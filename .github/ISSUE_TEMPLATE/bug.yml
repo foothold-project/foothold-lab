@@ -1,0 +1,32 @@
+name: "🐛 버그·막힘"
+description: 안 되는 것, 막힌 것
+title: "[버그] "
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 무엇이 안 되나
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 절차
+      placeholder: "1. ...
+2. ...
+3. 에러"
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 환경
+      placeholder: "GPU / 드라이버 / OS / 버전 (Isaac Lab v2.3.2 등)"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: 에러 로그
+      render: shell

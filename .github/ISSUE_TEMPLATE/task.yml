@@ -1,0 +1,25 @@
+name: "📋 작업"
+description: 해야 할 일 하나
+title: "[작업] "
+labels: [task]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: 무엇을 하나
+      description: 한두 문장. 명사형으로 끝내지 말고 "~한다"로.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 끝났다는 기준 (DoD)
+      description: 무엇이 존재하면/통과하면 끝인가. 애매하면 이 작업은 아직 쪼개지지 않은 것.
+      placeholder: "docs/xx.md 가 존재하고, 팀 리뷰 1명 통과"
+    validations:
+      required: true
+  - type: input
+    id: due
+    attributes:
+      label: 예상 기간
+      placeholder: "3일 (기본 마감 +7일이 자동으로 잡힌다 — 넘길 것 같으면 보드에서 늘리기)"

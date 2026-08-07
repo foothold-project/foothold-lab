@@ -1,0 +1,120 @@
+# 주간 스프린트 리포트 — 보드를 읽어 사람이 읽을 요약으로.
+#
+#   "주간 회고가 자동으로 스프린트 리포트 되게 할 수 있어?" → 된다. 이 파일이 그것.
+#   매주 월요일 아침, 지난주 Iteration 의 아이템을 사람별·상태별로 묶어
+#   디스코드에 올리고 GitHub Discussions/이슈로도 남긴다.
+#
+#   ⚠️ Iteration 필드는 **보드에서 먼저 만들어야** 한다 (설치 안내 §2).
+#      없으면 이 워크플로는 조용히 "Iteration 없음"만 보고하고 끝난다.
+#
+# 설치: 대표 레포 하나에만 (foothold-lab 권장). 여러 레포에 넣으면 중복 발송된다.
+# 필요: PROJECT_TOKEN, DISCORD_WEBHOOK
+name: 주간 리포트
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"       # 매주 월요일 09:00 KST (UTC 00:00)
+  workflow_dispatch:            # 손으로도 돌릴 수 있게
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 보드 읽어 요약 만들기
+        id: build
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ORG: foothold-project
+          PROJECT_NUMBER: "1"
+        run: |
+          set -euo pipefail
+          gh api graphql -f query='
+            query($org:String!, $num:Int!){
+              organization(login:$org){
+                projectV2(number:$num){
+                  title
+                  items(first:100){
+                    nodes{
+                      content{
+                        ... on Issue { number title url state closedAt
+                                       assignees(first:5){ nodes{ login } } }
+                      }
+                      fieldValues(first:20){
+                        nodes{
+                          ... on ProjectV2ItemFieldSingleSelectValue { name field{ ... on ProjectV2SingleSelectField { name } } }
+                          ... on ProjectV2ItemFieldIterationValue    { title startDate duration field{ ... on ProjectV2IterationField { name } } }
+                          ... on ProjectV2ItemFieldDateValue         { date  field{ ... on ProjectV2Field { name } } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f org="$ORG" -F num="$PROJECT_NUMBER" > board.json
+
+          python3 - <<'PY' > report.md
+          import json, datetime, collections
+          d = json.load(open('board.json'))
+          p = d['data']['organization']['projectV2']
+          today = datetime.date.today()
+          week_ago = today - datetime.timedelta(days=7)
+
+          def fv(item, name):
+              for n in item['fieldValues']['nodes']:
+                  f = (n.get('field') or {}).get('name')
+                  if f == name:
+                      return n.get('name') or n.get('title') or n.get('date')
+              return None
+
+          done, doing, todo, overdue = [], [], [], []
+          for it in p['items']['nodes']:
+              c = it.get('content') or {}
+              if not c.get('title'):
+                  continue
+              who = ', '.join(a['login'] for a in (c.get('assignees') or {}).get('nodes', [])) or '미배정'
+              st = fv(it, 'Status') or '—'
+              end = fv(it, 'end date')
+              row = f"- [#{c['number']}]({c['url']}) {c['title']} — **{who}**"
+              if c.get('state') == 'CLOSED':
+                  ca = c.get('closedAt', '')[:10]
+                  if ca and ca >= str(week_ago):
+                      done.append(row + f" _(닫힘 {ca})_")
+              elif st.lower().startswith('in'):
+                  doing.append(row + (f" _(마감 {end})_" if end else ''))
+              else:
+                  todo.append(row)
+              if end and c.get('state') != 'CLOSED' and end < str(today):
+                  overdue.append(row + f" _(마감 {end} 지남)_")
+
+          out = [f"# 주간 리포트 — {week_ago} ~ {today}", ""]
+          out += [f"**{p['title']}** · 완료 {len(done)} · 진행 {len(doing)} · 대기 {len(todo)}", ""]
+          for t, rows in [("✅ 지난주 완료", done), ("🔴 마감 지남", overdue),
+                          ("🔄 진행 중", doing), ("⏳ 대기", todo)]:
+              if rows:
+                  out += [f"## {t}"] + rows + [""]
+          if not done and not doing:
+              out += ["_지난주 보드 활동이 없습니다._", ""]
+          print('\n'.join(out))
+          PY
+          echo "has_content=1" >> "$GITHUB_OUTPUT"
+
+      - name: 디스코드로 보내기
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정"; exit 0; }
+          # 디스코드 메시지 상한 2000자 — 넘으면 자르고 보드 링크를 남긴다
+          CONTENT=$(head -c 1800 report.md)
+          jq -n --arg c "$CONTENT
+
+          → 전체 보드: https://github.com/orgs/foothold-project/projects/1" \
+            '{content:$c}' | curl -sS -X POST -H "Content-Type: application/json" -d @- "$HOOK"
+
+      - name: 아티팩트로도 보관
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-report-${{ github.run_number }}
+          path: report.md

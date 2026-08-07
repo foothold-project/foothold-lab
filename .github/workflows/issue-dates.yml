@@ -1,0 +1,77 @@
+# 이슈를 보드에 올릴 때 날짜를 자동으로 박는다.
+#
+#   보스 정정(2026-08-06)이 맞다 — "PR merge → Done" 만으로는 부족하고,
+#   ① 이슈 등록일이 start date 로 자동 기록되고
+#   ② 기본 마감일(+7일)이 end date 에 들어가되
+#   ③ 늘어날 것 같으면 **사람이 직접 늘린다**
+#   ④ 커밋에 #번호 를 쓰면 이슈가 닫히고 → 보드가 Done → 디스코드 알림
+#   이 흐름이 실제 작업 방식에 맞다.
+#
+# 설치 위치: 각 레포의 .github/workflows/issue-dates.yml
+# 필요한 것: 조직 시크릿 PROJECT_TOKEN (classic PAT, scope: project, repo)
+#            — GITHUB_TOKEN 으로는 Projects v2 를 못 건드린다.
+name: 보드 날짜 자동 기록
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  set-dates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 보드 아이템에 start/end date 기록
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ORG: foothold-project
+          PROJECT_NUMBER: "1"
+          DEFAULT_DAYS: "7"          # 기본 마감 = 등록일 + 7일 (필요하면 사람이 늘린다)
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          set -euo pipefail
+
+          # 1) 프로젝트 ID 와 날짜 필드 ID 조회
+          read -r PROJECT_ID START_ID END_ID <<EOF
+          $(gh api graphql -f query='
+            query($org:String!, $num:Int!){
+              organization(login:$org){
+                projectV2(number:$num){
+                  id
+                  fields(first:50){ nodes{ ... on ProjectV2Field { id name } } }
+                }
+              }
+            }' -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '
+              .data.organization.projectV2 as $p |
+              [ $p.id,
+                ($p.fields.nodes[] | select(.name=="start date") | .id),
+                ($p.fields.nodes[] | select(.name=="end date")   | .id)
+              ] | @tsv')
+          EOF
+
+          # 2) 이슈를 보드에 추가 (이미 있으면 기존 아이템 id 를 돌려준다)
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($p:ID!, $c:ID!){
+              addProjectV2ItemById(input:{projectId:$p, contentId:$c}){ item { id } }
+            }' -f p="$PROJECT_ID" -f c="$ISSUE_NODE_ID" \
+            --jq '.data.addProjectV2ItemById.item.id')
+
+          TODAY=$(date -u +%Y-%m-%d)
+          DUE=$(date -u -d "+${DEFAULT_DAYS} days" +%Y-%m-%d)
+
+          # 3) 날짜 기록
+          for pair in "$START_ID:$TODAY" "$END_ID:$DUE"; do
+            FIELD_ID="${pair%%:*}"; VALUE="${pair#*:}"
+            [ -z "$FIELD_ID" ] && continue
+            gh api graphql -f query='
+              mutation($p:ID!, $i:ID!, $f:ID!, $v:Date!){
+                updateProjectV2ItemFieldValue(
+                  input:{projectId:$p, itemId:$i, fieldId:$f, value:{date:$v}}
+                ){ projectV2Item { id } }
+              }' -f p="$PROJECT_ID" -f i="$ITEM_ID" -f f="$FIELD_ID" -f v="$VALUE" >/dev/null
+          done
+
+          echo "✓ #${{ github.event.issue.number }} → start=$TODAY / end=$DUE (기본 ${DEFAULT_DAYS}일)"

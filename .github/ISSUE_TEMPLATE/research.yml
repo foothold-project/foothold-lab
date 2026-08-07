@@ -1,0 +1,29 @@
+name: "🔍 리서치"
+description: 조사가 필요한 질문
+title: "[리서치] "
+labels: [research]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: 답하려는 질문
+      description: 조사 범위가 아니라 **질문**을 적는다. 질문이 명확하면 조사가 절반이다.
+      placeholder: "Go2 내장 보행 모델의 행동을 로깅할 수 있는가? 어떤 API 로?"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 왜 지금 필요한가
+      description: 이 답이 어떤 결정을 갈랐는지
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: 산출물 규칙
+      options:
+        - label: 정제본을 docs/research/ 에 md 로 남긴다 (원 출처 링크 포함)
+          required: true
+        - label: 숫자는 논문·공식 문서에서만 인용한다
+          required: true

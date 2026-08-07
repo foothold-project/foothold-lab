@@ -1,0 +1,21 @@
+# OS/에디터
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Python (분석 스크립트용)
+__pycache__/
+*.pyc
+.venv/
+
+# ★ 타인 저작물 원시 사본 — 실수로도 올라가지 않게 (README 정책 참조)
+_raw/
+*.pdf.txt
+crawl/
+
+# 대용량 산출물
+*.mp4
+*.m4a
+*.wav
