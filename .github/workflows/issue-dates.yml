@@ -10,7 +10,7 @@
 # 설치 위치: 각 레포의 .github/workflows/issue-dates.yml
 # 필요한 것: 조직 시크릿 PROJECT_TOKEN (classic PAT, scope: project, repo)
 #            — GITHUB_TOKEN 으로는 Projects v2 를 못 건드린다.
-name: 보드 날짜 자동 기록
+name: 이슈 등록 시 자동 처리
 
 on:
   issues:
@@ -18,12 +18,22 @@ on:
 
 permissions:
   contents: read
-  issues: read
+  issues: write        # 담당자 지정에 필요
 
 jobs:
   set-dates:
     runs-on: ubuntu-latest
     steps:
+      # 이슈를 연 사람이 곧 담당자다. 비워두면 보드에서 "누구 일인지" 가 사라지고,
+      # 팀원 개인 뷰(assignee 필터)에도 안 잡힌다.
+      - name: 담당자 자동 지정 (만든 사람)
+        if: github.event.issue.assignees[0] == null
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          gh api -X POST             repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/assignees             -f "assignees[]=${{ github.event.issue.user.login }}" >/dev/null
+          echo "담당자 → ${{ github.event.issue.user.login }}"
+
       - name: 보드 아이템에 start/end date 기록
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}

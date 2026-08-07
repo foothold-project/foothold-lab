@@ -15,8 +15,16 @@ FOOTHOLD 프로젝트의 **자료조사·문서·회의록**이 사는 곳.
 ## 일하는 방법 — 세 가지만 기억하기
 
 **① 작업은 이슈로 시작한다.**
-이슈를 만들면 보드에 자동으로 올라가고, 시작일(오늘)·마감(+7일)이 자동 기록된다.
+이슈를 만들면 자동으로 ⓐ보드에 등록되고 ⓑ시작일(오늘)·마감(+7일)이 찍히고 ⓒ**만든 사람이 담당자로** 잡힌다.
 마감을 늘릴 일이 생기면 보드에서 end date 를 직접 늘린다.
+
+> ⚠️ **이슈는 레포에서 만든다.** 보드에서 `+ Add item` 으로 바로 타이핑하면
+> **초안(draft)** 이 되는데, 이건 레포에 존재하지 않아서 자동화가 하나도 안 돈다
+> (담당자·날짜·알림·`Closes #번호` 전부 불가).
+> 이미 만든 초안은 `⋯ → Convert to issue` 로 진짜 이슈로 바꿀 수 있다.
+>
+> 새 이슈: [lab](https://github.com/foothold-project/foothold-lab/issues/new/choose) ·
+> [rl](https://github.com/foothold-project/foothold-rl/issues/new/choose)
 
 **② 끝나면 커밋 메시지에 `Closes #번호`.**
 ```

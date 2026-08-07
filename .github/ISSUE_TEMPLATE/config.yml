@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 프로젝트 보드
+    url: https://github.com/orgs/foothold-project/projects/1
+    about: 지금 누가 뭘 하는지, 이번 주 마감이 무엇인지
+  - name: 프로젝트 설계도
+    url: https://foothold-project.vercel.app/plan.html
+    about: 7단계 흐름 · 퀘스트 보드 · 아직 정하지 않은 것
