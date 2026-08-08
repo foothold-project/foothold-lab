@@ -30,6 +30,7 @@ jobs:
         env:
           EV: ${{ github.event_name }}
           ACT: ${{ github.event.action }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ "$EV" = "issues" ] && [ "$ACT" = "closed" ]; then
@@ -42,11 +43,19 @@ jobs:
             URL="${{ github.event.issue.html_url }}"; COLOR="11037960"
           else
             # 문서 push 만 알린다 — 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다.
-            # ★ git diff 를 쓰면 안 된다. 러너에 저장소가 없어서(checkout 안 함) 항상 비고
-            #   결과적으로 문서를 올려도 알림이 조용히 skip 된다 (2026-08-08 실측으로 발견).
-            #   push 이벤트 payload 의 commits[].added/modified 를 쓰면 checkout 이 필요 없다.
-            CHANGED=$(jq -r '[.commits[]? | .added[]?, .modified[]?] | unique | .[]'                         "$GITHUB_EVENT_PATH" 2>/dev/null || true)
-            echo "$CHANGED" | grep -q '^docs/' || { echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0; }
+            #
+            # ★ 두 번 틀렸다. 기록해 둔다 (2026-08-08 제로베이스 테스트에서 발견)
+            #   1차: git diff → 러너에 저장소가 없다(checkout 안 함). 항상 빈 결과.
+            #   2차: jq 로 payload 파싱 → 여전히 빈 결과. 그런데 **로그가 없어서** 왜인지 못 봤다.
+            #   교훈: 조용히 건너뛰는 분기에는 반드시 이유를 출력한다. 침묵은 디버깅을 막는다.
+            #
+            # 3차(현재): GitHub API 로 이 커밋의 파일 목록을 직접 묻는다. 가장 확실하다.
+            CHANGED=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}"                         --jq '.files[].filename' 2>&1 || echo "")
+            echo "::group::변경 파일"; echo "$CHANGED"; echo "::endgroup::"
+            if ! echo "$CHANGED" | grep -q '^docs/'; then
+              echo "docs/ 변경 없음 → 알림 생략"
+              echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+            fi
             TITLE="문서 갱신"
             BODY=$(echo "$CHANGED" | grep '^docs/' | head -5 | sed 's/^/• /')
             URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"; COLOR="8421504"
