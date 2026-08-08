@@ -33,18 +33,21 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$EV" = "issues" ] && [ "$ACT" = "closed" ]; then
-            TITLE="✅ 완료 · ${{ github.event.issue.title }}"
+            TITLE="완료 · ${{ github.event.issue.title }}"
             BODY="닫은 사람 **${{ github.event.sender.login }}** · 보드가 Done 으로 넘어갑니다"
             URL="${{ github.event.issue.html_url }}"; COLOR="1801806"
           elif [ "$EV" = "issues" ] && [ "$ACT" = "opened" ]; then
-            TITLE="🆕 새 작업 · ${{ github.event.issue.title }}"
+            TITLE="새 작업 · ${{ github.event.issue.title }}"
             BODY="등록 **${{ github.event.issue.user.login }}** · 시작일이 오늘로 기록됩니다"
             URL="${{ github.event.issue.html_url }}"; COLOR="11037960"
           else
-            # 문서 push 만 알린다 — 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다
-            CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null || true)
+            # 문서 push 만 알린다 — 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다.
+            # ★ git diff 를 쓰면 안 된다. 러너에 저장소가 없어서(checkout 안 함) 항상 비고
+            #   결과적으로 문서를 올려도 알림이 조용히 skip 된다 (2026-08-08 실측으로 발견).
+            #   push 이벤트 payload 의 commits[].added/modified 를 쓰면 checkout 이 필요 없다.
+            CHANGED=$(jq -r '[.commits[]? | .added[]?, .modified[]?] | unique | .[]'                         "$GITHUB_EVENT_PATH" 2>/dev/null || true)
             echo "$CHANGED" | grep -q '^docs/' || { echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0; }
-            TITLE="📄 문서 갱신"
+            TITLE="문서 갱신"
             BODY=$(echo "$CHANGED" | grep '^docs/' | head -5 | sed 's/^/• /')
             URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"; COLOR="8421504"
           fi
