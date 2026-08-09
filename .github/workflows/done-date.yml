@@ -29,11 +29,16 @@ jobs:
                 id fields(first:50){ nodes{ ... on ProjectV2Field { id name dataType } } } } } }'             -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '
               .data.organization.projectV2 as $p |
               [ $p.id,
-                ([$p.fields.nodes[] | select(.dataType=="DATE" and (.name|ascii_downcase|contains("done")))][0].id // "NONE")
+                ([$p.fields.nodes[] | select(.dataType=="DATE" and (.name|ascii_downcase|test("done|완료|실적")))][0].id // "NONE")
               ] | @tsv')
           EOF
           if [ "$DONE_ID" = "NONE" ]; then
-            echo "done 이 들어간 date 필드가 보드에 없음 — 기록 생략 (보드에 'done date' 필드를 만들 것)"
+            echo "done/완료/실적 이 들어간 date 필드가 보드에 없음 — 기록 생략"
+            echo "보드에 실제로 있는 date 필드 목록:"
+            gh api graphql -f query='
+              query($org:String!, $num:Int!){
+                organization(login:$org){ projectV2(number:$num){
+                  fields(first:50){ nodes{ ... on ProjectV2Field { name dataType } } } } } }'               -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '.data.organization.projectV2.fields.nodes[] | select(.dataType=="DATE") | "  - " + .name'
             exit 0
           fi
           ITEM_ID=$(gh api graphql -f query='
