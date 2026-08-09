@@ -1,7 +1,7 @@
 # ROS2 ↔ Isaac Sim — 파이썬 버전 충돌과 통합 방법
 
-> 작성 2026-08-09 · 출처: 팀장 WS 세션 논의(구두 전달, **원 세션 기록 미회수**) + 공식 문서 검증
-> 상태: `부분확인` — WS 세션의 원본 기록을 push 받아 대조할 것
+> 작성 2026-08-09 · 출처: 공식 문서 검증 + **WS 세션 원본 회수 완료(§회수 완료)**
+> 상태: `확인됨` — 참조 블로그·구현 저장소 URL 대조 완료
 
 ## 문제 — 두 도구의 파이썬이 다르다 `확인됨`
 
@@ -32,9 +32,50 @@
 - 특강(8/10~14, 1일차에 Docker 실습 포함)과 정확히 이어진다 — 특강의 Docker 가 곧 이 구성의 기초.
 - ⑥단계 준비: **가상 Go2 + ROS2 Bridge** 로 실물 없이 통신 연습 (참고: Zhefan-Xu/isaac-go2-ros2)
 
-## 미회수 — WS 세션에 요청할 것
+## ✅ 회수 완료 — 원 출처 (2026-08-09, WS 세션)
 
-WS 세션에서 이 논의의 원본(참조한 블로그 URL, 시도한 내용)이 저장·push 되지 않았다.
-WS 세션에 다음을 붙여넣어 회수한다:
-"이전에 논의한 ROS2 Humble ↔ Isaac Sim 파이썬 버전 충돌·컨테이너 2개 구성 내용을
- docs/research/ 형식의 md 로 정리해서 mai-universe 볼트에 commit-push 해줘. 참조한 블로그 URL 포함."
+### 참조한 글
+
+**블로그**: <https://slow-motionn.tistory.com/205>
+
+원문 요지 그대로:
+> *"Isaac Sim 5.1.0: Python 3.11 based (built-in) vs. ROS 2 Humble: Python 3.10 based (Ubuntu 22.04 default)"*
+> — 둘을 한 환경에 강제로 넣으면 **패키지가 깨지고 런타임 오류**가 난다.
+
+글쓴이는 개별 오류를 하나씩 잡는 대신 **컨테이너 격리로 통째로 우회**했다. 헤드리스 렌더링 · Fast DDS 설정 · rosdep 의존성 · GPU/Vulkan 접근을 미리 구운 이미지로 자동화했다고 밝힌다.
+
+⚠️ **그 글에는 GPU 모델·구체적 에러 메시지·CUDA/torch 버전이 없다.** *예방적 아키텍처*에 대한 글이지 사후 디버깅 기록이 아니다. 즉 **"이렇게 하면 안 겪는다"는 알지만 "안 하면 정확히 뭐가 터지는지"는 그 글로 알 수 없다.**
+
+### 구현 저장소
+
+**<https://github.com/hms-gymnopedie/IsaacSim_Setting>**
+
+| 컨테이너 | 베이스 이미지 | 담는 것 |
+|---|---|---|
+| **IsaacSim_Pegasus** | `nvidia/cuda:12.4.1-devel-ubuntu22.04` | Isaac Sim 5.1.0 스탠드얼론 · **Vulkan/X11**(헤드리스용 EGL 기반 Vulkan ICD) · PX4-Autopilot v1.14.3 · Pegasus Simulator |
+| **ROS 2 Humble** | `osrf/ros:humble-desktop` | colcon · rosdep · Isaac Sim ROS 워크스페이스 · `humble_ws` 빌드 · **Fast DDS 설정**(`fastdds.xml`, `ROS_DOMAIN_ID=0`) |
+
+**통신**: 두 컨테이너 모두 **`--net=host`** 로 호스트 네트워크 공유 → *"ROS 2 DDS 통신이 즉시 작동하며 추가 설정이 필요 없다"*
+
+### ★ 우리와 다른 점 — 우리가 더 유리하다
+
+그 사람은 `nvidia/cuda` 베이스에 **Isaac Sim을 직접 설치**했다. 우리는 그럴 필요가 없다:
+
+```
+nvcr.io/nvidia/isaac-sim:5.1.0     ← 우리 버전과 일치
+nvcr.io/nvidia/isaac-lab:2.3.2     ← 우리가 고정한 태그와 일치
+```
+
+공식 이미지가 있으므로 **Isaac Sim 쪽 컨테이너는 직접 빌드하지 않는다.** ROS2 쪽만 `osrf/ros:humble-desktop` 방식을 참고하면 된다. (근거: `cloud-gpu-options.md` §4)
+
+### 호스트 우분투 버전에 주는 함의
+
+컨테이너로 분리하면 **호스트 우분투 버전의 제약이 크게 줄어든다.** 컨테이너는 자기 파일시스템과 파이썬을 갖기 때문이다.
+⚠️ 단 **커널은 호스트와 공유**하므로 GPU 드라이버·커널 버전은 여전히 호스트 것을 쓴다.
+
+**그럼에도 22.04를 택했다 — 기술이 아니라 수업 때문이다.**
+8/10~14 ROS 보충수업이 **Ubuntu 22.04 + Humble 기준**(1일차 Docker 실습 포함)이고, PinkLAB 강의도 22.04다.
+**강의와 환경이 다르면 5일 내내 다른 문제로 시간을 쓴다.**
+
+**ISO 준비 완료** — `C:\Driver\ubuntu-22.04.5-desktop-amd64.iso` (4.44GB)
+SHA256 **공식 대조 일치 확인**: `bfd1cee02bc4f35db939e69b934ba49a39a378797ce9aee20f6e3e3e728fefbf`
