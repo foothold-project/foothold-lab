@@ -33,13 +33,11 @@ jobs:
               ] | @tsv')
           EOF
           if [ "$DONE_ID" = "NONE" ]; then
-            echo "done/완료/실적 이 들어간 date 필드가 보드에 없음 — 기록 생략"
-            echo "보드에 실제로 있는 date 필드 목록:"
-            gh api graphql -f query='
-              query($org:String!, $num:Int!){
-                organization(login:$org){ projectV2(number:$num){
-                  fields(first:50){ nodes{ ... on ProjectV2Field { name dataType } } } } } }'               -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '.data.organization.projectV2.fields.nodes[] | select(.dataType=="DATE") | "  - " + .name'
-            exit 0
+            echo "done date 필드가 보드에 없음 — 직접 만든다"
+            DONE_ID=$(gh api graphql -f query='
+              mutation($p:ID!){ createProjectV2Field(input:{projectId:$p, dataType:DATE, name:"done date"}){
+                projectV2Field { ... on ProjectV2Field { id } } } }'               -f p="$PROJECT_ID" --jq '.data.createProjectV2Field.projectV2Field.id')
+            echo "done date 필드 생성 완료 ($DONE_ID)"
           fi
           ITEM_ID=$(gh api graphql -f query='
             mutation($p:ID!, $c:ID!){ addProjectV2ItemById(input:{projectId:$p, contentId:$c}){ item { id } } }'             -f p="$PROJECT_ID" -f c="$ISSUE_NODE_ID" --jq '.data.addProjectV2ItemById.item.id')
