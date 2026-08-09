@@ -74,7 +74,12 @@ py3.10용 `rclpy`를 py3.11 Isaac Sim이 import하면 즉사한다.
 
 ## 3. 새로 발견된 제약 (1차 결론이 놓쳤던 것)
 
-### 3-1. ⚠️ Blackwell(RTX 5090)은 **open kernel module 전용**  `확인됨`
+### 3-1. ⚠️ Blackwell(RTX 5080)은 **open kernel module 전용**  `확인됨`
+
+> **장비 정정 (2026-08-09)**: 이 워크스테이션은 **RTX 5080 2장**이다(5090 아님).
+> Blackwell 세대(sm_120)라는 점은 같아 아래 드라이버 제약은 그대로 적용된다.
+> 다만 **VRAM이 장당 16GB**(5090은 32GB)이므로, 고해상도 Path Tracing이나
+> 대규모 환경 수를 잡을 때 여유가 절반이다. 학습 실측 사용량은 약 9GB로 문제없었다.
 
 NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel modules"*
 (https://us.download.nvidia.com/XFree86/Linux-x86_64/570.86.16/README/kernel_open.html)
@@ -82,7 +87,7 @@ NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel 
 - `nvidia-driver-580`이 아니라 **`nvidia-driver-580-open`** 을 설치해야 한다.
 - 자동 설치가 proprietary를 고르면 **GPU 미인식 / 부팅 불가**. 실사고 보고 있음.
 - Isaac Sim 5.1 최소 드라이버는 **580.65.06** (570 아님).
-- Ubuntu 22.04 설치 자체가 5090에서 검은 화면으로 멈춘 사례 있음(iGPU 우회 필요).
+- Ubuntu 22.04 설치 자체가 5090에서 검은 화면(같은 Blackwell 계열이므로 5080도 동일 위험)으로 멈춘 사례 있음(iGPU 우회 필요).
 
 ### 3-2. ⚠️ Isaac Sim 5.1은 **이미 공식 지원 종료(EOL)**  `확인됨`
 
@@ -197,7 +202,7 @@ DDS 벤더 간 비상호운용은 **에러도 안 낸다.**
 
 ## 8. 열려 있는 질문 (Human 결정 필요)
 
-1. **듀얼 5090 워크스테이션의 apt/드라이버를 만질 사람을 1명으로 고정할 수 있는가?**
+1. **듀얼 5080 워크스테이션의 apt/드라이버를 만질 사람을 1명으로 고정할 수 있는가?**
 2. **실기 Go2는 언제부터 팀 수중에 있는가?** — 9월 E2E 스모크가 물리적으로 가능한 일정인가?
 
 ---
