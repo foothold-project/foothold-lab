@@ -1,0 +1,36 @@
+# 공지 발송 — docs/notices/ 의 md 를 #foothold-notice 로.
+#   자동 발송이 아니라 **사람이 방아쇠를 당기는** 구조다(Actions 탭 → Run workflow).
+#   시크릿 DISCORD_NOTICE_WEBHOOK (notice 채널의 웹후크) 필요.
+name: 공지 발송
+
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: "보낼 파일 (docs/notices/ 안)"
+        default: "docs/notices/latest.md"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 발송
+        env:
+          HOOK: ${{ secrets.DISCORD_NOTICE_WEBHOOK }}
+          FILE: ${{ inputs.file }}
+        run: |
+          set -euo pipefail
+          [ -n "$HOOK" ] || { echo "DISCORD_NOTICE_WEBHOOK 미설정"; exit 1; }
+          [ -f "$FILE" ] || { echo "파일 없음: $FILE"; exit 1; }
+          # 디스코드 한 메시지 2000자 제한 — 1900자 단위로 쪼개 순서대로 보낸다
+          split -b 1900 "$FILE" /tmp/part_
+          for p in /tmp/part_*; do
+            jq -n --rawfile c "$p" '{content:$c}'               | curl -sS -X POST -H "Content-Type: application/json" -d @- "$HOOK"
+            sleep 1
+          done
+          echo "발송 완료: $FILE"

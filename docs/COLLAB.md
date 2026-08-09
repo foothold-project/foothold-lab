@@ -33,8 +33,10 @@
 | **foothold-site** | 공개 · 산출물 | 빌드된 웹 — **직접 수정 금지(미러)** |
 | **foothold-brand** | 공개 · 디자인 | 토큰 원본 · 로고 정본 · 브랜드 규칙 |
 | 보드 **FOOTHOLD** | org Projects | 모든 레포 이슈가 모이는 상황판 |
-| 디스코드 #foothold | 팀 | 자동 알림 + 대화 |
-| 디스코드 #resources | 비공개 | 팀 공용 계정 · NAS 경로. **토큰류 금지** |
+| 디스코드 #foothold-git | 팀 | **자동 알림 전용** (새 작업·완료·문서·주간 리포트) |
+| 디스코드 #foothold-general | 팀 | 일반 대화 |
+| 디스코드 #foothold-notice | 팀 | 공지 — 주요 업데이트·전달사항 |
+| 디스코드 #foothold-resource | 비공개 | 팀 공용 계정 · NAS 경로. **토큰류 금지** |
 | NAS `foothold/meetings/` | 팀 스토리지 | 회의 녹음 원본 |
 | 팀장 볼트 | 개인 | 타인 저작물 원문 등 — 팀 자산은 위로 이관 |
 

@@ -1,0 +1,46 @@
+# 이슈가 닫히면 보드의 done date(실적)를 오늘로 기록한다.
+#   계획(start/end date)은 절대 건드리지 않는다 — 계획 vs 실적 비교가 WBS 리뷰의 근거다.
+#   필드는 이름에 'done' 이 들어간 date 필드를 찾는다 (사람이 만든 이름의 사소한 차이 허용).
+name: 실적 종료일 기록
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  done-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: done date = 오늘
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ORG: foothold-project
+          PROJECT_NUMBER: "1"
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          set -euo pipefail
+          read -r PROJECT_ID DONE_ID <<EOF
+          $(gh api graphql -f query='
+            query($org:String!, $num:Int!){
+              organization(login:$org){ projectV2(number:$num){
+                id fields(first:50){ nodes{ ... on ProjectV2Field { id name dataType } } } } } }'             -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '
+              .data.organization.projectV2 as $p |
+              [ $p.id,
+                ([$p.fields.nodes[] | select(.dataType=="DATE" and (.name|ascii_downcase|contains("done")))][0].id // "NONE")
+              ] | @tsv')
+          EOF
+          if [ "$DONE_ID" = "NONE" ]; then
+            echo "done 이 들어간 date 필드가 보드에 없음 — 기록 생략 (보드에 'done date' 필드를 만들 것)"
+            exit 0
+          fi
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($p:ID!, $c:ID!){ addProjectV2ItemById(input:{projectId:$p, contentId:$c}){ item { id } } }'             -f p="$PROJECT_ID" -f c="$ISSUE_NODE_ID" --jq '.data.addProjectV2ItemById.item.id')
+          TODAY=$(date -u +%Y-%m-%d)
+          gh api graphql -f query='
+            mutation($p:ID!, $i:ID!, $f:ID!, $v:Date!){
+              updateProjectV2ItemFieldValue(input:{projectId:$p, itemId:$i, fieldId:$f, value:{date:$v}}){
+                projectV2Item { id } } }'             -f p="$PROJECT_ID" -f i="$ITEM_ID" -f f="$DONE_ID" -f v="$TODAY" >/dev/null
+          echo "done date = $TODAY  (#${{ github.event.issue.number }})"
