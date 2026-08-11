@@ -1,0 +1,60 @@
+# 보드에 로드맵(간트) 뷰를 만든다. 손으로 만들면 기기·사람마다 이름이 달라진다.
+#
+#   한계를 미리 적어 둔다: GitHub API 는 로드맵 뷰를 **만들 수는 있지만**
+#   어떤 날짜 필드로 막대를 그릴지는 지정할 수 없다(configuration 에 그 입력이 없다).
+#   그래서 뷰를 만든 뒤 **사람이 한 번** 필드를 골라야 한다. 그 안내를 로그에 남긴다.
+name: 보드 뷰 만들기
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  views:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 로드맵 뷰 확인·생성
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ORG: foothold-project
+          PROJECT_NUMBER: "1"
+        run: |
+          set -euo pipefail
+          read -r PID EXIST <<EOF
+          $(gh api graphql -f query='
+            query($org:String!,$num:Int!){
+              organization(login:$org){ projectV2(number:$num){
+                id views(first:20){ nodes{ name layout } } } } }' \
+            -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '
+              .data.organization.projectV2 as $p |
+              [ $p.id,
+                ([$p.views.nodes[] | select(.layout=="ROADMAP_LAYOUT") | .name] | join(",") // "")
+              ] | @tsv')
+          EOF
+          echo "이미 있는 로드맵 뷰: ${EXIST:-없음}"
+
+          make_view () {
+            local NAME="$1"
+            case ",${EXIST}," in
+              *",${NAME},"*) echo "  '$NAME' 이미 있음 → 건너뜀"; return 0 ;;
+            esac
+            gh api graphql -f query='
+              mutation($p:ID!,$n:String!){
+                createProjectV2View(input:{projectId:$p, name:$n, layout:ROADMAP_LAYOUT}){
+                  projectV2View{ id name } } }' \
+              -f p="$PID" -f n="$NAME" --jq '.data.createProjectV2View.projectV2View.name' \
+              | sed 's/^/  생성: /'
+          }
+
+          make_view "로드맵 · 계획"
+          make_view "로드맵 · 실적"
+
+          echo ""
+          echo "════ 사람이 한 번 해야 하는 것 (API 로는 지정할 수 없음) ════"
+          echo "  보드 → '로드맵 · 계획' 탭 → 우측 상단 ⚙ → Date fields"
+          echo "      Start date = start date · Target date = end date"
+          echo "  보드 → '로드맵 · 실적' 탭 → 우측 상단 ⚙ → Date fields"
+          echo "      Start date = start date · Target date = done date"
+          echo "  두 뷰를 나란히 보면 계획과 실적의 차이가 그대로 보인다."
