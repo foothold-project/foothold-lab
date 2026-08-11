@@ -1,14 +1,24 @@
-**FOOTHOLD 협업 시스템 오픈**
 
-우리 프로젝트의 작업 방식이 정리됐습니다. **30분이면 따라잡을 수 있게** 만들었어요.
+📢 **FOOTHOLD 공지 — 협업 시스템 오픈 + 첫 실측 결과** (2026-08-11)
 
-**협업 규칙** → https://foothold-project.vercel.app/collab.html
-손으로 하는 건 딱 두 가지 — ①레포에서 이슈 만들기 ②끝낼 때 커밋에 `Closes #번호`.
-나머지(보드 등록·담당자·날짜·알림)는 전부 자동입니다. 8개 경로 실제 테스트로 확인했어요.
+**1. 협업 시스템이 열렸습니다**
+- 규칙 한 장: <https://foothold-project.vercel.app/collab.html> (온보딩 30분 코스 포함)
+- 설계도: <https://foothold-project.vercel.app/plan.html>
+- 이슈를 만들면 보드 등록·날짜·담당자 지정이 자동으로 됩니다. 완료 알림은 #foothold-git 에 뜹니다.
 
-**프로젝트 설계도** → https://foothold-project.vercel.app/plan.html
-7단계 지도와 퀘스트 보드. 🔶 표시는 다음 회의에서 같이 정할 안건입니다.
+**2. 레포 클론, 받아도 됩니다**
+`foothold-lab`(문서·연구)과 `foothold-rl`(코드)은 지금부터 클론 받아 진행해도 됩니다.
+`foothold-site`·`foothold-brand`는 빌드 파이프라인이 관리하므로 클론 대상이 아닙니다.
+브랜치 규칙은 collab 페이지 §5 — main 직접 push 만 피하면 됩니다.
 
-시작은 **협업 규칙 §14 온보딩(30분 경로)** 부터.
-ROS 수업(오후 2~6시) 주간에도 오전에 온보딩 + 이슈 하나 만들어보기까지 부탁해요.
-질문은 #foothold-general 로!
+**3. 워크스테이션 첫 실측 결과 (foothold-lab/docs/research/)**
+- 학습이 실제로 됩니다 — 300 iteration 에 보상 −0.47 → **+13.94**, 생존 18.8초
+- 처리 속도 실측 **23,000 steps/s** (4096 envs) · 1,500 iteration ≈ 104분
+- 속도 2.4배 플래그는 **봉인** — 물리가 달라져 도달 상한이 낮아짐 (시드 고정 3회 판정)
+- 렌더 실측: Real-Time 0.056초/프레임, Path Tracing 1.75초/프레임(31배) — 발표 영상 일정의 근거
+
+**4. 이번 주**
+- ROS 보충수업 8/10~14 매일 14~18시 (오전은 프로젝트 가용)
+- 8/13(수) 조선대 현장 확인 — 목록: foothold-lab/docs/FIELD-CHECK-0813.md
+
+질문은 #foothold-general 로.
