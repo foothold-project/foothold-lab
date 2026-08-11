@@ -79,4 +79,7 @@ jobs:
                 --argjson c ${{ steps.msg.outputs.color }} \
                 --arg r "${{ github.repository }}" \
             '{embeds:[{title:$t, description:$d, url:$u, color:$c, footer:{text:$r}}]}' \
-            | curl -sS -X POST -H "Content-Type: application/json" -d @- "$HOOK"
+            | curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" -d @- "$HOOK" > /tmp/code
+          CODE=$(cat /tmp/code)
+          echo "HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패 — 웹훅 상태 확인 필요"; exit 1 ;; esac
