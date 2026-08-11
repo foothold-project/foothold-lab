@@ -1,7 +1,7 @@
 {
  "project": "FOOTHOLD",
- "generatedAt": "2026-08-11T14:04Z",
- "count": 8,
+ "generatedAt": "2026-08-11T15:13Z",
+ "count": 9,
  "items": [
   {
    "number": 1,
@@ -146,6 +146,23 @@
    "end": "2026-08-16",
    "done": "2026-08-09",
    "status": "Done"
+  },
+  {
+   "number": 8,
+   "repo": "foothold-lab",
+   "title": "[테스트] sub-issue 자동 연결 검증",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/8",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "[단계] ③ 연습장 만들기 — 지형·평가",
+   "start": "2026-08-11",
+   "end": "2026-08-18",
+   "done": null,
+   "status": "Todo"
   }
  ]
 }
