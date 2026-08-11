@@ -1,0 +1,151 @@
+{
+ "project": "FOOTHOLD",
+ "generatedAt": "2026-08-11T14:04Z",
+ "count": 8,
+ "items": [
+  {
+   "number": 1,
+   "repo": "foothold-lab",
+   "title": "[작업] 자동화 배선 테스트",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/1",
+   "state": "CLOSED",
+   "closedAt": "2026-08-07",
+   "assignees": [],
+   "labels": [
+    "task"
+   ],
+   "parent": "",
+   "start": "2026-08-07",
+   "end": "2026-08-14",
+   "done": null,
+   "status": "Done"
+  },
+  {
+   "number": 1,
+   "repo": "foothold-rl",
+   "title": "[실험] 배선 테스트 - 담당자 자동 지정 확인",
+   "url": "https://github.com/foothold-project/foothold-rl/issues/1",
+   "state": "CLOSED",
+   "closedAt": "2026-08-07",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "",
+   "start": "2026-08-07",
+   "end": "2026-08-14",
+   "done": null,
+   "status": "Done"
+  },
+  {
+   "number": 2,
+   "repo": "foothold-lab",
+   "title": "[작업] 협업 규칙 문서 초안 작성",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/2",
+   "state": "CLOSED",
+   "closedAt": "2026-08-08",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "",
+   "start": "2026-08-08",
+   "end": "2026-08-15",
+   "done": null,
+   "status": "Done"
+  },
+  {
+   "number": 3,
+   "repo": "foothold-lab",
+   "title": "[작업] 휘발 방지 — 결정 로그·검증 기록·재개 지점 문서화",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/3",
+   "state": "CLOSED",
+   "closedAt": "2026-08-08",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [
+    "task"
+   ],
+   "parent": "",
+   "start": "2026-08-08",
+   "end": "2026-08-15",
+   "done": null,
+   "status": "Done"
+  },
+  {
+   "number": 4,
+   "repo": "foothold-lab",
+   "title": "[작업] 협업 규칙 COLLAB.md 작성 + collab.html 게시",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/4",
+   "state": "CLOSED",
+   "closedAt": "2026-08-09",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [
+    "task"
+   ],
+   "parent": "",
+   "start": "2026-08-08",
+   "end": "2026-08-15",
+   "done": null,
+   "status": "Done"
+  },
+  {
+   "number": 5,
+   "repo": "foothold-lab",
+   "title": "[막힘] 사이트 5개 페이지 다크모드 미지원",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/5",
+   "state": "CLOSED",
+   "closedAt": "2026-08-11",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [
+    "blocked"
+   ],
+   "parent": "",
+   "start": "2026-08-08",
+   "end": "2026-08-15",
+   "done": "2026-08-11",
+   "status": "Done"
+  },
+  {
+   "number": 6,
+   "repo": "foothold-lab",
+   "title": "[작업] 도구 백과 — 우리가 쓰는 도구들을 그림과 함께",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/6",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [
+    "task"
+   ],
+   "parent": "",
+   "start": "2026-08-09",
+   "end": "2026-08-16",
+   "done": null,
+   "status": "Todo"
+  },
+  {
+   "number": 7,
+   "repo": "foothold-lab",
+   "title": "[테스트] done date 자동 기입 검증",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/7",
+   "state": "CLOSED",
+   "closedAt": "2026-08-09",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "",
+   "start": "2026-08-09",
+   "end": "2026-08-16",
+   "done": "2026-08-09",
+   "status": "Done"
+  }
+ ]
+}
