@@ -139,23 +139,14 @@ NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel 
 
 ## 5. ★ 확정 아키텍처
 
-```
-┌─ 호스트: Ubuntu 22.04.5 (HWE 커널 6.8) ────────────────────┐
-│  · NVIDIA 드라이버 580+ ★-open 계열★                        │
-│  · Docker + nvidia-container-toolkit                        │
-│  · ROS2 Humble 네이티브  ← 수업 호환 + 실기 Go2 배포용       │
-│    └ CycloneDDS 0.10.2 + CYCLONEDDS_URI NIC 바인딩          │
-│                                                              │
-│  ┌─ 컨테이너: IsaacLab v2.3.x Dockerfile.ros2 ──────────┐   │
-│  │  · Isaac Sim 5.1 + Isaac Lab + ROS2 Humble           │   │
-│  │  · 학습(RL)은 headless                                │   │
-│  │  · 격리를 ★사람의 규율이 아니라 컨테이너 경계로★      │   │
-│  │  · 5인은 사용자별 볼륨/브랜치로 분리                  │   │
-│  └───────────────────────────────────────────────────────┘   │
-│                                                              │
-│  관찰: WebRTC 스트리밍 (⚠️ 5.1은 동시 1명)                   │
-└──────────────────────────────────────────────────────────────┘
-```
+| 층 | 무엇이 있나 | 왜 |
+|---|---|---|
+| **호스트** Ubuntu 22.04.5 (HWE 커널 6.8) | NVIDIA 드라이버 580+ (open 계열) · Docker + nvidia-container-toolkit | 실기 Go2 와 수업이 요구하는 바닥 |
+| 호스트의 **ROS2 Humble 네이티브** | CycloneDDS 0.10.2 + CYCLONEDDS_URI NIC 바인딩 | 수업 호환 + 실기 Go2 배포용 |
+| **컨테이너** IsaacLab v2.3.x (Dockerfile.ros2) | Isaac Sim 5.1 + Isaac Lab + ROS2 Humble · 학습은 headless | 격리를 **사람의 규율이 아니라 컨테이너 경계**로 |
+| 컨테이너 안의 사용자 분리 | 5인은 사용자별 볼륨/브랜치로 | 서로의 실험을 덮어쓰지 않게 |
+| 관찰 | WebRTC 스트리밍 (⚠️ 5.1 은 동시 1명) | 원격에서 화면을 본다 |
+
 
 ### 유지 / 폐기
 
