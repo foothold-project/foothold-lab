@@ -58,6 +58,13 @@ jobs:
             fi
             TITLE="문서 갱신"
             BODY=$(echo "$CHANGED" | grep '^docs/' | head -5 | sed 's/^/• /')
+            # docs/research/ 는 웹에 자동 게시된다(빌드 [1.78]). 게시 대기 중임을 알려
+            # "올렸는데 웹에 없네" 를 없앤다 — 누락은 조용히 일어난다.
+            if echo "$CHANGED" | grep -q '^docs/research/'; then
+              TITLE="연구 기록 갱신 → 웹 게시 대기"
+              BODY="$BODY
+→ 다음 빌드에서 <https://foothold-project.vercel.app/research.html> 에 자동 반영됩니다."
+            fi
             URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"; COLOR="8421504"
           fi
           {
