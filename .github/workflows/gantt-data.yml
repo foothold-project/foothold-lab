@@ -136,4 +136,11 @@ jobs:
             exit 0
           fi
           git commit -m "data: 보드 스냅샷 갱신 (자동)"
-          git push
+          # 이슈 하나에 여러 워크플로가 동시에 반응해 먼저 push 한 쪽에 밀릴 수 있다.
+          # 실제로 그렇게 한 번 실패했다(2026-08-12). 받아서 얹고 다시 민다.
+          for i in 1 2 3; do
+            git pull --rebase --quiet origin main && git push && exit 0
+            echo "push 경합, 재시도 $i"
+            sleep 5
+          done
+          echo "★ push 3회 실패"; exit 1
