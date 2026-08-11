@@ -1,7 +1,7 @@
 {
  "project": "FOOTHOLD",
  "generatedAt": "2026-08-11T15:14Z",
- "count": 11,
+ "count": 14,
  "items": [
   {
    "number": 1,
@@ -193,6 +193,57 @@
    ],
    "labels": [],
    "parent": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "start": "2026-08-11",
+   "end": "2026-08-18",
+   "done": null,
+   "status": "Todo"
+  },
+  {
+   "number": 11,
+   "repo": "foothold-lab",
+   "title": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/11",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "start": "2026-08-11",
+   "end": "2026-08-18",
+   "done": null,
+   "status": "Todo"
+  },
+  {
+   "number": 12,
+   "repo": "foothold-lab",
+   "title": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/12",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "start": "2026-08-11",
+   "end": "2026-08-18",
+   "done": null,
+   "status": "Todo"
+  },
+  {
+   "number": 13,
+   "repo": "foothold-lab",
+   "title": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/13",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "[단계] ③ 연습장 만들기 — 지형·평가** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.** 단계에 속한 작업들을 모으는 부모 이슈입니다.",
    "start": "2026-08-11",
    "end": "2026-08-18",
    "done": null,
