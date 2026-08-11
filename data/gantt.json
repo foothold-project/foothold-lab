@@ -1,7 +1,7 @@
 {
  "project": "FOOTHOLD",
- "generatedAt": "2026-08-11T15:20Z",
- "count": 24,
+ "generatedAt": "2026-08-11T15:21Z",
+ "count": 25,
  "items": [
   {
    "number": 1,
@@ -416,8 +416,25 @@
    "parent": "",
    "start": "2026-08-11",
    "end": "2026-08-18",
-   "done": null,
+   "done": "2026-08-11",
    "status": "Done"
+  },
+  {
+   "number": 24,
+   "repo": "foothold-lab",
+   "title": "[테스트] 루프 차단 후 sub-issue 재검증",
+   "url": "https://github.com/foothold-project/foothold-lab/issues/24",
+   "state": "OPEN",
+   "closedAt": "",
+   "assignees": [
+    "vfxpedia"
+   ],
+   "labels": [],
+   "parent": "",
+   "start": "2026-08-11",
+   "end": "2026-08-18",
+   "done": null,
+   "status": "Todo"
   }
  ]
 }
