@@ -30,7 +30,9 @@ jobs:
           # 디스코드 한 메시지 2000자 제한 — 1900자 단위로 쪼개 순서대로 보낸다
           split -b 1900 "$FILE" /tmp/part_
           for p in /tmp/part_*; do
-            jq -n --rawfile c "$p" '{content:$c}'               | curl -sS -X POST -H "Content-Type: application/json" -d @- "$HOOK"
+            CODE=$(jq -n --rawfile c "$p" '{content:$c}'               | curl -sS -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d @- "$HOOK")
+            echo "조각 $p → HTTP $CODE"
+            case "$CODE" in 2*) ;; *) echo "★ 전송 실패"; exit 1;; esac
             sleep 1
           done
           echo "발송 완료: $FILE"
