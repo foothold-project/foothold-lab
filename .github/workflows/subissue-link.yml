@@ -1,0 +1,88 @@
+# 이슈를 만들면 "설계도 어느 단계인가" 드롭다운을 읽어 그 단계의 부모 이슈 밑에 매단다.
+#
+#   왜: 이슈가 늘어나면 목록은 평평해지고 "이게 어느 단계 일이었지" 를 아무도 모르게 된다.
+#   GitHub 의 sub-issue 는 부모에 진행률(3/7)을 자동으로 표시해 주므로,
+#   단계별 진척이 보드 밖에서도 한눈에 보인다.
+#
+#   ★ 부모 이슈는 미리 만들어 두지 않는다. 그 단계의 첫 이슈가 올라올 때 **워크플로가 만든다.**
+#     기획이 확정되기 전에 빈 부모 6개를 세워두면 쓰지도 않는 껍데기가 목록을 차지한다.
+#     (done date 필드를 워크플로가 스스로 만든 것과 같은 방식)
+name: 단계별 sub-issue 연결
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 부모 찾거나 만들어서 매달기
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUM: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.issue.body }}
+          NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          set -euo pipefail
+
+          # 템플릿 본문에서 단계 줄을 뽑는다. 템플릿을 안 쓴 이슈는 조용히 넘어간다.
+          PHASE=$(printf '%s' "$BODY" | grep -oE '[①②③④⑤⑥⑦][^\r\n]*|^운영 —[^\r\n]*' | head -n1 | sed 's/[[:space:]]*$//' || true)
+          if [ -z "$PHASE" ]; then
+            echo "단계 표기 없음 (템플릿 미사용) → 연결 생략"
+            exit 0
+          fi
+          echo "단계: $PHASE"
+
+          PARENT_TITLE="[단계] $PHASE"
+
+          # 이미 이 이슈에 부모가 있으면 손대지 않는다 (사람이 옮겼을 수 있다)
+          HAS_PARENT=$(gh api graphql -f query='
+            query($owner:String!,$name:String!,$num:Int!){
+              repository(owner:$owner,name:$name){ issue(number:$num){ parent{ number } } } }' \
+            -f owner="${REPO%%/*}" -f name="${REPO##*/}" -F num="$NUM" \
+            --jq '.data.repository.issue.parent.number // ""')
+          if [ -n "$HAS_PARENT" ]; then
+            echo "이미 부모 #$HAS_PARENT 에 매달려 있음 → 그대로 둠"
+            exit 0
+          fi
+
+          # 부모 이슈 찾기 (제목 완전 일치, 열린 것 우선)
+          PARENT=$(gh issue list --repo "$REPO" --state all --limit 100 \
+                     --search "\"$PARENT_TITLE\" in:title" --json number,title \
+                   --jq "[.[] | select(.title == \"$PARENT_TITLE\")] | .[0].number // \"\"")
+
+          if [ -z "$PARENT" ]; then
+            echo "부모 없음 → 새로 만든다"
+            PARENT=$(gh issue create --repo "$REPO" --title "$PARENT_TITLE" \
+              --label "단계" \
+              --body "설계도 **$PHASE** 단계에 속한 작업들을 모으는 부모 이슈입니다.
+
+이 이슈는 직접 작업하지 않습니다. 아래 하위 항목이 그 단계의 실제 일이고,
+하위가 닫힐 때마다 진행률이 자동으로 올라갑니다.
+
+설계도: https://foothold-project.vercel.app/plan.html
+일정: https://foothold-project.vercel.app/gantt.html
+
+(이 부모는 해당 단계의 첫 이슈가 올라올 때 자동으로 생성되었습니다.)" \
+              | grep -oE '[0-9]+$')
+            echo "부모 #$PARENT 생성"
+          fi
+
+          PARENT_ID=$(gh api graphql -f query='
+            query($owner:String!,$name:String!,$num:Int!){
+              repository(owner:$owner,name:$name){ issue(number:$num){ id } } }' \
+            -f owner="${REPO%%/*}" -f name="${REPO##*/}" -F num="$PARENT" \
+            --jq '.data.repository.issue.id')
+
+          gh api graphql -f query='
+            mutation($p:ID!,$c:ID!){
+              addSubIssue(input:{issueId:$p, subIssueId:$c}){ issue{ number } } }' \
+            -f p="$PARENT_ID" -f c="$NODE_ID" >/dev/null
+
+          echo "#$NUM → 부모 #$PARENT 에 연결 완료"
