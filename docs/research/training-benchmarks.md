@@ -189,14 +189,117 @@ A는 300번 만에 13.94에 도달했다. **B는 더 돌린다고 따라잡을 �
 
 ---
 
-## 5. 멀티 GPU — 미측정
+## 5. 멀티 GPU — ❌ **판정 완료: Windows 에서는 구조적으로 불가** `확인됨`
 
 - **RTX 50 시리즈에는 NVLink가 없다.** 실측 확인: Isaac Sim 기동 로그에 `CUDA peer access: Not supported`
 - → **VRAM 16+16=32GB로 합쳐지지 않는다.** 각 GPU는 여전히 16GB
-- **다만 DDP(분산 데이터 병렬)는 가능하다** — `train.py`에 `--distributed` 플래그 실재(`:31`)
-- **아직 측정하지 않았다.** 다음 측정 대상
+- `train.py` 에 `--distributed` 플래그는 실재한다(`:31`)
 
-**구조적으로 유리할 것으로 보이는 이유(추론, 미검증)**: 교환할 것은 gradient뿐인데 학습이 0.14초, 시뮬이 4초다. **통신할 게 적고 계산할 게 많은 구조**는 DDP가 잘 먹히는 조건이다. 다만 **실측 전까지는 추론이다.**
+### 실측 (2026-08-11)
+
+```
+python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 train_go2_win.py --distributed ...
+```
+
+| 시도 | 결과 |
+|---|---|
+| 1차 | `torch.distributed.DistStoreError: use_libuv was requested but PyTorch was built without libuv support` |
+| 2차 (`USE_LIBUV=0`) | 같은 오류 — 표면 증상이었다 |
+| **근본 원인 확인** | `torch.distributed.is_nccl_available()` → **`False`** |
+
+```
+torch      : 2.7.0+cu128
+GPU 개수   : 2
+NCCL 사용가능 : False      ← ★ 이것이 판정
+gloo 사용가능 : True
+```
+
+> ### **PyTorch Windows 빌드에는 NCCL 이 들어가지 않는다.**
+> NCCL 은 GPU 끼리 직접 데이터를 주고받는 라이브러리이고, DDP GPU 학습은 이것이 있어야 한다.
+> `gloo` 는 대체재지만 CPU 를 거쳐서 GPU 학습용으로는 쓰지 못한다.
+
+### 앞선 추론에 대한 정정
+
+이전 판(v1)에 *"구조적으로 유리할 것으로 보인다 — 교환할 것은 gradient뿐인데 학습이 0.14초, 시뮬이 4초다"*
+라고 적었다. **그 추론 자체는 여전히 타당하지만, Windows 에서는 시험할 수조차 없다.**
+**추론을 실측이 대체한 것이 아니라, 실측이 "시험 불가"를 확정했다.**
+
+### 이것이 뜻하는 것
+
+| | Windows | Ubuntu |
+|---|---|---|
+| GPU 1장 학습 | ✅ 실측 22.07분/300 iter | ✅ |
+| **GPU 2장 DDP** | ❌ **불가** | ✅ (미측정) |
+| GPU 2장에 **서로 다른 학습 2개** | ✅ 가능 (`--device cuda:0` / `cuda:1`) | ✅ |
+
+> **두 번째 5080 은 지금 "1개 학습을 2배 빠르게"에는 못 쓴다. "다른 실험을 동시에"에는 쓸 수 있다.**
+> 우분투 전환이 «하면 좋은 것»에서 «안 하면 장비 절반이 노는 것»으로 바뀌었다.
+> DDP 실측은 우분투 전환 후로 이월한다.
+
+---
+
+## 5-2. ★ 평가 파이프라인 v1 — 첫 착수와 그 과정에서 잡은 함정 3개
+
+`C:\isaac\IsaacLab\eval_go2.py` (2026-08-11 신설)
+
+**목적**: 지금까지 «보상 13.94» 같은 학습 지표만 있었다. 그건 *학습이 잘 됐다*는 뜻이지
+**로봇이 실제로 목적을 달성하는가**를 말해주지 않는다.
+
+**성공 정의 (임시안 v1)**: ① 전진 10m 이상 ② 넘어짐 없음 ③ 제한시간(20초) 내
+→ CSV 헤더 주석에 명시한다. 정의가 바뀌면 CSV 도 같이 바뀌게.
+
+### 함정 ① Isaac Sim Kit 은 stdout 을 가로챈다
+
+`print()` 가 로그 파일에 **하나도 남지 않는다.** 스크립트는 정상 종료(exit=0)하고 CSV 도 쓰는데
+화면에는 아무것도 없다. **"화면에 안 보이는 것"과 "실행되지 않은 것"이 구분되지 않는다.**
+→ **진단은 반드시 파일로 쓴다.**
+
+### 함정 ② 평가 조건을 학습 조건과 다르게 만들면 정책이 얼어붙는다
+
+명령을 «전진 1.0 m/s 고정»으로 두려고 `heading_command=False`, `resampling_time_range=(1e6,1e6)` 로 바꿨더니
+**로봇이 20초 내내 미동도 하지 않았다**(실제 vx = −0.00, 이동 0.59m).
+기본 랜덤 명령으로 두면 4.80m 를 갔다.
+
+**학습 원본 설정**(`velocity_env_cfg.py:94`):
+```
+lin_vel_x (-1,1) · lin_vel_y (-1,1) · ang_vel_z (-1,1) · heading (-π,π)
+heading_command=True · rel_standing_envs=0.02 · resampling_time_range=(10,10)
+```
+→ **평가는 학습 분포에서 최소한만 벗어나야 한다.** 지금은 `lin_vel_x` 범위와
+`rel_standing_envs` 만 바꾼다.
+
+### 함정 ③ ★ PLAY 설정은 로봇을 랜덤 난이도 지형에 떨어뜨린다
+
+`UnitreeGo2RoughEnvCfg_PLAY` 는 `max_init_terrain_level=None` + `curriculum=False` 다.
+진단에서 실제로 이런 스폰이 나왔다:
+
+```
+루트 위치 z = -0.187          ← 지면 아래
+중력[6:9] = [0.294, 0.255, -0.921]   → 기울기 22.9도
+명령[9:12] = [1.0, 0.0, 0.321]       ← 명령은 정상 전달됨
+```
+
+**로봇이 지형에 파묻힌 채 기울어져 시작한다.** 그 에피소드는 **정책 실력과 무관하게 0m 로 기록된다.**
+→ 평가에서는 `max_init_terrain_level` 을 **고정한다**(`--level`). 평가의 생명은 일관성이다.
+
+### 진단 코드 자신의 버그도 하나 잡았다
+
+관측 인덱스를 `6:9` 가 명령이라고 가정했는데 **거기는 `projected_gravity`** 였다.
+정확한 배치:
+
+```
+0:3    base_lin_vel        3:6    base_ang_vel
+6:9    projected_gravity   9:12   velocity_commands   ← 명령은 여기
+12:24  joint_pos          24:36   joint_vel
+36:48  actions            48:235  height_scan (187)
+```
+
+**`height_scan` 187 의 정체** (`velocity_env_cfg.py:66`):
+```
+격자 1.6m × 1.0m · 해상도 0.1m → x축 17점 × y축 11점 = 187점
+몸통 20m 위에서 아래로 광선을 쏴 지면까지 거리를 잰다 (ray_alignment="yaw")
+관측에 넣을 때 ±0.1m 노이즈 + (-1,1) clip
+```
 
 ---
 
