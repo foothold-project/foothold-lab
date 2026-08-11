@@ -1,0 +1,123 @@
+# 마감(end date)이 지났는데 아직 안 닫힌 이슈를 매일 알린다.
+#
+#   왜 필요한가: 계획을 넣어두기만 하면 아무도 안 본다. 지난 것을 매일 이름과 함께
+#   불러줘야 계획이 살아있는 약속이 된다.
+#
+#   보내는 규칙
+#     · 지난 것이 없으면 아무 말도 하지 않는다. 매일 "이상 없음"을 보내면 곧 아무도 안 본다.
+#     · 오늘이 마감인 것은 예고로 함께 알린다(지나기 전에 손 쓸 수 있게).
+#     · 담당자를 함께 적는다. 누구의 일인지 모르면 알림은 소음이 된다.
+#
+# 필요: PROJECT_TOKEN, DISCORD_WEBHOOK
+name: 마감 알림
+
+on:
+  schedule:
+    - cron: "0 0 * * 1-5"      # 평일 09:00 KST (UTC 00:00)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 지난 마감 찾기
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ORG: foothold-project
+          PROJECT_NUMBER: "1"
+        run: |
+          set -euo pipefail
+          gh api graphql -f query='
+            query($org:String!, $num:Int!){
+              organization(login:$org){
+                projectV2(number:$num){
+                  items(first:100){
+                    nodes{
+                      content{
+                        ... on Issue {
+                          number title url state
+                          repository{ name }
+                          assignees(first:5){ nodes{ login } }
+                        }
+                      }
+                      fieldValues(first:20){
+                        nodes{
+                          ... on ProjectV2ItemFieldDateValue {
+                            date field{ ... on ProjectV2FieldCommon { name } } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f org="$ORG" -F num="$PROJECT_NUMBER" > board.json
+
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import datetime, io, json, os
+
+          board = json.load(io.open('board.json', encoding='utf-8'))
+          nodes = board['data']['organization']['projectV2']['items']['nodes']
+          today = datetime.date.today()
+
+          over, due = [], []
+          for n in nodes:
+              c = n.get('content') or {}
+              if not c.get('number') or c.get('state') != 'OPEN':
+                  continue
+              end = None
+              for fv in (n.get('fieldValues') or {}).get('nodes', []):
+                  name = ((fv.get('field') or {}).get('name') or '').lower()
+                  if name == 'end date' and fv.get('date'):
+                      end = datetime.date.fromisoformat(fv['date'])
+              if not end:
+                  continue
+              who = ', '.join(a['login'] for a in (c.get('assignees') or {}).get('nodes', [])) or '담당자 없음'
+              row = (end, c['number'], c['title'][:60], c['url'], who,
+                     (c.get('repository') or {}).get('name', ''))
+              if end < today:
+                  over.append(row)
+              elif end == today:
+                  due.append(row)
+
+          if not over and not due:
+              print('skip=1')
+              raise SystemExit
+
+          lines = []
+          for end, num, title, url, who, repo in sorted(over):
+              lines.append('🔴 **%d일 지남** · [#%d %s](%s) · %s'
+                           % ((today - end).days, num, title, url, who))
+          for end, num, title, url, who, repo in sorted(due):
+              lines.append('🟡 **오늘 마감** · [#%d %s](%s) · %s' % (num, title, url, who))
+
+          body = '\n'.join(lines[:15])
+          if len(lines) > 15:
+              body += '\n…외 %d건' % (len(lines) - 15)
+
+          print('skip=0')
+          print('count=%d' % len(lines))
+          print('body<<ZEOF')
+          print(body)
+          print('ZEOF')
+          PY
+          rm -f board.json
+
+      - name: 보내기
+        if: steps.find.outputs.skip == '0'
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          BODY: ${{ steps.find.outputs.body }}
+          COUNT: ${{ steps.find.outputs.count }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOOK:-}" ]; then echo "시크릿 DISCORD_WEBHOOK 없음"; exit 1; fi
+          CODE=$(jq -n --arg t "마감 확인 필요 ${COUNT}건" --arg d "$BODY" \
+                   '{embeds:[{title:$t, description:$d, color:10761252}]}' \
+                 | curl -sS -o /dev/null -w '%{http_code}' -X POST \
+                        -H "Content-Type: application/json" -d @- "$HOOK")
+          echo "HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패"; exit 1 ;; esac
