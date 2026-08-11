@@ -1,6 +1,6 @@
 {
  "project": "FOOTHOLD",
- "generatedAt": "2026-08-11T15:21Z",
+ "generatedAt": "2026-08-11T15:22Z",
  "count": 26,
  "items": [
   {
@@ -424,8 +424,8 @@
    "repo": "foothold-lab",
    "title": "[테스트] 루프 차단 후 sub-issue 재검증",
    "url": "https://github.com/foothold-project/foothold-lab/issues/24",
-   "state": "OPEN",
-   "closedAt": "",
+   "state": "CLOSED",
+   "closedAt": "2026-08-11",
    "assignees": [
     "vfxpedia"
    ],
@@ -433,8 +433,8 @@
    "parent": "[단계] ② 터 다지기 — 환경·기준선",
    "start": "2026-08-11",
    "end": "2026-08-18",
-   "done": null,
-   "status": "Todo"
+   "done": "2026-08-11",
+   "status": "Done"
   },
   {
    "number": 25,
