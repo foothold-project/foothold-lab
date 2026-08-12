@@ -1,5 +1,6 @@
 # 클라우드 GPU에서 Isaac Sim 돌리기: 가능성 조사
 
+> 요지: 클라우드에서 Isaac Sim 은 가능하나 GPU 를 가려 받아야 하며, 성공 사례가 명시된 조합만 신뢰한다.
 > 작성 2026-08-08 · 방법: NVIDIA 공식 문서·포럼·NGC 카탈로그·GitHub 이슈 직접 확인 · 상태: **코덱스 교차검증 대기**
 > 배경: 팀원 4명 노트북에 RTX 없음(GTX 1650 Ti / RTX 30 구형) → 로컬 실행 불가. **RunPod 시도했으나 실패** 보고를 받아 원인 조사.
 > 연결: [[SETUP_GUIDE]] · [[TEAM_ACCESS]] · [[mvp-install-log]]

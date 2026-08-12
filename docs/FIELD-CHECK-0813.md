@@ -170,22 +170,22 @@ ros2 topic echo /lowstate --once      # imu_state · motor_state · foot_force
 ## 부록: 현장에서 바로 쓸 명령 모음
 
 ```bash
-# ── 보드 사양 ──
+# -- 보드 사양 --
 cat /etc/nv_tegra_release          # JetPack / L4T 버전
 free -h                            # 메모리
 df -h                              # 저장공간
 nvidia-smi 2>/dev/null || tegrastats --interval 1000   # GPU
 
-# ── ROS2 환경 ──
+# -- ROS2 환경 --
 ls /opt/ros/                       # 설치된 배포판
 echo $ROS_DISTRO $RMW_IMPLEMENTATION $ROS_DOMAIN_ID
 ros2 topic list                    # 토픽 전수
 
-# ── 관측 확인 ──
+# -- 관측 확인 --
 ros2 topic echo /lowstate --once
 ros2 topic hz /utlidar/height_map_array
 
-# ── 네트워크 (CycloneDDS 바인딩용) ──
+# -- 네트워크 (CycloneDDS 바인딩용) --
 ip -br addr                        # NIC 이름·주소
 ```
 
