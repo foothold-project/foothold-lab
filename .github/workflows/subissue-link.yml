@@ -84,9 +84,28 @@ jobs:
               printf '보드:  https://github.com/orgs/foothold-project/projects/1\n\n'
               printf '(이 부모는 해당 단계의 첫 이슈가 올라올 때 자동으로 만들어졌습니다.)\n'
             } > parent-body.md
-            PARENT=$(gh issue create --repo "$PARENT_REPO" --title "$PARENT_TITLE" \
+            NEW=$(gh issue create --repo "$PARENT_REPO" --title "$PARENT_TITLE" \
               --body-file parent-body.md | grep -oE '[0-9]+$')
-            echo "부모 #$PARENT 생성"
+            echo "부모 #$NEW 생성"
+
+            # 경합 정리: 두 저장소의 이슈가 동시에 올라오면 양쪽 워크플로가 각각
+            # "부모 없음" 을 보고 부모를 하나씩 만든다(2026-08-12 실측). 만든 뒤 다시 세어
+            # 같은 제목이 여럿이면 가장 작은 번호만 남기고 내가 만든 것을 지운다.
+            sleep 5
+            PARENT=$(gh issue list --repo "$PARENT_REPO" --state all --limit 100 \
+                       --search "\"$PARENT_TITLE\" in:title" --json number,title \
+                     --jq "[.[] | select(.title == \"$PARENT_TITLE\") | .number] | min // \"\"")
+            if [ "$PARENT" != "$NEW" ]; then
+              echo "동시에 만들어진 부모 발견. #$NEW 를 지우고 #$PARENT 로 모은다"
+              DUP_ID=$(gh api graphql -f query='
+                query($owner:String!,$name:String!,$num:Int!){
+                  repository(owner:$owner,name:$name){ issue(number:$num){ id } } }' \
+                -f owner="${PARENT_REPO%%/*}" -f name="${PARENT_REPO##*/}" -F num="$NEW" \
+                --jq '.data.repository.issue.id')
+              gh api graphql -f query='
+                mutation($id:ID!){ deleteIssue(input:{issueId:$id}){ clientMutationId } }' \
+                -f id="$DUP_ID" >/dev/null || echo "중복 삭제 실패(권한). 사람이 정리 필요"
+            fi
           fi
 
           PARENT_ID=$(gh api graphql -f query='
