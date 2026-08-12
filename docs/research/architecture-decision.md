@@ -1,4 +1,4 @@
-# 시스템 아키텍처 결정 — Isaac Sim + ROS2 + 실기 Go2
+# 시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2
 
 > 작성 2026-08-09 · 워크스테이션 세션
 > **이 문서는 "무엇을 어디에 설치할 것인가"의 결정 근거다.** 결론만 보려면 §5.
@@ -16,20 +16,20 @@ Isaac Sim은 **Python 3.11**로 만들어졌고, ROS2 Humble은 **Python 3.10**�
 
 ## 1. 1차 결론과 그 오류
 
-### 1차 결론 (2026-08-09 오후) — **폐기**
+### 1차 결론 (2026-08-09 오후): **폐기**
 
 > Ubuntu 22.04 한 대에 ROS2 Humble 네이티브 + Isaac Sim 네이티브를 함께 설치.
-> 규칙은 하나 — Isaac Sim을 실행하는 셸에서 Humble을 `source`하지 않는다.
+> 규칙은 하나. Isaac Sim을 실행하는 셸에서 Humble을 `source`하지 않는다.
 
 근거로 든 것 3개:
 
 | # | 근거 | 재검증 결과 |
 |---|---|---|
-| ① | NVIDIA 공식 문서가 이 구성을 기본 워크플로로 기술 | **부분확인** — 5.x 한정. 4.x는 정반대("source하고 실행하라"), 6.x는 또 다름 |
-| ② | Isaac Lab 공식 `Dockerfile.ros2`가 한 컨테이너에 둘을 함께 설치 | ❌ **자기부정** — 아래 참조 |
-| ③ | DDS가 파이썬 버전과 무관하게 통신 처리 | **부분확인** — 참이지만 논점 회피 |
+| ① | NVIDIA 공식 문서가 이 구성을 기본 워크플로로 기술 | **부분확인**: 5.x 한정. 4.x는 정반대("source하고 실행하라"), 6.x는 또 다름 |
+| ② | Isaac Lab 공식 `Dockerfile.ros2`가 한 컨테이너에 둘을 함께 설치 | ❌ **자기부정**: 아래 참조 |
+| ③ | DDS가 파이썬 버전과 무관하게 통신 처리 | **부분확인**: 참이지만 논점 회피 |
 
-### ② 가 왜 자기부정인가 — 이것이 결정적이다
+### ② 가 왜 자기부정인가: 이것이 결정적이다
 
 `Dockerfile.ros2`를 실제로 열어보면, Isaac Sim + Humble을 함께 깔면서
 **`.bashrc`에 `source /opt/ros/humble/setup.bash`를 넣는다.**
@@ -43,7 +43,7 @@ Isaac Sim은 **Python 3.11**로 만들어졌고, ROS2 Humble은 **Python 3.10**�
 ### ③ 이 왜 논점 회피인가
 
 DDS가 파이썬 버전과 무관한 것은 **프로세스 *사이*의 통신**에 대해서만 참이다.
-실제 사고는 **프로세스 *내부*의 라이브러리 로딩**에서 난다 —
+실제 사고는 **프로세스 *내부*의 라이브러리 로딩**에서 난다
 py3.10용 `rclpy`를 py3.11 Isaac Sim이 import하면 즉사한다.
 
 실사례: `No module named 'rclpy._rclpy_pybind11'`
@@ -55,17 +55,17 @@ py3.10용 `rclpy`를 py3.11 Isaac Sim이 import하면 즉사한다.
 
 실제로 지켜야 하는 규칙은 최소 **4개**다:
 
-1. `.bashrc` 전역 `source` 금지 — **그런데 이건 ROS2 공식 튜토리얼이 가르치는 표준 관행이다.**
+1. `.bashrc` 전역 `source` 금지. **그런데 이건 ROS2 공식 튜토리얼이 가르치는 표준 관행이다.**
    (https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html)
    팀원 5명 중 1명이라도 습관대로 하면 그 계정의 **모든 셸**(VSCode 터미널 포함)에서 붕괴.
-2. 공식 `ros2 launch isaacsim run_isaacsim.launch.py` 경로 포기 — 이 워크플로는 source된 셸을 전제한다.
+2. 공식 `ros2 launch isaacsim run_isaacsim.launch.py` 경로 포기: 이 워크플로는 source된 셸을 전제한다.
 3. 커스텀 메시지(`unitree_go` 등) 워크스페이스를 **py3.10(로봇용) / py3.11(심 내부용) 두 벌** 유지.
 4. `RMW_IMPLEMENTATION` · `ROS_DOMAIN_ID` · FastRTPS 프로파일을 팀 전체가 통일.
 
 > **사람이 4개월간 4개 규칙을 5명 전원이 지켜야 성립하는 아키텍처는 취약하다.**
 
 ### 규칙이 깨졌을 때의 실제 사고 기록
-- 심볼 충돌 크래시 `undefined symbol` — NVIDIA 모더레이터가 "source가 원인"으로 진단
+- 심볼 충돌 크래시 `undefined symbol`: NVIDIA 모더레이터가 "source가 원인"으로 진단
   (https://forums.developer.nvidia.com/t/undefined-symbol-error-occured-while-importing-tf2-ros-packages-in-isaac-sim-2022-2-0/242832)
 - **역방향 누출**: Isaac Sim 내부 lib 경로를 `.bashrc`에 넣으면 rviz2 등 ROS2 도구가 깨진다
   (https://www.stereolabs.com/docs/isaac-sim/ros2_integration)
@@ -103,7 +103,7 @@ NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel 
 > **"팀원 5명이 동시에 시뮬 GUI를 만진다"는 그림은 5.1에서 불가능하다.**
 > 팀 운영 설계를 여기에 맞춰야 한다.
 
-### 3-4. ⚠️ RMW(DDS 벤더) 분열 — **조용한 실패 위험**  `확인됨`
+### 3-4. ⚠️ RMW(DDS 벤더) 분열: **조용한 실패 위험**  `확인됨`
 
 | | 기본 DDS |
 |---|---|
@@ -111,9 +111,9 @@ NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel 
 | `unitree_ros2` (실기 Go2) | **CycloneDDS 0.10.2 + NIC 바인딩 강제** |
 
 **서로 다른 DDS 벤더는 상호 통신이 안 되고, 에러도 안 낸다.** 토픽이 그냥 0개가 된다.
-(커널 원칙 2 — 조용한 실패를 소리 나게 만들 것)
+(커널 원칙 2: 조용한 실패를 소리 나게 만들 것)
 
-### 3-5. ✅ Ubuntu 22.04 + Humble 선택은 **유지가 맞다** — 단 이유가 다르다  `확인됨`
+### 3-5. ✅ Ubuntu 22.04 + Humble 선택은 **유지가 맞다**. 단 이유가 다르다  `확인됨`
 
 `unitree_ros2` README: *"Ubuntu 22.04 - humble (recommend)"*. **Jazzy 미지원.**
 (https://github.com/unitreerobotics/unitree_ros2)
@@ -129,7 +129,7 @@ NVIDIA 1차 문서: *"Blackwell and later are only supported by the open kernel 
 
 ---
 
-## 4. 왜 컨테이너인가 — 5인 공유 관점 (1차 결론에서 통째로 빠졌던 것)
+## 4. 왜 컨테이너인가: 5인 공유 관점 (1차 결론에서 통째로 빠졌던 것)
 
 - 네이티브 apt는 **단일 장애점**이다. 한 명이 `apt upgrade`로 드라이버를 깨면 5명 전원 정지.
 - 컨테이너의 학습 성능 페널티는 NVIDIA 공식 표현으로 **"negligible"**.
@@ -194,7 +194,7 @@ DDS 벤더 간 비상호운용은 **에러도 안 낸다.**
 ## 8. 열려 있는 질문 (Human 결정 필요)
 
 1. **듀얼 5080 워크스테이션의 apt/드라이버를 만질 사람을 1명으로 고정할 수 있는가?**
-2. **실기 Go2는 언제부터 팀 수중에 있는가?** — 9월 E2E 스모크가 물리적으로 가능한 일정인가?
+2. **실기 Go2는 언제부터 팀 수중에 있는가?**: 9월 E2E 스모크가 물리적으로 가능한 일정인가?
 
 ---
 
