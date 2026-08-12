@@ -1,9 +1,9 @@
-# 이슈를 만들면 "어느 퀘스트의 일인가" 드롭다운을 읽어 그 퀘스트 부모 밑에 매단다.
+# 이슈를 만들면 "어느 갈래의 일인가" 드롭다운을 읽어 그 갈래 부모 밑에 매단다.
 #
-#   왜 «단계» 가 아니라 «퀘스트» 인가:
-#   7단계(땅 보러 가기·터 다지기…)는 설계도가 스스로 «소통용 지도» 라고 밝힌 은유다.
-#   실제 작업 단위는 §3 퀘스트 보드의 13개다. 완료 조건이 숫자나 산출물로 적혀 있어서
-#   부모가 언제 닫히는지가 명확하다. 단계는 퀘스트 이름 옆에 괄호로 남겨 흐름만 보이게 한다.
+#   WBS 1레벨 = 다섯 갈래(평가 체계·험지 환경·정책 학습·실기 전이·운영).
+#   산출물이 실제로 갈라지는 지점만 부모로 둔다. 퀘스트 13개를 부모로 썼더니
+#   부모(16)가 일감(7)보다 많아졌다(2026-08-13 팀장 지적). 퀘스트 번호는
+#   드롭다운 설명·이슈 제목에 남겨 이야기는 유지한다. 시기는 마일스톤이 담당한다.
 #
 #   왜: 이슈가 늘어나면 목록은 평평해지고 "이게 어느 단계 일이었지" 를 아무도 모르게 된다.
 #   GitHub 의 sub-issue 는 부모에 진행률(3/7)을 자동으로 표시해 주므로,
@@ -12,7 +12,7 @@
 #   ★ 부모 이슈는 미리 만들어 두지 않는다. 그 퀘스트의 첫 이슈가 올라올 때 **워크플로가 만든다.**
 #     기획이 확정되기 전에 빈 부모 6개를 세워두면 쓰지도 않는 껍데기가 목록을 차지한다.
 #     (done date 필드를 워크플로가 스스로 만든 것과 같은 방식)
-name: 퀘스트별 sub-issue 연결
+name: 갈래별 sub-issue 연결
 
 on:
   issues:
@@ -30,10 +30,11 @@ jobs:
     #   제목이 점점 길어지다가 256자 제한에 걸려서야 멈췄다. 방어를 두 겹으로 둔다.
     if: >-
       github.actor != 'github-actions[bot]' &&
-      !startsWith(github.event.issue.title, '[Q') &&
-      !startsWith(github.event.issue.title, '[보스전') &&
-      !startsWith(github.event.issue.title, '[현장·장비') &&
-      !startsWith(github.event.issue.title, '[운영')
+      !startsWith(github.event.issue.title, '[평가 체계]') &&
+      !startsWith(github.event.issue.title, '[험지 환경]') &&
+      !startsWith(github.event.issue.title, '[정책 학습]') &&
+      !startsWith(github.event.issue.title, '[실기 전이]') &&
+      !startsWith(github.event.issue.title, '[운영]')
     runs-on: ubuntu-latest
     steps:
       - name: 부모 찾거나 만들어서 매달기
