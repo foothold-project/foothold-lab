@@ -35,6 +35,18 @@ jobs:
           EOF
           echo "이미 있는 로드맵 뷰: ${EXIST:-없음}"
 
+          # 보드가 공개인지 확인한다. 조직 페이지에 안 보인다는 문의가 있었다(2026-08-12).
+          gh api graphql -f query='
+            query($org:String!,$num:Int!){
+              organization(login:$org){ projectV2(number:$num){
+                title url public closed
+                repositories(first:10){ nodes{ name isPrivate } } } } }'             -f org="$ORG" -F num="$PROJECT_NUMBER" --jq '
+              .data.organization.projectV2 |
+              "보드 공개 여부(public): \(.public)   닫힘(closed): \(.closed)",
+              "보드 주소: \(.url)",
+              "연결된 레포: " + ([.repositories.nodes[] | "\(.name)(\(if .isPrivate then "private" else "public" end))"] | join(" · "))'
+
+
           make_view () {
             local NAME="$1"
             case ",${EXIST}," in
