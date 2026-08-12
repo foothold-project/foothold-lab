@@ -40,8 +40,9 @@
 | 출처 | Unitree 공식 Go2 홍보 영상 (`00_reference/unitree-go2-official.mp4`) |
 | 사양 | 1920×1080 · 50fps · 5.4초 |
 
-같은 영상이 Unitree **공식 YouTube 채널**(@unitreerobotics)에 있다. 확인 2026-08-12.
-아래 재생은 우리 서버가 아니라 공식 채널 스트리밍 임베드다.
+아래는 Unitree **공식 YouTube 채널**(@unitreerobotics)의 Go2 소개 영상이다(공식 채널 확인 2026-08-12).
+우리 레퍼런스 클립(계곡 보행)과 같은 제품·같은 촬영 톤이지만 **같은 영상은 아니다**:
+계곡 클립의 공식 채널 게재 여부는 `미확인`. 재생은 우리 서버가 아니라 공식 채널 스트리밍 임베드다.
 
 ![Introducing Unitree Go2 · Unitree Robotics 공식 채널](https://www.youtube.com/watch?v=6zPvT0ig1VM)
 
