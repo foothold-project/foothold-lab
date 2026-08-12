@@ -1,0 +1,103 @@
+# Go2 공개 사전학습 정책 전수 조사: 무엇을 가져다 쓸 수 있나
+
+> 작성 2026-08-12 · 워크스테이션 세션 · 방법: S3 버킷 직접 리스팅 + 체크포인트 바이너리 파싱 + HuggingFace 실제 다운로드·로드 검증
+> 목적: 제로베이스 학습 대신 «잘 학습된 정책»에서 출발하거나 비교 기준으로 삼기 위해, 공개된 Go2 정책을 전부 찾아 **우리 스택(Isaac Lab 2.3.2 + rsl_rl 3.1.2)에 붙는지** 판정한다.
+
+## 결론 세 줄
+
+1. **NVIDIA 공식 체크포인트가 유일하게 «그대로 로드»된다.** 태스크·관측·포맷이 우리와 동일하다. `확인됨`
+2. **RoboGauge 라는 Go2 정책 점수표가 존재한다.** 11종이 서열화되어 공개돼 있다. **NVIDIA 공식은 그 표에 없다**: 우리가 처음 올릴 수 있다. `확인됨`
+3. 점수표의 상위 정책들은 **입력 45차원(실물형 관측)** 이다. 워크스테이션에서 직접 받아 로드해 확인했다. 즉 그들은 우리 Teacher 가 아니라 **우리 Student 의 비교 대상**이다. `확인됨`
+
+---
+
+## 1. NVIDIA 공식 체크포인트의 실체
+
+`--use_pretrained_checkpoint` 가 받아오는 파일을 바이너리로 뜯어 확인했다.
+
+| 항목 | 값 | 신뢰도 |
+|---|---|---|
+| 내려받는 곳 | `omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/{버전}/Isaac/IsaacLab/PretrainedCheckpoints/rsl_rl/{태스크}/checkpoint.pt` | `확인됨` (S3 리스팅) |
+| 학습량 | rough = **1,500 iteration** (`model_1499`) · flat = 300 | `확인됨` (pickle 구조 파싱) |
+| 포맷 | `{model_state_dict, optimizer_state_dict, iter, infos}` : **rsl_rl 표준 저장 포맷** | `확인됨` |
+| 관측 | rough **235차원** (base_lin_vel 3 + height_scan 187 포함) · flat 48 | `확인됨` |
+| 네트워크 | rough 512·256·128 · ELU | `확인됨` |
+| 공개 성능 수치 | **없다.** 문서에도 없다 | `확인됨` (부재 확인) |
+| 실물 배포 검증 | 공개 사례 없음 | `확인됨` (부재 확인) |
+| 자산 라이선스 | **문서를 찾지 못함.** 재배포·상업 조건 불명 | `미확인` |
+
+> **rsl_rl 표준 포맷이란**: rsl_rl 의 `OnPolicyRunner.save()` 가 쓰는 딕셔너리 구조다.
+> 같은 포맷이면 `runner.load()` 한 줄로 이어서 학습(fine-tune)할 수 있다.
+
+## 2. RoboGauge: 유일하게 확인된 Go2 정책 서열표
+
+[RoboGauge](https://github.com/wty-yy/RoboGauge) (MIT · RSS 2026 논문 부속) 는 보행 정책을 세 지표로 채점한다.
+
+| 지표 | 무엇을 재나 |
+|---|---|
+| **Tracking** | 가라는 대로 가나: 명령 속도와 실제 속도의 일치 |
+| **Safety** | 안 넘어지나: 전복·몸통 접촉 |
+| **Quality** | 보기 좋게 걷나: 떨림·부자연스러움 |
+
+공개 서열 (모두 [wty-yy/go2_rl_gym_data](https://huggingface.co/wty-yy/go2_rl_gym_data), MIT):
+
+| 정책 | Score | 정체 |
+|---|---|---|
+| **symmetry_v1_77k** | **0.7006** | 논문 저자들의 최고 성능 (77k 스텝 학습) |
+| moe_cts 137k | 0.6713 | MoE 변형 |
+| CTS | 0.5786 | CTS 논문 재구현 |
+| **HIMLoco 재구현** | 0.5379 | ICLR'24 방법 (원저자 가중치 비공개) |
+| **DreamWaQ 재구현** | 0.5054 | ICRA'23 방법 (원저자 코드 자체가 없음) |
+
+## 3. ★ 워크스테이션 실측: 실제로 받아서 로드해 봤다 (2026-08-12)
+
+조사 요약을 옮겨 적지 않고 직접 검증했다. `C:\isaac\checkpoints\robogauge\` 에 보관.
+
+| 정책 | 로드 | **입력 차원** | 출력 |
+|---|---|---|---|
+| symmetry (moe_cts_symmetry v5.1, 0.6953) | ✅ TorchScript | **45** | 12 (관절) |
+| HIMLoco 재구현 (0.5379) | ✅ TorchScript | **45** | 12 |
+| CTS vanilla (0.5786) | ✅ 로드는 됨 | 45~320 단일 텐서로는 실행 안 됨 | `미확인` (히스토리 등 복합 입력 추정) |
+| DreamWaQ 재구현 | 저장소에서 그 이름의 policy.pt 를 못 찾음 | - | `미확인` |
+
+### 이 실측이 바꾸는 것
+
+> **입력 45 = base_ang_vel 3 + gravity 3 + cmd 3 + q 12 + dq 12 + action 12.**
+> **height_scan 이 없고 base_lin_vel 도 없다. 실물에서 그대로 돌 수 있는 관측이다.**
+
+따라서 역할이 정리된다.
+
+| 역할 | 무엇 | 왜 |
+|---|---|---|
+| **fine-tune 출발점** | NVIDIA 공식 rough (235차원) | 우리 스택과 동일. 한 줄로 로드 |
+| **Teacher (증류의 선생)** | NVIDIA 공식 rough | 특권 관측을 보는 유일한 공개 정책 |
+| **Student 의 비교 기준** | symmetry · HIM (45차원) | **우리 Student 와 같은 관측 체급.** 같은 평가로 붙일 수 있다 |
+| 실기 배포 스택 | [unitree_rl_lab](https://github.com/unitreerobotics/unitree_rl_lab) (Apache-2.0, 가중치 없음) | Isaac Lab 기반 + 실기 C++ FSM |
+
+### 남은 확인
+
+- symmetry·HIM 45차원의 **정확한 항목 순서와 스케일**: 우리 평가 파이프라인에 붙이려면 매핑 표가 필요하다. `미확인`
+- CTS 의 입력 구조 (히스토리 길이 포함 여부). `미확인`
+- DreamWaQ 파일의 실제 경로. `미확인`
+
+## 4. 다른 후보들 (요약)
+
+| 저장소 | Go2 가중치 | 비고 |
+|---|---|---|
+| unitree_rl_gym (공식) | **없음** (g1/h1 만) | BSD-3 |
+| unitree_rl_lab (공식) | **없음** (코드만) | Apache-2.0 · 실기 배포 포함 · **코드 호환 최상** |
+| walk-these-ways-go2 (615★) | 있음 (MIT) | 커스텀 rsl_rl 포크 · 이식하려면 전면 재작성 |
+| HIMLoco 원본 | 없음 | CC-BY-NC (상업 불가) |
+| 파쿠르 계열 | Go1 만 / depth 카메라 필수 | 우리 범위 밖 |
+
+## 5. 이것이 프로젝트에 주는 것
+
+1. **작업 3(평가)의 성공 기준을 발명할 필요가 없다**: RoboGauge 의 Tracking·Safety·Quality 방법론을 참조한다.
+2. **«NVIDIA 공식 체크포인트를 점수표에 처음 올린 팀»** 이 될 수 있다: 검증 가능하고 남이 인용할 수 있는 기여다.
+3. 우리 Student 가 완성되면 **symmetry(0.7006)와 같은 체급에서 정면 비교**할 수 있다.
+
+## 연결
+
+- 평가 기준선 (1,500회 86.7%) → [training-benchmarks.md](training-benchmarks.md)
+- 관측 매핑과 실물 제약 → 볼트 go2-hardware.md §4
+- 프로젝트 흐름에서의 위치 → [FLOW.md](../FLOW.md) §3 (증류)
