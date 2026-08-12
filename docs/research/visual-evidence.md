@@ -218,6 +218,26 @@ warehouse는 원점에 넓은 바닥이 있어 우연히 됐고, office는 원�
 
 ---
 
+## 04-2. 평가에서 «걷지 못하는 정책»은 어떻게 보이는가
+
+![300 iteration 정책 — 전진 명령 고정](../assets/visual/07_eval_300iter_frozen.png)
+
+300 iteration 정책에 **전진 1.0 m/s 를 고정**으로 주고 20초를 재생한 것이다.
+**다리를 벌리고 몸을 낮춘 자세로 버티기만 한다.** 20초에 **0.56 m** 밖에 못 갔다.
+
+![300 iteration 정책 — 기본 랜덤 명령](../assets/visual/08_eval_300iter_random.png)
+
+같은 정책에 **기본 랜덤 명령**을 준 것. 같은 웅크린 자세지만 명령이 계속 바뀌니
+조금씩 밀려 나가 **4.81 m** 를 간다.
+
+> ### ★ 이 두 장이 말하는 것
+> 이 정책의 **보상은 13.94** 였다. 학습 로그만 봤다면 «잘 되고 있다»고 보고했을 것이다.
+> **영상을 보고서야 걷지 못한다는 것을 알았다.** 실제 통과율은 **0%** 였다.
+> 같은 조건에서 1,500 iteration 정책은 **86.7%** 를 낸다 →
+> [training-benchmarks.md](training-benchmarks.html)
+
+---
+
 ## 05. ★ 학습 곡선 읽는 법 — TensorBoard 를 대신하는 그림
 
 ![curves](../assets/visual/13_learning_curves_annotated.png)
