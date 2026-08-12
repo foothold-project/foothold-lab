@@ -1,0 +1,200 @@
+====================================================================================================
+### symmetry_v5.1 (robotlab)
+    C:\isaac\checkpoints\robogauge\go2_rl_robotlab\go2_moe_cts_symmetry_v5.1_52k_0.6953_20260703\exported\policy.pt
+has reset(): True
+named_buffers: {'obs_history': (1, 450)}
+num params tensors: 24; first: ('actor.network.0.weight', (512, 77)); last: ('student_moe_encoder.moe.gating_network.0.network.6.bias', (8,))
+m.history attribute: <none>
+--- forward code ---
+def forward(self,
+    single_obs: Tensor) -> Tensor:
+  _0 = "Expected single_obs last dimension {}, got {}."
+  _1 = "TorchScript CTS deployment currently supports batch size 1 only."
+  if torch.eq(torch.dim(single_obs), 1):
+    single_obs0 = torch.unsqueeze(single_obs, 0)
+  else:
+    single_obs0 = single_obs
+  _2 = (torch.size(single_obs0))[-1]
+  num_single_obs = self.num_single_obs
+  if torch.ne(_2, num_single_obs):
+    num_single_obs0 = self.num_single_obs
+    _3 = torch.format(_0, num_single_obs0, (torch.size(single_obs0))[-1])
+    ops.prim.RaiseException(_3, "builtins.ValueError")
+  else:
+    pass
+  _4 = torch.ne((torch.size(single_obs0))[0], 1)
+  if _4:
+    ops.prim.RaiseException(_1, "builtins.ValueError")
+  else:
+    pass
+  obs_history = self.obs_history
+  next_history = torch.clone(obs_history)
+  feature_dims = self.feature_dims
+  history_offset = 0
+  single_offset = 0
+  for _5 in range(torch.len(feature_dims)):
+    dim = feature_dims[_5]
+    history_len = self.history_len
+    block_size = torch.mul(dim, history_len)
+    block_end = torch.add(history_offset, block_size)
+    single_end = torch.add(single_offset, dim)
+    obs_history0 = self.obs_history
+    block = torch.slice(torch.slice(obs_history0), 1, history_offset, block_end)
+    _6 = torch.slice(torch.slice(block), 1, dim)
+    _7 = torch.slice(torch.slice(single_obs0), 1, single_offset, single_end)
+    shifted_block = torch.cat([_6, _7], -1)
+    _8 = torch.slice(torch.slice(next_history), 1, history_offset, bloc
+[A] 1-D zeros(45): OK, output tensor, action shape (1, 12)
+[B] [1,45] zeros: OK, output tensor, action shape (1, 12)
+    action = [-0.387, -0.660, +0.537, +0.361, -0.603, +0.438, -0.151, -0.656, +0.045, +0.152, -0.645, +0.019]
+    target_dof_pos = action*0.25+default = [ 0.003  0.635 -1.366 -0.01   0.649 -1.391  0.062  0.836 -1.489 -0.062
+  0.839 -1.495]
+    |action|_max = 0.660
+[C] standing obs (gravity=(0,0,-1)) x10 steps:
+    step0 action = [-0.525 -0.52   0.607  0.505 -0.509  0.574 -0.209 -0.611  0.338  0.191
+ -0.595  0.329]
+    step9 action = [-0.526 -0.489  0.597  0.51  -0.488  0.606 -0.209 -0.588  0.344  0.202
+ -0.586  0.36 ]
+    step9 |action|_max = 0.606
+    step9 target_dof_pos = [-0.031  0.678 -1.351  0.027  0.678 -1.348  0.048  0.853 -1.414 -0.05
+  0.854 -1.41 ]
+    step9 target-default (rad) = [-0.131 -0.122  0.149  0.127 -0.122  0.152 -0.052 -0.147  0.086  0.05
+ -0.146  0.09 ]
+    converged: |a9-a8|_max = 0.00384
+[D] gravity flip (0,0,-1)->(0,0,+1): |da|_max = 0.644 (expect large if slot 3:6 is gravity)
+[E] [2,45] zeros: FAIL -> Error: The following operation failed in the TorchScript interpreter.
+====================================================================================================
+### HIM (go2_him_21k)
+    C:\isaac\checkpoints\robogauge\go2_him_21k_0.5379.pt
+has reset(): True
+named_buffers: {}
+num params tensors: 21; first: ('estimator.encoder.0.weight', (128, 270)); last: ('actor.6.bias', (12,))
+m.history attribute shape: (1, 6, 45)
+--- forward code ---
+def forward(self,
+    x: Tensor) -> Tensor:
+  normalizer = self.normalizer
+  x0 = (normalizer).forward(x, )
+  _0 = torch.unsqueeze(x0, 1)
+  history = self.history
+  _1 = torch.slice(torch.slice(history), 1, None, -1)
+  self.history = torch.cat([_0, _1], 1)
+  history0 = self.history
+  obs_history = torch.flatten(history0, 1)
+  estimator = self.estimator
+  vel, latent, = (estimator).forward(obs_history, )
+  actor_input = torch.cat([x0, vel, latent], -1)
+  actor = self.actor
+  return (actor).forward(actor_input, )
+
+[A] 1-D zeros(45): FAIL -> RuntimeError: The following operation failed in the TorchScript interpreter.
+[B] [1,45] zeros: OK, output tensor, action shape (1, 12)
+    action = [-0.276, -0.736, +1.325, +0.549, -0.756, +1.014, -0.392, -0.598, +0.868, +0.500, -0.427, +0.296]
+    target_dof_pos = action*0.25+default = [ 0.031  0.616 -1.169  0.037  0.611 -1.246  0.002  0.85  -1.283  0.025
+  0.893 -1.426]
+    |action|_max = 1.325
+[C] standing obs (gravity=(0,0,-1)) x10 steps:
+    step0 action = [-0.767 -0.858  1.447  0.78  -0.494  0.975 -0.557 -0.67   0.755  0.811
+ -0.79   0.898]
+    step9 action = [-0.76  -0.496  1.076  0.654 -0.346  0.879 -0.556 -0.467  0.624  0.778
+ -0.614  0.847]
+    step9 |action|_max = 1.076
+    step9 target_dof_pos = [-0.09   0.676 -1.231  0.063  0.714 -1.28  -0.039  0.883 -1.344  0.095
+  0.847 -1.288]
+    step9 target-default (rad) = [-0.19  -0.124  0.269  0.163 -0.086  0.22  -0.139 -0.117  0.156  0.195
+ -0.153  0.212]
+    converged: |a9-a8|_max = 0.00000
+[D] gravity flip (0,0,-1)->(0,0,+1): |da|_max = 1.244 (expect large if slot 3:6 is gravity)
+[E] [2,45] zeros: FAIL -> RuntimeError: The following operation failed in the TorchScript interpreter.
+====================================================================================================
+### CTS vanilla2
+    C:\isaac\checkpoints\robogauge\go2_cts_vanilla2_103.5k_0.5786\policy.pt
+has reset(): True
+named_buffers: {}
+num params tensors: 14; first: ('student_encoder.0.weight', (512, 225)); last: ('actor.6.bias', (12,))
+m.history attribute shape: (1, 5, 45)
+--- forward code ---
+def forward(self,
+    x: Tensor) -> Tuple[Tensor, Tuple[NoneType, Tensor]]:
+  normalizer = self.normalizer
+  x0 = (normalizer).forward(x, )
+  history = self.history
+  _0 = torch.slice(torch.slice(history), 1, 1)
+  _1 = torch.cat([_0, torch.unsqueeze(x0, 1)], 1)
+  self.history = _1
+  student_encoder = self.student_encoder
+  history0 = self.history
+  latent = (student_encoder).forward(torch.flatten(history0, 1), )
+  x1 = torch.cat([latent, x0], 1)
+  actor = self.actor
+  _2 = ((actor).forward(x1, ), (None, latent))
+  return _2
+
+[A] 1-D zeros(45): FAIL -> RuntimeError: The following operation failed in the TorchScript interpreter.
+[B] [1,45] zeros: OK, output tuple(len=2, extras=tuple), action shape (1, 12)
+    action = [+0.390, -0.040, -0.173, -0.148, -0.528, +0.275, -0.352, -0.132, +0.450, +0.063, -0.176, +0.746]
+    target_dof_pos = action*0.25+default = [ 0.197  0.79  -1.543 -0.137  0.668 -1.431  0.012  0.967 -1.388 -0.084
+  0.956 -1.314]
+    |action|_max = 0.746
+[C] standing obs (gravity=(0,0,-1)) x10 steps:
+    step0 action = [ 0.108 -0.168  0.296  0.045 -0.138  0.312 -0.351 -0.446  0.54   0.222
+ -0.374  0.893]
+    step9 action = [-0.816 -0.179  1.191  0.512 -0.269  0.718 -0.19  -0.826  0.376  1.065
+ -0.6    0.882]
+    step9 |action|_max = 1.191
+    step9 target_dof_pos = [-0.104  0.755 -1.202  0.028  0.733 -1.32   0.052  0.794 -1.406  0.166
+  0.85  -1.28 ]
+    step9 target-default (rad) = [-0.204 -0.045  0.298  0.128 -0.067  0.18  -0.048 -0.206  0.094  0.266
+ -0.15   0.22 ]
+    converged: |a9-a8|_max = 0.00000
+[D] gravity flip (0,0,-1)->(0,0,+1): |da|_max = 1.128 (expect large if slot 3:6 is gravity)
+[E] [2,45] zeros: FAIL -> RuntimeError: The following operation failed in the TorchScript interpreter.
+====================================================================================================
+done
+### symmetry v5.1 attributes
+  num_single_obs = 45
+  history_len = 10
+  feature_dims = [3, 3, 3, 12, 12, 12]
+  actor.network.0.weight = (512, 77)
+  student_moe_encoder.moe.experts.backbone.network.0.weight = (512, 450)
+  student_moe_encoder.moe.experts.backbone.network.0.bias = (512,)
+  student_moe_encoder.moe.experts.backbone.network.2.weight = (256, 512)
+  student_moe_encoder.moe.experts.backbone.network.2.bias = (256,)
+
+### HIM dims
+  estimator.encoder.0.weight = (128, 270)
+  estimator.target.0.weight = (128, 45)
+  actor.0.weight = (512, 64)
+  actor.2.weight = (256, 512)
+  actor.4.weight = (128, 256)
+  actor.6.weight = (12, 128)
+
+### DreamWaQ (go2_dwaq_119.5k_0.5054.pt) load & known-answer test
+  has reset(): True
+  history shape: (1, 6, 45)
+  estimator.encoder.0.weight = (128, 270)
+  estimator.decoder.0.weight = (64, 16)
+  actor.0.weight = (512, 64)
+  --- forward code ---
+def forward(self,
+    x: Tensor) -> Tensor:
+  normalizer = self.normalizer
+  x0 = (normalizer).forward(x, )
+  _0 = torch.unsqueeze(x0, 1)
+  history = self.history
+  _1 = torch.slice(torch.slice(history), 1, None, -1)
+  self.history = torch.cat([_0, _1], 1)
+  history0 = self.history
+  obs_history = torch.flatten(history0, 1)
+  estimator = self.estimator
+  vel, latent, = (estimator).forward(obs_history, )
+  actor_input = torch.cat([x0, vel, latent], -1)
+  actor = self.actor
+  return (actor).forward(actor_input, )
+
+  [1,45] zeros -> output tensor, action (1, 12)
+  standing obs x10: step9 action = [-0.942 -0.619  1.562  0.645 -0.577  1.237 -0.454 -0.78   0.561  0.597
+ -0.863  1.106]
+  step9 target-default = [-0.236 -0.155  0.391  0.161 -0.144  0.309 -0.113 -0.195  0.14   0.149
+ -0.216  0.277]
+  converged |a9-a8|_max = 0.00000

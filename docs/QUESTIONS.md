@@ -33,6 +33,7 @@
 | 보상이 높은데 왜 못 걷는 경우가 있나 | [시각 증거 §04-2](research-visual-evidence.html) |
 | 걷는 모습을 영상으로 보고 싶다 | [시각 증거](research-visual-evidence.html) (페이지에서 바로 재생) |
 | 남들(공개 정책)은 얼마나 잘 걷나 | [Go2 공개 정책 조사](research-go2-pretrained-policies.html) |
+| 공개 정책을 우리 시뮬에서 돌리려면 뭘 맞춰야 하나 | [RoboGauge 관측 매핑](research-robogauge-observation-mapping.html) |
 
 ## 렌더·영상이 궁금할 때
 
