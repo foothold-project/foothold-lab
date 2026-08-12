@@ -40,9 +40,15 @@
 | 출처 | Unitree 공식 Go2 홍보 영상 (`00_reference/unitree-go2-official.mp4`) |
 | 사양 | 1920×1080 · 50fps · 5.4초 |
 
-> ⚠️ **이 영상은 재생 임베드를 하지 않는다.** 원본이 Unitree 의 저작물(홍보 영상)이라
-> 공개 페이지에 호스팅하면 저작권 문제가 된다. 위 프레임 인용(비교·연구 목적)까지만 싣는다.
-> 원본은 팀 내부 참고용으로만: NAS `media/reference/` (팀 채널 안내 참조).
+같은 영상이 Unitree **공식 YouTube 채널**(@unitreerobotics)에 있다. 확인 2026-08-12.
+아래 재생은 우리 서버가 아니라 공식 채널 스트리밍 임베드다.
+
+![Introducing Unitree Go2 · Unitree Robotics 공식 채널](https://www.youtube.com/watch?v=6zPvT0ig1VM)
+
+> ⚠️ **영상 파일을 우리 서버에 재호스팅하지 않는다.** 원본이 Unitree 의 저작물(홍보 영상)이라
+> 공개 페이지에 파일로 올리면 저작권 문제가 된다. 프레임 인용(비교·연구 목적)과
+> 공식 채널 YouTube 임베드(위)까지가 합법 경로다.
+> 다운로드 원본은 팀 내부 참고용으로만: NAS `media/reference/` (팀 채널 안내 참조).
 
 **★ 중요한 사실: 이것은 CG가 아니라 실물 로봇 실사 촬영이다.**
 
