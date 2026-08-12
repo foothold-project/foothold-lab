@@ -32,6 +32,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           REPO: ${{ github.repository }}
+          # 단계 부모는 이 저장소 한 곳에만 둔다. 저장소마다 만들면 같은 부모가
+          # lab 과 rl 에 하나씩 생겨 WBS 가 두 갈래로 쪼개진다. sub-issue 는
+          # 저장소를 넘어 연결된다(2026-08-12 실측). rl 은 공개라 보드에서 밖에도 보인다.
+          PARENT_REPO: foothold-project/foothold-rl
           NUM: ${{ github.event.issue.number }}
           BODY: ${{ github.event.issue.body }}
           NODE_ID: ${{ github.event.issue.node_id }}
@@ -64,7 +68,7 @@ jobs:
           fi
 
           # 부모 이슈 찾기 (제목 완전 일치, 열린 것 우선)
-          PARENT=$(gh issue list --repo "$REPO" --state all --limit 100 \
+          PARENT=$(gh issue list --repo "$PARENT_REPO" --state all --limit 100 \
                      --search "\"$PARENT_TITLE\" in:title" --json number,title \
                    --jq "[.[] | select(.title == \"$PARENT_TITLE\")] | .[0].number // \"\"")
 
@@ -77,10 +81,10 @@ jobs:
               printf '이 이슈는 직접 작업하지 않습니다. 아래 하위 항목이 그 단계의 실제 일이고,\n'
               printf '하위가 닫힐 때마다 진행률이 자동으로 올라갑니다.\n\n'
               printf '설계도: https://foothold-project.vercel.app/plan.html\n'
-              printf '일정:  https://foothold-project.vercel.app/gantt.html\n\n'
+              printf '보드:  https://github.com/orgs/foothold-project/projects/1\n\n'
               printf '(이 부모는 해당 단계의 첫 이슈가 올라올 때 자동으로 만들어졌습니다.)\n'
             } > parent-body.md
-            PARENT=$(gh issue create --repo "$REPO" --title "$PARENT_TITLE" \
+            PARENT=$(gh issue create --repo "$PARENT_REPO" --title "$PARENT_TITLE" \
               --body-file parent-body.md | grep -oE '[0-9]+$')
             echo "부모 #$PARENT 생성"
           fi
@@ -88,7 +92,7 @@ jobs:
           PARENT_ID=$(gh api graphql -f query='
             query($owner:String!,$name:String!,$num:Int!){
               repository(owner:$owner,name:$name){ issue(number:$num){ id } } }' \
-            -f owner="${REPO%%/*}" -f name="${REPO##*/}" -F num="$PARENT" \
+            -f owner="${PARENT_REPO%%/*}" -f name="${PARENT_REPO##*/}" -F num="$PARENT" \
             --jq '.data.repository.issue.id')
 
           gh api graphql -f query='
@@ -96,4 +100,4 @@ jobs:
               addSubIssue(input:{issueId:$p, subIssueId:$c}){ issue{ number } } }' \
             -f p="$PARENT_ID" -f c="$NODE_ID" >/dev/null
 
-          echo "#$NUM → 부모 #$PARENT 에 연결 완료"
+          echo "$REPO#$NUM → $PARENT_REPO#$PARENT 에 연결 완료"
