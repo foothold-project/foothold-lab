@@ -18,7 +18,7 @@
 
 | 항목 | 상태 | 다음 |
 |---|---|---|
-| RoboGauge 매핑 (#28) | ✅ **45차원 순서·스케일 확정 + 4종 실행 검증(08-13)** · CTS 구조·DreamWaQ 경로 확정 · [웹 게시](research/robogauge-observation-mapping.md) | 우리 env 관절 순서 실측(`robot.joint_names`) → 변환기 완성 |
+| RoboGauge 매핑 (#28) | ✅ **45차원 확정 + 4종 실행 검증 + 우리 env 관절 순서 실측(08-13)** · 변환 규칙 완성 · [웹 게시](research/robogauge-observation-mapping.md) | 235→45 변환기 구현 → eval_go2 로 4종 채점 |
 | 에셋 팩 (#29) | **수령 완료(08-13)**: vMaterials 2.1GB(MDL 315) + Sample Scenes 26GB(USD 938, Marbles·OldAttic 포함) → `C:\isaac\assets\` | Isaac Sim MDL 경로 등록 → Marbles PT 렌더 실측 → 위험지역 씬 적용 |
 | WS 실측 | **1,500 iter 실측 133분**(예상 113분 대비 +18%) · **Windows DDP 불가 판정**(NCCL 없음, 우분투 후 재측정) | 잔여: 평가 파이프라인(Q3 첫 통과율) |
 | ~~WS 실측(이전)~~ | **1차 결과 도착(08-09)**: 플래그 봉인 판정 · 23,000 steps/s · 학습 실증(보상 +13.94) | 잔여 3: DDP·1500완주·**평가 파이프라인(Q3 통과율)**: 렌더 ✅(08-10)·아키텍처 확정 ✅·FLOW ✅ |

@@ -1,0 +1,6 @@
+[JOINT_NAMES] ['FL_hip_joint', 'FR_hip_joint', 'RL_hip_joint', 'RR_hip_joint', 'FL_thigh_joint', 'FR_thigh_joint', 'RL_thigh_joint', 'RR_thigh_joint', 'FL_calf_joint', 'FR_calf_joint', 'RL_calf_joint', 'RR_calf_joint']
+[DEFAULT_JOINT_POS] [0.10000000149011612, -0.10000000149011612, 0.10000000149011612, -0.10000000149011612, 0.800000011920929, 0.800000011920929, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5]
+[OBS_TERMS] ['base_lin_vel', 'base_ang_vel', 'projected_gravity', 'velocity_commands', 'joint_pos', 'joint_vel', 'actions', 'height_scan']
+[OBS_DIMS] [(3,), (3,), (3,), (3,), (12,), (12,), (12,), (187,)]
+[ACTION_CFG] ActionManager 0.25 use_default_offset= True
+[DONE]

@@ -1,7 +1,7 @@
 # RoboGauge 공개 정책 해부: 45차원 관측의 정확한 순서와 스케일
 
-> 요지: 공개 최상위 정책 4종의 입력 45차원을 코드와 실행 양쪽으로 확정했다. CTS 미스터리와 DreamWaQ 행방도 풀렸다. 이제 우리 평가에 붙일 수 있다.
-> 작성 2026-08-13 · 워크스테이션 세션 · 방법: RoboGauge·go2_rl_gym 저장소 코드 판독 + 로컬 체크포인트 4종 known-answer 실행 검증
+> 요지: 공개 최상위 정책 4종의 입력 45차원을 코드와 실행 양쪽으로 확정했고, 우리 env 관절 순서까지 실측해 변환 규칙이 완성됐다. 남은 것은 구현뿐이다.
+> 작성 2026-08-13 · 워크스테이션 세션 · 방법: RoboGauge·go2_rl_gym 저장소 코드 판독 + 로컬 체크포인트 4종 known-answer 실행 검증 + 우리 env 실측
 > 표기: `확인됨` = 코드 실행으로 실측 · `코드확인` = 저장소 코드에서 읽음(실행 안 함) · `추측` · `미확인`
 > 검증 스크립트·로그: foothold-lab `tools/robogauge/` (verify_policies.py · verify_extra.py · verify_log.txt)
 
@@ -67,17 +67,31 @@ HIM 에 [1,1,1] 을 쓰면 yaw 명령이 4배 어긋난다. `코드확인` (run_
 
 HF `wty-yy/go2_rl_gym_data` **루트의 단일 파일** `go2_dwaq_119.5k_0.5054.pt`. 폴더/policy.pt 형태만 뒤져서 못 찾았던 것. 내려받아 [1,45]→[1,12] 실행까지 검증했다. 워크스테이션 `C:\isaac\checkpoints\robogauge\` 에 보관.
 
-## 5. 우리 평가에 붙일 때: 변환 규칙과 남은 확인
+## 5. 우리 평가에 붙일 때: 변환 규칙 (전 항목 실측 확정, 2026-08-13)
 
-우리 235차원 관측 → 45차원 변환: lin_vel(0:3)과 height_scan(48:235)을 **버리고**, ang_vel ×0.25 · dq ×0.05 · cmd ×(모델군별 표) 스케일을 적용하고, q 는 (q - default) 오프셋을 쓴다.
+우리 env 를 실제로 띄워 실측했다 (probe_joint_order.py, 로그 tools/robogauge/probe_joint_order.txt).
 
-**가장 위험한 함정이 하나 남았다: 관절 순서.** `미확인`
+### 관절 순서: 예상대로 달랐다 `확인됨`
 
-- RoboGauge 모델: 다리별 묶음 [FL_h, FL_t, FL_c, FR_h, ...]
-- 우리 Isaac Lab(USD): 관행상 관절종류별 묶음 [FL_h, FR_h, RL_h, RR_h, FL_t, ...] 로 알려져 있으나 **우리 env 에서 `robot.joint_names` 를 실측하기 전까지 미확인**
-- 순서가 다르면 q·dq·last_action 세 블록의 재배열 + 정책 출력 12차원의 역재배열이 필요하다. 실측 전에는 변환기를 완성하지 않는다.
+- 우리 env `robot.joint_names` 실측: **관절종류별 묶음** [FL_hip, FR_hip, RL_hip, RR_hip, FL_thigh, ... , RR_calf]
+- RoboGauge: **다리별 묶음** [FL_hip, FL_thigh, FL_calf, FR_hip, ...]
+- 변환 permutation (실측 근거로 확정):
+  - 우리 → RoboGauge (q·dq·last_action 세 블록): `[0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]`
+  - 정책 출력 12차원 → 우리 순서 (역재배열): `[0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11]`
 
-남은 확인 목록: ① 우리 env 관절 순서 실측 ② 우리 env 의 obs 스케일·default 자세가 위와 같은지 cfg 확인 ③ symmetry 학습 저장소(robotlab)는 비공개 추정이라 설정 주석과 실측만으로 파악한 상태.
+### 나머지 전제도 실측으로 닫혔다
+
+| 항목 | 우리 env 실측 | 변환 |
+|---|---|---|
+| 관측 구성 | lin_vel 3 + ang_vel 3 + gravity 3 + cmd 3 + q 12 + dq 12 + action 12 + height_scan 187 = 235 | lin_vel·height_scan 버림 | 
+| 관측 스케일 | **전부 raw (×1.0)** (velocity_env_cfg.py ObsTerm 에 scale 없음) | ang_vel ×0.25 · dq ×0.05 · cmd ×(모델군별 표) 적용 |
+| joint_pos 항목 | 이미 (q - default) (joint_pos_rel) | 재배열만 하면 됨 `확인됨` |
+| default 자세 | hip ±0.1 · thigh 0.8(앞)/1.0(뒤) · calf -1.5 | RoboGauge 와 **동일 값** (순서만 다름) `확인됨` |
+| action 스케일 | 0.25 + default 오프셋 (Go2 오버라이드) | RoboGauge 와 **동일** : target 의미가 같다 `확인됨` |
+
+남은 것은 확인이 아니라 **구현**이다: 위 표대로 235→45 변환기(재배열 + 스케일)를 짜서 eval_go2.py 에 붙이면 4종 정책을 우리 지형·우리 성공 정의(10m·무넘어짐·20초)로 채점할 수 있다. 단 배치 1 제약(2절) 때문에 평가 병렬화는 모델 복제로 푼다.
+
+부수 확인: symmetry 학습 저장소(robotlab)는 비공개 추정이라 설정 주석과 체크포인트 실측으로만 파악한 상태. `미확인`
 
 ## 연결
 
