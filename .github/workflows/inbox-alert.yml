@@ -32,7 +32,8 @@ jobs:
         run: |
           set -euo pipefail
           FILES=$(gh api "repos/$REPO/commits/$SHA" --jq '
-            [.files[].filename | select(startswith("inbox/"))
+            [.files[] | select(.status != "removed") | .filename
+             | select(startswith("inbox/"))
              | select(endswith("README.md") or endswith(".gitkeep") | not)]
             | join("\n")')
           if [ -z "$FILES" ]; then
