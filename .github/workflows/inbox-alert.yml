@@ -64,9 +64,9 @@ jobs:
             printf '파일:\n'
             printf '%s\n' "$FILES" | sed 's/^/- `/' | sed 's/$/`/'
             printf '\n검토 후 셋 중 하나:\n'
-            printf '- [ ] 승격: 정리해서 docs/research/ 로 (옮기면 웹에 자동 게시)\n'
-            printf '- [ ] 보류: 참고 자료로 inbox 에 둔다 (이 이슈만 닫기)\n'
-            printf '- [ ] 반려: 코멘트로 이유를 남긴다\n\n'
+            printf '%s\n' '- [ ] 승격: 정리해서 docs/research/ 로 (옮기면 웹에 자동 게시)'
+            printf '%s\n' '- [ ] 보류: 참고 자료로 inbox 에 둔다 (이 이슈만 닫기)'
+            printf '%s\n\n' '- [ ] 반려: 코멘트로 이유를 남긴다'
             printf '승격 조건 4가지: h1 제목 · 증거 표기 · 원 출처 · 민감정보 없음\n'
             printf 'https://github.com/%s/commit/%s\n' "$REPO" "$SHA"
           } > body.md
