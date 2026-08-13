@@ -1,0 +1,89 @@
+# inbox 제출 감지. 팀원이 한참 작업한 것이 조용히 묻히면 안 된다.
+#
+#   사고(2026-08-13): 팀원이 규칙대로 inbox 에 25KB 가이드를 제출했는데 아무 일도
+#   일어나지 않았다. 알림이 docs/ 만 보고 inbox/ 는 안 보고 있었다.
+#
+#   이 워크플로가 하는 일 두 가지:
+#   1. 디스코드 알림: 새 제출이 왔다고 팀에 알린다.
+#   2. [승격 검토] 이슈를 만들어 팀장에게 배정한다. 이것이 컨펌 대기 큐다.
+#      승격(웹 게시)은 자동으로 하지 않는다. 팀장 컨펌 후 docs/research/ 로
+#      옮기는 순간 게시된다 (합의된 흐름: 감지 → 초안 → 컨펌 → 게시).
+name: inbox 제출 감지
+
+on:
+  push:
+    branches: [main]
+    paths: ['inbox/**']
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 제출 파일 찾기
+        id: files
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          FILES=$(gh api "repos/$REPO/commits/$SHA" --jq '
+            [.files[].filename | select(startswith("inbox/"))
+             | select(endswith("README.md") or endswith(".gitkeep") | not)]
+            | join("\n")')
+          if [ -z "$FILES" ]; then
+            echo "README·gitkeep 뿐 → 생략"
+            echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "::group::제출 파일"; echo "$FILES"; echo "::endgroup::"
+          {
+            echo "skip=0"
+            echo "files<<ZEOF"; echo "$FILES"; echo "ZEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 승격 검토 이슈 + 디스코드
+        if: steps.files.outputs.skip == '0'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          AUTHOR: ${{ github.event.head_commit.author.name }}
+          FILES: ${{ steps.files.outputs.files }}
+        run: |
+          set -euo pipefail
+          FIRST=$(printf '%s' "$FILES" | head -n1)
+          {
+            printf '팀원 제출이 들어왔습니다. 팀장 검토 후 처리합니다.\n\n'
+            printf '제출: %s\n' "$AUTHOR"
+            printf '파일:\n'
+            printf '%s\n' "$FILES" | sed 's/^/- `/' | sed 's/$/`/'
+            printf '\n검토 후 셋 중 하나:\n'
+            printf '- [ ] 승격: 정리해서 docs/research/ 로 (옮기면 웹에 자동 게시)\n'
+            printf '- [ ] 보류: 참고 자료로 inbox 에 둔다 (이 이슈만 닫기)\n'
+            printf '- [ ] 반려: 코멘트로 이유를 남긴다\n\n'
+            printf '승격 조건 4가지: h1 제목 · 증거 표기 · 원 출처 · 민감정보 없음\n'
+            printf 'https://github.com/%s/commit/%s\n' "$REPO" "$SHA"
+          } > body.md
+          NUM=$(gh issue create --repo "$REPO" \
+            --title "[승격 검토] $FIRST" \
+            --assignee vfxpedia --body-file body.md | grep -oE '[0-9]+$')
+          echo "검토 이슈 #$NUM"
+
+          if [ -z "${HOOK:-}" ]; then echo "웹훅 없음"; exit 1; fi
+          {
+            printf '제출자: %s\n' "$AUTHOR"
+            printf '%s\n' "$FILES" | head -5 | sed 's/^/• /'
+            printf '\n팀장 검토 큐: https://github.com/%s/issues/%s\n' "$REPO" "$NUM"
+            printf '(승격되면 웹에 자동 게시됩니다)\n'
+          } > desc.txt
+          CODE=$(jq -n --arg t "📥 inbox 새 제출" --rawfile d desc.txt \
+                   '{embeds:[{title:$t, description:$d, color:1016969}]}' \
+                 | curl -sS -o /dev/null -w '%{http_code}' -X POST \
+                        -H "Content-Type: application/json" -d @- "$HOOK")
+          echo "HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
