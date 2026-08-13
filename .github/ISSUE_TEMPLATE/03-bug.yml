@@ -1,0 +1,31 @@
+name: 막힘·오류
+description: 안 되는 것을 올리는 곳. 에러 메시지를 그대로 붙여넣으면 됩니다.
+title: "[막힘] "
+labels: [blocked]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 무엇이 안 되나
+      description: 하려던 것 + 에러 메시지나 화면을 그대로. 정리 안 해도 됩니다.
+      placeholder: |
+        train.py 실행하면 아래 에러가 납니다.
+        (에러 메시지 통째로 붙여넣기)
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: 해본 것 (선택)
+      description: 시도해 본 게 있으면. 없으면 비워두세요.
+  - type: dropdown
+    id: quest
+    attributes:
+      label: 어느 갈래인가
+      description: 이슈가 다섯 갈래 중 하나에 자동으로 묶입니다. 애매하면 운영.
+      options:
+        - "평가 체계 (통과율·자동 평가·기준선)"
+        - "험지 환경 (지형 제작·3DGS)"
+        - "정책 학습 (학습·보상·실험)"
+        - "실기 전이 (sim2sim·ROS2·실기)"
+        - "운영 (문서·회의·인프라·발표)"

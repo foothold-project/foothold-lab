@@ -1,0 +1,26 @@
+name: 리서치
+description: 답을 모르는 질문 하나를 적는 곳.
+title: "[리서치] "
+labels: [research]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: 무엇이 궁금한가
+      description: 질문 하나면 됩니다. 왜 궁금한지 적으면 더 좋지만 필수 아닙니다.
+      placeholder: |
+        MuJoCo 로 sim2sim 검증할 때 지형은 어떻게 옮기나?
+        (왜: Q9 전에 알아야 함)
+    validations:
+      required: true
+  - type: dropdown
+    id: quest
+    attributes:
+      label: 어느 갈래인가
+      description: 이슈가 다섯 갈래 중 하나에 자동으로 묶입니다. 애매하면 운영.
+      options:
+        - "평가 체계 (통과율·자동 평가·기준선)"
+        - "험지 환경 (지형 제작·3DGS)"
+        - "정책 학습 (학습·보상·실험)"
+        - "실기 전이 (sim2sim·ROS2·실기)"
+        - "운영 (문서·회의·인프라·발표)"

@@ -1,0 +1,33 @@
+name: 작업
+description: 이런 작업을 진행합니다, 하고 선언하는 곳. 쓰는 건 두 개뿐입니다.
+title: "[작업] "
+labels: [task]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: 무엇을 하나
+      description: 한두 문장이면 됩니다. 끝났다는 기준까지 적으면 더 좋지만 필수 아닙니다.
+      placeholder: |
+        계단 지형 조각을 만들어 로봇을 세워 본다.
+        (끝 기준: 스크린샷 한 장)
+    validations:
+      required: true
+  - type: dropdown
+    id: quest
+    attributes:
+      label: 어느 갈래인가
+      description: 이슈가 다섯 갈래 중 하나에 자동으로 묶입니다. 애매하면 운영.
+      options:
+        - "평가 체계 (통과율·자동 평가·기준선)"
+        - "험지 환경 (지형 제작·3DGS)"
+        - "정책 학습 (학습·보상·실험)"
+        - "실기 전이 (sim2sim·ROS2·실기)"
+        - "운영 (문서·회의·인프라·발표)"
+    validations:
+      required: true
+  - type: textarea
+    id: memo
+    attributes:
+      label: 메모 (선택)
+      description: 막힐 것 같은 지점, 참고 링크, 예상 소요. 비워도 됩니다.
