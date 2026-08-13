@@ -54,16 +54,17 @@ jobs:
           # 템플릿의 퀘스트 줄만 뽑는다. 줄 전체가 퀘스트 문구인 경우로 한정한다.
           #   본문 아무 데나 있는 문구를 잡으면 부모의 설명문까지 읽혀 제목이 길어진다
           #   (2026-08-12 재귀 사고의 직접 원인).
-          QUEST=$(printf '%s' "$BODY" | tr -d '\r' \
-                  | grep -oE '^(Q[0-9]{1,2}|보스전|현장·장비 조사|운영) [^*]{2,60}$' \
-                  | head -n1 | sed 's/[[:space:]]*$//' || true)
-          if [ -z "$QUEST" ]; then
-            echo "퀘스트 표기 없음 (템플릿 미사용이거나 비워둠) → 연결 생략"
+          LINE=$(printf '%s' "$BODY" | tr -d '\r' \
+                  | grep -oE '^(평가 체계|험지 환경|정책 학습|실기 전이|운영) \([^)]{2,60}\)[[:space:]]*$' \
+                  | head -n1 || true)
+          if [ -z "$LINE" ]; then
+            echo "갈래 표기 없음 (템플릿 미사용이거나 비워둠) → 연결 생략"
             exit 0
           fi
-          echo "퀘스트: $QUEST"
+          BRANCH="${LINE%% (*}"
+          echo "갈래: $BRANCH"
 
-          PARENT_TITLE="[$QUEST]"
+          PARENT_TITLE="[$BRANCH]"
 
           # 이미 이 이슈에 부모가 있으면 손대지 않는다 (사람이 옮겼을 수 있다)
           HAS_PARENT=$(gh api graphql -f query='
