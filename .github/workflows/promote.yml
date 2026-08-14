@@ -1,0 +1,84 @@
+# 승격 컨펌 → docs/research/ 로 이동. 팀장이 «승격» 한 마디만 하면 된다.
+#
+#   쓰는 법: [승격 검토] 이슈에 코멘트로 아래 중 하나
+#     /승격            제안 경로 그대로
+#     /승격 새이름     docs/research/새이름.md 로
+#
+#   하는 일: inbox 원본을 docs/research/ 로 복사하고 머리에 출처·작성자 크레딧을 붙인다.
+#   그 순간부터 다음 빌드가 웹에 싣는다(자동 게시 대상 폴더이므로).
+#   원본은 inbox 에 남긴다. 이력이다.
+#
+#   ★ 형식 손질(제목·증거 표기·도식 변환)까지 기계가 하지는 않는다.
+#     그건 판단이 필요한 일이라 세션이 한다. 이 워크플로는 «옮기는 것» 까지다.
+name: 승격
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  promote:
+    if: >-
+      startsWith(github.event.comment.body, '/승격') &&
+      startsWith(github.event.issue.title, '[승격 검토]') &&
+      github.event.comment.user.login == 'vfxpedia'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: 옮기고 커밋
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          TITLE: ${{ github.event.issue.title }}
+          COMMENT: ${{ github.event.comment.body }}
+          NUM: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SRC=$(printf '%s' "$TITLE" | sed 's/^\[승격 검토\][[:space:]]*//')
+          if [ ! -f "$SRC" ]; then
+            gh issue comment "$NUM" --repo "$REPO" \
+              --body "원본을 찾지 못했습니다: \`$SRC\` (이미 옮겼거나 경로가 바뀌었습니다)"
+            exit 1
+          fi
+
+          NAME=$(printf '%s' "$COMMENT" | sed -n 's|^/승격[[:space:]]\+\([A-Za-z0-9._-]\+\).*|\1|p')
+          if [ -z "$NAME" ]; then
+            NAME=$(basename "$SRC" .md | sed 's/^[0-9]\{8\}[-_]//')
+          fi
+          DEST="docs/research/${NAME%.md}.md"
+          AUTHOR=$(git log -1 --format='%an' -- "$SRC")
+          TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
+
+          mkdir -p docs/research
+          {
+            printf '<!-- 승격: %s · 원본 %s · 작성 %s -->\n' "$TODAY" "$SRC" "$AUTHOR"
+            cat "$SRC"
+          } > "$DEST"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DEST"
+          if git diff --cached --quiet; then
+            echo "변경 없음"; exit 0
+          fi
+          git commit -m "승격: $(basename "$SRC") → $DEST (컨펌 #$NUM)"
+          for i in 1 2 3; do
+            git pull --rebase --quiet origin main && git push && break
+            echo "push 경합, 재시도 $i"; sleep 5
+          done
+
+          {
+            printf '승격 완료: `%s`\n\n' "$DEST"
+            printf '다음 빌드에서 웹에 게시됩니다. 원본은 inbox 에 그대로 둡니다.\n'
+            printf '형식 손질(제목·증거 표기·도식 변환)이 필요하면 세션이 이어서 처리합니다.\n'
+          } > done.md
+          gh issue comment "$NUM" --repo "$REPO" --body-file done.md
+          gh issue close "$NUM" --repo "$REPO" --reason completed
+          echo "승격 완료: $DEST"
