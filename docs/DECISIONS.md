@@ -72,6 +72,7 @@
 | 08-13 | 첫 팀원 승격: 임석헌 지형 가이드 → research/terrain-guide-isaaclab. 형식만 손질(h1·검증수위·ASCII→목록·크레딧), 취지 무변경 | 승격 절차의 첫 실전. 작성자 크레딧은 문서 머리에 명시한다 | 팀장 컨펌 |
 | 08-13 | 외부 V100 샌드박스는 **Isaac Sim 용이 아니다.** RT 코어가 없어 공식 미지원. 평가·증류·3DGS·ONNX 검증에 쓴다 | 학습·렌더는 로컬 RTX 5080, 대규모 병렬 연산은 V100 으로 역할 분담 | 세션 (근거: cloud-gpu-options §1) |
 | 08-13 | 외부 GPU 샌드박스 **신청 완료**. GPU 상시 8·최대 16장, Storage 2Ti, 4개월 | 컨테이너당 8장 상한을 컨테이너 분할로 넘긴다. 상한 대비 여유를 두되 근거를 숫자로 붙였다 | 팀장 |
+| 08-14 | 모드 전환 API 확정: `MotionSwitcherClient` 의 `Init`·`CheckMode`·`SelectMode`·`ReleaseMode`. 해제는 «StandDown → ReleaseMode → CheckMode 반복» | 공식 저장소 원본과 Go2 저수준 예제에서 직접 확인. FLOW 의 `부분확인` 해소 | 세션 |
 
 ## 세션 운영 규칙 (어느 세션이든 동일 적용)
 

@@ -278,10 +278,32 @@ env_cfg.scene.terrain = TerrainImporterCfg(
 
 ROS2 노드를 새로 짜는 것이 아니라 **모드 전환 요청**이다.
 
-1. `MotionSwitcher` 서비스에 «순정 컨트롤러 놔줘» 요청 (unitree_sdk2 의 `CheckMode`/`SelectMode`/`ReleaseMode` 계열. 정확한 호출명은 `부분확인`: 8/13 현장 확인 항목)
+1. `MotionSwitcherClient` 에 «순정 컨트롤러 놔줘» 요청 `확인됨`
 2. 순정이 관절을 놓는다
 3. 우리가 `/lowcmd` 토픽에 관절 12개의 목표각·강성·감쇠를 발행한다
-4. 되돌리려면 다시 1에서 순정 모드를 선택한다
+4. 되돌리려면 `SelectMode(nameOrAlias)` 로 순정 모드를 다시 고른다
+
+공식 API `확인됨` (unitree_sdk2_python `comm/motion_switcher/motion_switcher_client.py`):
+`Init()` · `CheckMode()` · `SelectMode(nameOrAlias)` · `ReleaseMode()`
+
+공식 Go2 저수준 예제(`example/go2/low_level/go2_stand_example.py`)가 쓰는 해제 절차 그대로:
+
+```python
+self.msc = MotionSwitcherClient()
+self.msc.SetTimeout(5.0)
+self.msc.Init()
+
+status, result = self.msc.CheckMode()
+while result['name']:          # 순정이 아직 뭔가 잡고 있으면
+    self.sc.StandDown()        # 먼저 엎드리게 하고
+    self.msc.ReleaseMode()     # 놔달라고 요청
+    status, result = self.msc.CheckMode()
+    time.sleep(1)              # 놓을 때까지 반복
+```
+
+`CheckMode()` 가 돌려주는 `result['name']` 이 **비면 순정이 완전히 손을 뗀 것**이다.
+그 뒤에야 우리가 `rt/lowcmd` 를 발행한다. 상태는 `rt/lowstate` 로 받는다.
+★ 순정을 놔주기 전에 **먼저 엎드리게** 한다. 서 있는 상태에서 놓으면 그대로 주저앉는다.
 
 **지우는 것이 아니라 비켜 두는 것이다.** 우리 정책이 이상하면 스위치를 되돌려 로봇을 세운다.
 그리고 순정의 걸음은 우리 정책의 **비교 기준선**으로도 쓴다.
