@@ -59,7 +59,7 @@ jobs:
           import json, datetime, collections
           d = json.load(open('board.json'))
           p = d['data']['organization']['projectV2']
-          today = datetime.date.today()
+          today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).date()
           week_ago = today - datetime.timedelta(days=7)
 
           def fv(item, name):

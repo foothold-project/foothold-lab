@@ -61,7 +61,7 @@ jobs:
 
           board = json.load(io.open('board.json', encoding='utf-8'))
           nodes = board['data']['organization']['projectV2']['items']['nodes']
-          today = datetime.date.today()
+          today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).date()
 
           over, due = [], []
           for n in nodes:

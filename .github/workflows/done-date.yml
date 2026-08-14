@@ -41,7 +41,7 @@ jobs:
           fi
           ITEM_ID=$(gh api graphql -f query='
             mutation($p:ID!, $c:ID!){ addProjectV2ItemById(input:{projectId:$p, contentId:$c}){ item { id } } }'             -f p="$PROJECT_ID" -f c="$ISSUE_NODE_ID" --jq '.data.addProjectV2ItemById.item.id')
-          TODAY=$(date -u +%Y-%m-%d)
+          TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
           gh api graphql -f query='
             mutation($p:ID!, $i:ID!, $f:ID!, $v:Date!){
               updateProjectV2ItemFieldValue(input:{projectId:$p, itemId:$i, fieldId:$f, value:{date:$v}}){
