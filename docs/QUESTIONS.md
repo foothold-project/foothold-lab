@@ -50,6 +50,7 @@
 |---|---|
 | 실물 Go2 는 어떻게 제어를 넘겨받나 (순정과의 관계) | [흐름 §5 제어 층 스위치](flow.html) |
 | 8/13 조선대 방문에서 뭘 확인해야 하나 | [현장 확인 목록](field-check-0813.html) |
+| 새 Go2 개체가 생기면 뭘 점검하나 (저수준 되는지 포함) | [Go2 개체 점검 목록](field-check-go2-intake.html) |
 | 우분투·ROS2·컨테이너 구조는 어떻게 확정됐나 | [아키텍처 결정](research-architecture-decision.html) |
 | 워크스테이션에 접속해서 학습을 돌리고 싶다 | [팀원 접속 가이드](team-access.html) |
 | 내 노트북에 환경을 깔고 싶다 | [개발환경 가이드](setup.html) |
