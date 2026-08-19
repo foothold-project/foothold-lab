@@ -60,7 +60,7 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 | 구축 순서 | 내용 |
 |---|---|
 | ① 기본 Terrain 활용 | `Random Rough` `Slope` `Stairs` `Discrete Obstacles` `Boxes` 등 |
-| ② Parameter 변경 | `계단 높이` `경사도` `장애물 크기` `표면 거칠기` |
+| ② Parameter 변경 | `계단 높이` `경사도` `장애물 크기` `표면 거칠기` `틈(Gap) 간격` `디딤돌 배치` `장애물 밀도` `마찰 계수` |
 | ③ Terrain 조합 | 기존 지형과 조건의 조합 |
 | ④ 신규 Terrain 구현 | 조합으로 표현하기 어려운 경우에만 직접 구현 |
 
@@ -80,6 +80,10 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 | Motor 특성 | Joint 응답 차이 대응 |
 | Sensor Noise | 실제 센서 오차 대응 |
 
+적용 순서:
+
+[[drflow]]
+
 ### Unseen Terrain 4유형
 
 | 유형 | 의미 | 예시 |
@@ -90,6 +94,10 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 | Physics Unseen | 유사 형상에서 물리 조건 변경 | 낮은 마찰력, 질량 변화 |
 
 기간을 고려해 네 유형을 모두 평가하기보다, 프로젝트 목표와 Sim-to-Real에 의미가 큰 **일부 유형을 선정해 집중 평가**할 수 있다.
+
+> ### 확정 방침 (2026-08-19 · 팀장)
+> **학습 보장선 = Parameter + Combination** (기존 지형 생성기로 확실히 구현 가능).
+> **Structure(Gap·Stepping Stones)는 학습 없이 평가에 처음부터 포함한다**: 비용이 거의 없고, 결과가 낮아도 «현재의 벽»으로 기록되어 중간발표(벽 확인)에서 최종발표(벽 넘기)로 이어지는 서사가 된다. Structure 를 학습 커리큘럼에 넣는 것은 도전선.
 
 ### 평가 지표와 비교군
 
@@ -110,10 +118,7 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 
 Isaac Lab의 Height Scanner(가상 광선 높이맵)는 실제 로봇에서 그대로 쓸 수 없다. 두 방향을 비교한다.
 
-| | 방향 A · Proprioception 중심 | 방향 B · 외부 센서 활용 |
-|---|---|---|
-| 구성 | `IMU` `Joint Position` `Joint Velocity` `Previous Action` `Command` | LiDAR 또는 Depth Camera로 지형 정보를 생성해 입력에 포함 |
-| 검토점 | 구현 현실성이 높다. 지형 사전 정보 없이 목표 성능이 나오는지 확인 필요 | 정보는 풍부하나 실기 통합 난이도와 처리 부하가 크다 |
+[[dirAB]]
 
 실기 실행 흐름:
 
@@ -139,6 +144,7 @@ Isaac Lab의 Height Scanner(가상 광선 높이맵)는 실제 로봇에서 그�
 ## 7. 미팅에서 확정할 5가지
 
 1. **중간발표 목표의 적절성**: Custom Terrain RL Training + Unseen Terrain Generalization 평가까지를 중간발표 목표로 설정하는 것이 현실적인가?
+   **→ 확정 (8/19)**: 현실적이다. 판정문 = 9/30까지 ⓐ Baseline 재현(완료) ⓑ Custom Terrain 학습 정책 확보 ⓒ 미학습 지형에서 Baseline 비교표(보장 = Parameter·Combination, Structure 는 평가 포함) ⓓ 시뮬 보행 영상.
 2. **최종 Sim-to-Real 목표의 적절성**: 사전에 정의한 실제 환경 1개에서 안정 보행을 구현하는 수준이 적절한가?
 3. **실제 환경 선정**: Sim-to-Real 성과를 보여주면서도 기간 내 구현 가능한 실제 Terrain은 어느 수준인가?
 4. **Height Scanner 대안**: Proprioception 중심 Policy부터 구현하는 것이 현실적인가, LiDAR/Depth 기반 정보를 포함해야 하는가?
