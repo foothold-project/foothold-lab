@@ -152,7 +152,7 @@ Isaac Lab의 Height Scanner(가상 광선 높이맵)는 실제 로봇에서 그�
 1. **중간발표 목표의 적절성**: Custom Terrain RL Training + Unseen Terrain Generalization 평가까지를 중간발표 목표로 설정하는 것이 현실적인가?
    **→ 확정 (8/19)**: 현실적이다. 판정문 = 9/30까지 ⓐ Baseline 재현(완료) ⓑ Custom Terrain 학습 정책 확보 ⓒ 미학습 지형에서 Baseline 비교표(보장 = Parameter·Combination, Structure 는 평가 포함) ⓓ 시뮬 보행 영상.
 2. **최종 Sim-to-Real 목표의 적절성**: 사전에 정의한 실제 환경 1개에서 안정 보행을 구현하는 수준이 적절한가?
-   **→ 재확정 (8/19 오후, 팀 전원)**: 최종 실기 목표를 **순정 보행 기반 SLAM·Nav2 자율주행**으로 변경. 우리 정책의 실기 이전은 목표에서 제외 (같은 날 오전의 «험지 실기 통과 필수» 결정은 번복 — 이력 투명 기록).
+   **→ 재확정 (8/19 오후, 팀 전원)**: 최종 실기 목표를 **순정 보행 기반 SLAM·Nav2 자율주행**으로 변경. 우리 정책의 실기 이전은 목표에서 제외 (같은 날 오전의 «험지 실기 통과 필수» 결정은 번복 · 이력 투명 기록).
 3. **실제 환경 선정**: Sim-to-Real 성과를 보여주면서도 기간 내 구현 가능한 실제 Terrain은 어느 수준인가?
 4. **Height Scanner 대안**: Proprioception 중심 Policy부터 구현하는 것이 현실적인가, LiDAR/Depth 기반 정보를 포함해야 하는가?
 5. **자율주행 개발 시점**: SLAM/Nav2는 Sim-to-Real 이후가 적절한가, 일부 병렬 준비가 좋은가?
