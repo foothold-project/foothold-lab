@@ -12,14 +12,7 @@
 
 전체 흐름은 여섯 단계다.
 
-| 순서 | 단계 |
-|---|---|
-| 1 | 학습 지형 설계 |
-| 2 | 강화학습 |
-| 3 | 미학습 지형 평가 |
-| 4 | 취약점 개선 (지형·보상·물리 조건) |
-| 5 | 실제 로봇 이전 |
-| 6 | 안정 보행 검증 |
+[[flow6]]
 
 ## 2. 단계별 추진 계획
 
@@ -55,7 +48,9 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 
 ### 반복형 학습 파이프라인
 
-핵심 루프: **학습 → 평가 → 실패 원인 분석 → 지형·보상·물리 조건 조정 → 재학습.**
+[[loop]]
+
+핵심 루프는 위 순환이다.
 초기에는 기본 Reward와 Observation 구조를 유지하고, 평가에서 문제가 확인된 항목만 단계적으로 바꾼다.
 
 ### Custom Terrain의 목적과 구축 순서
@@ -64,8 +59,8 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 
 | 구축 순서 | 내용 |
 |---|---|
-| ① 기본 Terrain 활용 | Random Rough · Slope · Stairs · Discrete Obstacles · Boxes 등 |
-| ② Parameter 변경 | 계단 높이 · 경사도 · 장애물 크기 · 표면 거칠기 |
+| ① 기본 Terrain 활용 | `Random Rough` `Slope` `Stairs` `Discrete Obstacles` `Boxes` 등 |
+| ② Parameter 변경 | `계단 높이` `경사도` `장애물 크기` `표면 거칠기` |
 | ③ Terrain 조합 | 기존 지형과 조건의 조합 |
 | ④ 신규 Terrain 구현 | 조합으로 표현하기 어려운 경우에만 직접 구현 |
 
@@ -98,7 +93,7 @@ Isaac Lab에서 학습한 정책을 실제 Go2에 적용한다. 모든 실제 �
 
 ### 평가 지표와 비교군
 
-평가 지표 예시: Success Rate · Fall Rate · Velocity Tracking Error · 이동 거리 · Episode Survival Time. (초기 예시이며, 실험 목적에 따라 안정성·에너지·자세 지표를 추가·조정할 수 있다.)
+평가 지표 예시: `Success Rate` `Fall Rate` `Velocity Tracking Error` `이동 거리` `Episode Survival Time`. (초기 예시이며, 실험 목적에 따라 안정성·에너지·자세 지표를 추가·조정할 수 있다.)
 
 비교군: **Baseline vs Our Policy vs Our Policy + Domain Randomization** 을 동일한 Unseen Terrain·동일 지표로 비교한다.
 
@@ -117,10 +112,12 @@ Isaac Lab의 Height Scanner(가상 광선 높이맵)는 실제 로봇에서 그�
 
 | | 방향 A · Proprioception 중심 | 방향 B · 외부 센서 활용 |
 |---|---|---|
-| 구성 | IMU · Joint Position · Joint Velocity · Previous Action · Command | LiDAR 또는 Depth Camera로 지형 정보를 생성해 입력에 포함 |
+| 구성 | `IMU` `Joint Position` `Joint Velocity` `Previous Action` `Command` | LiDAR 또는 Depth Camera로 지형 정보를 생성해 입력에 포함 |
 | 검토점 | 구현 현실성이 높다. 지형 사전 정보 없이 목표 성능이 나오는지 확인 필요 | 정보는 풍부하나 실기 통합 난이도와 처리 부하가 크다 |
 
-실기 실행 흐름: 로봇 센서 데이터 → Observation 생성 → Policy 추론 → Joint 목표 → Joint 제어 → 실제 Go2.
+실기 실행 흐름:
+
+[[deploy]]
 
 ## 6. 자율주행 확장과 역할 분리
 
