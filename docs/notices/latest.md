@@ -1,12 +1,10 @@
-📢 **전담 현직자 멘토(제6의 멤버) 킥오프: 오늘 8/20(목) 16:00 줌** (2026-08-20 오후 갱신)
+📢 **인프라 가이드 2편 게시 + 월요일 준비물** (2026-08-22)
 
-오늘 13시 이스트소프트 박재선 이사 미팅 + 오후 김현우 PM 공지 정리입니다.
+1. **Runpod 팀 운용 가이드** — FOOTHOLD 팀 워크스페이스를 쓰는 법 전부: 권한 차이(초대받은 권한 확인하세요), 네트워크 볼륨 표준(팟 종료해도 데이터 보존), 팟 쓰고 나면 Terminate, 비용 좌표.
+   <https://foothold-project.vercel.app/research-runpod-team-ops>
+2. **벤치마크 재현 프로토콜** — 일반화 벤치마크를 재현·검증하는 표준 절차. 원자료 재검에서 중요한 발견이 있어 보고서도 정정했습니다 (에피소드 50회가 동일 궤적의 재생이었음 · 다음 실험 설계 포함).
+   <https://foothold-project.vercel.app/research-benchmark-repro-protocol>
+3. **월요일 준비물 리마인드**: 개인 방향성 페이퍼 1~2장 (백그라운드 · 희망 직무·회사 · 파트, 자유 양식) — 멘토님 맞춤 어드바이스로 이어집니다. 참고: <https://foothold-project.vercel.app/research-role-map-careers>
+4. 경비 상신도 월요일 다같이 진행합니다.
 
-1. **전담 현직자 멘토가 우리 팀에 옵니다.** 이스트소프트가 직접 컨택해 고용한 전문가로, 멘토라기보다 제6의 멤버처럼 함께합니다. **매일 오전 9시~12시, 3시간 고정** (온/오프라인).
-2. **킥오프(상견례): 오늘 8/20(목) 16:00, 줌.** 당초 내일 오전이었으나 내일 조선대 공식 일정 때문에 앞당겨졌습니다.
-3. 팀 소개는 발표 덱으로 진행합니다 (전체화면, 방향키로 넘김):
-   <https://foothold-project.vercel.app/pitch>
-   기획서 전문: <https://foothold-project.vercel.app/project-report>
-4. **우리가 지킬 것 2가지**: 외부 전문가 멘토링도 정기 병행 / 전담 멘토에 과의존하지 않기. 우리가 얻어가는 것이 우선입니다.
-5. 중간발표는 "10월 초" 언급이 있었습니다. 공식 공지 대기 중이며 확정되면 다시 공유합니다 (현행 가정 9/30).
-6. 회의 기록(확정 사항·타임코드): <https://foothold-project.vercel.app/meeting-20260820-dedicated-mentor>
+8/21 팀 미팅 기록: <https://foothold-project.vercel.app/meeting-20260821-team-meeting>
