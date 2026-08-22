@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 620" font-family="'Malgun Gothic',sans-serif">
+<rect width="1080" height="620" fill="#f6f5f1"/>
+<text x="30" y="42" font-size="22" font-weight="800" fill="#161c26">실패 지형 파인튜닝: 레시피 병렬 → 혼합 단일 런</text>
+<text x="30" y="66" font-size="13" fill="#4a5566">합치는 것은 체크포인트가 아니라 «레시피(설정·지식)»다. 최종 정책은 언제나 하나의 혼합 런에서 나온다.</text>
+<text x="30" y="108" font-size="14" font-weight="800" fill="#0e7a6e">1~2주차 · 병렬 (팀원 4인, 지형 1개씩)</text>
+<g font-size="12.5">
+<rect x="30" y="120" width="240" height="150" rx="8" fill="#fff" stroke="#0e7a6e" stroke-width="1.6"/>
+<text x="45" y="145" font-weight="800" fill="#161c26">gap 담당</text>
+<text x="45" y="168" fill="#4a5566">① 단독 지형 평가 50ep</text>
+<text x="45" y="188" fill="#4a5566">② 실패 영상 분류 (낙상 우세)</text>
+<text x="45" y="208" fill="#4a5566">③ rough 0.6 + gap 0.4 혼합</text>
+<text x="45" y="228" fill="#4a5566">    resume 파인튜닝 sweep</text>
+<text x="45" y="248" fill="#a3342a">④ rough 회귀 지표 상시 계측</text>
+<rect x="290" y="120" width="240" height="150" rx="8" fill="#fff" stroke="#0e7a6e" stroke-width="1.6"/>
+<text x="305" y="145" font-weight="800" fill="#161c26">rails 담당</text>
+<text x="305" y="168" fill="#4a5566">동일 절차 · 낙상 우세(생존 36%)</text>
+<text x="305" y="188" fill="#4a5566">난이도 파라미터: 레일 폭·높이</text>
+<text x="305" y="208" fill="#4a5566">1/50 성공 → 학습 가능 신호</text>
+<rect x="550" y="120" width="240" height="150" rx="8" fill="#fff" stroke="#0e7a6e" stroke-width="1.6"/>
+<text x="565" y="145" font-weight="800" fill="#161c26">stepping_stones 담당</text>
+<text x="565" y="168" fill="#4a5566">동일 절차 · 낙상 58%로 재분류</text>
+<text x="565" y="188" fill="#4a5566">난이도: 디딤돌 간격·크기</text>
+<text x="565" y="208" fill="#4a5566">관측(height scan) 확인 포함</text>
+<rect x="810" y="120" width="240" height="150" rx="8" fill="#fff" stroke="#0e7a6e" stroke-width="1.6"/>
+<text x="825" y="145" font-weight="800" fill="#161c26">pit 담당</text>
+<text x="825" y="168" fill="#4a5566">동일 절차 · 순수 전진불능</text>
+<text x="825" y="188" fill="#4a5566">→ 처방은 보상·명령 쪽</text>
+<text x="825" y="208" fill="#4a5566">(낙상 페널티 vs 전진 보상)</text>
+</g>
+<g stroke="#0e7a6e" stroke-width="2" fill="none">
+<path d="M150 270 V300 H540"/><path d="M410 270 V300"/><path d="M670 270 V300"/><path d="M930 270 V300 H540"/>
+<path d="M540 300 V330"/>
+</g>
+<path d="M540 330 l-7 -12 h14 z" fill="#0e7a6e"/>
+<rect x="240" y="336" width="600" height="90" rx="8" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="2"/>
+<text x="260" y="362" font-size="14" font-weight="800" fill="#0e7a6e">산출물 = 지형별 «레시피 1장» × 4</text>
+<text x="260" y="384" font-size="12.5" fill="#161c26">작동한 지형 비율(proportion) · 난이도 시작점 · 보상 변경 · 학습률 · 실패 조건</text>
+<text x="260" y="404" font-size="12.5" fill="#161c26">체크포인트 4개를 합치는 게 아니다 (RL 가중치 병합은 성립하지 않음)</text>
+<path d="M540 426 V456" stroke="#0e7a6e" stroke-width="2"/><path d="M540 456 l-7 -12 h14 z" fill="#0e7a6e"/>
+<text x="30" y="452" font-size="14" font-weight="800" fill="#0e7a6e">3주차 · 통합 (단일 런)</text>
+<rect x="180" y="462" width="720" height="66" rx="8" fill="#fff" stroke="#161c26" stroke-width="2"/>
+<text x="200" y="488" font-size="13.5" font-weight="800" fill="#161c26">rough 0.5 + gap·rails·stones·pit 각 0.125 혼합 커리큘럼 → 정책 1개 학습</text>
+<text x="200" y="510" font-size="12.5" fill="#4a5566">Isaac Lab terrain_generator sub_terrains에 4종 추가 (전부 내장 cfg) · resume vs scratch 1런씩 비교</text>
+<path d="M540 528 V552" stroke="#0e7a6e" stroke-width="2"/><path d="M540 552 l-7 -12 h14 z" fill="#0e7a6e"/>
+<rect x="180" y="558" width="720" height="46" rx="8" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.6"/>
+<text x="200" y="586" font-size="13" font-weight="800" fill="#a86a08">4주차 · 전 지형 재벤치(기존+신규) + ablation 표(단독 vs 혼합의 rough 붕괴 비교) = 발표 소재</text>
+</svg>
