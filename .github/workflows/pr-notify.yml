@@ -1,0 +1,45 @@
+# PR 알림 - 검수 요청이 묻히지 않게.
+#
+#   discord-notify.yml 과 같은 패턴(조직 시크릿 DISCORD_WEBHOOK · jq payload · curl HTTP 코드 검증).
+#   PR 이 열리거나(opened) 다시 열리거나(reopened) 초안에서 검수 가능 상태가 되면(ready_for_review)
+#   디스코드로 "[PR] #번호 제목 (작성자) - 검수 대기" 를 보낸다.
+#
+# 설치: .github/workflows/pr-notify.yml
+# 필요: 조직 시크릿 DISCORD_WEBHOOK
+#       ⚠️ 웹후크 URL 은 비밀이다. 레포에 직접 적지 말고 반드시 Secrets 로.
+name: PR 알림
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # 초안 PR 은 검수 대기가 아니다. ready_for_review 로 전환될 때 잡는다.
+    if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - name: 보내기
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          # 제목·작성자는 셸에 직접 끼워넣지 않고 env 로 받는다(따옴표·백틱 깨짐 방지)
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정 - 건너뜀"; exit 0; }
+          jq -n --arg t "[PR] #${PR_NUMBER} ${PR_TITLE} (${PR_AUTHOR})" \
+                --arg d "검수 대기" \
+                --arg u "$PR_URL" \
+                --arg r "$REPO" \
+            '{embeds:[{title:$t, description:$d, url:$u, color:3447003, footer:{text:$r}}]}' \
+            | curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" -d @- "$HOOK" > /tmp/code
+          CODE=$(cat /tmp/code)
+          echo "HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패 - 웹훅 상태 확인 필요"; exit 1 ;; esac
