@@ -1,6 +1,6 @@
 # Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크
 
-> 작성 **임석헌** · 2026-08-22 · 원본: inbox/lim (승격 2026-08-22) · Runpod 재현의 실행 정본
+> 작성 2026-08-22 · **임석헌** · 원본: inbox/lim (승격 2026-08-22) · Runpod 재현의 실행 정본
 > 요지: NVIDIA 공식 checkpoint 모델의 미경험 험지에 대한 간단한 지표 측정
 
 - 기준 환경: RunPod Ubuntu 컨테이너
