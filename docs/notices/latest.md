@@ -1,10 +1,18 @@
-📢 **인프라 가이드 2편 게시 + 월요일 준비물** (2026-08-22)
+📢 **조선대 3주차 자료 «ROS2 Python 프로그래밍» 자료실 업로드** (2026-08-23)
 
-1. **Runpod 팀 운용 가이드** — FOOTHOLD 팀 워크스페이스를 쓰는 법 전부: 권한 차이(초대받은 권한 확인하세요), 네트워크 볼륨 표준(팟 종료해도 데이터 보존), 팟 쓰고 나면 Terminate, 비용 좌표.
-   <https://foothold-project.vercel.app/research-runpod-team-ops>
-2. **벤치마크 재현 프로토콜** — 일반화 벤치마크를 재현·검증하는 표준 절차. 원자료 재검에서 중요한 발견이 있어 보고서도 정정했습니다 (에피소드 50회가 동일 궤적의 재생이었음 · 다음 실험 설계 포함).
-   <https://foothold-project.vercel.app/research-benchmark-repro-protocol>
-3. **월요일 준비물 리마인드**: 개인 방향성 페이퍼 1~2장 (백그라운드 · 희망 직무·회사 · 파트, 자유 양식) — 멘토님 맞춤 어드바이스로 이어집니다. 참고: <https://foothold-project.vercel.app/research-role-map-careers>
-4. 경비 상신도 월요일 다같이 진행합니다.
+차주 수업 자료를 받아 팀 자료실에 올렸습니다. 미리 보고 오시면 금요일 수업을 실습 위주로 쓸 수 있습니다.
 
-8/21 팀 미팅 기록: <https://foothold-project.vercel.app/meeting-20260821-team-meeting>
+**자료실** (비밀번호는 기존과 동일, 디스코드 리소스 채널 참고)
+<https://foothold-project.vercel.app/chosun-materials>
+
+**이번 자료**: ROS2 Python 프로그래밍 (rclpy 실전, 50페이지)
+- rclpy로 직접 노드 작성하는 실전 개발 단계
+- 토픽 · 서비스 · 패키지 · 커스텀 메시지 · 액션 · 파라미터 · 디버그와 launch
+- 지난 «ROS2 개발환경 구축»의 후속편입니다. 환경 세팅을 아직 못 하신 분은 그것부터 먼저 하세요.
+
+**자료실에 있는 것 (총 3건)**
+1. OT · ROS2 & Go2 오리엔테이션
+2. ROS2 개발환경 구축 (Ubuntu 24.04)
+3. ROS2 Python 프로그래밍 (신규)
+
+웹에서 바로 열람하거나 원본 다운로드 모두 됩니다. **외부 공유는 금지**입니다 (조선대 제공 자료).
