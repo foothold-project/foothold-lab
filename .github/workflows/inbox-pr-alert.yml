@@ -1,0 +1,145 @@
+# inbox 제출 감지 (PR 시점) — 팀장이 머지하기 «전»에 알린다.
+#
+#   왜 필요한가 (2026-08-24 확인한 구멍):
+#     기존 inbox-alert.yml 은 main 에 push 될 때만 돈다. 그런데 팀원은 main 에
+#     직접 밀지 않고 브랜치 -> PR 로 올린다. 그래서 알림이 «팀장이 머지한 뒤»에야
+#     울렸다. 알림의 목적은 팀장이 «아직 모르는 것»을 알리는 것인데, 이미 처리한
+#     다음에 오면 소용이 없다.
+#     실제 사례: 임석헌 PR #40 제출 13:59 -> 알림은 15:00 (팀장이 머지한 직후).
+#
+#   이 워크플로: PR 이 열리거나 커밋이 추가되면, inbox/ 아래 파일이 있을 때만
+#   디스코드 + 팀장 텔레그램으로 알린다. 승격 검토 이슈는 만들지 않는다
+#   (그건 머지 후 inbox-alert.yml 이 만든다 — 큐가 두 번 생기면 안 된다).
+#
+# 필요: DISCORD_WEBHOOK, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+name: inbox 제출 감지 (PR)
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    paths: ['inbox/**']
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: inbox-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: 제출 파일 찾기
+        id: files
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          FILES=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '
+            [.[] | select(.status != "removed") | .filename
+             | select(startswith("inbox/"))
+             | select(endswith("README.md") or endswith(".gitkeep") | not)]
+            | join("\n")')
+          if [ -z "$FILES" ]; then
+            echo "inbox 실제 제출물 없음 → 생략"
+            echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "::group::제출 파일"; echo "$FILES"; echo "::endgroup::"
+          {
+            echo "skip=0"
+            echo "files<<ZEOF"; echo "$FILES"; echo "ZEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # 제출자는 «PR 을 연 사람»이다. 머지 커밋의 author 를 쓰면 팀장 이름이 나온다.
+      - name: 디스코드
+        if: steps.files.outputs.skip == '0'
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          TITLE: ${{ github.event.pull_request.title }}
+          URL: ${{ github.event.pull_request.html_url }}
+          FILES: ${{ steps.files.outputs.files }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOOK:-}" ]; then echo "웹훅 없음"; exit 1; fi
+          {
+            printf '제출자: %s\n' "$AUTHOR"
+            printf 'PR: %s\n\n' "$TITLE"
+            printf '%s\n' "$FILES" | head -5 | sed 's/^/• /'
+            printf '\n%s\n' "$URL"
+            printf '(팀장 검토 후 머지하면 승격 검토 큐가 열립니다)\n'
+          } > desc.txt
+          CODE=$(jq -n --arg t "📥 inbox 새 제출 (검토 전)" --rawfile d desc.txt \
+                   '{embeds:[{title:$t, description:$d, color:1016969}]}' \
+                 | curl -sS -o /dev/null -w '%{http_code}' -X POST \
+                        -H "Content-Type: application/json" -d @- "$HOOK")
+          echo "디스코드 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
+
+      - name: 팀장 텔레그램 (자동 검토 포함)
+        if: steps.files.outputs.skip == '0'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          TITLE: ${{ github.event.pull_request.title }}
+          URL: ${{ github.event.pull_request.html_url }}
+          FILES: ${{ steps.files.outputs.files }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
+          fi
+          if [ -f .github/scripts/review_inbox.py ]; then
+            printf '%s\n' "$FILES" | xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
+          else
+            echo '{}' > review.json
+          fi
+          python3 - <<'PY' > tg.txt
+          import io, json, os
+          try:
+              d = json.load(io.open('review.json', encoding='utf-8'))
+          except Exception:
+              d = {}
+          print('[FOOTHOLD] inbox 새 제출 · 아직 머지 전')
+          print('')
+          print('제출자: %s' % os.environ.get('AUTHOR', ''))
+          print('PR: %s' % os.environ.get('TITLE', ''))
+          files = d.get('files') or []
+          if files:
+              for f in files:
+                  print('')
+                  print('· %s' % f.get('path', ''))
+                  print('  제목: %s' % str(f.get('title', ''))[:60])
+                  if f.get('lede'):
+                      print('  요지: %s' % f['lede'])
+                  print('  분량: %s줄 · 증거표기 %s · 출처 %s'
+                        % (f.get('lines', '?'), f.get('evidence', '?'), f.get('links', '?')))
+                  print('  판정: %s' % ('승격 가능' if f.get('ok') else '손질 필요'))
+                  for x in (f.get('fixes') or []):
+                      print('    - %s' % x)
+          else:
+              print('')
+              for line in os.environ.get('FILES', '').split('\n'):
+                  if line.strip():
+                      print('· %s' % line.strip())
+          print('')
+          print('검토하시고 머지하면 승격 검토 큐가 열립니다.')
+          print(os.environ.get('URL', ''))
+          PY
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "disable_web_page_preview=true" \
+                 --data-urlencode "text@tg.txt")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
