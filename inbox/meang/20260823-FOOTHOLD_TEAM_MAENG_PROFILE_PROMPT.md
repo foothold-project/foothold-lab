@@ -1,6 +1,8 @@
 작성 2026-08-23
 요지: 홈 팀 카드에서 맹라현 Scene·Viz 상세 패널을 구현할 원샷 프롬프트
 
+소개 본문 정본은 이제 [docs/TEAM-MAENG.md](../../docs/TEAM-MAENG.md)다. 이 파일은 inbox라 웹에 나가지 않는다. 오흥재 `team-lead.html`과 같은 칸의 소개문을 lab에 적어 둔 것이다. 표지 «소개 보기» 링크는 사이트 빌드가 `team-maeng.html`로 잇는다.
+
 # FOOTHOLD 사이트 — 맹라현 팀 카드 클릭 프로필
 
 나중에 **팀 사이트 Git 저장소**에서 작업할 때 쓴다.  

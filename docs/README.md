@@ -8,7 +8,7 @@
 | `meetings/` | 회의록 (타임코드 인용) | 안 함 |
 | `notices/` | 공지 원고 | 안 함 (디스코드로 발송) |
 | `ops/` | 검증 기록·인프라 체크리스트 | 안 함 |
-| 루트 | 기획·규칙 문서 (COLLAB · FLOW · PLAN · LEDGER · DECISIONS) | 지정된 것만 |
+| 루트 | 기획·규칙 (COLLAB · FLOW · PLAN · LEDGER · DECISIONS) · 팀원 소개 (`TEAM-MAENG.md` → `team-maeng.html`) | 지정된 것만. 오흥재 소개는 `team-lead.html`(볼트 원본) |
 
 > ★ **`docs/` 는 정본만 둔다.** 다듬어지지 않은 제출물은 저장소 루트의
 > [`inbox/`](../inbox/README.md) 로 간다. inbox 는 웹에 나가지 않는다.
