@@ -3,13 +3,13 @@
 
 # 8/18 험지RL: 공부와 접근
 
-> 원본 인쇄본: [한 페이지 PDF](./20260818-rough-terrain-rl-study.pdf)
 > 작성 맹라현 · 2026-08-18 · v2026-08-18 (Priority Matrix / Study Planner)
 > 검증 수위: 이 장은 **8/18 시점의 공부·우선순위 표**다 `확인됨`. 8/19 방향 전환(실기 저수준 이전 폐기, 두 트랙)은 이 표에 없다 `확인됨`. 현재 정본은 [프로젝트 보고서](https://foothold-project.vercel.app/project-report).
+> 웹 길잡이 판: [8/18 험지RL](../../docs/meetings/20260818-rough-terrain-study.md). cfg 공부 장: [험지 학습 커리큘럼](../../docs/research/go2-rough-training.md).
 
 오늘 초점: **미경험 험지에서도 보행이 유지되는가?**
 
-사이트 디자인·카드 레이아웃은 새로 만들지 않는다. 이 md가 `docs/research/` 로 승격되면 다음 빌드가 표지 카드와 웹 페이지를 붙인다. PDF는 위 링크에서 원 배치 그대로 본다.
+사이트 디자인·카드 레이아웃은 새로 만들지 않는다. 이 md가 `docs/research/` 로 승격되면 다음 빌드가 표지 카드와 웹 페이지를 붙인다.
 
 ## 3단계 로드맵
 
@@ -148,7 +148,6 @@ SLAM/Nav: slam_toolbox · Nav2.
 
 ## 출처
 
-- 원본 PDF: [20260818-rough-terrain-rl-study.pdf](./20260818-rough-terrain-rl-study.pdf) (로컬 HTML `MD/print_oneshot_rl_guide.html` 에서 인쇄)
 - 현재 계획 정본: [프로젝트 보고서](https://foothold-project.vercel.app/project-report)
 - 협업·제출 규칙: [COLLAB](https://foothold-project.vercel.app/collab.html)
 - 학습 스택: [Isaac Lab v2.3.2](https://isaac-sim.github.io/IsaacLab/v2.3.2/)
