@@ -129,7 +129,7 @@
 ## 7. 문서 규칙
 
 - `docs/research/` 조사 · `docs/meetings/` 회의록 · `docs/ops/` 운영 · 루트 = 기획/규칙
-- 파일명은 소문자-하이픈. 회의록 타이틀은 `Foothold 회의록_YYMMDD` / `Foothold 정리본(멘토명)_YYMMDD`. md 는 `docs/meetings/YYMMDD_…md`, 인쇄는 한 페이지(`docs/meetings/print/`)
+- 파일명은 소문자-하이픈. 회의록 타이틀은 `Foothold_YYMMDD` / `Foothold(멘토명)_YYMMDD`. 인쇄는 한 페이지·나눔고딕 (`docs/meetings/print/`)
 - **출처 등급**: 공식 문서 > 교재 > 논문 > 해설 블로그 > 백과. **숫자 인용은 논문·공식만.**
 - 확인 못 한 것은 **`미확인`** 이라 쓴다. 미확인을 근거로 판단하지 않는다.
 - 웹에 올라가는 구조도는 **ASCII 금지**. SVG·이미지·표로.

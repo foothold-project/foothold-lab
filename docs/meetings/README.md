@@ -8,22 +8,21 @@
 
 ## 제목
 
-종류를 먼저 확인하고, 뒤에 날짜(`YYMMDD`)를 붙인다.
+`Foothold` 뒤에 사람(있으면 괄호)과 날짜(`YYMMDD`)를 붙인다. 폰트는 나눔고딕.
 
 | 종류 | 타이틀 | 예 |
 |---|---|---|
-| 팀·운영 회의 | `Foothold 회의록_YYMMDD` | `Foothold 회의록_260814` |
-| 멘토링 정리 | `Foothold 정리본(멘토명)_YYMMDD` | `Foothold 정리본(박철제님)_260824` |
+| 팀·운영 회의 | `Foothold_YYMMDD` | `Foothold_260814` |
+| 멘토링 | `Foothold(멘토명)_YYMMDD` | `Foothold(박철제님)_260824` |
 
-md 파일명은 `YYMMDD_Foothold_회의록.md` / `YYMMDD_Foothold_정리본_멘토.md`.
-인쇄 PDF 파일명은 위 타이틀 그대로.
+PDF · HTML · md 파일명을 이 타이틀과 같게 둔다.
 
 ## 디자인
 
 인쇄본은 **한 페이지**다. 기준은 `inbox/meang/20260818-rough-terrain-rl-study.pdf` (험지RL 공부와 접근)의 격자다.
 
 - HTML: `docs/meetings/print/`
-- 공유 스타일: `print/oneshot.css`
+- 공유 스타일: `print/oneshot.css` (나눔고딕)
 - PDF 다시 뽑기: `bash docs/meetings/print/render.sh`
 
 새 회차는 기존 HTML을 복사해 제목·초점·사분면·노트·다음 할 일만 바꾼다. 페이지를 늘리지 않는다.

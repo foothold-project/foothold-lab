@@ -23,8 +23,8 @@
 
 ## 회의록
 
-- 타이틀: 팀·운영은 `Foothold 회의록_YYMMDD`, 멘토링은 `Foothold 정리본(멘토명)_YYMMDD`
-- md 파일명: `docs/meetings/YYMMDD_Foothold_회의록.md` (또는 `_정리본_멘토.md`)
+- 타이틀: 팀·운영은 `Foothold_YYMMDD`, 멘토링은 `Foothold(멘토명)_YYMMDD`. 폰트는 나눔고딕
+- 파일명: PDF·HTML·md를 타이틀과 같게 (`docs/meetings/`, 인쇄 HTML은 `docs/meetings/print/`)
 - 인쇄본은 한 페이지. 디자인은 `docs/meetings/print/` (험지RL 공부와 접근 격자)
 - 녹음 기반 회의록은 **모든 인용에 타임코드**를 붙인다 (원문 대조 가능하게)
 - ⚠️ 금액·개인정보가 들어가는 회의록은 **이 레포(Private)까지만.** 공개 사이트에 내보내지 않는다.

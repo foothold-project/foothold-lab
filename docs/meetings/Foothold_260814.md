@@ -1,7 +1,7 @@
-# 8/14 Foothold 회의록: 이스트 운영 조율
+# Foothold_260814
 
 > 2026-08-14 · 이스트 / 운영 미팅 · 어제(조선대 OT) 후속.
-> 인쇄본: [Foothold 회의록_260814.pdf](./Foothold_회의록_260814.pdf) (`docs/meetings/print/` 한 페이지 디자인)
+> 인쇄본: [Foothold_260814.pdf](./Foothold_260814.pdf) (`docs/meetings/print/` 한 페이지 · 나눔고딕)
 
 오늘 초점: **이스트 지원 = ROS2·인프라. 멘토는 인사이트 계열.**
 
