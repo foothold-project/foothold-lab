@@ -5,6 +5,7 @@
 >
 > 근거: [go2-hardware.md](../../MAI_UNIVERSE/03_PROJECTS/doyak-final/01_research/go2-hardware.md) §6 «미확인(정직한 공백)» ·
 > [architecture-decision.md](research/architecture-decision.md) · [FLOW.md](FLOW.md)
+> 같은 날 운영진 조율에서 확정한 것은 [8/13 운영 미팅](meetings/20260813-ops-alignment.md)이다. 이 문서는 현장 확인 목록이다.
 
 ---
 
