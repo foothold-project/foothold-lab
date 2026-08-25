@@ -571,9 +571,9 @@ h1 {
 /* ── stacked flow: 세로 단락, 오른쪽 칸 없음 ── */
 .page.flow .hdr {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 3.2mm;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 2.6mm;
 }
 
 .page.flow .hdr h1 {
@@ -587,6 +587,8 @@ h1 {
 .page.flow .hdr .date {
   grid-column: auto;
   grid-row: auto;
+  margin-top: 1mm;
+  text-align: left;
   font-size: 9pt;
   font-weight: 400;
   color: var(--muted);
@@ -612,30 +614,33 @@ h1 {
 }
 
 .page.flow .frame {
-  height: 258mm;
+  height: 253mm;
   gap: 0.7pt;
 }
 
-.page.flow .workflow { flex: 0 0 auto; }
+.page.flow .workflow {
+  flex: 0 0 auto;
+  padding: 2.2mm 2.6mm 1.8mm;
+}
 
 .page.flow .matrix {
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  flex: 0 0 108mm;
+  grid-template-rows: auto auto;
+  flex: 0 0 auto;
 }
 
 .page.flow .matrix.deep .cell {
-  padding: 2.8mm 3mm 2.4mm;
+  padding: 1.8mm 2.4mm 1.6mm;
 }
 
 .page.flow .matrix.deep p {
   margin: 0;
-  padding: 1.35mm 0 1.45mm;
+  padding: 0.7mm 0 0.75mm;
   border-bottom: 0.75pt solid var(--slate);
-  font-size: 7.4pt;
+  font-size: 7pt;
   font-weight: 400;
   color: var(--ink2);
-  line-height: 1.38;
+  line-height: 1.32;
 }
 
 .page.flow .matrix.deep p:last-child {
@@ -649,7 +654,7 @@ h1 {
 
 .page.flow .band {
   background: #fff;
-  padding: 2.8mm 3.2mm 2.6mm;
+  padding: 2.2mm 3mm 2mm;
   flex: 0 0 auto;
 }
 
@@ -658,27 +663,31 @@ h1 {
   min-height: 0;
 }
 
+.page.flow .band.people {
+  padding: 1.6mm 3mm 1.4mm;
+}
+
 .page.flow .people .person {
-  padding: 1.7mm 0 1.8mm;
+  padding: 1mm 0 1.05mm;
   border-bottom: 0.75pt solid var(--slate);
 }
 
 .page.flow .people .person:last-child { border-bottom: 0; padding-bottom: 0; }
 
 .page.flow .people h3 {
-  margin: 0 0 0.6mm;
-  font-size: 10pt;
+  margin: 0 0 0.35mm;
+  font-size: 9.5pt;
   font-weight: 400;
   color: var(--ink);
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .page.flow .people p {
   margin: 0;
-  font-size: 7.6pt;
+  font-size: 7.2pt;
   font-weight: 400;
   color: var(--ink2);
-  line-height: 1.38;
+  line-height: 1.32;
 }
 
 .page.flow .notes-short p {
@@ -691,23 +700,31 @@ h1 {
 
 .page.flow .notes-short p:last-child { margin-bottom: 0; }
 
-.page.flow .axes .axis {
+.page.flow .band.axes {
   display: grid;
-  grid-template-columns: 16mm 1fr;
-  gap: 2.4mm;
-  padding: 1.5mm 0;
-  border-bottom: 0.75pt solid var(--slate);
-  font-size: 7.6pt;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.8pt;
+  background: var(--slate);
+  padding: 0;
+}
+
+.page.flow .axes .axis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7mm;
+  background: #fff;
+  padding: 2mm 2.6mm 1.8mm;
+  border: 0;
+  font-size: 7.4pt;
   line-height: 1.35;
   color: var(--ink2);
 }
-
-.page.flow .axes .axis:last-child { border-bottom: 0; padding-bottom: 0; }
 
 .page.flow .axes .k {
   font-weight: 400;
   color: var(--muted);
   font-size: 8pt;
+  line-height: 1.2;
 }
 
 .page.flow .next-row {
