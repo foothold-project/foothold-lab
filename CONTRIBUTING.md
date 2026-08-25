@@ -24,7 +24,7 @@
 ## 회의록
 
 - 타이틀: 팀·운영은 `Foothold_YYMMDD`, 멘토링은 `Foothold(멘토명)_YYMMDD`. 폰트는 나눔고딕
-- 파일명: PDF·HTML·md를 타이틀과 같게 (`docs/meetings/`, 인쇄 HTML은 `docs/meetings/print/`)
-- 인쇄본은 한 페이지. 디자인은 `docs/meetings/print/` (험지RL 공부와 접근 격자)
+- 회의록 정본은 md 하나다: `docs/meetings/YYYYMMDD-slug.md`
+- 인쇄·PDF 는 따로 만들지 않는다. 웹 페이지의 «PDF 저장» 버튼을 쓴다
 - 녹음 기반 회의록은 **모든 인용에 타임코드**를 붙인다 (원문 대조 가능하게)
 - ⚠️ 금액·개인정보가 들어가는 회의록은 **이 레포(Private)까지만.** 공개 사이트에 내보내지 않는다.
