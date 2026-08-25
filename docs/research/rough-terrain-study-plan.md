@@ -1,6 +1,7 @@
-# 8/18 험지RL: 공부와 접근
+# 험지 RL 학습 계획 : 무엇을 먼저 하고 무엇을 하지 않는가
 
-> 2026-08-18 · 작성 맹라현 · 한 장 우선순위 표 (Priority Matrix / Study Planner).
+> 작성 맹라현 · 2026-08-18 · 한 장 우선순위 표 (Priority Matrix / Study Planner).
+> 회의록이 아니라 **개인 학습 계획**이다. 2026-08-25 에 회의록 폴더에서 이리로 옮겼다.
 > 원본 md: [inbox/meang/20260818-rough-terrain-rl-study.md](../../inbox/meang/20260818-rough-terrain-rl-study.md). 원본 인쇄본 PDF는 그 폴더에 있다.
 > 이 장은 **8/18 시점의 공부·우선순위**다 `확인됨`. 다음날 방향 전환(저수준 실기 이전 폐기, 두 트랙)은 이 표에 없다. 현재 계획 정본은 [프로젝트 보고서](../REPORT.md).
 
