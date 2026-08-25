@@ -1,6 +1,11 @@
 # Isaac Lab Go2 험지 학습: cfg를 읽는 커리큘럼
 
+> 분류: 리서치
+> 작성: 맹라현 · 2026-08-25
+> 근거: 공식 문서
 > 요지: 공식 Go2 rough 환경이 로봇·지형·명령·보상·시간축을 어떻게 묶는지, 요약 다음에 상세로 읽는다.
+> 상태: 확정
+
 > 작성 2026-08-25 · 원본: 팀 스터디 필기 `IsaacLab_Go2_험지학습_요약.md` · `IsaacLab_Go2_험지학습_상세.md`. 공식 클래스명으로 재정리.
 > 이 문서가 답하는 것: **학습 cfg를 열기 전에 무엇을 어떤 순서로 읽는가.** 커스텀 험지 설계는 [지형 가이드](terrain-guide-isaaclab.md), 숫자 실측은 [학습 성능 실측](training-benchmarks.md).
 > 클래스명·기본값·Go2 오버라이드는 Isaac Lab 공식 `UNITREE_GO2_CFG` · `LocomotionVelocityRoughEnvCfg` · `UnitreeGo2RoughEnvCfg` · `ROUGH_TERRAINS_CFG` 기준 `확인됨`. 스터디 때 나온 실험 감각은 팀 실측과 맞춰 표시한다.
