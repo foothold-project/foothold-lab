@@ -570,14 +570,49 @@ h1 {
 
 /* ── stacked flow: 세로 단락, 오른쪽 칸 없음 ── */
 .page.flow .hdr {
-  grid-template-rows: auto auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3.2mm;
 }
 
-.page.flow h1 { grid-row: 2; }
-.page.flow .focus { grid-row: 2; align-self: end; }
+.page.flow .hdr h1 {
+  grid-column: auto;
+  grid-row: auto;
+  margin: 0;
+  font-size: 20pt;
+  font-weight: 700;
+}
+
+.page.flow .hdr .date {
+  grid-column: auto;
+  grid-row: auto;
+  font-size: 9pt;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.page.flow h2.sec {
+  margin: 0 0 2.4mm;
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.page.flow .wf-step .ttl {
+  font-weight: 400;
+}
+
+.page.flow .people .person h3 {
+  font-size: 10pt;
+  font-weight: 400;
+  color: var(--ink);
+}
 
 .page.flow .frame {
-  height: 250mm;
+  height: 258mm;
   gap: 0.7pt;
 }
 
@@ -612,15 +647,6 @@ h1 {
   color: var(--slate);
 }
 
-.page.flow .people h3 {
-  font-size: 8.6pt;
-}
-
-.page.flow .people p {
-  font-size: 7.8pt;
-  line-height: 1.42;
-}
-
 .page.flow .band {
   background: #fff;
   padding: 2.8mm 3.2mm 2.6mm;
@@ -641,8 +667,8 @@ h1 {
 
 .page.flow .people h3 {
   margin: 0 0 0.6mm;
-  font-size: 8.2pt;
-  font-weight: 700;
+  font-size: 10pt;
+  font-weight: 400;
   color: var(--ink);
   line-height: 1.2;
 }
@@ -679,8 +705,9 @@ h1 {
 .page.flow .axes .axis:last-child { border-bottom: 0; padding-bottom: 0; }
 
 .page.flow .axes .k {
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 8pt;
 }
 
 .page.flow .next-row {
