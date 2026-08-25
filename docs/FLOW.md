@@ -60,6 +60,8 @@ difficulty = (행번호 + 랜덤 0~1) ÷ 전체 행수
 
 **level 5 는 계단 약 14 cm.** Go2 몸통 높이가 약 35 cm 이니 다리 길이의 절반에 가깝다.
 
+공식 Go2 rough cfg(로봇·스폰·6종 지형·보상 오버라이드·시간축)를 코드 순서로 읽는 장은 [험지 학습 커리큘럼](research/go2-rough-training.md)이다. 커스텀 지형 21종은 [지형 가이드](research/terrain-guide-isaaclab.md).
+
 ### 단위: 시계가 두 개다
 
 | 말 | 뜻 |
@@ -443,5 +445,6 @@ VFX 파이프라인과 같은 구조다. 시뮬레이션 캐시를 굽고, 라�
 | GPU 2장 DDP | ❌ **Windows 는 NCCL 미지원 → 구조적 불가.** 우분투로 이월 |
 
 **상세**: [visual-evidence.md](research/visual-evidence.md) · [training-benchmarks.md](research/training-benchmarks.md) ·
+[go2-rough-training.md](research/go2-rough-training.md) · [terrain-guide-isaaclab.md](research/terrain-guide-isaaclab.md) ·
 [render-benchmarks.md](research/render-benchmarks.md) · [go2-pretrained-policies.md](research/go2-pretrained-policies.md) ·
 [omniverse-stack.md](research/omniverse-stack.md) · [architecture-decision.md](research/architecture-decision.md)

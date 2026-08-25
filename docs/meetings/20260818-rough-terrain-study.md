@@ -88,3 +88,5 @@ SLAM/Nav: slam_toolbox · Nav2.
 | 전원 | 학습 Windows WS | 실기 Ubuntu 22.04 / ROS 2 Humble |
 
 역할 정본은 [8/21 팀 미팅](20260821-team-meeting.md)에서 다시 고정됐다. 다음날 말하기 카드와 합의는 [8/19 팀 합의](20260819-team-lock.md).
+
+공식 Go2 rough env(로봇·6종 지형·보상·시간축)를 코드 순서로 읽는 공부 장은 [험지 학습 커리큘럼](../research/go2-rough-training.md)이다.

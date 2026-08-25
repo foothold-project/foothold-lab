@@ -3,7 +3,7 @@
 > 요지: 첫 기준선 통과율 86.7%. 실패 원인은 넘어짐이 아니라 느림이며, 보상 수치는 걷기를 보증하지 않는다.
 > 작성 2026-08-09 · 측정 환경 **AI-WS01** (RTX 5080 ×2 · Threadripper 7970X · 256GB RAM · Windows 11)
 > 성격: **웹 조사가 아니라 이 기계에서 실제로 돌린 숫자.** 전부 로그에서 추출.
-> 관련: [`SETUP_GUIDE`](../../../02_team/SETUP_GUIDE.md) · `cloud-gpu-options.md` · `ros2-isaacsim-integration.md`
+> 관련: [`SETUP_GUIDE`](../../../02_team/SETUP_GUIDE.md) · `cloud-gpu-options.md` · `ros2-isaacsim-integration.md` · cfg 읽는 순서 [험지 학습 커리큘럼](go2-rough-training.md)
 
 ---
 

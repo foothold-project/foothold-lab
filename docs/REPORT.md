@@ -137,6 +137,7 @@
 | Baseline 재현 | 완료: 1,500 iter 실측, 통과율 86.7% → [학습 실측](research-training-benchmarks.html) |
 | 평가 파이프라인 | v1 가동 중 → [학습 실측 §5](research-training-benchmarks.html) |
 | Terrain 이해 | [Isaac Lab 지형 가이드](research-terrain-guide-isaaclab.html) (작성 임석헌) |
+| Go2 rough cfg 읽기 | [험지 학습 커리큘럼](research-go2-rough-training.html) (요약 다음 상세) |
 | 렌더·트윈 역량 | PT 1080p 1.75초/프레임 실측 → [렌더 실측](research-render-benchmarks.html) · vMaterials·Sample Scenes 수령 완료 |
 | 공개 정책 비교군 | 4종 로드·실행 검증 → [관측 매핑](research-robogauge-observation-mapping.html) |
 | 조선대 수업 자료 | [팀 자료실](chosun-materials.html) (팀 전용, 비밀번호) |
