@@ -1,0 +1,4 @@
+{
+  "name": "foothold-lab",
+  "install": "sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends fonts-nanum && sudo fc-cache -f >/dev/null"
+}
