@@ -23,6 +23,7 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: 보드 읽어 요약 만들기
         id: build
         env:
