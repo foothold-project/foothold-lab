@@ -138,6 +138,11 @@ jobs:
                   print('')
                   print('· %s' % f.get('path', ''))
                   print('  제목: %s' % str(f.get('title', ''))[:60])
+                  # 분류·작성자를 먼저 보여준다. 「학습 계획」이 「회의록」으로
+                  # 올라간 사고는 알림에 분류가 없어서 지나쳤다 (2026-08-25).
+                  if f.get('doc_kind'):
+                      print('  분류: %s   작성: %s'
+                            % (f['doc_kind'], f.get('writer', '')))
                   if f.get('lede'):
                       print('  요지: %s' % f['lede'])
                   print('  분량: %s줄 · 증거표기 %s · 출처 %s'

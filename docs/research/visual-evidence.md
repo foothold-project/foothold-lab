@@ -272,7 +272,7 @@ warehouse는 원점에 넓은 바닥이 있어 우연히 됐고, office는 원�
 > 이 정책의 **보상은 13.94** 였다. 학습 로그만 봤다면 «잘 되고 있다»고 보고했을 것이다.
 > **영상을 보고서야 걷지 못한다는 것을 알았다.** 실제 통과율은 **0%** 였다.
 > 같은 조건에서 1,500 iteration 정책은 **86.7%** 를 낸다 →
-> [training-benchmarks.md](training-benchmarks.html)
+> [training-benchmarks.md](training-benchmarks.md)
 
 ---
 

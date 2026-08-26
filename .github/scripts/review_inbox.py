@@ -1,14 +1,35 @@
 # -*- coding: utf-8 -*-
 """inbox 제출물 자동 검토: 승격 조건을 기계가 판정하고 승격안을 만든다.
 
-  판정 4종은 docs/README.md 의 승격 조건 그대로다.
+  판정은 docs/README.md 의 승격 조건 그대로다.
     h1 제목 · 증거 표기 · 원 출처 링크 · 웹 금지 요소(ASCII 도식·em dash)
+    + 메타데이터 4줄 (2026-08-26 추가)
   통과 여부와 무관하게 **무엇을 고쳐야 하는지**를 문장으로 돌려준다.
   사람이 파일을 열어보지 않고도 승격 여부를 정할 수 있게 하는 것이 목적이다.
+
+  ★ 2026-08-26 메타데이터 검사 추가.
+    8/25 에 문서 표준(분류·작성·근거·요지)을 정하고 빌드 관문(metacheck)까지
+    세웠는데, **팀원 제출 경로에는 그 검사가 없었다.** 그래서 표준 밖 문서가
+    그대로 통과해 웹까지 갔고, 「본인 학습 계획」이 「회의록」으로 올라갔다.
+    관문은 사람이 지나는 모든 문에 있어야 한다. 한 문만 열려 있으면 그리로 샌다.
 
   출력: JSON (stdout)  { files: [ {path, title, lede, checks{}, ok, slug, dest, fixes[] } ] }
 """
 import io, json, os, re, sys
+
+# 문서 표준 (05_deliverables/_build/metacheck.py 와 같은 목록을 쓴다)
+KINDS = ('회의록', '리서치', '실험', '계획', '결정', '운영', '현장', '가이드')
+WRITER = re.compile(r'^\s*(.+?)\s*[·]\s*(20\d{2}-\d{2}-\d{2})\s*$')
+
+
+def meta_of(md):
+    """머리 메타 4~5줄을 읽는다. 없으면 빈 값."""
+    out = {}
+    for f in ('분류', '작성', '근거', '요지', '상태'):
+        m = re.search(r'^>\s*%s\s*:\s*(.+)$' % f, md, re.M)
+        if m:
+            out[f] = m.group(1).strip()
+    return out
 
 
 def review(path):
@@ -17,16 +38,27 @@ def review(path):
     m = re.search(r'^#\s+(.+)$', md, re.M)
     if m:
         title = m.group(1).strip()
-    m = re.search(r'^>?\s*요지:\s*(.+)$', md, re.M)
-    lede = m.group(1).strip()[:120] if m else ''
+    meta = meta_of(md)
+    lede = meta.get('요지', '')
+    if not lede:
+        m = re.search(r'^>?\s*요지:\s*(.+)$', md, re.M)
+        lede = m.group(1).strip() if m else ''
+    lede = lede[:120]
 
     evidence = len(re.findall(r'`(확인됨|검증됨|실측|추측|가설|미측정|미확인|코드확인)`', md))
     links = len(set(re.findall(r'https?://[^\s)]+', md)))
     ascii_art = len(re.findall(r'[─-╿▀-▟]', md))
     emdash = md.count('—')
 
+    missing = [f for f in ('분류', '작성', '근거', '요지') if not meta.get(f)]
+    kind_ok = meta.get('분류') in KINDS if meta.get('분류') else False
+    writer_ok = bool(WRITER.match(meta['작성'])) if meta.get('작성') else False
+
     checks = {
         'h1 제목': bool(title),
+        '메타데이터 4줄': not missing,
+        '분류가 정해진 값': kind_ok,
+        '작성자·날짜 형식': writer_ok,
         '증거 표기': evidence > 0,
         '원 출처 링크': links > 0,
         '웹 금지 요소 없음': ascii_art < 3 and emdash == 0,
@@ -34,6 +66,14 @@ def review(path):
     fixes = []
     if not checks['h1 제목']:
         fixes.append('맨 위에 `# 제목` 추가')
+    if missing:
+        fixes.append('머리에 메타 4줄 추가 (빠짐: %s). 예) > 분류: 리서치'
+                     % ' · '.join(missing))
+    elif not kind_ok:
+        fixes.append('분류를 다음 중 하나로: %s (지금 「%s」)'
+                     % (' · '.join(KINDS), meta.get('분류')))
+    if meta.get('작성') and not writer_ok:
+        fixes.append('작성은 «이름 · YYYY-MM-DD» 형식으로 (지금 「%s」)' % meta['작성'])
     if not checks['증거 표기']:
         fixes.append('`확인됨`/`추측`/`미측정` 표기 부여')
     if not checks['원 출처 링크']:
@@ -45,8 +85,15 @@ def review(path):
 
     slug = re.sub(r'^\d{8}[-_]', '', os.path.basename(path)[:-3])
     slug = re.sub(r'[^a-z0-9-]+', '-', slug.lower()).strip('-') or 'submission'
+    # 문서 표준의 «분류»를 함께 돌려준다. 「본인 학습 계획」이 「회의록」으로
+    # 올라간 사고가 있었으므로, 팀장이 알림만 보고도 분류가 내용과 맞는지
+    # 볼 수 있어야 한다.
+    # ★ 키 이름은 doc_kind 다. 'kind' 는 파일 종류(research/profile/asset)라
+    #   아래에서 덮어쓴다. 같은 이름을 쓰면 조용히 사라진다(실제로 그랬다).
     return {
         'path': path, 'title': title or '(제목 없음)', 'lede': lede,
+        'doc_kind': meta.get('분류') or '(분류 없음)',
+        'writer': meta.get('작성') or '(작성 없음)',
         'lines': md.count('\n') + 1, 'bytes': len(md.encode('utf-8')),
         'evidence': evidence, 'links': links,
         'checks': checks, 'ok': all(checks.values()),
