@@ -32,6 +32,16 @@ def meta_of(md):
     return out
 
 
+# GitHub 핸들 -> 사람 이름. 봇이 «vfxpedia · 2026-08-27» 처럼 핸들을 박으면
+# 문서 표준(이름 · 날짜)에 어긋나는데 검사기는 통과시킨다. 봇이 나쁜 메타를
+# 만드는 생산자가 되지 않게 여기서 이름으로 바꾼다. 모르는 핸들은 그대로 둔다.
+HANDLE_NAME = {
+    'vfxpedia': '오흥재',
+    'maengu86': '맹라현',
+    'less82': '오현민',
+}
+
+
 def paste_block(meta, author, today):
     """PR 코멘트에 그대로 붙일 머리 다섯 줄.
 
@@ -43,7 +53,7 @@ def paste_block(meta, author, today):
         return v if v else default
     return chr(10).join([
         '> 분류: %s' % keep('분류', '리서치'),
-        '> 작성: %s' % keep('작성', '%s · %s' % (author or '이름', today)),
+        '> 작성: %s' % keep('작성', '%s · %s' % (HANDLE_NAME.get(author, author) or '이름', today)),
         '> 근거: %s' % keep('근거', '공식 문서'),
         '> 요지: %s' % keep('요지', '(한 줄로 이 문서가 말하는 것)'),
         '> 상태: %s' % keep('상태', '초안'),
