@@ -22,6 +22,7 @@
    - 사용자가 분명히 시키기 전에는 이 절을 삭제·완화하지 않는다.
 
 5. **산출물은 `inbox/meang/`에만 쓴다.**
+   - 이후에도 `maeng` 브랜치 → `inbox/meang/`만 쓴다. 다른 경로는 없다.
    - `docs/`, `docs/meetings/`, `DECISIONS.md`, `CONTRIBUTING.md`, 남의 `inbox/` 폴더는 금지.
    - 팀장이 승격한다. 정본 폴더에 직접 올리지 않는다.
 
