@@ -114,7 +114,9 @@ def to_cells(r):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--xlsx')
-    ap.add_argument('--today', default=datetime.date.today().isoformat())
+    ap.add_argument('--today', default=(datetime.datetime.now(datetime.timezone.utc)
+                                    + datetime.timedelta(hours=9)).date().isoformat(),
+                help='기준일. 기본은 한국 시간 오늘 (UTC 로 두면 자정~09시에 어제가 된다)')
     a = ap.parse_args()
     today = datetime.date.fromisoformat(a.today)
 

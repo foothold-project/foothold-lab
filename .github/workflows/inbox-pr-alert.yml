@@ -118,7 +118,7 @@ jobs:
             echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
           fi
           if [ -f .github/scripts/review_inbox.py ]; then
-            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(date -u +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
           else
             echo '{}' > review.json
           fi
@@ -181,7 +181,7 @@ jobs:
         run: |
           set -uo pipefail
           if [ ! -f review.json ]; then
-            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(date -u +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
           fi
           python3 - <<'PYEOF' > comment.md
           import io, json, sys
