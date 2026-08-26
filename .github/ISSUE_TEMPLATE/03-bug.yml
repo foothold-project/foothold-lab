@@ -2,6 +2,7 @@ name: 막힘·오류
 description: 안 되는 것을 올리는 곳. 에러 메시지를 그대로 붙여넣으면 됩니다.
 title: "[막힘] "
 labels: [blocked]
+type: Bug
 body:
   - type: textarea
     id: what

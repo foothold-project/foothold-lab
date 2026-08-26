@@ -2,6 +2,7 @@ name: 리서치
 description: 답을 모르는 질문 하나를 적는 곳.
 title: "[리서치] "
 labels: [research]
+type: Feature
 body:
   - type: textarea
     id: question
