@@ -42,9 +42,9 @@ def paste_block(meta, author, today):
         v = (meta or {}).get(f)
         return v if v else default
     return chr(10).join([
-        '> 분류: %s' % keep('분류', '리서치        <- 여덟 중 하나로 바꿔 주세요 (%s)' % ' · '.join(KINDS)),
+        '> 분류: %s' % keep('분류', '리서치'),
         '> 작성: %s' % keep('작성', '%s · %s' % (author or '이름', today)),
-        '> 근거: %s' % keep('근거', '공식 문서      <- 실측 · 본인 노트 · 미확인 중에서'),
+        '> 근거: %s' % keep('근거', '공식 문서'),
         '> 요지: %s' % keep('요지', '(한 줄로 이 문서가 말하는 것)'),
         '> 상태: %s' % keep('상태', '초안'),
     ])
@@ -68,13 +68,13 @@ def review(path):
     ascii_art = len(re.findall(r'[─-╿▀-▟]', md))
     emdash = md.count('—')
 
-    missing = [f for f in ('분류', '작성', '근거', '요지') if not meta.get(f)]
+    missing = [f for f in ('분류', '작성', '근거', '요지', '상태') if not meta.get(f)]
     kind_ok = meta.get('분류') in KINDS if meta.get('분류') else False
     writer_ok = bool(WRITER.match(meta['작성'])) if meta.get('작성') else False
 
     checks = {
         'h1 제목': bool(title),
-        '메타데이터 4줄': not missing,
+        '메타데이터 5줄': not missing,
         '분류가 정해진 값': kind_ok,
         '작성자·날짜 형식': writer_ok,
         '증거 표기': evidence > 0,
@@ -85,7 +85,7 @@ def review(path):
     if not checks['h1 제목']:
         fixes.append('맨 위에 `# 제목` 추가')
     if missing:
-        fixes.append('머리에 메타 4줄 추가 (빠짐: %s). 예) > 분류: 리서치'
+        fixes.append('머리에 메타 5줄 추가 (빠짐: %s). 예) > 분류: 리서치'
                      % ' · '.join(missing))
     elif not kind_ok:
         fixes.append('분류를 다음 중 하나로: %s (지금 「%s」)'

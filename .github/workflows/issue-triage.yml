@@ -10,6 +10,10 @@ on:
   issues:
     types: [opened, edited]
 
+# ★ 봇이 PAT 로 만든 이슈([승격 검토] 등)도 opened 를 낸다. 그 이슈에는
+#   «작업 영역» 절이 없어서 «분류 안 됨» 이 팀장에게 가는데, 봇이 한 일로
+#   사람을 나무라는 꼴이 된다. 사람이 만든 이슈만 본다.
+
 permissions:
   issues: write
   contents: read
@@ -17,6 +21,9 @@ permissions:
 jobs:
   triage:
     runs-on: ubuntu-latest
+    if: >-
+      github.event.issue.user.type != 'Bot' &&
+      !startsWith(github.event.issue.title, '[승격 검토]')
     steps:
       - uses: actions/checkout@v4
 
