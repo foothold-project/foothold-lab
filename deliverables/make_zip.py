@@ -17,7 +17,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '_out')
 
-TRACK, TEAM, LEADER = '피지컬AI', 'FOOTHOLD', '오흥재'   # 트랙 공식 표기는 운영진 확인 필요
+TRACK, TEAM, LEADER = 'AI피지컬', 'FOOTHOLD', '오흥재'   # 학원 공식 명칭 (팀장 확인 2026-08-27)
 
 # (저장소 경로, zip 안 공식 폴더). 여기 없는 파일은 제출물이 아니다.
 SUBMIT = [
