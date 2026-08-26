@@ -15,6 +15,14 @@ on:
         description: "보낼 파일 (docs/notices/ 안)"
         default: "docs/notices/latest.md"
         required: true
+      mode:
+        description: "preview = 팀장 텔레그램에만 예고 · send = 디스코드 발송"
+        default: preview
+        required: true
+        type: choice
+        options:
+          - preview
+          - send
 
 permissions:
   contents: read
@@ -48,7 +56,52 @@ jobs:
           print('문체 OK · %d줄' % len(lines))
           PY
 
+      # ★ 2026-08-26 신설. 게시 절차는 «정리 -> 팀장 컨펌 -> 게시» 인데
+      #   컨펌 단계가 사람 기억에 맡겨져 있었고 실제로 건너뛰었다.
+      #   기본값이 preview 라 그냥 돌리면 팀장에게만 간다. 실수로 팀 전체에
+      #   나가지 않는다. 컨펌한 뒤 mode=send 로 다시 돌린다.
+      - name: 팀장 예고 (preview 면 여기서 끝난다)
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FILE: ${{ inputs.file }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음. 예고 건너뜀"; exit 0
+          fi
+          N=$(wc -m < "$FILE")
+          {
+            if [ "$MODE" = "send" ]; then
+              echo "[FOOTHOLD] 공지를 디스코드로 «보냅니다»"
+            else
+              echo "[FOOTHOLD] 공지 예고 (아직 안 보냈습니다)"
+            fi
+            echo ""
+            echo "파일: $FILE · ${N}자"
+            echo ""
+            echo "===== 아래가 그대로 나갑니다 ====="
+            echo ""
+            head -c 2600 "$FILE"
+            if [ "$N" -gt 2600 ]; then
+              echo ""; echo ""; echo "... (이하 생략. 파일 전문을 보세요)"
+            fi
+            if [ "$MODE" != "send" ]; then
+              echo ""; echo ""
+              echo "문제 없으면 mode=send 로 다시 돌려주세요."
+            fi
+          } > tg.txt
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "disable_web_page_preview=true" \
+                 --data-urlencode "text@tg.txt")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) echo "예고 전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
+
       - name: 발송
+        if: ${{ inputs.mode == 'send' }}
         env:
           HOOK: ${{ secrets.DISCORD_NOTICE_WEBHOOK }}
           FILE: ${{ inputs.file }}
