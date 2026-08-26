@@ -32,6 +32,24 @@ def meta_of(md):
     return out
 
 
+def paste_block(meta, author, today):
+    """PR 코멘트에 그대로 붙일 머리 다섯 줄.
+
+    기계가 아는 것(작성자·날짜·상태)은 채우고, 내용을 읽어야 아는 것
+    (분류·근거·요지)은 고르라고 남긴다. 설명하는 것보다 완성본을 주는 편이 빠르다.
+    """
+    def keep(f, default):
+        v = (meta or {}).get(f)
+        return v if v else default
+    return chr(10).join([
+        '> 분류: %s' % keep('분류', '리서치        <- 여덟 중 하나로 바꿔 주세요 (%s)' % ' · '.join(KINDS)),
+        '> 작성: %s' % keep('작성', '%s · %s' % (author or '이름', today)),
+        '> 근거: %s' % keep('근거', '공식 문서      <- 실측 · 본인 노트 · 미확인 중에서'),
+        '> 요지: %s' % keep('요지', '(한 줄로 이 문서가 말하는 것)'),
+        '> 상태: %s' % keep('상태', '초안'),
+    ])
+
+
 def review(path):
     md = io.open(path, encoding='utf-8').read()
     title = None
@@ -98,6 +116,8 @@ def review(path):
         'evidence': evidence, 'links': links,
         'checks': checks, 'ok': all(checks.values()),
         'slug': slug, 'dest': 'docs/research/%s.md' % slug, 'fixes': fixes,
+        'block': paste_block(meta, os.environ.get('PR_AUTHOR', ''),
+                             os.environ.get('TODAY', '')) if missing or not meta.get('상태') else '',
     }
 
 

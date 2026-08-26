@@ -30,7 +30,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   group: inbox-pr-${{ github.event.pull_request.number }}
@@ -118,7 +118,7 @@ jobs:
             echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
           fi
           if [ -f .github/scripts/review_inbox.py ]; then
-            printf '%s\n' "$FILES" | xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(date -u +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
           else
             echo '{}' > review.json
           fi
@@ -166,3 +166,63 @@ jobs:
                  --data-urlencode "text@tg.txt")
           echo "텔레그램 HTTP $CODE"
           case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
+
+      # 팀원의 AI 는 우리 문서 표준을 모른 채 올린다. 그러면 팀장이 머지한 뒤
+      # 발견해서 다시 시키게 되고 일이 쌓인다. 그래서 «무엇을 어떻게 쓰라»고
+      # 설명하는 대신 «채워진 블록»을 그대로 준다. 복사해 붙이면 끝난다.
+      - name: PR 코멘트 (붙여넣을 머리 다섯 줄)
+        if: steps.files.outputs.skip == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          FILES: ${{ steps.files.outputs.files }}
+        run: |
+          set -uo pipefail
+          if [ ! -f review.json ]; then
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(date -u +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || echo '{}' > review.json
+          fi
+          python3 - <<'PYEOF' > comment.md
+          import io, json, sys
+          sys.stdout.reconfigure(encoding='utf-8')
+          try:
+              d = json.load(io.open('review.json', encoding='utf-8'))
+          except Exception:
+              d = {}
+          need = [f for f in (d.get('files') or []) if f.get('block')]
+          if not need:
+              raise SystemExit(9)          # 붙일 것이 없으면 코멘트도 없다
+          print('### 올려 주셔서 감사합니다. 아래만 채우면 그대로 정본으로 올라갑니다')
+          print('')
+          print('문서 맨 위에 이 다섯 줄이 필요합니다. **복사해서 붙여넣고 화살표 부분만 고쳐 주세요.**')
+          print('')
+          for f in need:
+              print('#### `%s`' % f['path'])
+              print('')
+              print('```')
+              print(f['block'])
+              print('```')
+              fixes = [x for x in (f.get('fixes') or []) if '메타' not in x]
+              if fixes:
+                  print('')
+                  print('그 밖에 보완하면 좋은 것:')
+                  for x in fixes:
+                      print('- %s' % x)
+              print('')
+          print('---')
+          print('')
+          print('고치지 않아도 제출은 됩니다. 팀장이 승격할 때 채웁니다.')
+          print('규칙 전문은 저장소 루트의 AGENTS.md 와 https://foothold-project.vercel.app/collab 에 있습니다.')
+          PYEOF
+          RC=$?
+          if [ "$RC" = "9" ]; then
+            echo "메타가 다 갖춰져 있습니다. 코멘트 생략."; exit 0
+          fi
+          if [ "$RC" != "0" ]; then
+            echo "::error::코멘트 생성 실패 (rc=$RC)"; exit 1
+          fi
+          gh pr comment "$PR" -R "$REPO" --body-file comment.md
+          N=$(gh pr view "$PR" -R "$REPO" --json comments --jq '[.comments[] | select(.body | startswith("### 올려 주셔서"))] | length')
+          echo "확인: 안내 코멘트 $N개"
+          [ "$N" -ge 1 ] || { echo "::error::코멘트가 실제로 안 달렸습니다"; exit 1; }
