@@ -4,25 +4,42 @@
 #   PR 이 열리거나(opened) 다시 열리거나(reopened) 초안에서 검수 가능 상태가 되면(ready_for_review)
 #   디스코드로 "[PR] #번호 제목 (작성자) - 검수 대기" 를 보낸다.
 #
+#   2026-08-25 추가: 팀장 텔레그램.
+#
+#   ★ 2026-08-26 사고 — 이 워크플로는 «놓치지 않는 것»이 유일한 임무다.
+#     두 구멍이 동시에 터져 팀장이 PR 두 건을 통째로 몰랐다.
+#
+#     (1) pull_request 는 «PR 브랜치의» 워크플로 파일로 돈다.
+#         팀원이 옛 main 에서 갈라진 브랜치로 올리면 그 시점의 낡은 판이 실행된다.
+#         PR #47 이 08-23 판으로 돌아 텔레그램 단계가 아예 없었다.
+#         -> pull_request_target 으로 바꾼다. 이건 «base(main)의» 판으로 돈다.
+#            안전한 이유: 여기서는 PR 코드를 체크아웃하지도 실행하지도 않는다.
+#            메타데이터만 API 로 읽는다. (체크아웃하면 시크릿 탈취 경로가 열린다)
+#
+#     (2) 초안(draft) PR 은 조건에 걸려 알림이 통째로 생략됐다. PR #48 이 그랬다.
+#         «검수 대기»와 «올라옴»은 다른 사건이다. 초안도 보내되 초안이라고 적는다.
+#
+#     (3) inbox 전용 PR 을 제외하던 조건도 없앤다. 두 번 울리는 것보다
+#         한 번도 안 울리는 것이 훨씬 나쁘다는 것이 이번 사고의 교훈이다.
+#
 # 설치: .github/workflows/pr-notify.yml
-# 필요: 조직 시크릿 DISCORD_WEBHOOK
+# 필요: DISCORD_WEBHOOK · TELEGRAM_BOT_TOKEN · TELEGRAM_CHAT_ID · PROJECT_TOKEN
 #       ⚠️ 웹후크 URL 은 비밀이다. 레포에 직접 적지 말고 반드시 Secrets 로.
 name: PR 알림
 
 on:
-  pull_request:
-    types: [opened, reopened, ready_for_review]
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, converted_to_draft]
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-    # 초안 PR 은 검수 대기가 아니다. ready_for_review 로 전환될 때 잡는다.
-    if: ${{ github.event.pull_request.draft == false }}
     steps:
-      - name: 보내기
+      - name: 디스코드
         env:
           HOOK: ${{ secrets.DISCORD_WEBHOOK }}
           # 제목·작성자는 셸에 직접 끼워넣지 않고 env 로 받는다(따옴표·백틱 깨짐 방지)
@@ -31,11 +48,14 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           REPO: ${{ github.repository }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
         run: |
           set -euo pipefail
           [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정 - 건너뜀"; exit 0; }
+          if [ "${IS_DRAFT}" = "true" ]; then STATE="초안 - 아직 검수 요청 아님"
+          else STATE="검수 대기"; fi
           jq -n --arg t "[PR] #${PR_NUMBER} ${PR_TITLE} (${PR_AUTHOR})" \
-                --arg d "검수 대기" \
+                --arg d "$STATE" \
                 --arg u "$PR_URL" \
                 --arg r "$REPO" \
             '{embeds:[{title:$t, description:$d, url:$u, color:3447003, footer:{text:$r}}]}' \
@@ -43,3 +63,62 @@ jobs:
           CODE=$(cat /tmp/code)
           echo "HTTP $CODE"
           case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패 - 웹훅 상태 확인 필요"; exit 1 ;; esac
+
+      # 모든 PR 을 보낸다. inbox 전용도 초안도 거르지 않는다.
+      # 팀장이 «PR 이 올라온 사실»을 놓치지 않는 것이 이 단계의 유일한 목적이다.
+      - name: 팀장 텔레그램 (전건 · 초안 포함)
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          ADD: ${{ github.event.pull_request.additions }}
+          DEL: ${{ github.event.pull_request.deletions }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음 - 건너뜀"; exit 0
+          fi
+          gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | select(.status != "removed") | .filename' > files.txt
+          N=$(grep -c . files.txt || true)
+          # 기존 문서를 건드리는가. inbox/ 밖의 파일은 우리가 이미 쓴 것을 덮어쓸 수 있다.
+          OUT=$(grep -cv '^inbox/' files.txt || true)
+          # 충돌 여부. 옛 main 에서 갈라진 브랜치는 대개 여기서 걸린다.
+          MERGEABLE=$(gh api "repos/$REPO/pulls/$PR" --jq '.mergeable_state // "unknown"' || echo unknown)
+          if [ "${IS_DRAFT}" = "true" ]; then HEAD="PR #$PR 올라옴 (초안)"
+          else HEAD="PR #$PR 검수 대기"; fi
+          {
+            printf '[FOOTHOLD] %s\n\n' "$HEAD"
+            printf '제출자: %s\n' "$PR_AUTHOR"
+            printf '제목: %s\n' "$PR_TITLE"
+            printf '브랜치: %s\n' "$PR_BRANCH"
+            printf '규모: 파일 %s개  +%s / -%s\n' "$N" "$ADD" "$DEL"
+            printf '병합 상태: %s\n' "$MERGEABLE"
+            if [ "$OUT" -gt 0 ]; then
+              printf '\n★ inbox 밖 파일 %s개 - 기존 문서를 덮어쓸 수 있습니다. 머지 전 확인.\n' "$OUT"
+            fi
+            printf '\n파일\n'
+            head -12 files.txt | sed 's/^/  · /'
+            if [ "$N" -gt 12 ]; then printf '  ... 외 %s개\n' "$((N - 12))"; fi
+            if [ "${IS_DRAFT}" = "true" ]; then
+              printf '\n초안입니다. 작성자가 검수 요청으로 바꾸면 다시 알립니다.\n'
+            else
+              printf '\n확인 후 머지하시면 됩니다.\n'
+              printf '머지는 PR 에 «/머지» 라고 코멘트해도 됩니다.\n'
+            fi
+            printf '\n%s\n' "$PR_URL"
+          } > tg.txt
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "disable_web_page_preview=true" \
+                 --data-urlencode "text@tg.txt")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
