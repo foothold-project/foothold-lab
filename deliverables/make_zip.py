@@ -1,79 +1,65 @@
 # -*- coding: utf-8 -*-
 """제출용 zip 을 만든다.
 
-저장소 폴더는 영문(01-plan)이고 운영진이 요구하는 폴더는 한글(1. 기획 및 분석)이다.
-사람이 이름을 고치면 잊는다. 이 스크립트가 고친다.
+저장소 폴더는 발표 시점 기준(plan · midterm · final · logs)이고,
+운영진이 요구하는 zip 안 폴더는 공식 이름(1. 기획 및 분석 ...)이다.
+어느 파일이 어느 공식 폴더로 가는지는 아래 SUBMIT 표가 정한다.
+사람이 제출 직전에 폴더를 다시 짜면 실수가 나므로 스크립트가 한다.
 
     python deliverables/make_zip.py
 
 내는 것: deliverables/_out/(트랙명_팀명)팀장이름.zip
 """
-import io, os, sys, zipfile
+import os, sys, zipfile
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '_out')
 
-TRACK, TEAM, LEADER = '피지컬AI', 'FOOTHOLD', '오흥재'   # 트랙명 표기는 운영진 확인 필요
+TRACK, TEAM, LEADER = '피지컬AI', 'FOOTHOLD', '오흥재'   # 트랙 공식 표기는 운영진 확인 필요
 
-# 저장소 폴더 -> 제출 zip 안의 공식 폴더 이름
-MAP = [
-    ('01-plan',  '1. 기획 및 분석'),
-    ('03-build', '3. 구현'),
-    ('04-done',  '4. 완료'),
+# (저장소 경로, zip 안 공식 폴더). 여기 없는 파일은 제출물이 아니다.
+SUBMIT = [
+    ('plan/brainstorming.md',    '1. 기획 및 분석'),
+    ('plan/proposal-summary.md', '1. 기획 및 분석'),
+    ('plan/proposal-deck.md',    '1. 기획 및 분석'),
+    ('plan/wbs.md',              '3. 구현'),          # xlsx 가 생기면 그걸로 바꾼다
+    # midterm/ final/ 산출물은 발표가 끝나면 «4. 완료» 로 여기에 추가한다
 ]
-# 「2. 설계」는 넣지 않는다. 실증 프로젝트에 해당 항목이 없다.
-
-SKIP = {'README.md'}          # 우리 안내문은 제출물이 아니다
-NEEDS_CONVERT = ('.md',)      # 운영진은 hwp/xlsx/pptx 를 받는다
-
-
-def collect():
-    """(zip 안 경로, 원본 경로) 목록. 하나도 못 모으면 예외를 낸다."""
-    items = []
-    for src_dir, official in MAP:
-        root = os.path.join(HERE, src_dir)
-        if not os.path.isdir(root):
-            raise SystemExit('폴더가 없습니다: %s' % root)
-        for dirpath, _, files in os.walk(root):
-            for f in sorted(files):
-                if f in SKIP:
-                    continue
-                full = os.path.join(dirpath, f)
-                rel = os.path.relpath(full, root).replace(os.sep, '/')
-                items.append(('%s/%s' % (official, rel), full))
-    if not items:                                   # 조용한 실패 방지
-        raise SystemExit('넣을 파일이 하나도 없습니다. 중단합니다.')
-    return items
+NEEDS_CONVERT = ('.md',)   # 운영진은 hwp / xlsx / pptx / pdf 를 받는다
 
 
 def main():
-    items = collect()
+    items = []
+    for rel, official in SUBMIT:
+        full = os.path.join(HERE, rel)
+        if not os.path.isfile(full):
+            raise SystemExit('제출 목록에 있는 파일이 없습니다: %s' % rel)
+        items.append(('%s/%s' % (official, os.path.basename(rel)), full))
+    if not items:
+        raise SystemExit('제출할 파일이 없습니다. 중단합니다.')
+
     os.makedirs(OUT, exist_ok=True)
-    name = '(%s_%s)%s.zip' % (TRACK, TEAM, LEADER)
-    path = os.path.join(OUT, name)
+    path = os.path.join(OUT, '(%s_%s)%s.zip' % (TRACK, TEAM, LEADER))
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
         for arc, full in items:
             z.write(full, arc)
 
-    # 되읽어 확인한다. 쓴 것과 읽은 것이 같은지 본다.
-    with zipfile.ZipFile(path) as z:
+    with zipfile.ZipFile(path) as z:            # 되읽어 확인
         got = sorted(z.namelist())
-    want = sorted(a for a, _ in items)
-    if got != want:
+    if got != sorted(a for a, _ in items):
         raise SystemExit('zip 내용이 예상과 다릅니다.')
 
     print('만들었습니다: %s' % path)
-    print('파일 %d개' % len(got))
     for a in got:
         print('   %s' % a)
 
     todo = [a for a in got if a.endswith(NEEDS_CONVERT)]
     if todo:
         print('')
-        print('★ 아직 md 입니다. 운영진은 hwp / xlsx / pptx 를 받습니다.')
-        print('  제출 전에 아래를 변환해서 다시 넣으세요.')
+        print('★ 아직 md 입니다. 운영진 제출 형식은 hwp / xlsx / pptx / pdf 입니다.')
+        print('  제출 전에 변환본으로 SUBMIT 표를 바꾸십시오.')
         for a in todo:
             print('   %s' % a)
 
