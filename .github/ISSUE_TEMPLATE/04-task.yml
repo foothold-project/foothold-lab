@@ -1,4 +1,4 @@
-name: 작업
+name: 작업 선언
 description: 이런 작업을 진행합니다 하고 선언하는 곳. 쓰는 건 두 개뿐입니다.
 title: "[작업] "
 labels: [task]
