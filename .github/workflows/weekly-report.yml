@@ -17,7 +17,7 @@ on:
   workflow_dispatch:            # 손으로도 돌릴 수 있게
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   report:
@@ -118,3 +118,26 @@ jobs:
         with:
           name: weekly-report-${{ github.run_number }}
           path: report.md
+
+      # WBS 는 별도 스케줄을 만들지 않고 주간 보고에 편승한다 (팀장 지시).
+      # 이슈가 바뀔 때마다 xlsx 를 다시 커밋하면 이력만 지저분해지고 얻는 것이 없다.
+      # 급할 때는 Actions 의 Run workflow 단추로 이 워크플로를 직접 돌린다.
+      - name: WBS 엑셀 생성
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet openpyxl
+          python3 tools/build_wbs.py --xlsx deliverables/plan/wbs.xlsx > wbs.txt
+          tail -3 wbs.txt
+          test -s deliverables/plan/wbs.xlsx || { echo "::error::WBS 파일이 비었습니다"; exit 1; }
+          if git diff --quiet -- deliverables/plan/wbs.xlsx; then
+            echo "WBS 변경 없음"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add deliverables/plan/wbs.xlsx
+            git commit -m "chore: WBS 자동 갱신 ($(date -u +%F))"
+            git push
+            echo "WBS 갱신 커밋"
+          fi
