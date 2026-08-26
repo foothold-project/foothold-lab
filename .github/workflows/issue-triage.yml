@@ -74,11 +74,12 @@ jobs:
 
           print('AREA_LABEL=%s' % label)
           print('MILESTONE=%s' % milestone)
-          print('AREA_RAW=%s' % area.replace('\n', ' '))
-          print('GATE_RAW=%s' % gate.replace('\n', ' '))
           PY
           cat triage.env
-          set -a; . ./triage.env; set +a
+          # ★ «. ./triage.env» 로 읽지 않는다. 값에 공백이 있어 셸이 «·» 를
+          #   명령으로 실행하려 든다 (2026-08-27 실측: exit 127).
+          AREA_LABEL=$(sed -n 's/^AREA_LABEL=//p' triage.env)
+          MILESTONE=$(sed -n 's/^MILESTONE=//p' triage.env)
 
           CHANGED=""
           if [ -n "${AREA_LABEL:-}" ]; then
