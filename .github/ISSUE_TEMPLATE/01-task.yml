@@ -1,5 +1,5 @@
 name: 작업
-description: 이런 작업을 진행합니다, 하고 선언하는 곳. 쓰는 건 두 개뿐입니다.
+description: 이런 작업을 진행합니다 하고 선언하는 곳. 쓰는 건 두 개뿐입니다.
 title: "[작업] "
 labels: [task]
 body:
@@ -8,9 +8,7 @@ body:
     attributes:
       label: 무엇을 하나
       description: 한두 문장이면 됩니다. 끝났다는 기준까지 적으면 더 좋지만 필수 아닙니다.
-      placeholder: |
-        계단 지형 조각을 만들어 로봇을 세워 본다.
-        (끝 기준: 스크린샷 한 장)
+      placeholder: 계단 지형 조각을 만들어 로봇을 세워 본다. (끝 기준 스크린샷 한 장)
     validations:
       required: true
   - type: dropdown
