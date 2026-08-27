@@ -21,7 +21,7 @@
 | 저장소 | 공개 | 역할 | 로컬 위치 관례 |
 |---|---|---|---|
 | `foothold-project/foothold-lab` | 비공개 | 팀 문서·inbox·워크플로 (**두뇌**) | `인공지능사관학교/foothold-lab` |
-| `foothold-project/foothold-rl` | 공개 | 코드·실험 | `인공지능사관학교/foothold-rl` |
+| `foothold-project/foothold-go2` | 공개 | 코드·실험 (`sim/` `nav/` `common/`) | `인공지능사관학교/foothold-go2` |
 | `foothold-project/foothold-site` | 공개 | 웹 미러 (**직접 수정 금지**, 빌드 산출물) | `인공지능사관학교/foothold-site` |
 | `foothold-project/foothold-brand` | 공개 | 브랜드 정본 (Codex 관리) | `인공지능사관학교/foothold-brand` |
 | `vfxpedia/mai-universe` | 비공개 | 개인 볼트. 웹 원본(`03_PROJECTS/doyak-final/05_deliverables`)이 여기 산다 | `인공지능사관학교/MAI_UNIVERSE` |

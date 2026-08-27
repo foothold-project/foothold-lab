@@ -1,7 +1,7 @@
 # foothold-lab: 리서치·문서 허브 (팀 내부)
 
 FOOTHOLD 프로젝트의 **자료조사·문서·회의록**이 사는 곳.
-코드는 [foothold-rl](https://github.com/foothold-project/foothold-rl),
+코드는 [foothold-go2](https://github.com/foothold-project/foothold-go2),
 공개 사이트는 [foothold-site](https://github.com/foothold-project/foothold-site) → https://foothold-project.vercel.app
 
 ## 레포 3개의 역할
@@ -9,7 +9,7 @@ FOOTHOLD 프로젝트의 **자료조사·문서·회의록**이 사는 곳.
 | 레포 | 성격 | 무엇이 사나 |
 |---|---|---|
 | **foothold-lab** (여기) | Private · 팀 | 리서치 md · 회의록 · 질문지 · 기획 문서 |
-| foothold-rl | Public · 개발 | Isaac Lab 설정 · 학습 스크립트 · 실험 로그 |
+| foothold-go2 | Public · 개발 | `sim/` 학습·지형·평가·트윈 · `nav/` ROS2·SLAM·Nav2 · `guide/` 재현 절차 |
 | foothold-site | Public · 산출물 | 빌드된 HTML (직접 수정 금지 · 미러) |
 
 ## 일하는 방법
