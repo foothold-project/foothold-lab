@@ -32,6 +32,36 @@ def meta_of(md):
     return out
 
 
+# GitHub 핸들 -> 사람 이름. 봇이 «vfxpedia · 2026-08-27» 처럼 핸들을 박으면
+# 문서 표준(이름 · 날짜)에 어긋나는데 검사기는 통과시킨다. 봇이 나쁜 메타를
+# 만드는 생산자가 되지 않게 여기서 이름으로 바꾼다. 모르는 핸들은 그대로 둔다.
+HANDLE_NAME = {
+    'vfxpedia': '오흥재',
+    'maengu86': '맹라현',
+    'less82': '오현민',
+    'lmw0207': '이민우',
+    'IQ152': '임석헌',
+}
+
+
+def paste_block(meta, author, today):
+    """PR 코멘트에 그대로 붙일 머리 다섯 줄.
+
+    기계가 아는 것(작성자·날짜·상태)은 채우고, 내용을 읽어야 아는 것
+    (분류·근거·요지)은 고르라고 남긴다. 설명하는 것보다 완성본을 주는 편이 빠르다.
+    """
+    def keep(f, default):
+        v = (meta or {}).get(f)
+        return v if v else default
+    return chr(10).join([
+        '> 분류: %s' % keep('분류', '리서치'),
+        '> 작성: %s' % keep('작성', '%s · %s' % (HANDLE_NAME.get(author, author) or '이름', today)),
+        '> 근거: %s' % keep('근거', '공식 문서'),
+        '> 요지: %s' % keep('요지', '(한 줄로 이 문서가 말하는 것)'),
+        '> 상태: %s' % keep('상태', '초안'),
+    ])
+
+
 def review(path):
     md = io.open(path, encoding='utf-8').read()
     title = None
@@ -50,13 +80,13 @@ def review(path):
     ascii_art = len(re.findall(r'[─-╿▀-▟]', md))
     emdash = md.count('—')
 
-    missing = [f for f in ('분류', '작성', '근거', '요지') if not meta.get(f)]
+    missing = [f for f in ('분류', '작성', '근거', '요지', '상태') if not meta.get(f)]
     kind_ok = meta.get('분류') in KINDS if meta.get('분류') else False
     writer_ok = bool(WRITER.match(meta['작성'])) if meta.get('작성') else False
 
     checks = {
         'h1 제목': bool(title),
-        '메타데이터 4줄': not missing,
+        '메타데이터 5줄': not missing,
         '분류가 정해진 값': kind_ok,
         '작성자·날짜 형식': writer_ok,
         '증거 표기': evidence > 0,
@@ -67,7 +97,7 @@ def review(path):
     if not checks['h1 제목']:
         fixes.append('맨 위에 `# 제목` 추가')
     if missing:
-        fixes.append('머리에 메타 4줄 추가 (빠짐: %s). 예) > 분류: 리서치'
+        fixes.append('머리에 메타 5줄 추가 (빠짐: %s). 예) > 분류: 리서치'
                      % ' · '.join(missing))
     elif not kind_ok:
         fixes.append('분류를 다음 중 하나로: %s (지금 「%s」)'
@@ -98,6 +128,8 @@ def review(path):
         'evidence': evidence, 'links': links,
         'checks': checks, 'ok': all(checks.values()),
         'slug': slug, 'dest': 'docs/research/%s.md' % slug, 'fixes': fixes,
+        'block': paste_block(meta, os.environ.get('PR_AUTHOR', ''),
+                             os.environ.get('TODAY', '')) if missing or not meta.get('상태') else '',
     }
 
 

@@ -1,4 +1,4 @@
-# foothold-lab — 리서치·문서 허브 (팀 내부)
+# foothold-lab: 리서치·문서 허브 (팀 내부)
 
 FOOTHOLD 프로젝트의 **자료조사·문서·회의록**이 사는 곳.
 코드는 [foothold-rl](https://github.com/foothold-project/foothold-rl),
@@ -10,18 +10,18 @@ FOOTHOLD 프로젝트의 **자료조사·문서·회의록**이 사는 곳.
 |---|---|---|
 | **foothold-lab** (여기) | Private · 팀 | 리서치 md · 회의록 · 질문지 · 기획 문서 |
 | foothold-rl | Public · 개발 | Isaac Lab 설정 · 학습 스크립트 · 실험 로그 |
-| foothold-site | Public · 산출물 | 빌드된 HTML (직접 수정 금지 — 미러) |
+| foothold-site | Public · 산출물 | 빌드된 HTML (직접 수정 금지 · 미러) |
 
 ## 일하는 방법
 
 **전 규칙의 단일 진실 = [docs/COLLAB.md](docs/COLLAB.md)** (웹: [collab.html](https://foothold-project.vercel.app/collab.html)).
-요지만: **손으로 하는 건 두 가지** — ①레포에서 이슈 만들기 ②끝낼 때 커밋에 `Closes #번호`. 나머지는 자동.
+요지만: **손으로 하는 건 두 가지**: ①레포에서 이슈 만들기 ②끝낼 때 커밋에 `Closes #번호`. 나머지는 자동.
 처음이면 COLLAB §14 온보딩(30분)부터.
 
 ## 원시 자료(_raw) 정책
 
 논문 원문 추출·블로그 크롤 등 **타인 저작물의 사본은 이 레포에 올리지 않는다**
-(Private 이어도 올리지 않는다 — 배포 사고의 씨앗을 만들지 않기 위해).
+(Private 이어도 올리지 않는다 · 배포 사고의 씨앗을 만들지 않기 위해).
 정제본에는 **원 출처 링크**를 달고, 원시 사본은 팀장 볼트에만 보관한다.
 필요하면 팀장에게 요청.
 
