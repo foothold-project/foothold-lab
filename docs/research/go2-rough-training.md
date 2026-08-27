@@ -444,7 +444,7 @@ TensorBoard **mean reward** ≈ 에피소드 총점 평균. 우상향이면 학�
 
 ### 설치 · 실행
 
-학습은 Isaac Sim / Isaac Lab이 도는 GPU에서. 노트북에 Isaac을 올리지 않는다 `확인됨` ([8/18 험지RL](../meetings/20260818-rough-terrain-study.md)). Python·ROS가 충돌하면 컨테이너를 나누고 통신만 맞추는 구성이 [아키텍처 결정](architecture-decision.md)의 정본이다.
+학습은 Isaac Sim / Isaac Lab이 도는 GPU에서. 노트북에 Isaac을 올리지 않는다 `확인됨` ([8/18 험지 RL 스터디 계획](terrain-rl-study-plan-0818.md)). Python·ROS가 충돌하면 컨테이너를 나누고 통신만 맞추는 구성이 [아키텍처 결정](architecture-decision.md)의 정본이다.
 
 셋업 후 **실제로 한 걸음 도는지**부터 확인한다. PLAY cfg, 소량 env가 먼저다.
 
