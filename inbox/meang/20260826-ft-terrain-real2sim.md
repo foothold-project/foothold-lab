@@ -9,6 +9,10 @@
 
 한 줄: **rails · gap · stepping_stones** 를 파인튜닝 본선으로 둔다. pit는 2순위. floating_ring과 통과 5종은 본선에서 뺀다.
 
+Go2 단차 한도 **약 16 cm**는 유니트리 공식이다 `확인됨` (제품표 Max Climbing Height · 매뉴얼 «16 cm보다 높은 계단 권장하지 않음»). 팀 `go2-rough-training.md`의 `추측` 태그는 이 근거 이전 것이다. Isaac Lab 학습 맵 계단 상한 23 cm는 유니트리 스펙이 아니다.
+
+맵·씬 조사는 맹이 한다. 8/22 계획의 «5인 1지형»은 팀 실행안이고, 이 조사의 방식이 아니다. 조사한 것을 5인이 공유하고 회의한다.
+
 ## 1. 이 표에서 무엇을 묻나
 
 질문 두 개만 남긴다.
@@ -124,8 +128,11 @@ Go2 학습 초기 높이는 약 0.4 m `확인됨` ([험지 학습 cfg](../../doc
 | 조선대·ACC 광장에 cfg 구간 실측이 있는지 | 미확인. 줄자가 먼저다 |
 | 등에 단 라이다로 높이맵을 직접 만들 수 있는지 | 가설. 모델명 미확인 |
 
+단차 16 cm는 유니트리 공식이라 이 표에서 뺐다 `확인됨`.
+
 ## 출처
 
 - [일반화 벤치마크 라이브](https://foothold-project.vercel.app/research-generalization-benchmark-10-terrains.html) §2-1 표
 - lab `docs/research/generalization-benchmark-10-terrains.md`, `benchmark-setup-lim.md` cfg, `terrain-guide-isaaclab.md`, `terrain-finetune-plan.md`, `training-benchmarks.md` height_scan, `go2-rough-training.md` 초기 높이
 - 8/19 두 트랙·Structure 벽, 8/24 기성 자산, 8/25 3점 지지
+- Unitree Go2 제품표 Max Climbing Height 약 16 cm · 사용자 매뉴얼 16 cm 초과 계단 비권장
