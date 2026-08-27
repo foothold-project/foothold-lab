@@ -5,6 +5,15 @@
 **쓸 곳:** `inbox/meang/`만. 그 밖은 읽기만. 만들지·지우지·고치지 않음.
 «맹» = `inbox/meang/`.
 
+**불변식 (매 커밋·푸시 전에 확인):** 지금 이 브랜치와 `origin/main`의 차이는 `inbox/meang/`뿐이다.
+
+```bash
+git fetch origin main
+git diff --name-only origin/main HEAD | grep -v '^inbox/meang/'
+```
+
+여기 한 줄이라도 나오면 그 커밋은 올리지 않는다. 인박스 밖 변경을 되돌려 불변식이 다시 맞을 때만 푸시한다. 이 문장이 깨진 에이전트는 쓸모없다.
+
 **브랜치:** `feature/research-meang`만. `main` 직접 push 금지. 새 브랜치 금지.
 **PR:** «피알해줘» 또는 «PR 열어» 뒤에만.
 
