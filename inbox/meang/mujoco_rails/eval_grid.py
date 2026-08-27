@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """레일즈 높이×두께 평가. 학습 없음.
 
-Go2 몸체: mujoco_menagerie 충돌 근사.
-보행: 열린 루프 PD 트로트 (실기 스포츠 모드 순정 아님, Isaac 기준선 아님).
+Go2 몸체: Unitree 공개 URDF 계열 (mujoco_menagerie).
+보행: 열린 루프 PD 트로트. Unitree 스포츠 모드·공개 RL 정책 아님. Isaac 기준선 아님.
 판정: 6초 동안 전진 3 m, 몸통이 너무 낮거나 기울면 낙상.
 """
 
