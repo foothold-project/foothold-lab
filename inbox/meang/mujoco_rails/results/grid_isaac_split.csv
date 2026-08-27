@@ -1,0 +1,4 @@
+duration_s,episode,fallen,final_z,forward_m,height_m,kind,success,survived,thickness_inner_m,thickness_outer_m
+6.5,0,0,0.27470856886221423,0.6053970059025869,0.05,isaac_split,0,1,0.08,0.18
+6.5,0,0,0.30874704685072263,0.5259110818736674,0.115,isaac_split,0,1,0.08,0.18
+6.5,0,0,0.2669728009594153,0.3572854141406274,0.18,isaac_split,0,1,0.08,0.18
