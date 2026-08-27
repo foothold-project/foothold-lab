@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 GO2_XML = Path(__file__).with_name("go2_collision.xml")
+GO2_MOTOR_XML = Path(__file__).with_name("go2_motor.xml")
 
 
 def _bar(name: str, cx: float, cy: float, hx: float, hy: float, hz: float) -> str:
@@ -43,9 +44,10 @@ def rails_xml(
     tile: float = 8.0,
     platform_width: float = 1.5,
     rail_2_ratio: float = 0.6,
+    robot_xml: Path | None = None,
 ) -> str:
     outer_inner = platform_width + (tile - platform_width) * rail_2_ratio
-    go2 = GO2_XML.resolve()
+    go2 = (robot_xml or GO2_XML).resolve()
     body = []
     body.append(frame_geoms("inner", platform_width, thickness_inner, height))
     body.append(frame_geoms("outer", outer_inner, thickness_outer, height))
@@ -76,11 +78,12 @@ def write_scene(
     height: float,
     thickness_inner: float,
     thickness_outer: float | None = None,
+    robot_xml: Path | None = None,
 ) -> Path:
     if thickness_outer is None:
         thickness_outer = thickness_inner
     path.write_text(
-        rails_xml(height, thickness_inner, thickness_outer),
+        rails_xml(height, thickness_inner, thickness_outer, robot_xml=robot_xml),
         encoding="utf-8",
     )
     return path

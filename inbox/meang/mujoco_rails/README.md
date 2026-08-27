@@ -1,34 +1,44 @@
 # mujoco_rails · 맹 인박스
 
-학습 없음. Isaac 기준선 없음.
+학습 없음. Isaac 기준선 가중치 없음.
 
-**로봇 모델**은 Unitree Go2다. mujoco_menagerie `unitree_go2` 는 Unitree 공개 URDF에서 온 충돌 모델이다. 시각 메시는 용량 때문에 뺐다.
+레일즈 기하만 Isaac 팀 v2에 맞춘다. 걷는 프로그램은 두 개다. 숫자를 한 표에 넣지 않는다.
 
-**걷는 프로그램**은 Unitree가 넣은 게 아니다. 여기 있는 건 열린 루프 PD 트로트다. 평지 6초에 약 3.3 m는 이 환경에서 확인됨. 턱 위는 같은 트로트가 첫 프레임에서 막히는 경우가 많다.
+## 1. 공식 정책 (이 폴더의 본 실험)
 
-실기 리모컨의 스포츠 모드와, Unitree `unitree_rl_gym` 공개 보행 정책은 아직 안 붙였다.
+`unitree_rl_mjlab` 태스크 `Unitree-Go2-Flat` 공개 ONNX.
+Hugging Face `diasAiMaster/unitree-go2-velocity-flat`.
+Unitree `unitree_rl_gym` 저장소 안의 Go2 가중치가 **아니다**.
 
-그래서 이 표는 **아이작 1,500 iter의 교차점이 아니다.** 두께·높이 기하에 열린 루프 보행이 어떻게 걸리는지 보는 보조 실험이다.
+- 로봇: `go2_motor.xml` (토크 모터)
+- 평가: `run_official_rails.py`
+- 결과: [results/official_rails/README.md](results/official_rails/README.md)
 
-## 실행
+50회, 10초, vx 0.5 m/s, 판정은 사이트 일반화 벤치와 같다.
+https://foothold-project.vercel.app/research-generalization-benchmark-10-terrains
 
 ```bash
 cd inbox/meang/mujoco_rails
-python3 eval_grid.py --flat
-python3 eval_grid.py --heights 0.05,0.115,0.18 --thicknesses 0.08,0.18,0.30
-python3 eval_grid.py --isaac-split --heights 0.05,0.115,0.18
+MUJOCO_GL=disable python3 run_official_rails.py --episodes 50 --videos 0 --duration 10
+xvfb-run -a env MUJOCO_GL=glfw python3 run_official_rails.py \
+  --only-episodes 0,14,34 --duration 10 --keep-csv
 ```
 
-두께 1 cm 간격 예:
+2026-08-27 실측: 종합 **0%** (0/50), 생존 **2%** (1/50), 전진 **0.63 ± 0.25 m**. 낙상형.
+
+## 2. 열린 루프 PD 트로트 (보조)
+
+`walk_trot.py` · `eval_grid.py`. Unitree가 넣은 보행이 아니다.
 
 ```bash
-python3 eval_grid.py --heights 0.115 --thicknesses 0.08,0.09,0.10,0.12,0.18,0.30
+python3 eval_grid.py --flat
+python3 eval_grid.py --heights 0.05,0.115,0.18 --thicknesses 0.08,0.18,0.30
 ```
 
-결과 CSV: `results/grid.csv`
-
-판정: 6초, 전진 3 m, 몸통 높이 0.12 m 미만 또는 큰 기울기면 낙상.
+평지 6초에 약 3.3 m는 이 환경에서 확인됨. 턱 위는 같은 트로트가 첫 프레임에서 막히는 경우가 많다.
+이 CSV를 Isaac 학습 cfg의 근거 점수표로 바로 쓰지 않는다.
 
 ## 하지 말 것
 
-이 CSV를 Isaac 학습 cfg의 근거 점수표로 바로 쓰지 않는다. 정책·엔진·관측이 다르다.
+Isaac 1,500 iter 교차점이라고 말하지 않는다. 정책·엔진·관측이 다르다.
+사이트 v2 레일즈 2% / 생존 36% 와 이 0% / 생존 2% 를 같은 정책의 전후라고 말하지 않는다.
