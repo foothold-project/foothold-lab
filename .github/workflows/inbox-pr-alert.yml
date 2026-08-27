@@ -118,7 +118,7 @@ jobs:
             echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
           fi
           if [ -f .github/scripts/review_inbox.py ]; then
-            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date '+%F %H:%M')" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
           else
             echo "::error::review_inbox.py 가 없습니다"; exit 1
           fi
@@ -184,7 +184,7 @@ jobs:
           #   그 파일도 «있다». 그대로 두면 need=[] 가 되어 «메타가 다 갖춰져
           #   있습니다» 로 초록불이 난다. 빈 산출물이 긍정 보고가 되는 경로다.
           if [ ! -s review.json ] || ! jq -e 'has("files")' review.json >/dev/null 2>&1; then
-            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date +%F)" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
+            printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date '+%F %H:%M')" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
           fi
           python3 - <<'PYEOF' > comment.md
           import io, json, sys
