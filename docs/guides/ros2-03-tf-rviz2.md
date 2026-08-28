@@ -5,6 +5,7 @@
 > 근거: 조선대 ROS 2 수업 3편 「TF 좌표계 · RViz2 시각화」(자료 원본은 저장소에 넣지 않음) + ROS 2 Jazzy tf2 공식 문서 대조
 > 요지: TF 좌표계 발행부터 lookup_transform 조회, Marker·Path 시각화까지를 코드 순서대로 재구성하고, 이 내용이 CV 담당의 「탐지한 물체를 지도 좌표로 옮기는」 작업에 그대로 대응된다는 점을 정리했다. 자료에 실린 15주 커리큘럼 표도 함께 옮겼다.
 > 상태: 확정
+> 판: v1.0
 >
 > 원본: `inbox/oh/20260826-ros2-03-tf좌표계-rviz2.md` (PR #63, 2026-08-27 머지). 팀장이 `docs/` 로 승격하며 머리글 형식만 정리했고 본문은 손대지 않았다.
 
@@ -374,3 +375,9 @@ marker.scale.z = 0.3           # TEXT 에서는 글자 크기
 - `visualization_msgs/Marker` 메시지 정의: https://docs.ros.org/en/jazzy/p/visualization_msgs/msg/Marker.html
 - REP 105 (로봇 좌표계 표준 이름 규약: `map`, `odom`, `base_link`): https://www.ros.org/reps/rep-0105.html
 - 조선대 ROS 2 수업 3편 「TF 좌표계 · RViz2 시각화」: 조선대 저작물이므로 저장소에 넣지 않았습니다. 원본은 팀 자료실에 있습니다.
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-27 | 처음 씀 | 이전 이력은 git 에 |

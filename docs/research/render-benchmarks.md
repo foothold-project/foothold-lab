@@ -5,6 +5,7 @@
 > 근거: 실측
 > 요지: 1080p Path Tracing 128spp = 프레임당 1.75초(30초 영상 44분). 렌더 시간은 병목이 아니다.
 > 상태: 확정
+> 판: v1.0
 
 > 작성 2026-08-10 · 워크스테이션 세션 · 장비 **RTX 5080 ×2** (VRAM 16GB/장)
 > **목적**: "극사실주의 렌더가 현실적인가"를 추정이 아니라 실측으로 답한다.
@@ -220,3 +221,9 @@ python play_go2_in_usd.py --checkpoint $ck --steps 75 --headless --video `
 - 시각 증거 → [visual-evidence.md](visual-evidence.md)
 - 학습 수치 → [training-benchmarks.md](training-benchmarks.md)
 - 아키텍처 결정 → [architecture-decision.md](architecture-decision.md)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-10 | 처음 씀 | 이전 이력은 git 에 |

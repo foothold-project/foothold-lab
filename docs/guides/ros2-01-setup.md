@@ -5,6 +5,7 @@
 > 근거: 조선대 ROS 2 수업 1편 「ROS2 개발환경 구축」(2026-08-22 배포, 자료 원본은 저장소에 넣지 않음) + ROS 2 Jazzy 공식 설치 문서 대조
 > 요지: ROS 2 Jazzy 개발환경을 Ubuntu 설치부터 turtlesim 4대 통신까지 명령 순서 그대로 재구성하고, 강의 자료의 apt 저장소 등록 방식이 현재 공식 문서와 다르다는 점을 확인해 대체 절차를 함께 적었다.
 > 상태: 확정
+> 판: v1.0
 >
 > 원본: `inbox/oh/20260826-ros2-01-개발환경구축.md` (PR #63, 2026-08-27 머지). 팀장이 `docs/` 로 승격하며 머리글 형식만 정리했고 본문은 손대지 않았다.
 
@@ -448,3 +449,9 @@ ros2 run turtlesim turtle_teleop_key
 - REP 2000 (배포판별 대상 플랫폼 규정): https://reps.openrobotics.org/rep-2000/
 - turtlesim 기반 CLI 튜토리얼(공식): https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools.html
 - 조선대 ROS 2 수업 1편 「ROS2 개발환경 구축」: 조선대 저작물이므로 저장소에 넣지 않았습니다. 원본은 팀 자료실에 있습니다.
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-27 | 처음 씀 | 이전 이력은 git 에 |

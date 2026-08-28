@@ -5,6 +5,7 @@
 > 근거: 실측
 > 요지: 일반화 벤치마크 실패 5종을 5인이 하나씩 맡아 레시피를 찾고, 최종은 혼합 단일 런 1개로 합친다.
 > 상태: 확정
+> 판: v2.0
 
 > 입력: [일반화 벤치마크 v2](generalization-benchmark-10-terrains.md) (실패 5종·모드 지도, 지형당 50에피소드 `실측`) + [벤치마크 하네스 설정](benchmark-setup-lim.md) (10종 cfg 원문) + 문헌 조사 (하단 출처)
 > 답하는 질문 (팀장 8/22): "팀원별로 지형을 나눠 병렬 강화학습하는 게 의미가 있는가? RL은 순차로 쌓아야 하지 않나?"
@@ -114,3 +115,10 @@
 ## 출처
 
 [Rudin et al., Learning to Walk in Minutes](https://arxiv.org/abs/2109.11978) (혼합 지형 커리큘럼 원조) · [legged_gym terrain_proportions](https://github.com/leggedrobotics/legged_gym) · [Isaac Lab terrains API](https://isaac-sim.github.io/IsaacLab/main/source/api/lab/isaaclab.terrains.html) (실패 5종 cfg 전부 내장) · [Wołczyk et al., ICML 2024](https://arxiv.org/abs/2402.02868) (RL 파인튜닝 망각) · [Robot Parkour Learning](https://arxiv.org/abs/2309.05665) (specialist 병렬→증류, 스트레치 옵션) · [Lee et al., Science Robotics 2020](https://www.science.org/doi/10.1126/scirobotics.abc5986) (특권 관측)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| **v2.0** | 2026-08-28 | 병렬 갈래 4 -> 5 (floating_ring 누락 정정) · 담당 5인 배정 · 물리 관문 반영 | #65~69 |
+| v1.0 | 2026-08-22 | 처음 씀 | 이전 이력은 git 에 |

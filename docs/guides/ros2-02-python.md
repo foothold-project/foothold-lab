@@ -5,6 +5,7 @@
 > 근거: 조선대 ROS 2 수업 2편 「ROS2 Python 프로그래밍」(자료 원본은 저장소에 넣지 않음) + rclpy·ROS 2 Jazzy 공식 문서 대조
 > 요지: rclpy 로 토픽·서비스·액션·파라미터 노드를 직접 작성하고 colcon 패키지로 옮기는 전 과정을, 노트북 실험에서 패키지로 넘어가는 이유와 함께 명령·코드 순서 그대로 재구성했다.
 > 상태: 확정
+> 판: v1.0
 >
 > 원본: `inbox/oh/20260826-ros2-02-python프로그래밍.md` (PR #63, 2026-08-27 머지). 팀장이 `docs/` 로 승격하며 머리글 형식만 정리했고 본문은 손대지 않았다.
 
@@ -585,3 +586,9 @@ ros2 launch my_first_package turtlesim_and_teleop.launch.py
 - launch 시스템(공식): https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Launch/Launch-Main.html
 - rosbag2 기록·재생(공식): https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html
 - 조선대 ROS 2 수업 2편 「ROS2 Python 프로그래밍」: 조선대 저작물이므로 저장소에 넣지 않았습니다. 원본은 팀 자료실에 있습니다.
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-27 | 처음 씀 | 이전 이력은 git 에 |

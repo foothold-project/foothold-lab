@@ -5,6 +5,7 @@
 > 근거: 실측
 > 요지: 숫자로만 보던 학습 결과를 눈으로 확인한 기록. 보상 13.94 정책이 실제로는 걷지 못하는 것을 영상이 잡았다.
 > 상태: 확정
+> 판: v1.0
 
 > 작성 2026-08-09 · 워크스테이션 세션
 > **이 문서의 목적**: 학습 결과를 숫자로만 보지 않고 **눈으로 확인한 기록**을 남긴다.
@@ -376,3 +377,9 @@ python play_go2_in_usd.py `
 - 수치 정본 → [training-benchmarks.md](training-benchmarks.md)
 - 아키텍처 결정 → [architecture-decision.md](architecture-decision.md)
 - 곡선으로 보기 → TensorBoard `logs/rsl_rl/unitree_go2_rough` (LAN: `:6006`)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-09 | 처음 씀 | 이전 이력은 git 에 |

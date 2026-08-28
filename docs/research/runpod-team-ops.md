@@ -5,6 +5,7 @@
 > 근거: 공식 문서
 > 요지: Runpod 팀 워크스페이스 운용. 역할 · 볼륨 · 과금.
 > 상태: 확정
+> 판: v1.0
 
 > 작성 2026-08-22 (WS) · 근거: Runpod 공식 문서 정독 (하단 출처) + 팀 계정 실황 (FOOTHOLD's Team, 5인) + 8/20 벤치마크 실측
 > 지위: 공식 문서에 있는 것은 `확인됨`, 문서에 없어 우리가 직접 확인해야 하는 것은 `미확인`으로 구분한다.
@@ -67,3 +68,9 @@
 ## 출처
 
 공식 문서: [팀 계정·역할](https://docs.runpod.io/accounts-billing/manage-accounts) · [결제·크레딧](https://docs.runpod.io/accounts-billing/billing) · [카드 관리](https://docs.runpod.io/accounts-billing/manage-payment-cards) · [네트워크 볼륨](https://docs.runpod.io/storage/network-volumes) · [스토리지 유형](https://docs.runpod.io/pods/storage/types) · [S3 API](https://docs.runpod.io/storage/s3-api) · [템플릿·이미지 캐싱](https://docs.runpod.io/pods/templates/create-custom-template)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-22 | 처음 씀 | 이전 이력은 git 에 |

@@ -5,6 +5,7 @@
 > 근거: 팀 합의
 > 요지: 프로젝트 전체 흐름 7단계와 각 단계의 산출물.
 > 상태: 확정
+> 판: v1.0
 
 > 🔶 **구판 주의 (2026-08-22)**: 이 문서의 상당 부분은 **8/19 방향 전환 이전**의 계획(실기 저수준 배포 포함)을 담고 있다. **현재 정본은 [프로젝트 보고서](../REPORT.md)(두 트랙)와 [8/21 팀 미팅 기록](meetings/20260821-team-meeting.md)이다.** 저수준 실기 이전·전환 절차 관련 내용은 폐기됐다. 이 문서는 구조 개편 때 전면 개정 예정.
 
@@ -454,3 +455,9 @@ VFX 파이프라인과 같은 구조다. 시뮬레이션 캐시를 굽고, 라�
 [go2-rough-training.md](research/go2-rough-training.md) · [terrain-guide-isaaclab.md](research/terrain-guide-isaaclab.md) ·
 [render-benchmarks.md](research/render-benchmarks.md) · [go2-pretrained-policies.md](research/go2-pretrained-policies.md) ·
 [omniverse-stack.md](research/omniverse-stack.md) · [architecture-decision.md](research/architecture-decision.md)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-11 | 처음 씀 | 이전 이력은 git 에 |

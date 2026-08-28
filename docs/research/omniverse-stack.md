@@ -5,6 +5,7 @@
 > 근거: 공식 문서
 > 요지: Isaac Sim 과 USD Composer 는 같은 RTX 렌더러다. 화질은 렌더러가 아니라 에셋(룩뎁)에서 갈린다.
 > 상태: 확정
+> 판: v1.0
 
 > 작성 2026-08-12 · 워크스테이션 세션 · 방법: 공식 문서 + 쇼케이스 1차 출처 + 우리 실측(렌더 벤치마크·Racer 프레임 분석) 연결
 > 목적: «이 도구들이 서로 무슨 관계인가»를 한 장으로. 팀장이 VFX 출신이라 **Foundry 라인업에 빗대어** 설명한다.
@@ -82,3 +83,9 @@
 - 렌더 실측·Racer 프레임 판정 → [render-benchmarks.md](render-benchmarks.md)
 - 시각 증거 → [visual-evidence.md](visual-evidence.md)
 - 아키텍처(버전·EOL) → [architecture-decision.md](architecture-decision.md)
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-08-12 | 처음 씀 | 이전 이력은 git 에 |
