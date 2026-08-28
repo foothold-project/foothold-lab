@@ -10,7 +10,7 @@
 Hugging Face `diasAiMaster/unitree-go2-velocity-flat`.
 Unitree `unitree_rl_gym` 저장소 안의 Go2 가중치가 **아니다**.
 
-- 로봇: `go2_motor.xml` (토크 모터)
+- 로봇: mujoco_menagerie `unitree_go2` 시각 메시 (`vendor/unitree_go2/`). 충돌 박스는 같고, 영상에는 메시만 켠다.
 - 평가: `run_official_rails.py`
 - 결과: [results/official_rails/README.md](results/official_rails/README.md)
 
@@ -24,7 +24,7 @@ xvfb-run -a env MUJOCO_GL=glfw python3 run_official_rails.py \
   --only-episodes 0,14,34 --duration 10 --keep-csv
 ```
 
-2026-08-27 실측: 종합 **0%** (0/50), 생존 **2%** (1/50), 전진 **0.63 ± 0.25 m**. 낙상형.
+2026-08-28 실측 (menagerie Go2 메시): 종합 **0%** (0/50), 생존 **2%** (1/50), 전진 **0.67 ± 0.25 m**. 낙상형.
 
 ## 2. 열린 루프 PD 트로트 (보조)
 

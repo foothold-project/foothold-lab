@@ -12,6 +12,7 @@ docs/research/benchmark-setup-lim.md
 
 에피소드 길이는 영상 10초에 맞춘다. 사이트 본문은 6초다.
 레일즈 기하는 팀 v2: 높이 11.5 cm, 안쪽 8 cm, 바깥 18 cm.
+로봇 시각은 mujoco_menagerie Go2 메시. 충돌 박스는 그 모델과 같다.
 """
 
 from __future__ import annotations
@@ -64,9 +65,13 @@ def rollout(
     record: bool = False,
     video_path: Path | None = None,
     video_fps: int = 30,
+    xml_path: Path | None = None,
 ) -> dict:
     rng = np.random.default_rng(seed)
-    model = mujoco.MjModel.from_xml_string(xml)
+    if xml_path is not None:
+        model = mujoco.MjModel.from_xml_path(str(xml_path))
+    else:
+        model = mujoco.MjModel.from_xml_string(xml)
     data = mujoco.MjData(model)
     mujoco.mj_resetDataKeyframe(model, data, 0)
     yaw = float(rng.uniform(-0.15, 0.15))
@@ -95,11 +100,10 @@ def rollout(
     cam = None
     scene_option = None
     if record:
-        renderer = mujoco.Renderer(model, height=352, width=640)
+        renderer = mujoco.Renderer(model, height=352, width=640, max_geom=20000)
         cam = _track_camera(model)
         scene_option = mujoco.MjvOption()
-        # go2_motor.xml 충돌 메시는 group 3. 기본 렌더는 0-2만 켠다.
-        scene_option.geomgroup[:] = 1
+        # 시각 메시(group 2)만. 충돌 박스(group 3)는 끈다.
 
     target = from_policy(DEFAULT_POS_POLICY)
     for i in range(n_steps):
@@ -227,9 +231,12 @@ def main() -> int:
     video_dir = OUT_DIR / "videos"
     video_dir.mkdir(exist_ok=True)
 
+    scene_path = None
     if args.flat:
         go2 = GO2_MOTOR_XML.resolve()
+        assets = go2.parent / "assets"
         xml = f"""<mujoco model="go2_flat">
+  <compiler meshdir="{assets}"/>
   <include file="{go2}"/>
   <worldbody>
     <light pos="0 0 2" dir="0 0 -1" directional="true"/>
@@ -238,16 +245,19 @@ def main() -> int:
 </mujoco>
 """
         kind = "flat"
+        with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as tmp:
+            tmp.write(xml)
+            scene_path = Path(tmp.name)
     else:
         with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as tmp:
-            path = write_scene(
+            scene_path = write_scene(
                 Path(tmp.name),
                 height=0.115,
                 thickness_inner=0.08,
                 thickness_outer=0.18,
                 robot_xml=GO2_MOTOR_XML,
             )
-        xml = Path(path).read_text(encoding="utf-8")
+        xml = Path(scene_path).read_text(encoding="utf-8")
         kind = "rails_v2"
 
     policy = Go2MjlabPolicy()
@@ -270,6 +280,7 @@ def main() -> int:
             cmd_vx=args.cmd_vx,
             record=record,
             video_path=video_path if record else None,
+            xml_path=scene_path,
         )
         r["episode"] = ep
         r["kind"] = kind

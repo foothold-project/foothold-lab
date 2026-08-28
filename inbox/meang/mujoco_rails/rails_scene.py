@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 GO2_XML = Path(__file__).with_name("go2_collision.xml")
-GO2_MOTOR_XML = Path(__file__).with_name("go2_motor.xml")
+GO2_MOTOR_XML = Path(__file__).resolve().parent / "vendor" / "unitree_go2" / "go2.xml"
 
 
 def _bar(name: str, cx: float, cy: float, hx: float, hy: float, hz: float) -> str:
@@ -48,11 +48,14 @@ def rails_xml(
 ) -> str:
     outer_inner = platform_width + (tile - platform_width) * rail_2_ratio
     go2 = (robot_xml or GO2_XML).resolve()
+    assets = go2.parent / "assets"
+    meshdir = assets if assets.is_dir() else go2.parent
     body = []
     body.append(frame_geoms("inner", platform_width, thickness_inner, height))
     body.append(frame_geoms("outer", outer_inner, thickness_outer, height))
     rails = "".join(body)
     return f"""<mujoco model="go2_rails">
+  <compiler meshdir="{meshdir}"/>
   <include file="{go2}"/>
   <statistic center="0 0 0.2" extent="3"/>
   <visual>
