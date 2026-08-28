@@ -35,6 +35,7 @@ jobs:
           BODY: ${{ github.event.issue.body }}
           TITLE: ${{ github.event.issue.title }}
           AUTHOR: ${{ github.event.issue.user.login }}
+          ACTION: ${{ github.event.action }}
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
@@ -88,6 +89,15 @@ jobs:
           AREA_LABEL=$(sed -n 's/^AREA_LABEL=//p' triage.env)
           MILESTONE=$(sed -n 's/^MILESTONE=//p' triage.env)
 
+          # ★ 2026-08-28. 손대기 «전» 상태를 먼저 찍는다.
+          #   팀장 실측: 같은 알림이 두 번씩, #72 는 여섯 번 왔다.
+          #   원인은 `edited` 트리거다. 이슈를 고칠 때마다 이 워크플로가 다시 돌고,
+          #   **알림이 «변화» 가 아니라 «실행» 에 붙어 있어서** 아무것도 안 바뀌어도
+          #   그대로 또 보냈다. 전·후를 비교해 **정말 달라졌을 때만** 보낸다.
+          BEFORE=$(gh issue view "$NUM" -R "$REPO" --json labels,milestone \
+                   --jq '(.labels|map(.name)|sort|join(","))+" | "+((.milestone.title)//"없음")')
+          echo "이전: $BEFORE"
+
           CHANGED=""
           if [ -n "${AREA_LABEL:-}" ]; then
             gh issue edit "$NUM" -R "$REPO" --add-label "$AREA_LABEL"
@@ -105,6 +115,14 @@ jobs:
 
           if [ -n "${AREA_LABEL:-}" ] && ! echo "$GOT" | grep -q "$AREA_LABEL"; then
             echo "::error::라벨이 실제로 안 붙었습니다"; exit 1
+          fi
+
+          # 정렬해서 견준다. 라벨 순서만 달라진 것을 «바뀌었다» 로 보면 안 된다.
+          AFTER=$(gh issue view "$NUM" -R "$REPO" --json labels,milestone \
+                  --jq '(.labels|map(.name)|sort|join(","))+" | "+((.milestone.title)//"없음")')
+          if [ "$ACTION" != "opened" ] && [ "$BEFORE" = "$AFTER" ]; then
+            echo "고침인데 분류가 그대로다 ($AFTER). 알림 건너뜀"
+            exit 0
           fi
 
           if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
