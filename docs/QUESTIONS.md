@@ -13,10 +13,10 @@
 | 궁금한 것 | 여기 |
 |---|---|
 | 프로젝트 계획 전체를 한 장으로 (멘토 설명용) | [프로젝트 보고서](project-report.html) |
-| 전체 흐름이 한 장으로 보고 싶다 | [프로젝트 전체 흐름](flow.html) |
+| 전체 흐름이 한 장으로 보고 싶다 | [프로젝트 보고서](project-report.html) (`flow.html` 은 8/19 이전 구판) |
 | 이 프로젝트가 뭘 하는 건지 30분에 이해하고 싶다 | [프로젝트 브리프](brief.html) |
-| 왜 시뮬레이션에서만 학습하나 | [흐름 §7 FAQ](flow.html) |
-| 실기(실물 로봇)에서는 뭘 하나 | [흐름 §5 sim2real](flow.html) |
+| 왜 시뮬레이션에서만 학습하나 | [프로젝트 보고서](project-report.html) |
+| 실기(실물 로봇)에서는 뭘 하나 | [프로젝트 보고서 §9 트랙 B](project-report.html) · 순정 보행 위 SLAM·Nav2 |
 | 용어를 모르겠다 (정책·관측·보상 등) | [도메인 백과](encyclopedia.html) |
 
 ## 학습이 궁금할 때
@@ -24,9 +24,9 @@
 | 궁금한 것 | 여기 |
 |---|---|
 | Isaac Lab Go2 험지 env를 코드 순서로 읽고 싶다 | [험지 학습 커리큘럼](research-go2-rough-training.html) (요약 다음 상세) |
-| 로봇 몇 마리로, 얼마나 오래 학습하나 | [흐름 §2 단위](flow.html) |
-| 보상(채점표)은 정확히 뭘 채점하나 | [흐름 §2 보상 9항목](flow.html) |
-| 지형은 어떻게 생겼고 난이도는 어떻게 오르나 | [흐름 §2 지형·커리큘럼](flow.html) |
+| 로봇 몇 마리로, 얼마나 오래 학습하나 | [험지 학습 커리큘럼](research-go2-rough-training.html) |
+| 보상(채점표)은 정확히 뭘 채점하나 | [험지 학습 커리큘럼 · 보상](research-go2-rough-training.html) |
+| 지형은 어떻게 생겼고 난이도는 어떻게 오르나 | [Isaac Lab 지형 생성](research-terrain-guide-isaaclab.html) |
 | 한 번 학습에 실제로 몇 분 걸리나 | [학습 실측: 133분](research-training-benchmarks.html) |
 | 학습 곡선을 어떻게 읽나 | [시각 증거 §05](research-visual-evidence.html) |
 | 그 «봉인된 플래그»가 뭐였나 | [학습 실측 §2](research-training-benchmarks.html) |
@@ -55,8 +55,8 @@
 
 | 궁금한 것 | 여기 |
 |---|---|
-| 실물 Go2 는 어떻게 제어를 넘겨받나 (순정과의 관계) | [흐름 §5 제어 층 스위치](flow.html) |
-| 8/13 조선대 방문에서 뭘 확인해야 하나 | [현장 확인 목록](field-check-0813.html) |
+| 실물 Go2 는 어떻게 움직이나 (순정과의 관계) | [프로젝트 보고서 §9](project-report.html) · **제어를 넘겨받지 않는다.** 순정 보행 위에 항법을 얹는다 (8/19 결정) |
+| 8/13 조선대 방문에서 무엇을 확인했나 (기록) | [현장 확인 목록](field-check-0813.html) |
 | 새 Go2 개체가 생기면 뭘 점검하나 (저수준 되는지 포함) | [Go2 개체 점검 목록](field-check-go2-intake.html) |
 | 우분투·ROS2·컨테이너 구조는 어떻게 확정됐나 | [아키텍처 결정](research-architecture-decision.html) |
 | 워크스테이션에 접속해서 학습을 돌리고 싶다 | [팀원 접속 가이드](team-access.html) |
