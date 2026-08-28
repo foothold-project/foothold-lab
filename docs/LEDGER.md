@@ -48,8 +48,6 @@
 
 | 무엇 | 왜 | 근거 |
 |---|---|---|
-| 저수준 이전·증류 잔재 정리 | 8/19 에 목표에서 뺀 내용이 8개 문서 본문에 살아 있다 | 관계표 §4 |
-| `ROBOT-SPEC` · `architecture-decision` · `compute-resources` · `go2-pretrained-policies` | 위와 같음. 증류·Teacher/Student·저수준 E2E 표현 | 관계표 §4 |
 | `LEDGER` · `DECISIONS` 큐 · `SESSION-HANDOFF` 의 옛 저장소 이름 `rl` | `foothold-go2` 로 개명됨 (8/27) | 관계표 §4 |
 | 연구 허브 5갈래 재분류 | 23장이 한 허브. 본PoC · PoC시험 · 파이프라인점검 · 자료조사 · 학습계획 | #73 |
 | 파이프라인에서 3장 이동 | 결정 로그·설계 결정 기록은 회의 허브로, 팀 공지는 표지 배너로 | #73 |
@@ -58,7 +56,10 @@
 **기존 큐**
 
 ⑥ 미팅 파이프라인(녹음 -> 전사 -> 회의록 초안) · **리눅스 이관**(`ops/SESSION-HANDOFF.md` §5)
-· 라이다 모델명 확정 · `ReleaseMode` 실기 확인 · WBS 로드맵 뷰 날짜 필드
+· 라이다 모델명 확정 · WBS 로드맵 뷰 날짜 필드
+
+> ~~`ReleaseMode` 실기 확인~~ 은 **범위 밖으로 뺐다** (8/28). 트랙 B 는 순정 보행을
+> 그대로 쓰므로 스포츠 모드를 해제할 일이 없다. 근거 = `ROBOT-SPEC` v2.0 §2.
 
 ## 👆 팀장 확인 대기
 
@@ -75,6 +76,7 @@
 - lab 공개 전환 여부 (보류. 전제조건은 DECISIONS 08-12: 금액·외부실명·INFRA·LFS 정리)
 - 허브를 몇 개로 갈지 (지금 5 -> 기술 신설 시 6). 「파이프라인」 이름은 유지로 확정 (8/28)
 - 연구 5갈래 이름 확정 여부
+- **특권 관측(235차원) 정책을 45차원 점수표와 어떻게 나란히 놓을 것인가** (#28). 두 표로 나눌지 · 차원 열을 붙일지 · 평가 때 특권 관측을 막을지
 
 ## 📋 열린 이슈 전수 (2026-08-28 기준 31건)
 
@@ -128,6 +130,8 @@
 | 원장 v2.0 + 최신성 관문 `[3.8]` | `LEDGER.md` · `_build/ledgercheck.py` · 웹 `/ledger` |
 | **역할 배치 정본화** · 덱 두 장을 생성으로 | `ROLES.md` 신설 · `_build/roles.py` · 웹 `/roles` |
 | 역할 어긋남 관문 `[3.9]` (정본·COLLAB·라벨·게시물 4곳 대조) | `_build/roles.py` |
+| 저수준·증류 잔재 정리 (문서 5개 판 올림) | `ROBOT-SPEC` v2.0 · `go2-pretrained-policies` v2.0 · `compute-resources` v2.0 · `robogauge-observation-mapping` v1.1 · `GPU-SANDBOX` v1.1 · #86 |
+| 절 참조 관문 `[3.62]` (절이 있는가 · 딱지가 제목과 맞는가) | `_build/xrefcheck.py` |
 
 ## 판 이력
 
