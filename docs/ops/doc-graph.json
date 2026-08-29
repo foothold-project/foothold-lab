@@ -24,11 +24,11 @@
   "kind": "운영",
   "evidence": "팀",
   "areas": [
-   "C/기록",
-   "C/운영"
+   "C/운영",
+   "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 회의록×7 문서×21 백과×1 자동화×4 일정×3 자동화×4",
+  "areas_why": "5인이 한 저장소에서 부딪히지 않고 일하는 규칙(브랜치·보드·문서 규칙)이다. 회의록·발표물을 «남기는» 일이 아니라 일을 «굴리는» 규칙이므로 C/운영이다.",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
@@ -141,10 +141,11 @@
   "kind": "운영",
   "evidence": "팀",
   "areas": [
+   "C/운영",
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×56 보상×17 관측×3",
+  "areas_why": "트랙 A·B 전체를 어떤 순서로 하는가를 그린 문서다. 정책 학습 어휘가 많이 나오지만 그것은 «다루는 대상»이지 이 글이 하는 일이 아니다.",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
@@ -314,12 +315,11 @@
   "kind": "가이드",
   "evidence": "실측",
   "areas": [
-   "C/기록",
    "C/운영",
-   "B/항법"
+   "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 회의록×2 문서×21 백과×1 인프라×1 자동화×1 예산×3 TF×1 SLAM×3",
+  "areas_why": "이슈에서 머지까지의 절차. 「무엇을 남기나」가 아니라 「어떻게 굴리나」다.",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
