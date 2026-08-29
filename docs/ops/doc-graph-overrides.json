@@ -1,0 +1,342 @@
+{
+ "_설명": "사람이 판정한 값. 자동 규칙보다 이것이 이긴다. 2026-08-28 서브에이전트 판정 + 팀장 20건 전수 대조본이 씨앗이다.",
+ "_규칙": "새 문서는 여기 없어도 된다. 자동 규칙이 값을 낸다. 자동이 틀렸을 때만 여기 적는다.",
+ "docs": {
+  "AUTOMATION.md": {
+   "purpose": "운영",
+   "purpose_reason": "본문 1~13절이 전부 이슈 생성·라벨 자동 부여·PR·웹 배포 관문·브랜치 규칙 같은 «일을 굴리는 절차»다. 학습·평가 숫자가 하나도 없다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "머리글에 «이 문서는 md 가 원본이다 (2026-08-27 이관)»라고 적혀 있고 8갈래·관문 어휘가 최신이다. 팀원이 «내가 올린 게 어디로 가나»를 찾을 때 첫 문서다."
+  },
+  "COLLAB.md": {
+   "purpose": "운영",
+   "purpose_reason": "§2 작업 영역 8갈래 표, §2.5 마일스톤, §5 브랜치, §11 회의 규칙 등 전부 팀 규칙이다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "8갈래 주담당·부담당 표가 여기 있고 웹판(collab.html)이 이미 공개돼 있다. 여러 문서가 §2·§2.5를 근거로 인용한다. 다만 관문 목록에 기획발표 9/4 가 빠져 있어 5개 기준으로는 한 줄 보완이 필요하다."
+  },
+  "DECISIONS.md": {
+   "purpose": "운영",
+   "purpose_reason": "본문이 「날짜·결정·왜·출처」 4열 표 하나와 미결 안건 목록이다. 08-27 8갈래 재정의·마일스톤 재정의가 여기 취소선과 함께 남아 있다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "«왜 그렇게 정했더라»의 단일 출처이고 08-27 최신 결정 4건이 이미 반영돼 있다. 다만 미결 목록이 낡아 그대로 노출하면 오해를 준다."
+  },
+  "DESIGN-GUIDE.md": {
+   "purpose": "운영",
+   "purpose_reason": "색 변수·다크모드·나가기 전 관문·문체(em dash 금지) 같은 산출 규칙만 있다. `_build/brandvar.py` 가 빌드에서 강제한다고 본문이 밝힌다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "웹 페이지를 만드는 사람에게만 필요하다. 지금도 유효하고 빌드가 강제하지만 표지 방문자가 찾을 문서는 아니다."
+  },
+  "FIELD-CHECK-0813.md": {
+   "purpose": "운영",
+   "purpose_reason": "방문 당일 «들고 가는 종이». 항목마다 «이게 어떤 결정을 가르는가»가 붙은 확인 체크리스트이지 측정 결과가 아니다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "2026-08-13 단발 방문용 체크리스트이고 핵심 질문 세 개가 전부 닫혔다. 후속 정본은 FIELD-CHECK-GO2-INTAKE 와 ROBOT-SPEC 이다."
+  },
+  "FIELD-CHECK-GO2-INTAKE.md": {
+   "purpose": "운영",
+   "purpose_reason": "«어떤 Go2를 만나든 이 한 장을 채운다»는 재사용 체크리스트다. §1 신원 확인 · §2 저수준 개방 실측 3단계 · 부록 현장 명령으로 구성돼 있다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "개체가 늘 때마다 다시 쓰는 재사용 문서이고 11/11 자체 대여를 앞두고 있어 유효하다. 다만 §2 저수준 개방 실측은 트랙 B(순정 보행 위 항법)에서는 비중이 줄었다."
+  },
+  "FLOW.md": {
+   "purpose": "운영",
+   "purpose_reason": "7단계 흐름과 각 단계 산출물을 비전공자에게 설명하는 문서다. §7 FAQ, §8 진척 표까지 전부 설명·정의이고 새 측정이 없다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "스스로 구판이라 선언했고 폐기된 저수준 이전 절차가 본문의 큰 덩어리다. 전면 개정 전에는 표지에서 내리는 편이 낫다. 다만 QUESTIONS 가 5개 항목에서 이 문서를 가리키고 있어 함께 손봐야 한다."
+  },
+  "LEDGER.md": {
+   "purpose": "운영",
+   "purpose_reason": "완료·진행 중·대기 큐·확인 대기·결정 대기 다섯 상태로 안건을 추적하는 상태판이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "8/20 이후 갱신이 멈춘 내부 상태판이고 폐기된 갈래·저장소 이름이 살아 있다. 지금 상태의 정본은 GitHub 이슈·보드다."
+  },
+  "QUESTIONS.md": {
+   "purpose": "운영",
+   "purpose_reason": "본문 전체가 «궁금한 것 → 여기» 2열 표 다섯 묶음이다. 문서 색인이지 조사·측정이 아니다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "«이 정보가 어디 있지»의 진입점이라 표지에 가장 어울린다. 다만 8/12 이후 갱신이 안 돼 구판 링크를 먼저 고쳐야 한다."
+  },
+  "REPORT.md": {
+   "purpose": "운영",
+   "purpose_reason": "§3 단계별 추진 계획, §7 운영 체계, §8 남은 결정 안건, §9 산출물 정의로 이뤄진 프로젝트 계획서다. 트랙 A/B 정의의 정본이라고 여러 회의록이 명시한다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "두 트랙 정의·산출물·최종 결과 정의의 정본이고 회의록 4건과 계획 문서 3건이 «정본은 REPORT» 라고 가리킨다. §10 이 실측 문서로 이어지는 허브 역할도 한다."
+  },
+  "ROBOT-SPEC.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§1 확정 사양 표는 트림·보드·포트·센서 제원을 팀장 확인과 공식 자료로 정리한 것이다. 우리가 돌린 실험 결과가 아니라 사양 정리이며 §3-2 는 스스로 `가설` 로 표시한다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«우리 로봇»의 단일 진실이고 트랙 B 실기 작업의 전제라 유효하다. 다만 §3 재계산 절이 폐기된 증류 논의 위에 서 있어 표지에 올리려면 그 절을 먼저 정리해야 한다."
+  },
+  "WORKFLOW.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 이슈 만들기 · §2 관문 · §3 브랜치 · 머지까지의 절차 표가 전부다. 머리글이 «이 문서가 흐름의 정본이다» 라고 선언한다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "docs/README 와 notices 가 «처음 오셨다면 이것부터» 로 지목하는 문서다. 8갈래·관문 어휘가 최신이고 팀원이 가장 자주 여는 절차서다."
+  },
+  "decisions/20260826-27-design-session.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 이슈와 분류(8갈래·마일스톤) · §3 저장소와 폴더 · §5 산출물 · §7 자동화 · §9 아직 안 정해진 것. 현재 구조를 만든 결정 묶음이다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "저장소 이름 변경·8갈래·마일스톤·브랜치·산출물이 한 장에 모인 현재 구조의 근거 문서다. 다른 문서(가이드·협업 규칙)가 여기를 근거로 인용한다."
+  },
+  "digest/2026-W33.md": {
+   "purpose": "운영",
+   "purpose_reason": "«무엇을 알게 됐나»만 6항목으로 요약하고 각 항목이 실측 문서로 링크만 건다. 새 측정을 하지 않는 주간 요약이다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«5분이면 그 주의 발견을 다 안다»는 형식이라 신규 방문자에게 좋지만 3주 전 판이다. 표지에는 최신 주차를 두고 이건 목록에서 찾게 하는 편이 맞다."
+  },
+  "digest/2026-W34.md": {
+   "purpose": "운영",
+   "purpose_reason": "8/17~23 주에 «방향을 두 트랙으로 고정»한 것을 6항목으로 정리하고 회의록·보고서로 링크한다. 자체 실험이 없다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«하나의 흐름을 포기하니 두 개의 완결이 생겼다» 처럼 방향 전환의 이유를 가장 짧게 설명하는 글이다. 다만 지난 주차이고 남은 질문 한 줄이 낡았다."
+  },
+  "digest/2026-W35.md": {
+   "purpose": "운영",
+   "purpose_reason": "8/24~30 주의 발견 7항목 요약. 일반화 벤치마크·협업 규칙·NVIDIA 커리큘럼 문서로 링크만 걸고 자체 측정을 하지 않는다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "현재 주차이고 «10종 중 5종 실패»라는 지금의 문제 정의를 한 문장으로 준다. 표지 상단 다이제스트 자리에 그대로 맞는다. 상태가 «초안»인 점만 확인하면 된다."
+  },
+  "guides/ros2-01-setup.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "머리글이 «조선대 ROS 2 수업 1편 + 공식 설치 문서 대조»라 밝히고, §0 에서 «제 노트북에서 처음부터 끝까지 재실행해보지는 않았습니다. 명령의 동작 결과는 전부 `미확인`» 이라고 스스로 못 박는다. 우리가 돌린 것이 아니다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "팀 전원이 밟는 환경 구축 순서라 재사용성이 높고 8/27 에 승격된 최신 문서다. 다만 우리 스택은 22.04+Humble 이 정본(architecture-decision §3-5)이라 24.04+Jazzy 인 이 문서는 수업용 보조다."
+  },
+  "guides/ros2-02-python.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "수업 2편 자료를 rclpy 공식 문서와 대조해 재구성한 노트다. §5 패키지 만들기 · §7 액션 서버 · §9 launch 까지 전부 학습 재구성이고 팀 실험 데이터가 없다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "§10 «우리 프로젝트로의 연결» 이 있어 트랙 B 준비 자료로 쓸 만하다. 다만 일반 ROS2 튜토리얼 성격이 강해 표지보다 자료 목록이 어울린다."
+  },
+  "guides/ros2-03-tf-rviz2.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "수업 3편 + tf2 공식 문서 대조 노트다. §8 에서 «CV 담당 작업의 절반이 사실상 TF 문제» 라며 우리 작업 영역 `B/인지` 와 연결하지만, 실행 결과가 아니라 자료 정리다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "8/27 재정의된 관문 `NAV 11/7` 과의 관계를 §9 각주에서 스스로 대조해 둔 유일한 팀원 가이드다. 트랙 B 가 본격화되면 가치가 올라간다."
+  },
+  "meetings/20260813-ops-alignment.md": {
+   "purpose": "운영",
+   "purpose_reason": "전사 1,126세그먼트 기반 회의 기록이다. §«확정된 운영 사항» · §«바로 할 일» 로 끝난다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "회의록 폴더는 «기본적으로 비공개»가 원칙이고(meetings/README) 여기서 제기된 저수준 쟁점은 다음날 정정·8/19 폐기로 이미 닫혔다."
+  },
+  "meetings/20260814-east-ops.md": {
+   "purpose": "운영",
+   "purpose_reason": "MOSS 전사 258세그먼트 기반 회의 기록. §«전사에서 확정된 결정들» · §«확정·공유 사항» · §«바로 할 일» 구조다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "회의록 비공개 원칙 대상이고 이 자리의 최대 성과(저수준 «가능» 정정)는 ROBOT-SPEC 이 사양으로 흡수했다."
+  },
+  "meetings/20260819-team-lock.md": {
+   "purpose": "운영",
+   "purpose_reason": "«두 트랙으로 고정한 대화» 와 «그날 고정한 것» 으로 끝나는 합의 기록이다. 팀장 사전 브리핑(8/18)이 함께 실려 있다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«저수준 실기 이전 제외»와 두 트랙이라는 현재 방향의 원 근거라 인용 빈도가 높다. 다만 정의의 정본은 REPORT 이고 회의록은 비공개 원칙이다."
+  },
+  "meetings/20260820-kickoff.md": {
+   "purpose": "운영",
+   "purpose_reason": "13:00 운영 확정과 16:00 킥오프 두 자리를 전사 타임코드와 함께 한 장으로 기록한 회의록이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "멘토 체계 확정이라는 운영 사실은 REPORT §7 이 흡수했고 회의록은 비공개 원칙이다."
+  },
+  "meetings/20260821-team-meeting.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 역할 · §2 멘토링 운용 · §3 클라우드·인프라 · §5 비용 원칙으로 이뤄진 합의 기록이다. 08-27 변경분이 각주로 덧붙어 있다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "역할 main/sub 표의 원 출처이고 08-27 확장분까지 각주로 관리돼 있어 살아 있다. 다만 현재 정본은 COLLAB §2 의 8갈래 표이고 회의록은 비공개 원칙이다."
+  },
+  "meetings/20260824-park-mentoring.md": {
+   "purpose": "운영",
+   "purpose_reason": "«본 과제 · 병행 · 서류» · «개인별 지도» · «하지 말 것» · «바로 할 일» 로 구성된 멘토링 기록이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "개인 취업 멘토링 내용이 섞인 비공개 성격 문서다."
+  },
+  "meetings/20260825-park-mentoring.md": {
+   "purpose": "운영",
+   "purpose_reason": "«시뮬 · 제어 · 트윈» · «그날 험지» · «하지 말 것» · «바로 할 일» 구조의 2회차 멘토링 기록이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "«실패 험지는 3점 지지로 읽는다»는 멘토 조언은 파인튜닝 계획으로 흡수됐다. 회의록 자체는 비공개 원칙 대상이다."
+  },
+  "meetings/20260826-mentor-sync.md": {
+   "purpose": "운영",
+   "purpose_reason": "«조율 요청» · «하지 말 것» · «바로 할 일» 만 담은 44분 내부 점검 기록이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "단발 일정 조율 기록이라 표지 가치가 없다."
+  },
+  "notices/latest.md": {
+   "purpose": "운영",
+   "purpose_reason": "«바뀐 것만 모았습니다» 로 시작해 이슈 폼·브랜치·저장소 이름·문서 머리 다섯 줄 변경을 알리는 공지 원고다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "지금 시점에서 «무엇이 바뀌었나»를 가장 빠르게 알려 주지만 docs/README 규칙상 notices 는 웹 게시 대상이 아니고 디스코드로 발송한다. 내용의 정본은 WORKFLOW·COLLAB 이다."
+  },
+  "notices/report-web.md": {
+   "purpose": "운영",
+   "purpose_reason": "REPORT 웹판 게시를 알리는 공지 원고 한 장이다. 절 제목조차 없다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "8/19 단발 공지 원고이고 대상 페이지(REPORT)가 이미 표지에 있다."
+  },
+  "ops/DRAFT-0813-사전문의.md": {
+   "purpose": "운영",
+   "purpose_reason": "발송 전 메일 초안과 «발송 전 팀장 확인 사항» 뿐이다. 본문이 «이 문서는 초안일 뿐이다» 라고 밝힌다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "이미 발송이 끝난 2026-08-12 메일 초안이고 외부 인사 연락처·이메일이 본문에 있다."
+  },
+  "ops/GPU-SANDBOX.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 제공 규모 · §3 운영 시 반드시 지킬 것 · §5 신청 내역 · §6 쓰는 법. 배정받은 자원의 운용 규칙 문서다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "접속 IP·계정 운용이 걸린 내부 운영 문서이고 docs/README 상 ops 는 웹 게시 대상이 아니다."
+  },
+  "ops/INFRA-TODO.md": {
+   "purpose": "운영",
+   "purpose_reason": "NAS 폴더·Vaultwarden 개통·디스코드 채널·다크 모드 수리 네 묶음의 체크박스 목록이다. 상태가 «초안» 이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "상태가 초안이고 변경 이력이 2026-08-11 에서 멈춰 있다. §4 다크 모드 수리 항목은 이후 사이트가 다크 토글을 갖춘 것과 어긋날 가능성이 있으나 본문만으로는 `미확인` 이다."
+  },
+  "ops/SESSION-HANDOFF.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 저장소 지도 · §2 웹 빌드·배포 · §4 시크릿 지도 · §5 이관 체크리스트. 기계를 갈아탈 때 밟는 절차서다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "세션·기계 이관용 내부 절차서다. 저장소 이름이 문서 안에서 엇갈리는 점은 고쳐야 한다."
+  },
+  "ops/VERIFIED.md": {
+   "purpose": "파이프라인점검",
+   "purpose_reason": "«lab 14회 · rl 5회 실행» 처럼 각 자동화 경로를 실제로 트리거해 돌려 보고 결함 2건을 찾아낸 기록이다. §9경로·10경로·11경로가 전부 «실검증» 이라고 표시돼 있어 절차가 맞는지 확인한 문서에 해당한다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "«침묵은 성공과 구별되지 않는다» 같은 교훈이 값지지만 내용은 GitHub Actions 내부 검증 로그다. ops 는 웹 게시 대상이 아니다."
+  },
+  "research/architecture-decision.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§3 «새로 발견된 제약» 6항목(Blackwell open kernel 전용 · Isaac Sim 5.1 EOL · 스트리밍 동시 1명 · RMW 분열 등)이 전부 공식 문서·포럼 확인이고, 부록이 «이 문서가 반증한 출처» 로 남의 블로그를 대조한다. 우리가 돌린 실험 결과는 없다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "우분투 22.04+Humble·컨테이너 격리라는 스택 선택의 근거이고 아홉 문서가 인용한다. 다만 §5 일정 항목과 §6 시나리오가 폐기된 저수준 이전 위에 서 있다."
+  },
+  "research/benchmark-repro-protocol.md": {
+   "purpose": "파이프라인점검",
+   "purpose_reason": "§1 «동일 셋업 대조 체크리스트» · §2 Runpod 재현 런북 · §5 «실행자에게 요청» 으로 «같은 실험이라 말하려면 무엇이 일치해야 하나»를 정의한다. 새 정책을 학습하지 않고 원자료를 재검사해 §3 결정론 문제를 찾아냈다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«지형당 50 에피소드가 사실은 결정론적 궤적 1개의 50회 재생이었다»는 발견이 벤치마크 보고서 §2-1 을 낳았다. 재현성 규율의 좋은 사례이나 실행자용 런북 성격이 강하다."
+  },
+  "research/benchmark-setup-lim.md": {
+   "purpose": "파이프라인점검",
+   "purpose_reason": "§2 `generalization_env_cfg.py` 작성 · §3 `gym.register()` 추가 · §5 `eval_generalization.py` 전체 코드 · §7 자동 녹화 스크립트 · §8 «에피소드 변화 검증» 까지, 하네스를 세우고 그 하네스가 제대로 도는지 확인하는 절차서다. 로드하는 것은 NVIDIA 공식 체크포인트이지 우리 정책이 아니다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "일반화 벤치마크를 남이 그대로 재현할 수 있게 하는 실행 정본(48KB 코드 포함)이고 파인튜닝 계획이 여기 cfg 원문을 근거로 삼는다. 다만 표지용이라기보다 재현 절차 문서다."
+  },
+  "research/cloud-gpu-options.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "«방법: NVIDIA 공식 문서·포럼·NGC 카탈로그·GitHub 이슈 직접 확인» 이라 머리글에 있고 §7 이 «미확인 (판단 근거로 쓰지 말 것)» 목록이다. 우리가 클라우드에서 직접 돌려 본 기록은 없고 팀원 실패 보고의 원인을 문서로 추적한 것이다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«RT 코어가 관문» 과 «nvcr.io/nvidia/isaac-lab:2.3.2 가 우리 버전과 일치» 라는 두 결론은 지금도 유효하고 네 문서가 인용한다. 다만 이후 Runpod 실전 운용이 runpod-team-ops 로 넘어갔다."
+  },
+  "research/compute-resources.md": {
+   "purpose": "운영",
+   "purpose_reason": "§3 «그래서 이렇게 나눈다» 배정표 · §5 신청 규모 · §6 배정 결과와 «우리가 정한 운영 규율». 자원 배정·운용 규칙 문서이고 인용된 숫자(133분·86.7%)는 training-benchmarks 에서 가져온 것이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "8/14 배정 완료 시점의 계획 문서이고 실제 운용은 ops/GPU-SANDBOX 와 runpod-team-ops 로 갈라졌다. 배정표 한 행이 폐기된 증류를 전제한다."
+  },
+  "research/generalization-benchmark-10-terrains.md": {
+   "purpose": "본PoC",
+   "purpose_reason": "§1 «대상 정책 체크포인트: 기준선 1,500 iter 에서 시작 `확인됨`» · §2 지형별 성공률 표 · §2-1 v2 재검(지형당 고유 행 50/50). 우리 기준선 정책을 500 에피소드 돌려 얻은 숫자다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "«실패 5종» 이 곧 지금 남은 기간의 과제이고 파인튜닝 계획·주간 다이제스트·팀 미팅이 전부 여기를 근거로 삼는다. v2 재검으로 통계적 근거까지 붙었다."
+  },
+  "research/go2-pretrained-policies.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§1 NVIDIA 공식 체크포인트의 실체 · §2 RoboGauge 서열표 · §4 «다른 후보들» · §5 프로젝트 의미로 다섯 절 중 넷이 외부 공개물 조사다. §3 만 워크스테이션에서 실제로 받아 로드해 본 시험이다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«NVIDIA 공식만 우리 스택에 그대로 로드된다»는 결론은 지금도 파인튜닝 출발점의 근거다. 다만 역할 표가 폐기된 Teacher-Student 프레임 위에 있어 손봐야 표지에 올릴 수 있다."
+  },
+  "research/go2-rough-training.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "«클래스명·기본값·Go2 오버라이드는 Isaac Lab 공식 `UNITREE_GO2_CFG` · `LocomotionVelocityRoughEnvCfg` · `UnitreeGo2RoughEnvCfg` · `ROUGH_TERRAINS_CFG` 기준 `확인됨`» 이라 머리글에 있고, 본문이 공식 cfg 를 읽는 순서(요약 → 상세)를 정리한다. 우리 학습 결과는 training-benchmarks 로 링크만 한다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "학습 cfg 를 열기 전에 읽는 팀 공용 교재이고 §10 에서 «8/19 이후 정본: 실기 저수준 이전은 목표에서 빠진다 `확인됨`» 라고 스스로 최신 결정에 맞춰 두었다. REPORT·FLOW·QUESTIONS 가 전부 가리킨다."
+  },
+  "research/nvidia-curriculum-alignment.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "«팀장이 2026-08-26 에 nvidia-aicampus.com 과정 페이지를 직접 열어 확인 `확인됨`» 이 원자료이고 본문은 STEP 1~5 대 우리 8갈래 대응표다. §«한계» 가 «모듈 제목 수준의 비교» 라고 스스로 밝힌다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "8갈래 구성이 공인 커리큘럼과 겹친다는 외부 근거라 발표·기획서에 쓸 만하다. 다만 짧고 «구성의 타당성만 뒷받침한다»고 스스로 범위를 좁힌다."
+  },
+  "research/omniverse-stack.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§1 Foundry 라인업 대응표 · §2 쇼케이스 1차 출처 · §3 «지금 받아서 쓸 수 있는 에셋 (전부 근거 링크)». 공식 문서와 쇼케이스를 정리한 지도이고 측정값은 render-benchmarks 에서 인용한다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«화질은 렌더러가 아니라 에셋에서 갈린다»는 결론과 §4 컷별 도구 배분은 트랙 A 트윈·렌더 작업에 지금도 유효하다. 다만 도구 소개 성격이라 표지보다 자료 목록이 맞다."
+  },
+  "research/render-benchmarks.md": {
+   "purpose": "PoC시험",
+   "purpose_reason": "§2 «2점법으로 기동 시간을 소거한다» 로 프레임당 시간을 재고 §3 에서 1080p 128spp = 1.75초/프레임을 얻는다. 정책을 학습하거나 평가한 것이 아니라 «렌더가 현실적인가»를 속도로 확인한 시험이다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«렌더 시간은 병목이 아니다. 병목은 씬을 만드는 시간» 이라는 판정이 트랙 A 일정 근거이고 §1 함정 3개는 팀원 시간을 아껴 준다. 다만 씬이 정해지면 재측정이 필요하다고 스스로 적었다."
+  },
+  "research/robogauge-observation-mapping.md": {
+   "purpose": "PoC시험",
+   "purpose_reason": "§2 «실측 검증 (known-answer tests) `확인됨`» 에서 남의 정책 4종을 [1,45] 0벡터·표준자세로 실제 실행해 표를 채웠고, §5 에서 우리 env 를 띄워 관절 순서를 실측했다. 본선 학습이 아니라 «남의 것이 붙는가»를 확인한 시험이다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«남은 것은 확인이 아니라 구현이다» 로 끝나는 완결도 높은 실측이고 검증 스크립트·로그 경로까지 남겼다. 다만 붙일 대상(공개 정책 비교 평가)이 아직 착수되지 않아 표지 우선순위는 낮다."
+  },
+  "research/role-map-careers.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§4 «실제 채용 시장: 지금 열려 있는 문 (딥리서치 2026-08-21)» 이 A~E 다섯 묶음으로 공고를 정리한 것이고, §1·§5 도 밖의 직무명·요구 스택을 우리 산출물에 대응시킨 표다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "8/21 역할 확정 회의에서 화면에 띄운 문서이고 12월 포트폴리오의 뼈대다. 다만 팀원 개인 배경·포트폴리오 문장이 들어 있어 공개 범위를 따져야 한다."
+  },
+  "research/ros2-isaacsim-integration.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "§«참조한 글» 이 블로그 원문을 인용하고 §«구현 저장소» 가 남의 Dockerfile 구성을 표로 옮긴다. §«★ 우리와 다른 점: 우리가 더 유리하다» 도 공식 이미지 존재를 근거로 한 판단이지 실행 결과가 아니다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "핵심 결론(컨테이너 격리·DDS 는 버전 무관)이 architecture-decision 에 흡수됐고, 이 문서는 그 출처 회수 기록에 가깝다."
+  },
+  "research/rough-terrain-study-plan.md": {
+   "purpose": "운영",
+   "purpose_reason": "«회의록이 아니라 개인 학습 계획이다» 라고 머리글이 밝히고 본문이 «중요하고 급함 / 중요하지만 급하지 않음 / 급하지만 하지 않음 / 버린 것» 우선순위 표다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "스스로 «폐기» 상태이고 terrain-rl-study-plan-0818.md 와 중복이다. 본문 링크 `[8/19 팀 합의](20260819-team-lock.md)` 도 research/ 기준에서 깨진 경로다."
+  },
+  "research/runpod-team-ops.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "«근거: Runpod 공식 문서 정독 (하단 출처)» 이고 §1·§3 이 `확인됨`, §4 는 «설계, 팀장 실측 예정» 이다. §5 비용 좌표의 두 줄만 8/20 청구 실측이고 나머지는 공식 요금표다.",
+   "web_worthy": "보통",
+   "web_worthy_reason": "«크레딧은 계정당 하나·환불 불가» 같은 실무 함정과 하루 약 $5 라는 실측 단가가 있어 클라우드를 쓰는 팀원에게 바로 필요하다. 다만 §4 NAS 연계는 아직 설계 단계다."
+  },
+  "research/terrain-finetune-plan.md": {
+   "purpose": "운영",
+   "purpose_reason": "§1 지형 배정(5인에게 지형 하나씩) · §2~5 주차별 일정 · «MVP·중간발표(9/30) 판정선» 으로 일을 굴리는 실행 계획이다. 아직 이 계획으로 얻은 숫자는 없다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "지금 5인이 실제로 굴리고 있는 작업의 정본이고 마일스톤·이슈 생성 절차까지 지정한다(«작업 영역은 `A/정책학습`, 마일스톤은 `MVP · 중간발표 9/30`»). 설계 세션 문서가 «닫힌 것» 의 근거로 여기를 가리킨다."
+  },
+  "research/terrain-guide-isaaclab.md": {
+   "purpose": "자료조사",
+   "purpose_reason": "«terrain 클래스 목록(21종)·API 체계·기본 rough 구성은 공식 v2.3.2 소스와 대조 `확인됨`» 이고 현실 지형 대응표는 «저자 설계 지침» 이라고 스스로 수위를 구분한다. 실행 결과가 아니다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "«우리가 정한 험지» 를 만드는 작업(`A/지형씬제작`)의 기준 문서이고 REPORT §10 이 «Terrain 이해» 항목으로 가리킨다. 첫 팀원 기여 승격본이라는 상징성도 있다."
+  },
+  "research/terrain-rl-study-plan-0818.md": {
+   "purpose": "운영",
+   "purpose_reason": "«이것은 회의록이 아니다. 맹라현이 8/18에 혼자 정리한 학습·우선순위 계획이다» 라고 머리글이 못 박고, 본문이 우선순위 4구간 표다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "8/18 시점 개인 계획이고 폐기된 줄마다 «8/19 이후 정본이 아니다 `확인됨`» 주석이 붙어 있어 내용상 충돌은 없다. 다만 현재 계획 정본은 REPORT 와 terrain-finetune-plan 이고, rough-terrain-study-plan.md 와 사실상 같은 문서가 둘 있는 상태를 정리해야 한다."
+  },
+  "research/training-benchmarks.md": {
+   "purpose": "본PoC",
+   "purpose_reason": "«웹 조사가 아니라 이 기계에서 실제로 돌린 숫자. 전부 로그에서 추출» 이라 머리글에 있고, §2 플래그 A/B 시드 고정 3회 · §5-3 1,500 iteration 완주 134분 · 통과율 86.7% 가 전부 우리 학습·평가 결과다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "기준선 86.7% 의 원 출처이고 열한 개 문서가 여기를 인용한다. «보상 13.94 는 잘 걷는다를 뜻하지 않았다» 는 이 프로젝트에서 가장 자주 재인용되는 발견이다."
+  },
+  "research/visual-evidence.md": {
+   "purpose": "본PoC",
+   "purpose_reason": "우리 300 iter·1,500 iter 정책의 주행 영상에서 1초 간격 프레임을 뽑아 격자로 붙이고, §05 는 우리 TensorBoard 이벤트 파일을 직접 읽어 곡선을 그렸다. 남의 것이 아니라 우리 학습 산출물의 판독이다.",
+   "web_worthy": "높음",
+   "web_worthy_reason": "«보상 13.94 인데 통과율 0%» 를 그림으로 보여 주는 문서라 비전공자·심사자에게 가장 잘 전달된다. 그림이 본문이라 웹 표지에 어울린다."
+  },
+  "schedule/personal-plans.md": {
+   "purpose": "운영",
+   "purpose_reason": "«팀원이 스스로 세운 계획을 일정 페이지에 띄우기 위한 원본» 이고 본문이 단계·기간·마일스톤 대응표와 «앞으로는 이렇게 한다» 규칙이다.",
+   "web_worthy": "낮음",
+   "web_worthy_reason": "«이 문서는 8/19 방향 전환 이전에 쓰였다. 저수준 실기 이전 관련 항목은 폐기됐다» 라고 스스로 표시했고 폐기 행도 «폐기 (8/19 저수준 이전 제외)» 로 표기돼 충돌은 없다. 다만 일정 페이지가 읽는 데이터 원본이라 표지용 읽을거리는 아니다."
+  }
+ }
+}
