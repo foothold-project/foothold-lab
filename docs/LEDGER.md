@@ -146,8 +146,8 @@
 | **정보 모델 정본** · 축 다섯 + 작업 영역 자동 판정기 | `decisions/20260829-info-model.md` · `_build/areas.py` · 웹 `/info-model` |
 | 연구 허브 묶음 기준 (검토중) + 목업 | `decisions/20260829-research-hub-taxonomy.md` · 웹 `/research-taxonomy` · #73 |
 | 용어 정리 · 「갈래」(작업 영역) 와 「묶음」(화면) 을 갈랐다 | 정보 모델 §1-1 |
-| **관계표 자동 재생성**  · 새 문서를 스스로 찾아 넣는다 |  ·  |
-| 관계표가 잡은 것 · 새 문서 6장 자동 편입 · 내 문서 깨진 링크 3개 |    |
+| **관계표 자동 재생성** `[1.35]` · 새 문서를 스스로 찾아 넣는다 | `_build/docgraph.py` · `ops/doc-graph-overrides.json` |
+| 관계표가 붙자마자 잡은 것 · 새 문서 6장 자동 편입 · 내 문서 깨진 링크 3개 | `FLOW.md` · `info-model.md` · `rough-terrain-study-plan.md` |
 
 ## 판 이력
 
