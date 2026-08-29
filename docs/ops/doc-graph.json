@@ -1,674 +1,1352 @@
 [
-  {
-    "path": "AUTOMATION.md",
-    "title": "자동화 지도",
-    "kind": "가이드",
-    "purpose": "운영",
-    "purpose_reason": "본문 1~13절이 전부 이슈 생성·라벨 자동 부여·PR·웹 배포 관문·브랜치 규칙 같은 «일을 굴리는 절차»다. 학습·평가 숫자가 하나도 없다.",
-    "parents": [],
-    "children": [],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "머리글에 «이 문서는 md 가 원본이다 (2026-08-27 이관)»라고 적혀 있고 8갈래·관문 어휘가 최신이다. 팀원이 «내가 올린 게 어디로 가나»를 찾을 때 첫 문서다."
-  },
-  {
-    "path": "COLLAB.md",
-    "title": "FOOTHOLD 협업 규칙",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "§2 작업 영역 8갈래 표, §2.5 마일스톤, §5 브랜치, §11 회의 규칙 등 전부 팀 규칙이다.",
-    "parents": ["WORKFLOW.md"],
-    "children": ["WORKFLOW.md", "DECISIONS.md", "schedule/personal-plans.md", "guides/ros2-03-tf-rviz2.md", "digest/2026-W35.md", "meetings/20260813-ops-alignment.md", "QUESTIONS.md"],
-    "stale": "시기는 마일스톤이 담당한다. 2026-08-27 에 네 관문으로 재정의했다: `A-정책 9/12` · `MVP · 중간발표 9/30` · `NAV · 실기 항법 11/7` · `FINAL · 최종발표 12/11`",
-    "web_worthy": "높음",
-    "web_worthy_reason": "8갈래 주담당·부담당 표가 여기 있고 웹판(collab.html)이 이미 공개돼 있다. 여러 문서가 §2·§2.5를 근거로 인용한다. 다만 관문 목록에 기획발표 9/4 가 빠져 있어 5개 기준으로는 한 줄 보완이 필요하다."
-  },
-  {
-    "path": "DECISIONS.md",
-    "title": "결정 로그: 무엇을, 언제, 왜",
-    "kind": "결정",
-    "purpose": "운영",
-    "purpose_reason": "본문이 「날짜·결정·왜·출처」 4열 표 하나와 미결 안건 목록이다. 08-27 8갈래 재정의·마일스톤 재정의가 여기 취소선과 함께 남아 있다.",
-    "parents": ["decisions/20260826-27-design-session.md", "meetings/20260819-team-lock.md", "COLLAB.md", "LEDGER.md", "research/architecture-decision.md", "DESIGN-GUIDE.md", "ROBOT-SPEC.md"],
-    "children": ["WORKFLOW.md", "COLLAB.md", "ops/SESSION-HANDOFF.md"],
-    "stale": "미결 표에 «D1 | RL 범위 (시뮬만 vs 실기 도전) | 멘토 제안은 시뮬만», «D2 | 증류 채택 여부 | Orin NX 등급 확인 후» 가 여전히 열려 있다. 둘 다 8/19 두 트랙 합의와 terrain-finetune-plan §6 «특권 관측(teacher-student)은 필요 없다» 로 닫혔다. 또 다음 작업 큐의 «④ rl 폴더 골격 생성» 은 폐기된 저장소 이름(`foothold-rl`)을 쓴다.",
-    "web_worthy": "높음",
-    "web_worthy_reason": "«왜 그렇게 정했더라»의 단일 출처이고 08-27 최신 결정 4건이 이미 반영돼 있다. 다만 미결 목록이 낡아 그대로 노출하면 오해를 준다."
-  },
-  {
-    "path": "DESIGN-GUIDE.md",
-    "title": "웹 페이지 디자인 규칙: 새 페이지를 만들 때 지켜야 하는 것",
-    "kind": "가이드",
-    "purpose": "운영",
-    "purpose_reason": "색 변수·다크모드·나가기 전 관문·문체(em dash 금지) 같은 산출 규칙만 있다. `_build/brandvar.py` 가 빌드에서 강제한다고 본문이 밝힌다.",
-    "parents": [],
-    "children": ["DECISIONS.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "웹 페이지를 만드는 사람에게만 필요하다. 지금도 유효하고 빌드가 강제하지만 표지 방문자가 찾을 문서는 아니다."
-  },
-  {
-    "path": "FIELD-CHECK-0813.md",
-    "title": "8/13(목) 조선대 방문: 현장 확인 목록",
-    "kind": "현장",
-    "purpose": "운영",
-    "purpose_reason": "방문 당일 «들고 가는 종이». 항목마다 «이게 어떤 결정을 가르는가»가 붙은 확인 체크리스트이지 측정 결과가 아니다.",
-    "parents": ["research/architecture-decision.md", "FLOW.md", "meetings/20260813-ops-alignment.md", "ROBOT-SPEC.md"],
-    "children": ["meetings/20260813-ops-alignment.md", "FIELD-CHECK-GO2-INTAKE.md", "QUESTIONS.md"],
-    "stale": "### 1-3. 🔴 저수준 제어가 열려 있는가: 프로젝트 성립 여부 · «### 1-2. 🔴 컴퓨팅 보드: D2(증류)를 가르는 항목». 저수준 개방은 8/14 에 «가능»으로 정정됐고 ROBOT-SPEC 이 EDU·RJ45 로 닫았으며, 학습 정책의 저수준 실기 이전 자체가 8/19 에 목표에서 빠졌다. D2(증류)도 폐기됐다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "2026-08-13 단발 방문용 체크리스트이고 핵심 질문 세 개가 전부 닫혔다. 후속 정본은 FIELD-CHECK-GO2-INTAKE 와 ROBOT-SPEC 이다."
-  },
-  {
-    "path": "FIELD-CHECK-GO2-INTAKE.md",
-    "title": "Go2 신규 개체 점검 목록 (공통)",
-    "kind": "현장",
-    "purpose": "운영",
-    "purpose_reason": "«어떤 Go2를 만나든 이 한 장을 채운다»는 재사용 체크리스트다. §1 신원 확인 · §2 저수준 개방 실측 3단계 · 부록 현장 명령으로 구성돼 있다.",
-    "parents": ["FIELD-CHECK-0813.md", "research/architecture-decision.md"],
-    "children": ["ROBOT-SPEC.md", "QUESTIONS.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "개체가 늘 때마다 다시 쓰는 재사용 문서이고 11/11 자체 대여를 앞두고 있어 유효하다. 다만 §2 저수준 개방 실측은 트랙 B(순정 보행 위 항법)에서는 비중이 줄었다."
-  },
-  {
-    "path": "FLOW.md",
-    "title": "프로젝트 전체 흐름",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "7단계 흐름과 각 단계 산출물을 비전공자에게 설명하는 문서다. §7 FAQ, §8 진척 표까지 전부 설명·정의이고 새 측정이 없다.",
-    "parents": ["REPORT.md", "meetings/20260821-team-meeting.md", "research/training-benchmarks.md", "research/visual-evidence.md", "research/go2-rough-training.md", "research/terrain-guide-isaaclab.md", "research/go2-pretrained-policies.md", "research/render-benchmarks.md", "research/architecture-decision.md", "research/omniverse-stack.md"],
-    "children": ["FIELD-CHECK-0813.md", "ROBOT-SPEC.md", "QUESTIONS.md", "research/go2-pretrained-policies.md", "research/go2-rough-training.md"],
-    "stale": "🔶 구판 주의 (2026-08-22): 이 문서의 상당 부분은 8/19 방향 전환 이전의 계획(실기 저수준 배포 포함)을 담고 있다. ... 저수준 실기 이전·전환 절차 관련 내용은 폐기됐다. 그럼에도 §3 «2단계: 증류», §5 «5단계: sim2real: 실물 Go2», §5 «순정 컨트롤러는 어떻게 껐다 켜나» 가 본문에 그대로 남아 있고 §8 진척 표는 2026-08-12 기준이다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "스스로 구판이라 선언했고 폐기된 저수준 이전 절차가 본문의 큰 덩어리다. 전면 개정 전에는 표지에서 내리는 편이 낫다. 다만 QUESTIONS 가 5개 항목에서 이 문서를 가리키고 있어 함께 손봐야 한다."
-  },
-  {
-    "path": "LEDGER.md",
-    "title": "원장(LEDGER): 모든 요청이 지금 어디 있나",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "완료·진행 중·대기 큐·확인 대기·결정 대기 다섯 상태로 안건을 추적하는 상태판이다.",
-    "parents": ["ops/SESSION-HANDOFF.md", "ROBOT-SPEC.md", "ops/GPU-SANDBOX.md", "REPORT.md"],
-    "children": ["DECISIONS.md", "FIELD-CHECK-0813.md", "ops/SESSION-HANDOFF.md"],
-    "stale": "«자동화 16종(§SESSION-HANDOFF #3) · 날짜 KST · 이슈 템플릿 단순화(필수=큰 칸1+갈래1) · WBS=갈래 5 + 마일스톤 4» 와 «권한: 팀원 4명 lab·rl write, main 은 팀장만(rl 룰셋 강제·lab 감시)». 갈래 5는 08-27 에 작업 영역 8갈래로 폐기됐고 `rl` 은 `foothold-go2` 로 개명됐다. 머리글의 «최종 갱신: 2026-08-20» 이후 갱신이 없어 진행 중 항목(«킥오프 (8/20 16:00) | 덱 제작 중»)도 지나간 일이다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "8/20 이후 갱신이 멈춘 내부 상태판이고 폐기된 갈래·저장소 이름이 살아 있다. 지금 상태의 정본은 GitHub 이슈·보드다."
-  },
-  {
-    "path": "QUESTIONS.md",
-    "title": "질문으로 찾기",
-    "kind": "가이드",
-    "purpose": "운영",
-    "purpose_reason": "본문 전체가 «궁금한 것 → 여기» 2열 표 다섯 묶음이다. 문서 색인이지 조사·측정이 아니다.",
-    "parents": ["REPORT.md", "FLOW.md", "research/training-benchmarks.md", "research/visual-evidence.md", "research/go2-rough-training.md", "research/go2-pretrained-policies.md", "research/robogauge-observation-mapping.md", "research/omniverse-stack.md", "research/render-benchmarks.md", "research/architecture-decision.md", "FIELD-CHECK-0813.md", "FIELD-CHECK-GO2-INTAKE.md", "COLLAB.md"],
-    "children": [],
-    "stale": "| 실물 Go2 는 어떻게 제어를 넘겨받나 (순정과의 관계) | [흐름 §5 제어 층 스위치](flow.html) | 과 «| 8/13 조선대 방문에서 뭘 확인해야 하나 | [현장 확인 목록](field-check-0813.html) |». 둘 다 폐기·구판 문서를 정답으로 가리킨다. 또 08-19 이후 신설된 일반화 벤치마크·파인튜닝 계획·작업 흐름 항목이 표에 없다.",
-    "web_worthy": "높음",
-    "web_worthy_reason": "«이 정보가 어디 있지»의 진입점이라 표지에 가장 어울린다. 다만 8/12 이후 갱신이 안 돼 구판 링크를 먼저 고쳐야 한다."
-  },
-  {
-    "path": "REPORT.md",
-    "title": "Unitree Go2 미경험 험지 적응 시뮬레이션 및 실기 자율주행 프로젝트",
-    "kind": "계획",
-    "purpose": "운영",
-    "purpose_reason": "§3 단계별 추진 계획, §7 운영 체계, §8 남은 결정 안건, §9 산출물 정의로 이뤄진 프로젝트 계획서다. 트랙 A/B 정의의 정본이라고 여러 회의록이 명시한다.",
-    "parents": ["meetings/20260819-team-lock.md"],
-    "children": ["FLOW.md", "meetings/20260813-ops-alignment.md", "meetings/20260814-east-ops.md", "meetings/20260819-team-lock.md", "meetings/20260820-kickoff.md", "research/rough-terrain-study-plan.md", "research/terrain-rl-study-plan-0818.md", "research/go2-rough-training.md", "digest/2026-W34.md", "notices/report-web.md", "LEDGER.md"],
-    "stale": "§8 «5. 중간발표 일자 확인: 8/20 이사 언급 \"아마 10월 초\" · 공식 공지 대기 (현행 가정 9/30, 확정 시 로드맵 역산 갱신)» 과 «3. 역할 매트릭스: 5인의 메인+겹침 배치 (RL/Terrain·트윈/렌더·SLAM/Nav2·통합)». 둘 다 2026-08-27 에 `MVP · 중간발표 9/30` 확정과 작업 영역 8갈래로 닫혔다.",
-    "web_worthy": "높음",
-    "web_worthy_reason": "두 트랙 정의·산출물·최종 결과 정의의 정본이고 회의록 4건과 계획 문서 3건이 «정본은 REPORT» 라고 가리킨다. §10 이 실측 문서로 이어지는 허브 역할도 한다."
-  },
-  {
-    "path": "ROBOT-SPEC.md",
-    "title": "우리가 쓰는 Go2 실기 사양",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "§1 확정 사양 표는 트림·보드·포트·센서 제원을 팀장 확인과 공식 자료로 정리한 것이다. 우리가 돌린 실험 결과가 아니라 사양 정리이며 §3-2 는 스스로 `가설` 로 표시한다.",
-    "parents": ["FLOW.md", "FIELD-CHECK-GO2-INTAKE.md"],
-    "children": ["FIELD-CHECK-0813.md", "DECISIONS.md", "ops/SESSION-HANDOFF.md", "research/terrain-finetune-plan.md"],
-    "stale": "§3-1 «따라서 «작게 만드는 증류» 는 하지 않는다. 관측 증류(특권 정보를 안 보는 정책 만들기)만 남는다.» 관측 증류도 이제 필요 없다. terrain-finetune-plan §6 이 «특권 관측(teacher-student)은 필요 없다 ... 우리 정책은 실기에 배포하지 않고(트랙 B는 순정 보행 위의 항법이다)» 로 닫았다.",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«우리 로봇»의 단일 진실이고 트랙 B 실기 작업의 전제라 유효하다. 다만 §3 재계산 절이 폐기된 증류 논의 위에 서 있어 표지에 올리려면 그 절을 먼저 정리해야 한다."
-  },
-  {
-    "path": "WORKFLOW.md",
-    "title": "작업 흐름: 이슈에서 머지까지",
-    "kind": "가이드",
-    "purpose": "운영",
-    "purpose_reason": "§1 이슈 만들기 · §2 관문 · §3 브랜치 · 머지까지의 절차 표가 전부다. 머리글이 «이 문서가 흐름의 정본이다» 라고 선언한다.",
-    "parents": ["COLLAB.md", "DECISIONS.md", "decisions/20260826-27-design-session.md"],
-    "children": ["COLLAB.md", "decisions/20260826-27-design-session.md"],
-    "stale": "§2 관문 표가 `A-정책 9/12` · `MVP · 중간발표 9/30` · `NAV · 실기 항법 11/7` · `FINAL · 최종발표 12/11` 네 줄뿐이다. 관문 5개 기준에서는 «기획발표 9/4» 가 빠져 있다.",
-    "web_worthy": "높음",
-    "web_worthy_reason": "docs/README 와 notices 가 «처음 오셨다면 이것부터» 로 지목하는 문서다. 8갈래·관문 어휘가 최신이고 팀원이 가장 자주 여는 절차서다."
-  },
-  {
-    "path": "decisions/20260826-27-design-session.md",
-    "title": "설계 세션 기록: 2026-08-26 저녁 ~ 08-27 오전",
-    "kind": "결정",
-    "purpose": "운영",
-    "purpose_reason": "§1 이슈와 분류(8갈래·마일스톤) · §3 저장소와 폴더 · §5 산출물 · §7 자동화 · §9 아직 안 정해진 것. 현재 구조를 만든 결정 묶음이다.",
-    "parents": ["WORKFLOW.md", "research/terrain-finetune-plan.md"],
-    "children": ["DECISIONS.md", "guides/ros2-03-tf-rviz2.md"],
-    "stale": "«### 마일스톤 4개» 표가 A-정책·MVP·NAV·FINAL 넷만 담는다. 같은 문서 §5 가 «산출물 (9월 4일 제출)» 로 기획발표를 따로 두고 있어, 관문 5개로 세는 최신 기준과는 셈이 다르다.",
-    "web_worthy": "높음",
-    "web_worthy_reason": "저장소 이름 변경·8갈래·마일스톤·브랜치·산출물이 한 장에 모인 현재 구조의 근거 문서다. 다른 문서(가이드·협업 규칙)가 여기를 근거로 인용한다."
-  },
-  {
-    "path": "digest/2026-W33.md",
-    "title": "이번 주 알게 된 것: 8월 2주 (W33)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "«무엇을 알게 됐나»만 6항목으로 요약하고 각 항목이 실측 문서로 링크만 건다. 새 측정을 하지 않는 주간 요약이다.",
-    "parents": ["research/training-benchmarks.md", "research/visual-evidence.md", "research/render-benchmarks.md", "research/go2-pretrained-policies.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«5분이면 그 주의 발견을 다 안다»는 형식이라 신규 방문자에게 좋지만 3주 전 판이다. 표지에는 최신 주차를 두고 이건 목록에서 찾게 하는 편이 맞다."
-  },
-  {
-    "path": "digest/2026-W34.md",
-    "title": "이번 주 알게 된 것: 8월 3주 (W34)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "8/17~23 주에 «방향을 두 트랙으로 고정»한 것을 6항목으로 정리하고 회의록·보고서로 링크한다. 자체 실험이 없다.",
-    "parents": ["meetings/20260819-team-lock.md", "REPORT.md", "meetings/20260821-team-meeting.md"],
-    "children": [],
-    "stale": "«이번 주가 남긴 질문» 표의 «중간발표는 9/30 인가 10월 초인가 | 운영진 공지 대기 `미확인`». 2026-08-27 에 `MVP · 중간발표 9/30` 으로 확정됐다.",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«하나의 흐름을 포기하니 두 개의 완결이 생겼다» 처럼 방향 전환의 이유를 가장 짧게 설명하는 글이다. 다만 지난 주차이고 남은 질문 한 줄이 낡았다."
-  },
-  {
-    "path": "digest/2026-W35.md",
-    "title": "이번 주 알게 된 것: 8월 4주 (W35)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "8/24~30 주의 발견 7항목 요약. 일반화 벤치마크·협업 규칙·NVIDIA 커리큘럼 문서로 링크만 걸고 자체 측정을 하지 않는다.",
-    "parents": ["research/generalization-benchmark-10-terrains.md", "COLLAB.md", "meetings/20260821-team-meeting.md", "research/nvidia-curriculum-alignment.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "현재 주차이고 «10종 중 5종 실패»라는 지금의 문제 정의를 한 문장으로 준다. 표지 상단 다이제스트 자리에 그대로 맞는다. 상태가 «초안»인 점만 확인하면 된다."
-  },
-  {
-    "path": "guides/ros2-01-setup.md",
-    "title": "ROS 2 개발환경 구축 정리 (Ubuntu 24.04 · Jazzy)",
-    "kind": "가이드",
-    "purpose": "자료조사",
-    "purpose_reason": "머리글이 «조선대 ROS 2 수업 1편 + 공식 설치 문서 대조»라 밝히고, §0 에서 «제 노트북에서 처음부터 끝까지 재실행해보지는 않았습니다. 명령의 동작 결과는 전부 `미확인`» 이라고 스스로 못 박는다. 우리가 돌린 것이 아니다.",
-    "parents": [],
-    "children": ["guides/ros2-02-python.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "팀 전원이 밟는 환경 구축 순서라 재사용성이 높고 8/27 에 승격된 최신 문서다. 다만 우리 스택은 22.04+Humble 이 정본(architecture-decision §3-5)이라 24.04+Jazzy 인 이 문서는 수업용 보조다."
-  },
-  {
-    "path": "guides/ros2-02-python.md",
-    "title": "ROS 2 Python 프로그래밍 정리 (rclpy · colcon · 커스텀 인터페이스)",
-    "kind": "가이드",
-    "purpose": "자료조사",
-    "purpose_reason": "수업 2편 자료를 rclpy 공식 문서와 대조해 재구성한 노트다. §5 패키지 만들기 · §7 액션 서버 · §9 launch 까지 전부 학습 재구성이고 팀 실험 데이터가 없다.",
-    "parents": ["guides/ros2-01-setup.md"],
-    "children": ["guides/ros2-03-tf-rviz2.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "§10 «우리 프로젝트로의 연결» 이 있어 트랙 B 준비 자료로 쓸 만하다. 다만 일반 ROS2 튜토리얼 성격이 강해 표지보다 자료 목록이 어울린다."
-  },
-  {
-    "path": "guides/ros2-03-tf-rviz2.md",
-    "title": "ROS 2 TF 좌표계와 RViz2 시각화 정리",
-    "kind": "가이드",
-    "purpose": "자료조사",
-    "purpose_reason": "수업 3편 + tf2 공식 문서 대조 노트다. §8 에서 «CV 담당 작업의 절반이 사실상 TF 문제» 라며 우리 작업 영역 `B/인지` 와 연결하지만, 실행 결과가 아니라 자료 정리다.",
-    "parents": ["guides/ros2-02-python.md", "COLLAB.md", "decisions/20260826-27-design-session.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "8/27 재정의된 관문 `NAV 11/7` 과의 관계를 §9 각주에서 스스로 대조해 둔 유일한 팀원 가이드다. 트랙 B 가 본격화되면 가치가 올라간다."
-  },
-  {
-    "path": "meetings/20260813-ops-alignment.md",
-    "title": "8/13 조선대 미팅: 기획과 제시안이 갈라진 날",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "전사 1,126세그먼트 기반 회의 기록이다. §«확정된 운영 사항» · §«바로 할 일» 로 끝난다.",
-    "parents": ["FIELD-CHECK-0813.md", "COLLAB.md", "REPORT.md"],
-    "children": ["meetings/20260814-east-ops.md", "FIELD-CHECK-0813.md"],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "회의록 폴더는 «기본적으로 비공개»가 원칙이고(meetings/README) 여기서 제기된 저수준 쟁점은 다음날 정정·8/19 폐기로 이미 닫혔다."
-  },
-  {
-    "path": "meetings/20260814-east-ops.md",
-    "title": "8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "MOSS 전사 258세그먼트 기반 회의 기록. §«전사에서 확정된 결정들» · §«확정·공유 사항» · §«바로 할 일» 구조다.",
-    "parents": ["meetings/20260813-ops-alignment.md", "REPORT.md"],
-    "children": ["meetings/20260813-ops-alignment.md", "meetings/20260820-kickoff.md"],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "회의록 비공개 원칙 대상이고 이 자리의 최대 성과(저수준 «가능» 정정)는 ROBOT-SPEC 이 사양으로 흡수했다."
-  },
-  {
-    "path": "meetings/20260819-team-lock.md",
-    "title": "8/19 팀 합의: 두 트랙으로 간다, C는 지킨다",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "«두 트랙으로 고정한 대화» 와 «그날 고정한 것» 으로 끝나는 합의 기록이다. 팀장 사전 브리핑(8/18)이 함께 실려 있다.",
-    "parents": ["research/rough-terrain-study-plan.md", "REPORT.md"],
-    "children": ["meetings/20260813-ops-alignment.md", "research/rough-terrain-study-plan.md", "research/terrain-rl-study-plan-0818.md", "digest/2026-W34.md", "DECISIONS.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«저수준 실기 이전 제외»와 두 트랙이라는 현재 방향의 원 근거라 인용 빈도가 높다. 다만 정의의 정본은 REPORT 이고 회의록은 비공개 원칙이다."
-  },
-  {
-    "path": "meetings/20260820-kickoff.md",
-    "title": "8/20: 전담 멘토 확정, 박철제 킥오프",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "13:00 운영 확정과 16:00 킥오프 두 자리를 전사 타임코드와 함께 한 장으로 기록한 회의록이다.",
-    "parents": ["REPORT.md", "meetings/20260814-east-ops.md", "meetings/20260819-team-lock.md"],
-    "children": ["meetings/20260821-team-meeting.md", "meetings/20260824-park-mentoring.md", "meetings/20260814-east-ops.md"],
-    "stale": "«중간발표회 \"아마 10월 초\" 공지가 예정돼 있고, 기존 9/30 가정과 다를 수 있어 공식 공지를 기다린다» 는 당일 상태 기록이다. 08-27 에 `MVP · 중간발표 9/30` 으로 확정돼 이 미확인은 닫혔다. 회의록 특성상 당일 기록으로 남기는 것이 맞지만 갱신 각주가 없다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "멘토 체계 확정이라는 운영 사실은 REPORT §7 이 흡수했고 회의록은 비공개 원칙이다."
-  },
-  {
-    "path": "meetings/20260821-team-meeting.md",
-    "title": "8/21 팀 미팅: 역할 그룹핑 확정, 클라우드 운용 개시",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "§1 역할 · §2 멘토링 운용 · §3 클라우드·인프라 · §5 비용 원칙으로 이뤄진 합의 기록이다. 08-27 변경분이 각주로 덧붙어 있다.",
-    "parents": ["research/role-map-careers.md", "research/generalization-benchmark-10-terrains.md", "research/terrain-finetune-plan.md", "meetings/20260820-kickoff.md"],
-    "children": ["FLOW.md", "digest/2026-W34.md", "digest/2026-W35.md", "research/rough-terrain-study-plan.md", "research/terrain-rl-study-plan-0818.md", "meetings/20260819-team-lock.md", "meetings/20260820-kickoff.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "역할 main/sub 표의 원 출처이고 08-27 확장분까지 각주로 관리돼 있어 살아 있다. 다만 현재 정본은 COLLAB §2 의 8갈래 표이고 회의록은 비공개 원칙이다."
-  },
-  {
-    "path": "meetings/20260824-park-mentoring.md",
-    "title": "8/24 멘토링: 본 과제와 CAD 학습은 분리한다",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "«본 과제 · 병행 · 서류» · «개인별 지도» · «하지 말 것» · «바로 할 일» 로 구성된 멘토링 기록이다.",
-    "parents": ["meetings/20260820-kickoff.md"],
-    "children": ["meetings/20260819-team-lock.md", "meetings/20260820-kickoff.md"],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "개인 취업 멘토링 내용이 섞인 비공개 성격 문서다."
-  },
-  {
-    "path": "meetings/20260825-park-mentoring.md",
-    "title": "8/25 멘토링: 프로젝트 화면을 보고, 실패 험지는 3점 지지로",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "«시뮬 · 제어 · 트윈» · «그날 험지» · «하지 말 것» · «바로 할 일» 구조의 2회차 멘토링 기록이다.",
-    "parents": ["meetings/20260824-park-mentoring.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "«실패 험지는 3점 지지로 읽는다»는 멘토 조언은 파인튜닝 계획으로 흡수됐다. 회의록 자체는 비공개 원칙 대상이다."
-  },
-  {
-    "path": "meetings/20260826-mentor-sync.md",
-    "title": "8/26 팀: 오늘 멘토링은 취소, 프로젝트 피드백으로 조율",
-    "kind": "회의록",
-    "purpose": "운영",
-    "purpose_reason": "«조율 요청» · «하지 말 것» · «바로 할 일» 만 담은 44분 내부 점검 기록이다.",
-    "parents": [],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "단발 일정 조율 기록이라 표지 가치가 없다."
-  },
-  {
-    "path": "notices/latest.md",
-    "title": "(h1 없음) 📌 팀 작업 방식이 바뀌었습니다 · 8월 27일 기준",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "«바뀐 것만 모았습니다» 로 시작해 이슈 폼·브랜치·저장소 이름·문서 머리 다섯 줄 변경을 알리는 공지 원고다.",
-    "parents": ["WORKFLOW.md", "decisions/20260826-27-design-session.md", "COLLAB.md"],
-    "children": [],
-    "stale": "§«관문» 표가 A-정책 9/12 · MVP 9/30 · NAV 11/7 · FINAL 12/11 네 줄이다. 관문 5개 기준에서는 기획발표 9/4 가 빠져 있다.",
-    "web_worthy": "보통",
-    "web_worthy_reason": "지금 시점에서 «무엇이 바뀌었나»를 가장 빠르게 알려 주지만 docs/README 규칙상 notices 는 웹 게시 대상이 아니고 디스코드로 발송한다. 내용의 정본은 WORKFLOW·COLLAB 이다."
-  },
-  {
-    "path": "notices/report-web.md",
-    "title": "(h1 없음) 📢 프로젝트 보고서, 웹 정식 페이지로 올라갔습니다 (2026-08-19)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "REPORT 웹판 게시를 알리는 공지 원고 한 장이다. 절 제목조차 없다.",
-    "parents": ["REPORT.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "8/19 단발 공지 원고이고 대상 페이지(REPORT)가 이미 표지에 있다."
-  },
-  {
-    "path": "ops/DRAFT-0813-사전문의.md",
-    "title": "8/13 방문 사전 문의 초안 (김판구 교수님)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "발송 전 메일 초안과 «발송 전 팀장 확인 사항» 뿐이다. 본문이 «이 문서는 초안일 뿐이다» 라고 밝힌다.",
-    "parents": [],
-    "children": [],
-    "stale": "«2. 짧은 시간(5분 내외) 스포츠 모드를 해제하고 저수준 제어 상태를 확인해 봐도 되는지요. 저희 설계에서 라이다 높이맵이 저수준 제어와 양립하는지가 아키텍처를 가르는» 이라는 질문이 남아 있다. 저수준 실기 이전 자체가 8/19 에 목표에서 빠져 이 문의의 전제가 사라졌다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "이미 발송이 끝난 2026-08-12 메일 초안이고 외부 인사 연락처·이메일이 본문에 있다."
-  },
-  {
-    "path": "ops/GPU-SANDBOX.md",
-    "title": "외부 GPU 샌드박스 (V100 / KubeSphere)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "§1 제공 규모 · §3 운영 시 반드시 지킬 것 · §5 신청 내역 · §6 쓰는 법. 배정받은 자원의 운용 규칙 문서다.",
-    "parents": ["research/cloud-gpu-options.md"],
-    "children": ["LEDGER.md"],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "접속 IP·계정 운용이 걸린 내부 운영 문서이고 docs/README 상 ops 는 웹 게시 대상이 아니다."
-  },
-  {
-    "path": "ops/INFRA-TODO.md",
-    "title": "인프라 구축 체크리스트: 반드시 한다 (팀장 확정 2026-08-09)",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "NAS 폴더·Vaultwarden 개통·디스코드 채널·다크 모드 수리 네 묶음의 체크박스 목록이다. 상태가 «초안» 이다.",
-    "parents": [],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "상태가 초안이고 변경 이력이 2026-08-11 에서 멈춰 있다. §4 다크 모드 수리 항목은 이후 사이트가 다크 토글을 갖춘 것과 어긋날 가능성이 있으나 본문만으로는 `미확인` 이다."
-  },
-  {
-    "path": "ops/SESSION-HANDOFF.md",
-    "title": "세션 이관 가이드: 다른 기계·리눅스에서 이어받기",
-    "kind": "운영",
-    "purpose": "운영",
-    "purpose_reason": "§1 저장소 지도 · §2 웹 빌드·배포 · §4 시크릿 지도 · §5 이관 체크리스트. 기계를 갈아탈 때 밟는 절차서다.",
-    "parents": ["LEDGER.md", "DECISIONS.md", "ops/VERIFIED.md", "ROBOT-SPEC.md"],
-    "children": ["LEDGER.md"],
-    "stale": "§4 시크릿 표의 «lab 레포 시크릿 (rl 은 org `DISCORD_WEBHOOK` 사용)» 과 «팀원 권한 | lab·rl write / site·brand read». 같은 문서 §1 표는 이미 `foothold-go2` 로 적혀 있어 문서 안에서 이름이 엇갈린다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "세션·기계 이관용 내부 절차서다. 저장소 이름이 문서 안에서 엇갈리는 점은 고쳐야 한다."
-  },
-  {
-    "path": "ops/VERIFIED.md",
-    "title": "자동화 파이프라인: 검증 기록",
-    "kind": "운영",
-    "purpose": "파이프라인점검",
-    "purpose_reason": "«lab 14회 · rl 5회 실행» 처럼 각 자동화 경로를 실제로 트리거해 돌려 보고 결함 2건을 찾아낸 기록이다. §9경로·10경로·11경로가 전부 «실검증» 이라고 표시돼 있어 절차가 맞는지 확인한 문서에 해당한다.",
-    "parents": [],
-    "children": ["ops/SESSION-HANDOFF.md"],
-    "stale": "«실효 권한: lab·rl = 4명 전원 write, site·brand = read» 와 «★ 발견: rl main 보호가 실물로는 없었다». 저장소 `rl` 은 08-27 에 `foothold-go2` 로 개명됐다. 다만 이 문서는 2026-08-13 시점의 검증 로그라 기록으로서는 그대로 두는 것이 맞다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "«침묵은 성공과 구별되지 않는다» 같은 교훈이 값지지만 내용은 GitHub Actions 내부 검증 로그다. ops 는 웹 게시 대상이 아니다."
-  },
-  {
-    "path": "research/architecture-decision.md",
-    "title": "시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2",
-    "kind": "결정",
-    "purpose": "자료조사",
-    "purpose_reason": "§3 «새로 발견된 제약» 6항목(Blackwell open kernel 전용 · Isaac Sim 5.1 EOL · 스트리밍 동시 1명 · RMW 분열 등)이 전부 공식 문서·포럼 확인이고, 부록이 «이 문서가 반증한 출처» 로 남의 블로그를 대조한다. 우리가 돌린 실험 결과는 없다.",
-    "parents": [],
-    "children": ["FLOW.md", "FIELD-CHECK-0813.md", "FIELD-CHECK-GO2-INTAKE.md", "research/go2-rough-training.md", "research/omniverse-stack.md", "research/render-benchmarks.md", "research/visual-evidence.md", "QUESTIONS.md", "DECISIONS.md"],
-    "stale": "§5 «9월 첫 2주 안에 \"심 정책 → 실기 Go2 토픽 발행\" E2E 스모크를 1회 관통시킨다» 와 §6-① «최종 단계에서 심 안에서 Go2 메시지를 구독하려는 순간». 학습 정책의 실기 저수준 이전이 8/19 에 목표에서 빠져 이 E2E 전제가 바뀌었다.",
-    "web_worthy": "보통",
-    "web_worthy_reason": "우분투 22.04+Humble·컨테이너 격리라는 스택 선택의 근거이고 아홉 문서가 인용한다. 다만 §5 일정 항목과 §6 시나리오가 폐기된 저수준 이전 위에 서 있다."
-  },
-  {
-    "path": "research/benchmark-repro-protocol.md",
-    "title": "벤치마크 재현 프로토콜: 동일 셋업 검증과 결정론 발견",
-    "kind": "실험",
-    "purpose": "파이프라인점검",
-    "purpose_reason": "§1 «동일 셋업 대조 체크리스트» · §2 Runpod 재현 런북 · §5 «실행자에게 요청» 으로 «같은 실험이라 말하려면 무엇이 일치해야 하나»를 정의한다. 새 정책을 학습하지 않고 원자료를 재검사해 §3 결정론 문제를 찾아냈다.",
-    "parents": ["research/generalization-benchmark-10-terrains.md"],
-    "children": ["research/generalization-benchmark-10-terrains.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«지형당 50 에피소드가 사실은 결정론적 궤적 1개의 50회 재생이었다»는 발견이 벤치마크 보고서 §2-1 을 낳았다. 재현성 규율의 좋은 사례이나 실행자용 런북 성격이 강하다."
-  },
-  {
-    "path": "research/benchmark-setup-lim.md",
-    "title": "Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크",
-    "kind": "실험",
-    "purpose": "파이프라인점검",
-    "purpose_reason": "§2 `generalization_env_cfg.py` 작성 · §3 `gym.register()` 추가 · §5 `eval_generalization.py` 전체 코드 · §7 자동 녹화 스크립트 · §8 «에피소드 변화 검증» 까지, 하네스를 세우고 그 하네스가 제대로 도는지 확인하는 절차서다. 로드하는 것은 NVIDIA 공식 체크포인트이지 우리 정책이 아니다.",
-    "parents": [],
-    "children": ["research/terrain-finetune-plan.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "일반화 벤치마크를 남이 그대로 재현할 수 있게 하는 실행 정본(48KB 코드 포함)이고 파인튜닝 계획이 여기 cfg 원문을 근거로 삼는다. 다만 표지용이라기보다 재현 절차 문서다."
-  },
-  {
-    "path": "research/cloud-gpu-options.md",
-    "title": "클라우드 GPU에서 Isaac Sim 돌리기: 가능성 조사",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "«방법: NVIDIA 공식 문서·포럼·NGC 카탈로그·GitHub 이슈 직접 확인» 이라 머리글에 있고 §7 이 «미확인 (판단 근거로 쓰지 말 것)» 목록이다. 우리가 클라우드에서 직접 돌려 본 기록은 없고 팀원 실패 보고의 원인을 문서로 추적한 것이다.",
-    "parents": [],
-    "children": ["ops/GPU-SANDBOX.md", "research/compute-resources.md", "research/ros2-isaacsim-integration.md", "research/training-benchmarks.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«RT 코어가 관문» 과 «nvcr.io/nvidia/isaac-lab:2.3.2 가 우리 버전과 일치» 라는 두 결론은 지금도 유효하고 네 문서가 인용한다. 다만 이후 Runpod 실전 운용이 runpod-team-ops 로 넘어갔다."
-  },
-  {
-    "path": "research/compute-resources.md",
-    "title": "컴퓨팅 자원 계획: 무엇을 어디서 돌리나",
-    "kind": "실험",
-    "purpose": "운영",
-    "purpose_reason": "§3 «그래서 이렇게 나눈다» 배정표 · §5 신청 규모 · §6 배정 결과와 «우리가 정한 운영 규율». 자원 배정·운용 규칙 문서이고 인용된 숫자(133분·86.7%)는 training-benchmarks 에서 가져온 것이다.",
-    "parents": ["research/cloud-gpu-options.md", "research/training-benchmarks.md"],
-    "children": [],
-    "stale": "§3 배정표의 «정책 증류 (Teacher → Student) | 병렬 연산 | V100» 행. terrain-finetune-plan §6 이 «특권 관측(teacher-student)은 필요 없다» 로 닫았고 ROBOT-SPEC §3-1 은 경량화 증류도 불필요하다고 확정했다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "8/14 배정 완료 시점의 계획 문서이고 실제 운용은 ops/GPU-SANDBOX 와 runpod-team-ops 로 갈라졌다. 배정표 한 행이 폐기된 증류를 전제한다."
-  },
-  {
-    "path": "research/generalization-benchmark-10-terrains.md",
-    "title": "일반화 벤치마크: 미학습 지형 10종 실측 (5종 통과 · 5종 실패)",
-    "kind": "실험",
-    "purpose": "본PoC",
-    "purpose_reason": "§1 «대상 정책 체크포인트: 기준선 1,500 iter 에서 시작 `확인됨`» · §2 지형별 성공률 표 · §2-1 v2 재검(지형당 고유 행 50/50). 우리 기준선 정책을 500 에피소드 돌려 얻은 숫자다.",
-    "parents": ["research/benchmark-repro-protocol.md", "research/training-benchmarks.md"],
-    "children": ["research/benchmark-repro-protocol.md", "research/terrain-finetune-plan.md", "research/go2-rough-training.md", "meetings/20260821-team-meeting.md", "digest/2026-W35.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "«실패 5종» 이 곧 지금 남은 기간의 과제이고 파인튜닝 계획·주간 다이제스트·팀 미팅이 전부 여기를 근거로 삼는다. v2 재검으로 통계적 근거까지 붙었다."
-  },
-  {
-    "path": "research/go2-pretrained-policies.md",
-    "title": "Go2 공개 사전학습 정책 전수 조사: 무엇을 가져다 쓸 수 있나",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "§1 NVIDIA 공식 체크포인트의 실체 · §2 RoboGauge 서열표 · §4 «다른 후보들» · §5 프로젝트 의미로 다섯 절 중 넷이 외부 공개물 조사다. §3 만 워크스테이션에서 실제로 받아 로드해 본 시험이다.",
-    "parents": ["research/robogauge-observation-mapping.md", "research/training-benchmarks.md", "FLOW.md"],
-    "children": ["FLOW.md", "research/go2-rough-training.md", "research/robogauge-observation-mapping.md", "digest/2026-W33.md", "QUESTIONS.md"],
-    "stale": "§3 «이 실측이 바꾸는 것» 표의 «Teacher (증류의 선생) | NVIDIA 공식 rough» · «Student 의 비교 기준 | symmetry · HIM (45차원)» 과 §5-3 «우리 Student 가 완성되면 symmetry(0.7006)와 같은 체급에서 정면 비교할 수 있다». 증류로 Student 를 만드는 경로가 8/19 이후 목표에서 빠졌다.",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«NVIDIA 공식만 우리 스택에 그대로 로드된다»는 결론은 지금도 파인튜닝 출발점의 근거다. 다만 역할 표가 폐기된 Teacher-Student 프레임 위에 있어 손봐야 표지에 올릴 수 있다."
-  },
-  {
-    "path": "research/go2-rough-training.md",
-    "title": "Isaac Lab Go2 험지 학습: cfg를 읽는 커리큘럼",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "«클래스명·기본값·Go2 오버라이드는 Isaac Lab 공식 `UNITREE_GO2_CFG` · `LocomotionVelocityRoughEnvCfg` · `UnitreeGo2RoughEnvCfg` · `ROUGH_TERRAINS_CFG` 기준 `확인됨`» 이라 머리글에 있고, 본문이 공식 cfg 를 읽는 순서(요약 → 상세)를 정리한다. 우리 학습 결과는 training-benchmarks 로 링크만 한다.",
-    "parents": ["research/terrain-guide-isaaclab.md", "research/training-benchmarks.md", "research/generalization-benchmark-10-terrains.md", "research/terrain-finetune-plan.md", "REPORT.md", "FLOW.md", "research/architecture-decision.md", "research/omniverse-stack.md", "research/render-benchmarks.md", "research/visual-evidence.md", "research/go2-pretrained-policies.md", "research/terrain-rl-study-plan-0818.md"],
-    "children": ["FLOW.md", "REPORT.md", "QUESTIONS.md", "research/terrain-guide-isaaclab.md", "research/terrain-finetune-plan.md", "research/training-benchmarks.md", "research/rough-terrain-study-plan.md", "research/terrain-rl-study-plan-0818.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "학습 cfg 를 열기 전에 읽는 팀 공용 교재이고 §10 에서 «8/19 이후 정본: 실기 저수준 이전은 목표에서 빠진다 `확인됨`» 라고 스스로 최신 결정에 맞춰 두었다. REPORT·FLOW·QUESTIONS 가 전부 가리킨다."
-  },
-  {
-    "path": "research/nvidia-curriculum-alignment.md",
-    "title": "NVIDIA AI Campus 커리큘럼과 우리 프로젝트의 대응",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "«팀장이 2026-08-26 에 nvidia-aicampus.com 과정 페이지를 직접 열어 확인 `확인됨`» 이 원자료이고 본문은 STEP 1~5 대 우리 8갈래 대응표다. §«한계» 가 «모듈 제목 수준의 비교» 라고 스스로 밝힌다.",
-    "parents": ["COLLAB.md"],
-    "children": ["digest/2026-W35.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "8갈래 구성이 공인 커리큘럼과 겹친다는 외부 근거라 발표·기획서에 쓸 만하다. 다만 짧고 «구성의 타당성만 뒷받침한다»고 스스로 범위를 좁힌다."
-  },
-  {
-    "path": "research/omniverse-stack.md",
-    "title": "NVIDIA 도구 지도: Omniverse · Isaac Sim · SimReady 가 각각 무엇인가",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "§1 Foundry 라인업 대응표 · §2 쇼케이스 1차 출처 · §3 «지금 받아서 쓸 수 있는 에셋 (전부 근거 링크)». 공식 문서와 쇼케이스를 정리한 지도이고 측정값은 render-benchmarks 에서 인용한다.",
-    "parents": ["research/render-benchmarks.md", "research/visual-evidence.md", "research/architecture-decision.md"],
-    "children": ["FLOW.md", "QUESTIONS.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«화질은 렌더러가 아니라 에셋에서 갈린다»는 결론과 §4 컷별 도구 배분은 트랙 A 트윈·렌더 작업에 지금도 유효하다. 다만 도구 소개 성격이라 표지보다 자료 목록이 맞다."
-  },
-  {
-    "path": "research/render-benchmarks.md",
-    "title": "렌더 실측: Path Tracing 은 얼마나 걸리는가",
-    "kind": "실험",
-    "purpose": "PoC시험",
-    "purpose_reason": "§2 «2점법으로 기동 시간을 소거한다» 로 프레임당 시간을 재고 §3 에서 1080p 128spp = 1.75초/프레임을 얻는다. 정책을 학습하거나 평가한 것이 아니라 «렌더가 현실적인가»를 속도로 확인한 시험이다.",
-    "parents": ["research/training-benchmarks.md"],
-    "children": ["FLOW.md", "research/omniverse-stack.md", "research/visual-evidence.md", "research/go2-rough-training.md", "digest/2026-W33.md", "QUESTIONS.md", "REPORT.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«렌더 시간은 병목이 아니다. 병목은 씬을 만드는 시간» 이라는 판정이 트랙 A 일정 근거이고 §1 함정 3개는 팀원 시간을 아껴 준다. 다만 씬이 정해지면 재측정이 필요하다고 스스로 적었다."
-  },
-  {
-    "path": "research/robogauge-observation-mapping.md",
-    "title": "RoboGauge 공개 정책 해부: 45차원 관측의 정확한 순서와 스케일",
-    "kind": "리서치",
-    "purpose": "PoC시험",
-    "purpose_reason": "§2 «실측 검증 (known-answer tests) `확인됨`» 에서 남의 정책 4종을 [1,45] 0벡터·표준자세로 실제 실행해 표를 채웠고, §5 에서 우리 env 를 띄워 관절 순서를 실측했다. 본선 학습이 아니라 «남의 것이 붙는가»를 확인한 시험이다.",
-    "parents": ["research/go2-pretrained-policies.md", "research/training-benchmarks.md"],
-    "children": ["research/go2-pretrained-policies.md", "QUESTIONS.md", "REPORT.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«남은 것은 확인이 아니라 구현이다» 로 끝나는 완결도 높은 실측이고 검증 스크립트·로그 경로까지 남겼다. 다만 붙일 대상(공개 정책 비교 평가)이 아직 착수되지 않아 표지 우선순위는 낮다."
-  },
-  {
-    "path": "research/role-map-careers.md",
-    "title": "역할 지도: 이 프로젝트가 각자를 어떤 직무로 데려가는가",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "§4 «실제 채용 시장: 지금 열려 있는 문 (딥리서치 2026-08-21)» 이 A~E 다섯 묶음으로 공고를 정리한 것이고, §1·§5 도 밖의 직무명·요구 스택을 우리 산출물에 대응시킨 표다.",
-    "parents": [],
-    "children": ["meetings/20260821-team-meeting.md"],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "8/21 역할 확정 회의에서 화면에 띄운 문서이고 12월 포트폴리오의 뼈대다. 다만 팀원 개인 배경·포트폴리오 문장이 들어 있어 공개 범위를 따져야 한다."
-  },
-  {
-    "path": "research/ros2-isaacsim-integration.md",
-    "title": "ROS2 ↔ Isaac Sim: 파이썬 버전 충돌과 통합 방법",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "§«참조한 글» 이 블로그 원문을 인용하고 §«구현 저장소» 가 남의 Dockerfile 구성을 표로 옮긴다. §«★ 우리와 다른 점: 우리가 더 유리하다» 도 공식 이미지 존재를 근거로 한 판단이지 실행 결과가 아니다.",
-    "parents": ["research/cloud-gpu-options.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "핵심 결론(컨테이너 격리·DDS 는 버전 무관)이 architecture-decision 에 흡수됐고, 이 문서는 그 출처 회수 기록에 가깝다."
-  },
-  {
-    "path": "research/rough-terrain-study-plan.md",
-    "title": "험지 RL 학습 계획 : 무엇을 먼저 하고 무엇을 하지 않는가",
-    "kind": "계획",
-    "purpose": "운영",
-    "purpose_reason": "«회의록이 아니라 개인 학습 계획이다» 라고 머리글이 밝히고 본문이 «중요하고 급함 / 중요하지만 급하지 않음 / 급하지만 하지 않음 / 버린 것» 우선순위 표다.",
-    "parents": ["meetings/20260819-team-lock.md", "meetings/20260821-team-meeting.md", "REPORT.md", "research/go2-rough-training.md"],
-    "children": ["meetings/20260819-team-lock.md"],
-    "stale": "메타에 «상태: 폐기» 로 적혀 있다. 본문에도 «8/18 문장: 저수준 관절 정책이 주 경로이고, cmd_vel은 항법 연동용이다 ... 저수준 주 경로 문장은 8/19 이후 정본이 아니다» 가 남아 있다. 같은 내용의 살아 있는 판본이 research/terrain-rl-study-plan-0818.md 로 따로 있어 문서가 두 벌이다.",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "스스로 «폐기» 상태이고 terrain-rl-study-plan-0818.md 와 중복이다. 본문 링크 `[8/19 팀 합의](20260819-team-lock.md)` 도 research/ 기준에서 깨진 경로다."
-  },
-  {
-    "path": "research/runpod-team-ops.md",
-    "title": "Runpod 팀 운용 가이드: 권한 · 결제 · 네트워크 볼륨 · NAS 연계",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "«근거: Runpod 공식 문서 정독 (하단 출처)» 이고 §1·§3 이 `확인됨`, §4 는 «설계, 팀장 실측 예정» 이다. §5 비용 좌표의 두 줄만 8/20 청구 실측이고 나머지는 공식 요금표다.",
-    "parents": [],
-    "children": [],
-    "stale": "",
-    "web_worthy": "보통",
-    "web_worthy_reason": "«크레딧은 계정당 하나·환불 불가» 같은 실무 함정과 하루 약 $5 라는 실측 단가가 있어 클라우드를 쓰는 팀원에게 바로 필요하다. 다만 §4 NAS 연계는 아직 설계 단계다."
-  },
-  {
-    "path": "research/terrain-finetune-plan.md",
-    "title": "실패 지형 파인튜닝 실행 계획: 레시피 병렬, 혼합 단일 런",
-    "kind": "계획",
-    "purpose": "운영",
-    "purpose_reason": "§1 지형 배정(5인에게 지형 하나씩) · §2~5 주차별 일정 · «MVP·중간발표(9/30) 판정선» 으로 일을 굴리는 실행 계획이다. 아직 이 계획으로 얻은 숫자는 없다.",
-    "parents": ["research/generalization-benchmark-10-terrains.md", "research/benchmark-setup-lim.md", "research/go2-rough-training.md", "ROBOT-SPEC.md"],
-    "children": ["decisions/20260826-27-design-session.md", "meetings/20260821-team-meeting.md", "research/go2-rough-training.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "지금 5인이 실제로 굴리고 있는 작업의 정본이고 마일스톤·이슈 생성 절차까지 지정한다(«작업 영역은 `A/정책학습`, 마일스톤은 `MVP · 중간발표 9/30`»). 설계 세션 문서가 «닫힌 것» 의 근거로 여기를 가리킨다."
-  },
-  {
-    "path": "research/terrain-guide-isaaclab.md",
-    "title": "Isaac Lab v2.3.2 지형 가이드: Go2 커스텀 험지 설계",
-    "kind": "리서치",
-    "purpose": "자료조사",
-    "purpose_reason": "«terrain 클래스 목록(21종)·API 체계·기본 rough 구성은 공식 v2.3.2 소스와 대조 `확인됨`» 이고 현실 지형 대응표는 «저자 설계 지침» 이라고 스스로 수위를 구분한다. 실행 결과가 아니다.",
-    "parents": ["research/go2-rough-training.md"],
-    "children": ["FLOW.md", "REPORT.md", "research/go2-rough-training.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "«우리가 정한 험지» 를 만드는 작업(`A/지형씬제작`)의 기준 문서이고 REPORT §10 이 «Terrain 이해» 항목으로 가리킨다. 첫 팀원 기여 승격본이라는 상징성도 있다."
-  },
-  {
-    "path": "research/terrain-rl-study-plan-0818.md",
-    "title": "8/18 험지RL 학습 계획: 무엇을 먼저 하고 무엇을 하지 않는가",
-    "kind": "계획",
-    "purpose": "운영",
-    "purpose_reason": "«이것은 회의록이 아니다. 맹라현이 8/18에 혼자 정리한 학습·우선순위 계획이다» 라고 머리글이 못 박고, 본문이 우선순위 4구간 표다.",
-    "parents": ["meetings/20260819-team-lock.md", "meetings/20260821-team-meeting.md", "REPORT.md", "research/go2-rough-training.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "8/18 시점 개인 계획이고 폐기된 줄마다 «8/19 이후 정본이 아니다 `확인됨`» 주석이 붙어 있어 내용상 충돌은 없다. 다만 현재 계획 정본은 REPORT 와 terrain-finetune-plan 이고, rough-terrain-study-plan.md 와 사실상 같은 문서가 둘 있는 상태를 정리해야 한다."
-  },
-  {
-    "path": "research/training-benchmarks.md",
-    "title": "학습 성능 실측: Go2 험지 (AI-WS01)",
-    "kind": "실험",
-    "purpose": "본PoC",
-    "purpose_reason": "«웹 조사가 아니라 이 기계에서 실제로 돌린 숫자. 전부 로그에서 추출» 이라 머리글에 있고, §2 플래그 A/B 시드 고정 3회 · §5-3 1,500 iteration 완주 134분 · 통과율 86.7% 가 전부 우리 학습·평가 결과다.",
-    "parents": ["research/go2-rough-training.md", "research/cloud-gpu-options.md", "research/ros2-isaacsim-integration.md"],
-    "children": ["FLOW.md", "REPORT.md", "QUESTIONS.md", "digest/2026-W33.md", "research/visual-evidence.md", "research/render-benchmarks.md", "research/robogauge-observation-mapping.md", "research/go2-pretrained-policies.md", "research/go2-rough-training.md", "research/compute-resources.md", "research/generalization-benchmark-10-terrains.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "기준선 86.7% 의 원 출처이고 열한 개 문서가 여기를 인용한다. «보상 13.94 는 잘 걷는다를 뜻하지 않았다» 는 이 프로젝트에서 가장 자주 재인용되는 발견이다."
-  },
-  {
-    "path": "research/visual-evidence.md",
-    "title": "시각 증거: 우리가 실제로 본 것",
-    "kind": "실험",
-    "purpose": "본PoC",
-    "purpose_reason": "우리 300 iter·1,500 iter 정책의 주행 영상에서 1초 간격 프레임을 뽑아 격자로 붙이고, §05 는 우리 TensorBoard 이벤트 파일을 직접 읽어 곡선을 그렸다. 남의 것이 아니라 우리 학습 산출물의 판독이다.",
-    "parents": ["research/training-benchmarks.md", "research/architecture-decision.md"],
-    "children": ["FLOW.md", "research/omniverse-stack.md", "research/render-benchmarks.md", "research/go2-rough-training.md", "digest/2026-W33.md", "QUESTIONS.md"],
-    "stale": "",
-    "web_worthy": "높음",
-    "web_worthy_reason": "«보상 13.94 인데 통과율 0%» 를 그림으로 보여 주는 문서라 비전공자·심사자에게 가장 잘 전달된다. 그림이 본문이라 웹 표지에 어울린다."
-  },
-  {
-    "path": "schedule/personal-plans.md",
-    "title": "개인 계획 (일정 페이지 원본)",
-    "kind": "계획",
-    "purpose": "운영",
-    "purpose_reason": "«팀원이 스스로 세운 계획을 일정 페이지에 띄우기 위한 원본» 이고 본문이 단계·기간·마일스톤 대응표와 «앞으로는 이렇게 한다» 규칙이다.",
-    "parents": ["COLLAB.md"],
-    "children": [],
-    "stale": "",
-    "web_worthy": "낮음",
-    "web_worthy_reason": "«이 문서는 8/19 방향 전환 이전에 쓰였다. 저수준 실기 이전 관련 항목은 폐기됐다» 라고 스스로 표시했고 폐기 행도 «폐기 (8/19 저수준 이전 제외)» 로 표기돼 충돌은 없다. 다만 일정 페이지가 읽는 데이터 원본이라 표지용 읽을거리는 아니다."
-  }
+ {
+  "path": "AUTOMATION.md",
+  "title": "자동화 지도",
+  "kind": "가이드",
+  "purpose": "운영",
+  "purpose_reason": "본문 1~13절이 전부 이슈 생성·라벨 자동 부여·PR·웹 배포 관문·브랜치 규칙 같은 «일을 굴리는 절차»다. 학습·평가 숫자가 하나도 없다.",
+  "parents": [],
+  "children": [],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "머리글에 «이 문서는 md 가 원본이다 (2026-08-27 이관)»라고 적혀 있고 8갈래·관문 어휘가 최신이다. 팀원이 «내가 올린 게 어디로 가나»를 찾을 때 첫 문서다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×7 예산×1 자동화×7"
+ },
+ {
+  "path": "COLLAB.md",
+  "title": "FOOTHOLD 협업 규칙",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "§2 작업 영역 8갈래 표, §2.5 마일스톤, §5 브랜치, §11 회의 규칙 등 전부 팀 규칙이다.",
+  "parents": [
+   "WORKFLOW.md"
+  ],
+  "children": [
+   "WORKFLOW.md",
+   "DECISIONS.md",
+   "schedule/personal-plans.md",
+   "guides/ros2-03-tf-rviz2.md",
+   "digest/2026-W35.md",
+   "meetings/20260813-ops-alignment.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "시기는 마일스톤이 담당한다. 2026-08-27 에 네 관문으로 재정의했다: `A-정책 9/12` · `MVP · 중간발표 9/30` · `NAV · 실기 항법 11/7` · `FINAL · 최종발표 12/11`",
+  "web_worthy": "높음",
+  "web_worthy_reason": "8갈래 주담당·부담당 표가 여기 있고 웹판(collab.html)이 이미 공개돼 있다. 여러 문서가 §2·§2.5를 근거로 인용한다. 다만 관문 목록에 기획발표 9/4 가 빠져 있어 5개 기준으로는 한 줄 보완이 필요하다.",
+  "areas": [
+   "C/기록",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×7 문서×21 백과×1 자동화×4 일정×3 자동화×4"
+ },
+ {
+  "path": "DECISIONS.md",
+  "title": "결정 로그: 무엇을, 언제, 왜",
+  "kind": "결정",
+  "purpose": "운영",
+  "purpose_reason": "본문이 「날짜·결정·왜·출처」 4열 표 하나와 미결 안건 목록이다. 08-27 8갈래 재정의·마일스톤 재정의가 여기 취소선과 함께 남아 있다.",
+  "parents": [
+   "decisions/20260826-27-design-session.md",
+   "meetings/20260819-team-lock.md",
+   "COLLAB.md",
+   "LEDGER.md",
+   "research/architecture-decision.md",
+   "DESIGN-GUIDE.md",
+   "ROBOT-SPEC.md"
+  ],
+  "children": [
+   "WORKFLOW.md",
+   "COLLAB.md",
+   "ops/SESSION-HANDOFF.md"
+  ],
+  "stale": "미결 표에 «D1 | RL 범위 (시뮬만 vs 실기 도전) | 멘토 제안은 시뮬만», «D2 | 증류 채택 여부 | Orin NX 등급 확인 후» 가 여전히 열려 있다. 둘 다 8/19 두 트랙 합의와 terrain-finetune-plan §6 «특권 관측(teacher-student)은 필요 없다» 로 닫혔다. 또 다음 작업 큐의 «④ rl 폴더 골격 생성» 은 폐기된 저장소 이름(`foothold-rl`)을 쓴다.",
+  "web_worthy": "높음",
+  "web_worthy_reason": "«왜 그렇게 정했더라»의 단일 출처이고 08-27 최신 결정 4건이 이미 반영돼 있다. 다만 미결 목록이 낡아 그대로 노출하면 오해를 준다.",
+  "areas": [
+   "C/운영",
+   "C/기록",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×15 백과×2 SLAM×4 Nav2×2"
+ },
+ {
+  "path": "DESIGN-GUIDE.md",
+  "title": "웹 페이지 디자인 규칙: 새 페이지를 만들 때 지켜야 하는 것",
+  "kind": "가이드",
+  "purpose": "운영",
+  "purpose_reason": "색 변수·다크모드·나가기 전 관문·문체(em dash 금지) 같은 산출 규칙만 있다. `_build/brandvar.py` 가 빌드에서 강제한다고 본문이 밝힌다.",
+  "parents": [],
+  "children": [
+   "DECISIONS.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "웹 페이지를 만드는 사람에게만 필요하다. 지금도 유효하고 빌드가 강제하지만 표지 방문자가 찾을 문서는 아니다.",
+  "areas": [
+   "C/운영",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 배포×4 빌드×12 관문×4 문서×11"
+ },
+ {
+  "path": "FIELD-CHECK-0813.md",
+  "title": "8/13(목) 조선대 방문: 현장 확인 목록",
+  "kind": "현장",
+  "purpose": "운영",
+  "purpose_reason": "방문 당일 «들고 가는 종이». 항목마다 «이게 어떤 결정을 가르는가»가 붙은 확인 체크리스트이지 측정 결과가 아니다.",
+  "parents": [
+   "research/architecture-decision.md",
+   "FLOW.md",
+   "meetings/20260813-ops-alignment.md",
+   "ROBOT-SPEC.md"
+  ],
+  "children": [
+   "meetings/20260813-ops-alignment.md",
+   "FIELD-CHECK-GO2-INTAKE.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "### 1-3. 🔴 저수준 제어가 열려 있는가: 프로젝트 성립 여부 · «### 1-2. 🔴 컴퓨팅 보드: D2(증류)를 가르는 항목». 저수준 개방은 8/14 에 «가능»으로 정정됐고 ROBOT-SPEC 이 EDU·RJ45 로 닫았으며, 학습 정책의 저수준 실기 이전 자체가 8/19 에 목표에서 빠졌다. D2(증류)도 폐기됐다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "2026-08-13 단발 방문용 체크리스트이고 핵심 질문 세 개가 전부 닫혔다. 후속 정본은 FIELD-CHECK-GO2-INTAKE 와 ROBOT-SPEC 이다.",
+  "areas": [
+   "B/항법",
+   "B/인지",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS2×17 Go2×4 실기×3 LiDAR×5 LiDAR×5 라이다×7 학습×1 관측×13"
+ },
+ {
+  "path": "FIELD-CHECK-GO2-INTAKE.md",
+  "title": "Go2 신규 개체 점검 목록 (공통)",
+  "kind": "현장",
+  "purpose": "운영",
+  "purpose_reason": "«어떤 Go2를 만나든 이 한 장을 채운다»는 재사용 체크리스트다. §1 신원 확인 · §2 저수준 개방 실측 3단계 · 부록 현장 명령으로 구성돼 있다.",
+  "parents": [
+   "FIELD-CHECK-0813.md",
+   "research/architecture-decision.md"
+  ],
+  "children": [
+   "ROBOT-SPEC.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "개체가 늘 때마다 다시 쓰는 재사용 문서이고 11/11 자체 대여를 앞두고 있어 유효하다. 다만 §2 저수준 개방 실측은 트랙 B(순정 보행 위 항법)에서는 비중이 줄었다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS2×10 Go2×14 실기×1"
+ },
+ {
+  "path": "FLOW.md",
+  "title": "프로젝트 전체 흐름",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "7단계 흐름과 각 단계 산출물을 비전공자에게 설명하는 문서다. §7 FAQ, §8 진척 표까지 전부 설명·정의이고 새 측정이 없다.",
+  "parents": [
+   "REPORT.md",
+   "meetings/20260821-team-meeting.md",
+   "research/training-benchmarks.md",
+   "research/visual-evidence.md",
+   "research/go2-rough-training.md",
+   "research/terrain-guide-isaaclab.md",
+   "research/go2-pretrained-policies.md",
+   "research/render-benchmarks.md",
+   "research/architecture-decision.md",
+   "research/omniverse-stack.md"
+  ],
+  "children": [
+   "FIELD-CHECK-0813.md",
+   "ROBOT-SPEC.md",
+   "QUESTIONS.md",
+   "research/go2-pretrained-policies.md",
+   "research/go2-rough-training.md"
+  ],
+  "stale": "🔶 구판 주의 (2026-08-22): 이 문서의 상당 부분은 8/19 방향 전환 이전의 계획(실기 저수준 배포 포함)을 담고 있다. ... 저수준 실기 이전·전환 절차 관련 내용은 폐기됐다. 그럼에도 §3 «2단계: 증류», §5 «5단계: sim2real: 실물 Go2», §5 «순정 컨트롤러는 어떻게 껐다 켜나» 가 본문에 그대로 남아 있고 §8 진척 표는 2026-08-12 기준이다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "스스로 구판이라 선언했고 폐기된 저수준 이전 절차가 본문의 큰 덩어리다. 전면 개정 전에는 표지에서 내리는 편이 낫다. 다만 QUESTIONS 가 5개 항목에서 이 문서를 가리키고 있어 함께 손봐야 한다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×56 보상×17 관측×3"
+ },
+ {
+  "path": "LEDGER.md",
+  "title": "원장(LEDGER): 모든 요청이 지금 어디 있나",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "완료·진행 중·대기 큐·확인 대기·결정 대기 다섯 상태로 안건을 추적하는 상태판이다.",
+  "parents": [
+   "ops/SESSION-HANDOFF.md",
+   "ROBOT-SPEC.md",
+   "ops/GPU-SANDBOX.md",
+   "REPORT.md"
+  ],
+  "children": [
+   "DECISIONS.md",
+   "FIELD-CHECK-0813.md",
+   "ops/SESSION-HANDOFF.md"
+  ],
+  "stale": "«자동화 16종(§SESSION-HANDOFF #3) · 날짜 KST · 이슈 템플릿 단순화(필수=큰 칸1+갈래1) · WBS=갈래 5 + 마일스톤 4» 와 «권한: 팀원 4명 lab·rl write, main 은 팀장만(rl 룰셋 강제·lab 감시)». 갈래 5는 08-27 에 작업 영역 8갈래로 폐기됐고 `rl` 은 `foothold-go2` 로 개명됐다. 머리글의 «최종 갱신: 2026-08-20» 이후 갱신이 없어 진행 중 항목(«킥오프 (8/20 16:00) | 덱 제작 중»)도 지나간 일이다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "8/20 이후 갱신이 멈춘 내부 상태판이고 폐기된 갈래·저장소 이름이 살아 있다. 지금 상태의 정본은 GitHub 이슈·보드다.",
+  "areas": [
+   "C/운영",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×8 백과×2"
+ },
+ {
+  "path": "QUESTIONS.md",
+  "title": "질문으로 찾기",
+  "kind": "가이드",
+  "purpose": "운영",
+  "purpose_reason": "본문 전체가 «궁금한 것 → 여기» 2열 표 다섯 묶음이다. 문서 색인이지 조사·측정이 아니다.",
+  "parents": [
+   "REPORT.md",
+   "FLOW.md",
+   "research/training-benchmarks.md",
+   "research/visual-evidence.md",
+   "research/go2-rough-training.md",
+   "research/go2-pretrained-policies.md",
+   "research/robogauge-observation-mapping.md",
+   "research/omniverse-stack.md",
+   "research/render-benchmarks.md",
+   "research/architecture-decision.md",
+   "FIELD-CHECK-0813.md",
+   "FIELD-CHECK-GO2-INTAKE.md",
+   "COLLAB.md"
+  ],
+  "children": [],
+  "stale": "| 실물 Go2 는 어떻게 제어를 넘겨받나 (순정과의 관계) | [흐름 §5 제어 층 스위치](flow.html) | 과 «| 8/13 조선대 방문에서 뭘 확인해야 하나 | [현장 확인 목록](field-check-0813.html) |». 둘 다 폐기·구판 문서를 정답으로 가리킨다. 또 08-19 이후 신설된 일반화 벤치마크·파인튜닝 계획·작업 흐름 항목이 표에 없다.",
+  "web_worthy": "높음",
+  "web_worthy_reason": "«이 정보가 어디 있지»의 진입점이라 표지에 가장 어울린다. 다만 8/12 이후 갱신이 안 돼 구판 링크를 먼저 고쳐야 한다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×13 보상×4 관측×2 SLAM×1 Nav2×1 ROS2×2 문서×6 백과×1"
+ },
+ {
+  "path": "REPORT.md",
+  "title": "Unitree Go2 미경험 험지 적응 시뮬레이션 및 실기 자율주행 프로젝트",
+  "kind": "계획",
+  "purpose": "운영",
+  "purpose_reason": "§3 단계별 추진 계획, §7 운영 체계, §8 남은 결정 안건, §9 산출물 정의로 이뤄진 프로젝트 계획서다. 트랙 A/B 정의의 정본이라고 여러 회의록이 명시한다.",
+  "parents": [
+   "meetings/20260819-team-lock.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "meetings/20260813-ops-alignment.md",
+   "meetings/20260814-east-ops.md",
+   "meetings/20260819-team-lock.md",
+   "meetings/20260820-kickoff.md",
+   "research/rough-terrain-study-plan.md",
+   "research/terrain-rl-study-plan-0818.md",
+   "research/go2-rough-training.md",
+   "digest/2026-W34.md",
+   "notices/report-web.md",
+   "LEDGER.md"
+  ],
+  "stale": "§8 «5. 중간발표 일자 확인: 8/20 이사 언급 \"아마 10월 초\" · 공식 공지 대기 (현행 가정 9/30, 확정 시 로드맵 역산 갱신)» 과 «3. 역할 매트릭스: 5인의 메인+겹침 배치 (RL/Terrain·트윈/렌더·SLAM/Nav2·통합)». 둘 다 2026-08-27 에 `MVP · 중간발표 9/30` 확정과 작업 영역 8갈래로 닫혔다.",
+  "web_worthy": "높음",
+  "web_worthy_reason": "두 트랙 정의·산출물·최종 결과 정의의 정본이고 회의록 4건과 계획 문서 3건이 «정본은 REPORT» 라고 가리킨다. §10 이 실측 문서로 이어지는 허브 역할도 한다.",
+  "areas": [
+   "B/항법",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 TF×1 SLAM×13 Nav2×12 학습×36 관측×3 정책×8"
+ },
+ {
+  "path": "ROBOT-SPEC.md",
+  "title": "우리가 쓰는 Go2 실기 사양",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "§1 확정 사양 표는 트림·보드·포트·센서 제원을 팀장 확인과 공식 자료로 정리한 것이다. 우리가 돌린 실험 결과가 아니라 사양 정리이며 §3-2 는 스스로 `가설` 로 표시한다.",
+  "parents": [
+   "FLOW.md",
+   "FIELD-CHECK-GO2-INTAKE.md"
+  ],
+  "children": [
+   "FIELD-CHECK-0813.md",
+   "DECISIONS.md",
+   "ops/SESSION-HANDOFF.md",
+   "research/terrain-finetune-plan.md"
+  ],
+  "stale": "§3-1 «따라서 «작게 만드는 증류» 는 하지 않는다. 관측 증류(특권 정보를 안 보는 정책 만들기)만 남는다.» 관측 증류도 이제 필요 없다. terrain-finetune-plan §6 이 «특권 관측(teacher-student)은 필요 없다 ... 우리 정책은 실기에 배포하지 않고(트랙 B는 순정 보행 위의 항법이다)» 로 닫았다.",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«우리 로봇»의 단일 진실이고 트랙 B 실기 작업의 전제라 유효하다. 다만 §3 재계산 절이 폐기된 증류 논의 위에 서 있어 표지에 올리려면 그 절을 먼저 정리해야 한다.",
+  "areas": [
+   "B/항법",
+   "B/인지"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 SLAM×5 Nav2×2 ROS2×2 LiDAR×4 카메라×1 LiDAR×4"
+ },
+ {
+  "path": "WORKFLOW.md",
+  "title": "작업 흐름: 이슈에서 머지까지",
+  "kind": "가이드",
+  "purpose": "운영",
+  "purpose_reason": "§1 이슈 만들기 · §2 관문 · §3 브랜치 · 머지까지의 절차 표가 전부다. 머리글이 «이 문서가 흐름의 정본이다» 라고 선언한다.",
+  "parents": [
+   "COLLAB.md",
+   "DECISIONS.md",
+   "decisions/20260826-27-design-session.md"
+  ],
+  "children": [
+   "COLLAB.md",
+   "decisions/20260826-27-design-session.md"
+  ],
+  "stale": "§2 관문 표가 `A-정책 9/12` · `MVP · 중간발표 9/30` · `NAV · 실기 항법 11/7` · `FINAL · 최종발표 12/11` 네 줄뿐이다. 관문 5개 기준에서는 «기획발표 9/4» 가 빠져 있다.",
+  "web_worthy": "높음",
+  "web_worthy_reason": "docs/README 와 notices 가 «처음 오셨다면 이것부터» 로 지목하는 문서다. 8갈래·관문 어휘가 최신이고 팀원이 가장 자주 여는 절차서다.",
+  "areas": [
+   "C/기록",
+   "C/운영",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×2 문서×21 백과×1 인프라×1 자동화×1 예산×3 TF×1 SLAM×3"
+ },
+ {
+  "path": "decisions/20260826-27-design-session.md",
+  "title": "설계 세션 기록: 2026-08-26 저녁 ~ 08-27 오전",
+  "kind": "결정",
+  "purpose": "운영",
+  "purpose_reason": "§1 이슈와 분류(8갈래·마일스톤) · §3 저장소와 폴더 · §5 산출물 · §7 자동화 · §9 아직 안 정해진 것. 현재 구조를 만든 결정 묶음이다.",
+  "parents": [
+   "WORKFLOW.md",
+   "research/terrain-finetune-plan.md"
+  ],
+  "children": [
+   "DECISIONS.md",
+   "guides/ros2-03-tf-rviz2.md"
+  ],
+  "stale": "«### 마일스톤 4개» 표가 A-정책·MVP·NAV·FINAL 넷만 담는다. 같은 문서 §5 가 «산출물 (9월 4일 제출)» 로 기획발표를 따로 두고 있어, 관문 5개로 세는 최신 기준과는 셈이 다르다.",
+  "web_worthy": "높음",
+  "web_worthy_reason": "저장소 이름 변경·8갈래·마일스톤·브랜치·산출물이 한 장에 모인 현재 구조의 근거 문서다. 다른 문서(가이드·협업 규칙)가 여기를 근거로 인용한다.",
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×2 문서×22 발표×7"
+ },
+ {
+  "path": "digest/2026-W33.md",
+  "title": "이번 주 알게 된 것: 8월 2주 (W33)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "«무엇을 알게 됐나»만 6항목으로 요약하고 각 항목이 실측 문서로 링크만 건다. 새 측정을 하지 않는 주간 요약이다.",
+  "parents": [
+   "research/training-benchmarks.md",
+   "research/visual-evidence.md",
+   "research/render-benchmarks.md",
+   "research/go2-pretrained-policies.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«5분이면 그 주의 발견을 다 안다»는 형식이라 신규 방문자에게 좋지만 3주 전 판이다. 표지에는 최신 주차를 두고 이건 목록에서 찾게 하는 편이 맞다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×11 보상×5 관측×3"
+ },
+ {
+  "path": "digest/2026-W34.md",
+  "title": "이번 주 알게 된 것: 8월 3주 (W34)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "8/17~23 주에 «방향을 두 트랙으로 고정»한 것을 6항목으로 정리하고 회의록·보고서로 링크한다. 자체 실험이 없다.",
+  "parents": [
+   "meetings/20260819-team-lock.md",
+   "REPORT.md",
+   "meetings/20260821-team-meeting.md"
+  ],
+  "children": [],
+  "stale": "«이번 주가 남긴 질문» 표의 «중간발표는 9/30 인가 10월 초인가 | 운영진 공지 대기 `미확인`». 2026-08-27 에 `MVP · 중간발표 9/30` 으로 확정됐다.",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«하나의 흐름을 포기하니 두 개의 완결이 생겼다» 처럼 방향 전환의 이유를 가장 짧게 설명하는 글이다. 다만 지난 주차이고 남은 질문 한 줄이 낡았다.",
+  "areas": [
+   "B/항법",
+   "A/정책학습",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 SLAM×1 Nav2×1 SLAM×1 학습×2 정책×4 학습×2 회의록×1 문서×1"
+ },
+ {
+  "path": "digest/2026-W35.md",
+  "title": "이번 주 알게 된 것: 8월 4주 (W35)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "8/24~30 주의 발견 7항목 요약. 일반화 벤치마크·협업 규칙·NVIDIA 커리큘럼 문서로 링크만 걸고 자체 측정을 하지 않는다.",
+  "parents": [
+   "research/generalization-benchmark-10-terrains.md",
+   "COLLAB.md",
+   "meetings/20260821-team-meeting.md",
+   "research/nvidia-curriculum-alignment.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "현재 주차이고 «10종 중 5종 실패»라는 지금의 문제 정의를 한 문장으로 준다. 표지 상단 다이제스트 자리에 그대로 맞는다. 상태가 «초안»인 점만 확인하면 된다.",
+  "areas": [
+   "A/평가",
+   "C/기록",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일반화 벤치마크×3 벤치마크×3 benchmark×3 회의록×2 문서×5 커리큘럼×4 학습×4 관측×1"
+ },
+ {
+  "path": "guides/ros2-01-setup.md",
+  "title": "ROS 2 개발환경 구축 정리 (Ubuntu 24.04 · Jazzy)",
+  "kind": "가이드",
+  "purpose": "자료조사",
+  "purpose_reason": "머리글이 «조선대 ROS 2 수업 1편 + 공식 설치 문서 대조»라 밝히고, §0 에서 «제 노트북에서 처음부터 끝까지 재실행해보지는 않았습니다. 명령의 동작 결과는 전부 `미확인`» 이라고 스스로 못 박는다. 우리가 돌린 것이 아니다.",
+  "parents": [],
+  "children": [
+   "guides/ros2-02-python.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "팀 전원이 밟는 환경 구축 순서라 재사용성이 높고 8/27 에 승격된 최신 문서다. 다만 우리 스택은 22.04+Humble 이 정본(architecture-decision §3-5)이라 24.04+Jazzy 인 이 문서는 수업용 보조다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS 2×37 TF×5 Nav2×3"
+ },
+ {
+  "path": "guides/ros2-02-python.md",
+  "title": "ROS 2 Python 프로그래밍 정리 (rclpy · colcon · 커스텀 인터페이스)",
+  "kind": "가이드",
+  "purpose": "자료조사",
+  "purpose_reason": "수업 2편 자료를 rclpy 공식 문서와 대조해 재구성한 노트다. §5 패키지 만들기 · §7 액션 서버 · §9 launch 까지 전부 학습 재구성이고 팀 실험 데이터가 없다.",
+  "parents": [
+   "guides/ros2-01-setup.md"
+  ],
+  "children": [
+   "guides/ros2-03-tf-rviz2.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "§10 «우리 프로젝트로의 연결» 이 있어 트랙 B 준비 자료로 쓸 만하다. 다만 일반 ROS2 튜토리얼 성격이 강해 표지보다 자료 목록이 어울린다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS 2×20 Nav2×4 ROS 2×20"
+ },
+ {
+  "path": "guides/ros2-03-tf-rviz2.md",
+  "title": "ROS 2 TF 좌표계와 RViz2 시각화 정리",
+  "kind": "가이드",
+  "purpose": "자료조사",
+  "purpose_reason": "수업 3편 + tf2 공식 문서 대조 노트다. §8 에서 «CV 담당 작업의 절반이 사실상 TF 문제» 라며 우리 작업 영역 `B/인지` 와 연결하지만, 실행 결과가 아니라 자료 정리다.",
+  "parents": [
+   "guides/ros2-02-python.md",
+   "COLLAB.md",
+   "decisions/20260826-27-design-session.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "8/27 재정의된 관문 `NAV 11/7` 과의 관계를 §9 각주에서 스스로 대조해 둔 유일한 팀원 가이드다. 트랙 B 가 본격화되면 가치가 올라간다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS 2×15 TF×77 SLAM×4"
+ },
+ {
+  "path": "meetings/20260813-ops-alignment.md",
+  "title": "8/13 조선대 미팅: 기획과 제시안이 갈라진 날",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "전사 1,126세그먼트 기반 회의 기록이다. §«확정된 운영 사항» · §«바로 할 일» 로 끝난다.",
+  "parents": [
+   "FIELD-CHECK-0813.md",
+   "COLLAB.md",
+   "REPORT.md"
+  ],
+  "children": [
+   "meetings/20260814-east-ops.md",
+   "FIELD-CHECK-0813.md"
+  ],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "회의록 폴더는 «기본적으로 비공개»가 원칙이고(meetings/README) 여기서 제기된 저수준 쟁점은 다음날 정정·8/19 폐기로 이미 닫혔다.",
+  "areas": [
+   "B/항법",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 SLAM×20 Nav2×7 ROS2×3 회의록×2 문서×3 커리큘럼×4"
+ },
+ {
+  "path": "meetings/20260814-east-ops.md",
+  "title": "8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "MOSS 전사 258세그먼트 기반 회의 기록. §«전사에서 확정된 결정들» · §«확정·공유 사항» · §«바로 할 일» 구조다.",
+  "parents": [
+   "meetings/20260813-ops-alignment.md",
+   "REPORT.md"
+  ],
+  "children": [
+   "meetings/20260813-ops-alignment.md",
+   "meetings/20260820-kickoff.md"
+  ],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "회의록 비공개 원칙 대상이고 이 자리의 최대 성과(저수준 «가능» 정정)는 ROBOT-SPEC 이 사양으로 흡수했다.",
+  "areas": [
+   "C/운영",
+   "C/기록",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×6 일정×9 인프라×6 회의록×1 문서×3 커리큘럼×3 SLAM×4 ROS2×9"
+ },
+ {
+  "path": "meetings/20260819-team-lock.md",
+  "title": "8/19 팀 합의: 두 트랙으로 간다, C는 지킨다",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "«두 트랙으로 고정한 대화» 와 «그날 고정한 것» 으로 끝나는 합의 기록이다. 팀장 사전 브리핑(8/18)이 함께 실려 있다.",
+  "parents": [
+   "research/rough-terrain-study-plan.md",
+   "REPORT.md"
+  ],
+  "children": [
+   "meetings/20260813-ops-alignment.md",
+   "research/rough-terrain-study-plan.md",
+   "research/terrain-rl-study-plan-0818.md",
+   "digest/2026-W34.md",
+   "DECISIONS.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«저수준 실기 이전 제외»와 두 트랙이라는 현재 방향의 원 근거라 인용 빈도가 높다. 다만 정의의 정본은 REPORT 이고 회의록은 비공개 원칙이다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×18 관측×1 정책×5 SLAM×6 Nav2×6 ROS2×2 회의록×2 문서×2"
+ },
+ {
+  "path": "meetings/20260820-kickoff.md",
+  "title": "8/20: 전담 멘토 확정, 박철제 킥오프",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "13:00 운영 확정과 16:00 킥오프 두 자리를 전사 타임코드와 함께 한 장으로 기록한 회의록이다.",
+  "parents": [
+   "REPORT.md",
+   "meetings/20260814-east-ops.md",
+   "meetings/20260819-team-lock.md"
+  ],
+  "children": [
+   "meetings/20260821-team-meeting.md",
+   "meetings/20260824-park-mentoring.md",
+   "meetings/20260814-east-ops.md"
+  ],
+  "stale": "«중간발표회 \"아마 10월 초\" 공지가 예정돼 있고, 기존 9/30 가정과 다를 수 있어 공식 공지를 기다린다» 는 당일 상태 기록이다. 08-27 에 `MVP · 중간발표 9/30` 으로 확정돼 이 미확인은 닫혔다. 회의록 특성상 당일 기록으로 남기는 것이 맞지만 갱신 각주가 없다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "멘토 체계 확정이라는 운영 사실은 REPORT §7 이 흡수했고 회의록은 비공개 원칙이다.",
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×1 발표×7 회의록×1"
+ },
+ {
+  "path": "meetings/20260821-team-meeting.md",
+  "title": "8/21 팀 미팅: 역할 그룹핑 확정, 클라우드 운용 개시",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "§1 역할 · §2 멘토링 운용 · §3 클라우드·인프라 · §5 비용 원칙으로 이뤄진 합의 기록이다. 08-27 변경분이 각주로 덧붙어 있다.",
+  "parents": [
+   "research/role-map-careers.md",
+   "research/generalization-benchmark-10-terrains.md",
+   "research/terrain-finetune-plan.md",
+   "meetings/20260820-kickoff.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "digest/2026-W34.md",
+   "digest/2026-W35.md",
+   "research/rough-terrain-study-plan.md",
+   "research/terrain-rl-study-plan-0818.md",
+   "meetings/20260819-team-lock.md",
+   "meetings/20260820-kickoff.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "역할 main/sub 표의 원 출처이고 08-27 확장분까지 각주로 관리돼 있어 살아 있다. 다만 현재 정본은 COLLAB §2 의 8갈래 표이고 회의록은 비공개 원칙이다.",
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×2 문서×5 발표×2"
+ },
+ {
+  "path": "meetings/20260824-park-mentoring.md",
+  "title": "8/24 멘토링: 본 과제와 CAD 학습은 분리한다",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "«본 과제 · 병행 · 서류» · «개인별 지도» · «하지 말 것» · «바로 할 일» 로 구성된 멘토링 기록이다.",
+  "parents": [
+   "meetings/20260820-kickoff.md"
+  ],
+  "children": [
+   "meetings/20260819-team-lock.md",
+   "meetings/20260820-kickoff.md"
+  ],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "개인 취업 멘토링 내용이 섞인 비공개 성격 문서다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×21 학습×21 SLAM×9 SLAM×9 Go2×6"
+ },
+ {
+  "path": "meetings/20260825-park-mentoring.md",
+  "title": "8/25 멘토링: 프로젝트 화면을 보고, 실패 험지는 3점 지지로",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "«시뮬 · 제어 · 트윈» · «그날 험지» · «하지 말 것» · «바로 할 일» 구조의 2회차 멘토링 기록이다.",
+  "parents": [
+   "meetings/20260824-park-mentoring.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "«실패 험지는 3점 지지로 읽는다»는 멘토 조언은 파인튜닝 계획으로 흡수됐다. 회의록 자체는 비공개 원칙 대상이다.",
+  "areas": [
+   "A/정책학습",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 정책×1 체크포인트×2 회의록×1 회의록×1 멘토링×13"
+ },
+ {
+  "path": "meetings/20260826-mentor-sync.md",
+  "title": "8/26 팀: 오늘 멘토링은 취소, 프로젝트 피드백으로 조율",
+  "kind": "회의록",
+  "purpose": "운영",
+  "purpose_reason": "«조율 요청» · «하지 말 것» · «바로 할 일» 만 담은 44분 내부 점검 기록이다.",
+  "parents": [],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "단발 일정 조율 기록이라 표지 가치가 없다.",
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×1 커리큘럼×2 회의록×1"
+ },
+ {
+  "path": "notices/latest.md",
+  "title": "(h1 없음) 📌 팀 작업 방식이 바뀌었습니다 · 8월 27일 기준",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "«바뀐 것만 모았습니다» 로 시작해 이슈 폼·브랜치·저장소 이름·문서 머리 다섯 줄 변경을 알리는 공지 원고다.",
+  "parents": [
+   "WORKFLOW.md",
+   "decisions/20260826-27-design-session.md",
+   "COLLAB.md"
+  ],
+  "children": [],
+  "stale": "§«관문» 표가 A-정책 9/12 · MVP 9/30 · NAV 11/7 · FINAL 12/11 네 줄이다. 관문 5개 기준에서는 기획발표 9/4 가 빠져 있다.",
+  "web_worthy": "보통",
+  "web_worthy_reason": "지금 시점에서 «무엇이 바뀌었나»를 가장 빠르게 알려 주지만 docs/README 규칙상 notices 는 웹 게시 대상이 아니고 디스코드로 발송한다. 내용의 정본은 WORKFLOW·COLLAB 이다.",
+  "areas": [
+   "C/기록",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×3 문서×19 백과×1 TF×1 SLAM×4 Nav2×3"
+ },
+ {
+  "path": "notices/report-web.md",
+  "title": "(h1 없음) 📢 프로젝트 보고서, 웹 정식 페이지로 올라갔습니다 (2026-08-19)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "REPORT 웹판 게시를 알리는 공지 원고 한 장이다. 절 제목조차 없다.",
+  "parents": [
+   "REPORT.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "8/19 단발 공지 원고이고 대상 페이지(REPORT)가 이미 표지에 있다.",
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 보고서×9"
+ },
+ {
+  "path": "ops/DRAFT-0813-사전문의.md",
+  "title": "8/13 방문 사전 문의 초안 (김판구 교수님)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "발송 전 메일 초안과 «발송 전 팀장 확인 사항» 뿐이다. 본문이 «이 문서는 초안일 뿐이다» 라고 밝힌다.",
+  "parents": [],
+  "children": [],
+  "stale": "«2. 짧은 시간(5분 내외) 스포츠 모드를 해제하고 저수준 제어 상태를 확인해 봐도 되는지요. 저희 설계에서 라이다 높이맵이 저수준 제어와 양립하는지가 아키텍처를 가르는» 이라는 질문이 남아 있다. 저수준 실기 이전 자체가 8/19 에 목표에서 빠져 이 문의의 전제가 사라졌다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "이미 발송이 끝난 2026-08-12 메일 초안이고 외부 인사 연락처·이메일이 본문에 있다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 Go2×3"
+ },
+ {
+  "path": "ops/GPU-SANDBOX.md",
+  "title": "외부 GPU 샌드박스 (V100 / KubeSphere)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "§1 제공 규모 · §3 운영 시 반드시 지킬 것 · §5 신청 내역 · §6 쓰는 법. 배정받은 자원의 운용 규칙 문서다.",
+  "parents": [
+   "research/cloud-gpu-options.md"
+  ],
+  "children": [
+   "LEDGER.md"
+  ],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "접속 IP·계정 운용이 걸린 내부 운영 문서이고 docs/README 상 ops 는 웹 게시 대상이 아니다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일정×1 일정×1 배포×1"
+ },
+ {
+  "path": "ops/INFRA-TODO.md",
+  "title": "인프라 구축 체크리스트: 반드시 한다 (팀장 확정 2026-08-09)",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "NAS 폴더·Vaultwarden 개통·디스코드 채널·다크 모드 수리 네 묶음의 체크박스 목록이다. 상태가 «초안» 이다.",
+  "parents": [],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "상태가 초안이고 변경 이력이 2026-08-11 에서 멈춰 있다. §4 다크 모드 수리 항목은 이후 사이트가 다크 토글을 갖춘 것과 어긋날 가능성이 있으나 본문만으로는 `미확인` 이다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×12 자동화×1 인프라×12"
+ },
+ {
+  "path": "ops/SESSION-HANDOFF.md",
+  "title": "세션 이관 가이드: 다른 기계·리눅스에서 이어받기",
+  "kind": "운영",
+  "purpose": "운영",
+  "purpose_reason": "§1 저장소 지도 · §2 웹 빌드·배포 · §4 시크릿 지도 · §5 이관 체크리스트. 기계를 갈아탈 때 밟는 절차서다.",
+  "parents": [
+   "LEDGER.md",
+   "DECISIONS.md",
+   "ops/VERIFIED.md",
+   "ROBOT-SPEC.md"
+  ],
+  "children": [
+   "LEDGER.md"
+  ],
+  "stale": "§4 시크릿 표의 «lab 레포 시크릿 (rl 은 org `DISCORD_WEBHOOK` 사용)» 과 «팀원 권한 | lab·rl write / site·brand read». 같은 문서 §1 표는 이미 `foothold-go2` 로 적혀 있어 문서 안에서 이름이 엇갈린다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "세션·기계 이관용 내부 절차서다. 저장소 이름이 문서 안에서 엇갈리는 점은 고쳐야 한다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×5 자동화×5 GitHub×6"
+ },
+ {
+  "path": "ops/VERIFIED.md",
+  "title": "자동화 파이프라인: 검증 기록",
+  "kind": "운영",
+  "purpose": "파이프라인점검",
+  "purpose_reason": "«lab 14회 · rl 5회 실행» 처럼 각 자동화 경로를 실제로 트리거해 돌려 보고 결함 2건을 찾아낸 기록이다. §9경로·10경로·11경로가 전부 «실검증» 이라고 표시돼 있어 절차가 맞는지 확인한 문서에 해당한다.",
+  "parents": [],
+  "children": [
+   "ops/SESSION-HANDOFF.md"
+  ],
+  "stale": "«실효 권한: lab·rl = 4명 전원 write, site·brand = read» 와 «★ 발견: rl main 보호가 실물로는 없었다». 저장소 `rl` 은 08-27 에 `foothold-go2` 로 개명됐다. 다만 이 문서는 2026-08-13 시점의 검증 로그라 기록으로서는 그대로 두는 것이 맞다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "«침묵은 성공과 구별되지 않는다» 같은 교훈이 값지지만 내용은 GitHub Actions 내부 검증 로그다. ops 는 웹 게시 대상이 아니다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×12 자동화×12 GitHub×3"
+ },
+ {
+  "path": "research/architecture-decision.md",
+  "title": "시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2",
+  "kind": "결정",
+  "purpose": "자료조사",
+  "purpose_reason": "§3 «새로 발견된 제약» 6항목(Blackwell open kernel 전용 · Isaac Sim 5.1 EOL · 스트리밍 동시 1명 · RMW 분열 등)이 전부 공식 문서·포럼 확인이고, 부록이 «이 문서가 반증한 출처» 로 남의 블로그를 대조한다. 우리가 돌린 실험 결과는 없다.",
+  "parents": [],
+  "children": [
+   "FLOW.md",
+   "FIELD-CHECK-0813.md",
+   "FIELD-CHECK-GO2-INTAKE.md",
+   "research/go2-rough-training.md",
+   "research/omniverse-stack.md",
+   "research/render-benchmarks.md",
+   "research/visual-evidence.md",
+   "QUESTIONS.md",
+   "DECISIONS.md"
+  ],
+  "stale": "§5 «9월 첫 2주 안에 \"심 정책 → 실기 Go2 토픽 발행\" E2E 스모크를 1회 관통시킨다» 와 §6-① «최종 단계에서 심 안에서 Go2 메시지를 구독하려는 순간». 학습 정책의 실기 저수준 이전이 8/19 에 목표에서 빠져 이 E2E 전제가 바뀌었다.",
+  "web_worthy": "보통",
+  "web_worthy_reason": "우분투 22.04+Humble·컨테이너 격리라는 스택 선택의 근거이고 아홉 문서가 인용한다. 다만 §5 일정 항목과 §6 시나리오가 폐기된 저수준 이전 위에 서 있다.",
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 TF×1 ROS2×26 TF×1"
+ },
+ {
+  "path": "research/benchmark-repro-protocol.md",
+  "title": "벤치마크 재현 프로토콜: 동일 셋업 검증과 결정론 발견",
+  "kind": "실험",
+  "purpose": "파이프라인점검",
+  "purpose_reason": "§1 «동일 셋업 대조 체크리스트» · §2 Runpod 재현 런북 · §5 «실행자에게 요청» 으로 «같은 실험이라 말하려면 무엇이 일치해야 하나»를 정의한다. 새 정책을 학습하지 않고 원자료를 재검사해 §3 결정론 문제를 찾아냈다.",
+  "parents": [
+   "research/generalization-benchmark-10-terrains.md"
+  ],
+  "children": [
+   "research/generalization-benchmark-10-terrains.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«지형당 50 에피소드가 사실은 결정론적 궤적 1개의 50회 재생이었다»는 발견이 벤치마크 보고서 §2-1 을 낳았다. 재현성 규율의 좋은 사례이나 실행자용 런북 성격이 강하다.",
+  "areas": [
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일반화 벤치마크×1 벤치마크×27 benchmark×1"
+ },
+ {
+  "path": "research/benchmark-setup-lim.md",
+  "title": "Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크",
+  "kind": "실험",
+  "purpose": "파이프라인점검",
+  "purpose_reason": "§2 `generalization_env_cfg.py` 작성 · §3 `gym.register()` 추가 · §5 `eval_generalization.py` 전체 코드 · §7 자동 녹화 스크립트 · §8 «에피소드 변화 검증» 까지, 하네스를 세우고 그 하네스가 제대로 도는지 확인하는 절차서다. 로드하는 것은 NVIDIA 공식 체크포인트이지 우리 정책이 아니다.",
+  "parents": [],
+  "children": [
+   "research/terrain-finetune-plan.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "일반화 벤치마크를 남이 그대로 재현할 수 있게 하는 실행 정본(48KB 코드 포함)이고 파인튜닝 계획이 여기 cfg 원문을 근거로 삼는다. 다만 표지용이라기보다 재현 절차 문서다.",
+  "areas": [
+   "A/지형씬제작",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 terrain×156 지형×33 Isaac Lab×8 학습×3 보상×1 관측×3"
+ },
+ {
+  "path": "research/cloud-gpu-options.md",
+  "title": "클라우드 GPU에서 Isaac Sim 돌리기: 가능성 조사",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "«방법: NVIDIA 공식 문서·포럼·NGC 카탈로그·GitHub 이슈 직접 확인» 이라 머리글에 있고 §7 이 «미확인 (판단 근거로 쓰지 말 것)» 목록이다. 우리가 클라우드에서 직접 돌려 본 기록은 없고 팀원 실패 보고의 원인을 문서로 추적한 것이다.",
+  "parents": [],
+  "children": [
+   "ops/GPU-SANDBOX.md",
+   "research/compute-resources.md",
+   "research/ros2-isaacsim-integration.md",
+   "research/training-benchmarks.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«RT 코어가 관문» 과 «nvcr.io/nvidia/isaac-lab:2.3.2 가 우리 버전과 일치» 라는 두 결론은 지금도 유효하고 네 문서가 인용한다. 다만 이후 Runpod 실전 운용이 runpod-team-ops 로 넘어갔다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×1 인프라×1 GitHub×5"
+ },
+ {
+  "path": "research/compute-resources.md",
+  "title": "컴퓨팅 자원 계획: 무엇을 어디서 돌리나",
+  "kind": "실험",
+  "purpose": "운영",
+  "purpose_reason": "§3 «그래서 이렇게 나눈다» 배정표 · §5 신청 규모 · §6 배정 결과와 «우리가 정한 운영 규율». 자원 배정·운용 규칙 문서이고 인용된 숫자(133분·86.7%)는 training-benchmarks 에서 가져온 것이다.",
+  "parents": [
+   "research/cloud-gpu-options.md",
+   "research/training-benchmarks.md"
+  ],
+  "children": [],
+  "stale": "§3 배정표의 «정책 증류 (Teacher → Student) | 병렬 연산 | V100» 행. terrain-finetune-plan §6 이 «특권 관측(teacher-student)은 필요 없다» 로 닫았고 ROBOT-SPEC §3-1 은 경량화 증류도 불필요하다고 확정했다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "8/14 배정 완료 시점의 계획 문서이고 실제 운용은 ops/GPU-SANDBOX 와 runpod-team-ops 로 갈라졌다. 배정표 한 행이 폐기된 증류를 전제한다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 정책×6 PPO×1"
+ },
+ {
+  "path": "research/generalization-benchmark-10-terrains.md",
+  "title": "일반화 벤치마크: 미학습 지형 10종 실측 (5종 통과 · 5종 실패)",
+  "kind": "실험",
+  "purpose": "본PoC",
+  "purpose_reason": "§1 «대상 정책 체크포인트: 기준선 1,500 iter 에서 시작 `확인됨`» · §2 지형별 성공률 표 · §2-1 v2 재검(지형당 고유 행 50/50). 우리 기준선 정책을 500 에피소드 돌려 얻은 숫자다.",
+  "parents": [
+   "research/benchmark-repro-protocol.md",
+   "research/training-benchmarks.md"
+  ],
+  "children": [
+   "research/benchmark-repro-protocol.md",
+   "research/terrain-finetune-plan.md",
+   "research/go2-rough-training.md",
+   "meetings/20260821-team-meeting.md",
+   "digest/2026-W35.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "«실패 5종» 이 곧 지금 남은 기간의 과제이고 파인튜닝 계획·주간 다이제스트·팀 미팅이 전부 여기를 근거로 삼는다. v2 재검으로 통계적 근거까지 붙었다.",
+  "areas": [
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일반화 벤치마크×12 지표×1 벤치마크×13 학습×13 보상×4 관측×1"
+ },
+ {
+  "path": "research/go2-pretrained-policies.md",
+  "title": "Go2 공개 사전학습 정책 전수 조사: 무엇을 가져다 쓸 수 있나",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "§1 NVIDIA 공식 체크포인트의 실체 · §2 RoboGauge 서열표 · §4 «다른 후보들» · §5 프로젝트 의미로 다섯 절 중 넷이 외부 공개물 조사다. §3 만 워크스테이션에서 실제로 받아 로드해 본 시험이다.",
+  "parents": [
+   "research/robogauge-observation-mapping.md",
+   "research/training-benchmarks.md",
+   "FLOW.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "research/go2-rough-training.md",
+   "research/robogauge-observation-mapping.md",
+   "digest/2026-W33.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "§3 «이 실측이 바꾸는 것» 표의 «Teacher (증류의 선생) | NVIDIA 공식 rough» · «Student 의 비교 기준 | symmetry · HIM (45차원)» 과 §5-3 «우리 Student 가 완성되면 symmetry(0.7006)와 같은 체급에서 정면 비교할 수 있다». 증류로 Student 를 만드는 경로가 8/19 이후 목표에서 빠졌다.",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«NVIDIA 공식만 우리 스택에 그대로 로드된다»는 결론은 지금도 파인튜닝 출발점의 근거다. 다만 역할 표가 폐기된 Teacher-Student 프레임 위에 있어 손봐야 표지에 올릴 수 있다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×15 관측×19 파인튜닝×7"
+ },
+ {
+  "path": "research/go2-rough-training.md",
+  "title": "Isaac Lab Go2 험지 학습: cfg를 읽는 커리큘럼",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "«클래스명·기본값·Go2 오버라이드는 Isaac Lab 공식 `UNITREE_GO2_CFG` · `LocomotionVelocityRoughEnvCfg` · `UnitreeGo2RoughEnvCfg` · `ROUGH_TERRAINS_CFG` 기준 `확인됨`» 이라 머리글에 있고, 본문이 공식 cfg 를 읽는 순서(요약 → 상세)를 정리한다. 우리 학습 결과는 training-benchmarks 로 링크만 한다.",
+  "parents": [
+   "research/terrain-guide-isaaclab.md",
+   "research/training-benchmarks.md",
+   "research/generalization-benchmark-10-terrains.md",
+   "research/terrain-finetune-plan.md",
+   "REPORT.md",
+   "FLOW.md",
+   "research/architecture-decision.md",
+   "research/omniverse-stack.md",
+   "research/render-benchmarks.md",
+   "research/visual-evidence.md",
+   "research/go2-pretrained-policies.md",
+   "research/terrain-rl-study-plan-0818.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "REPORT.md",
+   "QUESTIONS.md",
+   "research/terrain-guide-isaaclab.md",
+   "research/terrain-finetune-plan.md",
+   "research/training-benchmarks.md",
+   "research/rough-terrain-study-plan.md",
+   "research/terrain-rl-study-plan-0818.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "학습 cfg 를 열기 전에 읽는 팀 공용 교재이고 §10 에서 «8/19 이후 정본: 실기 저수준 이전은 목표에서 빠진다 `확인됨`» 라고 스스로 최신 결정에 맞춰 두었다. REPORT·FLOW·QUESTIONS 가 전부 가리킨다.",
+  "areas": [
+   "A/정책학습",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×36 보상×18 관측×3 terrain×55 지형×29 Isaac Lab×13"
+ },
+ {
+  "path": "research/nvidia-curriculum-alignment.md",
+  "title": "NVIDIA AI Campus 커리큘럼과 우리 프로젝트의 대응",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "«팀장이 2026-08-26 에 nvidia-aicampus.com 과정 페이지를 직접 열어 확인 `확인됨`» 이 원자료이고 본문은 STEP 1~5 대 우리 8갈래 대응표다. §«한계» 가 «모듈 제목 수준의 비교» 라고 스스로 밝힌다.",
+  "parents": [
+   "COLLAB.md"
+  ],
+  "children": [
+   "digest/2026-W35.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "8갈래 구성이 공인 커리큘럼과 겹친다는 외부 근거라 발표·기획서에 쓸 만하다. 다만 짧고 «구성의 타당성만 뒷받침한다»고 스스로 범위를 좁힌다.",
+  "areas": [
+   "C/기록",
+   "A/정책학습",
+   "B/항법",
+   "A/지형씬제작"
+  ],
+  "areas_sure": false,
+  "areas_why": "근거 낱말 문서×2 커리큘럼×9 커리큘럼×9 학습×7 정책×2 학습×7 SLAM×1 Nav2×1"
+ },
+ {
+  "path": "research/omniverse-stack.md",
+  "title": "NVIDIA 도구 지도: Omniverse · Isaac Sim · SimReady 가 각각 무엇인가",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "§1 Foundry 라인업 대응표 · §2 쇼케이스 1차 출처 · §3 «지금 받아서 쓸 수 있는 에셋 (전부 근거 링크)». 공식 문서와 쇼케이스를 정리한 지도이고 측정값은 render-benchmarks 에서 인용한다.",
+  "parents": [
+   "research/render-benchmarks.md",
+   "research/visual-evidence.md",
+   "research/architecture-decision.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«화질은 렌더러가 아니라 에셋에서 갈린다»는 결론과 §4 컷별 도구 배분은 트랙 A 트윈·렌더 작업에 지금도 유효하다. 다만 도구 소개 성격이라 표지보다 자료 목록이 맞다.",
+  "areas": [
+   "A/트윈렌더"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 3DGS×1 RTX 렌더×6 3DGS×1"
+ },
+ {
+  "path": "research/render-benchmarks.md",
+  "title": "렌더 실측: Path Tracing 은 얼마나 걸리는가",
+  "kind": "실험",
+  "purpose": "PoC시험",
+  "purpose_reason": "§2 «2점법으로 기동 시간을 소거한다» 로 프레임당 시간을 재고 §3 에서 1080p 128spp = 1.75초/프레임을 얻는다. 정책을 학습하거나 평가한 것이 아니라 «렌더가 현실적인가»를 속도로 확인한 시험이다.",
+  "parents": [
+   "research/training-benchmarks.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "research/omniverse-stack.md",
+   "research/visual-evidence.md",
+   "research/go2-rough-training.md",
+   "digest/2026-W33.md",
+   "QUESTIONS.md",
+   "REPORT.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«렌더 시간은 병목이 아니다. 병목은 씬을 만드는 시간» 이라는 판정이 트랙 A 일정 근거이고 §1 함정 3개는 팀원 시간을 아껴 준다. 다만 씬이 정해지면 재측정이 필요하다고 스스로 적었다.",
+  "areas": [
+   "A/트윈렌더"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 Path Tracing×28 렌더×21 Omniverse×1"
+ },
+ {
+  "path": "research/robogauge-observation-mapping.md",
+  "title": "RoboGauge 공개 정책 해부: 45차원 관측의 정확한 순서와 스케일",
+  "kind": "리서치",
+  "purpose": "PoC시험",
+  "purpose_reason": "§2 «실측 검증 (known-answer tests) `확인됨`» 에서 남의 정책 4종을 [1,45] 0벡터·표준자세로 실제 실행해 표를 채웠고, §5 에서 우리 env 를 띄워 관절 순서를 실측했다. 본선 학습이 아니라 «남의 것이 붙는가»를 확인한 시험이다.",
+  "parents": [
+   "research/go2-pretrained-policies.md",
+   "research/training-benchmarks.md"
+  ],
+  "children": [
+   "research/go2-pretrained-policies.md",
+   "QUESTIONS.md",
+   "REPORT.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«남은 것은 확인이 아니라 구현이다» 로 끝나는 완결도 높은 실측이고 검증 스크립트·로그 경로까지 남겼다. 다만 붙일 대상(공개 정책 비교 평가)이 아직 착수되지 않아 표지 우선순위는 낮다.",
+  "areas": [
+   "A/정책학습",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×3 관측×13 정책×18 benchmark×2 에피소드×1 평가×6"
+ },
+ {
+  "path": "research/role-map-careers.md",
+  "title": "역할 지도: 이 프로젝트가 각자를 어떤 직무로 데려가는가",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "§4 «실제 채용 시장: 지금 열려 있는 문 (딥리서치 2026-08-21)» 이 A~E 다섯 묶음으로 공고를 정리한 것이고, §1·§5 도 밖의 직무명·요구 스택을 우리 산출물에 대응시킨 표다.",
+  "parents": [],
+  "children": [
+   "meetings/20260821-team-meeting.md"
+  ],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "8/21 역할 확정 회의에서 화면에 띄운 문서이고 12월 포트폴리오의 뼈대다. 다만 팀원 개인 배경·포트폴리오 문장이 들어 있어 공개 범위를 따져야 한다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×19 보상×3 관측×4 SLAM×11 Nav2×3 ROS2×5"
+ },
+ {
+  "path": "research/ros2-isaacsim-integration.md",
+  "title": "ROS2 ↔ Isaac Sim: 파이썬 버전 충돌과 통합 방법",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "§«참조한 글» 이 블로그 원문을 인용하고 §«구현 저장소» 가 남의 Dockerfile 구성을 표로 옮긴다. §«★ 우리와 다른 점: 우리가 더 유리하다» 도 공식 이미지 존재를 근거로 한 판단이지 실행 결과가 아니다.",
+  "parents": [
+   "research/cloud-gpu-options.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "핵심 결론(컨테이너 격리·DDS 는 버전 무관)이 architecture-decision 에 흡수됐고, 이 문서는 그 출처 회수 기록에 가깝다.",
+  "areas": [
+   "B/항법",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS 2×3 ROS 2×3 ROS2×17 자동화×1 자동화×1 GitHub×1"
+ },
+ {
+  "path": "research/rough-terrain-study-plan.md",
+  "title": "험지 RL 학습 계획 : 무엇을 먼저 하고 무엇을 하지 않는가",
+  "kind": "계획",
+  "purpose": "운영",
+  "purpose_reason": "«회의록이 아니라 개인 학습 계획이다» 라고 머리글이 밝히고 본문이 «중요하고 급함 / 중요하지만 급하지 않음 / 급하지만 하지 않음 / 버린 것» 우선순위 표다.",
+  "parents": [
+   "meetings/20260819-team-lock.md",
+   "meetings/20260821-team-meeting.md",
+   "REPORT.md",
+   "research/go2-rough-training.md"
+  ],
+  "children": [
+   "meetings/20260819-team-lock.md"
+  ],
+  "stale": "메타에 «상태: 폐기» 로 적혀 있다. 본문에도 «8/18 문장: 저수준 관절 정책이 주 경로이고, cmd_vel은 항법 연동용이다 ... 저수준 주 경로 문장은 8/19 이후 정본이 아니다» 가 남아 있다. 같은 내용의 살아 있는 판본이 research/terrain-rl-study-plan-0818.md 로 따로 있어 문서가 두 벌이다.",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "스스로 «폐기» 상태이고 terrain-rl-study-plan-0818.md 와 중복이다. 본문 링크 `[8/19 팀 합의](20260819-team-lock.md)` 도 research/ 기준에서 깨진 경로다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×26 보상×1 정책×7 ROS 2×2 SLAM×5 Nav2×7"
+ },
+ {
+  "path": "research/runpod-team-ops.md",
+  "title": "Runpod 팀 운용 가이드: 권한 · 결제 · 네트워크 볼륨 · NAS 연계",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "«근거: Runpod 공식 문서 정독 (하단 출처)» 이고 §1·§3 이 `확인됨`, §4 는 «설계, 팀장 실측 예정» 이다. §5 비용 좌표의 두 줄만 8/20 청구 실측이고 나머지는 공식 요금표다.",
+  "parents": [],
+  "children": [],
+  "stale": "",
+  "web_worthy": "보통",
+  "web_worthy_reason": "«크레딧은 계정당 하나·환불 불가» 같은 실무 함정과 하루 약 $5 라는 실측 단가가 있어 클라우드를 쓰는 팀원에게 바로 필요하다. 다만 §4 NAS 연계는 아직 설계 단계다.",
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 배포×2 Runpod×21 GPU×2"
+ },
+ {
+  "path": "research/terrain-finetune-plan.md",
+  "title": "실패 지형 파인튜닝 실행 계획: 레시피 병렬, 혼합 단일 런",
+  "kind": "계획",
+  "purpose": "운영",
+  "purpose_reason": "§1 지형 배정(5인에게 지형 하나씩) · §2~5 주차별 일정 · «MVP·중간발표(9/30) 판정선» 으로 일을 굴리는 실행 계획이다. 아직 이 계획으로 얻은 숫자는 없다.",
+  "parents": [
+   "research/generalization-benchmark-10-terrains.md",
+   "research/benchmark-setup-lim.md",
+   "research/go2-rough-training.md",
+   "ROBOT-SPEC.md"
+  ],
+  "children": [
+   "decisions/20260826-27-design-session.md",
+   "meetings/20260821-team-meeting.md",
+   "research/go2-rough-training.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "지금 5인이 실제로 굴리고 있는 작업의 정본이고 마일스톤·이슈 생성 절차까지 지정한다(«작업 영역은 `A/정책학습`, 마일스톤은 `MVP · 중간발표 9/30`»). 설계 세션 문서가 «닫힌 것» 의 근거로 여기를 가리킨다.",
+  "areas": [
+   "A/정책학습",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×12 보상×7 관측×13 terrain×13 지형×43 Isaac Lab×3"
+ },
+ {
+  "path": "research/terrain-guide-isaaclab.md",
+  "title": "Isaac Lab v2.3.2 지형 가이드: Go2 커스텀 험지 설계",
+  "kind": "리서치",
+  "purpose": "자료조사",
+  "purpose_reason": "«terrain 클래스 목록(21종)·API 체계·기본 rough 구성은 공식 v2.3.2 소스와 대조 `확인됨`» 이고 현실 지형 대응표는 «저자 설계 지침» 이라고 스스로 수위를 구분한다. 실행 결과가 아니다.",
+  "parents": [
+   "research/go2-rough-training.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "REPORT.md",
+   "research/go2-rough-training.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "«우리가 정한 험지» 를 만드는 작업(`A/지형씬제작`)의 기준 문서이고 REPORT §10 이 «Terrain 이해» 항목으로 가리킨다. 첫 팀원 기여 승격본이라는 상징성도 있다.",
+  "areas": [
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 terrain×140 지형×34 Isaac Lab×22"
+ },
+ {
+  "path": "research/terrain-rl-study-plan-0818.md",
+  "title": "8/18 험지RL 학습 계획: 무엇을 먼저 하고 무엇을 하지 않는가",
+  "kind": "계획",
+  "purpose": "운영",
+  "purpose_reason": "«이것은 회의록이 아니다. 맹라현이 8/18에 혼자 정리한 학습·우선순위 계획이다» 라고 머리글이 못 박고, 본문이 우선순위 4구간 표다.",
+  "parents": [
+   "meetings/20260819-team-lock.md",
+   "meetings/20260821-team-meeting.md",
+   "REPORT.md",
+   "research/go2-rough-training.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "8/18 시점 개인 계획이고 폐기된 줄마다 «8/19 이후 정본이 아니다 `확인됨`» 주석이 붙어 있어 내용상 충돌은 없다. 다만 현재 계획 정본은 REPORT 와 terrain-finetune-plan 이고, rough-terrain-study-plan.md 와 사실상 같은 문서가 둘 있는 상태를 정리해야 한다.",
+  "areas": [
+   "A/정책학습",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×26 보상×1 정책×7 ROS 2×2 SLAM×5 Nav2×7"
+ },
+ {
+  "path": "research/training-benchmarks.md",
+  "title": "학습 성능 실측: Go2 험지 (AI-WS01)",
+  "kind": "실험",
+  "purpose": "본PoC",
+  "purpose_reason": "«웹 조사가 아니라 이 기계에서 실제로 돌린 숫자. 전부 로그에서 추출» 이라 머리글에 있고, §2 플래그 A/B 시드 고정 3회 · §5-3 1,500 iteration 완주 134분 · 통과율 86.7% 가 전부 우리 학습·평가 결과다.",
+  "parents": [
+   "research/go2-rough-training.md",
+   "research/cloud-gpu-options.md",
+   "research/ros2-isaacsim-integration.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "REPORT.md",
+   "QUESTIONS.md",
+   "digest/2026-W33.md",
+   "research/visual-evidence.md",
+   "research/render-benchmarks.md",
+   "research/robogauge-observation-mapping.md",
+   "research/go2-pretrained-policies.md",
+   "research/go2-rough-training.md",
+   "research/compute-resources.md",
+   "research/generalization-benchmark-10-terrains.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "기준선 86.7% 의 원 출처이고 열한 개 문서가 여기를 인용한다. «보상 13.94 는 잘 걷는다를 뜻하지 않았다» 는 이 프로젝트에서 가장 자주 재인용되는 발견이다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×45 보상×30 관측×3"
+ },
+ {
+  "path": "research/visual-evidence.md",
+  "title": "시각 증거: 우리가 실제로 본 것",
+  "kind": "실험",
+  "purpose": "본PoC",
+  "purpose_reason": "우리 300 iter·1,500 iter 정책의 주행 영상에서 1초 간격 프레임을 뽑아 격자로 붙이고, §05 는 우리 TensorBoard 이벤트 파일을 직접 읽어 곡선을 그렸다. 남의 것이 아니라 우리 학습 산출물의 판독이다.",
+  "parents": [
+   "research/training-benchmarks.md",
+   "research/architecture-decision.md"
+  ],
+  "children": [
+   "FLOW.md",
+   "research/omniverse-stack.md",
+   "research/render-benchmarks.md",
+   "research/go2-rough-training.md",
+   "digest/2026-W33.md",
+   "QUESTIONS.md"
+  ],
+  "stale": "",
+  "web_worthy": "높음",
+  "web_worthy_reason": "«보상 13.94 인데 통과율 0%» 를 그림으로 보여 주는 문서라 비전공자·심사자에게 가장 잘 전달된다. 그림이 본문이라 웹 표지에 어울린다.",
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×42 보상×19 정책×48"
+ },
+ {
+  "path": "schedule/personal-plans.md",
+  "title": "개인 계획 (일정 페이지 원본)",
+  "kind": "계획",
+  "purpose": "운영",
+  "purpose_reason": "«팀원이 스스로 세운 계획을 일정 페이지에 띄우기 위한 원본» 이고 본문이 단계·기간·마일스톤 대응표와 «앞으로는 이렇게 한다» 규칙이다.",
+  "parents": [
+   "COLLAB.md"
+  ],
+  "children": [],
+  "stale": "",
+  "web_worthy": "낮음",
+  "web_worthy_reason": "«이 문서는 8/19 방향 전환 이전에 쓰였다. 저수준 실기 이전 관련 항목은 폐기됐다» 라고 스스로 표시했고 폐기 행도 «폐기 (8/19 저수준 이전 제외)» 로 표기돼 충돌은 없다. 다만 일정 페이지가 읽는 데이터 원본이라 표지용 읽을거리는 아니다.",
+  "areas": [
+   "C/운영",
+   "B/항법",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일정×13 일정×13 배포×1 ROS 2×3 TF×1 SLAM×1 학습×6 정책×3"
+ }
 ]
