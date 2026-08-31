@@ -191,6 +191,24 @@
   "web_worthy_reason": "8/20 이후 갱신이 멈춘 내부 상태판이고 폐기된 갈래·저장소 이름이 살아 있다. 지금 상태의 정본은 GitHub 이슈·보드다."
  },
  {
+  "path": "PRD-WEB.md",
+  "title": "PRD: 프로젝트 웹 v2.0.0 · 무엇이 어디에 어떻게 서는가",
+  "kind": "결정",
+  "evidence": "팀장",
+  "areas": [
+   "C/기록",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 문서×21 백과×1 백과×1 자동화×1 일정×6 자동화×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "QUESTIONS.md",
   "title": "질문으로 찾기",
   "kind": "가이드",
@@ -296,7 +314,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 회의록×3 문서×22 백과×3 학습×11 보상×3 관측×1",
+  "areas_why": "근거 낱말 회의록×3 문서×20 백과×3 학습×9 보상×3 관측×1",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [
