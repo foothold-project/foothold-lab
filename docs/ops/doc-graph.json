@@ -196,11 +196,11 @@
   "kind": "결정",
   "evidence": "팀장",
   "areas": [
-   "C/기록",
-   "C/운영"
+   "C/운영",
+   "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 문서×21 백과×1 백과×1 자동화×1 일정×6 자동화×1",
+  "areas_why": "근거 낱말 자동화×1 일정×9 자동화×1 문서×22 백과×1 백과×1",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
@@ -944,10 +944,11 @@
   "kind": "운영",
   "evidence": "팀장",
   "areas": [
-   "C/기록"
+   "C/기록",
+   "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 문서×3 백과×1 백과×1",
+  "areas_why": "근거 낱말 문서×4 백과×1 커리큘럼×1 예산×1 일정×1 예산×1",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
