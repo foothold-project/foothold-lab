@@ -7,6 +7,7 @@
 > 결론: 기준 정책은 미학습 지형 10종 중 5종에서 실패한다
 > 상태: 확정
 > 판: v1.0
+> 이슈: #59
 
 > **실험·기록: 임석헌** (2026-08-20, Runpod 헤드리스 실행) · 분석 정리: WS (8/21)
 > 원자료: v1 `go2_generalization_benchmark.zip` + **v2 `go2_generalization_results_v2.zip` (변동 주입 재검, 8/22 수령)** · 내부 볼트 99_inbox
