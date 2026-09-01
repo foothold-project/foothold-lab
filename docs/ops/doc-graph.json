@@ -925,8 +925,244 @@
   "web_worthy_src": "auto"
  },
  {
-  "path": "notices/latest.md",
-  "title": "notices/latest.md",
+  "path": "notices/2026-08-09.md",
+  "title": "notices/2026-08-09.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [],
+  "areas_sure": false,
+  "areas_why": "신호 없음",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-11.md",
+  "title": "notices/2026-08-11.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "A/정책학습",
+   "C/기록",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×1 보상×1 학습×1 문서×1 발표×1 발표×1 일정×1 일정×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-12.md",
+  "title": "notices/2026-08-12.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 GitHub×1 저장소×2",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-13.md",
+  "title": "notices/2026-08-13.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 GitHub×3 빌드×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-14.md",
+  "title": "① 스포츠 모드 켜진 상태에서 하이트맵이 나오는가",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "A/정책학습",
+   "B/항법",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×1 관측×7 정책×2 ROS2×5 Go2×3 실기×3 관문×7",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-18.md",
+  "title": "notices/2026-08-18.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 GPU×9 서버×8 저장소×2",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-20.md",
+  "title": "notices/2026-08-20.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 발표×2 멘토링×1 발표×2",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-22.md",
+  "title": "notices/2026-08-22.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 인프라×6 인프라×6 Runpod×2",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-23.md",
+  "title": "notices/2026-08-23.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS2×11 rclpy×2 Go2×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-24.md",
+  "title": "notices/2026-08-24.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [],
+  "areas_sure": false,
+  "areas_why": "신호 없음",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-25.md",
+  "title": "notices/2026-08-25.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×8 자동화×8 배포×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-26.md",
+  "title": "notices/2026-08-26.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/기록",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×7 문서×15 회의록×7 자동화×4 예산×1 자동화×4",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-08-27.md",
+  "title": "notices/2026-08-27.md",
+  "kind": "운영",
+  "evidence": "팀",
+  "issues": [],
+  "areas": [
+   "C/기록",
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×3 문서×19 백과×1 TF×1 SLAM×4 Nav2×3",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "notices/2026-09-02.md",
+  "title": "notices/2026-09-02.md",
   "kind": "운영",
   "evidence": "실측",
   "issues": [
@@ -937,15 +1173,13 @@
    "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 문서×13 백과×1 커리큘럼×1 자동화×3 예산×2 일정×1",
+  "areas_why": "근거 낱말 문서×12 백과×1 커리큘럼×1 자동화×1 예산×2 일정×1",
   "purpose": "운영",
-  "purpose_src": "human",
+  "purpose_src": "auto",
   "parents": [],
   "children": [],
-  "purpose_reason": "«바뀐 것만 모았습니다» 로 시작해 이슈 폼·브랜치·저장소 이름·문서 머리 다섯 줄 변경을 알리는 공지 원고다.",
-  "web_worthy": "보통",
-  "web_worthy_src": "human",
-  "web_worthy_reason": "지금 시점에서 «무엇이 바뀌었나»를 가장 빠르게 알려 주지만 docs/README 규칙상 notices 는 웹 게시 대상이 아니고 디스코드로 발송한다. 내용의 정본은 WORKFLOW·COLLAB 이다."
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "notices/report-web.md",

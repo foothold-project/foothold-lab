@@ -244,10 +244,75 @@
   "major": "",
   "ver": ""
  },
- "docs/notices/latest.md": {
-  "hash": "ee33a82fab98d2d8",
-  "major": "v3.0",
-  "ver": "v3.1"
+ "docs/notices/2026-08-09.md": {
+  "hash": "82e836cbda0dc995",
+  "major": "",
+  "ver": "v1.1"
+ },
+ "docs/notices/2026-08-11.md": {
+  "hash": "85d217c2098389b9",
+  "major": "",
+  "ver": "v1.1"
+ },
+ "docs/notices/2026-08-12.md": {
+  "hash": "d832b34bf3fc10d1",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-13.md": {
+  "hash": "b842771e2206b1af",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-14.md": {
+  "hash": "f9d84ea80fb82182",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-18.md": {
+  "hash": "25535fb9fe0f1c72",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-20.md": {
+  "hash": "4745c155d9a624f8",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-22.md": {
+  "hash": "b8ba5c33d9b5eea5",
+  "major": "",
+  "ver": "v1.1"
+ },
+ "docs/notices/2026-08-23.md": {
+  "hash": "2171b729adb183b6",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-24.md": {
+  "hash": "c8959b916cec8d98",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-25.md": {
+  "hash": "f629cf797bff41f7",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-08-26.md": {
+  "hash": "2ac8e94d460955a0",
+  "major": "",
+  "ver": "v1.1"
+ },
+ "docs/notices/2026-08-27.md": {
+  "hash": "25d1322c39e83289",
+  "major": "",
+  "ver": ""
+ },
+ "docs/notices/2026-09-02.md": {
+  "hash": "8a482f5b6b184fb8",
+  "major": "",
+  "ver": ""
  },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
