@@ -4,11 +4,12 @@
   "title": "자동화 지도",
   "kind": "가이드",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 자동화×8 예산×1 자동화×8",
+  "areas_why": "근거 낱말 자동화×7 예산×1 자동화×7",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -23,6 +24,7 @@
   "title": "FOOTHOLD 협업 규칙",
   "kind": "운영",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
@@ -48,6 +50,7 @@
   "title": "결정 로그: 무엇을, 언제, 왜",
   "kind": "결정",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록",
@@ -69,6 +72,7 @@
   "title": "웹 페이지 디자인 규칙: 새 페이지를 만들 때 지켜야 하는 것",
   "kind": "가이드",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
@@ -89,6 +93,7 @@
   "title": "8/13(목) 조선대 방문: 현장 확인 목록",
   "kind": "현장",
   "evidence": "현장",
+  "issues": [],
   "areas": [
    "B/항법",
    "B/인지",
@@ -117,6 +122,7 @@
   "title": "Go2 신규 개체 점검 목록 (공통)",
   "kind": "현장",
   "evidence": "현장",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -140,6 +146,7 @@
   "title": "프로젝트 전체 흐름",
   "kind": "운영",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/운영",
    "A/정책학습"
@@ -175,12 +182,13 @@
   "title": "원장(LEDGER): 모든 요청이 지금 어디 있나",
   "kind": "운영",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×12 백과×3",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×13 백과×3",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -195,6 +203,7 @@
   "title": "PRD: 프로젝트 웹 v2.0.0 · 무엇이 어디에 어떻게 서는가",
   "kind": "결정",
   "evidence": "팀장",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
@@ -213,6 +222,7 @@
   "title": "질문으로 찾기",
   "kind": "가이드",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법",
@@ -234,6 +244,7 @@
   "title": "docs/: 문서 작성 규칙",
   "kind": "",
   "evidence": "",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -253,6 +264,7 @@
   "title": "Unitree Go2 미경험 험지 적응 시뮬레이션 및 실기 자율주행 프로젝트",
   "kind": "계획",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "B/항법",
    "A/정책학습"
@@ -282,6 +294,7 @@
   "title": "우리가 쓰는 Go2 실기 사양",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "B/항법",
    "B/인지"
@@ -309,6 +322,7 @@
   "title": "역할 배치 · 누가 무엇을 맡나",
   "kind": "결정",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/기록",
    "A/정책학습"
@@ -332,6 +346,7 @@
   "title": "작업 흐름: 이슈에서 머지까지",
   "kind": "가이드",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
@@ -355,6 +370,7 @@
   "title": "설계 세션 기록: 2026-08-26 저녁 ~ 08-27 오전",
   "kind": "결정",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -376,6 +392,7 @@
   "title": "문서 관계표: 무엇이 무엇의 상위인가",
   "kind": "결정",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -393,6 +410,7 @@
   "title": "정보 모델: 문서를 무엇으로 가르고, 새 문서는 어떻게 제자리에 서나",
   "kind": "결정",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -412,6 +430,7 @@
   "title": "연구 허브 분류 기준: 무엇을 물으러 왔는지로 가른다",
   "kind": "결정",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/기록",
    "B/항법"
@@ -430,6 +449,7 @@
   "title": "프로젝트 페이지 v2.0.0: 무엇이 끝나면 끝인가",
   "kind": "결정",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록"
@@ -448,6 +468,7 @@
   "title": "허브 v3: 화면의 주어를 문서에서 상태로",
   "kind": "결정",
   "evidence": "팀장",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -465,6 +486,7 @@
   "title": "이번 주 알게 된 것: 8월 2주 (W33)",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/정책학습"
   ],
@@ -484,6 +506,7 @@
   "title": "이번 주 알게 된 것: 8월 3주 (W34)",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "B/항법",
    "A/정책학습",
@@ -505,6 +528,7 @@
   "title": "이번 주 알게 된 것: 8월 4주 (W35)",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/평가",
    "C/기록",
@@ -526,6 +550,7 @@
   "title": "ROS 2 개발환경 구축 정리 (Ubuntu 24.04 · Jazzy)",
   "kind": "가이드",
   "evidence": "조선대",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -545,6 +570,7 @@
   "title": "ROS 2 Python 프로그래밍 정리 (rclpy · colcon · 커스텀 인터페이스)",
   "kind": "가이드",
   "evidence": "조선대",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -564,6 +590,7 @@
   "title": "ROS 2 TF 좌표계와 RViz2 시각화 정리",
   "kind": "가이드",
   "evidence": "조선대",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -583,6 +610,9 @@
   "title": "RunPod 에서 Isaac Lab 돌리기: 네트워크 볼륨 · 템플릿 · 첫 실행",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [
+   "94"
+  ],
   "areas": [
    "A/정책학습",
    "C/운영"
@@ -601,6 +631,7 @@
   "title": "8/13 조선대 미팅: 기획과 제시안이 갈라진 날",
   "kind": "회의록",
   "evidence": "전사",
+  "issues": [],
   "areas": [
    "B/항법",
    "C/기록"
@@ -630,6 +661,7 @@
   "title": "8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정",
   "kind": "회의록",
   "evidence": "MOSS",
+  "issues": [],
   "areas": [
    "C/운영",
    "C/기록",
@@ -657,6 +689,7 @@
   "title": "8/19 팀 합의: 두 트랙으로 간다, C는 지킨다",
   "kind": "회의록",
   "evidence": "팀장",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법",
@@ -689,6 +722,7 @@
   "title": "8/20: 전담 멘토 확정, 박철제 킥오프",
   "kind": "회의록",
   "evidence": "전사",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -716,6 +750,7 @@
   "title": "8/21 팀 미팅: 역할 그룹핑 확정, 클라우드 운용 개시",
   "kind": "회의록",
   "evidence": "팀원",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -744,6 +779,7 @@
   "title": "8/24 멘토링: 본 과제와 CAD 학습은 분리한다",
   "kind": "회의록",
   "evidence": "음성",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법"
@@ -769,6 +805,7 @@
   "title": "8/25 멘토링: 프로젝트 화면을 보고, 실패 험지는 3점 지지로",
   "kind": "회의록",
   "evidence": "음성",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "C/기록"
@@ -789,6 +826,7 @@
   "title": "8/26 팀: 오늘 멘토링은 취소, 프로젝트 피드백으로 조율",
   "kind": "회의록",
   "evidence": "음성",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -808,6 +846,7 @@
   "title": "meetings: 회의록",
   "kind": "",
   "evidence": "",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -825,6 +864,7 @@
   "title": "notices/latest.md",
   "kind": "운영",
   "evidence": "팀",
+  "issues": [],
   "areas": [
    "C/기록",
    "B/항법"
@@ -845,6 +885,7 @@
   "title": "notices/report-web.md",
   "kind": "운영",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/기록"
   ],
@@ -864,6 +905,7 @@
   "title": "8/13 방문 사전 문의 초안 (김판구 교수님)",
   "kind": "운영",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -883,6 +925,7 @@
   "title": "외부 GPU 샌드박스 (V100 / KubeSphere)",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -904,6 +947,7 @@
   "title": "인프라 구축 체크리스트: 반드시 한다 (팀장 확정 2026-08-09)",
   "kind": "운영",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -923,6 +967,7 @@
   "title": "세션 이관 가이드: 다른 기계·리눅스에서 이어받기",
   "kind": "운영",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -942,6 +987,7 @@
   "title": "자동화 파이프라인: 검증 기록",
   "kind": "운영",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -961,6 +1007,7 @@
   "title": "화면 버전 로그: 무엇을 보여줬고 무슨 피드백을 받았나",
   "kind": "운영",
   "evidence": "팀장",
+  "issues": [],
   "areas": [
    "C/기록",
    "C/운영"
@@ -979,6 +1026,7 @@
   "title": "시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2",
   "kind": "결정",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "B/항법"
   ],
@@ -1004,6 +1052,7 @@
   "title": "벤치마크 재현 프로토콜: 동일 셋업 검증과 결정론 발견",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/평가"
   ],
@@ -1027,6 +1076,7 @@
   "title": "Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/지형씬제작",
    "A/정책학습"
@@ -1049,6 +1099,7 @@
   "title": "클라우드 GPU에서 Isaac Sim 돌리기: 가능성 조사",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -1071,6 +1122,7 @@
   "title": "컴퓨팅 자원 계획: 무엇을 어디서 돌리나",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/정책학습"
   ],
@@ -1092,6 +1144,7 @@
   "title": "일반화 벤치마크: 미학습 지형 10종 실측 (5종 통과 · 5종 실패)",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/평가",
    "A/정책학습"
@@ -1119,6 +1172,7 @@
   "title": "Go2 공개 사전학습 정책 전수 조사: 무엇을 가져다 쓸 수 있나",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "A/정책학습"
   ],
@@ -1146,6 +1200,7 @@
   "title": "Isaac Lab Go2 험지 학습: cfg를 읽는 커리큘럼",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "A/지형씬제작"
@@ -1186,6 +1241,7 @@
   "title": "NVIDIA AI Campus 커리큘럼과 우리 프로젝트의 대응",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "C/기록",
    "A/정책학습",
@@ -1208,6 +1264,7 @@
   "title": "NVIDIA 도구 지도: Omniverse · Isaac Sim · SimReady 가 각각 무엇인가",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "A/트윈렌더"
   ],
@@ -1233,6 +1290,7 @@
   "title": "렌더 실측: Path Tracing 은 얼마나 걸리는가",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/트윈렌더"
   ],
@@ -1260,6 +1318,7 @@
   "title": "RoboGauge 공개 정책 해부: 45차원 관측의 정확한 순서와 스케일",
   "kind": "리서치",
   "evidence": "코드",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "A/평가"
@@ -1286,6 +1345,7 @@
   "title": "역할 지도: 이 프로젝트가 각자를 어떤 직무로 데려가는가",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법"
@@ -1308,6 +1368,7 @@
   "title": "ROS2 ↔ Isaac Sim: 파이썬 버전 충돌과 통합 방법",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "B/항법",
    "C/운영"
@@ -1328,6 +1389,7 @@
   "title": "험지 RL 학습 계획 : 무엇을 먼저 하고 무엇을 하지 않는가",
   "kind": "계획",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법"
@@ -1355,6 +1417,7 @@
   "title": "Runpod 팀 운용 가이드: 권한 · 결제 · 네트워크 볼륨 · NAS 연계",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "C/운영"
   ],
@@ -1374,6 +1437,7 @@
   "title": "실패 지형 파인튜닝 실행 계획: 레시피 병렬, 혼합 단일 런",
   "kind": "계획",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "A/지형씬제작"
@@ -1403,6 +1467,7 @@
   "title": "Isaac Lab v2.3.2 지형 가이드: Go2 커스텀 험지 설계",
   "kind": "리서치",
   "evidence": "공식",
+  "issues": [],
   "areas": [
    "A/지형씬제작"
   ],
@@ -1427,6 +1492,7 @@
   "title": "8/18 험지RL 학습 계획: 무엇을 먼저 하고 무엇을 하지 않는가",
   "kind": "계획",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "A/정책학습",
    "B/항법"
@@ -1454,6 +1520,7 @@
   "title": "학습 성능 실측: Go2 험지 (AI-WS01)",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/정책학습"
   ],
@@ -1483,6 +1550,7 @@
   "title": "시각 증거: 우리가 실제로 본 것",
   "kind": "실험",
   "evidence": "실측",
+  "issues": [],
   "areas": [
    "A/정책학습"
   ],
@@ -1510,6 +1578,7 @@
   "title": "개인 계획 (일정 페이지 원본)",
   "kind": "계획",
   "evidence": "본인",
+  "issues": [],
   "areas": [
    "C/운영",
    "B/항법",
