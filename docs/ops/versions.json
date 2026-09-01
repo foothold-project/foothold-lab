@@ -65,9 +65,9 @@
   "ver": "v2.1"
  },
  "docs/DECISIONS.md": {
-  "hash": "83b5593f3085b80e",
+  "hash": "355e2f29e8c0579f",
   "major": "v2.0",
-  "ver": "v2.0"
+  "ver": "v2.1"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -90,9 +90,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "3d8712434615bda4",
+  "hash": "9ba566e73f536af3",
   "major": "v2.0",
-  "ver": "v2.0"
+  "ver": "v2.1"
  },
  "docs/PRD-WEB.md": {
   "hash": "1e818ddd1bd1624a",
@@ -245,9 +245,9 @@
   "ver": ""
  },
  "docs/notices/latest.md": {
-  "hash": "d7e1dd321d258954",
-  "major": "v2.0",
-  "ver": "v2.0"
+  "hash": "ee33a82fab98d2d8",
+  "major": "v3.0",
+  "ver": "v3.1"
  },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",

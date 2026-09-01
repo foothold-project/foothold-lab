@@ -67,7 +67,7 @@
    "B/항법"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×15 백과×2 SLAM×4 Nav2×2",
+  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×19 백과×4 SLAM×5 Nav2×3",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -928,14 +928,16 @@
   "path": "notices/latest.md",
   "title": "notices/latest.md",
   "kind": "운영",
-  "evidence": "팀",
-  "issues": [],
+  "evidence": "실측",
+  "issues": [
+   "120"
+  ],
   "areas": [
    "C/기록",
-   "B/항법"
+   "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 회의록×3 문서×19 백과×1 TF×1 SLAM×4 Nav2×3",
+  "areas_why": "근거 낱말 문서×13 백과×1 커리큘럼×1 자동화×3 예산×2 일정×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
