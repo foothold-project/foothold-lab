@@ -34,6 +34,9 @@ ORDER = {k: i for i, (k, _) in enumerate(AREAS)}
 
 # 2층. 관문과 산출물
 GATES = [
+    # 9/4 기획발표. GitHub 마일스톤에는 있는데 여기 없어서 그 이슈들이 관문
+    #   없는 행이 됐다 (2026-09-01 실측). 웹 타임라인에도 안 나왔다.
+    ('기획발표',        datetime.date(2026, 9, 4),   'deliverables/plan/wbs.md'),
     ('A-정책',          datetime.date(2026, 9, 12),  'deliverables/midterm/policy-metrics.md'),
     ('MVP · 중간발표',   datetime.date(2026, 9, 30),  'deliverables/midterm/generalization-report.md'),
     ('NAV · 실기 항법',  datetime.date(2026, 11, 7),  'deliverables/final/nav-report.md'),

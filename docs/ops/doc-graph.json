@@ -179,7 +179,7 @@
  },
  {
   "path": "LEDGER.md",
-  "title": "원장(LEDGER): 모든 요청이 지금 어디 있나",
+  "title": "진행 현황: 올린 것이 지금 어디 있나",
   "kind": "운영",
   "evidence": "팀",
   "issues": [],
@@ -188,7 +188,7 @@
    "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×13 백과×3",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×15 백과×3",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -860,6 +860,27 @@
   "web_worthy": "낮음",
   "web_worthy_src": "human",
   "web_worthy_reason": "단발 일정 조율 기록이라 표지 가치가 없다."
+ },
+ {
+  "path": "meetings/20260831-park-mentoring.md",
+  "title": "8/31 멘토링: 3 m 는 짧다, 10 m 를 곧게 가라",
+  "kind": "회의록",
+  "evidence": "음성",
+  "issues": [
+   "105"
+  ],
+  "areas": [
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 지표×8 통과율×2 에피소드×1 학습×7 보상×3 관측×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "meetings/README.md",

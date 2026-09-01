@@ -12,7 +12,7 @@
 
 ## 0. 먼저 읽는 순서
 
-1. `docs/LEDGER.md`: 지금 어디까지 왔나 (원장)
+1. `docs/LEDGER.md`: 지금 어디까지 왔나 (진행 현황)
 2. 이 문서: 어떻게 이어받나
 3. `MAI_UNIVERSE/00_STATE.md`: 프로젝트 전체 축 (WS 재기획 포함)
 4. `docs/DECISIONS.md`: 왜 그렇게 했나
