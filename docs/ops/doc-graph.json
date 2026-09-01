@@ -392,7 +392,9 @@
   "title": "문서 관계표: 무엇이 무엇의 상위인가",
   "kind": "결정",
   "evidence": "실측",
-  "issues": [],
+  "issues": [
+   "76"
+  ],
   "areas": [
    "C/기록"
   ],
@@ -550,7 +552,9 @@
   "title": "ROS 2 개발환경 구축 정리 (Ubuntu 24.04 · Jazzy)",
   "kind": "가이드",
   "evidence": "조선대",
-  "issues": [],
+  "issues": [
+   "63"
+  ],
   "areas": [
    "B/항법"
   ],
@@ -570,7 +574,9 @@
   "title": "ROS 2 Python 프로그래밍 정리 (rclpy · colcon · 커스텀 인터페이스)",
   "kind": "가이드",
   "evidence": "조선대",
-  "issues": [],
+  "issues": [
+   "63"
+  ],
   "areas": [
    "B/항법"
   ],
@@ -590,7 +596,9 @@
   "title": "ROS 2 TF 좌표계와 RViz2 시각화 정리",
   "kind": "가이드",
   "evidence": "조선대",
-  "issues": [],
+  "issues": [
+   "63"
+  ],
   "areas": [
    "B/항법"
   ],
@@ -631,7 +639,9 @@
   "title": "8/13 조선대 미팅: 기획과 제시안이 갈라진 날",
   "kind": "회의록",
   "evidence": "전사",
-  "issues": [],
+  "issues": [
+   "44"
+  ],
   "areas": [
    "B/항법",
    "C/기록"
@@ -661,7 +671,9 @@
   "title": "8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정",
   "kind": "회의록",
   "evidence": "MOSS",
-  "issues": [],
+  "issues": [
+   "44"
+  ],
   "areas": [
    "C/운영",
    "C/기록",
@@ -689,7 +701,9 @@
   "title": "8/19 팀 합의: 두 트랙으로 간다, C는 지킨다",
   "kind": "회의록",
   "evidence": "팀장",
-  "issues": [],
+  "issues": [
+   "44"
+  ],
   "areas": [
    "A/정책학습",
    "B/항법",
@@ -779,7 +793,9 @@
   "title": "8/24 멘토링: 본 과제와 CAD 학습은 분리한다",
   "kind": "회의록",
   "evidence": "음성",
-  "issues": [],
+  "issues": [
+   "44"
+  ],
   "areas": [
    "A/정책학습",
    "B/항법"
@@ -805,7 +821,9 @@
   "title": "8/25 멘토링: 프로젝트 화면을 보고, 실패 험지는 3점 지지로",
   "kind": "회의록",
   "evidence": "음성",
-  "issues": [],
+  "issues": [
+   "50"
+  ],
   "areas": [
    "A/정책학습",
    "C/기록"
@@ -826,7 +844,9 @@
   "title": "8/26 팀: 오늘 멘토링은 취소, 프로젝트 피드백으로 조율",
   "kind": "회의록",
   "evidence": "음성",
-  "issues": [],
+  "issues": [
+   "50"
+  ],
   "areas": [
    "C/기록"
   ],
@@ -1076,7 +1096,9 @@
   "title": "Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크",
   "kind": "실험",
   "evidence": "실측",
-  "issues": [],
+  "issues": [
+   "40"
+  ],
   "areas": [
    "A/지형씬제작",
    "A/정책학습"
@@ -1200,7 +1222,9 @@
   "title": "Isaac Lab Go2 험지 학습: cfg를 읽는 커리큘럼",
   "kind": "리서치",
   "evidence": "공식",
-  "issues": [],
+  "issues": [
+   "44"
+  ],
   "areas": [
    "A/정책학습",
    "A/지형씬제작"
@@ -1318,7 +1342,9 @@
   "title": "RoboGauge 공개 정책 해부: 45차원 관측의 정확한 순서와 스케일",
   "kind": "리서치",
   "evidence": "코드",
-  "issues": [],
+  "issues": [
+   "28"
+  ],
   "areas": [
    "A/정책학습",
    "A/평가"
