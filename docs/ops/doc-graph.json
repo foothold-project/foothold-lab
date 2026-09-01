@@ -8,7 +8,7 @@
    "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 자동화×7 예산×1 자동화×7",
+  "areas_why": "근거 낱말 자동화×8 예산×1 자동화×8",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -577,6 +577,24 @@
   "web_worthy": "보통",
   "web_worthy_src": "human",
   "web_worthy_reason": "8/27 재정의된 관문 `NAV 11/7` 과의 관계를 §9 각주에서 스스로 대조해 둔 유일한 팀원 가이드다. 트랙 B 가 본격화되면 가치가 올라간다."
+ },
+ {
+  "path": "guides/runpod-setup.md",
+  "title": "RunPod 에서 Isaac Lab 돌리기: 네트워크 볼륨 · 템플릿 · 첫 실행",
+  "kind": "운영",
+  "evidence": "실측",
+  "areas": [
+   "A/정책학습",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×19 관측×4 정책×6 GitHub×10 배포×6 빌드×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "meetings/20260813-ops-alignment.md",
@@ -1341,7 +1359,7 @@
    "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 배포×2 Runpod×21 GPU×2",
+  "areas_why": "근거 낱말 배포×2 Runpod×23 GPU×2",
   "purpose": "자료조사",
   "purpose_src": "human",
   "parents": [],

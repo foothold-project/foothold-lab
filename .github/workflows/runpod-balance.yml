@@ -1,0 +1,111 @@
+# RunPod 잔액 감시 -> 디스코드 resource 채널
+#
+#   왜 만드나 (#94 «잔액 알림 설정»)
+#     RunPod 자체 알림은 메일과 콘솔로만 간다. 팀이 실제로 보는 곳은
+#     디스코드 resource 채널이다. 잔액 $0 이면 Pod 을 멈춰도 볼륨 요금이
+#     쌓이고, 방치하면 네트워크 볼륨이 terminate 된다. 학습 결과가 거기 있다.
+#
+#   왜 GitHub Actions 인가 (철칙 1)
+#     기기에 묶이면 그 PC 를 켜야만 도는 알림이 된다. 그건 시스템이 아니다.
+#
+#   폴링 주기
+#     RunPod 은 잔액 변동 웹훅을 주지 않는다. 그래서 우리가 물어본다.
+#     하루 두 번 (09:00 · 21:00 KST). 급하면 Run workflow 로 즉시 돌린다.
+#
+#   문턱 세 단계 (팀장 확정 9/1)
+#     $100 알림 · $50 경고 · $20 긴급. 문턱 값은 스크립트가 소유한다.
+#
+#   시끄럽지 않게
+#     매번 알리면 아무도 안 본다. 단계가 바뀐 그 순간에만 알린다.
+#     등급은 저장소 캐시 파일에 남긴다 (러너는 매번 새로 뜨므로).
+name: RunPod 잔액 감시
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 등급이 안 바뀌어도 지금 상태를 알린다
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 잔액 조회
+        id: q
+        env:
+          KEY: ${{ secrets.RUNPOD_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEY:-}" ]; then
+            echo "::error::RUNPOD_API_KEY 시크릿이 없습니다"; exit 1
+          fi
+          curl -s --fail-with-body -X POST https://api.runpod.io/graphql \
+               -H "Authorization: Bearer $KEY" \
+               -H 'Content-Type: application/json' \
+               -d '{"query":"query { myself { clientBalance } }"}' > res.json
+          head -c 300 res.json; echo
+          BAL=$(python3 -c "import json;print(json.load(open('res.json'))['data']['myself']['clientBalance'])")
+          if [ -z "$BAL" ] || [ "$BAL" = "None" ]; then
+            echo "::error::잔액을 못 읽었습니다"; exit 1
+          fi
+          echo "balance=$BAL" >> "$GITHUB_OUTPUT"
+          echo "잔액 \$$BAL"
+
+      - name: 등급 판정
+        id: j
+        env:
+          BAL: ${{ steps.q.outputs.balance }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          PREV=$(cat .cache/runpod-balance-state 2>/dev/null || echo ok)
+          # 단계 판정은 스크립트가 소유한다 (문턱이 두 곳에 있으면 갈라진다)
+          LEVEL=$(python3 -c "import sys;sys.path.insert(0,'.github/scripts');import runpod_notify as r,os;print(r.level(float(os.environ['BAL'])))")
+          SEND=no
+          if [ "$LEVEL" != "$PREV" ] || [ "${FORCE:-false}" = "true" ]; then SEND=yes; fi
+          printf '%s' "$LEVEL" > .cache/runpod-balance-state
+          {
+            echo "level=$LEVEL"
+            echo "prev=$PREV"
+            echo "send=$SEND"
+          } >> "$GITHUB_OUTPUT"
+          echo "등급 $PREV -> $LEVEL · 알림 $SEND"
+
+      - name: 디스코드 알림
+        if: steps.j.outputs.send == 'yes'
+        env:
+          HOOK: ${{ secrets.DISCORD_RESOURCE_WEBHOOK }}
+          BAL: ${{ steps.q.outputs.balance }}
+          LEVEL: ${{ steps.j.outputs.level }}
+          PREV: ${{ steps.j.outputs.prev }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOOK:-}" ]; then
+            echo "::error::DISCORD_RESOURCE_WEBHOOK 시크릿이 없습니다"; exit 1
+          fi
+          python3 .github/scripts/runpod_notify.py > payload.json
+          curl -s --fail-with-body -X POST "$HOOK" \
+               -H 'Content-Type: application/json' --data @payload.json
+          echo; echo 보냈습니다
+
+      - name: 등급 저장
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- .cache/runpod-balance-state; then
+            echo "등급 변화 없음"; exit 0
+          fi
+          git config user.name foothold-bot
+          git config user.email bot@foothold.local
+          git add .cache/runpod-balance-state
+          git commit -m "chore: RunPod 잔액 등급 갱신 ($(TZ=Asia/Seoul date +%F))"
+          git push

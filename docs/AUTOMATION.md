@@ -11,6 +11,91 @@
 > 그래서 결정이 바뀌어도 이 페이지만 낡은 채 남았다. 폐기된 저장소 이름과
 > 옛 갈래 어휘가 여기 살아 있었다. 이제 md 를 고치면 웹이 따라온다.
 
+## 0. 한눈에 보는 그림
+
+<div class="tw" style="margin:1.2rem 0 1.6rem">
+<svg viewBox="0 0 980 430" role="img" aria-label="자동화 지도: 사람이 이슈를 열면 GitHub Actions 가 분류·기록·알림·배포를 이어 받는다" style="width:100%;height:auto;display:block">
+  <defs>
+    <marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="var(--ink-3)"/>
+    </marker>
+  </defs>
+
+  <text x="14" y="22" font-size="11" font-weight="800" letter-spacing="2.2" fill="var(--dim)">사람</text>
+  <rect x="14" y="34" width="176" height="86" rx="7" fill="var(--dim-soft)" stroke="var(--dim)" stroke-width="1"/>
+  <text x="30" y="60" font-size="14" font-weight="800" fill="var(--ink)">이슈를 연다</text>
+  <text x="30" y="80" font-size="11.5" fill="var(--ink-2)">폼에서 작업 영역과</text>
+  <text x="30" y="96" font-size="11.5" fill="var(--ink-2)">관문을 고른다</text>
+  <text x="30" y="112" font-size="10.5" fill="var(--ink-3)">여기까지가 사람 몫</text>
+
+  <rect x="14" y="140" width="176" height="70" rx="7" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="30" y="164" font-size="13" font-weight="800" fill="var(--ink)">PR 을 올린다</text>
+  <text x="30" y="184" font-size="11.5" fill="var(--ink-2)">Closes #번호</text>
+  <text x="30" y="200" font-size="10.5" fill="var(--ink-3)">inbox 제출도 여기</text>
+
+  <rect x="14" y="230" width="176" height="86" rx="7" fill="var(--paper-2)" stroke="var(--rule)"/>
+  <text x="30" y="254" font-size="13" font-weight="800" fill="var(--ink)">이 PC 에서만</text>
+  <text x="30" y="274" font-size="11.5" fill="var(--ink-2)">웹 빌드 · 암호화</text>
+  <text x="30" y="290" font-size="11.5" fill="var(--ink-2)">화면 실측</text>
+  <text x="30" y="306" font-size="10.5" fill="var(--ink-3)">사람이 시작하는 일</text>
+
+  <line x1="196" y1="77" x2="288" y2="77" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="196" y1="175" x2="288" y2="175" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <text x="296" y="22" font-size="11" font-weight="800" letter-spacing="2.2" fill="var(--dim)">GITHUB ACTIONS · 기기와 무관</text>
+  <rect x="294" y="34" width="392" height="282" rx="8" fill="none" stroke="var(--rule)" stroke-dasharray="3 3"/>
+
+  <rect x="308" y="50" width="176" height="58" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="322" y="72" font-size="12.5" font-weight="800" fill="var(--ink)">분류</text>
+  <text x="322" y="90" font-size="10.5" fill="var(--ink-3)">issue-triage · issue-dates</text>
+
+  <rect x="496" y="50" width="176" height="58" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="510" y="72" font-size="12.5" font-weight="800" fill="var(--ink)">기록</text>
+  <text x="510" y="90" font-size="10.5" fill="var(--ink-3)">done-date · promote</text>
+
+  <rect x="308" y="124" width="176" height="58" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="322" y="146" font-size="12.5" font-weight="800" fill="var(--ink)">주간</text>
+  <text x="322" y="164" font-size="10.5" fill="var(--ink-3)">weekly-report + WBS</text>
+
+  <rect x="496" y="124" width="176" height="58" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="510" y="146" font-size="12.5" font-weight="800" fill="var(--ink)">감시</text>
+  <text x="510" y="164" font-size="10.5" fill="var(--ink-3)">lecture-watch · deadline</text>
+
+  <rect x="308" y="198" width="364" height="58" rx="6" fill="var(--note-soft)" stroke="var(--note)"/>
+  <text x="322" y="220" font-size="12.5" font-weight="800" fill="var(--ink)">RunPod 잔액 감시</text>
+  <text x="322" y="238" font-size="10.5" fill="var(--ink-2)">09:00 · 21:00 KST · 경고 $50 · 위험 $20 · 등급이 바뀔 때만 알린다</text>
+
+  <rect x="308" y="272" width="364" height="30" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+  <text x="322" y="292" font-size="10.5" fill="var(--ink-3)">main-guard · 직접 push 를 감지하고 안내한다</text>
+
+  <line x1="692" y1="79" x2="784" y2="79" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="692" y1="153" x2="784" y2="153" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="692" y1="227" x2="784" y2="227" stroke="var(--note)" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <text x="792" y="22" font-size="11" font-weight="800" letter-spacing="2.2" fill="var(--dim)">도착</text>
+  <rect x="790" y="50" width="176" height="58" rx="6" fill="var(--dim-soft)" stroke="var(--dim)"/>
+  <text x="804" y="72" font-size="12.5" font-weight="800" fill="var(--ink)">프로젝트 보드</text>
+  <text x="804" y="90" font-size="10.5" fill="var(--ink-2)">라벨 · 관문 · 날짜</text>
+
+  <rect x="790" y="124" width="176" height="58" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="804" y="146" font-size="12.5" font-weight="800" fill="var(--ink)">웹 · Vercel</text>
+  <text x="804" y="164" font-size="10.5" fill="var(--ink-2)">허브 6 · 문서 90여 장</text>
+
+  <rect x="790" y="198" width="176" height="58" rx="6" fill="var(--note-soft)" stroke="var(--note)"/>
+  <text x="804" y="220" font-size="12.5" font-weight="800" fill="var(--ink)">디스코드 · 텔레그램</text>
+  <text x="804" y="238" font-size="10.5" fill="var(--ink-2)">공지 · resource 채널</text>
+
+  <line x1="102" y1="322" x2="102" y2="352" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ar)"/>
+  <rect x="14" y="358" width="952" height="56" rx="7" fill="var(--paper-2)" stroke="var(--rule)"/>
+  <text x="30" y="380" font-size="12" font-weight="800" fill="var(--ink)">사람이 시작하는 셋은 이 PC 에 묶인다</text>
+  <text x="30" y="400" font-size="11" fill="var(--ink-2)">웹 빌드 · 암호화 자산 재생성 · Chrome 화면 실측. 시간에 맞춰 도는 일이 아니라 사람이 부르는 일이라 기기에 묶여도 된다.</text>
+</svg>
+</div>
+
+**읽는 법.** 왼쪽이 사람, 가운데가 기계, 오른쪽이 도착지입니다. 사람이 하는 것은
+**이슈를 여는 것 하나**이고, 나머지는 이어서 저절로 갑니다. 아래 띠에 있는 셋만
+이 PC 를 켜야 도는데, 그건 시간에 맞춰 도는 일이 아니라 사람이 부르는 일입니다.
+
 ## 1. 손으로 하는 것은 하나뿐이다
 
 | 순서 | 무엇을 한다 | 보드 | 누가 |
@@ -98,6 +183,7 @@ inbox/<내이름>/ 에 md 를 올리고 PR
 | 조선대 자료가 올라오면 | 감지 알림 | `lecture-watch.yml` |
 | 마감이 다가오면 | 알림 | `deadline-alert.yml` |
 | `main` 에 직접 push 하면 | 감지하고 안내 | `main-guard.yml` |
+| 09:00 · 21:00 | **RunPod 잔액 감시** (경고 $50 · 위험 $20) | `runpod-balance.yml` |
 
 ### 다이제스트는 왜 「재료」만 모으나
 
