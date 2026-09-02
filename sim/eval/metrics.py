@@ -11,7 +11,11 @@ torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다
 평면만 쓰기 때문입니다.
 """
 
-# 원시 CSV 열 순서. 스냅샷 543행 `row` 딕셔너리의 키 순서와 같아야 한다.
+# 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번).
+# 이 목록을 빼면 `RAW_COLUMNS` 는 스냅샷 543행의 키 순서와 정확히 같아야 한다.
+ADDED_COLUMNS = ("peak_lateral_drift_m",)
+
+# 원시 CSV 열 순서. `ADDED_COLUMNS` 를 뺀 나머지가 스냅샷 543행의 키 순서다.
 RAW_COLUMNS = (
     "terrain",
     "env_id",
@@ -30,6 +34,7 @@ RAW_COLUMNS = (
     "ideal_distance_m",
     "progress_ratio",
     "lateral_drift_m",
+    "peak_lateral_drift_m",
     "velocity_mae_mps",
     "mean_reward_per_step",
 )
@@ -81,6 +86,40 @@ def forward_progress_m(disp, forward_dir):
 def lateral_drift_m(disp, forward_dir):
     """측면축 끝점 이탈의 절댓값. 스냅샷 487~489행."""
     return abs(dot(disp, lateral_axis(forward_dir)))
+
+
+def lateral_offset_m(start_xy, point_xy, forward_dir):
+    """어느 한 순간의 측면축 이탈. **부호가 남습니다.**
+
+    스냅샷에는 없는 함수입니다. 스냅샷은 끝점 하나만 보고 곧바로 `abs` 를 씌웁니다.
+    최댓값을 집으려면 순간값이 필요하고, 어느 쪽으로 벗어났는지는 진단에 쓰입니다.
+    """
+    return dot(displacement(start_xy, point_xy), lateral_axis(forward_dir))
+
+
+def peak_lateral_drift_m(start_xy, path_xy, forward_dir):
+    """경로 전체에서 가장 크게 벗어난 측면 이탈의 절댓값. #125 1번.
+
+    **관측용입니다. 성공 판정에 쓰지 마십시오.** 판정은 멘토 기준대로 끝점입니다
+    (`direction_success`).
+
+    좌우 어느 쪽으로 벗어났든 크기만 봅니다. 표본이 하나도 없으면 0.0 입니다.
+
+    **이름을 `max` 가 아니라 `peak` 으로 둔 이유.** 하네스에는 이미
+    `--max_lateral_drift` 라는 **문턱값**이 있습니다. 관측된 최고값을
+    `max_lateral_drift_m` 이라 부르면 CSV 열과 인자가 한 글자 차이가 되어
+    「이 숫자가 재본 값인가 기준값인가」가 헷갈립니다. `#125` 본문의 말은
+    「최대 좌우 이탈」이고 뜻은 그대로입니다. 이름만 갈랐습니다.
+    """
+    largest = 0.0
+
+    for point in path_xy:
+        offset = abs(lateral_offset_m(start_xy, point, forward_dir))
+
+        if offset > largest:
+            largest = offset
+
+    return largest
 
 
 # ---------------------------------------------------------------- 기준값
@@ -165,20 +204,29 @@ def episode_metrics(
     elapsed_s,
     timed_out,
     terminated,
+    path_xy,
     command_vx,
     eval_duration,
     min_progress_ratio,
     max_velocity_mae,
     max_lateral_drift,
 ):
-    """한 에피소드의 파생값 전부. 스냅샷 473~541행을 한 자리에 모은 것.
+    """한 에피소드의 파생값 전부.
 
-    스냅샷과 같은 순서로 계산하므로 부동소수 결과까지 같습니다.
+    스냅샷 473~541행을 한 자리에 모으고, 거기에 `peak_lateral_drift_m` 하나를
+    더했습니다. 스냅샷과 다른 것은 그 열 하나뿐입니다 (`ADDED_COLUMNS`).
+    나머지는 스냅샷과 같은 순서로 계산하므로 부동소수 결과까지 같습니다.
+
+    `path_xy` 는 에피소드 중 표본된 평면 위치들입니다. `None` 이면 끝점 하나만
+    본 것으로 칩니다. 경로를 안 넘겼다고 이탈이 0 이었던 것은 아니기 때문입니다.
     """
     disp = displacement(start_xy, end_xy)
 
     forward = forward_progress_m(disp, forward_dir)
     lateral = lateral_drift_m(disp, forward_dir)
+
+    sampled = (end_xy,) if path_xy is None else path_xy
+    peak_lateral = peak_lateral_drift_m(start_xy, sampled, forward_dir)
 
     ideal = ideal_distance_m(command_vx, eval_duration)
     floor = min_progress_m(min_progress_ratio, ideal)
@@ -203,6 +251,7 @@ def episode_metrics(
         "ideal_distance_m": ideal,
         "progress_ratio": progress_ratio(forward, ideal),
         "lateral_drift_m": lateral,
+        "peak_lateral_drift_m": peak_lateral,
         "velocity_mae_mps": vel_mae,
         "mean_reward_per_step": reward,
     }

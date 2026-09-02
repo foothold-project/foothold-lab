@@ -41,6 +41,7 @@ def case(**over):
         "elapsed_s": 6.0,
         "timed_out": True,
         "terminated": False,
+        "path_xy": None,
         "command_vx": 0.5,
         "eval_duration": 6.0,
         "min_progress_ratio": 0.70,
@@ -76,6 +77,14 @@ CASES = {
         sample_count=1000,
         elapsed_s=20.0,
     ),
+    "경로가 크게 나갔다 돌아온다": case(
+        end_xy=(2.85, 0.05),
+        path_xy=((0.5, 0.30), (1.2, 1.10), (2.0, 0.60), (2.85, 0.05)),
+    ),
+    "경로가 좌우로 흔들린다": case(
+        end_xy=(2.85, 0.02),
+        path_xy=((0.6, -0.55), (1.4, 0.62), (2.1, -0.31), (2.85, 0.02)),
+    ),
 }
 
 
@@ -110,8 +119,14 @@ class EpisodeMetricsMatchSnapshot(unittest.TestCase):
                 want = oracle.run_episode_block(values)
                 got = metrics.episode_metrics(**values)
 
+                # 스냅샷에 없던 열은 ADDED_COLUMNS 에 적힌 것뿐이어야 한다.
                 self.assertEqual(
-                    sorted(want), sorted(got), "열 집합이 다르다"
+                    set(got) - set(want),
+                    set(metrics.ADDED_COLUMNS),
+                    "스냅샷과 달라진 열이 적어 둔 것과 다르다",
+                )
+                self.assertEqual(
+                    set(want) - set(got), set(), "스냅샷 열이 사라졌다"
                 )
 
                 for column in sorted(want):
@@ -188,6 +203,139 @@ class KnownValues(unittest.TestCase):
         self.assertEqual(metrics.velocity_mae_mps(3.0, 0), 3.0)
 
 
+class PeakLateralDrift(unittest.TestCase):
+    """#125 1번. 스텝별 최대 좌우 이탈. **관측용이고 판정은 건드리지 않는다.**"""
+
+    FORWARD = (1.0, 0.0)
+
+    def test_빈_경로는_0(self):
+        self.assertEqual(
+            metrics.peak_lateral_drift_m((0.0, 0.0), (), self.FORWARD), 0.0
+        )
+
+    def test_경로가_한_점이면_그_점의_이탈(self):
+        got = metrics.peak_lateral_drift_m(
+            (0.0, 0.0), ((2.85, 0.42),), self.FORWARD
+        )
+
+        self.assertAlmostEqual(got, 0.42)
+
+    def test_스텝_최대를_집는다(self):
+        # 최댓값이 중간에 있고 끝점은 작다. 끝점만 보면 못 잡는 값이다.
+        path = ((0.5, 0.30), (1.2, 1.10), (2.0, 0.60), (2.85, 0.05))
+
+        got = metrics.peak_lateral_drift_m((0.0, 0.0), path, self.FORWARD)
+
+        self.assertAlmostEqual(got, 1.10)
+
+    def test_부호가_반대여도_같은_최댓값(self):
+        left = ((0.5, 0.30), (1.2, 1.10), (2.85, 0.05))
+        right = ((0.5, -0.30), (1.2, -1.10), (2.85, -0.05))
+
+        self.assertAlmostEqual(
+            metrics.peak_lateral_drift_m((0.0, 0.0), left, self.FORWARD),
+            metrics.peak_lateral_drift_m((0.0, 0.0), right, self.FORWARD),
+        )
+
+    def test_좌우로_흔들려도_가장_큰_쪽을_집는다(self):
+        path = ((0.6, -0.55), (1.4, 0.62), (2.1, -0.31), (2.85, 0.02))
+
+        got = metrics.peak_lateral_drift_m((0.0, 0.0), path, self.FORWARD)
+
+        self.assertAlmostEqual(got, 0.62)
+
+    def test_언제나_0_이상이다(self):
+        path = ((0.6, -0.55), (1.4, -0.62))
+
+        got = metrics.peak_lateral_drift_m((0.0, 0.0), path, self.FORWARD)
+
+        self.assertGreaterEqual(got, 0.0)
+        self.assertAlmostEqual(got, 0.62)
+
+    def test_순간값은_부호를_남긴다(self):
+        # peak 은 abs 지만, 그 재료인 lateral_offset_m 은 방향을 남긴다.
+        left = metrics.lateral_offset_m((0.0, 0.0), (1.0, 0.5), self.FORWARD)
+        right = metrics.lateral_offset_m((0.0, 0.0), (1.0, -0.5), self.FORWARD)
+
+        self.assertAlmostEqual(left, 0.5)
+        self.assertAlmostEqual(right, -0.5)
+
+    def test_끝점_이탈은_순간값의_절댓값과_같다(self):
+        start, end, forward = (-4.5, 7.25), (-1.7, 7.4), (0.0, -1.0)
+
+        endpoint = metrics.lateral_drift_m(
+            metrics.displacement(start, end), forward
+        )
+        moment = abs(metrics.lateral_offset_m(start, end, forward))
+
+        self.assertAlmostEqual(endpoint, moment)
+
+    def test_시작점이_원점이_아니어도_된다(self):
+        start = (-4.5, 7.25)
+        path = ((-3.0, 7.55), (-2.2, 6.45), (-1.7, 7.30))
+
+        got = metrics.peak_lateral_drift_m(start, path, self.FORWARD)
+
+        self.assertAlmostEqual(got, 0.80)
+
+    def test_전방축이_45도여도_맞다(self):
+        forward = (ROOT_HALF, ROOT_HALF)
+        # (1,-1) 은 전방축에 수직이고 길이 √2 다.
+        path = ((1.0, -1.0), (0.5, 0.5))
+
+        got = metrics.peak_lateral_drift_m((0.0, 0.0), path, forward)
+
+        self.assertAlmostEqual(got, math.sqrt(2.0))
+
+    # ---------------------------------------------------- 판정 불변
+
+    def test_최댓값은_끝점_이탈보다_작지_않다(self):
+        for name, values in CASES.items():
+            with self.subTest(case=name):
+                got = metrics.episode_metrics(**values)
+
+                self.assertGreaterEqual(
+                    got["peak_lateral_drift_m"],
+                    got["lateral_drift_m"],
+                    name,
+                )
+
+    def test_경로를_안_주면_끝점_하나짜리_경로다(self):
+        got = metrics.episode_metrics(**CASES["통과"])
+
+        self.assertAlmostEqual(
+            got["peak_lateral_drift_m"], got["lateral_drift_m"]
+        )
+
+    def test_판정은_끝점_그대로다(self):
+        # 중간에 문턱(0.75 m)을 크게 넘겼다가 끝점은 0.05 m 로 돌아온 경우.
+        # 멘토 기준대로 direction_success 는 True 여야 한다.
+        got = metrics.episode_metrics(**CASES["경로가 크게 나갔다 돌아온다"])
+
+        self.assertGreater(got["peak_lateral_drift_m"], 0.75)
+        self.assertLess(got["lateral_drift_m"], 0.75)
+        self.assertTrue(got["direction_success"])
+        self.assertTrue(got["overall_success"])
+
+    def test_경로를_바꿔도_판정_5축은_안_바뀐다(self):
+        without = metrics.episode_metrics(**case(end_xy=(2.85, 0.05)))
+        with_path = metrics.episode_metrics(
+            **case(
+                end_xy=(2.85, 0.05),
+                path_xy=((1.2, 1.10), (2.0, -0.90), (2.85, 0.05)),
+            )
+        )
+
+        for column in metrics.RAW_COLUMNS:
+            if column in metrics.ADDED_COLUMNS or column not in without:
+                continue
+            self.assertEqual(without[column], with_path[column], column)
+
+        self.assertNotEqual(
+            without["peak_lateral_drift_m"], with_path["peak_lateral_drift_m"]
+        )
+
+
 class SummaryMatchesSnapshot(unittest.TestCase):
     """지형별 집계가 스냅샷과 같은가."""
 
@@ -260,8 +408,32 @@ class SummaryMatchesSnapshot(unittest.TestCase):
 class ColumnContract(unittest.TestCase):
     """CSV 열 순서를 스냅샷에 못 박는다."""
 
-    def test_원시_열_순서(self):
-        self.assertEqual(oracle.dict_key_order(543), metrics.RAW_COLUMNS)
+    def test_추가분을_빼면_스냅샷_열_순서(self):
+        without_added = tuple(
+            c for c in metrics.RAW_COLUMNS if c not in metrics.ADDED_COLUMNS
+        )
+
+        self.assertEqual(oracle.dict_key_order(543), without_added)
+
+    def test_추가분은_원시_열에_들어_있다(self):
+        for column in metrics.ADDED_COLUMNS:
+            self.assertIn(column, metrics.RAW_COLUMNS)
+
+    def test_추가분의_자리도_못_박는다(self):
+        # 끝점 이탈 바로 뒤에 둔다. 같은 것을 두 가지로 잰 값이라 붙어 있어야
+        # CSV 를 눈으로 볼 때 비교가 된다.
+        columns = list(metrics.RAW_COLUMNS)
+
+        self.assertEqual(
+            columns.index("peak_lateral_drift_m"),
+            columns.index("lateral_drift_m") + 1,
+        )
+
+    def test_추가분은_스냅샷에_없던_이름이다(self):
+        snapshot_columns = set(oracle.dict_key_order(543))
+
+        for column in metrics.ADDED_COLUMNS:
+            self.assertNotIn(column, snapshot_columns)
 
     def test_요약_열_순서(self):
         self.assertEqual(oracle.dict_key_order(272), metrics.SUMMARY_COLUMNS)
