@@ -1,0 +1,285 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>FOOTHOLD · 미경험 험지의 경계를 재는 법</title><style>:root {
+  --brand: #E85D2A;
+  --bg: #F4F0E8;
+  --fg: #17201D;
+  --muted: #6C746F;
+  --card: #FFFDF8;
+  --line: #C9C5BB;
+  --accent: #275B4B;
+  --verified: #235C49;
+  --remeasure: #88561B;
+  --planned: #66548A;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#121714; --fg:#F5F0E6; --muted:#AAB2AD; --card:#1A211D; --line:#3A443E; --accent:#8BC0A6; --verified:#8BC0A6; --remeasure:#E9B56F; --planned:#C8B5EC; }
+}
+:root[data-theme="dark"] { --bg:#121714; --fg:#F5F0E6; --muted:#AAB2AD; --card:#1A211D; --line:#3A443E; --accent:#8BC0A6; --verified:#8BC0A6; --remeasure:#E9B56F; --planned:#C8B5EC; }
+:root[data-theme="light"] { --bg:#F4F0E8; --fg:#17201D; --muted:#6C746F; --card:#FFFDF8; --line:#C9C5BB; --accent:#275B4B; --verified:#235C49; --remeasure:#88561B; --planned:#66548A; }
+* { box-sizing: border-box; }
+html, body { margin:0; width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--fg); font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; }
+#deck { position:relative; width:100vw; height:100vh; }
+.slide { position:absolute; inset:0; display:none; padding:5.2vh 6.2vw 4.5vh; overflow:hidden; background:var(--bg); }
+.slide.active { display:grid; grid-template-columns: 0.9fr 1.35fr; grid-template-rows:auto auto 1fr auto; column-gap:4vw; animation:enter .28s ease-out; }
+@keyframes enter { from { opacity:.25; transform:translateX(12px); } }
+.kicker { grid-column:1; color:var(--brand); font-size:clamp(13px,1.05vw,21px); font-weight:800; letter-spacing:.18em; }
+h1 { grid-column:1 / -1; max-width:94%; margin:1.3vh 0 1vh; font-size:clamp(38px,4.25vw,82px); line-height:1.07; letter-spacing:-.045em; text-wrap:balance; }
+.copy { grid-column:1; grid-row:3; align-self:center; padding-right:1vw; }
+.copy p { margin:.7em 0; font-size:clamp(18px,1.55vw,30px); line-height:1.48; word-break:keep-all; }
+.copy p:first-child { color:var(--accent); font-weight:750; font-size:clamp(22px,2vw,38px); }
+.visual { grid-column:2; grid-row:3; align-self:stretch; min-height:0; display:flex; align-items:center; justify-content:center; }
+.visual > svg, .visual > img { width:100%; max-height:62vh; height:auto; object-fit:contain; }
+.evidence { grid-column:1 / -1; display:flex; gap:.65vw; align-items:center; flex-wrap:wrap; padding-top:1.4vh; border-top:1px solid var(--line); }
+.chip { padding:.42em .75em; border:1px solid currentColor; border-radius:99px; font-size:clamp(12px,.88vw,18px); white-space:nowrap; }
+.chip.verified { color:var(--verified); }
+.chip.remeasure { color:var(--remeasure); border-style:dashed; }
+.chip.planned { color:var(--planned); border-style:dotted; }
+.folio { position:absolute; right:2.2vw; bottom:2vh; color:var(--muted); font-size:clamp(11px,.8vw,16px); }
+#theme, #notes-toggle { position:fixed; z-index:20; top:18px; width:42px; height:42px; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--fg); font-weight:800; cursor:pointer; }
+#theme { right:18px; }
+#notes-toggle { right:70px; }
+#meta { position:fixed; z-index:10; left:18px; bottom:12px; color:var(--muted); font-size:11px; opacity:.6; }
+#notes { position:fixed; z-index:30; top:0; right:0; width:min(42rem,45vw); height:100%; padding:26px; overflow:auto; background:var(--card); border-left:1px solid var(--line); transform:translateX(102%); transition:transform .2s ease; box-shadow:-16px 0 45px rgba(0,0,0,.18); }
+#notes.open { transform:translateX(0); }
+#notes header { display:flex; justify-content:space-between; gap:20px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+.note { display:none; }
+.note.active { display:block; }
+.note h2 { font-size:28px; line-height:1.25; }
+.note p, .note li { font-size:16px; line-height:1.6; }
+.gate-svg { width:100%; }
+.timeline-wrap { width:100%; display:flex; flex-direction:column; align-items:stretch; }
+.timeline-wrap.compact .gate-svg { transform:scale(1.04); transform-origin:center; }
+.timeline-line { stroke:var(--line); stroke-width:7; }
+.gate-dot { fill:var(--brand); stroke:var(--bg); stroke-width:5; }
+.gate-name { fill:var(--fg); font-size:19px; font-weight:800; }
+.gate-date, .gate-count { fill:var(--muted); font-size:15px; }
+.stage-off { width:92%; margin:-2vh auto 0; padding:1rem 1.4rem; border-top:2px dashed var(--line); display:flex; justify-content:space-between; gap:2rem; color:var(--muted); font-size:clamp(13px,1vw,19px); }
+.stage-off b { color:var(--fg); }
+svg text { font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; }
+@media (max-aspect-ratio: 4/3) {
+  .slide.active { grid-template-columns:1fr; grid-template-rows:auto auto auto 1fr auto; }
+  .copy { grid-column:1; grid-row:3; }
+  .visual { grid-column:1; grid-row:4; }
+  .visual > svg, .visual > img { max-height:48vh; }
+  .evidence { grid-row:5; }
+}
+@media print {
+  @page { size:16in 9in; margin:0; }
+  html, body, #deck { width:16in; height:auto; overflow:visible; }
+  .slide { position:relative; display:grid !important; width:16in; height:9in; break-after:page; }
+  #theme, #notes-toggle, #notes, #meta { display:none; }
+}
+</style></head><body>
+    <main id="deck"><section class="slide" data-slide="1" aria-label="1번 슬라이드">
+          <div class="kicker">FOOTHOLD · 01</div>
+          <h1>위험한 현장은 정비된 길이 아니다</h1>
+          <div class="copy"><p>사람이 먼저 들어가기 위험한 공간일수록 로봇은 처음 만난 비정형 지형에서도 계속 움직여야 한다.</p><p>우리가 묻는 것은 최고 속도가 아니라 미경험 지형에서의 적응성과 일반화다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
+  <title id="t">정비되지 않은 현장</title><desc id="d">불규칙한 지면과 진행 경계를 추상화했다.</desc>
+  <path d="M35 520 L150 420 L252 458 L370 320 L484 390 L606 245 L735 350 L865 198 L1065 336 L1065 590 L35 590 Z" fill="var(--card)" stroke="var(--line)" stroke-width="4"/>
+  <path d="M35 520 L150 420 L252 458 L370 320 L484 390 L606 245 L735 350 L865 198" fill="none" stroke="var(--brand)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(400 278)" fill="var(--fg)"><rect x="0" y="0" width="196" height="70" rx="18"/><rect x="28" y="-30" width="92" height="38" rx="10" fill="var(--accent)"/><path d="M28 62 L-8 150 M70 62 L44 160 M132 62 L160 153 M174 62 L212 142" stroke="var(--fg)" stroke-width="18" stroke-linecap="round"/></g>
+  <path d="M628 237 Q765 85 998 118" fill="none" stroke="var(--accent)" stroke-width="5" stroke-dasharray="14 16"/>
+  <text x="668" y="92" fill="var(--accent)" font-size="26" font-weight="800">처음 만난 지형에서도 이동할 수 있는가</text>
+  <text x="54" y="626" fill="var(--muted)" font-size="19">비정형 지면 · 시야 제한 · 불연속 경계</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip planned"><b>목표·계획</b> · 추측</span></div>
+          <div class="folio">1 / 11</div>
+        </section><section class="slide" data-slide="2" aria-label="2번 슬라이드">
+          <div class="kicker">FOOTHOLD · 02</div>
+          <h1>같은 공간을 두 트랙으로 푼다</h1>
+          <div class="copy"><p>트랙 A는 시뮬레이션에서 보행 한계를 넓힌다.</p><p>트랙 B는 검증된 순정 보행 위에 실기 항법을 얹는다. 디지털 트윈은 두 트랙의 공통 환경이다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="병렬 트랙과 공통 환경" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50 70 H690 Q742 70 742 122 V322 Q742 374 690 374 H50 Z" fill="var(--card)" stroke="var(--brand)" stroke-width="5"/>
+  <text x="92" y="135" fill="var(--brand)" font-size="28" font-weight="800">TRACK A · 시뮬레이션</text><text x="92" y="218" fill="var(--fg)" font-size="49" font-weight="850">보행 한계를 넓힌다</text><text x="92" y="277" fill="var(--muted)" font-size="24">정책 학습 · 미경험 지형 평가 · 경계 이동</text>
+  <path d="M782 70 H1045 V374 H782 Q756 374 756 348 V96 Q756 70 782 70 Z" fill="var(--accent)" opacity=".16" stroke="var(--accent)" stroke-width="4"/>
+  <text x="804" y="135" fill="var(--accent)" font-size="25" font-weight="800">TRACK B</text><text x="804" y="202" fill="var(--fg)" font-size="36" font-weight="850">실기 항법</text><text x="804" y="253" fill="var(--muted)" font-size="21">순정 보행</text><text x="804" y="288" fill="var(--muted)" font-size="21">SLAM · Nav2</text>
+  <path d="M108 436 H1000 Q1044 436 1044 480 V565 H52 V492 Q52 436 108 436 Z" fill="var(--fg)"/>
+  <text x="92" y="506" fill="var(--bg)" font-size="23" font-weight="800">BRIDGE · 공통 환경</text><text x="92" y="550" fill="var(--bg)" font-size="31" font-weight="800">디지털 트윈 · 센서 · 렌더</text>
+  <path d="M342 374 V436 M879 374 V436" stroke="var(--brand)" stroke-width="6"/>
+</svg>
+</div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">2 / 11</div>
+        </section><section class="slide" data-slide="3" aria-label="3번 슬라이드">
+          <div class="kicker">FOOTHOLD · 03</div>
+          <h1>기준선의 이름부터 바로잡았다</h1>
+          <div class="copy"><p>기준선은 NVIDIA 공식 Go2 rough 체크포인트다.</p><p>우리 1,500 iteration 정책은 랜덤 초기화에서 시작한 독립 scratch 대조 실험이다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="NVIDIA 공식 기준선과 scratch 정책 비교" xmlns="http://www.w3.org/2000/svg">
+  <path d="M38 55 H708 V595 H38 Z" fill="var(--card)" stroke="var(--brand)" stroke-width="6"/>
+  <text x="80" y="124" fill="var(--brand)" font-size="26" font-weight="800">기준선 · 더 큰 비교축</text><text x="80" y="191" fill="var(--fg)" font-size="45" font-weight="850">NVIDIA 공식 Go2 rough</text>
+  <text x="80" y="274" fill="var(--muted)" font-size="22">출발점</text><text x="230" y="274" fill="var(--fg)" font-size="27" font-weight="750">공개 체크포인트</text>
+  <text x="80" y="350" fill="var(--muted)" font-size="22">용도</text><text x="230" y="350" fill="var(--fg)" font-size="27" font-weight="750">10종 벤치마크</text><text x="230" y="388" fill="var(--fg)" font-size="27" font-weight="750">파인튜닝 출발점</text>
+  <path d="M80 470 H610" stroke="var(--line)" stroke-width="3"/><text x="80" y="526" fill="var(--accent)" font-size="24" font-weight="800">같은 자로 다시 측정</text>
+  <path d="M750 145 H1065 V595 H750 Z" fill="none" stroke="var(--line)" stroke-width="4"/>
+  <text x="786" y="215" fill="var(--muted)" font-size="24" font-weight="800">대조 실험</text><text x="786" y="271" fill="var(--fg)" font-size="38" font-weight="850">scratch</text>
+  <text x="786" y="337" fill="var(--muted)" font-size="21">랜덤 초기화</text><text x="786" y="383" fill="var(--muted)" font-size="21">1,500 iteration</text><text x="786" y="456" fill="var(--accent)" font-size="33" font-weight="850">26 / 30</text><text x="786" y="492" fill="var(--muted)" font-size="19">평지 계열 · 별도 조건</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">3 / 11</div>
+        </section><section class="slide" data-slide="4" aria-label="4번 슬라이드">
+          <div class="kicker">FOOTHOLD · 04</div>
+          <h1>학습과 평가 파이프라인은 이미 돌렸다</h1>
+          <div class="copy"><p>scratch 정책은 평지 계열에서 26/30, 86.7%를 통과했다.</p><p>험지 4,096 환경은 21,248~21,385 steps/s로 학습됐다. 1,500 iteration은 약 113분이었다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="학습과 평가 파이프라인의 확인된 결과" xmlns="http://www.w3.org/2000/svg">
+  <path d="M60 90 H1040" stroke="var(--line)" stroke-width="4"/>
+  <circle cx="165" cy="90" r="23" fill="var(--brand)"/><circle cx="510" cy="90" r="23" fill="var(--brand)"/><circle cx="875" cy="90" r="23" fill="var(--accent)"/>
+  <text x="118" y="152" fill="var(--muted)" font-size="20">학습</text><text x="92" y="208" fill="var(--fg)" font-size="42" font-weight="850">1,500 iter</text><text x="92" y="248" fill="var(--muted)" font-size="20">약 113분</text>
+  <text x="456" y="152" fill="var(--muted)" font-size="20">평지 평가</text><text x="434" y="208" fill="var(--fg)" font-size="42" font-weight="850">26 / 30</text><text x="448" y="248" fill="var(--accent)" font-size="23" font-weight="800">86.7%</text>
+  <text x="820" y="152" fill="var(--muted)" font-size="20">rough 평가</text><text x="810" y="208" fill="var(--fg)" font-size="34" font-weight="850">level 4+</text><text x="814" y="248" fill="var(--muted)" font-size="21">50%대 천장</text>
+  <path d="M80 565 V348 H1015" fill="none" stroke="var(--line)" stroke-width="3"/><path d="M110 527 L250 478 L382 426 L520 397 L652 387 L788 395 L925 389" fill="none" stroke="var(--brand)" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M650 360 V552" stroke="var(--accent)" stroke-width="3" stroke-dasharray="10 10"/><text x="668" y="541" fill="var(--accent)" font-size="18">느린 전진이 주된 실패</text>
+  <text x="92" y="331" fill="var(--muted)" font-size="18">난이도 증가</text><text x="912" y="602" fill="var(--muted)" font-size="18">level</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">4 / 11</div>
+        </section><section class="slide" data-slide="5" aria-label="5번 슬라이드">
+          <div class="kicker">FOOTHOLD · 05</div>
+          <h1>옛 시험은 5종의 벽을 찾아냈다</h1>
+          <div class="copy"><p>NVIDIA 기준선은 옛 3 m 조건에서 미경험 10종 중 5종을 통과하고 5종에서 막혔다.</p><p>이 값은 현재 성적표가 아니라 다음 측정이 겨눌 문제의 위치다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="옛 시험의 통과 5종과 실패 5종" xmlns="http://www.w3.org/2000/svg">
+  <text x="54" y="70" fill="var(--muted)" font-size="21" font-weight="800">통과 5종 · 옛 조건</text>
+  <rect x="54" y="95" width="1000" height="58" rx="29" fill="var(--accent)" opacity=".18"/>
+  <text x="82" y="132" fill="var(--accent)" font-size="18">discrete_obstacles · wave · star · repeated_boxes · repeated_cylinders</text>
+  <text x="54" y="223" fill="var(--brand)" font-size="25" font-weight="850">막힌 5종 · 재측정 대상</text>
+  <path d="M54 260 H450 V398 H54 Z" fill="var(--card)" stroke="var(--brand)" stroke-width="5"/><text x="80" y="323" fill="var(--fg)" font-size="34" font-weight="850">gap</text><text x="80" y="365" fill="var(--muted)" font-size="20">낙상</text>
+  <path d="M478 260 H1054 V398 H478 Z" fill="var(--card)" stroke="var(--fg)" stroke-width="4"/><text x="510" y="323" fill="var(--fg)" font-size="34" font-weight="850">rails</text><text x="510" y="365" fill="var(--muted)" font-size="20">물리 관문 닫힘</text>
+  <path d="M54 426 H592 V590 H54 Z" fill="var(--card)" stroke="var(--line)" stroke-width="4"/><text x="80" y="496" fill="var(--fg)" font-size="30" font-weight="850">stepping_stones</text><text x="80" y="542" fill="var(--muted)" font-size="20">느린 전진</text>
+  <path d="M620 426 H820 V590 H620 Z" fill="var(--card)" stroke="var(--line)" stroke-width="4"/><text x="650" y="505" fill="var(--fg)" font-size="31" font-weight="850">pit</text>
+  <path d="M848 426 H1054 V590 H848 Z" fill="var(--card)" stroke="var(--line)" stroke-width="4"/><text x="875" y="493" fill="var(--fg)" font-size="27" font-weight="850">floating</text><text x="875" y="528" fill="var(--fg)" font-size="27" font-weight="850">ring</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span><span class="chip remeasure"><b>재측정 중</b> · 미측정</span></div>
+          <div class="folio">5 / 11</div>
+        </section><section class="slide" data-slide="6" aria-label="6번 슬라이드">
+          <div class="kicker">FOOTHOLD · 06</div>
+          <h1>8월 31일, 판정 자를 바꿨다</h1>
+          <div class="copy"><p>3 m를 버리고 평지 10 m, 20초, 1.0 m/s부터 다시 잰다.</p><p>판정은 목표점 좌우 5 cm. 최대 이탈은 원인을 찾는 진단선이다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="3 m 옛 구간과 10 m 새 기준의 비교" xmlns="http://www.w3.org/2000/svg">
+  <g opacity=".38"><line x1="76" y1="120" x2="360" y2="120" stroke="var(--muted)" stroke-width="10"/><circle cx="76" cy="120" r="13" fill="var(--muted)"/><circle cx="360" cy="120" r="13" fill="var(--muted)"/><text x="76" y="83" fill="var(--muted)" font-size="21">옛 구간</text><text x="315" y="83" fill="var(--muted)" font-size="31" font-weight="850">3 m</text></g>
+  <line x1="76" y1="292" x2="1022" y2="292" stroke="var(--brand)" stroke-width="13"/><circle cx="76" cy="292" r="18" fill="var(--fg)"/><circle cx="1022" cy="292" r="18" fill="var(--brand)"/>
+  <text x="76" y="244" fill="var(--fg)" font-size="25" font-weight="800">새 평지 기준</text><text x="938" y="244" fill="var(--brand)" font-size="42" font-weight="900">10 m</text>
+  <path d="M76 292 C280 288 410 212 610 292 S880 372 1022 292" fill="none" stroke="var(--accent)" stroke-width="5" stroke-dasharray="13 10"/>
+  <line x1="610" y1="212" x2="610" y2="292" stroke="var(--accent)" stroke-width="3"/><text x="632" y="208" fill="var(--accent)" font-size="21" font-weight="800">최대 이탈 · 진단</text>
+  <path d="M1022 265 V319 M1007 265 V319 M1037 265 V319" stroke="var(--fg)" stroke-width="3"/><text x="840" y="350" fill="var(--fg)" font-size="20" font-weight="800">끝점 좌우 5 cm · 판정</text>
+  <path d="M76 478 H1022" stroke="var(--line)" stroke-width="3"/><g fill="var(--muted)" font-size="18"><text x="76" y="520">0 m</text><text x="252" y="520">2 m</text><text x="441" y="520">4 m</text><text x="630" y="520">6 m</text><text x="819" y="520">8 m</text><text x="982" y="520">10 m</text></g>
+  <text x="76" y="592" fill="var(--brand)" font-size="26" font-weight="850">20초 · 1.0 m/s · 성공률 90% 이상 목표</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip remeasure"><b>재측정 중</b> · 미측정</span><span class="chip planned"><b>목표·계획</b> · 미측정</span></div>
+          <div class="folio">6 / 11</div>
+        </section><section class="slide" data-slide="7" aria-label="7번 슬라이드">
+          <div class="kicker">FOOTHOLD · 07</div>
+          <h1>KPI는 성공률이 아니라 경계 이동이다</h1>
+          <div class="copy"><p>같은 지형에서 기준선 경계와 학습 후 경계를 같은 자로 겹쳐 본다.</p><p>통과 5종은 후퇴하지 않는가. 실패 지형의 경계는 얼마나 이동했는가.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="데이터 없는 난이도 경계 측정 틀" xmlns="http://www.w3.org/2000/svg">
+  <path d="M115 520 V90 M115 520 H1020" fill="none" stroke="var(--fg)" stroke-width="4"/>
+  <g stroke="var(--line)" stroke-width="2" stroke-dasharray="7 10"><line x1="115" y1="190" x2="1020" y2="190"/><line x1="115" y1="305" x2="1020" y2="305"/><line x1="115" y1="420" x2="1020" y2="420"/></g>
+  <text x="32" y="112" fill="var(--muted)" font-size="19" transform="rotate(-90 32 112)">통과율</text><text x="870" y="570" fill="var(--muted)" font-size="20">지형 난이도</text>
+  <text x="700" y="130" fill="var(--muted)" font-size="19">1 · 기준선 경계를 기록</text><text x="700" y="168" fill="var(--brand)" font-size="19">2 · 학습 후 경계를 같은 축에 기록</text>
+  <path d="M115 590 H1020" stroke="var(--accent)" stroke-width="6"/><text x="115" y="624" fill="var(--accent)" font-size="20" font-weight="800">안전선 · 기존 통과 5종 비후퇴</text>
+  <rect x="392" y="268" width="352" height="105" rx="18" fill="var(--card)" stroke="var(--brand)" stroke-width="4"/><text x="568" y="314" text-anchor="middle" fill="var(--brand)" font-size="26" font-weight="900">측정 계획</text><text x="568" y="350" text-anchor="middle" fill="var(--muted)" font-size="18">실제 곡선 없음</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip planned"><b>목표·계획</b> · 미측정</span></div>
+          <div class="folio">7 / 11</div>
+        </section><section class="slide" data-slide="8" aria-label="8번 슬라이드">
+          <div class="kicker">FOOTHOLD · 08</div>
+          <h1>현재 위치는 WBS가 말한다</h1>
+          <div class="copy"><p>관문은 날짜다. 구현 단계는 순서다.</p><p>이번 발표에서는 #122가 정할 구현 단계를 확정하지 않고, 다섯 관문과 현재 이슈 흐름만 보인다.</p></div>
+          <div class="visual"><div class="timeline-wrap"><svg class="gate-svg" viewBox="0 0 1220 360" role="img" aria-label="다섯 관문 타임라인"><line x1="74" y1="164" x2="1142" y2="164" class="timeline-line"/><circle cx="74.0" cy="164" r="12" class="gate-dot"/><text x="74.0" y="112" text-anchor="start" class="gate-name">기획발표</text><text x="74.0" y="136" text-anchor="start" class="gate-date">09.04</text><text x="74.0" y="286" text-anchor="start" class="gate-count">이슈 16 · 완료 2</text><circle cx="161.2" cy="164" r="12" class="gate-dot"/><text x="161.2" y="226" text-anchor="middle" class="gate-name">A-정책</text><text x="161.2" y="250" text-anchor="middle" class="gate-date">09.12</text><text x="161.2" y="314" text-anchor="middle" class="gate-count">이슈 19 · 완료 10</text><circle cx="357.3" cy="164" r="12" class="gate-dot"/><text x="357.3" y="112" text-anchor="middle" class="gate-name">MVP · 중간발표</text><text x="357.3" y="136" text-anchor="middle" class="gate-date">09.30</text><text x="357.3" y="286" text-anchor="middle" class="gate-count">이슈 23 · 완료 6</text><circle cx="771.5" cy="164" r="12" class="gate-dot"/><text x="771.5" y="226" text-anchor="middle" class="gate-name">NAV · 실기 항법</text><text x="771.5" y="250" text-anchor="middle" class="gate-date">11.07</text><text x="771.5" y="314" text-anchor="middle" class="gate-count">이슈 1 · 완료 0</text><circle cx="1142.0" cy="164" r="12" class="gate-dot"/><text x="1142.0" y="112" text-anchor="end" class="gate-name">FINAL · 최종발표</text><text x="1142.0" y="136" text-anchor="end" class="gate-date">12.11</text><text x="1142.0" y="286" text-anchor="end" class="gate-count">이슈 1 · 완료 1</text></svg><div class="stage-off"><b>구현 단계 막대 비활성</b><span>구현 단계 열이 없어 단계 막대를 비활성화했습니다</span></div></div></div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">8 / 11</div>
+        </section><section class="slide" data-slide="9" aria-label="9번 슬라이드">
+          <div class="kicker">FOOTHOLD · 09</div>
+          <h1>다섯 사람이 실패 지형 하나씩을 소유한다</h1>
+          <div class="copy"><p>각자의 포지션이 한 실패 지형의 진단과 레시피로 이어진다.</p><p>합치는 것은 정책 가중치가 아니라 레시피다. 최종 학습은 혼합 단일 런이다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="다섯 담당자와 실패 지형의 비대칭 소유 지도" xmlns="http://www.w3.org/2000/svg">
+  <path d="M463 252 C360 210 286 160 180 120 M470 318 C330 320 232 350 92 404 M560 224 C590 160 640 114 736 70 M630 300 C760 260 862 250 1028 274 M594 370 C680 450 744 510 886 566" fill="none" stroke="var(--line)" stroke-width="6"/>
+  <path d="M435 215 H660 Q700 215 700 255 V370 Q700 410 660 410 H435 Q395 410 395 370 V255 Q395 215 435 215 Z" fill="var(--fg)"/>
+  <text x="548" y="278" text-anchor="middle" fill="var(--bg)" font-size="20" font-weight="800">공통 출발점</text><text x="548" y="330" text-anchor="middle" fill="var(--bg)" font-size="32" font-weight="900">NVIDIA</text><text x="548" y="368" text-anchor="middle" fill="var(--bg)" font-size="22">Go2 rough</text>
+  <g fill="var(--card)" stroke="var(--brand)" stroke-width="4"><path d="M52 52 H302 V176 H52 Z"/><path d="M40 350 H308 V484 H40 Z"/><path d="M660 28 H908 V146 H660 Z"/><path d="M824 208 H1064 V346 H824 Z"/><path d="M690 494 H1002 V622 H690 Z"/></g>
+  <g fill="var(--fg)" font-weight="850"><text x="78" y="101" font-size="28">gap</text><text x="78" y="139" font-size="18">임석헌 · 정책학습</text><text x="68" y="405" font-size="28">rails</text><text x="68" y="445" font-size="18">맹라현 · 지형씬제작</text><text x="686" y="76" font-size="25">stepping_stones</text><text x="686" y="112" font-size="18">오현민 · 평가</text><text x="850" y="266" font-size="30">pit</text><text x="850" y="306" font-size="18">이민우 · 트윈렌더</text><text x="716" y="545" font-size="28">floating_ring</text><text x="716" y="584" font-size="18">오흥재 · 항법</text></g>
+</svg>
+</div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">9 / 11</div>
+        </section><section class="slide" data-slide="10" aria-label="10번 슬라이드">
+          <div class="kicker">FOOTHOLD · 10</div>
+          <h1>남은 일정은 다섯 관문으로 닫는다</h1>
+          <div class="copy"><p>9월 12일 기준선과 평가 자를 고정한다.</p><p>9월 30일 트랙 A를 완결한 뒤 실기 항법과 최종 시연으로 간다.</p></div>
+          <div class="visual"><div class="timeline-wrap compact"><svg class="gate-svg" viewBox="0 0 1220 360" role="img" aria-label="다섯 관문 타임라인"><line x1="74" y1="164" x2="1142" y2="164" class="timeline-line"/><circle cx="74.0" cy="164" r="12" class="gate-dot"/><text x="74.0" y="112" text-anchor="start" class="gate-name">기획발표</text><text x="74.0" y="136" text-anchor="start" class="gate-date">09.04</text><circle cx="161.2" cy="164" r="12" class="gate-dot"/><text x="161.2" y="226" text-anchor="middle" class="gate-name">A-정책</text><text x="161.2" y="250" text-anchor="middle" class="gate-date">09.12</text><circle cx="357.3" cy="164" r="12" class="gate-dot"/><text x="357.3" y="112" text-anchor="middle" class="gate-name">MVP · 중간발표</text><text x="357.3" y="136" text-anchor="middle" class="gate-date">09.30</text><circle cx="771.5" cy="164" r="12" class="gate-dot"/><text x="771.5" y="226" text-anchor="middle" class="gate-name">NAV · 실기 항법</text><text x="771.5" y="250" text-anchor="middle" class="gate-date">11.07</text><circle cx="1142.0" cy="164" r="12" class="gate-dot"/><text x="1142.0" y="112" text-anchor="end" class="gate-name">FINAL · 최종발표</text><text x="1142.0" y="136" text-anchor="end" class="gate-date">12.11</text></svg></div></div>
+          <div class="evidence"><span class="chip verified"><b>검증 완료</b> · 확인됨</span></div>
+          <div class="folio">10 / 11</div>
+        </section><section class="slide" data-slide="11" aria-label="11번 슬라이드">
+          <div class="kicker">FOOTHOLD · 11</div>
+          <h1>남길 것은 더 높은 숫자 하나가 아니다</h1>
+          <div class="copy"><p>공개 기준 정책의 미경험 지형 경계를 같은 자로 잰다.</p><p>학습이 그 경계를 어떻게 옮겼는지 누구나 다시 확인할 수 있는 기록으로 남긴다.</p></div>
+          <div class="visual"><svg viewBox="0 0 1100 650" role="img" aria-label="같은 지형을 같은 자로 비교해 경계 이동을 기록" xmlns="http://www.w3.org/2000/svg">
+  <path d="M64 448 L164 356 L264 398 L364 274 L464 338 L564 225 L664 328 L764 248 L868 354 L1030 280" fill="none" stroke="var(--line)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M64 402 L164 326 L264 350 L364 238 L464 288 L564 172 L664 272 L764 190 L868 292 L1030 224" fill="none" stroke="var(--brand)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M110 535 H990" stroke="var(--fg)" stroke-width="5"/><g stroke="var(--fg)" stroke-width="3"><line x1="110" y1="520" x2="110" y2="550"/><line x1="330" y1="520" x2="330" y2="550"/><line x1="550" y1="520" x2="550" y2="550"/><line x1="770" y1="520" x2="770" y2="550"/><line x1="990" y1="520" x2="990" y2="550"/></g>
+  <text x="64" y="95" fill="var(--muted)" font-size="23">같은 지형 · 같은 조건 · 같은 판정 자</text><text x="64" y="150" fill="var(--fg)" font-size="40" font-weight="900">경계가 얼마나 이동했는가</text>
+  <line x1="828" y1="92" x2="900" y2="92" stroke="var(--line)" stroke-width="8"/><text x="918" y="100" fill="var(--muted)" font-size="18">기준선</text><line x1="828" y1="136" x2="900" y2="136" stroke="var(--brand)" stroke-width="8"/><text x="918" y="144" fill="var(--brand)" font-size="18">학습 후</text>
+  <text x="110" y="592" fill="var(--accent)" font-size="22" font-weight="800">결과보다 먼저, 다시 잴 수 있는 기록을 남긴다</text>
+</svg>
+</div>
+          <div class="evidence"><span class="chip planned"><b>목표·계획</b> · 미측정</span></div>
+          <div class="folio">11 / 11</div>
+        </section></main><aside id="notes" aria-label="발표자 노트"><header><b>발표자 노트</b><span>합계 600초 · 10분 0초</span></header><article class="note" data-note="1"><h2>1. 위험한 현장은 정비된 길이 아니다</h2>
+          <p><b>말할 시간</b> 50초</p><p>상용 로봇보다 높은 절대 성능을 약속하지 않는다. 위험한 현장에서 처음 만난 지형을 어떻게 건널 것인지가 출발 질문이다.</p>
+          <h3>근거 상태</h3><ul><li>목표·계획 · 추측 · 연구 질문이며 달성 결과가 아니다</li></ul><h3>Sources</h3><ul><li>deliverables/plan/proposal-summary.md</li><li>docs/REPORT.md</li></ul></article><article class="note" data-note="2"><h2>2. 같은 공간을 두 트랙으로 푼다</h2>
+          <p><b>말할 시간</b> 55초</p><p>두 트랙은 서로를 기다리지 않는다. 학습 정책을 실물에 직접 올리는 일은 안전 설비가 없어 이번 목표에서 제외했다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · 두 트랙은 병렬이며 학습 정책의 실기 이전은 목표에서 제외</li></ul><h3>Sources</h3><ul><li>docs/FLOW.md</li><li>docs/REPORT.md</li></ul></article><article class="note" data-note="3"><h2>3. 기준선의 이름부터 바로잡았다</h2>
+          <p><b>말할 시간</b> 55초</p><p>둘 다 1,500 iteration이라는 숫자 때문에 혼동됐다. 10종 벤치마크와 파인튜닝 출발점은 NVIDIA 정책이고, scratch의 86.7%는 별도 실험이다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · 10종 벤치마크와 파인튜닝 출발점은 NVIDIA 정책</li></ul><h3>Sources</h3><ul><li>docs/DECISIONS.md</li><li>docs/research/training-benchmarks.md</li><li>inbox/jay/20260902-기준선-재정립-HANDOFF.md</li></ul></article><article class="note" data-note="4"><h2>4. 학습과 평가 파이프라인은 이미 돌렸다</h2>
+          <p><b>말할 시간</b> 60초</p><p>보상 로그만 보지 않고 실제 통과율을 재는 파이프라인을 돌렸다. scratch 정책은 평지 계열에서 26회 통과했고, rough 난이도 곡선은 level 4 이후 50%대 천장을 보였다. 처리 속도와 시간은 AI-WS01의 RTX 5080 한 장에서 8월 5일 측정한 값이다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · 평지 level 0 · 1.0 m/s · 20초 · 30회</li><li>검증 완료 · 확인됨 · AI-WS01 · RTX 5080 1장 · 2026-08-05</li></ul><h3>Sources</h3><ul><li>docs/research/training-benchmarks.md</li><li>foothold-go2/README.md</li></ul></article><article class="note" data-note="5"><h2>5. 옛 시험은 5종의 벽을 찾아냈다</h2>
+          <p><b>말할 시간</b> 55초</p><p>실패 5종은 gap, rails, stepping_stones, pit, floating_ring이다. 새 20초, 10 m 조건에서 판정은 바뀔 수 있다. v2는 지형마다 서로 다른 50개 행을 써서 v1의 같은 궤적 반복 문제를 해소했다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · v2 지형별 고유 행 50/50</li><li>재측정 중 · 미측정 · NVIDIA 체크포인트 · 0.5 m/s · 6초 · 약 3 m</li></ul><h3>Sources</h3><ul><li>docs/research/generalization-benchmark-10-terrains.md</li><li>docs/research/benchmark-repro-protocol.md</li></ul></article><article class="note" data-note="6"><h2>6. 8월 31일, 판정 자를 바꿨다</h2>
+          <p><b>말할 시간</b> 60초</p><p>짧은 3 m 결과는 우연이 섞이고 배울 시간도 짧았다. 새 기준은 끝점으로 성공을 판정하고, 최대 이탈은 실패 원인을 진단하는 별도 열로 둔다. 27 cm와 5.6도, 6%는 옛 조건의 문제 크기이지 새 기준의 결과가 아니다.</p>
+          <h3>근거 상태</h3><ul><li>재측정 중 · 미측정 · 옛 값 · 평균 이탈 27.0 cm · 편향 5.6도 · 5 cm 이하 14/250</li><li>목표·계획 · 미측정 · 평지 · 20초 · 10 m · 1.0 m/s · 성공률 90% 이상</li></ul><h3>Sources</h3><ul><li>docs/meetings/20260831-park-mentoring.md</li><li>docs/DECISIONS.md</li><li>inbox/jay/20260902-기준선-재정립-HANDOFF.md</li></ul></article><article class="note" data-note="7"><h2>7. KPI는 성공률이 아니라 경계 이동이다</h2>
+          <p><b>말할 시간</b> 55초</p><p>아직 데이터가 없으므로 가짜 곡선을 그리지 않았다. 성공률만 목표로 두면 맵을 쉽게 만드는 유인이 생긴다. 실패 5종 가운데 물리 관문이 지금 닫힌 것은 rails 하나이며, 나머지는 경계 이동으로 본다.</p>
+          <h3>근거 상태</h3><ul><li>목표·계획 · 미측정 · 지형과 난이도 한 칸마다 100에피소드 · 측정 계획</li></ul><h3>Sources</h3><ul><li>docs/DECISIONS.md</li><li>docs/research/terrain-finetune-plan.md</li><li>GitHub issue #116</li></ul></article><article class="note" data-note="8"><h2>8. 현재 위치는 WBS가 말한다</h2>
+          <p><b>말할 시간</b> 55초</p><p>숫자를 슬라이드에 다시 쓰지 않았다. xlsx를 열 이름으로 읽은 deck-data가 관문과 이슈 수를 만든다. 구현 단계 열이 없으므로 막대를 숨겼고, 단계 구조는 이슈 122에서 결정한다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · wbs.xlsx 열 이름 검증 · deck-data 생성일과 해시 기록</li></ul><h3>Sources</h3><ul><li>deliverables/plan/wbs.xlsx</li><li>tools/build_wbs.py</li><li>GitHub issue #122</li></ul></article><article class="note" data-note="9"><h2>9. 다섯 사람이 실패 지형 하나씩을 소유한다</h2>
+          <p><b>말할 시간</b> 55초</p><p>임석헌은 gap, 맹라현은 rails, 오현민은 stepping_stones, 이민우는 pit, 오흥재는 floating_ring을 맡는다. 사람을 같은 크기 카드로 세우지 않고 실패 지형의 서로 다른 진단 경로로 배치했다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · 지형별 담당과 주갈래는 역할 정본과 9월 2일 공지에 따름</li></ul><h3>Sources</h3><ul><li>docs/ROLES.md</li><li>docs/research/terrain-finetune-plan.md</li><li>docs/notices/2026-09-02.md</li></ul></article><article class="note" data-note="10"><h2>10. 남은 일정은 다섯 관문으로 닫는다</h2>
+          <p><b>말할 시간</b> 55초</p><p>기획발표는 시작점이다. A-정책에서 기준선과 평가 자를 고정하고 MVP에서 트랙 A를 닫는다. 이어 NAV에서 실기 항법을 검증하고 FINAL에서 같은 공간의 자율주행 시연으로 마친다.</p>
+          <h3>근거 상태</h3><ul><li>검증 완료 · 확인됨 · 관문 날짜는 tools/build_wbs.py의 GATES에서 생성</li></ul><h3>Sources</h3><ul><li>tools/build_wbs.py</li><li>docs/FLOW.md</li><li>docs/DECISIONS.md</li></ul></article><article class="note" data-note="11"><h2>11. 남길 것은 더 높은 숫자 하나가 아니다</h2>
+          <p><b>말할 시간</b> 45초</p><p>트랙 A의 기여는 공개 체크포인트를 같은 조건에서 재는 것부터 시작한다. 같은 지형의 경계 이동을 재현 가능한 기록으로 남기고, 트랙 B는 같은 공간의 자율주행 시연으로 프로젝트를 닫는다.</p>
+          <h3>근거 상태</h3><ul><li>목표·계획 · 미측정 · 최종 검증 질문이며 완료 결과가 아니다</li></ul><h3>Sources</h3><ul><li>docs/DECISIONS.md</li><li>docs/research/terrain-finetune-plan.md</li><li>docs/REPORT.md</li></ul></article></aside>
+    <div id="meta">WBS 84개 · 생성 2026-09-02T21:59:59+09:00 · ff4a08fe7f14</div>
+    <button id="theme" aria-label="색상 모드 전환">◐</button><button id="notes-toggle" aria-label="발표자 노트 열기">N</button>
+    <script>(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const notes = document.getElementById('notes');
+  let current = Math.max(0, Math.min(slides.length - 1, Number(location.hash.slice(1) || 1) - 1));
+  function show(index) {
+    current = (index + slides.length) % slides.length;
+    slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+    document.querySelectorAll('.note').forEach((note, i) => note.classList.toggle('active', i === current));
+    history.replaceState(null, '', '#' + (current + 1));
+  }
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('theme', theme);
+  }
+  const saved = localStorage.getItem('theme');
+  if (saved) setTheme(saved);
+  document.getElementById('theme').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  document.getElementById('notes-toggle').addEventListener('click', () => notes.classList.toggle('open'));
+  addEventListener('keydown', event => {
+    if (['ArrowRight', 'PageDown', ' '].includes(event.key)) show(current + 1);
+    if (['ArrowLeft', 'PageUp'].includes(event.key)) show(current - 1);
+    if (event.key.toLowerCase() === 'n') notes.classList.toggle('open');
+    if (event.key === 'Home') show(0);
+    if (event.key === 'End') show(slides.length - 1);
+    if (event.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.();
+  });
+  show(current);
+})();
+</script></body></html>

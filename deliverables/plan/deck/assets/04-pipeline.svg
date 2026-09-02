@@ -1,0 +1,10 @@
+<svg viewBox="0 0 1100 650" role="img" aria-label="학습과 평가 파이프라인의 확인된 결과" xmlns="http://www.w3.org/2000/svg">
+  <path d="M60 90 H1040" stroke="var(--line)" stroke-width="4"/>
+  <circle cx="165" cy="90" r="23" fill="var(--brand)"/><circle cx="510" cy="90" r="23" fill="var(--brand)"/><circle cx="875" cy="90" r="23" fill="var(--accent)"/>
+  <text x="118" y="152" fill="var(--muted)" font-size="20">학습</text><text x="92" y="208" fill="var(--fg)" font-size="42" font-weight="850">1,500 iter</text><text x="92" y="248" fill="var(--muted)" font-size="20">약 113분</text>
+  <text x="456" y="152" fill="var(--muted)" font-size="20">평지 평가</text><text x="434" y="208" fill="var(--fg)" font-size="42" font-weight="850">26 / 30</text><text x="448" y="248" fill="var(--accent)" font-size="23" font-weight="800">86.7%</text>
+  <text x="820" y="152" fill="var(--muted)" font-size="20">rough 평가</text><text x="810" y="208" fill="var(--fg)" font-size="34" font-weight="850">level 4+</text><text x="814" y="248" fill="var(--muted)" font-size="21">50%대 천장</text>
+  <path d="M80 565 V348 H1015" fill="none" stroke="var(--line)" stroke-width="3"/><path d="M110 527 L250 478 L382 426 L520 397 L652 387 L788 395 L925 389" fill="none" stroke="var(--brand)" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M650 360 V552" stroke="var(--accent)" stroke-width="3" stroke-dasharray="10 10"/><text x="668" y="541" fill="var(--accent)" font-size="18">느린 전진이 주된 실패</text>
+  <text x="92" y="331" fill="var(--muted)" font-size="18">난이도 증가</text><text x="912" y="602" fill="var(--muted)" font-size="18">level</text>
+</svg>

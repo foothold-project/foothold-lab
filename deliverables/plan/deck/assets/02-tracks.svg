@@ -1,0 +1,9 @@
+<svg viewBox="0 0 1100 650" role="img" aria-label="병렬 트랙과 공통 환경" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50 70 H690 Q742 70 742 122 V322 Q742 374 690 374 H50 Z" fill="var(--card)" stroke="var(--brand)" stroke-width="5"/>
+  <text x="92" y="135" fill="var(--brand)" font-size="28" font-weight="800">TRACK A · 시뮬레이션</text><text x="92" y="218" fill="var(--fg)" font-size="49" font-weight="850">보행 한계를 넓힌다</text><text x="92" y="277" fill="var(--muted)" font-size="24">정책 학습 · 미경험 지형 평가 · 경계 이동</text>
+  <path d="M782 70 H1045 V374 H782 Q756 374 756 348 V96 Q756 70 782 70 Z" fill="var(--accent)" opacity=".16" stroke="var(--accent)" stroke-width="4"/>
+  <text x="804" y="135" fill="var(--accent)" font-size="25" font-weight="800">TRACK B</text><text x="804" y="202" fill="var(--fg)" font-size="36" font-weight="850">실기 항법</text><text x="804" y="253" fill="var(--muted)" font-size="21">순정 보행</text><text x="804" y="288" fill="var(--muted)" font-size="21">SLAM · Nav2</text>
+  <path d="M108 436 H1000 Q1044 436 1044 480 V565 H52 V492 Q52 436 108 436 Z" fill="var(--fg)"/>
+  <text x="92" y="506" fill="var(--bg)" font-size="23" font-weight="800">BRIDGE · 공통 환경</text><text x="92" y="550" fill="var(--bg)" font-size="31" font-weight="800">디지털 트윈 · 센서 · 렌더</text>
+  <path d="M342 374 V436 M879 374 V436" stroke="var(--brand)" stroke-width="6"/>
+</svg>

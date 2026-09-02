@@ -1,0 +1,10 @@
+<svg viewBox="0 0 1100 650" role="img" aria-label="NVIDIA 공식 기준선과 scratch 정책 비교" xmlns="http://www.w3.org/2000/svg">
+  <path d="M38 55 H708 V595 H38 Z" fill="var(--card)" stroke="var(--brand)" stroke-width="6"/>
+  <text x="80" y="124" fill="var(--brand)" font-size="26" font-weight="800">기준선 · 더 큰 비교축</text><text x="80" y="191" fill="var(--fg)" font-size="45" font-weight="850">NVIDIA 공식 Go2 rough</text>
+  <text x="80" y="274" fill="var(--muted)" font-size="22">출발점</text><text x="230" y="274" fill="var(--fg)" font-size="27" font-weight="750">공개 체크포인트</text>
+  <text x="80" y="350" fill="var(--muted)" font-size="22">용도</text><text x="230" y="350" fill="var(--fg)" font-size="27" font-weight="750">10종 벤치마크</text><text x="230" y="388" fill="var(--fg)" font-size="27" font-weight="750">파인튜닝 출발점</text>
+  <path d="M80 470 H610" stroke="var(--line)" stroke-width="3"/><text x="80" y="526" fill="var(--accent)" font-size="24" font-weight="800">같은 자로 다시 측정</text>
+  <path d="M750 145 H1065 V595 H750 Z" fill="none" stroke="var(--line)" stroke-width="4"/>
+  <text x="786" y="215" fill="var(--muted)" font-size="24" font-weight="800">대조 실험</text><text x="786" y="271" fill="var(--fg)" font-size="38" font-weight="850">scratch</text>
+  <text x="786" y="337" fill="var(--muted)" font-size="21">랜덤 초기화</text><text x="786" y="383" fill="var(--muted)" font-size="21">1,500 iteration</text><text x="786" y="456" fill="var(--accent)" font-size="33" font-weight="850">26 / 30</text><text x="786" y="492" fill="var(--muted)" font-size="19">평지 계열 · 별도 조건</text>
+</svg>

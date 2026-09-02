@@ -1,0 +1,10 @@
+<svg viewBox="0 0 1100 650" role="img" aria-label="3 m 옛 구간과 10 m 새 기준의 비교" xmlns="http://www.w3.org/2000/svg">
+  <g opacity=".38"><line x1="76" y1="120" x2="360" y2="120" stroke="var(--muted)" stroke-width="10"/><circle cx="76" cy="120" r="13" fill="var(--muted)"/><circle cx="360" cy="120" r="13" fill="var(--muted)"/><text x="76" y="83" fill="var(--muted)" font-size="21">옛 구간</text><text x="315" y="83" fill="var(--muted)" font-size="31" font-weight="850">3 m</text></g>
+  <line x1="76" y1="292" x2="1022" y2="292" stroke="var(--brand)" stroke-width="13"/><circle cx="76" cy="292" r="18" fill="var(--fg)"/><circle cx="1022" cy="292" r="18" fill="var(--brand)"/>
+  <text x="76" y="244" fill="var(--fg)" font-size="25" font-weight="800">새 평지 기준</text><text x="938" y="244" fill="var(--brand)" font-size="42" font-weight="900">10 m</text>
+  <path d="M76 292 C280 288 410 212 610 292 S880 372 1022 292" fill="none" stroke="var(--accent)" stroke-width="5" stroke-dasharray="13 10"/>
+  <line x1="610" y1="212" x2="610" y2="292" stroke="var(--accent)" stroke-width="3"/><text x="632" y="208" fill="var(--accent)" font-size="21" font-weight="800">최대 이탈 · 진단</text>
+  <path d="M1022 265 V319 M1007 265 V319 M1037 265 V319" stroke="var(--fg)" stroke-width="3"/><text x="840" y="350" fill="var(--fg)" font-size="20" font-weight="800">끝점 좌우 5 cm · 판정</text>
+  <path d="M76 478 H1022" stroke="var(--line)" stroke-width="3"/><g fill="var(--muted)" font-size="18"><text x="76" y="520">0 m</text><text x="252" y="520">2 m</text><text x="441" y="520">4 m</text><text x="630" y="520">6 m</text><text x="819" y="520">8 m</text><text x="982" y="520">10 m</text></g>
+  <text x="76" y="592" fill="var(--brand)" font-size="26" font-weight="850">20초 · 1.0 m/s · 성공률 90% 이상 목표</text>
+</svg>

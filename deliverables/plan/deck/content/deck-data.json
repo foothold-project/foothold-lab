@@ -1,0 +1,645 @@
+{
+  "meta": {
+    "generatedAt": "2026-09-02T21:59:59+09:00",
+    "source": "deliverables/plan/wbs.xlsx",
+    "sourceSha256": "ac7ef12082cc45524fa865c49abc9c9b53baff023226983fe3468b81f318ef2c",
+    "sheet": "WBS",
+    "headerRow": 3,
+    "contentSha256": "ff4a08fe7f1471dcfb2085c53ff649ff79ecd7e8e28fa804db39bf4d5fe77771"
+  },
+  "implementationStages": {
+    "active": false,
+    "reason": "구현 단계 열이 없어 단계 막대를 비활성화했습니다"
+  },
+  "summary": {
+    "issueCount": 84,
+    "completedCount": 42,
+    "gates": [
+      {
+        "name": "기획발표",
+        "date": "2026-09-04",
+        "deliverable": "deliverables/plan/wbs.md",
+        "issueCount": 16,
+        "completedCount": 2
+      },
+      {
+        "name": "A-정책",
+        "date": "2026-09-12",
+        "deliverable": "deliverables/midterm/policy-metrics.md",
+        "issueCount": 19,
+        "completedCount": 10
+      },
+      {
+        "name": "MVP · 중간발표",
+        "date": "2026-09-30",
+        "deliverable": "deliverables/midterm/generalization-report.md",
+        "issueCount": 23,
+        "completedCount": 6
+      },
+      {
+        "name": "NAV · 실기 항법",
+        "date": "2026-11-07",
+        "deliverable": "deliverables/final/nav-report.md",
+        "issueCount": 1,
+        "completedCount": 0
+      },
+      {
+        "name": "FINAL · 최종발표",
+        "date": "2026-12-11",
+        "deliverable": "deliverables/final/final-report.md",
+        "issueCount": 1,
+        "completedCount": 1
+      }
+    ]
+  },
+  "items": [
+    {
+      "gate": "",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-go2"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "less82",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "less82",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "maengu86",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "IQ152",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "lmw0207",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A1 정책 학습",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A2 지형·씬 제작",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A2 지형·씬 제작",
+      "owner": "maengu86",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "A3 평가",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "A3 평가",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A3 평가",
+      "owner": "vfxpedia,less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A3 평가",
+      "owner": "maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "A3 평가",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A3 평가",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-go2"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "A4 트윈·렌더",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "B1 항법",
+      "owner": "less82",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "B1 항법",
+      "owner": "less82",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "B1 항법",
+      "owner": "less82",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "B1 항법",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "NAV · 실기 항법",
+      "wbs": "B2 인지",
+      "owner": "less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C1 기록",
+      "owner": "lmw0207",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C1 기록",
+      "owner": "maengu86",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C1 기록",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C1 기록",
+      "owner": "IQ152",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-go2"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C2 운영",
+      "owner": "less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C2 운영",
+      "owner": "maengu86",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "A-정책",
+      "wbs": "C2 운영",
+      "owner": "maengu86",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "FINAL · 최종발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-go2"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "MVP · 중간발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 100.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia,less82,lmw0207,IQ152,maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia,less82,lmw0207,IQ152,maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "maengu86",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "less82",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "IQ152",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "lmw0207",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    },
+    {
+      "gate": "기획발표",
+      "wbs": "C2 운영",
+      "owner": "vfxpedia",
+      "completion": 0.0,
+      "repository": "foothold-lab"
+    }
+  ]
+}
