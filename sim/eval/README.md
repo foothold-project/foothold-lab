@@ -17,7 +17,9 @@
 | 원본 추적 · 무엇이 복원물인가 | `PROVENANCE.md` |
 | 문서에서 복원한 Candidate 스냅샷 | `provenance/candidate-20260822/` |
 | 스냅샷 재추출 · 대조 도구 | `provenance/extract_candidate.py` |
-| 활성 실행본 | 아직 없음. `#125` 커밋 1 부터 이 자리에 |
+| 판정 · 집계 순수 함수 | `metrics.py` |
+| 스냅샷과의 동치 시험 | `tests/` |
+| 활성 하네스 | 아직 없음. `#125` 커밋 2 부터 |
 
 ## 먼저 읽을 것
 
@@ -33,6 +35,11 @@ Isaac Lab 도 GPU 도 없이 표준 라이브러리만으로 다음이 됩니다
 
 ```bash
 python sim/eval/provenance/extract_candidate.py --check
+python -m unittest discover -s sim/eval/tests -v
 ```
+
+`metrics.py` 는 `torch` 를 쓰지 않습니다. 스냅샷의 식을 그대로 옮겨 적은 것이고,
+`tests/` 가 **스냅샷 원문을 다시 읽어** 같은 값이 나오는지 고정합니다.
+고정되는 것은 식과 경계 조건이지 float32 반올림이 아닙니다. `PROVENANCE.md` §7 참고.
 
 지형 생성 · 정책 로딩 · 실제 CSV 산출은 RunPod GPU 팟에서만 됩니다.
