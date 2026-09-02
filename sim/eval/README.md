@@ -18,8 +18,10 @@
 | 문서에서 복원한 Candidate 스냅샷 | `provenance/candidate-20260822/` |
 | 스냅샷 재추출 · 대조 도구 | `provenance/extract_candidate.py` |
 | 판정 · 집계 순수 함수 | `metrics.py` |
-| 스냅샷과의 동치 시험 | `tests/` |
-| 활성 하네스 | 아직 없음. `#125` 커밋 2 부터 |
+| 지형 이름과 순서 | `terrains.py` |
+| 활성 지형 설정 | `generalization_env_cfg.py` |
+| 스냅샷과의 동치 · 구조 시험 | `tests/` |
+| 활성 하네스 본체 | 아직 없음 |
 
 ## 먼저 읽을 것
 
