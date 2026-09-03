@@ -32,33 +32,39 @@ CHROME_CANDIDATES = [
 ]
 
 CSS = """
-@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+@page { size: A4; margin: 15mm 14mm 16mm 14mm; }
 :root { --ink:#1a1a1a; --muted:#5a5a5a; --line:#d8d8d8; --accent:#c2410c; --wash:#faf8f6; }
 * { box-sizing: border-box; }
 body {
   font-family: "Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
-  font-size: 10.2pt; line-height: 1.72; color: var(--ink);
+  font-size: 9.5pt; line-height: 1.62; color: var(--ink);
   margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-h1 { font-size: 20pt; letter-spacing:-.02em; margin: 0 0 4mm; padding-bottom: 3mm;
+h1 { font-size: 18pt; letter-spacing:-.02em; margin: 0 0 3mm; padding-bottom: 2.4mm;
      border-bottom: 2.2pt solid var(--accent); }
-h2 { font-size: 13.5pt; margin: 9mm 0 3mm; padding-left: 2.4mm;
+h2 { font-size: 12.6pt; margin: 6.5mm 0 2.4mm; padding-left: 2.2mm;
      border-left: 3.2pt solid var(--accent); break-after: avoid; }
-h3 { font-size: 11.4pt; margin: 6mm 0 2mm; color:#333; break-after: avoid; }
+h3 { font-size: 10.8pt; margin: 4.4mm 0 1.6mm; color:#333; break-after: avoid; }
 h4 { font-size: 10.4pt; margin: 4mm 0 1.5mm; color: var(--muted); break-after: avoid; }
-p { margin: 0 0 2.6mm; }
+p { margin: 0 0 2.1mm; }
 strong { font-weight: 700; }
-hr { border: 0; border-top: .6pt solid var(--line); margin: 7mm 0; }
+hr { border: 0; border-top: .6pt solid var(--line); margin: 5mm 0; }
 a { color: inherit; text-decoration: none; }
 
+/* 표는 쪽을 넘어 이어질 수 있어야 한다. 통째로 avoid 를 걸면 긴 표가
+   다음 쪽으로 통째로 밀려 앞쪽에 빈 반 쪽이 남는다. 행은 안 쪼갠다. */
 table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm;
-        font-size: 9.3pt; break-inside: avoid; }
-th, td { border: .5pt solid var(--line); padding: 1.9mm 2.4mm; text-align: left;
-         vertical-align: top; line-height: 1.55; }
+        font-size: 8.7pt; break-inside: auto; }
+th, td { border: .5pt solid var(--line); padding: 1.5mm 2mm; text-align: left;
+         vertical-align: top; line-height: 1.5; }
 th { background: var(--wash); font-weight: 700; }
+thead { display: table-header-group; }
 tr { break-inside: avoid; }
 
-blockquote { margin: 3mm 0 4mm; padding: 2.6mm 4mm; background: var(--wash);
+img { max-width: 100%; height: auto; display: block; margin: 3mm auto 4mm;
+      break-inside: avoid; }
+
+blockquote { margin: 2.4mm 0 3mm; padding: 2.2mm 3.4mm; background: var(--wash);
              border-left: 2.4pt solid var(--accent); color:#333; break-inside: avoid; }
 blockquote p { margin: 0; }
 
