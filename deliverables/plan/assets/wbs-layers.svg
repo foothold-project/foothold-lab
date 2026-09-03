@@ -22,7 +22,7 @@
   <text x="142" y="63" fill="#161c26" font-size="13.5" font-weight="700">작업 영역 8갈래</text>
   <text x="142" y="82" fill="#4a5566" font-size="11.5">A 정책학습 · 지형씬제작 · 평가 · 트윈렌더 · B 항법 · 인지 · C 기록 · 운영</text>
   <text x="556" y="70" fill="#161c26" font-size="12">사람이 정한다 · 고정</text>
-  <text x="762" y="70" fill="#4a5566" font-size="11.5">docs/ROLES.md v1.2</text>
+  <text x="762" y="70" fill="#4a5566" font-size="11.5">docs/ROLES.md</text>
 
   <!-- 2층 -->
   <rect x="20" y="102" width="96" height="52" rx="3" fill="#161c26"/>
@@ -30,7 +30,7 @@
   <rect x="126" y="102" width="410" height="52" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
   <text x="142" y="125" fill="#161c26" font-size="13.5" font-weight="700">관문 다섯</text>
   <text x="142" y="144" fill="#4a5566" font-size="11.5">기획발표 09/04 · A-정책 09/12 · MVP 09/30 · NAV 11/07 · FINAL 12/11</text>
-  <text x="556" y="132" fill="#161c26" font-size="12">사람이 정한다 · 날짜</text>
+  <text x="556" y="132" fill="#161c26" font-size="12">기한·착수 조건을 정한다</text>
   <text x="762" y="132" fill="#4a5566" font-size="11.5">tools/build_wbs.py GATES</text>
 
   <!-- 3층 신설 -->
@@ -39,7 +39,7 @@
   <text x="68" y="206" text-anchor="middle" fill="#e0f0ed" font-size="10.5">신설</text>
   <rect x="126" y="164" width="410" height="52" rx="3" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.8"/>
   <text x="142" y="187" fill="#0b6459" font-size="13.5" font-weight="700">구현 단계</text>
-  <text x="142" y="206" fill="#4a5566" font-size="11.5">트랙마다 세 단계에서 네 단계. 관문이 날짜라면 단계는 순서다</text>
+  <text x="142" y="206" fill="#4a5566" font-size="11.5">트랙별 작업 순서와 선행 관계 · 단계 수는 확정 전</text>
   <text x="556" y="187" fill="#0b6459" font-size="12" font-weight="700">사람이 정한다 · 순서</text>
   <text x="556" y="205" fill="#7c8798" font-size="10.5">팀장 확정 전</text>
   <text x="762" y="194" fill="#4a5566" font-size="11.5">이 문서 5절 · 이슈 #122</text>
@@ -50,7 +50,7 @@
   <rect x="126" y="226" width="410" height="52" rx="3" fill="#eeece6" stroke="#d9d6cd"/>
   <text x="142" y="249" fill="#161c26" font-size="13.5" font-weight="700">세부 작업</text>
   <text x="142" y="268" fill="#4a5566" font-size="11.5">이슈 한 건이 한 행. 계속 늘어난다</text>
-  <text x="556" y="256" fill="#0b6459" font-size="12" font-weight="700">깃이 채운다 · 자동</text>
+  <text x="556" y="256" fill="#0b6459" font-size="12" font-weight="700">GitHub 이슈 자동 집계</text>
   <text x="762" y="249" fill="#4a5566" font-size="11.5">GitHub 이슈의 라벨 · 마일스톤</text>
   <text x="762" y="266" fill="#4a5566" font-size="11.5">담당자 · 상태</text>
 
