@@ -10,7 +10,7 @@ from isaaclab.app import AppLauncher
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", required=True); p.add_argument("--output_dir", required=True)
 p.add_argument("--cut", required=True, choices=("A", "B"))
-p.add_argument("--view", required=True, choices=("chase", "topdown", "front"))
+p.add_argument("--view", required=True, choices=("chase", "topdown", "front", "dolly", "aisle", "macro", "hero"))
 p.add_argument("--num_envs", type=int, required=True); p.add_argument("--columns", type=int, required=True)
 p.add_argument("--rows", type=int, required=True); p.add_argument("--spacing", type=float, required=True)
 p.add_argument("--width", type=int, default=1920); p.add_argument("--height", type=int, default=1080)
@@ -82,11 +82,31 @@ def camera():
     rear, front = -depth / 2, depth / 2; finish = front + args.eval_duration * args.command_vx
     if args.view == "chase": eye, target = (rear - 15, 0, 3), (rear + 18, 0, 0.45)
     elif args.view == "front": eye, target = (finish + 40, 0, 2), (front + 8, 0, 0.45)
-    else:
+    elif args.view == "topdown":
         vfov = 2 * math.atan(math.tan(math.radians(30)) * args.height / args.width)
         height = max((width + 8) / (2 * math.tan(math.radians(30))), (depth + 28) / (2 * math.tan(vfov / 2)), 12)
         eye, target = (9, 0, height), (10, 0, 0)
+    else: eye, target = camera_at(0.0)
     return {"view": args.view, "eye_m": list(eye), "target_m": list(target), "horizontal_fov_deg": 60.0}
+
+
+def camera_at(s):
+    depth = (args.rows - 1) * args.spacing; width = (args.columns - 1) * args.spacing
+    rear, front = -depth / 2, depth / 2; finish = front + args.eval_duration * args.command_vx
+    vfov = 2 * math.atan(math.tan(math.radians(30)) * args.height / args.width)
+    top_h = max((width + 8) / (2 * math.tan(math.radians(30))), (depth + 28) / (2 * math.tan(vfov / 2)), 12)
+    lerp = lambda a, b: a + (b - a) * s
+    if args.view == "dolly":
+        eye = (lerp(rear - 8.0, 9.0), 0.0, 0.5 * (top_h / 0.5) ** s)
+        target = (lerp(rear + 10.0, 10.0), 0.0, lerp(0.4, 0.0))
+    elif args.view in ("aisle", "macro"):
+        x0 = rear + 1.5 * args.spacing; cx = x0 + args.command_vx * args.eval_duration * s
+        if args.view == "aisle": eye, target = (cx, 0.0, 0.45), (cx + 15.0, 0.0, 0.35)
+        else: eye, target = (cx, 0.0, 0.22), (cx + 3.0, 0.0, 0.18)
+    else:
+        eye = (finish + 6.0, 0.0, 0.6)
+        target = (lerp(front + 4.0, finish), 0.0, 0.45)
+    return eye, target
 
 
 def gate(width):
@@ -102,7 +122,9 @@ def main():
     err = float(torch.max(torch.abs(raw.scene.env_origins.detach().cpu() - expected.cpu())).item())
     if err > 1e-6: raise RuntimeError(f"env_origins mismatch: {err}")
     width = (args.columns - 1) * args.spacing; depth = (args.rows - 1) * args.spacing
-    gate(width); cam = camera(); raw.sim.set_camera_view(eye=cam["eye_m"], target=cam["target_m"])
+    gate(width); cam = camera()
+    moving_camera = args.view in ("dolly", "aisle", "macro", "hero")
+    if not moving_camera: raw.sim.set_camera_view(eye=cam["eye_m"], target=cam["target_m"])
     env = RslRlVecEnvWrapper(raw, clip_actions=agent.clip_actions); checkpoint = retrieve_file_path(args.checkpoint)
     runner = OnPolicyRunner(env, agent.to_dict(), log_dir=None, device=agent.device); runner.load(checkpoint)
     policy = runner.get_inference_policy(device=raw.device); policy_nn = runner.alg.policy; obs = env.get_observations()
@@ -111,14 +133,19 @@ def main():
     warmup_done = time.perf_counter(); fps = int(round(1 / raw.step_dt)); count = int(round(args.eval_duration * fps))
     stem = f"flat_army_{args.cut}_{args.num_envs}_{args.view}"; video = os.path.join(args.output_dir, stem + ".mp4")
     writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=None, macro_block_size=8, pixelformat="yuv420p", output_params=["-crf", str(args.crf), "-preset", args.preset])
-    renders, steps = [], []; preview_indices = (0, max(0, count // 2 - 1), count - 1); saved = {}; rec_start = time.perf_counter()
+    renders, steps = [], []; preview_indices = (0, 250, 500, 750, count - 1); saved = {}; rec_start = time.perf_counter()
     try:
-        t = time.perf_counter(); frame = np.ascontiguousarray(raw.render()); writer.append_data(frame); renders.append(time.perf_counter() - t)
+        t = time.perf_counter()
+        if moving_camera:
+            eye, target = camera_at(0.0); raw.sim.set_camera_view(eye=eye, target=target)
+        frame = np.ascontiguousarray(raw.render()); writer.append_data(frame); renders.append(time.perf_counter() - t)
         name = f"{args.cut}_{args.view}_frame0000.png"; imageio.imwrite(os.path.join(previews, name), frame); saved["0"] = name
         for i in range(1, count):
             t = time.perf_counter()
             with torch.inference_mode(): actions = policy(obs); obs, _, dones, _ = env.step(actions); policy_nn.reset(dones)
             steps.append(time.perf_counter() - t); t = time.perf_counter()
+            if moving_camera:
+                eye, target = camera_at(i / (count - 1)); raw.sim.set_camera_view(eye=eye, target=target)
             frame = np.ascontiguousarray(raw.render()); writer.append_data(frame); renders.append(time.perf_counter() - t)
             if i in preview_indices:
                 name = f"{args.cut}_{args.view}_frame{i:04d}.png"; imageio.imwrite(os.path.join(previews, name), frame); saved[str(i)] = name
