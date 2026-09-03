@@ -111,8 +111,8 @@
   <rect x="190" y="614" width="600" height="66" rx="4" fill="#1a1a1a"/>
   <text x="490" y="639" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">공통 증거 원장</text>
   <text x="490" y="659" text-anchor="middle" fill="#d6d0cc" font-size="11.5">조건 · 정책 체크포인트 · 지형 설정 · 원자료 · 판정 · 영상</text>
-  <text x="490" y="674" text-anchor="middle" fill="#a8a29c" font-size="10.5">같은 조건에서 재현되지 않으면 결과로 세지 않는다</text>
+  <text x="490" y="674" text-anchor="middle" fill="#a8a29c" font-size="10.5">같은 조건에서 재현되지 않은 결과는 근거로 쓰지 않는다</text>
 
-  <text x="490" y="708" text-anchor="middle" font-size="12" fill="#5a5a5a">두 트랙은 직접적인 제어 파이프라인으로 연결하지 않는다. 동일한 실제 환경을 공통 기준면으로 각각의 성능을 검증한다.</text>
-  <text x="490" y="730" text-anchor="middle" font-size="12" fill="#5a5a5a">우리 학습 정책을 실물에 이식하는 통로가 아니라, 가상과 현실이 같은 자로 재어지게 만드는 기준면이다.</text>
+  <text x="490" y="708" text-anchor="middle" font-size="12" fill="#5a5a5a">두 트랙은 직접적인 제어 파이프라인으로 연결하지 않는다. 동일한 실제 환경을 기준으로 각각의 성능을 검증한다.</text>
+  <text x="490" y="730" text-anchor="middle" font-size="12" fill="#5a5a5a">Digital Twin 은 학습 정책을 실물에 이식하는 용도로는 사용하지 않는다.</text>
 </svg>
