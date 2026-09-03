@@ -34,7 +34,9 @@ CHROME_CANDIDATES = [
 
 CSS = """
 @page { size: A4; margin: 15mm 14mm 16mm 14mm; }
-:root { --ink:#1a1a1a; --muted:#5a5a5a; --line:#d8d8d8; --accent:#c2410c; --wash:#faf8f6; }
+:root { --ink:#1a1a1a; --muted:#5a5a5a; --line:#d8d8d8; --accent:#c2410c;
+        --wash:#faf8f6; --soft:#faf8f6; --soft-ink:#333; --h3-ink:#333;
+        --code-bg:#f0eeec; --pre-bg:#f5f3f1; }
 * { box-sizing: border-box; }
 body {
   font-family: "Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
@@ -45,7 +47,7 @@ h1 { font-size: 18pt; letter-spacing:-.02em; margin: 0 0 3mm; padding-bottom: 2.
      border-bottom: 2.2pt solid var(--accent); }
 h2 { font-size: 12.6pt; margin: 6.5mm 0 2.4mm; padding-left: 2.2mm;
      border-left: 3.2pt solid var(--accent); break-after: avoid; }
-h3 { font-size: 10.8pt; margin: 4.4mm 0 1.6mm; color:#333; break-after: avoid; }
+h3 { font-size: 10.8pt; margin: 4.4mm 0 1.6mm; color: var(--h3-ink); break-after: avoid; }
 h4 { font-size: 10.4pt; margin: 4mm 0 1.5mm; color: var(--muted); break-after: avoid; }
 /* 문단을 쪽 경계에서 쪼개지 않는다. Chrome 은 orphans/widows 를 안
    듣기 때문에, 이 문서처럼 문단이 짧을 때는 통째로 넘기는 쪽이 낫다.
@@ -78,23 +80,46 @@ table.tight { break-inside: avoid; }
 img { max-width: 100%; height: auto; display: block; margin: 3mm auto 4mm;
       break-inside: avoid; }
 
-blockquote { margin: 2.4mm 0 3mm; padding: 2.2mm 3.4mm; background: var(--wash);
-             border-left: 2.4pt solid var(--accent); color:#333; break-inside: avoid; }
+blockquote { margin: 2.4mm 0 3mm; padding: 2.2mm 3.4mm; background: var(--soft);
+             border-left: 2.4pt solid var(--accent); color: var(--soft-ink);
+             break-inside: avoid; }
 blockquote p { margin: 0; }
 
 ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
 
-pre { background:#f5f3f1; border:.5pt solid var(--line); border-radius: 1mm;
+pre { background: var(--pre-bg); border:.5pt solid var(--line); border-radius: 1mm;
       padding: 3mm 3.5mm; font-size: 8.4pt; line-height: 1.5; overflow: visible;
       white-space: pre; break-inside: avoid; }
 code { font-family: Consolas,"D2Coding",monospace; font-size: .92em; }
-p code, td code, li code { background:#f0eeec; padding: .3mm 1mm; border-radius: .8mm; }
+p code, td code, li code { background: var(--code-bg); padding: .3mm 1mm; border-radius: .8mm; }
 pre code { background: none; padding: 0; }
 
 sup { font-size: .72em; }
 """
 
 HIDE_TITLE_BLOCK = "\nheader#title-block-header { display: none; }\n"
+
+BRAND_CSS = """
+/* FOOTHOLD 브랜드 색. 정본은 foothold-brand/tokens/foothold.tokens.json 의
+   light 값이고 여기서는 그 값을 그대로 옮겨 쓴다. 정본은 고치지 않는다.
+   brand #0e7a6e · ink #161c26 · ink-2 #4a5566 · ink-3 #7c8798
+   rule #d9d6cd · paper #f6f5f1 · paper-2 #eeece6 · card #fff
+   dim-soft #e0f0ed · dim-ink #0b6459 */
+:root {
+  --ink: #161c26;
+  --muted: #4a5566;
+  --line: #d9d6cd;
+  --accent: #0e7a6e;
+  --wash: #eeece6;
+  --soft: #e0f0ed;
+  --soft-ink: #161c26;
+  --h3-ink: #161c26;
+  --code-bg: #eeece6;
+  --pre-bg: #f6f5f1;
+}
+body { background: #fff; }
+"""
+
 
 EXCLUDE_OPEN = "<!-- 제출본 제외 -->"
 EXCLUDE_CLOSE = "<!-- /제출본 제외 -->"
@@ -244,6 +269,8 @@ def main():
                     help="저장소 전용 표기를 뺀 제출본으로 굽는다")
     ap.add_argument("--no-balance", action="store_true",
                     help="쪽 끝 제목 정리를 끈다")
+    ap.add_argument("--brand", action="store_true",
+                    help="FOOTHOLD 브랜드 색을 입힌다. 안 주면 기본 색 그대로다")
     args = ap.parse_args()
 
     src = pathlib.Path(args.source).resolve()
@@ -259,7 +286,8 @@ def main():
         sys.exit("Chrome 을 못 찾았다. PDF 인쇄 경로가 막힌다.")
 
     css = html.with_name(html.stem + ".css")
-    css.write_text(CSS + (HIDE_TITLE_BLOCK if args.submission else ""), encoding="utf-8")
+    css.write_text(CSS + (BRAND_CSS if args.brand else "")
+                   + (HIDE_TITLE_BLOCK if args.submission else ""), encoding="utf-8")
 
     body = src.read_text(encoding="utf-8")
     if args.submission:
@@ -294,24 +322,30 @@ def main():
         if best is None:
             print("  (PyMuPDF 가 없어 쪽 균형 검사를 건너뛴다)")
         else:
+            # 고아를 맞바꾸는 구간(4절을 끊으면 6절이 고아가 된다)이 있어
+            # 한 걸음 비교로는 못 넘는다. 연쇄를 허용하되 가장 좋았던 상태를
+            # 기억해 두고 끝에 그 상태로 되돌아온다.
+            cur_body = body
+            best_body = body
             for _ in range(4):
                 bad = orphan_headings(out)
                 if not bad:
                     break
-                trial, hit = insert_breaks(body, {bad[0]})
+                trial, hit = insert_breaks(cur_body, set(bad))
                 if not hit:
                     break
                 bake(trial)
                 score = layout_score(out)
+                print("  쪽 나눔 시도: " + " · ".join(bad)
+                      + f"  (고아 {score[1]} · 휑한 쪽 {score[2]}"
+                      + f" · {score[3]}쪽)")
+                cur_body = trial
                 if score[0] < best[0]:
-                    body, best = trial, score
-                    print(f"  쪽 나눔 추가: {bad[0]}"
-                          f"  (고아 {score[1]} · 휑한 쪽 {score[2]} · {score[3]}쪽)")
-                else:
-                    # 끊으면 오히려 나빠진다. 되돌리고 그대로 둔다
-                    print(f"  쪽 나눔 보류: {bad[0]}  (끊으면 여백이 더 커진다)")
-                    bake(body)
-                    break
+                    best, best_body = score, trial
+            if best_body is not cur_body:
+                print("  가장 나은 상태로 되돌린다")
+                bake(best_body)
+            body = best_body
             print(f"  조판 결과: 고아 {best[1]} · 휑한 쪽 {best[2]} · {best[3]}쪽")
 
     if not args.keep_html:
