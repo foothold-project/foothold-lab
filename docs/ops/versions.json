@@ -65,9 +65,9 @@
   "ver": "v2.1"
  },
  "docs/DECISIONS.md": {
-  "hash": "355e2f29e8c0579f",
+  "hash": "e6cc77a22b582ba8",
   "major": "v2.0",
-  "ver": "v2.1"
+  "ver": "v2.2"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -90,9 +90,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "03c9cff68148a3b4",
+  "hash": "d3a4d4aa8ba29bfb",
   "major": "v2.0",
-  "ver": "v2.2"
+  "ver": "v2.4"
  },
  "docs/PRD-WEB.md": {
   "hash": "1e818ddd1bd1624a",
@@ -430,9 +430,9 @@
   "ver": "v1.0"
  },
  "docs/research/terrain-finetune-plan.md": {
-  "hash": "591dae7c8e29c2ec",
+  "hash": "ef6fb8097879304d",
   "major": "v2.0",
-  "ver": "v2.0"
+  "ver": "v2.1"
  },
  "docs/research/terrain-guide-isaaclab.md": {
   "hash": "d9bf9db39933a7bc",

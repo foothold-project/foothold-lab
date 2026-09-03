@@ -1,0 +1,11 @@
+terrain,episodes,overall_success_rate,wilson_lo_pct,wilson_hi_pct,survival_rate,progress_success_rate,tracking_success_rate,direction_success_rate,mean_forward_progress_m,mean_lateral_drift_m,mean_peak_lateral_drift_m
+discrete_obstacles,100,0.97,91.5,99.0,1.0,1.0,0.99,0.98,5.3656,0.9648,0.9648
+wave,100,1.0,96.3,100.0,1.0,1.0,1.0,1.0,5.4737,0.6463,0.6463
+stepping_stones,100,0.0,0,3.7,0.2,0.0,0.0,1.0,1.0546,0.1672,0.1964
+gap,100,0.0,0,3.7,0.21,0.0,0.0,1.0,0.9215,0.254,0.2794
+pit,100,0.03,1.0,8.5,0.97,0.15,0.03,1.0,1.5687,0.1757,0.2106
+rails,100,0.04,1.6,9.8,0.85,0.51,0.08,0.92,2.6443,0.7244,0.7523
+star,100,1.0,96.3,100.0,1.0,1.0,1.0,1.0,5.5886,0.246,0.2603
+floating_ring,100,0.0,0,3.7,0.86,0.0,0.0,1.0,1.0551,0.0559,0.1023
+repeated_boxes,100,1.0,96.3,100.0,1.0,1.0,1.0,1.0,5.5641,0.2417,0.2684
+repeated_cylinders,100,1.0,96.3,100.0,1.0,1.0,1.0,1.0,5.5581,0.2234,0.2561
