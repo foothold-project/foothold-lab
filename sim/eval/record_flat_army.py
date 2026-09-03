@@ -1,5 +1,5 @@
 """평지 Go2 대군을 지정 대열과 카메라로 촬영한다. #99 발표 자산."""
-import argparse, hashlib, json, math, os, statistics, sys, time
+import argparse, csv, hashlib, json, math, os, statistics, sys, time
 
 # Windows Kit 기동 전 필수 import 순서.
 ORIGINAL_ARGV = list(sys.argv)
@@ -8,9 +8,9 @@ skip_next = False
 for token in sys.argv[1:]:
     if skip_next:
         skip_next = False
-    elif token in ("--view", "--hfov", "--gate"):
+    elif token in ("--view", "--hfov", "--gate", "--origins_csv"):
         skip_next = True
-    elif not token.startswith("--view=") and not token.startswith("--hfov=") and not token.startswith("--gate="):
+    elif not token.startswith("--view=") and not token.startswith("--hfov=") and not token.startswith("--gate=") and not token.startswith("--origins_csv="):
         prelaunch_argv.append(token)
 sys.argv[:] = prelaunch_argv
 import torch
@@ -21,8 +21,8 @@ sys.argv[:] = ORIGINAL_ARGV
 
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", required=True); p.add_argument("--output_dir", required=True)
-p.add_argument("--cut", required=True, choices=("A", "B"))
-p.add_argument("--view", required=True, choices=("chase", "topdown", "front", "dolly", "aisle", "macro", "hero", "lead", "foot", "side", "orbit", "rise", "underfoot"))
+p.add_argument("--cut", required=True, choices=("A", "B", "F"))
+p.add_argument("--view", required=True, choices=("chase", "topdown", "front", "dolly", "aisle", "macro", "hero", "lead", "foot", "side", "orbit", "rise", "underfoot", "formation"))
 p.add_argument("--num_envs", type=int, required=True); p.add_argument("--columns", type=int, required=True)
 p.add_argument("--rows", type=int, required=True); p.add_argument("--spacing", type=float, required=True)
 p.add_argument("--width", type=int, default=1920); p.add_argument("--height", type=int, default=1080)
@@ -33,19 +33,20 @@ p.add_argument("--spawn_xy_range", type=float, default=0.10)
 p.add_argument("--yaw_range_deg", type=float, default=5.0); p.add_argument("--joint_pos_scale", type=float, default=0.05)
 p.add_argument("--hfov", dest="camera_hfov", type=float, default=60.0)
 p.add_argument("--gate", dest="gate_mode", choices=("on", "off"), default="on")
+p.add_argument("--origins_csv", default="")
 AppLauncher.add_app_launcher_args(p)
 args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
-VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode
-del args.view, args.camera_hfov, args.gate_mode
+VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
+del args.view, args.camera_hfov, args.gate_mode, args.origins_csv
 launcher_argv = [sys.argv[0]]
 skip_next = False
 for token in sys.argv[1:]:
     if skip_next:
         skip_next = False
-    elif token in ("--view", "--hfov", "--gate"):
+    elif token in ("--view", "--hfov", "--gate", "--origins_csv"):
         skip_next = True
-    elif not token.startswith("--view=") and not token.startswith("--hfov=") and not token.startswith("--gate="):
+    elif not token.startswith("--view=") and not token.startswith("--hfov=") and not token.startswith("--gate=") and not token.startswith("--origins_csv="):
         launcher_argv.append(token)
 sys.argv[:] = launcher_argv
 
@@ -94,6 +95,18 @@ def configure(cfg, agent):
 
 
 def origins(device):
+    if ORIGINS_CSV:
+        with open(ORIGINS_CSV, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        if len(rows) != args.num_envs:
+            raise RuntimeError(f"origins CSV row count mismatch: expected={args.num_envs}, actual={len(rows)}")
+        try:
+            xy = [[float(row["x_m"]), float(row["y_m"])] for row in rows]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RuntimeError("origins CSV must contain numeric x_m,y_m columns") from exc
+        out = torch.zeros((args.num_envs, 3), device=device)
+        out[:, :2] = torch.tensor(xy, device=device, dtype=torch.float32)
+        return out
     row = torch.arange(args.rows, device=device, dtype=torch.float32)
     col = torch.arange(args.columns, device=device, dtype=torch.float32)
     rr, cc = torch.meshgrid(row, col, indexing="ij")
@@ -106,7 +119,8 @@ def origins(device):
 def camera():
     depth = (args.rows - 1) * args.spacing; width = (args.columns - 1) * args.spacing
     rear, front = -depth / 2, depth / 2; finish = front + args.eval_duration * args.command_vx
-    if VIEW == "chase": eye, target = (rear - 15, 0, 3), (rear + 18, 0, 0.45)
+    if VIEW == "formation": eye, target = (-1.0, 0.0, 927.988), (0.0, 0.0, 0.0)
+    elif VIEW == "chase": eye, target = (rear - 15, 0, 3), (rear + 18, 0, 0.45)
     elif VIEW == "front": eye, target = (finish + 40, 0, 2), (front + 8, 0, 0.45)
     elif VIEW == "topdown":
         vfov = 2 * math.atan(math.tan(math.radians(30)) * args.height / args.width)
@@ -202,7 +216,12 @@ def main():
     expected = origins(raw.device); raw.scene.terrain.env_origins[:] = expected; raw.reset(); env_ready = time.perf_counter()
     err = float(torch.max(torch.abs(raw.scene.env_origins.detach().cpu() - expected.cpu())).item())
     if err > 1e-6: raise RuntimeError(f"env_origins mismatch: {err}")
-    width = (args.columns - 1) * args.spacing; depth = (args.rows - 1) * args.spacing
+    if ORIGINS_CSV:
+        expected_cpu = expected.detach().cpu()
+        depth = float((expected_cpu[:, 0].max() - expected_cpu[:, 0].min()).item())
+        width = float((expected_cpu[:, 1].max() - expected_cpu[:, 1].min()).item())
+    else:
+        width = (args.columns - 1) * args.spacing; depth = (args.rows - 1) * args.spacing
     if GATE_MODE == "on": gate(width)
     cam = camera()
     moving_camera = VIEW in ("dolly", "aisle", "macro", "hero", "lead", "foot", "orbit", "rise")
@@ -215,7 +234,8 @@ def main():
     warmup_done = time.perf_counter(); fps = int(round(1 / raw.step_dt)); count = int(round(args.eval_duration * fps))
     stem = f"flat_army_{args.cut}_{args.num_envs}_{VIEW}"; video = os.path.join(args.output_dir, stem + ".mp4")
     writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=None, macro_block_size=8, pixelformat="yuv420p", output_params=["-crf", str(args.crf), "-preset", args.preset])
-    if moving_camera or VIEW in ("side", "underfoot"): preview_indices = (0, 250, 500, 750, count - 1)
+    if VIEW == "formation": preview_indices = (0, 50, 150, 500, count - 1)
+    elif moving_camera or VIEW in ("side", "underfoot"): preview_indices = (0, 250, 500, 750, count - 1)
     else: preview_indices = (0, max(0, count // 2 - 1), count - 1)
     renders, steps = [], []; saved = {}; rec_start = time.perf_counter()
     try:
@@ -244,7 +264,9 @@ def main():
     cam["horizontal_aperture"] = horizontal_aperture; cam["focal_length"] = focal_length
     cam["final_horizontal_fov_deg"] = final_hfov; cam["final_horizontal_aperture"] = final_ha; cam["final_focal_length"] = final_fl
     check = {"status": "pending external av inspection", "preview_frames": saved}
-    data = {"argv": ORIGINAL_ARGV, "cut": args.cut, "video": os.path.basename(video), "bytes": os.path.getsize(video), "num_envs": args.num_envs, "formation": {"columns": args.columns, "rows": args.rows}, "formation_extent_m": {"width": width, "depth": depth}, "spacing_m": args.spacing, "camera": cam, "gate_line": {"progress_m": 10.0, "visible": GATE_MODE == "on"}, "resolution": [args.width, args.height], "fps": fps, "frames": count, "video_duration_s": count / fps, "seed": args.seed, "command_vx_mps": args.command_vx, "eval_duration_s": args.eval_duration, "spawn_xy_range_m": args.spawn_xy_range, "yaw_range_deg": args.yaw_range_deg, "joint_pos_scale": args.joint_pos_scale, "policy_checkpoint": checkpoint, "policy_sha256": sha256(checkpoint), "env_origins_max_error_m": err, "encoding": {"codec": "libx264", "crf": args.crf, "preset": args.preset}, "timing_s": {"app_and_imports": env_started - STARTED, "environment_creation_and_reset": env_ready - env_started, "policy_load": policy_ready - env_ready, "render_warmup": warmup_done - policy_ready, "recording_total": rec_end - rec_start, "render_per_frame_mean": statistics.mean(renders), "render_per_frame_median": statistics.median(renders), "simulation_step_mean": statistics.mean(steps), "process_total": rec_end - STARTED}, "frame_inspection": check}
+    formation = {"columns": args.columns, "rows": args.rows}
+    if ORIGINS_CSV: formation = {"origins_csv": ORIGINS_CSV, "rows": args.num_envs}
+    data = {"argv": ORIGINAL_ARGV, "cut": args.cut, "video": os.path.basename(video), "bytes": os.path.getsize(video), "num_envs": args.num_envs, "formation": formation, "formation_extent_m": {"width": width, "depth": depth}, "spacing_m": args.spacing, "camera": cam, "gate_line": {"progress_m": 10.0, "visible": GATE_MODE == "on"}, "resolution": [args.width, args.height], "fps": fps, "frames": count, "video_duration_s": count / fps, "seed": args.seed, "command_vx_mps": args.command_vx, "eval_duration_s": args.eval_duration, "spawn_xy_range_m": args.spawn_xy_range, "yaw_range_deg": args.yaw_range_deg, "joint_pos_scale": args.joint_pos_scale, "policy_checkpoint": checkpoint, "policy_sha256": sha256(checkpoint), "env_origins_max_error_m": err, "encoding": {"codec": "libx264", "crf": args.crf, "preset": args.preset}, "timing_s": {"app_and_imports": env_started - STARTED, "environment_creation_and_reset": env_ready - env_started, "policy_load": policy_ready - env_ready, "render_warmup": warmup_done - policy_ready, "recording_total": rec_end - rec_start, "render_per_frame_mean": statistics.mean(renders), "render_per_frame_median": statistics.median(renders), "simulation_step_mean": statistics.mean(steps), "process_total": rec_end - STARTED}, "frame_inspection": check}
     with open(os.path.join(args.output_dir, stem + ".json"), "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
     print(json.dumps(data, ensure_ascii=False, indent=2), flush=True); env.close()
 
