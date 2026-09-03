@@ -7,7 +7,10 @@
 > 상태: 초안
 > 이슈: #116
 
+<!-- 제출본 제외 -->
 **제출 형식은 PDF.** 이 마크다운이 원본이고 PDF 는 여기서 생성한다. 숫자를 두 곳에 적지 않는다.
+`python tools/md2pdf.py deliverables/plan/proposal.md --submission`
+<!-- /제출본 제외 -->
 
 ---
 
