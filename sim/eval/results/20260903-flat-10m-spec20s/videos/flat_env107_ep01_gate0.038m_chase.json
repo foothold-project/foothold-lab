@@ -1,0 +1,61 @@
+{
+  "argv": [
+    "sim/eval/record_flat_baseline.py",
+    "--checkpoint",
+    "C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt",
+    "--raw_csv",
+    "sim/eval/results/20260903-flat-10m-spec20s/generalization_raw.csv",
+    "--record_env",
+    "107",
+    "--record_episode",
+    "1",
+    "--view",
+    "chase",
+    "--output_dir",
+    "sim/eval/results/20260903-flat-10m-spec20s/videos",
+    "--width",
+    "1920",
+    "--height",
+    "1080",
+    "--crf",
+    "20",
+    "--headless",
+    "--device",
+    "cuda:1"
+  ],
+  "bytes": 7677353,
+  "crf": 20,
+  "csv": {
+    "duration_s": "20.0003",
+    "forward_progress_m": "19.0647",
+    "gate_lateral_drift_m": "0.0381",
+    "lateral_drift_m": "2.1516",
+    "peak_lateral_drift_m": "2.1516",
+    "velocity_mae_mps": "0.0994"
+  },
+  "csv_row": 8,
+  "env_id": 107,
+  "episode": 1,
+  "fps": 50,
+  "frames": 1000,
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\.pretrained_checkpoints\\rsl_rl\\Isaac-Velocity-Rough-Unitree-Go2-v0\\checkpoint.pt",
+  "preset": "slow",
+  "reference_line": true,
+  "replay": {
+    "duration_s": 20.000267028808594,
+    "forward_progress_m": 19.064742721185933,
+    "gate_lateral_drift_m": 0.03814677603435128,
+    "lateral_drift_m": 2.1515976847138627,
+    "peak_lateral_drift_m": 2.1515976847138627,
+    "velocity_mae_mps": 0.09940309143066406
+  },
+  "resolution": [
+    1920,
+    1080
+  ],
+  "source_csv": "sim/eval/results/20260903-flat-10m-spec20s/generalization_raw.csv",
+  "terrain": "flat",
+  "video": "flat_env107_ep01_gate0.038m_chase.mp4",
+  "video_duration_s": 20.0,
+  "view": "chase"
+}
