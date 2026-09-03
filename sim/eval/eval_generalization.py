@@ -3,18 +3,23 @@
 원본: `provenance/candidate-20260822/eval_generalization.py`
 그 파일은 손대지 않습니다. 여기만 고칩니다.
 
-**판정은 스냅샷과 같습니다.** 판정 5축의 식은 전부 `metrics.py` 의 순수 함수를
-그대로 부릅니다. 이 파일은 시뮬레이터에서 값을 모으는 일만 합니다.
-`tests/` 가 `metrics.py` 를 스냅샷 원문과 대조합니다.
+**판정 식은 전부 `metrics.py` 의 순수 함수를 부릅니다.** 이 파일은 시뮬레이터에서
+값을 모으는 일만 합니다. `tests/` 가 `metrics.py` 를 스냅샷 원문과 대조합니다.
 
-스냅샷과 다른 것 네 가지 (#125 4번):
+스냅샷과 다른 것 다섯 가지 (#125 4번 · #99 2번):
 
 | 무엇 | 스냅샷 | 여기 |
 |---|---|---|
 | 판정·집계 | 본문에 인라인 | `metrics.py` 순수 함수 호출 |
-| 원시 CSV | 19열 | 20열 (`peak_lateral_drift_m`) |
+| 원시 CSV | 19열 | 21열 (`peak_...` · `gate_lateral_drift_m`) |
+| 방향 판정 | 에피소드 **끝점** 이탈 | **통과선(`--min_progress_m`) 위** 이탈 |
 | 지형 | 험지 10종 전부 | `--terrains` 로 고름 |
 | env 생성 | 등록된 태스크 + hydra | 설정 클래스에서 직접 |
+
+**방향 판정을 옮긴 이유** (#99 2번). 멘토 기준은 「목표점에 도달했을 때 좌우
+5 cm」입니다. 스냅샷은 에피소드가 끝나는 자리에서 쟀는데, 20초 x 1.0 m/s 면
+끝점이 20 m 라 목표점 10 m 의 두 배 지점입니다. 그래서 **전진이 통과선을
+지나는 순간**을 재고, 끝점 이탈과 최대 이탈은 관측 열로 함께 남깁니다.
 
 **env 를 직접 만드는 이유.** 스냅샷은 RunPod 컨테이너 안에 등록돼 있던
 `Isaac-Velocity-Unseen-Unitree-Go2-v0` 를 hydra 로 불렀습니다. 그 등록본을
@@ -34,10 +39,15 @@ NVIDIA 공식 rough 태스크의 등록본에서 가져옵니다. 체크포인�
 
 import argparse
 import csv
+import hashlib
+import importlib.metadata
 import json
 import math
 import os
+import platform
+import subprocess
 import sys
+from datetime import datetime, timezone
 
 # ★ Windows 우회. Kit 를 띄우기 **전에** 네이티브 확장을 선점 import 한다.
 #
@@ -82,7 +92,7 @@ parser.add_argument("--min_progress_m", type=float, default=10.0,
 parser.add_argument("--max_velocity_mae", type=float, default=0.25,
                     help="속도 추종 판정 문턱(m/s)")
 parser.add_argument("--max_lateral_drift", type=float, default=0.05,
-                    help="끝점 좌우 이탈 판정 문턱(m). 멘토 기준 5 cm")
+                    help="통과선 위 좌우 이탈 판정 문턱(m). 멘토 기준 5 cm")
 parser.add_argument("--output_dir", type=str, required=True)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--spawn_xy_range", type=float, default=0.10,
@@ -330,6 +340,67 @@ def save_csv(rows, summary_rows, output_dir):
     return raw_path, summary_path
 
 
+def file_sha256(path):
+    """파일 지문. 정책이 정말 그 파일이었는지 나중에 대조하는 자리."""
+    digest = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(block)
+
+    return digest.hexdigest()
+
+
+def environment_record():
+    """무엇 위에서 돌았는가. 하나가 없어도 실행을 죽이지 않는다.
+
+    7분짜리 실행이 조건 기록 한 줄 때문에 끝에서 터지면 안 됩니다.
+    못 읽은 항목은 문자열로 사유를 남깁니다.
+    """
+    record = {}
+
+    def attempt(key, fn):
+        try:
+            record[key] = fn()
+        except Exception as error:  # noqa: BLE001
+            record[key] = f"<못 읽음: {error}>"
+
+    attempt("python_version", lambda: platform.python_version())
+    attempt("platform", lambda: platform.platform())
+    attempt("hostname", lambda: platform.node())
+    attempt("torch_version", lambda: torch.__version__)
+    attempt("cuda_version", lambda: torch.version.cuda)
+
+    attempt("gpu_names", lambda: [
+        torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())
+    ])
+
+    attempt("isaaclab_version", lambda: __import__("isaaclab").__version__)
+    attempt("rsl_rl_version", lambda: importlib.metadata.version("rsl-rl-lib"))
+
+    def isaaclab_commit():
+        root = os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.dirname(__import__("isaaclab").__file__)
+        )))
+
+        return subprocess.check_output(
+            ["git", "-C", root, "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+
+    attempt("isaaclab_commit", isaaclab_commit)
+
+    def repo_commit():
+        return subprocess.check_output(
+            ["git", "-C", _HERE, "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+
+    attempt("repo_commit", repo_commit)
+
+    return record
+
+
 def save_run_manifest(output_dir, extra):
     """무엇으로 어떻게 쟀는지. 사람이 읽는 조건 기록은 이것을 근거로 쓴다."""
     path = os.path.join(output_dir, "run_manifest.json")
@@ -343,6 +414,8 @@ def save_run_manifest(output_dir, extra):
 
 
 def main():
+    started_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
     if args_cli.terrains.strip().lower() == "all":
         recorded = list(TERRAIN_NAMES)
     else:
@@ -402,6 +475,28 @@ def main():
     min_progress = args_cli.min_progress_m
     min_progress_ratio = min_progress / ideal_distance if ideal_distance > 0.0 else 0.0
 
+    # 세계가 이상 거리를 담는가. 담지 못하면 그 판은 정책이 아니라 **낙하**를 잰다.
+    #
+    # 2026-09-03 에 이것을 안 보고 20초를 돌려 로봇이 14.1 m 에서 지형 밖으로
+    # 나갔다 (`results/20260903-flat-10m/README.md` §5-2). 그때는 사람이 표를
+    # 보고 알아챘다. 여기서 먼저 걸리게 둔다.
+    terrain_cfg = env_cfg.scene.terrain.terrain_generator
+
+    terrain_border_width = terrain_cfg.border_width
+    forward_extent = terrain_cfg.num_rows * terrain_cfg.size[0] / 2.0 + terrain_border_width
+
+    if forward_extent < ideal_distance:
+        raise RuntimeError(
+            f"""지형이 이 시간을 담지 못합니다. 그대로 돌리면 로봇이 세계 밖으로 나가고,
+그 판은 정책 성능이 아니라 낙하를 재게 됩니다.
+  전방 한계   : {forward_extent:.2f} m  (= num_rows({terrain_cfg.num_rows})
+                x size[0]({terrain_cfg.size[0]}) / 2 + border_width({terrain_border_width}))
+  필요한 거리 : {ideal_distance:.2f} m  (= command_vx({args_cli.command_vx})
+                x eval_duration({args_cli.eval_duration}))
+시간을 줄이지 말고 `generalization_env_cfg.py` 의 `border_width` 를 키우십시오.
+테두리는 격자 바깥이라 험지 10종의 타일도 env_origin 도 안 움직입니다."""
+        )
+
     targets = episode_targets(recorded, envs_per_terrain, args_cli.episodes, device)
     total_target = int(targets.sum().item())
 
@@ -446,7 +541,10 @@ def main():
     print(f"ideal distance         : {ideal_distance:.2f} m")
     print(f"minimum progress       : {min_progress:.2f} m  (ratio {min_progress_ratio:.3f})")
     print(f"max velocity MAE       : {args_cli.max_velocity_mae:.2f} m/s")
-    print(f"max lateral drift      : {args_cli.max_lateral_drift:.3f} m  (endpoint)")
+    print(f"max lateral drift      : {args_cli.max_lateral_drift:.3f} m"
+          f"  (at the {min_progress:.2f} m gate)")
+    print(f"terrain border width   : {terrain_border_width:.2f} m"
+          f"  -> forward extent {forward_extent:.2f} m")
     print(f"seed                   : {args_cli.seed}")
     print("=" * 80, flush=True)
 
@@ -529,6 +627,7 @@ def main():
                 min_progress_ratio=min_progress_ratio,
                 max_velocity_mae=args_cli.max_velocity_mae,
                 max_lateral_drift=args_cli.max_lateral_drift,
+                gate_progress_m=min_progress,
             )
 
             episode_number = int(episode_counts[env_id].item()) + 1
@@ -552,6 +651,11 @@ def main():
                 "progress_ratio": round(row_metrics["progress_ratio"], 4),
                 "lateral_drift_m": round(row_metrics["lateral_drift_m"], 4),
                 "peak_lateral_drift_m": round(row_metrics["peak_lateral_drift_m"], 4),
+                "gate_lateral_drift_m": (
+                    ""
+                    if row_metrics["gate_lateral_drift_m"] is None
+                    else round(row_metrics["gate_lateral_drift_m"], 4)
+                ),
                 "velocity_mae_mps": round(row_metrics["velocity_mae_mps"], 4),
                 "mean_reward_per_step": round(row_metrics["mean_reward_per_step"], 6),
             }
@@ -575,7 +679,8 @@ def main():
                 f"| ok={int(row['overall_success'])} "
                 f"| surv={int(row['survival_success'])} "
                 f"| fwd={row['forward_progress_m']:6.2f}m "
-                f"| lat={row['lateral_drift_m']:5.3f}m "
+                f"| gate={row['gate_lateral_drift_m'] if row['gate_lateral_drift_m'] == '' else format(row['gate_lateral_drift_m'], '5.3f')}m "
+                f"| end={row['lateral_drift_m']:5.3f}m "
                 f"| peak={row['peak_lateral_drift_m']:5.3f}m "
                 f"| vMAE={row['velocity_mae_mps']:4.2f}",
                 flush=True,
@@ -611,6 +716,10 @@ def main():
         {
             "harness": "sim/eval/eval_generalization.py",
             "policy_checkpoint": resume_path,
+            "policy_sha256": file_sha256(resume_path),
+            "started_at_utc": started_at,
+            "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "environment": environment_record(),
             "recorded_terrains": recorded,
             "envs_per_terrain": envs_per_terrain,
             "total_envs_simulated": num_envs,
@@ -624,6 +733,14 @@ def main():
             "min_progress_ratio": min_progress_ratio,
             "max_velocity_mae_mps": args_cli.max_velocity_mae,
             "max_lateral_drift_m": args_cli.max_lateral_drift,
+            "direction_measured_at": "gate",
+            "direction_gate_m": min_progress,
+            "terrain_border_width_m": terrain_border_width,
+            "terrain_forward_extent_m": forward_extent,
+            "terrain_size_m": list(terrain_cfg.size),
+            "terrain_num_rows": terrain_cfg.num_rows,
+            "terrain_num_cols": terrain_cfg.num_cols,
+            "terrain_border_width_changed_from": 10.0,
             "seed": args_cli.seed,
             "spawn_xy_range_m": args_cli.spawn_xy_range,
             "yaw_range_deg": args_cli.yaw_range_deg,
