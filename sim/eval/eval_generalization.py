@@ -34,9 +34,13 @@ NVIDIA 공식 rough 태스크의 등록본에서 가져옵니다. 체크포인�
 
 import argparse
 import csv
+import datetime
+import hashlib
 import json
 import math
 import os
+import platform
+import subprocess
 import sys
 
 # ★ Windows 우회. Kit 를 띄우기 **전에** 네이티브 확장을 선점 import 한다.
@@ -97,6 +101,9 @@ parser.add_argument("--note", type=str, default="",
 AppLauncher.add_app_launcher_args(parser)
 
 args_cli, _ = parser.parse_known_args()
+
+# Kit 기동 전에 집는다. 부팅이 수십 초라 뒤에서 집으면 시작 시각이 밀린다.
+STARTED_AT = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
 
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
@@ -330,8 +337,87 @@ def save_csv(rows, summary_rows, output_dir):
     return raw_path, summary_path
 
 
+def file_sha256(path):
+    """파일의 sha256. 정책이 정말 그 정책이었는지 나중에 대조하는 자물쇠다."""
+    digest = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
+
+
+def git_commit(path):
+    """그 경로가 든 git 저장소의 HEAD. 못 읽으면 None 이다.
+
+    Isaac Lab 을 pip 로만 깐 기계에는 `.git` 이 없습니다. 그때 실행을 죽이지 않고
+    `null` 로 남깁니다. 「기록이 없다」와 「기록이 틀렸다」는 다릅니다.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", path, "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except Exception:
+        return None
+
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
+def isaac_lab_info():
+    """Isaac Lab 판번호와 커밋. 전부 best-effort 다."""
+    info = {"version": None, "commit": None, "path": None}
+
+    try:
+        import isaaclab
+
+        info["version"] = getattr(isaaclab, "__version__", None)
+
+        pkg_dir = os.path.dirname(os.path.abspath(isaaclab.__file__))
+        info["path"] = pkg_dir
+        info["commit"] = git_commit(pkg_dir)
+    except Exception:
+        pass
+
+    return info
+
+
+def gpu_info(device):
+    """이 실행이 실제로 쓴 GPU. `--device cuda:0` 이 어느 물건인지 남긴다."""
+    info = {"device_arg": str(device), "name": None, "total_memory_mb": None,
+            "capability": None, "count": None}
+
+    try:
+        if not torch.cuda.is_available():
+            return info
+
+        info["count"] = torch.cuda.device_count()
+
+        index = 0
+
+        if str(device).startswith("cuda:"):
+            index = int(str(device).split(":", 1)[1])
+
+        props = torch.cuda.get_device_properties(index)
+
+        info["name"] = props.name
+        info["total_memory_mb"] = round(props.total_memory / (1024 * 1024))
+        info["capability"] = f"{props.major}.{props.minor}"
+    except Exception:
+        pass
+
+    return info
+
+
 def save_run_manifest(output_dir, extra):
-    """무엇으로 어떻게 쟀는지. 사람이 읽는 조건 기록은 이것을 근거로 쓴다."""
+    """무엇으로 어떻게 쟀는지. 사람이 읽는 조건 기록은 이것을 근거로 쓴다.
+
+    **인자만으로는 부족합니다** (#99 3번). 같은 인자라도 정책 파일이 다르면 다른
+    실험이고, GPU 나 Isaac Lab 판이 다르면 재현이 안 됩니다. 그래서
+    `policy_sha256` · `gpu` · `isaac_lab` · `repo_commit` · `started_at` /
+    `finished_at` 을 함께 남깁니다. 못 읽은 항목은 `null` 이지 추측값이 아닙니다.
+    """
     path = os.path.join(output_dir, "run_manifest.json")
 
     with open(path, "w", encoding="utf-8") as f:
@@ -632,6 +718,19 @@ def main():
             "observation_dim": int(obs["policy"].shape[-1]),
             "argv": sys.argv,
             "note": args_cli.note,
+
+            # 여기부터가 「이 숫자를 누가 언제 무엇으로 냈나」다 (#99 3번).
+            # 이것이 없으면 CSV 는 출처 없는 숫자가 된다.
+            "policy_sha256": file_sha256(resume_path),
+            "started_at": STARTED_AT,
+            "finished_at": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "gpu": gpu_info(env_cfg.sim.device),
+            "isaac_lab": isaac_lab_info(),
+            "repo_commit": git_commit(os.path.dirname(os.path.dirname(_HERE))),
+            "host": platform.node(),
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
+            "torch_version": torch.__version__,
         },
     )
 
