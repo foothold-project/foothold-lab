@@ -133,7 +133,9 @@ def main():
     warmup_done = time.perf_counter(); fps = int(round(1 / raw.step_dt)); count = int(round(args.eval_duration * fps))
     stem = f"flat_army_{args.cut}_{args.num_envs}_{args.view}"; video = os.path.join(args.output_dir, stem + ".mp4")
     writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=None, macro_block_size=8, pixelformat="yuv420p", output_params=["-crf", str(args.crf), "-preset", args.preset])
-    renders, steps = [], []; preview_indices = (0, 250, 500, 750, count - 1); saved = {}; rec_start = time.perf_counter()
+    if moving_camera: preview_indices = (0, 250, 500, 750, count - 1)
+    else: preview_indices = (0, max(0, count // 2 - 1), count - 1)
+    renders, steps = [], []; saved = {}; rec_start = time.perf_counter()
     try:
         t = time.perf_counter()
         if moving_camera:
