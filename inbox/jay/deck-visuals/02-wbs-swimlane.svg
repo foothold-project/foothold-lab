@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">두 트랙이 다섯 관문에서 합류하는 WBS</title>
+  <desc id="desc">정책 평가, 디지털 트윈, 항법 인지, 공통 산출물의 관문별 작업 흐름</desc>
+  <defs><style>
+    text{font-family:'Malgun Gothic','맑은 고딕',sans-serif;fill:#1a1a1a}.title{font-size:32px;font-weight:800}.small{font-size:14px}.tiny{font-size:12px}.muted{fill:#6b6865}.accent{fill:#c2410c}.row{stroke:#d8d4d0;stroke-width:1}.barA{fill:#fff3ea;stroke:#c2410c;stroke-width:1.5}.barB{fill:#f1efed;stroke:#8d8883}.barC{fill:#1a1a1a}.gate{stroke:#aaa49f;stroke-width:1.5;stroke-dasharray:4 5}
+  </style></defs>
+  <rect width="1200" height="675" fill="#ffffff"/>
+  <text x="52" y="52" class="small accent" font-weight="700">WBS 구조 검토본 · 진척률 미표기</text>
+  <text x="52" y="92" class="title">두 트랙이 다섯 관문에서 합류한다</text>
+  <text x="52" y="120" class="small muted">날짜와 작업명은 원본 WBS에서 읽고, 발표에서는 의존성과 합류 지점만 강조한다.</text>
+
+  <rect x="52" y="151" width="1096" height="414" rx="5" fill="#faf9f8" stroke="#cfcbc7"/>
+  <rect x="52" y="151" width="176" height="414" rx="5" fill="#f1efed"/>
+  <line x1="228" y1="151" x2="228" y2="565" class="row"/>
+  <line x1="52" y1="247" x2="1148" y2="247" class="row"/><line x1="52" y1="343" x2="1148" y2="343" class="row"/><line x1="52" y1="439" x2="1148" y2="439" class="row"/>
+  <text x="76" y="190" font-size="19" font-weight="800">Track A</text><text x="76" y="216" class="small muted">정책 · 평가</text>
+  <text x="76" y="286" font-size="19" font-weight="800">Digital Twin</text><text x="76" y="312" class="small muted">공간 · 지형 자산</text>
+  <text x="76" y="382" font-size="19" font-weight="800">Track B</text><text x="76" y="408" class="small muted">항법 · 인지</text>
+  <text x="76" y="478" font-size="19" font-weight="800">공통</text><text x="76" y="504" class="small muted">판정 · 기록 · 발표</text>
+
+  <line x1="280" y1="151" x2="280" y2="565" class="gate"/><line x1="420" y1="151" x2="420" y2="565" class="gate"/><line x1="600" y1="151" x2="600" y2="565" class="gate"/><line x1="860" y1="151" x2="860" y2="565" class="gate"/><line x1="1105" y1="151" x2="1105" y2="565" class="gate"/>
+  <circle cx="280" cy="151" r="7" fill="#c2410c"/><circle cx="420" cy="151" r="7" fill="#1a1a1a"/><circle cx="600" cy="151" r="7" fill="#1a1a1a"/><circle cx="860" cy="151" r="7" fill="#1a1a1a"/><circle cx="1105" cy="151" r="7" fill="#1a1a1a"/>
+  <text x="280" y="143" class="tiny accent" text-anchor="middle" font-weight="700">09/04</text><text x="420" y="143" class="tiny" text-anchor="middle" font-weight="700">09/12</text><text x="600" y="143" class="tiny" text-anchor="middle" font-weight="700">09/30</text><text x="860" y="143" class="tiny" text-anchor="middle" font-weight="700">11/07</text><text x="1105" y="143" class="tiny" text-anchor="middle" font-weight="700">12/11</text>
+  <text x="280" y="177" class="tiny" text-anchor="middle">기획 발표</text><text x="420" y="177" class="tiny" text-anchor="middle">A-정책</text><text x="600" y="177" class="tiny" text-anchor="middle">MVP</text><text x="860" y="177" class="tiny" text-anchor="middle">NAV</text><text x="1105" y="177" class="tiny" text-anchor="middle">FINAL</text>
+
+  <rect x="246" y="194" width="338" height="37" rx="4" fill="#fff3ea" stroke="#c2410c" stroke-width="1.5"/><text x="262" y="218" class="small" font-weight="700">기준선 · 10종 재측정 · 경계 초기값</text>
+  <rect x="614" y="194" width="224" height="37" rx="4" fill="#fff3ea" stroke="#c2410c" stroke-width="1.5"/><text x="630" y="218" class="small" font-weight="700">보상 · 파인튜닝 · 재측정</text>
+  <rect x="874" y="194" width="249" height="37" rx="4" fill="#fff3ea" stroke="#c2410c" stroke-width="1.5"/><text x="890" y="218" class="small" font-weight="700">확장 평가 · 비후퇴 확인</text>
+
+  <rect x="438" y="270" width="382" height="48" rx="4" fill="#f1efed" stroke="#8d8883"/><text x="454" y="291" class="small" font-weight="700">PoC 공간 선정 · 스캔 · 지형 특성화</text><text x="454" y="309" class="tiny muted">평가 지형과 렌더 자산 연결</text>
+  <rect x="874" y="270" width="249" height="48" rx="4" fill="#f1efed" stroke="#8d8883"/><text x="890" y="291" class="small" font-weight="700">확장 자산 · 최종 렌더</text><text x="890" y="309" class="tiny muted">현실 데이터의 재사용</text>
+
+  <rect x="438" y="366" width="144" height="48" rx="4" fill="#f1efed" stroke="#8d8883"/><text x="454" y="388" class="small" font-weight="700">ROS2 · 센서</text><text x="454" y="406" class="tiny muted">TF · 연결 확인</text>
+  <rect x="614" y="366" width="224" height="48" rx="4" fill="#f1efed" stroke="#8d8883"/><text x="630" y="388" class="small" font-weight="700">SLAM · Nav2</text><text x="630" y="406" class="tiny muted">자율 항법 통합</text>
+  <rect x="874" y="366" width="249" height="48" rx="4" fill="#f1efed" stroke="#8d8883"/><text x="890" y="388" class="small" font-weight="700">실기 검증 · 자율 주행</text><text x="890" y="406" class="tiny muted">현장 데모까지 연결</text>
+
+  <rect x="246" y="466" width="876" height="48" rx="4" fill="#1a1a1a"/><text x="264" y="487" class="small" style="fill:#ffffff" font-weight="700">판정 기준 정본화</text><text x="492" y="487" class="small" style="fill:#ffffff" font-weight="700">실험 기록</text><text x="690" y="487" class="small" style="fill:#ffffff" font-weight="700">중간 산출물</text><text x="922" y="487" class="small" style="fill:#f28c52" font-weight="700">최종 보고 · 공개</text>
+  <line x1="345" y1="520" x2="345" y2="538" stroke="#c2410c" stroke-width="3"/><text x="345" y="554" class="tiny accent" text-anchor="middle" font-weight="700">현재 구간</text>
+
+  <rect x="52" y="588" width="1096" height="50" rx="4" fill="#fff3ea" stroke="#e3a27b"/>
+  <text x="72" y="610" class="small accent" font-weight="700">제작 규칙</text><text x="154" y="610" class="small">날짜 · 담당 · 상태는 손으로 박지 않는다.</text>
+  <text x="154" y="629" class="tiny muted">deliverables/plan/wbs.xlsx 또는 tools/build_wbs.py · 웹 deliverable-wbs 경로에서 읽어 SVG를 갱신한다.</text>
+</svg>
