@@ -49,6 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
 CUTS4 = os.path.join(ROOT, "cuts4")                 # 4초 원본 컷 (cut-plan2.py)
 STYLED = os.path.join(ROOT, "styled")               # 변환본. 마크 판단 뒤에 채운다
+GRADEDIR = os.path.join(ROOT, "graded")             # 모델이 컷을 갈아 치웠을 때의 대체본
 OPENING = os.path.join(ROOT, "opening", "opening-drift.mp4")
 TITLE = os.path.join(ROOT, "worka", "ending-title-50.mp4")
 SND = os.path.join(ROOT, "sound", "foothold-launch-sound-a.wav")
@@ -119,9 +120,17 @@ def curve_expr(kind, D):
     return "setpts=PTS-STARTPTS,"
 
 
-def make_cut(i, name, curve, want, dry):
-    """한 컷을 격자 프레임 수에 맞춰 만든다. 속도 곡선은 변환 뒤에 건다."""
+def make_cut(i, name, curve, want, dry, fallback=()):
+    """한 컷을 격자 프레임 수에 맞춰 만든다. 속도 곡선은 변환 뒤에 건다.
+
+    `fallback` 에 든 이름은 변환본을 쓰지 않고 `graded/` 의 원본 그레이딩판을 쓴다.
+    모델이 그 컷을 다른 장면으로 갈아 치웠을 때 쓰는 길이다."""
     src = os.path.join(STYLED, f"{i:02d}_{name}.mp4")
+    if name in fallback:
+        g = os.path.join(GRADEDIR, f"{i:02d}_{name}.mp4")
+        if not os.path.exists(g):
+            sys.exit(f"대체본이 없다: {g}  (grade-source-cut.py 를 먼저 돌려라)")
+        src = g
     if dry or not os.path.exists(src):
         src = os.path.join(CUTS4, f"{i:02d}_{name}.mp4")
     if not os.path.exists(src):
@@ -194,6 +203,9 @@ def write_frames(frames, dst):
 
 def main():
     dry = "--dry" in sys.argv
+    fallback = ()
+    if "--fallback" in sys.argv:
+        fallback = tuple(sys.argv[sys.argv.index("--fallback") + 1].split(","))
     cuts, FORM_E, TITLE_E = read_build()
     edges = grid_edges(cuts)
     os.makedirs(WORK, exist_ok=True)
@@ -214,10 +226,11 @@ def main():
     parts, srcs = [], {}
     for i, c in enumerate(cuts):
         want = edges[i + 1] - edges[i]
-        dst, src = make_cut(i, c[0], c[3], want, dry)
+        dst, src = make_cut(i, c[0], c[3], want, dry, fallback)
         parts.append(dst)
         srcs[c[0]] = src
-        print(f"  {c[0]:<10} {want:3d} 프레임  {'원본' if dry or STYLED not in dst else '변환본'}")
+        kind = "원본" if dry else ("대체본(원본 그레이딩)" if c[0] in fallback else "변환본")
+        print(f"  {c[0]:<10} {want:3d} 프레임  {kind}")
 
     # ---------------------------------------------------------- 물질화 (aisle 전체)
     ai = [c[0] for c in cuts].index("aisle")
@@ -322,18 +335,22 @@ def main():
     if not os.path.exists(SND):
         sys.exit("사운드가 없다. build-sound2.py a 를 돌려라: " + SND)
     out = OUT.replace(".mp4", "-dry.mp4") if dry else OUT
+    if fallback:
+        out = out.replace(".mp4", "-fb.mp4")
     run([FF, "-y", "-v", "error", "-i", silent, "-i", SND,
          "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
          "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2",
          "-shortest", "-movflags", "+faststart", out], "mux")
     print(f"\n썼다  {out}  {os.path.getsize(out)/1e6:.1f} MB")
 
-    json.dump({"dry_run": dry, "frames": ns2, "duration_s": round(ns2 / FPS, 4),
+    json.dump({"dry_run": dry, "fallback": list(fallback),
+               "frames": ns2, "duration_s": round(ns2 / FPS, 4),
                "opening_frames": OPEN_N, "walk_frames": walk,
                "formation_frames": form_n, "edges_main": edges,
                "title_offset_frames": TITLE_OFFSET, "push_in": PUSH_IN,
                "dissolve_start_s": round(off_s, 4)},
-              open(os.path.join(WORK, "build-a.json"), "w", encoding="utf-8"),
+              open(os.path.join(WORK, "build-a%s.json" % ("-fb" if fallback else "")),
+                   "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
 
 
