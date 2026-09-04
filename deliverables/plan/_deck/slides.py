@@ -23,7 +23,7 @@ A = json.load(io.open(os.path.join(HERE, 'assets.json'), encoding='utf-8'))
 # 박아두면 원본이 바뀌어도 눈치채지 못하고, 무엇이 들어갔는지도 알 수 없다.
 # 영상 교체는 저장소의 720p 사본을 갱신하고 이 스크립트를 한 번 돌리면 끝난다.
 FONT_FILE = os.path.join(HERE, 'PretendardVariable.woff2')
-MP4_FILE = os.path.join(HERE, os.pardir, 'assets', 'foothold-roughcut-720.mp4')
+MP4_FILE = os.path.join(HERE, os.pardir, 'assets', 'foothold-launch-720.mp4')
 POSTER_FRAME = 45          # 군집이 자리를 잡은 뒤. 인쇄본은 이 정지 화면을 쓴다
 
 if 'font' not in A:
