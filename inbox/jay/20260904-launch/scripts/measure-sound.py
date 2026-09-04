@@ -23,11 +23,18 @@ NEAR_END = 4.2                   # 근접 컷 구간의 끝
 
 
 def mono(path, sr=SR):
-    """48 kHz 모노 float 로 읽는다. 코디네이터가 잰 것과 같은 조건이다."""
+    """모노를 (L+R)/2 로 만든다.
+
+    `-ac 1` 의 다운믹스 이득은 출력 형식에 따라 다르다. 실측이다.
+      -f f32le  채널 RMS 의 1.414214 배 (에너지 보존)
+      -f s16le  채널 RMS 의 1.000000 배 (정수라 클리핑 보호로 정규화)
+    우리는 f32le 로 읽으므로 그대로 쓰면 절대 크기가 틀어진다.
+    형식에 안 흔들리게 `-ac 2` 로 읽고 직접 평균한다."""
     p = subprocess.run([FF, "-v", "error", "-i", path, "-map", "0:a:0",
-                        "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"],
+                        "-ac", "2", "-ar", str(sr), "-f", "f32le", "-"],
                        capture_output=True)
-    return np.frombuffer(p.stdout, np.float32).astype(np.float64)
+    a = np.frombuffer(p.stdout, np.float32).astype(np.float64)
+    return a[: (a.size // 2) * 2].reshape(-1, 2).mean(axis=1)
 
 
 def envelope(x, sr=SR, fc=30.0):

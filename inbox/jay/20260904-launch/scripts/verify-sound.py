@@ -76,14 +76,34 @@ LIMITS = {
 
 
 def read(path, ac=1):
+    """항상 스테레오로 읽고 모노는 여기서 (L+R)/2 로 만든다.
+
+    ffmpeg 의 `-ac 1` 에 기대면 안 된다. **다운믹스 이득이 출력 형식에 따라 다르다.**
+    같은 입력에 같은 `-ac 1` 을 걸고 형식만 바꿔 재면 이렇게 나온다. 실측이다.
+
+      -f f32le   채널 RMS 의 1.414214 배   부동소수라 클리핑 걱정이 없어 에너지 보존
+      -f s16le   채널 RMS 의 1.000000 배   정수라 클리핑 보호로 0.5/0.5 정규화
+      -f s32le   채널 RMS 의 1.000000 배   위와 같다
+
+    진폭을 0.2 에서 0.7 로 바꿔도 비는 그대로다. 신호에 따라 도는 것이 아니라
+    형식으로 정해진다. **그래서 `-f s16le` 로 확인하면 「평균이 맞다」는 결론이 나온다.**
+    실제로 그렇게 확인해 본 사람이 있었다. 형식을 안 맞추면 서로 다른 것을 보게 된다.
+
+    우리는 f32le 로 읽으므로 sqrt(2) 를 맞는다. 그래서 절대 크기를 쓰는 항목이 틀어졌다.
+      5번 근접컷 RMS 가 최대 3 dB 크게 나왔다
+      9번 크레스트가 그만큼 작게 나왔다 (10.49 로 보고했는데 참값은 13.34)
+    비중과 비율을 재는 항목(1 · 3 · 4 · 6 · 7)은 배율이 약분되어 영향이 없다.
+
+    형식에 안 흔들리게 하려고 `-ac 2` 로 읽고 여기서 직접 평균한다. 그것이 요점이다.
+    """
     p = subprocess.run([FF, "-v", "error", "-i", path, "-map", "0:a:0",
-                        "-ac", str(ac), "-ar", str(SR), "-f", "f32le", "-"],
+                        "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"],
                        capture_output=True)
     a = np.frombuffer(p.stdout, np.float32).astype(np.float64)
+    a = a[: (a.size // 2) * 2].reshape(-1, 2)
     if ac == 2:
-        a = a[: (a.size // 2) * 2].reshape(-1, 2)
         return a[:, 0], a[:, 1]
-    return a
+    return a.mean(axis=1)
 
 
 def _sh(x, H):
@@ -211,8 +231,10 @@ def main(path, offset=0.0):
     res[8] = float(np.corrcoef(hp(L, 200), hp(R, 200))[0, 1])
     ok[8] = res[8] <= 0.5
 
+    # 크레스트는 채널 피크 나누기 채널 RMS 다. 모노로 내려 재지 않는다.
     pk = max(np.abs(L).max(), np.abs(R).max())
-    res[9] = 20 * np.log10(pk / max(np.sqrt(np.mean(x ** 2)), 1e-12))
+    ch_rms = np.sqrt(np.mean(np.concatenate([L, R]) ** 2))
+    res[9] = 20 * np.log10(pk / max(ch_rms, 1e-12))
     ok[9] = res[9] >= 10.0
 
     print(f"{'':3}{'항목':<28}{'기준':>16}{'실측':>18}  판정")
