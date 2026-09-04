@@ -5,15 +5,15 @@
     "offset_s": 2.5,
     "items": {
       "1": {
-        "name": "초저역 20-60 Hz 비중",
+        "name": "초저역 20-60 Hz (본편)",
         "criterion": "25 % 이상",
-        "value": 51.38382194329206,
+        "value": 53.199663563177054,
         "pass": true
       },
       "2": {
-        "name": "포락선 자기상관 최대 지연",
+        "name": "자기상관 최대 (걷는 구간)",
         "criterion": "208 ms 격자",
-        "value": 208.1875,
+        "value": 416.6666666666667,
         "pass": true
       },
       "3": {
@@ -63,6 +63,7 @@
       }
     },
     "sustain_all": 0.3254,
+    "sub_opening_pct": 85.572,
     "lufs": -16.0,
     "true_peak_dbtp": -3.3,
     "passed": 7,
