@@ -5,67 +5,68 @@
     "offset_s": 2.5,
     "items": {
       "1": {
-        "name": "초저역 20-60 Hz 비중",
+        "name": "초저역 20-60 Hz (본편)",
         "criterion": "25 % 이상",
-        "value": 51.38382194329206,
+        "value": 53.8932813106511,
         "pass": true
       },
       "2": {
-        "name": "포락선 자기상관 최대 지연",
+        "name": "자기상관 최대 (걷는 구간)",
         "criterion": "208 ms 격자",
-        "value": 208.1875,
+        "value": 416.3125,
         "pass": true
       },
       "3": {
         "name": "우쉬 첫째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 13.777366622502237,
+        "value": 8.88469646303439,
         "pass": true
       },
       "4": {
         "name": "우쉬 둘째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 14.93212146625624,
+        "value": 12.218464280428481,
         "pass": true
       },
       "5": {
         "name": "근접컷 RMS",
         "criterion": "-16 dBFS 이상",
-        "value": -12.380118648467564,
+        "value": -11.965520619980062,
         "pass": true
       },
       "6": {
         "name": "지속 바닥 비 40-60 Hz",
         "criterion": "0.35 이상",
-        "value": 0.3229773487881526,
-        "pass": false
+        "value": 0.37387916520052256,
+        "pass": true
       },
       "7": {
         "name": "하모닉 2배 · 3배",
         "criterion": "-12 dB 이내",
         "value": [
-          0.3838960735713997,
-          7.117558322683191
+          4.816558657163067,
+          11.718320420531649
         ],
         "pass": true
       },
       "8": {
         "name": "스테레오 상관 200 Hz 위",
         "criterion": "0.5 이하",
-        "value": 0.2729357601269283,
+        "value": 0.2722433741730505,
         "pass": true
       },
       "9": {
         "name": "크레스트 팩터",
         "criterion": "10 dB 이상",
-        "value": 9.773494621625531,
-        "pass": false
+        "value": 10.489027840391717,
+        "pass": true
       }
     },
-    "sustain_all": 0.3254,
+    "sustain_all": 0.3046,
+    "sub_opening_pct": 85.428,
     "lufs": -16.0,
-    "true_peak_dbtp": -3.3,
-    "passed": 7,
-    "all_pass": false
+    "true_peak_dbtp": -2.6,
+    "passed": 9,
+    "all_pass": true
   }
 ]

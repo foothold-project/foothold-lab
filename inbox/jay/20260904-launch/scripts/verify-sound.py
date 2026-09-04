@@ -6,8 +6,8 @@
 무게는 저역 에너지 · 새추레이션 배음 · 트랜지언트 · 잔향 꼬리에서 나온다.
 그래서 그 넷을 직접 재는 항목을 넣었다.
 
-  1 초저역 20-60 Hz 에너지 비중          25 퍼센트 이상
-  2 포락선 자기상관 최대 지연            208 ms (8분음표 격자)
+  1 초저역 20-60 Hz 에너지 비중          25 퍼센트 이상 (첫 컷 이후 구간에서)
+  2 포락선 자기상관 최대 지연            208 ms 격자 (걷는 구간에서)
   3 우쉬 첫째 2k-12k 비중                3 퍼센트 이상
   4 우쉬 둘째 2k-12k 비중                3 퍼센트 이상
   5 근접컷 RMS                           -16 dBFS 이상
@@ -15,6 +15,18 @@
   7 하모닉 배음 2배 · 3배                기음 45 Hz 대비 -12 dB 이내
   8 스테레오 상관 (200 Hz 위)            0.5 이하
   9 크레스트 팩터 (피크 대 RMS)          10 dB 이상
+
+1번과 2번을 구간을 나눠 재는 이유. A 판은 앞에 2.5초 오프닝이 붙는데
+그 구간은 **의도적으로 거의 침묵**이고 발자국 간격도 넓게 시작해 208 ms 로 좁혀 온다.
+전체 평균으로 재면 두 성질이 섞여 흐려진다. 실측이다.
+
+  오프닝 0-2.5초     초저역 85.57 % · 격자 +0.414 대 비격자 +0.621 (격자가 최대가 아니다)
+  본편 2.5-23.06초   초저역 53.20 % · 격자 +0.721 대 +0.570 (격자가 최대)
+  걷는 구간 2.5-13.33초                +0.811 대 +0.480 (더 뚜렷하다)
+
+오프닝에 격자가 없는 것은 결함이 아니라 연출이다. 무음을 억지로 채우면
+「멀리서 들어온다」가 죽는다. 그래서 1번은 첫 컷 이후에서, 2번은 걷는 구간에서 잰다.
+오프닝 값은 판정에 넣지 않고 참고로 함께 적는다. 6번을 걷는 구간에서 재는 것과 같은 원리다.
 
 2번 판정에 대하여. 8분음표의 정수배(208 · 416 · 625 ms)를 격자 후보로 두고,
 그중 최댓값이 격자가 아닌 지연의 최댓값보다 크면 통과로 한다.
@@ -51,8 +63,8 @@ ROOT = os.path.normpath(os.path.join(HERE, ".."))
 KICK_REF = os.path.join(ROOT, "sound", "kick-reference.wav")
 
 LIMITS = {
-    1: ("초저역 20-60 Hz 비중", 25.0, "이상", "%"),
-    2: ("포락선 자기상관 최대 지연", 208.0, "격자", "ms"),
+    1: ("초저역 20-60 Hz (본편)", 25.0, "이상", "%"),
+    2: ("자기상관 최대 (걷는 구간)", 208.0, "격자", "ms"),
     3: ("우쉬 첫째 2k-12k", 3.0, "이상", "%"),
     4: ("우쉬 둘째 2k-12k", 3.0, "이상", "%"),
     5: ("근접컷 RMS", -16.0, "이상", "dBFS"),
@@ -165,10 +177,15 @@ def main(path, offset=0.0):
 
     res, ok = {}, {}
 
-    res[1] = band_share(x, 20, 60)
+    # 1번은 첫 컷 이후에서 잰다. 오프닝의 침묵이 평균을 희석한다.
+    body = x[int(offset * SR):]
+    res[1] = band_share(body, 20, 60)
+    sub_open = band_share(x[:int(offset * SR)], 20, 60) if offset > 0.05 else float("nan")
     ok[1] = res[1] >= 25.0
 
-    ac, gi, oi, cand = grid_autocorr(x)
+    # 2번은 걷는 구간에서 잰다. 오프닝은 간격이 넓게 시작하므로 격자가 있을 수 없다.
+    walk_seg = x[int(offset * SR):int((offset + WALK_END) * SR)]
+    ac, gi, oi, cand = grid_autocorr(walk_seg)
     res[2] = gi / SR * 1000
     ok[2] = ac[gi] > ac[oi]
 
@@ -242,7 +259,7 @@ def main(path, offset=0.0):
            "items": {str(i): {"name": LIMITS[i][0], "criterion": crit[i],
                               "value": ([float(v) for v in res[i]] if isinstance(res[i], tuple) else float(res[i])),
                               "pass": bool(ok[i])} for i in range(1, 10)},
-           "sustain_all": round(sus_all, 4), "lufs": I, "true_peak_dbtp": tp, "passed": int(n_ok), "all_pass": bool(n_ok == 9)}
+           "sustain_all": round(sus_all, 4), "sub_opening_pct": (None if offset <= 0.05 else round(sub_open, 3)), "lufs": I, "true_peak_dbtp": tp, "passed": int(n_ok), "all_pass": bool(n_ok == 9)}
     return out
 
 
