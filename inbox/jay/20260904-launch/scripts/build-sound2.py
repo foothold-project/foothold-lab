@@ -49,7 +49,8 @@ SUB = 4.805 * 2 ** 3            # 38.44 Hz. 30-50 Hz 안에 들어온다
 OPEN_E = 12                     # 오프닝 8분음표 12개 = 2.5초. 첫 컷이 박자에 떨어진다
 TARGET_LUFS = -16.0
 TARGET_TP = -1.5        # 상한 -1 에 딱 붙이지 않는다. 인코딩 뒤에 넘칠 수 있다
-rng = np.random.default_rng(4805)
+SEED = 4805
+rng = np.random.default_rng(SEED)
 
 # 층별 무게. 여기 하나만 고치면 된다. 값은 재서 맞췄다.
 #
@@ -74,6 +75,43 @@ WHOOSH_AIR = 2.40       # 우쉬의 2-8 kHz 공기 층
 SIDECHAIN = 0.55        # 발자국이 나머지를 누르는 깊이. 격자를 전 대역에 새긴다
 LOW_VERB = 0.35
 G_FLOOR = 0.0           # 지속 바닥 50 Hz. 0 으로 둔다.
+
+# ---------------------------------------------------------------- 엔딩 음정
+# 팀장이 계속 「피치가 높다」고 했다. 어느 대역인지 재서 찾았다.
+# 500-3000 Hz 비중이 걷는 구간에서 0.1-1.8 퍼센트인데 엔딩에서 33 퍼센트까지 간다.
+# 스펙트럼 무게중심도 80 Hz 에서 281 Hz 로 올라간다. 17.4초가 최대다.
+#
+# 엔딩의 타격음(글리치 · 블레이드 · 라이저 · 절단 전 긴장 · 착지의 공기층)이
+# 전부 고역에 놓여 있어서 그렇다. 발자국은 45 Hz 계열인데 엔딩만 다른 악기가 된다.
+#
+# 세 판을 만들어 팀장이 고른다. **엔딩 타격음의 높이만 다르다.** 나머지는 같다.
+#   tone   음정을 가진 성분의 기음. 45 계열이면 발자국과 같은 몸이 된다
+#   noise  질감을 만드는 잡음 대역의 배율. 음정이 아니라 질감이다
+#   body   발자국의 몸통(90 · 135 · 180 Hz 새추레이션)을 타격에 얹는 양
+END_PITCH = {
+    # 첫째. 기음을 45 Hz 계열로 내린다. 발자국과 같은 몸을 갖는다
+    "e45": {"tone": 45.0, "noise": 0.25, "body": 0.55},
+    # 둘째. 그보다 한 단(한 옥타브) 위
+    "e90": {"tone": 90.0, "noise": 0.50, "body": 0.30},
+    # 셋째. 지금 판. 손대지 않는다
+    "now": {"tone": None, "noise": 1.00, "body": 0.00},
+}
+
+# ---------------------------------------------------- 엔딩 보컬 패드의 색
+# 500-3000 Hz 를 실제로 만드는 것은 타격음이 아니라 **무언 보컬 패드**다.
+# 층을 하나씩 꺼서 쟀다. 보컬을 끄면 엔딩 8.24 퍼센트가 0.93 으로, 17.4초 최대가
+# 20.38 에서 0.06 으로 사라진다. 타격음 층(G_END)을 꺼도 최대는 20.39 로 그대로다.
+#
+# 보컬은 포먼트가 700 / 1200 / 2600 Hz 다. 걷는 동안은 발자국에 덮여 안 들리는데
+# 엔딩에서는 발자국이 멎어서 그대로 드러난다. 「피치가 높다」가 여기서 난다.
+#
+# 그래서 **엔딩 구간에서만** 포먼트를 내리는 갈래를 둔다. 걷는 구간은 안 건드린다.
+# 같은 배음 더미에서 색만 두 번 입혀 T_FORM_END 에서 0.5초로 건너간다.
+END_VOICE = {
+    "low": {"scale": 0.55, "lp": 2100.0},   # 한참 내린다
+    "mid": {"scale": 0.75, "lp": 2900.0},   # 그 사이
+    "now": {"scale": None, "lp": None},     # 지금 판
+}
                         # 넣어 봤지만 지속 바닥 비가 0.340 에서 0.336 으로 오히려 내려갔다.
                         # 포락선은 신호의 합이지 포락선의 합이 아니라 그렇다.
                         # 대신 초저역 비중이 79 퍼센트로 튀고 우쉬가 0.14 퍼센트로 묻혔다.         # 저역 전용 긴 잔향. 타격 사이 골을 메워 지속 바닥을 올린다
@@ -198,7 +236,13 @@ def write_wav(path, L, R):
 
 
 # ------------------------------------------------------------------ 본체
-def main(open_e=OPEN_E, suffix="a"):
+def main(open_e=OPEN_E, suffix="a", end="now", voice_end="now", tag=None):
+    # 시드를 여기서 다시 잡는다. 모듈 수준에서 한 번만 잡으면 한 프로세스에서
+    # main 을 두 번 부를 때 두 번째가 첫 번째가 쓰고 남긴 자리에서 이어 간다.
+    # 그러면 `build-sound2.py both` 로 낸 A 와 `build-sound2.py a` 로 낸 A 가 다르다.
+    # 음정 세 판도 잡음까지 달라져서 「높이만 다르다」가 성립하지 않는다. 실측으로 잡았다.
+    global rng
+    rng = np.random.default_rng(SEED)
     CUTS, FORM_E, TITLE_E = read_cuts()
 
     # 그림 길이가 기준이다. 조립된 그림이 있으면 그것을 따른다.
@@ -379,10 +423,24 @@ def main(open_e=OPEN_E, suffix="a"):
             v += np.sin(ph * h + vi * 0.7) * a
         voice += v * (0.9 - 0.12 * vi)
     voice /= np.abs(voice).max()
-    for f0, q, g in [(700.0, 7.0, 5.0), (1200.0, 9.0, 3.2), (2600.0, 11.0, 2.0)]:
-        voice = resonance(voice, f0, q, g)
-    voice = lp(voice, 3800.0)
-    voice /= np.abs(voice).max()
+    FORMANTS = [(700.0, 7.0, 5.0), (1200.0, 9.0, 3.2), (2600.0, 11.0, 2.0)]
+
+    def colour(src, scale=1.0, lpf=3800.0):
+        """배음 더미에 포먼트와 저역통과로 색을 입힌다."""
+        y = src
+        for f0, q, g in FORMANTS:
+            y = resonance(y, f0 * scale, q, g)
+        y = lp(y, lpf)
+        return y / max(np.abs(y).max(), 1e-9)
+
+    vraw = voice
+    voice = colour(vraw)
+    VP = END_VOICE[voice_end]
+    if VP["scale"] is not None:
+        # 엔딩만 갈아 끼운다. 걷는 구간은 손대지 않는다.
+        v_end = colour(vraw, VP["scale"], VP["lp"])
+        xf = np.clip((t - T_FORM_END) / 0.5, 0.0, 1.0)
+        voice = voice * (1.0 - xf) + v_end * xf
     voice *= np.interp(t,
         [0.0, T_OPEN, T_DOLLY, T_RISE, T_WALK_END, T_FORM_END, T_CUT, T_CUT + 0.3,
          T_KO, T_LOCK, T_LOCK + 1.5, DUR - 0.6, DUR],
@@ -434,9 +492,13 @@ def main(open_e=OPEN_E, suffix="a"):
     lt = np.arange(WN) / SR
     place(acc_l, np.sin(2 * np.pi * SUB * 2 * lt) * env(WN, 0.22, 0.70, 1.5), T_WORD, 0.16)
 
+    # 엔딩 타격음의 높이. 세 판을 이 세 값으로만 가른다.
+    P = END_PITCH[end]
+    TONE, EN, BODY = P["tone"], P["noise"], P["body"]
+
     GN = int(0.28 * SR)
-    gl = band(rng.normal(0, 1, GN), 600, 7000)
-    sq = np.sign(np.sin(2 * np.pi * 92 * np.arange(GN) / SR))
+    gl = band(rng.normal(0, 1, GN), 600 * EN, 7000 * EN)
+    sq = np.sign(np.sin(2 * np.pi * (TONE or 92.0) * np.arange(GN) / SR))
     gl = (gl * 0.8 + sq * 0.25) * env(GN, 0.001, 0.055, 5.0)
     st = int(0.012 * SR)
     for s in range(0, GN - st, st * 2):
@@ -445,20 +507,25 @@ def main(open_e=OPEN_E, suffix="a"):
 
     RN = int(0.60 * SR)
     lt = np.arange(RN) / SR
-    riser = np.sin(2 * np.pi * np.cumsum(np.geomspace(300, 2000, RN)) / SR)
-    riser += 0.35 * np.sin(2 * np.pi * np.cumsum(np.geomspace(450, 3000, RN)) / SR)
+    r1 = (TONE, TONE * 4) if TONE else (300, 2000)
+    r2 = (TONE * 1.5, TONE * 6) if TONE else (450, 3000)
+    riser = np.sin(2 * np.pi * np.cumsum(np.geomspace(*r1, RN)) / SR)
+    riser += 0.35 * np.sin(2 * np.pi * np.cumsum(np.geomspace(*r2, RN)) / SR)
     place(acc_l, riser * (lt / lt[-1]) ** 1.8, T_UNFOLD - 0.60, 0.18)
 
     # 절단. 가장 큰 포인트다. 앞에 긴장을 쌓고 서브를 떨어뜨린다.
     SN = int(0.75 * SR)
     lt = np.arange(SN) / SR
-    pre = band(rng.normal(0, 1, SN), 350, 6500) * (lt / lt[-1]) ** 3.0
-    pre += np.sin(2 * np.pi * np.cumsum(np.geomspace(200, 850, SN)) / SR) * (lt / lt[-1]) ** 3.4 * 0.5
+    pre = band(rng.normal(0, 1, SN), 350 * EN, 6500 * EN) * (lt / lt[-1]) ** 3.0
+    p1 = (TONE, TONE * 3) if TONE else (200, 850)
+    pre += (np.sin(2 * np.pi * np.cumsum(np.geomspace(*p1, SN)) / SR)
+            * (lt / lt[-1]) ** 3.4 * 0.5)
     place(acc_l, pre, T_CUT - 0.75, 0.34)
     CN = int(0.34 * SR)
     lt = np.arange(CN) / SR
-    blade = band(rng.normal(0, 1, CN), 2400, 9500) * env(CN, 0.0005, 0.050, 6.0)
-    blade += np.sin(2 * np.pi * 2900 * lt) * env(CN, 0.0005, 0.020, 8.0) * 0.30
+    blade = band(rng.normal(0, 1, CN), 2400 * EN, 9500 * EN) * env(CN, 0.0005, 0.050, 6.0)
+    blade += (np.sin(2 * np.pi * (TONE * 4 if TONE else 2900) * lt)
+              * env(CN, 0.0005, 0.020, 8.0) * 0.30)
     place(acc_l, blade, T_CUT, 0.30)
     DN = int(2.4 * SR)
     lt = np.arange(DN) / SR
@@ -471,8 +538,14 @@ def main(open_e=OPEN_E, suffix="a"):
     lt = np.arange(IN_) / SR
     land = np.sin(2 * np.pi * np.cumsum(34 + 24 * np.exp(-lt / 0.11)) / SR) * np.exp(-lt / 1.05)
     land = saturate(land, 2.0)
-    air = band(rng.normal(0, 1, IN_), 1600, 7000) * env(IN_, 0.008, 0.13, 4.0) * 0.075
+    air = band(rng.normal(0, 1, IN_), 1600 * EN, 7000 * EN) * env(IN_, 0.008, 0.13, 4.0) * 0.075
     place(acc_l, land + air, T_LOCK, 0.55)
+
+    # 발자국과 같은 몸을 타격에 얹는다. 새로 만들지 않고 실제 발자국 파형을 쓴다.
+    # 「발자국과 같은 몸」이라는 말이 그대로 사실이 되게 하려는 것이다.
+    if BODY > 0:
+        for at, amp in [(T_GLITCH, 1.00), (T_CUT, 0.55), (T_LOCK, 0.80)]:
+            place(acc_l, K_STRONG, at, BODY * amp)
     tail = DUR - T_LOCK
     for mul, amp in [(1.0, 0.22), (1.5, 0.13), (2.0, 0.20), (3.0, 0.13), (4.0, 0.080)]:
         ln = int(tail * SR)
@@ -574,7 +647,9 @@ def main(open_e=OPEN_E, suffix="a"):
     L, R = L / pk * 0.92, R / pk * 0.92
 
     os.makedirs(OUT, exist_ok=True)
-    path = os.path.normpath(os.path.join(OUT, f"foothold-launch-sound-{suffix}.wav"))
+    # `suffix` 는 어느 사건 파일을 읽을지 정하고 `tag` 는 파일 이름만 정한다.
+    # 음정 세 판은 같은 A 사건을 쓰고 이름만 다르다.
+    path = os.path.normpath(os.path.join(OUT, f"foothold-launch-sound-{tag or suffix}.wav"))
     write_wav(path, L, R)
 
     # 라우드니스를 재서 맞춘다. 재고 고치고 다시 잰다.
@@ -637,7 +712,25 @@ def main(open_e=OPEN_E, suffix="a"):
 
 if __name__ == "__main__":
     # 두 판을 낸다. B 는 오프닝 없는 20.56초, A 는 오프닝 2.5초를 앞에 둔 23.06초.
+    #
+    # `pitch` 를 주면 엔딩 타격음의 높이만 다른 세 판을 낸다. 팀장이 듣고 고른다.
+    # 길이와 구조는 지금 A 판 그대로다. 새 구조가 정해지기 전이라 엔딩만 견주면 된다.
     which = sys.argv[1] if len(sys.argv) > 1 else "both"
+    if which in ("pitch", "voice"):
+        if which == "pitch":
+            # 리드가 지시한 갈래. 엔딩 **타격음**의 높이만 다르다.
+            sets = [("e45", "now", "p1", "타격 기음 45 Hz 계열. 발자국과 같은 몸"),
+                    ("e90", "now", "p2", "타격 한 옥타브 위"),
+                    ("now", "now", "p3", "지금 판. 손대지 않았다")]
+        else:
+            # 500-3000 Hz 를 실제로 만드는 것은 보컬 패드다. 그것을 가르는 갈래다.
+            sets = [("now", "low", "v1", "엔딩 보컬 포먼트 0.55배 · 저역통과 2100 Hz"),
+                    ("now", "mid", "v2", "엔딩 보컬 포먼트 0.75배 · 저역통과 2900 Hz"),
+                    ("now", "now", "v3", "지금 판. 손대지 않았다")]
+        for end, ve, tag, what in sets:
+            print(f"\n### {tag}  {what}")
+            main(open_e=OPEN_E, suffix="a", end=end, voice_end=ve, tag=tag)
+        sys.exit(0)
     if which in ("b", "both"):
         print("### B 판 (오프닝 없음)")
         main(open_e=0, suffix="b")
