@@ -45,23 +45,38 @@ def main():
     print(f"기준(B 판) {len(r)} 프레임 · 순수 타이틀 구간 {DISS_END}-{len(r)-1}")
 
     ref = r[DISS_END:]
-    n_cmp = min(len(ref), 260)          # 260 프레임(5.2초)만 봐도 충분하다
-    ref = ref[:n_cmp]
 
-    best = (1e18, None)
+    # 화면 전체의 절대차로 맞추면 안 된다. 바탕이 어두워 대부분의 화소가 같고
+    # 실제로 움직이는 흰 글자는 화면의 몇 퍼센트뿐이라 차이가 묻힌다.
+    # 실측으로 확인했다. 최선 1.790 대 3프레임 밖 최선 1.820 으로 0.03 차이였다.
+    #
+    # 그래서 **흰 화소 수 곡선**으로 맞춘다. 워드마크가 뜨고 부서지고 문구가
+    # 펼쳐지고 잘리는 사건이 전부 이 곡선의 오르내림으로 나온다. 훨씬 뚜렷하다.
+    def ink(v):
+        return (v > 150).sum(axis=(1, 2)).astype(np.float64)
+
+    ib, ir = ink(b), ink(ref)
+    n_cmp = min(len(ir), 300)
+    ir = ir[:n_cmp]
+    ir_z = (ir - ir.mean()) / (ir.std() + 1e-9)
+
+    best = (-9.0, None)
     scores = []
-    for k in range(0, len(b) - n_cmp):
-        d = float(np.abs(b[k:k + n_cmp] - ref).mean())
-        scores.append((k, d))
-        if d < best[0]:
-            best = (d, k)
-    d, k = best
-    scores.sort(key=lambda x: x[1])
-    print(f"\n가장 잘 맞는 시작 프레임 {k} = {k/FPS:.4f}초 · 평균 절대차 {d:.3f}")
-    print("  상위 다섯: " + " · ".join(f"{kk}({kk/FPS:.3f}s) {dd:.2f}" for kk, dd in scores[:5]))
-    second = next(dd for kk, dd in scores if abs(kk - k) > 3)
-    print(f"  3프레임 밖 최선 {second:.2f} · 차이 {second-d:.2f}"
-          f"  {'뚜렷하다' if second - d > 1.0 else '뚜렷하지 않다. 확인이 필요하다'}")
+    for k in range(0, len(ib) - n_cmp):
+        seg = ib[k:k + n_cmp]
+        c = float(((seg - seg.mean()) / (seg.std() + 1e-9) * ir_z).mean())
+        scores.append((k, c))
+        if c > best[0]:
+            best = (c, k)
+    c, k = best
+    scores.sort(key=lambda x: -x[1])
+    print(f"\n흰 화소 곡선 상관으로 맞춘다 (비교 {n_cmp} 프레임)")
+    print(f"가장 잘 맞는 시작 프레임 {k} = {k/FPS:.4f}초 · 상관 {c:+.4f}")
+    print("  상위 다섯: " + " · ".join(f"{kk}({kk/FPS:.3f}s) {cc:+.3f}" for kk, cc in scores[:5]))
+    second = next(cc for kk, cc in scores if abs(kk - k) > 5)
+    print(f"  5프레임 밖 최선 {second:+.4f} · 차이 {c-second:.4f}"
+          f"  {'뚜렷하다' if c - second > 0.15 else '뚜렷하지 않다. 확인이 필요하다'}")
+    d = c
 
     # 이 오프셋에서 디졸브 시작 지점(타이틀이 처음 나타나는 시각)을 역산한다.
     # B 판은 569 프레임에서 디졸브를 시작하고 594 에서 끝난다.
@@ -74,7 +89,7 @@ def main():
     json.dump({"baked": os.path.basename(BAKED), "baked_frames": len(b),
                "ref": os.path.basename(REF), "dissolve_end_frame": DISS_END,
                "best_match_frame": k, "best_match_s": round(k / FPS, 4),
-               "mean_abs_diff": round(d, 4), "next_best_diff": round(second, 4),
+               "ink_correlation": round(d, 4), "next_best_correlation": round(second, 4),
                "title_start_offset_frames": diss_start_in_title,
                "title_start_offset_s": round(diss_start_in_title / FPS, 4)},
               open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)

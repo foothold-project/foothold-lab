@@ -56,6 +56,6 @@
   "shelf_hz": 6500,
   "shelf_db": -9.0,
   "lufs": -16.0,
-  "true_peak_dbtp": -3.3,
-  "lr_correlation": 0.918
+  "true_peak_dbtp": -2.6,
+  "lr_correlation": 0.9285
 }
