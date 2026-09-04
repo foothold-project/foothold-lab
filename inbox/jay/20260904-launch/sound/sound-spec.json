@@ -1,0 +1,38 @@
+{
+  "roughcut_frames": 1028,
+  "duration_s": 20.56,
+  "eighth_ms": 208.333,
+  "quarter_ms": 416.667,
+  "bpm": 144,
+  "gait_hz": 4.8,
+  "drone_root_hz": 76.88,
+  "cut_bounds_s": [
+    0.0,
+    0.625,
+    1.25,
+    1.875,
+    2.7083,
+    3.3333,
+    4.1667,
+    7.5
+  ],
+  "walk_end_s": 10.8333,
+  "formation_end_s": 11.875,
+  "title_start_s": 11.375,
+  "whoosh_s": [
+    4.1667,
+    7.5
+  ],
+  "ending": {
+    "wordmark": 11.66,
+    "glitch": 12.52,
+    "unfold": 13.22,
+    "cut": 15.4,
+    "korean": 16.5,
+    "lockup": 18.22
+  },
+  "ground_pulses": 53,
+  "grain_agents": 96,
+  "grain_jitter_ms": 22.0,
+  "peak_dbfs": -3.49
+}
