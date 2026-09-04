@@ -540,7 +540,6 @@ slide(18, 'night',
       'alt="FOOTHOLD 러프컷 한 장면">'
       '<div class="tagline"><span class="tv">TARGET VISION</span>'
       '시뮬레이터에서 천 번 넘어지고,<br>현장에서는 넘어지지 않는다.</div>'
-      '<div class="meta">FOOTHOLD roughcut v8 · 4,096 · 21s</div>'
       '</div>', band='video')
 
 # 19 마침 ────────────────────────────────────────────────────────────────
