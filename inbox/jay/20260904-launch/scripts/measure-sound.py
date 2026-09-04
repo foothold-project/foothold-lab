@@ -6,6 +6,8 @@
   1 포락선 자기상관 208 ms 지연        1차본 0.657
   2 가장 강한 주기                     1차본 130 ms = 7.69 Hz
   3 우쉬 두 곳 2k-12k 비중             1차본 0.711 퍼센트 · 0.961 퍼센트
+    창 길이 0.6초다 (앞 0.25 · 뒤 0.35). 「앞뒤 0.6초」로 읽으면 1.2초가 되고
+    값이 3 퍼센트포인트 내려간다. 창 길이를 안 맞추면 견줄 수 없다.
   4 0.0-4.2초 근접컷 RMS               1차본 -21.9 dBFS
   5 초저역 20-60 Hz 비중               1차본 11.88 퍼센트
   6 라우드니스와 트루피크              ffmpeg ebur128
@@ -128,7 +130,7 @@ def report(path, offset=0.0):
         seg = x[max(0, a):min(len(x), b)]
         s = band_share(seg, 2000, 12000)
         wh.append(s)
-        print(f"      {t:6.3f}초 앞뒤 0.6초   {s:6.3f} 퍼센트")
+        print(f"      {t:6.3f}초 창 0.6초   {s:6.3f} 퍼센트")
 
     near = x[int(offset * SR):int((NEAR_END + offset) * SR)]
     far = x[int((NEAR_END + offset) * SR):]
