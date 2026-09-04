@@ -190,7 +190,7 @@ seedance 는 「티얼 림 라이트」 지시를 몸체 도색으로 받아 로
 
 이 문서가 읽거나 잰 것들이다.
 
-- 러프컷 v7 · [`inbox/jay/20260904-roughcut/README.md`](../20260904-roughcut/README.md)
+- 러프컷 v8 · [`inbox/jay/20260904-roughcut/README.md`](../20260904-roughcut/README.md)
 - 컷 구성의 원본 · [`inbox/jay/20260904-roughcut/scripts/build-roughcut.py`](../20260904-roughcut/scripts/build-roughcut.py)
 - 연출 10컷 원본 · [`sim/eval/results/20260903-flat-army-cine/`](../../../sim/eval/results/20260903-flat-army-cine/)
 - FOOTHOLD 대형 · [`sim/eval/results/20260904-flat-army-formation/README.md`](../../../sim/eval/results/20260904-flat-army-formation/README.md)
