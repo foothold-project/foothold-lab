@@ -1,23 +1,23 @@
 [
   {
-    "file": "foothold-launch-sound.wav",
-    "duration_s": 23.06,
-    "autocorr_208ms": 0.5755,
-    "peak_period_ms": 207.21,
-    "peak_period_hz": 4.8261,
+    "file": "foothold-launch.mp4",
+    "duration_s": 20.5653,
+    "autocorr_208ms": 0.7403,
+    "peak_period_ms": 207.92,
+    "peak_period_hz": 4.8096,
     "grid_is_peak": true,
     "whoosh_2k12k_pct": [
-      8.3366,
-      10.7735
+      0.9071,
+      1.0313
     ],
-    "near_rms_dbfs": -13.75,
-    "far_rms_dbfs": -13.01,
-    "sub_20_60_pct": 41.763,
-    "low_20_120_pct": 82.029,
-    "above_8k_pct": 0.0408,
-    "lufs": -16.1,
-    "true_peak_dbtp": -1.0,
-    "lr_corr_full": 0.9203,
-    "lr_corr_above200": 0.2665
+    "near_rms_dbfs": -21.75,
+    "far_rms_dbfs": -16.45,
+    "sub_20_60_pct": 11.879,
+    "low_20_120_pct": 67.547,
+    "above_8k_pct": 0.0087,
+    "lufs": -16.0,
+    "true_peak_dbtp": -3.5,
+    "lr_corr_full": 0.9936,
+    "lr_corr_above200": 0.9939
   }
 ]

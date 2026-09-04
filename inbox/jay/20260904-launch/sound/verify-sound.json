@@ -7,7 +7,7 @@
       "1": {
         "name": "초저역 20-60 Hz (본편)",
         "criterion": "25 % 이상",
-        "value": 53.8932813106511,
+        "value": 53.75860792797111,
         "pass": true
       },
       "2": {
@@ -19,53 +19,53 @@
       "3": {
         "name": "우쉬 첫째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 8.88469646303439,
+        "value": 8.881634195908838,
         "pass": true
       },
       "4": {
         "name": "우쉬 둘째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 12.218464280428481,
+        "value": 12.213869035415813,
         "pass": true
       },
       "5": {
         "name": "근접컷 RMS",
         "criterion": "-16 dBFS 이상",
-        "value": -11.965520619980062,
+        "value": -14.758786159908377,
         "pass": true
       },
       "6": {
         "name": "지속 바닥 비 40-60 Hz",
         "criterion": "0.35 이상",
-        "value": 0.37387916520052256,
+        "value": 0.37433572225225953,
         "pass": true
       },
       "7": {
         "name": "하모닉 2배 · 3배",
         "criterion": "-12 dB 이내",
         "value": [
-          4.816558657163067,
-          11.718320420531649
+          4.811556089254133,
+          11.72046954090652
         ],
         "pass": true
       },
       "8": {
         "name": "스테레오 상관 200 Hz 위",
         "criterion": "0.5 이하",
-        "value": 0.2722433741730505,
+        "value": 0.2657879754879083,
         "pass": true
       },
       "9": {
         "name": "크레스트 팩터",
         "criterion": "10 dB 이상",
-        "value": 10.489027840391717,
+        "value": 13.368512987094892,
         "pass": true
       }
     },
-    "sustain_all": 0.3046,
-    "sub_opening_pct": 85.428,
+    "sustain_all": 0.2982,
+    "sub_opening_pct": 85.435,
     "lufs": -16.0,
-    "true_peak_dbtp": -2.6,
+    "true_peak_dbtp": -2.5,
     "passed": 9,
     "all_pass": true
   }

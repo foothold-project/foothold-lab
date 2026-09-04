@@ -203,7 +203,12 @@ def main(open_e=OPEN_E, suffix="a"):
 
     # 그림 길이가 기준이다. 조립된 그림이 있으면 그것을 따른다.
     vf = os.path.join(ROOT, "work", "video-frames.json")
-    ev_path = os.path.join(OUT, "title-events.json")
+    # A 판은 자기 조립본에서 잰 사건을 쓴다. 다시 구운 타이틀이 러프컷 판과
+    # 몇 프레임 다르기 때문이다. 실측하니 락업 착지가 18.22 에서 18.56 으로 옮겨졌다.
+    # 없으면 러프컷에서 잰 것으로 돌아간다.
+    ev_path = os.path.join(OUT, f"title-events-{suffix}.json")
+    if not os.path.exists(ev_path):
+        ev_path = os.path.join(OUT, "title-events.json")
     EV = json.load(open(ev_path, encoding="utf-8"))
     T_OPEN = open_e * E                       # 오프닝 길이. A 는 2.5초, B 는 0
     if os.path.exists(vf):
@@ -212,7 +217,10 @@ def main(open_e=OPEN_E, suffix="a"):
         # 오프닝을 포함한 길이다. 본편 시각은 T_OPEN 만큼 뒤로 간다.
     else:
         NF = None
-        DUR = T_OPEN + EV["duration"]
+        # title-events-a.json 은 조립본에서 잰 것이라 duration 이 이미 오프닝을 포함한
+        # 전체 길이다. 거기에 T_OPEN 을 또 더하면 안 된다. subtracted_s 로 구별한다.
+        # 이걸 놓쳐서 23.06초 대신 25.56초짜리 wav 가 나온 적이 있다. 파일 크기로 잡았다.
+        DUR = EV["duration"] if EV.get("subtracted_s") else T_OPEN + EV["duration"]
     N = int(round(DUR * SR))
     t = np.arange(N) / SR
 
