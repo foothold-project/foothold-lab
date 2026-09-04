@@ -43,8 +43,8 @@
   "ground_pulses": 53,
   "grain_agents": 96,
   "kick_attack_decay_s": 0.085,
-  "kick_tail_decay_s": 0.58,
-  "kick_tail_amp": 0.34,
+  "kick_tail_decay_s": 0.62,
+  "kick_tail_amp": 0.38,
   "sidechain": 0.55,
   "reverb_s": 3.0,
   "haas_ms": 18.0,
@@ -56,6 +56,6 @@
   "shelf_hz": 6500,
   "shelf_db": -9.0,
   "lufs": -16.0,
-  "true_peak_dbtp": -2.4,
-  "lr_correlation": 0.9385
+  "true_peak_dbtp": -3.3,
+  "lr_correlation": 0.918
 }
