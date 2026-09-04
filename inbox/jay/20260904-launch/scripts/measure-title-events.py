@@ -13,7 +13,18 @@ import numpy as np
 
 FF = r"C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe"
 LAB = r"C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab"
-RC = sys.argv[1] if len(sys.argv) > 1 else LAB + "/inbox/jay/20260904-roughcut/foothold-roughcut.mp4"
+_args = [a for a in sys.argv[1:] if not a.startswith("--")]
+RC = _args[0] if _args else LAB + "/inbox/jay/20260904-roughcut/foothold-roughcut.mp4"
+# --out <경로>  다른 파일에 쓴다. A 판은 B 판이 쓰는 title-events.json 을 덮으면 안 된다.
+# --sub <초>    사건 시각에서 그만큼 뺀다. A 판은 앞에 오프닝이 붙어 있어
+#               측정값이 절대 시각인데, build-sound2.py 는 본편 기준 시각에
+#               오프닝을 더해 쓴다. 규약을 하나로 두려고 여기서 빼 둔다.
+_OUT = None
+_SUB = 0.0
+if "--out" in sys.argv:
+    _OUT = sys.argv[sys.argv.index("--out") + 1]
+if "--sub" in sys.argv:
+    _SUB = float(sys.argv[sys.argv.index("--sub") + 1])
 W, H, FPS = 480, 270, 50
 TEAL = np.array([0x3e, 0xc7, 0xb4])
 
@@ -94,10 +105,13 @@ def main():
         print(f"  {tt:8.3f}  {nm:<14} {why}")
 
     spec = {"roughcut": os.path.basename(RC), "frames": n, "duration": round(dur, 4),
-            "title_start": round(t_title, 4),
-            "events": [{"t": tt, "what": nm, "why": why} for nm, tt, why in ev]}
-    out = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                        "..", "sound", "title-events.json"))
+            "title_start": round(t_title - _SUB, 4), "subtracted_s": _SUB,
+            "events": [{"t": round(tt - _SUB, 3), "what": nm, "why": why}
+                       for nm, tt, why in ev if tt - _SUB > 0]}
+    out = _OUT or os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                "..", "sound", "title-events.json"))
+    out = os.path.normpath(out if os.path.isabs(out) else
+                           os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", out))
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(spec, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     print(f"\n{out} 썼다")

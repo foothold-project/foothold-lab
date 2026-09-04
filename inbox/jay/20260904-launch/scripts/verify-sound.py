@@ -76,14 +76,25 @@ LIMITS = {
 
 
 def read(path, ac=1):
+    """항상 스테레오로 읽고 모노는 여기서 (L+R)/2 로 만든다.
+
+    ffmpeg 의 `-ac 1` 을 쓰면 안 된다. 그것은 평균이 아니라 **에너지 보존 다운믹스**다.
+    좌우가 같은 신호를 넣어 재 보면 출력 RMS 가 채널 RMS 의 1.4142 배로 나온다.
+    (L+R)/sqrt(2) 를 하는 것이다.
+
+    이걸 모르고 쓰면 절대 크기를 재는 항목이 전부 틀어진다. 실제로 틀어졌다.
+      5번 근접컷 RMS 가 최대 3 dB 크게 나왔다
+      9번 크레스트가 그만큼 작게 나왔다 (10.49 로 보고했는데 참값은 13.34)
+    비중과 비율을 재는 항목(1 · 3 · 4 · 6 · 7)은 배율이 약분되어 영향이 없다.
+    """
     p = subprocess.run([FF, "-v", "error", "-i", path, "-map", "0:a:0",
-                        "-ac", str(ac), "-ar", str(SR), "-f", "f32le", "-"],
+                        "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"],
                        capture_output=True)
     a = np.frombuffer(p.stdout, np.float32).astype(np.float64)
+    a = a[: (a.size // 2) * 2].reshape(-1, 2)
     if ac == 2:
-        a = a[: (a.size // 2) * 2].reshape(-1, 2)
         return a[:, 0], a[:, 1]
-    return a
+    return a.mean(axis=1)
 
 
 def _sh(x, H):
@@ -211,8 +222,10 @@ def main(path, offset=0.0):
     res[8] = float(np.corrcoef(hp(L, 200), hp(R, 200))[0, 1])
     ok[8] = res[8] <= 0.5
 
+    # 크레스트는 채널 피크 나누기 채널 RMS 다. 모노로 내려 재지 않는다.
     pk = max(np.abs(L).max(), np.abs(R).max())
-    res[9] = 20 * np.log10(pk / max(np.sqrt(np.mean(x ** 2)), 1e-12))
+    ch_rms = np.sqrt(np.mean(np.concatenate([L, R]) ** 2))
+    res[9] = 20 * np.log10(pk / max(ch_rms, 1e-12))
     ok[9] = res[9] >= 10.0
 
     print(f"{'':3}{'항목':<28}{'기준':>16}{'실측':>18}  판정")

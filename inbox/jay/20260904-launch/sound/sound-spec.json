@@ -33,12 +33,12 @@
     10.0
   ],
   "ending": {
-    "wordmark": 14.16,
-    "glitch": 15.02,
-    "unfold": 15.72,
-    "cut": 17.9,
-    "korean": 19.0,
-    "lockup": 20.72
+    "wordmark": 14.2,
+    "glitch": 15.14,
+    "unfold": 15.66,
+    "cut": 17.939999999999998,
+    "korean": 18.98,
+    "lockup": 21.06
   },
   "ground_pulses": 53,
   "grain_agents": 96,
@@ -56,6 +56,6 @@
   "shelf_hz": 6500,
   "shelf_db": -9.0,
   "lufs": -16.0,
-  "true_peak_dbtp": -2.6,
-  "lr_correlation": 0.9285
+  "true_peak_dbtp": -2.5,
+  "lr_correlation": 0.9272
 }
