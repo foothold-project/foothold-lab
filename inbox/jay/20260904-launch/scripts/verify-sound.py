@@ -285,6 +285,71 @@ def main(path, offset=0.0):
     return out
 
 
+def lead_in_seconds(x, sr=SR, hop_s=0.1, margin_db=3.0):
+    """앞에 붙은 조용한 구간의 길이를 잰다.
+
+    오프닝은 무음이 아니다. 먼 발자국과 드론이 깔린다. 그래서 무음 길이로는
+    못 찾는다. 대신 **소리가 본편 수준에 올라오는 자리**를 찾는다.
+    0.1초 단위 RMS 가 파일 60퍼센타일의 3 dB 안에 처음 드는 자리다.
+
+    실측이다. A 판 2.50초 · B 판 0.10초 · 1차본 1.60초.
+    포락선 백분위로도 해 봤는데 A 와 B 가 거의 같게 나와서 못 가른다.
+    오프닝의 드론이 포락선을 채워서 그렇다."""
+    hop = int(hop_s * sr)
+    n = len(x) // hop
+    if n < 8:
+        return 0.0
+    r = np.array([np.sqrt(np.mean(x[i * hop:(i + 1) * hop] ** 2)) for i in range(n)])
+    rdb = 20 * np.log10(np.maximum(r, 1e-12))
+    ok = rdb >= float(np.percentile(rdb, 60)) - margin_db
+    if not ok.any() or ok[0]:
+        return 0.0
+    return float(np.argmax(ok)) * hop_s
+
+
+def whoosh_at(x, offset, sr=SR):
+    """그 오프셋으로 쟀을 때 우쉬 두 곳의 2k-12k 비중."""
+    out = []
+    for t0 in WHOOSH:
+        t = t0 + offset
+        lo, hi = int((t - 0.25) * sr), int((t + 0.35) * sr)
+        out.append(band_share(x[max(0, lo):min(len(x), hi)], 2000, 12000))
+    return out
+
+
+def check_offset(paths):
+    """`--offset` 을 안 붙였는데 붙였어야 하면 멈춘다.
+
+    안 붙이고 돌리면 우쉬 창이 오프닝에 떨어져 3 · 4 · 5 · 6번이 **거짓으로
+    실패한다.** 우쉬가 8.592 퍼센트인데 0.001 퍼센트로 나온다. 한 번 속으면
+    다음 사람도 속는다.
+
+    앞에 조용한 구간이 있다는 것만으로는 멈추지 않는다. 그것만 보면 1차본
+    (앞이 1.60초 완만하게 차오른다)에서 헛돈다. **오프셋을 옮겼을 때 우쉬가
+    실제로 되살아나는 경우**에만 멈춘다. 증상 자체를 보는 것이다."""
+    bar = LIMITS[3][1]
+    for p in paths:
+        x = read(p)
+        lead = lead_in_seconds(x)
+        if lead <= 0.5:
+            continue
+        now, moved = whoosh_at(x, 0.0), whoosh_at(x, lead)
+        if min(now) >= bar or min(moved) < bar:
+            continue
+        print()
+        print(f"멈춘다. {os.path.basename(p)} 는 앞에 {lead:.2f}초가 붙어 있다.")
+        print(f"  지금 자리에서 우쉬가 {now[0]:.3f} · {now[1]:.3f} 퍼센트다 "
+              f"(기준 {bar} 퍼센트).")
+        print(f"  {lead:.2f}초 옮겨서 재면 {moved[0]:.3f} · {moved[1]:.3f} 퍼센트다.")
+        print("  창이 오프닝에 떨어져 3 · 4 · 5 · 6번이 거짓으로 실패한다.")
+        print()
+        print("  이렇게 돌려라")
+        print(f"    python scripts/verify-sound.py {p} --offset {lead:.1f}")
+        print()
+        print("  앞에 붙은 것이 없다고 확신하면 `--offset 0` 을 명시해라.")
+        sys.exit(2)
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     off = 0.0
@@ -294,6 +359,8 @@ if __name__ == "__main__":
         del args[i:i + 2]
     if not args:
         sys.exit(__doc__)
+    if "--offset" not in sys.argv:
+        check_offset(args)
     rows = [main(p, off) for p in args]
     dst = os.path.join(ROOT, "sound", "verify-sound.json")
     json.dump(rows, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
