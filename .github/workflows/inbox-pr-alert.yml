@@ -186,6 +186,11 @@ jobs:
           if [ ! -s review.json ] || ! jq -e 'has("files")' review.json >/dev/null 2>&1; then
             printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date '+%F %H:%M')" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
           fi
+          # ★ GitHub Actions 의 기본 셸은 bash -e 다. set -uo pipefail 은 -e 를 끄지 않는다.
+          #   아래 파이썬이 「붙일 것 없음」을 9 로 알리는데, -e 가 켜져 있으면 그 순간
+          #   스크립트가 죽어 RC=$? 에 도달하지 못한다. 그래서 메타가 잘 갖춰진 PR 일수록
+          #   검사가 실패했다. 판정이 뒤집혀 있었다. 여기서만 -e 를 끈다.
+          set +e
           python3 - <<'PYEOF' > comment.md
           import io, json, sys
           sys.stdout.reconfigure(encoding='utf-8')
