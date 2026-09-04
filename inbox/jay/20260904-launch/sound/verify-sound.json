@@ -1,70 +1,71 @@
 [
   {
-    "file": "foothold-launch-sound-b.wav",
-    "duration_s": 20.56,
-    "offset_s": 0.0,
+    "file": "foothold-launch-sound-a.wav",
+    "duration_s": 23.06,
+    "offset_s": 2.5,
     "items": {
       "1": {
         "name": "초저역 20-60 Hz 비중",
         "criterion": "25 % 이상",
-        "value": 32.344780817428116,
+        "value": 51.38382194329206,
         "pass": true
       },
       "2": {
         "name": "포락선 자기상관 최대 지연",
         "criterion": "208 ms 격자",
-        "value": 207.47916666666666,
+        "value": 208.1875,
         "pass": true
       },
       "3": {
         "name": "우쉬 첫째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 5.075712205267927,
+        "value": 13.777366622502237,
         "pass": true
       },
       "4": {
         "name": "우쉬 둘째 2k-12k",
         "criterion": "3 % 이상",
-        "value": 7.963031131588369,
+        "value": 14.93212146625624,
         "pass": true
       },
       "5": {
         "name": "근접컷 RMS",
         "criterion": "-16 dBFS 이상",
-        "value": -12.962888226899203,
+        "value": -12.380118648467564,
         "pass": true
       },
       "6": {
-        "name": "저역 감쇠 40-60 Hz -20 dB",
-        "criterion": "400 ms 이상",
-        "value": 544.1041666666667,
-        "pass": true
+        "name": "지속 바닥 비 40-60 Hz",
+        "criterion": "0.35 이상",
+        "value": 0.3229773487881526,
+        "pass": false
       },
       "7": {
         "name": "하모닉 2배 · 3배",
         "criterion": "-12 dB 이내",
         "value": [
-          23.367123706710153,
-          -9.871784671603592
+          0.3838960735713997,
+          7.117558322683191
         ],
         "pass": true
       },
       "8": {
         "name": "스테레오 상관 200 Hz 위",
         "criterion": "0.5 이하",
-        "value": 0.36548179461761426,
+        "value": 0.2729357601269283,
         "pass": true
       },
       "9": {
         "name": "크레스트 팩터",
         "criterion": "10 dB 이상",
-        "value": 11.290305513739865,
-        "pass": true
+        "value": 9.773494621625531,
+        "pass": false
       }
     },
+    "sustain_all": 0.3254,
     "lufs": -16.0,
-    "true_peak_dbtp": -1.9,
-    "passed": 9,
-    "all_pass": true
+    "true_peak_dbtp": -3.3,
+    "passed": 7,
+    "all_pass": false
   }
 ]
