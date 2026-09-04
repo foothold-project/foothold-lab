@@ -6,7 +6,7 @@ LAB  = r"C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab"
 CINE = LAB + "/sim/eval/results/20260903-flat-army-cine"
 FORM = LAB + "/sim/eval/results/20260904-flat-army-formation/flat_army_F_4096_formation.mp4"
 SP   = os.path.dirname(os.path.abspath(__file__))
-SEG  = os.path.join(SP,"seg6"); os.makedirs(SEG, exist_ok=True)
+SEG  = os.path.join(SP,"seg7"); os.makedirs(SEG, exist_ok=True)
 FPS, E, XF = 50, 30.0/144, 0.5        # 8분음표 0.20833 s = 실측 발 접지 간격 · 디졸브 0.5 s
 
 # 길이 단위가 8분음표다. 실측 발 접지가 208 ms 이므로 컷 지점이 발걸음에 떨어진다.
@@ -18,7 +18,7 @@ CUTS = [
     ("underfoot", 15.00, 3, None,   "지면 7 cm"),
     ("orbit",     15.00, 4, "out",  "선회. 감속하며 넘긴다"),
     ("dolly",      4.00,16, "soft", "달리 아웃. 45 퍼센트 속도로 들어와 가속"),
-    ("rise",      13.50,12, "out",  "수직 상승. 빠르게 들어와 멎는다"),
+    ("rise",      16.667,16,"out",  "수직 상승. 105 m 에서 282 m 부감까지 올라 도착한다"),
 ]
 FORM_E, TITLE_E = 5, 44               # 대형 1.042 s · 타이틀 9.167 s
 
