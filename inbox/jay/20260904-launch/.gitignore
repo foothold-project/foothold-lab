@@ -8,3 +8,12 @@ workb/
 test/
 sheet/
 sound/*.wav
+keyvis/src/
+keyvis/out/
+worka/
+
+# 오프닝 중간 산물. o1_raw.png 만 남긴다. build-opening.py 가 그것으로 다시 만든다.
+opening/o1.png
+opening/o2.png
+opening/o2_raw.png
+opening/opening-drift.mp4

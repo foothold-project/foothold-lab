@@ -48,7 +48,7 @@ GAIT = 1.0 / E                  # 4.8 Hz
 SUB = 4.805 * 2 ** 3            # 38.44 Hz. 30-50 Hz 안에 들어온다
 OPEN_E = 12                     # 오프닝 8분음표 12개 = 2.5초. 첫 컷이 박자에 떨어진다
 TARGET_LUFS = -16.0
-TARGET_TP = -1.0
+TARGET_TP = -1.5        # 상한 -1 에 딱 붙이지 않는다. 인코딩 뒤에 넘칠 수 있다
 rng = np.random.default_rng(4805)
 
 # 층별 무게. 여기 하나만 고치면 된다. 값은 재서 맞췄다.
@@ -56,22 +56,27 @@ rng = np.random.default_rng(4805)
 # 첫 판은 드론을 너무 크게 잡아서 20-60 Hz 가 73.9 퍼센트가 됐고
 # 포락선을 드론이 먹어서 208 ms 가 최대가 아니게 됐다(60 ms 가 나왔다).
 # 바닥은 「들리는」 것이지 「덮는」 것이 아니다. 드론을 내리고 중역을 올린다.
-G_DRONE = 0.40          # 지속 서브. 바닥이되 덮지 않는다
+G_DRONE = 0.32          # 지속 서브. 바닥이되 덮지 않는다
 G_FOOT = 1.00           # 발자국. 격자가 포락선에서 최대여야 한다
-G_VOICE = 1.15          # 무언 보컬. 중역을 채운다
-G_WHOOSH = 1.30         # 우쉬. 2k-12k 를 3 퍼센트 위로 올린다
+G_VOICE = 1.45          # 무언 보컬. 중역을 채운다
+G_WHOOSH = 2.30         # 우쉬. 2k-12k 를 3 퍼센트 위로 올린다
 G_FIG = 0.80            # 상승 음형
 G_END = 1.00            # 엔딩
 G_OPEN = 0.85           # 오프닝
-KICK_SUB  = 1.35        # 발자국의 서브(58->36 Hz). 초저역 20-60 비중을 여기서 올린다.
+KICK_SUB  = 0.85        # 발자국의 서브(58->36 Hz). 초저역 20-60 비중을 여기서 올린다.
                         # 드론을 올려 채우면 포락선이 매끈해져 208 ms 격자가 죽는다.
                         # 발자국 자체의 서브를 올리면 깊이와 격자를 같이 얻는다.
-KICK_BODY = 1.60        # 발자국의 80-250 Hz 몸통. 「300 의 두께」가 여기서 나온다
+KICK_BODY = 1.25        # 발자국의 80-250 Hz 몸통. 「300 의 두께」가 여기서 나온다
 KICK_DRIVE = 6.0        # 몸통 새추레이션 드라이브. 배음이 두께다.
                         # 3.2 에서는 3배 배음이 -14.7 dB 로 기준(-12 이내)에 못 미쳤다.
                         # 6.0 으로 올리니 -7.0 dB 다. 실측으로 정한 값이다.
-WHOOSH_AIR = 1.70       # 우쉬의 2-8 kHz 공기 층
+WHOOSH_AIR = 2.40       # 우쉬의 2-8 kHz 공기 층
 SIDECHAIN = 0.55        # 발자국이 나머지를 누르는 깊이. 격자를 전 대역에 새긴다
+LOW_VERB = 0.35
+G_FLOOR = 0.0           # 지속 바닥 50 Hz. 0 으로 둔다.
+                        # 넣어 봤지만 지속 바닥 비가 0.340 에서 0.336 으로 오히려 내려갔다.
+                        # 포락선은 신호의 합이지 포락선의 합이 아니라 그렇다.
+                        # 대신 초저역 비중이 79 퍼센트로 튀고 우쉬가 0.14 퍼센트로 묻혔다.         # 저역 전용 긴 잔향. 타격 사이 골을 메워 지속 바닥을 올린다
 
 
 # ------------------------------------------------------------------ 재료
@@ -239,7 +244,7 @@ def main(open_e=OPEN_E, suffix="a"):
 
     # ---------------------------------------------- 층 1. 지속 서브 드론. 바닥이다.
     drone = np.zeros(N)
-    for mul, amp in [(1.0, 1.00), (1.5, 0.30), (2.0, 0.34), (3.0, 0.12), (4.0, 0.060)]:
+    for mul, amp in [(1.0, 1.00), (1.5, 0.34), (2.0, 0.34), (3.0, 0.12), (4.0, 0.060)]:
         drift = 1.0 + 0.0020 * np.sin(2 * np.pi * 0.043 * t + mul * 1.7)
         ph = 2 * np.pi * np.cumsum(SUB * mul * drift) / SR
         drone += np.sin(ph) * amp
@@ -251,8 +256,8 @@ def main(open_e=OPEN_E, suffix="a"):
     # 다이내믹 대비. 오프닝은 거의 침묵. 첫 컷에서 바닥이 들어온다.
     if T_OPEN > 0.05:
         # A 판. 오프닝은 거의 침묵이고 첫 컷에서 바닥이 들어온다.
-        lx = [0.0, T_OPEN - 1.6, T_OPEN - 0.02, T_OPEN]
-        ly = [0.02, 0.10, 0.16, 0.62]
+        lx = [0.0, T_OPEN * 0.35, T_OPEN - 0.02, T_OPEN]
+        ly = [0.16, 0.30, 0.40, 0.62]
     else:
         # B 판. 오프닝이 없으므로 0.000초에서 바로 바닥이 서 있다.
         lx = [0.0, 0.05]
@@ -275,7 +280,7 @@ def main(open_e=OPEN_E, suffix="a"):
     #   타격 85 ms   포락선을 판다. 격자가 여기서 산다
     #   꼬리 580 ms  무게를 끈다. 400-700 ms 요구가 여기서 지켜진다
     # 208 ms 뒤 남는 양이 0.30 이라 포락선이 70 퍼센트 파인다.
-    ATK_DEC, TAIL_DEC, TAIL_AMP = 0.085, 0.580, 0.34
+    ATK_DEC, TAIL_DEC, TAIL_AMP = 0.085, 0.620, 0.38
 
     def two_stage(lt, scale=1.0):
         return (np.exp(-lt / (ATK_DEC * scale)) * (1.0 - TAIL_AMP)
@@ -287,12 +292,14 @@ def main(open_e=OPEN_E, suffix="a"):
         lt = np.arange(n) / SR
         e = two_stage(lt, scale)
         # 서브. 58 Hz 에서 36 Hz 로 떨어진다. 무게가 여기서 난다.
-        f_inst = 36 + 22 * np.exp(-lt / 0.085)
+        f_inst = 45 + 20 * np.exp(-lt / 0.085)
         sub = np.sin(2 * np.pi * np.cumsum(f_inst) / SR) * e
         # 몸통 80-250 Hz. 여기에 새추레이션을 건다. 「300 의 두께」가 여기서 나온다.
-        body = (np.sin(2 * np.pi * 96 * lt) * 0.7
-                + np.sin(2 * np.pi * 148 * lt) * 0.45
-                + band(rng.normal(0, 1, n), 80, 250) * 0.8)
+        # 90 Hz(2배)와 135 Hz(3배)에 정확히 둔다. 45 Hz 기음의 배음 계열이다.
+        body = (np.sin(2 * np.pi * 90 * lt) * 0.85
+                + np.sin(2 * np.pi * 135 * lt) * 0.60
+                + np.sin(2 * np.pi * 180 * lt) * 0.30
+                + band(rng.normal(0, 1, n), 80, 250) * 0.6)
         body *= two_stage(lt, scale * 0.60)
         body = saturate(band(body, 80, 250), KICK_DRIVE)
         # 흙. 아주 짧은 잡음 한 겹. 발이 땅을 긁는 소리다.
@@ -483,15 +490,32 @@ def main(open_e=OPEN_E, suffix="a"):
     for at in times:
         frac = at / max(T_OPEN, 1e-9)
         # 멀리 있는 것은 고역이 없다. 다가오면서 필터가 열린다.
-        fc = 55.0 * (420.0 / 55.0) ** (frac ** 1.5)
+        fc = 90.0 * (420.0 / 90.0) ** (frac ** 1.5)
         far = lp(K_STRONG, fc)
-        place(opening, far, at, (0.14 + 0.80 * frac ** 1.7) / max(1e-9, np.abs(far).max()))
+        place(opening, far, at, (0.34 + 0.62 * frac ** 1.4) / max(1e-9, np.abs(far).max()))
     if T_OPEN > 0.05:
         wind = band(rng.normal(0, 1, N), 40, 800) * np.interp(
             t, [0, T_OPEN * 0.5, T_OPEN, T_OPEN + 0.4], [0.10, 0.24, 0.30, 0.0])
         opening = opening + wind * 0.5
+        # 오프닝에도 서브 바닥을 깐다. 「거의 침묵」이 「아무것도 없음」은 아니다.
+        # 이것이 없으면 A 판에서 두 가지가 깨진다. 실측으로 확인했다.
+        #   초저역 20-60 이 22.9 퍼센트로 희석된다 (오프닝이 길이의 12 퍼센트다)
+        #   포락선에 큰 느린 성분이 생겨 208 ms 가 최대가 아니게 된다
+        # 바닥을 깔면 둘 다 풀린다. 소리는 여전히 아주 작다.
+        bed = (np.sin(2 * np.pi * SUB * t) + 0.35 * np.sin(2 * np.pi * SUB * 1.5 * t))
+        bed *= np.interp(t, [0, T_OPEN * 0.30, T_OPEN, T_OPEN + 0.25],
+                            [0.30, 0.52, 0.70, 0.0])
+        opening = opening + bed * 0.55
 
     # ---------------------------------------------- 합치고 마감
+    # 지속 바닥. 50 Hz 정현파 한 겹을 사이드체인 없이 깐다.
+    # 40-60 Hz 창 한가운데다. 이것이 「타격 사이가 안 비게」 하는 층이다.
+    # 더킹을 걸지 않는 것이 핵심이다. 눌리면 골이 다시 생긴다.
+    # 비(10퍼센타일/90퍼센타일)는 양쪽에 같은 양을 더하면 오른다.
+    floor50 = np.sin(2 * np.pi * 50.0 * t) + 0.30 * np.sin(2 * np.pi * 50.0 * 2 * t + 0.7)
+    floor50 *= np.interp(t, [0, max(T_OPEN, 0.05), T_WALK_END, T_FORM_END, DUR - 0.5, DUR],
+                            [0.55, 1.00, 1.00, 0.80, 0.70, 0.0])
+
     # 사이드체인 더킹. 발자국이 나머지를 208 ms 마다 눌렀다 놓는다.
     # 드론과 잔향은 그 자체로 매끈해서 포락선에 격자를 안 남긴다. 눌러야 남는다.
     # 짐머 결의 「숨쉬는」 느낌도 여기서 난다.
@@ -505,7 +529,7 @@ def main(open_e=OPEN_E, suffix="a"):
     wide_ducked = voice * 0.60 * G_VOICE + fig * G_FIG
     wide_free = whoosh * G_WHOOSH + acc_l * 0.45 * G_END
     dry_wide = wide_ducked * duck_sc + wide_free
-    dry_mono = (drone * G_DRONE * duck_sc + foot * G_FOOT + opening * G_OPEN
+    dry_mono = (drone * G_DRONE * duck_sc + floor50 * G_FLOOR + foot * G_FOOT + opening * G_OPEN
                 + acc_l * 0.55 * G_END + voice * 0.45 * G_VOICE * duck_sc)
 
     # 잔향 3초. 규모는 잔향에서 나온다. 좌우를 다른 잡음으로 만들어 폭을 낸다.
@@ -513,14 +537,19 @@ def main(open_e=OPEN_E, suffix="a"):
     irR = reverb_ir(3.0, 3200, 29, 0.026)
     wetL = conv(dry_wide * 0.55 + dry_mono * 0.30, irL)
     wetR = conv(dry_wide * 0.55 + dry_mono * 0.30, irR)
+    # 저역에만 긴 잔향을 하나 더 보낸다. 타격 사이의 골을 메운다.
+    # 지속 바닥 비(40-60 Hz 10/90 퍼센타일)가 이것으로 오른다.
+    irLow = reverb_ir(2.6, 160, 91, 0.006)
+    low_send = lp(foot * G_FOOT + drone * G_DRONE * 0.5, 90.0)
+    wet_low = conv(low_send, irLow) * LOW_VERB
     # 잔향에도 같은 더킹을 건다. 3초 꼬리가 안 눌리면 격자가 다시 메워진다.
     wetL, wetR = wetL * duck_sc, wetR * duck_sc
 
     # 하스 지연 18 ms. 듄의 공간감은 폭에서 온다. 저역은 모노로 둔다.
     HAAS = int(0.018 * SR)
     wide_d = np.concatenate([np.zeros(HAAS), dry_wide])[:N]
-    L = dry_mono + dry_wide * 0.75 + wide_d * 0.45 + wetL * 1.5
-    R = dry_mono + wide_d * 0.75 + dry_wide * 0.45 + wetR * 1.5
+    L = dry_mono + dry_wide * 0.92 + wide_d * 0.30 + wetL * 1.7 + wet_low
+    R = dry_mono + wide_d * 0.92 + dry_wide * 0.30 + wetR * 1.7 + wet_low
     # 120 Hz 아래는 좌우를 같게 한다. 저역이 갈라지면 스피커에서 사라진다.
     m = (L + R) * 0.5
     lowm = lp(m, 120.0)
@@ -546,15 +575,19 @@ def main(open_e=OPEN_E, suffix="a"):
         d_l = TARGET_LUFS - I
         d_p = TARGET_TP - tp
         g = min(d_l, d_p)
-        print(f"  마감 {it}: {I:7.2f} LUFS · 트루피크 {tp:6.2f} dBTP · 보정 {g:+.2f} dB")
+        print(f"  마감 {it}: {I:7.2f} LUFS · 트루피크 {tp:6.2f} dBTP · 라우드니스 보정 {d_l:+.2f} dB")
         if abs(d_l) < 0.15 and d_p > -0.05:
             break
-        gg = 10 ** (g / 20.0)
-        L, R = L * gg, R * gg
+        # 라우드니스를 먼저 맞추고, 넘치는 피크는 소프트 클립으로 눌러 천장 아래로 넣는다.
+        # 예전에는 min(라우드니스 보정, 피크 여유) 를 썼는데 피크에 걸리면 게인이 0 이 되어
+        # -18.6 LUFS 에서 멈췄다. 크레스트가 13.9 dB 나 있어 누를 여유가 있었는데도 그랬다.
+        L, R = L * 10 ** (d_l / 20.0), R * 10 ** (d_l / 20.0)
+        ceil = 10 ** (TARGET_TP / 20.0) * 0.94        # 트루피크 여유를 둔다
         pkn = max(np.abs(L).max(), np.abs(R).max())
-        if pkn > 0.97:                        # 부드럽게 눌러 클리핑을 막는다
-            L = np.tanh(L / pkn * 1.05) * 0.97
-            R = np.tanh(R / pkn * 1.05) * 0.97
+        if pkn > ceil:
+            drive = min(3.0, max(1.05, pkn / ceil))
+            L = np.tanh(L / pkn * drive) / np.tanh(drive) * ceil
+            R = np.tanh(R / pkn * drive) / np.tanh(drive) * ceil
         write_wav(path, L, R)
     nb = write_wav(path, L, R)
     I, tp = lufs_and_peak(path)

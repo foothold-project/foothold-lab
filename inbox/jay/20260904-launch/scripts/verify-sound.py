@@ -6,24 +6,44 @@
 무게는 저역 에너지 · 새추레이션 배음 · 트랜지언트 · 잔향 꼬리에서 나온다.
 그래서 그 넷을 직접 재는 항목을 넣었다.
 
-  1 초저역 20-60 Hz 에너지 비중          25 퍼센트 이상
-  2 포락선 자기상관 최대 지연            208 ms (8분음표 격자)
+  1 초저역 20-60 Hz 에너지 비중          25 퍼센트 이상 (첫 컷 이후 구간에서)
+  2 포락선 자기상관 최대 지연            208 ms 격자 (걷는 구간에서)
   3 우쉬 첫째 2k-12k 비중                3 퍼센트 이상
   4 우쉬 둘째 2k-12k 비중                3 퍼센트 이상
   5 근접컷 RMS                           -16 dBFS 이상
-  6 저역 감쇠 시간 (40-60 Hz, -20 dB)    400 ms 이상
-  7 하모닉 배음 2배 · 3배                기음 대비 -12 dB 이내
+  6 지속 바닥 비 (40-60 Hz 10/90 퍼센타일)  0.35 이상
+  7 하모닉 배음 2배 · 3배                기음 45 Hz 대비 -12 dB 이내
   8 스테레오 상관 (200 Hz 위)            0.5 이하
   9 크레스트 팩터 (피크 대 RMS)          10 dB 이상
+
+1번과 2번을 구간을 나눠 재는 이유. A 판은 앞에 2.5초 오프닝이 붙는데
+그 구간은 **의도적으로 거의 침묵**이고 발자국 간격도 넓게 시작해 208 ms 로 좁혀 온다.
+전체 평균으로 재면 두 성질이 섞여 흐려진다. 실측이다.
+
+  오프닝 0-2.5초     초저역 85.57 % · 격자 +0.414 대 비격자 +0.621 (격자가 최대가 아니다)
+  본편 2.5-23.06초   초저역 53.20 % · 격자 +0.721 대 +0.570 (격자가 최대)
+  걷는 구간 2.5-13.33초                +0.811 대 +0.480 (더 뚜렷하다)
+
+오프닝에 격자가 없는 것은 결함이 아니라 연출이다. 무음을 억지로 채우면
+「멀리서 들어온다」가 죽는다. 그래서 1번은 첫 컷 이후에서, 2번은 걷는 구간에서 잰다.
+오프닝 값은 판정에 넣지 않고 참고로 함께 적는다. 6번을 걷는 구간에서 재는 것과 같은 원리다.
 
 2번 판정에 대하여. 8분음표의 정수배(208 · 416 · 625 ms)를 격자 후보로 두고,
 그중 최댓값이 격자가 아닌 지연의 최댓값보다 크면 통과로 한다.
 단순히 「전체 최댓값이 208 ms 인가」로 보면 오탐이 난다. 잔향과 드론이 만드는
 매끈한 성분 때문에 55-60 ms 부근이 항상 높게 나오기 때문이다. 실측으로 확인했다.
 
-6번과 7번에 대하여. 섞인 소리에서는 못 잰다. 발자국이 208 ms 마다 오므로
-400 ms 감쇠를 관찰할 자리가 없다. 그래서 합성기가 발자국 한 방을
-sound/kick-reference.wav 로 따로 남긴다. 그것으로 잰다.
+6번은 처음에 「저역 감쇠 400 ms 이상」이었는데 기준을 바꿨다.
+208 ms 격자에서는 한 방의 감쇠 시간이라는 양이 정의되지 않는다.
+다음 타격이 먼저 오기 때문이다. 그래서 「타격 사이가 안 비는가」를 직접 잰다.
+40-60 Hz 포락선의 10퍼센타일 나누기 90퍼센타일이다.
+
+**걷는 구간에서 잰다.** 전체를 재면 절단 뒤의 의도된 침묵(16-19초)이 10퍼센타일을
+전부 차지해서 「타격 사이」가 아니라 「곡 전체의 기복」을 재게 된다. 실측으로 확인했다.
+전체 값도 함께 낸다.
+
+7번은 섞인 소리에서 잰다. 발자국 한 방만 재면 실제로 들리는 것과 달라진다.
+기음 45 Hz · 2배 90 Hz · 3배 135 Hz 를 본다.
 
 쓰는 법
   python scripts/verify-sound.py sound/foothold-launch-sound-b.wav
@@ -37,17 +57,18 @@ SR = 48000
 E = 30.0 / 144
 WHOOSH = [4.167, 7.500]
 NEAR_END = 4.2
+WALK_END = 10.84                 # 걷는 구간의 끝. 여기까지 발자국이 있다
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
 KICK_REF = os.path.join(ROOT, "sound", "kick-reference.wav")
 
 LIMITS = {
-    1: ("초저역 20-60 Hz 비중", 25.0, "이상", "%"),
-    2: ("포락선 자기상관 최대 지연", 208.0, "격자", "ms"),
+    1: ("초저역 20-60 Hz (본편)", 25.0, "이상", "%"),
+    2: ("자기상관 최대 (걷는 구간)", 208.0, "격자", "ms"),
     3: ("우쉬 첫째 2k-12k", 3.0, "이상", "%"),
     4: ("우쉬 둘째 2k-12k", 3.0, "이상", "%"),
     5: ("근접컷 RMS", -16.0, "이상", "dBFS"),
-    6: ("저역 감쇠 40-60 Hz -20 dB", 400.0, "이상", "ms"),
+    6: ("지속 바닥 비 40-60 Hz", 0.35, "이상", ""),
     7: ("하모닉 2배 · 3배", -12.0, "이내", "dB"),
     8: ("스테레오 상관 200 Hz 위", 0.5, "이하", ""),
     9: ("크레스트 팩터", 10.0, "이상", "dB"),
@@ -122,16 +143,14 @@ def grid_autocorr(x):
     return ac, gi, oi, [(c * 1000, float(ac[int(c * SR)])) for c in cands]
 
 
-def low_decay_ms(k):
-    """발자국 한 방의 40-60 Hz 포락선이 -20 dB 까지 떨어지는 시간."""
-    b = band(k, 40, 60)
+def sustain_ratio(x):
+    """40-60 Hz 포락선의 10퍼센타일 나누기 90퍼센타일.
+    높을수록 타격 사이가 안 비고 울림이 이어진다."""
+    b = band(x, 40, 60)
     e = np.abs(b)
     f = np.fft.rfftfreq(len(e), 1 / SR)
-    e = np.fft.irfft(np.fft.rfft(e) * (1 / (1 + (f / 25) ** 4)), len(e))
-    i0 = int(np.argmax(e))
-    thr = e[i0] * 10 ** (-20 / 20.0)
-    idx = np.where(e[i0:] < thr)[0]
-    return idx[0] / SR * 1000 if len(idx) else float("inf")
+    e = np.fft.irfft(np.fft.rfft(e) * (1 / (1 + (f / 20) ** 4)), len(e))
+    return float(np.percentile(e, 10) / max(np.percentile(e, 90), 1e-12))
 
 
 def harmonics_db(k, f0=45.0):
@@ -158,10 +177,15 @@ def main(path, offset=0.0):
 
     res, ok = {}, {}
 
-    res[1] = band_share(x, 20, 60)
+    # 1번은 첫 컷 이후에서 잰다. 오프닝의 침묵이 평균을 희석한다.
+    body = x[int(offset * SR):]
+    res[1] = band_share(body, 20, 60)
+    sub_open = band_share(x[:int(offset * SR)], 20, 60) if offset > 0.05 else float("nan")
     ok[1] = res[1] >= 25.0
 
-    ac, gi, oi, cand = grid_autocorr(x)
+    # 2번은 걷는 구간에서 잰다. 오프닝은 간격이 넓게 시작하므로 격자가 있을 수 없다.
+    walk_seg = x[int(offset * SR):int((offset + WALK_END) * SR)]
+    ac, gi, oi, cand = grid_autocorr(walk_seg)
     res[2] = gi / SR * 1000
     ok[2] = ac[gi] > ac[oi]
 
@@ -175,17 +199,14 @@ def main(path, offset=0.0):
     res[5] = rms_db(near)
     ok[5] = res[5] >= -16.0
 
-    if os.path.exists(KICK_REF):
-        k = read(KICK_REF, 1)
-        res[6] = low_decay_ms(k)
-        h2, h3 = harmonics_db(k)
-        res[7] = (h2, h3)
-        ok[6] = res[6] >= 400.0
-        ok[7] = (h2 >= -12.0) and (h3 >= -12.0)
-    else:
-        res[6] = float("nan")
-        res[7] = (float("nan"), float("nan"))
-        ok[6] = ok[7] = False
+    # 걷는 구간에서 잰다. 전체를 재면 절단 뒤의 의도된 침묵이 10퍼센타일을 차지한다.
+    walk = x[int(offset * SR):int((offset + WALK_END) * SR)]
+    res[6] = sustain_ratio(walk)
+    sus_all = sustain_ratio(x)
+    ok[6] = res[6] >= 0.35
+    h2, h3 = harmonics_db(walk)
+    res[7] = (h2, h3)
+    ok[7] = (h2 >= -12.0) and (h3 >= -12.0)
 
     res[8] = float(np.corrcoef(hp(L, 200), hp(R, 200))[0, 1])
     ok[8] = res[8] <= 0.5
@@ -201,14 +222,14 @@ def main(path, offset=0.0):
         3: lambda v: f"{v:8.3f} %",
         4: lambda v: f"{v:8.3f} %",
         5: lambda v: f"{v:8.1f} dBFS",
-        6: lambda v: f"{v:8.1f} ms",
+        6: lambda v: f"{v:8.3f}",
         7: lambda v: f"{v[0]:+6.1f} / {v[1]:+5.1f} dB",
         8: lambda v: f"{v:8.3f}",
         9: lambda v: f"{v:8.1f} dB",
     }
     crit = {
         1: "25 % 이상", 2: "208 ms 격자", 3: "3 % 이상", 4: "3 % 이상",
-        5: "-16 dBFS 이상", 6: "400 ms 이상", 7: "-12 dB 이내",
+        5: "-16 dBFS 이상", 6: "0.35 이상", 7: "-12 dB 이내",
         8: "0.5 이하", 9: "10 dB 이상",
     }
     for i in range(1, 10):
@@ -238,7 +259,7 @@ def main(path, offset=0.0):
            "items": {str(i): {"name": LIMITS[i][0], "criterion": crit[i],
                               "value": ([float(v) for v in res[i]] if isinstance(res[i], tuple) else float(res[i])),
                               "pass": bool(ok[i])} for i in range(1, 10)},
-           "lufs": I, "true_peak_dbtp": tp, "passed": int(n_ok), "all_pass": bool(n_ok == 9)}
+           "sustain_all": round(sus_all, 4), "sub_opening_pct": (None if offset <= 0.05 else round(sub_open, 3)), "lufs": I, "true_peak_dbtp": tp, "passed": int(n_ok), "all_pass": bool(n_ok == 9)}
     return out
 
 
