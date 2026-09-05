@@ -1,7 +1,7 @@
 # 다이제스트 재료: 2026-W36
 
 > 분류: 운영
-> 작성: 자동 수집 · 2026-09-05
+> 작성: 자동 수집 · 2026-09-05 09:47
 > 근거: 깃 이력
 > 요지: 2026-08-31 ~ 2026-09-06 의 활동 목록. 다이제스트를 쓰기 위한 재료다.
 > 상태: 초안
@@ -9,8 +9,10 @@
 **이 파일은 다이제스트가 아니다.** 「무엇을 알게 됐나」는 사람이 쓴다.
 아래에서 골라 `2026-W36.md` 를 쓴 뒤 이 파일은 지운다.
 
-## 머지된 PR (57건)
+## 머지된 PR (59건)
 
+- `#252` [운영] 자동화 실패 감시 신설과 inbox 검수의 broken pipe 수정  (vfxpedia)
+- `#251` [운영] 기획발표 산출물 상태의 확정 반영  (vfxpedia)
 - `#246` inbox(jay): 우쉬 창 문구를 한 갈래로 못 박는다  (vfxpedia)
 - `#244` inbox(jay): 오프닝 색을 본편에 붙인다 · 44.5도에서 19.3도로  (vfxpedia)
 - `#242` inbox(jay): A 판 완성 · 23.06초 · 사운드 아홉 항목 통과  (vfxpedia)
@@ -105,8 +107,9 @@
 - `#70` [작업] 노션 프로젝트 기획 정리 · C/기록
 - `#51` [승격 검토] inbox/meang/20260825-park-mentoring.md · C/기록
 
-## 새 문서 (16개)
+## 새 문서 (17개)
 
+- `docs/digest/2026-W36-material.md`
 - `docs/guides/runpod-setup.md`
 - `docs/meetings/20260831-park-mentoring.md`
 - `docs/notices/2026-08-09.md`
@@ -166,9 +169,12 @@
 - `docs/research/terrain-finetune-plan.md`
 - `docs/research/training-benchmarks.md`
 
-## 커밋 (164건)
+## 커밋 (167건)
 
 ```
+92caad8 VFXPEDIA ops: 자동화 실패 감시를 세우고 inbox 검수의 broken pipe 를 고친다 (#252)
+3db04c0 VFXPEDIA docs: 기획발표 산출물 넷의 상태를 확정으로 (#251)
+05f54c0 github-actions[bot] chore: 다이제스트 재료 수집 (2026-09-05)
 e94c0a7 VFXPEDIA Merge pull request #246 from foothold-project/feature/hf-launch2-jay
 32ea5b9 vfxpedia inbox(jay): 우쉬 창 문구를 한 갈래로 못 박는다
 ad263c1 VFXPEDIA Merge pull request #244 from foothold-project/feature/hf-launch2-jay
@@ -226,10 +232,7 @@ c884f56 VFXPEDIA Merge pull request #193 from foothold-project/feature/roughcut-
 3b0b5f4 vfxpedia docs: 원장 전수 절 재동기화 · 관문별 건수 정정 (#183)
 8af95c7 VFXPEDIA deliverables: 9/4 기획 발표 덱 1차 (#118) (#191)
 480c5dd VFXPEDIA Merge pull request #186 from foothold-project/feature/roughcut-jay
-d60327d VFXPEDIA Merge pull request #189 from foothold-project/feature/army-formation-jay
-86de3cd vfxpedia inbox(jay): 러프컷 v4 · 22.83초 · 대형에서 타이틀로 디졸브
-fb19686 vfxpedia FOOTHOLD 워드마크 대군 촬영 추가
-... 외 104건
+... 외 107건
 ```
 
 ## 다이제스트를 쓸 때
