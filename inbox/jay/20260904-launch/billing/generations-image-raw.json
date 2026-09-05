@@ -1,0 +1,515 @@
+{
+  "items": [
+    {
+      "id": "7b1a4a8f-f3c2-43ab-9ae3-ba7d50182b7b",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Wide low camera over untouched hostile terrain at dawn. Empty. No robots, no humans, no machinery, no signs of any kind. Broken rock and gravel and wind scoured dirt filling the frame and receding into fog, a vast unknown expanse with no landmarks and no path, the first light of a cold morning. Heavy, dark, monumental scale. Sun low and well off to one side behind haze, volumetric shafts in the dust, ochre and bone desaturated palette, lifted milky blacks, deep shadows in the foreground rocks, fine grain, anamorphic widescreen, cinematic. No text, no lettering, no logos, no writing.",
+        "aspect_ratio": "16:9",
+        "input_images": [],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_045547_7b1a4a8f-f3c2-43ab-9ae3-ba7d50182b7b.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_045547_7b1a4a8f-f3c2-43ab-9ae3-ba7d50182b7b_min.webp"
+      },
+      "createdAt": 1788497747.55845
+    },
+    {
+      "id": "23f3629d-4952-4fc1-b6c5-6092955328b9",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "An empty alien plain before anything arrives. Absolutely no machines, no people, no buildings, no roads, no footprints. Uncharted hostile ground of shattered rock slabs, scree and dry cracked dirt stretching to an unbroken horizon. Ground fog pooling in the low places. The mood is dark, weighty and vast, a place that does not want anyone in it. Low raking light from far off frame edge, thick atmospheric haze swallowing the distance, ochre and bone desaturated palette, milky lifted blacks, fine grain, anamorphic widescreen. No text, no lettering, no logos.",
+        "aspect_ratio": "16:9",
+        "input_images": [],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_045547_23f3629d-4952-4fc1-b6c5-6092955328b9.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_045547_23f3629d-4952-4fc1-b6c5-6092955328b9_min.webp"
+      },
+      "createdAt": 1788497747.430251
+    },
+    {
+      "id": "0ba686b0-99c0-43e0-9201-4b5b3c219848",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Change only the ground, the sky and the air of this frame. Everything else is locked. The robots, their positions, their sizes, the camera and the framing are identical to the source; this is a relight and a set dressing, not a new shot. Do not add a robot. Do not put anything in the foreground. The corridor running away from camera between the ranks stays clear. No text of any kind in the picture: no letters, no words, no logos, no brand names, no engraving on the robots; their shells are blank and unmarked. Robots stay pure white with rim light and soft bounce fill, never black silhouettes. The flat grid floor becomes uncharted hostile terrain of broken rock, gravel, angular stones and wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon well off to one side, moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "f95bd9c4-c6ac-4913-8b48-5730a9a606b6",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/f95bd9c4-c6ac-4913-8b48-5730a9a606b6.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_0ba686b0-99c0-43e0-9201-4b5b3c219848.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_0ba686b0-99c0-43e0-9201-4b5b3c219848_min.webp"
+      },
+      "createdAt": 1788496867.527386
+    },
+    {
+      "id": "5700e4b3-4e8d-420c-b444-039eecb1d28d",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Photographic regrade and set dressing of the source frame. Preserve the exact composition, camera angle, focal length and every robot position and scale. No robot is added, removed, enlarged or brought closer to camera; the foreground stays as empty as in the source and the aisle between the ranks reads clear to the far end. The image contains no text, no typography, no logo, no insignia and no engraved lettering; robot shells are smooth, blank and unbranded. Robots remain pure white and legible with rim light and fill, not black shapes. Replace the flat grid floor with uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and off to one side, moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "f95bd9c4-c6ac-4913-8b48-5730a9a606b6",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/f95bd9c4-c6ac-4913-8b48-5730a9a606b6.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_5700e4b3-4e8d-420c-b444-039eecb1d28d.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_5700e4b3-4e8d-420c-b444-039eecb1d28d_min.webp"
+      },
+      "createdAt": 1788496867.516767
+    },
+    {
+      "id": "0e280ae5-9e6e-46a1-a5f2-e074b8c02200",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Absolutely no text anywhere in the image: no lettering, no words, no logos, no brand marks, no engraved or printed characters. The robot bodies are blank, smooth and completely unmarked. Keep the camera position, framing and composition exactly as in the source. Do not add any robot. Do not introduce a new robot into the foreground. Do not move, remove, duplicate or resize any robot. The open corridor between the ranks stays open and unblocked all the way to the far end; nothing enters the foreground to obstruct it. Keep every robot exactly where it is, strict regular rectangular ranks, same number and spacing. Robots stay pure white and clearly readable, rim light on robot bodies, bounce light filling their shadow side, no colour cast on the robots, do not silhouette them into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "f95bd9c4-c6ac-4913-8b48-5730a9a606b6",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/f95bd9c4-c6ac-4913-8b48-5730a9a606b6.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_0e280ae5-9e6e-46a1-a5f2-e074b8c02200.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_044107_0e280ae5-9e6e-46a1-a5f2-e074b8c02200_min.webp"
+      },
+      "createdAt": 1788496867.443648
+    },
+    {
+      "id": "333b55a3-afe9-4b50-829b-7439132f836f",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. Robots stay pure white, no colour cast on the robots, no green, no teal. Robots remain clearly visible and readable, rim light on robot bodies, bounce light filling their shadow side, do not silhouette the robots into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "9f4f2165-feda-4138-b772-d6c549cd02a3",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/9f4f2165-feda-4138-b772-d6c549cd02a3.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_333b55a3-afe9-4b50-829b-7439132f836f.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_333b55a3-afe9-4b50-829b-7439132f836f_min.webp"
+      },
+      "createdAt": 1788494931.294606
+    },
+    {
+      "id": "248e7788-8406-48d1-9a34-f2ca0d276770",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. Robots stay pure white, no colour cast on the robots, no green, no teal. Robots remain clearly visible and readable, rim light on robot bodies, bounce light filling their shadow side, do not silhouette the robots into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "f95bd9c4-c6ac-4913-8b48-5730a9a606b6",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/f95bd9c4-c6ac-4913-8b48-5730a9a606b6.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_248e7788-8406-48d1-9a34-f2ca0d276770.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_248e7788-8406-48d1-9a34-f2ca0d276770_min.webp"
+      },
+      "createdAt": 1788494931.276107
+    },
+    {
+      "id": "9c5f6471-da91-4a0d-bdb8-7609a69eff01",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. Robots stay pure white, no colour cast on the robots, no green, no teal. Robots remain clearly visible and readable, rim light on robot bodies, bounce light filling their shadow side, do not silhouette the robots into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "62b9afdb-6a54-4f15-91ae-68d6a06f5410",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/62b9afdb-6a54-4f15-91ae-68d6a06f5410.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_9c5f6471-da91-4a0d-bdb8-7609a69eff01.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040851_9c5f6471-da91-4a0d-bdb8-7609a69eff01_min.webp"
+      },
+      "createdAt": 1788494931.107708
+    },
+    {
+      "id": "fd3ef744-a4de-4f9c-90a6-71041fd91b5a",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this high aerial frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. The columns must stay straight all the way to the horizon; each robot keeps a solid visible body and four distinct legs; do not blur small distant robots into clumps of legs. Robots stay pure white, no colour cast on the robots, no green, no teal. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "f4881ec3-f8cc-4c73-8ee7-cd74d0506fcd",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/f4881ec3-f8cc-4c73-8ee7-cd74d0506fcd.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_fd3ef744-a4de-4f9c-90a6-71041fd91b5a.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_fd3ef744-a4de-4f9c-90a6-71041fd91b5a_min.webp"
+      },
+      "createdAt": 1788494930.880408
+    },
+    {
+      "id": "78c76086-44bb-48aa-9889-4081e818a96e",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this very high aerial frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. The columns must stay straight all the way to the horizon; each robot keeps a solid visible body and four distinct legs; do not blur small distant robots into clumps of legs. Robots stay pure white, no colour cast on the robots, no green, no teal. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "70ebc562-0895-40c2-aaa4-06b606437858",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/70ebc562-0895-40c2-aaa4-06b606437858.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_78c76086-44bb-48aa-9889-4081e818a96e.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_78c76086-44bb-48aa-9889-4081e818a96e_min.webp"
+      },
+      "createdAt": 1788494930.774344
+    },
+    {
+      "id": "1fdc393f-4766-47d7-9135-18ba5a4f118b",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. The columns must stay straight all the way to the horizon; each robot keeps a solid visible body and four distinct legs; do not blur small distant robots into clumps of legs. Robots stay pure white, no colour cast on the robots, no green, no teal. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "d238fe7b-330b-4699-bc92-1c4617dec91e",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/d238fe7b-330b-4699-bc92-1c4617dec91e.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_1fdc393f-4766-47d7-9135-18ba5a4f118b.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_1fdc393f-4766-47d7-9135-18ba5a4f118b_min.webp"
+      },
+      "createdAt": 1788494930.749171
+    },
+    {
+      "id": "68c8478c-dab6-48b6-8b9f-73567b7320fe",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. Robots stay pure white, no colour cast on the robots, no green, no teal. Robots remain clearly visible and readable, rim light on robot bodies, bounce light filling their shadow side, do not silhouette the robots into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "064c5dfd-b1b6-408e-bf3a-aac03157d0de",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/064c5dfd-b1b6-408e-bf3a-aac03157d0de.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_68c8478c-dab6-48b6-8b9f-73567b7320fe.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_68c8478c-dab6-48b6-8b9f-73567b7320fe_min.webp"
+      },
+      "createdAt": 1788494930.746059
+    },
+    {
+      "id": "43247d6d-7771-4846-99e9-34e10da57f16",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Regrade and redress this frame. Keep every robot exactly where it is: strict regular rectangular grid, keep the exact number and spacing, do not merge, remove, duplicate, thin out or displace any robot. Robots stay pure white, no colour cast on the robots, no green, no teal. Robots remain clearly visible and readable, rim light on robot bodies, bounce light filling their shadow side, do not silhouette the robots into black shapes. Change only the ground, the sky and the air. The flat grid floor becomes uncharted hostile terrain: broken rock, gravel, angular stones, wind scoured dirt, a vast unknown expanse with no landmarks and no path, the machines are the first thing to ever walk here. Low sun near the horizon and well off to one side, not in the centre of frame. Moderate atmospheric haze, soft highlights with gentle filmic rolloff and no blown white areas, ochre and bone desaturated palette, lifted milky blacks, airborne dust, fine grain, anamorphic wide.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "b5be4214-a357-4246-874d-2ac440210be8",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/b5be4214-a357-4246-874d-2ac440210be8.png"
+          }
+        ],
+        "width": 2752,
+        "height": 1536,
+        "resolution": "2k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_43247d6d-7771-4846-99e9-34e10da57f16.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_040850_43247d6d-7771-4846-99e9-34e10da57f16_min.webp"
+      },
+      "createdAt": 1788494930.723109
+    },
+    {
+      "id": "c0cf6ef0-555b-45aa-8bd4-fa30375de5c4",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Match the tone, palette, grain and rendering style of the reference image exactly. STRICTLY GREYSCALE: pure neutral black-and-white, zero colour saturation, absolutely no rust colour, no brown, no orange, no sepia, no warm tint — neutral graphite and ash greys only. Heavy atmospheric haze, calm and still. Subject: a narrow industrial inspection passage far too tight for a human body. Wet concrete stair treads glistening with moisture, a tangle of corroded pipes and conduit running along the walls, one single thin steel handrail. Thick fog and condensation hang in the air. A single four-legged quadruped walking robot moves along the passage, seen from behind and slightly to one side, its body low between the pipes. Absolutely no people anywhere. In the far distance, faint silhouettes of inspection plant machinery dissolve into the mist. Camera placed low near the floor, looking down the length of the passage. IMPORTANT FRAMING: the passage, pipes and walls occupy only the LOWER TWO THIRDS of the frame. The entire upper third, especially the upper centre, is one large open expanse of flat featureless pale grey fog with absolutely nothing in it — no pipes, no walls, no structure, no detail intruding — completely clean empty negative space reserved for a title. Soft diffuse light, no strong highlights. No text, no letters, no numbers, no logo, no watermark, no colour, no neon, no lens flare.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "8a6aadd9-11f6-461f-a442-2692aec7b6c4",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/8a6aadd9-11f6-461f-a442-2692aec7b6c4.png"
+          }
+        ],
+        "width": 5504,
+        "height": 3072,
+        "resolution": "4k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002631_c0cf6ef0-555b-45aa-8bd4-fa30375de5c4.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002631_c0cf6ef0-555b-45aa-8bd4-fa30375de5c4_min.webp"
+      },
+      "createdAt": 1788481591.855793
+    },
+    {
+      "id": "3cd4c1f2-bc23-4bf2-9722-5df4fadb15a6",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Match the tone, palette, grain and rendering style of the reference image exactly. STRICTLY GREYSCALE: pure neutral black-and-white, zero colour saturation, no rust, no brown, no sepia, no warm tint — neutral graphite and ash greys only. Heavy atmospheric fog, calm, quiet, wide negative space. Subject: a cramped industrial inspection walkway too narrow for a person, running along the lower portion of the frame. Wet concrete steps slick with moisture, bundles of old pipes and conduit hugging one wall, a single slim steel handrail. Dense mist and condensation. One four-legged quadruped robot picks its way along the walkway, small in the frame, seen from behind. No people at all. Far off in the haze, faint silhouettes of inspection plant equipment. Low camera near floor level looking along the walkway. IMPORTANT FRAMING: keep all structure low and to the sides. The upper centre of the frame must be a large clean empty field of pale grey mist with nothing whatsoever in it, reserved for a title. Soft diffuse light. No text, no letters, no numbers, no logo, no watermark, no colour, no neon, no lens flare.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "8a6aadd9-11f6-461f-a442-2692aec7b6c4",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/8a6aadd9-11f6-461f-a442-2692aec7b6c4.png"
+          }
+        ],
+        "width": 5504,
+        "height": 3072,
+        "resolution": "4k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002631_3cd4c1f2-bc23-4bf2-9722-5df4fadb15a6.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002631_3cd4c1f2-bc23-4bf2-9722-5df4fadb15a6_min.webp"
+      },
+      "createdAt": 1788481591.837238
+    },
+    {
+      "id": "a350411f-bcaf-4fe3-9c58-71522e241ddd",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Match the tone, palette, grain and rendering style of the reference image exactly, but do NOT copy its composition and do NOT include any chasm, gap or cliff. Monochrome charcoal-grey matte painting, near black-and-white, very low saturation, heavy atmospheric haze. Subject: one single continuous unbroken rocky ground ridge running horizontally across the lower third of the frame. One straight vertical dividing line at the centre splits that same ground into two halves. LEFT HALF: the terrain is solid physical reality, real weathered stone, rough bumps and cracks, patches of moss, dust. RIGHT HALF: the exact same terrain continues but exists only as a fine triangular polygon mesh wireframe, thin pale grey lines over dark emptiness, transparent, no solid surface. CRITICAL GEOMETRY REQUIREMENT: the top profile line of the ground is ONE single unbroken continuous curve that crosses the vertical divide in perfect alignment. The height of the stone surface on the left and the height of the wireframe surface on the right match EXACTLY at the seam, with zero step, zero offset and zero mismatch. The silhouette flows straight through the boundary as one continuous shape. A single four-legged quadruped robot stands astride the dividing line, seen in profile, its rear legs planted on the real stone and one front foot placed forward onto the wireframe mesh side. Wide empty pale grey misty sky fills the entire upper half of the frame with nothing in it, clean negative space. Muted graphite and ash tones only. No text, no letters, no numbers, no logo, no watermark, no colour, no neon, no lens flare.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "8a6aadd9-11f6-461f-a442-2692aec7b6c4",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/8a6aadd9-11f6-461f-a442-2692aec7b6c4.png"
+          }
+        ],
+        "width": 5504,
+        "height": 3072,
+        "resolution": "4k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_a350411f-bcaf-4fe3-9c58-71522e241ddd.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_a350411f-bcaf-4fe3-9c58-71522e241ddd_min.webp"
+      },
+      "createdAt": 1788481315.920687
+    },
+    {
+      "id": "04bfe9c6-ec1b-464c-89b5-3078ce49830b",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Match the tone, palette, grain and rendering style of the reference image exactly, but do NOT copy its composition and do NOT include any chasm, gap or cliff. Monochrome charcoal-grey matte painting, near black-and-white, very low saturation, heavy atmospheric haze. Subject: one broad continuous rocky terrain plateau receding gently to a distant flat horizon. A single four-legged quadruped robot stands in the lower LEFT of the frame, seen in profile facing right. Directly beneath and just in front of its feet, a few small restrained geometric markers glow very faintly on the ground surface where the next footholds are being checked, small and low contrast, subtle. Far away at the RIGHT-hand horizon there is one single tiny pale point of light marking a distant goal, and a faint thin broken path traces across the terrain from the robot toward that far light. No people anywhere. Wide empty pale grey misty sky fills the whole upper portion of the frame with nothing in it, clean negative space. Muted graphite and ash tones only, soft diffuse light. No text, no letters, no numbers, no logo, no watermark, no colour, no neon, no lens flare.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "8a6aadd9-11f6-461f-a442-2692aec7b6c4",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/8a6aadd9-11f6-461f-a442-2692aec7b6c4.png"
+          }
+        ],
+        "width": 5504,
+        "height": 3072,
+        "resolution": "4k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_04bfe9c6-ec1b-464c-89b5-3078ce49830b.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_04bfe9c6-ec1b-464c-89b5-3078ce49830b_min.webp"
+      },
+      "createdAt": 1788481315.900426
+    },
+    {
+      "id": "ff95fdb5-c011-443e-a794-eb06607458a2",
+      "type": "image",
+      "status": "completed",
+      "model": "nano_banana_2",
+      "params": {
+        "prompt": "Match the tone, palette, grain and rendering style of the reference image exactly, but do NOT copy its composition. Monochrome charcoal-grey matte painting, near black-and-white, very low saturation, heavy atmospheric haze. Subject: a narrow industrial inspection passage far too tight for a human body. Wet concrete stair treads glistening with moisture, a dense tangle of corroded pipes and conduit running along both walls, one single thin steel handrail. Thick fog and condensation hang in the air. A single four-legged quadruped walking robot moves along the passage, seen from behind and slightly to one side, its body low and squeezed between the pipes. Absolutely no people anywhere in the frame. In the far distance, faint silhouettes of inspection plant machinery dissolve into the mist. Camera is placed low near the floor of the passage, looking down its length. The upper centre of the frame is open empty pale grey mist with nothing in it at all, clean negative space. Muted graphite and ash tones only, soft diffuse light, no strong highlights. No text, no letters, no numbers, no logo, no watermark, no colour, no neon, no lens flare.",
+        "aspect_ratio": "16:9",
+        "input_images": [
+          {
+            "id": "8a6aadd9-11f6-461f-a442-2692aec7b6c4",
+            "type": "media_input",
+            "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/8a6aadd9-11f6-461f-a442-2692aec7b6c4.png"
+          }
+        ],
+        "width": 5504,
+        "height": 3072,
+        "resolution": "4k",
+        "batch_size": 1,
+        "input_image": null,
+        "application": null,
+        "surface": null
+      },
+      "results": {
+        "rawUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_ff95fdb5-c011-443e-a794-eb06607458a2.png",
+        "minUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260904_002155_ff95fdb5-c011-443e-a794-eb06607458a2_min.webp"
+      },
+      "createdAt": 1788481315.875263
+    }
+  ],
+  "next_cursor": null
+}

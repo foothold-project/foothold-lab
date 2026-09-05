@@ -19,5 +19,10 @@ opening/o2_raw.png
 opening/opening-drift.mp4
 foothold-launch-a-dry.mp4
 
-# 힉스필드 생성물 원본. URL 로 다시 받는다. 저장소에 안 넣는다.
+# 힉스필드 생성물 원본. 343 MB 라 저장소에 안 넣는다.
+# `python scripts/fetch-library.py` 로 URL 에서 다시 받는다. 크레딧이 안 든다.
+# 목록(INDEX.md)과 프롬프트 전문(prompts.json)은 넣는다.
 hf-archive/
+library/*
+!library/INDEX.md
+!library/prompts.json

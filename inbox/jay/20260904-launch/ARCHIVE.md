@@ -10,9 +10,9 @@
 `d8j0ntlcm91z4.cloudfront.net` 이고 **서명이 없다.** `HTTP 206` 으로 부분 요청도 받는다.
 팀장이 링크를 그대로 열면 된다. 만료 시각이 붙어 있지 않다.
 
-원본은 `hf-archive/` 에 전량 내려받아 두었다. 저장소에는 안 넣는다(117 MB).
-`billing/generations-video.json` 에 id · 프롬프트 · URL · 길이 · fps · 오디오 유무 ·
-어느 컷인지가 다 들어 있다.
+원본은 **`library/` 에 47건 전량**을 내려받아 두었다. 저장소에는 안 넣는다(343 MB).
+목록은 `library/INDEX.md` 이고 프롬프트 전문은 `library/prompts.json` 이다.
+`python scripts/fetch-library.py` 로 언제든 다시 받는다. 크레딧이 안 든다.
 
 ## 팀장이 지목한 셋
 
