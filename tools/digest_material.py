@@ -32,6 +32,16 @@ def kst_today():
             + datetime.timedelta(hours=9)).date()
 
 
+def kst_stamp():
+    """머리말 «작성» 에 넣을 한국 시각. 문서 표준은 분까지 요구한다.
+
+    2026-09-05: 날짜만 찍고 있어서 빌드 관문 [3.4] 가 이 파일을 「메타데이터
+    없는 새 문서」로 세웠다. 자동 생성물도 사람이 쓴 문서와 같은 표준을 지킨다.
+    """
+    return (datetime.datetime.now(datetime.timezone.utc)
+            + datetime.timedelta(hours=9)).strftime('%Y-%m-%d %H:%M')
+
+
 def week_range(spec):
     """'2026-W34' 또는 None. 월요일부터 일요일까지를 돌려준다."""
     if spec:
@@ -92,7 +102,7 @@ def main():
     L.append('# 다이제스트 재료: %s' % tag)
     L.append('')
     L.append('> 분류: 운영')
-    L.append('> 작성: 자동 수집 · %s' % kst_today().isoformat())
+    L.append('> 작성: 자동 수집 · %s' % kst_stamp())
     L.append('> 근거: 깃 이력')
     L.append('> 요지: %s ~ %s 의 활동 목록. 다이제스트를 쓰기 위한 재료다.'
              % (mon.isoformat(), sun.isoformat()))

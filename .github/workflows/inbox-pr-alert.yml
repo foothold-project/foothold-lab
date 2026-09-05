@@ -52,7 +52,11 @@ jobs:
           git fetch --no-tags --depth=1 origin "+refs/pull/${PR}/head:refs/remotes/pr/${PR}"
           # 경로를 inbox/ 로 못박는다. .github/ 나 스크립트는 어떤 경우에도 안 덮인다.
           git checkout "refs/remotes/pr/${PR}" -- inbox/ || echo "inbox 변경 없음"
-          echo "가져온 inbox 파일"; find inbox -type f | head -20
+          # find 를 head 에 물리면 head 가 먼저 닫을 때 find 가 SIGPIPE 로 죽고,
+          # set -o pipefail 이라 스텝 전체가 실패한다. 파일이 20개 넘을 때만 나서
+          # 성공과 실패가 섞였다 (2026-09-04 · 09-05 에 네 번). 진단 출력 하나 때문에
+          # 검수가 통째로 안 돈 것이다.
+          echo "가져온 inbox 파일"; find inbox -type f > all.txt || true; head -20 all.txt; rm -f all.txt
 
       - name: 제출 파일 찾기
         id: files
