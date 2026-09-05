@@ -228,3 +228,9 @@ Unitree 공식 사양에서 Go2 PRO/X/EDU의 최대 climb/drop height는 약 16c
 
 - Unitree Go2 공식 제품 사양: https://www.unitree.com/go2/
 - Isaac Lab v2.3.2 terrain API: https://isaac-sim.github.io/IsaacLab/v2.3.2/source/api/lab/isaaclab.terrains.html
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-09-05 | `inbox/lim/` 에서 승격. 머리말의 `분류` 가 「실험 \| 리서치」로 둘이라 정보 구조가 허브를 못 정해 배포가 섰다. 내용이 실측 분석이므로 「실험」 하나로 했다. 작성 시각도 없어서 보강했다 | 빌드 관문 `[1.898]` · `[3.4]` |
