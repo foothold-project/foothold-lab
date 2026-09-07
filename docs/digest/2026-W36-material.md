@@ -1,7 +1,7 @@
 # 다이제스트 재료: 2026-W36
 
 > 분류: 운영
-> 작성: 자동 수집 · 2026-09-05 09:47
+> 작성: 자동 수집 · 2026-09-06 23:43
 > 근거: 깃 이력
 > 요지: 2026-08-31 ~ 2026-09-06 의 활동 목록. 다이제스트를 쓰기 위한 재료다.
 > 상태: 초안
@@ -9,10 +9,24 @@
 **이 파일은 다이제스트가 아니다.** 「무엇을 알게 됐나」는 사람이 쓴다.
 아래에서 골라 `2026-W36.md` 를 쓴 뒤 이 파일은 지운다.
 
-## 머지된 PR (59건)
+## 머지된 PR (79건)
 
+- `#274` [운영] 외부 표준 절 참조의 출처 명시  (vfxpedia)
+- `#273` [운영] 표 셀 안 파이프 이스케이프  (vfxpedia)
+- `#272` [운영] 승격 문서의 판 이력 표 추가  (vfxpedia)
+- `#271` [운영] 승격 문서의 판 표기 추가  (vfxpedia)
+- `#270` [운영] 승격 문서 분류의 단일화  (vfxpedia)
+- `#269` [운영] 원장 72건 재동기화  (vfxpedia)
+- `#262` [기록] 9/4 발표 시점 덱의 발표본 고정  (vfxpedia)
+- `#260` [기록] 멘토 재선정과 강화학습 멘토 첫 미팅  (vfxpedia)
+- `#259` [운영] 폐기 문서를 가리키던 연계 링크 정리  (vfxpedia)
+- `#258` [운영] 원장의 #257 반영  (vfxpedia)
+- `#256` [운영] 원장의 73건 재동기화  (vfxpedia)
+- `#255` [운영] 승격 검토 이슈의 md 한정과 중복 방지  (vfxpedia)
+- `#254` [운영] 다이제스트 재료 머리말의 시각 표기  (vfxpedia)
 - `#252` [운영] 자동화 실패 감시 신설과 inbox 검수의 broken pipe 수정  (vfxpedia)
 - `#251` [운영] 기획발표 산출물 상태의 확정 반영  (vfxpedia)
+- `#249` 조선대 커리큘럼 요일 정정과 금요일 확정 결정 기록  (vfxpedia)
 - `#246` inbox(jay): 우쉬 창 문구를 한 갈래로 못 박는다  (vfxpedia)
 - `#244` inbox(jay): 오프닝 색을 본편에 붙인다 · 44.5도에서 19.3도로  (vfxpedia)
 - `#242` inbox(jay): A 판 완성 · 23.06초 · 사운드 아홉 항목 통과  (vfxpedia)
@@ -27,6 +41,8 @@
 - `#225` [작업] 발표 덱 영상의 런칭 B 판 교체  (vfxpedia)
 - `#224` [운영] 발표 덱 영상을 B 판으로 갱신  (vfxpedia)
 - `#222` inbox(jay): 런칭 영상 B 판 · 사운드 아홉 항목 통과 · dolly 재변환 · 경계 유출 제거 (#221)  (vfxpedia)
+- `#220` 9/4 운영진 중간발표 심사 피드백 회의록  (maengu86)
+- `#218` NVIDIA 체크포인트의 추후 학습 방향성 분석  (IQ152)
 - `#215` [작업] 덱 갱신·검증 일괄 스크립트  (vfxpedia)
 - `#214` [운영] inbox 검사가 잘 갖춰진 PR 에서 실패하던 것을 고친다  (vfxpedia)
 - `#213` [작업] 발표 덱 영상의 런칭본 교체  (vfxpedia)
@@ -42,11 +58,13 @@
 - `#200` [운영] 러프컷 v7 · 20.54초 · rise 를 꼬리 구간으로  (vfxpedia)
 - `#198` [운영] 러프컷 v6 · 19.71초 · formation 축소  (vfxpedia)
 - `#197` [작업] 발표 덱 영상을 러프컷 v5 로 교체  (vfxpedia)
+- `#196` 학습 보상에 발 높이 항이 없다는 확인: feet_air_time 은 체공 시간을 상 준다  (maengu86)
 - `#193` [운영] 러프컷 v5 · 20.33초 · 8분음표 격자  (vfxpedia)
 - `#192` [작업] 발표 덱에 러프컷 영상 장 추가 · 19장  (vfxpedia)
 - `#191` [작업] 9/4 기획 발표 덱 1차 · proposal-deck HTML 과 PDF 추가  (vfxpedia)
 - `#189` [실험] FOOTHOLD 워드마크 대군 부감 촬영  (vfxpedia)
 - `#186` [운영] 러프컷 v4 · 22.83초 · 대형에서 타이틀로 디졸브  (vfxpedia)
+- `#185` 직진 5 cm 의 외부 근거 조사: ISO 18646 계열과 Go2 논문 대조  (maengu86)
 - `#182` [작업] 원장 전수 절 재동기화 · 신규 이슈 등재로 배포 관문 해제  (vfxpedia)
 - `#180` [운영] 기획발표 엔딩 타이틀 HTML·MP4  (vfxpedia)
 - `#178` [촬영] 평지 대군 영화적 카메라 4종  (vfxpedia)
@@ -57,6 +75,8 @@
 - `#167` [작업] 제출 문서 넷의 판 표기 통일  (vfxpedia)
 - `#166` WBS 설계 공식 제출본 신설과 인계 PDF 검수 (#122)  (vfxpedia)
 - `#165` deliverables: 팀 역할·책임 정의서 공식 PDF (#163)  (vfxpedia)
+- `#164` 평지 직진 기준선: 재는 자리와 초기화 요인 분리 (MuJoCo 568판)  (maengu86)
+- `#159` [작업] 09-03 결정 3건 원장 등재 · 좌우 이탈 판정 지점 확인 대기  (vfxpedia)
 - `#158` [계획] 기획서 7-1 KPI 실측 근거 재작성 · 근거 없는 목표치 6건 정리  (vfxpedia)
 - `#153` [계획] 브레인스토밍 정본 교체와 9/4 제출 PDF  (vfxpedia)
 - `#150` [계획] 기획서 v1.2 · v1.1 에서 되돌아온 표현 9건 정리  (vfxpedia)
@@ -71,13 +91,33 @@
 - `#113` inbox(meang): 8/31 박철제 멘토링 회의록  (maengu86)
 - `#106` RunPod Isaac Lab 환경 구축 기록 v2.0 (inbox/oh)  (less82)
 
-## 닫힌 이슈 (33건)
+## 닫힌 이슈 (54건)
 
+- `#266` [승격 검토] inbox/meang/20260904-발보상-시간아니고높이아님.md
+- `#265` [승격 검토] inbox/meang/20260903-직진성-외부표준.md
+- `#264` [승격 검토] inbox/meang/20260902-flat-straight-baseline-10m.md
+- `#263` [승격 검토] inbox/lim/20260904_NVIDIA공식체크포인트_속도단차교차평가분석.md
+- `#248` [작업] 조선대 협력 커리큘럼 요일 정정과 금요일 확정 결정 기록 신설 · C/기록
+- `#243` [승격 검토] inbox/jay/20260904-launch/CONVERSION.md
 - `#239` -ac 1 다운믹스 설명에 출력 형식 조건을 넣는다
+- `#238` [승격 검토] inbox/jay/20260904-launch/.gitignore
 - `#236` 사운드 잰 자 정정(-ac 1)과 A 최종 조립 스크립트
+- `#235` [승격 검토] inbox/jay/20260904-launch/.gitignore
 - `#233` A 후속 · 오프닝 · 엔딩 타이틀 재굽기 · 사운드 기준 기록
+- `#230` [승격 검토] inbox/jay/20260904-launch/.gitignore
 - `#227` 런칭 영상 B 사운드 재교정과 A 키비주얼 여덟 장
+- `#223` [승격 검토] inbox/jay/20260904-launch/.gitignore
 - `#221` 런칭 영상 재작업 · B 판 보정과 A 판 듄 2 재구성
+- `#219` [작업] 9/4 운영진 중간발표 심사 피드백 전사와 정리본 · C/기록
+- `#211` [승격 검토] inbox/jay/20260904-launch/.gitignore
+- `#206` [승격 검토] inbox/jay/20260904-roughcut/foothold-roughcut.mp4
+- `#201` [승격 검토] inbox/jay/20260904-roughcut/foothold-roughcut.mp4
+- `#199` [승격 검토] inbox/jay/20260904-roughcut/foothold-roughcut.mp4
+- `#195` [승격 검토] inbox/jay/20260904-roughcut/foothold-roughcut.mp4
+- `#194` [리서치] 학습 보상에 발 높이 항이 없다는 확인 · A/정책학습
+- `#190` [승격 검토] inbox/jay/20260904-roughcut/foothold-roughcut.mp4
+- `#184` [리서치] 평지 직진 「10 m · 좌우 5 cm」에 견줄 외부 근거가 있나 · A/평가
+- `#181` [승격 검토] inbox/jay/20260903-ending-title/foothold-ending-title.html
 - `#179` [작업] 연구 허브 Track A 실패 험지 5종 카드 절 신설 · C/운영
 - `#171` [작업] 제출 문서 4종 문체·근거 정정과 무판표기 PDF 갱신 · C/기록
 - `#154` [작업] 기획서 7-1 KPI 실측 근거 재작성 + 근거 없는 목표치 6건 정리 · A/평가
@@ -96,6 +136,7 @@
 - `#105` [작업] 8/31 박철제 멘토링 음성 전사와 정리본 · C/기록
 - `#104` [작업] WBS 웹 시각화: 98행 표를 «지금 어디까지 왔나»가 보이는 화면으로 · C/기록
 - `#99` [작업] 평지 직진 기준선 수립 + 미경험 10종 동일 조건 재측정 · A/정책학습
+- `#98` [작업] 제로베이스 보행 기준선: 직진 20 m 를 좌우 5 cm 안에서 걷는가 · A/평가
 - `#92` [작업] 험지 지형 종류 확장 및 난이도 파라미터화 · A/정책학습
 - `#91` [작업] RunPod에서 Isaac 험지 지형 headless 생성·확인 환경 확보 · A/정책학습
 - `#90` [작업] 레일즈 MuJoCo 사전 측정과 Isaac 스윕 설계 · A/정책학습
@@ -107,8 +148,11 @@
 - `#70` [작업] 노션 프로젝트 기획 정리 · C/기록
 - `#51` [승격 검토] inbox/meang/20260825-park-mentoring.md · C/기록
 
-## 새 문서 (17개)
+## 새 문서 (21개)
 
+- `"docs/research/NVIDIA\352\263\265\354\213\235\354\262\264\355\201\254\355\217\254\354\235\270\355\212\270_\354\206\215\353\217\204\353\213\250\354\260\250\352\265\220\354\260\250\355\217\211\352\260\200\353\266\204\354\204\235.md"`
+- `"docs/research/\353\260\234\353\263\264\354\203\201-\354\213\234\352\260\204\354\225\204\353\213\210\352\263\240\353\206\222\354\235\264\354\225\204\353\213\230.md"`
+- `"docs/research/\354\247\201\354\247\204\354\204\261-\354\231\270\353\266\200\355\221\234\354\244\200.md"`
 - `docs/digest/2026-W36-material.md`
 - `docs/guides/runpod-setup.md`
 - `docs/meetings/20260831-park-mentoring.md`
@@ -126,6 +170,7 @@
 - `docs/notices/2026-08-26.md`
 - `docs/notices/2026-08-27.md`
 - `docs/ops/versions.json`
+- `docs/research/flat-straight-baseline-10m.md`
 
 ## 고쳐진 문서 (39개)
 
@@ -169,9 +214,33 @@
 - `docs/research/terrain-finetune-plan.md`
 - `docs/research/training-benchmarks.md`
 
-## 커밋 (167건)
+## 커밋 (180건)
 
 ```
+aba3d4c VFXPEDIA docs: 외부 표준 절 참조에 출처를 명시한다 (#274)
+3215746 VFXPEDIA docs: 표 셀 안 파이프를 이스케이프한다 (내용 잘림 방지) (#273)
+50d5f2d VFXPEDIA docs: 승격 문서에 판 이력 표 추가 (#272)
+901faac VFXPEDIA docs: 승격 문서에 판 표기 추가 (v1.0) (#271)
+eddbc5c VFXPEDIA docs: 승격된 문서의 분류를 하나로 · 작성 시각 보강 (#270)
+d32df90 VFXPEDIA ops: 원장 72건 재동기화 (PR 7건 머지와 연구 4건 승격 반영) (#269)
+6173754 github-actions[bot] 승격: 20260904-발보상-시간아니고높이아님.md → docs/research/발보상-시간아니고높이아님.md (컨펌 #266)
+50de4b9 github-actions[bot] 승격: 20260903-직진성-외부표준.md → docs/research/직진성-외부표준.md (컨펌 #265)
+07d5213 github-actions[bot] 승격: 20260902-flat-straight-baseline-10m.md → docs/research/flat-straight-baseline-10m.md (컨펌 #264)
+9ab8260 github-actions[bot] 승격: 20260904_NVIDIA공식체크포인트_속도단차교차평가분석.md → docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md (컨펌 #263)
+dee86bd VFXPEDIA inbox(jay): 멘토 재선정과 강화학습 멘토 첫 미팅 (#260)
+f6e3618 VFXPEDIA [작업] 09-03 결정 3건 원장 등재 · 좌우 이탈 판정 지점 확인 대기 (#159)
+920f529 VFXPEDIA docs: 조선대 커리큘럼 요일을 금으로 정정하고 결정을 기록한다 (#249)
+8d6775d maengu86 9/4 운영진 중간발표 심사 피드백 회의록 (#220)
+2cd40b0 maengu86 학습 보상에 발 높이 항이 없다는 확인: feet_air_time 은 체공 시간을 상 준다 (#196)
+d63b1cd maengu86 inbox/meang: 직진 5 cm 의 외부 근거 조사 (#185)
+843ee03 maengu86 평지 직진 기준선: 재는 자리와 초기화 요인 분리 (MuJoCo 568판) (#164)
+ae8c945 IQ152 NVIDIA 체크포인트의 추후 학습 방향성 분석 (#218)
+b26578b VFXPEDIA plan: 9/4 발표 시점 덱을 발표본으로 고정한다 (#262)
+627adf8 VFXPEDIA docs: 폐기된 계획을 살아 있는 연계 자료로 가리키던 것을 고친다 (#259)
+a19bbc7 VFXPEDIA ops: 원장에 #257 추가 (74건) (#258)
+ef7fe67 VFXPEDIA ops: 원장을 73건으로 재동기화 (봇 이슈 정리 반영) (#256)
+56a7fe9 VFXPEDIA ops: 승격 검토 이슈를 md 만 대상으로 하고 중복을 막는다 (#255)
+1a36cd8 VFXPEDIA ops: 다이제스트 재료의 작성 시각을 분까지 찍는다 (#254)
 92caad8 VFXPEDIA ops: 자동화 실패 감시를 세우고 inbox 검수의 broken pipe 를 고친다 (#252)
 3db04c0 VFXPEDIA docs: 기획발표 산출물 넷의 상태를 확정으로 (#251)
 05f54c0 github-actions[bot] chore: 다이제스트 재료 수집 (2026-09-05)
@@ -208,31 +277,7 @@ e3a9a37 vfxpedia plan: 발표 덱 영상을 B 판으로 갱신
 c513182 VFXPEDIA plan: 덱 갱신과 검증을 한 번에 도는 refresh.py (#215)
 581fc97 vfxpedia ci: inbox 검사가 잘 갖춰진 PR 에서 실패하던 것을 고친다
 968f8d2 VFXPEDIA plan: 발표 덱 영상을 런칭본으로 교체 (#213)
-11b49ce VFXPEDIA Merge pull request #212 from foothold-project/feature/deck-launch720-jay
-40047bb vfxpedia plan: 발표 덱용 런칭 영상 720p 사본
-4316543 VFXPEDIA Merge pull request #208 from foothold-project/feature/hf-launch-jay
-45272ac VFXPEDIA plan: 영상 장의 캡션 제거 (#210)
-3213e99 VFXPEDIA plan: 발표 덱 생성기를 저장소에 넣는다 (#209)
-17037ab vfxpedia inbox(jay): 러프컷 v8 반영 · orbit 만 다시 걸었다 (#118)
-9d9c855 vfxpedia inbox(jay): 런칭 영상 완성본 · 험지 질감 · 실측 격자 사운드 (#118)
-a7dc97d VFXPEDIA plan: 발표 덱 영상을 러프컷 v8 로 교체하고 상단 문구 정리 (#207)
-376911a VFXPEDIA Merge pull request #205 from foothold-project/feature/roughcut-v8-jay
-bdea7f5 vfxpedia inbox(jay): 러프컷 v8 · orbit 이즈 아웃 제거
-d7b205e VFXPEDIA plan: 발표 덱 영상을 러프컷 v7 로 교체 (#204)
-47f4907 VFXPEDIA plan: 덱을 프레임 안에서도 열리게 하고 상단 안내 갱신 (#203)
-ca1054e VFXPEDIA plan: 발표용 덱 v6 반영과 단독 실행 결함 세 건 수정 (#202)
-a96c9ae VFXPEDIA Merge pull request #200 from foothold-project/feature/roughcut-v7-jay
-119312f vfxpedia inbox(jay): 러프컷 v7 · 20.54초 · rise 를 꼬리 구간으로
-443f198 VFXPEDIA Merge pull request #198 from foothold-project/feature/roughcut-v6-jay
-571ef39 vfxpedia inbox(jay): 러프컷 v6 · 19.71초 · formation 축소
-6674c4c VFXPEDIA deliverables: 발표 덱 영상을 러프컷 v5 로 교체 (#118) (#197)
-c884f56 VFXPEDIA Merge pull request #193 from foothold-project/feature/roughcut-v5-jay
-6fb4686 vfxpedia inbox(jay): 러프컷 v5 · 20.33초 · 8분음표 격자
-6837605 VFXPEDIA deliverables: 발표 덱에 러프컷 영상 장을 넣는다 (#118) (#192)
-3b0b5f4 vfxpedia docs: 원장 전수 절 재동기화 · 관문별 건수 정정 (#183)
-8af95c7 VFXPEDIA deliverables: 9/4 기획 발표 덱 1차 (#118) (#191)
-480c5dd VFXPEDIA Merge pull request #186 from foothold-project/feature/roughcut-jay
-... 외 107건
+... 외 120건
 ```
 
 ## 다이제스트를 쓸 때
