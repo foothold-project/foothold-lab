@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 760" width="980" height="760" font-family="Malgun Gothic, 맑은 고딕, sans-serif">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c8798"/>
+    </marker>
+  </defs>
+  <rect width="980" height="760" fill="#ffffff"/>
+
+  <rect x="270" y="12" width="440" height="50" rx="4" fill="#161c26"/>
+  <text x="490" y="35" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">실제 대상 환경</text>
+  <text x="490" y="53" text-anchor="middle" fill="#d9d6cd" font-size="11">비정형 지형 · 계단 · 경사 · 장애물 · 실제 주행 공간</text>
+
+  <path d="M380 62 L380 86 L235 86 L235 106" fill="none" stroke="#7c8798" stroke-width="1.6" marker-end="url(#b)"/>
+  <path d="M600 62 L600 86 L745 86 L745 106" fill="none" stroke="#7c8798" stroke-width="1.6" marker-end="url(#b)"/>
+  <text x="235" y="80" text-anchor="middle" font-size="11" fill="#4a5566">환경 데이터 취득 · RGB · 영상 · LiDAR 점군</text>
+  <text x="745" y="80" text-anchor="middle" font-size="11" fill="#4a5566">실제 로봇 운용</text>
+
+  <g font-size="12.5">
+    <rect x="75" y="108" width="320" height="44" rx="3" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="235" y="126" text-anchor="middle" font-weight="700" fill="#0b6459">Digital Twin · 3DGS</text>
+    <text x="235" y="143" text-anchor="middle" font-size="11" fill="#4a5566">실제 공간 3D 재구성 · Real to Sim</text>
+
+    <rect x="75" y="166" width="320" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="183" text-anchor="middle" font-weight="700">지형 특성 추출</text>
+    <text x="235" y="199" text-anchor="middle" font-size="11" fill="#4a5566">경사 · 요철 · 틈 · 단차 분포를 수치로</text>
+
+    <rect x="75" y="220" width="320" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="237" text-anchor="middle" font-weight="700">절차적 확장</text>
+    <text x="235" y="253" text-anchor="middle" font-size="11" fill="#4a5566">그 분포로 학습·평가 지형 생성</text>
+
+    <rect x="75" y="274" width="320" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="291" text-anchor="middle" font-weight="700">Isaac Sim · Isaac Lab</text>
+    <text x="235" y="307" text-anchor="middle" font-size="11" fill="#4a5566">Terrain · Physics · Domain Randomization</text>
+
+    <rect x="75" y="328" width="320" height="34" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="350" text-anchor="middle" font-weight="700">PPO 정책 학습 · RSL-RL</text>
+
+    <rect x="75" y="376" width="320" height="34" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="398" text-anchor="middle" font-weight="700">Policy Checkpoint</text>
+
+    <rect x="75" y="424" width="320" height="44" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="235" y="442" text-anchor="middle" font-weight="700">미경험 지형 평가</text>
+    <text x="235" y="459" text-anchor="middle" font-size="11" fill="#4a5566">held-out 원본 구간은 학습에 쓰지 않는다</text>
+
+    <rect x="75" y="482" width="320" height="56" rx="3" fill="#fff" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="235" y="502" text-anchor="middle" font-weight="700" fill="#0b6459">난이도 경계와 그 이동 폭</text>
+    <text x="235" y="518" text-anchor="middle" font-size="11" fill="#4a5566">통과율 · 생존 · 전진 거리</text>
+    <text x="235" y="532" text-anchor="middle" font-size="11" fill="#4a5566">속도 추종 · 좌우 이탈</text>
+  </g>
+  <g stroke="#7c8798" stroke-width="1.4" marker-end="url(#b)" fill="none">
+    <line x1="235" y1="152" x2="235" y2="164"/><line x1="235" y1="206" x2="235" y2="218"/>
+    <line x1="235" y1="260" x2="235" y2="272"/><line x1="235" y1="314" x2="235" y2="326"/>
+    <line x1="235" y1="362" x2="235" y2="374"/><line x1="235" y1="410" x2="235" y2="422"/>
+    <line x1="235" y1="468" x2="235" y2="480"/>
+  </g>
+  <path d="M75 446 L44 446 L44 294 L73 294" fill="none" stroke="#7c8798" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#b)"/>
+  <text x="34" y="370" font-size="10" fill="#4a5566" transform="rotate(-90 34 370)" text-anchor="middle">실패 원인 분석 · 학습 조건 개선 · 재학습</text>
+
+  <g font-size="12.5">
+    <rect x="585" y="108" width="320" height="44" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="126" text-anchor="middle" font-weight="700">Unitree Go2 · 순정 보행</text>
+    <text x="745" y="143" text-anchor="middle" font-size="11" fill="#4a5566">LiDAR · 카메라 · IMU · 오도메트리</text>
+
+    <rect x="585" y="166" width="320" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="183" text-anchor="middle" font-weight="700">ROS 2 (Jazzy)</text>
+    <text x="745" y="199" text-anchor="middle" font-size="11" fill="#4a5566">센서를 Topic 과 TF 로 묶는다</text>
+
+    <rect x="585" y="220" width="152" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="661" y="237" text-anchor="middle" font-weight="700">SLAM</text>
+    <text x="661" y="253" text-anchor="middle" font-size="11" fill="#4a5566">지도와 자기 위치</text>
+    <rect x="753" y="220" width="152" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="829" y="237" text-anchor="middle" font-weight="700">YOLO · 센서 융합</text>
+    <text x="829" y="253" text-anchor="middle" font-size="11" fill="#4a5566">객체 종류와 위치</text>
+
+    <rect x="585" y="274" width="320" height="40" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="291" text-anchor="middle" font-weight="700">Nav2</text>
+    <text x="745" y="307" text-anchor="middle" font-size="11" fill="#4a5566">Costmap · 경로 계획 · 재계획 · 회피</text>
+
+    <rect x="585" y="328" width="320" height="34" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="350" text-anchor="middle" font-weight="700">속도 명령 (cmd_vel)</text>
+
+    <rect x="585" y="376" width="320" height="34" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="398" text-anchor="middle" font-weight="700">Unitree Go2 순정 보행 제어</text>
+
+    <rect x="585" y="424" width="320" height="44" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="745" y="442" text-anchor="middle" font-weight="700">실제 구간 주행</text>
+    <text x="745" y="459" text-anchor="middle" font-size="11" fill="#4a5566">트윈의 원본이 된 그 공간에서</text>
+
+    <rect x="585" y="482" width="320" height="56" rx="3" fill="#fff" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="745" y="502" text-anchor="middle" font-weight="700" fill="#0b6459">목표 지점 자율 보행</text>
+    <text x="745" y="518" text-anchor="middle" font-size="11" fill="#4a5566">도달률 · 무충돌 주행률</text>
+    <text x="745" y="532" text-anchor="middle" font-size="11" fill="#4a5566">경로 재계획 성공률 · 위치 오차</text>
+  </g>
+  <g stroke="#7c8798" stroke-width="1.4" marker-end="url(#b)" fill="none">
+    <line x1="745" y1="152" x2="745" y2="164"/>
+    <path d="M745 206 L745 212 L661 212 L661 218"/>
+    <path d="M745 206 L745 212 L829 212 L829 218"/>
+    <path d="M661 260 L661 267 L745 267 L745 272"/>
+    <line x1="745" y1="314" x2="745" y2="326"/><line x1="745" y1="362" x2="745" y2="374"/>
+    <line x1="745" y1="410" x2="745" y2="422"/><line x1="745" y1="468" x2="745" y2="480"/>
+  </g>
+  <path d="M829 260 L829 267 L745 267" fill="none" stroke="#7c8798" stroke-width="1.4"/>
+
+  <text x="235" y="562" text-anchor="middle" font-size="13" font-weight="700" fill="#4a5566">TRACK A · RL LOCOMOTION</text>
+  <text x="745" y="562" text-anchor="middle" font-size="13" font-weight="700" fill="#4a5566">TRACK B · AUTONOMOUS NAVIGATION</text>
+
+  <path d="M235 572 L235 594 L490 594" fill="none" stroke="#7c8798" stroke-width="1.6"/>
+  <path d="M745 572 L745 594 L490 594" fill="none" stroke="#7c8798" stroke-width="1.6"/>
+  <line x1="490" y1="594" x2="490" y2="612" stroke="#7c8798" stroke-width="1.6" marker-end="url(#b)"/>
+
+  <rect x="190" y="614" width="600" height="66" rx="4" fill="#161c26"/>
+  <text x="490" y="639" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">실험·검증 기록</text>
+  <text x="490" y="659" text-anchor="middle" fill="#d9d6cd" font-size="11.5">조건 · 정책 체크포인트 · 지형 설정 · 원자료 · 판정 · 영상</text>
+  <text x="490" y="674" text-anchor="middle" fill="#adb5c1" font-size="10.5">시뮬레이션은 같은 seed 재실행으로, 실기는 반복 주행 기록으로 확인한다</text>
+
+  <text x="490" y="708" text-anchor="middle" font-size="12" fill="#4a5566">두 트랙은 직접적인 제어 파이프라인으로 연결하지 않는다. 동일한 실제 환경을 기준으로 각각의 성능을 검증한다.</text>
+  <text x="490" y="730" text-anchor="middle" font-size="12" fill="#4a5566">Digital Twin 은 학습 정책을 실물에 이식하는 용도로는 사용하지 않는다.</text>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 336" width="980" height="336" font-family="Malgun Gothic, 맑은 고딕, sans-serif">
+  <defs>
+    <marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c8798"/>
+    </marker>
+  </defs>
+  <rect width="980" height="336" fill="#ffffff"/>
+
+  <text x="20" y="22" fill="#7c8798" font-size="11.5">가로축은 작업 순서다. 각 단계 아래에는 관련 관문을 표시한다</text>
+
+  <!-- Track A -->
+  <rect x="20" y="38" width="150" height="72" rx="3" fill="#4a5566"/>
+  <text x="95" y="68" text-anchor="middle" fill="#ffffff" font-size="13.5" font-weight="700">TRACK A</text>
+  <text x="95" y="87" text-anchor="middle" fill="#d9d6cd" font-size="11">시뮬레이션과 강화학습</text>
+  <g font-size="12.5">
+    <rect x="186" y="38" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="274" y="62" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 1</text>
+    <text x="274" y="82" text-anchor="middle" fill="#161c26">기준선 확립</text>
+    <text x="274" y="100" text-anchor="middle" fill="#7c8798" font-size="10.5">A-정책 09/12</text>
+
+    <rect x="378" y="38" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="466" y="62" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 2</text>
+    <text x="466" y="82" text-anchor="middle" fill="#161c26">실패 지형 진단</text>
+    <text x="466" y="100" text-anchor="middle" fill="#7c8798" font-size="10.5">A-정책 · MVP</text>
+
+    <rect x="570" y="38" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="658" y="62" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 3</text>
+    <text x="658" y="82" text-anchor="middle" fill="#161c26">학습 조건 개선</text>
+    <text x="658" y="100" text-anchor="middle" fill="#7c8798" font-size="10.5">MVP 09/30</text>
+
+    <rect x="762" y="38" width="176" height="72" rx="3" fill="#ffffff" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="850" y="62" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 4</text>
+    <text x="850" y="82" text-anchor="middle" fill="#161c26">재학습과 재평가</text>
+    <text x="850" y="100" text-anchor="middle" fill="#7c8798" font-size="10.5">NAV 11/07</text>
+  </g>
+  <line x1="362" y1="74" x2="376" y2="74" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <line x1="554" y1="74" x2="568" y2="74" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <line x1="746" y1="74" x2="760" y2="74" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+
+  <!-- Bridge -->
+  <rect x="20" y="128" width="150" height="72" rx="3" fill="#4a5566"/>
+  <text x="95" y="158" text-anchor="middle" fill="#ffffff" font-size="13.5" font-weight="700">BRIDGE</text>
+  <text x="95" y="177" text-anchor="middle" fill="#d9d6cd" font-size="11">Digital Twin</text>
+  <g font-size="12.5">
+    <rect x="186" y="128" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="274" y="152" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 1</text>
+    <text x="274" y="172" text-anchor="middle" fill="#161c26">환경 촬영</text>
+    <text x="274" y="190" text-anchor="middle" fill="#7c8798" font-size="10.5">MVP 09/30</text>
+
+    <rect x="378" y="128" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="466" y="152" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 2</text>
+    <text x="466" y="172" text-anchor="middle" fill="#161c26">3DGS 복원</text>
+    <text x="466" y="190" text-anchor="middle" fill="#7c8798" font-size="10.5">MVP 09/30</text>
+
+    <rect x="570" y="128" width="176" height="72" rx="3" fill="#ffffff" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="658" y="152" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 3</text>
+    <text x="658" y="172" text-anchor="middle" fill="#161c26">Isaac USD 변환</text>
+    <text x="658" y="190" text-anchor="middle" fill="#7c8798" font-size="10.5">MVP 09/30</text>
+  </g>
+  <line x1="362" y1="164" x2="376" y2="164" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <line x1="554" y1="164" x2="568" y2="164" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <text x="770" y="169" fill="#7c8798" font-size="11">렌더는 별도 산출물이다.</text>
+  <text x="770" y="186" fill="#7c8798" font-size="11">MVP · FINAL 관문에서 제출</text>
+
+  <!-- Track B -->
+  <rect x="20" y="218" width="150" height="72" rx="3" fill="#4a5566"/>
+  <text x="95" y="248" text-anchor="middle" fill="#ffffff" font-size="13.5" font-weight="700">TRACK B</text>
+  <text x="95" y="267" text-anchor="middle" fill="#d9d6cd" font-size="11">실기 자율 보행</text>
+  <g font-size="12.5">
+    <rect x="186" y="218" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="274" y="242" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 1</text>
+    <text x="274" y="262" text-anchor="middle" fill="#161c26">ROS 2 연동</text>
+    <text x="274" y="280" text-anchor="middle" fill="#7c8798" font-size="10.5">A-정책 · MVP</text>
+
+    <rect x="378" y="218" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="466" y="242" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 2</text>
+    <text x="466" y="262" text-anchor="middle" fill="#161c26">SLAM 지도</text>
+    <text x="466" y="280" text-anchor="middle" fill="#7c8798" font-size="10.5">NAV 11/07</text>
+
+    <rect x="570" y="218" width="176" height="72" rx="3" fill="#f6f5f1" stroke="#d9d6cd"/>
+    <text x="658" y="242" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 3</text>
+    <text x="658" y="262" text-anchor="middle" fill="#161c26">Nav2 주행</text>
+    <text x="658" y="280" text-anchor="middle" fill="#7c8798" font-size="10.5">NAV 11/07</text>
+
+    <rect x="762" y="218" width="176" height="72" rx="3" fill="#ffffff" stroke="#0e7a6e" stroke-width="1.8"/>
+    <text x="850" y="242" text-anchor="middle" fill="#0b6459" font-size="11" font-weight="700">단계 4</text>
+    <text x="850" y="262" text-anchor="middle" fill="#161c26">인지 결합</text>
+    <text x="850" y="280" text-anchor="middle" fill="#7c8798" font-size="10.5">MVP · NAV</text>
+  </g>
+  <line x1="362" y1="254" x2="376" y2="254" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <line x1="554" y1="254" x2="568" y2="254" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+  <line x1="746" y1="254" x2="760" y2="254" stroke="#7c8798" stroke-width="1.5" marker-end="url(#as)"/>
+
+  <line x1="20" y1="306" x2="960" y2="306" stroke="#d9d6cd" stroke-width="1"/>
+  <text x="20" y="326" fill="#4a5566" font-size="11.5">단계 이름과 개수는 이슈 #122 의 초안이다. 팀장 확정 뒤 단계 라벨을 생성한다</text>
+</svg>

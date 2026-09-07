@@ -1,0 +1,49 @@
+# 자동화가 «조용히 죽는 것» 을 막는다.
+#
+# 2026-08-30 에 주간 다이제스트가 실패했고 아무도 6일 동안 몰랐다. 이 저장소의
+# 워크플로 18종 중 실패를 알리는 장치가 하나도 없었기 때문이다. 성공하면 조용하고
+# 실패해도 조용하니, 화면만 봐서는 «도는 것» 과 «죽은 것» 이 구별되지 않았다.
+#
+# 워크플로 이름을 나열해 두면 나중에 생긴 것이 빠진다(2026-09-01 · 09-04 에 같은
+# 부류로 두 번 당했다). 그래서 이름을 적지 않고 실행 기록을 조회한다.
+#
+# 실패가 없어도 월요일에는 한 줄 보낸다. 그래야 «알림이 안 온 것» 과 «감시가 죽은
+# 것» 이 구별된다.
+name: 자동화 실패 감시
+
+on:
+  schedule:
+    - cron: "0 22 * * *"        # 매일 07:00 KST
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 최근 실패 모아 보고
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
+          fi
+          gh run list --repo "$REPO" --limit 200 \
+            --json name,conclusion,createdAt,url,event,headBranch > runs.json
+          python3 .github/scripts/failure_digest.py runs.json > tg.txt
+          if [ ! -s tg.txt ]; then
+            echo "보낼 것 없음"; exit 0
+          fi
+          curl -sS -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d chat_id="${TG_CHAT}" -d parse_mode=HTML \
+            --data-urlencode text@tg.txt | head -c 300
+          echo
