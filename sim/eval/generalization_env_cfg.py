@@ -3,13 +3,14 @@
 원본: `provenance/candidate-20260822/generalization_env_cfg.py`
 그 파일은 손대지 않습니다. 여기만 고칩니다.
 
-**스냅샷과 다른 것은 셋뿐입니다** (#125 2번).
+**스냅샷과 다른 것은 넷뿐입니다** (#125 2번 · #99 2번).
 
 | 무엇 | 스냅샷 | 여기 |
 |---|---|---|
 | `sub_terrains` | 험지 10종 | 10종 + `flat` **맨 뒤에** |
 | `num_cols` | 10 | 11 |
 | `scene.num_envs` | 10 | 11 |
+| `border_width` | 10.0 | **20.0** (#99 2번) |
 
 기존 10종의 **설정과 순서를 그대로 둡니다.** `flat` 을 앞에 넣으면 지형 인덱스가
 전부 한 칸씩 밀려서 500판 기록과 대조가 안 됩니다. 그래서 맨 뒤입니다.
@@ -28,7 +29,21 @@ from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg i
 GO2_UNSEEN_TERRAINS_CFG = terrain_gen.TerrainGeneratorCfg(
     seed=42,
     size=(8.0, 8.0),
-    border_width=10.0,
+
+    # 20초 규격을 담으려고 테두리를 넓혔다 (#99 2번).
+    #
+    #   x 전체 = num_rows(1) x size[0](8.0) + 2 x border_width
+    #   10.0 -> 28 m, 전방 14 m.  20초 x 1.0 m/s = 20 m 를 6 m 모자라게 한다.
+    #   20.0 -> 48 m, 전방 24 m.  20 m 통과선에 4 m 여유가 남는다.
+    #
+    # **험지 10종은 이것으로 하나도 안 움직인다** `확인됨`.
+    # `terrain_generator.py` 에서 `border_width` 가 쓰이는 자리는
+    # `_add_terrain_border()` (276~277행) 하나뿐이고, 그 함수는 하위 지형을
+    # 다 구운 **뒤에** 불린다. 격자를 중앙에 놓는 변환(182행)은
+    # `size` 와 `num_rows`/`num_cols` 만 쓰고 테두리를 안 본다.
+    # 그래서 `env_origins` 도 타일 내용도 난수 소비도 그대로다.
+    # 넓어지는 것은 격자 바깥 평평한 테두리뿐이다.
+    border_width=20.0,
     num_rows=1,
     num_cols=11,
     horizontal_scale=0.1,
