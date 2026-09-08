@@ -86,8 +86,11 @@ ACTIVE = read(ACTIVE_PATH)
 SNAPSHOT = read(SNAPSHOT_PATH)
 
 
-class ActiveIsSnapshotPlusFlat(unittest.TestCase):
-    """활성본은 스냅샷에 `flat` 하나를 더한 것이어야 한다."""
+class ActiveIsSnapshotOnly(unittest.TestCase):
+    """활성본은 스냅샷 그대로여야 한다.
+
+    2026-09-08 에 평지를 뺐다. 평지가 험지 평균에 섞이면 성공률이 부풀려진다.
+    """
 
     def test_기존_10종의_순서가_그대로다(self):
         snapshot_names = tuple(sub_terrains(SNAPSHOT))
@@ -113,28 +116,32 @@ class ActiveIsSnapshotPlusFlat(unittest.TestCase):
             with self.subTest(terrain=name):
                 self.assertEqual(terrains.terrain_index(name), index)
 
-    def test_flat_은_맨_뒤다(self):
-        self.assertEqual(
-            terrains.terrain_index("flat"), len(terrains.TERRAIN_NAMES) - 1
-        )
+    def test_평가_목록에_평지가_없다(self):
+        """평지가 다시 들어오면 여기서 죽는다.
 
-    def test_flat_은_평면_클래스를_쓴다(self):
-        entry = sub_terrains(ACTIVE)["flat"]
+        #125 2번이 「평지 10 m 직진을 재려면 평지 cfg 가 필요하다」로 평지를
+        더했다. 목적은 맞았는데 «가르는 코드» 가 없어서 험지 평균에 섞였다.
+        ROUGH_TERRAIN_NAMES 와 is_flat() 을 만들어 놓고 어느 파일도 안 불렀다.
 
-        self.assertIn("MeshPlaneTerrainCfg", entry)
-
-    def test_flat_의_비율이_다른_지형과_같다(self):
-        entries = sub_terrains(ACTIVE)
-
-        for name, source in entries.items():
+        다시 넣으려면 집계에서 가르는 코드까지 만들고 이 시험을 함께 고친다.
+        """
+        for name in terrains.FLAT_TERRAIN_NAMES:
             with self.subTest(terrain=name):
-                self.assertIn("proportion=0.1", source)
+                self.assertNotIn(name, terrains.TERRAIN_NAMES)
+                self.assertNotIn(name, sub_terrains(ACTIVE))
+
+    def test_활성본이_스냅샷과_같다(self):
+        self.assertEqual(tuple(sub_terrains(ACTIVE)), tuple(sub_terrains(SNAPSHOT)))
+
+    def test_더한_지형이_없다(self):
+        self.assertEqual(terrains.ADDED_TERRAIN_NAMES, ())
 
 
 class GeneratorSettings(unittest.TestCase):
     """생성기 인자에서 무엇이 바뀌고 무엇이 그대로인가."""
 
-    CHANGED = {"num_cols", "border_width"}
+    # num_cols 는 2026-09-08 에 평지를 빼면서 스냅샷과 같아졌다(10).
+    CHANGED = {"border_width"}
 
     def test_바뀐_인자만_바뀌었다(self):
         snapshot_kwargs = generator_kwargs(SNAPSHOT)
@@ -198,17 +205,18 @@ class PostInit(unittest.TestCase):
             len(post_init_statements(SNAPSHOT)),
         )
 
-    def test_env_수_한_줄만_다르다(self):
+    def test_env_수가_스냅샷과_같아졌다(self):
+        """평지를 빼서 11 에서 10 이 됐고 스냅샷과 같아졌다.
+
+        전에는 «한 줄만 다르다» 를 확인했다(num_envs 10 대 11). 평지를 뺀 지금은
+        다른 줄이 없는 것이 맞다.
+        """
         snapshot_body = post_init_statements(SNAPSHOT)
         active_body = post_init_statements(ACTIVE)
 
-        different = [
-            (a, b) for a, b in zip(snapshot_body, active_body) if a != b
-        ]
+        different = [(a, b) for a, b in zip(snapshot_body, active_body) if a != b]
 
-        self.assertEqual(len(different), 1, different)
-        self.assertEqual(different[0][0], "self.scene.num_envs = 10")
-        self.assertEqual(different[0][1], "self.scene.num_envs = 11")
+        self.assertEqual(different, [], different)
 
     def test_env_수가_지형_수와_같다(self):
         wanted = "self.scene.num_envs = " + str(len(terrains.TERRAIN_NAMES))
@@ -233,10 +241,10 @@ class NamesAgreeWithConfig(unittest.TestCase):
             & set(terrains.FLAT_TERRAIN_NAMES),
             set(),
         )
+        # 평지를 뺀 뒤로 평가 목록은 험지뿐이다. 평지 이름은 «다시 넣을 때
+        # 가르는 자리를 잊지 않으려고» 남겨 둔 것이라 목록에는 없다.
         self.assertEqual(
-            len(terrains.ROUGH_TERRAIN_NAMES)
-            + len(terrains.FLAT_TERRAIN_NAMES),
-            len(terrains.TERRAIN_NAMES),
+            tuple(terrains.ROUGH_TERRAIN_NAMES), tuple(terrains.TERRAIN_NAMES)
         )
 
     def test_이름과_인덱스가_왕복한다(self):

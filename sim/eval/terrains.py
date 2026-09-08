@@ -27,13 +27,26 @@ SNAPSHOT_TERRAIN_NAMES = (
 
 # 우리가 더한 지형. 스냅샷에 없던 것은 여기 있는 것뿐입니다.
 # 새 지형은 **맨 뒤에** 붙입니다. 기존 인덱스를 지키기 위해서입니다.
-ADDED_TERRAIN_NAMES = (
-    "flat",  # #125 2번. 기준선 10 m 직진을 재는 자.
-)
+# 2026-09-08 에 비웠다. 팀장 결정이다.
+#
+#   평지는 «미경험 험지» 가 아니다. 한 표에 섞이면 험지 평균이 부풀려진다.
+#   험지 10종 평균 0.394 에 평지 0.98 이 끼면 11종 평균이 0.447 이 되어
+#   5.3 퍼센트포인트가 그냥 오른다. 성공률을 올리는 실험 중에 이 정도면
+#   결론이 바뀐다.
+#
+#   #125 2번이 「평지 10 m 직진을 재려면 평지 cfg 가 필요하다」로 flat 을
+#   더했다. 목적은 맞았지만 «가르는 코드» 가 없었다. ROUGH_TERRAIN_NAMES 와
+#   is_flat() 을 만들어 놓고 어느 파일도 부르지 않았다.
+#
+#   평지 기준선은 `docs/research/flat-straight-baseline-10m.md` 가 정본이다.
+#   다시 재야 하면 여기에 "flat" 을 넣고 generalization_env_cfg 의 cfg 도
+#   함께 살린 뒤, «집계에서 가르는 코드까지» 만들고 나서 쓴다.
+ADDED_TERRAIN_NAMES = ()
 
 TERRAIN_NAMES = SNAPSHOT_TERRAIN_NAMES + ADDED_TERRAIN_NAMES
 
-# 험지가 아닌 지형. 기준선용이라 험지 통계에서 빼고 볼 때가 있습니다.
+# 험지가 아닌 지형. 지금은 평가 목록에 없다(위 ADDED_TERRAIN_NAMES 참조).
+# 이름을 남겨 두는 이유는 다시 넣을 때 가르는 자리를 잊지 않기 위해서다.
 FLAT_TERRAIN_NAMES = ("flat",)
 
 ROUGH_TERRAIN_NAMES = tuple(

@@ -7,9 +7,9 @@
 
 | 무엇 | 스냅샷 | 여기 |
 |---|---|---|
-| `sub_terrains` | 험지 10종 | 10종 + `flat` **맨 뒤에** |
-| `num_cols` | 10 | 11 |
-| `scene.num_envs` | 10 | 11 |
+| `sub_terrains` | 험지 10종 | 험지 10종 (평지는 2026-09-08 에 뺐다 · `terrains.py` 주석) |
+| `num_cols` | 10 | 10 (평지를 뺀 뒤 스냅샷과 같아졌다) |
+| `scene.num_envs` | 10 | 10 (같음) |
 | `border_width` | 10.0 | **20.0** (#99 2번) |
 
 기존 10종의 **설정과 순서를 그대로 둡니다.** `flat` 을 앞에 넣으면 지형 인덱스가
@@ -45,7 +45,7 @@ GO2_UNSEEN_TERRAINS_CFG = terrain_gen.TerrainGeneratorCfg(
     # 넓어지는 것은 격자 바깥 평평한 테두리뿐이다.
     border_width=20.0,
     num_rows=1,
-    num_cols=11,
+    num_cols=10,
     horizontal_scale=0.1,
     vertical_scale=0.005,
     slope_threshold=0.75,
@@ -161,13 +161,6 @@ GO2_UNSEEN_TERRAINS_CFG = terrain_gen.TerrainGeneratorCfg(
             platform_width=1.5,
         ),
 
-        # 평지. #125 2번. 기준선 10 m 직진을 재려면 험지 밖의 자를 하나 둬야 한다.
-        # 팀 지형 조사(`inbox/lim/20260813-terrain_guide.md` 74행)가 v2.3.2 에서
-        # 이 클래스를 「generator 용 평평한 sub-terrain」으로 확인했다.
-        # 맨 뒤에 둔다. 앞에 넣으면 기존 10종의 지형 인덱스가 전부 밀린다.
-        "flat": terrain_gen.MeshPlaneTerrainCfg(
-            proportion=0.1,
-        ),
     },
 )
 
@@ -175,7 +168,7 @@ GO2_UNSEEN_TERRAINS_CFG = terrain_gen.TerrainGeneratorCfg(
 class UnitreeGo2GeneralizationEnvCfg(UnitreeGo2RoughEnvCfg):
     def __post_init__(self):
         super().__post_init__()
-        self.scene.num_envs = 11
+        self.scene.num_envs = 10
         self.scene.terrain.terrain_generator = GO2_UNSEEN_TERRAINS_CFG
         self.scene.terrain.max_init_terrain_level = 0
         self.curriculum.terrain_levels = None
