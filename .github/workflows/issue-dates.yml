@@ -1,6 +1,6 @@
 # 이슈를 보드에 올릴 때 날짜를 자동으로 박는다.
 #
-#   보스 정정(2026-08-06)이 맞다 — "PR merge → Done" 만으로는 부족하고,
+#   보스 정정(2026-08-06)이 맞다 · "PR merge → Done" 만으로는 부족하고,
 #   ① 이슈 등록일이 start date 로 자동 기록되고
 #   ② 기본 마감일(+7일)이 end date 에 들어가되
 #   ③ 늘어날 것 같으면 **사람이 직접 늘린다**
@@ -9,7 +9,7 @@
 #
 # 설치 위치: 각 레포의 .github/workflows/issue-dates.yml
 # 필요한 것: 조직 시크릿 PROJECT_TOKEN (classic PAT, scope: project, repo)
-#            — GITHUB_TOKEN 으로는 Projects v2 를 못 건드린다.
+#            · GITHUB_TOKEN 으로는 Projects v2 를 못 건드린다.
 name: 이슈 등록 시 자동 처리
 
 on:

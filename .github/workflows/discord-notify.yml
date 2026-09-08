@@ -1,4 +1,4 @@
-# 디스코드 알림 — 팀이 실제로 알아야 하는 것만.
+# 디스코드 알림 · 팀이 실제로 알아야 하는 것만.
 #
 #   보스 흐름: "커밋에 #번호 쓰면 이슈 닫힘 → 보드 Done → 그 훅 잡아 디코 알림"
 #   그대로 구현한다. 이슈가 닫히는 경로는 둘 다 잡힌다:
@@ -42,7 +42,7 @@ jobs:
             BODY="등록 **${{ github.event.issue.user.login }}** · 시작일이 오늘로 기록됩니다"
             URL="${{ github.event.issue.html_url }}"; COLOR="11037960"
           else
-            # 문서 push 만 알린다 — 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다.
+            # 문서 push 만 알린다 · 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다.
             #
             # ★ 두 번 틀렸다. 기록해 둔다 (2026-08-08 제로베이스 테스트에서 발견)
             #   1차: git diff → 러너에 저장소가 없다(checkout 안 함). 항상 빈 결과.
@@ -59,7 +59,7 @@ jobs:
             TITLE="문서 갱신"
             BODY=$(echo "$CHANGED" | grep '^docs/' | head -5 | sed 's/^/• /')
             # docs/research/ 는 웹에 자동 게시된다(빌드 [1.78]). 게시 대기 중임을 알려
-            # "올렸는데 웹에 없네" 를 없앤다 — 누락은 조용히 일어난다.
+            # "올렸는데 웹에 없네" 를 없앤다 · 누락은 조용히 일어난다.
             if echo "$CHANGED" | grep -q '^docs/research/'; then
               TITLE="연구 기록 갱신 → 웹 게시 대기"
               LINK="<https://foothold-project.vercel.app/research.html>"
@@ -79,7 +79,7 @@ jobs:
         env:
           HOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정 — 건너뜀"; exit 0; }
+          [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정 · 건너뜀"; exit 0; }
           jq -n --arg t "${{ steps.msg.outputs.title }}" \
                 --arg d "${{ steps.msg.outputs.body }}" \
                 --arg u "${{ steps.msg.outputs.url }}" \
@@ -89,4 +89,4 @@ jobs:
             | curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" -d @- "$HOOK" > /tmp/code
           CODE=$(cat /tmp/code)
           echo "HTTP $CODE"
-          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패 — 웹훅 상태 확인 필요"; exit 1 ;; esac
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "★ 전송 실패 · 웹훅 상태 확인 필요"; exit 1 ;; esac

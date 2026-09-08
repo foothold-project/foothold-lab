@@ -1,5 +1,5 @@
 # 이슈가 닫히면 보드의 done date(실적)를 오늘로 기록한다.
-#   계획(start/end date)은 절대 건드리지 않는다 — 계획 vs 실적 비교가 WBS 리뷰의 근거다.
+#   계획(start/end date)은 절대 건드리지 않는다 · 계획 vs 실적 비교가 WBS 리뷰의 근거다.
 #   필드는 이름에 'done' 이 들어간 date 필드를 찾는다 (사람이 만든 이름의 사소한 차이 허용).
 name: 실적 종료일 기록
 
@@ -33,7 +33,7 @@ jobs:
               ] | @tsv')
           EOF
           if [ "$DONE_ID" = "NONE" ]; then
-            echo "done date 필드가 보드에 없음 — 직접 만든다"
+            echo "done date 필드가 보드에 없음 · 직접 만든다"
             DONE_ID=$(gh api graphql -f query='
               mutation($p:ID!){ createProjectV2Field(input:{projectId:$p, dataType:DATE, name:"done date"}){
                 projectV2Field { ... on ProjectV2Field { id } } } }'               -f p="$PROJECT_ID" --jq '.data.createProjectV2Field.projectV2Field.id')
