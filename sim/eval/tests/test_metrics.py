@@ -317,6 +317,13 @@ class PeakLateralDrift(unittest.TestCase):
         self.assertTrue(got["direction_success"])
         self.assertTrue(got["overall_success"])
 
+    def test_통과선을_안_주면_스냅샷_그대로다(self):
+        # 기본값 None 이면 방향 판정은 끝점이고, 통과선 열은 비어 있다.
+        got = metrics.episode_metrics(**CASES["경로가 크게 나갔다 돌아온다"])
+
+        self.assertIsNone(got["gate_lateral_drift_m"])
+        self.assertTrue(got["direction_success"])
+
     def test_경로를_바꿔도_판정_5축은_안_바뀐다(self):
         without = metrics.episode_metrics(**case(end_xy=(2.85, 0.05)))
         with_path = metrics.episode_metrics(
@@ -334,6 +341,139 @@ class PeakLateralDrift(unittest.TestCase):
         self.assertNotEqual(
             without["peak_lateral_drift_m"], with_path["peak_lateral_drift_m"]
         )
+
+
+class GateLateralDrift(unittest.TestCase):
+    """통과선 위 이탈. 멘토 기준을 재는 자다 (#99 2번)."""
+
+    STRAIGHT = (1.0, 0.0)
+
+    def test_통과선_앞뒤_표본_사이를_보간한다(self):
+        # 9.9 m 에서 0.12, 10.1 m 에서 0.13. 10 m 는 딱 가운데라 0.125.
+        path = ((0.0, 0.0), (9.9, 0.12), (10.1, 0.13), (20.0, 0.30))
+
+        got = metrics.gate_lateral_drift_m((0.0, 0.0), path, self.STRAIGHT, 10.0)
+
+        self.assertAlmostEqual(got, 0.125)
+
+    def test_표본이_통과선_위에_정확히_있으면_그_값(self):
+        path = ((0.0, 0.0), (10.0, 0.08), (20.0, 0.40))
+
+        got = metrics.gate_lateral_drift_m((0.0, 0.0), path, self.STRAIGHT, 10.0)
+
+        self.assertAlmostEqual(got, 0.08)
+
+    def test_통과선을_못_넘기면_None(self):
+        # 0.0 이 아니어야 한다. 0.0 은 「도달했고 완벽하게 곧았다」와 안 갈린다.
+        path = ((0.0, 0.0), (3.0, 0.05), (6.2, 0.09))
+
+        got = metrics.gate_lateral_drift_m((0.0, 0.0), path, self.STRAIGHT, 10.0)
+
+        self.assertIsNone(got)
+
+    def test_빈_경로는_None(self):
+        self.assertIsNone(
+            metrics.gate_lateral_drift_m((0.0, 0.0), (), self.STRAIGHT, 10.0)
+        )
+
+    def test_부호를_지운다(self):
+        left = ((0.0, 0.0), (9.9, -0.12), (10.1, -0.13))
+        right = ((0.0, 0.0), (9.9, 0.12), (10.1, 0.13))
+
+        self.assertAlmostEqual(
+            metrics.gate_lateral_drift_m((0.0, 0.0), left, self.STRAIGHT, 10.0),
+            metrics.gate_lateral_drift_m((0.0, 0.0), right, self.STRAIGHT, 10.0),
+        )
+
+    def test_시작점이_원점이_아니어도_된다(self):
+        start = (-4.5, 7.25)
+        path = (start, (5.5, 7.30), (5.7, 7.31))
+
+        got = metrics.gate_lateral_drift_m(start, path, self.STRAIGHT, 10.0)
+
+        self.assertAlmostEqual(got, 0.05)
+
+    def test_전방축이_45도여도_맞다(self):
+        # 전방축 45도. 통과선 10 m 는 (10/√2, 10/√2) 자리다.
+        forward = (ROOT_HALF, ROOT_HALF)
+        gate_point = (10.0 * ROOT_HALF, 10.0 * ROOT_HALF)
+
+        path = ((0.0, 0.0), gate_point, (14.2, 14.2))
+
+        got = metrics.gate_lateral_drift_m((0.0, 0.0), path, forward, 10.0)
+
+        self.assertAlmostEqual(got, 0.0)
+
+    def test_첫_표본이_이미_통과선_너머면_그_표본(self):
+        path = ((11.0, 0.20), (20.0, 0.40))
+
+        got = metrics.gate_lateral_drift_m((0.0, 0.0), path, self.STRAIGHT, 10.0)
+
+        self.assertAlmostEqual(got, 0.20)
+
+
+class GateDirectionJudgement(unittest.TestCase):
+    """통과선으로 방향을 판정하면 무엇이 달라지는가."""
+
+    LONG_RUN = dict(
+        start_xy=(0.0, 0.0),
+        end_xy=(20.0, 0.30),
+        forward_dir=(1.0, 0.0),
+        velocity_error_sum=100.0,
+        reward_sum=500.0,
+        sample_count=1000,
+        elapsed_s=20.0,
+        timed_out=True,
+        terminated=False,
+        path_xy=((0.0, 0.0), (9.9, 0.02), (10.1, 0.03), (20.0, 0.30)),
+        command_vx=1.0,
+        eval_duration=20.0,
+        min_progress_ratio=0.5,
+        max_velocity_mae=0.25,
+        max_lateral_drift=0.05,
+    )
+
+    def test_끝점으로_재면_떨어지고_통과선으로_재면_붙는다(self):
+        # 10 m 에서 2.5 cm, 20 m 에서 30 cm. 같은 판인데 자리에 따라 판정이 갈린다.
+        # 멘토 기준은 「목표점에 도달했을 때」이므로 통과선이 맞는 자다.
+        endpoint = metrics.episode_metrics(**self.LONG_RUN)
+        gated = metrics.episode_metrics(**self.LONG_RUN, gate_progress_m=10.0)
+
+        self.assertFalse(endpoint["direction_success"])
+        self.assertTrue(gated["direction_success"])
+
+        self.assertAlmostEqual(gated["gate_lateral_drift_m"], 0.025)
+        self.assertAlmostEqual(gated["lateral_drift_m"], 0.30)
+
+    def test_끝점과_최대_이탈은_통과선을_켜도_그대로다(self):
+        endpoint = metrics.episode_metrics(**self.LONG_RUN)
+        gated = metrics.episode_metrics(**self.LONG_RUN, gate_progress_m=10.0)
+
+        for column in ("lateral_drift_m", "peak_lateral_drift_m",
+                       "forward_progress_m", "velocity_mae_mps", "duration_s"):
+            self.assertEqual(endpoint[column], gated[column], column)
+
+    def test_통과선을_못_넘기면_방향_실패(self):
+        short = dict(self.LONG_RUN)
+        short["end_xy"] = (6.0, 0.01)
+        short["path_xy"] = ((0.0, 0.0), (3.0, 0.005), (6.0, 0.01))
+
+        got = metrics.episode_metrics(**short, gate_progress_m=10.0)
+
+        self.assertIsNone(got["gate_lateral_drift_m"])
+        self.assertFalse(got["direction_success"])
+        self.assertFalse(got["overall_success"])
+
+        # 끝점 이탈은 1 cm 라 옛 자로는 통과했을 판이다.
+        self.assertLess(got["lateral_drift_m"], 0.05)
+
+    def test_도달_못_한_판은_0_이_아니라_None(self):
+        self.assertFalse(metrics.gate_direction_success(None, 0.05))
+        self.assertTrue(metrics.gate_direction_success(0.0, 0.05))
+
+    def test_문턱과_정확히_같으면_통과(self):
+        self.assertTrue(metrics.gate_direction_success(0.05, 0.05))
+        self.assertFalse(metrics.gate_direction_success(0.0500001, 0.05))
 
 
 class SummaryMatchesSnapshot(unittest.TestCase):
@@ -427,6 +567,16 @@ class ColumnContract(unittest.TestCase):
         self.assertEqual(
             columns.index("peak_lateral_drift_m"),
             columns.index("lateral_drift_m") + 1,
+        )
+
+    def test_통과선_열은_최대_이탈_바로_뒤다(self):
+        # 이탈 세 열이 붙어 있어야 CSV 를 눈으로 볼 때 비교가 된다.
+        # 판정 -> 관측 -> 관측 순서다.
+        columns = list(metrics.RAW_COLUMNS)
+
+        self.assertEqual(
+            columns.index("gate_lateral_drift_m"),
+            columns.index("peak_lateral_drift_m") + 1,
         )
 
     def test_추가분은_스냅샷에_없던_이름이다(self):

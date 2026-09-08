@@ -134,9 +134,9 @@ class ActiveIsSnapshotPlusFlat(unittest.TestCase):
 class GeneratorSettings(unittest.TestCase):
     """생성기 인자에서 무엇이 바뀌고 무엇이 그대로인가."""
 
-    CHANGED = {"num_cols"}
+    CHANGED = {"num_cols", "border_width"}
 
-    def test_num_cols_만_바뀌었다(self):
+    def test_바뀐_인자만_바뀌었다(self):
         snapshot_kwargs = generator_kwargs(SNAPSHOT)
         active_kwargs = generator_kwargs(ACTIVE)
 
@@ -166,7 +166,27 @@ class GeneratorSettings(unittest.TestCase):
         # 10 m 기준에는 8 m 타일이 모자라다. 그것은 별도 결정이라 여기서 안 바꾼다.
         # 바꿀 때 이 시험이 먼저 걸리게 둔다.
         self.assertEqual(generator_kwargs(ACTIVE)["size"], "(8.0, 8.0)")
-        self.assertEqual(generator_kwargs(ACTIVE)["border_width"], "10.0")
+
+    def test_테두리가_20초를_담는다(self):
+        # #99 2번. 20초 x 1.0 m/s = 20 m 를 담으려고 10.0 -> 20.0 으로 키웠다.
+        #
+        # 테두리는 격자 **바깥**이라 험지 10종의 타일도 env_origin 도 안 움직인다.
+        # `terrain_generator.py` 에서 `border_width` 가 쓰이는 자리는
+        # `_add_terrain_border()` 하나뿐이고, 격자를 중앙에 놓는 변환은
+        # `size` 와 `num_rows`/`num_cols` 만 본다.
+        self.assertEqual(generator_kwargs(ACTIVE)["border_width"], "20.0")
+
+    def test_전방_한계가_20_m_를_넘는다(self):
+        kwargs = generator_kwargs(ACTIVE)
+
+        num_rows = int(kwargs["num_rows"])
+        size_x = float(kwargs["size"].strip("()").split(",")[0])
+        border = float(kwargs["border_width"])
+
+        forward_extent = num_rows * size_x / 2.0 + border
+
+        # 20초 x 1.0 m/s. 이보다 좁으면 하네스가 실행 전에 막는다.
+        self.assertGreaterEqual(forward_extent, 20.0)
 
 
 class PostInit(unittest.TestCase):

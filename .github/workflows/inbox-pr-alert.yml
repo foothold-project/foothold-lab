@@ -124,7 +124,11 @@ jobs:
           if [ -f .github/scripts/review_inbox.py ]; then
             printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date '+%F %H:%M')" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
           else
-            echo "::error::review_inbox.py 가 없습니다"; exit 1
+            # 이 스크립트는 799f58d 에서 들어왔다. 그 전에 갈라진 브랜치에는 없다.
+            # 없다고 죽으면 그 PR 은 영구히 빨간불이 되고, 알림 실패가 검수 실패로
+            # 보여 멀쩡한 PR 이 막힌다. 2026-09-08 에 #250 #177 #304 가 그 상태였다.
+            echo "::warning::review_inbox.py 가 없습니다 (옛 브랜치). 자동 검토를 건너뜁니다"
+            echo '{"skipped":"no reviewer on this branch"}' > review.json
           fi
           python3 - <<'PY' > tg.txt
           import io, json, os
@@ -156,13 +160,24 @@ jobs:
                       print('    - %s' % x)
           else:
               print('')
-              for line in os.environ.get('FILES', '').split('\n'):
-                  if line.strip():
-                      print('· %s' % line.strip())
+              names = [x.strip() for x in os.environ.get('FILES', '').split(chr(10)) if x.strip()]
+              # 파일이 많으면 본문이 텔레그램 4096자 제한을 넘어 400 이 난다.
+              # 2026-09-08 에 영상 42개짜리 PR(#301)에서 실제로 터졌다.
+              for line in names[:15]:
+                  print('· %s' % line)
+              if len(names) > 15:
+                  print('· 외 %d개' % (len(names) - 15))
           print('')
           print('검토하시고 머지하면 승격 검토 큐가 열립니다.')
           print(os.environ.get('URL', ''))
           PY
+          # 그래도 넘칠 수 있다. 바이트가 아니라 «글자»로 잘라야 한글이 안 깨진다.
+          python3 - <<'CUT'
+          import io
+          s = io.open('tg.txt', encoding='utf-8').read()
+          if len(s) > 3500:
+              io.open('tg.txt', 'w', encoding='utf-8').write(s[:3500] + chr(10) + '... (길어서 줄였습니다)')
+          CUT
           CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
                  -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
                  --data-urlencode "chat_id=${TG_CHAT}" \
@@ -187,7 +202,7 @@ jobs:
           # ★ -f 로만 보면 안 된다. 앞 단계에서 검수기가 죽으면 «{}» 가 쓰이는데
           #   그 파일도 «있다». 그대로 두면 need=[] 가 되어 «메타가 다 갖춰져
           #   있습니다» 로 초록불이 난다. 빈 산출물이 긍정 보고가 되는 경로다.
-          if [ ! -s review.json ] || ! jq -e 'has("files")' review.json >/dev/null 2>&1; then
+          if [ -f .github/scripts/review_inbox.py ] && { [ ! -s review.json ] || ! jq -e 'has("files")' review.json >/dev/null 2>&1; }; then
             printf '%s\n' "$FILES" | PR_AUTHOR="$AUTHOR" TODAY="$(TZ=Asia/Seoul date '+%F %H:%M')" xargs python3 .github/scripts/review_inbox.py > review.json || { echo "::warning::review_inbox.py 실패"; echo '{"error":"review failed"}' > review.json; }
           fi
           # ★ GitHub Actions 의 기본 셸은 bash -e 다. set -uo pipefail 은 -e 를 끄지 않는다.
