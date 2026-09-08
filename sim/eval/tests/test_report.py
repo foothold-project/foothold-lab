@@ -119,6 +119,7 @@ def raw_row(**over):
         "progress_ratio": 0.95,
         "lateral_drift_m": 0.25,
         "peak_lateral_drift_m": 0.3,
+        "gate_lateral_drift_m": 0.12,
         "velocity_mae_mps": 0.11,
         "mean_reward_per_step": 0.5,
     }
@@ -217,6 +218,48 @@ class Analyse(unittest.TestCase):
 
         self.assertAlmostEqual(result["endpoint_drift"]["median"], 0.25)
         self.assertAlmostEqual(result["endpoint_drift"]["max"], 0.60)
+
+    def test_통과선_이탈은_판정용_자로_따로_집계된다(self):
+        rows = [
+            raw_row(episode=1, gate_lateral_drift_m=0.02, lateral_drift_m=0.40),
+            raw_row(episode=2, gate_lateral_drift_m=0.04, lateral_drift_m=0.60),
+        ]
+
+        result = report.analyse(rows, "flat")
+
+        # 통과선 이탈과 끝점 이탈은 서로 다른 숫자여야 한다. 20초 규격에서는
+        # 끝점이 20 m 라 목표점 10 m 와 자리가 다르다.
+        self.assertAlmostEqual(result["gate_drift"]["mean"], 0.03)
+        self.assertAlmostEqual(result["endpoint_drift"]["mean"], 0.50)
+        self.assertEqual(result["gate_reached"], 2)
+
+    def test_통과선을_못_넘긴_판은_0_이_아니라_빠진다(self):
+        # 빈칸을 0.0 으로 읽으면 「도달 못 했다」가 「완벽하게 곧았다」로 뒤집힌다.
+        rows = [
+            raw_row(episode=1, gate_lateral_drift_m=0.10),
+            raw_row(episode=2, gate_lateral_drift_m=""),
+        ]
+
+        result = report.analyse(rows, "flat")
+
+        self.assertEqual(result["gate_reached"], 1)
+        self.assertAlmostEqual(result["gate_drift"]["mean"], 0.10)
+
+    def test_통과선_이탈이_CSV_를_왕복한다(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "generalization_raw.csv")
+            write_raw_csv(
+                path,
+                [
+                    raw_row(episode=1, gate_lateral_drift_m=0.037),
+                    raw_row(episode=2, gate_lateral_drift_m=""),
+                ],
+            )
+
+            result = report.analyse(report.read_rows(path), "flat")
+
+        self.assertEqual(result["gate_reached"], 1)
+        self.assertAlmostEqual(result["gate_drift"]["mean"], 0.037)
 
     def test_unknown_terrain_is_an_error_not_a_zero(self):
         """기록이 없는 지형을 0% 로 조용히 내지 않는다."""

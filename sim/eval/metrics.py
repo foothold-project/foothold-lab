@@ -1,8 +1,12 @@
 """평가 하네스의 판정·집계 로직. 시뮬레이터에 기대지 않는 순수 함수.
 
-**동작을 바꾸지 않았습니다.** Candidate 스냅샷
-`provenance/candidate-20260822/eval_generalization.py` 의 식을 그대로 옮긴 것입니다.
+**스냅샷의 식을 그대로 옮겼습니다.** Candidate 스냅샷
+`provenance/candidate-20260822/eval_generalization.py` 가 원본이고,
 각 함수의 「스냅샷」 줄이 원본 행 번호입니다.
+
+여기서 더한 것은 **관측 열 둘과, 방향 판정의 자를 고르는 인자 하나**뿐입니다
+(`ADDED_COLUMNS` · `episode_metrics(gate_progress_m=...)`).
+그 인자를 안 주면 이 모듈은 스냅샷과 같은 값을 냅니다.
 
 torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다.
 `tests/test_metrics.py` 가 스냅샷 원문을 다시 읽어 같은 값이 나오는지 고정합니다.
@@ -11,9 +15,9 @@ torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다
 평면만 쓰기 때문입니다.
 """
 
-# 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번).
+# 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번 · #99 2번).
 # 이 목록을 빼면 `RAW_COLUMNS` 는 스냅샷 543행의 키 순서와 정확히 같아야 한다.
-ADDED_COLUMNS = ("peak_lateral_drift_m",)
+ADDED_COLUMNS = ("peak_lateral_drift_m", "gate_lateral_drift_m")
 
 # 원시 CSV 열 순서. `ADDED_COLUMNS` 를 뺀 나머지가 스냅샷 543행의 키 순서다.
 RAW_COLUMNS = (
@@ -35,6 +39,7 @@ RAW_COLUMNS = (
     "progress_ratio",
     "lateral_drift_m",
     "peak_lateral_drift_m",
+    "gate_lateral_drift_m",
     "velocity_mae_mps",
     "mean_reward_per_step",
 )
@@ -122,6 +127,69 @@ def peak_lateral_drift_m(start_xy, path_xy, forward_dir):
     return largest
 
 
+def forward_offset_m(start_xy, point_xy, forward_dir):
+    """어느 한 순간의 전방축 전진거리. `lateral_offset_m` 의 짝.
+
+    끝점만 보는 `forward_progress_m` 과 식이 같고 인자만 다릅니다.
+    통과선을 언제 지났는지 찾으려면 순간값이 필요합니다.
+    """
+    return dot(displacement(start_xy, point_xy), forward_dir)
+
+
+def gate_lateral_drift_m(start_xy, path_xy, forward_dir, gate_progress_m):
+    """**전진이 통과선을 지나는 순간**의 좌우 이탈 절댓값. #99 2번.
+
+    멘토 기준은 「목표점에 도달했을 때 좌우 5 cm」입니다. 목표점은 10 m 이고,
+    에피소드가 끝나는 자리가 아닙니다. 20초를 걸으면 끝점은 20 m 근처라
+    **끝점으로 재면 목표점이 아니라 그 두 배 지점을 재게 됩니다.**
+
+    경로 표본에서 전진이 처음 `gate_progress_m` 이상이 되는 자리를 찾고,
+    그 앞뒤 표본 사이를 **선형보간**해 정확히 통과선 위의 이탈을 냅니다.
+    표본 간격은 스텝 하나(1.0 m/s 에서 약 2 cm)라 보간 구간이 짧습니다.
+
+    통과선을 한 번도 못 넘겼으면 `None` 입니다. **0.0 이 아닙니다.**
+    0.0 으로 돌려주면 「도달했고 완벽하게 곧았다」와 구별이 안 됩니다.
+    """
+    if not path_xy:
+        return None
+
+    previous = None
+
+    for point in path_xy:
+        forward = forward_offset_m(start_xy, point, forward_dir)
+        lateral = lateral_offset_m(start_xy, point, forward_dir)
+
+        if forward >= gate_progress_m:
+            if previous is None:
+                return abs(lateral)
+
+            back_forward, back_lateral = previous
+            span = forward - back_forward
+
+            if span <= 0.0:
+                return abs(lateral)
+
+            t = (gate_progress_m - back_forward) / span
+
+            return abs(back_lateral + t * (lateral - back_lateral))
+
+        previous = (forward, lateral)
+
+    return None
+
+
+def gate_direction_success(gate_lateral, max_lateral_drift):
+    """통과선 위에서 방향을 지켰나. #99 2번.
+
+    통과선을 못 넘겼으면(`None`) **실패입니다.** 도착하지 않았는데
+    「도착했을 때 5 cm 안」을 통과시킬 수는 없습니다.
+    """
+    if gate_lateral is None:
+        return False
+
+    return bool(gate_lateral <= max_lateral_drift)
+
+
 # ---------------------------------------------------------------- 기준값
 
 def ideal_distance_m(command_vx, eval_duration):
@@ -178,6 +246,11 @@ def direction_success(lateral, max_lateral_drift):
 
     **끝점 이탈로 봅니다.** 옆으로 크게 밀렸다가 돌아오면 이 판정은 통과합니다.
     그 흔들림을 보려고 #125 1번이 최대 이탈 열을 따로 더합니다.
+
+    **끝점이 목표점이 아닐 때는 이 자가 안 맞습니다.** 20초 규격에서는
+    끝점이 20 m 인데 목표점은 10 m 입니다. 그때 쓰는 것이
+    `gate_direction_success` 이고, 고르는 자리는 `episode_metrics` 의
+    `gate_progress_m` 입니다 (#99 2번).
     """
     return bool(lateral <= max_lateral_drift)
 
@@ -210,15 +283,31 @@ def episode_metrics(
     min_progress_ratio,
     max_velocity_mae,
     max_lateral_drift,
+    gate_progress_m=None,
 ):
     """한 에피소드의 파생값 전부.
 
-    스냅샷 473~541행을 한 자리에 모으고, 거기에 `peak_lateral_drift_m` 하나를
-    더했습니다. 스냅샷과 다른 것은 그 열 하나뿐입니다 (`ADDED_COLUMNS`).
-    나머지는 스냅샷과 같은 순서로 계산하므로 부동소수 결과까지 같습니다.
+    스냅샷 473~541행을 한 자리에 모으고, 거기에 열 둘을 더했습니다
+    (`ADDED_COLUMNS`). 나머지는 스냅샷과 같은 순서로 계산하므로 부동소수
+    결과까지 같습니다.
 
     `path_xy` 는 에피소드 중 표본된 평면 위치들입니다. `None` 이면 끝점 하나만
     본 것으로 칩니다. 경로를 안 넘겼다고 이탈이 0 이었던 것은 아니기 때문입니다.
+
+    **`gate_progress_m` 이 방향 판정의 자를 고릅니다** (#99 2번).
+
+    | 값 | `direction_success` 를 무엇으로 재나 |
+    |---|---|
+    | `None` (기본) | 끝점 이탈. **스냅샷과 같습니다** |
+    | 숫자 | 전진이 그 거리를 지나는 순간의 이탈 |
+
+    기본값을 `None` 으로 둔 것은 뜻이 있습니다. 이 인자를 안 주면 이 함수는
+    스냅샷과 **글자 그대로 같은 값**을 냅니다. Candidate 와의 동치가
+    `tests/test_metrics.py` 로 계속 고정되고, 자를 옮기는 것은 부르는 쪽이
+    명시적으로 골라야 하는 일이 됩니다.
+
+    20초 규격에서는 하네스가 통과선 10 m 를 넣어 부릅니다. 20초를 걸으면
+    끝점이 20 m 근처라, 끝점으로 재면 목표점의 두 배 지점을 재게 됩니다.
     """
     disp = displacement(start_xy, end_xy)
 
@@ -227,6 +316,13 @@ def episode_metrics(
 
     sampled = (end_xy,) if path_xy is None else path_xy
     peak_lateral = peak_lateral_drift_m(start_xy, sampled, forward_dir)
+
+    if gate_progress_m is None:
+        gate_lateral = None
+    else:
+        gate_lateral = gate_lateral_drift_m(
+            start_xy, sampled, forward_dir, gate_progress_m
+        )
 
     ideal = ideal_distance_m(command_vx, eval_duration)
     floor = min_progress_m(min_progress_ratio, ideal)
@@ -237,7 +333,10 @@ def episode_metrics(
     survival = survival_success(timed_out, terminated)
     progress = progress_success(forward, floor)
     tracking = tracking_success(vel_mae, max_velocity_mae)
-    direction = direction_success(lateral, max_lateral_drift)
+    if gate_progress_m is None:
+        direction = direction_success(lateral, max_lateral_drift)
+    else:
+        direction = gate_direction_success(gate_lateral, max_lateral_drift)
 
     return {
         "overall_success": overall_success(survival, progress, tracking, direction),
@@ -252,6 +351,7 @@ def episode_metrics(
         "progress_ratio": progress_ratio(forward, ideal),
         "lateral_drift_m": lateral,
         "peak_lateral_drift_m": peak_lateral,
+        "gate_lateral_drift_m": gate_lateral,
         "velocity_mae_mps": vel_mae,
         "mean_reward_per_step": reward,
     }

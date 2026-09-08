@@ -1,0 +1,72 @@
+[
+  {
+    "file": "foothold-launch-a.mp4",
+    "duration_s": 23.0613,
+    "offset_s": 2.5,
+    "items": {
+      "1": {
+        "name": "초저역 20-60 Hz (본편)",
+        "criterion": "25 % 이상",
+        "value": 53.799937866013174,
+        "pass": true
+      },
+      "2": {
+        "name": "자기상관 최대 (걷는 구간)",
+        "criterion": "208 ms 격자",
+        "value": 416.3125,
+        "pass": true
+      },
+      "3": {
+        "name": "우쉬 첫째 2k-12k",
+        "criterion": "3 % 이상",
+        "value": 8.59242105391271,
+        "pass": true
+      },
+      "4": {
+        "name": "우쉬 둘째 2k-12k",
+        "criterion": "3 % 이상",
+        "value": 11.807978090012892,
+        "pass": true
+      },
+      "5": {
+        "name": "근접컷 RMS",
+        "criterion": "-16 dBFS 이상",
+        "value": -14.77817204771217,
+        "pass": true
+      },
+      "6": {
+        "name": "지속 바닥 비 40-60 Hz",
+        "criterion": "0.35 이상",
+        "value": 0.3743624240559857,
+        "pass": true
+      },
+      "7": {
+        "name": "하모닉 2배 · 3배",
+        "criterion": "-12 dB 이내",
+        "value": [
+          4.823117142258026,
+          11.725912244799108
+        ],
+        "pass": true
+      },
+      "8": {
+        "name": "스테레오 상관 200 Hz 위",
+        "criterion": "0.5 이하",
+        "value": 0.26475934346321833,
+        "pass": true
+      },
+      "9": {
+        "name": "크레스트 팩터",
+        "criterion": "10 dB 이상",
+        "value": 12.939109553796255,
+        "pass": true
+      }
+    },
+    "sustain_all": 0.2983,
+    "sub_opening_pct": 85.515,
+    "lufs": -16.0,
+    "true_peak_dbtp": -3.0,
+    "passed": 9,
+    "all_pass": true
+  }
+]

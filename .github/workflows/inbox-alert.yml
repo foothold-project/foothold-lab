@@ -36,10 +36,15 @@ jobs:
           FILES=$(gh api "repos/$REPO/commits/$SHA" --jq '
             [.files[] | select(.status != "removed") | .filename
              | select(startswith("inbox/"))
-             | select(endswith("README.md") or endswith(".gitkeep") | not)]
+            # 2026-09-05. 전에는 README.md 와 .gitkeep 만 걸러서 .gitignore ·
+            # .mp4 · .png 까지 「승격 검토」 이슈가 열렸다. 열린 21건 중 11건이
+            # 그런 것이었고 .gitignore 하나에 5건이었다. 승격은 md 를 docs/ 로
+            # 옮기는 일이라 md 가 아니면 promote.yml 이 처리하지도 못한다.
+               | select(endswith(".md"))
+               | select(endswith("README.md") | not)]
             | join("\n")')
           if [ -z "$FILES" ]; then
-            echo "README·gitkeep 뿐 → 생략"
+            echo "문서(.md)가 없음 → 생략"
             echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
           fi
           echo "::group::제출 파일"; echo "$FILES"; echo "::endgroup::"
@@ -93,6 +98,17 @@ jobs:
             printf '승격 조건 4가지: h1 제목 · 증거 표기 · 원 출처 · 민감정보 없음\n'
             printf 'https://github.com/%s/commit/%s\n' "$REPO" "$SHA"
           } > body.md
+          # 같은 파일로 이미 열린 것이 있으면 또 만들지 않는다. 판이 바뀔 때마다
+          # 새 이슈가 열려 하나의 mp4 에 5건이 쌓였다 (2026-09-05 실측).
+          DUP=$(gh issue list --repo "$REPO" --state open --limit 200 \
+                  --json number,title \
+                  --jq "[.[] | select(.title == \"[승격 검토] $FIRST\")] | .[0].number // empty")
+          if [ -n "$DUP" ]; then
+            echo "이미 #$DUP 이 같은 파일로 열려 있음"
+            gh issue comment "$DUP" --repo "$REPO" \
+              --body "같은 파일이 다시 올라왔습니다. 최신 판으로 보십시오." || true
+            exit 0
+          fi
           NUM=$(gh issue create --repo "$REPO" \
             --title "[승격 검토] $FIRST" \
             --assignee vfxpedia --body-file body.md | grep -oE '[0-9]+$')

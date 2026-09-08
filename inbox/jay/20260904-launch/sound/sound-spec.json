@@ -1,0 +1,61 @@
+{
+  "duration_s": 23.06,
+  "frames": null,
+  "sr": 48000,
+  "opening_s": 2.5,
+  "opening_eighths": 12,
+  "opening_hits": 5,
+  "opening_gaps_s": [
+    0.7127,
+    0.5241,
+    0.3853,
+    0.2833
+  ],
+  "eighth_ms": 208.333,
+  "bpm": 144,
+  "gait_hz": 4.8,
+  "sub_root_hz": 38.44,
+  "cut_bounds_s": [
+    2.5,
+    3.125,
+    3.75,
+    4.375,
+    5.2083,
+    5.8333,
+    6.6667,
+    10.0
+  ],
+  "walk_end_s": 13.3333,
+  "formation_end_s": 14.375,
+  "title_start_s": 13.875,
+  "whoosh_s": [
+    6.6667,
+    10.0
+  ],
+  "ending": {
+    "wordmark": 14.2,
+    "glitch": 15.14,
+    "unfold": 15.66,
+    "cut": 17.939999999999998,
+    "korean": 18.98,
+    "lockup": 21.06
+  },
+  "ground_pulses": 53,
+  "grain_agents": 96,
+  "kick_attack_decay_s": 0.085,
+  "kick_tail_decay_s": 0.62,
+  "kick_tail_amp": 0.38,
+  "sidechain": 0.55,
+  "reverb_s": 3.0,
+  "haas_ms": 18.0,
+  "formants_hz": [
+    700,
+    1200,
+    2600
+  ],
+  "shelf_hz": 6500,
+  "shelf_db": -9.0,
+  "lufs": -16.0,
+  "true_peak_dbtp": -2.5,
+  "lr_correlation": 0.9272
+}

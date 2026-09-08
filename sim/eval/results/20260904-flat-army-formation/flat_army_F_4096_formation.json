@@ -1,0 +1,113 @@
+{
+  "argv": [
+    "sim/eval/record_flat_army.py",
+    "--checkpoint",
+    "C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt",
+    "--output_dir",
+    "sim/eval/results/20260904-flat-army-formation",
+    "--cut",
+    "F",
+    "--view",
+    "formation",
+    "--num_envs",
+    "4096",
+    "--columns",
+    "128",
+    "--rows",
+    "32",
+    "--spacing",
+    "2.5",
+    "--origins_csv",
+    "sim/eval/wordmark_origins_4096.csv",
+    "--gate",
+    "off",
+    "--headless",
+    "--device",
+    "cuda:0"
+  ],
+  "cut": "F",
+  "video": "flat_army_F_4096_formation.mp4",
+  "bytes": 2085749,
+  "num_envs": 4096,
+  "formation": {
+    "origins_csv": "sim/eval/wordmark_origins_4096.csv",
+    "rows": 4096
+  },
+  "formation_extent_m": {
+    "width": 399.044677734375,
+    "depth": 49.563804626464844
+  },
+  "spacing_m": 2.5,
+  "camera": {
+    "view": "formation",
+    "eye_m": [
+      -1.0,
+      0.0,
+      927.988
+    ],
+    "target_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "horizontal_fov_deg": 60.000000665109205,
+    "horizontal_aperture": 20.954999923706055,
+    "focal_length": 18.14756202697754,
+    "final_horizontal_fov_deg": 60.000000665109205,
+    "final_horizontal_aperture": 20.954999923706055,
+    "final_focal_length": 18.14756202697754
+  },
+  "gate_line": {
+    "progress_m": 10.0,
+    "visible": false
+  },
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 50,
+  "frames": 1000,
+  "video_duration_s": 20.0,
+  "seed": 42,
+  "command_vx_mps": 1.0,
+  "eval_duration_s": 20.0,
+  "spawn_xy_range_m": 0.1,
+  "yaw_range_deg": 5.0,
+  "joint_pos_scale": 0.05,
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\.pretrained_checkpoints\\rsl_rl\\Isaac-Velocity-Rough-Unitree-Go2-v0\\checkpoint.pt",
+  "policy_sha256": "f2aa77bf0349c10ec2a00071162e37123d0cf80f3447c3989c17a618e1b24ad2",
+  "env_origins_max_error_m": 0.0,
+  "encoding": {
+    "codec": "libx264",
+    "crf": 20,
+    "preset": "slow"
+  },
+  "timing_s": {
+    "app_and_imports": 12.651502000167966,
+    "environment_creation_and_reset": 23.54345460003242,
+    "policy_load": 0.42227920005097985,
+    "render_warmup": 5.0191999999806285,
+    "recording_total": 71.61215359997004,
+    "render_per_frame_mean": 0.03857037419313565,
+    "render_per_frame_median": 0.03857834986411035,
+    "simulation_step_mean": 0.032152751765052626,
+    "process_total": 113.25475360034034
+  },
+  "frame_inspection": {
+    "decoded_frames": 1000,
+    "black_threshold_mean_gray": 10.0,
+    "black_frames": 0,
+    "alternating_black": false,
+    "mean_gray_min": 37.45634078979492,
+    "mean_gray_max": 37.77739715576172,
+    "mean_gray_mean": 37.50631636428833,
+    "preview_frames": {
+      "0": "F_formation_frame0000.png",
+      "50": "F_formation_frame0050.png",
+      "150": "F_formation_frame0150.png",
+      "500": "F_formation_frame0500.png",
+      "999": "F_formation_frame0999.png"
+    },
+    "passed": true
+  }
+}
