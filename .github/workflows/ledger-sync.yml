@@ -1,0 +1,97 @@
+# 원장(docs/LEDGER.md)의 「열린 이슈 전수」 절을 GitHub 열린 이슈로 다시 쓴다.
+#
+#   왜: 사람이 세어 적는 동안 같은 날 안에서도 수가 51 · 57 · 60 · 71 · 72 · 81 · 79 로
+#   흔들렸다 (#161). 이슈가 열리고 닫히는 속도가 손 갱신보다 빠르다. 게다가 빌드 관문
+#   [3.8] 이 낡은 원장을 «배포 중단» 으로 잡으므로, 손이 늦으면 사이트가 통째로 선다.
+#   세는 일은 GitHub 이 답을 갖고 있다. 기계가 세고 사람은 판단만 한다.
+#
+#   ★ 무한 루프를 안 만드는 이유 두 가지.
+#     ① 방아쇠가 issues 와 schedule 뿐이다. push 로는 이 워크플로가 안 깨어난다.
+#     ② push 를 기본 GITHUB_TOKEN 으로 한다. 그 토큰이 만든 커밋은 어떤 워크플로도
+#        깨우지 않는다 (GitHub 의 기본 루프 차단). PAT 로 바꾸면 그 보호가 사라진다.
+#
+#   ★ 기계가 쓰는 자리는 마커 안뿐이다.
+#     <!-- 자동:시작 · 열린 이슈 전수 --> ~ <!-- 자동:끝 · 열린 이슈 전수 -->
+#     그 뒤의 「손이 오래 안 간 것」 「막고 있는 것」 은 판단이라 사람 몫으로 남겼다.
+#
+#   ★ 실패하면 원장을 안 바꾼다. 이슈가 0건으로 읽히거나 마커가 없거나 만든 블록에
+#     번호가 빠지면 ledger_sync.py 가 파일을 쓰기 «전에» 죽는다.
+name: 원장 열린 이슈 집계
+
+on:
+  issues:
+    # 그 밖의 변화(마일스톤 이동 · 담당 교체 · 삭제 · 이관)는 아래 하루 한 번이 잡는다.
+    # 전부 방아쇠로 달면 커밋이 하루에 수십 개가 된다.
+    types: [opened, closed, reopened]
+  schedule:
+    - cron: "0 21 * * *"        # 매일 06:00 KST. 실패 감시(07:00)보다 앞선다
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+# 이슈 여러 개가 한꺼번에 닫히면 실행이 겹친다. 취소하지 말고 줄을 세운다.
+# 취소하면 마지막 상태를 반영한 실행이 사라져 원장이 낡은 채로 남는다.
+concurrency:
+  group: ledger-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 쪽을 펴는 일과 «받은 것이 쓸 만한가» 판정은 전부 ledger_sync.py 안에 있다.
+      # 러너에서만 도는 한 줄(jq 파이프)을 만들지 않아야 로컬에서 그대로 시험된다.
+      - name: 열린 이슈 전수 받기
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate -X GET \
+            "repos/$REPO/issues?state=open&per_page=100" --slurp > open.json
+          test -s open.json
+
+      - name: 원장 갱신
+        id: sync
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/ledger_sync.py \
+            --issues open.json --ledger docs/LEDGER.md | tee sync.out
+          cat sync.out >> "$GITHUB_OUTPUT"
+
+      - name: 커밋
+        if: steps.sync.outputs.changed == 'yes'
+        env:
+          COUNT: ${{ steps.sync.outputs.count }}
+        run: |
+          set -euo pipefail
+          # 원장 말고는 아무것도 커밋하지 않는다. 받은 JSON 은 산출물이 아니다.
+          rm -f open.json sync.out
+          if git diff --quiet -- docs/LEDGER.md; then
+            echo "::error::스크립트는 바꿨다는데 diff 가 없다. 멈춘다."; exit 1
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TODAY=$(TZ=Asia/Seoul date +%F)
+          git add docs/LEDGER.md
+          git commit -m "chore: 원장 열린 이슈 전수 자동 집계 (${COUNT}건 · ${TODAY})"
+          # 여러 실행이 겹쳐도 남의 커밋을 덮지 않는다. 밀리면 다시 얹고 다시 민다.
+          # force 는 쓰지 않는다. 세 번 밀리면 사람이 봐야 할 일이다.
+          for i in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo "push 성공 (${i}회차)"; exit 0
+            fi
+            echo "원격이 앞서 있다. 다시 얹는다 (${i}회차)"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || {
+              echo "::error::재배치 실패. 원장을 그대로 둔다"; exit 1
+            }
+          done
+          echo "::error::세 번 시도했으나 push 실패"; exit 1
+
+      - name: 결과
+        run: |
+          echo "바뀜: ${{ steps.sync.outputs.changed }} · 열린 이슈: ${{ steps.sync.outputs.count }}건"

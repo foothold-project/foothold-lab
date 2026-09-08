@@ -2,27 +2,27 @@
 
 > 분류: 운영
 > 작성: 오흥재 · 2026-09-08 16:40
-> 근거: 실측 (워크플로 19종 전수 · Actions API 런 기록 · 실패 런 로그 원문 · 로컬 시험 16건)
+> 근거: 실측 (워크플로 20종 전수 · 19종 감사 + `ledger-sync` 신설 · Actions API 런 기록 · 실패 런 로그 원문 · 로컬 시험 16건)
 > 요지: PR 을 막던 것은 «head 브랜치 워크플로»가 아니라 «알림 실패가 관문 실패로 보인 것»이었다. 알림 워크플로 둘을 어떤 이유로도 실패하지 않게 바꿨다.
 > 상태: 확정
-> 판: v1.1
+> 판: v1.2
 
 이슈 `#307` 의 답이다. 결론부터: **`#307` 이 적어 둔 원인 진단은 이미 지난 것이었다.**
 `가`와 `나`는 2026-08-26 에 이미 적용돼 있었고, 실제로 PR 을 막던 것은 다른 것이었다.
 
-## 1. 워크플로 19종 전수
+## 1. 워크플로 20종 전수
 
 **워크플로 파일을 «어느 브랜치에서» 읽는가**가 이 문제의 핵심이다. 트리거가 정한다.
 
 | 트리거 | 파일을 읽는 곳 | 해당 워크플로 |
 |---|---|---|
-| `schedule` · `workflow_dispatch` | 기본 브랜치(main) 고정 | `deadline-alert` `failure-watch` `lecture-watch` `notice` `project-views` `runpod-balance` `weekly-digest` `weekly-report` |
-| `issues` · `issue_comment` | 기본 브랜치(main) 고정 | `discord-notify` `done-date` `issue-dates` `issue-triage` `merge-on-comment` `promote` |
+| `schedule` · `workflow_dispatch` | 기본 브랜치(main) 고정 | `deadline-alert` `failure-watch` `lecture-watch` `notice` `project-views` `runpod-balance` `weekly-digest` `weekly-report` `ledger-sync` |
+| `issues` · `issue_comment` | 기본 브랜치(main) 고정 | `discord-notify` `done-date` `issue-dates` `issue-triage` `merge-on-comment` `promote` `ledger-sync` |
 | `push: [main]` | 밀린 브랜치 = main | `discord-notify` `inbox-alert` `main-guard` `merge-notify` |
 | **`pull_request_target`** | **base(main)** | **`inbox-pr-alert` `pr-notify`** |
 | `pull_request` | head(PR 브랜치) | **없음** |
 
-**PR 에서 도는 것은 19종 중 둘뿐이고, 둘 다 이미 `pull_request_target` 이다.**
+**PR 에서 도는 것은 20종 중 둘뿐이고, 둘 다 이미 `pull_request_target` 이다.**
 `pull_request` 를 쓰는 워크플로는 하나도 없다. Actions API 로 확인했다.
 `event=pull_request` 인 마지막 런은 **2026-08-26T00:02Z** 이고 그 뒤로 0건이다.
 
@@ -255,5 +255,6 @@ RC=0            <- 전에는 1 이었고 그래서 PR 이 빨간불이었다
 
 | 판 | 언제 | 무엇이 바뀌었나 | 근거 |
 |---|---|---|---|
+| **v1.2** | 2026-09-08 | `ledger-sync` 신설로 20종이 됐다. 이 워크플로는 `issues` 와 `schedule` 만 쓰므로 PR 에서 도는 것은 여전히 둘뿐이고 결론은 그대로다 | #161 |
 | **v1.1** | 2026-09-08 | 8절 신설. 「감시를 왜 안 늘렸나」의 근거를 남겼다. 채널 장애 사례가 없어 우회 통보에 의존하며, 우리 버그가 아닌 장애가 관측되면 되돌린다. 자동 차단 계획이 없음도 명문화 | 팀장 확정 · #316 |
 | v1.0 | 2026-09-08 | 처음 씀. 워크플로 19종을 전수로 보고 PR 에서 도는 둘이 이미 `pull_request_target` 임을 확인했다. 닷새를 막은 것은 트리거가 아니라 알림 전달 실패였다 | 실측 · #314 |
