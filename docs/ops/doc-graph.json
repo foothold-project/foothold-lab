@@ -64,11 +64,11 @@
   "areas": [
    "C/운영",
    "C/기록",
-   "A/정책학습",
-   "B/항법"
+   "B/항법",
+   "A/정책학습"
   ],
   "areas_sure": false,
-  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×21 백과×4 학습×11 보상×2",
+  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×21 백과×4 TF×1 SLAM×5",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -198,10 +198,11 @@
   "issues": [],
   "areas": [
    "C/운영",
-   "C/기록"
+   "C/기록",
+   "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×11 백과×2",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×11 백과×2 학습×6 보상×2",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -573,6 +574,24 @@
   "web_worthy_reason": "현재 주차이고 «10종 중 5종 실패»라는 지금의 문제 정의를 한 문장으로 준다. 표지 상단 다이제스트 자리에 그대로 맞는다. 상태가 «초안»인 점만 확인하면 된다."
  },
  {
+  "path": "digest/2026-W36-material.md",
+  "title": "다이제스트 재료: 2026-W36",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×4 문서×16 커리큘럼×3",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "guides/ros2-01-setup.md",
   "title": "ROS 2 개발환경 구축 정리 (Ubuntu 24.04 · Jazzy)",
   "kind": "가이드",
@@ -739,7 +758,6 @@
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
-   "research/rough-terrain-study-plan.md",
    "REPORT.md",
    "meetings/20260821-team-meeting.md",
    "meetings/20260820-kickoff.md",
@@ -1330,6 +1348,25 @@
   "web_worthy_src": "auto"
  },
  {
+  "path": "research/NVIDIA공식체크포인트_속도단차교차평가분석.md",
+  "title": "20260904 NVIDIA 공식 체크포인트 속도·단차 교차평가 분석",
+  "kind": "실험",
+  "evidence": "`metrics.zip`의",
+  "issues": [],
+  "areas": [
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 지표×3 에피소드×7 평가×16 학습×2 보상×1 정책×5",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/architecture-decision.md",
   "title": "시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2",
   "kind": "결정",
@@ -1454,6 +1491,26 @@
   "web_worthy": "낮음",
   "web_worthy_src": "human",
   "web_worthy_reason": "8/14 배정 완료 시점의 계획 문서이고 실제 운용은 ops/GPU-SANDBOX 와 runpod-team-ops 로 갈라졌다. 배정표 한 행이 폐기된 증류를 전제한다."
+ },
+ {
+  "path": "research/flat-straight-baseline-10m.md",
+  "title": "평지 직진: 재는 자리가 결과를 가르고, 초기화 요인 셋 중 방위만 효과가 검출된다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "98"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×7 보상×5 관측×13",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "research/generalization-benchmark-10-terrains.md",
@@ -1611,6 +1668,46 @@
   "web_worthy_reason": "«화질은 렌더러가 아니라 에셋에서 갈린다»는 결론과 §4 컷별 도구 배분은 트랙 A 트윈·렌더 작업에 지금도 유효하다. 다만 도구 소개 성격이라 표지보다 자료 목록이 맞다."
  },
  {
+  "path": "research/pretrained-vs-model99-7terrain.md",
+  "title": "NVIDIA Pretrained vs Model99: 난이도 0.50~0.70 7종 지형 성능 비교 보고서",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "284"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×31 보상×3 관측×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/rails-diagnosis.md",
+  "title": "레일즈 진단: 못 넘는 이유는 관절이 아니라 보상에 있다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "66"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×18 보상×28 관측×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/render-benchmarks.md",
   "title": "렌더 실측: Path Tracing 은 얼마나 걸리는가",
   "kind": "실험",
@@ -1731,9 +1828,7 @@
    "meetings/20260819-team-lock.md",
    "research/go2-rough-training.md"
   ],
-  "children": [
-   "meetings/20260819-team-lock.md"
-  ],
+  "children": [],
   "purpose_reason": "«회의록이 아니라 개인 학습 계획이다» 라고 머리글이 밝히고 본문이 «중요하고 급함 / 중요하지만 급하지 않음 / 급하지만 하지 않음 / 버린 것» 우선순위 표다.",
   "web_worthy": "낮음",
   "web_worthy_src": "human",
@@ -1905,6 +2000,46 @@
   "web_worthy": "높음",
   "web_worthy_src": "human",
   "web_worthy_reason": "«보상 13.94 인데 통과율 0%» 를 그림으로 보여 주는 문서라 비전공자·심사자에게 가장 잘 전달된다. 그림이 본문이라 웹 표지에 어울린다."
+ },
+ {
+  "path": "research/발보상-시간아니고높이아님.md",
+  "title": "우리 보상에 발 «높이» 항이 없다는 확인: `feet_air_time` 은 체공 «시간» 을 상 준다",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "194"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 보상×35 관측×1",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/직진성-외부표준.md",
+  "title": "직진 5 cm 의 외부 근거 조사: ISO 18646-1 에 직진성 항목 없음 · 18646-2 의 로봇 폭 기준 코스 규정",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "184"
+  ],
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 TF×3 SLAM×1 Nav2×1",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "schedule/personal-plans.md",

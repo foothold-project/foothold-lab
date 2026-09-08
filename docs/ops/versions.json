@@ -35,19 +35,34 @@
   "ver": ""
  },
  "deliverables/plan/brainstorming.md": {
-  "hash": "0477b0b3bcc6dbbe",
-  "major": "",
-  "ver": ""
+  "hash": "2f11837c5af36038",
+  "major": "v1.2",
+  "ver": "v1.2"
  },
  "deliverables/plan/proposal-deck.md": {
-  "hash": "464f961e188b3fcf",
+  "hash": "c56d992b0bd33ebd",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/plan/proposal-summary.md": {
-  "hash": "bdc3eb01bec7e27d",
+  "hash": "0fbb5e23970205c4",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
+ },
+ "deliverables/plan/proposal.md": {
+  "hash": "3e2fd35fa5a58a6c",
+  "major": "v1.6",
+  "ver": "v1.6"
+ },
+ "deliverables/plan/roles-responsibilities.md": {
+  "hash": "2a46b2a10fa2a081",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "deliverables/plan/wbs-official.md": {
+  "hash": "29f363e9e6e16d41",
+  "major": "v1.1",
+  "ver": "v1.1"
  },
  "deliverables/plan/wbs.md": {
   "hash": "303a32b640d7a577",
@@ -65,9 +80,9 @@
   "ver": "v2.1"
  },
  "docs/DECISIONS.md": {
-  "hash": "e6cc77a22b582ba8",
+  "hash": "9cd31a5af9517f62",
   "major": "v2.0",
-  "ver": "v2.2"
+  "ver": "v2.3"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -90,9 +105,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "d3a4d4aa8ba29bfb",
+  "hash": "8b0c7bf1e3690ead",
   "major": "v2.0",
-  "ver": "v2.4"
+  "ver": "v2.6"
  },
  "docs/PRD-WEB.md": {
   "hash": "1e818ddd1bd1624a",
@@ -110,9 +125,9 @@
   "ver": ""
  },
  "docs/REPORT.md": {
-  "hash": "b6d9d64c352ba317",
+  "hash": "78a23e2132e8fdb9",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/ROBOT-SPEC.md": {
   "hash": "380346d94212bfc1",
@@ -174,6 +189,11 @@
   "major": "",
   "ver": ""
  },
+ "docs/digest/2026-W36-material.md": {
+  "hash": "ab2adfc58a85b48b",
+  "major": "",
+  "ver": ""
+ },
  "docs/guides/ros2-01-setup.md": {
   "hash": "134819c0ab6febdd",
   "major": "v1.0",
@@ -205,9 +225,9 @@
   "ver": ""
  },
  "docs/meetings/20260819-team-lock.md": {
-  "hash": "ceb8249adb642e38",
+  "hash": "38c592014585140c",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/meetings/20260820-kickoff.md": {
   "hash": "e7e47618858e5ca5",
@@ -349,6 +369,11 @@
   "major": "",
   "ver": ""
  },
+ "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
+  "hash": "50e259d54c713cc2",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
  "docs/research/architecture-decision.md": {
   "hash": "9db94ee5579fe18d",
   "major": "v1.0",
@@ -374,6 +399,11 @@
   "major": "v2.0",
   "ver": "v2.0"
  },
+ "docs/research/flat-straight-baseline-10m.md": {
+  "hash": "c7716edbbd0f8b93",
+  "major": "v2.7",
+  "ver": "v2.7"
+ },
  "docs/research/generalization-benchmark-10-terrains.md": {
   "hash": "85c637673756709b",
   "major": "v1.0",
@@ -398,6 +428,16 @@
   "hash": "149e6ee0b8383112",
   "major": "v1.0",
   "ver": "v1.0"
+ },
+ "docs/research/pretrained-vs-model99-7terrain.md": {
+  "hash": "e663861d98dd9432",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/rails-diagnosis.md": {
+  "hash": "5a530b7f1da188cb",
+  "major": "v1.3",
+  "ver": "v1.3"
  },
  "docs/research/render-benchmarks.md": {
   "hash": "0d5f08e6e1d5d8d1",
@@ -453,6 +493,16 @@
   "hash": "2ffec4b3562f3ecc",
   "major": "v1.0",
   "ver": "v1.0"
+ },
+ "docs/research/발보상-시간아니고높이아님.md": {
+  "hash": "a2d7ceb94969b8ea",
+  "major": "v1.6",
+  "ver": "v1.6"
+ },
+ "docs/research/직진성-외부표준.md": {
+  "hash": "efe704d65447bd88",
+  "major": "v2.22",
+  "ver": "v2.22"
  },
  "docs/schedule/personal-plans.md": {
   "hash": "0a73f136a7b23d3a",
