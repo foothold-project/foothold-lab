@@ -14,6 +14,10 @@
 같은 날 **미경험 험지 10종을 우리 기준(1.0 m/s)으로 1000판** 다시 쟀습니다 (`#99`).
 `run_manifest.json` 에 정책 sha256 · GPU · Isaac Lab 커밋 · 실행 시각이 함께 남습니다.
 
+그리고 같은 날 **20초 규격으로 다시 냈습니다** (`#99` 2번).
+첫 판은 지형이 좁아 12초로 줄여 돌린 것이라 규격 밖이었습니다.
+**발표에 쓸 것은 `results/20260903-flat-10m-spec20s/` 입니다.**
+
 | 무엇 | 어디 |
 |---|---|
 | 원본 추적 · 무엇이 복원물인가 | `PROVENANCE.md` |
@@ -54,16 +58,34 @@ python -m unittest discover -s sim/eval/tests -v
 Wilson 95% 신뢰구간을 뽑습니다.
 
 ```bash
-python sim/eval/report.py sim/eval/results/20260903-flat-10m/generalization_raw.csv
+python sim/eval/report.py sim/eval/results/20260903-flat-10m-spec20s/generalization_raw.csv
 ```
+
+## 결과가 둘인데 어느 것을 쓰나
+
+| 폴더 | 무엇 | 쓰나 |
+|---|---|---|
+| `results/20260903-flat-10m-spec20s/` | **20초 규격** 100판 | **이것을 쓴다** |
+| `results/20260903-flat-10m/` | 12초로 줄여 돌린 100판 | 규격 밖. 증거로만 둔다 |
+| `results/20260903-flat-10m/spec-20s/` | 테두리를 안 넓히고 20초를 돈 100판 | **성능으로 인용 금지.** 낙하를 잰 숫자다 |
 
 ## 실제로 돌리려면
 
 지형 생성 · 정책 로딩 · CSV 산출에는 **Isaac Lab 과 GPU 가 필요합니다.**
 RunPod 팟에서도 되고, Isaac Lab 이 깔린 워크스테이션에서도 됩니다.
 2026-09-03 기준선은 워크스테이션에서 냈습니다. 명령줄 전문과 환경은
-`results/20260903-flat-10m/README.md` 에 있습니다.
+`results/20260903-flat-10m-spec20s/README.md` 에 있습니다.
 
-**돌리기 전에 `results/20260903-flat-10m/README.md` 의 「세계가 14 m 에서 끝난다」를
-먼저 읽으십시오.** 안 읽고 시간을 길게 잡으면 로봇이 지형 밖으로 나가고,
-그 판은 정책 성능이 아니라 낙하를 재게 됩니다.
+**세계의 크기와 시간이 맞아야 합니다.** 이상 거리(`command_vx x eval_duration`)가
+지형의 전방 한계보다 길면 로봇이 지형 밖으로 나가고, 그 판은 정책 성능이 아니라
+**낙하**를 재게 됩니다. 2026-09-03 에 실제로 그렇게 됐습니다.
+
+**이제는 하네스가 실행 전에 막습니다.** 좁으면 시작하지 않고 얼마나 모자란지
+말해 줍니다. 시간을 줄이지 말고 `generalization_env_cfg.py` 의 `border_width` 를
+키우십시오. 테두리는 격자 **바깥**이라 험지 10종의 타일도 `env_origin` 도
+안 움직입니다 `확인됨` (`results/20260903-flat-10m-spec20s/README.md` §4-2).
+
+| `border_width` | 전방 한계 | 담기는 시간 (1.0 m/s) |
+|---|---|---|
+| 10.0 (옛값) | 14 m | 12초까지 |
+| **20.0 (지금)** | **24 m** | **20초 규격 + 4 m 여유** |

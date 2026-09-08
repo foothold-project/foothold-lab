@@ -1,0 +1,112 @@
+{
+  "argv": [
+    "sim/eval/record_flat_army.py",
+    "--checkpoint",
+    "C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt",
+    "--output_dir",
+    "sim/eval/results/20260903-flat-army",
+    "--num_envs",
+    "256",
+    "--columns",
+    "32",
+    "--rows",
+    "8",
+    "--spacing",
+    "3.0",
+    "--benchmark_frames",
+    "10",
+    "--warmup_frames",
+    "8",
+    "--width",
+    "1920",
+    "--height",
+    "1080",
+    "--headless",
+    "--device",
+    "cuda:0"
+  ],
+  "device": "cuda:0",
+  "num_envs": 256,
+  "formation": [
+    32,
+    8
+  ],
+  "spacing_m": 3.0,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "benchmark_frames": 10,
+  "warmup_frames": 8,
+  "camera": {
+    "view": "topdown",
+    "center_x_m": 10.0,
+    "height_m": 87.46856578222831
+  },
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\.pretrained_checkpoints\\rsl_rl\\Isaac-Velocity-Rough-Unitree-Go2-v0\\checkpoint.pt",
+  "timing_s": {
+    "app_and_imports": 11.462038100231439,
+    "environment_creation_and_reset": 3.424031399656087,
+    "policy_load": 0.3399177002720535,
+    "render_warmup": 1.6362866000272334,
+    "render_frames": [
+      0.0377666000276804,
+      0.03815220016986132,
+      0.03917750017717481,
+      0.04127610009163618,
+      0.039816700387746096,
+      0.03879150003194809,
+      0.037659399677067995,
+      0.03803220018744469,
+      0.03720609983429313,
+      0.03989720018580556
+    ],
+    "render_attempts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "simulation_steps": [
+      0.16025400022044778,
+      0.02553000021725893,
+      0.02511230017989874,
+      0.025182699784636497,
+      0.02564410027116537,
+      0.02989879995584488,
+      0.02538979984819889,
+      0.024403900373727083,
+      0.025149900000542402,
+      0.02386710001155734
+    ],
+    "render_mean": 0.03877755007706583,
+    "render_median": 0.0384718501009047,
+    "simulation_step_mean": 0.03904326008632779,
+    "combined_per_output_frame_mean": 0.07782081016339362
+  },
+  "brightness": [
+    47.68599319458008,
+    47.56428909301758,
+    47.552879333496094,
+    47.46393966674805,
+    47.322200775146484,
+    47.287864685058594,
+    47.28731155395508,
+    47.18211364746094,
+    47.00771713256836,
+    47.0145263671875
+  ],
+  "black_frames": 0,
+  "alternating_black": false,
+  "env_origins_max_error_m": 0.0,
+  "preview_frames": [
+    "benchmark_256_first.png",
+    "benchmark_256_last.png"
+  ]
+}

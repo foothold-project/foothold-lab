@@ -28,6 +28,17 @@ JUDGEMENT_AXES = (
     ("direction_success", "방향"),
 )
 
+# 이탈·거리 표의 줄 순서. **통과선 이탈이 맨 위**입니다. 판정에 쓰는 자이고,
+# 나머지 둘은 관측입니다 (#99 2번).
+DRIFT_ROWS = (
+    ("통과선 좌우 이탈 (m)", "gate_drift"),
+    ("끝점 좌우 이탈 (m)", "endpoint_drift"),
+    ("최대 좌우 이탈 (m)", "peak_drift"),
+    ("전진 거리 (m)", "forward"),
+    ("에피소드 시간 (s)", "duration"),
+    ("속도 MAE (m/s)", "velocity_mae"),
+)
+
 
 def wilson_interval(successes, n, z=Z_95):
     """이항 비율의 Wilson 점수 구간. `(하한, 상한)` 을 비율로 돌려준다.
@@ -62,6 +73,28 @@ def read_rows(path):
             row[column] = row[column].strip().lower() == "true"
 
     return rows
+
+
+def numeric_column(episodes, key):
+    """수치 열을 float 목록으로. **빈칸은 건너뜁니다.**
+
+    `gate_lateral_drift_m` 은 통과선을 못 넘긴 판에서 빈칸입니다. 그것을 0.0 으로
+    읽으면 「도달 못 했다」가 「완벽하게 곧았다」로 뒤집힙니다.
+
+    **열 자체가 없어도 빈 목록입니다.** #99 2번 이전에 나온 CSV 에는
+    통과선 열이 아예 없습니다. 그 파일도 이 도구로 계속 읽을 수 있어야 합니다.
+    """
+    values = []
+
+    for row in episodes:
+        raw = row.get(key)
+
+        if raw is None or str(raw).strip() == "":
+            continue
+
+        values.append(float(raw))
+
+    return values
 
 
 def describe(values):
@@ -110,15 +143,20 @@ def analyse(rows, terrain):
     fell = sum(1 for r in episodes if r["termination_reason"] == "base_contact")
     timeout = sum(1 for r in episodes if r["termination_reason"] == "timeout")
 
+    # 통과선 위 이탈. 판정에 쓰이는 자다 (#99 2번).
+    gate_values = numeric_column(episodes, "gate_lateral_drift_m")
+
     return {
         "terrain": terrain,
         "episodes": n,
         "axes": axes,
-        "endpoint_drift": describe([float(r["lateral_drift_m"]) for r in episodes]),
-        "peak_drift": describe([float(r["peak_lateral_drift_m"]) for r in episodes]),
-        "forward": describe([float(r["forward_progress_m"]) for r in episodes]),
-        "duration": describe([float(r["duration_s"]) for r in episodes]),
-        "velocity_mae": describe([float(r["velocity_mae_mps"]) for r in episodes]),
+        "gate_drift": describe(gate_values),
+        "gate_reached": len(gate_values),
+        "endpoint_drift": describe(numeric_column(episodes, "lateral_drift_m")),
+        "peak_drift": describe(numeric_column(episodes, "peak_lateral_drift_m")),
+        "forward": describe(numeric_column(episodes, "forward_progress_m")),
+        "duration": describe(numeric_column(episodes, "duration_s")),
+        "velocity_mae": describe(numeric_column(episodes, "velocity_mae_mps")),
         "fell": fell,
         "timeout": timeout,
     }
@@ -149,18 +187,13 @@ def print_plain(result):
     print(f"{'항목':<22} {'평균':>10} {'중앙':>10} {'최대':>10}")
     print("-" * 72)
 
-    for label, key in (
-        ("끝점 좌우 이탈 (m)", "endpoint_drift"),
-        ("최대 좌우 이탈 (m)", "peak_drift"),
-        ("전진 거리 (m)", "forward"),
-        ("에피소드 시간 (s)", "duration"),
-        ("속도 MAE (m/s)", "velocity_mae"),
-    ):
+    for label, key in DRIFT_ROWS:
         d = result[key]
         print(f"{label:<22} {d['mean']:>10.3f} {d['median']:>10.3f} {d['max']:>10.3f}")
 
     print()
     print(f"낙상(base_contact) {result['fell']} 판 · 시간초과(timeout) {result['timeout']} 판")
+    print(f"통과선 도달 {result['gate_reached']}/{n} 판 (도달 못 한 판은 방향 실패)")
     print("=" * 72)
 
 
@@ -186,18 +219,13 @@ def print_markdown(result):
     print("| 항목 | 평균 | 중앙 | 최대 |")
     print("|---|---|---|---|")
 
-    for label, key in (
-        ("끝점 좌우 이탈 (m)", "endpoint_drift"),
-        ("최대 좌우 이탈 (m)", "peak_drift"),
-        ("전진 거리 (m)", "forward"),
-        ("에피소드 시간 (s)", "duration"),
-        ("속도 MAE (m/s)", "velocity_mae"),
-    ):
+    for label, key in DRIFT_ROWS:
         d = result[key]
         print(f"| {label} | {d['mean']:.3f} | {d['median']:.3f} | {d['max']:.3f} |")
 
     print()
-    print(f"낙상 {result['fell']} 판 · 시간초과 {result['timeout']} 판")
+    print(f"낙상 {result['fell']} 판 · 시간초과 {result['timeout']} 판 "
+          f"· 통과선 도달 {result['gate_reached']}/{n} 판")
 
 
 def main():

@@ -4,7 +4,7 @@
 > 작성: 오흥재 · 2026-09-03 18:40
 > 근거: `deliverables/plan/proposal.md` 8-1 부터 8-4 · `deliverables/plan/wbs.md` (2026-08-27 초안) · `tools/build_wbs.py` · `docs/ROLES.md` v1.2 · 이슈 #122 #77 #104 · 실패 지형 이슈 다섯 건
 > 요지: WBS 를 네 층으로 둔다. 위 세 층은 사람이 정하고 세부 작업과 진척은 GitHub 이슈에서 생성한다. 이 문서에 완료율을 적지 않는다
-> 상태: 초안
+> 상태: 확정
 > 판: v1.1
 
 <!-- 제출본 제외 -->
