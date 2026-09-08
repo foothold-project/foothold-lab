@@ -13,7 +13,12 @@
     그대로 통과해 웹까지 갔고, 「본인 학습 계획」이 「회의록」으로 올라갔다.
     관문은 사람이 지나는 모든 문에 있어야 한다. 한 문만 열려 있으면 그리로 샌다.
 
-  출력: JSON (stdout)  { files: [ {path, title, lede, checks{}, ok, slug, dest, fixes[] } ] }
+  출력: JSON (stdout)
+    { files: [ {path, title, lede, checks{}, ok, slug, dest, fixes[], style[] } ] }
+
+  fixes 와 style 은 «성격이 다르다».
+    fixes  승격하려면 채워야 하는 것. 판정(ok)에 들어간다
+    style  문체 권고. 판정에 «안» 들어가고 막지도 않는다. 승격할 때 우리가 맞춘다
 """
 import io, json, os, re, sys
 
@@ -93,8 +98,16 @@ def review(path):
         '작성자·날짜 형식': writer_ok,
         '증거 표기': evidence > 0,
         '원 출처 링크': links > 0,
-        '웹 금지 요소 없음': ascii_art < 3 and emdash == 0,
+        '선 도식 없음': ascii_art < 3,
     }
+    # ★ em dash 는 «문체» 규칙이지 내용 결함이 아니다. 판정(ok)에서 뺐다.
+    #   넣어 두면 문체 하나로 「손질 필요」가 떠서 팀장이 «내용 문제»로 읽는다.
+    #   2026-09-08 #307 에서 고친 것과 같은 부류다(알림 실패가 검수 실패로 보이는 것).
+    #   게다가 이것은 팀원이 아니라 «팀원의 AI» 가 쓴 것이라 요구할 자리가 아니다.
+    #   승격할 때 우리가 맞춘다. 알리기만 한다.
+    style = []
+    if emdash:
+        style.append('em dash %d개' % emdash)
     fixes = []
     if not checks['h1 제목']:
         fixes.append('맨 위에 `# 제목` 추가')
@@ -112,8 +125,6 @@ def review(path):
         fixes.append('참고한 원 출처 링크 추가')
     if ascii_art >= 3:
         fixes.append('선으로 그린 도식 %d자를 표로 변환' % ascii_art)
-    if emdash:
-        fixes.append('em dash %d개 제거' % emdash)
 
     slug = re.sub(r'^\d{8}[-_]', '', os.path.basename(path)[:-3])
     slug = re.sub(r'[^a-z0-9-]+', '-', slug.lower()).strip('-') or 'submission'
@@ -130,6 +141,7 @@ def review(path):
         'evidence': evidence, 'links': links,
         'checks': checks, 'ok': all(checks.values()),
         'slug': slug, 'dest': 'docs/research/%s.md' % slug, 'fixes': fixes,
+        'style': style,
         'block': paste_block(meta, os.environ.get('PR_AUTHOR', ''),
                              os.environ.get('TODAY', '')) if missing or not meta.get('상태') else '',
     }
@@ -173,12 +185,14 @@ def review_profile(path):
     m = re.search(r'^#\s+(.+)$', md, re.M)
     pii = scan_pii(md)
     emdash = md.count('—')
-    checks = {'개인정보 없음': not pii, 'em dash 없음': emdash == 0}
+    checks = {'개인정보 없음': not pii}
     fixes = []
     if pii:
         fixes.append('공개 페이지입니다. %s 를 지워주세요' % ' · '.join(pii))
+    # 문체는 판정에서 뺀다. review() 와 같은 이유다.
+    style = []
     if emdash:
-        fixes.append('em dash %d개 제거' % emdash)
+        style.append('em dash %d개' % emdash)
     slug = os.path.basename(path)[:-3].lower()
     return {
         'path': path, 'kind': 'profile',
@@ -187,6 +201,7 @@ def review_profile(path):
         'bytes': len(md.encode('utf-8')), 'evidence': 0, 'links': 0,
         'checks': checks, 'ok': all(checks.values()),
         'slug': slug, 'dest': '02_team/profiles/%s.md' % slug, 'fixes': fixes,
+        'style': style,
     }
 
 
@@ -208,6 +223,7 @@ def review_asset(path):
         'lines': 0, 'bytes': size, 'evidence': 0, 'links': 0,
         'checks': checks, 'ok': all(checks.values()) if checks else True,
         'slug': '', 'dest': '(개인 페이지 자산 · 팀장이 배치)', 'fixes': fixes,
+        'style': [],
     }
 
 
@@ -232,5 +248,6 @@ if __name__ == '__main__':
             out.append({'path': p, 'kind': 'error', 'title': os.path.basename(p),
                         'lede': '', 'lines': 0, 'bytes': 0, 'evidence': 0,
                         'links': 0, 'checks': {}, 'ok': False, 'slug': '',
-                        'dest': '', 'fixes': ['자동 검토 실패: %s' % str(e)[:80]]})
+                        'dest': '', 'style': [],
+                        'fixes': ['자동 검토 실패: %s' % str(e)[:80]]})
     print(json.dumps({'files': out}, ensure_ascii=False))
