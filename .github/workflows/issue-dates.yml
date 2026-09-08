@@ -69,8 +69,8 @@ jobs:
             }' -f p="$PROJECT_ID" -f c="$ISSUE_NODE_ID" \
             --jq '.data.addProjectV2ItemById.item.id')
 
-          TODAY=$(date -u +%Y-%m-%d)
-          DUE=$(date -u -d "+${DEFAULT_DAYS} days" +%Y-%m-%d)
+          TODAY=$(TZ=Asia/Seoul date +%Y-%m-%d)
+          DUE=$(TZ=Asia/Seoul date -d "+${DEFAULT_DAYS} days" +%Y-%m-%d)
 
           # 3) 날짜 기록
           for pair in "$START_ID:$TODAY" "$END_ID:$DUE"; do

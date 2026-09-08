@@ -1,0 +1,120 @@
+# PR 에 «/머지» 라고 코멘트하면 머지한다.
+#
+#   왜 필요한가 (2026-08-25):
+#     팀장은 외출 중에 폰으로 텔레그램을 본다. 알림은 폰까지 오는데 «머지»만
+#     GitHub 웹을 열어야 했다. 컨펌과 실행 사이에 기기 하나가 끼어 있었다.
+#     이제 텔레그램에서 링크를 눌러 «/머지» 한 줄이면 끝난다.
+#
+#   안전장치
+#     · 팀장(vfxpedia) 의 코멘트만 받는다. 팀원이 자기 PR 을 스스로 머지할 수 없다.
+#     · 초안(draft) PR 은 거부한다.
+#     · 충돌·검사 실패로 머지 불가면 그 이유를 코멘트로 남긴다. 조용히 실패하지 않는다.
+#     · 결과를 텔레그램으로 되돌려 보낸다. «눌렀는데 됐나?» 를 묻지 않아도 되게.
+#
+#   되돌리기: 머지 커밋은 revert 로 되돌릴 수 있다. 강제 push 는 하지 않는다.
+name: 코멘트로 머지
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    # PR 에 달린 코멘트 · 팀장 · «/머지» 로 시작
+    if: >
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == 'vfxpedia' &&
+      startsWith(github.event.comment.body, '/머지')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 상태 확인
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" -R "$REPO" \
+            --json isDraft,mergeable,state,title,author,headRefName > pr.json
+          DRAFT=$(jq -r .isDraft pr.json)
+          STATE=$(jq -r .state pr.json)
+          MERGEABLE=$(jq -r .mergeable pr.json)
+          echo "draft=$DRAFT state=$STATE mergeable=$MERGEABLE"
+          {
+            echo "title=$(jq -r .title pr.json)"
+            echo "author=$(jq -r .author.login pr.json)"
+            echo "branch=$(jq -r .headRefName pr.json)"
+          } >> "$GITHUB_OUTPUT"
+          REASON=""
+          [ "$STATE" != "OPEN" ]     && REASON="이미 닫힌 PR 입니다 (state=$STATE)."
+          [ "$DRAFT" = "true" ]      && REASON="초안(draft) 상태입니다. Ready for review 로 바꾼 뒤 다시 시도하세요."
+          [ "$MERGEABLE" = "CONFLICTING" ] && REASON="충돌이 있습니다. 브랜치를 main 에 rebase 한 뒤 다시 시도하세요."
+          if [ -n "$REASON" ]; then
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+            echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 머지 불가 사유를 남긴다
+        if: steps.check.outputs.ok == '0'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+          REASON: ${{ steps.check.outputs.reason }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR" -R "$REPO" --body "머지하지 못했습니다. $REASON"
+          echo "::error::$REASON"
+          exit 1
+
+      - name: 머지
+        if: steps.check.outputs.ok == '1'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR" -R "$REPO" --squash --delete-branch
+          # 도구가 «성공» 이라 말해도 결과를 다시 본다.
+          STATE=$(gh pr view "$PR" -R "$REPO" --json state -q .state)
+          echo "머지 후 상태: $STATE"
+          if [ "$STATE" != "MERGED" ]; then
+            echo "::error::머지 명령은 통과했는데 상태가 MERGED 가 아닙니다 ($STATE)"
+            exit 1
+          fi
+
+      - name: 결과를 텔레그램으로
+        if: always() && steps.check.outputs.ok == '1'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PR: ${{ github.event.issue.number }}
+          TITLE: ${{ steps.check.outputs.title }}
+          AUTHOR: ${{ steps.check.outputs.author }}
+          RESULT: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then exit 0; fi
+          {
+            if [ "$RESULT" = "success" ]; then
+              printf '[FOOTHOLD] PR #%s 머지 완료\n\n' "$PR"
+            else
+              printf '[FOOTHOLD] PR #%s 머지 실패\n\n' "$PR"
+            fi
+            printf '제목: %s\n' "$TITLE"
+            printf '제출자: %s\n' "$AUTHOR"
+            printf '\n브랜치는 삭제했습니다. inbox 제출이면 승격 검토 이슈가 곧 열립니다.\n'
+          } > tg.txt
+          curl -sS -o /dev/null -w '텔레그램 HTTP %{http_code}\n' \
+            -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            --data-urlencode "text@tg.txt"

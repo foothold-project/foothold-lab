@@ -1,0 +1,102 @@
+{
+  "argv": [
+    "sim/eval/record_flat_army.py",
+    "--checkpoint",
+    "C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt",
+    "--output_dir",
+    "sim/eval/results/20260903-flat-army",
+    "--cut",
+    "B",
+    "--view",
+    "front",
+    "--num_envs",
+    "1024",
+    "--columns",
+    "64",
+    "--rows",
+    "16",
+    "--spacing",
+    "3.0",
+    "--headless",
+    "--device",
+    "cuda:0"
+  ],
+  "cut": "B",
+  "video": "flat_army_B_1024_front.mp4",
+  "bytes": 4039031,
+  "num_envs": 1024,
+  "formation": {
+    "columns": 64,
+    "rows": 16
+  },
+  "formation_extent_m": {
+    "width": 189.0,
+    "depth": 45.0
+  },
+  "spacing_m": 3.0,
+  "camera": {
+    "view": "front",
+    "eye_m": [
+      82.5,
+      0,
+      2
+    ],
+    "target_m": [
+      30.5,
+      0,
+      0.45
+    ],
+    "horizontal_fov_deg": 60.0
+  },
+  "gate_line": {
+    "progress_m": 10.0,
+    "visible": true
+  },
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 50,
+  "frames": 1000,
+  "video_duration_s": 20.0,
+  "seed": 42,
+  "command_vx_mps": 1.0,
+  "eval_duration_s": 20.0,
+  "spawn_xy_range_m": 0.1,
+  "yaw_range_deg": 5.0,
+  "joint_pos_scale": 0.05,
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\.pretrained_checkpoints\\rsl_rl\\Isaac-Velocity-Rough-Unitree-Go2-v0\\checkpoint.pt",
+  "policy_sha256": "f2aa77bf0349c10ec2a00071162e37123d0cf80f3447c3989c17a618e1b24ad2",
+  "env_origins_max_error_m": 0.0,
+  "encoding": {
+    "codec": "libx264",
+    "crf": 20,
+    "preset": "slow"
+  },
+  "timing_s": {
+    "app_and_imports": 10.91807369980961,
+    "environment_creation_and_reset": 6.084062099922448,
+    "policy_load": 0.3798291003331542,
+    "render_warmup": 2.054095999803394,
+    "recording_total": 49.78722780011594,
+    "render_per_frame_mean": 0.023431472283788026,
+    "render_per_frame_median": 0.02329714992083609,
+    "simulation_step_mean": 0.025520057460336056,
+    "process_total": 69.22814519982785
+  },
+  "frame_inspection": {
+    "decoded_frames": 1000,
+    "black_threshold_mean_gray": 10.0,
+    "black_frames": 0,
+    "alternating_black": false,
+    "mean_gray_min": 152.51744079589844,
+    "mean_gray_max": 153.51878356933594,
+    "mean_gray_mean": 153.3910689239502,
+    "preview_frames": {
+      "0": "B_front_frame0000.png",
+      "499": "B_front_frame0499.png",
+      "999": "B_front_frame0999.png"
+    },
+    "passed": true
+  }
+}

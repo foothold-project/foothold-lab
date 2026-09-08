@@ -1,0 +1,152 @@
+# 이슈 자동 분류. 폼에서 고른 «작업 영역»과 «어느 관문까지»를 읽어
+# 라벨과 마일스톤으로 옮기고, 팀장 텔레그램으로 알린다.
+#
+#   왜 필요한가: 폼은 이미 묻고 있는데 그 답이 본문 «글자»로만 남아서
+#   보드에서 묶이지 않았다. 그래서 팀장이 이슈마다 손으로 분류하고 있었다.
+#   팀원이 안 적어서가 아니라 적은 것이 옮겨지지 않아서였다.
+name: 이슈 자동 분류
+
+on:
+  issues:
+    types: [opened, edited]
+
+# ★ 봇이 PAT 로 만든 이슈([승격 검토] 등)도 opened 를 낸다. 그 이슈에는
+#   «작업 영역» 절이 없어서 «분류 안 됨» 이 팀장에게 가는데, 봇이 한 일로
+#   사람을 나무라는 꼴이 된다. 사람이 만든 이슈만 본다.
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.issue.user.type != 'Bot' &&
+      !startsWith(github.event.issue.title, '[승격 검토]')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 본문에서 영역·관문 읽어 라벨·마일스톤 지정
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUM: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.issue.body }}
+          TITLE: ${{ github.event.issue.title }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          ACTION: ${{ github.event.action }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > triage.env
+          import os, re, sys
+          sys.stdout.reconfigure(encoding='utf-8')
+          body = os.environ.get('BODY') or ''
+
+          def section(name):
+              """### 제목 아래 첫 비어있지 않은 줄. 폼 응답은 이 모양으로 들어온다."""
+              m = re.search(r'^###\s*' + re.escape(name) + r'\s*$', body, re.M)
+              if not m:
+                  return ''
+              rest = body[m.end():]
+              for line in rest.split('\n'):
+                  s = line.strip()
+                  if not s:
+                      continue
+                  if s.startswith('###'):
+                      break
+                  return s
+              return ''
+
+          area = section('작업 영역')
+          gate = section('어느 관문까지')
+
+          # «A/평가 · 일반화 …» 에서 앞의 라벨 이름만 떼어낸다
+          label = area.split(' ')[0] if area and area[0] in 'ABC' and '/' in area.split(' ')[0] else ''
+          if label and not re.fullmatch(r'[ABC]/[가-힣]+', label):
+              label = ''
+
+          GATES = {
+              'A-정책': 'A-정책',
+              'MVP': 'MVP · 중간발표',
+              'NAV': 'NAV · 실기 항법',
+              'FINAL': 'FINAL · 최종발표',
+          }
+          milestone = ''
+          for key, title in GATES.items():
+              if gate.startswith(key):
+                  milestone = title
+                  break
+
+          print('AREA_LABEL=%s' % label)
+          print('MILESTONE=%s' % milestone)
+          PY
+          cat triage.env
+          # ★ «. ./triage.env» 로 읽지 않는다. 값에 공백이 있어 셸이 «·» 를
+          #   명령으로 실행하려 든다 (2026-08-27 실측: exit 127).
+          AREA_LABEL=$(sed -n 's/^AREA_LABEL=//p' triage.env)
+          MILESTONE=$(sed -n 's/^MILESTONE=//p' triage.env)
+
+          # ★ 2026-08-28. 손대기 «전» 상태를 먼저 찍는다.
+          #   팀장 실측: 같은 알림이 두 번씩, #72 는 여섯 번 왔다.
+          #   원인은 `edited` 트리거다. 이슈를 고칠 때마다 이 워크플로가 다시 돌고,
+          #   **알림이 «변화» 가 아니라 «실행» 에 붙어 있어서** 아무것도 안 바뀌어도
+          #   그대로 또 보냈다. 전·후를 비교해 **정말 달라졌을 때만** 보낸다.
+          BEFORE=$(gh issue view "$NUM" -R "$REPO" --json labels,milestone \
+                   --jq '(.labels|map(.name)|sort|join(","))+" | "+((.milestone.title)//"없음")')
+          echo "이전: $BEFORE"
+
+          CHANGED=""
+          if [ -n "${AREA_LABEL:-}" ]; then
+            gh issue edit "$NUM" -R "$REPO" --add-label "$AREA_LABEL"
+            CHANGED="$CHANGED 라벨=$AREA_LABEL"
+          fi
+          if [ -n "${MILESTONE:-}" ]; then
+            gh issue edit "$NUM" -R "$REPO" --milestone "$MILESTONE"
+            CHANGED="$CHANGED 마일스톤=$MILESTONE"
+          fi
+
+          # 되읽어 확인한다. 도구가 성공을 보고해도 결과는 다시 본다.
+          GOT=$(gh issue view "$NUM" -R "$REPO" --json labels,milestone \
+                --jq '(.labels|map(.name)|join(","))+" | "+((.milestone.title)//"없음")')
+          echo "확인: $GOT"
+
+          if [ -n "${AREA_LABEL:-}" ] && ! echo "$GOT" | grep -q "$AREA_LABEL"; then
+            echo "::error::라벨이 실제로 안 붙었습니다"; exit 1
+          fi
+
+          # 정렬해서 견준다. 라벨 순서만 달라진 것을 «바뀌었다» 로 보면 안 된다.
+          AFTER=$(gh issue view "$NUM" -R "$REPO" --json labels,milestone \
+                  --jq '(.labels|map(.name)|sort|join(","))+" | "+((.milestone.title)//"없음")')
+          if [ "$ACTION" != "opened" ] && [ "$BEFORE" = "$AFTER" ]; then
+            echo "고침인데 분류가 그대로다 ($AFTER). 알림 건너뜀"
+            exit 0
+          fi
+
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음. 알림 건너뜀"; exit 0
+          fi
+          {
+            echo "[FOOTHOLD] 이슈 #$NUM"
+            echo ""
+            echo "$TITLE"
+            echo "올린 사람: $AUTHOR"
+            echo ""
+            if [ -n "$CHANGED" ]; then
+              echo "자동 분류:$CHANGED"
+            else
+              echo "★ 분류 안 됨. 폼에서 «작업 영역»을 안 골랐습니다."
+            fi
+            echo ""
+            echo "현재: $GOT"
+            echo "https://github.com/$REPO/issues/$NUM"
+          } > tg.txt
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "disable_web_page_preview=true" \
+                 --data-urlencode "text@tg.txt")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) ;; *) echo "::warning::텔레그램 전송 실패" ;; esac

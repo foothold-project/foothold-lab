@@ -1,0 +1,179 @@
+# inbox 제출 감지. 팀원이 한참 작업한 것이 조용히 묻히면 안 된다.
+#
+#   사고(2026-08-13): 팀원이 규칙대로 inbox 에 25KB 가이드를 제출했는데 아무 일도
+#   일어나지 않았다. 알림이 docs/ 만 보고 inbox/ 는 안 보고 있었다.
+#
+#   이 워크플로가 하는 일 두 가지:
+#   1. 디스코드 알림: 새 제출이 왔다고 팀에 알린다.
+#   2. [승격 검토] 이슈를 만들어 팀장에게 배정한다. 이것이 컨펌 대기 큐다.
+#      승격(웹 게시)은 자동으로 하지 않는다. 팀장 컨펌 후 docs/research/ 로
+#      옮기는 순간 게시된다 (합의된 흐름: 감지 → 초안 → 컨펌 → 게시).
+name: inbox 제출 감지
+
+on:
+  push:
+    branches: [main]
+    paths: ['inbox/**']
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 제출 파일 찾기
+        id: files
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          FILES=$(gh api "repos/$REPO/commits/$SHA" --jq '
+            [.files[] | select(.status != "removed") | .filename
+             | select(startswith("inbox/"))
+            # 2026-09-05. 전에는 README.md 와 .gitkeep 만 걸러서 .gitignore ·
+            # .mp4 · .png 까지 「승격 검토」 이슈가 열렸다. 열린 21건 중 11건이
+            # 그런 것이었고 .gitignore 하나에 5건이었다. 승격은 md 를 docs/ 로
+            # 옮기는 일이라 md 가 아니면 promote.yml 이 처리하지도 못한다.
+               | select(endswith(".md"))
+               | select(endswith("README.md") | not)]
+            | join("\n")')
+          if [ -z "$FILES" ]; then
+            echo "문서(.md)가 없음 → 생략"
+            echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "::group::제출 파일"; echo "$FILES"; echo "::endgroup::"
+          {
+            echo "skip=0"
+            echo "files<<ZEOF"; echo "$FILES"; echo "ZEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # 머지 커밋의 author 는 «머지한 사람»(팀장)이다. 실제 제출자를 쓰려면
+      # 이 커밋을 담고 있던 PR 의 작성자를 찾아야 한다. (2026-08-24)
+      - name: 실제 제출자 찾기
+        id: who
+        if: steps.files.outputs.skip == '0'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          FALLBACK: ${{ github.event.head_commit.author.name }}
+        run: |
+          set -euo pipefail
+          WHO=$(gh api "repos/$REPO/commits/$SHA/pulls"                   -H "Accept: application/vnd.github+json"                   --jq '[.[] | .user.login] | first // empty' 2>/dev/null || true)
+          if [ -z "$WHO" ]; then
+            WHO=$(gh api "repos/$REPO/commits/$SHA" --jq '.author.login // empty' 2>/dev/null || true)
+          fi
+          if [ -z "$WHO" ]; then WHO="$FALLBACK"; fi
+          echo "제출자 = $WHO"
+          echo "who=$WHO" >> "$GITHUB_OUTPUT"
+
+      - name: 승격 검토 이슈 + 디스코드
+        id: issue
+        if: steps.files.outputs.skip == '0'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          AUTHOR: ${{ steps.who.outputs.who }}
+          FILES: ${{ steps.files.outputs.files }}
+        run: |
+          set -euo pipefail
+          FIRST=$(printf '%s' "$FILES" | head -n1)
+          {
+            printf '팀원 제출이 들어왔습니다. 팀장 검토 후 처리합니다.\n\n'
+            printf '제출: %s\n' "$AUTHOR"
+            printf '파일:\n'
+            printf '%s\n' "$FILES" | sed 's/^/- `/' | sed 's/$/`/'
+            printf '\n검토 후 셋 중 하나:\n'
+            printf '%s\n' '- [ ] 승격: 정리해서 docs/research/ 로 (옮기면 웹에 자동 게시)'
+            printf '%s\n' '- [ ] 보류: 참고 자료로 inbox 에 둔다 (이 이슈만 닫기)'
+            printf '%s\n\n' '- [ ] 반려: 코멘트로 이유를 남긴다'
+            printf '승격 조건 4가지: h1 제목 · 증거 표기 · 원 출처 · 민감정보 없음\n'
+            printf 'https://github.com/%s/commit/%s\n' "$REPO" "$SHA"
+          } > body.md
+          # 같은 파일로 이미 열린 것이 있으면 또 만들지 않는다. 판이 바뀔 때마다
+          # 새 이슈가 열려 하나의 mp4 에 5건이 쌓였다 (2026-09-05 실측).
+          DUP=$(gh issue list --repo "$REPO" --state open --limit 200 \
+                  --json number,title \
+                  --jq "[.[] | select(.title == \"[승격 검토] $FIRST\")] | .[0].number // empty")
+          if [ -n "$DUP" ]; then
+            echo "이미 #$DUP 이 같은 파일로 열려 있음"
+            gh issue comment "$DUP" --repo "$REPO" \
+              --body "같은 파일이 다시 올라왔습니다. 최신 판으로 보십시오." || true
+            exit 0
+          fi
+          NUM=$(gh issue create --repo "$REPO" \
+            --title "[승격 검토] $FIRST" \
+            --assignee vfxpedia --body-file body.md | grep -oE '[0-9]+$')
+          echo "검토 이슈 #$NUM"
+          echo "num=$NUM" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${HOOK:-}" ]; then echo "웹훅 없음"; exit 1; fi
+          {
+            printf '제출자: %s\n' "$AUTHOR"
+            printf '%s\n' "$FILES" | head -5 | sed 's/^/• /'
+            printf '\n팀장 검토 큐: https://github.com/%s/issues/%s\n' "$REPO" "$NUM"
+            printf '(승격되면 웹에 자동 게시됩니다)\n'
+          } > desc.txt
+          CODE=$(jq -n --arg t "📥 inbox 새 제출" --rawfile d desc.txt \
+                   '{embeds:[{title:$t, description:$d, color:1016969}]}' \
+                 | curl -sS -o /dev/null -w '%{http_code}' -X POST \
+                        -H "Content-Type: application/json" -d @- "$HOOK")
+          echo "디스코드 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
+
+      - name: 팀장 텔레그램 (자동 검토 결과 포함)
+        if: steps.files.outputs.skip == '0'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AUTHOR: ${{ steps.who.outputs.who }}
+          FILES: ${{ steps.files.outputs.files }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ steps.issue.outputs.num }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음, 건너뜀"; exit 0
+          fi
+          # 제출물을 기계가 먼저 읽고 승격 조건을 판정한다. 사람이 파일을 열지 않아도 되게.
+          printf '%s\n' "$FILES" | xargs python3 .github/scripts/review_inbox.py > review.json
+          python3 - <<'PY' > tg.txt
+          import io, json, os
+          d = json.load(io.open('review.json', encoding='utf-8'))
+          print('[FOOTHOLD] inbox 새 제출 · 자동 검토')
+          print('')
+          print('제출자: %s' % os.environ.get('AUTHOR', ''))
+          for f in d['files']:
+              print('')
+              print('· %s' % f['path'])
+              print('  제목: %s' % f['title'][:60])
+              if f['lede']:
+                  print('  요지: %s' % f['lede'])
+              print('  분량: %d줄 · 증거표기 %d · 출처 %d' % (f['lines'], f['evidence'], f['links']))
+              print('  판정: %s' % ('승격 가능' if f['ok'] else '손질 필요'))
+              for x in f['fixes']:
+                  print('    - %s' % x)
+              print('  제안 경로: %s' % f['dest'])
+          print('')
+          print('컨펌하시면 바로 옮깁니다. 검토 이슈에 코멘트로:')
+          print('  /승격            제안 경로 그대로')
+          print('  /승격 새이름     이름을 바꿔서')
+          print('')
+          print('검토 이슈: https://github.com/%s/issues/%s'
+                % (os.environ.get('REPO', ''), os.environ.get('ISSUE', '')))
+          print('(형식 손질이 필요하면 세션이 승격 후 이어서 처리합니다)')
+          PY
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "text=$(cat tg.txt)")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac

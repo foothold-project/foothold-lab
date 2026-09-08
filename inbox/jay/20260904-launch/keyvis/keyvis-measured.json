@@ -1,0 +1,187 @@
+{
+  "model": "nano_banana_pro 로 요청했고 서버가 nano_banana_2 로 처리했다",
+  "resolution": "1920x1080 로 맞춤 (모델 출력 2k 를 lanczos 로)",
+  "target": {
+    "over235_pct_max": 2.0,
+    "over250_pct_max": 0.3
+  },
+  "all_pass": true,
+  "cuts": [
+    {
+      "cut": "00_foot",
+      "source": {
+        "over235": 1.22,
+        "over250": 0.001,
+        "mean": 126.5,
+        "std": 64.6
+      },
+      "model_raw": {
+        "over235": 3.653,
+        "over250": 0.155,
+        "mean": 157.0,
+        "std": 64.0
+      },
+      "graded": {
+        "over235": 0.072,
+        "over250": 0.0,
+        "mean": 129.0,
+        "std": 60.7
+      },
+      "pass": true
+    },
+    {
+      "cut": "01_side",
+      "source": {
+        "over235": 0.009,
+        "over250": 0.0,
+        "mean": 127.9,
+        "std": 60.1
+      },
+      "model_raw": {
+        "over235": 2.352,
+        "over250": 0.078,
+        "mean": 141.6,
+        "std": 66.5
+      },
+      "graded": {
+        "over235": 0.008,
+        "over250": 0.0,
+        "mean": 115.2,
+        "std": 59.9
+      },
+      "pass": true
+    },
+    {
+      "cut": "02_aisle",
+      "source": {
+        "over235": 2.474,
+        "over250": 0.001,
+        "mean": 116.7,
+        "std": 71.8
+      },
+      "model_raw": {
+        "over235": 4.083,
+        "over250": 0.154,
+        "mean": 156.3,
+        "std": 60.5
+      },
+      "graded": {
+        "over235": 0.022,
+        "over250": 0.0,
+        "mean": 127.5,
+        "std": 56.1
+      },
+      "pass": true
+    },
+    {
+      "cut": "03_lead",
+      "source": {
+        "over235": 1.182,
+        "over250": 0.0,
+        "mean": 157.2,
+        "std": 62.8
+      },
+      "model_raw": {
+        "over235": 9.748,
+        "over250": 0.39,
+        "mean": 150.7,
+        "std": 70.7
+      },
+      "graded": {
+        "over235": 0.027,
+        "over250": 0.0,
+        "mean": 122.1,
+        "std": 64.1
+      },
+      "pass": true
+    },
+    {
+      "cut": "04_underfoot",
+      "source": {
+        "over235": 1.091,
+        "over250": 0.002,
+        "mean": 152.5,
+        "std": 61.8
+      },
+      "model_raw": {
+        "over235": 6.737,
+        "over250": 0.84,
+        "mean": 150.3,
+        "std": 67.2
+      },
+      "graded": {
+        "over235": 0.026,
+        "over250": 0.0,
+        "mean": 122.0,
+        "std": 61.9
+      },
+      "pass": true
+    },
+    {
+      "cut": "05_orbit",
+      "source": {
+        "over235": 0.055,
+        "over250": 0.0,
+        "mean": 98.7,
+        "std": 69.4
+      },
+      "model_raw": {
+        "over235": 9.235,
+        "over250": 0.004,
+        "mean": 154.5,
+        "std": 63.5
+      },
+      "graded": {
+        "over235": 0.024,
+        "over250": 0.0,
+        "mean": 124.6,
+        "std": 56.5
+      },
+      "pass": true
+    },
+    {
+      "cut": "06_dolly",
+      "source": {
+        "over235": 0.792,
+        "over250": 0.006,
+        "mean": 69.1,
+        "std": 68.2
+      },
+      "model_raw": {
+        "over235": 6.331,
+        "over250": 0.972,
+        "mean": 135.6,
+        "std": 57.2
+      },
+      "graded": {
+        "over235": 0.01,
+        "over250": 0.0,
+        "mean": 108.6,
+        "std": 49.7
+      },
+      "pass": true
+    },
+    {
+      "cut": "07_rise",
+      "source": {
+        "over235": 0.027,
+        "over250": 0.0,
+        "mean": 50.3,
+        "std": 31.4
+      },
+      "model_raw": {
+        "over235": 2.37,
+        "over250": 0.001,
+        "mean": 117.0,
+        "std": 48.4
+      },
+      "graded": {
+        "over235": 0.039,
+        "over250": 0.0,
+        "mean": 93.2,
+        "std": 43.7
+      },
+      "pass": true
+    }
+  ]
+}

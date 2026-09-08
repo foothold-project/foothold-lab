@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 프로젝트 보드
+  - name: 보드 (지금 누가 뭘 하나)
     url: https://github.com/orgs/foothold-project/projects/1
-    about: 지금 누가 뭘 하는지, 이번 주 마감이 무엇인지
-  - name: 프로젝트 설계도
+    about: 모든 이슈가 모이는 상황판. 이슈를 만들면 자동으로 여기 등록됩니다.
+  - name: 설계도 (전체 흐름과 퀘스트)
     url: https://foothold-project.vercel.app/plan.html
-    about: 7단계 흐름 · 퀘스트 보드 · 아직 정하지 않은 것
+    about: 7단계 흐름, 퀘스트 Q0~Q12, 아직 안 정한 것.

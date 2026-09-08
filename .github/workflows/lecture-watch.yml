@@ -1,0 +1,128 @@
+# 조선대 강의 저장소 감시 — slihump/ros2_lecture 에 새 자료가 올라오면 알린다.
+#
+#   왜 필요한가 (2026-08-24):
+#     이수혁 팀장이 강의 자료를 이 저장소에 «매번» 올린다. 우리가 그것을 매번
+#     들여다보고 있을 수 없다. 실제로 week 4(TF 좌표계 · go2 실습코드)가 올라온 것을
+#     한참 뒤에야 알았다.
+#
+#   왜 «알림»까지만 하나:
+#     팀 자료실은 AES 로 암호화해 올린다. 그 비밀번호는 저장소에 없고 팀장 PC 의
+#     로컬 파일에만 있다(있어서도 안 된다). 그래서 GitHub 쪽에서 자료실까지
+#     자동 반영하는 것은 «불가능»하다. 감지와 알림을 자동으로 하고, 실제 게시는
+#     워크스테이션에서 한 명령으로 한다:  python tools/lecture_sync.py
+#
+#   보내는 규칙: 새 파일이나 바뀐 파일이 있을 때만 보낸다. 변화가 없으면 침묵한다.
+#
+# 필요: DISCORD_WEBHOOK, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+name: 조선대 강의 자료 감시
+
+on:
+  schedule:
+    - cron: "0 1,7 * * *"      # 10:00 · 16:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 목록 뜨기 · 지난번과 대조
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM: slihump/ros2_lecture
+        run: |
+          set -euo pipefail
+          mkdir -p .github/state
+          SNAP=.github/state/lecture-files.json
+          gh api "repos/$UPSTREAM/git/trees/main?recursive=1" \
+            --jq '[.tree[] | select(.type=="blob")
+                   | {path: .path, sha: .sha, size: .size}]
+                  | sort_by(.path)' > /tmp/now.json
+          if [ ! -f "$SNAP" ]; then echo '[]' > "$SNAP"; fi
+          python3 - <<'PY' > /tmp/report.txt
+          import json, io, os
+          now = json.load(io.open('/tmp/now.json', encoding='utf-8'))
+          old = json.load(io.open('.github/state/lecture-files.json', encoding='utf-8'))
+          oldmap = {f['path']: f['sha'] for f in old}
+          new  = [f for f in now if f['path'] not in oldmap]
+          chg  = [f for f in now if f['path'] in oldmap and oldmap[f['path']] != f['sha']]
+          gone = [p for p in oldmap if p not in {f['path'] for f in now}]
+          lines = []
+          for f in new:
+              lines.append('신규 · %s (%.1f MB)' % (f['path'], f['size'] / 1048576.0))
+          for f in chg:
+              lines.append('변경 · %s (%.1f MB)' % (f['path'], f['size'] / 1048576.0))
+          for p in gone:
+              lines.append('삭제 · %s' % p)
+          print('\n'.join(lines))
+          io.open('/tmp/count', 'w').write(str(len(new) + len(chg) + len(gone)))
+          PY
+          N=$(cat /tmp/count)
+          echo "변화 $N 건"
+          echo "count=$N" >> "$GITHUB_OUTPUT"
+          {
+            echo "report<<ZEOF"; cat /tmp/report.txt; echo "ZEOF"
+          } >> "$GITHUB_OUTPUT"
+          cp /tmp/now.json "$SNAP"
+
+      - name: 스냅샷 저장 (다음 대조 기준)
+        if: steps.diff.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/state/lecture-files.json
+          git commit -m "state: 조선대 강의 저장소 목록 갱신" || exit 0
+          git push
+
+      - name: 디스코드
+        if: steps.diff.outputs.count != '0'
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPORT: ${{ steps.diff.outputs.report }}
+        run: |
+          set -euo pipefail
+          [ -z "${HOOK:-}" ] && { echo "웹훅 없음"; exit 1; }
+          {
+            printf '%s\n\n' "$REPORT"
+            printf '원본: https://github.com/slihump/ros2_lecture\n'
+            printf '팀장 확인 후 자료실에 올립니다.\n'
+          } > desc.txt
+          CODE=$(jq -n --arg t "📚 조선대 강의 자료 변화" --rawfile d desc.txt \
+                   '{embeds:[{title:$t, description:$d, color:15105570}]}' \
+                 | curl -sS -o /dev/null -w '%{http_code}' -X POST \
+                        -H "Content-Type: application/json" -d @- "$HOOK")
+          echo "디스코드 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
+
+      - name: 팀장 텔레그램
+        if: steps.diff.outputs.count != '0'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPORT: ${{ steps.diff.outputs.report }}
+          N: ${{ steps.diff.outputs.count }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "텔레그램 시크릿 없음"; exit 0
+          fi
+          {
+            printf '[FOOTHOLD] 조선대 강의 자료 변화 %s건\n\n' "$N"
+            printf '%s\n\n' "$REPORT"
+            printf '자료실 반영 (워크스테이션에서):\n'
+            printf '  python Claude/tools/lecture_sync.py\n\n'
+            printf 'https://github.com/slihump/ros2_lecture\n'
+          } > tg.txt
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+                 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                 --data-urlencode "chat_id=${TG_CHAT}" \
+                 --data-urlencode "disable_web_page_preview=true" \
+                 --data-urlencode "text@tg.txt")
+          echo "텔레그램 HTTP $CODE"
+          case "$CODE" in 2*) echo "전송 확인" ;; *) echo "전송 실패"; exit 1 ;; esac
