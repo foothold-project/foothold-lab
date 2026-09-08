@@ -1,4 +1,4 @@
-# 주간 스프린트 리포트 — 보드를 읽어 사람이 읽을 요약으로.
+# 주간 스프린트 리포트 · 보드를 읽어 사람이 읽을 요약으로.
 #
 #   "주간 회고가 자동으로 스프린트 리포트 되게 할 수 있어?" → 된다. 이 파일이 그것.
 #   매주 월요일 아침, 지난주 Iteration 의 아이템을 사람별·상태별로 묶어
@@ -76,9 +76,9 @@ jobs:
               if not c.get('title'):
                   continue
               who = ', '.join(a['login'] for a in (c.get('assignees') or {}).get('nodes', [])) or '미배정'
-              st = fv(it, 'Status') or '—'
+              st = fv(it, 'Status') or '미정'
               end = fv(it, 'end date')
-              row = f"- [#{c['number']}]({c['url']}) {c['title']} — **{who}**"
+              row = f"- [#{c['number']}]({c['url']}) {c['title']} · **{who}**"
               if c.get('state') == 'CLOSED':
                   ca = c.get('closedAt', '')[:10]
                   if ca and ca >= str(week_ago):
@@ -90,7 +90,7 @@ jobs:
               if end and c.get('state') != 'CLOSED' and end < str(today):
                   overdue.append(row + f" _(마감 {end} 지남)_")
 
-          out = [f"# 주간 리포트 — {week_ago} ~ {today}", ""]
+          out = [f"# 주간 리포트 · {week_ago} ~ {today}", ""]
           out += [f"**{p['title']}** · 완료 {len(done)} · 진행 {len(doing)} · 대기 {len(todo)}", ""]
           for t, rows in [("✅ 지난주 완료", done), ("🔴 마감 지남", overdue),
                           ("🔄 진행 중", doing), ("⏳ 대기", todo)]:
@@ -107,7 +107,7 @@ jobs:
           HOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정"; exit 0; }
-          # 디스코드 메시지 상한 2000자 — 넘으면 자르고 보드 링크를 남긴다
+          # 디스코드 메시지 상한 2000자 · 넘으면 자르고 보드 링크를 남긴다
           CONTENT=$(head -c 1800 report.md)
           jq -n --arg c "$CONTENT
 
