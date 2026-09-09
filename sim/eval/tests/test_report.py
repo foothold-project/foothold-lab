@@ -122,9 +122,96 @@ def raw_row(**over):
         "gate_lateral_drift_m": 0.12,
         "velocity_mae_mps": 0.11,
         "mean_reward_per_step": 0.5,
+        "head_contact_count": 0,
+        "head_contact_peak_n": 0.0,
+        "head_contact_first_s": "",
     }
     base.update(over)
     return base
+
+
+class LegacyCsvStillReads(unittest.TestCase):
+    """★ 옛 CSV 호환. **정본 실측이 20열이라 이 시험이 그것을 지킨다.**
+
+    `results/20260903-rough10-1.0mps/generalization_raw.csv` 는 20열이고
+    `gate_lateral_drift_m` 도 `head_contact_*` 셋도 **없다.** 열을 더할 때마다
+    그 파일이 안 읽히게 되면 정본 1,000판을 잃는다.
+    """
+
+    # 정본 실측이 실제로 가진 20열. 손으로 옮겨 적었다.
+    CANONICAL_20 = (
+        "terrain", "env_id", "episode",
+        "start_x_offset_m", "start_y_offset_m", "start_yaw_deg",
+        "overall_success", "survival_success", "progress_success",
+        "tracking_success", "direction_success", "termination_reason",
+        "duration_s", "forward_progress_m", "ideal_distance_m", "progress_ratio",
+        "lateral_drift_m", "peak_lateral_drift_m",
+        "velocity_mae_mps", "mean_reward_per_step",
+    )
+
+    def write_legacy(self, path, rows):
+        """열을 더하기 **전** 모양으로 쓴다. 새 열은 아예 없다."""
+        with io.open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(self.CANONICAL_20))
+            writer.writeheader()
+
+            for row in rows:
+                writer.writerow({k: row[k] for k in self.CANONICAL_20})
+
+    def test_정본_20열이_지금도_같은_열이다(self):
+        # 새 열을 뺀 나머지가 정본과 같아야 한다. 하나라도 사라졌으면
+        # 옛 CSV 를 읽는 코드가 KeyError 로 죽는다.
+        current = tuple(
+            c for c in metrics.RAW_COLUMNS
+            if c not in ("gate_lateral_drift_m",
+                         "head_contact_count",
+                         "head_contact_peak_n",
+                         "head_contact_first_s")
+        )
+
+        self.assertEqual(current, self.CANONICAL_20)
+
+    def test_머리_열이_없는_CSV_도_분석된다(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "generalization_raw.csv")
+            self.write_legacy(path, [raw_row(), raw_row(episode=2)])
+
+            rows = report.read_rows(path)
+            result = report.analyse(rows, "flat")
+
+        self.assertEqual(result["episodes"], 2)
+
+        # 「안 쟀다」가 「안 닿았다」로 둔갑하면 안 된다. 표본 수가 0 이어야 한다.
+        self.assertEqual(result["head_measured"], 0)
+        self.assertEqual(result["head_touched"], 0)
+
+    def test_머리_열이_있으면_센다(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "generalization_raw.csv")
+            write_raw_csv(path, [
+                raw_row(head_contact_count=0, head_contact_peak_n=0.0),
+                raw_row(episode=2, head_contact_count=7, head_contact_peak_n=1344.0),
+            ])
+
+            rows = report.read_rows(path)
+            result = report.analyse(rows, "flat")
+
+        self.assertEqual(result["head_measured"], 2)
+        self.assertEqual(result["head_touched"], 1)
+        self.assertAlmostEqual(result["head_peak"]["max"], 1344.0)
+
+    def test_머리_열은_판정축_수를_안_늘린다(self):
+        # 보고서가 세는 판정축은 넷 + 종합이다. 다섯째가 생기면 여기가 깨진다.
+        self.assertEqual(
+            [k for k, _ in report.JUDGEMENT_AXES],
+            [
+                "overall_success",
+                "survival_success",
+                "progress_success",
+                "tracking_success",
+                "direction_success",
+            ],
+        )
 
 
 class ReadRows(unittest.TestCase):

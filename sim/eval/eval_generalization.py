@@ -11,10 +11,19 @@
 | 무엇 | 스냅샷 | 여기 |
 |---|---|---|
 | 판정·집계 | 본문에 인라인 | `metrics.py` 순수 함수 호출 |
-| 원시 CSV | 19열 | 21열 (`peak_...` · `gate_lateral_drift_m`) |
+| 원시 CSV | 19열 | 24열 (`peak_...` · `gate_lateral_drift_m` · `head_contact_*` 셋) |
 | 방향 판정 | 에피소드 **끝점** 이탈 | **통과선(`--min_progress_m`) 위** 이탈 |
 | 지형 | 험지 10종 전부 | `--terrains` 로 고름 |
 | env 생성 | 등록된 태스크 + hydra | 설정 클래스에서 직접 |
+
+**머리 접촉 열 셋을 더한 이유.** 실기 Go2 는 머리 앞면에 라이다가 있는데
+(`docs/ROBOT-SPEC.md`) 종료 조건이 `body_names="base"` 하나라 **머리는 판정 밖이었다.**
+「이 정책이 센서를 위험하게 쓰는가」를 실기 이식 전에 알려면 그 접촉이 기록돼야 한다.
+
+**판정에는 안 넣었다.** `overall_success` 는 그대로 네 축의 AND 다. 근거 셋은
+`docs/research/20260909-head-contact-observation.md` 에 적었다. 요지는 ① AND 에 축을
+더하면 성공률이 반드시 깎이고 ② 「몇 N 부터 부서지는가」의 근거가 우리에게 없고
+③ 종료 조건을 더하면 `termination_reason` 이 조용히 거짓말을 시작한다는 것이다.
 
 **방향 판정을 옮긴 이유** (#99 2번). 멘토 기준은 「목표점에 도달했을 때 좌우
 5 cm」입니다. 스냅샷은 에피소드가 끝나는 자리에서 쟀는데, 20초 x 1.0 m/s 면
@@ -93,6 +102,9 @@ parser.add_argument("--max_velocity_mae", type=float, default=0.25,
                     help="속도 추종 판정 문턱(m/s)")
 parser.add_argument("--max_lateral_drift", type=float, default=0.05,
                     help="통과선 위 좌우 이탈 판정 문턱(m). 멘토 기준 5 cm")
+parser.add_argument("--head_contact_threshold_n", type=float, default=1.0,
+                    help="머리 접촉으로 세는 힘 문턱(N). **판정에 안 쓴다.** "
+                         "기본 1.0 은 몸통 종료 조건과 같은 자다")
 parser.add_argument("--output_dir", type=str, required=True)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--spawn_xy_range", type=float, default=0.10,
@@ -295,6 +307,69 @@ def verify_commands(raw_env, command_vx):
     print("\n[PASS] all robots receive the same velocity command.")
 
 
+def resolve_head_bodies(raw_env):
+    """접촉 센서에서 머리 링크의 번호를 뽑고, 못 찾으면 **죽는다.**
+
+    **이 함수가 있는 이유가 이것이다.** 이름이 틀리면 힘을 하나도 못 읽는데
+    오류는 안 난다. 그러면 `head_contact_count` 가 판마다 0 으로 채워지고,
+    CSV 는 「머리가 한 번도 안 닿았다」고 **또박또박 거짓말을 한다.**
+    종료코드도 0 이고 파일도 정상이라 아무도 못 알아챈다.
+
+    그래서 여기서 세 가지를 세어 보고 하나라도 어긋나면 `RuntimeError` 다.
+
+    | 무엇 | 왜 |
+    |---|---|
+    | 센서가 있나 | 없으면 접촉을 아예 못 읽는다 |
+    | 이름이 둘 다 잡히나 | USD 가 바뀌어 이름이 달라졌을 수 있다 |
+    | 센서가 몸 전체를 보나 | `prim_path` 가 좁혀졌으면 머리가 목록 밖이다 |
+
+    `contact_forces` 는 `ContactSensorCfg(prim_path=".../Robot/.*")` 라 강체 19개를
+    전부 본다 (`velocity_env_cfg.py:74`). 즉 머리도 이미 센서 안에 있다.
+    종료 조건만 `body_names="base"` 로 좁혀 볼 뿐이다.
+    """
+    sensor = raw_env.scene.sensors.get("contact_forces")
+
+    if sensor is None:
+        raise RuntimeError(
+            "접촉 센서 `contact_forces` 가 씬에 없습니다. 머리 접촉을 잴 수 없습니다.\n"
+            f"  있는 센서: {list(raw_env.scene.sensors.keys())}"
+        )
+
+    available = list(sensor.body_names)
+
+    # **이름 확인을 `find_bodies` 보다 먼저 한다.** 순서를 바꾸면 안 된다.
+    #
+    # `find_bodies` 는 못 찾으면 자기가 `ValueError` 를 던지고 죽는다
+    # (`string.py:267`). 그러면 이 아래 메시지가 **영영 안 보인다.**
+    # 2026-09-09 에 일부러 틀린 이름을 넣어 확인했고, 그때 나온 것은 IsaacLab 의
+    # 정규식 오류였다. 틀렸다는 것은 알려 주지만 「프로브를 다시 돌려라」는
+    # 안 알려 준다. 그 한 줄이 다음 사람의 30분이다.
+    missing = [n for n in metrics.HEAD_BODY_NAMES if n not in available]
+
+    if missing:
+        raise RuntimeError(
+            "머리 링크를 접촉 센서에서 못 찾았습니다. 이대로 두면 접촉 열이\n"
+            "전부 0 으로 채워지고 CSV 가 조용히 거짓말을 합니다.\n"
+            f"  찾는 이름 : {list(metrics.HEAD_BODY_NAMES)}\n"
+            f"  못 찾음   : {missing}\n"
+            f"  센서 목록 : {available}\n"
+            "USD 가 바뀌었으면 `sim/eval/probe_go2_bodies.py` 를 다시 돌려\n"
+            "`metrics.HEAD_BODY_NAMES` 를 고치십시오."
+        )
+
+    ids, names = sensor.find_bodies(list(metrics.HEAD_BODY_NAMES), preserve_order=True)
+
+    print("\n" + "=" * 80)
+    print("HEAD CONTACT SENSOR (관측 전용 · 판정에 안 들어감)")
+    print("=" * 80)
+    print(f"센서 강체 수 : {len(available)}")
+    print(f"머리 링크    : {names}  -> 번호 {ids}")
+    print(f"힘 문턱      : {args_cli.head_contact_threshold_n:.3f} N")
+    print("\n[PASS] 머리 링크를 접촉 센서에서 찾았습니다.")
+
+    return ids
+
+
 def episode_targets(recorded_terrains, envs_per_terrain, episodes, device):
     """env 별 목표 에피소드 수. 기록하지 않는 지형은 0 이라 처음부터 비활성이다.
 
@@ -441,6 +516,10 @@ def main():
 
     verify_mapping(raw_env, envs_per_terrain)
 
+    # 머리 링크를 못 찾으면 **여기서 죽는다.** 7분을 다 돌고 0 으로 찬 CSV 를
+    # 받는 것보다 낫다.
+    head_body_ids = resolve_head_bodies(raw_env)
+
     raw_env.reset()
 
     verify_commands(raw_env, args_cli.command_vx)
@@ -514,6 +593,12 @@ def main():
     path_buf = torch.zeros((num_envs, max_steps, 2), device=device)
     path_len = torch.zeros(num_envs, dtype=torch.long, device=device)
 
+    # 머리 접촉 표본. 스텝마다 머리 링크 둘에 걸린 힘의 최댓값 하나를 담는다.
+    # 경로 버퍼와 같은 규칙이다. 판이 끝날 때만 CPU 로 내린다.
+    head_contact_sensor = raw_env.scene.sensors["contact_forces"]
+    head_buf = torch.zeros((num_envs, max_steps), device=device)
+    head_len = torch.zeros(num_envs, dtype=torch.long, device=device)
+
     env_index = torch.arange(num_envs, device=device)
 
     robot = raw_env.scene["robot"]
@@ -579,6 +664,29 @@ def main():
         path_buf[env_index[room], path_len[room]] = pre_step_pos[room]
         path_len[room] += 1
 
+        # 머리 접촉을 **스텝 전에** 담는다. 경로 표본과 같은 자리다.
+        #
+        # **스텝 뒤에 담으면 안 된다** `확인됨`. `env.step()` 이 끝난 판을 그 자리에서
+        # 되감고, `ContactSensor.reset()` 이 `net_forces_w` 와 그 이력을 **0 으로
+        # 지운다** (`contact_sensor.py:151-152`, `manager_based_rl_env.py:221`).
+        # 즉 스텝 뒤에 읽으면 넘어진 판의 충격이 지워진 뒤를 읽게 된다.
+        #
+        # **대신 마지막 한 스텝을 못 본다.** 판이 끝나는 그 스텝의 힘은 다음 회차에
+        # 읽혔을 텐데 그때는 이미 지워져 있다. 경로 버퍼가 갖는 한 스텝 지연과 같은
+        # 성질이고, 이 열은 판정이 아니라 경고등이라 그대로 둔다 `미확인`
+        # (그 한 스텝이 최댓값이었을 판이 얼마나 되는지는 안 재봤다).
+        #
+        # 이력 전체의 최댓값을 쓴다. 센서는 `sim.dt`(0.005 s)마다 갱신되고 정책은
+        # `step_dt`(0.02 s)마다 도므로, 이력 3칸이 한 스텝 안의 물리 하위스텝 4개 중
+        # 3개를 덮는다. 순간값 하나만 읽으면 나머지 3개의 충격을 놓친다.
+        # 종료 조건 `mdp.illegal_contact` 도 같은 이력을 같은 방식으로 본다.
+        head_history = head_contact_sensor.data.net_forces_w_history[:, :, head_body_ids, :]
+        head_force = torch.linalg.vector_norm(head_history, dim=-1).amax(dim=2).amax(dim=1)
+
+        head_room = active & (head_len < max_steps)
+        head_buf[env_index[head_room], head_len[head_room]] = head_force[head_room]
+        head_len[head_room] += 1
+
         elapsed[active] += dt
         velocity_error_sum[active] += planar_vel_error[active]
         sample_count[active] += 1
@@ -607,6 +715,9 @@ def main():
             n_samples = int(path_len[env_id].item())
             path_xy = [tuple(p) for p in path_buf[env_id, :n_samples].tolist()]
 
+            n_head = int(head_len[env_id].item())
+            head_forces = head_buf[env_id, :n_head].tolist()
+
             start_xy = tuple(start_pos[env_id].tolist())
             end_xy = tuple(pre_step_pos[env_id].tolist())
             fwd = tuple(forward_dir[env_id].tolist())
@@ -628,6 +739,9 @@ def main():
                 max_velocity_mae=args_cli.max_velocity_mae,
                 max_lateral_drift=args_cli.max_lateral_drift,
                 gate_progress_m=min_progress,
+                head_contact_forces=head_forces,
+                head_contact_threshold_n=args_cli.head_contact_threshold_n,
+                step_dt=dt,
             )
 
             episode_number = int(episode_counts[env_id].item()) + 1
@@ -658,6 +772,16 @@ def main():
                 ),
                 "velocity_mae_mps": round(row_metrics["velocity_mae_mps"], 4),
                 "mean_reward_per_step": round(row_metrics["mean_reward_per_step"], 6),
+
+                # 머리 접촉 관측 셋. **판정 열이 아니다.** 위 다섯 판정 열은
+                # 이 값이 무엇이든 안 바뀐다.
+                "head_contact_count": row_metrics["head_contact_count"],
+                "head_contact_peak_n": round(row_metrics["head_contact_peak_n"], 3),
+                "head_contact_first_s": (
+                    ""
+                    if row_metrics["head_contact_first_s"] is None
+                    else round(row_metrics["head_contact_first_s"], 4)
+                ),
             }
 
             if list(row.keys()) != list(metrics.RAW_COLUMNS):
@@ -682,7 +806,8 @@ def main():
                 f"| gate={row['gate_lateral_drift_m'] if row['gate_lateral_drift_m'] == '' else format(row['gate_lateral_drift_m'], '5.3f')}m "
                 f"| end={row['lateral_drift_m']:5.3f}m "
                 f"| peak={row['peak_lateral_drift_m']:5.3f}m "
-                f"| vMAE={row['velocity_mae_mps']:4.2f}",
+                f"| vMAE={row['velocity_mae_mps']:4.2f} "
+                f"| head={row['head_contact_count']:3d}스텝/{row['head_contact_peak_n']:7.1f}N",
                 flush=True,
             )
 
@@ -703,9 +828,26 @@ def main():
             reward_sum[env_id] = 0.0
             sample_count[env_id] = 0
             path_len[env_id] = 0
+            head_len[env_id] = 0
 
     if len(results) == 0:
         raise RuntimeError("No evaluation episodes were recorded.")
+
+    # 관문 · 접촉 열이 통째로 비면 소리를 낸다 (원칙 2).
+    #
+    # 링크 이름이 맞고 센서도 있는데 **한 판도 표본을 못 담은** 경우가 남는다.
+    # 그러면 `head_contact_peak_n` 이 전부 0.0 이 되고 CSV 는 「어느 판도 머리가
+    # 안 닿았다」로 읽힌다. 진짜로 안 닿은 것과 못 잰 것을 여기서 가른다.
+    #
+    # **「최댓값이 전부 0」을 실패로 치지 않는다.** 평지 100판이면 그것이 정답이다.
+    # 표본 수가 0 인 것만 잡는다. 그건 물리적으로 불가능하다.
+    empty = [r for r in results if r["head_contact_count"] is None]
+
+    if empty:
+        raise RuntimeError(
+            f"머리 접촉을 못 잰 판이 {len(empty)}개입니다. 표본이 안 담겼습니다.\n"
+            "이대로 CSV 를 내면 「안 닿았다」로 읽힙니다."
+        )
 
     summary_rows = metrics.summarize(results, recorded)
 
@@ -735,6 +877,19 @@ def main():
             "max_lateral_drift_m": args_cli.max_lateral_drift,
             "direction_measured_at": "gate",
             "direction_gate_m": min_progress,
+
+            # 머리 접촉. **판정 축이 아니다.** 나중에 이 CSV 를 다시 읽는 사람이
+            # 「이 숫자가 성공률에 들어갔나」를 물을 때 답이 여기 있어야 한다.
+            "head_contact_body_names": list(metrics.HEAD_BODY_NAMES),
+            "head_contact_body_ids": head_body_ids,
+            "head_contact_threshold_n": args_cli.head_contact_threshold_n,
+            "head_contact_in_success_judgement": False,
+            "success_axes": [
+                "survival_success",
+                "progress_success",
+                "tracking_success",
+                "direction_success",
+            ],
             "terrain_border_width_m": terrain_border_width,
             "terrain_forward_extent_m": forward_extent,
             "terrain_size_m": list(terrain_cfg.size),

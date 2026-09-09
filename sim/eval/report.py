@@ -146,10 +146,22 @@ def analyse(rows, terrain):
     # 통과선 위 이탈. 판정에 쓰이는 자다 (#99 2번).
     gate_values = numeric_column(episodes, "gate_lateral_drift_m")
 
+    # 머리(= 실기 라이다 자리) 접촉. **판정에 안 들어간다.** 경고등이다.
+    #
+    # 열이 아예 없는 옛 CSV 도 그대로 읽힌다. `numeric_column` 이 빈 목록을
+    # 돌려주고, 그러면 `head_measured` 가 0 이라 아래 렌더가 절을 통째로 뺀다.
+    # 「안 닿았다」와 「안 쟀다」를 이 숫자가 가른다.
+    head_counts = numeric_column(episodes, "head_contact_count")
+    head_peaks = numeric_column(episodes, "head_contact_peak_n")
+
     return {
         "terrain": terrain,
         "episodes": n,
         "axes": axes,
+        "head_measured": len(head_counts),
+        "head_touched": sum(1 for c in head_counts if c > 0),
+        "head_count": describe(head_counts),
+        "head_peak": describe(head_peaks),
         "gate_drift": describe(gate_values),
         "gate_reached": len(gate_values),
         "endpoint_drift": describe(numeric_column(episodes, "lateral_drift_m")),
@@ -194,6 +206,22 @@ def print_plain(result):
     print()
     print(f"낙상(base_contact) {result['fell']} 판 · 시간초과(timeout) {result['timeout']} 판")
     print(f"통과선 도달 {result['gate_reached']}/{n} 판 (도달 못 한 판은 방향 실패)")
+
+    if result["head_measured"]:
+        print()
+        print("-" * 72)
+        print("머리 접촉 (실기 라이다 자리) · 경고등이지 판정이 아님")
+        print("-" * 72)
+        print(f"닿은 판          {result['head_touched']}/{result['head_measured']}")
+        print(f"접촉 스텝 수     평균 {result['head_count']['mean']:.1f}"
+              f" · 중앙 {result['head_count']['median']:.1f}"
+              f" · 최대 {result['head_count']['max']:.0f}")
+        print(f"최대 접촉력 (N)  평균 {result['head_peak']['mean']:.1f}"
+              f" · 중앙 {result['head_peak']['median']:.1f}"
+              f" · 최대 {result['head_peak']['max']:.1f}")
+        print("이 숫자는 위 판정축에 하나도 들어가지 않는다."
+              " 「몇 N 부터 부서지는가」는 아직 `미확인`.")
+
     print("=" * 72)
 
 
@@ -226,6 +254,23 @@ def print_markdown(result):
     print()
     print(f"낙상 {result['fell']} 판 · 시간초과 {result['timeout']} 판 "
           f"· 통과선 도달 {result['gate_reached']}/{n} 판")
+
+    if result["head_measured"]:
+        print()
+        print("**머리 접촉 (실기 라이다 자리) · 경고등이지 판정이 아님**")
+        print()
+        print("| 항목 | 평균 | 중앙 | 최대 |")
+        print("|---|---|---|---|")
+        print(f"| 접촉 스텝 수 | {result['head_count']['mean']:.1f} "
+              f"| {result['head_count']['median']:.1f} "
+              f"| {result['head_count']['max']:.0f} |")
+        print(f"| 최대 접촉력 (N) | {result['head_peak']['mean']:.1f} "
+              f"| {result['head_peak']['median']:.1f} "
+              f"| {result['head_peak']['max']:.1f} |")
+        print()
+        print(f"닿은 판 {result['head_touched']}/{result['head_measured']} "
+              "· 이 숫자는 판정축에 하나도 안 들어간다 "
+              "· 「몇 N 부터 부서지는가」는 `미확인`")
 
 
 def main():

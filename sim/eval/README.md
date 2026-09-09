@@ -27,6 +27,8 @@
 | 지형 이름과 순서 | `terrains.py` |
 | 활성 지형 설정 | `generalization_env_cfg.py` |
 | 스냅샷과의 동치 · 구조 시험 | `tests/` |
+| Go2 강체·충돌체 이름 프로브 | `probe_go2_bodies.py` |
+| Go2 관절 한계 프로브 | `probe_go2_joint_limits.py` |
 | **활성 하네스 본체** | `eval_generalization.py` |
 | 원시 CSV -> 요약 · Wilson 구간 | `report.py` |
 | 실측 결과 | `results/` |
@@ -60,6 +62,26 @@ Wilson 95% 신뢰구간을 뽑습니다.
 ```bash
 python sim/eval/report.py sim/eval/results/20260903-flat-10m-spec20s/generalization_raw.csv
 ```
+
+## 머리 접촉 열 셋은 판정이 아니다 (2026-09-09)
+
+원시 CSV 끝에 `head_contact_count` · `head_contact_peak_n` · `head_contact_first_s`
+가 붙습니다. 실기 Go2 의 라이다가 얹히는 머리 링크(`Head_upper` · `Head_lower`)에
+힘이 걸린 스텝 수와 세기입니다.
+
+> **★ `overall_success` 에 안 들어갑니다.** 판정은 지금도 네 축
+> (생존 · 전진 · 속도추종 · 방향)의 AND 입니다. **다섯째 축을 만들지 마십시오.**
+> 근거 셋(성공률이 반드시 깎임 · 파손 임계 근거 없음 · `termination_reason` 이
+> 조용히 거짓말함)은 `docs/research/20260909-head-contact-observation.md` 에 있습니다.
+> `tests/test_metrics.py` 의 `HeadContactIsNotJudgement` 가 이것을 못 박습니다.
+
+링크 이름은 **Go2 USD 를 직접 열어 확인한 것**입니다 (`probe_go2_bodies.py`).
+아이작 Go2 에는 `lidar` 라는 이름의 강체가 없습니다. USD 가 바뀌어 이름이 달라지면
+하네스가 **시작할 때 죽습니다.** 0 으로 찬 CSV 를 내는 것보다 낫기 때문입니다.
+
+**옛 CSV 는 그대로 읽힙니다.** 정본 `results/20260903-rough10-1.0mps/` 는 20열이고
+이 열들이 없습니다. `report.py` 가 없는 열을 빈 목록으로 처리해 머리 절을 아예
+안 냅니다. 「안 쟀다」가 「안 닿았다」로 둔갑하지 않습니다.
 
 ## 결과가 둘인데 어느 것을 쓰나
 
