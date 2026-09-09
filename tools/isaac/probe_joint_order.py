@@ -7,7 +7,7 @@
   Windows 함정 회피: Kit 이 stdout 을 삼키므로 결과는 파일로도 남긴다.
 """
 
-import torch                       # noqa: F401 (Kit 로드 전 선점 import — Windows 우회)
+import torch                       # noqa: F401 (Kit 로드 전 선점 import · Windows 우회)
 
 import argparse
 

@@ -76,7 +76,7 @@ def _force_renderer():
         s.set("/rtx/pathtracing/totalSpp", int(args_cli.spp))
         s.set("/rtx/pathtracing/maxBounces", 8)
         s.set("/rtx/pathtracing/optixDenoiser/enabled", True)
-    # ★ 되읽어 확인 — 설정했다는 사실이 아니라 설정된 값을 본다
+    # ★ 되읽어 확인 · 설정했다는 사실이 아니라 설정된 값을 본다
     print(f"[RENDER] 요청={args_cli.renderer}  실제 /rtx/rendermode={s.get('/rtx/rendermode')}")
     print(f"[RENDER] spp={s.get('/rtx/pathtracing/spp')}  totalSpp={s.get('/rtx/pathtracing/totalSpp')}")
 
@@ -99,7 +99,7 @@ def main():
     else:
         usd_full = f"{ISAAC_NUCLEUS_DIR}/{args_cli.env_usd}"
         print(f"[INFO] USD 환경: {usd_full}")
-        # ★ 핵심 한 줄 — 학습에 쓰던 절차생성 지형을 통째로 USD 파일로 교체
+        # ★ 핵심 한 줄 · 학습에 쓰던 절차생성 지형을 통째로 USD 파일로 교체
         env_cfg.scene.terrain = TerrainImporterCfg(
             prim_path="/World/ground",
             terrain_type="usd",
@@ -138,7 +138,7 @@ def main():
             inten = prim.GetAttribute("inputs:intensity").Get()
             print(f"[STAGE] /World/skyLight 존재 · texture={tex} · intensity={inten}")
         else:
-            print("[STAGE] ★ /World/skyLight 프림이 없다 — 돔 라이트가 스폰되지 않았다")
+            print("[STAGE] ★ /World/skyLight 프림이 없다 · 돔 라이트가 스폰되지 않았다")
     except Exception as e:
         print(f"[STAGE] 확인 실패: {e}")
 
