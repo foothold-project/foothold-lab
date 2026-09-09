@@ -68,6 +68,10 @@ if _HERE not in sys.path:
 import metrics  # noqa: E402
 import terrains  # noqa: E402
 
+# 프레임별 계측 기록. **표준 라이브러리만 씁니다.** Kit 를 띄우기 전에 임포트해도
+# 안전하고, `--trace_csv` 를 안 주면 아래 코드는 한 줄도 돌지 않습니다.
+from overlay import trace as trace_mod  # noqa: E402
+
 parser = argparse.ArgumentParser(
     description="Re-run one recorded flat-baseline episode and save it as a video."
 )
@@ -110,6 +114,9 @@ parser.add_argument("--no_refline", action="store_true",
                     help="바닥의 이상 직선 · 5 cm 난간 · 통과선을 깔지 않는다")
 parser.add_argument("--tolerance", type=float, default=0.0002,
                     help="CSV 대조 허용 오차(m). 넷째 자리 반올림이라 0.0002 면 충분하다")
+parser.add_argument("--trace_csv", type=str, default="",
+                    help="프레임별 계측 기록을 여기 쓴다. 빈 값이면 안 쓴다. "
+                         "`sim/eval/overlay/` 가 이 파일을 읽어 영상에 값을 겹쳐 그린다")
 
 AppLauncher.add_app_launcher_args(parser)
 
@@ -481,6 +488,78 @@ def main():
 
     episode_counts = torch.zeros(num_envs, dtype=torch.long, device=device)
 
+    # ------------------------------------------------------------ 프레임별 기록
+    #
+    # `--trace_csv` 를 안 주면 `trace_rows` 는 끝까지 `None` 이고, 아래 코드는
+    # 한 줄도 안 돕니다. 기본 동작은 바뀌지 않습니다.
+
+    trace_rows = [] if args_cli.trace_csv else None
+
+    foot_ids = None
+
+    if trace_rows is not None:
+        try:
+            found, foot_names = robot.find_bodies(".*_foot")
+        except Exception as error:  # noqa: BLE001
+            found, foot_names, error_text = [], [], str(error)
+        else:
+            error_text = ""
+
+        # Go2 는 FL · FR · RL · RR 넷이다. 넷이 아니면 발 높이를 안 적는다.
+        # **0 으로 채우지 않습니다.** 0 은 「쟀는데 0」이라는 뜻이 되기 때문입니다.
+        if len(found) == 4:
+            order = {"FL": 0, "FR": 1, "RL": 2, "RR": 3}
+            slots = [None, None, None, None]
+
+            for body_id, body_name in zip(found, foot_names):
+                slot = order.get(body_name.split("_")[0].upper())
+
+                if slot is not None:
+                    slots[slot] = body_id
+
+            if all(s is not None for s in slots):
+                foot_ids = slots
+
+        if foot_ids is None:
+            print(f"[WARN] 발 body 를 못 집었습니다({foot_names or error_text}). "
+                  "발 높이 열은 빈 칸으로 남습니다.", flush=True)
+        else:
+            print(f"[PASS] 발 body: {foot_names} -> FL/FR/RL/RR 자리 {foot_ids}",
+                  flush=True)
+
+    def trace_scalars():
+        """찍는 env 하나의 이번 스텝 값. **GPU 왕복을 한 번으로 묶습니다.**
+
+        스텝마다 `.item()` 을 열 번 부르면 그때마다 동기화가 걸립니다.
+        한 텐서로 쌓아 한 번에 내립니다.
+        """
+        root_pos = robot.data.root_pos_w[target_env]
+        quat = robot.data.root_quat_w[target_env]
+        vel_b = robot.data.root_lin_vel_b[target_env, :2]
+
+        parts = [root_pos, quat, vel_b]
+
+        if foot_ids is not None:
+            parts.append(robot.data.body_pos_w[target_env, foot_ids, 2])
+
+        return torch.cat([p.reshape(-1) for p in parts]).detach().cpu().tolist()
+
+    def euler_from_quat(w, x, y, z):
+        """wxyz 사원수에서 roll · pitch (도). yaw 는 안 씁니다.
+
+        Isaac Lab 의 `root_quat_w` 가 wxyz 순서입니다. 여기서 순서를 틀리면
+        영상 위 숫자만 조용히 틀리므로, 아래 `verify_trace_row` 가 첫 프레임의
+        roll · pitch 가 출발 자세(거의 수평)와 맞는지 봅니다.
+        """
+        sin_roll = 2.0 * (w * x + y * z)
+        cos_roll = 1.0 - 2.0 * (x * x + y * y)
+        roll = math.atan2(sin_roll, cos_roll)
+
+        sin_pitch = max(-1.0, min(1.0, 2.0 * (w * y - z * x)))
+        pitch = math.asin(sin_pitch)
+
+        return math.degrees(roll), math.degrees(pitch)
+
     hide_other_robots(raw_env, target_env)
 
     camera = raw_env.viewport_camera_controller
@@ -598,6 +677,46 @@ def main():
         room = path_len < max_steps
         path_buf[env_index[room], path_len[room]] = pre_step_pos[room]
         path_len[room] += 1
+
+        # trace 한 줄. **프레임을 찍는 것과 같은 조건 · 같은 자리입니다.**
+        # 위 `writer.append_data` 가 스텝 직전 화면을 찍고, 이 줄이 그 화면의
+        # 값입니다. 그래서 trace 줄 번호 = 프레임 번호가 됩니다.
+        if trace_rows is not None and recording:
+            values = trace_scalars()
+
+            px, py, pz = values[0], values[1], values[2]
+            qw, qx, qy, qz = values[3], values[4], values[5], values[6]
+            vx_b, vy_b = values[7], values[8]
+
+            here = (px, py)
+            origin = tuple(start_pos[target_env].tolist())
+            fdir = tuple(forward_dir[target_env].tolist())
+
+            roll_deg, pitch_deg = euler_from_quat(qw, qx, qy, qz)
+
+            row = {
+                "frame": len(trace_rows),
+                "t_s": round(len(trace_rows) * dt, 6),
+                "cmd_vx_mps": args_cli.command_vx,
+                "vx_mps": vx_b,
+                "vy_mps": vy_b,
+                "speed_mps": math.hypot(vx_b, vy_b),
+                "vel_err_mps": float(planar_vel_error[target_env].item()),
+                "fwd_m": metrics.forward_offset_m(origin, here, fdir),
+                "lat_m": metrics.lateral_offset_m(origin, here, fdir),
+                "base_z_m": pz - ground_z,
+                "pitch_deg": pitch_deg,
+                "roll_deg": roll_deg,
+            }
+
+            if foot_ids is not None:
+                for name, value in zip(
+                    ("foot_z_fl_m", "foot_z_fr_m", "foot_z_rl_m", "foot_z_rr_m"),
+                    values[9:13],
+                ):
+                    row[name] = value - ground_z
+
+            trace_rows.append(row)
 
         elapsed += dt
         velocity_error_sum += planar_vel_error
@@ -733,11 +852,18 @@ def main():
 
     gate = result_row["gate_lateral_drift_m"]
 
+    # 통과선을 못 넘긴 판은 `gate` 가 `None` 입니다. **험지에서는 그것이 보통입니다.**
+    # `pit` `gap` 처럼 앞에서 막히는 지형은 3 m 를 못 갑니다. 여기서 `None` 을
+    # 그대로 `:.3f` 에 넘기면 영상과 trace 를 다 쓴 뒤에 죽습니다 `확인됨`
+    # (2026-09-09 · pit env 44). 값 대조는 이미 `""` 를 제대로 다루고 있었고,
+    # 이름 짓기와 마지막 출력만 안 다루고 있었습니다.
+    gate_text = "none" if gate is None else f"{gate:.3f}"
+
     if args_cli.video_name:
         name = args_cli.video_name
     else:
-        name = (f"flat_env{target_env}_ep{target_episode:02d}"
-                f"_gate{gate:.3f}m_{args_cli.view}")
+        name = (f"{expected['terrain']}_env{target_env}_ep{target_episode:02d}"
+                f"_gate{gate_text}m_{args_cli.view}")
 
     final_path = os.path.join(args_cli.output_dir, name + ".mp4")
 
@@ -746,7 +872,95 @@ def main():
 
     os.replace(temp_path, final_path)
 
+    # ------------------------------------------------------------ 프레임별 기록 쓰기
+
+    trace_path = ""
+
+    if trace_rows is not None:
+        trace_path = args_cli.trace_csv
+
+        trace_dir = os.path.dirname(os.path.abspath(trace_path))
+
+        if trace_dir:
+            os.makedirs(trace_dir, exist_ok=True)
+
+        trace_mod.write(
+            trace_path,
+            {
+                "terrain": expected["terrain"],
+                "env_id": target_env,
+                "episode": target_episode,
+                "view": args_cli.view,
+                "fps": fps,
+                "dt_s": dt,
+                "frames_recorded": frames,
+                "command_vx_mps": args_cli.command_vx,
+                "eval_duration_s": args_cli.eval_duration,
+                "gate_m": min_progress,
+                "min_progress_m": min_progress,
+                "max_lateral_drift_m": args_cli.max_lateral_drift,
+                "max_velocity_mae_mps": args_cli.max_velocity_mae,
+                "termination_reason": result_row["termination_reason"],
+                "video": os.path.basename(final_path),
+                "source_csv": args_cli.raw_csv.replace("\\", "/"),
+                "csv_row": int(expected["_csv_row"]),
+                "policy_checkpoint": resume_path.replace("\\", "/"),
+            },
+            trace_rows,
+        )
+
+        # 다시 접으면 표의 그 줄이 나오는가. **여기서 안 보면 아무도 안 봅니다.**
+        # 영상 위 숫자가 표와 다른 채로 발표에 나가는 것이 이 검사가 막는 것입니다.
+        folded = trace_mod.read(trace_path)
+        checks_trace = trace_mod.verify_against_row(folded, result_row)
+
+        print("\n" + "=" * 78)
+        print("TRACE vs REPLAY (다시 접으면 같은 값이 나오는가)")
+        print("=" * 78)
+
+        bad = []
+
+        for name, want, got, delta, ok in checks_trace:
+            want_text = "-" if want is None else f"{want:.4f}"
+            got_text = "-" if got is None else f"{got:.4f}"
+            delta_text = "-" if delta is None else f"{delta:.6f}"
+
+            print(f"  {name:<24} replay={want_text:<10} trace={got_text:<10} "
+                  f"d={delta_text:<10} {'OK' if ok else 'MISMATCH'}")
+
+            if not ok:
+                bad.append(name)
+
+        if bad:
+            os.remove(trace_path)
+            raise RuntimeError(
+                "trace 를 접은 값이 판 결과와 다릅니다: " + ", ".join(bad) + "\n"
+                "영상 위에 그릴 숫자를 믿을 수 없으므로 trace 를 지우고 멈춥니다."
+            )
+
+        first = folded.rows[0]
+
+        # 첫 프레임은 출발 자세다. 거의 수평이어야 한다. 사원수 순서를 틀리면
+        # 여기가 먼저 터진다 (`euler_from_quat` 주석 참고).
+        for key in ("roll_deg", "pitch_deg"):
+            if abs(first[key]) > 15.0:
+                os.remove(trace_path)
+                raise RuntimeError(
+                    f"첫 프레임의 {key} 가 {first[key]:.1f}도 입니다. "
+                    "출발 자세는 거의 수평이어야 합니다. 사원수 해석을 보십시오."
+                )
+
+        spans = trace_mod.slowdown_spans(folded)
+
+        print(f"\n[PASS] trace {len(folded)} 줄 · 프레임 {frames} 장.")
+        print(f"  path   : {trace_path}")
+        print(f"  주춤   : {len(spans)} 구간 (명령의 60% 아래로 0.15초 이상)")
+
+        for start, end, lowest in spans:
+            print(f"    {start:5.2f} s ~ {end:5.2f} s   최저 {lowest:.2f} m/s")
+
     side_car = {
+        "trace_csv": os.path.basename(trace_path) if trace_path else None,
         "video": os.path.basename(final_path),
         "source_csv": args_cli.raw_csv.replace("\\", "/"),
         "csv_row": int(expected["_csv_row"]),
@@ -777,7 +991,8 @@ def main():
     print(f"  path     : {final_path}")
     print(f"  frames   : {frames}  ({frames / fps:.2f} s at {fps} fps)")
     print(f"  size     : {os.path.getsize(final_path) / 1024 / 1024:.2f} MB")
-    print(f"  gate     : {gate:.4f} m")
+    print(f"  gate     : {gate_text} m" if gate is not None
+          else "  gate     : 통과선을 못 넘겼습니다")
     print("=" * 78, flush=True)
 
     env.close()
