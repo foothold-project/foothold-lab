@@ -1,4 +1,4 @@
-﻿"""평가 파이프라인 v1 — 학습된 정책을 험지에서 N 에피소드 돌려 CSV 로 남긴다.
+﻿"""평가 파이프라인 v1 · 학습된 정책을 험지에서 N 에피소드 돌려 CSV 로 남긴다.
 
   왜 만드나
     지금까지 "보상 13.94" 같은 학습 지표만 있었다. 그건 학습이 잘 됐다는 뜻이지
@@ -20,7 +20,7 @@ import argparse
 
 from isaaclab.app import AppLauncher
 
-parser = argparse.ArgumentParser(description="Go2 정책 평가 — N 에피소드 → CSV")
+parser = argparse.ArgumentParser(description="Go2 정책 평가 · N 에피소드 → CSV")
 parser.add_argument("--checkpoint", type=str, required=True, help="JIT(TorchScript) policy.pt 경로")
 parser.add_argument("--episodes", type=int, default=100, help="평가할 에피소드 수")
 parser.add_argument("--num_envs", type=int, default=50, help="동시에 돌릴 환경 수")
@@ -66,7 +66,7 @@ def main():
     cfg.sim.device = args_cli.device
     cfg.observations.policy.enable_corruption = False       # 평가에는 관측 노이즈를 끈다
 
-    # ★ 스폰 난이도를 고정한다 — 평가의 생명은 일관성이다.
+    # ★ 스폰 난이도를 고정한다 · 평가의 생명은 일관성이다.
     #   PLAY 기본값 max_init_terrain_level=None 은 로봇을 랜덤 난이도 타일에 떨어뜨린다.
     #   실측 결과 로봇이 지형에 파묻힌 채(루트 z=-0.19, 기울기 23도) 시작하는 경우가 나왔고,
     #   그 에피소드는 정책 실력과 무관하게 0m 로 기록된다 (2026-08-11).
@@ -77,10 +77,10 @@ def main():
         tg.curriculum = True                                 # 행(row)=난이도 로 정렬시킨다
     cfg.scene.terrain.max_init_terrain_level = args_cli.level
 
-    # ★ 명령을 고정한다 — 랜덤 명령이면 "10m 전진"의 의미가 매 에피소드 달라진다
+    # ★ 명령을 고정한다 · 랜덤 명령이면 "10m 전진"의 의미가 매 에피소드 달라진다
     cmd = cfg.commands.base_velocity
     #  ★ 학습 조건에서 최소한만 바꾼다. 평가가 학습과 다른 환경이면 정책은 제 실력을 못 낸다
-    #    (heading_command 를 끄고 재샘플을 막았더니 로봇이 얼어붙었다 — 2026-08-11).
+    #    (heading_command 를 끄고 재샘플을 막았더니 로봇이 얼어붙었다 · 2026-08-11).
     #    학습 원본: lin_vel_x/y (-1,1) · ang_vel_z (-1,1) · heading (-pi,pi) · heading_command=True
     #             · rel_standing_envs=0.02 · resampling_time_range=(10,10)
     if not args_cli.free_cmd:
@@ -88,12 +88,12 @@ def main():
         cmd.ranges.lin_vel_y = (0.0, 0.0)
         cmd.rel_standing_envs = 0.0        # 평가에서 "가만히 서 있으라"는 명령은 만들지 않는다
         if args_cli.strict:
-            # 직진만 시키고 싶을 때 — 다만 이건 학습 분포에서 더 멀어진다
+            # 직진만 시키고 싶을 때 · 다만 이건 학습 분포에서 더 멀어진다
             cmd.ranges.ang_vel_z = (0.0, 0.0)
             cmd.ranges.heading = (0.0, 0.0)
 
     if args_cli.video:
-        # ★ 기본 카메라는 고정 좌표를 본다 — 로봇이 없는 허공을 찍는다(2026-08-11 실제로 그랬다).
+        # ★ 기본 카메라는 고정 좌표를 본다 · 로봇이 없는 허공을 찍는다(2026-08-11 실제로 그랬다).
         #   로봇을 따라가게 바꾼다. 안 그러면 "영상은 나왔는데 아무것도 안 보이는" 조용한 실패다.
         cfg.viewer.origin_type = "asset_root"
         cfg.viewer.asset_name = "robot"
@@ -137,7 +137,7 @@ def main():
 
     D(f"정책      : {policy_path}")
     D(f"환경      : {N}개 · step_dt {dt:.4f}s · 최대 {max_steps} step · 목표 {args_cli.goal_m}m")
-    # 알려진 답 테스트 — "설정했다"는 사실은 증거가 아니다. 값을 되읽어 확인한다.
+    # 알려진 답 테스트 · "설정했다"는 사실은 증거가 아니다. 값을 되읽어 확인한다.
     try:
         c = U.command_manager.get_command("base_velocity")
         D(f"[CHECK] 명령 텐서 shape={tuple(c.shape)}  첫 환경={[round(v,3) for v in c[0].tolist()]}")
@@ -194,7 +194,7 @@ def main():
                     cx = float("nan")
                 vx = float(robot.data.root_lin_vel_b[:, 0].mean())   # 몸통 좌표계 전진 속도
                 diag.append((cx, vx))
-                # 무엇이 멈췄는지 좁힌다 — 물리인가, 버퍼인가, 정책인가
+                # 무엇이 멈췄는지 좁힌다 · 물리인가, 버퍼인가, 정책인가
                 jp = robot.data.joint_pos[0, :3]
                 rp = robot.data.root_pos_w[0]
                 o0 = obs["policy"][0, :6]
@@ -216,7 +216,7 @@ def main():
     # ── 집계 ──
     n = len(rows)
     if n == 0:
-        print("[EVAL] ❌ 에피소드가 하나도 끝나지 않았다 — 결과 없음")
+        print("[EVAL] ❌ 에피소드가 하나도 끝나지 않았다 · 결과 없음")
         return
     ok = sum(r["success"] for r in rows)
     fell = sum(r["fell"] for r in rows)
