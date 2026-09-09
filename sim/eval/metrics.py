@@ -4,9 +4,14 @@
 `provenance/candidate-20260822/eval_generalization.py` 가 원본이고,
 각 함수의 「스냅샷」 줄이 원본 행 번호입니다.
 
-여기서 더한 것은 **관측 열 둘과, 방향 판정의 자를 고르는 인자 하나**뿐입니다
+여기서 더한 것은 **관측 열 다섯과, 방향 판정의 자를 고르는 인자 하나**뿐입니다
 (`ADDED_COLUMNS` · `episode_metrics(gate_progress_m=...)`).
 그 인자를 안 주면 이 모듈은 스냅샷과 같은 값을 냅니다.
+
+**관측 열은 판정에 하나도 안 들어갑니다.** `overall_success` 는 지금도 네 축
+(`survival` · `progress` · `tracking` · `direction`)의 AND 이고 그대로 둡니다.
+머리 접촉 열 셋은 «경고등»이지 판정이 아닙니다. 근거는
+`docs/research/20260909-head-contact-observation.md`.
 
 torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다.
 `tests/test_metrics.py` 가 스냅샷 원문을 다시 읽어 같은 값이 나오는지 고정합니다.
@@ -15,9 +20,27 @@ torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다
 평면만 쓰기 때문입니다.
 """
 
-# 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번 · #99 2번).
+# 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번 · #99 2번 · 머리 접촉).
 # 이 목록을 빼면 `RAW_COLUMNS` 는 스냅샷 543행의 키 순서와 정확히 같아야 한다.
-ADDED_COLUMNS = ("peak_lateral_drift_m", "gate_lateral_drift_m")
+ADDED_COLUMNS = (
+    "peak_lateral_drift_m",
+    "gate_lateral_drift_m",
+    "head_contact_count",
+    "head_contact_peak_n",
+    "head_contact_first_s",
+)
+
+# 머리 접촉을 재는 링크. **Go2 USD 를 직접 열어 확인한 이름이다** `확인됨`.
+#
+# `sim/eval/probe_go2_bodies.py` 를 2026-09-09 에 돌린 결과가 근거다. Go2 는 강체가
+# 19개이고, 그중 라이다·머리로 읽히는 이름은 이 둘뿐이다. 둘 다 충돌 메시를 하나씩
+# 갖고 있어 접촉력이 실제로 잡힌다.
+#
+# **아이작 Go2 에는 `lidar` 라는 이름의 강체가 없다** `확인됨`. 실기 Go2 는 이 자리
+# (머리 앞면)에 라이다가 얹힌다 (`docs/ROBOT-SPEC.md`). 그래서 열 이름을 `lidar_...`
+# 로 두지 않았다. 시뮬에 없는 부품 이름을 열에 적으면 그 열이 조용히 거짓말을 한다.
+# **재는 것은 머리 링크 접촉이고, 그 자리가 실기 라이다 자리라는 것이 쓰임새다.**
+HEAD_BODY_NAMES = ("Head_upper", "Head_lower")
 
 # 원시 CSV 열 순서. `ADDED_COLUMNS` 를 뺀 나머지가 스냅샷 543행의 키 순서다.
 RAW_COLUMNS = (
@@ -42,6 +65,12 @@ RAW_COLUMNS = (
     "gate_lateral_drift_m",
     "velocity_mae_mps",
     "mean_reward_per_step",
+
+    # 머리(= 실기 라이다 자리) 접촉 관측 셋. **판정에 안 들어간다.**
+    # 스냅샷 열 뒤에 붙여서, 열 번호로 CSV 를 읽는 코드가 앞쪽에서 안 밀리게 한다.
+    "head_contact_count",
+    "head_contact_peak_n",
+    "head_contact_first_s",
 )
 
 # 요약 CSV 열 순서. 스냅샷 272행 딕셔너리의 키 순서와 같아야 한다.
@@ -178,6 +207,63 @@ def gate_lateral_drift_m(start_xy, path_xy, forward_dir, gate_progress_m):
     return None
 
 
+# ---------------------------------------------------------------- 머리 접촉 (관측 전용)
+
+def head_contact_summary(step_forces_n, threshold_n, step_dt):
+    """머리 링크가 몇 스텝이나 · 얼마나 세게 · 언제 처음 닿았나.
+
+    **경고등이지 판정이 아닙니다.** 이 함수의 어떤 값도 `overall_success` 에
+    들어가지 않고, 들어가서도 안 됩니다. 근거 셋은 아래에 적습니다.
+
+    `step_forces_n` 은 스텝마다 머리 링크 두 개(`HEAD_BODY_NAMES`)에 걸린
+    접촉력 크기의 **최댓값** 목록입니다(N). `None` 이면 「안 쟀다」는 뜻이고
+    세 값 모두 `None` 입니다. **0 이 아닙니다.** 0 으로 돌려주면 「쟀는데 한 번도
+    안 닿았다」와 구별이 안 됩니다. `gate_lateral_drift_m` 이 쓰는 규칙과 같습니다.
+
+    | 돌려주는 것 | 무엇 |
+    |---|---|
+    | `count` | 힘이 문턱을 **넘은** 스텝 수. 「닿았나」 |
+    | `peak_n` | 문턱과 무관한 최댓값. 「얼마나 세게」 |
+    | `first_s` | 처음 넘은 스텝의 경과 시각(초). 안 넘었으면 `None` |
+
+    **문턱을 `>` 로 봅니다.** 종료 조건 `mdp.illegal_contact` 가 같은 부등호를
+    쓰기 때문입니다. 같은 자로 재야 「몸통은 종료시켰는데 머리는 몇 번 닿았나」가
+    비교됩니다.
+
+    **`peak_n` 은 문턱을 안 봅니다.** 나중에 팀이 「몇 N 부터 부서지는가」를
+    확보하면, 이 열만으로 지나간 판을 **소급해서** 다시 걸를 수 있어야 합니다.
+    문턱으로 미리 잘라 두면 그 기회가 사라집니다.
+    """
+    if step_forces_n is None:
+        return {
+            "head_contact_count": None,
+            "head_contact_peak_n": None,
+            "head_contact_first_s": None,
+        }
+
+    count = 0
+    peak = 0.0
+    first_index = None
+
+    for index, force in enumerate(step_forces_n):
+        if force > peak:
+            peak = force
+
+        if force > threshold_n:
+            count += 1
+
+            if first_index is None:
+                first_index = index
+
+    return {
+        "head_contact_count": count,
+        "head_contact_peak_n": peak,
+        "head_contact_first_s": (
+            None if first_index is None else first_index * step_dt
+        ),
+    }
+
+
 def gate_direction_success(gate_lateral, max_lateral_drift):
     """통과선 위에서 방향을 지켰나. #99 2번.
 
@@ -284,6 +370,9 @@ def episode_metrics(
     max_velocity_mae,
     max_lateral_drift,
     gate_progress_m=None,
+    head_contact_forces=None,
+    head_contact_threshold_n=1.0,
+    step_dt=0.0,
 ):
     """한 에피소드의 파생값 전부.
 
@@ -308,6 +397,11 @@ def episode_metrics(
 
     20초 규격에서는 하네스가 통과선 10 m 를 넣어 부릅니다. 20초를 걸으면
     끝점이 20 m 근처라, 끝점으로 재면 목표점의 두 배 지점을 재게 됩니다.
+
+    **`head_contact_forces` 는 판정을 하나도 안 바꿉니다** (`head_contact_summary`).
+    안 넘기면 세 열이 `None` 이고, 넘겨도 `overall_success` 는 그대로입니다.
+    아래 `overall_success(...)` 호출에 인자가 넷뿐인 것이 그 보증이고,
+    `tests/test_metrics.py` 가 같은 것을 시험으로 못 박습니다.
     """
     disp = displacement(start_xy, end_xy)
 
@@ -338,7 +432,14 @@ def episode_metrics(
     else:
         direction = gate_direction_success(gate_lateral, max_lateral_drift)
 
+    head = head_contact_summary(
+        head_contact_forces, head_contact_threshold_n, step_dt
+    )
+
     return {
+        # ★ 인자가 **넷**이다. 머리 접촉은 여기에 들어가지 않는다.
+        #   AND 에 축을 더하면 성공률이 반드시 깎이고, 정책이 웅크리는 쪽으로
+        #   선택된다. `docs/research/20260909-head-contact-observation.md` 참고.
         "overall_success": overall_success(survival, progress, tracking, direction),
         "survival_success": survival,
         "progress_success": progress,
@@ -354,6 +455,9 @@ def episode_metrics(
         "gate_lateral_drift_m": gate_lateral,
         "velocity_mae_mps": vel_mae,
         "mean_reward_per_step": reward,
+        "head_contact_count": head["head_contact_count"],
+        "head_contact_peak_n": head["head_contact_peak_n"],
+        "head_contact_first_s": head["head_contact_first_s"],
     }
 
 

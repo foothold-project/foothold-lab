@@ -545,6 +545,120 @@ class SummaryMatchesSnapshot(unittest.TestCase):
             self.assertEqual(row["mean_fall_time_s"], "")
 
 
+class HeadContactObservation(unittest.TestCase):
+    """머리(= 실기 라이다 자리) 접촉을 세는 자. **판정이 아니라 경고등이다.**"""
+
+    DT = 0.02
+
+    def summary(self, forces, threshold=1.0):
+        return metrics.head_contact_summary(forces, threshold, self.DT)
+
+    def test_문턱을_넘은_스텝만_센다(self):
+        # 0.5 와 1.0 은 안 세고, 1.01 과 300 만 센다.
+        got = self.summary([0.0, 0.5, 1.0, 1.01, 0.2, 300.0])
+
+        self.assertEqual(got["head_contact_count"], 2)
+
+    def test_문턱과_정확히_같으면_안_센다(self):
+        # 종료 조건 `mdp.illegal_contact` 가 `> threshold` 라 같은 부등호를 쓴다.
+        self.assertEqual(self.summary([1.0, 1.0])["head_contact_count"], 0)
+
+    def test_최댓값은_문턱을_안_본다(self):
+        # 문턱 아래로만 닿아도 「얼마나 세게」는 남아야 한다. 나중에 파손 임계가
+        # 정해지면 이 열로 소급 판정을 한다.
+        got = self.summary([0.4, 0.9, 0.7])
+
+        self.assertEqual(got["head_contact_count"], 0)
+        self.assertAlmostEqual(got["head_contact_peak_n"], 0.9)
+
+    def test_처음_넘은_시각(self):
+        # 번호 3 에서 처음 넘으므로 3 x 0.02 = 0.06 초.
+        got = self.summary([0.0, 0.1, 0.9, 5.0, 9.0])
+
+        self.assertAlmostEqual(got["head_contact_first_s"], 0.06)
+
+    def test_한_번도_안_넘으면_시각은_None(self):
+        # 0.0 이면 「0초에 닿았다」와 구별이 안 된다. gate 열과 같은 규칙이다.
+        self.assertIsNone(self.summary([0.0, 0.3])["head_contact_first_s"])
+
+    def test_안_쟀으면_셋_다_None(self):
+        # **「안 쟀다」와 「쟀는데 안 닿았다」는 다르다.**
+        got = self.summary(None)
+
+        self.assertIsNone(got["head_contact_count"])
+        self.assertIsNone(got["head_contact_peak_n"])
+        self.assertIsNone(got["head_contact_first_s"])
+
+    def test_쟀는데_안_닿았으면_0_이지_None_이_아니다(self):
+        got = self.summary([])
+
+        self.assertEqual(got["head_contact_count"], 0)
+        self.assertEqual(got["head_contact_peak_n"], 0.0)
+        self.assertIsNone(got["head_contact_first_s"])
+
+    def test_링크_이름을_못_박는다(self):
+        # `probe_go2_bodies.py` 로 Go2 USD 를 열어 확인한 이름이다 (2026-09-09).
+        # 여기를 고치려면 그 프로브를 다시 돌려 근거를 갱신해야 한다.
+        self.assertEqual(metrics.HEAD_BODY_NAMES, ("Head_upper", "Head_lower"))
+
+
+class HeadContactIsNotJudgement(unittest.TestCase):
+    """★ 이 저장소에서 가장 중요한 시험이다.
+
+    팀장 지시가 「성공 판정에 넣지 말라」였다. 나중에 누가 좋은 뜻으로
+    `overall_success` 에 머리 접촉을 끼워 넣으면 **여기가 깨져야 한다.**
+    """
+
+    def head(self, forces):
+        return metrics.episode_metrics(
+            **case(head_contact_forces=forces, head_contact_threshold_n=1.0, step_dt=0.02)
+        )
+
+    def test_머리를_아무리_박아도_판정_5축이_안_바뀐다(self):
+        clean = self.head([0.0] * 50)
+        smashed = self.head([2000.0] * 50)
+
+        for column in (
+            "overall_success",
+            "survival_success",
+            "progress_success",
+            "tracking_success",
+            "direction_success",
+        ):
+            self.assertEqual(clean[column], smashed[column], column)
+
+        # 시험이 실제로 두 경우를 갈랐는지 확인한다. 둘이 같으면 위 단언은
+        # 아무것도 안 지킨 것이다.
+        self.assertNotEqual(
+            clean["head_contact_count"], smashed["head_contact_count"]
+        )
+
+    def test_통과하던_판이_머리를_박아도_통과다(self):
+        # 「통과」 사례는 네 축을 다 넘는다. 머리를 2000 N 으로 박아도 통과여야 한다.
+        smashed = self.head([2000.0] * 50)
+
+        self.assertTrue(smashed["overall_success"])
+
+    def test_머리_열을_안_주면_판정이_스냅샷_그대로다(self):
+        without = metrics.episode_metrics(**case())
+        with_head = self.head([500.0] * 10)
+
+        for column in metrics.RAW_COLUMNS:
+            if column in metrics.ADDED_COLUMNS or column not in without:
+                continue
+
+            self.assertEqual(without[column], with_head[column], column)
+
+    def test_머리_열_셋은_전부_추가분이다(self):
+        # 추가분 목록에 있어야 스냅샷 대조 시험들이 이 열을 건너뛴다.
+        for column in (
+            "head_contact_count",
+            "head_contact_peak_n",
+            "head_contact_first_s",
+        ):
+            self.assertIn(column, metrics.ADDED_COLUMNS)
+
+
 class ColumnContract(unittest.TestCase):
     """CSV 열 순서를 스냅샷에 못 박는다."""
 
@@ -577,6 +691,31 @@ class ColumnContract(unittest.TestCase):
         self.assertEqual(
             columns.index("gate_lateral_drift_m"),
             columns.index("peak_lateral_drift_m") + 1,
+        )
+
+    def test_머리_접촉_열_셋은_붙어_있고_맨_뒤다(self):
+        # 스냅샷 열 **뒤에** 둔다. 앞에 끼우면 열 번호로 CSV 를 읽는 코드가 밀린다.
+        columns = list(metrics.RAW_COLUMNS)
+
+        self.assertEqual(
+            columns[-3:],
+            ["head_contact_count", "head_contact_peak_n", "head_contact_first_s"],
+        )
+
+    def test_판정_열은_머리_접촉_앞에_그대로_있다(self):
+        # 판정 5축의 자리가 안 밀렸는지. 스냅샷과 같은 6~11번째 칸이다.
+        columns = list(metrics.RAW_COLUMNS)
+
+        self.assertEqual(
+            columns[6:12],
+            [
+                "overall_success",
+                "survival_success",
+                "progress_success",
+                "tracking_success",
+                "direction_success",
+                "termination_reason",
+            ],
         )
 
     def test_추가분은_스냅샷에_없던_이름이다(self):
