@@ -23,7 +23,7 @@
 | **3** | **뒷다리 thigh 범위** | **-30 ~ 260도** (앞다리는 -90 ~ 200) | 공식 사양표·공식 URDF 모두 **네 다리 공통 단일 범위** | **앞뒤 비대칭이 공식 근거에 없다** | 우리 문서가 「실제 하드웨어의 비대칭이고 버그가 아니다」라고 단정해 두었다. 그 단정의 근거가 없다 (§7-2) |
 | **4** | **발 들기 높이** | 관절로는 **31.0 cm** 가능 · 걸을 때 **3.25 cm** | 순정 보행의 발 들기 높이는 **API 로 조정하는 값**이고 절대 기본값이 공개돼 있지 않다 `미확인` | 대조 불가 | 시뮬의 「3.25 cm 만 든다」에 대응하는 실기 수치가 아직 없다. 이걸 재는 것이 다음 실측 과제다 |
 
-> **1번은 우리 미결 질문에 직접 답한다.** [9/7 관절 한계 실측](20260907-go2-관절한계-실측.md) §7 이
+> **1번은 우리 미결 질문에 직접 답한다.** [9/7 관절 한계 실측](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md) §7 이
 > 「`effort_limit=23.5` 가 있고 무게를 이겨야 하니 정적으로 가능한 높이가 더 낮을 수 있다」로
 > 열어 두었다. **실기 하드웨어는 그보다 세다.** 시뮬이 보수적으로 잡혀 있는 쪽이므로,
 > 시뮬에서 토크 때문에 안 되는 동작이 실기에서는 될 여지가 있다.
@@ -261,7 +261,7 @@
 
 ### 7-2. 뒷다리 thigh 비대칭: 우리가 「하드웨어다」라고 적은 것의 근거가 없다
 
-[9/7 문서](20260907-go2-관절한계-실측.md) 와 [레일즈 진단 11절](../../docs/research/rails-diagnosis.md) 이
+[9/7 문서](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md) 와 [레일즈 진단 11절](../../docs/research/rails-diagnosis.md) 이
 둘 다 이렇게 적어 두었다.
 
 > 「앞다리와 뒷다리의 thigh 범위가 다르다 `확인됨`. 실제 Go2 하드웨어의 비대칭이고 버그가 아니다.」
@@ -396,7 +396,7 @@ soft_joint_pos_limit_factor=0.9
 | 태그 | 무엇 | 어디 |
 |---|---|---|
 | IsaacLab 소스 | `UNITREE_GO2_CFG` 원문 | `github.com/isaac-sim/IsaacLab` `isaaclab_assets/robots/unitree.py` |
-| 우리 실측 | 관절 한계 · 발 높이 · 단차 성공률 | [레일즈 진단](../../docs/research/rails-diagnosis.md) · [9/7 관절 한계](20260907-go2-관절한계-실측.md) |
+| 우리 실측 | 관절 한계 · 발 높이 · 단차 성공률 | [레일즈 진단](../../docs/research/rails-diagnosis.md) · [9/7 관절 한계](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md) |
 | 우리 정본 | 개체 사양 | [ROBOT-SPEC](../../docs/ROBOT-SPEC.md) · [현장 점검 목록](../../docs/FIELD-CHECK-GO2-INTAKE.md) |
 
 **3rd party (공식 아님. 이 문서에서 딱 한 값에만 썼다)**
