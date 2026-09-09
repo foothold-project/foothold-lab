@@ -62,7 +62,9 @@ def roster(root='.'):
 def check(root='.'):
     names = roster(root)
     if names is None:
-        return False, ['%s 를 못 읽었다. 이름 목록의 정본이 없으면 검사할 수 없다.' % ROLES], 0
+        # ★ 아래 출력 루프가 (파일, 이유) 튜플을 푼다. 여기서 문자열을 돌려주면
+        #   ValueError 로 죽어 정작 «명부가 없다» 는 진단문이 화면에서 사라진다.
+        return False, [(ROLES, '이 파일이 없다. 이름 목록의 정본이 없으면 검사할 수 없다.')], 0
     bad = []
     seen = 0
     for dirpath, dirs, files in os.walk(root):
@@ -94,12 +96,21 @@ def check(root='.'):
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else '.'
+    # ★ 명부가 없는 것은 «위반» 이 아니라 «검사 불능» 이다. 같은 화면으로
+    #   내면 사람이 원인을 이름 쪽에서 찾는다. 여기서 먼저 가른다.
+    if roster(root) is None:
+        print('  [!] %s 가 없다.' % ROLES)
+        print('      이름 목록의 정본이 없으면 이 검사는 성립하지 않는다.')
+        print('      위반이 없는 것이 아니라 «검사하지 못한 것» 이다.')
+        return 1
     ok, bad, seen = check(root)
     print('  작성자 표기 %d개 검사' % seen)
     # ★ 0개를 검사하고 «통과» 를 찍는 것이 이 관문의 가장 나쁜 실패다.
     #   실제로 첫 판이 re.M 을 빠뜨려 그렇게 돌았다. 관문이 대상에
     #   닿지 못한 것과 위반이 없는 것은 다른 사실이므로 소리 나게 한다.
-    if seen == 0:
+    # ★ bad 가 이미 있으면 그것이 더 구체적인 이유다 (명부 없음 등).
+    #   여기서 가로채면 진짜 원인이 «닿지 못했다» 로 덮인다.
+    if seen == 0 and not bad:
         print('  [!] 한 건도 검사하지 못했다. 관문이 대상에 닿지 못한 것이다.')
         print('      «위반 없음» 이 아니라 «검사 실패» 다. 경로와 정규식을 의심한다.')
         return 1
