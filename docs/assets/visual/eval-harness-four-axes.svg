@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 680" width="980" height="680" font-family="system-ui,-apple-system,Segoe UI,Malgun Gothic,Apple SD Gothic Neo,sans-serif" role="img" aria-label="평가 하네스의 네 축 AND 판정 구조">
+<title>종합 성공은 네 축의 AND</title>
+
+<defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6b7f"/>
+</marker>
+</defs>
+
+<rect x="0" y="0" width="980" height="680" fill="#f7f9fc"/>
+
+<text x="32" y="44" font-size="19" font-weight="700" fill="#16202c">종합 성공 = 네 축의 AND</text>
+<text x="32" y="68" font-size="12.5" fill="#5b6b7f">sim/eval/metrics.py:344 · overall_success(survival, progress, tracking, direction) · 인자가 넷이다</text>
+
+<rect x="32" y="100" width="176" height="394" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<text x="48" y="130" font-size="13" font-weight="600" fill="#16202c">한 판이 남기는 것</text>
+<text x="48" y="164" font-size="11.5" fill="#5b6b7f">시작·끝 평면 좌표</text>
+<text x="48" y="190" font-size="11.5" fill="#5b6b7f">경로 표본 (x, y)</text>
+<text x="48" y="216" font-size="11.5" fill="#5b6b7f">속도오차 합 · 스텝 수</text>
+<text x="48" y="242" font-size="11.5" fill="#5b6b7f">보상 합</text>
+<text x="48" y="268" font-size="11.5" fill="#5b6b7f">timed_out · terminated</text>
+<text x="48" y="294" font-size="11.5" fill="#5b6b7f">머리 접촉력 (스텝별)</text>
+
+<line x1="48" y1="318" x2="192" y2="318" stroke="#e2e8f0" stroke-width="1"/>
+<text x="48" y="344" font-size="11" fill="#8a6410">평면 2성분만 쓴다</text>
+<text x="48" y="364" font-size="11" fill="#8a6410">높이는 판정에 없다</text>
+
+<line x1="48" y1="388" x2="192" y2="388" stroke="#e2e8f0" stroke-width="1"/>
+<text x="48" y="414" font-size="11" fill="#5b6b7f">이상 거리</text>
+<text x="48" y="436" font-size="11.5" fill="#16202c">명령속도 × 제한시간</text>
+<text x="48" y="460" font-size="11" fill="#5b6b7f">기본 20 m · 험지 6 m</text>
+
+<line x1="208" y1="297" x2="226" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<text x="544" y="90" font-size="10.5" fill="#5b6b7f" text-anchor="middle">기본값</text>
+<text x="629" y="90" font-size="10.5" fill="#8a6410" text-anchor="middle">험지 정본</text>
+
+<rect x="232" y="100" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="100" width="6" height="88" fill="#17795e"/>
+<text x="252" y="128" font-size="14" font-weight="600" fill="#16202c">1 · 생존</text>
+<text x="322" y="128" font-size="11" fill="#5b6b7f">survival_success</text>
+<text x="252" y="152" font-size="11.5" fill="#16202c">제한 시간을 다 채우고 몸통 접촉 없음</text>
+<text x="252" y="174" font-size="10.5" fill="#1d5fa8">timed_out and not terminated</text>
+<rect x="506" y="116" width="76" height="52" rx="8" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="544" y="148" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">20.0 s</text>
+<rect x="590" y="116" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
+<text x="629" y="148" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">6.0 s</text>
+
+<rect x="232" y="202" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="202" width="6" height="88" fill="#17795e"/>
+<text x="252" y="230" font-size="14" font-weight="600" fill="#16202c">2 · 전진</text>
+<text x="322" y="230" font-size="11" fill="#5b6b7f">progress_success</text>
+<text x="252" y="254" font-size="11.5" fill="#16202c">끝점의 전방축 전진거리 ≥ 최소 전진</text>
+<text x="252" y="276" font-size="10.5" fill="#1d5fa8">forward_progress_m &gt;= min_progress</text>
+<rect x="506" y="218" width="76" height="52" rx="8" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="544" y="250" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">10.0 m</text>
+<rect x="590" y="218" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
+<text x="629" y="250" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">3.0 m</text>
+
+<rect x="232" y="304" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="304" width="6" height="88" fill="#17795e"/>
+<text x="252" y="332" font-size="14" font-weight="600" fill="#16202c">3 · 속도추종</text>
+<text x="350" y="332" font-size="11" fill="#5b6b7f">tracking_success</text>
+<text x="252" y="356" font-size="11.5" fill="#16202c">스텝당 평균 속도오차 ≤ 속도오차 문턱</text>
+<text x="252" y="378" font-size="10.5" fill="#1d5fa8">velocity_mae_mps &lt;= max_velocity_mae</text>
+<rect x="506" y="320" width="76" height="52" rx="8" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="544" y="352" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">0.25 m/s</text>
+<rect x="590" y="320" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
+<text x="629" y="352" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">0.25 m/s</text>
+
+<rect x="232" y="406" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="406" width="6" height="88" fill="#1d5fa8"/>
+<text x="252" y="434" font-size="14" font-weight="600" fill="#16202c">4 · 방향</text>
+<text x="322" y="434" font-size="11" fill="#5b6b7f">direction_success</text>
+<text x="252" y="458" font-size="11.5" fill="#16202c">통과선 위의 좌우 이탈 ≤ 이탈 문턱</text>
+<text x="252" y="480" font-size="10.5" fill="#1d5fa8">gate_lateral_drift_m &lt;= max_lateral_drift</text>
+<rect x="506" y="422" width="76" height="52" rx="8" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="544" y="454" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">0.05 m</text>
+<rect x="590" y="422" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
+<text x="629" y="454" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">1.5 m</text>
+
+<line x1="684" y1="144" x2="706" y2="144" stroke="#5b6b7f" stroke-width="1.2"/>
+<line x1="684" y1="246" x2="706" y2="246" stroke="#5b6b7f" stroke-width="1.2"/>
+<line x1="684" y1="348" x2="706" y2="348" stroke="#5b6b7f" stroke-width="1.2"/>
+<line x1="684" y1="450" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.2"/>
+<line x1="706" y1="144" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.2"/>
+<line x1="706" y1="297" x2="724" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="730" y="268" width="76" height="58" rx="10" fill="#16202c"/>
+<text x="768" y="304" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">AND</text>
+<line x1="806" y1="297" x2="824" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="830" y="252" width="124" height="90" rx="10" fill="#ffffff" stroke="#17795e" stroke-width="2"/>
+<text x="892" y="286" font-size="11.5" fill="#1d5fa8" text-anchor="middle">overall_success</text>
+<text x="892" y="312" font-size="14" font-weight="700" fill="#16202c" text-anchor="middle">종합 성공</text>
+<text x="892" y="366" font-size="10.5" fill="#b5341f" text-anchor="middle">하나만 떨어져도 실패</text>
+<text x="892" y="386" font-size="10.5" fill="#5b6b7f" text-anchor="middle">축마다 90 %면 65.6 %</text>
+
+<text x="232" y="520" font-size="11" fill="#8a6410">--min_progress_m 하나가 2번(전진 통과선)과 4번(방향 통과선)을 함께 움직인다</text>
+
+<rect x="32" y="542" width="922" height="86" rx="10" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1.2"/>
+<text x="52" y="570" font-size="13" font-weight="600" fill="#8a6410">AND 밖 · 관측 전용 열 (판정에 안 들어간다)</text>
+<text x="938" y="570" font-size="11" fill="#5b6b7f" text-anchor="end">축을 더하면 성공률은 반드시 깎인다</text>
+<text x="52" y="598" font-size="11" fill="#1d5fa8">peak_lateral_drift_m</text>
+<text x="52" y="618" font-size="11" fill="#5b6b7f">경로 전체의 최대 좌우 이탈</text>
+<text x="372" y="598" font-size="11" fill="#1d5fa8">lateral_drift_m</text>
+<text x="372" y="618" font-size="11" fill="#5b6b7f">끝점 좌우 이탈 · 지금은 관측용</text>
+<text x="692" y="598" font-size="11" fill="#1d5fa8">head_contact_count · _peak_n · _first_s</text>
+<text x="692" y="618" font-size="11" fill="#5b6b7f">머리 링크 접촉 셋 (경고등)</text>
+
+<text x="32" y="658" font-size="10.5" fill="#5b6b7f">기본값 = eval_generalization.py:95~103 의 argparse · 험지 정본 = docs/DECISIONS.md 09-03 두 행 (명령줄로 명시해야 걸린다)</text>
+</svg>
