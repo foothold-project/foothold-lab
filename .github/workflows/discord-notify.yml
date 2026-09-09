@@ -50,10 +50,26 @@ jobs:
             #   교훈: 조용히 건너뛰는 분기에는 반드시 이유를 출력한다. 침묵은 디버깅을 막는다.
             #
             # 3차(현재): GitHub API 로 이 커밋의 파일 목록을 직접 묻는다. 가장 확실하다.
-            CHANGED=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}"                         --jq '.files[].filename' 2>&1 || echo "")
+            #
+            # ★ 4차 보완 (2026-09-09). 3차에도 같은 부류의 구멍이 남아 있었다.
+            #   전에는 `... --jq ... 2>&1 || echo ""` 였다. 호출이 실패하면 오류
+            #   «문자열» 이 CHANGED 에 담기고, 그 문자열은 ^docs/ 에 안 걸리니
+            #   「docs/ 변경 없음 → 알림 생략」 분기로 갔다. 이유는 group 에 남지만
+            #   런이 초록불이라 아무도 그 group 을 펼치지 않는다.
+            #   이유를 출력하는 것과 «판정을 성공으로 두는 것» 은 다른 문제였다.
+            set +e
+            CHANGED=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}" \
+                        --jq '.files[].filename' 2> api_err.txt)
+            API_RC=$?
+            set -e
+            if [ "$API_RC" -ne 0 ]; then
+              echo "::group::gh api stderr"; cat api_err.txt; echo "::endgroup::"
+              echo "::error::변경 파일 목록을 못 받았다 (gh rc=$API_RC). 알림을 판정할 수 없다"
+              exit 1
+            fi
             echo "::group::변경 파일"; echo "$CHANGED"; echo "::endgroup::"
             if ! echo "$CHANGED" | grep -q '^docs/'; then
-              echo "docs/ 변경 없음 → 알림 생략"
+              echo "docs/ 변경 없음 → 알림 생략 (조회 자체는 정상)"
               echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
             fi
             TITLE="문서 갱신"
