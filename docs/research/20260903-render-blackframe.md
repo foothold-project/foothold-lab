@@ -88,9 +88,9 @@ Isaac Lab의 [`ManagerBasedRLEnv.render()`](https://github.com/isaac-sim/IsaacLa
 
 ## 수정
 
-[`sim/eval/render_capture.py`](../../../sim/eval/render_capture.py)에 `capture_lit_frame()`을 추가했다. 밝아야 하는 장면에서 RGB 평균이 10 이상인 완성 프레임만 반환하며, 기본 최대 3회 렌더 뒤에도 기준을 넘지 못하면 검정 영상을 저장하지 않고 오류로 중단한다.
+[`sim/eval/render_capture.py`](../../sim/eval/render_capture.py)에 `capture_lit_frame()`을 추가했다. 밝아야 하는 장면에서 RGB 평균이 10 이상인 완성 프레임만 반환하며, 기본 최대 3회 렌더 뒤에도 기준을 넘지 못하면 검정 영상을 저장하지 않고 오류로 중단한다.
 
-[`sim/eval/render_blackframe_probe.py`](../../../sim/eval/render_blackframe_probe.py)는 최소 재현과 검증 도구다. 평면과 반복 박스, chase와 topdown, 해상도, 환경 수, `single`·`pair`·`retry` 캡처를 독립적으로 바꿀 수 있다. `retry`는 시작 때 최대 120회 안에서 첫 정상 버퍼를 확인하고, 매 프레임은 최대 3회 안에서 검증한다.
+[`sim/eval/render_blackframe_probe.py`](../../sim/eval/render_blackframe_probe.py)는 최소 재현과 검증 도구다. 평면과 반복 박스, chase와 topdown, 해상도, 환경 수, `single`·`pair`·`retry` 캡처를 독립적으로 바꿀 수 있다. `retry`는 시작 때 최대 120회 안에서 첫 정상 버퍼를 확인하고, 매 프레임은 최대 3회 안에서 검증한다.
 
 이 보호 방법은 의도한 장면이 밝다는 전제가 있는 영상 기록에만 적용한다. 야간이나 의도적으로 검은 장면에는 고정 임계값을 그대로 적용하면 안 된다.
 
