@@ -31,9 +31,24 @@
 | Go2 관절 한계 프로브 | `probe_go2_joint_limits.py` |
 | **활성 하네스 본체** | `eval_generalization.py` |
 | 원시 CSV -> 요약 · Wilson 구간 | `report.py` |
+| **영상에 계측값 겹쳐 그리기** | `overlay/` |
 | 실측 결과 | `results/` |
 | 평지 10 m 기준선 100판 | `results/20260903-flat-10m/` |
 | 험지 10종 1.0 m/s 1000판 | `results/20260903-rough10-1.0mps/` |
+| pit env 44 · 겹쳐 그리기 실측 | `results/20260909-pit-env44-overlay/` |
+
+## 영상만으로 읽기 (`overlay/`)
+
+CSV 와 영상을 번갈아 보지 않아도 되게, **이미 만들어진 mp4 에 프레임별
+계측값을 겹쳐 그립니다.** 시뮬을 다시 안 돌리고 렌더 경로도 안 건드립니다.
+
+```bash
+python sim/eval/overlay/render.py --video <mp4> --trace <trace.csv> --out <mp4>
+```
+
+프레임별 기록은 `record_flat_baseline.py --trace_csv <경로>` 로 영상과 함께
+나옵니다. **그 인자를 안 주면 기존 동작 그대로입니다.**
+자세한 것은 `overlay/README.md` 에 있습니다.
 
 ## 먼저 읽을 것
 

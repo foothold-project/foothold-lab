@@ -1,0 +1,2 @@
+terrain,episodes,overall_success_rate,survival_rate,progress_success_rate,tracking_success_rate,direction_success_rate,mean_forward_progress_m,mean_lateral_drift_m,mean_velocity_mae_mps,mean_episode_duration_s,mean_fall_time_s,mean_reward_per_step
+pit,10,0.0,1.0,0.0,0.0,0.0,1.10104,0.07403,0.8162099999999999,6.0,,0.012786799999999997
