@@ -1,0 +1,29 @@
+# 문서 «작성» 칸에 없는 사람 이름이 들어가는 것을 PR 에서 막는다.
+#
+# 왜 관문인가. 2026-09-09 에 하위 세션이 «방재혁» 이라는 없는 사람 이름으로
+# 문서를 올렸다. 그 세션은 사람 이름을 알 수 없었고, 문서 형식이 그 칸을
+# 요구하니 환경에 있던 이메일 로컬파트를 사람 이름처럼 읽어 채웠다.
+# 같은 뿌리로 «jay»(경로 별칭) 3건과 날짜만 든 빈칸 4건이 이미 들어와 있었다.
+# 규칙 문서만 두면 다음 세션이 그 문서를 안 읽고 또 채운다.
+name: 작성자 이름 검사
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+      - '.github/scripts/authorcheck.py'
+      - '.github/workflows/authorcheck.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  authorcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 없는 이름 검사
+        run: python .github/scripts/authorcheck.py .
