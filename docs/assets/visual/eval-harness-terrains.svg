@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 630" width="980" height="630" font-family="system-ui,-apple-system,Segoe UI,Malgun Gothic,Apple SD Gothic Neo,sans-serif" role="img" aria-label="평가 지형 10종의 구성과 평지 제외">
+<title>평가 지형 10종의 구성</title>
+
+<rect x="0" y="0" width="980" height="630" fill="#f7f9fc"/>
+
+<text x="32" y="44" font-size="19" font-weight="700" fill="#16202c">평가 지형 10종 · 무엇을 어떤 값으로 세웠나</text>
+<text x="32" y="68" font-size="12.5" fill="#5b6b7f">이름과 순서 = sim/eval/terrains.py:15~26 · 값 = sim/eval/generalization_env_cfg.py:57~164</text>
+
+<text x="32" y="120" font-size="11" fill="#5b6b7f">인덱스 = terrains.py 등록 순서 = Isaac Lab 열 순서</text>
+<text x="950" y="120" font-size="11" fill="#b5341f" text-anchor="end">붉은 띠 = 실패 지형 5종 (원장 08-27)</text>
+
+<rect x="32" y="140" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<circle cx="54" cy="164" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="54" y="169" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">0</text>
+<text x="76" y="169" font-size="11" font-weight="600" fill="#16202c">discrete_obstacles</text>
+<text x="48" y="198" font-size="10" fill="#5b6b7f">장애물 35개</text>
+<text x="48" y="218" font-size="10" fill="#5b6b7f">높이 0.05~0.16 m</text>
+<text x="48" y="238" font-size="10" fill="#5b6b7f">폭 0.4~1.0 m</text>
+
+<rect x="218" y="140" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<circle cx="240" cy="164" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="240" y="169" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">1</text>
+<text x="262" y="169" font-size="11" font-weight="600" fill="#16202c">wave</text>
+<text x="234" y="198" font-size="10" fill="#5b6b7f">파형 4개</text>
+<text x="234" y="218" font-size="10" fill="#5b6b7f">진폭 0.03~0.12 m</text>
+
+<rect x="404" y="140" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="404" y="156" width="5" height="86" fill="#b5341f"/>
+<circle cx="426" cy="164" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="426" y="169" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">2</text>
+<text x="448" y="169" font-size="11" font-weight="600" fill="#16202c">stepping_stones</text>
+<text x="420" y="198" font-size="10" fill="#5b6b7f">돌 폭 0.35~0.65 m</text>
+<text x="420" y="218" font-size="10" fill="#5b6b7f">간격 0.08~0.20 m</text>
+<text x="420" y="238" font-size="10" fill="#5b6b7f">최대 높이 0.12 m</text>
+
+<rect x="590" y="140" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="590" y="156" width="5" height="86" fill="#b5341f"/>
+<circle cx="612" cy="164" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="612" y="169" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">3</text>
+<text x="634" y="169" font-size="11" font-weight="600" fill="#16202c">gap</text>
+<text x="606" y="198" font-size="10" fill="#5b6b7f">틈 폭 0.15~0.40 m</text>
+<text x="606" y="218" font-size="10" fill="#5b6b7f">평면 메시</text>
+
+<rect x="776" y="140" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="776" y="156" width="5" height="86" fill="#b5341f"/>
+<circle cx="798" cy="164" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="798" y="169" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">4</text>
+<text x="820" y="169" font-size="11" font-weight="600" fill="#16202c">pit</text>
+<text x="792" y="198" font-size="10" fill="#5b6b7f">깊이 0.10~0.30 m</text>
+<text x="792" y="218" font-size="10" fill="#5b6b7f">double_pit 없음</text>
+
+<rect x="32" y="274" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="32" y="290" width="5" height="86" fill="#b5341f"/>
+<circle cx="54" cy="298" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="54" y="303" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">5</text>
+<text x="76" y="303" font-size="11" font-weight="600" fill="#16202c">rails</text>
+<text x="48" y="332" font-size="10" fill="#5b6b7f">두께 0.08~0.18 m</text>
+<text x="48" y="352" font-size="10" fill="#5b6b7f">높이 0.05~0.18 m</text>
+
+<rect x="218" y="274" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<circle cx="240" cy="298" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="240" y="303" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">6</text>
+<text x="262" y="303" font-size="11" font-weight="600" fill="#16202c">star</text>
+<text x="234" y="332" font-size="10" fill="#5b6b7f">막대 5개</text>
+<text x="234" y="352" font-size="10" fill="#5b6b7f">폭 0.30~0.70 m</text>
+<text x="234" y="372" font-size="10" fill="#5b6b7f">높이 0.05~0.16 m</text>
+
+<rect x="404" y="274" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="404" y="290" width="5" height="86" fill="#b5341f"/>
+<circle cx="426" cy="298" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="426" y="303" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">7</text>
+<text x="448" y="303" font-size="11" font-weight="600" fill="#16202c">floating_ring</text>
+<text x="420" y="332" font-size="10" fill="#5b6b7f">고리 폭 0.25~0.60 m</text>
+<text x="420" y="352" font-size="10" fill="#5b6b7f">높이 0.05~0.16 m</text>
+<text x="420" y="372" font-size="10" fill="#5b6b7f">두께 0.12 m</text>
+
+<rect x="590" y="274" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<circle cx="612" cy="298" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="612" y="303" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">8</text>
+<text x="634" y="303" font-size="11" font-weight="600" fill="#16202c">repeated_boxes</text>
+<text x="606" y="332" font-size="10" fill="#5b6b7f">25 에서 45개</text>
+<text x="606" y="352" font-size="10" fill="#5b6b7f">높이 0.08~0.16 m</text>
+<text x="606" y="372" font-size="10" fill="#5b6b7f">크기 0.35~0.50 m</text>
+
+<rect x="776" y="274" width="174" height="118" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<circle cx="798" cy="298" r="13" fill="#eef4fb" stroke="#c9d3e0" stroke-width="1"/>
+<text x="798" y="303" font-size="12" font-weight="700" fill="#1d5fa8" text-anchor="middle">9</text>
+<text x="820" y="303" font-size="11" font-weight="600" fill="#16202c">repeated_cylinders</text>
+<text x="792" y="332" font-size="10" fill="#5b6b7f">25 에서 45개</text>
+<text x="792" y="352" font-size="10" fill="#5b6b7f">높이 0.08~0.16 m</text>
+<text x="792" y="372" font-size="10" fill="#5b6b7f">반지름 0.12~0.20 m</text>
+
+<rect x="32" y="424" width="560" height="158" rx="10" fill="#f1f3f6" stroke="#c9d3e0" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="52" y="454" font-size="13" font-weight="600" fill="#16202c">평지(flat) 는 이 목록에 없다</text>
+<text x="52" y="484" font-size="11" fill="#1d5fa8">ADDED_TERRAIN_NAMES = ()</text>
+<text x="572" y="484" font-size="10" fill="#5b6b7f" text-anchor="end">terrains.py:44</text>
+<text x="52" y="508" font-size="11" fill="#1d5fa8">FLAT_TERRAIN_NAMES = ("flat",) 는 이름만 남았다</text>
+<text x="572" y="508" font-size="10" fill="#5b6b7f" text-anchor="end">terrains.py:50</text>
+<text x="52" y="538" font-size="10.5" fill="#16202c">험지 10종 평균 0.394 에 평지 0.98 이 끼면 11종 평균 0.447 이 된다</text>
+<text x="52" y="558" font-size="10.5" fill="#b5341f">5.3 퍼센트포인트가 그냥 오른다 · 09-09 팀장 확정</text>
+
+<rect x="616" y="424" width="334" height="158" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<text x="636" y="454" font-size="13" font-weight="600" fill="#16202c">열 지형이 공유하는 설정</text>
+<text x="636" y="484" font-size="11" fill="#5b6b7f">타일 8.0 × 8.0 m · 1행 × 10열</text>
+<text x="636" y="506" font-size="11" fill="#5b6b7f">테두리 20.0 m · 전방 24 m</text>
+<text x="636" y="528" font-size="11" fill="#5b6b7f">난이도 고정 0.5 · 씨앗 42</text>
+<text x="636" y="550" font-size="11" fill="#5b6b7f">platform_width 1.5 m · 비중 0.1</text>
+<text x="636" y="570" font-size="10" fill="#5b6b7f">generalization_env_cfg.py:29~165</text>
+
+<text x="32" y="610" font-size="10.5" fill="#5b6b7f">이름은 순서다. 앞에 무언가를 끼우면 기존 500판 기록의 지형 인덱스가 전부 밀린다. 새 지형은 맨 뒤에 붙인다.</text>
+</svg>
