@@ -66,13 +66,55 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$DEST"
           if git diff --cached --quiet; then
-            echo "변경 없음"; exit 0
+            # 조용히 끝내지 않는다. 팀장은 «/승격» 을 쳤고 답을 기다린다.
+            echo "변경 없음: $DEST 가 이미 같은 내용이다"
+            gh issue comment "$NUM" --repo "$REPO" \
+              --body "이미 \`$DEST\` 에 같은 내용이 있습니다. 새로 옮길 것이 없어 그대로 둡니다." || true
+            exit 0
           fi
           git commit -m "승격: $(basename "$SRC") → $DEST (컨펌 #$NUM)"
+
+          # ★ 2026-09-09. 여기가 데이터 유실 경로였다.
+          #   전에는 `git pull && git push && break` 를 세 번 돌리기만 했다.
+          #   세 번 다 실패해도 for 문은 0 을 돌려준다. `&&` 목록에서 마지막이
+          #   아닌 명령의 실패는 `set -e` 대상이 아니고, 루프 몸통의 마지막
+          #   명령(echo)이 성공하기 때문이다. 실측으로 확인했다.
+          #   그 뒤 아래 «승격 완료» 코멘트가 달리고 이슈가 completed 로 닫혔다.
+          #   문서는 웹에 안 가고 큐에서도 사라진다.
+          PUSHED=0
           for i in 1 2 3; do
-            git pull --rebase --quiet origin main && git push && break
+            if git pull --rebase --quiet origin main && git push origin HEAD:main; then
+              PUSHED=1; break
+            fi
             echo "push 경합, 재시도 $i"; sleep 5
           done
+          if [ "$PUSHED" -ne 1 ]; then
+            echo "::error::세 번 시도했으나 push 실패. 이슈를 닫지 않고 큐에 남긴다"
+            gh issue comment "$NUM" --repo "$REPO" \
+              --body "승격을 시도했으나 원격에 밀지 못했습니다. 이 이슈는 열어 둡니다. 실행 기록: ${GITHUB_SERVER_URL:-https://github.com}/${REPO}/actions/runs/${GITHUB_RUN_ID:-0}" || true
+            exit 1
+          fi
+
+          # push 의 종료코드는 대리 신호다. 원격을 «다시 읽어» 판정한다.
+          LOCAL=$(git rev-parse HEAD)
+          git fetch --quiet origin main
+          REMOTE=$(git rev-parse FETCH_HEAD)
+          echo "로컬 $LOCAL · 원격 main $REMOTE"
+
+          # (1) 내가 민 커밋이 원격 main 에 담겨 있는가
+          if ! git merge-base --is-ancestor "$LOCAL" "$REMOTE"; then
+            echo "::error::push 는 0 을 돌려줬지만 원격 main 에 $LOCAL 이 없다. 이슈를 닫지 않는다"
+            exit 1
+          fi
+
+          # (2) 사용자가 겪는 층위. 웹 빌드가 읽는 것은 커밋이 아니라 이 파일이다.
+          WANT=$(git hash-object "$DEST")
+          GOT=$(git rev-parse --verify --quiet "$REMOTE:$DEST" || true)
+          if [ "$GOT" != "$WANT" ]; then
+            echo "::error::원격 main 의 $DEST 가 방금 만든 내용과 다르다 (원격 ${GOT:-없음} · 로컬 $WANT)"
+            exit 1
+          fi
+          echo "원격 확인: $DEST blob $WANT"
 
           {
             printf '승격 완료: `%s`\n\n' "$DEST"

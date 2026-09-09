@@ -237,10 +237,23 @@ def review_any(path):
     return r
 
 
+# ★ 2026-09-09. 여기가 「0건을 검토해 놓고 «자동 검토» 를 보내는」 자리였다.
+#   없는 경로는 조용히 `continue` 했고, 결과는 늘 종료코드 0 에 {"files": []} 였다.
+#   그래서 「검토했더니 지적할 게 없다」와 「한 건도 못 읽었다」가 같은 화면이었다.
+#   실제로 팀장에게 파일 목록이 통째로 빠진 «자동 검토» 가 나갔다.
+#
+#   부르는 쪽의 `xargs` 는 기본으로 공백에서도 쪼갠다. 제출 경로에 공백이 하나만
+#   있어도 조각난 이름 둘이 되고 둘 다 여기서 탈락한다 (실측으로 확인했다).
+#   부르는 쪽은 `xargs -d` 로 고쳤고, 여기서는 그 사고가 다시 나도 «소리가 나게» 한다.
+#   관문은 한 층위만 보면 안 된다.
+EXIT_NOTHING_REVIEWED = 3
+
 if __name__ == '__main__':
-    out = []
-    for p in sys.argv[1:]:
+    argv = sys.argv[1:]
+    out, missing = [], []
+    for p in argv:
         if not os.path.exists(p):
+            missing.append(p)
             continue
         try:
             out.append(review_any(p))
@@ -250,4 +263,26 @@ if __name__ == '__main__':
                         'links': 0, 'checks': {}, 'ok': False, 'slug': '',
                         'dest': '', 'style': [],
                         'fixes': ['자동 검토 실패: %s' % str(e)[:80]]})
-    print(json.dumps({'files': out}, ensure_ascii=False))
+
+    # 부르는 쪽이 파싱에 죽지 않게 JSON 은 어떤 경우에도 낸다.
+    # 못 읽은 경로는 «빠뜨리지 않고» 실어 보낸다. 알림에 그대로 드러나게.
+    payload = {'files': out, 'given': len(argv)}
+    if missing:
+        payload['missing'] = missing
+    print(json.dumps(payload, ensure_ascii=False))
+
+    NL = chr(10)
+    if not out:
+        sys.stderr.write(
+            '검토한 파일이 0개다. 받은 인수 %d개%s' % (len(argv), NL))
+        for p in missing:
+            sys.stderr.write('  없는 경로: %s%s' % (p, NL))
+        if not argv:
+            sys.stderr.write('  인수가 아예 안 넘어왔다 (부르는 쪽의 목록이 빈 것)%s' % NL)
+        sys.exit(EXIT_NOTHING_REVIEWED)
+
+    if missing:
+        sys.stderr.write('없는 경로 %d개를 건너뛰었다 (나머지 %d개는 검토했다)%s'
+                         % (len(missing), len(out), NL))
+        for p in missing:
+            sys.stderr.write('  %s%s' % (p, NL))
