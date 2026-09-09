@@ -29,7 +29,28 @@ Isaac 컷 변환 → 조립 → 사운드. 변환·조립은 우분투에서 이
 
 잔액 319.5. 새로 걸 것은 폭풍 통과 1컷 + Isaac 변환 여러 컷. 확정 전.
 
-## 아티팩트 (claude.ai, 저장소 밖)
+## 아티팩트 URL (claude.ai · 세션과 무관하게 유지됨)
 
-스토리보드·카탈로그·설계도는 claude.ai 아티팩트로 산다. URL 은 팀장 대화에 있다.
-저장소에는 이 문서와 원문·매핑만 남긴다.
+대화는 위로 밀려 다음 세션이 못 본다. 그래서 여기 박아 둔다. 최신순.
+
+| 무엇 | URL |
+|---|---|
+| 시나리오 대조 카탈로그 (재료 47건 + 마디별) | https://claude.ai/code/artifact/5f15c47a-65eb-4848-b1f8-08e20b05d141 |
+| 스토리보드 19컷 + 연결 영상 | https://claude.ai/code/artifact/c478cb1c-52b6-456b-bf09-d68e1f34a361 |
+| Isaac 결과 3컷 + 설계 | https://claude.ai/code/artifact/cb117797-10b9-4494-8f2b-df55a5bcbfe1 |
+| 엔딩 사운드 세 판 | https://claude.ai/code/artifact/718fe2f8-1a07-4cdd-aa1e-d13c246e00b0 |
+| A 완성본 (23초 · 구판) | https://claude.ai/code/artifact/14dbeeca-5a7f-4863-9d7f-a87d0c78fdd3 |
+| B 완성본 (20초) | https://claude.ai/code/artifact/6b111cc0-e4dc-4c71-8de8-d6b843e2ab11 |
+| 힉스필드 크레딧 내역 | https://claude.ai/code/artifact/7cf4dfff-ad71-4913-ae2f-a13728b7bd96 |
+
+## 80 cm 갭 대조 (외부 출처 · 영상에 쓰려면 팀장 승인)
+
+팀장이 물은 80 cm 파쿠르 영상은 우리 것이 아니다. 외부 저장소
+yobel-sungkooklee/extreme-quadruped-parkour 의 레벨 9 다. system 세션이 확정했다.
+
+- 단일 갭이 아니라 45 cm 착지대를 낀 80 cm 갭 12개 연속 도약이다.
+  캡션을 「80 cm 갭 하나 뛴다」로 달면 틀린다.
+- NVIDIA 설정과 우리 저장소에는 gap_bar / gap_strip 이 0건이다(외부 포크가 더한 지형).
+- 우리 갭 폭은 0.275 m 이고 거기서 우리 성공률 0 퍼센트다. 저쪽의 2.9배 작은 갭이다.
+- 파쿠르 저장소 원문은 우리가 직접 안 열었다. 위 수치는 우리 대조분석 문서
+  inbox/jay/20260909-parkour-ablation-대조분석.md 의 인용이다.
