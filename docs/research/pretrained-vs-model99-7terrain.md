@@ -4,7 +4,8 @@
 > 요지: NVIDIA pretrained에서 Gap 10%를 포함해 100 iterations 추가학습한 model99의 7종 지형 성능 비교  
 > 상태: 확정
 > 판: v1.0
-> 이슈: #284
+> 이슈: #284 #65
+> 단계: 진단
 
 # NVIDIA Pretrained vs Model99: 난이도 0.50~0.70 7종 지형 성능 비교 보고서
 
