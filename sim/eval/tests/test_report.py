@@ -161,12 +161,16 @@ class LegacyCsvStillReads(unittest.TestCase):
     def test_정본_20열이_지금도_같은_열이다(self):
         # 새 열을 뺀 나머지가 정본과 같아야 한다. 하나라도 사라졌으면
         # 옛 CSV 를 읽는 코드가 KeyError 로 죽는다.
+        #
+        # **뺄 목록을 손으로 적지 않는다.** 전에는 네 이름을 여기 직접 썼고,
+        # 그래서 열을 더할 때마다 이 시험이 「정본이 바뀌었다」고 거짓 경보를
+        # 냈다. 정본 20열은 `ADDED_COLUMNS` 중 `peak_lateral_drift_m` 하나만
+        # 갖고 있으므로, 「추가분이되 정본에도 있는 것」만 남기면 목록이
+        # 스스로 따라온다. 정본 열이 사라지거나 **정본 열 사이에** 추가분이
+        # 아닌 열이 끼면 지금도 그대로 걸린다.
         current = tuple(
             c for c in metrics.RAW_COLUMNS
-            if c not in ("gate_lateral_drift_m",
-                         "head_contact_count",
-                         "head_contact_peak_n",
-                         "head_contact_first_s")
+            if c not in metrics.ADDED_COLUMNS or c in self.CANONICAL_20
         )
 
         self.assertEqual(current, self.CANONICAL_20)

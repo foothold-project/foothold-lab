@@ -6,15 +6,31 @@
 **판정 식은 전부 `metrics.py` 의 순수 함수를 부릅니다.** 이 파일은 시뮬레이터에서
 값을 모으는 일만 합니다. `tests/` 가 `metrics.py` 를 스냅샷 원문과 대조합니다.
 
-스냅샷과 다른 것 다섯 가지 (#125 4번 · #99 2번):
+스냅샷과 다른 것 여섯 가지 (#125 4번 · #99 2번):
 
 | 무엇 | 스냅샷 | 여기 |
 |---|---|---|
 | 판정·집계 | 본문에 인라인 | `metrics.py` 순수 함수 호출 |
-| 원시 CSV | 19열 | 24열 (`peak_...` · `gate_lateral_drift_m` · `head_contact_*` 셋) |
+| 원시 CSV | 19열 | 27열 (`ADDED_COLUMNS` 여덟) |
 | 방향 판정 | 에피소드 **끝점** 이탈 | **통과선(`--min_progress_m`) 위** 이탈 |
 | 지형 | 험지 10종 전부 | `--terrains` 로 고름 |
 | env 생성 | 등록된 태스크 + hydra | 설정 클래스에서 직접 |
+| 시간축 자료 | 없음 | `--timeseries` 로 에피소드마다 parquet (**기본 꺼짐**) |
+
+**분석 열 셋을 더한 이유** (`traversal_success` · `gate_speed_mps` ·
+`speed_drop_ratio`). 성공률 한 숫자로는 「왜 떨어졌나」를 못 묻는다.
+못 넘은 에피소드와 넘었는데 느렸던 에피소드가 같은 0 이고, 관성으로 넘은
+에피소드와 보폭을 조절해 넘은 에피소드가 같은 1 이다.
+
+**셋 다 판정에 안 넣었다.** `overall_success` 는 그대로 네 축의 AND 다.
+`traversal_success` 는 **이름에 `success` 가 들어가지만 성공률이 아니다.**
+속도 추종을 뺀 세 축의 AND 이고, 문서 · 표 · 발표에 성공률로 적으면 안 된다.
+식과 경고는 `metrics.traversal_success` 에 한 번 더 적혀 있다.
+
+**시계열을 기본 꺼짐으로 둔 이유.** 켜면 에피소드마다 parquet 한 장이 더 나오고
+스텝마다 GPU 버퍼가 하나 더 찬다. 지금까지의 실행이 전부 무거워지면 안 된다.
+인자를 안 주면 CSV 도 실행 시간도 지금과 같다. 켜면 **성공한 에피소드도 함께**
+남는다. 같은 난이도에서 넘은 것과 못 넘은 것을 겹쳐 보는 것이 이 자료의 쓰임새다.
 
 **머리 접촉 열 셋을 더한 이유.** 실기 Go2 는 머리 앞면에 라이다가 있는데
 (`docs/ROBOT-SPEC.md`) 종료 조건이 `body_names="base"` 하나라 **머리는 판정 밖이었다.**
@@ -80,6 +96,7 @@ if _HERE not in sys.path:
 
 import metrics  # noqa: E402
 import terrains  # noqa: E402
+import timeseries  # noqa: E402
 
 parser = argparse.ArgumentParser(
     description="Evaluate Go2 on the generalization terrain set (active harness)."
@@ -130,9 +147,25 @@ parser.add_argument("--joint_pos_scale", type=float, default=0.05,
 parser.add_argument("--note", type=str, default="",
                     help="조건 기록에 남길 한 줄")
 
+# ---------------------------------------------------------------- 시계열 (기본 꺼짐)
+#
+# **기본이 꺼짐인 이유.** 켜면 에피소드마다 parquet 한 장이 더 나오고 스텝마다
+# GPU 버퍼가 하나 더 찬다. 지금까지의 실행이 전부 무거워지면 안 된다.
+# 인자를 안 주면 아래 코드는 한 줄도 돌지 않고 CSV 도 지금과 같다.
+parser.add_argument("--timeseries", action="store_true",
+                    help="에피소드마다 시간축 원자료를 parquet 으로 남긴다. "
+                         "`<output_dir>/timeseries/ep0001.parquet` 부터 "
+                         "**raw CSV 의 줄 순서대로** 번호가 붙는다. "
+                         "성공한 에피소드도 함께 남는다. `pyarrow` 가 필요하다")
+
 AppLauncher.add_app_launcher_args(parser)
 
 args_cli, _ = parser.parse_known_args()
+
+# ★ Kit 를 띄우기 **전에** 판다. 없는 채로 시작하면 에피소드를 다 돌고 첫 파일을
+#   쓰는 자리에서 죽는다. 7분을 버리지 않으려고 여기서 본다.
+if args_cli.timeseries:
+    timeseries.require_pyarrow()
 
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
@@ -390,6 +423,83 @@ def resolve_head_bodies(raw_env):
     return ids
 
 
+def resolve_obstacle_zones(terrain_cfg, recorded):
+    """지형마다 장애물 구간 `(시작 m, 끝 m)` 을 **설정에서 계산한다.**
+
+    `speed_drop_ratio` 가 이 구간 안에서 최저 속도를 집습니다. 식과 근거는
+    `terrains.obstacle_zone_m` 에 있습니다. **지형 이름으로 숫자를 박아 두지
+    않습니다.** 설정 종류와 그 안의 값에서 계산하므로 `--difficulty` 를 바꾸면
+    구간도 함께 움직입니다.
+
+    난이도는 `difficulty_range` 의 **가운데 값**을 씁니다. 이 설정은
+    `num_rows == 1` 이고 하네스가 `--difficulty d` 를 받으면 범위를 `(d, d)` 로
+    덮어쓰므로, 그때는 타일의 실제 난이도와 **정확히 같습니다.** 범위가 넓으면
+    타일마다 다르고 이 값은 대표값 하나입니다 `미확인`.
+    """
+    low, high = terrain_cfg.difficulty_range
+    difficulty = (low + high) / 2.0
+
+    zones = {}
+
+    print("\n" + "=" * 80)
+    print("OBSTACLE ZONE (speed_drop_ratio 를 재는 구간 · 설정에서 계산)")
+    print("=" * 80)
+    print(f"difficulty (대표값) : {difficulty:.3f}    "
+          f"타일 {terrain_cfg.size[0]:.2f} m")
+    print(f"{'terrain':<22} {'시작 m':>8} {'끝 m':>8}   근거")
+
+    for name in recorded:
+        sub_cfg = terrain_cfg.sub_terrains[name]
+
+        zone = terrains.obstacle_zone_m(sub_cfg, difficulty, terrain_cfg.size[0])
+
+        start, end, basis = zone
+        zones[name] = (start, end)
+
+        print(f"{name:<22} {start:8.3f} {end:8.3f}   {basis}")
+
+    print("\n[PASS] 지형 {}종의 장애물 구간을 설정에서 계산했습니다.".format(len(zones)))
+
+    return zones
+
+
+def resolve_foot_bodies(robot, contact_sensor):
+    """발 넷의 강체 번호를 **두 곳에서** 집는다. 못 집으면 `(None, None)`.
+
+    번호 공간이 둘이라 따로 집어야 합니다. `body_pos_w` 는 **관절체**의 번호를
+    쓰고 `net_forces_w` 는 **접촉 센서**의 번호를 씁니다. 같은 발이라도 두 번호가
+    다를 수 있고, 섞어 쓰면 오류 없이 엉뚱한 강체를 읽습니다.
+
+    못 집으면 죽지 않고 발 열을 **빈 칸**으로 남깁니다. 발 높이는 관측이지
+    판정이 아니고, 이것 때문에 평가 전체가 서면 안 됩니다. 대신 소리는 냅니다.
+    """
+    def slots_from(finder, label):
+        try:
+            found, names = finder(".*_foot")
+        except Exception as error:  # noqa: BLE001
+            print(f"[WARN] {label} 에서 발을 못 찾았습니다: {error}", flush=True)
+            return None
+
+        slots = timeseries.foot_slots(found, names)
+
+        if slots is None:
+            print(f"[WARN] {label} 의 발이 넷이 아닙니다: {names}", flush=True)
+
+        return slots
+
+    body_slots = slots_from(robot.find_bodies, "관절체")
+    sensor_slots = slots_from(contact_sensor.find_bodies, "접촉 센서")
+
+    if body_slots is None or sensor_slots is None:
+        print("[WARN] 발 열(높이 · 접촉력)은 빈 칸으로 남습니다.", flush=True)
+        return (None, None)
+
+    print(f"[PASS] 발 강체: 관절체 {body_slots} · 접촉 센서 {sensor_slots}"
+          f"  ({' · '.join(timeseries.FOOT_SLOTS).upper()} 순서)", flush=True)
+
+    return (body_slots, sensor_slots)
+
+
 def episode_targets(recorded_terrains, envs_per_terrain, episodes, device):
     """env 별 목표 에피소드 수. 기록하지 않는 지형은 0 이라 처음부터 비활성이다.
 
@@ -430,7 +540,9 @@ def save_csv(rows, summary_rows, output_dir):
     print("RESULT FILES")
     print("=" * 80)
     print(raw_path)
-    print(summary_path)
+    # 파일로 보내면 stdout 이 블록 버퍼이고 Kit 는 종료할 때 안 비운다.
+    # 그래서 이 줄들이 로그에서 조용히 사라져 있었다 (2026-09-10 발견).
+    print(summary_path, flush=True)
 
     return raw_path, summary_path
 
@@ -503,7 +615,7 @@ def save_run_manifest(output_dir, extra):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(extra, f, ensure_ascii=False, indent=2, sort_keys=True)
 
-    print(path)
+    print(path, flush=True)
 
     return path
 
@@ -685,6 +797,14 @@ def main():
     head_buf = torch.zeros((num_envs, max_steps), device=device)
     head_len = torch.zeros(num_envs, dtype=torch.long, device=device)
 
+    # 전진 속도 표본. **경로 표본과 같은 스텝 · 같은 자리에 담는다.**
+    # `speed_buf[e, i]` 는 `path_buf[e, i]` 와 같은 순간의 값이어야 하고,
+    # `gate_speed_mps` · `speed_drop_ratio` 가 그 짝맞음을 전제로 셈한다.
+    #
+    # 담는 것은 **몸통 좌표계의 전진 성분**이다. 명령(`--command_vx`)이 걸리는
+    # 축이 그 축이고, `overlay/trace.py` 의 `vx_mps` 도 같은 값이다.
+    speed_buf = torch.zeros((num_envs, max_steps), device=device)
+
     env_index = torch.arange(num_envs, device=device)
 
     robot = raw_env.scene["robot"]
@@ -695,6 +815,208 @@ def main():
     terrain_origins = raw_env.scene.terrain.env_origins[:, :2].clone()
     start_offset = start_pos - terrain_origins
     start_yaw = torch.atan2(forward_dir[:, 1], forward_dir[:, 0])
+
+    ground_z = raw_env.scene.terrain.env_origins[:, 2].clone()
+
+    obstacle_zones = resolve_obstacle_zones(terrain_cfg, recorded)
+
+    # ------------------------------------------------------------ 시계열 (기본 꺼짐)
+    #
+    # `--timeseries` 를 안 주면 `ts_buf` 는 끝까지 `None` 이고 아래 코드는 한 줄도
+    # 안 돈다. CSV 도 실행 시간도 지금과 같다.
+    ts_buf = None
+    ts_columns = None
+    ts_offset = None
+    ts_dir = ""
+    joint_names = None
+    foot_body_slots = None
+    foot_sensor_slots = None
+    ts_first_report = None
+    ts_written = 0
+
+    if args_cli.timeseries:
+        foot_body_slots, foot_sensor_slots = resolve_foot_bodies(
+            robot, head_contact_sensor
+        )
+
+        joint_names = list(robot.data.joint_names)
+        ts_columns = timeseries.columns_for(joint_names)
+
+        ts_dir = os.path.join(args_cli.output_dir, "timeseries")
+        os.makedirs(ts_dir, exist_ok=True)
+
+        # 스텝마다 CPU 로 내리지 않는다. GPU 에 쌓아 두고 **에피소드가 끝날 때만**
+        # 한 번 내린다. 경로 · 머리 접촉 버퍼와 같은 규칙이다.
+        #
+        # **자리표를 여기 한 번만 적는다.** 담는 쪽(`timeseries_slice`)과 푸는
+        # 쪽(`timeseries_rows`)이 이 목록 하나를 함께 본다. 숫자를 두 군데 적으면
+        # 한쪽만 고쳐도 오류가 안 나고 값만 밀린다.
+        ts_layout = (
+            ("pos", 3),          # root_pos_w        x y z (세계)
+            ("quat", 4),         # root_quat_w       w x y z
+            ("vel_b", 3),        # root_lin_vel_b    몸통 좌표계 선속도
+            ("vel_w", 3),        # root_lin_vel_w    세계 선속도
+            ("ang_b", 3),        # root_ang_vel_b    몸통 좌표계 각속도
+            ("foot_pos", 12),    # 발 넷의 세계 위치 (FL FR RL RR) x (x y z)
+            ("foot_force", 4),   # 발 넷의 접촉력 크기
+            ("joint_pos", len(joint_names)),
+            ("joint_vel", len(joint_names)),
+            ("joint_torque", len(joint_names)),
+            ("joint_target", len(joint_names)),
+            ("vel_err", 1),
+        )
+
+        ts_offset = {}
+        raw_width = 0
+
+        for field, width in ts_layout:
+            ts_offset[field] = (raw_width, raw_width + width)
+            raw_width += width
+
+        ts_buf = torch.zeros((num_envs, max_steps, raw_width), device=device)
+
+        print("\n" + "=" * 80)
+        print("TIMESERIES (에피소드마다 parquet 한 장 · 성공한 것도 남긴다)")
+        print("=" * 80)
+        print(f"관절 {len(joint_names)}개 : {joint_names}")
+        print(f"열 수      : {len(ts_columns)}")
+        print(f"버퍼       : {num_envs} env x {max_steps} 스텝 x {raw_width} 값"
+              f"  = {ts_buf.numel() * 4 / 1024 / 1024:.1f} MiB")
+        print(f"폴더       : {ts_dir}")
+        print("[PASS] 시계열을 켰습니다.", flush=True)
+
+    def timeseries_slice():
+        """이번 스텝의 원자료 한 줄(모든 env). **GPU 왕복을 한 번으로 묶는다.**
+
+        env 마다 `.item()` 을 부르면 그때마다 동기화가 걸린다. 한 텐서로 쌓아
+        버퍼에 그대로 넣고, CPU 로는 에피소드가 끝날 때만 내린다.
+        """
+        parts = [
+            robot.data.root_pos_w,                 # 3
+            robot.data.root_quat_w,                # 4
+            robot.data.root_lin_vel_b,             # 3
+            robot.data.root_lin_vel_w,             # 3
+            robot.data.root_ang_vel_b,             # 3
+        ]
+
+        if foot_body_slots is None:
+            parts.append(torch.full((num_envs, 16), float("nan"), device=device))
+        else:
+            foot_pos = robot.data.body_pos_w[:, foot_body_slots, :]   # (N, 4, 3)
+
+            forces = head_contact_sensor.data.net_forces_w_history[
+                :, :, foot_sensor_slots, :
+            ]
+            foot_force = torch.linalg.vector_norm(forces, dim=-1).amax(dim=1)
+
+            parts.append(foot_pos.reshape(num_envs, 12))
+            parts.append(foot_force)
+
+        parts.append(robot.data.joint_pos)
+        parts.append(robot.data.joint_vel)
+        parts.append(robot.data.applied_torque)
+        parts.append(robot.data.joint_pos_target)
+
+        parts.append(planar_vel_error.reshape(num_envs, 1))
+
+        return torch.cat([p.reshape(num_envs, -1) for p in parts], dim=1)
+
+    def timeseries_rows(env_id, n_samples, start_xy, fwd_dir, floor_z):
+        """버퍼 한 판을 parquet 줄 목록으로 푼다. **CPU 왕복은 여기서 한 번.**
+
+        `ts_layout` 의 자리표를 그대로 되읽습니다. 담는 쪽과 같은 목록을 보므로
+        한쪽만 고쳐 값이 밀리는 일이 없습니다.
+        """
+        block = ts_buf[env_id, :n_samples].cpu().tolist()
+
+        def cut(sample, field):
+            low, high = ts_offset[field]
+            return sample[low:high]
+
+        rows = []
+
+        for index, sample in enumerate(block):
+            px, py, pz = cut(sample, "pos")
+            qw, qx, qy, qz = cut(sample, "quat")
+            vx_b, vy_b, vz_b = cut(sample, "vel_b")
+            vx_w, vy_w, vz_w = cut(sample, "vel_w")
+            wx_b, wy_b, wz_b = cut(sample, "ang_b")
+
+            foot_pos = cut(sample, "foot_pos")
+            foot_force = cut(sample, "foot_force")
+
+            roll_deg, pitch_deg, yaw_deg = timeseries.euler_deg_from_quat(
+                qw, qx, qy, qz
+            )
+
+            here = (px, py)
+
+            row = {
+                "frame": index,
+                "t_s": index * dt,
+
+                "cmd_vx_mps": args_cli.command_vx,
+                "vx_mps": vx_b,
+                "vy_mps": vy_b,
+                "speed_mps": math.hypot(vx_b, vy_b),
+                "vel_err_mps": cut(sample, "vel_err")[0],
+
+                "fwd_m": metrics.forward_offset_m(start_xy, here, fwd_dir),
+                "lat_m": metrics.lateral_offset_m(start_xy, here, fwd_dir),
+
+                "base_z_m": pz - floor_z,
+                "pitch_deg": pitch_deg,
+                "roll_deg": roll_deg,
+
+                "base_x_m": px,
+                "base_y_m": py,
+                "base_z_w_m": pz,
+
+                "base_qw": qw,
+                "base_qx": qx,
+                "base_qy": qy,
+                "base_qz": qz,
+                "base_yaw_deg": yaw_deg,
+
+                "base_vx_w_mps": vx_w,
+                "base_vy_w_mps": vy_w,
+                "base_vz_w_mps": vz_w,
+
+                "base_wx_rps": wx_b,
+                "base_wy_rps": wy_b,
+                "base_wz_rps": wz_b,
+
+                # 명령은 `configure_evaluation` 이 y · yaw 를 0 으로 못 박고
+                # 스텝마다 되읽어 확인한다. 그 확인이 깨지면 위에서 죽는다.
+                "cmd_vy_mps": 0.0,
+                "cmd_wz_rps": 0.0,
+            }
+
+            for slot_index, slot in enumerate(timeseries.FOOT_SLOTS):
+                fx, fy, fz = foot_pos[3 * slot_index: 3 * slot_index + 3]
+
+                row["foot_x_{}_m".format(slot)] = timeseries.not_nan(fx)
+                row["foot_y_{}_m".format(slot)] = timeseries.not_nan(fy)
+
+                height = timeseries.not_nan(fz)
+
+                row["foot_z_{}_m".format(slot)] = (
+                    None if height is None else height - floor_z
+                )
+
+                row["foot_contact_{}_n".format(slot)] = timeseries.not_nan(
+                    foot_force[slot_index]
+                )
+
+            for prefix in timeseries.JOINT_PREFIXES:
+                values = cut(sample, prefix)
+
+                for name, value in zip(joint_names, values):
+                    row["{}_{}".format(prefix, name)] = value
+
+            rows.append(row)
+
+        return rows
 
     results = []
 
@@ -747,7 +1069,16 @@ def main():
         # 경로 표본을 먼저 담는다. 스냅샷이 끝점으로 쓰는 `pre_step_pos` 와 같은 값이라
         # 이 버퍼의 마지막 표본이 곧 그 끝점이다.
         room = active & (path_len < max_steps)
+
+        # **세 버퍼를 같은 마스크 · 같은 첨자로 한 자리에서 채운다.**
+        # 따로 채우면 어느 한쪽만 밀려도 오류가 안 나고, 통과선 속도만 조용히
+        # 다른 스텝의 값이 된다. 짝이 맞아야 하는 것은 여기서 함께 움직인다.
         path_buf[env_index[room], path_len[room]] = pre_step_pos[room]
+        speed_buf[env_index[room], path_len[room]] = actual_vel_b[room, 0]
+
+        if ts_buf is not None:
+            ts_buf[env_index[room], path_len[room]] = timeseries_slice()[room]
+
         path_len[room] += 1
 
         # 머리 접촉을 **스텝 전에** 담는다. 경로 표본과 같은 자리다.
@@ -800,6 +1131,7 @@ def main():
 
             n_samples = int(path_len[env_id].item())
             path_xy = [tuple(p) for p in path_buf[env_id, :n_samples].tolist()]
+            path_speed = speed_buf[env_id, :n_samples].tolist()
 
             n_head = int(head_len[env_id].item())
             head_forces = head_buf[env_id, :n_head].tolist()
@@ -828,6 +1160,10 @@ def main():
                 head_contact_forces=head_forces,
                 head_contact_threshold_n=args_cli.head_contact_threshold_n,
                 step_dt=dt,
+
+                # 속도 두 열. 경로 표본과 **같은 목록 길이 · 같은 첨자**다.
+                path_speed_mps=path_speed if path_speed else None,
+                obstacle_zone_m=obstacle_zones.get(terrain_name),
             )
 
             episode_number = int(episode_counts[env_id].item()) + 1
@@ -859,6 +1195,24 @@ def main():
                 "velocity_mae_mps": round(row_metrics["velocity_mae_mps"], 4),
                 "mean_reward_per_step": round(row_metrics["mean_reward_per_step"], 6),
 
+                # 분석 열 셋. **판정 열이 아니다.**
+                #
+                # `traversal_success` 는 이름에 `success` 가 들어가지만
+                # **성공률이 아니다.** 성공률은 `overall_success` 하나다.
+                # 이 열은 속도 추종을 뺀 세 축의 AND 이고, 「넘긴 했는데 느렸던」
+                # 에피소드를 세는 데만 쓴다 (`metrics.traversal_success`).
+                "traversal_success": row_metrics["traversal_success"],
+                "gate_speed_mps": (
+                    ""
+                    if row_metrics["gate_speed_mps"] is None
+                    else round(row_metrics["gate_speed_mps"], 4)
+                ),
+                "speed_drop_ratio": (
+                    ""
+                    if row_metrics["speed_drop_ratio"] is None
+                    else round(row_metrics["speed_drop_ratio"], 4)
+                ),
+
                 # 머리 접촉 관측 셋. **판정 열이 아니다.** 위 다섯 판정 열은
                 # 이 값이 무엇이든 안 바뀐다.
                 "head_contact_count": row_metrics["head_contact_count"],
@@ -880,6 +1234,66 @@ def main():
             results.append(row)
             episode_counts[env_id] += 1
 
+            # 시계열 한 장. **번호는 raw CSV 의 줄 순서다** (`len(results)`).
+            # 통과한 에피소드도 예외 없이 남긴다. 실패한 것만 남기면 같은
+            # 난이도에서 넘은 것과 못 넘은 것을 겹쳐 볼 수 없다.
+            if ts_buf is not None:
+                ts_rows = timeseries_rows(
+                    env_id, n_samples, start_xy, fwd,
+                    float(ground_z[env_id].item()),
+                )
+
+                ts_path = os.path.join(
+                    ts_dir, timeseries.episode_filename(len(results))
+                )
+
+                timeseries.write(
+                    ts_path,
+                    {
+                        "terrain": terrain_name,
+                        "env_id": env_id,
+                        "episode": episode_number,
+                        "csv_row": len(results),
+                        "fps": 1.0 / dt if dt > 0.0 else 0.0,
+                        "dt_s": dt,
+                        "command_vx_mps": args_cli.command_vx,
+                        "eval_duration_s": args_cli.eval_duration,
+                        "gate_m": min_progress,
+                        "min_progress_m": min_progress,
+                        "max_lateral_drift_m": args_cli.max_lateral_drift,
+                        "max_velocity_mae_mps": args_cli.max_velocity_mae,
+                        "obstacle_zone_start_m": obstacle_zones[terrain_name][0],
+                        "obstacle_zone_end_m": obstacle_zones[terrain_name][1],
+                        "overall_success": row["overall_success"],
+                        "traversal_success": row["traversal_success"],
+                        "termination_reason": row["termination_reason"],
+                        "policy_checkpoint": resume_path.replace("\\", "/"),
+                    },
+                    ts_rows,
+                    ts_columns,
+                )
+
+                ts_written += 1
+
+                # 첫 장만 되읽어 **정말 읽히는지 · 몇 줄 몇 열인지**를 잰다.
+                # 모든 장을 되읽으면 실행이 두 배로 느려지고, 한 장도 안 되읽으면
+                # 「썼다」는 종료코드만 믿게 된다 (원칙 2 · 3).
+                if ts_first_report is None:
+                    back_meta, back_rows = timeseries.read(ts_path)
+
+                    ts_first_report = {
+                        "path": ts_path,
+                        "rows": len(back_rows),
+                        "columns": len(back_rows[0]),
+                        "parquet_bytes": os.path.getsize(ts_path),
+                        "csv_bytes": timeseries.measure_csv_size(
+                            ts_rows, ts_columns
+                        ),
+                        "checks": timeseries.verify_against_row(back_rows, row),
+                    }
+
+                    del back_meta
+
             done_total = int(episode_counts.sum().item())
 
             print(
@@ -893,6 +1307,9 @@ def main():
                 f"| end={row['lateral_drift_m']:5.3f}m "
                 f"| peak={row['peak_lateral_drift_m']:5.3f}m "
                 f"| vMAE={row['velocity_mae_mps']:4.2f} "
+                f"| trav={int(row['traversal_success'])} "
+                f"| gateV={row['gate_speed_mps'] if row['gate_speed_mps'] == '' else format(row['gate_speed_mps'], '5.2f')} "
+                f"| drop={row['speed_drop_ratio'] if row['speed_drop_ratio'] == '' else format(row['speed_drop_ratio'], '5.2f')} "
                 f"| head={row['head_contact_count']:3d}스텝/{row['head_contact_peak_n']:7.1f}N",
                 flush=True,
             )
@@ -934,6 +1351,87 @@ def main():
             f"머리 접촉을 못 잰 판이 {len(empty)}개입니다. 표본이 안 담겼습니다.\n"
             "이대로 CSV 를 내면 「안 닿았다」로 읽힙니다."
         )
+
+    # 관문 · 시계열이 판정 표와 짝이 맞는가 (원칙 2 · 3).
+    #
+    # 「썼다」는 보고를 결과로 치지 않는다. **폴더를 실제로 세고, 한 장을 실제로
+    # 되읽고, 그 장을 접으면 표의 그 줄이 나오는지 본다.** 셋 중 하나라도
+    # 어긋나면 여기서 죽는다. 어긋난 시계열로 그린 그림은 멀쩡해 보인다.
+    if ts_buf is not None:
+        on_disk = sorted(
+            name for name in os.listdir(ts_dir) if name.endswith(".parquet")
+        )
+
+        print("\n" + "=" * 80)
+        print("TIMESERIES CHECK")
+        print("=" * 80)
+        print(f"판정 표 줄 수   : {len(results)}")
+        print(f"쓴 파일 수      : {ts_written}")
+        print(f"폴더에 있는 수  : {len(on_disk)}")
+
+        if ts_first_report is not None:
+            report_first = ts_first_report
+
+            saving = (
+                report_first["csv_bytes"] / report_first["parquet_bytes"]
+                if report_first["parquet_bytes"] > 0
+                else 0.0
+            )
+
+            print(f"첫 장           : {report_first['path']}")
+            print(f"  줄 x 열       : {report_first['rows']} x "
+                  f"{report_first['columns']}")
+            print(f"  parquet       : {report_first['parquet_bytes']:,} B")
+            print(f"  같은 자료 CSV : {report_first['csv_bytes']:,} B"
+                  f"  ({saving:.1f}배)")
+            print("  접어서 대조 (첫 에피소드):")
+
+            for name, want, got, delta, ok in report_first["checks"]:
+                mark = "OK  " if ok else "FAIL"
+                want_text = "-" if want is None else f"{want:.4f}"
+                got_text = "-" if got is None else f"{got:.4f}"
+                delta_text = "-" if delta is None else f"{delta:.5f}"
+
+                print(f"    [{mark}] {name:<22} 표={want_text:<10} "
+                      f"시계열={got_text:<10} 차이={delta_text}")
+
+        problems = []
+
+        if len(on_disk) != len(results):
+            problems.append(
+                f"파일 {len(on_disk)}장인데 판정 표는 {len(results)}줄입니다"
+            )
+
+        if ts_written != len(results):
+            problems.append(
+                f"쓴 것이 {ts_written}장인데 판정 표는 {len(results)}줄입니다"
+            )
+
+        if ts_first_report is None:
+            problems.append("첫 장을 되읽지 못했습니다")
+        else:
+            failed = [c[0] for c in ts_first_report["checks"] if not c[4]]
+
+            if failed:
+                problems.append("접어서 대조가 안 맞습니다: " + ", ".join(failed))
+
+        if problems:
+            raise RuntimeError(
+                "시계열이 판정 표와 짝이 안 맞습니다. 이대로 두면 그림은 멀쩡히\n"
+                "나오고 값만 밀립니다.\n  · " + "\n  · ".join(problems)
+            )
+
+        # ★ **여기서 반드시 흘려보낸다.** 파이썬 stdout 은 파일로 보낼 때
+        #   블록 버퍼이고, Kit 는 종료할 때 그 버퍼를 안 비운다. 2026-09-10 에
+        #   실제로 이 관문의 출력이 로그에서 통째로 사라졌다 (`RESULT FILES` 와
+        #   `SUMMARY` 도 같은 이유로 오래 안 보이고 있었다).
+        #
+        #   관문이 실패하면 `RuntimeError` 로 종료코드가 서므로 «막는 힘» 은
+        #   그대로였지만, **통과했을 때 무엇을 보고 통과라 했는지가 안 보였다.**
+        #   그것은 「관문이 스스로 눈을 감는」 부류의 절반이다.
+        print("\n[PASS] 시계열 {}장이 판정 표 {}줄과 짝이 맞습니다.".format(
+            len(on_disk), len(results)
+        ), flush=True)
 
     summary_rows = metrics.summarize(results, recorded)
 
@@ -978,6 +1476,60 @@ def main():
                 "tracking_success",
                 "direction_success",
             ],
+
+            # 분석 열 셋. **판정 축이 아니다.** 위 `success_axes` 가 넷 그대로인
+            # 것이 그 보증이다. 나중에 이 CSV 를 읽는 사람이 「이 숫자가
+            # 성공률에 들어갔나」를 물을 때 답이 여기 있어야 한다.
+            "traversal_success_axes": [
+                "survival_success",
+                "progress_success",
+                "direction_success",
+            ],
+            "traversal_success_is_a_success_rate": False,
+            "gate_speed_measured_at": "gate",
+            "gate_speed_source": "root_lin_vel_b[:, 0]",
+            "speed_drop_ratio_definition": (
+                "장애물 구간 안 최저 전진 속도 / 명령 전진 속도. "
+                "구간은 출발점 기준 전진거리이고 지형 설정에서 계산한다"
+            ),
+            "obstacle_zones_m": {
+                name: list(zone) for name, zone in obstacle_zones.items()
+            },
+            "obstacle_zone_basis": {
+                name: terrains.obstacle_zone_m(
+                    terrain_cfg.sub_terrains[name],
+                    (terrain_cfg.difficulty_range[0]
+                     + terrain_cfg.difficulty_range[1]) / 2.0,
+                    terrain_cfg.size[0],
+                )[2]
+                for name in recorded
+            },
+
+            # 시계열. 안 켰으면 `enabled: false` 하나만 남는다.
+            "timeseries": (
+                {"enabled": False}
+                if ts_buf is None
+                else {
+                    "enabled": True,
+                    "dir": "timeseries",
+                    "format": "parquet",
+                    "compression": "zstd",
+                    "schema": timeseries.SCHEMA,
+                    "files": ts_written,
+                    "columns": len(ts_columns),
+                    "joint_names": joint_names,
+                    "column_names": list(ts_columns),
+                    "feet_measured": foot_body_slots is not None,
+                    "includes_successful_episodes": True,
+                    "numbering": "raw CSV 의 줄 순서. ep0001 이 첫 줄",
+                    "first_file": ts_first_report and {
+                        "rows": ts_first_report["rows"],
+                        "columns": ts_first_report["columns"],
+                        "parquet_bytes": ts_first_report["parquet_bytes"],
+                        "same_data_csv_bytes": ts_first_report["csv_bytes"],
+                    },
+                }
+            ),
             "terrain_border_width_m": terrain_border_width,
             "terrain_forward_extent_m": forward_extent,
             "terrain_size_m": list(terrain_cfg.size),
@@ -1011,7 +1563,7 @@ def main():
 
     print("\n" + "=" * 80)
     print("SUMMARY")
-    print("=" * 80)
+    print("=" * 80, flush=True)
 
     for row in summary_rows:
         print(

@@ -547,6 +547,12 @@ def main():
     def euler_from_quat(w, x, y, z):
         """wxyz 사원수에서 roll · pitch (도). yaw 는 안 씁니다.
 
+        같은 식이 `timeseries.euler_deg_from_quat()` 에도 있습니다(그쪽은 yaw 도
+        냅니다). **합치지 않았습니다.** 이 함수는 아래 `verify_trace_row` 의
+        첫 프레임 검사에 묶여 있어서, 옮기면 영상 한 편을 다시 찍어 확인해야
+        합니다. 두 함수가 같은 값을 내는지는 `tests/test_timeseries.py` 가
+        나란히 돌려 못 박습니다.
+
         Isaac Lab 의 `root_quat_w` 가 wxyz 순서입니다. 여기서 순서를 틀리면
         영상 위 숫자만 조용히 틀리므로, 아래 `verify_trace_row` 가 첫 프레임의
         roll · pitch 가 출발 자세(거의 수평)와 맞는지 봅니다.

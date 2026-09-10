@@ -138,7 +138,9 @@ def write_terrain_readme(terrain_dir, terrain, rows, metas):
         % terrain,
         "`../../runs/<칸>/generalization_raw.csv` 입니다. 모으면서 더한 열은",
         "맨 앞 셋(`difficulty` · `command_vx` · `eval_duration_s`)뿐이고,",
-        "나머지 24열은 `metrics.RAW_COLUMNS` 그대로입니다.",
+        # **숫자를 손으로 적지 않는다.** 열을 더하면 이 문장만 조용히 틀린 채
+        # 남는다. 2026-09-10 에 24 -> 27 이 되면서 실제로 그럴 뻔했다.
+        "나머지 %d열은 `metrics.RAW_COLUMNS` 그대로입니다." % len(metrics.RAW_COLUMNS),
         "",
         "## 무엇을 쟀나",
         "",

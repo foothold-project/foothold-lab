@@ -100,3 +100,118 @@ def terrain_set(name):
         )
 
     return TERRAIN_SETS[name]
+
+# ---------------------------------------------------------------- 장애물 구간
+
+# Isaac Lab 이 하위 지형을 굽는 식에서 그대로 읽은 상수.
+#
+# `rails_terrain()` 과 `pit_terrain(double_pit=True)` 가 둘째 링을
+# `platform + (size - platform) * 0.6` 자리에 놓는다. 0.6 이 그 비율이다.
+# 근거: `isaaclab/terrains/trimesh/mesh_terrains.py` (Isaac Lab 0.54.2 · 410행
+# `rail_2_ratio = 0.6`, 467행 `ring_2_ratio = 0.6`) 를 2026-09-10 에 직접 열어
+# 확인했다 `확인됨`. **렌더해서 눈으로 재보지는 않았다** `미확인`.
+_SECOND_RING_RATIO = 0.6
+
+
+def _lerp(value_range, difficulty):
+    """Isaac Lab 이 난이도로 값을 고르는 식. `low + d x (high - low)`."""
+    low, high = value_range
+
+    return low + difficulty * (high - low)
+
+
+def _platform_half_m(cfg):
+    """가운데 평탄 플랫폼의 절반 폭. 플랫폼이 없는 지형은 0.0."""
+    width = getattr(cfg, "platform_width", None)
+
+    if width is None:
+        return 0.0
+
+    return float(width) / 2.0
+
+
+def obstacle_zone_m(cfg, difficulty, tile_size_x_m):
+    """그 지형에서 **장애물이 실제로 놓인** 전진 구간. `(시작 m, 끝 m, 근거)`.
+
+    출발점(타일 중앙)에서 앞으로 잰 거리입니다. `speed_drop_ratio` 가 이 구간
+    안에서 최저 속도를 집습니다 (`metrics.speed_drop_ratio`).
+
+    ## 구간을 어떻게 잡나
+
+    | 무엇 | 어떻게 |
+    |---|---|
+    | 시작 | `platform_width / 2`. 가운데 평탄 플랫폼이 끝나는 자리 |
+    | 끝 | 아래 표. 지형 설정에서 계산한다 |
+
+    **지형 이름으로 숫자를 박아 두지 않습니다.** 설정 객체의 종류와 그 안의
+    값에서 계산하므로, `difficulty` 를 바꾸면 구간도 함께 움직입니다.
+
+    | 설정 종류 | 끝 | 근거 (Isaac Lab 0.54.2) |
+    |---|---|---|
+    | `MeshGapTerrainCfg` | `플랫폼/2 + 틈폭(d)` | `gap_terrain()` 588행 |
+    | `MeshFloatingRingTerrainCfg` | `플랫폼/2 + 고리폭(d)` | `floating_ring_terrain()` 634행 |
+    | `MeshRailsTerrainCfg` | 바깥 레일의 **바깥 모서리** | `rails_terrain()` 417~420행 |
+    | 그 밖 전부 | `tile_size_x_m / 2` (타일 절반) | 장애물이 타일을 채운다 |
+
+    `tile_size_x_m` 은 **부모 생성기의 `size[0]`** 입니다 (여기서는 8.0 m).
+    하위 지형 설정의 `size` 를 읽지 않습니다. 그 칸은 `TerrainGenerator` 가
+    지형을 굽기 **직전에** 채우므로(`terrain_generator.py` 125행), 굽기 전에
+    읽으면 기본값이 잡힙니다. 부모에서 받아 오면 그 순서 함정이 아예 없습니다.
+
+    「그 밖」에는 험지 여섯(`discrete_obstacles` `wave` `stepping_stones` `star`
+    `repeated_boxes` `repeated_cylinders`)과 `pit` 이 듭니다. 앞 여섯은 장애물이
+    정말 타일 전체에 깔립니다. `pit` 은 다릅니다. **로봇이 구덩이 바닥에서
+    출발**하고(`pit_terrain()` 492행이 원점을 `-total_depth` 로 둡니다) 장애물은
+    플랫폼 가장자리의 턱 하나뿐이라, 「끝」을 그 턱으로 잡으면 구간의 폭이 0 이
+    됩니다. 그래서 타일 절반을 씁니다. **구간이 넓어질 뿐 턱은 그 안에 듭니다.**
+
+    ## 넓게 잡는 것이 왜 안전한가
+
+    이 구간에서 집는 것이 **최솟값**이기 때문입니다. 구간을 넓히면 평지 표본이
+    더 들어오는데, 평지에서는 로봇이 명령 속도로 걷고 있으므로 최솟값을 안
+    끌어내립니다. 반대로 구간을 짧게 잡아 장애물을 **놓치면** 그 에피소드는
+    「안 줄였다」로 잘못 읽힙니다. 그래서 모르면 넓게 잡습니다.
+
+    ## 한계 (재보지 않은 것)
+
+    · 설정 종류를 **클래스 이름**으로 가릅니다. Isaac Lab 이 이름을 바꾸면
+      「그 밖」으로 떨어지고, 그때도 죽지 않고 타일 절반을 씁니다. 어느 규칙이
+      걸렸는지는 셋째 값(`근거`)에 남고 `run_manifest.json` 에 기록됩니다.
+    · 출발점은 타일 중앙이 아니라 **로봇이 실제로 선 자리**입니다. 하네스가
+      `--spawn_xy_range` 만큼(기본 0.10 m) 흔들어 놓습니다. 그만큼 구간이
+      앞뒤로 밀립니다 `미확인` (그 오차가 결과를 얼마나 바꾸는지 안 재봤습니다).
+    · `difficulty` 는 부르는 쪽이 넘깁니다. `num_rows == 1` 이고
+      `difficulty_range` 가 `(d, d)` 면 타일의 실제 난이도가 정확히 `d` 입니다.
+      범위가 넓으면 타일마다 다르고, 이 함수는 그 대표값 하나만 받습니다.
+    """
+    start = _platform_half_m(cfg)
+    tile_half = float(tile_size_x_m) / 2.0
+
+    kind = type(cfg).__name__
+
+    end = None
+    basis = ""
+
+    if kind == "MeshGapTerrainCfg":
+        end = start + _lerp(cfg.gap_width_range, difficulty)
+        basis = "gap_width_range"
+
+    elif kind == "MeshFloatingRingTerrainCfg":
+        end = start + _lerp(cfg.ring_width_range, difficulty)
+        basis = "ring_width_range"
+
+    elif kind == "MeshRailsTerrainCfg":
+        platform = float(cfg.platform_width)
+        outer_thickness = float(cfg.rail_thickness_range[1])
+
+        inner = platform + (float(tile_size_x_m) - platform) * _SECOND_RING_RATIO
+
+        end = inner / 2.0 + outer_thickness
+        basis = "rail_2_outer_edge"
+
+    # 규칙이 없거나(그 밖 전부) 폭이 0 이하로 나오면 타일 절반을 쓴다.
+    # **조용히 넘기지 않는다.** 어느 쪽이 걸렸는지가 셋째 값에 남는다.
+    if end is None or end <= start:
+        return (start, tile_half, "tile_half:" + kind)
+
+    return (start, end, basis)
