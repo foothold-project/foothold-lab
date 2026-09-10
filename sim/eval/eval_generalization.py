@@ -88,6 +88,11 @@ parser.add_argument("--checkpoint", type=str, required=True,
                     help="rsl_rl 체크포인트 .pt 경로")
 parser.add_argument("--terrains", type=str, default="flat",
                     help="기록할 지형. 쉼표로 여럿. 'all' 이면 전부")
+parser.add_argument("--difficulty", type=float, default=None,
+                    help="지형 난이도 하나(0 초과 1 이하). 주면 "
+                         "`difficulty_range` 를 (d, d) 로 덮어써 타일 전부가 "
+                         "정확히 이 난이도가 된다. 안 주면 설정 파일 값을 "
+                         "그대로 쓴다(스냅샷과 같은 동작)")
 parser.add_argument("--episodes", type=int, default=100,
                     help="기록할 지형 하나당 총 에피소드 수")
 parser.add_argument("--envs_per_terrain", type=int, default=10,
@@ -508,6 +513,38 @@ def main():
 
     configure_evaluation(env_cfg, agent_cfg, envs_per_terrain)
 
+    # 난이도 하나로 못 박기 (#125 3번의 난이도 격자를 «한 판 한 난이도» 로 쓴다).
+    #
+    # 설정 파일의 `difficulty_range` 는 (0.5, 0.5) 그대로 둔다. 여기서만 덮어쓴다.
+    # 그래야 인자를 안 준 실행이 지금까지와 **글자 그대로 같은 값**을 내고,
+    # `tests/test_terrains.py` 의 「이 커밋에서 난이도를 안 건드린다」도 계속 산다.
+    #
+    # **왜 (d, d) 인가.** 이 설정은 `curriculum=True` · `num_rows=1` 이고,
+    # Isaac Lab 은 난이도를 이렇게 만든다 (`terrain_generator.py:260-262`) `확인됨`:
+    #
+    #     difficulty = (sub_row + U(0,1)) / num_rows
+    #     difficulty = lower + (upper - lower) x difficulty
+    #
+    # `lower == upper == d` 면 둘째 줄이 d 로 떨어진다. 난수는 그대로 소비되므로
+    # 난이도만 다르고 난수 소비는 같다. 스윕의 칸끼리 비교가 되는 근거가 이것이다.
+    if args_cli.difficulty is not None:
+        if not 0.0 < args_cli.difficulty <= 1.0:
+            raise ValueError(
+                f"--difficulty 는 0 초과 1 이하여야 합니다. 받은 값: {args_cli.difficulty}"
+            )
+
+        env_cfg.scene.terrain.terrain_generator.difficulty_range = (
+            args_cli.difficulty,
+            args_cli.difficulty,
+        )
+
+    # 덮어쓴 뒤 **되읽어서** 찍는다. 인자를 그대로 찍으면 덮어쓰기가 안 먹어도 같은 줄이 나온다.
+    print("\n" + "=" * 80)
+    print("TERRAIN DIFFICULTY")
+    print("=" * 80)
+    print(f"difficulty_range : {env_cfg.scene.terrain.terrain_generator.difficulty_range}"
+          f"  (덮어씀: {args_cli.difficulty is not None})")
+
     if getattr(args_cli, "device", None) is not None:
         env_cfg.sim.device = args_cli.device
         agent_cfg.device = args_cli.device
@@ -895,6 +932,12 @@ def main():
             "terrain_size_m": list(terrain_cfg.size),
             "terrain_num_rows": terrain_cfg.num_rows,
             "terrain_num_cols": terrain_cfg.num_cols,
+
+            # **cfg 에서 되읽는다. 인자를 그대로 옮겨 적지 않는다.**
+            # 인자를 적으면 「덮어쓰기가 실제로 먹었나」를 이 파일이 증언하지 못한다.
+            "terrain_difficulty_range": list(terrain_cfg.difficulty_range),
+            "terrain_difficulty_overridden": args_cli.difficulty is not None,
+            "terrain_curriculum": terrain_cfg.curriculum,
             "terrain_border_width_changed_from": 10.0,
             "seed": args_cli.seed,
             "spawn_xy_range_m": args_cli.spawn_xy_range,
