@@ -86,6 +86,10 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--checkpoint", type=str, required=True,
                     help="rsl_rl 체크포인트 .pt 경로")
+parser.add_argument("--terrain_set", type=str, default="unseen10",
+                    choices=["unseen10", "rough6"],
+                    help="어느 지형 집합을 굽나. `unseen10` 은 정책이 못 본 험지 10종, "
+                         "`rough6` 은 체크포인트가 학습에 쓴 험지 6종")
 parser.add_argument("--terrains", type=str, default="flat",
                     help="기록할 지형. 쉼표로 여럿. 'all' 이면 전부")
 parser.add_argument("--difficulty", type=float, default=None,
@@ -93,6 +97,11 @@ parser.add_argument("--difficulty", type=float, default=None,
                          "`difficulty_range` 를 (d, d) 로 덮어써 타일 전부가 "
                          "정확히 이 난이도가 된다. 안 주면 설정 파일 값을 "
                          "그대로 쓴다(스냅샷과 같은 동작)")
+parser.add_argument("--rail_thickness", type=float, default=None,
+                    help="`rails` 의 턱 두께(m)를 하나로 못 박는다. 안 주면 설정 "
+                         "그대로 (0.08, 0.18) 무작위다. **난이도가 두께를 안 "
+                         "건드리므로** 같은 난이도 칸 안에서도 두꺼운 판과 얇은 "
+                         "판이 섞인다. 축을 하나로 만들 때만 쓴다. `unseen10` 전용")
 parser.add_argument("--episodes", type=int, default=100,
                     help="기록할 지형 하나당 총 에피소드 수")
 parser.add_argument("--envs_per_terrain", type=int, default=10,
@@ -140,12 +149,18 @@ from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 import isaaclab_tasks  # noqa: F401,E402
 from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 
-from generalization_env_cfg import UnitreeGo2GeneralizationEnvCfg  # noqa: E402
+import importlib  # noqa: E402
 
 # 체크포인트를 학습시킨 NVIDIA 공식 태스크. agent_cfg 만 여기서 가져온다.
 POLICY_TASK = "Isaac-Velocity-Rough-Unitree-Go2-v0"
 
-TERRAIN_NAMES = list(terrains.TERRAIN_NAMES)
+# 지형 집합을 `--terrain_set` 으로 고른다. 설정 모듈은 **고른 것만** 임포트한다.
+# 둘 다 임포트하면 안 쓰는 쪽의 설정까지 만들어져 애먼 곳에서 죽을 수 있다.
+_SET_NAMES, _SET_MODULE, _SET_CLASS = terrains.terrain_set(args_cli.terrain_set)
+
+TERRAIN_NAMES = list(_SET_NAMES)
+
+ENV_CFG_CLASS = getattr(importlib.import_module(_SET_MODULE), _SET_CLASS)
 
 
 def configure_evaluation(env_cfg, agent_cfg, envs_per_terrain):
@@ -508,7 +523,7 @@ def main():
 
     envs_per_terrain = args_cli.envs_per_terrain
 
-    env_cfg = UnitreeGo2GeneralizationEnvCfg()
+    env_cfg = ENV_CFG_CLASS()
     agent_cfg = load_cfg_from_registry(POLICY_TASK, "rsl_rl_cfg_entry_point")
 
     configure_evaluation(env_cfg, agent_cfg, envs_per_terrain)
@@ -538,12 +553,46 @@ def main():
             args_cli.difficulty,
         )
 
+    # `rails` 턱 두께 못 박기.
+    #
+    # **왜 필요한가.** `rail_thickness_range=(0.08, 0.18)` 은 난이도가 안 건드리는
+    # 자리다 (`mesh_terrains.py` 의 `rails_terrain` 은 `rail_height` 만 보간한다).
+    # 그래서 난이도를 고정해도 두께는 판마다 무작위로 뽑히고, 그 편차가 성공률에
+    # 그대로 섞여 들어간다. 벽 구간을 촘촘히 잴 때는 축이 하나여야 한다.
+    #
+    # **이 인자를 준 실행은 기존 판과 조건이 다르다.** 나란히 놓지 말 것.
+    # manifest 의 `rail_thickness_fixed_m` 가 그 표시다.
+    if args_cli.rail_thickness is not None:
+        if args_cli.terrain_set != "unseen10":
+            raise ValueError(
+                f"--rail_thickness 는 `unseen10` 전용입니다. "
+                f"받은 집합: {args_cli.terrain_set}"
+            )
+
+        rails_cfg = env_cfg.scene.terrain.terrain_generator.sub_terrains.get("rails")
+
+        if rails_cfg is None:
+            raise RuntimeError(
+                "`rails` 하위 지형을 못 찾았습니다. 두께를 못 박을 자리가 없습니다."
+            )
+
+        rails_cfg.rail_thickness_range = (
+            args_cli.rail_thickness,
+            args_cli.rail_thickness,
+        )
+
     # 덮어쓴 뒤 **되읽어서** 찍는다. 인자를 그대로 찍으면 덮어쓰기가 안 먹어도 같은 줄이 나온다.
     print("\n" + "=" * 80)
     print("TERRAIN DIFFICULTY")
     print("=" * 80)
     print(f"difficulty_range : {env_cfg.scene.terrain.terrain_generator.difficulty_range}"
           f"  (덮어씀: {args_cli.difficulty is not None})")
+
+    _rails = env_cfg.scene.terrain.terrain_generator.sub_terrains.get("rails")
+
+    if _rails is not None:
+        print(f"rail_thickness   : {_rails.rail_thickness_range}"
+              f"  (덮어씀: {args_cli.rail_thickness is not None})")
 
     if getattr(args_cli, "device", None) is not None:
         env_cfg.sim.device = args_cli.device
@@ -899,6 +948,8 @@ def main():
             "started_at_utc": started_at,
             "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "environment": environment_record(),
+            "terrain_set": args_cli.terrain_set,
+            "terrain_set_names": list(TERRAIN_NAMES),
             "recorded_terrains": recorded,
             "envs_per_terrain": envs_per_terrain,
             "total_envs_simulated": num_envs,
@@ -937,6 +988,14 @@ def main():
             # 인자를 적으면 「덮어쓰기가 실제로 먹었나」를 이 파일이 증언하지 못한다.
             "terrain_difficulty_range": list(terrain_cfg.difficulty_range),
             "terrain_difficulty_overridden": args_cli.difficulty is not None,
+
+            # `rails` 두께를 못 박았나. 못 박은 판과 안 박은 판은 조건이 다르다.
+            # cfg 에서 되읽는다.
+            "rail_thickness_range": (
+                list(terrain_cfg.sub_terrains["rails"].rail_thickness_range)
+                if "rails" in terrain_cfg.sub_terrains else None
+            ),
+            "rail_thickness_fixed_m": args_cli.rail_thickness,
             "terrain_curriculum": terrain_cfg.curriculum,
             "terrain_border_width_changed_from": 10.0,
             "seed": args_cli.seed,

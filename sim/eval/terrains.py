@@ -67,3 +67,36 @@ def terrain_name(index):
 def is_flat(name):
     """험지가 아닌 기준선 지형인가."""
     return name in FLAT_TERRAIN_NAMES
+
+
+# ---------------------------------------------------------------- 학습에서 본 험지 6종
+
+# NVIDIA 공식 체크포인트가 **학습에 쓴** 지형이다. 위 10종(미경험)과 성격이 반대다.
+#
+# 순서는 Isaac Lab 원본 `ROUGH_TERRAINS_CFG` 의 `sub_terrains` 등록 순서 그대로다.
+# 이 순서가 곧 열 번호이고, `rough6_env_cfg.py` 의 등록 순서와 한 칸이라도
+# 어긋나면 이름과 지형이 뒤바뀐다. `tests/test_terrains.py` 가 둘을 대조한다.
+ROUGH6_TERRAIN_NAMES = (
+    "pyramid_stairs",
+    "pyramid_stairs_inv",
+    "boxes",
+    "random_rough",
+    "hf_pyramid_slope",
+    "hf_pyramid_slope_inv",
+)
+
+# 하네스가 `--terrain_set` 으로 고르는 자리. 값은 (이름 목록, 설정 모듈, 설정 클래스).
+TERRAIN_SETS = {
+    "unseen10": (TERRAIN_NAMES, "generalization_env_cfg", "UnitreeGo2GeneralizationEnvCfg"),
+    "rough6": (ROUGH6_TERRAIN_NAMES, "rough6_env_cfg", "UnitreeGo2Rough6EnvCfg"),
+}
+
+
+def terrain_set(name):
+    """이름으로 지형 집합을 고른다. 모르는 이름이면 죽는다."""
+    if name not in TERRAIN_SETS:
+        raise ValueError(
+            f"모르는 지형 집합: {name}. 있는 것: {sorted(TERRAIN_SETS)}"
+        )
+
+    return TERRAIN_SETS[name]

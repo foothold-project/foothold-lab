@@ -11,6 +11,15 @@ import os
 import sys
 
 
+def dlabel(value):
+    """난이도 이름표. **소수 둘째 자리를 잘라 먹지 않는다.**
+
+    `%.1f` 로 찍으면 0.12 와 0.14 가 둘 다 «0.1» 이 되어 표의 열 이름이 겹친다.
+    칸 폴더 이름에서 같은 실수를 한 번 했고, 표에서도 똑같이 났다.
+    """
+    return f"{value:.1f}" if round(value, 1) == round(value, 2) else f"{value:.2f}"
+
+
 def wilson(successes, n, z=1.96):
     """Wilson 95% 구간. 0% · 100% 에서도 폭이 남는다."""
     if n == 0:
@@ -36,7 +45,24 @@ def main():
 
     speeds = sorted({float(r["command_vx"]) for r in rows})
     diffs = sorted({float(r["difficulty"]) for r in rows})
-    terrains = ["gap", "rails", "pit", "stepping_stones", "floating_ring"]
+
+    # 지형 목록은 **데이터에서 읽는다.** 박아 두면 지형 집합이 바뀔 때 조용히
+    # 빈 표가 나온다 (rough6 를 처음 돌렸을 때 실제로 그럴 뻔했다).
+    # 아는 순서가 있으면 그 순서를, 없으면 CSV 에 나온 순서를 쓴다.
+    PREFERRED = (
+        "gap", "rails", "pit", "stepping_stones", "floating_ring",
+        "pyramid_stairs", "pyramid_stairs_inv", "boxes", "random_rough",
+        "hf_pyramid_slope", "hf_pyramid_slope_inv",
+    )
+
+    present = []
+
+    for r in rows:
+        if r["terrain"] not in present:
+            present.append(r["terrain"])
+
+    terrains = [t for t in PREFERRED if t in present]
+    terrains += [t for t in present if t not in PREFERRED]
 
     cell = {}
 
@@ -50,7 +76,7 @@ def main():
         print()
         print(f"### {label}")
         print()
-        print("| 지형 | 속도 | " + " | ".join(f"{d:.1f}" for d in diffs) + " |")
+        print("| 지형 | 속도 | " + " | ".join(dlabel(d) for d in diffs) + " |")
         print("|---|---|" + "---|" * len(diffs))
 
         for terrain in terrains:
@@ -95,7 +121,17 @@ def main():
                 n = int(cell[(terrain, vx, best)]["episodes"])
                 k = round(float(cell[(terrain, vx, best)]["overall_success_rate"]) * n)
                 lo, hi = wilson(k, n)
-                cells.append(f"**{best:.1f}** ({100*lo:.0f}~{100*hi:.0f}%)")
+
+                # **단조롭지 않으면 「벽」이라는 말이 거짓말이 된다.**
+                # `best` 보다 쉬운 난이도인데 떨어지는 칸이 있으면 이 열은
+                # 「여기까지 된다」로 읽히면 안 된다. 표시를 붙여 소리를 낸다.
+                dips = [d for d in diffs
+                        if d < best and (terrain, vx, d) in cell
+                        and float(cell[(terrain, vx, d)]["overall_success_rate"]) < 0.5]
+
+                mark = " `비단조`" if dips else ""
+
+                cells.append(f"**{dlabel(best)}** ({100*lo:.0f}~{100*hi:.0f}%){mark}")
             else:
                 cells.append("없음")
 
@@ -103,7 +139,11 @@ def main():
 
     print()
     print("「가장 낮은 난이도」가 아니라 **통과하는 가장 높은 난이도**를 적었다.")
-    print("난이도가 오를수록 어려워지므로, 이 값이 그 지형의 «벽» 이다.")
+    print("난이도가 오를수록 어려워지면 이 값이 그 지형의 «벽» 이다.")
+    print()
+    print("**`비단조` 가 붙은 칸은 벽으로 읽으면 안 된다.** 그 값보다 쉬운 난이도인데")
+    print("떨어지는 칸이 있다는 뜻이고, 그러면 난이도축이 그 지형의 어려움을")
+    print("한 방향으로 나타내지 못한다는 뜻이다.")
 
     return 0
 
