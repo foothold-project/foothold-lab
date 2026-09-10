@@ -1,0 +1,16 @@
+﻿[10:47:19] gpu1 | START cells=1.0:1.0
+[10:47:20] gpu1 | BEGIN v1.0-d1.0  vx=1 dur=6 diff=1
+[10:47:20] gpu1 | END   v1.0-d1.0  exit= sec=0 rows=-1
+[10:47:20] gpu1 | FAIL  v1.0-d1.0 寃곌낵 ?됱씠 ?녿떎. 濡쒓렇瑜?蹂몃떎: runs\v1.0-d1.0.log
+[10:47:20] gpu1 | DONE
+[10:48:07] gpu1 | START cells=1.0:1.0
+[10:48:07] gpu1 | BEGIN v1.0-d1.0  vx=1 dur=6 diff=1
+[10:48:09] gpu1 | END   v1.0-d1.0  exit=3 sec=1.6 rows=-1
+[10:48:09] gpu1 | FAIL  v1.0-d1.0 寃곌낵 ?됱씠 ?녿떎. 濡쒓렇瑜?蹂몃떎: runs\v1.0-d1.0.log
+[10:48:09] gpu1 | DONE
+[10:49:04] gpu1 | START cells=1.0:1.0
+[10:49:04] gpu1 | BEGIN v1.0-d1.0  vx=1 dur=6 diff=1
+[10:51:26] gpu1 | END   v1.0-d1.0  exit=0 sec=142.1 rows=500
+[10:51:26] gpu1 | DONE
+[10:52:17] gpu1 | START cells=1.5:0.6,1.0:0.6,0.5:0.6,1.5:0.7,1.5:0.8,1.5:0.9,1.5:1.0,1.0:0.7,1.0:0.8,1.0:0.9,0.5:0.7,0.5:0.8,0.5:0.9,0.5:1.0
+[10:52:17] gpu1 | BEGIN v1.5-d0.6  vx=1.5 dur=4 diff=0.6
