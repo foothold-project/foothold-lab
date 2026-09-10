@@ -4,7 +4,7 @@
 `provenance/candidate-20260822/eval_generalization.py` 가 원본이고,
 각 함수의 「스냅샷」 줄이 원본 행 번호입니다.
 
-여기서 더한 것은 **관측 열 다섯과, 방향 판정의 자를 고르는 인자 하나**뿐입니다
+여기서 더한 것은 **관측 열 여덟과, 방향 판정의 자를 고르는 인자 하나**뿐입니다
 (`ADDED_COLUMNS` · `episode_metrics(gate_progress_m=...)`).
 그 인자를 안 주면 이 모듈은 스냅샷과 같은 값을 냅니다.
 
@@ -12,6 +12,10 @@
 (`survival` · `progress` · `tracking` · `direction`)의 AND 이고 그대로 둡니다.
 머리 접촉 열 셋은 «경고등»이지 판정이 아닙니다. 근거는
 `docs/research/20260909-head-contact-observation.md`.
+
+**`traversal_success` 는 이름에 `success` 가 들어가지만 성공률이 아닙니다.**
+속도 추종을 뺀 세 축의 AND 이고, 쓰임새는 「넘긴 했는데 느렸던 에피소드」를
+세는 분석입니다. 그 함수의 설명에 이 경고가 한 번 더 있습니다.
 
 torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다.
 `tests/test_metrics.py` 가 스냅샷 원문을 다시 읽어 같은 값이 나오는지 고정합니다.
@@ -28,6 +32,9 @@ ADDED_COLUMNS = (
     "head_contact_count",
     "head_contact_peak_n",
     "head_contact_first_s",
+    "traversal_success",
+    "gate_speed_mps",
+    "speed_drop_ratio",
 )
 
 # 머리 접촉을 재는 링크. **Go2 USD 를 직접 열어 확인한 이름이다** `확인됨`.
@@ -65,6 +72,15 @@ RAW_COLUMNS = (
     "gate_lateral_drift_m",
     "velocity_mae_mps",
     "mean_reward_per_step",
+
+    # 분석 열 셋. **판정에 안 들어간다.** `overall_success` 는 지금도 네 축의 AND 다.
+    #
+    # 머리 접촉 셋 **앞에** 둔다. 뒤에 붙이면 「머리 접촉 셋은 붙어 있고 맨 뒤」를
+    # 못 박은 시험(`tests/test_metrics.py` · `ColumnContract`)이 깨진다.
+    # 스냅샷 21열은 여전히 앞쪽에 그대로라 열 번호로 읽는 옛 코드는 안 밀린다.
+    "traversal_success",
+    "gate_speed_mps",
+    "speed_drop_ratio",
 
     # 머리(= 실기 라이다 자리) 접촉 관측 셋. **판정에 안 들어간다.**
     # 스냅샷 열 뒤에 붙여서, 열 번호로 CSV 를 읽는 코드가 앞쪽에서 안 밀리게 한다.
@@ -207,6 +223,149 @@ def gate_lateral_drift_m(start_xy, path_xy, forward_dir, gate_progress_m):
     return None
 
 
+# ---------------------------------------------------------------- 속도 (관측 전용)
+
+def gate_speed_mps(start_xy, path_xy, path_speed_mps, forward_dir, gate_progress_m):
+    """**전진이 통과선을 지나는 순간**의 실제 전진 속도(m/s).
+
+    `gate_lateral_drift_m` 과 **같은 자리 · 같은 보간**입니다. 그 함수가 통과선
+    위의 좌우 이탈을 집는 자리에서, 이 함수는 같은 순간의 전진 속도를 집습니다.
+
+    **왜 필요한가.** 관성으로 넘어간 에피소드와 보폭을 조절해 넘어간 에피소드를
+    가르기 위해서입니다. `velocity_mae_mps` 는 에피소드 전체를 하나로 접은
+    평균이라 **통과선 그 순간이 빨랐는지 느렸는지를 못 말합니다.** 앞에서 느리고
+    뒤에서 빨랐던 에피소드와 내내 고르게 걸은 에피소드가 같은 값을 냅니다.
+
+    `path_speed_mps[i]` 는 `path_xy[i]` 와 **같은 순간**의 값이어야 합니다.
+    하네스가 두 버퍼를 같은 자리에서 같은 스텝에 담습니다.
+
+    쓰는 속도는 **몸통 좌표계의 전진 성분**(`root_lin_vel_b[:, 0]`)입니다.
+    명령(`command_vx`)이 걸리는 축이 바로 그 축이고, `overlay/trace.py` 의
+    `vx_mps` 도 같은 값입니다. 세계좌표 속도를 출발 전방축에 투영한 값이
+    아닙니다. 로봇이 몸을 틀면 둘이 갈라지므로, **명령과 견줄 값**을 골랐습니다.
+
+    통과선을 한 번도 못 넘겼으면 `None` 입니다. **0.0 이 아닙니다.**
+    0.0 으로 돌려주면 「도달했는데 그 순간 멈춰 있었다」와 구별이 안 됩니다.
+    """
+    if not path_xy or not path_speed_mps:
+        return None
+
+    count = min(len(path_xy), len(path_speed_mps))
+    previous = None
+
+    for index in range(count):
+        forward = forward_offset_m(start_xy, path_xy[index], forward_dir)
+        speed = path_speed_mps[index]
+
+        if speed is None:
+            continue
+
+        if forward >= gate_progress_m:
+            if previous is None:
+                return speed
+
+            back_forward, back_speed = previous
+            span = forward - back_forward
+
+            if span <= 0.0:
+                return speed
+
+            t = (gate_progress_m - back_forward) / span
+
+            return back_speed + t * (speed - back_speed)
+
+        previous = (forward, speed)
+
+    return None
+
+
+def obstacle_zone_min_speed_mps(
+    start_xy, path_xy, path_speed_mps, forward_dir, zone_start_m, zone_end_m
+):
+    """장애물 구간 안에서 **가장 느렸던** 전진 속도(m/s).
+
+    구간은 **출발점 기준 전진거리**로 잡습니다. 시각이 아닙니다. 같은 지형을
+    빨리 지난 에피소드와 느리게 지난 에피소드를 같은 자로 재려면 거리여야 합니다.
+
+    구간 안에 표본이 하나도 없으면 `None` 입니다. 장애물에 닿기도 전에 넘어진
+    에피소드가 여기 걸립니다. **0.0 으로 돌려주면 「구간 내내 멈춰 있었다」와
+    구별이 안 됩니다.**
+
+    `zone_end_m` 이 `zone_start_m` 보다 크지 않으면 `None` 입니다. 폭이 없는
+    구간에서 최솟값을 말할 수는 없습니다.
+
+    뒤로 밀린 스텝의 속도는 음수이고, **그대로 씁니다.** 뒤로 밀린 것은
+    「많이 줄였다」의 극단이지 결측이 아닙니다.
+    """
+    if not path_xy or not path_speed_mps:
+        return None
+
+    if zone_end_m <= zone_start_m:
+        return None
+
+    count = min(len(path_xy), len(path_speed_mps))
+    lowest = None
+
+    for index in range(count):
+        speed = path_speed_mps[index]
+
+        if speed is None:
+            continue
+
+        forward = forward_offset_m(start_xy, path_xy[index], forward_dir)
+
+        if forward < zone_start_m or forward > zone_end_m:
+            continue
+
+        if lowest is None or speed < lowest:
+            lowest = speed
+
+    return lowest
+
+
+def speed_drop_ratio(min_speed_mps, command_vx):
+    """장애물 구간의 최저 전진 속도를 **명령 속도로 나눈 값**. 단위가 없습니다.
+
+    ## 정의 (이 한 줄이 이 열의 전부다)
+
+        speed_drop_ratio = (장애물 구간 안 최저 전진 속도) / (명령 전진 속도)
+
+    구간과 속도의 정의는 각각 `obstacle_zone_min_speed_mps` 와
+    `gate_speed_mps` 의 설명에 있습니다. 셋을 함께 읽어야 이 숫자의 뜻이 닫힙니다.
+
+    ## 읽는 법
+
+    | 값 | 뜻 |
+    |---|---|
+    | 1.0 근처 | 장애물 앞에서 **안 줄였다** |
+    | 0.5 | 명령의 절반까지 떨어졌다 |
+    | 0.0 근처 | 그 자리에서 거의 멈췄다 |
+    | 음수 | 뒤로 밀렸다 |
+    | `None` | 구간에 표본이 없다. **「안 줄였다」가 아니다** |
+
+    ## 왜 최저값인가
+
+    평균으로 잡으면 구간의 대부분이 평지인 지형에서 장애물 한 걸음의 주춤이
+    희석됩니다. 팀이 보려는 것은 「어디까지 떨어졌나」이고 그것은 최저값입니다.
+    `overlay/trace.py` 의 `slowdown_spans()` 가 같은 뜻을 시간축에서 구간으로
+    잡습니다. 이 열은 그것을 **한 숫자로 접은 것**입니다.
+
+    ## 한계 (재보지 않은 것)
+
+    · 최저값 하나라 **얼마나 오래** 느렸는지는 안 담깁니다. 그것은
+      `slowdown_spans()` 쪽이고, 시계열 parquet 에 원자료가 남습니다.
+    · 스텝 하나짜리 튀는 값에 약합니다. 평활을 안 걸었습니다 `미확인`
+      (몇 스텝 평균이 나은지 실측으로 비교하지 않았습니다).
+    """
+    if min_speed_mps is None:
+        return None
+
+    if command_vx <= 0.0:
+        return None
+
+    return min_speed_mps / command_vx
+
+
 # ---------------------------------------------------------------- 머리 접촉 (관측 전용)
 
 def head_contact_summary(step_forces_n, threshold_n, step_dt):
@@ -346,6 +505,39 @@ def overall_success(survival, progress, tracking, direction):
     return bool(survival and progress and tracking and direction)
 
 
+def traversal_success(survival, progress, direction):
+    """생존 · 전진 · 방향 **셋만** 통과했나. **속도 추종을 뺀 것이다.**
+
+    ## ★ 이것은 성공률이 아니다
+
+    이름에 `success` 가 들어가지만 **성공 판정이 아니다.** 문서 · 표 · 발표 ·
+    이슈 어디에도 이 열을 「성공률」로 적지 마십시오. 성공률은 지금도 앞으로도
+    `overall_success` 하나이고, 그것은 네 축(생존 · 전진 · 속도추종 · 방향)의
+    AND 다. 이 함수는 그 넷 중 **속도 추종만 뺀 값**이고 쓰임새는 분석이다.
+
+    같은 부류의 열이 이미 둘 있다. `peak_lateral_drift_m` 은 판정에 쓰는
+    `lateral_drift_m` 옆에 붙은 관측 열이고, 머리 접촉 셋도 경고등이지 판정이
+    아니다. 이 열도 같은 자리에 있다.
+
+    ## 왜 재나
+
+    「넘긴 했는데 명령 속도를 못 따라간」 에피소드가 몇이나 되는지 세려는
+    것이다. `overall_success` 하나로는 **못 넘은 것과 느리게 넘은 것이 같은
+    0** 이라 둘이 구별되지 않는다. 두 수를 나란히 놓으면 그 차이가 곧
+    「속도 추종 때문에 떨어진 에피소드 수」다.
+
+    ## 판정 네 축은 그대로다
+
+    `overall_success` 는 안 건드린다. 이 열을 더한다고 지나간 기록의 성공률이
+    한 칸도 안 움직인다. 그것이 이 열을 **판정 밖에** 둔 이유다. 정본 1,000판과
+    비교가 끊기면 안 된다 (`docs/research/20260908-success-criteria-anatomy.md` 9-3).
+
+    `tests/test_metrics.py` 의 `HeadContactIsNotJudgement` 와 같은 뜻의 시험이
+    `tests/test_traversal_and_speed.py` 에 있다.
+    """
+    return bool(survival and progress and direction)
+
+
 def termination_reason(timed_out):
     """종료 사유. 스냅샷 537~541행."""
     return "timeout" if timed_out else "base_contact"
@@ -373,6 +565,8 @@ def episode_metrics(
     head_contact_forces=None,
     head_contact_threshold_n=1.0,
     step_dt=0.0,
+    path_speed_mps=None,
+    obstacle_zone_m=None,
 ):
     """한 에피소드의 파생값 전부.
 
@@ -402,6 +596,16 @@ def episode_metrics(
     안 넘기면 세 열이 `None` 이고, 넘겨도 `overall_success` 는 그대로입니다.
     아래 `overall_success(...)` 호출에 인자가 넷뿐인 것이 그 보증이고,
     `tests/test_metrics.py` 가 같은 것을 시험으로 못 박습니다.
+
+    **`path_speed_mps` 와 `obstacle_zone_m` 도 판정을 안 바꿉니다.**
+    둘 다 기본값이 `None` 이고, 안 주면 `gate_speed_mps` · `speed_drop_ratio` 가
+    `None` 으로 남습니다. `traversal_success` 는 새 입력이 없으므로 언제나 값이
+    있지만, 그것도 판정 밖입니다 (`traversal_success` 설명).
+
+    | 인자 | 무엇 | 안 주면 |
+    |---|---|---|
+    | `path_speed_mps` | `path_xy` 와 **같은 순간**의 전진 속도 목록 | 속도 두 열이 `None` |
+    | `obstacle_zone_m` | `(구간 시작 m, 구간 끝 m)`. 출발점 기준 전진거리 | `speed_drop_ratio` 가 `None` |
     """
     disp = displacement(start_xy, end_xy)
 
@@ -436,6 +640,26 @@ def episode_metrics(
         head_contact_forces, head_contact_threshold_n, step_dt
     )
 
+    # 속도 두 열. **위 판정 다섯 줄이 이미 끝난 뒤에 센다.** 순서가 곧 보증이다.
+    if path_speed_mps is None or gate_progress_m is None:
+        gate_speed = None
+    else:
+        gate_speed = gate_speed_mps(
+            start_xy, sampled, path_speed_mps, forward_dir, gate_progress_m
+        )
+
+    if path_speed_mps is None or obstacle_zone_m is None:
+        drop_ratio = None
+    else:
+        zone_start, zone_end = obstacle_zone_m
+
+        drop_ratio = speed_drop_ratio(
+            obstacle_zone_min_speed_mps(
+                start_xy, sampled, path_speed_mps, forward_dir, zone_start, zone_end
+            ),
+            command_vx,
+        )
+
     return {
         # ★ 인자가 **넷**이다. 머리 접촉은 여기에 들어가지 않는다.
         #   AND 에 축을 더하면 성공률이 반드시 깎이고, 정책이 웅크리는 쪽으로
@@ -455,6 +679,13 @@ def episode_metrics(
         "gate_lateral_drift_m": gate_lateral,
         "velocity_mae_mps": vel_mae,
         "mean_reward_per_step": reward,
+
+        # 분석 열 셋. **판정이 아니다.** 위 `overall_success` 는 이 셋이 무엇이든
+        # 안 바뀐다. `traversal_success` 는 특히 성공률이 아니다(그 함수 설명).
+        "traversal_success": traversal_success(survival, progress, direction),
+        "gate_speed_mps": gate_speed,
+        "speed_drop_ratio": drop_ratio,
+
         "head_contact_count": head["head_contact_count"],
         "head_contact_peak_n": head["head_contact_peak_n"],
         "head_contact_first_s": head["head_contact_first_s"],
