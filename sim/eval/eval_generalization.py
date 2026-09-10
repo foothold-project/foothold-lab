@@ -540,7 +540,9 @@ def save_csv(rows, summary_rows, output_dir):
     print("RESULT FILES")
     print("=" * 80)
     print(raw_path)
-    print(summary_path)
+    # 파일로 보내면 stdout 이 블록 버퍼이고 Kit 는 종료할 때 안 비운다.
+    # 그래서 이 줄들이 로그에서 조용히 사라져 있었다 (2026-09-10 발견).
+    print(summary_path, flush=True)
 
     return raw_path, summary_path
 
@@ -613,7 +615,7 @@ def save_run_manifest(output_dir, extra):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(extra, f, ensure_ascii=False, indent=2, sort_keys=True)
 
-    print(path)
+    print(path, flush=True)
 
     return path
 
@@ -1419,9 +1421,17 @@ def main():
                 "나오고 값만 밀립니다.\n  · " + "\n  · ".join(problems)
             )
 
+        # ★ **여기서 반드시 흘려보낸다.** 파이썬 stdout 은 파일로 보낼 때
+        #   블록 버퍼이고, Kit 는 종료할 때 그 버퍼를 안 비운다. 2026-09-10 에
+        #   실제로 이 관문의 출력이 로그에서 통째로 사라졌다 (`RESULT FILES` 와
+        #   `SUMMARY` 도 같은 이유로 오래 안 보이고 있었다).
+        #
+        #   관문이 실패하면 `RuntimeError` 로 종료코드가 서므로 «막는 힘» 은
+        #   그대로였지만, **통과했을 때 무엇을 보고 통과라 했는지가 안 보였다.**
+        #   그것은 「관문이 스스로 눈을 감는」 부류의 절반이다.
         print("\n[PASS] 시계열 {}장이 판정 표 {}줄과 짝이 맞습니다.".format(
             len(on_disk), len(results)
-        ))
+        ), flush=True)
 
     summary_rows = metrics.summarize(results, recorded)
 
@@ -1553,7 +1563,7 @@ def main():
 
     print("\n" + "=" * 80)
     print("SUMMARY")
-    print("=" * 80)
+    print("=" * 80, flush=True)
 
     for row in summary_rows:
         print(

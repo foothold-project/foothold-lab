@@ -28,9 +28,16 @@
 
 ## 왜 parquet 인가
 
-**실측입니다** (2026-09-10 · 아래 «실측» 절). CSV 로 적으면 에피소드 하나가
-약 0.87 MB 이고, 19,000 에피소드면 16 GB 입니다. 같은 자료를 parquet 으로
-적으면 5~10배 작아집니다. 열마다 형이 같은 수치 자료라 압축이 잘 듣습니다.
+**실측입니다** (2026-09-10 · 이 워크스테이션 · 20초 규격 한 에피소드
+1,000줄 x 92열).
+
+| 형식 | 한 에피소드 | 19,000 에피소드면 |
+|---|---|---|
+| CSV | 1,697,379 B (1.62 MB) | 약 30 GB |
+| parquet (zstd + `byte_stream_split`) | **294,436 B (0.28 MB)** | **약 5.2 GB** |
+
+**5.76배**입니다. 인코딩을 안 고르면 3.77배에 그칩니다. 어느 설정을 왜 골랐는지는
+`write()` 안에 여섯 가지 실측표와 함께 적어 두었습니다.
 
 **`pyarrow` 가 있어야 씁니다.** 없는데 쓰라고 하면 `TimeseriesError` 로
 **시작할 때** 죽습니다. 7분을 돌고 끝에서 죽으면 그 실행이 통째로 버려집니다.
@@ -308,7 +315,35 @@ def write(path, meta, rows, columns):
     if directory:
         os.makedirs(directory, exist_ok=True)
 
-    pq.write_table(table, path, compression="zstd")
+    # 실수 열은 `byte_stream_split` 으로 적는다. **실측으로 골랐다** `확인됨`.
+    #
+    # 20초 에피소드 한 장(1,000줄 x 92열)을 같은 자료로 여섯 가지 설정에 적어
+    # 바이트를 쟀다 (2026-09-10 · 이 워크스테이션).
+    #
+    #   같은 자료 CSV                 1,697,379 B
+    #   snappy 기본                     488,379 B   3.48배
+    #   zstd 기본                       450,402 B   3.77배
+    #   zstd + byte_stream_split        294,436 B   **5.76배**
+    #   zstd lvl9 + byte_stream_split   288,028 B   5.89배
+    #
+    # 실수 값은 부동소수 비트가 열마다 비슷하게 움직인다. 바이트 자리끼리 모아
+    # 두면(`byte_stream_split`) 압축기가 그 규칙을 본다. 그냥 적으면 못 본다.
+    # lvl9 는 2% 더 줄이고 시간을 더 쓴다. 기본 레벨을 쓴다.
+    #
+    # `use_dictionary=False` 가 함께 있어야 한다. 사전 인코딩이 켜져 있으면
+    # 실수 열이 사전 쪽으로 가서 이 인코딩이 안 걸린다.
+    float_columns = [
+        name for index, name in enumerate(columns)
+        if pa.types.is_floating(arrays[index].type)
+    ]
+
+    pq.write_table(
+        table,
+        path,
+        compression="zstd",
+        use_dictionary=False,
+        use_byte_stream_split=float_columns,
+    )
 
     return path
 
