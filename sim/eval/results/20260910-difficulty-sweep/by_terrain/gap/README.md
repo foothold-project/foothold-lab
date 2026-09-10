@@ -3,7 +3,7 @@
 > 분류: 실험
 > 작성: 오흥재 · 2026-09-10
 > 근거: 실측 (Isaac Lab · NVIDIA 공식 체크포인트 · RTX 5080 2대)
-> 요지: `gap` 한 종을 난이도 10단계 x 속도 3단계로 3000판 잰 원시 기록
+> 요지: `gap` 한 종을 난이도 18단계 x 속도 3단계로 3800판 잰 원시 기록
 > 상태: 초안
 
 이 폴더의 `gap_sweep.csv` 는 **모아 놓은 것**이고, 정본 원시 파일은
@@ -16,10 +16,10 @@
 | 항목 | 값 |
 |---|---|
 | 지형 | `gap` |
-| 난이도 | 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 |
+| 난이도 | 0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 |
 | 명령 속도 | 0.5 m/s, 1.0 m/s, 1.5 m/s |
-| 칸 | 30 |
-| 판 | 3000 |
+| 칸 | 38 |
+| 판 | 3800 |
 | 정책 sha256 | `f2aa77bf0349c10ec2a00071162e37123d0cf80f3447c3989c17a618e1b24ad2` |
 
 **거리 예산을 6 m 로 고정했습니다.** 속도가 바뀌어도 로봇이 갈 수 있는
@@ -64,8 +64,32 @@ python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretraine
 # v0.5-d1.0
 python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 1 --episodes 100 --envs_per_terrain 10 --eval_duration 12 --command_vx 0.5 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v0.5-d1.0 --note "difficulty sweep 20260910 | vx=0.5 difficulty=1 | gpu1"
 
+# v1.0-d0.02
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.02 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.02 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.02 | gpu0"
+
+# v1.0-d0.04
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.04 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.04 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.04 | gpu0"
+
+# v1.0-d0.06
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.06 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.06 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.06 | gpu0"
+
+# v1.0-d0.08
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.08 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.08 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.08 | gpu0"
+
 # v1.0-d0.1
 python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.1 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.1 --note "difficulty sweep 20260910 | vx=1 difficulty=0.1 | gpu0"
+
+# v1.0-d0.12
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.12 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.12 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.12 | gpu0"
+
+# v1.0-d0.14
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.14 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.14 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.14 | gpu0"
+
+# v1.0-d0.16
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.16 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.16 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.16 | gpu0"
+
+# v1.0-d0.18
+python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrain_set unseen10 --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.18 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.18 --note "difficulty sweep 20260910 | set=unseen10 vx=1 difficulty=0.18 | gpu0"
 
 # v1.0-d0.2
 python sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt --terrains gap,rails,pit,stepping_stones,floating_ring --difficulty 0.2 --episodes 100 --envs_per_terrain 10 --eval_duration 6 --command_vx 1 --min_progress_m 3.0 --max_lateral_drift 0.75 --max_velocity_mae 0.25 --seed 42 --headless --device cuda:0 --output_dir C:\work\foothold-lab-sweep\sim\eval\results\20260910-difficulty-sweep\runs\v1.0-d0.2 --note "difficulty sweep 20260910 | vx=1 difficulty=0.2 | gpu0"

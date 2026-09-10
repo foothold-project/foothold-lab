@@ -12,3 +12,21 @@
 [11:36:34] gpu0 | START cells=1.0:0.1
 [11:36:34] gpu0 | SKIP  v1.0-d0.1 (?대? ?덉쓬)
 [11:36:34] gpu0 | DONE
+[14:54:32] gpu0 | START cells=1.0:0.02,1.0:0.04,1.0:0.06,1.0:0.08,1.0:0.12,1.0:0.14,1.0:0.16,1.0:0.18
+[14:54:32] gpu0 | BEGIN v1.0-d0.02  vx=1 dur=6 diff=0.02
+[14:56:40] gpu0 | END   v1.0-d0.02  exit=0 sec=127.9 rows=500
+[14:56:40] gpu0 | BEGIN v1.0-d0.04  vx=1 dur=6 diff=0.04
+[14:58:46] gpu0 | END   v1.0-d0.04  exit=0 sec=126.3 rows=500
+[14:58:46] gpu0 | BEGIN v1.0-d0.06  vx=1 dur=6 diff=0.06
+[15:00:55] gpu0 | END   v1.0-d0.06  exit=0 sec=128.5 rows=500
+[15:00:55] gpu0 | BEGIN v1.0-d0.08  vx=1 dur=6 diff=0.08
+[15:03:08] gpu0 | END   v1.0-d0.08  exit=0 sec=133.5 rows=500
+[15:03:08] gpu0 | BEGIN v1.0-d0.12  vx=1 dur=6 diff=0.12
+[15:05:14] gpu0 | END   v1.0-d0.12  exit=0 sec=125.7 rows=500
+[15:05:14] gpu0 | BEGIN v1.0-d0.14  vx=1 dur=6 diff=0.14
+[15:07:21] gpu0 | END   v1.0-d0.14  exit=0 sec=127.5 rows=500
+[15:07:21] gpu0 | BEGIN v1.0-d0.16  vx=1 dur=6 diff=0.16
+[15:09:33] gpu0 | END   v1.0-d0.16  exit=0 sec=132 rows=500
+[15:09:33] gpu0 | BEGIN v1.0-d0.18  vx=1 dur=6 diff=0.18
+[15:11:47] gpu0 | END   v1.0-d0.18  exit=0 sec=133.3 rows=500
+[15:11:47] gpu0 | DONE

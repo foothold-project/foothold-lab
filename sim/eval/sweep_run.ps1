@@ -9,6 +9,10 @@ param(
     [Parameter(Mandatory=$true)][int]$Gpu,
     [Parameter(Mandatory=$true)][string]$Cells,
     [string]$Root,
+    [ValidateSet("unseen10", "rough6")][string]$TerrainSet = "unseen10",
+    [string]$Terrains,
+    [int]$EnvsPerTerrain = 10,
+    [double]$RailThickness = 0,
     [string]$CondaEnv = $env:FOOTHOLD_ISAAC_ENV,
     [string]$Checkpoint = $env:FOOTHOLD_GO2_CHECKPOINT,
     [int]$Episodes = 100
@@ -45,7 +49,19 @@ if (-not (Test-Path $py))         { throw "python.exe 가 없다: $py" }
 if (-not (Test-Path $Checkpoint)) { throw "체크포인트가 없다: $Checkpoint" }
 
 $ckpt = $Checkpoint
-$terrains = "gap,rails,pit,stepping_stones,floating_ring"
+
+# 기록할 지형. 안 주면 집합마다 뜻이 있는 기본값을 쓴다.
+#   unseen10 -> 실패 5종만 (통과 5종은 이 스윕의 관심사가 아니다)
+#   rough6   -> 여섯 다
+if (-not $Terrains) {
+    if ($TerrainSet -eq "rough6") {
+        $Terrains = "all"
+    } else {
+        $Terrains = "gap,rails,pit,stepping_stones,floating_ring"
+    }
+}
+
+$terrains = $Terrains
 
 Set-Location $repo
 
@@ -84,7 +100,17 @@ foreach ($cell in $Cells.Split(",")) {
     # 거리 예산을 6 m 로 고정한다. 속도만 바뀌고 갈 수 있는 거리는 안 바뀐다.
     $dur = [math]::Round(6.0 / $vx, 4)
 
-    $name = "v{0}-d{1}" -f $vx.ToString("0.0"), $diff.ToString("0.0")
+    # **소수 둘째 자리를 잘라 먹으면 안 된다.** "0.0" 형식으로 찍으면 0.12 가
+    # "0.1" 이 되어 **이미 있는 칸을 덮어쓴다.** 벽 구간을 0.02 씩 촘촘히 잴 때
+    # 정확히 그 일이 난다. 그래서 한 자리로 떨어지는 값만 "0.0" 을 쓰고,
+    # 아니면 "0.00" 을 쓴다. 기존 칸 이름(d0.1 · d1.0)은 그대로 유지된다.
+    if ([math]::Round($diff, 1) -eq $diff) {
+        $dstr = $diff.ToString("0.0")
+    } else {
+        $dstr = $diff.ToString("0.00")
+    }
+
+    $name = "v{0}-d{1}" -f $vx.ToString("0.0"), $dstr
     $out = Join-Path $Root ("runs\" + $name)
 
     if (Test-Path (Join-Path $out "run_manifest.json")) {
@@ -95,12 +121,21 @@ foreach ($cell in $Cells.Split(",")) {
     Say ("BEGIN " + $name + "  vx=" + $vx + " dur=" + $dur + " diff=" + $diff)
     $t0 = Get-Date
 
+    # `rails` 두께를 못 박는 팔. 0 이면 안 준다(설정 그대로).
+    $extra = @()
+
+    if ($RailThickness -gt 0) {
+        $extra += "--rail_thickness"
+        $extra += "$RailThickness"
+    }
+
     & $py sim/eval/eval_generalization.py `
         --checkpoint $ckpt `
+        --terrain_set $TerrainSet `
         --terrains $terrains `
         --difficulty $diff `
         --episodes $Episodes `
-        --envs_per_terrain 10 `
+        --envs_per_terrain $EnvsPerTerrain `
         --eval_duration $dur `
         --command_vx $vx `
         --min_progress_m 3.0 `
@@ -110,7 +145,8 @@ foreach ($cell in $Cells.Split(",")) {
         --headless `
         --device cuda:0 `
         --output_dir $out `
-        --note ("difficulty sweep 20260910 | vx=" + $vx + " difficulty=" + $diff + " | gpu" + $Gpu) `
+        --note ("difficulty sweep 20260910 | set=" + $TerrainSet + " vx=" + $vx + " difficulty=" + $diff + " | gpu" + $Gpu) `
+        @extra `
         *> (Join-Path $Root ("runs\" + $name + ".log"))
 
     $code = $LASTEXITCODE
