@@ -284,3 +284,48 @@ class SnapshotUntouched(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class PinDifficultyTests(unittest.TestCase):
+    """`pin_difficulty` 는 «영상이 몇 난이도인지» 를 지키는 관문입니다.
+
+    이 시험이 없으면, 난이도를 안 박고 찍은 영상이 아무 오류 없이 나옵니다.
+    화면마다 난이도가 다르고 기록에는 아무것도 안 남습니다. 조용한 실패입니다.
+    """
+
+    class _Fake:
+        def __init__(self, rng=(0.0, 1.0)):
+            self.difficulty_range = rng
+
+    def test_pins_range_to_a_single_value(self):
+        tg = self._Fake()
+        got = terrains.pin_difficulty(tg, 0.5)
+        self.assertEqual(got, (0.5, 0.5))
+        self.assertEqual(tuple(tg.difficulty_range), (0.5, 0.5))
+
+    def test_none_leaves_the_config_alone(self):
+        tg = self._Fake((0.2, 0.9))
+        got = terrains.pin_difficulty(tg, None)
+        self.assertEqual(got, (0.2, 0.9))
+        self.assertEqual(tuple(tg.difficulty_range), (0.2, 0.9))
+
+    def test_boundaries_are_allowed(self):
+        for d in (0.0, 1.0):
+            self.assertEqual(terrains.pin_difficulty(self._Fake(), d), (d, d))
+
+    def test_out_of_range_is_refused(self):
+        for d in (-0.01, 1.01, 2.0):
+            with self.assertRaises(ValueError):
+                terrains.pin_difficulty(self._Fake(), d)
+
+    def test_a_config_that_ignores_the_write_is_caught(self):
+        """설정이 값을 안 받아도 조용히 넘어가지 않아야 합니다."""
+
+        class Stubborn:
+            difficulty_range = (0.0, 1.0)
+
+            def __setattr__(self, name, value):
+                pass  # 쓰기를 삼킨다
+
+        with self.assertRaises(RuntimeError):
+            terrains.pin_difficulty(Stubborn(), 0.5)

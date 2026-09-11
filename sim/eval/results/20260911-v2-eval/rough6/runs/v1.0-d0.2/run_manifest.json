@@ -1,0 +1,172 @@
+{
+  "argv": [
+    "sim/eval/eval_generalization.py",
+    "--checkpoint",
+    "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-11_00-11-20_20260911_gapwide_seed42_iter1500\\model_1500.pt",
+    "--terrain_set",
+    "rough6",
+    "--terrains",
+    "all",
+    "--difficulty",
+    "0.2",
+    "--episodes",
+    "100",
+    "--envs_per_terrain",
+    "10",
+    "--eval_duration",
+    "6",
+    "--command_vx",
+    "1",
+    "--min_progress_m",
+    "3.0",
+    "--max_lateral_drift",
+    "0.75",
+    "--max_velocity_mae",
+    "0.25",
+    "--seed",
+    "42",
+    "--headless",
+    "--device",
+    "cuda:0",
+    "--output_dir",
+    "C:\\work\\foothold-lab-easy5\\sim\\eval\\results\\20260911-v2-eval\\rough6\\runs\\v1.0-d0.2",
+    "--note",
+    "difficulty sweep 20260910 | set=rough6 vx=1 difficulty=0.2 | gpu0"
+  ],
+  "command_vx_mps": 1.0,
+  "device": "cuda:0",
+  "direction_gate_m": 3.0,
+  "direction_measured_at": "gate",
+  "environment": {
+    "cuda_version": "12.8",
+    "gpu_names": [
+      "NVIDIA GeForce RTX 5080"
+    ],
+    "hostname": "AI-WS01",
+    "isaaclab_commit": "37ddf626871758333d6ed89cf64ad702aef127d0",
+    "isaaclab_version": "0.54.2",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python_version": "3.11.15",
+    "repo_commit": "7e979e0de528206836e3c6e540e2bfeb95dd8d1b",
+    "rsl_rl_version": "3.1.2",
+    "torch_version": "2.7.0+cu128"
+  },
+  "envs_per_terrain": 10,
+  "episodes_per_terrain": 100,
+  "episodes_recorded": 600,
+  "eval_duration_s": 6.0,
+  "finished_at_utc": "2026-09-10T17:44:59+00:00",
+  "gate_speed_measured_at": "gate",
+  "gate_speed_source": "root_lin_vel_b[:, 0]",
+  "harness": "sim/eval/eval_generalization.py",
+  "head_contact_body_ids": [
+    9,
+    10
+  ],
+  "head_contact_body_names": [
+    "Head_upper",
+    "Head_lower"
+  ],
+  "head_contact_in_success_judgement": false,
+  "head_contact_threshold_n": 1.0,
+  "ideal_distance_m": 6.0,
+  "joint_pos_scale": 0.05,
+  "max_lateral_drift_m": 0.75,
+  "max_velocity_mae_mps": 0.25,
+  "min_progress_m": 3.0,
+  "min_progress_ratio": 0.5,
+  "note": "difficulty sweep 20260910 | set=rough6 vx=1 difficulty=0.2 | gpu0",
+  "observation_dim": 235,
+  "obstacle_zone_basis": {
+    "boxes": "tile_half:MeshRandomGridTerrainCfg",
+    "hf_pyramid_slope": "tile_half:HfPyramidSlopedTerrainCfg",
+    "hf_pyramid_slope_inv": "tile_half:HfInvertedPyramidSlopedTerrainCfg",
+    "pyramid_stairs": "tile_half:MeshPyramidStairsTerrainCfg",
+    "pyramid_stairs_inv": "tile_half:MeshInvertedPyramidStairsTerrainCfg",
+    "random_rough": "tile_half:HfRandomUniformTerrainCfg"
+  },
+  "obstacle_zones_m": {
+    "boxes": [
+      1.0,
+      4.0
+    ],
+    "hf_pyramid_slope": [
+      1.0,
+      4.0
+    ],
+    "hf_pyramid_slope_inv": [
+      1.0,
+      4.0
+    ],
+    "pyramid_stairs": [
+      1.5,
+      4.0
+    ],
+    "pyramid_stairs_inv": [
+      1.5,
+      4.0
+    ],
+    "random_rough": [
+      0.0,
+      4.0
+    ]
+  },
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-11_00-11-20_20260911_gapwide_seed42_iter1500\\model_1500.pt",
+  "policy_sha256": "c7612aef0b3c49b876c610d6d1c4f507eba666a4ffa03797760ad4a896ee7aca",
+  "rail_thickness_fixed_m": null,
+  "rail_thickness_range": null,
+  "recorded_terrains": [
+    "pyramid_stairs",
+    "pyramid_stairs_inv",
+    "boxes",
+    "random_rough",
+    "hf_pyramid_slope",
+    "hf_pyramid_slope_inv"
+  ],
+  "seed": 42,
+  "spawn_xy_range_m": 0.1,
+  "speed_drop_ratio_definition": "장애물 구간 안 최저 전진 속도 / 명령 전진 속도. 구간은 출발점 기준 전진거리이고 지형 설정에서 계산한다",
+  "started_at_utc": "2026-09-10T17:43:13+00:00",
+  "step_dt_s": 0.02,
+  "success_axes": [
+    "survival_success",
+    "progress_success",
+    "tracking_success",
+    "direction_success"
+  ],
+  "terrain_border_width_changed_from": 10.0,
+  "terrain_border_width_m": 20.0,
+  "terrain_curriculum": true,
+  "terrain_difficulty_overridden": true,
+  "terrain_difficulty_range": [
+    0.2,
+    0.2
+  ],
+  "terrain_forward_extent_m": 24.0,
+  "terrain_num_cols": 6,
+  "terrain_num_rows": 1,
+  "terrain_set": "rough6",
+  "terrain_set_names": [
+    "pyramid_stairs",
+    "pyramid_stairs_inv",
+    "boxes",
+    "random_rough",
+    "hf_pyramid_slope",
+    "hf_pyramid_slope_inv"
+  ],
+  "terrain_size_m": [
+    8.0,
+    8.0
+  ],
+  "timeseries": {
+    "enabled": false
+  },
+  "total_envs_simulated": 60,
+  "traversal_success_axes": [
+    "survival_success",
+    "progress_success",
+    "direction_success"
+  ],
+  "traversal_success_is_a_success_rate": false,
+  "yaw_range_deg": 5.0
+}

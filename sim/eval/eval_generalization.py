@@ -131,6 +131,14 @@ parser.add_argument("--min_progress_m", type=float, default=10.0,
                     help="통과로 치는 최소 전진 거리(m)")
 parser.add_argument("--max_velocity_mae", type=float, default=0.25,
                     help="속도 추종 판정 문턱(m/s)")
+# **규격 2 가 기본값이다** (2026-09-11 전환). 빗나간 광선을 학습과 같은 +1 로 읽는다.
+#   왜: 구멍 위에서 광선이 아무것도 못 맞히는데, 옛 기본 함수는 그 자리를 -1 로
+#   잘랐다. 이 눈금에서 -1 은 «내 몸통보다 높이 솟은 것», 곧 벽이다. 구멍을
+#   장애물이라고 알려 주고 있었다. 실측: gap 1/28/100 (옛 규격 0/0/6).
+parser.add_argument("--gap_aware_scan", action="store_true",
+                    help="(지금은 기본값이라 아무 일도 안 한다. 옛 명령과의 호환용)")
+parser.add_argument("--legacy_miss_scan", action="store_true",
+                    help="**결함 규격 1** 로 되돌린다. 빗나간 광선을 -1(벽)로 읽는다. manifest 에 eval_spec_version=1 이 찍힌 결과를 재현할 때만 쓴다.")
 parser.add_argument("--max_lateral_drift", type=float, default=0.05,
                     help="통과선 위 좌우 이탈 판정 문턱(m). 멘토 기준 5 cm")
 parser.add_argument("--head_contact_threshold_n", type=float, default=1.0,
@@ -235,6 +243,15 @@ def configure_evaluation(env_cfg, agent_cfg, envs_per_terrain):
     cmd.rel_standing_envs = 0.0
 
     env_cfg.observations.policy.enable_corruption = False
+
+    # 빗나간 광선을 어떻게 읽을지. 규격을 바꾸는 팔이라 manifest 에 반드시 남긴다.
+    # 규격 2 가 기본. --legacy_miss_scan 을 줄 때만 옛 동작으로 돌아간다.
+    globals()["_MISS_VALUE"] = None
+    globals()["_SPEC_VERSION"] = 1 if args_cli.legacy_miss_scan else 2
+    if not args_cli.legacy_miss_scan:
+        # _SET_MODULE 은 모듈 «이름» 이다 (194행). 객체로 바꿔 부른다.
+        globals()["_MISS_VALUE"] = importlib.import_module(
+            _SET_MODULE).apply_gap_aware_scan(env_cfg)
 
     for event in ("push_robot", "base_external_force_torque", "add_base_mass", "base_com"):
         if hasattr(env_cfg.events, event):
@@ -1259,6 +1276,9 @@ def main():
                         "command_vx_mps": args_cli.command_vx,
                         "eval_duration_s": args_cli.eval_duration,
                         "gate_m": min_progress,
+                        "eval_spec_version": globals().get("_SPEC_VERSION"),
+                        "gap_aware_scan": not bool(args_cli.legacy_miss_scan),
+                        "height_scan_miss_value": globals().get("_MISS_VALUE"),
                         "min_progress_m": min_progress,
                         "max_lateral_drift_m": args_cli.max_lateral_drift,
                         "max_velocity_mae_mps": args_cli.max_velocity_mae,
@@ -1461,6 +1481,14 @@ def main():
             "min_progress_ratio": min_progress_ratio,
             "max_velocity_mae_mps": args_cli.max_velocity_mae,
             "max_lateral_drift_m": args_cli.max_lateral_drift,
+            # 어느 «규격» 으로 쟀는가. **이 세 줄이 없으면 옛 숫자와 새 숫자를
+            # 나중에 구별할 수 없다.** 2026-09-11 에 한 번 빠뜨려 78개 실행이
+            # 규격 없이 쌓였다. 규격을 바꾸는 팔은 반드시 여기 남긴다.
+            #   `--gap_aware_scan` 은 이제 아무 일도 안 하는 호환용 팔이다.
+            #   실제로 규격을 가르는 것은 `--legacy_miss_scan` 하나다.
+            "eval_spec_version": globals().get("_SPEC_VERSION"),
+            "gap_aware_scan": not bool(args_cli.legacy_miss_scan),
+            "height_scan_miss_value": globals().get("_MISS_VALUE"),
             "direction_measured_at": "gate",
             "direction_gate_m": min_progress,
 

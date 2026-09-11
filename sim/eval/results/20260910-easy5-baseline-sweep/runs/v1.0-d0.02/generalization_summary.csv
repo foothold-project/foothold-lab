@@ -1,0 +1,6 @@
+terrain,episodes,overall_success_rate,survival_rate,progress_success_rate,tracking_success_rate,direction_success_rate,mean_forward_progress_m,mean_lateral_drift_m,mean_velocity_mae_mps,mean_episode_duration_s,mean_fall_time_s,mean_reward_per_step
+discrete_obstacles,100,1.0,1.0,1.0,1.0,1.0,5.548374000000003,0.5046689999999999,0.13137399999999996,6.0,,0.03754408000000001
+wave,100,1.0,1.0,1.0,1.0,1.0,5.549094000000001,0.4495540000000001,0.131975,6.0,,0.03791726000000002
+star,100,1.0,1.0,1.0,1.0,1.0,5.633888,0.21321299999999993,0.115639,6.0,,0.03844286000000001
+repeated_boxes,100,1.0,1.0,1.0,1.0,1.0,5.594061000000003,0.24185600000000002,0.12684500000000004,6.0,,0.03805518
+repeated_cylinders,100,1.0,1.0,1.0,1.0,1.0,5.592142000000003,0.243447,0.127416,6.0,,0.03802673

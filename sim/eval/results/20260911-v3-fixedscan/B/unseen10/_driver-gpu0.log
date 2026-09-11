@@ -1,0 +1,40 @@
+﻿[09:14:12] gpu0 | START cells=1.0:0.1,1.0:0.2,1.0:0.3,1.0:0.4,1.0:0.6,1.0:0.7,1.0:0.8,1.0:0.9,1.0:1.0
+[09:14:12] gpu0 | BEGIN v1.0-d0.1  vx=1 dur=6 diff=0.1
+[09:16:15] gpu0 | END   v1.0-d0.1  exit=0 sec=123 rows=1000
+[09:16:15] gpu0 | BEGIN v1.0-d0.2  vx=1 dur=6 diff=0.2
+[09:18:33] gpu0 | END   v1.0-d0.2  exit=0 sec=137.8 rows=1000
+[09:18:33] gpu0 | BEGIN v1.0-d0.3  vx=1 dur=6 diff=0.3
+[09:20:55] gpu0 | END   v1.0-d0.3  exit=0 sec=142.4 rows=1000
+[09:20:55] gpu0 | BEGIN v1.0-d0.4  vx=1 dur=6 diff=0.4
+[09:23:16] gpu0 | END   v1.0-d0.4  exit=0 sec=140.6 rows=1000
+[09:23:16] gpu0 | BEGIN v1.0-d0.6  vx=1 dur=6 diff=0.6
+[09:25:35] gpu0 | END   v1.0-d0.6  exit=0 sec=139 rows=1000
+[09:25:35] gpu0 | BEGIN v1.0-d0.7  vx=1 dur=6 diff=0.7
+[09:27:48] gpu0 | END   v1.0-d0.7  exit=0 sec=133.3 rows=1000
+[09:27:48] gpu0 | BEGIN v1.0-d0.8  vx=1 dur=6 diff=0.8
+[09:30:04] gpu0 | END   v1.0-d0.8  exit=0 sec=135.9 rows=1000
+[09:30:04] gpu0 | BEGIN v1.0-d0.9  vx=1 dur=6 diff=0.9
+[09:32:26] gpu0 | END   v1.0-d0.9  exit=0 sec=142 rows=1000
+[09:32:26] gpu0 | BEGIN v1.0-d1.0  vx=1 dur=6 diff=1
+[09:34:49] gpu0 | END   v1.0-d1.0  exit=0 sec=142.8 rows=1000
+[09:34:49] gpu0 | DONE
+[09:34:49] gpu0 | START cells=0.5:0.1,0.5:0.2,0.5:0.3,0.5:0.4,0.5:0.6,0.5:0.7,0.5:0.8,0.5:0.9,0.5:1.0
+[09:34:49] gpu0 | BEGIN v0.5-d0.1  vx=0.5 dur=12 diff=0.1
+[09:38:45] gpu0 | END   v0.5-d0.1  exit=0 sec=236.1 rows=1000
+[09:38:45] gpu0 | BEGIN v0.5-d0.2  vx=0.5 dur=12 diff=0.2
+[09:43:05] gpu0 | END   v0.5-d0.2  exit=0 sec=260.5 rows=1000
+[09:43:05] gpu0 | BEGIN v0.5-d0.3  vx=0.5 dur=12 diff=0.3
+[09:47:20] gpu0 | END   v0.5-d0.3  exit=0 sec=255.1 rows=1000
+[09:47:20] gpu0 | BEGIN v0.5-d0.4  vx=0.5 dur=12 diff=0.4
+[09:51:31] gpu0 | END   v0.5-d0.4  exit=0 sec=251 rows=1000
+[09:51:31] gpu0 | BEGIN v0.5-d0.6  vx=0.5 dur=12 diff=0.6
+[09:55:53] gpu0 | END   v0.5-d0.6  exit=0 sec=261.7 rows=1000
+[09:55:53] gpu0 | BEGIN v0.5-d0.7  vx=0.5 dur=12 diff=0.7
+[10:00:04] gpu0 | END   v0.5-d0.7  exit=0 sec=251.1 rows=1000
+[10:00:04] gpu0 | BEGIN v0.5-d0.8  vx=0.5 dur=12 diff=0.8
+[10:04:18] gpu0 | END   v0.5-d0.8  exit=0 sec=253.2 rows=1000
+[10:04:18] gpu0 | BEGIN v0.5-d0.9  vx=0.5 dur=12 diff=0.9
+[10:08:37] gpu0 | END   v0.5-d0.9  exit=0 sec=259.1 rows=1000
+[10:08:37] gpu0 | BEGIN v0.5-d1.0  vx=0.5 dur=12 diff=1
+[10:12:51] gpu0 | END   v0.5-d1.0  exit=0 sec=253.9 rows=1000
+[10:12:51] gpu0 | DONE

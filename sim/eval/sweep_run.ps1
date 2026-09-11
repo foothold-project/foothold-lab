@@ -1,4 +1,4 @@
-# 난이도 스윕 실행기. 한 GPU 가 자기 몫의 칸을 순서대로 돈다.
+﻿# 난이도 스윕 실행기. 한 GPU 가 자기 몫의 칸을 순서대로 돈다.
 #
 # 쓰는 법:  powershell -File sweep_run.ps1 -Gpu 0 -Cells "1.0:0.1,1.0:0.2"
 #   Cells 는 "속도:난이도" 를 쉼표로 이은 것.
@@ -15,7 +15,13 @@ param(
     [double]$RailThickness = 0,
     [string]$CondaEnv = $env:FOOTHOLD_ISAAC_ENV,
     [string]$Checkpoint = $env:FOOTHOLD_GO2_CHECKPOINT,
-    [int]$Episodes = 100
+    [int]$Episodes = 100,
+    [switch]$Timeseries,
+    # 호환용 팔이다. 지금은 아무 일도 안 한다. 기본이 규격 2 이기 때문이다.
+    [switch]$GapAwareScan,
+    # 결함 규격 1 로 되돌린다. manifest 에 eval_spec_version=1 로 찍힌
+    # 결과를 재현할 때만 쓴다. 날짜로 가르지 않는다.
+    [switch]$LegacyMissScan
 )
 
 $ErrorActionPreference = "Continue"
@@ -127,6 +133,18 @@ foreach ($cell in $Cells.Split(",")) {
     if ($RailThickness -gt 0) {
         $extra += "--rail_thickness"
         $extra += "$RailThickness"
+    }
+
+    # 에피소드 시계열(parquet). #394 로 하네스에 들어온 팔이다. pyarrow 가 필요하고,
+    # 켜면 칸마다 `<out>/timeseries/ep****.parquet` 이 쌓인다. HUD 재료로 쓴다.
+    if ($Timeseries) {
+        $extra += "--timeseries"
+    }
+
+    # 규격 2 가 기본이다. -GapAwareScan 은 옛 명령과의 호환으로 남겨 둔다.
+    # 옛 결함 규격으로 되돌리려면 -LegacyMissScan 을 준다.
+    if ($LegacyMissScan) {
+        $extra += "--legacy_miss_scan"
     }
 
     & $py sim/eval/eval_generalization.py `

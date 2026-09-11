@@ -1,0 +1,8 @@
+﻿[08:50:27] gpu0 | START cells=1.0:0.5,0.5:0.5,1.5:0.5
+[08:50:27] gpu0 | BEGIN v1.0-d0.5  vx=1 dur=6 diff=0.5
+[08:52:36] gpu0 | END   v1.0-d0.5  exit=0 sec=129.3 rows=600
+[08:52:36] gpu0 | BEGIN v0.5-d0.5  vx=0.5 dur=12 diff=0.5
+[08:56:52] gpu0 | END   v0.5-d0.5  exit=0 sec=256 rows=600
+[08:56:52] gpu0 | BEGIN v1.5-d0.5  vx=1.5 dur=4 diff=0.5
+[08:58:24] gpu0 | END   v1.5-d0.5  exit=0 sec=92.2 rows=600
+[08:58:24] gpu0 | DONE

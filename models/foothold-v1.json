@@ -1,0 +1,164 @@
+{
+  "name": "foothold-v1",
+  "file": "models/foothold-v1.pt",
+  "sha256": "c7612aef0b3c49b876c610d6d1c4f507eba666a4ffa03797760ad4a896ee7aca",
+  "bytes": 6882293,
+  "released": "2026-09-11",
+  "eval_spec_version": 2,
+  "training": {
+    "task": "Isaac-Velocity-GapWide-Unitree-Go2-v0",
+    "started_from": "NVIDIA Isaac-Velocity-Rough-Unitree-Go2-v0 checkpoint (iter=0 으로 되감은 사본)",
+    "num_envs": 4096,
+    "seed": 42,
+    "wall_clock": "TensorBoard 이벤트 첫 기록에서 마지막 기록까지 5,818.4초 (약 96분 58초). RTX 5080 한 대. 앱 기동과 종료는 이 값에 안 들어갑니다.",
+    "terrain_mix": {
+      "pyramid_stairs": 0.18,
+      "pyramid_stairs_inv": 0.18,
+      "boxes": 0.18,
+      "random_rough": 0.18,
+      "hf_pyramid_slope": 0.09,
+      "hf_pyramid_slope_inv": 0.09,
+      "forward_gap": 0.1
+    },
+    "forward_gap_width_range_m": [
+      0.15,
+      0.4
+    ],
+    "command_lin_vel_x_mps": [
+      0.5,
+      1.5
+    ],
+    "difficulty_range": [
+      0.0,
+      1.0
+    ],
+    "curriculum": true,
+    "diff_from_A": "저장된 env.yaml 을 견주면 forward_gap 폭 두 줄(304~305행)과 log_dir(834행)만 다릅니다. A 는 폭이 (0.05, 0.20) 입니다. 「환경 설정은 폭만 바꿨다」까지가 확인된 것이고, 실행 조건 전부가 같았다는 뜻은 아닙니다.",
+    "checkpoint_iter": 1500,
+    "policy_updates": 1501,
+    "iterations_note": "체크포인트의 iter 값은 1500 이고, agent.yaml 의 max_iterations 는 1501 입니다. rsl_rl 은 range(start, start+N) 으로 돌아 model_1500.pt 를 얻으려면 N=1501 이어야 합니다. 「1,500회 돌렸다」로 읽으면 한 번 어긋납니다.",
+    "task_note": "env.yaml 에는 task 이름 필드가 없습니다. 저장된 설정이 Isaac-Velocity-GapWide-Unitree-Go2-v0 의 등록 내용과 일치하는 것까지 확인했습니다. 실행 CLI 의 task 문자열 자체는 별도 기록이 없습니다."
+  },
+  "evaluation": {
+    "spec": "difficulty 0.5 · 거리 예산 6 m · 통과선 3 m · 좌우 0.75 m · 속도 MAE 0.25 m/s · seed 42 · 지형마다 100 에피소드",
+    "note": "제한 시간은 속도에 딸립니다. 0.5 m/s 12초 · 1.0 m/s 6초 · 1.5 m/s 4초.",
+    "harness": "sim/eval/eval_generalization.py (규격 2 가 기본값)",
+    "termination_note": "termination_reason 열의 값은 timeout 과 base_contact 둘뿐입니다. 다만 timeout 은 성공한 에피소드에도 붙습니다. 「실패 사유가 둘」이 아니라 「종료 사유 열의 값이 둘」입니다. 성공 여부는 네 축의 AND 입니다.",
+    "dependency_note": "규격 2 관측 함수는 sim/eval/gap_observations.py 에 있습니다. 저장소 안입니다. 2026-09-11 이전에는 IsaacLab 에서 가져와, 그 판이 없는 사람은 규격 2 로 평가할 수 없었습니다."
+  },
+  "scores_difficulty_0_5": {
+    "0.5 m/s": {
+      "unseen10": {
+        "rails": 70.0,
+        "stepping_stones": 0.0,
+        "floating_ring": 95.0,
+        "discrete_obstacles": 100.0,
+        "wave": 100.0,
+        "gap": 90.0,
+        "pit": 100.0,
+        "star": 100.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0
+      },
+      "rough6": {
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "boxes": 99.0,
+        "random_rough": 99.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0
+      }
+    },
+    "1.0 m/s": {
+      "unseen10": {
+        "stepping_stones": 0.0,
+        "rails": 48.0,
+        "discrete_obstacles": 100.0,
+        "wave": 100.0,
+        "gap": 100.0,
+        "pit": 100.0,
+        "star": 100.0,
+        "floating_ring": 99.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0
+      },
+      "rough6": {
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "boxes": 100.0,
+        "random_rough": 100.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0
+      }
+    },
+    "1.5 m/s": {
+      "unseen10": {
+        "stepping_stones": 0.0,
+        "rails": 21.0,
+        "discrete_obstacles": 100.0,
+        "wave": 100.0,
+        "gap": 68.0,
+        "pit": 100.0,
+        "star": 100.0,
+        "floating_ring": 87.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0
+      },
+      "rough6": {
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "boxes": 100.0,
+        "random_rough": 90.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0
+      }
+    }
+  },
+  "gap_curve_1.0mps": {
+    "baseline": {
+      "0.1": 25.0,
+      "0.2": 7.0,
+      "0.3": 5.0,
+      "0.4": 2.0,
+      "0.5": 1.0,
+      "0.6": 0.0,
+      "0.7": 0.0,
+      "0.8": 0.0,
+      "0.9": 0.0,
+      "1.0": 0.0
+    },
+    "A": {
+      "0.1": 100.0,
+      "0.2": 100.0,
+      "0.3": 100.0,
+      "0.4": 79.0,
+      "0.5": 28.0,
+      "0.6": 8.0,
+      "0.7": 0.0,
+      "0.8": 0.0,
+      "0.9": 0.0,
+      "1.0": 0.0
+    },
+    "B": {
+      "0.1": 100.0,
+      "0.2": 100.0,
+      "0.3": 100.0,
+      "0.4": 100.0,
+      "0.5": 100.0,
+      "0.6": 100.0,
+      "0.7": 100.0,
+      "0.8": 100.0,
+      "0.9": 100.0,
+      "1.0": 100.0
+    }
+  },
+  "known_limits": [
+    "stepping_stones 는 평가한 난이도 격자(0.1 · 0.2 · ... · 1.0)에서 0.2 부터 0% 입니다. 0.1667 아래는 생성기가 발판 지형을 만들지 않으므로 그 구간의 수치를 「발판을 밟았다」로 읽으면 안 됩니다.",
+    "rails 는 난이도 0.5 에서 0.5 m/s 70% · 1.0 m/s 48% · 1.5 m/s 21% 입니다.",
+    "gap 은 난이도 0.5 에서 1.5 m/s 일 때 68% 로 떨어집니다. 「100%」는 1.0 m/s 한 점입니다.",
+    "머리 위에 천장이 있는 지형은 높이 스캔이 표현하지 못합니다. 광선이 아래로만 갑니다.",
+    "head_contact_* 세 열은 인용하지 마십시오. 규격 2 실행 99개 95,400 행 중 head_contact_first_s 에 값이 있는 행은 25,296 이고, 그중 5,979 행(23.6 %)이 정확히 0.0 입니다. 규격 1 에서는 36,134 행 중 8,003 행(22.1 %)입니다. 앞 에피소드가 머리가 닿은 채 끝나면 다음 에피소드의 첫 표본이 그 접촉력을 물려받기 때문으로 봅니다. 다만 «진짜 t=0 접촉»과 «물려받은 것»을 갈라내지 않았으므로 그 비율이 전부 오염이라고 단정하지는 않습니다 (미확인). 앞선 판에 적었던 「12,000 에피소드 중 18.7 %」는 어느 실행에서 나온 값인지 특정하지 못해 철회합니다. **count 와 peak 도 영향을 받습니다.** 오염된 첫 표본이 문턱을 넘으면 head_contact_count 가 1 올라가고, 그 힘이 그 판의 최댓값이면 head_contact_peak_n 도 그 값이 됩니다 (metrics.py:406~411). 앞선 판에서 「count 와 peak 는 영향이 없다」고 한 것은 틀렸습니다. 판정 네 축(생존·전진·속도추종·방향)은 이 열을 안 쓰므로 영향이 없습니다.",
+    "기존 험지 6종이 유지된다는 것은 규격 2 · 난이도 0.5 · 세 속도에서 확인한 범위입니다. 모든 난이도와 다른 Random Seed 까지 확인한 것이 아닙니다.",
+    "같은 Random Seed 를 줘도 에피소드별 초기 자세가 완전히 같지는 않습니다. 규격 1과 2 비교에서 판정 밖 값 83칸이 달라졌습니다 (예: 출발 x 가 -0.0401 m 에서 +0.0509 m). 종합 성공률은 같지만 «완전히 동일» 은 과장입니다."
+  ]
+}

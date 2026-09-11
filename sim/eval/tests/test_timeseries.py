@@ -67,9 +67,11 @@ class ColumnContract(unittest.TestCase):
     def setUp(self):
         self.columns = timeseries.columns_for(GO2_JOINTS)
 
-    def test_Go2_는_92열이다(self):
-        # trace 16 + 몸통 16 + 발 12 + 관절 4 x 12.
-        self.assertEqual(len(self.columns), 92)
+    def test_Go2_는_93열이다(self):
+        # trace 17 + 몸통 16 + 발 12 + 관절 4 x 12.
+        # trace 가 16 -> 17 이 된 것은 foothold-trace/2 에서 `yaw_deg` 가
+        # 붙었기 때문이다 (2026-09-11).
+        self.assertEqual(len(self.columns), 93)
 
     def test_겹치는_이름이_없다(self):
         self.assertEqual(len(self.columns), len(set(self.columns)))

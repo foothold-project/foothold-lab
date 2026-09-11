@@ -106,13 +106,21 @@ def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
                     len(trace), drift, max_drift_s)
         )
 
-    gap = abs(info["frames"] - len(trace))
+    # **부호를 본다.** 예전에는 `abs(...) > 2` 였다. 글로는 「1장까지 정상」
+    # 이라 써 놓고 2장까지 통과시켰고, 방향도 안 봤다. 영상이 trace 보다
+    # «긴» 것은 어떤 경우에도 정상이 아닌데 그것도 통과했다 `확인됨`
+    # (2026-09-11 검증 · 299/300 과 298/300 이 둘 다 통과했다).
+    #
+    # 정상은 딱 둘이다. 같거나, trace 가 한 줄 더 길거나. 판이 끝나는
+    # 스텝에서 프레임을 안 찍기 때문이다 (§ trace.py 머리말).
+    surplus = len(trace) - info["frames"]
 
-    if gap > 2:
+    if surplus not in (0, 1):
         problems.append(
-            "장수가 다릅니다. 영상 {}장 · trace {}줄. 판이 끝나는 스텝에서 "
-            "한 장을 안 찍으므로 1장 차이까지가 정상입니다."
-            .format(info["frames"], len(trace))
+            "장수가 다릅니다. 영상 {}장 · trace {}줄 (차이 {:+d}). 판이 끝나는 "
+            "스텝에서 한 장을 안 찍으므로 trace 가 «한 줄» 더 긴 것까지만 "
+            "정상입니다."
+            .format(info["frames"], len(trace), surplus)
         )
 
     if problems:

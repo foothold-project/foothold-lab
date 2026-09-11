@@ -10,13 +10,13 @@ __pycache__/
 *.pyc
 .venv/
 
-# ★ 타인 저작물 원시 사본 — 실수로도 올라가지 않게 (README 정책 참조)
+# ★ 타인 저작물 원시 사본 · 실수로도 올라가지 않게 (README 정책 참조)
 _raw/
 *.pdf.txt
 crawl/
 
 # 대용량 산출물
-# *.mp4 / *.m4a 는 Git LFS 로 전환 (2026-08-10) — .gitattributes 참조
+# *.mp4 / *.m4a 는 Git LFS 로 전환 (2026-08-10) · .gitattributes 참조
 #   이유: 학습 결과 영상은 팀 공유가 잦은 1차 증거물이다.
 #   PNG 컨택트시트만으로는 "걷는지 아닌지"를 대신할 수 없다.
 *.wav
@@ -27,3 +27,42 @@ docs/meetings/print/fonts/
 # 회의·inbox 인쇄 PDF는 git에 올리지 않는다 (정본은 md)
 docs/meetings/*.pdf
 inbox/**/*.pdf
+
+# ─────────────────────────────────────────────────────────────────────────
+# 평가 산출물 (2026-09-11 · 규격 2 전환에 맞춰 정리)
+#
+# **원칙 하나: 저장소의 «성적» 은 규격 2 뿐이다.**
+#   규격 1 은 빗나간 광선을 -1(벽)로 읽던 결함 규격이다. 그 숫자를 성적으로
+#   인용하지 않는다. 다만 «고치기 전과 후» 를 되짚을 수 있게 요약만 남긴다.
+#
+# **원칙 둘: 다시 뽑을 수 있는 것은 안 넣는다.**
+#   clone 하는 사람이 전부 받게 된다. 실행 명령이 run_manifest.json 에 있다.
+# ─────────────────────────────────────────────────────────────────────────
+
+# 시계열 parquet · 9,600개 · 1,098 MB · 전부 규격 1
+#   --timeseries 를 주면 다시 나온다. HUD 재료로 쓸 때 그때 뽑는다.
+sim/eval/results/**/timeseries/
+
+# Isaac Sim 콘솔 로그 · 규격 2 폴더만 37 MB
+#   플러그인 경고와 로딩 기록이다. 실패했을 때만 그 자리에서 본다.
+sim/eval/results/**/runs/*.log
+sim/eval/results/*/*.log
+
+# 렌더 중간 산출물
+#   mp4 는 LFS 로 넣는다 (.gitattributes). 미리보기 png 는 영상에서 다시 뽑는다.
+sim/eval/results/**/previews/
+sim/eval/results/**/hud/*.png
+
+# 규격 1 결과 · 에피소드 원시 행은 빼고 «요약과 조건» 만 남긴다
+#   남기는 것: generalization_summary.csv · run_manifest.json · README · 결함규격 딱지
+#   빼는 것:   generalization_raw.csv (에피소드마다 한 줄 · 아무도 안 읽는다)
+#   왜: 정본이 인용하는 «고치기 전» 숫자는 요약에 다 있다. 원시 행은 이 기계에 남는다.
+sim/eval/results/20260910-v1-eval/**/generalization_raw.csv
+sim/eval/results/20260911-v2-eval/**/generalization_raw.csv
+sim/eval/results/20260910-easy5-baseline-sweep/**/generalization_raw.csv
+
+# 일회용 확인 폴더
+#   2026-09-11 에 카메라 축 고정이 실제로 되는지 한 컷만 다시 찍어 본 자리다.
+#   같은 컷의 «고친 뒤» 판은 20260911-v1-clips/stepping_stones-high 에 있다.
+#   둘을 다 넣으면 받는 사람이 어느 쪽이 정본인지 헷갈린다.
+sim/eval/results/20260911-camprobe/

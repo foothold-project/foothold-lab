@@ -34,7 +34,7 @@ trace 줄도 같은 자리에서 적습니다. 스텝을 밟기 직전에 한 �
 `docs/assets/eval/lvl*.csv` 가 이미 쓰는 방식과 같습니다.
 
 ```
-# schema = foothold-trace/1
+# schema = foothold-trace/2
 # terrain = pit
 # fps = 50
 ...
@@ -50,9 +50,18 @@ import csv
 import io
 import math
 
-SCHEMA = "foothold-trace/1"
+SCHEMA = "foothold-trace/2"
 
-# 프레임 한 줄의 열. **순서를 바꾸지 마십시오.** 이미 나온 trace 를 못 읽게 됩니다.
+# 판 갈이
+#   /1  2026-09-10  처음
+#   /2  2026-09-11  `yaw_deg` 추가. 출발 축에서 얼마나 틀어졌는가.
+#                   roll·pitch 만 적고 yaw 를 안 적어서, 「카메라가 왜 도느냐」를
+#                   물었을 때 원자료로 답할 수 없었다 (팀장 지적).
+#
+# **한 판 안에서는 순서를 바꾸지 마십시오.** 판을 올릴 때만 바꿉니다.
+#
+# 옛 판은 아래 `READABLE_SCHEMAS` 에 「그 판에 없던 열」을 적어 두면 읽습니다.
+# 거기 없는 판은 거부합니다. 아무 판이나 받아 주는 자리가 아닙니다.
 TRACE_COLUMNS = (
     "frame",
     "t_s",
@@ -69,12 +78,27 @@ TRACE_COLUMNS = (
     "base_z_m",
     "pitch_deg",
     "roll_deg",
+    # 출발 축 대비 틀어진 각. 왼쪽이 양수. 세계좌표 yaw 가 아니다.
+    "yaw_deg",
     # 네 발 높이. 지형면이 아니라 세계 z 다. 안 그린다(§ README «뺀 것»).
     "foot_z_fl_m",
     "foot_z_fr_m",
     "foot_z_rl_m",
     "foot_z_rr_m",
 )
+
+# **읽을 수 있는 판과, 그 판에 없던 열.**
+#
+# 판을 올릴 때 «열이 늘기만» 했다면 옛 파일도 읽을 수 있습니다. 없는 열은
+# 빈 칸(`None`)으로 옵니다. 이 형식에서 빈 칸은 원래 「안 쟀다」는 뜻이라
+# 거짓말이 아닙니다.
+#
+# 열의 «뜻» 이 바뀌었다면 여기 넣지 마십시오. 그때는 거부해야 맞습니다.
+# 같은 이름으로 다른 것을 읽으면 아무도 못 잡습니다.
+READABLE_SCHEMAS = {
+    "foothold-trace/1": ("yaw_deg",),
+    SCHEMA: (),
+}
 
 # 숫자로 되읽을 열. `frame` 만 정수다.
 _INT_COLUMNS = ("frame",)
@@ -115,6 +139,19 @@ class Trace(object):
     def column(self, name):
         """열 하나를 목록으로. 빈 칸은 `None` 으로 남습니다."""
         return [row.get(name) for row in self.rows]
+
+    @property
+    def schema(self):
+        """이 파일이 어느 판으로 쓰였는가."""
+        return self.meta.get("schema")
+
+    @property
+    def absent_columns(self):
+        """이 판에 원래 없던 열. 값을 물으면 전부 `None` 입니다.
+
+        옛 판을 읽었을 때 「왜 이 열이 비었나」에 답하는 자리입니다.
+        """
+        return tuple(READABLE_SCHEMAS.get(self.schema, ()))
 
     @property
     def fps(self):
@@ -174,9 +211,42 @@ def write(path, meta, rows):
     `rows` 는 `TRACE_COLUMNS` 를 키로 갖는 딕셔너리 목록입니다. 없는 열은
     빈 칸으로 나갑니다. **없는 열을 0 으로 채우지 않습니다.** 0 은 「쟀는데
     0 이었다」는 뜻이고, 빈 칸은 「안 쟀다」는 뜻입니다.
+
+    등록 안 된 열을 주면 **거부합니다.** 예전에는 `extrasaction="ignore"` 라
+    조용히 버렸습니다. 새 열을 재서 넣어도 파일에는 안 들어가고 아무도
+    모릅니다 `확인됨` (2026-09-11 · `yaw_deg` 를 넣었는데 안 나왔다).
     """
     ordered = dict(meta)
     ordered.setdefault("schema", SCHEMA)
+
+    # **자기가 안 쓰는 판 이름을 적지 못하게 한다.**
+    #
+    # 이 함수는 언제나 지금 `TRACE_COLUMNS` 를 통째로 쓴다. 그런데 머리말의
+    # 판 이름은 `meta` 에서 그대로 받아 적었다. 그래서 `schema` 만 옛 판으로
+    # 주면 **내용은 새 판이고 이름만 옛 판인 파일**이 나왔다
+    # `확인됨` (2026-09-11 · 시험을 쓰다 드러남).
+    #
+    # 옛 판 파일은 «그때 그 코드» 가 만든 것이지 지금 코드가 만드는 것이 아니다.
+    if ordered["schema"] != SCHEMA:
+        raise TraceError(
+            "{} 에 schema 를 {} 로 적으려 합니다. 이 함수는 {} 만 씁니다. "
+            "옛 판 파일을 새로 만들지 마십시오.".format(
+                path, ordered["schema"], SCHEMA
+            )
+        )
+
+    # **등록 안 된 열을 소리 나게 만든다.** 쓰기 전에 다 본다. 절반 쓰다
+    # 멈추면 앞뒤 안 맞는 파일이 남는다.
+    known = set(TRACE_COLUMNS)
+    for index, row in enumerate(rows):
+        unknown = sorted(set(row) - known)
+        if unknown:
+            raise TraceError(
+                "{} 의 {} 번째 줄에 등록 안 된 열이 있습니다: {}. "
+                "`TRACE_COLUMNS` 에 넣고 `SCHEMA` 판을 올리십시오.".format(
+                    path, index, unknown
+                )
+            )
 
     with io.open(path, "w", encoding="utf-8", newline="") as handle:
         handle.write(format_meta_line("schema", ordered.pop("schema")))
@@ -185,7 +255,7 @@ def write(path, meta, rows):
             handle.write(format_meta_line(key, ordered[key]))
 
         writer = csv.DictWriter(
-            handle, fieldnames=list(TRACE_COLUMNS), extrasaction="ignore",
+            handle, fieldnames=list(TRACE_COLUMNS), extrasaction="raise",
             lineterminator="\n",
         )
         writer.writeheader()
@@ -211,8 +281,14 @@ def _coerce_meta(meta):
     return out
 
 
-def _coerce_row(raw):
-    row = {}
+def _coerce_row(raw, absent=()):
+    """CSV 한 줄을 수치로. `absent` 는 그 판에 없던 열이다.
+
+    없던 열은 **빈 칸으로 채워 넣는다.** 키 자체를 빼면 `row["yaw_deg"]` 가
+    `KeyError` 로 죽는다. 옛 판을 읽는 쪽은 그 열이 있는지 없는지 모르고
+    그냥 물을 뿐이고, 「안 쟀다」의 답은 `None` 이다.
+    """
+    row = {key: None for key in absent}
 
     for key, text in raw.items():
         if key is None or key not in TRACE_COLUMNS:
@@ -246,21 +322,37 @@ def read(path):
 
             body.append(line)
 
-    if meta.get("schema") != SCHEMA:
+    schema = meta.get("schema")
+
+    if schema not in READABLE_SCHEMAS:
         raise TraceError(
-            "{} 의 schema 가 {} 입니다. {} 여야 합니다.".format(
-                path, meta.get("schema"), SCHEMA
+            "{} 의 schema 가 {} 입니다. 읽을 수 있는 판은 {} 입니다.".format(
+                path, schema, ", ".join(sorted(READABLE_SCHEMAS))
             )
         )
 
     reader = csv.DictReader(body)
+    fieldnames = reader.fieldnames or []
 
-    missing = [c for c in TRACE_COLUMNS if c not in (reader.fieldnames or [])]
+    # 그 판에 원래 없던 열은 빼고 센다. 나머지가 하나라도 없으면 거부한다.
+    absent_by_design = READABLE_SCHEMAS[schema]
+    missing = [c for c in TRACE_COLUMNS
+               if c not in fieldnames and c not in absent_by_design]
 
     if missing:
         raise TraceError("{} 에 열이 없습니다: {}".format(path, missing))
 
-    rows = [_coerce_row(raw) for raw in reader]
+    # **있어야 할 열이 없는 것도 소리 나게 한다.** 옛 판이라 없는 것과,
+    # 파일이 깨져서 없는 것은 다르다. 앞의 것만 봐준다.
+    surprise = [c for c in absent_by_design if c in fieldnames]
+
+    if surprise:
+        raise TraceError(
+            "{} 는 {} 판인데 {} 열이 들어 있습니다. 머리말의 판 이름이 "
+            "내용과 다릅니다.".format(path, schema, surprise)
+        )
+
+    rows = [_coerce_row(raw, absent_by_design) for raw in reader]
 
     if not rows:
         raise TraceError("{} 에 프레임 줄이 없습니다.".format(path))

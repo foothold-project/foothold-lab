@@ -151,3 +151,6 @@ class UnitreeGo2Rough6EnvCfg(UnitreeGo2RoughEnvCfg):
         self.viewer.env_index = 0
         self.viewer.eye = (-3.0, 2.0, 1.5)
         self.viewer.lookat = (0.0, 0.0, 0.4)
+
+# 같은 눈 바꾸기를 rough6 에서도 쓴다. 구현은 한 자리에만 둔다.
+from generalization_env_cfg import apply_gap_aware_scan  # noqa: E402,F401

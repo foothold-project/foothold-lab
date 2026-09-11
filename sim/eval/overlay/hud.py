@@ -69,7 +69,9 @@ LABEL_TEXTS = (
     "추종",
     "방향",
     "판정",
-    "판",
+    "에피소드",
+    # 값이 비었을 때 쓰는 대체 글자. 없으면 두부가 찍힌다.
+    "?난이도모델…d",
     "미정",
     "통과",
     "실패",
@@ -103,7 +105,7 @@ def charset():
 INK = (233, 237, 245, 255)
 MUTED = (141, 150, 168, 255)
 
-PANEL = (11, 14, 21, 196)
+PANEL = (9, 12, 18, 238)
 EDGE = (255, 255, 255, 30)
 GRID = (255, 255, 255, 26)
 
@@ -112,7 +114,7 @@ CMD_LINE = (150, 161, 182, 255)
 GOOD = (46, 209, 158, 255)
 WARN = (243, 179, 58, 255)
 BAD = (255, 94, 94, 255)
-IDLE = (92, 100, 118, 255)
+IDLE = (93, 101, 119, 255)
 
 SHORTFALL = (243, 179, 58, 74)
 SLOWBAND = (255, 94, 94, 132)
@@ -242,11 +244,20 @@ class Hud(object):
         self.fell = self.termination == "base_contact" if self.termination else None
 
         if title is None:
-            title = "{} · env {} · {}판".format(
+            # **메타가 적어 준 제목을 먼저 쓴다.** 렌더가 만든 trace 에는 env_id 와
+            # episode 가 없어 아래 형식이 «?» 로 떨어진다. 그 글자가 굽힌 서체에
+            # 없으면 두부가 찍힌다 `확인됨` (2026-09-11).
+            title = meta.get("title") or ""
+        if not title:
+            title = "{} · env {} · 에피소드 {}".format(
                 meta.get("terrain", "?"), meta.get("env_id", "?"),
                 meta.get("episode", "?"),
             )
 
+        # **넘치면 자른다.** 제목이 길면 옆 칸(속도)의 라벨을 덮는다
+        # `확인됨` (2026-09-11 · «foothold-v1» 이 «속도» 위로 올라갔다).
+        if len(title) > 34:
+            title = title[:33] + "…"
         self.title = title
 
         from . import trace as trace_mod
@@ -376,13 +387,13 @@ class Hud(object):
 
         # 왼쪽 칸 · 제목
         draw_text(draw, (self.col_a[0], self.inner_top), self.title,
-                  f.get(s(13)), MUTED)
+                  f.get(s(17)), MUTED)
 
         # 속도 칸 · 제목
         bx = self.col_b[0]
         draw_text(draw, (bx, self.inner_top), "속도", f.get(s(15), bold=True), INK)
         draw_text(draw, (bx + s(36), self.inner_top + s(3)), "명령 대 실제",
-                  f.get(s(12)), MUTED)
+                  f.get(s(14)), MUTED)
 
         self._render_chart_frame(draw)
         self._render_ghost_curve(draw)
@@ -409,7 +420,7 @@ class Hud(object):
         # 명령 라벨은 **왼쪽 끝 위**에 둔다. 오른쪽에 두면 큰 숫자와 겹친다
         # `확인됨` (2026-09-09).
         draw_text(draw, (x0 + s(3), cy - s(3)), "명령 {:.2f}".format(self.command),
-                  f.get(s(11)), CMD_LINE, anchor="ld")
+                  f.get(s(12.5)), CMD_LINE, anchor="ld")
 
         # 세로 눈금. 1초마다(길면 5초마다).
         duration = self.trace.duration_s
@@ -419,18 +430,18 @@ class Hud(object):
         while mark < duration - 1.0e-9:
             x, _ = self._chart_xy(mark, 0.0)
             draw.line((x, y0, x, y1), fill=_fade((255, 255, 255), 16), width=1)
-            draw_text(draw, (x, y1 + s(2)), "{:g}".format(mark), f.get(s(10)),
-                      _fade(MUTED, 170), anchor="ma")
+            draw_text(draw, (x, y1 + s(2)), "{:g}".format(mark), f.get(s(11.5)),
+                      MUTED, anchor="ma")
             mark += step
 
         draw_text(draw, (x1, y1 + s(2)), "{:g}s".format(round(duration, 2)),
-                  f.get(s(10)), _fade(MUTED, 170), anchor="ra")
+                  f.get(s(11.5)), MUTED, anchor="ra")
 
         # 세로축 눈금 글자. **비워 둔 왼쪽 자리 안에** 넣는다.
-        draw_text(draw, (x0 - s(5), y1), "0", f.get(s(10)), _fade(MUTED, 170),
+        draw_text(draw, (x0 - s(5), y1), "0", f.get(s(11.5)), MUTED,
                   anchor="rs")
-        draw_text(draw, (x0 - s(5), y0), "{:.1f}".format(top), f.get(s(10)),
-                  _fade(MUTED, 170), anchor="rm")
+        draw_text(draw, (x0 - s(5), y0), "{:.1f}".format(top), f.get(s(11.5)),
+                  MUTED, anchor="rm")
         draw_text(draw, (x0 - s(5), (y0 + y1) / 2), "m/s", f.get(s(9)),
                   _fade(MUTED, 130), anchor="rm")
 
@@ -471,12 +482,12 @@ class Hud(object):
         draw_text(draw, (x0, self.prog_box[1] - s(21)), "전진",
                   f.get(s(14), bold=True), INK)
         draw_text(draw, (x0 + s(32), self.prog_box[1] - s(19)), "통과선까지",
-                  f.get(s(11)), MUTED)
+                  f.get(s(12.5)), MUTED)
 
         draw_text(draw, (x0, self.drift_box[1] - s(21)), "좌우",
                   f.get(s(14), bold=True), INK)
         draw_text(draw, (x0 + s(32), self.drift_box[1] - s(19)), "이탈",
-                  f.get(s(11)), MUTED)
+                  f.get(s(12.5)), MUTED)
 
     # ------------------------------------------------------------ 프레임
 
@@ -517,23 +528,23 @@ class Hud(object):
         # `확인됨` (2026-09-09 · «초» 가 숫자에 깔렸다).
         used = draw.textlength(text, font=big)
 
-        draw_text(draw, (x0 + used + s(5), baseline), "초", f.get(s(15)), MUTED,
+        draw_text(draw, (x0 + used + s(5), baseline), "초", f.get(s(17)), MUTED,
                   anchor="ls")
 
         draw_text(draw, (x0, baseline + s(18)),
                   "경과 / {:g}초".format(round(self.trace.duration_s, 2)),
-                  f.get(s(12)), _fade(MUTED, 200))
+                  f.get(s(14)), MUTED)
 
         if self.spans:
             seen = sum(1 for start, _e, _l in self.spans if start <= row["t_s"])
-            color = BAD if seen else _fade(MUTED, 200)
+            color = BAD if seen else MUTED
 
             draw_text(draw, (x0, baseline + s(44)),
                       "주춤 {} / {}".format(seen, len(self.spans)),
-                      f.get(s(13), bold=True), color)
+                      f.get(s(15), bold=True), color)
         else:
-            draw_text(draw, (x0, baseline + s(44)), "주춤 0", f.get(s(13)),
-                      _fade(MUTED, 200))
+            draw_text(draw, (x0, baseline + s(44)), "주춤 0", f.get(s(15)),
+                      MUTED)
 
     def _draw_chart(self, draw, row):
         s = self._s
@@ -591,7 +602,7 @@ class Hud(object):
             used = draw.textlength(text, font=value_font)
 
             draw_text(draw, (x1 - used - s(5), self.inner_top + s(7)), "m/s",
-                      f.get(s(10)), MUTED, anchor="ra")
+                      f.get(s(11.5)), MUTED, anchor="ra")
 
     def _draw_progress(self, draw, row):
         s = self._s
@@ -615,7 +626,7 @@ class Hud(object):
         draw_text(draw, (x0, y1 + s(3)), "{:.2f} m".format(fwd),
                   f.get(s(15), bold=True), INK)
         draw_text(draw, (x1, y1 + s(5)), "통과선 {:g} m".format(self.gate_m),
-                  f.get(s(11)), MUTED, anchor="ra")
+                  f.get(s(12.5)), MUTED, anchor="ra")
 
     def _draw_drift(self, draw, row):
         s = self._s
@@ -652,7 +663,7 @@ class Hud(object):
                       f.get(s(15), bold=True), INK)
 
         draw_text(draw, (x1, y1 + s(5)), "기준 {:g} m".format(self.max_lat),
-                  f.get(s(11)), MUTED, anchor="ra")
+                  f.get(s(12.5)), MUTED, anchor="ra")
 
     def _draw_lamps(self, draw, row):
         s = self._s
@@ -681,17 +692,17 @@ class Hud(object):
             # 표시는 O · X · - 셋이다. 「통과 · 실패 · 미정」을 글자로 넣으면
             # 한 줄에 안 들어가고, **색만으로 두면 색을 못 가르는 사람이 못 읽는다.**
             if value is None:
-                fill = (255, 255, 255, 16)
-                edge = _fade(IDLE, 150)
-                ink = _fade(MUTED, 215)
+                fill = (255, 255, 255, 34)
+                edge = _fade(IDLE, 210)
+                ink = INK
                 mark = "-"
             elif value:
-                fill = _fade(GOOD, 44)
+                fill = _fade(GOOD, 30)
                 edge = _fade(GOOD, 190)
                 ink = GOOD
                 mark = "O"
             else:
-                fill = _fade(BAD, 44)
+                fill = _fade(BAD, 30)
                 edge = _fade(BAD, 190)
                 ink = BAD
                 mark = "X"
@@ -702,10 +713,13 @@ class Hud(object):
             # **한 줄이다.** 두 줄로 넣었더니 28 px 에서도 36 px 에서도 위아래
             # 글자가 겹쳤다 `확인됨` (2026-09-09). 한글 ascent 때문에 PIL 의
             # `mm` 기준점이 눈에 보이는 가운데와 다르다.
+            # **이름은 흰색, 색은 표시에만.** 색 바탕 위에 같은 색 글씨를 얹으면
+            # 대비가 무너진다 `확인됨` (2026-09-11 스틸 · 초록 위 초록, 빨강 위 빨강).
+            # 색을 못 가르는 사람도 O · X · - 로 읽을 수 있게 표시는 남긴다.
             draw_text(draw, (x + s(11), y + h / 2), label,
-                      f.get(s(13), bold=True), ink, anchor="lm")
+                      f.get(s(15), bold=True), INK, anchor="lm")
             draw_text(draw, (x + w - s(11), y + h / 2), mark,
-                      f.get(s(14), bold=True), ink, anchor="rm")
+                      f.get(s(16), bold=True), ink, anchor="rm")
 
             x += w + self.lamp_gap
 

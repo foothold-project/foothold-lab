@@ -94,6 +94,7 @@ def make_rows(speeds, lats=None, fwd_step=None):
             "base_z_m": 0.32,
             "pitch_deg": 0.0,
             "roll_deg": 0.0,
+            "yaw_deg": 0.0,
             "foot_z_fl_m": 0.05,
             "foot_z_fr_m": 0.05,
             "foot_z_rl_m": 0.05,
@@ -151,6 +152,139 @@ class TraceRoundTripTest(TempDirTest):
 
         self.assertIsNone(got.rows[0]["foot_z_fl_m"])
         self.assertIsNotNone(got.rows[0]["foot_z_fr_m"])
+
+    def test_등록_안_된_열은_거부한다(self):
+        """새 열을 조용히 버리지 않는가.
+
+        예전에는 `extrasaction="ignore"` 라 등록 안 된 열이 소리 없이
+        사라졌습니다. 재서 넣어도 파일에는 없고 아무도 모릅니다.
+        `yaw_deg` 를 넣었는데 안 나온 것이 그 때문이었습니다 (2026-09-11).
+        """
+        rows = make_rows([0.5] * 3)
+
+        for row in rows:
+            row["아무도_등록_안_한_열"] = 1.0
+
+        with self.assertRaises(trace_mod.TraceError) as caught:
+            trace_mod.write(self.path("t.csv"), make_meta(), rows)
+
+        self.assertIn("아무도_등록_안_한_열", str(caught.exception))
+
+    def test_yaw_는_왕복한다(self):
+        """`yaw_deg` 가 실제로 파일에 들어갔다 나오는가.
+
+        열을 등록만 하고 왕복을 안 재면, 쓰기와 읽기 어느 한쪽만 알아도
+        통과해 버립니다. 알려진 답으로 시험합니다.
+        """
+        rows = make_rows([0.5] * 4)
+
+        for index, row in enumerate(rows):
+            row["yaw_deg"] = -12.5 + index
+
+        target = self.path("t.csv")
+        trace_mod.write(target, make_meta(), rows)
+
+        self.assertIn("yaw_deg", io.open(target, encoding="utf-8").read())
+
+        got = trace_mod.read(target)
+
+        self.assertAlmostEqual(got.rows[0]["yaw_deg"], -12.5)
+        self.assertAlmostEqual(got.rows[3]["yaw_deg"], -9.5)
+
+    def make_v1_file(self, path, rows):
+        """손으로 `foothold-trace/1` 파일을 만든다.
+
+        `write()` 로는 못 만든다. 그 함수는 언제나 지금 판만 쓴다. 옛 판
+        파일은 «그때 그 코드» 가 만든 것이라 여기서도 그대로 흉내 낸다.
+        """
+        columns = [c for c in trace_mod.TRACE_COLUMNS if c != "yaw_deg"]
+
+        with io.open(path, "w", encoding="utf-8", newline="") as handle:
+            handle.write("# schema = foothold-trace/1" + chr(10))
+
+            for key in sorted(make_meta()):
+                handle.write("# {} = {}".format(key, make_meta()[key]) + chr(10))
+
+            handle.write(",".join(columns) + chr(10))
+
+            for row in rows:
+                handle.write(",".join(
+                    "" if row.get(c) is None else repr(row[c])
+                    for c in columns) + chr(10))
+
+        return path
+
+    def test_옛_판_trace_를_읽는다(self):
+        """`foothold-trace/1` 로 쓴 파일이 여전히 읽혀야 한다.
+
+        판을 `/2` 로 올리면서 이미 저장소에 있던 trace 하나를 못 읽게 만들었다.
+        `sim/eval/overlay/README.md` 의 공식 예제가 그 파일을 쓴다
+        (2026-09-11 6차 검증이 잡음).
+
+        /1 과 /2 의 차이는 «열이 하나 늘었다» 뿐이다. 없는 열은 `None` 으로
+        온다. 이 형식에서 빈 칸은 원래 「안 쟀다」는 뜻이다.
+        """
+        rows = make_rows([0.5] * 5)
+        target = self.make_v1_file(self.path("old.csv"), rows)
+
+        # 파일에 `yaw_deg` 가 정말 없어야 시험이 뜻을 갖는다.
+        self.assertNotIn("yaw_deg", io.open(target, encoding="utf-8").read())
+
+        got = trace_mod.read(target)
+
+        self.assertEqual(len(got), 5)
+        self.assertEqual(got.schema, "foothold-trace/1")
+        self.assertEqual(got.absent_columns, ("yaw_deg",))
+
+        # **`.get()` 이 아니라 `[...]` 로도 물을 수 있어야 한다.**
+        # 키를 아예 빼 두면 읽는 쪽이 KeyError 로 죽는다.
+        self.assertIsNone(got.rows[0]["yaw_deg"])
+        self.assertTrue(all(v is None for v in got.column("yaw_deg")))
+
+        # 나머지 열은 멀쩡해야 한다.
+        self.assertAlmostEqual(got.rows[3]["speed_mps"], 0.5)
+
+    def test_옛_판을_새로_쓰지_못한다(self):
+        """`write()` 가 자기가 안 쓰는 판 이름을 적지 못하게 한다.
+
+        예전에는 `schema` 만 옛 판으로 주면 내용은 새 판인데 이름만 옛 판인
+        파일이 나왔다. 읽는 쪽이 그것을 거부하므로 조용히 틀리지는 않았지만,
+        애초에 만들 수 없어야 맞다.
+        """
+        meta = dict(make_meta())
+        meta["schema"] = "foothold-trace/1"
+
+        with self.assertRaises(trace_mod.TraceError) as caught:
+            trace_mod.write(self.path("nope.csv"), meta, make_rows([0.5] * 3))
+
+        self.assertIn("foothold-trace/1", str(caught.exception))
+
+    def test_모르는_판은_여전히_거부한다(self):
+        """옛 판을 받아 준다고 «아무 판이나» 받는 것은 아니다."""
+        target = self.path("future.csv")
+        trace_mod.write(self.path("now.csv"), make_meta(), make_rows([0.5] * 3))
+        text = io.open(self.path("now.csv"), encoding="utf-8").read()
+        io.open(target, "w", encoding="utf-8").write(
+            text.replace("foothold-trace/2", "foothold-trace/99", 1))
+
+        with self.assertRaises(trace_mod.TraceError) as caught:
+            trace_mod.read(target)
+
+        self.assertIn("foothold-trace/99", str(caught.exception))
+
+    def test_판_이름과_내용이_다르면_거부한다(self):
+        """/1 이라 적어 놓고 `yaw_deg` 가 들어 있으면 거짓말이다."""
+        # /1 이라고 적어 놓고 열은 /2 로 쓴다. 손으로 만든다.
+        target = self.path("liar.csv")
+        trace_mod.write(self.path("real.csv"), make_meta(), make_rows([0.5] * 3))
+        text = io.open(self.path("real.csv"), encoding="utf-8").read()
+        io.open(target, "w", encoding="utf-8").write(
+            text.replace("foothold-trace/2", "foothold-trace/1", 1))
+
+        with self.assertRaises(trace_mod.TraceError) as caught:
+            trace_mod.read(target)
+
+        self.assertIn("yaw_deg", str(caught.exception))
 
     def test_missing_row_is_caught(self):
         """줄이 빠지면 읽는 자리에서 죽어야 한다. 조용히 밀리면 안 된다."""
@@ -541,6 +675,42 @@ class RenderTest(TempDirTest):
             render_mod.render(video, trace_path, out, progress_every=0)
 
         self.assertFalse(os.path.exists(out))
+
+    def test_장수_차이는_부호까지_본다(self):
+        """영상과 trace 의 장수 차이 규칙을 알려진 답으로 시험한다.
+
+        예전 관문은 `abs(차이) > 2` 였다. 글에는 「1장까지 정상」이라 써 놓고
+        2장까지 통과시켰고, 방향도 안 봤다. 영상이 trace 보다 «긴» 것은 어떤
+        경우에도 정상이 아닌데 그것도 통과했다 (2026-09-11 검증).
+
+        정상은 딱 둘이다. 같거나, trace 가 한 줄 더 길거나.
+        """
+        from overlay import render as render_mod
+
+        # (영상 장수, trace 줄 수, 통과해야 하는가)
+        cases = (
+            (40, 40, True),    # 같다
+            (40, 41, True),    # 판이 끝나는 스텝. trace 만 한 줄 더
+            (40, 42, False),   # 두 줄은 과하다. 예전 관문은 통과시켰다
+            (41, 40, False),   # 영상이 더 길다. 있을 수 없다
+            (42, 40, False),
+        )
+
+        for frames, rows, should_pass in cases:
+            with self.subTest(영상=frames, trace=rows):
+                video = self.make_video(self.path("in_%d_%d.mp4" % (frames, rows)),
+                                        frames)
+                trace_path = self.path("t_%d_%d.csv" % (frames, rows))
+                trace_mod.write(trace_path, make_meta(), make_rows([1.0] * rows))
+                out = self.path("out_%d_%d.mp4" % (frames, rows))
+
+                if should_pass:
+                    render_mod.render(video, trace_path, out, progress_every=0)
+                    self.assertTrue(os.path.exists(out))
+                else:
+                    with self.assertRaises(render_mod.AlignmentError):
+                        render_mod.render(video, trace_path, out, progress_every=0)
+                    self.assertFalse(os.path.exists(out))
 
     def test_fps_mismatch_refuses(self):
         from overlay import render as render_mod

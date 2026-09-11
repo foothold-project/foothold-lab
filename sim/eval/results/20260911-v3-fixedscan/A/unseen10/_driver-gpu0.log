@@ -1,0 +1,62 @@
+﻿[08:58:24] gpu0 | START cells=1.0:0.5,0.5:0.5,1.5:0.5
+[08:58:24] gpu0 | BEGIN v1.0-d0.5  vx=1 dur=6 diff=0.5
+[09:00:42] gpu0 | END   v1.0-d0.5  exit=0 sec=137.2 rows=1000
+[09:00:42] gpu0 | BEGIN v0.5-d0.5  vx=0.5 dur=12 diff=0.5
+[09:04:55] gpu0 | END   v0.5-d0.5  exit=0 sec=253.3 rows=1000
+[09:04:55] gpu0 | BEGIN v1.5-d0.5  vx=1.5 dur=4 diff=0.5
+[09:06:30] gpu0 | END   v1.5-d0.5  exit=0 sec=94.5 rows=1000
+[09:06:30] gpu0 | DONE
+[10:20:53] gpu0 | START cells=1.0:0.1,1.0:0.2,1.0:0.3,1.0:0.4,1.0:0.5,1.0:0.6,1.0:0.7,1.0:0.8,1.0:0.9,1.0:1.0
+[10:20:53] gpu0 | SKIP  v1.0-d0.1 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.2 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.3 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.4 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.5 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.6 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.7 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.8 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d0.9 (이미 있음)
+[10:20:53] gpu0 | SKIP  v1.0-d1.0 (이미 있음)
+[10:20:53] gpu0 | DONE
+[10:57:42] gpu0 | START cells=0.5:0.1,0.5:0.2,0.5:0.3,0.5:0.4,0.5:0.5,0.5:0.6,0.5:0.7,0.5:0.8,0.5:0.9,0.5:1.0
+[10:57:42] gpu0 | BEGIN v0.5-d0.1  vx=0.5 dur=12 diff=0.1
+[11:01:21] gpu0 | END   v0.5-d0.1  exit=0 sec=219.5 rows=1000
+[11:01:21] gpu0 | BEGIN v0.5-d0.2  vx=0.5 dur=12 diff=0.2
+[11:05:25] gpu0 | END   v0.5-d0.2  exit=0 sec=244.5 rows=1000
+[11:05:25] gpu0 | BEGIN v0.5-d0.3  vx=0.5 dur=12 diff=0.3
+[11:09:38] gpu0 | END   v0.5-d0.3  exit=0 sec=253 rows=1000
+[11:09:38] gpu0 | BEGIN v0.5-d0.4  vx=0.5 dur=12 diff=0.4
+[11:13:44] gpu0 | END   v0.5-d0.4  exit=0 sec=245.9 rows=1000
+[11:13:44] gpu0 | SKIP  v0.5-d0.5 (이미 있음)
+[11:13:44] gpu0 | BEGIN v0.5-d0.6  vx=0.5 dur=12 diff=0.6
+[11:17:51] gpu0 | END   v0.5-d0.6  exit=0 sec=246.2 rows=1000
+[11:17:51] gpu0 | BEGIN v0.5-d0.7  vx=0.5 dur=12 diff=0.7
+[11:21:57] gpu0 | END   v0.5-d0.7  exit=0 sec=246.2 rows=1000
+[11:21:57] gpu0 | BEGIN v0.5-d0.8  vx=0.5 dur=12 diff=0.8
+[11:26:09] gpu0 | END   v0.5-d0.8  exit=0 sec=252.5 rows=1000
+[11:26:09] gpu0 | BEGIN v0.5-d0.9  vx=0.5 dur=12 diff=0.9
+[11:30:25] gpu0 | END   v0.5-d0.9  exit=0 sec=255.4 rows=1000
+[11:30:25] gpu0 | BEGIN v0.5-d1.0  vx=0.5 dur=12 diff=1
+[11:34:40] gpu0 | END   v0.5-d1.0  exit=0 sec=255.1 rows=1000
+[11:34:40] gpu0 | DONE
+[11:48:49] gpu0 | START cells=1.5:0.1,1.5:0.2,1.5:0.3,1.5:0.4,1.5:0.5,1.5:0.6,1.5:0.7,1.5:0.8,1.5:0.9,1.5:1.0
+[11:48:49] gpu0 | BEGIN v1.5-d0.1  vx=1.5 dur=4 diff=0.1
+[11:50:13] gpu0 | END   v1.5-d0.1  exit=0 sec=83.9 rows=1000
+[11:50:13] gpu0 | BEGIN v1.5-d0.2  vx=1.5 dur=4 diff=0.2
+[11:51:50] gpu0 | END   v1.5-d0.2  exit=0 sec=96.1 rows=1000
+[11:51:50] gpu0 | BEGIN v1.5-d0.3  vx=1.5 dur=4 diff=0.3
+[11:53:27] gpu0 | END   v1.5-d0.3  exit=0 sec=97.4 rows=1000
+[11:53:27] gpu0 | BEGIN v1.5-d0.4  vx=1.5 dur=4 diff=0.4
+[11:55:02] gpu0 | END   v1.5-d0.4  exit=0 sec=95.1 rows=1000
+[11:55:02] gpu0 | SKIP  v1.5-d0.5 (이미 있음)
+[11:55:02] gpu0 | BEGIN v1.5-d0.6  vx=1.5 dur=4 diff=0.6
+[11:56:38] gpu0 | END   v1.5-d0.6  exit=0 sec=95.8 rows=1000
+[11:56:38] gpu0 | BEGIN v1.5-d0.7  vx=1.5 dur=4 diff=0.7
+[11:58:17] gpu0 | END   v1.5-d0.7  exit=0 sec=99.4 rows=1000
+[11:58:17] gpu0 | BEGIN v1.5-d0.8  vx=1.5 dur=4 diff=0.8
+[11:59:57] gpu0 | END   v1.5-d0.8  exit=0 sec=99.4 rows=1000
+[11:59:57] gpu0 | BEGIN v1.5-d0.9  vx=1.5 dur=4 diff=0.9
+[12:01:36] gpu0 | END   v1.5-d0.9  exit=0 sec=99.1 rows=1000
+[12:01:36] gpu0 | BEGIN v1.5-d1.0  vx=1.5 dur=4 diff=1
+[12:03:13] gpu0 | END   v1.5-d1.0  exit=0 sec=97.5 rows=1000
+[12:03:13] gpu0 | DONE

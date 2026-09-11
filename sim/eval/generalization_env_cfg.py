@@ -23,6 +23,7 @@
 """
 
 import isaaclab.terrains as terrain_gen
+from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import UnitreeGo2RoughEnvCfg
 
@@ -185,3 +186,75 @@ class UnitreeGo2GeneralizationEnvCfg(UnitreeGo2RoughEnvCfg):
         self.viewer.env_index = 0
         self.viewer.eye = (-3.0, 2.0, 1.5)
         self.viewer.lookat = (0.0, 0.0, 0.4)
+
+
+def apply_gap_aware_scan(env_cfg, miss_value: float = 1.0):
+    """평가의 높이 스캔을 «학습과 같은» 함수로 바꿉니다.
+
+    왜 필요한가
+        바닥 없는 지형(`gap`)에서는 광선이 아무것도 못 맞힙니다. IsaacLab 기본
+        함수는 그 자리를 `몸통높이 - inf - 0.5 = -inf` 로 계산하고, 관측 클리핑이
+        그것을 **-1** 로 자릅니다. 이 눈금에서 -1 은 「내 몸통보다 1 m 넘게 솟은
+        무언가」, 곧 **벽**을 뜻합니다. 구멍을 벽이라고 알려 주는 셈입니다.
+
+        학습(`Isaac-Velocity-Gap-Unitree-Go2-v0`)은 같은 자리에 **+1** 을 넣습니다.
+        양수는 「바닥이 아래로 멀다」는 뜻이라 구멍의 올바른 표현입니다.
+        임석헌의 원격 평가 설정도 `miss_value=1.0` 이었습니다
+        (`lim-gap_stop_10-environment.yaml:532`).
+
+        기본 함수는 «바닥 없는 지형» 을 상정하고 만든 것이 아닙니다. 우리가 -1 을
+        고른 것이 아니라, 아무도 고르지 않아서 그렇게 된 것입니다.
+
+    쓰는 법
+        **아무것도 안 해도 이 함수가 돕니다.** 평가 하네스와 렌더러 모두
+        기본이 규격 2 이고 `miss_value` 는 +1.0 입니다. `git pull origin main`
+        만 받아 그냥 돌리면 그 값입니다.
+
+        `--gap_aware_scan` 은 기본값이 뒤집히기 전에 쓰던 팔이라 지금은
+        아무 일도 안 합니다. 규격 1(빗나간 광선 = -1)로 되돌리려면
+        `--legacy_miss_scan` 을 주십시오. 그 실행은 manifest 에
+        `eval_spec_version = 1` 로 남습니다.
+
+    Returns:
+        실제로 박힌 miss_value. 부르는 쪽은 이 값을 기록에 남겨야 합니다.
+    """
+    # **저장소 «안» 함수를 쓴다.** 예전에는 IsaacLab 에서 가져왔는데, 그건
+    # 이 저장소 밖이라 `git pull` 만 받은 사람은 규격 2 로 평가할 수 없었다
+    # `확인됨` (2026-09-11 검증 · 「공개 재현을 막는 누락 의존성」).
+    try:
+        import gap_observations
+    except ImportError:
+        # 하네스는 `sim/eval` 을 sys.path 에 두고 부르지만, 다른 곳에서 이
+        # 파일을 모듈로 가져다 쓰면 그렇지 않다. 옆에 있는 파일이므로
+        # 경로로 직접 집는다. 여기서 조용히 포기하면 규격 1 로 돌아간다.
+        import importlib.util
+        import os as _os
+
+        _path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                              "gap_observations.py")
+        _spec = importlib.util.spec_from_file_location("gap_observations", _path)
+        if _spec is None or _spec.loader is None:
+            raise RuntimeError("gap_observations.py 를 못 찾았습니다: %s" % _path)
+        gap_observations = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(gap_observations)
+
+    term = env_cfg.observations.policy.height_scan
+    offset = 0.5
+    if isinstance(getattr(term, "params", None), dict):
+        offset = term.params.get("offset", 0.5)
+
+    term.func = gap_observations.height_scan_with_gap
+    term.params = {
+        "sensor_cfg": SceneEntityCfg("height_scanner"),
+        "offset": offset,
+        "miss_value": float(miss_value),
+    }
+    term.clip = (-1.0, 1.0)
+
+    # 조용한 실패를 막습니다. 설정 객체가 쓰기를 삼키면 여기서 터집니다.
+    if term.func is not gap_observations.height_scan_with_gap:
+        raise RuntimeError("높이 스캔 함수가 안 바뀌었습니다")
+    if term.params.get("miss_value") != float(miss_value):
+        raise RuntimeError("miss_value 가 안 박혔습니다: %r" % (term.params,))
+
+    return float(miss_value)

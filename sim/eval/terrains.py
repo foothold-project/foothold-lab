@@ -215,3 +215,35 @@ def obstacle_zone_m(cfg, difficulty, tile_size_x_m):
         return (start, tile_half, "tile_half:" + kind)
 
     return (start, end, basis)
+
+
+def pin_difficulty(terrain_generator, difficulty):
+    """지형 난이도를 한 값으로 못 박고, 실제로 박힌 범위를 돌려줍니다.
+
+    왜 필요한가
+        IsaacLab 은 `curriculum` 이 꺼져 있으면 타일마다 `difficulty_range` 에서
+        `uniform` 으로 난이도를 뽑습니다 (`terrain_generator.py:229`). 그래서
+        범위를 그대로 둔 채 영상을 찍으면 **화면마다 난이도가 다르고, 어디에도
+        몇이었는지 안 남습니다.** 범위를 `(d, d)` 로 좁혀야 모든 타일이 정확히
+        `d` 가 됩니다. `num_rows` 는 상관없습니다.
+
+    `difficulty` 가 `None` 이면 설정을 건드리지 않고 현재 범위만 돌려줍니다.
+    부르는 쪽의 예전 명령이 그대로 돌아야 하기 때문입니다.
+
+    Returns:
+        (lower, upper) 튜플. 부르는 쪽은 이 값을 기록에 남겨 영상이 스스로
+        몇 난이도인지 말하게 해야 합니다.
+    """
+    if difficulty is not None:
+        d = float(difficulty)
+        if not (0.0 <= d <= 1.0):
+            raise ValueError("난이도는 0 과 1 사이여야 합니다: %r" % (difficulty,))
+        terrain_generator.difficulty_range = (d, d)
+
+    got = tuple(float(v) for v in terrain_generator.difficulty_range)
+
+    # 조용한 실패를 막습니다. 설정 객체가 값을 되돌리거나 무시하면 여기서 터집니다.
+    if difficulty is not None and got != (float(difficulty), float(difficulty)):
+        raise RuntimeError("난이도가 안 박혔습니다: 넣은 값=%r 남은 값=%r"
+                           % (difficulty, got))
+    return got
