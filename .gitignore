@@ -52,6 +52,17 @@ sim/eval/results/**/timeseries/
 # Isaac Sim 콘솔 로그 · 237개 79.5 MB
 #   플러그인 경고와 로딩 기록이다. 실패했을 때만 그 자리에서 본다.
 sim/eval/results/**/runs/*.log
+# 한 칸짜리 실행 로그도 안 담는다. 칸 54개면 9 MB 이고, 재현에 필요한 것은
+# `run_manifest.json` 에 다 있다 (2026-09-12).
+sim/eval/results/**/run.log
+
+# 보고서 생성기의 중간 산출물. 원자료에서 언제든 다시 만든다.
+# 발행본은 foothold-site 에 있다 (2026-09-12).
+sim/eval/results/report-v1/
+
+# 갤러리 렌더 작업 폴더. 마스터가 한 판에 600 MB 가 넘는다.
+# 배포본(1080p 웹 84컷)은 foothold-site 의 gallery/vN/clips 에 있다.
+sim/eval/results/*-gallery*/
 
 # **결과 폴더 직속 로그는 남긴다.** 30개 0.4 MB 다.
 #   렌더 한 컷의 argv 와 관문 통과 기록이 여기 있다. 예를 들어 14컷 전부의

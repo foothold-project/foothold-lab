@@ -1,0 +1,9 @@
+{
+  "source": "repeated_cylinders-side.hud.mp4",
+  "extent_m": 5.0,
+  "source_frames": 300,
+  "kept_frames": 267,
+  "fps": 50.0,
+  "seconds": 5.34,
+  "note": "속도는 원본 그대로다. 배속은 웹 재생기가 맡는다"
+}

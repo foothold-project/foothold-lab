@@ -1,0 +1,28 @@
+﻿[20:08:37] gpu1 | START 내 몫 13 칸 / 전체 27
+[20:08:37] gpu1 | BEGIN foothold-v1/d0.5/v1  dur=6s
+[20:11:17] gpu1 | END   foothold-v1/d0.5/v1  rows=1000 sec=160.2
+[20:11:17] gpu1 | BEGIN A/d0.5/v0.5  dur=12s
+[20:16:18] gpu1 | END   A/d0.5/v0.5  rows=1000 sec=301.4
+[20:16:18] gpu1 | BEGIN A/d0.5/v1.5  dur=4s
+[20:18:10] gpu1 | END   A/d0.5/v1.5  rows=1000 sec=112.3
+[20:18:10] gpu1 | BEGIN baseline/d0.5/v1  dur=6s
+[20:20:48] gpu1 | END   baseline/d0.5/v1  rows=1000 sec=157.5
+[20:20:48] gpu1 | BEGIN foothold-v1/d0.1/v0.5  dur=12s
+[20:25:19] gpu1 | END   foothold-v1/d0.1/v0.5  rows=1000 sec=271.1
+[20:25:19] gpu1 | BEGIN foothold-v1/d0.1/v1.5  dur=4s
+[20:27:08] gpu1 | END   foothold-v1/d0.1/v1.5  rows=1000 sec=109.4
+[20:27:08] gpu1 | BEGIN foothold-v1/d0.2/v1  dur=6s
+[20:29:49] gpu1 | END   foothold-v1/d0.2/v1  rows=1000 sec=160.9
+[20:29:49] gpu1 | BEGIN foothold-v1/d0.3/v0.5  dur=12s
+[20:34:58] gpu1 | END   foothold-v1/d0.3/v0.5  rows=1000 sec=309.1
+[20:34:58] gpu1 | BEGIN foothold-v1/d0.3/v1.5  dur=4s
+[20:36:55] gpu1 | END   foothold-v1/d0.3/v1.5  rows=1000 sec=116.9
+[20:36:55] gpu1 | BEGIN foothold-v1/d0.4/v1  dur=6s
+[20:39:39] gpu1 | END   foothold-v1/d0.4/v1  rows=1000 sec=163.2
+[20:39:39] gpu1 | BEGIN foothold-v1/d0.6/v0.5  dur=12s
+[20:44:46] gpu1 | END   foothold-v1/d0.6/v0.5  rows=1000 sec=307
+[20:44:46] gpu1 | BEGIN foothold-v1/d0.6/v1.5  dur=4s
+[20:46:39] gpu1 | END   foothold-v1/d0.6/v1.5  rows=1000 sec=113.8
+[20:46:39] gpu1 | BEGIN foothold-v1/d0.7/v1  dur=6s
+[20:49:20] gpu1 | END   foothold-v1/d0.7/v1  rows=1000 sec=160.2
+[20:49:20] gpu1 | ALL-DONE  성공 13 · 실패 0

@@ -1,0 +1,9 @@
+{
+  "source": "rails-side.hud.mp4",
+  "extent_m": 5.0,
+  "source_frames": 300,
+  "kept_frames": 300,
+  "fps": 50.0,
+  "seconds": 6.0,
+  "note": "속도는 원본 그대로다. 배속은 웹 재생기가 맡는다"
+}

@@ -1,0 +1,10 @@
+﻿[23:09:07] gpu1 | START 내 몫 4 칸 / 전체 9
+[23:09:07] gpu1 | BEGIN foothold-v1/d0.5/v1  dur=6s
+[23:12:17] gpu1 | END   foothold-v1/d0.5/v1  rows=600 sec=190
+[23:12:17] gpu1 | BEGIN A/d0.5/v0.5  dur=12s
+[23:18:34] gpu1 | END   A/d0.5/v0.5  rows=600 sec=377.3
+[23:18:34] gpu1 | BEGIN A/d0.5/v1.5  dur=4s
+[23:20:52] gpu1 | END   A/d0.5/v1.5  rows=600 sec=137.4
+[23:20:52] gpu1 | BEGIN baseline/d0.5/v1  dur=6s
+[23:24:11] gpu1 | END   baseline/d0.5/v1  rows=600 sec=199.3
+[23:24:11] gpu1 | ALL-DONE  성공 4 · 실패 0

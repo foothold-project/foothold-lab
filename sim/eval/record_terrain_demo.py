@@ -43,6 +43,10 @@ sys.argv[:] = ORIGINAL_ARGV
 p = argparse.ArgumentParser()
 p.add_argument("--checkpoint", required=True); p.add_argument("--output_dir", required=True)
 p.add_argument("--terrain", default="plane")
+p.add_argument("--terrain_set", default="unseen10",
+               help="어느 지형 집합인가. 평가 하네스의 같은 이름 팔과 같다. "
+                    "unseen10 = 미경험 험지 10종 · rough6 = 학습에서 쓴 6종. "
+                    "집합마다 환경 설정 클래스가 다르다.")
 p.add_argument("--trace_csv", type=str, default="",
                help="프레임별 계측을 이 자리에 적는다. HUD 를 나중에 얹을 때 쓴다. 안 주면 아무 일도 안 한다.")
 p.add_argument("--gate_m", type=float, default=3.0,
@@ -58,6 +62,11 @@ p.add_argument("--legacy_miss_scan", action="store_true",
                help="**결함 규격 1** 로 되돌린다. eval_spec_version=1 로 찍힌 영상을 재현할 때만 쓴다.")
 p.add_argument("--difficulty", type=float, default=None,
                help="지형 난이도를 한 값으로 못 박는다. 안 주면 설정 그대로 둔다(예전 동작).")
+p.add_argument("--slowmo", type=int, default=1, choices=(1, 2, 4),
+               help="**진짜 슬로우모션.** 물리 주기로 더 촘촘히 찍는다. "
+                    "2 면 초당 100장, 4 면 200장을 찍어 50 fps 로 담는다. "
+                    "컨테이너 fps 만 낮추는 것과 다르다. 그건 초당 보이는 "
+                    "장수가 줄어 툭툭 끊긴다.")
 p.add_argument("--horizon_dist", type=float, default=180.0)
 p.add_argument("--decel_start", type=float, default=-1.0, help="이 초부터 감속을 시작한다")
 p.add_argument("--decel_secs", type=float, default=2.0, help="감속에 걸리는 시간")
@@ -106,7 +115,17 @@ import terrains
 from isaaclab_tasks.utils import load_cfg_from_registry
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path: sys.path.insert(0, HERE)
-from generalization_env_cfg import UnitreeGo2GeneralizationEnvCfg
+# **지형 집합에 맞는 설정을 고른다.** 예전에는 `unseen10` 설정 하나만
+# 가져와서, `rough6` 지형을 주면 하위 지형 목록에 없어 죽었다 `확인됨`
+# (2026-09-11 · `pyramid_stairs` 를 찍으려다 걸렸다).
+#
+# 고르는 표는 `terrains.TERRAIN_SETS` 하나뿐이고 평가 하네스도 그것을 본다.
+import importlib
+
+_SET_NAMES, _SET_MODULE, _SET_CLASS = terrains.terrain_set(args.terrain_set)
+ENV_CFG_CLASS = getattr(importlib.import_module(_SET_MODULE), _SET_CLASS)
+print("[PASS] 지형 집합 %s · %s · %d종"
+      % (args.terrain_set, _SET_CLASS, len(_SET_NAMES)), flush=True)
 
 TASK = "Isaac-Velocity-Rough-Unitree-Go2-v0"
 
@@ -154,6 +173,38 @@ def configure(cfg, agent):
     cmd = cfg.commands.base_velocity
     cmd.ranges.lin_vel_x = (args.command_vx, args.command_vx); cmd.ranges.lin_vel_y = (0.0, 0.0)
     globals()["_CMD"] = cmd
+    # ── 진짜 슬로우모션 ────────────────────────────────────────────────
+    #
+    # 물리는 200 Hz(`sim.dt` 0.005), 정책은 50 Hz(`decimation` 4)로 돈다.
+    # 프레임은 정책과 같은 자리에서만 나오므로 **초당 50장**이다.
+    #
+    # 그것을 25 fps 컨테이너에 담으면 «초당 보이는» 장수가 25장으로 «줄어»
+    # 툭툭 끊긴다. 슬로우모션이 아니다 (2026-09-11 팀장 지적).
+    #
+    # 그래서 **물리 주기로 더 촘촘히 찍는다.** `decimation` 을 쪼개고 같은
+    # 행동을 그만큼 반복해 넣는다. 4 x 0.005초 동안 한 행동을 유지하는 것은
+    # 한 번에 4스텝을 밟든 1스텝씩 네 번 밟든 같다.
+    #
+    # 관측 주기는 **안 건드린다.** 그것까지 촘촘해지면 정책이 보는 것이
+    # 달라져 다른 판이 된다.
+    if args.slowmo > 1:
+        _base_dec = int(cfg.decimation)
+        if _base_dec % args.slowmo:
+            raise RuntimeError(
+                "decimation %d 을 %d 로 나눌 수 없다." % (_base_dec, args.slowmo))
+        _scanner = getattr(cfg.scene, "height_scanner", None)
+        _keep = (_base_dec * float(cfg.sim.dt)) if _scanner is not None else None
+        cfg.decimation = _base_dec // args.slowmo
+        cfg.sim.render_interval = cfg.decimation
+        if _scanner is not None:
+            _scanner.update_period = _keep
+        globals()["_ACTION_REPEAT"] = args.slowmo
+        print("[PASS] 슬로우모션 %dx · decimation %d -> %d · 초당 %d장 찍는다"
+              % (args.slowmo, _base_dec, cfg.decimation, 50 * args.slowmo), flush=True)
+    else:
+        globals()["_ACTION_REPEAT"] = 1
+        print("[PASS] 정속 · 초당 50장", flush=True)
+
     cmd.ranges.ang_vel_z = (0.0, 0.0); cmd.heading_command = False
     cmd.rel_heading_envs = 0.0; cmd.rel_standing_envs = 0.0; cmd.debug_vis = False
     for name in ("push_robot", "base_external_force_torque", "add_base_mass", "base_com"):
@@ -342,7 +393,7 @@ def initialize_camera(sim, eye, target):
 
 def main():
     os.makedirs(args.output_dir, exist_ok=True); previews = os.path.join(args.output_dir, "previews"); os.makedirs(previews, exist_ok=True)
-    cfg = UnitreeGo2GeneralizationEnvCfg(); agent = load_cfg_from_registry(TASK, "rsl_rl_cfg_entry_point"); configure(cfg, agent)
+    cfg = ENV_CFG_CLASS(); agent = load_cfg_from_registry(TASK, "rsl_rl_cfg_entry_point"); configure(cfg, agent)
     env_started = time.perf_counter(); raw = ManagerBasedRLEnv(cfg=cfg, render_mode="rgb_array")
     if args.terrain == "plane":
         expected = origins(raw.device); raw.scene.terrain.env_origins[:] = expected; raw.reset()
@@ -373,7 +424,16 @@ def main():
     policy = runner.get_inference_policy(device=raw.device); policy_nn = runner.alg.policy; obs = env.get_observations()
     policy_ready = time.perf_counter()
     for _ in range(args.warmup_frames): raw.render()
-    warmup_done = time.perf_counter(); fps = int(round(1 / raw.step_dt)); count = int(round(args.eval_duration * fps))
+    warmup_done = time.perf_counter()
+
+    # **찍는 주기와 담는 주기를 가른다.**
+    #   capture_fps  초당 몇 장을 찍는가. 슬로우모션이면 커진다
+    #   fps          파일에 몇 fps 로 담는가. 언제나 50 이다
+    capture_fps = int(round(1 / raw.step_dt))
+    fps = capture_fps // _ACTION_REPEAT
+    count = int(round(args.eval_duration * capture_fps))
+    print("[PASS] 초당 %d장 찍어 %d fps 로 담는다 · 프레임 %d장"
+          % (capture_fps, fps, count), flush=True)
     stem = f"flat_army_{args.cut}_{args.num_envs}_{VIEW}"; video = os.path.join(args.output_dir, stem + ".mp4")
 
     # **찍을 수 없는 길이면 writer 를 열기 «전»에 멈춘다.**
@@ -598,7 +658,13 @@ def main():
                     v = args.command_vx * (1.0 - u) ** 2      # 부드럽게 멎는다
                 cm = raw.command_manager.get_command("base_velocity")
                 cm[:, 0] = v
-            with torch.inference_mode(): actions = policy(obs); obs, _, dones, _ = env.step(actions); policy_nn.reset(dones)
+            # **정책은 원래 주기로만 부른다.** 슬로우모션이어도 로봇이
+            # 더 자주 생각하지 않는다. 같은 행동을 그대로 다시 넣는다.
+            with torch.inference_mode():
+                if i % _ACTION_REPEAT == 0:
+                    actions = policy(obs)
+                obs, _, dones, _ = env.step(actions)
+                policy_nn.reset(dones)
             steps.append(time.perf_counter() - t); t = time.perf_counter()
             if moving_camera:
                 eye, target = (camera_track() if VIEW in TRACK_VIEWS
