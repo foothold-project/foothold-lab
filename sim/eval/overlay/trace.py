@@ -114,7 +114,7 @@ _META_FLOAT_KEYS = (
     "max_velocity_mae_mps",
 )
 
-_META_INT_KEYS = ("env_id", "episode")
+_META_INT_KEYS = ("env_id", "episode", "slowmo")
 
 
 class TraceError(ValueError):
@@ -155,7 +155,24 @@ class Trace(object):
 
     @property
     def fps(self):
+        """**찍은 주기**다. 담긴 영상의 fps 가 아니다.
+
+        슬로우모션이면 둘이 다르다. 이 값은 언제나 «시뮬레이션을 초당 몇 번
+        재었나» 이고, `t_s` 가 그 주기를 따른다.
+        """
         return float(self.meta["fps"])
+
+    @property
+    def slowmo(self):
+        """몇 배 느리게 담았는가. 없으면 1 이다.
+
+        영상의 프레임 `i` 는 trace 의 줄 `i` 와 **일대일**이다. 시각으로
+        집으면 이 배수만큼 밀린다.
+        """
+        try:
+            return max(1, int(self.meta.get("slowmo", 1)))
+        except (TypeError, ValueError):
+            return 1
 
     @property
     def dt_s(self):

@@ -85,17 +85,22 @@ def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
     video_fps = info["fps"]
     trace_fps = trace.fps
 
+    # 슬로우모션이면 영상 fps 가 찍은 주기의 1/slowmo 다. 그만큼 올려 맞춘다.
+    slowmo = trace.slowmo
+    expected_video_fps = trace_fps / float(slowmo)
+
     if trace_fps > 0.0:
-        relative = abs(video_fps - trace_fps) / trace_fps
+        relative = abs(video_fps - expected_video_fps) / expected_video_fps
 
         if relative > 0.005 and not allow_fps_mismatch:
             problems.append(
                 "fps 가 다릅니다. 영상 {:.4f} · trace {:.4f} ({:.2f}% 차이). "
                 "정말 다른 것이면 --allow_fps_mismatch 로 넘기십시오."
-                .format(video_fps, trace_fps, relative * 100.0)
+                .format(video_fps, expected_video_fps, relative * 100.0)
             )
 
-    video_duration = info["frames"] / video_fps if video_fps > 0.0 else 0.0
+    # 길이는 «시뮬레이션 시간» 으로 견준다. 화면에 흐르는 시간이 아니다.
+    video_duration = (info["frames"] / (video_fps * slowmo)) if video_fps > 0.0 else 0.0
     drift = abs(video_duration - trace.duration_s)
 
     if drift > max_drift_s:
@@ -184,8 +189,16 @@ def render(video_path, trace_path, out_path, crf=20, preset="slow",
             if limit_frames and index >= limit_frames:
                 break
 
-            # **시각으로 집습니다.** 줄 번호로 집지 않는 이유는 머리말에 있습니다.
-            row_index = int(round((index / fps) / trace.dt_s))
+            # **슬로우모션이면 자리로 집습니다.** 프레임과 줄이 일대일이기
+            # 때문입니다. 시각으로 집으면 배수만큼 밀립니다
+            # `확인됨` (2026-09-11 · 2배 느린 영상에서 줄이 두 배로 뛴다).
+            #
+            # 보통 영상(slowmo 1)에서는 예전과 같은 식입니다. 줄 번호로
+            # 안 집는 이유는 머리말에 있습니다.
+            if trace.slowmo > 1:
+                row_index = index
+            else:
+                row_index = int(round((index / fps) / trace.dt_s))
             row_index = min(max(row_index, 0), len(trace) - 1)
 
             painted = painter.draw(frame.to_image(), row_index)

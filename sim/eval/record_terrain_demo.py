@@ -579,7 +579,7 @@ def main():
         # 빠뜨리면 프레임 수와 trace 줄 수가 하나 어긋나고, HUD 를 얹었을 때
         # 모든 숫자가 한 칸씩 밀린다 `확인됨` (2026-09-11 · 300프레임에 299줄).
         if trace_rows is not None:
-            trace_rows.append(trace_row(0, 1.0 / fps))
+            trace_rows.append(trace_row(0, 1.0 / capture_fps))
         frame = np.ascontiguousarray(raw.render()); writer.append_data(frame); renders.append(time.perf_counter() - t)
         initial_hfov, horizontal_aperture, focal_length = read_hfov()
         if abs(initial_hfov - CAMERA_HFOV) > 0.1:
@@ -648,8 +648,12 @@ def main():
         # overlay/render.py 가 KeyError 로 죽는다 (trace.py:121·134).
         trace_mod.write(args.trace_csv,
                         {"command_vx_mps": float(args.command_vx),
-                         "fps": fps,
-                         "dt_s": round(1.0 / fps, 6),
+                         # **찍은 주기**를 적는다. 담긴 영상의 fps 가 아니다.
+                         # 슬로우모션이면 둘이 다르고, `t_s` 는 찍은 주기를
+                         # 따라야 시뮬레이션 시각이 맞는다.
+                         "fps": capture_fps,
+                         "dt_s": round(1.0 / capture_fps, 6),
+                         "slowmo": _ACTION_REPEAT,
                          "eval_duration_s": float(args.eval_duration),
                          "frames_recorded": len(trace_rows),
                          "gate_m": float(args.gate_m),
