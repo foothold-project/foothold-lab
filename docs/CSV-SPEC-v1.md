@@ -44,7 +44,7 @@ gate_speed_mps · speed_drop_ratio
 head_contact_count · head_contact_peak_n · head_contact_first_s
 ```
 
-`head_contact_first_s` 는 18.7% 가 거짓 0.0 입니다. **재실행할 때 같이 고칩니다.**
+| `head_contact_*` 세 열 | **검증 전까지 인용 금지.** 규격 2 에서 `first_s` 값 25,296 행 중 5,979(23.6 %)이 0.0 인데, 그것만으로 오염 여부를 판별할 수 없다. 정본 7절 |
 
 ### 묶음 2 · 자세와 제어 (8열 · 지금 신호로 계산됨)
 
