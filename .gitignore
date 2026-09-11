@@ -39,27 +39,41 @@ inbox/**/*.pdf
 #   clone 하는 사람이 전부 받게 된다. 실행 명령이 run_manifest.json 에 있다.
 # ─────────────────────────────────────────────────────────────────────────
 
-# 시계열 parquet · 9,600개 · 1,098 MB · 전부 규격 1
-#   --timeseries 를 주면 다시 나온다. HUD 재료로 쓸 때 그때 뽑는다.
+# 시계열 parquet · 9,600개 · 1,098 MB · **전부 규격 1** · 안 넣는다
+#
+#   `--timeseries` 를 주면 다시 나온다. 다만 그러려면 그 스윕을 다시 돌려야
+#   하고 몇 시간이 든다. 「바로 다시 뽑힌다」는 뜻이 아니다.
+#
+#   그래도 빼는 쪽으로 정한다. 전부 결함 규격 1 이고, 이 저장소의 어느 문서도
+#   이 파일에서 나온 숫자를 인용하지 않는다. 열 구성(93열)은 `docs/CSV-SPEC-v1.md`
+#   에 이미 적혀 있다. 1 GB 를 받는 사람 모두에게 지우는 값이 그보다 크다.
 sim/eval/results/**/timeseries/
 
-# Isaac Sim 콘솔 로그 · 규격 2 폴더만 37 MB
+# Isaac Sim 콘솔 로그 · 237개 79.5 MB
 #   플러그인 경고와 로딩 기록이다. 실패했을 때만 그 자리에서 본다.
 sim/eval/results/**/runs/*.log
-sim/eval/results/*/*.log
+
+# **결과 폴더 직속 로그는 남긴다.** 30개 0.4 MB 다.
+#   렌더 한 컷의 argv 와 관문 통과 기록이 여기 있다. 예를 들어 14컷 전부의
+#   `[PASS] 카메라 축 고정 · 출발 yaw +2.14도` 가 이 로그에만 있다.
+#   Isaac 콘솔 로그와 달리 작고, 「그때 무엇이 통과했나」의 증거다.
 
 # 렌더 중간 산출물
 #   mp4 는 LFS 로 넣는다 (.gitattributes). 미리보기 png 는 영상에서 다시 뽑는다.
 sim/eval/results/**/previews/
 sim/eval/results/**/hud/*.png
 
-# 규격 1 결과 · 에피소드 원시 행은 빼고 «요약과 조건» 만 남긴다
-#   남기는 것: generalization_summary.csv · run_manifest.json · README · 결함규격 딱지
-#   빼는 것:   generalization_raw.csv (에피소드마다 한 줄 · 아무도 안 읽는다)
-#   왜: 정본이 인용하는 «고치기 전» 숫자는 요약에 다 있다. 원시 행은 이 기계에 남는다.
-sim/eval/results/20260910-v1-eval/**/generalization_raw.csv
-sim/eval/results/20260911-v2-eval/**/generalization_raw.csv
-sim/eval/results/20260910-easy5-baseline-sweep/**/generalization_raw.csv
+# 규격 1 원시행 · 138개 16 MB · **넣는다**
+#
+#   2026-09-11 에 뺐다가 도로 넣는다. 뺀 이유가 「원시 행은 이 기계에 남는다」
+#   였는데, 그 기계의 작업용 clone(`C:/work/foothold-lab-easy5`)을 지우기로
+#   했으므로 그 전제가 사라졌다. 빼면 어디에도 안 남는다.
+#
+#   그리고 정본이 이 행에서 나온 숫자를 인용한다. 머리 접촉 오염 비율
+#   「규격 1 이 36,134 행 중 22.1 %」가 그것이다. 원시 행이 없으면 그 숫자를
+#   아무도 다시 셀 수 없다. 인용하는 숫자는 되짚을 수 있어야 한다.
+#
+#   성적으로 인용하지 않는다는 원칙은 그대로다. 대조군이자 증거로만 둔다.
 
 # 일회용 확인 폴더
 #   2026-09-11 에 카메라 축 고정이 실제로 되는지 한 컷만 다시 찍어 본 자리다.
