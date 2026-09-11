@@ -95,6 +95,7 @@ if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
 import metrics  # noqa: E402
+import extras as csv_extras  # noqa: E402
 import terrains  # noqa: E402
 import timeseries  # noqa: E402
 
@@ -480,6 +481,47 @@ def resolve_obstacle_zones(terrain_cfg, recorded):
     return zones
 
 
+def resolve_contact_parts(contact_sensor):
+    """접촉 센서의 강체를 발·허벅지·종아리·몸통 넷으로 가른다.
+
+    **새 센서를 안 붙인다.** `contact_forces` 는 `prim_path=".../Robot/.*"` 라
+    이미 강체 19개를 전부 덮고 있다 `확인됨` (2026-09-11 · 이름 목록을 직접
+    읽어 확인했다). CSV 설계서가 「허벅지·종아리는 센서를 붙여야 함」이라
+    적은 것은 그 사실을 모르고 쓴 것이다.
+
+    Returns:
+        `{부위: [강체 번호]}`. 한 부위라도 비면 **죽는다.** 빈 채로 두면
+        그 열이 전부 0 이 되고 「한 번도 안 닿았다」로 읽힌다 (원칙 2).
+    """
+    names = list(contact_sensor.body_names)
+    parts = {"foot": [], "thigh": [], "calf": [], "base": []}
+
+    for index, name in enumerate(names):
+        low = name.lower()
+
+        if low.endswith("_foot"):
+            parts["foot"].append(index)
+        elif "thigh" in low:
+            parts["thigh"].append(index)
+        elif "calf" in low:
+            parts["calf"].append(index)
+        elif low in ("base", "trunk") or "head" in low:
+            # 몸통과 머리를 한 묶음으로 본다. 판정 종료 조건이 보는 자리와 같다.
+            parts["base"].append(index)
+
+    empty = [k for k, v in parts.items() if not v]
+
+    if empty:
+        raise RuntimeError(
+            "접촉 부위 %s 에 해당하는 강체를 못 찾았습니다. 센서 강체 이름: %s"
+            % (empty, names))
+
+    print("[PASS] 접촉 부위 · " + " · ".join(
+        "%s %d개" % (k, len(v)) for k, v in parts.items()), flush=True)
+
+    return parts
+
+
 def resolve_foot_bodies(robot, contact_sensor):
     """발 넷의 강체 번호를 **두 곳에서** 집는다. 못 집으면 `(None, None)`.
 
@@ -822,6 +864,67 @@ def main():
     # 축이 그 축이고, `overlay/trace.py` 의 `vx_mps` 도 같은 값이다.
     speed_buf = torch.zeros((num_envs, max_steps), device=device)
 
+    # ── FOOTHOLD CSV v1 · 더한 32열의 누적 ─────────────────────────────
+    #
+    # **스텝마다 목록에 쌓지 않는다.** 백분위가 필요한 둘만 버퍼를 쓰고
+    # 나머지는 합·최댓값만 들고 다닌다. 18,000판 x 300스텝 x 12관절을
+    # 목록으로 들면 6,480만 개가 된다.
+    contact_parts = resolve_contact_parts(head_contact_sensor)
+    part_names = list(csv_extras.CONTACT_PARTS)
+    part_ids = [torch.tensor(contact_parts[p], dtype=torch.long, device=device)
+                for p in part_names]
+
+    n_parts = len(part_names)
+    part_peak = torch.zeros((num_envs, n_parts), device=device)
+    part_impulse = torch.zeros((num_envs, n_parts), device=device)
+    part_steps = torch.zeros((num_envs, n_parts), dtype=torch.long, device=device)
+    part_events = torch.zeros((num_envs, n_parts), dtype=torch.long, device=device)
+    part_was = torch.zeros((num_envs, n_parts), dtype=torch.bool, device=device)
+
+    # 자세 둘만 버퍼를 쓴다. 95분위는 전부를 봐야 나온다.
+    roll_buf = torch.zeros((num_envs, max_steps), device=device)
+    pitch_buf = torch.zeros((num_envs, max_steps), device=device)
+    surf_pitch_buf = torch.zeros((num_envs, max_steps), device=device)
+    posture_len = torch.zeros(num_envs, dtype=torch.long, device=device)
+
+    vx_err_sq = torch.zeros(num_envs, device=device)
+    vy_sq = torch.zeros(num_envs, device=device)
+    torque_sq = torch.zeros(num_envs, device=device)
+    action_delta_sq = torch.zeros(num_envs, device=device)
+    motion_steps = torch.zeros(num_envs, dtype=torch.long, device=device)
+    action_steps = torch.zeros(num_envs, dtype=torch.long, device=device)
+    # 액션 크기를 `robot` 에서 읽지 않는다. 이 자리에서는 아직 안 만들어졌다
+    # `확인됨` (2026-09-11 · UnboundLocalError 로 죽었다).
+    prev_action = torch.zeros(
+        (num_envs, raw_env.action_manager.total_action_dim), device=device)
+    have_prev_action = torch.zeros(num_envs, dtype=torch.bool, device=device)
+
+    # 발 미끄러짐. 두 스텝이 «연속으로» 닿아 있을 때만 잰다.
+    slip_sum = torch.zeros(num_envs, device=device)
+    prev_foot_xy = torch.zeros((num_envs, 4, 2), device=device)
+    prev_foot_touch = torch.zeros((num_envs, 4), dtype=torch.bool, device=device)
+
+    # 험지 참여도. 「넘을 것이 있었나」와 「실제로 탔나」를 따로 센다.
+    BIG = 1.0e9
+    scan_lo = torch.full((num_envs,), BIG, device=device)
+    scan_hi = torch.full((num_envs,), -BIG, device=device)
+    under_lo = torch.full((num_envs,), BIG, device=device)
+    under_hi = torch.full((num_envs,), -BIG, device=device)
+
+    height_sensor = raw_env.scene.sensors["height_scanner"]
+
+    # 몸통 바로 아래 광선 하나. 「지금 밟고 있는 높이」다.
+    _ray_local = (height_sensor.data.ray_hits_w[0, :, :2]
+                  - height_sensor.data.pos_w[0, :2].unsqueeze(0))
+    center_ray = int(torch.argmin(torch.linalg.norm(_ray_local, dim=1)).item())
+    print("[PASS] 중심 광선 %d / %d"
+          % (center_ray, height_sensor.data.ray_hits_w.shape[1]), flush=True)
+
+    # 정책 파일 해시. 한 번만 낸다. 판마다 다시 읽으면 18,000번 읽는다.
+    policy_sha = file_sha256(resume_path) if os.path.isfile(resume_path) else ""
+    run_id = os.path.basename(os.path.normpath(args_cli.output_dir))
+    spec_version = globals().get("_SPEC_VERSION")
+
     env_index = torch.arange(num_envs, device=device)
 
     robot = raw_env.scene["robot"]
@@ -851,11 +954,14 @@ def main():
     ts_first_report = None
     ts_written = 0
 
-    if args_cli.timeseries:
-        foot_body_slots, foot_sensor_slots = resolve_foot_bodies(
-            robot, head_contact_sensor
-        )
+    # **시계열과 무관하게 항상 해석한다.** 예전에는 `--timeseries` 를 줄 때만
+    # 풀어서, 안 주면 `foot_slip_distance_proxy_m` 이 조용히 0 으로 나갔다
+    # `확인됨` (2026-09-11 · 200판 전부 0.0000 이었다).
+    foot_body_slots, foot_sensor_slots = resolve_foot_bodies(
+        robot, head_contact_sensor
+    )
 
+    if args_cli.timeseries:
         joint_names = list(robot.data.joint_names)
         ts_columns = timeseries.columns_for(joint_names)
 
@@ -1121,6 +1227,95 @@ def main():
         head_buf[env_index[head_room], head_len[head_room]] = head_force[head_room]
         head_len[head_room] += 1
 
+        # ── FOOTHOLD CSV v1 · 스텝 누적 ────────────────────────────────
+        #
+        # **머리 접촉과 같은 자리에서 담는다.** 스텝 «전» 이다. `env.step()` 이
+        # 끝난 판을 그 자리에서 되감으면서 접촉 이력을 0 으로 지우기 때문이다
+        # (같은 이유가 바로 위 머리 접촉 주석에 적혀 있다).
+        act_f = active.float()
+
+        # 자세 둘. 95분위를 내려면 스텝마다 남겨야 한다.
+        q = robot.data.root_quat_w
+        qw, qx, qy, qz = q[:, 0], q[:, 1], q[:, 2], q[:, 3]
+        roll_rad = torch.atan2(2.0 * (qw * qx + qy * qz),
+                               1.0 - 2.0 * (qx * qx + qy * qy))
+        pitch_rad = torch.asin(torch.clamp(2.0 * (qw * qy - qz * qx), -1.0, 1.0))
+
+        # 지면 기울기. 높이 스캔을 로봇 전방축에 최소제곱으로 맞춘다.
+        # 몸 기울기에서 이것을 빼면 «지면 기준» 기울기가 된다. 비탈을 오를 때
+        # 몸이 기우는 것과 평지에서 휘청이는 것을 가른다.
+        hits_w = height_sensor.data.ray_hits_w
+        hit_z = hits_w[..., 2]
+        ok = torch.isfinite(hit_z)
+        rel_xy = hits_w[..., :2] - height_sensor.data.pos_w[:, :2].unsqueeze(1)
+        along = (rel_xy * forward_dir.unsqueeze(1)).sum(dim=2)
+        w = ok.float()
+        cnt = w.sum(dim=1).clamp_min(1.0)
+        z_safe = torch.where(ok, hit_z, torch.zeros_like(hit_z))
+        mx = (along * w).sum(dim=1) / cnt
+        mz = (z_safe * w).sum(dim=1) / cnt
+        dx = (along - mx.unsqueeze(1)) * w
+        dz = (z_safe - mz.unsqueeze(1)) * w
+        var = (dx * dx).sum(dim=1)
+        slope_rad = torch.atan2((dx * dz).sum(dim=1), var.clamp_min(1.0e-6))
+        slope_rad = torch.where(var > 1.0e-6, slope_rad, torch.zeros_like(slope_rad))
+
+        p_room = active & (posture_len < max_steps)
+        idx = env_index[p_room]
+        roll_buf[idx, posture_len[p_room]] = torch.rad2deg(roll_rad[p_room]).abs()
+        pitch_buf[idx, posture_len[p_room]] = torch.rad2deg(pitch_rad[p_room]).abs()
+        surf_pitch_buf[idx, posture_len[p_room]] = torch.rad2deg(
+            pitch_rad[p_room] - slope_rad[p_room]).abs()
+        posture_len[p_room] += 1
+
+        # 속도와 토크. 합만 들고 다닌다.
+        vx_err_sq += act_f * (actual_vel_b[:, 0] - args_cli.command_vx) ** 2
+        vy_sq += act_f * actual_vel_b[:, 1] ** 2
+        torque_sq += act_f * (robot.data.applied_torque ** 2).mean(dim=1)
+        motion_steps += active.long()
+
+        # 부위별 접촉. 이력 전체의 최댓값을 쓴다. 머리 접촉과 같은 방식이다.
+        hist = head_contact_sensor.data.net_forces_w_history
+        mag = torch.linalg.vector_norm(hist, dim=-1).amax(dim=1)     # (envs, bodies)
+
+        for p_i, ids in enumerate(part_ids):
+            f = mag[:, ids].amax(dim=1)
+            touching = active & (f > args_cli.head_contact_threshold_n)
+
+            part_peak[:, p_i] = torch.maximum(
+                part_peak[:, p_i], torch.where(active, f, torch.zeros_like(f)))
+            part_impulse[:, p_i] += torch.where(
+                touching, f * dt, torch.zeros_like(f))
+            part_steps[:, p_i] += touching.long()
+            part_events[:, p_i] += (touching & ~part_was[:, p_i]).long()
+            part_was[:, p_i] = touching
+
+        # 험지 참여도.
+        #   scan     몸 주변 1.6 x 1.0 m 안에 «넘을 것이 있었나»
+        #   under    몸 «바로 아래» 지면이 위아래로 얼마나 움직였나
+        big = torch.where(ok, hit_z, torch.full_like(hit_z, -BIG))
+        small = torch.where(ok, hit_z, torch.full_like(hit_z, BIG))
+        any_hit = ok.any(dim=1) & active
+
+        scan_hi = torch.where(any_hit, torch.maximum(scan_hi, big.amax(dim=1)), scan_hi)
+        scan_lo = torch.where(any_hit, torch.minimum(scan_lo, small.amin(dim=1)), scan_lo)
+
+        under = hit_z[:, center_ray]
+        under_ok = torch.isfinite(under) & active
+        under_hi = torch.where(under_ok, torch.maximum(under_hi, under), under_hi)
+        under_lo = torch.where(under_ok, torch.minimum(under_lo, under), under_lo)
+
+        # 발 미끄러짐. 두 스텝이 «연속으로» 닿아 있을 때만 센다.
+        if foot_body_slots is not None and foot_sensor_slots is not None:
+            fxy = robot.data.body_pos_w[:, foot_body_slots, :2]
+            ff = mag[:, foot_sensor_slots]
+            touch = ff > args_cli.head_contact_threshold_n
+            both = touch & prev_foot_touch & active.unsqueeze(1)
+            step_move = torch.linalg.vector_norm(fxy - prev_foot_xy, dim=2)
+            slip_sum += (step_move * both.float()).sum(dim=1)
+            prev_foot_xy = fxy.clone()
+            prev_foot_touch = touch.clone()
+
         elapsed[active] += dt
         velocity_error_sum[active] += planar_vel_error[active]
         sample_count[active] += 1
@@ -1131,6 +1326,14 @@ def main():
             policy_nn.reset(dones)
 
         reward_sum[active] += reward[active]
+
+        # 명령이 프레임마다 얼마나 바뀌나. 첫 스텝은 «직전» 이 없어 안 센다.
+        act_now = actions.detach()
+        counted = active & have_prev_action
+        action_delta_sq += counted.float() * ((act_now - prev_action) ** 2).mean(dim=1)
+        action_steps += counted.long()
+        prev_action = torch.where(active.unsqueeze(1), act_now, prev_action)
+        have_prev_action = have_prev_action | active
 
         terminated = raw_env.reset_terminated.clone()
         timed_out = raw_env.reset_time_outs.clone()
@@ -1240,6 +1443,68 @@ def main():
                     else round(row_metrics["head_contact_first_s"], 4)
                 ),
             }
+
+            # ── FOOTHOLD CSV v1 · 더한 32열 ────────────────────────────
+            #
+            # **판정을 안 바꾼다.** 위 27열은 손대지 않았고 `overall_success`
+            # 는 여전히 네 축의 AND 다. 아래는 전부 관측이다.
+            def blank(v, digits=4):
+                return "" if v is None else round(float(v), digits)
+
+            n_post = int(posture_len[env_id].item())
+            n_motion = int(motion_steps[env_id].item())
+            n_action = int(action_steps[env_id].item())
+
+            row["roll_abs_p95_deg"] = blank(csv_extras.percentile(
+                roll_buf[env_id, :n_post].tolist(), 95), 3)
+            row["pitch_abs_p95_deg"] = blank(csv_extras.percentile(
+                pitch_buf[env_id, :n_post].tolist(), 95), 3)
+            row["surface_relative_pitch_abs_p95_deg"] = blank(csv_extras.percentile(
+                surf_pitch_buf[env_id, :n_post].tolist(), 95), 3)
+
+            row["forward_velocity_rmse_mps"] = blank(csv_extras.rms_from_sum_sq(
+                vx_err_sq[env_id].item(), n_motion))
+            row["lateral_velocity_rms_mps"] = blank(csv_extras.rms_from_sum_sq(
+                vy_sq[env_id].item(), n_motion))
+            row["joint_torque_rms_nm"] = blank(csv_extras.rms_from_sum_sq(
+                torque_sq[env_id].item(), n_motion), 3)
+            row["action_delta_rms"] = blank(csv_extras.rms_from_sum_sq(
+                action_delta_sq[env_id].item(), n_action), 5)
+            row["foot_slip_distance_proxy_m"] = blank(slip_sum[env_id].item())
+
+            for p_i, part in enumerate(part_names):
+                row["{}_peak_force_n".format(part)] = blank(
+                    part_peak[env_id, p_i].item(), 3)
+                row["{}_impulse_proxy_ns".format(part)] = blank(
+                    part_impulse[env_id, p_i].item(), 4)
+                row["{}_contact_time_s".format(part)] = blank(
+                    int(part_steps[env_id, p_i].item()) * dt)
+                row["{}_contact_events".format(part)] = int(
+                    part_events[env_id, p_i].item())
+
+            # 험지 참여도. 한 번도 못 맞혔으면 빈 칸이다. 0 이 아니다.
+            _slo = scan_lo[env_id].item()
+            _shi = scan_hi[env_id].item()
+            _ulo = under_lo[env_id].item()
+            _uhi = under_hi[env_id].item()
+
+            scan_relief = (None if _slo > _shi
+                           else csv_extras.relief_m(_slo, _shi))
+            under_relief = (None if _ulo > _uhi
+                            else csv_extras.relief_m(_ulo, _uhi))
+
+            row["terrain_relief_scan_m"] = blank(scan_relief)
+            row["terrain_relief_underfoot_m"] = blank(under_relief)
+            row["terrain_engagement_ratio"] = blank(
+                csv_extras.engagement_ratio(under_relief, scan_relief), 4)
+
+            row["episode_id"] = csv_extras.episode_id(
+                terrain_name, spec_version, args_cli.difficulty,
+                args_cli.command_vx, episode_number)
+            row["eval_spec_version"] = spec_version
+            row["policy_sha256"] = policy_sha
+            row["seed"] = args_cli.seed
+            row["run_id"] = run_id
 
             if list(row.keys()) != list(metrics.RAW_COLUMNS):
                 raise RuntimeError(
@@ -1353,6 +1618,30 @@ def main():
             path_len[env_id] = 0
             head_len[env_id] = 0
 
+            # ── 더한 32열의 누적도 되돌린다 ────────────────────────────
+            #
+            # **여기를 빼면 앞 판의 값이 다음 판에 새어 든다.** 머리 접촉
+            # 첫 시각이 오염된 것과 같은 부류의 사고다.
+            posture_len[env_id] = 0
+            motion_steps[env_id] = 0
+            action_steps[env_id] = 0
+            vx_err_sq[env_id] = 0.0
+            vy_sq[env_id] = 0.0
+            torque_sq[env_id] = 0.0
+            action_delta_sq[env_id] = 0.0
+            have_prev_action[env_id] = False
+            slip_sum[env_id] = 0.0
+            prev_foot_touch[env_id] = False
+            part_peak[env_id] = 0.0
+            part_impulse[env_id] = 0.0
+            part_steps[env_id] = 0
+            part_events[env_id] = 0
+            part_was[env_id] = False
+            scan_lo[env_id] = BIG
+            scan_hi[env_id] = -BIG
+            under_lo[env_id] = BIG
+            under_hi[env_id] = -BIG
+
     if len(results) == 0:
         raise RuntimeError("No evaluation episodes were recorded.")
 
@@ -1364,6 +1653,32 @@ def main():
     #
     # **「최댓값이 전부 0」을 실패로 치지 않는다.** 평지 100판이면 그것이 정답이다.
     # 표본 수가 0 인 것만 잡는다. 그건 물리적으로 불가능하다.
+    # ── 더한 열이 통째로 죽었는지 본다 (원칙 2) ───────────────────────
+    #
+    # 값이 «전부 같은» 열은 거의 언제나 안 잰 것이다. 진짜로 전부 같을 수
+    # 있는 열(실행 내내 안 바뀌는 추적 열, 평지에서 0 인 기복)은 뺀다.
+    #
+    # 2026-09-11 에 `foot_slip_distance_proxy_m` 이 200판 전부 0.0000 으로
+    # 나갔다. 오류는 없었고 CSV 는 「한 번도 안 미끄러졌다」로 읽혔다.
+    _alive_check = (
+        "roll_abs_p95_deg", "pitch_abs_p95_deg",
+        "surface_relative_pitch_abs_p95_deg",
+        "forward_velocity_rmse_mps", "lateral_velocity_rms_mps",
+        "joint_torque_rms_nm", "action_delta_rms",
+        "foot_slip_distance_proxy_m",
+        "foot_peak_force_n", "foot_contact_events",
+    )
+
+    if len(results) >= 10:
+        dead = [c for c in _alive_check
+                if len({str(r.get(c)) for r in results}) == 1]
+
+        if dead:
+            raise RuntimeError(
+                "열 %s 이 %d 판 내내 한 값이었습니다. 안 재고 있을 소지가 큽니다.%s"
+                "이대로 CSV 를 내면 「그런 일이 없었다」로 읽힙니다."
+                % (dead, len(results), chr(10)))
+
     empty = [r for r in results if r["head_contact_count"] is None]
 
     if empty:

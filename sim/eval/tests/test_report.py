@@ -168,8 +168,11 @@ class LegacyCsvStillReads(unittest.TestCase):
         # 갖고 있으므로, 「추가분이되 정본에도 있는 것」만 남기면 목록이
         # 스스로 따라온다. 정본 열이 사라지거나 **정본 열 사이에** 추가분이
         # 아닌 열이 끼면 지금도 그대로 걸린다.
+        # **옛 27열에서 본다.** FOOTHOLD 판 v1 의 32열은 전부 뒤에 붙으므로
+        # 정본 20열의 자리를 밀지 않는다. 전체에서 보면 그 32열이 꼬리에
+        # 붙어 대조가 깨진다 (2026-09-11).
         current = tuple(
-            c for c in metrics.RAW_COLUMNS
+            c for c in metrics.LEGACY_RAW_COLUMNS
             if c not in metrics.ADDED_COLUMNS or c in self.CANONICAL_20
         )
 

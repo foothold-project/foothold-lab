@@ -24,6 +24,8 @@ torch 도 Isaac 도 쓰지 않으므로 Windows 에서 그대로 돌아갑니다
 평면만 쓰기 때문입니다.
 """
 
+import extras
+
 # 스냅샷에 없던 열. 여기 있는 것만 Candidate 와 다르다 (#125 1번 · #99 2번 · 머리 접촉).
 # 이 목록을 빼면 `RAW_COLUMNS` 는 스냅샷 543행의 키 순서와 정확히 같아야 한다.
 ADDED_COLUMNS = (
@@ -88,6 +90,23 @@ RAW_COLUMNS = (
     "head_contact_peak_n",
     "head_contact_first_s",
 )
+
+# 옛 27열. `--legacy_csv` 가 쓴다. 옛 도구가 안 깨지게 남긴다.
+LEGACY_RAW_COLUMNS = RAW_COLUMNS
+
+# ── FOOTHOLD 판 v1 에서 더한 열 ────────────────────────────────────────
+#
+# **앞의 27열은 한 자리도 안 건드린다.** 열 번호로 읽는 옛 코드와 이미 나온
+# CSV 가 그대로 통해야 한다. 새 것은 전부 뒤에 붙는다.
+#
+# 무엇이 왜 붙는지는 `docs/CSV-SPEC-v1.md` 와 `extras.py` 머리말에 있다.
+# 여기서는 **순서만** 못 박는다.
+#
+#   자세·제어  8   지금 신호로 계산된다. 센서를 안 붙여도 된다
+#   부위 접촉 16   `contact_forces` 가 이미 강체 19개를 다 덮고 있다
+#   험지 참여  3   팀장 지시. 「그 성공이 진짜 험지 보행이었나」
+#   재현 추적  5   manifest 를 안 열어도 한 줄로 출처를 안다
+RAW_COLUMNS = RAW_COLUMNS + extras.FOOTHOLD_V1_COLUMNS
 
 # 요약 CSV 열 순서. 스냅샷 272행 딕셔너리의 키 순서와 같아야 한다.
 SUMMARY_COLUMNS = (

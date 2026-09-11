@@ -663,8 +663,13 @@ class ColumnContract(unittest.TestCase):
     """CSV 열 순서를 스냅샷에 못 박는다."""
 
     def test_추가분을_빼면_스냅샷_열_순서(self):
+        """**옛 27열에서 본다.** FOOTHOLD 판 v1 의 32열은 스냅샷과 무관하다.
+
+        `RAW_COLUMNS` 전체에서 보면 그 32열이 섞여 들어와 이 대조가 뜻을
+        잃는다. 스냅샷이 말하는 것은 원래 열의 순서다.
+        """
         without_added = tuple(
-            c for c in metrics.RAW_COLUMNS if c not in metrics.ADDED_COLUMNS
+            c for c in metrics.LEGACY_RAW_COLUMNS if c not in metrics.ADDED_COLUMNS
         )
 
         self.assertEqual(oracle.dict_key_order(543), without_added)
@@ -693,14 +698,35 @@ class ColumnContract(unittest.TestCase):
             columns.index("peak_lateral_drift_m") + 1,
         )
 
-    def test_머리_접촉_열_셋은_붙어_있고_맨_뒤다(self):
-        # 스냅샷 열 **뒤에** 둔다. 앞에 끼우면 열 번호로 CSV 를 읽는 코드가 밀린다.
-        columns = list(metrics.RAW_COLUMNS)
+    def test_머리_접촉_열_셋은_붙어_있고_옛_27열의_맨_뒤다(self):
+        """스냅샷 열 **뒤에** 둔다. 앞에 끼우면 열 번호로 읽는 코드가 밀린다.
 
+        2026-09-11 에 FOOTHOLD 판 v1 의 32열이 그 뒤에 더 붙었다. 그래서
+        「RAW_COLUMNS 의 맨 뒤」가 아니라 **「옛 27열의 맨 뒤」** 가 됐다.
+        앞 27열 안에서의 자리는 그대로여야 한다.
+        """
+        legacy = list(metrics.LEGACY_RAW_COLUMNS)
+
+        self.assertEqual(len(legacy), 27)
         self.assertEqual(
-            columns[-3:],
+            legacy[-3:],
             ["head_contact_count", "head_contact_peak_n", "head_contact_first_s"],
         )
+
+    def test_옛_27열이_앞쪽에_그대로_있다(self):
+        """**이미 나온 CSV 와 열 번호로 읽는 코드가 안 밀려야 한다.**
+
+        더한 32열은 전부 뒤에만 붙는다.
+        """
+        self.assertEqual(
+            tuple(metrics.RAW_COLUMNS[:27]), tuple(metrics.LEGACY_RAW_COLUMNS))
+
+    def test_더한_32열이_뒤에_그_순서로_붙는다(self):
+        import extras
+
+        self.assertEqual(
+            tuple(metrics.RAW_COLUMNS[27:]), tuple(extras.FOOTHOLD_V1_COLUMNS))
+        self.assertEqual(len(metrics.RAW_COLUMNS), 59)
 
     def test_판정_열은_머리_접촉_앞에_그대로_있다(self):
         # 판정 5축의 자리가 안 밀렸는지. 스냅샷과 같은 6~11번째 칸이다.
@@ -728,6 +754,12 @@ class ColumnContract(unittest.TestCase):
         self.assertEqual(oracle.dict_key_order(272), metrics.SUMMARY_COLUMNS)
 
     def test_파생값이_원시_열에_다_들어간다(self):
+        """`episode_metrics` 가 내는 것과 «옛 27열» 이 정확히 맞물리는가.
+
+        **옛 27열에서 본다.** FOOTHOLD 판 v1 의 32열은 `episode_metrics` 가
+        아니라 하네스가 스텝 누적에서 직접 채운다. 그것까지 여기서 요구하면
+        이 시험이 「무엇이 무엇을 만드는가」를 잘못 말하게 된다.
+        """
         derived = set(metrics.episode_metrics(**CASES["통과"]))
 
         # 원시 열에서 파생값이 아닌 것: 식별자와 초기 자세.
@@ -740,7 +772,15 @@ class ColumnContract(unittest.TestCase):
             "start_yaw_deg",
         }
 
-        self.assertEqual(set(metrics.RAW_COLUMNS) - identity, derived)
+        self.assertEqual(set(metrics.LEGACY_RAW_COLUMNS) - identity, derived)
+
+    def test_더한_32열은_하네스가_채운다(self):
+        """**`episode_metrics` 는 이 열들을 모른다.** 겹치면 두 곳에서 만드는 셈이다."""
+        import extras
+
+        derived = set(metrics.episode_metrics(**CASES["통과"]))
+
+        self.assertEqual(set(extras.FOOTHOLD_V1_COLUMNS) & derived, set())
 
 
 if __name__ == "__main__":
