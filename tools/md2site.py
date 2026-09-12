@@ -42,6 +42,7 @@ import html
 import io
 import os
 import re
+import shutil
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -99,6 +100,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 pre{background:#161c26;color:#e8e6e0;border-radius:10px;padding:16px 18px;
   overflow-x:auto;margin:16px 0;font-size:.84rem;line-height:1.6}
 pre code{background:none;color:inherit;padding:0}
+.fig{margin:24px 0;background:var(--card);border:1px solid var(--rule);
+  border-radius:10px;padding:16px 18px 12px}
+.fig img{width:100%;height:auto;display:block}
+.fig figcaption{font-size:.8rem;color:var(--ink-3);margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--rule)}
 .said{background:var(--dim-soft);color:var(--brand);font-size:.7rem;
   font-weight:700;padding:1px 7px;border-radius:4px;white-space:nowrap}
 blockquote{border-left:3px solid var(--brand);background:var(--card);
@@ -112,9 +118,32 @@ META_KEYS = ("분류", "작성", "근거", "요지", "상태")
 NUMERIC = re.compile(r"^[\s0-9.,%+\-x×~/]*$")
 
 
+IMAGES = []
+
+
+def web_path(src):
+    """`../assets/visual/x.svg` (lab 기준) -> `/assets/visual/x.svg` (site 기준)."""
+    return "/" + src.replace("../", "").lstrip("/")
+
+
 def inline(text):
-    """줄 안의 서식. **굵게** · `코드` · [글](주소) · `확인됨` 딱지."""
+    """줄 안의 서식.
+
+    **그림을 «먼저» 잡는다.** 링크 정규식이 `![alt](src)` 의 `[alt](src)` 를
+    먼저 먹으면 `!` 만 남아 `!<a href=...>` 가 된다 `확인됨`
+    (2026-09-12 · 정본 도면 5장이 전부 그렇게 깨졌다. 팀장이 잡았다).
+    """
     out = html.escape(text, quote=False)
+
+    def as_figure(m):
+        alt, src = m.group(1), m.group(2)
+        IMAGES.append(src)
+        return ('<figure class="fig"><img src="%s" alt="%s" loading="lazy">'
+                '<figcaption>%s</figcaption></figure>'
+                % (html.escape(web_path(src), quote=True),
+                   html.escape(alt, quote=True), html.escape(alt, quote=False)))
+
+    out = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", as_figure, out)
     out = re.sub(r"`확인됨`", '<span class="said">확인됨</span>', out)
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
     out = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
@@ -258,7 +287,11 @@ def convert(text):
                 j += 1
 
             if body:
-                out.append("<p>%s</p>" % inline(" ".join(body)))
+                piece = inline(" ".join(body))
+                # 그림 하나뿐인 문단은 `<p>` 로 감싸지 않는다
+                out.append(piece if piece.startswith("<figure")
+                           and piece.endswith("</figure>")
+                           else "<p>%s</p>" % piece)
                 i = j
                 continue
 
@@ -309,8 +342,13 @@ def main():
     text = io.open(args.source, encoding="utf-8").read()
     title, meta, body = convert(text)
 
+    # 공지는 `# 제목` 없이 머리의 `요지` 가 제목 노릇을 한다.
     if not title:
-        raise SystemExit("첫 줄에 `# 제목` 이 없다: %s" % args.source)
+        title = re.sub(r"^[^가-힣A-Za-z0-9]*", "", meta.get("요지", "")).strip()
+
+    if not title:
+        raise SystemExit("제목을 못 찾았다. `# 제목` 이나 머리의 `요지` 가 필요하다: %s"
+                         % args.source)
 
     missing = [k for k in META_KEYS if not meta.get(k)]
 
@@ -323,14 +361,52 @@ def main():
     out = page(title, meta, body, rel)
     io.open(args.out, "w", encoding="utf-8").write(out)
 
+    # **그림을 같이 옮긴다.** 안 옮기면 페이지만 올라가고 도면이 404 가 된다
+    # `확인됨` (2026-09-12 · 정본 도면 5장이 site 에 하나도 없었다).
+    here = os.path.dirname(os.path.abspath(args.source))
+    site = os.path.dirname(os.path.abspath(args.out))
+    moved = []
+
+    for src in IMAGES:
+        got = os.path.normpath(os.path.join(here, src))
+
+        if not os.path.isfile(got):
+            raise SystemExit("그림이 없다: %s (본문의 %s)" % (got, src))
+
+        dst = os.path.join(site, web_path(src).lstrip("/").replace("/", os.sep))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy2(got, dst)
+        moved.append(os.path.relpath(dst, site).replace(os.sep, "/"))
+
     print("  %s · %.1f KB" % (args.out, len(out.encode("utf-8")) / 1024))
+    print("  그림 %d장 옮김" % len(moved))
+
+    for name in moved:
+        print("    " + name)
     print("  절 %d · 표 %d · 코드울 %d"
           % (out.count("<h2>") + out.count('<h2><span'),
              out.count("<table>"), out.count("<pre>")))
 
     # **조용한 실패를 막는다.** 옮기다 통째로 비면 소리를 낸다.
-    if out.count("<table>") < 5 or len(out) < 8000:
+    # 원문에 있던 만큼 나왔나. 표가 없는 글(공지)도 있으므로 **원문과 견준다.**
+    md_tables = len(re.findall(r"^\s*\|[\s:|-]+\|\s*$", text, re.M))
+
+    if out.count("<table>") != md_tables:
+        raise SystemExit("원문 표 %d개인데 %d개만 나왔다"
+                         % (md_tables, out.count("<table>")))
+
+    body_only = re.sub(r"<style>.*?</style>", "", out, flags=re.S)
+
+    if len(re.sub(r"<[^>]+>", "", body_only).strip()) < len(text) * 0.5:
         raise SystemExit("옮긴 것이 너무 적다. 원문을 다 읽었는지 보라")
+
+    # 그림이 링크로 깨진 채 나가면 안 된다
+    if "!<a href" in out:
+        raise SystemExit("그림이 링크로 깨졌다. `![]()` 를 먼저 잡아야 한다")
+
+    if IMAGES and out.count("<figure class=\"fig\">") != len(IMAGES):
+        raise SystemExit("본문 그림 %d장인데 %d장만 나왔다"
+                         % (len(IMAGES), out.count("<figure class=\"fig\">")))
 
     for bad in (chr(8212), "%%"):
         if bad in out:

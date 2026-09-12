@@ -11,6 +11,7 @@ import base64
 import io
 import json
 import os
+import re
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -237,10 +238,49 @@ ul{margin:0 0 14px;padding-left:20px}
 li{margin:5px 0}
 """
 
-p = ['<title>FOOTHOLD 종합보고서 1차</title>',
+SITE_DIR = os.environ.get("FOOTHOLD_SITE") or os.path.abspath(
+    os.path.join(REPO, "..", "foothold-site"))
+
+
+def site_nav():
+    """site 의 전역바를 가져온다.
+
+    **없으면 웹에서 갤러리로 가는 길이 없다** `확인됨` (2026-09-12 · 127개
+    페이지에 있는 전역바가 이 보고서에만 없었다. 팀장이 잡았다).
+    """
+    path = os.path.join(SITE_DIR, "notice-20260902.html")
+
+    if not os.path.isfile(path):
+        return "", ""
+
+    src = io.open(path, encoding="utf-8").read()
+    got = re.search(r"<!--gnav:v1-->.*?<!--/gnav:v1-->", src, re.S)
+
+    if not got:
+        return "", ""
+
+    bar = re.sub(r'href="(?!/|https?:)([^"]+)"', r'href="/\1"', got.group(0))
+    bar = bar.replace('src="assets/', 'src="/assets/')
+    bar = bar.replace('class="on"', 'class=""')
+    i = src.find(".gnav{")
+    j = src.find("</style>", i)
+    return bar, (src[i:j].rstrip() if i > 0 else "")
+
+
+NAV, NAV_CSS = site_nav()
+
+# **온전한 문서로 낸다.** 조각으로 내면 doctype 도 charset 도 뷰포트도 없다.
+# 파일로 저장해 열면 한글이 깨지고 휴대폰에서 조판이 무너진다 `확인됨`
+# (2026-09-04 에 PDF 로 같은 일을 겪었다).
+p = ['<!doctype html>', '<html lang="ko">', "<head>", '<meta charset="utf-8">',
+     '<meta name="viewport" content="width=device-width,initial-scale=1">',
+     '<title>FOOTHOLD 종합보고서 1차</title>',
+     '<meta name="description" content="기준선 NVIDIA vs A vs foothold-v1 · '
+     '난이도 0.5 성적표 14,400 판 · 전체 원자료 43,200 판">',
      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
      'family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">',
-     "<style>%s</style>" % CSS, '<div class="wrap">']
+     "<style>%s%s%s</style>" % (CSS, NL, NAV_CSS), "</head>", "<body>",
+     NAV, '<div class="wrap">']
 
 p.append('<div class="head">'
          '<p>분류: 보고</p>'
@@ -678,7 +718,16 @@ document.querySelectorAll('.rate').forEach(function(bar){
 </script>''')
 p.append("</div>")
 
+p.append("</body>")
+p.append("</html>")
 html = NL.join(p)
+
+# 온전한 문서인지 «센다». 조각으로 나가면 파일로 열 때 한글이 깨진다.
+for _must in ("<!doctype html>", '<meta charset="utf-8">',
+              "width=device-width", "</body>", "</html>"):
+    if _must not in html:
+        raise SystemExit("문서에 %s 가 없다" % _must)
+
 # 원칙 2 · 조용한 실패를 소리 나게. 달라고 한 컷이 없으면 여기서 죽는다.
 if WANTED_MISSING and "--allow_missing_clips" not in sys.argv:
     for _stem in WANTED_MISSING:
