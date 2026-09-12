@@ -48,6 +48,7 @@ TERR = sorted(TSET, key=lambda t: (TSET[t], t))
 MATRIX = io.open(os.path.join(S, "chart_matrix.svg"), encoding="utf-8").read()
 STATUS = json.load(io.open(os.path.join(S, "matrix_status.json"), encoding="utf-8"))
 SCATTER = io.open(os.path.join(S, "chart_scatter.svg"), encoding="utf-8").read()
+CURVE = io.open(os.path.join(S, "chart_curve.svg"), encoding="utf-8").read()
 
 
 # ── 근거 영상 ──────────────────────────────────────────────────────────
@@ -495,6 +496,36 @@ p.append(clips([
 ]))
 
 # ── 5 ──────────────────────────────────────────────────────────────────
+# ── 난이도 곡선 ─────────────────────────────────────────────────────
+#
+# **한 점만 보면 「어디서 무너지나」를 못 본다.** 성적표는 난이도 0.5 한 칸이라
+# 기준선이 거기서 50 % 라는 것만 말한다. 곡선은 그 앞뒤를 말한다.
+p.append('<h2><span class="n">04</span>난이도를 올리면 어떻게 되나</h2>')
+p.append('<p>지금까지는 난이도 <strong>0.5</strong> 한 칸만 봤습니다. 그 한 칸은 '
+         '「지금 어느 쪽이 낫나」는 말해 주지만 <strong>어디서 무너지나</strong>는 '
+         '말해 주지 않습니다. 미경험 험지 10종을 난이도 0.1 부터 1.0 까지 '
+         '열 단으로 잰 것이 아래입니다.</p>')
+p.append('<figure>%s<figcaption>미경험 험지 10종의 종합 성공률 · 명령 속도 1.0 m/s · '
+         '칸마다 100 에피소드 · 규격 2. 점은 <strong>실제로 잰 자리</strong>이고 '
+         '선은 그 점을 이은 것입니다. 잰 적 없는 구간으로 늘이지 않았습니다. '
+         '자료는 <span class="mono">20260911-v3-fixedscan</span> 이고, 규격은 '
+         '폴더 이름이 아니라 각 실행의 '
+         '<span class="mono">height_scan_miss_value = 1.0</span> 으로 갈랐습니다.'
+         '</figcaption></figure>' % CURVE)
+p.append('<p>기준선은 난이도가 오를수록 <strong>76 %에서 37 %로</strong> 내려갑니다. '
+         'foothold-v1 은 <strong>90 %에서 77 %</strong> 로, 열 단을 다 올려도 '
+         '기준선의 가장 쉬운 자리(76 %)보다 높습니다. A 는 그 사이입니다.</p>')
+p.append('<div class="note"><b>이 곡선을 읽을 때 조심할 것 셋.</b>'
+         '<br>하나 · <span class="mono">floating_ring</span> 은 난이도가 오르면 '
+         '고리가 낮아져 장애물의 <strong>종류가 바뀝니다</strong>. 이 지형만은 '
+         '오른쪽이 더 어렵다는 뜻이 아닙니다.'
+         '<br>둘 · <span class="mono">random_rough</span> 는 난이도를 거의 타지 '
+         '않습니다. 곡선이 평평한 것이 성적이 좋아서가 아닙니다.'
+         '<br>셋 · 이것은 <strong>열 지형의 평균</strong>입니다. 지형 하나하나가 '
+         '어디서 무너지는지는 평가 정본 2부에 있습니다.</div>')
+p.append('<p>난이도 0.5 칸에서 이 곡선과 앞의 성적표는 <strong>같은 값</strong>입니다 '
+         '(기준선 50.5 % · A 76.6 % · foothold-v1 84.7 %). 두 자료가 같은 것을 '
+         '재고 있다는 뜻입니다.</p>')
 p.append('<h2><span class="n">05</span>성공률만으로는 안 보이는 것</h2>')
 p.append('<p>성공 조건은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND입니다. 그런데 장애물을 '
          '<strong>비켜 가도</strong> 그 조건은 채워집니다. 그래서 이번 판에 '

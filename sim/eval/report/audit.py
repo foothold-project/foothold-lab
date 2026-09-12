@@ -70,7 +70,25 @@ GALLERY = os.environ.get("FOOTHOLD_GALLERY") or os.path.join(
     LAB, "sim", "eval", "results", "20260911-gallery-1080")
 
 HTML = io.open(os.path.join(OUT, "report-v1.html"), encoding="utf-8").read()
-PLAIN = re.sub(r"<[^>]+>", " ", HTML)
+
+
+def _readable(html):
+    """**화면에 읽히는 글자만.**
+
+    태그만 벗기면 `hidden` 이나 `display:none` 인 요소의 글자도 본문이 된다.
+    codex 8회차가 그것으로 관문을 통과시켰다 `확인됨` · 보이는 자리에는
+    틀린 수를 두고 숨긴 요소에 맞는 수를 넣었더니 검사가 맞는 쪽을 봤다.
+    """
+    out = re.sub(r"<(script|style|template)\b[^>]*>.*?</\1>", " ", html,
+                 flags=re.S | re.I)
+    # 숨긴 요소는 **속 내용까지** 걷어낸다.
+    out = re.sub(r"<(\w+)\b[^>]*?(?:\bhidden\b|display\s*:\s*none|"
+                 r"visibility\s*:\s*hidden|aria-hidden=\"true\")[^>]*>.*?</\1>",
+                 " ", out, flags=re.S | re.I)
+    return re.sub(r"<[^>]+>", " ", out)
+
+
+PLAIN = _readable(HTML)
 DIGITS = re.sub(r"[\s,]", "", PLAIN)
 
 # 어느 절만 돌까. 시험이 영상 디코딩 없이 수치 절만 돌리려는 것이다.
@@ -772,18 +790,40 @@ check("4a", "모든 표의 머리칸과 줄 칸수가 같다", not bad_tables, "
 # **손으로 적은 수는 반드시 낡는다.** 대조컷을 28개 더 채웠는데 본문은
 # 「모두 84컷」 이라고 그대로 말하고 있었고, 관문은 그것을 못 잡았다
 # `확인됨` (2026-09-12 · codex 검수 뒤 직접 발견).
+# **`counts` 를 안 믿는다.** 요약은 본문과 «함께» 고칠 수 있다.
+# codex 8회차가 둘을 같이 84·60 으로 바꾸자 이 검사가 통과했다 `확인됨`.
+# 배열을 직접 세면 조작해야 할 것이 늘어난다.
+_clips = MAN["clips"]
+_evals = MAN["evaluations"]
+_have = {(c["terrain"], c["speed_mps"], c["model"]) for c in _clips}
+_cells = {(e["terrain"], e["speed_mps"], e["model"]) for e in _evals}
+_n_clip = len(_clips)
+_n_cmp = sum(1 for c in _clips if c.get("role") == "compare")
+_n_gap = len(_cells - _have)
 _c = MAN["counts"]
+
+check("4a1", "색인의 counts 가 배열과 같다",
+      _c.get("clips") == _n_clip
+      and _c.get("comparison_clips") == _n_cmp
+      and _c.get("evaluations_without_clip") == _n_gap,
+      "counts %s/%s/%s · 배열 %d/%d/%d"
+      % (_c.get("clips"), _c.get("comparison_clips"),
+         _c.get("evaluations_without_clip"), _n_clip, _n_cmp, _n_gap))
+
 _said = re.findall(r"모두 ([\d,]+)컷", PLAIN)
-_want = str(_c["clips"])
-check("4b", "본문의 「모두 N컷」 이 색인과 같다",
-      bool(_said) and all(x.replace(",", "") == _want for x in _said),
-      "본문 %s · 색인 %s" % (_said or "없음", _want))
+check("4b", "본문의 「모두 N컷」 이 배열과 같다",
+      bool(_said) and all(x.replace(",", "") == str(_n_clip) for x in _said),
+      "본문 %s · 배열 %d" % (_said or "없음", _n_clip))
 
 _gap = re.findall(r"(\d+)개는 성적만 있고", PLAIN)
-check("4c", "「성적만 있고 영상이 없다」 가 색인과 같다",
-      bool(_gap) and all(int(x) == _c["evaluations_without_clip"] for x in _gap),
-      "본문 %s · 색인 %d" % (_gap or "없음",
-                                   _c["evaluations_without_clip"]))
+check("4c", "「성적만 있고 영상이 없다」 가 배열과 같다",
+      bool(_gap) and all(int(x) == _n_gap for x in _gap),
+      "본문 %s · 배열 %d" % (_gap or "없음", _n_gap))
+
+_cmp = re.findall(r"모델 대조 (\d+)컷", PLAIN)
+check("4d", "본문의 「모델 대조 N컷」 이 배열과 같다",
+      bool(_cmp) and all(int(x) == _n_cmp for x in _cmp),
+      "본문 %s · 배열 %d" % (_cmp or "없음", _n_cmp))
 
 
 # ── 5. 배포본과 생성본 ──────────────────────────────────────────────

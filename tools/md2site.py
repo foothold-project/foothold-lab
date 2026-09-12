@@ -127,6 +127,7 @@ h2{font-size:1.24rem;font-weight:800;letter-spacing:-.02em;margin:44px 0 14px;
 h2 .n{font-size:.72rem;color:var(--brand);font-weight:700;letter-spacing:.1em;
   font-family:'JetBrains Mono',ui-monospace,monospace}
 h3{font-size:1rem;font-weight:700;margin:28px 0 10px;color:var(--ink)}
+h4{font-size:.9rem;font-weight:700;margin:22px 0 8px;color:var(--ink-2)}
 p{margin:12px 0}
 strong{font-weight:700}
 .tw{overflow-x:auto;margin:16px 0}
@@ -152,7 +153,11 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--ink);
   font-size:.78rem;color:var(--ink-3);display:grid;gap:5px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}"""
 
+# 공통 정본(`AGENTS.md` §4-1)은 **머리 여섯 줄**이다. 여섯째 `판` 은
+# 살아 있는 문서(규칙·계획·실측·조사)에만 단다. 그래서 앞 다섯은 반드시,
+# `판` 은 있으면 실는다 (저장소 실측 · 여섯 줄 65개 · 다섯 줄 40개).
 META_KEYS = ("분류", "작성", "근거", "요지", "상태")
+META_EXTRA = ("판",)
 NUMERIC = re.compile(r"^[\s0-9.,%+\-x×~/]*$")
 
 
@@ -187,8 +192,12 @@ def site_nav(site_dir):
     bar = bar.replace('src="assets/', 'src="/assets/')
     bar = bar.replace('class="on"', 'class=""')
     # 「연구」 가 지금 여기다.
-    bar = bar.replace('href="/hub-research.html"',
-                      'class="on" href="/hub-research.html"')
+    #
+    # **빈 class 를 «갈아끼워» 한다.** 앞에 더하면 한 태그에 class 가
+    # 둘이 되고 브라우저는 앞의 빈 것만 읽는다. 그래서 「지금 여기」
+    # 표시가 안 났다 `확인됨` (2026-09-12 화면 실측).
+    bar = bar.replace('<a class="" href="/hub-research.html"',
+                      '<a class="on" href="/hub-research.html"')
     return bar, got[1]
 
 
@@ -342,6 +351,13 @@ def convert(text):
             continue
 
         # 제목
+        # **깊은 제목도 받는다.** 전에는 `####` 이후를 통째로 버려서, 합친
+        # 정본의 소절 70여 개가 화면에서 사라졌다 `확인됨` (2026-09-12).
+        if line.startswith("#### ") or line.startswith("##### "):
+            out.append("<h4>%s</h4>" % inline(line.split(" ", 1)[1].strip()))
+            i += 1
+            continue
+
         if line.startswith("### "):
             out.append("<h3>%s</h3>" % inline(line[4:].strip()))
             i += 1
@@ -406,7 +422,7 @@ def page(title, meta, body, source, nav=("", "")):
              "<h1>%s</h1>" % html.escape(title), "</header>",
              '<div class="meta">']
 
-    for key in META_KEYS:
+    for key in META_KEYS + META_EXTRA:
         if meta.get(key):
             lines.append("<div><b>%s</b> %s</div>" % (key, inline(meta[key])))
 
@@ -505,7 +521,7 @@ def main():
     # ── 팀장이 잡은 넷. 다시 나가면 안 된다 (2026-09-12) ──────────────
     #
     # **글자가 아니라 뜻을 본다.** 첫 판은 「그 문자열이 있나」 만 봐서
-    # codex 가 주입한 아홉 건이 그대로 통과했다 `확인됨` — 주석 안에 넣거나
+    # codex 가 주입한 아홉 건이 그대로 통과했다 `확인됨` · 주석 안에 넣거나
     # 숫자 엔티티로 쓰거나 빈 껍데기로 개수만 맞추면 다 뚫렸다.
     from gatelib import live, plain
     alive = live(out)          # 주석을 걷어낸 «살아 있는» 부분
@@ -530,6 +546,12 @@ def main():
 
     if not re.search(r'<link[^>]+href="/assets/gnav\.css"', alive):
         raise SystemExit("전역바 CSS 링크가 없다")
+
+    # 한 태그에 class 가 둘이면 발리 반은 무시된다. 조용히 틀린다.
+    dup = len(re.findall(r'class="[^"]*"\s+class="', out))
+
+    if dup:
+        raise SystemExit("한 태그에 class 가 둘인 자리 %d곳" % dup)
 
     if re.search(r"<https?://", reads):
         raise SystemExit("`<주소>` 가 글자로 남았다. 자동 링크를 안 풀었다")
@@ -575,7 +597,7 @@ def main():
                              % (i, marks))
 
     # **원문이 아니라 «읽히는 글자» 를 본다.**
-    # `&#8212;` 는 화면에서 em dash 로 읽힌다. 원문에 `—` 이 없다고
+    # `&#8212;` 는 화면에서 em dash 로 읽힌다. 원문에 `·` 이 없다고
     # 통과시키면 금지한 것이 그대로 나간다 `확인됨`
     # (2026-09-12 codex 7회차 · em dash 와 `%%` 가 숫자 엔티티로 통과).
     for why, bad in (("em dash", chr(8212)), ("%% 가 새었다", "%%")):

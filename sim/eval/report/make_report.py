@@ -74,15 +74,19 @@ def main():
         argv.remove("--allow_missing_clips")
         link.append("--allow_missing_clips")
 
+    # 산출 자리를 **먼저** 정한다. 곡선이 그 값을 쓴다.
+    out = os.environ.get("FOOTHOLD_REPORT_OUT") or os.path.join(
+        HERE, "..", "results", "report-v1")
+
     stage("measure.py", argv)
+    # 곡선은 글보다 먼저 굽는다. `page.py` 가 그 파일을 읽는다.
+    stage("curve.py", ["--out", os.path.abspath(os.path.join(out, "chart_curve.svg"))])
     stage("page.py", link)
 
     # **관문은 마지막 단계다.** 따로 돌리게 두면 안 돌린다.
     # `--no_audit` 은 배포 전 자리가 아직 안 갖춰졌을 때만 쓴다.
     audit = "--no_audit" not in sys.argv
 
-    out = os.environ.get("FOOTHOLD_REPORT_OUT") or os.path.join(
-        HERE, "..", "results", "report-v1")
     page = os.path.abspath(os.path.join(out, "report-v1.html"))
 
     if not os.path.isfile(page):
