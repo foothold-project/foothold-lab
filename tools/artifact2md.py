@@ -53,7 +53,9 @@ BLOCK = ("h1", "h2", "h3", "h4", "h5", "p", "table", "svg", "img", "pre",
 def text_of(chunk):
     """태그를 벗기고 엔티티를 푼 글자. 줄 안의 서식은 markdown 으로."""
     out = chunk
-    out = re.sub(r"<br\s*/?>", " ", out, flags=re.I)
+    # `<br>` 을 공백으로 지우면 두 항목이 한 단어처럼 붙는다.
+    # 가운덩점은 표 칸 안에서도 안전하고 경계가 보인다.
+    out = re.sub(r"<br\s*/?>", " · ", out, flags=re.I)
     out = re.sub(r"<(strong|b)\b[^>]*>(.*?)</\1>", r"**\2**", out, flags=re.S | re.I)
     out = re.sub(r"<(code|kbd)\b[^>]*>(.*?)</\1>", r"`\2`", out, flags=re.S | re.I)
     out = re.sub(r'<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>', r"[\2](\1)",
@@ -64,21 +66,103 @@ def text_of(chunk):
 
 
 def cells(row):
-    got = re.findall(r"<t[hd]\b[^>]*>(.*?)</t[hd]>", row, re.S | re.I)
-    return [text_of(c).replace("|", "｜") for c in got]
+    """한 줄의 칸. **`colspan` 과 `rowspan` 을 그대로 들고 온다.**
+
+    `(글, 가로폭, 세로폭, 머리칸인가)` 로 돌려준다. 폭을 잃으면 값이 엉뚱한
+    열에 놓인다 `확인됨` (2026-09-12 codex 9회차 · 「누적 42,800」 이 총
+    에피소드 열이 아니라 둘째 열에 앉았다).
+    """
+    out = []
+
+    for m in re.finditer(r"<(t[hd])\b([^>]*)>(.*?)</\1>", row, re.S | re.I):
+        attr = m.group(2)
+        wide = int((re.search(r'colspan="(\d+)"', attr) or [0, 1])[1])
+        tall = int((re.search(r'rowspan="(\d+)"', attr) or [0, 1])[1])
+        out.append((text_of(m.group(3)).replace("|", "｜"),
+                    wide, tall, m.group(1).lower() == "th"))
+
+    return out
+
+
+def grid_of(chunk):
+    """`<table>` 을 **병합을 푼 격자**로 편다.
+
+    `rowspan` 은 아래 줄로 값을 내리고, `colspan` 은 오른쪽으로 빈 칸을 채운다.
+    그래야 각 값이 원래 열에 남는다.
+    """
+    rows = re.findall(r"<tr\b[^>]*>(.*?)</tr>", chunk, re.S | re.I)
+    grid, carry = [], {}
+
+    for raw in rows:
+        got = cells(raw)
+
+        if not got:
+            continue
+
+        line, col = [], 0
+
+        while col in carry:
+            text, left = carry[col]
+            line.append(text)
+            carry[col] = (text, left - 1) if left > 1 else None
+
+            if carry[col] is None:
+                del carry[col]
+
+            col += 1
+
+        for text, wide, tall, _is_head in got:
+            line.append(text)
+
+            if tall > 1:
+                carry[col] = ("", tall - 1)
+
+            col += 1
+
+            # 가로로 묶인 칸은 오른쪽을 비워 둔다. 값의 열을 지킨다.
+            for _ in range(wide - 1):
+                line.append("")
+
+                if tall > 1:
+                    carry[col] = ("", tall - 1)
+
+                col += 1
+
+            while col in carry:
+                text2, left2 = carry[col]
+                line.append(text2)
+                carry[col] = (text2, left2 - 1) if left2 > 1 else None
+
+                if carry[col] is None:
+                    del carry[col]
+
+                col += 1
+
+        grid.append(line)
+
+    return grid, rows
 
 
 def as_table(chunk):
-    """`<table>` 한 장을 markdown 표로. 머리줄이 없으면 첫 줄을 머리로 쓴다."""
-    rows = re.findall(r"<tr\b[^>]*>(.*?)</tr>", chunk, re.S | re.I)
-    grid = [c for c in (cells(r) for r in rows) if c]
+    """표 한 장. **머리줄이 없으면 만들어 넣는다.**
+
+    전에는 첫 «데이터» 행을 머리로 승격시켜 한 줄이 사라졌다.
+    """
+    grid, rows = grid_of(chunk)
 
     if not grid:
         return ""
 
     wide = max(len(r) for r in grid)
     grid = [r + [""] * (wide - len(r)) for r in grid]
-    head, body = grid[0], grid[1:]
+    has_head = bool(re.search(r"<thead\b", chunk, re.I)) or bool(
+        re.search(r"<th\b", rows[0], re.I))
+
+    if has_head:
+        head, body = grid[0], grid[1:]
+    else:
+        head, body = [""] * wide, grid
+
     out = ["| " + " | ".join(head) + " |",
            "|" + "|".join(["---"] * wide) + "|"]
 
@@ -204,7 +288,11 @@ def main():
 
             if got:
                 # 「01기준선은…」 처럼 붙은 절 번호를 떼어 낸다.
-                got = re.sub(r"^(\d{1,2})(?=[가-힣A-Za-z])", r"\1. ", got)
+                # 「01기준선」 처럼 붙은 절 번호만 둔다. 두 자리 숫자가
+                # 앞에 올 때만. 안 그러면 `61열로 늘리는 설계` 가
+                # `61. 열로 늘리는 설계` 가 된다 `확인됨` (2026-09-12).
+                got = re.sub(r"^(\d{2})(?=[가-힣])(?![열번장줄개컷판종초시분개월일년])",
+                             r"\1. ", got)
                 out.append("#" * int(kind[1]) + " " + got)
         elif kind == "table":
             got = as_table(chunk)
@@ -217,9 +305,13 @@ def main():
             if got:
                 out.append(got)
         elif kind == "pre":
-            got = text_of(chunk)
+            # **코드울은 원문 그대로.** `text_of` 를 쓰면 안의 `<code>` 가
+            # 인라인 백틱으로 바뀌어 **백틱이 본문에 남는다**
+            # `확인됨` (2026-09-12 codex 9회차 · JSON 복사본에 백틱이 섮였다).
+            raw = re.sub(r"<[^>]+>", "", chunk)
+            got = _html.unescape(raw).strip(chr(10))
 
-            if got:
+            if got.strip():
                 out.append("```" + chr(10) + got + chr(10) + "```")
         elif kind in ("p", "blockquote", "figure"):
             got = text_of(chunk)

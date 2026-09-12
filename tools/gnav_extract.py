@@ -82,6 +82,20 @@ TAIL = """
    페이지는 `:root{--gnav-width:1440px}` 한 줄만 적으면 된다. */
 .gnav .in{max-width:var(--gnav-width,1040px)}
 
+/* **본문 컨테이너도 같은 폭을 쓴다.**
+   PRD 4-1 의 「바깥 컨테이너 1040 한 벌」 이다. 다른 138쪽은 이 규칙을
+   베낀 전역바 CSS 안에 함께 들고 있었는데, 추출기가 `.gnav` 가 든 규칙만
+   뽑아 이 줄을 버렸다. 그래서 공유 시트를 링크한 쪽만 본문이 216px 좁아졌다
+   `확인됨` (2026-09-12 codex 9회차 실측).
+
+   바와 본문이 **같은 변수**를 보므로 이제 둘이 어긋날 수 없다. */
+body .wrap,body main.wrap,body div.wrap{
+  max-width:var(--gnav-width,1040px)!important;box-sizing:border-box}
+body main:not(.wrap):not(#deck){max-width:var(--gnav-width,1040px)!important;
+  margin-left:auto;margin-right:auto}
+@media print{body .wrap{max-width:none!important}}
+
+
 /* **로고 왼쪽 끝을 본문 글 왼쪽 끝에 맞춘다.**
 
    폭을 같게 해도 내용은 안 맞는다. 바 안쪽 여백은 19.2px 이고

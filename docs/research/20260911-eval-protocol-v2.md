@@ -509,9 +509,9 @@ v2 를 만들 때 이것을 빼먹으면 **v2 영상에 v1 이름이 붙습니�
 비교에는 **명시적 기준**이 필요합니다. NVIDIA 공식 체크포인트가 이 지형들에서 얼마나 하는지, 그리고 우리 정책이 얼마나 나아졌는지를 말하려면 **같은 자리에서 잰 숫자**가 있어야 합니다.
 
 ```
-`difficulty_range = (0.5, 0.5)
+difficulty_range = (0.5, 0.5)
 num_rows = 1
-sim/eval/generalization_env_cfg.py:53`
+sim/eval/generalization_env_cfg.py:53
 ```
 
 이 값에서 잰 것이 **기준선 성적**이고, 「실패 5종」도 이 기준에서 나온 말입니다.
@@ -636,14 +636,14 @@ sim/eval/generalization_env_cfg.py:53`
 
 광선이 빗나가려면 **바닥이 아예 없어야** 합니다. 열 종을 다 재 봤습니다.
 
-| 지형 | 빗나간 광선 187 중 | 낸 값 | 왜 |
+| 지형 | 빗나간 광선 · 187 중 | 낸 값 | 왜 |
 |---|---|---|---|
 | gap | **22** | -1.00 ~ -0.10 | **발판과 테두리 사이에 바닥이 없다** |
 | floating_ring | 0 | -0.33 ~ -0.10 | 타일 전체에 바닥이 깔려 있다 |
 | pit | 0 | -0.30 ~ -0.10 | 구덩이 바닥이 상자로 만들어져 있다 |
 | rails | 0 | -0.22 ~ -0.10 | 바닥 위에 턱을 얹은 것 |
 | stepping_stones | 0 | -0.10 ~ +0.97 | 높이필드라 「구멍」도 깊이가 정해진 면 |
-| star · wave · discrete_obstacles repeated_boxes · repeated_cylinders | 0 | -0.10 ~ +0.11 | 모두 바닥이 있다 |
+| star · wave · discrete_obstacles · repeated_boxes · repeated_cylinders | 0 | -0.10 ~ +0.11 | 모두 바닥이 있다 |
 
 값의 범위가 -0.33 에서 +0.97 까지 골고루 있습니다. **높이 스캔은 상수가 아니라 실제로 지형 정보를 담고 있습니다.** 그래서 이 채널이 뒤집히는 것은 무시할 수 있는 일이 아닙니다.
 
@@ -679,7 +679,7 @@ sim/eval/generalization_env_cfg.py:53`
 
 **고친 규격으로 세 모델을 다시 쟀습니다.** 난이도 0.5 · 1.0 m/s · 각 100 에피소드 · 원자료로 직접 셈.
 
-| 모델 | 연습한 틈 | 규격 1 빗나감 = -1 | 규격 2 빗나감 = +1 |
+| 모델 | 연습한 틈 | 규격 1 · 빗나감 = -1 | 규격 2 · 빗나감 = +1 |
 |---|---|---|---|
 | 기준선 NVIDIA | 없음 | 0% | 1% |
 | **A** | 0.05 ~ 0.20 m | 0% | **28%** |
@@ -693,7 +693,7 @@ sim/eval/generalization_env_cfg.py:53`
 
 2026-09-11 · **같은 모델(B) · 같은 Random Seed · 같은 조건 · 눈만 바꿔서** 각각 100 에피소드씩 돌렸습니다.
 
-| 지형 | 지금 규격 빗나감 = -1 | 고친 규격 빗나감 = +1 | 차이 |
+| 지형 | 지금 규격 · 빗나감 = -1 | 고친 규격 · 빗나감 = +1 | 차이 |
 |---|---|---|---|
 | **gap** · 전체 | 6% | **100%** | **+94 %p** |
 | **gap** · 생존 | 14% | **100%** | **+86 %p** |
@@ -787,11 +787,11 @@ IsaacLab 기본 함수는 **바닥 없는 지형을 상정하고 만든 것이 �
 
 | 축 | 함수 | CSV 열 | 참이 되는 조건 |
 |---|---|---|---|
-| **생존** | survival_success metrics.py:315 | survival_success | 몸통이 바닥에 안 닿음 |
-| **전진** | progress_success metrics.py:320 | progress_success | 통과선을 넘음 |
-| **속도 추종** | tracking_success metrics.py:325 | tracking_success | 평균 속도 오차가 임계 이하 |
-| **방향** | gate_direction_success metrics.py:267 | direction_success | **통과선을 지날 때** 좌우 임계 안 |
-| 종합 | overall_success metrics.py:344 | overall_success | 위 넷이 모두 참 |
+| **생존** | survival_success · metrics.py:315 | survival_success | 몸통이 바닥에 안 닿음 |
+| **전진** | progress_success · metrics.py:320 | progress_success | 통과선을 넘음 |
+| **속도 추종** | tracking_success · metrics.py:325 | tracking_success | 평균 속도 오차가 임계 이하 |
+| **방향** | gate_direction_success · metrics.py:267 | direction_success | **통과선을 지날 때** 좌우 임계 안 |
+| 종합 | overall_success · metrics.py:344 | overall_success | 위 넷이 모두 참 |
 
 #### 방향 판정이 2026-09-09 에 바뀌었습니다
 
@@ -892,7 +892,7 @@ IsaacLab 기본 함수는 **바닥 없는 지형을 상정하고 만든 것이 �
 | 실패 5종 | 5 | 18 | 3 | 190 | 100 | 19,000 |
 | 기존 6종 | 6 | 18 | 3 | 228 | 100 | 22,800 |
 | `rails` 두께 고정 | 1 | 10 | 1 | 10 | 100 | 1,000 |
-| **누적** · 규격 1 로 잰 것 | **42,800** |  |  |  |  |  |
+| **누적** · 규격 1 로 잰 것 |  |  |  |  |  | **42,800** |
 
 **격자가 다 채워져 있지 않습니다.** 5종은 완전격자 270 중 190칸, 6종은 324 중 228칸입니다.
 
@@ -909,12 +909,12 @@ IsaacLab 기본 함수는 **바닥 없는 지형을 상정하고 만든 것이 �
 ##### 한 칸이 무엇을 뜻하나
 
 ```
-`한 칸 = 지형 하나 · 난이도 하나 · 속도 하나 · 100 에피소드
+한 칸 = 지형 하나 · 난이도 하나 · 속도 하나 · 100 에피소드
 
 100에피소드는 에피소드마다 출발 위치와 방향이 조금씩 다르다
- start_x_offset_m · start_y_offset_m · start_yaw_deg
+  start_x_offset_m · start_y_offset_m · start_yaw_deg
 
-그 100 에피소드 중 네 축을 모두 통과한 비율이 그 칸의 성공률이다`
+그 100 에피소드 중 네 축을 모두 통과한 비율이 그 칸의 성공률이다
 ```
 
 **100에피소드가라 성공률의 오차가 대략 ±10 %p 입니다.** 두 칸이 5 %p 차이면 같다고 봐야 하고, 30 %p 차이면 다르다고 볼 수 있습니다. **표의 작은 오르내림을 추세로 읽으면 안 됩니다.**
@@ -948,10 +948,10 @@ IsaacLab 기본 함수는 **바닥 없는 지형을 상정하고 만든 것이 �
 0.16 에서 56% 인데 **0.18 에서 0%** 입니다. 그 사이 파라미터는 **6 mm 밖에 안 움직입니다.**
 
 ```
-`stone_distance = int(간격 / horizontal_scale)
+stone_distance = int(간격 / horizontal_scale)
 
-0.0992 -> int 0 픽셀 구멍이 없다 · 그냥 울퉁불퉁한 바닥
-0.1016 -> int 1 픽셀 10 cm 구멍 · 깊이 1 m`
+0.0992  ->  int  0 픽셀   구멍이 없다 · 그냥 울퉁불퉁한 바닥
+0.1016  ->  int  1 픽셀   10 cm 구멍 · 깊이 1 m
 ```
 
 **난이도 0.1667 아래의 `stepping_stones` 는 발판 지형이 아닙니다.** 그 구간의 62% 를 「발에피소드를 밟았다」로 읽으면 안 됩니다.
@@ -1110,12 +1110,12 @@ Isaac Lab 이 링 높이만 부호를 뒤집어 보간해서 **난이도가 오�
 `rail_thickness_range` 는 **뽑는 범위가 아니라 두 턱의 값**입니다. 난이도가 높이만 보간하고 두께는 **고정된 두 값**입니다.
 
 ```
-`Isaac Lab 원문
- rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range
+Isaac Lab 원문
+    rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range
 
-안쪽 턱 중심에서 0.75 m 두께 0.08 m
-바깥 레일 안쪽 모서리 2.70 m · 바깥 모서리 2.88 m 두께 0.18 m
-모든 에피소드가 같은 지형을 본다`
+안쪽 턱   중심에서 0.75 m   두께 0.08 m
+바깥 레일  안쪽 모서리 2.70 m · 바깥 모서리 2.88 m  두께 0.18 m
+모든 에피소드가 같은 지형을 본다
 ```
 
 **모든 에피소드가 같은 지형을 봅니다.** 같은 난이도 칸 안에서 두께가 섞이는 일은 없습니다.
@@ -1174,7 +1174,7 @@ Isaac Lab 이 링 높이만 부호를 뒤집어 보간해서 **난이도가 오�
 
 | 단계 | 무엇 | 지위 |
 |---|---|---|
-| **출발선** | .pretrained_checkpoints/rsl_rl/ Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt | 영구 기준선 |
+| **출발선** | .pretrained_checkpoints/rsl_rl/ · Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt | 영구 기준선 |
 | **1차** | foothold-v1.pt | 팀 내부 |
 | N 차 | foothold-vN.pt | 지형 레시피를 얹어 감 |
 
@@ -1193,22 +1193,22 @@ Isaac Lab 이 링 높이만 부호를 뒤집어 보간해서 **난이도가 오�
 #### 배포본 옆에 조건 파일을 둡니다
 
 ```
-`foothold-v1.pt 모델
-foothold-v1.json 이 모델이 어떻게 만들어졌는지`
+foothold-v1.pt        모델
+foothold-v1.json      이 모델이 어떻게 만들어졌는지
 ```
 
 ```
-`{
- "version": "v1",
- "base": "NVIDIA Isaac-Velocity-Rough-Unitree-Go2-v0",
- "source_run": "model_1500.pt",
- "total_iterations": 1500,
- "sha256": "...",
- "trained_by": "오흥재",
- "terrain_mix": {"nvidia_rough_6": 0.9, "gap": 0.1},
- "command_vx_range": [0.5, 1.5],
- "eval_run": "sim/eval/results/2026____-______/"
-}`
+{
+  "version": "v1",
+  "base": "NVIDIA Isaac-Velocity-Rough-Unitree-Go2-v0",
+  "source_run": "model_1500.pt",
+  "total_iterations": 1500,
+  "sha256": "...",
+  "trained_by": "오흥재",
+  "terrain_mix": {"nvidia_rough_6": 0.9, "gap": 0.1},
+  "command_vx_range": [0.5, 1.5],
+  "eval_run": "sim/eval/results/2026____-______/"
+}
 ```
 
 **이름은 「무엇인지」만 말하고, 옆 파일이 「어떻게 만들었는지」를 말합니다.**
@@ -1287,15 +1287,15 @@ Isaac Lab 에 `--video` 인자가 있지만 그것은 **학습이 어떻게 되�
 | 묶음 | 열 | 뜻 |
 |---|---|---|
 | 어디서 | terrain · env_id · episode | 지형 · 환경 · 몇 번째 에피소드 |
-| start_x_offset_m · start_y_offset_m · start_yaw_deg | 출발 흔들기 |  |
+|  | start_x_offset_m · start_y_offset_m · start_yaw_deg | 출발 흔들기 |
 | 판정 | overall_success | 네 축이 모두 참인가 |
-| survival_success · progress_success tracking_success · direction_success | 생존 · 전진 · 속도 추종 · 방향 |  |
-| traversal_success | 속도 추종을 뺀 셋의 AND |  |
+|  | survival_success · progress_success · tracking_success · direction_success | 생존 · 전진 · 속도 추종 · 방향 |
+|  | traversal_success | 속도 추종을 뺀 셋의 AND |
 | 얼마나 | termination_reason · duration_s | 왜 끝났나 · 몇 초 |
-| forward_progress_m · ideal_distance_m · progress_ratio | 몇 m · 이론 거리 · 비율 |  |
-| lateral_drift_m · peak_lateral_drift_m · gate_lateral_drift_m | 끝점 · 최대 · 통과선에서의 좌우 이탈 |  |
-| velocity_mae_mps · mean_reward_per_step gate_speed_mps · speed_drop_ratio | 속도 오차 · 보상 · 통과 순간 속도 · 최저 속도 비 |  |
-| 접촉 | head_contact_count · head_contact_peak_n head_contact_first_s | 머리 접촉 횟수 · 최대 힘 · 첫 접촉 시각 |
+|  | forward_progress_m · ideal_distance_m · progress_ratio | 몇 m · 이론 거리 · 비율 |
+|  | lateral_drift_m · peak_lateral_drift_m · gate_lateral_drift_m | 끝점 · 최대 · 통과선에서의 좌우 이탈 |
+|  | velocity_mae_mps · mean_reward_per_step · gate_speed_mps · speed_drop_ratio | 속도 오차 · 보상 · 통과 순간 속도 · 최저 속도 비 |
+| 접촉 | head_contact_count · head_contact_peak_n · head_contact_first_s | 머리 접촉 횟수 · 최대 힘 · 첫 접촉 시각 |
 
 head_contact_first_s **를 인용하지 마십시오.** 앞 에피소드가 머리가 닿은 채 끝나면 다음 에피소드 첫 표본이 그 힘을 물려받아 **18.7%(2,241/12,000)가 거짓 0.0** 입니다. head_contact_count · head_contact_peak_n 과 판정 네 축은 영향이 없습니다.
 
@@ -1303,8 +1303,9 @@ head_contact_first_s **를 인용하지 마십시오.** 앞 에피소드가 머�
 
 CSV 에는 없고 run_manifest.json 에 있습니다.
 
-| eval_spec_version | **1** = 빗나간 광선을 -1 로 읽던 결함 규격 · **2** = 학습과 같은 +1 |
+|  |  |
 |---|---|
+| eval_spec_version | **1** = 빗나간 광선을 -1 로 읽던 결함 규격 · **2** = 학습과 같은 +1 |
 | gap_aware_scan | 규격 2 인가 |
 | height_scan_miss_value | 실제로 박힌 값. 규격 2 면 1.0 |
 
@@ -1332,7 +1333,7 @@ CSV 에는 없고 run_manifest.json 에 있습니다.
 | 16 | 발 넷 · x · y · z · contact_n |
 | 48 | 관절 12 x pos · vel · torque · target |
 
-#### 61. 열로 늘리는 설계
+#### 61열로 늘리는 설계
 
 임석헌의 episodes.csv (45열) 와 맞대 보니 **이름이 겹치는 열이 duration_s 하나뿐**이었습니다. 우리는 「통과했나」를, 그는 「어떻게 통과했나」를 재고 있었습니다.
 
@@ -1361,10 +1362,10 @@ leading_front_foot · landing_edge_margin_m · entry_speed_mps · recovery_time_
 속도 · 시간 · 전진 · 좌우 이탈 · **판정 네 축**이 영상 위에 얹힙니다. CSV 와 영상을 번갈아 보지 않아도 됩니다.
 
 ```
-`python sim/eval/overlay/render.py \
- --video 결과폴더/pit_env44_ep01_chase.mp4 \
- --trace 결과폴더/pit_env44_ep01.trace.csv \
- --out /tmp/pit_env44_hud.mp4`
+python sim/eval/overlay/render.py \
+    --video  결과폴더/pit_env44_ep01_chase.mp4 \
+    --trace  결과폴더/pit_env44_ep01.trace.csv \
+    --out    /tmp/pit_env44_hud.mp4
 ```
 
 | 파일 | 하는 일 |
@@ -1436,8 +1437,9 @@ leading_front_foot · landing_edge_margin_m · entry_speed_mps · recovery_time_
 
 #### 하네스 · 이전에 들어간 것
 
-| --difficulty 인자 | 들어감 |
+|  |  |
 |---|---|
+| --difficulty 인자 | 들어감 |
 | 통과선 기준 방향 판정 | 들어감 |
 | 머리 접촉 세 열 | 들어감 |
 | traversal_success · gate_speed_mps · speed_drop_ratio | 들어감 #394 머지 |
