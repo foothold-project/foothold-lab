@@ -88,41 +88,65 @@ def best(path):
 
 def main():
     p = argparse.ArgumentParser(description="컷마다 표지 한 장")
-    p.add_argument("--gallery", required=True, help="manifest.json 이 있는 폴더")
+    p.add_argument("--gallery", required=True,
+                   help="`manifest.json` 이 있는 배포 폴더, 또는 `web/` 이 있는 "
+                        "촬영 폴더. 둘 다 받는다")
     p.add_argument("--quality", type=int, default=78)
     args = p.parse_args()
     root = os.path.abspath(args.gallery)
     hold = os.path.join(root, "manifest.json")
-    book = json.load(io.open(hold, encoding="utf-8"))
+
+    # **두 가지 배치를 다 받는다.** 색인을 만드는 `gallery_manifest.py`
+    # 가 포스터를 **촬영 폴더에서** 찾기 때문에, 배포 전에 그쪽을
+    # 먼저 굽는다 `확인됨` (2026-09-12 · 배포 폴더에만 굽고 발행했다가
+    # 색인이 28컷에서 막혔다).
+    if os.path.isfile(hold):
+        book = json.load(io.open(hold, encoding="utf-8"))
+        items = [(c["id"], os.path.join(root, c["file"].replace("/", os.sep)), c)
+                 for c in book["clips"]]
+    else:
+        web = os.path.join(root, "web")
+
+        if not os.path.isdir(web):
+            raise SystemExit("`manifest.json` 도 `web/` 도 없다: %s" % root)
+
+        book = None
+        items = [(n[:-4], os.path.join(web, n), None)
+                 for n in sorted(os.listdir(web)) if n.endswith(".mp4")]
+
+    if not items:
+        raise SystemExit("컷을 하나도 못 찾았다: %s" % root)
+
     into = os.path.join(root, "posters")
     os.makedirs(into, exist_ok=True)
     flat, done = [], 0
 
-    for clip in book["clips"]:
-        path = os.path.join(root, clip["file"].replace("/", os.sep))
-
+    for stem, path, clip in items:
         if not os.path.isfile(path):
             raise SystemExit("컷이 없다: %s" % path)
 
         got, img, at = best(path)
 
         if img is None:
-            raise SystemExit("%s 에서 프레임을 하나도 못 읽었다" % clip["id"])
+            raise SystemExit("%s 에서 프레임을 하나도 못 읽었다" % stem)
 
         img.thumbnail((WIDE, WIDE))
-        name = "%s.jpg" % clip["id"]
+        name = "%s.jpg" % stem
         img.convert("RGB").save(os.path.join(into, name), quality=args.quality,
                                 optimize=True)
-        clip["poster"] = "posters/" + name
-        clip["poster_frame"] = at
-        clip["poster_texture"] = round(got, 1)
+        if clip is not None:
+            clip["poster"] = "posters/" + name
+            clip["poster_frame"] = at
+            clip["poster_texture"] = round(got, 1)
+
         done += 1
 
         if got < FLOOR:
-            flat.append((clip["id"], got))
+            flat.append((stem, got))
 
-    io.open(hold, "w", encoding="utf-8").write(
-        json.dumps(book, ensure_ascii=False, indent=2) + "\n")
+    if book is not None:
+        io.open(hold, "w", encoding="utf-8").write(
+            json.dumps(book, ensure_ascii=False, indent=2) + "\n")
     total = sum(os.path.getsize(os.path.join(into, f))
                 for f in os.listdir(into) if f.endswith(".jpg"))
     print("  포스터 %d장 · 합 %.1f MB · 장당 %.0f KB"
@@ -138,8 +162,8 @@ def main():
         raise SystemExit("포스터가 %d장 검다. 그 컷은 카메라를 다시 잡아야 한다"
                          % len(flat))
 
-    if done != len(book["clips"]):
-        raise SystemExit("컷 %d개인데 %d장만 구웠다" % (len(book["clips"]), done))
+    if done != len(items):
+        raise SystemExit("컷 %d개인데 %d장만 구웠다" % (len(items), done))
 
 
 if __name__ == "__main__":

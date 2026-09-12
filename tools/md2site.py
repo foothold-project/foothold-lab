@@ -46,6 +46,9 @@ import shutil
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import gatelib  # noqa: E402
 
 # site 의 색과 조판. `foothold-site/index.html` 과 같은 값이다.
 STYLE = """:root{
@@ -500,38 +503,84 @@ def main():
                          % (len(IMAGES), out.count("<figure class=\"fig\">")))
 
     # ── 팀장이 잡은 넷. 다시 나가면 안 된다 (2026-09-12) ──────────────
-    for why, mark in (("전역바", "gnav:v1"),
-                      ("테마 부팅 (없으면 어두운 화면이 기본이 된다)",
-                       "fh-theme-boot"),
-                      ("전역바 CSS 링크", "/assets/gnav.css")):
-        if mark not in out:
-            raise SystemExit("%s 가 없다" % why)
+    #
+    # **글자가 아니라 뜻을 본다.** 첫 판은 「그 문자열이 있나」 만 봐서
+    # codex 가 주입한 아홉 건이 그대로 통과했다 `확인됨` — 주석 안에 넣거나
+    # 숫자 엔티티로 쓰거나 빈 껍데기로 개수만 맞추면 다 뚫렸다.
+    from gatelib import live, plain
+    alive = live(out)          # 주석을 걷어낸 «살아 있는» 부분
+    reads = plain(out)         # 엔티티를 푼 «읽히는» 글자
 
-    if re.search(r"&lt;https?://", out):
+    if "<!--gnav:v1-->" not in alive:
+        raise SystemExit("전역바가 없다")
+
+    boot = re.search(r'<script[^>]*id="fh-theme-boot"[^>]*>(.*?)</script>',
+                     alive, re.S)
+
+    if not boot:
+        raise SystemExit("테마 부팅이 없다. 없으면 어두운 화면이 기본이 된다")
+
+    lack = [why for why, mark in (("저장값을 안 읽는다", "getItem"),
+                                  ("표식을 안 찍는다", "dataset.theme"),
+                                  ("기본값이 없다", '"light"'))
+            if mark not in boot.group(1)]
+
+    if lack:
+        raise SystemExit("테마 부팅이 " + " · ".join(lack))
+
+    if not re.search(r'<link[^>]+href="/assets/gnav\.css"', alive):
+        raise SystemExit("전역바 CSS 링크가 없다")
+
+    if re.search(r"<https?://", reads):
         raise SystemExit("`<주소>` 가 글자로 남았다. 자동 링크를 안 풀었다")
 
     # **도면이 쓰는 색을 페이지가 다 들고 있나.** 하나라도 없으면 그 칠은
-    # 검정으로 떨어지는데, 오류는 안 난다. 그래서 여기서 센다.
-    root = re.search(r":root\{(.*?)\n\}", out, re.S)
-    have = set(re.findall(r"(--[a-z0-9-]+)\s*:", root.group(1) if root else ""))
+    # 검정으로 떨어지는데 오류는 안 난다. 밝음과 어두움을 «둘 다» 센다.
+    css = "".join(re.findall(r"<style[^>]*>(.*?)</style>", alive, re.S))
     want = set(re.findall(r"var\((--[a-z0-9-]+)\)",
                           "".join(m.group(0) for m
-                                  in re.finditer(r"<svg.*?</svg>", out, re.S))))
-    short = sorted(want - have)
+                                  in re.finditer(r"<svg.*?</svg>", alive, re.S))))
 
-    if short:
-        raise SystemExit("도면이 쓰는 색 %s 를 페이지가 정의하지 않았다. "
-                         "검은 상자로 나간다" % " ".join(short))
+    for state in gatelib.STATES:
+        have = set(gatelib.token_map(css, state))
+        short = sorted(want - have)
+
+        if short:
+            raise SystemExit("표식=%s · OS=%s 에서 도면 색 %s 가 없다. "
+                             "검은 상자로 나간다" % (state[0], state[1], " ".join(short)))
+
+    pale = gatelib.token_map(css, ("none", "light")).get("--paper")
+    dusk = gatelib.token_map(css, ("none", "dark")).get("--paper")
+
+    if not dusk or pale == dusk:
+        raise SystemExit("어두운 토큰이 없거나 밝은 것과 같다 (%s / %s)" % (pale, dusk))
 
     svgs = [s for s in IMAGES if s.lower().endswith(".svg")]
 
-    if svgs and out.count("<svg") < len(svgs):
-        raise SystemExit("SVG %d장 중 %d장만 본문에 심겼다. `<img>` 로 나가면 "
-                         "페이지 색을 못 받는다" % (len(svgs), out.count("<svg")))
+    # **개수만 맞추면 안 된다.** 빈 `<svg>` 다섯 개로 수량을 맞춘
+    # 주입이 통과했다 `확인됨` (2026-09-12 codex 7회차).
+    # 그려진 것이 실제로 있는지 센다.
+    drawn = [m.group(0) for m in re.finditer(r"<svg.*?</svg>", out, re.S)]
 
-    for bad in (chr(8212), "%%"):
-        if bad in out:
-            raise SystemExit("나가면 안 되는 것이 있다: %r" % bad)
+    if svgs and len(drawn) < len(svgs):
+        raise SystemExit("SVG %d장 중 %d장만 본문에 심겼다. `<img>` 로 나가면 "
+                         "페이지 색을 못 받는다" % (len(svgs), len(drawn)))
+
+    for i, one in enumerate(drawn, 1):
+        marks = len(re.findall(r"<(path|rect|circle|line|polyline|polygon|text|g)[ />]",
+                               one))
+
+        if marks < 3:
+            raise SystemExit("%d번째 도면에 그려진 것이 %d개뿐이다. 껍데기다"
+                             % (i, marks))
+
+    # **원문이 아니라 «읽히는 글자» 를 본다.**
+    # `&#8212;` 는 화면에서 em dash 로 읽힌다. 원문에 `—` 이 없다고
+    # 통과시키면 금지한 것이 그대로 나간다 `확인됨`
+    # (2026-09-12 codex 7회차 · em dash 와 `%%` 가 숫자 엔티티로 통과).
+    for why, bad in (("em dash", chr(8212)), ("%% 가 새었다", "%%")):
+        if bad in out or bad in reads:
+            raise SystemExit("나가면 안 되는 것이 있다: %s" % why)
 
 
 if __name__ == "__main__":

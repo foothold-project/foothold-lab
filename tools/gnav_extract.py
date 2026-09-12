@@ -37,6 +37,7 @@ import re
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 이 셀렉터나 변수가 든 최상위 규칙은 전역바의 것이다.
 MARKS = (".gnav", "--navh")
@@ -141,37 +142,60 @@ def extract(site):
 
 
 def check(css):
-    """**조용한 실패를 소리 나게 한다.** 뽑기는 했는데 알맹이가 빠지면 막는다."""
-    need = [
-        ("어두운 화면 조건", "@media (prefers-color-scheme:dark)"),
-        ("로고 되비침", ".gnav .lgr"),
-        ("바 자체", ".gnav{"),
-    ]
-    missing = [why for why, mark in need if mark not in css.replace(" {", "{")]
+    """**뽑기는 했는데 알맹이가 빠졌는가.**
 
-    if missing:
-        raise SystemExit("뽑은 CSS 에 %s 가 없다" % " · ".join(missing))
+    예전에는 「그 글자가 있나」 만 봤다. codex 7회차가 결함을 주입하자
+    여섯 중 여섯이 통과했다 `확인됨`.
 
-    # 로고 전환은 **조건 안에서만** 나와야 한다. 조건 밖에 있으면 늘 이긴다.
-    bare = [r for r in top_rules(css)
-            if ".lgi" in r and not r.lstrip().startswith(("@", "html["))
-            and "display:none" in r.split("{", 1)[1]]
+    이제 **네 상태에서 실제로 무엇이 보이는지** 를 따진다.
+    가장 중요한 것은 **표식이 없고 OS 가 어두운** 상태다. 사고는
+    거기서 난다. 그 상태를 빼면 `@media` 를 평면으로 풀어도
+    `html[data-theme=...]` 규칙이 뒤에서 멀집해 아무것도 안 잡힌다.
+    """
+    from gatelib import STATES, shown, token_map, unbridged
 
-    if len(bare) > 1:
-        raise SystemExit("조건 없는 로고 숨김 규칙이 %d개다. 밝은 화면에서 "
-                         "흰 로고가 뜬다" % len(bare))
+    for stamp, os_pref in STATES:
+        theme = (stamp, os_pref)
+        dark = (stamp == "dark") or (stamp == "none" and os_pref == "dark")
+        on, off = ((".gnav .lgr", ".gnav .lgi") if dark
+                   else (".gnav .lgi", ".gnav .lgr"))
+        got = shown(css, theme, [on, off])
 
-    # 페이지 토큰에 기대면 그 이름을 안 쓰는 페이지에서 바가 투명해진다.
-    leaked = sorted(set(re.findall(r"var\((--(?:paper|ink|rule)[a-z0-9-]*)\)",
-                                   css)) - {"--paper", "--paper-2", "--ink",
-                                            "--ink-3", "--rule"})
+        if got[on] == "none" or got[off] != "none":
+            raise SystemExit(
+                "표식=%s · OS=%s 에서 로고가 틀리다. %s=%s · %s=%s"
+                % (stamp, os_pref, on, got[on], off, got[off]))
 
-    if leaked:
-        raise SystemExit("다리를 안 건넌 변수가 있다: %s" % " ".join(leaked))
+        tone = token_map(css, theme)
 
-    for name in ("--np", "--ni", "--nr"):
-        if css.count("var(%s" % name) < 1:
-            raise SystemExit("%s 를 쓰는 규칙이 없다. 다리가 안 걸렸다" % name)
+        for name in ("--np", "--ni", "--nr"):
+            if not tone.get(name):
+                raise SystemExit("표식=%s · OS=%s 에서 `%s` 가 정의되지 "
+                                 "않는다. 다리가 끊겼다" % (stamp, os_pref, name))
+
+    # 밝은 상태와 어두운 상태의 바 배경이 달라야 한다.
+    pale = token_map(css, ("none", "light")).get("--np")
+    dusk = token_map(css, ("none", "dark")).get("--np")
+
+    if pale == dusk:
+        raise SystemExit("표식 없는 밝음·어두움의 바 배경이 같다 (%s). "
+                         "한쪽은 글씨가 안 보인다" % pale)
+
+    leaks = unbridged(css)
+
+    if leaks:
+        raise SystemExit("다리를 안 건널 자리 %d곳: %s"
+                         % (len(leaks),
+                            " · ".join("%s 의 %s -> %s" % x for x in leaks[:4])))
+
+    import gatelib
+
+    for why, want_sel, want_prop in (("바 배경", ".gnav", "background"),
+                                     ("바 안쪽 폭", ".gnav .in", "max-width")):
+        if not any(head == want_sel and want_prop in body
+                   for head, body in gatelib._walk(css, ("none", "light"))):
+            raise SystemExit("%s 규칙이 없다 (`%s` 에 `%s`)"
+                             % (why, want_sel, want_prop))
 
 
 def wearers(site):
@@ -184,13 +208,20 @@ def wearers(site):
     |---|---|
     | 테마 부팅 | 표식이 없어 어두운 화면이 기본이 된다 |
     | 어두운 토큰 | 본문은 밝은데 바만 흰 로고로 바뀐다 (로고가 사라진다) |
-    | `--gnav-width` | 바 안쪽과 본문 왼쪽 끝이 어긋난다 |
-    | 베낀 `.gnav` 규칙 | 한 벌을 고쳐도 그 페이지만 옛날 것으로 남는다 |
+    | `--gnav-width` | 바 안쪽과 본문 왼쪽 끝이 어깋난다 |
+    | 베낀 `.gnav` 규칙 | 한 벌을 고쳐도 그 페이지만 예날 것으로 남는다 |
+
+    **주석을 걷어내고 값을 맞춰 본다.** 예전에는 글자만 봐서, 부팅을
+    주석으로 바꾸거나 폭을 `1px` 로 두어도 통과했다 `확인됨`
+    (2026-09-12 codex 7회차 · 다섯 건).
     """
+    from gatelib import STATES, css_of, live, token_map, top_rules
     bad = []
 
-    for here, _dirs, names in os.walk(site):
-        if ".git" in here or "node_modules" in here:
+    for here, dirs, names in os.walk(site):
+        dirs[:] = [d for d in dirs if d not in (".git", "node_modules")]
+
+        if os.path.basename(here) == "assets":
             continue
 
         for name in names:
@@ -198,42 +229,88 @@ def wearers(site):
                 continue
 
             path = os.path.join(here, name)
+            raw = io.open(path, encoding="utf-8", errors="replace").read()
 
-            # `assets/` 의 것은 페이지가 아니라 조각이다. 자기 자신은 안 센다.
-            if os.path.basename(here) == "assets":
-                continue
-            text = io.open(path, encoding="utf-8", errors="replace").read()
-
-            if "/assets/gnav.css" not in text:
+            if "/assets/gnav.css" not in raw:
                 continue
 
             rel = os.path.relpath(path, site).replace(os.sep, "/")
-            sheets = [m for m in re.findall(r'href="([^"]+\.css)"', text)
-                      if not m.startswith(("http", "//"))]
-            css = "".join(re.findall(r"<style[^>]*>(.*?)</style>", text, re.S))
-
-            for one in sheets:
-                got = os.path.join(site, one.lstrip("/").replace("/", os.sep)) \
-                    if one.startswith("/") else os.path.join(here, one)
-
-                if os.path.isfile(got) and not got.endswith("gnav.css"):
-                    css += io.open(got, encoding="utf-8", errors="replace").read()
-
+            body = live(raw)
+            css = css_of(path, site)
+            # 베낀 것을 셀 때는 «공유 시트를 뺀» 것만 본다.
+            own = css_of(path, site, skip=("gnav.css",))
             miss = []
 
-            if "fh-theme-boot" not in text:
+            # 부팅은 «살아있는» 스크립트여야 하고, 테마를 실제로 찍어야 한다.
+            boot = re.search(r'<script[^>]*id="fh-theme-boot"[^>]*>(.*?)</script>',
+                             body, re.S)
+
+            if not boot:
                 miss.append("테마 부팅")
+            else:
+                # **부팅은 세 가지를 다 해야 한다.** 하나라도 빠지면 껍데기다.
+                #   저장된 것을 읽고 · 표식을 찍고 · 없을 때 밝음으로 둔다
+                job = boot.group(1)
+                lack = [why for why, mark in
+                        (("저장값을 안 읽는다", "getItem"),
+                         ("표식을 안 찍는다", "dataset.theme"),
+                         ("기본값이 없다", '"light"'))
+                        if mark not in job]
 
-            if "--gnav-width" not in css:
+                if lack:
+                    miss.append("테마 부팅이 " + " · ".join(lack))
+                elif job.count("dataset.theme") < 2:
+                    miss.append("테마 부팅의 분기 한쪽이 표식을 안 찍는다")
+
+            if not re.search(r'<link[^>]+href="/assets/gnav\.css"', body):
+                miss.append("한 벌 링크")
+
+            # 폭은 «있나» 가 아니라 «본문과 같나».
+            declared = token_map(css, "light").get("--gnav-width")
+            holder = None
+
+            for rule in top_rules(css):
+                head, _, decl = rule.partition("{")
+
+                if re.match(r"^\s*(body\s+)?(\.wrap|main\.wrap|div\.wrap|\.page)\s*$",
+                            head.replace("body.wide", "").split(",")[0]):
+                    got = re.search(r"max-width\s*:\s*([0-9]+)px", decl)
+
+                    if got:
+                        holder = got.group(1) + "px"
+
+            if not declared:
                 miss.append("--gnav-width")
+            elif holder and declared.replace(" ", "") != holder:
+                miss.append("폭이 본문과 다르다 (선언 %s · 본문 %s)"
+                            % (declared, holder))
 
-            if not re.search(r'data-theme="dark"|prefers-color-scheme:\s*dark', css):
-                miss.append("어두운 토큰")
+            # 어두운 토큰은 «있나» 가 아니라 **네 상태 전부에서** 맞는가.
+            #
+            # 한 상태만 보면 나머지에서 조용히 무너진다. `@media` 는 성하고
+            # `[data-theme="dark"]` 만 깨진 경우, 테마를 손으로 고른 사람만
+            # 밝은 본문에 흰 로고를 본다 `확인됨` (2026-09-12).
+            pale = token_map(css, ("none", "light")).get("--paper")
 
-            copied = len(re.findall(r"\.gnav[^{]*\{", css))
+            for stamp, os_pref in STATES:
+                dim = (stamp == "dark") or (stamp == "none" and os_pref == "dark")
+
+                if not dim:
+                    continue
+
+                dusk = token_map(css, (stamp, os_pref)).get("--paper")
+
+                if not dusk:
+                    miss.append("어두운 토큰 (표식=%s · OS=%s)" % (stamp, os_pref))
+                elif pale and pale == dusk:
+                    miss.append("어두운 토큰이 밝은 것과 같다 "
+                                "(표식=%s · %s)" % (stamp, dusk))
+
+            copied = [r for r in top_rules(own)
+                      if re.search(r"(^|[,\s])\.gnav([\s.,:{]|$)", r.partition("{")[0])]
 
             if copied:
-                miss.append("베낀 .gnav 규칙 %d개" % copied)
+                miss.append("베낀 .gnav 규칙 %d개" % len(copied))
 
             if miss:
                 bad.append((rel, miss))
