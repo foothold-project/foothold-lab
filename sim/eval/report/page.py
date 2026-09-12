@@ -629,7 +629,9 @@ p.append('<p>영상은 전진 5.0 m 에서 잘렸습니다. 난이도 0.5 에서
 p.append('<p>있어야 할 칸은 <span class="mono">sim/eval/matrix.py</span> 가 선언합니다. '
          '한 칸이라도 비면 실행기가 0 이 아닌 코드로 끝나고, 보고서 생성기도 거부합니다. '
          '측정 규격과 판정 정의는 '
-         '<span class="mono">docs/research/20260911-eval-protocol-v2.md</span> 가 정본입니다.</p>')
+         '<a href="/research-20260911-eval-protocol-v2.html">평가 프로토콜 정본</a> '
+         '입니다 (저장소는 '
+         '<span class="mono">docs/research/20260911-eval-protocol-v2.md</span>).</p>')
 
 # 판 수를 두 개로 나눠 적는다. 성적표 분모와 전체 원자료는 다른 수다.
 _score = STATUS["roles"].get("성적표", {"declared": 0, "present": 0, "cells": 0})
