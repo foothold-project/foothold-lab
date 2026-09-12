@@ -166,8 +166,19 @@ def extract(site):
     if not boot:
         raise SystemExit("index.html 에 fh-theme-boot 가 없다")
 
+    # **NEW 배지와 「봤음」 기록도 같이 간다.**
+    #
+    # 배지는 표지에서 뜨지만, 그 글을 «열었다»는 사실은 그 글의 페이지가
+    # 적는다. 내가 만든 여섯 쪽에 그 블록이 없어서 아무리 열어도 배지가
+    # 안 사라졌다 `확인됨` (2026-09-12 팀장 지적 · 실측으로 재현).
+    # 바를 받는 쪽이 기록기도 함께 받게 한다.
+    badge = re.search(r"<!--newbadge:v[0-9]+-->.*?</script>", text, re.S)
+
+    if not badge:
+        raise SystemExit("index.html 에 newbadge 블록이 없다")
+
     head = ('<link rel="stylesheet" href="/assets/gnav.css">' + "\n"
-            + boot.group(0) + "\n")
+            + boot.group(0) + "\n" + badge.group(0) + "\n")
     return nav.group(0), HEAD + BRIDGE + body + TAIL, head
 
 
