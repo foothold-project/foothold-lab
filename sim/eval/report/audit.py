@@ -767,6 +767,24 @@ for i, tbl in enumerate(re.findall(r"<table\b[^>]*>.*?</table>", HTML, re.S)):
 
 check("4a", "모든 표의 머리칸과 줄 칸수가 같다", not bad_tables, " ".join(bad_tables))
 
+# ── 4b. 본문이 말하는 컷 수가 색인과 같나 ──────────────────────────
+#
+# **손으로 적은 수는 반드시 낡는다.** 대조컷을 28개 더 채웠는데 본문은
+# 「모두 84컷」 이라고 그대로 말하고 있었고, 관문은 그것을 못 잡았다
+# `확인됨` (2026-09-12 · codex 검수 뒤 직접 발견).
+_c = MAN["counts"]
+_said = re.findall(r"모두 ([\d,]+)컷", PLAIN)
+_want = str(_c["clips"])
+check("4b", "본문의 「모두 N컷」 이 색인과 같다",
+      bool(_said) and all(x.replace(",", "") == _want for x in _said),
+      "본문 %s · 색인 %s" % (_said or "없음", _want))
+
+_gap = re.findall(r"(\d+)개는 성적만 있고", PLAIN)
+check("4c", "「성적만 있고 영상이 없다」 가 색인과 같다",
+      bool(_gap) and all(int(x) == _c["evaluations_without_clip"] for x in _gap),
+      "본문 %s · 색인 %d" % (_gap or "없음",
+                                   _c["evaluations_without_clip"]))
+
 
 # ── 5. 배포본과 생성본 ──────────────────────────────────────────────
 print("== 5. 배포본과 생성본 ==")

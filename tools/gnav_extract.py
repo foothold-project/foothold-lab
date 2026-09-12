@@ -81,6 +81,22 @@ TAIL = """
    폭을 얼마로 쓸지는 그 페이지가 정한다. 여기서는 **그 값을 따라간다.**
    페이지는 `:root{--gnav-width:1440px}` 한 줄만 적으면 된다. */
 .gnav .in{max-width:var(--gnav-width,1040px)}
+
+/* **로고 왼쪽 끝을 본문 글 왼쪽 끝에 맞춘다.**
+
+   폭을 같게 해도 내용은 안 맞는다. 바 안쪽 여백은 19.2px 이고
+   로고 링크가 4.8px 를 더 먹어 24px 인데, 갤러리와 정본의 본문
+   여백은 40px 이다. 그래서 **16px 어깋난다** `확인됨`
+   (2026-09-12 codex 7회차 실측 · 보고서만 0.016px 로 우연히 맞았다).
+
+   페이지는 자기 본문 여백을 `--gnav-pad` 로 알려 주면 된다.
+   기본값 1.5rem 은 지금 바의 24px 와 같다. */
+.gnav .in{padding-left:calc(var(--gnav-pad,1.5rem) - .3rem);
+  padding-right:var(--gnav-pad,1.5rem)}
+@media (max-width:720px){
+  .gnav .in{padding-left:calc(var(--gnav-pad-narrow,.7rem) - .15rem);
+    padding-right:var(--gnav-pad-narrow,.7rem)}
+}
 """
 
 BRIDGED = (("var(--paper-2)", "var(--np2)"), ("var(--paper)", "var(--np)"),

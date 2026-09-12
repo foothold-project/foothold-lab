@@ -163,7 +163,7 @@ def fmt(v, digits=0):
 
 CSS = """
 :root{
-  --gnav-width:960px;  /* 전역바가 이 폭을 따라온다 */
+  --gnav-width:960px; --gnav-pad:24px;  /* 전역바가 이 폭을 따라온다 */
   /* porcelain · lieflat-charts color-presets.js · 차트와 같은 체계 */
   --ink:#081F5C; --ink-2:#2a3f74; --ink-3:#41527e; --line:#d6dced;
   --bg:#f7f2eb; --card:#ffffff; --accent:#1d6b58; --warn:#8a5b12; --bad:#a8341f;
@@ -667,9 +667,23 @@ p.append("<pre>git pull origin main" + NL +
          "    --checkpoint models/foothold-v1.pt \\" + NL +
          "    --raw_csv sim/eval/results/maindata-v1</pre>")
 p.append('<h2><span class="n">08</span>근거 영상 전체</h2>')
+# **수를 손으로 적지 않는다.** 갤러리 색인에서 읽는다.
+# 전에는 「모두 84컷」 이 박혀 있었고, 대조컷을 28개 더 채운 뒤에도
+# 그대로 남았다 `확인됨` (2026-09-12 · 발행 관문도 못 잡았다).
+_book = json.load(io.open(os.path.join(
+    os.environ.get("FOOTHOLD_SITE")
+    or os.path.abspath(os.path.join(REPO, "..", "foothold-site")),
+    "gallery", "v1", "manifest.json"), encoding="utf-8"))
+_cuts = _book["counts"]
+_main = _cuts["clips"] - _cuts["comparison_clips"]
 p.append('<p>이 보고서에 실린 것은 주장마다 한두 장씩 고른 것입니다. '
-         '지형 16종 x 속도 3종 48컷과 모델 대조 36컷, 모두 84컷이 '
-         '<strong>gallery-v1</strong> 에 있습니다. 보고서 1차와 gallery-v1 이 한 세트입니다.</p>')
+         '지형 %d종 x 속도 %d종 %d컷과 모델 대조 %d컷, 모두 %d컷이 '
+         '<strong>gallery-v1</strong> 에 있습니다. 평가 칸 %d개 가운데 %d개는 '
+         '성적만 있고 영상이 없습니다. '
+         '보고서 1차와 gallery-v1 이 한 세트입니다.</p>'
+         % (_cuts["terrains"], len(_cuts["speeds"]), _main,
+            _cuts["comparison_clips"], _cuts["clips"],
+            _cuts["evaluations"], _cuts["evaluations_without_clip"]))
 p.append('<p>영상은 전진 5.0 m 에서 잘렸습니다. 난이도 0.5 에서 장애물 구간이 '
          '가장 멀리 가는 지형도 4.00 m 에서 끝나고 그 뒤는 평평한 테두리라 '
          '볼 것이 없기 때문입니다. 지형마다 구간이 달라 어떤 영상은 앞쪽에서 '

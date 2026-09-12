@@ -207,7 +207,10 @@ def shrink(src_path, dst_path, web_size=(WEB_WIDTH, WEB_HEIGHT)):
     try:
         in_stream = src.streams.video[0]
         in_stream.thread_type = "AUTO"
-        dst = av.open(dst_path, "w")
+        # **moov 를 앞으로 보낸다 (faststart).**
+        # 안 걸면 브라우저가 파일 끝까지 받아야 첫 프레임을 그린다.
+        # 발행 관문이 34컷을 잡았다 `확인됨` (2026-09-12).
+        dst = av.open(dst_path, "w", options={"movflags": "+faststart"})
 
         try:
             out = dst.add_stream("libx264", rate=in_stream.average_rate)

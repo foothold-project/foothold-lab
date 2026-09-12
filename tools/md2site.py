@@ -52,7 +52,7 @@ import gatelib  # noqa: E402
 
 # site 의 색과 조판. `foothold-site/index.html` 과 같은 값이다.
 STYLE = """:root{
-  --gnav-width:1100px;  /* 전역바가 이 폭을 따라온다 */
+  --gnav-width:1100px;--gnav-pad:clamp(18px,3vw,40px);  /* 전역바가 이 폭을 따라온다 */
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
   --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
   --rule:#d9d6cd;--brand:#0e7a6e;--dim-soft:#e0f0ed;
