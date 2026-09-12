@@ -3,6 +3,7 @@
 > 근거: 실측 (`git worktree list` · 각 자리의 branch·HEAD·upstream·생성 시각을 직접 읽음)
 > 요지: 작업용 clone 을 `C:/work/` 에 따로 두던 것을 그만둔다. 본 clone 하나에서 worktree 로 간다
 > 상태: 확정
+> 판: v1.0
 
 # 작업용 체크아웃 규약
 
@@ -112,3 +113,9 @@ scratchpad/wt-*        11개   PR 머지 완료 · 지워도 된다
 C:/work/foothold-lab-easy5    위 「정리 절차」 3번에서
 C:/work/foothold-lab-sweep    위 「정리 절차」 3번에서
 ```
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-09-11 | 처음 씀. 작업용 clone 을 접고 worktree 로 간다 | `git worktree list` 실측 |

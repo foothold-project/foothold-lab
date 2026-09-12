@@ -85,7 +85,7 @@ def review(path):
     evidence = len(re.findall(r'`(확인됨|검증됨|실측|추측|가설|미측정|미확인|코드확인)`', md))
     links = len(set(re.findall(r'https?://[^\s)]+', md)))
     ascii_art = len(re.findall(r'[─-╿▀-▟]', md))
-    emdash = md.count('—')
+    emdash = md.count('·')
 
     missing = [f for f in ('분류', '작성', '근거', '요지', '상태') if not meta.get(f)]
     kind_ok = meta.get('분류') in KINDS if meta.get('분류') else False
@@ -184,7 +184,7 @@ def review_profile(path):
     md = io.open(path, encoding='utf-8', errors='replace').read()
     m = re.search(r'^#\s+(.+)$', md, re.M)
     pii = scan_pii(md)
-    emdash = md.count('—')
+    emdash = md.count('·')
     checks = {'개인정보 없음': not pii}
     fixes = []
     if pii:

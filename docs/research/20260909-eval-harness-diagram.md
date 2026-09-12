@@ -5,6 +5,7 @@
 > 근거: 실측 (`sim/eval/` 코드 원문을 직접 읽음) · 원장 `docs/DECISIONS.md` · 기존 문서 `20260908-success-criteria-anatomy.md`
 > 요지: 평가 하네스의 판정 구조를 SVG 넷으로 옮긴다. 네 축의 AND · 실패 사유 둘 · 방향 판정이 끝점에서 통과선으로 옮겨간 것 · 지형 10종과 평지를 뺀 자리.
 > 상태: 초안
+> 판: v1.0
 
 ---
 
@@ -327,3 +328,9 @@ FLAT_TERRAIN_NAMES = ("flat",)
 - 성공 기준 해부: `docs/research/20260908-success-criteria-anatomy.md`
 - 머리 접촉 관측: `docs/research/20260909-head-contact-observation.md`
 - 평지 기준선: `docs/research/flat-straight-baseline-10m.md`
+
+## 판 이력
+
+| 판 | 언제 | 무엇이 바뀌었나 | 근거 |
+|---|---|---|---|
+| v1.0 | 2026-09-09 | 처음 씀. 판정 구조를 SVG 넷으로 옮겼다 | `sim/eval/` 코드 원문 |
