@@ -49,12 +49,47 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 # site 의 색과 조판. `foothold-site/index.html` 과 같은 값이다.
 STYLE = """:root{
+  --gnav-width:1100px;  /* 전역바가 이 폭을 따라온다 */
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
   --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
   --rule:#d9d6cd;--brand:#0e7a6e;--dim-soft:#e0f0ed;
   --note:#a86a08;--note-soft:#fbf0dc;
   --stop:#a3342a;--stop-soft:#fbe9e7;
   --grid:rgba(22,28,38,.04);
+  /* 본문에 심은 도면이 쓰는 색이다. **하나라도 빠지면 그 칠은 검정으로
+     떨어진다** `확인됨` (2026-09-12 · 도면 5장이 전부 검은 상자였다).
+     값은 site 색 체계에 맞춘 것이고, 이름은 도면 쪽을 따른다. */
+  --accent:#0e7a6e;--accent-soft:#e0f0ed;
+  --ok:#0e7a6e;
+  --warn:#a86a08;--warn-soft:#fbf0dc;
+  --bad:#a3342a;--bad-soft:#fbe9e7;
+  --rule-2:#efede6;
+}
+/* **어두운 화면.** 없으면 site 의 어두운 토큰을 못 받아 본문은 밝은 채로
+   전역바만 «흰 로고» 로 바뀐다. 밝은 바에 흰 글씨라 로고가 사라진다
+   `확인됨` (2026-09-12 · 관문이 잡았다. 예산안 때와 같은 부류).
+   심은 도면의 색도 여기서 함께 뒤집힌다. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+  --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+  --rule:#2b323d;--brand:#3ec7b4;--dim-soft:#11302c;
+  --note:#dc9a30;--note-soft:#332710;
+  --stop:#e56d5e;--stop-soft:#331c19;
+  --grid:rgba(233,231,225,.04);
+  --accent:#3ec7b4;--accent-soft:#11302c;--ok:#3ec7b4;
+  --warn:#dc9a30;--warn-soft:#332710;
+  --bad:#e56d5e;--bad-soft:#331c19;--rule-2:#232a35;
+}}
+:root[data-theme="dark"]{
+  --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+  --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+  --rule:#2b323d;--brand:#3ec7b4;--dim-soft:#11302c;
+  --note:#dc9a30;--note-soft:#332710;
+  --stop:#e56d5e;--stop-soft:#331c19;
+  --grid:rgba(233,231,225,.04);
+  --accent:#3ec7b4;--accent-soft:#11302c;--ok:#3ec7b4;
+  --warn:#dc9a30;--warn-soft:#332710;
+  --bad:#e56d5e;--bad-soft:#331c19;--rule-2:#232a35;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -102,7 +137,7 @@ pre{background:#161c26;color:#e8e6e0;border-radius:10px;padding:16px 18px;
 pre code{background:none;color:inherit;padding:0}
 .fig{margin:24px 0;background:var(--card);border:1px solid var(--rule);
   border-radius:10px;padding:16px 18px 12px}
-.fig img{width:100%;height:auto;display:block}
+.fig img,.fig>svg{width:100%;height:auto;display:block}
 .fig figcaption{font-size:.8rem;color:var(--ink-3);margin-top:10px;
   padding-top:10px;border-top:1px solid var(--rule)}
 .said{background:var(--dim-soft);color:var(--brand);font-size:.7rem;
@@ -119,6 +154,39 @@ NUMERIC = re.compile(r"^[\s0-9.,%+\-x×~/]*$")
 
 
 IMAGES = []
+
+# 원문이 있는 폴더. 그림 경로가 이 기준이라 `as_figure` 가 파일을 열 때 쓴다.
+SOURCE_DIR = ""
+
+
+def site_nav(site_dir):
+    """site 의 전역바를 **여기서** 붙인다.
+
+    전에는 만든 뒤에 따로 주입했다. 그러면 **다음에 다시 만들 때 사라진다**
+    `확인됨` (2026-09-12 · 정본 페이지의 전역바가 그렇게 날아갔다).
+    붙이는 자리는 만드는 자리여야 한다.
+
+    한 벌은 `tools/gnav_extract.py` 가 만든다. 규칙을 여기서 베끼면
+    `@media` 가 풀려 로고 색과 바 배경이 어긋난다.
+    """
+    got = []
+
+    for name in ("gnav.html", "gnav-head.html"):
+        path = os.path.join(site_dir, "assets", name)
+
+        if not os.path.isfile(path):
+            raise SystemExit("assets/%s 가 없다. tools/gnav_extract.py 를 "
+                             "먼저 돌린다" % name)
+
+        got.append(io.open(path, encoding="utf-8").read().strip())
+
+    bar = re.sub(r'href="(?!/|https?:)([^"]+)"', r'href="/\1"', got[0])
+    bar = bar.replace('src="assets/', 'src="/assets/')
+    bar = bar.replace('class="on"', 'class=""')
+    # 「연구」 가 지금 여기다.
+    bar = bar.replace('href="/hub-research.html"',
+                      'class="on" href="/hub-research.html"')
+    return bar, got[1]
 
 
 def web_path(src):
@@ -138,16 +206,35 @@ def inline(text):
     def as_figure(m):
         alt, src = m.group(1), m.group(2)
         IMAGES.append(src)
-        return ('<figure class="fig"><img src="%s" alt="%s" loading="lazy">'
-                '<figcaption>%s</figcaption></figure>'
-                % (html.escape(web_path(src), quote=True),
-                   html.escape(alt, quote=True), html.escape(alt, quote=False)))
+        body = ""
+
+        # **SVG 는 본문에 심는다.** `<img src>` 로 부르면 그 SVG 는 따로 문서라
+        # 페이지의 색 변수를 못 받는다. `var(--ink)` 가 전부 검정으로 떨어져
+        # 도면이 검은 덩어리가 된다 `확인됨` (2026-09-12 팀장 지적).
+        if src.lower().endswith(".svg") and SOURCE_DIR:
+            got = os.path.normpath(os.path.join(SOURCE_DIR, src))
+
+            if os.path.isfile(got):
+                svg = io.open(got, encoding="utf-8").read()
+                svg = re.sub(r"^\s*<\?xml[^>]*\?>\s*", "", svg)
+                body = svg.strip()
+
+        if not body:
+            body = ('<img src="%s" alt="%s" loading="lazy">'
+                    % (html.escape(web_path(src), quote=True),
+                       html.escape(alt, quote=True)))
+
+        return ('<figure class="fig">%s<figcaption>%s</figcaption></figure>'
+                % (body, html.escape(alt, quote=False)))
 
     out = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", as_figure, out)
     out = re.sub(r"`확인됨`", '<span class="said">확인됨</span>', out)
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
     out = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
     out = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', out)
+    # `<https://…>` 는 markdown 의 자동 링크다. 안 다루면 꺾쇠가 그대로 보이고
+    # 누를 수도 없다 `확인됨` (2026-09-12 · 웹판 링크가 그렇게 나갔다).
+    out = re.sub(r"&lt;(https?://[^\s&]+)&gt;", r'<a href="\1">\1</a>', out)
     return out
 
 
@@ -300,14 +387,15 @@ def convert(text):
     return title, meta, chr(10).join(out)
 
 
-def page(title, meta, body, source):
+def page(title, meta, body, source, nav=("", "")):
     lines = ['<!doctype html>', '<html lang="ko">', "<head>",
              '<meta charset="utf-8">',
              '<meta name="viewport" content="width=device-width,initial-scale=1">',
              "<title>%s · FOOTHOLD</title>" % html.escape(title),
              '<meta name="description" content="%s">'
              % html.escape(meta.get("요지", title), quote=True),
-             "<style>%s</style>" % STYLE, "</head>", "<body>",
+             "<style>%s</style>" % STYLE, nav[1], "</head>", "<body>",
+             nav[0],
              '<div class="wrap">', "<header>",
              '<div class="crumb"><a href="/">FOOTHOLD</a> · '
              '<a href="/research.html">연구</a> · 정본</div>',
@@ -339,6 +427,9 @@ def main():
     p.add_argument("--out", required=True)
     args = p.parse_args()
 
+    # 그림 경로는 원문 기준이다. `inline()` 이 SVG 를 열려면 먼저 알아야 한다.
+    global SOURCE_DIR
+    SOURCE_DIR = os.path.dirname(os.path.abspath(args.source))
     text = io.open(args.source, encoding="utf-8").read()
     title, meta, body = convert(text)
 
@@ -358,13 +449,13 @@ def main():
 
     rel = os.path.relpath(args.source, os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")).replace("\\", "/")
-    out = page(title, meta, body, rel)
+    site = os.path.dirname(os.path.abspath(args.out))
+    out = page(title, meta, body, rel, site_nav(site))
     io.open(args.out, "w", encoding="utf-8").write(out)
 
     # **그림을 같이 옮긴다.** 안 옮기면 페이지만 올라가고 도면이 404 가 된다
     # `확인됨` (2026-09-12 · 정본 도면 5장이 site 에 하나도 없었다).
-    here = os.path.dirname(os.path.abspath(args.source))
-    site = os.path.dirname(os.path.abspath(args.out))
+    here = SOURCE_DIR
     moved = []
 
     for src in IMAGES:
@@ -407,6 +498,36 @@ def main():
     if IMAGES and out.count("<figure class=\"fig\">") != len(IMAGES):
         raise SystemExit("본문 그림 %d장인데 %d장만 나왔다"
                          % (len(IMAGES), out.count("<figure class=\"fig\">")))
+
+    # ── 팀장이 잡은 넷. 다시 나가면 안 된다 (2026-09-12) ──────────────
+    for why, mark in (("전역바", "gnav:v1"),
+                      ("테마 부팅 (없으면 어두운 화면이 기본이 된다)",
+                       "fh-theme-boot"),
+                      ("전역바 CSS 링크", "/assets/gnav.css")):
+        if mark not in out:
+            raise SystemExit("%s 가 없다" % why)
+
+    if re.search(r"&lt;https?://", out):
+        raise SystemExit("`<주소>` 가 글자로 남았다. 자동 링크를 안 풀었다")
+
+    # **도면이 쓰는 색을 페이지가 다 들고 있나.** 하나라도 없으면 그 칠은
+    # 검정으로 떨어지는데, 오류는 안 난다. 그래서 여기서 센다.
+    root = re.search(r":root\{(.*?)\n\}", out, re.S)
+    have = set(re.findall(r"(--[a-z0-9-]+)\s*:", root.group(1) if root else ""))
+    want = set(re.findall(r"var\((--[a-z0-9-]+)\)",
+                          "".join(m.group(0) for m
+                                  in re.finditer(r"<svg.*?</svg>", out, re.S))))
+    short = sorted(want - have)
+
+    if short:
+        raise SystemExit("도면이 쓰는 색 %s 를 페이지가 정의하지 않았다. "
+                         "검은 상자로 나간다" % " ".join(short))
+
+    svgs = [s for s in IMAGES if s.lower().endswith(".svg")]
+
+    if svgs and out.count("<svg") < len(svgs):
+        raise SystemExit("SVG %d장 중 %d장만 본문에 심겼다. `<img>` 로 나가면 "
+                         "페이지 색을 못 받는다" % (len(svgs), out.count("<svg")))
 
     for bad in (chr(8212), "%%"):
         if bad in out:

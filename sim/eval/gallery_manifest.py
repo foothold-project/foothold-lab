@@ -378,6 +378,12 @@ def read_clips(web_dir, main_model, clip_prefix):
             model=model,
             role=("compare" if label else "main"),
             bytes=os.path.getsize(path),
+            # 대표 한 장. **없으면 갤러리 첫 화면이 검다** `확인됨`
+            # (2026-09-12 팀장 지적 · `preload=none` 이라 첫 장이 안 그려진다).
+            poster=(clip_prefix.replace("clips/", "posters/") + name[:-4] + ".jpg"
+                    if os.path.isfile(os.path.join(
+                        os.path.dirname(web_dir), "posters", name[:-4] + ".jpg"))
+                    else None),
             # **내용 해시를 적는다.** 크기만 보면 한 바이트 바뀐 파일을
             # 같다고 판정한다 `확인됨` (2026-09-12 검증 2회차 8번 · 재현됨).
             sha256=sha256_of(path),
@@ -476,6 +482,14 @@ def build(gallery_dir, raw_dir, version, main_model, difficulty, clip_prefix,
 
     evaluations = [cells[key] for key in sorted(cells)]
     no_clip = [cell["id"] for cell in evaluations if not cell["clips"]]
+    no_poster = [c["id"] for c in clips if not c.get("poster")]
+
+    if no_poster and not allow_missing:
+        for name in no_poster[:8]:
+            print("  [X] 포스터가 없는 컷: %s" % name)
+        raise SystemExit(
+            "컷 %d개에 포스터가 없다. tools 의 포스터 생성기를 먼저 돌린다"
+            % len(no_poster))
 
     data = {
         "schema": SCHEMA,
@@ -500,6 +514,7 @@ def build(gallery_dir, raw_dir, version, main_model, difficulty, clip_prefix,
             "speeds": sorted({c["speed_mps"] for c in clips}),
             "models": sorted(models),
             "comparison_clips": sum(1 for c in clips if c["role"] == "compare"),
+            "with_poster": sum(1 for c in clips if c.get("poster")),
         },
         "facets": {
             "terrain": sorted({e["terrain"] for e in evaluations}),

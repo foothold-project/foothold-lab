@@ -163,18 +163,23 @@ def fmt(v, digits=0):
 
 CSS = """
 :root{
+  --gnav-width:960px;  /* 전역바가 이 폭을 따라온다 */
   /* porcelain · lieflat-charts color-presets.js · 차트와 같은 체계 */
   --ink:#081F5C; --ink-2:#2a3f74; --ink-3:#41527e; --line:#d6dced;
   --bg:#f7f2eb; --card:#ffffff; --accent:#1d6b58; --warn:#8a5b12; --bad:#a8341f;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* 전역바가 찾는 이름. 없으면 바가 자기 기본값으로 칠해 본문과 색이 어긋난다. */
+  --paper:#f7f2eb; --paper-2:#eee7dc; --rule:#d6dced;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ink:#e6edfa; --ink-2:#b3c2de; --ink-3:#93a4c4; --line:#243254;
   --bg:#0b1020; --card:#141c30; --accent:#5fd0ae; --warn:#e0b55c; --bad:#f0836a;
+  --paper:#0b1020; --paper-2:#141c30; --rule:#243254;
 }}
 :root[data-theme="dark"]{
   --ink:#e6edfa; --ink-2:#b3c2de; --ink-3:#93a4c4; --line:#243254;
   --bg:#0b1020; --card:#141c30; --accent:#5fd0ae; --warn:#e0b55c; --bad:#f0836a;
+  --paper:#0b1020; --paper-2:#141c30; --rule:#243254;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
@@ -247,27 +252,34 @@ def site_nav():
 
     **없으면 웹에서 갤러리로 가는 길이 없다** `확인됨` (2026-09-12 · 127개
     페이지에 있는 전역바가 이 보고서에만 없었다. 팀장이 잡았다).
+
+    전에는 `index.html` 에서 규칙을 **평면으로 베꼈다.** 그러면 `@media` 의
+    중괄호가 풀려 안쪽 규칙이 조건 없이 적용된다. 그래서 밝은 화면인데
+    **흰 로고**가 떴고, `--paper` 를 안 쓰는 이 페이지에서 **바가 투명**
+    해졌다 `확인됨` (둘 다 2026-09-12 팀장 지적).
+
+    이제 베끼지 않는다. `tools/gnav_extract.py` 가 만든 한 벌을 링크한다.
+    머리 조각에는 테마 부팅 스크립트도 들어 있다. 그것이 없으면 표식이
+    안 달려 **site 기본값(밝음)을 무시하고 어두운 화면으로 열린다.**
     """
-    path = os.path.join(SITE_DIR, "notice-20260902.html")
+    got = []
 
-    if not os.path.isfile(path):
-        return "", ""
+    for name in ("gnav.html", "gnav-head.html"):
+        path = os.path.join(SITE_DIR, "assets", name)
 
-    src = io.open(path, encoding="utf-8").read()
-    got = re.search(r"<!--gnav:v1-->.*?<!--/gnav:v1-->", src, re.S)
+        if not os.path.isfile(path):
+            raise SystemExit("assets/%s 가 없다. tools/gnav_extract.py 를 "
+                             "먼저 돌린다" % name)
 
-    if not got:
-        return "", ""
+        got.append(io.open(path, encoding="utf-8").read().strip())
 
-    bar = re.sub(r'href="(?!/|https?:)([^"]+)"', r'href="/\1"', got.group(0))
+    bar = re.sub(r'href="(?!/|https?:)([^"]+)"', r'href="/\1"', got[0])
     bar = bar.replace('src="assets/', 'src="/assets/')
     bar = bar.replace('class="on"', 'class=""')
-    i = src.find(".gnav{")
-    j = src.find("</style>", i)
-    return bar, (src[i:j].rstrip() if i > 0 else "")
+    return bar, got[1]
 
 
-NAV, NAV_CSS = site_nav()
+NAV, NAV_HEAD = site_nav()
 
 # **온전한 문서로 낸다.** 조각으로 내면 doctype 도 charset 도 뷰포트도 없다.
 # 파일로 저장해 열면 한글이 깨지고 휴대폰에서 조판이 무너진다 `확인됨`
@@ -279,7 +291,7 @@ p = ['<!doctype html>', '<html lang="ko">', "<head>", '<meta charset="utf-8">',
      '난이도 0.5 성적표 14,400 판 · 전체 원자료 43,200 판">',
      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
      'family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">',
-     "<style>%s%s%s</style>" % (CSS, NL, NAV_CSS), "</head>", "<body>",
+     "<style>%s</style>" % CSS, NAV_HEAD, "</head>", "<body>",
      NAV, '<div class="wrap">']
 
 p.append('<div class="head">'

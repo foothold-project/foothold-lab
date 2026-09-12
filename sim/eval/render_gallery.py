@@ -12,6 +12,21 @@
 python sim/eval/render_gallery.py --checkpoint models/foothold-v1.pt
 ```
 
+단, **Isaac 환경의 python 으로** 부른다. 시스템 python 으로 부르면
+`tensordict` 부터 없다. 이 PC 에서는 conda 환경 `isaac311` 이고,
+비워 두면 안 되는 환경 변수가 둘 있다.
+
+```powershell
+$env:KMP_DUPLICATE_LIB_OK = "TRUE"   # OMP 중복 로드 오류 우회
+$env:OMNI_KIT_ACCEPT_EULA = "YES"    # 없으면 EULA 를 물고 바로 EOF 로 죽는다
+& "$env:USERPROFILE/anaconda3/envs/isaac311/python.exe" sim/eval/render_gallery.py `
+    --checkpoint models/foothold-v1.pt
+```
+
+아래 `preflight()` 가 이 셋을 **촬영 전에** 확인해서, 못 찍힐 환경이면
+6컷을 다 실패하고 나서가 아니라 처음부터 이유를 말한다 `확인됨`
+(2026-09-12 에 세 번 연속으로 「성공 0 · 실패 6」 을 받고서야 알았다).
+
 끝이다. 나머지는 전부 기본값이 있다. 결과는
 `sim/eval/results/<날짜>-gallery/` 에 쌓이고 그 안에 `gallery.html` 이 생긴다.
 
@@ -99,9 +114,15 @@ VIEW_BY_TERRAIN = {
     "star": "track_high",
     # 기존 험지 6종
     "pyramid_stairs": "track_side",
-    "pyramid_stairs_inv": "track_side",
+    # **역피라미드는 «높은» 시점으로 본다.** `track_side` 는 눈높이를
+    # `pz + 0.26` 으로 로봇에 붙여서, 로봇이 구덩이로 내려가면 카메라도
+    # 따라 내려가 벽 «안» 에 박힌다. 84컷 전수 실측에서 이 3컷의 첫 화면
+    # 질감이 1.9 였다 (정상 중앙값 17.9) `확인됨` (2026-09-12 팀장 지적:
+    # 「카메라가 처음에 이상한 곳을 보고 있던데?」).
+    # `track_high` 는 높이를 세계 좌표 1.02 m 로 못 박아 벽을 넘는다.
+    "pyramid_stairs_inv": "track_high",
     "hf_pyramid_slope": "track_side",
-    "hf_pyramid_slope_inv": "track_side",
+    "hf_pyramid_slope_inv": "track_high",   # 같은 이유. 실측 12.7
     "random_rough": "track_side",
     "boxes": "track_high",
 }
@@ -302,6 +323,44 @@ def build_html(root, cuts, args):
     return render_page(root, cuts, args)
 
 
+def preflight():
+    """**찍기 전에 환경을 본다.**
+
+    촬영은 하위 프로세스라, 환경이 틀리면 여기서는 「산출물을 안
+    남겼다」 라고만 보인다. 진짜 이유는 하위 로그 깊은 곳에 있고,
+    6컷을 다 실패한 뒤에야 보게 된다 `확인됨` (2026-09-12 · 세 번 연속).
+
+    | 빠지면 | 하위에서 보이는 것 |
+    |---|---|
+    | `tensordict` (Isaac 환경이 아니다) | `ModuleNotFoundError` |
+    | `KMP_DUPLICATE_LIB_OK` | `OMP: Error #15` |
+    | `OMNI_KIT_ACCEPT_EULA` | `Do you accept the EULA?` 뒤 `EOF when reading a line` |
+
+    세째는 이 설치에서 이미 수락한 것을 하위 프로세스에 전달하는
+    것일 뿐이다. 대신 수락해 주지 않고, 없으면 뭐를 넣어야 하는지 말한다.
+    """
+    import importlib.util
+
+    miss = []
+
+    if importlib.util.find_spec("tensordict") is None:
+        miss.append("이 python 에 `tensordict` 이 없다. Isaac 환경의 python 으로 "
+                    "부른다 (이 PC 에서는 conda `isaac311`)")
+
+    for name, why in (
+            ("KMP_DUPLICATE_LIB_OK", "없으면 `OMP: Error #15` 로 죽는다. TRUE 로 둔다"),
+            ("OMNI_KIT_ACCEPT_EULA", "없으면 EULA 를 물고 바로 EOF 로 죽는다. "
+                                     "이 설치에서 이미 수락했다면 YES 로 둔다")):
+        if not os.environ.get(name):
+            miss.append("환경 변수 `%s` 가 없다. %s" % (name, why))
+
+    if miss:
+        raise SystemExit(os.linesep.join(
+            ["촬영 환경이 안 갖춰졌습니다. 이대로 돌리면 모든 컷이 실패합니다."]
+            + ["  [X] " + m for m in miss]
+            + ["", "쓰는 법은 이 파일 머리의 「쓰는 법」 에 있습니다."]))
+
+
 def main():
     today = datetime.date.today().strftime("%Y%m%d")
     p = argparse.ArgumentParser(
@@ -348,6 +407,8 @@ def main():
         raise SystemExit(
             "시점을 모르는 지형이 있습니다: %s%s"
             "`VIEW_BY_TERRAIN` 에 한 줄씩 더하십시오." % (unknown, os.linesep))
+
+    preflight()
 
     say("지형 %d종 x 속도 %d = %d컷 · %s"
         % (len(names), len(speeds), len(names) * len(speeds), root))

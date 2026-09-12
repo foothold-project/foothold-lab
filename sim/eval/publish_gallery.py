@@ -81,13 +81,17 @@ def copy_clips(manifest_path, gallery_dir, target_dir):
     moved = 0
     same = 0
 
-    for clip in data["clips"]:
-        src = os.path.join(web, os.path.basename(clip["file"]))
-        dst = os.path.join(target_dir, clip["file"])
+    # 포스터도 같이 옮긴다. 안 옮기면 색인만 가리키고 404 가 된다.
+    wanted = [(clip["file"], "web") for clip in data["clips"]]
+    wanted += [(clip["poster"], "posters") for clip in data["clips"] if clip.get("poster")]
+
+    for name, where in wanted:
+        src = os.path.join(gallery_dir, where, os.path.basename(name))
+        dst = os.path.join(target_dir, name)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
 
         if not os.path.isfile(src):
-            raise SystemExit("색인이 적은 컷이 web/ 에 없다: %s" % src)
+            raise SystemExit("색인이 적은 파일이 없다: %s" % src)
 
         if os.path.isfile(dst) and sha256_of(dst) == sha256_of(src):
             same += 1
