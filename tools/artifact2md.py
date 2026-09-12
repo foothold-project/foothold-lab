@@ -193,6 +193,12 @@ def main():
         # **그림을 «먼저» 꺼낸다.** 바깥 블록의 글자만 남기면 삼켜진다.
         out.extend(graphics(chunk, args, seen))
 
+        # **꺼낸 그림은 덩어리에서 지운다.** 안 지우면 그 SVG 안의
+        # `<text>` 가 아래에서 다시 글자로 뽑혀 「평지」 「+1」 같은
+        # 토막 문단이 된다 `확인됨` (2026-09-12 · 팀장이 잡았다).
+        chunk = re.sub(r"<svg.*?</svg>", " ", chunk, flags=re.S | re.I)
+        chunk = re.sub(r'<img[^>]*src="data:[^"]*"[^>]*>', " ", chunk, flags=re.I)
+
         if kind.startswith("h") and kind[1:].isdigit():
             got = text_of(chunk)
 

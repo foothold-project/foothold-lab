@@ -303,7 +303,10 @@ def convert(text):
             continue
 
         # 머리 다섯 줄
-        got = re.match(r"^>\s*(%s):\s*(.+)$" % "|".join(META_KEYS), line)
+        # **여섯 줄을 다 읽는다.** 다섯만 읽으면 `판` 줄이 머리를
+        # 빠져나가 본문의 인용문으로 떨어진다 `확인됨` (2026-09-12 화면 실측).
+        got = re.match(r"^>\s*(%s):\s*(.+)$"
+                       % "|".join(META_KEYS + META_EXTRA), line)
 
         if got:
             meta[got.group(1)] = got.group(2).strip()
@@ -365,7 +368,11 @@ def convert(text):
 
         if line.startswith("## "):
             head = line[3:].strip()
-            num = re.match(r"^([\d.\-]+|부록)\s*[.·]?\s*(.*)$", head)
+            # 절 번호는 **구분 기호가 따라올 때만** 번호다.
+            # 안 그러면 `1부 · 지금…` 이 「1」 + 「부 · 지금…」 로
+            # 쪼개진다 `확인됨` (2026-09-12 화면 실측 · 팀장이 잡았다).
+            num = re.match(r"^([\d]+(?:[.\-][\d]+)*|부록)\s*[.·]\s*(.+)$",
+                           head)
 
             if num and num.group(2):
                 out.append('<h2><span class="n">%s</span>%s</h2>'
