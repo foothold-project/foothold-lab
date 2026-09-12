@@ -50,6 +50,32 @@ BLOCK = ("h1", "h2", "h3", "h4", "h5", "p", "table", "svg", "img", "pre",
          "ul", "ol", "blockquote", "figure", "hr")
 
 
+# 아티팩트 원본에 **낱말 치환 사고**가 박혀 있다. 이전 세션이 「판」을
+# 「에피소드」로 일괄 치환하며 단어 안까지 바꿨다.
+#
+#     발판을 밟았다     -> 발에피소드를 밟았다
+#     그 판을 그대로    -> 그 에피소드을 그대로
+#     가장 잘한 판 하나 -> 가장 잘에피소드 하나
+#
+# 원본을 못 고치므로 **옮기면서 되돌린다.** 안 그러면 다시 만들 때마다
+# 되살아난다 `확인됨` (2026-09-12 codex 10회차가 문장 훼손으로 잡았다).
+MENDED = (
+    ("발에피소드를 밟았다", "발판을 밟았다"),
+    ("그 에피소드을 그대로", "그 판을 그대로"),
+    ("가장 잘에피소드 하나", "가장 잘한 판 하나"),
+    ("100에피소드가라", "100판짜리"),
+    ("에피소드을", "판을"),
+)
+
+
+def mend(text):
+    """원본에 박힌 치환 사고를 되돌린다."""
+    for bad, good in MENDED:
+        text = text.replace(bad, good)
+
+    return text
+
+
 def text_of(chunk):
     """태그를 벗기고 엔티티를 푼 글자. 줄 안의 서식은 markdown 으로."""
     out = chunk
@@ -62,7 +88,7 @@ def text_of(chunk):
                  out, flags=re.S | re.I)
     out = re.sub(r"<[^>]*>", " ", out)
     out = _html.unescape(out)
-    return re.sub(r"[ \t ]+", " ", out).strip()
+    return mend(re.sub(r"[ \t ]+", " ", out).strip())
 
 
 def cells(row):
