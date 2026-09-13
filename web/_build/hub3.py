@@ -809,7 +809,7 @@ def _fn_of(rel):
     return (catalog().get('function') or {}).get(name, '')
 
 
-def _doors(docs):
+def _doors(docs, skip=()):
     """목업의 둘째 영역 · 여섯 입구.
 
     「이런 글은 어디서 찾지」의 답이다. 누르면 **목록에 거르개가 걸린다** ·
@@ -825,9 +825,15 @@ def _doors(docs):
     if not groups:
         return ''
 
+    # ★ 2026-09-13. 목록에 «카드로 나오는 것» 만 센다.
+    #   출발선 문서는 위 카드로 따로 서고 목록에는 안 들어간다. 그것까지
+    #   세면 「결과 보고 7」인데 눌러서 6장이 나온다. 건수가 거짓말을 한다.
+    skip = set(skip)
     here = {}
     for rel, _m, _page, _g in docs:
-        key = fn.get(rel.rsplit('/', 1)[-1].rsplit('.', 1)[0])
+        if rel in skip:
+            continue
+        key = _fn_of(rel)
         if key:
             here[key] = here.get(key, 0) + 1
 
@@ -849,7 +855,8 @@ def _doors(docs):
         '<script>(function(){function go(){'
         'var N=document.querySelector(".dr3");if(!N)return;'
         'var cards=[].slice.call(document.querySelectorAll(".ev3[data-fn]"));'
-        'var groups=[].slice.call(document.querySelectorAll(".eg3"));'
+        'var groups=[].slice.call('
+        'document.querySelectorAll("[data-label]"));'
         'var empty=document.createElement("div");'
         'empty.className="dnone3";empty.hidden=true;'
         'empty.appendChild(document.createTextNode('
@@ -1055,23 +1062,30 @@ def research_html(site):
 
     # 여섯 입구는 «문서 목록 바로 위» 다. 찾는 말과 목록이 붙어 있어야
     # 누르고 나서 무엇이 걸러졌는지 눈에 들어온다.
-    parts.append(_doors(docs))
+    parts.append(_doors(docs, skip=[hero[2]] if hero else []))
 
     # ★ v3.1: 활동이 «보이는 묶음» 이다. 정렬만으로는 분류가 안 보인다 (팀장 지적).
-    PO = [('본PoC', '본 PoC'),
-          ('PoC시험', 'PoC 시험'),
-          ('파이프라인점검', '파이프라인 점검'),
-          ('운영', '운영 실측')]
+    # ★ 2026-09-13. 묶음을 옛 `purpose` 에서 **여섯 입구** 로 바꾼다.
+    #
+    #   실측: `purpose` 로 묶으면 37장 중 **14장이 「분류 안 된 것」** 에
+    #   떨어졌다. 가장 큰 묶음이 「분류 안 된 것」이면 그 분류는 안 서는 것이다.
+    #   그 값은 자동 규칙이 evidence·kind 로 추정하던 것이라 새 문서가 들어올
+    #   때마다 빈칸이 늘었다.
+    #
+    #   입구는 원장이 **39장 전수** 를 배정했고 누락이 있으면 빌드가 선다
+    #   (`tools/build_research_catalog.py` 의 `check_functions`).
+    #   위 거르개가 쓰는 축과 **같은 축** 이라, 누른 입구와 묶음 제목이 맞는다.
+    #
+    #   옛 `purpose` 는 안 지운다. `docs_pages._front_picks()` 등이 읽는다.
+    #   화면에서 «묶는 기준» 으로만 안 쓴다.
+    cat = catalog()
+    PO = [(g['key'], g['name']) for g in (cat.get('groups') or [])]
     rest = list(scored[1:]) if hero else list(scored)
     bag = {}
     for it in rest:
-        # ★ 2026-09-09 팀장 지적: 「어떤 문서는 왜 None 으로 분류되어 있나」.
-        #   .get('purpose', '') 는 «키가 없을 때만» 기본값을 준다. 온톨로지에
-        #   purpose 가 null 로 들어 있으면 None 이 그대로 돌아오고, 아래에서
-        #   그 값이 곧 묶음 «이름» 이 되어 화면에 None 이라고 찍혔다 (실측 2건).
-        #   값이 비었는지를 본다. 그리고 빈 것에는 사람이 읽을 이름을 준다.
-        bag.setdefault((graph().get(it[2]) or {}).get('purpose') or '', []).append(it)
-    for key, label in PO + [(k, k or '분류 안 된 것') for k in bag if k not in dict(PO)]:
+        bag.setdefault(_fn_of(it[2]) or '', []).append(it)
+    for key, label in PO + [(k, k or '입구가 안 정해진 것')
+                            for k in sorted(bag) if k not in dict(PO)]:
         rows = []
         for _n2, _c2, rel, m, page, _m2 in sorted(bag.get(key, []),
                                                   key=lambda x: x[2]):
@@ -1139,9 +1153,13 @@ def research_html(site):
                          esc(m.get('제목', '')), esc(m.get('요지', '')[:78]),
                          esc('%s · %s' % (who, when) if who else when),
                          _thumb(page)))
+        # ★ 조사 절 제목은 `.eh3` 라 거르개가 «못 봤다». 걸렀더니 카드 5장이
+        #   제목 없이 떠 있었다 (실측 `?fn=tooling`). 클래스가 다르다고 규칙을
+        #   따로 만들면 또 어긋난다. **같은 표식** 을 달아 한 규칙으로 다룬다.
         parts.append(
-            '<div class="eh3">%s %d</div>'
-            '<div class="evs3">%s</div>' % (label, len(bins[key]), reads))
+            '<div class="eh3" data-label="%s">%s %d</div>'
+            '<div class="evs3">%s</div>'
+            % (esc(label), label, len(bins[key]), reads))
     return ''.join(parts)
 
 
@@ -1696,6 +1714,21 @@ CSS = '''<style id="hub3-css">
 .dr3 a[aria-pressed="true"]{border-color:var(--dim);border-width:2px;
  padding:calc(.45rem - 1px) calc(.6rem - 1px);background:var(--paper)}
 .dr3 a[aria-pressed="true"] .dnm3{color:var(--dim)}
+/* ★ 2026-09-13. `el.hidden` 만으로는 «안 사라진다».
+   브라우저 기본 시트의 `[hidden]{display:none}` 은 «태그 선택자» 수준이라
+   우리 `.ev3{display:grid}` 한 줄에 진다. 명세대로다.
+
+   실측 (라이브 `?fn=diagnosis`): 속성이 hidden 인 카드 29장 · 화면에서
+   실제로 사라진 카드 **0장** · 37장이 전부 보였다. 거르개를 눌러도
+   아무것도 안 걸러진 것이다.
+
+   내 시험이 이것을 놓친 까닭도 같다. `!c.hidden` 을 셌다. **그건 내가 넣은
+   속성이지 사람이 보는 화면이 아니다.** 세어야 하는 것은
+   `getComputedStyle(e).display` 다 (커널 원칙 3).
+
+   그래서 숨김을 «우리 규칙으로» 못 박는다. */
+[hidden]{display:none!important}
+
 /* 걸러서 아무것도 안 남았을 때. 목록을 숨기지 않고 «없다» 고 말한다 */
 .dnone3{margin:0 0 .9rem;padding:.7rem .8rem;border:1px dashed var(--rule);
  border-radius:var(--p-radius-tag,6px);font-size:.76rem;color:var(--ink-3)}

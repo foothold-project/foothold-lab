@@ -122,9 +122,51 @@ def check_hub(t, bad):
         bad.append('누르면 «빈 목록» 이 나오는 입구가 있습니다: %s'
                    % ' '.join(empty))
 
+    # ★ 2026-09-13. 입구에 적힌 수와 «실제로 나오는 카드 수» 가 같아야 한다.
+    #   실측: 출발선 문서를 건수에는 넣고 목록에는 안 넣어, 「결과 보고 7」을
+    #   눌러도 6장이 나왔다. 숫자가 거짓말을 하면 나머지도 못 믿는다.
+    n += 1
+    shown = dict(re.findall(
+        r'<a href="\?fn=([a-z]+)"[^>]*>.*?class="dct3">(\d+)<', t, re.S))
+    for k, v in shown.items():
+        if per.get(k, 0) != int(v):
+            bad.append('입구 «%s» 가 %s라고 적혀 있는데 카드는 %d장입니다'
+                       % (k, v, per.get(k, 0)))
+
     n += 1
     if 'id="terrain-board"' not in t:
         bad.append('지형 보드 접기가 없습니다')
+
+    # ★ 2026-09-13. 「분류 안 된 것」이 최대 묶음이면 그 분류는 «안 서는» 것이다.
+    #   실측: 옛 purpose 로 묶었더니 37장 중 14장이 거기 떨어졌다. 거르개로
+    #   「진단·분석」을 눌렀는데 묶음 제목이 「분류 안 된 것」으로 나왔다.
+    # ★ 2026-09-13. 카드를 담는 절이 둘이고 제목 클래스가 다르다
+    #   (`.eg3` 실측 · `.eh3` 조사). 거르개가 한쪽만 봐서, 「도구·운영」을
+    #   걸렀더니 카드 5장이 **제목 없이** 떠 있었다.
+    #   클래스를 나열하지 않고 **같은 표식**(`data-label`)으로 묶었는지 본다.
+    n += 1
+    boxes = len(re.findall(r'class="evs3"', t))
+    labels = len(re.findall(r'data-label="', t))
+    if boxes and labels < boxes:
+        bad.append('카드 묶음 %d개 중 %d개만 제목에 표식이 있습니다. '
+                   '거르면 제목 없는 카드가 남습니다' % (boxes, labels))
+
+    n += 1
+    for lab in re.findall(r'data-label="([^"]*)"', t):
+        if '분류 안 된' in lab or '입구가 안 정해진' in lab or lab.strip() in ('', 'None'):
+            bad.append('묶음 제목이 «%s» 입니다. 배정이 빠진 문서가 있습니다' % lab)
+
+    # ★ 2026-09-13. `el.hidden` 은 **혼자서 안 숨긴다.**
+    #   브라우저 기본 시트의 `[hidden]{display:none}` 은 태그 선택자 수준이라
+    #   `.ev3{display:grid}` 한 줄에 진다.
+    #   실측 (라이브): 속성 hidden 29장 · 화면에서 사라진 것 0장.
+    #   거르개를 눌러도 아무것도 안 걸러졌는데 내 시험은 통과했다.
+    #   `!c.hidden` 을 셌기 때문이다. 그건 «내가 넣은 속성» 이지 화면이 아니다.
+    n += 1
+    if 'hidden' in t and not re.search(r'\[hidden\]\s*\{[^}]*display\s*:\s*none'
+                                       r'\s*!important', t):
+        bad.append('숨김을 el.hidden 에만 맡겼습니다. `[hidden]{display:none'
+                   '!important}` 가 없으면 «걸러도 안 사라집니다»')
 
     # ★ 2026-09-13. 「있는가」만 세면 **화면이 망가져도 통과한다.**
     #   실측: 여섯 입구를 `<nav>` 로 만들었더니 전역 규칙
