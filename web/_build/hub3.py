@@ -664,9 +664,35 @@ def terrain_html():
         print('  [!] 험지 행이 %d개다. 다섯이어야 한다.' % len(cards))
         sys.exit(1)
 
+    # ★ 2026-09-13. 보드를 접는다. 다섯 칸 요약만 항상 보인다.
+    #
+    #   실측: 이 보드가 첫 문서 카드 위 1,263px 중 **601px** 을 먹고 있었다.
+    #   절반이다. 그래서 「연구 허브에 왔는데 문서가 안 보인다」가 됐다.
+    #
+    #   없애지는 않는다. 이 보드는 팀의 주된 작업 단위다. 담당자가 자기
+    #   지형을 찾는 길을 끊으면 안 된다. 그래서 **지형·담당·성적 다섯 칸은
+    #   접혀도 보이고**, 칸을 누르면 그 행이 열린다.
+    #
+    #   접기는 `<details>` 로 한다. 자바스크립트가 없어도 열리고, 키보드와
+    #   화면 낭독기가 그대로 쓴다. 직접 주소(`#terrain-gap`)와 뒤로 가기는
+    #   아래 작은 스크립트가 맡는다.
+    summary = []
+    for c in cards:
+        m = c['meas']
+        summary.append(
+            '<a class="tkpin3" href="#terrain-%s" data-tk="%s">'
+            '<b>%s</b><span class="tkcm3">%s</span>'
+            '<span class="tkco3">%s</span></a>'
+            % (c['key'], c['key'], esc(c['ko']),
+               ('%d%%' % m['success']) if m else '실측 없음',
+               esc(c['owner'])))
+
     out = ['<div class="eh3">Track A · 실패 험지 5종 <span>행 = 지형 · 열 = 단계 · '
            '실측 = 6초 · 통과선 3 m · 1.0 m/s · <b>난이도 0.5</b> · 방향 임계 1.5 m · 지형당 100판'
            '</span></div>',
+           '<div class="tkcs3">%s</div>' % ''.join(summary),
+           '<details class="tkd3" id="terrain-board"><summary class="tkds3">'
+           '지형별 진행 보드 <span>진단 · 설계 · 레시피 · 결과</span></summary>',
            '<p class="tkl3">칸은 이슈에 달린 문서와 코멘트가 채운다. 머리말에 '
            '「단계: 진단」 처럼 적으면 그 칸, 없으면 제목의 낱말로 고른다(「가설」은 '
            '설계). 한 칸에 셋까지 보이고 넘으면 「외 N건」. 어느 칸에도 못 간 것은 '
@@ -689,13 +715,13 @@ def terrain_html():
         # 넷을 각자 제 줄에 세웠더니 행 머리가 140px 이 됐고(실측 2026-09-04),
         # 문서 하나뿐인 행 넷이 그 키를 따라갔다. 표로 바꾼 뜻이 거기서 사라진다.
         out.append(
-            '<div class="tkrow3 %s"><div class="tkr3">'
+            '<div class="tkrow3 %s" id="terrain-%s"><div class="tkr3">'
             '<div class="tkn3"><b class="tkt3">%s <i>(%s)</i></b>'
             '<u class="tkf3">%s</u>'
             '<a class="tko3" href="%s">#%d · %s%s</a></div>'
             '<div class="tkm3">%s</div>%s'
             '</div>%s</div>'
-            % ('fall' if c['mode'] == '낙상형' else 'stall',
+            % ('fall' if c['mode'] == '낙상형' else 'stall', c['key'],
                c['key'], esc(c['ko']), c['mode'], esc(c['url']), c['no'],
                esc(c['owner']), ' · 닫힘' if c['state'] == 'CLOSED' else '',
                meas,
@@ -717,7 +743,244 @@ def terrain_html():
     if chips:
         out.append('<div class="hk3b">미분류 %d</div>'
                    '<div class="fks3">%s</div>' % (len(chips), ''.join(chips)))
+
+    # 접기 닫기. 「공통」·「미분류」도 보드 안이다. 접힌 상태에서도 건수는
+    # 요약 줄이 아니라 여기 그대로 있고, 열면 「외 N건」까지 그대로 나온다.
+    out.append('</details>')
+
+    # 직접 진입과 뒤로 가기. 자바스크립트가 없어도 페이지는 그대로 읽힌다.
+    #   · 주소에 `#terrain-gap` 이 있으면 보드를 열고 그 행으로 간다
+    #   · 다섯 칸 중 하나를 누르면 열고, 주소를 남긴다 (뒤로 가면 돌아온다)
+    #   · 보드를 손으로 열고 닫은 것은 주소를 더럽히지 않게 replaceState 로만
+    out.append(
+        '<script>(function(){'
+        'var b=document.getElementById("terrain-board");if(!b)return;'
+        'function open(id){b.open=true;'
+        'var r=id&&document.getElementById(id);'
+        'if(r){r.classList.add("tkhit3");'
+        'setTimeout(function(){r.scrollIntoView({block:"center"});},30);'
+        'setTimeout(function(){r.classList.remove("tkhit3");},2400);}}'
+        'function fromHash(){var h=location.hash.slice(1);'
+        'if(h&&h.indexOf("terrain-")===0)open(h);}'
+        'fromHash();window.addEventListener("hashchange",fromHash);'
+        'Array.prototype.forEach.call('
+        'document.querySelectorAll(".tkpin3[data-tk]"),function(a){'
+        'a.addEventListener("click",function(e){e.preventDefault();'
+        'var id="terrain-"+a.getAttribute("data-tk");'
+        'history.pushState(null,"","#"+id);open(id);});});'
+        'b.addEventListener("toggle",function(){'
+        # 지형 칸을 눌러 온 것이면 그 주소를 «덮지 않는다». 덮으면
+        # `#terrain-gap` 이 `#terrain-board` 가 되어 공유한 주소가
+        # 엉뚱한 데로 간다 (실측: 눌러 보고 잡았다).
+        'if(location.hash.indexOf("#terrain-")===0'
+        '&&location.hash!=="#terrain-board")return;'
+        'try{history.replaceState(null,"",'
+        'b.open?location.pathname+location.search+"#terrain-board"'
+        ':location.pathname+location.search);}catch(e){}});'
+        '}());</script>')
     return ''.join(out)
+
+
+def catalog():
+    """연구 원장. 사람이 내린 판단과 배포 사실이 여기 있다.
+
+    2026-09-13 에 네 군데 흩어진 것을 모았다 (`tools/build_research_catalog.py`).
+    없으면 빈 것을 준다. **없다고 빌드를 죽이지 않는다** 다른 기기·옛
+    체크아웃에서도 페이지는 나와야 한다. 대신 그 자리를 «비운다».
+    """
+    root = lab()
+    if not root:
+        return {}
+    p = os.path.join(root, 'docs', 'ops', 'research-catalog.json')
+    if not os.path.isfile(p):
+        return {}
+    try:
+        return json.load(io.open(p, encoding='utf-8'))
+    except Exception as e:
+        print('  [!] 연구 원장을 못 읽었습니다: %s' % e)
+        return {}
+
+
+def _fn_of(rel):
+    """문서 경로 -> 입구 열쇠. 원장이 정한다. 없으면 빈 문자열."""
+    name = rel.rsplit('/', 1)[-1]
+    if name.endswith('.md'):
+        name = name[:-3]
+    return (catalog().get('function') or {}).get(name, '')
+
+
+def _doors(docs):
+    """목업의 둘째 영역 · 여섯 입구.
+
+    「이런 글은 어디서 찾지」의 답이다. 누르면 **목록에 거르개가 걸린다** ·
+    다른 쪽으로 보내지 않는다. 큰 카드 여섯이 아니라 짧은 단추다. 크게
+    만들면 그만큼 첫 문서 카드가 밀린다 (실측: 얹기만 해도 PC +128px).
+
+    건수는 **지금 화면에 있는 문서로 센다.** 원장에 배정이 있어도 그 문서가
+    허브에 안 나오면 0 이다. 안 그러면 눌렀는데 빈 목록이 나온다.
+    """
+    cat = catalog()
+    groups = cat.get('groups') or []
+    fn = cat.get('function') or {}
+    if not groups:
+        return ''
+
+    here = {}
+    for rel, _m, _page, _g in docs:
+        key = fn.get(rel.rsplit('/', 1)[-1].rsplit('.', 1)[0])
+        if key:
+            here[key] = here.get(key, 0) + 1
+
+    out = []
+    for g in groups:
+        n = here.get(g['key'], 0)
+        out.append('<a href="?fn=%s" data-fn="%s"><span class="dnm3">%s</span>'
+                   '<span class="dex3">%s</span><span class="dct3">%d</span></a>'
+                   % (esc(g['key']), esc(g['key']), esc(g['name']),
+                      esc(g.get('hint') or ''), n))
+    # 거르개. **자바스크립트가 없어도 목록은 그대로 다 보인다.**
+    # 숨기는 일만 스크립트가 한다. 안 돌면 «전부 보임» 이지 «빈 화면» 이 아니다.
+    #
+    #   · 같은 축 안에서는 여러 개를 고를 수 있다 (OR)
+    #   · 주소에 남긴다 `?fn=diagnosis,plan` · 뒤로 가면 돌아온다
+    #   · 걸러서 비면 «없다» 고 말하고 해제 단추를 준다. 목록을 숨기지 않는다
+    #   · 묶음 제목의 건수도 함께 줄인다. 안 그러면 「진단 8」인데 3장만 보인다
+    js = (
+        '<script>(function(){function go(){'
+        'var N=document.querySelector(".dr3");if(!N)return;'
+        'var cards=[].slice.call(document.querySelectorAll(".ev3[data-fn]"));'
+        'var groups=[].slice.call(document.querySelectorAll(".eg3"));'
+        'var empty=document.createElement("div");'
+        'empty.className="dnone3";empty.hidden=true;'
+        'empty.appendChild(document.createTextNode('
+        '"이 조건에 맞는 문서가 없습니다. "));'
+        'var clr=document.createElement("button");clr.type="button";'
+        'clr.className="dclr3";clr.textContent="전체 보기";'
+        'empty.appendChild(clr);'
+        'N.parentNode.insertBefore(empty,N.nextSibling);'
+        'function sel(){var q=new URLSearchParams(location.search).get("fn");'
+        'return q?q.split(",").filter(Boolean):[];}'
+        'function apply(push){var s=sel();var on=s.length>0;var shown=0;'
+        'cards.forEach(function(c){'
+        'var hit=!on||s.indexOf(c.getAttribute("data-fn"))>=0;'
+        'c.hidden=!hit;if(hit)shown++;});'
+        'groups.forEach(function(g){var box=g.nextElementSibling;'
+        'if(!box)return;var vis=[].slice.call(box.querySelectorAll(".ev3"))'
+        '.filter(function(c){return !c.hidden;}).length;'
+        'g.hidden=vis===0;box.hidden=vis===0;'
+        'var t=g.getAttribute("data-label");'
+        'if(t!==null)g.textContent=t+" "+vis;});'
+        'empty.hidden=shown>0;'
+        '[].slice.call(N.querySelectorAll("a[data-fn]")).forEach(function(a){'
+        'a.setAttribute("aria-pressed",s.indexOf(a.getAttribute("data-fn"))>=0'
+        '?"true":"false");});'
+        'if(push){var u=location.pathname+(s.length?"?fn="+s.join(","):"");'
+        'history.pushState(null,"",u);}}'
+        'N.addEventListener("click",function(e){'
+        'var a=e.target.closest?e.target.closest("a[data-fn]"):null;'
+        'if(!a)return;e.preventDefault();'
+        'var k=a.getAttribute("data-fn"),s=sel(),i=s.indexOf(k);'
+        'if(i>=0)s.splice(i,1);else s.push(k);'
+        'var u=location.pathname+(s.length?"?fn="+s.join(","):"");'
+        'history.pushState(null,"",u);apply(false);});'
+        'empty.addEventListener("click",function(e){'
+        'if(!e.target.classList.contains("dclr3"))return;'
+        'history.pushState(null,"",location.pathname);apply(false);});'
+        'window.addEventListener("popstate",function(){apply(false);});'
+        'apply(false);}'
+        # ★ 문서 목록은 이 스크립트 «뒤» 에 온다. 바로 돌면 카드가 0장이라
+        #   「이 조건에 맞는 문서가 없습니다」가 아무것도 안 걸렀는데 뜬다.
+        #   실측: 화면을 찍어 보고 잡았다. 문자열 검사로는 안 잡혔다.
+        'if(document.readyState==="loading")'
+        'document.addEventListener("DOMContentLoaded",go);else go();'
+        '}());</script>')
+    # ★ `<nav>` 로 쓰면 안 된다. 전역 규칙 하나가 이렇게 걸려 있다.
+    #
+    #     nav:not(.gnav), aside { height: calc(100vh - var(--navh)) !important }
+    #
+    #   그래서 이 여섯 단추가 «화면 높이만큼» 늘어났다 (실측: 입구 하나가
+    #   1,273px · 첫 문서 카드가 561 -> 3,404 로 밀렸다). `!important` 라
+    #   내 규칙으로는 못 이긴다. 태그를 바꾸는 것이 맞다.
+    #   길잡이 구실은 `role`+`aria-label` 로 남긴다.
+    return ('<div class="eh3">무엇을 찾으시나요 <span>누르면 아래 목록이 '
+            '걸러진다</span></div>'
+            '<div class="dr3" role="navigation" aria-label="문서 분류">%s</div>%s'
+            % (''.join(out), js))
+
+
+def _release_block():
+    """목업의 첫 영역 · 「지금 어디까지 왔나」.
+
+    들어온 사람이 **맨 처음 보는 것**이다. 이 프로젝트가 무엇을 이뤘는지를
+    한 덩이로 말한다. 출발선(그때의 문제)은 바로 아래 붙는다.
+
+    **수치를 여기 손으로 적지 않는다.** 원장이 원자료에서 계산한 것을 읽는다
+    (`tools/build_research_catalog.py` 의 `measure_release`). 손으로 적으면
+    다음 배포에 반드시 낡고, 낡아도 아무도 모른다.
+
+    원장이 없거나 수치가 없으면 **그 칸을 안 그린다.** 빈 칸이나 「미정」을
+    그리면 그것이 사실처럼 읽힌다.
+    """
+    rels = (catalog().get('releases') or [])
+    if not rels:
+        return ''
+    r = rels[-1]
+    s = r.get('summary') or {}
+    un, kn = s.get('unseen'), s.get('known')
+    if not un:
+        return ''
+
+    when = (r.get('evaluated_at') or '')[:10]
+    cond = '난이도 %s · %s m/s · 칸당 %d판' % (
+        s.get('difficulty', '?'), s.get('speed_mps', '?'),
+        s.get('episodes_per_cell', 100))
+
+    # 한 문장. 두 무리를 한 번에 말한다.
+    lead = ('미경험 험지 <b>%d종</b>에서 기준선보다 <b>%.1f %%p</b> 높습니다.'
+            % (un['terrains'], un['delta_pp']))
+    if kn:
+        lead += (' 기존 험지 %d종은 <b>%d종 전부</b> 기준선 이상입니다.'
+                 % (kn['terrains'], kn['at_or_above']))
+
+    cells = [('미경험 %d종 · 종합' % un['terrains'],
+              '%.0f <i>→</i> %.0f<i>%%</i>' % (un['baseline_pct'], un['main_pct']),
+              cond)]
+    if kn:
+        cells.append(('기존 %d종 · 종합' % kn['terrains'],
+                      '%.0f <i>→</i> %.0f<i>%%</i>' % (kn['baseline_pct'], kn['main_pct']),
+                      '같은 조건 · %d칸' % kn['terrains']))
+    if s.get('scorecard_episodes'):
+        cells.append(('성적표 표본',
+                      '%s<i>판</i>' % format(s['scorecard_episodes'], ','),
+                      '한 칸의 분모는 %d판이다' % s.get('episodes_per_cell', 100)))
+    if r.get('clips'):
+        cells.append(('평가 영상', '%d<i>컷</i>' % r['clips'],
+                      '평가 칸 %d개 전부' % (r.get('evaluations') or r['clips'])))
+
+    grid = ''.join(
+        '<div class="rv3"><div class="rvk3">%s</div>'
+        '<div class="rvn3">%s</div><div class="rvs3">%s</div></div>'
+        % (esc(k), v, esc(note)) for k, v, note in cells)
+
+    # 바로가기. 원장이 가리키는 곳만 낸다. 없는 링크를 만들지 않는다.
+    go = []
+    if r.get('report'):
+        go.append((r['report'], '종합보고서', '무엇이 얼마나 나아졌나'))
+    go.append(('/gallery/', '평가 영상 갤러리', '눈으로 보기'))
+    go.append(('/research-20260911-eval-protocol-v2.html',
+               '현재 평가 해설', '무엇을 어떻게 재나'))
+    links = ''.join(
+        '<a class="rg3" href="%s"><b>%s</b><span>%s</span></a>' % (esc(h), esc(n), esc(d))
+        for h, n, d in go)
+
+    return ('<section class="rel3"><div class="rk3">지금 어디까지 왔나'
+            '<span class="rkm3">%s%s</span></div>'
+            '<p class="rl3">%s</p>'
+            '<div class="rvs">%s</div>'
+            '<div class="rgs3">%s</div></section>'
+            % (esc(r.get('main_model') or ''),
+               (' · 평가 %s · 판 %s' % (when, r.get('id'))) if when else '',
+               lead, grid, links))
 
 
 def research_html(site):
@@ -758,6 +1021,8 @@ def research_html(site):
             '<span class="fs3">%s</span></a>'
             % (esc(page), esc(m.get('제목') or m.get('요지') or rel),
                esc(m.get('요지') or '')))
+    parts.append(_release_block())
+
     if hero:
         _n, _c, rel, m, page, _men = hero
         # ★ v3.1: 출발선은 문서 제목이 아니라 «결론 문장» 이다 (목업 2판 확정).
@@ -768,8 +1033,18 @@ def research_html(site):
         # ★ 팀장 확정 2026-09-04: 「후속 과제」 칩 줄을 없앤다. 그 줄은 이 실측을
         #   참고 링크로 적은 이슈를 긁어 왔을 뿐 후속이 아니었다 (#123 · #100).
         #   후속은 바로 아래 절이다. 카드에는 그리로 보내는 한 줄만 남긴다.
+        #
+        # ★ 2026-09-13: 출발선 «옆에» 지금 배포 결과를 붙인다.
+        #   전에는 출발선만 있었다. 들어온 사람이 「이 팀이 무슨 문제를 풀고
+        #   있나」는 알았지만 「그래서 지금 어디까지 왔나」는 한참 스크롤해야
+        #   나왔다. 둘은 같은 이야기의 앞뒤라 붙여 놓아야 뜻이 산다.
+        #
+        #   설계 초안은 출발선을 «없애고» 배포 요약으로 바꾸는 것이었다.
+        #   그러면 「왜 그 다섯 지형인가」라는 문제 정의가 사라진다. 배포
+        #   요약은 «결과» 이지 «문제» 가 아니다. 그래서 대체가 아니라 합친다.
+        #   높이는 늘리지 않는다. 두 덩이를 쌓지 않고 한 덩이 안에 넣는다.
         parts.append(
-            '<div class="hero3"><div class="hk3">출발선 · 자체 실측</div>'
+            '<div class="hero3"><div class="hk3">출발선 · 그때의 문제</div>'
             '<a class="ht3" href="%s">%s</a><div class="hd3">%s</div>'
             '<div class="hn3">실패한 다섯 지형은 아래에서 하나씩 본다</div></div>'
             % (page, concl, esc(m.get('제목', ''))))
@@ -777,6 +1052,10 @@ def research_html(site):
     # ★ Track A · 실패 험지 5종 (foothold-lab#179). 출발선 바로 아래, 그 실측이
     #   낳은 다섯 지형의 «지금 어디까지» 다. 전용 페이지가 아니라 허브의 절이다.
     parts.append(terrain_html())
+
+    # 여섯 입구는 «문서 목록 바로 위» 다. 찾는 말과 목록이 붙어 있어야
+    # 누르고 나서 무엇이 걸러졌는지 눈에 들어온다.
+    parts.append(_doors(docs))
 
     # ★ v3.1: 활동이 «보이는 묶음» 이다. 정렬만으로는 분류가 안 보인다 (팀장 지적).
     PO = [('본PoC', '본 PoC'),
@@ -803,18 +1082,21 @@ def research_html(site):
                           for a in (g.get('areas') or [])[:2])
             who, when = _who_when(m)
             rows.append(
-                '<a class="ev3" href="%s"><span class="ex3">%02d</span>'
+                '<a class="ev3" data-fn="%s" href="%s"><span class="ex3">%02d</span>'
                 '<span class="en3">%s</span>'
                 '<span class="eb3"><b>%s</b><span>%s</span>'
                 '<span class="em3">%s %s</span></span>%s</a>'
-                % (page, len(rows) + 1, esc(n) or '·', esc(m.get('제목', '')),
+                % (esc(_fn_of(rel)), page, len(rows) + 1, esc(n) or '·',
+                   esc(m.get('제목', '')),
                    esc(m.get('요지', '')[:70]),
                    esc('%s · %s' % (who, when) if who else when), ar,
                    _thumb(page)))
         if rows:
-            parts.append('<div class="eg3">%s <span>%d</span></div>'
+            # `data-label` 은 거르개가 건수를 다시 쓸 때 쓴다. 글자에서
+            # 숫자를 떼어내려 하면 묶음 이름에 숫자가 들어간 날 깨진다.
+            parts.append('<div class="eg3" data-label="%s">%s <span>%d</span></div>'
                          '<div class="evs3">%s</div>'
-                         % (label, len(rows), ''.join(rows)))
+                         % (esc(label), label, len(rows), ''.join(rows)))
 
     # ★ 팀장 지적 (8/31): 「누가 언제 조사했는지」가 안 보이고 제목도 잘렸다.
     #   실측 카드와 같은 줄 구조로 통일한다. 근거 · 제목 · 요지 · 작성자 · 날짜.
@@ -843,11 +1125,16 @@ def research_html(site):
                 reverse=True):
             who, when = _who_when(m)
             _i += 1
-            reads += ('<a class="ev3" href="%s"><span class="ex3">%02d</span>'
+            # ★ 카드를 내는 자리가 «둘» 이다. 위(실측)와 여기(조사).
+            #   처음에 위만 고쳐서 조사 문서 16장이 입구 표식을 못 받았고,
+            #   거르개를 눌렀을 때 그 16장이 통째로 사라졌다. 규칙을 만들면
+            #   그 규칙이 사는 «다른 자리» 를 먼저 센다 (철칙 4).
+            reads += ('<a class="ev3" data-fn="%s" href="%s">'
+                      '<span class="ex3">%02d</span>'
                       '<span class="en3 src s-%s">%s</span>'
                       '<span class="eb3"><b>%s</b><span>%s</span>'
                       '<span class="em3">%s</span></span>%s</a>'
-                      % (page, _i, ev_short(m.get('근거')),
+                      % (esc(_fn_of(_rel)), page, _i, ev_short(m.get('근거')),
                          esc(ev_short(m.get('근거'))),
                          esc(m.get('제목', '')), esc(m.get('요지', '')[:78]),
                          esc('%s · %s' % (who, when) if who else when),
@@ -1305,7 +1592,11 @@ CSS = '''<style id="hub3-css">
 .em3 u.ar-b2{color:#a86a08;border-color:#a86a08}
 .em3 u.ar-c1{color:#4a5566;border-color:#4a5566}
 .em3 u.ar-c2{color:#5a6a2a;border-color:#5a6a2a}
-@media (max-width:760px){.ev3{grid-template-columns:1.8rem 3.4rem 1fr}
+@media (max-width:760px){/* ★ 2026-09-13. 데스크톱 선언에만 !important 가 있어 여기가 «졌다».
+   실측: 휴대폰에서 카드 본문 폭이 156px 이었다. 번호·수치 열이
+   데스크톱 폭 그대로 자리를 먹은 것이다. 같은 무게로 맞춘다 */
+.ev3{grid-template-columns:1.8rem 3.4rem minmax(0,1fr) auto!important}
+.ev3{grid-template-columns:1.8rem 3.4rem 1fr}
   .eth3{display:none}}
 
 
@@ -1352,6 +1643,66 @@ CSS = '''<style id="hub3-css">
  margin:.3rem 0 .1rem;line-height:1.35;color:inherit;text-decoration:none}
 .ht3:hover{color:var(--dim)}
 .hd3{font-size:.8rem;color:var(--ink-3);max-width:70ch}
+/* 첫 영역 · 「지금 어디까지 왔나」 (2026-09-13 · 목업 확정본).
+   들어온 사람이 맨 처음 보는 덩이다. 수치는 원장이 실측에서 계산한다.
+   PC 에서 넉 줄이 한 줄에 서고, 좁아지면 둘씩 접힌다 */
+.rel3{border:1px solid var(--rule);border-radius:var(--p-radius,10px);
+ padding:var(--p-pad);margin:0 0 .7rem;background:var(--paper-2,transparent)}
+.rk3{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+ font-size:.62rem;font-weight:800;letter-spacing:.14em;color:var(--dim)}
+.rkm3{font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--ink-3)}
+.rl3{margin:.45rem 0 .8rem;font-size:.92rem;font-weight:650;line-height:1.55;
+ color:var(--ink);word-break:keep-all}
+.rl3 b{font-weight:850;color:var(--dim)}
+.rvs{display:grid;gap:.5rem;grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.rvs{grid-template-columns:repeat(2,1fr)}}
+.rv3{border-top:2px solid var(--rule);padding-top:.4rem;min-width:0}
+.rvk3{font-size:.64rem;font-weight:700;color:var(--ink-3);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvn3{font-size:1.34rem;font-weight:850;letter-spacing:-.02em;color:var(--ink);
+ line-height:1.25;font-variant-numeric:tabular-nums;margin:.1rem 0}
+.rvn3 i{font-style:normal;font-size:.58em;font-weight:800;color:var(--dim)}
+.rvs3{font-size:.62rem;color:var(--ink-3);line-height:1.4;word-break:keep-all}
+.rgs3{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+.rg3{display:inline-flex;flex-direction:column;gap:.1rem;padding:.4rem .65rem;
+ border:1px solid var(--rule);border-radius:var(--p-radius-tag,6px);
+ background:var(--paper);color:inherit;text-decoration:none}
+.rg3:hover{border-color:var(--dim)}
+.rg3 b{font-size:.74rem;font-weight:800}
+.rg3 span{font-size:.62rem;color:var(--ink-3)}
+
+/* 둘째 영역 · 여섯 입구. 「이런 글은 어디서 찾지」의 답이다.
+   큰 카드 여섯이 아니라 «누르면 목록이 걸러지는» 단추다. 크게 만들면
+   첫 문서 카드가 그만큼 밀린다 (실측: 얹기만 해도 PC +128px) */
+.dr3{display:grid;gap:.4rem;grid-template-columns:repeat(6,1fr);margin:0 0 .9rem}
+@media(max-width:1100px){.dr3{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.dr3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.dr3{grid-template-columns:1fr}}
+.dr3 a{display:flex;align-items:baseline;gap:.4rem;padding:.45rem .6rem;
+ border:1px solid var(--rule);border-radius:var(--p-radius-tag,6px);
+ color:inherit;text-decoration:none;min-width:0}
+.dr3 a:hover{border-color:var(--dim)}
+.dnm3{font-size:.76rem;font-weight:800;white-space:nowrap}
+/* 설명은 «자리가 있을 때만» 보인다. 여섯을 한 줄에 놓으면 칸이 좁아
+   이름이 먼저 잘린다. 이름과 건수는 끝까지 남기고 설명부터 접는다.
+   찾는 사람에게 필요한 것은 이름이지 설명이 아니다 */
+.dex3{flex:1 1 auto;min-width:0;font-size:.64rem;color:var(--ink-3);
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:1101px){.dex3{display:none}}
+@media(max-width:520px){.dex3{display:none}}
+.dct3{flex:0 0 auto;font-size:.66rem;font-weight:850;color:var(--dim);
+ font-variant-numeric:tabular-nums}
+/* 고른 입구. 색만으로 알리지 않는다 (테두리도 함께 굵어진다) */
+.dr3 a[aria-pressed="true"]{border-color:var(--dim);border-width:2px;
+ padding:calc(.45rem - 1px) calc(.6rem - 1px);background:var(--paper)}
+.dr3 a[aria-pressed="true"] .dnm3{color:var(--dim)}
+/* 걸러서 아무것도 안 남았을 때. 목록을 숨기지 않고 «없다» 고 말한다 */
+.dnone3{margin:0 0 .9rem;padding:.7rem .8rem;border:1px dashed var(--rule);
+ border-radius:var(--p-radius-tag,6px);font-size:.76rem;color:var(--ink-3)}
+.dclr3{margin-left:.3rem;font:inherit;font-weight:800;color:var(--dim);
+ background:none;border:0;border-bottom:1px solid var(--dim);cursor:pointer;
+ padding:0}
+
 /* 출발선 카드가 아래 험지 표로 보내는 한 줄. 「후속 과제」 칩 줄을 대신한다
    (팀장 2026-09-04). 칩이 아니라 문장이다. 여기서 세지 않는다 */
 .hn3{display:block;font-size:.74rem;color:var(--dim);font-weight:700;
@@ -1496,6 +1847,34 @@ CSS = '''<style id="hub3-css">
    (실측 585px). 표는 한 행의 키가 그 행의 가장 긴 칸까지만 간다.
    그래서 세로 길이가 지형 수에만 비례하고, 「진단 열은 다 찼는데 레시피 열은
    비었다」 가 가로로 한 번에 읽힌다. 카드 배치로는 그 비교가 안 됐다. */
+/* 접힌 보드의 요약 줄. 지형 · 성적 · 담당 다섯 칸은 «접혀도» 보인다.
+   담당자가 자기 지형으로 가는 길이 목록 길이에 안 묶이게 (2026-09-13) */
+.tkcs3{display:flex;flex-wrap:wrap;gap:.4rem;margin:.15rem 0 .6rem}
+.tkpin3{display:inline-flex;align-items:baseline;gap:.4rem;
+ padding:.34rem .6rem;border:1px solid var(--rule);border-radius:999px;
+ background:var(--paper-2,transparent);color:inherit;text-decoration:none;
+ font-size:.72rem;line-height:1.2}
+.tkpin3:hover{border-color:var(--dim)}
+.tkpin3 b{font-weight:800}
+.tkcm3{font-weight:850;color:var(--dim);font-variant-numeric:tabular-nums}
+.tkco3{color:var(--ink-3);font-weight:600}
+
+/* 보드 자체는 접는다. 펼치기 전 601px 을 먹고 있었다 (실측) */
+.tkd3{margin:0 0 .9rem}
+.tkds3{cursor:pointer;list-style:none;display:flex;align-items:baseline;
+ gap:.5rem;padding:.45rem .1rem;font-size:.74rem;font-weight:800;
+ color:var(--ink-2,var(--ink-3));border-top:1px solid var(--rule);
+ border-bottom:1px solid var(--rule)}
+.tkds3::-webkit-details-marker{display:none}
+.tkds3::before{content:'▸';font-size:.8em;color:var(--dim);font-weight:900}
+.tkd3[open]>.tkds3::before{content:'▾'}
+.tkds3 span{font-weight:600;color:var(--ink-3);font-size:.68rem}
+.tkds3:hover{color:var(--dim)}
+/* 직접 주소로 들어온 행을 잠깐 표시한다. 색만 바꾸고 자리는 안 바꾼다 */
+.tkhit3{outline:2px solid var(--dim);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){
+ .tkhit3{transition:outline-color .3s}}
+
 .tkw3{display:block;overflow-x:auto;margin:0 0 .9rem}
 .tks3{display:grid;grid-template-columns:minmax(12rem,1.3fr) repeat(4,minmax(0,1fr));
  gap:.3rem;align-items:stretch;min-width:0}

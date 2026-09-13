@@ -27,6 +27,15 @@
 | `<p>` · `<li>` | 문단 · 목록 |
 | `<table>` | markdown 표 |
 | `<svg>` | `assets/visual/<slug>-NN.svg` 로 저장하고 `![]()` |
+
+★ 2026-09-13. 여기서 내린 SVG 는 **자립 상태가 아니다.** 페이지 토큰을
+  쓰면 `<img>` 로 불릴 때 색이 전부 검정으로 떨어진다. 이 도구를 돌린
+  뒤에는 반드시 이어서 돌린다.
+
+      python tools/svg_selfcontained.py --dir docs/assets/visual --write
+
+  잊어도 `tools/verify_live.py` 가 배포본에서 잡는다. 다만 그때는 이미
+  사람이 검정 그림을 본 뒤다.
 | `<img src="data:...">` | 같은 폴더에 파일로 저장하고 `![]()` |
 | `<pre>` | 코드울 |
 

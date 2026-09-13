@@ -34,6 +34,13 @@ import io, os, re, sys, shutil, hashlib, subprocess
 import buildtime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+# ★ 2026-09-13. 윈도에서 방금 쓴 파일을 검사기가 잠깐 잡아 «가끔»
+#   Errno 22 로 죽는다. 오늘만 세 번, 매번 다른 파일이었다.
+#   쓰는 자리가 흩어져 있어 한 곳씩 고치면 다음에 또 다른 데서 난다.
+#   여기서 한 번 걸어 부류로 막는다. 다시 해서 되면 그 사실을 찍는다.
+import safewrite
+safewrite.install()
 VAULT = os.path.dirname(HERE)                                   # 05_deliverables
 def _find_site():
     """foothold-site 클론 위치: 기계마다 볼트가 놓인 깊이가 달라 상대경로 하나로는 못 찾는다.
@@ -463,8 +470,14 @@ if __name__ == '__main__':
     #   없으니 여기서 알려 주지 않으면 검색에서 통째로 빠진다.
     #   그 페이지를 하나라도 못 찾으면 배포가 선다. 조용히 빠지면 검색에서
     #   사라지는데 아무도 모른다.
+    #   ★ 2026-09-13 정정. 여기에 `SITE` 를 주면 **재현 빌드가 죽는다.**
+    #     재현 모드에서 `SITE` 는 «빈 출력 폴더» 라 그 넷이 있을 리 없고,
+    #     관문이 «하나도 못 찾았다» 로 배포를 세운다 (실측: 이 줄 때문에
+    #     재현 빌드가 [1.8994] 에서 멈췄다).
+    #     그 페이지들은 이 빌드의 «산출» 이 아니라 «입력» 이다. 어디로
+    #     내보내든 읽는 자리는 언제나 진짜 배포본이다. 그래서 REAL_SITE 다.
     import searchbox as _sb0
-    _sb0.SITE_DIR = SITE
+    _sb0.SITE_DIR = REAL_SITE
     print('\n[1.89] 사이트 검색 (색인 생성 + 검색창 주입)')
     import searchbox
     searchbox.main(VAULT, PAGES)

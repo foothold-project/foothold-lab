@@ -93,40 +93,16 @@ CHIPS = {
 import standing as _standing
 
 CHIP_CSS = """
-/* ★ 2026-09-13. 도해가 쓰는 토큰을 여기서 정의한다.
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 실측 (라이브 `research-20260911-eval-protocol-v2`): 도해 열세 장이 전부
- * 검정이었다. 원인은 둘이고 **둘 다 있어야 고쳐진다**.
- *
- *   하나. `<img>` 로 부른 SVG 는 격리 문서라 페이지 변수가 안 닿는다
- *         -> `mdpage._svg_inline()` 이 본문에 넣도록 고쳤다
- *   둘.  넣어도 **이 일곱이 아예 정의돼 있지 않았다**
- *         --accent(172곳) --bad(30) --rule-2(31) --ok(3) --bad-soft --ok-soft --warn
- *        var() 가 안 풀리면 fill 은 초기값인 «검정» 이 된다
- *
- * 값은 `tools/md2site.py` 와 «같게» 둔다. 같은 그림이 두 경로로 나가는데
- * 색이 다르면 어느 쪽이 맞는지 알 수 없다.
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
-:root{
-  --accent:#0e7a6e;--accent-soft:#e0f0ed;--ok:#0e7a6e;--ok-soft:#e0f0ed;
-  --warn:#a86a08;--warn-soft:#fbf0dc;
-  --bad:#a3342a;--bad-soft:#fbe9e7;
-  --rule-2:#efede6;
-}
-@media(prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --accent:#3ec7b4;--accent-soft:#11302c;--ok:#3ec7b4;--ok-soft:#11302c;
-    --warn:#dc9a30;--warn-soft:#332710;
-    --bad:#e56d5e;--bad-soft:#331c19;
-    --rule-2:#232a35;
-  }
-}
-:root[data-theme="dark"]{
-  --accent:#3ec7b4;--accent-soft:#11302c;--ok:#3ec7b4;--ok-soft:#11302c;
-  --warn:#dc9a30;--warn-soft:#332710;
-  --bad:#e56d5e;--bad-soft:#331c19;
-  --rule-2:#232a35;
-}
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;

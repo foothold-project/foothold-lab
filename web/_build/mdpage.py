@@ -101,6 +101,20 @@ def inline(t):
     t = H.escape(t)
     t = t.replace('\x00BRSLOT\x00', '<br>')
 
+    # ★ 2026-09-13. `<https://…>` 는 markdown 의 «자동 링크» 문법이다.
+    #   안 다루면 위에서 이스케이프되어 꺾쇠가 화면에 글자로 남는다.
+    #   실측: 라이브 `notice-20260912` 에 주소 셋이 꺾쇠째 나왔다.
+    #   `tools/md2site.py` 는 이미 다루고 있었다. **같은 결함이 두 렌더러 중
+    #   한쪽에만 고쳐져 있었다.** 고칠 때 다른 자리를 안 센 것이다 (철칙 4).
+    #   ★ 여기서 한 번 더 틀렸다. 경고를 없애려고 `[^\\s&]` 로 백슬래시를
+    #     늘렸더니 그것이 「역슬래시·s·& 가 아닌 것」이 되어 **`https` 의 `s`
+    #     에서 막혔다.** 경고는 사라지고 규칙은 한 번도 안 돌았다.
+    #     조용히 안 도는 정규식이 이 저장소의 단골이다. 그래서 아래 _selftest
+    #     가 이 줄을 «알려진 답» 으로 매번 시험한다.
+    t = re.sub(r'&lt;(https?://[^\s&]+?)&gt;',
+               lambda m: '<a href="%s" target="_blank" rel="noopener">%s</a>'
+               % (m.group(1), m.group(1)), t)
+
     # [[문서]]: 볼트 내부 링크. 우리 사이트에 같은 문서가 있으면 **진짜 링크로** 바꾼다.
     # 없으면 회색 칩으로만 남긴다 (죽은 링크를 만들지 않는다).
     def vault(m):
@@ -480,3 +494,46 @@ def _para(t):
 def h1(md):
     m = re.search(r'^#\s+(.*)$', md, re.M)
     return m.group(1).strip() if m else '문서'
+
+
+def _selftest():
+    """알려진 답으로 이 렌더러의 «조용히 안 도는» 규칙을 시험한다.
+
+    2026-09-13 에 자동 링크 규칙이 두 번 안 돌았다. 한 번은 아예 없어서,
+    한 번은 경고를 없애려다 정규식을 깨뜨려서. **둘 다 오류를 안 냈다.**
+    화면에 꺾쇠가 남았을 뿐이고 그것을 팀장이 봤다.
+
+    그래서 규칙마다 «이렇게 넣으면 이렇게 나와야 한다» 를 못 박는다.
+    반환: (통과 여부, [틀린 것])
+    """
+    bad = []
+
+    def want(src, must_have, must_not, why):
+        out = render(src)
+        for s in must_have:
+            if s not in out:
+                bad.append('%s · 있어야 할 것이 없다: %s' % (why, s[:40]))
+        for s in must_not:
+            if s in out:
+                bad.append('%s · 없어야 할 것이 있다: %s' % (why, s[:40]))
+
+    url = 'https://foothold-project.vercel.app/x.html'
+    want('<' + url + '>', ['href="' + url + '"'], ['&lt;http'], '자동 링크')
+    want('`<' + url + '>` 는 코드', ['<code>'], ['href="' + url + '"'],
+         '코드 안의 꺾쇠는 그대로')
+    want('[이름](' + url + ')', ['href="' + url + '"', '이름'], ['&lt;http'],
+         '보통 링크')
+    want('![그림](../assets/visual/a.svg)', ['<img', 'assets/visual/a.svg'],
+         ['<svg'], '토큰 없는 그림은 img')
+    want('**굵게**', ['<b>굵게</b>'], [], '굵게')
+    want('a<br>b', ['<br>'], ['&lt;br&gt;'], '표 안 줄바꿈')
+    return (not bad), bad
+
+
+if __name__ == '__main__':
+    sys.stdout.reconfigure(encoding='utf-8')
+    ok, why = _selftest()
+    print('  자기시험 통과 (규칙 6)' if ok else '  자기시험 실패 %d건' % len(why))
+    for w in why:
+        print('      ' + w)
+    sys.exit(0 if ok else 1)

@@ -229,6 +229,14 @@ def inline(text):
             if os.path.isfile(got):
                 svg = io.open(got, encoding="utf-8").read()
                 svg = re.sub(r"^\s*<\?xml[^>]*\?>\s*", "", svg)
+                # 2026-09-13. 이 파일들은 `<img>` 로도 색이 나오게 «자립» 시켰다
+                # (`tools/svg_selfcontained.py` 가 팔레트를 파일 안에 넣는다).
+                # 그런데 **본문에 넣을 때는 그 블록을 떼야 한다.** 안 떼면
+                # 그 안의 `:root{--ink:…}` 가 «페이지» 토큰을 덮어써서 문서
+                # 전체의 배경과 글자색이 밝은 값으로 고정된다.
+                # 본문에 들어간 SVG 는 페이지 토큰을 그대로 받으므로 필요 없다.
+                svg = re.sub(r"<!--selfcontained:v1-->\s*<style>.*?</style>",
+                             "", svg, flags=re.S)
                 body = svg.strip()
 
         if not body:

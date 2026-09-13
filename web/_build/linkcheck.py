@@ -58,6 +58,22 @@ def scan(site):
                 files.append(os.path.relpath(os.path.join(dirpath, n), site)
                              .replace(os.sep, '/'))
     exists = set(files)
+
+    # ★ 2026-09-13. 이 빌드가 «안 만드는» 배포본 페이지도 «있는 것» 으로 센다.
+    #   갤러리와 종합 보고서는 다른 생성기가 배포본에 직접 만든다. 재현 빌드의
+    #   출력 폴더에는 당연히 없다. 그것을 「죽은 링크」로 보면 **실재하는 페이지를
+    #   가리키는 링크 때문에 배포가 선다.**
+    #   실측: 허브가 `/report-v1.html` 을 가리키자 재현 빌드가 멈췄다. 그 파일은
+    #   배포본에 멀쩡히 있다.
+    #   목록은 `build.py` 의 `OTHER_MADE` 하나다. 여기서 따로 적으면 갈라진다.
+    try:
+        import build as _b
+        for rel in getattr(_b, 'OTHER_MADE', ()):
+            exists.add(rel)
+            if not rel.endswith('.html'):
+                exists.add(rel.rstrip('/') + '/index.html')
+    except Exception:
+        pass                     # build 를 못 읽어도 나머지 검사는 돈다
     bad, seen = [], 0
     for f in sorted(files):
         base = os.path.dirname(f)
