@@ -168,6 +168,12 @@ def gate(site):
                 rel = os.path.relpath(os.path.join(dirpath, f), site)
                 found.append((rel.replace(os.sep, '/'), label, tgt))
     print('  자가검증 통과 · 페이지 %d개 · 연결 규칙 %d개' % (n, len(_MAP)))
+    # ★ 2026-09-10. 「검사할 것이 없었다」와 「위반이 없었다」는 다른 사실이다.
+    #   빈 대상으로 돌려 보니 이 관문이 「0개 · 통과」를 찍고 성공을 돌려줬다.
+    #   목록이 비는 순간 조용히 무력해진다. 그리고 목록은 실제로 빈다.
+    if n == 0:
+        print('  [!] 배포 페이지를 한 장도 못 봤습니다. 검사가 헛돌았습니다')
+        return False
     if found:
         seen = set()
         for path, label, tgt in found:

@@ -106,6 +106,22 @@ DIRS = ['assets']
 # 배포하면 안 되는 것 (개인정보·내부 경로가 들어 있었던 이력이 있다)
 NEVER = ['brief-workstation.html', 'quadruped-onepager.html', 'DEPLOY.md', '_src', '_build']
 
+# ★ 2026-09-13. 배포본에는 «이 빌드가 아닌 다른 생성기» 가 만드는 것이 있다.
+#   사람이 손으로 둔 것이 아니다. 지우면 그 생성기를 다시 돌려야 한다.
+#   실측: 이 빌드가 아래 넷을 실제로 지웠다 (커밋 전에 되살림).
+#
+#     assets/gnav.css · gnav.html · gnav-head.html   tools/gnav_extract.py
+#     report-v1.html                                  sim/eval/report/make_report.py
+#     gallery/                                        sim/eval/render_gallery.py
+#                                                     sim/eval/gallery_versions.py
+#
+#   assets/ 는 통째로 교체되므로 그 안의 것은 «파일 단위» 로 지켜야 한다.
+#   폴더 단위로는 못 막는다.
+OTHER_MADE = {
+    'assets/gnav.css', 'assets/gnav.html', 'assets/gnav-head.html',
+    'report-v1.html', 'gallery',
+}
+
 
 def sha(path):
     return hashlib.sha256(io.open(path, 'rb').read()).hexdigest()[:12]
@@ -160,7 +176,22 @@ def deploy():
     for d in DIRS:
         s, t = os.path.join(VAULT, d), os.path.join(SITE, d)
         if os.path.isdir(s):
+            # ★ 다른 생성기가 만든 것은 지우기 «전에» 떠 두었다가 되돌린다.
+            keepsafe = {}
+            for rel in OTHER_MADE:
+                if not rel.startswith(d + '/'):
+                    continue
+                fp = os.path.join(SITE, rel.replace('/', os.sep))
+                if os.path.isfile(fp):
+                    keepsafe[rel] = io.open(fp, 'rb').read()
             shutil.rmtree(t, ignore_errors=True); shutil.copytree(s, t)
+            for rel, blob in keepsafe.items():
+                fp = os.path.join(SITE, rel.replace('/', os.sep))
+                os.makedirs(os.path.dirname(fp), exist_ok=True)
+                io.open(fp, 'wb').write(blob)
+            if keepsafe:
+                print('  다른 생성기 산출물 %d개 지킴: %s'
+                      % (len(keepsafe), ' · '.join(sorted(keepsafe))))
             n += sum(len(fs) for _, _, fs in os.walk(t))
 
     # ★ 2026-08-28 신설. 여기는 «복사» 만 하고 «지우기» 를 안 했다.
@@ -169,8 +200,9 @@ def deploy():
     #   막았는데, 그 전에 복사된 html 이 사이트에 남아 계속 서비스되고 있었다.
     #   내용이 92% 같은 확정 문서와 나란히 떠서 어느 쪽이 맞는지 알 수 없었다.
     #   목록에 없는 «생성물» 만 지운다. 손으로 둔 것(assets·설정·git)은 안 건드린다.
-    keep = set(PAGES) | set(DIRS) | {'.git', '.gitignore', '.vercel', 'README.md',
-                                     'CNAME', 'vercel.json', 'assets'}
+    keep = (set(PAGES) | set(DIRS) | OTHER_MADE
+            | {'.git', '.gitignore', '.vercel', 'README.md',
+               'CNAME', 'vercel.json', 'assets'})
     gone = []
     for f in sorted(os.listdir(SITE)):
         if f in keep or f.startswith('.'):

@@ -359,6 +359,22 @@ def svg_census(vault, pub):
     return kinds, drawn
 
 
+def is_page(path):
+    """«페이지» 인가 «조각» 인가. 조각은 다른 페이지 안에 끼워지는 토막이다.
+
+    ★ 2026-09-13. assets/ 밑 .html 이 전부 페이지는 아니다. 다른 생성기가
+      전역바 조각을 둔다 (gnav.html · gnav-head.html). <head> 가 없다.
+      페이지로 세면 파비콘 · 검색 · 완비 관문이 전부 걸리고, 색인에는 전역바
+      글자가 페이지 하나로 들어가 검색을 흐린다.
+      실측: 그 둘 때문에 파비콘 관문이 배포를 세웠다.
+    """
+    try:
+        head = io.open(path, encoding='utf-8', errors='replace').read(600)
+    except OSError:
+        return False
+    return '<head' in head.lower()
+
+
 def public_pages(vault, pages):
     """배포되는 공개 HTML 전수. 단일 정본이다.
 
@@ -377,7 +393,7 @@ def public_pages(vault, pages):
         if os.path.isdir(p):                      # PAGES 에 폴더가 들어온다 (team-meang/)
             for r, _, xs in os.walk(p):
                 for x in xs:
-                    if x.endswith('.html'):
+                    if x.endswith('.html') and is_page(os.path.join(r, x)):
                         out.add(os.path.relpath(os.path.join(r, x), vault)
                                 .replace(os.sep, '/'))
         elif f.endswith('.html') and os.path.exists(p):
@@ -388,8 +404,11 @@ def public_pages(vault, pages):
         if rel_dir.startswith('assets/secure'):   # 보호 문서. 절대 색인하지 않는다
             continue
         for x in xs:
-            if x.endswith('.html'):
-                out.add((rel_dir + '/' + x).replace('./', ''))
+            if not x.endswith('.html'):
+                continue
+            if not is_page(os.path.join(r, x)):
+                continue
+            out.add((rel_dir + '/' + x).replace('./', ''))
     return sorted(out)
 
 

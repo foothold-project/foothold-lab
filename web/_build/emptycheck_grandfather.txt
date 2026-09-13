@@ -7,9 +7,7 @@ completecheck.main
 contentcheck.main
 darkmode.main
 docgraph.main
-mdlinks.gate
 scan.report
-stalecheck.main
 stamp.main
 tablefix.main
 voicecheck.main

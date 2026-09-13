@@ -71,6 +71,7 @@ pitch.html 0 1 0 1 0 0
 plan.html 0 1 0 19 0 0
 project-report.html 0 1 0 19 0 0
 questions.html 0 1 0 19 0 0
+report-v1.html 0 0 0 204 1 0
 research-20260903-default-1500iter-terrain-analysis.html 0 1 0 19 0 0
 research-20260903-rails-isaac-sweep-design.html 0 1 0 19 0 0
 research-20260903-render-blackframe.html 0 1 0 19 0 0
