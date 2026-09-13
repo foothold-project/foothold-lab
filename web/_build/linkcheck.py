@@ -69,7 +69,16 @@ def scan(site):
         for h in sorted(set(LINK.findall(t))):
             seen += 1
             # 링크는 그 페이지가 놓인 자리에서 푼다
-            target = os.path.normpath(os.path.join(base, h)).replace(os.sep, '/')
+            # ★ 2026-09-13. 단 «/» 로 시작하면 사이트 «뿌리» 에서 푼다.
+            #   os.path.join(base, '/x.html') 는 절대경로가 이겨 base 를 버리고,
+            #   normpath 가 '/x.html' 을 그대로 남겨 목록(뿌리 기준 상대경로)과
+            #   영원히 안 맞는다. 실측: gallery/view/index.html 의 루트 링크
+            #   33개가 전부 «없음» 으로 잡혀 배포를 세웠다. 전부 실재한다.
+            if h.startswith('/'):
+                target = h.lstrip('/')
+            else:
+                target = os.path.normpath(
+                    os.path.join(base, h)).replace(os.sep, '/')
             if target in exists:
                 continue
             # assets/ 는 «페이지» 목록에서 뺐지만(위 os.walk), 그 밑에 html 을 둘
@@ -132,10 +141,15 @@ def _kat():
     os.makedirs(os.path.join(d, 'sub'))
     io.open(os.path.join(d, 'sub', 'c.html'), 'w', encoding='utf-8').write(
         '<!-- 메모: href="ghost.html" 는 주석이라 링크가 아니다 -->'
-        '<a href="../b.html">up-ok</a><a href="b.html">up-missing</a>')
+        '<a href="../b.html">up-ok</a><a href="b.html">up-missing</a>'
+        # ★ 루트 절대경로. 하위 폴더에서 «/» 로 최상위를 가리킨다.
+        #   gallery/view/index.html 이 실제로 이렇게 적는다.
+        '<a href="/b.html">root-ok</a><a href="/ghost.html">root-dead</a>')
     bad, np, nl = scan(d)
     got = sorted((f, h) for f, h in bad)
-    ok = (got == [('a.html', 'nope.html'), ('sub/c.html', 'b.html')] and np == 3)
+    # 정렬에서 '/' 가 글자보다 앞선다. 기대값도 그 차례여야 한다.
+    ok = (got == [('a.html', 'nope.html'), ('sub/c.html', '/ghost.html'),
+                  ('sub/c.html', 'b.html')] and np == 3)
     import shutil
     shutil.rmtree(d, ignore_errors=True)
     return ok

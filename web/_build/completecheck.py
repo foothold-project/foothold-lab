@@ -278,8 +278,16 @@ def main(site):
         return False
     miss, nocard = [], []
     n = 0
+    # ★ 2026-09-13. 이 빌드가 «아닌» 생성기가 만드는 페이지는 우리 페이지
+    #   규격(전역바 · 검색 · 푸터 · 테마)으로 재지 않는다. 그 규격을 넣는 것은
+    #   그 생성기의 일이고, 여기서 잡으면 남의 산출물 때문에 배포가 선다.
+    #   실측: report-v1.html 을 지우지 않게 지켰더니 이 관문이 넷을 잡았다.
+    #   ★ 규격을 맞출지는 그 생성기 소유자가 정한다. 예외는 «안 본다» 는 뜻이지
+    #     «안 맞아도 된다» 는 뜻이 아니다.
+    import build as _b
+    other = {x for x in _b.OTHER_MADE if x.endswith('.html')}
     for f in sorted(os.listdir(site)):
-        if not f.endswith('.html'):
+        if not f.endswith('.html') or f in other:
             continue
         n += 1
         t = io.open(os.path.join(site, f), encoding='utf-8',
