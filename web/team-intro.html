@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>팀 소개 · 프로젝트 킥오프: FOOTHOLD</title>
+<style>
+/* ============================================================
+   설계 노트
+   주제: 사족보행 로봇 · 정밀 계측 · 현장 실증
+   미학: 엔지니어링 도면(technical drawing): 계측선, 치수, 좌표
+   색  : 도면 용지(웜 오프화이트) / 제도 잉크(딥 슬레이트) / 치수선(틸) / 주기(앰버)
+   금지: 형광 그라디언트, 보라-블루 히어로, 이모지 섹션 마커
+   ============================================================ */
+:root{
+  --paper:#f6f5f1;        /* 도면 용지 */
+  --paper-2:#eeece6;
+  --ink:#161c26;          /* 제도 잉크 */
+  --ink-2:#4a5566;
+  --ink-3:#7c8798;
+  --rule:#d6d3ca;         /* 도면 괘선 */
+  --brand:#0e7a6e; --dim:var(--brand);          /* 치수선 틸 */
+  --dim-soft:#e0f0ed;
+  --note:#a86a08;         /* 주기 앰버 */
+  --note-soft:#fbf0dc;
+  --grid:rgba(22,28,38,.045);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--ink);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+#deck{
+  position:relative;width:100vw;height:100vh;
+  background:var(--paper);overflow:hidden;
+}
+/* 도면 그리드 */
+#deck::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.slide{
+  position:absolute;inset:0;z-index:1;
+  padding:clamp(28px,4.2vh,52px) clamp(40px,5.5vw,88px) clamp(64px,8vh,88px);
+  display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateX(28px);
+  transition:opacity .34s ease,transform .34s ease,visibility .34s;
+}
+.slide.on{opacity:1;visibility:visible;transform:none}
+
+/* ---------- 공통 타이포 ---------- */
+.eyebrow{
+  font-size:clamp(.6rem,.72vw,.68rem);letter-spacing:.22em;font-weight:700;
+  color:var(--dim);text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--rule)}
+h1{font-size:clamp(1.5rem,2.5vw,2.05rem);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+h2{font-size:clamp(.82rem,1.05vw,.94rem);font-weight:800;letter-spacing:-.01em;
+   padding-bottom:7px;border-bottom:1.5px solid var(--ink);margin-bottom:12px;
+   display:flex;align-items:baseline;gap:9px}
+h2 .en{font-size:.62rem;font-weight:600;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+.sub{color:var(--ink-2);font-size:clamp(.74rem,.9vw,.84rem);line-height:1.6}
+
+/* ---------- 슬라이드 1: 아이덴티티 ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:clamp(28px,3.5vw,54px);flex:1;align-items:center}
+.mark{
+  display:inline-flex;align-items:baseline;gap:12px;margin-bottom:14px;
+}
+.mark{--wm-size:clamp(2.4rem,5.2vw,4rem)}
+.mark .name{font-size:var(--wm-size);font-weight:800;letter-spacing:-.045em;line-height:.94}
+.mark .ko{font-size:clamp(.72rem,.9vw,.82rem);color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+.slogan{
+  font-size:clamp(.94rem,1.35vw,1.16rem);font-weight:600;line-height:1.5;
+  color:var(--ink);padding-left:16px;border-left:3px solid var(--dim);margin-bottom:22px;
+}
+.vision{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;color:var(--ink-2);
+  line-height:1.5;margin:-6px 0 14px;max-width:min(38em,100%);word-break:keep-all}
+.vision .state{flex:0 0 auto;margin-top:.2em;display:inline-block;padding:.05rem .34rem;border-radius:3px;
+  font-size:.55rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--note);background:var(--note-soft);border:1px solid var(--note);vertical-align:.1em}
+
+.kw{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.kw span{
+  font-size:clamp(.66rem,.82vw,.75rem);font-weight:700;padding:6px 13px;
+  border:1.5px solid var(--ink);border-radius:2px;letter-spacing:-.01em;
+}
+.kwd{display:grid;gap:11px}
+.kwd .row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.kwd .k{font-size:clamp(.66rem,.82vw,.74rem);font-weight:800;color:var(--dim);white-space:nowrap;
+        padding-top:1px;min-width:5.2em}
+.kwd .v{font-size:clamp(.72rem,.88vw,.81rem);color:var(--ink-2);line-height:1.55}
+
+/* 목표 카드 */
+.goals{display:grid;gap:11px}
+.goal{
+  background:var(--dim-soft);border:1px solid var(--rule);
+  padding:13px 16px;position:relative;
+}
+.goal .gl{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+.goal .gt{font-size:clamp(.76rem,.93vw,.87rem);font-weight:600;line-height:1.5}
+.goal .gm{font-size:clamp(.66rem,.8vw,.73rem);color:var(--ink-3);margin-top:5px;font-family:'Consolas',monospace}
+
+/* ---------- 슬라이드 2: R&R ---------- */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.1vw,15px);flex:1;align-content:center}
+.role{
+  background:var(--card);border:1px solid var(--rule);padding:15px 16px 16px;
+  display:flex;flex-direction:column;position:relative;
+}
+.role::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--dim)}
+.role.lead::before{background:var(--note)}
+.role .rtag{
+  font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:3px;
+}
+.role.lead .rtag{color:var(--note)}
+.role .rname{font-size:clamp(.95rem,1.25vw,1.1rem);font-weight:800;letter-spacing:-.02em;margin-bottom:2px}
+.role .rrole{font-size:clamp(.66rem,.8vw,.73rem);color:var(--ink-3);font-weight:600;margin-bottom:11px;
+             padding-bottom:9px;border-bottom:1px dashed var(--rule)}
+.role dl{display:grid;gap:7px}
+.role dt{font-size:.58rem;font-weight:800;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.role.lead dt{color:var(--note)}
+.role dd{font-size:clamp(.66rem,.81vw,.74rem);line-height:1.5;color:var(--ink-2)}
+.role dd b{color:var(--ink);font-weight:700}
+
+/* ---------- 슬라이드 3: 협업구조 ---------- */
+.collab{display:grid;grid-template-columns:minmax(0,1.24fr) minmax(0,1fr);gap:clamp(24px,3vw,44px);flex:1;align-content:center}
+.phase{display:grid;gap:10px}
+.pstep{
+  display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+  background:var(--card);border:1px solid var(--rule);padding:13px 16px;position:relative;
+}
+.pnum{
+  width:26px;height:26px;border:1.5px solid var(--dim);color:var(--dim);
+  display:grid;place-items:center;font-size:.72rem;font-weight:800;border-radius:50%;
+  font-family:'Consolas',monospace;
+}
+.pstep .pt{font-size:clamp(.74rem,.9vw,.82rem);font-weight:800;margin-bottom:4px}
+.pstep .pd{font-size:clamp(.66rem,.8vw,.74rem);color:var(--ink-2);line-height:1.55}
+.pstep .pd .out{color:var(--dim);font-weight:700}
+.arrow{text-align:center;color:var(--rule);font-size:.9rem;line-height:.4;margin:-3px 0}
+
+.rules{display:grid;gap:9px;align-content:start}
+.rule{background:var(--paper-2);padding:11px 14px}
+.rule .rt{font-size:clamp(.7rem,.85vw,.78rem);font-weight:800;margin-bottom:3px}
+.rule .rd{font-size:clamp(.64rem,.78vw,.72rem);color:var(--ink-2);line-height:1.5}
+
+
+/* ── PDF 저장 버튼 (우측 상단 고정) ──────────────────────
+   window.print() 를 호출한다. 브라우저 인쇄 창에서 "PDF로 저장"을 고르면
+   이 문서의 인쇄 스타일(@media print)이 그대로 적용된 PDF가 나온다.
+   모바일에서는 숨긴다 (모바일 브라우저의 인쇄 지원이 제한적).
+   ──────────────────────────────────────────────────── */
+.pdfbtn{
+  position:fixed;top:7px;right:14px;z-index:70;
+  background:var(--paper);border:1px solid var(--rule);color:var(--ink-2);
+  padding:4px 9px;font-family:inherit;font-size:.55rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:.15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;line-height:1.2;
+}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+/* PDF 버튼 자리를 비워 eyebrow 밑줄이 버튼에 닿지 않게 한다.
+   버튼은 화면 우측 고정이고, 슬라이드 상단 패딩은 vh 기반이라
+   화면 높이에 따라 라인 위치가 변한다. 그래서 세로 회피만으로는 불충분하고
+   가로로도 라인을 물러나게 한다. (모바일은 버튼이 없으므로 해제) */
+.eyebrow{padding-right:104px}
+@media(max-width:900px){.eyebrow{padding-right:0}}
+
+.pdfbtn:active{transform:translateY(1px)}
+.pdfbtn svg{width:9px;height:9px;flex:0 0 auto}
+@media(max-width:900px){.pdfbtn{display:none}}
+@media print{.pdfbtn{display:none!important}}
+
+/* ---------- 크롬 ---------- */
+#bar{position:fixed;bottom:0;left:0;height:2px;background:var(--dim);z-index:20;transition:width .34s ease}
+#chrome{
+  position:fixed;bottom:0;left:0;right:0;height:clamp(40px,5.4vh,52px);z-index:15;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(40px,5.5vw,88px);border-top:1px solid var(--rule);
+  background:linear-gradient(to top,var(--paper) 72%,transparent);
+}
+#chrome .l{font-size:.6rem;letter-spacing:.14em;color:var(--ink-3);font-weight:700;text-transform:uppercase;
+  display:flex;align-items:center;gap:9px}
+#chrome .l a.home{color:var(--dim);text-decoration:none;border:1px solid var(--rule);padding:4px 9px;
+  letter-spacing:.06em;transition:.15s;white-space:nowrap}
+#chrome .l a.home:hover{border-color:var(--dim);background:var(--dim-soft)}
+#chrome .l .sep{color:var(--rule)}
+#chrome .r{display:flex;align-items:center;gap:14px}
+.nav{background:none;border:1px solid var(--rule);color:var(--ink-2);width:26px;height:26px;
+     cursor:pointer;font-size:.72rem;display:grid;place-items:center;transition:.15s}
+.nav:hover{border-color:var(--dim);color:var(--dim)}
+.nav:disabled{opacity:.28;cursor:default}
+#pg{font-family:'Consolas',monospace;font-size:.68rem;font-weight:700;letter-spacing:.04em;min-width:44px;text-align:center}
+#pg b{color:var(--dim)}
+.fs{background:none;border:1px solid var(--rule);color:var(--ink-2);padding:5px 10px;white-space:nowrap;
+    font-size:.6rem;letter-spacing:.1em;font-weight:700;cursor:pointer;text-transform:uppercase}
+.fs:hover{border-color:var(--dim);color:var(--dim)}
+.tbd{color:var(--note);font-weight:700;font-size:.9em}
+
+/* ══════════════════════════════════════════════════════════
+   모바일: 고정높이 슬라이드를 버리고 "스크롤 문서"로 전환
+   이유: 세로 공간이 부족하면 fixed 모델은 내용을 잘라내고
+        스크롤도 막힌다. 작은 화면에선 흐르게 두는 게 맞다.
+   ══════════════════════════════════════════════════════════ */
+@media (max-width:820px){
+  html,body{height:auto;overflow:visible;overflow-x:hidden}
+  body{display:block}
+  #deck{width:100%;height:auto;min-height:100vh;overflow:visible}
+
+  .slide{
+    position:relative;inset:auto;
+    height:auto;min-height:calc(100vh - 64px);
+    padding:22px 16px 24px;
+    display:none;                     /* 숨긴 장은 자리를 차지하지 않게 */
+    opacity:1;visibility:visible;transform:none;transition:none;
+  }
+  .slide.on{display:flex}
+
+  /* 2단·3단 그리드를 전부 1단으로: 잘림의 주원인 */
+  /* 1fr = minmax(auto,1fr) 이라 자식이 콘텐츠 최소폭 아래로 줄지 않는다.
+     minmax(0,1fr) + min-width:0 이 있어야 표·긴 단어가 부모를 밀어내지 않는다. */
+  .p1,.p2,.p4,.hero,.collab{grid-template-columns:minmax(0,1fr)!important;gap:18px!important;align-content:start!important}
+  .rgrid,.feat,.grules,.roles{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+  .p1>*,.p2>*,.p4>*,.hero>*,.collab>*,.rgrid>*,.feat>*,.grules>*,.roles>*{min-width:0}
+  .stack .sv{overflow-wrap:anywhere}
+  .goals,.meth,.rules,.phase,.why,.mini{gap:10px}
+
+  /* 간트는 표 자체가 넓으므로 가로 스크롤 컨테이너로 */
+  .gantt{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+  .gantt::after{
+    content:'← 좌우로 밀어서 전체 일정 보기';
+    display:block;font-size:.62rem;color:var(--ink-3);margin-top:7px;
+  }
+  table.g{min-width:680px}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* 산출물 표는 2열뿐이라 좁은 화면에서도 접혀 들어간다. 강제 최소폭을 두지 않는다 */
+  table.d{min-width:0;font-size:.7rem;table-layout:fixed}
+  table.d td,table.d th{padding:7px 8px;word-break:keep-all;overflow-wrap:anywhere}
+  table.d td.o{width:38%}
+
+  /* 3P 제목 "…그라운드 룰" 이 한 글자만 넘어가는 것을 막는다.
+     폰트 크기는 유지하고 자간만 조인다(모바일 한정). */
+  h1{letter-spacing:-.045em}
+  /* 타이포 하한: 축소되며 읽기 어려워지는 것 방지 */
+  h1{font-size:1.35rem}
+  .pname{font-size:1.22rem}
+  .mark{--wm-size:2.3rem}
+  .slogan{font-size:1rem}
+  .sub,.pdesc{font-size:.82rem}
+
+  /* ── 하단 바 ──────────────────────────────────────────
+     모바일에선 남길 것만 남긴다:  [← 표지]        [‹ 1/3 ›]
+     · 긴 소속 문구는 숨긴다 (가로 공간을 다 먹고 겹침을 만든다)
+     · 전체화면 버튼도 숨긴다 (모바일 브라우저는 이미 전체화면에 가깝고,
+       iOS Safari는 Fullscreen API 자체를 제한한다)
+     ──────────────────────────────────────────────────── */
+  #deck{padding-bottom:68px}
+  #chrome{height:62px;padding:0 14px;gap:10px}
+
+  #chrome .l{flex:0 0 auto;font-size:0;letter-spacing:0;gap:0}   /* 설명 문구 숨김 */
+  #chrome .l .sep{display:none}
+  #chrome .l a.home{font-size:.7rem;letter-spacing:.02em;padding:11px 14px;
+                    display:inline-flex;align-items:center;white-space:nowrap}
+
+  .fs{display:none}                                               /* 전체화면 버튼 숨김 */
+  #chrome .r{gap:10px;flex:1 1 auto;justify-content:flex-end;min-width:0;flex-wrap:nowrap}
+  .nav{width:40px;height:40px;font-size:1rem;flex:0 0 auto}
+  #pg{font-size:.8rem;min-width:50px;flex:0 0 auto}
+}
+
+/* 아주 좁은 화면: 버튼 글자를 줄여 줄바꿈을 막는다 */
+@media (max-width:400px){
+  .fs{font-size:.58rem;padding:10px 9px}
+  #chrome .l a.home{padding:10px 10px;font-size:.62rem}
+  #chrome{gap:8px}
+}
+
+@media print{
+  @page{ size:A4 landscape; margin:0; }
+  html{font-size:13.5px}
+  html,body,#deck{height:auto;overflow:visible;background:var(--card)}
+  /* ★ 인쇄 폭이 좁게 평가돼 모바일 규칙(.slide{display:none})이 걸리는 것을 해제.
+     이게 없으면 활성 슬라이드 1장만 인쇄된다. */
+  .slide{display:flex!important;position:relative!important;min-height:0!important}
+  #deck{padding-bottom:0!important}
+  #deck::before{display:none}
+  .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;
+         break-after:page;height:204mm;width:100%;padding:9mm 11mm 7mm}
+  .slide:last-child{break-after:auto}
+  #chrome,#bar{display:none}
+  table,figure,.role,.goal,.rule,.pstep{break-inside:avoid}
+  tr{break-inside:avoid}
+  /* ★ 모바일 블록의 align-content:start!important 가 인쇄에도 걸린다
+     (인쇄 폭이 A4 세로 794px 로 평가돼 max-width:820px 가 참이 됨).
+     grid-template-columns 만 되돌려선 부족하고 세로 정렬도 복구해야 한다.
+     .hero 는 원래 align-items:center 만 있어 행 자체가 위로 붙으므로 함께 지정. */
+  .hero,.collab,.roles{align-content:center!important}
+  .hero{grid-template-columns:minmax(0,1.06fr) minmax(0,1fr)!important}
+  .collab{grid-template-columns:minmax(0,1.24fr) minmax(0,1fr)!important}
+  .roles{grid-template-columns:repeat(3,1fr)!important}
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+
+/* 병합 후 세로 리듬 보정: 6장이 같은 높이에서 본문을 시작하게 한다 */
+[data-deck="ko"] .p2{margin-top:1.7rem}
+@media (max-width:820px){ [data-deck="ko"] .p2{margin-top:0} }
+@media print{ [data-deck="ko"] .p2{margin-top:15mm} }
+
+/* ═══════════ 킥오프 4장: 범위 격리 이관 ═══════════
+   두 문서가 .eyebrow · h1 · h2 · .sub 등을 다른 값으로 쓰기 때문에
+   (실측 43개 충돌) 그대로 합치면 팀소개 레이아웃이 깨진다.
+   그래서 킥오프 규칙 전체를 [data-deck="ko"] 안으로 가둔다.
+   전역 규칙(:root·html·body·#deck·#chrome)은 팀소개 것을 그대로 쓴다. */
+[data-deck="ko"] *{margin:0;padding:0;box-sizing:border-box}
+[data-deck="ko"]{position:absolute;inset:0;z-index:1;
+  padding:clamp(24px,3.6vh,44px) clamp(36px,5vw,80px) clamp(60px,7.5vh,84px);
+  display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateX(28px);
+  transition:opacity .34s ease,transform .34s ease,visibility .34s}
+[data-deck="ko"].on{opacity:1;visibility:visible;transform:none}
+[data-deck="ko"] .eyebrow{font-size:clamp(.58rem,.7vw,.66rem);letter-spacing:.22em;font-weight:700;color:var(--dim);
+  text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:5px}
+[data-deck="ko"] .eyebrow::after{content:'';flex:1;height:1px;background:var(--rule)}
+[data-deck="ko"] h1{font-size:clamp(1.35rem,2.2vw,1.85rem);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+[data-deck="ko"] h2{font-size:clamp(.78rem,1vw,.9rem);font-weight:800;padding-bottom:6px;border-bottom:1.5px solid var(--ink);
+   margin-bottom:11px;display:flex;align-items:baseline;gap:9px}
+[data-deck="ko"] h2 .en{font-size:.6rem;font-weight:600;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+[data-deck="ko"] .sub{color:var(--ink-2);font-size:clamp(.7rem,.86vw,.8rem);line-height:1.6}
+[data-deck="ko"] .tbd{color:var(--note);font-weight:700}
+[data-deck="ko"] .p1{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(22px,3vw,44px);flex:1;align-content:center}
+[data-deck="ko"] .mark{margin-bottom:12px}
+[data-deck="ko"] .mark{--wm-size:clamp(2rem,4.2vw,3.2rem)}
+[data-deck="ko"] .mark .name{font-size:var(--wm-size);font-weight:800;letter-spacing:-.045em;line-height:.95;display:block}
+[data-deck="ko"] .mark .ko{font-size:.72rem;color:var(--ink-3);font-weight:600}
+[data-deck="ko"] .slogan{font-size:clamp(.86rem,1.15vw,1rem);font-weight:600;line-height:1.5;
+  padding-left:14px;border-left:3px solid var(--dim);margin-bottom:18px}
+[data-deck="ko"] .vision{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;color:var(--ink-2);
+  line-height:1.5;margin:-6px 0 14px;max-width:min(38em,100%);word-break:keep-all}
+[data-deck="ko"] .vision .state{flex:0 0 auto;margin-top:.2em;display:inline-block;padding:.05rem .34rem;border-radius:3px;
+  font-size:.55rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--note);background:var(--note-soft);border:1px solid var(--note);vertical-align:.1em}
+[data-deck="ko"] .mini{display:grid;gap:8px}
+[data-deck="ko"] .mini .m{display:grid;grid-template-columns:5.4em 1fr;gap:10px;font-size:clamp(.66rem,.8vw,.74rem);line-height:1.5}
+[data-deck="ko"] .mini .m b{color:var(--dim);font-weight:800}
+[data-deck="ko"] .mini .m span{color:var(--ink-2)}
+[data-deck="ko"] .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+[data-deck="ko"] .rc{background:var(--dim-soft);border:1px solid var(--rule);padding:10px 12px}
+[data-deck="ko"] .rc.lead{border-top-color:var(--note)}
+[data-deck="ko"] .rc .t{font-size:.55rem;font-weight:800;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-bottom:2px}
+[data-deck="ko"] .rc.lead .t{color:var(--note)}
+[data-deck="ko"] .rc .n{font-size:clamp(.82rem,1vw,.94rem);font-weight:800;margin-bottom:3px}
+[data-deck="ko"] .rc .s{font-size:clamp(.62rem,.76vw,.7rem);color:var(--ink-2);line-height:1.45}
+[data-deck="ko"] .grules{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+[data-deck="ko"] .gr{background:var(--paper-2);padding:8px 11px}
+[data-deck="ko"] .gr .t{font-size:.66rem;font-weight:800;margin-bottom:2px}
+[data-deck="ko"] .gr .d{font-size:.62rem;color:var(--ink-2);line-height:1.45}
+[data-deck="ko"] .p2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(22px,3vw,42px);flex:1;align-content:center}
+[data-deck="ko"] .tags{display:flex;gap:7px;margin-bottom:10px}
+[data-deck="ko"] .tags span{font-size:.6rem;font-weight:800;padding:4px 10px;background:var(--dim);color:#fff;letter-spacing:.06em}
+[data-deck="ko"] .tags span.alt{background:var(--ink)}
+[data-deck="ko"] .pname{font-size:clamp(1.25rem,2vw,1.7rem);font-weight:800;letter-spacing:-.025em;line-height:1.2;margin-bottom:8px}
+[data-deck="ko"] .pdesc{font-size:clamp(.75rem,.92vw,.85rem);color:var(--ink-2);line-height:1.6;margin-bottom:18px}
+[data-deck="ko"] .why{display:grid;gap:11px}
+[data-deck="ko"] .why .w{background:var(--dim-soft);border:1px solid var(--rule);padding:11px 14px}
+[data-deck="ko"] .why .wl{font-size:.58rem;font-weight:800;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+[data-deck="ko"] .why .wt{font-size:clamp(.68rem,.83vw,.76rem);line-height:1.55;color:var(--ink-2)}
+[data-deck="ko"] .why .wt b{color:var(--ink)}
+[data-deck="ko"] .feat{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+[data-deck="ko"] .f{background:var(--card);border:1px solid var(--rule);padding:11px 13px;position:relative}
+[data-deck="ko"] .f .fn{font-family:'Consolas',monospace;font-size:.62rem;font-weight:700;color:var(--dim);margin-bottom:4px}
+[data-deck="ko"] .f .ft{font-size:clamp(.7rem,.86vw,.78rem);font-weight:800;margin-bottom:4px}
+[data-deck="ko"] .f .fd{font-size:clamp(.62rem,.76vw,.7rem);color:var(--ink-2);line-height:1.5}
+[data-deck="ko"] .stack{margin-top:11px;background:var(--paper-2);padding:10px 13px;border:1px solid var(--rule)}
+[data-deck="ko"] .stack .sl{font-size:.56rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:5px}
+[data-deck="ko"] .stack .sv{font-size:clamp(.63rem,.77vw,.71rem);line-height:1.7;color:var(--ink-2);font-family:'Consolas',monospace}
+[data-deck="ko"] .stack .sv b{color:var(--ink);font-family:inherit}
+[data-deck="ko"] .gantt{flex:1;display:flex;flex-direction:column;justify-content:center}
+[data-deck="ko"] table.g{width:100%;border-collapse:collapse;font-size:clamp(.56rem,.7vw,.66rem);table-layout:fixed}
+[data-deck="ko"] table.g th{background:var(--ink);color:var(--paper);padding:4px 7px;font-weight:700;font-size:.57rem;
+           letter-spacing:.03em;text-align:left}
+[data-deck="ko"] table.g th.mo{text-align:center;font-family:'Consolas',monospace;font-size:.56rem;
+              border-left:1px solid rgba(255,255,255,.22)}
+[data-deck="ko"] table.g th.wk{text-align:center;font-family:'Consolas',monospace;font-size:.5rem;font-weight:600;
+              background:#2a3444;padding:2px 0;color:#c7ccd4}
+[data-deck="ko"] table.g th.wk.mk{background:var(--note);color:#fff;font-weight:800}
+[data-deck="ko"] table.g td{border-bottom:1px solid var(--rule);padding:5px 7px;vertical-align:middle}
+[data-deck="ko"] table.g td.ph{font-weight:800;color:var(--dim);white-space:nowrap;background:var(--dim-soft);font-size:.62rem}
+[data-deck="ko"] table.g td.tk{color:var(--ink-2);line-height:1.35;font-size:.63rem}
+[data-deck="ko"] table.g td.ow{font-size:.55rem;color:var(--ink-3);font-weight:700;white-space:nowrap;letter-spacing:-.02em}
+[data-deck="ko"] table.g td.c{padding:3px 1px}
+[data-deck="ko"] .b{height:9px;background:var(--dim);border-radius:1px}
+[data-deck="ko"] .b.soft{background:transparent;border:1.2px solid var(--dim)}
+[data-deck="ko"] .b.note{background:var(--note)}
+[data-deck="ko"] .ms{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:.62rem;color:var(--ink-2);align-items:center}
+[data-deck="ko"] .ms i{display:inline-block;width:10px;height:9px;background:var(--dim);margin-right:5px;vertical-align:-1px;font-style:normal;border-radius:1px}
+[data-deck="ko"] .ms i.soft{background:transparent;border:1.2px solid var(--dim)}
+[data-deck="ko"] .ms i.note{background:var(--note)}
+[data-deck="ko"] .ms .mk{background:var(--note);color:#fff;font-weight:800;padding:1px 6px;font-size:.56rem;
+        font-family:'Consolas',monospace;margin-right:5px}
+[data-deck="ko"] .p4{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(22px,3vw,40px);
+     flex:1;align-content:center;align-items:stretch}
+[data-deck="ko"] .p4>div{display:flex;flex-direction:column;min-width:0}
+[data-deck="ko"] .p4>div:first-child{justify-content:center}
+[data-deck="ko"] table.d{width:100%;border-collapse:collapse;font-size:clamp(.62rem,.76vw,.71rem)}
+[data-deck="ko"] table.d th{background:var(--ink);color:var(--paper);padding:6px 9px;text-align:left;font-size:.58rem;letter-spacing:.06em;font-weight:700}
+[data-deck="ko"] table.d td{border-bottom:1px solid var(--rule);padding:8px 9px;vertical-align:top;line-height:1.5}
+[data-deck="ko"] table.d td.o{font-weight:800;width:32%}
+[data-deck="ko"] table.d td.o small{display:block;font-weight:600;color:var(--dim);font-family:'Consolas',monospace;font-size:.9em;margin-top:2px}
+[data-deck="ko"] table.d td.dod{color:var(--ink-2)}
+[data-deck="ko"] table.d tr.key td{background:var(--dim-soft)}
+[data-deck="ko"] .meth{display:grid;gap:9px}
+[data-deck="ko"] .me{background:var(--paper-2);border:1px solid var(--rule);padding:10px 13px}
+[data-deck="ko"] .me .mt{font-size:clamp(.68rem,.82vw,.76rem);font-weight:800;margin-bottom:3px}
+[data-deck="ko"] .me .md{font-size:clamp(.62rem,.76vw,.7rem);color:var(--ink-2);line-height:1.5}
+[data-deck="ko"] .me .md code{background:var(--paper-2);padding:1px 5px;font-family:'Consolas',monospace;font-size:.94em}
+[data-deck="ko"] .eyebrow{padding-right:104px}
+@media(max-width:900px){
+[data-deck="ko"] .eyebrow{padding-right:0}
+}
+[data-deck="ko"] .nav{background:none;border:1px solid var(--rule);color:var(--ink-2);width:25px;height:25px;cursor:pointer;
+     font-size:.7rem;display:grid;place-items:center;transition:.15s}
+[data-deck="ko"] .nav:hover{border-color:var(--dim);color:var(--dim)}
+[data-deck="ko"] .nav:disabled{opacity:.28;cursor:default}
+[data-deck="ko"] #pg{font-family:'Consolas',monospace;font-size:.66rem;font-weight:700;min-width:42px;text-align:center}
+[data-deck="ko"] #pg b{color:var(--dim)}
+[data-deck="ko"] .fs{background:none;border:1px solid var(--rule);color:var(--ink-2);padding:5px 9px;font-size:.58rem;
+    letter-spacing:.1em;font-weight:700;cursor:pointer;text-transform:uppercase}
+[data-deck="ko"] .fs:hover{border-color:var(--dim);color:var(--dim)}
+@media (max-width:820px){
+[data-deck="ko"]{position:relative;inset:auto;
+    height:auto;min-height:calc(100vh - 64px);
+    padding:22px 16px 24px;
+    display:none;                     
+    opacity:1;visibility:visible;transform:none;transition:none;}
+[data-deck="ko"].on{display:flex}
+[data-deck="ko"] .p1,
+[data-deck="ko"] .p2,
+[data-deck="ko"] .p4,
+[data-deck="ko"] .hero,
+[data-deck="ko"] .collab{grid-template-columns:minmax(0,1fr)!important;gap:18px!important;align-content:start!important}
+[data-deck="ko"] .rgrid,
+[data-deck="ko"] .feat,
+[data-deck="ko"] .grules,
+[data-deck="ko"] .roles{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+[data-deck="ko"] .p1>*,
+[data-deck="ko"] .p2>*,
+[data-deck="ko"] .p4>*,
+[data-deck="ko"] .hero>*,
+[data-deck="ko"] .collab>*,
+[data-deck="ko"] .rgrid>*,
+[data-deck="ko"] .feat>*,
+[data-deck="ko"] .grules>*,
+[data-deck="ko"] .roles>*{min-width:0}
+[data-deck="ko"] .stack .sv{overflow-wrap:anywhere}
+[data-deck="ko"] .goals,
+[data-deck="ko"] .meth,
+[data-deck="ko"] .rules,
+[data-deck="ko"] .phase,
+[data-deck="ko"] .why,
+[data-deck="ko"] .mini{gap:10px}
+[data-deck="ko"] .gantt{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+[data-deck="ko"] .gantt::after{content:'← 좌우로 밀어서 전체 일정 보기';
+    display:block;font-size:.62rem;color:var(--ink-3);margin-top:7px;}
+[data-deck="ko"] table.g{min-width:680px}
+[data-deck="ko"] .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+[data-deck="ko"] table.d{min-width:0;font-size:.7rem;table-layout:fixed}
+[data-deck="ko"] table.d td,
+[data-deck="ko"] table.d th{padding:7px 8px;word-break:keep-all;overflow-wrap:anywhere}
+[data-deck="ko"] table.d td.o{width:38%}
+[data-deck="ko"] h1{font-size:1.35rem}
+[data-deck="ko"] .pname{font-size:1.22rem}
+[data-deck="ko"] .mark{--wm-size:2.3rem}
+[data-deck="ko"] .slogan{font-size:1rem}
+[data-deck="ko"] .sub,
+[data-deck="ko"] .pdesc{font-size:.82rem}
+[data-deck="ko"] .fs{display:none}
+[data-deck="ko"] .nav{width:40px;height:40px;font-size:1rem;flex:0 0 auto}
+[data-deck="ko"] #pg{font-size:.8rem;min-width:50px;flex:0 0 auto}
+}
+@media (max-width:400px){
+[data-deck="ko"] .fs{font-size:.58rem;padding:10px 9px}
+}
+@media print{
+[data-deck="ko"]{display:flex!important;position:relative!important;min-height:0!important}
+[data-deck="ko"]{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;
+         break-after:page;height:204mm;width:100%;padding:9mm 11mm 7mm}
+[data-deck="ko"]:last-child{break-after:auto}
+[data-deck="ko"] table,
+[data-deck="ko"] figure,
+[data-deck="ko"] .rc,
+[data-deck="ko"] .role,
+[data-deck="ko"] .f,
+[data-deck="ko"] .me,
+[data-deck="ko"] .gr,
+[data-deck="ko"] .rule,
+[data-deck="ko"] .pstep{break-inside:avoid}
+[data-deck="ko"] tr{break-inside:avoid}
+[data-deck="ko"] .p1,
+[data-deck="ko"] .p2,
+[data-deck="ko"] .p4{align-content:center!important}
+[data-deck="ko"] .p1{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)!important}
+[data-deck="ko"] .p2{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important}
+[data-deck="ko"] .p4{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)!important}
+[data-deck="ko"] .rgrid{grid-template-columns:repeat(3,1fr)!important}
+[data-deck="ko"] .feat{grid-template-columns:repeat(2,1fr)!important}
+[data-deck="ko"] .grules{grid-template-columns:repeat(2,1fr)!important}
+[data-deck="ko"] *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+}
+
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style>.mark .wm{display:block;height:auto;width:calc(var(--wm-size,3.4rem) * 6.2);max-width:100%}.mark{align-items:center}@media print{.mark .wm{width:calc(var(--wm-size,2.3rem) * 6.2)}}</style>
+<!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+</head>
+<body>
+<button class="pdfbtn" id="pdfBtn" type="button"
+        title="브라우저 인쇄 창이 열립니다. 대상에서 &quot;PDF로 저장&quot;을 선택하세요."
+        aria-label="이 문서를 PDF로 저장">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+    <path d="M8 1v9M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12"/>
+  </svg>PDF 저장</button>
+<div id="deck">
+
+<!-- ============ 1. TEAM IDENTITY ============ -->
+<section class="slide on">
+  <div class="eyebrow">Team Identity</div>
+  <div class="hero">
+    <div>
+      <div class="mark">
+        <svg class="wm" viewBox="0 0 713.709 110" role="img" aria-label="FOOTHOLD" xmlns="http://www.w3.org/2000/svg"><defs></defs><g fill="var(--ink)" opacity="1" transform="translate(0 100)"><g transform="skewX(-3)"><g transform="scale(0.07120466 -0.06064690)"><g transform="translate(-160.000000 0)"><path d="M160.0 0V1454H434.0V0ZM260.0 577V841H1005.0V577ZM260.0 1190V1454H1115.0V1190ZM1834.0 -15Q1673.972602739726 -15.0 1554.4716242661448 51.5Q1434.9706457925636 118.0 1368.9853228962818 239.0Q1303.0 360 1303.0 521V933Q1303.0 1095 1368.9853228962818 1215.5Q1434.9706457925636 1336.0 1554.4716242661448 1402.5Q1673.972602739726 1469.0 1834.0 1469Q1994.027397260274 1469.0 2113.5283757338552 1402.5Q2233.0293542074364 1336.0 2299.014677103718 1215.5Q2365.0 1095 2365.0 933V521Q2365.0 360 2299.014677103718 239.0Q2233.0293542074364 118.0 2113.5283757338552 51.5Q1994.027397260274 -15.0 1834.0 -15ZM1833.5897435897436 259.0Q1946.0 259 2013.5 328.969512195122Q2081.0 398.9390243902439 2081.0 514V940Q2081.0 1055.8384146341464 2013.5248344370862 1125.4192073170732Q1946.0496688741723 1195.0 1834.0 1195Q1722.0 1195 1654.5 1125.4192073170732Q1587.0 1055.8384146341464 1587.0 940V514Q1587.0 398.9390243902439 1654.5 328.969512195122Q1722.0 259 1833.5897435897436 259.0ZM3184.0 -15Q3023.972602739726 -15.0 2904.4716242661448 51.5Q2784.9706457925636 118.0 2718.985322896282 239.0Q2653.0 360 2653.0 521V933Q2653.0 1095 2718.985322896282 1215.5Q2784.9706457925636 1336.0 2904.4716242661448 1402.5Q3023.972602739726 1469.0 3184.0 1469Q3344.027397260274 1469.0 3463.5283757338552 1402.5Q3583.0293542074364 1336.0 3649.014677103718 1215.5Q3715.0 1095 3715.0 933V521Q3715.0 360 3649.014677103718 239.0Q3583.0293542074364 118.0 3463.5283757338552 51.5Q3344.027397260274 -15.0 3184.0 -15ZM3183.5897435897436 259.0Q3296.0 259 3363.5 328.969512195122Q3431.0 398.9390243902439 3431.0 514V940Q3431.0 1055.8384146341464 3363.524834437086 1125.4192073170732Q3296.0496688741723 1195.0 3184.0 1195Q3072.0 1195 3004.5 1125.4192073170732Q2937.0 1055.8384146341464 2937.0 940V514Q2937.0 398.9390243902439 3004.5 328.969512195122Q3072.0 259 3183.5897435897436 259.0ZM4229.0 0V1335H4503.0V0ZM3833.0 1190V1454H4899.0V1190ZM5843.0 0V1454H6117.0V0ZM5047.0 0V1454H5321.0V0ZM5174.0 589V853H6021.0V589ZM6966.0 -15Q6805.972602739726 -15.0 6686.471624266145 51.5Q6566.970645792564 118.0 6500.985322896282 239.0Q6435.0 360 6435.0 521V933Q6435.0 1095 6500.985322896282 1215.5Q6566.970645792564 1336.0 6686.471624266145 1402.5Q6805.972602739726 1469.0 6966.0 1469Q7126.027397260274 1469.0 7245.528375733855 1402.5Q7365.029354207436 1336.0 7431.014677103718 1215.5Q7497.0 1095 7497.0 933V521Q7497.0 360 7431.014677103718 239.0Q7365.029354207436 118.0 7245.528375733855 51.5Q7126.027397260274 -15.0 6966.0 -15ZM6965.589743589744 259.0Q7078.0 259 7145.5 328.969512195122Q7213.0 398.9390243902439 7213.0 514V940Q7213.0 1055.8384146341464 7145.524834437087 1125.4192073170732Q7078.049668874172 1195.0 6966.0 1195Q6854.0 1195 6786.5 1125.4192073170732Q6719.0 1055.8384146341464 6719.0 940V514Q6719.0 398.9390243902439 6786.5 328.969512195122Q6854.0 259 6965.589743589744 259.0ZM7815.0 0V1454H8089.0V0ZM7937.0 0V264H8789.0V0ZM9155.0 0V264H9504.0Q9639.0 264 9713.0 329.5Q9787.0 395 9787.0 513V941Q9787.0 1060 9713.0 1125.0Q9639.0 1190 9504.0 1190H9155.0V1454H9498.0Q9772.0 1454 9921.5 1317.5Q10071.0 1181 10071.0 933V521Q10071.0 366 10007.0 248.5Q9943.0 131 9815.5 65.5Q9688.0 0 9497.0 0ZM9017.0 0V1454H9291.0V0Z"/></g></g></g></g></svg>
+        <span class="ko">발디딤</span>
+      </div>
+      <div class="slogan">불확실한 지형에서도,<br>다음 걸음을 이어갑니다.</div>
+      <div class="vision"><span class="state">Target Vision</span>시뮬레이터에서 천 번 넘어지고, 현장에서는 넘어지지 않는다.</div>
+      <div class="kw"><span>본질 우선</span><span>측정 가능한 결과</span><span>현장 검증</span></div>
+      <div class="kwd">
+        <div class="row"><div class="k">본질 우선</div>
+          <div class="v">도구를 먼저 고르지 않는다. 왜 다리로 걷는지, 왜 넘어지는지를 먼저 이해하고 기술을 선택한다.</div></div>
+        <div class="row"><div class="k">측정 가능</div>
+          <div class="v">"잘 걷는다"가 아니라 성공률·오차·낙상 수로 말한다. 재현 가능한 실험 기록을 남긴다.</div></div>
+        <div class="row"><div class="k">현장 검증</div>
+          <div class="v">시뮬레이션에서 끝내지 않는다. 실제 환경 조건에서 통하는지를 검증 기준으로 삼는다.</div></div>
+      </div>
+    </div>
+    <div>
+      <h2>팀 비전 &amp; 목표 <span class="en">Vision &amp; Goals</span></h2>
+      <div class="goals">
+        <div class="goal">
+          <div class="gl">핵심 비전</div>
+          <div class="gt">예측할 수 없는 지형에서 로봇이 넘어지지 않고 이동하는 능력을,<br>실제로 넘어뜨리지 않고 획득하는 방법을 검증한다</div>
+        </div>
+        <div class="goal">
+          <div class="gl">성장 목표</div>
+          <div class="gt">팀원 전원이 강화학습·물리 시뮬레이션 파이프라인을 직접 다뤄본 경험을 확보하고,<br>각자 대체 불가능한 축을 하나씩 갖는다</div>
+        </div>
+        <div class="goal">
+          <div class="gl">정량 목표</div>
+          <div class="gt">험지 정책 학습 재현 → 커스텀 지형 확장 → 정량 지표 확보</div>
+          <div class="gm">지형별 통과 성공률 · 속도추종 오차 · 낙상 횟수<br>외란 회복률 · 무개입 주행거리 · 이동 에너지</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. R&R ============ -->
+<section class="slide">
+  <div class="eyebrow">Team Profile &amp; Strengths</div>
+  <h1 style="margin-bottom:4px">팀원 R&amp;R 및 강점 분석</h1>
+  <p class="sub" style="margin-bottom:18px">각 축은 한 사람이 주도하되 겹쳐서 일한다. 대체 불가능한 부분을 기준으로 배치했다.</p>
+  <div class="roles">
+
+    <!-- ★ 손으로 고치지 마십시오. 정본은 foothold-lab/docs/ROLES.md 이고
+         빌드([1.04] roles.py)가 여기에 채워 넣습니다. 8/27 에 8갈래로 바꿨을 때
+         이 자리만 옛 5분야로 남아 있었습니다. -->
+        <div class="role lead">
+      <div class="rtag">B/항법 · C/운영</div>
+      <div class="rname">오흥재</div>
+      <div class="rrole">프로젝트 리딩 · 항법과 운영</div>
+      <dl>
+        <dt>메인 역할</dt><dd>일정·범위 관리, 멘토 인터페이스, <b>트랙 B 항법 축</b>과 팀 인프라</dd>
+        <dt>보유 강점</dt><dd>영상·VFX <b>12년</b>· 카메라·공간·3D 파이프라인 설계, 포인트클라우드 기반 공간 재구성 실무, 기획·구조 설계</dd>
+        <dt>협업 스타일</dt><dd>결정의 <b>배경까지 문서로</b> 남겨, 누구든 중간에 이어받을 수 있게 한다</dd>
+      </dl>
+    </div>
+
+    <div class="role">
+      <div class="rtag">A/정책학습</div>
+      <div class="rname">임석헌</div>
+      <div class="rrole">강화학습 정책 · 모델</div>
+      <dl>
+        <dt>메인 역할</dt><dd>보행 정책 학습, 보상 설계, 실험 설계와 반복</dd>
+        <dt>보유 강점</dt><dd>비전 모델 학습·데이터 구축, <b>파인튜닝 R&amp;D</b>, LLM 판단 로직 설계</dd>
+        <dt>협업 스타일</dt><dd>직접 돌려본 <b>결과를 근거로</b> 가져와 논의를 빠르게 좁힌다</dd>
+      </dl>
+    </div>
+
+    <div class="role">
+      <div class="rtag">A/지형씬제작 · A/트윈렌더</div>
+      <div class="rname">맹라현</div>
+      <div class="rrole">3D 지형 · 트윈 · 렌더</div>
+      <dl>
+        <dt>메인 역할</dt><dd>시뮬 지형 제작, 실공간 복원과 렌더 시연</dd>
+        <dt>보유 강점</dt><dd>Blender · 3ds Max · Unity, 2D CAD, 프리미어, HTML/CSS, MongoDB · SQL, Git · <b>제작부터 데이터까지</b></dd>
+        <dt>협업 스타일</dt><dd>복잡한 구조를 <b>눈으로 볼 수 있게</b> 만들어, 말로 하면 길어질 논의를 짧게 만든다</dd>
+      </dl>
+    </div>
+
+    <div class="role">
+      <div class="rtag">A/평가 · B/인지</div>
+      <div class="rname">오현민</div>
+      <div class="rrole">일반화 평가 · 인지</div>
+      <dl>
+        <dt>메인 역할</dt><dd>미경험 지형 일반화 벤치마크와 지표, 실기 LiDAR·카메라 인지</dd>
+        <dt>보유 강점</dt><dd>컴퓨터비전 분류, <b>프론트엔드 구현</b>, AI 부트캠프 수료</dd>
+        <dt>협업 스타일</dt><dd>결과를 <b>수치로 확인한 뒤</b> 넘겨, 뒷단이 다시 검증할 일을 줄인다</dd>
+      </dl>
+    </div>
+
+    <div class="role">
+      <div class="rtag">C/기록 · B/항법</div>
+      <div class="rname">이민우</div>
+      <div class="rrole">자율주행 · 기록</div>
+      <dl>
+        <dt>메인 역할</dt><dd><b>SLAM·Nav2 기반 실기 자율주행</b> (지도 생성 · 위치 추정 · 경로 계획 · 장애물 회피). 그리고 회의록과 문서 정본화, 백과·커리큘럼, 발표 자료와 대외보고</dd>
+        <dt>보유 강점</dt><dd>웹 <b>풀스택</b>· 기획부터 배포까지 직접 구현, 서버 구성·운영</dd>
+        <dt>협업 스타일</dt><dd>막힌 곳을 먼저 찾아 손대고, <b>남이 그대로 쓸 수 있게</b> 정리해 넘긴다</dd>
+      </dl>
+    </div>
+
+  </div>
+
+  </div>
+</section>
+
+<!-- ============ 3. 협업 구조 + 그라운드룰 ============ -->
+<section class="slide">
+  <div class="eyebrow">Collaboration Process &amp; Ground Rules</div>
+  <h1 style="margin-bottom:4px">강점 기반 협업 구조 &amp; 그라운드 룰</h1>
+  <p class="sub" style="margin-bottom:18px">단계마다 <b>산출물</b>이 남고, 그 산출물이 다음 단계의 입력이 된다.</p>
+  <div class="collab">
+
+    <div class="phase">
+      <div class="pstep">
+        <div class="pnum">1</div>
+        <div>
+          <div class="pt">기반 구축 · 재현</div>
+          <div class="pd"><b>전원</b> → <span class="out">각자 환경을 구축하고 공개 정책을 1회씩 완주해 학습 곡선 확보</span><br>
+          <span style="color:var(--ink-3)">한 사람만 환경을 알면 그 사람이 5개월 내내 병목이 된다</span></div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="pstep">
+        <div class="pnum">2</div>
+        <div>
+          <div class="pt">확장 · 실험</div>
+          <div class="pd">임석헌(보상·정책) + 맹라현(지형) + 오현민(데이터) → <span class="out">커스텀 지형 대응 정책과 비교 실험 결과</span><br>
+          <span style="color:var(--ink-3)">한 번에 하나만 바꾸고 매 실험을 기록한다</span></div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="pstep">
+        <div class="pnum">3</div>
+        <div>
+          <div class="pt">실증 · 전달</div>
+          <div class="pd">오흥재(재구성·PM) + 맹라현(시각화) + 오현민(검증) → <span class="out">실환경 조건 검증 리포트와 시연 자료</span><br>
+          <span style="color:var(--ink-3)">현장 기준으로 통하는지를 판정한다</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2>팀 그라운드 룰 <span class="en">Ground Rules</span></h2>
+      <div class="rules">
+        <div class="rule">
+          <div class="rt">회의 규칙</div>
+          <div class="rd">주 1회 정기 회의로 진행·블로커 공유. 결정이 필요한 안건은 사전에 문서로 올린다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">기록 규칙</div>
+          <div class="rd">실험은 <b>설정·커맨드·결과</b>를 함께 남긴다. 기록 없는 실험은 없었던 것으로 본다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">피드백 규칙</div>
+          <div class="rd">사람이 아니라 결과와 근거를 두고 말한다. 반대할 때는 대안을 함께 낸다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">일정 규칙</div>
+          <div class="rd">막히면 혼자 오래 붙들지 않는다. 하루 이상 진전이 없으면 공유한다.</div>
+        </div>
+        <div class="rule" style="border-left-color:var(--note);background:var(--note-soft)">
+          <div class="rt" style="color:var(--note)">범위 규칙</div>
+          <div class="rd">각 단계에서 <b>멈춰도 발표 가능한 산출물</b>을 먼저 확보한다. 확장은 그다음이다.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="slide" data-deck="ko">
+  <div class="eyebrow">Project Overview</div>
+  <div class="p2">
+    <div>
+      <div class="tags"><span>실증 프로젝트</span><span class="alt">Physical AI</span></div>
+      <div class="pname">4족 보행 로봇용<br>강화학습 기반 험지 적응 정책</div>
+      <div class="pdesc">사족보행 로봇이 모래·자갈·계단처럼 <b>겪어보지 않은 지형</b>에서도 넘어지지 않고 이동하도록,
+        시뮬레이션에서 보행 정책을 학습시키고 그 결과가 <b>실제 환경 조건에서도 통하는지</b>를 검증한다.</div>
+      <div class="why">
+        <div class="w">
+          <div class="wl">문제 · 배경</div>
+          <div class="wt">바퀴는 평탄한 곳에서만 최적이다. 계단·잔해·비정형 지형에서는 <b>발 디딜 곳을 골라 딛는 다리</b>가 필요하다.
+            그런데 다리 로봇은 본질적으로 불안정해 <b>넘어지면서 붙잡는 것</b>이 보행이고, 지형의 경우의 수는 무한해 규칙으로 다 쓸 수 없다.
+            결국 경험으로 배워야 하는데, <b>실물은 넘어지면 부서지고, 필요한 실패는 수백만 번이다.</b></div>
+        </div>
+        <div class="w">
+          <div class="wl">타겟 · 적용 대상</div>
+          <div class="wt">제조·산업 현장에서 <b>사람이 반복 순회하기 어려운 비정형 구역</b>· 설비 하부, 배관 주변,
+            바닥이 고르지 않은 협소 통로, 의 점검·모니터링 임무. 바퀴형 로봇은 진입하지 못하고
+            사람이 들어가기엔 반복 부담이 큰 구간이 1차 대상이다.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2>핵심 기능 <span class="en">Core Features</span></h2>
+      <div class="feat">
+        <div class="f"><div class="fn">01</div><div class="ft">시뮬레이션 보행 정책 학습</div>
+          <div class="fd">물리 시뮬레이터에서 수천 개 로봇을 동시에 학습시켜, 넘어지는 비용 없이 보행 정책을 획득</div></div>
+        <div class="f"><div class="fn">02</div><div class="ft">접촉 기반 적응 · 지형 커리큘럼</div>
+          <div class="fd">모래·자갈은 눈으로 봐도 밀도를 알 수 없다. 보고 판단하는 대신 <b>밟아보고 지형을 식별</b>하게 학습시키고, 쉬운 지형부터 자동 승급시킨다</div></div>
+        <div class="f"><div class="fn">03</div><div class="ft">실공간 재구성 검증 환경</div>
+          <div class="fd">실제 공간을 촬영해 3D로 복원하고, 그 안에서 학습된 정책이 통하는지 검증한다 <b>(확장 축)</b></div></div>
+        <div class="f"><div class="fn">04</div><div class="ft">정량 검증 · 실증 리포트</div>
+          <div class="fd">지형별 통과 성공률·속도추종 오차·낙상 횟수·외란 회복률로 결과를 수치화하고 재현 가능하게 기록</div></div>
+      </div>
+      <div class="stack">
+        <div class="sl">기술 스택</div>
+        <div class="sv">
+          <b>학습 환경</b> NVIDIA Isaac Sim / Isaac Lab · PhysX<br>
+          <b>평가 환경</b> MuJoCo (sim2sim 교차검증)<br>
+          <b>학습</b> PPO (rsl_rl) · Python · PyTorch<br>
+          <b>공간 재구성</b> COLMAP · 3D Gaussian Splatting · Blender<br>
+          <b>검증·전달</b> TensorBoard · 대시보드 · 시연 영상
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-deck="ko">
+  <div class="eyebrow">Project Schedule</div>
+  <h1 style="margin-bottom:3px">프로젝트 일정표</h1>
+  <p class="sub" style="margin-bottom:12px">20주. <b>1단계는 전원이 같은 것을 각자 한 번씩 완주한다</b>. 한 사람만 환경을 알면 그 사람이 5개월 내내 병목이 된다.
+    이후 축을 나누되 실험은 변수별로 분담한다. 각 단계는 <b>그 시점에서 멈춰도 발표 가능한 산출물</b>을 남긴다.</p>
+  <div class="gantt">
+    <div class="tw"><table class="g">
+      <colgroup><col style="width:10%"><col style="width:25%"><col style="width:9%"><col span="20" style="width:2.8%"></colgroup>
+      <tr>
+        <th rowspan="2">단계</th><th rowspan="2">세부 과업</th><th rowspan="2">담당</th>
+        <th class="mo" colspan="4">8월</th><th class="mo" colspan="4">9월</th>
+        <th class="mo" colspan="5">10월</th><th class="mo" colspan="4">11월</th><th class="mo" colspan="3">12월</th>
+      </tr>
+      <tr>
+        <th class="wk">1</th><th class="wk">2</th><th class="wk">3</th><th class="wk mk">4</th>
+        <th class="wk">5</th><th class="wk">6</th><th class="wk">7</th><th class="wk">8</th>
+        <th class="wk mk">9</th><th class="wk">10</th><th class="wk">11</th><th class="wk">12</th><th class="wk">13</th>
+        <th class="wk mk">14</th><th class="wk">15</th><th class="wk">16</th><th class="wk">17</th>
+        <th class="wk mk">18</th><th class="wk">19</th><th class="wk mk">20</th>
+      </tr>
+
+      <tr><td class="ph" rowspan="4">기반 구축</td>
+        <td class="tk">학습 환경 구축 · 버전 고정 <span style="color:var(--ink-3)">(각자 자기 머신)</span></td><td class="ow"><b style="color:var(--dim)">전원</b></td>
+        <td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">도메인 스터디 · 용어·논문 공동 정리</td><td class="ow"><b style="color:var(--dim)">전원</b></td>
+        <td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">문제정의 · 수요 조사 · 수행계획서</td><td class="ow">오흥재+<b style="color:var(--dim)">전원</b></td>
+        <td class="c"><div class="b note"></div></td><td class="c"><div class="b note"></div></td><td class="c"><div class="b note"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">공개 정책 재현, <b>각자 1회 완주</b></td><td class="ow"><b style="color:var(--dim)">전원</b></td>
+        <td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td class="ph" rowspan="4">정책 이해</td>
+        <td class="tk">보상 구조 분석 · 지표 판독 체계</td><td class="ow">임석헌·오현민</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">시뮬 지형 제작 파이프라인</td><td class="ow">맹라현·오흥재</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">실험 자동화 · 결과 수집 체계</td><td class="ow">이민우·오현민</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">단일변수 실험 <span style="color:var(--ink-3)">(변수별 분담)</span></td><td class="ow"><b style="color:var(--dim)">전원</b></td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b note"></div></td><td class="c"><div class="b note"></div></td><td class="c"><div class="b note"></div></td><td class="c"><div class="b note"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td class="ph" rowspan="3">확장</td>
+        <td class="tk">커스텀 험지 커리큘럼 설계·학습</td><td class="ow">맹라현·임석헌</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">도메인 랜덤화 · 강건성 확보</td><td class="ow">임석헌·이민우</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">실공간 재구성 <span style="color:var(--ink-3)">(확장 축)</span></td><td class="ow">오흥재·맹라현</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b soft"></div></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td class="ph" rowspan="2">실증 검증</td>
+        <td class="tk">비교 실험 · 정량 지표 산출</td><td class="ow">오현민·임석헌</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr>
+        <td class="tk">현장 조건 검증 · 검증 리포트</td><td class="ow">오흥재·이민우</td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td class="ph" rowspan="1">발표</td>
+        <td class="tk">시연 영상 · 최종 발표 준비</td><td class="ow">맹라현+<b style="color:var(--dim)">전원</b></td>
+        <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"><div class="b soft"></div></td><td class="c"><div class="b"></div></td><td class="c"><div class="b"></div></td></tr>
+    </table></div>
+    <div class="ms">
+      <span><i></i>수행 기간</span>
+      <span><i class="soft"></i>확장 축(조건부 착수)</span>
+      <span><i class="note"></i>최대 난이도, 변수를 한 번에 하나만 바꾼다</span>
+      <span><b class="mk">관문 5개</b>기획발표 9/4 · A-정책 9/12 · MVP 9/30 · NAV 11/7 · FINAL 12/11. 각 시점의 산출물로 진행을 판정</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-deck="ko">
+  <div class="eyebrow">Deliverables &amp; Methods</div>
+  <h1 style="margin-bottom:3px">산출물 목표 &amp; 수행 방법</h1>
+  <p class="sub" style="margin-bottom:14px">완료 기준(DoD)은 <b>말이 아니라 확인 가능한 상태</b>로 적었다.</p>
+  <div class="p4">
+    <div>
+      <div class="tw"><table class="d">
+        <tr><th>관문 · 산출물</th><th>완료 기준 (Definition of Done)</th></tr>
+        <tr class="key"><td class="o">기획발표<small>9/4 · 운영진 제출</small></td>
+          <td class="dod">프로젝트 기획서 · 브레인스토밍 · WBS 3종. 문제정의·수요 근거·검증 시나리오·평가지표 확정</td></tr>
+        <tr><td class="o">학습 환경 · 재현 절차서<small>9/4 이전 · 상시</small></td>
+          <td class="dod">전원이 동일 환경을 재구축 가능한 절차 확보. 공개 정책이 우리 환경에서 <b>동일한 학습 곡선으로 재현</b>됨</td></tr>
+        <tr class="key"><td class="o">A-정책: 기준 정책 · 지표 세트<small>9/12</small></td>
+          <td class="dod">기본 험지 정책 학습 완료. 속도추종 오차·통과 성공률·낙상 횟수가 <b>수치로 기록</b>되고, 이후 모든 실험의 비교 기준이 됨. <b>한 번 고정하면 중간발표까지 안 바꾼다</b></td></tr>
+        <tr class="key"><td class="o">MVP · 중간발표<small>9/30</small></td>
+          <td class="dod">일반화 평가표(미학습 지형 10종)와 <b>실패 5종에 대한 개선 결과</b>. 디지털 트윈 · 렌더 시연 1컷</td></tr>
+        <tr><td class="o">NAV: 실기 항법 검증<small>11/7</small></td>
+          <td class="dod">실물 Go2 가 SLAM·Nav2 로 지정 코스를 자율 주행. 실패 회차와 원인까지 리포트</td></tr>
+        <tr class="key"><td class="o">FINAL: 최종 실증결과 보고서 · 시연<small>12/11</small></td>
+          <td class="dod">정량 지표 + 비교 시연 영상 확보. <b>못 한 것과 그 이유</b>까지. 발표 리허설 1회 이상</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h2>수행 방법 <span class="en">Methods</span></h2>
+      <div class="meth">
+        <div class="me"><div class="mt">협업 도구</div>
+          <div class="md">코드·문서는 <code>Git</code>으로 이력 관리, 실험 결과는 <code>TensorBoard</code>로 공유.
+            산출물은 한 곳에 모아 버전을 남긴다.</div></div>
+        <div class="me"><div class="mt">소통 방식</div>
+          <div class="md">주 1회 정기 회의로 진행·블로커 공유. 결정이 필요한 안건은 <b>사전에 문서로</b> 올려 회의 시간을 판단에만 쓴다.</div></div>
+        <div class="me"><div class="mt">실험 방식</div>
+          <div class="md">기준선을 먼저 확보하고, 이후 <b>한 번에 하나의 변수만</b> 바꾼다.
+            모든 실험은 설정·커맨드·결과를 함께 기록해 재현 가능하게 한다.</div></div>
+        <div class="me" style="border-left-color:var(--dim)"><div class="mt">품질 관리</div>
+          <div class="md">"돌아간다"가 아니라 <b>지표로 확인</b>한다. 실패한 실험도 원인과 함께 남겨 같은 실패를 반복하지 않는다.</div></div>
+        <div class="me" style="border-left-color:var(--note);background:var(--note-soft)"><div class="mt">범위 방어</div>
+          <div class="md">각 단계에서 <b>멈춰도 발표 가능한 산출물</b>을 먼저 확보한 뒤 확장한다.
+            확장 축(실공간 재구성)은 기반이 선 뒤에만 착수한다.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<div id="bar"></div>
+<div id="chrome">
+  <div class="l"><a href="index.html" class="home">← 표지</a><span class="sep">|</span>인공지능사관학교 7기 · AI 도약과정 · 실증 프로젝트</div>
+  <div class="r">
+    <button class="nav" id="prev" aria-label="이전">‹</button>
+    <span id="pg"><b>1</b> / 3</span>
+    <button class="nav" id="next" aria-label="다음">›</button>
+    <button class="fs" id="fsb">전체화면</button>
+  </div>
+</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+const bar=document.getElementById('bar'),pg=document.getElementById('pg'),
+      prev=document.getElementById('prev'),next=document.getElementById('next');
+function go(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+  bar.style.width=((i+1)/slides.length*100)+'%';
+  pg.innerHTML='<b>'+(i+1)+'</b> / '+slides.length;
+  prev.disabled=i===0; next.disabled=i===slides.length-1;
+}
+prev.onclick=()=>go(i-1); next.onclick=()=>go(i+1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1)}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1)}
+  if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  if(e.key==='f'||e.key==='F')toggleFS();
+});
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+document.getElementById('fsb').onclick=toggleFS;
+let x0=null,y0=null,scrollBox=null,scrollX0=null;
+document.addEventListener('touchstart',e=>{
+  x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  scrollBox=e.target.closest('.gantt,.tw');
+  scrollX0=scrollBox?scrollBox.scrollLeft:null;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(x0===null){return}
+  const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+  const boxScrolled = scrollBox && Math.abs(scrollBox.scrollLeft-scrollX0)>3;
+  const mostlyHorizontal = Math.abs(dx)>Math.abs(dy);
+  if(!boxScrolled && mostlyHorizontal && Math.abs(dx)>50) go(dx<0?i+1:i-1);
+  x0=null;y0=null;scrollBox=null;scrollX0=null;
+},{passive:true});
+go(0);
+
+(function(){var b=document.getElementById('pdfBtn');if(b)b.addEventListener('click',()=>window.print());})();
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d6d3ca;--brand:#0e7a6e;--dim:var(--brand);--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<style>
+#themeBtn{position:fixed;bottom:14px;right:14px;z-index:9999;
+  background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.3rem .65rem;font-family:inherit;font-size:.66rem;font-weight:800;
+  letter-spacing:.12em;cursor:pointer;border-radius:4px;transition:.15s;
+  line-height:1.3;white-space:nowrap}
+#themeBtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#themeBtn:active{transform:translateY(1px)}
+@media print{#themeBtn{display:none!important}}
+</style>
+<button id="themeBtn" type="button" aria-label="다크/라이트 전환" title="다크/라이트 전환">다크</button>
+<script>(function(){
+  var d=document.documentElement,K='foothold-theme',b=document.getElementById('themeBtn'),
+      mq=window.matchMedia('(prefers-color-scheme: dark)');
+  function apply(t){d.setAttribute('data-theme',t);
+    b.textContent=(t==='dark')?'\ub77c\uc774\ud2b8':'\ub2e4\ud06c';}
+  function cur(){return localStorage.getItem(K)||('light');}
+  apply(cur());
+  b.addEventListener('click',function(){
+    var t=(cur()==='dark')?'light':'dark';localStorage.setItem(K,t);apply(t);});
+  mq.addEventListener&&mq.addEventListener('change',function(){
+    if(!localStorage.getItem(K))apply(cur());});
+})();</script>
+<!--/dark:v1-->
+</body>
+</html>

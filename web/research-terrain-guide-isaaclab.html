@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Isaac Lab v2.3.2 지형 가이드: Go2 커스텀 험지 설계 · FOOTHOLD</title>
+<meta name="description" content="Isaac Lab v2.3.2 의 지형 생성 구조와 설정 방법.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:anywhere}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>Isaac Lab v2.3.2 지형 가이드: Go2 커스텀 험지 설계</h1>
+  <p class="lede">Isaac Lab v2.3.2 의 지형 생성 구조와 설정 방법.</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">작성</span><span class="v">임석헌 · 2026-08-13 13:37</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / terrain-guide-isaaclab.md</span></div><div><span class="k">증거</span><span class="v">확인 2 · 추측 0 · 미측정 0</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 리서치
+작성: 임석헌 · 2026-08-13 13:37
+근거: 공식 문서
+요지: Isaac Lab v2.3.2 의 지형 생성 구조와 설정 방법.
+상태: 확정
+판: v1.0</p></blockquote>
+<blockquote><p>작성 <b>임석헌</b> · 2026-08-13 · 원본: <code>inbox/lim/20260813-terrain_guide.md</code> (승격 2026-08-13, 형식만 손질)
+검증 수위: terrain 클래스 목록(21종)·API 체계·기본 rough 구성은 <b>공식 v2.3.2 소스와 대조</b> <span class="ev ev-ok">확인됨</span>.
+현실 지형 대응표와 권장 절차는 공식 클래스의 기하·물리 한계에 근거한 <b>저자 설계 지침</b>이다.
+이 문서가 답하는 것: 험지 환경 갈래(Q4·Q5)의 «무엇으로, 어떤 순서로 지형을 만드나».
+공식 Go2 rough env가 이 21종 중 6종을 어떻게 묶고, 보상·시간축을 어떻게 오버라이드하는지는 <a href="research-go2-rough-training.html">험지 학습 커리큘럼</a>.</p></blockquote>
+</section>
+<section id="s1"><h2>한눈에 보는 전체 흐름과 핵심 요약</h2>
+<p>설계는 아래 순서로 돈다.</p>
+<ol><li>험지 정의 및 관찰·측정</li><li>험지 핵심 특징 분해 (높이 형상, 장애물, 간격, 재질/마찰, 변형성, 동적 요소)</li><li>기본 제공 terrain 으로 표현 가능한 요소를 우선 조합 (<code>TerrainGeneratorCfg.sub_terrains</code> + 비율 + 난이도 curriculum)</li><li>마찰·외란·센서 오차 등은 terrain 형상과 분리하여 물리 재질/EventCfg 로 모델링</li><li>Go2 baseline 을 같은 평가 조건에서 측정</li><li>핵심 특징이 여전히 표현되지 않는가?</li><ul><li>아니오: 기존 조합과 파라미터를 개선 (3으로)</li><li>예: 새 terrain 함수 또는 외부 USD/mesh/별도 물리 모델 구현</li></ul></ul><li>학습 → 고정 평가 세트 검증 → sim-to-real 범위 조정</li></ol>
+<p>핵심 원칙</p>
+<ol><li><b>처음부터 새 terrain 함수를 만들지 않는다.</b> 목표 현실 험지를 기하 형상, 접촉 물성, 변형성, 동적 요소로 분해하고 기존 terrain들의 조합으로 먼저 근사</li><li><code>ROUGH_TERRAINS_CFG</code>는 전체 terrain 목록이 아니라, 제공 terrain 중 일부를 선택해 만든 <b>예제 혼합 구성</b></li><li>Isaac Lab v2.3.2의 procedural sub-terrain 설정은 구체 클래스 기준으로 <b>Height Field 8종 + Triangle Mesh 13종 = 21종</b></li><li>모래·진흙·눈·물·loose gravel은 단순한 표면 높이 문제가 아니다. 입자 이동, 침하, 유체력, 속도 의존 저항 같은 물리가 필요하므로 기본 rigid terrain만으로 표현하는 데에는 한계</li><li><b>새 terrain 함수는 기존 조합으로 목표 환경의 학습에 중요한 핵심 특징을 표현할 수 없을 때만</b> 생성. 재질 또는 물리 문제라면 새 형상 함수가 아니라 material, EventCfg, 별도 rigid/deformable/particle/fluid 모델이 적절할 수 있다.</li><li>Go2 비교 실험에서는 baseline과 개선 정책에 동일한 terrain seed, 명령 분포, 초기 상태, episode 수와 평가 지표 적용</li></ol>
+</section>
+<section id="s2"><span id="1"></span><h2>1. Isaac Lab의 terrain 체계</h2>
+<p><code>TerrainImporterCfg.terrain_type</code>은 다음 세 입력 방식을 지원한다.</p>
+<div class="tw"><table><thead><tr><th>입력 방식</th><th>설정</th><th>의미</th></tr></thead><tbody><tr><td>평면</td><td><code>terrain_type=&quot;plane&quot;</code></td><td>매우 큰 기본 ground plane 직접 생성. procedural sub-terrain 클래스와는 별도 경로</td></tr><tr><td>USD</td><td><code>terrain_type=&quot;usd&quot;</code>, <code>usd_path=...</code></td><td>외부에서 제작하거나 스캔한 USD 지형. 복잡한 실제 구조 재현에 유용.</td></tr><tr><td>생성기</td><td><code>terrain_type=&quot;generator&quot;</code>, <code>terrain_generator=TerrainGeneratorCfg(...)</code></td><td>아래 21개 concrete sub-terrain을 단독 또는 혼합하여 절차적으로 생성.</td></tr></tbody></table></div>
+<p>생성기 방식은 <code>TerrainGeneratorCfg.sub_terrains</code> 딕셔너리에 terrain 설정을 넣어 구성한다. 각 설정의 <code>proportion</code>은 혼합에서 해당 유형이 선택될 상대 비율이며, <code>curriculum=True</code>이면 행 방향 난이도 수준을 구성할 수 있다. 각 sub-terrain은 중앙의 안전한 platform이나 flat patch를 제공할 수 있지만, 정확한 지원 여부와 파라미터는 클래스별로 다르다.</p>
+<h3>Height Field와 Triangle Mesh의 차이</h3>
+<ul><li><b>Height Field (<code>Hf...</code>)</b>: 각 <code>(x, y)</code>에 높이 하나를 갖는 2.5D 표면이다. 빠르고 연속적인 요철에 적합하지만, 동굴·돌출 천장·수직으로 겹치는 표면 같은 형상은 표현하지 못한다. 최종적으로 높이 배열이 triangle mesh로 변환된다.</li><li><b>Triangle Mesh (<code>Mesh...</code>)</b>: 박스, 계단, 틈, 레일, 반복 물체처럼 날카로운 모서리와 불연속 형상을 직접 구성하기 좋다. 복잡도가 높아질수록 충돌 mesh 비용과 접촉 안정성을 점검해야 한다.</li></ul>
+</section>
+<section id="s3"><span id="2"></span><h2>2. v2.3.2 기본 제공 procedural terrain 전체 목록 <span class="ev ev-ok">확인됨</span></h2>
+<p>아래 표는 추상 기반 클래스(<code>SubTerrainBaseCfg</code>, <code>HfTerrainBaseCfg</code>, <code>MeshRepeatedObjectsTerrainCfg</code>)를 제외하고, 공식 v2.3.2 API에 노출된 <b>직접 사용할 수 있는 concrete 설정 클래스 전체</b>를 정리한 것이다.</p>
+<div class="tw"><table><thead><tr><th>모든 지형의 종류</th><th>Isaac Lab 설정</th><th>어떤 지형인지 간단한 설명</th><th>현실에서는 어떤 환경을 의미하는지</th><th>특이사항</th></tr></thead><tbody><tr><td>균일 랜덤 요철 (HF)</td><td><code>HfRandomUniformTerrainCfg</code></td><td>일정 격자의 높이를 지정 범위에서 무작위로 만들고 보간한 울퉁불퉁한 표면</td><td>거친 흙길, 고르지 않은 잔디밭, 노후 포장면의 기하 근사</td><td><code>noise_range</code>, <code>noise_step</code>, <code>downsampled_scale</code>로 거칠기 조절. 재질이나 움직이는 흙을 표현하는 것은 아님</td></tr><tr><td>피라미드형 오르막 경사 (HF)</td><td><code>HfPyramidSlopedTerrainCfg</code></td><td>외곽에서 중앙 평탄부로 갈수록 높아지는 사방 경사</td><td>제방·램프·언덕 접근부</td><td><code>slope_range</code>, <code>platform_width</code>; 방향이 하나인 긴 실제 경사와 형상이 다를 수 있음</td></tr><tr><td>피라미드형 내리막 경사 (HF)</td><td><code>HfInvertedPyramidSlopedTerrainCfg</code></td><td>외곽에서 중앙으로 내려가는 사방 경사</td><td>배수 분지, 오목한 경사, 언덕 하강 구간</td><td>위 클래스의 inverted 형태. 음의 높이와 spawn 위치에 주의</td></tr><tr><td>피라미드형 오르막 계단 (HF)</td><td><code>HfPyramidStairsTerrainCfg</code></td><td>외곽에서 중앙 플랫폼까지 사방으로 올라가는 계단</td><td>건물 계단, 제방의 단형 구조</td><td>height-field 이산화의 영향을 받음. <code>step_width</code>, <code>step_height_range</code>, <code>platform_width</code> 사용</td></tr><tr><td>피라미드형 내리막 계단 (HF)</td><td><code>HfInvertedPyramidStairsTerrainCfg</code></td><td>외곽에서 중앙으로 내려가는 사방 계단</td><td>지하 출입 계단, 움푹한 계단식 구조</td><td><code>HfPyramidStairsTerrainCfg</code>의 inverted 전용 클래스</td></tr><tr><td>이산 장애물 (HF)</td><td><code>HfDiscreteObstaclesTerrainCfg</code></td><td>서로 다른 크기와 높이의 사각 장애물을 무작위 배치</td><td>낮은 잔해, 보도 턱, 불규칙 블록 지대</td><td><code>num_obstacles</code>, <code>obstacle_height_range</code>, 최소·최대 폭 설정. 물체는 고정된 표면 일부임</td></tr><tr><td>파형 지형 (HF)</td><td><code>HfWaveTerrainCfg</code></td><td>사인/코사인 계열의 반복적인 물결 높이 표면</td><td>완만한 연속 둔덕, 반복적인 굴곡, 밭고랑의 단순 근사</td><td><code>amplitude_range</code>, <code>num_waves</code>; 실제 물이나 움직이는 파도가 아님</td></tr><tr><td>징검다리 (HF)</td><td><code>HfSteppingStonesTerrainCfg</code></td><td>평평한 디딤돌 사이를 깊은 영역으로 분리</td><td>징검다리, 불연속 발판, 바위 사이 틈</td><td><code>stone_width</code>, <code>stone_distance_range</code>, <code>holes_depth</code>; 깊은 바닥으로 틈을 근사하며 진짜 빈 공간과 충돌 특성이 다를 수 있음</td></tr><tr><td>평면 mesh</td><td><code>MeshPlaneTerrainCfg</code></td><td>평평한 사각 sub-terrain</td><td>실내 바닥, 공장·창고 바닥, 평탄 포장도로</td><td><code>terrain_type=&quot;plane&quot;</code>과 별개의 generator용 sub-terrain. 혼합 지형에 평지 비율을 넣을 때 유용</td></tr><tr><td>피라미드형 오르막 계단 (Mesh)</td><td><code>MeshPyramidStairsTerrainCfg</code></td><td>중앙 플랫폼을 향해 사방에서 올라가는 박스 계단</td><td>계단, 단차가 반복되는 구조물</td><td>날카로운 단차 표현에 적합. <code>holes=True</code> 옵션은 계단 일부를 제거하며 일반적 의미의 무작위 구멍은 아님</td></tr><tr><td>피라미드형 내리막 계단 (Mesh)</td><td><code>MeshInvertedPyramidStairsTerrainCfg</code></td><td>중앙 플랫폼 쪽으로 내려가는 mesh 계단</td><td>지하 계단, 계단식 함몰부</td><td>위 계단의 inverted 형태. 충돌 모서리와 발 접촉 안정성 확인 필요</td></tr><tr><td>랜덤 그리드 블록 (Mesh)</td><td><code>MeshRandomGridTerrainCfg</code></td><td>고정 폭 격자 셀을 서로 다른 높이로 배치</td><td>울퉁불퉁한 블록 포장, 깨진 보도블록, 규칙 격자 잔해</td><td>정사각형 terrain만 지원. <code>grid_width</code>, <code>grid_height_range</code>; <code>holes=True</code> 지원</td></tr><tr><td>레일 (Mesh)</td><td><code>MeshRailsTerrainCfg</code></td><td>중앙을 둘러싼 안쪽·바깥쪽 박스 레일/턱</td><td>철도 레일의 형상 근사, 케이블 덮개, 낮은 길쭉한 턱</td><td><code>rail_thickness_range</code>, <code>rail_height_range</code>; 실제 선로의 침목·자갈은 별도 조합 필요</td></tr><tr><td>구덩이 (Mesh)</td><td><code>MeshPitTerrainCfg</code></td><td>중앙 플랫폼 주변을 낮춘 함몰 구조</td><td>도랑, 웅덩이 바닥, 굴착부</td><td><code>pit_depth_range</code>, <code>double_pit</code>; 물이나 부드러운 바닥은 포함하지 않음</td></tr><tr><td>박스/단상 (Mesh)</td><td><code>MeshBoxTerrainCfg</code></td><td>중앙에 피라미드와 비슷한 높은 박스 단상을 만듦</td><td>하역장 단차, 높은 연석, 단상</td><td><code>box_height_range</code>, <code>double_box</code>; 반복 장애물이 아니라 중앙 구조물</td></tr><tr><td>틈/도랑 (Mesh)</td><td><code>MeshGapTerrainCfg</code></td><td>중앙 플랫폼 둘레에 지정 폭의 빈 틈을 배치</td><td>도랑, 바닥 균열, 플랫폼 사이 간극</td><td><code>gap_width_range</code>, <code>platform_width</code>; Go2가 실제로 건널 수 있는 폭과 센서 인지 범위를 함께 설계</td></tr><tr><td>떠있는 링 (Mesh)</td><td><code>MeshFloatingRingTerrainCfg</code></td><td>중앙 주변에 지면에서 떠 있는 사각 링 장애물을 배치</td><td>낮은 가로대, 파이프·프레임 아래 통과, 몸통 높이 제약</td><td>발밑 지형보다 몸통 충돌·ducking/clearance 시험에 가깝다. 링 높이·두께 범위 사용</td></tr><tr><td>별 모양 방사형 장벽 (Mesh)</td><td><code>MeshStarTerrainCfg</code></td><td>중앙에서 바깥으로 뻗는 여러 박스 바(bar)를 별 모양으로 배치</td><td>방사형 칸막이, 좁은 통로, 교차 장애물</td><td><code>num_bars</code>는 2 이상. 자연 지형보다는 경로 선택·몸체 충돌 시험용</td></tr><tr><td>반복 피라미드 (Mesh)</td><td><code>MeshRepeatedPyramidsTerrainCfg</code></td><td>여러 피라미드 물체를 반복·무작위 배치</td><td>뾰족한 돌밭, 콘형 장애물의 근사</td><td>시작/종료 <code>ObjectCfg</code>로 curriculum 가능. 높이 noise 지원; 모두 고정 rigid geometry</td></tr><tr><td>반복 박스 (Mesh)</td><td><code>MeshRepeatedBoxesTerrainCfg</code></td><td>여러 박스 물체를 반복·무작위 배치</td><td>건설 잔해, 벽돌·블록, 불규칙 stepping blocks</td><td>개별 movable rubble이 아니라 하나의 고정 terrain mesh. 실제 전복·미끄러짐 없음</td></tr><tr><td>반복 원기둥 (Mesh)</td><td><code>MeshRepeatedCylindersTerrainCfg</code></td><td>여러 원기둥 물체를 반복·무작위 배치</td><td>통나무 끝, 둥근 돌, 볼라드·말뚝의 근사</td><td>원기둥은 고정됨. 굴러가는 통나무/돌은 별도 rigid body로 구현해야 함</td></tr></tbody></table></div>
+<h3>목록에 포함하지 않은 기반 설정</h3>
+<ul><li><code>SubTerrainBaseCfg</code>: 모든 sub-terrain 설정의 기반 클래스이며 지형 자체가 아니다.</li><li><code>HfTerrainBaseCfg</code>: height-field 공통 설정 기반이며 지형 자체가 아니다.</li><li><code>MeshRepeatedObjectsTerrainCfg</code>: 반복 물체 terrain의 기반 설정이다. 일반 callable을 받을 수 있지만, 공식 concrete 편의 클래스는 pyramids, boxes, cylinders 세 가지다.</li><li><code>TerrainGeneratorCfg</code>, <code>TerrainImporterCfg</code>: 각각 생성기와 가져오기 관리 설정이며 sub-terrain 종류가 아니다.</li></ul>
+</section>
+<section id="s4"><span id="3"></span><h2>3. 기본 rough 설정과 “전체 제공 목록”의 차이</h2>
+<p>공식 <code>ROUGH_TERRAINS_CFG</code>는 보통 다음 6개를 섞은 사전 정의 예제이다.</p>
+<ul><li><code>MeshPyramidStairsTerrainCfg</code></li><li><code>MeshInvertedPyramidStairsTerrainCfg</code></li><li><code>MeshRandomGridTerrainCfg</code></li><li><code>HfRandomUniformTerrainCfg</code></li><li><code>HfPyramidSlopedTerrainCfg</code></li><li><code>HfInvertedPyramidSlopedTerrainCfg</code></li></ul>
+<p>따라서 “Go2 rough task가 기본으로 쓰는 지형”과 “Isaac Lab이 제공하는 모든 지형”은 같은 의미가 아니다. Go2 프로젝트에서는 먼저 공식 baseline의 원래 설정을 보존해 재현용 평가를 하고, 그 다음 목표 커스텀 환경에 필요한 sub-terrain만 별도 config로 구성하는 것이 좋다.</p>
+</section>
+<section id="s5"><span id="4"></span><h2>4. 직접 지원되지 않는 현실 지형과 구현 방법 (설계 지침)</h2>
+<p>여기서 “직접 지원되지 않는다”는 말은 <b>전용 procedural terrain 설정 하나만 선택해 해당 물리 현상을 충실히 얻을 수 없다</b>는 뜻이다. 단순한 시각 재질이나 고정 높이 형상으로 비슷하게 보이게 하는 것과 실제 접촉 동역학을 재현하는 것은 구분해야 한다.</p>
+<div class="tw"><table><thead><tr><th>현실 지형/현상</th><th>기본 terrain만으로 부족한 핵심</th><th>권장 구현 방법</th><th>Go2 학습 시 주의점</th></tr></thead><tbody><tr><td>건조 모래</td><td>발 침하, 전단 항복, 모래 밀림, 속도 의존 저항</td><td>1차 근사는 요철 mesh + 낮고 random한 마찰 + 외란/저항 모델. 충실도가 필요하면 입자/변형 지반 모델 또는 실측 기반 접촉 force 모델을 별도 구현</td><td>단순 저마찰만 쓰면 “모래”가 아니라 미끄러운 단단한 바닥을 학습하게 됨</td></tr><tr><td>진흙</td><td>점착, 침하, 흡착, 속도·수분 의존 저항</td><td>deformable/particle 또는 커스텀 접촉·drag force 모델; 구역별 물성과 지면 함몰 상태를 관리</td><td>발을 뺄 때의 저항과 접촉 지속시간이 성능을 좌우함</td></tr><tr><td>눈</td><td>압축·붕괴, 깊이에 따른 저항, 숨은 장애물</td><td>깊이/침하 상태를 가진 커스텀 모델, deformable/particle 접근; 간이 모델은 높이 요철 + 깊이 기반 저항</td><td>powder/packed/icy snow를 서로 다른 domain으로 분리해야 함</td></tr><tr><td>물/얕은 침수</td><td>부력, 유체 항력, 유동, splash</td><td>시각 water material만으로는 불충분. rigid-body에 깊이·속도 기반 buoyancy/drag force 적용 또는 외부 유체/입자 모델 연동</td><td>물속 관절 저항, 센서 노이즈, 방수 한계는 terrain mesh 밖의 문제</td></tr><tr><td>loose gravel</td><td>개별 자갈 이동·회전, 발 아래 재배열</td><td>다수의 작은 rigid bodies/instancing 또는 입자 모델. 저비용 근사는 repeated objects/roughness + 마찰·외란 randomization</td><td>수천 개 rigid body는 계산비용과 접촉 수를 크게 늘림. 대표 크기 분포로 축약</td></tr><tr><td>실제 복합 잔해</td><td>불규칙 mesh, 움직이는 물체, 날카로운 접촉, 얽힘</td><td>스캔/모델링한 USD 또는 mesh를 import하고, 움직여야 하는 잔해는 별도 rigid bodies로 분리. 단순 부분은 repeated boxes/cylinders와 조합</td><td>collision mesh 단순화, 질량·관성·마찰 분포, 관통/폭발 접촉을 검증</td></tr><tr><td>공간별 마찰 차이</td><td>한 개의 전역 ground material로는 위치별 접촉 차이를 직접 표현하기 어려움</td><td>영역을 여러 collision prim/mesh로 분리해 각각 physics material 지정. 필요하면 발 위치에 따라 material/force를 적용하는 커스텀 로직</td><td>시각 텍스처 경계와 물리 경계를 일치시키고 경계 통과 평가를 포함</td></tr><tr><td>젖은 바닥/얼음</td><td>낮은 마찰, 방향·속도 의존 마찰, 국소 패치</td><td>여러 material 영역 + static/dynamic friction randomization. 복잡한 마찰 법칙은 커스텀 접촉/force 모델</td><td>전 구역 마찰을 낮추면 패치 탐지·전환 능력을 평가하지 못함</td></tr><tr><td>풀·덤불</td><td>유연한 줄기 접촉, 가림, 끌림</td><td>시각 vegetation과 collision proxy를 분리; 간이 spring/drag force 또는 articulation/deformable 객체 사용</td><td>카메라/LiDAR 가림과 실제 기계적 저항을 별도로 시험</td></tr><tr><td>카펫·고무 매트</td><td>순응성, 감쇠, 발 접촉 면적 변화</td><td>material의 마찰·반발·감쇠 근사 또는 deformable surface</td><td>rigid flat plane + 높은 마찰만으로 순응성은 표현되지 않음</td></tr><tr><td>움직이는 돌·통나무</td><td>접촉 시 굴림·전도·이동</td><td>terrain mesh가 아니라 별도 rigid objects로 배치하고 질량·관성·마찰 randomization</td><td>환경 reset 때 pose 안정화와 초기 관통 방지 필요</td></tr><tr><td>무너지는 발판</td><td>하중에 따른 파손·낙하, 상태 전이</td><td>joint/rigid body + trigger/state machine 또는 deformable/fracture 대체 모델</td><td>학습이 trigger의 허점을 악용하지 않는지 확인</td></tr><tr><td>메시/철망·격자 바닥</td><td>발끝 끼임, 얇은 구조, 고주파 접촉</td><td>상세 mesh 또는 단순화된 collision proxy를 USD로 import</td><td>지나치게 얇거나 복잡한 삼각형은 접촉 불안정과 큰 계산비용 유발</td></tr><tr><td>뿌리·비정형 암반</td><td>방향성 있는 길쭉한 돌출과 자연스러운 불규칙 곡면</td><td>rails/repeated objects/HF roughness 조합; 부족하면 스캔 mesh 또는 custom trimesh 함수</td><td>높이 통계뿐 아니라 간격·방향·곡률 분포를 실측에 맞춤</td></tr><tr><td>동적 지면(진동판, 이동 플랫폼)</td><td>시간에 따라 pose가 변함</td><td>kinematic/rigid body 플랫폼 또는 articulation로 구현; terrain generator가 담당할 문제가 아님</td><td>관측에 platform motion 정보가 필요한지 검토</td></tr></tbody></table></div>
+<h3>공간별 마찰 구현 시 중요한 구분</h3>
+<p><code>TerrainImporterCfg.physics_material</code>은 가져온 terrain에 적용하는 물리 재질의 출발점이다. 그러나 위치마다 다른 마찰을 원한다면 단일 통합 mesh와 단일 material만으로 끝내지 말고, 영역을 별도 collision prim으로 분리해 material을 배정하거나 접촉 위치 기반의 커스텀 효과를 구현해야 한다. <code>EventCfg</code>를 이용한 마찰 randomization은 <b>환경 또는 body/material 속성의 분포를 바꾸는 수단</b>이지, 자동으로 연속적인 공간 마찰 지도를 생성하는 terrain 함수는 아니다.</p>
+</section>
+<section id="s6"><span id="5"></span><h2>5. 기존 terrain 조합을 우선하는 설계 절차</h2>
+<h3>5.1 목표 현실 험지를 구성요소로 분해한다</h3>
+<p>예를 들어 “산악 구조 현장의 젖은 잔해길”을 하나의 새 지형 이름으로 취급하지 말고 다음처럼 분해한다.</p>
+<div class="tw"><table><thead><tr><th>축</th><th>관찰할 내용</th><th>Isaac Lab의 첫 번째 후보</th></tr></thead><tbody><tr><td>큰 지형 윤곽</td><td>오르막/내리막, 함몰부</td><td><code>HfPyramidSlopedTerrainCfg</code>, <code>HfInvertedPyramidSlopedTerrainCfg</code>, <code>MeshPitTerrainCfg</code></td></tr><tr><td>국소 높이 변화</td><td>작은 요철과 깨진 바닥</td><td><code>HfRandomUniformTerrainCfg</code>, <code>MeshRandomGridTerrainCfg</code></td></tr><tr><td>불연속 장애물</td><td>벽돌, 돌, 파이프</td><td><code>MeshRepeatedBoxesTerrainCfg</code>, <code>MeshRepeatedPyramidsTerrainCfg</code>, <code>MeshRepeatedCylindersTerrainCfg</code>, <code>MeshRailsTerrainCfg</code></td></tr><tr><td>통과 불가능 영역</td><td>균열, 도랑</td><td><code>MeshGapTerrainCfg</code>, <code>HfSteppingStonesTerrainCfg</code></td></tr><tr><td>접촉 물성</td><td>젖은 패치, 얼음, 고무</td><td>복수 collision prim/material, 마찰 randomization</td></tr><tr><td>움직임</td><td>굴러가는 돌, 흔들리는 판</td><td>별도 rigid body/articulation; terrain generator 밖에서 구성</td></tr><tr><td>센서 조건</td><td>먼지, 가림, depth 오차</td><td>observation noise, sensor material/scene asset, EventCfg</td></tr></tbody></table></div>
+<h3>5.2 기존 지형을 혼합한다</h3>
+<p>서로 다른 sub-terrain을 <code>sub_terrains</code>에 넣는 표준 방식은 각 환경 tile이 유형 중 하나를 갖게 한다. 즉 <code>proportion</code>은 한 tile 안에서 형상을 자동 합성하는 비율이 아니라 <b>tile 유형의 샘플링 비율</b>이다. 한 tile 안에 경사+잔해+마찰 패치를 동시에 넣고 싶다면 다음 중 하나를 선택한다.</p>
+<ol><li>여러 구간을 이어 붙인 외부 USD/mesh를 만든다.</li><li>기존 공식 생성 함수의 결과를 참고해 하나의 custom composite terrain 함수를 만든다.</li><li>고정 terrain 위에 별도 rigid objects와 material 영역을 배치한다.</li></ol>
+<p>단, 2번은 아래 기준을 충족할 때 선택한다.</p>
+<h3>5.3 새 terrain 함수를 만드는 기준</h3>
+<p>다음 질문에 <b>모두 예</b>일 때 새 함수를 만드는 것이 타당하다.</p>
+<ul><li>목표 현실 환경의 특징이 Go2의 성공/실패를 실제로 좌우하는가?</li><li>기존 terrain의 파라미터 조정, tile 혼합, 별도 rigid object, material 분할, USD import로 그 특징을 표현하기 어려운가?</li><li>새 함수가 만들어야 할 입력 파라미터와 난이도(<code>difficulty</code> 0~1)의 의미를 명확히 정의할 수 있는가?</li><li>collision 안정성, spawn 가능한 평탄부, origin, 경계, 재현 가능한 seed, curriculum 단조성을 시험할 수 있는가?</li><li>추가 복잡도가 학습 throughput과 접촉 안정성에 미치는 비용을 감당할 수 있는가?</li></ul>
+<p>하나라도 아니오라면 기존 구성요소 조합을 먼저 개선하는 편이 좋다.</p>
+</section>
+<section id="s7"><span id="6"></span><h2>6. 새 terrain 함수를 구현해야 할 때</h2>
+<h3>Height Field가 적합한 경우</h3>
+<p>각 <code>(x, y)</code>에 높이 하나로 표현할 수 있는 연속 또는 계단형 표면이면 공식 <code>HfTerrainBaseCfg</code> 패턴을 따른다.</p>
+<ol><li><code>HfTerrainBaseCfg</code>를 상속한 config class를 정의한다.</li><li><code>function</code>에 생성 함수를 연결한다.</li><li>함수는 <code>difficulty</code>와 <code>cfg</code>를 받아 정수 height field 배열과 origin을 생성하는 공식 패턴을 따른다.</li><li><code>horizontal_scale</code>, <code>vertical_scale</code>, <code>slope_threshold</code>, border와 중앙 platform을 검증한다.</li></ol>
+<h3>Triangle Mesh가 적합한 경우</h3>
+<p>틈, 돌출, 얇은 구조, 불연속 물체처럼 height field 한계를 넘으면 <code>SubTerrainBaseCfg</code> 기반의 trimesh 생성 패턴을 따른다.</p>
+<ol><li>config class와 <code>function</code> callable을 정의한다.</li><li>함수는 <code>difficulty</code>와 config를 받고 <code>list[trimesh.Trimesh]</code> 및 terrain origin을 반환한다.</li><li>전체 형상은 <code>(0, 0)</code>에서 <code>cfg.size</code> 범위 안에 있어야 한다.</li><li>폐합 mesh, 법선, 중복 면, 너무 작은 삼각형, self-intersection을 검사한다.</li><li>Go2 spawn/goal용 platform 또는 <code>flat_patch_sampling</code>을 설계한다.</li></ol>
+<h3>외부 USD/mesh가 더 적합한 경우</h3>
+<p>실측 스캔, 건물 잔해, 복잡한 산업 시설처럼 형상이 고정되고 사실성이 중요하면 procedural 함수보다 Blender/CAD/photogrammetry에서 collision proxy를 만든 뒤 <code>terrain_type=&quot;usd&quot;</code>로 가져오는 편이 낫다. 시각 mesh와 collision mesh를 분리해 충돌 복잡도를 낮춘다.</p>
+</section>
+<section id="s8"><span id="7"></span><h2>7. Unitree Go2 custom rough-terrain 권장 개발 순서</h2>
+<ol><li><b>기준선 보존</b>: 공식 Go2 rough 환경과 checkpoint의 설정·seed·평가 지표를 고정한다.</li><li><b>목표 현장 명세</b>: 경사각, 단차 높이, 장애물 폭·간격, 마찰 범위, 움직이는 물체 비율을 가능한 한 측정값으로 정의한다.</li><li><b>최소 조합</b>: 목표 특성마다 공식 terrain 하나를 대응시키고, 불필요한 종류는 넣지 않는다.</li><li><b>난이도 단계화</b>: Go2 신체 치수와 관절 한계를 기준으로 쉬운 범위에서 시작해 <code>difficulty_range</code>/curriculum을 증가시킨다.</li><li><b>형상과 물리 분리</b>: geometry, friction/restitution, 질량·외란, 센서 noise를 각각 별도 ablation 가능한 설정으로 둔다.</li><li><b>baseline 평가</b>: 학습 전에 custom terrain 고정 평가 세트에서 성공률, 낙상률, 속도 추종 오차, 몸체/무릎 충돌, 발 미끄러짐, 에너지/torque, terrain별 결과를 기록한다.</li><li><b>학습 및 비교</b>: 같은 평가 seed에서 baseline, fine-tuned, custom-trained 정책을 비교한다. 평균 reward만으로 결론 내리지 않는다.</li><li><b>실패 원인별 수정</b>: 형상 표현 문제면 terrain, 접촉 문제면 material/physics, 행동 유도 문제면 reward, 관측 부족이면 sensor/observation을 수정한다.</li><li><b>새 함수 결정</b>: 기존 조합으로 핵심 실패 모드가 재현되지 않을 때만 custom terrain을 구현한다.</li><li><b>sim-to-real 검증</b>: randomization 범위를 무조건 넓히지 말고 실측 오차와 현실 변동 범위를 덮도록 조정한다.</li></ol>
+<h3>권장 평가 분할</h3>
+<ul><li><b>기본 분포(ID)</b>: 공식 rough terrain에서 원래 성능이 유지되는지 확인</li><li><b>커스텀 학습 분포</b>: 학습에 사용한 목표 terrain 성능 측정</li><li><b>커스텀 미관측 분포(OOD)</b>: 높이·간격·마찰 조합과 seed를 분리해 일반화 측정</li><li><b>단일 요소 진단 세트</b>: stairs-only, gap-only, low-friction-only처럼 실패 원인을 분리</li></ul>
+</section>
+<section id="s9"><span id="8"></span><h2>8. 공식 출처 및 검증 범위</h2>
+<p>다음 v2.3.2 공식 자료를 기준으로 클래스 이름과 체계를 검증했다.</p>
+<ul><li><a href="https://isaac-sim.github.io/IsaacLab/v2.3.2/source/api/lab/isaaclab.terrains.html" target="_blank" rel="noopener">Isaac Lab v2.3.2 terrain API 전체</a></li><li><a href="https://isaac-sim.github.io/IsaacLab/v2.3.2/source/api/index.html" target="_blank" rel="noopener">Isaac Lab v2.3.2 API Reference</a></li><li><a href="https://github.com/isaac-sim/IsaacLab/tree/v2.3.2" target="_blank" rel="noopener">Isaac Lab GitHub v2.3.2 태그</a></li><li><a href="https://github.com/isaac-sim/IsaacLab/blob/v2.3.2/source/isaaclab/isaaclab/terrains/height_field/hf_terrains_cfg.py" target="_blank" rel="noopener">v2.3.2 Height Field config 소스</a></li><li><a href="https://github.com/isaac-sim/IsaacLab/blob/v2.3.2/source/isaaclab/isaaclab/terrains/trimesh/mesh_terrains_cfg.py" target="_blank" rel="noopener">v2.3.2 Triangle Mesh config 소스</a></li><li><a href="https://github.com/isaac-sim/IsaacLab/blob/v2.3.2/source/isaaclab/isaaclab/terrains/config/rough.py" target="_blank" rel="noopener">v2.3.2 기본 rough terrain config 소스</a></li></ul>
+<blockquote><p><b>범위 주의:</b> 이 문서의 “21종”은 v2.3.2 <code>isaaclab.terrains</code>의 concrete procedural sub-terrain config 클래스 기준이다. <code>plane</code>/<code>usd</code> importer 방식, 사용자가 제공하는 custom callable, 외부 asset, 물리 재질과 동적 객체는 별도 기능이며 21종에 포함하지 않았다. 현실 환경 대응과 구현 권고는 공식 클래스의 기하·물리적 한계를 바탕으로 한 프로젝트 설계 지침이다.</p></blockquote>
+</section>
+<section id="s10"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-08-13</td><td>처음 씀</td><td>이전 이력은 git 에</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

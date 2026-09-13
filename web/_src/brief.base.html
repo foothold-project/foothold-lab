@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>프로젝트 브리핑 · FOOTHOLD</title>
+<meta name="description" content="지금 확정된 것과 아직 아닌 것. 조사로 확인한 근거와 연락처, 그리고 쓰면 안 되는 주장까지.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--brand:#0e7a6e; --dim:var(--brand);--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  /* ★ 2026-09-08 팀장 지적: 본문이 가운데로 몰리고 좌우가 빈다.
+     원인은 이 값 자체가 아니라 «반쪽만 넓어진» 것이었다. 이 페이지는 원래
+     .wrap = calc(measure + 4rem) = 844px 로 설계됐는데, 나중에 주입되는
+     정보구조 CSS 가 .wrap 에만 max-width:1040px!important 를 걸어 겉만 넓혔다.
+     안쪽 p · .lede · .tw · .st 는 780px 그대로라 1040 껍데기에 780 본문이
+     들어앉았다. 규칙선과 판 띠는 1040 까지 가는데 내용만 780 에서 끊긴 이유다.
+     디자인 시스템 토큰은 건드리지 않는다. 이 페이지가 그 폭을 쓰게 맞춘다.
+     976 + 4rem(64px) = 1040 이라 .wrap 의 원래 calc 와 주입값이 일치한다. */
+  --measure:976px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3)}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.4rem;border-bottom:2px solid var(--ink);margin-bottom:1.6rem}
+.eyebrow{font-size:.6rem;font-weight:800;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:clamp(1.5rem,3.4vw,2rem);font-weight:800;letter-spacing:-.03em;line-height:1.3;margin-bottom:.55rem}
+.lede{font-size:.92rem;color:var(--ink-2);max-width:var(--measure)}
+.upd{margin-top:.9rem;font-size:.72rem;color:var(--ink-3)}
+.upd b{color:var(--dim)}
+
+section{margin-top:2.4rem;scroll-margin-top:60px}
+h2{font-size:1.12rem;font-weight:800;letter-spacing:-.02em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--ink);margin-bottom:.9rem;display:flex;align-items:baseline;gap:.55rem}
+h2 .n{font-size:.64rem;font-weight:800;color:var(--dim);letter-spacing:.1em;flex:0 0 auto}
+h3{font-size:.9rem;font-weight:800;margin:1.3rem 0 .45rem}
+p{margin:.55rem 0;max-width:var(--measure);color:var(--ink-2)}
+p b,li b,td b{color:var(--ink)}
+ul{margin:.5rem 0 .5rem 1.25rem;color:var(--ink-2)}
+li{margin:.22rem 0}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  padding:.08em .32em;border-radius:3px;color:var(--ink);word-break:break-all}
+
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:.7rem 0 1rem;max-width:var(--measure)}
+table{width:100%;border-collapse:collapse;font-size:.82rem;background:var(--card);min-width:440px}
+th{text-align:left;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);padding:.48rem .7rem;border-bottom:1px solid var(--rule);
+  background:var(--paper-2);white-space:nowrap}
+td{padding:.48rem .7rem;border-bottom:1px solid var(--rule);color:var(--ink-2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.num{font-weight:800;color:var(--dim);white-space:nowrap}
+
+/* 확정 / 미확인 */
+.st{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:.9rem 0;max-width:var(--measure)}
+.st>div{background:var(--dim-soft);border:1px solid var(--rule);padding:.75rem .9rem}
+.st>div.open{border-top-color:var(--note)}
+.st .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+.st>div.open .sh{color:var(--note)}
+.st ul{margin:0 0 0 1.05rem;font-size:.81rem}
+.st li{margin:.28rem 0}
+.st .who{display:block;font-size:.68rem;color:var(--ink-3)}
+
+/* 연락처 */
+.cc{background:var(--card);border:1px solid var(--rule);margin:.8rem 0;max-width:var(--measure)}
+.cc-row{display:grid;grid-template-columns:2rem 1fr auto;gap:.6rem;padding:.55rem .8rem;
+  border-bottom:1px solid var(--rule);align-items:baseline}
+.cc-row:last-child{border-bottom:none}
+.cc-row .no{font-size:.62rem;font-weight:800;color:var(--dim)}
+.cc-row .who{font-size:.84rem;font-weight:700;color:var(--ink)}
+.cc-row .who span{display:block;font-size:.72rem;font-weight:400;color:var(--ink-3)}
+.cc-row .tel{font-family:'Consolas',monospace;font-size:.82rem;font-weight:700;
+  color:var(--dim);white-space:nowrap;text-align:right}
+.cc-row .tel span{display:block;font-size:.7rem;font-weight:400;color:var(--ink-3)}
+
+/* 한 줄 */
+.oneline{background:var(--ink);color:var(--paper);padding:1.1rem 1.3rem 1.2rem;
+  margin:.9rem 0 1.1rem;max-width:var(--measure)}
+.oneline .ol-q{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.55rem}
+.oneline .ol-a{font-size:clamp(1.02rem,2.2vw,1.28rem);font-weight:700;line-height:1.6;
+  color:var(--paper);margin:0;letter-spacing:-.01em;max-width:none}
+.oneline .ol-a b{color:#7fd8cc}
+
+/* 서사 */
+.nar{background:var(--paper-2);border:1px solid var(--rule);
+  padding:1rem 1.2rem;margin:1rem 0;max-width:var(--measure)}
+.nar .beat{display:grid;grid-template-columns:5.2rem 1fr;gap:.7rem;padding:.4rem 0;
+  border-bottom:1px dotted var(--rule)}
+.nar .beat:last-child{border-bottom:none}
+.nar .bk{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);padding-top:.25rem}
+.nar .bv{font-size:.88rem;color:var(--ink);line-height:1.7}
+.nar .beat.hit .bk{color:var(--stop)}
+.nar .beat.turn .bk{color:var(--dim)}
+
+/* 금지 */
+.ban{background:var(--stop-soft);border:1px solid var(--stop);padding:.85rem 1rem;
+  margin:1rem 0;max-width:var(--measure)}
+.ban .bh{font-size:.62rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--stop);margin-bottom:.5rem}
+.ban-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;padding:.38rem 0;
+  border-bottom:1px dotted rgba(163,52,42,.3);font-size:.81rem}
+.ban-row:last-child{border-bottom:none}
+.ban-row .x{color:var(--stop);font-weight:700}
+.ban-row .y{color:var(--ink-2)}
+
+.src{font-size:.72rem;color:var(--ink-3);margin-top:.3rem}
+.src a{color:var(--dim)}
+.foot{margin-top:3.2rem;padding-top:1.1rem;border-top:1px solid var(--rule);
+  font-size:.74rem;color:var(--ink-3)}
+
+@media (max-width:760px){
+  body{font-size:14.5px}
+  .wrap{padding:1.6rem 1.1rem 3.5rem}
+  .top .doc{display:none}
+  .st{grid-template-columns:1fr}
+  .ban-row{grid-template-columns:1fr;gap:.1rem}
+  .nar .beat{grid-template-columns:1fr;gap:.05rem}
+  .cc-row{grid-template-columns:1.6rem 1fr;gap:.4rem}
+  .cc-row .tel{grid-column:2;text-align:left}
+}
+@page{ size:A4 portrait; margin:14mm 12mm; }
+@media print{
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{margin-top:1.3rem}
+  h2,h3{break-after:avoid}
+  .tw,.st,.cc,.nar,.ban{break-inside:avoid;page-break-inside:avoid}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="var(--dim)">
+
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Project Briefing · 수시 갱신</div>
+  <h1>지금 우리가 아는 것</h1>
+  <p class="lede">조사로 <b>확인한 것</b>과 <b>아직 확인 못 한 것</b>을 나눠 적었습니다.
+    발표·보고 자료를 만들 때 <b>여기 있는 것만 쓰세요.</b> 없는 건 아직 근거가 없다는 뜻입니다.</p>
+  <div class="upd">마지막 갱신 <b>2026-08-05</b> · 날짜가 아니라 <b>내용이 바뀔 때</b> 갱신합니다</div>
+</div>
+
+<!-- ══════ 0 ══════ -->
+<section id="s0">
+<h2><span class="n">00</span>한 줄로</h2>
+
+<div class="oneline">
+  <div class="ol-q">이 프로젝트가 뭐냐고 물으면</div>
+  <p class="ol-a">사람이 먼저 밟아볼 수 없는 땅을,<br>
+    <b>로봇이 넘어지지 않고 건너가게</b> 만듭니다.</p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>이렇게 물으면</th><th>이렇게 답합니다</th></tr></thead>
+<tbody>
+<tr><td><b>기술로 뭔데?</b></td>
+    <td>지면의 물성(얼마나 무른지·미끄러운지)을 <b>모르는 채로 적응하는</b> 보행 정책</td></tr>
+<tr><td><b>그래서 뭐에 쓰는데?</b></td>
+    <td>사람이 들어가기 전에 <b>로봇이 먼저 통과해</b> 확인한다</td></tr>
+<tr><td><b>뭐가 줄어드는데?</b></td>
+    <td>사람이 <b>위험한 지면에 직접 발을 딛는 횟수</b></td></tr>
+<tr><td><b>결국 뭘 만드는데?</b></td>
+    <td><b>로봇이 아니라 정책(소프트웨어)</b>입니다. 로봇은 사서 씁니다</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="st">
+  <div>
+    <div class="sh">✓ 5개월에 하는 것</div>
+    <ul>
+      <li>넓은 지면 물성 분포로 <b>시뮬레이션에서 학습</b></li>
+      <li><b>실제 모래·자갈에서 평가</b></li>
+      <li>지표와 실패 기준을 숫자로 정의</li>
+      <li>실기 배포 (조건이 되면)</li>
+    </ul>
+  </div>
+  <div class="open">
+    <div class="sh">✕ 5개월에 안 하는 것</div>
+    <ul>
+      <li>완제품 · 상용화</li>
+      <li>지도 없이 길을 찾는 <b>자율 탐사</b>
+        <span class="who">그건 보행이 아니라 내비게이션 문제</span></li>
+      <li>하수관 진입 · 정유공장 진입
+        <span class="who">§04 참조: 물리적·인증상 불가</span></li>
+    </ul>
+  </div>
+</div>
+
+<p class="src">⚠️ <b>“로봇이 사람을 대체한다”고 쓰지 마세요.</b>
+  우리가 근거로 댈 수 있는 건 <b>“사람이 위험한 지면에 발을 딛는 횟수를 줄일 수 있는 구조”</b>까지입니다.
+  대체 효과를 숫자로 증명한 공개 자료는 아직 없습니다 (§04).</p>
+</section>
+
+<!-- ══════ 1 ══════ -->
+<section id="s1">
+<h2><span class="n">01</span>현황</h2>
+<div class="st">
+  <div>
+    <div class="sh">✓ 확정</div>
+    <ul>
+      <li><b>주제</b>4족 보행 로봇용 강화학습 기반 험지 적응 정책</li>
+      <li><b>팀</b>5인 (피지컬 AI 반 · 실증 2팀)</li>
+      <li><b>MVP · 중간발표</b>9/30</li>
+      <li><b>환경</b>Isaac Sim 5.1 + Isaac Lab v2.3.2, 워크스테이션에서 <b>재생 성공</b></li>
+      <li><b>조선대 Go2 EDU 2대</b>조달 규격서로 확인
+        <span class="who">Go1 Edu Plus 1대 추가 보유</span></li>
+      <li><b>데이터</b>조선대 제공 승인</li>
+    </ul>
+  </div>
+  <div class="open">
+    <div class="sh">? 아직 확인 못 함</div>
+    <ul>
+      <li><b>조선대 데이터의 성격</b>
+        <span class="who">모션캡쳐 로그로 추정 · 확인 필요</span></li>
+      <li><b>Go2 대여 / 현장 사용 조건</b>
+        <span class="who">사업단 장비·규격 담당에게 문의 (번호는 팀 채널)</span></li>
+      <li><b>80h 교육(ROS2·SLAM) 일정</b>
+        <span class="who">사업단 통보 대기</span></li>
+      <li><b>학습 실행 속도</b>
+        <span class="who">재생만 했고 학습은 미측정</span></li>
+      <li><b>GPU 2장 묶어 1개 학습 가속</b>
+        <span class="who">peer access 미지원: 재검증 필요</span></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ══════ 2 ══════ -->
+<section id="s2">
+<h2><span class="n">02</span>조선대학교: 장비와 연락처</h2>
+<p>조달 입찰 규격서 원문에서 직접 확인했습니다. 검색 요약이 아니라 <b>대학이 발주한 문서</b>입니다.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>확인된 것</th><th>내용</th><th>근거</th></tr></thead>
+<tbody>
+<tr><td><b>Unitree Go2 EDU 2대</b></td>
+    <td>2025-01 발주 · 예산 <b>55,484,000원</b><br>
+        규격서 원문: <code>Go2 Edu SDK 및 ROS2 환경 구축</code><br>
+        <code>Orin NX</code> · <code>XT16 3D LiDAR</code> · <code>4D LIDAR L1</code></td>
+    <td class="num"><a href="http://www.chosun.ac.kr/common/downLoad.do?siteId=purchase&amp;fileSeq=360351" target="_blank" rel="noopener">규격서 ↗</a><span style="display:block;font-weight:400;font-size:.9em"><a href="http://www.chosun.ac.kr/user/indexSub.do?framePath=unknownboard&amp;siteId=purchase&amp;dum=dum&amp;boardId=10513&amp;page=1&amp;command=view&amp;boardSeq=360350" target="_blank" rel="noopener">공고문 ↗</a></span></td></tr>
+<tr><td>Unitree Go1 Edu Plus 1대</td>
+    <td>2022-12 발주 · 25,190,000원<br>설치: 1공학관 5F 응용역학실험실2</td>
+    <td class="num"><a href="http://www.chosun.ac.kr/common/downLoad.do?siteId=purchase&amp;fileSeq=352868" target="_blank" rel="noopener">규격서 ↗</a></td></tr>
+<tr><td>수요 조직</td>
+    <td><b>지능형로봇 혁신융합대학사업단</b> · 제1공학관 8층</td>
+    <td class="num"><a href="http://www.chosun.ac.kr/user/indexSub.do?framePath=unknownboard&amp;siteId=purchase&amp;dum=dum&amp;boardId=10513&amp;page=1&amp;command=view&amp;boardSeq=360350" target="_blank" rel="noopener">공고문 ↗</a></td></tr>
+<tr><td>운용 실적</td>
+    <td>전자공학과 <b>BITE팀</b>ICROS 2026 4족보행 경진대회 <b>3위</b>(16팀 중)<br>
+        CO-SHOW 2025 자율주행 부문 장려상</td>
+    <td class="num"><a href="https://www3.chosun.ac.kr/bbs/chosun/72/279738/artclView.do" target="_blank" rel="noopener">ICROS ↗</a><span style="display:block;font-weight:400;font-size:.9em"><a href="https://www4.chosun.ac.kr/bbs/airobot/906/228167/artclView.do" target="_blank" rel="noopener">CO-SHOW ↗</a></span></td></tr>
+<tr><td>모션캡쳐 환경</td>
+    <td>XEROmotion HALO v22 <b>5대</b>도입 목적이
+        “4족보행 로봇의 자율주행 알고리즘 연구와 주행 안정성 검증”</td>
+    <td class="num" style="color:var(--note)">벤더 사례<span style="display:block;font-weight:400;font-size:.85em">XEROmotion · 원문 링크 <b>확인 실패(404)</b>재확인 필요</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>연락 순서</h3>
+<div class="cc">
+  <div class="cc-row"><span class="no">1</span>
+    <span class="who">사업단 장비·규격 담당<span>Go2 실물 창구: 여기부터</span></span>
+    <span class="tel">번호는 팀 채널 · 디스코드 resources</span></div>
+  <div class="cc-row"><span class="no">2</span>
+    <span class="who">사업단 사무국 (김예진)<span>학사·프로그램</span></span>
+    <span class="tel">062-608-5578<span>hanbit@chosun.ac.kr</span></span></div>
+  <div class="cc-row"><span class="no">3</span>
+    <span class="who">사업단장 김태규 교수<span>의사결정</span></span>
+    <span class="tel">062-230-7123<span>taegyu@chosun.ac.kr</span></span></div>
+  <div class="cc-row"><span class="no">4</span>
+    <span class="who">전자공학과 사무실<span>BITE팀 지도교수 확인용</span></span>
+    <span class="tel">062-230-7070</span></div>
+</div>
+
+<div class="st">
+  <div class="open">
+    <div class="sh">★ 협업 프레이밍</div>
+    <p style="font-size:.83rem;margin:.2rem 0">조선대는 <b>하드웨어·SLAM·자율주행</b>은 있는데
+      <b>강화학습을 연구분야로 명시한 교수가 전 학과에 0명</b>입니다.</p>
+    <p style="font-size:.83rem;margin:.4rem 0 0">그래서 “장비 좀 빌려주세요”가 아니라
+      <b>“서로 없는 걸 채운다”</b>가 정확한 자리입니다.</p>
+  </div>
+  <div>
+    <div class="sh">우리가 가진 것</div>
+    <ul>
+      <li>Isaac Sim / Isaac Lab 학습 파이프라인 <b>구축 완료</b></li>
+      <li><b>RTX 5080 ×2</b> 워크스테이션</li>
+      <li>RL 정책 학습 · 온라인 적응</li>
+      <li>3DGS 공간 재구성 (확장 축)</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ══════ 3 ══════ -->
+<section id="s3">
+<h2><span class="n">03</span>왜 이 프로젝트인가</h2>
+<p><b>“로봇이 잘 걷는다”만으로는 설득이 안 됩니다.</b> 상용 제품을 사면 이미 걷기 때문입니다.
+  아래가 우리가 세울 수 있는 이야기입니다.</p>
+
+<div class="nar">
+  <div class="beat"><span class="bk">훅</span>
+    <span class="bv">로봇개가 계단을 오릅니다. <b>이건 이미 됩니다.</b> 사서 쓰면 돼요.</span></div>
+  <div class="beat hit"><span class="bk">반전</span>
+    <span class="bv">그런데 <b>모래에 발이 빠지는 순간</b> 무너집니다.</span></div>
+  <div class="beat"><span class="bk">왜</span>
+    <span class="bv">로봇은 지면이 얼마나 미끄러운지, 얼마나 꺼지는지 <b>잴 수가 없습니다.</b>
+      마찰계수 센서도 강성 센서도 없습니다. <span class="src">← 커리큘럼 A12 「관측 설계」</span></span></div>
+  <div class="beat"><span class="bk">시도</span>
+    <span class="bv">그럼 시뮬레이터에서 모래를 만들어 학습시키면 되지 않냐고요?</span></div>
+  <div class="beat hit"><span class="bk">실패</span>
+    <span class="bv"><b>Isaac Lab은 모래를 시뮬레이션하지 못합니다.</b> 강체와 지형 높이만 다룹니다.
+      <span class="src"><a href="https://isaac-sim.github.io/IsaacLab/main/source/api/lab/isaaclab.terrains.html" target="_blank" rel="noopener">공식 지형 API 문서 ↗</a> · NVIDIA 포럼에서 직접 확인</span></span></div>
+  <div class="beat"><span class="bk">진짜 원인</span>
+    <span class="bv">물성을 <b>알 수도 없고</b>, 시뮬로 <b>만들 수도 없습니다.</b></span></div>
+  <div class="beat turn"><span class="bk">발상 전환</span>
+    <span class="bv">그러면 <b>알려고 하지 맙시다.</b> 모르는 채로 <b>적응</b>하게 합니다.</span></div>
+  <div class="beat turn"><span class="bk">우리가 할 것</span>
+    <span class="bv">넓은 물성 분포로 학습 → <b>실제 모래와 자갈에서 평가.</b></span></div>
+</div>
+
+<h3>배경 숫자: 왜 중요한 문제인가</h3>
+<p>아래는 <b>서사의 척추가 아니라 배경</b>입니다. “그래서 이게 왜 중요한데?”에 답할 때 씁니다.</p>
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>수치</th><th>출처</th></tr></thead>
+<tbody>
+<tr><td>밀폐공간 질식재해 <b>치명률</b></td><td class="num">42.3%</td>
+    <td><a href="https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=16585" target="_blank" rel="noopener">고용노동부 ↗</a> 2015~2024 · 일반 재해(0.98%)의 40배</td></tr>
+<tr><td>맨홀 작업 한정 치명률</td><td class="num">54.5%</td><td><a href="https://www.segye.com/newsView/20250803507392" target="_blank" rel="noopener">세계일보 ↗</a></td></tr>
+<tr><td>사고 사업장 중 가스농도 <b>미측정</b></td><td class="num">86%</td><td><a href="https://v.daum.net/v/20251009170046423" target="_blank" rel="noopener">검찰 송치사건 ↗</a> 2021~2025</td></tr>
+<tr><td>정유·화학 사고 중 <b>정비·보수 중</b> 발생</td><td class="num">43.8%</td><td><a href="https://www.youthassembly.kr/news/849808" target="_blank" rel="noopener">고용부·환경부 합동 ↗</a> 2025.6 (73건 중)</td></tr>
+<tr><td>지반침하 원인 1위 = 하수관 손상</td><td class="num">46%</td><td><a href="https://www.seoul.co.kr/news/society/2025/03/26/20250326500152" target="_blank" rel="noopener">국토부 ↗</a> 2019~2023 (957건 중 446건)</td></tr>
+<tr><td>지역별 지반침하 <b>광주 2위</b></td><td class="num">122건</td><td>경기 197 다음</td></tr>
+<tr><td>서울소방+KAIST 사족보행 PoC</td><td class="num">43.5억</td><td><a href="https://app.rndcircle.io/gov-grant/83900139-118d-461b-b5d1-d1393ccf0d40" target="_blank" rel="noopener">과제 공고 ↗</a> 2026.8~12 · <b>우리 기간과 겹침</b></td></tr>
+<tr><td>한국수자원공사 사족보행 점검로봇</td><td class="num">260억</td><td><a href="https://biz.heraldcorp.com/article/10743732" target="_blank" rel="noopener">헤럴드경제 ↗</a> 2026~2030 · 4개소→44개소</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>상용 제품의 자율성 경계: 벤더가 스스로 문서에 쓴 것</h3>
+<ul>
+  <li><b><a href="https://dev.bostondynamics.com/docs/concepts/autonomy/autowalk_service.html" target="_blank" rel="noopener">Boston Dynamics 개발자 문서 ↗</a></b><i>“graph nav map <b>must be uploaded</b>”</i>,
+    <i>“<b>go here, do this</b> pattern”</i></li>
+  <li><b><a href="https://www.anybotics.com/get-started/onboarding/" target="_blank" rel="noopener">ANYbotics 온보딩 문서 ↗</a></b><i>“Operators can <b>guide the robot</b> through facilities…
+    <b>after which</b> the robot will autonomously repeat”</i></li>
+  <li><b><a href="https://arxiv.org/abs/2201.07067" target="_blank" rel="noopener">DARPA SubT 우승팀 ↗</a></b>조차 <i>supervised autonomy</i>사람이 탐사 전략을 지휘</li>
+</ul>
+<p class="src">→ 3사 전부 <b>사전 매핑이 전제</b>입니다. 다만 이건 <b>“어디로 갈지”(navigation)</b> 문제이지
+  <b>“어떻게 걷나”(locomotion)</b> 문제가 아니므로, 우리 주제와 직결시키지 마세요.</p>
+</section>
+
+<!-- ══════ 4 ══════ -->
+<section id="s4">
+<h2><span class="n">04</span>🔴 쓰면 안 되는 주장</h2>
+<p>아래는 <b>조사에서 반증되었거나 근거가 부족한</b> 것들입니다.
+  발표·보고서·멘토 면담에서 쓰면 그 자리에서 무너집니다.</p>
+
+<div class="ban">
+  <div class="bh">✕ 쓰지 말 것 · ✓ 정확한 표현</div>
+  <div class="ban-row"><span class="x">✕ “바퀴형은 계단·잔해를 못 간다”</span>
+    <span class="y">✓ <a href="https://www.unitree.com/mobile/go2-w/" target="_blank" rel="noopener">Go2-W ↗</a> (35°/70cm)가 반증. <b>“관절 없는 고정 바퀴만”</b> 못 오름</span></div>
+  <div class="ban-row"><span class="x">✕ “Go2가 Go2-W보다 험지에 낫다”</span>
+    <span class="y">✓ <a href="https://www.unitree.com/mobile/go2/" target="_blank" rel="noopener">공식 스펙 ↗</a>상 거짓 (30°/15cm vs <b>35°/70cm</b>)</span></div>
+  <div class="ban-row"><span class="x">✕ “우리 로봇이 하수관에 들어간다”</span>
+    <span class="y">✓ <b>물리적 불가.</b> Go2 폭 31cm vs 전용 크롤러 7.6cm급.
+      <b>대형 관로·맨홀 하부·지하공동구</b>로 한정</span></div>
+  <div class="ban-row"><span class="x">✕ “우리 로봇이 정유공장에 들어간다”</span>
+    <span class="y">✓ <b>방폭(ATEX) 인증이 <a href="https://www.anybotics.com/news/anymal-x-the-worlds-first-ex-proof-legged-robot/" target="_blank" rel="noopener">ANYmal X ↗</a> 에만</b> 있음. Go2는 인증 자료 없음</span></div>
+  <div class="ban-row"><span class="x">✕ “밀폐공간 사망의 60%는 구조자”</span>
+    <span class="y">✓ 출처마다 25~63%로 상충. <b>“절반 수준(KOSHA)”</b>까지만</span></div>
+  <div class="ban-row"><span class="x">✕ “로봇이 사망사고를 X% 줄인다”</span>
+    <span class="y">✓ 인과 근거 공개된 것 없음. <b>“줄일 수 있는 구조가 있다”</b>까지만</span></div>
+  <div class="ban-row"><span class="x">✕ “GPU 2장으로 학습을 2배 빠르게”</span>
+    <span class="y">✓ peer access 미지원. <b>“동시 2인 실험”</b>이 정확한 표현</span></div>
+  <div class="ban-row"><span class="x">✕ “바퀴가 다리보다 83% 효율적”</span>
+    <span class="y">✓ 회사 마케팅 수치. 같은 연구실 <a href="https://arxiv.org/abs/2405.01792" target="_blank" rel="noopener">동료심사 논문 ↗</a>은 <b>53%</b></span></div>
+  <div class="ban-row"><span class="x">✕ “사족보행 시장 $37억” (단일 인용)</span>
+    <span class="y">✓ 기관별 2~5배 차이. <b>Unitree 누적 출하 3만 대</b>가 검증 가능</span></div>
+  <div class="ban-row"><span class="x">✕ “우리 씬이 더 사실적이라 성능이 좋다”</span>
+    <span class="y">✓ 반박 논문 존재. 주역은 <b>RL과 공간 랜덤화</b></span></div>
+</div>
+
+<p><b>왜 이 목록이 있나</b>이 프로젝트를 준비하면서 위 주장들을 실제로 한 번씩 썼다가
+  근거를 찾는 과정에서 전부 무너뜨렸습니다. <b>같은 함정에 다시 빠지지 않기 위한 목록</b>입니다.</p>
+</section>
+
+<!-- ══════ 5 ══════ -->
+<section id="s5">
+<h2><span class="n">05</span>기술 스택: 확정</h2>
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>확정</th><th>왜</th></tr></thead>
+<tbody>
+<tr><td>시뮬레이터</td><td class="num">Isaac Sim 5.1.0.0</td><td>Isaac Lab 2.3.x의 짝</td></tr>
+<tr><td>학습 프레임워크</td><td class="num">Isaac Lab v2.3.2</td><td>★ 기본 브랜치는 베타이고 <b>험지 미지원</b></td></tr>
+<tr><td>RL 라이브러리</td><td class="num">rsl_rl 3.1.2</td><td>Isaac Lab이 핀 고정 · PPO 구현</td></tr>
+<tr><td>물리 백엔드</td><td class="num">PhysX</td><td>Newton은 험지 미지원</td></tr>
+<tr><td>Python / PyTorch</td><td class="num">3.11 / 2.7.0+cu128</td><td>wheel 태그 <code>cp311</code> · 기본 wheel은 CPU 전용</td></tr>
+<tr><td>베이스라인 태스크</td><td class="num">Isaac-Velocity-Rough-Unitree-Go2-v0</td><td>NVIDIA 사전학습 체크포인트 제공</td></tr>
+</tbody>
+</table>
+</div>
+<p><b>쓰지 않기로 한 것</b><code>legged_gym</code>(RTX 50 커널 없음 · 저자가 유지보수 축소 선언),
+  <code>unitree_rl_gym</code>(지형 생성 함수가 삭제된 fork), Isaac Gym Preview 4(NVIDIA가 legacy 지정).</p>
+<p class="src">설치 절차와 함정은 <a href="setup.html">개발환경 구축 가이드</a>에 있습니다.</p>
+</section>
+
+<div class="foot">
+  FOOTHOLD · 인공지능사관학교 7기 AI 도약과정 실증 프로젝트: 
+  이 페이지는 <b>확인된 것만</b> 싣습니다. 새로 확인한 사실이 생기면 근거와 함께 갱신하세요.
+</div>
+
+</div>
+
+<script>
+(function(){var b=document.getElementById('pdfBtn');if(b)b.addEventListener('click',function(){window.print();});})();
+</script>
+</body>
+</html>

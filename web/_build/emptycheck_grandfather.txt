@@ -1,0 +1,16 @@
+# 대상이 0개일 때 «통과» 라고 말하는 관문. 이 줄 수가 남은 일의 크기다.
+# 고치는 법: 검사한 개수를 세고 0이면 스스로 실패하게 한다.
+asciicheck.main
+brandcheck.report
+brandmark.main
+completecheck.main
+contentcheck.main
+darkmode.main
+docgraph.main
+mdlinks.gate
+scan.report
+stalecheck.main
+stamp.main
+tablefix.main
+voicecheck.main
+xrefcheck.main

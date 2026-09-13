@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>팀 소개 · 인공지능사관학교 7기 도약과정</title>
+<style>
+/* ============================================================
+   설계 노트
+   주제: 사족보행 로봇 · 정밀 계측 · 현장 실증
+   미학: 엔지니어링 도면(technical drawing): 계측선, 치수, 좌표
+   색  : 도면 용지(웜 오프화이트) / 제도 잉크(딥 슬레이트) / 치수선(틸) / 주기(앰버)
+   금지: 형광 그라디언트, 보라-블루 히어로, 이모지 섹션 마커
+   ============================================================ */
+:root{
+  --paper:#f6f5f1;        /* 도면 용지 */
+  --paper-2:#eeece6;
+  --ink:#161c26;          /* 제도 잉크 */
+  --ink-2:#4a5566;
+  --ink-3:#7c8798;
+  --rule:#d6d3ca;         /* 도면 괘선 */
+  --brand:#0e7a6e; --dim:var(--brand);          /* 치수선 틸 */
+  --dim-soft:#e0f0ed;
+  --note:#a86a08;         /* 주기 앰버 */
+  --note-soft:#fbf0dc;
+  --grid:rgba(22,28,38,.045);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--ink);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+#deck{
+  position:relative;width:100vw;height:100vh;
+  background:var(--paper);overflow:hidden;
+}
+/* 도면 그리드 */
+#deck::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.slide{
+  position:absolute;inset:0;z-index:1;
+  padding:clamp(28px,4.2vh,52px) clamp(40px,5.5vw,88px) clamp(64px,8vh,88px);
+  display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateX(28px);
+  transition:opacity .34s ease,transform .34s ease,visibility .34s;
+}
+.slide.on{opacity:1;visibility:visible;transform:none}
+
+/* ---------- 공통 타이포 ---------- */
+.eyebrow{
+  font-size:clamp(.6rem,.72vw,.68rem);letter-spacing:.22em;font-weight:700;
+  color:var(--dim);text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--rule)}
+h1{font-size:clamp(1.5rem,2.5vw,2.05rem);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+h2{font-size:clamp(.82rem,1.05vw,.94rem);font-weight:800;letter-spacing:-.01em;
+   padding-bottom:7px;border-bottom:1.5px solid var(--ink);margin-bottom:12px;
+   display:flex;align-items:baseline;gap:9px}
+h2 .en{font-size:.62rem;font-weight:600;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+.sub{color:var(--ink-2);font-size:clamp(.74rem,.9vw,.84rem);line-height:1.6}
+
+/* ---------- 슬라이드 1: 아이덴티티 ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:clamp(28px,3.5vw,54px);flex:1;align-items:center}
+.mark{
+  display:inline-flex;align-items:baseline;gap:12px;margin-bottom:14px;
+}
+.mark{--wm-size:clamp(2.4rem,5.2vw,4rem)}
+.mark .name{font-size:var(--wm-size);font-weight:800;letter-spacing:-.045em;line-height:.94}
+.mark .ko{font-size:clamp(.72rem,.9vw,.82rem);color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+.slogan{
+  font-size:clamp(.94rem,1.35vw,1.16rem);font-weight:600;line-height:1.5;
+  color:var(--ink);padding-left:16px;border-left:3px solid var(--dim);margin-bottom:22px;
+}
+.vision{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;color:var(--ink-2);
+  line-height:1.5;margin:-6px 0 14px;max-width:min(38em,100%);word-break:keep-all}
+.vision .state{flex:0 0 auto;margin-top:.2em;display:inline-block;padding:.05rem .34rem;border-radius:3px;
+  font-size:.55rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--note);background:var(--note-soft);border:1px solid var(--note);vertical-align:.1em}
+
+.kw{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.kw span{
+  font-size:clamp(.66rem,.82vw,.75rem);font-weight:700;padding:6px 13px;
+  border:1.5px solid var(--ink);border-radius:2px;letter-spacing:-.01em;
+}
+.kwd{display:grid;gap:11px}
+.kwd .row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.kwd .k{font-size:clamp(.66rem,.82vw,.74rem);font-weight:800;color:var(--dim);white-space:nowrap;
+        padding-top:1px;min-width:5.2em}
+.kwd .v{font-size:clamp(.72rem,.88vw,.81rem);color:var(--ink-2);line-height:1.55}
+
+/* 목표 카드 */
+.goals{display:grid;gap:11px}
+.goal{
+  background:var(--dim-soft);border:1px solid var(--rule);
+  padding:13px 16px;position:relative;
+}
+.goal .gl{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+.goal .gt{font-size:clamp(.76rem,.93vw,.87rem);font-weight:600;line-height:1.5}
+.goal .gm{font-size:clamp(.66rem,.8vw,.73rem);color:var(--ink-3);margin-top:5px;font-family:'Consolas',monospace}
+
+/* ---------- 슬라이드 2: R&R ---------- */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.1vw,15px);flex:1;align-content:center}
+.role{
+  background:#fff;border:1px solid var(--rule);padding:15px 16px 16px;
+  display:flex;flex-direction:column;position:relative;
+}
+.role::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--dim)}
+.role.lead::before{background:var(--note)}
+.role .rtag{
+  font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:3px;
+}
+.role.lead .rtag{color:var(--note)}
+.role .rname{font-size:clamp(.95rem,1.25vw,1.1rem);font-weight:800;letter-spacing:-.02em;margin-bottom:2px}
+.role .rrole{font-size:clamp(.66rem,.8vw,.73rem);color:var(--ink-3);font-weight:600;margin-bottom:11px;
+             padding-bottom:9px;border-bottom:1px dashed var(--rule)}
+.role dl{display:grid;gap:7px}
+.role dt{font-size:.58rem;font-weight:800;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.role.lead dt{color:var(--note)}
+.role dd{font-size:clamp(.66rem,.81vw,.74rem);line-height:1.5;color:var(--ink-2)}
+.role dd b{color:var(--ink);font-weight:700}
+
+/* ---------- 슬라이드 3: 협업구조 ---------- */
+.collab{display:grid;grid-template-columns:minmax(0,1.24fr) minmax(0,1fr);gap:clamp(24px,3vw,44px);flex:1;align-content:center}
+.phase{display:grid;gap:10px}
+.pstep{
+  display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+  background:#fff;border:1px solid var(--rule);padding:13px 16px;position:relative;
+}
+.pnum{
+  width:26px;height:26px;border:1.5px solid var(--dim);color:var(--dim);
+  display:grid;place-items:center;font-size:.72rem;font-weight:800;border-radius:50%;
+  font-family:'Consolas',monospace;
+}
+.pstep .pt{font-size:clamp(.74rem,.9vw,.82rem);font-weight:800;margin-bottom:4px}
+.pstep .pd{font-size:clamp(.66rem,.8vw,.74rem);color:var(--ink-2);line-height:1.55}
+.pstep .pd .out{color:var(--dim);font-weight:700}
+.arrow{text-align:center;color:var(--rule);font-size:.9rem;line-height:.4;margin:-3px 0}
+
+.rules{display:grid;gap:9px;align-content:start}
+.rule{background:var(--paper-2);padding:11px 14px}
+.rule .rt{font-size:clamp(.7rem,.85vw,.78rem);font-weight:800;margin-bottom:3px}
+.rule .rd{font-size:clamp(.64rem,.78vw,.72rem);color:var(--ink-2);line-height:1.5}
+
+
+/* ── PDF 저장 버튼 (우측 상단 고정) ──────────────────────
+   window.print() 를 호출한다. 브라우저 인쇄 창에서 "PDF로 저장"을 고르면
+   이 문서의 인쇄 스타일(@media print)이 그대로 적용된 PDF가 나온다.
+   모바일에서는 숨긴다 (모바일 브라우저의 인쇄 지원이 제한적).
+   ──────────────────────────────────────────────────── */
+.pdfbtn{
+  position:fixed;top:7px;right:14px;z-index:70;
+  background:var(--paper);border:1px solid var(--rule);color:var(--ink-2);
+  padding:4px 9px;font-family:inherit;font-size:.55rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:.15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;line-height:1.2;
+}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+/* PDF 버튼 자리를 비워 eyebrow 밑줄이 버튼에 닿지 않게 한다.
+   버튼은 화면 우측 고정이고, 슬라이드 상단 패딩은 vh 기반이라
+   화면 높이에 따라 라인 위치가 변한다. 그래서 세로 회피만으로는 불충분하고
+   가로로도 라인을 물러나게 한다. (모바일은 버튼이 없으므로 해제) */
+.eyebrow{padding-right:104px}
+@media(max-width:900px){.eyebrow{padding-right:0}}
+
+.pdfbtn:active{transform:translateY(1px)}
+.pdfbtn svg{width:9px;height:9px;flex:0 0 auto}
+@media(max-width:900px){.pdfbtn{display:none}}
+@media print{.pdfbtn{display:none!important}}
+
+/* ---------- 크롬 ---------- */
+#bar{position:fixed;bottom:0;left:0;height:2px;background:var(--dim);z-index:20;transition:width .34s ease}
+#chrome{
+  position:fixed;bottom:0;left:0;right:0;height:clamp(40px,5.4vh,52px);z-index:15;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(40px,5.5vw,88px);border-top:1px solid var(--rule);
+  background:linear-gradient(to top,var(--paper) 72%,transparent);
+}
+#chrome .l{font-size:.6rem;letter-spacing:.14em;color:var(--ink-3);font-weight:700;text-transform:uppercase;
+  display:flex;align-items:center;gap:9px}
+#chrome .l a.home{color:var(--dim);text-decoration:none;border:1px solid var(--rule);padding:4px 9px;
+  letter-spacing:.06em;transition:.15s;white-space:nowrap}
+#chrome .l a.home:hover{border-color:var(--dim);background:var(--dim-soft)}
+#chrome .l .sep{color:var(--rule)}
+#chrome .r{display:flex;align-items:center;gap:14px}
+.nav{background:none;border:1px solid var(--rule);color:var(--ink-2);width:26px;height:26px;
+     cursor:pointer;font-size:.72rem;display:grid;place-items:center;transition:.15s}
+.nav:hover{border-color:var(--dim);color:var(--dim)}
+.nav:disabled{opacity:.28;cursor:default}
+#pg{font-family:'Consolas',monospace;font-size:.68rem;font-weight:700;letter-spacing:.04em;min-width:44px;text-align:center}
+#pg b{color:var(--dim)}
+.fs{background:none;border:1px solid var(--rule);color:var(--ink-2);padding:5px 10px;white-space:nowrap;
+    font-size:.6rem;letter-spacing:.1em;font-weight:700;cursor:pointer;text-transform:uppercase}
+.fs:hover{border-color:var(--dim);color:var(--dim)}
+.tbd{color:var(--note);font-weight:700;font-size:.9em}
+
+/* ══════════════════════════════════════════════════════════
+   모바일: 고정높이 슬라이드를 버리고 "스크롤 문서"로 전환
+   이유: 세로 공간이 부족하면 fixed 모델은 내용을 잘라내고
+        스크롤도 막힌다. 작은 화면에선 흐르게 두는 게 맞다.
+   ══════════════════════════════════════════════════════════ */
+@media (max-width:820px){
+  html,body{height:auto;overflow:visible;overflow-x:hidden}
+  body{display:block}
+  #deck{width:100%;height:auto;min-height:100vh;overflow:visible}
+
+  .slide{
+    position:relative;inset:auto;
+    height:auto;min-height:calc(100vh - 64px);
+    padding:22px 16px 24px;
+    display:none;                     /* 숨긴 장은 자리를 차지하지 않게 */
+    opacity:1;visibility:visible;transform:none;transition:none;
+  }
+  .slide.on{display:flex}
+
+  /* 2단·3단 그리드를 전부 1단으로: 잘림의 주원인 */
+  /* 1fr = minmax(auto,1fr) 이라 자식이 콘텐츠 최소폭 아래로 줄지 않는다.
+     minmax(0,1fr) + min-width:0 이 있어야 표·긴 단어가 부모를 밀어내지 않는다. */
+  .p1,.p2,.p4,.hero,.collab{grid-template-columns:minmax(0,1fr)!important;gap:18px!important;align-content:start!important}
+  .rgrid,.feat,.grules,.roles{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+  .p1>*,.p2>*,.p4>*,.hero>*,.collab>*,.rgrid>*,.feat>*,.grules>*,.roles>*{min-width:0}
+  .stack .sv{overflow-wrap:anywhere}
+  .goals,.meth,.rules,.phase,.why,.mini{gap:10px}
+
+  /* 간트는 표 자체가 넓으므로 가로 스크롤 컨테이너로 */
+  .gantt{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+  .gantt::after{
+    content:'← 좌우로 밀어서 전체 일정 보기';
+    display:block;font-size:.62rem;color:var(--ink-3);margin-top:7px;
+  }
+  table.g{min-width:680px}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* 산출물 표는 2열뿐이라 좁은 화면에서도 접혀 들어간다. 강제 최소폭을 두지 않는다 */
+  table.d{min-width:0;font-size:.7rem;table-layout:fixed}
+  table.d td,table.d th{padding:7px 8px;word-break:keep-all;overflow-wrap:anywhere}
+  table.d td.o{width:38%}
+
+  /* 3P 제목 "…그라운드 룰" 이 한 글자만 넘어가는 것을 막는다.
+     폰트 크기는 유지하고 자간만 조인다(모바일 한정). */
+  h1{letter-spacing:-.045em}
+  /* 타이포 하한: 축소되며 읽기 어려워지는 것 방지 */
+  h1{font-size:1.35rem}
+  .pname{font-size:1.22rem}
+  .mark{--wm-size:2.3rem}
+  .slogan{font-size:1rem}
+  .sub,.pdesc{font-size:.82rem}
+
+  /* ── 하단 바 ──────────────────────────────────────────
+     모바일에선 남길 것만 남긴다:  [← 표지]        [‹ 1/3 ›]
+     · 긴 소속 문구는 숨긴다 (가로 공간을 다 먹고 겹침을 만든다)
+     · 전체화면 버튼도 숨긴다 (모바일 브라우저는 이미 전체화면에 가깝고,
+       iOS Safari는 Fullscreen API 자체를 제한한다)
+     ──────────────────────────────────────────────────── */
+  #deck{padding-bottom:68px}
+  #chrome{height:62px;padding:0 14px;gap:10px}
+
+  #chrome .l{flex:0 0 auto;font-size:0;letter-spacing:0;gap:0}   /* 설명 문구 숨김 */
+  #chrome .l .sep{display:none}
+  #chrome .l a.home{font-size:.7rem;letter-spacing:.02em;padding:11px 14px;
+                    display:inline-flex;align-items:center;white-space:nowrap}
+
+  .fs{display:none}                                               /* 전체화면 버튼 숨김 */
+  #chrome .r{gap:10px;flex:1 1 auto;justify-content:flex-end;min-width:0;flex-wrap:nowrap}
+  .nav{width:40px;height:40px;font-size:1rem;flex:0 0 auto}
+  #pg{font-size:.8rem;min-width:50px;flex:0 0 auto}
+}
+
+/* 아주 좁은 화면: 버튼 글자를 줄여 줄바꿈을 막는다 */
+@media (max-width:400px){
+  .fs{font-size:.58rem;padding:10px 9px}
+  #chrome .l a.home{padding:10px 10px;font-size:.62rem}
+  #chrome{gap:8px}
+}
+
+@media print{
+  @page{ size:A4 landscape; margin:0; }
+  html{font-size:13.5px}
+  html,body,#deck{height:auto;overflow:visible;background:#fff}
+  /* ★ 인쇄 폭이 좁게 평가돼 모바일 규칙(.slide{display:none})이 걸리는 것을 해제.
+     이게 없으면 활성 슬라이드 1장만 인쇄된다. */
+  .slide{display:flex!important;position:relative!important;min-height:0!important}
+  #deck{padding-bottom:0!important}
+  #deck::before{display:none}
+  .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;
+         break-after:page;height:204mm;width:100%;padding:9mm 11mm 7mm}
+  .slide:last-child{break-after:auto}
+  #chrome,#bar{display:none}
+  table,figure,.role,.goal,.rule,.pstep{break-inside:avoid}
+  tr{break-inside:avoid}
+  /* ★ 모바일 블록의 align-content:start!important 가 인쇄에도 걸린다
+     (인쇄 폭이 A4 세로 794px 로 평가돼 max-width:820px 가 참이 됨).
+     grid-template-columns 만 되돌려선 부족하고 세로 정렬도 복구해야 한다.
+     .hero 는 원래 align-items:center 만 있어 행 자체가 위로 붙으므로 함께 지정. */
+  .hero,.collab,.roles{align-content:center!important}
+  .hero{grid-template-columns:minmax(0,1.06fr) minmax(0,1fr)!important}
+  .collab{grid-template-columns:minmax(0,1.24fr) minmax(0,1fr)!important}
+  .roles{grid-template-columns:repeat(3,1fr)!important}
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+<button class="pdfbtn" id="pdfBtn" type="button"
+        title="브라우저 인쇄 창이 열립니다. 대상에서 &quot;PDF로 저장&quot;을 선택하세요."
+        aria-label="이 문서를 PDF로 저장">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+    <path d="M8 1v9M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12"/>
+  </svg>PDF 저장</button>
+<div id="deck">
+
+<!-- ============ 1. TEAM IDENTITY ============ -->
+<section class="slide on">
+  <div class="eyebrow">Team Identity</div>
+  <div class="hero">
+    <div>
+      <div class="mark">
+        <span class="name">FOOTHOLD</span>
+        <span class="ko">발디딤</span>
+      </div>
+      <div class="slogan">불확실한 지형에서도,<br>다음 걸음을 이어갑니다.</div>
+      <div class="vision"><span class="state">Target Vision</span>시뮬레이터에서 천 번 넘어지고, 현장에서는 넘어지지 않는다.</div>
+      <div class="kw"><span>본질 우선</span><span>측정 가능한 결과</span><span>현장 검증</span></div>
+      <div class="kwd">
+        <div class="row"><div class="k">본질 우선</div>
+          <div class="v">도구를 먼저 고르지 않는다. 왜 다리로 걷는지, 왜 넘어지는지를 먼저 이해하고 기술을 선택한다.</div></div>
+        <div class="row"><div class="k">측정 가능</div>
+          <div class="v">"잘 걷는다"가 아니라 성공률·오차·낙상 수로 말한다. 재현 가능한 실험 기록을 남긴다.</div></div>
+        <div class="row"><div class="k">현장 검증</div>
+          <div class="v">시뮬레이션에서 끝내지 않는다. 실제 환경 조건에서 통하는지를 검증 기준으로 삼는다.</div></div>
+      </div>
+    </div>
+    <div>
+      <h2>팀 비전 &amp; 목표 <span class="en">Vision &amp; Goals</span></h2>
+      <div class="goals">
+        <div class="goal">
+          <div class="gl">핵심 비전</div>
+          <div class="gt">예측할 수 없는 지형에서 로봇이 넘어지지 않고 이동하는 능력을,<br>실제로 넘어뜨리지 않고 획득하는 방법을 검증한다</div>
+        </div>
+        <div class="goal">
+          <div class="gl">성장 목표</div>
+          <div class="gt">팀원 전원이 강화학습·물리 시뮬레이션 파이프라인을 직접 다뤄본 경험을 확보하고,<br>각자 대체 불가능한 축을 하나씩 갖는다</div>
+        </div>
+        <div class="goal">
+          <div class="gl">정량 목표</div>
+          <div class="gt">험지 정책 학습 재현 → 커스텀 지형 확장 → 정량 지표 확보</div>
+          <div class="gm">지형별 통과 성공률 · 속도추종 오차 · 낙상 횟수<br>외란 회복률 · 무개입 주행거리 · 이동 에너지</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. R&R ============ -->
+<section class="slide">
+  <div class="eyebrow">Team Profile &amp; Strengths</div>
+  <h1 style="margin-bottom:4px">팀원 R&amp;R 및 강점 분석</h1>
+  <p class="sub" style="margin-bottom:18px">각 축은 한 사람이 주도하되 겹쳐서 일한다. 대체 불가능한 부분을 기준으로 배치했다.</p>
+  <div class="roles">
+
+    <!-- ★ 손으로 고치지 마십시오. 정본은 foothold-lab/docs/ROLES.md 이고
+         빌드([1.04] roles.py)가 여기에 채워 넣습니다. 8/27 에 8갈래로 바꿨을 때
+         이 자리만 옛 5분야로 남아 있었습니다. -->
+    <!--ROLES:deck-->
+
+  </div>
+
+  </div>
+</section>
+
+<!-- ============ 3. 협업 구조 + 그라운드룰 ============ -->
+<section class="slide">
+  <div class="eyebrow">Collaboration Process &amp; Ground Rules</div>
+  <h1 style="margin-bottom:4px">강점 기반 협업 구조 &amp; 그라운드 룰</h1>
+  <p class="sub" style="margin-bottom:18px">단계마다 <b>산출물</b>이 남고, 그 산출물이 다음 단계의 입력이 된다.</p>
+  <div class="collab">
+
+    <div class="phase">
+      <div class="pstep">
+        <div class="pnum">1</div>
+        <div>
+          <div class="pt">기반 구축 · 재현</div>
+          <div class="pd"><b>전원</b> → <span class="out">각자 환경을 구축하고 공개 정책을 1회씩 완주해 학습 곡선 확보</span><br>
+          <span style="color:var(--ink-3)">한 사람만 환경을 알면 그 사람이 5개월 내내 병목이 된다</span></div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="pstep">
+        <div class="pnum">2</div>
+        <div>
+          <div class="pt">확장 · 실험</div>
+          <div class="pd">임석헌(보상·정책) + 맹라현(지형) + 오현민(데이터) → <span class="out">커스텀 지형 대응 정책과 비교 실험 결과</span><br>
+          <span style="color:var(--ink-3)">한 번에 하나만 바꾸고 매 실험을 기록한다</span></div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="pstep">
+        <div class="pnum">3</div>
+        <div>
+          <div class="pt">실증 · 전달</div>
+          <div class="pd">오흥재(재구성·PM) + 맹라현(시각화) + 오현민(검증) → <span class="out">실환경 조건 검증 리포트와 시연 자료</span><br>
+          <span style="color:var(--ink-3)">현장 기준으로 통하는지를 판정한다</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2>팀 그라운드 룰 <span class="en">Ground Rules</span></h2>
+      <div class="rules">
+        <div class="rule">
+          <div class="rt">회의 규칙</div>
+          <div class="rd">주 1회 정기 회의로 진행·블로커 공유. 결정이 필요한 안건은 사전에 문서로 올린다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">기록 규칙</div>
+          <div class="rd">실험은 <b>설정·커맨드·결과</b>를 함께 남긴다. 기록 없는 실험은 없었던 것으로 본다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">피드백 규칙</div>
+          <div class="rd">사람이 아니라 결과와 근거를 두고 말한다. 반대할 때는 대안을 함께 낸다.</div>
+        </div>
+        <div class="rule">
+          <div class="rt">일정 규칙</div>
+          <div class="rd">막히면 혼자 오래 붙들지 않는다. 하루 이상 진전이 없으면 공유한다.</div>
+        </div>
+        <div class="rule" style="border-left-color:var(--note);background:var(--note-soft)">
+          <div class="rt" style="color:var(--note)">범위 규칙</div>
+          <div class="rd">각 단계에서 <b>멈춰도 발표 가능한 산출물</b>을 먼저 확보한다. 확장은 그다음이다.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<div id="bar"></div>
+<div id="chrome">
+  <div class="l"><a href="index.html" class="home">← 표지</a><span class="sep">|</span>인공지능사관학교 7기 · AI 도약과정 · 실증 프로젝트</div>
+  <div class="r">
+    <button class="nav" id="prev" aria-label="이전">‹</button>
+    <span id="pg"><b>1</b> / 3</span>
+    <button class="nav" id="next" aria-label="다음">›</button>
+    <button class="fs" id="fsb">전체화면</button>
+  </div>
+</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+const bar=document.getElementById('bar'),pg=document.getElementById('pg'),
+      prev=document.getElementById('prev'),next=document.getElementById('next');
+function go(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+  bar.style.width=((i+1)/slides.length*100)+'%';
+  pg.innerHTML='<b>'+(i+1)+'</b> / '+slides.length;
+  prev.disabled=i===0; next.disabled=i===slides.length-1;
+}
+prev.onclick=()=>go(i-1); next.onclick=()=>go(i+1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1)}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1)}
+  if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  if(e.key==='f'||e.key==='F')toggleFS();
+});
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+document.getElementById('fsb').onclick=toggleFS;
+let x0=null,y0=null,scrollBox=null,scrollX0=null;
+document.addEventListener('touchstart',e=>{
+  x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  scrollBox=e.target.closest('.gantt,.tw');
+  scrollX0=scrollBox?scrollBox.scrollLeft:null;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(x0===null){return}
+  const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+  const boxScrolled = scrollBox && Math.abs(scrollBox.scrollLeft-scrollX0)>3;
+  const mostlyHorizontal = Math.abs(dx)>Math.abs(dy);
+  if(!boxScrolled && mostlyHorizontal && Math.abs(dx)>50) go(dx<0?i+1:i-1);
+  x0=null;y0=null;scrollBox=null;scrollX0=null;
+},{passive:true});
+go(0);
+
+(function(){var b=document.getElementById('pdfBtn');if(b)b.addEventListener('click',()=>window.print());})();
+</script>
+</body>
+</html>

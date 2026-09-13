@@ -1,0 +1,70 @@
+# 디스코드 알림 — 팀이 실제로 알아야 하는 것만.
+#
+#   보스 흐름: "커밋에 #번호 쓰면 이슈 닫힘 → 보드 Done → 그 훅 잡아 디코 알림"
+#   그대로 구현한다. 이슈가 닫히는 경로는 둘 다 잡힌다:
+#     · 커밋 메시지에 `Closes #12` / `Fixes #12`  (main 에 push 될 때 GitHub 이 닫아줌)
+#     · PR 본문에 `Closes #12` (merge 시 닫힘)
+#   두 경우 모두 issues:closed 이벤트가 발생하므로 이 한 워크플로가 커버한다.
+#
+# 설치: 각 레포 .github/workflows/discord-notify.yml
+# 필요: 조직 시크릿 DISCORD_WEBHOOK  (디스코드 채널 → 설정 → 연동 → 웹후크 → URL 복사)
+#       ⚠️ 웹후크 URL 은 비밀이다. 레포에 직접 적지 말고 반드시 Secrets 로.
+name: 디스코드 알림
+
+on:
+  issues:
+    types: [opened, closed]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    steps:
+      - name: 메시지 만들기
+        id: msg
+        env:
+          EV: ${{ github.event_name }}
+          ACT: ${{ github.event.action }}
+        run: |
+          set -euo pipefail
+          if [ "$EV" = "issues" ] && [ "$ACT" = "closed" ]; then
+            TITLE="✅ 완료 · ${{ github.event.issue.title }}"
+            BODY="닫은 사람 **${{ github.event.sender.login }}** · 보드가 Done 으로 넘어갑니다"
+            URL="${{ github.event.issue.html_url }}"; COLOR="1801806"
+          elif [ "$EV" = "issues" ] && [ "$ACT" = "opened" ]; then
+            TITLE="🆕 새 작업 · ${{ github.event.issue.title }}"
+            BODY="등록 **${{ github.event.issue.user.login }}** · 시작일이 오늘로 기록됩니다"
+            URL="${{ github.event.issue.html_url }}"; COLOR="11037960"
+          else
+            # 문서 push 만 알린다 — 코드 push 까지 알리면 채널이 시끄러워 아무도 안 본다
+            CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null || true)
+            echo "$CHANGED" | grep -q '^docs/' || { echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0; }
+            TITLE="📄 문서 갱신"
+            BODY=$(echo "$CHANGED" | grep '^docs/' | head -5 | sed 's/^/• /')
+            URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"; COLOR="8421504"
+          fi
+          {
+            echo "skip=0"
+            echo "title<<Z"; echo "$TITLE"; echo "Z"
+            echo "body<<Z";  echo "$BODY";  echo "Z"
+            echo "url=$URL"; echo "color=$COLOR"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 보내기
+        if: steps.msg.outputs.skip == '0'
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          [ -z "$HOOK" ] && { echo "DISCORD_WEBHOOK 미설정 — 건너뜀"; exit 0; }
+          jq -n --arg t "${{ steps.msg.outputs.title }}" \
+                --arg d "${{ steps.msg.outputs.body }}" \
+                --arg u "${{ steps.msg.outputs.url }}" \
+                --argjson c ${{ steps.msg.outputs.color }} \
+                --arg r "${{ github.repository }}" \
+            '{embeds:[{title:$t, description:$d, url:$u, color:$c, footer:{text:$r}}]}' \
+            | curl -sS -X POST -H "Content-Type: application/json" -d @- "$HOOK"

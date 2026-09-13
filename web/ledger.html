@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>진행 현황: 올린 것이 지금 어디 있나 · FOOTHOLD</title>
+<meta name="description" content="팀에 올라온 모든 안건이 지금 어느 단계인가. 무엇이 열려 있고 무엇이 닫혔는가.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:anywhere}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:#fff!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:#161c26!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+/*themefix*/html[data-theme="dark"]{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+html[data-theme="light"]{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}/*/themefix*/
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Ledger · 모든 요청이 지금 어디 있나</div>
+  <h1>진행 현황: 올린 것이 지금 어디 있나</h1>
+  <p class="lede">팀에 올라온 모든 안건이 지금 어느 단계인가. 무엇이 열려 있고 무엇이 닫혔는가.</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.1</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-08-09 16:49</span></div><div><span class="k">상태</span><span class="v">확정</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs/LEDGER.md</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 운영
+작성: 오흥재 · 2026-08-09 16:49
+근거: 팀 합의
+요지: 팀에 올라온 모든 안건이 지금 어느 단계인가. 무엇이 열려 있고 무엇이 닫혔는가.
+상태: 확정
+판: v2.1</p></blockquote>
+<blockquote><p><b>역할</b>: 팀장의 모든 지시·질문·아이디어가 ①어떤 상태인지 ②산출물이 어디 있는지를 추적하는 <b>단일 지점</b>.
+DECISIONS(결정의 «왜») · 이슈(작업 실행)와 겹치지 않는다. 이 문서는 <b>«그거 어떻게 됐어?»의 답</b>이다.
+세션이 바뀌어도 여기부터 읽으면 같은 자리에서 잇는다. 갱신 책임 = 세션, 매 작업 턴마다.
+최종 갱신: 2026-09-13 (열린 이슈 전수 98건 · <code>ledger-sync</code> 자동 집계) </p></blockquote>
+</section>
+<section id="s1"><h2>✅ 완료 (요약. 상세는 DECISIONS·VERIFIED·커밋 이력)</h2>
+<p><b>기획·방향 (WS 축)</b> 8/13 조선대 미팅 → 재기획(REPLAN) → <b>REPORT v2: 트랙 A(시뮬 RL+트윈) / 트랙 B(실기 자율주행)</b> 확정 · 안건 1·2·5 확정 · 8/20 전담 멘토 확정 회의 기록 · <b>8/20 16:00 킥오프</b> (발표 덱 pitch.html, WS 제작)</p>
+<p><b>실기·자원</b> 실기 사양 정본 <code>ROBOT-SPEC.md</code>(EDU·Orin NX 16GB·RJ45·등 라이다·카메라) · 등 라이다 영상 판별(모델명만 미정) · 모드 전환 API 확정(<code>MotionSwitcherClient</code>: CheckMode/SelectMode/ReleaseMode, 공식 소스 대조) · <b>GIST V100 배정 완료</b>(계정=#foothold-resource, 가이드=<code>ops/GPU-SANDBOX.md</code> §6) · 경량화 증류 불필요 확정</p>
+<p><b>협업 인프라 (노트북 축, 전부 실검증)</b> 자동화 16종(§SESSION-HANDOFF <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/3">#3</a>) · 날짜 KST · 이슈 템플릿 단순화(필수=큰 칸1+갈래1) · WBS=갈래 5 + 마일스톤 4 · inbox 파이프라인: 감지→3중 알림(디스코드·검토이슈·텔레그램 자동검토)→<code>/승격</code>→웹 자동 게시 · 권한: 팀원 4명 lab·rl write, main 은 팀장만(rl 룰셋 강제·lab 감시) · rl main 보호 누락 발견·복구 · 웹: 다크모드+토글 · 브랜드 정본(워드마크·파비콘·색14종·문구) 빌드 관문 · 검색 · 연구 기록 11편+REPORT 웹판 · 첫 팀원 기여: 임석헌 terrain 가이드 승격·게시 (8/13)</p>
+</section>
+<section id="s2"><h2>🔄 진행 중</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>어디까지</th><th>다음</th><th>이슈</th></tr></thead><tbody><tr><td><b>기준선 재정립</b></td><td><b>기준선 = NVIDIA 공식 체크포인트로 확정.</b> 우리 1,500 iter(86.7%)는 scratch 대조로 재분류. 평가 조건 20초·10 m·1.0 m/s·flat · KPI 축을 난이도 경계 이동으로</td><td>하네스 확장(<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a>) -&gt; 평지 기준선 -&gt; 10종 재측정</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a> 닫힘</td></tr><tr><td><b>저장소 역할 재정의</b></td><td>lab = 비공개 개발 원본 · go2 = 검증된 공개 승격본. DECISIONS 반영 완료</td><td>운영 문서 8곳 갱신 · 실험 템플릿 이관</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/126">#126</a></td></tr><tr><td><b>v2.0.0 화면 적용</b></td><td>허브 6개 · 표지 재배열 · 「이 글이 선 자리」 17장</td><td>최종 목업 검토 후 마감</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/89">#89</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/71">#71</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/73">#73</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a></td></tr><tr><td><b>v2.0.0 적용 완료 점검</b></td><td>여덟 가지 실측 항목 · 목업과 실제 화면 차이 3건 확인</td><td>목업 표현을 허브에 넣고 여덟 항목 실측</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/89">#89</a></td></tr><tr><td><b>v2.0.0 범위 확정</b></td><td>이슈 아홉으로 못박음. 열 번째를 만들지 않는다</td><td>순서대로 닫기</td><td><code>20260829-v2-scope.md</code></td></tr><tr><td><b>정보 모델 (온톨로지 2~3단계)</b></td><td>축 다섯 + 작업 영역 자동 판정 + <b>관계표 매 빌드 자동 재생성</b></td><td>표지 노출 기준 적용 · 승격 흐름 개조</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a></td></tr><tr><td><b>프로젝트 페이지 v2.0.0</b></td><td>1단계 관계표 완료. 문서 56개의 목적·상하위·최신성 판정</td><td>2단계 노출 기준 -&gt; 3단계 목업</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/73">#73</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/71">#71</a></td></tr><tr><td><b>실패 지형 5종</b></td><td>담당 확정·이슈 발행 완료. <code>rails</code> 만 물리 관문 없음</td><td>각자 0단계 관문 닫기</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/65">#65</a>~<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/69">#69</a></td></tr><tr><td><b>브랜드·테마</b></td><td>실측 완료 (로고 79/79 글씨 · 토글 51/79) · 역할 8갈래는 정본화로 해결</td><td>전역바 로고 · 토글 없는 27장</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/85">#85</a></td></tr><tr><td><b>일정 시스템</b></td><td>라벨 5종 생성 · 첫 회차 주간 이슈 7개 발행</td><td>워크플로 2개 · <code>plan_weekly.py</code></td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/74">#74</a></td></tr><tr><td><b>wiki 흡수</b></td><td>흡수로 방향 확정</td><td>오현민 동의 -&gt; 기술 허브로 이관</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 닫힘 · 기술 4쪽 이식 완료</td></tr><tr><td>회의 전사</td><td>8/13 조선대(핵심메모만) · 8/14 운영 ×2 · 8/20 멘토 녹음 있음(NAS·볼트)</td><td>전사 -&gt; meetings 정본화</td><td></td></tr><tr><td><b>강의 저장소 감시 자동화</b></td><td>알림만 하고 파일은 안 받는 한계가 드러났다</td><td>비공개 저장소로 미러할지 팀장 결정</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/88">#88</a></td></tr><tr><td><b>공개 정책 4종 대조군</b></td><td>관측 매핑 확정 · 4종 로드·실행 검증 완료</td><td>우리 10종 지형에 태워 실패 지형 지도로</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/28">#28</a></td></tr><tr><td>도구 백과</td><td>범위를 「선택의 근거」로 좁힘 (명령·코드는 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/71">#71</a>)</td><td>본 빌드</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/6">#6</a></td></tr></tbody></table></div>
+</section>
+<section id="s3"><h2>🔧 대기 큐 (승인됨 · 착수 전)</h2>
+<p><b>문서 최신화 (v2.0.0 선행)</b></p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>왜</th><th>근거</th></tr></thead><tbody><tr><td><code>LEDGER</code> · <code>DECISIONS</code> 큐 · <code>SESSION-HANDOFF</code> 의 옛 저장소 이름 <code>rl</code></td><td><code>foothold-go2</code> 로 개명됨 (8/27)</td><td>관계표 §4</td></tr><tr><td>연구 허브 5갈래 재분류</td><td>23장이 한 허브. 본PoC · PoC시험 · 파이프라인점검 · 자료조사 · 학습계획</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/73">#73</a></td></tr><tr><td>파이프라인에서 3장 이동</td><td>결정 로그·설계 결정 기록은 회의 허브로, 팀 공지는 표지 배너로</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/73">#73</a></td></tr><tr><td>볼트 문서에 판 적용</td><td><code>plan.html</code>(04_plan/PLAN.md) 이 판 체계 밖이다</td><td>판 체계 (8/28)</td></tr></tbody></table></div>
+<p><b>기존 큐</b></p>
+<p>⑥ 미팅 파이프라인(녹음 -&gt; 전사 -&gt; 회의록 초안) · <b>리눅스 이관</b>(<code>ops/SESSION-HANDOFF.md</code> §5) · 라이다 모델명 확정 · WBS 로드맵 뷰 날짜 필드</p>
+<blockquote><p><s><code>ReleaseMode</code> 실기 확인</s> 은 <b>범위 밖이다</b> (8/28 팀장 확정). 트랙 B 는 순정
+보행을 그대로 쓰므로 스포츠 모드를 해제할 일이 없다. 근거 = <code>ROBOT-SPEC</code> v2.0.</p></blockquote>
+</section>
+<section id="s4"><h2>👆 팀장 확인 대기</h2>
+<div class="tw"><table><thead><tr><th>무엇</th><th>왜 막혀 있나</th></tr></thead><tbody><tr><td>임석헌 · 이민우 예산 납부</td><td>팀비는 3인 납부로 <b>이미 학습을 돌릴 수 있다.</b> 남은 2인은 1차분을 채우면 된다 (팀장 정정 8/31)</td></tr><tr><td><code>team-intro</code> md 이관을 지금 할지 v2.0.0 때 할지</td><td>분량이 있다</td></tr><tr><td>실패 5종 개인 목표를 각자 고치게 할지</td><td>이미 알림이 갔다</td></tr></tbody></table></div>
+</section>
+<section id="s5"><h2>🔶 결정 대기</h2>
+<ul><li>lab 공개 전환 여부 (보류. 전제조건은 DECISIONS 08-12: 금액·외부실명·INFRA·LFS 정리)</li><li>허브를 몇 개로 갈지 (지금 5 -&gt; 기술 신설 시 6). 「파이프라인」 이름은 유지로 확정 (8/28)</li><li>연구 5갈래 이름 확정 여부</li><li><b>통과 5종의 난이도 격자를 누가 재는가.</b> 실패 5종은 5인이 나눠 가졌으나 <code>discrete_obstacles</code> <code>wave</code> <code>star</code> <code>repeated_boxes</code> <code>repeated_cylinders</code> 는 주인이 없다. KPI 뒷조건(「통과 5종의 경계가 후퇴하지 않을 것」)을 재려면 그 경계를 알아야 한다</li><li><b>조선대 자료 미러를 어디에 둘지</b> (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/88">#88</a>). 저작물이라 공개 저장소에 못 넣는다. 비공개 저장소를 하나 더 만들지 결정 필요</li></ul>
+</section>
+<section id="s6"><h2>📋 열린 이슈 전수 (2026-09-13 기준 98건)</h2>
+<blockquote><p><b>이 절이 뼈대다.</b> 열린 이슈가 여기 없으면 이 문서가 지금을 안 담고 있는 것이고,
+빌드 관문 <code>[3.8]</code> 이 그것을 잡는다. 닫힌 이슈는 지운다.</p>
+<p>이 블록은 <code>ledger-sync</code> 워크플로가 GitHub 열린 이슈에서 <b>다시 쓴다.</b> 손으로 고치지 않는다.
+아래 「손이 오래 안 간 것」 「막고 있는 것」 두 표는 판단이라 <b>사람 몫</b>이다 (마커 밖).</p></blockquote>
+<p><b>관문에 걸린 것</b></p>
+<div class="tw"><table><thead><tr><th>관문</th><th>이슈</th></tr></thead><tbody><tr><td>기획발표 9/4 (19)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/78">#78</a> W35 팀 목표 (8/24~8/30) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/79">#79</a> W36 팀 목표 (8/31~9/6) · 기획발표 주 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/80">#80</a> W36 오흥재 개인 목표 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/81">#81</a> W36 맹라현 개인 목표 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/82">#82</a> W36 오현민 개인 목표 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/83">#83</a> W36 임석헌 개인 목표 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/84">#84</a> W36 이민우 개인 목표 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/89">#89</a> v2.0.0 적용 완료 점검 · 여덟 가지를 실측으로 확인한다 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/93">#93</a> PRD-WEB 정렬 패스 · 기준 한 장대로 전 화면을 맞춘다 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/95">#95</a> 표지를 타겟 기준으로 재구성 · 온톨로지의 마지막 축을 쓴다 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/96">#96</a> 멘토링 질문 사전 취합 · 노션 설계안의 빠진 조각 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/103">#103</a> 오늘 하루 진행 관리: 이슈 상태를 In Progress… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/119">#119</a> 팀원 포지션 키워드 신설과 대외 화면 반영 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/120">#120</a> 웹 v2.0.0 확정과 공지 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> WBS 구현 단계 층 신설과 사람별 기여 축 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/155">#155</a> 일정 허브 멘토링 D-day 주간 반복 반영 · 빌드 시점… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/156">#156</a> 연구 허브 「후속 과제」 라벨 수와 칩 수 불일치 해소… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/157">#157</a> 험지 원자료 CSV 열과 정본 요약의 최대 80 포인트… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/188">#188</a> 9/4 기획 발표 벡터 도해 4종 제작</td></tr><tr><td>A-정책 9/12 (29)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/28">#28</a> RoboGauge 공개 정책 4종: 우리 평가에 붙이기 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/30">#30</a> Vaultwarden 개통 + NAS 폴더 구조 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/94">#94</a> RunPod 네트워크 볼륨 개설과 팀 폴더 구조 표준화 (담당 없음) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/100">#100</a> 평가 지표 3종(평균 리턴 · 에피소드 길이 · 성공률)… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/101">#101</a> MuJoCo ↔ Isaac Sim 관측 차원 차이 조사… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/108">#108</a> RunPod 영속 볼륨 경로 정정: 웹에 게시된… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a> 저장소 역할 재정의를 운영 문서에 반영 (lab 개발… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/126">#126</a> 실험 템플릿 lab 이관과 「승격」 용어 분리 (저장소… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/138">#138</a> 험지 4종이 전역 np.random 을 써서 env 밖… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/151">#151</a> 기본 지형 6종에 대해서 정책 개선 (임석헌) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/183">#183</a> 연구 허브 험지 카드 후속 과제 중복 제거 · 5열 배치… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a> 레일즈 난이도 경계 탐색 · 여덟 칸 100판 (맹라현) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/287">#287</a> 발 높이의 상수에서 명령으로의 전환 설계 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/292">#292</a> 지형 혼합 학습 5개 arm 동일 평가지형 비교… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/293">#293</a> 평가 코드 조용한 오작동 3건 기록과 재발 방지 절차 (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/297">#297</a> 지형 검사 관문이 검사 실패를 못 막는다 · 러너 종료… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/298">#298</a> 부동소수점 절단으로 지형 치수가 조용히 틀어진다… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/299">#299</a> 지형 검사기 신뢰성 2건 · horizontal_scale… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/300">#300</a> play_eval.py 스윕 지형 선택 스위치 신설… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/316">#316</a> 워크플로 15군데 em dash 정리와 관문 확장 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/332">#332</a> 징검다리 메시 해상도별 발 접촉 물리 검증 (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/341">#341</a> 문서 그래프 표의 인용 절단이 백틱 짝을 깨뜨린다 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/342">#342</a> 리셋을 쓰는 평가에서 같은 명령줄로 다시 돌리면… (맹라현) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/350">#350</a> 평가 하네스가 죽어도 종료코드 0 을 내는 문제 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/363">#363</a> 평가 프로토콜 정본 1장 작성 · 난이도 주축과 고정값 확정 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/364">#364</a> 벤치마크 관문의 성공 조건과 종료코드 계약 문서화 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/366">#366</a> 용어 범위 · KPI 고정 시점 · PRD 근거 정정 셋의… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/385">#385</a> 레일즈 학습 레시피 한 장으로 모으기 (맹라현) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/399">#399</a> 실패 지형 공략 뼈대의 N차 누적 전환과 연구 보드 축 재구성</td></tr><tr><td>MVP 9/30 (36)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/6">#6</a> 도구 백과 · 우리가 쓰는 도구들을 그림과 함께 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/29">#29</a> 에셋 팩 수령과 HDRI 렌더 테스트 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/31">#31</a> 우분투 전환 후 DDP 재측정 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/65">#65</a> 실패 지형 gap: 진단 -&gt; 레시피 (임석헌) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a> 실패 지형 rails: 진단 -&gt; 레시피 (맹라현) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/67">#67</a> 실패 지형 stepping_stones: 진단 -&gt; 레시피… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/68">#68</a> 실패 지형 pit: 진단 -&gt; 레시피 (이민우) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/69">#69</a> 실패 지형 floating_ring: 진단 -&gt; 레시피… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/74">#74</a> 일정 시스템 구현 (8/26 설계안이 통째로 증발했다) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a> 사이트 온톨로지 정의 (무엇이 무엇의 상위인가) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/97">#97</a> 기술 허브 확장 3편 집필: Isaac Lab 실전… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/102">#102</a> 일정 허브 대시보드화: 전체 일정 + 개인 일정 도식… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/111">#111</a> 웹 문서에 출처 이슈 표기 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/115">#115</a> Go2 관절 각도 한계 기구학 계산 (5 cm 벽) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/123">#123</a> 공개 문서 금액 표기 정정과 redact 금액 탐지 개선 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/137">#137</a> 빌드 실행 순서 결함 2건 수정과 생성물 커밋·정상 배포 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/275">#275</a> 레일 통과와 보상 설계: 외부 문헌 여섯 편 대조 (맹라현) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/346">#346</a> 원장 관문 [3.8] 과 ledger-sync 봇의… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/354">#354</a> 코드블록 위젯 CSS 의 토큰 밖 색상 19개 · 배포본… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/365">#365</a> 팀 제출·완결 조건의 문서화 · 개인 위키 게재의 지위 정리 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/367">#367</a> RoboGauge 점수표 기여 철회의 문서 반영 · 한… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/368">#368</a> 발표 서사 정본과 계획 WBS 세로축의 결정 로그 반영 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/369">#369</a> 관문 코드에만 사는 웹·운영 규칙 넷의 문서 이관 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/370">#370</a> 배포본 diff 에서 빌드 시각을 걷어낸 «진짜 변경» 수… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/374">#374</a> deadline-alert.yml 보드 조회의 쪽 나눔과… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/375">#375</a> weekly-report.yml 의 전송 판정·쪽… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/376">#376</a> lecture-watch.yml 스냅샷 저장 시점의 알림… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/377">#377</a> issue-dates.yml 필드 id 미확보 시 성공… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/378">#378</a> merge-on-comment.yml 텔레그램 HTTP… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/379">#379</a> notice.yml 한글 공지의 글자 단위 분할 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/380">#380</a> authorcheck.py 의 ROLES.md 부재 시… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/392">#392</a> RL gap 30cm 범위까지 추가 학습 및 검증 (임석헌) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/395">#395</a> 갤러리 컷 포스터 이미지 생성과 목록 지연 로딩 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/396">#396</a> 대조컷 선택 정책의 코드화와 색인 기록 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/397">#397</a> 지형 집합과 모델별 학습 노출의 분리 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/398">#398</a> 갤러리 컷의 안정 식별자와 재촬영 이력 기록</td></tr><tr><td>NAV 11/7 (1)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/55">#55</a> CV 담당 단계별 계획과 실행 환경 문서 제출 (오현민)</td></tr><tr><td>관문 없음 (7)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/88">#88</a> 강의 저장소 감시가 알림만 한다. 미러까지 하게 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/128">#128</a> 프로젝트 페이지 검색의 본문 색인 누락 (절 1500자 잘림) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/133">#133</a> 발표 스토리라인 v1.0 검토 · Codex 수정 지시… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/253">#253</a> 웹에 남은 ASCII 도식 3블록의 SVG 전환 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/261">#261</a> 강화학습 멘토 첫 미팅 준비 (월 17:00) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/327">#327</a> AGENTS.md 와 docs/WORKFLOW.md 가… (오현민) · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/393">#393</a> RL gap 40cm까지 추가 학습 및 검증 (임석헌)</td></tr><tr><td>승격 검토 (6)</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/148">#148</a> jay/20260903-report-v2-개정안.md · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/149">#149</a> jay/20260902-benchmark-setup-lim-… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/331">#331</a> oh/20260908-평가하네스-수정본.md · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/349">#349</a> jay/20260909-parkour-ablation-대조분… · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/358">#358</a> jay/20260904-launch/README-B.md · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/382">#382</a> jay/20260904-launch/design/STATUS…</td></tr></tbody></table></div>
+<p><b>사람별로 열린 것</b></p>
+<div class="tw"><table><thead><tr><th>사람</th><th>건수</th><th>이슈</th></tr></thead><tbody><tr><td>오흥재</td><td>71</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/6">#6</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/28">#28</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/29">#29</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/30">#30</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/31">#31</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/69">#69</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/74">#74</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/80">#80</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/88">#88</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/89">#89</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/93">#93</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/95">#95</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/96">#96</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/97">#97</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/100">#100</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/101">#101</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/102">#102</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/103">#103</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/108">#108</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/111">#111</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/115">#115</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/119">#119</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/120">#120</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/123">#123</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/126">#126</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/128">#128</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/133">#133</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/137">#137</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/138">#138</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/148">#148</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/149">#149</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/155">#155</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/156">#156</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/157">#157</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/183">#183</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/188">#188</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/253">#253</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/261">#261</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/287">#287</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/316">#316</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/331">#331</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/341">#341</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/346">#346</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/349">#349</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/350">#350</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/354">#354</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/358">#358</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/363">#363</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/364">#364</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/365">#365</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/366">#366</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/367">#367</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/368">#368</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/369">#369</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/370">#370</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/374">#374</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/375">#375</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/376">#376</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/377">#377</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/378">#378</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/379">#379</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/380">#380</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/382">#382</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/395">#395</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/396">#396</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/397">#397</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/398">#398</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/399">#399</a></td></tr><tr><td>맹라현</td><td>6</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/81">#81</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/275">#275</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/342">#342</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/385">#385</a></td></tr><tr><td>오현민</td><td>12</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/28">#28</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/55">#55</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/67">#67</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/82">#82</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/292">#292</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/293">#293</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/297">#297</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/298">#298</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/299">#299</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/300">#300</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/327">#327</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/332">#332</a></td></tr><tr><td>임석헌</td><td>5</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/65">#65</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/83">#83</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/151">#151</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/392">#392</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/393">#393</a></td></tr><tr><td>이민우</td><td>2</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/68">#68</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/84">#84</a></td></tr><tr><td>담당 없음</td><td>1</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/94">#94</a></td></tr><tr><td>팀 공동</td><td>2</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/78">#78</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/79">#79</a></td></tr></tbody></table></div>
+<p><b>손이 오래 안 간 것</b> (착수 흔적이 없다. 관문이 가까워지면 위험하다)</p>
+<div class="tw"><table><thead><tr><th>이슈</th><th>무엇</th><th>왜 남아 있나</th></tr></thead><tbody><tr><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/29">#29</a></td><td>에셋 팩 수령과 HDRI 렌더</td><td>에셋 수령이 선행. 대기 중</td></tr><tr><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/30">#30</a></td><td>Vaultwarden · NAS 폴더</td><td>인프라. A-정책 관문에 걸려 있다</td></tr><tr><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/31">#31</a></td><td>우분투 전환 후 DDP 재측정</td><td>우분투 이관이 선행</td></tr></tbody></table></div>
+<p><b>막고 있는 것</b> (이것이 안 끝나면 뒤가 전부 멈춘다)</p>
+<div class="tw"><table><thead><tr><th>이슈</th><th>무엇을 막나</th></tr></thead><tbody><tr><td><b><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/151">#151</a></b> 기본 지형 6종 정책 개선</td><td>A-정책 9/12 의 본체다. <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/65">#65</a>~<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/69">#69</a> 실패 5종이 그 위에 선다</td></tr><tr><td><b><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a></b> 문서 반영</td><td>새 세션·새 기기의 에이전트가 아직 「go2 에서 개발」로 읽는다</td></tr></tbody></table></div>
+</section>
+<section id="s7"><h2>📌 오늘 남긴 것 (2026-09-02)</h2>
+<p>세션이 끝나도 사라지지 않게 여기 적는다. <b>이 절이 비어 있으면 그날 아무것도 안 남긴 것이다.</b></p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td><b>기준선이 두 개로 갈려 있던 것을 확인</b> · 10종 500판은 NVIDIA 공식 체크포인트 · 86.7% 는 우리가 랜덤 초기화에서 학습한 별개 정책</td><td><code>DECISIONS</code> 09-02 · HANDOFF §3-1</td></tr><tr><td><b>기준선 = NVIDIA 공식 체크포인트 확정</b> · 우리 1,500 iter 는 scratch 대조로 재분류</td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a></td></tr><tr><td><b>저장소 역할 재정의</b> · lab = 비공개 개발 원본 · go2 = 검증된 공개 승격본</td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a></td></tr><tr><td>평가 조건 20초 · 10 m · 1.0 m/s · 평지(flat) 추가</td><td><code>DECISIONS</code> 09-02</td></tr><tr><td>좌우 이탈 = <b>끝점 판정</b>(멘토 기준) + <b>최대값 관측</b>(<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/98">#98</a> 지적)</td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> 1번</td></tr><tr><td><b>KPI 축을 성공률에서 난이도 경계 이동으로</b></td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a> · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/116">#116</a></td></tr><tr><td>에피소드 = 「지형 × 난이도」 칸당 100 (30회는 신뢰구간 폭 24.4 포인트)</td><td><code>DECISIONS</code> 09-02</td></tr><tr><td>「멈춰서 한 발씩」 = 저속 상수 모드 + <b>위상 열</b>. 발 개별 제어는 정책 밖이라 안 한다</td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a> · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> 4번</td></tr><tr><td>「승격」 용어 분리 (문서 승격 / 공개 릴리스) · 실험 템플릿 lab 이관</td><td><code>DECISIONS</code> 09-02 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/126">#126</a></td></tr><tr><td><b>실측</b>: 좌우 이탈 27.0 cm · 5.6도 편향 · 출발 yaw 상관 +0.018 · v1 고유행 1 대 v2 50 · 신뢰구간 표</td><td>HANDOFF §3</td></tr><tr><td><b>우리 파이프라인에 방향 열이 없다</b> (평면 거리로만 판정)</td><td>HANDOFF §3-5 ·</td></tr><tr><td>문서 오기 3건 (<code>lateral_drift</code> 적분 표기 · 대상 정책 표기 · level 0 이 86.7% 인가 80.0% 인가)</td><td>HANDOFF §4 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a></td></tr><tr><td>멘토가 이미 답한 것 발굴 · 「0 과 100 이 아닌 칸만 Isaac 에서」</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/101">#101</a></td></tr><tr><td>세션 HANDOFF (실측 방법 · 미해결 6건 · 읽은 파일과 줄)</td><td><code>inbox/jay/20260902-기준선-재정립-HANDOFF.md</code></td></tr><tr><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a> 결론 달고 닫음 · 신규 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/124">#124</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/126">#126</a> · 기존 11건에 반영</td><td>이슈</td></tr></tbody></table></div>
+</section>
+<section id="s8"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v2.1</b></td><td>2026-09-08</td><td><b>열린 이슈 전수를 기계가 쓴다.</b> 절 제목·관문 표·사람 표를 마커 안에 넣고 <code>ledger-sync</code> 워크플로가 GitHub 열린 이슈에서 다시 쓰게 했다. 판단이 들어가는 「손이 오래 안 간 것」 「막고 있는 것」 두 표는 마커 밖에 남겼다</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/161">#161</a></td></tr><tr><td><b>v2.0</b></td><td>2026-08-28</td><td><b>8일치 누수를 메웠다.</b> 최종 갱신이 8/20 에 멈춰 있었다. 열린 이슈 31개와 오늘 남긴 것을 전부 반영</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/76">#76</a></td></tr><tr><td>v1.0</td><td>2026-08-09</td><td>처음 씀</td><td>이전 이력은 git 에</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

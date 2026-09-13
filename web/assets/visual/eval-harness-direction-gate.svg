@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 620" width="980" height="620" font-family="system-ui,-apple-system,Segoe UI,Malgun Gothic,Apple SD Gothic Neo,sans-serif" role="img" aria-label="방향 판정을 끝점에서 통과선으로 옮긴 구조">
+<title>방향 판정 · 끝점에서 통과선으로</title>
+
+<rect x="0" y="0" width="980" height="620" fill="#f7f9fc"/>
+
+<text x="32" y="44" font-size="19" font-weight="700" fill="#16202c">방향 판정을 «끝점»에서 «통과선»으로 옮겼다</text>
+<text x="32" y="68" font-size="12.5" fill="#5b6b7f">docs/DECISIONS.md 09-09 · 위에서 내려다본 한 판 · 가로 세로 같은 축척 (1 m = 40 px)</text>
+
+<rect x="64" y="96" width="880" height="250" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+
+<line x1="104" y1="221" x2="904" y2="221" stroke="#98a4b3" stroke-width="1" stroke-dasharray="5 4"/>
+
+<line x1="504" y1="110" x2="504" y2="332" stroke="#1d5fa8" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="512" y="122" font-size="11.5" font-weight="600" fill="#1d5fa8">통과선 10 m</text>
+
+<line x1="904" y1="110" x2="904" y2="332" stroke="#b5341f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="896" y="122" font-size="11.5" font-weight="600" fill="#b5341f" text-anchor="end">끝점 20 m</text>
+
+<polyline points="104,221 144,220 184,222 224,219 264,221 304,219 344,220 384,219 424,220 464,218 504,218 544,213 584,206 624,197 664,187 704,176 744,165 784,155 824,146 864,139 904,135" fill="none" stroke="#16202c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+
+<line x1="904" y1="135" x2="904" y2="221" stroke="#b5341f" stroke-width="3"/>
+<line x1="898" y1="135" x2="910" y2="135" stroke="#b5341f" stroke-width="1.6"/>
+<line x1="898" y1="221" x2="910" y2="221" stroke="#b5341f" stroke-width="1.6"/>
+<text x="894" y="186" font-size="11.5" font-weight="600" fill="#b5341f" text-anchor="end">2.143 m</text>
+
+<circle cx="104" cy="221" r="4.5" fill="#16202c"/>
+<text x="104" y="248" font-size="10.5" fill="#5b6b7f" text-anchor="middle">출발</text>
+
+<circle cx="504" cy="218" r="5.5" fill="#ffffff" stroke="#1d5fa8" stroke-width="2.4"/>
+<line x1="504" y1="236" x2="504" y2="262" stroke="#1d5fa8" stroke-width="1"/>
+<text x="504" y="280" font-size="11.5" font-weight="600" fill="#1d5fa8" text-anchor="middle">통과선 이탈 0.085 m</text>
+<text x="504" y="299" font-size="10.5" fill="#5b6b7f" text-anchor="middle">판정 문턱 0.05 m 는 이 축척에서 2 px</text>
+
+<circle cx="904" cy="135" r="5.5" fill="#ffffff" stroke="#b5341f" stroke-width="2.4"/>
+
+<line x1="104" y1="326" x2="104" y2="332" stroke="#98a4b3" stroke-width="1"/>
+<line x1="304" y1="326" x2="304" y2="332" stroke="#98a4b3" stroke-width="1"/>
+<line x1="704" y1="326" x2="704" y2="332" stroke="#98a4b3" stroke-width="1"/>
+<text x="104" y="340" font-size="10" fill="#5b6b7f" text-anchor="middle">0 m</text>
+<text x="304" y="340" font-size="10" fill="#5b6b7f" text-anchor="middle">5 m</text>
+<text x="704" y="340" font-size="10" fill="#5b6b7f" text-anchor="middle">15 m</text>
+
+<rect x="64" y="392" width="424" height="180" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<text x="84" y="422" font-size="13" font-weight="600" fill="#16202c">같은 100판을 두 기준으로 재면</text>
+<line x1="84" y1="436" x2="468" y2="436" stroke="#e2e8f0" stroke-width="1"/>
+<text x="84" y="458" font-size="10.5" fill="#5b6b7f">무엇으로 재나</text>
+<text x="330" y="458" font-size="10.5" fill="#5b6b7f" text-anchor="end">평균 좌우 이탈</text>
+<text x="464" y="458" font-size="10.5" fill="#5b6b7f" text-anchor="end">직진성</text>
+<text x="84" y="488" font-size="12" font-weight="600" fill="#1d5fa8">통과선 10 m</text>
+<text x="330" y="488" font-size="12" font-weight="600" fill="#16202c" text-anchor="end">0.085 m</text>
+<text x="464" y="488" font-size="12" font-weight="600" fill="#17795e" text-anchor="end">33 / 100</text>
+<text x="84" y="516" font-size="12" font-weight="600" fill="#b5341f">끝점 20 m</text>
+<text x="330" y="516" font-size="12" font-weight="600" fill="#16202c" text-anchor="end">2.143 m</text>
+<text x="464" y="516" font-size="12" font-weight="600" fill="#b5341f" text-anchor="end">0 / 100</text>
+<text x="84" y="550" font-size="10" fill="#5b6b7f">평지 정본 20260903-flat-10m-spec20s · 원장 09-02 아래 표</text>
+
+<rect x="520" y="392" width="424" height="180" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<text x="540" y="422" font-size="13" font-weight="600" fill="#16202c">통과선을 못 넘긴 판은 어떻게 되나</text>
+<line x1="540" y1="436" x2="924" y2="436" stroke="#e2e8f0" stroke-width="1"/>
+<text x="540" y="462" font-size="11.5" fill="#b5341f">끝점 판정 · 이탈이 작게 나와 통과처럼 보인다</text>
+<text x="540" y="488" font-size="11.5" fill="#17795e">통과선 판정 · gate_lateral_drift_m 이 None 이라 실패</text>
+<text x="540" y="520" font-size="11" fill="#5b6b7f">None 은 0.0 이 아니다. 도달한 판과 구별하려고</text>
+<text x="540" y="540" font-size="11" fill="#5b6b7f">일부러 갈랐다 · metrics.py:179~180</text>
+<text x="540" y="562" font-size="10" fill="#5b6b7f">gate_direction_success · metrics.py:267~276</text>
+
+<text x="32" y="600" font-size="10.5" fill="#5b6b7f">멘토 기준은 「목표점 도달 시 좌우 5 cm」다. 20초 × 1.0 m/s 면 끝점이 20 m 라, 끝점으로 재면 목표점의 두 배 지점을 재게 된다.</text>
+</svg>

@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FOOTHOLD · 프로젝트 소개 덱</title>
+<link rel="icon" href="assets/brand/foothold-favicon.svg?v=08e237b2">
+<style>
+/* 발표용 페이지. 다크 단일 룩 고정: 줌 공유·프로젝터 가독성 (팀장 확인 08-20).
+   브랜드 규칙: 32px 그리드는 장식이 아니라 정렬 장치 · 색은 시맨틱(teal=검증/정체성,
+   amber=미확정, red=한계)으로만 · 워드마크는 SVG 정본만 사용 (BRAND_BIBLE §4·§7) */
+:root{
+  --paper:#0e1218; --paper-2:#141a23; --card:#181d26;
+  --ink:#e9e7e1; --ink-2:#adb5c1; --ink-3:#7d8693;
+  --rule:#2b323d; --brand:#3ec7b4; --dim:var(--brand); --dim-soft:#11302c;
+  --note:#dc9a30; --note-soft:#332710;
+  --stop:#e56d5e; --stop-soft:#331c19;
+  --grid:rgba(233,231,225,.035);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);
+  font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+  overflow:hidden;-webkit-font-smoothing:antialiased}
+#themeBtn{display:none!important}
+.fh-sbtn-fix{display:none!important}
+/* 32px 그리드: 브랜드의 정렬 장치. 모든 장에 동일하게 깔린다 */
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+/* 고정 헤더: 모든 장에 같은 틀 */
+.hd{position:fixed;top:0;left:0;right:0;z-index:8;display:flex;align-items:center;
+  justify-content:space-between;padding:14px 3vw;border-bottom:1px solid var(--rule);
+  background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(4px)}
+.hd img{height:22px;display:block}
+.hd .sec{color:var(--ink-3);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hd .sec b{color:var(--brand)}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+  padding:96px 8vw 9vh;z-index:1}
+.slide.on{display:flex}
+.eyebrow{color:var(--brand);font-weight:800;letter-spacing:.14em;font-size:clamp(11px,1.4vh,15px);
+  text-transform:uppercase;margin-bottom:2vh}
+h1{font-size:clamp(30px,6.6vh,62px);line-height:1.16;font-weight:900;letter-spacing:-.02em}
+h2{font-size:clamp(23px,4.8vh,42px);line-height:1.2;font-weight:900;letter-spacing:-.02em;margin-bottom:3.2vh}
+.sub{color:var(--ink-2);font-size:clamp(15px,2.3vh,21px);line-height:1.55;margin-top:2.4vh;max-width:62ch}
+b,strong{color:var(--ink)}
+.mark{color:var(--brand)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:2.2vh 2.2vw}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:2vh 1.6vw}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:2.6vh 1.8vw;position:relative}
+.card .k{color:var(--brand);font-weight:800;font-size:clamp(10px,1.5vh,13px);letter-spacing:.1em;margin-bottom:1vh;text-transform:uppercase}
+.card .t{font-weight:800;font-size:clamp(15px,2.5vh,23px);line-height:1.3}
+.card .d{color:var(--ink-2);font-size:clamp(12px,1.85vh,16px);line-height:1.55;margin-top:1vh}
+.num{font-size:clamp(26px,5vh,50px);font-weight:900;color:var(--brand);letter-spacing:-.02em;white-space:nowrap}
+.numl{color:var(--ink-2);font-size:clamp(12px,1.75vh,15px);margin-top:.6vh;line-height:1.45}
+.chain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:.6vh 0}
+.chain .n{background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  padding:1.4vh 1.2vw;font-weight:700;font-size:clamp(12px,1.9vh,17px);line-height:1.35;
+  display:flex;align-items:center;text-align:center}
+.chain .a{display:flex;align-items:center;color:var(--brand);font-weight:900;padding:0 .6vw;
+  font-size:clamp(14px,2.2vh,20px)}
+/* 트랙 배지: A=채움(시뮬 검증) · B=윤곽+발자국(실물 완주). 색이 아니라 구조로 구분한다 */
+.tk{display:inline-flex;align-items:center;gap:.5em;border-radius:999px;
+  padding:.55vh 1.3vw;font-weight:900;font-size:clamp(11px,1.8vh,15px);letter-spacing:.06em}
+.tkA{background:var(--brand);color:var(--paper)}
+.tkB{border:2px solid var(--brand);color:var(--brand);background:transparent}
+.tk svg{height:.85em;width:auto;display:block}
+.tag{display:inline-block;background:var(--dim-soft);color:var(--brand);border-radius:999px;
+  padding:.5vh 1.1vw;font-weight:800;font-size:clamp(11px,1.6vh,14px);margin-right:.5vw}
+.tag.note{background:var(--note-soft);color:var(--note)}
+ul.big{list-style:none;margin-top:.6vh}
+ul.big li{font-size:clamp(14px,2.2vh,20px);line-height:1.5;padding:.9vh 0 .9vh 2.1ch;position:relative;color:var(--ink-2)}
+ul.big li::before{content:"";position:absolute;left:.2ch;top:calc(.9vh + .6em);width:.65ch;height:.65ch;
+  border-radius:50%;background:var(--brand);transform:translateY(-50%)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);border-radius:16px;overflow:hidden}
+.split>div{padding:3.4vh 2.2vw;background:var(--card)}
+.split>div+div{border-left:1px solid var(--rule)}
+.split .big-l{font-size:clamp(20px,3.6vh,34px);font-weight:900;margin:1.4vh 0 1vh}
+.media{border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--paper-2)}
+.media img,.media video{display:block;width:100%;height:auto}
+.media .cap{padding:.9vh 1.2vw;color:var(--ink-3);font-size:clamp(10px,1.5vh,13px);border-top:1px solid var(--rule)}
+.duo{display:grid;grid-template-columns:1.15fr .85fr;gap:2vh 2vw;align-items:start}
+.lane{display:grid;grid-template-columns:10ch 1fr;gap:0;border-top:1px solid var(--rule)}
+.lane>div{padding:1.5vh 1vw;font-size:clamp(12px,2vh,18px)}
+.lane .w{color:var(--brand);font-weight:800;white-space:nowrap}
+.lane .tkm{display:inline-block;min-width:2.6ch;text-align:center;border-radius:6px;font-weight:900;
+  font-size:.72em;padding:.14em .4em;margin-right:.55ch;vertical-align:.08em}
+.lane .mA{background:var(--brand);color:var(--paper)}
+.lane .mB{border:1.5px solid var(--brand);color:var(--brand)}
+.lane .mX{border:1.5px solid var(--rule);color:var(--ink-3)}
+.foot{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;
+  padding:1.3vh 2vw;color:var(--ink-3);font-size:12px;z-index:8;pointer-events:none}
+.foot .r{display:flex;gap:12px;align-items:center;pointer-events:auto}
+.foot button,.foot a{background:none;border:1px solid var(--rule);color:var(--ink-3);border-radius:8px;
+  padding:4px 10px;font-size:12px;cursor:pointer;text-decoration:none}
+.bar{position:fixed;top:0;left:0;height:3px;background:var(--brand);width:0;z-index:9;transition:width .25s}
+.wm{height:clamp(30px,5.2vh,52px);margin-bottom:3.6vh;align-self:flex-start}
+.kicker{color:var(--ink-3);font-size:clamp(13px,2vh,17px);margin-top:3.4vh}
+.trail{margin-top:4vh;max-width:520px;opacity:.9}
+.hint{position:fixed;right:2vw;bottom:5.6vh;color:var(--ink-3);font-size:12px;opacity:.85;z-index:8}
+.end{align-items:center;text-align:center;justify-content:center}
+.end img{height:clamp(90px,18vh,170px);margin-bottom:4.5vh}
+.end .pj{font-size:clamp(17px,2.8vh,26px);font-weight:800;color:var(--ink-2);letter-spacing:.02em}
+.end .pd{color:var(--brand);font-weight:800;letter-spacing:.16em;font-size:clamp(12px,1.9vh,16px);margin-top:1.6vh}
+.end .nm{color:var(--ink-3);font-size:clamp(13px,2vh,17px);margin-top:3.4vh;line-height:1.7}
+@media (max-width:760px){
+  .grid2,.grid3,.duo,.split{grid-template-columns:1fr}
+  .split>div+div{border-left:none;border-top:1px solid var(--rule)}
+  .slide{padding:84px 6vw 10vh;overflow-y:auto;justify-content:flex-start}
+  .chain{flex-direction:column}
+  .chain .a{transform:rotate(90deg);padding:.3vh 0;justify-content:center}
+  .hd .sec{display:none}
+}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="hd">
+  <img src="assets/brand/foothold-lockup-compact-dark.svg?v=1b14c22e" alt="FOOTHOLD">
+  <span class="sec" id="sec"><b>KICK-OFF</b> · 2026-08-20</span>
+</div>
+
+<!-- 1 표지 -->
+<section class="slide on" data-sec="표지">
+  <div class="eyebrow">Final Project · Kick-off 2026-08-20</div>
+  <h1>Unitree Go2,<br>미경험 험지를 <span class="mark">적응</span>해서 건넌다</h1>
+  <p class="sub">가상에서는 강화학습으로 한계에 도전하고(중간 9/30), 실물에서는 검증된 보행 위에 자율주행을 쌓아 완주한다(최종 12/11).</p>
+  <p class="kicker">FOOTHOLD · 오흥재(팀장) · 임석헌 · 오현민 · 맹라현 · 이민우 · 그리고 여섯 번째 멤버를 환영합니다</p>
+  <svg class="trail" viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M30 132c142-96 268 18 404-70 119-77 252 12 406-48" fill="none" stroke="var(--rule)" stroke-width="3" stroke-dasharray="10 10"/>
+    <g fill="var(--brand)" opacity=".28" transform="translate(22 100) scale(1.67)"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z"/></g>
+    <g fill="var(--brand)" opacity=".48" transform="translate(238 56) scale(1.86)"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z"/></g>
+    <g fill="var(--brand)" opacity=".72" transform="translate(486 78) scale(2.05)"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z"/></g>
+    <g fill="var(--brand)" transform="translate(758 10) scale(2.33)"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z"/></g>
+  </svg>
+</section>
+
+<!-- 2 팀 -->
+<section class="slide" data-sec="01 · Team">
+  <div class="eyebrow">01 · Team</div>
+  <h2>다섯 명, 그리고 비어 있는 여섯 번째 자리</h2>
+  <div class="grid3">
+    <!-- ★ 손으로 고치지 마십시오. 정본은 foothold-lab/docs/ROLES.md -->
+        <div class="card"><div class="k">B/항법 · C/운영</div><div class="t">오흥재</div>
+      <div class="d">리딩 · 항법 · 운영. 영상·VFX 12년, 카메라·공간·3D 파이프라인, 포인트클라우드 재구성 실무.</div></div>
+    <div class="card"><div class="k">A/정책학습</div><div class="t">임석헌</div>
+      <div class="d">보행 정책 학습 · 보상 설계 · 실험 반복. 비전 모델 학습·데이터 구축, 파인튜닝 R&amp;D.</div></div>
+    <div class="card"><div class="k">A/지형씬제작 · A/트윈렌더</div><div class="t">맹라현</div>
+      <div class="d">시뮬 지형 제작 · 실공간 복원 · 렌더 시연. Blender · 3ds Max · Unity, 웹·DB까지.</div></div>
+    <div class="card"><div class="k">A/평가 · B/인지</div><div class="t">오현민</div>
+      <div class="d">일반화 벤치마크·지표 · 실기 센서 인지. 컴퓨터비전 분류, 결과 화면 구현.</div></div>
+    <div class="card"><div class="k">C/기록 · B/항법</div><div class="t">이민우</div>
+      <div class="d">SLAM·Nav2 실기 자율주행 · 회의록과 문서 정본화 · 백과·커리큘럼. 웹 풀스택, 서버 구성·운영.</div></div>
+    <div class="card" style="border-color:var(--brand)"><div class="k">6th Member · 전담 멘토</div><div class="t">현직 전문가 (8/20 합류)</div>
+      <div class="d">매일 오후 15~18시 협업. 현장의 기준으로 우리 실험과 코드를 검증받는다.</div></div>
+  </div>
+</section>
+
+<!-- 3 왜 -->
+<section class="slide" data-sec="02 · Why">
+  <div class="eyebrow">02 · Why</div>
+  <h2>사람이 못 들어가는 곳에 먼저 들어가는 발</h2>
+  <div class="grid2">
+    <div class="card"><div class="k">문제</div>
+      <div class="t">재난·위험 현장의 첫 진입</div>
+      <div class="d">화재·붕괴 현장에서 대원 안전 확보와 현장 파악을 위한 사족보행 로봇은 정부 과제로 추진되는 실수요다 (현장 지휘 지원·대원 안전 확보 과제, RND).</div></div>
+    <div class="card"><div class="k">공백</div>
+      <div class="t">순정이 못 가는 험지가 남아 있다</div>
+      <div class="d">순정 Go2는 계단·경사·발빠짐 정도는 이미 잘 걷는다 (조선대 BITE팀 대회 실증). 하지만 연약지반·잔해·불규칙 지형은 여전히 어렵다. <b>그 험지가 우리의 무대다.</b></div></div>
+  </div>
+</section>
+
+<!-- 4 왜 나눴나 (다리) -->
+<section class="slide" data-sec="03 · Approach">
+  <div class="eyebrow">03 · Approach</div>
+  <h2>왜 가상은 <span class="mark">학습</span>이고, 실물은 <span class="mark">순정 + 항법</span>인가</h2>
+  <div class="split">
+    <div>
+      <span class="tk tkA">가상 · 시뮬레이션</span>
+      <div class="big-l">실패가 공짜다</div>
+      <div class="d" style="color:var(--ink-2);font-size:clamp(13px,2vh,18px);line-height:1.6">
+        수천 번 넘어져도 잃는 것이 없다. 그래서 <b>순정의 한계 너머 험지에 강화학습으로 도전</b>한다.
+        결과는 감이 아니라 정량 평가(성공률·낙상·회복)로 증명한다.</div>
+    </div>
+    <div>
+      <span class="tk tkB"><svg viewBox="0 0 42 27" xmlns="http://www.w3.org/2000/svg"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z" fill="currentColor"/></svg>실물 · Go2</span>
+      <div class="big-l">실패가 비싸다</div>
+      <div class="d" style="color:var(--ink-2);font-size:clamp(13px,2vh,18px);line-height:1.6">
+        낙상 한 번이 장비 파손·안전 사고다. 와이어 리깅 같은 안전장치가 없는 조건에서는
+        <b>검증된 순정 보행 위에 SLAM·Nav2 항법을 쌓는 것</b>이 완주로 가는 검증된 길이다.</div>
+    </div>
+  </div>
+  <p class="sub"><b>그래서 두 트랙이다.</b> 도전은 가상에, 완주는 실물에. 8/19 조선대 교수 가이드와 팀 전원 합의로 확정했다.</p>
+</section>
+
+<!-- 5 전략 -->
+<section class="slide" data-sec="04 · Strategy">
+  <div class="eyebrow">04 · Strategy</div>
+  <h2>두 트랙: 시뮬로 <span class="mark">증명</span>하고, 실물로 <span class="mark">완성</span>한다</h2>
+  <div class="split">
+    <div>
+      <span class="tk tkA">TRACK A · 시뮬 검증</span>
+      <div class="big-l">험지 적응 RL + 디지털 트윈</div>
+      <div class="d" style="color:var(--ink-2);font-size:clamp(13px,2vh,18px);line-height:1.6">
+        Isaac Lab에서 우리가 정의한 험지로 보행 정책을 학습하고 <b>미학습 지형 일반화</b>를 정량 검증.
+        디지털 트윈과 실사급 렌더로 눈에 보이는 증거를 만든다.<br><b>중간발표 9/30의 주인공.</b></div>
+    </div>
+    <div>
+      <span class="tk tkB"><svg viewBox="0 0 42 27" xmlns="http://www.w3.org/2000/svg"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z" fill="currentColor"/></svg>TRACK B · 실물 완주</span>
+      <div class="big-l">SLAM · Nav2 자율주행</div>
+      <div class="d" style="color:var(--ink-2);font-size:clamp(13px,2vh,18px);line-height:1.6">
+        검증된 순정 보행 위에 ROS2·SLAM·Nav2 항법을 얹어 <b>지정 험지 코스를 자율주행으로 완주</b>.
+        조선대 인프라(장비·XT16 라이다·교수 멘토링)와 연계.<br><b>최종발표 12/11의 주인공.</b></div>
+    </div>
+  </div>
+  <p class="sub">한 문장으로: <b>같은 험지에 두 개의 답</b>을 만든다. 트윈 안에서는 학습으로, 현장에서는 항법으로.</p>
+</section>
+
+<!-- 6 트랙 A -->
+<section class="slide" data-sec="05 · Track A">
+  <div class="eyebrow">05 · Track A <span class="tk tkA" style="margin-left:.8vw">TRACK A · 시뮬 검증</span></div>
+  <h2>학습·평가 파이프라인은 이미 돌아간다</h2>
+  <div class="duo">
+    <div>
+      <div class="chain">
+        <div class="n">험지 정의<br>(지형 생성)</div><div class="a">→</div>
+        <div class="n">커리큘럼<br>강화학습</div><div class="a">→</div>
+        <div class="n">미학습 지형<br>정량 평가</div><div class="a">→</div>
+        <div class="n">디지털 트윈<br>·실사급 렌더</div>
+      </div>
+      <div class="grid3" style="margin-top:2vh">
+        <div class="card"><div class="num">86.7%</div><div class="numl">기준선 성공률 실측 (1,500 iter)</div></div>
+        <div class="card"><div class="num">6,000회+</div><div class="numl">정책당 평가 에피소드 (지형·난이도 전수)</div></div>
+        <div class="card"><div class="num">45차원</div><div class="numl">RoboGauge 관측 매핑 확정 (외부 비교군)</div></div>
+      </div>
+    </div>
+    <div class="media">
+      <video src="assets/video/eval_1500iter_level6.mp4?v=682c579b" controls preload="none" muted playsinline poster="assets/visual/14_eval_levels_frames.png?v=f677a882"></video>
+      <div class="cap">기준선 정책 평가 실기록 (난이도 레벨 6) · 클릭 재생 · 포스터: 난이도 격자 프레임</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 트랙 B -->
+<section class="slide" data-sec="06 · Track B">
+  <div class="eyebrow">06 · Track B <span class="tk tkB" style="margin-left:.8vw"><svg viewBox="0 0 42 27" xmlns="http://www.w3.org/2000/svg"><path d="m9 4 12 9L33 4l9 8-21 15L0 12z" fill="currentColor"/></svg>TRACK B · 실물 완주</span></div>
+  <h2>검증된 길로, 그러나 우리 코스에서</h2>
+  <div class="chain">
+    <div class="n">ROS2 기초</div><div class="a">→</div>
+    <div class="n">Go2 연결·제어</div><div class="a">→</div>
+    <div class="n">SLAM 지도</div><div class="a">→</div>
+    <div class="n">Nav2 경로</div><div class="a">→</div>
+    <div class="n">험지 코스 완주</div>
+  </div>
+  <p class="numl" style="margin:.4vh 0 1.6vh">기초는 조선대 커리큘럼(금)과 함께 · 전 과정 검증된 스택</p>
+  <div class="duo">
+    <div>
+      <ul class="big">
+        <li>8/19 조선대 방문에서 교수와 방향 가이드 확정 · 매주 금 수업·멘토링</li>
+        <li>실기 코스는 <b>트윈에서 먼저 리허설</b>하고 현장에서 재현한다</li>
+      </ul>
+    </div>
+    <div class="media">
+      <img src="assets/visual/00_reference_unitree_official.png?v=d6ef9b7d" alt="Unitree 공식 레퍼런스: Go2 계곡 도하 프레임">
+      <div class="cap">Unitree 공식 레퍼런스 · Go2 계곡 도하 (순정 보행의 검증된 기반, 프레임 그리드)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 연결 -->
+<section class="slide" data-sec="07 · Bridge">
+  <div class="eyebrow">07 · Bridge</div>
+  <h2>두 트랙은 서로의 증거가 된다</h2>
+  <div class="grid3">
+    <div class="card"><div class="k">같은 험지, 두 답</div>
+      <div class="t">학습 vs 항법 비교</div>
+      <div class="d">동일 험지를 트윈에서는 학습 정책으로, 실물에서는 항법으로 건너 성능과 한계를 비교 리포트로 남긴다.</div></div>
+    <div class="card"><div class="k">트윈 리허설</div>
+      <div class="t">현장 실험의 예행연습</div>
+      <div class="d">실기 코스를 디지털 트윈으로 먼저 세워 SLAM·Nav2 설정을 시뮬에서 튜닝하고 현장 시간을 아낀다.</div></div>
+    <div class="card"><div class="k">관측 연속성</div>
+      <div class="t">시뮬과 실물의 같은 언어</div>
+      <div class="d">시뮬 관측 체계(IMU·관절·명령)와 실물 센서 스택을 같은 좌표로 정리해 분석이 이어지게 한다.</div></div>
+  </div>
+</section>
+
+<!-- 9 자산 -->
+<section class="slide" data-sec="08 · Assets">
+  <div class="eyebrow">08 · Assets</div>
+  <h2>4주간 쌓은 것: 말이 아니라 실측</h2>
+  <div class="duo">
+    <div>
+      <div class="grid3">
+        <div class="card"><div class="num">11편</div><div class="numl">공개 연구 문서 (실측·근거·정정 이력)</div></div>
+        <div class="card"><div class="num">1.75s</div><div class="numl">프레임당 실사급 PT 렌더 벤치 (RTX 5080)</div></div>
+        <div class="card"><div class="num">100%</div><div class="numl">회의 기록률 (화자분리 전사 + 타임코드)</div></div>
+      </div>
+      <p class="sub" style="margin-top:2.2vh">전부 웹에 있다: 연구 기록 · 기획서 · 회의 기록 · 팀 자료실.<br>
+      <b>foothold-project.vercel.app</b> 하나로 열람. 틀렸던 판단과 정정 이력도 남긴다: <b>번복의 기록이 곧 검증의 증거다.</b></p>
+    </div>
+    <div class="media">
+      <img src="assets/visual/11_racer_rtx_desert.png?v=d3aa8ce2" alt="실사급 렌더 실측 장면">
+      <div class="cap">실사급 렌더 실측 (RTX Path Tracing) · 디지털 트윈 서사의 마감 품질 기준</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 일정 -->
+<section class="slide" data-sec="09 · Timeline">
+  <div class="eyebrow">09 · Timeline</div>
+  <h2>역산으로 움직인다 <span class="tag" style="margin-left:.6vw">A = 시뮬</span><span class="tag" style="background:transparent;border:1.5px solid var(--brand)">B = 실물</span></h2>
+  <div>
+    <div class="lane"><div class="w">지금 · 8월</div><div><span class="tkm mA">A</span>험지 세트 확정 · 트윈 씬 준비 <span class="tkm mB" style="margin-left:1.2ch">B</span>병행 시작: ROS2 환경 구축(전원) · 조선대 금요 수업</div></div>
+    <div class="lane"><div class="w">9월</div><div><span class="tkm mA">A</span>커리큘럼 학습 반복 · 미학습 평가 · 트윈·렌더 완성 <span class="tkm mB" style="margin-left:1.2ch">B</span>ROS2·SLAM 학습 지속 (조선대 금) · Go2 연결 실습</div></div>
+    <div class="lane"><div class="w">9/30</div><div><span class="tkm mA">A</span><b>중간발표 (Track A 완결)</b> <span class="tag note" style="margin-left:.8ch">일자 확인 중 · "10월 초" 언급</span></div></div>
+    <div class="lane"><div class="w">10~11월</div><div><span class="tkm mB">B</span>SLAM 지도 · Nav2 튜닝 · 험지 코스 반복 실험 (조선대) <span class="tkm mA" style="margin-left:1.2ch">A</span>비교 리포트</div></div>
+    <div class="lane" style="border-bottom:1px solid var(--rule)"><div class="w">12/11</div><div><span class="tkm mB">B</span><b>최종발표: 험지 코스 자율주행 완주 시연</b> <span class="tkm mX" style="margin-left:1.2ch">A+B</span>두 트랙 비교 리포트</div></div>
+  </div>
+</section>
+
+<!-- 11 멘토께 -->
+<section class="slide" data-sec="10 · To Our Mentor">
+  <div class="eyebrow">10 · To Our Mentor</div>
+  <h2>오전 3시간, 저희 생각은 이렇습니다 <span class="tag note">멘토님 방식을 듣고 함께 확정</span></h2>
+  <div class="grid3">
+    <div class="card"><div class="k">매주 시작</div><div class="t">방향 점검 30분</div>
+      <div class="d">주간 목표와 리스크를 함께 확인. 남은 결정 안건을 하나씩 닫는다.</div></div>
+    <div class="card"><div class="k">매일</div><div class="t">오피스아워</div>
+      <div class="d">막힌 곳을 그날 해소. 질문은 웹 질문 지도에 쌓아 중복을 없앤다.</div></div>
+    <div class="card"><div class="k">주 1회</div><div class="t">깊은 리뷰</div>
+      <div class="d">코드·아키텍처·실험 설계를 실물 기준으로 검증받는다.</div></div>
+  </div>
+  <p class="sub" style="margin-top:2.6vh"><b>이번 주 함께 정하고 싶은 것</b>: ① 트랙 A 험지 세트 ② 트랙 B 실기 코스 ③ 역할 매트릭스 ④ 외부 멘토링 주기 ⑤ 중간발표 일자 확인.<br>
+  전체 자료: <b>foothold-project.vercel.app</b> · 기획서는 홈의 «프로젝트 보고서»</p>
+</section>
+
+<!-- 12 엔딩 -->
+<section class="slide end" data-sec="마침">
+  <img src="assets/brand/foothold-lockup-stacked-dark.svg?v=a3702cef" alt="FOOTHOLD">
+  <div class="pj">Unitree Go2 미경험 험지 적응 프로젝트</div>
+  <div class="pd">2026.07 ~ 2026.12.11</div>
+  <div class="nm">오흥재 · 임석헌 · 오현민 · 맹라현 · 이민우 · 전담 멘토<br>
+  foothold-project.vercel.app</div>
+</section>
+
+<div class="foot">
+  <span id="cnt">1 / 12</span>
+  <span class="r">
+    <a href="index.html">웹으로 나가기</a>
+    <button id="fs">전체화면 (F)</button>
+  </span>
+</div>
+<div class="hint">← → 방향키 · 클릭으로 진행</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0;
+  var h = parseInt((location.hash || '').replace('#', ''), 10);
+  if (h >= 1 && h <= slides.length) cur = h - 1;
+  function show(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, k){ s.classList.toggle('on', k === cur); });
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + slides.length;
+    document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+    var lab = slides[cur].getAttribute('data-sec') || '';
+    document.getElementById('sec').innerHTML = '<b>KICK-OFF</b> · ' + lab;
+    history.replaceState(null, '', '#' + (cur + 1));
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(cur + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') toggleFS();
+  });
+  document.addEventListener('click', function(e){
+    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('video')) return;
+    var x = e.clientX / window.innerWidth;
+    show(x < 0.3 ? cur - 1 : cur + 1);
+  });
+  var tx = null;
+  document.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (dx < -40) show(cur + 1); else if (dx > 40) show(cur - 1);
+  }, {passive:true});
+  function toggleFS(){
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+  document.getElementById('fs').addEventListener('click', toggleFS);
+  window.addEventListener('hashchange', function(){
+    var n = parseInt(location.hash.slice(1), 10);
+    if (n >= 1 && n <= slides.length && n - 1 !== cur) show(n - 1);
+  });
+  show(cur);
+})();
+</script>
+<style>html[data-theme="light"]{--paper:#0e1218;--paper-2:#141a23;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:var(--brand);--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<style>
+#themeBtn{position:fixed;bottom:14px;right:14px;z-index:9999;
+  background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.3rem .65rem;font-family:inherit;font-size:.66rem;font-weight:800;
+  letter-spacing:.12em;cursor:pointer;border-radius:4px;transition:.15s;
+  line-height:1.3;white-space:nowrap}
+#themeBtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#themeBtn:active{transform:translateY(1px)}
+@media print{#themeBtn{display:none!important}}
+</style>
+<button id="themeBtn" type="button" aria-label="다크/라이트 전환" title="다크/라이트 전환">다크</button>
+<script>(function(){
+  var d=document.documentElement,K='foothold-theme',b=document.getElementById('themeBtn'),
+      mq=window.matchMedia('(prefers-color-scheme: dark)');
+  function apply(t){d.setAttribute('data-theme',t);
+    b.textContent=(t==='dark')?'\ub77c\uc774\ud2b8':'\ub2e4\ud06c';}
+  function cur(){return localStorage.getItem(K)||('light');}
+  apply(cur());
+  b.addEventListener('click',function(){
+    var t=(cur()==='dark')?'light':'dark';localStorage.setItem(K,t);apply(t);});
+  mq.addEventListener&&mq.addEventListener('change',function(){
+    if(!localStorage.getItem(K))apply(cur());});
+})();</script>
+<!--/dark:v1-->
+</body>
+</html>

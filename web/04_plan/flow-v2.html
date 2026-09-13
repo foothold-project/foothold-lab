@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>FOOTHOLD 전체 흐름</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{width:1760px;background:#f6f5f1;font-family:"Pretendard","Malgun Gothic",sans-serif;color:#161c26;
+    background-image:linear-gradient(rgba(22,28,38,.045) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(22,28,38,.045) 1px,transparent 1px);
+    background-size:32px 32px;padding:46px 50px 40px}
+  .ep{font-size:15px;font-weight:800;letter-spacing:.24em;color:#0e7a6e;margin-bottom:10px}
+  h1{font-size:34px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .sub{font-size:15px;color:#4a5566;margin-bottom:26px}
+  .sub b{color:#0e7a6e}
+
+  .lane-label{font-size:12px;font-weight:800;letter-spacing:.12em;color:#7c8798;margin:14px 0 6px}
+
+  .flow{display:flex;align-items:stretch;gap:0}
+  .stage{flex:1;position:relative;padding:0 8px}
+  .stage+.stage::before{content:'▶';position:absolute;left:-7px;top:74px;font-size:13px;color:#7c8798}
+  .card{background:#fff;border:2px solid #d9d6cd;border-top:4px solid #161c26;padding:12px 12px 10px;height:100%}
+  .stage.gate .card{border-top-color:#0e7a6e;background:#e0f0ed}
+  .stage.final .card{border-top-color:#a86a08;background:#fbf0dc}
+  .mon{font-size:11px;font-weight:800;color:#7c8798;letter-spacing:.06em;margin-bottom:5px}
+  .stage.gate .mon,.stage.final .mon{color:#0e7a6e}
+  .stage.final .mon{color:#a86a08}
+  .tt{font-size:16.5px;font-weight:800;line-height:1.3;margin-bottom:7px;word-break:keep-all}
+  .dd{font-size:12.5px;color:#4a5566;line-height:1.5;word-break:keep-all}
+  .dd b{color:#161c26}
+
+  .rows{margin-top:4px}
+  .row{display:flex;gap:0;margin-top:8px}
+  .cell{flex:1;padding:0 8px}
+  .tag{font-size:12.5px;line-height:1.45;padding:7px 9px;border:1.5px dashed #d9d6cd;background:#fff;
+    color:#4a5566;word-break:keep-all;height:100%}
+  .row.house .tag{border-color:#c9c2b2;background:#faf8f2;font-weight:700;color:#6b6253}
+  .row.robot .tag{border-color:#bfe0da;background:#f2faf8;color:#0e6257}
+  .row.robot .tag b{color:#0a5f56}
+
+  .foot{margin-top:22px;display:flex;justify-content:space-between;align-items:center}
+  .legend{font-size:12.5px;color:#4a5566;display:flex;gap:18px;align-items:center}
+  .sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border:1.5px solid #d9d6cd}
+  .sw.g{background:#e0f0ed;border-color:#0e7a6e}
+  .sw.f{background:#fbf0dc;border-color:#a86a08}
+  .src{font-size:11.5px;color:#7c8798}
+  .loop-note{margin-top:16px;border-left:4px solid #a86a08;background:#fff;padding:10px 14px;
+    font-size:13.5px;line-height:1.6;color:#4a5566;word-break:keep-all}
+  .loop-note b{color:#a86a08}
+  .und{color:#a3342a;font-weight:700}
+</style>
+</head>
+<body>
+  <div class="ep">FOOTHOLD · 전체 흐름 한 장</div>
+  <h1>집을 짓듯이, 로봇이 걷는 법을 배우듯이</h1>
+  <div class="sub">프로젝트의 7단계 — 아래 두 줄은 같은 단계를 <b>집짓기</b>와 <b>로봇이 걷는 원리</b>로 번역한 것</div>
+
+  <div class="flow">
+    <div class="stage"><div class="card">
+      <div class="mon">8월 상순</div>
+      <div class="tt">① 땅 보러 가기</div>
+      <div class="dd">조선대 방문 — 장비 실물<br><b>Orin NX 등급 · 라이다</b> ·<br>험지 시설 확인</div>
+    </div></div>
+    <div class="stage"><div class="card">
+      <div class="mon">8월</div>
+      <div class="tt">② 터 다지기</div>
+      <div class="dd">환경 구축(완료) +<br><b>재현 게이트</b> — 기성 체크포인트를 그대로 돌려 <b>첫 기록 측정</b></div>
+    </div></div>
+    <div class="stage"><div class="card">
+      <div class="mon">9월</div>
+      <div class="tt">③ 연습장 만들기</div>
+      <div class="dd">시뮬에 <b>우리 험지</b> 직접 제작<br>(계곡형 = 불규칙 경사+요철)<br>+ 100회 자동 평가 파이프라인</div>
+    </div></div>
+    <div class="stage gate"><div class="card">
+      <div class="mon">9월 말 — PoC</div>
+      <div class="tt">④ 걷는 법 배우기</div>
+      <div class="dd">커스텀 험지에서 <b>정책 학습</b><br><span class="und">🔶 RL 범위 — 팀 미확정<br>(멘토 제안: 시뮬에서만)</span><br><b>게이트: 우리 지형에서 걷는가</b></div>
+    </div></div>
+    <div class="stage gate"><div class="card">
+      <div class="mon">10월 — MVP</div>
+      <div class="tt">⑤ 기록 재기</div>
+      <div class="dd">험지 통과율 <b>N%</b> (100회)<br>시연 영상 + 수치 발표<br><b>= 10월 MVP</b></div>
+    </div></div>
+    <div class="stage"><div class="card">
+      <div class="mon">11월 — QA</div>
+      <div class="tt">⑥ 몸에 옮기기</div>
+      <div class="dd"><span class="und">🔶 증류</span>(시뮬 정책→경량)<br>→ ROS2 통신 → Go2 배포<br>+ 라이다 인지 · 3DGS 갭 측정</div>
+    </div></div>
+    <div class="stage final"><div class="card">
+      <div class="mon">12월 — 최종</div>
+      <div class="tt">⑦ 현실에서 달리기</div>
+      <div class="dd">실기 험지 시연 +<br><b>시뮬↔실기 격차 리포트</b><br>"얼마나 옮겨졌는가"</div>
+    </div></div>
+  </div>
+
+  <div class="rows">
+    <div class="lane-label">🏠 집짓기로 번역하면</div>
+    <div class="row house">
+      <div class="cell"><div class="tag">땅 보기</div></div>
+      <div class="cell"><div class="tag">터 다지기 · 수평 재기</div></div>
+      <div class="cell"><div class="tag">기둥 세우기</div></div>
+      <div class="cell"><div class="tag">벽돌 쌓기</div></div>
+      <div class="cell"><div class="tag">중간 검사</div></div>
+      <div class="cell"><div class="tag">이사</div></div>
+      <div class="cell"><div class="tag">입주해서 살아보기</div></div>
+    </div>
+    <div class="lane-label">🤖 로봇이 걷는 원리로 번역하면 — 관측 → 판단 → 행동 → 되먹임과 같은 구조</div>
+    <div class="row robot">
+      <div class="cell"><div class="tag"><b>관측</b> — 세상을 잰다</div></div>
+      <div class="cell"><div class="tag"><b>기준</b> — 지금 실력을 잰다</div></div>
+      <div class="cell"><div class="tag"><b>환경</b> — 겪을 세계를 만든다</div></div>
+      <div class="cell"><div class="tag"><b>학습</b> — 넘어지며 배운다</div></div>
+      <div class="cell"><div class="tag"><b>평가</b> — 숫자로 판정한다</div></div>
+      <div class="cell"><div class="tag"><b>전이</b> — 몸으로 옮긴다</div></div>
+      <div class="cell"><div class="tag"><b>적응</b> — 현실이 되먹임을 준다</div></div>
+    </div>
+  </div>
+
+  <div class="loop-note">
+    <b>★ 왜 이 순서인가</b> — 로봇이 걷는 원리(관측→판단→행동→<b>그 결과가 다음 관측이 됨</b>)와 프로젝트 진행
+    (조사→계획→실행→측정→<b>그 결과로 계획을 고침</b>)은 같은 되먹임 구조다.
+    그래서 ⑤에서 잰 숫자가 ⑥⑦의 범위를 정하고, ②의 첫 기록이 KPI 의 출발점이 된다 —
+    <b>목표는 달려보기 전이 아니라, 한 번 달려본 뒤에 정한다.</b>
+  </div>
+
+  <div class="foot">
+    <div class="legend">
+      <span><span class="sw g"></span>게이트 (PoC · MVP)</span>
+      <span><span class="sw f"></span>최종</span>
+      <span style="color:#a3342a;font-weight:700">🔶 팀 미확정 — 논의 안건</span>
+      <span>일정: 9월 PoC → 10월 MVP → 11월 QA·중간보고 → 12월 최종</span>
+    </div>
+    <div class="src">FOOTHOLD · 2026-08-07 · 논의용 v2 — 🔶 표시는 아직 팀이 정하지 않은 것</div>
+  </div>
+</body>
+</html>

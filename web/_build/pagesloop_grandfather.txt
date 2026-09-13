@@ -1,0 +1,6 @@
+# PAGES 를 직접 도는 자리. 정본은 searchbox.public_pages 다.
+# 이 줄 수가 남은 일의 크기다. 고치면 지운다. 늘리지 않는다.
+build.py 2
+darkmode.py 1
+ia.py 1
+newbadge.py 1

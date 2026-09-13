@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>학습 커리큘럼 · FOOTHOLD</title>
+<meta name="description" content="로봇도 강화학습도 처음인 사람이, 무엇을 어떤 순서로 익히면 되는지. 한 번에 한 단계씩.">
+<style>
+:root{
+  --paper:#f6f5f1; --paper-2:#eeece6; --card:#fff;
+  --ink:#161c26; --ink-2:#4a5566; --ink-3:#7c8798;
+  --rule:#d9d6cd; --brand:#0e7a6e; --dim:var(--brand); --dim-soft:#e0f0ed;
+  --note:#a86a08; --note-soft:#fbf0dc;
+  --stop:#a3342a; --stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:720px;
+  --nav:250px;   /* 백과와 같은 폭 (팀장 9/1: 백과처럼 보이게) */
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d; --paper-2:#191e27; --card:#181d26;
+    --ink:#e9e7e1; --ink-2:#adb5c1; --ink-3:#7d8693;
+    --rule:#2b323d; --brand:#3ec7b4; --dim:var(--brand); --dim-soft:#11302c;
+    --note:#dc9a30; --note-soft:#332710;
+    --stop:#e56d5e; --stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12161d; --paper-2:#191e27; --card:#181d26;
+  --ink:#e9e7e1; --ink-2:#adb5c1; --ink-3:#7d8693;
+  --rule:#2b323d; --brand:#3ec7b4; --dim:var(--brand); --dim-soft:#11302c;
+  --note:#dc9a30; --note-soft:#332710;
+  --stop:#e56d5e; --stop-soft:#331c19;
+  --grid:rgba(233,231,225,.035);
+}
+:root[data-theme="light"]{
+  --paper:#f6f5f1; --paper-2:#eeece6; --card:#fff;
+  --ink:#161c26; --ink-2:#4a5566; --ink-3:#7c8798;
+  --rule:#d9d6cd; --brand:#0e7a6e; --dim:var(--brand); --dim-soft:#e0f0ed;
+  --note:#a86a08; --note-soft:#fbf0dc;
+  --stop:#a3342a; --stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body{
+  margin:0;padding:0 0 92px;
+  font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.8;font-size:16px;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--dim);outline-offset:3px;border-radius:3px}
+
+/* ═════ 골격 ═════ */
+/* ★ 9/1 실측: 본문이 268~1261 로 서서 전역바(111~1151)와 중심이 134px
+   어긋났다. 다른 25장은 전부 111~1151 이다. 레일이 있어도 «1040 봉투»
+   안에서 나눈다 - 레일 + 본문의 합이 1040 이 되게. (PRD §4-1) */
+.shell{max-width:1040px;margin:0 auto;box-sizing:border-box;
+  padding:0 clamp(24px,4vw,64px)}   /* 백과와 같은 규칙 */
+.col{min-width:0}
+
+/* ═════ 좌측 사이드바 목차 ═════ */
+.side{
+  position:fixed;top:48px;left:0;width:var(--nav);
+  height:calc(100vh - 48px);overflow-y:auto;z-index:60;
+  /* 도메인 백과와 같은 방식: 레일은 1040 봉투 «밖» 화면 왼쪽 끝에 선다.
+     그래야 본문이 다른 42장과 같은 폭으로 읽힌다 (팀장 9/1) */
+  background:var(--paper-2);border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;
+}
+.side .sh{
+  padding:.85rem 1rem;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;gap:.6rem;flex:0 0 auto;
+}
+.side .sh b{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.side .sh .pct{font-family:'Consolas',monospace;font-size:.72rem;color:var(--dim);margin-left:auto;font-variant-numeric:tabular-nums}
+.side .closeS{display:none}
+.side .list{flex:1 1 auto;overflow-y:auto;padding:.55rem .6rem 2rem;display:flex;flex-direction:column;gap:.1rem}
+.side .g{
+  font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:700;
+  margin-top:1rem;padding:0 .5rem .3rem;border-bottom:1px solid var(--rule);
+}
+.side .g:first-child{margin-top:.2rem}
+.side .item{
+  display:flex;gap:.6rem;align-items:baseline;background:transparent;border:0;
+  padding:.36rem .5rem;border-radius:4px;text-align:left;color:var(--ink-2);width:100%;
+  font-size:.83rem;line-height:1.4;
+}
+.side .item:hover{background:var(--card);color:var(--ink)}
+.side .item.cur{background:var(--dim);color:#fff;font-weight:700}
+.side .item .k{
+  font-family:'Consolas',monospace;font-size:.7rem;color:var(--ink-3);
+  min-width:2.5em;flex:0 0 auto;font-variant-numeric:tabular-nums;
+}
+.side .item.cur .k{color:rgba(255,255,255,.75)}
+.side .item.done .k{color:var(--dim)}
+.side .item .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backdrop{position:fixed;inset:0;background:rgba(10,12,16,.45);z-index:65;display:none}
+.backdrop.on{display:block}
+
+/* ═════ 상단 바 ═════ */
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--paper);
+  border-bottom:1px solid var(--rule);
+}
+.progress{height:3px;background:var(--paper-2)}
+.progress > i{display:block;height:100%;width:0;background:var(--dim);transition:width .25s ease}
+.topbar .row{
+  max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.6rem 1.5rem;
+  display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;
+}
+.stage-chip{
+  font-size:.72rem;letter-spacing:.1em;font-weight:700;color:var(--dim);
+  background:var(--dim-soft);padding:.2rem .6rem;border-radius:99px;white-space:nowrap;
+}
+.counter{font-family:'Consolas',monospace;font-size:.76rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.topbar .spacer{flex:1}
+.tbtn{
+  background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.3rem .7rem;border-radius:4px;font-size:.78rem;
+}
+.tbtn:hover{border-color:var(--dim);color:var(--dim)}
+
+/* ═════ 슬라이드 ═════ */
+main{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.4rem 1.5rem 0}
+.slide{display:none;flex-direction:column;gap:1.5rem;animation:fade .3s ease}
+.slide.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.head{display:flex;flex-direction:column;gap:.55rem}
+.sid{
+  font-family:'Consolas',monospace;font-size:.8rem;font-weight:700;color:var(--dim);
+  letter-spacing:.08em;
+}
+h1{font-size:clamp(1.7rem,5vw,2.3rem);line-height:1.28;margin:0;letter-spacing:-.02em;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(1.45rem,4vw,1.9rem);line-height:1.3;margin:0;letter-spacing:-.02em;font-weight:800;text-wrap:balance}
+p{margin:0}
+.sub{color:var(--ink-2);font-size:1rem}
+
+/* 블록 공통 */
+.blk{display:flex;flex-direction:column;gap:.6rem}
+.lbl{
+  font-size:.68rem;letter-spacing:.14em;font-weight:700;color:var(--ink-3);
+  text-transform:uppercase;display:flex;align-items:center;gap:.45rem;
+}
+.lbl::after{content:"";flex:1;height:1px;background:var(--rule)}
+.blk p,.blk li{color:var(--ink-2);font-size:.96rem}
+.blk strong{color:var(--ink);font-weight:700}
+ul,ol{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:.5rem}
+li::marker{color:var(--ink-3)}
+code{font-family:'Consolas',monospace;font-size:.87em;background:var(--paper-2);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+
+/* 한 줄로 */
+.oneline{
+  border-left:3px solid var(--dim);padding:.2rem 0 .2rem 1.1rem;
+  font-size:1.12rem;font-weight:700;color:var(--ink);line-height:1.6;text-wrap:balance;
+}
+/* 강조 상자들 */
+.box{border-radius:5px;padding:.95rem 1.1rem;display:flex;flex-direction:column;gap:.45rem}
+.box .bt{font-size:.72rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase}
+.box p,.box li{font-size:.93rem;color:var(--ink-2)}
+.box.analogy{background:var(--paper-2);border:1px solid var(--rule)}
+.box.analogy .bt{color:var(--ink-3)}
+.box.myth{background:var(--note-soft);border:1px solid var(--note)}
+.box.myth .bt{color:var(--note)}
+.box.check{background:var(--dim-soft);border:1px solid var(--dim)}
+.box.check .bt{color:var(--dim)}
+.box.deliver{background:var(--card);border:1px dashed var(--note)}
+.box.deliver .bt{color:var(--note)}
+.box.danger{background:var(--stop-soft);border:1px solid var(--stop)}
+.box.danger .bt{color:var(--stop)}
+
+/* 도식 */
+.dia{
+  font-family:'Consolas',monospace;font-size:.78rem;line-height:1.65;
+  background:var(--card);border:1px solid var(--rule);border-radius:5px;
+  padding:1.1rem 1.2rem;overflow-x:auto;white-space:pre;color:var(--ink-2);margin:0;
+}
+.dia b{color:var(--dim)}
+.dia i{color:var(--stop);font-style:normal}
+
+/* 표 */
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:5px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:440px}
+th,td{text-align:left;padding:.6rem .85rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+th{font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700;background:var(--paper-2)}
+tbody tr:last-child td{border-bottom:0}
+td b{color:var(--ink)}
+td .ok{color:var(--dim);font-weight:700}
+td .no{color:var(--stop);font-weight:700}
+
+/* 목록 카드형 */
+.cards{display:grid;gap:.7rem}
+.mini{background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.25rem}
+.mini h4{margin:0;font-size:.95rem;font-weight:700}
+.mini p{font-size:.89rem;color:var(--ink-2)}
+.mini .n{font-family:'Consolas',monospace;font-size:.7rem;color:var(--ink-3)}
+
+/* 표지 */
+.cover{gap:1.8rem;padding:2rem 0 1rem}
+.cover .eyebrow{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.cover .big{font-size:clamp(2rem,7vw,3rem);line-height:1.18;font-weight:800;letter-spacing:-.03em;margin:0;text-wrap:balance}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.7rem}
+.fact{background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:.75rem .9rem}
+.fact dt{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:0 0 .25rem}
+.fact dd{margin:0;font-size:.92rem;font-weight:600;color:var(--ink)}
+.startbtn{
+  align-self:flex-start;background:var(--dim);color:#fff;border:0;
+  padding:.75rem 1.6rem;border-radius:5px;font-size:1rem;font-weight:700;
+}
+.startbtn:hover{filter:brightness(1.08)}
+
+/* ═════ 하단 내비 ═════ */
+.navbar{
+  position:fixed;left:var(--nav);right:0;bottom:0;z-index:50;
+  padding-left:0;
+  background:var(--paper);border-top:1px solid var(--rule);
+}
+.navbar .row{
+  max-width:1040px;margin:0 auto;padding:.7rem clamp(24px,4vw,64px);
+  display:flex;align-items:stretch;gap:.7rem;box-sizing:border-box;
+}
+.nbtn{
+  flex:1;min-width:0;background:var(--card);border:1px solid var(--rule);border-radius:5px;
+  padding:.55rem .9rem;display:flex;flex-direction:column;gap:.1rem;text-align:left;color:var(--ink);
+}
+.nbtn:hover:not(:disabled){border-color:var(--dim)}
+.nbtn:disabled{opacity:.35;cursor:default}
+.nbtn .d{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.nbtn .t{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbtn.next{text-align:right;align-items:flex-end;border-color:var(--dim);background:var(--dim-soft)}
+.nbtn.next .d{color:var(--dim)}
+
+/* 데스크톱에서는 목차 토글 버튼 숨김 (사이드바가 항상 보임) */
+#tocBtn{display:none}
+
+/* ═════ 좁은 화면: 사이드바를 서랍으로 ═════ */
+@media (max-width:900px){
+  .shell{margin:0;padding:0 16px}
+  .side{
+    position:fixed;top:0;left:0;bottom:0;height:auto;
+    z-index:240;
+    width:min(300px,84vw);transform:translateX(-100%);
+    transition:transform .22s ease;box-shadow:0 0 32px rgba(0,0,0,.18);
+  }
+  .side.on{transform:none}
+  .side .closeS{display:inline-block;margin-left:auto}
+  .side .sh .pct{margin-left:0}
+  .navbar{left:0}
+  #tocBtn{display:inline-block}
+}
+@media (max-width:560px){
+  body{font-size:15px}
+  main{padding:1.8rem 1.1rem 0}
+  .topbar .row,.navbar .row{padding-left:1.1rem;padding-right:1.1rem}
+  .nbtn .t{font-size:.8rem}
+}
+@media print{
+  .topbar,.navbar,.side,.backdrop{display:none}
+  .shell{display:block}
+  .slide{display:flex!important;break-after:page}
+  body{background:#fff;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="side" id="side" aria-label="목차">
+  <div class="sh">
+    <b>목차</b>
+    <span class="pct" id="pct">0%</span>
+    <button class="tbtn closeS" type="button" onclick="closeToc()">✕</button>
+  </div>
+  <div class="list" id="tocList"></div>
+</aside>
+
+<div class="col">
+
+<div class="topbar">
+  <div class="progress"><i id="bar"></i></div>
+  <div class="row">
+    <button class="tbtn" id="tocBtn" type="button">☰ 목차</button>
+    <span class="stage-chip" id="stageChip">시작</span>
+    <span class="counter" id="counter">1 / 38</span>
+    <span class="spacer"></span>
+    <button class="tbtn" id="themeBtn" type="button">테마</button>
+  </div>
+</div>
+
+<main id="deck">
+
+<!-- ══════ 0. 표지 ══════ -->
+<section class="slide cover" data-stage="시작" data-title="표지" data-id="">
+  <div class="head">
+    <div class="eyebrow">FOOTHOLD · Curriculum</div>
+    <p class="big">로봇도 강화학습도<br>처음인 사람을 위한<br>학습 순서</p>
+  </div>
+  <p class="sub">4족 보행 로봇에게 험한 땅을 걷는 법을 가르치는 프로젝트입니다.
+  5개월 안에 끝내야 하고, 우리 다섯 명 중 이 분야를 해본 사람은 없습니다.<br><br>
+  그래서 이 문서는 “로봇공학을 배우는 법”이 아니라 <strong>“이 프로젝트가 실제로 쓰는 것만, 이해되는 순서대로”</strong> 배우는 길을 적었습니다.
+  날짜는 없습니다. <strong>순서만</strong> 있습니다.</p>
+  <div class="facts">
+    <div class="fact"><dt>전체 단계</dt><dd>38개 화면</dd></div>
+    <div class="fact"><dt>공통 학습</dt><dd>17단계</dd></div>
+    <div class="fact"><dt>작업 영역</dt><dd>8갈래</dd></div>
+    <div class="fact"><dt>실전</dt><dd>8단계</dd></div>
+  </div>
+  <button class="startbtn" type="button" onclick="go(1)">시작하기 →</button>
+</section>
+
+<!-- ══════ 1. 보는 법 ══════ -->
+<section class="slide" data-stage="시작" data-title="이 문서를 보는 법" data-id="">
+  <div class="head"><div class="sid">안내</div><h2>이 문서를 보는 법</h2></div>
+
+  <div class="blk">
+    <p>화면 하나에 <strong>한 단계</strong>만 나옵니다. 아래 <strong>다음 →</strong> 버튼으로 넘기고,
+    키보드 <strong>← →</strong> 방향키로도 넘길 수 있습니다. 위쪽 <strong>목차</strong> 버튼을 누르면 전체 목록에서 원하는 곳으로 바로 갈 수 있습니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">모든 단계는 같은 순서로 쓰여 있습니다</div>
+    <div class="cards">
+      <div class="mini"><div class="n">1</div><h4>한 줄로</h4><p>이 단계가 무엇인지 한 문장.</p></div>
+      <div class="mini"><div class="n">2</div><h4>왜 이걸 하나</h4><p>안 하면 나중에 어디서 막히는지.</p></div>
+      <div class="mini"><div class="n">3</div><h4>무엇을 배우나</h4><p>실제 내용. 여기가 본문입니다.</p></div>
+      <div class="mini"><div class="n">4</div><h4>비유 · 흔한 오해</h4><p>헷갈리기 쉬운 지점을 짚습니다.</p></div>
+      <div class="mini"><div class="n">5</div><h4>이렇게 확인한다</h4><p>“다 했다”를 판단하는 기준. 스스로 체크하세요.</p></div>
+    </div>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">먼저 알아두면 마음이 편한 것</div>
+    <p><strong>이 분야는 전공자도 대부분 처음입니다.</strong> 4족 보행 로봇에 강화학습을 쓰는 방법이 실제로 통하기 시작한 건 2019년 이후입니다.
+    대학 학부 과정에는 아직 없습니다. 로봇공학을 전공했어도 이 주제는 새로 배웁니다.</p>
+    <p><strong>그리고 우리는 처음부터 만들지 않습니다.</strong> 이미 공개된 코드를 우리 환경에서 돌려보고,
+    거기에 우리 지형과 우리 실험을 얹는 것이 목표입니다. “새로 발명하기”가 아니라 <strong>“이해하고 바꾸기”</strong>입니다.</p>
+  </div>
+</section>
+
+<!-- ══════ 2. 안 배워도 되는 것 ══════ -->
+<section class="slide" data-stage="시작" data-title="안 배워도 되는 것" data-id="">
+  <div class="head"><div class="sid">안내</div><h2>먼저, 안 배워도 되는 것</h2></div>
+  <p class="oneline">로봇공학 자료를 펼치면 압도당합니다. 우리 프로젝트가 실제로 안 쓰는 것부터 잘라냅니다.</p>
+
+  <div class="blk">
+    <p>이 목록을 지우는 것만으로 공부량이 <strong>3분의 1 이하</strong>가 됩니다.
+    로봇 강의를 듣다가 아래 주제가 나오면 <strong>그냥 넘기세요.</strong></p>
+    <div class="tw"><table>
+      <thead><tr><th>안 배워도 되는 것</th><th>왜</th></tr></thead>
+      <tbody>
+        <tr><td><b>역기구학 (IK)</b></td><td>“발끝을 여기에 놓으려면 관절을 몇 도로?”를 푸는 수학입니다. 우리는 이 계산을 안 합니다. 신경망이 관절 각도를 직접 내놓습니다</td></tr>
+        <tr><td><b>동역학 방정식</b></td><td>라그랑주·뉴턴오일러. 시뮬레이터가 전부 대신 계산합니다</td></tr>
+        <tr><td><b>MPC · 최적제어 · ZMP</b></td><td>강화학습을 안 쓰고 보행을 만드는 다른 방법들입니다. 우리 길이 아닙니다</td></tr>
+        <tr><td><b>Q-learning, DQN, SAC</b></td><td>강화학습에도 여러 알고리즘이 있는데, 우리는 <b>PPO 하나만</b> 씁니다</td></tr>
+        <tr><td><b>각종 수학 증명</b></td><td>결과 공식만 쓰면 됩니다. 유도 과정은 필요 없습니다</td></tr>
+        <tr><td><b>ROS2 전체 · SLAM 이론</b></td><td>우리는 기록하고 측정하는 용도로만 씁니다</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="box check">
+    <div class="bt">필요한 수학은 이게 전부입니다</div>
+    <ul>
+      <li><strong>선형대수</strong>벡터가 뭔지, 행렬을 곱하면 무슨 일이 일어나는지, 회전이 행렬로 표현된다는 것</li>
+      <li><strong>미적분</strong>“기울어진 방향으로 조금 움직인다”는 개념 하나</li>
+      <li><strong>확률통계</strong>평균, 분산, 정규분포, 무작위로 뽑는다는 것</li>
+    </ul>
+    <p>고등학교 수학 + 대학 교양 수준이면 충분합니다.</p>
+  </div>
+</section>
+
+<!-- ══════ 3. 전체 구조 ══════ -->
+<section class="slide" data-stage="시작" data-title="전체 구조" data-id="">
+  <div class="head"><div class="sid">안내</div><h2>전체 구조</h2></div>
+  <p class="oneline">세 구간입니다. A는 전원이 똑같이, B는 여덟 갈래로 나눠서, C는 다시 모여서.</p>
+
+  <pre class="dia">┌─ 구간 A · 공통 기반 ─────── 전원 동일, 17단계 ──┐
+│                                                 │
+│   A1 → A2 → A3 → A4 → <b>A5</b>                       │
+│                        ↓   로봇과 제어를 이해   │
+│                 <b>A6</b> → A7                        │
+│                        ↓   직접 만져본다        │
+│   A8 → A9 → <b>A10</b> → A11                          │
+│                        ↓   강화학습을 겪는다    │
+│   <b>A12</b> → A13 → A14 → A15 → A16 → A17            │
+│                        ↓   우리 것으로 좁힌다   │
+└────────────────────────┬────────────────────────┘
+                         │
+       ┌────────┬────────┼────────┬────────┐
+       ▼        ▼        ▼        ▼        ▼
+┌─ 구간 B · 작업 영역별 ──── 여덟 갈래 ───────────┐
+│  A 정책학습 · 지형씬제작 · 평가 · 트윈렌더      │
+│  B 항법 · 인지        C 기록 · 운영            │
+└────────────────────────┬────────────────────────┘
+                         ▼
+┌─ 구간 C · 실전 ──────────── 다시 다 같이 ───────┐
+│   C1 → C2 → C3 → C4 → C5 → <b>C6</b> → C7 → C8        │
+└─────────────────────────────────────────────────┘</pre>
+
+  <div class="blk">
+    <div class="lbl">순서를 이렇게 정한 이유 세 가지</div>
+    <div class="cards">
+      <div class="mini"><div class="n">원칙 1</div><h4>물리를 먼저, 강화학습을 나중에</h4>
+        <p>보통은 강화학습부터 배우려 하는데, 순서를 뒤집었습니다. 신경망이 내놓는 숫자가 “관절을 몇 도로 놓아라”라는 명령인데,
+        그 명령이 어떻게 모터를 움직이는지 모르면 학습 코드를 봐도 무슨 일이 벌어지는지 안 보입니다.</p></div>
+      <div class="mini"><div class="n">원칙 2</div><h4>개념을 먼저, 코드를 나중에</h4>
+        <p>A8~A12를 건너뛰고 A13(코드 읽기)으로 가면 글자만 읽힙니다. 코드는 개념을 적어놓은 것일 뿐입니다.</p></div>
+      <div class="mini"><div class="n">원칙 3</div><h4>구간 A는 다섯 명 모두 똑같이</h4>
+        <p>한 사람만 아는 순간, 그 사람이 5개월 내내 병목이 됩니다. 회의가 성립하려면 같은 단어를 써야 합니다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 구간 A ══════════════════ -->
+
+<!-- A1 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="프로젝트 전체 그림" data-id="A1">
+  <div class="head"><div class="sid">A1 · 선행 없음</div><h2>프로젝트 전체 그림</h2></div>
+  <p class="oneline">다섯 명이 “우리가 뭘 하는지”를 똑같이 설명할 수 있게 되는 것.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 먼저 하나</div>
+    <p>다섯 명이 각자 다른 그림을 머릿속에 갖고 시작하면, 3개월쯤 뒤에 “우리가 만들려던 게 그게 아니었는데”가 나옵니다.
+    그때는 되돌릴 시간이 없습니다. 그래서 <strong>가장 먼저, 가장 확실하게</strong> 맞춰둡니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">무엇을 이해하나</div>
+    <p><strong>① 왜 바퀴가 아니라 다리인가.</strong> 바퀴는 평평한 곳에서 다리보다 모든 면에서 낫습니다. 빠르고, 효율적이고, 제어하기 쉽습니다.
+    딱 하나 못 하는 게 있습니다. 바퀴는 지나가는 길의 <strong>모든 지점</strong>에 닿아야 합니다. 계단이나 돌무더기처럼 중간이 비어 있으면 아예 못 갑니다.
+    다리는 반대입니다. <strong>디딜 곳만 골라 딛고 나머지는 건너뜁니다.</strong> 다리가 존재하는 이유는 이것 하나입니다.</p>
+    <p><strong>② 왜 규칙이 아니라 학습인가.</strong> “돌이 있으면 다리를 더 든다” 같은 규칙을 사람이 직접 쓸 수도 있습니다.
+    문제는 지형의 경우의 수가 무한하다는 겁니다. 규칙을 하나 쓰면 다른 지형에서 무너지고, 그걸 고치면 또 다른 데서 무너집니다.
+    그래서 <strong>경험으로 배우게</strong> 합니다.</p>
+    <p><strong>③ 왜 시뮬레이션인가.</strong> 배우려면 넘어져 봐야 하는데, 필요한 실패 횟수가 <strong>수백만 번</strong>입니다.
+    실제 로봇은 몇 번만 넘어져도 부서지고, 한 대에 수천만 원입니다. 그래서 컴퓨터 안에서 수천 마리를 동시에 넘어뜨립니다.</p>
+    <p><strong>④ 그리고 진짜 어려운 부분.</strong> 컴퓨터 안에서 배운 걸 실제 로봇에 옮기는 순간 <strong>대부분 무너집니다.</strong>
+    시뮬레이션은 현실보다 너무 깨끗하기 때문입니다. 이 간극을 메우는 것이 이 프로젝트의 진짜 주제입니다.</p>
+  </div>
+
+  <div class="box deliver">
+    <div class="bt">하고 나면</div>
+    <p>각자 “우리 프로젝트는 이런 것이다”를 한 문단으로 씁니다. 다섯 개를 나란히 놓고 비교하세요.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>다섯 명의 설명이 서로 어긋나지 않는다. 어긋나는 부분이 있으면 그게 지금 맞춰야 할 것입니다.</p>
+  </div>
+</section>
+
+<!-- A2 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="로봇을 숫자로 보기" data-id="A2">
+  <div class="head"><div class="sid">A2 · 선행 A1</div><h2>로봇을 숫자로 보기</h2></div>
+  <p class="oneline">프로그램 입장에서 로봇은 “숫자 몇십 개”입니다. 그 숫자가 정확히 무엇인지 압니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 하나</div>
+    <p>앞으로 다룰 모든 것이 이 숫자들 위에서 돌아갑니다. 사람 말로 “다리를 든다”가 코드에서는
+    <strong>“3번 관절 각도를 0.5에서 1.2로 바꾼다”</strong>입니다. 이 번역이 안 되면 코드를 봐도 무슨 일이 일어나는지 안 보입니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">무엇을 배우나</div>
+    <p><strong>관절 12개.</strong> Go2는 다리가 4개, 다리마다 관절이 3개라 총 12개입니다. 이 12를 <strong>DOF(자유도)</strong>라고 부릅니다.</p>
+    <ul>
+      <li><strong>hip abduction</strong>다리를 옆으로 벌리는 관절</li>
+      <li><strong>hip pitch</strong>다리를 앞뒤로 흔드는 관절. 사람의 고관절에 해당</li>
+      <li><strong>knee</strong>무릎</li>
+    </ul>
+    <p>관절마다 두 종류의 숫자가 나옵니다. <strong>지금 각도가 얼마인가</strong>(12개), <strong>얼마나 빨리 움직이는 중인가</strong>(12개).</p>
+    <p><strong>IMU 하나.</strong> 스마트폰에 들어 있는 그 센서입니다. 로봇이 얼마나 기울었는지(자세), 얼마나 빨리 도는지(각속도)를
+    <strong>초당 500번</strong> 알려줍니다.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">★ 그런데 없는 것이 더 중요합니다</div>
+    <ul>
+      <li><strong>몸통이 얼마나 빨리 가고 있는지. 재는 센서가 아예 없습니다.</strong> 자동차 속도계 같은 게 없다는 뜻입니다. 이 사실 하나가 나중에 프로젝트 설계 전체를 바꿉니다(A12에서 다시 나옵니다)</li>
+      <li><strong>지금 어느 방향을 보고 있는지</strong>나침반(자력계)이 없어서 방향이 계속 조금씩 틀어집니다</li>
+      <li><strong>관절에 힘이 얼마나 걸리는지</strong>토크 센서가 없고, 모터에 흐르는 전류로 <strong>추정</strong>합니다</li>
+    </ul>
+  </div>
+
+  <div class="box analogy">
+    <div class="bt">비유</div>
+    <p>눈을 감고 걷는 사람을 생각하세요. 자기 다리가 어떤 각도인지(관절), 몸이 기울었는지(IMU)는 압니다.
+    그런데 <strong>“내가 지금 초속 몇 미터로 가고 있는지”는 모릅니다.</strong> Go2가 딱 그 상태입니다.</p>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">흔한 오해</div>
+    <p><em>“속도는 관절 움직임으로 계산하면 되지 않나?”</em>발이 땅에 붙어 있다는 가정이 맞을 때만 됩니다.
+    발이 미끄러지면 계산이 완전히 틀립니다. 그리고 <strong>험지에서는 늘 미끄러집니다.</strong></p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>“정책이 볼 수 있는 숫자”와 “볼 수 없는 숫자”를 나눠서 말할 수 있다.</p>
+  </div>
+</section>
+
+<!-- A3 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="좌표계와 회전" data-id="A3">
+  <div class="head"><div class="sid">A3 · 선행 A2</div><h2>좌표계와 회전</h2></div>
+  <p class="oneline">“기울었다”를 숫자로 표현하는 방법. 로봇이 보는 숫자의 절반이 이겁니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 하나</div>
+    <p>로봇이 균형을 잡으려면 “내가 지금 얼마나 기울었나”를 알아야 합니다. 그런데 “기울었다”를 컴퓨터에 어떻게 전달할까요?
+    여기서 <strong>좌표계</strong>와 <strong>회전</strong>이 필요해집니다. 이걸 모르면 관측 벡터의 절반이 무슨 뜻인지 모른 채 지나갑니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">무엇을 배우나</div>
+    <p><strong>① 좌표계는 “누구 기준으로 보느냐”입니다.</strong></p>
+    <ul>
+      <li><strong>world</strong>세상 기준. 중력은 항상 아래를 향합니다</li>
+      <li><strong>base</strong>로봇 몸통 기준. 로봇이 누우면 이 기준도 같이 눕습니다</li>
+      <li><strong>foot</strong>발 기준</li>
+    </ul>
+    <p>같은 방향도 어느 기준으로 보느냐에 따라 숫자가 완전히 달라집니다.</p>
+
+    <p><strong>② 쿼터니언은 자세를 숫자 4개로 표현한 것입니다.</strong> IMU가 이 형태로 자세를 알려줍니다.
+    “왜 4개나 필요하지? 3개(앞뒤·좌우·회전)면 되지 않나?”라고 생각할 수 있는데, 숫자 3개로 표현하면
+    특정 자세에서 표현이 망가지는 문제(짐벌락)가 생깁니다. 그래서 4개를 씁니다.</p>
+
+    <p><strong>③ <code>projected_gravity</code>이게 핵심입니다.</strong> 월드 기준의 중력 방향을 몸통 기준으로 바꿔놓은 벡터입니다.
+    로봇이 똑바로 서 있으면 이 값은 “정확히 아래”를 가리킵니다. 앞으로 기울면 값이 기울어진 만큼 달라집니다.
+    <strong>즉 로봇이 “내가 얼마나 기울었나”를 아는 방법이 바로 이겁니다.</strong></p>
+  </div>
+
+  <div class="box analogy">
+    <div class="bt">비유</div>
+    <p>비행기 안 물컵을 생각하세요. 비행기가 기울면 수면이 컵 기준으로 기울어 보입니다.
+    사실 물은 그대로 아래를 향하고 있고, <strong>기울어진 건 컵(=로봇 몸통)</strong>입니다.
+    로봇은 그 “컵에서 본 물 표면 각도”로 자기가 얼마나 기울었는지 압니다. 그게 <code>projected_gravity</code>입니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>아무 쿼터니언 값을 하나 잡고 <code>projected_gravity</code>를 직접 계산해서, 그 값이 왜 그렇게 나왔는지 설명한다.
+    (<code>scipy.spatial.transform.Rotation</code>으로 몇 줄이면 됩니다.)</p>
+  </div>
+</section>
+
+<!-- A4 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="PD 제어" data-id="A4">
+  <div class="head"><div class="sid">A4 · 선행 A2</div><h2>PD 제어</h2></div>
+  <p class="oneline">신경망이 내놓은 “목표 각도”를 실제 모터 힘으로 바꾸는 장치. 딱 한 줄짜리 공식입니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 하나</div>
+    <p>많은 사람이 “신경망이 모터를 직접 돌린다”고 오해합니다. <strong>아닙니다.</strong>
+    신경망은 “이 관절을 30도로 놔라”라고 말할 뿐이고, 실제로 힘을 주는 건 PD 제어기입니다.
+    이 사이에 뭐가 있는지 모르면, 로봇이 왜 뻣뻣하거나 흐물거리는지 영원히 이해 못 합니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">무엇을 배우나</div>
+    <pre class="dia">토크 = <b>kp</b> × (목표각도 − 현재각도)  +  <b>kd</b> × (0 − 현재속도)
+       ─────────────────────────     ──────────────────
+        멀리 있으면 세게 당긴다        빨리 움직이면 브레이크</pre>
+    <p><strong>앞부분</strong>은 “목표에서 멀수록 세게 당겨라”입니다. 고무줄과 같습니다. 많이 늘어날수록 더 세게 당깁니다.
+    <code>kp</code>는 그 고무줄의 <strong>세기</strong>입니다.</p>
+    <p><strong>뒷부분</strong>은 “빨리 움직이는 중이면 좀 말려라”입니다. 이게 없으면 목표를 지나쳐서 앞뒤로 계속 흔들립니다.
+    <code>kd</code>는 그 <strong>브레이크 세기</strong>입니다.</p>
+    <p>Go2에서 쓰는 정상 범위는 <strong>kp 20~40, kd 0.5~1.0</strong>입니다.</p>
+  </div>
+
+  <div class="box analogy">
+    <div class="bt">비유</div>
+    <p>문을 닫는 도어클로저를 생각하세요. 문이 많이 열려 있을수록 세게 당기고(kp),
+    너무 빨리 닫히면 속도를 줄여서 쾅 소리가 안 나게 합니다(kd). 조합이 나쁘면 문이 쾅 닫히거나 영영 안 닫힙니다.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">실측으로 확인된 것</div>
+    <p><strong>kp=40</strong>으로 학습한 정책은 실제 로봇으로 옮겼을 때 성공했고,
+    <strong>kp=160</strong>은 다른 조건을 어떻게 바꿔도 실패했습니다. 게인 값 하나가 프로젝트 성패를 가릅니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>“kp를 2배로 올리면 로봇이 어떻게 변할까?”에 답할 수 있다. (더 빠르고 단단해지지만 진동과 충격이 커진다.)</p>
+  </div>
+</section>
+
+<!-- A5 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="제어 루프 전체 그림 · 관문" data-id="A5">
+  <div class="head"><div class="sid">A5 · 선행 A2+A3+A4 · 관문</div><h2>제어 루프 전체 그림</h2></div>
+  <p class="oneline">앞의 네 단계를 하나로 합칩니다. 이 그림이 이 프로젝트의 중심입니다.</p>
+
+  <div class="blk">
+    <div class="lbl">이 순환이 초당 50번 돕니다</div>
+    <pre class="dia">① <b>관측</b>숫자 47개
+   관절각 12 · 관절속도 12 · IMU 6
+   명령속도 3 · 직전행동 12 · 보행위상 2
+        ↓  초당 50번
+② <b>정책</b> (신경망) ← 우리가 학습시키는 유일한 것
+        ↓
+③ <b>목표 관절각</b> 12개
+        ↓  초당 500번
+④ <b>PD 제어기</b>
+        ↓
+⑤ <b>모터 토크</b> → 다리가 실제로 움직임
+        ↓
+⑥ <b>물리</b>땅에 닿고, 미끄러지고, 자세가 바뀜
+        ↓
+     다시 ① (자세가 바뀌었으니 관측도 바뀜)</pre>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">반드시 짚을 네 가지</div>
+    <ul>
+      <li><strong>정책은 토크를 내지 않습니다.</strong> “목표 각도”를 냅니다. 초보자가 가장 많이 오해하는 지점입니다</li>
+      <li><strong>PD가 각도를 토크로 바꿉니다.</strong> 그래서 kp·kd가 중요합니다</li>
+      <li><strong>정책은 초당 50번, PD는 초당 500번</strong> 돕니다. 10배 차이입니다. 정책이 느려도 로봇이 부드럽게 움직이는 이유가 이겁니다</li>
+      <li><strong>정책이 보는 건 숫자 47개가 전부입니다.</strong> 카메라도 없고 지도도 없습니다</li>
+    </ul>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">관문 1: 여기서 진도를 막습니다</div>
+    <p>이 그림을 <strong>아무것도 안 보고 그릴 수 있을 때까지</strong> 다음으로 가지 마세요.
+    A5를 못 하면 A6 이후가 전부 겉돕니다. 손은 움직이는데 무슨 일이 벌어지는지 모르는 상태가 됩니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>빈 종이에 그림을 그리고, 각 화살표에서 무엇이 무엇으로 바뀌는지 말로 설명한다. 팀 채팅방에 사진을 올려 서로 확인하세요.</p>
+  </div>
+</section>
+
+<!-- A6 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="MuJoCo에서 Go2 세우기" data-id="A6">
+  <div class="head"><div class="sid">A6 · 선행 A5 · 첫 실습</div><h2>MuJoCo에서 Go2 세우기</h2></div>
+  <p class="oneline">지금까지 배운 걸 전부 손으로 확인합니다. 여기가 가장 재미있는 단계입니다.</p>
+
+  <div class="blk">
+    <div class="lbl">준비</div>
+    <p><strong>MuJoCo</strong>는 물리 시뮬레이터입니다. <code>pip install mujoco</code> 한 줄이면 설치되고,
+    <strong>GPU 없이 CPU만으로 돌아갑니다.</strong> 아무 노트북에서나 됩니다.
+    코드는 AI에게 맡기되, <strong>숫자는 직접 바꿔가며 관찰하세요.</strong> 그게 이 단계의 목적입니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">순서대로 해볼 것</div>
+    <ol>
+      <li><strong>Go2 모델을 불러와 화면에 띄웁니다.</strong> 마우스로 돌려보며 관절이 어디 있는지 봅니다</li>
+      <li><strong>관절을 하나씩 움직여 표를 만듭니다.</strong> 이름 / 어느 축으로 도는지 / 플러스 방향이 어디인지 / 몇 도까지 움직이는지.
+        <span class="no">→ 이 표가 나중에 실제 로봇 배포 사고를 막는 1번 안전장치입니다</span></li>
+      <li><strong>중력만 켜고 손을 뗍니다.</strong> 로봇이 그냥 무너집니다. 제어가 없으면 아무것도 안 된다는 걸 눈으로 봅니다</li>
+      <li><strong>PD 제어를 붙여 세웁니다.</strong> ← 전환점. A4의 공식이 실제로 작동하는 순간입니다</li>
+      <li><strong>kp를 20 → 40 → 160으로 바꿉니다.</strong> 20은 흐물거리고, 160은 딱딱하게 떨립니다. 왜 40 근처를 쓰는지 알게 됩니다</li>
+      <li><strong>옆에서 밀어봅니다.</strong> 힘을 주고 회복하는지 관찰합니다. 나중에 “외란 회복률” 지표가 될 것의 실물입니다</li>
+      <li><strong>IMU 값을 읽어 <code>projected_gravity</code>를 계산합니다.</strong> A3에서 배운 걸 검증합니다</li>
+    </ol>
+  </div>
+
+  <div class="box deliver">
+    <div class="bt">하고 나면: 팀 공용 문서</div>
+    <p><strong>12관절 표.</strong> 이건 개인 메모가 아니라 팀 전체가 쓰는 기준 문서입니다.
+    그리고 이때 만든 코드는 나중에 <strong>C6(다른 시뮬레이터로 검증하는 단계)</strong>의 기반이 됩니다. 지우지 마세요.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>PD 제어로 로봇이 <strong>5초 이상</strong> 서 있다. kp 세 가지의 차이를 영상이나 그래프로 설명할 수 있다.</p>
+  </div>
+</section>
+
+<!-- A7 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="규칙으로 걷게 해보고 실패하기" data-id="A7">
+  <div class="head"><div class="sid">A7 · 선행 A6</div><h2>규칙으로 걷게 해보고, 실패하기</h2></div>
+  <p class="oneline">“왜 강화학습이 필요한가”를 남의 설명이 아니라 자기 손으로 겪습니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 일부러 실패하나</div>
+    <p>“지형이 무한해서 규칙으로는 안 된다”는 말은 누구나 읽으면 고개를 끄덕입니다.
+    그런데 <strong>직접 규칙을 짜서 무너뜨려 보지 않으면</strong> 끝까지 남의 이야기로 남습니다.
+    그리고 다음 단계에서 강화학습이 왜 그렇게 복잡한지 납득이 안 됩니다. 이 좌절이 A8의 동기입니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">해볼 것</div>
+    <ol>
+      <li><strong>다리를 사인파로 흔들어 어설픈 걸음을 만듭니다.</strong> 네 다리를 일정한 주기로 번갈아 움직이면 됩니다.
+        여기서 <strong>보행 위상</strong>이라는 개념을 만납니다. 지금 걸음 주기의 어디쯤인가</li>
+      <li><strong>평평한 바닥에서는 어느 정도 걷습니다.</strong> 뿌듯합니다</li>
+      <li><strong>울퉁불퉁한 지형을 넣습니다. 무너집니다.</strong></li>
+      <li><strong>규칙을 더 정교하게 고칩니다.</strong> 그 지형은 통과합니다. 그런데 다른 지형에서 또 무너집니다</li>
+      <li>3~4를 두어 번 반복하면 이 방식의 한계가 몸으로 느껴집니다</li>
+    </ol>
+  </div>
+
+  <div class="box analogy">
+    <div class="bt">비유</div>
+    <p>“이런 경우엔 이렇게 하라”를 사람이 다 적어주는 방식입니다.
+    바둑을 규칙표로 두게 만드는 것과 같습니다. 경우의 수가 조금만 늘어도 표를 다 못 씁니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>“지형마다 규칙을 새로 써야 하는데 지형은 무한하다”를 <strong>자기 실험 결과로</strong> 설명한다.</p>
+  </div>
+</section>
+
+<!-- A8 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="강화학습 개념" data-id="A8">
+  <div class="head"><div class="sid">A8 · 선행 A7</div><h2>강화학습 개념</h2></div>
+  <p class="oneline">다섯 단어만 알면 됩니다. 정책 · 보상 · PPO · 커리큘럼 · 도메인 랜덤화.</p>
+
+  <div class="blk">
+    <div class="lbl">기본 구조</div>
+    <pre class="dia"><b>정책</b> ──행동──▶ <b>환경</b>(시뮬레이션) ──점수──▶ <b>PPO</b> ──수정──▶ <b>정책</b>
+                                                       반복 수백만 번</pre>
+    <p>로봇이 행동하고, 잘했는지 점수를 받고, 그 점수를 근거로 신경망을 조금 고칩니다. 이걸 계속 반복합니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">다섯 단어</div>
+    <ul>
+      <li><strong>정책 (policy)</strong>상태를 받아 행동을 내놓는 신경망. <strong>우리가 학습시키는 유일한 대상</strong>입니다</li>
+      <li><strong>보상 (reward)</strong>“잘했다/못했다”를 숫자로 준 것. <strong>이걸 설계하는 게 이 프로젝트의 진짜 난이도</strong>입니다</li>
+      <li><strong>PPO</strong>정책을 고치는 방법 중 하나. 특징은 “한 번에 크게 바꾸지 않는다”입니다. 크게 바꾸면 애써 배운 게 망가지기 때문입니다. 안정적이라 많이 씁니다</li>
+      <li><strong>커리큘럼</strong>쉬운 지형부터 시작해 잘하면 어렵게 올립니다. 처음부터 어려우면 아무것도 못 배웁니다</li>
+      <li><strong>도메인 랜덤화</strong>매 시도마다 조건을 조금씩 바꿉니다. 바닥 마찰, 로봇 무게, 밀리는 힘 같은 것들. 시뮬레이션이 너무 완벽해서, 그 완벽함에만 맞춰 배우면 현실에서 무너지기 때문입니다</li>
+    </ul>
+    <p class="sub"><strong>커리큘럼과 도메인 랜덤화는 목적이 정반대입니다.</strong> 앞은 “점점 어렵게”라 학습이 가능하게 만들고,
+    뒤는 “매번 다르게”라 배운 것이 현실에서도 통하게 만듭니다.</p>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">하나만 더: actor와 critic</div>
+    <p>학습할 때 신경망이 두 개 돕니다. <strong>actor</strong>는 행동을 정하고, <strong>critic</strong>은 “지금 상황이 얼마나 좋은지” 점수를 매깁니다.
+    핵심은 이겁니다. <strong>실제 로봇에 올라가는 건 actor뿐이고 critic은 학습이 끝나면 버립니다.</strong>
+    그래서 critic에게는 <strong>실제 로봇에 없는 정보를 줘도 됩니다.</strong> 이 아이디어가 A12에서 우리 설계의 핵심이 됩니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>다섯 단어를 각각 한 문장으로 설명한다. 커리큘럼과 도메인 랜덤화의 차이를 말한다.</p>
+  </div>
+</section>
+
+<!-- A9 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="첫 학습과 곡선 읽기" data-id="A9">
+  <div class="head"><div class="sid">A9 · 선행 A8 · 실습</div><h2>첫 학습과 곡선 읽기</h2></div>
+  <p class="oneline">가장 간단한 문제로 학습을 성공시켜 보고, 학습 그래프 읽는 법을 익힙니다.</p>
+
+  <div class="blk">
+    <div class="lbl">CartPole로 시작합니다</div>
+    <p>막대기를 손바닥 위에 세우는 문제입니다. 강화학습의 “Hello World”이고, <strong>노트북에서 몇 분이면 학습됩니다.</strong>
+    로봇으로 바로 가지 않는 이유는, 로봇은 학습에 몇 시간이 걸려서 뭘 배우기엔 피드백이 너무 느리기 때문입니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">순서</div>
+    <ol>
+      <li><strong>먼저 아무렇게나 움직여 봅니다.</strong> 관측·행동·보상이 실제로 어떤 숫자인지 화면에 찍어 봅니다</li>
+      <li><strong>이미 만들어진 라이브러리로 풀어봅니다.</strong> 되는 걸 먼저 보는 게 중요합니다. 직접 만드는 건 나중입니다</li>
+      <li><strong>학습 그래프를 띄웁니다.</strong> 여기가 이 단계의 진짜 목적입니다</li>
+    </ol>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">반드시 읽을 줄 알아야 하는 네 개</div>
+    <div class="tw"><table>
+      <thead><tr><th>이름</th><th>무슨 뜻</th><th>이상하면</th></tr></thead>
+      <tbody>
+        <tr><td><b>mean_reward</b></td><td>평균 점수. 잘하고 있나</td><td>안 오르거나 갑자기 튄다</td></tr>
+        <tr><td><b>episode_length</b></td><td>한 판을 얼마나 오래 버티나</td><td>짧게 유지 = 계속 실패 중</td></tr>
+        <tr><td><b>KL</b></td><td>정책이 한 번에 얼마나 바뀌었나</td><td>폭주 = 학습률이 너무 큼</td></tr>
+        <tr><td><b>value_loss</b></td><td>critic이 잘 배우고 있나</td><td>발산 = 보상 크기가 이상함</td></tr>
+      </tbody>
+    </table></div>
+    <p class="sub">이 네 개를 5개월 내내 봅니다. 지금 익숙해지는 게 남는 장사입니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>학습이 실패한 그래프를 보고 “아마 이것 때문일 것”이라고 원인 후보를 댈 수 있다.</p>
+  </div>
+</section>
+
+<!-- A10 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="보상 해킹 직접 만들어보기" data-id="A10">
+  <div class="head"><div class="sid">A10 · 선행 A9 · 가장 중요한 실습</div><h2>보상 해킹, 직접 만들어보기</h2></div>
+  <p class="oneline">일부러 망가진 보상을 줘서, “점수는 오르는데 결과는 엉망”인 상태를 눈에 익힙니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이게 가장 중요한가</div>
+    <p>강화학습은 <strong>에러를 내지 않습니다.</strong> 보상 설계가 잘못돼도 프로그램은 멀쩡히 몇 시간 돌아가고,
+    그래프도 예쁘게 올라가고, 결과 정책만 이상합니다. <strong>아무도 안 알려줍니다.</strong></p>
+    <p>웹 개발이면 버그가 화면에 보이고, 데이터 분석이면 숫자가 이상하게 나옵니다.
+    그런데 여기서는 “돌아가는 것”과 “맞는 것”이 완전히 분리됩니다.
+    <strong>그래서 이상한 걸 알아보는 눈이 유일한 방어선입니다.</strong> 특히 코드를 AI에게 맡길 거라면 더 그렇습니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">다섯 가지를 일부러 망가뜨립니다</div>
+    <p>각각 <strong>“이렇게 될 것 같다”를 먼저 적고</strong> → 돌리고 → 맞았는지 대조합니다.</p>
+    <div class="tw"><table>
+      <thead><tr><th>망가뜨릴 것</th><th>예상되는 증상</th></tr></thead>
+      <tbody>
+        <tr><td>속도 점수만 남기기</td><td>몸을 앞으로 던졌다가 넘어지기를 반복. 순간 속도는 높으니까</td></tr>
+        <tr><td>버티는 점수만 크게</td><td>아예 주저앉아서 안 움직임. 넘어질 일이 없으니까</td></tr>
+        <tr><td>에너지 감점 없애기</td><td>다리를 질질 끎. 드는 것보다 끄는 게 싸니까</td></tr>
+        <tr><td>떨림 감점 없애기</td><td>출력이 덜덜 떨림. 실제 로봇에서 특히 치명적</td></tr>
+        <tr><td>발 드는 점수 없애기</td><td>발을 안 듦. 평지는 되는데 턱을 못 넘음</td></tr>
+      </tbody>
+    </table></div>
+    <p class="sub">코드를 AI가 짜주므로 <strong>하루에 다섯 개를 다 재현할 수 있습니다.</strong> 예전 같으면 몇 주 걸릴 훈련입니다.</p>
+  </div>
+
+  <div class="box deliver">
+    <div class="bt">하고 나면</div>
+    <p><strong>증상 ↔ 원인 표.</strong> 남이 만든 표가 아니라 자기가 직접 돌려서 본 것으로 채웁니다. 5개월 내내 이 표를 씁니다.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>처음 보는 이상한 보행 영상을 보고, 원인 후보를 <strong>두 개 이상</strong> 댈 수 있다.</p>
+  </div>
+</section>
+
+<!-- A11 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="숫자 감각 만들기" data-id="A11">
+  <div class="head"><div class="sid">A11 · 선행 A9</div><h2>숫자 감각 만들기</h2></div>
+  <p class="oneline">AI가 준 설정값이 정상 범위인지 즉시 판단할 수 있게 됩니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 하나</div>
+    <p>코드를 AI에게 맡기면 <strong>숫자도 AI가 정합니다.</strong> 그런데 AI는 그럴듯한 값을 자신 있게 틀리게 말합니다.
+    <code>kp=100</code>을 받았을 때 “왜 100이지?”라는 생각이 즉시 안 들면, 그 값으로 3시간을 학습시키고 나서야 이상하다는 걸 알게 됩니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">직접 바꿔보며 느낄 것</div>
+    <ul>
+      <li><code>clip_param</code>을 0.05 / 0.2 / 0.5로: 정책을 얼마나 과감하게 바꿀지</li>
+      <li>학습률을 너무 크게 → KL이 폭주하는 걸 관찰</li>
+      <li><code>gamma</code>를 0.9 / 0.99로: 눈앞만 보는가, 멀리 보는가</li>
+      <li><strong>관측 정규화를 껐다 켜보기</strong>실제 로봇 배포 시 1순위 버그의 정체입니다</li>
+    </ul>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">외워둘 정상 범위</div>
+    <div class="tw"><table>
+      <thead><tr><th>항목</th><th>정상 범위</th></tr></thead>
+      <tbody>
+        <tr><td>시뮬 간격 / decimation</td><td>0.005 / 4 → 정책 <span class="ok">50 Hz</span></td></tr>
+        <tr><td>kp / kd (Go2)</td><td>20~40 / 0.5~1.0</td></tr>
+        <tr><td>행동 스케일</td><td>0.25</td></tr>
+        <tr><td>동시 로봇 수</td><td>2048 ~ 4096</td></tr>
+        <tr><td>gamma / lam / clip</td><td>0.99 / 0.95 / 0.2</td></tr>
+        <tr><td>관측 개수 (우리 설계)</td><td>45 ~ 50</td></tr>
+        <tr><td>학습 반복 횟수</td><td>1500 ~ 3000</td></tr>
+      </tbody>
+    </table></div>
+    <p class="sub">인쇄해서 옆에 붙여두세요. 이 표 하나가 AI의 헛소리를 거르는 가장 강력한 도구입니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>표를 안 보고 대부분을 말한다. AI가 범위 밖 값을 주면 그 자리에서 알아챈다.</p>
+  </div>
+</section>
+
+<!-- A12 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="관측 설계 · 관문" data-id="A12">
+  <div class="head"><div class="sid">A12 · 선행 A8+A2 · 관문</div><h2>관측 설계: 이 프로젝트의 급소</h2></div>
+  <p class="oneline">로봇에게 무엇을 보여줄지 정하는 단계. 여기서 틀리면 5개월 뒤에야 알게 됩니다.</p>
+
+  <div class="blk">
+    <div class="lbl">넣을 수 있는 것</div>
+    <p>각속도(3) · 중력방향(3) · 명령속도(3) · 관절각(12) · 관절속도(12) · 직전행동(12) · 보행위상(2) = <strong>47개</strong></p>
+    <p>전부 로봇 몸 안에서 나오는 정보입니다. 그래서 이 설계를 <strong>blind(눈이 없는)</strong> 방식이라고 부릅니다.
+    카메라도 라이다도 정책 입력에 쓰지 않습니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">넣으면 실제 로봇에서 무너지는 것</div>
+    <ul>
+      <li><strong><code>base_lin_vel</code> (몸통 속도)</strong>A2에서 봤듯 Go2에 <strong>재는 센서가 없습니다.</strong>
+        시뮬레이션에서는 공짜로 알 수 있어서 성능이 잘 나오는데, 실제 로봇에는 그 숫자를 줄 방법이 없습니다</li>
+      <li><strong><code>height_scan</code> (지형 높이 지도)</strong>아래 이유로 함께 사라집니다</li>
+    </ul>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">MCF 딜레마: 우리가 blind로 가는 진짜 이유</div>
+    <p>Go2에는 유니트리가 만든 내장 보행 제어기(MCF)가 들어 있습니다. 우리 신경망으로 관절을 직접 명령하려면
+    <strong>이걸 반드시 꺼야 합니다.</strong> 두 제어기가 동시에 살아 있으면 명령이 충돌해서 제어를 잃습니다.</p>
+    <p>그런데 이걸 끄면 <strong>① 몸통 속도 추정치 ② 라이다 높이 지도</strong>가 <strong>같이 죽습니다.</strong></p>
+    <p>즉 “카메라를 안 쓰기로 결정했다”가 아니라, <strong>Go2에서 실제로 작동하는 경로가 이것뿐</strong>입니다.</p>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">그럼 지형은 어떻게 아나. 비대칭 actor-critic</div>
+    <p>A8에서 나온 이야기가 여기서 쓰입니다. <strong>실제 로봇에 올라가는 건 actor뿐</strong>이므로,
+    학습할 때만 쓰고 버릴 critic에게는 <strong>시뮬레이션만 아는 정답</strong>(진짜 지형 높이, 마찰, 밀리는 힘)을 줍니다.</p>
+    <p>그러면 actor는 몸의 감각만으로도, 과거 몇 초의 움직임 속에 남은 흔적으로 <strong>“방금 밟은 게 뭔지”를 스스로 추론</strong>하게 됩니다.
+    눈으로 보는 게 아니라 <strong>밟아보고 아는</strong> 방식입니다.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">관문 2 · AI가 여기서 반드시 틀립니다</div>
+    <p><strong>AI에게 코드를 시키면 거의 항상 <code>base_lin_vel</code>을 관측에 넣습니다.</strong>
+    세상의 거의 모든 튜토리얼이 그렇게 하기 때문입니다. 그리고 시뮬레이션에서는 오히려 성능이 더 잘 나옵니다.
+    문제가 드러나는 건 <strong>실제 로봇에 올리는 날</strong>입니다. 그게 11월입니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>“<code>base_lin_vel</code>을 왜 빼는가”를 세 문장으로 설명한다.</p>
+  </div>
+</section>
+
+<!-- A13 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="우리가 쓸 코드 읽기" data-id="A13">
+  <div class="head"><div class="sid">A13 · 선행 A8~A12</div><h2>우리가 쓸 코드 읽기</h2></div>
+  <p class="oneline">공개된 <code>unitree_rl_lab</code> 코드의 지도를 그립니다. 설치는 아직 안 해도 됩니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 지금인가</div>
+    <p>A8~A12를 건너뛰고 이걸 먼저 읽으면 <strong>글자만 읽힙니다.</strong>
+    “ObservationTerm”이라는 단어를 봐도 A12를 안 했으면 그게 왜 중요한지 모릅니다.
+    거꾸로 A12까지 하고 오면, 같은 코드가 <strong>이미 아는 개념의 표현</strong>으로 읽힙니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">읽는 순서: 이 순서를 지키세요</div>
+    <ol>
+      <li><strong>관측 목록</strong>정책이 무엇을 보는지. A12와 대조</li>
+      <li><strong>보상 항목 전체</strong>이름과 가중치를 전부 표로 옮겨 적습니다</li>
+      <li><strong>도메인 랜덤화 설정</strong>무엇을 어떤 범위로 흔드는지</li>
+      <li><strong>커리큘럼 설정</strong>언제 지형이 어려워지고 언제 쉬워지는지</li>
+      <li><strong>로봇 설정</strong>kp/kd와 관절 순서. <span class="no">A6에서 만든 12관절 표와 반드시 대조</span></li>
+      <li><strong>지형 설정</strong>어떤 종류의 지형이 만들어지는지</li>
+      <li><strong>PPO 설정</strong>전 항목. A11 숫자표와 대조</li>
+      <li><strong>실제 로봇 배포 코드</strong>관측을 어떤 순서로 모으고, 행동을 어떻게 바꾸는지</li>
+    </ol>
+  </div>
+
+  <div class="box deliver">
+    <div class="bt">하고 나면: 팀 공용 표 3개</div>
+    <ul>
+      <li><strong>관측 명세표</strong>항목 / 개수 / 크기 조절값 / actor·critic 구분</li>
+      <li><strong>보상 항목표</strong>이름 / 수식 / 가중치 / <strong>없으면 생기는 문제</strong></li>
+      <li><strong>PPO 설정표</strong>항목 / 값 / 의미</li>
+    </ul>
+    <p>이 세 표가 <strong>앞으로 모든 실험의 기준 문서</strong>가 됩니다. 지금 만들어두면 서버가 준비된 날 바로 실험을 시작할 수 있습니다.</p>
+  </div>
+</section>
+
+<!-- A14 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="시뮬과 현실의 간극" data-id="A14">
+  <div class="head"><div class="sid">A14 · 선행 A13</div><h2>시뮬과 현실의 간극</h2></div>
+  <p class="oneline">시뮬레이션에서 완벽했던 정책이 실제 로봇에서 무너지는 다섯 가지 이유.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 이걸 알아야 하나</div>
+    <p>이 프로젝트가 실제로 푸는 문제가 바로 이겁니다. 학습을 성공시키는 건 공개 코드로도 됩니다.
+    <strong>옮기는 순간 벌어지는 간극을 메우는 것</strong>이 우리 기여입니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">다섯 가지 원인</div>
+    <div class="tw"><table>
+      <thead><tr><th>원인</th><th>무슨 일이 생기나</th><th>대응</th></tr></thead>
+      <tbody>
+        <tr><td><b>모터 모델</b></td><td>모터를 이상적이라 가정하면 실기에서 한 걸음도 못 걷고 넘어짐</td><td>Go2는 모터 구조가 단순해 1순위는 아님</td></tr>
+        <tr><td><b>제어 지연</b></td><td>신경망 계산에 15~19ms가 걸리는데 시뮬은 0이라고 가정. 시뮬이 실제보다 훨씬 관대해짐</td><td><span class="ok">지연을 넣고, 지연값도 랜덤하게</span></td></tr>
+        <tr><td><b>관절 마찰</b></td><td>실제 관절은 뻑뻑함. 무시하면 특히 계단에서 성능 저하</td><td>실측해서 범위로 반영</td></tr>
+        <tr><td><b>관측 부족</b></td><td>몸통 속도를 모르면 옆에서 밀 때 버티는 힘이 43N → 22N으로 반토막</td><td>비대칭 actor-critic (A12)</td></tr>
+        <tr><td><b>접촉 부드러움</b></td><td>딱딱한 바닥만 가정하고 배우면 모래·매트에서 불안정</td><td>접촉 강성도 랜덤하게</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">반직관: 랜덤화는 많을수록 좋은 게 아닙니다</div>
+    <p>“조건을 마구 흔들어놓으면 뭐든 잘 버티겠지”가 상식적으로 보입니다. <strong>실측은 반대였습니다.</strong></p>
+    <p>불필요한 랜덤화를 넣었더니 최고 속도가 <strong>1.1 → 0.9 m/s로 18% 떨어졌습니다.</strong>
+    조건을 너무 흔들면 정책이 “어떤 상황에서도 안전한” 지나치게 소심한 걸음을 배웁니다.</p>
+    <p><strong>실행 규칙: 랜덤화 항목을 하나씩 추가하면서 성능 손실을 표로 기록합니다.</strong> 이 표 자체가 발표 자료가 됩니다.</p>
+  </div>
+
+  <div class="box check">
+    <div class="bt">이렇게 확인한다</div>
+    <p>다섯 원인을 말할 수 있고, “랜덤화 다 넣읍시다”라는 제안에 근거를 대고 반박할 수 있다.</p>
+  </div>
+</section>
+
+<!-- A15 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="무엇을 성공이라 부를 것인가" data-id="A15">
+  <div class="head"><div class="sid">A15 · 선행 A13</div><h2>무엇을 “성공”이라 부를 것인가</h2></div>
+  <p class="oneline">“잘 걷는다”는 평가가 아닙니다. 숫자 여섯 개로만 말합니다.</p>
+
+  <div class="blk">
+    <div class="lbl">여섯 개 지표</div>
+    <div class="tw"><table>
+      <thead><tr><th>지표</th><th>무엇을 보나</th><th>기준</th></tr></thead>
+      <tbody>
+        <tr><td><b>지형별 통과율</b></td><td>지형 종류마다 몇 번 시도해서 몇 번 도착했나</td><td>기준 정책보다 떨어지지 않기</td></tr>
+        <tr><td><b>속도 추종 오차</b></td><td>가라는 속도대로 가는가</td><td>험지에서 가장 먼저 무너지는 지표</td></tr>
+        <tr><td><b>넘어진 횟수</b></td><td>몸통이 땅에 닿은 횟수</td><td><span class="no">0에 가까워야</span> 현장 이야기가 가능</td></tr>
+        <tr><td><b>외란 회복률</b></td><td>옆에서 밀었을 때 다시 걷는가</td><td>충격 크기별로 기록</td></tr>
+        <tr><td><b>무개입 주행거리</b></td><td>사람이 안 건드리고 얼마나 갔나</td><td>국내 사례가 공개 안 하는 지표. 우리가 내면 최초</td></tr>
+        <tr><td><b>에너지 소모</b></td><td>같은 거리를 가는 데 배터리를 얼마나 쓰나</td><td>기준 대비 비율로</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">반드시 각인할 것</div>
+    <p><strong>학습 그래프의 보상값은 성능 지표가 아닙니다.</strong> 보상은 우리가 임의로 설계한 점수 체계일 뿐입니다.
+    보상이 올라가도 실제 보행은 나빠질 수 있습니다. A10에서 직접 다섯 번 본 그대로입니다.</p>
+    <p><strong>보상 곡선과 위 여섯 지표를 항상 같이 봅니다.</strong> “보상 20 달성!”은 보고가 아닙니다.</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">실험 기록 규칙: 지금 정해야 합니다</div>
+    <ul>
+      <li>실험 한 건 = <strong>코드 버전 + 설정 전문 + 랜덤 시드 + 학습 곡선 + 지표 + 영상</strong>. 하나라도 빠지면 나중에 재현이 안 됩니다</li>
+      <li>이름 규칙: <code>날짜-바꾼것-시드번호</code></li>
+      <li><strong>시드를 최소 3개로 안 돌린 결과는 결론으로 쓰지 않습니다.</strong> 운 좋게 한 번 잘 나온 걸 성과로 보고하면 나중에 재현이 안 돼서 곤란해집니다</li>
+    </ul>
+    <p class="sub">실험이 쏟아지기 시작하면 규칙을 만들 시간이 없습니다. 한가한 지금 만들어야 합니다.</p>
+  </div>
+</section>
+
+<!-- A16 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="안전 절차" data-id="A16">
+  <div class="head"><div class="sid">A16 · 독립 · 실기 전 필수</div><h2>안전 절차</h2></div>
+  <p class="oneline">수천만 원짜리 장비이고, 다리가 갑자기 움직입니다. 문서로 만들어 두고 매번 확인합니다.</p>
+
+  <div class="blk">
+    <div class="lbl">지켜야 할 것</div>
+    <ul>
+      <li><strong>실기 작업은 최소 2인.</strong> 한 명은 아무것도 안 하고 <strong>비상정지만</strong> 담당합니다</li>
+      <li><strong>첫 정책 실행은 반드시 로봇을 매단 상태에서.</strong> 발이 땅에 닿으면 안 됩니다. 이건 예외 없습니다</li>
+      <li><strong>내장 제어기(MCF)를 끄는 순간 모터에 힘이 빠져 로봇이 주저앉습니다.</strong> 매달지 않고 끄면 그대로 바닥에 떨어집니다</li>
+      <li><strong>자세를 천천히 올립니다.</strong> 현재 자세에서 목표 자세로 2~3초에 걸쳐. 급하게 하면 다리가 튕깁니다</li>
+      <li>리튬 배터리: 충격 주의, 충전 중 자리 비우지 않기</li>
+      <li>사람과 같은 공간에서 시험할 때는 최소 2m 반경 확보</li>
+    </ul>
+  </div>
+
+  <div class="box deliver">
+    <div class="bt">하고 나면</div>
+    <p><strong>안전 체크리스트</strong>를 만들어 실기 세션마다 종이로 체크합니다.
+    이 문서가 있다는 사실 자체가 멘토와 심사에서 신뢰를 삽니다.</p>
+  </div>
+</section>
+
+<!-- A17 -->
+<section class="slide" data-stage="구간 A · 공통" data-title="AI에게 코드를 시킬 때의 규칙" data-id="A17">
+  <div class="head"><div class="sid">A17 · 선행 A12+A13+A14</div><h2>AI에게 코드를 시킬 때의 규칙</h2></div>
+  <p class="oneline">AI는 이 프로젝트에서 <strong>예측 가능하게</strong> 틀립니다. 미리 막아둡니다.</p>
+
+  <div class="blk">
+    <div class="lbl">왜 예측 가능한가</div>
+    <p>AI가 학습한 자료는 <strong>2021~2023년 방식</strong>에 몰려 있습니다.
+    그 시절의 관행을 자신 있게 제안하는데, 우리 환경에서는 그게 안 됩니다.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">가장 위험한 두 가지</div>
+    <ul>
+      <li><strong>① 관측에 <code>base_lin_vel</code>을 넣습니다.</strong> 시뮬은 오히려 잘 되고, <strong>실제 로봇에 올리는 날 무너집니다.</strong> 발견이 11월입니다</li>
+      <li><strong>② <code>legged_gym</code> 코드를 제안합니다.</strong> 우리 GPU(RTX 5080)에서는 <strong>실행 자체가 안 됩니다.</strong> 모르고 따라가면 며칠을 날립니다</li>
+    </ul>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">대응: 요청할 때마다 붙이는 제약 블록</div>
+    <p>팀 공용 스니펫으로 저장해두고 <strong>코드를 요청할 때마다 앞에 붙입니다.</strong> 로봇 사양, 쓰면 안 되는 라이브러리,
+    관측에 넣으면 안 되는 것, 주기, 배포 방식을 미리 못 박아 두는 텍스트입니다.
+    (전문은 <code>FOOTHOLD_도메인지식_핵심.md</code> 2절에 있습니다.)</p>
+  </div>
+
+  <div class="blk">
+    <div class="lbl">작업 규칙 다섯 개</div>
+    <ol>
+      <li>제약 블록을 <strong>매번</strong> 붙인다. 귀찮아 보이지만 한 번 빠뜨려 생긴 버그가 며칠을 먹습니다</li>
+      <li>AI가 준 숫자를 <strong>A11 표와 대조</strong>한다</li>
+      <li>보상 함수는 <strong>“이렇게 될 것 같다”를 먼저 적고</strong> 받는다. 판정 기준 없이 받으면 맞는지 알 수 없습니다</li>
+      <li><strong>검증 코드도 같이</strong> 시킨다. 관측값 출력, 개수 확인, 범위 체크. AI가 잘하는 일입니다</li>
+      <li><span class="no">모르는 코드를 실제 로봇에 올리지 않는다.</span> 예외 없습니다</li>
+    </ol>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">요청하는 법이 결과를 바꿉니다</div>
+    <p><strong>나쁜 요청</strong>“Go2 보행 학습 환경 만들어줘” → 옛날 코드가 나오고 며칠 날립니다.</p>
+    <p><strong>좋은 요청</strong>“[제약 블록] 발을 충분히 드는 걸음을 유도하는 보상 항목을 추가하려 한다.
+    예상 부작용은 종종걸음이 되는 것. 표준 구현과 가중치 범위를 알려주고, <strong>그 부작용을 확인할 측정 코드도 같이</strong> 만들어줘.”</p>
+    <p>차이는 <strong>“만들어줘”가 아니라 “이 판단이 맞는지 같이 보자”</strong>입니다. 판단의 주체가 사람일 때 AI가 훨씬 정확해집니다.</p>
+  </div>
+</section>
+
+<!-- ══════════════════ 구간 B ══════════════════ -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="여기서 여덟 갈래로 나뉩니다" data-id="B">
+  <div class="head"><div class="sid">구간 B</div><h2>여기서 여덟 갈래로 나뉩니다</h2></div>
+  <p class="oneline">구간 A까지는 전원 동일. 여기부터는 각자 자기 작업 영역을 깊게 팝니다. 이 여덟 갈래가 곧 이슈 라벨이고, 곧 폴더 이름입니다.</p>
+
+  <div class="blk">
+    <div class="lbl">배정</div>
+    <div class="tw"><table>
+      <thead><tr><th>작업 영역</th><th>하는 일</th><th>주 / 부</th></tr></thead>
+      <tbody>
+        <tr><td><b>A/정책학습</b></td><td>정책을 어떻게 학습시킬 것인가: 보상 설계와 관측, 실패 지형 파인튜닝</td><td>임석헌 / 전원</td></tr>
+        <tr><td><b>A/지형씬제작</b></td><td>무엇을 겪게 할 것인가: 지형과 씬 에셋을 만들고 난이도를 조절</td><td>맹라현 / 오흥재 · 이민우</td></tr>
+        <tr><td><b>A/평가</b></td><td>잘 됐는지 어떻게 아는가: 일반화 벤치마크와 지표</td><td>오현민 / 맹라현 · 이민우</td></tr>
+        <tr><td><b>A/트윈렌더</b></td><td>결과를 어떻게 보이는가: 실공간 복원 · 3DGS · 실사급 렌더</td><td>맹라현 / 오흥재 · 이민우</td></tr>
+        <tr><td><b>B/항법</b></td><td>실물이 스스로 길을 찾게: ROS2 · TF · SLAM · Nav2</td><td>오흥재 / 전원</td></tr>
+        <tr><td><b>B/인지</b></td><td>실물이 세상을 읽게: LiDAR · 카메라 · 센서 융합</td><td>오현민 / 맹라현 · 이민우</td></tr>
+        <tr><td><b>C/기록</b></td><td>무엇을 왜 했는가: 회의록 · 문서 · 발표 · 대외 보고</td><td>이민우 / 맹라현 · 오흥재</td></tr>
+        <tr><td><b>C/운영</b></td><td>일이 굴러가게: 인프라 · 자동화 · 깃 · 웹 · 예산 · 일정</td><td>오흥재 / 전원</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="box myth">
+    <div class="bt">주 1개를 깊게, 부는 대신할 수 있을 만큼만</div>
+    <p>여덟 갈래를 다 얕게 아는 사람 다섯보다, <strong>하나를 깊게 알고 하나를 대신할 수 있는 사람 다섯</strong>이 훨씬 강합니다.</p>
+    <p>부 담당은 <strong>앞 3개 단계까지</strong>만 하면 됩니다. 주 담당이 빠져도 그 갈래가 멈추지 않을 정도면 충분합니다.</p>
+    <p>나머지 갈래는 <strong>주 1회 30분 공유 세션</strong>에서 각자 “이번 주에 알게 된 것 하나”를 5분씩 설명하는 것으로 자동 커버됩니다.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="bt">절대 나누면 안 되는 것</div>
+    <p><strong>12관절 표 · 관측 벡터 구성 · 여섯 개 지표 · 안전 절차 · 실험 기록 규칙.</strong></p>
+    <p>이유는 각각 다릅니다. 12관절 표는 실기 사고 1순위 원인이라 서로 실수를 잡아야 하고,
+    <strong>안전 절차는 사고가 모르는 사람 한 명에게서 나기 때문</strong>입니다.</p>
+  </div>
+</section>
+
+<!-- A/정책학습 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="A/정책학습" data-id="B·A1">
+  <div class="head"><div class="sid">구간 B · A/정책학습</div><h2>A/정책학습: 정책이 잘 걷게 만든다</h2><p class="sub">주 임석헌 / 부 전원</p></div>
+  <p class="oneline">보상 설계와 관측 구성의 최종 결정권을 가집니다. 실패 지형 5종 파인튜닝도 이 영역입니다.</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>P1</b></td><td><b>보상 항목 10종을 정밀하게 이해</b>각 항목이 어떤 행동을 유도하고 어떤 부작용이 있는지. A13에서 만든 보상 표의 “없으면 생기는 문제” 칸을 전부 채운다</td><td>완성된 보상 표</td></tr>
+      <tr><td><b>P2</b></td><td><b>비대칭 actor-critic</b>무엇을 critic에만 줄 것인가의 경계를 정한다. CartPole에서 먼저 만들어 동작을 확인하면, 나중에 로봇에는 옮기기만 하면 된다</td><td>CartPole 검증 코드</td></tr>
+      <tr><td><b>P3</b></td><td><b>과거 기억을 압축하는 신경망</b>지난 2초의 움직임에서 “방금 밟은 지형이 뭐였나”를 추론하게 만드는 구조</td><td>작은 예제</td></tr>
+      <tr><td><b>P4</b></td><td><b>DreamWaQ 논문 정독</b>우리가 채택한 구조의 원본. 왜 “선생-학생” 2단계 방식을 버렸는지 이해</td><td>대조표 1장</td></tr>
+      <tr><td><b>P5</b></td><td>설정값 민감도 순서: 결과가 안 좋을 때 <b>무엇부터 건드릴 것인가</b></td><td>튜닝 우선순위</td></tr>
+      <tr><td><b>P6</b></td><td>학습 실패 진단 심화: 증상별 원인 트리</td><td>진단 체크리스트</td></tr>
+      <tr><td><b>P7</b></td><td><b>실패 지형 5종 파인튜닝</b>A/평가가 “여기서 넘어진다”를 찾아 주면, 그 지형만 비중을 올려 다시 학습시킨다. <span class="ok">5종이 서로 다른 실패 유형이라 처방도 다르다</span></td><td>지형별 개선 정책</td></tr>
+      <tr><td><b>P8</b></td><td><b>지형 배정 (8/27 확정)</b>한 사람이 한 지형을 온전히 소유한다. <b>gap 임석헌</b> · <b>rails 맹라현</b> · <b>stepping_stones 오현민</b> · <b>pit 이민우</b> · <b>floating_ring 오흥재</b>. <span class="no">합치는 것은 체크포인트가 아니라 레시피다</span> (RL 가중치 병합은 성립하지 않는다)</td><td>지형별 레시피 1장 × 5</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub"><strong>마일스톤 연결</strong> · A-정책 9/12(기준 정책 고정) · MVP 9/30(실패 5종 중 3종 개선)</p>
+</section>
+
+<!-- A/지형씬제작 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="A/지형씬제작" data-id="B·A2">
+  <div class="head"><div class="sid">구간 B · A/지형씬제작</div><h2>A/지형씬제작: 정책이 무엇을 겪을지 정한다</h2><p class="sub">주 맹라현 / 부 오흥재 · 이민우</p></div>
+  <p class="oneline">3D 툴 경험이 그대로 쓰이는 영역입니다. 지형을 만들고 난이도를 조절합니다.</p>
+  <div class="box myth">
+    <div class="bt">왜 이 배정인가</div>
+    <p>Isaac Lab의 지형은 결국 <strong>삼각형 메시</strong>입니다. Blender에서 만들어 넣을 수 있습니다.
+    “우리가 설계한 커스텀 지형”이 MVP 산출물인데, 이건 3D 저작 툴을 다루는 사람이 있어야 제대로 나옵니다.
+    <strong>시각화 담당이 아니라 지형 저작 담당</strong>으로 보셔야 합니다.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>E1</b></td><td>Isaac Lab 환경 구조: 관측·보상·종료·랜덤화·커리큘럼·지형을 관리하는 8개 부품이 각각 무엇을 하는지</td><td>구조도 1장</td></tr>
+      <tr><td><b>E2</b></td><td>지형 종류와 파라미터: 계단·경사·불규칙·기둥. <b>난이도를 결정하는 숫자가 무엇인지</b></td><td>지형 파라미터 표</td></tr>
+      <tr><td><b>E3</b></td><td><b><code>trimesh</code>로 지형 만들기</b>Isaac Lab 지형 생성기가 실제로 쓰는 라이브러리다. <span class="ok">서버 없이 노트북 CPU로 연습 가능</span></td><td>지형 메시 3종</td></tr>
+      <tr><td><b>E4</b></td><td><b><code>usd-core</code>로 파일 구조 익히기</b>Isaac Sim 설치 없이 USD 파일을 읽고 쓸 수 있다</td><td>USD 다루기</td></tr>
+      <tr><td><b>E5</b></td><td>지형 커리큘럼 로직: 통과율 0.5~0.9를 유지하도록 자동 승급·강등시키는 방식</td><td>커리큘럼 설계안</td></tr>
+      <tr><td><b>E6</b></td><td>도메인 랜덤화 설계: 항목별 범위와 <b>성능 손실 기록표 템플릿</b></td><td>손실 기록표</td></tr>
+      <tr><td><b>E7</b></td><td><b>실패 지형 5종을 씬으로</b>A/평가가 정의한 5종 실패 유형을 실제로 걸어 볼 수 있는 씬으로 만든다</td><td>실패 지형 씬 5종</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub"><strong>E3 + E4만으로 서버 없이 지형 파이프라인의 대부분을 완성할 수 있습니다.</strong> 서버가 준비되면 붙이기만 하면 됩니다.</p>
+</section>
+
+<!-- A/평가 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="A/평가" data-id="B·A3">
+  <div class="head"><div class="sid">구간 B · A/평가</div><h2>A/평가: “잘 됐다”를 숫자로 만든다</h2><p class="sub">주 오현민 / 부 맹라현 · 이민우</p></div>
+  <p class="oneline">일반화 벤치마크와 지표를 세웁니다. 실패 5종을 “찾아내는” 것도 이 영역입니다.</p>
+  <div class="box danger">
+    <div class="bt">이 영역이 프로젝트의 숨은 급소입니다</div>
+    <p>A12에서 봤듯 우리는 몸통 속도를 정책에 안 줍니다. 그런데 그 결정에는 아무도 안 짚은 결과가 하나 있습니다.
+    <strong>정책이 속도를 못 보는 것과, 우리가 속도를 못 재는 것은 별개 문제인데 원인이 같습니다.</strong></p>
+    <p>그래서 여섯 지표 중 <strong>속도 추종 오차 · 무개입 주행거리 · 에너지 소모</strong> 세 개가
+    현재 실제 로봇에서 <strong>측정할 방법이 없습니다.</strong></p>
+    <p>이걸 만드는 것. 라이다로 로봇의 실제 이동을 추적하는 계측 장치를 세우는 것. 이것이 이 영역의 진짜 임무입니다.
+    <span class="sub">계측 장치의 센서 쪽 절반은 B/인지와 함께 합니다.</span></p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>V1</b></td><td>여섯 지표를 <b>시뮬에서 / 실기에서</b> 각각 어떻게 잴 것인지 확정</td><td>측정 방법 명세</td></tr>
+      <tr><td><b>V2</b></td><td>시뮬 평가 자동화: N번 시도해서 지표 표를 자동으로 뽑기</td><td>평가 스크립트</td></tr>
+      <tr><td><b>V3</b></td><td>기록 데이터 다루기 + <b>시간 동기화</b>두 센서가 같은 순간을 말하는지. 계측 오류의 주범</td><td>분석 실습</td></tr>
+      <tr><td><b>V4</b></td><td><b>라이다 기반 위치·속도 추적(Point-LIO)</b><span class="no">이 영역의 핵심.</span> 로봇이 없어도 공개 데이터로 미리 연습할 수 있다</td><td>공개 데이터로 구동</td></tr>
+      <tr><td><b>V5</b></td><td>실험 관리 체계: 기록 도구 세팅, 실험 이름 규칙, 설정 보관</td><td>기록 체계 가동</td></tr>
+      <tr><td><b>V6</b></td><td>통계적 판정: 시드마다 결과가 다른데 <b>“이 차이가 진짜 차이인가”</b></td><td>판정 기준</td></tr>
+      <tr><td><b>V7</b></td><td><b>일반화 벤치마크: 실패 5종을 찾아낸다</b>학습에 안 쓴 지형을 골고루 걸려 보고, 넘어지는 지점을 <b>유형별로</b> 분류한다. 그 5종이 A/정책학습과 A/지형씬제작의 다음 작업 지시서가 된다</td><td>실패 유형 5종 정의</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- A/트윈렌더 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="A/트윈렌더" data-id="B·A4">
+  <div class="head"><div class="sid">구간 B · A/트윈렌더</div><h2>A/트윈렌더: 결과를 보이게 만든다</h2><p class="sub">주 맹라현 / 부 오흥재 · 이민우</p></div>
+  <p class="oneline">실공간을 복원해 우리 시뮬 안으로 가져오고, 결과를 실사급으로 보여 줍니다.</p>
+  <div class="box myth">
+    <div class="bt">이건 “예쁘게 만들기”가 아닙니다</div>
+    <p>심사위원이 보는 것은 학습 곡선이 아니라 <strong>“진짜 현장에서 저게 걷나”</strong>입니다.
+    실제 현장을 3D로 복원해 그 위에서 정책을 돌려 보여 주면, 지표 여섯 줄보다 그 30초가 더 설득력이 있습니다.
+    동시에 <strong>복원한 공간은 A/지형씬제작의 입력</strong>이 되기도 합니다. 발표용과 실사용이 같은 산출물입니다.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>T1</b></td><td><b>사진으로 3D 공간 복원: 촬영 기법</b>촬영이 결과의 80%다. 중첩률 · 조도 · 이동 궤적 설계는 영상 경험이 그대로 쓰인다</td><td>촬영 가이드</td></tr>
+      <tr><td><b>T2</b></td><td>3DGS의 원리와 한계: <b>보이는 것은 주지만 만져지는 물리는 못 준다</b>. 그래서 무엇을 3DGS로 하고 무엇을 메시로 할지 경계를 긋는다</td><td>활용 범위 정의</td></tr>
+      <tr><td><b>T3</b></td><td>복원 결과를 <b>충돌 가능한 메시로 변환</b>하는 경로. 여기서 A/지형씬제작과 만난다</td><td>변환 파이프라인</td></tr>
+      <tr><td><b>T4</b></td><td>렌더 세팅: 카메라 워크 · 조명 · 합성. <b>발표 30초 컷을 반복 생산할 수 있게</b> 템플릿화</td><td>렌더 템플릿</td></tr>
+      <tr><td><b>T5</b></td><td>브랜드 적용: 확정된 색·타이포를 렌더와 자막에 일관되게</td><td>브랜드 키트 적용</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- B/항법 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="B/항법" data-id="B·B1">
+  <div class="head"><div class="sid">구간 B · B/항법</div><h2>B/항법: 실물이 스스로 길을 찾게</h2><p class="sub">주 오흥재 / 부 전원</p></div>
+  <p class="oneline">트랙 B는 실기입니다. 다만 <b>저수준 관절 제어를 실기로 옮기는 일이 아닙니다.</b></p>
+  <div class="box danger">
+    <div class="bt">8/19에 목표를 바꾼 지점</div>
+    <p>전에는 시뮬에서 학습한 <strong>저수준 보행 정책을 실제 Go2에 올리는 것</strong>을 트랙 B로 잡았습니다.
+    지금은 아닙니다. 내장 제어기를 끄고 관절을 직접 지령하는 경로는 <strong>사고 위험과 남는 시간에 견줘 이득이 없다</strong>고 판단했습니다.</p>
+    <p>대신 트랙 B는 <strong>Go2의 내장 보행 위에서 스스로 길을 찾게</strong> 하는 것입니다.
+    ROS2로 지도를 만들고, 목적지를 주면 알아서 가고, 막히면 돌아갑니다. 걷는 방법은 로봇이 이미 압니다.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>N1</b></td><td>ROS2 기초: 노드 · 토픽 · 서비스 · 액션. <b>메시지가 어디서 어디로 흐르는지</b></td><td>노드·토픽 실습</td></tr>
+      <tr><td><b>N2</b></td><td><b>TF 좌표 변환</b>“로봇 기준 앞 1m”와 “지도 기준 어느 지점”을 오가는 법. 항법 버그의 대부분이 여기서 난다</td><td>TF 트리 이해</td></tr>
+      <tr><td><b>N3</b></td><td>Go2 ROS2 인터페이스: 속도 지령을 어떻게 넣고 상태를 어떻게 받는지. <span class="ok">내장 제어기는 켜 둔 채로 쓴다</span></td><td>실기 원격 주행</td></tr>
+      <tr><td><b>N4</b></td><td><b>SLAM</b>움직이면서 지도를 만들고 동시에 자기 위치를 안다. LiDAR 기반</td><td>실내 지도 1장</td></tr>
+      <tr><td><b>N5</b></td><td><b>Nav2</b>목적지를 주면 경로를 짜고 장애물을 피해 간다. 코스트맵 · 플래너 · 컨트롤러의 역할 분담</td><td>자율 주행 1회</td></tr>
+      <tr><td><b>N6</b></td><td>안전 절차: 비상 정지 · 배터리 · 사람과의 거리. <b>이건 전원이 안다</b></td><td>안전 체크리스트</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub"><strong>마일스톤 연결</strong> · NAV · 실기 항법 11/7</p>
+</section>
+
+<!-- B/인지 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="B/인지" data-id="B·B2">
+  <div class="head"><div class="sid">구간 B · B/인지</div><h2>B/인지: 실물이 세상을 읽게</h2><p class="sub">주 오현민 / 부 맹라현 · 이민우</p></div>
+  <p class="oneline">센서에서 나온 날 데이터를 “쓸 수 있는 것”으로 바꿉니다. A/평가의 계측 장치와 뿌리가 같습니다.</p>
+  <div class="box myth">
+    <div class="bt">왜 A/평가와 같은 사람인가</div>
+    <p>실기에서 <strong>“로봇이 실제로 얼마나 갔나”</strong>를 재는 것과, <strong>“로봇이 앞에 뭐가 있는지 아는 것”</strong>은
+    같은 라이다에서 같은 방식으로 나옵니다. 두 영역을 따로 배우면 같은 것을 두 번 배웁니다.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>S1</b></td><td>LiDAR 데이터 구조: 포인트 클라우드가 실제로 무슨 숫자 뭉치인지. 필터링 · 다운샘플링</td><td>포인트 클라우드 다루기</td></tr>
+      <tr><td><b>S2</b></td><td>카메라 · 깊이 센서: 내부 파라미터, 왜곡 보정, 깊이 이미지의 한계</td><td>캘리브레이션 1회</td></tr>
+      <tr><td><b>S3</b></td><td><b>센서 융합과 시간 동기화</b>두 센서가 같은 순간을 말하게 만드는 것. A/평가 V3과 같은 문제</td><td>동기화 파이프라인</td></tr>
+      <tr><td><b>S4</b></td><td>지면 분리 · 장애물 검출: “바닥”과 “걸리는 것”을 나누는 고전적 방법부터</td><td>장애물 맵</td></tr>
+      <tr><td><b>S5</b></td><td>Point-LIO 실기 적용: 공개 데이터로 익힌 것을 우리 로봇 로그에 건다</td><td>실기 궤적 추적</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- C/기록 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="C/기록" data-id="B·C1">
+  <div class="head"><div class="sid">구간 B · C/기록</div><h2>C/기록: 무엇을 왜 했는가</h2><p class="sub">주 이민우 / 부 맹라현 · 오흥재</p></div>
+  <p class="oneline">한 일이 남지 않으면 안 한 것과 같습니다. 대외 제출물이 전부 여기서 나옵니다.</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>R1</b></td><td><b>프로젝트 기획서 · 브레인스토밍 · WBS</b>9/4 운영진 제출물 3종. 문제정의 · 수요 근거 · 검증 시나리오 · 평가지표</td><td>9/4 제출 완료</td></tr>
+      <tr><td><b>R2</b></td><td>검증 시나리오 설계: 어떤 지형에서 어떤 임무를 몇 번, <b>판정 기준까지 포함</b></td><td>시나리오 문서</td></tr>
+      <tr><td><b>R3</b></td><td>현장 조사: 설비 하부 · 배관 주변 · 좁은 통로의 실제 특성</td><td>현장 특성 정리</td></tr>
+      <tr><td><b>R4</b></td><td><b>회의록 규칙</b>정한 것 · 안 정한 것 · 다음에 할 것 세 줄. 회의가 끝난 그 자리에서 올린다</td><td>회의록 체계 가동</td></tr>
+      <tr><td><b>R5</b></td><td><b>메타 5줄 표준</b>분류 · 작성(이름 · 날짜 시각) · 근거 · 요지 · 상태. 빌드가 막으므로 안 쓰면 게시가 안 된다</td><td>문서 표준 준수</td></tr>
+      <tr><td><b>R6</b></td><td>발표 체계: 각 시점에서 <b>“멈춰도 발표 가능한”</b> 형태로</td><td>발표 템플릿</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub"><strong>마일스톤 연결</strong> · 기획발표 9/4 · MVP · 중간발표 9/30 · 최종 12/11</p>
+</section>
+
+<!-- C/운영 -->
+<section class="slide" data-stage="구간 B · 작업 영역별" data-title="C/운영" data-id="B·C2">
+  <div class="head"><div class="sid">구간 B · C/운영</div><h2>C/운영: 일이 굴러가게</h2><p class="sub">주 오흥재 / 부 전원</p></div>
+  <p class="oneline">팀이 실제로 돌릴 수 있게 만드는 책임. 초반에 가장 바쁜 영역입니다.</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>내용</th><th>하고 나면</th></tr></thead>
+    <tbody>
+      <tr><td><b>I1</b></td><td>리눅스 · SSH · tmux · conda: 서버가 우분투이므로 전원이 터미널로 일하게 된다</td><td>원격 접속 성공</td></tr>
+      <tr><td><b>I2</b></td><td><b>CUDA · 드라이버 · PyTorch 버전 맞추기</b>RTX 5080은 최신 세대라 구버전 PyTorch로는 아예 안 돈다. <code>get_device_capability()</code>가 <code>(12, 0)</code>으로 나오는지 확인하는 게 모든 것의 전제</td><td><span class="no">관문: 여기 막히면 이후 전부 무의미</span></td></tr>
+      <tr><td><b>I3</b></td><td>Docker + NVIDIA 공식 컨테이너: 설치 삽질을 크게 줄일 수 있다</td><td>컨테이너 실행</td></tr>
+      <tr><td><b>I4</b></td><td>Isaac Sim / Isaac Lab 설치 + <b>재현 절차서 작성</b></td><td>절차서</td></tr>
+      <tr><td><b>I5</b></td><td>실험 운영: 예약 규칙, 체크포인트 백업, GPU 2장을 각각 다른 실험에 쓰기</td><td>운영 규칙</td></tr>
+      <tr><td><b>I6</b></td><td>AWS: GPU 할당량 신청(승인에 며칠 걸림), 저렴한 Spot 사용법, 비용 관리</td><td>할당량 승인</td></tr>
+      <tr><td><b>I7</b></td><td><b>깃 · 이슈 · 자동화</b>이슈 하나가 브랜치 하나, 브랜치 하나가 PR 하나. 라벨·마일스톤 자동 분류와 웹 배포 관문</td><td>협업 규칙 가동</td></tr>
+      <tr><td><b>I8</b></td><td>예산 · 일정 · 대외 일정 관리</td><td>일정 운영</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ══════════════════ 구간 C ══════════════════ -->
+<section class="slide" data-stage="구간 C · 실전" data-title="다시 다 같이: 실전" data-id="C">
+  <div class="head"><div class="sid">구간 C</div><h2>다시 다 같이: 실전</h2></div>
+  <p class="oneline">여기부터는 학습이 아니라 프로젝트 실행입니다.</p>
+  <div class="blk">
+    <p>각 단계에 <strong>통과 조건</strong>이 있습니다. 넘지 못하면 다음으로 가지 않습니다.
+    이렇게 하는 이유는 두 가지입니다. <strong>① 안 되는 걸 붙잡고 5개월을 쓰지 않기 위해</strong>,
+    <strong>② 실패했을 때 “왜 실패했는지”가 곧 결과물이 되게 하기 위해</strong>서입니다.</p>
+  </div>
+  <pre class="dia">C1 환경 재현     공개 정책을 우리 환경에서 그대로 돌린다
+   ↓
+C2 기준 정책     이후 모든 비교의 기준을 만들고 <i>고정</i>한다
+   ↓
+C3 보상 실험     보상 항목을 하나씩 바꿔본다
+   ↓
+C4 랜덤화 실험   랜덤화를 하나씩 추가하며 손실을 기록한다
+   ↓
+C5 커스텀 지형   우리가 만든 지형에서 학습시킨다
+   ↓
+<b>C6 교차검증</b>     다른 물리 엔진에서도 걷는가  ← <i>실기 전 마지막 관문</i>
+   ↓
+C7 실기 배포     실제 로봇에 올린다
+   ↓
+C8 최종 보고     지표 + 시연 영상 + 한계까지 정직하게</pre>
+</section>
+
+<!-- C1 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C1 환경 재현" data-id="C1">
+  <div class="head"><div class="sid">C1 · 선행 구간 A 전체 + I4</div><h2>환경 재현: 공개 정책 한 번 완주</h2></div>
+  <p class="oneline">전원이 각자, 공개된 Go2 학습을 처음부터 끝까지 한 번 돌려봅니다.</p>
+  <div class="blk">
+    <div class="lbl">왜 전원이 하나</div>
+    <p>한 사람만 환경을 알면 그 사람이 5개월 내내 병목이 됩니다.
+    그리고 자기 손으로 한 번 돌려보지 않으면, 나중에 결과 이야기를 할 때 감이 안 잡힙니다.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>공개 정책이 우리 환경에서 <strong>원본과 같은 학습 곡선</strong>으로 재현된다.
+    그리고 <strong>다른 팀원이 절차서만 보고 똑같이 재현</strong>할 수 있다.</p>
+  </div>
+</section>
+
+<!-- C2 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C2 기준 정책 확립" data-id="C2">
+  <div class="head"><div class="sid">C2</div><h2>기준 정책 확립</h2></div>
+  <p class="oneline">앞으로 모든 실험을 비교할 “기준선”을 만듭니다.</p>
+  <div class="blk">
+    <p>기본 험지 정책을 학습시키고 여섯 지표를 <strong>숫자로</strong> 기록합니다.
+    이후 “좋아졌다 / 나빠졌다”는 전부 이 숫자와의 비교로 말합니다.</p>
+  </div>
+  <div class="box danger">
+    <div class="bt">여기서 지표를 고정하고 이후 변경하지 않습니다</div>
+    <p>중간에 측정 방법을 바꾸면 앞뒤 실험을 비교할 수 없게 됩니다.
+    그러면 그때까지 한 실험이 전부 무의미해집니다. <strong>고정하기 전에 충분히 논의하세요.</strong></p>
+  </div>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>랜덤 시드를 바꿔도 지표가 안정적으로 재현된다. (한 번 잘 나온 게 아니라 항상 그렇게 나온다.)</p>
+  </div>
+</section>
+
+<!-- C3 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C3 보상 단일변수 실험" data-id="C3">
+  <div class="head"><div class="sid">C3</div><h2>보상 실험: 한 번에 하나씩</h2></div>
+  <p class="oneline">보상 항목을 하나씩만 바꾸며 지표가 어떻게 변하는지 기록합니다.</p>
+  <div class="blk">
+    <p>A10에서 CartPole로 예측했던 것을, 이제 진짜 로봇 학습에서 검증합니다.</p>
+  </div>
+  <div class="box danger">
+    <div class="bt">한 번에 하나만</div>
+    <p>두 개를 동시에 바꾸면 <strong>어느 쪽 효과인지 영원히 모릅니다.</strong>
+    급해 보여도 이 규칙을 깨면 그때까지의 실험이 해석 불가능해집니다.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>각 보상 항목의 효과를 <strong>지표 변화로</strong> 설명할 수 있다.</p>
+  </div>
+</section>
+
+<!-- C4 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C4 랜덤화 단일변수 실험" data-id="C4">
+  <div class="head"><div class="sid">C4</div><h2>도메인 랜덤화 실험</h2></div>
+  <p class="oneline">랜덤화를 하나씩 추가하며 시뮬 성능이 얼마나 떨어지는지 기록합니다.</p>
+  <div class="blk">
+    <p>A14에서 본 “1.1 → 0.9 m/s” 같은 표를 우리 손으로 만듭니다.
+    각 랜덤화가 <strong>얼마의 대가를 치르고 얼마의 강건성을 사는지</strong>를 숫자로 남깁니다.</p>
+  </div>
+  <div class="box deliver">
+    <div class="bt">이 표 자체가 발표 자료가 됩니다</div>
+    <p>“랜덤화를 이만큼 넣었습니다”가 아니라 “각 항목이 이만큼의 비용으로 이만큼을 샀습니다”라고 말할 수 있게 됩니다.
+    심사에서 가장 설득력 있는 형태입니다.</p>
+  </div>
+</section>
+
+<!-- C5 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C5 커스텀 지형" data-id="C5">
+  <div class="head"><div class="sid">C5</div><h2>우리가 만든 지형에서 학습</h2></div>
+  <p class="oneline">ENV 분야에서 만든 지형을 실제 학습에 투입합니다.</p>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>기준 정책 대비 <strong>무엇이 어떻게 달라졌는지를 지표로 설명</strong>할 수 있다.
+    “더 잘 걷는 것 같다”는 통과가 아닙니다.</p>
+  </div>
+</section>
+
+<!-- C6 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C6 다른 엔진에서 검증 · 관문" data-id="C6">
+  <div class="head"><div class="sid">C6 · 관문</div><h2>다른 물리 엔진에서 검증</h2></div>
+  <p class="oneline">Isaac Lab에서 배운 정책을 MuJoCo로 옮겨 걷는지 봅니다. 실기 전 마지막 시험입니다.</p>
+  <div class="blk">
+    <div class="lbl">왜 두 개의 시뮬레이터를 쓰나</div>
+    <p>정책이 <strong>“그 시뮬레이터에서만 통하는 꼼수”</strong>를 배웠을 수 있기 때문입니다.
+    엔진마다 접촉 계산과 마찰 처리가 미묘하게 달라서, A엔진에서 완벽한 정책이 B엔진에서 픽 쓰러지는 일이 흔합니다.</p>
+    <p>A6에서 만들어둔 MuJoCo 코드가 여기서 쓰입니다.</p>
+  </div>
+  <div class="box danger">
+    <div class="bt">여기를 통과하지 못하면 실기는 볼 것도 없습니다</div>
+    <p>다른 시뮬레이터에서 무너지는 정책은 <strong>실제 로봇에서 확실히 무너집니다.</strong>
+    수천만 원짜리 장비를 그 상태로 시험하지 않습니다.</p>
+  </div>
+  <div class="box myth">
+    <div class="bt">덤</div>
+    <p>“학습 환경과 평가 환경을 분리했다”는 구조 자체가 <strong>발표에서 방어 가능한 강점</strong>이 됩니다.</p>
+  </div>
+</section>
+
+<!-- C7 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C7 실기 배포" data-id="C7">
+  <div class="head"><div class="sid">C7 · 선행 A16 + I7 + C6</div><h2>실제 로봇에 올리기</h2></div>
+  <p class="oneline">순서를 하나라도 건너뛰면 장비가 부서집니다.</p>
+  <div class="blk">
+    <div class="lbl">순서</div>
+    <ol>
+      <li><strong>로봇을 매답니다.</strong> 발이 땅에 닿으면 안 됩니다</li>
+      <li>유선으로 연결하고 통신이 되는지 확인합니다 (로봇 상태가 들어오는지)</li>
+      <li><strong>내장 제어기를 끕니다.</strong> 이 순간 모터 힘이 빠져 로봇이 주저앉습니다. 매달았으니 괜찮습니다</li>
+      <li>현재 자세에서 학습 시 기본 자세로 <strong>2~3초에 걸쳐 천천히</strong> 옮깁니다</li>
+      <li>정책 추론을 초당 50번 돌리기 시작합니다</li>
+      <li><span class="no">시뮬과 실기에서 관측값을 각각 출력해 숫자를 비교합니다</span>배포 버그의 80%가 여기서 잡힙니다</li>
+      <li>공중에서 “정지” 명령으로 자세 유지 확인 → 저속 전진 확인 → <strong>그 다음에야 땅에 내립니다</strong></li>
+    </ol>
+  </div>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>시뮬과 실기의 차이를 <strong>지표로 정량화</strong>한다.
+    성공이든 실패든 <strong>숫자가 결과물</strong>입니다. 잘 안 됐어도 “얼마나 어떻게 안 됐는지”가 우리 기여입니다.</p>
+  </div>
+</section>
+
+<!-- C8 -->
+<section class="slide" data-stage="구간 C · 실전" data-title="C8 최종 보고와 시연" data-id="C8">
+  <div class="head"><div class="sid">C8</div><h2>최종 보고와 시연</h2></div>
+  <p class="oneline">정량 지표 + 비교 시연 영상 + 한계까지 정직하게.</p>
+  <div class="blk">
+    <p><strong>한계를 적는 것이 약점이 아닙니다.</strong> “어디까지 됐고 어디서부터 안 됐는지”를 정확히 아는 팀이
+    “다 됐습니다”라고 말하는 팀보다 신뢰받습니다. 그리고 그게 다음 사람이 이어받을 수 있는 형태입니다.</p>
+  </div>
+  <div class="box check">
+    <div class="bt">통과 조건</div>
+    <p>발표 리허설 <strong>1회 이상</strong>. 처음 말해보는 발표는 반드시 무너집니다.</p>
+  </div>
+</section>
+
+<!-- 부록 -->
+<section class="slide" data-stage="부록" data-title="일정이 밀리면 자르는 순서" data-id="">
+  <div class="head"><div class="sid">부록</div><h2>일정이 밀리면 자르는 순서</h2></div>
+  <p class="oneline">뒤에서부터 자릅니다. 앞을 자르면 뒤가 전부 무너집니다.</p>
+  <div class="cards">
+    <div class="mini"><div class="n">1순위로 자름</div><h4>3DGS 확장축</h4><p>실제 공간을 3D로 복원하는 부분. 애초에 “되면 하는” 조건부 항목이었습니다.</p></div>
+    <div class="mini"><div class="n">2순위</div><h4>커스텀 지형 (C5)</h4><p>기준 정책만으로도 발표는 됩니다. 우리 지형은 있으면 좋은 것입니다.</p></div>
+    <div class="mini"><div class="n">3순위</div><h4>실험 라운드 축소 (C3·C4)</h4><p>항목 수를 줄이되 <strong>표 형식은 남깁니다.</strong> 표가 있어야 “체계적으로 했다”가 됩니다.</p></div>
+    <div class="mini"><div class="n">4순위</div><h4>실기 배포 (C7)</h4><p>못 하면 <strong>“왜 못 했는지”가 결과물</strong>이 됩니다. 장비를 못 구한 것도 실증 결과의 일부입니다.</p></div>
+  </div>
+  <div class="box danger">
+    <div class="bt">절대 안 자르는 것</div>
+    <p><strong>구간 A 전체 · C1(환경 재현) · C2(기준 정책) · C6(교차검증) · A15(지표) · A16(안전)</strong></p>
+    <p>이게 없으면 프로젝트가 아니라 “뭔가 해봤다”가 됩니다.</p>
+  </div>
+</section>
+
+<!-- 마무리 -->
+<section class="slide" data-stage="부록" data-title="마무리" data-id="">
+  <div class="head"><div class="sid">끝</div><h2>기억할 것 세 가지</h2></div>
+  <div class="cards">
+    <div class="mini"><div class="n">01</div><h4>순서에는 이유가 있습니다</h4>
+      <p>A5 없이 A6은 손만 움직이고, A12 없이 A13은 글자만 읽히고, C6 없이 C7은 로봇을 부숩니다.
+      막히면 앞으로 돌아가는 게 빠릅니다.</p></div>
+    <div class="mini"><div class="n">02</div><h4>모르는 걸 말하는 게 가장 싸게 먹힙니다</h4>
+      <p>회의에서 모르는 단어가 나오면 그 자리에서 물어보세요. 다섯 명 중 한 명이 물으면 보통 세 명이 몰랐던 겁니다.
+      넘어가면 그 세 명이 각자 집에서 두 시간씩 헤맵니다.</p></div>
+    <div class="mini"><div class="n">03</div><h4>코드는 AI가 씁니다. 판정은 사람이 합니다</h4>
+      <p>강화학습은 틀려도 에러를 안 냅니다. 이상한 걸 알아보는 눈: 숫자 감각표(A11)와 증상 진단표(A10): 
+      그 두 개가 우리가 가진 전부입니다.</p></div>
+  </div>
+  <div class="box check">
+    <div class="bt">한 줄로</div>
+    <p>로봇공학을 배우는 게 아니라, <strong>이 프로젝트가 실제로 쓰는 것만</strong> 배웁니다.
+    물리를 먼저, 강화학습을 나중에, 그리고 구간 A는 다섯 명이 똑같이.</p>
+  </div>
+</section>
+
+</main>
+
+</div><!-- /.col -->
+</div><!-- /.shell -->
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="navbar">
+  <div class="row">
+    <button class="nbtn prev" id="prevBtn" type="button">
+      <span class="d">← 이전</span><span class="t" id="prevT"></span>
+    </button>
+    <button class="nbtn next" id="nextBtn" type="button">
+      <span class="d">다음 →</span><span class="t" id="nextT"></span>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var bar = document.getElementById('bar');
+  var counter = document.getElementById('counter');
+  var chip = document.getElementById('stageChip');
+  var pct = document.getElementById('pct');
+  var prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn');
+  var prevT = document.getElementById('prevT'), nextT = document.getElementById('nextT');
+  var side = document.getElementById('side');
+  var backdrop = document.getElementById('backdrop');
+  var tocList = document.getElementById('tocList');
+  var items = [];
+  var cur = 0;
+
+  function isNarrow(){ return window.matchMedia('(max-width:900px)').matches; }
+
+  function label(i){
+    var s = slides[i]; if(!s) return ': ';
+    var id = s.getAttribute('data-id');
+    return (id ? id + ' · ' : '') + s.getAttribute('data-title');
+  }
+  function slug(i){
+    var id = slides[i].getAttribute('data-id');
+    return id ? id.toLowerCase().replace(/[^a-z0-9]/g,'') : 's' + i;
+  }
+
+  window.go = function(i){
+    if(i < 0 || i >= slides.length) return;
+    slides[cur].classList.remove('on');
+    cur = i;
+    slides[cur].classList.add('on');
+
+    var p = Math.round((i+1)/slides.length*100);
+    bar.style.width = p + '%';
+    pct.textContent = p + '%';
+    counter.textContent = (i+1) + ' / ' + slides.length;
+    chip.textContent = slides[i].getAttribute('data-stage');
+
+    prevBtn.disabled = (i === 0);
+    nextBtn.disabled = (i === slides.length-1);
+    prevT.textContent = i > 0 ? label(i-1) : '처음';
+    nextT.textContent = i < slides.length-1 ? label(i+1) : '끝';
+
+    items.forEach(function(b,j){
+      b.classList.toggle('cur', j === i);
+      b.classList.toggle('done', j < i);
+    });
+    var c = items[i];
+    if(c && c.scrollIntoView) c.scrollIntoView({block:'nearest'});
+
+    history.replaceState(null,'','#'+slug(i));
+    window.scrollTo(0,0);
+  };
+
+  prevBtn.addEventListener('click', function(){ go(cur-1); });
+  nextBtn.addEventListener('click', function(){ go(cur+1); });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ closeToc(); return; }
+    var t = e.target.tagName;
+    if(t === 'INPUT' || t === 'TEXTAREA') return;
+    if(e.key === 'ArrowRight') go(cur+1);
+    if(e.key === 'ArrowLeft')  go(cur-1);
+  });
+
+  // 사이드바 목차 생성
+  var lastStage = null;
+  slides.forEach(function(s,i){
+    var st = s.getAttribute('data-stage');
+    if(st !== lastStage){
+      var g = document.createElement('div');
+      g.className = 'g'; g.textContent = st;
+      tocList.appendChild(g); lastStage = st;
+    }
+    var b = document.createElement('button');
+    b.className = 'item'; b.type = 'button';
+    var k = document.createElement('span');
+    k.className = 'k'; k.textContent = s.getAttribute('data-id') || '·';
+    var n = document.createElement('span');
+    n.className = 'n'; n.textContent = s.getAttribute('data-title');
+    b.appendChild(k); b.appendChild(n);
+    b.addEventListener('click', function(){ go(i); if(isNarrow()) closeToc(); });
+    tocList.appendChild(b);
+    items[i] = b;
+  });
+
+  document.getElementById('tocBtn').addEventListener('click', function(){
+    side.classList.add('on'); backdrop.classList.add('on');
+  });
+  backdrop.addEventListener('click', closeToc);
+  window.closeToc = function(){
+    side.classList.remove('on'); backdrop.classList.remove('on');
+  };
+  window.addEventListener('resize', function(){ if(!isNarrow()) closeToc(); });
+
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    var r = document.documentElement, c = r.getAttribute('data-theme');
+    if(!c) c = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    r.setAttribute('data-theme', c === 'dark' ? 'light' : 'dark');
+  });
+
+  // 해시로 시작 위치
+  var start = 0, h = location.hash.replace('#','');
+  if(h){ for(var i=0;i<slides.length;i++){ if(slug(i)===h){ start = i; break; } } }
+  go(start);
+})();
+</script>
+</body>
+</html>

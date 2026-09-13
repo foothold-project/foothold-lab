@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>시뮬레이션 RL 레퍼런스 · FOOTHOLD</title>
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;else document.documentElement.dataset.theme="light"}catch(e){}</script>
+<style>/* ============================================================
+   FOOTHOLD 브랜드 스타일시트 · 모든 페이지가 공유
+   Primary  : 딥 틸그린  (지형·필드 로보틱스)
+   Accent   : 세이프티 오렌지 (주의·강조)
+   Typography: Pretendard · H1 38/800 · H2 24/700 · 본문 16/400 · 캡션 12.5
+   ============================================================ */
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1e2528; --sub:#5c6870; --line:#e4e1da;
+  --brand:#0e5e52; --brand-ink:#0a4a41; --brand-soft:#e2efec; --brand-line:#bcd8d1;
+  --accent:#c65214; --accent-soft:#f9ece1;
+  --code:#efede8;
+  --shadow:0 1px 2px rgba(30,37,40,.05),0 8px 24px -12px rgba(30,37,40,.12);
+  --rail-w:250px; --radius:14px;
+  --tb1-h:54px; --tb2-h:44px; --tb-h:100px;
+}
+*{box-sizing:border-box}
+
+/* ---------- 레이아웃 ---------- */
+.shell{display:flex;max-width:1240px;margin:0 auto}
+main{flex:1;min-width:0;padding:36px 52px 120px}
+main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 18px)}
+
+/* ---------- 상단 고정바 (2단) ---------- */
+.topbar{position:sticky;top:0;z-index:60;background:var(--panel);
+  border-bottom:1px solid var(--line)}
+.tbin{max-width:1240px;margin:0 auto;padding:0 22px}
+.tb1 .tbin{display:flex;align-items:center;gap:20px;height:var(--tb1-h)}
+.tb2{border-top:1px solid var(--line);background:var(--bg)}
+
+/* 1단 · 과목 탭 */
+.tabs{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{text-decoration:none;color:var(--sub);font-size:15px;font-weight:700;
+  padding:6px 15px;border-radius:9px;white-space:nowrap}
+.tabs a:hover{color:var(--ink);background:var(--code)}
+.tabs a.on{color:var(--brand-ink);background:var(--brand-soft)}
+
+/* 2단 · 활성 탭의 페이지 알약 */
+.pills{display:flex;align-items:center;gap:3px;height:var(--tb2-h);
+  overflow-x:auto;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pills a{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;
+  text-decoration:none;color:var(--sub);font-size:15px;font-weight:600;
+  padding:5px 13px;border-radius:999px}
+.pills a .pn{font-size:10.56px;font-weight:800;color:var(--brand);opacity:.7;
+  font-variant-numeric:tabular-nums}
+.pills a:hover{color:var(--ink);background:var(--code)}
+.pills a.here{color:var(--brand-ink);background:var(--brand-soft)}
+.pills a.here .pn{opacity:1}
+.pills a .pc{font-size:11px;font-weight:700;color:var(--sub);opacity:.8;letter-spacing:.01em}
+.pills a:hover .pc,.pills a.here .pc{opacity:1}
+
+/* ---------- 좌측 레일 = 이 페이지 목차 전용 ---------- */
+nav.rail{width:var(--rail-w);flex-shrink:0;position:sticky;top:var(--tb-h);
+  height:calc(100vh - var(--tb-h));overflow-y:auto;
+  padding:28px 20px 40px;border-right:1px solid var(--line)}
+nav.rail.notoc{display:none}
+
+/* ---------- 히어로 ---------- */
+.hero{margin-bottom:44px;padding:34px 38px;background:var(--panel);
+  border:1px solid var(--line);border-radius:20px;
+  position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;
+  border-radius:50%;pointer-events:none}
+.eyebrow{font-size:12.16px;font-weight:800;color:var(--brand);letter-spacing:.14em;text-transform:uppercase}
+.hero h1{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:.25em 0 .35em}
+.hero .lede{color:var(--sub);max-width:62ch;margin:0;font-size:16.5px}
+.stamp{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--sub);
+  border:1px solid var(--line);border-radius:999px;padding:3px 13px;background:var(--bg)}
+
+/* ---------- 본문 타이포 ---------- */
+h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:60px 0 10px;
+  padding-top:26px;border-top:1px solid var(--line)}
+h2 .n{color:var(--brand);margin-right:9px;font-variant-numeric:tabular-nums}
+h3{font-size:17.5px;font-weight:700;margin:32px 0 6px}
+p{margin:.5em 0 1em}
+.sub{color:var(--sub)}
+a{color:var(--brand-ink)}
+main a:hover{text-decoration-thickness:2px}
+ul,ol{padding-left:22px;margin:.4em 0 1em}
+li{margin:4px 0}
+strong{font-weight:700}
+code{background:var(--code);border-radius:6px;padding:2px 6px;font-size:.86em;
+  font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:var(--code);border-radius:12px;padding:14px 18px;overflow-x:auto;
+  font-size:13px;line-height:1.6}
+pre code{background:none;padding:0}
+
+/* ---------- 명령 해부 (pre 바로 아래 붙는 토큰 설명) ---------- */
+.cmd{margin:14px 0 22px}
+.cmd pre{margin:0;border-radius:12px 12px 0 0}
+.cmd .why{font-size:15px;color:var(--sub);margin:0 0 6px;padding-left:2px}
+.anno{border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;
+  background:var(--panel);font-size:13px;overflow:hidden}
+.anno>div{display:grid;grid-template-columns:230px 1fr;gap:0 14px;
+  padding:7px 14px;border-bottom:1px solid var(--line)}
+.anno>div:last-child{border-bottom:0}
+.anno code{background:none;padding:0;color:var(--brand-ink);font-weight:700;font-size:12.5px}
+@media (max-width:640px){.anno>div{grid-template-columns:1fr;gap:1px}}
+
+/* ---------- 용어 정의 (처음 나오는 개념) ---------- */
+dl.defs{margin:14px 0 20px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--panel);overflow:hidden}
+dl.defs>div{display:grid;grid-template-columns:150px 1fr;gap:0 16px;
+  padding:11px 16px;border-bottom:1px solid var(--line)}
+dl.defs>div:last-child{border-bottom:0}
+dl.defs dt{font-weight:800;color:var(--brand-ink);font-size:15px;padding-top:1px}
+dl.defs dd{margin:0;font-size:15px;color:var(--ink)}
+@media (max-width:640px){dl.defs>div{grid-template-columns:1fr;gap:2px}}
+
+/* ---------- 표 ---------- */
+.tablewrap{overflow-x:auto;margin:16px 0 22px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);
+  text-align:left;padding:11px 16px;border-bottom:2px solid var(--line);white-space:nowrap;
+  background:var(--code)}
+td{padding:10px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.pos{color:var(--brand-ink);font-weight:600}
+td.neg{color:var(--accent);font-weight:600}
+
+/* ---------- 콜아웃 ---------- */
+.call{border:1px solid var(--brand-line);
+  background:var(--brand-soft);border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 20px;margin:18px 0}
+.call.trap{border-color:var(--accent-soft);border-left-color:var(--accent);background:var(--accent-soft)}
+.call .t{font-size:11.68px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--brand-ink);margin-bottom:3px}
+.call.trap .t{color:var(--accent)}
+.call p{margin:.3em 0}
+
+/* ---------- 카드 ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:18px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;}
+.card h4{margin:0 0 5px;font-size:15px;font-weight:700}
+.card p{margin:0;font-size:15px;color:var(--sub)}
+.card .who{display:inline-block;font-size:11.68px;font-weight:800;color:var(--brand-ink);
+  background:var(--brand-soft);border-radius:999px;padding:2px 11px;margin-bottom:9px}
+a.card{display:block;text-decoration:none;color:var(--ink)}
+a.card:hover{border-color:var(--brand-line)}
+a.card .go{color:var(--brand);font-weight:700;font-size:15px}
+
+/* ---------- 페이즈 바 ---------- */
+.phasebar{display:flex;margin:22px 0 10px;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--line);font-size:15px;text-align:center;background:var(--panel);}
+.phasebar>div{flex:1;padding:15px 12px}
+.phasebar>div+div{border-left:1px solid var(--line)}
+.phasebar b{display:block;font-size:14.5px}
+.phasebar .now{background:var(--brand-soft);}
+.phasebar small{color:var(--sub);font-size:12.5px}
+
+/* ---------- 푸터 ---------- */
+footer{margin-top:80px;font-size:12.5px;color:var(--sub);
+  border-top:1px solid var(--line);padding-top:18px;display:flex;gap:16px;flex-wrap:wrap}
+footer a{color:var(--sub)}
+
+/* ---------- 페이지 하단 이동 ---------- */
+.pagerow{display:flex;gap:14px;margin-top:56px}
+.pagerow a{flex:1;display:block;text-decoration:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;color:var(--ink);}
+.pagerow a:hover{border-color:var(--brand-line)}
+.pagerow .dir{font-size:11.68px;font-weight:800;letter-spacing:.09em;color:var(--sub);text-transform:uppercase}
+.pagerow .pt{font-weight:700;color:var(--brand-ink)}
+.pagerow a.next{text-align:right}
+
+@media (max-width:920px){
+  .shell{flex-direction:column}
+  nav.rail{position:sticky;top:var(--tb-h);z-index:50;width:auto;height:auto;overflow:visible;
+    padding:0;border-right:0;border-bottom:1px solid var(--line);background:var(--bg)}
+  nav.rail .toc{display:none;background:var(--panel);padding:10px 12px 14px;
+    max-height:52vh;overflow-y:auto}
+  nav.rail.open .toc{display:flex}
+  main{padding:28px 20px 80px}
+  .hero{padding:26px 24px}
+  .hero h1{font-size:29px}
+  .phasebar{flex-direction:column}
+  .phasebar>div+div{border-left:0;border-top:1px solid var(--line)}
+  .pagerow{flex-direction:column}
+}
+
+/* ---------- 학습 자료: 명령 종류 배지 · 스텝 번호 · 성공 판정 ---------- */
+.tag{display:inline-block;font-size:10.56px;font-weight:800;letter-spacing:.05em;border-radius:999px;
+  padding:1px 8px;margin-right:7px;vertical-align:1px;
+  background:var(--code);color:var(--sub);border:1px solid var(--line)}
+.tag.lx{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-soft)}
+.tag.ros{background:var(--brand-soft);color:var(--brand-ink);border-color:var(--brand-line)}
+.step{font-size:12.16px;font-weight:800;color:var(--brand);letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;margin-right:9px}
+.chk{font-size:15px;color:var(--brand-ink);background:var(--brand-soft);
+  border:1px solid var(--brand-line);border-radius:10px;padding:8px 14px;margin:10px 0 22px}
+.chk b{font-weight:800;margin-right:6px}
+.slot{border:1.5px dashed var(--line);border-radius:var(--radius);padding:20px 22px;
+  margin:18px 0;color:var(--sub);font-size:15px;background:transparent}
+
+/* ---------- 학습 자료: 작업 폴더(패키지) 배지 ---------- */
+.tag.ch{background:transparent;color:var(--brand-ink);border:1px dashed var(--brand-line);
+  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+.tag.fh{background:transparent;color:var(--accent);border:1px dashed var(--accent);
+  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+.tag.nb{background:transparent;color:var(--sub);border:1px dashed var(--line);
+  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+.wherebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;color:var(--sub);
+  background:var(--code);border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:12px 0 20px}
+.wherebar b{color:var(--ink);font-weight:800}
+
+/* ---------- 확장형 목차 (스텝이 있는 페이지에서만 JS가 생성) ---------- */
+.toc a.hasSub{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.subtoc{display:none;margin:1px 0 5px}
+.subtoc.open{display:block}
+.subtoc a{display:flex;gap:6px;color:var(--sub);text-decoration:none;font-size:12.16px;
+  line-height:1.45;padding:4px 8px 4px 14px;border-left:2px solid var(--line);margin-left:6px}
+.subtoc a:hover{color:var(--ink);background:var(--code)}
+.subtoc a .sn{flex:0 0 auto;min-width:34px;font-weight:800;color:var(--brand);
+  font-variant-numeric:tabular-nums;font-size:11px;padding-top:1px}
+.subtoc a .st{flex:1 1 auto;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+.subtoc a.on{color:var(--brand-ink);border-left-color:var(--brand);font-weight:600;background:var(--brand-soft)}
+.subtoc a.now{border-left-color:var(--accent)}
+.subtoc a.now .sn{color:var(--accent)}
+.subtoc a.now .st::after{content:"지금";display:inline-block;font-size:10px;font-weight:800;
+  color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:0 6px;margin-left:5px;
+  vertical-align:1px}
+
+main h4{font-size:15px;font-weight:700;margin:26px 0 4px;color:var(--brand-ink)}
+main h5{font-size:15px;font-weight:800;margin:22px 0 4px;color:var(--sub);letter-spacing:.02em}
+.subtoc a.lv2{padding-left:28px;font-size:11.68px}
+.subtoc a.lv2 .sn{min-width:40px;color:var(--sub)}
+
+/* ---------- 스텝별 작업 폴더 배지 ---------- */
+h3 .dirtag, h4 .dirtag{float:right;font-size:11px;font-weight:600;letter-spacing:0;
+  font-family:Consolas,"Cascadia Mono",monospace;padding:2px 9px;border-radius:999px;
+  border:1px dashed var(--line);color:var(--sub);background:var(--panel);
+  margin-left:12px;position:relative;top:3px}
+h3 .dirtag.pkg, h4 .dirtag.pkg{color:var(--brand-ink);border-color:var(--brand-line);background:var(--brand-soft)}
+h3 .dirtag.nb, h4 .dirtag.nb{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:640px){h3 .dirtag,h4 .dirtag{float:none;display:block;margin:6px 0 0;width:fit-content}}
+
+/* ---------- 조건부 예비책 (해당될 때만 펴 보는 블록) ---------- */
+details.ifonly{border:1px solid var(--line);border-radius:0 var(--radius) var(--radius) 0;
+  background:var(--code);margin:18px 0;padding:0}
+details.ifonly>summary{cursor:pointer;list-style:none;padding:12px 18px;font-size:15px;color:var(--sub);
+  display:flex;align-items:baseline;gap:9px}
+details.ifonly>summary::-webkit-details-marker{display:none}
+details.ifonly>summary::before{content:"▸";color:var(--sub);font-size:12.16px;flex-shrink:0}
+details.ifonly[open]>summary::before{content:"▾"}
+details.ifonly>summary b{color:var(--ink);font-weight:800}
+details.ifonly>summary .skip{margin-left:auto;font-size:11.68px;font-weight:800;letter-spacing:.05em;
+  color:var(--brand-ink);background:var(--brand-soft);border:1px solid var(--brand-line);
+  border-radius:999px;padding:1px 10px;white-space:nowrap}
+details.ifonly>.body{padding:0 18px 6px;border-top:1px solid var(--line)}
+details.ifonly>.body>.cmd:first-child{margin-top:16px}
+
+/* ---------- 연구 기록 게시판 (research.html) ---------- */
+td.no{color:var(--brand);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+td .bt{font-weight:700;color:var(--brand-ink);text-decoration:none}
+td .bt:hover{text-decoration:underline}
+.badge{display:inline-block;font-size:11.68px;font-weight:800;border-radius:999px;
+  padding:1px 10px;white-space:nowrap;border:1px solid transparent}
+.badge.run{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.badge.done{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
+.badge.rej{color:var(--sub);background:var(--code);border-color:var(--line)}
+
+@media (max-width:640px){
+  :root{--tb1-h:50px; --tb2-h:40px; --tb-h:92px}
+  .tb1 .tbin{gap:12px}
+}
+
+/* ---------- 그림 (인라인 SVG 차트) · 영상 ---------- */
+/* SVG 안에서 쓰는 선·글자 클래스 · 색을 토큰으로 받아 테마를 따라간다 */
+.cg{stroke:var(--line);stroke-width:1}
+.ca{stroke:var(--line);stroke-width:1.2}
+.cb{stroke:var(--ink);stroke-width:1.4;stroke-dasharray:4 3;opacity:.45}
+.cc{stroke:var(--sub);stroke-width:1;stroke-dasharray:2 4;opacity:.7}
+.ct{fill:var(--sub);font-size:10.56px;font-variant-numeric:tabular-nums}
+.cl{fill:var(--sub);font-size:11px}
+
+.fig{margin:18px 0 24px;padding:18px 20px 12px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);}
+.fig svg{display:block}
+.fig figcaption{font-size:15px;color:var(--sub);margin-top:10px}
+.fig figcaption b{display:block;color:var(--ink);font-weight:800;font-size:15px;margin-bottom:2px}
+.leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.16px;color:var(--sub);margin-top:12px}
+.leg span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.leg i{width:20px;height:0;border-top:2.5px solid currentColor;flex-shrink:0}
+.leg .a{color:var(--accent)}
+.leg .m{color:var(--sub)}
+.leg .m i{border-top-style:dashed}
+.leg .b{color:var(--brand)}
+
+.vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:18px 0 22px}
+.vids figure{margin:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden}
+.vids video{display:block;width:100%;height:auto;background:#000}
+.vids figcaption{font-size:12.5px;color:var(--sub);padding:10px 14px 13px;line-height:1.6}
+.vids figcaption b{display:block;color:var(--brand-ink);font-size:15px;font-weight:800}
+
+.was{margin:14px 0;padding:12px 16px 13px;
+  background:var(--panel);border-radius:0 var(--radius) var(--radius) 0}
+.was .t{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--accent);
+  margin-bottom:7px;text-transform:none}
+.was p{margin:0;font-size:15px;color:var(--sub);line-height:1.75;
+  text-decoration:line-through;text-decoration-color:var(--line);text-decoration-thickness:1px}
+.was p+p{margin-top:8px}
+.was p strong{font-weight:700;color:var(--sub)}
+
+/* ---------- 작업현황: GitHub Project 보드형 표 (펼치는 행) ---------- */
+.board{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:var(--panel);margin:16px 0 26px}
+.board .bh,.board summary{display:grid;
+  grid-template-columns:minmax(0,1fr) 74px 94px 100px 76px 76px;gap:12px;align-items:center;
+  padding:11px 16px;font-size:15px;line-height:1.5}
+.board .bh{background:var(--code);color:var(--sub);text-transform:uppercase;
+  font-size:11px;font-weight:800;letter-spacing:.07em}
+.board details{border-top:1px solid var(--line)}
+.board summary{cursor:pointer;list-style:none}
+.board summary::-webkit-details-marker{display:none}
+.board summary:hover{background:var(--code)}
+.board details[open]>summary{background:var(--brand-soft)}
+.board summary .ti{font-weight:600;color:var(--ink)}
+.board summary .ti .bn{font-weight:800;color:var(--brand-ink);margin-right:7px}
+.board summary .ti::before{content:"\25B8";color:var(--sub);margin-right:8px;font-size:11px}
+.board details[open]>summary .ti::before{content:"\25BE"}
+.board summary .bs{font-size:12.5px;color:var(--sub)}
+.board .story{padding:2px 18px 20px;border-top:1px solid var(--line);background:var(--bg)}
+.board .story h5{margin:16px 0 3px;font-size:12.5px;font-weight:800;
+  color:var(--brand-ink);letter-spacing:.02em}
+.board .story p,.board .story ul{margin:.2em 0;font-size:15px;color:var(--sub);line-height:1.8}
+.board .story ul{padding-left:19px}
+.board .story strong{color:var(--ink)}
+@media (max-width:900px){
+  .board .bh{display:none}
+  .board summary{grid-template-columns:1fr;gap:6px}
+  .board summary .bs::before{content:attr(data-l) " ";font-weight:800;opacity:.7}
+}
+.badge.hyp{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
+
+/* ---------- 외부자료: 근거 표시 ([코드]/[README]/[미확인]) ---------- */
+.ev{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.02em;
+  border-radius:5px;padding:0 6px;white-space:nowrap;border:1px solid transparent;
+  vertical-align:1px}
+.ev::before{content:"["}
+.ev::after{content:"]"}
+.ev.code{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
+.ev.rm{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.ev.unk{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
+
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}
+html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}
+:root{--bg:var(--paper);--panel:var(--card);--sub:var(--ink-3);--line:var(--rule);--brand:var(--dim);--brand-ink:var(--dim-ink,#0b3d2e);--brand-soft:var(--dim-soft);--brand-line:var(--dim);--accent:var(--note);--accent-soft:var(--note-soft);--code:var(--paper-2);--shadow:none}body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink)}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+main{max-width:1040px;margin:0 auto;padding:1.5rem 1.4rem 4rem}.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.tw table{min-width:max-content}main{overflow-wrap:anywhere;word-break:keep-all}main pre,main code,main kbd,main samp{overflow-wrap:normal;word-break:normal}@media (max-width:640px){main.fh-doc .hero{overflow:hidden}}.fh-doc{font-size:15px;line-height:1.75;color:var(--ink)}.fh-doc p,.fh-doc li,.fh-doc .lede{font-size:15px;line-height:1.75}.fh-doc .why,.fh-doc .lede,.fh-doc .cmd .why{color:var(--ink-2)}.fh-doc h1,.fh-doc .hero h1{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.25}.fh-doc h2{font-size:20.48px;font-weight:800;line-height:1.75;margin:2.2rem 0 .7rem;padding-bottom:.35rem;border-bottom:1px solid var(--rule)}.fh-doc h3{font-size:16px;font-weight:800;line-height:1.75;margin:1.4rem 0 .5rem}.fh-doc h4{font-size:15px;font-weight:700;margin:1.1rem 0 .4rem}.fh-doc h5{font-size:13.5px;font-weight:700;margin:1rem 0 .35rem}.fh-doc .hero,.fh-doc .card,.fh-doc .box,.fh-doc .panel,.fh-doc .call,.fh-doc .stamp{border-radius:8px;border:1px solid var(--rule);background:var(--card)}.fh-doc table{border-collapse:collapse;width:100%}.fh-doc th,.fh-doc td{font-size:13.12px;line-height:1.75;border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left}.fh-doc th{font-weight:700;color:var(--ink-2)}.fh-doc code,.fh-doc kbd{font-family:ui-monospace,Consolas,monospace;font-size:13.5px;background:var(--paper-2);border-radius:3px;padding:0 .25em}.fh-doc pre{font-size:12.16px;line-height:1.7;background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:.9rem 1rem;overflow-x:auto}.fh-doc pre code{font-size:inherit;background:none;padding:0}.fh-doc .hero{background:none;border:0;border-radius:0;padding:0;margin:0 0 2.2rem;overflow:visible}.fh-doc .hero .eyebrow{font-size:.66rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:.4rem}.fh-doc h2 .n{color:var(--ink-3);font-weight:700;margin-right:.42rem;font-size:1em;letter-spacing:0}.fh-doc h2 .n::after{content:"."}.fh-doc th{text-transform:none;letter-spacing:0;font-size:13.12px;color:var(--ink-2);border-bottom:1px solid var(--rule);white-space:normal;padding:.5rem .7rem;background:none}.fh-doc h2{border-top:0}.fh-doc a{color:var(--dim)}</style>
+<style id="fh-cb">.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b;border-radius:8px;overflow:hidden}.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7d8693}.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}.fh-doc .cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;background:none;border:0;border-radius:0;font-family:'Consolas','D2Coding',ui-monospace,monospace;font-size:12.16px;line-height:1.7}.cb pre .c{color:#6f7a88}</style><script id="fh-cb-js">document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".copy");if(!b)return;var w=b.closest(".cb");var t=w&&w.querySelector("pre");if(!t)return;navigator.clipboard.writeText(t.innerText).then(function(){var o=b.textContent;b.textContent="복사됨";b.classList.add("done");setTimeout(function(){b.textContent=o;b.classList.remove("done")},1400)})});</script><!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<main class="fh-doc">
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-13 12:00 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+
+<div class="hero">
+  <div class="eyebrow">1단계 · 지금 ~ 10월 중간발표</div>
+  <h1>시뮬레이션 강화학습</h1>
+  <p class="lede">Isaac Lab에서 Go2 험지 보행 정책을 학습한다. 실기 배포는 하지 않고, 학습 곡선·정책 재생 영상·지형 난이도별 정량 평가가 중간발표의 산출물이다.</p>
+</div>
+
+<h2 id="stack"><span class="n">1</span>시뮬레이터 선택 · Isaac Lab 주력, 분기 규칙 포함</h2>
+<p>2026년 8월 기준 Go2 험지 RL의 사실상 표준은 <strong>NVIDIA Isaac Lab</strong>(2.1~2.3 + Isaac Sim 4.5/5.1)이다. <code>Isaac-Velocity-Rough-Unitree-Go2-v0</code> 태스크가 지형 커리큘럼·도메인 랜덤화·PPO(rsl_rl) 설정까지 포함해 기본 제공되므로, 7주 안에 "셋업"이 아니라 "실험"에 시간을 쓸 수 있는 유일한 선택이다.</p>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th>프레임워크</th><th>Go2 지원</th><th>Vulkan 필요</th><th>평가</th></tr>
+<tr><td><strong>Isaac Lab</strong></td><td class="pos">험지 태스크 내장</td><td class="neg">필요 (headless여도)</td><td>주력. 문서·커뮤니티 최다. VRAM 8GB+ 권장</td></tr>
+<tr><td>MuJoCo Playground (MJX)</td><td>Go1만 공식 · Menagerie Go2 모델로 포팅 필요</td><td class="pos">불필요 (CUDA만)</td><td>백업. 학습 매우 빠름, JAX 생태계 적응 필요</td></tr>
+<tr><td>Genesis</td><td class="pos">go2_train.py 예제 내장</td><td class="pos">불필요 (학습 시)</td><td>개인 실습·프로토타이핑용 서브 옵션</td></tr>
+<tr><td>legged_gym (Isaac Gym)</td><td>지원</td><td>불필요</td><td class="neg">기반 Isaac Gym이 deprecated · 신규 사용 비추천, 보상 함수 코드는 최고의 교재</td></tr>
+</table></div></div>
+<div class="call"><div class="t">컴퓨트 환경 · 지금은 RunPod, <strong>최종 결정은 아니다</strong></div>
+<p><strong>RunPod에서 Isaac Lab이 headless로 구동되는 것을 확인했고, 2026-08-28에 FOOTHOLD 팀 계정으로 결제를 시작해 현재 실험은 RunPod에서 돌리고 있다</strong> <span class="sub">확인됨</span>.</p>
+<p class="neg"><strong>단, 학습 컴퓨팅의 최종 선택(WS · RunPod · A6000)은 팀 결정 문서의 <code>D6</code>에서 「판단 대기」 상태다</strong> · 판단 근거는 「실험 병렬 필요성」. <strong>「RunPod으로 확정」이라고 적었던 예전 서술은 팀 결정 문서와 어긋나 정정한다.</strong></p>
+<p>셋업이 심하게 막히면 MuJoCo Playground(CUDA만 필요)가 백업 경로. 운영 방법은 05 RunPod 운영.</p></div>
+<div class="call trap"><div class="t">주의</div>
+<p>로컬 노트북(RTX 3060 6GB)은 Isaac 최소사양 미달 · 코드 편집·결과 확인용으로만 쓰고 학습은 RunPod 전용. VRAM이 작은 GPU를 고르면 험지 4096 env가 안 돌아가니 Pod 생성 시 VRAM 8GB+ 확인.</p></div>
+
+<h2 id="recipe"><span class="n">2</span>험지 RL 표준 레시피</h2>
+<ul>
+<li><strong>알고리즘</strong>: PPO (rsl_rl 구현). 병렬 환경 ~4096개, 평지 20~30분·험지 수 시간(A10G/L4 기준).</li>
+<li><strong>관측 (proprioceptive, ~48차원)</strong>: base 각속도 · 중력벡터 투영 · 속도 명령(3) + 관절 위치/속도(12+12) + 이전 액션(12). 험지 인지형은 로봇 주변 격자 고도 <strong>height scan</strong>(~187차원) 추가.</li>
+<li><strong>액션</strong>: 관절 목표각 12차원 → PD 제어(kp 25~40, kd ~0.5). 정책 50Hz, 물리 200Hz+.</li>
+<li><strong>보상</strong>: 속도 명령 추종(+) / z속도·roll·pitch 페널티 / 토크·액션 변화율 페널티 / 발 공중시간 보너스 / 넘어지면 종료. legged_gym 보상 코드가 표준 레퍼런스.</li>
+<li><strong>지형 커리큘럼</strong>: 평지 → 경사 → 계단·요철. 성공하면 승급, 실패하면 강등 (Isaac Lab terrain generator 내장).</li>
+<li><strong>도메인 랜덤화</strong>: 마찰, 질량/무게중심, 모터 강성, 관측 노이즈, 외력 푸시.</li>
+</ul>
+
+<h2 id="papers"><span class="n">3</span>핵심 논문 5편 <span class="sub">· 전체 지도는 11번</span></h2>
+<div class="call"><div class="t">이 다섯 편은 «입구»다</div>
+<p>계보도 전체 · off-policy·월드 모델·오프라인 RL·트랜스포머가 어디서 갈라졌고 <strong>왜 우리 설정에서는 밀리는지</strong>, 그리고 <strong>새 학습 없이 <code>height_scan</code> 의존도를 재는 평가 축</strong>은 12 RL 알고리즘 지도에 있다.</p></div>
+<ul>
+<li><strong>Learning to Walk in Minutes</strong> (Rudin+, CoRL 2021) · GPU 병렬 수천 env + PPO로 분 단위 학습. legged_gym의 원 논문. <a href="https://arxiv.org/abs/2109.11978">arXiv</a></li>
+<li><strong>Learning Quadrupedal Locomotion over Challenging Terrain</strong> (Lee+, Sci. Robotics 2020) · 지형 커리큘럼 + teacher-student, blind 험지 보행의 기틀.</li>
+<li><strong>Learning Robust Perceptive Locomotion</strong> (Miki+, Sci. Robotics 2022) · 고도맵 + proprio 융합, ANYmal 험지 SOTA.</li>
+<li><strong>Walk These Ways</strong> (Margolis &amp; Agrawal, CoRL 2022) · 보행 스타일을 명령으로 조건화. <a href="https://github.com/Improbable-AI/walk-these-ways">GitHub</a></li>
+<li><strong>Extreme Parkour</strong> (Cheng+, 2023) · 비전 기반 파쿠르. 심화 참고용 (우리 범위 밖).</li>
+</ul>
+
+<h2 id="plan"><span class="n">4</span>7주 마일스톤 (8월 말 → 10월 중순)</h2>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th>주차</th><th>목표</th><th>완료 기준</th></tr>
+<tr><td>1</td><td>RunPod 환경 구축(Isaac Lab headless 컨테이너), Go2 flat 태스크 학습 재현. PPO 개념 스터디 병행</td><td>flat 학습이 돌아간다</td></tr>
+<tr><td>2</td><td>flat 완주, TensorBoard/wandb로 보상 곡선 읽기, 정책 재생 영상 저장. 관측·보상 코드 1줄씩 매핑</td><td>영상 + 곡선 해석 가능</td></tr>
+<tr><td>3–4</td><td><strong>rough 태스크 학습 + 보상·커리큘럼 파라미터 실험</strong> (air time 가중치, 지형 비율 등 · 프로젝트의 본체)</td><td>파라미터별 비교 결과</td></tr>
+<tr><td>5–6</td><td>자체 지형 추가(계단 높이↑, 경사↑), 도메인 랜덤화 ablation, 정량 평가(성공률·속도 추종 오차 vs 난이도)</td><td>난이도별 평가 표</td></tr>
+<tr><td>7</td><td>결과 정리, 영상/그래프, 발표 자료. 여유 시 height-scan 유무 비교</td><td>중간발표 리허설</td></tr>
+</table></div></div>
+<div class="call trap"><div class="t">흔한 함정</div>
+<p>· 환경 셋업에 2~3주 소모가 최대 리스크 · 1주차에 심하게 막히면 MuJoCo Playground 백업 경로 검토.<br>
+· 보상 해킹(제자리 진동, 다리 끌기) · 곡선만 믿지 말고 영상을 반드시 눈으로 확인.<br>
+· 파라미터 여러 개 동시 변경 · 한 번에 하나만, 시드 2~3개로 비교.<br>
+· RunPod 비용 · 학습 안 돌릴 땐 Pod 중지, 체크포인트는 network volume이나 외부 저장소에 백업(Pod 삭제 시 데이터 소실).</p></div>
+
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

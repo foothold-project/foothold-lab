@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>팀 공통 개발환경 구축 가이드 · FOOTHOLD</title>
+<meta name="description" content="Isaac Sim 5.1 + Isaac Lab v2.3.2 환경을 각자 PC에 구축해 NVIDIA 사전학습 Go2 험지 정책을 재생하는 데까지. 2026-07-29 AI-WS01에서 실제로 성공한 절차.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--brand:#0e7a6e; --dim:var(--brand);--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{
+  font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;
+  font-size:15px;-webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+/* ── 상단 바 ── */
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:4px;
+  transition:.15s;white-space:nowrap;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+.pdfbtn:active{transform:translateY(1px)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+/* ── 표지 ── */
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.6rem;font-weight:800;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:clamp(1.5rem,3.4vw,2rem);font-weight:800;letter-spacing:-.03em;line-height:1.3;margin-bottom:.6rem}
+.lede{font-size:.92rem;color:var(--ink-2);max-width:var(--measure)}
+.meta{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--rule)}
+.meta div{font-size:.74rem}
+.meta .k{font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-bottom:.15rem}
+.meta .v{color:var(--ink);font-weight:600}
+
+/* ── 절 ── */
+section{margin-top:2.6rem;scroll-margin-top:64px}
+h2{font-size:1.16rem;font-weight:800;letter-spacing:-.02em;padding-bottom:.5rem;
+  border-bottom:1px solid var(--ink);margin-bottom:1rem;display:flex;align-items:baseline;gap:.6rem}
+h2 .n{font-size:.66rem;font-weight:800;color:var(--dim);letter-spacing:.1em;flex:0 0 auto}
+h3{font-size:.94rem;font-weight:800;margin:1.5rem 0 .5rem;letter-spacing:-.01em}
+h3 .step{display:inline-block;background:var(--ink);color:var(--paper);font-size:.6rem;
+  font-weight:800;letter-spacing:.1em;padding:.14rem .45rem;margin-right:.5rem;vertical-align:.1em}
+p{margin:.6rem 0;max-width:var(--measure);color:var(--ink-2)}
+p b,li b,td b{color:var(--ink)}
+ul,ol{margin:.6rem 0 .6rem 1.3rem;color:var(--ink-2)}
+li{margin:.25rem 0}
+code{font-family:'Consolas','D2Coding','Courier New',monospace;font-size:.9em;
+  background:var(--paper-2);padding:.08em .32em;border-radius:3px;color:var(--ink);
+  word-break:break-all}
+
+/* ── 인용/주의 ── */
+blockquote{margin:.9rem 0;padding:.7rem .95rem;background:var(--card);
+  border-left:3px solid var(--dim);font-size:.85rem;color:var(--ink-2);max-width:var(--measure)}
+blockquote.warn{border-left-color:var(--note);background:var(--note-soft)}
+blockquote.warn b{color:var(--ink)}
+
+/* ── 코드 블록 + 복사 ── */
+.cb{position:relative;margin:.7rem 0 1rem;max-width:var(--measure)}
+.cb pre{background:#1c2128;color:#dfe4ec;border:1px solid #2b323d;border-radius:5px;
+  padding:.85rem 3.4rem .85rem 1rem;overflow-x:auto;font-size:.79rem;line-height:1.7;
+  font-family:'Consolas','D2Coding','Courier New',monospace;white-space:pre;
+  -webkit-overflow-scrolling:touch}
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+.cb .copy{position:absolute;top:.5rem;right:.5rem;background:#2b323d;color:#c3cbd8;
+  border:1px solid #3a4250;border-radius:4px;font-family:inherit;font-size:.6rem;
+  font-weight:800;letter-spacing:.08em;padding:.24rem .5rem;cursor:pointer;transition:.14s}
+.cb .copy:hover{background:var(--dim);color:#fff;border-color:var(--dim)}
+.cb .copy.ok{background:var(--dim);color:#fff;border-color:var(--dim)}
+.cb .lbl{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.3rem}
+
+/* ── 표 ── */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:.8rem 0 1.1rem;max-width:var(--measure)}
+table{width:100%;border-collapse:collapse;font-size:.82rem;background:var(--card);min-width:420px}
+th{text-align:left;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);padding:.5rem .7rem;border-bottom:1px solid var(--rule);background:var(--paper-2);
+  white-space:nowrap}
+td{padding:.5rem .7rem;border-bottom:1px solid var(--rule);color:var(--ink-2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+table.stop th{background:var(--stop-soft);color:var(--stop)}
+table.stop td:first-child{color:var(--stop);font-weight:700}
+
+/* ── 체크리스트 ── */
+.ck{background:var(--card);border:1px solid var(--rule);border-radius:5px;
+  padding:.3rem .2rem;margin:.9rem 0;max-width:var(--measure)}
+.ck-row{display:grid;grid-template-columns:1.9rem 1fr;gap:.5rem;padding:.55rem .7rem;
+  border-bottom:1px solid var(--rule);align-items:start}
+.ck-row:last-child{border-bottom:none}
+.ck-row input{width:17px;height:17px;margin-top:.15rem;accent-color:var(--dim);cursor:pointer}
+.ck-row label{cursor:pointer;font-size:.82rem}
+.ck-row .cmd{display:block;font-family:'Consolas','D2Coding',monospace;font-size:.76rem;
+  color:var(--ink);background:var(--paper-2);padding:.25rem .45rem;border-radius:3px;
+  margin:.2rem 0;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+.ck-row .exp{display:block;font-size:.73rem;color:var(--dim);font-weight:700}
+.ck-row.done label{opacity:.5;text-decoration:line-through;text-decoration-thickness:1px}
+.ck-row.done .exp{text-decoration:none}
+.ck-foot{display:flex;align-items:center;gap:.7rem;padding:.5rem .7rem;font-size:.72rem;
+  color:var(--ink-3);border-top:1px solid var(--rule);flex-wrap:wrap}
+.ck-foot b{color:var(--dim)}
+.ck-foot button{background:none;border:1px solid var(--rule);border-radius:3px;
+  font-family:inherit;font-size:.66rem;color:var(--ink-3);padding:.16rem .45rem;cursor:pointer}
+.ck-foot button:hover{border-color:var(--stop);color:var(--stop)}
+
+/* ── 함정 (접기) ── */
+details.trap{background:var(--note-soft);border:1px solid var(--note);border-radius:5px;
+  margin:.65rem 0;max-width:var(--measure)}
+details.trap summary{cursor:pointer;padding:.65rem .85rem;font-size:.88rem;font-weight:700;
+  color:var(--ink);list-style:none;display:flex;align-items:baseline;gap:.55rem}
+details.trap summary::-webkit-details-marker{display:none}
+details.trap summary::before{content:'▸';color:var(--note);font-weight:800;flex:0 0 auto;
+  transition:transform .16s;display:inline-block}
+details.trap[open] summary::before{transform:rotate(90deg)}
+details.trap summary .tno{font-size:.6rem;font-weight:800;letter-spacing:.08em;color:#fff;
+  background:var(--note);padding:.1rem .38rem;flex:0 0 auto}
+details.trap .body{padding:0 .85rem .8rem 2rem;border-top:1px solid rgba(168,106,8,.25);
+  margin-top:.1rem;padding-top:.7rem}
+details.trap .body p{margin:.35rem 0;font-size:.82rem}
+details.trap .r{display:grid;grid-template-columns:4.6rem 1fr;gap:.5rem;padding:.22rem 0;font-size:.82rem}
+details.trap .r .k{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--note);padding-top:.2rem}
+details.trap .r .v{color:var(--ink-2)}
+details.trap .r.fix .k{color:var(--dim)}
+details.trap .r.fix .v{color:var(--ink)}
+details.trap .cb{margin:.5rem 0 .2rem}
+
+/* ── 강조 박스 ── */
+.key{background:var(--dim-soft);border:1px solid var(--dim);border-radius:5px;
+  padding:.85rem 1rem;margin:1rem 0;max-width:var(--measure)}
+.key .kh{font-size:.62rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.key ol{margin:.3rem 0 0 1.2rem}
+.key li{color:var(--ink);font-size:.86rem;margin:.3rem 0}
+.tree{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;
+  padding:.7rem .9rem;font-family:'Consolas','D2Coding',monospace;font-size:.76rem;
+  line-height:1.75;color:var(--ink-2);overflow-x:auto;margin:.7rem 0;max-width:var(--measure);white-space:pre}
+.tree b{color:var(--dim)}
+
+/* ── 하단 ── */
+.foot{margin-top:3.5rem;padding-top:1.2rem;border-top:1px solid var(--rule);
+  font-size:.74rem;color:var(--ink-3)}
+.foot a{color:var(--dim)}
+
+@media (max-width:700px){
+  body{font-size:14.5px}
+  .wrap{padding:1.6rem 1.1rem 3.5rem}
+  .top .row{padding:.5rem 1.1rem;gap:.55rem}
+  .top .doc{display:none}
+  .meta{gap:1rem}
+  .cb pre{font-size:.74rem;padding:.75rem 1rem .75rem .8rem}
+  .cb .copy{position:static;display:block;width:100%;margin-bottom:.3rem;padding:.34rem}
+  .ck-row{grid-template-columns:1.6rem 1fr}
+  details.trap .body{padding-left:.85rem}
+  details.trap .r{grid-template-columns:1fr;gap:.05rem}
+}
+
+@page{ size:A4 portrait; margin:14mm 12mm; }
+@media print{
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.cb .copy,.ck-foot button{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .cb,.ck,.tw,.key,.tree,blockquote,details.trap{break-inside:avoid;page-break-inside:avoid}
+  .cb pre{background:#f4f5f7!important;color:var(--ink)!important;border:1px solid #ccc!important;
+    white-space:pre-wrap!important;word-break:break-all}
+  /* 종이에서는 색이 흐리게 나올 수 있다. 굵기·기울기로도 구분되게 (hl.py 와 같은 규칙) */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+  /* 인쇄에서는 함정을 모두 펼친다.
+     ⚠️ display 만으로는 안 된다. 크롬은 닫힌 <details> 를 content-visibility 로 숨긴다.
+     아래가 없으면 함정 6개 내용이 PDF에서 통째로 빠진다(실측). */
+  details.trap{display:block!important}
+  details.trap>.body{display:block!important}
+  details.trap:not([open])>*:not(summary){content-visibility:visible!important}
+  details.trap::details-content{content-visibility:visible!important;block-size:auto!important}
+  details.trap summary::before{content:'▾'}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Environment Setup · 실행 절차</div>
+  <h1>팀 공통 개발환경 구축 가이드</h1>
+  <p class="lede">RL·Isaac Sim 경험이 없어도 <b>그대로 따라 하면 됩니다.</b>
+    목표는 NVIDIA가 배포하는 <b>사전학습 Go2 험지 보행 정책을 각자 PC에서 재생</b>하는 데까지입니다.</p>
+  <div class="meta">
+    <div><span class="k">대상</span><span class="v">팀원 5인 전원</span></div>
+    <div><span class="k">검증</span><span class="v">2026-07-29 · AI-WS01</span></div>
+    <div><span class="k">소요</span><span class="v">약 1시간 · 디스크 16 GB</span></div>
+    <div><span class="k">성격</span><span class="v">실제로 끝까지 돌려 성공한 절차</span></div>
+  </div>
+</div>
+
+<blockquote>
+  <b>추측이나 문서 인용이 아닙니다.</b> 팀 워크스테이션에서 실제로 끝까지 실행해 성공한 기록입니다.
+  같은 이유로, 여기 적힌 버전과 숫자는 임의로 바꾸지 마세요.
+</blockquote>
+
+<div class="tw">
+<table>
+<thead><tr><th>관련 문서</th><th>답하는 질문</th><th>읽는 사람</th></tr></thead>
+<tbody>
+<tr><td>MVP 결과 보고</td><td><b>무슨 일이 있었나</b></td><td>팀 전원 · 멘토</td></tr>
+<tr><td><b>이 문서</b></td><td><b>내 PC에서 어떻게 따라 하나</b></td><td><b>환경을 설치할 사람</b></td></tr>
+<tr><td>원본 실측 로그</td><td>정확히 어떤 숫자가 나왔나</td><td>검증 · 재현할 사람</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ══════ 0 ══════ -->
+<section id="s0">
+<h2><span class="n">00</span>세 줄 요약</h2>
+<div class="key">
+  <div class="kh">먼저 알아둘 것</div>
+  <ol>
+    <li><b>우분투 설치 필요 없습니다.</b> Windows에서 그대로 됩니다.</li>
+    <li><b>전체 약 1시간, 디스크 16 GB</b> (회선 89 Mbps 기준). "수십 GB" 아닙니다.</li>
+    <li><b>함정이 6개 있습니다.</b> 전부 <i>“설치는 성공했다고 뜨는데 나중에 터지는”</i> 종류라,
+      <b>§4 검증 체크리스트를 각 단계마다 반드시 실행</b>하세요.</li>
+  </ol>
+</div>
+</section>
+
+<!-- ══════ 1 ══════ -->
+<section id="s1">
+<h2><span class="n">01</span>확정 버전: 이 조합만 씁니다</h2>
+<p><b>한 명이라도 다른 버전을 쓰면 팀 결과가 갈라집니다.</b> 프로젝트 종료까지 업그레이드하지 않습니다.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>버전</th><th>왜 이 버전인가</th></tr></thead>
+<tbody>
+<tr><td>OS</td><td><code>Windows 10/11</code></td><td>Isaac Sim 5.1 공식 지원 대상</td></tr>
+<tr><td><b>Python</b></td><td><code>3.11</code></td><td>★ Isaac Sim 5.1 wheel이 <code>cp311</code> 전용. <b>3.10·3.12·3.13 전부 안 됨</b></td></tr>
+<tr><td>NVIDIA 드라이버</td><td><code>570 이상</code></td><td>RTX 50 시리즈(Blackwell, <code>sm_120</code>) 요구치. 검증 환경 591.86<br>
+    RTX 40/30 은 더 낮아도 될 수 있으나 <b>미확인</b><a href="#s15">§1.5</a></td></tr>
+<tr><td><b>PyTorch</b></td><td><code>2.7.0 + cu128</code></td><td>★ 기본 wheel은 <b>CPU 전용</b>. cu128을 강제해야 GPU가 잡힘</td></tr>
+<tr><td><b>Isaac Sim</b></td><td><code>5.1.0.0</code> (pip)</td><td>Isaac Lab 2.3.x가 요구하는 짝</td></tr>
+<tr><td><b>Isaac Lab</b></td><td><code>v2.3.2</code> 태그 고정</td><td>★ <b>v2.3.2가 최신 안정판입니다.</b> 그 위는 전부 베타: <a href="#s11">§1.1</a></td></tr>
+<tr><td>물리 백엔드</td><td><code>PhysX</code></td><td>Newton 지원 태스크 목록에 <b>우리가 쓰는 Rough 태스크가 없음</b><a href="#s11">§1.1</a></td></tr>
+<tr><td>rsl_rl</td><td><code>3.1.2</code></td><td>Isaac Lab v2.3.2가 핀으로 고정</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>🚫 쓰면 안 되는 것</h3>
+<div class="tw">
+<table class="stop">
+<thead><tr><th>금지</th><th>이유</th></tr></thead>
+<tbody>
+<tr><td><code>git clone</code> 후 그냥 쓰기</td><td><b>기본 브랜치가 베타</b>입니다. 반드시 <code>--branch v2.3.2</code></td></tr>
+<tr><td>Newton 백엔드 · <code>develop</code> · <code>3.0.0-beta*</code></td><td><b>우리 태스크(Rough)가 지원 목록에 없음</b> (NVIDIA 공식 문서): <a href="#s11">§1.1</a></td></tr>
+<tr><td><code>legged_gym</code> · Isaac Gym Preview 4</td><td>Blackwell(<code>sm_120</code>) 커널 없음 → RTX 50에서 아예 안 돎</td></tr>
+<tr><td><code>unitree_rl_gym</code></td><td><b>지형 생성 함수가 통째로 삭제된 fork</b>입니다. 설정만 남아 있어 “바꿨는데 반영 안 됨” 사고가 납니다</td></tr>
+<tr><td><code>pip install torch</code> (그냥)</td><td><b>CPU 전용이 깔립니다</b></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ══════ 1.1 ══════ -->
+<section id="s11">
+<h2><span class="n">1.1</span>★ “왜 최신 버전을 안 쓰나요?”</h2>
+<blockquote>
+  팀원 질문: <i>“<code>--branch v2.3.2</code>로 고정하던데, 최신을 받으면 학습이 더 진전돼 있는 거 아닌가요?”</i>
+</blockquote>
+
+<h3>먼저, 오해 하나를 풀어야 합니다</h3>
+<div class="key" style="border-color:var(--dim);background:var(--dim-soft)">
+  <div class="kh" style="color:var(--dim)">Isaac Lab은 「학습된 결과」가 아니라 「학습시키는 도구」입니다</div>
+  <p style="font-size:.9rem">버전이 올라간다고 <b>로봇이 더 잘 걷지 않습니다.</b>
+    걷게 만드는 건 <b>우리가 돌리는 학습</b>입니다.</p>
+  <p style="font-size:.9rem;margin-top:.5rem">오히려 반대입니다. 우리가 첫날부터 걷는 로봇을 볼 수 있었던 건
+    NVIDIA가 배포한 <b>사전학습 체크포인트</b> 덕분인데, 그건
+    <code>Isaac/5.1/…/Isaac-Velocity-Rough-Unitree-Go2-v0/</code> 경로로
+    <b>Isaac Sim 5.1 · Isaac Lab 2.3.x 짝에 맞춰</b> 올라와 있습니다.
+    버전을 올리면 <b>그 자산이 안 맞게 됩니다.</b></p>
+</div>
+
+<h3>그리고, “최신”이라는 게 안정판이 아닙니다</h3>
+<p>2026-08-05 <a href="https://github.com/isaac-sim/IsaacLab/releases" target="_blank" rel="noopener">릴리스 목록</a> 실제 조회 결과입니다.</p>
+<div class="tw">
+<table>
+<thead><tr><th>태그</th><th>날짜</th><th>상태</th></tr></thead>
+<tbody>
+<tr><td><code>v3.0.0-beta2.patch1</code></td><td>2026-07-02</td><td>🔴 베타</td></tr>
+<tr><td><code>v3.0.0-beta2</code></td><td>2026-06-17</td><td>🔴 베타</td></tr>
+<tr><td><code>v3.0.0-beta</code></td><td>2026-03-17</td><td>🔴 베타</td></tr>
+<tr><td><b><code>v2.3.2</code></b></td><td><b>2026-02-02</b></td><td>✅ <b>최신 안정판 = 우리가 쓰는 것</b></td></tr>
+</tbody>
+</table>
+</div>
+<p><b>v2.3.2 위로는 정식 릴리스가 하나도 없습니다.</b> 기본 브랜치조차
+  <code>release/3.0.0-beta2</code>(베타)입니다. 그래서 <code>git clone</code>만 하면
+  <b>베타를 받게 됩니다.</b></p>
+
+<h3>3.0을 받으면 실제로 무슨 일이 나는가: 전부 NVIDIA 공식 문구</h3>
+<div class="tw">
+<table class="stop">
+<thead><tr><th>#</th><th>무슨 일</th><th>근거 (원문)</th></tr></thead>
+<tbody>
+<tr><td>①</td><td><b>Windows에서 아예 안 됩니다</b></td>
+  <td>v3.0.0-beta Known Limitations: <i>“<b>Ubuntu only</b>The develop branch is currently
+  available on Ubuntu. Windows support … will be available soon.”</i></td></tr>
+<tr><td>②</td><td><b>Isaac Sim부터 다시 깔아야 합니다</b></td>
+  <td>3.0은 <b>Isaac Sim 6.0</b> 기반. 우리가 깐 건 <b>5.1</b>입니다</td></tr>
+<tr><td>③</td><td><b>Python·PyTorch가 다릅니다</b></td>
+  <td>3.0 = Python <b>3.12</b> / PyTorch <b>2.10.0</b>. 우리 = 3.11 / 2.7.0+cu128</td></tr>
+<tr><td>④</td><td><b>명령어가 통째로 깨집니다</b></td>
+  <td>beta2 Migration Notes: <i>“Replace <code>--headless</code> usage with
+  <code>--viz</code> / <code>--visualizer</code>”</i>이 문서의 모든 명령이 못 쓰게 됩니다</td></tr>
+<tr><td>⑤</td><td><b>NVIDIA가 직접 경고합니다</b></td>
+  <td>beta2: <i>“may still receive <b>breaking changes</b> before the final Isaac Lab 3.0 release”</i></td></tr>
+<tr><td>⑥</td><td><b>Newton 백엔드에 우리 태스크가 없습니다</b></td><td>아래 참조 ↓</td></tr>
+<tr><td>⑦</td><td><code>unitree_rl_lab</code>(실기 배포 코드)이 <b>2.3.x를 요구</b>합니다</td>
+  <td>나중에 실물에 올릴 때 막힙니다</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>⑥번이 결정적입니다. 이름으로 확인 가능합니다</h3>
+<p><a href="https://github.com/isaac-sim/IsaacLab/blob/v2.3.2/docs/source/experimental-features/newton-physics-integration/training-environments.rst" target="_blank" rel="noopener">Newton 통합 문서의 지원 태스크 목록</a>입니다.</p>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>Isaac-Velocity-Flat-Unitree-Go2-v0      <span class="c"># 평지. 목록에 있음</span>
+Isaac-Velocity-Rough-Unitree-Go2-v0     <span class="c"># 험지. 목록에 없음  ★ 우리가 쓰는 것</span></pre></div>
+<blockquote class="warn">
+  같은 문서 원문:<br>
+  <i>“Many features are not yet supported, and only a limited set of classic RL and
+  <b>flat terrain</b> locomotion reinforcement learning examples are included at the moment.”</i><br>
+  <i>“you are likely to encounter <b>breaking changes</b> … We do not expect to be able to provide
+  support or debugging assistance until the framework has reached an official release.”</i>
+</blockquote>
+<p><b>우리 프로젝트 주제가 「험지」입니다.</b> 험지가 없는 백엔드로는 할 게 없습니다.
+  그리고 3.0 릴리스 노트는 <b>material randomization(마찰 랜덤화)이 PhysX 전용</b>이라고 명시하는데,
+  그건 우리의 <b>도메인 랜덤화 핵심 기법</b>입니다.</p>
+
+<div class="key">
+  <div class="kh">결론</div>
+  <p style="font-size:.92rem"><b>v2.3.2 고정은 보수적인 선택이 아니라, 지금 유일하게 굴러가는 조합입니다.</b>
+    프로젝트 종료(11월)까지 올리지 않습니다.
+    3.0 정식판이 나와도 <b>그때 검토 대상이지 즉시 적용 대상이 아닙니다.</b></p>
+  <p style="font-size:.78rem;color:var(--ink-3);margin-top:.5rem">
+    📌 위 사실들은 <code>_build/claims.py</code> 가 <b>배포할 때마다 원본을 다시 조회</b>해
+    확인합니다. 하나라도 뒤집히면 빌드가 멈추고, 이 문서를 고치기 전에는 배포되지 않습니다.</p>
+</div>
+</section>
+
+<!-- ══════ 1.5 ══════ -->
+<section id="s15">
+<h2><span class="n">01.5</span>★ 내 PC는 어떤가 <span style="font-weight:400;font-size:.78rem;color:var(--ink-3)">팀원마다 다릅니다</span></h2>
+
+<blockquote class="warn">
+  <b>이 가이드의 검증 환경은 RTX 5080 ×2 입니다. 여러분 PC는 다릅니다.</b><br>
+  특히 <b>§4 체크리스트 3번(<code>sm_120</code>)은 RTX 50 시리즈에만 해당</b>합니다.
+  그대로 읽으면 <b>멀쩡한 PC가 “실패”로 나옵니다.</b>
+</blockquote>
+
+<h3>GPU 세대별 아키텍처 코드</h3>
+<div class="tw">
+<table>
+<thead><tr><th>GPU 세대</th><th>코드명</th><th>arch 코드</th></tr></thead>
+<tbody>
+<tr><td>RTX 50</td><td>Blackwell</td><td><code>sm_120</code> ← <b>검증 환경</b></td></tr>
+<tr><td>RTX 40</td><td>Ada Lovelace</td><td><code>sm_89</code></td></tr>
+<tr><td>RTX 30</td><td>Ampere</td><td><code>sm_86</code></td></tr>
+<tr><td>RTX 20</td><td>Turing</td><td><code>sm_75</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="key">
+  <div class="kh">§4 체크리스트 3번은 이렇게 읽으세요</div>
+  <p style="margin:.2rem 0;color:var(--stop)">✗ “<code>sm_120</code>이 있어야 한다”</p>
+  <p style="margin:.2rem 0;color:var(--ink)"><b>✅ “내 GPU의 코드가 목록에 있어야 한다”</b></p>
+</div>
+
+<div class="cb">
+  <div class="lbl">내 GPU 확인</div>
+  <button class="copy" type="button">복사</button>
+<pre># 이름 · VRAM · 드라이버
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+
+# torch 가 내 GPU를 지원하는지
+python -c &quot;import torch; print(torch.cuda.get_device_name(0)); print(torch.cuda.get_arch_list())&quot;</pre>
+</div>
+
+<h3>🔴 Isaac Sim 공식 요구사양: 생각보다 높습니다</h3>
+<div class="tw">
+<table class="stop">
+<thead><tr><th>등급</th><th>GPU</th><th>VRAM</th></tr></thead>
+<tbody>
+<tr><td><b>최소</b></td><td><b>GeForce RTX 4080</b></td><td><b>16 GB</b></td></tr>
+<tr><td>권장</td><td>GeForce RTX 5080</td><td>16 GB</td></tr>
+<tr><td>이상적</td><td>RTX PRO 6000 Blackwell</td><td>48 GB</td></tr>
+<tr><td><b>미지원</b></td><td colspan="2"><b>RT 코어가 없는 GPU</b>GTX 전 계열, A100 · H100 포함</td></tr>
+</tbody>
+</table>
+</div>
+<p class="src">출처: 
+  <a href="https://docs.isaacsim.omniverse.nvidia.com/latest/installation/requirements.html" target="_blank" rel="noopener">Isaac Sim 공식 요구사양 ↗</a>
+  · <b>AI-WS01의 RTX 5080이 정확히 “권장” 등급</b>입니다.</p>
+
+<blockquote class="warn">
+  ⚠️ <b>이 문턱은 팀원 대부분이 못 넘습니다.</b> RTX 3060·4060 급도 <b>공식 최소 미달</b>입니다.
+</blockquote>
+
+<blockquote class="note" id="runpod-turn">
+  <b>2026-08-31 정정.</b> 아래 「워크스테이션 공유(우분투 계정 분배)」 계획은
+  <b>더 이상 우리 방식이 아닙니다.</b> 팀 학습은 <b>RunPod</b> 로 갑니다.
+  워크스테이션은 개인 개발·검증용으로 남습니다.<br>
+  근거: 팀비 납부 3인으로 이미 학습 가능 · RunPod 네트워크 볼륨과 팀 폴더 표준화는
+  <a href="https://github.com/foothold-project/foothold-lab/issues/94">#94</a> 진행 중.
+  이 아래 문단은 <b>그때의 판단 기록</b>으로 남겨 둡니다.
+</blockquote>
+
+<h3>내 PC로 어디까지 되나</h3>
+<div class="tw">
+<table>
+<thead><tr><th>내 환경</th><th>Isaac Sim</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td><b>RTX 5080 (AI-WS01)</b></td><td><b>전부 가능</b></td><td>실증 완료 · 공식 “권장” 등급</td></tr>
+<tr><td>RTX 4080 이상 · 16 GB</td><td>가능</td><td>공식 최소 충족</td></tr>
+<tr><td>RTX 30/40 · VRAM 16 GB 미만</td>
+    <td style="color:var(--note)"><b>공식 최소 미달</b></td>
+    <td>돌 수도 있으나 <b>보장 없음</b> · 복잡한 장면에서 실패</td></tr>
+<tr><td><b>GTX 계열</b> (예: GTX 1650 Ti)</td>
+    <td style="color:var(--stop)"><b>원천적으로 불가</b></td>
+    <td><b>RT 코어가 없습니다.</b> 드라이버·VRAM 문제가 아니라 <b>하드웨어에 그 기능이 없음</b></td></tr>
+<tr><td>GPU 없음 · 내장 그래픽 · 맥</td>
+    <td style="color:var(--stop)"><b>불가</b></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>★ 그래서 노트북으로는 무엇을 하나. 생각보다 많습니다</h3>
+<p>Isaac Sim이 안 돌아도 <b>학습 커리큘럼 A트랙 17절 중 대부분</b>은 노트북에서 그대로 진행됩니다.
+  특히 <b>실습이 있는 A6·A7이 가능</b>합니다.</p>
+<div class="tw">
+<table>
+<thead><tr><th>절</th><th>노트북</th><th>왜</th></tr></thead>
+<tbody>
+<tr><td>A1 ~ A5 · A8 · A11 · A12 · A14 ~ A17</td><td><b>가능</b></td><td>개념 · 설계 · 표 만들기</td></tr>
+<tr><td><b>A6 MuJoCo에서 Go2 세우기</b></td><td><b>가능</b></td>
+    <td><b>MuJoCo는 CPU 물리 엔진</b>입니다. RT 코어도 큰 VRAM도 필요 없습니다</td></tr>
+<tr><td><b>A7 규칙으로 걷게 해보고 실패하기</b></td><td><b>가능</b></td>
+    <td>MuJoCo 위에서 합니다. <b>이 프로젝트에서 물리 감각을 얻는 유일한 절</b></td></tr>
+<tr><td>A13 코드 읽기</td><td><b>가능</b></td><td>읽고 고치는 데 GPU가 필요 없습니다</td></tr>
+<tr><td>A9 첫 학습 · A10 보상 실험</td>
+    <td style="color:var(--note)"><b>워크스테이션 원격</b></td><td>GPU 2장이라 동시 2인</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="key">
+  <div class="kh">노트북 담당자에게</div>
+  <p style="color:var(--ink);margin:.2rem 0"><b>A6·A7을 먼저 하세요.</b>
+    선행 사례는 이 단계를 건너뛰고 바로 강화학습으로 가서
+    “발을 왜 안 떼는지”를 물리적 직관 없이 <b>석 달을 헤맸습니다</b>
+    (<a href="curriculum.html">커리큘럼 A7</a>).
+    노트북에서 할 수 있는 이 두 절이 <b>팀 전체의 진단 속도를 좌우합니다.</b></p>
+</div>
+
+<blockquote>
+  <b>미래 방향</b>AI-WS01에 <b>리눅스 멀티부트</b>를 구성해 팀원이 원격으로 붙는 안을 검토 중입니다.
+  리눅스가 Isaac Sim·Isaac Lab의 1차 지원 플랫폼이고, 다중 사용자 접속도 훨씬 수월합니다.
+  <span class="src">⚠️ 아직 구성 안 함. 결정되면 이 문서에 절차를 추가합니다.</span>
+</blockquote>
+</section>
+
+<!-- ══════ 2 ══════ -->
+<section id="s2">
+<h2><span class="n">02</span>사전 준비</h2>
+<div class="cb">
+  <div class="lbl">PowerShell</div>
+  <button class="copy" type="button">복사</button>
+  <pre># 1) GPU·드라이버 확인: 570 이상이어야 함
+nvidia-smi
+
+# 2) 디스크 여유 20GB 이상 확인
+Get-Volume -DriveLetter C
+
+# 3) git 설치 여부
+git --version</pre>
+</div>
+<p><b>Anaconda 또는 Miniconda가 필요합니다.</b> 없으면 <a href="https://www.anaconda.com/docs/getting-started/miniconda/install" target="_blank" rel="noopener">Miniconda ↗</a>를 먼저 설치하세요.<br>
+※ 관리자 권한은 <b>필요 없습니다.</b> 전부 사용자 폴더에 설치됩니다.</p>
+</section>
+
+<!-- ══════ 3 ══════ -->
+<section id="s3">
+<h2><span class="n">03</span>설치 절차: 복붙용</h2>
+
+<h3><span class="step">STEP 1</span>Python 3.11 전용 환경 만들기</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>conda create -n isaac311 python=3.11 -y
+conda activate isaac311
+python --version          # → Python 3.11.x 여야 함</pre></div>
+<blockquote class="warn">⚠️ <b><code>conda activate</code>를 반드시 하세요.</b> 뒤에 나올 <code>isaaclab.bat</code>이
+  <code>%CONDA_PREFIX%</code>로 파이썬을 찾습니다. PATH만 건드리면 <b>베이스 환경에 잘못 설치</b>됩니다 (함정 ③).</blockquote>
+
+<h3><span class="step">STEP 2</span>PyTorch를 cu128로 설치 <span style="color:var(--stop)">★ 순서 중요</span></h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 `
+    --index-url https://download.pytorch.org/whl/cu128</pre></div>
+<blockquote><b>왜 먼저 하나</b>Isaac Sim이 <code>torch==2.7.0</code>을 요구하는데, 그냥 두면
+  PyPI 기본 wheel(<b>CPU 전용</b>)이 깔립니다. 먼저 cu128을 깔아두면 <code>2.7.0+cu128</code>이
+  <code>==2.7.0</code> 조건을 만족해 <b>덮어쓰이지 않습니다.</b> (실측 확인)</blockquote>
+
+<h3><span class="step">STEP 3</span>Isaac Sim 설치</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>pip install &quot;isaacsim[all]==5.1.0.0&quot; --extra-index-url https://pypi.nvidia.com</pre></div>
+<p>소요 약 4분.</p>
+
+<h3><span class="step">STEP 4</span>첫 실행: Kit 런타임 자동 수신</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>$env:OMNI_KIT_ACCEPT_EULA=&quot;YES&quot;
+python -c &quot;from isaacsim import SimulationApp; app=SimulationApp({&#x27;headless&#x27;:True}); print(&#x27;OK&#x27;); app.close()&quot;</pre></div>
+<blockquote class="warn">⏱ <b>첫 실행만 6~7분 걸립니다.</b> Kit 런타임 약 5 GB를 자동으로 받고 초기화합니다(초기화만 385초).
+  두 번째부터는 20초 내외입니다. <b>멈춘 게 아니니 기다리세요.</b></blockquote>
+
+<h3><span class="step">STEP 5</span>Isaac Lab 태그 고정 clone</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>mkdir C:\isaac -Force
+cd C:\isaac
+git clone --branch <span class="k">v2.3.2</span> --depth 1 https://github.com/isaac-sim/IsaacLab.git
+cd IsaacLab
+git describe --tags       <span class="c"># → v2.3.2 여야 함</span></pre></div>
+<blockquote>경로를 <b>짧게(<code>C:\isaac</code>)</b> 두세요. Isaac Lab은 경로가 깊어서 Windows 260자 제한에 걸릴 수 있습니다.</blockquote>
+
+<h3><span class="step">STEP 6</span>빌드 도구 문제 선처리</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>pip install &quot;setuptools&lt;81&quot; wheel
+pip install &quot;flatdict==4.0.1&quot; --no-build-isolation</pre></div>
+<blockquote>최신 setuptools(83+)에서 <code>pkg_resources</code>가 빠졌는데 <code>flatdict</code>가 그걸 씁니다 (함정 ④).</blockquote>
+
+<h3><span class="step">STEP 7</span>Isaac Lab 설치</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>conda activate isaac311       # ★ 다시 한 번 확인
+cd C:\isaac\IsaacLab
+.\isaaclab.bat --install rsl_rl
+pip install -e source/isaaclab
+pip install &quot;packaging==23.0&quot;   # isaacsim이 요구하는 핀으로 복구</pre></div>
+<blockquote><code>rsl_rl</code>만 설치합니다. 우리 프로젝트는 다른 RL 프레임워크(rl_games·skrl·sb3)를 쓰지 않습니다.</blockquote>
+
+<h3><span class="step">STEP 8</span>Windows 우회 스크립트 만들기 <span style="color:var(--stop)">★ 필수</span></h3>
+<p><b>재생용</b> <code>C:\isaac\IsaacLab\play_go2_win.py</code> 파일을 만들고 아래를 넣으세요.</p>
+<div class="cb">
+  <div class="lbl">play_go2_win.py</div>
+  <button class="copy" type="button">복사</button>
+<pre># Windows 우회: Isaac Sim Kit 로드 전에 &quot;네이티브 확장을 가진&quot; 패키지를 선점 import
+#   - tensordict : access violation 0xC0000005 (헤드리스에서도 발생)
+#   - h5py       : entrypoint not found 0xC0000139 (GUI 모드에서 발생)
+import torch                       # noqa
+from tensordict import TensorDict  # noqa
+import rsl_rl.runners              # noqa
+import h5py                        # noqa
+import runpy, sys, os
+SCRIPT = os.path.join(&quot;scripts&quot;, &quot;reinforcement_learning&quot;, &quot;rsl_rl&quot;, &quot;play.py&quot;)
+sys.path.insert(0, os.path.dirname(os.path.abspath(SCRIPT)))   # cli_args 를 찾게
+sys.argv = [SCRIPT] + sys.argv[1:]
+runpy.run_path(SCRIPT, run_name=&quot;__main__&quot;)</pre></div>
+
+<p><b>학습용</b> <code>C:\isaac\IsaacLab\train_go2_win.py</code> 도 같이 만듭니다.
+  <b>위와 완전히 같고 <code>SCRIPT</code> 한 줄만 <code>train.py</code> 로 바꿉니다.</b></p>
+<div class="cb">
+  <div class="lbl">train_go2_win.py</div>
+  <button class="copy" type="button">복사</button>
+<pre># Windows 우회: Isaac Sim Kit 로드 전에 &quot;네이티브 확장을 가진&quot; 패키지를 선점 import
+#   - tensordict : access violation 0xC0000005 (헤드리스에서도 발생)
+#   - h5py       : entrypoint not found 0xC0000139 (GUI 모드에서 발생)
+import torch                       # noqa
+from tensordict import TensorDict  # noqa
+import rsl_rl.runners              # noqa
+import h5py                        # noqa
+import runpy, sys, os
+SCRIPT = os.path.join(&quot;scripts&quot;, &quot;reinforcement_learning&quot;, &quot;rsl_rl&quot;, &quot;train.py&quot;)
+sys.path.insert(0, os.path.dirname(os.path.abspath(SCRIPT)))   # cli_args 를 찾게
+sys.argv = [SCRIPT] + sys.argv[1:]
+runpy.run_path(SCRIPT, run_name=&quot;__main__&quot;)</pre></div>
+
+<h3><span class="step">STEP 9</span>최종 실행</h3>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>conda activate isaac311
+cd C:\isaac\IsaacLab
+$env:OMNI_KIT_ACCEPT_EULA=&quot;YES&quot;
+
+python play_go2_win.py --task Isaac-Velocity-Rough-Unitree-Go2-Play-v0 `
+    --num_envs 32 --use_pretrained_checkpoint --headless --video --video_length 200</pre></div>
+
+<p><b>성공하면 아래 4개가 생깁니다:</b></p>
+<div class="tree">C:\isaac\IsaacLab\.pretrained_checkpoints\rsl_rl\Isaac-Velocity-Rough-Unitree-Go2-v0\
+  ├─ <b>checkpoint.pt</b>                     6.56 MB   ← NVIDIA 사전학습 정책
+  ├─ exported\<b>policy.onnx</b>              1.10 MB   ← 실물 배포용 포맷
+  ├─ exported\policy.pt                1.11 MB
+  └─ videos\play\<b>rl-video-step-0.mp4</b>   0.51 MB   ← 재생 영상</div>
+<div class="key"><div class="kh">여기까지 되면</div>
+  <p style="color:var(--ink);margin:0"><b>환경 구축 완료입니다.</b></p></div>
+</section>
+
+<!-- ══════ 4 ══════ -->
+<section id="s4">
+<h2><span class="n">04</span>★ 검증 체크리스트</h2>
+<blockquote class="warn"><b>“설치 성공 메시지”는 결과가 아닙니다.</b> 아래를 직접 돌려서 눈으로 확인하세요.
+  체크는 이 브라우저에 저장되어 새로고침해도 남습니다.</blockquote>
+
+<div class="ck" id="ck">
+  <div class="ck-row"><input type="checkbox" id="c1"><label for="c1">
+    <span class="cmd">python --version</span>
+    <span class="exp">→ Python 3.11.x</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c2"><label for="c2">
+    <span class="cmd">python -c "import torch; print(torch.__version__, torch.version.cuda)"</span>
+    <span class="exp">→ 2.7.0+cu128 12.8</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c3"><label for="c3">
+    <span class="cmd">python -c "import torch; print(torch.cuda.get_arch_list())"</span>
+    <span class="exp">→ 목록에 <b>내 GPU의 arch 코드</b> 포함
+      · RTX 50 = sm_120 · RTX 40 = sm_89 · RTX 30 = sm_86 (<a href="#s15">§1.5</a>)</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c4"><label for="c4">
+    <span class="cmd">python -c "import torch; print(torch.cuda.is_available(), torch.cuda.device_count())"</span>
+    <span class="exp">→ True + GPU 수</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c5"><label for="c5">
+    <b>GPU가 정말 계산하는지. 알려진 답 테스트</b>
+    <span class="cmd">python -c "import torch; d='cuda:0'; I=torch.eye(1024,device=d); x=torch.randn(1024,1024,device=d); print(torch.allclose(I@x, x, atol=1e-5))"</span>
+    <span class="exp">→ True · cuda.is_available() 이 True인 것만으로는 부족합니다</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c6"><label for="c6">
+    <span class="cmd">git describe --tags   (IsaacLab 폴더에서)</span>
+    <span class="exp">→ v2.3.2</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c7"><label for="c7">
+    <span class="cmd">pip list | findstr "isaacsim isaaclab rsl"</span>
+    <span class="exp">→ isaacsim 5.1.0.0 · rsl-rl-lib 3.1.2</span></label></div>
+
+  <div class="ck-row"><input type="checkbox" id="c8"><label for="c8">
+    <b>STEP 9 실행</b>
+    <span class="exp">→ mp4 파일 생성</span></label></div>
+
+  <div class="ck-foot">
+    <span><b id="ckN">0</b> / 8 완료</span>
+    <button type="button" id="ckReset">초기화</button>
+    <span style="flex:1"></span>
+    <span>하나라도 다르면 §5 함정 목록을 확인하세요</span>
+  </div>
+</div>
+</section>
+
+<!-- ══════ 5 ══════ -->
+<section id="s5">
+<h2><span class="n">05</span>🔴 함정 6개와 해법</h2>
+<p>전부 <b>“성공한 것처럼 보이다가 나중에 터지는”</b> 종류입니다. 검증 환경에서 실제로 다 겪었습니다.
+  <span style="color:var(--ink-3);font-size:.85em">(제목을 누르면 펼쳐집니다)</span></p>
+
+<div class="key" style="border-color:var(--stop);background:var(--stop-soft)">
+  <div class="kh" style="color:var(--stop)">★ 먼저 일반 규칙: 개별 사례보다 이게 중요합니다</div>
+  <p style="font-size:.9rem;font-weight:800;margin:.3rem 0 .5rem">
+    Isaac Sim Kit은 자기 네이티브 DLL을 먼저 올립니다.<br>
+    네이티브 확장을 가진 파이썬 패키지를 Kit보다 <b>나중에 import하면 충돌</b>합니다.</p>
+  <div class="tw" style="margin:.6rem 0">
+  <div class="tw"><table>
+  <thead><tr><th>패키지</th><th>증상</th><th>언제</th></tr></thead>
+  <tbody>
+  <tr><td><code>tensordict</code></td><td>access violation <code>0xC0000005</code></td><td>헤드리스에서도</td></tr>
+  <tr><td><code>h5py</code></td><td>entrypoint not found <code>0xC0000139</code></td><td>GUI 모드에서</td></tr>
+  </tbody>
+  </table></div>
+  </div>
+  <p style="font-size:.84rem">함정 <b>⑤·⑥은 같은 부류</b>입니다.
+    <b>앞으로 새 패키지를 추가할 때마다 같은 증상이 날 수 있고, 해법은 항상 「선점 import」입니다.</b><br>
+    새 패키지를 넣었는데 알 수 없는 <code>0xC000....</code> 로 죽으면 <b>먼저 이걸 의심하세요.</b></p>
+</div>
+
+<details class="trap">
+  <summary><span class="tno">①</span>Isaac Sim 5.1은 Python 3.11 전용</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v"><code>No matching distribution found for isaacsim</code></span></div>
+    <div class="r"><span class="k">원인</span><span class="v">wheel 태그가 <code>cp311</code>. 3.10 / 3.12 / 3.13 모두 불가</span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v"><code>conda create -n isaac311 python=3.11</code></span></div>
+    <p style="font-size:.78rem;color:var(--ink-3)">※ Isaac Sim 6.0.x는 <code>cp312</code>지만, 우리는 v2.3.2 정책상 <b>5.1을 씁니다.</b></p>
+  </div>
+</details>
+
+<details class="trap">
+  <summary><span class="tno">②</span>★ torch 2.7.0 기본 wheel은 CPU 전용</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v">설치는 성공. 그런데 아래처럼 나옵니다.</span></div>
+    <div class="cb"><button class="copy" type="button">복사</button>
+<pre>torch: 2.7.0+cpu / CUDA build: None / arch list: [] / cuda avail: False</pre></div>
+    <div class="r"><span class="k">왜 위험</span><span class="v">설치 단계에서 <b>아무 에러도 안 납니다.</b>
+      학습을 돌려서야 GPU를 못 쓴다는 걸 발견합니다</span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v">STEP 2 (cu128 인덱스 강제)
+      → <code>2.7.0+cu128</code>, arch list에 <code>sm_120</code> 포함</span></div>
+  </div>
+</details>
+
+<details class="trap">
+  <summary><span class="tno">③</span>isaaclab.bat은 %CONDA_PREFIX%로 파이썬을 찾음</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v"><code>ERROR: Unknown compiler(s): [['icl'], ['cl'], ['gcc'], ...]</code></span></div>
+    <div class="r"><span class="k">함정</span><span class="v">C 컴파일러가 진짜 원인이 <b>아닙니다.</b>
+      conda 환경이 활성화 안 돼 <b>베이스 파이썬(3.13)</b>이 쓰였고,
+      <code>numpy&lt;2</code>에 cp313 wheel이 없어 소스 빌드로 떨어진 것입니다</span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v"><code>conda activate isaac311</code>을 <b>실제로</b> 실행.
+      PATH 조작만으로는 안 됩니다</span></div>
+    <p style="font-size:.8rem;margin-top:.5rem"><b>이미 당했다면</b>베이스 환경 정리</p>
+    <div class="cb"><button class="copy" type="button">복사</button>
+<pre><span class="c"># 베이스에서 실행</span>
+pip uninstall -y isaaclab isaaclab_assets isaaclab_contrib isaaclab_mimic isaaclab_rl isaaclab_tasks</pre></div>
+  </div>
+</details>
+
+<details class="trap">
+  <summary><span class="tno">④</span>flatdict==4.0.1 빌드 실패</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v"><code>ModuleNotFoundError: No module named 'pkg_resources'</code></span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v">STEP 6</span></div>
+    <div class="r"><span class="k">후처리</span><span class="v"><code>packaging</code>이 26.x로 올라가 isaacsim 핀(23.0)을 깨뜨리므로
+      <code>pip install "packaging==23.0"</code>으로 복구</span></div>
+  </div>
+</details>
+
+<details class="trap">
+  <summary><span class="tno">⑤</span>★★ Windows에서 rsl_rl을 Isaac Sim 뒤에 import하면 크래시</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v"><code>Windows fatal exception: access violation</code>
+      (exit code <code>-1073741819</code> = <code>0xC0000005</code>)</span></div>
+    <div class="r"><span class="k">지점</span><span class="v"><code>rsl_rl/runners/on_policy_runner.py</code> <b>line 14</b>
+      = <code>from tensordict import TensorDict</code></span></div>
+    <div class="r"><span class="k">왜 어려움</span><span class="v">각 모듈을 <b>단독으로 import하면 전부 정상</b>입니다.
+      Isaac Sim Kit이 먼저 로드된 상태에서만 죽습니다</span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v">STEP 8의 래퍼 스크립트: 
+      <code>tensordict</code>/<code>rsl_rl</code>을 <code>AppLauncher</code>보다 <b>먼저</b> import</span></div>
+    <p style="font-size:.8rem;color:var(--stop);margin-top:.5rem">⚠️ <b>미확인</b>이 크래시가 Windows 전용인지
+      Linux/WSL에서도 나는지는 확인하지 않았습니다.</p>
+  </div>
+</details>
+
+<details class="trap">
+  <summary><span class="tno">⑥</span>★★ GUI 모드에서 h5py DLL 로드 실패</summary>
+  <div class="body">
+    <div class="r"><span class="k">증상</span><span class="v">GUI로 띄우면 <b>67초 만에 죽습니다.</b></span></div>
+    <div class="cb"><button class="copy" type="button">복사</button>
+<pre>ImportError: DLL load failed while importing _errors   <span class="c"># h5py</span>
+Windows fatal exception: code 0xc0000139               <span class="c"># 엔트리포인트 불일치</span></pre></div>
+    <div class="r"><span class="k">함정</span><span class="v"><b>h5py를 단독 import하면 정상</b>입니다(<code>OK 3.16.0</code>).
+      Kit이 먼저 로드된 상태에서만 죽습니다</span></div>
+    <div class="r"><span class="k">왜 늦게 발견</span><span class="v"><b>헤드리스에서는 안 나타납니다.</b>
+      GUI가 확장을 더 올리면서 터집니다</span></div>
+    <div class="r fix"><span class="k">해법</span><span class="v">함정 ⑤와 동일: <b>선점 import.</b>
+      STEP 8 래퍼에 <code>import h5py</code> 한 줄</span></div>
+  </div>
+</details>
+
+<div class="key">
+  <div class="kh">공통 팁</div>
+  <ul style="margin:.2rem 0 0 1.1rem">
+    <li>Isaac Sim은 <b>stdout을 가로챕니다.</b> 스크립트의 <code>print()</code>가 안 보이면 죽은 게 아닙니다.
+      <b>결과는 파일로 쓰세요.</b></li>
+    <li>실행 중 <code>omni.hydra</code> 메시 primvar 경고가 많이 뜨는데 <b>정상 동작에 지장 없습니다.</b></li>
+  </ul>
+</div>
+</section>
+
+<!-- ══════ 6 ══════ -->
+<section id="s6">
+<h2><span class="n">06</span>우리가 어디서 무엇을 가져왔나</h2>
+<div class="tw">
+<table>
+<thead><tr><th>대상</th><th>출처</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td><b>Isaac Sim 5.1.0.0</b></td><td><a href="https://pypi.nvidia.com" target="_blank" rel="noopener"><code>pypi.nvidia.com</code> ↗</a><br>NVIDIA 공식 pip 인덱스</td><td>wheel 태그 <code>cp311</code></td></tr>
+<tr><td>Kit 런타임 ~5 GB</td><td><code>d4i3qtqj3r0z5.cloudfront.net</code><br>첫 실행 시 자동 · 직접 받을 일 없음</td><td><code>%LOCALAPPDATA%\ov\</code> 에 캐시</td></tr>
+<tr><td><b>Isaac Lab v2.3.2</b></td><td><a href="https://github.com/isaac-sim/IsaacLab" target="_blank" rel="noopener">github.com/isaac-sim/IsaacLab</a><br>커밋 <code>37ddf626871758333d6ed89cf64ad702aef127d0</code><br><a href="https://github.com/isaac-sim/IsaacLab/releases/tag/v2.3.2" target="_blank" rel="noopener">v2.3.2 릴리스 ↗</a></td><td>★ 태그 고정 필수</td></tr>
+<tr><td>rsl_rl 3.1.2</td><td><a href="https://pypi.org/project/rsl-rl-lib/" target="_blank" rel="noopener">PyPI <code>rsl-rl-lib</code> ↗</a></td><td>ETH RSL 학습 라이브러리. Isaac Lab이 핀 고정</td></tr>
+<tr><td>PyTorch cu128</td><td><a href="https://download.pytorch.org/whl/cu128" target="_blank" rel="noopener"><code>download.pytorch.org/whl/cu128</code> ↗</a></td><td>기본 PyPI 아님</td></tr>
+<tr><td><b>사전학습 Go2 체크포인트</b></td><td><a href="https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/PretrainedCheckpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt" target="_blank" rel="noopener">체크포인트 직접 내려받기 ↗</a><br><code style="font-size:.86em;word-break:break-all">omniverse-content-production.s3-us-west-2.amazonaws.com/…/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt</code></td><td>6.56 MB<br><code>--use_pretrained_checkpoint</code>로 자동 수신</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>사용 가능한 Go2 태스크 4개 <span style="font-weight:400;font-size:.8rem;color:var(--ink-3)">설치 후 확인됨</span></h3>
+<div class="tw"><table>
+<thead><tr><th>태스크 이름</th><th>지형</th><th>쓰임</th></tr></thead>
+<tbody>
+<tr><td><code>Isaac-Velocity-Flat-Unitree-Go2-v0</code></td><td>평지</td><td>학습</td></tr>
+<tr><td><code>Isaac-Velocity-Flat-Unitree-Go2-Play-v0</code></td><td>평지</td><td>재생(학습된 정책 보기)</td></tr>
+<tr><td><code>Isaac-Velocity-Rough-Unitree-Go2-v0</code></td><td><b>험지</b></td><td><b>학습 · 우리 베이스라인</b></td></tr>
+<tr><td><code>Isaac-Velocity-Rough-Unitree-Go2-Play-v0</code></td><td><b>험지</b></td><td><b>재생 · 결과 확인용</b></td></tr>
+</tbody>
+</table></div>
+
+<blockquote class="warn">
+  <b>⚠️ 저장소가 둘입니다. 헷갈리기 쉬우니 미리 정리합니다.</b><br><br>
+  이 가이드가 세우는 것은 <b>IsaacLab</b> 하나입니다. 여기서 <b>학습과 재생</b>이 다 됩니다.<br>
+  그런데 학습 커리큘럼 A13은 <a href="https://github.com/unitreerobotics/unitree_rl_lab" target="_blank" rel="noopener">unitree_rl_lab ↗</a>
+  코드를 읽으라고 합니다. <b>다른 저장소가 맞습니다.</b><br><br>
+  <div class="tw"><table style="min-width:0;margin:.4rem 0 .2rem">
+  <tr><td style="padding:.3rem .6rem .3rem 0"><b>IsaacLab</b></td>
+      <td style="padding:.3rem 0">학습 · 재생 · 지형 · 사전학습 체크포인트: <b>지금 세우는 것</b></td></tr>
+  <tr><td style="padding:.3rem .6rem .3rem 0;border:none"><b>unitree_rl_lab</b></td>
+      <td style="padding:.3rem 0;border:none">Go2 <b>실기 배포</b> 코드(C++ 컨트롤러 · FSM · 관절 매핑): 
+      IsaacLab 에는 이게 없습니다</td></tr>
+  </table></div>
+  <b>지금은 설치하지 마세요.</b> 실물 로봇에 올릴 때가 되면 그때 붙입니다.
+  단 그 저장소는 <b>Isaac Lab 2.3.x</b>를 요구하므로, 지금 v2.3.2로 고정해 두는 것이 그때를 위한 준비이기도 합니다.
+</blockquote>
+
+<p><b>teacher-student 증류 예제도 포함돼 있습니다</b>우리 프로젝트의 핵심 구조입니다.</p>
+<div class="tree">source/isaaclab_rl/isaaclab_rl/rsl_rl/distillation_cfg.py
+source/isaaclab_tasks/.../config/anymal_d/agents/rsl_rl_distillation_cfg.py</div>
+</section>
+
+<!-- ══════ 7 ══════ -->
+<section id="s7">
+<h2><span class="n">07</span>실측 데이터 <span style="font-weight:400;font-size:.78rem;color:var(--ink-3)">검증 환경 AI-WS01</span></h2>
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>값</th></tr></thead>
+<tbody>
+<tr><td>GPU</td><td><b>RTX 5080 ×2</b> (각 15,979 MB) · 드라이버 591.86</td></tr>
+<tr><td>CPU / RAM</td><td>Threadripper 7970X (32C/64T) / 256 GB</td></tr>
+<tr><td>회선 실측</td><td><b>11.1 MB/s (89 Mbps)</b>544 MB를 48.9초에 수신</td></tr>
+<tr><td><b>총 디스크 사용</b></td><td><b>15.77 GB</b> (pip 캐시 8 GB 포함, 캐시는 삭제 가능)</td></tr>
+<tr><td>전체 소요</td><td>약 1시간 (시행착오 포함)</td></tr>
+<tr><td>Kit 첫 초기화</td><td>385초: <b>두 번째부터 ~20초</b></td></tr>
+<tr><td>GPU 실측 성능</td><td>fp32 4096×4096 matmul <b>36.4 TFLOPS</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>학습 성능 <span style="font-weight:400;font-size:.78rem;color:var(--ink-3)">2026-08-05 측정 · 험지 · 4096 envs · RTX 5080 1장</span></h3>
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>값</th></tr></thead>
+<tbody>
+<tr><td><b>학습 처리 속도</b></td><td><b>21,248 ~ 21,385 steps/s</b></td></tr>
+<tr><td><b>iteration 1회</b></td><td><b>4.4 ~ 4.6초</b> (수집 4.5s + 학습 0.12s)</td></tr>
+<tr><td>30 iteration</td><td>2.53분 (기동 포함)</td></tr>
+<tr><td><b>표준 1,500 iteration</b></td><td><b>실측 133분 (2시간 13분)</b>2026-08-12 완주. 30 iteration 외삽 예상은 113분이었고 <b>실측이 +18% 더 걸렸다</b></td></tr>
+<tr><td>GUI 모드 자원</td><td>시스템 RAM 13.5 GB · VRAM 약 9 GB (GPU0 4,143 + GPU1 4,807 MiB)</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+  <b>한 번 학습에 약 2시간 15분이 걸립니다</b>(1,500 iteration 실측 133분). 하루 8시간이면 <b>3~4회</b> 실험할 수 있습니다.<br>
+  수집(4.5s)이 학습(0.12s)의 <b>37배</b>입니다. 병목은 신경망이 아니라 <b>시뮬레이션</b>입니다.<br>
+  이 수치는 <b>험지(Rough)</b> 기준이고, 평지(Flat)는 훨씬 빠릅니다.
+</blockquote>
+<p><b>설치 후 디스크 사용량</b> 합계 약 <b>12.6 GB</b>. 여유 공간을 볼 때 이 숫자로 잡으세요.</p>
+<div class="tw"><table>
+<thead><tr><th>경로</th><th style="text-align:right">용량</th><th>무엇인가</th></tr></thead>
+<tbody>
+<tr><td><code>C:\Users\&lt;사용자&gt;\anaconda3\envs\isaac311\</code></td><td style="text-align:right"><b>7.77 GB</b></td><td>파이썬 환경 전체. 지우면 처음부터 다시</td></tr>
+<tr><td><code>C:\Users\&lt;사용자&gt;\AppData\Local\ov\</code></td><td style="text-align:right">4.75 GB</td><td>Kit 런타임 캐시. 지우면 첫 실행이 다시 느려짐</td></tr>
+<tr><td><code>C:\isaac\IsaacLab\</code></td><td style="text-align:right">0.08 GB</td><td>Isaac Lab 소스. git 으로 다시 받을 수 있음</td></tr>
+<tr><td><code>C:\Users\&lt;사용자&gt;\AppData\Local\pip\Cache\</code></td><td style="text-align:right">-</td><td><b>삭제 가능.</b> 설치가 끝나면 안 쓴다</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- ══════ 8 ══════ -->
+<section id="s8">
+<h2><span class="n">08</span>⚠️ 팀에 공유할 주의사항</h2>
+
+<blockquote class="warn">
+  <b>① <code>CUDA peer access: Not supported</code></b><br>
+  워크스테이션의 두 GPU가 <b>서로 직접 통신하지 못합니다.</b><br><br>
+  ✅ <b>“GPU 2장 = 동시에 두 명이 각자 학습”</b>유효합니다<br>
+  ❓ <b>“GPU 2장을 묶어 하나의 학습을 가속”</b><b>측정 완료. Windows 에서는 구조적으로 불가합니다.</b> <code>torch.distributed.is_nccl_available()</code> 가 <b>False</b> 입니다. NCCL 은 GPU 끼리 직접 데이터를 주고받는 라이브러리로 DDP 학습에 필수인데 PyTorch Windows 빌드에는 들어가지 않습니다(gloo 는 CPU 경유라 대체 불가). <b>우분투 전환 후 재측정</b>합니다. 2026-08-11 판정<br><br>
+  → 대외 자료에 <i>“GPU 2장으로 학습을 2배 빠르게”</i>라고 쓰지 마세요.
+  <b>“동시 2인 실험”</b>이 정확한 표현입니다.
+</blockquote>
+
+<div class="key">
+  <div class="kh">② policy.onnx 가 자동 생성됩니다</div>
+  <p style="color:var(--ink);margin:0">재생만 해도 <b>ONNX 익스포트가 함께 나옵니다</b>(1.1 MB).
+    Unitree 공식 실물 배포 경로가 ONNX이므로, <b>sim2real의 첫 단추가 이미 준비돼 있다</b>는 뜻입니다.</p>
+</div>
+</section>
+
+<!-- ══════ 9 ══════ -->
+<section id="s9">
+<h2><span class="n">09</span>아직 검증 안 된 것 <span style="font-weight:400;font-size:.78rem;color:var(--ink-3)">정직하게</span></h2>
+<div class="tw">
+<table>
+<thead><tr><th>항목</th><th>상태</th></tr></thead>
+<tbody>
+<tr><td><b>험지 속도 우회 플래그</b></td><td><code>--kit_args="--/physics/collisionApproximateCylinders=true"</code> 효과 <b>여전히 미측정</b></td></tr>
+<tr><td><b>teacher-student 증류 실제 실행</b></td><td>예제 파일 존재만 확인. 안 돌려봄</td></tr>
+<tr><td><b>WSL2 / 네이티브 우분투</b></td><td>시험 안 함. Windows로 성공했으므로 급하지 않음</td></tr>
+<tr><td><b>함정 ⑤·⑥이 Linux에서도 나는지</b></td><td>미확인</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+  ✅ <b>해소됨 (2026-08-05)</b>「학습 실행 속도 미측정」과 「GUI 실행 미확인」은
+  이번 2차 실증으로 측정됐습니다. <b>§7 실측 데이터</b>를 보세요.
+</blockquote>
+</section>
+
+<!-- ══════ 10 ══════ -->
+<section id="s10">
+<h2><span class="n">10</span>각자 설치 후 보고할 것</h2>
+<p>팀 채널에 아래를 붙여넣어 주세요. <b>전원이 같은 환경인지 확인하는 용도</b>입니다.</p>
+<div class="cb"><button class="copy" type="button">복사</button>
+<pre>conda activate isaac311
+python -c &quot;import torch,sys; print(&#x27;py&#x27;,sys.version.split()[0]); print(&#x27;torch&#x27;,torch.__version__,torch.version.cuda); print(&#x27;sm_120&#x27;, &#x27;sm_120&#x27; in torch.cuda.get_arch_list()); print(&#x27;gpu&#x27;,torch.cuda.device_count())&quot;
+cd C:\isaac\IsaacLab; git describe --tags</pre></div>
+
+<p><b>기대 출력</b></p>
+<div class="tw"><table>
+<thead><tr><th>줄</th><th>맞는 값</th><th>다르면 무슨 뜻인가</th></tr></thead>
+<tbody>
+<tr><td><code>py</code></td><td><code>3.11.x</code></td><td>다른 파이썬 환경이 켜져 있다. <code>conda activate isaac311</code></td></tr>
+<tr><td><code>torch</code></td><td><code>2.7.0+cu128 12.8</code></td><td>CPU 판이거나 구버전 CUDA 다. 재설치</td></tr>
+<tr><td><code>sm_120</code></td><td><b><code>True</code></b></td><td><b>여기가 관문.</b> False 면 RTX 5080 에서 아예 안 돈다</td></tr>
+<tr><td><code>gpu</code></td><td>각자 GPU 수</td><td><code>0</code> 이면 드라이버·CUDA 를 못 잡은 것</td></tr>
+<tr><td><code>git describe</code></td><td><code>v2.3.2</code></td><td>Isaac Lab 판이 다르다. 태스크 이름이 안 맞을 수 있다</td></tr>
+</tbody>
+</table></div>
+<p>하나라도 다르면 <b><a href="#s5" style="color:var(--stop)">§5 함정 목록</a></b>을 확인하세요.</p>
+</section>
+
+<div class="foot">
+  FOOTHOLD · 인공지능사관학교 7기 AI 도약과정 실증 프로젝트: 
+  원문 <code>02_team/SETUP_GUIDE.md</code> (v1 · 2026-08-05).
+  <b>버전·수치가 바뀌면</b> 이 문서와 MVP 결과 보고·원본 실측 로그를 <b>함께</b> 고쳐야 합니다.
+</div>
+
+</div>
+
+<script>
+/* ── 코드 복사 ── */
+document.querySelectorAll('.cb .copy').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var pre = btn.parentElement.querySelector('pre');
+    if(!pre) return;
+    var text = pre.innerText;
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '복사됨'; btn.classList.add('ok');
+      setTimeout(function(){ btn.textContent = old; btn.classList.remove('ok'); }, 1400);
+    };
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent='복사 실패'; }
+      document.body.removeChild(ta);
+    }
+  });
+});
+
+/* ── 체크리스트 (브라우저에 저장) ── */
+(function(){
+  var KEY='foothold-setup-check';
+  var boxes=[].slice.call(document.querySelectorAll('#ck input[type=checkbox]'));
+  var counter=document.getElementById('ckN');
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){
+      b.parentElement.classList.toggle('done', b.checked);
+      if(b.checked) n++;
+    });
+    counter.textContent=n;
+  }
+  boxes.forEach(function(b){
+    b.checked = !!saved[b.id];
+    b.addEventListener('change', function(){
+      saved[b.id]=b.checked;
+      try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){}
+      paint();
+    });
+  });
+  paint();
+  document.getElementById('ckReset').addEventListener('click', function(){
+    boxes.forEach(function(b){ b.checked=false; });
+    saved={}; try{ localStorage.removeItem(KEY); }catch(e){}
+    paint();
+  });
+})();
+
+/* ── 읽기 진행률 ── */
+(function(){
+  var bar=document.getElementById('prog');
+  function upd(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    bar.style.width = (max>0 ? (h.scrollTop/max*100) : 0) + '%';
+  }
+  window.addEventListener('scroll', upd, {passive:true});
+  window.addEventListener('resize', upd);
+  upd();
+})();
+
+/* ── 인쇄 전 함정 전부 펼치기 (CSS 만으로 안 되는 브라우저 대비) ── */
+(function(){
+  var traps=[].slice.call(document.querySelectorAll('details.trap'));
+  var wasOpen=[];
+  function openAll(){ wasOpen=traps.map(function(d){var o=d.open; d.open=true; return o;}); }
+  function restore(){ traps.forEach(function(d,i){ d.open=wasOpen[i]; }); }
+  window.addEventListener('beforeprint', openAll);
+  window.addEventListener('afterprint', restore);
+  if(window.matchMedia){
+    var mq=window.matchMedia('print');
+    var h=function(e){ e.matches ? openAll() : restore(); };
+    if(mq.addEventListener) mq.addEventListener('change', h);
+    else if(mq.addListener) mq.addListener(h);
+  }
+  /* ★ 2026-09-08 감사 F-05. 이 페이지의 pdfBtn 은 상단바 재조립 뒤에 없을 수
+     있는데 방어 없이 붙여 로드 즉시 예외가 났다. 있을 때만 붙인다. */
+  var pdfBtn = document.getElementById('pdfBtn');
+  if (pdfBtn) pdfBtn.addEventListener('click', function(){
+    openAll(); window.print();
+  });
+})();
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:var(--brand);--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style></body>
+</html>

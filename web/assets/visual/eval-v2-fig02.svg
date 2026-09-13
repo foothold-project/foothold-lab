@@ -1,0 +1,258 @@
+<svg viewBox="0 0 780 470" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="gap 지형 위 광선 187개와 빗나간 22개">
+<defs><marker id="a2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="var(--ink-2)"/></marker></defs>
+<text x="0.0" y="15.0" font-size="13" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">gap 지형 · 광선 187개가 어디를 비추나</text>
+<text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">난이도 0.5 · 출발 직후 · 위에서 내려다본 그림</text>
+<rect x="47.5" y="42.5" width="405.0" height="315.0" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="96.2" y="46.2" width="307.5" height="307.5" fill="var(--bad-soft)" stroke="var(--bad)" stroke-dasharray="4 3"/>
+<rect x="137.5" y="87.5" width="225.0" height="225.0" fill="var(--card)" stroke="var(--ink-3)"/>
+<text x="250.0" y="79.5" font-size="10" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">발판 1.5 m x 1.5 m</text>
+<text x="409.8" y="58.2" font-size="10" fill="var(--bad)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">틈 0.275 m</text>
+<text x="409.8" y="72.2" font-size="9.5" fill="var(--bad)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">바닥이 없다</text>
+<circle cx="130.0" cy="275.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="260.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="245.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="230.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="215.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="200.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="185.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="170.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="155.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="140.0" r="4.2" fill="var(--bad)"/>
+<circle cx="130.0" cy="125.0" r="4.2" fill="var(--bad)"/>
+<circle cx="145.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="145.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="160.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="175.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="190.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="205.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="220.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="235.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="250.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="265.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="280.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="295.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="310.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="325.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="340.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="275.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="260.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="245.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="230.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="215.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="200.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="185.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="170.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="155.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="140.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="355.0" cy="125.0" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<circle cx="370.0" cy="275.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="260.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="245.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="230.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="215.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="200.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="185.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="170.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="155.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="140.0" r="4.2" fill="var(--bad)"/>
+<circle cx="370.0" cy="125.0" r="4.2" fill="var(--bad)"/>
+<rect x="197.5" y="176.8" width="105.0" height="46.5" rx="7.5" fill="var(--accent)" opacity="0.92"/><rect x="299.5" y="191.8" width="13.5" height="16.5" rx="3.0" fill="var(--accent)"/><circle cx="286.0" cy="227.8" r="3.3" fill="var(--accent)" opacity="0.55"/><circle cx="286.0" cy="172.2" r="3.3" fill="var(--accent)" opacity="0.55"/><circle cx="214.0" cy="227.8" r="3.3" fill="var(--accent)" opacity="0.55"/><circle cx="214.0" cy="172.2" r="3.3" fill="var(--accent)" opacity="0.55"/>
+<line x1="419.5" y1="383.0" x2="448.0" y2="383.0" stroke="var(--ink)" stroke-width="2" marker-end="url(#a2)"/>
+<text x="412.0" y="387.0" font-size="10" fill="var(--ink)" text-anchor="end" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">진행</text>
+<text x="520.0" y="70.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">격자</text>
+<text x="520.0" y="88.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">1.6 m x 1.0 m · 0.1 m 간격</text>
+<text x="520.0" y="105.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">17 x 11 = 187 개</text>
+<text x="520.0" y="122.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">몸통 20 m 위에서 아래로만</text>
+<circle cx="525" cy="146" r="4.2" fill="var(--bad)"/>
+<text x="536.0" y="150.0" font-size="10.5" fill="var(--bad)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">빗나간 광선 22 개 (11.8%)</text>
+<circle cx="525" cy="166" r="2.2" fill="var(--accent)" opacity="0.5"/>
+<text x="536.0" y="170.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">맞은 광선 165 개</text>
+<text x="520.0" y="200.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">왜 딱 두 줄인가</text>
+<text x="520.0" y="218.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">발판 가장자리가 ±0.75 m</text>
+<text x="520.0" y="234.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">격자는 ±0.80 m 까지 뻗는다</text>
+<text x="520.0" y="250.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">그래서 맨 앞줄과 맨 뒷줄만</text>
+<text x="520.0" y="266.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">0.05 m 만큼 틈 위로 나간다</text>
+<line x1="0" y1="328" x2="780" y2="328" stroke="var(--rule)"/>
+<text x="0.0" y="348.0" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">같은 광선 22개가 학습과 평가에서 정반대 값이 된다</text>
+<text x="0.0" y="384.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습이 준 값</text>
+<rect x="110.0" y="368.0" width="20" height="24" rx="3" fill="var(--ok)" stroke="var(--rule)"/>
+<text x="120.0" y="384.0" font-size="11" fill="var(--card)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">+1</text>
+<rect x="132.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="154.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="176.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="198.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="220.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="242.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="264.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="286.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="308.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="330.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="352.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="374.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="396.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="418.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="440.0" y="368.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="462.0" y="368.0" width="20" height="24" rx="3" fill="var(--ok)" stroke="var(--rule)"/>
+<text x="472.0" y="384.0" font-size="11" fill="var(--card)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">+1</text>
+<text x="494.0" y="384.0" font-size="10.5" fill="var(--ok)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">바닥이 아주 멀리 아래 · 구멍</text>
+<text x="0.0" y="428.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평가가 주는 값</text>
+<rect x="110.0" y="412.0" width="20" height="24" rx="3" fill="var(--bad)" stroke="var(--rule)"/>
+<text x="120.0" y="428.0" font-size="11" fill="var(--card)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">-1</text>
+<rect x="132.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="154.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="176.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="198.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="220.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="242.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="264.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="286.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="308.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="330.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="352.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="374.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="396.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="418.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="440.0" y="412.0" width="20" height="24" rx="3" fill="var(--rule-2)" stroke="var(--rule)"/>
+<rect x="462.0" y="412.0" width="20" height="24" rx="3" fill="var(--bad)" stroke="var(--rule)"/>
+<text x="472.0" y="428.0" font-size="11" fill="var(--card)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">-1</text>
+<text x="494.0" y="428.0" font-size="10.5" fill="var(--bad)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">아주 높이 솟음 · 장애물</text>
+</svg>

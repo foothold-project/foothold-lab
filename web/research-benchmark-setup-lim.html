@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크 · FOOTHOLD</title>
+<meta name="description" content="NVIDIA 공식 checkpoint 모델의 미경험 험지에 대한 간단한 지표 측정">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:anywhere}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>Unitree Go2 Isaac Lab 2.3.2 베이스라인·미경험 험지 벤치마크</h1>
+  <p class="lede">NVIDIA 공식 checkpoint 모델의 미경험 험지에 대한 간단한 지표 측정</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/40">#40</a></span></div><div><span class="k">작성</span><span class="v">임석헌 · 2026-08-22 22:59</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / benchmark-setup-lim.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 실험
+작성: 임석헌 · 2026-08-22 22:59
+근거: 실측
+요지: NVIDIA 공식 checkpoint 모델의 미경험 험지에 대한 간단한 지표 측정
+상태: 확정
+판: v1.0
+이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/40">#40</a></p></blockquote>
+<blockquote><p>작성 2026-08-22 · <b>임석헌</b> · 원본: inbox/lim (승격 2026-08-22) · Runpod 재현의 실행 정본</p></blockquote>
+<ul><li>기준 환경: RunPod Ubuntu 컨테이너</li><li>Isaac Lab 루트: <code>/workspace/isaaclab</code></li><li>공식 체크포인트: <code>/workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt</code></li><li>미경험 험지 태스크: <code>Isaac-Velocity-Unseen-Unitree-Go2-v0</code></li><li>평가 규모: 10개 험지 × 험지별 50개 에피소드</li><li>공통 명령: <code>vx=0.5 m/s</code>, <code>vy=0.0 m/s</code>, <code>wz=0.0 rad/s</code></li><li>공통 seed: <code>42</code></li></ul>
+</section>
+<section id="s1"><span id="1"></span><h2>1. NVIDIA pretrained Go2 checkpoint 로드</h2>
+<h3>작업 경로와 버전 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">git</span> describe <span class="o">--tags</span> <span class="o">--always</span>
+./isaaclab.sh <span class="o">-p</span> <span class="o">-c</span> <span class="s">&quot;import isaaclab; print(isaaclab.__version__)&quot;</span>
+<span class="f">cat</span> source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/rough_env_cfg.py</pre></div>
+<ul><li>기대 버전 : <code>v2.3.2</code> 또는 <code>2.3.2</code></li></ul>
+<h3>공식 체크포인트 자동 다운로드와 실행</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> scripts/reinforcement_learning/rsl_rl/play.py \
+  <span class="o">--task</span> Isaac-Velocity-Rough-Unitree-Go2-v0 \
+  <span class="o">--num_envs</span> <span class="n">1</span> \
+  <span class="o">--use_pretrained_checkpoint</span> \
+  <span class="o">--headless</span></pre></div>
+<ul><li>최초 실행 결과 : 공식 pretrained checkpoint 다운로드</li><li>실행 종료 방식 : <code>Ctrl+C</code></li></ul>
+</section>
+<section id="s2"><span id="2"></span><h2>2. <code>generalization_env_cfg.py</code> 미경험 험지 구성</h2>
+<h3>목적</h3>
+<ul><li>기본 Go2 로봇·관측·행동·보상 구조 재사용</li><li>기본 학습 지형과 다른 10개 지형 타입의 평가 전용 구성</li><li><code>env 0</code>부터 <code>env 9</code>까지의 고정 지형 배치</li><li>에피소드별 작은 초기조건 변화와 전체 실행 재현성 확보</li></ul>
+<h3>파일 경로</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>/workspace/isaaclab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/generalization_env_cfg.py</pre></div>
+<h3>파일 전체 작성</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> <span class="o">&gt;</span> <span class="f">source</span>/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/generalization_env_cfg.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+<span class="f">import</span> isaaclab.terrains as terrain_gen
+<span class="f">from</span> isaaclab.utils import configclass
+<span class="f">from</span> isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import UnitreeGo2RoughEnvCfg
+
+GO2_UNSEEN_TERRAINS_CFG = terrain_gen.TerrainGeneratorCfg(
+    <span class="f">seed</span>=<span class="n">42</span>,
+    <span class="f">size</span>=(<span class="n">8.0</span>, <span class="n">8.0</span>),
+    <span class="f">border_width</span>=<span class="n">10.0</span>,
+    <span class="f">num_rows</span>=<span class="n">1</span>,
+    <span class="f">num_cols</span>=<span class="n">10</span>,
+    <span class="f">horizontal_scale</span>=<span class="n">0.1</span>,
+    <span class="f">vertical_scale</span>=<span class="n">0.005</span>,
+    <span class="f">slope_threshold</span>=<span class="n">0.75</span>,
+    <span class="f">curriculum</span>=True,
+    <span class="f">difficulty_range</span>=(<span class="n">0.5</span>, <span class="n">0.5</span>),
+    <span class="f">color_scheme</span>=<span class="s">&quot;height&quot;</span>,
+    <span class="f">use_cache</span>=False,
+
+    <span class="f">sub_terrains</span>={
+        <span class="s">&quot;discrete_obstacles&quot;</span>: terrain_gen.HfDiscreteObstaclesTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">obstacle_width_range</span>=(<span class="n">0.4</span>, <span class="n">1.0</span>),
+            <span class="f">obstacle_height_range</span>=(<span class="n">0.05</span>, <span class="n">0.16</span>),
+            <span class="f">num_obstacles</span>=<span class="n">35</span>,
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+            <span class="f">border_width</span>=<span class="n">0.25</span>,
+        ),
+
+        <span class="s">&quot;wave&quot;</span>: terrain_gen.HfWaveTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">amplitude_range</span>=(<span class="n">0.03</span>, <span class="n">0.12</span>),
+            <span class="f">num_waves</span>=<span class="n">4</span>,
+            <span class="f">border_width</span>=<span class="n">0.25</span>,
+        ),
+
+        <span class="s">&quot;stepping_stones&quot;</span>: terrain_gen.HfSteppingStonesTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">stone_height_max</span>=<span class="n">0.12</span>,
+            <span class="f">stone_width_range</span>=(<span class="n">0.35</span>, <span class="n">0.65</span>),
+            <span class="f">stone_distance_range</span>=(<span class="n">0.08</span>, <span class="n">0.20</span>),
+            <span class="f">holes_depth</span>=-<span class="n">1.0</span>,
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+            <span class="f">border_width</span>=<span class="n">0.25</span>,
+        ),
+
+        <span class="s">&quot;gap&quot;</span>: terrain_gen.MeshGapTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">gap_width_range</span>=(<span class="n">0.15</span>, <span class="n">0.40</span>),
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+
+        <span class="s">&quot;pit&quot;</span>: terrain_gen.MeshPitTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">pit_depth_range</span>=(<span class="n">0.10</span>, <span class="n">0.30</span>),
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+            <span class="f">double_pit</span>=False,
+        ),
+
+        <span class="s">&quot;rails&quot;</span>: terrain_gen.MeshRailsTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">rail_thickness_range</span>=(<span class="n">0.08</span>, <span class="n">0.18</span>),
+            <span class="f">rail_height_range</span>=(<span class="n">0.05</span>, <span class="n">0.18</span>),
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+
+        <span class="s">&quot;star&quot;</span>: terrain_gen.MeshStarTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">num_bars</span>=<span class="n">5</span>,
+            <span class="f">bar_width_range</span>=(<span class="n">0.30</span>, <span class="n">0.70</span>),
+            <span class="f">bar_height_range</span>=(<span class="n">0.05</span>, <span class="n">0.16</span>),
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+
+        <span class="s">&quot;floating_ring&quot;</span>: terrain_gen.MeshFloatingRingTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+            <span class="f">ring_width_range</span>=(<span class="n">0.25</span>, <span class="n">0.60</span>),
+            <span class="f">ring_height_range</span>=(<span class="n">0.05</span>, <span class="n">0.16</span>),
+            <span class="f">ring_thickness</span>=<span class="n">0.12</span>,
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+
+        <span class="s">&quot;repeated_boxes&quot;</span>: terrain_gen.MeshRepeatedBoxesTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+
+            <span class="f">object_params_start</span>=terrain_gen.MeshRepeatedBoxesTerrainCfg.ObjectCfg(
+                <span class="f">num_objects</span>=<span class="n">25</span>,
+                <span class="f">height</span>=<span class="n">0.08</span>,
+                <span class="f">size</span>=(<span class="n">0.35</span>, <span class="n">0.35</span>),
+                <span class="f">max_yx_angle</span>=<span class="n">0.0</span>,
+                <span class="f">degrees</span>=True,
+            ),
+
+            <span class="f">object_params_end</span>=terrain_gen.MeshRepeatedBoxesTerrainCfg.ObjectCfg(
+                <span class="f">num_objects</span>=<span class="n">45</span>,
+                <span class="f">height</span>=<span class="n">0.16</span>,
+                <span class="f">size</span>=(<span class="n">0.50</span>, <span class="n">0.50</span>),
+                <span class="f">max_yx_angle</span>=<span class="n">15.0</span>,
+                <span class="f">degrees</span>=True,
+            ),
+
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+
+        <span class="s">&quot;repeated_cylinders&quot;</span>: terrain_gen.MeshRepeatedCylindersTerrainCfg(
+            <span class="f">proportion</span>=<span class="n">0.1</span>,
+
+            <span class="f">object_params_start</span>=terrain_gen.MeshRepeatedCylindersTerrainCfg.ObjectCfg(
+                <span class="f">num_objects</span>=<span class="n">25</span>,
+                <span class="f">height</span>=<span class="n">0.08</span>,
+                <span class="f">radius</span>=<span class="n">0.12</span>,
+                <span class="f">max_yx_angle</span>=<span class="n">0.0</span>,
+                <span class="f">degrees</span>=True,
+            ),
+
+            <span class="f">object_params_end</span>=terrain_gen.MeshRepeatedCylindersTerrainCfg.ObjectCfg(
+                <span class="f">num_objects</span>=<span class="n">45</span>,
+                <span class="f">height</span>=<span class="n">0.16</span>,
+                <span class="f">radius</span>=<span class="n">0.20</span>,
+                <span class="f">max_yx_angle</span>=<span class="n">15.0</span>,
+                <span class="f">degrees</span>=True,
+            ),
+
+            <span class="f">platform_width</span>=<span class="n">1.5</span>,
+        ),
+    },
+)
+
+@configclass
+<span class="f">class</span> UnitreeGo2GeneralizationEnvCfg(UnitreeGo2RoughEnvCfg):
+    <span class="f">def</span> __post_init__(self):
+        <span class="f">super</span>().__post_init__()
+        <span class="f">self.scene.num_envs</span> = <span class="n">10</span>
+        <span class="f">self.scene.terrain.terrain_generator</span> = GO2_UNSEEN_TERRAINS_CFG
+        <span class="f">self.scene.terrain.max_init_terrain_level</span> = <span class="n">0</span>
+        <span class="f">self.curriculum.terrain_levels</span> = None
+        <span class="f">self.observations.policy.enable_corruption</span> = False
+        <span class="f">self.events.push_robot</span> = None
+        <span class="f">self.events.base_external_force_torque</span> = None
+        <span class="f">self.commands.base_velocity.ranges.lin_vel_x</span> = (<span class="n">0.5</span>, <span class="n">0.5</span>)
+        <span class="f">self.commands.base_velocity.ranges.lin_vel_y</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+        <span class="f">self.commands.base_velocity.ranges.ang_vel_z</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+        <span class="f">self.commands.base_velocity.heading_command</span> = False
+        <span class="f">self.commands.base_velocity.rel_standing_envs</span> = <span class="n">0.0</span>
+        <span class="f">self.viewer.origin_type</span> = <span class="s">&quot;asset_root&quot;</span>
+        <span class="f">self.viewer.asset_name</span> = <span class="s">&quot;robot&quot;</span>
+        <span class="f">self.viewer.env_index</span> = <span class="n">0</span>
+        <span class="f">self.viewer.eye</span> = (-<span class="n">3.0</span>, <span class="n">2.0</span>, <span class="n">1.5</span>)
+        <span class="f">self.viewer.lookat</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>, <span class="n">0.4</span>)
+PY</pre></div>
+<h3>문법·내용 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> <span class="o">-m</span> py_compile source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/generalization_env_cfg.py
+<span class="f">cat</span> source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/generalization_env_cfg.py</pre></div>
+<ul><li>정상 문법 확인: <code>py_compile</code> 무출력</li></ul>
+</section>
+<section id="s3"><span id="3"></span><h2>3. Go2 <code>__init__.py</code>에 <code>gym.register()</code> 추가</h2>
+<h3>목적</h3>
+<ul><li>문자열 태스크 ID와 환경 설정 클래스의 연결</li><li><code>gym.make()</code>와 Hydra 태스크 설정 로더의 새 태스크 탐색 지원</li><li>기존 Go2 Rough PPO runner 설정의 재사용</li></ul>
+<h3>파일 경로</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>/workspace/isaaclab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py</pre></div>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cp</span> source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py /workspace/isaaclab/go2_init_backup.py</pre></div>
+<h3>파일 끝에 추가할 코드</h3>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>gym.<span class="f">register</span>(
+    id=<span class="s">&quot;Isaac-Velocity-Unseen-Unitree-Go2-v0&quot;</span>,
+    entry_point=<span class="s">&quot;isaaclab.envs:ManagerBasedRLEnv&quot;</span>,
+    disable_env_checker=<span class="k">True</span>,
+    kwargs={
+        <span class="s">&quot;env_cfg_entry_point&quot;</span>: f<span class="s">&quot;{__name__}.generalization_env_cfg:UnitreeGo2GeneralizationEnvCfg&quot;</span>,
+        <span class="s">&quot;rsl_rl_cfg_entry_point&quot;</span>: f<span class="s">&quot;{agents.__name__}.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg&quot;</span>,
+    },
+)</pre></div>
+<h3><code>cat</code> 기반 추가 방식</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> <span class="o">&gt;&gt;</span> <span class="f">source</span>/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+
+<span class="f">gym.register</span>(
+    <span class="f">id</span>=<span class="s">&quot;Isaac-Velocity-Unseen-Unitree-Go2-v0&quot;</span>,
+    <span class="f">entry_point</span>=<span class="s">&quot;isaaclab.envs:ManagerBasedRLEnv&quot;</span>,
+    <span class="f">disable_env_checker</span>=True,
+    <span class="f">kwargs</span>={
+        <span class="s">&quot;env_cfg_entry_point&quot;</span>: f<span class="s">&quot;{__name__}.generalization_env_cfg:UnitreeGo2GeneralizationEnvCfg&quot;</span>,
+        <span class="s">&quot;rsl_rl_cfg_entry_point&quot;</span>: f<span class="s">&quot;{agents.__name__}.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg&quot;</span>,
+    },
+)
+PY</pre></div>
+<h3>등록 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">grep</span> <span class="o">-n</span> <span class="s">&quot;Isaac-Velocity-Unseen-Unitree-Go2-v0&quot;</span> <span class="f">source</span>/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py
+./isaaclab.sh <span class="o">-p</span> <span class="o">-m</span> py_compile source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py
+./isaaclab.sh <span class="o">-p</span> <span class="o">-c</span> <span class="s">&quot;import gymnasium as gym; import isaaclab_tasks; print(gym.spec(&#x27;Isaac-Velocity-Unseen-Unitree-Go2-v0&#x27;))&quot;</span></pre></div>
+<ul><li>기대 검색 결과: 단일 <code>id</code> 행</li><li>기대 Gym 출력: 새 태스크의 <code>EnvSpec</code></li></ul>
+</section>
+<section id="s4"><span id="4"></span><h2>4. 미경험 태스크와 공식 체크포인트 연결 실행</h2>
+<h3>목적</h3>
+<ul><li>학습된 policy 파라미터의 변경 없는 재사용</li><li>미경험 험지 환경만 교체한 zero-shot 실행</li><li>관측 차원·행동 차원·checkpoint 호환성 확인</li></ul>
+<h3>체크포인트 경로 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> &lt;&lt;<span class="s">&#x27;TXT&#x27;</span>
+/workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt
+TXT
+<span class="f">test</span> <span class="o">-s</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt
+<span class="f">echo</span> $?</pre></div>
+<h3>미경험 태스크 실행</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> scripts/reinforcement_learning/rsl_rl/play.py \
+  <span class="o">--task</span> Isaac-Velocity-Unseen-Unitree-Go2-v0 \
+  <span class="o">--num_envs</span> <span class="n">10</span> \
+  <span class="o">--checkpoint</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt \
+  <span class="o">--headless</span></pre></div>
+<h3>정상 실행 기준</h3>
+<ul><li>환경 개수 <code>10</code> 확인</li><li>공식 <code>checkpoint.pt</code> 로드 로그 확인</li><li>관측·행동 차원 불일치 오류 부재</li><li>terrain 생성 오류 부재</li><li>실행 종료 방식: <code>Ctrl+C</code></li></ul>
+</section>
+<section id="s5"><span id="5"></span><h2>5. <code>eval_generalization.py</code> 정량평가 코드 작성</h2>
+<h3>목적</h3>
+<ul><li>10개 지형의 병렬 평가</li><li>지형별 50개 에피소드 수집</li><li>동일 지형의 50개 에피소드마다 서로 다른 초기 위치·방향·관절 자세 적용</li><li>생존·전진·속도 추종·방향 유지 평가</li><li>raw CSV와 summary CSV 자동 생성</li><li>동일 evaluator 기반 checkpoint 공정 비교</li></ul>
+<h3>파일 경로</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>/workspace/isaaclab/scripts/reinforcement_learning/rsl_rl/eval_generalization.py</pre></div>
+<h3>파일 전체 작성</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> <span class="o">&gt;</span> <span class="f">scripts</span>/reinforcement_learning/rsl_rl/eval_generalization.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+
+<span class="f">import</span> argparse
+<span class="f">import</span> csv
+<span class="f">import</span> math
+<span class="f">import</span> os
+<span class="f">import</span> sys
+<span class="f">import</span> math
+<span class="f">from</span> collections import defaultdict
+<span class="f">from</span> isaaclab.app import AppLauncher
+
+<span class="f">parser</span> = argparse.ArgumentParser(description=<span class="s">&quot;Evaluate Go2 zero-shot generalization on unseen terrains.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--task&quot;</span>, type=str, default=<span class="s">&quot;Isaac-Velocity-Unseen-Unitree-Go2-v0&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--episodes_per_terrain&quot;</span>, type=int, default=<span class="n">50</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--eval_duration&quot;</span>, type=float, default=<span class="n">6.0</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--command_vx&quot;</span>, type=float, default=<span class="n">0.5</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--min_progress_ratio&quot;</span>, type=float, default=<span class="n">0.70</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--max_velocity_mae&quot;</span>, type=float, default=<span class="n">0.25</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--max_lateral_drift&quot;</span>, type=float, default=<span class="n">0.75</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--output_dir&quot;</span>, type=str, default=<span class="s">&quot;/workspace/isaaclab/generalization_results&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--seed&quot;</span>, type=int, default=<span class="n">42</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--spawn_xy_range&quot;</span>, type=float, default=<span class="n">0.10</span>, help=<span class="s">&quot;Random initial x/y offset in meters.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--yaw_range_deg&quot;</span>, type=float, default=<span class="n">5.0</span>, help=<span class="s">&quot;Random initial yaw range in degrees.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--joint_pos_scale&quot;</span>, type=float, default=<span class="n">0.05</span>, help=<span class="s">&quot;Random joint position scale around default pose.&quot;</span>)
+
+<span class="f">import</span> cli_args
+
+<span class="f">cli_args.add_rsl_rl_args</span>(parser)
+
+AppLauncher.add_app_launcher_args(parser)
+
+<span class="f">args_cli</span>, hydra_args = parser.parse_known_args()
+
+<span class="f">sys.argv</span> = [sys.argv[<span class="n">0</span>]] + hydra_args
+
+<span class="f">app_launcher</span> = AppLauncher(args_cli)
+<span class="f">simulation_app</span> = app_launcher.app
+
+<span class="f">import</span> gymnasium as gym
+<span class="f">import</span> torch
+
+<span class="f">from</span> rsl_rl.runners import OnPolicyRunner
+<span class="f">from</span> isaaclab.utils.assets import retrieve_file_path
+<span class="f">from</span> isaaclab.utils.math import quat_apply
+<span class="f">from</span> isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
+<span class="f">import</span> isaaclab_tasks
+<span class="f">from</span> isaaclab_tasks.utils.hydra import hydra_task_config
+
+TERRAIN_NAMES = [
+    <span class="s">&quot;discrete_obstacles&quot;</span>,
+    <span class="s">&quot;wave&quot;</span>,
+    <span class="s">&quot;stepping_stones&quot;</span>,
+    <span class="s">&quot;gap&quot;</span>,
+    <span class="s">&quot;pit&quot;</span>,
+    <span class="s">&quot;rails&quot;</span>,
+    <span class="s">&quot;star&quot;</span>,
+    <span class="s">&quot;floating_ring&quot;</span>,
+    <span class="s">&quot;repeated_boxes&quot;</span>,
+    <span class="s">&quot;repeated_cylinders&quot;</span>,
+]
+
+<span class="f">def</span> configure_evaluation(env_cfg, agent_cfg):
+    <span class="f">env_cfg.seed</span> = args_cli.seed
+    <span class="f">agent_cfg.seed</span> = args_cli.seed
+    <span class="f">env_cfg.scene.num_envs</span> = len(TERRAIN_NAMES)
+
+    <span class="f">terrain_gen</span> = env_cfg.scene.terrain.terrain_generator
+
+    <span class="f">if</span> terrain_gen is None:
+        <span class="f">raise</span> RuntimeError(<span class="s">&quot;Benchmark task does not use a TerrainGenerator.&quot;</span>)
+
+    <span class="f">terrain_gen.seed</span> = args_cli.seed
+
+    <span class="f">terrain_gen.curriculum</span> = True
+
+    <span class="f">if</span> terrain_gen.num_cols != len(TERRAIN_NAMES):
+        <span class="f">raise</span> RuntimeError(
+            <span class="f">f</span><span class="s">&quot;Expected {len(TERRAIN_NAMES)} terrain columns, &quot;</span>
+            <span class="f">f</span><span class="s">&quot;but config has {terrain_gen.num_cols}.&quot;</span>
+        )
+
+    <span class="f">env_cfg.scene.terrain.max_init_terrain_level</span> = <span class="n">0</span>
+
+    <span class="f">if</span> hasattr(env_cfg.curriculum, <span class="s">&quot;terrain_levels&quot;</span>):
+        <span class="f">env_cfg.curriculum.terrain_levels</span> = None
+    <span class="f">env_cfg.episode_length_s</span> = args_cli.eval_duration
+
+    <span class="f">cmd</span> = env_cfg.commands.base_velocity
+
+    <span class="f">cmd.ranges.lin_vel_x</span> = (args_cli.command_vx, args_cli.command_vx)
+    <span class="f">cmd.ranges.lin_vel_y</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+    <span class="f">cmd.ranges.ang_vel_z</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+
+    <span class="f">cmd.heading_command</span> = False
+    <span class="f">cmd.rel_heading_envs</span> = <span class="n">0.0</span>
+    <span class="f">cmd.rel_standing_envs</span> = <span class="n">0.0</span>
+
+    <span class="f">env_cfg.observations.policy.enable_corruption</span> = False
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;push_robot&quot;</span>):
+        <span class="f">env_cfg.events.push_robot</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;base_external_force_torque&quot;</span>):
+        <span class="f">env_cfg.events.base_external_force_torque</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;add_base_mass&quot;</span>):
+        <span class="f">env_cfg.events.add_base_mass</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;base_com&quot;</span>):
+        <span class="f">env_cfg.events.base_com</span> = None
+
+    <span class="f">spawn_range</span> = args_cli.spawn_xy_range
+
+    <span class="f">yaw_range_rad</span> = math.radians(args_cli.yaw_range_deg)
+
+    <span class="f">joint_scale</span> = args_cli.joint_pos_scale
+
+    <span class="f">if</span> getattr(env_cfg.events, <span class="s">&quot;reset_base&quot;</span>, None) is not None:
+        <span class="f">env_cfg.events.reset_base.params</span>[<span class="s">&quot;pose_range&quot;</span>] = {
+            <span class="s">&quot;x&quot;</span>: (<span class="o">-spawn_range</span>, spawn_range),
+            <span class="s">&quot;y&quot;</span>: (<span class="o">-spawn_range</span>, spawn_range),
+            <span class="s">&quot;yaw&quot;</span>: (<span class="o">-yaw_range_rad</span>, yaw_range_rad),
+        }
+
+        <span class="f">env_cfg.events.reset_base.params</span>[<span class="s">&quot;velocity_range&quot;</span>] = {
+            <span class="s">&quot;x&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;y&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;z&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;roll&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;pitch&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;yaw&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+        }
+
+    <span class="f">if</span> getattr(env_cfg.events, <span class="s">&quot;reset_robot_joints&quot;</span>, None) is not None:
+        <span class="f">env_cfg.events.reset_robot_joints.params</span>[<span class="s">&quot;position_range&quot;</span>] = (
+            <span class="n">1.0</span> - joint_scale,
+            <span class="n">1.0</span> + joint_scale,
+        )
+
+        <span class="f">env_cfg.events.reset_robot_joints.params</span>[<span class="s">&quot;velocity_range&quot;</span>] = (
+            <span class="n">0.0</span>,
+            <span class="n">0.0</span>,
+        )
+
+
+<span class="f">def</span> initial_forward_vectors(robot, num_envs, device):
+    <span class="f">local_x</span> = torch.zeros((num_envs, <span class="n">3</span>), device=device)
+    <span class="f">local_x</span>[:, <span class="n">0</span>] = <span class="n">1.0</span>
+
+    <span class="f">forward_w</span> = quat_apply(robot.data.root_quat_w, local_x)
+    <span class="f">forward_xy</span> = forward_w[:, :<span class="n">2</span>]
+
+    <span class="f">forward_xy</span> = forward_xy / torch.linalg.vector_norm(
+        <span class="f">forward_xy</span>, dim=<span class="n">1</span>, keepdim=True
+    ).clamp_min(<span class="n">1</span>.0e-<span class="n">8</span>)
+
+    <span class="f">return</span> forward_xy
+
+
+<span class="f">def</span> print_and_verify_mapping(raw_env):
+    <span class="f">terrain</span> = raw_env.scene.terrain
+    <span class="f">terrain_gen_cfg</span> = raw_env.cfg.scene.terrain.terrain_generator
+
+    <span class="f">cfg_names</span> = list(terrain_gen_cfg.sub_terrains.keys())
+
+    <span class="f">print</span>(<span class="s">&quot;\n&quot;</span> + <span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;ENV -&gt; TERRAIN MAPPING&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+
+    <span class="f">if</span> cfg_names != TERRAIN_NAMES:
+        <span class="f">print</span>(<span class="s">&quot;Configured terrain order:&quot;</span>)
+        <span class="f">print</span>(cfg_names)
+        <span class="f">print</span>(<span class="s">&quot;Expected terrain order:&quot;</span>)
+        <span class="f">print</span>(TERRAIN_NAMES)
+        <span class="f">raise</span> RuntimeError(
+            <span class="s">&quot;sub_terrains dictionary order does not match benchmark definition.&quot;</span>
+        )
+
+    <span class="f">types</span> = terrain.terrain_types.detach().cpu().tolist()
+    <span class="f">levels</span> = terrain.terrain_levels.detach().cpu().tolist()
+    <span class="f">origins</span> = terrain.env_origins.detach().cpu().tolist()
+
+    <span class="f">for</span> env_id in range(raw_env.num_envs):
+        <span class="f">terrain_type</span> = int(types[env_id])
+
+        <span class="f">if</span> terrain_type &lt; <span class="n">0</span> or terrain_type <span class="o">&gt;</span>= len(TERRAIN_NAMES):
+            <span class="f">raise</span> RuntimeError(
+                <span class="f">f</span><span class="s">&quot;env {env_id} has invalid terrain_type={terrain_type}&quot;</span>
+            )
+
+        <span class="f">terrain_name</span> = TERRAIN_NAMES[terrain_type]
+
+        <span class="f">print</span>(
+            <span class="f">f</span><span class="s">&quot;env {env_id:02d}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | terrain_type={terrain_type}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | level={int(levels[env_id])}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | terrain={terrain_name:&lt;22}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | origin=({origins[env_id][0]:7.2f},&quot;</span>
+            <span class="f">f</span><span class="s">&quot; {origins[env_id][1]:7.2f},&quot;</span>
+            <span class="f">f</span><span class="s">&quot; {origins[env_id][2]:6.2f})&quot;</span>
+        )
+
+        <span class="f">if</span> terrain_type != env_id:
+            <span class="f">raise</span> RuntimeError(
+                <span class="f">f</span><span class="s">&quot;Mapping mismatch: env {env_id} -&gt; terrain_type {terrain_type}&quot;</span>
+            )
+
+    <span class="f">print</span>(<span class="s">&quot;\n[PASS] env-to-terrain mapping is deterministic and correct.&quot;</span>)
+
+
+<span class="f">def</span> verify_commands(raw_env, command_vx):
+    <span class="f">command</span> = raw_env.command_manager.get_command(<span class="s">&quot;base_velocity&quot;</span>)
+
+    <span class="f">expected</span> = torch.zeros_like(command)
+    <span class="f">expected</span>[:, <span class="n">0</span>] = command_vx
+
+    <span class="f">max_error</span> = torch.max(torch.abs(command - expected)).item()
+
+    <span class="f">print</span>(<span class="s">&quot;\n&quot;</span> + <span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;COMMAND VERIFICATION&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+
+    <span class="f">for</span> env_id in range(raw_env.num_envs):
+        <span class="f">values</span> = command[env_id].detach().cpu().tolist()
+        <span class="f">print</span>(
+            <span class="f">f</span><span class="s">&quot;env {env_id:02d}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | vx={values[0]: .3f}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | vy={values[1]: .3f}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | wz={values[2]: .3f}&quot;</span>
+        )
+
+    <span class="f">if</span> max_error <span class="o">&gt;</span> <span class="n">1</span>.0e-<span class="n">6</span>:
+        <span class="f">raise</span> RuntimeError(
+            <span class="f">f</span><span class="s">&quot;Commands are not fixed as expected. max error={max_error}&quot;</span>
+        )
+
+    <span class="f">print</span>(<span class="s">&quot;\n[PASS] all robots receive the same velocity command.&quot;</span>)
+
+
+<span class="f">def</span> summarize_results(rows):
+    <span class="f">grouped</span> = defaultdict(list)
+
+    <span class="f">for</span> row in rows:
+        <span class="f">grouped</span>[row[<span class="s">&quot;terrain&quot;</span>]].append(row)
+
+    <span class="f">summary_rows</span> = []
+
+    <span class="f">for</span> terrain_name in TERRAIN_NAMES:
+        <span class="f">episodes</span> = grouped[terrain_name]
+
+        <span class="f">n</span> = len(episodes)
+
+        <span class="f">overall_rate</span> = sum(int(r[<span class="s">&quot;overall_success&quot;</span>]) for r in episodes) / n
+        <span class="f">survival_rate</span> = sum(int(r[<span class="s">&quot;survival_success&quot;</span>]) for r in episodes) / n
+        <span class="f">progress_rate</span> = sum(int(r[<span class="s">&quot;progress_success&quot;</span>]) for r in episodes) / n
+        <span class="f">tracking_rate</span> = sum(int(r[<span class="s">&quot;tracking_success&quot;</span>]) for r in episodes) / n
+        <span class="f">direction_rate</span> = sum(int(r[<span class="s">&quot;direction_success&quot;</span>]) for r in episodes) / n
+
+        <span class="f">mean_forward</span> = sum(float(r[<span class="s">&quot;forward_progress_m&quot;</span>]) for r in episodes) / n
+        <span class="f">mean_lateral</span> = sum(float(r[<span class="s">&quot;lateral_drift_m&quot;</span>]) for r in episodes) / n
+        <span class="f">mean_vel_mae</span> = sum(float(r[<span class="s">&quot;velocity_mae_mps&quot;</span>]) for r in episodes) / n
+        <span class="f">mean_duration</span> = sum(float(r[<span class="s">&quot;duration_s&quot;</span>]) for r in episodes) / n
+        <span class="f">mean_reward</span> = sum(float(r[<span class="s">&quot;mean_reward_per_step&quot;</span>]) for r in episodes) / n
+
+        <span class="f">failed</span> = [r for r in episodes if not bool(r[<span class="s">&quot;survival_success&quot;</span>])]
+
+        <span class="f">if</span> failed:
+            <span class="f">mean_fall_time</span> = sum(float(r[<span class="s">&quot;duration_s&quot;</span>]) for r in failed) / len(failed)
+        <span class="f">else</span>:
+            <span class="f">mean_fall_time</span> = <span class="s">&quot;&quot;</span>
+
+        <span class="f">summary_rows.append</span>(
+            {
+                <span class="s">&quot;terrain&quot;</span>: terrain_name,
+                <span class="s">&quot;episodes&quot;</span>: n,
+                <span class="s">&quot;overall_success_rate&quot;</span>: overall_rate,
+                <span class="s">&quot;survival_rate&quot;</span>: survival_rate,
+                <span class="s">&quot;progress_success_rate&quot;</span>: progress_rate,
+                <span class="s">&quot;tracking_success_rate&quot;</span>: tracking_rate,
+                <span class="s">&quot;direction_success_rate&quot;</span>: direction_rate,
+                <span class="s">&quot;mean_forward_progress_m&quot;</span>: mean_forward,
+                <span class="s">&quot;mean_lateral_drift_m&quot;</span>: mean_lateral,
+                <span class="s">&quot;mean_velocity_mae_mps&quot;</span>: mean_vel_mae,
+                <span class="s">&quot;mean_episode_duration_s&quot;</span>: mean_duration,
+                <span class="s">&quot;mean_fall_time_s&quot;</span>: mean_fall_time,
+                <span class="s">&quot;mean_reward_per_step&quot;</span>: mean_reward,
+            }
+        )
+
+    <span class="f">return</span> summary_rows
+
+
+<span class="f">def</span> save_csv(rows, summary_rows, output_dir):
+    <span class="f">os.makedirs</span>(output_dir, exist_ok=True)
+
+    <span class="f">raw_path</span> = os.path.join(output_dir, <span class="s">&quot;generalization_raw.csv&quot;</span>)
+    <span class="f">summary_path</span> = os.path.join(output_dir, <span class="s">&quot;generalization_summary.csv&quot;</span>)
+
+    <span class="f">with</span> open(raw_path, <span class="s">&quot;w&quot;</span>, newline=<span class="s">&quot;&quot;</span>) as f:
+        <span class="f">writer</span> = csv.DictWriter(f, fieldnames=list(rows[<span class="n">0</span>].keys()))
+        <span class="f">writer.writeheader</span>()
+        <span class="f">writer.writerows</span>(rows)
+
+    <span class="f">with</span> open(summary_path, <span class="s">&quot;w&quot;</span>, newline=<span class="s">&quot;&quot;</span>) as f:
+        <span class="f">writer</span> = csv.DictWriter(f, fieldnames=list(summary_rows[<span class="n">0</span>].keys()))
+        <span class="f">writer.writeheader</span>()
+        <span class="f">writer.writerows</span>(summary_rows)
+
+    <span class="f">print</span>(<span class="s">&quot;\n&quot;</span> + <span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;RESULT FILES&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(raw_path)
+    <span class="f">print</span>(summary_path)
+
+
+@hydra_task_config(args_cli.task, <span class="s">&quot;rsl_rl_cfg_entry_point&quot;</span>)
+<span class="f">def</span> main(env_cfg, agent_cfg):
+
+    <span class="f">if</span> args_cli.checkpoint is None:
+        <span class="f">raise</span> ValueError(
+            <span class="s">&quot;--checkpoint is required. &quot;</span>
+            <span class="s">&quot;Use the NVIDIA Go2 Rough pretrained checkpoint.&quot;</span>
+        )
+
+    <span class="f">configure_evaluation</span>(env_cfg, agent_cfg)
+
+    <span class="f">if</span> getattr(args_cli, <span class="s">&quot;device&quot;</span>, None) is not None:
+        <span class="f">env_cfg.sim.device</span> = args_cli.device
+
+    <span class="f">gym_env</span> = gym.make(args_cli.task, cfg=env_cfg)
+
+    <span class="f">raw_env</span> = gym_env.unwrapped
+
+    <span class="f">print_and_verify_mapping</span>(raw_env)
+
+    <span class="f">gym_env.reset</span>()
+
+    <span class="f">verify_commands</span>(raw_env, args_cli.command_vx)
+
+    <span class="f">env</span> = RslRlVecEnvWrapper(
+        <span class="f">gym_env</span>,
+        <span class="f">clip_actions</span>=agent_cfg.clip_actions,
+    )
+
+    <span class="f">resume_path</span> = retrieve_file_path(args_cli.checkpoint)
+
+    <span class="f">print</span>(<span class="s">&quot;\n[INFO] Loading checkpoint:&quot;</span>)
+    <span class="f">print</span>(resume_path)
+
+    <span class="f">runner</span> = OnPolicyRunner(
+        <span class="f">env</span>,
+        <span class="f">agent_cfg.to_dict</span>(),
+        <span class="f">log_dir</span>=None,
+        <span class="f">device</span>=agent_cfg.device,
+    )
+
+    <span class="f">runner.load</span>(resume_path)
+
+    <span class="f">policy</span> = runner.get_inference_policy(device=raw_env.device)
+    <span class="f">policy_nn</span> = runner.alg.policy
+
+    <span class="f">obs</span> = env.get_observations()
+
+
+    <span class="f">verify_commands</span>(raw_env, args_cli.command_vx)
+
+    <span class="f">num_envs</span> = raw_env.num_envs
+    <span class="f">device</span> = raw_env.device
+    <span class="f">dt</span> = raw_env.step_dt
+
+    <span class="f">target_episodes</span> = args_cli.episodes_per_terrain
+
+    <span class="f">ideal_distance</span> = args_cli.command_vx * args_cli.eval_duration
+    <span class="f">min_progress</span> = args_cli.min_progress_ratio * ideal_distance
+
+    <span class="f">episode_counts</span> = torch.zeros(
+        <span class="f">num_envs</span>, dtype=torch.long, device=device
+    )
+
+    <span class="f">elapsed</span> = torch.zeros(num_envs, device=device)
+    <span class="f">velocity_error_sum</span> = torch.zeros(num_envs, device=device)
+    <span class="f">reward_sum</span> = torch.zeros(num_envs, device=device)
+    <span class="f">sample_count</span> = torch.zeros(num_envs, dtype=torch.long, device=device)
+
+    <span class="f">robot</span> = raw_env.scene[<span class="s">&quot;robot&quot;</span>]
+
+    <span class="f">start_pos</span> = robot.data.root_pos_w[:, :<span class="n">2</span>].clone()
+    <span class="f">forward_dir</span> = initial_forward_vectors(robot, num_envs, device)
+
+    <span class="f">terrain_origins</span> = raw_env.scene.terrain.env_origins[:, :<span class="n">2</span>].clone()
+
+    <span class="f">start_offset</span> = start_pos - terrain_origins
+
+    <span class="f">start_yaw</span> = torch.atan2(
+        <span class="f">forward_dir</span>[:, <span class="n">1</span>],
+        <span class="f">forward_dir</span>[:, <span class="n">0</span>],
+    )
+
+    <span class="f">results</span> = []
+
+    <span class="f">print</span>(<span class="s">&quot;\n&quot;</span> + <span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;GENERALIZATION EVALUATION&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(f<span class="s">&quot;terrains               : {num_envs}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;episodes / terrain     : {target_episodes}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;total target episodes  : {num_envs * target_episodes}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;evaluation duration    : {args_cli.eval_duration:.2f} s&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;command vx             : {args_cli.command_vx:.2f} m/s&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;ideal distance         : {ideal_distance:.2f} m&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;minimum progress       : {min_progress:.2f} m&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;max velocity MAE       : {args_cli.max_velocity_mae:.2f} m/s&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;max lateral drift      : {args_cli.max_lateral_drift:.2f} m&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+
+    <span class="f">while</span> simulation_app.is_running():
+
+        <span class="f">if</span> torch.all(episode_counts <span class="o">&gt;</span>= target_episodes):
+            <span class="f">break</span>
+
+        <span class="f">active</span> = episode_counts &lt; <span class="f">target_episodes</span>
+
+        <span class="f">pre_step_pos</span> = robot.data.root_pos_w[:, :<span class="n">2</span>].clone()
+
+        <span class="f">command</span> = raw_env.command_manager.get_command(<span class="s">&quot;base_velocity&quot;</span>).clone()
+
+        <span class="f">expected</span> = torch.zeros_like(command)
+        <span class="f">expected</span>[:, <span class="n">0</span>] = args_cli.command_vx
+
+        <span class="f">command_error</span> = torch.max(torch.abs(command - expected)).item()
+
+        <span class="f">if</span> command_error <span class="o">&gt;</span> <span class="n">1</span>.0e-<span class="n">5</span>:
+            <span class="f">raise</span> RuntimeError(
+                <span class="f">f</span><span class="s">&quot;Command changed during evaluation. &quot;</span>
+                <span class="f">f</span><span class="s">&quot;max deviation={command_error}&quot;</span>
+            )
+
+        <span class="f">actual_vel_b</span> = robot.data.root_lin_vel_b[:, :<span class="n">2</span>].clone()
+
+        <span class="f">planar_vel_error</span> = torch.linalg.vector_norm(
+            <span class="f">actual_vel_b</span> - command[:, :<span class="n">2</span>],
+            <span class="f">dim</span>=<span class="n">1</span>,
+        )
+
+        <span class="f">elapsed</span>[active] += dt
+        <span class="f">velocity_error_sum</span>[active] += planar_vel_error[active]
+        <span class="f">sample_count</span>[active] += <span class="n">1</span>
+
+        <span class="f">with</span> torch.inference_mode():
+            <span class="f">actions</span> = policy(obs)
+            <span class="f">obs</span>, reward, dones, extras = env.step(actions)
+            <span class="f">policy_nn.reset</span>(dones)
+
+        <span class="f">reward_sum</span>[active] += reward[active]
+
+        <span class="f">terminated</span> = raw_env.reset_terminated.clone()
+        <span class="f">timed_out</span> = raw_env.reset_time_outs.clone()
+
+        <span class="f">done_ids</span> = torch.nonzero(
+            (terminated <span class="o">|</span> <span class="f">timed_out</span>) &amp; <span class="f">active</span>,
+            <span class="f">as_tuple</span>=False,
+        ).squeeze(-<span class="n">1</span>)
+
+        <span class="f">if</span> done_ids.numel() == <span class="n">0</span>:
+            <span class="f">continue</span>
+
+        <span class="f">for</span> env_id_tensor in done_ids:
+            <span class="f">env_id</span> = int(env_id_tensor.item())
+
+            <span class="f">terrain_type</span> = int(
+                <span class="f">raw_env.scene.terrain.terrain_types</span>[env_id].item()
+            )
+            <span class="f">terrain_name</span> = TERRAIN_NAMES[terrain_type]
+
+            <span class="f">displacement</span> = pre_step_pos[env_id] - start_pos[env_id]
+
+            <span class="f">forward</span> = torch.dot(
+                <span class="f">displacement</span>,
+                <span class="f">forward_dir</span>[env_id],
+            ).item()
+
+            <span class="f">lateral_axis</span> = torch.stack(
+                (
+                    <span class="o">-forward_dir</span>[env_id, <span class="n">1</span>],
+                    <span class="f">forward_dir</span>[env_id, <span class="n">0</span>],
+                )
+            )
+
+            <span class="f">lateral</span> = abs(
+                <span class="f">torch.dot</span>(displacement, lateral_axis).item()
+            )
+
+            <span class="f">steps</span> = max(int(sample_count[env_id].item()), <span class="n">1</span>)
+
+            <span class="f">vel_mae</span> = (
+                <span class="f">velocity_error_sum</span>[env_id].item() / steps
+            )
+
+            <span class="f">mean_reward</span> = (
+                <span class="f">reward_sum</span>[env_id].item() / steps
+            )
+
+            <span class="f">duration</span> = elapsed[env_id].item()
+
+            <span class="f">survival_success</span> = bool(
+                <span class="f">timed_out</span>[env_id].item()
+                <span class="f">and</span> not terminated[env_id].item()
+            )
+
+            <span class="f">progress_success</span> = bool(
+                <span class="f">forward</span> <span class="o">&gt;</span>= min_progress
+            )
+
+            <span class="f">tracking_success</span> = bool(
+                <span class="f">vel_mae</span> &lt;= args_cli.max_velocity_mae
+            )
+
+            <span class="f">direction_success</span> = bool(
+                <span class="f">lateral</span> &lt;= args_cli.max_lateral_drift
+            )
+
+            <span class="f">overall_success</span> = bool(
+                <span class="f">survival_success</span>
+                <span class="f">and</span> progress_success
+                <span class="f">and</span> tracking_success
+                <span class="f">and</span> direction_success
+            )
+
+            <span class="f">episode_number</span> = int(
+                <span class="f">episode_counts</span>[env_id].item()
+            ) + <span class="n">1</span>
+
+            <span class="f">progress_ratio</span> = (
+                <span class="f">forward</span> / ideal_distance
+                <span class="f">if</span> ideal_distance <span class="o">&gt;</span> <span class="n">0.0</span>
+                <span class="f">else</span> <span class="n">0.0</span>
+            )
+
+            <span class="f">termination_reason</span> = (
+                <span class="s">&quot;timeout&quot;</span>
+                <span class="f">if</span> timed_out[env_id].item()
+                <span class="f">else</span> <span class="s">&quot;base_contact&quot;</span>
+            )
+
+            <span class="f">row</span> = {
+                <span class="s">&quot;terrain&quot;</span>: terrain_name,
+                <span class="s">&quot;env_id&quot;</span>: env_id,
+                <span class="s">&quot;episode&quot;</span>: episode_number,
+                <span class="s">&quot;start_x_offset_m&quot;</span>: round(
+                    <span class="f">start_offset</span>[env_id, <span class="n">0</span>].item(),
+                    <span class="n">4</span>,
+                ),
+
+                <span class="s">&quot;start_y_offset_m&quot;</span>: round(
+                    <span class="f">start_offset</span>[env_id, <span class="n">1</span>].item(),
+                    <span class="n">4</span>,
+                ),
+
+                <span class="s">&quot;start_yaw_deg&quot;</span>: round(
+                    <span class="f">math.degrees</span>(start_yaw[env_id].item()),
+                    <span class="n">3</span>,
+                ),
+                <span class="s">&quot;overall_success&quot;</span>: overall_success,
+                <span class="s">&quot;survival_success&quot;</span>: survival_success,
+                <span class="s">&quot;progress_success&quot;</span>: progress_success,
+                <span class="s">&quot;tracking_success&quot;</span>: tracking_success,
+                <span class="s">&quot;direction_success&quot;</span>: direction_success,
+                <span class="s">&quot;termination_reason&quot;</span>: termination_reason,
+                <span class="s">&quot;duration_s&quot;</span>: round(duration, <span class="n">4</span>),
+                <span class="s">&quot;forward_progress_m&quot;</span>: round(forward, <span class="n">4</span>),
+                <span class="s">&quot;ideal_distance_m&quot;</span>: round(ideal_distance, <span class="n">4</span>),
+                <span class="s">&quot;progress_ratio&quot;</span>: round(progress_ratio, <span class="n">4</span>),
+                <span class="s">&quot;lateral_drift_m&quot;</span>: round(lateral, <span class="n">4</span>),
+                <span class="s">&quot;velocity_mae_mps&quot;</span>: round(vel_mae, <span class="n">4</span>),
+                <span class="s">&quot;mean_reward_per_step&quot;</span>: round(mean_reward, <span class="n">6</span>),
+            }
+
+            <span class="f">results.append</span>(row)
+
+            <span class="f">episode_counts</span>[env_id] += <span class="n">1</span>
+
+            <span class="f">print</span>(
+                <span class="f">f</span><span class="s">&quot;[{terrain_name:&lt;22}] &quot;</span>
+                <span class="f">f</span><span class="s">&quot;episode {episode_number:02d}/{target_episodes} &quot;</span>
+                <span class="f">f</span><span class="s">&quot;| success={int(overall_success)} &quot;</span>
+                <span class="f">f</span><span class="s">&quot;| survival={int(survival_success)} &quot;</span>
+                <span class="f">f</span><span class="s">&quot;| forward={forward:5.2f}m &quot;</span>
+                <span class="f">f</span><span class="s">&quot;| lateral={lateral:4.2f}m &quot;</span>
+                <span class="f">f</span><span class="s">&quot;| vel_MAE={vel_mae:4.2f}&quot;</span>
+            )
+
+            <span class="f">start_pos</span>[env_id] = robot.data.root_pos_w[env_id, :<span class="n">2</span>]
+
+            <span class="f">local_x</span> = torch.tensor(
+                [[<span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">0.0</span>]],
+                <span class="f">device</span>=device,
+            )
+
+            <span class="f">new_forward</span> = quat_apply(
+                <span class="f">robot.data.root_quat_w</span>[env_id : env_id + <span class="n">1</span>],
+                <span class="f">local_x</span>,
+            )[<span class="n">0</span>, :<span class="n">2</span>]
+
+            <span class="f">new_forward</span> = new_forward / torch.linalg.vector_norm(
+                <span class="f">new_forward</span>
+            ).clamp_min(<span class="n">1</span>.0e-<span class="n">8</span>)
+
+            <span class="f">forward_dir</span>[env_id] = new_forward
+
+            <span class="f">start_offset</span>[env_id] = (
+                <span class="f">start_pos</span>[env_id]
+                - terrain_origins[env_id]
+            )
+
+            <span class="f">start_yaw</span>[env_id] = torch.atan2(
+                <span class="f">new_forward</span>[<span class="n">1</span>],
+                <span class="f">new_forward</span>[<span class="n">0</span>],
+            )
+
+            <span class="f">elapsed</span>[env_id] = <span class="n">0.0</span>
+            <span class="f">velocity_error_sum</span>[env_id] = <span class="n">0.0</span>
+            <span class="f">reward_sum</span>[env_id] = <span class="n">0.0</span>
+            <span class="f">sample_count</span>[env_id] = <span class="n">0</span>
+
+    <span class="f">if</span> len(results) == <span class="n">0</span>:
+        <span class="f">raise</span> RuntimeError(<span class="s">&quot;No evaluation episodes were recorded.&quot;</span>)
+
+    <span class="f">summary_rows</span> = summarize_results(results)
+
+    <span class="f">save_csv</span>(
+        <span class="f">results</span>,
+        <span class="f">summary_rows</span>,
+        <span class="f">args_cli.output_dir</span>,
+    )
+
+    <span class="f">print</span>(<span class="s">&quot;\n&quot;</span> + <span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;SUMMARY&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+
+    <span class="f">for</span> row in summary_rows:
+        <span class="f">print</span>(
+            <span class="f">f</span><span class="s">&quot;{row[&#x27;terrain&#x27;]:&lt;22}&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | overall={100 * row[&#x27;overall_success_rate&#x27;]:6.1f}%&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | survival={100 * row[&#x27;survival_rate&#x27;]:6.1f}%&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | forward={row[&#x27;mean_forward_progress_m&#x27;]:5.2f}m&quot;</span>
+            <span class="f">f</span><span class="s">&quot; | vel_MAE={row[&#x27;mean_velocity_mae_mps&#x27;]:5.2f}m/s&quot;</span>
+        )
+
+    <span class="f">env.close</span>()
+
+
+<span class="f">if</span> __name__ == <span class="s">&quot;__main__&quot;</span>:
+    <span class="f">main</span>()
+    <span class="f">simulation_app.close</span>()
+PY</pre></div>
+<h3>평가 지표와 기준</h3>
+<div class="tw"><table><thead><tr><th>지표</th><th>의미</th><th>판정 기준</th></tr></thead><tbody><tr><td><code>overall_success</code></td><td>최종 성공</td><td>아래 4개 조건의 동시 만족</td></tr><tr><td><code>survival_success</code></td><td>평가 종료까지 생존</td><td>6초 timeout 도달</td></tr><tr><td><code>progress_success</code></td><td>충분한 전진</td><td>3.0 m의 70%인 2.1 m 이상</td></tr><tr><td><code>tracking_success</code></td><td>명령 속도 추종</td><td>planar velocity MAE 0.25 m/s 이하</td></tr><tr><td><code>direction_success</code></td><td>방향 유지</td><td>측면 누적 이동 0.75 m 이하</td></tr><tr><td><code>duration_s</code></td><td>실제 지속 시간</td><td>최대 6초</td></tr><tr><td><code>forward_progress_m</code></td><td>초기 전방축 누적 전진거리</td><td>월드 속도의 전방축 투영 적분</td></tr><tr><td><code>ideal_distance_m</code></td><td>명령 완전 추종 거리</td><td>0.5 m/s × 6초인 3.0 m</td></tr><tr><td><code>progress_ratio</code></td><td>이상적 거리 대비 비율</td><td>실제 거리 ÷ 이상적 거리</td></tr><tr><td><code>lateral_drift_m</code></td><td>초기 측면축 누적 이탈</td><td>측면축 투영 적분 절댓값</td></tr><tr><td><code>velocity_mae_mps</code></td><td>목표 planar velocity 오차</td><td>작을수록 우수</td></tr><tr><td><code>mean_reward_per_step</code></td><td>timestep별 평균 reward</td><td>학습 목적 관점의 보조 지표</td></tr></tbody></table></div>
+<h3>임계값 설정 근거</h3>
+<ul><li>70% progress threshold: 생존만 하고 정지하는 rollout 제외</li><li>0.25 m/s MAE threshold: 0.5 m/s 명령 대비 50% 오차 상한</li><li>0.75 m lateral threshold: 3.0 m 목표 대비 25% 측면 편차 상한</li><li>복합 기준: 단일 지표 편향 방지</li><li>보고서 표기 권장: 프로젝트 내부 operational threshold</li></ul>
+<h3>문법·내용 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> <span class="o">-m</span> py_compile scripts/reinforcement_learning/rsl_rl/eval_generalization.py
+<span class="f">cat</span> scripts/reinforcement_learning/rsl_rl/eval_generalization.py</pre></div>
+<ul><li>정상 문법 확인: <code>py_compile</code> 무출력</li></ul>
+</section>
+<section id="s6"><span id="6"></span><h2>6. <code>record_generalization.py</code> 지형별 영상 녹화 코드 작성</h2>
+<h3>목적</h3>
+<ul><li>10개 지형 배치 유지</li><li>선택한 <code>record_env</code>의 Go2 추적 카메라 구성</li><li>V2 정량평가와 분리된 대표 rollout 영상 구성</li><li>공식 checkpoint 기반 단일 지형 대표 rollout 녹화</li><li>CSV 평가와 동일한 6초·0.5 m/s 조건 구성</li></ul>
+<h3>파일 경로</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>/workspace/isaaclab/scripts/reinforcement_learning/rsl_rl/record_generalization.py</pre></div>
+<h3>파일 전체 작성</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> <span class="o">&gt;</span> <span class="f">scripts</span>/reinforcement_learning/rsl_rl/record_generalization.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+<span class="f">import</span> argparse
+<span class="f">import</span> os
+<span class="f">import</span> sys
+<span class="f">from</span> isaaclab.app import AppLauncher
+
+<span class="f">parser</span> = argparse.ArgumentParser(description=<span class="s">&quot;Record one terrain from the Go2 generalization benchmark.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--task&quot;</span>, type=str, default=<span class="s">&quot;Isaac-Velocity-Unseen-Unitree-Go2-v0&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--checkpoint&quot;</span>, type=str, required=True)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--record_env&quot;</span>, type=int, required=True, help=<span class="s">&quot;Environment index to follow and record.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--video_length&quot;</span>, type=int, default=<span class="n">300</span>, help=<span class="s">&quot;Number of environment steps to record.&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--output_dir&quot;</span>, type=str, default=<span class="s">&quot;/workspace/isaaclab/generalization_videos&quot;</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--command_vx&quot;</span>, type=float, default=<span class="n">0.5</span>)
+<span class="f">parser.add_argument</span>(<span class="s">&quot;--seed&quot;</span>, type=int, default=<span class="n">42</span>)
+
+<span class="f">import</span> cli_args
+<span class="f">cli_args.add_rsl_rl_args</span>(parser)
+AppLauncher.add_app_launcher_args(parser)
+<span class="f">args_cli</span>, hydra_args = parser.parse_known_args()
+<span class="f">args_cli.enable_cameras</span> = True
+<span class="f">sys.argv</span> = [sys.argv[<span class="n">0</span>]] + hydra_args
+<span class="f">app_launcher</span> = AppLauncher(args_cli)
+<span class="f">simulation_app</span> = app_launcher.app
+
+<span class="f">import</span> gymnasium as gym
+<span class="f">import</span> torch
+<span class="f">from</span> rsl_rl.runners import OnPolicyRunner
+<span class="f">from</span> isaaclab.utils.assets import retrieve_file_path
+<span class="f">from</span> isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
+<span class="f">import</span> isaaclab_tasks  <span class="c"># noqa: F401</span>
+<span class="f">from</span> isaaclab_tasks.utils.hydra import hydra_task_config
+
+TERRAIN_NAMES = [
+    <span class="s">&quot;discrete_obstacles&quot;</span>,
+    <span class="s">&quot;wave&quot;</span>,
+    <span class="s">&quot;stepping_stones&quot;</span>,
+    <span class="s">&quot;gap&quot;</span>,
+    <span class="s">&quot;pit&quot;</span>,
+    <span class="s">&quot;rails&quot;</span>,
+    <span class="s">&quot;star&quot;</span>,
+    <span class="s">&quot;floating_ring&quot;</span>,
+    <span class="s">&quot;repeated_boxes&quot;</span>,
+    <span class="s">&quot;repeated_cylinders&quot;</span>,
+]
+
+<span class="f">def</span> configure_recording(env_cfg, agent_cfg):
+    <span class="f">env_id</span> = args_cli.record_env
+    <span class="f">if</span> env_id &lt; <span class="n">0</span> or env_id <span class="o">&gt;</span>= len(TERRAIN_NAMES):
+        <span class="f">raise</span> ValueError(
+            <span class="f">f</span><span class="s">&quot;--record_env must be 0-{len(TERRAIN_NAMES) - 1}&quot;</span>
+        )
+
+    <span class="f">env_cfg.seed</span> = args_cli.seed
+    <span class="f">agent_cfg.seed</span> = args_cli.seed
+    <span class="f">env_cfg.scene.num_envs</span> = len(TERRAIN_NAMES)
+
+    <span class="f">terrain_gen</span> = env_cfg.scene.terrain.terrain_generator
+    <span class="f">terrain_gen.seed</span> = args_cli.seed
+    <span class="f">terrain_gen.curriculum</span> = True
+
+    <span class="f">env_cfg.scene.terrain.max_init_terrain_level</span> = <span class="n">0</span>
+
+    <span class="f">if</span> hasattr(env_cfg.curriculum, <span class="s">&quot;terrain_levels&quot;</span>):
+        <span class="f">env_cfg.curriculum.terrain_levels</span> = None
+
+    <span class="f">cmd</span> = env_cfg.commands.base_velocity
+
+    <span class="f">cmd.ranges.lin_vel_x</span> = (
+        <span class="f">args_cli.command_vx</span>,
+        <span class="f">args_cli.command_vx</span>,
+    )
+    <span class="f">cmd.ranges.lin_vel_y</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+    <span class="f">cmd.ranges.ang_vel_z</span> = (<span class="n">0.0</span>, <span class="n">0.0</span>)
+
+    <span class="f">cmd.heading_command</span> = False
+    <span class="f">cmd.rel_heading_envs</span> = <span class="n">0.0</span>
+    <span class="f">cmd.rel_standing_envs</span> = <span class="n">0.0</span>
+
+    <span class="f">env_cfg.observations.policy.enable_corruption</span> = False
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;push_robot&quot;</span>):
+        <span class="f">env_cfg.events.push_robot</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;base_external_force_torque&quot;</span>):
+        <span class="f">env_cfg.events.base_external_force_torque</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;add_base_mass&quot;</span>):
+        <span class="f">env_cfg.events.add_base_mass</span> = None
+
+    <span class="f">if</span> hasattr(env_cfg.events, <span class="s">&quot;base_com&quot;</span>):
+        <span class="f">env_cfg.events.base_com</span> = None
+
+    <span class="f">if</span> getattr(env_cfg.events, <span class="s">&quot;reset_base&quot;</span>, None) is not None:
+        <span class="f">env_cfg.events.reset_base.params</span>[<span class="s">&quot;pose_range&quot;</span>] = {
+            <span class="s">&quot;x&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;y&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;yaw&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+        }
+
+        <span class="f">env_cfg.events.reset_base.params</span>[<span class="s">&quot;velocity_range&quot;</span>] = {
+            <span class="s">&quot;x&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;y&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;z&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;roll&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;pitch&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+            <span class="s">&quot;yaw&quot;</span>: (<span class="n">0.0</span>, <span class="n">0.0</span>),
+        }
+
+    <span class="f">env_cfg.viewer.origin_type</span> = <span class="s">&quot;asset_root&quot;</span>
+    <span class="f">env_cfg.viewer.asset_name</span> = <span class="s">&quot;robot&quot;</span>
+    <span class="f">env_cfg.viewer.env_index</span> = env_id
+
+    <span class="f">env_cfg.viewer.eye</span> = (-<span class="n">3.0</span>, <span class="n">2.0</span>, <span class="n">1.4</span>)
+    <span class="f">env_cfg.viewer.lookat</span> = (<span class="n">0.5</span>, <span class="n">0.0</span>, <span class="n">0.35</span>)
+
+    <span class="f">env_cfg.viewer.resolution</span> = (<span class="n">1280</span>, <span class="n">720</span>)
+
+@hydra_task_config(args_cli.task, <span class="s">&quot;rsl_rl_cfg_entry_point&quot;</span>)
+<span class="f">def</span> main(env_cfg, agent_cfg):
+    <span class="f">configure_recording</span>(env_cfg, agent_cfg)
+    <span class="f">env_id</span> = args_cli.record_env
+    <span class="f">terrain_name</span> = TERRAIN_NAMES[env_id]
+
+    <span class="f">if</span> getattr(args_cli, <span class="s">&quot;device&quot;</span>, None) is not None:
+        <span class="f">env_cfg.sim.device</span> = args_cli.device
+
+    <span class="f">output_dir</span> = os.path.join(
+        <span class="f">args_cli.output_dir</span>,
+        <span class="f">f</span><span class="s">&quot;{env_id:02d}_{terrain_name}&quot;</span>,
+    )
+
+    <span class="f">os.makedirs</span>(output_dir, exist_ok=True)
+
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(<span class="s">&quot;GENERALIZATION VIDEO RECORDING&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+    <span class="f">print</span>(f<span class="s">&quot;env id       : {env_id}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;terrain      : {terrain_name}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;video length : {args_cli.video_length} steps&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;output dir   : {output_dir}&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;=&quot;</span> * <span class="n">80</span>)
+
+    <span class="f">gym_env</span> = gym.make(
+        <span class="f">args_cli.task</span>,
+        <span class="f">cfg</span>=env_cfg,
+        <span class="f">render_mode</span>=<span class="s">&quot;rgb_array&quot;</span>,
+    )
+
+    <span class="f">raw_env</span> = gym_env.unwrapped
+
+    <span class="f">gym_env.reset</span>()
+
+    <span class="f">terrain_type</span> = int(
+        <span class="f">raw_env.scene.terrain.terrain_types</span>[env_id].item()
+    )
+
+    <span class="f">print</span>(
+        <span class="f">f</span><span class="s">&quot;[VERIFY] env {env_id} -&gt; &quot;</span>
+        <span class="f">f</span><span class="s">&quot;terrain_type {terrain_type} -&gt; &quot;</span>
+        <span class="f">f</span><span class="s">&quot;{TERRAIN_NAMES[terrain_type]}&quot;</span>
+    )
+
+    <span class="f">if</span> terrain_type != env_id:
+        <span class="f">raise</span> RuntimeError(
+            <span class="f">f</span><span class="s">&quot;Unexpected mapping: env {env_id} -&gt; &quot;</span>
+            <span class="f">f</span><span class="s">&quot;terrain_type {terrain_type}&quot;</span>
+        )
+
+    <span class="f">command</span> = raw_env.command_manager.get_command(
+        <span class="s">&quot;base_velocity&quot;</span>
+    )
+
+    <span class="f">cmd_values</span> = command[env_id].detach().cpu().tolist()
+
+    <span class="f">print</span>(
+        <span class="f">f</span><span class="s">&quot;[VERIFY] command env {env_id}: &quot;</span>
+        <span class="f">f</span><span class="s">&quot;vx={cmd_values[0]:.3f}, &quot;</span>
+        <span class="f">f</span><span class="s">&quot;vy={cmd_values[1]:.3f}, &quot;</span>
+        <span class="f">f</span><span class="s">&quot;wz={cmd_values[2]:.3f}&quot;</span>
+    )
+
+    <span class="f">video_kwargs</span> = {
+        <span class="s">&quot;video_folder&quot;</span>: output_dir,
+        <span class="s">&quot;step_trigger&quot;</span>: lambda step: step == <span class="n">0</span>,
+        <span class="s">&quot;video_length&quot;</span>: args_cli.video_length,
+        <span class="s">&quot;disable_logger&quot;</span>: True,
+        <span class="s">&quot;name_prefix&quot;</span>: terrain_name,
+    }
+
+    <span class="f">gym_env</span> = gym.wrappers.RecordVideo(
+        <span class="f">gym_env</span>,
+        **video_kwargs,
+    )
+
+    <span class="f">env</span> = RslRlVecEnvWrapper(
+        <span class="f">gym_env</span>,
+        <span class="f">clip_actions</span>=agent_cfg.clip_actions,
+    )
+
+    <span class="f">checkpoint_path</span> = retrieve_file_path(
+        <span class="f">args_cli.checkpoint</span>
+    )
+
+    <span class="f">print</span>(<span class="s">&quot;[INFO] Loading checkpoint:&quot;</span>)
+    <span class="f">print</span>(checkpoint_path)
+
+    <span class="f">runner</span> = OnPolicyRunner(
+        <span class="f">env</span>,
+        <span class="f">agent_cfg.to_dict</span>(),
+        <span class="f">log_dir</span>=None,
+        <span class="f">device</span>=agent_cfg.device,
+    )
+
+    <span class="f">runner.load</span>(checkpoint_path)
+
+    <span class="f">policy</span> = runner.get_inference_policy(
+        <span class="f">device</span>=raw_env.device
+    )
+
+    <span class="f">policy_nn</span> = runner.alg.policy
+
+    <span class="f">obs</span> = env.get_observations()
+
+    <span class="f">step</span> = <span class="n">0</span>
+
+    <span class="f">while</span> simulation_app.is_running():
+
+        <span class="f">with</span> torch.inference_mode():
+            <span class="f">actions</span> = policy(obs)
+            <span class="f">obs</span>, _, dones, _ = env.step(actions)
+            <span class="f">policy_nn.reset</span>(dones)
+
+        <span class="f">step</span> += <span class="n">1</span>
+
+        <span class="f">if</span> step <span class="o">&gt;</span>= args_cli.video_length:
+            <span class="f">break</span>
+
+    <span class="f">env.close</span>()
+
+    <span class="f">print</span>(<span class="s">&quot;\n[DONE]&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;terrain : {terrain_name}&quot;</span>)
+    <span class="f">print</span>(f<span class="s">&quot;folder  : {output_dir}&quot;</span>)
+
+
+<span class="f">if</span> __name__ == <span class="s">&quot;__main__&quot;</span>:
+    <span class="f">main</span>()
+    <span class="f">simulation_app.close</span>()
+PY</pre></div>
+<h3>문법·내용 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> <span class="o">-m</span> py_compile scripts/reinforcement_learning/rsl_rl/record_generalization.py
+<span class="f">cat</span> scripts/reinforcement_learning/rsl_rl/record_generalization.py</pre></div>
+<ul><li>정상 문법 확인: <code>py_compile</code> 무출력</li></ul>
+</section>
+<section id="s7"><span id="7"></span><h2>7. <code>record_all_generalization.sh</code> 전체 지형 자동 녹화 스크립트 작성</h2>
+<h3>목적</h3>
+<ul><li><code>record_env=0</code>부터 <code>record_env=9</code>까지 순차 실행</li><li>프로세스별 카메라 대상 지형 변경</li><li>지형별 독립 폴더와 MP4 한 개 생성</li></ul>
+<h3>파일 경로</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>/workspace/isaaclab/record_all_generalization.sh</pre></div>
+<h3>파일 전체 작성</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">cat</span> <span class="o">&gt;</span> /workspace/isaaclab/record_all_generalization.sh &lt;&lt;<span class="s">&#x27;SH&#x27;</span>
+<span class="c">#!/bin/bash</span>
+
+<span class="f">set</span> <span class="o">-e</span>
+
+<span class="f">cd</span> /workspace/isaaclab
+
+CHECKPOINT=<span class="s">&quot;/workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt&quot;</span>
+
+<span class="f">for</span> ENV_ID in {<span class="n">0</span>..<span class="n">9</span>}
+<span class="f">do</span>
+    ./isaaclab.sh <span class="o">-p</span> \
+    <span class="f">scripts</span>/reinforcement_learning/rsl_rl/record_generalization.py \
+      <span class="o">--task</span> Isaac-Velocity-Unseen-Unitree-Go2-v0 \
+      <span class="o">--checkpoint</span> <span class="s">&quot;${CHECKPOINT}&quot;</span> \
+      <span class="o">--record_env</span> <span class="s">&quot;${ENV_ID}&quot;</span> \
+      <span class="o">--video_length</span> <span class="n">300</span> \
+      <span class="o">--command_vx</span> <span class="n">0.5</span> \
+      <span class="o">--seed</span> <span class="n">42</span> \
+      <span class="o">--headless</span>
+<span class="f">done</span>
+
+<span class="f">find</span> /workspace/isaaclab/generalization_videos \
+  <span class="o">-type</span> f <span class="o">-name</span> <span class="s">&quot;*.mp4&quot;</span> \
+  <span class="o">-print</span>
+SH</pre></div>
+<h3>권한·문법·내용 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">chmod</span> +x /workspace/isaaclab/record_all_generalization.sh
+<span class="f">bash</span> <span class="o">-n</span> /workspace/isaaclab/record_all_generalization.sh
+<span class="f">cat</span> /workspace/isaaclab/record_all_generalization.sh</pre></div>
+<ul><li>정상 문법 확인: <code>bash -n</code> 무출력</li></ul>
+</section>
+<section id="s8"><span id="8"></span><h2>8. 에피소드 실행과 CSV 저장</h2>
+<h3>목적</h3>
+<ul><li>10개 지형의 병렬 rollout</li><li>지형별 50개 에피소드 수집</li><li>총 500개 raw 평가 행 생성</li><li>지형별 summary 10개 행 생성</li></ul>
+<h3>출력 경로 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">mkdir</span> <span class="o">-p</span> /workspace/isaaclab/generalization_results_v2
+<span class="f">cat</span> &lt;&lt;<span class="s">&#x27;TXT&#x27;</span>
+/workspace/isaaclab/generalization_results_v2/generalization_raw.csv
+/workspace/isaaclab/generalization_results_v2/generalization_summary.csv
+TXT</pre></div>
+<h3>평가 실행</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> scripts/reinforcement_learning/rsl_rl/eval_generalization.py \
+  <span class="o">--task</span> Isaac-Velocity-Unseen-Unitree-Go2-v0 \
+  <span class="o">--checkpoint</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt \
+  <span class="o">--episodes_per_terrain</span> <span class="n">50</span> \
+  <span class="o">--eval_duration</span> <span class="n">6.0</span> \
+  <span class="o">--command_vx</span> <span class="n">0.5</span> \
+  <span class="o">--spawn_xy_range</span> <span class="n">0.10</span> \
+  <span class="o">--yaw_range_deg</span> <span class="n">5.0</span> \
+  <span class="o">--joint_pos_scale</span> <span class="n">0.05</span> \
+  <span class="o">--min_progress_ratio</span> <span class="n">0.70</span> \
+  <span class="o">--max_velocity_mae</span> <span class="n">0.25</span> \
+  <span class="o">--max_lateral_drift</span> <span class="n">0.75</span> \
+  <span class="o">--output_dir</span> /workspace/isaaclab/generalization_results_v2 \
+  <span class="o">--seed</span> <span class="n">42</span> \
+  <span class="o">--headless</span></pre></div>
+<h3>결과 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/isaaclab/generalization_results_v2/generalization_raw.csv
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/isaaclab/generalization_results_v2/generalization_summary.csv
+<span class="f">wc</span> <span class="o">-l</span> /workspace/isaaclab/generalization_results_v2/generalization_raw.csv
+<span class="f">wc</span> <span class="o">-l</span> /workspace/isaaclab/generalization_results_v2/generalization_summary.csv
+<span class="f">head</span> <span class="o">-n</span> <span class="n">3</span> /workspace/isaaclab/generalization_results_v2/generalization_raw.csv
+<span class="f">cat</span> /workspace/isaaclab/generalization_results_v2/generalization_summary.csv</pre></div>
+<ul><li>raw CSV 기대 행 수: 헤더 포함 <code>501</code></li><li>summary CSV 기대 행 수: 헤더 포함 <code>11</code></li><li>지형별 episode 기대값: <code>50</code></li></ul>
+<h3>에피소드 변화 검증</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> <span class="o">-c</span> <span class="s">&quot;import pandas as pd; p=&#x27;/workspace/isaaclab/generalization_results_v2/generalization_raw.csv&#x27;; d=pd.read_csv(p); print(d.groupby(&#x27;terrain&#x27;).size()); print(d.groupby(&#x27;terrain&#x27;)[&#x27;forward_progress_m&#x27;].nunique())&quot;</span></pre></div>
+<ul><li>지형별 행 개수: 모두 <code>50</code></li><li>randomization 확인: 지형별 <code>forward_progress_m</code> 고유값 복수 개</li></ul>
+</section>
+<section id="s9"><span id="9"></span><h2>9. 지형별 로봇 움직임 영상 저장</h2>
+<h3>목적</h3>
+<ul><li>10개 미경험 지형별 MP4 한 개 생성</li><li>정량 CSV 결과 해석용 행동 근거 확보</li><li><code>asset_root</code> 기준 Go2 추적 카메라 적용</li><li>1280×720 해상도와 300 environment step 녹화</li></ul>
+<h3>단일 지형 시험 녹화</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+./isaaclab.sh <span class="o">-p</span> scripts/reinforcement_learning/rsl_rl/record_generalization.py \
+  <span class="o">--task</span> Isaac-Velocity-Unseen-Unitree-Go2-v0 \
+  <span class="o">--checkpoint</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt \
+  <span class="o">--record_env</span> <span class="n">1</span> \
+  <span class="o">--video_length</span> <span class="n">1000</span> \
+  <span class="o">--output_dir</span> /workspace/isaaclab/generalization_videos \
+  <span class="o">--command_vx</span> <span class="n">0.5</span> \
+  <span class="o">--seed</span> <span class="n">42</span> \
+  <span class="o">--headless</span></pre></div>
+<h3>전체 지형 자동 녹화</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+/workspace/isaaclab/record_all_generalization.sh</pre></div>
+<h3>영상 확인</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">find</span> /workspace/isaaclab/generalization_videos <span class="o">-type</span> f <span class="o">-name</span> <span class="s">&quot;*.mp4&quot;</span> <span class="o">-print</span>
+<span class="f">find</span> /workspace/isaaclab/generalization_videos <span class="o">-type</span> f <span class="o">-name</span> <span class="s">&quot;*.mp4&quot;</span> <span class="o">|</span> <span class="f">wc</span> <span class="o">-l</span>
+<span class="f">cat</span> &lt;&lt;<span class="s">&#x27;TXT&#x27;</span>
+00_discrete_obstacles
+01_wave
+02_stepping_stones
+03_gap
+04_pit
+05_rails
+06_star
+07_floating_ring
+08_repeated_boxes
+09_repeated_cylinders
+TXT</pre></div>
+<ul><li>기대 MP4 개수: <code>10</code></li><li>영상 길이: <code>step_dt=0.02 s</code> 기준 약 6초</li><li>CSV 대응 조건: 동일 command·seed·초기 randomization 범위·평가 길이</li></ul>
+</section>
+<section id="s10"><span id="10"></span><h2>10. CSV·영상 압축과 8000 포트 다운로드</h2>
+<h3>목적</h3>
+<ul><li>raw CSV·summary CSV·지형별 MP4의 단일 ZIP 패키징</li><li>RunPod HTTP Service 8000 기반 로컬 다운로드</li><li>Pod 종료 전 결과 반출과 압축 무결성 확인</li></ul>
+<h3>결과 확인과 ZIP 생성</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/isaaclab/generalization_results_v2
+<span class="f">find</span> /workspace/isaaclab/generalization_videos <span class="o">-type</span> f <span class="o">-name</span> <span class="s">&quot;*.mp4&quot;</span> <span class="o">-print</span>
+<span class="f">zip</span> <span class="o">-r</span> go2_generalization_benchmark_v2.zip \
+  <span class="f">generalization_results_v2</span> \
+  <span class="f">generalization_videos</span></pre></div>
+<h3><code>zip</code> 미설치 시 설치</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">apt-get</span><span class="k"> update</span>
+<span class="f">apt-get</span><span class="k"> install</span> <span class="o">-y</span> zip unzip</pre></div>
+<h3>압축 검증</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/isaaclab/go2_generalization_benchmark_v2.zip
+<span class="f">unzip</span> <span class="o">-t</span> /workspace/isaaclab/go2_generalization_benchmark_v2.zip
+<span class="f">unzip</span> <span class="o">-l</span> /workspace/isaaclab/go2_generalization_benchmark_v2.zip</pre></div>
+<ul><li>필수 파일: <code>generalization_results_v2/generalization_raw.csv</code></li><li>필수 파일: <code>generalization_results_v2/generalization_summary.csv</code></li><li>필수 파일: <code>generalization_videos</code> 하위 MP4 10개</li><li>정상 무결성 출력: <code>No errors detected</code></li></ul>
+<h3>다운로드 폴더와 8000 포트 서버</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">mkdir</span> <span class="o">-p</span> /workspace/download
+<span class="f">cp</span> /workspace/isaaclab/go2_generalization_benchmark_v2.zip /workspace/download/
+<span class="f">cat</span> &lt;&lt;<span class="s">&#x27;TXT&#x27;</span>
+/workspace/download/go2_generalization_benchmark_v2.zip
+TXT
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/download/go2_generalization_benchmark_v2.zip
+<span class="f">cd</span> /workspace/download
+<span class="f">python3</span> <span class="o">-m</span> http.server <span class="n">8000</span> <span class="o">--bind</span> <span class="n">0.0.0.0</span></pre></div>
+<ul><li>정상 출력: <code>Serving HTTP on 0.0.0.0 port 8000</code></li><li>서버 유지 조건: 현재 터미널 세션 유지</li><li>RunPod 접속 위치: <code>Pod → Connect → HTTP Service 8000</code></li><li>직접 주소 형식: <code>https://&lt;POD_ID&gt;-8000.proxy.runpod.net</code></li><li>다운로드 대상: <code>go2_generalization_benchmark_v2.zip</code></li></ul>
+<h3>최종 안전 확인</h3>
+<ul><li>로컬 ZIP 다운로드 완료</li><li>로컬 ZIP 압축 해제 성공</li><li>CSV 2개 존재 확인</li><li>MP4 10개 존재 확인</li><li>결과 확인 이후 Pod 종료</li></ul>
+<h3>공식 코드 기준 참조</h3>
+<ul><li>Go2 등록 구조: <code>source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/__init__.py</code></li><li>Go2 Rough 환경 구조: <code>source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/rough_env_cfg.py</code></li><li>RSL-RL 실행 구조: <code>scripts/reinforcement_learning/rsl_rl/play.py</code></li><li>terrain 설정 클래스: <code>source/isaaclab/isaaclab/terrains</code></li></ul>
+<h3>체크포인트 검증</h3>
+<div class="cb"><div class="cb-h">Bash / 우분투<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">cd</span> /workspace/isaaclab
+<span class="f">ls</span> <span class="o">-lh</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt
+<span class="f">test</span> <span class="o">-s</span> /workspace/isaaclab/.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt
+<span class="f">echo</span> $?</pre></div>
+<ul><li>정상 확인값: <code>0</code></li></ul>
+</section>
+<section id="s11"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-08-22</td><td>처음 씀</td><td>이전 이력은 git 에</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

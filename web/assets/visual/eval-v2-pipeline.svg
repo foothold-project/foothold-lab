@@ -1,0 +1,53 @@
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="학습 평가 렌더 세 단계의 입출력과 소요 시간">
+<text x="0.0" y="15.0" font-size="13" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 · 평가 · 렌더는 각각 «다른 실행» 이다</text>
+<text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">하나를 돌린다고 다른 하나가 따라오지 않는다. 시간이 따로 든다</text>
+<rect x="0" y="52" width="240" height="192" rx="10" fill="var(--card)" stroke="var(--rule)"/>
+<rect x="0" y="52" width="240" height="30" rx="10" fill="var(--accent)"/>
+<rect x="0" y="72" width="240" height="10" fill="var(--accent)"/>
+<text x="14.0" y="73.0" font-size="13.5" fill="var(--card)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습</text>
+<text x="14.0" y="104.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">입력</text>
+<text x="52.0" y="104.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">NVIDIA checkpoint.pt</text>
+<text x="14.0" y="124.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">출력</text>
+<text x="52.0" y="124.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">model_1500.pt</text>
+<line x1="12" y1="134" x2="228" y2="134" stroke="var(--rule-2)"/>
+<text x="14.0" y="154.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">업데이트 1,501회</text>
+<text x="14.0" y="169.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">96분 58초</text>
+<text x="14.0" y="182.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실측</text>
+<text x="14.0" y="197.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">2026-09-10 20:47 → 22:22</text>
+<text x="14.0" y="210.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">영상</text>
+<text x="14.0" y="225.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">안 나온다</text>
+<path d="M242.0,148 l8,0 M250.0,144 l6,4 l-6,4" stroke="var(--ink-3)" stroke-width="2" fill="none"/>
+<rect x="260" y="52" width="240" height="192" rx="10" fill="var(--card)" stroke="var(--rule)"/>
+<rect x="260" y="52" width="240" height="30" rx="10" fill="var(--ok)"/>
+<rect x="260" y="72" width="240" height="10" fill="var(--ok)"/>
+<text x="274.0" y="73.0" font-size="13.5" fill="var(--card)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평가</text>
+<text x="274.0" y="104.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">입력</text>
+<text x="312.0" y="104.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">model.pt</text>
+<text x="274.0" y="124.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">출력</text>
+<text x="312.0" y="124.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">CSV</text>
+<line x1="272" y1="134" x2="488" y2="134" stroke="var(--rule-2)"/>
+<text x="274.0" y="154.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">에피소드마다</text>
+<text x="274.0" y="169.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">한 줄</text>
+<text x="274.0" y="182.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">한 칸 100회</text>
+<text x="274.0" y="197.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">109 ~ 323초</text>
+<text x="274.0" y="210.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">영상</text>
+<text x="274.0" y="225.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">안 나온다</text>
+<path d="M502.0,148 l8,0 M510.0,144 l6,4 l-6,4" stroke="var(--ink-3)" stroke-width="2" fill="none"/>
+<rect x="520" y="52" width="240" height="192" rx="10" fill="var(--card)" stroke="var(--rule)"/>
+<rect x="520" y="52" width="240" height="30" rx="10" fill="var(--warn)"/>
+<rect x="520" y="72" width="240" height="10" fill="var(--warn)"/>
+<text x="534.0" y="73.0" font-size="13.5" fill="var(--card)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">렌더</text>
+<text x="534.0" y="104.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">입력</text>
+<text x="572.0" y="104.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">model.pt</text>
+<text x="534.0" y="124.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">출력</text>
+<text x="572.0" y="124.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">mp4</text>
+<line x1="532" y1="134" x2="748" y2="134" stroke="var(--rule-2)"/>
+<text x="534.0" y="154.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">시뮬레이션을</text>
+<text x="534.0" y="169.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">처음부터 다시 돈다</text>
+<text x="534.0" y="182.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">4096 마리 20초</text>
+<text x="534.0" y="197.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">104 ~ 120초</text>
+<text x="534.0" y="210.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">성적</text>
+<text x="534.0" y="225.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Mono, monospace">안 나온다</text>
+<rect x="0" y="256" width="780" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+<text x="12.0" y="281.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">영상이 필요하면 «렌더를 따로 돌려야» 한다. 학습이나 평가가 영상을 남기지 않는다</text>
+</svg>

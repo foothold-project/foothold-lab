@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사족보행 로봇 도메인 백과 · FOOTHOLD</title>
+<style>
+:root{
+  --paper:#f6f5f1; --paper-2:#eeece6; --card:#fff;
+  --ink:#161c26; --ink-2:#4a5566; --ink-3:#7c8798;
+  --rule:#d9d6cd; --brand:#0e7a6e; --dim:var(--brand); --dim-soft:#e0f0ed;
+  --note:#a86a08; --note-soft:#fbf0dc;
+  --stop:#a3342a; --stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --nav:250px;
+  /* 본문 1행 폭.
+     ch 단위는 숫자 0 기준이라 한글(1.82배 폭)에는 쓰면 안 된다.
+     845px 영역에서 780px = 92% 사용, 줄당 한글 약 57자. */
+  --measure:780px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.65;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+/* ───── 좌측 네비 ───── */
+#nav{
+  position:fixed;top:0;left:0;width:var(--nav);height:100vh;overflow-y:auto;
+  border-right:1px solid var(--rule);background:rgba(246,245,241,.97);
+  padding:26px 20px 40px;z-index:50;
+}
+#nav a.home{display:inline-block;font-size:.64rem;font-weight:700;color:var(--dim);text-decoration:none;
+  border:1px solid var(--rule);padding:4px 10px;margin-bottom:14px;letter-spacing:.04em;transition:.15s}
+#nav a.home:hover{border-color:var(--dim);background:var(--dim-soft)}
+@media(max-width:900px),(pointer:coarse){#nav a.home{padding:11px 14px;font-size:.72rem}}
+#nav .brand{font-size:1.25rem;font-weight:800;letter-spacing:-.04em;line-height:1}
+#nav .brand small{display:block;font-size:.6rem;font-weight:600;color:var(--ink-3);
+  letter-spacing:.18em;margin-top:5px;text-transform:uppercase}
+#nav .tag{font-size:.66rem;color:var(--ink-2);margin:14px 0 20px;line-height:1.5;
+  padding-bottom:16px;border-bottom:1px solid var(--rule)}
+#nav ol{list-style:none;counter-reset:L}
+#nav .L{margin-bottom:4px}
+#nav .L > a{
+  display:flex;gap:9px;align-items:baseline;padding:7px 8px;text-decoration:none;
+  color:var(--ink);font-size:.78rem;font-weight:700;border-radius:2px;transition:.14s;
+}
+#nav .L > a:hover{background:var(--dim-soft);color:var(--dim)}
+#nav .L > a.on{background:var(--ink);color:var(--paper)}
+#nav .L > a .n{font-family:'Consolas',monospace;font-size:.62rem;color:var(--dim);font-weight:800}
+#nav .L > a.on .n{color:#7fd8cc}
+#nav ul{list-style:none;margin:1px 0 8px 26px}
+#nav ul a{display:block;padding:3px 6px;font-size:.7rem;color:var(--ink-3);
+  text-decoration:none;border-left:1.5px solid var(--rule);padding-left:11px;transition:.14s}
+#nav ul a:hover{color:var(--dim);border-left-color:var(--dim)}
+#navToggle{display:none}
+
+/* ───── 본문 ───── */
+main{margin-left:var(--nav);max-width:960px;padding:0 clamp(24px,4vw,64px) 120px}
+header.top{padding:clamp(56px,9vh,96px) 0 clamp(30px,4vh,44px);border-bottom:2px solid var(--ink)}
+header.top h1{font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:800;letter-spacing:-.035em;line-height:1.15}
+header.top .lede{font-size:clamp(.86rem,1.1vw,.98rem);color:var(--ink-2);margin-top:16px;max-width:var(--measure);line-height:1.7}
+header.top .lede b{color:var(--ink)}
+header.top .meta{margin-top:20px;font-size:.66rem;color:var(--ink-3);font-family:'Consolas',monospace;letter-spacing:.03em}
+
+/* 층위 헤더 */
+.layer{padding-top:clamp(48px,7vh,80px);scroll-margin-top:24px}
+.layer > .lh{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.layer > .lh .num{font-family:'Consolas',monospace;font-size:.68rem;font-weight:800;color:var(--dim);
+  letter-spacing:.14em;border:1.5px solid var(--dim);padding:3px 9px;white-space:nowrap}
+.layer > .lh h2{font-size:clamp(1.3rem,2.3vw,1.8rem);font-weight:800;letter-spacing:-.03em;line-height:1.2}
+.layer > .lsub{font-size:clamp(.78rem,.95vw,.87rem);color:var(--ink-2);margin-bottom:8px;max-width:var(--measure)}
+.layer > .因{
+  font-size:.72rem;color:var(--dim);font-weight:700;padding:8px 0 0;
+  border-top:1px solid var(--rule);margin-top:14px;
+}
+h3{font-size:clamp(1rem,1.5vw,1.18rem);font-weight:800;letter-spacing:-.02em;
+   margin:clamp(30px,4vh,44px) 0 10px;scroll-margin-top:24px}
+h4{font-size:clamp(.84rem,1.1vw,.94rem);font-weight:800;margin:22px 0 7px}
+p{margin:9px 0;font-size:clamp(.79rem,.95vw,.875rem);color:var(--ink-2);max-width:var(--measure)}
+p b,li b{color:var(--ink);font-weight:700}
+p.big{font-size:clamp(.85rem,1.05vw,.95rem);color:var(--ink)}
+ul.body,ol.body{margin:9px 0 9px 20px;font-size:clamp(.78rem,.93vw,.86rem);color:var(--ink-2);max-width:var(--measure)}
+ul.body li,ol.body li{margin:5px 0}
+
+/* 개념 카드 */
+.concept{
+  background:var(--dim-soft);border:1px solid var(--rule);
+  padding:16px 20px;margin:16px 0;
+}
+.concept .term{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.concept .term .ko{font-size:clamp(.92rem,1.15vw,1.02rem);font-weight:800;letter-spacing:-.02em}
+.concept .term .en{font-size:.66rem;font-weight:700;color:var(--dim);letter-spacing:.06em;
+  font-family:'Consolas',monospace}
+.concept dl{display:grid;gap:8px;margin-top:9px}
+.concept dt{font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.concept dd{font-size:clamp(.76rem,.9vw,.84rem);color:var(--ink-2);line-height:1.6;max-width:var(--measure)}
+.concept dd b{color:var(--ink)}
+
+/* 강조 블록 */
+.key{background:var(--dim-soft);border:1px solid var(--dim);padding:15px 19px;margin:18px 0}
+.key .kl{font-size:.58rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:6px}
+.key p{color:var(--ink);margin:4px 0;font-size:clamp(.81rem,.97vw,.9rem);max-width:var(--measure)}
+.warn{background:var(--note-soft);border:1px solid var(--note);padding:15px 19px;margin:18px 0}
+.warn .kl{font-size:.58rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--note);margin-bottom:6px}
+.warn p{color:var(--ink);margin:4px 0;max-width:var(--measure)}
+.stop{background:var(--stop-soft);border:1px solid var(--stop);padding:15px 19px;margin:18px 0}
+.stop .kl{font-size:.58rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--stop);margin-bottom:6px}
+.stop p{color:var(--ink);margin:4px 0;max-width:var(--measure)}
+
+/* 인용 */
+blockquote{
+  border-left:3px solid var(--ink-3);padding:4px 0 4px 16px;margin:14px 0;
+  font-size:clamp(.77rem,.92vw,.85rem);color:var(--ink-2);font-style:italic;max-width:var(--measure);
+}
+blockquote cite{display:block;font-style:normal;font-size:.68rem;color:var(--ink-3);margin-top:6px;
+  font-family:'Consolas',monospace}
+
+/* 표 */
+.tw{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:clamp(.71rem,.86vw,.79rem);min-width:440px;background:var(--card)}
+th{background:var(--ink);color:var(--paper);padding:8px 11px;text-align:left;
+   font-size:.63rem;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+td{border-bottom:1px solid var(--rule);padding:8px 11px;vertical-align:top;line-height:1.55;color:var(--ink-2)}
+td b,td strong{color:var(--ink)}
+tr.hl td{background:var(--dim-soft)}
+td.c{text-align:center}
+.mono{font-family:'Consolas',monospace;font-size:.94em}
+
+/* 도식 컨테이너 */
+figure{margin:22px 0;background:var(--card);border:1px solid var(--rule);padding:18px 20px 14px}
+figure svg{display:block;width:100%;height:auto}
+figure img{display:block;width:100%;height:auto;background:var(--paper-2)}
+figure .cred{font-size:.62rem;color:var(--ink-3);margin-top:6px;font-family:'Consolas',monospace}
+figure .cred a{color:var(--ink-3);text-decoration:none;border-bottom:1px dotted var(--ink-3)}
+figure.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 20px 14px}
+figure.duo > div{min-width:0}
+figure.duo figcaption{grid-column:1/-1}
+@media(max-width:700px){figure.duo{grid-template-columns:1fr}}
+.paths{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0 8px}
+.path{background:var(--dim-soft);border:1px solid var(--rule);padding:13px 16px}
+.path.mentor{border-top-color:var(--note)}
+.path .who{font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.path.mentor .who{color:var(--note)}
+.path .ttl{font-size:.86rem;font-weight:800;margin-bottom:6px}
+.path .rt{font-size:.62rem;color:var(--ink-3);font-family:'Consolas',monospace;float:right;font-weight:700}
+.path ol{list-style:none;margin:0;font-size:.72rem;color:var(--ink-2);line-height:1.75}
+.path ol li{padding-left:16px;position:relative}
+.path ol li::before{content:'→';position:absolute;left:0;color:var(--dim);font-weight:700}
+.path.mentor ol li::before{color:var(--note)}
+.path a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule);font-weight:600}
+.path a:hover{border-bottom-color:var(--dim);color:var(--dim)}
+@media(max-width:700px){.paths{grid-template-columns:1fr}}
+.gloss{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.gt{background:var(--card);border:1px solid var(--rule);padding:11px 14px}
+.gt{position:relative}
+.gt .kind{position:absolute;top:10px;right:12px;font-size:.5rem;font-weight:800;
+  letter-spacing:.08em;padding:1px 6px;font-family:'Consolas',monospace}
+.kind.pri{background:var(--dim);color:#fff}
+.kind.met{background:var(--ink);color:var(--paper)}
+.kind.tool{background:var(--note);color:#fff}
+.gt .g1{padding-right:52px}
+.gt .g1{font-size:.8rem;font-weight:800;margin-bottom:2px}
+.gt .g2{font-size:.62rem;color:var(--dim);font-family:'Consolas',monospace;margin-bottom:5px}
+.gt .g3{font-size:.72rem;color:var(--ink-2);line-height:1.55}
+.gt .g3 b{color:var(--ink)}
+@media(max-width:700px){.gloss{grid-template-columns:1fr}}
+.imgnote{font-size:.7rem;color:var(--ink-3);text-align:center;margin-top:5px;line-height:1.4}
+figcaption{font-size:.7rem;color:var(--ink-3);margin-top:11px;padding-top:9px;
+  border-top:1px solid var(--rule);line-height:1.55;max-width:var(--measure)}
+figcaption b{color:var(--ink-2)}
+
+/* 인터랙티브 gait */
+.gaitbox{background:var(--card);border:1px solid var(--rule);padding:18px 20px;margin:22px 0}
+.gaitpick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.gaitpick button{
+  font-family:inherit;font-size:.72rem;font-weight:700;padding:6px 13px;cursor:pointer;
+  background:none;border:1.5px solid var(--rule);color:var(--ink-2);transition:.14s;
+}
+.gaitpick button:hover{border-color:var(--dim);color:var(--dim)}
+.gaitpick button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.gaitstage{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:22px;align-items:start}
+.gaitinfo{display:grid;gap:9px;font-size:.74rem}
+.gaitinfo .gi{display:grid;grid-template-columns:5.4em 1fr;gap:8px}
+.gaitinfo .gi b{color:var(--dim);font-weight:800;font-size:.66rem;letter-spacing:.04em}
+.gaitinfo .gi span{color:var(--ink-2);line-height:1.5}
+.gaitctl{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.gaitctl button{font-family:inherit;font-size:.68rem;font-weight:700;padding:5px 12px;cursor:pointer;
+  background:none;border:1.5px solid var(--dim);color:var(--dim)}
+.gaitctl input[type=range]{flex:1;accent-color:var(--dim)}
+.gaitctl .spd{font-family:'Consolas',monospace;font-size:.66rem;color:var(--ink-3);min-width:52px}
+@media(max-width:820px){.gaitstage{grid-template-columns:1fr}}
+
+/* 논문 카드 */
+.paper{background:var(--card);border:1px solid var(--rule);padding:15px 18px;margin:14px 0}
+.paper .pt{font-size:clamp(.83rem,1vw,.92rem);font-weight:800;line-height:1.35;margin-bottom:3px}
+.paper .pm{font-size:.66rem;color:var(--ink-3);font-family:'Consolas',monospace;margin-bottom:10px}
+.paper dl{display:grid;gap:7px}
+.paper dt{font-size:.57rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.paper dt.lim{color:var(--stop)}
+.paper dt.take{color:var(--note)}
+.paper dd{font-size:clamp(.74rem,.88vw,.82rem);color:var(--ink-2);line-height:1.55;max-width:var(--measure)}
+.paper dd b{color:var(--ink)}
+.paper .links{margin-top:10px;padding-top:9px;border-top:1px solid var(--rule);
+  display:flex;gap:12px;flex-wrap:wrap}
+.paper .links a{font-size:.66rem;color:var(--dim);text-decoration:none;font-weight:700;
+  border-bottom:1px solid transparent;transition:.14s}
+.paper .links a:hover{border-bottom-color:var(--dim)}
+
+a.ext{color:var(--dim);text-decoration:none;border-bottom:1px solid rgba(14,122,110,.3);font-weight:600}
+a.ext:hover{border-bottom-color:var(--dim)}
+code{background:var(--paper-2);padding:1px 5px;font-family:'Consolas',monospace;font-size:.92em;color:var(--ink)}
+
+/* 신뢰도 배지 */
+.cf{display:inline-block;font-size:.56rem;font-weight:800;padding:1px 6px;letter-spacing:.06em;
+    vertical-align:1px;margin-left:5px;font-family:'Consolas',monospace}
+.cf.ok{background:var(--dim);color:#fff}
+.cf.part{background:var(--note);color:#fff}
+.cf.no{background:var(--ink-3);color:#fff}
+
+
+/* ── PDF 저장 버튼 (우측 상단 고정) ──────────────────────
+   window.print() 를 호출한다. 브라우저 인쇄 창에서 "PDF로 저장"을 고르면
+   이 문서의 인쇄 스타일(@media print)이 그대로 적용된 PDF가 나온다.
+   모바일에서는 숨긴다 (모바일 브라우저의 인쇄 지원이 제한적).
+   ──────────────────────────────────────────────────── */
+.pdfbtn{
+  position:fixed;top:7px;right:14px;z-index:70;
+  background:var(--paper);border:1px solid var(--rule);color:var(--ink-2);
+  padding:4px 9px;font-family:inherit;font-size:.55rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:.15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;line-height:1.2;
+}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+.pdfbtn:active{transform:translateY(1px)}
+.pdfbtn svg{width:9px;height:9px;flex:0 0 auto}
+@media(max-width:900px){.pdfbtn{display:none}}
+@media print{.pdfbtn{display:none!important}}
+
+@media(max-width:900px){
+  :root{--nav:0px}
+  #nav{transform:translateX(-100%);width:250px;transition:transform .24s;
+       box-shadow:0 0 40px rgba(0,0,0,.18)}
+  #nav.open{transform:none}
+  #navToggle{display:grid;place-items:center;position:fixed;top:12px;left:12px;z-index:60;
+    width:40px;height:40px;background:var(--ink);color:var(--paper);border:none;cursor:pointer;
+    font-size:1.1rem;border-radius:2px}
+  main{margin-left:0;padding-top:44px}
+}
+@media print{
+  @page{ size:A4 portrait; margin:14mm 12mm; }
+  #nav,#navToggle,.gaitctl,.gaitpick{display:none}
+  main{margin-left:0;max-width:none;padding:0}
+  body{background-image:none;background:#fff}
+  :root{--measure:100%}                    /* 인쇄에선 지면 폭을 그대로 쓴다 */
+
+  /* ★ 인터랙티브 도식: 화면 비율 유지(좁은폭 미디어쿼리가 걸려 터지는 것 방지) */
+  .gaitstage{grid-template-columns:1fr 190px!important;gap:16px!important}
+  #gaitTop{max-width:190px;margin-left:auto}
+  .gaitbox{break-inside:avoid}
+  .gaitbox::after{
+    content:'※ 인쇄본에서는 한 순간만 보입니다. 웹에서 보행 종류를 눌러 비교하세요.';
+    display:block;margin-top:9px;padding-top:8px;border-top:1px solid var(--rule);
+    font-size:.66rem;color:var(--ink-3);
+  }
+
+  /* 페이지 경계에서 쪼개지면 안 되는 것들 */
+  figure,.concept,.key,.warn,.stop,.paper,.gt,.path{break-inside:avoid}
+  figure img,figure svg{break-inside:avoid;max-height:210mm}
+  tr{break-inside:avoid}
+  thead{display:table-header-group}
+  h1,h2,h3,h4{break-after:avoid}
+  .lh{break-after:avoid}
+
+  /* 표는 인쇄에서 스크롤이 없으므로 지면에 맞춘다 */
+  .tw{overflow:visible}
+  table{min-width:0!important;font-size:8.4pt}
+  th,td{padding:5px 7px}
+
+  /* 층위 시작은 새 페이지에서 */
+  .layer{break-before:page}
+  header.top{break-after:page}
+
+  /* 링크 URL 노출 (인쇄본에서 출처 추적 가능하게) */
+  a.ext[href^="http"]::after,.paper .links a::after,figure .cred a::after{
+    content:" (" attr(href) ")";font-size:.82em;color:#777;word-break:break-all;
+  }
+  /* 배경색 강제 출력 */
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<button class="pdfbtn" id="pdfBtn" type="button"
+        title="브라우저 인쇄 창이 열립니다. 대상에서 &quot;PDF로 저장&quot;을 선택하세요."
+        aria-label="이 문서를 PDF로 저장">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+    <path d="M8 1v9M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12"/>
+  </svg>PDF 저장</button>
+<button id="navToggle" aria-label="목차">☰</button>
+
+<nav id="nav">
+  <a href="index.html" class="home">← 표지로</a>
+  <div class="brand">FOOTHOLD<small>Domain Encyclopedia</small></div>
+  <div class="tag">사족보행 로봇이 험지를 걷는다는 것의 <b>물리 · 기술 · 검증</b>을 층위로 정리한 문서.
+    각 층은 아래층의 <b>"그래서"</b>로만 이어진다.</div>
+  <ol>
+    <li class="L"><a href="#L0"><span class="n">L0</span>물리적 실재</a>
+      <ul>
+        <li><a href="#why-legs">왜 다리인가</a></li>
+        <li><a href="#gait">보행 패턴이란</a></li>
+        <li><a href="#duty">걷기와 달리기의 경계</a></li>
+        <li><a href="#transition">왜 gait이 바뀌는가</a></li>
+        <li><a href="#stability">넘어지지 않는다는 것</a></li>
+        <li><a href="#falling">보행은 제어된 낙하</a></li>
+      </ul></li>
+    <li class="L"><a href="#L1"><span class="n">L1</span>문제 정의</a>
+      <ul>
+        <li><a href="#whynow">왜 지금 이 문제인가</a></li>
+        <li><a href="#core">넘어져야 배우는데</a></li>
+        <li><a href="#sim-limit">시뮬레이터의 한계</a></li>
+      </ul></li>
+    <li class="L"><a href="#L2"><span class="n">L2</span>학습이란 무엇인가</a>
+      <ul>
+        <li><a href="#rl-basic">강화학습의 기본 구조</a></li>
+        <li><a href="#reward">보상 설계라는 함정</a></li>
+        <li><a href="#ppo">PPO · 왜 이 알고리즘인가</a></li>
+        <li><a href="#curriculum">커리큘럼과 랜덤화</a></li>
+      </ul></li>
+    <li class="L"><a href="#L3"><span class="n">L3</span>접근 전략</a>
+      <ul>
+        <li><a href="#sense">지형을 안다는 것</a></li>
+        <li><a href="#teacher">교사–학생 학습</a></li>
+        <li><a href="#position">우리 자리</a></li>
+      </ul></li>
+    <li class="L"><a href="#L4"><span class="n">L4</span>기술 스택</a>
+      <ul>
+        <li><a href="#hw">Go2 하드웨어 해부</a></li>
+        <li><a href="#obs">관측 설계</a></li>
+        <li><a href="#s2r">sim-to-real</a></li>
+        <li><a href="#gs">3DGS 실공간 재구성</a></li>
+      </ul></li>
+    <li class="L"><a href="#L5"><span class="n">L5</span>실증 · 검증</a>
+      <ul>
+        <li><a href="#proof">연구와 실증의 차이</a></li>
+        <li><a href="#metric">무엇을 측정하나</a></li>
+        <li><a href="#baseline">비교 기준선</a></li>
+        <li><a href="#protocol">실험 프로토콜</a></li>
+        <li><a href="#failcrit">실패 판정 기준</a></li>
+        <li><a href="#safety">안전</a></li>
+        <li><a href="#field">현장은 지금 무엇을 하나</a></li>
+      </ul></li>
+    <li class="L"><a href="#decide"><span class="n">＝</span>우리는 무엇을 할 것인가</a>
+      <ul><li><a href="#delta">우리만의 델타</a></li></ul></li>
+    <li class="L"><a href="#glossary"><span class="n">＋</span>용어 사전</a></li>
+    <li class="L"><a href="#papers"><span class="n">R</span>선행 연구 지도</a></li>
+    <li class="L"><a href="#unknown"><span class="n">Q</span>우리가 모르는 것</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="top">
+  <h1>사족보행 로봇이 험지를 걷는다는 것</h1>
+  <p class="lede">이 문서는 도구 설명서가 아니다. <b>왜 다리로 걷는가</b>에서 시작해
+    <b>왜 그것이 어려운가</b>를 거쳐 <b>그래서 어떤 기술을 왜 선택했는가</b>까지, 인과로만 이어지는 지도다.
+    각 층위는 아래층의 결론에서 도출된다. 순서대로 읽으면 우리 프로젝트의 모든 기술 선택이 왜 그렇게 되었는지 알 수 있다.</p>
+  <div class="meta">인공지능사관학교 7기 · AI 도약과정 실증 프로젝트 · 팀 FOOTHOLD
+    &nbsp;|&nbsp; 최종 갱신 2026-07-30</div>
+  <div class="key" style="margin-top:26px">
+    <div class="kl">이 프로젝트의 한 문장</div>
+    <p style="font-size:1.05rem;font-weight:700;line-height:1.5">
+      넘어져 봐야 배우는데, 넘어뜨릴 수 없다.</p>
+    <p style="margin-top:8px">이 모순을 푸는 것이 이 분야 전체의 문제다. 시뮬레이션에서 수백만 번 넘어뜨리고,
+      그 경험을 현실로 옮긴다. 그리고 옮기는 순간 시뮬과 현실의 차이 때문에 다시 넘어진다.
+      그 간극을 메우는 것이 우리가 5개월간 할 일이다.</p>
+  </div>
+
+  <h3 style="margin-top:34px;font-size:1.05rem">이 문서를 읽는 법</h3>
+  <p style="font-size:.82rem">전부 읽을 필요는 없다. <b>목적에 따라 경로가 다르다.</b>
+    각 층위는 아래층의 결론에서 나오므로, 건너뛰면 그 다음이 근거 없이 들린다. 그래서 <b>순서는 지키되 범위를 줄이는</b> 방식으로 안내한다.</p>
+  <div class="paths">
+    <div class="path">
+      <div class="who">처음 보는 분</div><span class="rt">약 30분</span>
+      <div class="ttl">순서대로 전부</div>
+      <ol>
+        <li><a href="#L0">L0 물리적 실재</a>· 동물은 어떻게 걷나</li>
+        <li><a href="#L1">L1 문제 정의</a>· 왜 어려운가</li>
+        <li><a href="#L2">L2 학습이란 무엇인가</a>· 용어가 여기서 다 나온다</li>
+        <li><a href="#L3">L3</a> · <a href="#L4">L4</a> · <a href="#L5">L5</a> 순서대로</li>
+      </ol>
+    </div>
+    <div class="path mentor">
+      <div class="who">멘토님 · 검토자</div><span class="rt">약 15분</span>
+      <div class="ttl">문제의식과 검증 설계만</div>
+      <ol>
+        <li><a href="#whynow">L1 왜 지금 이 문제인가</a>· 프로젝트의 이유</li>
+        <li><a href="#core">L1 넘어져야 배우는데</a>, 기술적 난제</li>
+        <li><a href="#sim-limit">L1 시뮬레이터의 한계</a>· 우리가 발견한 제약</li>
+        <li><a href="#position">L3 우리가 서는 자리</a>· 연구 지형도</li>
+        <li><a href="#L5">L5 실증 · 검증</a>· <b>지표 · 기준선 · 실패 판정</b></li>
+        <li><a href="#decide">결정 요약표</a> · <a href="#unknown">우리가 모르는 것</a> ★</li>
+      </ol>
+    </div>
+    <div class="path">
+      <div class="who">팀원 · 학습용</div><span class="rt">2~3회 나눠서</span>
+      <div class="ttl">기술을 익히는 순서</div>
+      <ol>
+        <li><a href="#L2">L2 학습이란 무엇인가</a>· 여기부터. 필수</li>
+        <li><a href="#sense">L3 지형을 안다는 것</a></li>
+        <li><a href="#L4">L4 기술 스택</a>· 실제 코드와 하드웨어</li>
+        <li><a href="#glossary">용어 사전</a>을 옆에 띄워두고</li>
+      </ol>
+    </div>
+    <div class="path">
+      <div class="who">이미 아시는 분</div><span class="rt">약 8분</span>
+      <div class="ttl">결론과 근거만</div>
+      <ol>
+        <li><a href="#sim-limit">L1 시뮬레이터의 한계</a></li>
+        <li><a href="#decide">결정 요약표</a>· 9개 결정과 근거</li>
+        <li><a href="#unknown">인용 금지 목록</a>· 검증 못 한 것</li>
+      </ol>
+    </div>
+  </div>
+  <p style="font-size:.74rem;color:var(--ink-3);margin-top:12px">
+    ※ 왼쪽 목차는 스크롤에 따라 현재 위치를 표시한다. 모바일에서는 좌측 상단 ☰ 버튼.</p>
+  <p style="font-size:.7rem;color:var(--ink-3);margin-top:14px">
+    표기, <span class="cf ok">확인</span> 1차 원문 직접 확인 ·
+    <span class="cf part">부분</span> 2차 출처 교차 ·
+    <span class="cf no">미확인</span> 근거 부족, 판단에 쓰지 말 것
+  </p>
+</header>
+
+<!-- ══════════════ LAYER 0 ══════════════ -->
+<section class="layer" id="L0">
+  <div class="lh"><span class="num">LAYER 0</span><h2>물리적 실재</h2></div>
+  <p class="lsub">로봇 이야기를 하기 전에. <b>동물은 어떻게 걷는가, 그리고 걷는다는 것은 물리적으로 무엇인가.</b>
+    여기를 모르면 뒤에 나오는 모든 기술 선택이 근거 없는 관행으로 보인다.</p>
+
+  <h3 id="why-legs">왜 바퀴가 아니라 다리인가</h3>
+  <p>바퀴는 <b>연속된 평면</b>에서만 최적이다. 에너지 효율도, 속도도, 제어 난이도도 다리를 압도한다.
+    그런데 계단·잔해·틈·비정형 지면이 있으면 바퀴는 아예 갈 수 없다.</p>
+  <p class="big"><b>다리의 유일한 존재 이유는 "접촉점을 골라서 딛는 능력"이다.</b>
+    바퀴는 지나가는 모든 지점에 닿아야 하지만, 다리는 <b>디딜 곳을 선택</b>하고 나머지는 건너뛴다.
+    갈 수 있는 곳의 집합 자체가 다르다.</p>
+  <div class="key">
+    <div class="kl">그래서</div>
+    <p>다리 로봇의 가치는 속도나 효율이 아니라 <b>접근 가능 영역</b>에 있다.
+      이 프로젝트가 "험지"를 목표로 삼는 이유가 여기서 나온다. 평지에서는 다리를 쓸 이유가 없다.</p>
+  </div>
+
+  <h3 id="gait">보행 패턴(gait)은 5종 세트가 아니라 다이얼 2개다</h3>
+  <p>초심자가 가장 먼저 버려야 할 오해: walk·trot·gallop이 서로 다른 별개의 동작이라는 생각.
+    실제로는 <b>변수 두 개짜리 연속 공간 위에 이름이 붙은 지점들</b>이다.
+    이 체계를 만든 사람이 Hildebrand(1965)다.<span class="cf ok">확인</span></p>
+
+  <div class="concept">
+    <div class="term"><span class="ko">접지시간 비율</span><span class="en">duty factor</span></div>
+    <dl>
+      <dt>정의</dt><dd>한 다리가 한 걸음 주기(stride) 중 <b>땅에 붙어 있는 시간의 비율</b>.
+        <code>접지 지속시간 ÷ 한 걸음 주기</code></dd>
+      <dt>직관</dt><dd>"발이 땅에 머무는 지분율". 0.75면 걸음의 3/4 동안 그 발이 땅에 있다.</dd>
+    </dl>
+  </div>
+  <div class="concept">
+    <div class="term"><span class="ko">위상차</span><span class="en">limb phase</span></div>
+    <dl>
+      <dt>정의</dt><dd>각 다리가 서로 <b>얼마나 시간차를 두고 착지</b>하는가. 0~1로 표현.</dd>
+      <dt>직관</dt><dd>"네 발이 돌아가며 치는 드럼의 박자 간격". 이 두 다이얼만 돌리면 모든 gait이 나온다.</dd>
+    </dl>
+  </div>
+
+  <p><b>아래 도식을 직접 눌러보면 각 gait이 어떻게 다른지 보인다.</b>
+    가로축은 한 걸음 주기(0~100%)이고, 색이 칠해진 구간이 <b>그 발이 땅에 닿아 있는 시간</b>이다.
+    오른쪽 위에서 내려다본 그림은 지금 어느 발이 땅에 있는지를 보여준다.</p>
+
+  <div class="gaitbox">
+    <div class="gaitpick" id="gaitPick"></div>
+    <div class="gaitstage">
+      <div>
+        <svg id="gaitChart" viewBox="0 0 620 210" aria-label="보행 패턴 접지 타이밍 도식"></svg>
+      </div>
+      <div>
+        <svg id="gaitTop" viewBox="0 0 200 210" aria-label="위에서 본 접지 상태"></svg>
+      </div>
+    </div>
+    <div class="gaitinfo" id="gaitInfo" style="margin-top:14px"></div>
+    <div class="gaitctl">
+      <button id="gaitPlay">⏸ 정지</button>
+      <input type="range" id="gaitSpeed" min="10" max="220" value="70">
+      <span class="spd" id="gaitSpd">×1.0</span>
+    </div>
+  </div>
+
+
+  <figure class="duo">
+    <div>
+      <img loading="lazy" alt="Muybridge가 1878년 연속촬영으로 기록한 말의 걷기 · 네 다리의 착지 순서가 보인다"
+        src="assets/muybridge-walk.gif?v=f8693167">
+      <div class="imgnote"><b>실제 말의 walk</b>· 항상 세 발이 땅에 있다</div>
+    </div>
+    <div>
+      <img loading="lazy" alt="Hildebrand 규약에 따른 대칭 gait 분포도 · 가로축 duty factor, 세로축 limb phase"
+        src="assets/hildebrand-map.jpg?v=7233263d">
+      <div class="imgnote"><b>다이얼 2개가 만드는 지도</b>· 이름 붙은 gait들은 이 평면 위의 점이다</div>
+    </div>
+    <figcaption><b>왼쪽</b>은 Eadweard Muybridge가 1878년, "달리는 말이 네 발을 동시에 뗄까"라는 논쟁을 끝내려고
+      연속촬영으로 찍은 것이다. <b>영화의 기원이 된 촬영이 사실은 보행 연구였다.</b>
+      <b>오른쪽</b>은 Hildebrand 규약으로 실제 동물 데이터를 찍은 분포도, 가로가 <b>duty factor</b>, 세로가 <b>limb phase</b>다. 위 인터랙티브 도식에서 눌러본 gait들이 이 평면 위의 좌표다.
+      <div class="cred">왼쪽: Eadweard Muybridge (1878), Public Domain via Wikimedia Commons ·
+        오른쪽: <a href="https://elifesciences.org/articles/29495/figures" target="_blank" rel="noopener">eLife 29495, Fig 1</a>, CC BY</div>
+    </figcaption>
+  </figure>
+  <div class="warn">
+    <div class="kl">숫자 하나만 기억한다면</div>
+    <p>이론상 가능한 4족 발놓기 순열은 좌우대칭을 접어도 <b>2,352가지</b>다.
+      그런데 자연이 실제로 쓰는 건 위의 극소수뿐이다. <b>왜 하필 이것들만 살아남았는가</b>· 그게 다음 절이다.</p>
+  </div>
+
+  <h3 id="duty">걷기와 달리기를 가르는 숫자</h3>
+  <p>Hildebrand의 판정 기준은 놀랍도록 단순하다.<span class="cf ok">확인</span></p>
+  <div class="key">
+    <div class="kl">판정 기준</div>
+    <p><b>duty factor &gt; 0.5 = 걷기(walking) · ≤ 0.5 = 달리기(running)</b></p>
+    <p style="font-size:.8rem;color:var(--ink-2);margin-top:6px">
+      직관: 0.5보다 크면 항상 최소 한 발이 땅에 있다. 작으면 아무 발도 땅에 없는 순간이 생긴다.</p>
+  </div>
+  <div class="warn">
+    <div class="kl">★ 4족에서의 예외, 반드시 짚고 갈 것</div>
+    <p><b>4족에서는 대각 다리 위상 배치 때문에 duty factor가 0.5 미만이어도 전신 공중기가 없을 수 있다.</b>
+      즉 "DF 0.5 = 달리기"는 <b>역학적 정의(스프링처럼 튄다)이지, 공중에 뜬다는 뜻이 아니다.</b></p>
+  </div>
+  <div class="tw"><table>
+    <tr><th>대상</th><th>duty factor</th><th>위상</th></tr>
+    <tr><td>파충류 · 소형 포유류</td><td class="mono">≈ 0.8</td><td>40–50% (거의 trot 타이밍)</td></tr>
+    <tr><td>중대형 포유류(말 등)</td><td class="mono">≈ 0.65–0.75</td><td>25% 이하</td></tr>
+    <tr class="hl"><td><b>로봇 walk gait</b></td><td class="mono">0.75</td><td>지지 3/4</td></tr>
+    <tr class="hl"><td><b>로봇 trot gait</b></td><td class="mono">0.5</td><td>대각쌍</td></tr>
+  </table></div>
+
+  <h3 id="transition">왜 속도에 따라 gait이 바뀌는가, 통념이 뒤집히는 지점</h3>
+
+  <h4>통설: 에너지 최소화</h4>
+  <p>Hoyt &amp; Taylor(Nature 1981)<span class="cf part">부분</span>는 소형마를 트레드밀에서
+    각 gait의 원래 속도 범위 밖까지 확장시켜 산소소비량을 쟀다. 결론:</p>
+  <blockquote>어떤 속도에서든 자연적으로 선택하는 gait이 실제로 가장 작은 에너지 소비를 수반한다.
+    <cite>Hoyt &amp; Taylor, Nature 292:239–240 (1981)</cite></blockquote>
+  <p>각 gait마다 "속도 대 단위거리당 에너지" 곡선이 U자로 그려지고, 세 U자가 겹쳐 있으며,
+    동물은 항상 그 속도에서 <b>가장 낮은 곡선</b>에 해당하는 gait을 쓴다는 그림이다. 곡선 교차점이 곧 전이점.</p>
+
+  <h4>★ 반전: 힘이 방아쇠다</h4>
+  <p>그런데 Farley &amp; Taylor(Science 1991)<span class="cf part">부분</span>가 이걸 뒤집었다.
+    거의 모든 입문 설명에서 빠지는 부분이다.</p>
+  <ol class="body">
+    <li>말은 <b>gallop이 trot보다 에너지가 더 드는 속도에서</b> 전환했다. 전이가 에너지를 오히려 <b>증가</b>시켰다.</li>
+    <li>그 속도에서 gallop으로 바꾸면 <b>근육·건·뼈의 최대 힘(peak force)이 감소</b>했다.</li>
+    <li><b>(결정타)</b> 말에 추가 중량을 지우자 <b>더 낮은 속도에서 전환</b>했지만,
+      <b>전환 시점의 임계 힘 수준은 동일</b>했다.</li>
+  </ol>
+  <div class="key">
+    <div class="kl">자동차 변속에 비유하면</div>
+    <p>Hoyt &amp; Taylor는 <b>"연비 좋은 기어로 바꾼다"</b>,
+       Farley &amp; Taylor는 <b>"엔진 레드존을 넘지 않으려고 바꾼다"</b>.
+       trot→gallop은 후자가 훨씬 강한 설명이다.</p>
+    <p style="margin-top:8px;font-size:.82rem">현재 문헌의 균형점: <b>walk→trot은 에너지 최소화</b>로,
+      <b>trot→gallop은 근골격 하중 회피</b>로 설명하는 것이 더 설득력 있다.</p>
+  </div>
+
+  <h4>★★ 결정적 증거, gait은 설계가 아니라 최적화의 부산물이다</h4>
+  <p class="big"><b>gait을 전혀 프로그래밍하지 않고 에너지만 최소화시켰더니, gait이 저절로 나왔다.</b><span class="cf ok">확인</span></p>
+  <ul class="body">
+    <li>모델: 점질량 2개 + 무질량 다리, 2D, <b>스프링 없음</b>. 비용 = 다리 일 + 힘 변화율 페널티</li>
+    <li>결과: 무차원 속도 <code>&lt; 0.65</code> → <b>4박 walking</b> / <code>0.65~1.2</code> → <b>2박 trotting</b> / <code>&gt; 1.2</code> → 비대칭 증가</li>
+    <li>예측 전이점 0.65–0.70 vs <b>개의 실측 임계 0.8</b></li>
+    <li>보너스: 스프링을 전혀 안 넣었는데 <b>유사 탄성 거동이 창발</b></li>
+  </ul>
+  <p><b>로봇 실물로도 재현됐다.</b> Owaki &amp; Ishiguro(Sci. Rep. 2017)<span class="cf ok">확인</span>는
+    <b>"다리에 하중이 느껴지는 동안 그 다리는 몸을 계속 지지한다"</b>는 국소 규칙 하나만 넣은 분산 제어로,
+    <b>파라미터 하나만 바꾸자 로봇이 walk→trot→canter→gallop으로 자발 전이</b>하게 만들었다.
+    에너지 효율 프로파일도 말 실측과 일치했다.</p>
+  <div class="key">
+    <div class="kl">이것이 의미하는 것</div>
+    <p><b>gait은 뇌에 저장된 안무 세트가 아니다.</b> 에너지 지형 위의 계곡들이고,
+      속도를 올리면 발밑 계곡이 사라지면서 옆 계곡으로 굴러떨어지는 것에 가깝다.</p>
+    <p style="margin-top:8px"><b>→ 우리 프로젝트에 주는 함의:</b> 보상함수에 gait을 직접 새기지 말고
+      <b>에너지·토크·접촉 제약으로 유도</b>하는 것이 문헌적으로 정당하다.
+      실제로 Unitree 공식 배포 코드도 gait을 지정하는 대신 <b>보행 위상(sin/cos)</b>을 관측에 넣는다.</p>
+  </div>
+
+  <h4>★ 왜 trot이 로봇의 기본값인가, 답은 "제어 난이도"</h4>
+  <p>에너지와 안정성도 이유지만, 결정적인 건 세 번째다.</p>
+  <ol class="body">
+    <li><b>에너지</b>· 위 시뮬레이션에서 중간 속도 구간의 전역 최적해가 trot.
+      원리는 <i>"기계적 일을 최소화하려면 다리 힘 벡터가 무게중심 속도 벡터에 가급적 수직이어야 한다. 굴러가는 바퀴가 에너지 없이 하중을 지탱하는 것과 같은 이치"</i>.</li>
+    <li><b>안정성</b>· 대각 지지는 앞다리 하나 + 뒷다리 하나를 제공해 <b>피칭 회전을 안정화</b>한다.
+      대각 두 발로 서면 지지선이 무게중심 바로 아래를 <b>대각선으로 관통</b>해,
+      앞뒤로 고꾸라지는 힘과 좌우로 넘어지는 힘이 이 하나의 선으로 동시에 제어된다.
+      <br><span style="color:var(--ink-3)">pace(같은 쪽 두 발)는 지지선이 옆구리에 치우쳐 좌우로 훨씬 잘 넘어진다. 그래서 pace를 쓰는 낙타·기린은 다리가 아주 길다.</span></li>
+    <li><b>★ 제어가 가장 쉽다</b>. Raibert의 <b>virtual leg</b> 개념<span class="cf part">부분</span>:
+      다리를 쌍으로 쓰는 gait들(trot=대각쌍, pace=동측쌍, bound=전후쌍)은 모두
+      <b>하나의 가상 2족 보행으로 변환</b>할 수 있고, 변환하면 단일 제어 알고리즘이 파라미터만 바꿔 세 gait을 모두 만든다.</li>
+  </ol>
+
+  <figure>
+    <img loading="lazy" alt="duty factor 0.8과 0.65에서 대각 다리쌍의 힘 벡터와 무게중심 속도 벡터 비교"
+      src="assets/trot-force-geom.jpg?v=42bb0091"
+      style="max-width:460px;margin:0 auto">
+    <figcaption><b>같은 trot 타이밍에서 "발이 땅에 붙어 있는 시간"만 바꾼 비교다.</b>
+      좌우 두 열이 전부다. <b>왼쪽은 접지비율 0.8(느린 걸음), 오른쪽은 0.65(빠른 걸음).</b>
+      가로축은 둘 다 "한 걸음 주기의 몇 %인가"이고, 세 행은 위에서부터 이렇게 읽는다.
+      <br><br>
+      <b>A행, 대각 다리쌍이 내는 수직 힘.</b> 곡선 두 개가 두 대각쌍이다.
+      왼쪽은 봉우리가 <b>넓게 겹치고</b>, 오른쪽은 좁고 뾰족하며 거의 겹치지 않는다.<br>
+      <b>B행, A행의 두 곡선을 더한 것</b>, 즉 몸이 실제로 받는 총 수직 힘.
+      겹침이 크면(왼쪽) 총합이 평평해지고, <b>합쳐진 힘의 피크가 다리 하나의 피크와 다른 시점으로 밀려난다</b>. 이 "밀림"이 이 그림의 주인공이다.<br>
+      <b>C행, 그 결과인 무게중심의 수직 속도.</b> 기준선 위면 몸이 올라가는 중, 아래면 내려가는 중이다.
+      왼쪽은 진폭이 작아 <b>몸이 거의 상하로 움직이지 않는다.</b>
+      <br><br>
+      <b>몸을 덜 들었다 놨다 할수록 근육이 하는 일이 줄어든다</b>. 이것이 논문 제목의 "work minimization"이다.
+      <br><span style="color:var(--note)">※ 이 그림에 벡터나 각도는 그려져 있지 않다. 수직 성분 시계열 세 종류다.
+      그리고 이 논문은 <b>느린 보행(slow gaits)</b>을 다룬다.</span>
+      <div class="cred">Usherwood &amp; Self Davies, <i>Work minimization accounts for footfall phasing in slow quadrupedal gaits</i>,
+        <a href="https://elifesciences.org/articles/29495/figures" target="_blank" rel="noopener">eLife 2017;6:e29495</a>, Fig 3 · CC BY</div>
+    </figcaption>
+  </figure>
+  <p>그리고 MIT Cheetah 3가 제어 난이도를 정량적으로 확인했다.<span class="cf ok">확인</span></p>
+  <blockquote>trotting은 즉각 반응형 QP 제어기와 convex MPC 양쪽으로 달성 가능하지만,
+    <b>bounding과 pacing은 다가올 공중기에 대한 예측적 지식이 필요하므로 convex MPC로만 가능</b>하다.
+    <cite>Di Carlo, Wensing, Katz, Bledt, Kim · IROS 2018</cite></blockquote>
+  <div class="key">
+    <div class="kl">결론</div>
+    <p><b>trot은 "예측 없이 반응만으로 굴러가는 유일한 동적 gait"이고, 2족 문제로 환원된다.</b>
+      이것이 로봇 기본값인 진짜 이유다.</p>
+    <p style="margin-top:8px">Unitree 공식 API의 gait 카탈로그
+      (<code>TrotRun</code> · <code>EconomicGait</code> · <code>SwitchGait 1=trot, 2=trot running, 4=trot obstacle</code>)가
+      사실상 trot 계열뿐인 것도 이 때문이다.</p>
+  </div>
+
+  <h3 id="stability">넘어지지 않는다는 것. 정적 안정성 · 동적 안정성 · ZMP</h3>
+
+  <div class="concept">
+    <div class="term"><span class="ko">지지다각형</span><span class="en">support polygon</span></div>
+    <dl>
+      <dt>정의</dt><dd>지금 땅에 닿아 있는 발들을 이어서 만든 다각형.<span class="cf ok">확인</span></dd>
+      <dt>정적 안정 조건</dt><dd><b>무게중심의 수직 투영이 항상 이 다각형 안에</b> 있어야 한다.
+        중심에서 경계까지의 최소 거리를 <b>안정 여유(stability margin)</b>라 한다.</dd>
+      <dt>직관</dt><dd>정적 안정성 = <b>"동영상을 아무 프레임에서 일시정지해도 안 넘어지는가"</b>.
+        동적 안정성 = "일시정지하면 넘어지지만 재생 중엔 안 넘어지는가". 자전거가 그렇다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 620 250" aria-label="지지다각형 비교 · walk 삼각형 vs trot 선분">
+      <defs>
+        <marker id="ah" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#4a5566"/></marker>
+      </defs>
+      <!-- 왼쪽: crawl 3발 지지 -->
+      <text x="100" y="22" font-size="12" font-weight="800" fill="#161c26" text-anchor="middle">Crawl · 3발 지지</text>
+      <text x="100" y="38" font-size="9.5" fill="#7c8798" text-anchor="middle">정적으로 안정</text>
+      <polygon points="45,80 155,80 155,175" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <!-- 발 -->
+      <circle cx="45" cy="80" r="7.5" fill="#0e7a6e"/><circle cx="155" cy="80" r="7.5" fill="#0e7a6e"/>
+      <circle cx="155" cy="175" r="7.5" fill="#0e7a6e"/>
+      <circle cx="45" cy="175" r="7.5" fill="none" stroke="#d9d6cd" stroke-width="2" stroke-dasharray="3 3"/>
+      <!-- CoM -->
+      <circle cx="112" cy="120" r="5" fill="#a86a08"/>
+      <circle cx="112" cy="120" r="11" fill="none" stroke="#a86a08" stroke-width="1.2" stroke-dasharray="2 3"/>
+      <text x="112" y="145" font-size="9" fill="#a86a08" font-weight="700" text-anchor="middle">무게중심</text>
+      <text x="100" y="210" font-size="9.5" fill="#4a5566" text-anchor="middle">면적이 있는 다각형 →</text>
+      <text x="100" y="224" font-size="9.5" fill="#4a5566" text-anchor="middle">"안에 있으면 안 넘어진다"가 성립</text>
+
+      <!-- 오른쪽: trot 2발 대각 -->
+      <text x="400" y="22" font-size="12" font-weight="800" fill="#161c26" text-anchor="middle">Trot · 대각 2발 지지</text>
+      <text x="400" y="38" font-size="9.5" fill="#a3342a" text-anchor="middle">지지다각형이 선분으로 퇴화</text>
+      <line x1="345" y1="80" x2="455" y2="175" stroke="#a3342a" stroke-width="2.6"/>
+      <circle cx="345" cy="80" r="7.5" fill="#0e7a6e"/><circle cx="455" cy="175" r="7.5" fill="#0e7a6e"/>
+      <circle cx="455" cy="80" r="7.5" fill="none" stroke="#d9d6cd" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="345" cy="175" r="7.5" fill="none" stroke="#d9d6cd" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="400" cy="127" r="5" fill="#a86a08"/>
+      <!-- 넘어지는 방향 화살표 -->
+      <line x1="400" y1="127" x2="352" y2="152" stroke="#4a5566" stroke-width="1.3" marker-end="url(#ah)" stroke-dasharray="3 2"/>
+      <line x1="400" y1="127" x2="448" y2="102" stroke="#4a5566" stroke-width="1.3" marker-end="url(#ah)" stroke-dasharray="3 2"/>
+      <text x="400" y="210" font-size="9.5" fill="#a3342a" text-anchor="middle" font-weight="700">면적이 0 → "안에 있다"가 불가능</text>
+      <text x="400" y="224" font-size="9.5" fill="#4a5566" text-anchor="middle">계속 움직여야만 안 넘어진다</text>
+
+      <!-- 범례 -->
+      <circle cx="500" cy="242" r="5" fill="#0e7a6e"/><text x="510" y="246" font-size="9" fill="#4a5566">접지</text>
+      <circle cx="552" cy="242" r="5" fill="none" stroke="#d9d6cd" stroke-width="2" stroke-dasharray="3 3"/>
+      <text x="562" y="246" font-size="9" fill="#4a5566">공중</text>
+    </svg>
+    <figcaption><b>왜 ZMP가 4족 동적보행에 안 맞는지가 이 그림 하나에 있다.</b>
+      crawl은 지지다각형에 면적이 있어 "안에 있으면 안 넘어진다"가 성립하지만,
+      trot에서는 대각 두 발만 접지해 <b>다각형이 면적 0의 선분으로 퇴화</b>한다.
+      면적이 없는 영역에서 "내부에 있어야 한다"는 조건은 만족될 수 없다.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <div class="term"><span class="ko">영모멘트점</span><span class="en">ZMP · Zero Moment Point</span></div>
+    <dl>
+      <dt>정의</dt><dd>관성력과 중력의 합모멘트가 0이 되는 지면 위의 점.
+        = 발–지면 반력이 <b>수평 방향으로 아무 모멘트도 만들지 않는</b> 점.<span class="cf ok">확인</span></dd>
+      <dt>판정</dt><dd>지지다각형 안에 이 점이 존재하면 <b>동적으로 균형이 잡혔다</b>고 본다.</dd>
+      <dt>역사</dt><dd>1968년 모스크바 학회 최초 발표, 최초 실물 시연은 <b>1984년 와세다대 WL-10RD</b>.
+        ASIMO를 포함한 20세기 이족보행의 지배적 패러다임이었다.</dd>
+      <dt>한계</dt><dd>강체 접촉 가정 · 공중기에는 정의 불가 · 본질적으로 준정적 ·
+        <b>trot에서는 지지다각형이 선분으로 퇴화해 조건 자체가 성립 불가</b></dd>
+    </dl>
+  </div>
+  <div class="key">
+    <div class="kl">패러다임 전환이 일어난 지점</div>
+    <p><b>ZMP는 "넘어지지 않는 것"을 정의한다. 그런데 달리기는 매 걸음 의도적으로 넘어지는 것이다.</b>
+      안 넘어지는 조건으로 넘어지는 동작을 기술하려니 맞지 않는다.
+      <b>ASIMO(ZMP) → Boston Dynamics(MPC·학습)</b>의 전환점이 정확히 여기다.</p>
+  </div>
+
+  <h3 id="falling">"보행은 제어된 낙하"의 정확한 의미</h3>
+  <blockquote>동적보행 연구는 보행을 <b>controlled falling</b>으로 본다.
+    <b>운동량은 오직 지면의 적절한 위치를 밟음으로써만</b> 계에 더해지거나 제거될 수 있다.
+    <cite>Kuo &amp; Donelan, Physical Therapy 90(2) (2010)</cite></blockquote>
+  <p class="big">죽마를 타고 서 있다고 상상하라. 가만히 있으면 넘어진다.
+    그런데 <b>넘어지는 방향으로 다음 죽마를 미리 짚으면</b> 넘어짐이 전진으로 변환된다.</p>
+  <div class="key">
+    <div class="kl">"제어된"의 정확한 뜻</div>
+    <p>넘어짐을 <b>막는다</b>는 뜻이 아니다.
+      <b>넘어지는 방향과 시점을 지정하고, 그에 맞춰 발을 놓는다</b>는 뜻이다.</p>
+  </div>
+
+  <div class="tw"><table>
+    <tr><th>모델</th><th>대응 동작</th><th>비유</th><th>물리</th></tr>
+    <tr><td><b>도립진자</b><br><span class="mono" style="font-size:.9em">Inverted Pendulum</span></td>
+        <td>걷기</td><td><b>시소</b></td>
+        <td>지지 다리가 진자처럼 행동해 무게중심이 <b>원형에 가까운 호</b>를 그린다</td></tr>
+    <tr><td><b>스프링 도립진자</b><br><span class="mono" style="font-size:.9em">SLIP</span></td>
+        <td>달리기 · trot</td><td><b>트램폴린</b></td>
+        <td>다리가 스프링처럼 에너지를 저장했다 되돌려준다</td></tr>
+  </table></div>
+  <p><b>그래서 walk/run의 진짜 물리적 정의는 duty factor 0.5가 아니라 "진자냐 스프링이냐"다.</b>
+    Cavagna·Heglund·Taylor(1977)<span class="cf part">부분</span>가
+    <i>"자연이 채택한 두 가지 기본 메커니즘: 걷기의 진자 메커니즘과, 달리기·뛰기·trotting의 튀는 메커니즘"</i>이라 정리했다.</p>
+
+  <div class="concept">
+    <div class="term"><span class="ko">포착점</span><span class="en">Capture Point</span></div>
+    <dl>
+      <dt>정의</dt><dd>어떤 상태의 로봇에게, <b>그 지점을 밟으면 완전히 안정적으로 정지시키는</b> 지면 위의 점.<span class="cf part">부분</span></dd>
+      <dt>수식</dt><dd><code>ξ = x_CoM + ẋ_CoM / ω₀</code>,&nbsp; <code>ω₀ = √(g / z₀)</code> (z₀ = 무게중심 높이)</dd>
+      <dt>왜 아름다운가</dt><dd><b>"속도"를 "미래의 위치"로 환산</b>해 주기 때문이다.
+        ω₀=√(g/z)라 <b>키가 클수록 같은 속도에도 더 멀리 밟아야 한다</b>. 키 큰 사람이 밀렸을 때 보폭이 큰 것과 같다.</dd>
+      <dt>의의</dt><dd>ZMP는 <b>"지금 안 넘어지는가"</b>(정적·순간), Capture Point는
+        <b>"어디를 밟으면 멈출 수 있는가"</b>(미래·행동 지향). 이 전환이 곧 보행 패러다임의 전환이다.</dd>
+    </dl>
+  </div>
+  <p>흥미로운 건, Raibert가 1984년에 <b>경험적 휴리스틱</b>으로 발견한
+    <i>"전진 속도는 비행 중 발 배치로 제어한다"</i>는 원리가,
+    2006년 Capture Point로 <b>해석해를 얻었다</b>는 점이다. 같은 아이디어의 22년 간격 재발견이다.</p>
+
+  <div class="因">그래서, 지형의 경우의 수는 무한하고, 걷기는 매 순간 넘어짐을 붙잡는 일이다. 다음 층위로.</div>
+</section>
+
+<!-- ══════════════ LAYER 1 ══════════════ -->
+<section class="layer" id="L1">
+  <div class="lh"><span class="num">LAYER 1</span><h2>문제 정의</h2></div>
+  <p class="lsub">먼저 <b>왜 지금 이걸 해야 하는가</b>, 그다음 <b>왜 그것이 어려운가.</b>
+    Layer 0에서 나온 두 사실, 다리는 디딜 곳을 골라야 하고, 걷기는 계속 넘어지는 일이다. 이 둘이 만나면 난이도가 나온다.</p>
+
+  <h3 id="whynow">왜 지금 이 문제인가</h3>
+  <p>기술적으로 어렵다는 것만으로는 프로젝트의 이유가 되지 않는다. <b>지금 이걸 해야 하는 이유</b>는 따로 있다.</p>
+  <ol class="body">
+    <li><b>현장이 이미 도입을 시작했다.</b> POSCO 제철소가 2023년부터 고로 점검에 투입해
+      <b>점검 빈도를 하루 1회에서 12회로</b> 늘렸고, 한국수자원공사는 <b>총사업비 260억원</b> 규모로
+      전국 44개 사업장 확대를 계획하고 있다. 연구 단계가 아니라 <b>구매 단계</b>다.</li>
+    <li><b>그런데 도입된 로봇은 대부분 수입산이고, 험지 성능이 병목이다.</b>
+      계단 16cm·등판각 40°가 현재 보급형의 한계이고, 그 이상은 사람이 들어간다.</li>
+    <li><b>이 분야는 한국이 세계 최전선이다.</b> KAIST만 Science Robotics에 3편
+      (2023 모래 3.03 m/s · 2025 징검다리 4 m/s · 2026 표지 6 m/s).
+      <b>따라갈 국내 벤치마크가 있고, 물어볼 사람이 국내에 있다.</b></li>
+    <li><b>그리고 비어 있는 자리가 명확하다.</b> 국내 어떤 도입 사례도
+      <b>점검 시간 단축률이나 인력 절감 인원을 공개하지 않는다.</b>
+      정량 데이터가 없다. 그게 우리가 만들 수 있는 것이다.</li>
+  </ol>
+  <div class="key">
+    <div class="kl">한 줄로</div>
+    <p><b>시장은 이미 사고 있는데, "얼마나 쓸 만한가"에 대한 공개된 숫자가 없다.</b>
+      우리 프로젝트는 그 숫자를 만드는 일이다.</p>
+    <p style="font-size:.76rem;margin-top:8px;color:var(--ink-2)">
+      → 도입 사례의 상세와 우리 비교 기준선 설계는 <a class="ext" href="#field">L5 · 현장은 지금 무엇을 하나</a>에서 다룬다.</p>
+  </div>
+  <h3 id="core">넘어져야 배우는데, 넘어뜨릴 수 없다</h3>
+  <ol class="body">
+    <li><b>지형의 경우의 수가 무한하다.</b> "돌이 이만큼 튀어나오면 다리를 이만큼 든다"를 사람이 다 쓸 수 없다.
+      → 경험에서 규칙을 스스로 만들게 하는 것 외에 방법이 없다. <b>그래서 강화학습이다.</b></li>
+    <li><b>학습은 실패를 필요로 한다.</b> 그런데 실물 로봇은 넘어지면 부서지고 수천만 원이다.
+      게다가 필요한 실패 횟수가 <b>수백만 번</b>이다. 현실에서는 물리적으로 불가능하다.
+      → <b>그래서 시뮬레이션이다.</b></li>
+    <li><b>그런데 시뮬은 현실이 아니다.</b> 시뮬에서 완벽했던 정책이 실물에서 픽 쓰러진다.
+      → <b>그래서 sim-to-real gap이 이 분야 전체의 문제다.</b></li>
+  </ol>
+  <div class="key">
+    <div class="kl">이 세 줄에서 모든 기술이 파생된다</div>
+    <p>강화학습 · 시뮬레이션 · 도메인 랜덤화 · 지형 커리큘럼 · 관측 설계, 전부 위 세 문장의 <b>"그래서"</b>다. 도구를 먼저 고르고 이유를 붙인 게 아니다.</p>
+  </div>
+
+
+  <h3 id="sim-limit">★ 그런데 시뮬레이터가 모래를 못 만든다</h3>
+  <p>우리 주제 원문이 <b>"모래·자갈·계단 험지 적응"</b>인데, 여기서 프로젝트 전제를 바꾸는 사실이 나온다.</p>
+
+  <div class="stop">
+    <div class="kl">확인된 제약, 직접 원문 확인</div>
+    <p><b>Isaac Lab 지형 생성기에 granular(입상체)·deformable(변형) 항목이 하나도 없다.</b><span class="cf ok">확인</span></p>
+  </div>
+  <div class="tw"><table>
+    <tr><th style="width:24%">분류</th><th>제공되는 지형 생성 함수 <b>전체</b></th></tr>
+    <tr><td><b>Height field</b></td><td class="mono">random_uniform · pyramid_sloped · pyramid_stairs ·
+      discrete_obstacles · wave · stepping_stones</td></tr>
+    <tr><td><b>Trimesh</b></td><td class="mono">flat · pyramid_stairs · inverted_pyramid_stairs · random_grid ·
+      rails · pit · box · gap · floating_ring · star · repeated_objects</td></tr>
+  </table></div>
+
+  <figure>
+    <img loading="lazy" alt="Isaac Lab의 Unitree Go2 험지 학습 환경 · 계단, 경사, 불규칙 블록으로 이루어진 강체 지형에서 다수의 로봇이 동시에 학습하는 모습"
+      src="assets/isaaclab-go2-rough.jpg?v=dc07e51d">
+    <figcaption><b>"강체(rigid) 지형"이 실제로 무엇인지, 이 그림이 답이다.</b>
+      Isaac Lab 공식 문서에 실린 Go2 험지 학습 환경이다.
+      바닥이 계단·경사·불규칙 블록으로 이루어져 있고, <b>전부 단단한 덩어리다.</b>
+      밟으면 <b>딱 그 높이에서 멈춘다</b>. 가라앉지도, 흩어지지도, 발이 파묻히지도 않는다.
+      <br><br>모래는 밟으면 <b>발이 가라앉고, 알갱이가 옆으로 밀리고, 딛는 힘에 따라 다르게 반응한다.</b>
+      위 그림의 물리로는 그 어느 것도 표현되지 않는다. <b>이것이 "모래를 시뮬레이션할 수 없다"의 정확한 의미다.</b>
+      <br><br>동시에 이 그림은 <b>대규모 병렬 학습</b>이 무엇인지도 보여준다. 한 화면에 로봇이 여러 마리다. 실제로는 수천 마리가 같은 세계에서 동시에 넘어지며 배운다.
+      <div class="cred">출처: <a href="https://isaac-sim.github.io/IsaacLab/" target="_blank" rel="noopener">NVIDIA Isaac Lab 공식 문서</a></div>
+    </figcaption>
+  </figure>
+  <p><b>전부 강체(rigid) 지형이다.</b> 그리고 NVIDIA 개발자가 포럼에서 직접 답했다:</p>
+  <blockquote>입자 솔버는 이런 시나리오에 쓸 만큼 정확하지 않다. 현재로서는.
+    <cite>SimonPhysX (NVIDIA), NVIDIA 개발자 포럼, 2024-05-28</cite></blockquote>
+  <p>명시된 이유: 중력 대비 입자 크기 비율 문제(1cm 입자를 정상 중력에서 다루기 매우 어려움),
+    더미 전체가 붕괴하는 것을 막지 못함, 접착력이 크면 콜라이더 마찰이 깨지는 버그, 광범위한 수동 튜닝 필요.</p>
+  <div class="stop">
+    <div class="kl">그래서 이건</div>
+    <p><b>팀의 튜닝으로 풀리는 문제가 아니라, 문제 정의를 바꿔야 하는 제약이다.</b>
+      모르고 갔으면 5개월 뒤에 "모래가 안 돼요"로 끝난다.</p>
+  </div>
+
+  <h4>세계 최고 성과는 "모래를 그리지" 않았다</h4>
+  <div class="paper">
+    <div class="pt">Learning quadrupedal locomotion on deformable terrain</div>
+    <div class="pm">Choi, Ji, Park, Kim, Mun, Lee, 황보제민 (KAIST) · Science Robotics 8(74), 2023</div>
+    <dl>
+      <dt>논문이 직접 진술한 문제</dt>
+      <dd><i>"기존 제어 정책은 부드럽고 변형되는 지형에, 특히 고속에서 적용할 수 없다.
+        주된 이유는 <b>강화학습이 일반적으로 데이터 분포 밖에서는 효과적이지 않기 때문</b>이다."</i></dd>
+      <dt>해법</dt>
+      <dd>입자 시뮬레이션 대신 <b>입상체 접촉의 해석적 축약 모델</b>· 표면 추적 없이 각 타임스텝 접촉점에서
+        지면반력을 계산. 매우 부드러운 해변 모래부터 단단한 아스팔트까지 <b>파라미터로 표현</b>.
+        그리고 <b>적응형 제어 구조가 지형 특성을 암묵적으로 식별</b>.</dd>
+      <dt>결과</dt><dd>로봇 <b>RaiBo</b>가 <b>발이 완전히 파묻히는 해변 모래에서 3.03 m/s</b></dd>
+      <dt class="lim">확인 못 한 것</dt><dd>본문(모델 수식·계산비용·Isaac Lab 이식성)은 페이월. 대학 접근권으로 확보 필요.</dd>
+    </dl>
+  </div>
+  <div class="key">
+    <div class="kl">★ 핵심 전환</div>
+    <p style="font-size:1.02rem;font-weight:700">모래를 <b>그리는</b> 게 아니라, 모래를 <b>느끼게</b> 한다.</p>
+    <p style="margin-top:8px">지오메트리(형상)로 표현하려는 시도를 버리고,
+      <b>발이 지면과 어떻게 상호작용하는지</b>를 모델링하거나 아예 학습이 알아서 식별하게 만든다.</p>
+  </div>
+
+  <h4>★ 그래서 우리 프로젝트의 문장을 바꿔야 한다</h4>
+  <div class="stop">
+    <div class="kl">Isaac Lab 메인테이너 공식 답변 (2025-08)</div>
+    <p><i>"진정한 granular/deformable 모래(침하·바퀴자국)는 Isaac Sim/Isaac Lab에서 지원되지 않으며,
+      <b>로드맵에도 없다.</b>"</i></p>
+    <p style="margin-top:8px">파티클 기반 "모래"는 <b>불안정하며 비권장</b>이고, 제시된 우회책은
+      <b>낮은 마찰 + 미세 요철 + 마찰 랜덤화 + 모래 텍스처</b>· 즉 <b>거동은 여전히 강체</b>다.</p>
+  </div>
+  <p><b>이 사실을 모른 채 "모래를 학습시킵니다"라고 하면, 우리가 실제로 학습시키는 것은
+    "미끄럽고 울퉁불퉁한 단단한 바닥"이다.</b> 5개월 뒤에 이걸 깨닫는 것이 최악의 시나리오다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:22%">경로</th><th style="width:36%">내용</th><th>20주 5인 팀 적합성</th></tr>
+    <tr><td>① Newton 물리엔진</td><td>MPM 입자 solver. Isaac Lab 통합이 <b>실험 단계</b></td>
+        <td><b style="color:var(--stop)">✕</b> 학습 속도가 3~4자릿수 부족. 20주엔 불가</td></tr>
+    <tr><td>② 해석적 접촉 모델 직접 구현</td><td>KAIST 방식을 Isaac Lab에 이식</td>
+        <td><b style="color:var(--note)">△</b> 차별화는 최대지만 난도 높음. 여유 생기면 1명 전담</td></tr>
+    <tr class="hl"><td><b>③ 강체 근사 + 공격적 랜덤화</b></td>
+        <td>마찰·복원·지면 강성·발 침하 근사·질량·지연을 광범위 랜덤화</td>
+        <td><b style="color:var(--dim)">✅ 채택</b> 검증된 길이고 20주 안에 완주 가능</td></tr>
+  </table></div>
+  <div class="key">
+    <div class="kl">③을 택하면 프로젝트 문장이 이렇게 된다</div>
+    <p style="color:var(--stop)">✕ "모래·자갈을 시뮬레이션해서 학습한다"</p>
+    <p style="font-size:1rem;font-weight:700;margin-top:6px">✅ <b>미지의 지면 물성에 대한 강건성</b>을 시뮬레이션에서 학습하고,
+      <b>평가는 실제 모래·자갈에서</b> 한다.</p>
+    <p style="margin-top:9px">이 문장이 더 나은 이유 세 가지, <b>①</b> 시뮬 한계를 정직하게 인정하고,
+      <b>②</b> 그래서 실증이 곧 기여가 되며, <b>③</b> VR-Robo가 증명한
+      <i>"3DGS를 써도 도메인 랜덤화를 빼면 붕괴한다"</i>와 논리가 일치한다.</p>
+  </div>
+
+  <div class="因">그래서, 우리는 "보고 판단하는" 문제가 아니라 "밟아보고 적응하는" 문제를 푼다. 다음 층위로.</div>
+</section>
+
+
+<!-- ══════════════ LAYER 2 · 학습이란 무엇인가 ══════════════ -->
+<section class="layer" id="L2">
+  <div class="lh"><span class="num">LAYER 2</span><h2>학습이란 무엇인가</h2></div>
+  <p class="lsub">Layer 1에서 <b>"규칙으로 못 짜니 경험으로 배우게 한다"</b>는 결론이 나왔다.
+    그런데 <b>기계가 경험으로 배운다는 게 정확히 무슨 뜻인가.</b>
+    이 절을 건너뛰면 뒤의 모든 기술 이야기가 공중에 뜬다.</p>
+
+  <h3 id="rl-basic">강화학습의 기본 구조</h3>
+  <p>우리가 흔히 아는 AI 학습은 <b>지도학습</b>이다. 고양이 사진에 "고양이"라는 정답표를 붙여 주고 모델이 맞히도록 시킨다.
+    <b>정답이 미리 있다.</b></p>
+  <p>그런데 보행에는 정답표가 없다.
+    <b>"이 상황에서 관절을 정확히 몇 도로 움직여야 한다"는 정답을 아무도 모른다.</b>
+    사람도 걷는 법을 각도로 설명하지 못한다.</p>
+  <p class="big">그래서 <b>강화학습</b>은 정답 대신 <b>점수</b>를 준다.
+    시켜 보고, 잘하면 점수를 올리고 못하면 깎는다. 기계는 점수가 높아지는 방향으로 스스로 움직임을 바꾼다.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 262" aria-label="강화학습 루프 구조">
+      <defs>
+        <marker id="a3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#0e7a6e"/></marker>
+        <marker id="a4" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#a86a08"/></marker>
+      </defs>
+      <rect x="34" y="66" width="176" height="96" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.8"/>
+      <text x="122" y="90" font-size="12" font-weight="800" fill="#0e7a6e" text-anchor="middle">정책 (Policy)</text>
+      <text x="122" y="107" font-size="9" fill="#4a5566" text-anchor="middle">= 신경망 한 개</text>
+      <text x="122" y="128" font-size="9.3" fill="#161c26" text-anchor="middle">"지금 이 상황이면</text>
+      <text x="122" y="142" font-size="9.3" fill="#161c26" text-anchor="middle">관절을 이렇게 움직여라"</text>
+      <text x="122" y="156" font-size="8.3" fill="#7c8798" text-anchor="middle">우리의 최종 산출물</text>
+
+      <rect x="410" y="66" width="176" height="96" fill="#eeece6" stroke="#4a5566" stroke-width="1.8"/>
+      <text x="498" y="90" font-size="12" font-weight="800" fill="#161c26" text-anchor="middle">환경 (Environment)</text>
+      <text x="498" y="107" font-size="9" fill="#4a5566" text-anchor="middle">= 물리 시뮬레이터</text>
+      <text x="498" y="128" font-size="9.3" fill="#161c26" text-anchor="middle">중력·마찰·충돌을 계산해</text>
+      <text x="498" y="142" font-size="9.3" fill="#161c26" text-anchor="middle">결과를 돌려준다</text>
+      <text x="498" y="156" font-size="8.3" fill="#7c8798" text-anchor="middle">Isaac Lab이 여기 해당</text>
+
+      <path d="M212,96 C280,96 340,96 406,96" stroke="#0e7a6e" stroke-width="2.2" fill="none" marker-end="url(#a3)"/>
+      <text x="309" y="86" font-size="10" font-weight="700" fill="#0e7a6e" text-anchor="middle">행동 (Action)</text>
+      <text x="309" y="58" font-size="8.6" fill="#4a5566" text-anchor="middle">12개 관절의 목표 각도</text>
+      <text x="309" y="44" font-size="8.6" fill="#7c8798" text-anchor="middle">초당 50회 내보낸다</text>
+
+      <path d="M408,140 C340,140 280,140 214,140" stroke="#a86a08" stroke-width="2.2" fill="none" marker-end="url(#a4)"/>
+      <text x="309" y="158" font-size="10" font-weight="700" fill="#a86a08" text-anchor="middle">관측 + 보상</text>
+      <text x="309" y="174" font-size="8.6" fill="#4a5566" text-anchor="middle">관절 각도·IMU·… 그리고 점수</text>
+
+      <rect x="34" y="198" width="552" height="50" fill="#fff" stroke="#d9d6cd" stroke-width="1.3"/>
+      <text x="48" y="217" font-size="9.6" font-weight="700" fill="#161c26">이 루프가 한 번 도는 데 0.02초. 그리고 수천 마리가 동시에 돈다.</text>
+      <text x="48" y="235" font-size="9" fill="#4a5566">4,096마리를 병렬로 굴리면 실시간의 4,096배로 경험이 쌓인다. 이것이 대규모 병렬 학습이다.</text>
+    </svg>
+    <figcaption><b>강화학습의 전부가 이 그림이다.</b> 정책이 행동을 내고, 환경이 결과와 점수를 돌려주고,
+      정책은 점수가 높아지는 쪽으로 조금씩 바뀐다. 이걸 수억 번 반복한다.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <div class="term"><span class="ko">정책</span><span class="en">policy</span></div>
+    <dl>
+      <dt>정의</dt><dd><b>관측을 넣으면 행동이 나오는 함수.</b> 실제로는 신경망이다.
+        입력은 관절 각도·속도·IMU 등이고, 출력은 <b>12개 관절의 목표 각도</b>다.</dd>
+      <dt>왜 중요한가</dt><dd><b>이것이 우리 프로젝트의 최종 산출물이다.</b>
+        "학습한다" = 이 신경망의 가중치를 조정한다. "실기에 올린다" = 이 신경망 파일을 로봇에 넣는다.</dd>
+    </dl>
+  </div>
+  <div class="concept">
+    <div class="term"><span class="ko">에피소드 · 롤아웃</span><span class="en">episode · rollout</span></div>
+    <dl>
+      <dt>정의</dt><dd><b>시도 한 번.</b> 로봇을 세워 놓고 정해진 시간(보통 20초) 걷게 한 뒤,
+        넘어지거나 시간이 다 되면 리셋하고 처음부터.</dd>
+      <dt>실무 감각</dt><dd>넘어지면 <b>그 에피소드는 거기서 끝난다</b>(early termination).
+        빨리 끝날수록 점수를 덜 받으므로, 이것 자체가 "넘어지지 마라"는 신호가 된다.</dd>
+    </dl>
+  </div>
+
+  <h3 id="reward">보상 설계라는 함정</h3>
+  <p>강화학습에서 가장 어려운 건 알고리즘이 아니라 <b>"무엇에 점수를 줄 것인가"</b>다.
+    사족보행 정책의 보상은 보통 여러 항목의 합으로 만든다.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 300" aria-label="사족보행 보상 항목 구성과 보상 해킹">
+      <text x="16" y="20" font-size="11" font-weight="800" fill="#0e7a6e">＋ 잘하면 주는 점수</text>
+      <rect x="16" y="30" width="286" height="112" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.5"/>
+      <text x="30" y="52" font-size="9.6" font-weight="700" fill="#161c26">속도 추종</text>
+      <text x="30" y="66" font-size="8.8" fill="#4a5566">명령한 속도대로 갈수록 큰 점수. 가장 핵심.</text>
+      <text x="30" y="88" font-size="9.6" font-weight="700" fill="#161c26">생존</text>
+      <text x="30" y="102" font-size="8.8" fill="#4a5566">넘어지지 않고 버틴 시간에 비례.</text>
+      <text x="30" y="124" font-size="9.6" font-weight="700" fill="#161c26">자세 유지</text>
+      <text x="30" y="138" font-size="8.8" fill="#4a5566">몸통이 수평이고 목표 높이에 있으면 점수.</text>
+
+      <text x="318" y="20" font-size="11" font-weight="800" fill="#a3342a">－ 못하면 깎는 점수</text>
+      <rect x="318" y="30" width="286" height="112" fill="#fbe9e7" stroke="#a3342a" stroke-width="1.5"/>
+      <text x="332" y="48" font-size="8.9" fill="#4a5566"><tspan font-weight="700" fill="#161c26">에너지</tspan>· 토크를 크게 쓰면 감점</text>
+      <text x="332" y="64" font-size="8.9" fill="#4a5566"><tspan font-weight="700" fill="#161c26">관절 한계</tspan>· 가동범위 끝까지 밀면 감점</text>
+      <text x="332" y="80" font-size="8.9" fill="#4a5566"><tspan font-weight="700" fill="#161c26">발 미끄러짐</tspan>. 접지 중 발이 밀리면 감점</text>
+      <text x="332" y="96" font-size="8.9" fill="#4a5566"><tspan font-weight="700" fill="#161c26">액션 떨림</tspan>· 출력이 덜덜 떨리면 감점</text>
+      <text x="332" y="112" font-size="8.9" fill="#4a5566"><tspan font-weight="700" fill="#161c26">충돌</tspan>· 무릎·몸통이 땅에 닿으면 감점</text>
+      <text x="332" y="132" font-size="8.3" fill="#7c8798" font-style="italic">감점 항목이 없으면 정책은 반드시 편법을 찾는다</text>
+
+      <rect x="16" y="164" width="588" height="122" fill="#fff" stroke="#a86a08" stroke-width="1.8"/>
+      <text x="32" y="186" font-size="11" font-weight="800" fill="#a86a08">⚠ 보상 해킹, 정책은 우리가 시킨 걸 하지 않는다. 점수가 높아지는 걸 한다.</text>
+      <text x="32" y="208" font-size="9.2" fill="#4a5566">· 속도 보상만 주면 → <tspan font-weight="700" fill="#161c26">몸을 앞으로 던졌다가 넘어지기를 반복</tspan>한다. 순간 속도는 높으니까.</text>
+      <text x="32" y="226" font-size="9.2" fill="#4a5566">· 생존 보상만 크면 → <tspan font-weight="700" fill="#161c26">아예 주저앉아 안 움직인다.</tspan> 넘어질 일이 없으니까.</text>
+      <text x="32" y="244" font-size="9.2" fill="#4a5566">· 에너지 감점이 없으면 → <tspan font-weight="700" fill="#161c26">다리를 질질 끌면서 간다.</tspan> 드는 것보다 끄는 게 싸니까.</text>
+      <text x="32" y="268" font-size="9" fill="#a86a08" font-style="italic">실제로 대규모 병렬 학습을 처음 제시한 논문조차 결과 정책에 "다리 끌기와 비정상적인 몸통 높이"</text>
+      <text x="32" y="281" font-size="9" fill="#a86a08" font-style="italic">결함이 있어 보상 재조정이 필요했다고 적었다.</text>
+    </svg>
+    <figcaption><b>보상 설계가 이 프로젝트의 진짜 난이도다.</b>
+      알고리즘은 공개 코드를 쓰면 되지만, 보상 가중치를 맞추는 건 실험을 반복하는 수밖에 없다.
+      그래서 우리 계획의 <b>"한 번에 하나의 변수만 바꾼다"</b>는 규칙이 중요하다.</figcaption>
+  </figure>
+
+  <h3 id="ppo">PPO · 왜 이 알고리즘인가</h3>
+  <div class="concept">
+    <div class="term"><span class="ko">근접 정책 최적화</span><span class="en">PPO · Proximal Policy Optimization</span></div>
+    <dl>
+      <dt>누가 · 언제</dt><dd>Schulman 외 (OpenAI), 2017. 현재 로봇 보행 학습의 <b>사실상 표준</b>이다.</dd>
+      <dt>한 줄 정의</dt><dd>정책을 개선하되, <b>한 번에 너무 크게 바꾸지 못하도록 제한</b>하면서 조금씩 개선하는 알고리즘.
+        이름의 "근접(Proximal)"이 그 뜻이다. <b>이전 정책 근처에 머물러라.</b></dd>
+      <dt>왜 제한이 필요한가</dt>
+      <dd>점수가 조금 오르는 방향으로 크게 움직이면 <b>정책이 완전히 망가져 회복이 안 된다.</b>
+        걷던 로봇이 갑자기 못 걷게 되고, 그 상태에서는 좋은 경험을 못 모으니 학습이 영영 안 돌아온다.
+        <b>PPO는 매 업데이트에서 정책 변화폭에 뚜껑을 씌운다</b>(clipping).</dd>
+      <dt>왜 로봇에 이걸 쓰나</dt>
+      <dd>① <b>안정적</b>· 잘 안 터진다 &nbsp;② <b>대규모 병렬과 궁합이 좋다</b>. 수천 마리 경험을 한꺼번에 소화
+        &nbsp;③ <b>하이퍼파라미터에 덜 민감</b>· 무경험 팀이 다루기 가장 무난하다</dd>
+      <dt>약점</dt>
+      <dd><b>샘플 비효율.</b> PPO는 <b>on-policy</b> 방식이라 <b>지금 정책이 직접 모은 데이터만</b> 쓸 수 있고,
+        한 번 업데이트하면 그 데이터를 <b>버린다</b>. 그래서 경험이 어마어마하게 많이 필요하다.
+        <b>→ 그래서 수천 마리 병렬 시뮬레이션이 필수다. 이 둘은 한 세트다.</b></dd>
+    </dl>
+  </div>
+  <div class="warn">
+    <div class="kl">바로 쓰이는 실무 숫자</div>
+    <p>대규모 병렬 학습을 제시한 원 논문이 명시한 제약:
+      <b>GAE(이득 추정)는 연속 25스텝 미만이면 학습이 붕괴한다.</b>
+      rollout 길이를 설정할 때 이 숫자가 하한이 된다.</p>
+  </div>
+
+  <h3 id="curriculum">커리큘럼과 도메인 랜덤화, 두 개의 다이얼</h3>
+  <p><b>"무엇을 언제 겪게 할 것인가"</b>를 조절하는 두 장치가 있다. 목적이 정반대다.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 300" aria-label="지형 커리큘럼과 도메인 랜덤화">
+      <text x="16" y="20" font-size="11" font-weight="800" fill="#0e7a6e">① 지형 커리큘럼, 난이도를 올린다</text>
+      <text x="16" y="36" font-size="8.8" fill="#7c8798">목적: 처음부터 어려우면 아무것도 못 배운다</text>
+      <rect x="20" y="112" width="86" height="16" fill="#e0f0ed" stroke="#0e7a6e"/>
+      <text x="63" y="124" font-size="8.4" fill="#161c26" text-anchor="middle">평지</text>
+      <rect x="112" y="98" width="86" height="30" fill="#e0f0ed" stroke="#0e7a6e"/>
+      <text x="155" y="118" font-size="8.4" fill="#161c26" text-anchor="middle">완경사</text>
+      <rect x="204" y="80" width="86" height="48" fill="#e0f0ed" stroke="#0e7a6e"/>
+      <text x="247" y="108" font-size="8.4" fill="#161c26" text-anchor="middle">거친 지면</text>
+      <rect x="296" y="58" width="86" height="70" fill="#0e7a6e"/>
+      <text x="339" y="98" font-size="8.4" fill="#fff" text-anchor="middle" font-weight="700">계단·단차</text>
+      <line x1="20" y1="128" x2="382" y2="128" stroke="#4a5566" stroke-width="1.4"/>
+      <text x="200" y="146" font-size="8.8" fill="#4a5566" text-anchor="middle">난이도 →</text>
+      <text x="404" y="76" font-size="9.2" fill="#4a5566">통과율이 높으면 <tspan font-weight="700" fill="#0e7a6e">승급</tspan></text>
+      <text x="404" y="93" font-size="9.2" fill="#4a5566">자꾸 넘어지면 <tspan font-weight="700" fill="#a3342a">강등</tspan></text>
+      <text x="404" y="115" font-size="8.8" fill="#7c8798">항상 "약간 어려운" 지형만</text>
+      <text x="404" y="128" font-size="8.8" fill="#7c8798">겪게 자동 조절한다</text>
+      <text x="404" y="147" font-size="8.4" fill="#a86a08" font-style="italic">목표 통과율 0.5~0.9 유지</text>
+
+      <text x="16" y="182" font-size="11" font-weight="800" fill="#a86a08">② 도메인 랜덤화, 조건을 흔든다</text>
+      <text x="16" y="198" font-size="8.8" fill="#7c8798">목적: 시뮬은 너무 완벽해서, 그 완벽함이 오히려 독이 된다</text>
+      <rect x="20" y="210" width="278" height="76" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.4"/>
+      <text x="34" y="228" font-size="9" fill="#4a5566">매 에피소드마다 무작위로 바꾼다:</text>
+      <text x="34" y="246" font-size="8.8" fill="#161c26">· 지면 마찰 &nbsp;&nbsp;· 로봇 질량 · 무게중심</text>
+      <text x="34" y="262" font-size="8.8" fill="#161c26">· 모터 강도 &nbsp;· <tspan font-weight="700">제어 지연</tspan></text>
+      <text x="34" y="278" font-size="8.8" fill="#161c26">· 옆에서 미는 외란</text>
+      <rect x="312" y="210" width="292" height="76" fill="#fbe9e7" stroke="#a3342a" stroke-width="1.4"/>
+      <text x="326" y="228" font-size="9.4" font-weight="700" fill="#a3342a">⚠ 많이 걸수록 좋은 게 아니다</text>
+      <text x="326" y="247" font-size="8.8" fill="#4a5566">불필요한 랜덤화를 넣자 실측 최고속도가</text>
+      <text x="326" y="263" font-size="9.2" fill="#161c26" font-weight="700">1.1 → 0.9 m/s (약 18% 손실)</text>
+      <text x="326" y="279" font-size="8.6" fill="#4a5566">지나친 랜덤화 = 지나치게 보수적인 정책</text>
+    </svg>
+    <figcaption><b>커리큘럼은 "점점 어렵게", 랜덤화는 "매번 다르게".</b>
+      전자는 학습이 가능하게 만들고, 후자는 학습 결과가 현실에서도 통하게 만든다.
+      <b>다만 랜덤화는 공짜가 아니다</b>. 항목을 하나씩 추가하며 시뮬 성능 손실을 표로 기록해야 한다.</figcaption>
+  </figure>
+
+  <div class="key">
+    <div class="kl">여기까지의 요약, 이 다섯 단어면 뒤를 읽을 수 있다</div>
+    <p><b>정책</b>(신경망) · <b>보상</b>(점수 설계) · <b>PPO</b>(안전하게 조금씩 개선) ·
+      <b>커리큘럼</b>(점점 어렵게) · <b>도메인 랜덤화</b>(매번 다르게)</p>
+  </div>
+
+  <div class="因">그래서, 정책에 무엇을 보여주고, 어떻게 지형을 알게 할 것인가. 다음 층위로.</div>
+</section>
+
+<!-- ══════════════ LAYER 3 ══════════════ -->
+<section class="layer" id="L3">
+  <div class="lh"><span class="num">LAYER 3</span><h2>접근 전략</h2></div>
+  <p class="lsub">Layer 1의 결론에서 우리의 기술 선택이 직접 도출된다.</p>
+
+  <h3 id="sense">로봇이 "지형을 안다"는 것. 두 가지 길</h3>
+  <div class="key" style="background:var(--paper-2);border-color:var(--rule)">
+    <div class="kl" style="color:var(--ink-2)">한 문장 요약</div>
+    <p><b>Proprioception은 "밟아보고 아는 것", Exteroception은 "밟기 전에 보고 아는 것".</b>
+      앞의 것은 느리지만 절대 안 죽고, 뒤의 것은 빠르지만 눈·물·유리·먼지에서 거짓말한다.</p>
+  </div>
+
+  <div class="concept">
+    <div class="term"><span class="ko">고유수용감각</span><span class="en">proprioception</span></div>
+    <dl>
+      <dt>정의</dt><dd>로봇 <b>안쪽</b>에서 나오는 감각, 관절 각도·속도, 추정 토크, IMU(기울기·회전), 직전 액션.</dd>
+      <dt>인간으로 치면</dt><dd><b>눈 감고도 내 팔이 어디 있는지 아는 감각.</b></dd>
+      <dt>Go2에서</dt><dd>전 등급에서 <b>500 Hz</b>로 안정적으로 나온다. 별도 장비 불필요.</dd>
+    </dl>
+  </div>
+  <div class="concept">
+    <div class="term"><span class="ko">외수용감각</span><span class="en">exteroception</span></div>
+    <dl>
+      <dt>정의</dt><dd>로봇 <b>바깥</b>을 재는 감각, 뎁스 카메라, LiDAR, 그로부터 만든 높이맵.</dd>
+      <dt>인간으로 치면</dt><dd><b>눈.</b></dd>
+      <dt>Go2에서</dt><dd>사실상 L1/L2 LiDAR 하나뿐. 전방 카메라는 <b>단안 RGB로 깊이 촬영 불가</b>.</dd>
+    </dl>
+  </div>
+
+
+  <figure>
+    <img loading="lazy" alt="로봇 주변 지형을 격자로 나눠 각 칸의 높이를 저장한 elevation map 시각화"
+      src="assets/elevation-map.jpg?v=25a66344">
+    <figcaption><b>높이맵(elevation map)이 실제로 어떻게 생겼는가.</b>
+      땅을 격자로 쪼개고 <b>각 칸에 높이 하나</b>를 저장한 표다. 한 칸에 높이가 하나뿐이라
+      <b>오버행(다리 밑·터널)은 표현할 수 없다</b>. 그래서 3D가 아니라 "2.5D"라 부른다.
+      <br><br>그리고 결정적으로, <b>정책은 이 지도 전체를 보지 않는다.</b>
+      발 주변에 꽂아둔 수십 개 지점의 높이 값만 뽑아 읽는다.
+      로봇에게 지형 인지란 <b>시각이라기보다 촉각의 원격 버전</b>에 가깝다.
+      <div class="cred">출처: <a href="https://leggedrobotics.github.io/rl-perceptiveloco/" target="_blank" rel="noopener">ETH Zürich RSL 프로젝트 페이지</a></div>
+    </figcaption>
+  </figure>
+  <h4>고유수용감각만으로 어떻게 지형을 아는가, 지형은 몸에 흔적을 남긴다</h4>
+  <p class="big">이게 이 분야에서 가장 반직관적이면서 가장 강력한 발견이다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:44%">몸이 겪은 일</th><th>추론되는 지형</th></tr>
+    <tr><td>발을 내렸는데 <b>예상보다 5cm 일찍 닿았다</b></td><td>거기 뭔가 솟아 있다</td></tr>
+    <tr><td>토크를 넣었는데 <b>발이 미끄러졌다</b></td><td>마찰이 낮다 (얼음·젖은 바닥)</td></tr>
+    <tr><td>발을 디뎠는데 <b>계속 가라앉는다</b></td><td>모래·진흙처럼 무른 지면</td></tr>
+    <tr><td>관절이 <b>밀리지 않는다</b></td><td>단단한 바닥</td></tr>
+  </table></div>
+  <p><b>최근 2초간의 관절 궤적·토크·자세 이력 안에 "방금 밟은 지형이 무엇이었는지"가 이미 인코딩되어 있다.</b>
+    신경망은 그 이력을 읽어 지형을 역추론한다.</p>
+
+  <h3 id="teacher">교사–학생 학습, 우리의 메인 아키텍처</h3>
+  <p>문제는 "이력에서 지형을 읽는 법"을 어떻게 가르치냐다. 답은 <b>시뮬에서는 정답이 공짜</b>라는 것이다.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 300" aria-label="교사-학생 학습 파이프라인">
+      <!-- 교사 -->
+      <rect x="18" y="30" width="270" height="115" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="30" y="50" font-size="11.5" font-weight="800" fill="#0e7a6e">① 교사 (Teacher)</text>
+      <text x="30" y="66" font-size="9" fill="#4a5566">시뮬레이션 안에서만 존재. 정답을 다 본다.</text>
+      <text x="30" y="88" font-size="9.5" font-weight="700" fill="#161c26">특권 정보, 실기엔 없는 것들</text>
+      <text x="30" y="103" font-size="9" fill="#4a5566">· 진짜 지형 높이 (발마다 9점 × 4다리 = 36점)</text>
+      <text x="30" y="116" font-size="9" fill="#4a5566">· 발 접촉 상태 · 접촉력</text>
+      <text x="30" y="129" font-size="9" fill="#4a5566">· 마찰계수 · 외부 외란력</text>
+
+      <!-- 압축 -->
+      <rect x="18" y="160" width="270" height="42" fill="#fff" stroke="#d9d6cd" stroke-width="1.3"/>
+      <text x="30" y="178" font-size="10" font-weight="700" fill="#161c26">② 잠재벡터로 압축</text>
+      <text x="30" y="193" font-size="8.8" fill="#4a5566">인코더가 "지형·접촉 관련 특징만" 담도록 학습</text>
+
+      <!-- 화살표 -->
+      <path d="M300,110 L340,110" stroke="#a86a08" stroke-width="2" marker-end="url(#ah2)"/>
+      <defs><marker id="ah2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#a86a08"/></marker></defs>
+      <text x="320" y="102" font-size="8.5" fill="#a86a08" text-anchor="middle" font-weight="700">모방</text>
+      <text x="320" y="126" font-size="8.5" fill="#a86a08" text-anchor="middle">(증류)</text>
+
+      <!-- 학생 -->
+      <rect x="352" y="30" width="250" height="172" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.6"/>
+      <text x="364" y="50" font-size="11.5" font-weight="800" fill="#a86a08">③ 학생 (Student)</text>
+      <text x="364" y="66" font-size="9" fill="#4a5566">실기에 올라가는 것. 특권을 뺏겼다.</text>
+      <text x="364" y="88" font-size="9.5" font-weight="700" fill="#161c26">볼 수 있는 것. 전부 로봇 내부</text>
+      <text x="364" y="103" font-size="9" fill="#4a5566">· 관절 각도 · 속도 (12개)</text>
+      <text x="364" y="116" font-size="9" fill="#4a5566">· IMU (기울기 · 회전)</text>
+      <text x="364" y="129" font-size="9" fill="#4a5566">· 직전 액션</text>
+      <rect x="364" y="140" width="226" height="50" fill="#fff" stroke="#a86a08" stroke-width="1.1"/>
+      <text x="376" y="157" font-size="9.5" font-weight="700" fill="#a86a08">+ 시간 기억 (TCN)</text>
+      <text x="376" y="172" font-size="8.8" fill="#4a5566">과거 100스텝 ≈ 2초의 고유수용 기억</text>
+      <text x="376" y="184" font-size="8.8" fill="#4a5566">← 지형이 남긴 흔적이 여기 들어 있다</text>
+
+      <!-- 결과 -->
+      <rect x="18" y="222" width="584" height="62" fill="#fff" stroke="#161c26" stroke-width="1.6"/>
+      <text x="30" y="242" font-size="10.5" font-weight="800" fill="#161c26">④ 결과, 학습 중 명시한 적 없는 행동이 창발했다</text>
+      <text x="30" y="259" font-size="9.2" fill="#4a5566">발이 장애물에 걸리면 스스로 들어올리는 <tspan font-weight="700" fill="#0e7a6e">발 걸림 반사(foot-trapping reflex)</tspan>가 나타났다.</text>
+      <text x="30" y="273" font-size="9.2" fill="#4a5566">접촉 감지기를 따로 만들지 않았는데, 접촉 반응 행동이 저절로 생겼다.</text>
+    </svg>
+    <figcaption><b>Lee et al. 2020 (Science Robotics)의 구조.</b>
+      교사는 시뮬에서만 아는 정답을 보고 최적 정책을 배우고, 학생은 그 행동을
+      <b>관절 이력만으로 모방</b>한다. 접촉 센서도, 접촉 추정기도, 임계값 튜닝도 파이프라인에서 사라진다.</figcaption>
+  </figure>
+
+  <div class="paper">
+    <div class="pt">Learning quadrupedal locomotion over challenging terrain</div>
+    <div class="pm">Lee, 황보제민, Wellhausen, Koltun, Hutter (ETH Zürich) · Science Robotics 5(47), 2020 · arXiv 2010.11251</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd>카메라 없이 고유수용감각만으로 이끼·진흙·눈·자갈·물·수풀을 주파</dd>
+      <dt>실측 결과</dt><dd>이끼 <b>0.452 m/s</b>(기존 0.199) · 에너지 비용 0.423 vs 0.625 · 계단 16.8cm ·
+        <b>10kg 페이로드(자중 +22.7%)로 13.4cm 계단</b>(학습에 없던 조건) ·
+        <b>DARPA SubT 60분×4회 실패율 0%</b></dd>
+      <dt>실행 속도</dt><dd>온보드 CPU에서 <b>400 Hz</b>· 별도 연산 장비 불필요</dd>
+      <dt class="lim">저자가 밝힌 한계</dt>
+      <dd><i>"기계에게 절벽 밖으로 걸으라고 명령하면, 그렇게 할 것이다."</i>
+        컨트롤러는 <b>필연적으로 몸으로 환경을 더듬어야</b> 하므로 보수적 걸음이 된다.
+        <b>평지 최고속도 약 0.6 m/s. 보행은 trot 하나뿐.</b></dd>
+      <dt class="take">우리가 가져갈 것</dt>
+      <dd><b>아이디어는 가져가되, 2단계 구조는 가져가지 않는다.</b>
+        핵심은 "시뮬에서만 아는 정보로 좋은 정책을 만들고, 그것을 몸의 감각만으로 재현한다"이고,
+        이건 <b>더 짧은 경로로도 얻을 수 있다</b>(아래 참조).</dd>
+    </dl>
+  </div>
+
+  <div class="key">
+    <div class="kl">★ 그런데 우리는 2단계를 쓰지 않는다. 더 짧은 길이 있다</div>
+    <p>DreamWaQ(KAIST, ICRA 2023)는 <b>교사–학생을 의도적으로 버렸다.</b> 이유 두 가지, <b>①</b> 학생이 교사를 모방하는 구조는 <b>교사 성능이 곧 학생의 상한</b>이 되고,
+      <b>②</b> 두 번 나눠 학습하는 것이 <b>데이터 효율이 나쁘다.</b></p>
+    <p style="margin-top:9px">대신 <b>비대칭 actor-critic</b>을 쓴다. 실기에 올라가는 <b>액터에게는 몸의 감각만</b> 주고,
+      학습 때만 쓰이고 버려지는 <b>크리틱에게만 시뮬의 정답을 준다.</b>
+      여기에 <b>과거 관측 이력</b>을 더하면, 정책이 "지금 밟은 게 뭔지"를 스스로 압축해 들고 있게 된다.
+      <b>한 번의 학습으로 같은 결과에 도달한다.</b></p>
+    <p style="margin-top:9px"><b>→ 5인 무경험 팀에게 이 차이는 결정적이다.</b>
+      2단계는 <b>학습 2회 · 하이퍼파라미터 2세트 · 디버깅해야 할 지점 2배</b>다.
+      "학생이 교사를 못 따라온다"가 발생하면 원인을 분리하기가 극히 어렵다.</p>
+    <p style="margin-top:9px;font-size:.82rem;color:var(--ink-2)">
+      <b>채택</b>· 단일 단계 비대칭 actor-critic + 관측 이력 인코더 + 공격적 도메인 랜덤화.
+      교사–학생 증류는 <b>후속 옵션</b>으로 남긴다(시각 입력을 붙이게 되면 그때 필요해진다).</p>
+  </div>
+
+  <div class="warn">
+    <div class="kl">용어 주의, 자주 혼동되는 지점</div>
+    <p><b>DARPA SubT</b>는 미국 국방고등연구계획국이 연 <b>지하 탐사 로봇 대회</b>(Subterranean Challenge)다.
+      터널·동굴·지하시설을 로봇이 사람 없이 자율 탐사한다. 먼지 자욱하고 조명 없고 바닥이 무너져 있는 곳, <b>실험실 데모가 아니라 실전 조건</b>이라는 뜻이다.</p>
+  </div>
+
+  <h4>왜 시각(카메라) 접근이 우리 문제의 답이 아닌가</h4>
+  <figure>
+    <img loading="lazy" alt="자세 추정 드리프트로 지형 높이맵이 실제 지면과 어긋나는 모습 · 로봇이 계단을 오르는 동안 지도가 흔들린다"
+      src="assets/unreliable-map.gif?v=71c59b49">
+    <figcaption><b>"지도를 못 믿는다"가 어떤 모습인지.</b>
+      로봇이 만든 지형 높이맵이 <b>실제 지면과 어긋나 흔들리는</b> 장면이다.
+      자세 추정이 드리프트하면 지도 전체가 이렇게 밀린다. 로봇은 "여기 계단이 있다"고 믿는데 실제로는 15cm 옆에 있는 상황이다.
+      <br><br>Miki et al.이 학습 시간의 <b>40%를 일부러 이렇게 망가진 지도</b>로 채운 이유가 이것이다.
+      정상 지도만 보고 배운 정책은 이 순간 그대로 넘어진다.
+      <div class="cred">출처: <a href="https://leggedrobotics.github.io/rl-perceptiveloco/" target="_blank" rel="noopener">ETH Zürich RSL, Learning Robust Perceptive Locomotion 프로젝트 페이지</a></div>
+    </figcaption>
+  </figure>
+
+  <blockquote><b>눈, 초목, 물은 시각적으로 로봇이 밟을 수 없는 장애물로 보이거나, 높은 반사율 때문에 아예 보이지 않는다.</b>
+    게다가 깊이 인식은 어려운 조명, 먼지, 안개, 반사·투명 표면, 센서 가림 등으로 저하될 수 있다.
+    <cite>Miki et al., Science Robotics 7(62), 2022</cite></blockquote>
+  <p class="big">시각은 <b>형상</b>을 준다. 그런데 우리 문제의 지형은 <b>형상이 아니라 물성으로 정의된다</b>. 같은 모양의 모래라도 마르면 단단하고 젖으면 무너진다.</p>
+  <div class="warn">
+    <div class="kl">★ 정직하게, "시각으로는 불가능하다"는 말은 과장이다</div>
+    <p>RGB 이미지에서 마찰과 강성을 예측해 실기에 올린 연구가 이미 있다
+      (Chen·Frey·Miki·Hutter 2024, ANYmal D. 마찰 오차 0.33 → <b>0.02</b>).
+      <b>Miki와 Hutter는 위에 인용한 Science Robotics 2022의 저자들이다</b>. 같은 팀이 2년 뒤 반대를 해냈다.</p>
+    <p style="margin-top:9px"><b>그런데 그 논문을 읽으면 우리 논지가 오히려 강해진다.</b>
+      그 방식이 작동하는 이유는, 시뮬에서 <b>고유수용감각으로 물성을 추정하는 모듈을 먼저 학습시킨 뒤,
+      그 모듈이 실기 이미지에 자동으로 정답을 붙여주기 때문</b>이다.
+      <b>즉 "밟아본 경험이 눈을 가르친다."</b></p>
+    <p style="margin-top:9px"><b>→ 물성 정보의 원천은 여전히 접촉이다.</b>
+      우리는 그 원천 신호를 판다. 시각 확장은 그 위에 얹는 후속 과제로 명시적으로 남긴다.</p>
+  </div>
+
+  <h3 id="position">★ 우리가 서는 자리, 연구 지형도</h3>
+  <figure>
+    <svg viewBox="0 0 620 330" aria-label="연구 지형도 · 우리 프로젝트의 위치">
+      <!-- 축 -->
+      <text x="188" y="24" font-size="10.5" font-weight="800" fill="#161c26" text-anchor="middle">기하로 정의되는 지형</text>
+      <text x="188" y="38" font-size="8.8" fill="#7c8798" text-anchor="middle">계단 · 간극 · 박스</text>
+      <text x="452" y="24" font-size="10.5" font-weight="800" fill="#161c26" text-anchor="middle">물성으로 정의되는 지형</text>
+      <text x="452" y="38" font-size="8.8" fill="#7c8798" text-anchor="middle">모래 · 자갈 · 진흙</text>
+      <text x="16" y="105" font-size="10.5" font-weight="800" fill="#161c26">시각 기반</text>
+      <text x="16" y="119" font-size="8.8" fill="#7c8798">(카메라)</text>
+      <text x="16" y="222" font-size="10.5" font-weight="800" fill="#161c26">접촉 기반</text>
+      <text x="16" y="236" font-size="8.8" fill="#7c8798">(밟아보고)</text>
+
+      <!-- 좌상: 이미 풀림 -->
+      <rect x="88" y="50" width="200" height="112" fill="#eeece6" stroke="#d9d6cd" stroke-width="1.4"/>
+      <text x="100" y="70" font-size="9.2" fill="#4a5566">Extreme Parkour</text>
+      <text x="100" y="85" font-size="9.2" fill="#4a5566">Robot Parkour Learning</text>
+      <text x="100" y="100" font-size="9.2" fill="#4a5566">ANYmal Parkour</text>
+      <text x="100" y="115" font-size="9.2" fill="#4a5566">StairMaster (Go2, 55° 계단)</text>
+      <text x="100" y="138" font-size="9.2" font-weight="800" fill="#7c8798">→ 성숙했으나 미해결</text>
+      <text x="100" y="151" font-size="8" fill="#7c8798">단일 장애물 ○ / 연속 코스 ✕</text>
+
+      <!-- 우상: 불가 -->
+      <rect x="308" y="50" width="290" height="112" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.4"/>
+      <text x="322" y="72" font-size="12" font-weight="800" fill="#a86a08">△ 직접 측정은 불가 · 간접 추정은 작동 중</text>
+      <text x="322" y="92" font-size="9" fill="#4a5566">RGB에서 마찰·강성 조밀 예측 실기 성공</text>
+      <text x="322" y="105" font-size="8.6" fill="#7c8798">Chen·Frey·Miki·Hutter 2024 (ANYmal D)</text>
+      <text x="322" y="124" font-size="9" fill="#161c26" font-weight="700">단, 그 라벨을 만드는 건 결국 접촉 경험이다</text>
+      <text x="322" y="140" font-size="8.6" fill="#4a5566">한계, 외관은 같은데 물성이 다르면 붕괴</text>
+      <text x="322" y="153" font-size="8.6" fill="#4a5566">(마른 모래 vs 젖은 모래 · 얇은 표면 크러스트)</text>
+
+      <!-- 좌하 -->
+      <rect x="88" y="176" width="200" height="98" fill="#eeece6" stroke="#d9d6cd" stroke-width="1.4"/>
+      <text x="100" y="198" font-size="9.2" fill="#4a5566">Lee 2020 · RMA</text>
+      <text x="100" y="213" font-size="9.2" fill="#4a5566">DreamWaQ (KAIST)</text>
+      <text x="100" y="228" font-size="9.2" fill="#4a5566">HIMLoco</text>
+      <text x="100" y="252" font-size="9.5" font-weight="800" fill="#7c8798">→ 성숙한 영역</text>
+
+      <!-- 우하: 우리 자리 -->
+      <rect x="308" y="176" width="290" height="98" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="2.4"/>
+      <text x="322" y="198" font-size="9.2" fill="#161c26" font-weight="700">★ KAIST 2023 · 모래 3.03 m/s</text>
+      <text x="322" y="214" font-size="9.2" fill="#161c26" font-weight="700">★ MoE-Go2, RSS 2026 · Go2, 4 m/s</text>
+      <text x="322" y="238" font-size="11" font-weight="800" fill="#0e7a6e">→ 최전선 · 우리도 여기 선다</text>
+      <text x="322" y="254" font-size="8.6" fill="#a3342a" font-weight="700">단 MoE-Go2가 이미 같은 자리에 있다. </text>
+      <text x="322" y="266" font-size="8.6" fill="#4a5566">우리 차별점은 아래 "우리만의 델타" 참조</text>
+
+      <!-- 하단 3DGS 띠 -->
+      <rect x="88" y="288" width="510" height="34" fill="#fff" stroke="#a86a08" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="100" y="303" font-size="9.2" font-weight="700" fill="#a86a08">3DGS 디지털트윈, VR-Robo(실내·정적) · GaussGym(A1, 17cm 계단) · GS-Playground</text>
+      <text x="100" y="316" font-size="8.8" fill="#4a5566">전부 "시각 갭"만 해결. 접촉 물리는 저자들이 미해결로 자인. <tspan font-weight="700">실외·험지는 명시적 공백</tspan></text>
+    </svg>
+    <figcaption><b>선행 연구가 만든 지도.</b> 두 축(지형을 기하로 볼 것인가 물성으로 볼 것인가 ×
+      감각을 몸에서 얻을 것인가 눈에서 얻을 것인가)은 우리가 만든 게 아니라
+      <b>Fahmi(2021) 박사논문이 PTAL/ETAL로 정리한 기존 프레임</b>이다. 칸의 배치와 판정이 우리 해석이다.
+      <br><br><b>중요한 정정, 오른쪽 위 칸은 "불가능"이 아니다.</b>
+      시각으로 마찰·강성을 <b>간접 추정</b>하는 연구가 실기에서 작동한다(Chen·Miki·Hutter 2024).
+      다만 그 학습에 쓰이는 <b>정답 라벨을 만드는 것이 고유수용감각</b>이다. <b>즉 물성 정보의 원천은 여전히 접촉이다.</b> 우리가 파는 것이 그 원천 신호다.
+      <div class="cred">Fahmi, <i>On Terrain-Aware Locomotion for Legged Robots</i>, PhD thesis, IIT 2021 (arXiv 2212.00683) §1.3 ·
+        Chen, Frey, Zhou, Miki, Martius, Hutter, <a href="https://arxiv.org/abs/2408.16567" target="_blank" rel="noopener">arXiv 2408.16567</a> (2024)</div>
+    </figcaption>
+  </figure>
+
+  <div class="key">
+    <div class="kl">★ 우리 프로젝트의 존재 이유, 후속 논문이 직접 지적한 문장</div>
+    <p><i>"특권 물리 정보가 시뮬레이션 장애물의 <b>기하학적 속성</b>에 강하게 연관되어 있다
+      → <b>기하만으로 기술될 수 없는 지형에는 학습이 어렵다.</b>"</i></p>
+    <p style="margin-top:8px"><b>"기하만으로 기술될 수 없는 지형", 우리는 이것을 모래·자갈로 읽는다.</b>
+      (지형 종류를 특정한 것은 PIE가 아니라 <b>우리 해석</b>이다.)</p>
+    <p style="font-size:.74rem;color:var(--ink-2);margin-top:8px;background:var(--paper-2);padding:8px 11px">
+      ⚠ <b>공정하게 밝힐 것</b>. PIE 자신도 <b>뎁스 카메라 기반 시각 파쿠르 방법</b>이다.
+      PIE의 처방은 "시각을 버려라"가 아니라 <b>"암묵 추정과 명시 추정을 함께 써서 시각을 더 잘 쓰라"</b>이다.
+      우리가 이 인용에서 취하는 것은 <b>"특권정보를 기하에 묶는 설계가 한계를 만든다"</b>까지다.</p>
+    <p style="font-size:.72rem;color:var(--ink-3);margin-top:6px">· Luo, Li, Yu, Wang, Wu, Zhu, <i>PIE: Parkour with Implicit-Explicit Learning Framework for Legged Robots</i>,
+      <a class="ext" href="https://arxiv.org/abs/2408.13740" target="_blank" rel="noopener">arXiv 2408.13740</a> §II-B</p>
+  </div>
+
+  <h4>3DGS 축의 정직한 포지셔닝</h4>
+  <p>실공간을 3D로 복원해 시뮬에 넣는 <b>3D Gaussian Splatting(3DGS)</b>은 우리 차별화 축이다.
+    다만 정확히 알고 써야 한다.</p>
+  <p><b>모든 실전 3DGS 로보틱스 파이프라인은 "GS(렌더링) + 메시(물리)" 이중 표현이다.</b>
+    VR-Robo는 GS-Mesh 하이브리드, GaussGym은 NKSR로 충돌 메시를 별도 생성한다.
+    그리고 GS-Playground 저자는 <b>contact-rich 물리 격차가 여전히 미해결</b>이라고 직접 밝혔다.</p>
+  <div class="key">
+    <div class="kl">한 문장</div>
+    <p><b>3DGS는 "어떻게 보이는가"의 갭을 거의 지웠지만, "어떻게 밟히는가"의 갭은 손도 못 댔다.</b></p>
+    <p style="margin-top:8px">→ 우리 3DGS 축은 <b>지형 물리의 해법이 아니라 "현장 시나리오를 재현하는 도구"</b>로 포지셔닝한다.
+      이게 기술적으로 정직하면서 동시에 실증 트랙의 목적과 정확히 맞는다.</p>
+  </div>
+  <div class="paper">
+    <div class="pt">VR-Robo: A Real-to-Sim-to-Real Framework for Visual Robot Navigation and Locomotion</div>
+    <div class="pm">Zhu, Mou, Li, Ye, Huang, Zhao · arXiv 2502.01536 (2025)</div>
+    <dl>
+      <dt>왜 우리에게 중요한가</dt>
+      <dd>하드웨어(<b>Unitree Go2</b>)와 시뮬레이터(<b>Isaac Sim</b>)가 <b>우리와 동일</b>하다. 재현 난도가 가장 낮다.</dd>
+      <dt>실기 성공률</dt><dd>Easy <b>100%</b> / Medium <b>93.33%</b> / Hard <b>100%</b></dd>
+      <dt>★ 결정적 대조</dt>
+      <dd><b>도메인 랜덤화를 제거하면 Hard 0%로 붕괴</b>했다(w/o DR: 53.33/6.67/0%).
+        <b>3DGS를 써도 도메인 랜덤화는 여전히 필수</b>라는 직접 증거.</dd>
+      <dt class="lim">저자가 밝힌 한계</dt>
+      <dd><i>"현재 환경은 <b>정적 지형의 실내 씬</b>에 국한되어 시나리오 다양성이 제약된다."</i>
+        + 과제당 학습 약 3일</dd>
+      <dt class="take">우리가 가져갈 것</dt>
+      <dd><b>저자가 밝힌 한계 "실내·정적 지형"이 정확히 우리가 채울 빈칸이다.</b></dd>
+    </dl>
+
+    <figure style="margin:14px 0 0;border:none;padding:0">
+      <img loading="lazy" alt="VR-Robo 파이프라인 · 실제 공간을 촬영해 3D로 복원하고 그 안에서 Go2가 주행하는 모습"
+        src="assets/vr-robo-pipeline.jpg?v=f0b6a9cc">
+      <div class="cred" style="margin-top:6px">출처: <a href="https://vr-robo.github.io/" target="_blank" rel="noopener">VR-Robo 프로젝트 페이지</a> ·
+        실제 공간 촬영 → 3DGS 복원 → 시뮬 학습 → 실기 배포의 전 과정</div>
+    </figure>
+    <div class="links">
+      <a class="ext" href="https://vr-robo.github.io/" target="_blank" rel="noopener">프로젝트 페이지 ↗</a>
+      <a class="ext" href="https://github.com/zst1406217/VR-Robo" target="_blank" rel="noopener">코드 ↗</a>
+      <a class="ext" href="https://arxiv.org/abs/2502.01536" target="_blank" rel="noopener">논문 ↗</a>
+    </div>
+  </div>
+
+  <div class="因">그래서, blind proprioceptive 경로로 간다. 그럼 실제로 무엇을 관측에 넣는가? 다음 층위로.</div>
+</section>
+
+<!-- ══════════════ LAYER 3 ══════════════ -->
+<section class="layer" id="L4">
+  <div class="lh"><span class="num">LAYER 4</span><h2>기술 스택</h2></div>
+  <p class="lsub">Layer 3의 전략을 실제 하드웨어와 코드로 옮기면 무엇이 되는가.
+    <b>여기서부터는 Go2의 물리적 제약이 설계를 결정한다.</b></p>
+
+  <h3 id="hw">Unitree Go2 하드웨어 해부</h3>
+  <p>Unitree는 중국 항저우의 사족보행 로봇 제조사로, Go2는 그중 소형·보급형 라인이다.
+    <b>공식 URDF(로봇 형상·물성 정의 파일)를 직접 열어 확인한 값</b>만 아래에 적는다.</p>
+
+  <h4>관절 구조, 12 자유도</h4>
+  <figure>
+    <img loading="lazy" alt="Unitree Go2 3D 모델 렌더링 · 12개 관절과 다리 구조가 보인다"
+      src="assets/unitree-go2.jpg?v=29a32efc">
+    <figcaption><b>우리가 다룰 로봇.</b> 다리마다 관절이 세 개 보인다. 몸통에 붙어 옆으로 벌리는 <b>hip</b>, 앞뒤로 젓는 <b>thigh</b>, 그리고 가운데서 접히는 <b>calf(무릎)</b>.
+      × 4다리 = <b>12개</b>. 이 12개 각도를 초당 50번 정하는 것이 우리 정책이 하는 일의 전부다.
+      <div class="cred">출처: <a href="https://github.com/google-deepmind/mujoco_menagerie/tree/main/unitree_go2" target="_blank" rel="noopener">google-deepmind/mujoco_menagerie</a>, BSD-3-Clause</div>
+    </figcaption>
+  </figure>
+
+  <p>다리마다 3개 관절: <b>hip</b>(옆으로 벌리기) · <b>thigh</b>(앞뒤로 젓기) · <b>calf</b>(무릎 굽히기). × 4다리 = <b>12 DOF</b>.</p>
+  <div class="tw"><table>
+    <tr><th>관절</th><th>최대 토크</th><th>최대 속도</th><th>비고</th></tr>
+    <tr><td>Hip</td><td class="mono"><b>23.7 N·m</b></td><td class="mono">30.1 rad/s</td><td>옆으로 벌림</td></tr>
+    <tr><td>Thigh</td><td class="mono"><b>23.7 N·m</b></td><td class="mono">30.1 rad/s</td><td>앞뒤로 저음</td></tr>
+    <tr class="hl"><td><b>Calf (무릎)</b></td><td class="mono"><b>45.43 N·m</b></td><td class="mono">15.70 rad/s</td>
+        <td>토크 1.917배↑ / 속도 1.917배↓</td></tr>
+  </table></div>
+  <div class="warn">
+    <div class="kl">★ 흔한 오해, "Go2 최대 관절토크 45 N·m"</div>
+    <p><b>45 N·m는 무릎에만 해당한다.</b> hip과 thigh는 23.7 N·m다.
+      토크와 속도가 정확히 역수 관계(1.917배)인 것으로 보아
+      <b>동일 모터에 약 1.92:1 링키지를 걸어 무릎을 구동</b>하는 구조로 추정된다.</p>
+    <p style="margin-top:8px"><b>→ 우리 작업에 미치는 영향:</b> Isaac Lab 기본 설정
+      <code>effort_limit = 23.5</code>는 hip/thigh와는 거의 맞지만 <b>calf를 절반으로 과소평가</b>한다.
+      관절별로 다르게 설정하는 것이 <b>sim-to-real 첫 실질 작업 후보</b>다.</p>
+  </div>
+
+
+  <figure>
+    <svg viewBox="0 0 620 250" aria-label="Go2 다리 관절 구조 · hip, thigh, calf">
+      <!-- 정면(앞에서 본) -->
+      <text x="120" y="22" font-size="10.5" font-weight="800" fill="#161c26" text-anchor="middle">앞에서 본 모습</text>
+      <text x="120" y="36" font-size="8.4" fill="#7c8798" text-anchor="middle">hip = 다리를 옆으로 벌린다</text>
+      <rect x="66" y="52" width="108" height="34" rx="6" fill="#eeece6" stroke="#4a5566" stroke-width="1.5"/>
+      <text x="120" y="73" font-size="8.6" fill="#4a5566" text-anchor="middle">몸통</text>
+      <circle cx="80" cy="86" r="6" fill="#a86a08"/><circle cx="160" cy="86" r="6" fill="#a86a08"/>
+      <line x1="80" y1="86" x2="62" y2="176" stroke="#161c26" stroke-width="3"/>
+      <line x1="160" y1="86" x2="178" y2="176" stroke="#161c26" stroke-width="3"/>
+      <path d="M80,86 A28,28 0 0,0 58,110" fill="none" stroke="#a86a08" stroke-width="1.4" stroke-dasharray="3 2"/>
+      <path d="M160,86 A28,28 0 0,1 182,110" fill="none" stroke="#a86a08" stroke-width="1.4" stroke-dasharray="3 2"/>
+      <text x="120" y="200" font-size="9" font-weight="700" fill="#a86a08" text-anchor="middle">hip  ±60°</text>
+      <text x="120" y="215" font-size="8.4" fill="#4a5566" text-anchor="middle">23.7 N·m</text>
+
+      <!-- 측면 -->
+      <text x="400" y="22" font-size="10.5" font-weight="800" fill="#161c26" text-anchor="middle">옆에서 본 모습</text>
+      <text x="400" y="36" font-size="8.4" fill="#7c8798" text-anchor="middle">thigh = 앞뒤로 젓고, calf = 무릎을 접는다</text>
+      <rect x="300" y="52" width="200" height="34" rx="6" fill="#eeece6" stroke="#4a5566" stroke-width="1.5"/>
+      <text x="400" y="73" font-size="8.6" fill="#4a5566" text-anchor="middle">몸통</text>
+      <!-- thigh -->
+      <circle cx="470" cy="86" r="7" fill="#0e7a6e"/>
+      <line x1="470" y1="86" x2="428" y2="146" stroke="#161c26" stroke-width="4"/>
+      <text x="484" y="112" font-size="8.6" font-weight="700" fill="#0e7a6e">thigh</text>
+      <text x="484" y="124" font-size="7.8" fill="#4a5566">0.213 m</text>
+      <text x="484" y="135" font-size="7.8" fill="#4a5566">23.7 N·m</text>
+      <!-- calf -->
+      <circle cx="428" cy="146" r="7" fill="#a3342a"/>
+      <line x1="428" y1="146" x2="466" y2="204" stroke="#161c26" stroke-width="3.4"/>
+      <text x="336" y="150" font-size="8.6" font-weight="700" fill="#a3342a" text-anchor="end">calf (무릎)</text>
+      <text x="336" y="162" font-size="7.8" fill="#4a5566" text-anchor="end">0.213 m</text>
+      <text x="336" y="173" font-size="8.2" fill="#a3342a" text-anchor="end" font-weight="700">45.43 N·m ← 약 2배</text>
+      <line x1="340" y1="146" x2="418" y2="146" stroke="#a3342a" stroke-width="1" stroke-dasharray="2 2"/>
+      <!-- foot -->
+      <circle cx="466" cy="204" r="5.5" fill="#161c26"/>
+      <text x="480" y="208" font-size="8.4" fill="#4a5566">발 (r=2cm)</text>
+      <line x1="300" y1="216" x2="540" y2="216" stroke="#7c8798" stroke-width="1.4"/>
+
+      <text x="400" y="240" font-size="8.8" fill="#4a5566" text-anchor="middle">다리 하나에 관절 3개 × 4다리 = <tspan font-weight="800" fill="#161c26">12 자유도</tspan></text>
+    </svg>
+    <figcaption><b>왜 무릎만 토크가 두 배인가.</b>
+      무릎은 토크가 <b>1.917배 크고 속도는 정확히 1.917배 느리다.</b>
+      이 정확한 역수 관계는 <b>같은 모터에 약 1.92:1 링키지를 걸어</b> 힘을 키우고 속도를 줄였다는 뜻이다
+      (토크 × 속도 = 일정, 즉 출력이 같다).
+      <b>무릎이 착지 충격을 받아내는 관절이라 힘이 더 필요하기 때문</b>이다.
+      <br><br>다리 길이는 <b>thigh 0.213 m + calf 0.213 m = 0.426 m</b>.
+      이 값으로 Froude number를 계산하면 Go2가 어느 속도에서 gait을 바꿔야 하는지 추정할 수 있다.</figcaption>
+  </figure>
+  <h4>왜 감속비가 낮은가, 이게 프로젝트 본질과 직결된다</h4>
+  <p>Go2 모터는 <b>유성기어 1단, 약 6.22:1</b>의 낮은 감속비를 쓴다 (<b>준직접구동, QDD</b>).
+    보통 로봇은 힘을 키우려고 감속비를 높이는데, 왜 반대로 갔을까.</p>
+  <div class="key">
+    <div class="kl">MIT Cheetah의 proprioceptive actuation 철학</div>
+    <p>감속비를 낮추면 <b>액추에이터가 "투명"해진다</b>. 발끝에 가해진 힘이 모터까지 그대로 전달된다.
+      그러면 <b>모터 전류가 발끝 힘의 좋은 대리 지표</b>가 된다.</p>
+    <p style="margin-top:8px"><b>→ 발 센서 없이 접촉을 알 수 있는 물리적 근거가 여기 있다.</b>
+      감속비가 높으면 기어 마찰이 힘 정보를 다 먹어버려 이게 불가능하다.</p>
+  </div>
+
+  <h4>센서, 무엇이 있고 무엇이 없나</h4>
+  <div class="tw"><table>
+    <tr><th>센서</th><th>사양</th><th>상태</th></tr>
+    <tr><td><b>IMU</b></td><td>자세(quaternion) · 각속도 · 가속도, <b>500 Hz</b></td>
+        <td>🟢 전 등급</td></tr>
+    <tr><td><b>관절 엔코더</b></td><td>절대식 자기 엔코더, 모터 내장. 해상도 미공개</td><td>🟢 전 등급</td></tr>
+    <tr><td>관절 토크</td><td><b>토크 센서 없음.</b> 공식 헤더가 <code>// current estimated output torque</code>로 명시, 전류 기반 <b>추정값</b></td>
+        <td>🟠 추정</td></tr>
+    <tr><td><b>몸통 선속도</b></td><td><b>직접 측정하는 센서가 없다</b></td><td>🔴 없음</td></tr>
+    <tr><td>발바닥 힘센서</td><td>발당 정수 1개(0~4095 raw). <b>Unitree 공식 FAQ가 드리프트 특성을 직접 경고</b></td>
+        <td>🟠 <b>EDU 전용</b></td></tr>
+    <tr><td>LiDAR (L1/L2)</td><td>L1 <b>21,600 pts/s</b> / L2 64,000 pts/s. 약 165° 기울여 앞쪽 아래를 봄</td>
+        <td>🟢 전 등급</td></tr>
+    <tr><td>전방 카메라</td><td><b>단안 RGB. 깊이 촬영 불가</b></td><td>🟢 전 등급</td></tr>
+    <tr><td>깊이 카메라</td><td>RealSense D435i</td><td>🟠 EDU 별매</td></tr>
+  </table></div>
+  <div class="stop">
+    <div class="kl">🚨 IMU에 자력계가 없다</div>
+    <p>이게 사소해 보이지만 결정적이다. <b>자력계가 없으면 방향(yaw)에 절대 기준이 없어 계속 드리프트한다.</b>
+      높이맵은 로봇 자세를 기준으로 누적되므로, <b>자세 오차가 곧 지도 왜곡</b>이 된다.
+      Go2로 지형 인지를 시도한 공개 프로젝트 두 곳이 <b>독립적으로 둘 다 Point-LIO를 채택</b>한 게 우연이 아니다.</p>
+  </div>
+
+  <h4>★ 등급별 개발 접근, 프로젝트의 결정적 제약</h4>
+  <div class="tw"><table>
+    <tr><th>등급</th><th class="c">가격</th><th class="c">2차 개발</th><th class="c">RJ45</th><th class="c">발 힘센서</th><th class="c">최대 등판각</th></tr>
+    <tr><td><b>AIR</b></td><td class="c mono">$1,600</td><td class="c"><b style="color:var(--stop)">✗</b></td>
+        <td class="c" style="color:var(--stop)">✗</td><td class="c">✗</td><td class="c">30°</td></tr>
+    <tr><td><b>PRO</b></td><td class="c mono">$2,800</td><td class="c"><b style="color:var(--stop)">✗</b></td>
+        <td class="c" style="color:var(--stop)">✗</td><td class="c">✗</td><td class="c">40°</td></tr>
+    <tr><td><b>X</b></td><td class="c mono">$4,500</td><td class="c">◕ 부분</td><td class="c">· </td><td class="c">✗</td><td class="c">40°</td></tr>
+    <tr class="hl"><td><b>EDU</b></td><td class="c">영업 문의</td><td class="c"><b style="color:var(--dim)">● 전체</b></td>
+        <td class="c" style="color:var(--dim)"><b>●</b></td><td class="c"><b>●</b></td><td class="c">40°</td></tr>
+  </table></div>
+  <blockquote><b>EDU 이상 버전만 개발이 가능하며, PRO와 AIR 같은 다른 버전은 2차 개발 인터페이스를 열지 않습니다.</b>
+    <cite>Unitree 공식 FAQ</cite></blockquote>
+  <blockquote>Go2 Pro와 Go2 Air는 SBUS 포트, DC 28.8V 전원 출력,
+    <b>이더넷(RJ45) 인터페이스를 포함한 어떤 확장 전기 인터페이스도 지원하지 않습니다.
+    이 인터페이스들은 Go2 EDU 전용입니다.</b>
+    <cite>Unitree 공식 문서</cite></blockquote>
+  <div class="stop">
+    <div class="kl">이것이 의미하는 것</div>
+    <p><b>우리가 학습한 신경망을 12개 관절에 직접 명령하려면</b>
+      저수준 인터페이스 <code>rt/lowcmd</code>(500Hz)가 필요하고,
+      이건 DDS 미들웨어 위에서 돌고, DDS는 <b>유선 이더넷이 전제</b>다.
+      <b>RJ45가 없으면 경로 자체가 없다.</b></p>
+    <p style="margin-top:8px">AIR/PRO로 로봇을 움직일 수는 있다. 하지만 그건
+      <b>Unitree 내장 컨트롤러를 쓰는 것</b>이지 우리 정책이 아니다.
+      (커뮤니티 WebRTC 우회는 자체 보고 <b>관절 상태 1 Hz</b>로 500Hz 대비 500배 느려 RL에 부적합)</p>
+  </div>
+
+  <h3 id="obs">관측 설계, Go2에서 무엇이 되고 무엇이 막혀 있나</h3>
+  <p>강화학습 정책이 무엇을 "보게" 할지가 프로젝트의 핵심 설계 결정이다.
+    그리고 <b>Go2에서는 넣고 싶어도 못 넣는 것들이 있다.</b></p>
+
+  <figure>
+    <svg viewBox="0 0 620 290" aria-label="Go2 관측 설계 · 사용 가능 여부">
+      <text x="16" y="20" font-size="11" font-weight="800" fill="#0e7a6e">✓ 안전하게 쓸 수 있는 관측</text>
+      <rect x="16" y="30" width="286" height="132" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.5"/>
+      <text x="30" y="52" font-size="9.4" fill="#161c26">· 각속도 (IMU 자이로) <tspan fill="#7c8798">3차원</tspan></text>
+      <text x="30" y="70" font-size="9.4" fill="#161c26">· 중력 방향 (자세에서 유도) <tspan fill="#7c8798">3차원</tspan></text>
+      <text x="30" y="88" font-size="9.4" fill="#161c26">· 관절 각도 <tspan fill="#7c8798">12차원</tspan></text>
+      <text x="30" y="106" font-size="9.4" fill="#161c26">· 관절 속도 <tspan fill="#7c8798">12차원</tspan></text>
+      <text x="30" y="124" font-size="9.4" fill="#161c26">· 직전 액션 <tspan fill="#7c8798">12차원</tspan></text>
+      <text x="30" y="142" font-size="9.4" font-weight="700" fill="#0e7a6e">· 보행 위상 sin/cos <tspan font-weight="400" fill="#7c8798">← CPG를 학습에 이식</tspan></text>
+      <text x="30" y="156" font-size="8.6" fill="#4a5566" font-style="italic">전 등급에서 500 Hz로 안정적</text>
+
+      <text x="318" y="20" font-size="11" font-weight="800" fill="#a3342a">✕ 넣으면 실기에서 무너지는 관측</text>
+      <rect x="318" y="30" width="286" height="132" fill="#fbe9e7" stroke="#a3342a" stroke-width="1.5"/>
+      <text x="332" y="52" font-size="9.6" font-weight="700" fill="#161c26">base_lin_vel (몸통 선속도)</text>
+      <text x="332" y="67" font-size="8.8" fill="#4a5566">→ Go2에 측정 센서 자체가 없다.</text>
+      <text x="332" y="80" font-size="8.8" fill="#4a5566">→ 내장 추정치는 MCF를 끄면 사라진다.</text>
+      <text x="332" y="102" font-size="9.6" font-weight="700" fill="#161c26">height_scan (지형 높이맵)</text>
+      <text x="332" y="117" font-size="8.8" fill="#4a5566">→ 순정 하이트맵은 MCF 오도메트리 의존.</text>
+      <text x="332" y="130" font-size="8.8" fill="#4a5566">→ 저수준 RL 하려고 MCF 끄면 함께 끊긴다.</text>
+      <text x="332" y="150" font-size="8.6" fill="#a3342a" font-style="italic">시뮬에선 잘 되는데 실기에서 못 쓴다</text>
+
+      <!-- 하단: MCF 딜레마 -->
+      <rect x="16" y="180" width="588" height="98" fill="#fff" stroke="#a86a08" stroke-width="1.6"/>
+      <text x="30" y="200" font-size="10.5" font-weight="800" fill="#a86a08">🚨 MCF 딜레마, 저수준 제어의 대가</text>
+      <text x="30" y="219" font-size="9.2" fill="#4a5566">우리 정책을 관절에 직접 명령하려면 Unitree 내장 모션 제어(MCF)를 <tspan font-weight="700" fill="#161c26">반드시 꺼야 한다.</tspan></text>
+      <text x="30" y="234" font-size="9.2" fill="#4a5566">두 제어기가 동시에 살아 있으면 명령이 충돌해 <tspan font-style="italic">"혼란과 제어 상실"</tspan>이 일어난다(공식 문서).</text>
+      <text x="30" y="254" font-size="9.2" font-weight="700" fill="#161c26">그런데 MCF를 끄면 이것들이 함께 사라진다:</text>
+      <text x="30" y="269" font-size="9.2" fill="#4a5566">① 몸통 선속도 추정치&nbsp;&nbsp; ② LiDAR 하이트맵&nbsp;&nbsp; ③ 일부 LiDAR 기능</text>
+    </svg>
+    <figcaption><b>이 그림이 우리가 blind로 가는 실무적 이유다.</b>
+      "카메라를 안 쓰기로 했다"가 아니라, <b>Go2에서 실제로 작동하는 경로가 이것뿐</b>이다.
+      실제로 Unitree 공식 배포 코드도 <code>base_lin_vel</code>·<code>height_scan</code>·<code>foot_force</code> 없이
+      <b>보행 위상(sin/cos)</b>을 넣는다.</figcaption>
+  </figure>
+
+  <div class="warn">
+    <div class="kl">팀이 가장 흔히 밟는 지뢰</div>
+    <p><b>관측 벡터에 <code>base_lin_vel</code>을 그냥 넣지 말 것.</b>
+      시뮬에서는 공짜로 알 수 있어 성능이 잘 나오는데, 실기에는 그 센서가 없어 배포 순간 무너진다.
+      넣으려면 <b>(a)</b> 별도 상태추정망을 동시 학습하거나
+      <b>(b)</b> actor에서 빼고 critic에만 주는 <b>비대칭 actor-critic</b> 구조를 써야 한다.</p>
+  </div>
+
+  <h3 id="s2r">sim-to-real · 시뮬과 현실의 간극</h3>
+  <p>학습한 정책을 실물에 올릴 때 무너지는 이유는 크게 다섯 가지다.
+    그리고 <b>"많이 랜덤화하면 된다"는 통념이 실측으로 반박됐다.</b></p>
+
+  <div class="tw"><table>
+    <tr><th style="width:22%">원인</th><th>실측 근거</th><th style="width:30%">대응</th></tr>
+    <tr><td><b>액추에이터 모델</b></td>
+        <td>모터를 이상적 토크원으로 가정하면 실기에서 <b>한 걸음도 못 걷고 전도</b>(일주일 튜닝에도)</td>
+        <td>실측 데이터로 학습한 액추에이터 모델. <b>단 Go2는 QDD라 1순위는 아님</b></td></tr>
+    <tr><td><b>제어 지연</b></td>
+        <td>PD 서보는 3ms인데 신경망은 <b>15~19ms</b>. 시뮬은 0 → 시뮬의 안정영역이 실제보다 훨씬 넓어진다</td>
+        <td><code>DelayedPDActuator</code>로 1~3스텝 지연 + <b>지연값도 랜덤화</b></td></tr>
+    <tr><td><b>관절 정적 마찰</b></td>
+        <td>예상외로 높은 마찰-토크 비. 빼면 실기 성능 저하, <b>특히 계단</b>에서</td>
+        <td>느린 램프 토크로 break-away 토크 실측 → 랜덤화 범위 중심으로</td></tr>
+    <tr><td><b>관측 부족</b></td>
+        <td>몸통 속도 관측이 없으면 측면 강건성 <b>43N → 22N</b>. <b>도메인 랜덤화로는 못 메움</b></td>
+        <td>상태추정망 동시 학습 또는 비대칭 actor-critic</td></tr>
+    <tr><td><b>접촉 강성</b></td>
+        <td>강체 가정으로 학습한 정책은 <b>소프트 접촉에서 불안정 · 추종 불량</b></td>
+        <td>접촉 강성·감쇠 랜덤화. <b>모래 실험 전 이 실패를 우리 데이터로 재현해 두면 그 자체가 문제 증명</b></td></tr>
+  </table></div>
+
+  <div class="key">
+    <div class="kl">★ 반직관, 도메인 랜덤화는 많이 걸수록 좋은 게 아니다</div>
+    <p>Laikago 실기 검증 논문(arXiv 2011.02404)의 실측:</p>
+    <ul class="body" style="color:var(--ink)">
+      <li>불필요한 랜덤화 대가, 최고속도 <b>1.1 → 0.9 m/s (약 18% 손실)</b></li>
+      <li>P 게인, <code>kp=40</code> 전이 성공 / <code>kp=160</code>은 <b>랜덤화 여부와 무관하게 실패</b></li>
+      <li>유용했던 유일한 랜덤화, <b>지연 랜덤화</b></li>
+    </ul>
+    <p style="margin-top:8px"><b>→ 실행 규칙: 랜덤화를 하나씩 추가하며 시뮬 성능 손실을 표로 기록한다.</b>
+      위 "1.1 → 0.9"가 그 표의 템플릿이다.</p>
+  </div>
+
+
+  <h3 id="gs">실공간을 시뮬레이터로, 3D Gaussian Splatting</h3>
+  <p>여기까지는 <b>사람이 만든 지형</b>에서 학습하는 이야기였다.
+    그런데 실증 프로젝트라면 결국 <b>실제 현장</b>에서 통해야 한다.
+    실제 공간을 시뮬레이터 안으로 가져오는 것. 그게 우리 확장 축이다.</p>
+
+  <h4>먼저: 전통적인 방법은 무엇이었나</h4>
+  <p>실제 공간을 3D로 만드는 일은 오래된 기술이다. <b>사진측량(photogrammetry)</b>이라 부른다.</p>
+  <ol class="body">
+    <li>공간을 여러 각도에서 찍는다</li>
+    <li>사진들에서 <b>같은 지점</b>을 찾아 카메라가 어디서 찍었는지 역산한다. 이걸 <b>SfM</b>(Structure from Motion)이라 하고, 대표 도구가 <b>COLMAP</b>이다</li>
+    <li>카메라 위치를 알면 삼각측량으로 <b>점들의 3차원 좌표</b>를 찍을 수 있다 → <b>포인트 클라우드</b></li>
+    <li>점들을 이어 면을 만든다 → <b>메시(mesh)</b>. 이게 3D 소프트웨어가 다루는 형식이다</li>
+  </ol>
+  <div class="key" style="background:var(--paper-2);border-color:var(--rule)">
+    <div class="kl" style="color:var(--ink-2)">우리 팀에 이미 있는 역량</div>
+    <p>VFX 현장에서는 이 파이프라인을 <b>카메라 트래킹 · 매치무브</b>라는 이름으로 20년 넘게 써 왔다.
+      Nuke 같은 합성 소프트웨어에서 <b>영상 → 카메라 궤적 복원 → 포인트 클라우드 → 메시화</b>는 일상 작업이다.
+      <b>단계도, 실패 지점도, 품질을 결정하는 요인도 같다.</b></p>
+  </div>
+
+  <h4>그럼 3DGS는 무엇이 다른가</h4>
+  <div class="concept">
+    <div class="term"><span class="ko">3D 가우시안 스플래팅</span><span class="en">3DGS · 3D Gaussian Splatting</span></div>
+    <dl>
+      <dt>누가 · 언제</dt><dd>Kerbl 외, SIGGRAPH 2023. 2년 만에 3D 재구성의 표준을 바꿔놓았다.</dd>
+      <dt>핵심 아이디어</dt>
+      <dd>공간을 <b>점이나 삼각형이 아니라 "뿌옇게 번진 3차원 타원체" 수백만 개</b>로 표현한다.
+        타원체 하나마다 <b>위치 · 모양(퍼진 방향과 크기) · 투명도 · 보는 각도에 따라 달라지는 색</b>을 갖는다.</dd>
+      <dt>어떻게 만드나</dt>
+      <dd>사진과 비교해서 <b>"지금 렌더한 게 원본 사진과 얼마나 다른가"</b>를 재고,
+        그 오차를 줄이는 방향으로 타원체들의 값을 조금씩 고친다.
+        <b>렌더링 과정 전체가 미분 가능하기 때문에</b> 신경망 학습과 똑같은 방식으로 최적화된다.</dd>
+      <dt>왜 강력한가</dt>
+      <dd>메시로는 표현하기 어려운 것들, <b>반투명, 반사, 잔털처럼 가는 구조, 흐릿한 경계</b>· 을 자연스럽게 담는다. 그리고 <b>실시간으로 렌더된다.</b></dd>
+    </dl>
+  </div>
+
+  <div class="stop">
+    <div class="kl">★ 그런데 3DGS는 물리를 주지 않는다. 이걸 혼동하면 프로젝트가 무너진다</div>
+    <p>최적화가 끝난 가우시안들은 <b>표면 위에 가지런히 놓여 있지 않다.</b>
+      공중에 떠 있기도 하고, 서로 겹쳐 있고, <b>이웃한 것들끼리 방향이 제각각</b>이다.
+      "보기에 맞으면 됐다"로 최적화했으니 당연하다.</p>
+    <p style="margin-top:8px"><b>로봇의 발은 가우시안을 밟을 수 없다.</b>
+      충돌 판정을 하려면 <b>면(surface)</b>이 있어야 하는데, 가우시안 덩어리에서 깔끔한 면을 뽑아내는 것은
+      <b>지금도 미해결 문제</b>다.</p>
+  </div>
+  <p>그래서 <b>실전 3DGS 로보틱스 파이프라인은 예외 없이 "이중 표현"</b>을 쓴다. <b>보여주는 것은 가우시안이 하고, 부딪히는 것은 별도의 메시가 한다.</b></p>
+
+  <figure>
+    <svg viewBox="0 0 620 300" aria-label="실공간 재구성 파이프라인 · 촬영에서 시뮬레이터까지">
+      <defs><marker id="a5" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#4a5566"/></marker></defs>
+
+      <!-- 1 촬영 -->
+      <rect x="14" y="52" width="104" height="66" fill="#eeece6" stroke="#4a5566" stroke-width="1.4"/>
+      <text x="66" y="72" font-size="9.6" font-weight="800" fill="#161c26" text-anchor="middle">① 촬영</text>
+      <text x="66" y="89" font-size="8.4" fill="#4a5566" text-anchor="middle">현장을 여러 각도로</text>
+      <text x="66" y="102" font-size="8.4" fill="#4a5566" text-anchor="middle">휴대폰도 가능</text>
+      <text x="66" y="113" font-size="7.8" fill="#7c8798" text-anchor="middle">겹침률이 품질을 좌우</text>
+
+      <path d="M120,85 L142,85" stroke="#4a5566" stroke-width="1.6" marker-end="url(#a5)"/>
+
+      <!-- 2 COLMAP -->
+      <rect x="146" y="52" width="104" height="66" fill="#eeece6" stroke="#4a5566" stroke-width="1.4"/>
+      <text x="198" y="72" font-size="9.6" font-weight="800" fill="#161c26" text-anchor="middle">② COLMAP</text>
+      <text x="198" y="89" font-size="8.4" fill="#4a5566" text-anchor="middle">카메라 위치 역산</text>
+      <text x="198" y="102" font-size="8.4" fill="#4a5566" text-anchor="middle">＋ 초기 포인트</text>
+      <text x="198" y="113" font-size="7.8" fill="#7c8798" text-anchor="middle">＝ 매치무브와 동일</text>
+
+      <path d="M252,85 L274,85" stroke="#4a5566" stroke-width="1.6" marker-end="url(#a5)"/>
+
+      <!-- 3 3DGS 학습 -->
+      <rect x="278" y="52" width="104" height="66" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.8"/>
+      <text x="330" y="72" font-size="9.6" font-weight="800" fill="#0e7a6e" text-anchor="middle">③ 3DGS 최적화</text>
+      <text x="330" y="89" font-size="8.4" fill="#4a5566" text-anchor="middle">가우시안 수백만 개를</text>
+      <text x="330" y="102" font-size="8.4" fill="#4a5566" text-anchor="middle">사진에 맞춰 조정</text>
+      <text x="330" y="113" font-size="7.8" fill="#7c8798" text-anchor="middle">여기서 갈라진다 ↓</text>
+
+      <!-- 분기 -->
+      <path d="M330,122 L330,140 L214,140 L214,158" stroke="#0e7a6e" stroke-width="1.6" fill="none" marker-end="url(#a5)"/>
+      <path d="M330,122 L330,140 L446,140 L446,158" stroke="#a86a08" stroke-width="1.6" fill="none" marker-end="url(#a5)"/>
+
+      <!-- 4a 렌더 경로 -->
+      <rect x="146" y="162" width="136" height="70" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="214" y="182" font-size="9.6" font-weight="800" fill="#0e7a6e" text-anchor="middle">④-A 가우시안 그대로</text>
+      <text x="214" y="199" font-size="8.4" fill="#161c26" text-anchor="middle">＝ 로봇이 <tspan font-weight="700">보는</tspan> 화면</text>
+      <text x="214" y="213" font-size="8.4" fill="#4a5566" text-anchor="middle">사진 같은 카메라 영상</text>
+      <text x="214" y="226" font-size="7.8" fill="#7c8798" text-anchor="middle">시각 sim-to-real 갭 해소</text>
+
+      <!-- 4b 메시 경로 -->
+      <rect x="378" y="162" width="136" height="70" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.6"/>
+      <text x="446" y="182" font-size="9.6" font-weight="800" fill="#a86a08" text-anchor="middle">④-B 메시 추출</text>
+      <text x="446" y="199" font-size="8.4" fill="#161c26" text-anchor="middle">＝ 로봇이 <tspan font-weight="700">부딪히는</tspan> 것</text>
+      <text x="446" y="213" font-size="8.4" fill="#4a5566" text-anchor="middle">깊이 융합 → 삼각형 면</text>
+      <text x="446" y="226" font-size="7.8" fill="#a3342a" text-anchor="middle">★ 여기가 미해결·수작업 구간</text>
+
+      <path d="M214,236 L214,252 L330,252" stroke="#4a5566" stroke-width="1.6" fill="none"/>
+      <path d="M446,236 L446,252 L334,252" stroke="#4a5566" stroke-width="1.6" fill="none" marker-end="url(#a5)"/>
+
+      <!-- 5 -->
+      <rect x="216" y="258" width="228" height="34" fill="#161c26"/>
+      <text x="330" y="279" font-size="10" font-weight="800" fill="#f6f5f1" text-anchor="middle">⑤ Isaac Sim · 같은 좌표계에 겹쳐 넣는다</text>
+
+      <text x="14" y="26" font-size="10.5" font-weight="800" fill="#161c26">실공간 → 시뮬레이터 파이프라인</text>
+      <text x="14" y="40" font-size="8.6" fill="#7c8798">③에서 두 갈래로 갈라져 ⑤에서 다시 만난다. 이 이중 구조가 핵심이다</text>
+    </svg>
+    <figcaption><b>보는 것과 부딪히는 것을 분리한다.</b>
+      가우시안은 사진처럼 그럴듯한 화면을 만들고, 거기서 뽑아낸 메시가 발이 닿는 바닥이 된다.
+      둘은 같은 좌표계를 공유하므로 로봇 입장에서는 하나의 공간이다.
+      <b>VR-Robo(GS-Mesh), GaussGym(NKSR 메시), SplatMesh 모두 이 구조다.</b></figcaption>
+  </figure>
+
+  <div class="warn">
+    <div class="kl">그리고 3DGS를 써도 도메인 랜덤화는 여전히 필요하다</div>
+    <p>VR-Robo 실험에서 <b>도메인 랜덤화를 빼자 어려운 시나리오 성공률이 100% → 0%로 붕괴</b>했다.
+      "실사에 가까운 화면을 주면 갭이 사라진다"는 기대는 틀렸다.
+      <b>보이는 것이 진짜 같아져도, 물리와 센서 노이즈의 갭은 그대로 남는다.</b></p>
+  </div>
+
+  <div class="key">
+    <div class="kl">우리 프로젝트에서 3DGS의 자리</div>
+    <p><b>지형 물리의 해법이 아니라, 현장 시나리오를 재현하는 도구.</b>
+      모래의 물성은 3DGS로 복원되지 않는다. 가우시안은 <b>마찰계수도 강성도 침하량도 담지 않는다.</b>
+      우리가 3DGS로 하는 일은 <b>"실제 그 현장의 형상과 배치에서 우리 정책이 통하는가"</b>를 확인하는 것이다.</p>
+    <p style="margin-top:8px"><b>기술적으로 정직하면서, 동시에 실증 트랙의 목적과 정확히 맞는 포지션</b>이다.</p>
+  </div>
+  <h4>학습 환경과 평가 환경을 분리한다</h4>
+  <div class="tw"><table>
+    <tr><th style="width:16%"></th><th style="width:32%">환경</th><th>근거</th></tr>
+    <tr><td><b>학습</b></td><td>Isaac Lab<br><span style="color:var(--ink-3)">강체 + 절차적 지형 다양성 + 온라인 적응</span></td>
+        <td>고충실도 입자 물리는 <b>"minor gains"에 "significant computational cost"</b>였고,
+          <b>절차적 다양성이 더 나은 zero-shot 성능</b>을 냈다 (Sim2Dust, arXiv 2508.11503)</td></tr>
+    <tr class="hl"><td><b>평가</b></td><td>MuJoCo + RFT 모래 시나리오</td>
+        <td>MuJoCo에 3D Granular RFT를 구현해 <b>보행 거리·발 침하량을 실험 대비 20% 이내로 예측</b>
+          (arXiv 2606.19504). 그리고 <code>unitree_rl_lab</code>에 <b>MuJoCo sim2sim 단계가 이미 존재</b></td></tr>
+  </table></div>
+  <div class="concept">
+    <div class="term"><span class="ko">MuJoCo</span><span class="en">Multi-Joint dynamics with Contact</span></div>
+    <dl>
+      <dt>정의</dt><dd>Isaac Lab과는 <b>다른 물리 엔진</b>. 원래 로봇 연구용으로 만들어졌고 지금은 Google DeepMind가 관리한다.</dd>
+      <dt>왜 두 개를 쓰나</dt>
+      <dd>정책이 <b>"그 시뮬레이터에서만 통하는 꼼수"</b>를 배웠을 수 있기 때문이다.
+        엔진마다 접촉 계산·마찰 처리·수치 적분이 미묘하게 달라,
+        A엔진에서 완벽한 정책이 B엔진에서 픽 쓰러지는 일이 흔하다.</dd>
+      <dt>우리 구조에서의 역할</dt>
+      <dd><b>실물 전 마지막 모의고사.</b> 여기서 통과 못 하면 실물은 볼 것도 없다.
+        그리고 <b>"학습 환경 ≠ 평가 환경" 구조 자체가 발표에서 방어 가능한 강점</b>이 된다.</dd>
+    </dl>
+  </div>
+
+  <div class="因">그래서, 무엇을 어떻게 측정해야 "됐다"고 말할 수 있는가. 마지막 층위로.</div>
+</section>
+
+<!-- ══════════════ LAYER 5 ══════════════ -->
+<section class="layer" id="L5">
+  <div class="lh"><span class="num">LAYER 5</span><h2>실증 · 검증</h2></div>
+  <p class="lsub">여기서 프로젝트의 성패가 갈린다.
+    <b>실증은 "동작하는 데모"를 만드는 일이 아니라, "현장 조건에서 쓸 만한가"를 판정 가능한 형태로 증명하는 일</b>이다.
+    그 둘은 요구하는 것이 완전히 다르다.</p>
+
+  <h3 id="proof">연구와 실증은 무엇이 다른가</h3>
+  <div class="tw"><table>
+    <tr><th style="width:14%"></th><th style="width:43%">연구 (research)</th><th>실증 (field validation)</th></tr>
+    <tr><td><b>질문</b></td><td>"새 방법이 기존 방법보다 나은가"</td>
+        <td><b>"이 방법이 이 현장에서 쓸 만한가"</b></td></tr>
+    <tr><td><b>비교 대상</b></td><td>선행 논문의 수치</td>
+        <td><b>지금 현장이 실제로 하고 있는 방식</b></td></tr>
+    <tr><td><b>성공 기준</b></td><td>지표가 유의미하게 개선됨</td>
+        <td><b>현장 담당자가 "이거면 쓰겠다"고 판단함</b></td></tr>
+    <tr><td><b>실패의 가치</b></td><td>낮음 (논문이 안 됨)</td>
+        <td><b>높음. "왜 안 되는지"가 곧 결과물</b></td></tr>
+    <tr class="hl"><td><b>필수 조건</b></td><td>재현 가능한 실험</td>
+        <td>재현 가능한 실험 <b>＋ 안전 ＋ 현장 조건 반영 ＋ 실패 판정 기준의 사전 선언</b></td></tr>
+  </table></div>
+  <div class="key">
+    <div class="kl">이 표에서 나오는 우리의 규칙</div>
+    <p><b>① 성공 기준을 실험 전에 정하고 문서에 박는다.</b> 결과를 보고 기준을 맞추면 그건 실증이 아니다.</p>
+    <p><b>② 실패한 실험도 원인과 함께 남긴다.</b> 실증에서 "안 되는 조건을 밝힌 것"은 성과다.</p>
+  </div>
+
+  <h3 id="metric">무엇을 측정하나, 지표 정의</h3>
+  <p>"잘 걷는다"는 평가가 아니다. 아래 지표로만 말한다.
+    각 지표는 <b>측정 방법과 판정선</b>이 함께 정의되어야 쓸 수 있다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:19%">지표</th><th style="width:29%">정의 · 측정 방법</th><th style="width:26%">왜 이걸 보나</th><th>판정선</th></tr>
+    <tr class="hl"><td><b>지형별 통과 성공률</b></td>
+        <td>지형 유형별 N회 시도 중 목표 지점 도달 비율.<br>지형별로 <b>따로</b> 집계한다</td>
+        <td>가장 직접적인 임무 성공 지표</td>
+        <td>기준 정책 대비 <b>하락 없음</b>이 최소선</td></tr>
+    <tr><td><b>속도 추종 오차</b></td>
+        <td>명령 속도와 실제 몸통 속도의 차이. 평균 절대오차(m/s)</td>
+        <td>정책이 "가라는 대로 가는가". <b>험지에서 가장 먼저 무너지는 지표</b></td>
+        <td>실험별 기록, 절대 기준은 두지 않음</td></tr>
+    <tr><td><b>낙상 횟수</b></td>
+        <td>단위 거리·시간당 몸통이 지면에 닿은 횟수</td><td>현장 투입 가능성의 하한선</td>
+        <td><b>0에 수렴</b>하지 않으면 현장 논의 불가</td></tr>
+    <tr><td><b>외란 회복률</b></td>
+        <td>정해진 크기의 측면 충격 후 N초 내 정상 보행 복귀 비율</td>
+        <td>예측 불가 상황 대응력. <b>현장에서 실제로 일어나는 일</b></td>
+        <td>충격 크기별 곡선으로 기록</td></tr>
+    <tr class="hl"><td><b>무개입 주행거리</b></td>
+        <td>사람이 손대지 않고 이동한 연속 거리</td>
+        <td>★ <b>국내 도입 사례가 공개하지 않는 지표.</b> 우리가 내면 최초 데이터</td>
+        <td>길수록 좋음. 실패 지점을 함께 기록</td></tr>
+    <tr><td><b>에너지 소모</b></td>
+        <td>이동 단위 거리당 소비 전력 (CoT)</td>
+        <td>배터리 1~2시간이라는 현실 제약과 직결</td>
+        <td>기준 정책 대비 비율로</td></tr>
+  </table></div>
+  <div class="warn">
+    <div class="kl">지표를 볼 때 반드시 함께 봐야 하는 것</div>
+    <p><b>학습 곡선의 보상값(reward)은 성능 지표가 아니다.</b>
+      보상은 우리가 설계한 점수 체계일 뿐이라, 보상이 올라도 실제 보행이 나빠질 수 있다
+      (보상 해킹, Layer 2 참조). <b>보상 곡선과 위 지표를 항상 같이 본다.</b></p>
+  </div>
+
+  <h3 id="baseline">비교 기준선을 어떻게 잡나</h3>
+  <p>실증에서 <b>"무엇과 비교할 것인가"</b>가 결과의 의미를 결정한다. 우리는 세 층의 기준선을 둔다.</p>
+  <figure>
+    <svg viewBox="0 0 620 232" aria-label="3층 비교 기준선 구조">
+      <rect x="24" y="26" width="180" height="86" fill="#eeece6" stroke="#4a5566" stroke-width="1.5"/>
+      <text x="114" y="48" font-size="10.5" font-weight="800" fill="#161c26" text-anchor="middle">기준선 ①</text>
+      <text x="114" y="65" font-size="9.8" font-weight="700" fill="#4a5566" text-anchor="middle">공개 사전학습 정책</text>
+      <text x="114" y="84" font-size="8.6" fill="#4a5566" text-anchor="middle">Isaac Lab 기본 Go2 정책</text>
+      <text x="114" y="98" font-size="8.6" fill="#7c8798" text-anchor="middle">"우리가 만든 게 더 나은가"</text>
+
+      <rect x="220" y="26" width="180" height="86" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.8"/>
+      <text x="310" y="48" font-size="10.5" font-weight="800" fill="#0e7a6e" text-anchor="middle">기준선 ②</text>
+      <text x="310" y="65" font-size="9.8" font-weight="700" fill="#161c26" text-anchor="middle">우리 기준 정책</text>
+      <text x="310" y="84" font-size="8.6" fill="#4a5566" text-anchor="middle">W9에 확정, 이후 변경 금지</text>
+      <text x="310" y="98" font-size="8.6" fill="#7c8798" text-anchor="middle">"이 변경이 효과가 있었나"</text>
+
+      <rect x="416" y="26" width="180" height="86" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.5"/>
+      <text x="506" y="48" font-size="10.5" font-weight="800" fill="#a86a08" text-anchor="middle">기준선 ③</text>
+      <text x="506" y="65" font-size="9.8" font-weight="700" fill="#161c26" text-anchor="middle">현장의 현재 방식</text>
+      <text x="506" y="84" font-size="8.6" fill="#4a5566" text-anchor="middle">사람 점검 · 고정 센서</text>
+      <text x="506" y="98" font-size="8.6" fill="#7c8798" text-anchor="middle">"쓸 이유가 있는가"</text>
+
+      <text x="114" y="136" font-size="8.6" fill="#7c8798" text-anchor="middle">기술적 타당성</text>
+      <text x="310" y="136" font-size="8.6" fill="#0e7a6e" text-anchor="middle" font-weight="700">실험의 통제</text>
+      <text x="506" y="136" font-size="8.6" fill="#a86a08" text-anchor="middle" font-weight="700">실증의 의미</text>
+
+      <rect x="24" y="154" width="572" height="62" fill="#fff" stroke="#a3342a" stroke-width="1.5"/>
+      <text x="40" y="174" font-size="10" font-weight="800" fill="#a3342a">가장 흔한 실수, 기준선 ②를 계속 바꾸는 것</text>
+      <text x="40" y="192" font-size="9" fill="#4a5566">실험 도중 "더 좋은 설정"을 찾으면 기준을 갈아치우고 싶어진다. 그러면 <tspan font-weight="700" fill="#161c26">이전 실험 결과가 전부 무효</tspan>가 된다.</text>
+      <text x="40" y="208" font-size="9" fill="#4a5566">기준 정책은 <tspan font-weight="700" fill="#161c26">W9에 한 번 고정하고 프로젝트 끝까지 건드리지 않는다.</tspan> 개선안은 항상 "기준 대비 +α"로 보고한다.</text>
+    </svg>
+    <figcaption><b>기준선 ③이 실증을 실증답게 만든다.</b>
+      기술 지표만 개선되고 "현장이 왜 이걸 써야 하는가"에 답이 없으면 그건 연구지 실증이 아니다.
+      우리가 멘토에게 물어야 할 것도 바로 이 ③이다.</figcaption>
+  </figure>
+
+  <h3 id="protocol">실험 프로토콜, 재현 가능하다는 것의 의미</h3>
+  <p>"재현 가능"은 <b>다른 사람이 우리 결과를 다시 만들어낼 수 있다</b>는 뜻이다.
+    강화학습은 <b>같은 코드를 돌려도 난수 시드에 따라 결과가 크게 달라지므로</b>, 아래를 지키지 않으면 재현이 불가능하다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:24%">항목</th><th>규칙</th></tr>
+    <tr><td><b>난수 시드</b></td>
+        <td>모든 실험은 <b>최소 3개 시드</b>로 돌리고 <b>평균과 편차</b>를 함께 보고한다.
+          시드 1개 결과는 <b>결과로 인정하지 않는다</b>. 운이었을 수 있다</td></tr>
+    <tr class="hl"><td><b>단일 변수 원칙</b></td>
+        <td>한 실험에서 <b>하나만 바꾼다.</b> 두 개를 동시에 바꾸면 무엇이 효과였는지 영원히 알 수 없다</td></tr>
+    <tr><td><b>기록 항목</b></td>
+        <td>실험마다 <b>설정 파일 · 실행 커맨드 · 커밋 해시 · 결과 지표 · 학습 곡선</b>을 한 세트로 남긴다.
+          <b>기록 없는 실험은 없었던 것으로 본다</b></td></tr>
+    <tr><td><b>환경 고정</b></td>
+        <td>시뮬레이터·라이브러리 버전을 고정하고 문서화한다.
+          버전이 바뀌면 <b>그 자체가 변수</b>이므로 기준 정책을 다시 돌려 비교한다</td></tr>
+    <tr><td><b>평가 분리</b></td>
+        <td>학습에 쓴 지형과 <b>평가에 쓰는 지형을 분리</b>한다.
+          학습한 지형에서 잘하는 건 당연하다. 우리가 알고 싶은 건 <b>안 겪어본 지형</b>이다</td></tr>
+  </table></div>
+
+  <h3 id="failcrit">언제 "안 된다"고 말할 것인가, 실패 판정 기준</h3>
+  <p class="big">실증 문서에서 가장 신뢰를 만드는 부분이 이것이다.
+    <b>"우리는 이러이러하면 실패라고 부르겠다"를 실험 전에 선언하는 것.</b></p>
+  <div class="tw"><table>
+    <tr><th style="width:26%">단계</th><th style="width:37%">실패로 판정하는 조건</th><th>그때 무엇을 하는가</th></tr>
+    <tr><td><b>W4 · 재현</b></td>
+        <td>공개 정책이 우리 환경에서 <b>동일한 학습 곡선을 못 낸다</b></td>
+        <td>기술 문제가 아니라 <b>환경 문제</b>. 버전·설정을 원점에서 재검토. 다음 단계로 넘어가지 않는다</td></tr>
+    <tr><td><b>W9 · 기준 정책</b></td>
+        <td>지표가 수치로 안정되게 나오지 않는다 (시드마다 결과가 크게 다름)</td>
+        <td>보상 설계 재검토. <b>여기서 못 잡으면 이후 모든 비교가 무의미</b></td></tr>
+    <tr class="hl"><td><b>W14 · 커스텀 지형</b></td>
+        <td>커스텀 지형에서 <b>기준 정책보다 나빠지고 원인을 설명하지 못한다</b></td>
+        <td>확장 축(3DGS)을 <b>포기하고</b> 원인 분석에 자원을 돌린다.
+          <b>"왜 안 되는지 밝힌 것"도 실증 결과다</b></td></tr>
+    <tr><td><b>W18 · 현장 검증</b></td>
+        <td>현장 조건을 반영하자 지표가 <b>사용 불가 수준</b>으로 떨어진다</td>
+        <td><b>이것 자체를 결과로 보고한다.</b> "시뮬에서 되던 것이 이 조건에서 무너진다"는
+          현장에 가장 필요한 정보다</td></tr>
+  </table></div>
+  <div class="key">
+    <div class="kl">왜 이걸 먼저 쓰는가</div>
+    <p>실패 기준이 없으면 팀은 <b>안 되는 걸 붙잡고 5개월을 쓴다.</b>
+      그리고 실패 기준을 <b>미리 공개한 문서</b>는 "잘 될 것만 말하는 문서"보다 훨씬 신뢰를 얻는다.</p>
+  </div>
+
+  <h3 id="safety">안전, 우리에게 가장 없는 지식</h3>
+  <p>사람과 같은 공간에서 로봇을 검증하려면 지켜야 할 것이 있다.
+    <b>우리 팀에 이 지식이 전혀 없다</b>는 것을 명시해 둔다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:30%">항목</th><th>우리가 아는 것 / 모르는 것</th></tr>
+    <tr><td>로봇 질량 · 속도</td>
+        <td>Go2는 <b>약 15 kg, 최대 3.7 m/s</b>. 사람에게 충돌 시 위험한 수준인지 판단할 기준을 모른다</td></tr>
+    <tr class="hl"><td><b>동적 보호분리거리</b></td>
+        <td>이동하는 기계와 사람 사이에 확보해야 하는 거리 기준(ISO 13855 계열)이 있다는 것만 안다.
+          <b>사족보행 로봇에 어떻게 적용되는지 모른다</b>. 멘토 전문 분야</td></tr>
+    <tr><td>실증 공간 요건</td><td>검증 구역을 어떻게 구획하고 누가 접근을 통제하는지 모른다</td></tr>
+    <tr><td>비상 정지</td><td>Go2에 리모컨 정지가 있다는 것은 안다. 현장 기준으로 충분한지 모른다</td></tr>
+    <tr><td>보험 · 책임</td><td>전혀 모른다</td></tr>
+  </table></div>
+  <div class="warn">
+    <div class="kl">그래서 이건 멘토링 항목이다</div>
+    <p>안전 요건은 <b>공개 자료로 자체 학습할 수 있는 영역이 아니다.</b>
+      현장 경험이 있는 사람에게 직접 들어야 한다. 우리 멘토링 요청의 핵심이 여기 있다.</p>
+  </div>
+
+  <h3 id="field">기준선 ③, 현장은 지금 무엇을 하고 있나</h3>
+  <p>우리 결과가 의미를 가지려면 <b>현재 현장의 방식</b>을 알아야 한다.
+    국내 도입 사례를 <b>배경 지식이 아니라 비교 기준선으로</b> 본다.</p>
+  <div class="tw"><table>
+    <tr><th style="width:17%">주체</th><th style="width:36%">무엇을 하고 있나</th><th>공개된 수치</th></tr>
+    <tr class="hl"><td><b>POSCO</b><br>포항·광양제철소</td>
+        <td>Spot으로 고로 풍구 44개 열화상 점검. <b>최대 55°C 환경</b></td>
+        <td><b>점검 빈도 하루 1회 → 하루 12회 (12배)</b><br>
+          <span style="color:var(--ink-3)">시간 단축률·인건비 절감액은 미공개</span></td></tr>
+    <tr class="hl"><td><b>한국수자원공사</b></td>
+        <td>화성정수장 실증 6회 → 전국 44개 사업장 확대 계획</td>
+        <td><b>총사업비 260억원</b><br>
+          <span style="color:var(--dim)">실증 항목: 협소공간 주행 · 장애물 회피 · <b>철제 발판 통과 · 계단 이동</b></span></td></tr>
+    <tr><td><b>고려아연</b><br>온산제련소</td><td>세계 제련소 최초. 점검 포인트 466개 야간·휴일 순찰</td>
+        <td>수치 미공개</td></tr>
+    <tr><td><b>SK이노베이션</b><br>울산CLX</td><td>정유공장 가스누출·설비온도 점검, 하루 4~5회</td>
+        <td>수치 미공개</td></tr>
+  </table></div>
+  <div class="key">
+    <div class="kl">★ 여기서 두 가지가 나온다</div>
+    <p><b>① 우리 검증 항목이 이미 정해져 있다.</b> 한국수자원공사 실증 항목이
+      <b>"협소공간 주행 · 장애물 회피 · 철제 발판 통과 · 계단 이동"</b>이다.
+      우리가 시뮬에서 만들 지형을 이 목록에 맞추면, 결과가 곧바로 현장 언어로 번역된다.</p>
+    <p style="margin-top:10px"><b>② 비어 있는 자리가 명확하다.</b>
+      국내 어떤 도입 사례도 <b>점검 시간 단축률이나 인력 절감 인원을 공개하지 않는다.</b>
+      공개되는 건 빈도·커버리지·예산뿐이다.
+      → 우리가 <b>무개입 주행거리 · 지형별 성공률 · 야간 무인 가동시간</b>을 정량화하면
+      그것이 국내 최초 데이터가 된다.</p>
+  </div>
+  <p>그리고 <b>이 분야는 한국이 세계 최전선</b>이다. KAIST만 Science Robotics 3편
+    (2023 모래 3.03 m/s · 2025 징검다리 4 m/s · 2026 표지 6 m/s).
+    "우리가 하려는 게 한국이 1등인 분야"라는 서사가 사실로 성립한다.</p>
+
+  <h3 id="deliv">공식 산출물과의 대응</h3>
+  <div class="tw"><table>
+    <tr><th style="width:26%">공식 산출물</th><th style="width:16%">시점</th><th>이 문서에서 대응하는 절</th></tr>
+    <tr><td><b>실증 수행계획서</b></td><td>W4 · 8월 말</td>
+        <td>Layer 1 문제정의 · Layer 5 지표/기준선/실패판정 · 멘토 확인 필요 항목</td></tr>
+    <tr><td><b>현장검증 리포트</b></td><td>W18 · 11월 말</td>
+        <td>Layer 5 실험 프로토콜에 따라 축적한 실험 기록 + 한계 서술</td></tr>
+    <tr><td><b>최종 실증결과 보고서</b></td><td>W20 · 12월</td>
+        <td>전 층위 종합 + 정량 지표 + 시연</td></tr>
+  </table></div>
+</section>
+
+<!-- ══════════════ 에필로그 ══════════════ -->
+<section class="layer" id="decide">
+  <div class="lh"><span class="num">＝</span><h2>그래서 우리는 무엇을 할 것인가</h2></div>
+  <p class="lsub">여기까지가 조사다. 이제 <b>우리가 내린 결정과 그 근거</b>를 한 장에 모은다.
+    <b>모든 결정에는 위 층위 중 어느 절에서 나왔는지가 붙어 있다.</b> 근거 없는 선택은 없다.</p>
+
+
+  <figure>
+    <svg viewBox="0 0 620 468" aria-label="프로젝트 전체 흐름 · 입력에서 산출물까지, 단계별 통과 조건 포함">
+      <defs>
+        <marker id="fa" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#0e7a6e"/></marker>
+        <marker id="fb" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#7c8798"/></marker>
+      </defs>
+
+      <!-- 열 제목 -->
+      <text x="70" y="20" font-size="9.4" font-weight="800" fill="#7c8798" text-anchor="middle">들어가는 것</text>
+      <text x="310" y="20" font-size="9.4" font-weight="800" fill="#161c26" text-anchor="middle">우리가 하는 일 · 20주</text>
+      <text x="546" y="20" font-size="9.4" font-weight="800" fill="#a86a08" text-anchor="middle">나오는 것</text>
+      <line x1="14" y1="27" x2="606" y2="27" stroke="#d9d6cd" stroke-width="1"/>
+
+      <!-- ═══ 1단계 ═══ -->
+      <rect x="146" y="38" width="328" height="50" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="158" y="55" font-size="9.6" font-weight="800" fill="#0e7a6e">W1–4 · 기반 구축</text>
+      <text x="158" y="70" font-size="8.6" fill="#161c26">전원이 각자 환경을 세우고 공개 정책을 1회씩 완주</text>
+      <text x="158" y="82" font-size="8" fill="#4a5566">＋ 문제정의 · 수요 조사 · 도메인 스터디</text>
+      <text x="464" y="55" font-size="7.6" fill="#0e7a6e" text-anchor="end" font-weight="700">전원</text>
+
+      <rect x="14" y="38" width="118" height="50" fill="#eeece6" stroke="#7c8798" stroke-width="1.2"/>
+      <text x="24" y="53" font-size="8.4" font-weight="700" fill="#161c26">주제</text>
+      <text x="24" y="65" font-size="7.6" fill="#4a5566">험지 적응 정책</text>
+      <text x="24" y="80" font-size="7.6" fill="#4a5566">Isaac Lab · 공개 정책</text>
+      <path d="M134,63 L142,63" stroke="#7c8798" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <rect x="488" y="38" width="118" height="50" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.2"/>
+      <text x="498" y="53" font-size="8.4" font-weight="800" fill="#a86a08">실증 수행계획서</text>
+      <text x="498" y="65" font-size="7.4" fill="#4a5566">＝ 공식 산출물 ①</text>
+      <text x="498" y="80" font-size="7.6" fill="#4a5566">학습 환경 절차서</text>
+      <path d="M476,63 L484,63" stroke="#a86a08" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <!-- 게이트 1 -->
+      <path d="M310,90 L310,104" stroke="#0e7a6e" stroke-width="1.8" marker-end="url(#fa)"/>
+      <rect x="186" y="94" width="248" height="16" fill="#fff" stroke="#a3342a" stroke-width="1.1"/>
+      <text x="310" y="106" font-size="8" font-weight="700" fill="#a3342a" text-anchor="middle">통과 조건, 공개 정책이 우리 환경에서 같은 곡선을 내는가</text>
+
+      <!-- ═══ 2단계 ═══ -->
+      <rect x="146" y="118" width="328" height="50" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="158" y="135" font-size="9.6" font-weight="800" fill="#0e7a6e">W5–9 · 기준 정책 확립</text>
+      <text x="158" y="150" font-size="8.6" fill="#161c26">보상 구조를 이해하고 지표 판독 체계를 세운다</text>
+      <text x="158" y="162" font-size="8" fill="#4a5566">＋ 지형 제작 파이프라인 · 단일변수 실험(변수별 분담)</text>
+      <text x="464" y="135" font-size="7.6" fill="#0e7a6e" text-anchor="end" font-weight="700">전원 분담</text>
+
+      <rect x="488" y="118" width="118" height="50" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="498" y="133" font-size="8.4" font-weight="800" fill="#0e7a6e">기준 정책</text>
+      <text x="498" y="146" font-size="7.4" fill="#4a5566">＋ 지표 세트</text>
+      <text x="498" y="161" font-size="7.4" fill="#a3342a" font-weight="700">이후 변경 금지</text>
+      <path d="M476,143 L484,143" stroke="#0e7a6e" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <path d="M310,170 L310,184" stroke="#0e7a6e" stroke-width="1.8" marker-end="url(#fa)"/>
+      <rect x="186" y="174" width="248" height="16" fill="#fff" stroke="#a3342a" stroke-width="1.1"/>
+      <text x="310" y="186" font-size="8" font-weight="700" fill="#a3342a" text-anchor="middle">통과 조건, 시드를 바꿔도 지표가 안정적으로 재현되는가</text>
+
+      <!-- ═══ 3단계 ═══ -->
+      <rect x="146" y="198" width="328" height="50" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="158" y="215" font-size="9.6" font-weight="800" fill="#0e7a6e">W10–16 · 확장</text>
+      <text x="158" y="230" font-size="8.6" fill="#161c26">커스텀 험지 커리큘럼 · 도메인 랜덤화로 강건성 확보</text>
+      <text x="158" y="242" font-size="8" fill="#4a5566">＋ 실공간 3DGS 재구성 <tspan fill="#7c8798">(조건부 착수)</tspan></text>
+
+      <rect x="14" y="198" width="118" height="50" fill="#eeece6" stroke="#7c8798" stroke-width="1.2" stroke-dasharray="3 2"/>
+      <text x="24" y="213" font-size="8.4" font-weight="700" fill="#161c26">현장 촬영</text>
+      <text x="24" y="225" font-size="7.6" fill="#4a5566">사진 → COLMAP</text>
+      <text x="24" y="240" font-size="7.6" fill="#4a5566">→ 3DGS + 메시</text>
+      <path d="M134,223 L142,223" stroke="#7c8798" stroke-width="1.3" marker-end="url(#fb)" stroke-dasharray="2 2"/>
+
+      <rect x="488" y="198" width="118" height="50" fill="#e0f0ed" stroke="#0e7a6e" stroke-width="1.6"/>
+      <text x="498" y="213" font-size="8.4" font-weight="800" fill="#0e7a6e">커스텀 지형 정책</text>
+      <text x="498" y="226" font-size="7.4" fill="#4a5566">＋ 비교 실험 기록</text>
+      <text x="498" y="241" font-size="7.4" fill="#4a5566">＋ 검증용 실공간 씬</text>
+      <path d="M476,223 L484,223" stroke="#0e7a6e" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <path d="M310,250 L310,264" stroke="#0e7a6e" stroke-width="1.8" marker-end="url(#fa)"/>
+      <rect x="186" y="254" width="248" height="16" fill="#fff" stroke="#a3342a" stroke-width="1.1"/>
+      <text x="310" y="266" font-size="8" font-weight="700" fill="#a3342a" text-anchor="middle">통과 조건, 기준 대비 변화를 지표로 설명할 수 있는가</text>
+
+      <!-- ═══ 4단계 ═══ -->
+      <rect x="146" y="278" width="328" height="50" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.8"/>
+      <text x="158" y="295" font-size="9.6" font-weight="800" fill="#a86a08">W15–18 · 실증 검증</text>
+      <text x="158" y="310" font-size="8.6" fill="#161c26">MuJoCo 교차검증 → 현장 조건 반영 → 정량 지표 산출</text>
+      <text x="158" y="322" font-size="8" fill="#4a5566">＋ Go2 EDU 확보 시 <tspan font-weight="700" fill="#a86a08">실기에서 sim-to-real 갭 측정</tspan></text>
+
+      <rect x="14" y="278" width="118" height="50" fill="#fff" stroke="#a86a08" stroke-width="1.4" stroke-dasharray="3 2"/>
+      <text x="24" y="293" font-size="8.4" font-weight="700" fill="#a86a08">Go2 EDU</text>
+      <text x="24" y="305" font-size="7.4" fill="#4a5566">AIR/PRO는 불가</text>
+      <text x="24" y="320" font-size="7.4" fill="#a3342a" font-weight="700">멘토 확인 1순위</text>
+      <path d="M134,303 L142,303" stroke="#a86a08" stroke-width="1.3" marker-end="url(#fb)" stroke-dasharray="2 2"/>
+
+      <rect x="488" y="278" width="118" height="50" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.2"/>
+      <text x="498" y="293" font-size="8.4" font-weight="800" fill="#a86a08">현장검증 리포트</text>
+      <text x="498" y="305" font-size="7.4" fill="#4a5566">＝ 공식 산출물 ②</text>
+      <text x="498" y="320" font-size="7.4" fill="#4a5566">한계까지 문서화</text>
+      <path d="M476,303 L484,303" stroke="#a86a08" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <path d="M310,330 L310,344" stroke="#0e7a6e" stroke-width="1.8" marker-end="url(#fa)"/>
+      <rect x="186" y="334" width="248" height="16" fill="#fff" stroke="#a3342a" stroke-width="1.1"/>
+      <text x="310" y="346" font-size="8" font-weight="700" fill="#a3342a" text-anchor="middle">통과 조건, 현장 기준으로 쓸 만한가 · 아니면 왜 아닌가</text>
+
+      <!-- ═══ 5단계 ═══ -->
+      <rect x="146" y="358" width="328" height="44" fill="#161c26"/>
+      <text x="158" y="375" font-size="9.6" font-weight="800" fill="#f6f5f1">W19–20 · 전달</text>
+      <text x="158" y="390" font-size="8.6" fill="#c7ccd4">시연 영상 · 최종 발표 · 결과 종합</text>
+
+      <rect x="488" y="358" width="118" height="44" fill="#fbf0dc" stroke="#a86a08" stroke-width="1.2"/>
+      <text x="498" y="373" font-size="8.4" font-weight="800" fill="#a86a08">최종 실증결과</text>
+      <text x="498" y="385" font-size="7.4" fill="#4a5566">＝ 공식 산출물 ③</text>
+      <text x="498" y="396" font-size="7.4" fill="#4a5566">＋ 비교 시연 영상</text>
+      <path d="M476,380 L484,380" stroke="#a86a08" stroke-width="1.3" marker-end="url(#fb)"/>
+
+      <!-- 하단 원칙 -->
+      <rect x="14" y="416" width="592" height="44" fill="#fff" stroke="#0e7a6e" stroke-width="1.5"/>
+      <text x="28" y="434" font-size="9.4" font-weight="800" fill="#0e7a6e">이 그림의 핵심, 단계가 그냥 흐르지 않는다. 통과 조건을 넘어야 다음으로 간다.</text>
+      <text x="28" y="450" font-size="8.6" fill="#4a5566">그리고 각 단계는 <tspan font-weight="700" fill="#161c26">거기서 멈춰도 발표 가능한 산출물</tspan>을 남긴다. 뒤가 막혀도 앞까지는 결과가 된다.</text>
+    </svg>
+    <figcaption><b>우리가 5개월간 실제로 만드는 것.</b>
+      왼쪽이 들어가는 것, 가운데가 하는 일, 오른쪽이 나오는 것이다.
+      <b>점선으로 표시한 두 입력</b>(현장 촬영 · Go2 EDU)은 <b>확보되면 프로젝트가 완성되고,
+      없어도 나머지는 그대로 굴러간다</b>. 의존을 최소화한 구조다.
+      <br><br>단계 사이의 붉은 띠가 <b>통과 조건</b>이다. 이걸 미리 정해 두는 이유는 두 가지, <b>① 안 되는 걸 붙잡고 5개월을 쓰지 않기 위해</b>,
+      <b>② 실패했을 때 "왜 실패했는지"가 곧 결과물이 되게 하기 위해서</b>다.</figcaption>
+  </figure>
+
+  <h3>결정 요약표, 모든 선택에는 근거가 있다</h3>
+  <div class="tw"><table>
+    <tr><th style="width:15%">결정 사항</th><th style="width:24%">우리의 선택</th><th>근거</th><th style="width:9%">출처</th></tr>
+    <tr class="hl"><td><b>관측 설계</b></td><td><b>blind proprioceptive</b><br>카메라·LiDAR를 관측에 넣지 않는다</td>
+        <td>① Go2 순정 하이트맵은 저수준 제어를 위해 MCF를 끄면 <b>함께 끊긴다</b>
+          ② L1 LiDAR는 뎁스카메라 대비 약 <b>560배 성기다</b>
+          ③ IMU에 자력계가 없어 <b>방향이 드리프트</b>→지도 왜곡
+          ④ 모래·자갈은 <b>뎁스로 봐도 밀도를 알 수 없다</b></td>
+        <td class="mono">L3·L4</td></tr>
+    <tr><td><b>아키텍처</b></td><td><b>단일 단계 비대칭 actor-critic</b><br>＋ 관측 이력 인코더</td>
+        <td>교사–학생의 이득(접촉 추정기 제거·암묵 적응)을 <b>한 번의 학습으로</b> 얻는다.
+          DreamWaQ가 2단계를 버린 이유, <b>모방은 교사가 성능 상한이 되고 데이터 효율이 나쁘다.</b>
+          무경험 팀에게 <b>디버깅 지점이 절반</b>이 되는 것이 결정적</td>
+        <td class="mono">L3</td></tr>
+    <tr><td><b>학습 알고리즘</b></td><td><b>PPO (rsl_rl)</b></td>
+        <td>안정적이고 대규모 병렬과 궁합이 좋으며 <b>하이퍼파라미터에 덜 민감</b>· RL 무경험 팀에 가장 무난하다</td>
+        <td class="mono">L2</td></tr>
+    <tr class="hl"><td><b>학습 환경</b></td><td><b>Isaac Lab</b><br>강체 지형 + 절차적 다양성</td>
+        <td>고충실도 입자 물리는 <b>"minor gains"에 "significant computational cost"</b>였고
+          절차적 다양성이 더 나은 미경험 지형 성능을 냈다.
+          Newton/MPM은 <b>8~12 FPS로 학습 자체가 불가</b></td>
+        <td class="mono">L1·L4</td></tr>
+    <tr class="hl"><td><b>평가 환경</b></td><td><b>MuJoCo 교차검증</b><br>(sim2sim)</td>
+        <td>정책이 <b>특정 엔진에서만 통하는 꼼수</b>를 배웠는지 걸러낸다.
+          Unitree 공식 코드에 이 단계가 <b>이미 있어</b> 추가 비용이 낮다</td>
+        <td class="mono">L4</td></tr>
+    <tr class="hl"><td><b>모래 대응</b></td>
+        <td>시뮬에서 모래를 만들지 않는다.<br><b>"미지의 지면 물성에 대한 강건성"을 학습하고<br>평가를 실제 모래·자갈에서</b></td>
+        <td>Isaac Lab에 granular 지형이 없고 <b>메인테이너가 "로드맵에도 없다"고 답했다.</b>
+          모른 채 진행하면 <b>5개월 뒤 "우리가 배운 건 모래가 아니었다"</b>가 된다.
+          문장을 바꾸면 시뮬 한계를 인정하면서 <b>실증이 곧 기여</b>가 된다</td>
+        <td class="mono">L1</td></tr>
+    <tr><td><b>확장 축</b></td><td><b>3DGS 실공간 재구성</b><br>· 단, <b>물리가 아니라 시나리오 재현용</b></td>
+        <td>3DGS는 렌더링을 해결하지 접촉 물리를 주지 않는다(저자들이 자인).
+          VR-Robo가 <b>Go2 + Isaac Sim</b>으로 우리와 동일 구성이고,
+          그 <b>한계("실내·정적 지형")가 우리가 채울 빈칸</b>이다</td>
+        <td class="mono">L3</td></tr>
+    <tr class="hl"><td><b>실기 검증</b></td><td><b>Go2 EDU 확보를 추진</b></td>
+        <td>AIR/PRO는 <b>RJ45가 없어 우리 정책을 올릴 경로 자체가 없다.</b>
+          실기가 있어야 진짜 sim-to-real gap을 측정할 수 있다.
+          <b>멘토 질문 1순위</b></td>
+        <td class="mono">L4</td></tr>
+    <tr><td><b>검증 지형</b></td><td>한국수자원공사 실증 항목에 맞춘다<br>
+          <span style="color:var(--dim)">협소공간 · 장애물 회피 · 철제 발판 · 계단</span></td>
+        <td>결과가 곧바로 <b>현장 언어로 번역</b>된다. 임의로 정한 지형은 실증 의미가 약하다</td>
+        <td class="mono">L5</td></tr>
+  </table></div>
+
+  <h3 id="delta">우리만의 델타, 같은 자리에 이미 누가 있다</h3>
+  <div class="stop">
+    <div class="kl">먼저 정직하게</div>
+    <p><b>MoE-Go2</b>(RSS 2026)는 <b>Unitree Go2</b>에서 <b>고유수용감각만으로</b>
+      눈·모래·계단·경사·30cm 장애물을 주파하고 <b>최고 4 m/s</b>를 냈다.
+      <b>하드웨어도 접근법도 우리와 같다.</b></p>
+    <p style="margin-top:8px">이건 <b>"우리 방향이 맞다"는 검증</b>인 동시에
+      <b>"성능으로는 차별화할 수 없다"</b>는 뜻이다. 5인 무경험 팀이 20주에
+      RSS 논문의 속도 기록을 넘을 수는 없다. <b>그러니 다른 축에서 기여해야 한다.</b></p>
+  </div>
+  <div class="tw"><table>
+    <tr><th style="width:22%">우리 델타</th><th>내용</th><th style="width:24%">왜 이게 비어 있나</th></tr>
+    <tr class="hl"><td><b>① 정량 평가 프로토콜</b></td>
+        <td>지형별 성공률 매트릭스 · <b>실패 판정 기준의 사전 선언</b> · 시드 3개 이상 · 재현 가능한 실험 기록.
+          <b>"얼마나 빠른가"가 아니라 "얼마나 믿을 수 있는가"를 측정한다</b></td>
+        <td>논문은 최고 성능을 보고하지, <b>현장 판정 기준을 만들지 않는다</b></td></tr>
+    <tr class="hl"><td><b>② 국내 최초 정량 데이터</b></td>
+        <td>무개입 주행거리 · 지형별 통과율 · 야간 무인 가동시간을 공개 가능한 형태로</td>
+        <td><b>국내 도입 사례 어디도 이 숫자를 공개하지 않았다</b>(POSCO·K-water·고려아연 전부)</td></tr>
+    <tr><td><b>③ 실공간 재현 검증</b></td>
+        <td>특정 현장을 3DGS로 복원해 <b>그 현장에서</b> 통하는지 확인</td>
+        <td>VR-Robo가 <b>"실내·정적 지형"</b>을 한계로 자인했다. 실외·험지가 빈칸</td></tr>
+  </table></div>
+  <div class="key">
+    <div class="kl">한 문장으로</div>
+    <p><b>우리는 더 빠르게 걷는 로봇을 만들지 않는다.
+      "이 정책을 현장에 넣어도 되는가"를 판정하는 방법을 만든다.</b>
+      그것이 연구가 아니라 <b>실증</b>이 하는 일이고, 지금 국내에 비어 있는 자리다.</p>
+  </div>
+
+  <h3>의도적으로 하지 않는 것. 그리고 그 이유</h3>
+  <div class="tw"><table>
+    <tr><th style="width:30%">배제 항목</th><th>이유</th></tr>
+    <tr><td>Newton / MPM 입자 모래 학습</td>
+        <td>RTX 4090에서 150만 파티클 <b>8~12 FPS</b>. Isaac Lab 병렬(수천 FPS) 대비 <b>3~4자릿수 차이</b>로 학습 불가.
+          Isaac Lab 통합도 "예정" 상태</td></tr>
+    <tr><td>뎁스 기반 perceptive 파이프라인</td>
+        <td>5개월 범위 초과 + <b>모래·자갈엔 원리적으로 부적합</b>. Miki et al.도 학습 시간의 40%를
+          "망가진 지도"에 써야 했다. 지도 파이프라인 전체를 얹어야 한다</td></tr>
+    <tr><td>ActuatorNet 1순위 도입</td>
+        <td>이게 극적이었던 건 ANYmal이 <b>직렬탄성 구동</b>이었기 때문. <b>Go2는 준직접구동(QDD)</b>이라
+          모터 모델 + 지연 + 마찰 랜덤화로 대개 충분하다</td></tr>
+    <tr><td>적대적 학습(RARL)</td>
+        <td>검증이 시뮬 환경뿐이고 <b>사족보행 실기 검증이 없다.</b>
+          랜덤 push force로 대부분의 효익을 훨씬 싸게 얻는다</td></tr>
+  </table></div>
+
+  <div class="key">
+    <div class="kl">한 문단으로</div>
+    <p>우리는 <b>"본 적 없는 지형을 보고 판단하는" 문제가 아니라, "기하로 기술되지 않는 지형을 밟아보고 적응하는" 문제</b>를 푼다.
+      학습은 Isaac Lab에서, 검증은 MuJoCo에서, 그리고 <b>가능하면 실기에서</b> 한다.
+      3DGS는 지형 물리의 해법이 아니라 <b>현장 시나리오를 재현하는 도구</b>로 쓴다.
+      각 단계마다 <b>멈춰도 발표 가능한 산출물</b>을 남기고, <b>실패 판정 기준을 미리 선언</b>한다.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 용어 사전 ══════════════ -->
+<section class="layer" id="glossary">
+  <div class="lh"><span class="num">＋</span><h2>용어 사전</h2></div>
+  <p class="lsub">본문에 나오지만 따로 설명하지 않고 지나간 것들. <b>읽다가 막히면 여기를 본다.</b></p>
+  <div class="key" style="background:var(--paper-2);border-color:var(--rule)">
+    <div class="kl" style="color:var(--ink-2)">배지가 알려주는 것. 이 지식이 얼마나 오래 쓰이는가</div>
+    <p style="font-size:.8rem"><span class="cf ok" style="background:var(--dim)">원리</span>
+      <b>도구가 바뀌어도 남는다.</b> 로봇공학·제어의 기초 개념이라 이 프로젝트가 끝나도 계속 쓰인다. <b>가장 먼저 익힐 것.</b></p>
+    <p style="font-size:.8rem;margin-top:6px"><span class="cf ok" style="background:var(--ink)">방법론</span>
+      <b>기계학습 전반에서 쓰인다.</b> 로봇이 아닌 분야로 가도 그대로 통한다.</p>
+    <p style="font-size:.8rem;margin-top:6px"><span class="cf ok" style="background:var(--note)">도구</span>
+      <b>이 프로젝트·이 하드웨어에 한정된다.</b> 지금 필요하지만 외울 필요는 없다. 필요할 때 찾아보면 되는 것들.</p>
+  </div>
+
+  <h3>학습 관련</h3>
+  <div class="gloss">
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">제로샷</div><div class="g2">zero-shot</div>
+      <div class="g3"><b>한 번도 안 겪어본 조건에서 추가 학습 없이 바로 해내는 것.</b>
+        "모래에서 학습한 적 없는데 모래를 걸었다"가 zero-shot이다.
+        이 분야에서 가장 중요한 평가 방식, 겪어본 걸 잘하는 건 당연하니까.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">증류</div><div class="g2">distillation</div>
+      <div class="g3">큰 모델(교사)이 배운 것을 <b>작거나 정보가 적은 모델(학생)에게 흉내내게 하는 학습법.</b>
+        우리는 "시뮬 정답을 본 교사"의 행동을 "관절 정보만 아는 학생"이 따라하게 만든다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">on-policy / off-policy</div><div class="g2">· </div>
+      <div class="g3"><b>on-policy</b>는 <b>지금 정책이 직접 겪은 경험만</b> 학습에 쓴다(PPO).
+        <b>off-policy</b>는 예전 경험도 저장해뒀다 재활용한다.
+        전자는 안정적이지만 경험이 많이 필요하고, 후자는 효율적이지만 불안정해지기 쉽다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">GAE</div><div class="g2">Generalized Advantage Estimation</div>
+      <div class="g3"><b>"이 행동이 평균보다 얼마나 좋았나"를 추정하는 방법.</b>
+        지금 받은 점수뿐 아니라 <b>앞으로 받을 점수까지</b> 고려해 계산한다.
+        그래서 <b>연속 25스텝 이상</b>을 봐야 제대로 작동한다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">액터–크리틱</div><div class="g2">actor–critic</div>
+      <div class="g3">학습을 두 신경망이 나눠 한다. <b>액터</b>는 행동을 정하고(=정책),
+        <b>크리틱</b>은 그 상황이 얼마나 좋은지 점수를 매긴다. <b>실기에 올라가는 건 액터뿐</b>이라,
+        크리틱에는 실기에 없는 정보를 줘도 된다. 이게 <b>비대칭 actor-critic</b>이다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">TCN</div><div class="g2">Temporal Convolutional Network</div>
+      <div class="g3"><b>시간 순서로 늘어선 데이터에서 패턴을 뽑는 신경망.</b>
+        우리 경우 "지난 2초간의 관절 움직임" 같은 시계열을 읽어
+        <b>방금 밟은 지형이 무엇이었는지</b>를 추론하는 데 쓴다.</div></div>
+  </div>
+
+  <h3>시뮬레이션 · 도구</h3>
+  <div class="gloss">
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">Isaac Sim vs Isaac Lab</div><div class="g2">· </div>
+      <div class="g3"><b>Isaac Sim</b>은 NVIDIA의 로봇 시뮬레이터 본체(그래픽·물리 엔진).
+        <b>Isaac Lab</b>은 그 위에 얹는 <b>강화학습 전용 도구모음</b>. 환경 정의, 보상, 병렬 실행을 담당한다.
+        <b>Sim이 무대라면 Lab은 연출 도구</b>다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">PhysX</div><div class="g2">· </div>
+      <div class="g3">Isaac Sim이 쓰는 <b>물리 계산 엔진.</b> 중력·충돌·마찰을 계산한다.
+        <b>여기에 입상체(모래) 지형이 없다</b>는 것이 우리 프로젝트의 결정적 제약이다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">TensorBoard</div><div class="g2">· </div>
+      <div class="g3"><b>학습이 어떻게 진행되는지 그래프로 보여주는 웹 대시보드.</b>
+        학습 중 로봇이 받은 보상, 에피소드가 얼마나 오래 갔는지, 보상 항목별 값이
+        <b>시간축 위에 그려진다.</b> 학습을 돌려놓고 이걸 열어 두면 잘 되고 있는지 바로 보인다.
+        <br><b>가장 중요한 기능은 여러 실험을 겹쳐 보는 것</b>. "A 설정과 B 설정 중 뭐가 나았나"를
+        곡선 두 개로 비교한다. <b>우리 "한 번에 하나만 바꾼다" 규칙이 여기서 결실을 맺는다.</b></div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">rsl_rl</div><div class="g2">· </div>
+      <div class="g3">취리히공대(ETH)가 만든 <b>가볍고 빠른 강화학습 라이브러리.</b>
+        PPO 구현이 들어 있고 Isaac Lab의 기본 학습기다. <b>우리가 실제로 돌릴 코드가 이것</b>이다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">sim2sim</div><div class="g2">· </div>
+      <div class="g3"><b>시뮬레이터 A에서 학습한 정책을 시뮬레이터 B에서 돌려보는 것.</b>
+        실물에 올리기 전 마지막 관문이다. 여기서 무너지면 실물에서도 무너진다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">URDF</div><div class="g2">Unified Robot Description Format</div>
+      <div class="g3"><b>로봇의 생김새와 물리 성질을 적어놓은 파일.</b>
+        링크 길이·질량·관절 축·가동범위·최대 토크가 전부 들어 있다.
+        우리가 확인한 <b>"무릎만 45.43 N·m"</b>도 이 파일에서 직접 읽은 값이다.</div></div>
+    <div class="gt"><div class="kind met">방법론</div><div class="g1">체크포인트</div><div class="g2">checkpoint</div>
+      <div class="g3"><b>학습 중간에 저장한 신경망 가중치 파일.</b>
+        "사전학습 정책을 받아온다"는 건 남이 학습시켜 저장한 이 파일을 쓴다는 뜻이다.</div></div>
+  </div>
+
+  <h3>로봇 · 하드웨어</h3>
+  <div class="gloss">
+    <div class="gt"><div class="kind pri">원리</div><div class="g1">준직접구동</div><div class="g2">QDD · quasi-direct-drive</div>
+      <div class="g3">모터와 관절 사이 <b>기어 감속을 최소로</b> 한 구조.
+        힘은 덜 세지지만 <b>바깥에서 온 힘이 모터까지 그대로 전달</b>돼,
+        모터 전류만 보고도 발끝에 걸린 힘을 짐작할 수 있다. Go2가 이 방식이다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">ROS2</div><div class="g2">Robot Operating System 2</div>
+      <div class="g3">로봇 프로그램들이 서로 데이터를 주고받게 해주는 <b>미들웨어이자 생태계.</b> 업계 표준에 가깝다.
+        <br><b>그런데 우리 경로에는 들어가지 않는다.</b> 학습은 시뮬레이터 안에서 끝나고,
+        실기 배포도 Unitree 공식 파이프라인이 <b>DDS에 직접 붙기 때문</b>이다.
+        <br>헷갈리기 쉬운 점, <b>ROS2도 내부적으로 DDS를 쓴다.</b> 그래서 Go2 메시지가 ROS2와 호환되지만,
+        <b>ROS2 없이 DDS에 직접 붙는 게 더 짧은 경로</b>다. 500Hz 저수준 제어에는 중간 계층이 적을수록 유리하다.
+        <br>필요해지는 시점은 <b>모듈이 여러 개가 될 때</b>(지도 작성 + 경로 계획 + 보행 + 촬영)다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">DDS</div><div class="g2">Data Distribution Service</div>
+      <div class="g3">로봇 내부 프로그램들이 <b>데이터를 주고받는 통신 규약.</b>
+        Go2의 저수준 제어가 이 위에서 돌고, <b>유선 이더넷을 전제</b>로 한다. AIR/PRO에 RJ45가 없어 저수준 제어가 불가능한 이유가 이것이다.</div></div>
+    <div class="gt"><div class="kind tool">도구</div><div class="g1">MCF</div><div class="g2">Motion Control Function</div>
+      <div class="g3">Go2에 <b>공장에서 이미 들어 있는 보행 제어 프로그램.</b>
+        리모컨으로 조종할 때 실제로 걷게 하는 것이 이것이다.
+        <b>우리 정책을 올리려면 이걸 꺼야 하고, 끄면 몸통 속도 추정치와 하이트맵도 함께 사라진다.</b></div></div>
+    <div class="gt"><div class="kind pri">원리</div><div class="g1">IMU</div><div class="g2">Inertial Measurement Unit</div>
+      <div class="g3"><b>기울기와 회전을 재는 센서.</b> 자이로(회전 속도) + 가속도계로 구성된다.
+        스마트폰에도 들어 있는 그것이다. <b>Go2 IMU에는 자력계가 없어</b> 방향이 서서히 어긋난다.</div></div>
+    <div class="gt"><div class="kind pri">원리</div><div class="g1">이동 비용</div><div class="g2">CoT · Cost of Transport</div>
+      <div class="g3"><b>단위 무게를 단위 거리 옮기는 데 드는 에너지.</b> 낮을수록 효율적이다.
+        로봇끼리, 그리고 동물과도 비교할 수 있는 표준 지표라 논문에 자주 나온다.</div></div>
+    <div class="gt"><div class="kind pri">원리</div><div class="g1">외란</div><div class="g2">disturbance</div>
+      <div class="g3"><b>예상치 못한 외부 힘.</b> 옆에서 미는 것, 바람, 짐이 흔들리는 것 등.
+        학습 중에 일부러 무작위로 밀어서 <b>회복 능력을 기르게</b> 한다.</div></div>
+  </div>
+
+  <h3>이 문서에서 쓰는 표기</h3>
+  <div class="tw"><table>
+    <tr><th style="width:16%">표기</th><th>뜻</th></tr>
+    <tr><td><span class="cf ok">확인</span></td><td>논문 원문·공식 문서·소스 코드를 <b>직접 열어서</b> 확인한 것</td></tr>
+    <tr><td><span class="cf part">부분</span></td><td>2차 출처로 교차 확인했으나 <b>원문 전체는 못 본 것</b>(페이월 등)</td></tr>
+    <tr><td><span class="cf no">미확인</span></td><td><b>근거를 확보하지 못한 것. 판단이나 발표에 쓰지 않는다</b></td></tr>
+    <tr><td><b>★</b></td><td>이 문서에서 특히 중요하다고 판단한 지점</td></tr>
+  </table></div>
+</section>
+
+<!-- ══════════════ 선행 연구 ══════════════ -->
+<section class="layer" id="papers">
+  <div class="lh"><span class="num">REF</span><h2>선행 연구 지도</h2></div>
+  <p class="lsub">각 논문마다 <b>무엇을 풀었나 / 한계는 무엇인가 / 우리가 가져갈 것</b>으로 정리했다.
+    <b>한계를 아는 것이 논문을 아는 것</b>이다.</p>
+
+  <div class="paper">
+    <div class="pt">Learning to Walk in Minutes Using Massively Parallel Deep RL</div>
+    <div class="pm">Rudin, Hoeller, Reist, Hutter (ETH) · CoRL 2021 · arXiv 2109.11978</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd>단일 GPU 대규모 병렬 + 게임식 지형 커리큘럼. 오늘날 모든 <code>legged_gym</code> 파생과
+        Isaac Lab locomotion 환경의 <b>조상</b>이다.</dd>
+      <dt class="lim">논문이 직접 명시한 한계</dt>
+      <dd>① 배치 크기 트레이드오프, 적으면 그래디언트 노이즈, 많으면 샘플 중복
+        ② <b>GAE는 연속 25스텝 미만이면 학습 붕괴</b>
+        ③ PPO는 on-policy라 업데이트마다 데이터를 버리는 <b>본질적 샘플 비효율</b></dd>
+      <dt class="take">우리가 가져갈 것</dt>
+      <dd>지형 커리큘럼 설계를 그대로 차용. <b>"25스텝" 제약은 rollout 길이 설정 시 바로 쓰이는 실무 숫자</b>다.</dd>
+    </dl>
+    <div class="links"><a class="ext" href="https://leggedrobotics.github.io/legged_gym/" target="_blank" rel="noopener">프로젝트 ↗</a>
+      <a class="ext" href="https://arxiv.org/abs/2109.11978" target="_blank" rel="noopener">논문 ↗</a></div>
+  </div>
+
+  <div class="paper">
+    <div class="pt">RMA: Rapid Motor Adaptation for Legged Robots</div>
+    <div class="pm">Kumar, Fu, Pathak, Malik (UC Berkeley / CMU) · RSS 2021 · arXiv 2107.04034</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd>기본 정책 + 적응 모듈. 시뮬만으로 학습해 Unitree A1에 <b>파인튜닝 없이</b> 배포.
+        검증 지형에 <b>자갈·계단·모래</b>가 포함돼 우리 타깃과 일치한다.</dd>
+      <dt>★ 용어 정정</dt>
+      <dd>초록의 "0.1초 만에 적응"은 <b>현장에서 학습한다는 뜻이 아니다.</b>
+        본문은 <i>"완전히 시뮬레이션에서 학습하고, 아무 수정이나 파인튜닝 없이 배포한다"</i>고 명시한다.
+        <b>"Online"은 학습이 아니라 실시간 "추정"</b>이다.</dd>
+      <dt class="lim">한계</dt>
+      <dd>저자 자인 <b>blind</b>. 계단 하강 중 급낙하, 돌에 다리 여러 개가 걸리는 큰 외란에서 실패.
+        <i>"진정으로 신뢰할 만한 보행 로봇을 만들려면 고유수용감각뿐 아니라 외수용감각도 써야 한다."</i></dd>
+      <dt class="take">★ 중요한 구분</dt>
+      <dd>RMA의 환경벡터에서 <b>지형은 국소 높이 스칼라 1개</b>가 전부다.
+        RMA의 잠재변수는 <b>동역학 파라미터의 압축</b>이지 지형 형상의 표현이 아니다.
+        <b>"험지 적응"에 대응하는 건 RMA가 아니라 Lee et al. 계열이다.</b></dd>
+    </dl>
+    <div class="links"><a class="ext" href="https://ashish-kmr.github.io/rma-legged-robots/" target="_blank" rel="noopener">프로젝트 ↗</a>
+      <a class="ext" href="https://arxiv.org/abs/2107.04034" target="_blank" rel="noopener">논문 ↗</a></div>
+  </div>
+
+  <div class="paper">
+    <div class="pt">Learning robust perceptive locomotion for quadrupedal robots in the wild</div>
+    <div class="pm">Miki, Lee, 황보제민, Wellhausen, Koltun, Hutter (ETH) · Science Robotics 7(62), 2022</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd>고유수용 + 외수용을 하나의 순환 신경망으로 통합.
+        <b>시그모이드 게이트가 "지도를 얼마나 믿을지"를 스스로 조절</b>한다.
+        지도가 못 믿을 때 자동으로 고유수용감각으로 폴백.</dd>
+      <dt>실측</dt><dd>알프스 2.2km/고도 120m를 <b>31분에 정상 도달</b>(인간 권장 35분).
+        DARPA SubT 우승팀 CERBERUS의 기본 컨트롤러, <b>1700m 이상 탐사, 전도 0회</b></dd>
+      <dt>★ 진짜 발명</dt>
+      <dd>게이트 구조가 아니라 <b>학습 방법</b>이다. 시뮬 노이즈를 3조건으로 섞었다. <b>정상 60% / 큰 오프셋 30% / 정보 완전 부재 10%</b>.
+        <b>학습 시간의 40%를 "지도가 망가진 경험"에 썼기 때문에</b> 폴백 능력이 생겼다.</dd>
+      <dt class="lim">한계</dt>
+      <dd>눈·수풀·물이 밟을 수 없는 장애물로 보이거나 아예 안 보임. 조명·먼지·안개·반사면에서 뎁스 열화.</dd>
+      <dt class="take">우리가 가져갈 것</dt>
+      <dd><b>5개월 안엔 구현하지 말되, 문제정의로 인용한다.</b>
+        "모래는 뎁스로 봐도 밀도를 알 수 없다" → <b>모래·자갈에는 시각이 원리적으로 답이 아니다</b>.
+        이게 우리 접근의 핵심 논거다.</dd>
+    </dl>
+    <div class="links"><a class="ext" href="https://leggedrobotics.github.io/rl-perceptiveloco/" target="_blank" rel="noopener">프로젝트 ↗</a>
+      <a class="ext" href="https://arxiv.org/abs/2201.08117" target="_blank" rel="noopener">논문 ↗</a></div>
+  </div>
+
+  <div class="paper">
+    <div class="pt">DreamWaQ · 암묵적 지형 상상</div>
+    <div class="pm">Nahrendra, Yu, 명현 (KAIST 미래도시로봇연구실) · ICRA 2023 · arXiv 2301.10602</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd><b>관절 엔코더 + IMU만</b>으로 계단·험지. 인코더 하나가
+        몸통 선속도와 잠재 지형 컨텍스트를 동시 추정하고,
+        잠재변수는 <b>"다음 관측을 맞혀라"</b>로 학습된다 → 다음 몸의 느낌을 맞히려면 지형을 알아야 하므로
+        <b>라벨 없이 지형 정보가 자발적으로 들어앉는다</b>.</dd>
+      <dt>실측</dt><dd><b>1ms 미만 온보드 연산</b> · 몸체 높이 약 2/3 계단 극복.
+        후속 DreamWaQ++는 <b>계단 50개를 35초</b> · <b>35° 경사</b>(학습조건의 3.5배) ·
+        <b>27cm 학습 후 42cm 계단 성공률 약 80%</b>. <b>검증 플랫폼에 Unitree Go1 포함</b></dd>
+      <dt class="take">★ 우리에게 가장 가까운 벤치마크</dt>
+      <dd><b>국내 + Go1급 저가 플랫폼 + 고유수용감각만</b>이라는 3박자가 우리 팀 조건과 가장 가깝다.
+        같은 팀이 ICRA 2023 사족로봇 자율보행 경진대회 <b>1위</b>(246점, 2위 MIT 60점).</dd>
+    </dl>
+    <div class="links"><a class="ext" href="https://sites.google.com/view/dreamwaq" target="_blank" rel="noopener">프로젝트 ↗</a>
+      <a class="ext" href="https://arxiv.org/abs/2301.10602" target="_blank" rel="noopener">논문 ↗</a></div>
+  </div>
+
+  <div class="paper">
+    <div class="pt">Robot Parkour Learning / Extreme Parkour</div>
+    <div class="pm">Zhuang et al. · Cheng et al. · CoRL 2023 / ICRA 2024</div>
+    <dl>
+      <dt>무엇을 풀었나</dt><dd>참조 모션 없이 단순 보상으로 파쿠르 학습.
+        0.40m 장애물 등반(로봇 높이 1.53배) · 0.60m 간극 도약 · 자기 키 2배 장애물 고점프 · 물구나무</dd>
+      <dt class="lim">★ 후속 논문 PIE의 명시적 비판</dt>
+      <dd>Zhuang et al.에 대해, <i>"특권 물리 정보가 시뮬레이션 장애물의 <b>기하학적 속성</b>에 강하게 연관되어 있다"</i>
+        → <b>기하만으로 기술될 수 없는 지형에는 학습이 어렵다</b><br>
+        Cheng et al.에 대해, <i>"지형 기반 waypoint의 수동 지정이 상당한 제약을 부과한다"</i>,
+        <i>"2단계 학습 패러다임이 정보 손실과 성능 저하를 낳는다"</i></dd>
+      <dt class="take">★ 우리 프로젝트의 정당성</dt>
+      <dd><b>PIE의 첫 번째 비판이 곧 우리 프로젝트의 존재 이유다.</b>
+        파쿠르 계열은 "기하학적으로 정의된 장애물"을 풀었고,
+        <b>모래·자갈처럼 기하가 아니라 물성으로 정의되는 지형은 미해결 영역</b>으로 남아 있다.</dd>
+    </dl>
+    <div class="links"><a class="ext" href="https://robot-parkour.github.io" target="_blank" rel="noopener">Robot Parkour ↗</a>
+      <a class="ext" href="https://extreme-parkour.github.io/" target="_blank" rel="noopener">Extreme Parkour ↗</a>
+      <a class="ext" href="https://github.com/ZiwenZhuang/parkour" target="_blank" rel="noopener">코드 (Go2 배포 가이드 포함) ↗</a></div>
+  </div>
+
+  <h3>실전 코드베이스</h3>
+  <div class="tw"><table>
+    <tr><th style="width:22%">저장소</th><th>확인 내용</th></tr>
+    <tr class="hl"><td><b>unitree_rl_lab</b><br><span style="color:var(--dim);font-size:.9em">Unitree 공식</span></td>
+      <td>Go2/H1/G1. <b>IsaacSim 5.1.0 + Isaac Lab 2.3.0</b>, rsl_rl.
+        <b>3단 구조: Isaac Lab 학습 → MuJoCo sim2sim → 실기.</b> 우리 전략과 그대로 맞는다</td></tr>
+    <tr><td><b>robot_lab</b></td><td>Isaac Lab v2.3.2 + rsl_rl, Go2 지원, 멀티GPU. sim2real은 별도 레포 필요</td></tr>
+    <tr><td><b>walk-these-ways-go2</b></td><td>Go1→Go2 포팅. <b>Go2 사전학습 모델 포함</b>. 진입 비용이 낮다</td></tr>
+    <tr><td><b>PGTT</b></td><td>Go2 perceptive locomotion <b>사실상 유일한 실증 사례</b>(IROS 2026 공식 코드).
+      Point-LIO + Elevation Mapping + L1 LiDAR</td></tr>
+  </table></div>
+</section>
+
+<!-- ══════════════ 모르는 것 ══════════════ -->
+<section class="layer" id="unknown">
+  <div class="lh"><span class="num">Q</span><h2>우리가 아직 모르는 것</h2></div>
+  <p class="lsub">아는 것만 적은 문서는 신뢰할 수 없다.
+    <b>확인하지 못한 것과, 멘토에게 물어야 할 것을 명시한다.</b></p>
+
+  <h3>멘토에게 물을 것. 우선순위 순</h3>
+  <div class="tw"><table>
+    <tr><th style="width:6%" class="c">#</th><th style="width:40%">질문</th><th>왜 이게 중요한가</th></tr>
+    <tr class="hl"><td class="c mono"><b>1</b></td>
+      <td><b>사업단 차원에 Unitree Go2 EDU 실기 접근 경로가 있습니까?</b></td>
+      <td>AIR/PRO는 RJ45가 없어 우리 정책을 올릴 <b>경로 자체가 없다</b>.
+        실기가 있어야 진짜 sim-to-real gap을 측정할 수 있다</td></tr>
+    <tr class="hl"><td class="c mono"><b>2</b></td>
+      <td><b>실증 결과를 "통과"로 판정하는 현장 기준은 무엇입니까?</b></td>
+      <td>연구는 성공률로 말하지만 현장은 다른 기준을 쓴다.
+        이걸 모르면 5개월 뒤 지표는 좋은데 현장에서 못 쓰는 결과가 나온다</td></tr>
+    <tr><td class="c mono"><b>3</b></td>
+      <td>사람과 같은 공간에서 로봇을 검증할 때 <b>지켜야 할 안전 요건</b>은?</td>
+      <td>멘토의 전문 분야(동적 보호분리거리·ISO 13855)와 직결. 우리에게 완전히 없는 지식</td></tr>
+    <tr><td class="c mono"><b>4</b></td>
+      <td>현장 점검 임무에서 <b>실제로 가치 있는 데이터</b>는 무엇입니까?</td>
+      <td>"순찰한다"가 아니라 무엇을 보고 무엇을 기록해야 쓸모가 있는지</td></tr>
+    <tr><td class="c mono"><b>5</b></td>
+      <td>실증 수행계획서에서 <b>가장 자주 지적받는 부분</b>은?</td>
+      <td>8월 말 제출 전에 알면 한 번의 반복을 줄일 수 있다</td></tr>
+  </table></div>
+
+  <h3>확인하지 못한 것. 인용 금지 목록</h3>
+  <p>아래는 <b>근거를 확보하지 못했으므로 판단이나 발표에 쓰지 않는다.</b></p>
+  <div class="tw"><table>
+    <tr><th style="width:32%">항목</th><th>상태</th></tr>
+    <tr><td>KAIST 2023 모래 논문 <b>본문</b></td><td>페이월. 모델 수식·계산비용·Isaac Lab 이식 가능성 미확인</td></tr>
+    <tr><td>Go2 관절 모터 <b>공식 모델명·데이터시트</b></td><td>존재하지 않음. GO-M8010-6은 Go1용(감속비 6.33 vs Go2 6.22 → 다른 유닛)</td></tr>
+    <tr><td>Go2 8-core CPU의 <b>실제 SoC 모델명</b></td><td>미공개. 커뮤니티의 RK3588 추측은 <b>검증 실패</b></td></tr>
+    <tr><td>Go2 카메라 실제 사양</td><td><b>공식 문서 3곳이 서로 충돌</b>(15/30/60 fps, 100°/120°). 실측 필요</td></tr>
+    <tr><td>엔코더 해상도 · IMU 칩 모델·노이즈</td><td>미공개</td></tr>
+    <tr><td>Hoyt &amp; Taylor 1981의 정확한 전이 속도</td><td>페이월. 인터넷의 "4.4 m/s trot"은 <b>다른 논문 값</b></td></tr>
+    <tr><td>Froude number 구간표</td><td>웹에 도는 "Walk 0.0–1.5 / Trot 1.51–2.5" 표는 <b>1차 출처 특정 실패</b></td></tr>
+    <tr><td><b>QuadVerse</b> (3DGS×사족 프레임워크)</td><td><b>논문 실체 확인 실패</b></td></tr>
+  </table></div>
+  <div class="warn">
+    <div class="kl">발견한 오류, 널리 퍼져 있으니 주의</div>
+    <ul class="body" style="color:var(--ink)">
+      <li><b>"Go2 최대 관절토크 45 N·m"</b> → 무릎만. hip/thigh는 23.7 N·m</li>
+      <li><b><code>foot_force_est</code></b> → 중문 원문은 <b>"레거시, 현재 미사용"</b>. 영문판이 오역. <b>쓰지 말 것</b></li>
+      <li><b>"Go2 최대속도 5 m/s"</b> → 매뉴얼 원문이 <i>"실험실에서 측정"</i>. 실사양은 3.5/3.7 m/s</li>
+      <li>커뮤니티 저장소의 <b>"속도별 gait 자동전환표"</b> → Unitree 공식이 아니라 그 저장소 작성자의 자체 구현</li>
+      <li>일부 블로그의 <b>"peak joint torque 345 N·m"</b> → 명백한 오류</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ─────────── 보행 패턴 인터랙티브 도식 ───────────
+   각 gait = { duty, phase:[LH, LF, RH, RF] }
+   phase는 0~1, 착지 시점. 색칠 구간 = 접지(stance)
+   다리 순서: LH(왼뒤) LF(왼앞) RH(오른뒤) RF(오른앞)
+*/
+const GAITS = {
+  walk:{ label:'Walk 걷기', duty:0.75, phase:[0,0.25,0.5,0.75],
+    beat:'4박', who:'말 · 개 · 고양이 등 대부분',
+    note:'항상 3발이 땅에 있다. 유일하게 정적으로 안정한 gait.',
+    why:'가장 느리지만 가장 안전하다. 아무 순간에 정지해도 안 넘어진다.'},
+  trot:{ label:'Trot 속보', duty:0.5, phase:[0,0.5,0.5,0],
+    beat:'2박 · 대각쌍', who:'말 · 개 · 고양이',
+    note:'대각선 두 발이 동시에 움직인다. 4족 로봇의 사실상 표준.',
+    why:'지지선이 무게중심 아래를 대각선으로 관통해 앞뒤·좌우가 동시에 잡힌다. 그리고 예측 없이 반응만으로 굴러가는 유일한 동적 gait이다.'},
+  pace:{ label:'Pace 측대보', duty:0.5, phase:[0,0,0.5,0.5],
+    beat:'2박 · 동측쌍', who:'낙타 · 기린 · 곰',
+    note:'같은 쪽 두 발이 동시에 움직인다.',
+    why:'지지선이 옆구리로 치우쳐 좌우로 잘 넘어진다. 그래서 이걸 쓰는 동물은 다리가 아주 길다.'},
+  bound:{ label:'Bound 바운드', duty:0.4, phase:[0,0.5,0,0.5],
+    beat:'2박 · 전후쌍', who:'토끼 · 다람쥐',
+    note:'뒷다리쌍 → 앞다리쌍. 몸통을 접었다 펴며 추진한다.',
+    why:'몸통의 굽힘을 추진에 쓸 수 있어 작은 동물에게 유리하다. 제어에는 공중기 예측이 필요하다.'},
+  gallop:{ label:'Gallop 습보', duty:0.3, phase:[0,0.6,0.15,0.75],
+    beat:'4박 · 비대칭', who:'말 · 치타 · 개',
+    note:'네 발이 각각 다른 시점에 착지. 공중기가 있다.',
+    why:'최고 속도용. 흥미롭게도 전환 이유는 에너지 절약이 아니라 근골격 최대 힘 회피다.'},
+};
+const LEGNAME = ['왼 뒤','왼 앞','오른 뒤','오른 앞'];
+const LEGABBR = ['LH','LF','RH','RF'];
+
+let cur='trot', t=0, playing=true, speed=70, raf=null;
+
+const pick=document.getElementById('gaitPick');
+Object.keys(GAITS).forEach(k=>{
+  const b=document.createElement('button');
+  b.textContent=GAITS[k].label; b.dataset.k=k;
+  if(k===cur)b.className='on';
+  b.onclick=()=>{cur=k;t=0;
+    [...pick.children].forEach(c=>c.className=c.dataset.k===k?'on':'');
+    drawInfo();draw();};
+  pick.appendChild(b);
+});
+
+function inStance(ph,duty,time){
+  // time, ph ∈ [0,1). 착지 ph부터 duty만큼 접지 (wrap 포함)
+  let d=(time-ph+1)%1;
+  return d < duty;
+}
+
+function draw(){
+  const g=GAITS[cur];
+  const W=620,H=210, L=52, R=596, top=42, rowH=30, barH=17;
+  const span=R-L;
+  let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="none"/>`;
+  // 배경 격자 (25% 단위)
+  for(let i=0;i<=4;i++){
+    const x=L+span*i/4;
+    s+=`<line x1="${x}" y1="${top-8}" x2="${x}" y2="${top+4*rowH-4}" stroke="#e6e3da" stroke-width="1"/>`;
+    s+=`<text x="${x}" y="${top+4*rowH+14}" font-size="8.5" fill="#7c8798" text-anchor="middle">${i*25}%</text>`;
+  }
+  s+=`<text x="${(L+R)/2}" y="${top+4*rowH+30}" font-size="9" fill="#7c8798" text-anchor="middle">한 걸음 주기 (stride)</text>`;
+  s+=`<text x="${L}" y="${top-16}" font-size="9.5" font-weight="700" fill="#161c26">접지 구간: 색이 있는 동안 그 발이 땅에 있다</text>`;
+
+  g.phase.forEach((ph,i)=>{
+    const y=top+i*rowH;
+    s+=`<text x="${L-8}" y="${y+barH-4}" font-size="9" fill="#4a5566" text-anchor="end">${LEGABBR[i]}</text>`;
+    s+=`<rect x="${L}" y="${y}" width="${span}" height="${barH}" fill="#f2f0ea"/>`;
+    // 접지 막대 (wrap 처리 위해 두 조각 가능)
+    const st=ph, en=ph+g.duty;
+    const segs = en<=1 ? [[st,en]] : [[st,1],[0,en-1]];
+    segs.forEach(([a,b])=>{
+      s+=`<rect x="${L+span*a}" y="${y}" width="${span*(b-a)}" height="${barH}" fill="#0e7a6e" opacity=".85"/>`;
+    });
+    // 현재 시각에 접지면 밝게
+    if(inStance(ph,g.duty,t)){
+      s+=`<rect x="${L}" y="${y}" width="${span}" height="${barH}" fill="none" stroke="#a86a08" stroke-width="1.6"/>`;
+    }
+  });
+  // 현재 시각 커서
+  const cx=L+span*t;
+  s+=`<line x1="${cx}" y1="${top-10}" x2="${cx}" y2="${top+4*rowH-4}" stroke="#a86a08" stroke-width="2"/>`;
+  s+=`<circle cx="${cx}" cy="${top-12}" r="3.5" fill="#a86a08"/>`;
+  document.getElementById('gaitChart').innerHTML=s;
+
+  // ── 위에서 본 그림
+  const g2=GAITS[cur];
+  const cxs=[62,62,138,138], cys=[140,72,140,72]; // LH,LF,RH,RF
+  let v=`<text x="100" y="20" font-size="9.5" font-weight="700" fill="#161c26" text-anchor="middle">위에서 본 접지 상태</text>`;
+  v+=`<text x="100" y="34" font-size="8" fill="#7c8798" text-anchor="middle">▲ 진행 방향</text>`;
+  // 몸통
+  v+=`<rect x="76" y="66" width="48" height="82" rx="12" fill="#eeece6" stroke="#d9d6cd" stroke-width="1.4"/>`;
+  v+=`<path d="M100,52 L108,64 L92,64 Z" fill="#7c8798"/>`;
+  g2.phase.forEach((ph,i)=>{
+    const on=inStance(ph,g2.duty,t);
+    v+=`<line x1="100" y1="${cys[i]<100?86:128}" x2="${cxs[i]}" y2="${cys[i]}" stroke="${on?'#0e7a6e':'#d9d6cd'}" stroke-width="${on?2.4:1.6}"/>`;
+    v+=`<circle cx="${cxs[i]}" cy="${cys[i]}" r="${on?11:8}" fill="${on?'#0e7a6e':'#fff'}" stroke="${on?'#0e7a6e':'#d9d6cd'}" stroke-width="2"/>`;
+    v+=`<text x="${cxs[i]}" y="${cys[i]+3.5}" font-size="8" font-weight="700" fill="${on?'#fff':'#7c8798'}" text-anchor="middle">${LEGABBR[i]}</text>`;
+  });
+  const cnt=g2.phase.filter((ph)=>inStance(ph,g2.duty,t)).length;
+  v+=`<text x="100" y="176" font-size="10" font-weight="800" fill="#161c26" text-anchor="middle">땅에 닿은 발: ${cnt}개</text>`;
+  v+=`<text x="100" y="192" font-size="8.5" fill="#7c8798" text-anchor="middle">${cnt>=3?'정적으로 안정':cnt===2?'동적 균형 필요':cnt<=1?'공중기 · 낙하 중':''}</text>`;
+  document.getElementById('gaitTop').innerHTML=v;
+}
+
+function drawInfo(){
+  const g=GAITS[cur];
+  document.getElementById('gaitInfo').innerHTML=`
+    <div class="gi"><b>박자</b><span>${g.beat}</span></div>
+    <div class="gi"><b>접지비율</b><span><span style="font-family:Consolas,monospace">duty factor = ${g.duty}</span>
+      &nbsp;→ ${g.duty>0.5?'<b>걷기</b>(항상 한 발 이상 접지)':'<b>달리기</b>(역학적 정의)'}</span></div>
+    <div class="gi"><b>쓰는 동물</b><span>${g.who}</span></div>
+    <div class="gi"><b>특징</b><span>${g.note}</span></div>
+    <div class="gi"><b>왜</b><span>${g.why}</span></div>`;
+}
+
+function tick(){
+  if(playing){ t=(t+0.0016*speed/70)%1; draw(); }
+  raf=requestAnimationFrame(tick);
+}
+document.getElementById('gaitPlay').onclick=function(){
+  playing=!playing; this.textContent=playing?'⏸ 정지':'▶ 재생';
+};
+document.getElementById('gaitSpeed').oninput=function(){
+  speed=+this.value;
+  document.getElementById('gaitSpd').textContent='×'+(speed/70).toFixed(1);
+};
+drawInfo(); draw(); tick();
+
+/* ─────────── 네비 현재 위치 ─────────── */
+const links=[...document.querySelectorAll('#nav .L > a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+    }
+  });
+},{rootMargin:'-15% 0px -70% 0px'});
+secs.forEach(s=>io.observe(s));
+
+/* 모바일 네비 */
+const nav=document.getElementById('nav');
+document.getElementById('navToggle').onclick=()=>nav.classList.toggle('open');
+nav.addEventListener('click',e=>{if(e.target.tagName==='A'&&innerWidth<=900)nav.classList.remove('open')});
+
+(function(){var b=document.getElementById('pdfBtn');if(b)b.addEventListener('click',()=>window.print());})();
+</script>
+</body>
+</html>

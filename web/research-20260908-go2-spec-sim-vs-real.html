@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Go2 제원: 시뮬과 실기를 나란히 놓는다 · FOOTHOLD</title>
+<meta name="description" content="Go2 EDU 제원을 한 자리에 모으고 시뮬 값과 실기 값을 열로 갈랐다. 가장 큰 격차는 무릎 토크(시뮬 23.5 N·m 대 공식 최대 약 45 N·m)와 hip 관절 범위(시뮬 60도 대 공식 48도)다. 우리가 「하드웨어 비대칭」이라 적어 둔 뒷다리 thigh 범">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:anywhere}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>Go2 제원: 시뮬과 실기를 나란히 놓는다</h1>
+  <p class="lede">Go2 EDU 제원을 한 자리에 모으고 시뮬 값과 실기 값을 열로 갈랐다. 가장 큰 격차는 무릎 토크(시뮬 23.5 N·m 대 공식 최대 약 45 N·m)와 hip 관절 범위(시뮬 60도 대 공식 48도)다. 우리가 「하드웨어 비대칭」이라 적어 둔 뒷다리 thigh 범위는 공식 사양표에</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.1</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/296">#296</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/332">#332</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-08 16:10</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260908-go2-spec-sim-vs-real.md</span></div><div><span class="k">증거</span><span class="v">확인 3 · 추측 0 · 미측정 22</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 리서치
+작성: 오흥재 · 2026-09-08 16:10
+근거: 공식 문서 (Unitree 사양표 · 브로슈어 · 사용설명서 · 공식 URDF) · IsaacLab 소스 원문 · 우리 실측 인용
+요지: Go2 EDU 제원을 한 자리에 모으고 시뮬 값과 실기 값을 열로 갈랐다. 가장 큰 격차는 무릎 토크(시뮬 23.5 N·m 대 공식 최대 약 45 N·m)와 hip 관절 범위(시뮬 60도 대 공식 48도)다. 우리가 「하드웨어 비대칭」이라 적어 둔 뒷다리 thigh 범위는 공식 사양표에도 공식 URDF 에도 없다.
+상태: 초안
+판: v1.1
+이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/296">#296</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/332">#332</a></p></blockquote>
+<p><figure class="mdimg"><img src="assets/visual/20260908-go2-spec-diagram.svg?v=5621eedc" alt="Go2 제원 도해" loading="lazy"><figcaption>Go2 제원 도해</figcaption></figure></p>
+</section>
+<section id="s1"><span id="0"></span><h2>0. 먼저 볼 것: 시뮬과 실기가 크게 다른 넷</h2>
+<p><b>이 표가 이 문서의 요점이다.</b> 나머지는 근거다.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>항목</th><th>시뮬 (우리가 학습·평가하는 로봇)</th><th>실기 (실제 Go2)</th><th>차이</th><th>왜 중요한가</th></tr></thead><tbody><tr><td><b>1</b></td><td><b>관절 토크 한계</b></td><td><b>23.5 N·m · 12관절 전부 같은 값</b></td><td><b>약 45 N·m</b> (가장 큰 관절 모터 기준) · 공식 URDF 는 hip·thigh 23.7 / calf <b>35.55</b></td><td>무릎 기준 <b>시뮬이 3분의 2 이하</b></td><td>「자세는 되는데 토크가 되는가」가 우리 미결 질문이었다. 실기 무릎이 시뮬보다 세다</td></tr><tr><td><b>2</b></td><td><b>hip 관절 범위</b></td><td><b>-60 ~ 60도</b></td><td><b>-48 ~ 48도</b></td><td><b>시뮬이 좌우로 24도 넓다</b></td><td>시뮬에서 배운 옆짚기·자세복구가 실기 관절 한계에 걸릴 수 있다</td></tr><tr><td><b>3</b></td><td><b>뒷다리 thigh 범위</b></td><td><b>-30 ~ 260도</b> (앞다리는 -90 ~ 200)</td><td>공식 사양표·공식 URDF 모두 <b>네 다리 공통 단일 범위</b></td><td><b>앞뒤 비대칭이 공식 근거에 없다</b></td><td>우리 문서가 「실제 하드웨어의 비대칭이고 버그가 아니다」라고 단정해 두었다. 그 단정의 근거가 없다 (§7-2)</td></tr><tr><td><b>4</b></td><td><b>발 들기 높이</b></td><td>관절로는 <b>31.0 cm</b> 가능 · 걸을 때 <b>3.25 cm</b></td><td>순정 보행의 발 들기 높이는 <b>API 로 조정하는 값</b>이고 절대 기본값이 공개돼 있지 않다 <span class="ev ev-todo">미확인</span></td><td>대조 불가</td><td>시뮬의 「3.25 cm 만 든다」에 대응하는 실기 수치가 아직 없다. 이걸 재는 것이 다음 실측 과제다</td></tr></tbody></table></div>
+<blockquote><p><b>1번은 우리 미결 질문에 직접 답한다.</b> <a href="https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md" target="_blank" rel="noopener">9/7 관절 한계 실측</a> §7 이
+「<code>effort_limit=23.5</code> 가 있고 무게를 이겨야 하니 정적으로 가능한 높이가 더 낮을 수 있다」로
+열어 두었다. <b>실기 하드웨어는 그보다 세다.</b> 시뮬이 보수적으로 잡혀 있는 쪽이므로,
+시뮬에서 토크 때문에 안 되는 동작이 실기에서는 될 여지가 있다.
+다만 <b>IsaacLab 값이 틀렸다는 뜻은 아니다.</b> 45 N·m 는 공식 표기상 「최대 관절 모터의 최대
+토크」, 즉 순간 피크값이고 IsaacLab 의 <code>effort_limit</code> 는 연속 제어 상한이다. <b>두 값은 정의가
+다르다.</b> 같은 축에서 비교하려면 실기 연속 토크 정격이 필요한데 그것은 <span class="ev ev-todo">미확인</span> 이다.</p></blockquote>
+</section>
+<section id="s2"><span id="1"></span><h2>1. 우리가 쓰는 개체</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead><tbody><tr><td>트림</td><td><b>Go2 EDU</b></td><td><code>docs/ROBOT-SPEC.md</code> (팀장 확인)</td></tr><tr><td>온보드 컴퓨팅</td><td><b>Jetson Orin NX 16GB</b></td><td>같음</td></tr><tr><td>RJ45 이더넷</td><td>있음</td><td>같음</td></tr><tr><td>라이다</td><td>기본 라이다 + <b>등에 별도 Unitree 라이다 모듈</b> (모델명 미정)</td><td>같음</td></tr><tr><td>라이다 세대 (L1 인가 L2 인가)</td><td><span class="ev ev-todo">미확인</span></td><td><a href="field-check-go2-intake.html">현장 점검 목록</a> ⑧</td></tr><tr><td>펌웨어 버전 · 연식</td><td><span class="ev ev-todo">미확인</span></td><td>같음 ③④</td></tr></tbody></table></div>
+<p><b>대여 개체는 두 대다</b> (조선대 보유분 · 운영진이 별도 업체를 통해 대여한 개체). 개체별로 값이 다를 수 있으므로 이 문서의 실기 열은 <b>공식 사양이지 우리 개체의 실측이 아니다.</b></p>
+<blockquote><p>대여 비용은 대외비다. 이 문서에 적지 않는다. 장비 정가는 공개 정보라 §2 에 적는다 (팀장 2026-09-04 확정).</p></blockquote>
+</section>
+<section id="s3"><span id="2"></span><h2>2. 등급별 차이 (공식 사양표 전문)</h2>
+<p><b>Go2 는 네 등급이다</b> (AIR · PRO · X · EDU). 우리 것은 EDU 다.</p>
+<div class="tw"><table><thead><tr><th>항목</th><th>AIR</th><th>PRO</th><th>X</th><th><b>EDU</b></th></tr></thead><tbody><tr><td>선 자세 치수</td><td>70 x 31 x 40 cm</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>엎드린 자세 치수</td><td>76 x 31 x 20 cm</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>무게 (배터리 포함)</td><td>약 15 kg</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>재질</td><td>알루미늄 합금 + 고강도 엔지니어링 플라스틱</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>전압</td><td>28 ~ 33.6 V</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>최대 작동 전력</td><td>약 3000 W</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td><b>적재 하중</b></td><td>약 7 kg (최대 10)</td><td>약 8 kg (최대 10)</td><td>약 8 kg (최대 12)</td><td><b>약 8 kg (최대 12)</b></td></tr><tr><td><b>속도</b></td><td>0 ~ 2.5 m/s</td><td>0 ~ 3.5 m/s</td><td>0 ~ 3.7 m/s (최대 5)</td><td><b>0 ~ 3.7 m/s (최대 5)</b></td></tr><tr><td><b>단차 한계</b></td><td>약 15 cm</td><td>약 16 cm</td><td>약 16 cm</td><td><b>약 16 cm</b></td></tr><tr><td><b>등반 각도</b></td><td>30도</td><td>40도</td><td>40도</td><td><b>40도</b></td></tr><tr><td>연산</td><td>없음</td><td>8코어 고성능 CPU</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td><b>최대 관절 토크</b></td><td>표기 없음</td><td>약 45 N·m</td><td>약 45 N·m</td><td><b>약 45 N·m</b></td></tr><tr><td>관절 모터</td><td>12개</td><td>12개</td><td>12개</td><td><b>12개</b></td></tr><tr><td>관절 범위</td><td>body -48~48도 · thigh -200~90도 · shank -156~-48도</td><td>좌동</td><td>좌동</td><td><b>좌동</b></td></tr><tr><td>초광각 4D 라이다</td><td>있음</td><td>있음</td><td>있음</td><td><b>있음</b></td></tr><tr><td>무선 벡터 측위 모듈</td><td>없음</td><td>있음</td><td>있음</td><td><b>있음</b></td></tr><tr><td>HD 광각 카메라</td><td>있음</td><td>있음</td><td>있음</td><td><b>있음</b></td></tr><tr><td><b>발끝 힘 센서</b></td><td>없음</td><td>없음</td><td>없음</td><td><b>있음</b></td></tr><tr><td>뎁스 카메라</td><td>없음</td><td>없음</td><td>없음</td><td><b>있음</b></td></tr><tr><td>4G 모듈 (GPS 포함)</td><td>없음</td><td>있음</td><td>있음</td><td><b>있음</b></td></tr><tr><td>충전 도크 호환</td><td>없음</td><td>없음</td><td>있음</td><td><b>있음</b></td></tr><tr><td><b>2차 개발</b></td><td>없음</td><td>없음</td><td>부분</td><td><b>전면</b></td></tr><tr><td>고연산 모듈</td><td>없음</td><td>없음</td><td>없음</td><td><b>Orin 등 선택 (40~100 TOPS)</b></td></tr><tr><td><b>배터리</b></td><td>8000 mAh</td><td>8000 mAh</td><td>8000 mAh</td><td><b>15000 mAh</b></td></tr><tr><td><b>가동 시간</b></td><td>약 1~2시간</td><td>약 1~2시간</td><td>약 1~2시간</td><td><b>약 2~4시간</b></td></tr><tr><td>충전기</td><td>33.6 V 3.5 A</td><td>좌동</td><td>좌동</td><td><b>급속 33.6 V 9 A</b></td></tr><tr><td>보증</td><td>6개월</td><td>12개월</td><td>12개월</td><td><b>12개월</b></td></tr><tr><td>정가 (세금·운임 별도)</td><td>$1,600</td><td>$2,800</td><td>$4,500</td><td>영업 문의</td></tr></tbody></table></div>
+<p>출처: 공식 사양표 (unitree.com/go2, 2026-09-08 원문 확인) · 공식 브로슈어 PDF 로 교차 확인.</p>
+<blockquote><p><b>EDU 만 발끝 힘 센서와 2차 개발이 열려 있다.</b> 그리고 EDU 만 배터리가 15000 mAh 다.
+「배터리 4시간 = 하루 실험 상한」이라는 <a href="meeting-20260813-ops-alignment.html">8/13 회의</a> 발언은
+<b>EDU 기준으로 맞는 말이다.</b> AIR·PRO 였다면 1~2시간이었다.</p></blockquote>
+</section>
+<section id="s4"><span id="3"></span><h2>3. 치수와 무게</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>시뮬</th><th>실기</th><th>출처</th></tr></thead><tbody><tr><td>몸길이 (선 자세 외곽)</td><td>몸통 충돌체 <b>0.3762 m</b></td><td><b>0.70 m</b></td><td>시뮬 = 공식 URDF <code>trunk_length</code> · 실기 = 공식 사양표</td></tr><tr><td>폭</td><td>몸통 충돌체 <b>0.0935 m</b></td><td><b>0.31 m</b></td><td>같음</td></tr><tr><td>높이 (선 자세)</td><td>스폰 높이 <b>0.40 m</b> (<code>init_state.pos</code> z)</td><td><b>0.40 m</b></td><td>시뮬 = IsaacLab 소스 · 실기 = 공식 사양표</td></tr><tr><td>엎드린 자세</td><td>해당 없음</td><td><b>0.76 x 0.31 x 0.20 m</b></td><td>공식 사양표</td></tr><tr><td><b>thigh 마디</b></td><td><b>0.213 m</b></td><td><b>0.213 m</b></td><td>시뮬 = 우리 실측 (Isaac USD) · 실기 = 공식 URDF. <b>두 값이 같다</b></td></tr><tr><td><b>calf 마디</b></td><td><b>0.213 m</b></td><td><b>0.213 m</b></td><td>같음</td></tr><tr><td>다리 최대 폄 (thigh + calf)</td><td>0.426 m</td><td>0.426 m</td><td>이 문서 계산</td></tr><tr><td>hip 관절 간격 (앞뒤)</td><td>0.3868 m</td><td>0.3868 m</td><td>공식 URDF <code>leg_offset_x</code> 0.1934 x 2</td></tr><tr><td>thigh 관절 간격 (좌우)</td><td>0.2840 m</td><td>0.2840 m</td><td>공식 URDF <code>leg_offset_y</code> 0.0465 + <code>hip_offset</code> 0.0955, x 2</td></tr><tr><td>발 반경</td><td><b>0.022 m</b> (USD 실측 · 구 collider)</td><td><b>0.020 m</b> (공식 URDF <code>foot_radius</code>)</td><td><b>두 출처가 2 mm 갈린다. 어느 쪽이 맞는지 여기서 판정하지 않고 둘 다 적는다</b> (§3-1 · <code>#332</code>)</td></tr><tr><td><b>무게</b></td><td>URDF 링크 합 <b>15.10 kg</b> (로터 12개 포함 시 16.17)</td><td><b>약 15 kg</b> (배터리 포함)</td><td>시뮬 = 이 문서가 공식 URDF 질량으로 계산 · 실기 = 공식 사양표</td></tr></tbody></table></div>
+<blockquote><p><b>몸길이 0.3762 m 와 0.70 m 를 같은 줄에 놓고 「시뮬이 절반이다」라고 읽으면 안 된다.</b>
+앞쪽은 <b>몸통 충돌 상자</b>이고 뒤쪽은 <b>머리·꼬리를 포함한 외곽 치수</b>다. 잰 대상이 다르다.
+같은 대상끼리 비교되는 것은 hip 간격 0.3868 m 인데, 이것은 시뮬과 실기가 정확히 같다.
+<b>즉 치수는 sim2real 격차가 아니다.</b> 시뮬이 공식 URDF 를 그대로 쓰고 있다.</p></blockquote>
+<p>무게 내역 (공식 URDF, 단위 kg):</p>
+<div class="tw"><table><thead><tr><th>링크</th><th>개수</th><th>개당</th><th>합</th></tr></thead><tbody><tr><td>trunk</td><td>1</td><td>6.921</td><td>6.921</td></tr><tr><td>hip</td><td>4</td><td>0.678</td><td>2.712</td></tr><tr><td>thigh</td><td>4</td><td>1.152</td><td>4.608</td></tr><tr><td>calf</td><td>4</td><td>0.154</td><td>0.616</td></tr><tr><td>foot</td><td>4</td><td>0.060</td><td>0.240</td></tr><tr><td><b>소계</b></td><td></td><td></td><td><b>15.097</b></td></tr><tr><td>rotor</td><td>12</td><td>0.089</td><td>1.068</td></tr><tr><td><b>로터 포함 합</b></td><td></td><td></td><td><b>16.165</b></td></tr></tbody></table></div>
+<h3>3-1. 발 collider 와 지형 메시 해상도</h3>
+<p>출처 = <a href="https://github.com/foothold-project/foothold-lab/issues/332" target="_blank" rel="noopener"><code>#332</code></a> 코멘트 (2026-09-09 · 오현민 · 정적 접촉 시험). 제출 문서는 <code>inbox/oh/</code> 로 대기 중이다.</p>
+<p><b>발 collider 는 구(Sphere)다</b> <span class="ev ev-ok">확인됨</span>. USD 실측에서 <code>{FL,FR,RL,RR}_foot/collisions/mesh_0</code> 이 넷 다 Sphere · 스케일 1.0 · 반지름 0.022 m · 지름 0.044 m 다. <b>캡슐이 아니다.</b></p>
+<div class="tw"><table><thead><tr><th>출처</th><th>발 반경</th><th>무엇인가</th></tr></thead><tbody><tr><td><b>우리 USD 실측</b> (<code>#332</code>)</td><td><b>0.022 m</b></td><td>시뮬레이션이 실제로 도는 값</td></tr><tr><td><b>공식 URDF <code>foot_radius</code></b></td><td><b>0.020 m</b></td><td>유니트리 공식 값</td></tr></tbody></table></div>
+<p><b>어느 쪽이 맞는지 여기서 판정하지 않고 출처를 붙여 둘 다 적는다.</b> 2 mm 차이는 아래 걸침 경계를 4 mm 앞당긴다 (<code>2r</code> 이 0.044 에서 0.040 으로).</p>
+<p>구이므로 기하 예측이 성립한다.</p>
+<div class="tw"><table><thead><tr><th></th><th>식</th></tr></thead><tbody><tr><td>걸침 조건</td><td><code>2r &gt; g</code> (<code>g</code> = 틈 폭)</td></tr><tr><td>걸침 침하</td><td><code>r - sqrt(r^2 - (g/2)^2)</code></td></tr></tbody></table></div>
+<p>USD 0.022 m 로 계산하면 틈 2.5 cm 는 걸치고(예측 침하 3.9 mm) <b>틈 5 cm 부터는 기하학적으로 그냥 빠진다.</b> 학습으로 「밟는 법」을 배울 대상이 아니라 <b>밟을 자리를 피해야 하는 문제</b>라는 뜻이다. 다만 틈이 만들어지는 해상도(<code>hs</code> 0.025)에서도 <b>발의 12.5%가 2 cm 넘게 빠졌다</b> (최저 -16 cm). 기하학적으로 걸쳐져야 하는 폭에서 여덟 중 하나가 그대로 통과한다.</p>
+<h4><code>hs</code> 0.1 에서는 미세 틈 지형이 «존재하지 않는다»</h4>
+<p>팀 정본 징검다리가 쓰는 해상도가 <code>hs</code> 0.1 이고, 그 격자에서 의도한 틈이 정수 픽셀로 절단된다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>의도한 틈</th><th><code>hs</code> 0.1 에서 실현된 틈</th><th>발끝 z 중앙</th><th>접촉율</th></tr></thead><tbody><tr><td>0.000 m</td><td>0.000 m (0 px)</td><td>-0.0033</td><td>1.000</td></tr><tr><td><b>0.025 m</b></td><td><b>0.000 m (0 px)</b></td><td><b>-0.0033</b></td><td><b>1.000</b></td></tr><tr><td><b>0.050 m</b></td><td><b>0.000 m (0 px)</b></td><td><b>-0.0033</b></td><td><b>1.000</b></td></tr><tr><td>0.075 m</td><td>0.100 m (1 px)</td><td>-0.2127</td><td>0.463</td></tr><tr><td>0.100 m</td><td>0.100 m (1 px)</td><td>-0.2325</td><td>0.463</td></tr><tr><td>0.150 m</td><td>0.100 m (1 px)</td><td>-0.2004</td><td>0.425</td></tr><tr><td>0.200 m</td><td>0.200 m (2 px)</td><td>-0.1853</td><td>0.412</td></tr></tbody></table></div>
+<p><b>틈 2.5 cm 와 5 cm 는 0 px 로 절단되어 연속 평면이 된다.</b> 세 지표가 틈 0 과 소수점까지 같다. 7.5 cm 와 15 cm 는 10 cm 로 스냅된다.</p>
+<p><b>그래서 <code>hs</code> 0.1 에서 잰 「미세 틈」 숫자는 미세 틈의 숫자가 아니다.</b> 미세 틈을 보려면 그 틈이 실제로 만들어지는 해상도(<code>hs</code> 0.025)로 다시 재야 한다.</p>
+<p><b>한계</b> · 정적 시험이다. 걷는 중에는 발이 속도를 갖고 들어가 걸침·빠짐 경계가 달라진다. 네 발이 함께 지지하므로 한 발의 침하는 나머지 셋의 지지에 좌우된다. 접촉 «점» 개수는 못 쟀다 (<code>ContactSensor</code> API 가 몸체별 합력만 준다). 지형이 전역 <code>np.random</code> 을 쓰므로 평가가 실제로 걸은 타일과 같지 않다.</p>
+</section>
+<section id="s5"><span id="4"></span><h2>4. 성능</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>시뮬</th><th>실기 (EDU)</th><th>출처</th></tr></thead><tbody><tr><td><b>최대 속도</b></td><td>명령 속도로 준다. 우리 평가는 <b>1.0 m/s</b> (평지 기준선) · 험지도 1.0</td><td><b>0 ~ 3.7 m/s</b> (실험실 최대 약 5 m/s)</td><td>시뮬 = <code>DECISIONS</code> 09-02 · 실기 = 공식 사양표</td></tr><tr><td>사용설명서상 실사용 속도</td><td>해당 없음</td><td><b>평지 최대 3.5 m/s</b></td><td>공식 사용설명서</td></tr><tr><td>반려 추종 모드 속도</td><td>해당 없음</td><td>느린 추종 <b>1.5 m/s</b> · 빠른 추종 <b>3.0 m/s</b></td><td>공식 사용설명서</td></tr><tr><td><b>등반 각도</b></td><td>학습 지형 최대 경사 <b>0.4 (약 22도)</b></td><td><b>40도</b></td><td>시뮬 = <a href="research-go2-rough-training.html">험지 학습 커리큘럼</a> <code>slope_range=(0.0, 0.4)</code> · 실기 = 공식 사양표</td></tr><tr><td><b>단차 한계</b></td><td>학습 지형은 계단 0.05~0.23 m 까지 준다. <b>정책이 실제로 넘는 것은</b> 12.5 cm 63% · 13 cm 39% · 14 cm 10%. <b>절반이 실패하는 지점은 12.5 ~ 13 cm 사이</b></td><td><b>약 16 cm</b> (16 cm 넘는 계단은 권장하지 않음)</td><td>시뮬 = <a href="research-rails-diagnosis.html">레일즈 진단</a> 1절 · 실기 = 공식 사양표 + 사용설명서</td></tr><tr><td><b>적재 하중</b></td><td>시뮬에 하중 항 없음</td><td><b>약 8 kg (최대 12 kg)</b></td><td>실기 = 공식 사양표</td></tr><tr><td><b>점프 높이</b></td><td><span class="ev ev-todo">미확인</span> (측정한 적 없음)</td><td><b>공식 수치 없음</b> <span class="ev ev-todo">미확인</span>. 점프·백플립 동작은 SDK 에 있으나 높이 표기가 공개돼 있지 않다</td><td>공식 브로슈어에 동작만 언급</td></tr><tr><td>최대 작동 전력</td><td>해당 없음</td><td>약 3000 W</td><td>공식 사양표</td></tr><tr><td>로봇 질량 랜덤화</td><td>학습 시 <b>±15%</b></td><td>해당 없음</td><td><code>docs/FLOW.md</code></td></tr></tbody></table></div>
+<blockquote><p><b>단차만 놓고 보면 시뮬이 실기보다 못한다.</b> 실기 공식 한계가 16 cm 인데 우리 시뮬 정책은
+13 cm 부터 무너진다. 이것은 하드웨어 격차가 아니라 <b>정책 격차</b>다. 순정 Go2 의
+16 cm 는 유니트리가 손으로 짠 MCF 컨트롤러가 내는 값이고, 우리 12.5 cm 는 NVIDIA 공식
+체크포인트가 내는 값이다. <b>같은 몸으로 다른 뇌가 낸 두 숫자다.</b></p></blockquote>
+</section>
+<section id="s6"><span id="5"></span><h2>5. 보행</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>시뮬</th><th>실기</th><th>출처</th></tr></thead><tbody><tr><td>물리 주기</td><td><b>200 Hz</b> (<code>sim.dt = 0.005</code>)</td><td>해당 없음</td><td><code>docs/FLOW.md</code></td></tr><tr><td><b>정책 주기</b></td><td><b>50 Hz</b> (<code>decimation = 4</code>, 1 step = 0.02초)</td><td>저수준 제어 주기 <span class="ev ev-todo">미확인</span></td><td>시뮬 = <code>docs/FLOW.md</code></td></tr><tr><td><b>최대 발 높이 (관절 한계)</b></td><td>앞 <b>31.0 cm</b> · 뒤 <b>30.1 cm</b> (무조코로는 33.5 cm)</td><td>관절 범위가 다르므로 재계산 필요 <span class="ev ev-todo">미확인</span></td><td>시뮬 = 우리 실측 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/280">#280</a>)</td></tr><tr><td><b>실제 보행 중 발 높이</b></td><td><b>3.25 cm</b></td><td><span class="ev ev-todo">미확인</span></td><td>시뮬 = <a href="research-rails-diagnosis.html">레일즈 진단</a> 3절</td></tr><tr><td>발 들기 높이 조정</td><td>보상 설계에 발 높이 항이 <b>없다</b></td><td>리모컨·API 로 조정하는 값이다. 상대 조정 범위 <b>-0.06 ~ +0.03 m</b> (비공식 ROS2 래퍼 문서) · <b>절대 기본값 <span class="ev ev-todo">미확인</span></b></td><td>시뮬 = 우리 실측 · 실기 = 공식 사용설명서(리모컨에 「발 들기 높이 조정」 항목 존재) + 3rd party 래퍼 문서</td></tr><tr><td>몸통 높이 조정</td><td>학습된 자세로 결정</td><td>리모컨·API 로 조정 가능. 정확한 범위 <span class="ev ev-todo">미확인</span></td><td>공식 사용설명서</td></tr><tr><td><b>보폭</b></td><td><span class="ev ev-todo">미확인</span> (측정한 적 없음)</td><td><span class="ev ev-todo">미확인</span> (공식 수치 없음)</td><td></td></tr><tr><td><b>걸음 주기</b></td><td><span class="ev ev-todo">미확인</span> (측정한 적 없음)</td><td><span class="ev ev-todo">미확인</span> (공식 수치 없음)</td><td></td></tr><tr><td>보행 모드</td><td>단일 정책</td><td>순정에 여러 모드. 정적보행 · 트롯 · 절전 · 클래식 · 직립보행 · 크로스스텝 · 문워크 · 옆걸음 · 평행다리 달리기</td><td>공식 SDK <code>sport_client</code> · 공식 사용설명서</td></tr></tbody></table></div>
+<blockquote><p><b>보폭과 걸음 주기는 양쪽 다 비어 있다.</b> 유니트리가 공개하지 않고 우리도 안 쟀다.
+<b>둘 다 우리 CSV 에서 뽑을 수 있는 값이다</b> (발 접지 시점과 접지 위치). 별도 과제로 뺀다.
+이것이 채워지면 실기 영상과 프레임 단위로 대조할 수 있어 sim2real 격차의 가장 직접적인
+지표가 된다.</p></blockquote>
+</section>
+<section id="s7"><span id="6"></span><h2>6. 센서</h2>
+<h3>6-1. 라이다</h3>
+<p><b>우리 개체가 L1 인지 L2 인지 아직 모른다</b> <span class="ev ev-todo">미확인</span>. 두 세대를 모두 적어 둔다. 현재 유니트리 공식 페이지는 Go2 를 <b>L2</b> 로 소개하고, 우리가 받은 브로슈어(구판)는 <b>L1</b> 로 적혀 있다. <b>연식에 따라 갈린다.</b></p>
+<div class="tw"><table><thead><tr><th>항목</th><th>4D LiDAR L1</th><th>4D LiDAR L2</th></tr></thead><tbody><tr><td>FOV</td><td><b>360도 x 90도</b></td><td><b>360도 x 96도</b></td></tr><tr><td>최대 측정 거리</td><td>30 m (@90% 반사율) · 20 m (@10%)</td><td>30 m (@90%) · 15 m (@10%)</td></tr><tr><td>최소 측정 거리 (사각)</td><td><b>0.05 m</b></td><td><b>0.05 m</b></td></tr><tr><td>측정 정확도</td><td>약 2 cm</td><td>약 2 cm</td></tr><tr><td>유효 샘플링</td><td><b>21,600 점/초</b> (샘플 주파수 43,200)</td><td><b>64,000 점/초</b> (샘플 주파수 128,000)</td></tr><tr><td>수평 주사 주파수</td><td>11 Hz</td><td>5.55 Hz</td></tr><tr><td>수직 주사 주파수</td><td>180 Hz</td><td>216 Hz</td></tr><tr><td>내장 IMU</td><td>3축 가속 + 3축 자이로 · <b>250 Hz</b></td><td>3축 가속 + 3축 자이로</td></tr><tr><td>레이저 안전 등급</td><td>Class 1 (IEC60825-1:2014)</td><td>Class 1 (IEC60825-1:2014)</td></tr><tr><td>내광</td><td>100 Klux</td><td>100 Klux 초과</td></tr><tr><td>무게</td><td><b>230 g</b></td><td><b>230 g</b></td></tr><tr><td>크기</td><td>75 x 75 x 65 mm</td><td>75 x 75 x 65 mm</td></tr><tr><td>소비 전력</td><td>6 W</td><td>10 W</td></tr><tr><td>동작 온도</td><td>-10 ~ 60도</td><td><span class="ev ev-todo">미확인</span></td></tr><tr><td>인터페이스</td><td>4핀 시리얼 (GH1.25 4PIN) · DC 12 V</td><td>ENET UDP / TTL UART</td></tr></tbody></table></div>
+<p>출처: L1 = 공식 L1 사용설명서 v1.1 (2024.06) + 공식 L1 제품 페이지 · L2 = 공식 L2 제품 페이지.</p>
+<p><b>시뮬 쪽 대응물</b>: 우리는 라이다를 쓰지 않는다. 정책 관측 235차원 중 지형 정보는 <b>높이 스캔 187점</b>이고 이것은 시뮬이 지형에서 직접 읽는 값이지 라이다 점군이 아니다. <b>즉 라이다는 sim2real 대조표에 열이 없다.</b> 트랙 B(항법)에서만 쓰인다.</p>
+<h3>6-2. 카메라</h3>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead><tbody><tr><td>종류</td><td>HD 광각 카메라 (전방)</td><td>공식 사양표</td></tr><tr><td>영상 전송 해상도</td><td>1280 x 720</td><td>공식 브로슈어</td></tr><tr><td>화각 · 렌즈 스펙</td><td><span class="ev ev-todo">미확인</span> (「초광각」 표기뿐)</td><td></td></tr><tr><td>뎁스 카메라 (EDU)</td><td>있음. 확장 옵션 D435i (124 x 29 x 26 mm · 최소 깊이 0.105 m · 1280x720@30fps)</td><td>공식 사양표 · 공식 브로슈어 확장품 표</td></tr></tbody></table></div>
+<h3>6-3. IMU</h3>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead><tbody><tr><td>몸통 IMU 모델·정밀도</td><td><b><span class="ev ev-todo">미확인</span>.</b> 유니트리가 공개하지 않는다</td><td></td></tr><tr><td>얻을 수 있는 값</td><td><code>LowState.imu_state</code> 로 쿼터니언(4) · 자이로(3) · 가속도(3) · RPY(3) · 온도</td><td>공식 SDK 메시지 정의</td></tr><tr><td>시뮬 쪽</td><td>정책 관측에 몸통 각속도 3 · 중력 투영 3 이 들어간다</td><td><code>docs/FLOW.md</code></td></tr><tr><td>라이다 내장 IMU</td><td>별도로 존재 (§6-1)</td><td>공식 L1 설명서</td></tr></tbody></table></div>
+<h3>6-4. 발끝 힘 센서</h3>
+<p><b>EDU 에만 있다.</b> <code>LowState.foot_force</code> 로 읽는다. 실제로 값이 변하는지는 현장에서 확인할 항목이다 (<a href="field-check-go2-intake.html">현장 점검 목록</a> ⑪). 시뮬에는 접촉 센서가 있어 <code>feet_air_time</code> 보상에 쓰인다.</p>
+</section>
+<section id="s8"><span id="7"></span><h2>7. 관절</h2>
+<h3>7-1. 관절 범위</h3>
+<p><b>단위는 도. 세 출처가 부호 규약이 다르다. 표에 그대로 적고 아래에서 맞춘다.</b></p>
+<div class="tw"><table><thead><tr><th>다리</th><th>관절</th><th>시뮬 (우리 실측 · Isaac go2.usd)</th><th>공식 URDF (unitree_ros)</th><th>공식 사양표</th></tr></thead><tbody><tr><td>앞 FL·FR</td><td>hip</td><td><b>-60 ~ 60</b></td><td>-60 ~ 60 (±1.0472 rad)</td><td><b>-48 ~ 48</b></td></tr><tr><td>앞 FL·FR</td><td>thigh</td><td><b>-90 ~ 200</b></td><td>-90 ~ 200 (-1.5708 ~ 3.4907 rad)</td><td><b>-200 ~ 90</b></td></tr><tr><td>앞 FL·FR</td><td>calf</td><td><b>-156 ~ -48</b></td><td>-156 ~ -48 (-2.7227 ~ -0.83776 rad)</td><td><b>-156 ~ -48</b></td></tr><tr><td>뒤 RL·RR</td><td>hip</td><td><b>-60 ~ 60</b></td><td>-60 ~ 60</td><td>-48 ~ 48</td></tr><tr><td>뒤 RL·RR</td><td>thigh</td><td><b>-30 ~ 260</b></td><td><b>-90 ~ 200 (앞과 같다)</b></td><td><b>-200 ~ 90 (앞과 같다)</b></td></tr><tr><td>뒤 RL·RR</td><td>calf</td><td><b>-156 ~ -48</b></td><td>-156 ~ -48</td><td>-156 ~ -48</td></tr></tbody></table></div>
+<p>부호를 맞춰 폭으로 다시 보면 이렇다.</p>
+<div class="tw"><table><thead><tr><th>관절</th><th>시뮬 폭</th><th>공식 폭</th><th>일치 여부</th></tr></thead><tbody><tr><td>hip</td><td>120도</td><td><b>96도</b></td><td><b>시뮬이 24도 넓다</b></td></tr><tr><td>thigh (앞)</td><td>290도</td><td>290도</td><td>폭 일치 · 위치도 일치</td></tr><tr><td>thigh (뒤)</td><td>290도</td><td>290도</td><td><b>폭은 같은데 시뮬이 +60도 밀려 있다</b></td></tr><tr><td>calf</td><td>108도</td><td>108도</td><td>일치</td></tr></tbody></table></div>
+<blockquote><p><b>공식 사양표의 thigh -200~90 은 공식 URDF 의 -90~200 과 부호 규약이 반대다.</b>
+폭이 290도로 같고 calf 는 두 출처가 부호까지 같으므로, 사양표가 thigh 만 반대 방향을 양으로
+잡았다고 읽는 것이 자연스럽다. <b>다만 이것은 추론이다</b> <span class="ev ev-todo">미확인</span>. 사양표에 부호 정의 그림이
+없어 확정할 수 없다.</p></blockquote>
+<h3>7-2. 뒷다리 thigh 비대칭: 우리가 「하드웨어다」라고 적은 것의 근거가 없다</h3>
+<p><a href="https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md" target="_blank" rel="noopener">9/7 문서</a> 와 <a href="research-rails-diagnosis.html">레일즈 진단 11절</a> 이 둘 다 이렇게 적어 두었다.</p>
+<blockquote><p>「앞다리와 뒷다리의 thigh 범위가 다르다 <span class="ev ev-ok">확인됨</span>. 실제 Go2 하드웨어의 비대칭이고 버그가 아니다.」</p></blockquote>
+<p><b>앞 문장(USD 에 그렇게 적혀 있다)은 맞고, 뒷 문장(하드웨어의 비대칭이다)은 근거가 없다.</b></p>
+<p>찾아본 것은 셋이다.</p>
+<div class="tw"><table><thead><tr><th>출처</th><th>앞뒤 thigh 범위</th><th>확인 방법</th></tr></thead><tbody><tr><td>공식 사양표</td><td><b>하나뿐이다.</b> 다리 구분 없이 thigh -200~90</td><td>페이지 원문 확인</td></tr><tr><td>공식 URDF (<code>leg.xacro</code>)</td><td><b>하나뿐이다.</b> <code>thigh_position_min/max</code> 를 네 다리에 그대로 쓴다. 앞뒤 분기가 없다</td><td>원문 확인. 앞뒤 분기(<code>front_hind</code>)는 메시·관성에만 쓰이고 <code>&lt;limit&gt;</code> 에는 안 쓰인다</td></tr><tr><td>Isaac <code>go2.usd</code></td><td>앞 -90~200 · 뒤 -30~260</td><td>우리 실측 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/280">#280</a>)</td></tr></tbody></table></div>
+<p>그리고 <b>밀린 양이 정확히 60도다.</b> 하한도 60도, 상한도 60도 밀렸고 폭은 290도로 같다. 링크 길이가 바뀌지 않았고, 우리가 기본 자세에서 계산한 발 깊이(앞 0.311 m · 뒤 0.302 m)는 <b>앞뒤에 같은 부호 규약을 써야 나오는 값이다.</b> 이 문서가 공식 URDF 마디 길이 0.213 m 와 IsaacLab 기본 관절각(앞 thigh 0.8 rad · 뒤 1.0 rad · calf -1.5 rad)으로 정기구학을 다시 풀어 <b>0.3113 m 와 0.3020 m 를 그대로 재현했다.</b> 즉 <b>영점은 앞뒤가 같은데 한계만 60도 밀려 있다.</b></p>
+<p><b>이것은 하드웨어 비대칭보다 USD 자산의 한계 메타데이터 문제로 읽힌다.</b> 다만 확정은 아니다.</p>
+<p><b>해야 할 것</b> (<span class="ev ev-todo">미확인</span> 을 닫는 방법):</p>
+<ol><li>실기에서 뒷다리 thigh 를 앞다리와 같은 자세로 두고 <code>LowState</code> 관절각을 읽어 영점이 같은지 본다. 5분이면 된다</li><li>뒷다리가 정말 260도까지 가는지는 <b>실기에서 시험하지 않는다.</b> 관절 한계를 실기로 탐색하는 것은 위험하고 대여 장비다</li><li>그 전까지 두 문서의 「실제 하드웨어의 비대칭이고 버그가 아니다」를 <b>「USD 에 그렇게 적혀 있다. 하드웨어 근거는 미확인」으로 낮춰 적는다</b></li></ol>
+<p><b>왜 이것이 중요한가</b>: 뒷다리 최대 발 높이 30.1 cm 가 이 범위 위에서 계산됐다. 범위가 틀렸다면 그 숫자도 틀린다.</p>
+<h3>7-3. 토크와 속도 한계</h3>
+<div class="tw"><table><thead><tr><th>관절</th><th>시뮬 (IsaacLab)</th><th>공식 URDF</th><th>공식 사양표</th></tr></thead><tbody><tr><td>hip 토크</td><td><b>23.5 N·m</b></td><td>23.7 N·m</td><td>표기 없음</td></tr><tr><td>thigh 토크</td><td><b>23.5 N·m</b></td><td>23.7 N·m</td><td>표기 없음</td></tr><tr><td><b>calf 토크</b></td><td><b>23.5 N·m</b></td><td><b>35.55 N·m</b></td><td><b>약 45 N·m</b> (가장 큰 관절 모터의 최대)</td></tr><tr><td>hip·thigh 속도</td><td>30.0 rad/s</td><td>30.1 rad/s</td><td>표기 없음</td></tr><tr><td>calf 속도</td><td>30.0 rad/s</td><td><b>20.06 rad/s</b></td><td>표기 없음</td></tr></tbody></table></div>
+<p>시뮬 액추에이터 설정 전문 (IsaacLab <code>UNITREE_GO2_CFG</code>):</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">DCMotorCfg</span>(
+    joint_names_expr=[<span class="s">&quot;.*_hip_joint&quot;</span>, <span class="s">&quot;.*_thigh_joint&quot;</span>, <span class="s">&quot;.*_calf_joint&quot;</span>],
+    effort_limit=<span class="n">23.5</span>, saturation_effort=<span class="n">23.5</span>, velocity_limit=<span class="n">30.0</span>,
+    stiffness=<span class="n">25.0</span>, damping=<span class="n">0.5</span>, friction=<span class="n">0.0</span>,
+)
+soft_joint_pos_limit_factor=<span class="n">0.9</span></pre></div>
+<blockquote><p><b>시뮬은 12관절을 한 덩어리로 잡는다.</b> 하나의 <code>DCMotorCfg</code> 가 hip·thigh·calf 에 같은
+23.5 N·m 와 30.0 rad/s 를 준다. <b>실제 하드웨어는 관절마다 다르다.</b> 공식 URDF 기준으로
+무릎은 토크가 1.5배 세고 속도는 3분의 2로 느리다.
+<b>무릎을 빠르게 휘두르는 동작은 시뮬에서 실기보다 쉽고, 무릎으로 버티는 동작은
+시뮬에서 실기보다 어렵다.</b> 방향이 반대인 두 격차가 동시에 있다.
+우리 과제(발을 높이 들어 턱을 넘는다)는 <b>둘 다 걸린다.</b></p></blockquote>
+<h3>7-4. 기본 자세</h3>
+<div class="tw"><table><thead><tr><th>관절</th><th>IsaacLab 기본값</th><th>도 환산</th></tr></thead><tbody><tr><td>왼쪽 hip</td><td>0.1 rad</td><td>5.7도</td></tr><tr><td>오른쪽 hip</td><td>-0.1 rad</td><td>-5.7도</td></tr><tr><td>앞 thigh (FL·FR)</td><td>0.8 rad</td><td>45.8도</td></tr><tr><td>뒤 thigh (RL·RR)</td><td>1.0 rad</td><td>57.3도</td></tr><tr><td>calf (전부)</td><td>-1.5 rad</td><td>-85.9도</td></tr><tr><td>스폰 높이</td><td>0.4 m</td><td></td></tr></tbody></table></div>
+<p>이 자세에서 발은 thigh 관절 기준 <b>앞 0.3113 m · 뒤 0.3020 m</b> 아래에 있다 (이 문서가 마디 길이 0.213 m 로 재계산해 우리 실측값을 재현했다).</p>
+</section>
+<section id="s9"><span id="8"></span><h2>8. 전원</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>시뮬</th><th>실기 (EDU)</th><th>출처</th></tr></thead><tbody><tr><td>배터리 용량</td><td>해당 없음</td><td><b>15,000 mAh</b> (AIR·PRO·X 는 8,000)</td><td>공식 사양표</td></tr><tr><td>전압</td><td>해당 없음</td><td><b>28 ~ 33.6 V</b> (공칭 28.8 V)</td><td>공식 사양표 · 공식 브로슈어</td></tr><tr><td>에너지 환산</td><td>해당 없음</td><td>약 <b>432 Wh</b> (15,000 mAh x 28.8 V) <code>계산</code></td><td>이 문서 계산. 공칭 전압을 29.6 V 로 보면 444 Wh 라 <b>출처마다 값이 다르다</b></td></tr><tr><td><b>가동 시간</b></td><td>해당 없음</td><td><b>약 2~4시간</b></td><td>공식 사양표</td></tr><tr><td>험지 주행 시 실사용</td><td>해당 없음</td><td><b>2~3시간</b> (증언)</td><td><a href="meeting-20260813-ops-alignment.html">8/13 회의</a> 유성현 발언</td></tr><tr><td>최대 작동 전력</td><td>해당 없음</td><td>약 3,000 W</td><td>공식 사양표</td></tr><tr><td>충전기</td><td>해당 없음</td><td>급속 33.6 V 9 A</td><td>공식 사양표</td></tr><tr><td>배터리 개수·실사용 시간</td><td></td><td><b>우리 개체 기준은 <span class="ev ev-todo">미확인</span></b></td><td><a href="field-check-go2-intake.html">현장 점검 목록</a> 4절</td></tr></tbody></table></div>
+<p><b>가동 시간을 줄이는 조건</b> (공식 사용설명서가 직접 열거한다): 오래 빠르게 달리기 · 선 채로 자세를 크게 오래 바꾸기 · 다리를 굽힌 채 서 있기 · 짐을 지고 달리기 · <b>몸을 낮춘 채 걷기</b> · 기복과 경사.</p>
+<blockquote><p>마지막 둘이 우리 실험 조건이다. <b>험지에서 2~3시간이라는 증언은 스펙과 모순되지 않는다.</b></p></blockquote>
+</section>
+<section id="s10"><span id="9"></span><h2>9. 미확인 목록 (추측으로 메우지 않은 것들)</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>왜 안 채웠나</th><th>어떻게 채우나</th></tr></thead><tbody><tr><td>1</td><td>우리 개체의 라이다 세대 (L1/L2)</td><td>개체 확인 전</td><td>모듈 라벨 사진 한 장</td></tr><tr><td>2</td><td>등에 얹힌 별도 라이다의 모델명</td><td>영상에 각인이 안 보임</td><td>라벨 사진 · <code>ros2 topic list</code> · <code>ip -4 addr</code></td></tr><tr><td>3</td><td>펌웨어 버전 · 연식 · 고장 이력</td><td>관리자 문의 필요</td><td>Unitree Go 앱 장비 정보</td></tr><tr><td>4</td><td><b>실기 점프 높이</b></td><td>공식 수치가 없다</td><td>유니트리 문의 또는 우리 실측. <b>대여 장비라 점프 시험은 허락 필요</b></td></tr><tr><td>5</td><td><b>실기 보폭 · 걸음 주기</b></td><td>공식 수치가 없다</td><td>실기 영상 프레임 분석</td></tr><tr><td>6</td><td><b>시뮬 보폭 · 걸음 주기</b></td><td>안 쟀다</td><td>우리 CSV 의 발 접지 시점·위치에서 산출</td></tr><tr><td>7</td><td><b>실기 발 들기 높이 기본값(절대)</b></td><td>공식 API 문서에 상대 조정 범위만 있다</td><td><code>LowState</code> 로 보행 중 발 궤적 기록</td></tr><tr><td>8</td><td>실기 저수준 제어 주기</td><td>공식 문서 미확보</td><td>SDK 실행 시 실측</td></tr><tr><td>9</td><td>몸통 IMU 모델·정밀도</td><td>유니트리가 공개하지 않는다</td><td>문의</td></tr><tr><td>10</td><td>전방 카메라 화각</td><td>「초광각」 표기뿐</td><td>문의 또는 체커보드 실측</td></tr><tr><td>11</td><td><b>뒷다리 thigh 60도 밀림이 하드웨어인지 자산 문제인지</b></td><td>공식 근거가 반대를 가리킨다</td><td>§7-2 의 절차</td></tr><tr><td>12</td><td>실기 <b>연속</b> 토크 정격</td><td>45 N·m 는 피크값이라 <code>effort_limit</code> 와 정의가 다르다</td><td>문의. 이것이 있어야 §0 의 1번이 정량 비교가 된다</td></tr><tr><td>13</td><td>우리 개체의 배터리 개수</td><td>현장 확인 전</td><td>인수 점검</td></tr><tr><td>14</td><td><b>발 반경 0.020 m 대 0.022 m 중 어느 쪽이 맞나</b></td><td>공식 URDF 와 우리 USD 실측이 2 mm 갈린다. 어느 쪽이 틀렸다고 할 근거가 없어 둘 다 적었다 (§3-1)</td><td>USD 자산의 출처 이력을 따라가거나 유니트리에 문의</td></tr></tbody></table></div>
+</section>
+<section id="s11"><span id="10"></span><h2>10. 출처</h2>
+<p><b>공식 (유니트리)</b></p>
+<div class="tw"><table><thead><tr><th>태그</th><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>공식 사양표</td><td>Go2 제품 페이지 사양표 4등급 전문</td><td><code>unitree.com/go2</code> · 2026-09-08 원문 확인</td></tr><tr><td>공식 브로슈어</td><td>Go2 EN 브로슈어 (파라미터 표 · 확장품 표)</td><td><code>static.generation-robots.com/media/brochure-unitree-go2-en.pdf</code></td></tr><tr><td>공식 사용설명서</td><td>Go2 User Manual V1.0</td><td><code>static.generation-robots.com/media/Go2-User-Manual.pdf</code></td></tr><tr><td>공식 URDF</td><td><code>go2_description</code> 의 <code>const.xacro</code> · <code>leg.xacro</code></td><td><code>github.com/unitreerobotics/unitree_ros</code></td></tr><tr><td>공식 SDK</td><td><code>sport_client.hpp</code> (동작 목록)</td><td><code>github.com/unitreerobotics/unitree_sdk2</code></td></tr><tr><td>공식 L1 설명서</td><td>4D LiDAR-L1 User Manual 2024.06 v1.1</td><td><code>oss-global-cdn.unitree.com</code></td></tr><tr><td>공식 L2 페이지</td><td>4D LiDAR L2 제품 페이지</td><td><code>unitree.com/L2</code></td></tr></tbody></table></div>
+<p><b>시뮬</b></p>
+<div class="tw"><table><thead><tr><th>태그</th><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>IsaacLab 소스</td><td><code>UNITREE_GO2_CFG</code> 원문</td><td><code>github.com/isaac-sim/IsaacLab</code> <code>isaaclab_assets/robots/unitree.py</code></td></tr><tr><td>우리 실측</td><td>관절 한계 · 발 높이 · 단차 성공률</td><td><a href="research-rails-diagnosis.html">레일즈 진단</a> · <a href="https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20260907-go2-%EA%B4%80%EC%A0%88%ED%95%9C%EA%B3%84-%EC%8B%A4%EC%B8%A1.md" target="_blank" rel="noopener">9/7 관절 한계</a></td></tr><tr><td>우리 정본</td><td>개체 사양</td><td><a href="robot-spec.html">ROBOT-SPEC</a> · <a href="field-check-go2-intake.html">현장 점검 목록</a></td></tr></tbody></table></div>
+<p><b>3rd party (공식 아님. 이 문서에서 딱 한 값에만 썼다)</b></p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th><th>어디에 썼나</th></tr></thead><tbody><tr><td><code>FootRaiseHeight</code> 상대 조정 범위 -0.06 ~ 0.03</td><td><code>github.com/Unitree-Go2-Robot/go2_robot</code> README</td><td>§5 발 들기 높이 조정 한 칸</td></tr></tbody></table></div>
+<p><b>이 문서가 계산한 것</b> (원본 수치가 아니다): URDF 질량 합 15.097 / 16.165 kg · 다리 최대 폄 0.426 m · hip 간격 0.3868 m · thigh 간격 0.2840 m · 라디안-도 환산 전부 · 기본 자세 발 깊이 0.3113 / 0.3020 m 재현 · 배터리 Wh 환산 · 관절 범위 폭 비교.</p>
+</section>
+<section id="s12"><span id="11"></span><h2>11. 도해</h2>
+<p><code>20260908-go2-제원-도해.svg</code> 를 같이 올렸다. 세 칸이다.</p>
+<ol><li><b>치수</b>: 선 자세 700 x 400 mm 와 엎드린 자세 760 x 200 mm 를 같은 축척으로 그렸다 (공식)</li><li><b>다리 마디</b>: thigh 213 · calf 213 과 기본 자세의 발 깊이 311 / 302 mm. <b>좌표를 손으로 찍지 않고 정기구학으로 계산했고, 두 발이 지면선에 정확히 닿는 것으로 계산이 맞는지 확인했다</b></li><li><b>관절 범위</b>: 공식과 시뮬을 겹쳐 그렸다. hip 이 24도 넓고 뒷다리 thigh 가 60도 밀린 것이 눈으로 보인다. <b>축은 시뮬 부호계이고, 공식 thigh 는 부호를 뒤집어 겹쳤다</b> (그 사실을 그림 안에 적어 두었다)</li></ol>
+</section>
+<section id="s13"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v1.1</b></td><td>2026-09-09</td><td><b>§3-1 신설.</b> 발 collider 가 구이고 반지름이 <b>USD 0.022 m 대 공식 URDF 0.020 m</b> 로 갈린다는 것을 출처를 붙여 둘 다 적었다(§3 표도 함께 고침 · §9 에 14번 추가). <b><code>hs</code> 0.1 에서 틈 2.5·5 cm 지형이 0 px 로 절단돼 존재하지 않는다</b>는 것도 같이 옮겼다. 이 둘이 이슈 코멘트에만 있어 「0.02 m」와 「미세 틈 숫자」가 그대로 인용되고 있었다</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/332">#332</a></td></tr><tr><td>v1.0</td><td>2026-09-08</td><td>처음 씀. 공식 사양·공식 URDF·IsaacLab 소스를 원문으로 확인해 시뮬/실기 열을 갈랐다. 뒷다리 thigh 비대칭의 근거 부재를 §7-2 에 적었다</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/296">#296</a></td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

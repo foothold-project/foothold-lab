@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pit 진단: 못 나오는 게 아니라 뒷발 빼느라 느리다 · FOOTHOLD</title>
+<meta name="description" content="난이도 지도에서 14 cm 가 51 % 로 처음 절반을 깬다. 그 하락은 두 몫의 곱이다 · 구덩이를 나오는 비율이 95 → 89 % 로 떨어지고, 나온 판이 통과하는 비율이 87 → 57 % 로 떨어진다. 뒤쪽이 크다. 10판을 재현해 6초 속도오차를 구간별로 쪼갠 ">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:anywhere}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem;max-width:56ch}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
+  main table,.wrap table{min-width:0}
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>pit 진단: 못 나오는 게 아니라 뒷발 빼느라 느리다</h1>
+  <p class="lede">난이도 지도에서 14 cm 가 51 % 로 처음 절반을 깬다. 그 하락은 두 몫의 곱이다 · 구덩이를 나오는 비율이 95 → 89 % 로 떨어지고, 나온 판이 통과하는 비율이 87 → 57 % 로 떨어진다. 뒤쪽이 크다. 10판을 재현해 6초 속도오차를 구간별로 쪼갠 결과 판마다 갈리는</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v4.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/68">#68</a></span></div><div><span class="k">작성</span><span class="v">이민우 · 2026-09-08 13:20</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260908-pit-diagnosis.md</span></div><div><span class="k">증거</span><span class="v">확인 52 · 추측 7 · 미측정 21</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 실험
+작성: 이민우 · 2026-09-08 13:20
+근거: 실측 (Isaac Lab 800판 + 재현 27판) · 팀 정본 <code>sim/eval/</code> 원문 · <code>docs/DECISIONS.md</code> · 이슈 <code>#68</code>
+요지: 난이도 지도에서 14 cm 가 51 % 로 처음 절반을 깬다. 그 하락은 두 몫의 곱이다 · 구덩이를 나오는 비율이 95 → 89 % 로 떨어지고, 나온 판이 통과하는 비율이 87 → 57 % 로 떨어진다. 뒤쪽이 크다. 10판을 재현해 6초 속도오차를 구간별로 쪼갠 결과 <b>판마다 갈리는 몫은 1.5 ~ 3.0초 하나뿐</b>이고 3 ~ 6초는 아홉 판이 같다. 그 구간을 정하는 것은 <b>뒷발이 가장자리를 넘는 시각</b>이다.
+상태: 초안
+판: v4.0
+이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/68">#68</a></p></blockquote>
+<blockquote><p>실행: 이민우 · 2026-09-03 및 09-07 · RunPod RTX 4090 (Isaac Lab 2.3.2 · Isaac Sim 5.1)
+정책: 팀 기준선 NVIDIA 공식 체크포인트 <code>Isaac-Velocity-Rough-Unitree-Go2-v0</code> (관측 235차원)
+원자료: <code>1차 검토/26.09.03/02-깊이8개-에피소드100/결과/판별-800판.csv</code> (800판) ·
+<code>1차 검토/26.09.07/csv/원자료-{몸상태,관측스캔,스캔격자}-27판.csv</code> · <code>요약-27판지표.csv</code> ·
+<code>1차 검토/26.09.08/요약-14cm병목.csv</code>
+계산식: <code>계산-요약지표.py</code> · <code>계산-14cm병목.py</code> (작성자 로컬 보관)
+(원자료 CSV 와 계산 스크립트는 저장소에 올리지 않는다. 필요하면 요청해 주십시오)
+평가 조건: <b>6초 · 통과선 3 m · 1.0 m/s · 좌우 임계 1.5 m · 지형당 100판 · seed 42</b>
+<b>주의: 실행은 통과선 4.2 m 로 돌았다. 이 문서의 표는 팀 정본 3 m 로 다시 채점한 값이다</b> (1절)</p></blockquote>
+</section>
+<section id="s1"><span id="0"></span><h2>0. 왜 14 cm 를 보나</h2>
+<h3>KPI 축은 원장에 등재된 결정이다</h3>
+<p><code>docs/DECISIONS.md</code> 09-02 행이다 <span class="ev ev-ok">확인됨</span>.</p>
+<blockquote><p><b>KPI 축을 «성공률»에서 «난이도 경계 이동»으로 바꾼다.</b> 지형별 난이도 파라미터를
+단계로 나눠 「어디까지 되는가」를 재고, 학습 뒤 그 경계가 얼마나 밀렸는지로 판정한다.
+팀장 확정</p></blockquote>
+<p>같은 행의 사유가 왜 그렇게 바꿨는지를 적는다.</p>
+<blockquote><p>나머지 넷은 학습으로 안 열릴 수 있어 「3종 이상 향상」을 지키려면 <b>맵을 쉽게 만들게
+되고, 그 순간 비교가 끊긴다.</b> 경계로 재면 벽 앞에서 어디까지 가능한지가 결과가 되고
+<b>맵을 바꿔도 비교가 산다.</b></p></blockquote>
+<h3>14 cm 는 그 지도 위의 기준점이다</h3>
+<p><b>팀장님의 방향 추천 (2026-09-07)</b> · 14 cm 부터 성공률이 51 % 로 12 cm 보다 크게 떨어지니 <b>KPI 를 14 cm 로 두고 병목을 보라</b>. <code>미등재</code> (원장에 아직 행이 없다. 등재되면 이 문서의 근거 등급이 올라간다.)</p>
+<p><b>이것은 맵을 쉽게 만드는 것이 아니다.</b> 둘을 갈라 둔다.</p>
+<div class="tw"><table><thead><tr><th></th><th>무엇을 하나</th><th>비교가 사나</th></tr></thead><tbody><tr><td>맵을 쉽게 만든다</td><td><code>pit_depth_range</code> 를 낮춰 <b>평가 자체</b>를 바꾼다</td><td><b>끊긴다</b></td></tr><tr><td><b>14 cm 를 기준점으로 둔다</b></td><td>8 ~ 22 cm 를 <b>전부 계속 재고</b>, 그중 14 cm 를 주 관찰점으로 삼는다</td><td><b>산다</b></td></tr></tbody></table></div>
+<p><b>아래쪽을 택했다.</b> 평가 맵 설정(<code>generalization_env_cfg.py</code>)은 손대지 않았고 난이도 지도 8단계도 그대로 유지한다.</p>
+</section>
+<section id="s2"><span id="1"></span><h2>1. 측정 조건 · 6초와 3 m 가 무엇을 뜻하나</h2>
+<p>같은 물음이 세 번 돌아왔으므로 근거를 여기 모아 둔다.</p>
+<h3>6초는 조건이 아니라 에피소드 길이 그 자체다</h3>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>env_cfg.episode_length_s = args_cli.eval_duration      <span class="c"># eval_generalization.py:160</span>
+max_steps = <span class="f">int</span>(<span class="f">round</span>(args_cli.eval_duration / dt)) + <span class="n">2</span> <span class="c"># 503행</span></pre></div>
+<p><code>dt</code> 가 0.02초이므로 <b>300스텝</b>이다. 「6초 안에 3 m」라는 말은 <b>에피소드 길이 6초와 통과선 3 m 를 합쳐 부른 이름</b>이지 별개의 규정이 아니다. 그래서 <b>에피소드 길이를 바꾸면 조건 자체가 바뀐다.</b> 「6초 안에 3 m」를 유지한 채 20초를 줄 수는 없다.</p>
+<p>종료 조건은 둘뿐이다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>done_ids = torch.<span class="f">nonzero</span>((terminated | timed_out) &amp; active, ...)</pre></div>
+<p><b>낙상(<code>terminated</code>) 아니면 시간 끝(<code>timed_out</code>) 이다. 통과선 도달은 종료 조건이 아니다.</b> 명령이 1.0 m/s 고정이라 3 m 를 넘어도 로봇은 계속 걷는다.</p>
+<h3>팀 험지 조건은 6초 · 3 m 다</h3>
+<p>네 자리가 같은 말을 한다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>자리</th><th>무엇이 적혀 있나</th></tr></thead><tbody><tr><td>기획서 <code>deliverables/plan/proposal.md:352</code></td><td>전진 = <b>통과선 도달 (평지 10 m · 험지 3 m)</b> · 근거 「8/31 멘토링 · <b>지형 타일 구조</b>」</td></tr><tr><td><code>docs/DECISIONS.md:125</code></td><td><b>미경험 험지 10종은 6초 · 통과선 3 m 로 잰다</b> (09-03 팀장 확정)</td></tr><tr><td>험지 정본 1000판 실행 명령 (<code>results/20260903-rough10-1.0mps/README.md:303</code>)</td><td><code>--eval_duration 6.0 --command_vx 1.0 --min_progress_m 3.0</code></td></tr><tr><td>맹라현 님 <code>rails</code> 진단 (<code>#66</code> 1주차)</td><td>「판정 임계: 좌우 이탈 1.5 m. <b>통과선 3 m · 6초</b>」</td></tr></tbody></table></div>
+<h3>왜 6초인가 · 타일이 8 m 이기 때문이다</h3>
+<p>지형 타일은 <code>size=(8.0, 8.0)</code> · <code>num_rows=1</code> 이라 <b>전방 4 m</b> 뿐이고 그 바깥은 평평한 테두리다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>시간</th><th>주행 거리</th><th><b>지형 위</b></th><th>지형 밖 평지</th></tr></thead><tbody><tr><td><b>6초</b></td><td>6.0 m</td><td><b>4.0 m (67 %)</b></td><td>2.0 m (33 %)</td></tr><tr><td>20초</td><td>20.0 m</td><td>4.0 m (20 %)</td><td><b>16.0 m (80 %)</b></td></tr></tbody></table></div>
+<p><code>DECISIONS.md:125</code> 의 사유가 이것이다.</p>
+<blockquote><p>타일이 8 m 라 10 m 를 요구하면 <b>지형 밖 평지를 걷는 시간이 대부분이 된다.</b></p></blockquote>
+<p>실제로 6초 실행에서도 마지막 0.6 ~ 1.5초는 이미 지형 밖이다. 14 cm ep96 은 5.28초에 타일 끝(4 m)을 지나고 6초에 4.69 m 에서 끝난다.</p>
+<h3>시간과 통과선은 짝으로 움직인다</h3>
+<p>팀의 조건들은 <b>요구 평균속도 비율</b>이 같게 짜여 있다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th></th><th>시간</th><th>통과선</th><th>요구 평균속도</th><th>명령 대비</th></tr></thead><tbody><tr><td>평지 정본</td><td>20초</td><td>10 m</td><td>0.50 m/s</td><td><b>50 %</b></td></tr><tr><td><b>험지 10종</b></td><td><b>6초</b></td><td><b>3 m</b></td><td><b>0.50 m/s</b></td><td><b>50 %</b></td></tr></tbody></table></div>
+<p><b>평지 20초·10 m 와 험지 6초·3 m 가 같은 50 % 인 것은 우연이 아니다.</b> 시간을 바꾸면 통과선도 같이 바꿔야 엄격도가 유지된다.</p>
+<blockquote><p><b>그래서 이 진단은 6초 · 3 m 로 간다.</b> 20초로 늘리면 측정의 80 % 가 평지 보행이 되어
+험지 능력이 평지 성적에 덮인다. 시간을 늘리려면 임석헌 님 <code>Corridor</code>(24 x 8 m ·
+gap 5개 · 통과선 15 m)처럼 <b>지형을 함께 늘려야</b> 한다.</p></blockquote>
+<h3>실행이 통과선 4.2 m 로 돌았다 · 이 문서는 3 m 로 다시 채점했다</h3>
+<p><b>800판은 <code>min_progress</code> 4.2 m 로 채점됐다</b> <span class="ev ev-ok">확인됨</span>. 판정 경계를 역산하면 통과 최소 4.2020 m · 탈락 최대 4.1836 m 이고 <code>progress_ratio</code> 경계가 정확히 0.70 이다.</p>
+<p>출처는 임석헌 님 초기 하네스다. 그 판은 통과선을 <b>비율</b>로 받았고 기본값이 0.70 이었다 (<code>inbox/lim/20260822-…성능 측정.md:359</code> · 승격본 <code>benchmark-setup-lim.md:364</code>). 6초 x 1.0 m/s x 0.70 = 4.2 m 다. 현재 팀 하네스는 미터로 직접 받는다 (<code>--min_progress_m</code>) 는 것을 <code>sim/eval/PROVENANCE.md:128</code> 이 적고 있다.</p>
+<p><b>다시 채점해도 종합 성공률은 여덟 깊이 전부 한 판도 바뀌지 않는다</b> <span class="ev ev-ok">확인됨</span>. 3 ~ 4.2 m 를 간 판은 속도추종에서 어차피 탈락하기 때문이다. <b>다만 「전진」 축은 바뀌므로 아래 표는 전부 3 m 로 다시 채점한 값이다.</b></p>
+</section>
+<section id="s3"><span id="2"></span><h2>2. 이 지형이 무엇인가</h2>
+<p><code>pit</code> 은 앞에 있는 구덩이를 건너뛰는 지형이 아니다. <b>로봇이 1.5 m x 1.5 m 구멍 바닥에서 태어나 사방 가장자리를 기어올라 나와야 한다</b> <span class="ev ev-ok">확인됨</span>. 근거는 <code>mesh_terrains.py</code> <code>pit_terrain()</code> 마지막 줄이다.</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>origin = np.<span class="f">array</span>([pos[<span class="n">0</span>], pos[<span class="n">1</span>], -total_depth])</pre></div>
+<p>로봇은 발판 중앙에서 출발하고 시작 위치가 앞뒤좌우 10 cm 씩 흔들린다. <b>가장자리까지 거리는 0.65 ~ 0.85 m</b> 다.</p>
+<h3>평가 맵은 20 cm 한 점이고 14 cm 는 내가 만든 단계다</h3>
+<p>깊이 식이 <code>mesh_terrains.py:458</code> 에 있다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>pit_depth = cfg.pit_depth_range[<span class="n">0</span>] + difficulty * (cfg.pit_depth_range[<span class="n">1</span>] - cfg.pit_depth_range[<span class="n">0</span>])</pre></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>줄</th></tr></thead><tbody><tr><td><code>pit_depth_range</code></td><td><code>(0.10, 0.30)</code></td><td>54</td></tr><tr><td><code>difficulty_range</code></td><td><b><code>(0.5, 0.5)</code></b></td><td>15</td></tr><tr><td><code>num_rows</code></td><td><b><code>1</code></b></td><td>9</td></tr><tr><td>커리큘럼</td><td><b><code>terrain_levels = None</code></b></td><td>135</td></tr></tbody></table></div>
+<p><b>난이도가 0.5 고정이고 레벨이 하나뿐이며 커리큘럼이 꺼져 있어 평가 맵 깊이는 언제나 <code>0.10 + 0.5 x 0.20 = 0.20 m</code> 한 점이다.</b> 14 cm 는 그 설정을 그대로 두고 깊이만 바꿔 따로 돌린 단계다. 계획서 §2 4번이 요구한 난이도 지도를 만들려고 8단계로 나눴다.</p>
+<h3>학습 맵은 반대다</h3>
+<div class="tw"><table><thead><tr><th></th><th><b>학습</b> (<code>velocity_env_cfg.py</code>)</th><th><b>평가</b> (<code>generalization_env_cfg.py</code>)</th></tr></thead><tbody><tr><td>지형 난이도</td><td><b>커리큘럼이 돈다</b> (10레벨)</td><td><b>0.5 고정</b></td></tr><tr><td>명령 속도</td><td><b>무작위</b> <code>(-1.0, 1.0)</code> · 10초마다 재샘플</td><td>고정 1.0</td></tr><tr><td>질량 · 밀치기 · 외력 · 무게중심</td><td><b>전부 켜짐</b></td><td><b>전부 꺼짐</b></td></tr><tr><td>관측 잡음</td><td>켜짐</td><td>꺼짐</td></tr></tbody></table></div>
+<p>그리고 <b>지금 학습 맵(<code>rough.py</code>)에 <code>pit</code> 이 아예 없다</b> <span class="ev ev-ok">확인됨</span>. 2주차에 계획서 §3 대로 <b>rough 0.6 + <code>pit</code> 0.4</b> 혼합 맵을 새로 만들어야 한다.</p>
+</section>
+<section id="s4"><span id="3"></span><h2>3. 난이도 지도 · 이 이슈의 KPI</h2>
+<p>깊이만 8 ~ 22 cm 로 바꾸고 나머지는 전부 같게 두어 지형당 100판씩 <b>800판</b>을 돌렸다. <b>아래는 팀 정본 통과선 3 m 로 다시 채점한 값이다</b> (1절).</p>
+<div class="tw"><table><thead><tr><th>깊이</th><th>종합</th><th>생존</th><th>전진</th><th>속도추종</th><th>방향유지</th><th><b>나옴</b></th></tr></thead><tbody><tr><td>8 cm</td><td><b>100 %</b></td><td>100 %</td><td>100 %</td><td>100 %</td><td>100 %</td><td>100</td></tr><tr><td>10 cm</td><td>90 %</td><td>99 %</td><td>96 %</td><td>90 %</td><td>100 %</td><td>96</td></tr><tr><td>12 cm</td><td>83 %</td><td>98 %</td><td>95 %</td><td>83 %</td><td>100 %</td><td>95</td></tr><tr><td><b>14 cm</b></td><td><b>51 %</b></td><td>96 %</td><td>89 %</td><td><b>52 %</b></td><td>98 %</td><td><b>89</b></td></tr><tr><td>16 cm</td><td>22 %</td><td>95 %</td><td>66 %</td><td>24 %</td><td>97 %</td><td>72</td></tr><tr><td>18 cm</td><td>7 %</td><td>95 %</td><td>47 %</td><td>7 %</td><td>100 %</td><td>50</td></tr><tr><td>20 cm</td><td>2 %</td><td>95 %</td><td>20 %</td><td>2 %</td><td>99 %</td><td>22</td></tr><tr><td>22 cm</td><td>1 %</td><td>91 %</td><td>6 %</td><td>1 %</td><td>99 %</td><td>7</td></tr></tbody></table></div>
+<p><b>「나옴」은 전진 1.5 m 이상인 판이다.</b> 갇힌 판은 0.97 ~ 1.14 m 에 좁게 뭉쳐 있고 그다음 값이 3.1 m 라 <b>1.14 와 3.1 사이가 완전히 비어 있어</b> 경계를 어디 두어도 같다.</p>
+<p><b>2주차 뒤에는 이 표를 다시 만들어 경계가 몇 cm 밀렸는지로 잰다.</b></p>
+</section>
+<section id="s5"><span id="4"></span><h2>4. 12 → 14 cm 의 하락은 두 몫의 곱이다</h2>
+<div class="tw"><table><thead><tr><th>깊이</th><th>① 나오는 비율</th><th>② 나온 판이 통과하는 비율</th><th>① x ②</th></tr></thead><tbody><tr><td>12 cm</td><td>95 / 100 = <b>95 %</b></td><td>83 / 95 = <b>87 %</b></td><td>83 %</td></tr><tr><td><b>14 cm</b></td><td>89 / 100 = <b>89 %</b></td><td>51 / 89 = <b>57 %</b></td><td><b>51 %</b></td></tr><tr><td>16 cm</td><td>72 / 100 = 72 %</td><td>22 / 72 = 31 %</td><td>22 %</td></tr></tbody></table></div>
+<blockquote><p><b>12 → 14 cm 의 32 포인트 하락에서 큰 쪽은 ② 다.</b>
+나오는 비율은 6 포인트 떨어졌는데 <b>나온 뒤 통과하는 비율이 30 포인트 떨어졌다.</b></p></blockquote>
+<h3>표 읽는 법 · 「추종만 실패」가 무슨 뜻인가</h3>
+<p>판정은 네 축을 <b>전부</b> 만족해야 종합 성공이다. 그래서 실패한 판도 어느 축에서 떨어졌느냐에 따라 뜻이 다르다.</p>
+<div class="tw"><table><thead><tr><th>분류</th><th>생존</th><th>전진</th><th>속도추종</th><th>방향유지</th><th>무엇을 뜻하나</th></tr></thead><tbody><tr><td>성공</td><td>O</td><td>O</td><td>O</td><td>O</td><td></td></tr><tr><td><b>추종만 실패</b></td><td>O</td><td>O</td><td><b>X</b></td><td>O</td><td><b>구덩이는 나왔는데 느렸다</b></td></tr><tr><td><b>방향만 실패</b></td><td>O</td><td>O</td><td>O</td><td><b>X</b></td><td><b>잘 갔는데 좌우로 1.5 m 넘게 벗어났다</b></td></tr><tr><td><b>추종+방향 실패</b></td><td>O</td><td>O</td><td><b>X</b></td><td><b>X</b></td><td>느렸고 옆으로도 벗어났다</td></tr><tr><td><b>전진+추종 실패</b></td><td>O</td><td><b>X</b></td><td><b>X</b></td><td>O</td><td><b>못 나왔다</b></td></tr><tr><td>낙상</td><td><b>X</b></td><td>-</td><td>-</td><td>-</td><td>넘어졌다</td></tr></tbody></table></div>
+<p><b>전진이 실패하면 속도추종은 반드시 따라 실패한다.</b> 6초에 3 m 를 못 갔다는 것은 평균 0.5 m/s 미만이라는 뜻이고, 그러면 속도 오차가 임계 0.25 를 자동으로 넘기기 때문이다. 그래서 둘을 갈라 세면 <b>「못 나왔다」와 「나왔는데 느렸다」가 구분된다.</b></p>
+<p>사건별로 쪼개면 이렇다 (통과선 3 m 기준).</p>
+<div class="tw"><table><thead><tr><th>깊이</th><th>성공</th><th><b>추종만 실패</b></th><th>전진+추종 실패</th><th>낙상</th><th>방향만</th><th>추종+방향</th></tr></thead><tbody><tr><td>12 cm</td><td>83</td><td>12</td><td>3</td><td>2</td><td>0</td><td>0</td></tr><tr><td><b>14 cm</b></td><td><b>51</b></td><td><b>36</b></td><td>7</td><td>4</td><td>1</td><td>1</td></tr><tr><td>16 cm</td><td>22</td><td>41</td><td>29</td><td>5</td><td>2</td><td>1</td></tr><tr><td>18 cm</td><td>7</td><td>40</td><td>48</td><td>5</td><td>0</td><td>0</td></tr><tr><td>20 cm</td><td>2</td><td>17</td><td>75</td><td>5</td><td>0</td><td>1</td></tr><tr><td>22 cm</td><td>1</td><td>4</td><td>85</td><td>9</td><td>0</td><td>1</td></tr></tbody></table></div>
+<p><b>방향 관련은 여섯 깊이 통틀어 여덟 판뿐이다.</b> 14 cm 의 두 판은 ep36(이탈 1.705 m · 다른 축 통과)과 ep70(이탈 1.717 m · 속도추종도 실패)이다.</p>
+<p><b>14 cm 실패 49판 중 36판(73 %)이 「구덩이는 나왔고 방향도 지켰는데 속도만 못 따라간」 판이다.</b> 갇힌 판은 7판뿐이다.</p>
+<p>「추종만 실패」가 14 ~ 18 cm 에서 36 ~ 41판으로 가장 많고 <b>20 ~ 22 cm 에서 17 · 4판으로 줄어든다.</b> 깊어서 좋아진 것이 아니라 아예 못 나와서 속도추종까지 갈 판이 없는 것이다.</p>
+<blockquote><p><b>14 cm 는 「나올 수 있는데 느려서 떨어지는」 판이 가장 많은 깊이다.</b>
+그래서 이 자리를 KPI 로 두면 학습이 밀어야 할 대상이 분명해진다.</p></blockquote>
+</section>
+<section id="s6"><span id="5"></span><h2>5. 51 % 는 벽이 아니라 분포 한복판에 그은 선이다</h2>
+<p>14 cm 에서 구덩이를 나온 <b>89판</b>의 속도추종 오차 분포다. 팀 임계는 <b>0.25</b> 다.</p>
+<div class="tw"><table><thead><tr><th>MAE</th><th>판 수</th><th></th></tr></thead><tbody><tr><td>0.12 ~ 0.14</td><td>3</td><td><code>***</code></td></tr><tr><td>0.14 ~ 0.16</td><td>4</td><td><code>****</code></td></tr><tr><td>0.16 ~ 0.18</td><td>6</td><td><code>******</code></td></tr><tr><td>0.18 ~ 0.20</td><td>13</td><td><code>*************</code></td></tr><tr><td>0.20 ~ 0.22</td><td>9</td><td><code>*********</code></td></tr><tr><td>0.22 ~ 0.24</td><td>12</td><td><code>************</code></td></tr><tr><td><b>0.24 ~ 0.26</b></td><td><b>11</b></td><td><code>***********</code> <b>← 임계 0.25 가 이 칸을 지난다</b></td></tr><tr><td>0.26 ~ 0.28</td><td>11</td><td><code>***********</code></td></tr><tr><td>0.28 ~ 0.30</td><td>5</td><td><code>*****</code></td></tr><tr><td>0.30 ~ 0.32</td><td>1</td><td><code>*</code></td></tr><tr><td>0.32 ~ 0.34</td><td>1</td><td><code>*</code></td></tr><tr><td>0.34 이상</td><td>13</td><td><code>*************</code></td></tr><tr><td><b>합계</b></td><td><b>89</b></td><td></td></tr></tbody></table></div>
+<p>중앙값 <b>0.2293</b> · 최소 0.1317 · 최대 0.4960.</p>
+<blockquote><p><b>두 무리로 갈라지지 않는다. 0.13 에서 0.50 까지 이어진 한 덩어리다</b> <span class="ev ev-ok">확인됨</span>.
+임계 0.25 가 그 한복판을 지나고, 그 칸 하나에만 <b>11판</b>이 걸쳐 있다.</p></blockquote>
+<h3>깊이가 깊어지면 이 분포가 통째로 밀린다</h3>
+<p>같은 계산을 깊이마다 하면 이렇다 (나온 판 = 전진 1.5 m 이상).</p>
+<div class="tw"><table><thead><tr><th>깊이</th><th>나옴</th><th><b>중앙값</b></th><th><b>임계 0.25 까지</b></th><th>통과율</th></tr></thead><tbody><tr><td>8 cm</td><td>100</td><td>0.142</td><td>−0.108</td><td><b>100 %</b></td></tr><tr><td>10 cm</td><td>96</td><td>0.151</td><td>−0.099</td><td>94 %</td></tr><tr><td>12 cm</td><td>95</td><td>0.179</td><td>−0.071</td><td>87 %</td></tr><tr><td><b>14 cm</b></td><td>89</td><td><b>0.229</b></td><td><b>−0.021</b></td><td><b>58 %</b></td></tr><tr><td>16 cm</td><td>72</td><td><b>0.274</b></td><td><b>+0.024</b></td><td>33 %</td></tr></tbody></table></div>
+<p><b>밀리는 폭 자체는 완만하다.</b> 중앙값이 12 → 14 에서 <b>+0.050</b>, 14 → 16 에서 <b>+0.045</b> 로 거의 같은데 통과율은 87 → 58 → 33 으로 계속 크게 떨어진다. <b>밀림 폭이 급락의 원인이 아니다.</b></p>
+<p>정하는 것은 <b>중앙값이 임계의 어느 쪽에 있느냐</b>다. 오른쪽 두 열을 보면 <b>14 cm 에서 거리가 −0.021 로 거의 0 이 되고 16 cm 에서 부호가 뒤집힌다.</b></p>
+<blockquote><p>### 14 cm 는 분포의 중앙이 임계에 도달하는 깊이다 <span class="ev ev-ok">확인됨</span></p>
+<p>중앙값이 임계에 오면 정의상 절반이 통과한다. 그래서 51 % 가 나온다.
+12 cm 까지는 분포 전체가 임계 왼쪽에 있어 조금 밀려도 통과율이 잘 안 떨어졌는데,
+<b>14 cm 부터 분포가 임계를 걸치기 시작하면서 밀림이 그대로 탈락으로 바뀐다.</b></p></blockquote>
+<p><b>「왜 분포가 밀리는가」는 아직 못 답한다.</b> 14 cm 안에서는 뒷발 통과 시각이 MAE 를 정하는 것을 보였지만 (7절), <b>재현 측정에 12 cm 가 없다</b> <span class="ev ev-todo">미측정</span>. 12 cm 를 같은 방식으로 재면 <b>「깊이 2 cm 가 뒷발 통과를 몇 초 늦추는가」</b>가 나온다. 그것이 이 진단에서 비어 있는 마지막 조각이다.</p>
+<h3>임계는 예민하다</h3>
+<p>임계를 옮겨 보면 얼마나 예민한지 보인다.</p>
+<div class="tw"><table><thead><tr><th>임계</th><th>성공 판</th></tr></thead><tbody><tr><td>0.24</td><td>46</td></tr><tr><td><b>0.25</b></td><td><b>51</b></td></tr><tr><td>0.26</td><td>56</td></tr><tr><td>0.27</td><td>60</td></tr><tr><td>0.28</td><td>67</td></tr></tbody></table></div>
+<p><b>임계를 0.01 만 옮겨도 성공이 5판씩 움직인다.</b> 그래서 성공률 자체보다 <b>분포가 얼마나 왼쪽으로 밀리는지</b>가 학습 성과를 더 잘 나타낸다. 이는 원장 09-02 의 「성공률이 아니라 경계로 재라」와 같은 방향이다.</p>
+</section>
+<section id="s7"><span id="6"></span><h2>6. 6초 오차가 어느 구간에서 왔나 · 이 진단의 핵심</h2>
+<h3>먼저 팀 지표를 원자료로 재현했다</h3>
+<p>800판 중 27판을 그대로 재현해 매 스텝을 기록하고, 팀 계산식을 원자료에 다시 걸었다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>eval_generalization.py:562   planar_vel_error = ||(vx_b, vy_b) - (cmd_vx, cmd_vy)||
+metrics.py:149               velocity_mae_mps = Σ planar_vel_error / 스텝수</pre></div>
+<p><b>27판 전부 소수 넷째 자리까지 일치했다</b> <span class="ev ev-ok">확인됨</span> (<code>요약-14cm병목.csv</code> 의 <code>대조</code> 열). 전진거리도 27판 전부 800판 CSV 와 맞는다.</p>
+<h3>이 10판은 무작위 표본이 아니다</h3>
+<p><b>14 cm 100판 중 열 판을 데이터를 보고 골랐다</b> <span class="ev ev-ok">확인됨</span>. 목적은 <b>「임계 0.25 양쪽을 무엇이 가르는가」</b>였다. 나온 89판을 MAE 순으로 줄 세웠을 때 고른 판의 자리는 이렇다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>고른 이유 (실행 로그 이름)</th><th>MAE</th><th>89판 중 순위</th></tr></thead><tbody><tr><td>ep83 · ep28</td><td><code>success-fast</code> · 가장 빠른 성공</td><td>0.132 · 0.135</td><td><b>1 · 2위</b></td></tr><tr><td>ep50 · ep96</td><td><code>success-near(est)</code> · 임계 바로 아래</td><td>0.248 · 0.249</td><td>51 · 52위</td></tr><tr><td>ep35 · ep98 · ep99 · ep34</td><td><code>fail-near(est)</code> · 임계 바로 위</td><td>0.252 ~ 0.257</td><td>53 ~ 56위</td></tr><tr><td>ep1</td><td><code>escaped</code> · 나왔으나 더 느린 실패</td><td>0.275</td><td>66위</td></tr><tr><td>ep8</td><td><code>stuck</code> · 갇힌 판</td><td>0.804</td><td>-</td></tr></tbody></table></div>
+<blockquote><p><b>3 ~ 50위(MAE 0.15 ~ 0.24)에서는 한 판도 고르지 않았다.</b> 중간 성적 48판이
+표본에 없다. 이 공백은 데이터의 성질이 아니라 <b>내 선택의 결과</b>다.
+아래 결론을 읽을 때 이 점을 함께 본다.</p></blockquote>
+<p><b>그래서 6초 MAE 를 구간별 «기여분» 으로 쪼갤 수 있다.</b> MAE 는 스텝 오차의 합을 스텝 수로 나눈 값이므로, 한 구간의 오차 합을 <b>전체</b> 스텝 수로 나누면 그 구간이 6초 MAE 에 보탠 몫이 된다. <b>셋을 더하면 6초 MAE 와 같아진다.</b></p>
+<h3>갈리는 구간은 하나뿐이다</h3>
+<p>구간은 앞발이 0.9 ~ 1.2초, 뒷발이 1.3 ~ 2.4초에 넘는 것을 보고 잘랐다 (팀이 정한 경계가 아니다).</p>
+<div class="tw"><table><thead><tr><th>판</th><th>종합</th><th>속도MAE</th><th>0 ~ 1.5초</th><th><b>1.5 ~ 3.0초</b></th><th>3.0 ~ 6.0초</th></tr></thead><tbody><tr><td>ep83</td><td>성공</td><td>0.1317</td><td>0.0645</td><td><b>0.0215</b></td><td>0.0456</td></tr><tr><td>ep28</td><td>성공</td><td>0.1346</td><td>0.0659</td><td><b>0.0229</b></td><td>0.0458</td></tr><tr><td>ep50</td><td>성공</td><td>0.2476</td><td>0.0768</td><td><b>0.1265</b></td><td>0.0443</td></tr><tr><td>ep96</td><td>성공</td><td>0.2489</td><td>0.0721</td><td><b>0.1339</b></td><td>0.0428</td></tr><tr><td>ep35</td><td>실패</td><td>0.2515</td><td>0.0831</td><td><b>0.1247</b></td><td>0.0437</td></tr><tr><td>ep98</td><td>실패</td><td>0.2518</td><td>0.0734</td><td><b>0.1340</b></td><td>0.0444</td></tr><tr><td>ep99</td><td>실패</td><td>0.2543</td><td>0.1010</td><td><b>0.1083</b></td><td>0.0450</td></tr><tr><td>ep34</td><td>실패</td><td>0.2567</td><td>0.0824</td><td><b>0.1305</b></td><td>0.0437</td></tr><tr><td>ep1</td><td>실패</td><td>0.2745</td><td>0.0852</td><td><b>0.1455</b></td><td>0.0439</td></tr><tr><td>ep8</td><td>갇힘</td><td>0.8043</td><td>0.0705</td><td>0.2381</td><td>0.4957</td></tr></tbody></table></div>
+<p><b>표의 숫자는 구간 «기여분» 이다. 셋을 더하면 그 판의 속도MAE 가 된다</b> (ep83: 0.0645 + 0.0215 + 0.0456 = 0.1316). 나누는 수를 구간 스텝 수가 아니라 <b>전체 300 으로 고정</b>했기 때문이다. <b>그 구간의 평균 오차가 아니다</b> · ep83 의 0 ~ 1.5초 기여분 0.0645 를 그 구간 스텝 수(75)로 다시 나누면 평균 오차는 0.258 이다.</p>
+<p><b>구간 길이가 다르므로 직접 비교할 때 주의한다.</b> 0 ~ 1.5초와 1.5 ~ 3.0초는 각각 75스텝(전체의 25 %)으로 같아서 그대로 비교되지만, <b>3 ~ 6초는 150스텝(50 %)으로 두 배</b>라 기여분도 그만큼 커지기 쉽다. 그런데도 3 ~ 6초가 가장 작다.</p>
+<p>구덩이를 나온 아홉 판에서 구간별로 얼마나 퍼지는지 보면 이렇다.</p>
+<div class="tw"><table><thead><tr><th>구간</th><th>아홉 판의 폭</th><th>배수</th></tr></thead><tbody><tr><td>0 ~ 1.5초 (앞발)</td><td>0.0645 ~ 0.1010</td><td>1.6배</td></tr><tr><td><b>1.5 ~ 3.0초 (뒷발)</b></td><td><b>0.0215 ~ 0.1455</b></td><td><b>6.8배</b></td></tr><tr><td>3.0 ~ 6.0초 (평지)</td><td>0.0428 ~ 0.0458</td><td><b>1.07배</b></td></tr></tbody></table></div>
+<blockquote><p><b>3 ~ 6초는 아홉 판이 사실상 같다 (0.043 ~ 0.046).</b> 구덩이만 나오면 어느 판이든
+명령 속도를 잘 따라간다 (평균 0.98 m/s).
+<b>0 ~ 1.5초도 비슷하다.</b> 앞발을 올리는 동안은 다 같이 느리다.
+<b>판마다 갈리는 것은 1.5 ~ 3.0초 하나뿐이다</b> <span class="ev ev-ok">확인됨</span>.</p></blockquote>
+<p>가장 느린 판은 ep96 으로 <b>1.5 ~ 2.0초에 평균 0.05 m/s</b> 로 거의 멈춘다 (명령 1.0). ep98 은 같은 구간에서 0.03 m/s 다.</p>
+</section>
+<section id="s8"><span id="7"></span><h2>7. 그 구간을 정하는 것은 뒷발이 넘는 시각이다</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>종합</th><th>앞발 통과</th><th><b>뒷발 통과</b></th><th>속도MAE</th></tr></thead><tbody><tr><td>ep28</td><td>성공</td><td>0.92</td><td><b>1.28</b></td><td>0.1346</td></tr><tr><td>ep83</td><td>성공</td><td>0.94</td><td><b>1.30</b></td><td>0.1317</td></tr><tr><td>ep50</td><td>성공</td><td>1.14</td><td><b>2.24</b></td><td>0.2476</td></tr><tr><td>ep98</td><td>실패</td><td>0.96</td><td><b>2.24</b></td><td>0.2518</td></tr><tr><td>ep96</td><td>성공</td><td>0.96</td><td><b>2.28</b></td><td>0.2489</td></tr><tr><td>ep99</td><td>실패</td><td>1.20</td><td><b>2.28</b></td><td>0.2543</td></tr><tr><td>ep34</td><td>실패</td><td>1.14</td><td><b>2.28</b></td><td>0.2567</td></tr><tr><td>ep35</td><td>실패</td><td>1.22</td><td><b>2.32</b></td><td>0.2515</td></tr><tr><td>ep1</td><td>실패</td><td>1.18</td><td><b>2.44</b></td><td>0.2745</td></tr><tr><td>ep8</td><td>갇힘</td><td>0.96</td><td><b>못 넘음</b></td><td>0.8043</td></tr></tbody></table></div>
+<p><b>앞발은 아홉 판 전부 0.92 ~ 1.22초에 넘는다. 갈리는 것은 뒷발이다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<p>직선을 맞추면 상관계수 <b>r = 0.998</b> · 기울기 <b>0.121</b> (뒷발이 1초 늦으면 MAE 가 0.121 오른다) 이고, 팀 임계 0.25 는 뒷발 통과 <b>2.26초</b>에 해당한다.</p>
+<blockquote><p>### 14 cm 의 판정선은 「뒷발이 2.26초 안에 나오느냐」와 같은 말이다 <span class="ev ev-guess">추측</span></p></blockquote>
+<p><b><span class="ev ev-guess">추측</span> 인 이유를 분명히 적는다.</b> 아홉 판이 <b>1.3초 근처 2판과 2.24 ~ 2.44초 7판</b> 두 덩어리로 뭉쳐 있고 그 사이(1.4 ~ 2.2초)에 판이 하나도 없다. r = 0.998 은 멀리 떨어진 두 덩어리를 이으면 저절로 높아지는 값이라 <b>직선의 근거로 쓸 수 없다.</b></p>
+<p><b>그리고 그 공백은 내가 만든 것이다</b> (6절). 임계 양쪽을 보려고 <b>가장 빠른 2판과 임계 근처 6판</b>을 골랐고, <b>중간 성적 48판을 하나도 안 골랐다.</b> 그 판들의 뒷발 통과 시각이 1.4 ~ 2.2초에 실제로 있는지 없는지는 <b>재 보지 않았다</b> <span class="ev ev-todo">미측정</span>. 따라서 「두 무리로 갈린다」를 이 지형의 성질이라고 말하면 안 된다.</p>
+<p><b>확실한 것은 여기까지다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<ul><li>뒷발이 1.3초에 넘은 2판은 MAE 0.13 이고 둘 다 통과했다.</li><li>뒷발이 2.24 ~ 2.44초에 넘은 7판은 MAE 0.248 ~ 0.275 로 임계선에 걸쳐 있고 2판만 통과했다.</li><li><b>뒷발을 1초 일찍 빼면 이 지형의 판정이 뒤집힌다.</b></li></ul>
+</section>
+<section id="s9"><span id="8"></span><h2>8. 밀려난 가설들</h2>
+<p>14 cm 에서 「왜 느린가」를 설명할 후보를 하나씩 걸러 냈다.</p>
+<div class="tw"><table><thead><tr><th>가설</th><th>결과</th><th>근거</th><th>표본</th></tr></thead><tbody><tr><td>관절 가동범위가 모자라다</td><td><b>아니다</b> <span class="ev ev-ok">확인됨</span></td><td>팀 실측 최대 발 높이 앞 <b>31.0</b> · 뒤 <b>30.1 cm</b>. 14 cm 는 그 절반도 안 된다 (10절)</td><td>팀 USD 실측</td></tr><tr><td>힘이 모자라다</td><td><b>아니다</b> <span class="ev ev-guess">추측</span></td><td>요구 토크 미달 0.50 ~ 5.67 %</td><td>재현 19판</td></tr><tr><td>관측이 못 본다</td><td><b>아니다</b> <span class="ev ev-ok">확인됨</span></td><td>늦어도 0.22초에 깊이 오차 없이 본다</td><td>재현 19판</td></tr><tr><td><b>머리가 부딪혀서다</b></td><td><b>14 cm 에는 해당 없음</b> <span class="ev ev-ok">확인됨</span></td><td>10판 전부 머리·몸통 <b>안 닿음</b>. 16 cm 부터 나타난다 (9절)</td><td>14 cm 10판</td></tr><tr><td><b>뒷발을 낮게 들어서다</b></td><td><b>가르지 못한다</b> <span class="ev ev-todo">미확인</span></td><td>빠른 2판 8.2 · 6.6 cm 와 느린 7판 4.9 ~ 9.2 cm 가 겹친다</td><td>재현 9판</td></tr><tr><td><b>뒷발이 되밀려서다</b></td><td><b>가르지 못한다</b> <span class="ev ev-todo">미확인</span></td><td>되밀림 0인데 늦은 판이 넷, 되밀림 1인데 통과한 판이 하나</td><td>재현 9판</td></tr><tr><td><b>앞이 들린 자세 때문이다</b></td><td><b>가르지 못한다</b> <span class="ev ev-todo">미확인</span></td><td>빠른 ep28(-10.6도)과 느린 ep96(-11.2도)이 붙어 있다</td><td>재현 9판</td></tr></tbody></table></div>
+<blockquote><p>볼 수 있고, 힘도 있고, 관절도 남는다. 머리도 안 부딪힌다.
+<b>남은 것은 「뒷발을 언제 빼는가」 하나인데, 그것을 무엇이 정하는지는 아직 모른다.</b></p></blockquote>
+<h3>뒷발 지연의 원인 셋은 아홉 판으로 안 갈렸다</h3>
+<p>한 층 더 내려가려 했으나 <b>아홉 판으로는 갈리지 않았다.</b> 셋을 봤다.</p>
+<div class="tw"><table><thead><tr><th>후보</th><th>빠른 2판</th><th>느린 7판</th><th>갈리나</th></tr></thead><tbody><tr><td>뒷발 되밀림 횟수</td><td>0 · 0</td><td><b>0 이 4판, 1 이 3판</b></td><td><b>아니다</b></td></tr><tr><td>걸침 중 몸통 기울기</td><td>-8.2 · -10.6도</td><td>-11.2 ~ -14.5도</td><td><b>겹친다</b></td></tr><tr><td>뒷발 clearance 중앙값</td><td>8.2 · 6.6 cm</td><td>4.9 ~ 9.2 cm</td><td><b>아니다</b></td></tr></tbody></table></div>
+<p><b>되밀림</b>은 뒷발이 가장자리 위로 올라갔다가(<code>z_rel_rim &gt; 0</code>) 다시 내려온 횟수다. 스윙 중 스치는 것을 빼려고 올라간 상태가 0.04초 이상 유지된 것만 셌다. <b>되밀림이 0인데도 2.24 ~ 2.44초에 넘은 판이 넷이고, 되밀림이 1인데 통과한 판(ep96)도 있다.</b> 늦음의 일부 원인일 수는 있으나 성패를 가르지 못한다 <span class="ev ev-todo">미확인</span>.</p>
+<p><b>기울기</b>는 <code>pitch</code> 가 음수일수록 앞이 들린 자세다. ep96 으로 확인했다 · 걸침 때 <code>pitch</code> -11.6도이고 머리가 몸통보다 6.7 cm 높다 (평지 주행은 -3.3도 · 2.6 cm). 느린 판이 더 들리기는 하나 <b>빠른 ep28(-10.6도)과 느린 ep96(-11.2도)이 붙어 있어 선을 그을 수 없다</b> <span class="ev ev-todo">미확인</span>.</p>
+<h3>임계 바로 양쪽은 이 데이터로 못 가른다</h3>
+<p>ep96(0.2489 통과)과 ep35(0.2515 탈락)의 차이는 <b>0.0026</b> 이고, 구간별로 뜯으면 방향이 거꾸로다.</p>
+<div class="tw"><table><thead><tr><th></th><th>ep96 (통과)</th><th>ep35 (탈락)</th></tr></thead><tbody><tr><td>0 ~ 1.5초 기여</td><td>0.0721</td><td><b>0.0831</b> ← 여기서 졌다</td></tr><tr><td>1.5 ~ 3.0초 기여</td><td><b>0.1339</b></td><td>0.1247 ← 뒷발 구간은 ep35 가 나았다</td></tr></tbody></table></div>
+<blockquote><p><b>탈락한 ep35 가 뒷발 구간에서는 오히려 덜 잃었다.</b> 진 곳은 앞 1.5초다.
+6절이 보인 「뒷발 구간이 갈린다」는 <b>0.13 무리와 0.25 무리 사이</b>의 이야기이고,
+<b>임계선 바로 양쪽에는 적용되지 않는다</b> <span class="ev ev-ok">확인됨</span>.</p></blockquote>
+<p>5절에서 임계선 칸 하나에 11판이 몰려 있는 것과 같은 사실이다. <b>그 자리에서 통과와 탈락을 가르는 것은 이 표본으로 설명되지 않는다</b> <span class="ev ev-todo">미확인</span>.</p>
+</section>
+<section id="s10"><span id="9"></span><h2>9. 14 cm 에서는 머리 접촉이 성패를 가르지 않는다</h2>
+<p>18 ~ 22 cm 진단(v3.2)에서는 아래턱 접촉이 중요한 축이었다. <b>14 cm 에서는 그 축이 통하지 않는다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>깊이</th><th>아래턱 접촉</th></tr></thead><tbody><tr><td>8 cm · 14 cm</td><td><b>측정한 판 전부 안 닿는다</b> (14 cm 는 10판 전수)</td></tr><tr><td>16 cm 부터</td><td>나타난다</td></tr></tbody></table></div>
+<p><b>14 cm 10판 전부 머리(<code>Head_upper</code> · <code>Head_lower</code>)와 몸통(<code>base</code>)에 힘이 한 번도 걸리지 않았다.</b> 정강이(<code>calf</code>)는 22.9 ~ 343.5 N 으로 닿는데, 8 cm 대조군에서도 124.5 N 이 나오므로 정상 보행의 일부로 본다.</p>
+<blockquote><p><b>깊이마다 병목이 다르다.</b> 18 ~ 22 cm 는 「몸을 갈지 않고 넘을 수 있는가」였고,
+<b>14 cm 는 「얼마나 빨리 빼는가」다.</b> 20 cm 용 지표를 그대로 가져오면 안 된다.</p></blockquote>
+<p><code>#125</code> 4번이 요구한 「턱 접촉 순간의 보행 위상」은 <b>14 cm 에서는 잴 접촉이 없다.</b> 그 항목은 16 cm 이상에서만 성립한다.</p>
+</section>
+<section id="s11"><span id="10"></span><h2>10. 팀 다른 지형과 견주면 같은 그림이 나온다</h2>
+<h3>맹라현 님 <code>rails</code> 진단과 조건이 같다</h3>
+<p><code>docs/research/rails-diagnosis.md</code> (승격 <code>확정</code> v1.3) 및 <code>inbox/meang/20260906-rails-진단.md</code> 는 <b>저와 같은 하네스 · 같은 조건(6초 · 통과선 3 m · 좌우 1.5 m)</b> 으로 아이작심 800판을 냈다 <span class="ev ev-ok">확인됨</span>. 결론 구조가 같다.</p>
+<div class="tw"><table><thead><tr><th></th><th>맹라현 님 <code>rails</code></th><th>이 문서 <code>pit</code> (14 cm)</th></tr></thead><tbody><tr><td>낙상형인가</td><td><b>아니다</b> · 100판 중 15판만 낙상</td><td><b>아니다</b> · 4판</td></tr><tr><td>4축</td><td>생존 85 · 전진 51 · 방향 92 · <b>속도추종 8</b></td><td>생존 96 · 전진 89 · 방향 98 · <b>속도추종 52</b></td></tr><tr><td>병목</td><td><b>속도추종 하나</b></td><td><b>속도추종</b></td></tr><tr><td>경계가 둘</td><td>넘는 한계 <b>10.78 cm</b> · 성공률 90 % 경계 <b>7.89 cm</b></td><td>나옴 경계와 판정 경계가 다름 (4절)</td></tr><tr><td>힘 문제인가</td><td>아니다. 관절은 33.5 cm 드는데 실제 <b>3.21 cm</b></td><td>아니다. 요구 토크 미달 0.50 ~ 5.67 %</td></tr><tr><td>지목한 원인</td><td><b>보상 11항목에 발 높이 항 없음</b></td><td>같음 (13절)</td></tr></tbody></table></div>
+<blockquote><p><b>두 지형이 같은 병목을 공유한다.</b> 「넘을 힘은 있는데 속도추종에서 떨어진다」가
+<code>rails</code> 와 <code>pit</code> 에서 각각 독립적으로 나왔다.</p></blockquote>
+<h3>관절 한계는 팀이 실측했다</h3>
+<p>오흥재 님 <code>inbox/jay/20260907-go2-관절한계-실측.md</code> (<code>확정</code>) 가 아이작 USD 에서 직접 쟀다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>다리</th><th>hip</th><th><b>thigh</b></th><th>calf</th></tr></thead><tbody><tr><td>앞 FL · FR</td><td>-60 ~ 60</td><td><b>-90 ~ 200</b></td><td>-156 ~ -48</td></tr><tr><td>뒤 RL · RR</td><td>-60 ~ 60</td><td><b>-30 ~ 260</b></td><td>-156 ~ -48</td></tr></tbody></table></div>
+<p>최대 발 높이가 <b>앞다리 31.0 cm · 뒷다리 30.1 cm</b> 이고 맹라현 님의 무조코 33.5 cm 와 7 % 안에서 일치한다. <b>14 cm 는 그 절반도 안 되므로 관절 가동범위 문제가 아니다</b> <span class="ev ev-ok">확인됨</span>. 이로써 v3.2 가 <span class="ev ev-todo">미측정</span> 으로 남긴 <code>#115</code> 항목이 채워졌다.</p>
+<blockquote><p><b>다만 앞다리와 뒷다리의 <code>thigh</code> 범위가 다르다</b> <span class="ev ev-ok">확인됨</span>. 뒤가 더 뒤로 뻗고 덜 앞으로 온다.
+이 진단은 「앞발은 늘 넘고 뒷발이 늦다」인데, <b>그 비대칭을 뒷발 지연에 대 보지는 않았다</b> <span class="ev ev-todo">미측정</span>.</p></blockquote>
+<h3>지형 노출만으로 clearance 가 올라간 선례가 있다</h3>
+<p>임석헌 님 <code>#278</code> 은 NVIDIA pretrained 에서 gap 10 % 를 섞어 <b>100 iteration</b> 추가학습했다 <code>확정</code>.</p>
+<div class="tw"><table><thead><tr><th></th><th>pretrained</th><th>model99</th></tr></thead><tbody><tr><td>Gap 성공률</td><td>37.33 %</td><td><b>88.17 %</b> (+50.83 %p)</td></tr><tr><td>기존 6종 평균</td><td>83.69 %</td><td><b>94.97 %</b> (+11.28 %p)</td></tr><tr><td><b>평균 발 clearance</b></td><td>4.86 cm</td><td><b>6.42 cm</b></td></tr><tr><td>최대 정체시간</td><td>5.45 s</td><td><b>1.13 s</b></td></tr></tbody></table></div>
+<p><b>보상을 하나도 안 건드리고 지형만 섞었는데 clearance 가 올랐다.</b> 13절이 「발 높이 보상」을 넘길 것으로 적었지만, <b>보상 변경 없이 지형 노출만으로도 같은 방향이 나온다는 선례</b>이므로 순서를 그렇게 잡는다.</p>
+<p>다만 임석헌 님도 단서를 달았다 · 계단 상승에서 충돌·행동 변화가 커져 <b>「50 iteration 통제 연장 · 25마다 검증」</b> 을 권한다.</p>
+</section>
+<section id="s12"><span id="11"></span><h2>11. 판정에 구멍이 두 개 있다</h2>
+<h3>11-1. 아래턱이 판정에 안 들어간다</h3>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre>base_contact = <span class="f">DoneTerm</span>(func=mdp.illegal_contact,
+    params={<span class="s">&quot;sensor_cfg&quot;</span>: <span class="f">SceneEntityCfg</span>(<span class="s">&quot;contact_forces&quot;</span>, body_names=<span class="s">&quot;base&quot;</span>),
+            <span class="s">&quot;threshold&quot;</span>: <span class="n">1.0</span>})</pre></div>
+<p>Go2 는 몸체가 19개이고 머리가 <code>base</code> 와 별개라 <b>머리가 아무리 세게 부딪혀도 판정은 모른다.</b> 실기 Go2 는 그 자리에 라이다가 있다. <b>18 cm ep1 은 아래턱에 1344 N 을 맞고도 「생존」으로 셌다.</b></p>
+<p><b>14 cm 에서는 이 구멍이 실제 문제를 일으키지 않는다</b> · 10판 전부 안 닿았다. 16 cm 이상으로 갈 때 다시 문제가 된다.</p>
+<blockquote><p><b>「몇 N 부터 부서지는가」의 기준은 우리에게 없다</b> <span class="ev ev-todo">미확인</span>. 팀 문서에도 없다.</p></blockquote>
+<h3>11-2. 발 접촉이 판정에 없다</h3>
+<p><code>#125</code> 5번이 「네 발이 다음 단 위에」를 요구했고 완료로 닫혔는데 정본 <code>metrics.py</code> 에 발 접촉을 보는 코드가 없다 <span class="ev ev-ok">확인됨</span>. <b>다만 이번 27판에서는 문제가 안 됐다</b> · 넘은 판이 전부 네 발 4/4 였다.</p>
+</section>
+<section id="s13"><span id="12"></span><h2>12. 부록 · 사양 밖 18 ~ 22 cm 와 0단계 관문</h2>
+<p><b>14 cm 로 KPI 를 옮겨도 0단계 관문의 답은 그대로 살아 있다.</b> 자세한 것은 v3.2 (<code>26.09.07/20260907-pit진단.md</code>) 5 ~ 8절에 있다.</p>
+<p>관문이 물은 것은 「이 맵·이 센서로 돌릴 수 있는가를 숫자로 말할 수 있나」이지 「불가능함을 증명하라」가 아니다 (계획서 §2 0번).</p>
+<div class="tw"><table><thead><tr><th>물음</th><th>답</th><th>근거</th><th>표본</th></tr></thead><tbody><tr><td>20 cm 가 물리적으로 불가능한가</td><td><b>아니다</b> <span class="ev ev-ok">확인됨</span></td><td>성공 2판 중 ep78 이 머리·몸통을 <b>안 대고</b> 넘었다</td><td><b>한 판</b></td></tr><tr><td>못 봐서인가</td><td><b>아니다</b> <span class="ev ev-ok">확인됨</span></td><td>늦어도 0.22초에 깊이 오차 없이 본다</td><td>19판</td></tr><tr><td>힘이 모자라서인가</td><td><b>아니다</b> <span class="ev ev-ok">확인됨</span></td><td>요구 토크 미달 0.50 ~ 5.67 % + 관절 실측 30 cm 가능 (10절)</td><td>19판 + 팀 실측</td></tr></tbody></table></div>
+<p>사양 밖 성공 10판 전수 측정 결과다.</p>
+<div class="tw"><table><thead><tr><th>깊이</th><th>성공 판</th><th>머리·몸통 <b>안 닿음</b></th></tr></thead><tbody><tr><td>18 cm</td><td>7</td><td><b>5</b></td></tr><tr><td>20 cm</td><td>2</td><td><b>1</b></td></tr><tr><td>22 cm</td><td>1</td><td><b>0</b></td></tr></tbody></table></div>
+<p><b>Go2 공식 사양의 최대 등판/하강은 약 16 cm</b> 이고 (임석헌 님 <code>#218</code> §11), 그 문서는 이를 <b>「정격 운용 목표가 아니라 최대 성능 경계」</b>로 읽으라고 적는다. 18 cm 에서 5판이 제대로 넘은 것이 그 서술과 맞는다.</p>
+<blockquote><p><b>14 cm 는 사양 안쪽이다.</b> 그래서 이 깊이의 실패는 사양 문제가 아니라 전적으로
+정책 문제다. KPI 를 여기 두면 학습 효과가 사양 논쟁에 섞이지 않는다.</p></blockquote>
+</section>
+<section id="s14"><span id="13"></span><h2>13. 2주차로 넘길 것</h2>
+<p>계획서 §3 이 정한 틀 안에서만 적는다. <b>한 번에 하나씩 바꾼다.</b></p>
+<h3>무엇을 건드리고 무엇을 안 건드리나</h3>
+<p>원장 <code>DECISIONS.md</code> 09-02 행이 못박았다 <span class="ev ev-ok">확인됨</span>.</p>
+<blockquote><p><b>「멈춰서 한 발씩」은 저속 상수 모드로만 넣고, 보행 위상을 CSV 열로 기록해 가설을
+직접 검증한다. 발을 하나씩 드는 직접 제어는 하지 않는다.</b> 정책이 받는 명령은
+<code>(vx, vy, wz)</code> 뿐이라 넣을 자리가 없고, 넣으면 정책을 평가하는 것이 아니게 된다.
+팀장 확정</p></blockquote>
+<div class="tw"><table><thead><tr><th></th><th>관절 값을 누가 정하나</th></tr></thead><tbody><tr><td>토크 제어 · 위치 제어</td><td><b>사람이 정한다.</b> 매 스텝 로봇에 값이 들어간다</td></tr><tr><td><b>보상 항 추가 (아래)</b></td><td><b>정책이 정한다.</b> 학습 중 점수만 매기고 로봇에는 아무 값도 안 넣는다</td></tr></tbody></table></div>
+<p>정책이 내보내는 것 자체는 원래부터 관절 목표각이다 (<code>목표각 = 기본자세 + 0.25 x 행동</code>, 12관절) <span class="ev ev-ok">확인됨</span>. 맹라현 님 <code>#194</code> 가 확인한 것으로, <b>공식 체크포인트가 처음부터 그렇게 학습된 구조</b>이지 우리가 넣거나 바꾸는 것이 아니다.</p>
+<h3>순서</h3>
+<div class="tw"><table><thead><tr><th>순서</th><th>무엇</th><th>계획서 §3</th><th>근거</th></tr></thead><tbody><tr><td><b>1</b></td><td><b>학습 맵을 만든다</b> (rough 0.6 + <code>pit</code> 0.4)</td><td>1번</td><td>지금 <code>rough.py</code> 에 <code>pit</code> 이 없다 (2절). <b>임석헌 님 <code>#278</code> 이 지형 노출만으로 clearance 가 오른 것을 보였다</b> (10절)</td></tr><tr><td><b>2</b></td><td><b>난이도 시작점을 쉬운 쪽에서</b></td><td>2번</td><td>8 ~ 12 cm 가 83 ~ 100 % (3절)</td></tr><tr><td><b>3</b></td><td><b>난이도 범위를 14 cm 전후로</b></td><td>3번</td><td>14 cm 가 「나올 수 있는데 느린」 판이 가장 많다 (4절)</td></tr><tr><td>4</td><td>뒷발 회수 시간을 줄이는 보상</td><td>3번</td><td>6초 오차 중 갈리는 몫이 1.5 ~ 3.0초 하나다 (6 · 7절)</td></tr><tr><td>5</td><td>뒷발 높이 보상</td><td>3번</td><td>보상에 발 높이 항이 없다 (아래)</td></tr><tr><td>-</td><td><b>rough 회귀 지표 계측</b></td><td>4번</td><td><b>필수. 이 열이 비면 결과로 인정 안 된다</b></td></tr></tbody></table></div>
+<p><b>1번을 먼저 하고 4 · 5번은 그다음이다.</b> 임석헌 님 선례가 보상을 안 건드리고 지형만으로 개선을 냈으므로, 보상을 먼저 손대면 무엇이 효과를 냈는지 갈리지 않는다.</p>
+<p><b>전진불능형이므로 전진 보상 쪽을 본다.</b> 계획서 §3 3번이 「낙상형은 발 배치·접촉 페널티, <b>전진불능형(이민우·오흥재)은 전진 보상 쪽</b>」이라 배정했다.</p>
+<h3>왜 지금은 그렇게 안 하나</h3>
+<p>맹라현 님 <code>#194</code> (<code>docs/research/발보상-시간아니고높이아님.md</code> · 승격본) 다.</p>
+<blockquote><p>우리 학습 cfg 의 보상 열한 항목에 <b>발 높이나 발 배치를 상 주는 항이 없다.</b>
+<code>feet_air_time</code> 은 발이 떠 있던 «시간» 을 상 주고 높이는 안 본다.</p></blockquote>
+<p>임석헌 님 <code>#218</code> 도 같은 말을 한다.</p>
+<blockquote><p><code>feet_air_time</code> 증폭만으로 clearance 를 대체하지 않는 것이 좋다.
+공중 체류시간과 계단 수직면을 넘는 발 높이는 동일한 목표가 아니다.</p></blockquote>
+<p><b>뒷발을 빨리 빼도록 상 주는 항도 없다.</b> 반대로 힘·가속·행동 변화는 전부 벌점이라 <b>빨리 빼면 그 벌점을 더 받는다.</b> 정책이 회수 시간을 줄일 이유가 보상에 없다 <span class="ev ev-guess">추측</span>.</p>
+<h3>성과를 무엇으로 재나</h3>
+<p><b>성공률 하나로 재지 않는다</b> (5절). 셋을 함께 낸다.</p>
+<ol><li><b>난이도 지도 8단계를 다시 만들어 경계가 몇 cm 밀렸는지</b> · 원장 09-02 가 정한 KPI</li><li><b>14 cm 에서 나온 판의 MAE 분포가 얼마나 왼쪽으로 밀렸는지</b> · 임계 근처 한 칸에 11판이 몰려 있어 성공률이 분포의 작은 이동에도 크게 흔들린다</li><li><b>14 cm 뒷발 통과 시각의 중앙값</b> · 이 진단이 병목으로 지목한 값 자체</li></ol>
+<h3>맵은 안 바꾼다</h3>
+<p><code>pit_depth_range</code> 를 낮추자는 안은 넣지 않는다. 원장 09-02 가 「맵을 쉽게 만들면 그 순간 비교가 끊긴다」고 이미 짚었다.</p>
+</section>
+<section id="s15"><span id="14"></span><h2>14. 다음 실행 전에 볼 것 · 평가 하네스가 바뀌었다</h2>
+<p>2026-09-08 에 <code>main</code> 을 받으면서 <code>sim/eval/</code> 이 <code>#168</code> 로 바뀌었다 <span class="ev ev-ok">확인됨</span>. <b>다음 측정은 조건이 달라지므로 이 표를 그대로 비교하면 안 된다.</b></p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>전 (이 문서의 800판)</th><th>후 (현재 <code>main</code>)</th></tr></thead><tbody><tr><td><b>방향 판정 기준점</b></td><td>에피소드 <b>끝점</b> 이탈</td><td><b>통과선 지점</b> 이탈 (선형보간)</td></tr><tr><td><b>통과선 미도달 판</b></td><td>끝점이 곧으면 통과</td><td><b>자동 실패</b></td></tr><tr><td><code>border_width</code></td><td>10.0 (전방 14 m)</td><td><b>20.0 (전방 24 m)</b></td></tr><tr><td>원자료 열</td><td>19</td><td><b>21</b> (<code>peak_lateral_drift_m</code> · <code>gate_lateral_drift_m</code>)</td></tr><tr><td>실행 전 검사</td><td>없음</td><td><code>command_vx x eval_duration</code> &gt; 전방 한계면 <code>RuntimeError</code></td></tr></tbody></table></div>
+<p><b><code>pit</code> 에 특히 크다.</b> 이 문서의 방향유지 97 ~ 100 % 는 갇힌 판도 끝점 이탈이 작아 통과한 값이다. 새 방식이면 <b>통과선을 못 넘긴 판이 전부 방향 실패</b>가 되므로 20 cm 의 99 % 같은 숫자는 그대로 남지 않는다.</p>
+<p><code>border_width</code> 변경은 커밋 본문이 「험지 10종의 타일도 <code>env_origin</code> 도 안 움직인다」고 <span class="ev ev-ok">확인됨</span> 으로 적고 있으나 <b>내가 재현해 검증하지는 않았다</b> <span class="ev ev-todo">미확인</span>. 재측정 때 8 cm 대조군으로 먼저 확인한다.</p>
+</section>
+<section id="s16"><span id="15"></span><h2>15. 확인 현황</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>등급</th><th>근거</th></tr></thead><tbody><tr><td>구덩이 바닥에서 출발한다</td><td><span class="ev ev-ok">확인됨</span></td><td>소스 원문 + 출발 z 좌표 실측</td></tr><tr><td>깊이 = 하한 + difficulty x (상한 - 하한)</td><td><span class="ev ev-ok">확인됨</span></td><td><code>mesh_terrains.py:458</code></td></tr><tr><td>평가 맵은 20 cm 한 점이고 14 cm 는 따로 돌린 단계다</td><td><span class="ev ev-ok">확인됨</span></td><td><code>difficulty_range=(0.5,0.5)</code> · <code>num_rows=1</code> · <code>terrain_levels=None</code></td></tr><tr><td><b>6초는 에피소드 길이 자체이고 통과선과 짝으로 움직인다</b></td><td><span class="ev ev-ok">확인됨</span></td><td><code>eval_generalization.py:160</code> · 평지 10/20 = 험지 3/6 = 50 %</td></tr><tr><td><b>팀 험지 조건이 6초 · 3 m 다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>기획서 352행 · 원장 125행 · 정본 실행 명령 · 맹라현 님 진단</td></tr><tr><td><b>실행이 4.2 m 로 돌았고 3 m 재채점으로 종합이 안 바뀐다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>판정 경계 역산 · 여덟 깊이 재채점</td></tr><tr><td>학습 맵에 <code>pit</code> 이 없다</td><td><span class="ev ev-ok">확인됨</span></td><td><code>rough.py</code> 지형 목록</td></tr><tr><td>깊이만 바꿔 100 % -&gt; 1 %</td><td><span class="ev ev-ok">확인됨</span></td><td>800판</td></tr><tr><td>27판 재현이 800판과 일치</td><td><span class="ev ev-ok">확인됨</span></td><td>전진거리·속도MAE 소수 넷째 자리까지 27판 전부</td></tr><tr><td><b>12 -&gt; 14 cm 하락이 「나옴 95-&gt;89 %」와 「나온 뒤 통과 87-&gt;57 %」의 곱이다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>800판 사건별 분해</td></tr><tr><td><b>나온 판의 MAE 가 0.13 ~ 0.50 연속 분포이고 임계가 한복판을 자른다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>14 cm 89판</td></tr><tr><td><b>14 cm 는 나온 판의 MAE 중앙값이 임계 0.25 에 도달하는 깊이다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>깊이별 분포 (8~16 cm)</td></tr><tr><td><b>왜 깊이가 깊어지면 분포가 밀리는가</b></td><td><span class="ev ev-todo">미측정</span></td><td><b>재현 측정에 12 cm 가 없다.</b> 12 cm 를 재면 「2 cm 가 뒷발 통과를 몇 초 늦추나」가 나온다</td></tr><tr><td><b>6초 오차 중 갈리는 몫은 1.5 ~ 3.0초 구간 하나다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>재현 9판. 3~6초는 0.043~0.046 으로 같다</td></tr><tr><td>앞발은 아홉 판 전부 0.92 ~ 1.22초에 넘는다</td><td><span class="ev ev-ok">확인됨</span></td><td>재현 9판</td></tr><tr><td>뒷발이 1.3초에 넘은 2판은 MAE 0.13, 2.24~2.44초에 넘은 7판은 0.248~0.275</td><td><span class="ev ev-ok">확인됨</span></td><td>재현 9판</td></tr><tr><td><b>이 10판은 무작위 표본이 아니다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>임계 양쪽을 보려고 골랐다. <b>중간 성적 48판이 표본에 없다</b> (6절)</td></tr><tr><td><b>뒷발 통과 시각과 MAE 가 직선이고 임계가 2.26초다</b></td><td><span class="ev ev-guess">추측</span></td><td><b>표본이 두 덩어리이고 1.4~2.2초에 판이 없다</b></td></tr><tr><td>14 cm 10판 전부 머리·몸통 <b>안 닿음</b></td><td><span class="ev ev-ok">확인됨</span></td><td>10판 전수. 정강이는 닿는다 (8 cm 대조군도 닿는다)</td></tr><tr><td><b>관절 가동범위는 문제가 아니다</b></td><td><span class="ev ev-ok">확인됨</span></td><td>오흥재 님 아이작 실측 앞 31.0 · 뒤 30.1 cm (<code>#280</code>)</td></tr><tr><td><b>왜 뒷발이 늦는가</b></td><td><span class="ev ev-todo">미확인</span></td><td>되밀림·기울기·clearance 어느 것도 아홉 판에서 안 갈린다</td></tr><tr><td><b>임계선 바로 양쪽(ep96 대 ep35)을 무엇이 갈랐나</b></td><td><span class="ev ev-todo">미확인</span></td><td>뒷발 구간은 오히려 ep35 가 나았다</td></tr><tr><td>앞뒤 다리 <code>thigh</code> 범위 차이가 뒷발 지연과 관련되나</td><td><span class="ev ev-todo">미측정</span></td><td>팀 실측은 있으나 내 데이터에 대 보지 않았다</td></tr><tr><td>20 cm 가 학습으로 열린다</td><td><span class="ev ev-guess">추측</span></td><td>근거가 성공 2판 중 1판이다</td></tr><tr><td>22 cm 가 학습으로 열리는가</td><td><span class="ev ev-todo">미확인</span></td><td>성공 1판이 머리에 441.8 N 을 맞았다</td></tr><tr><td>보상에 발 높이·회수 시간 항이 없어서다</td><td><span class="ev ev-guess">추측</span></td><td>팀 문서 <code>#194</code> · 우리 실험은 아직 안 함</td></tr><tr><td>머리 접촉 몇 N 부터 파손인가</td><td><span class="ev ev-todo">미확인</span></td><td>팀 문서에 기준이 없다</td></tr><tr><td>14 cm 에서 <b>왜 못 나오는 판이 7판인가</b></td><td><span class="ev ev-todo">미측정</span></td><td>갇힌 판은 ep8 하나만 쟀다</td></tr><tr><td><code>border_width</code> 20 이 험지 타일을 안 움직이나</td><td><span class="ev ev-todo">미확인</span></td><td>커밋 본문의 주장. 재현 검증 안 함</td></tr><tr><td>낙상 판 판독</td><td><span class="ev ev-todo">미측정</span></td><td>14 cm 낙상 4판. 영상 안 봤다</td></tr></tbody></table></div>
+</section>
+<section id="s17"><span id="16"></span><h2>16. 출처</h2>
+<div class="tw"><table><thead><tr><th>내용</th><th>출처</th></tr></thead><tbody><tr><td><b>KPI 축을 난이도 경계로 바꾼 결정</b></td><td><b><code>docs/DECISIONS.md</code> 09-02 팀장 확정</b></td></tr><tr><td>14 cm 를 기준점으로 두라</td><td><b>팀장님의 방향 추천 2026-09-07</b> · <code>미등재</code></td></tr><tr><td>관절 직접 제어 금지</td><td><code>docs/DECISIONS.md</code> 09-02 팀장 확정</td></tr><tr><td><b>험지 6초 · 통과선 3 m</b></td><td><code>docs/DECISIONS.md</code> 09-03 팀장 확정 · <b>기획서 <code>proposal.md:209 · 352</code></b> · 험지 정본 실행 명령</td></tr><tr><td>좌우 임계 1.5 m</td><td><code>docs/DECISIONS.md</code> 09-03 · 근거는 <b>「6 m 의 25 %」</b> (<code>proposal.md:211</code>. 원장 표기는 <code>#157</code> 에서 정비 중)</td></tr><tr><td>평지 20초 · 10 m</td><td><code>docs/DECISIONS.md</code> 09-02 · <code>results/20260903-flat-10m-spec20s/README.md:229</code></td></tr><tr><td>통과선 비율 0.70 (옛 하네스)</td><td>임석헌 님 <code>inbox/lim/20260822-…성능 측정.md:359</code> · <code>sim/eval/PROVENANCE.md:128</code></td></tr><tr><td>관문 문구 · 끝났다는 기준</td><td>이슈 <code>#68</code> 본문 (상위 <code>#59</code>)</td></tr><tr><td>「닫혔다」의 정의 · 난이도 지도 요구</td><td><code>docs/research/terrain-finetune-plan.md</code> §1-2 · §2</td></tr><tr><td>보행 위상 · 네 발 조건</td><td>이슈 <code>#125</code> 4번 · 5번</td></tr><tr><td>판정 4축 · 종료 조건 · 속도오차 식</td><td><code>sim/eval/metrics.py</code> · <code>eval_generalization.py:562</code></td></tr><tr><td>구덩이 형상 · 깊이 보간식</td><td>Isaac Lab 2.3.2 <code>mesh_terrains.py</code> <code>pit_terrain()</code> · 458행</td></tr><tr><td>평가 맵 설정</td><td><code>generalization_env_cfg.py</code> 9 · 15 · 54 · 135행</td></tr><tr><td>학습 맵 · 랜덤화</td><td><code>terrains/config/rough.py</code> · <code>velocity_env_cfg.py</code></td></tr><tr><td><b><code>rails</code> 진단 (같은 조건 · 같은 병목) · 이 문서가 따른 형식 본보기</b></td><td><b>맹라현 님 <code>docs/research/rails-diagnosis.md</code> v1.3 <code>확정</code></b> (계획서 §1-2 가 「맹라현이 본보기 1장을 만들고 나머지 넷이 따라간다」로 정했다)</td></tr><tr><td><b>Go2 관절 한계 아이작 실측</b></td><td><b>오흥재 님 <code>inbox/jay/20260907-go2-관절한계-실측.md</code> <code>확정</code> (<code>#280</code>)</b></td></tr><tr><td><b>gap 추가학습 선례</b></td><td><b>임석헌 님 <code>inbox/lim/20260906_Pretrained_vs_Model99…</code> <code>확정</code> (<code>#278</code>)</b></td></tr><tr><td>보상에 발 높이 항 없음</td><td>맹라현 님 <code>#194</code> · <code>docs/research/발보상-시간아니고높이아님.md</code></td></tr><tr><td>Go2 최대 등판 16 cm</td><td>임석헌 님 <code>#218</code> §11 (Unitree 공식 <code>Max Climb Drop Height</code>)</td></tr><tr><td>평가 하네스 변경</td><td><code>#168</code> (<code>sim/eval/eval_generalization.py</code> · <code>metrics.py</code> · <code>generalization_env_cfg.py</code>)</td></tr><tr><td>800판 원자료</td><td><code>1차 검토/26.09.03/02-깊이8개-에피소드100/결과/판별-800판.csv</code></td></tr><tr><td>27판 원자료</td><td><code>1차 검토/26.09.07/csv/원자료-*-27판.csv</code> · <code>요약-27판지표.csv</code></td></tr><tr><td><b>14 cm 병목 계산식</b></td><td><b><code>1차 검토/26.09.08/계산-14cm병목.py</code></b> · 결과 <code>요약-14cm병목.csv</code></td></tr><tr><td>사양 밖 18 ~ 22 cm 상세</td><td><code>1차 검토/26.09.07/20260907-pit진단.md</code> (v3.2) 5 ~ 8절</td></tr></tbody></table></div>
+</section>
+<section id="s18"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v4.0</td><td>2026-09-08</td><td><b>주제를 20 cm 관문에서 14 cm 병목으로 옮겼다.</b> 6초 오차를 구간별로 쪼개 <b>1.5 ~ 3.0초 하나만 갈리는 것</b>과 그 구간을 <b>뒷발 통과 시각</b>이 정하는 것을 냈다. 14 cm 급락이 <b>중앙값이 임계에 도달한 것</b>임을 밝히고, 측정 조건(1절)·팀 지형 대조(10절)·하네스 변경(14절)을 새로 넣었다. 사양 밖 18 ~ 22 cm 는 부록으로 내렸다</td><td>재현 27판 · 800판 · 팀 승격본 3건</td></tr><tr><td>v3.2</td><td>2026-09-07</td><td>20 cm 0단계 관문을 「닫음」으로 확정했다. 사양 밖 10판을 전수 측정했다 (<code>26.09.07/</code>)</td><td>재현 19판</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>
