@@ -37,6 +37,42 @@ LABELS = {
     'TEAM_ACCESS': '팀원 사용 가이드',
 }
 
+# 그림을 찾을 곳. 빌드가 도는 자리(web/)가 기준이다.
+SVG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _svg_inline(src):
+    """페이지 토큰을 쓰는 SVG 를 본문에 넣을 수 있게 읽어 온다.
+
+    토큰을 안 쓰면 `<img>` 로 두는 편이 낫다. 브라우저가 따로 받아 캐시하고
+    본문이 가벼워진다. **토큰을 쓸 때만** 인라인한다.
+
+    못 읽으면 `None` 을 준다. 부르는 쪽이 `<img>` 로 돌아간다. 그림이 통째로
+    사라지는 것보다는 낫다.
+    """
+    if src.startswith(('http://', 'https://', '//', 'data:')):
+        return None
+    path = os.path.join(SVG_ROOT, src.replace('/', os.sep))
+    if not os.path.isfile(path):
+        return None
+    try:
+        t = io.open(path, encoding='utf-8').read()
+    except OSError:
+        return None
+    if 'var(--' not in t:
+        return None                      # 토큰을 안 쓰면 그대로 img 로 둔다
+    i = t.find('<svg')
+    if i < 0:
+        return None
+    t = t[i:]
+    # 본문에 들어가므로 문서용 속성은 뗀다. 두 번 선언되면 접근성 나무가 흐려진다.
+    t = re.sub(r'\sxmlns(:\w+)?="[^"]*"', '', t, count=2)
+    # id 충돌을 막는다. 한 페이지에 도해가 열세 장이면 marker id 가 부딪힌다.
+    tag = 's%d' % (abs(hash(src)) % 100000)
+    t = re.sub(r'\bid="([^"]+)"', lambda m: 'id="%s-%s"' % (tag, m.group(1)), t)
+    t = re.sub(r'url\(#([^)]+)\)', lambda m: 'url(#%s-%s)' % (tag, m.group(1)), t)
+    return t
+
 
 def inline(t):
     """줄 안쪽 서식. 순서가 중요하다. 코드(`)를 먼저 빼내야 그 안의 * 가 안 먹는다."""
@@ -100,6 +136,14 @@ def inline(t):
             return ('<figure class="mdimg mdvid">'
                     '<video controls muted playsinline preload="metadata" src="%s"></video>'
                     '%s</figure>' % (src, cap))
+        # ★ 2026-09-13. 토큰을 쓰는 SVG 를 «본문에 넣는» 길도 해 봤다.
+        #   색은 살지만 셋이 나빠졌다.
+        #     · 정본 한 장이 167 KB -> 869 KB
+        #     · 검색 색인에 도해 안 «좌표와 글자» 가 들어가 검색이 흐려진다
+        #     · 빌드가 10분을 넘겼다
+        #   그래서 `<img>` 로 두고 **SVG 파일 자체를 자립시킨다**
+        #   (`tools/svg_selfcontained.py`). 파일 안에 팔레트를 넣으면
+        #   격리 문서여도 색이 산다.
         return ('<figure class="mdimg"><img src="%s" alt="%s" loading="lazy">%s</figure>'
                 % (src, alt, cap))
 

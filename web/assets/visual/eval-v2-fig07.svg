@@ -1,4 +1,10 @@
-<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="학습 평가 렌더 세 단계의 입출력과 소요 시간">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="학습 평가 렌더 세 단계의 입출력과 소요 시간" width="780" height="300">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--dim:#0e7a6e;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+@media(prefers-color-scheme:dark){:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--dim:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}}
+</style>
+
 <text x="0.0" y="15.0" font-size="13" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 · 평가 · 렌더는 각각 «다른 실행» 이다</text>
 <text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">하나를 돌린다고 다른 하나가 따라오지 않는다. 시간이 따로 든다</text>
 <rect x="0" y="52" width="240" height="192" rx="10" fill="var(--card)" stroke="var(--rule)"/>
