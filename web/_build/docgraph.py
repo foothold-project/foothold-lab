@@ -93,6 +93,47 @@ def _resolve(src_rel, target, known):
     return p if p in known else None
 
 
+def _judgements(root):
+    """사람이 내린 판단을 읽는다. **원장이 먼저다.**
+
+    2026-09-13 에 `docs/ops/research-catalog.json` 으로 모았다. 전까지는
+    `doc-graph-overrides.json` 이었고, 같은 성격의 판단이 그 파일 · 배포
+    `release.json` · `terrain5.py` 상수 세 군데에 흩어져 있었다. 한 곳을
+    고치면 나머지가 조용히 낡는 구조였다.
+
+    **옮기면서 아무것도 안 흘렸다는 것은 왕복으로 증명한다** (`tools/
+    build_research_catalog.py --verify`). 그래서 이 함수가 돌려주는 모양은
+    옛 것과 «완전히 같다». 부르는 쪽은 바뀐 줄 모른다.
+
+    옛 파일은 아직 지우지 않았다. 다른 기기·옛 체크아웃에서 부를 수 있다.
+    원장이 있으면 그쪽이 이긴다.
+    """
+    cat = os.path.join(root, 'ops', 'research-catalog.json')
+    if os.path.isfile(cat):
+        docs = json.load(io.open(cat, encoding='utf-8')).get('documents', {})
+        out = {}
+        for path, rec in docs.items():
+            lp, ww = rec.get('legacy_purpose') or {}, rec.get('web_worthy') or {}
+            v = {}
+            if lp.get('value'):
+                v['purpose'] = lp['value']
+                v['purpose_reason'] = lp.get('reason', '')
+            if ww.get('value'):
+                v['web_worthy'] = ww['value']
+                v['web_worthy_reason'] = ww.get('reason', '')
+            ao = rec.get('areas_override')
+            if ao and ao.get('value'):
+                v['areas'] = ao['value']
+                v['areas_reason'] = ao.get('reason', '')
+            out[path] = v
+        return out
+
+    old = os.path.join(root, 'ops', 'doc-graph-overrides.json')
+    if os.path.isfile(old):
+        return json.load(io.open(old, encoding='utf-8')).get('docs', {})
+    return {}
+
+
 def build(lab):
     root = os.path.join(lab, 'docs')
     import areas
@@ -104,10 +145,7 @@ def build(lab):
         texts[rel] = io.open(full, encoding='utf-8', newline=None,
                              errors='replace').read()
 
-    ovp = os.path.join(root, 'ops', 'doc-graph-overrides.json')
-    ov = {}
-    if os.path.isfile(ovp):
-        ov = json.load(io.open(ovp, encoding='utf-8')).get('docs', {})
+    ov = _judgements(root)
 
     docs, drift, unsure = {}, [], []
     for rel, t in texts.items():
