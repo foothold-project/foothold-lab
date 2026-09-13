@@ -458,6 +458,13 @@ if __name__ == '__main__':
     newbadge.main(VAULT, PAGES, SITE)
 
     # 모든 페이지가 최종 내용을 갖춘 뒤에 색인을 뜬다. 앞에 두면 색인이 낡는다.
+    # ★ 2026-09-13. 색인이 «배포본에만 있는 페이지» 도 읽게 배포 경로를 준다.
+    #   갤러리와 종합 보고서는 다른 생성기가 배포본에 직접 만든다. 볼트에
+    #   없으니 여기서 알려 주지 않으면 검색에서 통째로 빠진다.
+    #   그 페이지를 하나라도 못 찾으면 배포가 선다. 조용히 빠지면 검색에서
+    #   사라지는데 아무도 모른다.
+    import searchbox as _sb0
+    _sb0.SITE_DIR = SITE
     print('\n[1.89] 사이트 검색 (색인 생성 + 검색창 주입)')
     import searchbox
     searchbox.main(VAULT, PAGES)

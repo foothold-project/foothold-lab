@@ -417,6 +417,17 @@ def public_pages(vault, pages):
 NO_UI = {'assets/deliverables/proposal-deck-presented.html'}
 
 
+# ★ 2026-09-13. 이 빌드가 «안 만드는» 배포본 페이지. 볼트에 없고 배포본에만
+#   있다. 갤러리와 종합 보고서가 그렇고, 지금 이 프로젝트의 주된 산출물이라
+#   검색에 없으면 「우리 결과가 어디 있지」가 검색으로 안 풀린다.
+#   그 페이지는 «배포본이 곧 원본» 이다. 거기서 읽는 것은 두 번째 진실을
+#   만드는 것이 아니라 유일한 진실을 읽는 것이다.
+#   영상 자체는 대상이 아니다. 그 페이지들의 «글자» 만 담는다.
+FROM_SITE = ['gallery/index.html', 'gallery/view/index.html',
+             'gallery/compare/index.html', 'report-v1.html']
+SITE_DIR = None          # build.py 가 배포본 경로를 넣어 준다
+
+
 def build_index(vault, pages):
     idx = []
     # ★ 2026-09-03 (foothold-lab#137). 색인 순서를 이름으로 못박는다.
@@ -483,6 +494,32 @@ def build_index(vault, pages):
             body = re.search(r'<div class="wrap">(.*)', t, re.S)
             idx.append({'p': f, 't': ptitle, 'h': ptitle, 'a': '',
                         'x': strip_tags(body.group(1) if body else t)})
+    # ── 배포본에만 있는 페이지 ────────────────────────────────────
+    #   ★ 0건이면 실패한다. 경로가 바뀌거나 파일이 사라지면 «조용히» 빠지고,
+    #     그러면 검색에서 없어지는데 아무도 모른다.
+    if SITE_DIR:
+        got = 0
+        for rel in FROM_SITE:
+            fp = os.path.join(SITE_DIR, rel.replace('/', os.sep))
+            if not os.path.isfile(fp):
+                continue
+            t = io.open(fp, encoding='utf-8', errors='replace').read()
+            mt = re.search(r'<title>([^<]+)</title>', t)
+            ttl = (mt.group(1).split('·')[0].strip() if mt else rel)
+            body = re.search(r'<body[^>]*>(.*)', t, re.S)
+            txt = strip_tags(body.group(1) if body else t)
+            if not txt:
+                continue
+            idx.append({'p': rel, 't': ttl, 'h': ttl, 'a': '', 'x': txt})
+            got += 1
+        if got != len(FROM_SITE):
+            print('  [!] 배포본에서 읽을 페이지 %d개 중 %d개만 찾았습니다'
+                  % (len(FROM_SITE), got))
+            print('      경로가 바뀌었거나 그 생성기가 안 돌았습니다.')
+            print('      조용히 빠지면 검색에서 사라지는데 아무도 모릅니다.')
+            return -1, 0
+        print('  배포본 전용 페이지 %d장도 색인에 넣었습니다: %s'
+              % (got, ' · '.join(FROM_SITE)))
     out = os.path.join(vault, 'assets', 'search-index.json')
     io.open(out, 'w', encoding='utf-8').write(json.dumps(idx, ensure_ascii=False))
     return len(idx), os.path.getsize(out)
@@ -551,6 +588,10 @@ def main(vault, pages):
         return False
 
     n, size = build_index(vault, pages)
+    # ★ 배포본 전용 페이지를 하나라도 못 찾으면 build_index 가 -1 을 준다.
+    #   여기서 안 보면 «옛 색인 파일» 을 그대로 읽고 통과한다. 조용한 실패다.
+    if n < 0:
+        return False
     pub = public_pages(vault, pages)
 
     # ── 관문 ① 색인 대상 집합 == 공개 HTML 집합 ────────────────────────
