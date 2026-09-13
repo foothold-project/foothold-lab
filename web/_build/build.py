@@ -757,6 +757,19 @@ if __name__ == '__main__':
     if not emptycheck.main(VAULT, PAGES):
         print('\n  [!] 눈먼 관문이 새로 생겼습니다. 배포를 중단합니다.')
         sys.exit(1)
+    # ★ 2026-09-13 신설. 연구 허브의 거르개가 라이브에서 한 줄도 안 걸렀다.
+    #   스크립트는 제대로 돌아 29행을 `hidden` 으로 껐는데, 그 29행이 전부
+    #   화면에 남아 있었다 (display:grid). `[hidden]` 은 브라우저 «기본» 시트라
+    #   제작자 CSS 의 `.ev3{display:grid}` 한 줄에 진다. 특이도가 아니라 출처로
+    #   진다. 그래서 CSS 를 들여다봐도 충돌로 안 보인다.
+    #   만든 쪽은 `!c.hidden` 을 세어 「37 -> 8」 을 얻었고 그 수는 «맞다».
+    #   속성은 정확히 8이다. 그런데 그것은 화면이 아니다 (커널 원칙 3).
+    print('\n[3.445] hidden 숨김 안전망 검사 (CSS 가 숨김을 이기는가)')
+    import hiddencheck
+    if not hiddencheck.main(VAULT, PAGES):
+        print('\n  [!] hidden 이 CSS 에 집니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('\n[3.45] 브랜드 정합 검사 (그라데이션 · 그림자 · 토글 · hex)')
     import brandcheck
     if not brandcheck.report(SITE):
