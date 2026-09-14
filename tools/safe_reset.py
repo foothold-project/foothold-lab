@@ -37,6 +37,7 @@
   시점에 아직 안 돈다. 위험한 습관은 막을 자리가 있어야 하고, 그 자리는
   그 습관을 대신하는 도구다.
 """
+import ast
 import io
 import os
 import shutil
@@ -49,24 +50,98 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 def other_made(repo_root):
     """`build.py` 의 OTHER_MADE 를 «읽어서» 쓴다. 여기에 베껴 적지 않는다.
 
-    ★ 베껴 적으면 저쪽에 한 줄 늘 때 여기가 조용히 낡는다. 오늘 하루
-      「같은 규칙이 두 자리에 살면 갈라진다」를 일곱 번 봤다.
+    베껴 적으면 저쪽에 한 줄 늘 때 여기가 조용히 낡는다. 2026-09-14 하루에
+    「같은 규칙이 두 자리에 살면 갈라진다」를 일곱 번 봤다.
+
+    ## 문자열이 아니라 구문으로 읽는다
+
+    첫 판은 `find('OTHER_MADE')` 로 자리를 잡고 첫 중괄호부터 다음 중괄호까지를
+    잘라 쉼표로 쪼갰다. 같은 날 저쪽에 `OTHER_MADE_SOURCE` 라는 표가 생기고
+    항목마다 주석이 붙자 **주석 글이 파일 이름으로 섞여 들어왔다.** 조용히.
+    그러면 `report-v1.html` 을 못 지킨다. 그 파일을 지키려고 만든 도구가.
+
+    그래서 `ast` 로 읽는다. 주석도 중첩도 안 먹는다. set 이든 dict 든
+    (dict 면 «키» 가 파일 이름) 둘 다 받는다.
     """
     p = os.path.join(repo_root, 'web', '_build', 'build.py')
-    src = io.open(p, encoding='utf-8', errors='replace').read()
-    i = src.find('OTHER_MADE')
-    if i < 0:
+
+    try:
+        src = io.open(p, encoding='utf-8', errors='replace').read()
+        tree = ast.parse(src)
+    except Exception:
         return None
-    j = src.find('{', i)
-    k = src.find('}', j)
-    if j < 0 or k < 0:
-        return None
-    out = set()
-    for piece in src[j + 1:k].split(','):
-        piece = piece.strip().strip('\'"')
-        if piece:
-            out.add(piece)
-    return out or None
+
+    return _names_from(tree)
+
+
+def _names_from(tree):
+    """`OTHER_MADE` 또는 `OTHER_MADE_SOURCE` 에서 파일 이름을 뽑는다."""
+    found = {}
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        for tgt in node.targets:
+            if not isinstance(tgt, ast.Name):
+                continue
+            if tgt.id not in ('OTHER_MADE', 'OTHER_MADE_SOURCE'):
+                continue
+            v = node.value
+            if isinstance(v, ast.Dict):
+                names = {k.value for k in v.keys
+                         if isinstance(k, ast.Constant)
+                         and isinstance(k.value, str)}
+            elif isinstance(v, (ast.Set, ast.List, ast.Tuple)):
+                names = {e.value for e in v.elts
+                         if isinstance(e, ast.Constant)
+                         and isinstance(e.value, str)}
+            else:
+                continue        # `set(OTHER_MADE_SOURCE)` 같은 파생은 건너뛴다
+            if names:
+                found[tgt.id] = names
+
+    # 표가 있으면 그것이 정본이다 (거기에 «소스가 어디인가» 도 적혀 있다)
+    return found.get('OTHER_MADE_SOURCE') or found.get('OTHER_MADE') or None
+
+
+def _names_selftest():
+    """이 읽기를 쓰기 전에 시험한다. 첫 판이 실제로 틀렸던 모양을 넣는다."""
+    dict_src = (
+        "OTHER_MADE_SOURCE = {@"
+        "    # 배포본에서 뽑는다. 관문 [3.478] 이 다시 굽는다.@"
+        "    'assets/gnav.css': '다시 구워짐',@"
+        "    # lab 에서 구워 복사한다@"
+        "    'report-v1.html': '유일본 · 커밋이 소스',@"
+        "}@OTHER_MADE = set(OTHER_MADE_SOURCE)").replace('@', chr(10))
+
+    cases = [
+        ("맨 set", "OTHER_MADE = {'a.html', 'b/c.css'}",
+         {'a.html', 'b/c.css'}),
+        ("주석 붙은 dict (첫 판이 여기서 틀렸다)", dict_src,
+         {'assets/gnav.css', 'report-v1.html'}),
+        ("남의 중괄호에 안 속는다",
+         ("X = {'not-this'}@OTHER_MADE = {'yes.html'}").replace('@', chr(10)),
+         {'yes.html'}),
+        ("아무것도 없으면 None", "Y = 1", None),
+    ]
+
+    bad = []
+    for name, src, want in cases:
+        try:
+            got = _names_from(ast.parse(src))
+        except Exception as e:
+            got = 'Error: %s' % e
+        if got != want:
+            bad.append('%s (기대 %s · 결과 %s)' % (name, want, got))
+
+    if bad:
+        print('  [!] OTHER_MADE 읽기 자기시험 실패:')
+        for b in bad:
+            print('      ' + b)
+        return False
+
+    print('  OTHER_MADE 읽기 자기시험 %d/%d 통과' % (len(cases), len(cases)))
+    return True
 
 
 def run(args, cwd):
