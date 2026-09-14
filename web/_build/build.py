@@ -73,6 +73,22 @@ REAL_SITE = SITE                                                # 덮어쓰기 �
 REPRO = buildtime.configure()
 SKIP_SECURE = REPRO or ('--skip-secure' in sys.argv)
 NO_DEPLOY = '--no-deploy' in sys.argv
+
+# ★ 2026-09-14 사고. `--out <폴더>` 만 주고 `--repro` 를 빼면 이 값이
+#   «아무 데도 안 쓰인다». 목적지가 안 바뀌고 빌드가 진짜 배포본에 그대로
+#   쓴다. 오류도 경고도 없다. 부른 사람은 격리된 곳에 쓴다고 믿는다.
+#   실측: 동료 세션이 그렇게 세 번 돌렸고, 둘은 관문에서 멈췄지만 마지막
+#   하나가 끝까지 가서 남의 배포 저장소에 148개를 썼다. 커밋 직전에
+#   본인이 알아채 막았다. 알아채지 못했으면 다음 배포가 통째로 남의 것이
+#   된다.
+#
+#   그 반대 방향은 이미 막혀 있었다 (`--repro` 인데 `--out` 이 없으면 죽는다).
+#   한쪽만 막힌 관문은 반대쪽에서 조용히 무너진다 (철칙 4).
+if '--out' in sys.argv and not REPRO:
+    print('  [!] --out 은 --repro 와 함께만 씁니다.')
+    print('      지금처럼 --out 만 주면 그 값이 무시되고 «진짜 배포본» 에 씁니다.')
+    print('      격리해서 구우려면:  python _build/build.py --repro --out <빈 폴더>')
+    sys.exit(2)
 REPRO_OUT = None
 if REPRO:
     _i = sys.argv.index('--out') if '--out' in sys.argv else -1
