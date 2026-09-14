@@ -49,6 +49,18 @@ def week_range(spec):
         mon = datetime.date.fromisocalendar(int(y), int(w), 1)
     else:
         t = kst_today()
+        # ★ 2026-09-14. **월요일이면 하루 되돌려 «막 끝난 주» 를 본다.**
+        #
+        #   cron 은 일 21:00 KST 인데 GitHub Actions 가 밀린다. 2026-09-13 에
+        #   3시간 25분 밀려 **월 00:25 KST** 에 돌았고, 그러면 여기가 「이번 주」를
+        #   W38 로 잡아 «아직 아무 일도 없는 주» 를 집계하고 죽었다.
+        #   08-30 에도 같은 실패가 있었다. 자정까지 여유가 3시간뿐이라
+        #   구조적으로 되풀이된다.
+        #
+        #   일요일 밤에 도는 일감은 «그날로 끝나는 주» 를 본다. 월요일에
+        #   깨어나도 같은 주를 봐야 한다. 하루 되돌리면 밀림 24시간까지 견딘다.
+        if t.weekday() == 0:
+            t -= datetime.timedelta(days=1)
         mon = t - datetime.timedelta(days=t.weekday())
     return mon, mon + datetime.timedelta(days=6)
 
@@ -96,7 +108,14 @@ def main():
                          '--pretty=format:%h %an %s'])
 
     if not (prs or issues or added or changed or commits):
-        raise SystemExit('%s 에 아무 활동도 없습니다. 재료를 만들지 않습니다.' % tag)
+        # ★ 2026-09-14. 전에는 `raise SystemExit(문자열)` 이라 **종료코드 1** 이었다.
+        #   워크플로가 빨간 X 로 남았고, 그게 「정말 고장」인지 「그 주에 일이
+        #   없었다」인지 구별이 안 됐다. 빨간 X 가 예사로 보이면 진짜 고장을
+        #   놓친다.
+        #
+        #   일이 없는 것은 실패가 아니다. 말하고 «정상 종료» 한다.
+        print('%s 에 아무 활동도 없습니다. 재료를 만들지 않습니다.' % tag)
+        return 0
 
     L = []
     L.append('# 다이제스트 재료: %s' % tag)
@@ -174,4 +193,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # ★ 2026-09-14. 전에는 `main()` 만 불렀다. 그래서 `main` 이 무엇을 돌려주든
+    #   종료코드는 늘 0 이었고, 반대로 «일이 없다» 는 `SystemExit(문자열)` 이라
+    #   1 이었다. 뜻이 뒤집혀 있었다. 반환값을 종료코드로 쓴다.
+    sys.exit(main() or 0)
