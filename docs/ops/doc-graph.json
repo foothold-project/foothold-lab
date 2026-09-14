@@ -241,7 +241,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×19 백과×2 학습×10 보상×1",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×18 백과×2 학습×10 보상×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -1804,7 +1804,7 @@
    "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 terrain×13 지형×137 Isaac Lab×5 학습×47 보상×12 관측×8 지표×1 에피소드×73",
+  "areas_why": "근거 낱말 terrain×13 지형×139 Isaac Lab×5 학습×47 보상×12 관측×8 지표×1 에피소드×73",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 -1.8 1060 665.8" font-family="'Malgun Gothic',sans-serif">
+<style>
+:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--deep:#0c1117;--dim:#3ec7b4;--dim-ink:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ink-soft:#4a5566;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}
+
+</style>
+
+<rect width="1080" height="660" fill="var(--paper)"/>
+<text x="30" y="42" font-size="22" font-weight="800" fill="var(--ink)">실패 지형 파인튜닝: 레시피 병렬 → 혼합 단일 런</text>
+<text x="30" y="66" font-size="13" fill="var(--ink-2)">합치는 것은 체크포인트가 아니라 «레시피(설정·지식)»다. 최종 정책은 언제나 하나의 혼합 런에서 나온다.</text>
+<text x="30" y="108" font-size="14" font-weight="800" fill="var(--accent)">1~2주차 · 병렬 (팀원 5인, 지형 1개씩)</text>
+<text x="1050" y="108" font-size="12" fill="var(--ink-2)" text-anchor="end">숫자는 벤치마크 v2 실측 (지형당 50에피소드) · 성공 / 생존 / 전진</text>
+<g font-size="12">
+<rect x="30" y="120" width="196" height="176" rx="8" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="44" y="145" font-size="13" font-weight="800" fill="var(--ink)">gap</text>
+<text x="212" y="145" font-size="12.5" font-weight="800" fill="var(--bad)" text-anchor="end">임석헌</text>
+<text x="44" y="168" fill="var(--bad)">낙상형 · 3.2초에 접촉</text>
+<text x="44" y="188" fill="var(--ink-2)">0% / 42% / 0.86 m</text>
+<text x="44" y="212" fill="var(--ink)">틈 폭 0.15~0.40 m</text>
+<text x="44" y="236" fill="var(--ink-2)">① 단독 50ep 재현</text>
+<text x="44" y="256" fill="var(--ink-2)">② 실패 영상 분류</text>
+<text x="44" y="276" fill="var(--ink-2)">③ 관측·발 배치 처방</text>
+
+<rect x="240" y="120" width="196" height="176" rx="8" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="254" y="145" font-size="13" font-weight="800" fill="var(--ink)">rails</text>
+<text x="422" y="145" font-size="12.5" font-weight="800" fill="var(--bad)" text-anchor="end">맹라현</text>
+<text x="254" y="168" fill="var(--bad)">낙상형 · 2.1초에 접촉</text>
+<text x="254" y="188" fill="var(--ink-2)">2% / 36% / 0.93 m</text>
+<text x="254" y="212" fill="var(--ink)">레일 두께·높이 2축</text>
+<text x="254" y="236" fill="var(--ink-2)">가장 빨리 넘어진다</text>
+<text x="254" y="256" fill="var(--ink-2)">1/50 성공 = 학습 신호</text>
+<text x="254" y="276" fill="var(--ink-2)">③ 관측·발 배치 처방</text>
+
+<rect x="450" y="120" width="196" height="176" rx="8" fill="var(--card)" stroke="var(--warn)" stroke-width="2"/>
+<text x="464" y="145" font-size="13" font-weight="800" fill="var(--ink)">stepping_stones</text>
+<text x="632" y="145" font-size="12.5" font-weight="800" fill="var(--warn)" text-anchor="end">오현민</text>
+<text x="464" y="168" fill="var(--warn)">혼합 · v2에서 재분류</text>
+<text x="464" y="188" fill="var(--ink-2)">0% / 42% / 0.97 m</text>
+<text x="464" y="212" fill="var(--ink)">디딤돌 크기·간격</text>
+<text x="464" y="236" fill="var(--ink-2)">낙상 58%가 새로 나옴</text>
+<text x="464" y="256" fill="var(--warn)">두 처방을 다 시험한다</text>
+<text x="464" y="276" fill="var(--ink-2)">= 비교 실험대</text>
+
+<rect x="660" y="120" width="196" height="176" rx="8" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<text x="674" y="145" font-size="13" font-weight="800" fill="var(--ink)">pit</text>
+<text x="842" y="145" font-size="12.5" font-weight="800" fill="var(--accent)" text-anchor="end">이민우</text>
+<text x="674" y="168" fill="var(--accent)">순수 전진불능</text>
+<text x="674" y="188" fill="var(--ink-2)">2% / 100% / 1.07 m</text>
+<text x="674" y="212" fill="var(--ink)">구덩이 깊이 0.10~0.30</text>
+<text x="674" y="236" fill="var(--ink-2)">한 번도 안 넘어진다</text>
+<text x="674" y="256" fill="var(--ink-2)">③ 보상·명령 처방</text>
+<text x="674" y="276" fill="var(--ink-2)">(전진 보상 쪽)</text>
+
+<rect x="870" y="120" width="180" height="176" rx="8" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<text x="884" y="145" font-size="13" font-weight="800" fill="var(--ink)">floating_ring</text>
+<text x="1036" y="163" font-size="12.5" font-weight="800" fill="var(--accent)" text-anchor="end">오흥재</text>
+<text x="884" y="186" fill="var(--accent)">대체로 전진불능</text>
+<text x="884" y="206" fill="var(--ink-2)">0% / 86% / 0.94 m</text>
+<text x="884" y="230" fill="var(--ink)">고리 폭·높이</text>
+<text x="884" y="254" fill="var(--ink-2)">14%는 넘어진다</text>
+<text x="884" y="276" fill="var(--ink-2)">③ 보상 처방</text>
+</g>
+<g stroke="var(--accent)" stroke-width="2" fill="none">
+<path d="M128 296 V326 H540"/><path d="M338 296 V326"/><path d="M548 296 V326"/><path d="M758 296 V326"/><path d="M960 296 V326 H540"/>
+<path d="M540 326 V356"/>
+</g>
+<path d="M540 356 l-7 -12 h14 z" fill="var(--accent)"/>
+<rect x="240" y="362" width="600" height="90" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+<text x="260" y="388" font-size="14" font-weight="800" fill="var(--accent)">산출물 = 지형별 «레시피 1장» × 5</text>
+<text x="260" y="410" font-size="12.5" fill="var(--ink)">작동한 지형 비율(proportion) · 난이도 시작점 · 보상 변경 · 학습률 · rough 회귀 폭</text>
+<text x="260" y="430" font-size="12.5" fill="var(--ink)">체크포인트 5개를 합치는 게 아니다 (RL 가중치 병합은 성립하지 않음)</text>
+<path d="M540 452 V482" stroke="var(--accent)" stroke-width="2"/><path d="M540 482 l-7 -12 h14 z" fill="var(--accent)"/>
+<text x="30" y="478" font-size="14" font-weight="800" fill="var(--accent)">3주차 · 통합 (단일 런)</text>
+<rect x="180" y="488" width="720" height="66" rx="8" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+<text x="200" y="514" font-size="13.5" font-weight="800" fill="var(--ink)">rough 0.5 + gap·rails·stones·pit·floating_ring 각 0.1 혼합 커리큘럼 → 정책 1개 학습</text>
+<text x="200" y="536" font-size="12.5" fill="var(--ink-2)">Isaac Lab terrain_generator sub_terrains에 5종 추가 (다섯 모두 내장 cfg) · resume vs scratch 1런씩 비교</text>
+<path d="M540 554 V578" stroke="var(--accent)" stroke-width="2"/><path d="M540 578 l-7 -12 h14 z" fill="var(--accent)"/>
+<rect x="180" y="584" width="720" height="60" rx="8" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/>
+<text x="200" y="608" font-size="13" font-weight="800" fill="var(--warn)">4주차 · 전 지형 재벤치(기존+신규 10종) + ablation 표(단독 vs 혼합의 rough 붕괴)</text>
+<text x="200" y="630" font-size="12.5" fill="var(--warn)">판정선: 실패 5종 중 3종 이상 개선 &amp; 통과 5종이 95% 아래로 안 내려갈 것</text>
+</svg>

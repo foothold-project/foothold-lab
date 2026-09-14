@@ -538,6 +538,12 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+   올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
+   여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+
 /* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
 .recent{display:grid;gap:.45rem;margin:0 0 10px}
 .recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
@@ -556,7 +562,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   .recent .rt{flex-basis:100%}
 }
 </style>
-<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><!--newbadge:v7--><style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><script id="fh-figs">window.fhFigs=function(t){try{var g=document.querySelectorAll('img[data-themed]'),i,e,u,q,b;for(i=0;i<g.length;i++){e=g[i];u=e.getAttribute('src');if(!u)continue;q=u.indexOf('?');b=(q<0?u:u.slice(0,q));if(!e.dataset.fhLight)e.dataset.fhLight=b.replace(/\.dark\.svg$/,'.svg');b=e.dataset.fhLight;if(t==='dark')b=b.replace(/\.svg$/,'.dark.svg');if(b!==(q<0?u:u.slice(0,q)))e.setAttribute('src',b+(q<0?'':u.slice(q)));}}catch(err){}};document.addEventListener("DOMContentLoaded",function(){window.fhFigs(document.documentElement.dataset.theme)});</script><!--newbadge:v7--><style>
 span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
   background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
   font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
@@ -762,7 +768,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
+    fetch('/assets/search-index.json?v=16debf05').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -880,7 +886,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
@@ -905,14 +911,14 @@ body>*{flex-shrink:0}
 </section>
 <section id="s2"><h2>지금 확인한 기준선</h2>
 <p>기준선은 <b>NVIDIA 공식 Go2 rough 체크포인트</b>다. 팀이 자체 학습한 1,500 iteration 정책은 별도 대조 실험이며 공식 성능으로 부르지 않는다. RTX 5080 1대, 4,096 병렬 환경에서 21,248~21,385 steps/s였고, 표준 1,500 iteration 학습 시간은 <b>133분 실측</b>이다. 113분은 30 iteration에서 외삽한 값이며 실측보다 18% 짧다.</p>
-<div class="tw"><table><thead><tr><th>평가</th><th>조건</th><th>확인된 결과</th></tr></thead><tbody><tr><td><b>평지 기준선</b></td><td>20초·통과선 10 m·1.0 m/s·100판·seed 42</td><td>낙상 없이 10 m 도달 100/100. 통과선 지점 좌우 5 cm 이내 직진성 33/100</td></tr><tr><td><b>미경험 험지 10종</b></td><td>6초·통과선 3 m·1.0 m/s·지형당 100판·난이도 0.5·시험 중 최대 좌우 이탈 1.5 m</td><td>반복 박스·반복 원기둥·파형·별·이산 장애물 97~100% 통과. 턱·구덩이·디딤돌·틈·부유 고리 0~4% 통과</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>평가</th><th>조건</th><th>확인된 결과</th></tr></thead><tbody><tr><td><b>평지 기준선</b></td><td>20초·통과선 10 m·1.0 m/s·100 에피소드·seed 42</td><td>낙상 없이 10 m 도달 100/100. 통과선 지점 좌우 5 cm 이내 직진성 33/100</td></tr><tr><td><b>미경험 험지 10종</b></td><td>6초·통과선 3 m·1.0 m/s·지형당 100 에피소드·난이도 0.5·시험 중 최대 좌우 이탈 1.5 m</td><td>반복 박스·반복 원기둥·파형·별·이산 장애물 97~100% 통과. 턱·구덩이·디딤돌·틈·부유 고리 0~4% 통과</td></tr></tbody></table></div>
 <p>평지 직진성은 10 m 통과선에서 재며, 험지 직진성은 6초 동안 최대 좌우 이탈 1.5 m로 판정한다. 서로 다른 기준이므로 한 비율로 비교하지 않는다. 험지의 1.5 m는 명령 거리 6 m의 25%이며 통과선 3 m의 비율이 아니다. 같은 seed의 독립 실행 3회는 원자료가 바이트 단위로 일치했다.</p>
-<div class="tw"><table><thead><tr><th>실패 지형</th><th>현재값</th><th>관측된 병목과 해석</th></tr></thead><tbody><tr><td><b>턱</b></td><td>통과 4%·속도 추종 8%</td><td>주요 병목은 명령 속도 추종 부족이다. 살아남은 85판의 속도 오차 중앙값 0.502 m/s를 목표 기준으로 쓴다</td></tr><tr><td><b>구덩이</b></td><td>통과 3%·전진 15%</td><td>전진 중앙값 1.09 m. 15판은 3 m를 넘었고 최댓값은 5.14 m이므로 모두 첫 장애물에서 끝났다고 해석하지 않는다</td></tr><tr><td><b>디딤돌·틈</b></td><td>통과 0%·생존 20%·21%</td><td>몸통 접촉에 따른 낙상이 병목이다</td></tr><tr><td><b>부유 고리</b></td><td>통과 0%·전진 0%</td><td>전진 중앙값 1.07 m. 닫힌 형상과 정책의 영향을 분리하려면 난이도별 통과 여부를 먼저 재야 한다</td></tr></tbody></table></div>
-<p>이 값은 지형당 100판이지만 난이도 0.5에서 생성한 <b>타일 하나, n=1</b>의 결과다. 통과율의 Wilson 구간은 에피소드 변동만 나타내며 지형을 새로 생성했을 때의 변동은 포함하지 않는다. 디딤돌·틈·부유 고리의 높은 직진성 수치는 100판 모두 통과선 앞에서 끝나 좌우로 벗어날 거리가 없었던 결과이므로 성과로 쓰지 않는다.</p>
+<div class="tw"><table><thead><tr><th>실패 지형</th><th>현재값</th><th>관측된 병목과 해석</th></tr></thead><tbody><tr><td><b>턱</b></td><td>통과 4%·속도 추종 8%</td><td>주요 병목은 명령 속도 추종 부족이다. 살아남은 85 에피소드의 속도 오차 중앙값 0.502 m/s를 목표 기준으로 쓴다</td></tr><tr><td><b>구덩이</b></td><td>통과 3%·전진 15%</td><td>전진 중앙값 1.09 m. 15 에피소드는 3 m를 넘었고 최댓값은 5.14 m이므로 모두 첫 장애물에서 끝났다고 해석하지 않는다</td></tr><tr><td><b>디딤돌·틈</b></td><td>통과 0%·생존 20%·21%</td><td>몸통 접촉에 따른 낙상이 병목이다</td></tr><tr><td><b>부유 고리</b></td><td>통과 0%·전진 0%</td><td>전진 중앙값 1.07 m. 닫힌 형상과 정책의 영향을 분리하려면 난이도별 통과 여부를 먼저 재야 한다</td></tr></tbody></table></div>
+<p>이 값은 지형당 100 에피소드이지만 난이도 0.5에서 생성한 <b>타일 하나, n=1</b>의 결과다. 통과율의 Wilson 구간은 에피소드 변동만 나타내며 지형을 새로 생성했을 때의 변동은 포함하지 않는다. 디딤돌·틈·부유 고리의 높은 직진성 수치는 100 에피소드 모두 통과선 앞에서 끝나 좌우로 벗어날 거리가 없었던 결과이므로 성과로 쓰지 않는다.</p>
 </section>
 <section id="s3"><h2>어떻게 개선하고 판정하는가</h2>
 <p>Track A는 기준선 평가, 실패 원인 분석, 지형·물리·보상·도메인 랜덤화 조정, 혼합 단일 학습, 미경험 지형 재평가 순으로 반복한다. 특정 지형만 추가 학습해 기존 성능을 잃지 않도록 기존 rough 지형 0.6과 대상 지형 0.4를 섞는다. 평가는 생존·전진·속도 추종·직진성 <b>네 축을 모두 만족해야 통과</b>로 센다.</p>
-<p>난이도는 0부터 1까지 <code>i/9</code> 열 칸으로 나누고 지형·칸마다 100판을 측정한다. 실패 5종은 학습 전후 통과 가능한 난이도 경계의 이동을 비교한다. 턱의 MuJoCo 경계 13~14 cm는 20초·전진 4 m·속도 추종 축 없음 조건이라 Isaac의 6초·3 m·네 축 판정과 다르다. &lt;strong&gt;Isaac KPI에 13~14 cm를 쓰지 않고 참고 교차 검증으로만 둔다.&lt;/strong&gt; 부유 고리는 난이도 번호와 실제 통과 난이도의 순서가 같은지 <span class="ev ev-todo">미확인</span>이다.</p>
+<p>난이도는 0부터 1까지 <code>i/9</code> 열 칸으로 나누고 지형·칸마다 100 에피소드를 측정한다. 실패 5종은 학습 전후 통과 가능한 난이도 경계의 이동을 비교한다. 턱의 MuJoCo 경계 13~14 cm는 20초·전진 4 m·속도 추종 축 없음 조건이라 Isaac의 6초·3 m·네 축 판정과 다르다. &lt;strong&gt;Isaac KPI에 13~14 cm를 쓰지 않고 참고 교차 검증으로만 둔다.&lt;/strong&gt; 부유 고리는 난이도 번호와 실제 통과 난이도의 순서가 같은지 <span class="ev ev-todo">미확인</span>이다.</p>
 <p>Digital Twin은 실제 구간 촬영·점군, COLMAP 카메라 추정, 3DGS 시각 복원, 충돌 형상, Isaac Sim USD 장면 순으로 구축한다. 시각 복원물과 보행용 충돌 형상은 분리해 검증한다. 원본 구간은 held-out 평가장으로 보존하고, 경사·요철·틈·단차 분포를 추출해 학습·평가용 변형 지형을 만든다.</p>
 <p>Track B는 Go2의 LiDAR·Camera·IMU·Odometry를 ROS 2 Jazzy와 TF에 연결하고, slam_toolbox로 지도와 위치를 추정한다. Nav2로 경로 계획·재계획·장애물 회피를 수행하며, YOLO 객체 분류와 LiDAR 공간 정보를 결합해 주변 의미 정보를 기록한다. 위성 위치를 쓸 수 없는 실내·지하 구간이므로 자기 위치는 LiDAR·IMU·오도메트리로 추정한다.</p>
 </section>
@@ -923,7 +929,7 @@ body>*{flex-shrink:0}
 <p>Track B의 SLAM 유지율 90% 이상·위치 오차 30 cm 이하, 자율 보행 20회 이상·도달률 80% 이상·무충돌 90% 이상·재계획 80% 이상, 객체 3종 이상·Precision과 Recall 80% 이상·mAP@0.5 75% 이상은 <b>초안에서 가져온 도전 목표·일반 기준</b>이다. 우리 실기 측정은 아직 0건이며, 장비와 PoC 구간 확정 뒤 재검토한다.</p>
 </section>
 <section id="s5"><h2>데이터와 재현성</h2>
-<p>현재 확보한 것은 공식·자체 정책 체크포인트, 지형 설정, 학습 로그, 시뮬레이션 롤아웃 <b>1,100판</b>이다. 롤아웃 CSV에는 종합 판정과 네 판정 축, 이동 거리, 좌우 이탈, 속도 오차가 들어 있다. 실제 공간 촬영·LiDAR 점군·rosbag2 실기 로그는 아직 <code>계획</code>이다.</p>
+<p>현재 확보한 것은 공식·자체 정책 체크포인트, 지형 설정, 학습 로그, 시뮬레이션 롤아웃 <b>1,100 에피소드</b>이다. 롤아웃 CSV에는 종합 판정과 네 판정 축, 이동 거리, 좌우 이탈, 속도 오차가 들어 있다. 실제 공간 촬영·LiDAR 점군·rosbag2 실기 로그는 아직 <code>계획</code>이다.</p>
 <p>모든 결과에는 조건·정책 체크포인트·지형 seed·평가 인자·원자료·재실행 방법을 함께 남긴다. 시뮬레이션은 같은 seed 재실행에서 원자료가 일치해야 근거로 쓰고, 실기는 원자료 일치를 요구하는 대신 반복 주행 횟수와 조건을 기록한다. 실험은 한 요인씩 바꾸고 기준 곡선과 비교한 경우에만 성능 개선으로 판정한다.</p>
 </section>
 <section id="s6"><h2>언제까지 누가 하는가</h2>
@@ -969,5 +975,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.3</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpg6b6px1a</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

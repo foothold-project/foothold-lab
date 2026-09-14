@@ -107,5 +107,5 @@
 <text x="636" y="550" font-size="11" fill="#5b6b7f">platform_width 1.5 m · 비중 0.1</text>
 <text x="636" y="570" font-size="10" fill="#5b6b7f">generalization_env_cfg.py:29~165</text>
 
-<text x="32" y="610" font-size="10.5" fill="#5b6b7f">이름은 순서다. 앞에 무언가를 끼우면 기존 500판 기록의 지형 인덱스가 전부 밀린다. 새 지형은 맨 뒤에 붙인다.</text>
+<text x="32" y="610" font-size="10.5" fill="#5b6b7f">이름은 순서다. 앞에 무언가를 끼우면 기존 500에피소드 기록의 지형 인덱스가 전부 밀린다. 새 지형은 맨 뒤에 붙인다.</text>
 </svg>

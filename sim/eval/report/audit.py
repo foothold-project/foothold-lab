@@ -158,6 +158,102 @@ for base, _dirs, files in os.walk(RAW):
     if os.path.basename(os.path.dirname(base)) == "d0.5":
         score += n
 
+# ── 절 번호 ────────────────────────────────────────────────────────────
+# ★ 2026-09-14 (#422). `04` 가 둘이었고, 첫머리를 넣으며 `08` 이 또 둘이 됐다.
+#   사람은 번호로 자리를 가리키는데 번호가 겹치면 그 말이 안 통한다.
+#   겹침과 건너뜀을 둘 다 본다.
+_secs = [int(m) for m in re.findall(r'<span class="n">(\d+)</span>', HTML)]
+_dupes = sorted({n for n in _secs if _secs.count(n) > 1})
+_gaps = [b for a, b in zip(_secs, _secs[1:]) if b != a + 1]
+check("9a", "절 번호가 안 겹친다", not _dupes, "겹친 번호 %s" % (_dupes or "없음"))
+check("9b", "절 번호가 안 건너뛴다", not _gaps,
+      "%s 에서 튄다" % (_gaps or "없음"))
+
+# ── 그림 상자 안의 폭 규칙 ─────────────────────────────────────────────
+# ★ 2026-09-14. 07 절 보상 지도가 화면에서 오른쪽 109 px 가 잘려 나갔다.
+#   CSS 에 `figure svg` 는 있는데 `figure img` 가 없어서, img 만 제 원본
+#   1000 px 로 그려지고 912 px 짜리 상자를 넘었다. 「막는다」의 마지막
+#   글자가 안 보였고 아무 오류도 안 났다.
+#
+#   이 관문은 문자열을 찾지 않는다. `<figure>` 안에 «실제로 들어 있는»
+#   태그를 세고, 그 태그마다 폭을 묶는 규칙이 «선언으로» 있는지 본다.
+#   그래서 다음에 figure 안에 video 나 canvas 가 들어와도 같이 잡힌다.
+_SIZED = ("img", "svg", "video", "canvas", "iframe", "object", "embed")
+
+
+def _fig_children(html):
+    """figure 안에 실제로 들어 있는, 제 크기를 가진 태그들."""
+    got = set()
+    for body in re.findall(r"<figure\b[^>]*>(.*?)</figure>", html, re.S | re.I):
+        for t in _SIZED:
+            if re.search(r"<%s\b" % t, body, re.I):
+                got.add(t)
+    return got
+
+
+def _width_bound(html, tag):
+    """`figure <tag>` 를 폭으로 묶는 선언이 있나. 선언을 갈라서 본다."""
+    for css in re.findall(r"<style\b[^>]*>(.*?)</style>", html, re.S | re.I):
+        # 주석을 먼저 걷는다. 안 걷으면 바로 앞 주석이 셀렉터에 붙어
+        # 「figure img」 가 「/* ... */ figure img」 가 되고, 있는 규칙을
+        # 없다고 읽는다. 첫 판이 실제로 그렇게 틀렸다 (2026-09-14).
+        css = re.sub(r"\/\*.*?\*\/", " ", css, flags=re.S)
+        for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+            sels = [x.strip() for x in sel.split(",")]
+            if not any(re.fullmatch(r"figure\s+%s" % tag, x) or
+                       re.fullmatch(r"figure\s*>\s*%s" % tag, x) for x in sels):
+                continue
+            for decl in body.split(";"):
+                if ":" not in decl:
+                    continue
+                prop, val = decl.split(":", 1)
+                if prop.strip().lower() in ("width", "max-width"):
+                    v = val.strip().lower()
+                    if v not in ("none", "auto", "max-content", "fit-content"):
+                        return True
+    return False
+
+
+def _figwidth_selftest():
+    """관문 자신을 먼저 시험한다. 없는 결함을 만들어 잡히는지 본다."""
+    good = ('<style>figure img{width:100%}</style>'
+            '<figure><img src="a.svg"></figure>')
+    bad = ('<style>figure svg{width:100%}</style>'
+           '<figure><img src="a.svg"></figure>')
+    none_ = ('<style>figure img{max-width:none}</style>'
+             '<figure><img src="a.svg"></figure>')
+    other = ('<style>figure img{width:100%}</style>'
+             '<figure><video src="a.mp4"></video></figure>')
+    # 주석 붙은 경우. 첫 판이 이것을 못 봐서 있는 규칙을 없다고 읽었다.
+    # 자기시험에 주석이 없어 4/4 를 통과했다. 시험이 빈 채로 돌았던 것.
+    commented = (chr(60) + 'style>' + '/*' + ' 왜 이 규칙이 있는지 ' + '*/'
+        + 'figure img{width:100%}</style><figure><img src="a.svg"></figure>')
+    cases_extra = [("규칙 앞에 주석이 있어도 통과", commented, set())]
+    cases = [
+        ("규칙 있으면 통과", good, set()),
+        ("img 규칙 없으면 잡는다", bad, {"img"}),
+        ("max-width:none 은 묶은 게 아니다", none_, {"img"}),
+        ("figure 안의 video 도 본다", other, {"video"}),
+    ] + cases_extra
+    bad_cases = []
+    for name, h, want in cases:
+        got = {t for t in _fig_children(h) if not _width_bound(h, t)}
+        if got != want:
+            bad_cases.append("%s (기대 %s · 결과 %s)" % (name, want or "없음", got or "없음"))
+    return bad_cases
+
+
+_st = _figwidth_selftest()
+if _st:
+    print("  [X] 9c. 관문 자기시험 실패: %s" % " · ".join(_st))
+    fails.append("9c. 관문 자기시험 실패")
+else:
+    _unbound = sorted(t for t in _fig_children(HTML) if not _width_bound(HTML, t))
+    _kinds = sorted(_fig_children(HTML))
+    check("9c", "그림 상자 안이 상자 폭에 묶인다", not _unbound,
+          "자기시험 5/5 · figure 안 %s · 안 묶인 것 %s"
+          % ("/".join(_kinds) or "없음", "/".join(_unbound) or "없음"))
+
 check("1a", "전체 원자료 에피소드 수", says(total), "%d 에피소드" % total)
 check("1b", "성적표 분모", says(score), "%d 에피소드" % score)
 
@@ -830,8 +926,24 @@ check("4d", "본문의 「모델 대조 N컷」 이 배열과 같다",
 print("== 5. 배포본과 생성본 ==")
 deployed = os.path.join(SITE, "report-v1.html")
 made = os.path.join(OUT, "report-v1.html")
-check("5a", "배포된 보고서가 생성본과 바이트로 같다",
-      os.path.isfile(deployed) and filecmp.cmp(deployed, made, shallow=False),
+# ★ 2026-09-14. 전에는 바이트로 견줬다. 그런데 이제 배포본에는 «빌드가 붙이는 표»
+#   가 있다 (`data-themed` · `data-plate` · 도해가 테마를 따라가게 하는 것).
+#   그것 때문에 두 파일이 늘 달라져 관문이 언제나 붉게 됐다. 관문이 늘 실패하면
+#   사람이 관문을 안 본다. 그러니 «빌드가 붙이는 것만» 걷고 나머지를 견준다.
+#   걷는 목록을 여기 명시해 두어, 새 후처리가 생기면 이 관문이 다시 잡는다.
+_POST = re.compile(r'\s+data-(?:themed|plate)(?=[\s>])')
+
+
+def _same_but_marks(a, b):
+    if not (os.path.isfile(a) and os.path.isfile(b)):
+        return False
+    ta = _POST.sub("", io.open(a, encoding="utf-8", errors="ignore").read())
+    tb = _POST.sub("", io.open(b, encoding="utf-8", errors="ignore").read())
+    return ta == tb
+
+
+check("5a", "배포된 보고서가 생성본과 같다 (빌드가 붙이는 표 제외)",
+      _same_but_marks(deployed, made),
       "foothold-site/report-v1.html")
 
 

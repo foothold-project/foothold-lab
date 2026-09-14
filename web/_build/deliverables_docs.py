@@ -97,7 +97,18 @@ def _copy_figs(md, srcdir):
     2026-09-04: 본 기획서를 목록에 넣자 실제로 그 자리에서 멈췄다.
     """
     dst_dir = os.path.join(VAULT, 'assets')
+    # ★ 2026-09-14. 도해마다 테마 짝(`x.dark.svg`)이 있다. 그것도 함께 옮긴다.
+    #   안 옮기면 사이트가 다크로 갔을 때 브라우저가 없는 파일을 부른다.
+    #   (이 함수가 사본만 보고 원본을 안 봐서, 내가 web/assets 를 고쳐 놓고
+    #    빌드가 원본으로 덮어쓰는 것을 한 번 겪었다. 원본은 여기 srcdir 이다)
+    want = set()
     for rel in set(_FIG.findall(md)):
+        want.add(rel)
+        if rel.endswith('.svg') and not rel.endswith('.dark.svg'):
+            dk = rel[:-4] + '.dark.svg'
+            if os.path.isfile(os.path.join(srcdir, dk.replace('/', os.sep))):
+                want.add(dk)
+    for rel in want:
         src = os.path.join(srcdir, rel.replace('/', os.sep))
         if not os.path.isfile(src):
             print('  [!] 산출물 그림이 없다: %s' % rel)

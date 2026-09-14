@@ -452,6 +452,12 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+   올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
+   여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+
 /* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
 .recent{display:grid;gap:.45rem;margin:0 0 10px}
 .recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
@@ -659,9 +665,22 @@ def inject_nav(path, cur):
         # ★ 실측 (팀장 9/1): 저장 키가 둘이었다. 표지는 'foothold-theme',
         #   내가 만든 토글은 'theme'. 서로 못 읽어 «표지는 밝은데 허브는 다크» 가
         #   났다. 사이트 정본 키 하나로 통일한다.
+        # ★ 2026-09-14. 팀장이 「SVG 컬러가 이전 컬러로 돌아갔다」고 잡았다.
+        #   `<img>` 안의 도해는 «격리된 문서» 라 이 페이지의 data-theme 이 안 닿고,
+        #   도해는 OS 설정(prefers-color-scheme)만 볼 수 있었다. OS 가 라이트인
+        #   사람이 사이트를 다크로 바꾸면 도해만 라이트로 남았다.
+        #
+        #   정하는 자리를 여기 하나로 모은다. 테마마다 구운 파일을 갈아끼운다.
+        #   짝은 `tools/svg_theme.py` 가 굽고, 어느 그림이 짝을 갖는지는 빌드가
+        #   `data-themed` 로 표시한다. 브라우저에서 «이름» 으로 고르지 않는다.
+        #
+        #   클릭과 첫 로드가 같은 함수를 부른다. 한쪽만 달면 새로 연 페이지와
+        #   토글한 페이지가 서로 다른 말을 한다.
+        _figs_js = "window.fhFigs=function(t){try{var g=document.querySelectorAll('img[data-themed]'),i,e,u,q,b;for(i=0;i<g.length;i++){e=g[i];u=e.getAttribute('src');if(!u)continue;q=u.indexOf('?');b=(q<0?u:u.slice(0,q));if(!e.dataset.fhLight)e.dataset.fhLight=b.replace(/\\.dark\\.svg$/,'.svg');b=e.dataset.fhLight;if(t==='dark')b=b.replace(/\\.svg$/,'.dark.svg');if(b!==(q<0?u:u.slice(0,q)))e.setAttribute('src',b+(q<0?'':u.slice(q)));}}catch(err){}};"
         _js = ("var h=document.documentElement,"
                "t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;"
-               "try{localStorage.setItem('foothold-theme',t)}catch(e){}")
+               "try{localStorage.setItem('foothold-theme',t)}catch(e){}"
+               ";if(window.fhFigs)window.fhFigs(t)")
         ctl = ('<button id="themeBtn" type="button" aria-label="테마 전환" '
                'onclick="' + _js + '" '
                'style="cursor:pointer;background:var(--card);color:var(--ink-3);'
@@ -679,7 +698,10 @@ def inject_nav(path, cur):
                 '||localStorage.getItem("theme");'
                 'if(_t)document.documentElement.dataset.theme=_t;'
                 'else document.documentElement.dataset.theme="light"}'
-                'catch(e){}</script>')
+                'catch(e){}</script>'
+                '<script id="fh-figs">' + _figs_js +
+                'document.addEventListener("DOMContentLoaded",'
+                'function(){window.fhFigs(document.documentElement.dataset.theme)});</script>')
         # ★ 2026-09-03 (foothold-lab#137). 여기가 «없으면 넣는다» 였다. 그래서
         #   첫 빌드와 두 번째 빌드의 head 순서가 갈렸다. 첫 빌드는 ia-css 를 넣은
         #   뒤 부트를 넣어 «ia-css 다음 부트» 가 되는데, 두 번째 빌드는 이미 있는
@@ -687,6 +709,7 @@ def inject_nav(path, cur):
         #   내용은 같고 순서만 달라 A1 과 A2 가 바이트로 갈렸다 (허브 6장 실측).
         #   위 ia-css 와 똑같이 «걷어내고 언제나 다시 넣는다». 자리가 한 곳으로 고정된다.
         t = re.sub(r'<script id="fh-theme-boot">.*?</script>', '', t, flags=re.S)
+        t = re.sub(r'<script id="fh-figs">.*?</script>', '', t, flags=re.S)
         if '</head>' in t:
             t = t.replace('</head>', boot + '</head>', 1)
         else:

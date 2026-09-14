@@ -48,6 +48,8 @@ LIGHT = {
     '--ok': '#0e7a6e', '--ok-soft': '#e0f0ed',
     '--warn': '#a86a08', '--warn-soft': '#fbf0dc',
     '--bad': '#a3342a', '--bad-soft': '#fbe9e7',
+    # 2026-09-14. 손그림 도해 4장이 쓰던 색. 값은 사이트 CSS 에서 가져왔다.
+    '--dim-ink': '#0b6459', '--ink-soft': '#adb5c1', '--deep': '#112222',
 }
 DARK = {
     '--ink': '#e9e7e1', '--ink-2': '#adb5c1', '--ink-3': '#7d8693',
@@ -57,6 +59,7 @@ DARK = {
     '--ok': '#3ec7b4', '--ok-soft': '#11302c',
     '--warn': '#dc9a30', '--warn-soft': '#332710',
     '--bad': '#e56d5e', '--bad-soft': '#331c19',
+    '--dim-ink': '#3ec7b4', '--ink-soft': '#4a5566', '--deep': '#0c1117',
 }
 
 

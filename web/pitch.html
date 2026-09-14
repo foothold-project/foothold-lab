@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
+    fetch('/assets/search-index.json?v=16debf05').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -698,6 +698,11 @@ document.addEventListener('DOMContentLoaded',function(){
   letter-spacing:.12em;cursor:pointer;border-radius:4px;transition:.15s;
   line-height:1.3;white-space:nowrap}
 #themeBtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해는 밝은 판 위에 올린다.
+   그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
+   `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
 #themeBtn:active{transform:translateY(1px)}
 @media print{#themeBtn{display:none!important}}
 </style>
@@ -705,8 +710,28 @@ document.addEventListener('DOMContentLoaded',function(){
 <script>(function(){
   var d=document.documentElement,K='foothold-theme',b=document.getElementById('themeBtn'),
       mq=window.matchMedia('(prefers-color-scheme: dark)');
+  function figs(t){
+    /* 2026-09-14. <img> 안의 도해는 «격리된 문서» 라 이 페이지의 data-theme 이
+       안 닿는다. 도해 스스로는 OS 설정(prefers-color-scheme)만 볼 수 있어서,
+       OS 가 라이트인 사람이 사이트를 다크로 바꾸면 도해만 라이트로 남았다.
+       팀장이 「SVG 컬러가 이전 컬러로 돌아갔다」고 잡은 것이 이것이다.
+       그래서 정하는 자리를 여기 하나로 모은다. 파일을 갈아끼운다.
+       (짝은 tools/svg_theme.py 가 굽고, 빌드 관문 [3.477] 이 센다) */
+    var g=document.querySelectorAll('img[src*="assets/visual/"]'),i,el,u,q,base;
+    for(i=0;i<g.length;i++){
+      el=g[i];u=el.getAttribute('src');if(!u||u.indexOf('.svg')<0)continue;
+      q=u.indexOf('?');base=(q<0?u:u.slice(0,q));
+      if(!el.dataset.themeLight){
+        el.dataset.themeLight=base.replace(/\.dark\.svg$/,'.svg');}
+      base=el.dataset.themeLight;
+      if(t==='dark')base=base.replace(/\.svg$/,'.dark.svg');
+      if(base!==(q<0?u:u.slice(0,q)))el.setAttribute('src',base+(q<0?'':u.slice(q)));
+    }}
   function apply(t){d.setAttribute('data-theme',t);
-    b.textContent=(t==='dark')?'\ub77c\uc774\ud2b8':'\ub2e4\ud06c';}
+    b.textContent=(t==='dark')?'\ub77c\uc774\ud2b8':'\ub2e4\ud06c';
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',function(){figs(t);});
+    else figs(t);}
   function cur(){return localStorage.getItem(K)||('light');}
   apply(cur());
   b.addEventListener('click',function(){

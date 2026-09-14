@@ -1,8 +1,8 @@
 <svg viewBox="-20 -19 802 344" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="높이 스캔 값이 뜻하는 세 가지" width="780" height="320">
 <!--selfcontained:v1-->
 <style>
-:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--dim:#0e7a6e;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
-@media(prefers-color-scheme:dark){:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--dim:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}}
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
 </style>
 
 <text x="0.0" y="15.0" font-size="13" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">광선 한 줄기가 내는 값</text>

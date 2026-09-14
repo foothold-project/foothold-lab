@@ -13,7 +13,7 @@
 <text x="32" y="68" font-size="12.5" fill="#5b6b7f">metrics.py:349 · termination_reason(timed_out) · 플래그 하나만 받아 이름 둘로 가른다</text>
 
 <rect x="32" y="100" width="300" height="280" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
-<text x="52" y="130" font-size="13" font-weight="600" fill="#16202c">한 판이 실제로 끝나는 방식</text>
+<text x="52" y="130" font-size="13" font-weight="600" fill="#16202c">한 에피소드가 실제로 끝나는 방식</text>
 
 <circle cx="58" cy="162" r="4" fill="#17795e"/>
 <text x="72" y="167" font-size="11.5" fill="#16202c">제한 시간을 다 채웠다</text>
@@ -64,8 +64,8 @@
 <text x="52" y="454" font-size="13" font-weight="600" fill="#8a6410">이 두 값이 못 보게 하는 것</text>
 <text x="52" y="488" font-size="11.5" fill="#16202c">어느 링크가 닿았는지</text>
 <text x="52" y="514" font-size="11.5" fill="#16202c">정말 접촉 때문에 끝났는지</text>
-<text x="52" y="540" font-size="11.5" fill="#16202c">다리가 접혀 주저앉은 판은 종료조차 안 된다</text>
-<text x="500" y="488" font-size="11.5" fill="#16202c">종료 조건을 하나라도 더하면 그 판이 전부</text>
+<text x="52" y="540" font-size="11.5" fill="#16202c">다리가 접혀 주저앉은 에피소드는 종료조차 안 된다</text>
+<text x="500" y="488" font-size="11.5" fill="#16202c">종료 조건을 하나라도 더하면 그 에피소드가 전부</text>
 <text x="500" y="514" font-size="11.5" fill="#16202c">base_contact 로 기록되고 오류는 나지 않는다</text>
 <text x="500" y="540" font-size="11.5" fill="#16202c">「낙상」은 정확히는 「몸통이 1 N 이상 닿았다」다</text>
 

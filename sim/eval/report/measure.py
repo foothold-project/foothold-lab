@@ -427,6 +427,24 @@ for _tset in ("rough6", "unseen10"):
     if os.path.isfile(_mp):
         zones.update(json.load(io.open(_mp, encoding="utf-8")).get("obstacle_zones_m", {}))
 
+# ── 난이도 스윕 ────────────────────────────────────────────────────────
+# ★ 2026-09-14 (#422). 종합보고서 첫머리가 난이도 곡선과 속도 영향을 인용한다.
+#   그 수를 본문에 손으로 박으면 다음 실행에서 수가 바뀌어도 글이 안 따라온다.
+#   원자료에서 읽어 넘긴다. 없으면 빈 표를 넘기고 본문이 그 줄을 접는다.
+sweep = {}
+# `R` 은 maindata-v1 을 가리킨다. 스윕은 그 형제 폴더라 한 단계 위에서 찾는다.
+_sp = os.path.join(os.path.dirname(R), "20260910-difficulty-sweep",
+                   "sweep_summary.csv")
+if os.path.isfile(_sp):
+    import csv as _csv
+    for _r in _csv.DictReader(io.open(_sp, encoding="utf-8")):
+        _v = float(_r["overall_success_rate"])
+        sweep["%s|%s|%s" % (_r["terrain"], _r["difficulty"], _r["command_vx"])] = (
+            round(_v * 100 if _v <= 1 else _v, 1))
+    print("  난이도 스윕 %d칸 읽었다" % len(sweep))
+else:
+    print("  [!] 난이도 스윕을 못 찾았다: %s" % _sp)
+
 json.dump({
     "score": {"%s|%s|%s" % k: round(v, 1) for k, v in score.items()},
     "zones": zones,
@@ -434,6 +452,7 @@ json.dump({
     "tracking15": tracking15,
     "axes": {"%s|%s" % k: v for k, v in axes.items()},
     "engage": engage, "terr_set": terr_set, "episodes": episodes,
+    "sweep": sweep,
 }, io.open(os.path.join(S, "report_numbers.json"), "w", encoding="utf-8"),
     ensure_ascii=False, indent=2)
 print("  수치 적었다 · report_numbers.json")

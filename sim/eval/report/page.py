@@ -30,6 +30,7 @@ ENG = D["engage"]
 BD = D["breakdown"]        # (지형|모델|속도) -> 승패와 실패 축 조합
 TR15 = D["tracking15"]     # 1.5 m/s 속도추종 통과 수
 ZONES = D["zones"]         # 지형 -> [장애물 구간 시작 m, 끝 m]
+SWEEP = D.get("sweep", {})  # (지형|난이도|속도) -> 성공률 %. 없으면 빈 표
 
 
 def worst(key, top=2):
@@ -234,6 +235,19 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .head p{margin:2px 0;font-size:12.5px;color:var(--ink-3);font-family:var(--mono)}
 h1{font-size:32px;font-weight:700;letter-spacing:-.025em;margin:0 0 12px;text-wrap:balance}
 .lead{font-size:16.5px;color:var(--ink-2);margin:0 0 8px}
+/* ★ 2026-09-14 (#422). 첫머리「이번에 얻은 것」다섯 줄.
+   번호를 크게 두어 읽는 사람이 «몇 개인지» 를 먼저 보게 한다.
+   각 줄 끝의 «-> N» 이 근거 절이다. 약한 회색을 안 쓴다 (웹 규칙). */
+ol.find{margin:1.1rem 0 0;padding:0;list-style:none;counter-reset:f}
+ol.find li{counter-increment:f;position:relative;padding:.85rem 0 .85rem 2.6rem;
+  border-top:1px solid var(--rule);line-height:1.75}
+ol.find li:last-child{border-bottom:1px solid var(--rule)}
+ol.find li::before{content:counter(f,decimal-leading-zero);position:absolute;
+  left:0;top:.9rem;font:800 .78rem/1 var(--mono);color:var(--accent);
+  letter-spacing:.04em}
+ol.find b{color:var(--ink)}
+.to{display:inline-block;margin-left:.4rem;font:700 .72rem/1 var(--mono);
+  color:var(--ink-2);white-space:nowrap}
 h2{font-size:20px;font-weight:700;margin:58px 0 8px;letter-spacing:-.01em;
   display:flex;align-items:baseline;gap:11px}
 h2 .n{font-family:var(--mono);font-size:12px;color:var(--ink-3);font-weight:500}
@@ -255,6 +269,13 @@ td.mono{font-family:var(--mono);font-size:12px}
 figure{margin:24px 0;background:var(--card);border:1px solid var(--line);
   border-radius:14px;padding:20px 20px 14px;overflow:hidden}
 figure svg{display:block;width:100%;height:auto}
+/* 2026-09-14. svg 만 있고 img 가 없었다. 07 절 보상 지도가 1000 px 로
+   그려져 912 px 짜리 상자에서 오른쪽 109 px 가 잘려 나갔다. 「막는다」의
+   마지막 글자가 안 보였다. 같은 규칙이 사는 두 자리 중 한쪽만 있었던 것. */
+figure img{display:block;width:100%;height:auto}
+/* 영상 12개는 오늘은 안 넘친다. flex 가 눌러 주고 있을 뿐 묶는 규칙은
+   없었다 (관문 9c 가 잡았다). 눌러 주는 쪽이 바뀌면 조용히 새니 묶는다. */
+figure video{display:block;width:100%;height:auto}
 figcaption{margin-top:12px;font-size:12.5px;color:var(--ink-3);
   padding-top:11px;border-top:1px solid var(--line)}
 .note{border:1px solid var(--line);border-left:3px solid var(--ink-3);
@@ -353,6 +374,64 @@ p.append("<h1>FOOTHOLD 종합보고서 1차</h1>")
 p.append('<p class="lead">Unitree Go2 사족보행 정책을 미경험 험지에서 평가한 결과입니다. '
          '기준선(NVIDIA 공식 체크포인트), 중간 판 A, 그리고 이번 배포 대상인 '
          'foothold-v1 을 같은 조건에서 비교합니다.</p>')
+
+# ── 0 · 이번에 얻은 것 ────────────────────────────────────────────────
+# ★ 2026-09-14 팀장 지시: 「맨 위에는 가장 핵심 이번 보고서에서 우리가 얻은
+#   것과 중요한 것들을 먼저 이야기 하고 풀어가야하는 것이 맞지 않을까?」
+#   맞다. 「01 한 줄」은 요약이지 «얻은 것» 이 아니었다.
+#
+#   여기 수는 전부 아래 절에서 다시 나온다. 새로 만든 것이 하나도 없다.
+#   각 줄 끝의 «-> N» 이 그 근거가 있는 절이다.
+p.append('<h2><span class="n">00</span>이번에 얻은 것</h2>')
+p.append('<p>다섯 줄입니다. 각 줄의 근거는 뒤 절에 있습니다.</p>')
+
+_sw = lambda t, d, v='1.0': SWEEP.get('%s|%s|%s' % (t, d, v))
+_easy = lambda t: _sw(t, '0.02')
+
+p.append('<ol class="find">')
+
+# 1 · gap 을 열었다
+p.append('<li><b>미경험 험지 <span class="mono">gap</span> 을 열었습니다.</b> '
+         '정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 '
+         '기준선 %.0f %% 에서 foothold-v1 %.0f %% 입니다. '
+         '기존 험지 6종은 하나도 안 무너졌습니다. <span class="to">-> 03 · 04</span></li>'
+         % (g("gap", "baseline", "1"), g("gap", "foothold-v1", "1")))
+
+# 2 · 기준선은 학습 분포 «안» 에서도 무너진다
+p.append('<li><b>기준선은 학습한 지형에서도 무너집니다.</b> '
+         '<span class="mono">pyramid_stairs_inv</span> %.0f %% · '
+         '<span class="mono">boxes</span> %.0f %% 입니다. '
+         '「미경험이라 못 한다」로는 설명이 안 됩니다. <span class="to">-> 03</span></li>'
+         % (g("pyramid_stairs_inv", "baseline", "1"), g("boxes", "baseline", "1")))
+
+# 3 · 실패는 능력의 바닥이 아니라 난이도의 값이다
+p.append('<li><b>실패 다섯 중 넷은 «못 하는 것» 이 아니라 «이 난이도에서 못 하는 것» '
+         '입니다.</b> 난이도를 0.02 까지 내리면 '
+         '<span class="mono">rails</span> %.0f %% · '
+         '<span class="mono">pit</span> %.0f %% · '
+         '<span class="mono">stepping_stones</span> %.0f %% · '
+         '<span class="mono">gap</span> %.0f %% 로 돌아옵니다. '
+         '<span class="mono">floating_ring</span> 하나만 가장 쉬운 칸에서도 0 %% 라 '
+         '난이도 축의 문제가 아닙니다. <span class="to">-> 05</span></li>'
+         % (_easy('rails'), _easy('pit'), _easy('stepping_stones'), _easy('gap')))
+
+# 4 · 느리게 가는 것이 더 안전하지 않다
+p.append('<li><b>천천히 가는 것이 더 안전하지 않습니다.</b> 같은 난이도(0.1)에서 '
+         '명령 속도를 1.0 에서 0.5 m/s 로 낮추면 다섯 지형이 모두 떨어집니다 '
+         '(<span class="mono">rails</span> %.0f -> %.0f · '
+         '<span class="mono">pit</span> %.0f -> %.0f). '
+         '학습 속도에서 멀어지면 양쪽 다 나빠집니다. <span class="to">-> 06</span></li>'
+         % (_sw('rails', '0.1', '1.0'), _sw('rails', '0.1', '0.5'),
+            _sw('pit', '0.1', '1.0'), _sw('pit', '0.1', '0.5')))
+
+# 5 · 성공률 한 수로는 원인이 안 보인다
+p.append('<li><b>성공률 한 수로는 «왜» 가 안 보입니다.</b> '
+         '<span class="mono">rails</span> 는 정본 조건에서 %.0f %% 인데, '
+         '떨어진 에피소드의 대부분이 넘어져서가 아니라 <b>방향 축</b> 에서 '
+         '탈락합니다. 네 축을 갈라야 처방이 갈립니다. <span class="to">-> 07</span></li>'
+         % g("rails", "foothold-v1", "1"))
+
+p.append('</ol>')
 
 # ── 1 ──────────────────────────────────────────────────────────────────
 p.append('<h2><span class="n">01</span>한 줄</h2>')
@@ -547,7 +626,7 @@ p.append(clips([
 #
 # **한 점만 보면 「어디서 무너지나」를 못 본다.** 성적표는 난이도 0.5 한 칸이라
 # 기준선이 거기서 50 % 라는 것만 말한다. 곡선은 그 앞뒤를 말한다.
-p.append('<h2><span class="n">04</span>난이도를 올리면 어떻게 되나</h2>')
+p.append('<h2><span class="n">05</span>난이도를 올리면 어떻게 되나</h2>')
 p.append('<p>지금까지는 난이도 <strong>0.5</strong> 한 칸만 봤습니다. 그 한 칸은 '
          '「지금 어느 쪽이 낫나」는 말해 주지만 <strong>어디서 무너지나</strong>는 '
          '말해 주지 않습니다. 미경험 험지 10종을 난이도 0.1 부터 1.0 까지 '
@@ -569,11 +648,38 @@ p.append('<div class="note"><b>이 곡선을 읽을 때 조심할 것 셋.</b>'
          '<br>둘 · <span class="mono">random_rough</span> 는 난이도를 거의 타지 '
          '않습니다. 곡선이 평평한 것이 성적이 좋아서가 아닙니다.'
          '<br>셋 · 이것은 <strong>열 지형의 평균</strong>입니다. 지형 하나하나가 '
-         '어디서 무너지는지는 평가 정본 2부에 있습니다.</div>')
+         '어디서 무너지는지는 바로 아래 표에 있습니다.</div>')
+
+# ── 지형별 난이도 축 ───────────────────────────────────────────────────
+# ★ 2026-09-14 (#422). 전에는 「지형 하나하나는 평가 정본 2부에 있습니다」로
+#   넘겼다. 팀장 지시대로 «발견» 은 여기서 답한다. 넘기면 아무도 안 따라간다.
+#   수는 스윕 원자료에서 읽는다. 손으로 안 박는다.
+if SWEEP:
+    _T = ["rails", "pit", "stepping_stones", "gap", "floating_ring"]
+    _D = ["0.02", "0.1", "0.3", "0.5", "0.8", "1.0"]
+    _rows = ""
+    for _t in _T:
+        _c = "".join(
+            '<td class="num">%s</td>'
+            % ("%.0f" % SWEEP["%s|%s|1.0" % (_t, _d)]
+               if ("%s|%s|1.0" % (_t, _d)) in SWEEP else "·")
+            for _d in _D)
+        _rows += '<tr><td class="mono">%s</td>%s</tr>' % (_t, _c)
+    p.append('<p><b>지형마다 무너지는 자리가 다릅니다.</b> 실패 5종을 난이도 '
+             '축으로 편 것입니다 (1.0 m/s · 칸마다 100 에피소드 · 단위 %).</p>')
+    p.append('<div class="tw"><table class="wide"><thead><tr><th>지형</th>%s</tr>'
+             '</thead><tbody>%s</tbody></table></div>'
+             % ("".join('<th class="num">%s</th>' % _d for _d in _D), _rows))
+    p.append('<p>넷은 난이도를 내리면 돌아옵니다. '
+             '<span class="mono">floating_ring</span> 하나만 가장 쉬운 칸에서도 '
+             '0 % 이고 오히려 난이도 0.8 에서 값이 생깁니다. '
+             '<b>이 지형은 난이도가 오를수록 고리가 낮아져 장애물의 종류가 '
+             '바뀌기 때문입니다.</b> 난이도 축으로 설명되지 않는 유일한 지형이라 '
+             '따로 봐야 합니다.</p>')
 p.append('<p>난이도 0.5 칸에서 이 곡선과 앞의 성적표는 <strong>같은 값</strong>입니다 '
          '(기준선 50.5 % · A 76.6 % · foothold-v1 84.7 %). 두 자료가 같은 것을 '
          '재고 있다는 뜻입니다.</p>')
-p.append('<h2><span class="n">05</span>성공률만으로는 안 보이는 것</h2>')
+p.append('<h2><span class="n">06</span>성공률만으로는 안 보이는 것</h2>')
 p.append('<p>성공 조건은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND입니다. 그런데 장애물을 '
          '<strong>비켜 가도</strong> 그 조건은 채워집니다. 그래서 이번 에피소드에 '
          '<strong>몸통 아래 광선이 어느 높이 폭을 지났는가</strong>를 재는 열 셋을 더했습니다.</p>')
@@ -684,7 +790,28 @@ p.append('<p><span class="mono">gap</span> 은 <strong>이 조건에서</strong>
          '지형은 네 축이 이미 답하고 있습니다.</p>')
 
 # ── 6 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">06</span>아직 안 되는 것</h2>')
+# ── 무엇을 잘하라고 가르쳤나 ───────────────────────────────────────────
+# ★ 2026-09-14 (#422) 팀장 지목. 보상 지도는 «어떻게 쟀나» 가 아니라
+#   «왜 그렇게 움직이나» 라서 발견 쪽이다. 평가 정본에서 여기로 옮긴다.
+p.append('<h2><span class="n">07</span>무엇을 잘하라고 가르쳤나</h2>')
+p.append('<p>성적이 갈리는 까닭을 보려면 <b>무엇에 상을 주고 무엇에 벌을 '
+         '주었는지</b>를 봐야 합니다. 아래는 학습 실행이 저장한 '
+         '<span class="mono">params/env.yaml</span> 에서 그대로 읽은 것입니다.</p>')
+p.append('<figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg" '
+         'alt="Go2 몸의 어디에 어떤 보상이 걸리는가" loading="lazy">'
+         '<figcaption>그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. '
+         '사진은 실제 평가 렌더에서 오린 것입니다</figcaption></figure>')
+p.append('<p>가장 큰 벌점이 <span class="mono">lin_vel_z_l2</span> 의 '
+         '<b>-2.00</b> 입니다. 「위아래로 출렁이지 마라」가 「명령 속도를 '
+         '맞춰라(+1.50)」보다 무겁습니다. <b>이것이 뛰어넘는 동작과 '
+         '부딪칩니다.</b> 틈이나 턱을 넘으려면 몸이 위아래로 움직여야 하는데 '
+         '그 움직임 자체가 벌점입니다.</p>')
+p.append('<div class="note"><b>다만 보상만 바꿔서는 아무 일도 안 일어납니다.</b> '
+         '기준선은 구멍이 없는 지형에서 학습된 NVIDIA 공식 체크포인트입니다. '
+         '보상을 고치려면 <b>재학습이 전제</b>입니다. 그리고 우리는 아직 NVIDIA '
+         '보상을 한 항도 안 바꿨습니다 <span class="mono">확인됨</span>.</div>')
+
+p.append('<h2><span class="n">08</span>아직 안 되는 것</h2>')
 p.append("<ul>")
 p.append('<li><strong><span class="mono">stepping_stones</span> 0 %.</strong> '
          '난이도 0.5 · 세 속도 전부에서 세 모델 모두 0 % 입니다. 더 낮은 난이도에서도 못 건너는지는 곡선 자료로 따로 확인해야 합니다. '
@@ -732,7 +859,7 @@ p.append(clips([
 ]))
 
 # ── 7 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">07</span>재현</h2>')
+p.append('<h2><span class="n">09</span>재현</h2>')
 p.append("<pre>git pull origin main" + NL +
          "pip install av        # Isaac 이 도는 파이썬에 한 번만" + NL + NL +
          "# 이 보고서의 데이터 전부" + NL +
@@ -744,7 +871,7 @@ p.append("<pre>git pull origin main" + NL +
          "python sim/eval/render_gallery.py \\" + NL +
          "    --checkpoint models/foothold-v1.pt \\" + NL +
          "    --raw_csv sim/eval/results/maindata-v1</pre>")
-p.append('<h2><span class="n">08</span>근거 영상 전체</h2>')
+p.append('<h2><span class="n">10</span>근거 영상 전체</h2>')
 # **수를 손으로 적지 않는다.** 갤러리 색인에서 읽는다.
 # 전에는 「모두 84컷」 이 박혀 있었고, 대조컷을 28개 더 채운 뒤에도
 # 그대로 남았다 `확인됨` (2026-09-12 · 발행 관문도 못 잡았다).

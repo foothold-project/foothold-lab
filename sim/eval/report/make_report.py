@@ -59,6 +59,22 @@ def stage(name, argv):
 
 
 def main():
+    # ★ 2026-09-14 (#412). 모르는 인자를 조용히 넘기지 않는다.
+    #   같은 날 `build.py --out` 이 `--repro` 없이는 조용히 무시되고 실제
+    #   배포본에 쓰는 것을 겪었다. 여기도 `--out` 을 안 받는데 주면 아무 말
+    #   없이 흘려보냈다. 목적지는 `FOOTHOLD_REPORT_OUT` 로만 바꾼다.
+    KNOWN = ("--link", "--allow_missing_clips", "--no_audit", "--allow_missing")
+    unknown = [a for a in sys.argv[1:]
+               if a.startswith("--") and a not in KNOWN]
+    if unknown:
+        print("  [!] 모르는 인자: %s" % " ".join(unknown))
+        print("      이 도구가 받는 것: %s" % " ".join(KNOWN))
+        if any(a == "--out" for a in unknown):
+            print("      산출 자리는 인자가 아니라 환경 변수로 바꿉니다:")
+            print("        FOOTHOLD_REPORT_OUT=<폴더> python "
+                  "sim/eval/report/make_report.py")
+        raise SystemExit(2)
+
     argv = [a for a in sys.argv[1:] if a != "--no_audit"]
 
     # `--link <앞머리>` 는 글을 짜는 쪽만 쓴다. 수치 쪽에는 안 넘긴다.
@@ -94,6 +110,17 @@ def main():
 
     print()
     print("만들었다 · %s (%.2f MB)" % (page, os.path.getsize(page) / 1048576))
+
+    # ★ 2026-09-14. 순서를 틀리면 조용히 되돌아간다.
+    #   보고서를 배포 폴더로 «복사» 하면 사이트 빌드가 넣어 둔 것이 지워진다
+    #   (전역바 · 테마 토글 · 도해 테마 표시 data-themed). 실제로 한 번 지웠고
+    #   아무 오류도 안 났다. 그 페이지만 다크에서 도해가 안 따라온다.
+    #
+    #   지켜야 할 순서:  make_report -> 배포본으로 복사 -> **사이트 빌드**
+    #   빌드를 먼저 돌리고 복사하면 안 된다.
+    print('  [순서] 복사한 뒤 `python web/_build/build.py --skip-secure` 를 '
+          '한 번 더 돌립니다')
+    print('         (전역바·테마 토글·도해 테마 표시가 복사로 지워집니다)')
 
     if audit:
         print()

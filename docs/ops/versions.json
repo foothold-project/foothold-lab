@@ -45,24 +45,24 @@
   "ver": "v1.1"
  },
  "deliverables/plan/proposal-summary.md": {
-  "hash": "04c3a7d7f5947535",
+  "hash": "54e5bf76498a8edb",
   "major": "",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "deliverables/plan/proposal.md": {
-  "hash": "3e2fd35fa5a58a6c",
+  "hash": "5d20c1fa1b4f4fd5",
   "major": "v1.6",
-  "ver": "v1.6"
+  "ver": "v1.7"
  },
  "deliverables/plan/roles-responsibilities.md": {
-  "hash": "2a46b2a10fa2a081",
+  "hash": "1bd0b46707d514e3",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "deliverables/plan/wbs-official.md": {
-  "hash": "29f363e9e6e16d41",
+  "hash": "46e42ce548288b23",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "deliverables/plan/wbs.md": {
   "hash": "303a32b640d7a577",
@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "1a4f5ee0f4fcf6bf",
+  "hash": "9cb99c5d6dfb73df",
   "major": "v2.1",
-  "ver": "v2.5"
+  "ver": "v2.7"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -480,9 +480,9 @@
   "ver": "v1.1"
  },
  "docs/research/20260911-eval-protocol-v2.md": {
-  "hash": "0c3c226a6b5a5b72",
+  "hash": "d4aed44b8a748b4c",
   "major": "v2.0",
-  "ver": "v2.4"
+  "ver": "v2.5"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

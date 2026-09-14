@@ -233,6 +233,12 @@ def checks(out, bad):
             #   `src`/`href` 속성 안의 것만 센다.
             ref |= {m.group(1) for m in
                     re.finditer(r'(?:src|href)="[^"?]*?([\w.-]+\.svg)', t)}
+        # ★ 2026-09-14. 테마 짝(`x.dark.svg`)은 HTML 에 «안» 나온다.
+        #   토글이 브라우저에서 src 를 갈아끼우기 때문이다. 짝을 고아로
+        #   세면 23장이 고아로 찍혀 진짜 고아가 묻힌다. 밝은 쪽이 걸려
+        #   있으면 짝도 걸린 것으로 본다.
+        ref |= {f[:-len(".svg")] + ".dark.svg" for f in ref
+                if f.endswith(".svg") and not f.endswith(".dark.svg")}
         orphan = [f for f in sorted(os.listdir(vis))
                   if f.endswith('.svg') and f not in ref]
         if orphan:

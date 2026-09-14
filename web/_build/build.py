@@ -1027,6 +1027,23 @@ if __name__ == '__main__':
         print('      `python tools/svg_pad.py --write docs/assets/visual` 로 맞춥니다')
         sys.exit(1)
 
+    # ★ 2026-09-14 신설. 팀장이 「웹에 들어가면 SVG 컬러가 이전 컬러로
+    #   돌아갔다」고 잡았다. 실제로 봤다. 페이지는 다크인데 도해만 라이트였다.
+    #   `<img>` 안의 도해는 격리된 문서라 이 페이지의 data-theme 이 안 닿고,
+    #   도해는 OS 설정만 보고 있었다. 정하는 자리가 둘인데 서로 몰랐던 것.
+    #   이제 테마마다 파일을 굽고 토글이 갈아끼운다. 여기서 그것을 다시 잰다.
+    print('[3.477] 도해 테마 검사 (사이트 토글을 따라오는가)')
+    import svg_theme
+    _nt, _np, _plate = svg_theme.mark_pages(SITE)
+    print('  표시: 테마 짝 %d곳 · 밝은 판 %d곳 (다크 색 미정 %d종)'
+          % (_nt, _np, len(_plate)))
+    if not svg_theme._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    if not svg_theme.check(SITE):
+        print('  [!] 도해가 사이트 테마를 못 따라갑니다. 배포를 중단합니다.')
+        print('      `python tools/svg_theme.py --write` 로 짝을 굽습니다')
+        sys.exit(1)
+
     print('[3.475] 영상 규격 검사 (썸네일 · 폰 재생 속성)')
     import videocheck
     if not videocheck.main(SITE):
