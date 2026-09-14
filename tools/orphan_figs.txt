@@ -1,0 +1,14 @@
+# 어느 페이지에도 안 걸린 도해. 2026-09-14 실측.
+#
+# 이 파일의 줄 수가 남은 일의 크기다. 빌드 관문 [3.479] 가 이 명부를 쓴다.
+# 여기 없는 고아가 새로 생기면 배포를 세운다. 명부가 줄어드는 것은 통과다.
+#
+# reward-map 과 scan-grid 는 각각 종합보고서 07절과 fig02 로 옮긴 흔적이다.
+# 나머지 다섯은 왜 안 걸리는지 아직 안 봤다.
+eval-v2-curves.svg
+eval-v2-gap-geometry.svg
+eval-v2-pipeline.svg
+eval-v2-reward-map.svg
+eval-v2-ring-section.svg
+eval-v2-scan-grid.svg
+eval-v2-scan-meaning.svg

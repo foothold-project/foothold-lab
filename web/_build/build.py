@@ -1032,6 +1032,31 @@ if __name__ == '__main__':
     #   `<img>` 안의 도해는 격리된 문서라 이 페이지의 data-theme 이 안 닿고,
     #   도해는 OS 설정만 보고 있었다. 정하는 자리가 둘인데 서로 몰랐던 것.
     #   이제 테마마다 파일을 굽고 토글이 갈아끼운다. 여기서 그것을 다시 잰다.
+    # 2026-09-14 site 세션이 잡았다. 「보존이 갱신도 막는다」.
+    #   `assets/gnav-head.html` 은 lab 에 없고 배포본에서 뽑아 쓰는 스냅샷인데,
+    #   지우지 않으려고 OTHER_MADE 에 넣어 둔 것이 **다시 굽는 것도 막았다.**
+    #   그래서 바에 fh-figs 를 넣어도 스냅샷은 옛것이라, 그 스냅샷을 박아 쓰는
+    #   페이지(report-v1)만 다크에서 도해가 안 갈렸다. 오류는 하나도 안 났다.
+    #
+    #   문자열을 찾지 않는다. **지금 배포본에서 다시 뽑아 바이트로 견준다.**
+    #   그래서 다음에 바에 무엇이 더 붙어도 이 관문이 같이 잡는다.
+    print('[3.478] 전역바 스냅샷이 지금 바와 같은가')
+    import gnav_extract
+    _nav, _css, _head = gnav_extract.extract(SITE)
+    _stale = []
+    for _n, _t in (('gnav.css', _css), ('gnav.html', _nav + '\n'),
+                   ('gnav-head.html', _head)):
+        _p = os.path.join(SITE, 'assets', _n)
+        _old = (io.open(_p, encoding='utf-8').read()
+                if os.path.isfile(_p) else None)
+        if _old != _t:
+            io.open(_p, 'w', encoding='utf-8').write(_t)
+            _stale.append('%s (%d -> %d바이트)'
+                          % (_n, len(_old.encode('utf-8')) if _old else 0,
+                             len(_t.encode('utf-8'))))
+    print('  스냅샷 3장 · 낡아서 다시 구운 것 %d장%s'
+          % (len(_stale), (': ' + ' · '.join(_stale)) if _stale else ''))
+
     print('[3.477] 도해 테마 검사 (사이트 토글을 따라오는가)')
     import svg_theme
     _nt, _np, _plate = svg_theme.mark_pages(SITE)
