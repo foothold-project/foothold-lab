@@ -140,10 +140,29 @@ NEVER = ['brief-workstation.html', 'quadruped-onepager.html', 'DEPLOY.md', '_src
 #
 #   assets/ 는 통째로 교체되므로 그 안의 것은 «파일 단위» 로 지켜야 한다.
 #   폴더 단위로는 못 막는다.
-OTHER_MADE = {
-    'assets/gnav.css', 'assets/gnav.html', 'assets/gnav-head.html',
-    'report-v1.html', 'gallery',
+# ★ 2026-09-14. 여기에 「지우지 마라」만 적혀 있고 **「그러면 이 파일의 새 판은
+#   어디서 오나」가 없었다.** 그래서 site 세션이 배포 전에 작업 트리를 되돌렸다가
+#   커밋 안 된 종합보고서를 지웠고, 빌드는 되살아난 옛 판을 그대로 «보존» 했다.
+#   오류는 하나도 안 났다. 적힌 대로 했는데 틀린 것이니 적은 쪽이 잘못이다.
+#
+#   그래서 항목마다 «소스가 어디인가» 를 함께 적는다. 그러면
+#   「되돌려도 되는가」가 항목마다 답이 나온다.
+#
+#     매 빌드에 다시 구워진다  -> 되돌려도 된다
+#     복사해 넣는 것이 유일본  -> 되돌리면 사라진다. 커밋이 유일한 소스다
+OTHER_MADE_SOURCE = {
+    # 배포본에서 뽑는다. 관문 [3.478] 이 매 빌드에 다시 굽고 바이트로 견준다.
+    'assets/gnav.css': '다시 구워짐',
+    'assets/gnav.html': '다시 구워짐',
+    'assets/gnav-head.html': '다시 구워짐',
+    # lab 에서 구워 손으로 복사한다. 빌드는 만들지 못한다.
+    #   sim/eval/report/make_report.py -> sim/eval/results/report-v1/
+    'report-v1.html': '유일본 · 커밋이 소스',
+    #   sim/eval/render_gallery.py · gallery_versions.py
+    'gallery': '유일본 · 커밋이 소스',
 }
+
+OTHER_MADE = set(OTHER_MADE_SOURCE)
 
 # ★ 2026-09-14 팀장 확정: 「lab 에도 갤러리 뷰어가 있어야 하면 그렇게 해」.
 #
@@ -1032,6 +1051,30 @@ if __name__ == '__main__':
     #   `<img>` 안의 도해는 격리된 문서라 이 페이지의 data-theme 이 안 닿고,
     #   도해는 OS 설정만 보고 있었다. 정하는 자리가 둘인데 서로 몰랐던 것.
     #   이제 테마마다 파일을 굽고 토글이 갈아끼운다. 여기서 그것을 다시 잰다.
+    # 2026-09-14. 「유일본」 항목이 커밋 안 된 채로 있으면 알린다.
+    #   배포 절차가 작업 트리를 HEAD 로 되돌리는 순간 그것은 사라지고,
+    #   빌드는 되살아난 옛 판을 «보존» 한다. 오늘 종합보고서가 그랬다.
+    #   막을 수는 없으니(되돌리는 쪽은 다른 세션이다) 소리를 낸다.
+    print('[3.4775] 되돌리면 사라질 것이 커밋 안 됐나')
+    _only = [k for k, v in OTHER_MADE_SOURCE.items() if '유일본' in v]
+    _risk = []
+    try:
+        _st = subprocess.run(['git', 'status', '--short', '--'] + _only,
+                             cwd=SITE, capture_output=True, text=True,
+                             encoding='utf-8', timeout=30)
+        for _l in (_st.stdout or '').splitlines():
+            if _l.strip():
+                _risk.append(_l.strip())
+    except Exception as _e:
+        print('  [!] git 을 못 물었다: %s' % _e)
+    if _risk:
+        print('  [!] 커밋 안 된 «유일본» %d건. 되돌리면 사라집니다:' % len(_risk))
+        for _l in _risk:
+            print('       %s' % _l)
+        print('       foothold-site 에서 커밋해 두십시오.')
+    else:
+        print('  유일본 %d종 · 커밋 안 된 것 없음' % len(_only))
+
     # 2026-09-14 site 세션이 잡았다. 「보존이 갱신도 막는다」.
     #   `assets/gnav-head.html` 은 lab 에 없고 배포본에서 뽑아 쓰는 스냅샷인데,
     #   지우지 않으려고 OTHER_MADE 에 넣어 둔 것이 **다시 굽는 것도 막았다.**
