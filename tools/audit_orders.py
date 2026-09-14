@@ -198,8 +198,11 @@ out = subprocess.run([sys.executable, os.path.join(LAB, 'tools/pan_to_episode.py
                         if 'assets' not in r for f in fs if f.endswith('.md')],
                      capture_output=True, text=True, encoding='utf-8', cwd=LAB)
 tot = re.search(r'합계 (\d+)곳', out.stdout or '')
-chk('21', '문서의 「판」 -> 「에피소드」', False,
-    '남은 %s곳 (전부 팀원 문서 · PR 대기)' % (tot.group(1) if tot else '?'))
+# ★ 첫 판은 여기에 `False` 를 박아 두었다. PR 대기 중이라 «아직 안 끝났다» 는
+#   뜻이었는데, PR 이 머지되어 0곳이 된 뒤에도 계속 어긋남으로 찍혔다.
+#   **판정을 상수로 박으면 사실이 바뀌어도 안 따라온다.** 실측으로 센다.
+chk('21', '문서의 「판」 -> 「에피소드」', tot and tot.group(1) == '0',
+    '남은 %s곳' % (tot.group(1) if tot else '?'))
 
 # 22 · 다이제스트
 dg = [f for f in os.listdir(os.path.join(LAB, 'docs/digest'))
