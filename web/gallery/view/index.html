@@ -420,7 +420,38 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
                         '&mid=' + man.version + ':' + man.main_model,
                   class: 'btn', text: '이 조건으로 3열 비교' })
     ]));
-    body.appendChild(filters);
+    /* 좁은 화면에서는 거르개를 접는다.
+     *
+     * ★ 2026-09-14 팀장 지적. 390 px 에서 거르개 블록만 934 px 였다 ·
+     *   화면(800 px)보다 커서 내용을 보려면 두 화면을 넘겨야 했다.
+     *   CSS 로 이름표를 제 줄로 내려도 여전히 길다. 접는 것이 답이다.
+     *
+     * **접어도 «지금 무엇으로 걸렀는지» 는 보여야 한다.** 안 그러면 접힌
+     * 채로 다른 것을 보면서 왜 90 칸인지 모른다. 요약을 여름표에 적는다.
+     * 넓은 화면은 그대로 펼친다 · 접을 까닭이 없다.
+     */
+    if (window.matchMedia('(max-width:640px)').matches) {
+      const picked = [];
+      if (state.set) picked.push(G.SET_NAME[state.set] || state.set);
+      if (state.terrain) picked.push(state.terrain);
+      if (state.speed !== undefined && state.speed !== null) picked.push(state.speed + ' m/s');
+      if (state.model) picked.push(state.model);
+      if (state.rate) picked.push(bandLabel(F.success_rate_band)(state.rate));
+      if (state.eng) picked.push(bandLabel(F.engagement_band)(state.eng));
+      if (state.clips) picked.push(state.clips === 'with' ? '영상 있음' : '성적만');
+      const box = G.el('details', { class: 'fold' }, [
+        G.el('summary', {}, [
+          G.el('span', { class: 'fk', text: '조건' }),
+          G.el('span', { class: 'fv',
+                         text: picked.length ? picked.join(' · ') : '전부' }),
+          G.el('span', { class: 'fn', text: hits.length + ' 칸' })
+        ])
+      ]);
+      box.appendChild(filters);
+      body.appendChild(box);
+    } else {
+      body.appendChild(filters);
+    }
 
     if (!hits.length) {
       body.appendChild(G.emptyBox('조건에 맞는 것이 없습니다',

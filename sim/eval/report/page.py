@@ -116,6 +116,32 @@ for _i, _a in enumerate(sys.argv):
 # 본문이 달라고 한 컷 가운데 «없던» 것. 끝에서 소리를 낸다.
 WANTED_MISSING = []
 
+# ★ 2026-09-14 신설. 포스터(첫 화면 그림)가 사는 곳.
+#   `--link` 로 갤러리를 가리킬 때만 쓴다. 통째로 박는 모드에서는 페이지가
+#   수 MB 로 불어나므로 안 건다.
+#   `LINK` 는 `.../v1/web/` 꼴이라 형제 폴더 `posters/` 를 본다.
+POSTERS = os.path.join(GALLERY, "posters")
+
+
+def _poster_link(link):
+    """영상 주소에서 포스터 주소를 만든다.
+
+    ★ 짐작하지 않는다. 실제 배포본은 `/gallery/v1/clips/` 를 쓴다.
+      처음에 `web/` 를 기준으로 잘랐다가 안 맞았다 · 로컬 폴더 이름(`web/`)과
+      배포 주소(`clips/`)가 달랐다. **마지막 폴더 이름을 무엇이든 바꾼다.**
+    """
+    if not link:
+        return ""
+    s = link.rstrip("/")
+    return s.rsplit("/", 1)[0] + "/posters/"
+
+
+POSTER_LINK = _poster_link(LINK)
+
+# 포스터가 없던 컷. 끝에서 «수만» 알린다. 없다고 죽이지는 않는다 ·
+# 포스터는 있으면 좋은 것이지 본문이 달라고 한 것이 아니다.
+POSTER_MISSING = []
+
 
 def clip(stem, who, why):
     """영상 한 장. **없으면 모아 두었다가 끝에서 죽는다.**
@@ -137,10 +163,27 @@ def clip(stem, who, why):
         % (r, "true" if r == "1" else "false", r)
         for r in ("0.25", "0.5", "1", "2")) + "</span>"
 
-    return ('<figure><video src="%s" controls '
+    # ★ 2026-09-14 팀장 지적: 「갤러리에서는 썸네일이 보이는데 종합보고서는
+    #   영상이 처음에 블랙으로 떠 있다」. 폰에서 특히 그렇다.
+    #
+    #   `preload="metadata"` 는 첫 프레임을 안 그린다. 갤러리는 포스터 이미지를
+    #   따로 깔아서 멀쩡했고, 여기는 안 깔아서 검정이었다. 포스터는 **이미
+    #   144장 다 있다** (`gallery/v1/posters/`). 걸기만 하면 된다.
+    #
+    #   이름은 «정확히» 맞춘다. `startswith` 로 고르면 `gap-v1` 이
+    #   `gap-v1.5.jpg` 를 집는다 (실측으로 확인했다). 확장자만 바꾼다.
+    poster = ''
+    if LINK:
+        cand = os.path.join(POSTERS, stem + '.jpg') if POSTERS else ''
+        if cand and os.path.isfile(cand):
+            poster = ' poster="%s"' % (POSTER_LINK + stem + '.jpg')
+        else:
+            POSTER_MISSING.append(stem)
+
+    return ('<figure><video src="%s"%s controls '
             'preload="metadata" playsinline muted loop></video>'
             '<figcaption><span class="who">%s</span>%s%s</figcaption></figure>'
-            % (src, who, why, rate))
+            % (src, poster, who, why, rate))
 
 
 def clips(items):

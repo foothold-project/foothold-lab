@@ -81,6 +81,52 @@ h1{font-size:clamp(1.5rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.03em;
 .chip.whole[aria-pressed="true"]{border-color:var(--brand)}
 .chip:focus-visible,select:focus-visible,a:focus-visible,button:focus-visible{
   outline:2px solid var(--brand);outline-offset:2px}
+
+/* ── 좁은 화면 ─────────────────────────────────────────────
+ * ★ 2026-09-14 팀장 지적: 「144개 보기에서 필터쪽을 깔끔하게 하기로 하지
+ *   않았나」. 폰에서 보고 하신 말씀이고 **맞다.** 나는 1568px 에서만 재고
+ *   「됐다」고 했다. 390px 로 재니 이랬다 `실측`.
+ *
+ *     거르개 블록 높이   934 px   (화면이 800 px 인데 그보다 크다)
+ *     지형 줄 하나       178 px   (칩이 네 줄로 접힌다)
+ *     이름표가 먹는 폭   124 px   (390 중 32 %)
+ *
+ *   내용을 보려면 거르개만 두 화면 넘겨야 했다.
+ *
+ *   고치는 방식 둘.
+ *     1. 이름표를 «제 줄» 로 내린다 -> 칩이 폭을 다 쓴다
+ *     2. 거르개를 접는다 -> 첫 화면에 내용이 바로 온다
+ *
+ *   접는 것은 markup 이 필요해서 view 쪽에서 한다. 여기서는 1 을 한다. */
+@media (max-width:640px){
+  .filters{padding:12px 13px;gap:11px}
+  /* 이름표를 한 줄 통째로 쓰게 해서 칩에 폭을 넘긴다 */
+  .frow{gap:6px}
+  .flabel{min-width:0;flex:0 0 100%;margin-bottom:2px}
+  .tset .flabel{min-width:0}
+  .tgrp{gap:11px}
+  /* 칩을 조금 줄인다. 손가락으로 누를 수 있는 크기는 지킨다 (높이 30px) */
+  .chip{font-size:.76rem;padding:5px 10px;gap:5px}
+  .chip .n{font-size:.7em}
+  /* 접은 거르개. 여름표가 «지금 조건» 을 말한다 */
+  .fold{margin-bottom:18px}
+  .fold>summary{list-style:none;cursor:pointer;display:flex;gap:9px;
+    align-items:baseline;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--rule);border-radius:10px;
+    padding:11px 14px;font-size:.82rem;color:var(--ink-2)}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold>summary::after{content:'▾';margin-left:auto;color:var(--ink-3);
+    font-size:.9em;transition:transform .15s}
+  .fold[open]>summary::after{transform:rotate(180deg)}
+  .fold>summary .fk{font-size:.66rem;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);flex-shrink:0}
+  .fold>summary .fv{color:var(--ink);font-weight:600}
+  .fold>summary .fn{color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .fold .filters{margin-top:9px;margin-bottom:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .fold>summary::after{transition:none}
+}
 .tally{font-size:.82rem;color:var(--ink-2);display:flex;gap:14px;flex-wrap:wrap;
   align-items:center;border-top:1px solid var(--rule);padding-top:12px}
 .tally strong{color:var(--ink);font-variant-numeric:tabular-nums}
