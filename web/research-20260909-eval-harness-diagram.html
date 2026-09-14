@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -866,7 +866,7 @@ body>*{flex-shrink:0}
 판: v1.0</p></blockquote>
 </section>
 <section id="s1"><h2>왜 이 문서가 따로 있나</h2>
-<p><b>성공 기준의 숫자와 논증은 이미 있다.</b> <code>20260908-success-criteria-anatomy.md</code> 가 네 축을 해부하고 1,000판을 축별로 재집계해 두었다. 이 문서는 그것을 대체하지 않는다.</p>
+<p><b>성공 기준의 숫자와 논증은 이미 있다.</b> <code>20260908-success-criteria-anatomy.md</code> 가 네 축을 해부하고 1,000 에피소드를 축별로 재집계해 두었다. 이 문서는 그것을 대체하지 않는다.</p>
 <p>없던 것은 <b>그림</b>이다. 그 문서에 SVG·이미지·mermaid 가 <b>0건</b>이다 <span class="ev ev-ok">확인됨</span> (전수 검색). 표와 코드펜스로만 되어 있어서, 처음 보는 사람이 「네 축이 어떻게 합쳐지는가」를 잡으려면 열두 개 절을 순서대로 읽어야 한다.</p>
 <p>팀장 요청은 「평가 하네스가 무엇을 어떻게 재는지 <b>그림으로</b> 설명하라」였다. 그래서 도해 넷을 만들고, 각 그림 아래에 <b>그 숫자를 어느 파일 몇 행에서 읽었는지</b>를 붙인다. 숫자의 정본은 여전히 해부 문서다.</p>
 <blockquote><p><b>줄 번호 주의.</b> 해부 문서(09-08)가 인용한 <code>metrics.py</code> · <code>eval_generalization.py</code>
@@ -875,7 +875,7 @@ body>*{flex-shrink:0}
 것이다.</p></blockquote>
 </section>
 <section id="s2"><span id="1"></span><h2>1. 종합 성공은 네 축의 AND</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-four-axes.svg?v=c6144c71" alt="네 축 AND 판정 구조" loading="lazy"><figcaption>네 축 AND 판정 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-four-axes.svg?v=7189faa9" alt="네 축 AND 판정 구조" loading="lazy"><figcaption>네 축 AND 판정 구조</figcaption></figure></p>
 <p>성공은 <b>하나의 점수가 아니라 네 개의 통과·탈락</b>이고, 넷을 AND 로 묶는다.</p>
 <div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="c"># sim/eval/metrics.py:344</span>
 <span class="k">def</span> <span class="f">overall_success</span>(survival, progress, tracking, direction):
@@ -895,7 +895,7 @@ gate_progress_m=min_progress,</pre></div>
 <p><b>셋째, 관측 열은 AND 밖이다.</b> <code>peak_lateral_drift_m</code>(경로 전체의 최대 좌우 이탈) · <code>lateral_drift_m</code>(끝점 이탈) · 머리 접촉 셋은 CSV 에 남지만 판정에 안 들어간다. 통과선 판정으로 옮긴 뒤로 <b>끝점 이탈은 판정에서 관측으로 내려왔다.</b></p>
 </section>
 <section id="s3"><span id="2"></span><h2>2. 실패 사유는 둘뿐이다</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-termination.svg?v=275b1667" alt="실패 사유 열이 둘뿐인 구조" loading="lazy"><figcaption>실패 사유 열이 둘뿐인 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-termination.svg?v=b1d1611d" alt="실패 사유 열이 둘뿐인 구조" loading="lazy"><figcaption>실패 사유 열이 둘뿐인 구조</figcaption></figure></p>
 <div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="c"># sim/eval/metrics.py:349</span>
 <span class="k">def</span> <span class="f">termination_reason</span>(timed_out):
     <span class="s">&quot;&quot;&quot;종료 사유. 스냅샷 537~541행.&quot;&quot;&quot;</span>
@@ -918,14 +918,14 @@ gate_progress_m=min_progress,</pre></div>
 <p>그리고 이것이 <b>앞으로 터질 자리</b>다. 종료 조건을 하나라도 더하는 순간 새 사유로 끝난 판이 전부 <code>&quot;base_contact&quot;</code> 로 기록되고 <b>오류는 나지 않는다.</b> 커널 철칙의 「조용한 실패」 그대로다. 라이다 접촉을 종료 조건으로 올리자는 제안을 검토할 때 <code>termination_reason</code> 을 함께 고치는 비용이 계산에 들어가야 한다.</p>
 </section>
 <section id="s4"><span id="3"></span><h2>3. 방향 판정이 「끝점」에서 「통과선」으로 바뀌었다</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-direction-gate.svg?v=f12509c5" alt="방향 판정을 끝점에서 통과선으로 옮긴 구조" loading="lazy"><figcaption>방향 판정을 끝점에서 통과선으로 옮긴 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-direction-gate.svg?v=512e5c47" alt="방향 판정을 끝점에서 통과선으로 옮긴 구조" loading="lazy"><figcaption>방향 판정을 끝점에서 통과선으로 옮긴 구조</figcaption></figure></p>
 <p>원장 09-09 행이 정본이다.</p>
 <blockquote><p><b>좌우 이탈은 «통과선»에서 판정한다.</b> 09-02 의 「끝점 판정」을 대체한다.
 멘토 기준 「목표점 도달 시 좌우 5 cm」는 <b>평지 전제</b>다. 험지에서는 통과선을
 못 넘은 판이 섞이는데 끝점만 보면 그것이 0 으로 나와 통과처럼 보인다.</p></blockquote>
 <h3>왜 끝점이 안 맞았나</h3>
 <p><b>끝점이 목표점이 아니기 때문이다.</b> 20초 × 1.0 m/s 면 끝점은 20 m 근처인데 목표점은 10 m 다. 끝점으로 재면 <b>목표점이 아니라 그 두 배 지점</b>을 재게 된다.</p>
-<p>같은 100판을 두 기준으로 재면 값이 이렇게 갈린다.</p>
+<p>같은 100 에피소드를 두 기준으로 재면 값이 이렇게 갈린다.</p>
 <div class="tw"><table><thead><tr><th>무엇으로 재나</th><th>평균 좌우 이탈</th><th>직진성</th></tr></thead><tbody><tr><td>통과선 10 m</td><td>0.085 m</td><td>33 / 100</td></tr><tr><td>끝점 20 m</td><td>2.143 m</td><td>0 / 100</td></tr></tbody></table></div>
 <p>기획서가 인용한 직진성 33/100 은 <b>통과선 기준</b>이고, 끝점으로 재면 0/100 이다.</p>
 <h3>백분율로 보면 층위가 다르다</h3>
@@ -946,15 +946,15 @@ gate_progress_m=min_progress,</pre></div>
     <span class="k">return</span> <span class="f">bool</span>(gate_lateral &lt;= max_lateral_drift)</pre></div>
 <p>통과선을 한 번도 못 넘겼으면 <code>gate_lateral_drift_m</code> 이 <b><code>None</code></b> 이고, 그것은 곧 실패다. <b><code>0.0</code> 이 아니다</b> (<code>metrics.py:179~180</code>). 0.0 으로 돌려주면 「도달했고 완벽하게 곧았다」와 구별이 안 된다. 통과선 기준이면 <b>「도달하지 않았으면 실패」가 코드로 강제된다.</b></p>
 <p>전진이 통과선을 처음 넘는 자리를 찾아 앞뒤 표본 사이를 <b>선형보간</b>해 정확히 통과선 위의 이탈을 낸다. 표본 간격은 스텝 하나(1.0 m/s 에서 약 2 cm)다.</p>
-<blockquote><p><b>정본 1,000판은 재측정이 필요하다.</b> 그 기록은 20열이라 끝점으로 채점됐다
+<blockquote><p><b>정본 1,000 에피소드는 재측정이 필요하다.</b> 그 기록은 20열이라 끝점으로 채점됐다
 (원장 09-09 행).</p></blockquote>
 </section>
 <section id="s5"><span id="4"></span><h2>4. 지형 10종과, 평지를 뺀 자리</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-terrains.svg?v=6e7833af" alt="평가 지형 10종의 구성과 평지 제외" loading="lazy"><figcaption>평가 지형 10종의 구성과 평지 제외</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-terrains.svg?v=bd5cf09b" alt="평가 지형 10종의 구성과 평지 제외" loading="lazy"><figcaption>평가 지형 10종의 구성과 평지 제외</figcaption></figure></p>
 <p>이름과 순서는 <code>sim/eval/terrains.py:15~26</code>, 값은 <code>sim/eval/generalization_env_cfg.py:57~164</code> 에서 읽었다.</p>
 <div class="tw"><table><thead><tr><th>#</th><th>이름</th><th>무엇을 흔드나</th></tr></thead><tbody><tr><td>0</td><td><code>discrete_obstacles</code></td><td>장애물 35개 · 높이 0.05~0.16 m · 폭 0.4~1.0 m</td></tr><tr><td>1</td><td><code>wave</code></td><td>파형 4개 · 진폭 0.03~0.12 m</td></tr><tr><td>2</td><td><code>stepping_stones</code></td><td>돌 폭 0.35~0.65 m · 간격 0.08~0.20 m · 최대 높이 0.12 m</td></tr><tr><td>3</td><td><code>gap</code></td><td>틈 폭 0.15~0.40 m</td></tr><tr><td>4</td><td><code>pit</code></td><td>깊이 0.10~0.30 m · <code>double_pit</code> 없음</td></tr><tr><td>5</td><td><code>rails</code></td><td>두께 0.08~0.18 m · 높이 0.05~0.18 m</td></tr><tr><td>6</td><td><code>star</code></td><td>막대 5개 · 폭 0.30~0.70 m · 높이 0.05~0.16 m</td></tr><tr><td>7</td><td><code>floating_ring</code></td><td>고리 폭 0.25~0.60 m · 높이 0.05~0.16 m · 두께 0.12 m</td></tr><tr><td>8</td><td><code>repeated_boxes</code></td><td>25에서 45개 · 높이 0.08~0.16 m · 크기 0.35~0.50 m</td></tr><tr><td>9</td><td><code>repeated_cylinders</code></td><td>25에서 45개 · 높이 0.08~0.16 m · 반지름 0.12~0.20 m</td></tr></tbody></table></div>
 <p><b>열 지형이 공유하는 것</b>: 타일 8.0 × 8.0 m · 격자 1행 × 10열 · 테두리 20.0 m · 난이도 고정 0.5 · 씨앗 42 · <code>platform_width</code> 전부 1.5 m · 비중 각 0.1.</p>
-<p><b>인덱스가 곧 순서다.</b> Isaac Lab 이 <code>sub_terrains</code> 등록 순서대로 열을 배정하고 하네스가 <code>TERRAIN_NAMES[terrain_type]</code> 로 이름을 되찾는다. 앞에 무언가를 끼우면 기존 500판 기록의 지형 인덱스가 전부 밀린다. 새 지형은 <b>맨 뒤에</b> 붙인다.</p>
+<p><b>인덱스가 곧 순서다.</b> Isaac Lab 이 <code>sub_terrains</code> 등록 순서대로 열을 배정하고 하네스가 <code>TERRAIN_NAMES[terrain_type]</code> 로 이름을 되찾는다. 앞에 무언가를 끼우면 기존 500 에피소드 기록의 지형 인덱스가 전부 밀린다. 새 지형은 <b>맨 뒤에</b> 붙인다.</p>
 <h3>평지를 왜 뺐나</h3>
 <div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="c"># sim/eval/terrains.py:44</span>
 ADDED_TERRAIN_NAMES = ()
@@ -1025,5 +1025,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

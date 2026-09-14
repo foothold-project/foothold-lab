@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>평지 직진: 재는 자리가 결과를 가르고, 초기화 요인 셋 중 방위만 효과가 검출된다 · FOOTHOLD</title>
-<meta name="description" content="같은 104판이 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.">
+<meta name="description" content="같은 104 에피소드가 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -853,7 +853,7 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>평지 직진: 재는 자리가 결과를 가르고, 초기화 요인 셋 중 방위만 효과가 검출된다</h1>
-  <p class="lede">같은 104판이 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.</p>
+  <p class="lede">같은 104 에피소드가 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.</p>
   <div class="meta"><div><span class="k">판</span><span class="v">v2.7</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/98">#98</a></span></div><div><span class="k">작성</span><span class="v">맹라현 · 2026-09-03 13:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / flat-straight-baseline-10m.md</span></div><div><span class="k">증거</span><span class="v">확인 27 · 추측 2 · 미측정 11</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
@@ -861,27 +861,27 @@ body>*{flex-shrink:0}
 <!--H1:평지 직진: 재는 자리가 결과를 가르고, 초기화 요인 셋 중 방위만 효과가 검출된다-->
 <blockquote><p>분류: 실험
 작성: 맹라현 · 2026-09-03 13:30
-근거: 실측 (MuJoCo 568판 + 초기화 표본 200)
-요지: 같은 104판이 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.
+근거: 실측 (MuJoCo 568 에피소드 + 초기화 표본 200)
+요지: 같은 104 에피소드가 재는 자리에 따라 39.4% 와 1.0% 로 갈린다. 초당 0.5 m 에서 초기화 요인 셋을 비교하면 방위만 효과가 검출되고, 방위 고리를 세게 걸면 오히려 나빠진다.
 상태: 초안
 판: v2.7
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/98">#98</a></p></blockquote>
 <blockquote><p>실행: 맹라현 · 2026-09-03 · Mac mini (MuJoCo 3.12.0, GPU 없음)
 정책: 팀 기준선 NVIDIA 공식 체크포인트 <code>Isaac-Velocity-Rough-Unitree-Go2-v0</code> (관측 235차원)
 원자료: <code>mujoco_rails/results/straight_walk/raw_r235_gate_v0.5.csv</code> · <code>raw_r235_gate_v1.0.csv</code>
-규모: 평지 통과선 <b>208판</b> (두 조건 각 104) · 요인 분리 <b>240판</b> (2^3 여덟 칸 x 30) ·
-방위 고리 이득 <b>120판</b> (네 칸 x 30) · 합계 <b>568판</b>.
+규모: 평지 통과선 <b>208 에피소드</b> (두 조건 각 104) · 요인 분리 <b>240 에피소드</b> (2^3 여덟 칸 x 30) ·
+방위 고리 이득 <b>120 에피소드</b> (네 칸 x 30) · 합계 <b>568 에피소드</b>.
 초기화 범위 검증은 판이 아니라 <code>INIT.reset</code> <b>표본 200개</b> 다.
 하네스 <code>straight_walk.py</code> · <code>factor_probe.py</code> · 초기화 <code>init_state.py</code></p></blockquote>
 <p><b>「기준선이 90% 를 못 넘는다」는 팀장이 <code>#99</code> 에서 아이작심 실측으로 이미 밝혔다.</b> 이 문서가 새로 더하는 것은 셋이다.</p>
-<div class="tw"><table><thead><tr><th>#</th><th>무엇</th></tr></thead><tbody><tr><td>1</td><td><b>재는 자리가 결과를 가른다.</b> 같은 104판이 통과선 <b>39.4%</b> · 최대값 <b>1.0%</b></td></tr><tr><td>2</td><td><b>초기화 요인 셋 중 방위만 효과가 검출된다.</b> 초당 0.5 m · 2^3 여덟 칸 240판</td></tr><tr><td>3</td><td><b>방위 고리를 세게 걸면 오히려 나빠진다.</b> 이득 0.5 -&gt; 4.0 에 6.28 -&gt; 15.75 cm</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>#</th><th>무엇</th></tr></thead><tbody><tr><td>1</td><td><b>재는 자리가 결과를 가른다.</b> 같은 104 에피소드가 통과선 <b>39.4%</b> · 최대값 <b>1.0%</b></td></tr><tr><td>2</td><td><b>초기화 요인 셋 중 방위만 효과가 검출된다.</b> 초당 0.5 m · 2^3 여덟 칸 240 에피소드</td></tr><tr><td>3</td><td><b>방위 고리를 세게 걸면 오히려 나빠진다.</b> 이득 0.5 -&gt; 4.0 에 6.28 -&gt; 15.75 cm</td></tr></tbody></table></div>
 <p>무조코 판정 숫자는 초당 0.5 m 39.4% · 초당 1.0 m 26.9% 이고 낙상은 0% 다.</p>
 </section>
 <section id="s1"><span id="1"></span><h2>1. 초기화를 켜고 끄면 결과가 갈린다</h2>
 <p><b>완벽하게 정렬된 채 출발시키면 98.1% 다. 팀 벤치 초기화를 걸면 39.4% 가 된다.</b></p>
 <div class="tw"><table><thead><tr><th>초당 0.5 m</th><th>정렬 출발</th><th><b>팀 벤치 초기화</b></th></tr></thead><tbody><tr><td>초기 위치 흔들기</td><td>없음</td><td>±0.10 m</td></tr><tr><td>초기 방위 흔들기</td><td>없음</td><td><b>±5.0도</b></td></tr><tr><td>관절 흔들기</td><td>없음</td><td>기본자세 x 0.95~1.05</td></tr><tr><td>5 cm 안 (통과선)</td><td>98.1%</td><td><b>39.4%</b></td></tr></tbody></table></div>
 <p><b>팀 재현 규약 §4 가 「① 초기 자세·yaw 랜덤화」를 첫 항목으로 요구한다.</b> 아래 숫자는 전부 그 초기화를 건 값이다.</p>
-<p><b>흔드는 요인 셋을 2^3 여덟 칸으로 갈랐다</b> <span class="ev ev-ok">확인됨</span> (칸당 30판 · 합계 240판 · 짝지은 시드 · 10 m 통과선 기준 · <code>results/factor_probe/grid_full_factor.csv</code>).</p>
+<p><b>흔드는 요인 셋을 2^3 여덟 칸으로 갈랐다</b> <span class="ev ev-ok">확인됨</span> (칸당 30 에피소드 · 합계 240 에피소드 · 짝지은 시드 · 10 m 통과선 기준 · <code>results/factor_probe/grid_full_factor.csv</code>).</p>
 <div class="tw"><table><thead><tr><th>위치</th><th>방위</th><th>관절</th><th>통과선 이탈 중앙</th><th>5 cm 안</th></tr></thead><tbody><tr><td>끔</td><td>끔</td><td>끔</td><td>3.37 cm</td><td><b>30/30</b></td></tr><tr><td>끔</td><td>끔</td><td>켬</td><td>3.69 cm</td><td>29/30</td></tr><tr><td><b>끔</b></td><td><b>켬</b></td><td>끔</td><td><b>6.10 cm</b></td><td><b>12/30</b></td></tr><tr><td>끔</td><td>켬</td><td>켬</td><td>6.28 cm</td><td>12/30</td></tr><tr><td>켬</td><td>끔</td><td>끔</td><td>3.37 cm</td><td>30/30</td></tr><tr><td>켬</td><td>끔</td><td>켬</td><td>3.69 cm</td><td>29/30</td></tr><tr><td>켬</td><td>켬</td><td>끔</td><td>6.10 cm</td><td>12/30</td></tr><tr><td>켬</td><td>켬</td><td>켬</td><td>6.28 cm</td><td>12/30</td></tr></tbody></table></div>
 <p><b>주효과.</b> 실험 단위는 «시드» 다. 한 시드가 대비 넷을 갖는데 그 넷은 독립이 아니므로 <b>시드 안에서 먼저 평균 낸 뒤 시드 사이로 구간을 잡았다</b> (n = 30).</p>
 <div class="tw"><table><thead><tr><th>요인</th><th>평균</th><th>95% t (df=29)</th><th>부트스트랩 95%</th></tr></thead><tbody><tr><td>위치</td><td><b>+0.000 cm</b></td><td>[+0.000, +0.000]</td><td>[+0.000, +0.000]</td></tr><tr><td><b>방위</b></td><td><b>+3.034 cm</b></td><td><b>[+1.480, +4.588]</b></td><td><b>[+1.614, +4.499]</b></td></tr><tr><td>관절</td><td>-0.100 cm</td><td>[-0.404, +0.203]</td><td>[-0.392, +0.185]</td></tr></tbody></table></div>
@@ -913,11 +913,11 @@ body>*{flex-shrink:0}
 하네스에 <code>gate_lateral_drift_m</code> 열을 새로 만들어 구현했다. (<code>#99</code> 팀장 2026-09-03)</p></blockquote>
 <p><b>측정 자리가 결과를 크게 가른다.</b></p>
 <div class="tw"><table><thead><tr><th>재는 자리</th><th>초당 0.5 m</th><th>초당 1.0 m</th></tr></thead><tbody><tr><td><b>10 m 통과선</b> (판정)</td><td><b>39.4%</b></td><td><b>26.9%</b></td></tr><tr><td>판 전체의 최대값 (관측)</td><td><b>1.0%</b></td><td>20.2%</td></tr></tbody></table></div>
-<p><b>같은 104판인데 초당 0.5 m 에서 39.4% 와 1.0% 로 갈린다.</b> 팀장이 「판정은 끝점(멘토 기준) · 최대값은 관측 열」로 정한 것이 이래서 맞다.</p>
+<p><b>같은 104 에피소드인데 초당 0.5 m 에서 39.4% 와 1.0% 로 갈린다.</b> 팀장이 「판정은 끝점(멘토 기준) · 최대값은 관측 열」로 정한 것이 이래서 맞다.</p>
 <h3>3-1. 초기 조건</h3>
 <p><code>benchmark-setup-lim.md</code> 의 인자 기본값을 그대로 옮겼다 <span class="ev ev-ok">확인됨</span>.</p>
 <div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>시작 위치</td><td>±0.10 m (<code>--spawn_xy_range</code>)</td></tr><tr><td>시작 방위</td><td>±5.0도 (<code>--yaw_range_deg</code>)</td></tr><tr><td>관절</td><td>기본자세 x 0.95~1.05 (<code>--joint_pos_scale</code>, <b>곱셈이다</b>)</td></tr><tr><td>초기 속도</td><td>전부 0</td></tr></tbody></table></div>
-<p><b>200판 표본으로 범위를 검증했다.</b> 위치 −0.100~+0.098 m · 방위 −4.98~+4.92도 · 관절 편차 5.00%.</p>
+<p><b>200 에피소드 표본으로 범위를 검증했다.</b> 위치 −0.100~+0.098 m · 방위 −4.98~+4.92도 · 관절 편차 5.00%.</p>
 <p><b>하네스 셋이 초기화를 <code>init_state.py</code> 하나로 공유한다.</b> 어느 하네스로 재도 흔드는 폭이 같다.</p>
 </section>
 <section id="s4"><span id="3-2"></span><h2>3-2. 팀 기준선 정책을 무조코로 가져왔다</h2>
@@ -948,19 +948,19 @@ body>*{flex-shrink:0}
 보상에 <b>무게중심(COM)·압력중심(COP) 항이 아예 없다</b> (<code>RewardsCfg</code> 11항목 전수 확인 ·
 <code>flat_orientation_l2</code> 가중치 0). 다음 과제다.</p></blockquote>
 <p><b>이 문서가 새로 더하는 것은 셋이다.</b></p>
-<div class="tw"><table><thead><tr><th>#</th><th>무엇</th></tr></thead><tbody><tr><td>1</td><td><b>같은 판정으로 두 엔진이 겹친다</b> - 평지에서 무조코 숫자를 쓸 수 있다는 증거 (<code>#101</code> 자리)</td></tr><tr><td>2</td><td><b>재는 자리가 결과를 가른다</b> - 같은 104판이 통과선 39.4% · 최대값 1.0%</td></tr><tr><td>3</td><td><b>초당 0.5 m 에서 시작 방위와 좌우 이탈이 양의 상관을 보인다</b> (r = +0.635)</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>#</th><th>무엇</th></tr></thead><tbody><tr><td>1</td><td><b>같은 판정으로 두 엔진이 겹친다</b> - 평지에서 무조코 숫자를 쓸 수 있다는 증거 (<code>#101</code> 자리)</td></tr><tr><td>2</td><td><b>재는 자리가 결과를 가른다</b> - 같은 104 에피소드가 통과선 39.4% · 최대값 1.0%</td></tr><tr><td>3</td><td><b>초당 0.5 m 에서 시작 방위와 좌우 이탈이 양의 상관을 보인다</b> (r = +0.635)</td></tr></tbody></table></div>
 </section>
 <section id="s7"><span id="6"></span><h2>6. 왜 좌우로 흘러가나</h2>
 <p><b>방위는 편다. 펴는 동안 옆으로 밀린 거리가 안 돌아온다.</b></p>
 <p>학습 때 <code>heading_command=True</code> 라 <code>wz</code> 는 사람이 주는 값이 아니라 매 걸음 <code>wz = clip(0.5 x 방위오차, -1, 1)</code> 로 다시 계산됐다 <span class="ev ev-ok">확인됨</span>. 이 하네스도 같은 고리를 굴린다.</p>
-<p><b>고리 이득을 0.5 에서 4.0 까지 올려 봤다</b> (네 칸 x 30판 · 합계 120판 · 통과선 기준 · <code>results/factor_probe/grid_full_gain.csv</code>).</p>
+<p><b>고리 이득을 0.5 에서 4.0 까지 올려 봤다</b> (네 칸 x 30 에피소드 · 합계 120 에피소드 · 통과선 기준 · <code>results/factor_probe/grid_full_gain.csv</code>).</p>
 <div class="tw"><table><thead><tr><th>이득</th><th>통과선 이탈 중앙</th><th>끝 방위 오차</th><th>5 cm 안</th></tr></thead><tbody><tr><td><b>0.5 (학습값)</b></td><td><b>6.28 cm</b></td><td>1.48도</td><td><b>12/30</b></td></tr><tr><td>1.0</td><td>6.83 cm</td><td>0.77도</td><td>9/30</td></tr><tr><td>2.0</td><td>12.73 cm</td><td>0.41도</td><td>0/30</td></tr><tr><td>4.0</td><td>15.75 cm</td><td><b>0.22도</b></td><td>0/30</td></tr></tbody></table></div>
 <p><b>방위는 잘 잡히는데 좌우 이탈이 오히려 나빠진다</b> <span class="ev ev-ok">확인됨</span>. 이득 4.0 은 방위 오차를 0.22도까지 줄이지만 좌우 이탈은 15.75 cm 로 2.5배가 된다.</p>
 <p><b>세게 돌릴수록 몸이 옆으로 크게 휘둘리기 때문으로 본다</b> <span class="ev ev-guess">추측</span>. <b>학습값 0.5 가 이 중에서 가장 낫다. 고리를 세게 해서 풀 문제가 아니다.</b></p>
 <p><b>방위를 잡아도 이미 옆으로 밀린 거리는 안 돌아온다.</b> 명령이 <code>(vx, vy, wz)</code> 셋뿐이고 <b>「출발선으로 돌아오라」는 항이 없다.</b> 항법의 일이지 보행 정책의 일이 아니다.</p>
 <p><b>학습 보상에도 그 항이 없다</b> <span class="ev ev-ok">확인됨</span>. IsaacLab <code>RewardsCfg</code> 11항목을 전수 확인했더니 무게중심 항이 없고 자세 항 <code>flat_orientation_l2</code> 는 가중치 0 으로 꺼져 있다. 9/2 멘토링에서 박철제 멘토가 지적한 그대로다.</p>
 <h3>6-1. 초당 0.5 m 에서 시작 방위와 좌우 이탈이 같이 움직인다</h3>
-<p>104판을 시작 방위별로 갈랐다 (초당 0.5 m).</p>
+<p>104 에피소드를 시작 방위별로 갈랐다 (초당 0.5 m).</p>
 <div class="tw"><table><thead><tr><th>시작 방위</th><th>좌우 이탈 중앙</th><th>5 cm 통과</th></tr></thead><tbody><tr><td>0~1도</td><td>3.34 cm</td><td><b>80%</b></td></tr><tr><td>1~2도</td><td>2.03 cm</td><td>58%</td></tr><tr><td>2~3도</td><td>4.11 cm</td><td>56%</td></tr><tr><td>3~4도</td><td>8.37 cm</td><td>18%</td></tr><tr><td><b>4~5도</b></td><td><b>12.80 cm</b></td><td><b>0%</b></td></tr></tbody></table></div>
 <p>상관계수 <b>r = +0.635</b> <span class="ev ev-ok">확인됨</span>.</p>
 <blockquote><p><b>「대부분이 방위 때문」이라고 쓰지 않는다.</b> 상관계수만으로는 기여율을 못 낸다.
@@ -972,14 +972,14 @@ body>*{flex-shrink:0}
 <p><b>정책은 이것을 고치도록 학습됐다.</b> 학습 cfg 의 목표 방위 범위가 <b>±180도</b>다 <span class="ev ev-ok">확인됨</span>. 지금 주는 것은 그 1/36 인 ±5도다.</p>
 <p><b>방위 자체는 편다</b> (10 m 지점에서 1.48도). <b>그런데 펴는 동안 옆으로 밀린 거리가 5 cm 예산을 다 먹는다.</b> 5도로 출발하면 첫 몇 걸음에 이미 몇 cm 가 벌어진다.</p>
 <h3>6-2. 초당 1.0 m 는 초기 방위와 무관하다</h3>
-<p>같은 분석을 초당 1.0 m 에 하면 상관이 <b>r = +0.192</b> 로 거의 없다. <b>거의 정면(1도 미만)으로 놔도 15판 전부 실패한다</b> (좌우 중앙 11.97 cm).</p>
+<p>같은 분석을 초당 1.0 m 에 하면 상관이 <b>r = +0.192</b> 로 거의 없다. <b>거의 정면(1도 미만)으로 놔도 15 에피소드 전부 실패한다</b> (좌우 중앙 11.97 cm).</p>
 <p><b>초당 1.0 m 에서는 초기 방위만으로 설명되지 않는다.</b> 초당 0.5 m 는 방위를 펴면 들어오지만, 초당 1.0 m 는 정면으로 출발해도 흘러간다.</p>
 <blockquote><p><b>한계.</b> 두 속도를 비교한 것뿐이라 <b>속도에 딸려 오는 다른 요인</b>(걸음 주기 ·
 접촉 힘 · 제한 시간 · 실제 간 거리)이 안 갈렸다. 속도를 단독 원인으로 지목하려면
 그것들을 붙잡고 속도만 바꿔야 한다 <span class="ev ev-todo">미측정</span>.</p></blockquote>
 </section>
 <section id="s8"><span id="7"></span><h2>7. 확인 현황</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>0.5 m/s 39.4% · 1.0 m/s 26.9% · 각 104판</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>초기 조건이 팀 벤치 값과 같음</td><td><span class="ev ev-ok">확인됨</span>. 200판 표본 검증</td></tr><tr><td>방위 주효과 +3.034 cm · 95% [+1.480, +4.588]</td><td><span class="ev ev-ok">확인됨</span>. <b>초당 0.5 m 한정</b> · 2^3 여덟 칸 240판 · 시드 묶음 n=30</td></tr><tr><td>관절 주효과</td><td><b>효과 미검출.</b> 구간 [-0.404, +0.203] 이 0 을 품는다</td></tr><tr><td>위치 주효과 0.000</td><td><b>구조적 결과</b> <span class="ev ev-ok">확인됨</span>. 평지 병진대칭 + <code>|y-y0|</code> 정의. 판 120쌍이 완전 일치</td></tr><tr><td>험지에서도 위치가 0 인가</td><td><b><span class="ev ev-todo">미측정</span></b></td></tr><tr><td>이 이슈의 「참고」 지위</td><td><b><span class="ev ev-todo">미확인</span>.</b> 격하 근거(45차원)가 바뀌었다. 7-1 절</td></tr><tr><td>초기 방위와 좌우 이탈의 상관</td><td><span class="ev ev-ok">확인됨</span>. 0.5 m/s r=+0.635 · 1.0 m/s r=+0.192 · 각 104판</td></tr><tr><td>고리 이득을 올리면 좌우가 <b>더 나빠짐</b> (6.28 -&gt; 15.75 cm)</td><td><span class="ev ev-ok">확인됨</span>. 30판씩</td></tr><tr><td>이득을 올리면 왜 나빠지나</td><td><span class="ev ev-guess">추측</span>. 세게 돌리면 몸이 옆으로 휘둘리는 것으로 본다</td></tr><tr><td>보상에 무게중심·자세 항이 없음</td><td><span class="ev ev-ok">확인됨</span>. <code>RewardsCfg</code> 전수</td></tr><tr><td>정렬 출발 98.1%</td><td><span class="ev ev-ok">확인됨</span>. <b>초기 흔들기를 끈 조건</b> 값이다. 1절</td></tr><tr><td><b>험지에서도 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>0.5 m/s 39.4% · 1.0 m/s 26.9% · 각 104 에피소드</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>초기 조건이 팀 벤치 값과 같음</td><td><span class="ev ev-ok">확인됨</span>. 200 에피소드 표본 검증</td></tr><tr><td>방위 주효과 +3.034 cm · 95% [+1.480, +4.588]</td><td><span class="ev ev-ok">확인됨</span>. <b>초당 0.5 m 한정</b> · 2^3 여덟 칸 240 에피소드 · 시드 묶음 n=30</td></tr><tr><td>관절 주효과</td><td><b>효과 미검출.</b> 구간 [-0.404, +0.203] 이 0 을 품는다</td></tr><tr><td>위치 주효과 0.000</td><td><b>구조적 결과</b> <span class="ev ev-ok">확인됨</span>. 평지 병진대칭 + <code>|y-y0|</code> 정의. 판 120쌍이 완전 일치</td></tr><tr><td>험지에서도 위치가 0 인가</td><td><b><span class="ev ev-todo">미측정</span></b></td></tr><tr><td>이 이슈의 「참고」 지위</td><td><b><span class="ev ev-todo">미확인</span>.</b> 격하 근거(45차원)가 바뀌었다. 7-1 절</td></tr><tr><td>초기 방위와 좌우 이탈의 상관</td><td><span class="ev ev-ok">확인됨</span>. 0.5 m/s r=+0.635 · 1.0 m/s r=+0.192 · 각 104 에피소드</td></tr><tr><td>고리 이득을 올리면 좌우가 <b>더 나빠짐</b> (6.28 -&gt; 15.75 cm)</td><td><span class="ev ev-ok">확인됨</span>. 30 에피소드씩</td></tr><tr><td>이득을 올리면 왜 나빠지나</td><td><span class="ev ev-guess">추측</span>. 세게 돌리면 몸이 옆으로 휘둘리는 것으로 본다</td></tr><tr><td>보상에 무게중심·자세 항이 없음</td><td><span class="ev ev-ok">확인됨</span>. <code>RewardsCfg</code> 전수</td></tr><tr><td>정렬 출발 98.1%</td><td><span class="ev ev-ok">확인됨</span>. <b>초기 흔들기를 끈 조건</b> 값이다. 1절</td></tr><tr><td><b>험지에서도 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr></tbody></table></div>
 </section>
 <section id="s9"><span id="7-1"></span><h2>7-1. 확인이 필요한 것: 이 이슈의 「참고」 지위</h2>
 <p><b><code>#98</code> 팀장 댓글 3번이 이 이슈의 실측 지위를 「참고」로 두었다.</b> 근거는 이것이다.</p>
@@ -1038,5 +1038,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

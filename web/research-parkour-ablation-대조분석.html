@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -960,7 +960,7 @@ priv 29D 는 질량·COM·마찰·PD 게인처럼 <b>에피소드 내내 상수<
 인코더가 그 상수에 과적합했다는 것이 저쪽 해석이다. 우리가 라이다 잠재를
 critic 에 넣을 때 같은 함정이 있다: <b>시간에 따라 변하지 않는 양을 인코딩하지 말 것.</b></p></blockquote>
 <h3>3-5. 평가</h3>
-<div class="tw"><table><thead><tr><th>항목</th><th>저쪽</th><th>우리</th><th>판정</th></tr></thead><tbody><tr><td>성공 정의</td><td><b>없다.</b> 평균 보상과 속도추종 곡선 + 영상 육안</td><td><b>4축 AND</b> (생존 · 전진 · 속도추종 · 방향)</td><td><b>우리가 낫다</b></td></tr><tr><td>판수</td><td>명시 없음</td><td>지형당 100판 (총 1000판)</td><td><b>우리가 낫다</b></td></tr><tr><td>신뢰구간</td><td>없음</td><td>Wilson 95%</td><td><b>우리가 낫다</b></td></tr><tr><td>평가 지형</td><td>학습 지형과 <b>같다</b> (README: Play task 대신 학습 task 로 돌림)</td><td><b>미경험 험지 10종</b> · 학습에 없던 지형</td><td><b>우리가 낫다</b></td></tr><tr><td>재현 근거</td><td>브랜치명 + PPT</td><td><code>run_manifest.json</code> · <code>PROVENANCE.md</code> · 스냅샷 대조 테스트</td><td><b>우리가 낫다</b></td></tr><tr><td>승자 판정</td><td><b>지표와 영상이 갈렸다</b> (§4-4)</td><td>지표만</td><td><b>저쪽에서 배울 것</b></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>저쪽</th><th>우리</th><th>판정</th></tr></thead><tbody><tr><td>성공 정의</td><td><b>없다.</b> 평균 보상과 속도추종 곡선 + 영상 육안</td><td><b>4축 AND</b> (생존 · 전진 · 속도추종 · 방향)</td><td><b>우리가 낫다</b></td></tr><tr><td>판수</td><td>명시 없음</td><td>지형당 100 에피소드 (총 1000 에피소드)</td><td><b>우리가 낫다</b></td></tr><tr><td>신뢰구간</td><td>없음</td><td>Wilson 95%</td><td><b>우리가 낫다</b></td></tr><tr><td>평가 지형</td><td>학습 지형과 <b>같다</b> (README: Play task 대신 학습 task 로 돌림)</td><td><b>미경험 험지 10종</b> · 학습에 없던 지형</td><td><b>우리가 낫다</b></td></tr><tr><td>재현 근거</td><td>브랜치명 + PPT</td><td><code>run_manifest.json</code> · <code>PROVENANCE.md</code> · 스냅샷 대조 테스트</td><td><b>우리가 낫다</b></td></tr><tr><td>승자 판정</td><td><b>지표와 영상이 갈렸다</b> (§4-4)</td><td>지표만</td><td><b>저쪽에서 배울 것</b></td></tr></tbody></table></div>
 <blockquote><p><b>평가 방법론은 우리가 앞서 있다.</b> 이 문서에서 「저쪽을 따라가자」가 아닌 유일한 절이다.
 다만 마지막 줄 하나는 저쪽이 우리보다 낫다: <b>저쪽은 영상을 판정에 넣었고, 그 덕에 지표가 고른
 승자를 뒤집었다.</b> 자세한 것은 §4-4.</p></blockquote>
@@ -1008,7 +1008,7 @@ Abl7.0 ... Best result in graphs</pre></div>
 <p><b>이걸 안 하면 A/B 결과를 못 읽는다.</b> 우리 두 실행이 서로 다른 자를 썼다.</p>
 <div class="tw"><table><thead><tr><th>실행</th><th><code>min_progress_m</code></th><th><code>max_lateral_drift_m</code></th><th>근거</th></tr></thead><tbody><tr><td><code>20260903-flat-10m</code></td><td>10.0</td><td><b>0.05</b></td><td><code>run_manifest.json</code></td></tr><tr><td><code>20260903-rough10-1.0mps</code></td><td>3.0</td><td><b>0.75</b></td><td><code>run_manifest.json</code></td></tr><tr><td>팀장 결정(2026-09-03)</td><td>명시 없음</td><td><b>1.5</b></td><td><code>results/20260903-rough10-1.0mps/README.md</code> 머리</td></tr></tbody></table></div>
 <p>그리고 <b>0.05 m 자로는 평지에서도 2% 만 통과한다.</b></p>
-<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>flat, 100판:  생존 1.00 · 전진 1.00 · 속도추종 1.00 · 방향 0.02 → 종합 0.02
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>flat, 100 에피소드:  생존 1.00 · 전진 1.00 · 속도추종 1.00 · 방향 0.02 → 종합 0.02
               평균 횡이탈 0.255 m  (임계 0.05 m)</pre></div>
 <blockquote><p><b>네 축 중 셋이 만점인데 종합이 2% 다.</b> 방향축 하나가 AND 를 지배하고 있다.
 도약을 배운 정책은 횡이탈이 <b>더</b> 커진다. 자를 안 고치고 A/B 를 돌리면
@@ -1162,5 +1162,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>레일즈 진단: 넘는 힘은 있는데 «속도를 못 맞춰» 떨어진다 · FOOTHOLD</title>
-<meta name="description" content="레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100판 중 8판만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 무너진다. 다만">
+<meta name="description" content="레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100 에피소드 중 8 에피소드만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 ">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -853,15 +853,15 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>레일즈 진단: 넘는 힘은 있는데 «속도를 못 맞춰» 떨어진다</h1>
-  <p class="lede">레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100판 중 8판만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 무너진다. 다만 그 관문은 구간마</p>
+  <p class="lede">레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100 에피소드 중 8 에피소드만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 무너진다. 다만 그</p>
   <div class="meta"><div><span class="k">판</span><span class="v">v1.1</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a></span></div><div><span class="k">작성</span><span class="v">맹라현 · 2026-09-07 10:59</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260906-rails-speed-tracking-diagnosis.md</span></div><div><span class="k">증거</span><span class="v">확인 21 · 추측 5 · 미측정 9</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 실험
 작성: 맹라현 · 2026-09-07 10:59
-근거: 실측 (아이작심 800판 + 열 칸 1,000판 + 무조코 1,600판) · 주행 영상 3판 · IsaacLab 소스 원문
-요지: 레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100판 중 8판만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 무너진다. 다만 <b>그 관문은 구간마다 다르다</b> (§7-1 · 09-09 열 칸 1,000판).
+근거: 실측 (아이작심 800 에피소드 + 열 칸 1,000 에피소드 + 무조코 1,600 에피소드) · 주행 영상 3 에피소드 · IsaacLab 소스 원문
+요지: 레일즈는 낙상형이 아니다. 넘어지는 판은 다섯 중 하나뿐이고 나머지는 안 넘어진 채 시간이 끝난다. 실패를 가르는 관문은 속도추종이다. 100 에피소드 중 8 에피소드만 통과한다. 턱을 넘는 한계는 10.78 cm 인데 종합 성공률 90% 는 이미 7.89 cm 에서 무너진다. 다만 <b>그 관문은 구간마다 다르다</b> (§7-1 · 09-09 열 칸 1,000 에피소드).
 상태: 초안
 판: v1.1
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a></p></blockquote>
@@ -877,12 +877,12 @@ sha256 <code>f2aa77bf…</code> <span class="ev ev-ok">확인됨</span> · 관�
 </section>
 <section id="s1"><span id="0"></span><h2>0. 결론 먼저</h2>
 <p><b>넷이다.</b></p>
-<ol><li><b>레일즈는 낙상형이 아니다.</b> 100판 중 넘어진 것은 <b>15판</b>이고 <b>85판은 안 넘어진 채 시간이 끝났다.</b></li><li><b>병목은 속도추종 하나다.</b> 생존 85 · 전진 51 · 방향 92 인데 <b>속도추종만 8</b> 이다.</li><li><b>한계가 둘이고 자리가 다르다.</b> 턱을 넘는 한계는 <b>10.78 cm</b>, 종합 성공률 90% 의 경계는 <b>7.89 cm</b> 다.</li><li><b>힘이 모자란 것이 아니다.</b> 관절은 <b>33.5 cm</b> 까지 드는데 평지에서 앞발 <b>발 들림 높이</b>(유각기에 발이 땅에서 뜬 최고 높이)가 <b>평균 3.21 cm</b> 다. 학습 보상 11항목에 발 높이 항이 없다.</li></ol>
+<ol><li><b>레일즈는 낙상형이 아니다.</b> 100 에피소드 중 넘어진 것은 <b>15 에피소드</b>이고 <b>85 에피소드는 안 넘어진 채 시간이 끝났다.</b></li><li><b>병목은 속도추종 하나다.</b> 생존 85 · 전진 51 · 방향 92 인데 <b>속도추종만 8</b> 이다.</li><li><b>한계가 둘이고 자리가 다르다.</b> 턱을 넘는 한계는 <b>10.78 cm</b>, 종합 성공률 90% 의 경계는 <b>7.89 cm</b> 다.</li><li><b>힘이 모자란 것이 아니다.</b> 관절은 <b>33.5 cm</b> 까지 드는데 평지에서 앞발 <b>발 들림 높이</b>(유각기에 발이 땅에서 뜬 최고 높이)가 <b>평균 3.21 cm</b> 다. 학습 보상 11항목에 발 높이 항이 없다.</li></ol>
 </section>
 <section id="s2"><span id="1"></span><h2>1. 첫 관문 · 재현할 표가 폐기됐다</h2>
-<p><code>#66</code> 은 <b>「0.5 m/s · 50판 · 종합 2% · 생존 36% · 전진 0.93 m 를 재현하라. 안 나오면 여기서 멈춰라」</b> 로 시작한다.</p>
+<p><code>#66</code> 은 <b>「0.5 m/s · 50 에피소드 · 종합 2% · 생존 36% · 전진 0.93 m 를 재현하라. 안 나오면 여기서 멈춰라」</b> 로 시작한다.</p>
 <p><b>그 표는 2026-09-03 에 팀장이 뒤집었다.</b> 같은 정책·같은 지형에서 명령 속도만 0.5 에서 1.0 m/s 로 올렸다.</p>
-<div class="tw"><table><thead><tr><th></th><th>옛 표 (0.5 m/s · 50판)</th><th><b>정본 (1.0 m/s · 100판)</b></th></tr></thead><tbody><tr><td>종합</td><td>2%</td><td><b>4%</b></td></tr><tr><td>생존</td><td>36%</td><td><b>85%</b></td></tr><tr><td>평균 전진</td><td>0.93 m</td><td><b>2.64 m</b></td></tr><tr><td>종료 사유</td><td>낙상 우세</td><td><b>timeout 85 · base_contact 15</b></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>옛 표 (0.5 m/s · 50 에피소드)</th><th><b>정본 (1.0 m/s · 100 에피소드)</b></th></tr></thead><tbody><tr><td>종합</td><td>2%</td><td><b>4%</b></td></tr><tr><td>생존</td><td>36%</td><td><b>85%</b></td></tr><tr><td>평균 전진</td><td>0.93 m</td><td><b>2.64 m</b></td></tr><tr><td>종료 사유</td><td>낙상 우세</td><td><b>timeout 85 · base_contact 15</b></td></tr></tbody></table></div>
 <p><b>원자료를 직접 읽었다</b> (<code>foothold-lab/sim/eval/results/20260903-rough10-1.0mps/</code>). 정본 임계(좌우 1.5 m)의 요약 행이 이렇다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>rails,100,0.04,1.6,9.8,0.85,0.51,0.08,0.92,2.6443,0.7244,0.7523
         판  종합  Wilson  생존  전진  속도추종  방향  평균전진  좌우  최대좌우</pre></div>
@@ -896,16 +896,16 @@ sha256 <code>f2aa77bf…</code> <span class="ev ev-ok">확인됨</span> · 관�
 <p>턱은 두께가 8 cm 인데 로봇 발이 그 위에 선다. 지지할 자리가 좁다.</p>
 <h3>2-2. 막힘형 · 턱에 «걸터앉아» 멈춘다 (1.20 m)</h3>
 <p>앞발은 턱을 넘어갔고 뒷발은 못 넘었다. <b>몸통이 턱 위에 얹힌 채 10초를 보낸다.</b></p>
-<p><b>넘어지지 않는다.</b> 다리를 계속 젓는데 앞으로 못 간다. 이것이 <b>timeout 85판의 모습</b>이다.</p>
+<p><b>넘어지지 않는다.</b> 다리를 계속 젓는데 앞으로 못 간다. 이것이 <b>timeout 85 에피소드의 모습</b>이다.</p>
 <h3>2-3. 낙상형 · «바깥» 턱에서 넘어진다 (2.91 m)</h3>
 <p>안쪽 턱은 넘었다. 평지를 걸었다. <b>바깥 턱에서 4.54초에 끝났다.</b></p>
 <p><b>레일즈는 한 판에 턱이 둘이고 두께가 다르다</b> · 안쪽 8 cm · 바깥 18 cm <span class="ev ev-ok">확인됨</span> (<code>sim/eval/generalization_env_cfg.py</code> 84행 · <code>mesh_terrains.py</code> 406행이 튜플 언패킹이라 난이도 축이 아니다). 넘어진 자리가 바깥 턱이라는 것은 <b>두꺼운 턱이 더 쉬운 것이 아님</b>을 뜻한다 <span class="ev ev-guess">추측</span>. 세 판 중 한 판이라 판 수가 모자란다.</p>
 <h3>2-4. 통과형 · 둘 다 밟고 넘는다 (8.27 m)</h3>
 <p>턱 둘을 다 올라타 넘고 나머지는 평지를 달린다. <b>막힌 판과 다른 점은 「어떻게 넘느냐」가 아니라 「턱 위에서 몸이 안 걸리느냐」다</b> <span class="ev ev-guess">추측</span>.</p>
 <h3>2-5. 데이터가 같은 그림을 준다</h3>
-<p>tier4 (10.78 cm · 100판) 를 종료 사유로 갈랐다.</p>
+<p>tier4 (10.78 cm · 100 에피소드) 를 종료 사유로 갈랐다.</p>
 <div class="tw"><table><thead><tr><th></th><th>판</th><th>전진 중앙</th><th>좌우 중앙</th><th>속도오차 중앙</th></tr></thead><tbody><tr><td>전체</td><td>100</td><td>3.12 m</td><td>0.60 m</td><td>0.410</td></tr><tr><td>종합 성공</td><td>7</td><td>4.76 m</td><td>1.22 m</td><td><b>0.226</b></td></tr><tr><td>종합 실패</td><td>93</td><td>3.06 m</td><td>0.49 m</td><td><b>0.421</b></td></tr><tr><td>└ <code>base_contact</code></td><td>19</td><td>2.71 m</td><td>0.20 m</td><td>0.344</td></tr></tbody></table></div>
-<p><b>넘어진 19판은 좌우 이탈이 0.20 m 로 가장 작다.</b> 똑바로 가다가 넘어졌다. <b>성공한 7판은 좌우 이탈이 1.22 m 로 가장 크다.</b> 상관이고 인과는 <span class="ev ev-todo">미측정</span> 이다.</p>
+<p><b>넘어진 19 에피소드는 좌우 이탈이 0.20 m 로 가장 작다.</b> 똑바로 가다가 넘어졌다. <b>성공한 7 에피소드는 좌우 이탈이 1.22 m 로 가장 크다.</b> 상관이고 인과는 <span class="ev ev-todo">미측정</span> 이다.</p>
 </section>
 <section id="s4"><span id="3"></span><h2>3. 관측 점검 · 격자가 턱보다 성기다</h2>
 <p>IsaacLab 사양(격자 1.6 × 1.0 m · 간격 0.1 m · 17 × 11 = 187점 · yaw 정렬 · ±0.1 m 잡음)을 무조코 광선으로 옮겨 쟀다.</p>
@@ -914,32 +914,32 @@ sha256 <code>f2aa77bf…</code> <span class="ev ev-ok">확인됨</span> · 관�
 <p><b>그래도 관측으로 막힌 칸은 없다.</b> 가시율이 98% 아래로 안 내려간다. <b>레일즈는 「센서를 더 달아야 열리는 지형」이 아니다</b> <span class="ev ev-ok">확인됨</span>.</p>
 <p><b>이 수치는 광선과 격자의 기하 계산이라 접촉·마찰·해석기가 안 들어간다.</b> 단 IsaacLab <code>RayCaster</code> 내부 처리까지 같은지는 <span class="ev ev-todo">미확인</span>.</p>
 </section>
-<section id="s5"><span id="4"></span><h2>4. 난이도 지도 · 여덟 칸 800판</h2>
-<p>턱 높이 5.00 ~ 15.11 cm 를 여덟 칸으로 나눠 <b>칸마다 100판</b>을 돌렸다.</p>
+<section id="s5"><span id="4"></span><h2>4. 난이도 지도 · 여덟 칸 800 에피소드</h2>
+<p>턱 높이 5.00 ~ 15.11 cm 를 여덟 칸으로 나눠 <b>칸마다 100 에피소드</b>을 돌렸다.</p>
 <div class="tw"><table><thead><tr><th>칸</th><th>턱 높이</th><th>종합</th><th>Wilson 95%</th><th>생존</th><th>전진</th><th><b>속도추종</b></th><th>방향</th><th>평균 전진</th></tr></thead><tbody><tr><td>0</td><td>5.00 cm</td><td>92%</td><td>[85.0, 95.9]</td><td>99%</td><td>100%</td><td>92%</td><td>100%</td><td>5.32 m</td></tr><tr><td><b>1</b></td><td><b>6.44</b></td><td><b>96%</b></td><td>[90.2, 98.4]</td><td>100%</td><td>100%</td><td>96%</td><td>100%</td><td>5.16</td></tr><tr><td><b>2</b></td><td><b>7.89</b></td><td><b>55%</b></td><td>[45.2, 64.4]</td><td>100%</td><td>100%</td><td>55%</td><td>100%</td><td>4.75</td></tr><tr><td>3</td><td>9.33</td><td>33%</td><td>[24.6, 42.7]</td><td>98%</td><td>95%</td><td>36%</td><td>97%</td><td>4.31</td></tr><tr><td>4</td><td>10.78</td><td>7%</td><td>[3.4, 13.7]</td><td>80%</td><td>57%</td><td>17%</td><td>92%</td><td>3.07</td></tr><tr><td>5</td><td>12.22</td><td>1%</td><td>[0.2, 5.4]</td><td>76%</td><td>29%</td><td>7%</td><td>92%</td><td>2.07</td></tr><tr><td>6</td><td>13.67</td><td>0%</td><td>[0.0, 3.7]</td><td>59%</td><td>8%</td><td>0%</td><td>95%</td><td>1.30</td></tr><tr><td>7</td><td>15.11</td><td>0%</td><td>[0.0, 3.7]</td><td>27%</td><td>1%</td><td>0%</td><td>100%</td><td>0.97</td></tr></tbody></table></div>
 <p><b>한계가 두 개이고 자리가 다르다.</b></p>
 <div class="tw"><table><thead><tr><th>무엇을 재나</th><th>꺾이는 자리</th></tr></thead><tbody><tr><td><b>턱을 넘는 것</b> (통과선까지 감)</td><td>칸 3 → 4 사이. <b>95% → 57%</b></td></tr><tr><td><b>종합 성공률 90%</b></td><td>칸 1 → 2 사이. <b>96% → 55%</b></td></tr></tbody></table></div>
 <p><b>턱은 10.78 cm 까지 넘는데 종합 성적은 이미 7.89 cm 에서 무너진다.</b> 그 사이를 가르는 것이 <b>속도추종</b> 열이다. 칸 2 에서 생존·전진·방향이 전부 100인데 속도추종만 55 다.</p>
 </section>
 <section id="s6"><span id="5"></span><h2>5. 왜 안 드는가 · 보상에 항이 없다</h2>
-<p><b>힘의 문제가 아니다.</b> 이 절의 근거는 둘이다 · <b>역기구학 계산</b>(33.5 cm)과 <b>무조코 평지 100판</b>(스윙 높이). 문서 머리의 「1,600판」은 무조코 작업 전체의 판 수이고 이 절 숫자의 근거가 아니다.</p>
-<p><b>아래 스윙 값은 «턱이 없는 평지» 에서 잰 것이다</b> (<code>height_m = 0.0</code> · 100판) <span class="ev ev-ok">확인됨</span>. <b>턱을 넘느라 든 높이가 아니다.</b> 턱 높이와 나란히 놓고 읽으면 안 된다.</p>
-<div class="tw"><table><thead><tr><th></th><th>높이</th><th>무엇을 잰 것인가</th></tr></thead><tbody><tr><td>관절 한계 안에서 앞발이 오르는 높이</td><td><b>33.5 cm</b></td><td>역기구학 · 발을 몸통 아래 두는 조건</td></tr><tr><td>평지에서 앞발 <b>발 들림 높이</b> 평균</td><td><b>3.21 cm</b></td><td>100판 · <code>swing_peak</code> = 판 안 유각기들의 평균</td></tr><tr><td>평지에서 앞발 <b>발 들림 높이</b> 최대</td><td><b>7.67 cm</b></td><td>같은 100판 · <code>swing_max</code> = 판 안 유각기 최댓값의 중앙</td></tr></tbody></table></div>
+<p><b>힘의 문제가 아니다.</b> 이 절의 근거는 둘이다 · <b>역기구학 계산</b>(33.5 cm)과 <b>무조코 평지 100 에피소드</b>(스윙 높이). 문서 머리의 「1,600 에피소드」은 무조코 작업 전체의 판 수이고 이 절 숫자의 근거가 아니다.</p>
+<p><b>아래 스윙 값은 «턱이 없는 평지» 에서 잰 것이다</b> (<code>height_m = 0.0</code> · 100 에피소드) <span class="ev ev-ok">확인됨</span>. <b>턱을 넘느라 든 높이가 아니다.</b> 턱 높이와 나란히 놓고 읽으면 안 된다.</p>
+<div class="tw"><table><thead><tr><th></th><th>높이</th><th>무엇을 잰 것인가</th></tr></thead><tbody><tr><td>관절 한계 안에서 앞발이 오르는 높이</td><td><b>33.5 cm</b></td><td>역기구학 · 발을 몸통 아래 두는 조건</td></tr><tr><td>평지에서 앞발 <b>발 들림 높이</b> 평균</td><td><b>3.21 cm</b></td><td>100 에피소드 · <code>swing_peak</code> = 판 안 유각기들의 평균</td></tr><tr><td>평지에서 앞발 <b>발 들림 높이</b> 최대</td><td><b>7.67 cm</b></td><td>같은 100 에피소드 · <code>swing_max</code> = 판 안 유각기 최댓값의 중앙</td></tr></tbody></table></div>
 <p><b>평균과 최대가 2.4배 벌어진다.</b> 그리고 이것은 튀는 판 하나가 아니다.</p>
-<div class="tw"><table><thead><tr><th></th><th>값</th></tr></thead><tbody><tr><td>최대의 <b>최소</b> (가장 얌전한 판)</td><td><b>6.72 cm</b></td></tr><tr><td>최대가 평균의 두 배를 넘는 판</td><td><b>네 발 모두 100 / 100 판</b></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>값</th></tr></thead><tbody><tr><td>최대의 <b>최소</b> (가장 얌전한 판)</td><td><b>6.72 cm</b></td></tr><tr><td>최대가 평균의 두 배를 넘는 판</td><td><b>네 발 모두 100 / 100 에피소드</b></td></tr></tbody></table></div>
 <p><b>평지에서도 걸음마다 높이가 크게 들쭉날쭉하다</b> <span class="ev ev-ok">확인됨</span>. <b>아주 못 드는 것이 아니라 «평소에» 안 드는 것이다.</b></p>
 <p><b>어느 스윙이 7.67 cm 였는지는 알 수 없다</b> <span class="ev ev-todo">미측정</span>. <code>swing_probe.py</code> 가 판마다 «평균» 과 «최대» 두 숫자만 남기고 스윙 하나하나의 시각·높이를 안 남긴다. 자리잡는 구간 없이 <code>i=0</code> 부터 재므로 <b>첫 몇 걸음일 수 있으나</b>, 「최대의 최소」가 6.72 로 모든 판에 일관되게 나오는 것과는 잘 안 맞는다 <span class="ev ev-guess">추측</span>. 가르려면 스윙마다 기록하도록 고쳐 다시 재야 한다.</p>
 <p><b>학습 보상 11항목에 「발을 높이 들면 점수를 준다」가 하나도 없다</b> <span class="ev ev-ok">확인됨</span>. <code>feet_air_time</code> 은 발 «높이» 가 아니라 «체공 시간» 에 상을 준다. 반대로 <code>dof_torques_l2</code> · <code>dof_acc_l2</code> · <code>action_rate_l2</code> 가 <b>드는 노력을 벌한다.</b></p>
 <p><b>들 이유가 없게 학습됐다.</b></p>
 </section>
 <section id="s7"><span id="6"></span><h2>6. 확인 현황</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>정본 조건 rails 100판 요약 (종합 4 · 생존 85 · 속도추종 8)</td><td><span class="ev ev-ok">확인됨</span>. 팀장 9/3 원자료 직접 읽음</td></tr><tr><td>옛 표(2% · 36% · 0.93 m)가 폐기됨</td><td><span class="ev ev-ok">확인됨</span>. 같은 원자료</td></tr><tr><td>여덟 칸 800판 성적</td><td><span class="ev ev-ok">확인됨</span>. 내 실행 · <code>run_manifest.json</code> 여덟 칸 전부</td></tr><tr><td>어느 판이든 첫 발이 턱 위로 올라감</td><td><span class="ev ev-ok">확인됨</span>. 영상 세 판</td></tr><tr><td>막힘형이 턱에 걸터앉아 멈춤</td><td><span class="ev ev-ok">확인됨</span>. 영상</td></tr><tr><td><b>바깥 턱이 더 어렵다</b></td><td><span class="ev ev-guess">추측</span>. 영상 한 판뿐</td></tr><tr><td><b>좌우 이탈이 큰 판이 통과한다</b></td><td><span class="ev ev-guess">추측</span>. 상관이고 인과는 <span class="ev ev-todo">미측정</span></td></tr><tr><td>격자 10 cm 대 턱 두께 8/18 cm 의 증거량 두 배 차</td><td><span class="ev ev-ok">확인됨</span>. 광선 기하 계산</td></tr><tr><td>IsaacLab <code>RayCaster</code> 내부 처리가 같은지</td><td><span class="ev ev-todo">미확인</span></td></tr><tr><td>관절 33.5 cm · <b>평지</b> 발 들림 높이 평균 3.21 cm · 최대 7.67 cm</td><td><span class="ev ev-ok">확인됨</span>. 무조코 100판 원자료 재계산 (<code>height_m = 0.0</code>)</td></tr><tr><td><b>어느 스윙이 7.67 cm 였나</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 원자료가 판마다 평균·최대 두 숫자만 남긴다</td></tr><tr><td>보상 11항목에 발 높이 항 없음</td><td><span class="ev ev-ok">확인됨</span>. 소스 원문</td></tr><tr><td><b>칸 0~4 에서 종합과 속도추종이 100판 전부 같은 값</b></td><td><span class="ev ev-ok">확인됨</span>. 열 칸 1,000판 판 단위 대조 · <code>#216</code> (§7-1)</td></tr><tr><td><b>12.70 cm 위에서 주 실패 원인이 전진으로 바뀐다</b></td><td><span class="ev ev-ok">확인됨</span>. 같은 1,000판</td></tr><tr><td><b>속도추종을 고치면 종합이 오르는가</b></td><td><span class="ev ev-todo">미측정</span>. 2주차에 잰다</td></tr><tr><td><b>발 높이 보상이 계단 정책을 무너뜨리는가</b></td><td><span class="ev ev-todo">미측정</span>. 2주차 rough 회귀 지표로 잰다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>정본 조건 rails 100 에피소드 요약 (종합 4 · 생존 85 · 속도추종 8)</td><td><span class="ev ev-ok">확인됨</span>. 팀장 9/3 원자료 직접 읽음</td></tr><tr><td>옛 표(2% · 36% · 0.93 m)가 폐기됨</td><td><span class="ev ev-ok">확인됨</span>. 같은 원자료</td></tr><tr><td>여덟 칸 800 에피소드 성적</td><td><span class="ev ev-ok">확인됨</span>. 내 실행 · <code>run_manifest.json</code> 여덟 칸 전부</td></tr><tr><td>어느 판이든 첫 발이 턱 위로 올라감</td><td><span class="ev ev-ok">확인됨</span>. 영상 세 판</td></tr><tr><td>막힘형이 턱에 걸터앉아 멈춤</td><td><span class="ev ev-ok">확인됨</span>. 영상</td></tr><tr><td><b>바깥 턱이 더 어렵다</b></td><td><span class="ev ev-guess">추측</span>. 영상 한 판뿐</td></tr><tr><td><b>좌우 이탈이 큰 판이 통과한다</b></td><td><span class="ev ev-guess">추측</span>. 상관이고 인과는 <span class="ev ev-todo">미측정</span></td></tr><tr><td>격자 10 cm 대 턱 두께 8/18 cm 의 증거량 두 배 차</td><td><span class="ev ev-ok">확인됨</span>. 광선 기하 계산</td></tr><tr><td>IsaacLab <code>RayCaster</code> 내부 처리가 같은지</td><td><span class="ev ev-todo">미확인</span></td></tr><tr><td>관절 33.5 cm · <b>평지</b> 발 들림 높이 평균 3.21 cm · 최대 7.67 cm</td><td><span class="ev ev-ok">확인됨</span>. 무조코 100 에피소드 원자료 재계산 (<code>height_m = 0.0</code>)</td></tr><tr><td><b>어느 스윙이 7.67 cm 였나</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 원자료가 판마다 평균·최대 두 숫자만 남긴다</td></tr><tr><td>보상 11항목에 발 높이 항 없음</td><td><span class="ev ev-ok">확인됨</span>. 소스 원문</td></tr><tr><td><b>칸 0~4 에서 종합과 속도추종이 100 에피소드 전부 같은 값</b></td><td><span class="ev ev-ok">확인됨</span>. 열 칸 1,000 에피소드 판 단위 대조 · <code>#216</code> (§7-1)</td></tr><tr><td><b>12.70 cm 위에서 주 실패 원인이 전진으로 바뀐다</b></td><td><span class="ev ev-ok">확인됨</span>. 같은 1,000 에피소드</td></tr><tr><td><b>속도추종을 고치면 종합이 오르는가</b></td><td><span class="ev ev-todo">미측정</span>. 2주차에 잰다</td></tr><tr><td><b>발 높이 보상이 계단 정책을 무너뜨리는가</b></td><td><span class="ev ev-todo">미측정</span>. 2주차 rough 회귀 지표로 잰다</td></tr></tbody></table></div>
 </section>
 <section id="s8"><span id="7"></span><h2>7. 2주차 레시피로 넘길 것</h2>
-<h3>7-1. 학습 목표를 구간별로 나눈다 (2026-09-09 · 열 칸 1,000판)</h3>
-<p><b>「학습 목표를 속도추종으로 잡는 것이 맞나」에 대한 답은 「구간을 나눠야 맞다」다.</b> <code>#216</code> 에서 열 칸 × 100판 = <b>1,000판</b>을 판 단위로 다시 갈랐다. 묶음 <code>20260908-레일즈단독</code> · 레일즈 단독 · 로봇 한 마리 · 6초 · 통과선 3 m · 좌우 1.5 m · 1.0 m/s · 시드 42.</p>
+<h3>7-1. 학습 목표를 구간별로 나눈다 (2026-09-09 · 열 칸 1,000 에피소드)</h3>
+<p><b>「학습 목표를 속도추종으로 잡는 것이 맞나」에 대한 답은 「구간을 나눠야 맞다」다.</b> <code>#216</code> 에서 열 칸 × 100 에피소드 = <b>1,000 에피소드</b>을 판 단위로 다시 갈랐다. 묶음 <code>20260908-레일즈단독</code> · 레일즈 단독 · 로봇 한 마리 · 6초 · 통과선 3 m · 좌우 1.5 m · 1.0 m/s · 시드 42.</p>
 <div class="tw"><table><thead><tr><th>칸</th><th>턱 cm</th><th>종합</th><th>생존</th><th>전진</th><th>속도추종</th><th>방향</th><th>속도추종«만» 실패</th><th>전진도 실패</th></tr></thead><tbody><tr><td>0</td><td>5.00</td><td>87</td><td>96</td><td>99</td><td><b>87</b></td><td>99</td><td>9</td><td>1</td></tr><tr><td>1</td><td>6.10</td><td>94</td><td>100</td><td>100</td><td><b>94</b></td><td>100</td><td>6</td><td>0</td></tr><tr><td>2</td><td>7.20</td><td>81</td><td>100</td><td>100</td><td><b>81</b></td><td>100</td><td>19</td><td>0</td></tr><tr><td>3</td><td>8.30</td><td>50</td><td>99</td><td>98</td><td><b>50</b></td><td>98</td><td><b>47</b></td><td>2</td></tr><tr><td>4</td><td>9.40</td><td>36</td><td>98</td><td>96</td><td><b>36</b></td><td>96</td><td><b>59</b></td><td>4</td></tr><tr><td>5</td><td>10.50</td><td>6</td><td>82</td><td>74</td><td>15</td><td>73</td><td>67</td><td>26</td></tr><tr><td>6</td><td>11.60</td><td>7</td><td>87</td><td>54</td><td>10</td><td>55</td><td>46</td><td><b>46</b></td></tr><tr><td>7</td><td>12.70</td><td>0</td><td>75</td><td>16</td><td>4</td><td>16</td><td>16</td><td><b>84</b></td></tr><tr><td>8</td><td>13.80</td><td>0</td><td>62</td><td>6</td><td>0</td><td>6</td><td>6</td><td><b>94</b></td></tr><tr><td>9</td><td>14.90</td><td>0</td><td>37</td><td>5</td><td>2</td><td>4</td><td>5</td><td><b>95</b></td></tr></tbody></table></div>
-<p><b>칸 0~4 는 100판 전부에서 <code>overall_success</code> 와 <code>tracking_success</code> 가 같은 값이다</b> <span class="ev ev-ok">확인됨</span>. 8.30 cm 에서 47판이, 9.40 cm 에서 59판이 「살아서 · 통과선을 넘고 · 방향도 지켰는데 속도를 못 맞춰」 떨어진다. 낙상은 각각 1판 · 2판뿐이다.</p>
+<p><b>칸 0~4 는 100 에피소드 전부에서 <code>overall_success</code> 와 <code>tracking_success</code> 가 같은 값이다</b> <span class="ev ev-ok">확인됨</span>. 8.30 cm 에서 47 에피소드가, 9.40 cm 에서 59 에피소드가 「살아서 · 통과선을 넘고 · 방향도 지켰는데 속도를 못 맞춰」 떨어진다. 낙상은 각각 1 에피소드 · 2 에피소드뿐이다.</p>
 <div class="tw"><table><thead><tr><th>구간</th><th>관문</th><th>무엇을 올리나</th></tr></thead><tbody><tr><td><b>5.00 ~ 9.40 cm</b></td><td><b>속도추종이 유일한 관문</b></td><td>속도추종만 올리면 종합이 그대로 따라 오른다</td></tr><tr><td><b>10.50 ~ 11.60 cm</b></td><td>속도추종과 전진이 <b>혼재</b></td><td>한쪽만 올려서는 종합이 안 오른다</td></tr><tr><td><b>12.70 cm 위</b></td><td><b>전진이 먼저</b></td><td>속도추종을 100% 로 만들어도 종합은 안 오른다</td></tr></tbody></table></div>
 <p><b>§4 의 난이도 경계 6.44 ~ 7.89 cm 와 이 표가 어긋나 보이는 이유도 여기 있다.</b> 그 경계는 <b>종합</b> 성공률이 반으로 꺾이는 자리이고 그 꺾임을 만든 것이 속도추종이다. <b>턱을 넘는 물리 한계는 훨씬 위(12.70 cm 근처)에 있다.</b> 이 둘을 하나로 읽으면 12.70 cm 위에서 속도추종 보상만 올리다 헛돈다.</p>
 <p><b>한계</b> · <b>학습은 안 돌렸다</b> <span class="ev ev-todo">미측정</span>. 이 표는 팀 기준선 체크포인트를 그대로 돌려 잰 것이고, 「속도추종 보상을 올리면 실제로 오르는가」는 학습을 돌려야 안다. 원자료 <code>runpod/data/maengrak/results/20260908-레일즈단독/tier{0..9}/generalization_raw.csv</code> · 칸당 100행 · 21열. 문서와 그림은 <code>#356</code> 으로 제출했다.</p>
@@ -951,10 +951,10 @@ sha256 <code>f2aa77bf…</code> <span class="ev ev-ok">확인됨</span> · 관�
 <p><b>모든 런에서 rough 회귀 지표를 잰다.</b> 이 열이 빈 런은 결과로 인정하지 않는다 (<code>terrain-finetune-plan</code> §3 (4번 항목)).</p>
 </section>
 <section id="s9"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v1.1</b></td><td>2026-09-09</td><td><b>§7-1 신설.</b> 학습 목표를 구간별로 나눈다는 답(5.00~9.40 속도추종 · 10.50~11.60 혼재 · 12.70 위 전진 먼저)을 이슈 코멘트에서 문서로 옮겼다. §4 의 난이도 경계와 물리 한계가 다른 것이라는 해석도 함께 적었다</td><td>열 칸 1,000판 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a></td></tr><tr><td>v1.0</td><td>2026-09-07</td><td>처음 냄</td><td>아이작심 800판 · 무조코 100판 · 영상 3판 · 팀장 9/3 원자료</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v1.1</b></td><td>2026-09-09</td><td><b>§7-1 신설.</b> 학습 목표를 구간별로 나눈다는 답(5.00~9.40 속도추종 · 10.50~11.60 혼재 · 12.70 위 전진 먼저)을 이슈 코멘트에서 문서로 옮겼다. §4 의 난이도 경계와 물리 한계가 다른 것이라는 해석도 함께 적었다</td><td>열 칸 1,000 에피소드 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/216">#216</a></td></tr><tr><td>v1.0</td><td>2026-09-07</td><td>처음 냄</td><td>아이작심 800 에피소드 · 무조코 100 에피소드 · 영상 3 에피소드 · 팀장 9/3 원자료</td></tr></tbody></table></div>
 </section>
 <section id="s10"><h2>출처</h2>
-<ul><li><code>#66</code> <a href="https://github.com/foothold-project/foothold-lab/issues/66" target="_blank" rel="noopener">실패 지형 rails: 진단 -&gt; 레시피</a></li><li><code>#216</code> <a href="https://github.com/foothold-project/foothold-lab/issues/216" target="_blank" rel="noopener">레일즈 난이도 경계 탐색 · 여덟 칸 100판</a> (§7-1 의 열 칸 1,000판)</li><li>열 칸 1,000판 원자료 <code>runpod/data/maengrak/results/20260908-레일즈단독/tier{0..9}/generalization_raw.csv</code></li><li><code>docs/research/terrain-finetune-plan.md</code> §2 (1주차 산출물) · §3 (2주차)</li><li>팀장 9/3 실측 <code>sim/eval/results/20260903-rough10-1.0mps/</code> (<code>summary-thr1.5.csv</code> · <code>generalization_raw.csv</code>)</li><li>내 실행 <code>haeng/isaac/results/20260904-rails-난이도격자/</code> (여덟 칸 800판)</li><li>무조코 실측 <code>haeng/mujoco_rails/results/swing_probe/</code> · <code>results/rails_tile/</code></li><li>영상 <code>runpod/data/maengrak/videos/rails-side/h11.5cm-10s/</code> (세 판)</li><li><code>haeng/mujoco_rails/vendor/isaaclab_src/velocity_env_cfg.py</code> (보상 11항목 · height_scan 설정)</li><li><code>foothold-lab/sim/eval/generalization_env_cfg.py</code> 84행 (rails 지형 cfg · 두께·높이 범위)</li><li><code>haeng/mujoco_rails/swing_probe.py</code> (발 들림 높이 정의)</li></ul>
+<ul><li><code>#66</code> <a href="https://github.com/foothold-project/foothold-lab/issues/66" target="_blank" rel="noopener">실패 지형 rails: 진단 -&gt; 레시피</a></li><li><code>#216</code> <a href="https://github.com/foothold-project/foothold-lab/issues/216" target="_blank" rel="noopener">레일즈 난이도 경계 탐색 · 여덟 칸 100 에피소드</a> (§7-1 의 열 칸 1,000 에피소드)</li><li>열 칸 1,000 에피소드 원자료 <code>runpod/data/maengrak/results/20260908-레일즈단독/tier{0..9}/generalization_raw.csv</code></li><li><code>docs/research/terrain-finetune-plan.md</code> §2 (1주차 산출물) · §3 (2주차)</li><li>팀장 9/3 실측 <code>sim/eval/results/20260903-rough10-1.0mps/</code> (<code>summary-thr1.5.csv</code> · <code>generalization_raw.csv</code>)</li><li>내 실행 <code>haeng/isaac/results/20260904-rails-난이도격자/</code> (여덟 칸 800 에피소드)</li><li>무조코 실측 <code>haeng/mujoco_rails/results/swing_probe/</code> · <code>results/rails_tile/</code></li><li>영상 <code>runpod/data/maengrak/videos/rails-side/h11.5cm-10s/</code> (세 판)</li><li><code>haeng/mujoco_rails/vendor/isaaclab_src/velocity_env_cfg.py</code> (보상 11항목 · height_scan 설정)</li><li><code>foothold-lab/sim/eval/generalization_env_cfg.py</code> 84행 (rails 지형 cfg · 두께·높이 범위)</li><li><code>haeng/mujoco_rails/swing_probe.py</code> (발 들림 높이 정의)</li></ul>
 </section>
 
 </div>
@@ -994,5 +994,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -241,7 +241,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×18 백과×2 학습×9 보상×1",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×19 백과×2 학습×10 보상×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -717,7 +717,7 @@
    "A/정책학습"
   ],
   "areas_sure": false,
-  "areas_why": "근거 낱말 자동화×3 자동화×3 GitHub×12 회의록×1 문서×16 발표×1 benchmark×2 에피소드×2",
+  "areas_why": "근거 낱말 자동화×3 자동화×3 GitHub×12 회의록×1 문서×16 발표×1 benchmark×2 에피소드×6",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -1651,10 +1651,11 @@
    "216"
   ],
   "areas": [
+   "A/평가",
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×10 보상×12 관측×8",
+  "areas_why": "근거 낱말 지표×3 에피소드×63 지표×3 학습×10 보상×12 관측×8",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -1716,12 +1717,10 @@
    "68"
   ],
   "areas": [
-   "A/정책학습",
-   "A/평가",
-   "A/지형씬제작"
+   "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×20 보상×18 관측×4 지표×8 benchmark×1 통과율×3 terrain×10 지형×30",
+  "areas_why": "근거 낱말 지표×8 benchmark×1 통과율×3",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -1740,11 +1739,10 @@
    "295"
   ],
   "areas": [
-   "A/정책학습",
    "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×10 보상×11 관측×11 지표×10 통과율×1 에피소드×1",
+  "areas_why": "근거 낱말 지표×10 통과율×1 에피소드×51",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
@@ -1781,11 +1779,12 @@
   ],
   "areas": [
    "B/인지",
+   "A/평가",
    "B/항법",
    "A/정책학습"
   ],
-  "areas_sure": true,
-  "areas_why": "근거 낱말 LiDAR×6 LiDAR×6 라이다×11 Go2×14 실기×10 학습×2 보상×1 관측×6",
+  "areas_sure": false,
+  "areas_why": "근거 낱말 LiDAR×6 LiDAR×6 라이다×11 지표×1 통과율×1 에피소드×10 Go2×14 실기×10",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -1805,7 +1804,7 @@
    "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 terrain×13 지형×137 Isaac Lab×5 학습×47 보상×12 관측×8 지표×1 에피소드×68",
+  "areas_why": "근거 낱말 terrain×13 지형×137 Isaac Lab×5 학습×47 보상×12 관측×8 지표×1 에피소드×73",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
@@ -1969,10 +1968,11 @@
    "98"
   ],
   "areas": [
-   "A/정책학습"
+   "A/정책학습",
+   "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×7 보상×5 관측×13",
+  "areas_why": "근거 낱말 학습×7 보상×5 관측×13 벤치마크×1 benchmark×3 통과율×1",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -2359,10 +2359,11 @@
   ],
   "areas": [
    "A/정책학습",
-   "A/지형씬제작"
+   "A/지형씬제작",
+   "A/평가"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×12 보상×13 관측×14 terrain×13 지형×46 Isaac Lab×3",
+  "areas_why": "근거 낱말 학습×12 보상×13 관측×14 terrain×13 지형×46 Isaac Lab×3 일반화 벤치마크×6 지표×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>평가 성공 기준 해부: 무엇을 성공이라 부르고 있나 · FOOTHOLD</title>
-<meta name="description" content="미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 AND 이고 실패 사유 열은 timeout·base_contact 둘뿐이다. 정본 1,000판을 축별로 재집계하니 생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51판이고, rails 는 그 자">
+<meta name="description" content="미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 AND 이고 실패 사유 열은 timeout·base_contact 둘뿐이다. 정본 1,000 에피소드를 축별로 재집계하니 생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51 에피소드이고, rai">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -853,15 +853,15 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>평가 성공 기준 해부: 무엇을 성공이라 부르고 있나</h1>
-  <p class="lede">미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 AND 이고 실패 사유 열은 timeout·base_contact 둘뿐이다. 정본 1,000판을 축별로 재집계하니 생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51판이고, rails 는 그 자리에 도달한 42판</p>
+  <p class="lede">미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 AND 이고 실패 사유 열은 timeout·base_contact 둘뿐이다. 정본 1,000 에피소드를 축별로 재집계하니 생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51 에피소드이고, rails 는 그 자리에</p>
   <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/99">#99</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/295">#295</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-08 19:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260908-success-criteria-anatomy.md</span></div><div><span class="k">증거</span><span class="v">확인 14 · 추측 0 · 미측정 4</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 리서치
 작성: 오흥재 · 2026-09-08 19:40
-근거: 실측 (정본 1,000판 축별 재집계) · 팀 정본 코드 원문 (<code>sim/eval/</code>) · 원장 <code>docs/DECISIONS.md</code> · 이민우 <code>pit</code> 진단 인용
-요지: 미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 <b>AND</b> 이고 실패 사유 열은 <code>timeout</code>·<code>base_contact</code> 둘뿐이다. 정본 1,000판을 축별로 재집계하니 <b>생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51판</b>이고, <code>rails</code> 는 그 자리에 도달한 42판 중 <b>38판(90 %)</b> 이 속도추종에서 탈락한다. 턱을 넘으려면 잠깐 느려져야 하는데 그 순간이 곧 탈락 사유라, 성공 조건이 우리가 원하는 행동을 벌하고 있을 소지가 있다. 결론을 단정하지 않고 선택지 넷과 각각의 대가를 적는다.
+근거: 실측 (정본 1,000 에피소드 축별 재집계) · 팀 정본 코드 원문 (<code>sim/eval/</code>) · 원장 <code>docs/DECISIONS.md</code> · 이민우 <code>pit</code> 진단 인용
+요지: 미경험 험지 10종의 성공은 네 축(생존·전진·속도추종·방향)의 <b>AND</b> 이고 실패 사유 열은 <code>timeout</code>·<code>base_contact</code> 둘뿐이다. 정본 1,000 에피소드를 축별로 재집계하니 <b>생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판이 51 에피소드</b>이고, <code>rails</code> 는 그 자리에 도달한 42 에피소드 중 <b>38 에피소드(90 %)</b> 이 속도추종에서 탈락한다. 턱을 넘으려면 잠깐 느려져야 하는데 그 순간이 곧 탈락 사유라, 성공 조건이 우리가 원하는 행동을 벌하고 있을 소지가 있다. 결론을 단정하지 않고 선택지 넷과 각각의 대가를 적는다.
 상태: 초안
 판: v1.0
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/99">#99</a> · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/295">#295</a></p></blockquote>
@@ -869,9 +869,9 @@ body>*{flex-shrink:0}
 <section id="s1"><span id="0"></span><h2>0. 한 장 요약</h2>
 <p><b>팀장 질문</b>: 「미경험 10종 테스트에서 무엇을 성공의 기준으로 코드가 짜여 있는가. 그 기준이 합당한가. 아니라면 재설정할 수 있는가.」</p>
 <div class="tw"><table><thead><tr><th>물음</th><th>답</th><th>어디서</th></tr></thead><tbody><tr><td>성공 기준이 몇 개인가</td><td><b>넷.</b> 생존 · 전진 · 속도추종 · 방향</td><td><code>metrics.py:229</code> ~ <code>:255</code></td></tr><tr><td>어떻게 합치나</td><td><b>AND.</b> 하나라도 떨어지면 실패</td><td><code>metrics.py:258-260</code></td></tr><tr><td>실패 사유 열은</td><td><b>둘.</b> <code>timeout</code> · <code>base_contact</code></td><td><code>metrics.py:263-265</code></td></tr><tr><td>라이다 접촉은 보나</td><td><b>안 본다.</b> 코드에 없다 <span class="ev ev-ok">확인됨</span></td><td><code>sim/eval/</code> 전수 검색</td></tr><tr><td>방향 판정의 정본은</td><td><b>통과선 기준</b>(<code>gate_direction_success</code>)</td><td><code>eval_generalization.py:630</code></td></tr><tr><td>기준이 합당한가</td><td><b>셋은 그렇다. 속도추종 하나가 쟁점이다</b></td><td>5절</td></tr><tr><td>재설정할 수 있나</td><td><b>된다.</b> 인자 하나로 되는 것과 코드를 고쳐야 하는 것이 갈린다</td><td>9절</td></tr></tbody></table></div>
-<p><b>이 문서가 새로 재 본 것.</b> 정본 실측 <code>20260903-rough10-1.0mps</code> 원자료 1,000판을 축별로 다시 세었다 <span class="ev ev-ok">확인됨</span>.</p>
+<p><b>이 문서가 새로 재 본 것.</b> 정본 실측 <code>20260903-rough10-1.0mps</code> 원자료 1,000 에피소드를 축별로 다시 세었다 <span class="ev ev-ok">확인됨</span>.</p>
 <div class="tw"><table><thead><tr><th></th><th>판 수</th></tr></thead><tbody><tr><td>종합 성공</td><td><b>504</b></td></tr><tr><td>실패</td><td>496</td></tr><tr><td>그중 <b>생존·전진·방향을 다 통과하고 속도추종에서만 떨어진 판</b></td><td><b>51</b></td></tr><tr><td>생존·전진·방향을 통과한 판 (= 「거기까지 간」 판)</td><td>555</td></tr><tr><td>그중 속도추종을 통과한 비율</td><td><b>90.8 %</b></td></tr></tbody></table></div>
-<p>지형별로 보면 이 51판이 어디에 몰려 있는지가 드러난다.</p>
+<p>지형별로 보면 이 51 에피소드가 어디에 몰려 있는지가 드러난다.</p>
 <div class="tw"><table><thead><tr><th>지형</th><th>성공</th><th><b>속도추종만 실패</b></th><th>「거기까지 간」 판</th><th>그중 통과</th></tr></thead><tbody><tr><td><code>rails</code></td><td>4</td><td><b>38</b></td><td>42</td><td><b>9.5 %</b></td></tr><tr><td><code>pit</code></td><td>3</td><td><b>12</b></td><td>15</td><td>20.0 %</td></tr><tr><td><code>discrete_obstacles</code></td><td>97</td><td>1</td><td>98</td><td>99.0 %</td></tr><tr><td>나머지 7종</td><td>400</td><td>0</td><td>400</td><td>100 %</td></tr></tbody></table></div>
 <blockquote><p><b><code>rails</code> 에서는 살아남고 거리도 가고 옆으로도 안 샌 판 42개 중 38개가 속도추종 하나로 탈락한다.</b>
 이 한 줄이 이 문서의 쟁점이다.</p></blockquote>
@@ -943,7 +943,7 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <p><b>순수한 AND 다.</b> 가중치도, 부분 점수도, 등급도 없다.</p>
 <h3>함의 셋</h3>
 <p><b>① 축이 늘어날수록 성공률은 반드시 떨어진다.</b> 각 축이 독립이고 통과율이 각각 90 %면 넷을 AND 하면 0.9⁴ = 65.6 % 다. 축을 하나 더하는 것은 언제나 성공률을 깎는 방향이고, 절대 올리지 않는다. <b>7절의 라이다 제안을 판정에 넣지 말자는 근거가 여기서 나온다.</b></p>
-<p><b>② 「거의 성공」이 「완전 실패」와 같은 칸에 들어간다.</b> 임계 0.25 에 대해 0.2501 인 판과, 넘어져서 1.54초에 끝난 판이 CSV 의 <code>overall_success</code> 열에서 똑같이 <code>False</code> 다. 이민우 진단이 실측한 바로는 14 cm 에서 구덩이를 나온 89판의 속도오차가 <b>0.13 에서 0.50 까지 이어진 한 덩어리</b>이고 두 무리로 갈라지지 않는다 (<code>inbox/lee/20260908-pit진단.md:284-287</code>). 임계 0.25 가 그 한복판을 지나고 <b>0.24 ~ 0.26 칸 하나에만 11판이 걸쳐 있다.</b></p>
+<p><b>② 「거의 성공」이 「완전 실패」와 같은 칸에 들어간다.</b> 임계 0.25 에 대해 0.2501 인 판과, 넘어져서 1.54초에 끝난 판이 CSV 의 <code>overall_success</code> 열에서 똑같이 <code>False</code> 다. 이민우 진단이 실측한 바로는 14 cm 에서 구덩이를 나온 89 에피소드의 속도오차가 <b>0.13 에서 0.50 까지 이어진 한 덩어리</b>이고 두 무리로 갈라지지 않는다 (<code>inbox/lee/20260908-pit진단.md:284-287</code>). 임계 0.25 가 그 한복판을 지나고 <b>0.24 ~ 0.26 칸 하나에만 11 에피소드가 걸쳐 있다.</b></p>
 <p><b>③ 어느 축에서 떨어졌는지는 원자료에만 남는다.</b> 다행히 네 축이 전부 CSV 열이라(<code>metrics.py:23-45</code>) 사후 재집계가 된다. 0절의 표를 만들 수 있었던 이유다. <code>report.py:22-28</code> 이 축별 성공률을 따로 뽑아 준다.</p>
 <blockquote><p><b>AND 자체는 합당하다.</b> 「빠르지만 넘어진다」와 「안 넘어지지만 안 간다」를 평균 내면 둘 다 감춰진다. 쟁점은 AND 가 아니라 <b>어느 축을 AND 안에 넣을 것인가</b>다.</p></blockquote>
 </section>
@@ -961,8 +961,8 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <section id="s5"><span id="4"></span><h2>4. 원장과 코드가 어긋나 있는 자리</h2>
 <p>방향 판정에 대해 <b>원장과 코드가 서로 다른 말을 한다.</b> 문서로 남겨 둔다.</p>
 <div class="tw"><table><thead><tr><th></th><th>무엇이라 하나</th><th>근거</th></tr></thead><tbody><tr><td>원장 <code>DECISIONS.md:118</code></td><td>「좌우 이탈은 <b>«끝점»</b>으로 판정하고 «최대값»을 관측 열로 남긴다」 팀장 확정</td><td>09-02</td></tr><tr><td>코드 (지금)</td><td><b>통과선</b>으로 판정한다</td><td><code>eval_generalization.py:630</code></td></tr><tr><td>원장 <code>DECISIONS.md:129-145</code></td><td>「<b>팀장이 정해야 한다.</b> 정할 때까지 두 값을 함께 기록한다」</td><td>미결</td></tr></tbody></table></div>
-<p>원장은 이 어긋남을 이미 알고 있고 <b>미결로 열어 두었다</b> (<code>docs/DECISIONS.md:144</code>). 같은 100판을 두 자로 재면 통과선 기준 이탈 평균 0.085 m, 끝점 기준 2.143 m 로 크게 다르고, 기획서가 인용한 직진성 33/100 은 통과선 기준이며 <b>끝점으로 재면 0/100</b> 이다 (<code>docs/DECISIONS.md:142</code>).</p>
-<p><b>그리고 정본 실측은 코드보다 먼저 돌았다</b> <span class="ev ev-ok">확인됨</span>. <code>20260903-rough10-1.0mps/generalization_raw.csv</code> 의 헤더는 20열이고 <code>gate_lateral_drift_m</code> 이 <b>없다</b>. 즉 정본 1,000판은 <b>끝점</b>으로 채점됐다. 지금 코드로 같은 명령을 다시 돌리면 방향 축이 통과선으로 바뀌어 <b>숫자가 재현되지 않는다.</b></p>
+<p>원장은 이 어긋남을 이미 알고 있고 <b>미결로 열어 두었다</b> (<code>docs/DECISIONS.md:144</code>). 같은 100 에피소드를 두 자로 재면 통과선 기준 이탈 평균 0.085 m, 끝점 기준 2.143 m 로 크게 다르고, 기획서가 인용한 직진성 33/100 은 통과선 기준이며 <b>끝점으로 재면 0/100</b> 이다 (<code>docs/DECISIONS.md:142</code>).</p>
+<p><b>그리고 정본 실측은 코드보다 먼저 돌았다</b> <span class="ev ev-ok">확인됨</span>. <code>20260903-rough10-1.0mps/generalization_raw.csv</code> 의 헤더는 20열이고 <code>gate_lateral_drift_m</code> 이 <b>없다</b>. 즉 정본 1,000 에피소드는 <b>끝점</b>으로 채점됐다. 지금 코드로 같은 명령을 다시 돌리면 방향 축이 통과선으로 바뀌어 <b>숫자가 재현되지 않는다.</b></p>
 <blockquote><p><b>팀장 결정이 필요한 항목 1.</b> 방향을 끝점으로 잴 것인가 통과선으로 잴 것인가. 코드는 이미 통과선을 쓰고 있으므로, 끝점이 정답이면 <b>코드가 원장을 어기고 있는 상태</b>이고, 통과선이 정답이면 <b>원장 09-02 행을 정정해야 한다.</b></p></blockquote>
 </section>
 <section id="s6"><span id="5"></span><h2>5. 합당성 검토</h2>
@@ -971,14 +971,14 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <h3>5-2. 속도추종은 쟁점이다</h3>
 <p><b>논지: 턱이나 구덩이를 넘으려면 잠깐 느려져야 하는데, 그 순간이 곧 벌점이고 그 판이 실패로 셈해진다.</b></p>
 <h4>근거 ① 실측 · 「나왔는데 느려서 떨어진」 판이 실패의 다수인 구간이 있다</h4>
-<p>이민우 <code>pit</code> 진단이 깊이를 8 ~ 22 cm 로 훑어 800판을 냈다 (<code>inbox/lee/20260908-pit진단.md:241-253</code>).</p>
-<blockquote><p><b>「14 cm 실패 49판 중 36판(73 %)이 「구덩이는 나왔고 방향도 지켰는데 속도만 못 따라간」 판이다. 갇힌 판은 7판뿐이다.</b>
+<p>이민우 <code>pit</code> 진단이 깊이를 8 ~ 22 cm 로 훑어 800 에피소드를 냈다 (<code>inbox/lee/20260908-pit진단.md:241-253</code>).</p>
+<blockquote><p><b>「14 cm 실패 49 에피소드 중 36 에피소드(73 %)이 「구덩이는 나왔고 방향도 지켰는데 속도만 못 따라간」 판이다. 갇힌 판은 7 에피소드뿐이다.</b>
 <code>inbox/lee/20260908-pit진단.md:253-254</code></p></blockquote>
 <p><b>조건을 밝혀 둔다.</b> 이 실험은 <b>6초 · 통과선 3 m · 1.0 m/s · 좌우 임계 1.5 m</b> 로 돌았다 (<code>inbox/lee/20260908-pit진단.md:18</code>). 이것이 험지 10종의 팀 정본 조건이다 (<code>docs/DECISIONS.md:125</code>, <code>:124</code>). 평지 기준선의 20초 · 10 m · 5 cm 와 다르다.</p>
-<h4>근거 ② 정본 1,000판 재집계도 같은 방향을 가리킨다</h4>
+<h4>근거 ② 정본 1,000 에피소드 재집계도 같은 방향을 가리킨다</h4>
 <p>0절의 표를 다시 본다. 정본 실측 원자료를 팀 정본 임계 1.5 m 로 재채점해 축별로 센 값이다 <span class="ev ev-ok">확인됨</span>.</p>
 <div class="tw"><table><thead><tr><th>지형</th><th>「거기까지 간」 판 (생존·전진·방향 통과)</th><th>그중 속도추종 통과</th></tr></thead><tbody><tr><td><code>rails</code></td><td>42</td><td><b>4 (9.5 %)</b></td></tr><tr><td><code>pit</code></td><td>15</td><td>3 (20.0 %)</td></tr><tr><td>나머지 8종</td><td>498</td><td>497 (99.8 %)</td></tr></tbody></table></div>
-<p><b><code>rails</code> 에서 속도추종은 사실상 유일한 관문이다.</b> 살아남고 거리도 가고 옆으로도 안 샌 42판 중 38판을 이 축 하나가 떨어뜨린다.</p>
+<p><b><code>rails</code> 에서 속도추종은 사실상 유일한 관문이다.</b> 살아남고 거리도 가고 옆으로도 안 샌 42 에피소드 중 38 에피소드를 이 축 하나가 떨어뜨린다.</p>
 <p>맹라현 <code>rails</code> 진단과 이민우 <code>pit</code> 진단이 <b>서로 독립적으로 같은 결론에 도달했다</b> (<code>inbox/lee/20260908-pit진단.md:546-552</code>).</p>
 <blockquote><p><b>두 지형이 같은 병목을 공유한다.</b> 「넘을 힘은 있는데 속도추종에서 떨어진다」가 <code>rails</code> 와 <code>pit</code> 에서 각각 독립적으로 나왔다.</p></blockquote>
 <h4>근거 ③ 힘이 모자라서가 아니다</h4>
@@ -991,7 +991,7 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <p><b>단, 1.0 → 1.5 는 저장소 안의 코드가 아니라 저장소 밖 Isaac Lab 파일의 전사다</b> <span class="ev ev-ok">확인됨</span>(전사) / <span class="ev ev-todo">미확인</span>(원본 대조). <code>foothold-lab</code> 에는 <code>rough_env_cfg.py</code> 가 없다. 출처는 <code>source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/rough_env_cfg.py</code> 이고, 우리 문서 세 곳이 같은 값을 적는다 (<code>docs/research/rails-diagnosis.md:333</code> · <code>docs/research/go2-rough-training.md:373</code> · <code>inbox/jay/20260907-go2-관절한계-실측.md:76</code>).</p>
 <h3>5-3. 반대 논거도 적는다 (속도추종을 그대로 두어야 할 이유)</h3>
 <p>공정하게 반대쪽을 적는다. <b>이 축을 빼자는 주장이 자동으로 옳지는 않다.</b></p>
-<ol><li><b>명령 추종은 평가 대상 그 자체다.</b> 우리가 재는 정책은 <code>(vx, vy, wz)</code> 명령을 받는 속도 추종 정책이다. 명령을 안 따라도 성공이라 하면 <b>무엇을 평가하는지가 흐려진다.</b></li><li><b>속도추종을 빼면 「기어가기」가 성공이 된다.</b> 6초에 3 m 만 넘으면 되므로 평균 0.5 m/s 로 느릿느릿 넘는 정책이 만점을 받는다. 전진 축이 하한을 지키지만 그 하한은 <b>명령의 절반</b>이다.</li><li><b>실기 이식에서 속도는 요구사항이다.</b> 현장 임무에 시간 예산이 있으면 「넘긴 넘었는데 3배 걸린다」는 실패일 수 있다.</li><li><b>정본 1,000판 전체로 보면 이 버킷은 51/496 = 10.3 %다.</b> 나머지 445판의 실패는 낙상(<code>stepping_stones</code> 80판 · <code>gap</code> 79판 · <code>floating_ring</code> 14판)과 전진 미달이 지배한다. <b>10종 전체의 성공률을 끌어올리는 데 이 축이 최대 병목은 아니다.</b> 최대 병목인 지형은 <code>rails</code> 와 <code>pit</code> 둘이다.</li></ol>
+<ol><li><b>명령 추종은 평가 대상 그 자체다.</b> 우리가 재는 정책은 <code>(vx, vy, wz)</code> 명령을 받는 속도 추종 정책이다. 명령을 안 따라도 성공이라 하면 <b>무엇을 평가하는지가 흐려진다.</b></li><li><b>속도추종을 빼면 「기어가기」가 성공이 된다.</b> 6초에 3 m 만 넘으면 되므로 평균 0.5 m/s 로 느릿느릿 넘는 정책이 만점을 받는다. 전진 축이 하한을 지키지만 그 하한은 <b>명령의 절반</b>이다.</li><li><b>실기 이식에서 속도는 요구사항이다.</b> 현장 임무에 시간 예산이 있으면 「넘긴 넘었는데 3배 걸린다」는 실패일 수 있다.</li><li><b>정본 1,000 에피소드 전체로 보면 이 버킷은 51/496 = 10.3 %다.</b> 나머지 445 에피소드의 실패는 낙상(<code>stepping_stones</code> 80 에피소드 · <code>gap</code> 79 에피소드 · <code>floating_ring</code> 14 에피소드)과 전진 미달이 지배한다. <b>10종 전체의 성공률을 끌어올리는 데 이 축이 최대 병목은 아니다.</b> 최대 병목인 지형은 <code>rails</code> 와 <code>pit</code> 둘이다.</li></ol>
 <blockquote><p><b>그러므로 「속도추종을 없애자」가 아니라 「속도추종이 무엇을 재는 자인지 다시 정하자」가 정확한 문제 설정이다.</b></p></blockquote>
 </section>
 <section id="s7"><span id="6"></span><h2>6. 재설정 선택지와 각각의 대가</h2>
@@ -999,9 +999,9 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <h3>선택지 A · 그대로 둔다</h3>
 <div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td>없음</td></tr><tr><td>얻는 것</td><td>정본 실측과의 비교가 끊기지 않는다. 기준이 하나다</td></tr><tr><td>잃는 것</td><td><code>rails</code>·<code>pit</code> 개선이 성공률에 거의 안 나타난다. 속도오차가 0.26 → 0.24 로 좋아져야만 성공으로 잡히는데, 그것은 「넘는 능력」이 아니라 「속도 회복」의 개선이다</td></tr><tr><td>언제 옳은가</td><td>KPI 축이 이미 <b>난이도 경계 이동</b>으로 바뀌었으므로(<code>DECISIONS.md:119</code>) 성공률 자체가 최종 지표가 아니다. 경계만 재면 A 로 충분할 수 있다</td></tr></tbody></table></div>
 <h3>선택지 B · 임계값만 완화한다 (<code>--max_velocity_mae</code> 를 올린다)</h3>
-<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td>명령줄 인자 하나. <b>코드 수정 없음</b></td></tr><tr><td>얻는 것</td><td>가장 싸다. 되돌리기도 쉽다</td></tr><tr><td>잃는 것</td><td><b>자의적이다.</b> 0.25 를 0.30 으로 왜 옮겼는지 설명할 근거가 없으면 「맵을 쉽게 만든 것」과 구별되지 않는다. 원장이 경계 KPI 로 바꾼 이유가 정확히 그것이다(<code>DECISIONS.md:119</code>)</td></tr><tr><td>참고 수치</td><td>14 cm 에서 나온 89판의 중앙값이 0.2293 이고 분포가 0.13 ~ 0.50 인 한 덩어리다(<code>pit진단:284</code>). 임계를 0.30 으로 올리면 성공률이 오르지만 <b>분포 한복판에 다시 선을 긋는 것</b>이라 성질이 같다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td>명령줄 인자 하나. <b>코드 수정 없음</b></td></tr><tr><td>얻는 것</td><td>가장 싸다. 되돌리기도 쉽다</td></tr><tr><td>잃는 것</td><td><b>자의적이다.</b> 0.25 를 0.30 으로 왜 옮겼는지 설명할 근거가 없으면 「맵을 쉽게 만든 것」과 구별되지 않는다. 원장이 경계 KPI 로 바꾼 이유가 정확히 그것이다(<code>DECISIONS.md:119</code>)</td></tr><tr><td>참고 수치</td><td>14 cm 에서 나온 89 에피소드의 중앙값이 0.2293 이고 분포가 0.13 ~ 0.50 인 한 덩어리다(<code>pit진단:284</code>). 임계를 0.30 으로 올리면 성공률이 오르지만 <b>분포 한복판에 다시 선을 긋는 것</b>이라 성질이 같다</td></tr></tbody></table></div>
 <h3>선택지 C · 속도추종을 AND 에서 빼고 관측 열로 내린다</h3>
-<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td><code>metrics.py:258-260</code> 에서 <code>tracking</code> 을 뺀다. 열은 그대로 남긴다</td></tr><tr><td>얻는 것</td><td>성공이 <b>「넘었는가」</b>를 재게 된다. <code>rails</code> 성공률이 4 % 에서 42 % 로, <code>pit</code> 이 3 % 에서 15 % 로 바뀌어 <b>개선이 보이는 눈금</b>이 생긴다</td></tr><tr><td>잃는 것</td><td>5-3 의 반대 논거 전부. 기어가는 정책이 만점을 받는다. 정본 500판·1,000판과 <b>비교가 끊긴다</b></td></tr><tr><td>완화책</td><td>성공을 두 층으로 나눈다. <code>overall_success</code>(넷 AND · 지금 그대로)와 <code>traversal_success</code>(생존·전진·방향 셋 AND)를 <b>둘 다 열로</b> 남기면 비교도 살고 개선도 보인다. <b>이것이 대가가 가장 작은 변형이다</b></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td><code>metrics.py:258-260</code> 에서 <code>tracking</code> 을 뺀다. 열은 그대로 남긴다</td></tr><tr><td>얻는 것</td><td>성공이 <b>「넘었는가」</b>를 재게 된다. <code>rails</code> 성공률이 4 % 에서 42 % 로, <code>pit</code> 이 3 % 에서 15 % 로 바뀌어 <b>개선이 보이는 눈금</b>이 생긴다</td></tr><tr><td>잃는 것</td><td>5-3 의 반대 논거 전부. 기어가는 정책이 만점을 받는다. 정본 500 에피소드·1,000 에피소드와 <b>비교가 끊긴다</b></td></tr><tr><td>완화책</td><td>성공을 두 층으로 나눈다. <code>overall_success</code>(넷 AND · 지금 그대로)와 <code>traversal_success</code>(생존·전진·방향 셋 AND)를 <b>둘 다 열로</b> 남기면 비교도 살고 개선도 보인다. <b>이것이 대가가 가장 작은 변형이다</b></td></tr></tbody></table></div>
 <h3>선택지 D · 속도추종의 «자»를 바꾼다 (평균 대신 회복 시간)</h3>
 <div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>바꾸는 것</td><td>새 열을 더한다. 판정 식은 나중에 정한다</td></tr><tr><td>얻는 것</td><td>「턱에서 잠깐 느려지는 것」과 「내내 느린 것」을 <b>가른다.</b> 지금 평균 MAE 는 이 둘을 구별하지 못한다</td></tr><tr><td>근거</td><td>이민우가 6초 오차를 구간별로 쪼개니 <b>판마다 갈리는 몫은 1.5 ~ 3.0초 하나뿐이고 3 ~ 6초는 아홉 판이 같다</b> (<code>pit진단</code> 요지). 즉 <b>차이는 특정 구간에 몰려 있다.</b> 평균은 그것을 뭉갠다</td></tr><tr><td>잃는 것</td><td>설계·구현 비용. 새 지표라 과거 기록에 없다</td></tr><tr><td>후보 열</td><td>구간별 MAE(<code>vel_mae_0_2s</code> 등) · 명령 속도의 80 % 를 회복하기까지 걸린 시간 · 최저 속도와 그 시각</td></tr></tbody></table></div>
 <blockquote><p><b>선택지 C 의 완화책(성공을 두 층으로)과 선택지 D(회복 시간 열)는 서로 배타적이지 않다.</b> 둘 다 «판정을 바꾸지 않고 먼저 재 본다»는 성격이라 함께 넣어도 비교가 안 끊긴다.</p></blockquote>
@@ -1054,7 +1054,7 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <p><b>14 cm 에서는 잴 접촉이 없다</b> <span class="ev ev-ok">확인됨</span>.</p>
 <blockquote><p><code>#125</code> 4번이 요구한 「턱 접촉 순간의 보행 위상」은 <b>14 cm 에서는 잴 접촉이 없다.</b> 그 항목은 16 cm 이상에서만 성립한다.
 <code>inbox/lee/20260908-pit진단.md:530-531</code></p></blockquote>
-<p>14 cm 10판 전부 머리와 몸통에 힘이 한 번도 안 걸렸다 (<code>pit진단:523-525</code>). <b>KPI 를 14 cm 로 두면 위상 열은 그 깊이에서 빈 열이 된다.</b> 위상 가설은 16 cm 이상, 또는 <code>rails</code> 처럼 실제로 턱에 닿는 지형에서 검증해야 한다.</p>
+<p>14 cm 10 에피소드 전부 머리와 몸통에 힘이 한 번도 안 걸렸다 (<code>pit진단:523-525</code>). <b>KPI 를 14 cm 로 두면 위상 열은 그 깊이에서 빈 열이 된다.</b> 위상 가설은 16 cm 이상, 또는 <code>rails</code> 처럼 실제로 턱에 닿는 지형에서 검증해야 한다.</p>
 <blockquote><p><b>즉 8절의 두 제안은 같은 자리를 판다.</b> 머리 접촉 열(7절)과 위상 열(8절)은 <b>둘 다 「접촉 순간」을 잡아야</b> 값이 나온다. 접촉 순간을 한 번 잡으면 두 열을 함께 채울 수 있으므로 <b>묶어서 구현하는 것이 싸다.</b></p></blockquote>
 </section>
 <section id="s10"><span id="9"></span><h2>9. 재설정하려면 무엇을 바꾸나</h2>
@@ -1067,7 +1067,7 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <h3>9-3. 고칠 때 반드시 함께 볼 것</h3>
 <p><b><code>metrics.py</code> 를 고치면 스냅샷 동치가 깨진다.</b> <code>tests/test_metrics.py</code> 가 2026-08-22 Candidate 스냅샷 원문을 다시 읽어 같은 값이 나오는지 고정하고 있다 (<code>metrics.py:12</code>). 판정 식을 바꾸면 그 시험이 <b>깨지는 것이 정상</b>이고, 깨진 채로 두면 안 된다. 시험을 함께 고치고 <b>무엇을 왜 갈랐는지 <code>PROVENANCE.md</code> 에 남긴다.</b></p>
 <p><b>기본값을 바꾸지 말고 호출부에서 넘긴다.</b> <code>metrics.py:304-307</code> 이 그 설계 의도를 적어 두었다. <code>gate_progress_m</code> 기본값을 <code>None</code> 으로 둔 것은 「인자를 안 주면 스냅샷과 글자 그대로 같은 값이 나오게」 하기 위해서다. <b>같은 규율을 새 인자에도 적용한다.</b></p>
-<p><b>그리고 정본과의 비교가 끊기는지 먼저 센다.</b> 4절에서 봤듯 정본 1,000판은 이미 지금 코드와 다른 자(끝점)로 채점돼 있다. 판정을 또 바꾸면 <b>끊어지는 비교가 하나 더 늘어난다.</b></p>
+<p><b>그리고 정본과의 비교가 끊기는지 먼저 센다.</b> 4절에서 봤듯 정본 1,000 에피소드는 이미 지금 코드와 다른 자(끝점)로 채점돼 있다. 판정을 또 바꾸면 <b>끊어지는 비교가 하나 더 늘어난다.</b></p>
 </section>
 <section id="s11"><span id="10"></span><h2>10. 확인하지 못한 것 (<span class="ev ev-todo">미확인</span>)</h2>
 <p>정직하게 남긴다. 이 목록이 다음 사람의 출발점이다.</p>
@@ -1077,13 +1077,13 @@ ADDED_COLUMNS = (<span class="s">&quot;peak_lateral_drift_m&quot;</span>, <span 
 <ol><li><b>방향 판정의 자.</b> 끝점인가 통과선인가. 코드는 통과선, 원장 09-02 는 끝점이고 원장이 이미 미결로 열어 두었다 (<code>DECISIONS.md:144</code>). <b>어느 쪽이든 다른 쪽을 정정해야 한다.</b></li><li><b>속도추종을 어떻게 할 것인가.</b> 6절의 A · B · C · D 중에서. 제 의견은 <b>C 의 완화책(성공을 두 층으로) + D(회복 시간 열)를 함께 넣고, 판정은 당분간 그대로 두는 것</b>입니다. 판정을 안 바꾸므로 비교가 안 끊기고, 개선이 보이는 눈금은 생깁니다.</li><li><b><code>#125</code> 4번·5번을 다시 열 것인가.</b> 닫힌 이슈에 미구현 항목이 둘 있다.</li></ol>
 </section>
 <section id="s13"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v1.0</b></td><td>2026-09-08</td><td>처음 씀. 네 축의 코드 정의·AND·실패 사유 둘을 줄 단위로 옮기고, 정본 1,000판을 축별로 재집계해 「속도추종만 실패」 51판을 냈다. 라이다 접촉과 보행 위상 제안 둘을 검토했다</td><td>코드 원문 · 원장 · 정본 실측 재집계</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td><b>v1.0</b></td><td>2026-09-08</td><td>처음 씀. 네 축의 코드 정의·AND·실패 사유 둘을 줄 단위로 옮기고, 정본 1,000 에피소드를 축별로 재집계해 「속도추종만 실패」 51 에피소드를 냈다. 라이다 접촉과 보행 위상 제안 둘을 검토했다</td><td>코드 원문 · 원장 · 정본 실측 재집계</td></tr></tbody></table></div>
 </section>
 <section id="s14"><h2>참고한 것</h2>
 <p><b>코드</b> (<code>origin/main</code> <code>a729db5</code> 기준 · 인용한 파일 전부 이 커밋과 일치함을 확인) <code>sim/eval/metrics.py</code> · <code>sim/eval/eval_generalization.py</code> · <code>sim/eval/report.py</code> · <code>sim/eval/terrains.py</code> · <code>sim/eval/generalization_env_cfg.py</code></p>
 <p><b>원장·결정</b> <code>docs/DECISIONS.md:117-126</code> (평가 조건·임계·KPI 축) · <code>:121</code> (보행 위상) · <code>:129-145</code> (미결: 방향의 자)</p>
-<p><b>팀 진단</b> <code>inbox/lee/20260908-pit진단.md</code> (이민우 · <code>pit</code> 깊이 지도 800판) · <code>docs/research/rails-diagnosis.md</code> (맹라현 · <code>rails</code>) · <code>docs/research/pretrained-vs-model99-7terrain.md</code> (임석헌 · <code>#278</code> 후속) · <code>inbox/jay/20260907-go2-관절한계-실측.md</code> (관절 한계 실측) · <code>inbox/meang/20260902-park-mentoring.md:151-160</code> (위상 열 설계)</p>
-<p><b>실측 원자료</b> <code>sim/eval/results/20260903-rough10-1.0mps/</code> (1,000판 · <code>run_manifest.json</code> 에 조건 전부)</p>
+<p><b>팀 진단</b> <code>inbox/lee/20260908-pit진단.md</code> (이민우 · <code>pit</code> 깊이 지도 800 에피소드) · <code>docs/research/rails-diagnosis.md</code> (맹라현 · <code>rails</code>) · <code>docs/research/pretrained-vs-model99-7terrain.md</code> (임석헌 · <code>#278</code> 후속) · <code>inbox/jay/20260907-go2-관절한계-실측.md</code> (관절 한계 실측) · <code>inbox/meang/20260902-park-mentoring.md:151-160</code> (위상 열 설계)</p>
+<p><b>실측 원자료</b> <code>sim/eval/results/20260903-rough10-1.0mps/</code> (1,000 에피소드 · <code>run_manifest.json</code> 에 조건 전부)</p>
 <p><b>저장소 밖 원 출처</b></p>
 <ul><li>이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/125" target="_blank" rel="noopener">#125 평가 하네스 확장 5건</a> (4번 = 보행 위상 열 · CLOSED)</li><li>이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/99" target="_blank" rel="noopener">#99 방향 판정을 통과선으로</a></li><li>PR <a href="https://github.com/foothold-project/foothold-lab/pull/309" target="_blank" rel="noopener">#309 평가 하네스에서 평지 지형 제거</a> (MERGED · 커밋 <code>61de365</code>)</li><li>PR <a href="https://github.com/foothold-project/foothold-lab/pull/278" target="_blank" rel="noopener">#278 gap 추가 학습한 모델과 베이스라인 모델 비교</a> (MERGED)</li><li>보상 가중치 원본: Isaac Lab <a href="https://github.com/isaac-sim/IsaacLab/blob/main/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/rough_env_cfg.py" target="_blank" rel="noopener"><code>config/go2/rough_env_cfg.py</code></a> · 공통 <code>RewardsCfg</code> 는 같은 트리의 <a href="https://github.com/isaac-sim/IsaacLab/blob/main/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/velocity_env_cfg.py" target="_blank" rel="noopener"><code>velocity_env_cfg.py</code></a> <span class="ev ev-todo">미확인</span> (우리 문서의 전사만 대조했다 · 10절)</li></ul>
 <blockquote><p><b>평지(flat)는 2026-09-08 에 평가 목록에서 빠졌다</b> (<code>#309</code> 머지 · 커밋 <code>61de365</code>). <code>sim/eval/terrains.py:44</code> 가 <code>ADDED_TERRAIN_NAMES = ()</code> 다. 이 문서의 「10종」은 그 상태를 가리킨다. 정본 실측 <code>20260903-rough10-1.0mps</code> 는 처음부터 10종이라 오염되지 않았다.</p></blockquote>
@@ -1126,5 +1126,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

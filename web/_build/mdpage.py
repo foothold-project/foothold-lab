@@ -41,6 +41,30 @@ LABELS = {
 SVG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+
+def _poster_attr(src):
+    """영상 옆 `posters/<같은이름>.jpg` 가 있으면 ` poster="..."` 를 돌려준다.
+
+    없으면 빈 글자를 돌려준다. 여기서 막지 않는다 · 빠진 것은 관문이 잡는다.
+    (여기서 죽이면 포스터를 굽기 전에는 빌드를 못 돌린다.)
+    """
+    import posixpath
+    rel = src.split('?')[0]
+    if rel.startswith(('http://', 'https://', 'data:')):
+        return ''
+    d, f = posixpath.split(rel)
+    stem = posixpath.splitext(f)[0]
+    cand = posixpath.join(d, 'posters', stem + '.jpg')
+    # 문서 기준 상대경로(`../assets/...`)를 저장소 자리로 편다
+    probe = cand.lstrip('/')
+    while probe.startswith('../'):
+        probe = probe[3:]
+    here = os.path.dirname(os.path.abspath(__file__))     # web/_build
+    for base in (os.path.join(here, '..'), os.path.join(here, '..', '..')):
+        if os.path.isfile(os.path.join(base, probe.replace('/', os.sep))):
+            return ' poster="%s"' % cand
+    return ''
+
 def _svg_inline(src):
     """페이지 토큰을 쓰는 SVG 를 본문에 넣을 수 있게 읽어 온다.
 
@@ -147,9 +171,19 @@ def inline(t):
         # 영상도 같은 문법으로 받는다. 링크만 적어두면 아무도 안 눌러본다.
         # 페이지에서 바로 재생되어야 «본다»가 된다.
         if src.lower().endswith(('.mp4', '.webm', '.mov')):
+            # ★ 2026-09-13 팀장이 폰에서 「영상이 처음에 블랙으로 떠 있다」고 잡았다.
+            #   `poster` 가 없으면 브라우저가 첫 프레임을 그리는데, **우리 렌더는
+            #   프레임 0 이 검정이다** (밝기 0.0 · 21개 전부 · `make_posters.py` 실측).
+            #
+            #   그때 `report-v1` 만 손으로 고쳤고 다른 문서 영상 19개는 그대로였다.
+            #   그래서 **여기서 붙인다.** 영상 옆 `posters/<같은이름>.jpg` 가 있으면
+            #   자동으로 달린다. 새 영상이 올라와도 포스터만 구워 두면 그만이다.
+            #   포스터를 굽는 것은 `tools/make_posters.py`, 빠진 것을 잡는 것은
+            #   빌드 관문 `[3.47]` 이다.
             return ('<figure class="mdimg mdvid">'
-                    '<video controls muted playsinline preload="metadata" src="%s"></video>'
-                    '%s</figure>' % (src, cap))
+                    '<video controls muted playsinline preload="metadata"%s '
+                    'src="%s"></video>%s</figure>'
+                    % (_poster_attr(src), src, cap))
         # ★ 2026-09-13. 토큰을 쓰는 SVG 를 «본문에 넣는» 길도 해 봤다.
         #   색은 살지만 셋이 나빠졌다.
         #     · 정본 한 장이 167 KB -> 869 KB

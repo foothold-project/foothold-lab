@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -860,7 +860,7 @@ body>*{flex-shrink:0}
 
 <blockquote><p>분류: 실험
 작성: 맹라현 · 2026-09-03 12:00
-근거: 실측 (MuJoCo 1,500판) · IsaacLab 소스 원문
+근거: 실측 (MuJoCo 1,500 에피소드) · IsaacLab 소스 원문
 요지: 지금 학습 범위는 난이도 열 칸 중 셋만 쓸모가 있다. (0.10, 0.15) 로 좁히면 여덟 칸이 산다.
 상태: 초안
 판: v1.2
@@ -868,14 +868,14 @@ body>*{flex-shrink:0}
 <blockquote><p>실행: 맹라현 · 2026-09-02 ~ 09-03 · Mac mini (MuJoCo 3.12.0, GPU 없음)
 정책: 팀 기준선 NVIDIA 공식 체크포인트 <code>Isaac-Velocity-Rough-Unitree-Go2-v0</code> (관측 235차원)
 원자료: <code>mujoco_rails/results/rails_tile/grid_r235_std.csv</code> · <code>grid_r235_fine.csv</code>
-조건: 초당 1.0 m · 20초 · 10 m · <b>칸당 100판</b> (9/2 팀장 확정)
+조건: 초당 1.0 m · 20초 · 10 m · <b>칸당 100 에피소드</b> (9/2 팀장 확정)
 초기 조건은 <b>팀 벤치와 같게 맞췄다</b> <span class="ev ev-ok">확인됨</span> - 위치 ±0.10 m · 방위 ±5.0도 ·
 관절 기본자세 x 0.95~1.05 · 초기 속도 0 (<code>benchmark-setup-lim.md</code> 인자 기본값)</p></blockquote>
 <p><b>지금 학습 범위 <code>rail_height_range=(0.05, 0.18)</code> 은 난이도 열 칸 중 일곱이 낭비다.</b> 넷은 거의 100% 라 배울 것이 없고 셋은 0% 라 아무도 못 올라간다. <b><code>(0.10, 0.15)</code> 로 좁히면 여덟 칸이 살아난다.</b></p>
 </section>
 <section id="s1"><span id="1"></span><h2>1. 무엇을 쟀나</h2>
-<p>턱 높이를 4 cm 부터 18 cm 까지 <b>열다섯 단계</b>로 바꿔 가며 <b>칸당 100판씩 1,500판</b>을 돌렸다.</p>
-<p><b>칸을 촘촘하게 두고 칸당 100판을 지켰다.</b> 9/2 팀장 확정이 「경계 판정은 한 칸의 정밀도보다 칸이 촘촘한 것이 중요하므로 『한 칸 1,000회』보다 『열 칸 100회』가 낫다」이기 때문이다.</p>
+<p>턱 높이를 4 cm 부터 18 cm 까지 <b>열다섯 단계</b>로 바꿔 가며 <b>칸당 100 에피소드씩 1,500 에피소드</b>을 돌렸다.</p>
+<p><b>칸을 촘촘하게 두고 칸당 100 에피소드를 지켰다.</b> 9/2 팀장 확정이 「경계 판정은 한 칸의 정밀도보다 칸이 촘촘한 것이 중요하므로 『한 칸 1,000회』보다 『열 칸 100회』가 낫다」이기 때문이다.</p>
 <p>성공 판정은 넷을 동시에 만족하는 것이다 (IsaacLab 표준).</p>
 <div class="tw"><table><thead><tr><th>조건</th><th>값</th></tr></thead><tbody><tr><td>네 발이 모두 바깥 프레임 뒷면을 넘음</td><td>출발점에서 2.88 m</td></tr><tr><td>그 뒤 더 걸어 나감</td><td><b>4.0 m</b></td></tr><tr><td>낙상</td><td>없음</td></tr><tr><td>몸통이 지형에 닿음</td><td><b>한 번도 없음</b></td></tr></tbody></table></div>
 </section>
@@ -884,7 +884,7 @@ body>*{flex-shrink:0}
 <p><b>10 cm 까지 거의 다 넘고, 10.5 cm 부터 떨어지기 시작해, 15 cm 에서 끝난다.</b> <b>경계는 13 ~ 14 cm 사이</b>다 (39% -&gt; 10%).</p>
 <blockquote><p><b>주의 하나.</b> 11 cm 79% 와 11.5 cm 84% 가 뒤집혀 있다. 신뢰구간이
 [70.0, 85.8] 과 [75.6, 89.9] 로 겹치므로 <b>표본 잡음이다</b> <span class="ev ev-ok">확인됨</span>.
-칸당 100판의 구간 폭이 13~16 포인트라 인접 칸의 5 포인트 차이는 못 가른다.</p></blockquote>
+칸당 100 에피소드의 구간 폭이 13~16 포인트라 인접 칸의 5 포인트 차이는 못 가른다.</p></blockquote>
 <blockquote><p><b>주의 둘.</b> 스윕 로그가 「성공」으로 찍는 열은 «얼굴 접촉» 기준이다.
 위 표는 정본인 «몸통 접촉» 기준(<code>strict_no_base_rate</code>)으로 원자료에서 다시 센 값이다.</p></blockquote>
 </section>
@@ -920,7 +920,7 @@ body>*{flex-shrink:0}
 <h3>그래도 두께를 바꿀 수는 있다</h3>
 <p>cfg 값이므로 손으로 고칠 수 있다. 다만 <b>난이도로 자동으로 변하지 않으므로 실험을 따로 세워야 한다.</b> 참고로 재 둔 것이 있다.</p>
 <div class="tw"><table><thead><tr><th>턱 높이</th><th>두께 8 cm</th><th>두께 13 cm</th><th>두께 18 cm</th></tr></thead><tbody><tr><td>6 cm</td><td>75.5%</td><td>80.5%</td><td><b>86.0%</b></td></tr><tr><td>7 cm</td><td>63.5%</td><td><b>70.5%</b></td><td>66.0%</td></tr><tr><td>8 cm</td><td>48.5%</td><td>47.5%</td><td><b>51.5%</b></td></tr><tr><td>9 cm</td><td>38.5%</td><td>34.5%</td><td><b>39.0%</b></td></tr><tr><td>10 cm</td><td>31.5%</td><td><b>32.0%</b></td><td>19.0%</td></tr></tbody></table></div>
-<blockquote><p>이 표는 <b>옛 조건</b>이다. 초당 0.5 m · 턱 한 개 씬 · 칸당 200판.
+<blockquote><p>이 표는 <b>옛 조건</b>이다. 초당 0.5 m · 턱 한 개 씬 · 칸당 200 에피소드.
 위 설계 숫자와 같은 자가 아니므로 <b>방향만 읽는다</b> <code>미검증</code>.</p></blockquote>
 <p><b>낮은 턱에서는 두꺼운 쪽이 유리하고 (타고 올라설 면이 넓다), 10 cm 에서는 뒤집힌다 (18 cm 가 19% 로 떨어진다).</b> 두께가 단순히 「두꺼울수록 어렵다」가 아니라 <b>높이와 함께 움직인다.</b> 두께를 건드릴 거면 높이와 격자로 봐야 한다.</p>
 </section>
@@ -928,11 +928,11 @@ body>*{flex-shrink:0}
 <p><b>평지에서는 두 엔진이 같은 답을 낸다</b> <span class="ev ev-ok">확인됨</span>. 같은 체크포인트 · 같은 판정으로 <b>아이작심 33%</b> · <b>무조코 26.9%</b> 로 구간이 겹친다 (팀장 실측 <code>#99</code> 2026-09-03).</p>
 <p><b>험지에서도 같은지는 모른다</b> <span class="ev ev-todo">미측정</span>. 대조가 없다. <b>그래서 옮기는 것은 「경계가 대략 어디쯤이고 어느 칸이 갈리는가」이지 통과율 절대값이 아니다.</b></p>
 <p>멘토가 8/31 에 승인한 용법이 이것이다. <b>「0 과 100 이 아닌 칸만 아이작심에서 돌려도 된다」</b></p>
-<div class="tw"><table><thead><tr><th>순서</th><th>무엇</th><th>규모</th></tr></thead><tbody><tr><td>1</td><td><code>(0.10, 0.15)</code> 로 <b>난이도 2 · 5 · 8 세 칸만</b> 짧게 돌린다 (11.1 · 12.8 · 14.4 cm)</td><td>칸당 100판</td></tr><tr><td>2</td><td>세 칸이 무조코처럼 <b>0도 100도 아니면</b> 이 범위로 학습을 건다</td><td></td></tr><tr><td>3</td><td>세 칸이 전부 0% 면 <b>한두 칸 아래로 내려</b> 다시 본다</td><td></td></tr><tr><td>4</td><td>학습 뒤 평가 범위 <code>(0.05, 0.18)</code> 로 재서 <b>경계가 밀렸는지</b> 본다</td><td></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>순서</th><th>무엇</th><th>규모</th></tr></thead><tbody><tr><td>1</td><td><code>(0.10, 0.15)</code> 로 <b>난이도 2 · 5 · 8 세 칸만</b> 짧게 돌린다 (11.1 · 12.8 · 14.4 cm)</td><td>칸당 100 에피소드</td></tr><tr><td>2</td><td>세 칸이 무조코처럼 <b>0도 100도 아니면</b> 이 범위로 학습을 건다</td><td></td></tr><tr><td>3</td><td>세 칸이 전부 0% 면 <b>한두 칸 아래로 내려</b> 다시 본다</td><td></td></tr><tr><td>4</td><td>학습 뒤 평가 범위 <code>(0.05, 0.18)</code> 로 재서 <b>경계가 밀렸는지</b> 본다</td><td></td></tr></tbody></table></div>
 <p><b>1번이 GPU 시간을 아끼는 자리다.</b> 열 칸을 다 돌리는 대신 셋만 확인한다.</p>
 </section>
 <section id="s9"><span id="9"></span><h2>9. 확인 현황</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>실측 1,500판 · 칸당 100 · 열다섯 칸</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>초기 조건이 팀 벤치와 같음</td><td><span class="ev ev-ok">확인됨</span>. 200판 표본으로 범위 검증</td></tr><tr><td>난이도 -&gt; 높이 보간식</td><td><span class="ev ev-ok">확인됨</span>. <code>mesh_terrains.py</code> 원문</td></tr><tr><td>두께가 난이도 축이 아님</td><td><span class="ev ev-ok">확인됨</span>. 같은 함수 본문</td></tr><tr><td>안쪽 8 cm · 바깥 18 cm 고정</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>평지에서 두 엔진이 같은가</td><td><span class="ev ev-ok">확인됨</span>. 아이작심 33% · 무조코 26.9% · 구간 겹침 (<code>#99</code>)</td></tr><tr><td><b>험지에서 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr><tr><td>두께 표 (7절)</td><td><b><code>미검증</code>.</b> 옛 조건이라 방향만 읽는다</td></tr><tr><td>난이도 사다리의 중간 칸 통과율</td><td><b>보간값</b>이다. 실측 지점은 4·6·8·9·10·10.5·11·11.5·12·12.5·13·13.5·14·15·18 cm</td></tr><tr><td>인접 칸의 5 포인트 차이</td><td><b>못 가른다.</b> 칸당 100판의 신뢰구간 폭이 13~16 포인트다</td></tr><tr><td>왜 못 넘나</td><td>이 문서가 다루지 않는다. <a href="https://github.com/foothold-project/foothold-lab/issues/66" target="_blank" rel="noopener">#66</a> 진단 문서 참고</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>실측 1,500 에피소드 · 칸당 100 · 열다섯 칸</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>초기 조건이 팀 벤치와 같음</td><td><span class="ev ev-ok">확인됨</span>. 200 에피소드 표본으로 범위 검증</td></tr><tr><td>난이도 -&gt; 높이 보간식</td><td><span class="ev ev-ok">확인됨</span>. <code>mesh_terrains.py</code> 원문</td></tr><tr><td>두께가 난이도 축이 아님</td><td><span class="ev ev-ok">확인됨</span>. 같은 함수 본문</td></tr><tr><td>안쪽 8 cm · 바깥 18 cm 고정</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>평지에서 두 엔진이 같은가</td><td><span class="ev ev-ok">확인됨</span>. 아이작심 33% · 무조코 26.9% · 구간 겹침 (<code>#99</code>)</td></tr><tr><td><b>험지에서 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr><tr><td>두께 표 (7절)</td><td><b><code>미검증</code>.</b> 옛 조건이라 방향만 읽는다</td></tr><tr><td>난이도 사다리의 중간 칸 통과율</td><td><b>보간값</b>이다. 실측 지점은 4·6·8·9·10·10.5·11·11.5·12·12.5·13·13.5·14·15·18 cm</td></tr><tr><td>인접 칸의 5 포인트 차이</td><td><b>못 가른다.</b> 칸당 100 에피소드의 신뢰구간 폭이 13~16 포인트다</td></tr><tr><td>왜 못 넘나</td><td>이 문서가 다루지 않는다. <a href="https://github.com/foothold-project/foothold-lab/issues/66" target="_blank" rel="noopener">#66</a> 진단 문서 참고</td></tr></tbody></table></div>
 </section>
 <section id="s10"><span id="10"></span><h2>10. 출처</h2>
 <ul><li>하네스 <code>mujoco_rails/sweep_rails_tile.py</code> · 재현 명령 <code>python sweep_rails_tile.py --heights ... --seeds 100 --cmd-vx 1.0 --duration 20 --target-x 10 --policy rough235</code></li><li>지형 생성기 IsaacLab <code>source/isaaclab/isaaclab/terrains/trimesh/mesh_terrains.py</code> <code>rails_terrain</code></li><li>정책 정합 규격 <code>mujoco_rails/vendor/isaaclab_go2_rough/SPEC.md</code></li><li>평가 조건 <code>docs/DECISIONS.md</code> 2026-09-02 팀장 확정</li><li>「0과 100이 아닌 칸만」 <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/meetings/20260831-park-mentoring.md" target="_blank" rel="noopener">8/31 멘토링</a></li><li>스윙 실측 <code>mujoco_rails/results/swing_probe/raw_r235_std.csv</code></li><li>보상 항목 IsaacLab <code>manager_based/locomotion/velocity/velocity_env_cfg.py</code> <code>RewardsCfg</code></li><li>초기 조건 <code>mujoco_rails/init_state.py</code> · <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/research/benchmark-setup-lim.md" target="_blank" rel="noopener">벤치마크 셋업</a> 인자 기본값</li></ul>
@@ -978,5 +978,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

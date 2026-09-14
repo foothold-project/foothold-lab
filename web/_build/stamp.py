@@ -26,6 +26,12 @@
           열 경쟁 · `overflow-wrap:anywhere` 의 min-content 붕괴.
           열 수로 나누던 `wide` 를 걷고 모든 표에 한 규칙을 준다.
           실측 390 px: 머리말 2줄 17개 -> 0개 · 짧은 토큰 쪼개짐 6건 -> 0건
+  v2.1.2  도해 여백과 영상 썸네일 (2026-09-14) · 팀장이 넷을 더 짚음
+          도해 21장의 viewBox 가 제각각이라 일곱 장은 글자가 틀에 닿고
+          반대쪽은 최대 321 이 비어 있었다. 사방 20 으로 맞췄다.
+          영상 32개 중 19개에 썸네일이 없었다. 프레임 0 이 전부 검정이라
+          폰에서 검정 네모로 떴다. 21개를 굽고 빌드가 자동으로 붙인다.
+          새 관문 둘: 도해 여백 [3.474] · 영상 규격 [3.475]
           갤러리 뷰어를 lab 으로 이관 (site 는 배포본)
 """
 import io
@@ -36,7 +42,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 VAULT = os.path.dirname(HERE)
 
-SITE_VERSION = 'v2.1.1'
+SITE_VERSION = 'v2.1.2'
 A, B = '<!--stamp:v1-->', '<!--/stamp:v1-->'
 
 CSS = '''<style id="stamp-css">

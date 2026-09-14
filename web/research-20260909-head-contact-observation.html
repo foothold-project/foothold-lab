@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -860,8 +860,8 @@ body>*{flex-shrink:0}
 
 <blockquote><p>분류: 실험
 작성: 오흥재 · 2026-09-09 12:20
-근거: 실측 (Go2 USD 프로브 · 아이작심 20판) · 팀 정본 코드 원문 (<code>sim/eval/</code>) · 선례 문서 <code>pretrained-vs-model99-7terrain.md</code>
-요지: 실기 Go2 의 라이다가 얹히는 머리 링크는 지금까지 판정 밖이었다. 접촉을 세는 관측 열 셋(<code>head_contact_count</code> · <code>head_contact_peak_n</code> · <code>head_contact_first_s</code>)을 원시 CSV 에 더한다. <b><code>overall_success</code> 는 그대로 네 축의 AND 이고 다섯째 축을 만들지 않는다.</b> 근거 셋은 ① AND 에 축을 더하면 성공률이 반드시 깎이고 ② 「몇 N 부터 부서지는가」의 근거가 우리에게 없고 ③ 종료 조건을 더하면 <code>termination_reason</code> 이 오류 없이 거짓말을 시작한다는 것이다. 아이작심 20판 실측에서 최대 1,735 N 이 나왔고, <b>성공한 판 하나가 846 N 을 맞고도 성공으로 남았다.</b>
+근거: 실측 (Go2 USD 프로브 · 아이작심 20 에피소드) · 팀 정본 코드 원문 (<code>sim/eval/</code>) · 선례 문서 <code>pretrained-vs-model99-7terrain.md</code>
+요지: 실기 Go2 의 라이다가 얹히는 머리 링크는 지금까지 판정 밖이었다. 접촉을 세는 관측 열 셋(<code>head_contact_count</code> · <code>head_contact_peak_n</code> · <code>head_contact_first_s</code>)을 원시 CSV 에 더한다. <b><code>overall_success</code> 는 그대로 네 축의 AND 이고 다섯째 축을 만들지 않는다.</b> 근거 셋은 ① AND 에 축을 더하면 성공률이 반드시 깎이고 ② 「몇 N 부터 부서지는가」의 근거가 우리에게 없고 ③ 종료 조건을 더하면 <code>termination_reason</code> 이 오류 없이 거짓말을 시작한다는 것이다. 아이작심 20 에피소드 실측에서 최대 1,735 N 이 나왔고, <b>성공한 판 하나가 846 N 을 맞고도 성공으로 남았다.</b>
 상태: 초안
 판: v1.0
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a> · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/295">#295</a></p></blockquote>
@@ -936,12 +936,12 @@ body>*{flex-shrink:0}
 <p>머리 접촉도 같은 길을 간다. 먼저 분포를 모으고, 「몇 N 부터 문제인가」를 확보한 뒤에 <code>≤ N</code> 형태의 감시 임계로 올린다.</p>
 </section>
 <section id="s7"><span id="6"></span><h2>6. 아이작심에서 실제로 돌려 값이 나오는 것을 봤다 <span class="ev ev-ok">확인됨</span></h2>
-<p><b>코드만 넣은 것이 아니다.</b> 20판을 돌렸다.</p>
+<p><b>코드만 넣은 것이 아니다.</b> 20 에피소드를 돌렸다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>--terrains pit,rails --episodes 10 --envs_per_terrain 10
 --eval_duration 6.0 --command_vx 1.0 --min_progress_m 3.0
 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:0</pre></div>
 <p>체크포인트는 정본 실측과 같은 NVIDIA pretrained (<code>Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt</code>) 다.</p>
-<div class="tw"><table><thead><tr><th></th><th>값</th></tr></thead><tbody><tr><td>판 수</td><td>20</td></tr><tr><td>머리가 닿은 판</td><td><b>13 / 20</b></td></tr><tr><td>최대 접촉력</td><td><b>1,735.0 N</b></td></tr><tr><td><code>pit</code> 10판 접촉 스텝 수</td><td>평균 7.2 · 중앙 4.5 · 최대 38</td></tr><tr><td><code>pit</code> 10판 최대 접촉력</td><td>평균 606.9 N · 중앙 468.7 N · 최대 1,735.0 N</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>값</th></tr></thead><tbody><tr><td>판 수</td><td>20</td></tr><tr><td>머리가 닿은 판</td><td><b>13 / 20</b></td></tr><tr><td>최대 접촉력</td><td><b>1,735.0 N</b></td></tr><tr><td><code>pit</code> 10 에피소드 접촉 스텝 수</td><td>평균 7.2 · 중앙 4.5 · 최대 38</td></tr><tr><td><code>pit</code> 10 에피소드 최대 접촉력</td><td>평균 606.9 N · 중앙 468.7 N · 최대 1,735.0 N</td></tr></tbody></table></div>
 <p>이민우 님이 18 cm <code>pit</code> 에서 잰 1,344 N 과 같은 자릿수다. <code>pit</code> 은 난이도 0.5 에서 깊이 20 cm 이므로 조건이 더 험하고, 그만큼 값이 크다. <b>독립 확인이다.</b></p>
 <h3>★ 판정에 안 들어간다는 것의 실측 증거</h3>
 <p>성공한 판(<code>overall_success=True</code>) 둘 중 <b>하나가 머리에 846.33 N 을 맞고도 성공으로 남았다.</b></p>
@@ -982,7 +982,7 @@ body>*{flex-shrink:0}
 <div class="tw"><table><thead><tr><th></th><th>물음</th><th>지금</th></tr></thead><tbody><tr><td>1</td><td>파손 임계를 몇 N 으로 볼 것인가</td><td><span class="ev ev-todo">미확인</span>. 확보되면 감시 임계로 올린다 (5절 선례 형태)</td></tr><tr><td>2</td><td>열 이름을 <code>head_</code> 로 둘 것인가 <code>lidar_</code> 로 갈 것인가</td><td><code>head_</code> 로 두었다. 시뮬에 <code>lidar</code> 강체가 없기 때문 (2절)</td></tr><tr><td>3</td><td>마지막 한 스텝 누락을 재볼 것인가</td><td>안 재봤다 (9-1)</td></tr><tr><td>4</td><td>종료코드 0 문제를 언제 고칠 것인가</td><td>별도 이슈 (9-2)</td></tr></tbody></table></div>
 </section>
 <section id="s12"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-09</td><td>최초. 링크 이름 프로브 실측 · 관측 열 셋 · 아이작심 20판 검증 · 판정 제외 근거 셋</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-09</td><td>최초. 링크 이름 프로브 실측 · 관측 열 셋 · 아이작심 20 에피소드 검증 · 판정 제외 근거 셋</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1022,5 +1022,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

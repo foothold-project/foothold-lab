@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -894,7 +894,7 @@ body>*{flex-shrink:0}
 <p>우리 목표가 <i>&quot;이 수준으로 렌더한다&quot;</i>라면, 정확히는 <b>&quot;실사 촬영물과 구분되지 않는 CG를 만든다&quot;</b>. VFX에서 가장 어려운 과제다.</p>
 </section>
 <section id="s3"><span id="00-1"></span><h2>00-1. 프로젝트의 첫 렌더: NVIDIA 체크포인트 재생 (2026-07-29)</h2>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/pretrained_first_playback_20260729.mp4?v=1cdf6104"></video><figcaption>프로젝트 최초 렌더. NVIDIA 사전학습 체크포인트를 우리 환경에서 재생한 것</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/pretrained_first_playback_20260729.jpg" src="assets/video/pretrained_first_playback_20260729.mp4?v=1cdf6104"></video><figcaption>프로젝트 최초 렌더. NVIDIA 사전학습 체크포인트를 우리 환경에서 재생한 것</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>날짜</td><td><b>2026-07-29</b> (파일 타임스탬프. 이 프로젝트에서 렌더된 가장 오래된 영상)</td></tr><tr><td>무엇</td><td>NVIDIA 공식 사전학습 체크포인트(1,500 iteration)를 받아 <b>처음으로 걷는 것을 확인</b>한 기록</td></tr><tr><td>의미</td><td>«우리 환경이 정상이다»의 첫 증거. 이때는 아직 우리가 학습한 정책이 없었다</td></tr></tbody></table></div>
 <blockquote><p>이 영상이 있었기에 이후의 모든 비교(우리 300회 vs 1,500회 vs 공개 정책)가 가능했다.
 기록이 늦게 등록된 것 자체가 교훈이다: <b>산출물은 만든 날 문서에 붙인다.</b></p></blockquote>
@@ -905,7 +905,7 @@ body>*{flex-shrink:0}
 <p><b>읽는 법: 로봇의 화면상 위치를 보라:</b></p>
 <div class="tw"><table><thead><tr><th>시각</th><th>위치</th></tr></thead><tbody><tr><td>1.2초</td><td>중앙 타일에 2마리</td></tr><tr><td>7.5초</td><td><b>화면 왼쪽 끝까지 이동</b></td></tr><tr><td>10.0초</td><td>왼쪽 가장자리</td></tr></tbody></table></div>
 <p><b>→ 로봇이 화면을 가로질러 이동한다. 걷고 있다.</b></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/trainA_noflag_300iter.mp4?v=888b9eb1"></video><figcaption>A 정책 재생 (300 iteration · 플래그 없음)</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/trainA_noflag_300iter.jpg" src="assets/video/trainA_noflag_300iter.mp4?v=888b9eb1"></video><figcaption>A 정책 재생 (300 iteration · 플래그 없음)</figcaption></figure></p>
 <p><b>화살표 읽는 법</b>: Isaac Lab은 로봇 위에 화살표 2개를 그린다.</p>
 <ul><li><b>초록 = 명령받은 속도</b> (가라고 시킨 방향·크기)</li><li><b>파랑 = 실제 속도</b> (진짜 가고 있는 방향·크기)</li></ul>
 <p>A에서는 <b>둘 다 뚜렷하다</b> = 시킨 대로 가고 있다.</p>
@@ -916,7 +916,7 @@ body>*{flex-shrink:0}
 <p><b>읽는 법:</b></p>
 <div class="tw"><table><thead><tr><th>시각</th><th>위치</th></tr></thead><tbody><tr><td>1.2초</td><td>중앙 타일</td></tr><tr><td>10.0초</td><td><b>거의 같은 자리</b></td></tr></tbody></table></div>
 <p><b>→ 10초 동안 화면상 위치가 거의 변하지 않는다. 제자리에서 주저앉아 있다.</b></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/trainB_flag_300iter.mp4?v=855d509a"></video><figcaption>B 정책 재생 (플래그 있음). 제자리에 주저앉는다</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/trainB_flag_300iter.jpg" src="assets/video/trainB_flag_300iter.mp4?v=855d509a"></video><figcaption>B 정책 재생 (플래그 있음). 제자리에 주저앉는다</figcaption></figure></p>
 <p>화살표: <b>초록(명령)만 크고 파랑(실제)이 거의 없다</b> = 시켰는데 못 간다.</p>
 <h3>그 플래그가 무엇이었나</h3>
 <p><code>collisionApproximateCylinders=true</code>: Go2의 정강이는 <b>원통(cylinder) 충돌체</b>다. 원통은 충돌 계산이 비싸다. 이 스위치는 그 원통을 <b>더 단순한 모양으로 근사</b>하게 만든다.</p>
@@ -933,8 +933,8 @@ body>*{flex-shrink:0}
 </section>
 <section id="s6"><span id="03"></span><h2>03. ★ 학습 씬 ≠ 렌더 씬: 분리 실증 (성공)</h2>
 <p><figure class="mdimg"><img src="assets/visual/03_usdscene_warehouse.png?v=1fdc70e3" alt="warehouse" loading="lazy"><figcaption>warehouse</figcaption></figure></p>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>정책</td><td><b>A 정책</b> (회색 절차생성 험지에서 학습한 것)</td></tr><tr><td>씬</td><td><code>Environments/Simple_Warehouse/warehouse.usd</code>: <b>학습에 쓴 적 없는 씬</b></td></tr><tr><td>스크립트</td><td><code>C:\isaac\IsaacLab\play_go2_in_usd.py</code> (NVIDIA 공식 튜토리얼의 Go2판)</td></tr><tr><td>소요</td><td>1.78분 (400 스텝 = 8초)</td></tr></tbody></table></div>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/usdscene_warehouse.mp4?v=07183f74"></video><figcaption>회색 험지에서 학습한 정책이 창고 씬에서 걷는다</figcaption></figure></p>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>정책</td><td><b>A 정책</b> (회색 절차생성 험지에서 학습한 것)</td></tr><tr><td>씬</td><td><code>Environments/Simple_Warehouse/warehouse.usd</code>: <b>학습에 쓴 적 없는 씬</b></td></tr><tr><td>스크립트</td><td><code>C:\isaac\IsaacLab\play_go2_in_usd.py</code> (NVIDIA 공식 튜토리얼의 Go2 에피소드)</td></tr><tr><td>소요</td><td>1.78분 (400 스텝 = 8초)</td></tr></tbody></table></div>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/usdscene_warehouse.jpg" src="assets/video/usdscene_warehouse.mp4?v=07183f74"></video><figcaption>회색 험지에서 학습한 정책이 창고 씬에서 걷는다</figcaption></figure></p>
 <p><b>이것이 증명한 것:</b></p>
 <blockquote><p><b>회색 무텍스처 지형에서 학습한 정책을, 정책 파일만 들고 나와서,
 텍스처와 조명이 있는 완전히 다른 씬에서 걷게 할 수 있다.</b></p></blockquote>
@@ -964,7 +964,7 @@ body>*{flex-shrink:0}
 <section id="s8"><span id="04-2"></span><h2>04-2. 평가에서 «걷지 못하는 정책»은 어떻게 보이는가</h2>
 <p><figure class="mdimg"><img src="./assets/visual/07_eval_300iter_frozen.png" alt="300 iteration 정책: 전진 명령 고정" loading="lazy"><figcaption>300 iteration 정책: 전진 명령 고정</figcaption></figure></p>
 <p>300 iteration 정책에 <b>전진 1.0 m/s 를 고정</b>으로 주고 20초를 재생한 것이다. <b>다리를 벌리고 몸을 낮춘 자세로 버티기만 한다.</b> 20초에 <b>0.56 m</b> 밖에 못 갔다.</p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/eval_300iter_fixed_cmd.mp4?v=d516be00"></video><figcaption>300 iteration 정책이 전진 명령에 얼어붙는 장면</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/eval_300iter_fixed_cmd.jpg" src="assets/video/eval_300iter_fixed_cmd.mp4?v=d516be00"></video><figcaption>300 iteration 정책이 전진 명령에 얼어붙는 장면</figcaption></figure></p>
 <p><figure class="mdimg"><img src="./assets/visual/08_eval_300iter_random.png" alt="300 iteration 정책: 기본 랜덤 명령" loading="lazy"><figcaption>300 iteration 정책: 기본 랜덤 명령</figcaption></figure></p>
 <p>같은 정책에 <b>기본 랜덤 명령</b>을 준 것. 같은 웅크린 자세지만 명령이 계속 바뀌니 조금씩 밀려 나가 <b>4.81 m</b> 를 간다.</p>
 <blockquote><p>### ★ 이 두 장이 말하는 것
@@ -991,10 +991,10 @@ body>*{flex-shrink:0}
 <section id="s10"><span id="06"></span><h2>06. 난이도별 주행: 눈으로 보는 차이</h2>
 <p><figure class="mdimg"><img src="assets/visual/14_eval_levels_frames.png?v=f677a882" alt="levels" loading="lazy"><figcaption>levels</figcaption></figure></p>
 <p>1,500 iteration 정책을 난이도 <b>0 / 3 / 6 / 9</b> 에서 각각 재생한 것이다.</p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/eval_1500iter_level0.mp4?v=1ab23c60"></video><figcaption>난이도 0 (계단 6cm) 주행</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/eval_1500iter_level9.mp4?v=8a1e6020"></video><figcaption>난이도 9 (계단 22cm) 주행</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/eval_1500iter_level3.mp4?v=f2300cff"></video><figcaption>난이도 3 (계단 11cm) 주행</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" src="assets/video/eval_1500iter_level6.mp4?v=682c579b"></video><figcaption>난이도 6 (계단 17cm) 주행</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/eval_1500iter_level0.jpg" src="assets/video/eval_1500iter_level0.mp4?v=1ab23c60"></video><figcaption>난이도 0 (계단 6cm) 주행</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/eval_1500iter_level9.jpg" src="assets/video/eval_1500iter_level9.mp4?v=8a1e6020"></video><figcaption>난이도 9 (계단 22cm) 주행</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/eval_1500iter_level3.jpg" src="assets/video/eval_1500iter_level3.mp4?v=f2300cff"></video><figcaption>난이도 3 (계단 11cm) 주행</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/eval_1500iter_level6.jpg" src="assets/video/eval_1500iter_level6.mp4?v=682c579b"></video><figcaption>난이도 6 (계단 17cm) 주행</figcaption></figure></p>
 <blockquote><p><b>level 9 영상에서 화면을 덮는 파란 영역의 정체</b>: 하늘(스카이 돔)이다.
 높은 난이도 스폰은 지형 가장자리 근처라, 로봇을 따라가는 카메라(낮은 앵글)가
 지형 바깥의 빈 하늘을 크게 잡는 구간이 생긴다. 렌더 오류가 아니라 <b>카메라 앵글 문제</b>이며,
@@ -1065,5 +1065,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

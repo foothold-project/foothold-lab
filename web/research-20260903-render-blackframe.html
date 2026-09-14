@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -883,7 +883,7 @@ body>*{flex-shrink:0}
 <section id="s4"><h2>수정 전 재현율</h2>
 <p>동일한 <code>repeated_boxes(반복 박스)</code> · topdown · 1920×1080 · single · 20프레임 조건을 새 프로세스로 10회 실행했다.</p>
 <div class="tw"><table><thead><tr><th>실행</th><th>검정/전체</th><th>교대</th></tr></thead><tbody><tr><td>1</td><td>0/20</td><td>false</td></tr><tr><td>2</td><td>10/20</td><td>true</td></tr><tr><td>3</td><td>0/20</td><td>false</td></tr><tr><td>4</td><td>10/20</td><td>true</td></tr><tr><td>5</td><td>0/20</td><td>false</td></tr><tr><td>6</td><td>0/20</td><td>false</td></tr><tr><td>7</td><td>0/20</td><td>false</td></tr><tr><td>8</td><td>10/20</td><td>true</td></tr><tr><td>9</td><td>10/20</td><td>true</td></tr><tr><td>10</td><td>20/20</td><td>false</td></tr></tbody></table></div>
-<p><span class="ev ev-ok">확인됨</span> 결함 판은 5/10이었다. 그중 4판은 정확한 검정 교대였고 1판은 20프레임 모두 검정이었다. 기존 <code>flat_env109_ep01_gate0.002m_topdown.mp4</code>도 1,000프레임 중 500장이 검정이고 정확히 교대했다.</p>
+<p><span class="ev ev-ok">확인됨</span> 결함 판은 5/10이었다. 그중 4 에피소드는 정확한 검정 교대였고 1 에피소드는 20프레임 모두 검정이었다. 기존 <code>flat_env109_ep01_gate0.002m_topdown.mp4</code>도 1,000프레임 중 500장이 검정이고 정확히 교대했다.</p>
 </section>
 <section id="s5"><h2>원인을 가른 관찰</h2>
 <p>한 환경 스텝에서 렌더 호출을 두 번 연속 수행하는 <code>pair</code> 시험을 10회 반복했다. 모든 판에서 저장한 두 번째 프레임은 검정 0/20이었다. 실행 1, 2, 7, 9에서는 첫 호출 20장이 전부 검정이고 바로 뒤의 두 번째 호출 20장은 전부 정상이었다.</p>
@@ -901,7 +901,7 @@ body>*{flex-shrink:0}
 <section id="s8"><h2>수정 후 재현율</h2>
 <p>수정 전과 같은 <code>repeated_boxes(반복 박스)</code> · topdown · 1920×1080 · 20프레임 조건에서 <code>retry</code> 방식으로 새 프로세스 10회를 실행했다.</p>
 <div class="tw"><table><thead><tr><th>지표</th><th>수정 전</th><th>수정 후</th></tr></thead><tbody><tr><td>결함 판</td><td>5/10</td><td>0/10</td></tr><tr><td>검정 프레임</td><td>60/200</td><td>0/200</td></tr><tr><td>교대 판</td><td>4/10</td><td>0/10</td></tr></tbody></table></div>
-<p><span class="ev ev-ok">확인됨</span> 수정 후 10판 모두 검정 0/20과 교대 <code>false</code>였다. 첫 실행은 시작 준비에 렌더 2회가 필요했고, 나머지 9회는 1회가 필요했다. 첫 실행의 기록 프레임 중 최대 재시도 횟수는 2회였으며 검정 버퍼는 저장되지 않았다.</p>
+<p><span class="ev ev-ok">확인됨</span> 수정 후 10 에피소드 모두 검정 0/20과 교대 <code>false</code>였다. 첫 실행은 시작 준비에 렌더 2회가 필요했고, 나머지 9회는 1회가 필요했다. 첫 실행의 기록 프레임 중 최대 재시도 횟수는 2회였으며 검정 버퍼는 저장되지 않았다.</p>
 </section>
 <section id="s9"><h2>정상 험지 한 판</h2>
 <div class="tw"><table><thead><tr><th>항목</th><th>결과</th></tr></thead><tbody><tr><td>영상</td><td><span class="vlink"><code>evidence/repeated_boxes_retry.mp4</code><i>../assets/render-blackframe/repeated_boxes_retry.mp4</i></span></td></tr><tr><td>조건</td><td>Go2 1대 · repeated_boxes(반복 박스) · chase · 1920×1080 · 50 fps · 300프레임 · <code>cuda:1</code></td></tr><tr><td>정책</td><td>제공된 rough Go2 체크포인트 · 전진 명령 1.0 m/s</td></tr><tr><td>디코딩 결과</td><td>300프레임 · 검정 0 · 교대 <code>false</code></td></tr><tr><td>밝기 범위</td><td>182.6551∼183.3222</td></tr><tr><td>지형 확인</td><td>시작 · 중간 · 끝 프레임에서 반복 박스 돌출 형상 확인</td></tr><tr><td>상세 기록</td><td><span class="vlink"><code>evidence/result.json</code><i>../assets/render-blackframe/result.json</i></span></td></tr><tr><td>확인 이미지</td><td><span class="vlink"><code>frame_000.png</code><i>../assets/render-blackframe/frame_000.png</i></span> · <span class="vlink"><code>frame_150.png</code><i>../assets/render-blackframe/frame_150.png</i></span> · <span class="vlink"><code>frame_299.png</code><i>../assets/render-blackframe/frame_299.png</i></span></td></tr></tbody></table></div>
@@ -951,5 +951,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

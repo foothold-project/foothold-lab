@@ -224,7 +224,7 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 </style>
-<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
 <style id="ia-css">
 /* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
    ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
@@ -513,7 +513,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<!--search:v8--><style>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -674,7 +674,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -957,5 +957,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:var(--brand);--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

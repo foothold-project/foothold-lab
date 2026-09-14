@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=742286f7').then(function(r){
+    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -860,7 +860,7 @@ body>*{flex-shrink:0}
 
 <blockquote><p>분류: 실험
 작성: 맹라현 · 2026-09-03 12:10
-근거: 실측 (MuJoCo 1,600판) · IsaacLab 소스 원문
+근거: 실측 (MuJoCo 1,600 에피소드) · IsaacLab 소스 원문
 요지: 관절은 33.5 cm 까지 들 수 있는데 걸을 때 3.25 cm 만 든다. 학습 보상 11항목에 발 높이 항이 없다. 아이작 USD 로도 다시 재서 31.0 cm 를 얻었고 두 시뮬이 7% 안에서 일치한다.
 상태: 확정
 판: v1.4
@@ -869,11 +869,11 @@ body>*{flex-shrink:0}
 정책: 팀 기준선 NVIDIA 공식 체크포인트 <code>Isaac-Velocity-Rough-Unitree-Go2-v0</code> (관측 235차원)
 원자료: <code>mujoco_rails/results/swing_probe/raw_r235_std.csv</code> ·
 <code>results/rails_tile/raw_r235_std.csv</code> · <code>raw_r235_fine.csv</code>
-조건: 초당 1.0 m · 20초 · 10 m · <b>칸당 100판</b> · 초기 조건은 팀 벤치와 같게 (9/2 팀장 확정)</p></blockquote>
+조건: 초당 1.0 m · 20초 · 10 m · <b>칸당 100 에피소드</b> · 초기 조건은 팀 벤치와 같게 (9/2 팀장 확정)</p></blockquote>
 <p><b>로봇이 힘이 모자라서 못 넘는 것이 아니다.</b> 관절 한계 안에서 앞발이 <b>33.5 cm</b> 까지 올라가는데 (발을 몸통 아래 두는 조건) 실제로 걸을 때는 <b>3.25 cm</b> 만 든다. <b>학습 보상 11항목에 「발을 높이 들면 점수를 준다」가 하나도 없다.</b> 반대로 힘·가속·행동 변화는 전부 벌점이다. <b>들 이유가 없게 학습됐다.</b></p>
 </section>
 <section id="s1"><span id="1"></span><h2>1. 어디서 못 넘나</h2>
-<p>턱 높이를 4 cm 부터 18 cm 까지 열 칸, 칸당 100판씩 돌렸다.</p>
+<p>턱 높이를 4 cm 부터 18 cm 까지 열 칸, 칸당 100 에피소드씩 돌렸다.</p>
 <div class="tw"><table><thead><tr><th>턱 높이</th><th>성공률</th><th>네 발 통과</th><th>낙상</th></tr></thead><tbody><tr><td>4 ~ 6 cm</td><td>100%</td><td>100%</td><td>0%</td></tr><tr><td>8 cm</td><td>99%</td><td>99%</td><td>1%</td></tr><tr><td>9 cm</td><td>98%</td><td>100%</td><td>1%</td></tr><tr><td>10 cm</td><td>97%</td><td>100%</td><td>0%</td></tr><tr><td>10.5 cm</td><td>90%</td><td>95%</td><td>6%</td></tr><tr><td><b>11 cm</b></td><td><b>79%</b></td><td>84%</td><td>9%</td></tr><tr><td>11.5 cm</td><td>84%</td><td>92%</td><td>5%</td></tr><tr><td><b>12 cm</b></td><td><b>68%</b></td><td>81%</td><td>11%</td></tr><tr><td><b>12.5 cm</b></td><td><b>63%</b></td><td>78%</td><td>12%</td></tr><tr><td><b>13 cm</b></td><td><b>39%</b></td><td>73%</td><td>19%</td></tr><tr><td><b>13.5 cm</b></td><td><b>23%</b></td><td>58%</td><td>26%</td></tr><tr><td><b>14 cm</b></td><td><b>10%</b></td><td>42%</td><td>31%</td></tr><tr><td>15 cm</td><td>1%</td><td>22%</td><td>24%</td></tr><tr><td>18 cm</td><td>0%</td><td>2%</td><td>6%</td></tr></tbody></table></div>
 <p><b>10 cm 까지 거의 다 넘고 10.5 cm 부터 떨어지며 14 cm 에서 무너진다.</b> <b>경계는 13 ~ 14 cm 다</b> (39% -&gt; 10%).</p>
 <blockquote><p><b>주의.</b> 11 cm 79% 와 11.5 cm 84% 가 뒤집혀 있다. 신뢰구간이 겹쳐 <b>표본 잡음</b>이다 <span class="ev ev-ok">확인됨</span>.</p></blockquote>
@@ -891,7 +891,7 @@ body>*{flex-shrink:0}
 <p><b>관절 한계는 엔진이 아니라 로봇 모델이 만든다.</b> 다만 <b>아이작심 쪽 USD 를 직접 열어 대조하지는 않았다</b> <span class="ev ev-todo">미확인</span>. 정합 규격도 「USD 대 MJCF 의 관성값은 맞출 수 없다」로 남겨 두었다. <b>한계값이 같다고 단정하지 않는다.</b></p>
 </section>
 <section id="s3"><span id="3"></span><h2>3. 실제로 얼마나 드나</h2>
-<p>평지에서 발이 자유롭게 흔들릴 때의 최고 높이다. 100판.</p>
+<p>평지에서 발이 자유롭게 흔들릴 때의 최고 높이다. 100 에피소드.</p>
 <div class="tw"><table><thead><tr><th>다리</th><th>스윙 최고 (평균)</th></tr></thead><tbody><tr><td><b>앞왼 FL</b></td><td><b>3.18 cm</b></td></tr><tr><td><b>앞오른 FR</b></td><td><b>3.25 cm</b></td></tr><tr><td>뒤왼 RL</td><td>2.53 cm</td></tr><tr><td>뒤오른 RR</td><td>2.57 cm</td></tr></tbody></table></div>
 <p><b>33.5 cm 를 들 수 있는데 3.25 cm 를 든다. 열 배 차이다.</b></p>
 </section>
@@ -902,17 +902,17 @@ body>*{flex-shrink:0}
 <p><b>그래서 최소한으로 든다.</b> 이 보상 아래에서 그것이 최적이라고 보지만 <span class="ev ev-guess">추측</span>, 보상을 바꿔 학습을 다시 돌려 본 것은 아니다.</p>
 </section>
 <section id="s5"><span id="5"></span><h2>5. 밀려난 가설들</h2>
-<div class="tw"><table><thead><tr><th>가설</th><th>판정</th></tr></thead><tbody><tr><td>무조코에 관절 각도 제어가 없다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 정책이 명령하는 것 자체가 12개 관절 각도다 (<code>목표각 = 기본자세 + 0.25 x 행동</code>). 두 엔진이 같은 식을 쓴다</td></tr><tr><td>무조코 쪽 관절이 14 cm 에서 막힌다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 위 2절</td></tr><tr><td>행동 스케일 0.25 가 발 높이를 5 cm 로 묶는다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 타일 1,500판의 행동 크기가 <b>중앙 6.76 · 최대 11.6</b> 이라 스케일이 천장이 아니다</td></tr><tr><td>보행 위상(발 딛는 박자)이 성패를 가른다</td><td><b>기각</b> <span class="ev ev-ok">확인됨</span>. 아래 6절</td></tr><tr><td>아이작심은 22 cm 계단을 오른다</td><td><b>근거 없음</b> <span class="ev ev-todo">미확인</span>. 「5~23 cm」는 지형 생성기가 만들 수 있는 <b>학습 범위</b>이지 통과 실적이 아니다. 팀이 아이작심에서 계단 통과율을 잰 적이 없다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>가설</th><th>판정</th></tr></thead><tbody><tr><td>무조코에 관절 각도 제어가 없다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 정책이 명령하는 것 자체가 12개 관절 각도다 (<code>목표각 = 기본자세 + 0.25 x 행동</code>). 두 엔진이 같은 식을 쓴다</td></tr><tr><td>무조코 쪽 관절이 14 cm 에서 막힌다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 위 2절</td></tr><tr><td>행동 스케일 0.25 가 발 높이를 5 cm 로 묶는다</td><td><b>틀림</b> <span class="ev ev-ok">확인됨</span>. 타일 1,500 에피소드의 행동 크기가 <b>중앙 6.76 · 최대 11.6</b> 이라 스케일이 천장이 아니다</td></tr><tr><td>보행 위상(발 딛는 박자)이 성패를 가른다</td><td><b>기각</b> <span class="ev ev-ok">확인됨</span>. 아래 6절</td></tr><tr><td>아이작심은 22 cm 계단을 오른다</td><td><b>근거 없음</b> <span class="ev ev-todo">미확인</span>. 「5~23 cm」는 지형 생성기가 만들 수 있는 <b>학습 범위</b>이지 통과 실적이 아니다. 팀이 아이작심에서 계단 통과율을 잰 적이 없다</td></tr></tbody></table></div>
 </section>
 <section id="s6"><span id="6"></span><h2>6. 보행 위상 가설은 서지 않는다</h2>
-<p>멘토가 「5~6 cm 에서 되살아나는 것은 보행 위상 탓」이라는 가설을 세웠다. <b>첫 턱 접촉 순간의 앞발 높이</b>를 1,500판 전부 기록해 성공과 실패로 갈랐다.</p>
-<p><b>양쪽 표본이 각 20판 이상인 칸만 본다.</b> 한쪽이 3판뿐인 칸은 비교가 안 된다.</p>
+<p>멘토가 「5~6 cm 에서 되살아나는 것은 보행 위상 탓」이라는 가설을 세웠다. <b>첫 턱 접촉 순간의 앞발 높이</b>를 1,500 에피소드 전부 기록해 성공과 실패로 갈랐다.</p>
+<p><b>양쪽 표본이 각 20 에피소드 이상인 칸만 본다.</b> 한쪽이 3 에피소드뿐인 칸은 비교가 안 된다.</p>
 <div class="tw"><table><thead><tr><th>턱 높이</th><th>성공 앞발 높이</th><th>n</th><th>실패 앞발 높이</th><th>n</th><th>t</th><th>뜬 발 (성공/실패)</th></tr></thead><tbody><tr><td>11 cm</td><td>7.82 cm</td><td>79</td><td>9.01 cm</td><td>21</td><td>-0.87</td><td>1.67 / 2.00</td></tr><tr><td>12 cm</td><td>9.52 cm</td><td>68</td><td>10.33 cm</td><td>32</td><td>-0.67</td><td>1.87 / 1.91</td></tr><tr><td>12.5 cm</td><td>10.78 cm</td><td>63</td><td>10.18 cm</td><td>37</td><td>+0.52</td><td>2.00 / 1.97</td></tr><tr><td>13 cm</td><td>10.98 cm</td><td>39</td><td>10.70 cm</td><td>61</td><td>+0.24</td><td>2.00 / 2.03</td></tr><tr><td>13.5 cm</td><td>11.72 cm</td><td>23</td><td>10.56 cm</td><td>77</td><td>+0.90</td><td>2.04 / 2.00</td></tr><tr><td><b>합계</b></td><td><b>9.71 cm</b></td><td><b>272</b></td><td><b>10.36 cm</b></td><td><b>228</b></td><td><b>-1.27</b></td><td></td></tr></tbody></table></div>
 <p><b>다섯 칸 어디에서도 유의하지 않다.</b> <code>|t|</code> 가 전부 1 아래이고 합쳐도 <b>-1.27</b> 로 5% 기준(1.96)을 못 넘는다. <b>부호도 갈린다</b> (11·12 cm 는 실패가 높고 12.5~13.5 cm 는 성공이 높다).</p>
 <p><b>공중에 뜬 발 개수도 같다.</b> 어느 칸에서도 0.35개 안쪽 차이다.</p>
 <p><b>보행 위상은 성패를 가르지 않는다.</b></p>
 <blockquote><p><b>표현에 주의.</b> 「값이 같다」가 아니라 <b>「차이가 통계적으로 유의하지 않다」</b>다.
-표본이 더 커지면 작은 차이가 드러날 수 있다. 다만 지금 500판으로도
+표본이 더 커지면 작은 차이가 드러날 수 있다. 다만 지금 500 에피소드로도
 <b>실패를 설명할 만한 크기의 차이는 없다.</b></p></blockquote>
 </section>
 <section id="s7"><span id="7"></span><h2>7. 왜 계단은 되고 이 턱은 안 되나</h2>
@@ -930,7 +930,7 @@ body>*{flex-shrink:0}
 <p><b>둘이 짝으로 보인다</b> <span class="ev ev-guess">추측</span>. 범위만 좁히면 발 높이에 점수가 없으니 여전히 안 들 것이고, 보상만 넣으면 난이도 칸 열 중 일곱이 낭비된 채로 남는다. <b>둘 다 학습을 돌려야 확인된다</b> <span class="ev ev-todo">미측정</span>.</p>
 </section>
 <section id="s9"><span id="9"></span><h2>9. 확인 현황</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>밴드 10.5~15 cm · 열다섯 칸 · 1,500판</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>스윙 3.25 cm · 100판</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>관절 한계와 역기구학 33.5 cm</td><td><span class="ev ev-ok">확인됨</span>. 몸통 고정 · 발을 몸통 아래 두는 조건</td></tr><tr><td>아이작심 대조 (평지 33%)</td><td><span class="ev ev-ok">확인됨</span>. 팀장 실측 <code>#99</code></td></tr><tr><td><b>험지에서 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr><tr><td>보상 11항목</td><td><span class="ev ev-ok">확인됨</span>. IsaacLab 소스 원문</td></tr><tr><td>위상 차이가 유의하지 않음</td><td><span class="ev ev-ok">확인됨</span>. 다섯 칸 · 성공 272판 대 실패 228판 · t = -1.27</td></tr><tr><td>학습 지형 6종에 레일즈 없음</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td><code>lin_vel_z_l2</code> 가 발 높이를 누른다</td><td><b><span class="ev ev-guess">추측</span>.</b> 따로 검증하지 않았다</td></tr><tr><td>발 높이 보상을 넣으면 실제로 오르나</td><td><b><span class="ev ev-todo">미측정</span>.</b> 학습을 돌려야 안다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>상태</th></tr></thead><tbody><tr><td>밴드 10.5~15 cm · 열다섯 칸 · 1,500 에피소드</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>스윙 3.25 cm · 100 에피소드</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td>관절 한계와 역기구학 33.5 cm</td><td><span class="ev ev-ok">확인됨</span>. 몸통 고정 · 발을 몸통 아래 두는 조건</td></tr><tr><td>아이작심 대조 (평지 33%)</td><td><span class="ev ev-ok">확인됨</span>. 팀장 실측 <code>#99</code></td></tr><tr><td><b>험지에서 두 엔진이 같은가</b></td><td><b><span class="ev ev-todo">미측정</span>.</b> 대조가 없다</td></tr><tr><td>보상 11항목</td><td><span class="ev ev-ok">확인됨</span>. IsaacLab 소스 원문</td></tr><tr><td>위상 차이가 유의하지 않음</td><td><span class="ev ev-ok">확인됨</span>. 다섯 칸 · 성공 272 에피소드 대 실패 228 에피소드 · t = -1.27</td></tr><tr><td>학습 지형 6종에 레일즈 없음</td><td><span class="ev ev-ok">확인됨</span></td></tr><tr><td><code>lin_vel_z_l2</code> 가 발 높이를 누른다</td><td><b><span class="ev ev-guess">추측</span>.</b> 따로 검증하지 않았다</td></tr><tr><td>발 높이 보상을 넣으면 실제로 오르나</td><td><b><span class="ev ev-todo">미측정</span>.</b> 학습을 돌려야 안다</td></tr></tbody></table></div>
 <p><b>평지에서는 두 엔진이 같은 답을 낸다</b> <span class="ev ev-ok">확인됨</span>. 같은 체크포인트 · 같은 판정 (10 m 통과선 5 cm · 초당 1.0 m · 20초)으로 재면 <b>아이작심 33%</b> [24.6, 42.7] · <b>무조코 26.9%</b> [19.3, 36.2] 로 신뢰구간이 겹친다 (아이작심 값은 팀장 실측 · <code>#99</code> 2026-09-03).</p>
 <p><b>험지에서도 같은지는 아직 모른다</b> <span class="ev ev-todo">미측정</span>. 같은 체크포인트로 험지를 두 엔진에서 잰 대조가 없다. <b>그래서 이 문서의 통과율 절대값은 아이작심 값이 아니다.</b> 확실한 것은 <b>경계의 위치와 원인 진단</b>이다.</p>
 </section>
@@ -976,7 +976,7 @@ body>*{flex-shrink:0}
 <p><b>한 번 조용히 실패했다.</b> <code>ISAACLAB_NUCLEUS_DIR</code> 이 <code>None</code> 이라 경로가 <code>None/Isaac/...</code> 가 됐는데 <b>종료코드는 0</b> 이었고 결과 파일도 생겼다. 관절 0개가 담긴 채로. 스크립트가 관절 수를 세어 0 이면 죽게 고쳤다.</p>
 </section>
 <section id="s12"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v1.4</td><td>2026-09-08</td><td>11절의 「뒷다리 비대칭은 실제 하드웨어」를 정정했다. 공식 사양표와 URDF 는 네 다리에 단일 범위를 쓰고, 아이작 USD 만 폭이 같은 채 60도 밀려 있다. 영점 표기 차이로 보인다</td><td>제원 조사 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/311">#311</a></td></tr><tr><td>v1.3</td><td>2026-09-07</td><td>11절을 더했다. 아이작 USD 로 관절 한계를 다시 재어 31.0 / 30.1 cm 를 얻었고 무조코 33.5 와 7% 안에서 일치하는 것을 확인했다. soft_joint_pos_limit_factor 가 제약이 아니라는 것과 flat_orientation_l2 가 꺼져 있다는 것을 더했다. 상태를 확정으로 올렸다</td><td>실측 (오흥재)</td></tr><tr><td>v1.2</td><td>2026-09-03</td><td>오류 셋을 고쳤다. ① 「36% 대 98%」는 정책이 달라 성립하지 않는다 (무조코 쪽이 flat45) ② 63.7 cm 를 조건 명시한 33.5 cm 로 ③ 행동 크기 4.4 를 6.76 으로</td><td>원자료 재검산</td></tr><tr><td>v1.1</td><td>2026-09-03</td><td>밴드 안 다섯 칸을 더 재 열다섯 칸이 됐다. 위상 검정을 표본 500판으로 다시 했다</td><td>실측</td></tr><tr><td>v1.0</td><td>2026-09-03</td><td>처음 씀</td><td></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v1.4</td><td>2026-09-08</td><td>11절의 「뒷다리 비대칭은 실제 하드웨어」를 정정했다. 공식 사양표와 URDF 는 네 다리에 단일 범위를 쓰고, 아이작 USD 만 폭이 같은 채 60도 밀려 있다. 영점 표기 차이로 보인다</td><td>제원 조사 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/311">#311</a></td></tr><tr><td>v1.3</td><td>2026-09-07</td><td>11절을 더했다. 아이작 USD 로 관절 한계를 다시 재어 31.0 / 30.1 cm 를 얻었고 무조코 33.5 와 7% 안에서 일치하는 것을 확인했다. soft_joint_pos_limit_factor 가 제약이 아니라는 것과 flat_orientation_l2 가 꺼져 있다는 것을 더했다. 상태를 확정으로 올렸다</td><td>실측 (오흥재)</td></tr><tr><td>v1.2</td><td>2026-09-03</td><td>오류 셋을 고쳤다. ① 「36% 대 98%」는 정책이 달라 성립하지 않는다 (무조코 쪽이 flat45) ② 63.7 cm 를 조건 명시한 33.5 cm 로 ③ 행동 크기 4.4 를 6.76 으로</td><td>원자료 재검산</td></tr><tr><td>v1.1</td><td>2026-09-03</td><td>밴드 안 다섯 칸을 더 재 열다섯 칸이 됐다. 위상 검정을 표본 500 에피소드로 다시 했다</td><td>실측</td></tr><tr><td>v1.0</td><td>2026-09-03</td><td>처음 씀</td><td></td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1016,5 +1016,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkviecyy7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -90,9 +90,9 @@
   "ver": "v1.0"
  },
  "docs/DECISIONS.md": {
-  "hash": "7d89e43baaa369e4",
+  "hash": "c1f7233efe2cf003",
   "major": "v2.1",
-  "ver": "v2.1"
+  "ver": "v2.2"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "202fc314bcbfdd7d",
+  "hash": "2d8e461ef03d1155",
   "major": "v2.1",
-  "ver": "v2.1"
+  "ver": "v2.4"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -190,14 +190,14 @@
   "ver": "v1.0"
  },
  "docs/decisions/20260830-hub-v3.md": {
-  "hash": "b02c77f3d4f972fd",
+  "hash": "940606929d06e620",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/decisions/20260912-research-hub-redesign.md": {
-  "hash": "3846c7077e0cd6b6",
+  "hash": "107f07b8ad1ca12e",
   "major": "v3.0",
-  "ver": "v3.0"
+  "ver": "v3.1"
  },
  "docs/digest/2026-W33.md": {
   "hash": "1b39d75aa1e56114",
@@ -215,9 +215,9 @@
   "ver": ""
  },
  "docs/digest/2026-W36-material.md": {
-  "hash": "ab2adfc58a85b48b",
+  "hash": "5493e51be5afa1c3",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/digest/2026-W36.md": {
   "hash": "9c85870c1613ed49",
@@ -225,9 +225,9 @@
   "ver": ""
  },
  "docs/digest/2026-W37-material.md": {
-  "hash": "df693830d115057a",
+  "hash": "a90ad26d49205322",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/digest/2026-W37.md": {
   "hash": "7c9ee2243c83eefe",
@@ -300,9 +300,9 @@
   "ver": ""
  },
  "docs/meetings/20260902-park-mentoring.md": {
-  "hash": "8d6cdfd338054f9e",
+  "hash": "913b7ae24f80ef00",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/meetings/20260904-east-midterm-review.md": {
   "hash": "f7fc5da990c2b6fe",
@@ -420,9 +420,9 @@
   "ver": ""
  },
  "docs/ops/screen-review-log.md": {
-  "hash": "d0c54ee11dd1f44c",
+  "hash": "17be253908f42340",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/research/20260903-default-1500iter-terrain-analysis.md": {
   "hash": "ac075e39d1af3d3f",
@@ -430,14 +430,14 @@
   "ver": "v1.0"
  },
  "docs/research/20260903-rails-isaac-sweep-design.md": {
-  "hash": "c459562f42671efa",
+  "hash": "de230ac7e97cd51a",
   "major": "v1.2",
-  "ver": "v1.2"
+  "ver": "v1.3"
  },
  "docs/research/20260903-render-blackframe.md": {
-  "hash": "f3ee252ca756b3de",
+  "hash": "230cbecf4748c5e8",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/20260904-rail-reward-literature.md": {
   "hash": "199f516120c424f3",
@@ -445,9 +445,9 @@
   "ver": "v1.0"
  },
  "docs/research/20260906-rails-speed-tracking-diagnosis.md": {
-  "hash": "3938e4d2b82d076c",
+  "hash": "125c61cd722cc70b",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/research/20260907-go2-joint-limits.md": {
   "hash": "d1d5f186404bf65a",
@@ -460,29 +460,29 @@
   "ver": "v1.1"
  },
  "docs/research/20260908-pit-diagnosis.md": {
-  "hash": "be2605491ea1e430",
+  "hash": "61c76a7a1f9c4518",
   "major": "v4.0",
-  "ver": "v4.0"
+  "ver": "v4.1"
  },
  "docs/research/20260908-success-criteria-anatomy.md": {
-  "hash": "4b8a9594888373f0",
+  "hash": "6486055dd6a1718a",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/20260909-eval-harness-diagram.md": {
-  "hash": "a7ad8751a5a418e9",
+  "hash": "a04417fc4e4ce0b4",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/20260909-head-contact-observation.md": {
-  "hash": "d59301549721ac5c",
+  "hash": "74788910b693b33c",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/20260911-eval-protocol-v2.md": {
-  "hash": "8da63a3a2a3174ed",
+  "hash": "0c3c226a6b5a5b72",
   "major": "v2.0",
-  "ver": "v2.3"
+  "ver": "v2.4"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",
@@ -515,9 +515,9 @@
   "ver": "v2.0"
  },
  "docs/research/flat-straight-baseline-10m.md": {
-  "hash": "c7716edbbd0f8b93",
+  "hash": "2b4343bcedad2505",
   "major": "v2.7",
-  "ver": "v2.7"
+  "ver": "v2.8"
  },
  "docs/research/generalization-benchmark-10-terrains.md": {
   "hash": "f9d5246390e409e3",
@@ -545,9 +545,9 @@
   "ver": "v1.0"
  },
  "docs/research/parkour-ablation-대조분석.md": {
-  "hash": "b6cafc2bbbda2501",
+  "hash": "bb94b04115275fb2",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/research/pretrained-vs-model99-7terrain.md": {
   "hash": "5bfaf38007a5844d",
@@ -555,9 +555,9 @@
   "ver": "v1.0"
  },
  "docs/research/rails-diagnosis.md": {
-  "hash": "a2ba6f2e9fe97a5b",
+  "hash": "4fe359aca0cdac56",
   "major": "v1.4",
-  "ver": "v1.4"
+  "ver": "v1.5"
  },
  "docs/research/render-benchmarks.md": {
   "hash": "0d5f08e6e1d5d8d1",
@@ -590,9 +590,9 @@
   "ver": "v1.0"
  },
  "docs/research/terrain-finetune-plan.md": {
-  "hash": "c3c74c17fc44a872",
+  "hash": "c5c6684837763121",
   "major": "v2.2",
-  "ver": "v2.2"
+  "ver": "v2.3"
  },
  "docs/research/terrain-guide-isaaclab.md": {
   "hash": "d9bf9db39933a7bc",
@@ -610,9 +610,9 @@
   "ver": "v1.0"
  },
  "docs/research/visual-evidence.md": {
-  "hash": "2ffec4b3562f3ecc",
+  "hash": "dd54b3244ccaf190",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/발보상-시간아니고높이아님.md": {
   "hash": "a2d7ceb94969b8ea",
@@ -620,9 +620,9 @@
   "ver": "v1.6"
  },
  "docs/research/직진성-외부표준.md": {
-  "hash": "efe704d65447bd88",
+  "hash": "ed10e8b990a75bba",
   "major": "v2.22",
-  "ver": "v2.22"
+  "ver": "v2.23"
  },
  "docs/research/평가하네스-수정본.md": {
   "hash": "8154bc2c668ab4bb",

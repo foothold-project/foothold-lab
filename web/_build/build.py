@@ -1008,6 +1008,22 @@ if __name__ == '__main__':
     # ★ 2026-09-14 신설. 도해 «안» 에서 글자가 겹치는지 본다.
     #   팀장이 「글씨 겹침」을 지적했고 실제로 두 도해가 겹쳐 있었다. 그중
     #   하나는 같은 그림의 옛 사본이라 한쪽만 고쳐져 있었다. 눈으로는 못 잡는다.
+    print('[3.474] 도해 여백 검사 (viewBox 가 실측 기준과 같은가)')
+    sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
+    import svg_pad
+    if not svg_pad._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    if not svg_pad.check(os.path.join(HERE, '..', '..', 'docs', 'assets', 'visual')):
+        print('  [!] 도해 여백이 기준과 다릅니다. 배포를 중단합니다.')
+        print('      `python tools/svg_pad.py --write docs/assets/visual` 로 맞춥니다')
+        sys.exit(1)
+
+    print('[3.475] 영상 규격 검사 (썸네일 · 폰 재생 속성)')
+    import videocheck
+    if not videocheck.main(SITE):
+        print('  [!] 영상 규격이 어긋납니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('\n[3.48] 도해 글자 검사 (겹침 · 틀 밖)')
     import svgtext
     if not svgtext.main(VAULT):
