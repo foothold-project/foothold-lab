@@ -212,6 +212,33 @@ def checks(out, bad):
                    '· min-content 를 한 글자로 무너뜨려 「100」이 1/0/0 이 됩니다'
                    % (len(ow), ' · '.join(ow[:2])))
 
+    # 아무 쪽에도 안 걸린 도해. ★ 2026-09-14 site 세션이 잡았다.
+    #   나는 «폴더에 21장» 이라 했고 그쪽은 «쪽에 걸린 것 14장» 이라 했다.
+    #   세어 보니 그쪽이 맞았다. 1부의 중복 그림을 안내 줄로 바꾸면서 옛 이름
+    #   파일 일곱이 고아가 됐다. **지우지 않는다** (아티팩트 등에서 직접 링크했을
+    #   수 있다). 대신 이름을 대서 다음 사람이 판단하게 한다. 세지 않으면 계속
+    #   늘어나고, 늘어난 뒤에는 어느 게 진짜인지 아무도 모른다.
+    n += 1
+    vis = os.path.join(out, 'assets', 'visual')
+    if os.path.isdir(vis):
+        ref = set()
+        for f in sorted(os.listdir(out)):
+            if not f.endswith('.html'):
+                continue
+            t = re.sub(r'(?s)<style\b.*?</style>|<script\b.*?</script>', ' ',
+                       read(out, f) or '')
+            # ★ 파일 이름이 «글자로» 적힌 것을 참조로 세면 안 된다.
+            #   다이제스트 재료의 «새 문서 목록» 이 경로를 코드로 적어 두는데,
+            #   느슨하게 세면 그것 때문에 고아가 0장으로 나온다. 실제로 그랬다.
+            #   `src`/`href` 속성 안의 것만 센다.
+            ref |= {m.group(1) for m in
+                    re.finditer(r'(?:src|href)="[^"?]*?([\w.-]+\.svg)', t)}
+        orphan = [f for f in sorted(os.listdir(vis))
+                  if f.endswith('.svg') and f not in ref]
+        if orphan:
+            print('      [참고] 아무 쪽에도 안 걸린 도해 %d장: %s'
+                  % (len(orphan), ' '.join(orphan[:8])))
+
     # 파비콘. ★ 2026-09-14 팀장 확인 요청: 「파비콘 없어진 거 아니지?」
     #   한 장만 보면 안 된다. **전수** 로 세고, 가리키는 파일이 실제로 있는지와
     #   그 파일이 «그림인지» 까지 본다. 빈 SVG 도 링크는 멀쩡해 보인다.
