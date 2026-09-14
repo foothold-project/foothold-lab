@@ -189,7 +189,7 @@ A에서는 **둘 다 뚜렷하다** = 시킨 대로 가고 있다.
 |---|---|
 | 정책 | **A 정책** (회색 절차생성 험지에서 학습한 것) |
 | 씬 | `Environments/Simple_Warehouse/warehouse.usd`: **학습에 쓴 적 없는 씬** |
-| 스크립트 | `C:\isaac\IsaacLab\play_go2_in_usd.py` (NVIDIA 공식 튜토리얼의 Go2판) |
+| 스크립트 | `C:\isaac\IsaacLab\play_go2_in_usd.py` (NVIDIA 공식 튜토리얼의 Go2 에피소드) |
 | 소요 | 1.78분 (400 스텝 = 8초) |
 
 ![회색 험지에서 학습한 정책이 창고 씬에서 걷는다](../assets/video/usdscene_warehouse.mp4)
