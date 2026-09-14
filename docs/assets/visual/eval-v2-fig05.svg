@@ -15,7 +15,7 @@
 <text x="27.0" y="132.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="32.0" y1="90.0" x2="216.0" y2="90.0" stroke="var(--rule-2)"/>
 <text x="27.0" y="93.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="32.0,148.5 52.4,162.5 72.9,164.1 93.3,166.4 113.8,167.2 134.2,168.0 154.7,168.0 175.1,168.0 195.6,168.0 216.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,148.5 52.4,162.5 72.9,164.1 93.3,166.4 113.8,167.2 134.2,168.0 154.7,168.0 175.1,168.0 195.6,168.0 216.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="148.5" r="2.2" fill="var(--ink-3)"/>
 <circle cx="52.4" cy="162.5" r="2.2" fill="var(--ink-3)"/>
 <circle cx="72.9" cy="164.1" r="2.2" fill="var(--ink-3)"/>
@@ -26,7 +26,7 @@
 <circle cx="175.1" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="195.6" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="216.0" cy="168.0" r="2.2" fill="var(--ink-3)"/>
-<polyline points="32.0,90.0 52.4,90.0 72.9,90.0 93.3,106.4 113.8,146.2 134.2,161.8 154.7,168.0 175.1,168.0 195.6,168.0 216.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,90.0 52.4,90.0 72.9,90.0 93.3,106.4 113.8,146.2 134.2,161.8 154.7,168.0 175.1,168.0 195.6,168.0 216.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="52.4" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="72.9" cy="90.0" r="2.2" fill="var(--warn)"/>
@@ -61,7 +61,7 @@
 <text x="275.0" y="132.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="280.0" y1="90.0" x2="464.0" y2="90.0" stroke="var(--rule-2)"/>
 <text x="275.0" y="93.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="280.0,104.8 300.4,122.8 320.9,149.3 341.3,161.0 361.8,166.4 382.2,168.0 402.7,167.2 423.1,168.0 443.6,168.0 464.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,104.8 300.4,122.8 320.9,149.3 341.3,161.0 361.8,166.4 382.2,168.0 402.7,167.2 423.1,168.0 443.6,168.0 464.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="104.8" r="2.2" fill="var(--ink-3)"/>
 <circle cx="300.4" cy="122.8" r="2.2" fill="var(--ink-3)"/>
 <circle cx="320.9" cy="149.3" r="2.2" fill="var(--ink-3)"/>
@@ -72,7 +72,7 @@
 <circle cx="423.1" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="443.6" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="464.0" cy="168.0" r="2.2" fill="var(--ink-3)"/>
-<polyline points="280.0,90.0 300.4,90.0 320.9,90.0 341.3,90.0 361.8,90.0 382.2,90.0 402.7,90.0 423.1,92.3 443.6,116.5 464.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,90.0 300.4,90.0 320.9,90.0 341.3,90.0 361.8,90.0 382.2,90.0 402.7,90.0 423.1,92.3 443.6,116.5 464.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="300.4" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="320.9" cy="90.0" r="2.2" fill="var(--warn)"/>
@@ -107,7 +107,7 @@
 <text x="523.0" y="132.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="528.0" y1="90.0" x2="712.0" y2="90.0" stroke="var(--rule-2)"/>
 <text x="523.0" y="93.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="528.0,168.0 548.4,168.0 568.9,168.0 589.3,168.0 609.8,168.0 630.2,168.0 650.7,167.2 671.1,164.1 691.6,165.7 712.0,164.1" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="528.0,168.0 548.4,168.0 568.9,168.0 589.3,168.0 609.8,168.0 630.2,168.0 650.7,167.2 671.1,164.1 691.6,165.7 712.0,164.1" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="528.0" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="548.4" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="568.9" cy="168.0" r="2.2" fill="var(--ink-3)"/>
@@ -118,7 +118,7 @@
 <circle cx="671.1" cy="164.1" r="2.2" fill="var(--ink-3)"/>
 <circle cx="691.6" cy="165.7" r="2.2" fill="var(--ink-3)"/>
 <circle cx="712.0" cy="164.1" r="2.2" fill="var(--ink-3)"/>
-<polyline points="528.0,168.0 548.4,168.0 568.9,143.8 589.3,108.7 609.8,93.1 630.2,90.0 650.7,90.0 671.1,90.0 691.6,90.0 712.0,90.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="528.0,168.0 548.4,168.0 568.9,143.8 589.3,108.7 609.8,93.1 630.2,90.0 650.7,90.0 671.1,90.0 691.6,90.0 712.0,90.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="528.0" cy="168.0" r="2.2" fill="var(--warn)"/>
 <circle cx="548.4" cy="168.0" r="2.2" fill="var(--warn)"/>
 <circle cx="568.9" cy="143.8" r="2.2" fill="var(--warn)"/>
@@ -153,7 +153,7 @@
 <text x="771.0" y="132.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="776.0" y1="90.0" x2="960.0" y2="90.0" stroke="var(--rule-2)"/>
 <text x="771.0" y="93.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="776.0,96.2 796.4,115.0 816.9,139.9 837.3,161.0 857.8,161.8 878.2,167.2 898.7,168.0 919.1,168.0 939.6,168.0 960.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="776.0,96.2 796.4,115.0 816.9,139.9 837.3,161.0 857.8,161.8 878.2,167.2 898.7,168.0 919.1,168.0 939.6,168.0 960.0,168.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="776.0" cy="96.2" r="2.2" fill="var(--ink-3)"/>
 <circle cx="796.4" cy="115.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="816.9" cy="139.9" r="2.2" fill="var(--ink-3)"/>
@@ -164,7 +164,7 @@
 <circle cx="919.1" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="939.6" cy="168.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="960.0" cy="168.0" r="2.2" fill="var(--ink-3)"/>
-<polyline points="776.0,90.0 796.4,90.0 816.9,96.2 837.3,122.0 857.8,135.2 878.2,159.4 898.7,166.4 919.1,167.2 939.6,168.0 960.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="776.0,90.0 796.4,90.0 816.9,96.2 837.3,122.0 857.8,135.2 878.2,159.4 898.7,166.4 919.1,167.2 939.6,168.0 960.0,168.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="776.0" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="796.4" cy="90.0" r="2.2" fill="var(--warn)"/>
 <circle cx="816.9" cy="96.2" r="2.2" fill="var(--warn)"/>
@@ -199,7 +199,7 @@
 <text x="27.0" y="320.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="32.0" y1="278.0" x2="216.0" y2="278.0" stroke="var(--rule-2)"/>
 <text x="27.0" y="281.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="32.0,310.8 52.4,356.0 72.9,356.0 93.3,356.0 113.8,356.0 134.2,356.0 154.7,356.0 175.1,356.0 195.6,356.0 216.0,356.0" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,310.8 52.4,356.0 72.9,356.0 93.3,356.0 113.8,356.0 134.2,356.0 154.7,356.0 175.1,356.0 195.6,356.0 216.0,356.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="310.8" r="2.2" fill="var(--ink-3)"/>
 <circle cx="52.4" cy="356.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="72.9" cy="356.0" r="2.2" fill="var(--ink-3)"/>
@@ -210,7 +210,7 @@
 <circle cx="175.1" cy="356.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="195.6" cy="356.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="216.0" cy="356.0" r="2.2" fill="var(--ink-3)"/>
-<polyline points="32.0,287.4 52.4,356.0 72.9,356.0 93.3,356.0 113.8,356.0 134.2,356.0 154.7,356.0 175.1,356.0 195.6,356.0 216.0,356.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,287.4 52.4,356.0 72.9,356.0 93.3,356.0 113.8,356.0 134.2,356.0 154.7,356.0 175.1,356.0 195.6,356.0 216.0,356.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="287.4" r="2.2" fill="var(--warn)"/>
 <circle cx="52.4" cy="356.0" r="2.2" fill="var(--warn)"/>
 <circle cx="72.9" cy="356.0" r="2.2" fill="var(--warn)"/>
@@ -245,7 +245,7 @@
 <text x="275.0" y="320.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="280.0" y1="278.0" x2="464.0" y2="278.0" stroke="var(--rule-2)"/>
 <text x="275.0" y="281.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="280.0,278.0 300.4,278.0 320.9,278.0 341.3,278.0 361.8,282.7 382.2,281.1 402.7,293.6 423.1,308.4 443.6,315.4 464.0,332.6" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,278.0 300.4,278.0 320.9,278.0 341.3,278.0 361.8,282.7 382.2,281.1 402.7,293.6 423.1,308.4 443.6,315.4 464.0,332.6" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="300.4" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="320.9" cy="278.0" r="2.2" fill="var(--ink-3)"/>
@@ -256,7 +256,7 @@
 <circle cx="423.1" cy="308.4" r="2.2" fill="var(--ink-3)"/>
 <circle cx="443.6" cy="315.4" r="2.2" fill="var(--ink-3)"/>
 <circle cx="464.0" cy="332.6" r="2.2" fill="var(--ink-3)"/>
-<polyline points="280.0,278.0 300.4,278.0 320.9,278.0 341.3,278.0 361.8,278.0 382.2,278.0 402.7,278.0 423.1,278.0 443.6,278.0 464.0,285.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,278.0 300.4,278.0 320.9,278.0 341.3,278.0 361.8,278.0 382.2,278.0 402.7,278.0 423.1,278.0 443.6,278.0 464.0,285.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="300.4" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="320.9" cy="278.0" r="2.2" fill="var(--warn)"/>
@@ -291,7 +291,7 @@
 <text x="523.0" y="320.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="528.0" y1="278.0" x2="712.0" y2="278.0" stroke="var(--rule-2)"/>
 <text x="523.0" y="281.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="528.0,278.0 548.4,278.0 568.9,278.0 589.3,278.0 609.8,278.0 630.2,281.9 650.7,288.1 671.1,295.2 691.6,309.2 712.0,310.0" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="528.0,278.0 548.4,278.0 568.9,278.0 589.3,278.0 609.8,278.0 630.2,281.9 650.7,288.1 671.1,295.2 691.6,309.2 712.0,310.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="528.0" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="548.4" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="568.9" cy="278.0" r="2.2" fill="var(--ink-3)"/>
@@ -302,7 +302,7 @@
 <circle cx="671.1" cy="295.2" r="2.2" fill="var(--ink-3)"/>
 <circle cx="691.6" cy="309.2" r="2.2" fill="var(--ink-3)"/>
 <circle cx="712.0" cy="310.0" r="2.2" fill="var(--ink-3)"/>
-<polyline points="528.0,278.0 548.4,278.0 568.9,278.0 589.3,278.0 609.8,278.0 630.2,278.0 650.7,278.0 671.1,278.0 691.6,278.0 712.0,278.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="528.0,278.0 548.4,278.0 568.9,278.0 589.3,278.0 609.8,278.0 630.2,278.0 650.7,278.0 671.1,278.0 691.6,278.0 712.0,278.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="528.0" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="548.4" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="568.9" cy="278.0" r="2.2" fill="var(--warn)"/>
@@ -337,7 +337,7 @@
 <text x="771.0" y="320.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="776.0" y1="278.0" x2="960.0" y2="278.0" stroke="var(--rule-2)"/>
 <text x="771.0" y="281.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="776.0,278.0 796.4,278.0 816.9,278.0 837.3,278.0 857.8,278.0 878.2,278.8 898.7,280.3 919.1,283.5 939.6,281.1 960.0,292.8" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="776.0,278.0 796.4,278.0 816.9,278.0 837.3,278.0 857.8,278.0 878.2,278.8 898.7,280.3 919.1,283.5 939.6,281.1 960.0,292.8" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="776.0" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="796.4" cy="278.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="816.9" cy="278.0" r="2.2" fill="var(--ink-3)"/>
@@ -348,7 +348,7 @@
 <circle cx="919.1" cy="283.5" r="2.2" fill="var(--ink-3)"/>
 <circle cx="939.6" cy="281.1" r="2.2" fill="var(--ink-3)"/>
 <circle cx="960.0" cy="292.8" r="2.2" fill="var(--ink-3)"/>
-<polyline points="776.0,278.0 796.4,278.0 816.9,278.0 837.3,278.0 857.8,278.0 878.2,278.0 898.7,278.0 919.1,280.3 939.6,278.8 960.0,278.8" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="776.0,278.0 796.4,278.0 816.9,278.0 837.3,278.0 857.8,278.0 878.2,278.0 898.7,278.0 919.1,280.3 939.6,278.8 960.0,278.8" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="776.0" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="796.4" cy="278.0" r="2.2" fill="var(--warn)"/>
 <circle cx="816.9" cy="278.0" r="2.2" fill="var(--warn)"/>
@@ -383,7 +383,7 @@
 <text x="27.0" y="508.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="32.0" y1="466.0" x2="216.0" y2="466.0" stroke="var(--rule-2)"/>
 <text x="27.0" y="469.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="32.0,466.0 52.4,466.0 72.9,466.0 93.3,466.0 113.8,466.0 134.2,469.9 154.7,466.0 175.1,466.0 195.6,471.5 216.0,467.6" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,466.0 52.4,466.0 72.9,466.0 93.3,466.0 113.8,466.0 134.2,469.9 154.7,466.0 175.1,466.0 195.6,471.5 216.0,467.6" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="52.4" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="72.9" cy="466.0" r="2.2" fill="var(--ink-3)"/>
@@ -394,7 +394,7 @@
 <circle cx="175.1" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="195.6" cy="471.5" r="2.2" fill="var(--ink-3)"/>
 <circle cx="216.0" cy="467.6" r="2.2" fill="var(--ink-3)"/>
-<polyline points="32.0,466.0 52.4,466.0 72.9,466.0 93.3,466.0 113.8,466.0 134.2,466.0 154.7,466.0 175.1,466.0 195.6,466.0 216.0,466.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="32.0,466.0 52.4,466.0 72.9,466.0 93.3,466.0 113.8,466.0 134.2,466.0 154.7,466.0 175.1,466.0 195.6,466.0 216.0,466.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="32.0" cy="466.0" r="2.2" fill="var(--warn)"/>
 <circle cx="52.4" cy="466.0" r="2.2" fill="var(--warn)"/>
 <circle cx="72.9" cy="466.0" r="2.2" fill="var(--warn)"/>
@@ -429,7 +429,7 @@
 <text x="275.0" y="508.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</text>
 <line x1="280.0" y1="466.0" x2="464.0" y2="466.0" stroke="var(--rule-2)"/>
 <text x="275.0" y="469.5" font-size="8.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</text>
-<polyline points="280.0,466.0 300.4,466.0 320.9,466.0 341.3,466.0 361.8,466.0 382.2,466.0 402.7,466.0 423.1,466.0 443.6,466.8 464.0,467.6" fill="none" stroke="var(--ink-3)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,466.0 300.4,466.0 320.9,466.0 341.3,466.0 361.8,466.0 382.2,466.0 402.7,466.0 423.1,466.0 443.6,466.8 464.0,467.6" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="300.4" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="320.9" cy="466.0" r="2.2" fill="var(--ink-3)"/>
@@ -440,7 +440,7 @@
 <circle cx="423.1" cy="466.0" r="2.2" fill="var(--ink-3)"/>
 <circle cx="443.6" cy="466.8" r="2.2" fill="var(--ink-3)"/>
 <circle cx="464.0" cy="467.6" r="2.2" fill="var(--ink-3)"/>
-<polyline points="280.0,466.0 300.4,466.0 320.9,466.0 341.3,466.0 361.8,466.0 382.2,466.0 402.7,466.0 423.1,466.0 443.6,466.0 464.0,466.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="280.0,466.0 300.4,466.0 320.9,466.0 341.3,466.0 361.8,466.0 382.2,466.0 402.7,466.0 423.1,466.0 443.6,466.0 464.0,466.0" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="280.0" cy="466.0" r="2.2" fill="var(--warn)"/>
 <circle cx="300.4" cy="466.0" r="2.2" fill="var(--warn)"/>
 <circle cx="320.9" cy="466.0" r="2.2" fill="var(--warn)"/>
@@ -467,9 +467,9 @@
 <text x="402.7" y="557.0" font-size="8.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.7</text>
 <text x="464.0" y="557.0" font-size="8.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">1.0</text>
 <text x="362.0" y="565.0" font-size="9" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">난이도</text>
-<line x1="0" y1="610" x2="30" y2="610" stroke="var(--ink-3)" stroke-width="1.7" stroke-linecap="round"/>
+<line x1="0" y1="610" x2="30" y2="610" stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round"/>
 <text x="38.0" y="614.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">기준선 · NVIDIA</text>
-<line x1="210" y1="610" x2="240" y2="610" stroke="var(--warn)" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="210" y1="610" x2="240" y2="610" stroke="var(--warn)" stroke-width="2" stroke-linecap="round"/>
 <text x="248.0" y="614.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">A · 연습 틈 0.20 m</text>
 <line x1="420" y1="610" x2="450" y2="610" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round"/>
 <text x="458.0" y="614.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">B · 연습 틈 0.40 m</text>

@@ -20,6 +20,7 @@
 """
 import argparse
 import ast
+import re
 import csv
 import io
 import json
@@ -113,19 +114,148 @@ FUNCTION = {
 DROPPED = {'rough-terrain-study-plan'}      # 상태가 «폐기» · 허브에 안 낸다
 
 
-def check_functions():
-    """배정이 빠진 문서를 찾는다. **빠지면 실패한다.**
+def resolved_functions():
+    """문서 전수의 입구를 «정해서» 돌려준다. 손 배정 + 자동 규칙.
 
-    새 연구 문서를 올렸는데 입구를 안 정하면 허브에서 «어느 서랍에도»
-    안 들어간다. 조용히 사라지는데 아무도 모른다. 그래서 센다.
+    자동 규칙(`door_of`)이 먼저 일하고 FUNCTION 은 그것이 틀렸을 때만
+    끼어든다. 그래서 새 문서를 올려도 사람이 코드를 고칠 일이 없다.
+    """
+    out, auto = {}, []
+    d = os.path.join(LAB, 'docs', 'research')
+    for stem in research_docs():
+        if stem in DROPPED:
+            continue
+        p = os.path.join(d, stem + '.md')
+        try:
+            txt = io.open(p, encoding='utf-8', errors='replace').read()
+        except OSError:
+            txt = ''
+        key = door_of(p, txt)
+        if key:
+            out[stem] = key
+            if stem not in FUNCTION:
+                auto.append((stem, key))
+    # 연구 폴더 밖(결정 문서 등)에 배정된 것도 그대로 싣는다
+    for stem, key in FUNCTION.items():
+        out.setdefault(stem, key)
+    return out, auto
+
+
+def check_functions():
+    """입구가 «끝내» 안 정해진 문서를 찾는다. **있으면 실패한다.**
+
+    ★ 2026-09-14 에 뜻이 바뀌었다. 전에는 FUNCTION 에 손으로 안 적힌 것을
+      전부 실패로 셌다. 그러면 팀원이 문서를 올릴 때마다 빌드가 서고 내가
+      코드를 고쳐야 한다. 그건 자동화가 아니라 사람을 관문으로 쓴 것이다.
+
+      이제는 자동 규칙이 먼저 정하고, 그것도 못 정한 것만 센다. 못 정하는
+      경우는 머리 여섯 줄의 «분류:» 가 없고 제목에도 단서가 없을 때다.
+      그때는 문서를 고치는 것이 맞다(`AGENTS.md` 문서 표준).
     """
     docs = set(research_docs()) - DROPPED
-    miss = sorted(docs - set(FUNCTION))
+    got, _auto = resolved_functions()
+    miss = sorted(d for d in docs if not got.get(d))
     ghost = sorted(k for k in FUNCTION
                    if k not in docs and not os.path.isfile(
                        os.path.join(LAB, 'docs', 'decisions', k + '.md')))
     return miss, ghost
 
+
+# 분류(머리 여섯 줄의 «분류:») -> 입구. 새 문서가 올라오면 이것으로 «저절로»
+# 정해진다. FUNCTION 에 손으로 적는 것은 **이 자동 규칙이 틀렸을 때만** 이다.
+#
+# ★ 2026-09-14. 이것이 없으면 팀원이 문서를 올릴 때마다 빌드가 서고 사람이
+#   코드를 고쳐야 했다. 그건 자동화가 아니다. 시험으로 확인했다 ·
+#   새 문서 하나를 넣자 「배정 없음」으로 관문이 섰다.
+KIND_DOOR = {
+    '실험': 'result',
+    '리서치': 'survey',
+    '조사': 'survey',
+    '계획': 'plan',
+    '결정': 'plan',
+    '가이드': 'protocol',
+    '운영': 'tooling',
+    '현장': 'diagnosis',
+    '회의록': 'plan',
+}
+
+# 제목·요지에 이 말이 있으면 그 입구가 «분류보다» 먼저다. 진단 문서가
+# 「분류: 실험」으로 올라오는 일이 잦다.
+TITLE_DOOR = [
+    ('diagnosis', ('진단', '왜 실패', '원인', '분석')),
+    ('protocol', ('프로토콜', '재현', '평가 기준', '하네스')),
+    ('plan', ('계획', '설계', '로드맵')),
+    ('tooling', ('설치', '구축', '환경', '운영')),
+]
+
+
+def door_of(path, text):
+    """문서 하나의 입구를 정한다. 우선순위가 있다.
+
+      1. 머리말의 «입구:» 선언        사람이 정한 것이 언제나 이긴다
+      2. FUNCTION 손 배정             자동이 틀렸을 때 바로잡는 자리
+      3. 제목·요지의 낱말
+      4. 머리말의 «분류:»
+      5. 그래도 모르면 '' (관문이 잡는다)
+    """
+    head = text[:1200]
+    m = re.search(r'^>\s*입구:\s*([a-z]+)\s*$', head, re.M)
+    if m and m.group(1) in {g[0] for g in GROUPS}:
+        return m.group(1)
+
+    stem = os.path.splitext(os.path.basename(path))[0]
+    if stem in FUNCTION:
+        return FUNCTION[stem]
+
+    title = ''
+    h1 = re.search(r'^#\s+(.+)$', head, re.M)
+    if h1:
+        title += h1.group(1)
+    gist = re.search(r'^>\s*요지:\s*(.+)$', head, re.M)
+    if gist:
+        title += ' ' + gist.group(1)
+    for key, words in TITLE_DOOR:
+        if any(w in title for w in words):
+            return key
+
+    kind = re.search(r'^>\s*분류:\s*(\S+)', head, re.M)
+    if kind:
+        return KIND_DOOR.get(kind.group(1), '')
+    return ''
+
+
+def _door_selftest():
+    """알려진 답으로 배정 규칙을 시험한다 (원칙 1).
+
+    이 규칙은 정규식과 우선순위로 되어 있어 **조용히** 틀린다. 실제로
+    단어 경계 기호가 제어문자로 박혀 규칙 하나가 한 번도 안 돈 적이 있다.
+    그래서 쓰기 전에 내가 답을 아는 입력으로 한 번 돌린다.
+    """
+    def d(*lines):
+        return chr(10).join(lines) + chr(10)
+
+    cases = [
+        ('a.md', d('# 왜 pit 에서 실패하나', '', '> 분류: 실험',
+                   '> 요지: 원인을 본다'),
+         'diagnosis', '제목이 분류를 이긴다'),
+        ('b.md', d('# 클라우드 GPU 비교', '', '> 분류: 리서치',
+                   '> 요지: 값과 성능'),
+         'survey', '분류로 정한다'),
+        ('c.md', d('# 무엇', '', '> 분류: 실험', '> 입구: tooling',
+                   '> 요지: 아무거나'),
+         'tooling', '문서 선언이 전부를 이긴다'),
+        ('d.md', d('# 학습 성능 실측', '', '> 분류: 실험',
+                   '> 요지: 몇 %가 나왔나'),
+         'result', '분류 실험은 실측'),
+        ('e.md', d('# 아무말', '', '> 요지: 단서 없음'),
+         '', '못 정하면 빈 값 · 관문이 잡는다'),
+    ]
+    for name, txt, want, why in cases:
+        got = door_of(name, txt)
+        if got != want:
+            return False, '%s -> %s (기대 %s · %s)' % (
+                name, got or '없음', want or '없음', why)
+    return True, '%d칸' % len(cases)
 
 def research_docs():
     """docs/research 의 문서 이름 전수. 배정이 빠진 것을 찾으려고 센다."""
@@ -366,7 +496,7 @@ def build():
         }],
         'groups': [{'key': k, 'name': n, 'hint': h}
                    for k, n, h in GROUPS],
-        'function': dict(FUNCTION),
+        'function': resolved_functions()[0],
         'releases': read_releases(),
     }
 
@@ -435,7 +565,14 @@ def main():
         raise SystemExit(1)
 
     print('  문서 판단 %d건 · 근거가 둘 다 있는 것 %d건' % (n, n_reason))
-    print('  입구 %d개 · 배정 %d개 · 누락 0' % (len(GROUPS), len(FUNCTION)))
+    ok, why = _door_selftest()
+    if not ok:
+        print('  [!] 입구 배정 자기시험 실패: %s' % why)
+        return False
+    got_fn, auto_fn = resolved_functions()
+    print('  입구 %d개 · 배정 %d개(손 %d · 자동 %d) · 누락 0 · 자기시험 %s'
+          % (len(GROUPS), len(got_fn), len(got_fn) - len(auto_fn),
+             len(auto_fn), why))
     print('  지형 %d · 단계 %d · 이름표 %d · 실측 %d · 배포 %d'
           % (len(cat['terrain_meta']), len(cat['stages']),
              len(cat['gh_names']), len(cat['measurements']),

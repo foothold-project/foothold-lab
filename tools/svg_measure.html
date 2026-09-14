@@ -1,0 +1,102 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>도해 실측 · getBBox</title>
+<!-- 분류: 운영 · 작성: 오흥재 · 2026-09-14 · 상태: 확정
+     쓰는 법: 배포본을 로컬로 띄운 뒤
+       /tools/svg_measure.html?f=/assets/visual/a.svg&f=/assets/visual/b.svg
+     빌드 관문(web/_build/svgtext.py)은 글자 폭을 «어림» 한다.
+     이 쪽은 브라우저 getBBox 라 정확하다. 관문이 걸리면 여기서 확인한다. -->
+<style>body{font:13px system-ui;margin:0;padding:12px}#out{white-space:pre;font:12px monospace}</style>
+<div id="host" style="width:992px"></div>
+<div id="out">재는 중…</div>
+<script>
+/* 잴 도해 목록. 주소에 ?f=... 로 준다. 없으면 assets/visual 의 eval-v2 전부.
+ * 목록을 파일에 박으면 새 도해가 생겼을 때 조용히 안 재게 된다. 그 부류로
+ * 이미 당했다 (주입기가 11개짜리 고정 배열이라 70여 장을 건너뜀). */
+window.__FILES = new URLSearchParams(location.search).getAll('f');
+</script>
+<script>
+/* 도해를 «하나씩 인라인으로» 띄워 실제 글자 상자를 잰다.
+ *
+ * <img> 로 띄우면 안쪽을 못 본다. 인라인으로 넣어야 getBBox 가 돈다.
+ * 본문(126천자 · 표 69개)을 같이 띄우면 브라우저가 얼어붙어서 여기서는
+ * 도해만 띄운다. 실제로 두 번 얼었다. */
+const FILES = window.__FILES || [];
+const host = document.getElementById('host');
+const out = document.getElementById('out');
+
+function boxesOverlap(a, b) {
+  /* 2px 이내로 스치는 것은 겹침으로 안 센다. 글자 상자는 여백을 조금 물고 있다. */
+  const pad = 2;
+  return !(a.x + a.width - pad <= b.x || b.x + b.width - pad <= a.x ||
+           a.y + a.height - pad <= b.y || b.y + b.height - pad <= a.y);
+}
+
+async function run() {
+  const lines = [];
+  window.__ERR = null;
+  for (const f of FILES) {
+    let txt;
+    try { txt = await (await fetch(f)).text(); }
+    catch (e) { lines.push(f + '  [못 읽음]'); continue; }
+    host.innerHTML = txt;
+    const svg = host.querySelector('svg');
+    if (!svg) { lines.push(f + '  [svg 아님]'); continue; }
+    await new Promise(r => setTimeout(r, 30));  /* rAF 는 이 탭에서 안 돈다 */
+
+    const vb = (svg.getAttribute('viewBox') || '').trim().split(/\s+/).map(Number);
+    const texts = [...svg.querySelectorAll('text')];
+    const boxes = texts.map(t => {
+      let b; try { b = t.getBBox(); } catch (e) { b = null; }
+      return b ? {x: b.x, y: b.y, width: b.width, height: b.height,
+                  s: (t.textContent || '').trim().slice(0, 18)} : null;
+    }).filter(Boolean);
+
+    /* 1. 글자끼리 겹치나 */
+    const hits = [];
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++)
+        if (boxesOverlap(boxes[i], boxes[j])) hits.push(boxes[i].s + ' / ' + boxes[j].s);
+
+    /* 2. viewBox 밖으로 나간 것 */
+    let outside = 0, worst = 0;
+    if (vb.length === 4) {
+      [...svg.querySelectorAll('text,rect,path,line,circle,polyline,polygon')].forEach(el => {
+        let b; try { b = el.getBBox(); } catch (e) { return; }
+        if (!b || (b.width === 0 && b.height === 0)) return;
+        const over = Math.max(vb[0] - b.x, b.x + b.width - (vb[0] + vb[2]),
+                              vb[1] - b.y, b.y + b.height - (vb[1] + vb[3]));
+        if (over > 1) { outside++; worst = Math.max(worst, over); }
+      });
+    }
+
+    /* 3. 테두리 굵기가 몇 가지인가 (제각각이면 «border 가 다르다») */
+    const widths = new Set();
+    [...svg.querySelectorAll('rect,line,path,polyline')].forEach(el => {
+      const w = getComputedStyle(el).strokeWidth;
+      const col = getComputedStyle(el).stroke;
+      if (col && col !== 'none' && w) widths.add(parseFloat(w).toFixed(2));
+    });
+
+    /* 4. 검정으로 떨어진 글자 (토큰 못 받은 자리) */
+    let black = 0;
+    texts.forEach(t => {
+      const c = getComputedStyle(t).fill;
+      if (c === 'rgb(0, 0, 0)') black++;
+    });
+
+    lines.push([f.split('/').pop(),
+      'viewBox ' + (vb.length === 4 ? vb[2] + 'x' + vb[3] : '없음'),
+      'text ' + texts.length,
+      '겹침 ' + hits.length + (hits.length ? ' [' + hits.slice(0, 2).join(' | ') + ']' : ''),
+      '밖으로 ' + outside + (outside ? ' (최대 ' + worst.toFixed(0) + ')' : ''),
+      '선굵기 ' + [...widths].sort().join(',') ,
+      '순검정글자 ' + black
+    ].join('  ·  '));
+  }
+  out.textContent = lines.join('\n');
+  window.__DONE = true;
+}
+run().catch(e => { window.__ERR = String(e); window.__DONE = true;
+  out.textContent = '터짐: ' + e; });
+</script>

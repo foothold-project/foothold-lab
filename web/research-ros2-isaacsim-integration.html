@@ -220,6 +220,16 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
@@ -485,7 +495,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -703,7 +713,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -821,7 +831,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
@@ -854,14 +864,14 @@ body>*{flex-shrink:0}
 </section>
 <section id="s4"><h2>✅ 회수 완료: 원 출처 (2026-08-09, WS 세션)</h2>
 <h3>참조한 글</h3>
-<p><b>블로그</b>: &lt;https://slow-motionn.tistory.com/205&gt;</p>
+<p><b>블로그</b>: <a href="https://slow-motionn.tistory.com/205" target="_blank" rel="noopener">https://slow-motionn.tistory.com/205</a></p>
 <p>원문 요지 그대로:</p>
 <blockquote><p><i>&quot;Isaac Sim 5.1.0: Python 3.11 based (built-in) vs. ROS 2 Humble: Python 3.10 based (Ubuntu 22.04 default)&quot;</i>
 둘을 한 환경에 강제로 넣으면 <b>패키지가 깨지고 런타임 오류</b>가 난다.</p></blockquote>
 <p>글쓴이는 개별 오류를 하나씩 잡는 대신 <b>컨테이너 격리로 통째로 우회</b>했다. 헤드리스 렌더링 · Fast DDS 설정 · rosdep 의존성 · GPU/Vulkan 접근을 미리 구운 이미지로 자동화했다고 밝힌다.</p>
 <p>⚠️ <b>그 글에는 GPU 모델·구체적 에러 메시지·CUDA/torch 버전이 없다.</b> <i>예방적 아키텍처</i>에 대한 글이지 사후 디버깅 기록이 아니다. 즉 <b>&quot;이렇게 하면 안 겪는다&quot;는 알지만 &quot;안 하면 정확히 뭐가 터지는지&quot;는 그 글로 알 수 없다.</b></p>
 <h3>구현 저장소</h3>
-<p><b>&lt;https://github.com/hms-gymnopedie/IsaacSim_Setting&gt;</b></p>
+<p><b><a href="https://github.com/hms-gymnopedie/IsaacSim_Setting" target="_blank" rel="noopener">https://github.com/hms-gymnopedie/IsaacSim_Setting</a></b></p>
 <div class="tw"><table><thead><tr><th>컨테이너</th><th>베이스 이미지</th><th>담는 것</th></tr></thead><tbody><tr><td><b>IsaacSim_Pegasus</b></td><td><code>nvidia/cuda:12.4.1-devel-ubuntu22.04</code></td><td>Isaac Sim 5.1.0 스탠드얼론 · <b>Vulkan/X11</b>(헤드리스용 EGL 기반 Vulkan ICD) · PX4-Autopilot v1.14.3 · Pegasus Simulator</td></tr><tr><td><b>ROS 2 Humble</b></td><td><code>osrf/ros:humble-desktop</code></td><td>colcon · rosdep · Isaac Sim ROS 워크스페이스 · <code>humble_ws</code> 빌드 · <b>Fast DDS 설정</b>(<code>fastdds.xml</code>, <code>ROS_DOMAIN_ID=0</code>)</td></tr></tbody></table></div>
 <p><b>통신</b>: 두 컨테이너 모두 <b><code>--net=host</code></b> 로 호스트 네트워크 공유 → <i>&quot;ROS 2 DDS 통신이 즉시 작동하며 추가 설정이 필요 없다&quot;</i></p>
 <h3>★ 우리와 다른 점: 우리가 더 유리하다</h3>
@@ -915,5 +925,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

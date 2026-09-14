@@ -220,6 +220,16 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
@@ -485,7 +495,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -703,7 +713,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -821,7 +831,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="on" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
@@ -849,7 +859,7 @@ body>*{flex-shrink:0}
 것이다.</p></blockquote>
 </section>
 <section id="s2"><span id="1"></span><h2>1. 종합 성공은 네 축의 AND</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-four-axes.svg?v=a36cda4e" alt="네 축 AND 판정 구조" loading="lazy"><figcaption>네 축 AND 판정 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-four-axes.svg?v=6b7cd805" alt="네 축 AND 판정 구조" loading="lazy"><figcaption>네 축 AND 판정 구조</figcaption></figure></p>
 <p>성공은 <b>하나의 점수가 아니라 네 개의 통과·탈락</b>이고, 넷을 AND 로 묶는다.</p>
 <div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="c"># sim/eval/metrics.py:344</span>
 <span class="k">def</span> <span class="f">overall_success</span>(survival, progress, tracking, direction):
@@ -869,7 +879,7 @@ gate_progress_m=min_progress,</pre></div>
 <p><b>셋째, 관측 열은 AND 밖이다.</b> <code>peak_lateral_drift_m</code>(경로 전체의 최대 좌우 이탈) · <code>lateral_drift_m</code>(끝점 이탈) · 머리 접촉 셋은 CSV 에 남지만 판정에 안 들어간다. 통과선 판정으로 옮긴 뒤로 <b>끝점 이탈은 판정에서 관측으로 내려왔다.</b></p>
 </section>
 <section id="s3"><span id="2"></span><h2>2. 실패 사유는 둘뿐이다</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-termination.svg?v=2859d4cf" alt="실패 사유 열이 둘뿐인 구조" loading="lazy"><figcaption>실패 사유 열이 둘뿐인 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-termination.svg?v=21555732" alt="실패 사유 열이 둘뿐인 구조" loading="lazy"><figcaption>실패 사유 열이 둘뿐인 구조</figcaption></figure></p>
 <div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="c"># sim/eval/metrics.py:349</span>
 <span class="k">def</span> <span class="f">termination_reason</span>(timed_out):
     <span class="s">&quot;&quot;&quot;종료 사유. 스냅샷 537~541행.&quot;&quot;&quot;</span>
@@ -892,7 +902,7 @@ gate_progress_m=min_progress,</pre></div>
 <p>그리고 이것이 <b>앞으로 터질 자리</b>다. 종료 조건을 하나라도 더하는 순간 새 사유로 끝난 판이 전부 <code>&quot;base_contact&quot;</code> 로 기록되고 <b>오류는 나지 않는다.</b> 커널 철칙의 「조용한 실패」 그대로다. 라이다 접촉을 종료 조건으로 올리자는 제안을 검토할 때 <code>termination_reason</code> 을 함께 고치는 비용이 계산에 들어가야 한다.</p>
 </section>
 <section id="s4"><span id="3"></span><h2>3. 방향 판정이 「끝점」에서 「통과선」으로 바뀌었다</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-direction-gate.svg?v=e9792c83" alt="방향 판정을 끝점에서 통과선으로 옮긴 구조" loading="lazy"><figcaption>방향 판정을 끝점에서 통과선으로 옮긴 구조</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-direction-gate.svg?v=6a37c190" alt="방향 판정을 끝점에서 통과선으로 옮긴 구조" loading="lazy"><figcaption>방향 판정을 끝점에서 통과선으로 옮긴 구조</figcaption></figure></p>
 <p>원장 09-09 행이 정본이다.</p>
 <blockquote><p><b>좌우 이탈은 «통과선»에서 판정한다.</b> 09-02 의 「끝점 판정」을 대체한다.
 멘토 기준 「목표점 도달 시 좌우 5 cm」는 <b>평지 전제</b>다. 험지에서는 통과선을
@@ -924,7 +934,7 @@ gate_progress_m=min_progress,</pre></div>
 (원장 09-09 행).</p></blockquote>
 </section>
 <section id="s5"><span id="4"></span><h2>4. 지형 10종과, 평지를 뺀 자리</h2>
-<p><figure class="mdimg"><img src="assets/visual/eval-harness-terrains.svg?v=0341eee0" alt="평가 지형 10종의 구성과 평지 제외" loading="lazy"><figcaption>평가 지형 10종의 구성과 평지 제외</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-harness-terrains.svg?v=838c5272" alt="평가 지형 10종의 구성과 평지 제외" loading="lazy"><figcaption>평가 지형 10종의 구성과 평지 제외</figcaption></figure></p>
 <p>이름과 순서는 <code>sim/eval/terrains.py:15~26</code>, 값은 <code>sim/eval/generalization_env_cfg.py:57~164</code> 에서 읽었다.</p>
 <div class="tw"><table><thead><tr><th>#</th><th>이름</th><th>무엇을 흔드나</th></tr></thead><tbody><tr><td>0</td><td><code>discrete_obstacles</code></td><td>장애물 35개 · 높이 0.05~0.16 m · 폭 0.4~1.0 m</td></tr><tr><td>1</td><td><code>wave</code></td><td>파형 4개 · 진폭 0.03~0.12 m</td></tr><tr><td>2</td><td><code>stepping_stones</code></td><td>돌 폭 0.35~0.65 m · 간격 0.08~0.20 m · 최대 높이 0.12 m</td></tr><tr><td>3</td><td><code>gap</code></td><td>틈 폭 0.15~0.40 m</td></tr><tr><td>4</td><td><code>pit</code></td><td>깊이 0.10~0.30 m · <code>double_pit</code> 없음</td></tr><tr><td>5</td><td><code>rails</code></td><td>두께 0.08~0.18 m · 높이 0.05~0.18 m</td></tr><tr><td>6</td><td><code>star</code></td><td>막대 5개 · 폭 0.30~0.70 m · 높이 0.05~0.16 m</td></tr><tr><td>7</td><td><code>floating_ring</code></td><td>고리 폭 0.25~0.60 m · 높이 0.05~0.16 m · 두께 0.12 m</td></tr><tr><td>8</td><td><code>repeated_boxes</code></td><td>25에서 45개 · 높이 0.08~0.16 m · 크기 0.35~0.50 m</td></tr><tr><td>9</td><td><code>repeated_cylinders</code></td><td>25에서 45개 · 높이 0.08~0.16 m · 반지름 0.12~0.20 m</td></tr></tbody></table></div>
 <p><b>열 지형이 공유하는 것</b>: 타일 8.0 × 8.0 m · 격자 1행 × 10열 · 테두리 20.0 m · 난이도 고정 0.5 · 씨앗 42 · <code>platform_width</code> 전부 1.5 m · 비중 각 0.1.</p>
@@ -999,5 +1009,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

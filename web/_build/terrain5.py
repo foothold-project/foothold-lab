@@ -38,8 +38,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 REPO = 'foothold-project/foothold-lab'
-CSV_REL = os.path.join('sim', 'eval', 'results', '20260903-rough10-1.0mps',
-                       'summary-thr1.5.csv')
+# ★ 2026-09-14. 정본으로 옮겼다.
+#
+#   전에는 `20260903-rough10-1.0mps/summary-thr1.5.csv` 를 읽었다. 그것은
+#   **평가 규격 1** 의 값이다. 그 사이 정본이 규격 2 로 바뀌었는데 보드만
+#   옛 자리를 보고 있었고, 그래서 같은 허브 안에서 숫자가 갈렸다.
+#
+#     보드         rails 4% 성공 · 85% 생존 · 2.64 m
+#     벤치마크 문서  rails 8% 성공 · 82% 생존 · 2.70 m
+#
+#   읽는 사람은 어느 쪽을 믿어야 할지 모른다. **자리가 둘인데 한쪽만 고친**
+#   그 부류다. 이 저장소에서 다섯 번째다.
+CSV_REL = os.path.join('sim', 'eval', 'results', 'maindata-v1', 'baseline',
+                       'unseen10', 'd0.5', 'v1', 'generalization_summary.csv')
 
 # (이슈, key, 화면 이름, 실패형, 담당 예비값). 담당은 이슈 제목 끝 괄호에서 읽고
 # 못 읽으면 이 값을 쓴다. 실패형은 팀장 확정값이라 코드에 둔다.
@@ -278,8 +289,27 @@ def classify_text(text):
     declared = mention_set(m.get('이슈', ''))
     issues = declared or mention_set(text)
     who, when = hub3._who_when(m)
+
+    # ★ 2026-09-13 팀장 3번째 지시: 「실패 지형 파인튜닝 실행 계획」이 rails 의
+    #   «레시피» 칸에 들어가 있다. 그 문서는 rails 레시피가 아니다.
+    #
+    #   원인은 «공통» 판정이 **이슈 번호만** 세는 것이었다. 그 문서는 다섯
+    #   지형을 이름으로 전부 다루는데(gap 9 · rails 13 · stepping_stones 5 ·
+    #   pit 10 · floating_ring 7) 머리말 이슈는 `#59 #66` 뿐이라, 번호로는
+    #   rails 하나만 맞고 그 행으로 갔다. 제목에 「레시피」가 있어 그 칸에 앉았다.
+    #
+    #   고치는 길 둘을 다 넣는다. 하나만 넣으면 다음 문서가 또 샌다.
+    #     1. 문서가 «자기 자리를 선언» 할 수 있게 한다 (선언이 언제나 이긴다)
+    #     2. 선언이 없어도 다섯 지형을 이름으로 다 다루면 공통으로 본다
+    scope = (m.get('지형') or '').strip()
+    named = {k for _n, k, _ko, _f, _o, _h in TERRAINS
+             if re.search(r'(?<![A-Za-z_])%s(?![A-Za-z_])'
+                           % re.escape(k), text)}
+    common = (scope in ('공통', '전체', '다섯 지형')
+              or (not scope and len(named) == len(TERRAINS)))
+
     return {'title': title, 'issues': issues, 'stage': stage_of(title, m),
-            'who': who, 'when': when,
+            'who': who, 'when': when, 'scope': scope, 'common_by_text': common,
             'src': _SRC_MD.findall(m.get('출처', '')),
         'kind': (m.get('분류') or '').strip()}
 
@@ -324,7 +354,7 @@ def doc_records(lab):
                     'rel': rel,
                     'title': c['title'] or f,
                     'issues': hit,
-                    'common': hit == NUMS,
+                    'common': hit == NUMS or c.get('common_by_text'),
                     'href': page or ('https://github.com/%s/blob/main/%s'
                                      % (REPO, quote(rel))),
                     'published': bool(page),
@@ -518,6 +548,31 @@ def kat():
                      'pit,100,0.03,1.0,8.5,0.97,0.15,0.03,1.0,1.5687,0.1757,0.2106')
     if rows.get('pit') != {'success': 3, 'survival': 97, 'progress': 1.5687, 'n': 100}:
         return False, 'CSV 를 잘못 읽음: %s' % rows.get('pit')
+    # ★ 2026-09-14. 정본 CSV 는 열 구성이 다르다 (wilson 열이 없고 뒤에 여섯이 는다).
+    #   읽는 자리를 옮겼으니 «그 모양» 으로도 시험한다. 옛 모양만 시험하면
+    #   정본에서 열 이름이 바뀌어도 여기서는 통과한다.
+    rows = parse_csv('terrain,episodes,overall_success_rate,survival_rate,'
+                     'progress_success_rate,tracking_success_rate,'
+                     'direction_success_rate,mean_forward_progress_m,'
+                     'mean_lateral_drift_m,mean_velocity_mae_mps,'
+                     'mean_episode_duration_s,mean_fall_time_s,'
+                     'mean_reward_per_step' + n +
+                     'rails,100,0.08,0.82,0.46,0.1,0.41,2.6970,0.2,0.3,5.0,1.0,0.5')
+    if rows.get('rails') != {'success': 8, 'survival': 82, 'progress': 2.697,
+                             'n': 100}:
+        return False, '정본 CSV 모양을 잘못 읽음: %s' % rows.get('rails')
+    # 실제 정본 파일이 그 자리에 있고 그 열을 갖고 있는가 (경로만 바꾸고
+    # 파일이 없으면 보드가 조용히 빈다)
+    import docs_pages as _dp
+    for _lab in _dp.LAB_CANDIDATES:
+        _p = os.path.join(_lab, CSV_REL)
+        if os.path.isfile(_p):
+            _r = parse_csv(io.open(_p, encoding='utf-8').read())
+            if 'rails' not in _r:
+                return False, '정본 CSV 에 rails 가 없다: %s' % _p
+            break
+    else:
+        return False, '정본 CSV 를 못 찾았다: %s' % CSV_REL
     cards = [{'filled': 0, 'meas': {'progress': 0.9}},
              {'filled': 2, 'meas': {'progress': 0.5}},
              {'filled': 0, 'meas': {'progress': 1.5}},

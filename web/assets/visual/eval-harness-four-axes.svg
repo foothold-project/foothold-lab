@@ -12,7 +12,7 @@
 <text x="32" y="44" font-size="19" font-weight="700" fill="#16202c">종합 성공 = 네 축의 AND</text>
 <text x="32" y="68" font-size="12.5" fill="#5b6b7f">sim/eval/metrics.py:344 · overall_success(survival, progress, tracking, direction) · 인자가 넷이다</text>
 
-<rect x="32" y="100" width="176" height="394" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="32" y="100" width="176" height="394" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
 <text x="48" y="130" font-size="13" font-weight="600" fill="#16202c">한 판이 남기는 것</text>
 <text x="48" y="164" font-size="11.5" fill="#5b6b7f">시작·끝 평면 좌표</text>
 <text x="48" y="190" font-size="11.5" fill="#5b6b7f">경로 표본 (x, y)</text>
@@ -30,12 +30,12 @@
 <text x="48" y="436" font-size="11.5" fill="#16202c">명령속도 × 제한시간</text>
 <text x="48" y="460" font-size="11" fill="#5b6b7f">기본 20 m · 험지 6 m</text>
 
-<line x1="208" y1="297" x2="226" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="208" y1="297" x2="226" y2="297" stroke="#5b6b7f" stroke-width="1.6" marker-end="url(#ar)"/>
 
 <text x="544" y="90" font-size="10.5" fill="#5b6b7f" text-anchor="middle">기본값</text>
 <text x="629" y="90" font-size="10.5" fill="#8a6410" text-anchor="middle">험지 정본</text>
 
-<rect x="232" y="100" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="100" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
 <rect x="232" y="100" width="6" height="88" fill="#17795e"/>
 <text x="252" y="128" font-size="14" font-weight="600" fill="#16202c">1 · 생존</text>
 <text x="322" y="128" font-size="11" fill="#5b6b7f">survival_success</text>
@@ -46,7 +46,7 @@
 <rect x="590" y="116" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
 <text x="629" y="148" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">6.0 s</text>
 
-<rect x="232" y="202" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="202" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
 <rect x="232" y="202" width="6" height="88" fill="#17795e"/>
 <text x="252" y="230" font-size="14" font-weight="600" fill="#16202c">2 · 전진</text>
 <text x="322" y="230" font-size="11" fill="#5b6b7f">progress_success</text>
@@ -57,7 +57,7 @@
 <rect x="590" y="218" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
 <text x="629" y="250" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">3.0 m</text>
 
-<rect x="232" y="304" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="304" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
 <rect x="232" y="304" width="6" height="88" fill="#17795e"/>
 <text x="252" y="332" font-size="14" font-weight="600" fill="#16202c">3 · 속도추종</text>
 <text x="350" y="332" font-size="11" fill="#5b6b7f">tracking_success</text>
@@ -68,7 +68,7 @@
 <rect x="590" y="320" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
 <text x="629" y="352" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">0.25 m/s</text>
 
-<rect x="232" y="406" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.2"/>
+<rect x="232" y="406" width="452" height="88" rx="10" fill="#ffffff" stroke="#c9d3e0" stroke-width="1.6"/>
 <rect x="232" y="406" width="6" height="88" fill="#1d5fa8"/>
 <text x="252" y="434" font-size="14" font-weight="600" fill="#16202c">4 · 방향</text>
 <text x="322" y="434" font-size="11" fill="#5b6b7f">direction_success</text>
@@ -79,16 +79,16 @@
 <rect x="590" y="422" width="78" height="52" rx="8" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1"/>
 <text x="629" y="454" font-size="12" font-weight="600" fill="#16202c" text-anchor="middle">1.5 m</text>
 
-<line x1="684" y1="144" x2="706" y2="144" stroke="#5b6b7f" stroke-width="1.2"/>
-<line x1="684" y1="246" x2="706" y2="246" stroke="#5b6b7f" stroke-width="1.2"/>
-<line x1="684" y1="348" x2="706" y2="348" stroke="#5b6b7f" stroke-width="1.2"/>
-<line x1="684" y1="450" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.2"/>
-<line x1="706" y1="144" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.2"/>
-<line x1="706" y1="297" x2="724" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="684" y1="144" x2="706" y2="144" stroke="#5b6b7f" stroke-width="1.6"/>
+<line x1="684" y1="246" x2="706" y2="246" stroke="#5b6b7f" stroke-width="1.6"/>
+<line x1="684" y1="348" x2="706" y2="348" stroke="#5b6b7f" stroke-width="1.6"/>
+<line x1="684" y1="450" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.6"/>
+<line x1="706" y1="144" x2="706" y2="450" stroke="#5b6b7f" stroke-width="1.6"/>
+<line x1="706" y1="297" x2="724" y2="297" stroke="#5b6b7f" stroke-width="1.6" marker-end="url(#ar)"/>
 
 <rect x="730" y="268" width="76" height="58" rx="10" fill="#16202c"/>
 <text x="768" y="304" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">AND</text>
-<line x1="806" y1="297" x2="824" y2="297" stroke="#5b6b7f" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="806" y1="297" x2="824" y2="297" stroke="#5b6b7f" stroke-width="1.6" marker-end="url(#ar)"/>
 
 <rect x="830" y="252" width="124" height="90" rx="10" fill="#ffffff" stroke="#17795e" stroke-width="2"/>
 <text x="892" y="286" font-size="11.5" fill="#1d5fa8" text-anchor="middle">overall_success</text>
@@ -98,7 +98,7 @@
 
 <text x="232" y="520" font-size="11" fill="#8a6410">--min_progress_m 하나가 2번(전진 통과선)과 4번(방향 통과선)을 함께 움직인다</text>
 
-<rect x="32" y="542" width="922" height="86" rx="10" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1.2"/>
+<rect x="32" y="542" width="922" height="86" rx="10" fill="#fdf8ec" stroke="#e0cfa4" stroke-width="1.6"/>
 <text x="52" y="570" font-size="13" font-weight="600" fill="#8a6410">AND 밖 · 관측 전용 열 (판정에 안 들어간다)</text>
 <text x="938" y="570" font-size="11" fill="#5b6b7f" text-anchor="end">축을 더하면 성공률은 반드시 깎인다</text>
 <text x="52" y="598" font-size="11" fill="#1d5fa8">peak_lateral_drift_m</text>

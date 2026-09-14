@@ -69,23 +69,23 @@ SVG_DEPLOY = r'''<figure class="fdia" style="margin:1.4rem 0;background:var(--ca
   <text x="558" y="152" class="st" text-anchor="middle">내보내기</text>
   <text x="558" y="172" class="sm" text-anchor="middle">ONNX / TorchScript</text>
 
-  <rect x="698" y="126" width="174" height="70" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.8"/>
+  <rect x="698" y="126" width="174" height="70" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/>
   <text x="785" y="146" class="st" text-anchor="middle">Orin NX</text>
   <text x="785" y="165" class="sm" text-anchor="middle">Go2 위 컴퓨터</text>
   <text x="785" y="182" class="sm" text-anchor="middle">제어 프로그램 50Hz</text>
 
-  <path d="M188 161 L232 161" stroke="var(--dim)"  stroke-width="1.8" fill="none" marker-end="url(#pd-d)"/>
-  <path d="M418 161 L462 161" stroke="var(--dim)"  stroke-width="1.8" fill="none" marker-end="url(#pd-d)"/>
-  <path d="M648 161 L692 161" stroke="var(--dim)"  stroke-width="1.8" fill="none" marker-end="url(#pd-d)"/>
+  <path d="M188 161 L232 161" stroke="var(--dim)"  stroke-width="1.6" fill="none" marker-end="url(#pd-d)"/>
+  <path d="M418 161 L462 161" stroke="var(--dim)"  stroke-width="1.6" fill="none" marker-end="url(#pd-d)"/>
+  <path d="M648 161 L692 161" stroke="var(--dim)"  stroke-width="1.6" fill="none" marker-end="url(#pd-d)"/>
 
   <!-- 관절 명령 -->
   <rect x="698" y="228" width="174" height="56" rx="4" fill="var(--dim-soft)" stroke="var(--dim)"/>
   <text x="785" y="250" class="st" text-anchor="middle">관절 명령</text>
   <text x="785" y="269" class="sm" text-anchor="middle">Unitree SDK (DDS) 직행</text>
-  <path d="M785 196 L785 222" stroke="var(--ink-2)" stroke-width="1.8" fill="none" marker-end="url(#pd-a)"/>
+  <path d="M785 196 L785 222" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#pd-a)"/>
 
   <!-- 위층은 목표만 내려보낸다. 받는 쪽은 Orin 의 제어 프로그램이다 -->
-  <path d="M785 82 L785 120" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 4"
+  <path d="M785 82 L785 120" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="4 4"
         fill="none" marker-end="url(#pd-a)"/>
   <text x="770" y="106" class="sm" text-anchor="end">위층은 "어디로" 만 준다. "어떻게 걷나" 는 정책이 정한다</text>
 

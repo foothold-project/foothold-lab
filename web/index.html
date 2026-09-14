@@ -390,7 +390,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -726,7 +726,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <button class="pdfbtn" id="pdfBtn" type="button"
         title="브라우저 인쇄 창이 열립니다. 대상에서 &quot;PDF로 저장&quot;을 선택하세요."
         aria-label="이 문서를 PDF로 저장">
@@ -827,23 +827,23 @@ body>*{flex-shrink:0}
   }else{ start(); }
 })();
 </script>
-<div class="dday" aria-label="다음 관문까지 남은 기간과 제출물"><a class="dd-cell" href="deliverables.html"><span class="dd-name">MVP · 중간발표</span><span class="dd-num"><span class="dd-live" data-due="2026-09-30">D-17</span></span><span class="dd-sub">09월 30일 · 제출 0/2</span><span class="dd-list">일반화 평가표 · 디지털 트윈 · 렌더 시연물</span></a><a class="dd-cell" href="deliverables.html"><span class="dd-name">FINAL · 최종발표</span><span class="dd-num"><span class="dd-live dd-sec" data-due="2026-12-11">89일</span></span><span class="dd-sub">12월 11일 · 제출 0/1</span><span class="dd-list">최종 실증결과 보고서</span></a></div>
-<div class="bands3"><a class="band b-notice" data-added="2026-09-13" href="notice-latest.html"><div class="t">팀 공지</div><div class="d">지금 무엇이 바뀌었나</div></a><a class="band b-digest" href="digest-2026-W36-material.html"><span class="w">2026년 36주차</span><div class="t">주간 다이제스트</div><div class="d">이번 주에 알게 된 것</div></a><a class="band b-deliv" data-added="2026-09-13" href="deliverables.html"><div class="t">산출물 현황</div><div class="d">D-17 MVP · 중간발표 · 2장</div></a></div>
-<div class="hubs"><a class="" data-added="2026-09-13" href="hub-proposal.html"><div class="k">기획</div><div class="e">Proposal</div><div class="d">밖으로 3 · 안으로 3 · 제출 초안 0</div></a><a class="" data-added="2026-09-13" href="hub-schedule.html"><div class="k">일정</div><div class="e">Schedule</div><div class="d">D-17 MVP · 중간발표 · 걸린 2장 전부 대기</div></a><a class="" data-added="2026-09-13" href="hub-meeting.html"><div class="k">회의</div><div class="e">Meetings</div><div class="d">최근 09/04 · 심사위원이 둘을 짚었다. 점유격자 지도로는 </div></a><a class="" data-added="2026-09-13" href="hub-research.html"><div class="k">연구</div><div class="e">Research</div><div class="d">실측 22 · 조사 16 · 출발선이 맨 위</div></a><a class="" data-added="2026-09-13" href="hub-tech.html"><div class="k">기술</div><div class="e">Tech</div><div class="d">경로 7편 · 기초 4 + 트랙 A·B</div></a><a class="" data-added="2026-09-13" href="hub-pipeline.html"><div class="k">파이프라인</div><div class="e">Pipeline</div><div class="d">규칙 9장 · 합류 · 매일 · 투고</div></a></div><!--/home:v1-->
+<div class="dday" aria-label="다음 관문까지 남은 기간과 제출물"><a class="dd-cell" href="deliverables.html"><span class="dd-name">MVP · 중간발표</span><span class="dd-num"><span class="dd-live" data-due="2026-09-30">D-16</span></span><span class="dd-sub">09월 30일 · 제출 0/2</span><span class="dd-list">일반화 평가표 · 디지털 트윈 · 렌더 시연물</span></a><a class="dd-cell" href="deliverables.html"><span class="dd-name">FINAL · 최종발표</span><span class="dd-num"><span class="dd-live dd-sec" data-due="2026-12-11">88일</span></span><span class="dd-sub">12월 11일 · 제출 0/1</span><span class="dd-list">최종 실증결과 보고서</span></a></div>
+<div class="bands3"><a class="band b-notice" data-added="2026-09-14" href="notice-latest.html"><div class="t">팀 공지</div><div class="d">지금 무엇이 바뀌었나</div></a><a class="band b-digest" href="digest-2026-W36-material.html"><span class="w">2026년 36주차</span><div class="t">주간 다이제스트</div><div class="d">이번 주에 알게 된 것</div></a><a class="band b-deliv" data-added="2026-09-14" href="deliverables.html"><div class="t">산출물 현황</div><div class="d">D-16 MVP · 중간발표 · 2장</div></a></div>
+<div class="hubs"><a class="" data-added="2026-09-14" href="hub-proposal.html"><div class="k">기획</div><div class="e">Proposal</div><div class="d">밖으로 3 · 안으로 3 · 제출 초안 0</div></a><a class="" data-added="2026-09-14" href="hub-schedule.html"><div class="k">일정</div><div class="e">Schedule</div><div class="d">D-16 MVP · 중간발표 · 걸린 2장 전부 대기</div></a><a class="" data-added="2026-09-14" href="hub-meeting.html"><div class="k">회의</div><div class="e">Meetings</div><div class="d">최근 09/04 · 심사위원이 둘을 짚었다. 점유격자 지도로는 </div></a><a class="" data-added="2026-09-14" href="hub-research.html"><div class="k">연구</div><div class="e">Research</div><div class="d">실측 23 · 조사 17 · 출발선이 맨 위</div></a><a class="" href="/gallery/"><div class="k">갤러리</div><div class="e">Gallery</div><div class="d">평가 영상 144컷 · 지형과 속도별로 눈으로 보기</div></a><a class="" data-added="2026-09-14" href="hub-tech.html"><div class="k">기술</div><div class="e">Tech</div><div class="d">경로 7편 · 기초 4 + 트랙 A·B</div></a><a class="" data-added="2026-09-14" href="hub-pipeline.html"><div class="k">파이프라인</div><div class="e">Pipeline</div><div class="d">규칙 9장 · 합류 · 매일 · 투고</div></a></div><!--/home:v1-->
 
 <h2 class="sec">현재 상태 <span class="en">Status</span></h2>
 <!--status:v1-->
 <div class="status">
   <div class="st"><div class="k">기간</div><div class="v">6주차<small>전체 19주 · 2026.08 ~ 12</small></div></div>
   <div class="st"><div class="k">현 단계</div><div class="v">중간 발표 준비<small>시뮬 RL · 일반화 벤치마크</small></div></div>
-  <div class="st" style="border-left-color:var(--dim)"><div class="k">다음 마일스톤</div><div class="v">D-17<small>9/30 중간 발표</small></div></div>
+  <div class="st" style="border-left-color:var(--dim)"><div class="k">다음 마일스톤</div><div class="v">D-16<small>9/30 중간 발표</small></div></div>
   <div class="st" style="border-left-color:var(--note)"><div class="k">미결 안건</div><div class="v">6건<small>설계도 5절 · 팀이 정할 것</small></div></div>
 </div>
 <!--/status:v1-->
 <!--recent:v1-->
 <h2 class="sec">최근 올라온 것 <span class="en">Recent</span></h2>
 <p class="lede" style="margin:-2px 0 12px;font-size:.82rem;color:var(--ink-3)">종류를 가리지 않고 최근 5개. 내가 올린 것이 반영됐는지 여기서 본다.</p>
-<div class="recent"><a class="rcard" data-added="2026-09-13" href="workflow.html"><span class="rd">09/13</span><span class="rk">파이프라인</span><span class="rt">작업 흐름: 이슈에서 머지까지</span></a><a class="rcard" data-added="2026-09-13" href="tech-slam-nav.html"><span class="rd">09/13</span><span class="rk">기술</span><span class="rt">SLAM · Nav2 자율주행</span></a><a class="rcard" data-added="2026-09-13" href="tech-ros2-ref.html"><span class="rd">09/13</span><span class="rk">기술</span><span class="rt">ROS 2 기초</span></a><a class="rcard" data-added="2026-09-13" href="tech-rl.html"><span class="rd">09/13</span><span class="rk">기술</span><span class="rt">시뮬레이션 강화학습</span></a><a class="rcard" data-added="2026-09-13" href="tech-cv.html"><span class="rd">09/13</span><span class="rk">기술</span><span class="rt">컴퓨터 비전</span></a></div>
+<div class="recent"><a class="rcard" data-added="2026-09-14" href="workflow.html"><span class="rd">09/14</span><span class="rk">파이프라인</span><span class="rt">작업 흐름: 이슈에서 머지까지</span></a><a class="rcard" data-added="2026-09-14" href="tech-slam-nav.html"><span class="rd">09/14</span><span class="rk">기술</span><span class="rt">SLAM · Nav2 자율주행</span></a><a class="rcard" data-added="2026-09-14" href="tech-ros2-ref.html"><span class="rd">09/14</span><span class="rk">기술</span><span class="rt">ROS 2 기초</span></a><a class="rcard" data-added="2026-09-14" href="tech-rl.html"><span class="rd">09/14</span><span class="rk">기술</span><span class="rt">시뮬레이션 강화학습</span></a><a class="rcard" data-added="2026-09-14" href="tech-cv.html"><span class="rd">09/14</span><span class="rk">기술</span><span class="rt">컴퓨터 비전</span></a></div>
 <!--/recent:v1-->
 
 <!-- ★ 2026-09-08 감사 F-07. 팀원 개인 페이지의 «← 표지로» 가 index.html#team 을
@@ -869,5 +869,5 @@ body>*{flex-shrink:0}
 </div>
 </div>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:var(--brand);--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

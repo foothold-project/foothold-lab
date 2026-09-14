@@ -1011,12 +1011,12 @@ PY
 | `survival_success` | 평가 종료까지 생존 | 6초 timeout 도달 |
 | `progress_success` | 충분한 전진 | 3.0 m의 70%인 2.1 m 이상 |
 | `tracking_success` | 명령 속도 추종 | planar velocity MAE 0.25 m/s 이하 |
-| `direction_success` | 방향 유지 | 측면 누적 이동 0.75 m 이하 |
+| `direction_success` | 방향 유지 | 측면 끝점 이탈 0.75 m 이하 |
 | `duration_s` | 실제 지속 시간 | 최대 6초 |
-| `forward_progress_m` | 초기 전방축 누적 전진거리 | 월드 속도의 전방축 투영 적분 |
+| `forward_progress_m` | 초기 전방축 끝점 전진거리 | 시작점 대비 변위의 전방축 투영 |
 | `ideal_distance_m` | 명령 완전 추종 거리 | 0.5 m/s × 6초인 3.0 m |
 | `progress_ratio` | 이상적 거리 대비 비율 | 실제 거리 ÷ 이상적 거리 |
-| `lateral_drift_m` | 초기 측면축 누적 이탈 | 측면축 투영 적분 절댓값 |
+| `lateral_drift_m` | 초기 측면축 끝점 이탈 | 시작점 대비 변위의 측면축 투영 절댓값 |
 | `velocity_mae_mps` | 목표 planar velocity 오차 | 작을수록 우수 |
 | `mean_reward_per_step` | timestep별 평균 reward | 학습 목적 관점의 보조 지표 |
 
@@ -1588,4 +1588,5 @@ echo $?
 
 | 판 | 언제 | 무엇이 바뀌었나 | 근거 |
 |---|---|---|---|
+| **v1.1** | 2026-09-14 | **지표 표 세 칸 정정.** `direction_success` · `forward_progress_m` · `lateral_drift_m` 을 「누적·적분」이라 적었으나 코드는 셋 다 **끝점 변위**다 (`metrics.py` 150~156행 · 스냅샷 473~489행). 같은 오해가 세 칸에 퍼져 있어 함께 고쳤다 | 정정안 #149 · 코드 직접 대조 |
 | v1.0 | 2026-08-22 | 처음 씀 | 이전 이력은 git 에 |

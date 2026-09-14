@@ -68,23 +68,23 @@ SVG_PIPELINE = r"""
   <text x="279" y="76" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">10종 · 각 50에피소드</text>
   <text x="279" y="92" text-anchor="middle" font-size="10" font-weight="800" fill="var(--stop)">5종 통과 · 5종 실패</text>
   <text x="279" y="106" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">전부 아니면 전무</text>
-  <line x1="164" y1="74" x2="200" y2="74" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="164" y1="74" x2="200" y2="74" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
   <rect x="394" y="34" width="150" height="80" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
   <text x="469" y="58" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">실패 5종 파인튜닝</text>
   <text x="469" y="76" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">5인이 하나씩 레시피</text>
   <text x="469" y="92" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">혼합 단일 런으로 합침</text>
   <text x="469" y="106" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">체크포인트는 못 합친다</text>
-  <line x1="354" y1="74" x2="390" y2="74" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="354" y1="74" x2="390" y2="74" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
   <rect x="584" y="34" width="182" height="80" fill="var(--dim-soft)" stroke="var(--dim)" stroke-width="2.5"/>
   <text x="675" y="58" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">트윈 · 렌더</text>
   <text x="675" y="76" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">실공간 복원 · 3DGS</text>
   <text x="675" y="92" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">Path Tracing 시연</text>
   <text x="675" y="106" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">학습 기여도 0 · 보여주기</text>
-  <line x1="544" y1="74" x2="580" y2="74" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="544" y1="74" x2="580" y2="74" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
-  <path d="M 279 114 L 279 138 L 469 138 L 469 118" stroke="var(--dim)" stroke-width="1.8"
+  <path d="M 279 114 L 279 138 L 469 138 L 469 118" stroke="var(--dim)" stroke-width="1.6"
         stroke-dasharray="6 4" fill="none" marker-end="url(#pad)"/>
   <text x="374" y="152" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--dim)">어디서 깨지는지가 다음 학습의 지시서</text>
 
@@ -100,27 +100,27 @@ SVG_PIPELINE = r"""
   <text x="299" y="234" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">인지</text>
   <text x="299" y="252" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">LiDAR · 카메라</text>
   <text x="299" y="270" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">주변을 읽는다</text>
-  <line x1="184" y1="248" x2="220" y2="248" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="184" y1="248" x2="220" y2="248" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
   <rect x="414" y="210" width="150" height="76" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
   <text x="489" y="234" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">SLAM</text>
   <text x="489" y="252" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">지도를 만들고</text>
   <text x="489" y="270" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">자기 위치를 안다</text>
-  <line x1="374" y1="248" x2="410" y2="248" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="374" y1="248" x2="410" y2="248" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
   <rect x="604" y="210" width="162" height="76" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
   <text x="685" y="234" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">Nav2 자율주행</text>
   <text x="685" y="252" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">목적지를 주면 간다</text>
   <text x="685" y="270" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">막히면 돌아간다</text>
-  <line x1="564" y1="248" x2="600" y2="248" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#pah)"/>
+  <line x1="564" y1="248" x2="600" y2="248" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#pah)"/>
 
   <text x="99" y="304" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">우리가 보내는 것은</text>
   <text x="99" y="318" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--ink-2)">«초속 몇 미터로 어느 쪽»</text>
 
-  <rect x="224" y="330" width="542" height="42" fill="var(--note-soft)" stroke="var(--note)" stroke-width="1.8"/>
+  <rect x="224" y="330" width="542" height="42" fill="var(--note-soft)" stroke="var(--note)" stroke-width="1.6"/>
   <text x="495" y="348" text-anchor="middle" font-size="11" font-weight="800" fill="var(--note)">두 트랙이 만나는 곳</text>
   <text x="495" y="364" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">같은 험지를 시뮬과 실기로 건넌 비교 · 트윈으로 먼저 리허설한 코스</text>
-  <path d="M 675 118 L 675 200 L 675 206" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>
+  <path d="M 675 118 L 675 200 L 675 206" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="4 4" fill="none"/>
 
   <text x="14" y="392" font-size="9.5" fill="var(--ink-3)">실선 = 데이터가 흐르는 방향 · 점선 = 사람이 도는 개선 루프</text>
   <text x="500" y="392" font-size="9.5" font-weight="700" fill="var(--ink-3)">두 트랙은 서로를 기다리지 않는다</text>

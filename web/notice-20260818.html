@@ -220,6 +220,16 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
@@ -510,7 +520,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -728,7 +738,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -846,7 +856,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="on" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="on" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
@@ -864,12 +874,12 @@ body>*{flex-shrink:0}
 상태: 확정</p></blockquote>
 <p>📢 <b>GPU 서버 계정 발급 (보충): 웹에도 정리했습니다</b> (2026-08-14)</p>
 <p>방금 보낸 GPU 서버 공지의 배경과 «왜 이렇게 쓰는가» 를 웹에 올렸습니다.</p>
-<p><b>컴퓨팅 자원 계획</b> &lt;https://foothold-project.vercel.app/research-compute-resources.html&gt;</p>
+<p><b>컴퓨팅 자원 계획</b> <a href="https://foothold-project.vercel.app/research-compute-resources.html" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-compute-resources.html</a></p>
 <p>읽으면 알 수 있는 것</p>
 <ul><li>왜 학습과 평가를 다른 장비에서 돌리나 (학습 1회 133분, 하루 4~5회가 한계)</li><li>왜 이 서버에서 Isaac Sim 을 돌리지 않나 (GPU 종류가 작업을 가른다)</li><li>왜 평가에 그렇게 많은 연산이 필요한가 (한 정책당 6,000회 이상)</li><li>계정 하나를 5명이 쓰는 규율과 그 이유</li><li>붙자마자 확인할 것, 그리고 첫 작업</li></ul>
 <p><b>세부 사용 절차</b>(볼륨 → 컨테이너 → SSH → 포트)는 저장소에 있습니다: <code>foothold-lab/docs/ops/GPU-SANDBOX.md</code> §6</p>
 <p><b>계정은 여전히 #foothold-resource 에만 있습니다.</b> 웹·저장소에는 넣지 않았습니다.</p>
-<p>전체 문서 목록: &lt;https://foothold-project.vercel.app/research.html&gt;</p><style>.nl{margin:2.6rem 0 0;border-top:1px solid var(--rule);padding-top:1.1rem}.nl>h2{font-size:1rem;font-weight:800;margin:0 0 .7rem}.nl-row{display:flex;gap:.9rem;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit}.nl-row b{font-size:.78rem;font-weight:700;min-width:6.2rem;font-variant-numeric:tabular-nums}.nl-row span{font-size:.74rem;color:var(--ink-3);flex:1}.nl-row i{font-style:normal;font-size:.6rem;font-weight:800;letter-spacing:.1em;color:var(--dim)}a.nl-row:hover b{color:var(--dim)}</style><div class="nl"><h2>지난 공지 15개</h2><a class="nl-row" href="notice-20260912.html"><b>2026-09-12</b><span>foothold-v1 을 배포하고, 보고서 1차 · 갤러리 144컷 · 평가 정본을 한 벌로 냅니다</span></a><a class="nl-row" href="notice-20260902.html"><b>2026-09-02</b><span>프로젝트 웹이 v2.0.0 으로 다시 만들어졌다. 무엇이 어떻게 바뀌었나.</span></a><a class="nl-row" href="notice-20260827.html"><b>2026-08-27</b><span>8/26~27 에 바뀐 작업 방식 전부. 팀에 보내는 공지.</span></a><a class="nl-row" href="notice-20260826.html"><b>2026-08-26</b><span>팀 공통 규율 · AI 로 작업할 때 반드시 지킬 것</span></a><a class="nl-row" href="notice-20260825.html"><b>2026-08-25</b><span>📢 자동화 지도 · 프로젝트 웹에 올렸습니다 (2026-08-25)</span></a><a class="nl-row" href="notice-20260824.html"><b>2026-08-24</b><span>📢 자기소개, 각자 원하는 방식으로 (오늘 오후 3시 박철제 멘토님 미팅 전)</span></a><a class="nl-row" href="notice-20260823.html"><b>2026-08-23</b><span>📢 조선대 3주차 자료 «ROS2 Python 프로그래밍» 자료실 업로드 (2026-08-23)</span></a><a class="nl-row" href="notice-20260822.html"><b>2026-08-22</b><span>📢 인프라 가이드 2편 게시 + 월요일 준비물 (2026-08-22)</span></a><a class="nl-row" href="notice-20260820.html"><b>2026-08-20</b><span>📢 전담 현직자 멘토(제6의 멤버) 킥오프: 오늘 8/20(목) 16:00 줌 (2026-08-20</span></a><div class="nl-row nl-cur"><b>2026-08-18</b><span>📢 GPU 서버 계정 발급 (보충): 웹에도 정리했습니다 (2026-08-14)</span><i>지금 보는 공지</i></div><a class="nl-row" href="notice-20260814.html"><b>2026-08-14</b><span>📢 현장 확인: 저수준 제어가 이 프로젝트의 관문입니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260813.html"><b>2026-08-13</b><span>📢 이제 진짜로 올릴 수 있습니다: 시작 가이드 (2026-08-13)</span></a><a class="nl-row" href="notice-20260812.html"><b>2026-08-12</b><span>📢 자료 제출함(inbox)이 열렸습니다 (2026-08-12)</span></a><a class="nl-row" href="notice-20260811.html"><b>2026-08-11</b><span>📢 FOOTHOLD 공지 · 협업 시스템 오픈 + 첫 실측 결과 (2026-08-11)</span></a><a class="nl-row" href="notice-20260809.html"><b>2026-08-09</b><span>FOOTHOLD 협업 시스템 오픈</span></a></div>
+<p>전체 문서 목록: <a href="https://foothold-project.vercel.app/research.html" target="_blank" rel="noopener">https://foothold-project.vercel.app/research.html</a></p><style>.nl{margin:2.6rem 0 0;border-top:1px solid var(--rule);padding-top:1.1rem}.nl>h2{font-size:1rem;font-weight:800;margin:0 0 .7rem}.nl-row{display:flex;gap:.9rem;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit}.nl-row b{font-size:.78rem;font-weight:700;min-width:6.2rem;font-variant-numeric:tabular-nums}.nl-row span{font-size:.74rem;color:var(--ink-3);flex:1}.nl-row i{font-style:normal;font-size:.6rem;font-weight:800;letter-spacing:.1em;color:var(--dim)}a.nl-row:hover b{color:var(--dim)}</style><div class="nl"><h2>지난 공지 15개</h2><a class="nl-row" href="notice-20260912.html"><b>2026-09-12</b><span>foothold-v1 을 배포하고, 보고서 1차 · 갤러리 144컷 · 평가 정본을 한 벌로 냅니다</span></a><a class="nl-row" href="notice-20260902.html"><b>2026-09-02</b><span>프로젝트 웹이 v2.0.0 으로 다시 만들어졌다. 무엇이 어떻게 바뀌었나.</span></a><a class="nl-row" href="notice-20260827.html"><b>2026-08-27</b><span>8/26~27 에 바뀐 작업 방식 전부. 팀에 보내는 공지.</span></a><a class="nl-row" href="notice-20260826.html"><b>2026-08-26</b><span>팀 공통 규율 · AI 로 작업할 때 반드시 지킬 것</span></a><a class="nl-row" href="notice-20260825.html"><b>2026-08-25</b><span>📢 자동화 지도 · 프로젝트 웹에 올렸습니다 (2026-08-25)</span></a><a class="nl-row" href="notice-20260824.html"><b>2026-08-24</b><span>📢 자기소개, 각자 원하는 방식으로 (오늘 오후 3시 박철제 멘토님 미팅 전)</span></a><a class="nl-row" href="notice-20260823.html"><b>2026-08-23</b><span>📢 조선대 3주차 자료 «ROS2 Python 프로그래밍» 자료실 업로드 (2026-08-23)</span></a><a class="nl-row" href="notice-20260822.html"><b>2026-08-22</b><span>📢 인프라 가이드 2편 게시 + 월요일 준비물 (2026-08-22)</span></a><a class="nl-row" href="notice-20260820.html"><b>2026-08-20</b><span>📢 전담 현직자 멘토(제6의 멤버) 킥오프: 오늘 8/20(목) 16:00 줌 (2026-08-20</span></a><div class="nl-row nl-cur"><b>2026-08-18</b><span>📢 GPU 서버 계정 발급 (보충): 웹에도 정리했습니다 (2026-08-14)</span><i>지금 보는 공지</i></div><a class="nl-row" href="notice-20260814.html"><b>2026-08-14</b><span>📢 현장 확인: 저수준 제어가 이 프로젝트의 관문입니다 (2026-08-14)</span></a><a class="nl-row" href="notice-20260813.html"><b>2026-08-13</b><span>📢 이제 진짜로 올릴 수 있습니다: 시작 가이드 (2026-08-13)</span></a><a class="nl-row" href="notice-20260812.html"><b>2026-08-12</b><span>📢 자료 제출함(inbox)이 열렸습니다 (2026-08-12)</span></a><a class="nl-row" href="notice-20260811.html"><b>2026-08-11</b><span>📢 FOOTHOLD 공지 · 협업 시스템 오픈 + 첫 실측 결과 (2026-08-11)</span></a><a class="nl-row" href="notice-20260809.html"><b>2026-08-09</b><span>FOOTHOLD 협업 시스템 오픈</span></a></div>
 
 </div>
 <script>
@@ -906,5 +916,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

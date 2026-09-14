@@ -696,7 +696,16 @@ def terrain_html():
            '<p class="tkl3">칸은 이슈에 달린 문서와 코멘트가 채운다. 머리말에 '
            '「단계: 진단」 처럼 적으면 그 칸, 없으면 제목의 낱말로 고른다(「가설」은 '
            '설계). 한 칸에 셋까지 보이고 넘으면 「외 N건」. 어느 칸에도 못 간 것은 '
-           '아래 「미분류」에 그대로 있다. 채운 칸이 많은 지형이 위다.</p>']
+           '아래 「미분류」에 그대로 있다. 채운 칸이 많은 지형이 위다.</p>',
+           # ★ 2026-09-14 신설. 수치가 «어디서 온 것인가» 를 화면에 적는다.
+           #   보드가 2026-09-03(평가 규격 1) CSV 를 읽고 있었는데 그 사실이
+           #   화면 어디에도 없었다. 그래서 같은 허브 안에서 보드와 문서의
+           #   숫자가 갈렸는데도 오래 안 들켰다. 출처를 코드에서 뽑아 적으면
+           #   다음에 자리를 옮겨도 설명이 따라온다.
+           '<p class="tkl3">아래 성공률 · 생존율 · 전진 평균은 <b>%s</b> 에서 '
+           '읽는다. 정본 조건은 난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드다 '
+           '(<a href="research-20260911-eval-protocol-v2.html">평가 프로토콜 v2</a>).'
+           '</p>' % esc(t5.CSV_REL.replace(os.sep, '/'))]
     for w in notes:
         out.append('<div class="tkx3">%s</div>' % esc(w))
     for w in wide_notes:
@@ -795,10 +804,63 @@ def catalog():
     if not os.path.isfile(p):
         return {}
     try:
-        return json.load(io.open(p, encoding='utf-8'))
+        d = json.load(io.open(p, encoding='utf-8'))
     except Exception as e:
         print('  [!] 연구 원장을 못 읽었습니다: %s' % e)
         return {}
+    return _with_live_doors(d, root)
+
+
+def _with_live_doors(d, root):
+    """원장의 입구 배정을 «지금 폴더에 있는 문서» 기준으로 다시 채운다.
+
+    ★ 2026-09-14. 여기가 승격 사슬의 마지막 끊긴 칸이었다.
+
+      팀장이 `[승격 검토]` 이슈에 `/승격` 한 마디를 치면 워크플로가 문서를
+      `docs/research/` 로 옮긴다. 거기까지는 자동이다. 그런데 허브가 입구를
+      읽는 곳은 **커밋된 `research-catalog.json`** 이고, 그 파일은 빌드가
+      다시 만들지 않는다. 그래서 옮겨진 문서는 어느 입구에도 안 들어가고,
+      **팀원에게는 「PR 머지됐는데 웹에 없다」로 보인다.**
+
+      원장 생성기를 손으로 돌려야만 이어졌다. 사람을 관문으로 쓴 것이다.
+
+    규칙은 **한 곳에만** 둔다. `door_of` 를 여기에 베껴 쓰면 두 자리가 되고,
+    그 부류로 이미 네 번 당했다 (md2site/docs_pages · ia.HUBS/gnav · eg3/eh3 ·
+    docs assets/web assets). 그래서 생성기 모듈을 **불러다 쓴다.**
+
+    못 불러오면 조용히 원장 그대로 쓴다. 다른 기기·옛 체크아웃에서도 페이지는
+    나와야 한다.
+    """
+    tools = os.path.join(root, 'tools')
+    if not os.path.isdir(tools):
+        return d
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    try:
+        import build_research_catalog as _brc
+        live, auto = _brc.resolved_functions()
+    except Exception as e:
+        print('  [!] 입구 자동 배정을 못 돌렸습니다 (원장 그대로 씁니다): %s'
+              % str(e)[:70])
+        return d
+    old = d.get('function') or {}
+    if live != old:
+        added = sorted(set(live) - set(old))
+        moved = sorted(k for k in live if k in old and live[k] != old[k])
+        gone = sorted(set(old) - set(live))
+        bits = []
+        if added:
+            bits.append('새로 %d건(%s)' % (len(added), ' · '.join(added[:3])))
+        if moved:
+            bits.append('바뀜 %d건' % len(moved))
+        if gone:
+            bits.append('사라짐 %d건' % len(gone))
+        print('  원장 입구 배정이 지금과 다릅니다 · %s' % ' · '.join(bits))
+        print('    화면에는 지금 것을 씁니다. 원장 파일도 맞추려면:')
+        print('    python tools/build_research_catalog.py --write')
+    d = dict(d)
+    d['function'] = live
+    return d
 
 
 def _fn_of(rel):
@@ -1121,17 +1183,26 @@ def research_html(site):
     #   외부 자료로 묶였다. 실측 9 · 공식 12 · 코드 1 · 본인 2 · 표기미비 1.
     #   「무엇이 아니다」로 묶지 않고 «근거 종류» 로 가른다.
     #   표기가 어긋난 것은 숨기지 말고 그 이름으로 드러낸다. 그래야 고쳐진다.
-    READ_GROUPS = [('공식', '외부 자료 조사'),
-                   ('코드', '우리 코드 분석'),
-                   ('본인', '우리 노트 · 계획'),
-                   ('현장', '현장 기록'),
-                   ('전사', '회의 전사')]
+    # ★ 2026-09-13 팀장 확정: 목록을 «한 기준» 으로 묶는다.
+    #
+    #   전에는 위쪽(실측)이 여섯 입구로, 아래쪽(조사)이 «출처»(공식·코드·본인)로
+    #   묶였다. 그래서 「도구·운영」을 눌렀는데 묶음 제목이 「외부 자료 조사」로
+    #   나왔다. 클릭한 이름과 제목이 달라 읽는 사람이 멈춘다.
+    #
+    #   출처는 **카드 왼쪽 표식**(`실측`·`조사`·`코드`)에 이미 있다. 목록을
+    #   묶는 축까지 그것으로 쓸 이유가 없다. 찾는 사람이 쓰는 말은 «무슨 글인가»
+    #   이지 «어디서 났나» 가 아니다.
+    #
+    #   설계 문서의 「출처와 확실성은 다른 축」은 그대로다. 축이 다른 것과
+    #   «목록을 묶는 기준» 은 다른 문제다. 거르개는 두 축을 다 둔다.
+    cat2 = catalog()
+    READ_GROUPS = [(g['key'], g['name']) for g in (cat2.get('groups') or [])]
     known = dict(READ_GROUPS)
     bins = {}
     for d in read:
-        bins.setdefault(ev_short(d[1].get('근거')), []).append(d)
+        bins.setdefault(_fn_of(d[0]) or '', []).append(d)
     order = [(k, known[k]) for k, _ in READ_GROUPS if k in bins] + \
-            [(k, '근거 표기 미비 · %s' % k) for k in sorted(bins) if k not in known]
+            [(k, '입구가 안 정해진 것') for k in sorted(bins) if k not in known]
     for key, label in order:
         reads, _i = '', 0
         for _rel, m, page, _g in sorted(
@@ -1660,7 +1731,7 @@ CSS = '''<style id="hub3-css">
 .ht3{display:block;font-size:1.25rem;font-weight:850;letter-spacing:-.01em;
  margin:.3rem 0 .1rem;line-height:1.35;color:inherit;text-decoration:none}
 .ht3:hover{color:var(--dim)}
-.hd3{font-size:.8rem;color:var(--ink-3);max-width:70ch}
+.hd3{font-size:.8rem;color:var(--ink-3)}
 /* 첫 영역 · 「지금 어디까지 왔나」 (2026-09-13 · 목업 확정본).
    들어온 사람이 맨 처음 보는 덩이다. 수치는 원장이 실측에서 계산한다.
    PC 에서 넉 줄이 한 줄에 서고, 좁아지면 둘씩 접힌다 */
@@ -1979,7 +2050,7 @@ CSS = '''<style id="hub3-css">
 /* 「외 N건」. 잘린 것이 자기 존재를 주장하는 자리다 (#156) */
 .tkmr3{font-weight:800;color:var(--dim)!important}
 .tkmr3 b{font-size:.66rem;letter-spacing:.04em}
-.tkl3{font-size:var(--p-body);color:var(--ink-3);margin:.15rem 0 .7rem;max-width:80ch}
+.tkl3{font-size:var(--p-body);color:var(--ink-3);margin:.15rem 0 .7rem}
 .tkx3{font-size:var(--p-body);color:var(--stop);font-weight:700}
 /* 여러 지형에 똑같이 걸린 것. 경고가 아니라 «전체 사정» 이라 색을 가른다. */
 .tkall3{font-size:var(--p-body);color:var(--ink-2);border-left:3px solid var(--dim);

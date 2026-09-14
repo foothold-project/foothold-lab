@@ -27,6 +27,7 @@ BASE = 'https://foothold-project.vercel.app'
 # 팀장이 실제로 여는 쪽. 여기가 맞아야 «문제 없다» 고 말할 수 있다.
 PAGES = [
     'research-20260911-eval-protocol-v2',
+    'research-generalization-benchmark-10-terrains',
     'hub-research',
     'index.html',
     'notice-20260912',
@@ -190,6 +191,65 @@ def check_hub(t, bad):
     return n
 
 
+def check_bench(t, bad):
+    """일반화 벤치마크 문서가 «정본 판» 으로 나갔는가.
+
+    ★ 2026-09-14 신설. 이 문서를 여섯 판에 걸쳐 고쳤는데 라이브 검사 대상에
+      없었다. 가장 많이 바뀐 것이 검사 밖에 있으면 검사의 뜻이 없다.
+
+    숫자 대조는 `tools/check_doc_numbers.py` 가 원자료로 한다. 여기서는
+    **배포본이 그 판인가** 와 **고쳐 놓고 되살아나는 것** 만 본다.
+    """
+    n = 0
+    body = re.sub(r'(?s)<(script|style)\b.*?</\1>', '', t)
+    txt = re.sub(r'<[^>]+>', ' ', body)
+
+    # ★ 판 이력은 «무엇을 지웠는지» 를 설명하느라 지운 말을 인용한다.
+    #   그 줄까지 보면 고칠수록 위반이 는다. 실측: 이 검사를 만들자마자
+    #   v2.5 이력의 「정책 파일도 다르며를 지웠다」가 위반으로 잡혔다.
+    #   아래 검사는 **본문만** 본다.
+    main = txt.split('판 이력')[0]
+
+    # 머리말의 «판» 만 본다. 판 이력 표에는 옛 판 번호가 다 들어 있어서
+    # 전체를 보면 v2.0 으로 되돌려도 통과한다. 실측으로 확인했다.
+    n += 1
+    head = main.split('## 1.')[0]
+    if not re.search(r'판:\s*v2\.[6-9]|판:\s*v[3-9]\.', head):
+        bad.append('벤치마크 문서가 옛 판입니다 (머리말이 v2.6 이상이어야 합니다)')
+
+    # 물린 «주장» 이 되살아났나. 여섯 판에 걸쳐 하나씩 뺀 것들이다.
+    #
+    # ★ 낱말만 찾으면 안 된다. 본문은 「실패를 «지형 자체의 성질» 로 단정할
+    #   수도 없다」처럼 **그 말을 부정하면서** 쓴다. 낱말 검사는 그것을 위반으로
+    #   잡는다. 그래서 «단정하는 모양» 을 정규식으로 잡는다.
+    for pat, label, why in [
+            (r'같은 정책 체크포인트(?!.{0,30}(?:아니|없|미확인))',
+             '같은 정책 체크포인트', '두 측정의 정책 동일성은 미확인이다'),
+            (r'정책 파일도 다르(?!.{0,30}(?:아니|없|미확인))',
+             '정책 파일도 다르다', '다르다고도 확정할 수 없다'),
+            (r'지형 자체의 성질(?!.{0,40}(?:단정할 수도 없|단정할 수 없|아니))',
+             '지형 자체의 성질', '조건을 분리하지 못해 단정할 수 없다'),
+            (r'전진불능형 \(floating_ring · rails · pit\)',
+             '전진불능형에 rails 포함', 'rails 는 빠졌다'),
+            (r'일일 청구', '일일 청구액', '청구액은 공개 문서에 안 적는다')]:
+        n += 1
+        if re.search(pat, main):
+            bad.append('벤치마크 문서에 «%s» 가 되살아났습니다 (%s)' % (label, why))
+
+    # 실패 다섯과 통과 다섯이 다 실려 있나
+    n += 1
+    miss = [x for x in ('stepping_stones', 'gap', 'pit', 'rails', 'floating_ring',
+                        'wave', 'star', 'repeated_boxes', 'repeated_cylinders',
+                        'discrete_obstacles') if x not in txt]
+    if miss:
+        bad.append('벤치마크 문서에 빠진 지형: %s' % ' '.join(miss))
+
+    n += 1
+    if '평가 영상 갤러리' not in txt or '/gallery/' not in t:
+        bad.append('벤치마크 문서에서 갤러리로 가는 길이 없습니다')
+    return n
+
+
 def check_page(base, name, bad):
     # 배포본은 확장자 없는 주소를 쓰고(호스트가 이어 준다) 로컬 정적 서버는
     # 파일 이름 그대로다. 배포 «전» 에 같은 검사를 돌리려면 둘 다 봐야 한다.
@@ -203,6 +263,8 @@ def check_page(base, name, bad):
     checks = 0
     if name == 'hub-research':
         checks += check_hub(t, bad)
+    if name == 'research-generalization-benchmark-10-terrains':
+        checks += check_bench(t, bad)
 
     # 1. 고쳐 놓고 되살아나는 것들. 전부 «본문 글자» 로 본다.
     text = re.sub(r'<script.*?</script>|<style.*?</style>', '', t, flags=re.S)

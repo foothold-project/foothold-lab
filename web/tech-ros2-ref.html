@@ -71,7 +71,7 @@ nav.rail.notoc{display:none}
   border-radius:50%;pointer-events:none}
 .eyebrow{font-size:12.16px;font-weight:800;color:var(--brand);letter-spacing:.14em;text-transform:uppercase}
 .hero h1{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:.25em 0 .35em}
-.hero .lede{color:var(--sub);max-width:62ch;margin:0;font-size:16.5px}
+.hero .lede{color:var(--sub);margin:0;font-size:16.5px}
 .stamp{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--sub);
   border:1px solid var(--line);border-radius:999px;padding:3px 13px;background:var(--bg)}
 
@@ -622,7 +622,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -840,7 +840,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -958,9 +958,9 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-13 12:00 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-14 12:00 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <div class="hero">
   <div class="eyebrow">조선대 금요일 수업 정리 · Ubuntu 24.04 + Jazzy</div>
@@ -1474,5 +1474,5 @@ $</span> <span class="f">ros2</span><span class="k"> launch</span> my_first_pack
 <div class="call trap"><div class="t">막히면 순서대로 의심할 것</div>
 <p>① 이 터미널에서 source 했나 (<code>ros2</code> 명령 자체가 안 되면 이것) → ② colcon build 후 <code>install/setup.bash</code>를 source 했나 → ③ <code>ROS_DOMAIN_ID</code>가 터미널끼리 같은가 → ④ 가상환경(<code>ros</code>)이 켜져 있나 (rclpy import 에러면 이것)</p></div>
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

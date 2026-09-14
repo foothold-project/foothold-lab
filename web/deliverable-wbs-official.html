@@ -220,6 +220,16 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
@@ -510,7 +520,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -728,7 +738,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -846,7 +856,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
@@ -870,7 +880,7 @@ body>*{flex-shrink:0}
 <p><b>관문은 기한과 다음 단계 착수 조건을, 구현 단계는 작업 순서와 선행 관계를 정의한다.</b> 지금은 「A-정책 09/12 안에 이슈 몇 건」만 있고 그 이슈들이 어떤 차례로 이어지는지가 없다. 8/31 멘토링이 정한 「평지 기준선을 먼저, 그다음 실패 지형」이 바로 그 차례인데 WBS 어디에도 적혀 있지 않았다.</p>
 </section>
 <section id="s2"><span id="2"></span><h2>2. WBS 의 층 구조</h2>
-<p><figure class="mdimg"><img src="assets/wbs-layers.svg?v=adab2725" alt="" loading="lazy"></figure></p>
+<p><figure class="mdimg"><img src="assets/wbs-layers.svg?v=477f0236" alt="" loading="lazy"></figure></p>
 <p>2026-08-27 설계(<code>deliverables/plan/wbs.md</code>)는 3층이었다. 위 두 층을 사람이 정하고 세부 작업을 GitHub 이슈에서 생성하는 구조다. <b>작업 순서를 나타내는 구현 단계 분류를 추가해 네 층으로 구성한다.</b></p>
 <div class="tw"><table><thead><tr><th>층</th><th>무엇</th><th>누가 정하나</th><th>개수</th><th>정본</th></tr></thead><tbody><tr><td>1</td><td>작업 영역</td><td>사람 · 고정</td><td>8</td><td><code>docs/ROLES.md</code></td></tr><tr><td>2</td><td>관문</td><td>사람 · 날짜</td><td>5</td><td><code>tools/build_wbs.py</code> 의 <code>GATES</code></td></tr><tr><td><b>3</b></td><td><b>구현 단계</b></td><td><b>사람 · 순서</b></td><td><b>트랙마다 셋 또는 넷</b></td><td><b>이 문서 5절 · 팀장 확정 전</b></td></tr><tr><td>4</td><td>세부 작업</td><td><b>이슈에서 자동</b></td><td>계속 늘어난다</td><td>GitHub 이슈</td></tr></tbody></table></div>
 <p><b>왜 층을 나누나.</b> 이슈 제목을 그대로 WBS 에 올리면 사람마다 쓰는 말이 달라 표가 흩어진다. 작업 영역·관문·구현 단계를 기준으로 분류하면 서로 다른 제목의 이슈도 같은 기준으로 집계할 수 있다. 위 세 층은 이슈가 하나도 없어도 그려지고, 4층은 진척을 채우는 데 쓴다.</p>
@@ -889,7 +899,7 @@ body>*{flex-shrink:0}
 </section>
 <section id="s5"><span id="5"></span><h2>5. 3층 · 구현 단계</h2>
 <p>이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> 의 첫째 요구다. <b>팀장 9/1 지시</b>가 「지금 마일스톤 외에도 실제 구현 단계를 쪼개고, 그 안에서 팀원이 각자의 역할로 할 수 있는 것을 쪼개라」였다.</p>
-<p><figure class="mdimg"><img src="assets/wbs-stages.svg?v=c54129bc" alt="" loading="lazy"></figure></p>
+<p><figure class="mdimg"><img src="assets/wbs-stages.svg?v=06db0a49" alt="" loading="lazy"></figure></p>
 <h3>5-1. 단계 초안</h3>
 <p><b>아래 단계 이름과 개수는 이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> 의 초안이고 팀장 확정 전이다.</b> 기획서의 두 트랙 축을 그대로 따랐다. 「관련 관문」 열은 기획서 8-2 의 각 작업 항목에 이미 붙어 있는 관문을 모은 것이고, 새로 만든 날짜가 아니다.</p>
 <div class="tw"><table><thead><tr><th>트랙</th><th>단계</th><th>무엇을 하나</th><th>관련 관문</th><th>기획서 8-2 의 해당 작업 항목</th></tr></thead><tbody><tr><td>Track A</td><td>1 · 기준선 확립</td><td>평지와 미경험 10종을 지형별로 정한 조건에 따라 재측정하고 하네스를 고정한다</td><td>A-정책</td><td>기본값 1,500 iter 학습 지형 결과 분석 · 평가 하네스 확장 7건 · 지표 3종 정본화</td></tr><tr><td>Track A</td><td>2 · 실패 지형 진단</td><td>실패 5종의 병목 축을 갈라 내고 난이도 격자로 경계를 잰다</td><td>A-정책 · MVP</td><td>난이도 격자 스윕과 경계 측정 · 재현성 결함 수정 · 난이도 스윕 설계</td></tr><tr><td>Track A</td><td>3 · 학습 조건 개선</td><td>보상 항을 다시 짜고 기존 지형 성능을 유지한 채 혼합 학습한다</td><td>MVP</td><td>보상 항 재설계와 재학습 · 기존 지형 성능 유지 혼합 학습</td></tr><tr><td>Track A</td><td>4 · 재학습과 재평가</td><td>확장 지형으로 학습하고 held-out 으로 일반화를 잰다</td><td>NAV</td><td>확장 지형 학습과 held-out 평가 · 절차적 확장 지형 생성</td></tr><tr><td>Bridge</td><td>1 · 환경 촬영</td><td>PoC 공간을 고르고 촬영과 점군을 남긴다</td><td>MVP</td><td>PoC 공간 선정과 스캔</td></tr><tr><td>Bridge</td><td>2 · 3DGS 복원</td><td>COLMAP 과 3DGS 로 복원하고 충돌 형상을 만든다</td><td>MVP</td><td>COLMAP · 3DGS 복원과 충돌 형상 구성</td></tr><tr><td>Bridge</td><td>3 · Isaac USD 변환</td><td>복원 결과를 학습과 평가가 쓰는 USD 씬으로 바꾼다</td><td>MVP</td><td>COLMAP · 3DGS 복원과 충돌 형상 구성 (산출물 USD 씬)</td></tr><tr><td>Track B</td><td>1 · ROS 2 연동</td><td>실행 환경을 세우고 센서와 TF 를 잇는다</td><td>A-정책 · MVP</td><td>ROS 2 환경 구축 · 센서와 TF 연결</td></tr><tr><td>Track B</td><td>2 · SLAM 지도</td><td>지도를 만들고 위치 추정 오차를 기록한다</td><td>NAV</td><td>SLAM 지도 생성과 위치 추정</td></tr><tr><td>Track B</td><td>3 · Nav2 주행</td><td>경로 계획과 재계획으로 목표 지점까지 간다</td><td>NAV</td><td>Nav2 경로 계획 · 재계획 · 장애물 회피</td></tr><tr><td>Track B</td><td>4 · 인지 결합</td><td>검출 결과를 항법과 합친다</td><td>MVP · NAV</td><td>CV 단계별 계획과 실행 환경 구축 · YOLO 파인튜닝과 LiDAR 융합</td></tr></tbody></table></div>
@@ -977,5 +987,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

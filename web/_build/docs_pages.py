@@ -167,7 +167,7 @@ def _svg_chain(steps, loop_back=None, note=None):
     for i, s in enumerate(steps):
         x = pad + i * (bw + gap)
         parts.append('<rect x="%d" y="%d" width="%d" height="%d" rx="6" '
-                     'fill="var(--card)" stroke="var(--dim)" stroke-width="1.4"/>' % (x, y, bw, bh))
+                     'fill="var(--card)" stroke="var(--dim)" stroke-width="1.6"/>' % (x, y, bw, bh))
         lines = s.split('\n')
         for j, ln in enumerate(lines):
             ty = y + bh / 2 + (j - (len(lines) - 1) / 2) * 14 + 4
@@ -184,7 +184,7 @@ def _svg_chain(steps, loop_back=None, note=None):
         x2 = pad + (n - 1) * (bw + gap) + bw / 2
         yy = y + bh + 18
         parts.append('<path d="M%.0f %d V%d H%.0f V%d" fill="none" stroke="var(--note)" '
-                     'stroke-width="1.5" stroke-dasharray="5 4"/>' % (x2, y + bh + 2, yy, x1, y + bh + 8))
+                     'stroke-width="1.6" stroke-dasharray="5 4"/>' % (x2, y + bh + 2, yy, x1, y + bh + 8))
         parts.append('<path d="M%.0f %d l-4 7 h8 z" fill="var(--note)"/>' % (x1, y + bh + 4))
         parts.append('<text x="%.0f" y="%d" text-anchor="middle" font-size="11" '
                      'fill="var(--note)" font-weight="700">%s</text>'

@@ -161,7 +161,7 @@ def gate_fig(meta, body):
                  % (y + 29, due.strftime('%m/%d'), left))
         # 달력: 프로젝트 시작부터 이 관문 마감까지. 칠하지 않는다
         o.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="var(--ink-3)" '
-                 'stroke-width="1.4"/>' % (X(START), y + 16, X(due), y + 16))
+                 'stroke-width="1.6"/>' % (X(START), y + 16, X(due), y + 16))
         o.append('<circle cx="%.1f" cy="%d" r="3" fill="var(--ink-3)"/>'
                  % (X(START), y + 16))
         o.append('<rect x="%.1f" y="%d" width="7" height="18" rx="2" fill="var(--note)"/>'

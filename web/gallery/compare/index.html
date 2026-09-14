@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FOOTHOLD · 판 3열 비교</title>
+<meta name="description" content="같은 지형·같은 속도에서 세 (판, 모델)을 나란히 견준다">
+<link rel="stylesheet" href="/gallery/gallery.css">
+<style>.top .sp{flex:1}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+
+/* 컷 길이. 세 열이 다른 것이 정상이라 그 까닭을 옆에 적는다. */
+.colscore .len{font-variant-numeric:tabular-nums}
+.colscore .len b{font-weight:700;color:var(--ink)}
+.cmpnote{font-size:.78rem;color:var(--ink-3);line-height:1.6;margin:10px 0 0;
+  padding:9px 12px;background:var(--card);border:1px solid var(--rule);
+  border-radius:8px}
+</style>
+<link rel="stylesheet" href="/assets/gnav.css">
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script>
+<!--newbadge:v8--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){
+    /* 2026-09-12. split('/').pop() 이 끝의 빈 조각을 집어
+       /gallery/ · /index.html · /team-meang/index.html 이 전부 'index' 로
+       뭉개졌다. 표지를 여는 순간 갤러리가 「봤음」이 돼 NEW 가 안 떴다. */
+    s=(s||'').split('#')[0].split('?')[0].replace(/\.html$/,'').replace(/\/+$/,'');
+    var p=s.split('/').filter(Boolean);
+    var last=p.pop()||'index';
+    if(last==='index'&&p.length)last=p.pop()+'/index';
+    return last;
+  }
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+</head>
+<body class="wide">
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="/index.html"><img class="lgi" src="/assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="/assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="/hub-proposal.html">기획</a><a class="" href="/hub-schedule.html">일정</a><a class="" href="/hub-meeting.html">회의</a><a class="" href="/hub-research.html">연구</a><a class="on" href="/gallery/">갤러리</a><a class="" href="/hub-tech.html">기술</a><a class="" href="/hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="/chosun-materials.html">팀 자료실</a><a class="q" href="/encyclopedia.html">도메인 백과</a><a class="q" href="/curriculum.html">학습 커리큘럼</a><a class="q" href="/budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<header>
+  <div class="crumb"><a href="/">FOOTHOLD</a> · <a href="/gallery/">갤러리</a> · 3열 비교</div>
+  <div class="eyebrow">Side by Side</div>
+  <h1>같은 자리를 세 열로 견준다</h1>
+  <p class="lede">지형과 속도를 하나로 고정하고, 열마다 <b>(판, 모델)</b>을 고른다.
+     기준선 NVIDIA · foothold-v1 · foothold-v2 처럼 세대를 가로질러 놓을 수 있다.</p>
+</header>
+
+<div id="body"></div>
+
+<footer>
+  <div>재생은 <b>녹화 시작 후 경과 시간</b> 하나를 기준으로 묶는다. 길이가 다른 열은 짧은 쪽이 마지막 장면에서 멈추고 「영상 종료」를 단다. 되돌아 감기(loop)는 쓰지 않는다. 같은 경과 시간이 같은 장애물 위치를 뜻하지는 않는다.</div>
+  <div>열 옆의 성공률은 그 자리 평가 100판의 결과이고, 아래 영상은 시연 1회다.</div>
+</footer>
+
+</div>
+<script src="/gallery/gallery.js"></script>
+<script>
+(async function () {
+  const body = document.getElementById('body');
+  const SLOTS = ['left', 'mid', 'right'];
+
+  let index;
+  try {
+    index = G.checkSchema(await G.loadJSON(G.at('versions.json')), 'foothold-gallery-index/');
+  } catch (err) {
+    body.appendChild(G.warn('판 목록을 읽지 못했습니다. ' + err.message, true));
+    return;
+  }
+
+  /* 판 색인을 전부 읽는다. 판이 열 개여도 색인 합이 수백 KB 라 문제가 없다. */
+  const mans = {};
+  for (const v of index.versions) {
+    try {
+      mans[v.version] = G.checkSchema(await G.loadJSON(G.at(v.manifest)), 'foothold-gallery/');
+      mans[v.version]._folder = v.folder;
+    } catch (err) {
+      body.appendChild(G.warn(v.version + ' 색인을 읽지 못했습니다. ' + err.message, true));
+    }
+  }
+
+  /* 고를 수 있는 열은 (판, 모델) 쌍 전부다. */
+  const pairs = [];
+  Object.values(mans).forEach(m => {
+    Object.keys(m.models).forEach(model => {
+      /* 주소에는 판을 남긴다 (`v1:baseline`). 판을 넘나드는 비교가 이
+       * 페이지의 목적이라 그것이 열의 «주소» 다. 다만 화면 이름은 아래에서
+       * 셋이 같은 판일 때 판을 뗀다 `확인됨` (2026-09-12 팀장: 「앞에 v1 은
+       * 왜 들어가?」). 주소와 이름은 다른 것이다. */
+      pairs.push({ id: m.version + ':' + model, version: m.version, model: model,
+                   label: m.version + ' · ' + model });
+    });
+  });
+
+  /* 지형·속도는 **선택된 판들의 합집합**이다. 목록을 각각 합쳐 곱하면
+     어느 판에도 없는 가짜 조합이 생긴다. */
+  function cellsOf(versions) {
+    const seen = new Map();
+    versions.forEach(v => {
+      const m = mans[v];
+      if (!m) return;
+      m.evaluations.forEach(e => {
+        seen.set(e.terrain + '|' + e.speed_mps, { terrain: e.terrain, speed: e.speed_mps });
+      });
+    });
+    return [...seen.values()].sort((a, b) =>
+      a.terrain.localeCompare(b.terrain) || a.speed - b.speed);
+  }
+
+  const state = {};
+  const q = new URLSearchParams(location.search);
+  const rejected = [];
+
+  /* **링크가 요청한 것을 바꿔치기하지 않는다.**
+   *
+   * 값이 «없는» 것과 «틀린» 것은 다르다. 없으면 우리가 고르고, 틀리면 그
+   * 사실을 말하고 빈 상태로 둔다. 예전에는 `speed=9` 를 조용히 0.5 로 바꾸고
+   * URL 까지 덮어써서, 요청하지 않은 속도의 성적을 보여 줬다 `확인됨`
+   * (2026-09-12 검증 2회차 7번 · 브라우저에서 재현됐다). */
+  let guessed = false;
+
+  SLOTS.forEach((slot, i) => {
+    const raw = q.get(slot);
+
+    if (raw !== null && raw !== '') {
+      const hit = pairs.find(p => p.id === raw);
+      if (hit) state[slot] = hit.id;
+      else rejected.push(slot + '=' + raw);   // 빈 열로 둔다. 대신 채우지 않는다
+      return;
+    }
+
+    /* 아예 «안 준» 자리만 우리가 고른다.
+     *
+     * **기준선은 고정, 나머지 둘은 최근 두 판** (팀장 확정 2026-09-12).
+     * 판이 쌓이면 저절로 굴러간다.
+     *
+     *   지금      baseline · A · foothold-v1
+     *   v2 뒤     baseline · foothold-v1 · foothold-v2
+     *   v3 뒤     baseline · foothold-v2 · foothold-v3
+     *
+     * 「최근 두 판」은 `versions.json` 의 차례를 따른다. 손으로 안 고친다. */
+    const order = (index.versions || []).map(v => v.version);
+    const recent = order.slice(-2);
+    const mainOf = v => (mans[v] && mans[v].main_model) || null;
+    const picks = [];
+    picks.push((index.latest && index.latest + ':baseline') || null);
+
+    if (recent.length >= 2) {
+      picks.push(recent[0] + ':' + mainOf(recent[0]));
+      picks.push(recent[1] + ':' + mainOf(recent[1]));
+    } else {
+      /* 판이 하나뿐이면 그 판 안에서 견준다. */
+      const one = index.latest;
+      picks.push(one ? one + ':A' : null);
+      picks.push(one ? one + ':' + mainOf(one) : null);
+    }
+
+    const guess = picks[i];
+    if (guess && pairs.find(p => p.id === guess)) { state[slot] = guess; guessed = true; }
+  });
+
+  /** 화면에 보일 열 이름. 셋이 같은 판이면 판을 뗀다. */
+  function columnLabel(pair) {
+    if (!pair) return '';
+    const versions = new Set(SLOTS.map(s => state[s]).filter(Boolean)
+                                  .map(id => id.split(':')[0]));
+    return versions.size <= 1 ? pair.model : pair.label;
+  }
+
+  const chosenVersions = () => [...new Set(SLOTS.map(s => state[s]).filter(Boolean)
+                                             .map(id => id.split(':')[0]))];
+
+  let cells = cellsOf(chosenVersions());
+  const rawTerrain = q.get('terrain');
+  const rawSpeed = q.get('speed');
+  const askedTerrain = rawTerrain !== null && rawTerrain !== '';
+  const askedSpeed = rawSpeed !== null && rawSpeed !== '';
+  let cell = null;
+
+  if (askedTerrain && askedSpeed) {
+    cell = cells.find(c => c.terrain === rawTerrain && G.sameNumber(c.speed, rawSpeed)) || null;
+    if (!cell) rejected.push('terrain=' + rawTerrain + ' & speed=' + rawSpeed);
+  } else if (askedTerrain) {
+    cell = cells.find(c => c.terrain === rawTerrain) || null;
+    if (!cell) rejected.push('terrain=' + rawTerrain);
+  } else if (askedSpeed) {
+    // **속도만 준 링크는 그 속도를 지킨다.** 지형만 우리가 고른다.
+    cell = cells.find(c => G.sameNumber(c.speed, rawSpeed)) || null;
+    if (!cell) rejected.push('speed=' + rawSpeed);
+  } else {
+    /* **기본은 gap 0.5 다** (팀장 확정 2026-09-12). 전에는 `cells[0]` 이라
+     * 알파벳 첫 지형이 잡혔다. gap 은 기준선 1 % 에서 foothold-v1 100 % 로
+     * 가장 크게 벌어지는 자리라 세 열을 견주기에 제일 잘 보인다. */
+    cell = cells.find(c => c.terrain === 'gap' && G.sameNumber(c.speed, 0.5))
+        || cells.find(c => c.terrain === 'gap')
+        || cells[0];
+    guessed = true;
+  }
+
+  /* ── 재생 묶기 ────────────────────────────────────────── */
+  const players = {};   // slot -> {video, ended}
+  let base = 0;         // 기준 시각 (초)
+  let running = false;
+  let raf = 0;
+
+  function everyVideo() {
+    return SLOTS.map(s => players[s]).filter(p => p && p.video.getAttribute('src'));
+  }
+
+  function longest() {
+    return Math.max(0, ...everyVideo().map(p => p.duration || 0));
+  }
+
+  function tick() {
+    if (!running) return;
+    const now = Math.max(0, ...everyVideo().map(p => p.video.currentTime));
+    base = now;
+    say('clock', G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
+
+    everyVideo().forEach(p => {
+      const done = p.duration && base >= p.duration - 0.04;
+      p.tagEnded.hidden = !done;
+    });
+
+    if (base >= longest() - 0.04) { stop(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  async function playAll() {
+    running = true;
+    const results = await Promise.all(everyVideo().map(async p => {
+      if (p.duration && p.video.currentTime >= p.duration - 0.04) return null;
+      const r = await G.play(p.video);
+      return r && r.error ? p.slot : null;
+    }));
+    const failed = results.filter(Boolean);
+    say('playnote', failed.length
+        ? failed.join(' · ') + ' 열이 재생을 시작하지 못했습니다' : '');
+    say('playbtn', '멈춤');
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* `draw()` 첫 줄이 이것을 부른다. 그때는 조종간이 아직 없다. */
+  function say(id, text) {
+    const node = document.getElementById(id);
+    if (node) node.textContent = text;
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(raf);
+    everyVideo().forEach(p => p.video.pause());
+    say('playbtn', '함께 재생');
+  }
+
+  function seekAll(t) {
+    base = t;
+    everyVideo().forEach(p => {
+      p.video.currentTime = Math.min(t, Math.max(0, (p.duration || t) - 0.01));
+    });
+    say('clock', G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
+  }
+
+  function rateAll(x) {
+    everyVideo().forEach(p => { p.video.playbackRate = x; });
+  }
+
+  /* ── 그리기 ───────────────────────────────────────────── */
+  function push(replace) {
+    G.writeParams({
+      terrain: cell ? cell.terrain : null,
+      speed: cell ? cell.speed : null,
+      left: state.left, mid: state.mid, right: state.right
+    }, replace);
+  }
+
+  function draw() {
+    stop();
+    SLOTS.forEach(s => delete players[s]);
+    body.textContent = '';
+
+    if (rejected.length) {
+      body.appendChild(G.warn('링크의 ' + rejected.join(' · ') +
+        ' 은 지금 색인에 없는 값입니다. 그 자리는 비워 두었고, 다른 값의 성적을 '
+        + '대신 그리지 않았습니다.', true));
+    }
+
+    cells = cellsOf(chosenVersions());
+    if (!cells.length) {
+      body.appendChild(G.emptyBox('고른 판에 평가 칸이 없습니다', '열을 다시 골라 주세요.'));
+      return;
+    }
+    if (!cell) {
+      body.appendChild(G.emptyBox(
+        '링크가 요청한 자리가 이 판들에 없습니다',
+        '요청한 조건을 다른 값으로 바꾸지 않았습니다. 아래에서 열을 다시 고르거나 '
+        + '갤러리 목록으로 돌아가 주세요.'));
+      body.appendChild(G.el('div', { class: 'vlinks' }, [
+        G.el('a', { class: 'btn go', href: G.at(''), text: '갤러리 목록' })
+      ]));
+      return;
+    }
+
+    if (!cells.find(c => c.terrain === cell.terrain && c.speed === cell.speed)) {
+      cell = cells[0];
+    }
+
+    /* 조건 줄 */
+    const cond = G.el('div', { class: 'cmpcond' });
+    cond.appendChild(G.el('span', { class: 'flabel', text: '지형' }));
+    const tsel = G.el('select');
+    [...new Set(cells.map(c => c.terrain))].forEach(t => {
+      const o = G.el('option', { value: t, text: t });
+      if (t === cell.terrain) o.selected = true;
+      tsel.appendChild(o);
+    });
+    tsel.addEventListener('change', () => {
+      const speeds = cells.filter(c => c.terrain === tsel.value);
+      cell = speeds.find(c => G.sameNumber(c.speed, cell.speed)) || speeds[0];
+      push(); draw();
+    });
+    cond.appendChild(tsel);
+
+    cond.appendChild(G.el('span', { class: 'flabel', text: '속도 m/s' }));
+    const ssel = G.el('select');
+    cells.filter(c => c.terrain === cell.terrain).forEach(c => {
+      const o = G.el('option', { value: String(c.speed), text: c.speed.toFixed(1) });
+      if (G.sameNumber(c.speed, cell.speed)) o.selected = true;
+      ssel.appendChild(o);
+    });
+    ssel.addEventListener('change', () => {
+      cell = cells.find(c => c.terrain === cell.terrain && G.sameNumber(c.speed, ssel.value));
+      push(); draw();
+    });
+    cond.appendChild(ssel);
+    cond.appendChild(G.el('a', { href: G.at('view/') + '?v=' + index.latest +
+                                 '&terrain=' + encodeURIComponent(cell.terrain),
+                                 class: 'btn', text: '이 지형 전부 보기' }));
+    body.appendChild(cond);
+
+    /* 조건이 서로 다른 판을 섞고 있지 않은가 */
+    const diffs = [];
+    const picked = chosenVersions().map(v => mans[v]).filter(Boolean);
+    ['difficulty'].forEach(key => {
+      const seen = [...new Set(picked.map(m => JSON.stringify(m[key])))];
+      if (seen.length > 1) diffs.push(key + ' ' + seen.join(' vs '));
+    });
+    ['eval_spec_version', 'eval_duration_s', 'min_progress_m', 'seed'].forEach(key => {
+      const seen = [...new Set(picked.map(m => JSON.stringify(m.protocol[key])))];
+      if (seen.length > 1) diffs.push(key + ' ' + seen.join(' vs '));
+    });
+    if (diffs.length) {
+      body.appendChild(G.warn('고른 판들의 평가 조건이 다릅니다: ' + diffs.join(' · ') +
+        '. 같은 시험이 아니므로 수치를 그대로 빼면 시험 조건 변화를 모델 개선으로 오해합니다.', true));
+    }
+
+    /* 조종간 */
+    const transport = G.el('div', { class: 'transport' }, [
+      G.el('button', { class: 'chip', type: 'button', id: 'playbtn', text: '함께 재생' }),
+      G.el('button', { class: 'chip', type: 'button', id: 'rewind', text: '처음으로' }),
+      G.el('span', { class: 'clock', id: 'clock', text: '0:00.0 / 0:00.0' }),
+      G.el('span', { class: 'flabel', text: '배속' })
+    ]);
+    [0.25, 0.5, 1, 2].forEach(x => {
+      const b = G.el('button', { class: 'chip', type: 'button',
+                                 'aria-pressed': x === 1 ? 'true' : 'false',
+                                 text: x + '×' });
+      b.addEventListener('click', () => {
+        transport.querySelectorAll('.chip[aria-pressed]').forEach(o => o.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        rateAll(x);
+      });
+      transport.appendChild(b);
+    });
+    transport.appendChild(G.el('span', { id: 'playnote', class: 'tag warn' }));
+    body.appendChild(transport);
+
+    transport.querySelector('#playbtn').addEventListener('click', () => {
+      if (running) stop(); else playAll();
+    });
+    transport.querySelector('#rewind').addEventListener('click', () => { stop(); seekAll(0); });
+
+    /* 세 열 */
+    const cmp = G.el('div', { class: 'cmp' });
+    SLOTS.forEach(slot => cmp.appendChild(column(slot)));
+    body.appendChild(cmp);
+
+    /* **세 열의 길이가 왜 다른지 적는다.** 실측: 자리 48개 전부 해상도와
+     * 초당 장수는 같고 길이만 다르다 (중앙값 0.2초 · 최대 1.5초).
+     * 아무 말이 없으면 읽는 사람에게 「왜 다르지」로 남는다
+     * `확인됨` (2026-09-12 팀장 지적). */
+    body.appendChild(G.el('p', { class: 'cmpnote' }, [
+      G.el('b', { text: '세 열의 길이가 다른 것은 정상입니다. ' }),
+      G.el('span', { text: '해상도 1920x1080 · 초당 50장 · 카메라 시점은 세 열이 ' +
+        '같습니다 (시점은 모델이 아니라 지형이 정합니다). 길이만 다른데, ' +
+        '촬영이 「전진 5.0 m 에서 자른다」라 빨리 간 모델은 짧고 못 간 모델은 ' +
+        '시간 예산을 다 씁니다. 길이 차이가 곧 성적입니다.' })
+    ]));
+
+    body.appendChild(G.el('div', { class: 'note' }, [
+      G.el('span', { text: '「영상 없음」은 그 자리를 평가는 했지만 대표 영상을 뜨지 않았다는 뜻이고, ' +
+        '「미평가」는 그 판이 그 자리를 아예 돌리지 않았다는 뜻입니다. 둘은 다릅니다.' })
+    ]));
+  }
+
+  function column(slot) {
+    const col = G.el('div', { class: 'col' });
+    const head = G.el('div', { class: 'colhead' });
+
+    const sel = G.el('select');
+    sel.appendChild(G.el('option', { value: '', text: '(비움)' }));
+    pairs.forEach(p => {
+      const o = G.el('option', { value: p.id, text: columnLabel(p) });
+      if (p.id === state[slot]) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      if (sel.value) state[slot] = sel.value; else delete state[slot];
+      push(); draw();
+    });
+    head.appendChild(sel);
+
+    const pair = pairs.find(p => p.id === state[slot]);
+    const man = pair && mans[pair.version];
+    const ev = man && man.evaluations.find(e =>
+      e.terrain === cell.terrain && G.sameNumber(e.speed_mps, cell.speed) &&
+      e.model === pair.model);
+
+    const score = G.el('div', { class: 'colscore' });
+    if (ev) {
+      score.appendChild(G.el('span', { class: 'big ' + G.rateClass(ev.success_rate),
+                                       text: ev.success_rate.toFixed(1) + ' %' }));
+      score.appendChild(G.el('span', { class: 'sub',
+        text: ev.episodes + '판 중 ' + ev.successes + '판 · 참여도 ' +
+              (ev.engagement === null ? '측정값 없음' : ev.engagement.toFixed(2)) }));
+
+      /* **컷 길이를 적는다.** 세 열의 길이가 다른 것은 결함이 아니라 성적이다.
+       * 촬영이 「전진 5.0 m 에서 자른다」라, 빨리 가면 짧고 못 가면 시간
+       * 예산을 다 쓴다. 아무 말이 없으면 「왜 다르지」로 남는다
+       * `확인됨` (2026-09-12 팀장: 「길이가 같은지도 모르겠다」). */
+      const one = ev.clips.length ? man.clips.find(c => c.id === ev.clips[0]) : null;
+
+      if (one) {
+        const full = one.seconds >= (man.protocol.eval_duration_s
+          ? Math.max.apply(null, [].concat(man.protocol.eval_duration_s)) - 0.15
+          : 99);
+        score.appendChild(G.el('span', { class: 'sub len' }, [
+          G.el('b', { text: one.seconds.toFixed(1) + '초' }),
+          G.el('span', { text: full ? ' · 시간 예산을 다 씀' : ' · 5 m 에서 잘림' })
+        ]));
+      }
+    } else if (pair) {
+      score.appendChild(G.el('span', { class: 'tag stop', text: '미평가' }));
+      score.appendChild(G.el('span', { class: 'sub',
+        text: pair.version + ' 은 이 자리를 돌리지 않았습니다' }));
+    } else {
+      score.appendChild(G.el('span', { class: 'sub', text: '열을 고르세요' }));
+    }
+    head.appendChild(score);
+    col.appendChild(head);
+
+    const slotBox = G.el('div', { class: 'slot' });
+    const clip = ev && ev.clips.length
+      ? man.clips.find(c => c.id === ev.clips[0]) : null;
+
+    if (clip) {
+      // 열이 셋뿐이라 통째로 받아도 된다. 멈춰 있을 때 **첫 장면이 보여야**
+      // 무엇을 견주는지 알 수 있다. `metadata` 만 받으면 검은 칸이 남는다.
+      const video = G.el('video', { preload: 'auto', playsinline: true, muted: true });
+
+      // 첫 장이 그려지기 전에도 무엇을 견주는지 보이게 한다
+      if (clip.poster) video.poster = G.at(man._folder + '/' + clip.poster);
+
+      video.src = G.at(man._folder + '/' + clip.file);
+      /* **대표 한 장을 깔아 둔다.** 없으면 첫 화면이 검다.
+       * 피라미드 컷은 첫 프레임에 지형이 아예 안 보인다
+       * `확인됨` (2026-09-12 codex 7회차 · 표준편차 2.23). */
+      if (clip.poster) video.poster = G.at(man._folder + '/' + clip.poster);
+      const ended = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
+      slotBox.appendChild(video);
+      slotBox.appendChild(ended);
+      players[slot] = { slot: slot, video: video, duration: clip.seconds, tagEnded: ended };
+      video.addEventListener('loadedmetadata', () => {
+        players[slot].duration = video.duration || clip.seconds;
+        /* 표지가 있으면 굳이 첫 프레임으로 감을 필요가 없다. */
+        if (!clip.poster && video.currentTime === 0) video.currentTime = 0.04;
+      });
+      video.addEventListener('click', () => { if (running) stop(); else playAll(); });
+    } else {
+      slotBox.appendChild(G.el('div', { class: 'state' }, [
+        G.el('b', { text: ev ? '영상 없음' : (pair ? '미평가' : '비어 있음') }),
+        G.el('span', { text: ev
+          ? '이 자리는 ' + ev.episodes + '판을 평가했지만 대표 영상을 뜨지 않았습니다'
+          : (pair ? '이 판의 평가 범위에 이 자리가 없습니다' : '위에서 (판, 모델)을 고르세요') })
+      ]));
+    }
+    col.appendChild(slotBox);
+
+    col.appendChild(G.el('div', { class: 'cut' }, [
+      G.el('figcaption', {}, [
+        G.el('div', { class: 'meta' }, [
+          G.el('span', { class: 'mono', text: cell.terrain }),
+          G.el('span', { text: cell.speed.toFixed(1) + ' m/s' }),
+          clip ? G.el('span', { text: clip.width + '×' + clip.height }) : null,
+          clip ? G.el('span', { text: clip.seconds.toFixed(2) + '초' }) : null
+        ])
+      ])
+    ]));
+    return col;
+  }
+
+  window.addEventListener('popstate', () => location.reload());
+
+  // 사용자가 고르기 전에는 URL 을 건드리지 않는다. 우리가 채운 기본값을
+  // 링크에 박아 넣으면, 저장한 링크가 요청하지도 않은 조건을 뜻하게 된다.
+  if (!guessed && !rejected.length) push(true);
+
+  draw();
+})();
+</script>
+</body>
+</html>

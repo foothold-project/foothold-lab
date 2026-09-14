@@ -129,6 +129,22 @@ OTHER_MADE = {
     'report-v1.html', 'gallery',
 }
 
+# ★ 2026-09-14 팀장 확정: 「lab 에도 갤러리 뷰어가 있어야 하면 그렇게 해」.
+#
+#   갤러리 폴더는 두 가지가 섞여 있다.
+#
+#     뷰어 (js · css · html · 시험)   사람이 쓰는 코드 · **정본은 lab**
+#     v1/ · versions.json             평가가 만든 데이터 250 MB · site 에 남는다
+#
+#   전에는 뷰어까지 `foothold-site` 에만 있었다. 「lab 이 정본」과 어긋나고,
+#   빌드 관문도 못 본다. 그래서 뷰어만 lab 으로 옮기고 빌드가 **그 파일만**
+#   덮어쓴다. 데이터는 손대지 않는다.
+GALLERY_VIEWER = [
+    'gallery.js', 'gallery.css', 'index.html',
+    'view/index.html', 'compare/index.html',
+    'test/terrain-rows.test.js',
+]
+
 
 def sha(path):
     return hashlib.sha256(io.open(path, 'rb').read()).hexdigest()[:12]
@@ -180,6 +196,22 @@ def deploy():
             n += sum(len(fs) for _, _, fs in os.walk(dst))
             continue
         shutil.copy(src, dst); n += 1
+
+    # 갤러리 뷰어: lab 이 정본이므로 여기서 덮어쓴다.
+    # **파일 단위로만** 만진다. `v1/`(250 MB) 과 `versions.json` 은 평가가
+    # 만드는 것이라 건드리면 안 된다. 폴더째 복사하면 그것이 날아간다.
+    gv = 0
+    for rel in GALLERY_VIEWER:
+        s = os.path.join(VAULT, 'gallery', rel.replace('/', os.sep))
+        if not os.path.isfile(s):
+            print('  [!] 갤러리 뷰어 원본이 없습니다: %s' % rel)
+            continue
+        d2 = os.path.join(SITE, 'gallery', rel.replace('/', os.sep))
+        os.makedirs(os.path.dirname(d2), exist_ok=True)
+        shutil.copy(s, d2); gv += 1; n += 1
+    if gv:
+        print('  갤러리 뷰어 %d개 (데이터 v1/ 은 안 건드림)' % gv)
+
     for d in DIRS:
         s, t = os.path.join(VAULT, d), os.path.join(SITE, d)
         if os.path.isdir(s):
@@ -716,6 +748,18 @@ if __name__ == '__main__':
     #   2026-08-25 실측: 35개 중 작성자 표기가 있는 것은 6개(17%)뿐이었다.
     #   전부 미비인 상태라 곧바로 차단하면 빌드가 안 돈다. 유예 목록을 두어
     #   새 문서만 막고, 기존은 metacheck_grandfather.txt 를 줄여 가며 갚는다.
+    # ★ 2026-09-13. 팀장이 세 번째로 지적한 뒤에 넣었다.
+    #   「또 Claude AI Slop 인 문단의 width 를 일부만 쓰네? 규칙 AGENTS.md 에
+    #    넣으라고 했지?」
+    #   찾아보니 규칙은 `AGENTS.md` 214줄에 **이미 있었다.** 그런데 코드 세
+    #   곳이 어기고 있었고 아무도 안 막았다.
+    #   **적는 것과 강제하는 것은 다른 일이다.** 적힌 쪽만 있으면 안 지켜진다.
+    print('\n[3.41] 문단 폭 검사 (max-width 를 문단에 걸었는가)')
+    import widthcheck
+    if not widthcheck.main(VAULT):
+        print('\n  [!] 문단에 폭 제한이 걸려 있습니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('\n[3.4] 문서 메타데이터 검사 (분류 · 작성 · 근거 · 요지)')
     import metacheck
     import roots as _r34
@@ -942,6 +986,34 @@ if __name__ == '__main__':
     elif not _rl.main(VAULT):
         print('\n  [!] 역할 배치가 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
+
+    # ★ 2026-09-14 신설. 도해 «안» 에서 글자가 겹치는지 본다.
+    #   팀장이 「글씨 겹침」을 지적했고 실제로 두 도해가 겹쳐 있었다. 그중
+    #   하나는 같은 그림의 옛 사본이라 한쪽만 고쳐져 있었다. 눈으로는 못 잡는다.
+    print('\n[3.48] 도해 글자 검사 (겹침 · 틀 밖)')
+    import svgtext
+    if not svgtext.main(VAULT):
+        print('\n  [!] 도해 안에서 글자가 겹칩니다. 배포를 중단합니다.')
+        sys.exit(1)
+
+    # ★ 2026-09-14 신설. 문서 표의 숫자를 원장과 «값으로» 대조한다.
+    #   손으로 옮긴 숫자는 틀려도 소리가 안 난다. 표는 멀쩡해 보이고 빌드도
+    #   통과하고 읽는 사람은 그 숫자를 믿는다. 문자열을 찾는 관문은 조작한
+    #   보고서 5종을 다 통과시킨 적이 있어(2026-09-12) 이것은 재측정으로 만들었다.
+    #   고의 오류 7종을 넣어 7/7 검출을 확인했다.
+    print('\n[3.86] 문서 숫자 대조 (원장 실측과 같은가)')
+    _cdn = os.path.join(os.path.dirname(VAULT), 'tools', 'check_doc_numbers.py')
+    if not os.path.isfile(_cdn):
+        print('  건너뜁니다 (대조기가 없습니다)')
+    else:
+        _r = subprocess.run([sys.executable, _cdn], capture_output=True,
+                            text=True, encoding='utf-8', errors='replace')
+        for _ln in ((_r.stdout or '') + (_r.stderr or '')).rstrip().split('\n'):
+            if _ln.strip():
+                print('  ' + _ln.strip())
+        if _r.returncode != 0:
+            print('\n  [!] 문서의 숫자가 원장과 다릅니다. 배포를 중단합니다.')
+            sys.exit(1)
 
     print('\n[4] 민감정보 검사: 공개 저장소로 나갈 파일')
     import scan

@@ -25,7 +25,7 @@
 | `foothold-project/foothold-go2` | 공개 | 코드·실험 (`sim/` `nav/` `common/`) | `인공지능사관학교/foothold-go2` |
 | `foothold-project/foothold-site` | 공개 | 웹 미러 (**직접 수정 금지**, 빌드 산출물) | `인공지능사관학교/foothold-site` |
 | `foothold-project/foothold-brand` | 공개 | 브랜드 정본 (Codex 관리) | `인공지능사관학교/foothold-brand` |
-| `vfxpedia/mai-universe` | 비공개 | 개인 볼트. 웹 원본(`03_PROJECTS/doyak-final/05_deliverables`)이 여기 산다 | `인공지능사관학교/MAI_UNIVERSE` |
+| `vfxpedia/mai-universe` | 비공개 | 개인 볼트. **웹 원본은 2026-09-13 에 `foothold-lab/web/` 로 옮겼다** | `인공지능사관학교/MAI_UNIVERSE` |
 
 ★ 세션 임시 클론(스크래치패드)은 **세션이 끝나면 사라진다.** 영속 작업은 위 관례 위치의 클론에서 한다.
 ★ 노트북에는 볼트 옆 `foothold-lab` 클론(빌드가 읽는 것)과 세션 임시 클론이 **둘 다** 있었다.
@@ -36,9 +36,14 @@
 빌드는 GitHub Actions 가 아니라 **로컬**에서 돈다 (볼트가 비공개 로컬에 있기 때문).
 
 ```
-cd MAI_UNIVERSE/03_PROJECTS/doyak-final/05_deliverables
-python _build/build.py --check     # 필요 시 --verify (외부 사실 검증)
+cd foothold-lab
+python web/_build/build.py --skip-secure          # 배포 (foothold-site 로 씀)
+python web/_build/build.py --repro --out <빈폴더>  # 안 쓰고 검사만
 ```
+
+★ **2026-09-13 에 빌드가 `foothold-lab/web/_build/` 로 옮겨졌다.** 전에는
+`MAI_UNIVERSE/03_PROJECTS/doyak-final/05_deliverables/_build` 에 있었다.
+팀장 확정: 「lab 이 정본이다」. 옛 경로를 보고 있으면 아무것도 안 바뀐다.
 
 절차 (충돌 사고 2회로 확정된 순서):
 1. **pull 먼저**: lab · 볼트 · site 전부 원격 최신으로 (WS 세션이 먼저 밀었을 수 있다)

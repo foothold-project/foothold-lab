@@ -71,7 +71,6 @@ pitch.html 0 1 0 1 0 0
 plan.html 0 1 0 19 0 0
 project-report.html 0 1 0 19 0 0
 questions.html 0 1 0 19 0 0
-report-v1.html 0 0 0 204 1 0
 research-20260903-default-1500iter-terrain-analysis.html 0 1 0 19 0 0
 research-20260903-rails-isaac-sweep-design.html 0 1 0 19 0 0
 research-20260903-render-blackframe.html 0 1 0 19 0 0
@@ -96,6 +95,7 @@ research-go2-pretrained-policies.html 0 1 0 19 0 0
 research-go2-rough-training.html 0 1 0 19 0 0
 research-nvidia-curriculum-alignment.html 0 1 0 19 0 0
 research-omniverse-stack.html 0 1 0 19 0 0
+research-parkour-ablation-대조분석.html 0 1 0 19 0 0
 research-pretrained-vs-model99-7terrain.html 0 1 0 19 0 0
 research-rails-diagnosis.html 0 1 0 19 0 0
 research-render-benchmarks.html 0 1 0 19 0 0
@@ -111,6 +111,7 @@ research-training-benchmarks.html 0 1 0 19 0 0
 research-visual-evidence.html 0 1 0 19 0 0
 research-발보상-시간아니고높이아님.html 0 1 0 19 0 0
 research-직진성-외부표준.html 0 1 0 19 0 0
+research-평가하네스-수정본.html 0 1 0 19 0 0
 research.html 0 1 0 19 0 0
 robot-spec.html 0 1 0 20 0 0
 roles.html 0 1 0 20 0 0

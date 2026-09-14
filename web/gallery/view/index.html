@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FOOTHOLD · 갤러리 한 판</title>
+<meta name="description" content="한 판의 평가 영상 전부. 지형·속도·모델·성공률·참여도로 거른다">
+<link rel="stylesheet" href="/gallery/gallery.css">
+<style>.top .sp{flex:1}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<link rel="stylesheet" href="/assets/gnav.css">
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script>
+<!--newbadge:v8--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){
+    /* 2026-09-12. split('/').pop() 이 끝의 빈 조각을 집어
+       /gallery/ · /index.html · /team-meang/index.html 이 전부 'index' 로
+       뭉개졌다. 표지를 여는 순간 갤러리가 「봤음」이 돼 NEW 가 안 떴다. */
+    s=(s||'').split('#')[0].split('?')[0].replace(/\.html$/,'').replace(/\/+$/,'');
+    var p=s.split('/').filter(Boolean);
+    var last=p.pop()||'index';
+    if(last==='index'&&p.length)last=p.pop()+'/index';
+    return last;
+  }
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+</head>
+<body class="wide">
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="/index.html"><img class="lgi" src="/assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="/assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="/hub-proposal.html">기획</a><a class="" href="/hub-schedule.html">일정</a><a class="" href="/hub-meeting.html">회의</a><a class="" href="/hub-research.html">연구</a><a class="on" href="/gallery/">갤러리</a><a class="" href="/hub-tech.html">기술</a><a class="" href="/hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="/chosun-materials.html">팀 자료실</a><a class="q" href="/encyclopedia.html">도메인 백과</a><a class="q" href="/curriculum.html">학습 커리큘럼</a><a class="q" href="/budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<header>
+  <div class="crumb"><a href="/">FOOTHOLD</a> · <a href="/gallery/">갤러리</a> · <span id="crumbv">…</span></div>
+  <div class="eyebrow">Evaluation Gallery</div>
+  <h1 id="title">갤러리</h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<div id="body"></div>
+
+<footer>
+  <div>영상은 <b>시연 1회</b>이고, 옆에 적힌 성공률은 그 자리에서 돌린 평가 100판의 결과다. 한 판의 성패와 100판의 비율은 다른 것이다.</div>
+  <div id="foot2"></div>
+</footer>
+
+</div>
+<script src="/gallery/gallery.js"></script>
+<script>
+(async function () {
+  const body = document.getElementById('body');
+
+  /* 어느 판을 보는가. 판 목록에 있는 이름만 받는다. */
+  let index;
+  try {
+    index = G.checkSchema(await G.loadJSON(G.at('versions.json')), 'foothold-gallery-index/');
+  } catch (err) {
+    body.appendChild(G.warn('판 목록을 읽지 못했습니다. ' + err.message, true));
+    return;
+  }
+
+  const names = index.versions.map(v => v.version);
+  const asked = new URLSearchParams(location.search).get('v');
+  let picked = index.versions.find(v => v.version === asked);
+  const notices = [];
+
+  if (asked && !picked) {
+    notices.push('링크가 가리키는 판 ' + asked + ' 이 목록에 없습니다. 최신 판을 대신 열지 않았습니다.');
+    body.appendChild(G.warn(notices[0] + ' 있는 판: ' + names.join(' · '), true));
+    return;
+  }
+  if (!picked) picked = index.versions[0];
+
+  let man;
+  try {
+    man = G.checkSchema(await G.loadJSON(G.at(picked.manifest)), 'foothold-gallery/');
+  } catch (err) {
+    body.appendChild(G.warn('색인을 읽지 못했습니다. ' + err.message, true));
+    return;
+  }
+
+  const base = G.at(picked.folder + '/');
+  document.getElementById('crumbv').textContent = 'gallery-' + man.version;
+  document.getElementById('title').textContent = 'gallery-' + man.version;
+  document.getElementById('lede').textContent =
+    '주 모델 ' + man.main_model + ' · 난이도 ' + man.difficulty +
+    ' · 영상 ' + man.counts.clips + '컷 · 평가 칸 ' + man.counts.evaluations +
+    '개 (그중 ' + man.counts.evaluations_without_clip + '칸은 성적만 있고 영상이 없습니다)';
+  document.getElementById('foot2').textContent =
+    '평가 규격 ' + (man.protocol.eval_spec_version || '미기록') +
+    ' · Random Seed ' + (man.protocol.seed || '미기록') +
+    ' · 한 칸 ' + (man.protocol.episodes_per_terrain || '?') + '판' +
+    ' · 통과선 ' + (man.protocol.min_progress_m || '?') + ' m';
+
+  /* ── 상태 ─────────────────────────────────────────────── */
+  const F = man.facets;
+  const allowed = {
+    terrain: F.terrain,
+    set: F.terrain_set,
+    speed: F.speed_mps,
+    model: F.model,
+    rate: F.success_rate_band.map(b => b.id),
+    eng: F.engagement_band.map(b => b.id),
+    clips: ['with', 'without'],
+    // 보기 방식도 링크에 남는다. 「보고서」가 기본이라 값이 없으면 그것이다.
+    view: ['grid']
+  };
+  const read = G.readParams(allowed);
+  const state = read.value;
+
+  /* **거절한 조건이 있으면 성적을 그리지 않는다.**
+   *
+   * 예전에는 잘못된 조건을 버리고 남은 것으로 144칸을 다 보여 준 뒤 URL 까지
+   * 정규화했다 `확인됨` (2026-09-12 검증 3회차 4번 · `?speed=9` 가 경고를 띄운
+   * 채 전체 목록을 그렸다). 요청하지 않은 성적으로 대체하는 것은 같다. */
+  const rejected = read.rejected;
+
+  /* 평가 칸이 바탕이다. 영상은 그 칸에 달린다. */
+  const clipById = new Map(man.clips.map(c => [c.id, c]));
+  const rows = man.evaluations.map(e => ({
+    ev: e,
+    clips: e.clips.map(id => clipById.get(id)).filter(Boolean)
+  }));
+
+  const match = (r, skip) => {
+    const s = state;
+    if (skip !== 'terrain' && s.terrain && r.ev.terrain !== s.terrain) return false;
+    if (skip !== 'set' && s.set && r.ev.terrain_set !== s.set) return false;
+    if (skip !== 'speed' && s.speed !== undefined && s.speed !== null &&
+        !G.sameNumber(r.ev.speed_mps, s.speed)) return false;
+    if (skip !== 'model' && s.model && r.ev.model !== s.model) return false;
+    if (skip !== 'rate' && s.rate) {
+      const band = F.success_rate_band.find(b => b.id === s.rate);
+      if (!G.inBand(r.ev.success_rate, band)) return false;
+    }
+    if (skip !== 'eng' && s.eng) {
+      const band = F.engagement_band.find(b => b.id === s.eng);
+      if (!G.inBand(r.ev.engagement, band)) return false;
+    }
+    if (skip !== 'clips' && s.clips) {
+      if (s.clips === 'with' && !r.clips.length) return false;
+      if (s.clips === 'without' && r.clips.length) return false;
+    }
+    return true;
+  };
+
+  const countIf = (axis, value) => rows.filter(r => {
+    if (!match(r, axis)) return false;
+    if (value === '') return true;
+    if (axis === 'terrain') return r.ev.terrain === value;
+    if (axis === 'set') return r.ev.terrain_set === value;
+    if (axis === 'speed') return G.sameNumber(r.ev.speed_mps, value);
+    if (axis === 'model') return r.ev.model === value;
+    if (axis === 'rate') return G.inBand(r.ev.success_rate, F.success_rate_band.find(b => b.id === value));
+    if (axis === 'eng') return G.inBand(r.ev.engagement, F.engagement_band.find(b => b.id === value));
+    if (axis === 'clips') return value === 'with' ? r.clips.length > 0 : r.clips.length === 0;
+    return true;
+  }).length;
+
+  /* 축 하나를 바꾼다. 객체를 주면 여러 축을 «한 번에» 바꾼다.
+   * 지형과 지형 무리는 서로를 지워야 해서(둘 다 켜지면 뜻이 모순된다)
+   * 두 번 나눠 부르면 중간 상태로 한 번 그려진다. */
+  const set = (axis, value) => {
+    if (axis && typeof axis === 'object') {
+      Object.keys(axis).forEach(k => {
+        const v = axis[k];
+        if (v === null || v === '' || v === undefined) delete state[k];
+        else state[k] = v;
+      });
+    } else if (value === null || value === '') delete state[axis];
+    else state[axis] = value;
+    G.writeParams(Object.assign({ v: man.version }, state));
+    draw();
+  };
+
+  /* 지형 칩의 건수는 **무리 선택을 무시하고** 센다.
+   * 그러지 않으면 「미경험 전부」를 누른 순간 기존 6종 칩이 전부 0건이 되어
+   * 눌리지 않고, 무리를 먼저 풀지 않으면 다른 지형으로 못 간다. 칩을 누르면
+   * 무리는 어차피 풀리므로 그 앞의 숫자도 풀린 뒤의 수여야 맞다. */
+  const countTerrain = (name) => {
+    const keep = state.set;
+    if (keep) delete state.set;
+    const n = countIf('terrain', name);
+    if (keep) state.set = keep;
+    return n;
+  };
+
+  /* ── 그리기 ───────────────────────────────────────────── */
+  function draw() {
+    body.textContent = '';
+    notices.forEach(text => body.appendChild(G.warn(text, true)));
+
+    if (rejected.length) {
+      body.appendChild(G.warn('링크의 조건 ' + rejected.join(' · ') +
+        ' 은 이 판에 없는 값입니다. 다른 조건의 성적을 대신 그리지 않았고, '
+        + 'URL 도 그대로 두었습니다.', true));
+      body.appendChild(G.emptyBox('요청한 조건으로는 보여 드릴 것이 없습니다',
+        '조건을 풀면 이 판의 전체 목록을 봅니다.',
+        () => {
+          rejected.length = 0;
+          Object.keys(state).forEach(k => delete state[k]);
+          G.writeParams({ v: man.version });
+          draw();
+        }));
+      return;
+    }
+
+    const filters = G.el('div', { class: 'filters' });
+    const bandLabel = (bands) => (id) => (bands.find(b => b.id === id) || {}).label || id;
+
+    filters.appendChild(G.terrainRows({
+      sets: man.terrain_sets, terrains: F.terrain,
+      terrain: state.terrain || '', set: state.set || '',
+      countTerrain: countTerrain,
+      countSet: k => countIf('set', k),
+      pickTerrain: v => set({ terrain: v, set: null }),
+      pickSet: v => set({ set: v, terrain: null })
+    }));
+    filters.appendChild(G.chipRow('속도 m/s', F.speed_mps,
+      state.speed === undefined ? '' : state.speed,
+      v => countIf('speed', v), v => set('speed', v)));
+    filters.appendChild(G.chipRow('모델', F.model, state.model || '',
+      v => countIf('model', v), v => set('model', v)));
+
+    const rateRow = G.chipRow('성공률', F.success_rate_band.map(b => b.id), state.rate || '',
+      v => countIf('rate', v), v => set('rate', v));
+    rateRow.querySelectorAll('.chip').forEach((chip, i) => {
+      if (i === 0) return;
+      chip.firstChild.textContent = bandLabel(F.success_rate_band)(F.success_rate_band[i - 1].id);
+    });
+    filters.appendChild(rateRow);
+
+    const engRow = G.chipRow('험지 참여도', F.engagement_band.map(b => b.id), state.eng || '',
+      v => countIf('eng', v), v => set('eng', v));
+    engRow.querySelectorAll('.chip').forEach((chip, i) => {
+      if (i === 0) return;
+      chip.firstChild.textContent = bandLabel(F.engagement_band)(F.engagement_band[i - 1].id);
+    });
+    filters.appendChild(engRow);
+
+    const clipRow = G.chipRow('영상', ['with', 'without'], state.clips || '',
+      v => countIf('clips', v), v => set('clips', v));
+    clipRow.querySelectorAll('.chip')[1].firstChild.textContent = '영상 있음';
+    clipRow.querySelectorAll('.chip')[2].firstChild.textContent = '성적만 있음';
+    filters.appendChild(clipRow);
+
+    const hits = rows.filter(r => match(r));
+    const shown = hits.reduce((n, r) => n + Math.max(r.clips.length, 1), 0);
+
+    filters.appendChild(G.el('div', { class: 'tally' }, [
+      G.el('span', {}, [G.el('strong', { text: String(hits.length) }),
+                        G.el('span', { text: ' 평가 칸' })]),
+      G.el('span', {}, [G.el('strong', { text: String(hits.reduce((n, r) => n + r.clips.length, 0)) }),
+                        G.el('span', { text: ' 컷' })]),
+      G.el('a', { href: G.at('compare/') + '?terrain=' + encodeURIComponent(state.terrain || F.terrain[0]) +
+                        '&speed=' + (state.speed !== undefined ? state.speed : 1) +
+                        '&left=' + man.version + ':baseline' +
+                        '&mid=' + man.version + ':' + man.main_model,
+                  class: 'btn', text: '이 조건으로 3열 비교' })
+    ]));
+    body.appendChild(filters);
+
+    if (!hits.length) {
+      body.appendChild(G.emptyBox('조건에 맞는 것이 없습니다',
+        '위 조건을 함께 걸면 남는 칸이 없습니다. 건수가 0 인 단추는 눌리지 않게 해 두었습니다.',
+        () => { Object.keys(state).forEach(k => delete state[k]);
+                G.writeParams({ v: man.version }); draw(); }));
+      return;
+    }
+
+    /* ── 보고서 느낌: 지형으로 묶고 속도 셋을 세 열로 ────────────────
+     * 팀장 확정 2026-09-12. 평평한 격자는 「무엇이 있나」만 말하고
+     * 「이 지형은 빠를수록 어떻게 되나」를 안 말한다. */
+    const grouped = state.view !== 'grid';
+    body.appendChild(viewSwitch(grouped));
+
+    if (!grouped) {
+      const grid = G.el('div', { class: 'grid' });
+      hits.slice().sort(byPlace).forEach(r => {
+        if (r.clips.length) r.clips.forEach(c => grid.appendChild(cutCard(r.ev, c)));
+        else grid.appendChild(cutCard(r.ev, null));
+      });
+      body.appendChild(grid);
+      return;
+    }
+
+    const order = [];
+    const byTerrain = new Map();
+
+    hits.slice().sort(byPlace).forEach(r => {
+      if (!byTerrain.has(r.ev.terrain)) { byTerrain.set(r.ev.terrain, []); order.push(r.ev.terrain); }
+      byTerrain.get(r.ev.terrain).push(r);
+    });
+
+    order.forEach(name => body.appendChild(terrainBlock(name, byTerrain.get(name))));
+  }
+
+  function byPlace(a, b) {
+    return a.ev.terrain.localeCompare(b.ev.terrain) ||
+           a.ev.speed_mps - b.ev.speed_mps ||
+           a.ev.model.localeCompare(b.ev.model);
+  }
+
+  function viewSwitch(grouped) {
+    const row = G.el('div', { class: 'viewsw' }, [
+      G.el('span', { class: 'lab', text: '보기' })
+    ]);
+    [['report', '보고서', '지형으로 묶고 속도 셋을 나란히'],
+     ['grid', '격자', '조건에 맞는 컷을 죽 늘어놓기']].forEach(([id, label, why]) => {
+      const on = (id === 'grid') !== grouped;
+      /* 고른 상태는 `aria-pressed` 가 말한다. `.on` 은 이 시트에 없는 이름이라
+       * 아무 표시도 안 났다 `확인됨` (2026-09-12 로컬 실측). */
+      const b = G.el('button', { type: 'button', class: 'chip', title: why });
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.appendChild(G.el('span', { text: label }));
+      b.addEventListener('click', () => set('view', id === 'report' ? '' : id));
+      row.appendChild(b);
+    });
+    return row;
+  }
+
+  /** 한 지형 한 덩이. 머리에 그 지형의 성적, 아래에 속도 세 열. */
+  function terrainBlock(name, list) {
+    const main = list.filter(r => r.ev.model === man.main_model);
+    const from = main.length ? main : list;
+    const rate = from.reduce((s, r) => s + r.ev.success_rate, 0) / from.length;
+    const engs = from.filter(r => r.ev.engagement !== null);
+    const eng = engs.length ? engs.reduce((s, r) => s + r.ev.engagement, 0) / engs.length : null;
+    const eps = from.reduce((s, r) => s + r.ev.episodes, 0);
+    const set6 = from[0].ev.terrain_set === 'rough6';
+
+    const head = G.el('header', { class: 'thead' }, [
+      G.el('h2', {}, [
+        G.el('span', { class: 'mono', text: name }),
+        G.el('span', { class: 'kind ' + (set6 ? 'k6' : 'k10'),
+                       text: set6 ? '기존 험지 6종' : '미경험 험지 10종' })
+      ]),
+      G.el('div', { class: 'tstat' }, [
+        G.el('span', {}, [
+          G.el('i', { text: '성공률' }),
+          G.el('b', { class: G.rateClass(rate), text: rate.toFixed(0) + ' %' })
+        ]),
+        G.el('span', {}, [
+          G.el('i', { text: '험지 참여도' }),
+          G.el('b', { text: eng === null ? '측정값 없음' : eng.toFixed(2) })
+        ]),
+        G.el('span', {}, [
+          G.el('i', { text: main.length ? man.main_model : '평균 대상' }),
+          G.el('b', { text: eps.toLocaleString() + '판' })
+        ])
+      ])
+    ]);
+
+    const cols = G.el('div', { class: 'speeds' });
+    const speeds = [];
+    list.forEach(r => { if (speeds.indexOf(r.ev.speed_mps) < 0) speeds.push(r.ev.speed_mps); });
+    speeds.sort((a, b) => a - b);
+
+    speeds.forEach(v => {
+      const col = G.el('div', { class: 'scol' }, [
+        G.el('div', { class: 'shead' }, [
+          G.el('b', { text: v.toFixed(1) }),
+          G.el('span', { text: 'm/s 명령' })
+        ])
+      ]);
+      const here = list.filter(r => G.sameNumber(r.ev.speed_mps, v));
+
+      /* **주 모델이 먼저 온다.** 알파벳 차례로 두면 `A` 와 `baseline` 의
+       * 「영상 없음」 두 칸이 정작 볼 컷보다 위에 깔린다 `확인됨`. */
+      const lead = here.filter(r => r.ev.model === man.main_model);
+      const rest = here.filter(r => r.ev.model !== man.main_model);
+
+      (lead.length ? lead : rest.slice(0, 1)).forEach(r => {
+        if (r.clips.length) r.clips.forEach(c => col.appendChild(cutCard(r.ev, c, true)));
+        else col.appendChild(cutCard(r.ev, null, true));
+      });
+
+      const others = lead.length ? rest : rest.slice(1);
+      if (others.length) col.appendChild(compareStrip(others));
+      cols.appendChild(col);
+    });
+
+    return G.el('section', { class: 'terr' }, [head, cols]);
+  }
+
+  /** 배속 단추. 파일은 한 벌이고 재생기만 바꾼다. */
+  function rateBar(video) {
+    const bar = G.el('div', { class: 'rates' }, [G.el('span', { class: 'lab', text: '배속' })]);
+    [0.25, 0.5, 1, 2].forEach(x => {
+      const b = G.el('button', { type: 'button', class: 'rb' + (x === 1 ? ' on' : ''),
+                                 text: x + 'x' });
+      b.addEventListener('click', () => {
+        video.playbackRate = x;
+        bar.querySelectorAll('.rb').forEach(o => o.classList.remove('on'));
+        b.classList.add('on');
+      });
+      bar.appendChild(b);
+    });
+    return bar;
+  }
+
+  /** 비교 모델 한 줄씩. 컷이 있으면 눌러서 그 자리에서 편다. */
+  function compareStrip(rows) {
+    const box = G.el('div', { class: 'cmpstrip' }, [
+      G.el('div', { class: 'clab', text: '비교' })
+    ]);
+
+    rows.sort((a, b) => a.ev.model.localeCompare(b.ev.model)).forEach(r => {
+      const rate = r.ev.success_rate;
+      const line = G.el('div', { class: 'cline' });
+      const head = G.el('button', { type: 'button', class: 'chead' }, [
+        G.el('span', { class: 'mono', text: r.ev.model }),
+        G.el('span', { class: 'rate ' + G.rateClass(rate), text: rate.toFixed(0) + ' %' })
+      ]);
+      const clip = r.clips[0];
+
+      if (clip) {
+        head.appendChild(G.el('span', { class: 'open', text: '컷 보기' }));
+        head.addEventListener('click', () => {
+          if (line.querySelector('video')) {
+            line.querySelector('.cvid').remove();
+            head.querySelector('.open').textContent = '컷 보기';
+            return;
+          }
+          const video = G.el('video', {
+            controls: true, playsinline: true, muted: true, preload: 'metadata'
+          });
+          G.attach(video, base + clip.file);
+          const hold = G.el('div', { class: 'cvid' }, [video]);
+          hold.appendChild(rateBar(video));
+          line.appendChild(hold);
+          head.querySelector('.open').textContent = '접기';
+          G.play(video);
+        });
+      } else {
+        head.appendChild(G.el('span', { class: 'none', text: '영상 없음' }));
+        head.disabled = true;
+      }
+
+      line.appendChild(head);
+      box.appendChild(line);
+    });
+
+    return box;
+  }
+
+  function cutCard(ev, clip, tight) {
+    const card = G.el('div', { class: 'cut' + (tight ? ' tight' : '') });
+    const fig = G.el('figure');
+
+    if (clip) {
+      const video = G.el('video', {
+        preload: 'none', controls: true, playsinline: true, muted: true
+      });
+      const poster = G.el('button', { class: 'poster', type: 'button' }, [
+        G.el('span', { class: 'play', text: '▶' }),
+        G.el('span', { text: clip.width + '×' + clip.height + ' · ' + clip.seconds.toFixed(1) + '초' })
+      ]);
+
+      /* **대표 한 장을 깐다.** 없으면 검은 칸이라 어떤 영상인지 모른다
+       * `확인됨` (2026-09-12 팀장 지적). 그 한 장은 첫 프레임이 아니라
+       * «지형이 가장 잘 보이는» 프레임이다. 첫 프레임은 로봇이 평평한
+       * 출발판에 있어 피라미드 여섯 컷이 통째로 검거나 밋밋했다. */
+      if (clip.poster) {
+        poster.style.backgroundImage = 'url("' + base + clip.poster + '")';
+        poster.classList.add('has-shot');
+      }
+      poster.addEventListener('click', () => {
+        G.attach(video, base + clip.file);
+        poster.remove();
+        G.play(video);
+      });
+      fig.appendChild(video);
+      fig.appendChild(poster);
+      card.appendChild(fig);
+      card.appendChild(rateBar(video));
+    } else {
+      fig.appendChild(G.el('div', { class: 'state' }, [
+        G.el('b', { text: '영상 없음' }),
+        G.el('span', { text: '이 자리는 ' + ev.episodes + '판을 평가했지만 대표 영상을 뜨지 않았습니다' })
+      ]));
+      fig.style.position = 'relative';
+      card.appendChild(fig);
+    }
+
+    const rate = ev.success_rate;
+    const cap = G.el('figcaption', {}, [
+      G.el('div', { class: 'name' }, [
+        G.el('span', { class: 'mono', text: ev.model }),
+        G.el('span', { class: 'rate ' + G.rateClass(rate), text: rate.toFixed(0) + ' %' })
+      ]),
+      G.el('div', { class: 'meta' }, [
+        G.el('span', { text: ev.episodes + '판 중 ' + ev.successes + '판 성공' }),
+        G.el('span', { text: '참여도 ' + (ev.engagement === null ? '측정값 없음'
+                       : ev.engagement.toFixed(2)) })
+      ])
+    ]);
+
+    if (!tight) {
+      cap.insertBefore(G.el('div', { class: 'meta' }, [
+        G.el('span', { class: 'mono', text: ev.terrain }),
+        G.el('span', { text: ev.speed_mps.toFixed(1) + ' m/s' }),
+        G.el('span', { class: 'tag ' + (ev.terrain_set === 'rough6' ? 'main' : 'compare'),
+                       text: ev.terrain_set === 'rough6' ? '기존 험지 6종' : '미경험 험지 10종' })
+      ]), cap.children[1]);
+    }
+
+    card.appendChild(cap);
+    return card;
+  }
+
+  window.addEventListener('popstate', () => {
+    const again = G.readParams(allowed);
+    Object.keys(state).forEach(k => delete state[k]);
+    Object.assign(state, again.value);
+    rejected.length = 0;
+    again.rejected.forEach(r => rejected.push(r));
+    draw();
+  });
+
+  // 거절한 조건이 있으면 URL 을 건드리지 않는다. 저장한 링크가 요청하지도
+  // 않은 조건을 뜻하게 되는 것을 막는다.
+  if (!rejected.length) G.writeParams(Object.assign({ v: man.version }, state), true);
+
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -108,9 +108,9 @@ SVG_BRANCH = r"""
   </g>
   <path d="M 120 100 L 120 160" stroke="var(--dim)" stroke-width="1.6" fill="none"/>
   <path d="M 340 100 L 340 160" stroke="var(--dim)" stroke-width="1.6" fill="none"/>
-  <path d="M 300 160 C 320 160, 320 100, 336 100" stroke="var(--ink-2)" stroke-width="1.8" fill="none" marker-end="url(#bah)"/>
-  <path d="M 560 160 C 580 160, 580 100, 596 100" stroke="var(--ink-2)" stroke-width="1.8" fill="none" marker-end="url(#bah)"/>
-  <path d="M 640 100 C 660 100, 660 40, 676 40" stroke="var(--ink-2)" stroke-width="1.8" fill="none" marker-end="url(#bah)"/>
+  <path d="M 300 160 C 320 160, 320 100, 336 100" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#bah)"/>
+  <path d="M 560 160 C 580 160, 580 100, 596 100" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#bah)"/>
+  <path d="M 640 100 C 660 100, 660 40, 676 40" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#bah)"/>
   <g font-size="9.5" font-weight="800" fill="var(--ink)">
     <text x="298" y="128">PR</text><text x="558" y="128">PR</text><text x="640" y="68">PR</text>
   </g>

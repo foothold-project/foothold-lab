@@ -220,6 +220,16 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
+/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
 .mdsvg{margin:20px 0;padding:0;overflow-x:auto}
 .mdsvg svg{display:block;max-width:100%;height:auto}
 .ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
@@ -510,7 +520,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
   margin-bottom:.4rem}
 .hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
 .hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
-  margin-top:.4rem;max-width:56ch}
+  margin-top:.4rem}
 .hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
   font-variant-numeric:tabular-nums}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
@@ -728,7 +738,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=304548ef').then(function(r){
+    fetch('/assets/search-index.json?v=1594681f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -846,7 +856,7 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="hub-tech.html">기술</a><a class="on" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="on" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 <h1>파이프라인 <span style="font-size:.6em;color:var(--ink-3);font-weight:600">Pipeline</span></h1>
 <p class="lede">환경 구축 · 협업 규칙 · 자동화</p>
@@ -974,7 +984,11 @@ body>*{flex-shrink:0}
 .em3 u.ar-b2{color:#a86a08;border-color:#a86a08}
 .em3 u.ar-c1{color:#4a5566;border-color:#4a5566}
 .em3 u.ar-c2{color:#5a6a2a;border-color:#5a6a2a}
-@media (max-width:760px){.ev3{grid-template-columns:1.8rem 3.4rem 1fr}
+@media (max-width:760px){/* ★ 2026-09-13. 데스크톱 선언에만 !important 가 있어 여기가 «졌다».
+   실측: 휴대폰에서 카드 본문 폭이 156px 이었다. 번호·수치 열이
+   데스크톱 폭 그대로 자리를 먹은 것이다. 같은 무게로 맞춘다 */
+.ev3{grid-template-columns:1.8rem 3.4rem minmax(0,1fr) auto!important}
+.ev3{grid-template-columns:1.8rem 3.4rem 1fr}
   .eth3{display:none}}
 
 .w3b{margin-left:auto;font-size:.68rem;font-weight:800;color:var(--dim);
@@ -1019,7 +1033,82 @@ body>*{flex-shrink:0}
 .ht3{display:block;font-size:1.25rem;font-weight:850;letter-spacing:-.01em;
  margin:.3rem 0 .1rem;line-height:1.35;color:inherit;text-decoration:none}
 .ht3:hover{color:var(--dim)}
-.hd3{font-size:.8rem;color:var(--ink-3);max-width:70ch}
+.hd3{font-size:.8rem;color:var(--ink-3)}
+/* 첫 영역 · 「지금 어디까지 왔나」 (2026-09-13 · 목업 확정본).
+   들어온 사람이 맨 처음 보는 덩이다. 수치는 원장이 실측에서 계산한다.
+   PC 에서 넉 줄이 한 줄에 서고, 좁아지면 둘씩 접힌다 */
+.rel3{border:1px solid var(--rule);border-radius:var(--p-radius,10px);
+ padding:var(--p-pad);margin:0 0 .7rem;background:var(--paper-2,transparent)}
+.rk3{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+ font-size:.62rem;font-weight:800;letter-spacing:.14em;color:var(--dim)}
+.rkm3{font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--ink-3)}
+.rl3{margin:.45rem 0 .8rem;font-size:.92rem;font-weight:650;line-height:1.55;
+ color:var(--ink);word-break:keep-all}
+.rl3 b{font-weight:850;color:var(--dim)}
+.rvs{display:grid;gap:.5rem;grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.rvs{grid-template-columns:repeat(2,1fr)}}
+.rv3{border-top:2px solid var(--rule);padding-top:.4rem;min-width:0}
+.rvk3{font-size:.64rem;font-weight:700;color:var(--ink-3);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvn3{font-size:1.34rem;font-weight:850;letter-spacing:-.02em;color:var(--ink);
+ line-height:1.25;font-variant-numeric:tabular-nums;margin:.1rem 0}
+.rvn3 i{font-style:normal;font-size:.58em;font-weight:800;color:var(--dim)}
+.rvs3{font-size:.62rem;color:var(--ink-3);line-height:1.4;word-break:keep-all}
+.rgs3{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+.rg3{display:inline-flex;flex-direction:column;gap:.1rem;padding:.4rem .65rem;
+ border:1px solid var(--rule);border-radius:var(--p-radius-tag,6px);
+ background:var(--paper);color:inherit;text-decoration:none}
+.rg3:hover{border-color:var(--dim)}
+.rg3 b{font-size:.74rem;font-weight:800}
+.rg3 span{font-size:.62rem;color:var(--ink-3)}
+
+/* 둘째 영역 · 여섯 입구. 「이런 글은 어디서 찾지」의 답이다.
+   큰 카드 여섯이 아니라 «누르면 목록이 걸러지는» 단추다. 크게 만들면
+   첫 문서 카드가 그만큼 밀린다 (실측: 얹기만 해도 PC +128px) */
+.dr3{display:grid;gap:.4rem;grid-template-columns:repeat(6,1fr);margin:0 0 .9rem}
+@media(max-width:1100px){.dr3{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.dr3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.dr3{grid-template-columns:1fr}}
+.dr3 a{display:flex;align-items:baseline;gap:.4rem;padding:.45rem .6rem;
+ border:1px solid var(--rule);border-radius:var(--p-radius-tag,6px);
+ color:inherit;text-decoration:none;min-width:0}
+.dr3 a:hover{border-color:var(--dim)}
+.dnm3{font-size:.76rem;font-weight:800;white-space:nowrap}
+/* 설명은 «자리가 있을 때만» 보인다. 여섯을 한 줄에 놓으면 칸이 좁아
+   이름이 먼저 잘린다. 이름과 건수는 끝까지 남기고 설명부터 접는다.
+   찾는 사람에게 필요한 것은 이름이지 설명이 아니다 */
+.dex3{flex:1 1 auto;min-width:0;font-size:.64rem;color:var(--ink-3);
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:1101px){.dex3{display:none}}
+@media(max-width:520px){.dex3{display:none}}
+.dct3{flex:0 0 auto;font-size:.66rem;font-weight:850;color:var(--dim);
+ font-variant-numeric:tabular-nums}
+/* 고른 입구. 색만으로 알리지 않는다 (테두리도 함께 굵어진다) */
+.dr3 a[aria-pressed="true"]{border-color:var(--dim);border-width:2px;
+ padding:calc(.45rem - 1px) calc(.6rem - 1px);background:var(--paper)}
+.dr3 a[aria-pressed="true"] .dnm3{color:var(--dim)}
+/* ★ 2026-09-13. `el.hidden` 만으로는 «안 사라진다».
+   브라우저 기본 시트의 `[hidden]{display:none}` 은 «태그 선택자» 수준이라
+   우리 `.ev3{display:grid}` 한 줄에 진다. 명세대로다.
+
+   실측 (라이브 `?fn=diagnosis`): 속성이 hidden 인 카드 29장 · 화면에서
+   실제로 사라진 카드 **0장** · 37장이 전부 보였다. 거르개를 눌러도
+   아무것도 안 걸러진 것이다.
+
+   내 시험이 이것을 놓친 까닭도 같다. `!c.hidden` 을 셌다. **그건 내가 넣은
+   속성이지 사람이 보는 화면이 아니다.** 세어야 하는 것은
+   `getComputedStyle(e).display` 다 (커널 원칙 3).
+
+   그래서 숨김을 «우리 규칙으로» 못 박는다. */
+[hidden]{display:none!important}
+
+/* 걸러서 아무것도 안 남았을 때. 목록을 숨기지 않고 «없다» 고 말한다 */
+.dnone3{margin:0 0 .9rem;padding:.7rem .8rem;border:1px dashed var(--rule);
+ border-radius:var(--p-radius-tag,6px);font-size:.76rem;color:var(--ink-3)}
+.dclr3{margin-left:.3rem;font:inherit;font-weight:800;color:var(--dim);
+ background:none;border:0;border-bottom:1px solid var(--dim);cursor:pointer;
+ padding:0}
+
 /* 출발선 카드가 아래 험지 표로 보내는 한 줄. 「후속 과제」 칩 줄을 대신한다
    (팀장 2026-09-04). 칩이 아니라 문장이다. 여기서 세지 않는다 */
 .hn3{display:block;font-size:.74rem;color:var(--dim);font-weight:700;
@@ -1161,6 +1250,34 @@ body>*{flex-shrink:0}
    (실측 585px). 표는 한 행의 키가 그 행의 가장 긴 칸까지만 간다.
    그래서 세로 길이가 지형 수에만 비례하고, 「진단 열은 다 찼는데 레시피 열은
    비었다」 가 가로로 한 번에 읽힌다. 카드 배치로는 그 비교가 안 됐다. */
+/* 접힌 보드의 요약 줄. 지형 · 성적 · 담당 다섯 칸은 «접혀도» 보인다.
+   담당자가 자기 지형으로 가는 길이 목록 길이에 안 묶이게 (2026-09-13) */
+.tkcs3{display:flex;flex-wrap:wrap;gap:.4rem;margin:.15rem 0 .6rem}
+.tkpin3{display:inline-flex;align-items:baseline;gap:.4rem;
+ padding:.34rem .6rem;border:1px solid var(--rule);border-radius:999px;
+ background:var(--paper-2,transparent);color:inherit;text-decoration:none;
+ font-size:.72rem;line-height:1.2}
+.tkpin3:hover{border-color:var(--dim)}
+.tkpin3 b{font-weight:800}
+.tkcm3{font-weight:850;color:var(--dim);font-variant-numeric:tabular-nums}
+.tkco3{color:var(--ink-3);font-weight:600}
+
+/* 보드 자체는 접는다. 펼치기 전 601px 을 먹고 있었다 (실측) */
+.tkd3{margin:0 0 .9rem}
+.tkds3{cursor:pointer;list-style:none;display:flex;align-items:baseline;
+ gap:.5rem;padding:.45rem .1rem;font-size:.74rem;font-weight:800;
+ color:var(--ink-2,var(--ink-3));border-top:1px solid var(--rule);
+ border-bottom:1px solid var(--rule)}
+.tkds3::-webkit-details-marker{display:none}
+.tkds3::before{content:'▸';font-size:.8em;color:var(--dim);font-weight:900}
+.tkd3[open]>.tkds3::before{content:'▾'}
+.tkds3 span{font-weight:600;color:var(--ink-3);font-size:.68rem}
+.tkds3:hover{color:var(--dim)}
+/* 직접 주소로 들어온 행을 잠깐 표시한다. 색만 바꾸고 자리는 안 바꾼다 */
+.tkhit3{outline:2px solid var(--dim);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){
+ .tkhit3{transition:outline-color .3s}}
+
 .tkw3{display:block;overflow-x:auto;margin:0 0 .9rem}
 .tks3{display:grid;grid-template-columns:minmax(12rem,1.3fr) repeat(4,minmax(0,1fr));
  gap:.3rem;align-items:stretch;min-width:0}
@@ -1232,7 +1349,7 @@ body>*{flex-shrink:0}
 /* 「외 N건」. 잘린 것이 자기 존재를 주장하는 자리다 (#156) */
 .tkmr3{font-weight:800;color:var(--dim)!important}
 .tkmr3 b{font-size:.66rem;letter-spacing:.04em}
-.tkl3{font-size:var(--p-body);color:var(--ink-3);margin:.15rem 0 .7rem;max-width:80ch}
+.tkl3{font-size:var(--p-body);color:var(--ink-3);margin:.15rem 0 .7rem}
 .tkx3{font-size:var(--p-body);color:var(--stop);font-weight:700}
 /* 여러 지형에 똑같이 걸린 것. 경고가 아니라 «전체 사정» 이라 색을 가른다. */
 .tkall3{font-size:var(--p-body);color:var(--ink-2);border-left:3px solid var(--dim);
@@ -1256,6 +1373,6 @@ body>*{flex-shrink:0}
  .ev3{grid-template-columns:4rem 1fr}
  .rr3 b{white-space:normal}
 }
-</style><div class="wns3"><div class="ws3"><div class="wt3">합류 시</div><div class="wd3">오늘 합류했다. 손을 움직이려면 무엇부터.</div><a class="wr3" data-added="2026-09-13" href="setup.html"><b>개발환경 구축</b><span>팀 공통 세팅</span></a><a class="wr3" data-added="2026-09-13" href="team-access.html"><b>워크스테이션 접속</b><span>원격 접속과 운영</span></a><a class="wr3" data-added="2026-09-13" href="runpod-setup.html"><b>RunPod Isaac Lab 환경</b><span>볼륨 · 템플릿 · 첫 실행. 마운트는 /data</span></a></div><div class="ws3"><div class="wt3">상시 참조</div><div class="wd3">이슈를 열고 PR 을 올릴 때 펴 놓는 것.</div><a class="wr3" data-added="2026-09-13" href="workflow.html"><b>작업 흐름</b><span>이슈부터 머지까지 한 장</span></a><a class="wr3" data-added="2026-09-13" href="collab.html"><b>FOOTHOLD 협업 규칙</b><span>브랜치 · 보드 · 문서 규칙</span></a><a class="wr3" data-added="2026-09-13" href="automation.html"><b>자동화 지도</b><span>무엇이 자동이고 무엇이 사람인가</span></a></div><div class="ws3"><div class="wt3">문서 투고 시</div><div class="wd3">내 글이 어디로 가는가.</div><a class="wr3" data-added="2026-09-13" href="info-model.html"><b>정보 모델</b><span>내 글이 어디로 가나</span></a><a class="wr3" data-added="2026-09-13" href="doc-graph.html"><b>문서 관계표</b><span>무엇이 무엇의 상위인가</span></a><a class="wr3" data-added="2026-09-13" href="research-taxonomy.html"><b>연구 허브 분류 기준</b><span>검토중</span></a></div></div>
-</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.0.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp6aj0ttm2</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</style><div class="wns3"><div class="ws3"><div class="wt3">합류 시</div><div class="wd3">오늘 합류했다. 손을 움직이려면 무엇부터.</div><a class="wr3" data-added="2026-09-14" href="setup.html"><b>개발환경 구축</b><span>팀 공통 세팅</span></a><a class="wr3" data-added="2026-09-14" href="team-access.html"><b>워크스테이션 접속</b><span>원격 접속과 운영</span></a><a class="wr3" data-added="2026-09-14" href="runpod-setup.html"><b>RunPod Isaac Lab 환경</b><span>볼륨 · 템플릿 · 첫 실행. 마운트는 /data</span></a></div><div class="ws3"><div class="wt3">상시 참조</div><div class="wd3">이슈를 열고 PR 을 올릴 때 펴 놓는 것.</div><a class="wr3" data-added="2026-09-14" href="workflow.html"><b>작업 흐름</b><span>이슈부터 머지까지 한 장</span></a><a class="wr3" data-added="2026-09-14" href="collab.html"><b>FOOTHOLD 협업 규칙</b><span>브랜치 · 보드 · 문서 규칙</span></a><a class="wr3" data-added="2026-09-14" href="automation.html"><b>자동화 지도</b><span>무엇이 자동이고 무엇이 사람인가</span></a></div><div class="ws3"><div class="wt3">문서 투고 시</div><div class="wd3">내 글이 어디로 가는가.</div><a class="wr3" data-added="2026-09-14" href="info-model.html"><b>정보 모델</b><span>내 글이 어디로 가나</span></a><a class="wr3" data-added="2026-09-14" href="doc-graph.html"><b>문서 관계표</b><span>무엇이 무엇의 상위인가</span></a><a class="wr3" data-added="2026-09-14" href="research-taxonomy.html"><b>연구 허브 분류 기준</b><span>검토중</span></a></div></div>
+</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

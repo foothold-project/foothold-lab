@@ -351,6 +351,18 @@ def rescale(css):
 
 def style():
     css = fetch('style.css')
+
+    # ★ 2026-09-13. 남의 스타일시트에서 «문단 폭 제한» 을 걷어낸다.
+    #
+    #   팀장 지적: 「또 Claude AI Slop 인 문단의 width 를 일부만 쓰네」.
+    #   `AGENTS.md` 214줄에 규칙이 있는데 `tech-*` 네 쪽이 어기고 있었다.
+    #   생성기에도 저장소에도 그 문자열이 없어 한참 찾았다. 원본이
+    #   `~/.claude/cache/wiki-import/style.css` 였다 · **저장소 밖 캐시다.**
+    #   기기에만 있는 파일이라 다른 사람 기기에서는 또 달라진다.
+    #
+    #   가져온 쪽을 고쳐도 다음 가져오기에 되돌아온다. 들어오는 길목에서 뗀다.
+    css = re.sub(r'max-width\s*:\s*\d+(?:\.\d+)?ch\s*;?', '', css)
+
     # 겉(레일·본문 배치·wiki 자체 토큰) 규칙은 걷어낸다. 본문 구조 규칙만 남긴다.
     out, skip = [], 0
     for block in re.split(r'(?<=\})', css):
