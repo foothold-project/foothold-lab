@@ -72,6 +72,14 @@ h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem
   border-bottom:1px solid var(--rule);margin-bottom:1rem}
 h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
 h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
 /* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
    원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
    낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
@@ -729,7 +737,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
+    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1045,7 +1053,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <h4>왜 험지는 6 초 · 3 m 인가</h4>
 <p>지형이 놓인 방식 때문입니다. 로봇은 <b>타일 한가운데</b>에서 출발하고 장애물은 바로 앞에 있습니다.</p>
 <div class="tw"><table><thead><tr><th>거리 (출발점 기준)</th><th>거기 무엇이 있나</th></tr></thead><tbody><tr><td>0 m</td><td>로봇 출발 위치 · 타일 중앙 좌표 <code>(0, 0)</code></td></tr><tr><td>0.75 m</td><td>여기까지 평평한 발판 · <b>모든 지형이 같다</b> (<code>platform_width = 1.5 m</code> 의 절반)</td></tr><tr><td>0.75 m 부터</td><td><b>장애물이 시작된다</b></td></tr><tr><td><b>3 m</b></td><td><b>통과선</b> · 전진 축을 채우는 자리. 성공은 네 축 AND 다</td></tr><tr><td>4 m</td><td>타일 끝 (타일은 8 m × 8 m)</td></tr></tbody></table></div>
-<p>##### 장애물이 끝나는 자리는 지형마다 다릅니다</p>
+<h5>장애물이 끝나는 자리는 지형마다 다릅니다</h5>
 <p>코드에서 계산한 값입니다. 난이도 0.5 기준이고 중심에서 잰 거리입니다.</p>
 <div class="tw"><table><thead><tr><th>지형</th><th>장애물 끝</th><th>통과선까지</th><th>근거 · Isaac Lab 0.54.2</th></tr></thead><tbody><tr><td>gap</td><td>1.02 m</td><td>1.98 m 가 평지</td><td>0.75 + (0.15 + 0.5×0.25)</td></tr><tr><td>rails</td><td>2.88 m</td><td>0.12 m 뿐</td><td>바깥 레일 바깥 모서리</td></tr><tr><td>pit</td><td>4.0 m</td><td>통과선이 구덩이 안</td><td>double_pit=False · 타일 절반</td></tr></tbody></table></div>
 <p><b>지형마다 크게 다릅니다.</b></p>
@@ -1068,7 +1076,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=d219cefc" alt="그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다" loading="lazy"><figcaption>그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다</figcaption></figure></p>
 <h4>3.2 gap 지형에서 광선이 어디를 비추나</h4>
 <p>난이도 0.5 에서 실제로 재 본 그림입니다. 재현은 sim/eval/probe_height_scan.py 입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=c957c9e9" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=2bf4affd" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
 <p>발판이 1.5 m 라 가장자리가 ±0.75 m 인데 격자는 ±0.80 m 까지 뻗습니다. 그래서 <b>맨 앞줄과 맨 뒷줄 11개씩, 모두 22개</b>가 틈 위에 걸칩니다.</p>
 <p><b>학습이 고른 +1 은 옳은 선택입니다.</b> 이 눈금에서 양수는 「바닥이 아래로 멀다」는 뜻이고, 바닥 없는 구멍이 바로 그것입니다. 학습 코드 주석도 그렇게 적고 있습니다.</p>
 <p>평가가 넣는 -1 은 <b>눈금의 정반대 끝</b>입니다. 뜻으로 옮기면 <b>「내 몸통보다 0.5 m 넘게 솟은 무언가가 있다」</b> 입니다. 몸통높이 - 닿은높이 - 0.5 = -1 이 되는 경계가 닿은높이 = 몸통높이 + 0.5 이기 때문입니다.</p>
@@ -1154,21 +1162,21 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>속도 축도 같은 이유입니다.</b> 한 속도에서만 재면 <b>「이 지형이 어렵다」와 「이 속도가 어렵다」가 섞입니다.</b> 실제로 1.5 m/s 칸이 전부 무너진 것은 지형 탓이 아니라 <b>그 속도가 학습 범위 밖</b>이기 때문이었고, 속도를 나누지 않았으면 그것을 지형 문제로 잘못 읽었을 것입니다.</p>
 <h4>어떻게 나눠서 쟀나</h4>
 <p>「난이도를 0 에서 1 까지」라는 값 하나가 지형마다 <b>다른 것</b>을 바꿉니다. 6절에 어느 지형이 무엇을 바꾸는지 적었습니다. 여기서는 <b>격자를 어떻게 짰고 왜 그렇게 짰는지</b>를 적습니다.</p>
-<p>##### 격자를 두 번에 나눠 짰습니다</p>
+<h5>격자를 두 번에 나눠 짰습니다</h5>
 <ol><li>먼저 넓게 훑는다 · 0.1 씩 열 칸 </li></ol>
 <p> <code>0.1 · 0.2 · 0.3 · … · 1.0</code> 을 속도 세 개와 곱해 <b>지형당 30칸</b>을 돌렸습니다. <b>어디쯤에서 무너지는지</b>를 먼저 봅니다.</p>
 <ol><li>움직이는 구간만 촘촘히 다시 잰다 </li></ol>
 <p> 1단계에서 성공률이 크게 변하는 구간에 <b>여덟 칸을 더</b> 넣습니다. 어디에 넣을지는 지형마다 다릅니다.   실패 5종은 <b>아래쪽</b>(<code>0.02 · 0.04 · 0.06 · 0.08 · 0.12 · 0.14 · 0.16 · 0.18</code>), 기존 6종은 <b>위쪽</b>(<code>0.92 · 0.94 · 0.96 · 0.98</code>)과 아래쪽을 섞었습니다.</p>
 <p><b>왜 두 번에 나누나.</b> 처음부터 스무 칸을 다 돌리면 시간이 두 배인데, <b>대부분의 칸이 0% 나 100% 라 정보가 없습니다.</b> 먼저 훑어서 「어디가 움직이나」를 보고 그 구간만 촘촘히 하면 같은 시간에 더 많이 압니다.</p>
-<p>##### 실제로 돌린 격자</p>
+<h5>실제로 돌린 격자</h5>
 <div class="tw"><table><thead><tr><th>실행</th><th>지형</th><th>난이도 칸</th><th>속도</th><th>돌린 칸</th><th>칸당</th><th>총 판수</th></tr></thead><tbody><tr><td>실패 5종</td><td>5</td><td>18</td><td>3</td><td>190</td><td>100</td><td>19,000</td></tr><tr><td>기존 6종</td><td>6</td><td>18</td><td>3</td><td>228</td><td>100</td><td>22,800</td></tr><tr><td><code>rails</code> 두께 고정</td><td>1</td><td>10</td><td>1</td><td>10</td><td>100</td><td>1,000</td></tr><tr><td><b>누적</b> · 규격 1 로 잰 것</td><td></td><td></td><td></td><td></td><td></td><td><b>42,800</b></td></tr></tbody></table></div>
 <p><b>격자가 다 채워져 있지 않습니다.</b> 5종은 완전격자 270 중 190칸, 6종은 324 중 228칸입니다.</p>
 <p><b>빠진 칸은 2단계에서 더한 세밀화 구간의 0.5 와 1.5 m/s 입니다.</b> 그 여덟 칸은 <b>1.0 m/s 만</b> 돌렸습니다. 속도 비교는 1단계 열 칸으로 충분하고, 세밀화는 <b>「한계 난이도가 어디인가」</b> 를 보는 것이라 기준 속도 하나면 되기 때문입니다.</p>
 <p><b>그래서 세밀화 구간의 표에는 1.0 m/s 만 있습니다.</b> 다른 속도 칸이 비어 있는 것은 안 돌린 것이지 0% 가 아닙니다.</p>
-<p>##### 왜 1.0 m/s 를 대표로 보나</p>
+<h5>왜 1.0 m/s 를 대표로 보나</h5>
 <p><b>정본 조건이 1.0 m/s 이기 때문입니다.</b> 기준선 성적도 그 속도로 쟀고, 지형 사이를 비교할 때 조건이 같아야 합니다.</p>
 <p><b>0.5 와 1.5 는 「속도가 성패에 얼마나 관여하나」를 보려고 넣은 것</b>이지 대표값이 아닙니다. 특히 <b>1.5 m/s 는 이 정책의 학습 범위 밖</b>이라 따로 읽어야 합니다.</p>
-<p>##### 한 칸이 무엇을 뜻하나</p>
+<h5>한 칸이 무엇을 뜻하나</h5>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>한 칸 = 지형 하나 · 난이도 하나 · 속도 하나 · 100 에피소드
 
 100에피소드는 에피소드마다 출발 위치와 방향이 조금씩 다르다
@@ -1183,9 +1191,9 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>벽은 0.2 와 0.4 사이입니다.</b> 0.02 씩 채워 보면 <code>rails</code> 와 <code>pit</code> 은 <b>0.02 부터 0.18 까지 거의 평평합니다.</b></p>
 <p><b>커리큘럼 첫 계단을 0.02 로 잡을 이유가 없습니다. 0.2 면 됩니다.</b></p>
 <h4>이 곡선이 말해 주는 것 셋</h4>
-<p>##### 하나 · 지형마다 무너지는 자리가 다릅니다</p>
+<h5>하나 · 지형마다 무너지는 자리가 다릅니다</h5>
 <p><code>rails</code> 와 <code>pit</code> 은 0.1 에서 0.3 까지 완만하게 내려갑니다. <code>stepping_stones</code> 는 <b>0.1 과 0.2 사이에서 절벽처럼 떨어집니다</b>(54%에서 0%). <b>같은 「실패」라도 곡선 모양이 다르고, 그래서 처방도 다릅니다.</b></p>
-<p>##### 둘 · <code>stepping_stones</code> 의 절이 급락은 난이도가 아니라 픽셀 탓입니다</p>
+<h5>둘 · <code>stepping_stones</code> 의 절이 급락은 난이도가 아니라 픽셀 탓입니다</h5>
 <p>0.16 에서 56% 인데 <b>0.18 에서 0%</b> 입니다. 그 사이 파라미터는 <b>6 mm 밖에 안 움직입니다.</b></p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>stone_distance = int(간격 / horizontal_scale)
 
@@ -1193,7 +1201,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 0.1016  -&gt;  int  1 픽셀   10 cm 구멍 · 깊이 1 m</pre></div>
 <p><b>난이도 0.1667 아래의 <code>stepping_stones</code> 는 발판 지형이 아닙니다.</b> 그 구간의 62% 를 「발판을 밟았다」로 읽으면 안 됩니다.</p>
 <p><b>커리큘럼에 「쉬운 발판」 단계를 난이도로는 만들 수 없습니다.</b> <code>horizontal_scale</code> 이나 <code>stone_distance_range</code> 를 손대야 합니다.</p>
-<p>##### 셋 · <code>gap</code> 에 곡선이 없던 것은 «측정» 탓이었습니다</p>
+<h5>셋 · <code>gap</code> 에 곡선이 없던 것은 «측정» 탓이었습니다</h5>
 <p><b>2026-09-10 에는 이렇게 적었습니다.</b> 「서른 칸 어디서도 5% 이하다. 난이도를 낮춰도 안 된다. <code>gap</code> 은 어디까지 되는가라는 물음 자체가 성립하지 않는다.」</p>
 <p><b>틀렸습니다.</b> 그건 규격 1 로 잰 것이고, 로봇이 구멍을 장애물로 보고 있었습니다.</p>
 <p><b>규격 2 로 다시 재니 곡선이 나옵니다.</b> 1.0 m/s 기준.</p>
@@ -1201,7 +1209,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>A 는 연습한 폭(0.20 m)을 조금 넘어서까지 버팁니다.</b> 난이도 0.3 이 평가 틈 0.225 m 이고 거기까지 100% 입니다. 0.4(0.25 m)에서 79%, 0.5(0.275 m)에서 28% 로 떨어집니다.</p>
 <p><b>B 는 난이도 1.0(0.40 m)까지 전부 100% 입니다.</b> 연습 범위 안이면 넘습니다.</p>
 <p>임석헌이 <code>gap</code> 을 따로 떼어 학습시킨 접근은 <b>옳았습니다.</b> 다만 우리 평가가 그것을 못 보여 주고 있었습니다.</p>
-<p>##### 넷 · 190칸 중 50칸만 성공률이 5%를 넘습니다</p>
+<h5>넷 · 190칸 중 50칸만 성공률이 5%를 넘습니다</h5>
 <p>나머지 140칸은 거의 0 입니다. <b>그 50칸이 어디에 있는지</b>가 지금 정책의 능력 범위입니다.</p>
 <div class="tw"><table><thead><tr><th>지형</th><th>속도</th><th>칸</th><th>난이도 범위</th></tr></thead><tbody><tr><td>pit</td><td>1.0</td><td>12</td><td>0.02 ~ 0.4</td></tr><tr><td>rails</td><td>1.0</td><td>12</td><td>0.02 ~ 0.4</td></tr><tr><td>stepping_stones</td><td>1.0</td><td>8</td><td>0.02 ~ 0.16</td></tr><tr><td>gap</td><td>1.0</td><td>6</td><td>0.02 ~ 0.18 전부 22% 이하</td></tr><tr><td>pit · rails</td><td>0.5</td><td>6</td><td>0.1 ~ 0.3</td></tr><tr><td>floating_ring</td><td>0.5</td><td>3</td><td>0.8 ~ 1.0 반대쪽</td></tr><tr><td>그 밖</td><td></td><td>3</td><td>낱개</td></tr></tbody></table></div>
 <p><b>1.0 m/s 에 39칸이 몰려 있습니다.</b> 0.5 m/s 는 10칸, 1.5 m/s 는 1칸뿐입니다. <b>이 정책이 통하는 속도가 사실상 하나</b>라는 뜻입니다.</p>
@@ -1222,11 +1230,11 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b><code>random_rough</code> 에는 난이도 축이 아예 없습니다.</b> Isaac Lab 독스트링이 <b>「이 지형에서는 난이도가 무시된다」</b> 고 적어 두었고 본문에서도 안 씁니다. 실측 80~91%에 추세가 없는 것이 그 때문입니다.</p>
 <p><b>이 지형의 난이도 열 개를 자료점 열 개로 세면 안 됩니다. 하나입니다.</b></p>
 <p><b><code>경사</code> 의 100% 를 성과로 인용하면 안 됩니다.</b> 최대 경사가 0.4 라 이 정책에게 쉬운 것이고, 난이도를 끝까지 올려도 그 값이 안 넘어갑니다.</p>
-<p>##### 속도의 영향이 지형마다 반대입니다</p>
+<h5>속도의 영향이 지형마다 반대입니다</h5>
 <div class="tw"><table><thead><tr><th>지형 (난이도 0.5)</th><th>0.5 m/s</th><th>1.0 m/s</th><th>1.5 m/s</th></tr></thead><tbody><tr><td>계단</td><td>10</td><td>100</td><td>81</td></tr><tr><td>경사</td><td>100</td><td>100</td><td>0</td></tr><tr><td>boxes</td><td>76</td><td>34</td><td>0</td></tr><tr><td>역계단</td><td>24</td><td>0</td><td>0</td></tr></tbody></table></div>
 <p><b>계단은 천천히 가면 10% 인데 1.0 m/s 로 가면 100% 입니다.</b> 반대로 <code>boxes</code> 와 <code>역계단</code> 은 <b>천천히 갈 때 더 잘합니다.</b></p>
 <p><b>「빠르게가 유리하다」도 「천천히가 유리하다」도 지형을 안 밝히면 틀립니다.</b> 실패 5종에서는 1.0 m/s 가 일관되게 좋았는데 6종에서는 갈립니다.</p>
-<p>##### 열한 지형을 한 줄에 놓으면</p>
+<h5>열한 지형을 한 줄에 놓으면</h5>
 <p><figure class="mdimg"><img src="assets/visual/eval-v2-fig06.svg?v=327419a5" alt="정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다." loading="lazy"><figcaption>정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다.</figcaption></figure></p>
 <p><b>「학습한 지형이면 된다」가 성립하지 않습니다.</b> <code>역계단</code> 은 기준선이 학습에 쓴 지형인데 <b>미경험 5종과 같은 자리인 0%</b> 에 있습니다. <code>boxes</code> 도 34% 로 중간에 걸쳐 있습니다.</p>
 <p><b>경계는 「학습했나」가 아니라 「무엇이 어려운가」로 그어집니다.</b></p>
@@ -1253,7 +1261,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 바깥 레일  안쪽 모서리 2.70 m · 바깥 모서리 2.88 m  두께 0.18 m
 모든 에피소드가 같은 지형을 본다</pre></div>
 <p><b>모든 에피소드가 같은 지형을 봅니다.</b> 같은 난이도 칸 안에서 두께가 섞이는 일은 없습니다.</p>
-<p>##### 고정해서 다시 재봤습니다 · 차이가 없습니다</p>
+<h5>고정해서 다시 재봤습니다 · 차이가 없습니다</h5>
 <p>두께를 <code>0.08</code> 로 고정하고 1,000에피소드를 돌렸습니다. <b>평균 차이 0.1 포인트, 열 칸 전부 표본오차 안</b>입니다.</p>
 <p>그 실행이 실제로 한 일은 분산 제거가 아니라 <b>바깥 턱을 얇게 바꾼 것</b>이고, 그래도 성적이 안 움직였습니다.</p>
 <p><b><code>rails</code> 를 더 보려면 두께가 아니라 다른 곳을 봐야 합니다.</b> 지금 <b>통과선 3.0 m 가 바깥 레일 바깥 모서리 2.88 m 에서 12 cm 뒤</b>입니다. 레일을 넘자마자 통과선입니다. 높이와 통과선 위치가 성패를 가를 자리로 보입니다.</p>
@@ -1268,7 +1276,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <h4>열을 셋 남깁니다</h4>
 <div class="tw"><table><thead><tr><th>열 이름</th><th>정의</th></tr></thead><tbody><tr><td>traversal_success</td><td>생존 <b>그리고</b> 전진 <b>그리고</b> 방향. 속도 추종만 뺀 것</td></tr><tr><td>gate_speed_mps</td><td>통과선을 지나는 <b>그 순간</b>의 전진 속도. <code>gate_lateral_drift_m</code> 과 같은 자리 · 같은 보간</td></tr><tr><td>speed_drop_ratio</td><td><b>장애물 구간 안 최저 전진 속도 ÷ 명령 속도</b></td></tr></tbody></table></div>
 <p><b>판정 네 축은 그대로입니다.</b> <code>overall_success</code> 는 지금처럼 넷을 다 봅니다. 새 열은 분석용이고 기존 기록과의 비교가 끊기지 않습니다.</p>
-<p>##### <code>speed_drop_ratio</code> 를 왜 그렇게 정의했나</p>
+<h5><code>speed_drop_ratio</code> 를 왜 그렇게 정의했나</h5>
 <ul><li><b>평균이 아니라 최저값</b>입니다. 평균으로 잡으면 대부분 평지인 구간에서 <b>한 걸음의 주춤이 희석됩니다</b></li><li><b>시각이 아니라 거리</b>로 구간을 잡습니다. 빨리 지난 에피소드와 느리게 지난 에피소드를 <b>같은 기준으로</b> 재기 위해서입니다</li><li>뒤로 밀린 경우(음수)를 자르지 않습니다. 구간에 표본이 없으면 <b>0 이 아니라 빈 값</b>입니다</li></ul>
 <p>구간 끝은 <b>지형 이름으로 박지 않고 설정에서 계산</b>합니다(<code>terrains.obstacle_zone_m</code>). 어느 규칙이 걸렸는지가 실행 기록에 남습니다.</p>
 <p><b>이 열이 실제로 값을 하는지 재봤습니다.</b> 에피소드 30개에서 <b>넷이 갈렸고</b> 방향이 전부 같습니다. 「종합은 실패인데 지형은 건넜고 속도 추종만 탈락」입니다. 반대는 0건입니다.</p>
@@ -1302,7 +1310,7 @@ foothold-v1.json      이 모델이 어떻게 만들어졌는지</pre></div>
 <div class="tw"><table><thead><tr><th>단계</th><th>입력</th><th>출력</th><th>실측 시간</th></tr></thead><tbody><tr><td>학습</td><td>NVIDIA checkpoint.pt</td><td>model.pt</td><td>1,500회에 134분</td></tr><tr><td>평가</td><td>model.pt</td><td>CSV</td><td>에피소드당 0.25초 (1.0 m/s)</td></tr><tr><td>렌더</td><td>model.pt</td><td>mp4</td><td>4096마리 20초 컷에 104~120초</td></tr></tbody></table></div>
 <h4>무엇을 잘하라고 가르쳤나</h4>
 <p>보상은 <b>몸의 어느 부분을 보느냐</b>로 나뉩니다. 아래 값은 학습 실행이 저장한 params/env.yaml 에서 그대로 읽은 것입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg?v=875a0825" alt="그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. 사진은 실제 평가 렌더에서 오린 것입니다" loading="lazy"><figcaption>그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. 사진은 실제 평가 렌더에서 오린 것입니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg?v=49123001" alt="그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. 사진은 실제 평가 렌더에서 오린 것입니다" loading="lazy"><figcaption>그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. 사진은 실제 평가 렌더에서 오린 것입니다</figcaption></figure></p>
 <p><b>가장 큰 벌점이 lin_vel_z_l2 (-2.00) 입니다.</b> 「위아래로 출렁이지 마라」가 「명령 속도를 맞춰라 (+1.50) 」보다 무겁습니다.</p>
 <p><b>이것이 틈을 뛰어넘는 동작과 정면으로 부딪칩니다.</b> 뛰려면 몸이 위아래로 움직여야 하는데, 그 동작에 가장 큰 벌점이 걸려 있습니다. gap 과 stepping_stones 를 볼 때 이 값을 같이 봐야 합니다.</p>
 <p>flat_orientation_l2 와 dof_pos_limits 는 <b>가중치가 0</b> 이라 이번 학습에서 아무 일도 하지 않았습니다. 설정에 이름은 있지만 꺼져 있습니다.</p>
@@ -1416,5 +1424,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.3</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpg6b6px1a</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -443,11 +443,38 @@ def render(md):
             body = []
             while i < n and lines[i].startswith('>'):
                 body.append(lines[i][1:].lstrip()); i += 1
-            out.append('<blockquote>%s</blockquote>' % _para('\n'.join(body)))
+            # ★ 2026-09-14. 인용 안의 줄을 `_para` 로만 보내서 `### 제목` 이
+            #   글자로 남았다. 라이브에서 14곳이었고 오류는 안 났다.
+            #   인용 안에서도 제목을 제목으로 만든다. 인용은 짧으니 h4 아래로
+            #   낮춰 본문 위계를 안 흔든다.
+            q, buf, parts = [], [], []
+            for b in body:
+                hm = re.match(r'^(#{1,6})\s+(.*)$', b)
+                if hm:
+                    lv = min(6, max(4, len(hm.group(1))))
+                    q.append('<h%d>%s</h%d>'
+                             % (lv, inline(hm.group(2).strip()), lv))
+                else:
+                    q.append(b)
+            for x in q:
+                if x.startswith('<h'):
+                    if buf:
+                        parts.append(_para(chr(10).join(buf)))
+                        buf = []
+                    parts.append(x)
+                else:
+                    buf.append(x)
+            if buf:
+                parts.append(_para(chr(10).join(buf)))
+            out.append('<blockquote>%s</blockquote>' % ''.join(parts))
             continue
 
         # ── 제목 ──
-        m = re.match(r'^(#{1,4})\s+(.*)$', L)
+        # ★ 2026-09-14 팀장 지적: 「##### 열한 지형을 한 줄에 놓으면 → 이 앞에
+        #   # 는 뭐야? 오류쟖아 이거?」. 맞다. `{1,4}` 였어서 **h5·h6 를 아예
+        #   안 받고** 그 줄이 본문 문단으로 떨어졌다. 화면에 `#####` 가 글자로
+        #   떴다. 라이브에서 13곳이었고 오류는 한 번도 안 났다.
+        m = re.match(r'^(#{1,6})\s+(.*)$', L)
         if m:
             lv, txt = len(m.group(1)), m.group(2).strip()
             if lv == 1:

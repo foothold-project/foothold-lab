@@ -149,6 +149,28 @@ def _newest_first(m):
     """
     return (_who_when(m)[1], m.get('제목', ''))
 
+def _gist(m, limit=None):
+    """카드에 실을 「요지」. 마크다운을 글자로 내보내지 않는다.
+
+    ★ 2026-09-14 팀장 지적 계열. 머리말 `요지:` 에는 `**굵게**` 가 들어 있다.
+      `esc()` 로만 감싸면 화면에 별표가 그대로 뜬다. 라이브에서 2곳이었다.
+
+      카드는 한 줄짜리라 태그를 넣지 않고 **문법만 벗긴다.** 굵게 표시가
+      필요하면 본문에서 본다.
+
+      자리가 셋이다 (실측 카드 · 조사 카드 · 그래프 카드). 한쪽만 고치면
+      또 갈라지므로 여기 하나로 모은다.
+    """
+    s = (m.get('요지') or '').strip()
+    s = re.sub(r'\*\*([^*]+)\*\*', r'\1', s)     # **굵게**
+    s = re.sub(r'(?<!\w)__([^_]+)__(?!\w)', r'\1', s)
+    s = re.sub(r'`([^`]+)`', r'\1', s)           # `코드`
+    s = re.sub(r'!?\[([^\]]*)\]\([^)]*\)', r'\1', s)  # [글자](주소)
+    s = re.sub(r'\s+', ' ', s).strip()
+    if limit and len(s) > limit:
+        s = s[:limit]
+    return s
+
 AREA_HUE = {'A/정책학습': 'a1', 'A/평가': 'a2', 'A/지형씬제작': 'a3',
             'A/트윈렌더': 'a4', 'B/항법': 'b1', 'B/인지': 'b2',
             'C/기록': 'c1', 'C/운영': 'c2'}
@@ -1107,7 +1129,7 @@ def research_html(site):
             '<b class="ft3">%s</b>'
             '<span class="fs3">%s</span></a>'
             % (esc(page), esc(m.get('제목') or m.get('요지') or rel),
-               esc(m.get('요지') or '')))
+               esc(_gist(m))))
     parts.append(_release_block())
 
     if hero:
@@ -1183,7 +1205,7 @@ def research_html(site):
                 '<span class="em3">%s %s</span></span>%s</a>'
                 % (esc(_fn_of(rel)), page, len(rows) + 1, esc(n) or '·',
                    esc(m.get('제목', '')),
-                   esc(m.get('요지', '')[:70]),
+                   esc(_gist(m, 70)),
                    esc('%s · %s' % (who, when) if who else when), ar,
                    _thumb(page)))
         if rows:
@@ -1239,7 +1261,7 @@ def research_html(site):
                       '<span class="em3">%s</span></span>%s</a>'
                       % (esc(_fn_of(_rel)), page, _i, ev_short(m.get('근거')),
                          esc(ev_short(m.get('근거'))),
-                         esc(m.get('제목', '')), esc(m.get('요지', '')[:78]),
+                         esc(m.get('제목', '')), esc(_gist(m, 78)),
                          esc('%s · %s' % (who, when) if who else when),
                          _thumb(page)))
         # ★ 조사 절 제목은 `.eh3` 라 거르개가 «못 봤다». 걸렀더니 카드 5장이

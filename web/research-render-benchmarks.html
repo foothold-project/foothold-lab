@@ -72,6 +72,14 @@ h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem
   border-bottom:1px solid var(--rule);margin-bottom:1rem}
 h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
 h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
 /* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
    원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
    낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
@@ -729,7 +737,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
+    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -925,8 +933,7 @@ s.<span class="f">set</span>(<span class="s">&quot;/rtx/rendermode&quot;</span>,
 <p><figure class="mdimg"><img src="assets/visual/11_racer_rtx_desert.png?v=d3aa8ce2" alt="Racer RTX 사막 구간" loading="lazy"><figcaption>Racer RTX 사막 구간</figcaption></figure></p>
 <p><figure class="mdimg"><img src="assets/visual/12_racer_rtx_overview.png?v=ef315f92" alt="Racer RTX 전체 흐름" loading="lazy"><figcaption>Racer RTX 전체 흐름</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th>요소</th><th>실제로 시뮬레이션됐나</th></tr></thead><tbody><tr><td>차체 물리 · 서스펜션 · 점프 · 착지</td><td>✅ <b>확실히 시뮬레이션</b>(강체 물리). 74초 공중 → 75초 착지</td></tr><tr><td>흩날리는 모래 · 모래폭풍</td><td>❌ <b>거의 없다.</b> 사막 지형은 정적 메시 + 텍스처</td></tr><tr><td>차 뒤 먼지</td><td>🟡 약하게 있음(72초·80초). 규모가 작다</td></tr><tr><td><b>흐릿함의 정체</b></td><td>⚠️ <b>대부분 모션블러다</b></td></tr></tbody></table></div>
-<blockquote><p>### ★ 우리에게 좋은 소식
-<b>«실사처럼 보이는 것»의 상당 부분은 물리 시뮬이 아니라 렌더링 기법</b>
+<blockquote><h4>★ 우리에게 좋은 소식</h4><p><b>«실사처럼 보이는 것»의 상당 부분은 물리 시뮬이 아니라 렌더링 기법</b>
 모션블러 · 얕은 심도 · 룩뎁: <b>이다.</b>
 즉 모래를 물리로 시뮬레이션하지 않아도 «모래밭을 질주하는 느낌»을 낼 수 있다.
 <b>Isaac Lab 이 모래를 지원하지 않는 제약이 최종 영상 품질의 제약은 아니다.</b></p></blockquote>
@@ -935,8 +942,7 @@ s.<span class="f">set</span>(<span class="s">&quot;/rtx/rendermode&quot;</span>,
 <section id="s7"><span id="5"></span><h2>5. 이 숫자가 프로젝트에 의미하는 것</h2>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>30초 편집본 @1080p PT128 = 약 44분   → 하룻밤에 여러 번 다시 뽑을 수 있다
 2분 완성본  @1080p PT128 = 약 3시간   → 하루 한 번</pre></div>
-<blockquote><p>### <b>렌더 시간은 이 프로젝트의 병목이 아니다.</b>
-병목은 <b>씬을 만드는 시간</b>이다. 자갈 배치, 재질, 조명, 카메라 워크.</p></blockquote>
+<blockquote><h4><b>렌더 시간은 이 프로젝트의 병목이 아니다.</b></h4><p>병목은 <b>씬을 만드는 시간</b>이다. 자갈 배치, 재질, 조명, 카메라 워크.</p></blockquote>
 <h3>남은 위험</h3>
 <div class="tw"><table><thead><tr><th></th><th>내용</th></tr></thead><tbody><tr><td>⚠️ <b>멀티 GPU</b></td><td>Movie Capture 가 <b>GPU 1장만 쓴다</b>는 보고가 있다(L40S 4장 환경). 5080 두 장 중 한 장이 놀 수 있다. 최종 파이프라인에서 확인 필요. <span class="ev ev-todo">미확인</span></td></tr><tr><td>⚠️ <b>캡처 경로</b></td><td>여기 쓴 <code>gym.wrappers.RecordVideo</code> 는 프레임마다 즉시 넘어간다. <b>누적형 고품질 정지 프레임에는 <code>Movie Capture</code> 확장이 맞는 도구다</b></td></tr><tr><td>⚠️ <b>씬 복잡도</b></td><td>이 측정은 기본 창고 씬 기준이다. Megascans 자갈 + HDRI + 다중 광원이면 <b>더 느려진다.</b> 씬이 정해지면 재측정할 것</td></tr></tbody></table></div>
 </section>
@@ -1002,5 +1008,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.3</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpg6b6px1a</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

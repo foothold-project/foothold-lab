@@ -1008,6 +1008,15 @@ if __name__ == '__main__':
     # ★ 2026-09-14 신설. 도해 «안» 에서 글자가 겹치는지 본다.
     #   팀장이 「글씨 겹침」을 지적했고 실제로 두 도해가 겹쳐 있었다. 그중
     #   하나는 같은 그림의 옛 사본이라 한쪽만 고쳐져 있었다. 눈으로는 못 잡는다.
+    print('[3.473] 도해 안 바깥 자원 검사 (<img> 로 불리면 안 불려온다)')
+    sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
+    import svg_embed_images
+    if not svg_embed_images._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    if not svg_embed_images.check(os.path.join(HERE, '..', '..', 'docs', 'assets', 'visual')):
+        print('  [!] 도해가 바깥 그림을 가리킵니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('[3.474] 도해 여백 검사 (viewBox 가 실측 기준과 같은가)')
     sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
     import svg_pad
@@ -1029,6 +1038,12 @@ if __name__ == '__main__':
     if not svgtext.main(VAULT):
         print('\n  [!] 도해 안에서 글자가 겹칩니다. 배포를 중단합니다.')
         sys.exit(1)
+    print('[3.476] 렌더 검사 (마크다운 문법이 글자로 보이는가)')
+    import rendercheck
+    if not rendercheck.main(SITE):
+        print('  [!] 문법이 글자로 보입니다. 배포를 중단합니다.')
+        sys.exit(1)
+
 
     # ★ 2026-09-14 신설. 문서 표의 숫자를 원장과 «값으로» 대조한다.
     #   손으로 옮긴 숫자는 틀려도 소리가 안 난다. 표는 멀쩡해 보이고 빌드도

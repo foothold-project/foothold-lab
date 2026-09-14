@@ -72,6 +72,14 @@ h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem
   border-bottom:1px solid var(--rule);margin-bottom:1rem}
 h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
 h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
 /* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
    원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
    낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
@@ -729,7 +737,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
+    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -967,8 +975,8 @@ gap 5개 · 통과선 15 m)처럼 <b>지형을 함께 늘려야</b> 한다.</p><
 <div class="tw"><table><thead><tr><th>깊이</th><th>나옴</th><th><b>중앙값</b></th><th><b>임계 0.25 까지</b></th><th>통과율</th></tr></thead><tbody><tr><td>8 cm</td><td>100</td><td>0.142</td><td>−0.108</td><td><b>100 %</b></td></tr><tr><td>10 cm</td><td>96</td><td>0.151</td><td>−0.099</td><td>94 %</td></tr><tr><td>12 cm</td><td>95</td><td>0.179</td><td>−0.071</td><td>87 %</td></tr><tr><td><b>14 cm</b></td><td>89</td><td><b>0.229</b></td><td><b>−0.021</b></td><td><b>58 %</b></td></tr><tr><td>16 cm</td><td>72</td><td><b>0.274</b></td><td><b>+0.024</b></td><td>33 %</td></tr></tbody></table></div>
 <p><b>밀리는 폭 자체는 완만하다.</b> 중앙값이 12 → 14 에서 <b>+0.050</b>, 14 → 16 에서 <b>+0.045</b> 로 거의 같은데 통과율은 87 → 58 → 33 으로 계속 크게 떨어진다. <b>밀림 폭이 급락의 원인이 아니다.</b></p>
 <p>정하는 것은 <b>중앙값이 임계의 어느 쪽에 있느냐</b>다. 오른쪽 두 열을 보면 <b>14 cm 에서 거리가 −0.021 로 거의 0 이 되고 16 cm 에서 부호가 뒤집힌다.</b></p>
-<blockquote><p>### 14 cm 는 분포의 중앙이 임계에 도달하는 깊이다 <span class="ev ev-ok">확인됨</span></p>
-<p>중앙값이 임계에 오면 정의상 절반이 통과한다. 그래서 51 % 가 나온다.
+<blockquote><h4>14 cm 는 분포의 중앙이 임계에 도달하는 깊이다 <span class="ev ev-ok">확인됨</span></h4><p>
+중앙값이 임계에 오면 정의상 절반이 통과한다. 그래서 51 % 가 나온다.
 12 cm 까지는 분포 전체가 임계 왼쪽에 있어 조금 밀려도 통과율이 잘 안 떨어졌는데,
 <b>14 cm 부터 분포가 임계를 걸치기 시작하면서 밀림이 그대로 탈락으로 바뀐다.</b></p></blockquote>
 <p><b>「왜 분포가 밀리는가」는 아직 못 답한다.</b> 14 cm 안에서는 뒷발 통과 시각이 MAE 를 정하는 것을 보였지만 (7절), <b>재현 측정에 12 cm 가 없다</b> <span class="ev ev-todo">미측정</span>. 12 cm 를 같은 방식으로 재면 <b>「깊이 2 cm 가 뒷발 통과를 몇 초 늦추는가」</b>가 나온다. 그것이 이 진단에서 비어 있는 마지막 조각이다.</p>
@@ -1007,7 +1015,7 @@ metrics.py:149               velocity_mae_mps = Σ planar_vel_error / 스텝수<
 <div class="tw"><table><thead><tr><th>판</th><th>종합</th><th>앞발 통과</th><th><b>뒷발 통과</b></th><th>속도MAE</th></tr></thead><tbody><tr><td>ep28</td><td>성공</td><td>0.92</td><td><b>1.28</b></td><td>0.1346</td></tr><tr><td>ep83</td><td>성공</td><td>0.94</td><td><b>1.30</b></td><td>0.1317</td></tr><tr><td>ep50</td><td>성공</td><td>1.14</td><td><b>2.24</b></td><td>0.2476</td></tr><tr><td>ep98</td><td>실패</td><td>0.96</td><td><b>2.24</b></td><td>0.2518</td></tr><tr><td>ep96</td><td>성공</td><td>0.96</td><td><b>2.28</b></td><td>0.2489</td></tr><tr><td>ep99</td><td>실패</td><td>1.20</td><td><b>2.28</b></td><td>0.2543</td></tr><tr><td>ep34</td><td>실패</td><td>1.14</td><td><b>2.28</b></td><td>0.2567</td></tr><tr><td>ep35</td><td>실패</td><td>1.22</td><td><b>2.32</b></td><td>0.2515</td></tr><tr><td>ep1</td><td>실패</td><td>1.18</td><td><b>2.44</b></td><td>0.2745</td></tr><tr><td>ep8</td><td>갇힘</td><td>0.96</td><td><b>못 넘음</b></td><td>0.8043</td></tr></tbody></table></div>
 <p><b>앞발은 아홉 판 전부 0.92 ~ 1.22초에 넘는다. 갈리는 것은 뒷발이다</b> <span class="ev ev-ok">확인됨</span>.</p>
 <p>직선을 맞추면 상관계수 <b>r = 0.998</b> · 기울기 <b>0.121</b> (뒷발이 1초 늦으면 MAE 가 0.121 오른다) 이고, 팀 임계 0.25 는 뒷발 통과 <b>2.26초</b>에 해당한다.</p>
-<blockquote><p>### 14 cm 의 판정선은 「뒷발이 2.26초 안에 나오느냐」와 같은 말이다 <span class="ev ev-guess">추측</span></p></blockquote>
+<blockquote><h4>14 cm 의 판정선은 「뒷발이 2.26초 안에 나오느냐」와 같은 말이다 <span class="ev ev-guess">추측</span></h4></blockquote>
 <p><b><span class="ev ev-guess">추측</span> 인 이유를 분명히 적는다.</b> 아홉 판이 <b>1.3초 근처 2 에피소드와 2.24 ~ 2.44초 7 에피소드</b> 두 덩어리로 뭉쳐 있고 그 사이(1.4 ~ 2.2초)에 판이 하나도 없다. r = 0.998 은 멀리 떨어진 두 덩어리를 이으면 저절로 높아지는 값이라 <b>직선의 근거로 쓸 수 없다.</b></p>
 <p><b>그리고 그 공백은 내가 만든 것이다</b> (6절). 임계 양쪽을 보려고 <b>가장 빠른 2 에피소드와 임계 근처 6 에피소드</b>을 골랐고, <b>중간 성적 48 에피소드를 하나도 안 골랐다.</b> 그 판들의 뒷발 통과 시각이 1.4 ~ 2.2초에 실제로 있는지 없는지는 <b>재 보지 않았다</b> <span class="ev ev-todo">미측정</span>. 따라서 「두 무리로 갈린다」를 이 지형의 성질이라고 말하면 안 된다.</p>
 <p><b>확실한 것은 여기까지다</b> <span class="ev ev-ok">확인됨</span>.</p>
@@ -1159,5 +1167,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.3</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpg6b6px1a</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

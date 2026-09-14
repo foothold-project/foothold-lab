@@ -863,7 +863,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=4bc615db').then(function(r){
+    fetch('/assets/search-index.json?v=45c3d2cc').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -983,7 +983,7 @@ body>*{flex-shrink:0}
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-14 16:09 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-14 18:49 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <div class="hero">
   <div class="eyebrow">내 담당 파트 · <code>B/인지</code> 주담당 · <code>nav/perception/</code></div>
@@ -1055,6 +1055,7 @@ body>*{flex-shrink:0}
 <tr><td><code>B/인지</code> · <b>LiDAR · 카메라 · 센서 융합</b></td><td><b>주담당</b></td><td><code>nav/perception/</code></td><td>11/7 · 12/11</td></tr>
 <tr><td><code>B/항법</code> · ROS 2 · TF · SLAM · Nav2</td><td>부담당 (주담당: 팀장)</td><td><code>nav/</code></td><td>11/7 · 12/11</td></tr>
 </table></div></div>
+<p><strong>(09-14 갱신)</strong> 아래 문단은 8월 계획 당시 기록이다. 현행 기준은 우선순위 ①~⑤(중간발표 10/1~2 전 ① D455 기준 RGB 출력 → ② 사람 탐지·정지 → ③ XT-16 근사 점군, ④ XT-16/L1 근거리 비교·⑤ SLAM·Nav2 는 중간발표 필수 아님) · 28 Go2 CV·LiDAR.</p>
 <div class="call trap"><div class="t">9월의 함정 · CV가 아니라 평가가 주력이다</div>
 <p>9/30 중간발표 제출물은 <strong>일반화 평가표 + 트윈 렌더</strong>이고, 거기에 <strong>트랙 B(CV·ROS 2·Nav2)는 걸려 있지 않다.</strong> 9월 자율 시간의 60%는 <code>A/평가</code>로 간다. 이 교재의 C1~C3을 이번 주에 밀어 두는 이유가 그것이다 · <strong>9월에 CV를 붙들 시간이 없으므로, 8월 안에 "돌아가는 증거" 한 장을 확보해 둔다.</strong></p>
 <p>대신 <strong>파인튜닝 mAP(<a href="#c7">C7</a>)는 9월에도 죽이지 않는다.</strong> RunPod 실험 1회가 2h15m이라 그 대기시간에 개인 노트북에서 굴릴 수 있다. 이게 죽으면 이력서에 "모델 학습 경험 0"이 된다.</p></div>
@@ -1933,6 +1934,7 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 <tr><td>카메라 장착 위치·각도</td><td>스펙 문서 또는 직접 측정</td><td><code>base_link</code>→<code>camera_link</code> TF 값</td></tr>
 </table></div></div>
 <p class="sub">영상으로 확인된 것: <strong>기계식 회전 puck 형태의 360° LiDAR가 별도 브래킷으로 등에 얹혀 있고 자체 케이블이 있다.</strong> 모델명은 각인이 안 보여 특정되지 않는다. <strong>추측을 결론 자리에 앉히지 않는다.</strong></p>
+<div class="call"><div class="t">09-14 갱신 · 이 표는 이전 계획 당시 기록이다</div><p>모델명은 09-11 수업에서 [들음]으로 답이 남: 머리 위 Hesai XT-16(3D 16ch) · 턱 밑 Unitree L1(3D 비반복) · 카메라 RealSense d455i 표기(라벨 미확인 → 잠정 D455 기준, ROS 2 토픽이 아니라 웹 스트림). 라벨·장착·토픽·실성능은 여전히 미확인. 현행 기준·우선순위는 새 시리즈 C0 1-A · 실기 3종 표 C0 5-A. 위 표의 「depth 토픽 있나」 갈림길은 새 기준에서 필수 아님(RGB 기반 인식이 기본).</p></div>
 
 <h3 id="C8-3"><span class="step">C8-3</span>융합의 원리 · 한 문단</h3>
 <p>LiDAR 점군의 각 점을 <strong><a href="#C5-1">C5-1</a>의 핀홀 식으로 이미지에 투영</strong>하면 "이 점이 화면 어디에 찍히는가"가 나온다. 그 픽셀이 <strong>탐지 박스 안</strong>이면, 그 점의 거리가 <strong>그 물체의 거리</strong>다.</p>
@@ -2038,5 +2040,5 @@ $</span> <span class="f">ros2</span><span class="k"> bag</span><span class="k"> 
 <tr><td>학습이 시작은 되는데 mAP가 0이다</td><td>라벨 경로 규칙(<code>images/</code>→<code>labels/</code>) 또는 정규화 안 된 라벨</td><td><a href="#C7-2">C7-2</a></td></tr>
 </table></div></div>
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.2</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpmpkczc4m</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.3</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpg6b6px1a</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
