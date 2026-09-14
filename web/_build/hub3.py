@@ -131,6 +131,24 @@ def _who_when(m):
     return who, when
 
 
+def _newest_first(m):
+    """카드 정렬 열쇠. `sorted(..., key=_newest_first, reverse=True)` 로 쓴다.
+
+    ★ 2026-09-14 팀장 지적: 「연구 허브 날짜가 뒤죽박죽이다. 최신 글이 맨 위로」.
+      맞다. 카드를 내는 자리가 둘인데 **둘 다 날짜로 안 세고 있었다.**
+
+        실측 카드  파일 «경로» 순 (`x[2]`). 날짜와 아무 상관이 없다
+        조사 카드  머리말 `작성` 통문자열 순. 그 값이 「이름 · 날짜」 라서
+                   «이름» 이 먼저 걸린다. 그래서 저자별로 뭉치고 날짜가 되감긴다
+
+      실측 (배포본 hub-research.html · 묶음 8개): 여섯 묶음이 뒤죽박죽,
+      두 묶음이 오름차순. 내림차순인 묶음은 하나도 없었다.
+
+      날짜가 없는 문서는 빈 문자열이라 `reverse=True` 에서 «맨 아래» 로 간다.
+      같은 날짜면 제목으로 가른다 (빌드마다 순서가 흔들리지 않게).
+    """
+    return (_who_when(m)[1], m.get('제목', ''))
+
 AREA_HUE = {'A/정책학습': 'a1', 'A/평가': 'a2', 'A/지형씬제작': 'a3',
             'A/트윈렌더': 'a4', 'B/항법': 'b1', 'B/인지': 'b2',
             'C/기록': 'c1', 'C/운영': 'c2'}
@@ -1149,8 +1167,9 @@ def research_html(site):
     for key, label in PO + [(k, k or '입구가 안 정해진 것')
                             for k in sorted(bag) if k not in dict(PO)]:
         rows = []
-        for _n2, _c2, rel, m, page, _m2 in sorted(bag.get(key, []),
-                                                  key=lambda x: x[2]):
+        for _n2, _c2, rel, m, page, _m2 in sorted(
+                bag.get(key, []), key=lambda x: _newest_first(x[3]),
+                reverse=True):
             g = graph().get(rel) or {}
             n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
             ar = ' '.join('<u class="ar-%s">%s</u>'
@@ -1206,8 +1225,7 @@ def research_html(site):
     for key, label in order:
         reads, _i = '', 0
         for _rel, m, page, _g in sorted(
-                bins[key], key=lambda x: (x[1].get('작성', ''), x[1].get('제목', '')),
-                reverse=True):
+                bins[key], key=lambda x: _newest_first(x[1]), reverse=True):
             who, when = _who_when(m)
             _i += 1
             # ★ 카드를 내는 자리가 «둘» 이다. 위(실측)와 여기(조사).
