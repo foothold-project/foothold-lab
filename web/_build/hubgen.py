@@ -514,6 +514,21 @@ GROUP_ORDER = [
 GROUP_FALLBACK = '아직 안 갈린 것'
 
 
+def _cover_tiles():
+    """표지 타일의 차례. 허브 + 밖에 있는 목적지를 정해진 자리에 끼운다.
+
+    ★ 전역바와 «같은 차례» 여야 한다. 둘이 다르면 표지에서 본 자리와
+      상단바에서 누르는 자리가 달라진다. 그래서 한 함수로 모은다.
+    """
+    out = []
+    for h in ia.HUBS:
+        out.append(h)
+        if h[0] == ia.OUTSIDE_AFTER:
+            for href, ko, en, lede in ia.OUTSIDE:
+                out.append((href, ko, en, href, lede))
+    return out
+
+
 def gnav(cur, ctl=''):
     """전역 상단바. 모든 페이지에 같은 것이 붙는다."""
     # ★ #85: 로고는 글씨가 아니라 정본 워드마크다 (5도 슬라이스가 식별 요소).
@@ -527,6 +542,12 @@ def gnav(cur, ctl=''):
     for key, ko, en, f, _ in ia.HUBS:
         a.append('<a class="%s" href="%s">%s</a>'
                  % ('on' if cur == key else '', f, ko))
+        # ★ 밖에 있는 목적지는 «정해진 자리» 에 끼운다. 끝에 붙이면
+        #   assets/gnav.html 과 차례가 어긋나 페이지를 오갈 때 메뉴가 움직인다.
+        if key == ia.OUTSIDE_AFTER:
+            for href, oko, _en, _lede in ia.OUTSIDE:
+                a.append('<a class="%s" href="%s">%s</a>'
+                         % ('on' if cur == href else '', href, oko))
     a.append('<span class="sp"></span>')
     for f, ko, _, _ in ia.QUICK:
         a.append('<a class="q%s" href="%s">%s</a>'
@@ -857,7 +878,8 @@ def home_block(assigned):
         '<a class="%s" href="%s"><div class="k">%s</div><div class="e">%s</div>'
         '<div class="d">%s</div></a>'
         % ('hot' if st.get(k, ('', False))[1] else '', f, ko, en,
-           st.get(k, (lede, False))[0]) for k, ko, en, f, lede in ia.HUBS))
+           st.get(k, (lede, False))[0])
+        for k, ko, en, f, lede in _cover_tiles()))
     extra = ''
     try:
         import deliverables_page as dlv
