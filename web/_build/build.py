@@ -295,6 +295,8 @@ def check():
 if __name__ == '__main__':
     print('원본 : %s' % VAULT)
     print('배포 : %s\n' % SITE)
+    # 이 빌드가 «foothold-lab» 이 아닌 트리에서 돌면 이름을 댄다 (roots 참조).
+    __import__('roots').warn_if_stray()
     # ★ 맨 앞이어야 한다 (mai-os#24). 손 관리 페이지를 소스에서 새로 만든다.
     #   나중에 돌면 그 빌드의 주입물을 통째로 지운다.
     #   여기가 있어야 주입물이 쌓일 수 없다 (실측: 빈 CSS 껍데기가 빌드마다 +1 로

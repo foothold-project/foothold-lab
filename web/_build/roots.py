@@ -27,6 +27,31 @@ def _ok(p):
     return p if os.path.isdir(p) else None
 
 
+def _dedupe(paths):
+    """같은 트리를 가리키는 후보를 하나로 줄인다. 순서는 지킨다.
+
+    ★ 2026-09-14 site 세션이 집었다. 세 후보가 전부 같은 곳으로
+      풀렸다 (`WS/foothold-lab` · `~/Desktop/.../foothold-lab` · `LAB`).
+      첫 후보만 보는 자리는 무해했지만 **후보를 전부 도는 자리** 는
+      같은 트리를 세 번 읽었다. 기기마다 다른 트리로 풀리면 그때는
+      섞인다. `realpath` + `normcase` 로 묶는다 (윈도우는 대소문자를
+      안 가리고, 심볼링크도 같은 곳을 다른 이름으로 가리킨다).
+    """
+    seen, out = set(), []
+    for p in paths:
+        if not p:
+            continue
+        try:
+            key = os.path.normcase(os.path.realpath(p))
+        except OSError:
+            key = os.path.normcase(os.path.abspath(p))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return out
+
+
 def lab_candidates():
     """문서 정본이 있는 곳. 앞에서부터 먼저 본다.
 
@@ -60,7 +85,7 @@ def lab_candidates():
         os.path.expanduser(os.path.join('~', 'Desktop', 'jay',
                                         '인공지능사관학교', 'foothold-lab')),
     ]
-    return [p for p in out if p]
+    return _dedupe(out)
 
 
 def site_candidates():
@@ -73,7 +98,7 @@ def site_candidates():
         os.path.expanduser(os.path.join('~', 'Desktop', 'jay',
                                         '인공지능사관학교', 'foothold-site')),
     ]
-    return [p for p in out if p]
+    return _dedupe(out)
 
 
 def lab():
@@ -81,6 +106,30 @@ def lab():
         if _ok(p):
             return os.path.abspath(p)
     return None
+
+
+def warn_if_stray(say=print):
+    """이 빌드가 `foothold-lab` 이 아닌 트리에서 돌면 알린다.
+
+    ★ 2026-09-14. `_lab-main` 을 후보에서 빼는 것으로는 반쪽만 막혔다.
+      그 안에서 빌드를 돌리면 `LAB` 이 계속 제 트리를 가리켜 실행은
+      되고, 문서는 옆 트리에서 오는 섞임이 그대로 남는다. 그것을
+      막을 수는 없어도 (재현 빌드는 그렇게 돌려야 한다) **조용히 둘 수는
+      없다.** 2026-09-13 사고가 정확히 «아무 말도 안 해서» 26 커밋을
+      사흘간 가렸다. 멈추지는 않고 이름을 댄다.
+    """
+    name = os.path.basename(LAB)
+    if name == 'foothold-lab' or os.environ.get('FOOTHOLD_LAB'):
+        return None
+    msg = chr(10).join([
+        '  [!] 이 빌드가 «%s» 안에서 돕니다. 문서 정본은 '
+        '`foothold-lab` 입니다.' % name,
+        '      지금 읽는 곳: %s' % lab(),
+        '      의도한 것이 아니면 `foothold-lab` 에서 돌리거나 '
+        'FOOTHOLD_LAB 로 명시하십시오.',
+    ])
+    say(msg)
+    return msg
 
 
 def site():

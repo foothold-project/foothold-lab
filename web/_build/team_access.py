@@ -23,6 +23,33 @@ VAULT = os.path.dirname(HERE)                                  # 05_deliverables
 SRC = os.path.join(__import__('roots').proj(), '02_team', 'TEAM_ACCESS.md')
 OUT = os.path.join(VAULT, 'team-access.html')
 
+# ★ 표 규칙 (2026-09-14). 팀장이 폰에서 「난이도」가 난/이/도 로 접히는 것을
+#   잡았다. 원인이 셋 겹쳐 있었고, 하나만 고쳤을 때는 나머지 둘이 그대로
+#   무너뜨렸다.
+#     1. `searchbox` 의 `main table{min-width:0}` 이 `min-width` 를 무력화
+#        (2026-08-28 사고의 «남은 반쪽» 이었다. 지웠다)
+#     2. 420 px 고정폭 안에서 긴 열이 짧은 열을 먹어 「단계」가 39 px 가 됨
+#     3. `overflow-wrap:anywhere` 가 min-content 폭을 «한 글자» 로 붕괴시켜
+#        표 레이아웃에 그 좁힘을 허용함. `word-break:keep-all` 이 있어도
+#        anywhere 가 이긴다
+#
+#   그래서 열 수로 나누지 않고 «모든 표» 에 같은 규칙을 준다. 처음엔 다섯 열
+#   이상에만 `wide` 를 달았는데, 3열짜리가 그대로 무너졌다 (표 20 「단계」).
+#     · min-width:max-content     내용이 요구하는 폭을 확보하고 `.tw` 가 스크롤
+#     · width:100%                넓은 화면에서는 여전히 컨테이너를 채움
+#     · 칸 폭 상한 26ch          긴 산문 칸이 표를 1542 px 로 펴지 않게 막는다
+#     · overflow-wrap:break-word  넘칠 때만 자르되 min-content 는 안 무너뜨림
+#     · code 의 nowrap 은 푼다    anywhere 를 막으려던 것이라 같이 없앤다.
+#                                 두면 긴 경로가 칸 밖으로 197 px 넘친다
+#
+#   실측 (같은 출처 iframe 390/430/768/1280 px · 표 69개 · 평가 프로토콜 정본.
+#   `resize_window` 는 성공을 찍고도 창을 안 바꾼 전과가 있어 쓰지 않았다):
+#     머리말 2줄 이상  17개 -> 0개     최대 표폭  659 px -> 617 px
+#     칸 밖 넘침        0곳 -> 0곳     1280 px 에서 990 px 그대로 (무변화)
+#     짧은 토큰 쪼개짐   6건 -> 0건    (「rails」「27」「16」 이 갈라지던 것)
+#
+#   관문: `tablefix.blocky` 가 표를 짜부라뜨리는 규칙을, `tools/predeploy.py` 가
+#   이 두 선언이 사라지거나 뒤집히는 것을 본다. 둘 다 알려진 답으로 시험한다.
 CSS = r"""
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -116,9 +143,13 @@ blockquote b{color:var(--ink)}
 
 /* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
-table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
 th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
-  word-break:keep-all;overflow-wrap:anywhere}
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
 tbody tr:last-child td{border-bottom:none}

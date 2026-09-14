@@ -60,8 +60,53 @@ def _targets_table(sel):
     return False
 
 
+def _drop_print(css):
+    """`@media print{...}` 블록을 통째로 뺀다. 중괄호를 세어 잘라낸다.
+
+    정규식으로 `@media print\\{[^}]*\\}` 를 쓰면 안쪽 규칙의 첫 `}` 에서
+    끊겨 나머지가 남는다. 실제로 그렇게 새는 것을 봤다.
+    """
+    out, i = [], 0
+    while True:
+        m = re.search(r'@media[^{]*\bprint\b[^{]*\{', css[i:])
+        if not m:
+            out.append(css[i:])
+            break
+        s = i + m.start()
+        out.append(css[i:s])
+        j = i + m.end()          # 여는 중괄호 «뒤»
+        depth = 1
+        while j < len(css) and depth:
+            if css[j] == '{':
+                depth += 1
+            elif css[j] == '}':
+                depth -= 1
+            j += 1
+        i = j
+    return ''.join(out)
+
+
+# 발표 덱의 표. 고정 판형이라 «지면에 맞추는» 것이 맞다. 흐르는 문서가 아니다.
+#   `widthcheck` 가 슬라이드를 빼는 것과 같은 까닭이다.
+DECK_SEL = re.compile(r'(?:^|[\s,>+~])(?:table\.d\b|\[data-deck)')
+
+
 def blocky(html):
-    """표를 블록으로 만드는 CSS 규칙을 찾는다. [(선택자, 본문)]
+    """표를 «짜부라뜨리는» CSS 규칙을 찾는다. [(선택자, 본문)]
+
+    ★ 2026-09-14. 전에는 `display:block` 하나만 봤다. 그래서 같은 사고의
+      **나머지 반쪽을 못 잡았다.**
+
+      2026-08-28 에 `main table,.wrap table{display:block; overflow-x:auto;
+      min-width:0}` 에서 `display:block` 만 지우고 **`min-width:0` 을 남겼다.**
+      그 한 줄이 기본 CSS 의 `table{min-width:420px}` 를 이겨, 좁은 화면에서
+      표가 `.tw` 안에서 스크롤하는 대신 감싸개 폭까지 줄어들었다.
+
+      팀장이 폰에서 잡았다 · 11열 표의 셀이 30 px 가 되어 「난이도」가
+      난/이/도 로, 「100」이 1/0/0 으로 쪼개졌다. **관문은 통과했다.**
+      `display:block` 만 세고 있었기 때문이다.
+
+      그래서 둘 다 본다. 규칙을 하나만 막으면 다음번엔 다른 속성으로 온다.
 
     정규식 하나로 전체를 훑지 않는다. 처음에 그렇게 썼다가 본문 HTML 에서
     역추적이 폭발해 2분을 넘겼다. 스타일 블록만 떼어 «}» 로 잘라 본다.
@@ -71,6 +116,11 @@ def blocky(html):
         # 주석을 먼저 걷어낸다. 안 걷으면 «이 규칙을 쓰지 말라» 고 설명한
         # 주석 자체가 규칙으로 잡힌다. 실제로 그렇게 잡혔다.
         css = re.sub(r'/\*.*?\*/', ' ', sm.group(1), flags=re.S)
+        # ★ 인쇄에는 «스크롤이 없다». 종이에 맞추려고 표를 줄이는 것은 옳다.
+        #   `@media print` 안은 안 본다. 이 규칙을 넣자마자 `encyclopedia.html`
+        #   의 인쇄 블록(「표는 인쇄에서 스크롤이 없으므로 지면에 맞춘다」)이
+        #   위반으로 잡혔다. 관문이 틀린 이유로 배포를 막으면 안 된다.
+        css = _drop_print(css)
         for rule in css.split('}'):
             if '{' not in rule:
                 continue
@@ -78,7 +128,14 @@ def blocky(html):
             sel = sel.rsplit('{', 1)[-1].strip()
             if not _targets_table(sel):
                 continue
+            if DECK_SEL.search(sel):
+                continue
             if re.search(r'display\s*:\s*block', body):
+                hit.append((sel, body.strip()))
+            elif re.search(r'min-width\s*:\s*0(?:px|%|em|rem)?\s*(?:!important)?\s*(?:;|$)',
+                           body):
+                # `min-width:0` 은 기본 CSS 의 `table{min-width:420px}` 바닥을
+                # 없앤다. 표가 스크롤 대신 짜부라진다.
                 hit.append((sel, body.strip()))
     return hit
 

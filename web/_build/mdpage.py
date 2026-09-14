@@ -388,7 +388,17 @@ def render(md):
                 elif len(r) > w:
                     r = r[:w - 1] + [' | '.join(r[w - 1:])]
                 fixed.append(r)
-            out.append('<div class="tw"><table><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>'
+            # ★ 2026-09-14 팀장이 폰에서 잡았다. 표가 좁은 화면에서 «넘치지
+            #   않고 짜부라진다». `.tw` 에 `overflow-x:auto` 가 있는데도 표가
+            #   `table-layout:auto` 라 감싸개 폭까지 줄어든다.
+            #
+            #   처음엔 여기서 «열이 다섯 이상» 일 때만 `wide` 를 달았다. 그런데
+            #   실측해 보니 3열짜리도 똑같이 무너졌다 (표 20 「단계」가 39 px 로
+            #   눌려 단/계 로 접힘). 긴 열이 짧은 열을 먹는 것이라 열 수는
+            #   기준이 아니다. 그래서 이 자리에서 나누지 않고 CSS 가 «모든 표» 에
+            #   같은 규칙을 준다 -> `team_access.py` 의 `min-width:max-content`.
+            out.append('<div class="tw"><table><thead><tr>%s</tr></thead>'
+                       '<tbody>%s</tbody></table></div>'
                        % (''.join('<th>%s</th>' % _cell(c) for c in head),
                           ''.join('<tr>%s</tr>' % ''.join('<td>%s</td>' % _cell(c) for c in r)
                                   for r in fixed)))

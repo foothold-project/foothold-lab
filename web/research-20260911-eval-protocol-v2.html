@@ -98,9 +98,13 @@ blockquote b{color:var(--ink)}
 
 /* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
-table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
 th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
-  word-break:keep-all;overflow-wrap:anywhere}
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
 tbody tr:last-child td{border-bottom:none}
@@ -579,8 +583,20 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
      좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
      실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
-     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
-  main table,.wrap table{min-width:0}
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
   header.top{padding-top:28px}
 }
 .fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
@@ -713,7 +729,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=1594681f').then(function(r){
+    fetch('/assets/search-index.json?v=937cb455').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -878,7 +894,7 @@ body>*{flex-shrink:0}
 <div class="tw"><table><thead><tr><th>지형</th><th>빗나간 광선 (187 중)</th><th>낸 값</th></tr></thead><tbody><tr><td><b><code>gap</code></b></td><td><b>22</b></td><td><code>-1.00</code> ~ <code>-0.10</code></td></tr><tr><td><code>floating_ring</code></td><td>0</td><td><code>-0.33</code> ~ <code>-0.10</code></td></tr><tr><td><code>pit</code></td><td>0</td><td><code>-0.30</code> ~ <code>-0.10</code></td></tr><tr><td><code>rails</code></td><td>0</td><td><code>-0.22</code> ~ <code>-0.10</code></td></tr><tr><td><code>stepping_stones</code></td><td>0</td><td><code>-0.10</code> ~ <code>+0.97</code></td></tr><tr><td>나머지 다섯</td><td>0</td><td><code>-0.10</code> ~ <code>+0.11</code></td></tr></tbody></table></div>
 <p>재현은 <code>sim/eval/probe_height_scan.py</code> 입니다.</p>
 <h4>값이 무엇을 뜻하나</h4>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-scan-meaning.svg?v=34fcd048" alt="높이 스캔 값의 뜻" loading="lazy"><figcaption>높이 스캔 값의 뜻</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-scan-meaning.svg?v=2ca03314" alt="높이 스캔 값의 뜻" loading="lazy"><figcaption>높이 스캔 값의 뜻</figcaption></figure></p>
 <p><code>값 = 몸통 높이 - 광선이 닿은 높이 - 0.5</code></p>
 <p>양수는 「바닥이 아래로 멀다」, 음수는 「위로 솟았다」입니다. 자르는 범위가 <code>(-1, 1)</code> 이라 <code>-1</code> 의 경계는 <code>닿은높이 = 몸통높이 + 0.5</code> 입니다.</p>
 <h3>2. 측정 조건</h3>
@@ -897,15 +913,15 @@ body>*{flex-shrink:0}
 <h4>기존 험지 6종 · 난이도 0.5</h4>
 <div class="tw"><table><thead><tr><th>지형</th><th>0.5 m/s</th><th>1.0 m/s</th><th>1.5 m/s</th></tr></thead><tbody><tr><td><code>boxes</code></td><td>99</td><td>100</td><td>100</td></tr><tr><td><code>hf_pyramid_slope</code></td><td>100</td><td>100</td><td>100</td></tr><tr><td><code>hf_pyramid_slope_inv</code></td><td>100</td><td>100</td><td>100</td></tr><tr><td><code>pyramid_stairs</code></td><td>100</td><td>100</td><td>100</td></tr><tr><td><code>pyramid_stairs_inv</code></td><td>100</td><td>100</td><td>100</td></tr><tr><td><code>random_rough</code></td><td>99</td><td>100</td><td>90</td></tr></tbody></table></div>
 <h3>4. 난이도 곡선 · 세 모델</h3>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-curves.svg?v=89a92fbc" alt="규격 2 난이도별 성공률 세 모델" loading="lazy"><figcaption>규격 2 난이도별 성공률 세 모델</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-curves.svg?v=10a9dc80" alt="규격 2 난이도별 성공률 세 모델" loading="lazy"><figcaption>규격 2 난이도별 성공률 세 모델</figcaption></figure></p>
 <p><b><code>gap</code> · 1.0 m/s</b></p>
 <div class="tw"><table><thead><tr><th>난이도</th><th>0.1</th><th>0.2</th><th>0.3</th><th>0.4</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>0.9</th><th>1.0</th></tr></thead><tbody><tr><td>기준선</td><td>25</td><td>7</td><td>5</td><td>2</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>A</td><td>100</td><td>100</td><td>100</td><td>79</td><td>28</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><b>B</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td><td><b>100</b></td></tr></tbody></table></div>
 <p>A 는 연습한 폭(0.20 m)을 <b>조금 넘어서까지</b> 버팁니다. 난이도 0.3 이 평가 틈 0.225 m 이고 거기까지 100%, 0.4(0.25 m)에서 79%, 0.5(0.275 m)에서 28% 입니다. 연습 상한에서 딱 끊기는 것이 아니라 그 위로 서서히 떨어집니다. <b>B 는 난이도 1.0(0.40 m)까지 전부 100%</b> 입니다.</p>
 <h3>5. 연습한 지형과 시험 보는 지형</h3>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-gap-geometry.svg?v=9529d387" alt="학습 지형과 평가 지형의 거리 비교" loading="lazy"><figcaption>학습 지형과 평가 지형의 거리 비교</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-gap-geometry.svg?v=0667cdb2" alt="학습 지형과 평가 지형의 거리 비교" loading="lazy"><figcaption>학습 지형과 평가 지형의 거리 비교</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th></th><th>학습 <code>forward_gap</code></th><th>평가 <code>gap</code></th></tr></thead><tbody><tr><td>틈 모양</td><td>앞을 가로지르는 도랑 하나</td><td>발판 사방을 두른 고리</td></tr><tr><td>출발점에서 틈까지</td><td>1.50 m</td><td>0.75 m</td></tr><tr><td>틈 폭 (난이도 0.5) · A</td><td>0.125 m</td><td>0.275 m</td></tr><tr><td>틈 폭 (난이도 0.5) · <b>B</b></td><td><b>0.275 m</b></td><td>0.275 m</td></tr><tr><td>넘은 뒤 착지면 · A</td><td>3.94 m</td><td>2.98 m</td></tr><tr><td>넘은 뒤 착지면 · <b>B</b></td><td><b>3.86 m</b></td><td>2.98 m</td></tr></tbody></table></div>
 <h3>6. 보상이 몸의 어디에 걸리나</h3>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-reward-map.svg?v=396a26eb" alt="보상 지도" loading="lazy"><figcaption>보상 지도</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-reward-map.svg?v=ff357ac4" alt="보상 지도" loading="lazy"><figcaption>보상 지도</figcaption></figure></p>
 <p>가장 큰 벌점이 <code>lin_vel_z_l2</code> 의 <b>-2.00</b> 입니다. 「위아래로 출렁이지 마라」가 「명령 속도를 맞춰라(+1.50)」보다 무겁습니다.</p>
 <p><b>이것이 뛰어넘는 동작과 부딪칩니다.</b> <code>stepping_stones</code> 가 관측을 고쳐도 안 풀리는 이유로 이 값을 의심하고 있습니다.</p>
 <h3>7. 아직 안 된 것</h3>
@@ -1050,7 +1066,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>몸통 아래를 향해 <b>격자 모양으로 광선을 쏘고, 각 광선이 땅에 닿는 높이</b>를 받습니다. 카메라가 아니라 줄자에 가깝습니다.</p>
 <div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>어디서</th></tr></thead><tbody><tr><td>격자 크기</td><td>1.6 m x 1.0 m</td><td>velocity_env_cfg.py:70</td></tr><tr><td>격자 간격</td><td>0.1 m</td><td>같은 자리</td></tr><tr><td>광선 개수</td><td>17 x 11 = 187</td><td>위 둘에서 계산</td></tr><tr><td>쏘는 방향</td><td>(0, 0, -1) · 아래로만</td><td>patterns_cfg.py:52</td></tr><tr><td>출발 높이</td><td>몸통에서 20 m 위</td><td>ray_caster.py:224</td></tr><tr><td>값 계산</td><td>몸통높이 - 닿은높이 - 0.5</td><td>observations.py:300</td></tr><tr><td>자르는 범위</td><td>-1 에서 +1</td><td>velocity_env_cfg.py:138</td></tr></tbody></table></div>
 <p><b>「20 m 위에서 쏜다」는 것은 출발점 이야기</b>입니다. 값 자체는 <b>몸통 기준</b>이라 평지에서 -0.10 근처가 나옵니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=34fcd048" alt="높이 스캔 값이 뜻하는 세 가지" loading="lazy"><figcaption>높이 스캔 값이 뜻하는 세 가지</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=2ca03314" alt="높이 스캔 값이 뜻하는 세 가지" loading="lazy"><figcaption>높이 스캔 값이 뜻하는 세 가지</figcaption></figure></p>
 <p>그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다</p>
 <h4>3.2 gap 지형에서 광선이 어디를 비추나</h4>
 <p>난이도 0.5 에서 실제로 재 본 그림입니다. 재현은 sim/eval/probe_height_scan.py 입니다.</p>
@@ -1066,7 +1082,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>값의 범위가 -0.33 에서 +0.97 까지 골고루 있습니다. <b>높이 스캔은 상수가 아니라 실제로 지형 정보를 담고 있습니다.</b> 그래서 이 채널이 뒤집히는 것은 무시할 수 있는 일이 아닙니다.</p>
 <h4>3.4 고리 밑을 지나갈 때는 무엇을 보나</h4>
 <p>광선이 아래로만 가니 <b>머리 위에 뭔가 있으면 그것부터 맞힙니다.</b> floating_ring 에서 실제로 그렇습니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=edfe4f0c" alt="floating_ring 단면에서 광선이 고리 윗면만 본다" loading="lazy"><figcaption>floating_ring 단면에서 광선이 고리 윗면만 본다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=81c79766" alt="floating_ring 단면에서 광선이 고리 윗면만 본다" loading="lazy"><figcaption>floating_ring 단면에서 광선이 고리 윗면만 본다</figcaption></figure></p>
 <p>그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다</p>
 <div class="tw"><table><thead><tr><th>난이도 0.5 에서</th><th>높이</th><th>광선이 보는가</th></tr></thead><tbody><tr><td>고리 윗면</td><td>0.225 m</td><td>본다 값 -0.33</td></tr><tr><td>고리 아랫면</td><td>0.105 m</td><td>못 본다</td></tr><tr><td>고리 아래 바닥</td><td>0 m</td><td>못 본다</td></tr><tr><td>고리 없는 자리 바닥</td><td>0 m</td><td>본다 값 -0.10</td></tr><tr><td>Go2 몸통</td><td>0.42 m</td><td>기준점. 20환경 평균 0.421 m · floating_ring 초기값은 0.40 m</td></tr></tbody></table></div>
 <p><b>로봇은 고리를 「바닥에서 0.225 m 솟은 덩어리」로 봅니다.</b> 아래에 틈이 있다는 것도, 고리가 얼마나 두꺼운지도 모릅니다. <b>높이 스캔은 한 자리에 숫자 하나</b>라서 「위에 천장, 아래에 바닥」을 담을 수 없습니다.</p>
@@ -1102,7 +1118,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>이렇게 해야 <b>「폭을 넓혀서 오른 것」과 「입력을 맞춰서 오른 것」을 갈라서</b> 말할 수 있습니다.</p>
 <h4>3.8 연습한 지형과 시험 보는 지형</h4>
 <p>부호 말고 기하도 다릅니다. 둘 다 난이도 0.5 에서 계산한 값입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig04.svg?v=9529d387" alt="학습 지형과 평가 지형의 달릴 거리와 틈 폭 비교" loading="lazy"><figcaption>학습 지형과 평가 지형의 달릴 거리와 틈 폭 비교</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig04.svg?v=0667cdb2" alt="학습 지형과 평가 지형의 달릴 거리와 틈 폭 비교" loading="lazy"><figcaption>학습 지형과 평가 지형의 달릴 거리와 틈 폭 비교</figcaption></figure></p>
 <p>그림 3-4 · 같은 난이도에서 달릴 거리는 절반, 틈은 2.2 배입니다</p>
 <div class="tw"><table><thead><tr><th></th><th>학습 forward_gap</th><th>평가 gap</th></tr></thead><tbody><tr><td>틈 모양</td><td>앞을 가로지르는 도랑 하나</td><td>발판 사방을 두른 고리</td></tr><tr><td>출발점에서 틈까지</td><td>1.50 m</td><td>0.75 m</td></tr><tr><td>틈 폭 (난이도 0.5)</td><td>0.125 m</td><td>0.275 m</td></tr><tr><td>넘은 뒤 착지면</td><td>3.94 m</td><td>2.98 m</td></tr><tr><td>빗나간 광선의 값</td><td><b>+1</b></td><td><b>-1</b></td></tr></tbody></table></div>
 <p><b>임석헌의 영상과 우리 성적이 다른 이유는 하나가 아닙니다.</b> 2026-09-11 에 그의 S3 원자료를 내려받아 대조했습니다.</p>
@@ -1136,7 +1152,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>두 규격의 값이 gap 말고도 다릅니다.</b> 예전에는 「빗나가는 광선이 0개라 나머지 아홉은 같다」고 적었는데, 공통 150칸을 다시 세니 <b>40칸이 다르고 rails 는 8칸이 2 %p 를 넘었습니다</b> <span class="ev ev-ok">확인됨</span> (2026-09-12 codex 8회차 · <code>pit</code> d0.3 v0.5 는 18 %에서 31 %). 그 차이가 관측 부호 변경 때문인지는 <b>미확인</b>입니다. 실행 구성과 초기 상태까지 통제한 대조가 아닙니다.</p>
 <p>그러니 이 절의 옛 표는 <b>어느 지형이든 성적으로 인용하지 마십시오.</b></p>
 <p>기준선 한 점 옆에 <b>난이도별 곡선</b>을 세웁니다. 2026-09-10 에 실패 5종 19,000에피소드를 40분에 돌렸습니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig05.svg?v=89a92fbc" alt="규격 2 난이도별 성공률 세 모델 비교" loading="lazy"><figcaption>규격 2 난이도별 성공률 세 모델 비교</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig05.svg?v=10a9dc80" alt="규격 2 난이도별 성공률 세 모델 비교" loading="lazy"><figcaption>규격 2 난이도별 성공률 세 모델 비교</figcaption></figure></p>
 <p>그림 · 규격 2 로 다시 잰 난이도 곡선. 회색이 기준선, 주황이 A(연습 틈 0.20 m), 파랑이 B(0.40 m)</p>
 <p><b>이 그림은 2026-09-11 에 다시 그렸습니다.</b> 그 전 그림은 <b>규격 1</b>(빗나간 광선 = -1) 로 잰 것이라 gap 이 세 모델 모두 0 근처로 평평했습니다. 구멍을 장애물이라고 알려 주고 잰 곡선이었습니다.</p>
 <h4>왜 스윕을 하나</h4>
@@ -1297,7 +1313,7 @@ foothold-v1.json      이 모델이 어떻게 만들어졌는지</pre></div>
 <div class="tw"><table><thead><tr><th>단계</th><th>입력</th><th>출력</th><th>실측 시간</th></tr></thead><tbody><tr><td>학습</td><td>NVIDIA checkpoint.pt</td><td>model.pt</td><td>1,500회에 134분</td></tr><tr><td>평가</td><td>model.pt</td><td>CSV</td><td>에피소드당 0.25초 (1.0 m/s)</td></tr><tr><td>렌더</td><td>model.pt</td><td>mp4</td><td>4096마리 20초 컷에 104~120초</td></tr></tbody></table></div>
 <h4>무엇을 잘하라고 가르쳤나</h4>
 <p>보상은 <b>몸의 어느 부분을 보느냐</b>로 나뉩니다. 아래 값은 학습 실행이 저장한 params/env.yaml 에서 그대로 읽은 것입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg?v=3258721f" alt="Go2 몸의 어디에 어떤 보상이 걸리는가" loading="lazy"><figcaption>Go2 몸의 어디에 어떤 보상이 걸리는가</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg?v=cb566755" alt="Go2 몸의 어디에 어떤 보상이 걸리는가" loading="lazy"><figcaption>Go2 몸의 어디에 어떤 보상이 걸리는가</figcaption></figure></p>
 <p>그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. 사진은 실제 평가 렌더에서 오린 것입니다</p>
 <p><b>가장 큰 벌점이 lin_vel_z_l2 (-2.00) 입니다.</b> 「위아래로 출렁이지 마라」가 「명령 속도를 맞춰라 (+1.50) 」보다 무겁습니다.</p>
 <p><b>이것이 틈을 뛰어넘는 동작과 정면으로 부딪칩니다.</b> 뛰려면 몸이 위아래로 움직여야 하는데, 그 동작에 가장 큰 벌점이 걸려 있습니다. gap 과 stepping_stones 를 볼 때 이 값을 같이 봐야 합니다.</p>
@@ -1414,5 +1430,5 @@ document.addEventListener('click', function(e){
 });
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp7obocbvq</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

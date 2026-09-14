@@ -94,11 +94,23 @@ def checks(out, bad):
     if b and 'maindata-v1' not in b:
         bad.append('지형 보드가 수치 출처를 안 밝힙니다 (정본이 아닐 수 있습니다)')
 
-    # 7. 문단 폭 제한
+    # 7. 문단 폭 제한.
+    #    ★ 판정은 빌드 관문 `widthcheck` 를 «그대로 빌려 쓴다». 처음엔 여기에
+    #      정규식을 따로 적었는데, 그것이 `/* 폭허용: */` 예외 표기를 몰라
+    #      빌드가 0곳이라 한 것을 여기서 3건으로 셌다. 같은 규칙을 두 곳에
+    #      따로 적으면 반드시 갈라진다 (오늘 이 부류만 여러 번 봤다).
     n += 1
-    for name, t in (('hub', hub), ('프로토콜', proto), ('벤치마크', bench)):
-        if re.search(r'max-width\s*:\s*\d+(\.\d+)?ch', t):
-            bad.append('%s 에 문단 폭 제한이 남았습니다' % name)
+    try:
+        _here = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, os.path.join(os.path.dirname(_here), 'web', '_build'))
+        import widthcheck as _wc
+        for name, t in (('hub', hub), ('프로토콜', proto), ('벤치마크', bench)):
+            got = _wc.scan_text(t, name)
+            if got:
+                bad.append('%s 에 문단 폭 제한이 %d곳 남았습니다: %s'
+                           % (name, len(got), got[0][1][:60]))
+    except Exception as e:
+        bad.append('문단 폭 검사를 못 돌렸습니다: %s' % str(e)[:60])
 
     # 12. 프로토콜 페이지의 전역바 활성 항목
     n += 1
@@ -119,6 +131,86 @@ def checks(out, bad):
     for name, t in (('hub', hub), ('프로토콜', proto), ('벤치마크', bench)):
         if '—' in t:
             bad.append('%s 에 em dash 가 %d개 있습니다' % (name, t.count('—')))
+
+    # ── 좁은 화면 ──────────────────────────────────────────────
+    # ★ 2026-09-14. 팀장이 폰에서 표가 뭉개지는 것을 잡았다. 나는 1568 px 에서만
+    #   재고 「됐다」고 보고했다. 두 번 그랬다 (갤러리 거르개 · 이 표).
+    #
+    #   진짜 폭 측정은 브라우저가 있어야 한다. 여기서는 **그 사고를 만든 구조**
+    #   를 본다. 규칙 판정은 `tablefix.blocky` 를 그대로 빌려 쓴다 · 문자열을
+    #   찾는 대신 «표를 겨눈 규칙인가» 를 파싱해서 본다.
+    n += 1
+    try:
+        _here = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, os.path.join(os.path.dirname(_here), 'web', '_build'))
+        import tablefix as _tf
+        squash = []
+        for f in sorted(os.listdir(out)):
+            if not f.endswith('.html'):
+                continue
+            for sel, body in _tf.blocky(read(out, f) or ''):
+                squash.append('%s: %s{%s}' % (f, sel[:40], body[:40]))
+        if squash:
+            bad.append('표를 짜부라뜨리는 규칙 %d곳: %s'
+                       % (len(squash), ' · '.join(squash[:2])))
+    except Exception as e:
+        bad.append('표 규칙 검사를 못 돌렸습니다: %s' % str(e)[:60])
+
+    # 표를 «펴는» 규칙이 살아 있나.
+    #
+    # ★ 이것은 «구조 검사» 다. 진짜 폭은 브라우저만 잴 수 있고, 그 실측은
+    #   아래 숫자로 남겨 뒀다 (iframe 390/430/768/1280 px · 표 69개):
+    #     머리말 2줄 이상 17개 -> 0개 · 짧은 토큰 쪼개짐 6건 -> 0건
+    #   여기서 막는 것은 «그 규칙이 사라지거나 뒤집히는 것» 이다. 실제로
+    #   2026-08-28 에 `min-width:420px` 이 들어간 뒤 `searchbox` 의
+    #   `min-width:0` 이 그것을 조용히 무력화했고 17일간 아무도 못 봤다.
+    #
+    #   문자열을 찾지 않고 «선언» 을 파싱한다. 주석 안의 같은 글자에 속지
+    #   않으려고 먼저 주석을 걷어낸다.
+    n += 1
+    css = ''
+    for f in sorted(os.listdir(out)):
+        if f.endswith('.css'):
+            css += read(out, f) or ''
+    if not css:
+        css = proto
+    bare = re.sub(r'/\*.*?\*/', ' ', css, flags=re.S)
+
+    def decl(sel_re, prop):
+        """`sel{...}` 를 찾아 그 안의 prop 값을 돌려준다 (마지막 선언이 이긴다)."""
+        hit = None
+        for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', bare):
+            if not re.search(sel_re, m.group(1)):
+                continue
+            for d in m.group(2).split(';'):
+                if ':' not in d:
+                    continue
+                k, v = d.split(':', 1)
+                if k.strip() == prop:
+                    hit = v.strip()
+        return hit
+
+    mw = decl(r'(?:^|[\s,>+~])table(?![\w.-])', 'min-width')
+    if mw is None:
+        bad.append('표에 min-width 선언이 없습니다 (좁은 화면에서 짜부라집니다)')
+    elif mw != 'max-content':
+        bad.append('표의 min-width 가 «%s» 입니다 (max-content 여야 합니다)' % mw)
+    # ★ anywhere 는 «마지막이 이긴다» 로 보면 안 된다. 뒤에 좁은 셀렉터로
+    #   `normal` 을 덮어 두면 앞의 anywhere 가 가려져 검사를 빠져나간다.
+    #   실제로 첫 판이 그래서 repro-m 의 anywhere 를 못 잡았다. 우리는 이 값을
+    #   표에서 «아예 안 쓰기로» 했으니 어느 규칙에 있든 잡는다.
+    ow = []
+    for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', bare):
+        if not re.search(r'(?:^|[\s,>+~])(?:th|td)(?![\w.-])', m.group(1)):
+            continue
+        for d in m.group(2).split(';'):
+            k, _, v = d.partition(':')
+            if k.strip() == 'overflow-wrap' and v.strip() == 'anywhere':
+                ow.append(m.group(1).strip()[:40])
+    if ow:
+        bad.append('칸에 overflow-wrap:anywhere 가 %d곳 있습니다 (%s) '
+                   '· min-content 를 한 글자로 무너뜨려 「100」이 1/0/0 이 됩니다'
+                   % (len(ow), ' · '.join(ow[:2])))
 
     # 파비콘. ★ 2026-09-14 팀장 확인 요청: 「파비콘 없어진 거 아니지?」
     #   한 장만 보면 안 된다. **전수** 로 세고, 가리키는 파일이 실제로 있는지와
@@ -168,29 +260,55 @@ def selftest(out):
     p = os.path.join(out, 'hub-research.html')
     orig = hub
     cases = [
-        ('묶음 하나 지움', lambda s: s.replace('data-label="진단·분석"', '', 1)),
+        # ★ 한 곳만 지우면 안 된다. 「진단·분석」은 두 자리에 붙어 있어서
+        #   하나를 지워도 «묶음 6종» 은 그대로다. 즉 이 시험이 아무것도 안
+        #   재고 있었다. 기준선 대조를 넣고 나서야 [X]놓침 으로 드러났다.
+        ('묶음 하나 지움', lambda s: s.replace('data-label="진단·분석"', '')),
         ('옛 묶음 이름 되살림',
          lambda s: s.replace('data-label="조사·비교"',
                              'data-label="외부 자료 조사"', 1)),
         ('보드 출처 지움', lambda s: s.replace('maindata-v1', 'oldrun', 1)),
         ('em dash 넣음', lambda s: s.replace('<body', '<body data-x="—"', 1)),
     ]
+    # ★ 기준선을 먼저 잰다. 이것이 없으면 «원래 나던 오류» 가 주입한 결함을
+    #   가려 4/4 로 찍힌다. 실제로 그랬다: report-v1 파비콘 오류가 늘 나고
+    #   있어서 「묶음 하나 지움」이 안 잡혀도 통과로 읽혔다. 관문이 무엇을
+    #   근거로 통과했는지 대지 못하면 그 관문은 아직 시험되지 않은 것이다.
+    # ★ 이 시험은 «대상 폴더의 진짜 파일» 을 고쳤다 되돌린다. 되돌림이
+    #   빠지면 배포본이 오염된 채 남는다. 실제로 2026-09-14 에 그랬다:
+    #   편집하다 되돌림 줄을 함께 지웠고, 두 번 돌린 시험이 배포 트리에
+    #   `data-x="—"` 를 박아 두었는데 아무 오류도 안 났다.
+    #   그래서 finally 로 되돌리고, 되돌린 뒤 «바이트로» 대조한다.
+    base = []
+    checks(out, base)
+    base = set(base)
+    if base:
+        print('  기준선 오류 %d건 (이것들은 안 센다): %s'
+              % (len(base), (' · '.join(sorted(base)))[:66]))
     ok = 0
-    for name, f in cases:
-        s = f(orig)
-        if s == orig:
-            print('  [!] %-18s 주입 실패' % name)
-            continue
-        io.open(p, 'w', encoding='utf-8', newline='\n').write(s)
-        bad = []
-        checks(out, bad)
-        if bad:
-            ok += 1
-            print('  잡음   %-18s %s' % (name, bad[0][:52]))
-        else:
-            print('  [X]놓침 %-18s' % name)
-    io.open(p, 'w', encoding='utf-8', newline='\n').write(orig)
-    print('  %d/%d · 원본 되돌림' % (ok, len(cases)))
+    try:
+        for name, f in cases:
+            s = f(orig)
+            if s == orig:
+                print('  [!] %-18s 주입 실패' % name)
+                continue
+            io.open(p, 'w', encoding='utf-8', newline='\n').write(s)
+            bad = []
+            checks(out, bad)
+            fresh = [x for x in bad if x not in base]   # «새로» 생긴 것만 센다
+            if fresh:
+                ok += 1
+                print('  잡음   %-18s %s' % (name, fresh[0][:52]))
+            else:
+                print('  [X]놓침 %-18s (기준선 밖 새 오류 없음)' % name)
+    finally:
+        io.open(p, 'w', encoding='utf-8', newline='\n').write(orig)
+        back = io.open(p, encoding='utf-8').read()
+        if back != orig:
+            print('  [!!] 되돌림 실패. %s 가 원본과 다릅니다' % p)
+            return False
+        print('  원본 되돌림 확인 (바이트 일치)')
+    print('  %d/%d' % (ok, len(cases)))
     return ok == len(cases)
 
 

@@ -3,7 +3,7 @@
 
 분류: 운영
 작성: Claude 세션 (오흥재 지시) · 2026-09-11 23:45
-근거: maindata-v1 지형 16종 x 모델 3 x 속도 3 · 14,400 판
+근거: maindata-v1 지형 16종 x 모델 3 x 속도 3 · 14,400 에피소드
 요지: N차에 그대로 다시 쓰는 양식. 손으로 적은 숫자가 없다
 상태: 확정
 """
@@ -332,7 +332,11 @@ p = ['<!doctype html>', '<html lang="ko">', "<head>", '<meta charset="utf-8">',
      '<meta name="viewport" content="width=device-width,initial-scale=1">',
      '<title>FOOTHOLD 종합보고서 1차</title>',
      '<meta name="description" content="기준선 NVIDIA vs A vs foothold-v1 · '
-     '난이도 0.5 성적표 14,400 판 · 전체 원자료 43,200 판">',
+     '난이도 0.5 성적표 14,400 에피소드 · 전체 원자료 43,200 에피소드">',
+     # 파비콘. 이 장은 `build.py` 가 굽는 페이지가 아니라서 전역 head 를
+     # 안 받는다. 그래서 여기 직접 적는다 (배포 전 점검 [파비콘] 이 잡았다).
+     '<link rel="icon" type="image/svg+xml" '
+     'href="assets/brand/foothold-favicon.svg">',
      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
      'family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">',
      "<style>%s</style>" % CSS, NAV_HEAD, "</head>", "<body>",
@@ -341,7 +345,7 @@ p = ['<!doctype html>', '<html lang="ko">', "<head>", '<meta charset="utf-8">',
 p.append('<div class="head">'
          '<p>분류: 보고</p>'
          '<p>작성: 오흥재 · 2026-09-11</p>'
-         '<p>근거: 지형 16종 x 모델 3 x 속도 3 · %s 판 · 측정 규격 2</p>'
+         '<p>근거: 지형 16종 x 모델 3 x 속도 3 · %s 에피소드 · 측정 규격 2</p>'
          '<p>요지: foothold-v1 은 기존 험지를 유지하면서 미경험 험지 gap 을 1 %%에서 100 %%로 올렸다</p>'
          '<p>상태: 검토중</p></div>' % format(EPISODES, ","))
 
@@ -356,7 +360,7 @@ p.append('<h2><span class="n">01</span>한 줄</h2>')
 gap_base = g("gap", "baseline", "1")
 gap_v1 = g("gap", "foothold-v1", "1")
 p.append('<p><strong>foothold-v1 은 기존 험지 6종의 성적을 유지하거나 끌어올리면서, '
-         '미경험 험지 <span class="mono">gap</span> 의 성공률을 (난이도 0.5 · 1.0 m/s · 100 판 기준) %.0f %%에서 %.0f %%로 '
+         '미경험 험지 <span class="mono">gap</span> 의 성공률을 (난이도 0.5 · 1.0 m/s · 100 에피소드 기준) %.0f %%에서 %.0f %%로 '
          '올렸습니다.</strong> 다만 <span class="mono">stepping_stones</span> 는 세 모델 '
          '모두 0 %% 이고, <span class="mono">rails</span> 는 %.0f %% 에 머뭅니다.</p>'
          % (gap_base, gap_v1, g("rails", "foothold-v1", "1")))
@@ -365,8 +369,8 @@ p.append('<p>아래는 그 주장의 근거입니다. 같은 지형, 같은 속�
          '세 모델이 무엇을 하는지 보십시오.</p>')
 p.append(clips([
     ("gap-v1-baseline", "기준선 NVIDIA",
-     "이 자리 성공 %d/%d. <strong>이 시연 한 판에서는</strong> 앞다리가 틈에 "
-     "빠지고 몸통이 가장자리에 걸립니다. 100 판이 모두 그렇다는 뜻은 아닙니다"
+     "이 자리 성공 %d/%d. <strong>이 시연 한 에피소드에서는</strong> 앞다리가 틈에 "
+     "빠지고 몸통이 가장자리에 걸립니다. 100 에피소드가 모두 그렇다는 뜻은 아닙니다"
      % (BD["gap|baseline|1"]["win"], BD["gap|baseline|1"]["n"])),
     ("gap-v1-A", "A · 연습 틈 0.05~0.20 m",
      "이 자리 성공 %d/%d. 시험 틈은 0.275 m 로 연습 범위 밖입니다. "
@@ -389,14 +393,14 @@ p.append('<div class="tw"><table><thead><tr><th>이름</th><th>무엇인가</th>
          '<td class="mono">0.15 ~ 0.40 m</td><td class="mono">models/foothold-v1.pt</td></tr>'
          '</tbody></table></div>')
 p.append('<p>세 모델 모두 같은 평가 하네스, 같은 난수(seed 42), 같은 난이도(0.5)로 '
-         '측정했습니다. 지형마다 100 판입니다.</p>')
+         '측정했습니다. 지형마다 100 에피소드입니다.</p>')
 
 # ── 3 ──────────────────────────────────────────────────────────────────
 p.append('<h2><span class="n">03</span>성적표</h2>')
-p.append('<p>난이도 0.5, 명령 속도 1.0 m/s, 지형마다 100 판에서의 성공률입니다. '
+p.append('<p>난이도 0.5, 명령 속도 1.0 m/s, 지형마다 100 에피소드에서의 성공률입니다. '
          '성공은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND 입니다.</p>')
 p.append('<figure>%s<figcaption>지형 16종 x 모델 3 · 난이도 0.5 · 1.0 m/s · '
-         '지형마다 100 판. 칸 안의 수가 성공률이고 진할수록 높습니다.</figcaption></figure>'
+         '지형마다 100 에피소드. 칸 안의 수가 성공률이고 진할수록 높습니다.</figcaption></figure>'
          % MATRIX)
 
 p.append("<h3>속도별 전수</h3>")
@@ -445,14 +449,14 @@ p.append('<p>집합별 지형 평균입니다. 기존 험지 6종에서 foothold
          % (avg("rough6", "baseline", "1.5"), avg("rough6", "foothold-v1", "1.5")))
 
 p.append("<h3>기준선은 1.5 m/s 를 따라가지 못합니다</h3>")
-p.append('<p>1.5 m/s 에서 기준선이 실패한 판을 <strong>판마다</strong> 갈랐습니다. '
-         '축별 합계로는 어느 판이 어느 축에서 떨어졌는지 알 수 없어, 각 판의 네 축을 '
+p.append('<p>1.5 m/s 에서 기준선이 실패한 에피소드를 <strong>에피소드마다</strong> 갈랐습니다. '
+         '축별 합계로는 어느 에피소드가 어느 축에서 떨어졌는지 알 수 없어, 각 에피소드의 네 축을 '
          '모두 보고 분류했습니다.</p>')
 
 bad4 = [(t, AXES[(t, "baseline")]) for t in TERR
         if (t, "baseline") in AXES and AXES[(t, "baseline")]["failed"] > 0]
 
-p.append('<div class="tw"><table><thead><tr><th>지형</th><th class="num">실패 판</th>'
+p.append('<div class="tw"><table><thead><tr><th>지형</th><th class="num">실패 에피소드</th>'
          '<th class="num">속도추종만</th><th class="num">속도추종+1축</th>'
          '<th class="num">속도추종+2축 이상</th><th class="num">속도추종 무관</th>'
          '<th class="num">foothold-v1 성공률</th></tr></thead><tbody>')
@@ -475,21 +479,21 @@ p.append('<tr><td><strong>합계</strong></td><td class="num"><strong>%d</strong
          % (sum_failed, sum_only, sum_one, sum_many, sum_other))
 p.append("</tbody></table></div>")
 
-p.append('<p>난이도 0.5, 지형마다 100 판입니다. 실패한 %d 판 가운데 '
-         '<strong>%d 판(%.0f %%)은 속도추종 축에서만 떨어졌습니다.</strong> '
-         '나머지 세 축은 통과했다는 뜻이고, 그 판에서 로봇은 넘어지지 않고 '
+p.append('<p>난이도 0.5, 지형마다 100 에피소드입니다. 실패한 %d 에피소드 가운데 '
+         '<strong>%d 에피소드(%.0f %%)은 속도추종 축에서만 떨어졌습니다.</strong> '
+         '나머지 세 축은 통과했다는 뜻이고, 그 에피소드에서 로봇은 넘어지지 않고 '
          '통과선도 넘었습니다. 명령 1.5 m/s 를 주었는데 그보다 느리게 간 것입니다.</p>'
          % (sum_failed, sum_only, 100.0 * sum_only / sum_failed))
-# 네 갈래를 «다» 적는다. 합이 실패 판 수와 맞는 것이 보여야 한다.
+# 네 갈래를 «다» 적는다. 합이 실패 에피소드 수와 맞는 것이 보여야 한다.
 # 「두 축 이상」은 속도추종을 포함해 세는지 아닌지가 중의적이라 쓰지 않는다.
-p.append('<p>나머지 %d 판은 이렇게 갈립니다. '
-         '속도추종 <strong>말고 한 축이 더</strong> 떨어진 판이 %d, '
-         '<strong>두 축 이상이 더</strong> 떨어진 판이 %d 입니다. '
-         '속도추종이 통과했는데 실패한 판은 %d 입니다. '
-         '넷을 더하면 %d 로 실패 판 수와 같습니다.</p>'
+p.append('<p>나머지 %d 에피소드는 이렇게 갈립니다. '
+         '속도추종 <strong>말고 한 축이 더</strong> 떨어진 에피소드가 %d, '
+         '<strong>두 축 이상이 더</strong> 떨어진 에피소드가 %d 입니다. '
+         '속도추종이 통과했는데 실패한 에피소드는 %d 입니다. '
+         '넷을 더하면 %d 로 실패 에피소드 수와 같습니다.</p>'
          % (sum_failed - sum_only, sum_one, sum_many, sum_other,
             sum_only + sum_one + sum_many + sum_other))
-p.append('<p>두 축 이상이 더 떨어진 %d 판은 '
+p.append('<p>두 축 이상이 더 떨어진 %d 에피소드는 '
          '<span class="mono">floating_ring</span> · '
          '<span class="mono">stepping_stones</span> · <span class="mono">gap</span> · '
          '<span class="mono">pyramid_stairs_inv</span> 에 몰려 있고, '
@@ -498,7 +502,7 @@ p.append('<div class="note"><p><strong>이 표를 「기준선이 고속 험지�
          '읽으면 과장입니다.</strong> 대부분은 넘어지지 않고 더 느리게 걸을 뿐입니다. '
          '자료가 말하는 것은 <strong>기준선에 1.5 m/s 를 시켜도 그 속도가 안 나온다</strong>는 '
          '것입니다. foothold-v1 도 <strong>모든 지형에서 그 속도를 내는 것은 아닙니다.</strong> '
-         '같은 조건에서 속도추종 축을 통과한 판이 %s / %s 이고, '
+         '같은 조건에서 속도추종 축을 통과한 에피소드가 %s / %s 이고, '
          '<span class="mono">stepping_stones</span> 는 %d/%d, '
          '<span class="mono">rails</span> 는 %d/%d 입니다.</p>'
          '<p>이 관측은 시뮬레이션 안의 것입니다. 실기에서 같은 일이 일어나는지는 '
@@ -510,10 +514,10 @@ p.append('<div class="note"><p><strong>이 표를 「기준선이 고속 험지�
 p.append('<p>같은 지형(<span class="mono">wave</span>)을 1.5 m/s 명령으로 걷는 장면입니다. '
          '<strong>셋 다 넘어지지 않습니다.</strong> 기준선은 그 속도가 안 나와서 '
          '속도추종 축에서 떨어집니다.</p>')
-p.append('<div class="note"><p><strong>영상은 평가 판 자체가 아닙니다.</strong> '
-         '같은 체크포인트·지형·난이도·난수로 <strong>따로 촬영한 한 판</strong>이고, '
-         '성적표의 100 판 중 하나를 꺼낸 것이 아닙니다. 옆의 성공률은 그 자리의 '
-         '100 판 집계이고, 영상은 같은 조건에서 로봇이 무엇을 하는지 보여 줍니다.</p>'
+p.append('<div class="note"><p><strong>영상은 평가 에피소드 자체가 아닙니다.</strong> '
+         '같은 체크포인트·지형·난이도·난수로 <strong>따로 촬영한 한 에피소드</strong>이고, '
+         '성적표의 100 에피소드 중 하나를 꺼낸 것이 아닙니다. 옆의 성공률은 그 자리의 '
+         '100 에피소드 집계이고, 영상은 같은 조건에서 로봇이 무엇을 하는지 보여 줍니다.</p>'
          '<p><strong>HUD 의 추종 표시는 평가의 속도추종 판정과 다른 계산입니다.</strong> '
          'HUD 는 그 시점까지의 <strong>전후 방향</strong> 오차 '
          '<span class="mono">abs(vx - 명령속도)</span> 의 누적 평균을 보여 줍니다. '
@@ -534,7 +538,7 @@ p.append(clips([
      "종합 0 %. 생존 100 · 전진 100 · <strong>속도추종 0</strong>. 넘어진 것이 아니라 느립니다"),
     ("wave-v1.5-A", "A · 1.5 m/s 명령", "종합 100 %"),
     ("wave-v1.5", "foothold-v1 · 1.5 m/s 명령", ("종합 성공 %d/%d. 속도추종 기준인 평면 평균 오차 0.25 m/s 이내를 "
-      "100 판 모두 통과했습니다. 명령 속도를 정확히 낸다는 뜻은 아닙니다"
+      "100 에피소드 모두 통과했습니다. 명령 속도를 정확히 낸다는 뜻은 아닙니다"
       % (BD["wave|foothold-v1|1.5"]["win"], BD["wave|foothold-v1|1.5"]["n"]))),
 ]))
 
@@ -571,7 +575,7 @@ p.append('<p>난이도 0.5 칸에서 이 곡선과 앞의 성적표는 <strong>�
          '재고 있다는 뜻입니다.</p>')
 p.append('<h2><span class="n">05</span>성공률만으로는 안 보이는 것</h2>')
 p.append('<p>성공 조건은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND입니다. 그런데 장애물을 '
-         '<strong>비켜 가도</strong> 그 조건은 채워집니다. 그래서 이번 판에 '
+         '<strong>비켜 가도</strong> 그 조건은 채워집니다. 그래서 이번 에피소드에 '
          '<strong>몸통 아래 광선이 어느 높이 폭을 지났는가</strong>를 재는 열 셋을 더했습니다.</p>')
 p.append('<figure>%s<figcaption>가로가 참여도, 세로가 성공률입니다. 오른쪽 위는 '
          '중앙 광선이 지난 높이 폭이 스캔 전체와 비슷하면서 성공률도 높은 자리, '
@@ -587,7 +591,7 @@ p.append('<div class="tw"><table><thead><tr><th>지형</th><th class="num">성�
 # **정의를 본문에 둔다.** 갤러리 색인에 적어 둔 것은 보고서를 읽는 사람에게
 # 안 보인다 `확인됨` (2026-09-12 검증 2회차 2번).
 _defn = ('<div class="note"><p><strong>참여도가 무엇인가.</strong> '
-         '한 판 동안 몸통 아래 <strong>중앙 광선 하나</strong>가 지나간 높이 폭을, '
+         '한 에피소드 동안 몸통 아래 <strong>중앙 광선 하나</strong>가 지나간 높이 폭을, '
          '<strong>스캔 전체</strong>가 본 높이 폭으로 나눈 값입니다. '
          '0 과 1 사이로 자릅니다.</p>'
          '<p class="mono" style="font-size:.86rem">'
@@ -632,12 +636,12 @@ p.append('<div class="note bad"><p><strong>'
          '<p><strong>평균보다 분포가 분명합니다.</strong> 참여도 중앙값이 '
          + ("%.2f" % st["ratio_p50"]) + ' 이고 10~90 분위가 '
          + ("%.2f ~ %.2f" % (st["ratio_p10"], st["ratio_p90"])) + ' 입니다. '
-         '절반 넘는 판에서 그 폭이 거의 0 이었고, %d 판에서는 비율이 1 이었습니다. '
+         '절반 넘는 에피소드에서 그 폭이 거의 0 이었고, %d 에피소드에서는 비율이 1 이었습니다. '
          % st["ones"] + 
          '평균 ' + ("%.2f" % st["ratio"]) + ' 은 그 둘을 섞은 값입니다.</p>'
          '<p>Isaac 의 star 지형은 막대가 중심에서 바깥으로 뻗습니다. 중심에서 방사 '
          '방향으로 걸으면 막대를 가로지를 일이 구조적으로 없습니다. 다만 그 경로를 '
-         '실제로 확인한 것은 영상 한 판뿐입니다(미확인).</p>'
+         '실제로 확인한 것은 영상 한 에피소드뿐입니다(미확인).</p>'
          '<p>반대로 <span class="mono">rails</span> 와 '
          '<span class="mono">stepping_stones</span> 는 참여도 중앙값이 '
          + ("%.2f" % ENG["rails"]["ratio_p50"]) + ' 와 '
@@ -646,21 +650,21 @@ p.append('<div class="note bad"><p><strong>'
          + fmt(g("stepping_stones", "foothold-v1", "1")) + ' ' + PCT
          + ' 입니다. 비율이 높은데 성공률이 낮은 자리입니다. 이 비율만으로 실패 원인을 말할 수는 없습니다.</p></div>')
 # **성공률로 원인을 말하지 않는다.** 어느 축에서 떨어졌는지 세어서 적는다
-# `확인됨` (2026-09-12 검증 2회차 1번 · rails 실패 52판 중 27판은 방향 축만
+# `확인됨` (2026-09-12 검증 2회차 1번 · rails 실패 52 에피소드 중 27 에피소드는 방향 축만
 # 떨어졌다. 「걸렸다」고 쓰면 종합 실패율을 물리적 걸림으로 바꿔 말하는 것이다).
 _rails = BD["rails|foothold-v1|1"]
 _step = BD["stepping_stones|foothold-v1|1"]
 _rails_dir = _rails["combo"].get("방향", 0)
 
 p.append('<p>참여도가 높다고 실패하는 것도, 낮다고 성공하는 것도 아닙니다. '
-         '아래 셋은 난이도 0.5 · 1.0 m/s 에서 <strong>따로 촬영한 시연 한 판씩</strong>이고, '
-         '옆의 수치는 같은 조건 100 판의 집계입니다.</p>')
+         '아래 셋은 난이도 0.5 · 1.0 m/s 에서 <strong>따로 촬영한 시연 한 에피소드씩</strong>이고, '
+         '옆의 수치는 같은 조건 100 에피소드의 집계입니다.</p>')
 p.append(clips([
     ("star-v1", "star · 참여도 중앙값 %.2f" % ENG["star"]["ratio_p50"],
      "성공 %d/%d. 몸통 아래 광선이 지난 높이 폭이 대체로 작았습니다"
      % (BD["star|foothold-v1|1"]["win"], BD["star|foothold-v1|1"]["n"])),
     ("rails-v1", "rails · 참여도 중앙값 %.2f" % ENG["rails"]["ratio_p50"],
-     "성공 %d/%d. 실패 %d판 가운데 %d판은 <strong>방향 축만</strong> 떨어졌습니다"
+     "성공 %d/%d. 실패 %d에피소드 가운데 %d에피소드는 <strong>방향 축만</strong> 떨어졌습니다"
      % (_rails["win"], _rails["n"], _rails["n"] - _rails["win"], _rails_dir)),
     ("stepping_stones-v1", "stepping_stones · 참여도 중앙값 %.2f"
      % ENG["stepping_stones"]["ratio_p50"],
@@ -670,12 +674,12 @@ p.append(clips([
 p.append('<div class="note"><p><strong>참여도는 발이 닿았는지를 재지 않습니다.</strong> '
          '몸통 아래 중앙 광선이 지난 높이 폭을, 스캔 전체가 본 높이 폭으로 나눈 값입니다. '
          '어느 길로 우회했는지, 장애물을 끝까지 갔는지는 이 비율만으로 알 수 없습니다. '
-         '<span class="mono">rails</span> 는 100 판 모두 참여도 1.00 인데 그중 %d판은 '
+         '<span class="mono">rails</span> 는 100 에피소드 모두 참여도 1.00 인데 그중 %d에피소드는 '
          '방향 축만 떨어졌습니다.</p></div>' % _rails_dir)
 p.append('<p><span class="mono">gap</span> 은 <strong>이 조건에서</strong> 잴 수 '
-         '없습니다. 난이도 0.5 · 1.0 m/s · foothold-v1 의 100 판 모두 스캔 전체 '
+         '없습니다. 난이도 0.5 · 1.0 m/s · foothold-v1 의 100 에피소드 모두 스캔 전체 '
          '기복이 0.02 m 에 못 미쳐 비어 있습니다. 구멍은 광선이 아무것도 못 맞히기 '
-         '때문입니다. 다른 모델·속도에서는 유효값이 몇 판 잡히기도 하므로, '
+         '때문입니다. 다른 모델·속도에서는 유효값이 몇 에피소드 잡히기도 하므로, '
          '「gap 은 언제나 못 잰다」로 넓히지 마십시오. 안 딛고 넘는 것이 정답인 '
          '지형은 네 축이 이미 답하고 있습니다.</p>')
 
@@ -687,13 +691,13 @@ p.append('<li><strong><span class="mono">stepping_stones</span> 0 %.</strong> '
          '2차의 첫 과제입니다.</li>')
 _r = BD["rails|foothold-v1|1"]
 p.append('<li><strong><span class="mono">rails</span> %.0f %%.</strong> '
-         '100 판 모두 참여도 1.00 이지만 그것으로 실패 원인을 말할 수 없습니다. '
-         '실패 %d 판 가운데 가장 많은 세 조합은 %s 이고, 나머지 %d 판은 '
+         '100 에피소드 모두 참여도 1.00 이지만 그것으로 실패 원인을 말할 수 없습니다. '
+         '실패 %d 에피소드 가운데 가장 많은 세 조합은 %s 이고, 나머지 %d 에피소드는 '
          '다른 조합입니다. 속도를 1.5 m/s 로 올리면 '
          '%.0f %% 까지 떨어집니다.</li>'
          % (g("rails", "foothold-v1", "1"),
             _r["n"] - _r["win"],
-            " · ".join("%s %d판" % (k, v) for k, v in
+            " · ".join("%s %d에피소드" % (k, v) for k, v in
                        sorted(_r["combo"].items(), key=lambda kv: -kv[1])[:3]),
             (_r["n"] - _r["win"]
              - sum(v for _k, v in sorted(_r["combo"].items(),
@@ -715,7 +719,7 @@ p.append('<li><strong>장애물 구간은 지형마다 다릅니다.</strong> �
             _narrow[0][0], _narrow[0][1][0], _narrow[0][1][1],
             _narrow[1][0], _narrow[1][1][0], _narrow[1][1][1]))
 p.append('<li><strong>머리 접촉 세 열은 검증 전까지 인용하지 않습니다.</strong> '
-         '첫 표본이 앞 판의 접촉력을 물려받을 수 있고, 그 비율을 아직 갈라내지 '
+         '첫 표본이 앞 에피소드의 접촉력을 물려받을 수 있고, 그 비율을 아직 갈라내지 '
          '못했습니다.</li>')
 p.append("</ul>")
 
@@ -761,7 +765,7 @@ p.append('<p>이 보고서에 실린 것은 주장마다 한두 장씩 고른 �
 p.append('<p>영상은 전진 5.0 m 에서 잘렸습니다. 난이도 0.5 에서 장애물 구간이 '
          '가장 멀리 가는 지형도 4.00 m 에서 끝나고 그 뒤는 평평한 테두리라 '
          '볼 것이 없기 때문입니다. 지형마다 구간이 달라 어떤 영상은 앞쪽에서 '
-         '이미 볼 것이 끝납니다. 넘어져서 그만큼 못 간 판은 '
+         '이미 볼 것이 끝납니다. 넘어져서 그만큼 못 간 에피소드는 '
          '그대로 다 남아 있습니다. 배속 단추는 재생기의 '
          '<span class="mono">playbackRate</span> 를 바꿉니다. 다만 느리게 틀어도 '
          '새 프레임이 생기지는 않아, 원본 초당 50장이 0.25배에서는 12.5장으로 보입니다.</p>')
@@ -773,12 +777,12 @@ p.append('<p>있어야 할 칸은 <span class="mono">sim/eval/matrix.py</span> �
          '입니다 (저장소는 '
          '<span class="mono">docs/research/20260911-eval-protocol-v2.md</span>).</p>')
 
-# 판 수를 두 개로 나눠 적는다. 성적표 분모와 전체 원자료는 다른 수다.
+# 에피소드 수를 두 개로 나눠 적는다. 성적표 분모와 전체 원자료는 다른 수다.
 _score = STATUS["roles"].get("성적표", {"declared": 0, "present": 0, "cells": 0})
 _curve = STATUS["roles"].get("곡선", {"declared": 0, "present": 0, "cells": 0})
 
 p.append('<table><thead><tr><th>무리</th><th class="num">칸</th>'
-         '<th class="num">선언한 판</th><th class="num">있는 판</th></tr></thead><tbody>'
+         '<th class="num">선언한 에피소드</th><th class="num">있는 에피소드</th></tr></thead><tbody>'
          '<tr><td>성적표 (난이도 0.5)</td><td class="num">%d</td>'
          '<td class="num">%s</td><td class="num">%s</td></tr>'
          '<tr><td>난이도 곡선</td><td class="num">%d</td>'
@@ -793,14 +797,14 @@ p.append('<table><thead><tr><th>무리</th><th class="num">칸</th>'
 
 if STATUS["missing"]:
     p.append('<div class="note bad"><p><strong>선언한 칸 가운데 %d칸이 아직 비어 있습니다.</strong> '
-             '본문의 성적표는 난이도 0.5 의 %s 판을 분모로 하고 그 칸은 다 찼습니다. '
+             '본문의 성적표는 난이도 0.5 의 %s 에피소드를 분모로 하고 그 칸은 다 찼습니다. '
              '비어 있는 것은 난이도 곡선 쪽이며, 그만큼 곡선의 한 부분이 그려지지 '
              '않았습니다.</p><p class="mono" style="font-size:.8rem">%s</p></div>'
              % (len(STATUS["missing"]), f"{_score['declared']:,}",
                 " · ".join(STATUS["missing"])))
 else:
-    p.append('<p>선언한 %d칸이 모두 찼습니다. 본문의 성적표는 난이도 0.5 의 %s 판이 '
-             '분모이고, 난이도 곡선까지 합한 전체 원자료는 %s 판입니다.</p>'
+    p.append('<p>선언한 %d칸이 모두 찼습니다. 본문의 성적표는 난이도 0.5 의 %s 에피소드가 '
+             '분모이고, 난이도 곡선까지 합한 전체 원자료는 %s 에피소드입니다.</p>'
              % (STATUS["cells"], f"{_score['declared']:,}", f"{STATUS['present']:,}"))
 
 p.append('''<script>

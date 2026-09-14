@@ -35,19 +35,34 @@
   "ver": ""
  },
  "deliverables/plan/brainstorming.md": {
-  "hash": "0477b0b3bcc6dbbe",
-  "major": "",
-  "ver": ""
+  "hash": "2f11837c5af36038",
+  "major": "v1.2",
+  "ver": "v1.2"
  },
  "deliverables/plan/proposal-deck.md": {
-  "hash": "464f961e188b3fcf",
+  "hash": "c56d992b0bd33ebd",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/plan/proposal-summary.md": {
-  "hash": "bdc3eb01bec7e27d",
+  "hash": "04c3a7d7f5947535",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
+ },
+ "deliverables/plan/proposal.md": {
+  "hash": "3e2fd35fa5a58a6c",
+  "major": "v1.6",
+  "ver": "v1.6"
+ },
+ "deliverables/plan/roles-responsibilities.md": {
+  "hash": "2a46b2a10fa2a081",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "deliverables/plan/wbs-official.md": {
+  "hash": "29f363e9e6e16d41",
+  "major": "v1.1",
+  "ver": "v1.1"
  },
  "deliverables/plan/wbs.md": {
   "hash": "303a32b640d7a577",
@@ -55,19 +70,29 @@
   "ver": ""
  },
  "docs/AUTOMATION.md": {
-  "hash": "2a1d520735c90640",
-  "major": "v1.1",
-  "ver": "v1.1"
+  "hash": "268c72a7297d8db1",
+  "major": "v1.2",
+  "ver": "v1.2"
+ },
+ "docs/CI-PR-CHECKS.md": {
+  "hash": "bd4fbbeb82345f43",
+  "major": "v1.4",
+  "ver": "v1.4"
  },
  "docs/COLLAB.md": {
   "hash": "c2e5a8e53622f74f",
   "major": "v2.1",
   "ver": "v2.1"
  },
+ "docs/CSV-SPEC-v1.md": {
+  "hash": "e98d24c5e7f0aa42",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
  "docs/DECISIONS.md": {
-  "hash": "e6cc77a22b582ba8",
-  "major": "v2.0",
-  "ver": "v2.2"
+  "hash": "7d89e43baaa369e4",
+  "major": "v2.1",
+  "ver": "v2.1"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -90,9 +115,14 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "d3a4d4aa8ba29bfb",
-  "major": "v2.0",
-  "ver": "v2.4"
+  "hash": "202fc314bcbfdd7d",
+  "major": "v2.1",
+  "ver": "v2.1"
+ },
+ "docs/PR-REVIEW-FLOW.md": {
+  "hash": "8bb2cf051b08e621",
+  "major": "v1.2",
+  "ver": "v1.2"
  },
  "docs/PRD-WEB.md": {
   "hash": "1e818ddd1bd1624a",
@@ -110,9 +140,9 @@
   "ver": ""
  },
  "docs/REPORT.md": {
-  "hash": "b6d9d64c352ba317",
+  "hash": "78a23e2132e8fdb9",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/ROBOT-SPEC.md": {
   "hash": "380346d94212bfc1",
@@ -120,14 +150,19 @@
   "ver": "v2.0"
  },
  "docs/ROLES.md": {
-  "hash": "8ddd87383adf6839",
+  "hash": "6202ec3b340028f6",
   "major": "v1.2",
-  "ver": "v1.2"
+  "ver": "v1.3"
  },
  "docs/WORKFLOW.md": {
-  "hash": "e91e85924a84bc76",
+  "hash": "825d6ce94e3b5021",
   "major": "v2.0",
-  "ver": "v2.0"
+  "ver": "v2.1"
+ },
+ "docs/WORKING-CHECKOUTS.md": {
+  "hash": "8cb732aaa79a0428",
+  "major": "v1.0",
+  "ver": "v1.0"
  },
  "docs/decisions/20260826-27-design-session.md": {
   "hash": "90529e94f49ed497",
@@ -159,6 +194,11 @@
   "major": "v1.1",
   "ver": "v1.1"
  },
+ "docs/decisions/20260912-research-hub-redesign.md": {
+  "hash": "3846c7077e0cd6b6",
+  "major": "v3.0",
+  "ver": "v3.0"
+ },
  "docs/digest/2026-W33.md": {
   "hash": "1b39d75aa1e56114",
   "major": "",
@@ -171,6 +211,26 @@
  },
  "docs/digest/2026-W35.md": {
   "hash": "cd769c5815fcfa00",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W36-material.md": {
+  "hash": "ab2adfc58a85b48b",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W36.md": {
+  "hash": "9c85870c1613ed49",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W37-material.md": {
+  "hash": "df693830d115057a",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W37.md": {
+  "hash": "7c9ee2243c83eefe",
   "major": "",
   "ver": ""
  },
@@ -205,9 +265,9 @@
   "ver": ""
  },
  "docs/meetings/20260819-team-lock.md": {
-  "hash": "ceb8249adb642e38",
+  "hash": "38c592014585140c",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/meetings/20260820-kickoff.md": {
   "hash": "e7e47618858e5ca5",
@@ -238,6 +298,16 @@
   "hash": "fdbe67d74674aea6",
   "major": "",
   "ver": ""
+ },
+ "docs/meetings/20260902-park-mentoring.md": {
+  "hash": "8d6cdfd338054f9e",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/meetings/20260904-east-midterm-review.md": {
+  "hash": "f7fc5da990c2b6fe",
+  "major": "v1.0",
+  "ver": "v1.0"
  },
  "docs/meetings/README.md": {
   "hash": "5282241ecb9979b4",
@@ -314,6 +384,11 @@
   "major": "",
   "ver": ""
  },
+ "docs/notices/2026-09-12.md": {
+  "hash": "fb3171e0ec58f517",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
   "major": "",
@@ -335,9 +410,9 @@
   "ver": "v1.0"
  },
  "docs/ops/SESSION-HANDOFF.md": {
-  "hash": "8f1a899519f29403",
+  "hash": "a79087970d754c12",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/ops/VERIFIED.md": {
   "hash": "5e846cd2493ffad6",
@@ -348,6 +423,71 @@
   "hash": "d0c54ee11dd1f44c",
   "major": "",
   "ver": ""
+ },
+ "docs/research/20260903-default-1500iter-terrain-analysis.md": {
+  "hash": "ac075e39d1af3d3f",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260903-rails-isaac-sweep-design.md": {
+  "hash": "c459562f42671efa",
+  "major": "v1.2",
+  "ver": "v1.2"
+ },
+ "docs/research/20260903-render-blackframe.md": {
+  "hash": "f3ee252ca756b3de",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260904-rail-reward-literature.md": {
+  "hash": "199f516120c424f3",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260906-rails-speed-tracking-diagnosis.md": {
+  "hash": "3938e4d2b82d076c",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "docs/research/20260907-go2-joint-limits.md": {
+  "hash": "d1d5f186404bf65a",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "docs/research/20260908-go2-spec-sim-vs-real.md": {
+  "hash": "e54aedaf167daadc",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "docs/research/20260908-pit-diagnosis.md": {
+  "hash": "be2605491ea1e430",
+  "major": "v4.0",
+  "ver": "v4.0"
+ },
+ "docs/research/20260908-success-criteria-anatomy.md": {
+  "hash": "4b8a9594888373f0",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260909-eval-harness-diagram.md": {
+  "hash": "a7ad8751a5a418e9",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260909-head-contact-observation.md": {
+  "hash": "d59301549721ac5c",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/20260911-eval-protocol-v2.md": {
+  "hash": "1acd153a58f01511",
+  "major": "v2.0",
+  "ver": "v2.0"
+ },
+ "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
+  "hash": "aa7c615724d8db25",
+  "major": "v1.1",
+  "ver": "v1.1"
  },
  "docs/research/architecture-decision.md": {
   "hash": "9db94ee5579fe18d",
@@ -360,9 +500,9 @@
   "ver": "v1.0"
  },
  "docs/research/benchmark-setup-lim.md": {
-  "hash": "c49532bcc65ce427",
+  "hash": "1009b9b324724830",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  },
  "docs/research/cloud-gpu-options.md": {
   "hash": "4227a9107e382998",
@@ -374,10 +514,15 @@
   "major": "v2.0",
   "ver": "v2.0"
  },
+ "docs/research/flat-straight-baseline-10m.md": {
+  "hash": "c7716edbbd0f8b93",
+  "major": "v2.7",
+  "ver": "v2.7"
+ },
  "docs/research/generalization-benchmark-10-terrains.md": {
-  "hash": "85c637673756709b",
-  "major": "v1.0",
-  "ver": "v1.0"
+  "hash": "f9d5246390e409e3",
+  "major": "v2.6",
+  "ver": "v2.6"
  },
  "docs/research/go2-pretrained-policies.md": {
   "hash": "b532b12ca6a1bdb7",
@@ -398,6 +543,21 @@
   "hash": "149e6ee0b8383112",
   "major": "v1.0",
   "ver": "v1.0"
+ },
+ "docs/research/parkour-ablation-대조분석.md": {
+  "hash": "b6cafc2bbbda2501",
+  "major": "v1.1",
+  "ver": "v1.1"
+ },
+ "docs/research/pretrained-vs-model99-7terrain.md": {
+  "hash": "5bfaf38007a5844d",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/rails-diagnosis.md": {
+  "hash": "a2ba6f2e9fe97a5b",
+  "major": "v1.4",
+  "ver": "v1.4"
  },
  "docs/research/render-benchmarks.md": {
   "hash": "0d5f08e6e1d5d8d1",
@@ -430,9 +590,9 @@
   "ver": "v1.0"
  },
  "docs/research/terrain-finetune-plan.md": {
-  "hash": "ef6fb8097879304d",
-  "major": "v2.0",
-  "ver": "v2.1"
+  "hash": "c3c74c17fc44a872",
+  "major": "v2.2",
+  "ver": "v2.2"
  },
  "docs/research/terrain-guide-isaaclab.md": {
   "hash": "d9bf9db39933a7bc",
@@ -451,6 +611,21 @@
  },
  "docs/research/visual-evidence.md": {
   "hash": "2ffec4b3562f3ecc",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/research/발보상-시간아니고높이아님.md": {
+  "hash": "a2d7ceb94969b8ea",
+  "major": "v1.6",
+  "ver": "v1.6"
+ },
+ "docs/research/직진성-외부표준.md": {
+  "hash": "efe704d65447bd88",
+  "major": "v2.22",
+  "ver": "v2.22"
+ },
+ "docs/research/평가하네스-수정본.md": {
+  "hash": "8154bc2c668ab4bb",
   "major": "v1.0",
   "ver": "v1.0"
  },

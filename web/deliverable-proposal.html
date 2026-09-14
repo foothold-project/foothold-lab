@@ -98,9 +98,13 @@ blockquote b{color:var(--ink)}
 
 /* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
-table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
 th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
-  word-break:keep-all;overflow-wrap:anywhere}
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
 tbody tr:last-child td{border-bottom:none}
@@ -604,8 +608,20 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
      좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
      실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
-     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
-  main table,.wrap table{min-width:0}
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
   header.top{padding-top:28px}
 }
 .fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
@@ -738,7 +754,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=1594681f').then(function(r){
+    fetch('/assets/search-index.json?v=937cb455').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -883,7 +899,7 @@ body>*{flex-shrink:0}
 <section id="s2"><span id="1"></span><h2>1. 프로젝트 개요</h2>
 <blockquote><p><b>사람이 들어가기 전에, 로봇이 먼저 길을 확인한다.</b></p></blockquote>
 <p>FOOTHOLD 는 실제 험지 환경을 Digital Twin 으로 복원하고, 지형 특성을 바탕으로 학습·평가용 변형 지형을 생성한다. <b>시뮬레이션에서는 보행 성능을 측정하고, 실제 환경에서는 목표 지점까지의 자율 보행을 검증한다.</b></p>
-<p><figure class="mdimg"><img src="assets/overview.svg?v=9a226c33" alt="프로젝트 개요" loading="lazy"><figcaption>프로젝트 개요</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/overview.svg?v=0a6d06c5" alt="프로젝트 개요" loading="lazy"><figcaption>프로젝트 개요</figcaption></figure></p>
 <p>세 축으로 구성한다.</p>
 <div class="tw"><table><thead><tr><th>축</th><th>묻는 질문</th><th>무엇을 하나</th></tr></thead><tbody><tr><td><b>Track A</b></td><td>어디까지 걸을 수 있는가</td><td>Isaac Sim · Isaac Lab · PPO 로 미경험 험지의 보행 한계와 난이도 경계를 측정한다</td></tr><tr><td><b>Digital Twin</b></td><td>가상·실기 평가에 어떤 공간을 사용하는가</td><td>실제 구간을 물리·시각 트윈으로 복원하고, 지형 특성을 바탕으로 변형 지형을 생성한다. 원본 구간은 학습에 쓰지 않는 held-out 평가 환경으로 남긴다</td></tr><tr><td><b>Track B</b></td><td>목표까지 스스로 갈 수 있는가</td><td>검증된 순정 보행 위에 ROS 2 · SLAM · Nav2 · 센서 인지를 통합해 실기 자율 보행을 검증한다</td></tr></tbody></table></div>
 <p><b>Digital Twin 은 두 트랙이 평가할 공간의 기준을 제공한다.</b> Track A 와 Track B 는 같은 실제 구간을 대상으로 각각의 평가 조건과 결과를 기록한다. 학습 정책을 실물에 이식하는 용도로는 사용하지 않는다.</p>
@@ -912,7 +928,7 @@ body>*{flex-shrink:0}
 </section>
 <section id="s5"><span id="4"></span><h2>4. 시스템 아키텍처</h2>
 <p>시뮬레이션 기반 보행 정책 학습과 실기 자율 보행·환경 인지를 <b>병렬로</b> 개발한다. 두 트랙의 제어기를 직접 연결하지 않고, <b>동일한 실제 구간을 기준으로</b> 각각의 성능을 검증한다.</p>
-<p><figure class="mdimg"><img src="assets/architecture.svg?v=4896803a" alt="시스템 아키텍처" loading="lazy"><figcaption>시스템 아키텍처</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/architecture.svg?v=b081c5e7" alt="시스템 아키텍처" loading="lazy"><figcaption>시스템 아키텍처</figcaption></figure></p>
 <p><b>Track A 의 흐름</b> · 지형 구성 → PPO 정책 학습 → 미경험 지형 평가 → 실패 원인 분석 → 학습 조건 개선 → 재학습 → 일반화 비교</p>
 <p><b>Track B 의 흐름</b> · LiDAR·카메라·로봇 상태 → ROS 2 → SLAM·CV → Nav2 → 목표 지점 자율 보행</p>
 <h3>실제 구간 복원과 학습·평가 지형 구성</h3>
@@ -1075,5 +1091,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp7obocbvq</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

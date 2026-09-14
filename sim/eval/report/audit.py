@@ -158,8 +158,8 @@ for base, _dirs, files in os.walk(RAW):
     if os.path.basename(os.path.dirname(base)) == "d0.5":
         score += n
 
-check("1a", "전체 원자료 판 수", says(total), "%d 판" % total)
-check("1b", "성적표 분모", says(score), "%d 판" % score)
+check("1a", "전체 원자료 에피소드 수", says(total), "%d 에피소드" % total)
+check("1b", "성적표 분모", says(score), "%d 에피소드" % score)
 
 cell = {}
 raw_rows = {}
@@ -207,11 +207,11 @@ def anchored(pattern, *want):
     ours = tuple(re.sub(r"[\s,]", "", str(w)) for w in want)
     return got == ours, "본문 %s · 실측 %s" % ("/".join(got), "/".join(ours))
 
-ok, why = anchored(r"성공 (\d+)/(\d+)[^가-힣]{0,4}\s*실패 (\d+)판 가운데 (\d+)판",
+ok, why = anchored(r"성공 (\d+)/(\d+)[^가-힣]{0,4}\s*실패 (\d+)에피소드 가운데 (\d+)에피소드",
                    rw, rn, rn - rw, rc.get("방향", 0))
 check("1c", "rails 캡션의 성공·실패·방향 단독", ok, why)
 
-ok, why = anchored(r"실패 (\d+)판 가운데 (\d+)판은\s*방향 축만",
+ok, why = anchored(r"실패 (\d+)에피소드 가운데 (\d+)에피소드는\s*방향 축만",
                    rn - rw, rc.get("방향", 0))
 check("1d", "rails 방향 단독 실패", ok, why)
 
@@ -222,7 +222,7 @@ for tset in ("rough6", "unseen10"):
         tr_pass += truthy(r["tracking_success"])
         tr_n += 1
 
-ok, why = anchored(r"속도추종 축을 통과한 판이 ([\d,]+) / ([\d,]+)", tr_pass, tr_n)
+ok, why = anchored(r"속도추종 축을 통과한 에피소드가 ([\d,]+) / ([\d,]+)", tr_pass, tr_n)
 check("1e", "1.5 m/s 속도추종 통과", ok, why)
 
 # wave 캡션의 「종합 성공 n/m」 도 그 칸의 실측이어야 한다.

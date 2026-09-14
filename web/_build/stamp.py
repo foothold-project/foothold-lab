@@ -21,6 +21,11 @@
           연구 허브를 여섯 입구 «한 기준» 으로 · 지형 보드를 정본 실측으로
           평가 프로토콜 v2 정본화 · 일반화 벤치마크를 정본 기준 재작성 (문서 v2.6)
           새 관문 셋: 문단 폭 [3.41] · 도해 글자·선 [3.48] · 문서 숫자 대조 [3.86]
+  v2.1.1  폰에서 표가 짜부라지던 것 (2026-09-14) · 팀장이 폰으로 잡음
+          원인 셋이 겹쳐 있었다. `min-width:0` 잔재 · 420 px 고정폭 안의
+          열 경쟁 · `overflow-wrap:anywhere` 의 min-content 붕괴.
+          열 수로 나누던 `wide` 를 걷고 모든 표에 한 규칙을 준다.
+          실측 390 px: 머리말 2줄 17개 -> 0개 · 짧은 토큰 쪼개짐 6건 -> 0건
           갤러리 뷰어를 lab 으로 이관 (site 는 배포본)
 """
 import io
@@ -31,7 +36,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 VAULT = os.path.dirname(HERE)
 
-SITE_VERSION = 'v2.1.0'
+SITE_VERSION = 'v2.1.1'
 A, B = '<!--stamp:v1-->', '<!--/stamp:v1-->'
 
 CSS = '''<style id="stamp-css">

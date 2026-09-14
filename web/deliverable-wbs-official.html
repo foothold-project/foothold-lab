@@ -98,9 +98,13 @@ blockquote b{color:var(--ink)}
 
 /* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
-table{border-collapse:collapse;width:100%;min-width:420px;font-size:.82rem;background:var(--card)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
 th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
-  word-break:keep-all;overflow-wrap:anywhere}
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
 tbody tr:last-child td{border-bottom:none}
@@ -604,8 +608,20 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
      좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
      실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
-     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다. */
-  main table,.wrap table{min-width:0}
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
   header.top{padding-top:28px}
 }
 .fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
@@ -738,7 +754,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=1594681f').then(function(r){
+    fetch('/assets/search-index.json?v=937cb455').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -880,7 +896,7 @@ body>*{flex-shrink:0}
 <p><b>관문은 기한과 다음 단계 착수 조건을, 구현 단계는 작업 순서와 선행 관계를 정의한다.</b> 지금은 「A-정책 09/12 안에 이슈 몇 건」만 있고 그 이슈들이 어떤 차례로 이어지는지가 없다. 8/31 멘토링이 정한 「평지 기준선을 먼저, 그다음 실패 지형」이 바로 그 차례인데 WBS 어디에도 적혀 있지 않았다.</p>
 </section>
 <section id="s2"><span id="2"></span><h2>2. WBS 의 층 구조</h2>
-<p><figure class="mdimg"><img src="assets/wbs-layers.svg?v=477f0236" alt="" loading="lazy"></figure></p>
+<p><figure class="mdimg"><img src="assets/wbs-layers.svg?v=406c269a" alt="" loading="lazy"></figure></p>
 <p>2026-08-27 설계(<code>deliverables/plan/wbs.md</code>)는 3층이었다. 위 두 층을 사람이 정하고 세부 작업을 GitHub 이슈에서 생성하는 구조다. <b>작업 순서를 나타내는 구현 단계 분류를 추가해 네 층으로 구성한다.</b></p>
 <div class="tw"><table><thead><tr><th>층</th><th>무엇</th><th>누가 정하나</th><th>개수</th><th>정본</th></tr></thead><tbody><tr><td>1</td><td>작업 영역</td><td>사람 · 고정</td><td>8</td><td><code>docs/ROLES.md</code></td></tr><tr><td>2</td><td>관문</td><td>사람 · 날짜</td><td>5</td><td><code>tools/build_wbs.py</code> 의 <code>GATES</code></td></tr><tr><td><b>3</b></td><td><b>구현 단계</b></td><td><b>사람 · 순서</b></td><td><b>트랙마다 셋 또는 넷</b></td><td><b>이 문서 5절 · 팀장 확정 전</b></td></tr><tr><td>4</td><td>세부 작업</td><td><b>이슈에서 자동</b></td><td>계속 늘어난다</td><td>GitHub 이슈</td></tr></tbody></table></div>
 <p><b>왜 층을 나누나.</b> 이슈 제목을 그대로 WBS 에 올리면 사람마다 쓰는 말이 달라 표가 흩어진다. 작업 영역·관문·구현 단계를 기준으로 분류하면 서로 다른 제목의 이슈도 같은 기준으로 집계할 수 있다. 위 세 층은 이슈가 하나도 없어도 그려지고, 4층은 진척을 채우는 데 쓴다.</p>
@@ -899,7 +915,7 @@ body>*{flex-shrink:0}
 </section>
 <section id="s5"><span id="5"></span><h2>5. 3층 · 구현 단계</h2>
 <p>이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> 의 첫째 요구다. <b>팀장 9/1 지시</b>가 「지금 마일스톤 외에도 실제 구현 단계를 쪼개고, 그 안에서 팀원이 각자의 역할로 할 수 있는 것을 쪼개라」였다.</p>
-<p><figure class="mdimg"><img src="assets/wbs-stages.svg?v=06db0a49" alt="" loading="lazy"></figure></p>
+<p><figure class="mdimg"><img src="assets/wbs-stages.svg?v=ea40aa23" alt="" loading="lazy"></figure></p>
 <h3>5-1. 단계 초안</h3>
 <p><b>아래 단계 이름과 개수는 이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/122">#122</a> 의 초안이고 팀장 확정 전이다.</b> 기획서의 두 트랙 축을 그대로 따랐다. 「관련 관문」 열은 기획서 8-2 의 각 작업 항목에 이미 붙어 있는 관문을 모은 것이고, 새로 만든 날짜가 아니다.</p>
 <div class="tw"><table><thead><tr><th>트랙</th><th>단계</th><th>무엇을 하나</th><th>관련 관문</th><th>기획서 8-2 의 해당 작업 항목</th></tr></thead><tbody><tr><td>Track A</td><td>1 · 기준선 확립</td><td>평지와 미경험 10종을 지형별로 정한 조건에 따라 재측정하고 하네스를 고정한다</td><td>A-정책</td><td>기본값 1,500 iter 학습 지형 결과 분석 · 평가 하네스 확장 7건 · 지표 3종 정본화</td></tr><tr><td>Track A</td><td>2 · 실패 지형 진단</td><td>실패 5종의 병목 축을 갈라 내고 난이도 격자로 경계를 잰다</td><td>A-정책 · MVP</td><td>난이도 격자 스윕과 경계 측정 · 재현성 결함 수정 · 난이도 스윕 설계</td></tr><tr><td>Track A</td><td>3 · 학습 조건 개선</td><td>보상 항을 다시 짜고 기존 지형 성능을 유지한 채 혼합 학습한다</td><td>MVP</td><td>보상 항 재설계와 재학습 · 기존 지형 성능 유지 혼합 학습</td></tr><tr><td>Track A</td><td>4 · 재학습과 재평가</td><td>확장 지형으로 학습하고 held-out 으로 일반화를 잰다</td><td>NAV</td><td>확장 지형 학습과 held-out 평가 · 절차적 확장 지형 생성</td></tr><tr><td>Bridge</td><td>1 · 환경 촬영</td><td>PoC 공간을 고르고 촬영과 점군을 남긴다</td><td>MVP</td><td>PoC 공간 선정과 스캔</td></tr><tr><td>Bridge</td><td>2 · 3DGS 복원</td><td>COLMAP 과 3DGS 로 복원하고 충돌 형상을 만든다</td><td>MVP</td><td>COLMAP · 3DGS 복원과 충돌 형상 구성</td></tr><tr><td>Bridge</td><td>3 · Isaac USD 변환</td><td>복원 결과를 학습과 평가가 쓰는 USD 씬으로 바꾼다</td><td>MVP</td><td>COLMAP · 3DGS 복원과 충돌 형상 구성 (산출물 USD 씬)</td></tr><tr><td>Track B</td><td>1 · ROS 2 연동</td><td>실행 환경을 세우고 센서와 TF 를 잇는다</td><td>A-정책 · MVP</td><td>ROS 2 환경 구축 · 센서와 TF 연결</td></tr><tr><td>Track B</td><td>2 · SLAM 지도</td><td>지도를 만들고 위치 추정 오차를 기록한다</td><td>NAV</td><td>SLAM 지도 생성과 위치 추정</td></tr><tr><td>Track B</td><td>3 · Nav2 주행</td><td>경로 계획과 재계획으로 목표 지점까지 간다</td><td>NAV</td><td>Nav2 경로 계획 · 재계획 · 장애물 회피</td></tr><tr><td>Track B</td><td>4 · 인지 결합</td><td>검출 결과를 항법과 합친다</td><td>MVP · NAV</td><td>CV 단계별 계획과 실행 환경 구축 · YOLO 파인튜닝과 LiDAR 융합</td></tr></tbody></table></div>
@@ -987,5 +1003,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.0</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmprq_jgxbf</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.1</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp7obocbvq</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

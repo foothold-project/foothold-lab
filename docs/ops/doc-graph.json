@@ -9,7 +9,7 @@
    "C/운영"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 자동화×7 예산×1 자동화×7",
+  "areas_why": "근거 낱말 자동화×7 자동화×7 GitHub×8",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -18,6 +18,24 @@
   "web_worthy": "높음",
   "web_worthy_src": "human",
   "web_worthy_reason": "머리글에 «이 문서는 md 가 원본이다 (2026-08-27 이관)»라고 적혀 있고 8갈래·관문 어휘가 최신이다. 팀원이 «내가 올린 게 어디로 가나»를 찾을 때 첫 문서다."
+ },
+ {
+  "path": "CI-PR-CHECKS.md",
+  "title": "PR 체크 구조: 어느 워크플로가 무엇을 막는가",
+  "kind": "운영",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 GitHub×7 워크플로×37 빌드×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "COLLAB.md",
@@ -53,13 +71,34 @@
   "web_worthy_reason": "8갈래 주담당·부담당 표가 여기 있고 웹판(collab.html)이 이미 공개돼 있다. 여러 문서가 §2·§2.5를 근거로 인용한다. 다만 관문 목록에 기획발표 9/4 가 빠져 있어 5개 기준으로는 한 줄 보완이 필요하다."
  },
  {
+  "path": "CSV-SPEC-v1.md",
+  "title": "FOOTHOLD 평가 CSV 설계 v1",
+  "kind": "운영",
+  "evidence": "우리",
+  "issues": [],
+  "areas": [
+   "B/인지",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 센서×12 에피소드×3 평가×7",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "DECISIONS.md",
   "title": "결정 로그: 무엇을, 언제, 왜",
   "kind": "결정",
   "evidence": "팀",
   "issues": [
    "3",
-   "117"
+   "117",
+   "66",
+   "125"
   ],
   "areas": [
    "C/운영",
@@ -68,7 +107,7 @@
    "B/항법"
   ],
   "areas_sure": false,
-  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×21 백과×4 학습×11 보상×2",
+  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×22 백과×4 학습×11 보상×5",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -198,10 +237,11 @@
   "issues": [],
   "areas": [
    "C/운영",
-   "C/기록"
+   "C/기록",
+   "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×11 백과×2",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×18 백과×2 학습×9 보상×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -210,6 +250,25 @@
   "web_worthy": "낮음",
   "web_worthy_src": "human",
   "web_worthy_reason": "8/20 이후 갱신이 멈춘 내부 상태판이고 폐기된 갈래·저장소 이름이 살아 있다. 지금 상태의 정본은 GitHub 이슈·보드다."
+ },
+ {
+  "path": "PR-REVIEW-FLOW.md",
+  "title": "PR 검수 흐름: 누가 무엇까지 결정하는가",
+  "kind": "운영",
+  "evidence": "팀장",
+  "issues": [],
+  "areas": [
+   "C/운영",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×1 자동화×1 GitHub×2 문서×14",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "PRD-WEB.md",
@@ -351,7 +410,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 회의록×3 문서×19 백과×3 학습×9 보상×3 관측×1",
+  "areas_why": "근거 낱말 회의록×3 문서×22 백과×3 학습×9 보상×3 관측×1",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [
@@ -387,6 +446,24 @@
   "web_worthy": "높음",
   "web_worthy_src": "human",
   "web_worthy_reason": "docs/README 와 notices 가 «처음 오셨다면 이것부터» 로 지목하는 문서다. 8갈래·관문 어휘가 최신이고 팀원이 가장 자주 여는 절차서다."
+ },
+ {
+  "path": "WORKING-CHECKOUTS.md",
+  "title": "작업용 체크아웃 규약",
+  "kind": "운영",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 문서×5",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "decisions/20260826-27-design-session.md",
@@ -509,6 +586,25 @@
   "web_worthy_src": "auto"
  },
  {
+  "path": "decisions/20260912-research-hub-redesign.md",
+  "title": "연구 허브 재설계 · 구현 설계",
+  "kind": "결정",
+  "evidence": "팀장",
+  "issues": [],
+  "areas": [
+   "C/운영",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 자동화×1 예산×6 자동화×1 terrain×35 지형×26 씬×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "digest/2026-W33.md",
   "title": "이번 주 알게 된 것: 8월 2주 (W33)",
   "kind": "운영",
@@ -571,6 +667,82 @@
   "web_worthy": "높음",
   "web_worthy_src": "human",
   "web_worthy_reason": "현재 주차이고 «10종 중 5종 실패»라는 지금의 문제 정의를 한 문장으로 준다. 표지 상단 다이제스트 자리에 그대로 맞는다. 상태가 «초안»인 점만 확인하면 된다."
+ },
+ {
+  "path": "digest/2026-W36-material.md",
+  "title": "다이제스트 재료: 2026-W36",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×4 문서×16 커리큘럼×3",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "digest/2026-W36.md",
+  "title": "이번 주 알게 된 것: 9월 1주 (W36)",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×2 보상×7 정책×2",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "digest/2026-W37-material.md",
+  "title": "다이제스트 재료: 2026-W37",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "C/운영",
+   "C/기록",
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": false,
+  "areas_why": "근거 낱말 자동화×3 자동화×3 GitHub×12 회의록×1 문서×16 발표×1 benchmark×2 에피소드×2",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "digest/2026-W37.md",
+  "title": "이번 주 알게 된 것: 9월 2주 (W37)",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 일반화 벤치마크×4 벤치마크×4 benchmark×4 학습×5 관측×3 정책×3",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "guides/ros2-01-setup.md",
@@ -739,7 +911,6 @@
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
-   "research/rough-terrain-study-plan.md",
    "REPORT.md",
    "meetings/20260821-team-meeting.md",
    "meetings/20260820-kickoff.md",
@@ -900,6 +1071,48 @@
   ],
   "areas_sure": true,
   "areas_why": "근거 낱말 지표×8 통과율×2 에피소드×1 학습×7 보상×3 관측×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "meetings/20260902-park-mentoring.md",
+  "title": "9/2 멘토링: 발바닥 말고 어디가 닿으면 실패다",
+  "kind": "회의록",
+  "evidence": "전사",
+  "issues": [
+   "134"
+  ],
+  "areas": [
+   "A/정책학습",
+   "C/기록"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×12 보상×5 관측×1 회의록×2 문서×2 회의록×2",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "meetings/20260904-east-midterm-review.md",
+  "title": "9/4 운영진 중간발표 심사: 점유격자 지도의 한계와 모델 통합의 난점",
+  "kind": "회의록",
+  "evidence": "전사",
+  "issues": [
+   "219"
+  ],
+  "areas": [
+   "C/기록",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 회의록×1 문서×2 발표×18 학습×18 정책×5 학습×18",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
@@ -1183,6 +1396,25 @@
   "web_worthy_src": "auto"
  },
  {
+  "path": "notices/2026-09-12.md",
+  "title": "foothold-v1 배포 · 종합보고서 1차 · 평가 영상 갤러리 · 평가 정본",
+  "kind": "운영",
+  "evidence": "maindata-v1",
+  "issues": [],
+  "areas": [
+   "A/평가",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 에피소드×5 평가×28 성공률×3 예산×1 예산×1 배포×14",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "notices/report-web.md",
   "title": "notices/report-web.md",
   "kind": "운영",
@@ -1330,6 +1562,279 @@
   "web_worthy_src": "auto"
  },
  {
+  "path": "research/20260903-default-1500iter-terrain-analysis.md",
+  "title": "20260903_기본값_1500iter_학습지형결과분석",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "A/정책학습",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×33 정책×14 checkpoint×4 지표×11 에피소드×17 평가×30",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260903-rails-isaac-sweep-design.md",
+  "title": "레일즈 Isaac 스윕 설계: 학습 범위를 (0.10, 0.15) 로 좁힌다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "90"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×29 보상×1 관측×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260903-render-blackframe.md",
+  "title": "렌더 검정 프레임 결함 조사",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "99"
+  ],
+  "areas": [
+   "A/트윈렌더",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 렌더×23 지형×14 Isaac Lab×5",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260904-rail-reward-literature.md",
+  "title": "레일 통과 실패와 보상 설계의 외부 문헌 대조: 지형 종류에 따라 결과가 갈린다는 확인",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "275"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×22 보상×56 관측×7",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260906-rails-speed-tracking-diagnosis.md",
+  "title": "레일즈 진단: 넘는 힘은 있는데 «속도를 못 맞춰» 떨어진다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "66",
+   "216"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 보상×12 관측×8",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [
+   "research/generalization-benchmark-10-terrains.md",
+   "research/terrain-finetune-plan.md"
+  ],
+  "web_worthy": "보통",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260907-go2-joint-limits.md",
+  "title": "Go2 관절 한계 실측: 30 cm 를 들 수 있는데 3.25 cm 를 든다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "285"
+  ],
+  "areas": [
+   "B/항법",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 Go2×16 실기×1 USD×15",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260908-go2-spec-sim-vs-real.md",
+  "title": "Go2 제원: 시뮬과 실기를 나란히 놓는다",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "296",
+   "332"
+  ],
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 ROS2×2 Go2×43 실기×52",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260908-pit-diagnosis.md",
+  "title": "pit 진단: 못 나오는 게 아니라 뒷발 빼느라 느리다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "68"
+  ],
+  "areas": [
+   "A/정책학습",
+   "A/평가",
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×20 보상×18 관측×4 지표×8 benchmark×1 통과율×3 terrain×10 지형×30",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260908-success-criteria-anatomy.md",
+  "title": "평가 성공 기준 해부: 무엇을 성공이라 부르고 있나",
+  "kind": "리서치",
+  "evidence": "실측",
+  "issues": [
+   "125",
+   "99",
+   "295"
+  ],
+  "areas": [
+   "A/정책학습",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 보상×11 관측×11 지표×10 통과율×1 에피소드×1",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260909-eval-harness-diagram.md",
+  "title": "평가 하네스 도해 · 무엇을 어떤 기준으로 재나",
+  "kind": "가이드",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "A/지형씬제작"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 terrain×34 지형×13 Isaac Lab×3",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260909-head-contact-observation.md",
+  "title": "머리 접촉을 CSV 에 남긴다 · 판정이 아니라 경고등으로",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "125",
+   "295"
+  ],
+  "areas": [
+   "B/인지",
+   "B/항법",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 LiDAR×6 LiDAR×6 라이다×11 Go2×14 실기×10 학습×2 보상×1 관측×6",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260911-eval-protocol-v2.md",
+  "title": "평가 프로토콜 정본 · 측정 규격 2",
+  "kind": "가이드",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "A/지형씬제작",
+   "A/정책학습",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 terrain×13 지형×141 Isaac Lab×5 학습×49 보상×13 관측×8 지표×1 에피소드×69",
+  "purpose": "운영",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [
+   "research/generalization-benchmark-10-terrains.md"
+  ],
+  "web_worthy": "보통",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/NVIDIA공식체크포인트_속도단차교차평가분석.md",
+  "title": "20260904 NVIDIA 공식 체크포인트 속도·단차 교차평가 분석",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "A/평가",
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 지표×3 에피소드×7 평가×16 학습×2 보상×1 정책×5",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/architecture-decision.md",
   "title": "시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2",
   "kind": "결정",
@@ -1456,23 +1961,48 @@
   "web_worthy_reason": "8/14 배정 완료 시점의 계획 문서이고 실제 운용은 ops/GPU-SANDBOX 와 runpod-team-ops 로 갈라졌다. 배정표 한 행이 폐기된 증류를 전제한다."
  },
  {
+  "path": "research/flat-straight-baseline-10m.md",
+  "title": "평지 직진: 재는 자리가 결과를 가르고, 초기화 요인 셋 중 방위만 효과가 검출된다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "98"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×7 보상×5 관측×13",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/generalization-benchmark-10-terrains.md",
   "title": "일반화 벤치마크: 미학습 지형 10종 실측 (5종 통과 · 5종 실패)",
   "kind": "실험",
   "evidence": "실측",
   "issues": [
-   "59"
+   "59",
+   "66"
   ],
   "areas": [
+   "A/정책학습",
    "A/평가",
-   "A/정책학습"
+   "A/지형씬제작"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 일반화 벤치마크×12 지표×1 벤치마크×13 학습×14 보상×4 관측×1",
+  "areas_why": "근거 낱말 학습×24 보상×6 관측×4 일반화 벤치마크×7 벤치마크×7 benchmark×1 terrain×1 지형×49",
   "purpose": "본PoC",
   "purpose_src": "human",
   "parents": [
-   "research/benchmark-repro-protocol.md"
+   "research/20260911-eval-protocol-v2.md",
+   "research/benchmark-repro-protocol.md",
+   "research/20260906-rails-speed-tracking-diagnosis.md",
+   "research/terrain-finetune-plan.md"
   ],
   "children": [
    "meetings/20260821-team-meeting.md",
@@ -1611,6 +2141,65 @@
   "web_worthy_reason": "«화질은 렌더러가 아니라 에셋에서 갈린다»는 결론과 §4 컷별 도구 배분은 트랙 A 트윈·렌더 작업에 지금도 유효하다. 다만 도구 소개 성격이라 표지보다 자료 목록이 맞다."
  },
  {
+  "path": "research/parkour-ablation-대조분석.md",
+  "title": "80 cm 갭 영상의 정체와 우리 설정의 병목: extreme-quadruped-parkour 대조 분석",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×53 보상×49 관측×22",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/pretrained-vs-model99-7terrain.md",
+  "title": "NVIDIA Pretrained vs Model99: 난이도 0.50~0.70 7종 지형 성능 비교 보고서",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "284",
+   "65"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×31 보상×3 관측×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/rails-diagnosis.md",
+  "title": "레일즈 진단: 못 넘는 이유는 관절이 아니라 보상에 있다",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [
+   "66"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×18 보상×28 관측×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/render-benchmarks.md",
   "title": "렌더 실측: Path Tracing 은 얼마나 걸리는가",
   "kind": "실험",
@@ -1731,9 +2320,7 @@
    "meetings/20260819-team-lock.md",
    "research/go2-rough-training.md"
   ],
-  "children": [
-   "meetings/20260819-team-lock.md"
-  ],
+  "children": [],
   "purpose_reason": "«회의록이 아니라 개인 학습 계획이다» 라고 머리글이 밝히고 본문이 «중요하고 급함 / 중요하지만 급하지 않음 / 급하지만 하지 않음 / 버린 것» 우선순위 표다.",
   "web_worthy": "낮음",
   "web_worthy_src": "human",
@@ -1767,25 +2354,28 @@
   "kind": "계획",
   "evidence": "실측",
   "issues": [
-   "59"
+   "59",
+   "66"
   ],
   "areas": [
    "A/정책학습",
    "A/지형씬제작"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×12 보상×7 관측×13 terrain×13 지형×43 Isaac Lab×3",
+  "areas_why": "근거 낱말 학습×12 보상×13 관측×14 terrain×13 지형×46 Isaac Lab×3",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
    "research/generalization-benchmark-10-terrains.md",
    "research/benchmark-setup-lim.md",
    "research/go2-rough-training.md",
+   "research/20260906-rails-speed-tracking-diagnosis.md",
    "ROBOT-SPEC.md"
   ],
   "children": [
    "decisions/20260826-27-design-session.md",
    "meetings/20260821-team-meeting.md",
+   "research/generalization-benchmark-10-terrains.md",
    "research/go2-rough-training.md"
   ],
   "purpose_reason": "§1 지형 배정(5인에게 지형 하나씩) · §2~5 주차별 일정 · «MVP·중간발표(9/30) 판정선» 으로 일을 굴리는 실행 계획이다. 아직 이 계획으로 얻은 숫자는 없다.",
@@ -1905,6 +2495,65 @@
   "web_worthy": "높음",
   "web_worthy_src": "human",
   "web_worthy_reason": "«보상 13.94 인데 통과율 0%» 를 그림으로 보여 주는 문서라 비전공자·심사자에게 가장 잘 전달된다. 그림이 본문이라 웹 표지에 어울린다."
+ },
+ {
+  "path": "research/발보상-시간아니고높이아님.md",
+  "title": "우리 보상에 발 «높이» 항이 없다는 확인: `feet_air_time` 은 체공 «시간» 을 상 준다",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "194"
+  ],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×10 보상×35 관측×1",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/직진성-외부표준.md",
+  "title": "직진 5 cm 의 외부 근거 조사: ISO 18646-1 에 직진성 항목 없음 · 18646-2 의 로봇 폭 기준 코스 규정",
+  "kind": "리서치",
+  "evidence": "공식",
+  "issues": [
+   "184"
+  ],
+  "areas": [
+   "B/항법"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 TF×3 SLAM×1 Nav2×1",
+  "purpose": "자료조사",
+  "purpose_src": "auto",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/평가하네스-수정본.md",
+  "title": "평가 하네스 조용한 오작동 4건 수정본 제출",
+  "kind": "실험",
+  "evidence": "실측",
+  "issues": [],
+  "areas": [
+   "A/지형씬제작",
+   "A/평가"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 terrain×12 지형×18 Isaac Lab×3 에피소드×1 평가×25",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
  },
  {
   "path": "schedule/personal-plans.md",
