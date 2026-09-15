@@ -65,6 +65,59 @@ def _em(s):
     return w
 
 
+# ★ 2026-09-15 신설. 조상 <g transform="translate(dx,dy)"> 를 보게 한다.
+#   fig03 을 <g transform="translate(0,-120)"> 로 감쌌더니 관문이 원좌표를
+#   읽고 「틀 밖 49 px」이라며 배포를 막았다. 화면에서는 멀쩡했다.
+#   translate 만 푼다. 회전·확대가 걸린 무리 안의 글자는 «못 잼» 으로 센다.
+_G_OPEN = re.compile(r'<g\b([^>]*)>')
+_G_CLOSE = re.compile(r'</g\s*>')
+_TRANSLATE = re.compile(r'translate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*\)')
+_OTHER_TF = re.compile(r'(rotate|scale|matrix|skew)\s*\(')
+
+
+def group_offsets(svg_text):
+    """글자가 시작하는 «자리» 마다 (dx, dy, 잴수있나) 를 돌려준다.
+
+    여는 `<g>` 와 닫는 `</g>` 를 순서대로 훑어 쌓아 둔다. 그 무리에
+    회전·확대가 걸려 있으면 잴 수 없다고 표시한다.
+    """
+    events = []
+    for m in _G_OPEN.finditer(svg_text):
+        a = m.group(1)
+        if '/' == a.strip()[-1:]:          # <g .../> 는 즉시 닫힌다
+            continue
+        t = _TRANSLATE.search(a)
+        ok = not _OTHER_TF.search(a)
+        events.append((m.end(), 'open',
+                       (float(t.group(1)), float(t.group(2))) if t else (0.0, 0.0),
+                       ok))
+    for m in _G_CLOSE.finditer(svg_text):
+        events.append((m.start(), 'close', (0.0, 0.0), True))
+    events.sort()
+
+    marks, stack = [], []
+    for pos, kind, off, ok in events:
+        if kind == 'open':
+            stack.append((off, ok))
+        elif stack:
+            stack.pop()
+        dx = sum(o[0] for o, _ in stack)
+        dy = sum(o[1] for o, _ in stack)
+        marks.append((pos, dx, dy, all(k for _, k in stack)))
+    return marks
+
+
+def offset_at(marks, pos):
+    """그 자리에서 쌓여 있는 이동량. 없으면 (0, 0, 잴수있음)."""
+    dx = dy = 0.0
+    ok = True
+    for p, x, y, k in marks:
+        if p > pos:
+            break
+        dx, dy, ok = x, y, k
+    return dx, dy, ok
+
+
 def boxes(svg_text, skipped=None):
     """[(x1, x2, y1, y2, 글자)] · 못 읽는 것은 건너뛴다.
 
@@ -72,8 +125,10 @@ def boxes(svg_text, skipped=None):
     관문이 무엇을 안 보고 있는지 아무도 모른다.
     """
     out = []
+    marks = group_offsets(svg_text)
     for m in TEXT.finditer(svg_text):
         a = dict(ATTR.findall(m.group(1)))
+        gdx, gdy, gok = offset_at(marks, m.start())
         # ★ 엔티티를 «먼저» 푼다. 안 풀면 `&#xC885;` 여덟 글자를 ASCII 여덟
         #   자로 세서 한 글자짜리가 여덟 배로 부풀고, 그 그림이 전부 「틀 밖」
         #   으로 잡힌다. 처음 돌렸을 때 거짓 경보 4건이 그래서 났다.
@@ -84,13 +139,13 @@ def boxes(svg_text, skipped=None):
         #   가로 폭을 더해도 실제 자리가 아니다. `architecture.svg` 의
         #   rotate(-90) 세로 글자가 「44 px 넘침」으로 잡혔는데 화면에서는
         #   멀쩡했다. 못 재는 것은 «안 재고 센다». 조용히 빼지 않는다.
-        if 'transform' in a:
+        if 'transform' in a or not gok:
             if skipped is not None:
                 skipped.append(s)
             continue
         try:
-            x = float(a.get('x', 'nan'))
-            y = float(a.get('y', 'nan'))
+            x = float(a.get('x', 'nan')) + gdx
+            y = float(a.get('y', 'nan')) + gdy
             fs = float(a.get('font-size', '12'))
         except ValueError:
             continue
@@ -154,7 +209,20 @@ def _selftest():
     good = svg(T % (100, 50, 'start', '틈 0.125 m') + T % (200, 50, 'start', '착지면 3.94 m'))
     stack = svg(T % (100, 50, 'start', '틈 0.125 m') + T % (100, 90, 'start', '착지면 3.94 m'))
     out = svg(T % (370, 50, 'start', '바깥으로 나간 글자'))
+    # ★ 2026-09-15 추가. 조상 <g translate> 를 못 봐서 멀쩡한 그림 넷을
+    #   「틀 밖」으로 막았다. «들어온 것은 통과 · 나간 것은 여전히 잡음» 을
+    #   둘 다 시험한다. 하나만 넣으면 관문을 눈멀게 해도 통과한다.
+    g_in = svg('<g transform="translate(0,-200)">'
+               + T % (10, 250, 'start', '무리가 위로 올린 글자') + '</g>')
+    g_out = svg('<g transform="translate(0,300)">'
+                + T % (10, 50, 'start', '무리가 밖으로 민 글자') + '</g>')
+    g_after = svg('<g transform="translate(0,-200)">'
+                  + T % (10, 250, 'start', '가') + '</g>'
+                  + T % (10, 50, 'start', '나'))
     cases = [('겹친 것을 잡는다', len(overlaps(boxes(bad))), 1),
+             ('무리가 들여놓은 글자는 안 잡는다', len(outside(g_in, boxes(g_in))), 0),
+             ('무리가 내보낸 글자는 잡는다', len(outside(g_out, boxes(g_out))), 1),
+             ('무리 밖으로 나온 뒤는 영향 없다', len(outside(g_after, boxes(g_after))), 0),
              ('떨어진 것은 안 잡는다', len(overlaps(boxes(good))), 0),
              ('줄이 다르면 안 잡는다', len(overlaps(boxes(stack))), 0),
              ('틀 밖을 잡는다', len(outside(out, boxes(out))), 1),

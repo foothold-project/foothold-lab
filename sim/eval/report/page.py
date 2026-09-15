@@ -476,7 +476,7 @@ _steps = [
     ('학습 범위를 평가 범위와 똑같이 맞췄다',
      '모델 <b>B</b>는 폭 ' + rng('B') + '의 틈에서 학습했습니다. 평가 하네스의 '
      '<span class="mono">gap_width_range</span>와 <b>같은 값</b>입니다. '
-     'A와 B는 <b>학습 설정 두 줄만</b> 다릅니다.', '03'),
+     'A와 B는 <b><span class="mono">gap_width_range</span> 한 줄만</b> 다릅니다.', '03'),
     ('B를 <span class="mono">foothold-v1</span>로 배포한다',
      '<b>명령 속도 1.0 m/s로 평가한</b> 난이도 0.1~1.0의 10개 조건 모두에서 '
      '<span class="mono">gap</span>의 종합 성공률이 <b>100 %</b>이고, '
@@ -587,9 +587,9 @@ p.append('<p>이번에는 대응 방법으로 구멍이 있는 지형 '
          '(<span class="mono">gap</span>)을 학습에 추가했습니다.</p>')
 
 # ── 3 · 레시피 ────────────────────────────────────────────────────────
-p.append('<h2><span class="n">03</span>레시피 · A와 B는 두 줄만 다릅니다</h2>')
-p.append('<p class="prov"><b>학습한 틈 폭</b>은 평가 기준 문서의 모델 표가 근거입니다(모델마다 SHA-256 기록). <b>지형 배합</b>은 팀장 확인이 근거이고, '
-         '설정 파일과 체크포인트는 저장소에 아직 기록되지 않았고, <a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>에서 '
+p.append('<h2><span class="n">03</span>레시피 · A와 B는 한 줄만 다릅니다</h2>')
+p.append('<p class="prov"><b>학습한 틈 폭</b>은 평가 기준 문서의 모델 표가 근거입니다(모델마다 SHA-256 기록). <b>지형 배합과 출발 체크포인트</b>는 팀장 확인이 근거입니다. '
+         '학습에 쓴 설정 파일과 체크포인트 자체는 저장소에 아직 없고, <a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>에서 '
          '받는 중입니다.</p>')
 p.append('<p>사전학습 체크포인트는 <b>기존 험지 6종</b>만 배운 상태입니다. 거기에 '
          '<span class="mono">gap</span> <b>하나만</b> <span class="mono">proportion 0.1</span>로 더하고, '
@@ -628,21 +628,23 @@ p.append('<figure class="mdimg"><img src="assets/visual/eval-v2-range.svg" '
          '<figcaption>그림 · A와 B의 학습 틈 폭 범위와 기준 평가의 틈 폭을 같은 눈금에 '
          '표시했습니다. A가 학습한 최대 틈 폭은 0.20 m로, 기준 평가의 0.275 m보다 '
          '0.075 m 좁습니다</figcaption></figure>')
-p.append('<div class="note"><b>학습을 재현하는 데 필요한 정보 두 가지를 '
-         '저장소에서 찾지 못했습니다.</b>'
-         '<br>하나 · <b>A와 B가 어디서 출발했는지.</b> 공식 체크포인트에서 '
-         '각각 시작했는지, 100회 추가 학습한 모델에서 이어서 학습했는지, B가 A를 이어받았는지 '
-         '실행 기록에 없습니다. <span class="mono">미확인</span>'
-         '<br>둘 · <b>「두 줄」이 정확히 어느 설정인지.</b> 평가 기준 문서에 '
-         '「폭 두 줄만 다르다」고 적혀 있는데, 이 보고서에 명시된 설정은 틈 폭 범위 하나뿐입니다. '
-         '<span class="mono">미확인</span>'
-         '<br>두 항목 모두 이슈로 등록했습니다. 실행 기록을 확인하면 이 절에 보완하겠습니다.</div>')
+p.append('<div class="note"><b>A와 B는 둘 다 NVIDIA 공식 체크포인트에서 '
+         '각각 출발했습니다.</b> A를 이어받아 B를 학습한 것이 아닙니다. '
+         '두 모델의 차이는 <span class="mono">gap_width_range</span> '
+         '<b>한 줄뿐이고</b> 나머지 학습 설정은 같습니다.'
+         '<br>두 모델 모두 <b>워크스테이션 AI-WS01에서 직접 학습</b>했습니다. '
+         'A는 임석헌의 학습 방식을 그대로 재현한 것이고, B는 학습 틈 폭 범위를 '
+         '평가 기준과 같게 넓혀 같은 조건으로 1,500회 학습한 것입니다. '
+         '<span class="mono">팀장 확인</span>'
+         '<br>다만 <b>학습에 쓴 설정 파일과 체크포인트는 아직 저장소에 없습니다.</b> '
+         '<a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>'
+         '에서 받는 중이고, 들어오면 이 절이 그 기록을 가리키게 바꾸겠습니다.</div>')
 p.append('<p><b>왜 범위를 바꿨나.</b> 평가 하네스에 설정된 틈 폭 범위는 '
          '<span class="mono">gap_width_range=(0.15, 0.40)</span>이고, '
          '기준 평가 조건인 난이도 0.5에서 실제 틈은 <b>0.275 m</b>입니다. '
          'A가 학습한 최대 틈 폭은 0.20 m이므로 <b>기준 평가의 틈 폭은 A의 학습 범위 밖입니다.</b> '
          'B는 학습 범위를 평가 범위와 <b>같게</b> 두었습니다. '
-         '그 두 줄 말고 나머지 학습 설정은 A와 같습니다.</p>')
+         '그 한 줄 말고 <b>나머지 학습 설정은 A와 완전히 같습니다.</b></p>')
 
 p.append('<h2><span class="n">04</span>비교 대상</h2>')
 p.append('<div class="tw"><table><thead><tr><th>이름</th><th>무엇인가</th>'

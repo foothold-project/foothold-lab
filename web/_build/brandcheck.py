@@ -212,7 +212,14 @@ def report(site, strict=True):
     tot = {k: sum(v[k] for v in state.values()) for k in
            ('색그라데이션', '그림자', '토글없음', '토큰밖hex',
                      '강조바', '바뒤가림')}
-    n = save_grand(state)     # 좋아진 것은 즉시 명부에 반영 (역주행 차단)
+    # ★ 2026-09-15. 여기서 무조건 저장하고 있었다. 그래서 관문이 「나빠졌다」고
+    #   «실패를 내면서도» 그 나쁜 수를 명부에 박았고, 같은 빌드를 한 번 더
+    #   돌리면 통과했다. 실패한 관문이 제 기준선을 옮기면 한 번만 작동한다.
+    #   좋아졌을 때만 내린다. 나빠졌으면 명부는 그대로 두고 실패만 낸다.
+    if worse:
+        n = len([1 for v in state.values() if any(v.values())])
+    else:
+        n = save_grand(state)     # 좋아진 것만 반영 (역주행 차단)
     print('  자기시험 통과 · 페이지 %d · 부채: 색그라데이션 %d · 그림자 %d · '
           '토글없음 %d · 토큰밖hex %d · 강조바 %d · 바뒤가림 %d · 유예 명부 %d장'
           % (len(state), tot['색그라데이션'], tot['그림자'],

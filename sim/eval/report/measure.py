@@ -275,109 +275,93 @@ def matrix_svg(speed, title):
 
 
 def scatter_svg():
-    """F8 plumb scatter · 참여도(x) 대 성공률(y). 점마다 이름을 단다."""
+    """가로 막대 · 지형마다 한 줄. 성공률 오름차순.
+
+    ★ 2026-09-15. 원래 산점도였는데 팀장이 「해석할 수 있겠냐」고 물었다.
+      못 한다. 점 여섯 개가 «좌표까지» 같아서(716, 152) 라벨만 위로 쌓여
+      있었고, 0 % 인 `stepping_stones` 는 라벨이 화면 꼭대기에 있었다.
+      이 자료는 「거의 다 100 % 이고 둘만 다르다」라서 겹칠 수 있는 형태로
+      그리면 안 된다. 막대는 한 줄에 하나라 겹칠 수가 없다.
+    """
     pts = [(t, engage[t]["ratio"], score.get((t, "foothold-v1", "1")))
            for t in TERR if t in engage and engage[t]["ratio"] is not None
            and score.get((t, "foothold-v1", "1")) is not None]
-    W, H = 780, 500
-    X0, X1, base, top = 78, 716, 412, 152
+    if not pts:
+        return ('<svg viewBox="0 0 780 60" width="100%%" role="img" '
+                'aria-label="자료 없음"><text x="12" y="34" font-size="12" '
+                'fill="%s">그릴 자료가 없습니다</text></svg>' % INK)
+
+    pts.sort(key=lambda r: (r[2], r[1]))        # 못한 것이 위로
+
+    NAME_R, BAR_X, BAR_W = 168, 182, 392        # 이름 오른끝 · 막대 시작 · 막대 폭
+    PCT_X, ENG_X = BAR_X + BAR_W + 14, 700
+    ROW, TOP = 23, 70
+    W = 780
+    H = TOP + ROW * len(pts) + 34
+
+    # ★ 색을 요소마다 적지 않는다. 15줄 x 3곳이면 hex 가 45번 나오고
+    #   브랜드 관문의 「토큰밖hex」 부채가 그만큼 늘어난다. 한 번만 적는다.
     o = ['<svg viewBox="0 0 %d %d" width="100%%" role="img" '
-         'aria-label="참여도 대 성공률">' % (W, H),
-         '<rect width="100%%" height="100%%" fill="%s"/>' % PAPER]
+         'aria-label="지형마다 성공률과 참여도">' % (W, H),
+         '<style>'
+         '.cs-bg{fill:%s}.cs-nm{fill:%s}.cs-hd{fill:%s}.cs-gut{fill:%s;opacity:.5}'
+         '.cs-bar{fill:%s}.cs-low{fill:%s}.cs-mu{fill:%s}'
+         '</style>' % (PAPER, TXT, TXT, RAMP[0], RAMP[3], INK, MUTED),
+         # ★ 이 줄은 % 서식을 «안» 거친다. 여기 %% 를 쓰면 화면에 %% 로 샌다.
+         '<rect width="100%" height="100%" class="cs-bg"/>']
 
-    for g_ in range(21):
-        x = X0 + g_ / 20.0 * (X1 - X0)
-        o.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="%s" '
-                 'stroke-width=".7"/>'
-                 % (x, base, x, base - (8 if g_ % 5 == 0 else 4), GRID))
-    o.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="1"/>'
-             % (X0 - 6, base, X1 + 6, base, FLOOR))
+    # 머리글
+    o.append('<text x="%d" y="22" font-size="10.5" font-weight="700" '
+             'class="cs-hd" text-anchor="end">지형</text>' % NAME_R)
+    o.append('<text x="%d" y="22" font-size="10.5" font-weight="700" '
+             'class="cs-hd">성공률 (foothold-v1 · 1.0 m/s)</text>' % BAR_X)
+    o.append('<text x="%d" y="22" font-size="10.5" font-weight="700" '
+             'class="cs-hd" text-anchor="end">참여도</text>' % ENG_X)
 
-    mx = lambda p_: X0 + p_ * (X1 - X0)
-    my = lambda v: base - (v / 100.0) * (base - top)
-
+    # 0 · 50 · 100 눈금. 막대 «뒤» 에 깔아 글자를 안 가린다.
     for v in (0, 50, 100):
-        o.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" '
+        x = BAR_X + v / 100.0 * BAR_W
+        o.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="%s" '
                  'stroke-width=".6" stroke-dasharray="2 5"/>'
-                 % (X0, my(v), X1, my(v), GRID))
-        o.append('<text x="%d" y="%.1f" font-size="9.5" font-weight="600" fill="%s" '
-                 'text-anchor="end">%d%%</text>' % (X0 - 11, my(v) + 3, MUTED, v))
+                 % (x, TOP - 18, x, TOP + ROW * len(pts) - 6, GRID))
+        o.append('<text x="%.1f" y="%d" font-size="9.5" font-weight="600" '
+                 'fill="%s" text-anchor="middle">%d%%</text>'
+                 % (x, TOP - 26, MUTED, v))
+
+    for i, (t, ratio, pct) in enumerate(pts):
+        y = TOP + i * ROW
+        low = pct < 100
+        o.append('<text x="%d" y="%.1f" font-size="10.5" font-weight="%s" '
+                 'class="%s" text-anchor="end">%s</text>'
+                 % (NAME_R, y + 11, '800' if low else '600',
+                    'cs-low' if low else 'cs-nm', t))
+        # 빈 홈통을 먼저 깔아 0 %% 인 줄도 «줄이 있다» 는 것이 보이게
+        o.append('<rect x="%d" y="%.1f" width="%d" height="13" rx="3" '
+                 'class="cs-gut"/>' % (BAR_X, y + 1, BAR_W))
+        if pct > 0:
+            o.append('<rect x="%d" y="%.1f" width="%.1f" height="13" rx="3" '
+                     'class="%s"/>'
+                     % (BAR_X, y + 1, pct / 100.0 * BAR_W,
+                        'cs-low' if low else 'cs-bar'))
+        o.append('<text x="%d" y="%.1f" font-size="10.5" font-weight="%s" '
+                 'class="%s">%d%%</text>'
+                 % (PCT_X, y + 11, '800' if low else '600',
+                    'cs-low' if low else 'cs-mu', round(pct)))
+        o.append('<text x="%d" y="%.1f" font-size="10" font-weight="600" '
+                 'class="cs-mu" text-anchor="end">%.2f</text>'
+                 % (ENG_X, y + 11, ratio))
 
     o.append('<text x="%d" y="%d" font-size="9.5" font-weight="600" fill="%s">'
-             '0 · 중앙 광선 기복 작음</text>' % (X0, base + 19, MUTED))
-    o.append('<text x="%d" y="%d" font-size="9.5" font-weight="600" fill="%s" '
-             'text-anchor="end">1 · 스캔 기복과 같음</text>' % (X1, base + 19, MUTED))
+             '참여도 0 = 중앙 광선 기복 작음 · 1 = 스캔 기복과 같음. '
+             '성공률이 100 %%가 아닌 줄을 진하게 칠했습니다</text>'
+             % (NAME_R - 148, H - 12, MUTED))
+    o.append('</svg>')
+    return '\n'.join(o)
 
-    # **점마다 이름을 단다. 겹치면 지시선으로 빼낸다.**
-    #
-    # 성공률 100 % 에 여럿이 몰려 이름이 포개진다 `확인됨`
-    # (2026-09-12 팀장 지적 · repeated_boxes / repeated_cylinders / pit 등).
-    #
-    # **점은 안 옮긴다.** 점 자리가 곧 자료다. 대신 이름을 위아래 층으로
-    # 밀어내고 점에서 이름까지 가는 실선을 그린다. 어느 이름이 어느 점인지
-    # 선으로 따라갈 수 있으면 겹쳐도 읽힌다.
-    LANE = 14.5                      # 이름 한 층의 높이
-    CHAR = 5.4                       # 글자 하나의 대략 폭
-
-    items = []
-    for name, ratio, succ in sorted(pts, key=lambda q: (-q[2], q[1])):
-        items.append({
-            "name": name, "x": mx(ratio), "y": my(succ),
-            "hero": (succ >= 90 and ratio < 0.4) or (ratio >= 0.8 and succ < 60),
-            "w": len(name) * CHAR,
-        })
-
-    # 층을 찾는다. 같은 층에서 가로로 겹치면 다음 층으로.
-    lanes = []
-    for it in items:
-        half = it["w"] / 2.0
-        left, right = it["x"] - half, it["x"] + half
-        for k, lane in enumerate(lanes):
-            if all(right < a - 7 or left > b + 7 for a, b, _ in lane):
-                lane.append((left, right, it))
-                it["lane"] = k
-                break
-        else:
-            lanes.append([(left, right, it)])
-            it["lane"] = len(lanes) - 1
-
-    for it in items:
-        x, y = it["x"], it["y"]
-        o.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%.1f" stroke="%s" '
-                 'stroke-width=".8" opacity=".5"/>' % (x, base, x, y, FLOOR))
-        o.append('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>'
-                 % (x, y, 5.6 if it["hero"] else 3.6, INK if it["hero"] else "#334EAC"))
-
-        ty = top - 12 - it["lane"] * LANE
-        anchor, tx = "middle", x
-        if x - it["w"] / 2 < 4:
-            anchor, tx = "start", 4
-        elif x + it["w"] / 2 > W - 4:
-            anchor, tx = "end", W - 4
-
-        # 점에서 이름까지 지시선
-        o.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" '
-                 'stroke-width=".7" opacity=".45"/>' % (x, y - 7, tx, ty + 4, FLOOR))
-        o.append('<text x="%.1f" y="%.1f" font-size="%s" font-weight="%d" fill="%s" '
-                 'text-anchor="%s">%s</text>'
-                 % (tx, ty, "11" if it["hero"] else "10",
-                    800 if it["hero"] else 600,
-                    INK if it["hero"] else TXT, anchor, it["name"]))
-
-    o.append('<text x="22" y="%.0f" font-size="9.5" font-weight="700" fill="%s" '
-             'transform="rotate(-90 22 %.0f)" text-anchor="middle">성공률</text>'
-             % ((base + top) / 2, TXT, (base + top) / 2))
-    o.append('<text x="%d" y="%d" font-size="9.5" font-weight="600" fill="%s" '
-             'text-anchor="middle">가로 = 참여도 · 세로 = 성공률 · 점마다 바닥까지 실선'
-             '</text>' % (W / 2, H - 14, MUTED))
-    o.append("</svg>")
-    return "".join(o)
-
-
-print("  차트 둘 만듦")
 io.open(os.path.join(S, "chart_matrix.svg"), "w", encoding="utf-8").write(
     matrix_svg("1", "지형별 성공률"))
 io.open(os.path.join(S, "chart_scatter.svg"), "w", encoding="utf-8").write(scatter_svg())
+print("  차트 둘 만듦")
 
 # ── 실패를 어느 축으로 갈랐나 (성적표 전 지형·전 속도) ─────────────
 #

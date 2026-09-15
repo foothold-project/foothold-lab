@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=0ad0ac87').then(function(r){
+    fetch('/assets/search-index.json?v=f2b0523a').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1082,7 +1082,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=0ff29973" alt="그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다" loading="lazy"><figcaption>그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다</figcaption></figure></p>
 <h4>3.2 gap 지형에서 광선이 어디를 비추나</h4>
 <p>난이도 0.5 에서 실제로 재 본 그림입니다. 재현은 sim/eval/probe_height_scan.py 입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=a52cb8ed" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=304c9044" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
 <p>발판이 1.5 m 라 가장자리가 ±0.75 m 인데 격자는 ±0.80 m 까지 뻗습니다. 그래서 <b>맨 앞줄과 맨 뒷줄 11개씩, 모두 22개</b>가 틈 위에 걸칩니다.</p>
 <p><b>학습이 고른 +1 은 옳은 선택입니다.</b> 이 눈금에서 양수는 「바닥이 아래로 멀다」는 뜻이고, 바닥 없는 구멍이 바로 그것입니다. 학습 코드 주석도 그렇게 적고 있습니다.</p>
 <p>평가가 넣는 -1 은 <b>눈금의 정반대 끝</b>입니다. 뜻으로 옮기면 <b>「내 몸통보다 0.5 m 넘게 솟은 무언가가 있다」</b> 입니다. 몸통높이 - 닿은높이 - 0.5 = -1 이 되는 경계가 닿은높이 = 몸통높이 + 0.5 이기 때문입니다.</p>
@@ -1093,7 +1093,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>값의 범위가 -0.33 에서 +0.97 까지 골고루 있습니다. <b>높이 스캔은 상수가 아니라 실제로 지형 정보를 담고 있습니다.</b> 그래서 이 채널이 뒤집히는 것은 무시할 수 있는 일이 아닙니다.</p>
 <h4>3.4 고리 밑을 지나갈 때는 무엇을 보나</h4>
 <p>광선이 아래로만 가니 <b>머리 위에 뭔가 있으면 그것부터 맞힙니다.</b> floating_ring 에서 실제로 그렇습니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=77c6b9f9" alt="그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다" loading="lazy"><figcaption>그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=40251373" alt="그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다" loading="lazy"><figcaption>그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th>난이도 0.5 에서</th><th>높이</th><th>광선이 보는가</th></tr></thead><tbody><tr><td>고리 윗면</td><td>0.225 m</td><td>본다 값 -0.33</td></tr><tr><td>고리 아랫면</td><td>0.105 m</td><td>못 본다</td></tr><tr><td>고리 아래 바닥</td><td>0 m</td><td>못 본다</td></tr><tr><td>고리 없는 자리 바닥</td><td>0 m</td><td>본다 값 -0.10</td></tr><tr><td>Go2 몸통</td><td>0.42 m</td><td>기준점. 20환경 평균 0.421 m · floating_ring 초기값은 0.40 m</td></tr></tbody></table></div>
 <p><b>로봇은 고리를 「바닥에서 0.225 m 솟은 덩어리」로 봅니다.</b> 아래에 틈이 있다는 것도, 고리가 얼마나 두꺼운지도 모릅니다. <b>높이 스캔은 한 자리에 숫자 하나</b>라서 「위에 천장, 아래에 바닥」을 담을 수 없습니다.</p>
 <p><b>이번 지형에서는 그게 문제가 안 됩니다.</b> 고리 아래 틈이 10.5 cm 라 Go2(몸통 0.42 m )가 기어들어갈 수 없습니다. <b>넘어가는 턱</b>이고, 넘으려면 윗면 높이만 알면 됩니다. 그래서 지금 눈으로도 98~99% 를 냅니다.</p>
@@ -1442,5 +1442,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp8so2j04p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpn4uhh57z</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

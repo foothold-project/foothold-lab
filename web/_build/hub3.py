@@ -763,7 +763,7 @@ def terrain_html():
                esc(c['owner'])))
 
     out = ['<div class="eh3">Track A · 실패 험지 5종 <span>행 = 지형 · 열 = 단계 · '
-           '실측 = 6초 · 통과선 3 m · 1.0 m/s · <b>난이도 0.5</b> · 방향 임계 1.5 m · 지형당 100판'
+           '실측 = 6초 · 통과선 3 m · 1.0 m/s · <b>난이도 0.5</b> · 방향 임계 1.5 m · 지형당 100 에피소드'
            '</span></div>',
            '<div class="tkcs3">%s</div>' % ''.join(summary),
            '<details class="tkd3" id="terrain-board"><summary class="tkds3">'
