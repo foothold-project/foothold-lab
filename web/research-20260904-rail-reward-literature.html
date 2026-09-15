@@ -232,13 +232,13 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
-/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
  * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
  * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
  * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
  * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
  * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
  * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
@@ -513,7 +513,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -738,12 +738,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1003,12 +1003,12 @@ document.addEventListener('click', function(e){
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
 <style>
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해는 밝은 판 위에 올린다.
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
    그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
    `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

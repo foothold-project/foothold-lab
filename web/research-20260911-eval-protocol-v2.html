@@ -232,13 +232,13 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
-/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
  * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
  * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
  * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
  * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
  * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
  * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
@@ -513,7 +513,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -738,12 +738,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -878,7 +878,7 @@ body>*{flex-shrink:0}
 요지: 우리가 무엇을 어떻게 재는지 한 문서에 못 박는다. 규격 2(빗나간 광선 +1)가 기본이고 규격 1 숫자는 성적으로 인용하지 않는다
 상태: 확정
 판: v2.0</p></blockquote>
-<p><b>웹판</b>: <a href="https://foothold-project.vercel.app/research-20260911-eval-protocol-v2.html" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-20260911-eval-protocol-v2.html</a> 도해 여덟 장 · 실측 사진 여섯 장 · 표 예순여덟 개가 다 들어 있습니다. 이 markdown 이 정본이고 웹판은 그것을 옮긴 것입니다.</p>
+<p><b>웹판</b>: <a href="https://foothold-project.vercel.app/research-20260911-eval-protocol-v2.html" target="_blank" rel="noopener">https://foothold-project.vercel.app/research-20260911-eval-protocol-v2.html</a> 그림 여덟 장 · 실측 사진 여섯 장 · 표 예순여덟 개가 다 들어 있습니다. 이 markdown 이 정본이고 웹판은 그것을 옮긴 것입니다.</p>
 <p>숫자와 규격을 인용할 때는 이 문서를 근거로 답니다.</p>
 <blockquote><p><b>이 판에서 합쳐진 것.</b> 배포용 정본과 규격 2 갱신본이 따로 있었고,
 웹에는 갱신본만 올라가 <b>난이도 스윕 곡선과 높이 스캔 해설이 빠져</b>
@@ -1079,10 +1079,10 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>몸통 아래를 향해 <b>격자 모양으로 광선을 쏘고, 각 광선이 땅에 닿는 높이</b>를 받습니다. 카메라가 아니라 줄자에 가깝습니다.</p>
 <div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>어디서</th></tr></thead><tbody><tr><td>격자 크기</td><td>1.6 m x 1.0 m</td><td>velocity_env_cfg.py:70</td></tr><tr><td>격자 간격</td><td>0.1 m</td><td>같은 자리</td></tr><tr><td>광선 개수</td><td>17 x 11 = 187</td><td>위 둘에서 계산</td></tr><tr><td>쏘는 방향</td><td>(0, 0, -1) · 아래로만</td><td>patterns_cfg.py:52</td></tr><tr><td>출발 높이</td><td>몸통에서 20 m 위</td><td>ray_caster.py:224</td></tr><tr><td>값 계산</td><td>몸통높이 - 닿은높이 - 0.5</td><td>observations.py:300</td></tr><tr><td>자르는 범위</td><td>-1 에서 +1</td><td>velocity_env_cfg.py:138</td></tr></tbody></table></div>
 <p><b>「20 m 위에서 쏜다」는 것은 출발점 이야기</b>입니다. 값 자체는 <b>몸통 기준</b>이라 평지에서 -0.10 근처가 나옵니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=ccabc4c5" alt="그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다" loading="lazy"><figcaption>그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig01.svg?v=0ff29973" alt="그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다" loading="lazy"><figcaption>그림 3-1 · 값 하나가 뜻하는 것. 양수는 바닥이 아래로 멀어진 것, 음수는 위로 솟은 것입니다</figcaption></figure></p>
 <h4>3.2 gap 지형에서 광선이 어디를 비추나</h4>
 <p>난이도 0.5 에서 실제로 재 본 그림입니다. 재현은 sim/eval/probe_height_scan.py 입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=2cbd19ef" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig02.svg?v=a52cb8ed" alt="그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다" loading="lazy"><figcaption>그림 3-2 · 위에서 내려다본 gap 지형과 광선 187개. 빨간 점 22개가 틈 위로 나가 아무것도 못 맞힙니다</figcaption></figure></p>
 <p>발판이 1.5 m 라 가장자리가 ±0.75 m 인데 격자는 ±0.80 m 까지 뻗습니다. 그래서 <b>맨 앞줄과 맨 뒷줄 11개씩, 모두 22개</b>가 틈 위에 걸칩니다.</p>
 <p><b>학습이 고른 +1 은 옳은 선택입니다.</b> 이 눈금에서 양수는 「바닥이 아래로 멀다」는 뜻이고, 바닥 없는 구멍이 바로 그것입니다. 학습 코드 주석도 그렇게 적고 있습니다.</p>
 <p>평가가 넣는 -1 은 <b>눈금의 정반대 끝</b>입니다. 뜻으로 옮기면 <b>「내 몸통보다 0.5 m 넘게 솟은 무언가가 있다」</b> 입니다. 몸통높이 - 닿은높이 - 0.5 = -1 이 되는 경계가 닿은높이 = 몸통높이 + 0.5 이기 때문입니다.</p>
@@ -1093,7 +1093,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>값의 범위가 -0.33 에서 +0.97 까지 골고루 있습니다. <b>높이 스캔은 상수가 아니라 실제로 지형 정보를 담고 있습니다.</b> 그래서 이 채널이 뒤집히는 것은 무시할 수 있는 일이 아닙니다.</p>
 <h4>3.4 고리 밑을 지나갈 때는 무엇을 보나</h4>
 <p>광선이 아래로만 가니 <b>머리 위에 뭔가 있으면 그것부터 맞힙니다.</b> floating_ring 에서 실제로 그렇습니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=cc70d1f4" alt="그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다" loading="lazy"><figcaption>그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig03.svg?v=77c6b9f9" alt="그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다" loading="lazy"><figcaption>그림 3-3 · 고리가 있는 자리에서 광선은 고리 윗면에서 멈춥니다. 그 아래 바닥은 값에 안 들어옵니다</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th>난이도 0.5 에서</th><th>높이</th><th>광선이 보는가</th></tr></thead><tbody><tr><td>고리 윗면</td><td>0.225 m</td><td>본다 값 -0.33</td></tr><tr><td>고리 아랫면</td><td>0.105 m</td><td>못 본다</td></tr><tr><td>고리 아래 바닥</td><td>0 m</td><td>못 본다</td></tr><tr><td>고리 없는 자리 바닥</td><td>0 m</td><td>본다 값 -0.10</td></tr><tr><td>Go2 몸통</td><td>0.42 m</td><td>기준점. 20환경 평균 0.421 m · floating_ring 초기값은 0.40 m</td></tr></tbody></table></div>
 <p><b>로봇은 고리를 「바닥에서 0.225 m 솟은 덩어리」로 봅니다.</b> 아래에 틈이 있다는 것도, 고리가 얼마나 두꺼운지도 모릅니다. <b>높이 스캔은 한 자리에 숫자 하나</b>라서 「위에 천장, 아래에 바닥」을 담을 수 없습니다.</p>
 <p><b>이번 지형에서는 그게 문제가 안 됩니다.</b> 고리 아래 틈이 10.5 cm 라 Go2(몸통 0.42 m )가 기어들어갈 수 없습니다. <b>넘어가는 턱</b>이고, 넘으려면 윗면 높이만 알면 됩니다. 그래서 지금 눈으로도 98~99% 를 냅니다.</p>
@@ -1128,7 +1128,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p>이렇게 해야 <b>「폭을 넓혀서 오른 것」과 「입력을 맞춰서 오른 것」을 갈라서</b> 말할 수 있습니다.</p>
 <h4>3.8 연습한 지형과 시험 보는 지형</h4>
 <p>부호 말고 기하도 다릅니다. 둘 다 난이도 0.5 에서 계산한 값입니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig04.svg?v=134078a6" alt="그림 3-4 · 같은 난이도에서 달릴 거리는 절반, 틈은 2.2 배입니다" loading="lazy"><figcaption>그림 3-4 · 같은 난이도에서 달릴 거리는 절반, 틈은 2.2 배입니다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig04.svg?v=325d8f7a" alt="그림 3-4 · 같은 난이도에서 달릴 거리는 절반, 틈은 2.2 배입니다" loading="lazy"><figcaption>그림 3-4 · 같은 난이도에서 달릴 거리는 절반, 틈은 2.2 배입니다</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th></th><th>학습 forward_gap</th><th>평가 gap</th></tr></thead><tbody><tr><td>틈 모양</td><td>앞을 가로지르는 도랑 하나</td><td>발판 사방을 두른 고리</td></tr><tr><td>출발점에서 틈까지</td><td>1.50 m</td><td>0.75 m</td></tr><tr><td>틈 폭 (난이도 0.5)</td><td>0.125 m</td><td>0.275 m</td></tr><tr><td>넘은 뒤 착지면</td><td>3.94 m</td><td>2.98 m</td></tr><tr><td>빗나간 광선의 값</td><td><b>+1</b></td><td><b>-1</b></td></tr></tbody></table></div>
 <p><b>임석헌의 영상과 우리 성적이 다른 이유는 하나가 아닙니다.</b> 2026-09-11 에 그의 S3 원자료를 내려받아 대조했습니다.</p>
 <div class="tw"><table><thead><tr><th></th><th>임석헌 gap_stop_10</th><th>우리 1.0 m/s</th></tr></thead><tbody><tr><td><b>빗나간 광선</b></td><td><b>+1</b> · 구멍으로 보임</td><td><b>-1</b> · 장애물로 보임</td></tr><tr><td>틈 폭</td><td>0.16 m</td><td>0.275 m</td></tr><tr><td>제한 시간</td><td>20초</td><td>6초</td></tr><tr><td>성공 기준</td><td>gap_only</td><td>네 축 AND</td></tr><tr><td>체크포인트</td><td>model_899.pt</td><td>model_1500.pt</td></tr><tr><td><b>준비 구간</b></td><td><b>정책을 끄고</b> 기본 관절 자세</td><td>없음</td></tr></tbody></table></div>
@@ -1161,7 +1161,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>두 규격의 값이 gap 말고도 다릅니다.</b> 예전에는 「빗나가는 광선이 0개라 나머지 아홉은 같다」고 적었는데, 공통 150칸을 다시 세니 <b>40칸이 다르고 rails 는 8칸이 2 %p 를 넘었습니다</b> <span class="ev ev-ok">확인됨</span> (2026-09-12 codex 8회차 · <code>pit</code> d0.3 v0.5 는 18 %에서 31 %). 그 차이가 관측 부호 변경 때문인지는 <b>미확인</b>입니다. 실행 구성과 초기 상태까지 통제한 대조가 아닙니다.</p>
 <p>그러니 이 절의 옛 표는 <b>어느 지형이든 성적으로 인용하지 마십시오.</b></p>
 <p>기준선 한 점 옆에 <b>난이도별 곡선</b>을 세웁니다. 2026-09-10 에 실패 5종 19,000에피소드를 40분에 돌렸습니다.</p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig05.svg?v=dcccc550" alt="그림 · 규격 2 로 다시 잰 난이도 곡선. 회색이 기준선, 주황이 A(연습 틈 0.20 m), 파랑이 B(0.40 m)" loading="lazy"><figcaption>그림 · 규격 2 로 다시 잰 난이도 곡선. 회색이 기준선, 주황이 A(연습 틈 0.20 m), 파랑이 B(0.40 m)</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig05.svg?v=8e2a76be" alt="그림 · 규격 2 로 다시 잰 난이도 곡선. 회색이 기준선, 주황이 A(연습 틈 0.20 m), 파랑이 B(0.40 m)" loading="lazy"><figcaption>그림 · 규격 2 로 다시 잰 난이도 곡선. 회색이 기준선, 주황이 A(연습 틈 0.20 m), 파랑이 B(0.40 m)</figcaption></figure></p>
 <p><b>이 그림은 2026-09-11 에 다시 그렸습니다.</b> 그 전 그림은 <b>규격 1</b>(빗나간 광선 = -1) 로 잰 것이라 gap 이 세 모델 모두 0 근처로 평평했습니다. 구멍을 장애물이라고 알려 주고 잰 곡선이었습니다.</p>
 <h4>왜 스윕을 하나</h4>
 <p><b>기준선 하나로는 「나아졌다」를 말할 수 없기 때문입니다.</b></p>
@@ -1243,7 +1243,7 @@ sim/eval/generalization_env_cfg.py:53</pre></div>
 <p><b>계단은 천천히 가면 10% 인데 1.0 m/s 로 가면 100% 입니다.</b> 반대로 <code>boxes</code> 와 <code>역계단</code> 은 <b>천천히 갈 때 더 잘합니다.</b></p>
 <p><b>「빠르게가 유리하다」도 「천천히가 유리하다」도 지형을 안 밝히면 틀립니다.</b> 실패 5종에서는 1.0 m/s 가 일관되게 좋았는데 6종에서는 갈립니다.</p>
 <h5>열한 지형을 한 줄에 놓으면</h5>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig06.svg?v=384fa7fa" alt="정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다." loading="lazy"><figcaption>정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다.</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig06.svg?v=9f804c22" alt="정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다." loading="lazy"><figcaption>정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 잰 성공률. 축을 자르지 않았습니다.</figcaption></figure></p>
 <p><b>「학습한 지형이면 된다」가 성립하지 않습니다.</b> <code>역계단</code> 은 기준선이 학습에 쓴 지형인데 <b>미경험 5종과 같은 자리인 0%</b> 에 있습니다. <code>boxes</code> 도 34% 로 중간에 걸쳐 있습니다.</p>
 <p><b>경계는 「학습했나」가 아니라 「무엇이 어려운가」로 그어집니다.</b></p>
 <p><b>출발선 성적이 이것입니다.</b> 정본 조건(난이도 0.5 · 1.0 m/s)에서 <b>기존 6종 평균 69%</b> 대 <b>실패 5종 평균 1.6%</b>. 나중에 <code>foothold-vN.pt</code> 가 나오면 양쪽을 이 표와 대조해 「모두 나아졌다」를 말할 수 있습니다.</p>
@@ -1316,7 +1316,7 @@ foothold-v1.json      이 모델이 어떻게 만들어졌는지</pre></div>
 <p><b>이름은 「무엇인지」만 말하고, 옆 파일이 「어떻게 만들었는지」를 말합니다.</b></p>
 <h3>10 학습 · 평가 · 렌더</h3>
 <p><b>셋은 각각 다른 실행이고 시간이 따로 듭니다.</b></p>
-<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig07.svg?v=d1056104" alt="그림 · 셋은 각각 다른 실행이다. 학습이 끝나도 영상은 안 나온다" loading="lazy"><figcaption>그림 · 셋은 각각 다른 실행이다. 학습이 끝나도 영상은 안 나온다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/eval-v2-fig07.svg?v=1ae49673" alt="그림 · 셋은 각각 다른 실행이다. 학습이 끝나도 영상은 안 나온다" loading="lazy"><figcaption>그림 · 셋은 각각 다른 실행이다. 학습이 끝나도 영상은 안 나온다</figcaption></figure></p>
 <div class="tw"><table><thead><tr><th>단계</th><th>입력</th><th>출력</th><th>실측 시간</th></tr></thead><tbody><tr><td>학습</td><td>NVIDIA checkpoint.pt</td><td>model.pt</td><td>1,500회에 134분</td></tr><tr><td>평가</td><td>model.pt</td><td>CSV</td><td>에피소드당 0.25초 (1.0 m/s)</td></tr><tr><td>렌더</td><td>model.pt</td><td>mp4</td><td>4096마리 20초 컷에 104~120초</td></tr></tbody></table></div>
 <h4>무엇을 잘하라고 가르쳤나</h4>
 <p>보상은 <b>몸의 어느 부분을 보느냐</b>로 나뉩니다. 아래 값은 학습 실행이 저장한 params/env.yaml 에서 그대로 읽은 것입니다.</p>
@@ -1435,12 +1435,12 @@ document.addEventListener('click', function(e){
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
 <style>
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해는 밝은 판 위에 올린다.
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
    그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
    `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""도해 안에서 «글자가 겹치는가 · 틀 밖으로 나가는가» (빌드 [3.48] 단계).
+"""그림 안에서 «글자가 겹치는가 · 틀 밖으로 나가는가» (빌드 [3.48] 단계).
 
 분류: 운영 · 작성: 오흥재 · 2026-09-14 · 상태: 확정
 근거: 실측 (브라우저 getBBox 로 잰 값과 대조 · 알려진 결함 2종 재현 검출)
@@ -7,7 +7,7 @@
 ## 왜 있나
 
 2026-09-13 에 팀장이 프로토콜 페이지를 보고 「글씨 겹침 · border 다름 ·
-layout 선 넘어옴」을 지적했다. 브라우저에서 `getBBox` 로 15개 도해를 재니
+layout 선 넘어옴」을 지적했다. 브라우저에서 `getBBox` 로 15개 그림을 재니
 실제로 둘이 겹치고 있었다.
 
   eval-v2-scan-meaning.svg   「?」 가 「광선이 아무것도 못 맞힘」 위에 앉음
@@ -75,7 +75,7 @@ def boxes(svg_text, skipped=None):
     for m in TEXT.finditer(svg_text):
         a = dict(ATTR.findall(m.group(1)))
         # ★ 엔티티를 «먼저» 푼다. 안 풀면 `&#xC885;` 여덟 글자를 ASCII 여덟
-        #   자로 세서 한 글자짜리가 여덟 배로 부풀고, 그 도해가 전부 「틀 밖」
+        #   자로 세서 한 글자짜리가 여덟 배로 부풀고, 그 그림이 전부 「틀 밖」
         #   으로 잡힌다. 처음 돌렸을 때 거짓 경보 4건이 그래서 났다.
         s = html.unescape(TAG.sub('', m.group(2))).strip()
         if not s:
@@ -207,12 +207,12 @@ def main(vault):
                     bad.append('%s  틀 밖으로 %d: «%s»' % (f, over, s[:22]))
 
     if not seen:
-        print('  [!] 검사한 도해가 0개입니다. 통과로 안 읽습니다')
+        print('  [!] 검사한 그림이 0개입니다. 통과로 안 읽습니다')
         return False
 
     # ★ 2026-09-14 신설. 선 굵기가 «한 벌» 밖으로 새지 않았나.
-    #   팀장이 「border 다름」이라 한 것이 이것이다. 도해 19장에 굵기가
-    #   16가지였다. 한 벌로 모은 뒤에도 새 도해가 들어오면 또 벌어지므로 센다.
+    #   팀장이 「border 다름」이라 한 것이 이것이다. 그림 19장에 굵기가
+    #   16가지였다. 한 벌로 모은 뒤에도 새 그림이 들어오면 또 벌어지므로 센다.
     #   고치는 도구는 tools/svg_strokes.py 다.
     stroke = set(re.findall(r'stroke-width="([\d.]+)"', ''.join(texts)))
     stray = sorted(stroke - SCALE, key=float)
@@ -220,7 +220,7 @@ def main(vault):
         bad.append('한 벌에 없는 선 굵기: %s (한 벌 = %s)'
                    % (' · '.join(stray), ' · '.join(sorted(SCALE, key=float))))
         bad.append('  고치려면: python tools/svg_strokes.py --write')
-    print('  도해 %d개 검사 · 글자 결함 %d곳 · 못 잰 글자 %d개(회전·변형)'
+    print('  그림 %d개 검사 · 글자 결함 %d곳 · 못 잰 글자 %d개(회전·변형)'
           % (seen, len(bad), len(skip)))
     if bad:
         for b in bad[:12]:

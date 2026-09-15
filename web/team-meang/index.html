@@ -483,12 +483,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){

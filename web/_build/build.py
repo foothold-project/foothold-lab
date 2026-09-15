@@ -1024,32 +1024,32 @@ if __name__ == '__main__':
         print('\n  [!] 역할 배치가 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    # ★ 2026-09-14 신설. 도해 «안» 에서 글자가 겹치는지 본다.
-    #   팀장이 「글씨 겹침」을 지적했고 실제로 두 도해가 겹쳐 있었다. 그중
+    # ★ 2026-09-14 신설. 그림 «안» 에서 글자가 겹치는지 본다.
+    #   팀장이 「글씨 겹침」을 지적했고 실제로 두 그림이 겹쳐 있었다. 그중
     #   하나는 같은 그림의 옛 사본이라 한쪽만 고쳐져 있었다. 눈으로는 못 잡는다.
-    print('[3.473] 도해 안 바깥 자원 검사 (<img> 로 불리면 안 불려온다)')
+    print('[3.473] 그림 안 바깥 자원 검사 (<img> 로 불리면 안 불려온다)')
     sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
     import svg_embed_images
     if not svg_embed_images._selftest():
         print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
     if not svg_embed_images.check(os.path.join(HERE, '..', '..', 'docs', 'assets', 'visual')):
-        print('  [!] 도해가 바깥 그림을 가리킵니다. 배포를 중단합니다.')
+        print('  [!] 그림이 바깥 그림을 가리킵니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    print('[3.474] 도해 여백 검사 (viewBox 가 실측 기준과 같은가)')
+    print('[3.474] 그림 여백 검사 (viewBox 가 실측 기준과 같은가)')
     sys.path.insert(0, os.path.join(HERE, '..', '..', 'tools'))
     import svg_pad
     if not svg_pad._selftest():
         print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
     if not svg_pad.check(os.path.join(HERE, '..', '..', 'docs', 'assets', 'visual')):
-        print('  [!] 도해 여백이 기준과 다릅니다. 배포를 중단합니다.')
+        print('  [!] 그림 여백이 기준과 다릅니다. 배포를 중단합니다.')
         print('      `python tools/svg_pad.py --write docs/assets/visual` 로 맞춥니다')
         sys.exit(1)
 
     # ★ 2026-09-14 신설. 팀장이 「웹에 들어가면 SVG 컬러가 이전 컬러로
-    #   돌아갔다」고 잡았다. 실제로 봤다. 페이지는 다크인데 도해만 라이트였다.
-    #   `<img>` 안의 도해는 격리된 문서라 이 페이지의 data-theme 이 안 닿고,
-    #   도해는 OS 설정만 보고 있었다. 정하는 자리가 둘인데 서로 몰랐던 것.
+    #   돌아갔다」고 잡았다. 실제로 봤다. 페이지는 다크인데 그림만 라이트였다.
+    #   `<img>` 안의 그림은 격리된 문서라 이 페이지의 data-theme 이 안 닿고,
+    #   그림은 OS 설정만 보고 있었다. 정하는 자리가 둘인데 서로 몰랐던 것.
     #   이제 테마마다 파일을 굽고 토글이 갈아끼운다. 여기서 그것을 다시 잰다.
     # 2026-09-14. 「유일본」 항목이 커밋 안 된 채로 있으면 알린다.
     #   배포 절차가 작업 트리를 HEAD 로 되돌리는 순간 그것은 사라지고,
@@ -1079,7 +1079,7 @@ if __name__ == '__main__':
     #   `assets/gnav-head.html` 은 lab 에 없고 배포본에서 뽑아 쓰는 스냅샷인데,
     #   지우지 않으려고 OTHER_MADE 에 넣어 둔 것이 **다시 굽는 것도 막았다.**
     #   그래서 바에 fh-figs 를 넣어도 스냅샷은 옛것이라, 그 스냅샷을 박아 쓰는
-    #   페이지(report-v1)만 다크에서 도해가 안 갈렸다. 오류는 하나도 안 났다.
+    #   페이지(report-v1)만 다크에서 그림이 안 갈렸다. 오류는 하나도 안 났다.
     #
     #   문자열을 찾지 않는다. **지금 배포본에서 다시 뽑아 바이트로 견준다.**
     #   그래서 다음에 바에 무엇이 더 붙어도 이 관문이 같이 잡는다.
@@ -1100,7 +1100,7 @@ if __name__ == '__main__':
     print('  스냅샷 3장 · 낡아서 다시 구운 것 %d장%s'
           % (len(_stale), (': ' + ' · '.join(_stale)) if _stale else ''))
 
-    print('[3.477] 도해 테마 검사 (사이트 토글을 따라오는가)')
+    print('[3.477] 그림 테마 검사 (사이트 토글을 따라오는가)')
     import svg_theme
     _nt, _np, _plate = svg_theme.mark_pages(SITE)
     print('  표시: 테마 짝 %d곳 · 밝은 판 %d곳 (다크 색 미정 %d종)'
@@ -1108,8 +1108,34 @@ if __name__ == '__main__':
     if not svg_theme._selftest():
         print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
     if not svg_theme.check(SITE):
-        print('  [!] 도해가 사이트 테마를 못 따라갑니다. 배포를 중단합니다.')
+        print('  [!] 그림이 사이트 테마를 못 따라갑니다. 배포를 중단합니다.')
         print('      `python tools/svg_theme.py --write` 로 짝을 굽습니다')
+        sys.exit(1)
+
+    # 2026-09-15 팀장 지적: 「자동화 시스템을 갖춰놨다고 했는대도 업데이트가
+    #   안되어있고 죽어있는 문서가 되어있다」. 우리 관문은 「자동화가 돌았나」
+    #   만 봤다. 그건 대리 신호고, 결과는 「화면이 지금을 말하나」다.
+    #   실제로 일정 허브가 9/15 에 「이번 주 W36」 이라 말하고 있었다.
+    print('[3.479] 화면이 말하는 «지금» 이 진짜 지금인가')
+    import stale_check
+    if not stale_check._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    if not stale_check.check(SITE):
+        print('  [!] 화면이 옛 상태를 «지금» 이라 말합니다. 배포를 중단합니다.')
+        sys.exit(1)
+
+    # 2026-09-15. 결과 폴더가 「인용하지 말 것」 이라 적어 두었는데 내가
+    #   CSV 만 읽고 보고서에 실었다. 사람에게 적어 둔 경고는 기계가 안 읽는다.
+    print('[3.4795] 보고서가 인용 금지 자료를 읽나')
+    import no_cite_guard
+    if not no_cite_guard._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    _rep = os.path.join(HERE, '..', '..', 'sim', 'eval', 'report')
+    if not no_cite_guard.check(
+            os.path.join(HERE, '..', '..', 'sim', 'eval', 'results'),
+            [os.path.join(_rep, f) for f in
+             ('measure.py', 'page.py', 'audit.py', 'make_report.py')]):
+        print('  [!] 보고서가 인용 금지 자료를 읽습니다. 배포를 중단합니다.')
         sys.exit(1)
 
     print('[3.475] 영상 규격 검사 (썸네일 · 폰 재생 속성)')
@@ -1118,10 +1144,10 @@ if __name__ == '__main__':
         print('  [!] 영상 규격이 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    print('\n[3.48] 도해 글자 검사 (겹침 · 틀 밖)')
+    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖)')
     import svgtext
     if not svgtext.main(VAULT):
-        print('\n  [!] 도해 안에서 글자가 겹칩니다. 배포를 중단합니다.')
+        print('\n  [!] 그림 안에서 글자가 겹칩니다. 배포를 중단합니다.')
         sys.exit(1)
     print('[3.476] 렌더 검사 (마크다운 문법이 글자로 보이는가)')
     import rendercheck

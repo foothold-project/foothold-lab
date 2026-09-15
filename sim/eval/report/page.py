@@ -33,6 +33,22 @@ ZONES = D["zones"]         # 지형 -> [장애물 구간 시작 m, 끝 m]
 SWEEP = D.get("sweep", {})  # (지형|난이도|속도) -> 성공률 %. 없으면 빈 표
 
 
+_A = lambda t, d, v='1.0': SWEEP.get('A|%s|%s|%s' % (t, d, v))
+_B = lambda t, d, v='1.0': SWEEP.get('B|%s|%s|%s' % (t, d, v))
+_BL = lambda t, d, v='1.0': SWEEP.get('baseline|%s|%s|%s' % (t, d, v))
+_UNSEEN = ["gap", "pit", "rails", "stepping_stones", "floating_ring",
+           "star", "wave", "discrete_obstacles", "repeated_boxes",
+           "repeated_cylinders"]
+
+
+def _avg(model, d, v):
+    """그 모델 · 난이도 · 속도에서 미경험 지형 평균. 없는 칸은 빼고 센다."""
+    vals = [SWEEP[k] for k in
+            ("%s|%s|%s|%s" % (model, t, d, v) for t in _UNSEEN)
+            if k in SWEEP]
+    return sum(vals) / len(vals) if vals else 0.0
+
+
 def worst(key, top=2):
     """그 칸에서 «가장 많은» 실패 조합 몇 개. 성공률만으로 원인을 말하지 않으려는 것."""
     combo = BD[key]["combo"]
@@ -66,7 +82,7 @@ GALLERY = os.environ.get("FOOTHOLD_GALLERY") or os.path.join(
 TINY = os.path.join(GALLERY, "web")
 
 if not os.path.isdir(TINY):
-    raise SystemExit("갤러리 web/ 이 없다: %s. FOOTHOLD_GALLERY 로 지정한다" % TINY)
+    raise SystemExit("갤러리 web/ 이 없다: %s. FOOTHOLD_GALLERY로 지정한다" % TINY)
 
 
 def _video_spec():
@@ -268,6 +284,21 @@ td.mono{font-family:var(--mono);font-size:12px}
 .flat{color:var(--ink-3)}
 figure{margin:24px 0;background:var(--card);border:1px solid var(--line);
   border-radius:14px;padding:20px 20px 14px;overflow:hidden}
+/* 서사 사슬. 번호가 «걸음 순서» 를 뜻하므로 번호를 크게 살린다.
+   .find 는 나란한 발견이라 번호가 라벨이지만, 여기서는 번호가 뜻이다. */
+ol.chain{list-style:none;counter-reset:ch;padding:0;margin:18px 0}
+ol.chain li{counter-increment:ch;position:relative;padding:0 0 0 46px;
+  margin:0 0 18px}
+ol.chain li::before{content:counter(ch,decimal-leading-zero);
+  position:absolute;left:0;top:1px;font-family:var(--mono,monospace);
+  font-size:.82rem;font-weight:700;color:var(--dim);
+  border:1px solid var(--rule);border-radius:99px;
+  width:28px;height:28px;display:grid;place-items:center}
+ol.chain li:not(:last-child)::after{content:"";position:absolute;
+  left:13px;top:32px;bottom:-14px;width:1px;background:var(--rule)}
+/* 첫 <b> 만 걸음 제목이다. 그냥 li>b 로 잡으면 본문 안의 강조까지
+   블록이 되어 「겹치는 것이 0종 / 입니다」 처럼 줄이 끊긴다 (실측). */
+ol.chain li>b:first-child{display:block;margin-bottom:3px}
 figure svg{display:block;width:100%;height:auto}
 /* 2026-09-14. svg 만 있고 img 가 없었다. 07 절 보상 지도가 1000 px 로
    그려져 912 px 짜리 상자에서 오른쪽 109 px 가 잘려 나갔다. 「막는다」의
@@ -313,7 +344,7 @@ SITE_DIR = os.environ.get("FOOTHOLD_SITE") or os.path.abspath(
 
 
 def site_nav():
-    """site 의 전역바를 가져온다.
+    """site의 전역바를 가져온다.
 
     **없으면 웹에서 갤러리로 가는 길이 없다** `확인됨` (2026-09-12 · 127개
     페이지에 있는 전역바가 이 보고서에만 없었다. 팀장이 잡았다).
@@ -333,7 +364,7 @@ def site_nav():
         path = os.path.join(SITE_DIR, "assets", name)
 
         if not os.path.isfile(path):
-            raise SystemExit("assets/%s 가 없다. tools/gnav_extract.py 를 "
+            raise SystemExit("assets/%s가 없다. tools/gnav_extract.py를 "
                              "먼저 돌린다" % name)
 
         got.append(io.open(path, encoding="utf-8").read().strip())
@@ -367,122 +398,243 @@ p.append('<div class="head">'
          '<p>분류: 보고</p>'
          '<p>작성: 오흥재 · 2026-09-11</p>'
          '<p>근거: 지형 16종 x 모델 3 x 속도 3 · %s 에피소드 · 측정 규격 2</p>'
-         '<p>요지: foothold-v1 은 기존 험지를 유지하면서 미경험 험지 gap 을 1 %%에서 100 %%로 올렸다</p>'
-         '<p>상태: 검토중</p></div>' % format(EPISODES, ","))
+         '<p>요지: foothold-v1은 기존 험지를 유지하면서 미경험 험지 gap의 성공률을 1 %%에서 100 %%로 올렸다</p>'
+         '<p>상태: 검토 중</p></div>' % format(EPISODES, ","))
 
 p.append("<h1>FOOTHOLD 종합보고서 1차</h1>")
 p.append('<p class="lead">Unitree Go2 사족보행 정책을 미경험 험지에서 평가한 결과입니다. '
-         '기준선(NVIDIA 공식 체크포인트), 중간 판 A, 그리고 이번 배포 대상인 '
-         'foothold-v1 을 같은 조건에서 비교합니다.</p>')
+         '기준선(NVIDIA 공식 체크포인트), 중간 모델 A, 그리고 이번 배포 대상인 '
+         'foothold-v1(모델 B)을 같은 조건에서 비교합니다.</p>')
+# ★ 2026-09-15 astra 지적. 「미경험 험지」가 세 모델 모두에게 미경험인 것처럼
+#   읽힌다. 그중 다섯은 A 와 v1 이 «학습에 넣은» 지형이다. 첫 등장에 밝힌다.
+p.append('<div class="note">이 보고서에서 <b>「미경험 험지」</b>는 '
+         '기준선(NVIDIA 공식 체크포인트)이 학습하지 않은 지형 10종을 뜻합니다. '
+         '그중 다섯 종(<span class="mono">gap · pit · rails · '
+         'stepping_stones · floating_ring</span>)은 <b>A와 foothold-v1의 학습에 '
+         '포함했습니다.</b> 따라서 「미경험」은 기준선에만 해당하는 분류입니다.</div>')
 
-# ── 0 · 이번에 얻은 것 ────────────────────────────────────────────────
-# ★ 2026-09-14 팀장 지시: 「맨 위에는 가장 핵심 이번 보고서에서 우리가 얻은
-#   것과 중요한 것들을 먼저 이야기 하고 풀어가야하는 것이 맞지 않을까?」
-#   맞다. 「01 한 줄」은 요약이지 «얻은 것» 이 아니었다.
+# ── 0 · 이번에 한 일 (서사 사슬) ───────────────────────────────────────
+# ★ 2026-09-15 팀장 지시: 「우선 우리가 학습 설계와 레시피를 소개해야할 것 같아
+#   ... 전체 서사가 눈에 확 들어오고서 보고서형태의 흐름이 가면 좋을 것 같다」
 #
-#   여기 수는 전부 아래 절에서 다시 나온다. 새로 만든 것이 하나도 없다.
-#   각 줄 끝의 «-> N» 이 그 근거가 있는 절이다.
-p.append('<h2><span class="n">00</span>이번에 얻은 것</h2>')
-p.append('<p>다섯 줄입니다. 각 줄의 근거는 뒤 절에 있습니다.</p>')
+#   맞다. 전에는 «결과» 다섯 줄로 시작했다. 결과는 «왜 그렇게 했나» 없이는
+#   읽히지 않는다. 사슬을 먼저 놓고 그 뒤에 결과를 둔다.
+#
+#   각 칸의 수는 전부 아래 절에서 다시 나온다. 새로 만든 것이 없다.
+p.append('<h2><span class="n">00</span>이번에 한 일</h2>')
+p.append('<p>진행 과정은 다음 여섯 단계입니다. 각 단계의 근거는 연결된 절에서 설명합니다.</p>')
 
-_sw = lambda t, d, v='1.0': SWEEP.get('%s|%s|%s' % (t, d, v))
-_easy = lambda t: _sw(t, '0.02')
+_A = lambda t, d, v='1.0': SWEEP.get('A|%s|%s|%s' % (t, d, v))
+_B = lambda t, d, v='1.0': SWEEP.get('B|%s|%s|%s' % (t, d, v))
+_BL = lambda t, d, v='1.0': SWEEP.get('baseline|%s|%s|%s' % (t, d, v))
+
+_steps = [
+    ('학습 지형에 구멍이 없었다',
+     'NVIDIA 공식 체크포인트가 학습한 지형에는 구멍이 있는 지형이 없습니다 '
+     '(<span class="mono">holes=False</span> · 코드에서 확인). '
+     '평가에 쓴 신규 지형 10종은 <b>그 학습 지형에 하나도 들어 있지 않습니다.</b>', '02'),
+    ('그래서 <span class="mono">gap</span>을 10 % 섞었다',
+     '신규 5종(<span class="mono">gap · pit · rails · stepping_stones · '
+     'floating_ring</span>)의 비중을 각각 0.1로 '
+     '넣었습니다. 신규 5종에 학습 지형 비중의 50 %를 배정하고, 기존 험지 6종에 '
+     '나머지 50 %를 남겼습니다. <b>기존 험지의 성공률을 지키기 위해서입니다.</b>', '03'),
+    ('100 iteration만 먼저 돌려 가능성을 봤다',
+     '사전학습 체크포인트를 불러온 뒤 학습 지형에 <span class="mono">gap</span>을 추가해 '
+     '<b>학습 반복(iteration) 100회</b>만 더 돌렸습니다. 기존 험지 6종의 '
+     '성공률이 유지되는지 먼저 확인한 것입니다. <b>그 결과를 바탕으로</b> '
+     '학습 지형의 비중을 그대로 두고 <b>A와 B를 각각 1,500회 학습</b>했습니다.', '03'),
+    ('그런데 학습한 틈 폭이 평가 조건보다 좁았다',
+     '모델 <b>A</b>는 폭 0.05 ~ 0.20 m의 틈에서 학습했습니다. '
+     '기준 평가 조건(난이도 0.5)의 틈 폭은 <b>0.275 m</b>입니다. '
+     'A의 <span class="mono">gap</span> 성공률은 난이도 0.3까지 100 %%, '
+     '0.5에서 <b>%s %%</b>입니다. '
+     '<b>평가의 틈 폭이 학습 범위를 벗어난 것이 실패 원인인지는 아직 확인하지 못했습니다.</b>', '07'),
+    ('학습 범위를 평가 범위와 똑같이 맞췄다',
+     '모델 <b>B</b>는 폭 0.15 ~ 0.40 m의 틈에서 학습했습니다. 평가 하네스의 '
+     '<span class="mono">gap_width_range</span>와 <b>같은 값</b>입니다. '
+     'A와 B는 <b>학습 설정 두 줄만</b> 다릅니다.', '03'),
+    ('B를 <span class="mono">foothold-v1</span>로 배포한다',
+     '<b>명령 속도 1.0 m/s로 평가한</b> 난이도 0.1~1.0의 10개 조건 모두에서 '
+     '<span class="mono">gap</span>의 종합 성공률이 <b>100 %</b>이고, '
+     '기존 험지 6종에서도 성공률이 낮아진 지형은 없습니다. '
+     '다른 속도는 08절에 따로 있습니다.', '05'),
+]
+
+p.append('<ol class="chain">')
+for _i, (_t, _b, _to) in enumerate(_steps, 1):
+    _body = _b
+    if '%s %%' in _body:
+        _body = _body % ('%.0f' % (_A('gap', '0.5') or 0))
+    p.append('<li><b>%s</b><br>%s <span class="to">-> %s</span></li>'
+             % (_t, _body, _to))
+p.append('</ol>')
+
+# ── 1 · 무엇을 얻었나 ─────────────────────────────────────────────────
+# ★ 2026-09-15. 수치를 «규격 2» 스윕에서 다시 읽는다. 전에는 결함 규격으로 잰
+#   `20260910-difficulty-sweep` 을 읽었고, 게다가 그것은 **NVIDIA 기준선** 숫자인데
+#   모델을 안 밝히고 우리 정책 이야기 뒤에 붙였다. 둘이 한꺼번에 틀렸다.
+#   관문 `tools/no_cite_guard.py` 가 이제 그 폴더를 읽으면 세운다.
+p.append('<h2><span class="n">01</span>무엇을 얻었나</h2>')
+p.append('<p>주요 결과는 다섯 가지입니다. 모두 측정 규격 2를 적용했고, '
+         '모델과 평가 조건을 함께 적었습니다.</p>')
 
 p.append('<ol class="find">')
 
-# 1 · gap 을 열었다
-p.append('<li><b>미경험 험지 <span class="mono">gap</span> 을 열었습니다.</b> '
-         '정본 조건(난이도 0.5 · 1.0 m/s · 지형마다 100 에피소드)에서 '
-         '기준선 %.0f %% 에서 foothold-v1 %.0f %% 입니다. '
-         '기존 험지 6종은 하나도 안 무너졌습니다. <span class="to">-> 03 · 04</span></li>'
+p.append('<li><b>미경험 험지 <span class="mono">gap</span>의 성공률을 크게 높였습니다.</b> '
+         '기준 평가 조건(난이도 0.5 · 명령 속도 1.0 m/s · 지형마다 100 에피소드)에서 '
+         '성공률은 기준선 %.0f %%, foothold-v1 %.0f %%입니다. '
+         '난이도를 1.0까지 올려도 <b>100 %%</b>입니다. '
+         '<span class="to">-> 05 · 07</span></li>'
          % (g("gap", "baseline", "1"), g("gap", "foothold-v1", "1")))
 
-# 2 · 기준선은 학습 분포 «안» 에서도 무너진다
-p.append('<li><b>기준선은 학습한 지형에서도 무너집니다.</b> '
-         '<span class="mono">pyramid_stairs_inv</span> %.0f %% · '
-         '<span class="mono">boxes</span> %.0f %% 입니다. '
-         '「미경험이라 못 한다」로는 설명이 안 됩니다. <span class="to">-> 03</span></li>'
-         % (g("pyramid_stairs_inv", "baseline", "1"), g("boxes", "baseline", "1")))
+p.append('<li><b>A의 학습 범위는 기준 평가의 틈 폭을 포함하지 않았습니다.</b> '
+         'A(0.05~0.20 m)의 <span class="mono">gap</span> 성공률은 난이도 0.3까지 %.0f %%를 '
+         '지키다가 0.5에서 <b>%.0f %%</b>로 떨어집니다. B(0.15~0.40 m)는 같은 조건에서 '
+         '<b>%.0f %%</b>입니다. 평가의 틈은 0.275 m입니다. '
+         '<span class="to">-> 03 · 07</span></li>'
+         % (_A('gap', '0.3') or 0, _A('gap', '0.5') or 0, _B('gap', '0.5') or 0))
 
-# 3 · 실패는 능력의 바닥이 아니라 난이도의 값이다
-p.append('<li><b>실패 다섯 중 넷은 «못 하는 것» 이 아니라 «이 난이도에서 못 하는 것» '
-         '입니다.</b> 난이도를 0.02 까지 내리면 '
-         '<span class="mono">rails</span> %.0f %% · '
-         '<span class="mono">pit</span> %.0f %% · '
-         '<span class="mono">stepping_stones</span> %.0f %% · '
-         '<span class="mono">gap</span> %.0f %% 로 돌아옵니다. '
-         '<span class="mono">floating_ring</span> 하나만 가장 쉬운 칸에서도 0 %% 라 '
-         '난이도 축의 문제가 아닙니다. <span class="to">-> 05</span></li>'
-         % (_easy('rails'), _easy('pit'), _easy('stepping_stones'), _easy('gap')))
+p.append('<li><b>기존 험지 6종 중 3종은 성공률이 올랐고 나머지 3종은 100 %%를 지켰습니다.</b> '
+         '난이도 0.5 · 1.0 m/s에서 <span class="mono">boxes</span> %.0f -> %.0f %% · '
+         '<span class="mono">pyramid_stairs_inv</span> %.0f -> %.0f %% · '
+         '<span class="mono">random_rough</span> %.0f -> %.0f %%로 올랐고, '
+         '나머지 셋은 100 %%를 지켰습니다. <b>기준선은 학습에 포함된 지형에서도 '
+         '일부 성공률이 낮았습니다.</b> <span class="to">-> 05</span></li>'
+         % (_BL('boxes', '0.5') or 0, _B('boxes', '0.5') or 0,
+            _BL('pyramid_stairs_inv', '0.5') or 0, _B('pyramid_stairs_inv', '0.5') or 0,
+            _BL('random_rough', '0.5') or 0, _B('random_rough', '0.5') or 0))
 
-# 4 · 느리게 가는 것이 더 안전하지 않다
-p.append('<li><b>천천히 가는 것이 더 안전하지 않습니다.</b> 같은 난이도(0.1)에서 '
-         '명령 속도를 1.0 에서 0.5 m/s 로 낮추면 다섯 지형이 모두 떨어집니다 '
-         '(<span class="mono">rails</span> %.0f -> %.0f · '
-         '<span class="mono">pit</span> %.0f -> %.0f). '
-         '학습 속도에서 멀어지면 양쪽 다 나빠집니다. <span class="to">-> 06</span></li>'
-         % (_sw('rails', '0.1', '1.0'), _sw('rails', '0.1', '0.5'),
-            _sw('pit', '0.1', '1.0'), _sw('pit', '0.1', '0.5')))
+p.append('<li><b>1.5 m/s에서 기준선과 foothold-v1의 성공률 차이가 큽니다.</b> 미경험 10종 · 난이도 0.1에서 '
+         '명령 속도를 1.5 m/s로 올리면 기준선의 평균 종합 성공률이 <b>%.0f %%</b>인데 '
+         'foothold-v1은 <b>%.0f %%</b>를 지킵니다. '
+         '<span class="to">-> 08</span></li>'
+         % (_avg('baseline', '0.1', '1.5'), _avg('B', '0.1', '1.5')))
 
-# 5 · 성공률 한 수로는 원인이 안 보인다
-p.append('<li><b>성공률 한 수로는 «왜» 가 안 보입니다.</b> '
-         '<span class="mono">rails</span> 는 정본 조건에서 %.0f %% 인데, '
-         '떨어진 에피소드의 대부분이 넘어져서가 아니라 <b>방향 축</b> 에서 '
-         '탈락합니다. 네 축을 갈라야 처방이 갈립니다. <span class="to">-> 07</span></li>'
+p.append('<li><b>성공률 숫자 하나로는 실패 양상이 안 드러납니다.</b> '
+         '<span class="mono">rails</span>는 기준 평가 조건에서 %.0f %%인데, '
+         '실패한 에피소드 중 상당수는 <b>방향 기준</b>만 충족하지 못했습니다. 개선 방향을 정하려면 네 평가 항목을 나눠 봐야 합니다. '
+         '<span class="to">-> 09</span></li>'
          % g("rails", "foothold-v1", "1"))
 
 p.append('</ol>')
 
 # ── 1 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">01</span>한 줄</h2>')
+p.append('<h3>핵심 결과</h3>')
 
 gap_base = g("gap", "baseline", "1")
 gap_v1 = g("gap", "foothold-v1", "1")
-p.append('<p><strong>foothold-v1 은 기존 험지 6종의 성적을 유지하거나 끌어올리면서, '
-         '미경험 험지 <span class="mono">gap</span> 의 성공률을 (난이도 0.5 · 1.0 m/s · 100 에피소드 기준) %.0f %%에서 %.0f %%로 '
-         '올렸습니다.</strong> 다만 <span class="mono">stepping_stones</span> 는 세 모델 '
-         '모두 0 %% 이고, <span class="mono">rails</span> 는 %.0f %% 에 머뭅니다.</p>'
+p.append('<p><strong>foothold-v1은 기존 험지 6종의 성적을 유지하거나 끌어올리면서, '
+         '미경험 험지 <span class="mono">gap</span>의 성공률을 (난이도 0.5 · 1.0 m/s · 100 에피소드 기준) %.0f %%에서 %.0f %%로 '
+         '올렸습니다.</strong> 다만 <span class="mono">stepping_stones</span>는 세 모델 '
+         '모두 0 %%이고, <span class="mono">rails</span>는 %.0f %%에 머뭅니다.</p>'
          % (gap_base, gap_v1, g("rails", "foothold-v1", "1")))
 
 p.append('<p>아래는 그 주장의 근거입니다. 같은 지형, 같은 속도, 같은 난수에서 '
          '세 모델이 무엇을 하는지 보십시오.</p>')
 p.append(clips([
     ("gap-v1-baseline", "기준선 NVIDIA",
-     "이 자리 성공 %d/%d. <strong>이 시연 한 에피소드에서는</strong> 앞다리가 틈에 "
+     "이 조건의 평가 성공: %d/%d. <strong>별도로 촬영한 이 시연에서는</strong> 앞다리가 틈에 "
      "빠지고 몸통이 가장자리에 걸립니다. 100 에피소드가 모두 그렇다는 뜻은 아닙니다"
      % (BD["gap|baseline|1"]["win"], BD["gap|baseline|1"]["n"])),
-    ("gap-v1-A", "A · 연습 틈 0.05~0.20 m",
-     "이 자리 성공 %d/%d. 시험 틈은 0.275 m 로 연습 범위 밖입니다. "
-     "그것이 원인인지는 아직 안 갈라냈습니다(미확인)"
+    ("gap-v1-A", "A · 학습 틈 폭 0.05~0.20 m",
+     "이 조건의 평가 성공: %d/%d. 평가 틈 폭은 0.275 m로 A의 학습 범위 밖입니다. "
+     "학습 범위를 벗어난 틈 폭이 실패 원인인지는 아직 확인하지 못했습니다(미확인)"
      % (BD["gap|A|1"]["win"], BD["gap|A|1"]["n"])),
     ("gap-v1", "foothold-v1",
-     "이 자리 성공 %d/%d. 이 시연에서는 뒷발이 가장자리를 딛고 앞발이 먼저 "
+     "이 조건의 평가 성공: %d/%d. 이 시연에서는 뒷발이 가장자리를 딛고 앞발이 먼저 "
      "건넙니다" % (BD["gap|foothold-v1|1"]["win"], BD["gap|foothold-v1|1"]["n"])),
 ]))
 
 # ── 2 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">02</span>비교 대상</h2>')
+# ── 2 · 왜 gap 이었나 ─────────────────────────────────────────────────
+p.append('<h2><span class="n">02</span>왜 <span class="mono">gap</span> 이었나</h2>')
+p.append('<p><span class="mono">gap</span>을 고른 까닭은 '
+         '<b>기준선의 학습 지형에 구멍이 없었기 때문</b>입니다.</p>')
+p.append('<p>NVIDIA 공식 체크포인트가 학습한 지형은 여섯 종입니다. 코드에서 확인한 설정은 '
+         '계단 두 종 모두 <span class="mono">holes=False</span>이고 '
+         '<span class="mono">boxes</span>도 기본값이 <span class="mono">False</span>'
+         '입니다. <b>학습 지형에는 바닥이 뚫린 구간이 없습니다.</b></p>')
+p.append('<div class="note"><b>높이 스캔은 광선으로 바닥까지의 거리를 잽니다.</b> '
+         '<span class="mono">gap</span> 평가에서는 일부 광선이 지형에 닿지 않았습니다. '
+         '기준선의 학습 지형 여섯 종은 평가 10종과 <b>겹치는 것이 0종</b>입니다 '
+         '(지형 «종류» 기준). <b>학습 중에도 같은 관측값이 나왔는지, 정책이 그 값을 '
+         '어떻게 처리하는지는 확인하지 못했습니다.</b></div>')
+p.append('<p>이번에는 대응 방법으로 구멍이 있는 지형 '
+         '(<span class="mono">gap</span>)을 학습에 추가했습니다.</p>')
+
+# ── 3 · 레시피 ────────────────────────────────────────────────────────
+p.append('<h2><span class="n">03</span>레시피 · A와 B는 두 줄만 다릅니다</h2>')
+p.append('<p>신규 5종을 각 <span class="mono">proportion 0.1</span>로 섞었습니다. '
+         '기존 험지의 성능을 지키면서 새 지형도 학습하도록 정한 비중입니다. '
+         '먼저 학습을 <b>100회</b> 반복해 기존 험지의 성공률이 유지되는지 확인했고, '
+         '그 뒤 1,500 iteration으로 두 차례 돌렸습니다.</p>')
+p.append('<div class="tw"><table><thead><tr>'
+         '<th>모델</th><th>학습한 틈 폭</th><th>iteration</th>'
+         '<th class="num">gap 난이도 0.5</th><th class="num">gap 난이도 1.0</th>'
+         '</tr></thead><tbody>'
+         '<tr><td class="mono">기준선 NVIDIA</td><td>없음</td><td class="num">1,500</td>'
+         '<td class="num">%.0f %%</td><td class="num">%.0f %%</td></tr>'
+         '<tr><td class="mono">A</td><td>0.05 ~ 0.20 m</td><td class="num">1,500</td>'
+         '<td class="num">%.0f %%</td><td class="num">%.0f %%</td></tr>'
+         '<tr><td class="mono">B = foothold-v1</td><td><b>0.15 ~ 0.40 m</b></td>'
+         '<td class="num">1,500</td>'
+         '<td class="num"><b>%.0f %%</b></td><td class="num"><b>%.0f %%</b></td></tr>'
+         '</tbody></table></div>'
+         % (_BL('gap', '0.5') or 0, _BL('gap', '1.0') or 0,
+            _A('gap', '0.5') or 0, _A('gap', '1.0') or 0,
+            _B('gap', '0.5') or 0, _B('gap', '1.0') or 0))
+p.append('<p class="cap">gap의 종합 성공률 · 명령 속도 1.0 m/s · '
+         '조건마다 100 에피소드 · 규격 2.</p>')
+# ★ 2026-09-15 팀장 지시: 「도식화, 곡선 등 추가되어야하는 부분이 있다면」.
+#   이야기의 척추가 표로만 있었다. 두 범위와 한 점의 관계는 «자 위에» 놓아야
+#   한눈에 들어온다. `tools/make_range_fig.py` 가 굽는다 (자기시험 8/8).
+p.append('<figure class="mdimg"><img src="assets/visual/eval-v2-range.svg" '
+         'alt="A와 B가 학습한 틈 폭 범위를 평가의 틈 범위와 한 자에 놓은 그림" '
+         'loading="lazy">'
+         '<figcaption>그림 · A와 B의 학습 틈 폭 범위와 기준 평가의 틈 폭을 같은 눈금에 '
+         '표시했습니다. A가 학습한 최대 틈 폭은 0.20 m로, 기준 평가의 0.275 m보다 '
+         '0.075 m 좁습니다</figcaption></figure>')
+p.append('<div class="note"><b>학습을 재현하는 데 필요한 정보 두 가지를 '
+         '저장소에서 찾지 못했습니다.</b>'
+         '<br>하나 · <b>A와 B가 어디서 출발했는지.</b> 공식 체크포인트에서 '
+         '각각 시작했는지, 100회 추가 학습한 모델에서 이어서 학습했는지, B가 A를 이어받았는지 '
+         '실행 기록에 없습니다. <span class="mono">미확인</span>'
+         '<br>둘 · <b>「두 줄」이 정확히 어느 설정인지.</b> 평가 기준 문서에 '
+         '「폭 두 줄만 다르다」고 적혀 있는데, 이 보고서에 명시된 설정은 틈 폭 범위 하나뿐입니다. '
+         '<span class="mono">미확인</span>'
+         '<br>두 항목 모두 이슈로 등록했습니다. 실행 기록을 확인하면 이 절에 보완하겠습니다.</div>')
+p.append('<p><b>왜 범위를 바꿨나.</b> 평가 하네스에 설정된 틈 폭 범위는 '
+         '<span class="mono">gap_width_range=(0.15, 0.40)</span>이고, '
+         '기준 평가 조건인 난이도 0.5에서 실제 틈은 <b>0.275 m</b>입니다. '
+         'A가 학습한 최대 틈 폭은 0.20 m이므로 <b>기준 평가의 틈 폭은 A의 학습 범위 밖입니다.</b> '
+         'B는 학습 범위를 평가 범위와 같게 두었습니다. '
+         '그 두 줄 말고 나머지 학습 설정은 A와 같습니다.</p>')
+
+p.append('<h2><span class="n">04</span>비교 대상</h2>')
 p.append('<div class="tw"><table><thead><tr><th>이름</th><th>무엇인가</th>'
-         '<th>연습한 틈 폭</th><th>출처</th></tr></thead><tbody>'
+         '<th>학습한 틈 폭</th><th>출처</th></tr></thead><tbody>'
          '<tr><td class="mono">기준선 NVIDIA</td><td>Isaac Lab 공식 Go2 험지 체크포인트</td>'
          '<td class="mono">없음</td><td class="mono">.pretrained_checkpoints</td></tr>'
-         '<tr><td class="mono">A</td><td>기존 험지 6종 재학습 · 틈 연습 추가</td>'
+         '<tr><td class="mono">A</td><td>기존 험지 6종 재학습 · 틈 학습 추가</td>'
          '<td class="mono">0.05 ~ 0.20 m</td><td class="mono">model_1500.pt</td></tr>'
          '<tr><td class="mono">foothold-v1</td><td>틈 폭을 넓혀 재학습</td>'
          '<td class="mono">0.15 ~ 0.40 m</td><td class="mono">models/foothold-v1.pt</td></tr>'
          '</tbody></table></div>')
-p.append('<p>세 모델 모두 같은 평가 하네스, 같은 난수(seed 42), 같은 난이도(0.5)로 '
-         '측정했습니다. 지형마다 100 에피소드입니다.</p>')
+p.append('<p><b>기준 성적표</b>는 세 모델을 같은 평가 하네스 · 같은 난수(seed 42) · '
+         '난이도 0.5 · 명령 속도 1.0 m/s에서 비교한 것입니다. 지형마다 100 에피소드입니다. '
+         '다른 속도의 기준 평가는 05절에, 난이도별 결과는 07절에, '
+         '난이도 0.1의 속도 비교는 08절에 있습니다.</p>')
 
 # ── 3 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">03</span>성적표</h2>')
+p.append('<h2><span class="n">05</span>성적표</h2>')
 p.append('<p>난이도 0.5, 명령 속도 1.0 m/s, 지형마다 100 에피소드에서의 성공률입니다. '
-         '성공은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND 입니다.</p>')
+         '생존 · 전진 · 속도추종 · 방향의 네 평가 기준을 모두 충족해야 성공으로 판정합니다.</p>')
 p.append('<figure>%s<figcaption>지형 16종 x 모델 3 · 난이도 0.5 · 1.0 m/s · '
          '지형마다 100 에피소드. 칸 안의 수가 성공률이고 진할수록 높습니다.</figcaption></figure>'
          % MATRIX)
 
-p.append("<h3>속도별 전수</h3>")
+p.append("<h3>속도별 전체 결과</h3>")
+p.append('<p class="cap">난이도 0.5 · 명령 속도 m/s · 종합 성공률 % · 지형마다 100 에피소드.</p>')
 p.append('<div class="tw"><table><thead><tr><th rowspan="2">지형</th>')
 for _m, label in MODELS:
     p.append('<th class="num grp" colspan="3">%s</th>' % label)
@@ -504,12 +656,12 @@ for tset, label in SETS:
 p.append("</tbody></table></div>")
 
 # ── 4 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">04</span>무엇이 달라졌나</h2>')
+p.append('<h2><span class="n">06</span>무엇이 달라졌나</h2>')
 
-p.append("<h3>기존 험지는 무너지지 않았습니다</h3>")
-p.append('<div class="tw"><table><thead><tr><th>집합</th><th>속도</th>'
+p.append("<h3>기존 험지의 성공률은 유지하거나 높였습니다</h3>")
+p.append('<div class="tw"><table><thead><tr><th>지형 집합</th><th>속도</th>'
          '<th class="num">기준선</th><th class="num">A</th>'
-         '<th class="num">foothold-v1</th><th class="num">기준선 대비</th>'
+         '<th class="num">foothold-v1</th><th class="num">기준선 대비 (%p)</th>'
          '</tr></thead><tbody>')
 for tset, label in SETS:
     for v in SPEEDS:
@@ -522,14 +674,15 @@ for tset, label in SETS:
                  % (label, v, fmt(b, 1), fmt(a, 1), fmt(c, 1), cls,
                     "+" if (d or 0) > 0 else "", fmt(d, 1)))
 p.append("</tbody></table></div>")
-p.append('<p>집합별 지형 평균입니다. 기존 험지 6종에서 foothold-v1 은 세 속도 모두 '
-         '기준선을 웃돕니다. 특히 1.5 m/s 에서 기준선은 평균 %.1f %% 인데 '
-         'foothold-v1 은 %.1f %% 입니다.</p>'
+p.append('<p>각 지형 집합의 평균 종합 성공률입니다. 기존 험지 6종에서 foothold-v1은 세 속도 모두 '
+         '기준선을 웃돕니다. 특히 1.5 m/s에서 기준선은 평균 %.1f %%인데 '
+         'foothold-v1은 %.1f %%입니다.</p>'
          % (avg("rough6", "baseline", "1.5"), avg("rough6", "foothold-v1", "1.5")))
 
-p.append("<h3>기준선은 1.5 m/s 를 따라가지 못합니다</h3>")
-p.append('<p>1.5 m/s 에서 기준선이 실패한 에피소드를 <strong>에피소드마다</strong> 갈랐습니다. '
-         '축별 합계로는 어느 에피소드가 어느 축에서 떨어졌는지 알 수 없어, 각 에피소드의 네 축을 '
+p.append("<h3>기준선의 1.5 m/s 실패는 속도추종 축에 몰려 있습니다</h3>")
+p.append('<p>명령 속도 1.5 m/s에서 기준선이 실패한 각 에피소드를, '
+         '<strong>충족하지 못한 평가 항목의 조합</strong>에 따라 분류했습니다. '
+         '축별 합계로는 어느 에피소드가 어느 항목을 못 채웠는지 알 수 없어, 각 에피소드의 네 항목을 '
          '모두 보고 분류했습니다.</p>')
 
 bad4 = [(t, AXES[(t, "baseline")]) for t in TERR
@@ -537,7 +690,7 @@ bad4 = [(t, AXES[(t, "baseline")]) for t in TERR
 
 p.append('<div class="tw"><table><thead><tr><th>지형</th><th class="num">실패 에피소드</th>'
          '<th class="num">속도추종만</th><th class="num">속도추종+1축</th>'
-         '<th class="num">속도추종+2축 이상</th><th class="num">속도추종 무관</th>'
+         '<th class="num">속도추종+2축 이상</th><th class="num">속도추종 통과 · 다른 항목 실패</th>'
          '<th class="num">foothold-v1 성공률</th></tr></thead><tbody>')
 sum_only = sum_one = sum_many = sum_other = sum_failed = 0
 for t, a in sorted(bad4, key=lambda x: -x[1]["tracking_only"]):
@@ -559,62 +712,68 @@ p.append('<tr><td><strong>합계</strong></td><td class="num"><strong>%d</strong
 p.append("</tbody></table></div>")
 
 p.append('<p>난이도 0.5, 지형마다 100 에피소드입니다. 실패한 %d 에피소드 가운데 '
-         '<strong>%d 에피소드(%.0f %%)은 속도추종 축에서만 떨어졌습니다.</strong> '
+         '<strong>에피소드 %d개(%.0f %%)는 속도추종 기준만 충족하지 못했습니다.</strong> '
          '나머지 세 축은 통과했다는 뜻이고, 그 에피소드에서 로봇은 넘어지지 않고 '
-         '통과선도 넘었습니다. 명령 1.5 m/s 를 주었는데 그보다 느리게 간 것입니다.</p>'
+         '통과선도 넘었습니다. <b>속도추종 기준은 평면 평균 오차 0.25 m/s이고 '
+         '이 오차에는 전후 방향뿐 아니라 좌우 방향 오차도 들어갑니다.</b> 그래서 이 항목의 탈락을 «명령보다 '
+         '느리게 갔다»로 읽으면 안 됩니다. 잰 것은 오차가 한계를 넘었다는 '
+         '점입니다.</p>'
          % (sum_failed, sum_only, 100.0 * sum_only / sum_failed))
 # 네 갈래를 «다» 적는다. 합이 실패 에피소드 수와 맞는 것이 보여야 한다.
 # 「두 축 이상」은 속도추종을 포함해 세는지 아닌지가 중의적이라 쓰지 않는다.
 p.append('<p>나머지 %d 에피소드는 이렇게 갈립니다. '
-         '속도추종 <strong>말고 한 축이 더</strong> 떨어진 에피소드가 %d, '
-         '<strong>두 축 이상이 더</strong> 떨어진 에피소드가 %d 입니다. '
-         '속도추종이 통과했는데 실패한 에피소드는 %d 입니다. '
-         '넷을 더하면 %d 로 실패 에피소드 수와 같습니다.</p>'
+         '속도추종 <strong>외에 다른 항목 하나도</strong> 충족하지 못한 에피소드가 %d, '
+         '<strong>두 축 이상이 더</strong> 떨어진 에피소드가 %d입니다. '
+         '속도추종 기준을 충족했지만 다른 기준 때문에 실패한 에피소드는 %d입니다. '
+         '네 범주를 더하면 %d로 전체 실패 에피소드 수와 같습니다.</p>'
          % (sum_failed - sum_only, sum_one, sum_many, sum_other,
             sum_only + sum_one + sum_many + sum_other))
 p.append('<p>두 축 이상이 더 떨어진 %d 에피소드는 '
          '<span class="mono">floating_ring</span> · '
          '<span class="mono">stepping_stones</span> · <span class="mono">gap</span> · '
-         '<span class="mono">pyramid_stairs_inv</span> 에 몰려 있고, '
+         '<span class="mono">pyramid_stairs_inv</span>에 몰려 있고, '
          '그 지형에서는 실제로 넘어지거나 통과선까지 못 갔습니다.</p>' % sum_many)
 p.append('<div class="note"><p><strong>이 표를 「기준선이 고속 험지에서 무너진다」로 '
-         '읽으면 과장입니다.</strong> 대부분은 넘어지지 않고 더 느리게 걸을 뿐입니다. '
-         '자료가 말하는 것은 <strong>기준선에 1.5 m/s 를 시켜도 그 속도가 안 나온다</strong>는 '
-         '것입니다. foothold-v1 도 <strong>모든 지형에서 그 속도를 내는 것은 아닙니다.</strong> '
-         '같은 조건에서 속도추종 축을 통과한 에피소드가 %s / %s 이고, '
-         '<span class="mono">stepping_stones</span> 는 %d/%d, '
-         '<span class="mono">rails</span> 는 %d/%d 입니다.</p>'
-         '<p>이 관측은 시뮬레이션 안의 것입니다. 실기에서 같은 일이 일어나는지는 '
+         '읽으면 과장입니다.</strong> 대부분은 생존 · 전진 · 방향을 통과하고 '
+         '속도추종 축에서만 떨어집니다. <b>이 표만으로는 속도 부족과 좌우 오차의 '
+         '몫을 가를 수 없습니다.</b> '
+         '<strong>기준선의 실패 에피소드는 모두 속도추종 축에서도 떨어졌습니다.</strong> '
+         'foothold-v1도 <strong>모든 에피소드에서 이 축을 통과하지는 않습니다.</strong> '
+         '같은 조건에서 속도추종 축을 통과한 에피소드가 %s / %s이고, '
+         '<span class="mono">stepping_stones</span>는 %d/%d, '
+         '<span class="mono">rails</span>는 %d/%d입니다.</p>'
+         '<p>이 결과는 시뮬레이션에서 얻었습니다. 실제 로봇에서도 같은 결과가 나오는지는 '
          '재보지 않았습니다(미확인).</p></div>'
          % (f"{TR15['pass']:,}", f"{TR15['n']:,}",
             TR15["per"]["stepping_stones"][0], TR15["per"]["stepping_stones"][1],
             TR15["per"]["rails"][0], TR15["per"]["rails"][1]))
 
 p.append('<p>같은 지형(<span class="mono">wave</span>)을 1.5 m/s 명령으로 걷는 장면입니다. '
-         '<strong>셋 다 넘어지지 않습니다.</strong> 기준선은 그 속도가 안 나와서 '
-         '속도추종 축에서 떨어집니다.</p>')
+         '<strong>셋 다 넘어지지 않습니다.</strong> 기준선 시연의 trace를 평가 방식으로 '
+         '다시 계산하면 평면 평균 오차가 기준을 벗어나 '
+         '속도추종 기준을 못 채웁니다.</p>')
 p.append('<div class="note"><p><strong>영상은 평가 에피소드 자체가 아닙니다.</strong> '
          '같은 체크포인트·지형·난이도·난수로 <strong>따로 촬영한 한 에피소드</strong>이고, '
          '성적표의 100 에피소드 중 하나를 꺼낸 것이 아닙니다. 옆의 성공률은 그 자리의 '
          '100 에피소드 집계이고, 영상은 같은 조건에서 로봇이 무엇을 하는지 보여 줍니다.</p>'
-         '<p><strong>HUD 의 추종 표시는 평가의 속도추종 판정과 다른 계산입니다.</strong> '
-         'HUD 는 그 시점까지의 <strong>전후 방향</strong> 오차 '
-         '<span class="mono">abs(vx - 명령속도)</span> 의 누적 평균을 보여 줍니다. '
+         '<p><strong>HUD의 추종 표시는 평가의 속도추종 판정과 다른 계산입니다.</strong> '
+         'HUD는 그 시점까지의 <strong>전후 방향</strong> 오차 '
+         '<span class="mono">abs(vx - 명령속도)</span>의 누적 평균을 보여 줍니다. '
          '평가는 전후와 좌우를 합친 <strong>평면</strong> 오차를 누적합니다. '
-         '판정 한계 0.25 m/s 를 사이에 두고 갈리기도 합니다. 기준선 1.5 m/s '
-         '시연 세 편의 trace 를 다시 재 보면 전후 오차는 0.18~0.24 로 한계 안이고 '
-         '같은 표본의 평면 오차는 0.25~0.30 으로 한계 밖입니다 '
+         '판정 한계 0.25 m/s를 사이에 두고 갈리기도 합니다. 기준선 1.5 m/s '
+         '시연 세 편의 trace를 다시 재 보면 전후 오차는 0.18~0.24로 한계 안이고 '
+         '같은 표본의 평면 오차는 0.25~0.30으로 한계 밖입니다 '
          '(<span class="mono">repeated_boxes</span> · '
          '<span class="mono">repeated_cylinders</span> · '
          '<span class="mono">wave</span>). '
-         '<strong>HUD 를 보고 판정을 역산하지 마십시오.</strong></p>'
+         '<strong>HUD를 보고 판정을 역산하지 마십시오.</strong></p>'
          '<p>영상은 %s 초당 %s장이고, 지형이 끝나는 자리까지만 잘랐습니다. '
          '초당 장수는 임의값이 아니라 <strong>정책이 결정을 내리는 주기</strong>입니다 '
          '(물리 200 Hz · 4스텝에 결정 1번 · 결정 1번에 프레임 1장).</p></div>'
          % (VIDEO_SIZE, VIDEO_FPS))
 p.append(clips([
     ("wave-v1.5-baseline", "기준선 NVIDIA · 1.5 m/s 명령",
-     "종합 0 %. 생존 100 · 전진 100 · <strong>속도추종 0</strong>. 넘어진 것이 아니라 느립니다"),
+     "종합 0 %. 생존 100 · 전진 100 · <strong>속도추종 0</strong>. 넘어지지 않았고 평면 속도 오차가 한계를 넘었습니다"),
     ("wave-v1.5-A", "A · 1.5 m/s 명령", "종합 100 %"),
     ("wave-v1.5", "foothold-v1 · 1.5 m/s 명령", ("종합 성공 %d/%d. 속도추종 기준인 평면 평균 오차 0.25 m/s 이내를 "
       "100 에피소드 모두 통과했습니다. 명령 속도를 정확히 낸다는 뜻은 아닙니다"
@@ -626,66 +785,130 @@ p.append(clips([
 #
 # **한 점만 보면 「어디서 무너지나」를 못 본다.** 성적표는 난이도 0.5 한 칸이라
 # 기준선이 거기서 50 % 라는 것만 말한다. 곡선은 그 앞뒤를 말한다.
-p.append('<h2><span class="n">05</span>난이도를 올리면 어떻게 되나</h2>')
+p.append('<h2><span class="n">07</span>난이도를 올리면 어떻게 되나</h2>')
 p.append('<p>지금까지는 난이도 <strong>0.5</strong> 한 칸만 봤습니다. 그 한 칸은 '
-         '「지금 어느 쪽이 낫나」는 말해 주지만 <strong>어디서 무너지나</strong>는 '
-         '말해 주지 않습니다. 미경험 험지 10종을 난이도 0.1 부터 1.0 까지 '
+         '「지금 어느 쪽이 낫나」는 말해 주지만 <strong>어느 난이도부터 떨어지나</strong>는 '
+         '말해 주지 않습니다. 미경험 험지 10종을 난이도 0.1부터 1.0까지 '
          '열 단으로 잰 것이 아래입니다.</p>')
-p.append('<figure>%s<figcaption>미경험 험지 10종의 종합 성공률 · 명령 속도 1.0 m/s · '
-         '칸마다 100 에피소드 · 규격 2. 점은 <strong>실제로 잰 자리</strong>이고 '
+p.append('<figure>%s<figcaption>각 점은 미경험 험지 10종의 <b>평균</b> 종합 성공률입니다. '
+         '지형마다 100 에피소드라 한 점에 1,000 에피소드가 들어갑니다. '
+         '명령 속도 1.0 m/s · 규격 2. 점은 <strong>실제 측정값</strong>이고 '
          '선은 그 점을 이은 것입니다. 잰 적 없는 구간으로 늘이지 않았습니다. '
-         '자료는 <span class="mono">20260911-v3-fixedscan</span> 이고, 규격은 '
+         '자료는 <span class="mono">20260911-v3-fixedscan</span>이고, 규격은 '
          '폴더 이름이 아니라 각 실행의 '
-         '<span class="mono">height_scan_miss_value = 1.0</span> 으로 갈랐습니다.'
+         '<span class="mono">height_scan_miss_value</span>가 1.0인지 확인해 측정 규격을 구분했습니다.'
          '</figcaption></figure>' % CURVE)
 p.append('<p>기준선은 난이도가 오를수록 <strong>76 %에서 37 %로</strong> 내려갑니다. '
-         'foothold-v1 은 <strong>90 %에서 77 %</strong> 로, 열 단을 다 올려도 '
-         '기준선의 가장 쉬운 자리(76 %)보다 높습니다. A 는 그 사이입니다.</p>')
-p.append('<div class="note"><b>이 곡선을 읽을 때 조심할 것 셋.</b>'
-         '<br>하나 · <span class="mono">floating_ring</span> 은 난이도가 오르면 '
+         'foothold-v1은 <strong>90 %에서 77 %</strong>로, 열 단을 다 올려도 '
+         '기준선의 가장 쉬운 칸(난이도 0.1 · 76 %)보다 높습니다. A는 그 사이입니다.</p>')
+p.append('<div class="note"><b>이 곡선을 읽을 때 조심할 것 둘.</b>'
+         '<br>하나 · <span class="mono">floating_ring</span>은 난이도가 오르면 '
          '고리가 낮아져 장애물의 <strong>종류가 바뀝니다</strong>. 이 지형만은 '
          '오른쪽이 더 어렵다는 뜻이 아닙니다.'
-         '<br>둘 · <span class="mono">random_rough</span> 는 난이도를 거의 타지 '
-         '않습니다. 곡선이 평평한 것이 성적이 좋아서가 아닙니다.'
-         '<br>셋 · 이것은 <strong>열 지형의 평균</strong>입니다. 지형 하나하나가 '
-         '어디서 무너지는지는 바로 아래 표에 있습니다.</div>')
+         '<br>둘 · 이것은 <strong>미경험 험지 열 종의 평균</strong>입니다. '
+         '아래 표는 그중 다섯 종을 골라 다섯 난이도만 발췌한 것입니다.</div>')
 
 # ── 지형별 난이도 축 ───────────────────────────────────────────────────
 # ★ 2026-09-14 (#422). 전에는 「지형 하나하나는 평가 정본 2부에 있습니다」로
 #   넘겼다. 팀장 지시대로 «발견» 은 여기서 답한다. 넘기면 아무도 안 따라간다.
 #   수는 스윕 원자료에서 읽는다. 손으로 안 박는다.
 if SWEEP:
-    _T = ["rails", "pit", "stepping_stones", "gap", "floating_ring"]
-    _D = ["0.02", "0.1", "0.3", "0.5", "0.8", "1.0"]
+    _T = ["gap", "pit", "rails", "floating_ring", "stepping_stones"]
+    _D = ["0.1", "0.3", "0.5", "0.7", "1.0"]
+    _MM = [("baseline", "기준선"), ("A", "A"), ("B", "v1")]
     _rows = ""
     for _t in _T:
-        _c = "".join(
-            '<td class="num">%s</td>'
-            % ("%.0f" % SWEEP["%s|%s|1.0" % (_t, _d)]
-               if ("%s|%s|1.0" % (_t, _d)) in SWEEP else "·")
-            for _d in _D)
-        _rows += '<tr><td class="mono">%s</td>%s</tr>' % (_t, _c)
-    p.append('<p><b>지형마다 무너지는 자리가 다릅니다.</b> 실패 5종을 난이도 '
-             '축으로 편 것입니다 (1.0 m/s · 칸마다 100 에피소드 · 단위 %).</p>')
-    p.append('<div class="tw"><table class="wide"><thead><tr><th>지형</th>%s</tr>'
-             '</thead><tbody>%s</tbody></table></div>'
-             % ("".join('<th class="num">%s</th>' % _d for _d in _D), _rows))
-    p.append('<p>넷은 난이도를 내리면 돌아옵니다. '
-             '<span class="mono">floating_ring</span> 하나만 가장 쉬운 칸에서도 '
-             '0 % 이고 오히려 난이도 0.8 에서 값이 생깁니다. '
-             '<b>이 지형은 난이도가 오를수록 고리가 낮아져 장애물의 종류가 '
-             '바뀌기 때문입니다.</b> 난이도 축으로 설명되지 않는 유일한 지형이라 '
-             '따로 봐야 합니다.</p>')
+        for _mi, (_m, _ml) in enumerate(_MM):
+            _c = "".join(
+                '<td class="num">%s</td>'
+                % ("%.0f" % SWEEP["%s|%s|%s|1.0" % (_m, _t, _d)]
+                   if ("%s|%s|%s|1.0" % (_m, _t, _d)) in SWEEP else "·")
+                for _d in _D)
+            # rowspan 을 안 쓴다. 관문 [4a] 가 줄마다 칸 수를 세는데
+            # rowspan 은 줄마다 칸이 달라져 어긋난 것처럼 보인다.
+            _rows += '<tr><td class="mono">%s</td><td>%s</td>%s</tr>' % (_t, _ml, _c)
+    # ★ 2026-09-15 astra 지적: 이 표의 자료가 09절 재현 회계(43,200)에
+    #   안 들어 있다. 읽는 사람은 같은 자료로 여긴다. 출처를 밝힌다.
+    p.append('<p><b>지형마다 성공률이 떨어지는 난이도가 다르고, 모델마다 그 난이도가 옮겨갑니다.</b> '
+             '규격 2 · 1.0 m/s · 칸마다 100 에피소드 · 단위 %.</p>')
+    p.append('<div class="note">이 표와 위 곡선은 '
+             '<span class="mono">20260911-v3-fixedscan</span>에서 옵니다. '
+             '전체 조합은 3 x 16 x 10 x 3 = 1,440칸입니다. 그중 <b>954칸 95,400 에피소드</b>를 '
+             '쟀습니다. 미경험 10종은 난이도 10칸을 다 재고(900칸), 기존 험지 6종은 '
+             '난이도 0.5 한 칸만 쟀기 때문입니다(54칸). '
+             '<b>13절 집계표의 43,200 과는 다른 자료</b>이니 더하지 마십시오. '
+             '기준 성적표(난이도 0.5 · 1.0 m/s)는 16종 x 3모델 x 100 = <b>4,800 에피소드</b>이고, '
+             '세 속도를 합치면 14,400입니다. 각 성공률의 분모는 100 에피소드입니다. '
+             '13절의 43,200은 그 평가와 별도 난이도 평가를 합친 집계입니다.</div>')
+    p.append('<div class="tw"><table class="wide"><thead><tr>'
+             '<th>지형</th><th>모델</th>%s</tr></thead><tbody>%s</tbody></table></div>'
+             % ("".join('<th class="num">난이도 %s</th>' % _d for _d in _D), _rows))
+    p.append('<p><b><span class="mono">gap</span>에서 A와 foothold-v1의 차이가 뚜렷합니다.</b> '
+             '기준선은 가장 쉬운 칸에서도 %.0f %%이고, A는 0.3까지 버티다 '
+             '0.5에서 %.0f %%로 떨어지고, v1은 난이도 1.0까지 %.0f %%입니다. '
+             'A가 학습한 최대 틈이 0.20 m이고 난이도 0.5의 틈이 0.275 m 라 '
+             '<b>A는 평가의 틈 폭을 학습에서 본 적이 없습니다.</b></p>'
+             % (_BL("gap", "0.1") or 0, _A("gap", "0.5") or 0, _B("gap", "1.0") or 0))
+    p.append('<p><span class="mono">floating_ring</span>은 거꾸로 갑니다. '
+             '이 지형은 <b>난이도 설정값이 커질수록 고리가 낮아집니다.</b> '
+             '그래서 설정값이 오른 것을 «더 어려워졌다»로 읽을 수 없습니다. '
+             '그것이 성공률 상승의 원인인지까지는 확인하지 않았습니다.</p>')
+    p.append('<div class="note"><b><span class="mono">stepping_stones</span>만 '
+             '안 열렸습니다.</b> 1.0 m/s에서 난이도 0.1은 기준선 58 · A 88 · B 99 %로 '
+             '올랐는데, <b>난이도 0.2부터 1.0까지 잰 모든 칸에서 세 모델 모두 0 %</b>'
+             '입니다. 범위를 넓혀도 0.1 한 칸 밖으로는 안 나갔습니다. '
+             '돌 사이가 약 14 cm이고 높이 스캔 격자가 0.1 m 라 <b>관측 설정이 '
+             '실패에 얼마나 관여하는지는 아직 확인하지 못했습니다.</b> '
+             '<span class="mono">미확인</span></div>'
+             )
 p.append('<p>난이도 0.5 칸에서 이 곡선과 앞의 성적표는 <strong>같은 값</strong>입니다 '
-         '(기준선 50.5 % · A 76.6 % · foothold-v1 84.7 %). 두 자료가 같은 것을 '
+         '(기준선 50.5 % · A 76.6 % · foothold-v1 84.7 %). 난이도 0.5 · 1.0 m/s에서 '
+         '미경험 10종의 모델별 평균이 기준 성적표와 일치한다는 뜻입니다. 두 자료가 같은 것을 '
          '재고 있다는 뜻입니다.</p>')
-p.append('<h2><span class="n">06</span>성공률만으로는 안 보이는 것</h2>')
-p.append('<p>성공 조건은 네 축(생존 · 전진 · 속도추종 · 방향)의 AND입니다. 그런데 장애물을 '
+# ── 8 · 속도 ──────────────────────────────────────────────────────────
+# ★ 2026-09-15 신설. 팀장이 「속도별 0.5 · 1.0 · 1.5 를 확인 해본 결과」 를
+#   서사에 넣자고 했다. 재 보니 보고서에 아예 없던 가장 큰 결과가 여기 있었다.
+p.append('<h2><span class="n">08</span>속도를 바꾸면 어떻게 되나</h2>')
+p.append('<p><b>난이도 0.1에서</b> 명령 속도 0.5 · 1.0 · 1.5 m/s를 비교했습니다. '
+         '미경험 10종의 평균 종합 성공률입니다.</p>')
+
+if SWEEP:
+    _rows = ''
+    for _m, _label in (('baseline', '기준선 NVIDIA'), ('A', 'A'),
+                       ('B', 'B = foothold-v1')):
+        _cells = ''.join('<td class="num">%.0f</td>' % _avg(_m, '0.1', _v)
+                         for _v in ('0.5', '1.0', '1.5'))
+        _rows += '<tr><td class="mono">%s</td>%s</tr>' % (_label, _cells)
+    p.append('<div class="tw"><table><thead><tr><th>모델</th>'
+             '<th class="num">0.5 m/s</th><th class="num">1.0 m/s</th>'
+             '<th class="num">1.5 m/s</th></tr></thead><tbody>%s</tbody></table></div>'
+             % _rows)
+
+p.append('<p><b>둘이 보입니다.</b> 하나 · <b>명령 속도를 낮춘다고 종합 성공률이 '
+         '올라가지는 않습니다.</b> '
+         '기준선과 foothold-v1은 0.5 m/s가 1.0 m/s보다 낮습니다 '
+         '(%.1f 대 %.1f · %.1f 대 %.1f). <b>다만 A는 세 속도가 거의 같습니다</b> '
+         '(%.1f · %.1f · %.1f) 라 이 경향이 모든 정책에 있는 것은 아닙니다.</p>'
+         % (_avg('baseline', '0.1', '0.5'), _avg('baseline', '0.1', '1.0'),
+            _avg('B', '0.1', '0.5'), _avg('B', '0.1', '1.0'),
+            _avg('A', '0.1', '0.5'), _avg('A', '0.1', '1.0'),
+            _avg('A', '0.1', '1.5')))
+p.append('<p>둘 · <b>1.5 m/s에서 기준선과 foothold-v1의 차이가 큽니다.</b> 난이도 0.1에서 '
+         '기준선의 종합 성공률은 1.0 m/s의 %.0f %%에서 1.5 m/s의 %.0f %%로 '
+         '떨어지는데, foothold-v1은 %.0f %%를 지킵니다. '
+         '<b>왜 그런지는 이 자료로 못 가릅니다.</b></p>'
+         % (_avg('baseline', '0.1', '1.0'), _avg('baseline', '0.1', '1.5'),
+            _avg('B', '0.1', '1.5')))
+p.append('<div class="note">이 표는 <b>난이도 0.1 한 칸</b>의 평균입니다. '
+         '속도와 난이도를 함께 올린 칸은 따로 봐야 합니다.</div>')
+
+p.append('<h2><span class="n">09</span>성공률만으로는 안 보이는 것</h2>')
+p.append('<p>생존 · 전진 · 속도추종 · 방향의 네 기준을 모두 충족해야 성공입니다. 그런데 장애물을 '
          '<strong>비켜 가도</strong> 그 조건은 채워집니다. 그래서 이번 에피소드에 '
          '<strong>몸통 아래 광선이 어느 높이 폭을 지났는가</strong>를 재는 열 셋을 더했습니다.</p>')
 p.append('<figure>%s<figcaption>가로가 참여도, 세로가 성공률입니다. 오른쪽 위는 '
-         '중앙 광선이 지난 높이 폭이 스캔 전체와 비슷하면서 성공률도 높은 자리, '
-         '왼쪽 위는 그 폭이 작은데 성공률은 높은 자리입니다. 이 비율은 '
+         '중앙 광선이 지난 높이 폭이 스캔 전체와 비슷하면서 성공률도 높은 쪽, '
+         '왼쪽 위는 그 폭이 작은데 성공률은 높은 쪽입니다. 이 비율은 '
          '발이 닿았는지나 어느 길로 갔는지를 재지 않습니다.'
          '</figcaption></figure>' % SCATTER)
 
@@ -699,12 +922,12 @@ p.append('<div class="tw"><table><thead><tr><th>지형</th><th class="num">성�
 _defn = ('<div class="note"><p><strong>참여도가 무엇인가.</strong> '
          '한 에피소드 동안 몸통 아래 <strong>중앙 광선 하나</strong>가 지나간 높이 폭을, '
          '<strong>스캔 전체</strong>가 본 높이 폭으로 나눈 값입니다. '
-         '0 과 1 사이로 자릅니다.</p>'
+         '0과 1 사이로 자릅니다.</p>'
          '<p class="mono" style="font-size:.86rem">'
          '참여도 = min(1, max(0, 중앙 광선 높이 범위 / 스캔 전체 높이 범위))</p>'
-         '<p>높이 범위의 단위는 m 이고 비율은 단위가 없습니다. 스캔 전체 기복이 '
+         '<p>높이 범위의 단위는 m이고 비율은 단위가 없습니다. 스캔 전체 기복이 '
          '0.02 m 미만이면 나눗셈이 뜻을 잃으므로 <strong>비웁니다.</strong> '
-         '난이도 0.5 · 1.0 m/s · foothold-v1 에서 비는 것은 '
+         '난이도 0.5 · 1.0 m/s · foothold-v1에서 비는 것은 '
          '<span class="mono">gap</span> 뿐입니다.</p>'
          '<p><strong>이 값이 답하지 않는 것.</strong> 발이 장애물에 닿았는지, '
          '어느 길로 우회했는지, 장애물 구간을 끝까지 갔는지는 이 비율만으로 '
@@ -735,26 +958,29 @@ p.append("</tbody></table></div>")
 st = ENG["star"]
 PCT = "%"
 p.append('<div class="note bad"><p><strong>'
-         '<span class="mono">star</span> 의 100 ' + PCT + '는 막대를 넘어서 받은 '
-         '점수가 아닐 소지가 큽니다.</strong> 난이도 0.5 에서 star 의 막대 높이는 '
-         '0.105 m 인데, 몸통 아래 광선이 지나간 높이 폭은 평균 '
-         + ("%.3f" % st["under"]) + ' m 입니다.</p>'
+         '<span class="mono">star</span>는 성공률 100 ' + PCT + '인데 참여도 '
+         '중앙값이 표시 자릿수에서 0.00입니다.</strong> 시연 한 편에서 막대 사이를 '
+         '지나는 경로를 봤고, 평가 100 에피소드 전체의 경로는 확인하지 않았습니다. '
+         '난이도 0.5에서 star의 막대 높이는 '
+         '0.105 m인데, 몸통 아래 광선이 지나간 높이 폭은 평균 '
+         + ("%.3f" % st["under"]) + ' m입니다.</p>'
          '<p><strong>평균보다 분포가 분명합니다.</strong> 참여도 중앙값이 '
-         + ("%.2f" % st["ratio_p50"]) + ' 이고 10~90 분위가 '
-         + ("%.2f ~ %.2f" % (st["ratio_p10"], st["ratio_p90"])) + ' 입니다. '
-         '절반 넘는 에피소드에서 그 폭이 거의 0 이었고, %d 에피소드에서는 비율이 1 이었습니다. '
+         + ("%.2f" % st["ratio_p50"]) + '이고 10~90 분위가 '
+         + ("%.2f ~ %.2f" % (st["ratio_p10"], st["ratio_p90"])) + '입니다. '
+         '중앙값이 표시 자릿수에서 0.00이고, 비율이 정확히 1인 에피소드는 %d개였습니다. '
          % st["ones"] + 
-         '평균 ' + ("%.2f" % st["ratio"]) + ' 은 그 둘을 섞은 값입니다.</p>'
-         '<p>Isaac 의 star 지형은 막대가 중심에서 바깥으로 뻗습니다. 중심에서 방사 '
-         '방향으로 걸으면 막대를 가로지를 일이 구조적으로 없습니다. 다만 그 경로를 '
+         '평균은 ' + ("%.2f" % st["ratio"]) + '입니다. 중앙값과 그 개수만으로 '
+         '나머지가 어떻게 흩어졌는지는 말할 수 없습니다.</p>'
+         '<p>Isaac의 star 지형은 막대가 중심에서 바깥으로 뻗습니다. 막대 사이를 따라 '
+         '바깥쪽으로 걸으면 막대를 가로지르지 않는 경로가 가능합니다. 다만 그 경로를 '
          '실제로 확인한 것은 영상 한 에피소드뿐입니다(미확인).</p>'
-         '<p>반대로 <span class="mono">rails</span> 와 '
-         '<span class="mono">stepping_stones</span> 는 참여도 중앙값이 '
-         + ("%.2f" % ENG["rails"]["ratio_p50"]) + ' 와 '
-         + ("%.2f" % ENG["stepping_stones"]["ratio_p50"]) + ' 인데 성공률이 '
-         + fmt(g("rails", "foothold-v1", "1")) + ' ' + PCT + ' 와 '
+         '<p>반대로 <span class="mono">rails</span>와 '
+         '<span class="mono">stepping_stones</span>는 참여도 중앙값이 '
+         + ("%.2f" % ENG["rails"]["ratio_p50"]) + '와 '
+         + ("%.2f" % ENG["stepping_stones"]["ratio_p50"]) + '인데 성공률이 '
+         + fmt(g("rails", "foothold-v1", "1")) + ' ' + PCT + '와 '
          + fmt(g("stepping_stones", "foothold-v1", "1")) + ' ' + PCT
-         + ' 입니다. 비율이 높은데 성공률이 낮은 자리입니다. 이 비율만으로 실패 원인을 말할 수는 없습니다.</p></div>')
+         + '입니다. 참여도가 높은데 성공률이 낮은 조건입니다. 이 비율만으로 실패 원인을 말할 수는 없습니다.</p></div>')
 # **성공률로 원인을 말하지 않는다.** 어느 축에서 떨어졌는지 세어서 적는다
 # `확인됨` (2026-09-12 검증 2회차 1번 · rails 실패 52 에피소드 중 27 에피소드는 방향 축만
 # 떨어졌다. 「걸렸다」고 쓰면 종합 실패율을 물리적 걸림으로 바꿔 말하는 것이다).
@@ -763,7 +989,7 @@ _step = BD["stepping_stones|foothold-v1|1"]
 _rails_dir = _rails["combo"].get("방향", 0)
 
 p.append('<p>참여도가 높다고 실패하는 것도, 낮다고 성공하는 것도 아닙니다. '
-         '아래 셋은 난이도 0.5 · 1.0 m/s 에서 <strong>따로 촬영한 시연 한 에피소드씩</strong>이고, '
+         '아래 셋은 난이도 0.5 · 1.0 m/s에서 <strong>따로 촬영한 시연 한 에피소드씩</strong>이고, '
          '옆의 수치는 같은 조건 100 에피소드의 집계입니다.</p>')
 p.append(clips([
     ("star-v1", "star · 참여도 중앙값 %.2f" % ENG["star"]["ratio_p50"],
@@ -780,48 +1006,51 @@ p.append(clips([
 p.append('<div class="note"><p><strong>참여도는 발이 닿았는지를 재지 않습니다.</strong> '
          '몸통 아래 중앙 광선이 지난 높이 폭을, 스캔 전체가 본 높이 폭으로 나눈 값입니다. '
          '어느 길로 우회했는지, 장애물을 끝까지 갔는지는 이 비율만으로 알 수 없습니다. '
-         '<span class="mono">rails</span> 는 100 에피소드 모두 참여도 1.00 인데 그중 %d에피소드는 '
-         '방향 축만 떨어졌습니다.</p></div>' % _rails_dir)
-p.append('<p><span class="mono">gap</span> 은 <strong>이 조건에서</strong> 잴 수 '
-         '없습니다. 난이도 0.5 · 1.0 m/s · foothold-v1 의 100 에피소드 모두 스캔 전체 '
-         '기복이 0.02 m 에 못 미쳐 비어 있습니다. 구멍은 광선이 아무것도 못 맞히기 '
-         '때문입니다. 다른 모델·속도에서는 유효값이 몇 에피소드 잡히기도 하므로, '
-         '「gap 은 언제나 못 잰다」로 넓히지 마십시오. 안 딛고 넘는 것이 정답인 '
-         '지형은 네 축이 이미 답하고 있습니다.</p>')
+         '</p></div>')
+p.append('<p><span class="mono">gap</span>은 <strong>이 조건에서</strong> 잴 수 '
+         '없습니다. 난이도 0.5 · 1.0 m/s · foothold-v1의 100 에피소드 모두 스캔 전체 '
+         '기복이 0.02 m에 못 미쳐 비어 있습니다. 다른 모델·속도에서는 유효값이 몇 '
+         '에피소드 잡히기도 하므로 「gap은 언제나 못 잰다」로 넓히지 마십시오. '
+         '<b>네 축은 평가 기준을 채웠는지를 보여 줍니다.</b> 발이 실제로 어디에 '
+         '닿았는지와 어떤 경로로 지났는지는 따로 봐야 합니다.</p>')
 
 # ── 6 ──────────────────────────────────────────────────────────────────
 # ── 무엇을 잘하라고 가르쳤나 ───────────────────────────────────────────
 # ★ 2026-09-14 (#422) 팀장 지목. 보상 지도는 «어떻게 쟀나» 가 아니라
 #   «왜 그렇게 움직이나» 라서 발견 쪽이다. 평가 정본에서 여기로 옮긴다.
-p.append('<h2><span class="n">07</span>무엇을 잘하라고 가르쳤나</h2>')
+p.append('<h2><span class="n">10</span>무엇을 잘하라고 가르쳤나</h2>')
 p.append('<p>성적이 갈리는 까닭을 보려면 <b>무엇에 상을 주고 무엇에 벌을 '
          '주었는지</b>를 봐야 합니다. 아래는 학습 실행이 저장한 '
-         '<span class="mono">params/env.yaml</span> 에서 그대로 읽은 것입니다.</p>')
+         '<span class="mono">params/env.yaml</span>에서 그대로 읽은 것입니다.</p>')
 p.append('<figure class="mdimg"><img src="assets/visual/eval-v2-fig08.svg" '
          'alt="Go2 몸의 어디에 어떤 보상이 걸리는가" loading="lazy">'
          '<figcaption>그림 · 보상 10개와 종료 조건 3개가 몸의 어디에 걸리는지. '
          '사진은 실제 평가 렌더에서 오린 것입니다</figcaption></figure>')
-p.append('<p>가장 큰 벌점이 <span class="mono">lin_vel_z_l2</span> 의 '
-         '<b>-2.00</b> 입니다. 「위아래로 출렁이지 마라」가 「명령 속도를 '
-         '맞춰라(+1.50)」보다 무겁습니다. <b>이것이 뛰어넘는 동작과 '
-         '부딪칩니다.</b> 틈이나 턱을 넘으려면 몸이 위아래로 움직여야 하는데 '
-         '그 움직임 자체가 벌점입니다.</p>')
+p.append('<p><span class="mono">lin_vel_z_l2</span>의 가중치가 '
+         '<b>-2.00</b>으로, 몸통이 위아래로 움직이는 데 벌점을 줍니다. '
+         '절댓값 2.00은 속도추종 보상의 절댓값 1.50보다 큽니다. '
+         '<b>다만 항마다 계산식과 값의 범위가 달라 가중치의 크기만으로 '
+         '실제 기여를 견줄 수는 없습니다.</b> 틈이나 턱을 넘으려면 몸이 위아래로 '
+         '움직여야 하니 이 항이 그 동작을 누르는지 <b>확인할 항목</b>이지만, '
+         '그렇다고 확인한 것은 아닙니다. <span class="mono">미확인</span></p>')
 p.append('<div class="note"><b>다만 보상만 바꿔서는 아무 일도 안 일어납니다.</b> '
          '기준선은 구멍이 없는 지형에서 학습된 NVIDIA 공식 체크포인트입니다. '
          '보상을 고치려면 <b>재학습이 전제</b>입니다. 그리고 우리는 아직 NVIDIA '
          '보상을 한 항도 안 바꿨습니다 <span class="mono">확인됨</span>.</div>')
 
-p.append('<h2><span class="n">08</span>아직 안 되는 것</h2>')
+p.append('<h2><span class="n">11</span>아직 안 되는 것</h2>')
 p.append("<ul>")
 p.append('<li><strong><span class="mono">stepping_stones</span> 0 %.</strong> '
-         '난이도 0.5 · 세 속도 전부에서 세 모델 모두 0 % 입니다. 더 낮은 난이도에서도 못 건너는지는 곡선 자료로 따로 확인해야 합니다. '
+         '난이도 0.5 · 세 속도 전부에서 세 모델 모두 0 %입니다. 1.0 m/s 난이도 0.1에서는 '
+         '기준선 58 % · A 88 % · foothold-v1 99 %인데 <b>난이도 0.2부터 세 모델 모두 '
+         '0 %</b>로 떨어집니다 (07절). '
          '2차의 첫 과제입니다.</li>')
 _r = BD["rails|foothold-v1|1"]
 p.append('<li><strong><span class="mono">rails</span> %.0f %%.</strong> '
-         '100 에피소드 모두 참여도 1.00 이지만 그것으로 실패 원인을 말할 수 없습니다. '
-         '실패 %d 에피소드 가운데 가장 많은 세 조합은 %s 이고, 나머지 %d 에피소드는 '
-         '다른 조합입니다. 속도를 1.5 m/s 로 올리면 '
-         '%.0f %% 까지 떨어집니다.</li>'
+         '100 에피소드 모두 참여도 1.00이지만 그것으로 실패 원인을 말할 수 없습니다. '
+         '실패 %d 에피소드 가운데 가장 많은 세 조합은 %s이고, 나머지 %d 에피소드는 '
+         '다른 조합입니다. 속도를 1.5 m/s로 올리면 '
+         '%.0f %%까지 떨어집니다.</li>'
          % (g("rails", "foothold-v1", "1"),
             _r["n"] - _r["win"],
             " · ".join("%s %d에피소드" % (k, v) for k, v in
@@ -838,20 +1067,21 @@ _zstart = sorted({v[0] for v in ZONES.values()})
 _zend = sorted({v[1] for v in ZONES.values()})
 _narrow = sorted(ZONES.items(), key=lambda kv: kv[1][1] - kv[1][0])[:2]
 
-p.append('<li><strong>장애물 구간은 지형마다 다릅니다.</strong> 난이도 0.5 의 실행 기록이 적어 둔 구간은 시작 %.2f~%.2f m, 끝 %.2f~%.2f m 입니다. '
-         '가장 좁은 것은 <span class="mono">%s</span> (%.2f~%.2f m) 와 <span class="mono">%s</span> (%.2f~%.2f m) 입니다. '
-         '발판이 0.75 m 인 지형에서는 통과선 3.0 m 까지 2.25 m 가 남지만, <strong>그 뺄셈을 모든 지형에 그대로 쓰면 안 됩니다.</strong> '
-         '「넘었다」와 「운이 좋았다」를 가르기에 짧습니다. corridor 방식 재설계가 2차 검토 대상입니다.</li>'
+p.append('<li><strong>장애물 구간은 지형마다 다릅니다.</strong> 난이도 0.5의 실행 기록이 적어 둔 구간은 시작 %.2f~%.2f m, 끝 %.2f~%.2f m입니다. '
+         '진행 방향으로 구간이 가장 짧은 지형은 <span class="mono">%s</span> (%.2f~%.2f m)와 <span class="mono">%s</span> (%.2f~%.2f m)입니다. '
+         '발판이 0.75 m 인 지형에서는 통과선 3.0 m까지 2.25 m가 남지만, <strong>그 뺄셈을 모든 지형에 그대로 쓰면 안 됩니다.</strong> '
+         '지금 결과는 이 길이의 장애물 구간에서 얻은 성공률입니다. 더 긴 연속 장애물에서도 '
+         '통과 성능이 유지되는지는 따로 재야 합니다. corridor 방식 재설계가 2차 검토 대상입니다.</li>'
          % (_zstart[0], _zstart[-1], _zend[0], _zend[-1],
             _narrow[0][0], _narrow[0][1][0], _narrow[0][1][1],
             _narrow[1][0], _narrow[1][1][0], _narrow[1][1][1]))
 p.append('<li><strong>머리 접촉 세 열은 검증 전까지 인용하지 않습니다.</strong> '
-         '첫 표본이 앞 에피소드의 접촉력을 물려받을 수 있고, 그 비율을 아직 갈라내지 '
+         '첫 표본이 앞 에피소드의 접촉력을 물려받을 수 있고, 그 비율을 아직 확인하지 '
          '못했습니다.</li>')
 p.append("</ul>")
 
-p.append('<p><span class="mono">stepping_stones</span> 에서 세 모델이 어떻게 '
-         '실패하는지입니다. 2차는 이 자리를 기준으로 개선을 주장하게 됩니다.</p>')
+p.append('<p><span class="mono">stepping_stones</span>에서 세 모델이 어떻게 '
+         '실패하는지입니다. 2차는 이 결과를 기준으로 개선을 주장하게 됩니다.</p>')
 p.append(clips([
     ("stepping_stones-v1-baseline", "기준선 NVIDIA", "성공률 0 %"),
     ("stepping_stones-v1-A", "A", "성공률 0 %"),
@@ -859,10 +1089,35 @@ p.append(clips([
 ]))
 
 # ── 7 ──────────────────────────────────────────────────────────────────
-p.append('<h2><span class="n">09</span>재현</h2>')
+# ── 남은 질문 ─────────────────────────────────────────────────────────
+# ★ 2026-09-15 팀장이 적어 준 세 질문. 답을 아는 척하지 않는다.
+#   모르는 것을 «모른다» 로 적는 것도 보고서의 일이다.
+p.append('<h3>남은 질문 셋</h3>')
+p.append('<ol class="find">')
+p.append('<li><b>NVIDIA는 왜 이것을 안 했나.</b> '
+         '우리는 <span class="mono">gap</span>을 포함한 신규 지형 5종을 학습 구성에 '
+         '추가했습니다. 개발자가 손댈 자리로 '
+         '남긴 것인지, 다른 까닭이 있는지 '
+         '<b>우리는 모릅니다.</b> 공식 문서에서 근거를 못 찾았습니다.</li>')
+p.append('<li><b>0.5 m/s의 성공률은 왜 1.0 m/s보다 낮았나.</b> 난이도 0.1에서 기준선과 '
+         'foothold-v1은 0.5 m/s의 성공률이 1.0 m/s보다 낮습니다 '
+         '(A는 예외로 세 속도가 거의 같습니다). 평가 성공률이 명령 속도에 따라 '
+         '달랐다는 점까지가 확인한 것이고, <b>학습 속도 설정과의 관계는 '
+         '확인하지 못했습니다.</b></li>')
+p.append('<li><b>다음 레시피는 어디를 봐야 하나.</b> 지금 자료로는 '
+         '<span class="mono">stepping_stones</span>가 난이도 0.2에서 '
+         '세 모델 모두 0 %입니다. 난이도 0.1에서는 셋 다 올랐는데 그 한 칸 밖으로 '
+         '안 나갔습니다. <b>관측 쪽</b>을 먼저 보려 합니다. 돌 간격이 약 14 cm이고 '
+         '높이 스캔 격자가 0.1 m 라, 관측이 돌과 틈을 어떻게 표현하는지부터 볼 참입니다. '
+         '관측 설정이 실패에 얼마나 기여했는지는 <span class="mono">미확인</span>입니다.</li>')
+p.append('</ol>')
+
+p.append('<h2><span class="n">12</span>재현</h2>')
 p.append("<pre>git pull origin main" + NL +
-         "pip install av        # Isaac 이 도는 파이썬에 한 번만" + NL + NL +
-         "# 이 보고서의 데이터 전부" + NL +
+         "pip install av        # Isaac이 도는 파이썬에 한 번만" + NL + NL +
+         "# maindata-v1 평가 자료 (성적표와 그 원자료)" + NL +
+        "#   07 · 08절의 난이도·속도 표는 20260911-v3-fixedscan이고" + NL +
+        "#   아래 명령으로는 안 나옵니다. 그 자료의 재현은 평가 기준 문서를 보십시오." + NL +
          "python sim/eval/run_matrix.py \\" + NL +
          "    --model baseline=&lt;pt&gt; --model A=&lt;pt&gt; \\" + NL +
          "    --model foothold-v1=models/foothold-v1.pt \\" + NL +
@@ -871,7 +1126,7 @@ p.append("<pre>git pull origin main" + NL +
          "python sim/eval/render_gallery.py \\" + NL +
          "    --checkpoint models/foothold-v1.pt \\" + NL +
          "    --raw_csv sim/eval/results/maindata-v1</pre>")
-p.append('<h2><span class="n">10</span>근거 영상 전체</h2>')
+p.append('<h2><span class="n">13</span>근거 영상 전체</h2>')
 # **수를 손으로 적지 않는다.** 갤러리 색인에서 읽는다.
 # 전에는 「모두 84컷」 이 박혀 있었고, 대조컷을 28개 더 채운 뒤에도
 # 그대로 남았다 `확인됨` (2026-09-12 · 발행 관문도 못 잡았다).
@@ -883,24 +1138,24 @@ _cuts = _book["counts"]
 _main = _cuts["clips"] - _cuts["comparison_clips"]
 p.append('<p>이 보고서에 실린 것은 주장마다 한두 장씩 고른 것입니다. '
          '지형 %d종 x 속도 %d종 %d컷과 모델 대조 %d컷, 모두 %d컷이 '
-         '<strong>gallery-v1</strong> 에 있습니다. 평가 칸 %d개 가운데 %d개는 '
+         '<strong>gallery-v1</strong>에 있습니다. 평가 칸 %d개 가운데 %d개는 '
          '성적만 있고 영상이 없습니다. '
-         '보고서 1차와 gallery-v1 이 한 세트입니다.</p>'
+         '보고서 1차와 gallery-v1이 한 세트입니다.</p>'
          % (_cuts["terrains"], len(_cuts["speeds"]), _main,
             _cuts["comparison_clips"], _cuts["clips"],
             _cuts["evaluations"], _cuts["evaluations_without_clip"]))
-p.append('<p>영상은 전진 5.0 m 에서 잘렸습니다. 난이도 0.5 에서 장애물 구간이 '
-         '가장 멀리 가는 지형도 4.00 m 에서 끝나고 그 뒤는 평평한 테두리라 '
+p.append('<p>영상은 전진 5.0 m에서 잘렸습니다. 난이도 0.5에서 장애물 구간이 '
+         '가장 멀리 가는 지형도 4.00 m에서 끝나고 그 뒤는 평평한 테두리라 '
          '볼 것이 없기 때문입니다. 지형마다 구간이 달라 어떤 영상은 앞쪽에서 '
          '이미 볼 것이 끝납니다. 넘어져서 그만큼 못 간 에피소드는 '
          '그대로 다 남아 있습니다. 배속 단추는 재생기의 '
-         '<span class="mono">playbackRate</span> 를 바꿉니다. 다만 느리게 틀어도 '
+         '<span class="mono">playbackRate</span>를 바꿉니다. 다만 느리게 틀어도 '
          '새 프레임이 생기지는 않아, 원본 초당 50장이 0.25배에서는 12.5장으로 보입니다.</p>')
 
-p.append('<p>있어야 할 칸은 <span class="mono">sim/eval/matrix.py</span> 가 선언합니다. '
-         '한 칸이라도 비면 실행기가 0 이 아닌 코드로 끝나고, 보고서 생성기도 거부합니다. '
+p.append('<p>있어야 할 칸은 <span class="mono">sim/eval/matrix.py</span>가 선언합니다. '
+         '한 칸이라도 비면 실행기가 0이 아닌 코드로 끝나고, 보고서 생성기도 거부합니다. '
          '측정 규격과 판정 정의는 '
-         '<a href="/research-20260911-eval-protocol-v2.html">평가 프로토콜 정본</a> '
+         '<a href="/research-20260911-eval-protocol-v2.html">평가 기준 문서</a> '
          '입니다 (저장소는 '
          '<span class="mono">docs/research/20260911-eval-protocol-v2.md</span>).</p>')
 
@@ -908,6 +1163,12 @@ p.append('<p>있어야 할 칸은 <span class="mono">sim/eval/matrix.py</span> �
 _score = STATUS["roles"].get("성적표", {"declared": 0, "present": 0, "cells": 0})
 _curve = STATUS["roles"].get("곡선", {"declared": 0, "present": 0, "cells": 0})
 
+# ★ 2026-09-15 astra 지적. 앞에서는 «지형 x 모델 x 난이도 x 속도» 를 한 칸으로
+#   세는데 이 표의 「칸」은 «지형 묶음 x 모델 x 조건» 단위라 뜻이 다르다.
+#   같은 낱말이 두 뜻이면 읽는 사람이 더한다. 표 앞에 무엇을 세는지 적는다.
+p.append('<p class="cap">여기서 «칸»은 한 번의 평가 실행입니다. '
+         '07절의 «칸»(모델 하나 x 지형 하나 x 난이도 하나 x 속도 하나)과 '
+         '단위가 다릅니다.</p>')
 p.append('<table><thead><tr><th>무리</th><th class="num">칸</th>'
          '<th class="num">선언한 에피소드</th><th class="num">있는 에피소드</th></tr></thead><tbody>'
          '<tr><td>성적표 (난이도 0.5)</td><td class="num">%d</td>'
@@ -924,14 +1185,22 @@ p.append('<table><thead><tr><th>무리</th><th class="num">칸</th>'
 
 if STATUS["missing"]:
     p.append('<div class="note bad"><p><strong>선언한 칸 가운데 %d칸이 아직 비어 있습니다.</strong> '
-             '본문의 성적표는 난이도 0.5 의 %s 에피소드를 분모로 하고 그 칸은 다 찼습니다. '
+             '본문의 성적표는 난이도 0.5의 %s 에피소드를 분모로 하고 그 칸은 다 찼습니다. '
              '비어 있는 것은 난이도 곡선 쪽이며, 그만큼 곡선의 한 부분이 그려지지 '
              '않았습니다.</p><p class="mono" style="font-size:.8rem">%s</p></div>'
              % (len(STATUS["missing"]), f"{_score['declared']:,}",
                 " · ".join(STATUS["missing"])))
 else:
-    p.append('<p>선언한 %d칸이 모두 찼습니다. 본문의 성적표는 난이도 0.5 의 %s 에피소드가 '
-             '분모이고, 난이도 곡선까지 합한 전체 원자료는 %s 에피소드입니다.</p>'
+    # ★ 2026-09-15 astra 지적. 「난이도 곡선까지 합한」 이라 적으면 07절의
+    #   곡선(20260911-v3-fixedscan · 95,400)과 출처가 부딪친다. 이 회계는
+    #   `maindata-v1` 한 자료의 것이다. 어느 자료의 회계인지 밝힌다.
+    p.append('<p>선언한 %d칸이 모두 찼습니다. 이 표는 '
+             '<span class="mono">maindata-v1</span> 한 자료의 회계입니다. '
+             '본문의 성적표는 난이도 0.5의 %s 에피소드가 분모이고, '
+             '이 자료 전체는 %s 에피소드입니다. '
+             '<b>07절의 난이도 표와 곡선은 다른 자료</b>'
+             '(<span class="mono">20260911-v3-fixedscan</span> · 954칸)이니 '
+             '더하지 마십시오.</p>'
              % (STATUS["cells"], f"{_score['declared']:,}", f"{STATUS['present']:,}"))
 
 p.append('''<script>
@@ -957,14 +1226,14 @@ html = NL.join(p)
 for _must in ("<!doctype html>", '<meta charset="utf-8">',
               "width=device-width", "</body>", "</html>"):
     if _must not in html:
-        raise SystemExit("문서에 %s 가 없다" % _must)
+        raise SystemExit("문서에 %s가 없다" % _must)
 
 # 원칙 2 · 조용한 실패를 소리 나게. 달라고 한 컷이 없으면 여기서 죽는다.
 if WANTED_MISSING and "--allow_missing_clips" not in sys.argv:
     for _stem in WANTED_MISSING:
         print("  [X] 본문이 쓰는 컷이 없다: %s.mp4" % _stem)
-    raise SystemExit("컷 %d개가 %s 에 없다. 갤러리를 마저 굽거나 "
-                     "--allow_missing_clips 를 준다" % (len(WANTED_MISSING), TINY))
+    raise SystemExit("컷 %d개가 %s에 없다. 갤러리를 마저 굽거나 "
+                     "--allow_missing_clips를 준다" % (len(WANTED_MISSING), TINY))
 
 out = os.path.join(S, "report-v1.html")
 io.open(out, "w", encoding="utf-8").write(html)

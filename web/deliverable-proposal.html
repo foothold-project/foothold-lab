@@ -232,13 +232,13 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
-/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
  * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
  * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
  * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
  * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
  * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
  * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
@@ -538,7 +538,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -763,12 +763,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -913,7 +913,7 @@ body>*{flex-shrink:0}
 <section id="s2"><span id="1"></span><h2>1. 프로젝트 개요</h2>
 <blockquote><p><b>사람이 들어가기 전에, 로봇이 먼저 길을 확인한다.</b></p></blockquote>
 <p>FOOTHOLD 는 실제 험지 환경을 Digital Twin 으로 복원하고, 지형 특성을 바탕으로 학습·평가용 변형 지형을 생성한다. <b>시뮬레이션에서는 보행 성능을 측정하고, 실제 환경에서는 목표 지점까지의 자율 보행을 검증한다.</b></p>
-<p><figure class="mdimg"><img src="assets/overview.svg?v=5c6392b2" alt="프로젝트 개요" loading="lazy"><figcaption>프로젝트 개요</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/overview.svg?v=329f22b4" alt="프로젝트 개요" loading="lazy"><figcaption>프로젝트 개요</figcaption></figure></p>
 <p>세 축으로 구성한다.</p>
 <div class="tw"><table><thead><tr><th>축</th><th>묻는 질문</th><th>무엇을 하나</th></tr></thead><tbody><tr><td><b>Track A</b></td><td>어디까지 걸을 수 있는가</td><td>Isaac Sim · Isaac Lab · PPO 로 미경험 험지의 보행 한계와 난이도 경계를 측정한다</td></tr><tr><td><b>Digital Twin</b></td><td>가상·실기 평가에 어떤 공간을 사용하는가</td><td>실제 구간을 물리·시각 트윈으로 복원하고, 지형 특성을 바탕으로 변형 지형을 생성한다. 원본 구간은 학습에 쓰지 않는 held-out 평가 환경으로 남긴다</td></tr><tr><td><b>Track B</b></td><td>목표까지 스스로 갈 수 있는가</td><td>검증된 순정 보행 위에 ROS 2 · SLAM · Nav2 · 센서 인지를 통합해 실기 자율 보행을 검증한다</td></tr></tbody></table></div>
 <p><b>Digital Twin 은 두 트랙이 평가할 공간의 기준을 제공한다.</b> Track A 와 Track B 는 같은 실제 구간을 대상으로 각각의 평가 조건과 결과를 기록한다. 학습 정책을 실물에 이식하는 용도로는 사용하지 않는다.</p>
@@ -942,7 +942,7 @@ body>*{flex-shrink:0}
 </section>
 <section id="s5"><span id="4"></span><h2>4. 시스템 아키텍처</h2>
 <p>시뮬레이션 기반 보행 정책 학습과 실기 자율 보행·환경 인지를 <b>병렬로</b> 개발한다. 두 트랙의 제어기를 직접 연결하지 않고, <b>동일한 실제 구간을 기준으로</b> 각각의 성능을 검증한다.</p>
-<p><figure class="mdimg"><img src="assets/architecture.svg?v=d51ee55f" alt="시스템 아키텍처" loading="lazy"><figcaption>시스템 아키텍처</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/architecture.svg?v=889a4432" alt="시스템 아키텍처" loading="lazy"><figcaption>시스템 아키텍처</figcaption></figure></p>
 <p><b>Track A 의 흐름</b> · 지형 구성 → PPO 정책 학습 → 미경험 지형 평가 → 실패 원인 분석 → 학습 조건 개선 → 재학습 → 일반화 비교</p>
 <p><b>Track B 의 흐름</b> · LiDAR·카메라·로봇 상태 → ROS 2 → SLAM·CV → Nav2 → 목표 지점 자율 보행</p>
 <h3>실제 구간 복원과 학습·평가 지형 구성</h3>
@@ -1105,5 +1105,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

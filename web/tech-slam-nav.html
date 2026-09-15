@@ -17,62 +17,60 @@
   --accent:#c65214; --accent-soft:#f9ece1;
   --code:#efede8;
   --shadow:0 1px 2px rgba(30,37,40,.05),0 8px 24px -12px rgba(30,37,40,.12);
-  --rail-w:250px; --radius:14px;
-  --tb1-h:54px; --tb2-h:44px; --tb-h:100px;
+  --rail-w:250px; --toc-w:200px; --radius:14px;
+  --tb-h:56px; --on-fill:#fff; /* 상단바는 한 줄 고정 · 메뉴가 늘어도 높이가 안 는다 */
 }
 *{box-sizing:border-box}
 
-/* ---------- 레이아웃 ---------- */
-.shell{display:flex;max-width:1240px;margin:0 auto}
-main{flex:1;min-width:0;padding:36px 52px 120px}
+/* ---------- 레이아웃: 문서 트리 | 본문 | 페이지 목차 ---------- */
+.shell{display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr) var(--toc-w);
+  grid-template-areas:"tree main toc";max-width:1320px;margin:0 auto}
+main{grid-area:main;min-width:0;padding:28px 48px 120px}
 main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 18px)}
+.skip{position:absolute;left:-999px;top:0;z-index:100;background:var(--brand);color:#fff;
+  padding:8px 14px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+.skip:focus{left:0}
 
-/* ---------- 상단 고정바 (2단) ---------- */
-.topbar{position:sticky;top:0;z-index:60;background:var(--panel);
-  border-bottom:1px solid var(--line)}
-.tbin{max-width:1240px;margin:0 auto;padding:0 22px}
-.tb1 .tbin{display:flex;align-items:center;gap:20px;height:var(--tb1-h)}
-.tb2{border-top:1px solid var(--line);background:var(--bg)}
-
-/* 1단 · 과목 탭 */
-.tabs{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tabs a{text-decoration:none;color:var(--sub);font-size:15px;font-weight:700;
+/* ---------- 상단 고정바 (한 줄) ---------- */
+.topbar{position:sticky;top:0;z-index:60;background:var(--panel);border-bottom:1px solid var(--line)}
+.tbin{max-width:1320px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:18px;height:var(--tb-h)}
+.gnav{display:flex;gap:2px;flex:1;min-width:0;overflow:hidden}
+.gnav a{text-decoration:none;color:var(--sub);font-size:15px;font-weight:700;
   padding:6px 15px;border-radius:9px;white-space:nowrap}
-.tabs a:hover{color:var(--ink);background:var(--code)}
-.tabs a.on{color:var(--brand-ink);background:var(--brand-soft)}
+.gnav a:hover{color:var(--ink);background:var(--code)}
+.gnav a[aria-current]{color:var(--brand-ink);background:var(--brand-soft)}
+.menubtn{display:none}
+.menubtn,.menubtn:hover,/* ---------- 좌측 문서 트리 (정적 HTML · details 로 접고 편다) ---------- */
+nav.tree{grid-area:tree;position:sticky;top:var(--tb-h);height:calc(100vh - var(--tb-h));overflow-y:auto;
+  padding:18px 12px 40px;border-right:1px solid var(--line);font-size:15px}
+.tree summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px;
+  padding:6px 8px;border-radius:7px;font-weight:800;color:var(--ink);font-size:15px}
+.tree summary::-webkit-details-marker{display:none}
+.tree summary::before{content:"\25B8";font-size:11px;color:var(--sub);flex-shrink:0;width:10px}
+.tree details[open]>summary::before{content:"\25BE"}
+.tree summary:hover{background:var(--code)}
+.tree .cat{margin-bottom:4px}
+.tree .cat>ul,.tree .grp{margin-left:10px}
+.tree .grp>summary{font-weight:700;color:var(--sub);font-size:12.5px;padding:5px 8px;letter-spacing:.01em}
+.tree ul{list-style:none;padding:0 0 4px 12px;margin:0;border-left:1px solid var(--line);margin-left:15px}
+.tree li{margin:0}
+.tree a{display:block;text-decoration:none;color:var(--sub);font-size:15px;line-height:1.5;
+  padding:4px 10px;border-radius:7px;word-break:keep-all}
+.tree a:hover{color:var(--ink);background:var(--code)}
+.tree a[aria-current]{color:var(--brand-ink);background:var(--brand-soft);font-weight:700}
 
-/* 2단 · 활성 탭의 페이지 알약 */
-/* 넓은 화면: 줄바꿈으로 전부 보이게(페이지가 늘어도 손볼 것 없음). 실제 높이는 app.js 가 --tb-h 로 반영 */
-.pills{display:flex;flex-wrap:wrap;align-items:center;gap:2px 3px;min-height:var(--tb2-h);
-  padding:5px 0;position:relative}
-.pills::-webkit-scrollbar{display:none}
-/* 좁은 화면: 한 줄 가로 스크롤 + 양끝 페이드(app.js 가 .fl/.fr 토글) + 현재 페이지를 가운데로 */
-@media (max-width:920px){
-  .tb2 .tbin{position:relative}
-  .pills{flex-wrap:nowrap;height:var(--tb2-h);padding:0;overflow-x:auto;scrollbar-width:none}
-  .tb2 .tbin::before,.tb2 .tbin::after{content:"";position:absolute;top:0;bottom:0;width:44px;
-    pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
-  .tb2 .tbin::before{left:22px;}
-  .tb2 .tbin::after{right:22px;}
-  .tb2 .tbin.fl::before,.tb2 .tbin.fr::after{opacity:1}
-}
-.pills a{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;
-  text-decoration:none;color:var(--sub);font-size:15px;font-weight:600;
-  padding:5px 13px;border-radius:999px}
-.pills a .pn{font-size:10.56px;font-weight:800;color:var(--brand);opacity:.7;
-  font-variant-numeric:tabular-nums}
-.pills a:hover{color:var(--ink);background:var(--code)}
-.pills a.here{color:var(--brand-ink);background:var(--brand-soft)}
-.pills a.here .pn{opacity:1}
-.pills a .pc{font-size:11px;font-weight:700;color:var(--sub);opacity:.8;letter-spacing:.01em}
-.pills a:hover .pc,.pills a.here .pc{opacity:1}
+/* ---------- breadcrumb (본문 첫 줄) ---------- */
+.crumb ol{display:flex;flex-wrap:wrap;align-items:center;list-style:none;padding:0;margin:0 0 20px;
+  font-size:12.5px;color:var(--sub);gap:2px 0}
+.crumb li+li::before{content:"\203A";margin:0 8px;opacity:.6}
+.crumb a{color:var(--sub);text-decoration:none;font-weight:600}
+.crumb a:hover{color:var(--brand-ink);text-decoration:underline}
+.crumb li[aria-current]{color:var(--ink);font-weight:700}
 
-/* ---------- 좌측 레일 = 이 페이지 목차 전용 ---------- */
-nav.rail{width:var(--rail-w);flex-shrink:0;position:sticky;top:var(--tb-h);
-  height:calc(100vh - var(--tb-h));overflow-y:auto;
-  padding:28px 20px 40px;border-right:1px solid var(--line)}
-nav.rail.notoc{display:none}
+/* ---------- 우측 = 이 페이지 목차 전용 ---------- */
+aside.pagetoc{grid-area:toc;position:sticky;top:var(--tb-h);height:calc(100vh - var(--tb-h));overflow-y:auto;
+  padding:26px 14px 40px 6px}
+aside.pagetoc.notoc{visibility:hidden}
 
 /* ---------- 히어로 ---------- */
 .hero{margin-bottom:44px;padding:34px 38px;background:var(--panel);
@@ -98,7 +96,7 @@ main a:hover{text-decoration-thickness:2px}
 ul,ol{padding-left:22px;margin:.4em 0 1em}
 li{margin:4px 0}
 strong{font-weight:700}
-code{background:var(--code);border-radius:6px;padding:2px 6px;font-size:.86em;
+code{background:var(--code);border-radius:6px;padding:2px 6px;font-size:.86em;overflow-wrap:anywhere;
   font-family:Consolas,"Cascadia Mono",monospace}
 pre{background:var(--code);border-radius:12px;padding:14px 18px;overflow-x:auto;
   font-size:13px;line-height:1.6}
@@ -113,7 +111,8 @@ pre code{background:none;padding:0}
 .anno>div{display:grid;grid-template-columns:230px 1fr;gap:0 14px;
   padding:7px 14px;border-bottom:1px solid var(--line)}
 .anno>div:last-child{border-bottom:0}
-.anno code{background:none;padding:0;color:var(--brand-ink);font-weight:700;font-size:12.5px}
+.anno>div{min-width:0}
+.anno code{background:none;padding:0;color:var(--brand-ink);font-weight:700;font-size:12.5px;overflow-wrap:anywhere}
 @media (max-width:640px){.anno>div{grid-template-columns:1fr;gap:1px}}
 
 /* ---------- 용어 정의 (처음 나오는 개념) ---------- */
@@ -183,20 +182,38 @@ footer a{color:var(--sub)}
 .pagerow .pt{font-weight:700;color:var(--brand-ink)}
 .pagerow a.next{text-align:right}
 
+/* 본문 폭이 모자라면 페이지 목차는 본문 위 접이식 줄로 */
+@media (max-width:1180px){
+  .shell{grid-template-columns:var(--rail-w) minmax(0,1fr);grid-template-areas:"tree toc" "tree main"}
+  aside.pagetoc{position:sticky;top:var(--tb-h);z-index:50;height:auto;overflow:visible;padding:0;
+    border-bottom:1px solid var(--line);background:var(--bg)}
+  aside.pagetoc.notoc{display:none}
+  aside.pagetoc .toc{display:none;background:var(--panel);padding:10px 12px 14px;max-height:52vh;overflow-y:auto}
+  aside.pagetoc.open .toc{display:flex}
+  main h2[id],main h3[id],main h4[id],main .vids figure[id]{scroll-margin-top:calc(var(--tb-h) + 58px)}
+}
+/* 좁은 화면: 문서 트리는 메뉴 버튼 → drawer, 상단 분류 링크는 트리 안에서 */
 @media (max-width:920px){
-  .shell{flex-direction:column}
-  nav.rail{position:sticky;top:var(--tb-h);z-index:50;width:auto;height:auto;overflow:visible;
-    padding:0;border-right:0;border-bottom:1px solid var(--line);background:var(--bg)}
-  nav.rail .toc{display:none;background:var(--panel);padding:10px 12px 14px;
-    max-height:52vh;overflow-y:auto}
-  nav.rail.open .toc{display:flex}
-  main{padding:28px 20px 80px}
+  :root{--tb-h:52px}
+  .shell{grid-template-columns:minmax(0,1fr);grid-template-areas:"tree" "toc" "main"}
+  .tbin{gap:10px;padding:0 14px}
+  .gnav{display:none}
+  nav.tree{position:static;top:auto;height:auto;width:auto;overflow-y:visible;padding-bottom:18px;
+    border-right:0;border-bottom:1px solid var(--line);transform:none;visibility:visible}
+  .js .shell{grid-template-areas:"toc" "main"}
+  .js .menubtn{display:inline-flex}
+  .js nav.tree{position:fixed;top:var(--tb-h);left:0;bottom:0;height:auto;width:min(310px,86vw);z-index:70;
+    background:var(--panel);border-right:1px solid var(--line);
+    transform:translateX(-102%);transition:transform .18s ease;visibility:hidden}
+  .js nav.tree.open{transform:none;visibility:visible}
+  main{padding:22px 18px 80px}
   .hero{padding:26px 24px}
   .hero h1{font-size:29px}
   .phasebar{flex-direction:column}
   .phasebar>div+div{border-left:0;border-top:1px solid var(--line)}
   .pagerow{flex-direction:column}
 }
+@media (prefers-reduced-motion:reduce){.js nav.tree{transition:none}}
 
 /* ---------- 학습 자료: 명령 종류 배지 · 스텝 번호 · 성공 판정 ---------- */
 .tag{display:inline-block;font-size:10.56px;font-weight:800;letter-spacing:.05em;border-radius:999px;
@@ -278,11 +295,6 @@ td .bt:hover{text-decoration:underline}
 .badge.run{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
 .badge.done{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
 .badge.rej{color:var(--sub);background:var(--code);border-color:var(--line)}
-
-@media (max-width:640px){
-  :root{--tb1-h:50px; --tb2-h:40px; --tb-h:92px}
-  .tb1 .tbin{gap:12px}
-}
 
 /* ---------- 그림 (인라인 SVG 차트) · 영상 ---------- */
 /* SVG 안에서 쓰는 선·글자 클래스 · 색을 토큰으로 받아 테마를 따라간다 */
@@ -639,7 +651,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -864,12 +876,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -989,56 +1001,199 @@ body>*{flex-shrink:0}
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-14 22:35 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-15 18:58 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+
+<!-- nav:crumb -->
+<nav class="crumb" aria-label="현재 위치"><ol><li><a href="tech-rl.html">기술 문서</a></li><li>센서·자율주행</li><li aria-current="page">SLAM · Nav2</li></ol></nav>
+<!-- /nav:crumb -->
 
 <div class="hero">
-  <div class="eyebrow">2단계 · 10월 중순 ~ 12/11</div>
-  <h1>SLAM · Nav2 자율주행</h1>
-  <p class="lede">실기 Go2의 내장 보행(sport mode) 위에 항법 스택을 올린다. 지도 작성 → 위치추정 → 목표점 자율 이동 → 웨이포인트 순회 + 장애물 회피가 최종 데모다.</p>
+  <div class="eyebrow">센서 · SLAM · Nav2 · 갱신 2026-09-15</div>
+  <h1>센서가 경로를 정하고, 기존 정책이 걷는다</h1>
+  <p class="lede">Isaac Sim 안의 Go2 에 <strong>센서 → 지도·비용 → Nav2 → 속도 명령 → 기존 RL 보행 정책</strong>을 잇는 구조다. 학원 앞 광장을 옮긴 환경에서 지도 작성 · 위험 인식 · 목적지 이동을 연결하는 것이 목표이고, <strong>보행 정책은 손대지 않는다</strong> · 정책은 지금처럼 proprioception 과 height_scan 만 받는다.</p>
+  <span class="stamp"><span class="badge done">확인 완료</span> 카메라·RTX LiDAR 부착과 데이터 취득 &nbsp;·&nbsp; <span class="badge run">구현 예정</span> 지도·비용·Nav2·연결 코드 &nbsp;·&nbsp; <span class="badge hyp">미확인</span> 실기 장착·토픽·성능</span>
 </div>
 
-<h2 id="ros"><span class="n">1</span>Go2 ↔ ROS 2 연동</h2>
-<div class="call"><div class="t">가장 먼저 확인할 것</div>
-<p><strong>우리 Go2가 EDU인지 Air/Pro인지.</strong> EDU만 이더넷+DDS 공식 API가 열려 있다. Air/Pro는 WebRTC 기반 비공식 SDK(go2_ros2_sdk)를 써야 하며, 이 답이 아키텍처 전체를 결정한다.</p></div>
+<div class="call"><div class="t">이 페이지의 성격</div>
+<p>아래 구조는 <strong>제안</strong>이다. 팀이 확정한 필수 범위가 아니고, 팀원의 현재 학습 코드를 확인한 것도 아니다. 「확인 완료」 배지는 <code>Isaac-CV/08-wiki-exact-sensors/</code> 의 run02 원물(<code>verification.json</code> · <code>configuration_check.json</code>)로 확인한 것에만 붙였다.</p></div>
+
+<h2 id="arch"><span class="n">1</span>5단계 구조 · 두 정보 흐름</h2>
+<ol>
+<li><strong>LiDAR · 깊이 카메라 → 형상 관측 → 지도 작성.</strong> 어디가 막혀 있고 어디가 높은지.</li>
+<li><strong>RGB → 사람·지면·물체 분류 → 깊이·좌표 변환과 결합 → 위험 대상의 위치와 비용.</strong> 박스 하나로는 안 되고 「몇 m 앞, 지도 어느 칸」까지 가야 한다.</li>
+<li><strong>장애물·지형 비용 지도 + 로봇 위치 + 목적지 → Nav2 경로 계획·추종.</strong></li>
+<li><strong>Nav2 의 <code>vx · vy · wz</code> → 연결 코드 → 기존 RL 보행 정책 → 관절 제어.</strong> 정책은 이 속도 명령을 지금까지 받던 <code>velocity_commands</code> 자리로 받는다.</li>
+<li><strong>기존 정책은 별도로 proprioception 과 height_scan 을 계속 입력받는다.</strong> 위 1~4 의 센서는 정책 입력에 합류하지 않는다.</li>
+</ol>
+
+<figure class="fig">
+<svg viewBox="0 0 800 350" width="100%" role="img" aria-label="두 정보 흐름: 센서에서 Nav2 를 거쳐 속도 명령이 정책으로 들어가는 흐름과, 정책이 원래 받던 proprioception·height_scan 흐름" style="max-width:100%;font-family:inherit">
+<defs>
+<marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--brand)"/></marker>
+<marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker>
+</defs>
+<g style="font-size:11.5px;fill:var(--ink)">
+<text x="8" y="16" style="font-weight:800;fill:var(--brand)">① 센서 → 경로 (새로 만든다)</text>
+<g style="stroke:var(--brand);stroke-width:1.2;fill:var(--panel)">
+<rect x="8" y="28" width="118" height="40" rx="6"/>
+<rect x="158" y="28" width="150" height="40" rx="6"/>
+<rect x="8" y="94" width="118" height="40" rx="6"/>
+<rect x="158" y="86" width="150" height="56" rx="6"/>
+<rect x="340" y="48" width="160" height="72" rx="6"/>
+<rect x="532" y="64" width="72" height="40" rx="6"/>
+<rect x="636" y="56" width="156" height="56" rx="6"/>
+</g>
+<text x="67" y="46" text-anchor="middle">LiDAR · 깊이 카메라</text><text x="67" y="60" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">XT-16 근사 · D455 잠정</text>
+<text x="233" y="46" text-anchor="middle">형상 관측 → 지도</text><text x="233" y="60" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">점유 · 높이(2.5D)</text>
+<text x="67" y="112" text-anchor="middle">RGB 카메라</text><text x="67" y="126" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">사람 · 지면 · 물체</text>
+<text x="233" y="104" text-anchor="middle">분류 + 깊이 · TF 결합</text><text x="233" y="118" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">→ 위험 대상 위치 · 비용</text><text x="233" y="132" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">추적 · 시간 만료 포함</text>
+<text x="420" y="70" text-anchor="middle">비용 지도 + 로봇 위치</text><text x="420" y="84" text-anchor="middle">+ 목적지</text><text x="420" y="104" text-anchor="middle" style="font-weight:800">→ Nav2 계획 · 추종</text>
+<text x="568" y="82" text-anchor="middle" style="font-weight:800">vx · vy · wz</text><text x="568" y="96" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">cmd_vel</text>
+<text x="714" y="78" text-anchor="middle">연결 코드</text><text x="714" y="92" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">범위 · timeout · 정지 · 정책 명령 형식</text>
+<g style="stroke:var(--brand);stroke-width:1.4;fill:none;marker-end:url(#ab)">
+<path d="M126 48H156"/><path d="M126 114H156"/>
+<path d="M308 48C324 48 324 70 338 70"/><path d="M308 114C324 114 324 98 338 98"/>
+<path d="M500 84H530"/><path d="M604 84H634"/>
+<path d="M714 112V196"/>
+</g>
+<text x="722" y="158" style="fill:var(--brand);font-size:10.5px;font-weight:800">속도 명령</text>
+<line x1="8" y1="176" x2="792" y2="176" style="stroke:var(--line);stroke-dasharray:5 4"/>
+<text x="8" y="170" style="fill:var(--sub);font-size:10.5px">경계 · 위 센서는 정책 입력에 들어가지 않는다</text>
+<text x="8" y="200" style="font-weight:800;fill:var(--accent)">② 정책 입력 (기존 그대로 · 재학습 없음)</text>
+<g style="stroke:var(--accent);stroke-width:1.2;fill:var(--panel)">
+<rect x="158" y="214" width="150" height="48" rx="6"/>
+<rect x="158" y="282" width="150" height="56" rx="6"/>
+<rect x="636" y="198" width="156" height="56" rx="6"/>
+<rect x="636" y="286" width="156" height="40" rx="6"/>
+</g>
+<text x="233" y="234" text-anchor="middle">proprioception 48</text><text x="233" y="250" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">속도 · 중력 · 관절 · 명령 · 이전 행동</text>
+<text x="233" y="300" text-anchor="middle">height_scan 187</text><text x="233" y="314" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">17×11 · 0.1 m · 1.6×1.0 m</text><text x="233" y="328" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">base 위 20 m 에서 아래로 ray · yaw 정렬</text>
+<text x="714" y="220" text-anchor="middle" style="font-weight:800">기존 RL 보행 정책</text><text x="714" y="236" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">입력 235 = 48 + 187 → 출력 12</text><text x="714" y="248" text-anchor="middle" style="fill:var(--sub);font-size:10.5px">foothold-v1.pt</text>
+<text x="714" y="310" text-anchor="middle">관절 제어 (12)</text>
+<g style="stroke:var(--accent);stroke-width:1.4;fill:none;marker-end:url(#aa)">
+<path d="M308 238C480 238 480 226 634 226"/>
+<path d="M308 310C480 310 480 240 634 240"/>
+<path d="M714 254V284"/>
+</g>
+</g>
+</svg>
+<figcaption><b>두 흐름은 정책 안에서 「속도 명령」 한 자리로만 만난다.</b> 위(①)는 새로 만드는 것, 아래(②)는 run02 녹화에서 확인한 기존 정책 입력 그대로다(<code>original_environment_config.json</code> 의 <code>height_scanner</code>: grid 0.1 m · 1.6×1.0 m · offset z 20 m · <code>ray_alignment: yaw</code> · 대상 <code>/World/ground</code> · <code>update_period</code> 0.02 s). 정책 입력 48 = base_lin_vel 3 + base_ang_vel 3 + projected_gravity 3 + velocity_commands 3 + joint_pos 12 + joint_vel 12 + actions 12.</figcaption>
+</figure>
+
+<h2 id="boundary"><span class="n">2</span>height_scan 경계 · 센서로 바꿔 끼우면 되는 것이 아니다</h2>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th></th><th>height_scan (정책이 보는 것)</th><th>장착 LiDAR (우리가 새로 다는 것)</th></tr>
+<tr><td>어디서 쏘나</td><td>지형 <strong>위 20 m</strong>에서 수직 아래로. 가림이 없다</td><td>실제 장착 위치에서 비스듬히. <strong>몸체·다리·물체에 가린다</strong></td></tr>
+<tr><td>배열</td><td>로봇 yaw 에 정렬된 <strong>고정 격자 187칸</strong>, 결측 없음</td><td>채널·각도 순서의 점군, <strong>결측·근거리 사각</strong> 있음(§ 아래 rails 사례)</td></tr>
+<tr><td>지연</td><td>0.02 s 마다 즉시</td><td>스캔 주기 · 수신 지연 · 처리 지연</td></tr>
+<tr><td>대상</td><td><code>/World/ground</code> 정적 메시만</td><td>사람 같은 동적 물체도 찍힌다</td></tr>
+</table></div></div>
+<p><strong>따라서 187개 숫자를 LiDAR 값으로 채워 넣는다고 같은 정책이 되지 않는다.</strong> 센서로 발 디딤 지형까지 판단하게 하려면 관측 표현을 맞추고 성능을 검증해야 하고, 필요하면 재학습·학습 설계 변경이 따른다. 이 페이지의 범위(상위 CV·Nav2 연결)에서는 그 일을 하지 않는다 · 그래서 RL 담당이 학습 env 에 카메라·RTX LiDAR 를 달 필요도 당장은 없다. <span class="badge hyp">조건</span> 팀원의 학습 코드가 run02 와 같은 관측 구조라는 전제이며, 그 코드는 확인하지 않았다.</p>
+
+<div class="call"><div class="t">run02 rails 녹화에서 확인한 것 <span class="badge done">확인 완료</span></div>
+<p>참조 벤치마크 10종 지형 중 <strong>env 5 rails</strong>(1×10 배치, seed 42, 난이도 0.5, rail 높이 0.115 m, 명령 vx 0.5 m/s, 300 step / 6 s)에 카메라 · XT-16 근사 RTX LiDAR · L1 시야 비교용 센서를 붙여 녹화했다. 정책은 <code>foothold-v1.pt</code>(SHA256 <code>c7612aef…ee7aca</code>), 기존 환경 설정은 <strong>센서 3필드 추가 외 무변경</strong>(<code>existing_config_unchanged: true</code>, <code>added_scene_fields: front_camera · xt16_geometry · l1_fov_comparison</code>). 저장 60샘플 중 RTX 점군이 비어 있지 않은 것 57, 스캔 수신 시각 24개 · <strong>10 Hz 저장이 10 Hz 새 스캔은 아니다.</strong></p>
+<p><strong>이 녹화가 입증한 것은 「센서를 달고 데이터를 받았다」까지다.</strong> 센서 기반 지도 작성 · SLAM · Nav2 · 사람 인식으로 실제 행동이 바뀐 것은 입증되지 않았다. 참고 영상은 바닥이 검고 재녹화는 밝은 타일이며, 원본 에피소드를 프레임까지 복제한 것도 아니다.</p>
+<p class="sub">우하단 점군 패널은 <strong>raw point cloud 의 XY 표시</strong>이지 rail 인식 결과가 아니다. 표시 색 범위 0~1.2 m 와 1 px 점이 0.115 m rail 을 읽기 어렵게 하는 것도 맞지만, <strong>색을 바꾸면 있는 점이 보일 뿐 없는 관측이 생기지 않는다.</strong> XT-16 근사 ±15° 수직 시야 · 센서 높이 0.62 m 수평 자세 가정에서 최저 광선이 바닥에 닿는 수평 거리는 약 2.31 m, rail 상면(0.115 m)은 약 1.89 m 다(<code>rails_returns_diagnosis.json</code> · 자세가 바뀌면 달라지는 예시값이고 기기 최소 측정 거리가 아니다). 알려진 rail 위치·높이 근방 점 수는 t=0.3 s 안쪽 0 / 바깥 4,949, t=3.0 s 안쪽 685 / 바깥 5,002 · <strong>기하 ROI 집계이지 인식 정답·정확도가 아니다.</strong> 영상은 C3 에 싣는다(작업 B).</p></div>
+
+<h2 id="maps"><span class="n">3</span>지도 세 종류 · 3D 관측을 2D 비용으로</h2>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th>지도</th><th>무엇을 담나</th><th>어디서 오나</th><th>Nav2 와의 관계</th></tr>
+<tr><td><strong>장애물 지도(점유)</strong></td><td>칸마다 막힘/빈 곳/미관측</td><td>LiDAR · 깊이</td><td>기본 <code>costmap_2d</code> 가 바로 먹는 형태</td></tr>
+<tr><td><strong>높이 지도(2.5D)</strong></td><td>칸마다 높이 · 단차 · 경사</td><td>LiDAR · 깊이 점군을 누적</td><td>그대로는 못 먹는다 · <strong>높이·경사·불확실성을 비용으로 바꾸는 로직</strong>이 필요</td></tr>
+<tr><td><strong>의미 지도</strong></td><td>칸마다 종류(사람 · 잔디 · 보도 …)</td><td>RGB 분류 + 깊이·TF 로 칸에 투영</td><td>종류별 비용(사람 = 정지/우회, 잔디 = 감속 등)으로 변환해 layer 에 넣는다</td></tr>
+</table></div></div>
+<p><strong>기본 Nav2 계획은 2D 비용 지도 기반이다.</strong> 3D 점군·voxel 입력을 받는 layer 가 있다는 것과, 험지를 <em>통과할 수 있는지</em>를 판단하는 것은 다른 문제다. 3D 관측을 2D 비용으로 바꾸는 자리에서 결정할 것:</p>
 <ul>
-<li><strong>go2_ros2_sdk</strong> (비공식, 커뮤니티 표준) · Wi-Fi(WebRTC)·이더넷(CycloneDDS) 모두 지원, Air/Pro/EDU 전부 가능. IMU·L1 포인트클라우드(~7Hz)·카메라·LaserScan 변환·텔레옵에 <strong>slam_toolbox + Nav2까지 이미 통합</strong> → 우리 일정의 최단 출발점. <a href="https://github.com/abizovnuralem/go2_ros2_sdk">GitHub</a></li>
+<li><strong>ground filtering</strong> · 바닥 점을 장애물로 넣지 않기. 높이 문턱 하나로 하면 경사에서 깨진다.</li>
+<li><strong>높이·경사 → 비용</strong> · 단차 몇 cm 부터 비용을 올릴지, 경사 몇 도부터 막을지. 이 값은 <strong>정책의 실측 한계</strong>(20 지형 한계선)와 맞춰야 한다.</li>
+<li><strong>미관측 칸</strong> · 안전한 바닥으로도 구덩이로도 <strong>자동 치환하지 않는다.</strong> 「모름」 비용을 따로 둔다.</li>
+<li><strong>잔디 분류 ≠ 통과 안전</strong> · 구덩이 · 낮은 턱 · 급경사는 의미 지도가 아니라 기하 분석으로 따로 본다.</li>
+</ul>
+
+<h2 id="confuse"><span class="n">4</span>혼동하면 안 되는 것</h2>
+<dl class="defs">
+  <div><dt>디지털 트윈 vs 로봇의 지도</dt><dd>사진으로 구축한 트윈은 <strong>시뮬레이터의 세계</strong>다. 로봇이 센서로 재구성한 지도는 <strong>로봇의 관측 결과</strong>다. 같은 것이 아니다.</dd></div>
+  <div><dt>Mapping · Localization · SLAM</dt><dd>Mapping = 관측을 공간에 누적, Localization = 자기 위치 추정, SLAM = 둘을 함께 추정. <strong>시뮬레이터 정답 위치로 지도 작성·항법을 검증하는 단계는 정당</strong>하지만, 그것을 「센서 기반 SLAM 달성」으로 표시하면 안 된다.</dd></div>
+  <div><dt>박스 표시 vs 행동 변경</dt><dd>사람 박스가 화면에 뜨는 것과, 그 때문에 로봇이 <strong>감속·정지·경로 변경</strong>을 하는 것은 다른 단계다. CV 의 기여를 말할 때는 <strong>CV 켬/끔</strong> 비교와, <strong>기하 기반 장애물 회피만으로도 멈추는 경우</strong>와의 차이를 같이 보여야 한다.</dd></div>
+  <div><dt>Detection2DArray 만으로는 안 붙는다</dt><dd>표준 메시지를 발행한다고 Nav2 와 자동으로 연결되지 않는다. 깊이 · 센서 보정 · 동기화 · TF · 추적 또는 시간 만료 · 비용 지도 반영 또는 정지 로직이 <strong>전부 우리 코드</strong>다(CV 교재 C4-5).</dd></div>
+  <div><dt>「기하는 LiDAR, 의미는 카메라」</dt><dd>입문용 역할 분담 예시다. RGB-D · visual SLAM 을 배제하는 법칙이 아니다.</dd></div>
+</dl>
+
+<h2 id="nav2req"><span class="n">5</span>Nav2 연결 요구사항 · cmd_vel 브리지 하나로 끝나지 않는다</h2>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th>항목</th><th>무엇을 맞춰야 하나</th><th>확인 방법</th><th>상태</th></tr>
+<tr><td><strong>TF</strong></td><td><code>map → odom → base_link → 센서 프레임</code> 이 전부 발행되고 시각이 맞아야 한다. 센서 장착 변환은 실기에서 <strong>미측정</strong></td><td><code>ros2 run tf2_tools view_frames</code> · <code>tf2_echo map base_link</code></td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>odometry</strong></td><td><code>odom → base_link</code> 를 누가 내나. 1단계는 시뮬 정답 위치, 뒤에 LIO/SLAM</td><td><code>ros2 topic hz /odom</code> · RViz 에서 드리프트 육안</td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>simulation clock</strong></td><td><code>/clock</code> 발행 + 모든 노드 <code>use_sim_time:=true</code>. 안 맞으면 TF 조회가 시간 초과로 조용히 실패</td><td><code>ros2 topic echo /clock</code> · 노드 파라미터 확인</td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>footprint</strong></td><td>Go2 몸체 크기 · 다리 반경. 너무 작으면 다리가 걸리고 너무 크면 통로를 못 지난다</td><td>costmap 파라미터 · RViz footprint 표시</td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>ground filtering</strong></td><td>§3. 바닥·낮은 rail·경사를 장애물로 넣을지 비용으로 넣을지</td><td>정지 상태에서 costmap 에 바닥이 안 찍히는지</td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>속도 범위 · timeout</strong></td><td>Nav2 가 내는 <code>vx·vy·wz</code> 를 정책 학습 범위 안으로 clip. 명령이 끊기면 <strong>timeout 후 정지</strong> 명령을 정책에 준다</td><td>연결 코드 자체검사 · 명령 끊고 정지 확인</td><td><span class="badge run">구현 예정</span></td></tr>
+<tr><td><strong>정책의 정지 · 회전 · 속도 추종</strong></td><td>정책이 <code>(0,0,0)</code> 에서 실제로 서는지, <code>wz</code> 만 줘도 제자리 회전이 되는지, 명령 대비 실속도 오차</td><td>같은 명령을 주고 <code>base_lin_vel</code> 로그 비교(08 평가 실행)</td><td><span class="badge hyp">미확인</span></td></tr>
+</table></div></div>
+<p class="sub">Nav2 자체는 4족을 몰라도 된다 · 속도 명령을 받는 쪽이 정책이면 된다. 처음에는 diff-drive 처럼 <code>vy=0</code> 으로 시작하고, 횡이동은 정책의 추종 검증 뒤에 연다.</p>
+
+<h2 id="order"><span class="n">6</span>추천 순서 · 중간발표 10/1~2 표현</h2>
+<ol>
+<li><strong>알려진 지도 + 시뮬레이터 정답 위치</strong>로 기존 정책 ↔ Nav2 목적지 이동 연결 검증 <span class="badge run">구현 예정</span></li>
+<li><strong>센서 관측으로 비용 지도 갱신</strong> → 장애물 회피 <span class="badge run">구현 예정</span></li>
+<li><strong>CV 사람 검출 → 위치·거리 → 감속·정지 / 우회</strong> <span class="badge run">구현 예정</span></li>
+<li><strong>센서 기반 Mapping/SLAM</strong> · 높이·경사 기반 통과 비용 확장 <span class="badge hyp">확장 · 중간발표 필수 아님</span></li>
+</ol>
+<div class="tablewrap"><div class="tw"><table>
+<tr><th>구분</th><th>내용</th><th>성격</th></tr>
+<tr><td><strong>팀 기본</strong></td><td>RL 전후 비교 · 트윈 영상</td><td>팀이 유지하는 기존 학습 단계</td></tr>
+<tr><td><strong>최소 시연 (내 몫)</strong></td><td>영상 출력 · 센서 데이터 · 사람 인식 → <strong>실제 정지</strong></td><td>09-14 우선순위 ①~③ (28 시리즈)</td></tr>
+<tr><td><strong>확장 목표</strong></td><td>「목적지 이동 중 사람 관측 → 감속/정지 또는 우회」= Nav2 통합</td><td><strong>추천 통합 시연 목표.</strong> 팀이 승인한 필수 범위가 아니고 완료 상태도 아니다</td></tr>
+</table></div></div>
+
+<h2 id="real"><span class="n">7</span>실기 경로 · 두 갈래, 확정 아님</h2>
+<div class="cards">
+  <div class="card"><span class="who">갈래 A</span><h4>Unitree 내장 보행 위에 Nav2</h4><p>Nav2 의 <code>cmd_vel</code> 을 로봇 내장 보행 API 로 전달. 우리 RL 정책은 실기에 안 올라간다. 시뮬에서 만든 지도·비용·CV 코드는 그대로 쓴다. <span class="badge hyp">미확인</span> Go2 개체의 API 접근 방식·토픽</p></div>
+  <div class="card"><span class="who">갈래 B</span><h4>자체 RL 정책 실기 배포</h4><p>시뮬 정책을 실기 관절 제어에 올린다. sim-to-real · 안전 · 관측 정합이 전부 추가 과제. <strong>이번 논의가 이 갈래를 확정한 것은 아니다.</strong></p></div>
+</div>
+<p><strong>실기 센서(09-11 [들음] · 라벨·장착·토픽·실성능 미확인)</strong>: 등 Hesai XT-16(16ch, 수직 30°) · 턱 Unitree L1(비반복 360°×90°) · 카메라 RealSense 「d455i」표기(공식 SKU 대조 전 <strong>잠정 D455 기준</strong>). 카메라 영상은 ROS 2 토픽이 아니라 <strong>웹 스트림</strong>으로 받는다(프로토콜·해상도·depth 포함 여부 미확인). 시뮬 XT-16 은 16ch ±15° 근사, L1 은 시야만 맞춘 근사이며 비반복 패턴 재현이 아니다. 렌더 depth 는 실제 D455 의 스테레오 오차를 재현하지 않는다. 상세 표는 C0 5-A.</p>
+
+<h2 id="refs"><span class="n">8</span>참고 자료 (공식)</h2>
+<ul>
+<li>Nav2 <code>costmap_2d</code> 설정 · <a href="https://docs.nav2.org/rolling/configuration_and_development/configuration_guide/core_servers/costmap_2d/">docs.nav2.org · costmap_2d</a>: layer 종류(obstacle · voxel · inflation …), footprint, 3D 입력 layer 가 있다는 것과 험지 통과 판단은 별개</li>
+<li>Nav2 Collision Monitor · <a href="https://docs.nav2.org/jazzy/configuration_and_development/configuration_guide/core_servers/collision_monitor/">docs.nav2.org · collision_monitor (jazzy)</a>: 계획과 별개로 근접 시 감속·정지시키는 안전층. 「사람 → 정지」의 표준 자리 후보</li>
+<li>Nav2 state estimation 개념 · <a href="https://ros-navigation.github.io/mkdocs.nav2.org/rolling/getting_started/navigation_concepts/state_estimation/">navigation_concepts · state_estimation</a>: <code>map→odom→base_link</code> 를 누가 내는지</li>
+<li>elevation_mapping · <a href="https://github.com/ANYbotics/elevation_mapping">github.com/ANYbotics/elevation_mapping</a>: 2.5D 높이 지도의 <strong>개념 참고</strong>. ROS 2 Jazzy 에서 바로 쓸 수 있는 패키지라고 단정하지 않는다(미검증)</li>
+<li>Isaac Lab RayCaster · <a href="https://isaac-sim.github.io/IsaacLab/v2.3.0/source/overview/core-concepts/sensors/ray_caster.html">IsaacLab v2.3.0 · ray_caster</a>: height_scan 이 어떻게 만들어지는지(§2 경계의 근거)</li>
+</ul>
+
+<h2 id="old"><span class="n">9</span>옛 기록</h2>
+<details class="ifonly"><summary><b>2026-08 조사 · 실기 Go2 내장 보행 위 2D SLAM·Nav2 8주 계획</b><span class="skip">현행 아님</span></summary><div class="body">
+<p class="sub">2026-08 에 쓴 판. 「Go2 등급부터 확인」「L1 2D 우선」「브리지 하나면 된다」는 이 판의 전제였고, 09-11 실기 센서 확인(등 XT-16 3D · 턱 L1 3D, 2D LiDAR 없음)과 09-15 구조(시뮬 정책 + Nav2, 위 §1~§7)로 대체됐다. 내용은 기록으로 남긴다.</p>
+<h3>Go2 ↔ ROS 2 연동</h3>
+<p><strong>우리 Go2가 EDU인지 Air/Pro인지.</strong> EDU만 이더넷+DDS 공식 API가 열려 있다. Air/Pro는 WebRTC 기반 비공식 SDK(go2_ros2_sdk)를 써야 하며, 이 답이 아키텍처 전체를 결정한다. (09-11 이후: EDU 로 전달받음 · 라벨 미확인)</p>
+<ul>
+<li><strong>go2_ros2_sdk</strong> (비공식) · Wi-Fi(WebRTC)·이더넷(CycloneDDS), IMU·L1 포인트클라우드(~7Hz)·카메라·LaserScan 변환·텔레옵에 slam_toolbox + Nav2 통합. <a href="https://github.com/abizovnuralem/go2_ros2_sdk">GitHub</a></li>
 <li><strong>unitree_ros2</strong> (공식) · SDK2의 DDS 토픽을 ROS 2에서 직접 구독/발행. EDU 전제. <a href="https://github.com/unitreerobotics/unitree_ros2">GitHub</a></li>
-<li><strong>배포판</strong>: 우리는 조선대 ROS 2 수업(매주 금요일) 기준 <strong>Ubuntu 24.04 + ROS 2 Jazzy</strong>를 사용. 이더넷 직결 시 PC를 <code>192.168.123.x</code>로 수동 설정, <code>RMW_IMPLEMENTATION=rmw_cyclonedds_cpp</code> + <code>CYCLONEDDS_URI</code>에 NIC 지정.</li>
-<li><strong>호환 주의</strong>: Go2 커뮤니티 자료(go2_ros2_sdk 등)는 Humble(22.04) 기준이 많다 · 브링업 1주차에 Jazzy에서 빌드·동작을 먼저 검증하고, 안 되는 패키지는 소스 빌드나 브랜치 확인.</li>
-<li><strong>주의</strong>: 펌웨어 버전에 따라 WebRTC 연결이 깨지는 이슈가 잦다 · 펌웨어 업데이트 전에 go2_ros2_sdk 이슈 트래커 확인.</li>
+<li>배포판 Ubuntu 24.04 + Jazzy. 이더넷 직결 시 <code>192.168.123.x</code>, <code>RMW_IMPLEMENTATION=rmw_cyclonedds_cpp</code>. 커뮤니티 자료는 Humble 기준이 많아 Jazzy 빌드 검증 필요. 펌웨어 버전에 따라 WebRTC 연결이 깨지는 이슈.</li>
 </ul>
-
-<h2 id="slam"><span class="n">2</span>SLAM · 2D를 메인, 3D는 확장</h2>
+<h3>SLAM · 2D 메인, 3D 확장</h3>
 <ul>
-<li><strong>내장 L1 4D LiDAR</strong>: 360°×90° FOV, ±2cm. 단 저해상도·~7Hz·근거리 노이즈 많음. 실내 소규모 매핑엔 충분, 대면적 고품질 3D엔 부족.</li>
-<li><strong>1순위: slam_toolbox (2D)</strong> · L1 포인트클라우드를 <code>pointcloud_to_laserscan</code>으로 2D화해서 사용. go2_ros2_sdk에 기본 포함. <strong>실내 평지 데모라면 최소 리스크 경로.</strong></li>
-<li><strong>확장: point_lio_unilidar</strong> (Unitree 공식 Point-LIO 포팅) · L1으로 3D LIO를 돌리는 표준 방법. 루프 클로저 없음(드리프트 누적), 시작 시 IMU 초기화로 수 초 정지 필요. <a href="https://github.com/unitreerobotics/point_lio_unilidar">GitHub</a></li>
-<li><strong>FAST-LIO2</strong>는 L1에 바로 안 붙는다 · Livox Mid-360을 외장 추가한 팀들이 쓰는 조합. 예산이 생기면 SLAM 품질을 가장 크게 올리는 투자.</li>
-<li>RTAB-Map(RGB-D)은 뎁스 카메라 추가 전제라 이번 범위에선 후순위.</li>
+<li>내장 L1: 360°×90°, ±2cm, 저해상도·~7Hz. 1순위 slam_toolbox(2D, <code>pointcloud_to_laserscan</code>). 확장 point_lio_unilidar(3D LIO, 루프 클로저 없음). FAST-LIO2 는 Mid-360 외장 전제. RTAB-Map 은 뎁스 카메라 추가 전제라 후순위.</li>
 </ul>
-
-<h2 id="nav2"><span class="n">3</span>Nav2 · Go2를 차동구동 로봇처럼 보이게</h2>
-<p>핵심: Nav2가 내는 <code>/cmd_vel</code>(Twist)을 sport-mode API <code>Move(vx, vy, vyaw)</code>로 전달하는 브리지 노드 하나면 되고, go2_ros2_sdk에 내장되어 있다. 4족이라 횡이동이 가능하지만 diff-drive 설정으로 시작하는 게 단순하다.</p>
-<ul>
-<li><strong>TF 트리</strong>: <code>map → odom → base_link</code>. odom은 로봇 오도메트리 또는 LIO, map→odom은 AMCL(2D).</li>
-<li><strong>코스트맵</strong>: L1 포인트클라우드 → 2D 스캔 변환 → obstacle layer. <strong>L1이 바닥을 많이 찍어서 높이 필터링이 실전 최대 삽질 포인트.</strong></li>
-<li>Nav2 내장 waypoint follower로 다중 경유지 순회 데모가 쉽다. <a href="https://docs.nav2.org">docs.nav2.org</a> (특히 First-Time Setup, Tuning Guide)</li>
-<li>참고 구현: <a href="https://github.com/h-naderi/unitree-go2-slam-nav2">h-naderi/unitree-go2-slam-nav2</a>, <a href="https://github.com/Sayantani-Bhattacharya/unitree_go2_nav">unitree_go2_nav</a>, <a href="https://github.com/Maverick220141/Quadruped-ROS2-Navigation">Quadruped-ROS2-Navigation</a> (Mid-360 + FAST-LIO 전체 스택)</li>
-</ul>
-
-<h2 id="plan"><span class="n">4</span>8주 마일스톤 (10월 중순 → 12/11)</h2>
+<h3>Nav2 · 차동구동처럼</h3>
+<p>Nav2 의 <code>/cmd_vel</code> 을 sport-mode <code>Move(vx, vy, vyaw)</code> 로 전달하는 브리지 노드 하나면 되고 go2_ros2_sdk 에 내장. TF <code>map → odom → base_link</code>, map→odom 은 AMCL(2D). 코스트맵은 L1 → 2D 스캔 → obstacle layer, 바닥 필터링이 최대 삽질. 참고 구현: <a href="https://github.com/h-naderi/unitree-go2-slam-nav2">unitree-go2-slam-nav2</a> · <a href="https://github.com/Sayantani-Bhattacharya/unitree_go2_nav">unitree_go2_nav</a> · <a href="https://github.com/Maverick220141/Quadruped-ROS2-Navigation">Quadruped-ROS2-Navigation</a></p>
+<h3>8주 마일스톤 (10월 중순 → 12/11)</h3>
 <div class="tablewrap"><div class="tw"><table>
 <tr><th>주차</th><th>목표</th><th>완료 기준</th></tr>
-<tr><td>1</td><td>Ubuntu 24.04 + Jazzy, 로봇 등급 확인·네트워크 연결, SDK 브링업(Jazzy 호환 검증 포함)</td><td><code>ros2 topic list</code>에 IMU/LiDAR/odom</td></tr>
-<tr><td>2</td><td>텔레옵 + 센서 시각화 (cmd_vel → 보행, RViz/Foxglove)</td><td>조종하며 LiDAR 실시간 표시</td></tr>
+<tr><td>1</td><td>Jazzy, 로봇 등급 확인·네트워크, SDK 브링업</td><td><code>ros2 topic list</code>에 IMU/LiDAR/odom</td></tr>
+<tr><td>2</td><td>텔레옵 + 센서 시각화</td><td>조종하며 LiDAR 실시간 표시</td></tr>
 <tr><td>3</td><td>2D 매핑: pointcloud_to_laserscan + slam_toolbox</td><td>복도/실험실 맵 저장</td></tr>
-<tr><td>4</td><td>위치추정: 저장 맵 + AMCL, TF 정리</td><td>초기포즈 찍고 위치 수렴</td></tr>
-<tr><td>5</td><td>Nav2 단일 목표점: costmap 튜닝(footprint·inflation·바닥 필터), 브리지 검증</td><td>RViz Goal 클릭 → 자율 도달</td></tr>
-<tr><td>6</td><td>웨이포인트 순회 + 동적 장애물 회피 <strong>+ CV 탐지 연동 시작</strong></td><td>3개 경유지 순회, 회피 동작</td></tr>
-<tr><td>7</td><td>통합 데모 리허설, 파라미터 고정. 여유 시 3D LIO 실험</td><td>시나리오 전체 통과</td></tr>
+<tr><td>4</td><td>저장 맵 + AMCL, TF 정리</td><td>초기포즈 찍고 위치 수렴</td></tr>
+<tr><td>5</td><td>Nav2 단일 목표점: costmap 튜닝, 브리지 검증</td><td>RViz Goal 클릭 → 자율 도달</td></tr>
+<tr><td>6</td><td>웨이포인트 순회 + 동적 장애물 회피 + CV 탐지 연동 시작</td><td>3개 경유지 순회, 회피 동작</td></tr>
+<tr><td>7</td><td>통합 데모 리허설, 파라미터 고정. 여유 시 3D LIO</td><td>시나리오 전체 통과</td></tr>
 <tr><td>8</td><td>버퍼 + 발표 자료/영상</td><td>12/11 최종 데모</td></tr>
 </table></div></div>
-<p class="sub">단골 지연 구간: 1~2주차 네트워크/펌웨어, 5주차 costmap 바닥 노이즈. 3D LIO는 "되면 좋은 것"으로 분리하고 2D 경로를 메인으로 유지한다.</p>
+</div></details>
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!-- nav:pagerow -->
+<!-- /nav:pagerow -->
+
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

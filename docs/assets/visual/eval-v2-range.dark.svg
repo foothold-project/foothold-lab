@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 800 364" width="760" height="324" font-family="Pretendard, Malgun Gothic, sans-serif">
+<style>
+:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--deep:#0c1117;--dim:#3ec7b4;--dim-ink:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ink-soft:#4a5566;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}
+
+</style>
+
+<text x="0" y="16" font-size="16" font-weight="700" fill="var(--ink)">연습한 틈과 평가의 틈</text>
+<text x="0" y="38" font-size="12" fill="var(--ink-2)">A 는 평가의 틈을 연습에서 본 적이 없습니다</text>
+<line x1="90.0" y1="300" x2="700.0" y2="300" stroke="var(--rule)" stroke-width="1.6"/>
+<line x1="90.0" y1="300" x2="90.0" y2="306" stroke="var(--rule)" stroke-width="1"/>
+<text x="90.0" y="322" text-anchor="middle" font-size="11" fill="var(--ink-3)">0.00</text>
+<line x1="225.6" y1="300" x2="225.6" y2="306" stroke="var(--rule)" stroke-width="1"/>
+<text x="225.6" y="322" text-anchor="middle" font-size="11" fill="var(--ink-3)">0.10</text>
+<line x1="361.1" y1="300" x2="361.1" y2="306" stroke="var(--rule)" stroke-width="1"/>
+<text x="361.1" y="322" text-anchor="middle" font-size="11" fill="var(--ink-3)">0.20</text>
+<line x1="496.7" y1="300" x2="496.7" y2="306" stroke="var(--rule)" stroke-width="1"/>
+<text x="496.7" y="322" text-anchor="middle" font-size="11" fill="var(--ink-3)">0.30</text>
+<line x1="632.2" y1="300" x2="632.2" y2="306" stroke="var(--rule)" stroke-width="1"/>
+<text x="632.2" y="322" text-anchor="middle" font-size="11" fill="var(--ink-3)">0.40</text>
+<text x="710.0" y="322" font-size="11" fill="var(--ink-3)">틈 폭 (m)</text>
+<rect x="293.3" y="70.0" width="338.9" height="22" rx="4" fill="var(--rule-2)"/>
+<text x="78.0" y="86.0" text-anchor="end" font-size="13" font-weight="500" fill="var(--ink)">평가 하네스</text>
+<text x="642.2" y="86.0" font-size="11.5" fill="var(--ink-2)">0.15 ~ 0.40 m</text>
+<line x1="293.3" y1="66" x2="293.3" y2="96" stroke="var(--ink-3)" stroke-width="1"/>
+<text x="293.3" y="108" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">난이도 0</text>
+<line x1="462.8" y1="66" x2="462.8" y2="96" stroke="var(--ink-3)" stroke-width="1"/>
+<text x="462.8" y="108" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">0.5</text>
+<line x1="632.2" y1="66" x2="632.2" y2="96" stroke="var(--ink-3)" stroke-width="1"/>
+<text x="632.2" y="108" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">1.0</text>
+<rect x="157.8" y="150.0" width="203.3" height="22" rx="4" fill="var(--warn-soft)"/>
+<text x="78.0" y="166.0" text-anchor="end" font-size="13" font-weight="500" fill="var(--ink)">A 가 연습한 틈</text>
+<text x="371.1" y="166.0" font-size="11.5" fill="var(--ink-2)">0.05 ~ 0.20 m</text>
+<rect x="293.3" y="200.0" width="338.9" height="22" rx="4" fill="var(--accent-soft)"/>
+<text x="78.0" y="216.0" text-anchor="end" font-size="13" font-weight="700" fill="var(--ink)">B = foothold-v1</text>
+<text x="642.2" y="216.0" font-size="11.5" fill="var(--ink-2)">0.15 ~ 0.40 m</text>
+<line x1="462.8" y1="60" x2="462.8" y2="300" stroke="var(--bad)" stroke-width="1.6" stroke-dasharray="4 3"/>
+<rect x="386.8" y="240" width="152" height="40" rx="5" fill="var(--card)" stroke="var(--bad)" stroke-width="1"/>
+<text x="462.8" y="256" text-anchor="middle" font-size="12" font-weight="700" fill="var(--bad)">정본 조건 · 0.275 m</text>
+<text x="462.8" y="272" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">A 28 %  ·  B 100 %</text>
+<line x1="361.1" y1="161" x2="462.8" y2="161" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="411.9" y="152" text-anchor="middle" font-size="10.5" fill="var(--bad)">0.075 m 모자람</text>
+</svg>

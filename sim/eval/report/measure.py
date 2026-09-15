@@ -427,23 +427,44 @@ for _tset in ("rough6", "unseen10"):
     if os.path.isfile(_mp):
         zones.update(json.load(io.open(_mp, encoding="utf-8")).get("obstacle_zones_m", {}))
 
-# ── 난이도 스윕 ────────────────────────────────────────────────────────
-# ★ 2026-09-14 (#422). 종합보고서 첫머리가 난이도 곡선과 속도 영향을 인용한다.
-#   그 수를 본문에 손으로 박으면 다음 실행에서 수가 바뀌어도 글이 안 따라온다.
-#   원자료에서 읽어 넘긴다. 없으면 빈 표를 넘기고 본문이 그 줄을 접는다.
+# ── 난이도 · 속도 스윕 (규격 2) ────────────────────────────────────────
+# ★ 2026-09-15. 전에는 `20260910-difficulty-sweep` 을 읽었다. 그 폴더는
+#   첫 줄에 「규격 1 · 결함 · 보행 능력을 잰 것이 아닙니다」 라고 적혀 있고,
+#   게다가 **NVIDIA 기준선**으로 잰 것인데 보고서가 모델을 안 밝히고 실었다.
+#   둘이 한꺼번에 틀렸다. 관문 `tools/no_cite_guard.py` 가 이제 그것을 막는다.
+#
+#   지금은 `20260911-v3-fixedscan` 을 읽는다. 규격 2 이고 세 모델 x 두 지형집합
+#   x 속도 3 x 난이도 10 이 다 있다.
+#
+#   키에 **모델을 넣는다.** 그래야 본문이 「누구 숫자인가」를 안 밝히고 쓰는 일이
+#   구조적으로 막힌다. 앞의 사고가 정확히 그것이었다.
 sweep = {}
-# `R` 은 maindata-v1 을 가리킨다. 스윕은 그 형제 폴더라 한 단계 위에서 찾는다.
-_sp = os.path.join(os.path.dirname(R), "20260910-difficulty-sweep",
-                   "sweep_summary.csv")
-if os.path.isfile(_sp):
+_sw_root = os.path.join(os.path.dirname(R), "20260911-v3-fixedscan")
+
+if os.path.isdir(_sw_root):
     import csv as _csv
-    for _r in _csv.DictReader(io.open(_sp, encoding="utf-8")):
-        _v = float(_r["overall_success_rate"])
-        sweep["%s|%s|%s" % (_r["terrain"], _r["difficulty"], _r["command_vx"])] = (
-            round(_v * 100 if _v <= 1 else _v, 1))
-    print("  난이도 스윕 %d칸 읽었다" % len(sweep))
+    import glob as _glob
+    import re as _re
+
+    for _model in sorted(os.listdir(_sw_root)):
+        _mdir = os.path.join(_sw_root, _model)
+        if not os.path.isdir(_mdir):
+            continue
+        for _run in sorted(_glob.glob(os.path.join(_mdir, "*", "runs", "*"))):
+            _m = _re.search(r"v([0-9.]+)-d([0-9.]+)$", os.path.basename(_run))
+            if not _m:
+                continue
+            _csvp = os.path.join(_run, "generalization_summary.csv")
+            if not os.path.isfile(_csvp):
+                continue
+            for _r in _csv.DictReader(io.open(_csvp, encoding="utf-8")):
+                _v = float(_r["overall_success_rate"])
+                sweep["%s|%s|%s|%s" % (_model, _r["terrain"],
+                                       _m.group(2), _m.group(1))] = (
+                    round(_v * 100 if _v <= 1 else _v, 1))
+    print("  난이도 스윕 %d칸 읽었다 (규격 2 · 모델별)" % len(sweep))
 else:
-    print("  [!] 난이도 스윕을 못 찾았다: %s" % _sp)
+    print("  [!] 규격 2 스윕을 못 찾았다: %s" % _sw_root)
 
 json.dump({
     "score": {"%s|%s|%s" % k: round(v, 1) for k, v in score.items()},

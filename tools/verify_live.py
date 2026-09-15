@@ -295,14 +295,14 @@ def check_page(base, name, bad):
     if 'fh-theme-boot' not in t:
         bad.append('%s 에 테마 초기화가 없습니다' % name)
 
-    # 3. 도해. **이것이 오늘 검정으로 나온 자리다.**
+    # 3. 그림. **이것이 오늘 검정으로 나온 자리다.**
     for src in set(re.findall(r'<img[^>]+src="([^"?]+\.svg)', t)):
         if 'brand' in src or 'favicon' in src:
             continue
         checks += 1
         scode, stext = get('%s/%s' % (base, src.lstrip('/')))
         if scode != 200:
-            bad.append('%s 의 도해 %s 가 안 열립니다 (%s)' % (name, src, scode))
+            bad.append('%s 의 그림 %s 가 안 열립니다 (%s)' % (name, src, scode))
             continue
 
         head = stext[:600]

@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>도해 실측 · getBBox</title>
+<title>그림 실측 · getBBox</title>
 <!-- 분류: 운영 · 작성: 오흥재 · 2026-09-14 · 상태: 확정
      쓰는 법: 배포본을 로컬로 띄운 뒤
        /tools/svg_measure.html?f=/assets/visual/a.svg&f=/assets/visual/b.svg
@@ -10,17 +10,17 @@
 <div id="host" style="width:992px"></div>
 <div id="out">재는 중…</div>
 <script>
-/* 잴 도해 목록. 주소에 ?f=... 로 준다. 없으면 assets/visual 의 eval-v2 전부.
- * 목록을 파일에 박으면 새 도해가 생겼을 때 조용히 안 재게 된다. 그 부류로
+/* 잴 그림 목록. 주소에 ?f=... 로 준다. 없으면 assets/visual 의 eval-v2 전부.
+ * 목록을 파일에 박으면 새 그림이 생겼을 때 조용히 안 재게 된다. 그 부류로
  * 이미 당했다 (주입기가 11개짜리 고정 배열이라 70여 장을 건너뜀). */
 window.__FILES = new URLSearchParams(location.search).getAll('f');
 </script>
 <script>
-/* 도해를 «하나씩 인라인으로» 띄워 실제 글자 상자를 잰다.
+/* 그림을 «하나씩 인라인으로» 띄워 실제 글자 상자를 잰다.
  *
  * <img> 로 띄우면 안쪽을 못 본다. 인라인으로 넣어야 getBBox 가 돈다.
  * 본문(126천자 · 표 69개)을 같이 띄우면 브라우저가 얼어붙어서 여기서는
- * 도해만 띄운다. 실제로 두 번 얼었다. */
+ * 그림만 띄운다. 실제로 두 번 얼었다. */
 const FILES = window.__FILES || [];
 const host = document.getElementById('host');
 const out = document.getElementById('out');

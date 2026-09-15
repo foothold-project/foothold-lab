@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 988 639" width="980" height="610" font-family="system-ui,-apple-system,Segoe UI,Malgun Gothic,Apple SD Gothic Neo,sans-serif" role="img" aria-label="종료 사유 열이 둘뿐이고 그것이 실패 사유가 아닌 구조">
+<title>종료 사유는 둘뿐이고, 그것은 실패 사유가 아니다</title>
+
+<defs>
+<marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#808c9a"/>
+</marker>
+</defs>
+
+<rect x="0" y="0" width="980" height="610" fill="#131a24"/>
+
+<text x="32" y="44" font-size="19" font-weight="700" fill="#bfcad7">&#xC885;&#xB8CC; &#xC0AC;&#xC720; &#xC5F4;&#xC740; &#xB458;&#xBFD0;&#xC774;&#xACE0;, &#xADF8;&#xAC83;&#xC740; &#xC2E4;&#xD328; &#xC0AC;&#xC720;&#xAC00; &#xC544;&#xB2C8;&#xB2E4;</text>
+<text x="32" y="68" font-size="12.5" fill="#808c9a">metrics.py:349 · termination_reason(timed_out) · 플래그 하나만 받아 이름 둘로 가른다</text>
+
+<rect x="32" y="100" width="300" height="280" rx="10" fill="#171717" stroke="#2f3844" stroke-width="1.6"/>
+<text x="52" y="130" font-size="13" font-weight="600" fill="#bfcad7">한 에피소드가 실제로 끝나는 방식</text>
+
+<circle cx="58" cy="162" r="4" fill="#3dc6a0"/>
+<text x="72" y="167" font-size="11.5" fill="#bfcad7">제한 시간을 다 채웠다</text>
+<circle cx="58" cy="192" r="4" fill="#d26d5d"/>
+<text x="72" y="197" font-size="11.5" fill="#bfcad7">몸통(base)이 1 N 이상 닿았다</text>
+<text x="72" y="216" font-size="10.5" fill="#808c9a">지금 종료 조건은 이 하나뿐이다</text>
+
+<line x1="52" y1="240" x2="312" y2="240" stroke="#202732" stroke-width="1"/>
+<text x="52" y="266" font-size="11" font-weight="600" fill="#d2a237">아직 종료 조건이 아닌 것</text>
+<circle cx="58" cy="292" r="4" fill="#555e6a"/>
+<text x="72" y="297" font-size="11.5" fill="#555e6a">머리를 세게 박았다</text>
+<circle cx="58" cy="318" r="4" fill="#555e6a"/>
+<text x="72" y="323" font-size="11.5" fill="#555e6a">다리가 접혀 주저앉았다</text>
+<circle cx="58" cy="344" r="4" fill="#555e6a"/>
+<text x="72" y="349" font-size="11.5" fill="#555e6a">지형 밖으로 떨어졌다</text>
+
+<line x1="332" y1="164" x2="368" y2="228" stroke="#808c9a" stroke-width="1.6"/>
+<line x1="332" y1="194" x2="368" y2="246" stroke="#808c9a" stroke-width="1.6"/>
+<line x1="368" y1="240" x2="390" y2="240" stroke="#808c9a" stroke-width="1.6" marker-end="url(#ar2)"/>
+
+<line x1="332" y1="318" x2="356" y2="302" stroke="#555e6a" stroke-width="1.6" stroke-dasharray="4 3"/>
+<line x1="360" y1="292" x2="372" y2="304" stroke="#d26d5d" stroke-width="1.6"/>
+<line x1="372" y1="292" x2="360" y2="304" stroke="#d26d5d" stroke-width="1.6"/>
+<text x="380" y="302" font-size="10.5" fill="#d26d5d">종료 자체가 안 된다</text>
+
+<rect x="396" y="190" width="220" height="100" rx="10" fill="#171717" stroke="#bfcad7" stroke-width="1.6"/>
+<text x="506" y="216" font-size="11" fill="#5590d0" text-anchor="middle">termination_reason(timed_out)</text>
+<text x="506" y="241" font-size="12.5" font-weight="600" fill="#bfcad7" text-anchor="middle">인자가 하나다</text>
+<text x="506" y="263" font-size="11" fill="#d26d5d" text-anchor="middle">접촉을 읽지 않는다</text>
+<text x="506" y="282" font-size="10" fill="#808c9a" text-anchor="middle">metrics.py:349~351</text>
+
+<line x1="616" y1="220" x2="668" y2="198" stroke="#808c9a" stroke-width="1.6" marker-end="url(#ar2)"/>
+<line x1="616" y1="260" x2="668" y2="316" stroke="#808c9a" stroke-width="1.6" marker-end="url(#ar2)"/>
+
+<rect x="676" y="152" width="200" height="92" rx="10" fill="#171717" stroke="#5590d0" stroke-width="1.6"/>
+<text x="776" y="186" font-size="15" font-weight="700" fill="#5590d0" text-anchor="middle">timeout</text>
+<text x="776" y="210" font-size="11" fill="#bfcad7" text-anchor="middle">제한 시간을 다 채우고 끝났다</text>
+<text x="776" y="228" font-size="11" font-weight="600" fill="#3dc6a0" text-anchor="middle">&#xC131;&#xACF5;&#xC758; 100 %&#xAC00; &#xC5EC;&#xAE30;&#xB2E4;</text><text x="776" y="244" font-size="9.5" fill="#808c9a" text-anchor="middle">&#xC131;&#xACF5; 60,295 &#xD310; &#xC804;&#xBD80; &#xB54C; &#xC2E4;&#xD328; 21,185 &#xD310;</text>
+
+<rect x="676" y="276" width="200" height="92" rx="10" fill="#171717" stroke="#d26d5d" stroke-width="1.6"/>
+<text x="776" y="310" font-size="15" font-weight="700" fill="#d26d5d" text-anchor="middle">base_contact</text>
+<text x="776" y="334" font-size="11" fill="#bfcad7" text-anchor="middle">시간 전에 끝났다</text>
+<text x="776" y="352" font-size="11" font-weight="600" fill="#d26d5d" text-anchor="middle">&#xC0DD;&#xC874;&#xC740; &#xBC18;&#xB4DC;&#xC2DC; &#xC2E4;&#xD328;</text><text x="776" y="368" font-size="9.5" fill="#808c9a" text-anchor="middle">&#xC131;&#xACF5; 0 &#xD310; &#xB54C; &#xC2E4;&#xD328; 13,920 &#xD310;</text>
+
+<text x="396" y="398" font-size="11.5" fill="#d2a237">timed_out &#xC774; &#xC544;&#xB2C8;&#xBA74; &#xBB34;&#xC870;&#xAC74; base_contact &#xB77C;&#xACE0; &#xC801;&#xB294; &#xCD94;&#xB860;&#xC774;&#xB2E4;</text><text x="396" y="418" font-size="11.5" font-weight="600" fill="#d26d5d">&#xADF8;&#xB798;&#xC11C; &#xC774; &#xC5F4;&#xB85C;&#xB294; &#xC65C; &#xC2E4;&#xD328;&#xD588;&#xB294;&#xC9C0;&#xB97C; &#xC54C; &#xC218; &#xC5C6;&#xB2E4;. &#xC0AC;&#xC720;&#xB294; &#xB124; &#xCD95;&#xC774; &#xB9D0;&#xD55C;&#xB2E4;</text>
+
+<rect x="32" y="424" width="916" height="142" rx="10" fill="#31270e" stroke="#d7c8a3" stroke-width="1.6"/>
+<text x="52" y="454" font-size="13" font-weight="600" fill="#d2a237">이 두 값이 못 보게 하는 것</text>
+<text x="52" y="488" font-size="11.5" fill="#bfcad7">어느 링크가 닿았는지</text>
+<text x="52" y="514" font-size="11.5" fill="#bfcad7">정말 접촉 때문에 끝났는지</text>
+<text x="52" y="540" font-size="11.5" fill="#bfcad7">다리가 접혀 주저앉은 에피소드는 종료조차 안 된다</text>
+<text x="500" y="488" font-size="11.5" fill="#bfcad7">종료 조건을 하나라도 더하면 그 에피소드가 전부</text>
+<text x="500" y="514" font-size="11.5" fill="#bfcad7">base_contact 로 기록되고 오류는 나지 않는다</text>
+<text x="500" y="540" font-size="11.5" fill="#bfcad7">「낙상」은 정확히는 「몸통이 1 N 이상 닿았다」다</text>
+
+<text x="32" y="576" font-size="10.5" fill="#808c9a">&#xBAA8;&#xC9D1;&#xB2E8; &#xB294; &#xADDC;&#xACA9; 2 &#xC2E4;&#xD589; 99&#xAC1C; · &#xC5D0;&#xD53C;&#xC18C;&#xB4DC; 95,400 &#xD589; &#xC804;&#xC218; &#xB2E4;</text><text x="32" y="596" font-size="10.5" fill="#808c9a">종료 조건 base_contact 는 환경 설정이라 명령줄로 못 바꾼다. 임계 1 N 은 머리 접촉 관측 열이 쓰는 문턱과 같은 값이다.</text>
+</svg>

@@ -177,9 +177,9 @@ def extract(site):
     if not badge:
         raise SystemExit("index.html 에 newbadge 블록이 없다")
 
-    # 2026-09-14. **도해 테마 갈아끼우기도 같이 간다.**
+    # 2026-09-14. **그림 테마 갈아끼우기도 같이 간다.**
     #   `fh-theme-boot` 만 떠 오던 자리다. 그래서 바를 받은 페이지가
-    #   테마는 따라가는데 도해만 라이트로 남았다. 위 두 사고와 같은 부류.
+    #   테마는 따라가는데 그림만 라이트로 남았다. 위 두 사고와 같은 부류.
     #   같이 가야 할 것이 셋이 됐으니 하나라도 빠지면 세운다.
     figs = re.search(r'<script id="fh-figs">.*?</script>', text, re.S)
 

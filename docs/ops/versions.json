@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "9cb99c5d6dfb73df",
+  "hash": "7a7426fada7c43dd",
   "major": "v2.1",
-  "ver": "v2.7"
+  "ver": "v2.9"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -195,9 +195,9 @@
   "ver": "v1.2"
  },
  "docs/decisions/20260912-research-hub-redesign.md": {
-  "hash": "107f07b8ad1ca12e",
+  "hash": "2c394547100c5e1e",
   "major": "v3.0",
-  "ver": "v3.1"
+  "ver": "v3.2"
  },
  "docs/digest/2026-W33.md": {
   "hash": "1b39d75aa1e56114",
@@ -225,9 +225,9 @@
   "ver": ""
  },
  "docs/digest/2026-W37-material.md": {
-  "hash": "a90ad26d49205322",
+  "hash": "d15490dbbe1314ab",
   "major": "",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/digest/2026-W37.md": {
   "hash": "7c9ee2243c83eefe",
@@ -385,9 +385,9 @@
   "ver": ""
  },
  "docs/notices/2026-09-12.md": {
-  "hash": "fb3171e0ec58f517",
+  "hash": "f43a963cf46024b5",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
@@ -455,9 +455,9 @@
   "ver": "v1.1"
  },
  "docs/research/20260908-go2-spec-sim-vs-real.md": {
-  "hash": "e54aedaf167daadc",
+  "hash": "58d98c61145f84ba",
   "major": "v1.1",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/research/20260908-pit-diagnosis.md": {
   "hash": "61c76a7a1f9c4518",
@@ -470,9 +470,9 @@
   "ver": "v1.1"
  },
  "docs/research/20260909-eval-harness-diagram.md": {
-  "hash": "a04417fc4e4ce0b4",
+  "hash": "dbfc24178a9e119e",
   "major": "v1.0",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/research/20260909-head-contact-observation.md": {
   "hash": "74788910b693b33c",
@@ -480,9 +480,9 @@
   "ver": "v1.1"
  },
  "docs/research/20260911-eval-protocol-v2.md": {
-  "hash": "d4aed44b8a748b4c",
+  "hash": "2725315bc737a8b7",
   "major": "v2.0",
-  "ver": "v2.5"
+  "ver": "v2.6"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",
@@ -545,9 +545,9 @@
   "ver": "v1.0"
  },
  "docs/research/parkour-ablation-대조분석.md": {
-  "hash": "bb94b04115275fb2",
+  "hash": "4ac45634074bc50e",
   "major": "v1.1",
-  "ver": "v1.2"
+  "ver": "v1.3"
  },
  "docs/research/pretrained-vs-model99-7terrain.md": {
   "hash": "5bfaf38007a5844d",

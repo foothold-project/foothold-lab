@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""도해의 `viewBox` 를 내용에 맞춰 «사방 같은 여백» 으로 다시 잡는다.
+"""그림의 `viewBox` 를 내용에 맞춰 «사방 같은 여백» 으로 다시 잡는다.
 
 분류: 운영 · 작성: 오흥재 · 2026-09-14 · 상태: 확정
 근거: 실측 (브라우저 `getBBox` 로 잰 내용 상자 · 아래 표)
@@ -59,7 +59,7 @@ BOX = {
     'eval-v2-fig06': (30.3, 20, 463, 353),
     'eval-v2-fig07': (0, 1, 780, 296),
     'eval-v2-fig08': (0, 1, 1000, 614),
-    # 평가 하네스 도해와 Go2 제원 도해도 여백이 제각각이었다 (좌 0 이 둘).
+    # 평가 하네스 그림과 Go2 제원 그림도 여백이 제각각이었다 (좌 0 이 둘).
     '20260908-go2-spec-diagram': (40, 18, 888.7, 659),
     'eval-harness-direction-gate': (32, 23, 944, 603),
     'eval-harness-four-axes': (0, 0, 954, 661),
@@ -133,7 +133,7 @@ def check(root, say=print):
         elif m.group(1).strip() != want:
             bad.append('%s 의 viewBox 가 «%s» 입니다 (실측 기준 «%s»)'
                        % (f, m.group(1), want))
-    say('  실측 기준을 가진 도해 %d장 검사 · 기준 없는 것 %d장'
+    say('  실측 기준을 가진 그림 %d장 검사 · 기준 없는 것 %d장'
         % (seen, len(unknown)))
     if unknown:
         say('      기준 없음: %s' % ' '.join(unknown[:5]))

@@ -316,6 +316,20 @@ MENTOR_JS = """<script id="mentor-dday">
   }
   function tick(){
     var t=kday(), i, g, els;
+    /* 날짜가 박힌 D-day. 빌드 시점 값이 굳지 않게 매번 다시 센다.
+       KST 자정 기준이라 날짜 일련번호로 뺀다 (밀리초로 빼면 하루를 잃는다). */
+    els=document.querySelectorAll('.ddate');
+    for(i=0;i<els.length;i++){
+      var due=els[i].getAttribute('data-due');
+      if(!due) continue;
+      /* 기준을 맞춘다. `t` 는 «KST 로 민» 일련번호다. 마감일에 +09:00 을
+         붙여 파싱하면 UTC 로 하루 앞(9/29 15:00Z)이 되어 **하루를 잃는다.**
+         실제로 D-15 여야 할 자리에 D-14 가 떴다. 마감일도 같은 공간에서
+         읽도록 Z 로 파싱한다. 둘 다 «달력 날짜» 의 일련번호가 된다. */
+      var d=Math.floor(Date.parse(due+'T00:00:00Z')/86400000);
+      var g2=d-t;
+      els[i].textContent = g2>0 ? ('D-'+g2) : (g2===0 ? '오늘' : '지남');
+    }
     els=document.querySelectorAll('.mdd');
     for(i=0;i<els.length;i++){
       g=gap(els[i],t); if(g<0) continue;
@@ -414,19 +428,35 @@ def week_section():
     #   「앞으로 차주에 뭘 집중하나」가 필요해서 만든 칸이다. 뒤를 보는 칸이 아니다.
     #   차주 이슈가 아직 없으면 «아직 안 열림» 을 말하고 만들 자리를 알려 준다.
     import datetime
+    # ★ 2026-09-15. 전에는 `cur = weeks[-1]` 로 «이슈 중 가장 늦은 주» 를
+    #   「이번 주」라고 불렀다. 주간 목표 이슈가 W36(8/28) 이후 안 열려서,
+    #   페이지가 9월 15일에도 「이번 주 · W36 · 8/31~9/6」 이라고 말하고 있었다.
+    #   2주 뒤진 것을 현재라고 말한 것이고 오류는 하나도 안 났다.
+    #
+    #   **달력에서 오늘 주차를 센다.** 그 주 이슈가 없으면 «안 열렸다» 고
+    #   말한다. 조용히 틀린 것을 말하느니 시끄럽게 비어 있는 편이 낫다.
+    # 시간은 정본(`buildtime`)으로만 읽는다. 여기서 직접 시계를 보면
+    # 재현 빌드가 안 되고, 빌드 관문 [1.2] 가 그것을 잡는다.
+    cur = 'W%02d' % buildtime.today().isocalendar()[1]
+    nxt = 'W%02d' % (int(cur[1:]) + 1)
     weeks = sorted(wk)
-    cur = weeks[-1]
-    nxt = 'W%d' % (int(cur[1:]) + 1)
+    _last = weeks[-1] if weeks else None
     out = []
     for n, wknum in enumerate((cur, nxt)):
         if wknum not in wk:
+            _label = '이번 주' if n == 0 else '차주'
+            _extra = ''
+            if n == 0 and _last and _last != cur:
+                _extra = ('<br><b>마지막으로 연 주는 %s 입니다.</b> '
+                          '%d주째 안 열렸습니다.'
+                          % (_last, int(cur[1:]) - int(_last[1:])))
             out.append(
-                '<div class="w3 dim"><div class="w3h">차주 · %s</div>'
+                '<div class="w3 dim"><div class="w3h">%s · %s</div>'
                 '<div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 '
-                '「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.'
+                '「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.%s'
                 '<br><a href="https://github.com/foothold-project/foothold-lab/'
                 'issues/new?template=weekly-team.md">지금 열기</a></div></div>'
-                % wknum)
+                % (_label, wknum, _extra))
             continue
         team, people = None, []
         for rest, it in wk[wknum]:
@@ -487,11 +517,16 @@ def schedule_html(site):
                  if len(st) == 1 and items else
                  ' · '.join('%s %d' % kv for kv in st.items()) or '걸린 문서 없음')
         out.append(
-            '<div class="g3%s"><div class="g3l"><span class="g3d">D-%d</span>'
+            # ★ 2026-09-15. D-day 가 «빌드 시점» 으로 굳어 있었다. 어제 구운
+            #   페이지가 오늘 D-16 이라 말했고 실제로는 D-15 였다. 다시 굽지
+            #   않으면 매일 하루씩 더 틀려지는데 오류는 하나도 안 난다.
+            #   날짜를 달아 브라우저가 매번 다시 센다 (`ddate` 반열).
+            '<div class="g3%s"><div class="g3l">'
+            '<span class="g3d ddate" data-due="%s">D-%d</span>'
             '<span class="g3n">%s</span><span class="g3u">%d월 %d일</span></div>'
             '<div class="g3r"><div class="g3t">%s</div>'
             '<div class="chips3">%s</div></div></div>'
-            % (' near' if dday <= 7 else '', dday, esc(name),
+            % (' near' if dday <= 7 else '', due.isoformat(), dday, esc(name),
                due.month, due.day, esc(tally), ''.join(chips)))
     out.append('</div>')
     # ★ 팀장 지적 (8/31): 「더 깊이」가 너무 작아 안 보인다. 카드로 올린다.
@@ -1733,6 +1768,9 @@ CSS = '''<style id="hub3-css">
  text-decoration:none;border:1px solid var(--dim);border-radius:99px;padding:.12rem .6rem}
 /* 매주 회차를 브라우저가 다시 세는 D-day (#155). 값이 바뀌는 자리라
    폭이 흔들리지 않게 고정폭 숫자를 쓴다. 관문 dd-live 와 같은 처리다. */
+/* 날짜가 박힌 D-day. 브라우저가 매번 다시 세므로 자릿수가 흔들리지
+   않게 고정폭 숫자를 쓴다 (`mdd` 와 같은 까닭). */
+.ddate{font-variant-numeric:tabular-nums}
 .mdd{font-variant-numeric:tabular-nums}
 .w3t{display:block;text-decoration:none;color:inherit;margin:.55rem 0 0}
 .w3t b{font-size:.85rem;font-weight:780;display:block}

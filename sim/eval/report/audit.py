@@ -329,8 +329,11 @@ check("1j", "wave 캡션의 종합 성공이 실측과 같다", ok, why)
 
 # 시연 캡션이 적은 「이 자리 성공 n/m」 이 그 칸의 실제 값인가.
 # gap 의 세 모델 캡션이 보고서에 나오는 순서대로다.
+# ★ 2026-09-15. 캡션 문구를 「이 조건의 평가 성공: N/N」 으로 고쳤다.
+# 관문이 옛 문구를 찾고 있어 본문 [] 로 비었다. **문구가 바뀌면 그것을
+# 읽는 관문도 같이 본다** 는 것을 오늘 세 번째 겪는다.
 caption = [tuple(int(x) for x in m)
-           for m in re.findall(r"이 자리 성공 (\d+)/(\d+)", PLAIN)]
+       for m in re.findall(r"이 조건의 평가 성공: (\d+)/(\d+)", PLAIN)]
 want = [(cell[("gap", m, "1")][0], cell[("gap", m, "1")][1])
         for m in ("baseline", "A", "foothold-v1")]
 check("1g", "시연 캡션의 성적이 그 칸의 실측과 같다", caption == want,
@@ -927,7 +930,7 @@ print("== 5. 배포본과 생성본 ==")
 deployed = os.path.join(SITE, "report-v1.html")
 made = os.path.join(OUT, "report-v1.html")
 # ★ 2026-09-14. 전에는 바이트로 견줬다. 그런데 이제 배포본에는 «빌드가 붙이는 표»
-#   가 있다 (`data-themed` · `data-plate` · 도해가 테마를 따라가게 하는 것).
+#   가 있다 (`data-themed` · `data-plate` · 그림이 테마를 따라가게 하는 것).
 #   그것 때문에 두 파일이 늘 달라져 관문이 언제나 붉게 됐다. 관문이 늘 실패하면
 #   사람이 관문을 안 본다. 그러니 «빌드가 붙이는 것만» 걷고 나머지를 견준다.
 #   걷는 목록을 여기 명시해 두어, 새 후처리가 생기면 이 관문이 다시 잡는다.

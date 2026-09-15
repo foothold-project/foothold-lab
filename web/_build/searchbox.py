@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
@@ -303,7 +303,7 @@ def svg_text(chunk):
                          chunk, re.S):
         out.append(re.sub(r'<[^>]+>', ' ', m.group(1)))
     # ★ 2026-09-09. 도식 상당수는 <text> 가 아예 없다. 도형만 있거나, 빈 <svg> 를
-    #   두고 JS 가 런타임에 그린다 (백과의 보행 도해가 그렇다).
+    #   두고 JS 가 런타임에 그린다 (백과의 보행 그림이 그렇다).
     #   그런 도식의 «이름» 은 aria-label 에 있고 그것이 유일한 정적 글자다.
     #   실측: 도식 184개 중 150개가 <text> 없이 왔고 aria-label 은 32개 있었다.
     #   런타임에 그려지는 글자는 정적 파일에 없으므로 색인할 방법이 없다.
@@ -570,8 +570,8 @@ def _kat():
     #   사라지면 안 된다. 반대로 경로 데이터가 새면 검색이 쓰레기로 찬다.
     g = strip_tags('<p>본문</p><svg viewBox="0 0 9 9"><rect x="3" y="4"/>'
                    '<path d="M1 2L3 4"/><text x="5" y="9">ZZSVGKAT</text>'
-                   '<title>도해</title></svg><p>끝</p>')
-    for want in ('본문', 'ZZSVGKAT', '도해', '끝'):
+                   '<title>그림</title></svg><p>끝</p>')
+    for want in ('본문', 'ZZSVGKAT', '그림', '끝'):
         if want not in g:
             return False, '도식 안 글자가 색인에서 빠진다: %s' % want
     for junk in ('viewBox', 'M1 2L3 4', 'rect'):

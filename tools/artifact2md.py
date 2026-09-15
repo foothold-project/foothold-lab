@@ -12,7 +12,7 @@
 
 ## 왜 이것이 있나
 
-평가 정본 아티팩트에 **13절 · 표 46 · 도해 8 · 사진 6** 이 들어 있는데,
+평가 정본 아티팩트에 **13절 · 표 46 · 그림 8 · 사진 6** 이 들어 있는데,
 저장소 markdown 에는 그 내용이 없었다. 그래서 웹판을 만들자 **다른, 더
 얇은 문서**가 올라갔다 `확인됨` (2026-09-12 팀장 지적).
 
@@ -39,7 +39,7 @@
 | `<img src="data:...">` | 같은 폴더에 파일로 저장하고 `![]()` |
 | `<pre>` | 코드울 |
 
-**도해와 사진을 파일로 내린다.** base64 로 본문에 박혀 있으면 그 문서는
+**그림과 사진을 파일로 내린다.** base64 로 본문에 박혀 있으면 그 문서는
 2 MB 가 되고, 고칠 수도 재사용할 수도 없다.
 """
 from __future__ import annotations
@@ -225,7 +225,7 @@ def graphics(chunk, args, seen):
 
     그림은 `<figure>` 나 `<p>` 안에 들어 있는 일이 많다. 바깥 블록을 먼저
     집으면 그림이 통째로 삼켜져 «글자만» 남는다 `확인됨` (2026-09-12 ·
-    첫 판에서 도해 8장과 사진 6장이 전부 사라졌고 관문이 잡았다).
+    첫 판에서 그림 8장과 사진 6장이 전부 사라졌고 관문이 잡았다).
     """
     out = []
 
@@ -235,7 +235,7 @@ def graphics(chunk, args, seen):
         io.open(os.path.join(args.assets, name), "w",
                 encoding="utf-8").write(m.group(0))
         cap = re.search(r'aria-label="([^"]*)"', m.group(0))
-        out.append("![%s](%s/%s)" % (cap.group(1) if cap else "도해 %d" % seen["svg"],
+        out.append("![%s](%s/%s)" % (cap.group(1) if cap else "그림 %d" % seen["svg"],
                                      args.rel, name))
         seen["files"].append(name)
 
@@ -258,7 +258,7 @@ def main():
     p = argparse.ArgumentParser(description="아티팩트를 markdown 으로")
     p.add_argument("source")
     p.add_argument("--out", required=True)
-    p.add_argument("--assets", required=True, help="도해·사진을 내릴 폴더")
+    p.add_argument("--assets", required=True, help="그림·사진을 내릴 폴더")
     p.add_argument("--slug", required=True, help="파일 이름 앞머리")
     p.add_argument("--rel", default="../assets/visual",
                    help="markdown 안에서 그림을 가리킬 상대 경로")
@@ -360,7 +360,7 @@ def main():
     text = "\n\n".join(out) + "\n"
     io.open(args.out, "w", encoding="utf-8").write(text)
     print("  %s · %.1f KB" % (args.out, len(text.encode("utf-8")) / 1024))
-    print("  절 %d · 표 %d · 도해 %d · 사진 %d"
+    print("  절 %d · 표 %d · 그림 %d · 사진 %d"
           % (sum(1 for l in out if l.startswith("#")),
              sum(1 for l in out if l.startswith("|")), n_svg, n_img))
 

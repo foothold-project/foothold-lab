@@ -232,13 +232,13 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
-/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
  * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
  * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
  * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
  * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
  * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
  * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
@@ -513,7 +513,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -738,12 +738,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1047,7 +1047,7 @@ Abl 7.0 이 나빠졌다. <b>에피소드 내내 상수인 양은 인코딩하�
 <ol><li><b>목표가 다르다.</b> 저쪽은 파쿠르(넓은 갭·높은 계단 정복), 우리는 <b>미경험 험지 적응</b>(본 적 없는 지형에서 안 넘어지고 명령을 따르기).</li><li><b>명령 체계가 다르다.</b> 저쪽은 <code>(1.0, 0, 0)</code> 고정 + heading 범위 0. 우리 평가는 속도추종과 방향을 <b>성공 축</b>으로 센다.</li><li><b>평가 지형이 다르다.</b> 저쪽은 학습 지형에서, 우리는 학습에 없던 지형에서 잰다.</li><li><b>현재 위치가 다르다.</b> 저쪽은 20000 iter 학습된 자기 정책, 우리는 <b>남의 체크포인트</b>로 기준선을 재는 단계다.</li></ol>
 </section>
 <section id="s8"><span id="7"></span><h2>7. 미확인 · 다음에 확인할 것</h2>
-<div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>왜 아직 모르나</th><th>어떻게 확인하나</th></tr></thead><tbody><tr><td>1</td><td>영상 자체의 프레임 단위 거동</td><td>저장소의 <code>.webm</code>/<code>.mov</code>/<code>.gif</code> 를 <b>재생해 보지 않았다.</b> 이 문서의 영상 해석은 <b>지형 생성 코드와 캡션에서 역산한 것</b></td><td><code>assets/videos/Abl1.0/Abl1.0. GAP-level=9.webm</code> 을 받아 프레임 단위로 볼 것</td></tr><tr><td>2</td><td>Abl 별 정량 수치</td><td>저쪽 README 에 <b>숫자 표가 없다.</b> 「best mean reward」 같은 서술뿐이고 로그·체크포인트는 저장소에 없다</td><td>저쪽에 TensorBoard 로그를 요청하거나, 우리가 직접 재현 학습</td></tr><tr><td>3</td><td><s>우리가 <code>feet_air_time</code> 을 0.01 로 낮춘 원래 근거</s> <b>[09-09 닫힘]</b></td><td><s>이 문서는 IsaacLab 파일에서 <b>값만</b> 읽었다. 그 값을 넣은 결정 기록은 못 찾았다</s> <b>질문 자체가 틀린 전제였다. 우리는 낮춘 적이 없고 NVIDIA 가 정한 값을 상속만 했다.</b> 찾을 결정 기록이 애초에 없다</td><td><b>닫힘.</b> 근거는 §9-2 · 상류 트리 대조 실측</td></tr><tr><td>4</td><td>학습 지형에 갭을 넣는 비용</td><td>재학습 시간·GPU 예산을 안 재 봤다</td><td>4096 env 짧은 구간 실측 (커널 2-1 절)</td></tr><tr><td>5</td><td>Notion·Drive 보충자료</td><td>README 가 링크한 RMA 분석 노트와 네트워크 도해가 <b>접근 권한 필요</b></td><td>필요하면 저자에게 요청</td></tr><tr><td>6</td><td><b>팀장이 「80 cm」를 처음 말한 원 대화</b></td><td>이슈 <b>370건 본문 전수</b>와 <code>docs/</code> 를 훑었고 <b>일치 0건</b>이다. 회의 전사나 채팅에만 있었던 것으로 보이고 그것은 이 저장소에 없다</td><td>회의 전사·채팅 이력. <b>아래 경고를 함께 읽을 것</b></td></tr><tr><td>7</td><td><b><code>#278</code> 파인튜닝 arm 이 무엇을 바꿔 돌렸나</b></td><td>그 실행의 <b>설정이 저장소에 없다.</b> <code>sim/</code> 에 환경 설정 클래스는 <code>UnitreeGo2GeneralizationEnvCfg</code> 하나뿐이고 학습용 arm 설정이 없다</td><td>임석헌에게 확인 (오케스트레이터가 진행 중). §10 참조</td></tr><tr><td>8</td><td>NVIDIA 가 <code>feet_air_time=0.01</code> · <code>dof_torques_l2=-2e-4</code> 를 <b>왜</b> 그 값으로 정했나</td><td>코드에 주석이 없고, 로컬 IsaacLab 체크아웃이 <b>얕은 복제</b>(<code>git rev-list --count HEAD = 1</code>)라 커밋 이력이 없다</td><td>상류 GitHub 이력·PR 조회</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>왜 아직 모르나</th><th>어떻게 확인하나</th></tr></thead><tbody><tr><td>1</td><td>영상 자체의 프레임 단위 거동</td><td>저장소의 <code>.webm</code>/<code>.mov</code>/<code>.gif</code> 를 <b>재생해 보지 않았다.</b> 이 문서의 영상 해석은 <b>지형 생성 코드와 캡션에서 역산한 것</b></td><td><code>assets/videos/Abl1.0/Abl1.0. GAP-level=9.webm</code> 을 받아 프레임 단위로 볼 것</td></tr><tr><td>2</td><td>Abl 별 정량 수치</td><td>저쪽 README 에 <b>숫자 표가 없다.</b> 「best mean reward」 같은 서술뿐이고 로그·체크포인트는 저장소에 없다</td><td>저쪽에 TensorBoard 로그를 요청하거나, 우리가 직접 재현 학습</td></tr><tr><td>3</td><td><s>우리가 <code>feet_air_time</code> 을 0.01 로 낮춘 원래 근거</s> <b>[09-09 닫힘]</b></td><td><s>이 문서는 IsaacLab 파일에서 <b>값만</b> 읽었다. 그 값을 넣은 결정 기록은 못 찾았다</s> <b>질문 자체가 틀린 전제였다. 우리는 낮춘 적이 없고 NVIDIA 가 정한 값을 상속만 했다.</b> 찾을 결정 기록이 애초에 없다</td><td><b>닫힘.</b> 근거는 §9-2 · 상류 트리 대조 실측</td></tr><tr><td>4</td><td>학습 지형에 갭을 넣는 비용</td><td>재학습 시간·GPU 예산을 안 재 봤다</td><td>4096 env 짧은 구간 실측 (커널 2-1 절)</td></tr><tr><td>5</td><td>Notion·Drive 보충자료</td><td>README 가 링크한 RMA 분석 노트와 네트워크 그림이 <b>접근 권한 필요</b></td><td>필요하면 저자에게 요청</td></tr><tr><td>6</td><td><b>팀장이 「80 cm」를 처음 말한 원 대화</b></td><td>이슈 <b>370건 본문 전수</b>와 <code>docs/</code> 를 훑었고 <b>일치 0건</b>이다. 회의 전사나 채팅에만 있었던 것으로 보이고 그것은 이 저장소에 없다</td><td>회의 전사·채팅 이력. <b>아래 경고를 함께 읽을 것</b></td></tr><tr><td>7</td><td><b><code>#278</code> 파인튜닝 arm 이 무엇을 바꿔 돌렸나</b></td><td>그 실행의 <b>설정이 저장소에 없다.</b> <code>sim/</code> 에 환경 설정 클래스는 <code>UnitreeGo2GeneralizationEnvCfg</code> 하나뿐이고 학습용 arm 설정이 없다</td><td>임석헌에게 확인 (오케스트레이터가 진행 중). §10 참조</td></tr><tr><td>8</td><td>NVIDIA 가 <code>feet_air_time=0.01</code> · <code>dof_torques_l2=-2e-4</code> 를 <b>왜</b> 그 값으로 정했나</td><td>코드에 주석이 없고, 로컬 IsaacLab 체크아웃이 <b>얕은 복제</b>(<code>git rev-list --count HEAD = 1</code>)라 커밋 이력이 없다</td><td>상류 GitHub 이력·PR 조회</td></tr></tbody></table></div>
 <blockquote><p><b>6번은 그냥 「못 찾았다」가 아니다.</b> 판단 근거로 돌아다니는 수치가 <b>저장소 밖에만 있다</b>는 뜻이다.
 이 프로젝트가 반복해서 겪는 부류이고, 커널 2-3 절 2번(「모든 데이터는 휘발되지 않는다」)이 정확히
 이것을 막으려는 조항이다. <b>세션 안에서만 말한 수치는 다음 세션에 근거가 없다.</b>
@@ -1177,12 +1177,12 @@ document.addEventListener('click', function(e){
 </script>
 <style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
 <style>
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해는 밝은 판 위에 올린다.
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
    그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
    `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

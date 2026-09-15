@@ -232,13 +232,13 @@ section .addr .big{font-size:1.2rem}
   .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
 }
 
-/* ★ 2026-09-13. 여기에 도해용 토큰(--accent --bad --ok …)을 정의했다가
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
  * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
  * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
  * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
  * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
  *
- * 애초에 필요 없다. 도해를 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
  * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
  * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
  */
@@ -538,7 +538,7 @@ html[data-theme="light"] .gnav .lgr{display:none}
 .hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
 @media (max-width:560px){.hhero .t{font-size:1.08rem}}
 
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 도해 5장은 다크에서 흰 판 위에
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
    올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
    여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
 [data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
@@ -763,12 +763,12 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
      색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
-     앞의 둘은 우리 잘못이고 사용자는 다시 시도해야 한다는 것을 알아야 한다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
      경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=16debf05').then(function(r){
+    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1025,6 +1025,9 @@ body>*{flex-shrink:0}
  text-decoration:none;border:1px solid var(--dim);border-radius:99px;padding:.12rem .6rem}
 /* 매주 회차를 브라우저가 다시 세는 D-day (#155). 값이 바뀌는 자리라
    폭이 흔들리지 않게 고정폭 숫자를 쓴다. 관문 dd-live 와 같은 처리다. */
+/* 날짜가 박힌 D-day. 브라우저가 매번 다시 세므로 자릿수가 흔들리지
+   않게 고정폭 숫자를 쓴다 (`mdd` 와 같은 까닭). */
+.ddate{font-variant-numeric:tabular-nums}
 .mdd{font-variant-numeric:tabular-nums}
 .w3t{display:block;text-decoration:none;color:inherit;margin:.55rem 0 0}
 .w3t b{font-size:.85rem;font-weight:780;display:block}
@@ -1403,7 +1406,7 @@ body>*{flex-shrink:0}
  .ev3{grid-template-columns:4rem 1fr}
  .rr3 b{white-space:normal}
 }
-</style><div class="wks"><div class="w3"><div class="w3h">이번 주 · W36<a class="w3b" href="https://github.com/orgs/foothold-project/projects/1">프로젝트 보드</a></div><a class="w3t" href="https://github.com/foothold-project/foothold-lab/issues/79"><b>팀 목표 (8/31~9/6) · 기획발표 주</b><span>운영진 제출 3종 완성 · WBS 를 웹에서 볼 수 있게 · 제출 형식 확정 외 3</span><span class="w3done">끝났다는 기준 0 / 3</span></a><div class="w3p"><a href="https://github.com/foothold-project/foothold-lab/issues/81">맹라현 <i>#81</i></a><a href="https://github.com/foothold-project/foothold-lab/issues/82">오현민 <i>#82</i></a><a href="https://github.com/foothold-project/foothold-lab/issues/80">오흥재 <i>#80</i></a><a href="https://github.com/foothold-project/foothold-lab/issues/84">이민우 <i>#84</i></a><a href="https://github.com/foothold-project/foothold-lab/issues/83">임석헌 <i>#83</i></a></div></div><div class="w3 dim"><div class="w3h">차주 · W37</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">D-4</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">오늘</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
+</style><div class="wks"><div class="w3 dim"><div class="w3h">이번 주 · W38</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><b>마지막으로 연 주는 W36 입니다.</b> 2주째 안 열렸습니다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div><div class="w3 dim"><div class="w3h">차주 · W39</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">D-3</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">D-1</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
 (function(){
   /* 매주 반복이라 마감 «날짜» 가 없다. 요일이 데이터다.
      값이 바뀌는 자리는 KST 자정 하나뿐이라 달력 «날짜» 의 일련번호로 센다.
@@ -1422,6 +1425,20 @@ body>*{flex-shrink:0}
   }
   function tick(){
     var t=kday(), i, g, els;
+    /* 날짜가 박힌 D-day. 빌드 시점 값이 굳지 않게 매번 다시 센다.
+       KST 자정 기준이라 날짜 일련번호로 뺀다 (밀리초로 빼면 하루를 잃는다). */
+    els=document.querySelectorAll('.ddate');
+    for(i=0;i<els.length;i++){
+      var due=els[i].getAttribute('data-due');
+      if(!due) continue;
+      /* 기준을 맞춘다. `t` 는 «KST 로 민» 일련번호다. 마감일에 +09:00 을
+         붙여 파싱하면 UTC 로 하루 앞(9/29 15:00Z)이 되어 **하루를 잃는다.**
+         실제로 D-15 여야 할 자리에 D-14 가 떴다. 마감일도 같은 공간에서
+         읽도록 Z 로 파싱한다. 둘 다 «달력 날짜» 의 일련번호가 된다. */
+      var d=Math.floor(Date.parse(due+'T00:00:00Z')/86400000);
+      var g2=d-t;
+      els[i].textContent = g2>0 ? ('D-'+g2) : (g2===0 ? '오늘' : '지남');
+    }
     els=document.querySelectorAll('.mdd');
     for(i=0;i<els.length;i++){
       g=gap(els[i],t); if(g<0) continue;
@@ -1438,6 +1455,6 @@ body>*{flex-shrink:0}
     document.addEventListener('DOMContentLoaded',start);
   }else{ start(); }
 })();
-</script><div class="g3s"><div class="g3"><div class="g3l"><span class="g3d">D-16</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">2장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>대기</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d">D-54</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d">D-88</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
-</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.5</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpou547g0i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><div class="g3s"><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-09-30">D-15</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">2장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>대기</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-11-07">D-53</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-12-11">D-87</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
+</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

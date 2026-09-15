@@ -26,7 +26,7 @@
 - `#371` [작업] 우리 코드의 em dash 14개 정리  (vfxpedia)
 - `#362` [작업] 이슈 코멘트에만 있던 결정 넷의 문서 이관 (#66 · #125 · #216 · #332)  (vfxpedia)
 - `#361` [작업] 작성자 관문의 0개 검사 실패 처리와 안내 문구 순서 정정  (vfxpedia)
-- `#360` [작업] 평가 하네스 판정 구조 도해 4종 신설  (vfxpedia)
+- `#360` [작업] 평가 하네스 판정 구조 그림 4종 신설  (vfxpedia)
 - `#359` [작업] ROLES 정본에 팀장 직함 명시  (vfxpedia)
 - `#357` [작업] 문서 작성자 이름 관문과 잘못된 표기 7건 정정  (vfxpedia)
 - `#355` [운영] 사람 이름을 지어내지 않는다는 규칙 (v1.2)  (vfxpedia)
@@ -54,7 +54,7 @@
 - `#317` [운영] CI-PR-CHECKS 판 표기 추가 (v1.0)  (vfxpedia)
 - `#314` 고침: 알림 워크플로가 PR 을 막지 못하게 한다 (#307)  (vfxpedia)
 - `#313` [정정] 레일즈 진단 11절 · 뒷다리 비대칭 판단 되돌림 (v1.4)  (vfxpedia)
-- `#311` [작업] Go2 제원 시뮬·실기 대조표와 치수 도해 (#296)  (vfxpedia)
+- `#311` [작업] Go2 제원 시뮬·실기 대조표와 치수 그림 (#296)  (vfxpedia)
 - `#310` [운영] PR-REVIEW-FLOW 판 표기 추가 (v1.1)  (vfxpedia)
 - `#309` [작업] 평가 하네스에서 평지 지형 제거 (#295)  (vfxpedia)
 - `#306` [작업] 검수기 없는 옛 브랜치에서 PR 이 영구 실패하는 문제 수정  (vfxpedia)
@@ -198,8 +198,8 @@ bba02c0 vfxpedia 원장에 승격 둘 반영 · 낡은 금액 검사 제거
 014a366 vfxpedia 평가: 정본 기준 재작성 · 갤러리 거르개 · 관문 셋 (웹 v2.1.0)
 389e603 VFXPEDIA 관문 추가: hidden 숨김이 CSS 에 지는 자리 ([3.445]) (#403)
 2a98f5c vfxpedia [작업] 거르개가 화면에서 안 걸리던 것 · 묶음을 여섯 입구로
-08e23a5 vfxpedia [작업] 연구 허브를 목업대로 · 도해 검정 고침 · 검증을 두 층으로
-e31c06e vfxpedia [작업] 정본 도해 열다섯 장이 검정으로 나오던 것 · SVG 를 자립시킨다
+08e23a5 vfxpedia [작업] 연구 허브를 목업대로 · 그림 검정 고침 · 검증을 두 층으로
+e31c06e vfxpedia [작업] 정본 그림 열다섯 장이 검정으로 나오던 것 · SVG 를 자립시킨다
 5d948c8 VFXPEDIA Merge pull request #401 from foothold-project/fix/index-other-made
 0c7d06f vfxpedia 더함: 배포본에만 있는 페이지도 검색 색인에 넣는다
 a4d4411 VFXPEDIA Merge pull request #400 from foothold-project/fix/deploy-guards
@@ -211,7 +211,7 @@ d0e8fe3 vfxpedia 설계 v3.0 · 문서 머리 관문 셋 해소 · em dash 제�
 8ecf3eb github-actions[bot] chore: 원장 열린 이슈 전수 자동 집계 (98건 · 2026-09-13)
 d53248c vfxpedia 평가: 정본 낱말 치환 사고 복구 · 현재 상태표 갱신 · 허브 재설계안
 b189e1b vfxpedia 평가: 공유 머리 조각에 NEW 배지 기록기를 묶는다
-08fbd3a vfxpedia 평가: 표 병합 복원 · 도해 가림 해소 · 본문 컨테이너를 한 벌로
+08fbd3a vfxpedia 평가: 표 병합 복원 · 그림 가림 해소 · 본문 컨테이너를 한 벌로
 4773e7d vfxpedia 평가: 정본 렌더 결함 셋 · 공지 갱신 (84 -> 144컷)
 2a477ed vfxpedia 평가: 아티팩트를 저장소로 되돌리고 난이도 곡선을 보고서에
 09248cb vfxpedia 평가: 역피라미드 카메라 · faststart · 컷 수를 색인에서 읽기
@@ -243,7 +243,7 @@ a95028e VFXPEDIA inbox(jay): Isaac 최종 컷 9개 LFS 저장 (파티션 전 보
 1c8435a VFXPEDIA ci: 자동화가 조용히 성공하는 자리 다섯 곳 차단 (#373)
 690b61a VFXPEDIA docs: NVIDIA 공식 체크포인트 코드 분석을 #349 에 합침 (v1.1) (#372)
 7dfae02 VFXPEDIA docs: 이슈 코멘트에만 있던 결정 넷을 문서로 이관 (#66 #125 #216 #332) (#362)
-d490800 VFXPEDIA [작업] 평가 하네스 판정 구조 도해 4종 신설 (#360)
+d490800 VFXPEDIA [작업] 평가 하네스 판정 구조 그림 4종 신설 (#360)
 fbbd3f1 VFXPEDIA [작업] 런칭 영상 A 설계 현황과 시나리오 원문 저장 (#381)
 3b17a04 VFXPEDIA chore: 우리가 쓴 코드의 em dash 14개를 가운뎃점으로 (#371)
 cb4eaa9 VFXPEDIA [작업] 작성자 관문의 0개 검사 실패 처리와 안내 문구 순서 정정 (#361)

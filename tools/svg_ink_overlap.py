@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""도해에서 «글자가 무엇에 파묻혔는가» 를 찾는다.
+"""그림에서 «글자가 무엇에 파묻혔는가» 를 찾는다.
 
 분류: 운영 · 작성: 오흥재 · 2026-09-14 · 상태: 확정
 근거: 실측 (브라우저 getBBox · 고의 결함 주입 시험)
@@ -154,7 +154,7 @@ def main():
             for s, tag, ox, oy in hits[:3]:
                 print('  [!] %-26s «%s» 가 <%s> 에 덮임 %dx%dpx'
                       % (f, s[:26], tag, ox, oy))
-    print('  도해 %d장 · 글자가 덮인 자리 %d곳' % (len(data), bad))
+    print('  그림 %d장 · 글자가 덮인 자리 %d곳' % (len(data), bad))
     return 1 if bad else 0
 
 

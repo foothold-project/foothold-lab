@@ -212,7 +212,7 @@ def checks(out, bad):
                    '· min-content 를 한 글자로 무너뜨려 「100」이 1/0/0 이 됩니다'
                    % (len(ow), ' · '.join(ow[:2])))
 
-    # 아무 쪽에도 안 걸린 도해. ★ 2026-09-14 site 세션이 잡았다.
+    # 아무 쪽에도 안 걸린 그림. ★ 2026-09-14 site 세션이 잡았다.
     #   나는 «폴더에 21장» 이라 했고 그쪽은 «쪽에 걸린 것 14장» 이라 했다.
     #   세어 보니 그쪽이 맞았다. 1부의 중복 그림을 안내 줄로 바꾸면서 옛 이름
     #   파일 일곱이 고아가 됐다. **지우지 않는다** (아티팩트 등에서 직접 링크했을
@@ -242,7 +242,7 @@ def checks(out, bad):
         orphan = [f for f in sorted(os.listdir(vis))
                   if f.endswith('.svg') and f not in ref]
         if orphan:
-            print('      [참고] 아무 쪽에도 안 걸린 도해 %d장: %s'
+            print('      [참고] 아무 쪽에도 안 걸린 그림 %d장: %s'
                   % (len(orphan), ' '.join(orphan[:8])))
 
     # 파비콘. ★ 2026-09-14 팀장 확인 요청: 「파비콘 없어진 거 아니지?」
