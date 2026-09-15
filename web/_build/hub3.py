@@ -1595,7 +1595,11 @@ def state_lines():
         tal = ('걸린 %d장 전부 %s' % (len(near[4]), list(st)[0])
                if len(st) == 1 and near[4] else
                ' · '.join('%s %d' % kv for kv in st.items()))
-        out['schedule'] = ('D-%d %s · %s' % (near[3], near[0], tal), near[3] <= 7)
+        # ★ 2026-09-16. 같은 이유로 여기도 살린다.
+        out['schedule'] = (('<span class="dd-live" data-due="%s">D-%d</span> '
+                            '%s · %s')
+                           % (near[1].isoformat(), near[3], near[0], tal),
+                           near[3] <= 7)
     except Exception:
         out['schedule'] = ('관문 다섯', False)
     docs = _research_docs()
@@ -1724,6 +1728,10 @@ CSS = '''<style id="hub3-css">
 /* 부품 4: 큰 숫자 (D-day · 실측치 공용) */
 .g3d,.en3{font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
 .g3d{font-size:1.4rem}
+/* ★ 2026-09-16. .dd-live 는 JS 가 열 때마다 다시 쓰는 숫자다. 자릿수가
+   줄 때(D-15 -> D-9) 칸이 흔들리지 않게 숫자 폭을 고정한다. 지금까지
+   규칙이 아예 없어 관문이 「CSS 에 없는 클래스」로 잡았다. */
+.dd-live{font-variant-numeric:tabular-nums}
 .en3{font-size:1rem;color:var(--dim);text-align:right}
 /* ★ 근거 태그도 색으로 (팀장 9/1). 공식=밖에서 온 것 · 코드=코드에서 확인 ·
    본인=내 노트. 갈래 색과 겹치지 않게 «채도 낮은 계열» 로 둔다. */

@@ -59,7 +59,12 @@ LAB = os.path.dirname(HERE)
 _TAG = re.compile(r'(?s)<(script|style)\b.*?</\1>|<[^>]+>')
 _WEEK = re.compile(r'(이번\s*주|금주|현재\s*주)[^0-9W]{0,6}W(\d{2})')
 _DDAY = re.compile(r'D-(\d{1,3})[^0-9]{0,40}?(\d{1,2})\s*월\s*(\d{1,2})\s*일')
-_UPD = re.compile(r'(최종 갱신|마지막 갱신|최신)[^\n]{0,24}?(20\d\d)[-./](\d{1,2})[-./](\d{1,2})')
+# ★ 2026-09-16. 「최신」 하나로 잡았더니 setup.html 의
+#   「「최신」이라는 게 안정판이 아닙니다 · 2026-08-05 릴리스 목록 조회」를
+#   갱신일로 읽었다. 그날 조회한 «기록» 이지 지금을 말한 것이 아니다.
+#   배포 전수로 세어 넓은 패턴만 잡는 것이 그 한 곳뿐이라 좁혔다.
+_UPD = re.compile(r'(최종 갱신|마지막 갱신|최신 갱신|갱신일)'
+                  r'[^\n]{0,24}?(20\d\d)[-./](\d{1,2})[-./](\d{1,2})')
 
 STALE_DAYS = 21          # 「최종 갱신」이 이보다 오래면 알린다
 
@@ -102,6 +107,15 @@ def dday_js_matches(site, today):
     return bad
 
 
+# ★ 2026-09-16 신설. 정적 D-day 를 «미리 그려둔 자리» 로 볼 수 있나.
+#   페이지가 data-due 를 들고 JS 로 다시 세면 사람은 언제나 맞는 수를 본다.
+#   그 자리를 「낡았다」고 막으면 빌드한 다음 날부터 매일 실패한다.
+#   식이 틀렸는지는 dday_js_matches() 가 따로 잡으므로 눈이 머는 것이 아니다.
+def dday_is_live(raw):
+    """이 페이지가 D-day 를 열 때마다 다시 세나."""
+    return bool('data-due=' in raw and _JS_DUE.search(raw) and _JS_NOW.search(raw))
+
+
 def _is_record(t, pos, week, year, look=90):
     """그 「이번 주 Wxx」가 «그날의 기록» 인가.
 
@@ -122,7 +136,9 @@ def _is_record(t, pos, week, year, look=90):
 
 def findings(path, today):
     """이 페이지가 「지금」을 잘못 말하는 자리들. (심각도, 말) 목록."""
-    t = text_of(path)
+    raw = io.open(path, encoding='utf-8', errors='ignore').read()
+    t = re.sub(r'\s+', ' ', _TAG.sub(' ', raw))
+    live = dday_is_live(raw)
     out = []
     nw = today.isocalendar()[1]
 
@@ -146,7 +162,7 @@ def findings(path, today):
         except ValueError:
             continue
         real = (d - today).days
-        if real >= 0 and said != real:
+        if real >= 0 and said != real and not live:
             out.append(('막음', '「D-%d」(%d월 %d일) 인데 오늘 기준 D-%d'
                         % (said, d.month, d.day, real)))
 
@@ -175,6 +191,18 @@ def _selftest():
             ('ok-dday.html', '<p>D-15 MVP 9월 30일</p>', 0),
             ('bad-dday.html', '<p>D-16 MVP 9월 30일</p>', 1),
             ('bad-upd.html', '<p>최종 갱신 2026-07-30</p>', 1),
+            # ★ 그날 조회한 기록은 갱신일이 아니다 (setup.html 오탐)
+            ('rel-list.html',
+             '<p>「최신」이라는 게 안정판이 아닙니다. 2026-08-05 '
+             '릴리스 목록 조회 결과입니다.</p>', 0),
+            ('upd-word.html', '<p>갱신일 2026-07-30</p>', 1),
+            # ★ 브라우저가 다시 세는 D-day 는 정적 값이 낡아도 넘긴다.
+            #   그러나 다시 안 세는 페이지는 «여전히» 잡는다.
+            #   한쪽만 시험하면 관문을 눈멀게 해도 통과한다.
+            ('live-dday.html',
+             '<p data-due="2026-09-30">D-16 MVP 9월 30일</p>'
+             + "<script>var d=Date.parse(due+'T00:00:00Z');var n=Date.now()+9*3600000;</script>", 0),
+            ('dead-dday.html', '<p>D-16 MVP 9월 30일</p>', 1),
             ('ok-upd.html', '<p>최종 갱신 2026-09-14</p>', 0),
             # 기록 문서의 옛 날짜는 「지금」을 말한 것이 아니다
             ('record.html', '<p>2026-08-09 회의록. 그날 정한 것</p>', 0),

@@ -97,7 +97,9 @@ def block(f):
         st % ('기간', '%d주차' % f['week'], '전체 %d주 · 2026.08 ~ 12' % f['total_weeks']),
         st % ('현 단계', f['stage'], f['stage_sub']),
         stc % ('var(--dim)', '다음 마일스톤',
-               'D-%d' % f['dday'] if f['dday'] >= 0 else '지남',
+               # ★ 2026-09-16. 같은 이유로 여기도 살린다.
+               (('<span class="dd-live" data-due="%s">D-%d</span>'
+                 % (md.isoformat(), f['dday'])) if f['dday'] >= 0 else '지남'),
                '%d/%d %s' % (md.month, md.day, f['next_label'])),
         stc % ('var(--note)', '미결 안건', '%d건' % f['agenda'],
                '설계도 5절 · 팀이 정할 것'),

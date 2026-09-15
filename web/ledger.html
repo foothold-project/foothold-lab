@@ -768,7 +768,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f2b0523a').then(function(r){
+    fetch('/assets/search-index.json?v=c7e35c14').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -906,7 +906,7 @@ body>*{flex-shrink:0}
 <blockquote><p><b>역할</b>: 팀장의 모든 지시·질문·아이디어가 ①어떤 상태인지 ②산출물이 어디 있는지를 추적하는 <b>단일 지점</b>.
 DECISIONS(결정의 «왜») · 이슈(작업 실행)와 겹치지 않는다. 이 문서는 <b>«그거 어떻게 됐어?»의 답</b>이다.
 세션이 바뀌어도 여기부터 읽으면 같은 자리에서 잇는다. 갱신 책임 = 세션, 매 작업 턴마다.
-최종 갱신: 2026-09-15 (열린 이슈 전수 103건 · <code>ledger-sync</code> 자동 집계) </p></blockquote>
+최종 갱신: 2026-09-16 (열린 이슈 전수 103건 · <code>ledger-sync</code> 자동 집계) </p></blockquote>
 </section>
 <section id="s1"><h2>✅ 완료 (요약. 상세는 DECISIONS·VERIFIED·커밋 이력)</h2>
 <p><b>기획·방향 (WS 축)</b> 8/13 조선대 미팅 → 재기획(REPLAN) → <b>REPORT v2: 트랙 A(시뮬 RL+트윈) / 트랙 B(실기 자율주행)</b> 확정 · 안건 1·2·5 확정 · 8/20 전담 멘토 확정 회의 기록 · <b>8/20 16:00 킥오프</b> (발표 덱 pitch.html, WS 제작)</p>
@@ -930,7 +930,7 @@ DECISIONS(결정의 «왜») · 이슈(작업 실행)와 겹치지 않는다. �
 <section id="s5"><h2>🔶 결정 대기</h2>
 <ul><li>lab 공개 전환 여부 (보류. 전제조건은 DECISIONS 08-12: 금액·외부실명·INFRA·LFS 정리)</li><li>허브를 몇 개로 갈지 (지금 5 -&gt; 기술 신설 시 6). 「파이프라인」 이름은 유지로 확정 (8/28)</li><li>연구 5갈래 이름 확정 여부</li><li><b>통과 5종의 난이도 격자를 누가 재는가.</b> 실패 5종은 5인이 나눠 가졌으나 <code>discrete_obstacles</code> <code>wave</code> <code>star</code> <code>repeated_boxes</code> <code>repeated_cylinders</code> 는 주인이 없다. KPI 뒷조건(「통과 5종의 경계가 후퇴하지 않을 것」)을 재려면 그 경계를 알아야 한다</li><li><b>조선대 자료 미러를 어디에 둘지</b> (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/88">#88</a>). 저작물이라 공개 저장소에 못 넣는다. 비공개 저장소를 하나 더 만들지 결정 필요</li></ul>
 </section>
-<section id="s6"><h2>📋 열린 이슈 전수 (2026-09-15 기준 103건)</h2>
+<section id="s6"><h2>📋 열린 이슈 전수 (2026-09-16 기준 103건)</h2>
 <blockquote><p><b>이 절이 뼈대다.</b> 열린 이슈가 여기 없으면 이 문서가 지금을 안 담고 있는 것이고,
 빌드 관문 <code>[3.8]</code> 이 그것을 잡는다. 닫힌 이슈는 지운다.</p>
 <p>이 블록은 <code>ledger-sync</code> 워크플로가 GitHub 열린 이슈에서 <b>다시 쓴다.</b> 손으로 고치지 않는다.
@@ -987,5 +987,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpn4uhh57z</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyjfw1x_4</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

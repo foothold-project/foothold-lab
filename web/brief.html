@@ -457,7 +457,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<!--search:v8--><style>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f2b0523a').then(function(r){
+    fetch('/assets/search-index.json?v=c7e35c14').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -744,7 +744,7 @@ body>*{flex-shrink:0}
   <h1>지금 우리가 아는 것</h1>
   <p class="lede">조사로 <b>확인한 것</b>과 <b>아직 확인 못 한 것</b>을 나눠 적었습니다.
     발표·보고 자료를 만들 때 <b>여기 있는 것만 쓰세요.</b> 없는 건 아직 근거가 없다는 뜻입니다.</p>
-  <div class="upd">마지막 갱신 <b>2026-08-05</b> · 날짜가 아니라 <b>내용이 바뀔 때</b> 갱신합니다</div>
+  <div class="upd">마지막 갱신 <b>2026-09-16</b> · 날짜가 아니라 <b>내용이 바뀔 때</b> 갱신합니다</div>
 </div>
 
 <!-- ══════ 0 ══════ -->
@@ -814,6 +814,18 @@ body>*{flex-shrink:0}
       <li><b>조선대 Go2 EDU 2대</b>조달 규격서로 확인
         <span class="who">Go1 Edu Plus 1대 추가 보유</span></li>
       <li><b>데이터</b>조선대 제공 승인</li>
+      <li><b>평가 기준</b>규격 2 · 954칸 · 95,400 에피소드
+        <span class="who">지형 16종 x 난이도 10 x 속도 3 · seed 42</span></li>
+      <li><b>1차 배포 정책 <span class="mono">foothold-v1</span></b>
+        학습한 틈 폭 0.15 ~ 0.40 m · 1,500 iteration
+        <span class="who">중간 모델 A 는 0.05 ~ 0.20 m · 두 모델의 차이는
+        <span class="mono">gap_width_range</span> 한 줄뿐</span></li>
+      <li><b>미경험 험지 <span class="mono">gap</span></b>
+        난이도 0.5 성공률 기준선 1 % · A 28 % · <b>foothold-v1 100 %</b>
+        <span class="who">명령 속도 1.0 m/s · 조건마다 100 에피소드</span></li>
+      <li><b>기존 험지 6종</b>성공률이 내려간 지형 없음</li>
+      <li><b>학습 소요</b>1,500 iteration 에 94분 32초
+        <span class="who">워크스테이션 AI-WS01</span></li>
     </ul>
   </div>
   <div class="open">
@@ -825,8 +837,8 @@ body>*{flex-shrink:0}
         <span class="who">사업단 장비·규격 담당에게 문의 (번호는 팀 채널)</span></li>
       <li><b>80h 교육(ROS2·SLAM) 일정</b>
         <span class="who">사업단 통보 대기</span></li>
-      <li><b>학습 실행 속도</b>
-        <span class="who">재생만 했고 학습은 미측정</span></li>
+      <li><b>학습 실행 설정 파일과 체크포인트</b>
+        <span class="who">A·B 의 설정 파일이 저장소에 없다 · <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a> 에서 받는 중</span></li>
       <li><b>GPU 2장 묶어 1개 학습 가속</b>
         <span class="who">peer access 미지원: 재검증 필요</span></li>
     </ul>
@@ -1035,5 +1047,5 @@ body>*{flex-shrink:0}
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpn4uhh57z</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyjfw1x_4</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

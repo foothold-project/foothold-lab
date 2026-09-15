@@ -880,7 +880,10 @@ def home_block(assigned):
             _rows = [r for r in _dlv.build_rows(_dlv.lab_root(), _dlv.today_kst())
                      if r[3] >= 0]
             _near = min(_rows, key=lambda r: r[3]) if _rows else None
-            _sub = ('D-%d %s · %d장' % (_near[3], _near[0], len(_near[4]))
+            # ★ 2026-09-16. 죽은 수였다. 첫 화면에 D-14 와 D-15 가 같이 떴다.
+            _sub = (('<span class="dd-live" data-due="%s">D-%d</span> '
+                     '%s · %d장')
+                    % (_near[1].isoformat(), _near[3], _near[0], len(_near[4]))
                     if _near else '무엇을 언제까지 내는가')
         except Exception:
             _sub = '무엇을 언제까지 내는가'

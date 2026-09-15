@@ -801,7 +801,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f2b0523a').then(function(r){
+    fetch('/assets/search-index.json?v=c7e35c14').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -994,8 +994,11 @@ body>*{flex-shrink:0}
   <p class="lede">이 문서는 도구 설명서가 아니다. <b>왜 다리로 걷는가</b>에서 시작해
     <b>왜 그것이 어려운가</b>를 거쳐 <b>그래서 어떤 기술을 왜 선택했는가</b>까지, 인과로만 이어지는 지도다.
     각 층위는 아래층의 결론에서 도출된다. 순서대로 읽으면 우리 프로젝트의 모든 기술 선택이 왜 그렇게 되었는지 알 수 있다.</p>
-  <div class="meta">인공지능사관학교 7기 · AI 도약과정 실증 프로젝트 · 팀 FOOTHOLD
-    &nbsp;|&nbsp; 최종 갱신 2026-07-30</div>
+  <!-- ★ 2026-09-16 팀장 승인 (#427). 갱신일 표기를 뺀다. 이 문서는 «지금» 을
+       말하는 문서가 아니라 «왜 그렇게 정했는가» 를 적은 참조 문서다. 날짜를
+       걸어 두면 내용이 그대로여도 영원히 낡아 보이고, 그 표기 때문에 관문이
+       매번 운다. 내용이 틀리면 내용을 고치는 것이 맞는 신호다. -->
+  <div class="meta">인공지능사관학교 7기 · AI 도약과정 실증 프로젝트 · 팀 FOOTHOLD</div>
   <div class="key" style="margin-top:26px">
     <div class="kl">이 프로젝트의 한 문장</div>
     <p style="font-size:1.05rem;font-weight:700;line-height:1.5">
@@ -3375,5 +3378,5 @@ nav.addEventListener('click',e=>{if(e.target.tagName==='A'&&innerWidth<=900)nav.
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpn4uhh57z</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyjfw1x_4</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
