@@ -216,12 +216,17 @@ def main(vault):
     #   고치는 도구는 tools/svg_strokes.py 다.
     stroke = set(re.findall(r'stroke-width="([\d.]+)"', ''.join(texts)))
     stray = sorted(stroke - SCALE, key=float)
+    # ★ 2026-09-15. 선 굵기를 `bad` 에 넣고 「글자 결함 N곳」이라 셌다.
+    #   겹친 글자가 0인데 「글자가 겹칩니다」로 배포를 막아, 없는 결함을
+    #   찾느라 한참 헤맸다. 센 것과 부른 이름이 달랐다. 따로 센다.
+    ink = list(bad)
     if stray:
         bad.append('한 벌에 없는 선 굵기: %s (한 벌 = %s)'
                    % (' · '.join(stray), ' · '.join(sorted(SCALE, key=float))))
         bad.append('  고치려면: python tools/svg_strokes.py --write')
-    print('  그림 %d개 검사 · 글자 결함 %d곳 · 못 잰 글자 %d개(회전·변형)'
-          % (seen, len(bad), len(skip)))
+    print('  그림 %d개 검사 · 글자 결함 %d곳 · 한 벌 밖 선 굵기 %d종 '
+          '· 못 잰 글자 %d개(회전·변형)'
+          % (seen, len(ink), len(stray), len(skip)))
     if bad:
         for b in bad[:12]:
             print('     ' + b)

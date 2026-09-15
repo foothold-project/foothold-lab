@@ -90,9 +90,9 @@
   "ver": "v1.0"
  },
  "docs/DECISIONS.md": {
-  "hash": "c1f7233efe2cf003",
+  "hash": "d56df287659f3298",
   "major": "v2.1",
-  "ver": "v2.2"
+  "ver": "v2.3"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "7a7426fada7c43dd",
+  "hash": "36477eaf88233896",
   "major": "v2.1",
-  "ver": "v2.9"
+  "ver": "v2.10"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -140,9 +140,9 @@
   "ver": ""
  },
  "docs/REPORT.md": {
-  "hash": "78a23e2132e8fdb9",
+  "hash": "a08c5d0c0509a07e",
   "major": "v1.0",
-  "ver": "v1.1"
+  "ver": "v1.2"
  },
  "docs/ROBOT-SPEC.md": {
   "hash": "380346d94212bfc1",
@@ -580,9 +580,9 @@
   "ver": "v1.0"
  },
  "docs/research/rough-terrain-study-plan.md": {
-  "hash": "24c948ffc031293c",
+  "hash": "0861f3cfa1a80372",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "docs/research/runpod-team-ops.md": {
   "hash": "471f00226644e778",
@@ -590,9 +590,9 @@
   "ver": "v1.0"
  },
  "docs/research/terrain-finetune-plan.md": {
-  "hash": "c5c6684837763121",
+  "hash": "021c0bcdccd42ebe",
   "major": "v2.2",
-  "ver": "v2.3"
+  "ver": "v2.4"
  },
  "docs/research/terrain-guide-isaaclab.md": {
   "hash": "d9bf9db39933a7bc",
@@ -630,8 +630,8 @@
   "ver": "v1.0"
  },
  "docs/schedule/personal-plans.md": {
-  "hash": "0a73f136a7b23d3a",
+  "hash": "923f45bbc5cabb63",
   "major": "v1.0",
-  "ver": "v1.0"
+  "ver": "v1.1"
  }
 }

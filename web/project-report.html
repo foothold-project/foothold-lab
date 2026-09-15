@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
+    fetch('/assets/search-index.json?v=0ad0ac87').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -896,6 +896,8 @@ body>*{flex-shrink:0}
 상태: 확정
 판: v1.0
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/116">#116</a></p></blockquote>
+<blockquote><p><b>이 문서는 「계획」이다.</b> 여기 적힌 수치와 배분을 <b>실행 결과로 인용하지 말 것.</b>
+실제로 돌린 것은 <a href="decisions-log.html"><code>DECISIONS.md</code></a> 가 정본이다.</p></blockquote>
 <blockquote><p>작성 2026-08-20 · v2 (방향 전환 반영, 팀 전원 합의 8/19) · <b>원자료: 임석헌(부팀장) 정리 보고서 양식</b> · 용도: 팀 공유 · 멘토 설명
 이전 판(실기 저수준 이전 목표)은 lab git 이력에 보존.</p></blockquote>
 </section>
@@ -1004,5 +1006,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp8so2j04p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

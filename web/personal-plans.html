@@ -768,7 +768,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
+    fetch('/assets/search-index.json?v=0ad0ac87').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -903,6 +903,8 @@ body>*{flex-shrink:0}
 요지: 팀원이 스스로 세운 계획을 일정 페이지에 띄우기 위한 원본. 대신 이슈를 만들지 않는다.
 상태: 확정
 판: v1.0</p></blockquote>
+<blockquote><p><b>이 문서는 「계획」이다.</b> 여기 적힌 수치와 배분을 <b>실행 결과로 인용하지 말 것.</b>
+실제로 돌린 것은 <a href="decisions-log.html"><code>DECISIONS.md</code></a> 가 정본이다.</p></blockquote>
 <blockquote><p><b>왜 이 파일이 있나</b>: 팀원 계획을 팀장이 대신 이슈로 발행하면, 본인은 자기가 만들지
 않은 이슈가 왜 있는지 모르고 작업을 마쳐도 닫지 않는다. 그래서 계획은 여기 원본으로
 두고, 이슈는 <b>본인이 직접</b> 만든다. 일정 페이지는 이 파일과 깃 이슈를 함께 읽는다.</p></blockquote>
@@ -962,5 +964,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp8so2j04p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

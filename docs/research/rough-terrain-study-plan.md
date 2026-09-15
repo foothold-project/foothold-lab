@@ -6,6 +6,9 @@
 > 요지: 험지 RL 학습 우선순위 표. 무엇을 먼저 하고 무엇을 하지 않는가.
 > 상태: 폐기
 
+> **이 문서는 「계획」이다.** 여기 적힌 수치와 배분을 **실행 결과로 인용하지 말 것.**
+> 실제로 돌린 것은 [`DECISIONS.md`](../DECISIONS.md) 가 정본이다.
+
 > 작성 맹라현 · 2026-08-18 · 한 장 우선순위 표 (Priority Matrix / Study Planner).
 > 회의록이 아니라 **개인 학습 계획**이다. 2026-08-25 에 회의록 폴더에서 이리로 옮겼다.
 > 원본 md: [inbox/meang/20260818-rough-terrain-rl-study.md](../../inbox/meang/20260818-rough-terrain-rl-study.md). 원본 인쇄본 PDF는 그 폴더에 있다.

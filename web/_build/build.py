@@ -1138,6 +1138,18 @@ if __name__ == '__main__':
         print('  [!] 보고서가 인용 금지 자료를 읽습니다. 배포를 중단합니다.')
         sys.exit(1)
 
+    print('[3.4796] 계획을 실행 기록으로 읽지 않았나')
+    import plan_vs_record
+    if not plan_vs_record._selftest():
+        print('  [!] 자기시험 실패. 이 검사를 믿을 수 없습니다'); sys.exit(1)
+    if not plan_vs_record.check(
+            os.path.join(HERE, '..', '..', 'docs'),
+            os.path.join(HERE, '..', '..', 'sim', 'eval', 'results',
+                         'report-v1', 'report-v1.html')):
+        print('  [!] 계획 문서에 경고가 없거나, 보고서가 학습 설정을 근거 없이')
+        print('      단정합니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('[3.475] 영상 규격 검사 (썸네일 · 폰 재생 속성)')
     import videocheck
     if not videocheck.main(SITE):

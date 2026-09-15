@@ -36,6 +36,31 @@ SWEEP = D.get("sweep", {})  # (지형|난이도|속도) -> 성공률 %. 없으�
 _A = lambda t, d, v='1.0': SWEEP.get('A|%s|%s|%s' % (t, d, v))
 _B = lambda t, d, v='1.0': SWEEP.get('B|%s|%s|%s' % (t, d, v))
 _BL = lambda t, d, v='1.0': SWEEP.get('baseline|%s|%s|%s' % (t, d, v))
+# ── 학습 설정 · 이 수치는 여기 «한 곳» 에만 있다 ──────────────────────
+#   2026-09-15. 틈 폭을 고쳤는데 네 자리 중 한 자리만 고쳐져 있었다.
+#   본문은 rng() 로 읽는다. 자리를 하나로 만들어 어긋날 수 없게 한다.
+#   근거: 평가 기준 문서 `20260911-eval-protocol-v2.md` 모델 표 (모델마다
+#   SHA-256 앞자리와 학습 시각까지 적혀 있다: A 54064c77 · B c7612aef).
+#   2026-09-15 팀장 확정. 지형 «배합» 은 그 문서에도 없어 TRAIN_MIX 참조.
+TRAIN = {
+    'baseline': {'gap': None, 'iter': 1500},
+    'A': {'gap': (0.05, 0.20), 'iter': 1500},
+    'B': {'gap': (0.15, 0.40), 'iter': 1500},
+}
+TRAIN_MIX = ('gap', 0.1, 0.9)      # 더한 지형 · 그 비중 · 기존 험지 6종 몫
+
+
+def rng(m):
+    """그 모델이 학습한 틈 폭. 없으면 「없음」."""
+    g = TRAIN[m]['gap']
+    return '없음' if g is None else '%.2f ~ %.2f m' % g
+
+
+def itr(m):
+    """그 모델의 학습 반복 횟수."""
+    return '{:,}'.format(TRAIN[m]['iter'])
+
+
 _UNSEEN = ["gap", "pit", "rails", "stepping_stones", "floating_ring",
            "star", "wave", "discrete_obstacles", "repeated_boxes",
            "repeated_cylinders"]
@@ -434,23 +459,22 @@ _steps = [
      '(<span class="mono">holes=False</span> · 코드에서 확인). '
      '평가에 쓴 신규 지형 10종은 <b>그 학습 지형에 하나도 들어 있지 않습니다.</b>', '02'),
     ('그래서 <span class="mono">gap</span>을 10 % 섞었다',
-     '신규 5종(<span class="mono">gap · pit · rails · stepping_stones · '
-     'floating_ring</span>)의 비중을 각각 0.1로 '
-     '넣었습니다. 신규 5종에 학습 지형 비중의 50 %를 배정하고, 기존 험지 6종에 '
-     '나머지 50 %를 남겼습니다. <b>기존 험지의 성공률을 지키기 위해서입니다.</b>', '03'),
+     '학습 지형에 <span class="mono">gap</span> <b>하나만</b> 비중 0.1로 더했습니다. '
+     '기존 험지 6종이 나머지 0.9를 나눠 가집니다. '
+     '<b>기존 험지의 성공률을 지키면서 틈만 새로 가르치기 위해서입니다.</b>', '03'),
     ('100 iteration만 먼저 돌려 가능성을 봤다',
      '사전학습 체크포인트를 불러온 뒤 학습 지형에 <span class="mono">gap</span>을 추가해 '
      '<b>학습 반복(iteration) 100회</b>만 더 돌렸습니다. 기존 험지 6종의 '
      '성공률이 유지되는지 먼저 확인한 것입니다. <b>그 결과를 바탕으로</b> '
      '학습 지형의 비중을 그대로 두고 <b>A와 B를 각각 1,500회 학습</b>했습니다.', '03'),
     ('그런데 학습한 틈 폭이 평가 조건보다 좁았다',
-     '모델 <b>A</b>는 폭 0.05 ~ 0.20 m의 틈에서 학습했습니다. '
+     '모델 <b>A</b>는 폭 ' + rng('A') + '의 틈에서 학습했습니다. '
      '기준 평가 조건(난이도 0.5)의 틈 폭은 <b>0.275 m</b>입니다. '
      'A의 <span class="mono">gap</span> 성공률은 난이도 0.3까지 100 %%, '
      '0.5에서 <b>%s %%</b>입니다. '
      '<b>평가의 틈 폭이 학습 범위를 벗어난 것이 실패 원인인지는 아직 확인하지 못했습니다.</b>', '07'),
     ('학습 범위를 평가 범위와 똑같이 맞췄다',
-     '모델 <b>B</b>는 폭 0.15 ~ 0.40 m의 틈에서 학습했습니다. 평가 하네스의 '
+     '모델 <b>B</b>는 폭 ' + rng('B') + '의 틈에서 학습했습니다. 평가 하네스의 '
      '<span class="mono">gap_width_range</span>와 <b>같은 값</b>입니다. '
      'A와 B는 <b>학습 설정 두 줄만</b> 다릅니다.', '03'),
     ('B를 <span class="mono">foothold-v1</span>로 배포한다',
@@ -564,24 +588,34 @@ p.append('<p>이번에는 대응 방법으로 구멍이 있는 지형 '
 
 # ── 3 · 레시피 ────────────────────────────────────────────────────────
 p.append('<h2><span class="n">03</span>레시피 · A와 B는 두 줄만 다릅니다</h2>')
-p.append('<p>신규 5종을 각 <span class="mono">proportion 0.1</span>로 섞었습니다. '
-         '기존 험지의 성능을 지키면서 새 지형도 학습하도록 정한 비중입니다. '
+p.append('<p class="prov"><b>학습한 틈 폭</b>은 평가 기준 문서의 모델 표가 근거입니다(모델마다 SHA-256 기록). <b>지형 배합</b>은 팀장 확인이 근거이고, '
+         '설정 파일과 체크포인트는 저장소에 아직 기록되지 않았고, <a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>에서 '
+         '받는 중입니다.</p>')
+p.append('<p>사전학습 체크포인트는 <b>기존 험지 6종</b>만 배운 상태입니다. 거기에 '
+         '<span class="mono">gap</span> <b>하나만</b> <span class="mono">proportion 0.1</span>로 더하고, '
+         '기존 6종이 나머지 <span class="mono">0.9</span>를 나눠 가지게 했습니다. '
+         '<b>계획 단계에서는 실패 5종을 모두 넣는 안이었지만, 실제로 돌린 것은 gap 하나입니다.</b> '
+         '기존 험지를 잊지 않게 하면서 틈만 새로 가르치려는 비중입니다. '
          '먼저 학습을 <b>100회</b> 반복해 기존 험지의 성공률이 유지되는지 확인했고, '
          '그 뒤 1,500 iteration으로 두 차례 돌렸습니다.</p>')
 p.append('<div class="tw"><table><thead><tr>'
          '<th>모델</th><th>학습한 틈 폭</th><th>iteration</th>'
          '<th class="num">gap 난이도 0.5</th><th class="num">gap 난이도 1.0</th>'
          '</tr></thead><tbody>'
-         '<tr><td class="mono">기준선 NVIDIA</td><td>없음</td><td class="num">1,500</td>'
+         '<tr><td class="mono">기준선 NVIDIA</td><td>%s</td>'
+         '<td class="num">%s</td>'
          '<td class="num">%.0f %%</td><td class="num">%.0f %%</td></tr>'
-         '<tr><td class="mono">A</td><td>0.05 ~ 0.20 m</td><td class="num">1,500</td>'
+         '<tr><td class="mono">A</td><td>%s</td><td class="num">%s</td>'
          '<td class="num">%.0f %%</td><td class="num">%.0f %%</td></tr>'
-         '<tr><td class="mono">B = foothold-v1</td><td><b>0.15 ~ 0.40 m</b></td>'
-         '<td class="num">1,500</td>'
+         '<tr><td class="mono">B = foothold-v1</td><td><b>%s</b></td>'
+         '<td class="num">%s</td>'
          '<td class="num"><b>%.0f %%</b></td><td class="num"><b>%.0f %%</b></td></tr>'
          '</tbody></table></div>'
-         % (_BL('gap', '0.5') or 0, _BL('gap', '1.0') or 0,
+         % (rng('baseline'), itr('baseline'),
+            _BL('gap', '0.5') or 0, _BL('gap', '1.0') or 0,
+            rng('A'), itr('A'),
             _A('gap', '0.5') or 0, _A('gap', '1.0') or 0,
+            rng('B'), itr('B'),
             _B('gap', '0.5') or 0, _B('gap', '1.0') or 0))
 p.append('<p class="cap">gap의 종합 성공률 · 명령 속도 1.0 m/s · '
          '조건마다 100 에피소드 · 규격 2.</p>')
@@ -607,7 +641,7 @@ p.append('<p><b>왜 범위를 바꿨나.</b> 평가 하네스에 설정된 틈 �
          '<span class="mono">gap_width_range=(0.15, 0.40)</span>이고, '
          '기준 평가 조건인 난이도 0.5에서 실제 틈은 <b>0.275 m</b>입니다. '
          'A가 학습한 최대 틈 폭은 0.20 m이므로 <b>기준 평가의 틈 폭은 A의 학습 범위 밖입니다.</b> '
-         'B는 학습 범위를 평가 범위와 같게 두었습니다. '
+         'B는 학습 범위를 평가 범위와 <b>같게</b> 두었습니다. '
          '그 두 줄 말고 나머지 학습 설정은 A와 같습니다.</p>')
 
 p.append('<h2><span class="n">04</span>비교 대상</h2>')
@@ -616,10 +650,14 @@ p.append('<div class="tw"><table><thead><tr><th>이름</th><th>무엇인가</th>
          '<tr><td class="mono">기준선 NVIDIA</td><td>Isaac Lab 공식 Go2 험지 체크포인트</td>'
          '<td class="mono">없음</td><td class="mono">.pretrained_checkpoints</td></tr>'
          '<tr><td class="mono">A</td><td>기존 험지 6종 재학습 · 틈 학습 추가</td>'
-         '<td class="mono">0.05 ~ 0.20 m</td><td class="mono">model_1500.pt</td></tr>'
+         '<td class="mono">' + rng('A') + '</td>'
+         '<td class="mono">model_1500.pt</td></tr>'
          '<tr><td class="mono">foothold-v1</td><td>틈 폭을 넓혀 재학습</td>'
-         '<td class="mono">0.15 ~ 0.40 m</td><td class="mono">models/foothold-v1.pt</td></tr>'
+         '<td class="mono">' + rng('B') + '</td>'
+         '<td class="mono">models/foothold-v1.pt</td></tr>'
          '</tbody></table></div>')
+p.append('<p class="cap">A와 B의 <b>학습한 틈 폭</b>은 팀장 확인이 근거입니다. 실행 당시 설정은 '
+         '<a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>에서 받는 중입니다.</p>')
 p.append('<p><b>기준 성적표</b>는 세 모델을 같은 평가 하네스 · 같은 난수(seed 42) · '
          '난이도 0.5 · 명령 속도 1.0 m/s에서 비교한 것입니다. 지형마다 100 에피소드입니다. '
          '다른 속도의 기준 평가는 05절에, 난이도별 결과는 07절에, '
@@ -1095,8 +1133,8 @@ p.append(clips([
 p.append('<h3>남은 질문 셋</h3>')
 p.append('<ol class="find">')
 p.append('<li><b>NVIDIA는 왜 이것을 안 했나.</b> '
-         '우리는 <span class="mono">gap</span>을 포함한 신규 지형 5종을 학습 구성에 '
-         '추가했습니다. 개발자가 손댈 자리로 '
+         '우리는 <span class="mono">gap</span> 하나를 학습 구성에 '
+         '10 %만 더해 이만큼을 얻었습니다. 개발자가 손댈 자리로 '
          '남긴 것인지, 다른 까닭이 있는지 '
          '<b>우리는 모릅니다.</b> 공식 문서에서 근거를 못 찾았습니다.</li>')
 p.append('<li><b>0.5 m/s의 성공률은 왜 1.0 m/s보다 낮았나.</b> 난이도 0.1에서 기준선과 '

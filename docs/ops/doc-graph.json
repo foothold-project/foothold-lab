@@ -107,11 +107,16 @@
    "B/항법"
   ],
   "areas_sure": false,
-  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×22 백과×4 학습×11 보상×5",
+  "areas_why": "근거 낱말 인프라×2 자동화×4 예산×2 회의록×3 문서×25 백과×4 학습×13 보상×5",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
-  "children": [],
+  "children": [
+   "REPORT.md",
+   "research/rough-terrain-study-plan.md",
+   "research/terrain-finetune-plan.md",
+   "schedule/personal-plans.md"
+  ],
   "purpose_reason": "본문이 「날짜·결정·왜·출처」 4열 표 하나와 미결 안건 목록이다. 08-27 8갈래 재정의·마일스톤 재정의가 여기 취소선과 함께 남아 있다.",
   "web_worthy": "높음",
   "web_worthy_src": "human",
@@ -241,7 +246,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×18 백과×2 학습×10 보상×1",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×19 백과×2 학습×10 보상×1",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -349,7 +354,9 @@
   "areas_why": "근거 낱말 TF×1 SLAM×13 Nav2×12 학습×36 관측×3 정책×8",
   "purpose": "운영",
   "purpose_src": "human",
-  "parents": [],
+  "parents": [
+   "DECISIONS.md"
+  ],
   "children": [
    "FLOW.md",
    "meetings/20260813-ops-alignment.md",
@@ -2315,6 +2322,7 @@
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
+   "DECISIONS.md",
    "REPORT.md",
    "meetings/20260821-team-meeting.md",
    "meetings/20260819-team-lock.md",
@@ -2359,14 +2367,14 @@
   ],
   "areas": [
    "A/정책학습",
-   "A/지형씬제작",
-   "A/평가"
+   "A/지형씬제작"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×12 보상×13 관측×14 terrain×13 지형×46 Isaac Lab×3 일반화 벤치마크×6 지표×1",
+  "areas_why": "근거 낱말 학습×13 보상×13 관측×14 terrain×13 지형×46 Isaac Lab×3",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [
+   "DECISIONS.md",
    "research/generalization-benchmark-10-terrains.md",
    "research/benchmark-setup-lim.md",
    "research/go2-rough-training.md",
@@ -2571,7 +2579,9 @@
   "areas_why": "근거 낱말 일정×13 일정×13 배포×1 ROS 2×3 TF×1 SLAM×1 학습×6 정책×3",
   "purpose": "운영",
   "purpose_src": "human",
-  "parents": [],
+  "parents": [
+   "DECISIONS.md"
+  ],
   "children": [],
   "purpose_reason": "«팀원이 스스로 세운 계획을 일정 페이지에 띄우기 위한 원본» 이고 본문이 단계·기간·마일스톤 대응표와 «앞으로는 이렇게 한다» 규칙이다.",
   "web_worthy": "낮음",

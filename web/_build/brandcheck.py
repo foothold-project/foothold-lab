@@ -28,7 +28,10 @@ GRAND = os.path.join(HERE, 'brand_grandfather.txt')
 _TOKEN_BLOCK = re.compile(
     r'(?::root(?:\[[^\]]*\])?|html\[data-theme[^\]]*\])\s*\{[^}]*\}')
 _MEDIA_ROOT = re.compile(r'@media[^{]*\{\s*:root\s*\{[^}]*\}\s*\}')
-_GRAD = re.compile(r'[^;{}]*(?:linear|radial)-gradient[^;}]*')
+# ★ 2026-09-15. 앞에 `[^;{}]*` 가 붙어 있었다. 판정에 안 쓰이는 접두사인데
+#   `;{}` 없는 긴 구간(base64 영상)에서 제곱으로 폭발했다. 보고서 0.5 MB 에
+#   100초를 못 끝냈고 빌드가 32분 멈췄다. 판정은 `gradient(` «뒤» 만 본다.
+_GRAD = re.compile(r'(?:linear|radial)-gradient[^;}]*')
 _SHAD = re.compile(r'box-shadow\s*:(?!\s*none)')
 _HEX = re.compile(r'(?<![-\w])#[0-9a-fA-F]{6}\b')
 

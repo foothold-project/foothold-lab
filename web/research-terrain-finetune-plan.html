@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=6956e09d').then(function(r){
+    fetch('/assets/search-index.json?v=0ad0ac87').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -880,6 +880,12 @@ body>*{flex-shrink:0}
 판: v2.2
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/59">#59</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a>
 지형: 공통</p></blockquote>
+<blockquote><p><b>[2026-09-15 정정] 아래 「실패 5종을 각 <code>proportion 0.1</code>」 배합은 1차 배포에서 실행되지 않았다.</b></p>
+<p>실제로 돌린 것은 <b><code>gap</code> 하나만 <code>proportion 0.1</code></b> 이고 <b>기존 험지 6종이 <code>0.9</code></b> 다.
+학습한 틈 폭은 A 가 <code>0.05 ~ 0.20 m</code> · B 가 <code>0.15 ~ 0.40 m</code> 다 (평가 기준 문서 모델 표 · 모델마다 SHA-256 기록). 근거는 팀장 확인이고
+실행 당시 설정 파일과 체크포인트는 <a href="https://github.com/foothold-project/foothold-lab/issues/428" target="_blank" rel="noopener"><code>#428</code></a> 에서 받는 중이다.</p>
+<p>이 문서는 <b>계획</b>이다. 여기 적힌 수를 실행 결과로 인용하지 말 것.
+정본은 <a href="decisions-log.html"><code>DECISIONS.md</code></a> 09-15 행이다.</p></blockquote>
 <blockquote><p>입력: <a href="research-generalization-benchmark-10-terrains.html">일반화 벤치마크 v2</a> (실패 5종·모드 지도, 지형당 50에피소드 <span class="ev ev-ok">실측</span>) + <a href="research-benchmark-setup-lim.html">벤치마크 하네스 설정</a> (10종 cfg 원문) + 문헌 조사 (하단 출처)
 답하는 질문 (팀장 8/22): &quot;팀원별로 지형을 나눠 병렬 강화학습하는 게 의미가 있는가? RL은 순차로 쌓아야 하지 않나?&quot;
 공식 Go2 rough cfg를 먼저 읽는 장은 <a href="research-go2-rough-training.html">험지 학습 커리큘럼</a>.</p></blockquote>
@@ -989,5 +995,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmptpw1vyx0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp8so2j04p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
