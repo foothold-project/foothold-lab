@@ -1075,7 +1075,7 @@ def _release_block():
         return ''
 
     when = (r.get('evaluated_at') or '')[:10]
-    cond = '난이도 %s · %s m/s · 칸당 %d판' % (
+    cond = '난이도 %s · %s m/s · 칸당 %d 에피소드' % (
         s.get('difficulty', '?'), s.get('speed_mps', '?'),
         s.get('episodes_per_cell', 100))
 
@@ -1095,8 +1095,8 @@ def _release_block():
                       '같은 조건 · %d칸' % kn['terrains']))
     if s.get('scorecard_episodes'):
         cells.append(('성적표 표본',
-                      '%s<i>판</i>' % format(s['scorecard_episodes'], ','),
-                      '한 칸의 분모는 %d판이다' % s.get('episodes_per_cell', 100)))
+                      '%s<i>에피소드</i>' % format(s['scorecard_episodes'], ','),
+                      '한 칸의 분모는 %d 에피소드다' % s.get('episodes_per_cell', 100)))
     if r.get('clips'):
         cells.append(('평가 영상', '%d<i>컷</i>' % r['clips'],
                       '평가 칸 %d개 전부' % (r.get('evaluations') or r['clips'])))

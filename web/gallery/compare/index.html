@@ -211,7 +211,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
 
 <footer>
   <div>재생은 <b>녹화 시작 후 경과 시간</b> 하나를 기준으로 묶는다. 길이가 다른 열은 짧은 쪽이 마지막 장면에서 멈추고 「영상 종료」를 단다. 되돌아 감기(loop)는 쓰지 않는다. 같은 경과 시간이 같은 장애물 위치를 뜻하지는 않는다.</div>
-  <div>열 옆의 성공률은 그 자리 평가 100판의 결과이고, 아래 영상은 시연 1회다.</div>
+  <div>열 옆의 성공률은 그 자리 평가 100 에피소드의 결과이고, 아래 영상은 시연 1회다.</div>
 </footer>
 
 </div>
@@ -592,7 +592,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
       score.appendChild(G.el('span', { class: 'big ' + G.rateClass(ev.success_rate),
                                        text: ev.success_rate.toFixed(1) + ' %' }));
       score.appendChild(G.el('span', { class: 'sub',
-        text: ev.episodes + '판 중 ' + ev.successes + '판 · 참여도 ' +
+        text: ev.episodes + ' 에피소드 중 ' + ev.successes + '개 · 참여도 ' +
               (ev.engagement === null ? '측정값 없음' : ev.engagement.toFixed(2)) }));
 
       /* **컷 길이를 적는다.** 세 열의 길이가 다른 것은 결함이 아니라 성적이다.

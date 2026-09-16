@@ -202,7 +202,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
 <div id="body"></div>
 
 <footer>
-  <div>영상은 <b>시연 1회</b>이고, 옆에 적힌 성공률은 그 자리에서 돌린 평가 100판의 결과다. 한 판의 성패와 100판의 비율은 다른 것이다.</div>
+  <div>영상은 <b>시연 1회</b>이고, 옆에 적힌 성공률은 그 자리에서 돌린 평가 100 에피소드의 결과다. 영상 하나의 성패와 100 에피소드의 비율은 다른 것이다.</div>
   <div id="foot2"></div>
 </footer>
 
@@ -251,7 +251,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   document.getElementById('foot2').textContent =
     '평가 규격 ' + (man.protocol.eval_spec_version || '미기록') +
     ' · Random Seed ' + (man.protocol.seed || '미기록') +
-    ' · 한 칸 ' + (man.protocol.episodes_per_terrain || '?') + '판' +
+    ' · 한 칸 ' + (man.protocol.episodes_per_terrain || '?') + ' 에피소드' +
     ' · 통과선 ' + (man.protocol.min_progress_m || '?') + ' m';
 
   /* ── 상태 ─────────────────────────────────────────────── */
@@ -539,7 +539,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
         ]),
         G.el('span', {}, [
           G.el('i', { text: main.length ? man.main_model : '평균 대상' }),
-          G.el('b', { text: eps.toLocaleString() + '판' })
+          G.el('b', { text: eps.toLocaleString() + ' 에피소드' })
         ])
       ])
     ]);
@@ -683,7 +683,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
         G.el('span', { class: 'rate ' + G.rateClass(rate), text: rate.toFixed(0) + ' %' })
       ]),
       G.el('div', { class: 'meta' }, [
-        G.el('span', { text: ev.episodes + '판 중 ' + ev.successes + '판 성공' }),
+        G.el('span', { text: ev.episodes + ' 에피소드 중 ' + ev.successes + '개 성공' }),
         G.el('span', { text: '참여도 ' + (ev.engagement === null ? '측정값 없음'
                        : ev.engagement.toFixed(2)) })
       ])
