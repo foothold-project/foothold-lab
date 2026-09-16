@@ -1,14 +1,14 @@
-# 3DGS 지형 PoC 결과 · 스마트폰 영상 한 편에서 Go2 보행 시험용 충돌 지형까지
+# 3DGS 지형 PoC 결과 · 스마트폰 영상 한 편에서 Go2 보행 시험용 충돌 지형과 NuRec 스플랫 배경까지
 
 > 분류: 실험
 > 작성: 오흥재 · 2026-09-16 20:20
-> 근거: 이 폴더의 워커 보고서 5편(`_out/colmap/REPORT-02.md` · `_out/splat/REPORT-03.md` · `_out/mesh/REPORT-04.md` · `_out/mesh/REPORT-05.md` · `_out/go2/REPORT-06.md`) 과 그 원자료(CSV · JSON · PLY · USD) · 코디네이터 세션의 독립 실측
-> 요지: 35.9초 폰 영상 하나에서 «SfM → 3DGS → 지면 후보 2.5D 메시 → Isaac Lab 충돌체 USD» 를 생성하고 두 Go2 정책의 로드 · 추론 · 이동을 같은 날 기록했다. 선택된 지면 후보 인라이어의 평면 적합 잔차는 가정 축척에서 약 1.27 cm 이며 실제 지면 대비 정확도는 미측정이다. 정책별 12초 실행에서 base_contact 종료는 A 3건 · B 2건이었다. 축척 가정 · 작은 표본 · 무작위 초기 방향 · 관측 처리 차이 때문에 정책 성능을 비교하는 자료로 쓰지 않는다
+> 근거: 이 폴더의 워커 보고서 6편(`_out/colmap/REPORT-02.md` · `_out/splat/REPORT-03.md` · `_out/mesh/REPORT-04.md` · `_out/mesh/REPORT-05.md` · `_out/go2/REPORT-06.md` · `_out/nurec/REPORT-07.md`) 과 그 원자료(CSV · JSON · PLY · USD) · 코디네이터 세션의 독립 실측
+> 요지: 35.9초 폰 영상 하나에서 «SfM → 3DGS → 지면 후보 2.5D 메시 → Isaac Lab 충돌체 USD» 를 생성하고 두 Go2 정책의 로드 · 추론 · 이동을 같은 날 기록했다. 선택된 지면 후보 인라이어의 평면 적합 잔차는 가정 축척에서 약 1.27 cm 이며 실제 지면 대비 정확도는 미측정이다. 정책별 12초 실행에서 base_contact 종료는 A 3건 · B 2건이었다. 축척 가정 · 작은 표본 · 무작위 초기 방향 · 관측 처리 차이 때문에 정책 성능을 비교하는 자료로 쓰지 않는다. 이어서 같은 스플랫을 NuRec USDZ 로 바꿔 Windows Isaac Sim 5.1 에서 배경 렌더와 정책 B 의 이동을 함께 기록했다(시스템 설치 없이). 각 12초 실행에는 낙상 1회와 재시작이 포함되며 렌더 품질 · 보행 성능 판정은 아니다
 > 상태: 검토중
-> 판: v1.3
+> 판: v1.5
 > 이슈: #430
 >
-> 조사 문서는 `RESEARCH-3dgs-terrain.md`(v1.4) 이고 이 문서는 그 2절 계획을 실제로 돌린 기록이다. 실행은 codex 워커(작업서 `WORKER-02` ~ `WORKER-06`)가 했고 판정은 코디네이터 세션이 했다. 대용량 산출물은 전부 `_out/` 아래(gitignore 대상)이며 경로만 적는다.
+> 조사 문서는 `RESEARCH-3dgs-terrain.md`(v1.4) 이고 이 문서는 그 2절 계획을 실제로 돌린 기록이다. 실행은 codex 워커(작업서 `WORKER-02` ~ `WORKER-07`)가 했고 판정은 코디네이터 세션이 했다. 대용량 산출물은 전부 `_out/` 아래(gitignore 대상)이며 경로만 적는다.
 
 ## 0. 한눈에
 
@@ -20,6 +20,7 @@
 | 4 지면 메시 | `poc_mesh_grid.py` · sol | 삼각형 34,508 · **인라이어 평면 잔차 RMS 1.27 cm (가정 축척)** · 보행 관심 영역 관측 68.5 % | 3 초 | 통과 (축척 `추측` · 실제 지면 대비 정확도 미측정) |
 | 5 USD 충돌체 | `poc_mesh_to_usd.py` · astra | 새 프로세스 재개방 검사표 **9 / 9** · 424 KB | 앱 기동 5 초 (검사 전체 시간 아님) | 통과 (별도 구성한 스캔 시험은 결과 미반환) |
 | 6 Go2 보행 | `poc_go2_on_usd.py` · astra | A · B 둘 다 로드 · 추론 완료 · 정책 입력 스캔 유한값 100 % · 원시 광선 유한값 90.2 / 93.4 % · base_contact 종료 3 / 2 · world x 변위 평균 0.71 / 1.07 m | A 47.7 초 · B 46.5 초 | 통과 (관문 통과이지 성능 비교 아님) |
+| 7 스플랫 배경 | 3DGRUT transcode · `poc_nurec_render.py` · `poc_go2_nurec.py` · astra | PLY → NuRec USDZ (splat.nurec 267.9 MB) · **Windows Isaac Sim 5.1 렌더 됨** (숨김 렌더 대비 RGB 절대차 평균이 5/255 를 넘는 픽셀 98.4 % · 원본 대비 상호상관 0.970 은 품질 판정 아님) · 정책 B 한 화면 영상 2 편(낙상 1 회 · 재시작 포함) | 좌표 변환 10 초 · transcode 8 초 · 영상 각 12 초 | 통과 (렌더 품질 · 보행 판정 아님) |
 
 «통과» 는 파일 생성 · 실행 관문을 지났다는 뜻이고 품질 판정이 아니다. 시간은 보존된 실행 기록값이다.
 
@@ -114,7 +115,50 @@
 - 첫 본 시험은 `terrain.env_spacing` 만 1.0 으로 두어 실제 원점 간격이 `scene.env_spacing` 기본값 2.5 m 로 잡혔다(`interactive_scene.py` 741행이 scene 값을 복사한다). `scene.env_spacing` 도 1.0 으로 고치고 원점을 검사하는 관문을 넣어 새 프로세스로 재측정했다. 수정 전 결과는 `_out/go2/initial_spacing2p5/` 에 남겼고 위 표는 수정 후 값이다. 설정 오류 수정이지 수치를 고른 것이 아니다.
 - 워커의 독립 검증(astra) 1 차는 GPU 사용량 서술 불일치로 발행을 막았고, 보존한 `gpu_before.csv` 값으로 고친 뒤 2 차에서 발행 가능 판정을 받았다.
 
-## 7. 팀장 집중점에 대한 답
+## 7. 스플랫 배경 + 메시 충돌체 + Go2 한 화면 (`확인됨` · `_out/nurec/REPORT-07.md`)
+
+같은 스플랫 PLY 를 NuRec USDZ 로 바꿔 Windows Isaac Sim 5.1 안에 시각 전용 배경으로 참조하고, 충돌은 5 단계의 `ground.usd` 만 담당하게 한 뒤 정책 B 를 걷게 했다. 작업서 `WORKER-07-nurec.md`. 시스템 설치(VS Build Tools · CUDA 툴킷)는 하지 않았다.
+
+**변환.** 3DGRUT 저장소 사본(`_out/tools/3dgrut/` · 커밋 a37ef72)의 `transcode` 는 PLYImporter → AttributesExportAdapter(torch CPU) → NuRecExporter(pxr · msgpack) 경로라 CUDA 커널이 필요 없다. 전용 venv(Python 3.11 · torch 2.14.0+cpu · usd-core 26.8 · nvidia-ncore 19.8.0 · plyfile · msgpack · opencv · tensorboard 추가 필요)에서 돌렸다. 좌표는 PLY 를 먼저 `world_to_mesh_4x4` 로 옮겼다(위치 · wxyz 쿼터니언 · log 축척 + ln s · f_rest 는 3DGRUT `rotate_specular` 로 회전).
+
+| 항목 | 값 |
+|---|---:|
+| 변환 검증 (a) 평면 인라이어 56,113 개의 z | 중앙값 0.00068 m · RMS 0.01266 m |
+| 변환 검증 (b) 카메라 중심 287 개 vs `cameras.centers_m` | 최대 절대 차이 2.8e-16 m |
+| 변환 검증 (c) 가우시안 · 속성 | 2,270,126 → 2,270,126 · 59 → 59 · 헤더 동일 |
+| transcode 벽시계 | 8.0 초 (PLY 변환은 mmap 재실행 10 초 · 첫 실행은 136 초 뒤 종료 코드 1) |
+| USDZ 구성 | default.usda 834 B · splat.nurec 267,897,169 B · gauss.usda 2,253 B · upAxis Z · metersPerUnit 1 · Volume xform 항등 |
+| 스플랫 전체 extent (m) | (-37.9, -31.7, -55.3) ~ (43.6, 61.7, 48.5) · 격자 6.7 m 보다 훨씬 넓다 |
+
+**렌더 시험.** Kit 107.3.3 · RaytracedLighting · Fabric Scene Delegate 켜짐 · GPU 0 · 1280x720. COLMAP 143 번째 이미지(0428.jpg)의 포즈를 메시 프레임으로 옮긴 카메라(수평 FOV 97.8 도)에서 렌더하고, NuRec prim 을 숨긴 렌더 및 원본 undistorted 프레임과 비교했다(`compare_cam143.png` · 왼쪽 원본 · 가운데 렌더 · 오른쪽 숨김).
+
+| 지표 | 값 |
+|---|---:|
+| 숨김 렌더 대비 RGB 채널 절대차 평균이 5/255 를 초과한 픽셀 비율 (판정 기준 ≥ 30 %) | **98.4 %** → 렌더 됨 |
+| 숨김 렌더 대비 평균 절대차 (0 ~ 255) | 170.4 |
+| 렌더 그레이 표준편차 (0 ~ 255) | 75.5 |
+| 원본 프레임과의 128 px 그레이 정규화 상호상관 | 0.970 (품질 판정에 쓰지 않음) |
+
+첫 캡처는 빈 배열(shape (0,))이 나왔고, 타임라인을 켠 뒤 명시적 렌더 요청을 두 번 해 해결했다. 작업서의 대안 네 가지(Fabric 끔 · PathTracing · gauss.usda 직접 참조 · AppLauncher)는 기본 설정이 통과해 `미수행`. 프로브가 조회한 NuRec 관련 스키마 이름 6 개는 pxr 스키마 레지스트리에 없었지만 참조 후 prim 은 `Volume` + `OmniNuRecFieldAsset` 으로 풀렸다(codeless 스키마).
+
+**한 화면.** `poc_go2_nurec.py`(06 스크립트를 복사해 확장 · `poc_go2_on_usd.py` 는 수정 안 함). num_envs 1 · 정책 B(규격 2 관측) · 0.5 m/s 직진 · 12 초 · seed 42 · **reset yaw 0 고정(06 과 다름)** · 카메라는 스폰 기준 원점에서 뒤 3.5 m · 기준 지면보다 높이 1.6 m · 20 도 하향의 월드 고정(reset 의 ±0.3 m 무작위 스폰을 따라가지 않는다). 충돌은 `ground.usd` 뿐이고 NuRec 아래 CollisionAPI prim 은 0 개. 높이 스캔 대상은 `/World/ground` 그대로.
+
+| 측정 | 메시 보임 | 메시 숨김 |
+|---|---:|---:|
+| 영상 (`run.mp4`) · trace | 360 프레임 · 600 행 | 360 프레임 · 600 행 |
+| 표본 에피소드 (종료 / 관측창 끝 미종료) | 2 (1 / 1) | 2 (1 / 1) |
+| base_contact 낙상 | 1 (7.22 초) | 1 (7.22 초) |
+| 에피소드별 world x 변위 | 3.37 m (7.22 초 종료) · 2.18 m (4.78 초 미종료) · 평균 2.78 m | 같음 |
+| 원시 광선 유한값 비율 · 정책 관측의 높이 스캔(187 차원) 유한값 비율 | 97.9 % · 100 % | 97.9 % · 100 % |
+| 첫 스텝 광선 | 187 / 187 | 187 / 187 |
+
+- 두 실행의 `trace.csv` 는 바이트 단위로 동일하다. 같은 seed 에 메시 visibility 만 다르고 물리는 같기 때문이다(`확인됨` · 이 두 실행에 한한 확인). 06 과는 env 수 · yaw · 카메라가 달라 6 절 표와 비교하지 않는다.
+- 메시 보임 판에서도 스틸에 지면 메시가 드러나지 않는다. t = 4 초 스틸의 보임 · 숨김 평균 절대차는 4.96 (0 ~ 255). 스플랫 지면이 같은 높이를 덮거나 proxy 합성 때문일 수 있으나 원인은 `미확인`.
+- NuRec Volume 에는 `proxy` 관계가 있어 실제 충돌 메시 `/World/ground/terrain/ground/mesh`(Isaac Lab importer 가 만든 경로 · 작업서의 `/World/ground/mesh` 는 실행 스테이지에 없었다)를 지정했다. proxy 전후 스틸 평균 절대차는 보임 17.6 · 숨김 0.09 (0 ~ 255) 이며 시간 누적 렌더 차이를 포함할 수 있어 proxy 만의 효과로 단정하지 않는다. 메시에 matte 속성은 없어 켜지 않았다.
+- 스틸에서 카메라 바로 앞(로봇 뒤)에 어두운 스플랫 덩어리가 보인다. 촬영 범위 밖 · 카메라 아래 영역의 부유 가우시안으로 보이나(`추측`) 정리하지 않았다.
+- GPU 0 번 사용은 로그로 `확인됨`. 선택 당시 GPU 별 사용량은 nvidia-smi 원문이 없어 `미확인`.
+
+## 8. 팀장 집중점에 대한 답
 
 **바닥이 메시로 뜨는가.** 스플랫 중심점의 지면 후보에서 메시를 생성했다. 선택한 인라이어의 평면 적합 잔차는 가정 축척에서 약 1.27 cm 다. 이는 전체 메시와 실제 바닥 사이의 복원 오차를 뜻하지 않는다. 실제 지면 대비 정확도는 `미측정` 이다. 보행 관심 영역의 68.5 % 가 실제 관측 칸이고, 높이 분포에 0.14 m 떨어진 두 번째 봉우리가 있다(연석인지는 `추측`). 이 모든 길이는 «폰 높이 1.4 m» 가정에서 나온 것이라 실측 기준물이 있어야 확정된다.
 
@@ -122,7 +166,9 @@
 
 **그 지형 위에서 우리 정책이 걷는가.** 복원 메시 위에서 두 정책의 추론과 이동을 기록했다. B 의 표본 6 개는 낙상 종료 2 · timeout 종료 2 · 미종료 2 다. 낙상이 두 정책 모두에서 나왔으므로 안정적인 지형 통과 성능을 검증한 결과는 아니고, 원인이 지형 · 격자 경계 · 스폰 자세 · 정책 가운데 무엇인지 가르지 않았다.
 
-## 8. 한계와 다음 단계
+**스플랫을 배경으로 띄울 수 있는가.** 됐다(7 절). 시스템 설치 없이, 메시 프레임으로 옮긴 PLY 를 NuRec USDZ 로 내보내는 transcode 는 8 초였고(선행 좌표 변환 10 초 별도), Windows Isaac Sim 5.1 이 그것을 렌더했다. 단일 카메라의 128x72 그레이 정규화 상호상관은 0.970 이며 품질 판정에는 쓰지 않았다. 그 배경 안에서 정책 B 가 `ground.usd` 충돌체 위를 움직이는 12 초 영상이 있다(낙상 1 회와 재시작 포함 · 보행 성능 판정 아님). 스플랫은 시각 전용이라 충돌 · 스캔은 메시가 담당한다. 남은 것은 로봇과 스플랫의 깊이 합성(proxy) 효과 분리, 부유 가우시안으로 추정되는 전경 덩어리의 원인 확인 · 정리, 06 과 같은 조건의 재측정이다.
+
+## 9. 한계와 다음 단계
 
 | 한계 | 다음 단계 |
 |---|---|
@@ -131,35 +177,39 @@
 | HLG · 낮은 비트레이트 재인코딩 영상 | 폰 원본 파일을 그대로 받는다 |
 | 메시 대조군 없음 | 같은 PLY 로 Poisson(open3d wheel) · 같은 undistort 로 COLMAP dense(`patch_match_stereo`)를 돌려 평면 잔차와 관측 비율을 나란히 놓는다 |
 | 보행 표본 6 ~ 7 에피소드 · yaw 무작위 | 평가 하네스(`sim/eval` 규격 2)와 같은 조건(heading 고정 · 100 에피소드)으로 다시 잰다. USD 지형을 평가 하네스에 연결하는 작업은 `sim/` 에 브랜치와 PR 로 |
-| 스플랫 외관 렌더링 없음 | 작업서 `WORKER-07-nurec.md` 로 진행 중. 3DGRUT 의 transcode 는 CUDA 빌드 없이 PLY → NuRec USDZ 로 변환되므로 VS Build Tools · CUDA 툴킷 설치는 필요 없다. Windows Isaac Sim 5.1 에서 실제 렌더되는지는 `미확인` 이며 워커 07 의 첫 관문이다. 결과는 `_out/nurec/REPORT-07.md` 와 이 문서 다음 판에 |
+| 스플랫 배경은 렌더되지만(7 절) 로봇과의 깊이 합성 효과와 메시 미노출 원인은 `미확인` 이고, 전경 덩어리는 부유 가우시안으로 `추측` | NuRec `proxy` 를 켠 채와 끈 채로 같은 프레임을 렌더해 차이를 분리한다. 카메라 아래 · 촬영 범위 밖 가우시안을 불투명도 · 거리로 잘라낸 USDZ 를 하나 더 만든다. 06 과 같은 조건(num_envs 4 · yaw 무작위)으로 다시 잰다 |
 | 별도 구성한 스캔 시험 결과 미반환 | 원인은 미조사. 표준 환경 흐름이 도는 것을 확인했으므로 우선순위 낮음 |
 
-## 9. 산출물과 재현
+## 10. 산출물과 재현
 
 | 경로 (이 폴더 기준) | 무엇 | 크기 |
 |---|---|---:|
 | `_frames/plain/` · `_frames/sdr/` · `frames.csv` | 프레임 287 x 2 | 325 MiB |
-| `_out/tools/colmap/` · `_out/tools/brush/` · `_out/tools/colmap-x64-windows-cuda.zip` | COLMAP 4.2.0 · Brush v0.3.0 배포 파일 | 743 · 303 · 364 MiB (`_out/tools/3dgrut/` 는 7단계용 저장소 사본과 venv 라 계속 커지므로 이 표에서 뺀다) |
+| `_out/tools/colmap/` · `_out/tools/brush/` · `_out/tools/colmap-x64-windows-cuda.zip` | COLMAP 4.2.0 · Brush v0.3.0 배포 파일 | 743 · 303 · 364 MiB (`_out/tools/3dgrut/` 저장소 사본 + venv 는 v1.4 시점 1168 MiB · 계속 커질 수 있어 합계에 넣지 않는다) |
 | `_out/colmap/` · `_out/colmap_loop/` | SfM 두 판 · undistort · REPORT-02 | 1,247 + 1,265 MiB |
 | `_out/splat/` (short.ply · splat.ply · 입력 모델 TXT · REPORT-03) | 스플랫 | 662 MiB |
 | `_out/mesh/` (ground.obj · ground.usd · ground_heightmap.png · ground_stats.json · REPORT-04 · REPORT-05) | 지면 메시 · 충돌체 | 6 MiB |
 | `_out/go2/` (A · B · 초기 실행 · 사전 실행 점검(smoke test) · 로그 · REPORT-06) | trace.csv · summary.json · run.mp4 | 10 MiB |
 | `_out/viewer/` (index.html · data.js · export_viewer_data.py) | 바닥 메시 빠른 확인 뷰어(스플랫 중심점 500,000 개 · 지면 메시 · 카메라 궤적 · three.js) · Artifact 로 발행 https://claude.ai/code/artifact/6df7ce39-0102-4741-823d-bc374ca3ff69 | 7 MiB |
+| `_out/nurec/` (splat_mesh_frame.ply · splat.usdz · usdz_listing.md · render_*.png · compare_cam143.png · go2_B_mesh_visible/ · go2_B_mesh_hidden/ · REPORT-07 · 로그) | 7 단계 NuRec 변환 · 렌더 시험 · 한 화면 영상 | 785 MiB |
 | `_out/verify/` (조사 문서 `verify-result-r1 ~ r5.md` · 이 문서 `verify-results-r1.md` · `verify-results-r2.md` · `verify-results-r3.md` · 회차마다 하나씩 추가) | 검증 원문 | 1 MiB (`du -sm` 올림 · 파일 길이 합은 회차마다 늘며 v1.3 시점 199,739 바이트 = 약 0.190 MiB) |
 
 크기는 `du -sm` 실측(MiB)이다.
 
-저장소에서 추적 중인 것은 조사 문서 · 작업서 6 편(`WORKER-02` ~ `WORKER-07`) · 스크립트 4 편(`poc_frames.py` · `poc_mesh_grid.py` · `poc_mesh_to_usd.py` · `poc_go2_on_usd.py`)이고, 이 결과 문서는 검증 통과 후 같은 브랜치에 추가한다. 실행 원자료는 메인 체크아웃의 이 폴더에 있고 제출은 worktree 브랜치 `vfxpedia/3dgs-terrain-poc` · PR #437 로 한다.
+저장소에서 추적 중인 것은 조사 문서 · 이 결과 문서 · 작업서 6 편(`WORKER-02` ~ `WORKER-07`) · 스크립트 7 편(`poc_frames.py` · `poc_mesh_grid.py` · `poc_mesh_to_usd.py` · `poc_go2_on_usd.py` · 7 단계의 `poc_ply_to_mesh_frame.py` · `poc_nurec_render.py` · `poc_go2_nurec.py`)이다. 7 단계 스크립트 3 편은 검증 5회차 뒤 같은 브랜치에 커밋했다(`git ls-files` 로 확인 가능). 실행 원자료는 메인 체크아웃의 이 폴더에 있고 제출은 worktree 브랜치 `vfxpedia/3dgs-terrain-poc` · PR #437 로 한다.
 
-재현 순서는 작업서 02 ~ 06 의 3 절 명령 그대로다. isaac311 파이썬 하나로 1 · 4 · 5 · 6 단계가 돌고, 2 · 3 단계는 배포 파일을 `_out/tools/` 에 풀어 절대 경로로 부른다. 환경 변수 `OMNI_KIT_ACCEPT_EULA=YES` · `KMP_DUPLICATE_LIB_OK=TRUE` 는 Isaac 을 띄우는 5 · 6 단계에만 준다. 신규 환경에서 전체 파이프라인을 다시 실행해 재현을 검증한 것은 아니다.
+재현 순서는 작업서 02 ~ 07 의 명령 그대로다(07 은 `_out/nurec/REPORT-07.md` 6 절). isaac311 파이썬 하나로 1 · 4 · 5 · 6 단계와 7 단계의 Isaac 실행이 돌고, 2 · 3 단계는 배포 파일을 `_out/tools/` 에 풀어 절대 경로로 부르며, 7 단계의 변환은 `_out/tools/3dgrut/.venv` 파이썬으로 한다. 환경 변수 `OMNI_KIT_ACCEPT_EULA=YES` · `KMP_DUPLICATE_LIB_OK=TRUE` 는 Isaac 을 띄우는 5 · 6 · 7 단계에만 준다. 신규 환경에서 전체 파이프라인을 다시 실행해 재현을 검증한 것은 아니다.
 
-## 10. 출처
+## 11. 출처
 
 1. COLMAP 4.2.0 릴리스 https://github.com/colmap/colmap/releases/tag/4.2.0
 2. Brush v0.3.0 릴리스 https://github.com/ArthurBrussee/brush/releases/tag/v0.3.0
 3. Isaac Lab v2.3.2 (로컬 `C:/isaac/IsaacLab` · `terrains/utils.py` `create_prim_from_mesh`) https://github.com/isaac-sim/IsaacLab
 4. NVIDIA 사전학습 체크포인트 `Isaac-Velocity-Rough-Unitree-Go2-v0` (Isaac Lab `.pretrained_checkpoints`) 와 우리 `models/foothold-v1.pt` (`models/foothold-v1.json`)
 5. 조사 문서 `RESEARCH-3dgs-terrain.md` v1.4 의 출처 1 ~ 39
+6. 3DGRUT 저장소(export 문서 `threedgrut/export/README.md` · `threedgrut/export/scripts/transcode.py`) https://github.com/nv-tlabs/3dgrut · 로컬 사본 `_out/tools/3dgrut/` 커밋 a37ef72
+7. Isaac Sim 5.1 Neural Volume Rendering https://docs.isaacsim.omniverse.nvidia.com/5.1.0/assets/usd_assets_nurec.html
+8. NVIDIA 포럼 · Isaac Sim 5.1 에서 원점에서 300 ~ 400 m 이상 떨어진 장면의 층 현상 보고와 float16 정밀도 손실 가능성이라는 답변(우리 장면과 무관 · 원인 확정 아님) https://forums.developer.nvidia.com/t/3dgs-renders-correctly-from-ply-but-shows-layered-artifacts-after-conversion-to-usdz-via-3dgrut-in-isaac-sim/360930
 
 ## 판 이력
 
@@ -169,3 +219,5 @@
 | v1.1 | 2026-09-16 20:45 | 검증 1회차 반영: 평면 RMS 유닛 오기(0.0161 → 0.1609) · GPU 메모리 MiB · «완주» 를 «종료» 로 · 카메라 누적 이동거리와 관측 구간 구분 · 평활화 형상 보존 한정 · 관통 결측 행 · 스캔 시험 «미반환» · 요지 교체 · 근거 5편 | `_out/verify/verify-results-r1.md` |
 | v1.2 | 2026-09-16 21:07 | 검증 2회차 반영: 평활화 수치의 집계 범위(보행 관심 영역 4,127 칸) 명시 · 낙상 거리의 경계 정의 · 작성 줄 형식 · 검증 원문을 `_out/verify/` 에 보존 · tools · verify 크기 · smoke test 표현. 뷰어와 작업서 07 추가 | `_out/verify/verify-results-r2.md` |
 | v1.3 | 2026-09-16 21:17 | 검증 3회차 반영: v1.1 · v1.2 의 «언제» 를 실제 기록으로 정정(v1.1 은 편집 스크립트 `apply_v11.py` 작성 시각, v1.2 는 파일 저장 시각). 이 행의 시각은 편집 스크립트 실행 시각 | `_out/verify/verify-results-r3.md` |
+| v1.4 | 2026-09-16 21:37 | 7 단계(NuRec 스플랫 배경 + 메시 충돌체 + Go2 한 화면) 추가: 0절 7행 · 새 7절 · 8절 네 번째 답 · 9절 한계 행 교체 · 10절 nurec 행과 스크립트 7 편 · 11절 출처 6 ~ 8 · 제목 · 요지 · 근거 6편. 기존 7 ~ 10절은 8 ~ 11절로 | `_out/nurec/REPORT-07.md` · `_out/nurec/*/summary.json` |
+| v1.5 | 2026-09-16 21:51 | 검증 5회차 반영: 0절 · 8절의 «8 초» 를 transcode 로 한정(좌표 변환 10 초 별도) · 7절 표의 «정책 입력 유한값» 을 높이 스캔 187 차원으로 한정 · 요지 · 8절에 낙상 1 회 · 재시작 · 품질 미판정 한정 · 부유 가우시안은 추측 · 출처 8 한정 · 7 단계 스크립트 3 편 커밋 뒤 추적 문장 · 지표 이름 · 카메라 기준 · GPU 문장 | `_out/verify/verify-results-r5.md` |
