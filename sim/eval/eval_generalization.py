@@ -667,6 +667,85 @@ def environment_record():
     return record
 
 
+def policy_provenance(checkpoint_path):
+    """이 정책이 «어떤 조건으로 학습됐는가» 를 매니페스트에 같이 남긴다.
+
+    2026-09-11 에 배포한 foothold-v1 이 NVIDIA Go2 rough 에서 명령 6줄과
+    리셋 3줄을 좁힌 전진 전용 설정으로 학습됐는데, 그 사실이 어느 실행
+    기록에도 없었다. 평가는 0.5 · 1.0 · 1.5 m/s 직진만 재므로 **학습 명령
+    범위 안에서만 시험을 본 셈**이었고, 잃은 능력(정지 · 저속 · 회전)이
+    한 달 가까이 안 보였다.
+
+    그래서 학습 조건의 출처를 평가 기록에 붙인다. 두 곳을 본다.
+
+    - 체크포인트 옆 `params/agent.yaml` · rsl_rl 이 학습 시각에 남긴 것.
+      `resume` · `load_run` · `load_checkpoint` 가 **출발 체크포인트**다
+    - 모델 카드 `models/<이름>.json` · 사람이 적은 것.
+      `training.command_conditions` 가 **학습한 명령 범위**다
+
+    둘 다 없어도 평가는 그대로 돈다. 못 읽은 것은 못 읽었다고 적는다.
+    """
+    record = {"checkpoint": checkpoint_path}
+
+    def attempt(key, fn):
+        try:
+            record[key] = fn()
+        except Exception as error:  # noqa: BLE001
+            record[key] = f"<못 읽음: {error}>"
+
+    ckpt_dir = os.path.dirname(checkpoint_path or "")
+    stem = os.path.splitext(os.path.basename(checkpoint_path or ""))[0]
+
+    def training_agent_cfg():
+        # rsl_rl 학습 로그는 <런>/params/agent.yaml, 우리 models/ 는
+        # <이름>.agent.yaml 이다. 배치가 달라 둘 다 본다.
+        candidates = [
+            os.path.join(ckpt_dir, "params", "agent.yaml"),
+            os.path.join(ckpt_dir, stem + ".agent.yaml"),
+        ]
+        path = next((c for c in candidates if os.path.isfile(c)), None)
+
+        if path is None:
+            return "<없음: %s>" % " · ".join(candidates)
+
+        wanted = ("resume", "load_run", "load_checkpoint", "max_iterations",
+                  "experiment_name", "run_name", "seed")
+        found = {}
+
+        with io.open(path, encoding="utf-8") as f:
+            for line in f:
+                key = line.split(":", 1)[0].strip()
+
+                if key in wanted and key not in found:
+                    found[key] = line.split(":", 1)[1].strip()
+
+        return found or "<빈 값>"
+
+    attempt("training_agent_cfg", training_agent_cfg)
+
+    def model_card():
+        path = os.path.join(_HERE, "models", stem + ".json")
+
+        if not os.path.isfile(path):
+            return "<없음: %s>" % path
+
+        with io.open(path, encoding="utf-8") as f:
+            card = json.load(f)
+
+        training = card.get("training", {})
+
+        return {
+            "path": os.path.relpath(path, _HERE).replace("\\", "/"),
+            "started_from": training.get("started_from"),
+            "command_conditions": training.get("command_conditions"),
+            "known_limits_count": len(card.get("known_limits", [])),
+        }
+
+    attempt("model_card", model_card)
+
+    return record
+
+
 def save_run_manifest(output_dir, extra):
     """무엇으로 어떻게 쟀는지. 사람이 읽는 조건 기록은 이것을 근거로 쓴다."""
     path = os.path.join(output_dir, "run_manifest.json")
@@ -1778,6 +1857,8 @@ def main():
             "harness": "sim/eval/eval_generalization.py",
             "policy_checkpoint": resume_path,
             "policy_sha256": file_sha256(resume_path),
+            # 학습 조건의 출처. 없으면 「없음」 이라고 적힌다 (policy_provenance 주석 참고)
+            "policy_provenance": policy_provenance(resume_path),
             "started_at_utc": started_at,
             "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "environment": environment_record(),
