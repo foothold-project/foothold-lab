@@ -1,5 +1,13 @@
 # PoC 대용량 산출물은 커밋하지 않는다
 *.mp4
+*.MOV
+*.mov
+*.MP4
+*.jpg
+*.JPG
+*.jpeg
+*.heic
+*.HEIC
 _out/
 _frames/
 *.ply
