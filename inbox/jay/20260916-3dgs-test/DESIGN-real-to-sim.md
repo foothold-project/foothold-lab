@@ -688,16 +688,66 @@ nvcc 와 MSVC 를 설치하면 **더 빨라지는 것이 아니라 못 하던 �
 | 시스템 설치(VS Build Tools · CUDA Toolkit)는 별도로 알린다 | Python 가상환경으로 격리되지 않는 부분이다 |
 | 드라이버를 바꾸지 않는다 · 시스템 PATH 를 전역으로 덮지 않는다 | 다른 세션의 GPU 작업이 돌고 있다 |
 
-### 8-2. 설치 순서
+### 8-1-1. 이 머신을 실제로 확인한 결과 · 계획이 바뀐다
 
-1. **VS Build Tools** (C++ 워크로드). 시스템 설치. 재부팅 필요 여부를 먼저 확인하고 다른 GPU 작업이 없을 때 한다.
-2. **CUDA Toolkit 12.8**. 드라이버는 **업데이트하지 않는다**(현재 591.86).
-3. `conda create -n twin_env python=3.11` 로 환경 생성.
-4. PyTorch(CUDA 12.8 빌드) · open3d · trimesh · scipy · opencv · plyfile 설치. 버전을 `environment.yml` 에 고정.
-5. 선택한 표면 복원 도구(D 후보) 하나를 빌드.
-6. **검증**: `nvcc --version` · `python -c "import torch; print(torch.cuda.is_available())"` · 작은 장면으로 끝까지 한 번 돌리기.
+설계안을 쓴 뒤 이 머신을 직접 열어 봤다 `확인됨`.
 
-각 단계의 실제 명령 · 출력 · 소요 시간을 기록으로 남긴다. **「설치 허용」이 「모든 최신판을 동시에 설치」라는 뜻은 아니다.**
+| 확인한 것 | 값 |
+|---|---|
+| **WSL2 Ubuntu 24.04.3 LTS 가 이미 설치되어 실행 중** | `wsl -l -v` 에서 Running |
+| **WSL2 안에서 GPU 가 보인다** | `nvidia-smi` 가 RTX 5080 **두 장**을 드라이버 591.86 으로 보고 |
+| gcc | 13.3.0 있음 |
+| python3 | 3.12.3 |
+| **nvcc** | **없음** |
+| WSL 내부 디스크 여유 | 890 GB (`/`) |
+| Windows 디스크 여유 | C: 938 GB · E: 923 GB · G: 680 GB |
+
+> **즉 5-1-1 절에서 「전부 Windows 미지원」이라 걱정한 표면 복원 도구들을 위해 새 운영체제를 깔 필요가 없다. 이미 리눅스가 있고 GPU 도 잡힌다.**
+>
+> **빠진 것은 CUDA Toolkit(`nvcc`) 하나뿐이고, 그것은 WSL2 안에 apt 로 넣으면 된다. 재부팅도 파티션 작업도 필요 없다.**
+
+이것이 8-2 의 순서를 바꾼다. **Windows 에 VS Build Tools 와 CUDA Toolkit 을 시스템 설치하는 것을 우선 보류한다.** 시스템 설치는 되돌리기 어렵고 다른 세션의 GPU 작업에 영향을 줄 수 있는데, 지금 그것이 필요한지부터 WSL2 로 확인할 수 있기 때문이다.
+
+### 8-2. 설치 순서 (고친 판)
+
+**두 갈래로 나눈다. 후보마다 필요한 것이 다르기 때문이다.**
+
+| 후보 | 어디서 | 왜 |
+|---|---|---|
+| A(2.5D 격자) · B(Poisson) · C(COLMAP dense) | **Windows · conda `twin_env`** | 결과를 Isaac Sim USD 로 넘겨야 하고 Isaac Sim 은 Windows 쪽에 있다. COLMAP 도 이미 Windows 에 설치돼 있다 |
+| **D(표면 복원)** · E(lingbot-map) | **WSL2 Ubuntu** | 저자들이 리눅스만 지원한다 |
+
+#### (가) Windows 쪽 · `twin_env`
+
+1. `conda create -n twin_env python=3.11`
+2. open3d · trimesh · scipy · opencv · plyfile · numpy 설치. 버전을 `environment.yml` 에 고정
+3. **PyTorch 는 지금 넣지 않는다.** A · B · C 에 필요 없다. 필요해지면 그때
+4. 검증: 작은 PLY 로 Poisson 을 한 번 돌리고, 기존 `poc_mesh_grid.py` 가 이 환경에서도 도는지 확인
+5. **`isaac311` 은 건드리지 않는다.** USD 생성과 Go2 보행은 기존대로 `isaac311` 에서 한다
+
+**VS Build Tools 와 Windows CUDA Toolkit 은 이 단계에 필요 없다.** 넣지 않는다.
+
+#### (나) WSL2 쪽 · D 후보 시험
+
+1. WSL2 Ubuntu 안에 **CUDA Toolkit** 설치 (`nvcc`). 드라이버는 Windows 쪽 591.86 을 그대로 쓴다. **WSL 안에 드라이버를 설치하면 안 된다**(NVIDIA 공식 지침)
+2. `nvcc --version` 과 `python -c "import torch; print(torch.cuda.is_available())"` 로 검증
+3. **PGSR 또는 2DGS 하나만** 빌드 시도
+4. **작업 파일은 WSL 내부 디스크(`/`, 890 GB 여유)에 둔다.** `/mnt/c` 를 거치면 파일 입출력이 느리다
+5. 결과 메시(PLY · OBJ)만 Windows 쪽으로 복사해 A · B · C 와 같은 측정표에 올린다
+
+**시간 상한을 둔다. 하루 안에 빌드가 안 되면 중단하고 기록으로 남긴다**(5-1-1 절).
+
+#### (다) 기록
+
+각 단계의 실제 명령 · 출력 · 소요 시간을 남긴다. **「설치 허용」이 「모든 최신판을 동시에 설치」라는 뜻은 아니다.** 팀원이 따라 할 수 있도록 설치 스크립트와 검증 명령까지 문서로 남긴다.
+
+### 8-2-1. 네이티브 우분투(멀티부트)는 지금 하지 않는다
+
+별도 검토 문서로 다룬다(`HANDOFF-os-migration.md` 참조). 요지만 적으면 이렇다.
+
+- **지금 막힌 것은 WSL2 로 풀린다.** 그러므로 지금 멀티부트를 할 기술적 이유가 없다
+- 네이티브 우분투가 실제로 필요해지는 시점은 **ROS 2 Jazzy · Nav2 · Isaac ROS 를 쓰는 실기 단계**다
+- 이 머신은 팀의 유일한 Isaac Sim · 정책 학습 · Orca 오케스트레이션 거점이다. 듀얼부트는 **두 환경을 동시에 못 쓴다**는 비용이 크다
 
 ### 8-3. Isaac Sim 6.0
 
