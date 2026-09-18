@@ -1822,6 +1822,27 @@
   "web_worthy_src": "auto"
  },
  {
+  "path": "research/20260918-postshot-3dgs-tech-analysis.md",
+  "title": "Postshot 기술 분석과 3DGS 오픈소스 대체 경로 · 움직이는 피사체를 포함해서",
+  "kind": "리서치",
+  "evidence": "jawset.com",
+  "issues": [
+   "430"
+  ],
+  "areas": [
+   "A/트윈렌더",
+   "B/인지"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 3DGS×25 3DGS×25 렌더×2 LiDAR×1 카메라×14 LiDAR×1",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
   "path": "research/NVIDIA공식체크포인트_속도단차교차평가분석.md",
   "title": "20260904 NVIDIA 공식 체크포인트 속도·단차 교차평가 분석",
   "kind": "실험",

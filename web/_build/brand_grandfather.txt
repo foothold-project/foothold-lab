@@ -87,6 +87,7 @@ research-20260908-success-criteria-anatomy.html 0 1 0 19 0 0
 research-20260909-eval-harness-diagram.html 0 1 0 19 0 0
 research-20260909-head-contact-observation.html 0 1 0 19 0 0
 research-20260911-eval-protocol-v2.html 0 1 0 19 0 0
+research-20260918-postshot-3dgs-tech-analysis.html 0 1 0 19 0 0
 research-NVIDIA공식체크포인트_속도단차교차평가분석.html 0 1 0 19 0 0
 research-architecture-decision.html 0 1 0 19 0 0
 research-benchmark-repro-protocol.html 0 1 0 19 0 0
