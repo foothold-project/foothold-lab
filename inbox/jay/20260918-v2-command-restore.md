@@ -5,7 +5,7 @@
 > 근거: 실측. 팀장 AI-WS01 기준선 `logs/rsl_rl/unitree_go2_rough/2026-08-11_20-32-58/params/env.yaml`(처음부터 1500 iter) 과 임석헌 원본 `0909_nvidia_gap_v3_seed42_iter900/params/env.yaml`(NAS 백업) 의 키 650 대 674 전수 대조 · `models/foothold-v1.env.yaml`(학습 시각 직렬화본)
 > 요지: foothold-v1 은 석헌 gap 레시피를 정확히 재현한 것이고 레시피 자체가 전진 전용이었다. 능력 13 가지 중 우리가 재는 것은 셋뿐이다. 명령 손잡이 4개만 되돌린 D 한 판(97분)과 명령 응답 하네스 신설이 그 격차를 줄이는 첫 걸음이다.
 > 상태: 확정
-> 판: v1.3
+> 판: v1.4
 > 이슈: #428 #409 #392
 
 ---
@@ -108,7 +108,7 @@ resume 원본        C:\isaac\IsaacLab\logs\rsl_rl\unitree_go2_gap_nvidia\nvidia
 
 **foothold-v1 은 임석헌의 gap 레시피를 정확히 재현한 것이다.** 팀장 재현에 오류가 없었다. 틈 폭 한 줄(0.05~0.20 → 0.15~0.40)만 넓힌 것이 B 이고 그것이 배포본이다.
 
-**그 레시피는 NVIDIA Go2 rough 에서 17개 값을 바꾸고 2블록을 더한 것이다.** 그중 **9개가 「전진 전용」 제약**이다.
+**그 레시피는 NVIDIA Go2 rough 에서 17개 값을 바꾸고 키 24개를 더한 것이다.** 그중 **9개가 「전진 전용」 제약**이다. (기계가 세면 값이 다른 키는 `log_dir` 을 포함해 18 이다. 2-2-1 절)
 
 **그 사실이 배포 시점에 아무 문서에도 없었다.** 팀장은 「gap 지형 0.1 추가 + `height_scan_with_gap` 관측」만 바뀐 것으로 알고 배포했다.
 
@@ -146,10 +146,31 @@ resume 원본        C:\isaac\IsaacLab\logs\rsl_rl\unitree_go2_gap_nvidia\nvidia
 | **지형 비율 6** | `pyramid_stairs` 외 3종 | 0.2 | **0.18** |
 | | `hf_pyramid_slope` 외 1종 | 0.1 | **0.09** |
 
-### 2-2. 새로 더한 2블록
+### 2-2. 새로 더한 키 24개 · 출처는 세 곳이다 `확인됨`
 
-- **`forward_gap`** · proportion 0.1 · `gap_width_range` (0.05, 0.2) · `gap_center_ratio` 0.5 · `approach_distance` 1.5 · `slab_thickness` 1.0 · `minimum_spawn_x` 0.75
-- **`fell_below_terrain`** 종료항 · `minimum_relative_height` -3.0
+**「2블록」이라고만 적었던 것을 고친다**(rl 세션 지적). 실제 출처는 셋이고, `forward_gap` 11 + `fell_below_terrain` 13 이 우연히 24 라 총수로는 안 걸린다.
+
+| 출처 | 키 수 | 내용 |
+|---|---:|---|
+| `scene...forward_gap` | **9** | proportion 0.1 · `gap_width_range` (0.05, 0.2) · `gap_center_ratio` 0.5 · `approach_distance` 1.5 · `slab_thickness` 1.0 · `minimum_spawn_x` 0.75 · `function` · `size` · `flat_patch_sampling` |
+| `terminations.fell_below_terrain` | **13** | `func` · `minimum_relative_height` -3.0 · `time_out` false · `asset_cfg` **10칸** |
+| **`observations.policy.height_scan.params`** | **2** | `offset` 0.5 · `miss_value` 1.0 |
+| 합계 | **24** | |
+
+**`asset_cfg` 는 11 칸이 아니라 10 칸이다**(`models/foothold-v1.env.yaml:941` 기준).
+
+### 2-2-1. 세는 규칙을 못 박는다
+
+9 절 「학습 전」 관문이 **항목 수**로 판정하므로 규칙이 없으면 헛돈다. **아래 규칙으로 센다.**
+
+| 무엇 | 값 |
+|---|---|
+| 키 총수 | 기준선 **650** · 석헌 **674** |
+| **값이 다른 키** | **18** (본문 17 + `log_dir`) |
+| 석헌에만 있는 키 | **24** |
+| 기준선에만 있는 키 | **0** |
+
+**`log_dir` 를 세느냐가 17 과 18 을 가른다.** 실행마다 반드시 달라지는 값이라 본문 표에서는 뺐지만, **관문은 기계가 세므로 18 로 잡고 `log_dir` 을 예외 목록에 명시한다.** 예외를 암묵으로 두면 다음 사람이 17 과 18 사이에서 헤맨다.
 
 ### 2-3. 안 바뀐 것
 
@@ -222,6 +243,23 @@ resume 원본        C:\isaac\IsaacLab\logs\rsl_rl\unitree_go2_gap_nvidia\nvidia
 | `commands.base_velocity.rel_standing_envs` | 0.0 | **0.02** |
 
 `heading_command` 와 `rel_heading_envs` 는 한 쌍이라 함께 움직인다. 손잡이 수로는 넷이다.
+
+**그리고 `heading_command` 와 `ang_vel_z` 도 한 쌍이다** `확인됨` (rl 세션이 소스에서 찾았다).
+
+```python
+# velocity_command.py:155  _update_command()
+self.vel_command_b[env_ids, 2] = torch.clip(
+    self.cfg.heading_control_stiffness * heading_error,
+    min=self.cfg.ranges.ang_vel_z[0],
+    max=self.cfg.ranges.ang_vel_z[1],
+)
+```
+
+`heading_command=True` 를 켜면 요레이트가 **매 스텝 이 식으로 덮어써진다.** 그런데 `ang_vel_z` 가 (0, 0) 이면 `clip(x, 0, 0)` 은 언제나 0 이다. **heading 을 켜도 회전이 통째로 죽는다.**
+
+> **그러므로 `heading_command` 만 켜거나 `ang_vel_z` 만 여는 것은 둘 다 무의미하다. 반드시 함께 바꾼다.** D 의 다섯 줄이 서로 맞물려 있다는 뜻이고, 4-1 표가 그렇게 짜여 있다.
+
+**그리고 `rel_standing_envs` 가 정지의 유일한 통로다** `확인됨`. standing 으로 뽑힌 환경은 `velocity_command.py:162` 에서 명령 3 축이 전부 0 이 된다. B 는 이 값이 0.0 이라 **정지 명령을 한 번도 본 적이 없다.** `lin_vel_x` 하한을 0 으로 내리는 것과는 다른 기제다. 하한은 「느리게 걷기」이고 standing 은 「멈춰 있기」다.
 
 ### 4-2. 유지하는 것 (B 와 완전 동일)
 
@@ -488,7 +526,7 @@ action_delta_rms · foot_slip_distance_proxy_m
 
 | # | 무엇 | 어디 |
 |---|---|---|
-| 1 | 학습 조건표에 **17항목 + 2블록 전부** | 종합보고서 |
+| 1 | 학습 조건표에 **17항목 + 추가 키 24개 전부** | 종합보고서 |
 | 2 | 성능표에 **「0.5 ~ 1.5 m/s 직진 조건에서 측정」** 명시 | 종합보고서 |
 | 3 | **한계 절 신설**: 「전진 전용으로 학습되어 정지 · 저속 · 회전 · 횡이동은 평가되지 않았다」 | 종합보고서 |
 | 4 | 석헌 계보(2-4 절) + 명령 조건 17항목 기록 | 이슈 #428 |
@@ -586,7 +624,8 @@ NVIDIA 소스
 
 | 판 | 언제 | 무엇이 바뀌었나 | 근거 |
 |---|---|---|---|
-| **v1.3** | 2026-09-18 | **rl 세션이 K4 오류를 잡았다.** 「rough6 99 ~ 100 %」로 뭉쳐 적었는데 정답지의 1.5 m/s `random_rough` 는 90 이라, 90 에서 80 으로 떨어지는 회귀가 문턱 안에 숨어 있었다 `확인됨`. 속도별 칸 값을 그대로 쓰도록 고치고, 「범위로 뭉치지 않는다」를 0-3 절에 규칙으로 적었다 | rl 세션 지적 · `foothold-v1.json` 재측정 |
+| **v1.4** | 2026-09-18 | **rl 세션이 셋을 잡았다.** (1) 2-2 절의 「2블록」이 틀렸다. 추가 키 24개의 출처는 셋이고 `height_scan.params` 의 `offset`·`miss_value` 2 개가 빠져 있었다. `asset_cfg` 도 11 칸이 아니라 10 칸이다. (2) 세는 규칙이 없어 관문이 헛돈다. 값이 다른 키는 기계가 세면 `log_dir` 포함 18 이고, 규칙을 2-2-1 절에 못 박았다. (3) **`heading_command` 와 `ang_vel_z` 가 한 쌍이다.** `clip(x, 0, 0)` 이라 `ang_vel_z` 가 (0,0) 이면 heading 을 켜도 회전이 죽는다(`velocity_command.py:155` · 실측). `rel_standing_envs` 가 정지의 유일한 통로라는 것도 4-1 절에 적었다 | rl 세션 지적 · 소스 실측 |
+| v1.3 | 2026-09-18 | **rl 세션이 K4 오류를 잡았다.** 「rough6 99 ~ 100 %」로 뭉쳐 적었는데 정답지의 1.5 m/s `random_rough` 는 90 이라, 90 에서 80 으로 떨어지는 회귀가 문턱 안에 숨어 있었다 `확인됨`. 속도별 칸 값을 그대로 쓰도록 고치고, 「범위로 뭉치지 않는다」를 0-3 절에 규칙으로 적었다 | rl 세션 지적 · `foothold-v1.json` 재측정 |
 | v1.2 | 2026-09-18 | 팀장 지적 둘을 고쳤다. **(1) 기준선이 둘인데 이름을 안 갈랐다.** 0-1-1 절을 신설해 정책 기준선(zero · NVIDIA 공식 `f2aa77bf`)과 설정 기준선(`2026-08-11` 런의 `env.yaml`)을 갈랐다. `model_1499.pt` 는 기준선이 아니라 참고용이라고 명시했다. 실측으로 **foothold-v1 이 실제 NVIDIA 가중치에서 출발한 것을 확인**했다(`model_state_dict` 17 텐서 동일 · `iter` 만 0). **(2) `gap_training/` 을 IsaacLab 에 둘지 고민한 것이 없는 선택지였다.** 정본은 `sim/` 이고 IsaacLab 은 로딩 경로일 뿐이다 | 팀장 지적 · 체크포인트 실측 |
 | v1.1 | 2026-09-18 | **팀장 방향성 승인으로 전체 그림을 넣었다.** 4-5 절에 능력 13 가지 지도를 소스 실측으로 펴고 v2 가 덮는 셋과 남는 열을 갈랐다. 주행 하네스가 명령 변화를 예외로 막는 것(`eval_generalization.py:1176`)과 push_robot 이 NVIDIA 부터 꺼져 있는 것을 확인했다. 4-6 절에 하네스 둘과 배포 관문 하나를 설계하고, **필요한 열 대부분이 `extras.py` 에 이미 있다**(`action_delta_rms` 포함)는 것을 확인해 재사용으로 바꿨다. 5 절에 D 제출 표 양식을 못 박고, 9 절 재발 방지를 super 피드백으로 넷으로 늘렸다(런 시작 16 초 뒤 검사 · 범위 밖 없으면 차단 · 카드 자동 생성 · 범위 대조). 9-1 절에 `gap_training/` 추적 필요를 적었다 | 소스 실측 · super 피드백 · 팀장 승인 |
 | v1.0 | 2026-09-18 | 처음 씀. 팀장 기준선과 석헌 원본의 키 전수 대조로 17항목 + 2블록을 확정하고, 손잡이를 기능별로 나눠 ②③만 되돌리는 D 를 설계했다. 목표(G1~G4)와 잃지 말 것(K1~K5)을 0절에 명시했다 | 전수 대조 실측 |
