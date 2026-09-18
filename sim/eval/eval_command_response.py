@@ -180,6 +180,54 @@ def _turn_profile(t):
     return (0.0, 0.0, steps[index])
 
 
+# 회전 계단의 순서와 쉬는 구간을 바꾼 두 판. **`turn` 의 미달 한 칸이
+# 「오른쪽이 약한 것」인지 「맨 마지막 칸이라 앞의 것이 쌓인 것」인지 가른다.**
+#
+# 2026-09-18 실측에서 D 의 `wz +1.00` 추종비가 0.253 으로 문턱(0.40) 아래였다.
+# 그 칸은 `turn` 의 **맨 마지막**이라 앞 네 칸의 누적 요각 표류가 섞여 있다.
+# 한 판으로는 안 갈리므로 둘을 따로 돌린다.
+#
+#   turn_rest  같은 순서에 칸 사이 쉬는 구간을 넣는다 -> 쌓임이 원인인가
+#   turn_rev   쉬는 구간 없이 순서만 뒤집는다        -> 자리가 원인인가
+#
+# **둘 다 좋아지면** 쌓임이고, **`turn_rev` 에서만 좋아지면** 자리이고,
+# **둘 다 그대로면** 진짜 좌우 비대칭이다.
+
+TURN_STEPS = (-1.0, -0.5, 0.0, 0.5, 1.0)
+TURN_LEAD_S = 1.5
+TURN_HOLD_S = 3.0
+TURN_REST_S = 1.5
+
+
+def _turn_steps_profile(t, steps, rest_s):
+    """계단 목록과 쉬는 구간 길이로 만든 요레이트 프로파일."""
+    if t < TURN_LEAD_S:
+        return (0.0, 0.0, 0.0)
+
+    period = TURN_HOLD_S + rest_s
+    elapsed = t - TURN_LEAD_S
+    index = int(elapsed // period)
+
+    if index >= len(steps):
+        return (0.0, 0.0, 0.0)
+
+    # 칸 안에서 앞 `TURN_HOLD_S` 만 명령을 주고 나머지는 쉰다.
+    if (elapsed - index * period) >= TURN_HOLD_S:
+        return (0.0, 0.0, 0.0)
+
+    return (0.0, 0.0, steps[index])
+
+
+def _turn_rest_profile(t):
+    """`turn` 과 같은 순서 · 칸 사이에 1.5초씩 쉰다."""
+    return _turn_steps_profile(t, TURN_STEPS, TURN_REST_S)
+
+
+def _turn_rev_profile(t):
+    """`turn` 과 같은 간격 · 순서만 뒤집는다. `+1.0` 이 맨 앞으로 온다."""
+    return _turn_steps_profile(t, tuple(reversed(TURN_STEPS)), 0.0)
+
+
 def _hold_profile(t):
     """처음부터 끝까지 전 명령 0. 인지 세션이 본 증상 그대로.
 
@@ -198,7 +246,21 @@ SCENARIOS = {
              "what": "제자리 요레이트 계단 다섯. 회전 추종비"},
     "hold": {"profile": _hold_profile, "duration_s": 20.0,
              "what": "20초 내내 전 명령 0. 얼음"},
+
+    # 아래 둘은 기본 실행(`all`)에 안 들어간다. `turn` 의 미달 칸을 가를 때만
+    # 이름을 찍어 부른다. 기본에 넣으면 매번 8분이 더 든다.
+    "turn_rest": {"profile": _turn_rest_profile, "duration_s": 25.0,
+                  "what": "회전 계단 · 칸 사이 1.5초 쉼. 쌓임이 원인인가",
+                  "extra": True},
+    "turn_rev": {"profile": _turn_rev_profile, "duration_s": 18.0,
+                 "what": "회전 계단 · 순서 뒤집음(+1.0 이 처음). 자리가 원인인가",
+                 "extra": True},
 }
+
+# `--scenario all` 이 도는 기본 넷. `extra` 가 붙은 것은 빠진다.
+DEFAULT_SCENARIOS = tuple(
+    name for name, spec in SCENARIOS.items() if not spec.get("extra")
+)
 
 
 parser = argparse.ArgumentParser(
@@ -210,7 +272,7 @@ parser.add_argument("--checkpoint", type=str, required=True,
 parser.add_argument("--label", type=str, default=None,
                     help="산출물에 적을 이름. 안 주면 체크포인트 파일 이름")
 parser.add_argument("--scenario", type=str, default="all",
-                    help="stop · ramp · turn · hold · all (쉼표로 여럿)")
+                    help="stop · ramp · turn · hold · all (쉼표로 여럿). `all` 은 기본 넷만 돈다. turn_rest · turn_rev 는 이름을 찍어야 돈다")
 parser.add_argument("--num_envs", type=int, default=64,
                     help="같은 명령을 동시에 받는 로봇 수. 초기 자세 흩어짐이 표본")
 parser.add_argument("--env_spacing", type=float, default=8.0,
@@ -544,7 +606,7 @@ def main():
         raise RuntimeError(f"체크포인트가 없습니다: {args_cli.checkpoint}")
 
     names = ([n.strip() for n in args_cli.scenario.split(",")]
-             if args_cli.scenario != "all" else list(SCENARIOS))
+             if args_cli.scenario != "all" else list(DEFAULT_SCENARIOS))
 
     unknown = [n for n in names if n not in SCENARIOS]
 
