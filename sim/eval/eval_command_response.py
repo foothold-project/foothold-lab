@@ -1072,6 +1072,28 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
 
     path = os.path.join(args_cli.output_dir, "probe_manifest.json")
 
+    # **앞서 돌린 시나리오를 지우지 않는다.** 같은 폴더에 시나리오를 나눠
+    # 돌리면(먼저 넷, 나중에 turn_rest 둘) 나중 실행이 manifest 를 통째로
+    # 덮어써서 **앞 시나리오의 요약이 사라진다** `확인됨` (2026-09-18 · D 의
+    # turn 이 이렇게 날아가 git 에서 되찾았다. per_env.json 은 남아 있었다).
+    #
+    # 시계열 폴더는 `refuse_dirty_output_dir()` 가 막지만 그것은 **같은**
+    # 시나리오를 다시 돌릴 때만 걸린다. 다른 시나리오를 «더하는» 것은 정상
+    # 작업이므로 막지 않고 합친다.
+    previous = {}
+
+    if os.path.isfile(path):
+        try:
+            with open(path, encoding="utf-8") as handle:
+                previous = json.load(handle)
+        except (OSError, ValueError) as error:
+            print(f"[WARN] 앞 manifest 를 못 읽었습니다: {error}", flush=True)
+
+    merged_summary = dict(previous.get("summary") or {})
+    merged_summary.update(summary)
+
+    merged_scenarios = dict(previous.get("scenarios") or {})
+
     payload = {
         "probe": "command_response",
         "probe_file": os.path.basename(__file__),
@@ -1112,15 +1134,9 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         "settle_speed_mps": args_cli.settle_speed_mps,
         "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
 
-        "scenarios": {
-            name: {
-                "what": SCENARIOS[name]["what"],
-                "duration_s": SCENARIOS[name]["duration_s"],
-            }
-            for name in names
-        },
+        "scenarios": merged_scenarios,
 
-        "summary": summary,
+        "summary": merged_summary,
 
         "not_a_judgement": (
             "이 파일은 성공률을 내지 않는다. 판정은 "
@@ -1128,10 +1144,25 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         ),
     }
 
+    merged_scenarios.update({
+        name: {
+            "what": SCENARIOS[name]["what"],
+            "duration_s": SCENARIOS[name]["duration_s"],
+            "ran_at_utc": payload["finished_at_utc"],
+        }
+        for name in names
+    })
+
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
 
-    print(f"\n[PASS] 요약을 적었습니다: {path}", flush=True)
+    kept = sorted(set(merged_summary) - set(names))
+
+    if kept:
+        print(f"\n[PASS] 앞서 돌린 시나리오를 그대로 두었습니다: {kept}",
+              flush=True)
+
+    print(f"[PASS] 요약을 적었습니다: {path}", flush=True)
 
 
 if __name__ == "__main__":
