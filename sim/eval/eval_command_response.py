@@ -285,12 +285,25 @@ parser.add_argument("--settle_speed_mps", type=float, default=0.05,
                     help="이 아래로 내려오면 «멈췄다». 정지 도달 시각 판정")
 parser.add_argument("--keep_pushes", action="store_true",
                     help="바깥에서 미는 이벤트를 살린다. 기본은 끈다")
+parser.add_argument("--video", action="store_true",
+                    help="시나리오마다 mp4 한 편. 로봇 한 마리를 따라간다. "
+                         "**기본은 꺼짐**이고 켜면 느려진다")
+parser.add_argument("--video_env", type=int, default=0,
+                    help="영상으로 따라갈 env 번호")
+parser.add_argument("--video_width", type=int, default=1280)
+parser.add_argument("--video_height", type=int, default=720)
+parser.add_argument("--video_crf", type=int, default=26)
 parser.add_argument("--overwrite", action="store_true",
                     help="출력 폴더에 앞 실행이 남아 있어도 지우고 덮어쓴다. "
                          "안 주면 시작 전에 죽는다")
 
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
+
+# **AppLauncher 를 짓기 «전»에 켜야 한다.** 뒤에 켜면 렌더 경로가 안 붙는다.
+# `record_terrain_demo.py` 90행과 같은 자리다.
+if args_cli.video:
+    args_cli.enable_cameras = True
 
 # parquet 이 없으면 **시뮬을 띄우기 전에** 죽는다. 7분 돌고 끝에서 죽지 않게.
 timeseries.require_pyarrow()
@@ -299,6 +312,7 @@ app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
 import gymnasium as gym  # noqa: E402
+import numpy as np  # noqa: E402
 from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 
 from isaaclab.utils.math import quat_apply  # noqa: E402
@@ -470,6 +484,43 @@ def verify_probe_config(env_cfg):
         )
 
 
+def follow_camera(raw_env, robot, env_id):
+    """로봇 한 마리를 뒤 비스듬히 위에서 따라본다.
+
+    `record_terrain_demo.py` 의 `track_q` 와 같은 자리다. **로봇이 겹쳐 보이는
+    그림을 만들지 않는다.** 한 마리만 화면에 담는다.
+    """
+    pos = robot.data.root_pos_w[env_id]
+    px, py, pz = float(pos[0]), float(pos[1]), float(pos[2])
+
+    local_x = torch.zeros((1, 3), device=robot.data.root_quat_w.device)
+    local_x[0, 0] = 1.0
+    forward = quat_apply(robot.data.root_quat_w[env_id: env_id + 1], local_x)[0]
+
+    fx, fy = float(forward[0]), float(forward[1])
+    norm = math.hypot(fx, fy) or 1.0
+    fx, fy = fx / norm, fy / norm
+
+    # 왼쪽 단위벡터. 카메라를 옆으로 조금 물린다.
+    lx, ly = -fy, fx
+
+    eye = (px - 2.5 * fx + 1.55 * lx, py - 2.5 * fy + 1.55 * ly, pz + 1.25)
+    target = (px + 1.1 * fx, py + 1.1 * fy, pz - 0.14)
+
+    raw_env.sim.set_camera_view(eye=eye, target=target)
+
+
+def open_video(path, fps):
+    """mp4 쓰기. `record_terrain_demo.py` 와 같은 코덱·설정이다."""
+    import imageio.v2 as imageio
+
+    return imageio.get_writer(
+        path, fps=fps, codec="libx264", quality=None,
+        macro_block_size=8, pixelformat="yuv420p",
+        output_params=["-crf", str(args_cli.video_crf), "-preset", "slow"],
+    )
+
+
 def initial_forward_vectors(robot, num_envs, device):
     """시작 자세의 전방축 단위벡터. `eval_generalization.py` 289행과 같은 식."""
     local_x = torch.zeros((num_envs, 3), device=device)
@@ -628,7 +679,13 @@ def main():
 
     configure_probe(env_cfg)
 
-    env = gym.make(BASE_TASK, cfg=env_cfg)
+    # 영상을 찍으려면 `render_mode="rgb_array"` 로 지어야 한다
+    # (`record_terrain_demo.py` 397행). 안 그러면 `render()` 가 그림을 안 준다.
+    if args_cli.video:
+        env_cfg.sim.render_interval = env_cfg.decimation
+
+    env = gym.make(BASE_TASK, cfg=env_cfg,
+                   render_mode="rgb_array" if args_cli.video else None)
     env = RslRlVecEnvWrapper(env)
 
     raw_env = env.unwrapped
@@ -722,6 +779,24 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
 
     buffer = torch.zeros((num_envs, n_steps, raw_width), device=device)
 
+    writer = None
+    video_path = None
+
+    if args_cli.video:
+        out_dir = os.path.join(args_cli.output_dir, name)
+        os.makedirs(out_dir, exist_ok=True)
+
+        video_path = os.path.join(out_dir, f"{label}_{name}.mp4")
+        writer = open_video(video_path, fps=round(1.0 / dt))
+
+        follow_camera(raw_env, robot, args_cli.video_env)
+
+        # 첫 프레임이 검게 나오지 않게 몇 장 버린다.
+        for _ in range(8):
+            raw_env.render()
+
+        print(f"        영상: {video_path}", flush=True)
+
     # 넘어진 env 는 그 자리에서 기록을 멈춘다. 리셋된 뒤의 값을 같은 에피소드에
     # 이어 붙이면 「넘어졌다가 멀쩡해졌다」가 된다.
     alive = torch.ones(num_envs, dtype=torch.bool, device=device)
@@ -765,6 +840,10 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
 
         env.step(action)
 
+        if writer is not None:
+            follow_camera(raw_env, robot, args_cli.video_env)
+            writer.append_data(np.ascontiguousarray(raw_env.render()))
+
         # 넘어짐. `time_out` 이 아닌 종료만 낙상으로 센다.
         terminated = raw_env.termination_manager.terminated
 
@@ -781,6 +860,11 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
             # 저장값과 같은 눈금으로 적는다. `fell_at` 은 `t + dt` 다.
             print(f"        {t + dt:.2f} s 에 전부 넘어졌습니다.", flush=True)
             break
+
+    if writer is not None:
+        writer.close()
+        size_mb = os.path.getsize(video_path) / 1024.0 / 1024.0
+        print(f"        영상 {size_mb:.1f} MB", flush=True)
 
     return finish_scenario(
         name, spec, label, buffer, n_valid, fell_at, dt, num_envs,

@@ -88,6 +88,20 @@ AXIS2_POLICIES = (
 
 SPEED_TAGS = {"v0.5": 0.5, "v1.0": 1.0, "v1.5": 1.5}
 
+# 비교 영상이 있는 칸. **없는 칸이 훨씬 많다.** 논지를 지는 컷만 찍었다.
+#
+# 영상은 `num_envs 1` 한 판이라 **성공률이 아니다.** 64 판(축 2)이나 100 판
+# (축 1)으로 잰 성적과 같은 설정에서 돌린 «예시 한 판»이다. 갤러리에서 이 둘을
+# 같은 것으로 읽으면 안 된다.
+VIDEO_ROOT = os.path.join("sim", "eval", "results", "20260918-D-videos")
+
+AXIS1_VIDEO_TAGS = {
+    ("gap", 0.5): "gap_vx0.5",
+    ("gap", 1.0): "gap_vx1",
+    ("rails", 0.5): "rails_vx0.5",
+    ("floating_ring", 0.5): "floating_ring_vx0.5",
+}
+
 # `maindata-v1` 은 속도 폴더 이름이 다르다. 1.0 을 `v1` 로 적었다.
 V1_SPEED_DIRS = {"v0.5": "v0.5", "v1.0": "v1", "v1.5": "v1.5"}
 
@@ -151,6 +165,27 @@ def compare_wilson(base, test):
     return (None, f"겹침 (v1 [{bl}, {bh}] · D [{tl}, {th}])")
 
 
+def axis1_video(terrain, vx, policy):
+    """그 칸의 비교 영상. 없으면 `None`."""
+    tag = AXIS1_VIDEO_TAGS.get((terrain, vx))
+
+    if tag is None:
+        return None
+
+    name = f"{tag}_{policy}"
+    path = os.path.join(REPO_ROOT, VIDEO_ROOT, "axis1", name, f"{name}.mp4")
+
+    return rel(path) if os.path.isfile(path) else None
+
+
+def axis2_video(policy, scenario):
+    """시나리오 영상. 없으면 `None`."""
+    path = os.path.join(REPO_ROOT, VIDEO_ROOT, "axis2", policy, scenario,
+                        f"{policy}_{scenario}.mp4")
+
+    return rel(path) if os.path.isfile(path) else None
+
+
 def axis1_entries(v1_scores):
     """축 1. v1 정본과 D 실행을 같은 키로 묶는다."""
     entries = []
@@ -206,7 +241,11 @@ def axis1_entries(v1_scores):
                         "summary_csv": rel(summary_path),
                         "run_manifest": rel(os.path.join(folder, "run_manifest.json"))
                                         if exists(os.path.join(folder, "run_manifest.json")) else None,
-                        "video": None,
+                        "video": axis1_video(terrain, vx, policy),
+                        "video_note": (
+                            None if axis1_video(terrain, vx, policy) is None
+                            else "num_envs 1 한 판. 성공률이 아니라 예시다"
+                        ),
                         "metric": "overall_success_rate_pct",
                         "value": round(value, 2),
                         "successes": cell[1],
@@ -250,7 +289,11 @@ def axis2_entries(root):
                 "summary_csv": rel(os.path.join(root, policy, "summary.csv"))
                                if exists(os.path.join(root, policy, "summary.csv")) else None,
                 "run_manifest": rel(manifest_path),
-                "video": None,
+                "video": axis2_video(policy, scenario),
+                "video_note": (
+                    None if axis2_video(policy, scenario) is None
+                    else "num_envs 1 한 판. 성적은 64 env 실행이 정본이다"
+                ),
             }
 
             for metric, (op, limit) in AXIS2_THRESHOLDS.items():
@@ -430,7 +473,11 @@ def main():
     judged = [e for e in entries if e["passed"] is not None]
     failed = [e for e in judged if not e["passed"]]
 
+    videos = sorted({e["video"] for e in entries if e.get("video")})
+
     print(f"CSV 새로 만든 것 {len(made)}개")
+    print(f"영상이 붙은 칸 {sum(1 for e in entries if e.get('video'))}개 "
+          f"(파일 {len(videos)}편)")
     print(f"항목 {len(entries)}개 (축1 {len(axis1)} · 축2 {len(axis2)})")
     print(f"문턱이 걸린 항목 {len(judged)}개 중 미달 {len(failed)}개")
 
