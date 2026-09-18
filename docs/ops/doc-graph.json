@@ -1823,18 +1823,17 @@
  },
  {
   "path": "research/20260918-postshot-3dgs-tech-analysis.md",
-  "title": "Postshot 기술 분석과 3DGS 오픈소스 대체 경로 · 움직이는 피사체를 포함해서",
+  "title": "실제 장소를 시뮬레이션으로 옮기는 기술 · 가우시안 스플래팅 해설과 Postshot 평가",
   "kind": "리서치",
   "evidence": "jawset.com",
   "issues": [
    "430"
   ],
   "areas": [
-   "A/트윈렌더",
    "B/인지"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 3DGS×25 3DGS×25 렌더×2 LiDAR×1 카메라×14 LiDAR×1",
+  "areas_why": "근거 낱말 카메라×26 카메라×26 점군×1",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
