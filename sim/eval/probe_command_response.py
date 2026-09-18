@@ -3,7 +3,7 @@
 
 분류: 실험
 작성: Claude 세션 (오흥재 지시) · 2026-09-18
-근거: `inbox/jay/20260918-v2-command-restore.md` 5-3 절 · `timeseries.py` 92열 스키마
+근거: `inbox/jay/20260918-v2-command-restore.md` 5-3 절 · `timeseries.py` 93열 스키마
 요지: 정지 · 저속 · 회전을 재는 프로브. 판정 하네스를 한 줄도 안 건드린다
 상태: 확정
 
@@ -37,12 +37,18 @@
     변화량이 0 으로 수렴    정책 출력이 굳었다. 「얼음」이 정책 쪽이다
     변화량이 계속 큼        정책은 움직이는데 몸이 안 따라온다. 「얼음」이 몸 쪽이다
 
-둘은 원인이 다르고 처방도 다르다. 한 열이 그것을 가른다.
+둘은 원인이 다르고 처방도 다르다. 이 열은 그 둘을 **가르는 단서**다.
+원인을 확정하지는 못한다. 확정하려면 토크와 접지도 함께 봐야 한다.
 
-## 기록은 92열 스키마 그대로
+## 기록은 93열 스키마 그대로
 
 `timeseries.py` 의 `columns_for()` 를 그대로 쓴다. **두 벌을 만들지 않는다.**
 `joint_target_*` 12열이 이미 있어서 새 열이 필요 없다 `확인됨`.
+
+**93열이다** (trace 17 + 몸통·명령 16 + 발 12 + 관절 48) `확인됨`.
+`tests/test_timeseries.py` 의 `test_Go2_는_93열이다` 가 이 숫자를 못 박는다.
+`timeseries.py` 머리글과 `sim/eval/README.md` 에 아직 「92열」로 적힌 자리가
+있는데, `yaw_deg` 가 들어오기 전 숫자라 낡은 것이다.
 
 다른 것은 명령 세 열(`cmd_vx_mps` · `cmd_vy_mps` · `cmd_wz_rps`)에 **스텝마다
 실제로 정책이 본 값**이 들어간다는 것뿐이다. 하네스는 거기에 상수를 적는다
@@ -98,6 +104,7 @@ from isaaclab.app import AppLauncher  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import timeseries  # noqa: E402
+import probe_metrics  # noqa: E402
 from overlay import trace as trace_mod  # noqa: E402,F401
 
 
@@ -121,8 +128,9 @@ def _ramp_profile(t):
 def _turn_profile(t):
     """제자리에서 요레이트를 계단으로 훑는다. G3.
 
-    각 3초씩 -1.0 · -0.5 · 0.0 · +0.5 · +1.0 이다. 앞뒤 1.5초는 가만히 두어
-    직전 구간의 관성이 다음 구간에 안 섞이게 한다.
+    각 3초씩 -1.0 · -0.5 · 0.0 · +0.5 · +1.0 이다. 맨 앞 1.5초와 마지막 구간
+    뒤는 명령이 0 이다. **계단 사이에는 쉬는 구간이 없다.** 그래서 각 구간의
+    앞쪽 절반은 직전 계단에서 넘어오는 과도구간이고, 추종비는 뒤쪽 절반만 본다.
     """
     steps = (-1.0, -0.5, 0.0, 0.5, 1.0)
 
@@ -617,7 +625,10 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
         newly = alive & terminated
 
         if newly.any():
-            fell_at[newly] = t
+            # **`t` 가 아니라 `t + dt` 다.** 종료는 `env.step()` 이 끝난 뒤에
+            # 확인하므로 그 시각은 이 스텝이 «끝난» 시각이다. `t` 로 적으면
+            # 첫 스텝 낙상이 0.0 초가 되어 「시작하자마자」와 구별되지 않는다.
+            fell_at[newly] = t + dt
             alive = alive & ~newly
 
         if not alive.any():
@@ -650,10 +661,20 @@ def collect_sample(robot, contact_sensor, command_term, num_envs, device,
     else:
         foot_pos = robot.data.body_pos_w[:, foot_body_slots, :]
 
-        forces = contact_sensor.data.net_forces_w_history[
-            :, :, foot_sensor_slots, :
-        ]
-        foot_force = torch.linalg.vector_norm(forces, dim=-1).amax(dim=1)
+        # **이력 최댓값이 아니라 «지금» 접촉력이다.** 하네스는
+        # `net_forces_w_history` 의 최댓값을 적는데(`eval_generalization.py`
+        # 1036행), 이 센서는 `history_length=3` 이라 60 ms 앞의 힘이 섞여 들어온다
+        # `확인됨` (`velocity_env_cfg.py` 74행).
+        #
+        # 걷는 판을 셀 때는 그것이 문제가 안 되지만 **「서 있는가」를 재는 순간
+        # 치명적이다.** 발이 이미 떨어졌는데 60 ms 전 힘 때문에 접지로 세면
+        # 미끄러짐과 동시 접지 시간이 둘 다 부풀어 오른다. 검증에서 실제로
+        # 잡혔다 (네 발 접촉력이 지금 0 인데 2 N 으로 기록됨).
+        #
+        # 그래서 이 열은 **하네스와 뜻이 다르다.** `probe_manifest.json` 의
+        # `foot_contact_semantics` 에 그렇게 적는다.
+        forces = contact_sensor.data.net_forces_w[:, foot_sensor_slots, :]
+        foot_force = torch.linalg.vector_norm(forces, dim=-1)
 
         parts.append(foot_pos.reshape(num_envs, 12))
         parts.append(foot_force)
@@ -780,12 +801,26 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
 
     per_env = []
 
+    # **표본이 모자란 env 도 세어 둔다.** 시계열 지표는 못 내지만 「몇 대 중
+    # 몇 대가 넘어졌나」의 분모와 분자에는 반드시 남아야 한다. 첫 스텝에
+    # 넘어진 env 가 바로 이 경우이고, 빼 버리면 **가장 심하게 실패한 판이
+    # 낙상률에서 사라진다.** 검증에서 잡힌 자리다.
+    degenerate = []
+
     for env_id in range(num_envs):
         n = valid_cpu[env_id]
 
         if n <= 1:
-            print(f"[WARN] env {env_id} 는 표본이 {n} 개뿐이라 건너뜁니다.",
+            fell_s = fell_cpu[env_id]
+
+            print(f"[WARN] env {env_id} 는 표본이 {n} 개뿐입니다. 시계열은 "
+                  f"안 남기고 낙상 집계에만 넣습니다 "
+                  f"(낙상 {'예' if fell_s == fell_s else '아니오'}).",
                   flush=True)
+
+            degenerate.append(
+                probe_metrics.degenerate_entry(n, dt, fell_s)
+            )
             continue
 
         block = buffer[env_id, :n].cpu().tolist()
@@ -813,239 +848,23 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
             ts_columns,
         )
 
-        per_env.append(
-            episode_metrics(rows, dt, joint_names, fell_cpu[env_id])
-        )
+        per_env.append(probe_metrics.episode_metrics(
+            rows, dt, joint_names, fell_cpu[env_id],
+            contact_threshold_n=args_cli.contact_threshold_n,
+            settle_speed_mps=args_cli.settle_speed_mps,
+        ))
 
-    result = aggregate(per_env, name, spec)
+    result = probe_metrics.aggregate(
+        per_env, degenerate, name, spec["what"]
+    )
 
     print_scenario_summary(name, result)
 
     with open(os.path.join(out_dir, "per_env.json"), "w",
               encoding="utf-8") as handle:
-        json.dump(per_env, handle, ensure_ascii=False, indent=2)
+        json.dump(per_env + degenerate, handle, ensure_ascii=False, indent=2)
 
     return result
-
-
-def episode_metrics(rows, dt, joint_names, fell_at_s):
-    """env 하나의 5-3 절 지표. **전부 92열에서 나온다.**"""
-    n = len(rows)
-    last_window = max(1, int(round(1.0 / dt)))
-
-    cmd_vx = [r["cmd_vx_mps"] for r in rows]
-    cmd_wz = [r["cmd_wz_rps"] for r in rows]
-    vx = [r["vx_mps"] for r in rows]
-    vy = [r["vy_mps"] for r in rows]
-    wz = [r["base_wz_rps"] for r in rows]
-    speed = [r["speed_mps"] for r in rows]
-
-    # -- 관절 목표각의 시간 변화량. 이 도구의 요점.
-    target_keys = ["joint_target_{}".format(j) for j in joint_names]
-    target_delta = []
-
-    for index in range(1, n):
-        prev = rows[index - 1]
-        here = rows[index]
-        total = sum(abs(here[k] - prev[k]) for k in target_keys)
-        target_delta.append(total)
-
-    # -- 정지. 명령이 처음 0 이 된 뒤 언제 실제로 멈췄나.
-    zero_from = next(
-        (i for i, c in enumerate(cmd_vx)
-         if abs(c) < 1.0e-9 and abs(cmd_wz[i]) < 1.0e-9),
-        None,
-    )
-
-    stop_time_s = None
-
-    if zero_from is not None:
-        for index in range(zero_from, n):
-            window = speed[index:index + last_window]
-
-            if window and max(window) < args_cli.settle_speed_mps:
-                stop_time_s = (index - zero_from) * dt
-                break
-
-    tail = slice(max(0, n - last_window), n)
-
-    return {
-        "samples": n,
-        "duration_s": n * dt,
-        "fell": fell_at_s == fell_at_s,          # NaN 이면 False
-        "fell_at_s": None if fell_at_s != fell_at_s else fell_at_s,
-
-        # G1
-        "stop_time_s": stop_time_s,
-        "residual_speed_mps": _mean(speed[tail]),
-        "residual_vx_mps": _mean(vx[tail]),
-        "residual_vy_mps": _mean(vy[tail]),
-
-        # 「얼음」
-        "joint_target_delta_mean": _mean(target_delta),
-        "joint_target_delta_tail": _mean(target_delta[max(0, n - 1 - last_window):]),
-        "joint_target_delta_max": max(target_delta) if target_delta else None,
-
-        # 무게중심
-        "pitch_abs_max_deg": max((abs(r["pitch_deg"]) for r in rows), default=None),
-        "roll_abs_max_deg": max((abs(r["roll_deg"]) for r in rows), default=None),
-        "base_z_min_m": min((r["base_z_m"] for r in rows), default=None),
-        "base_z_tail_m": _mean([r["base_z_m"] for r in rows[tail]]),
-
-        # G2 · G3
-        "response": response_curve(cmd_vx, vx, dt),
-        "yaw_follow": yaw_follow(cmd_wz, wz),
-
-        # 멈춘 방식의 질
-        "foot_slip_m": foot_slip(rows),
-        "quad_stance_s": quad_stance_s(rows, dt),
-    }
-
-
-def _mean(values):
-    clean = [v for v in values if v is not None and v == v]
-    return sum(clean) / len(clean) if clean else None
-
-
-def response_curve(cmd_vx, vx, dt):
-    """명령 격자마다 «정상상태» 실속도. G2.
-
-    램프는 명령이 계속 움직이므로 구간마다 뒤쪽 절반만 본다. 앞쪽 절반은
-    직전 명령에서 넘어오는 과도구간이라 정상상태가 아니다.
-    """
-    grid = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.25, 1.5]
-    out = {}
-
-    for target in grid:
-        picked = [v for c, v in zip(cmd_vx, vx) if abs(c - target) < 0.05]
-
-        if len(picked) >= 2:
-            out["{:.2f}".format(target)] = _mean(picked[len(picked) // 2:])
-
-    return out
-
-
-def yaw_follow(cmd_wz, wz):
-    """요레이트 추종비. G3. 명령이 0 인 구간은 비를 만들 수 없어 뺀다."""
-    out = {}
-
-    for target in (-1.0, -0.5, 0.5, 1.0):
-        picked = [w for c, w in zip(cmd_wz, wz) if abs(c - target) < 1.0e-6]
-
-        if len(picked) >= 2:
-            actual = _mean(picked[len(picked) // 2:])
-            out["{:+.2f}".format(target)] = {
-                "actual_rps": actual,
-                "ratio": None if actual is None else actual / target,
-            }
-
-    return out
-
-
-def foot_slip(rows):
-    """접지 중인 발이 수평으로 움직인 거리 합 (m).
-
-    발이 땅에 닿아 있는데 자리가 움직이면 미끄러진 것이다. 접촉력이 문턱을
-    넘은 스텝만 세고, 발 열이 빈 칸이면 `None` 을 돌려준다.
-    """
-    total = 0.0
-    counted = False
-
-    for slot in timeseries.FOOT_SLOTS:
-        fx_key = "foot_x_{}_m".format(slot)
-        fy_key = "foot_y_{}_m".format(slot)
-        fn_key = "foot_contact_{}_n".format(slot)
-
-        for index in range(1, len(rows)):
-            prev, here = rows[index - 1], rows[index]
-
-            if None in (prev[fx_key], here[fx_key], prev[fn_key], here[fn_key]):
-                continue
-
-            if min(prev[fn_key], here[fn_key]) < args_cli.contact_threshold_n:
-                continue
-
-            total += math.hypot(here[fx_key] - prev[fx_key],
-                                here[fy_key] - prev[fy_key])
-            counted = True
-
-    return total if counted else None
-
-
-def quad_stance_s(rows, dt):
-    """네 발이 동시에 닿아 있던 가장 긴 구간 (초).
-
-    멈춘 방식의 질이다. 네 발로 버티고 서 있으면 길고, 계속 발을 바꿔 딛으면
-    짧다. 「얼음」이면 아주 길게 나온다.
-    """
-    keys = ["foot_contact_{}_n".format(s) for s in timeseries.FOOT_SLOTS]
-
-    longest = 0
-    run = 0
-
-    for row in rows:
-        values = [row[k] for k in keys]
-
-        if any(v is None for v in values):
-            return None
-
-        if min(values) >= args_cli.contact_threshold_n:
-            run += 1
-            longest = max(longest, run)
-        else:
-            run = 0
-
-    return longest * dt
-
-
-def aggregate(per_env, name, spec):
-    """env 들을 하나로 접는다. 중앙값이 아니라 평균과 퍼짐을 함께 낸다."""
-    if not per_env:
-        return {"scenario": name, "what": spec["what"], "envs": 0}
-
-    def across(key):
-        return _mean([e[key] for e in per_env])
-
-    fell = [e for e in per_env if e["fell"]]
-
-    merged_response = {}
-
-    for entry in per_env:
-        for grid_key, value in entry["response"].items():
-            merged_response.setdefault(grid_key, []).append(value)
-
-    merged_yaw = {}
-
-    for entry in per_env:
-        for grid_key, value in entry["yaw_follow"].items():
-            merged_yaw.setdefault(grid_key, []).append(value["ratio"])
-
-    return {
-        "scenario": name,
-        "what": spec["what"],
-        "envs": len(per_env),
-        "fell_count": len(fell),
-        "fell_ratio": len(fell) / len(per_env),
-
-        "stop_time_s": _mean(
-            [e["stop_time_s"] for e in per_env if e["stop_time_s"] is not None]
-        ),
-        "stop_reached_count": sum(
-            1 for e in per_env if e["stop_time_s"] is not None
-        ),
-
-        "residual_speed_mps": across("residual_speed_mps"),
-        "joint_target_delta_mean": across("joint_target_delta_mean"),
-        "joint_target_delta_tail": across("joint_target_delta_tail"),
-        "pitch_abs_max_deg": across("pitch_abs_max_deg"),
-        "roll_abs_max_deg": across("roll_abs_max_deg"),
-        "base_z_tail_m": across("base_z_tail_m"),
-        "foot_slip_m": across("foot_slip_m"),
-        "quad_stance_s": across("quad_stance_s"),
-
-        "response_curve": {k: _mean(v) for k, v in sorted(merged_response.items())},
-        "yaw_follow_ratio": {k: _mean(v) for k, v in sorted(merged_yaw.items())},
-    }
 
 
 def print_scenario_summary(name, result):
@@ -1120,6 +939,16 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         "timeseries_schema": timeseries.SCHEMA,
         "timeseries_columns": len(ts_columns),
         "pushes_enabled": bool(args_cli.keep_pushes),
+
+        # **이 열은 하네스와 뜻이 다르다.** 읽는 사람이 반드시 알아야 한다.
+        "foot_contact_semantics": (
+            "foot_contact_*_n 은 그 스텝의 «지금» 접촉력이다. "
+            "eval_generalization.py 는 같은 이름의 열에 net_forces_w_history "
+            "최댓값(history_length=3, 60 ms)을 적는다. 프로브는 «서 있는가» 를 "
+            "재는 도구라 이력 최댓값을 쓰면 이미 뗀 발이 접지로 세어져 "
+            "미끄러짐과 동시 접지 시간이 부푼다. 두 파일의 이 열을 "
+            "그대로 견주지 마십시오"
+        ),
         "contact_threshold_n": args_cli.contact_threshold_n,
         "settle_speed_mps": args_cli.settle_speed_mps,
         "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
