@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
-"""명령에 어떻게 반응하는가. **시간에 따라 변하는 명령**으로 정책을 흔들어 본다.
+"""**명령 응답 하네스.** 시간에 따라 변하는 명령으로 정지 · 저속 · 회전을 잰다.
 
 분류: 실험
 작성: Claude 세션 (오흥재 지시) · 2026-09-18
-근거: `inbox/jay/20260918-v2-command-restore.md` 5-3 절 · `timeseries.py` 93열 스키마
-요지: 정지 · 저속 · 회전을 재는 프로브. 판정 하네스를 한 줄도 안 건드린다
+근거: `inbox/jay/20260918-v2-command-restore.md` · `timeseries.py` 93열 스키마 · `extras.py` POSTURE_COLUMNS
+요지: 하네스 둘 가운데 «명령» 쪽. 주행 하네스를 한 줄도 안 건드린다
 상태: 확정
 
-## 왜 하네스 «안» 이 아니라 새 파일인가
+## 하네스가 둘이다
+
+| 무엇 | 어디 | 무엇을 보나 |
+|---|---|---|
+| **주행 하네스** | `eval_generalization.py` | 험지를 통과하는가 |
+| **명령 응답 하네스** | 이 파일 | 멈추고 · 천천히 걷고 · 도는가 |
+
+**배포 관문은 하나다.** 둘 다 통과해야 배포한다. 하네스만 나누고 관문을 안
+합치면 보고서가 둘 나오고 아무도 둘 다 안 본다.
+
+## 왜 주행 하네스 «안» 이 아니라 새 파일인가
 
 `eval_generalization.py` 는 **명령이 안 변한다는 전제 위에 서 있다.**
 
@@ -32,13 +42,23 @@
 | `ang_vel_z` 추종비 | G3 회전 |
 | 발 미끄러짐 · 네 발 동시 접지 지속시간 | 멈춘 방식의 질 |
 
-**관절 목표각 변화량이 이 도구의 요점이다.** 지금 아무도 이것을 안 쟀다.
+### 관절 목표각 변화량에 대해 (앞선 판의 과장을 물린다)
 
-    변화량이 0 으로 수렴    정책 출력이 굳었다. 「얼음」이 정책 쪽이다
-    변화량이 계속 큼        정책은 움직이는데 몸이 안 따라온다. 「얼음」이 몸 쪽이다
+앞선 판은 「지금 아무도 이것을 안 쟀다」고 적었다. **틀렸다.**
+`extras.POSTURE_COLUMNS` 에 **`action_delta_rms`** 가 이미 있다
+(`eval_generalization.py` 1333행 · 1471행) `확인됨`. 관절 목표각은 액션의
+아핀 변환이라 같은 신호다.
 
-둘은 원인이 다르고 처방도 다르다. 이 열은 그 둘을 **가르는 단서**다.
-원인을 확정하지는 못한다. 확정하려면 토크와 접지도 함께 봐야 한다.
+**새로운 것은 양이 아니라 «시간축»이다.** `action_delta_rms` 는 에피소드
+하나에 숫자 하나라 「시간이 가면서 줄어드는가」를 물을 수 없다. 이 하네스는
+스텝마다 남기므로 그것을 물을 수 있다.
+
+    변화량이 0 으로 수렴    정책 출력이 굳었다. **이것은 이 값만으로 말할 수 있다**
+    변화량이 계속 큼        정책이 계속 새 목표를 낸다. 몸이 따라오는지 «아닌지» 는
+                            `joint_pos` 와 `base_*` 를 함께 봐야 안다.
+                            **정상 보행도 이 값이 크다**
+
+즉 굳었다는 것은 이 열 혼자 말할 수 있고, 안 따라온다는 것은 못 한다.
 
 ## 기록은 93열 스키마 그대로
 
@@ -56,6 +76,22 @@
 
 `verify_against_row()` 는 부르지 않는다. 그것은 판정 표의 «그 줄» 과 대조하는
 함수인데 프로브에는 대응하는 판정 행이 없다. 없는 것을 있는 척하지 않는다.
+
+## 어느 체크포인트를 재나 (**기준선이 둘이다. 섞지 마십시오**)
+
+| 이름 | 파일 | 쓰임 |
+|---|---|---|
+| **정책 기준선 (zero)** | `.pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt` · sha256 `f2aa77bf` | **목표선.** D 의 출발점이기도 하다 |
+| 배포본 | `models/foothold-v1.pt` · sha256 `c7612aef` | 현재선. 얼마나 잃었나 |
+| D | (학습 뒤) | 되찾았나 |
+| 참고용 | `logs/.../2026-08-11_20-32-58/model_1499.pt` · sha256 `512d543a` | **기준선이 아니다.** 팀장 재현본이다. 넣어도 되지만 참고로만 |
+
+`logs/rsl_rl/unitree_go2_rough/2026-08-11_20-32-58/params/env.yaml` 은 **설정**
+기준선이다. 17항목 diff 를 뜨는 데만 쓰고 정책 기준선과 섞지 않는다.
+
+foothold-v1 이 이어받은 `nvidia_pretrained.pt` 는 공식 파일과 해시도 크기도
+다르지만 `model_state_dict` 17개 텐서가 전부 같고 `iter` 만 1499 에서 0 으로
+바뀌어 있다 (팀장 실측). **「iter=0 으로 되감은 사본」이 사실이다.**
 
 ## 지형은 평지다
 
@@ -104,7 +140,7 @@ from isaaclab.app import AppLauncher  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import timeseries  # noqa: E402
-import probe_metrics  # noqa: E402
+import command_response_metrics as cmd_metrics  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +223,9 @@ parser.add_argument("--settle_speed_mps", type=float, default=0.05,
                     help="이 아래로 내려오면 «멈췄다». 정지 도달 시각 판정")
 parser.add_argument("--keep_pushes", action="store_true",
                     help="바깥에서 미는 이벤트를 살린다. 기본은 끈다")
+parser.add_argument("--overwrite", action="store_true",
+                    help="출력 폴더에 앞 실행이 남아 있어도 지우고 덮어쓴다. "
+                         "안 주면 시작 전에 죽는다")
 
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -216,6 +255,50 @@ BASE_TASK = "Isaac-Velocity-Rough-Unitree-Go2-v0"
 
 # 학습이 본 적 없는 명령을 주입하므로 재표집이 끼어들면 안 된다.
 NEVER_RESAMPLE_S = 1.0e9
+
+
+def refuse_dirty_output_dir(output_dir, scenario_names):
+    """앞 실행이 남아 있으면 **시작 전에 죽는다.**
+
+    같은 폴더에 두 번 쓰면 앞 실행의 parquet 이 그대로 남는다. 이번 실행에서
+    어떤 env 가 표본이 모자라 파일을 안 쓰면 **그 자리에 앞 실행 파일이 남아**
+    나중에 폴더를 훑는 사람이 두 실행을 섞어 읽는다. 3회차 검증에서
+    재현됐다(앞 실행 `ep0002.parquet` 이 남고 JSON 은 전부 `null`).
+
+    `--overwrite` 를 주면 지우고 간다. **안 주면 안 지운다.** 남의 결과를
+    말없이 지우는 것이 더 나쁘다.
+    """
+    dirty = []
+
+    for name in scenario_names:
+        ts_dir = os.path.join(output_dir, name, "timeseries")
+
+        if os.path.isdir(ts_dir) and os.listdir(ts_dir):
+            dirty.append((name, ts_dir, len(os.listdir(ts_dir))))
+
+    if not dirty:
+        return
+
+    if not args_cli.overwrite:
+        lines = [
+            "  - {} : {} 개 파일 ({})".format(name, count, ts_dir)
+            for name, ts_dir, count in dirty
+        ]
+
+        raise RuntimeError(
+            "출력 폴더에 앞 실행이 남아 있습니다:\n"
+            + "\n".join(lines)
+            + "\n\n같은 폴더에 다시 쓰면 이번에 안 쓴 자리에 앞 실행 파일이 "
+            "남아 두 실행이 섞입니다.\n"
+            "다른 --output_dir 을 주거나, 지우고 가려면 --overwrite 를 "
+            "주십시오."
+        )
+
+    import shutil
+
+    for name, ts_dir, _count in dirty:
+        shutil.rmtree(ts_dir)
+        print(f"[WARN] 앞 실행을 지웠습니다: {ts_dir}", flush=True)
 
 
 def configure_probe(env_cfg):
@@ -469,6 +552,9 @@ def main():
         raise RuntimeError(
             f"모르는 시나리오: {unknown}. 있는 것은 {list(SCENARIOS)} 입니다."
         )
+
+    # **시뮬을 띄우기 전에** 본다. 7분 돌고 끝에서 죽지 않게.
+    refuse_dirty_output_dir(args_cli.output_dir, names)
 
     os.makedirs(args_cli.output_dir, exist_ok=True)
 
@@ -822,7 +908,7 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
                   flush=True)
 
             degenerate.append(
-                probe_metrics.degenerate_entry(n, dt, fell_s, env_id=env_id)
+                cmd_metrics.degenerate_entry(n, dt, fell_s, env_id=env_id)
             )
             continue
 
@@ -851,7 +937,7 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
             ts_columns,
         )
 
-        per_env.append(probe_metrics.episode_metrics(
+        per_env.append(cmd_metrics.episode_metrics(
             rows, dt, joint_names, fell_cpu[env_id],
             contact_threshold_n=args_cli.contact_threshold_n,
             settle_speed_mps=args_cli.settle_speed_mps,
@@ -859,7 +945,7 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
             timeseries_file=os.path.basename(path),
         ))
 
-    result = probe_metrics.aggregate(
+    result = cmd_metrics.aggregate(
         per_env, degenerate, name, spec["what"]
     )
 
@@ -948,6 +1034,7 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         "timeseries_schema": timeseries.SCHEMA,
         "timeseries_columns": len(ts_columns),
         "pushes_enabled": bool(args_cli.keep_pushes),
+        "overwrote_previous_run": bool(args_cli.overwrite),
 
         # **이 열은 하네스와 뜻이 다르다.** 읽는 사람이 반드시 알아야 한다.
         "foot_contact_semantics": (

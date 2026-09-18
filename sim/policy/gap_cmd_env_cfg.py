@@ -92,6 +92,22 @@ Go2 에 횡보행 수요가 낮고, 손잡이를 하나 더 열면 원인 분리
 그리고 같은 폴더 `__init__.py` 에 `Isaac-Velocity-GapWideCmd-Unitree-Go2-v0`
 등록 블록을 **더한다** (기존 세 블록은 안 건드린다).
 
+## 어디서 출발하나
+
+**NVIDIA 공식 가중치다.**
+
+    .pretrained_checkpoints/rsl_rl/Isaac-Velocity-Rough-Unitree-Go2-v0/checkpoint.pt
+    sha256 f2aa77bf · 6,881,762 B
+
+foothold-v1 이 이어받은 `nvidia_pretrained.pt` 와 `model_state_dict` 가 같고
+`iter` 만 0 으로 되감겨 있다(팀장 실측). **D 도 같은 자리에서 출발해야 B 와의
+비교가 성립한다.**
+
+팀장 기준선 `2026-08-11_20-32-58/model_1499.pt` 는 **출발점이 아니다.** 그 런의
+`env.yaml` 은 17항목 diff 를 뜨는 «설정» 기준선으로만 쓴다.
+
+## 몇 번 돌리나
+
 `max_iterations` 는 `gap_ppo_cfg.py` 에 **100** 으로 박혀 있다 `확인됨`.
 foothold-v1 의 1501 은 CLI 로 준 값이다. **D 도 CLI 로 줘야 한다.**
 안 주면 100 iter 짜리가 나온다.

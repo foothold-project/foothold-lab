@@ -3,13 +3,13 @@
 
 분류: 실험
 작성: Claude 세션 (오흥재 지시) · 2026-09-18
-근거: `sim/eval/probe_command_response.py` 에서 순수 계산만 떼어 냄
+근거: `sim/eval/eval_command_response.py` 에서 순수 계산만 떼어 냄
 요지: 프로브 지표를 Isaac 밖에서 부를 수 있게 한다. 그래야 시험이 돌고 관문이 생긴다
 상태: 확정
 
 ## 왜 떼어 냈나
 
-`probe_command_response.py` 는 모듈을 읽는 것만으로 `AppLauncher` 가 돌아서
+`eval_command_response.py` 는 모듈을 읽는 것만으로 `AppLauncher` 가 돌아서
 **Isaac 을 안 띄우면 import 가 안 된다.** 그러면 지표 계산을 시험할 수가 없다.
 
 `gap_observations.py` 가 같은 이유로 떼어져 나왔다. 그때 적힌 말을 그대로 옮기면,
