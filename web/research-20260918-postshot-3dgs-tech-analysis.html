@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Postshot 기술 분석과 3DGS 오픈소스 대체 경로 · 움직이는 피사체를 포함해서 · FOOTHOLD</title>
-<meta name="description" content="Postshot 이 파는 것의 거의 전부가 Apache-2.0 공개 구현으로 존재한다. 움직이는 사람은 도구가 아니라 동기 멀티카메라가 가르는 문제이고 오픈소스로 바꿔도 같다. 우리 1차 촬영 실패는 COLMAP 의 삼각측량각 임계로 정확히 설명된다.">
+<title>실제 장소를 시뮬레이션으로 옮기는 기술 · 가우시안 스플래팅 해설과 Postshot 평가 · FOOTHOLD</title>
+<meta name="description" content="가우시안 스플래팅이 무엇을 담고 어떻게 화면에 찍히는지부터 설명하고, 우리 촬영본으로 무엇이 되고 무엇이 안 되는지를 보인 뒤, 그 위에서 Postshot 이라는 상용 도구를 평가한다. 파는 기능의 거의 전부가 공개 구현에 대응하고, 움직이는 사람은 도구가 아니라 동기">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=1a3c1fa8').then(function(r){
+    fetch('/assets/search-index.json?v=8fc94194').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -866,141 +866,185 @@ body>*{flex-shrink:0}
 
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
-  <h1>Postshot 기술 분석과 3DGS 오픈소스 대체 경로 · 움직이는 피사체를 포함해서</h1>
-  <p class="lede">Postshot 이 파는 것의 거의 전부가 Apache-2.0 공개 구현으로 존재한다. 움직이는 사람은 도구가 아니라 동기 멀티카메라가 가르는 문제이고 오픈소스로 바꿔도 같다. 우리 1차 촬영 실패는 COLMAP 의 삼각측량각 임계로 정확히 설명된다.</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-18 11:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260918-postshot-3dgs-tech-analysis.md</span></div><div><span class="k">증거</span><span class="v">확인 30 · 추측 0 · 미측정 1</span></div></div>
+  <h1>실제 장소를 시뮬레이션으로 옮기는 기술 · 가우시안 스플래팅 해설과 Postshot 평가</h1>
+  <p class="lede">가우시안 스플래팅이 무엇을 담고 어떻게 화면에 찍히는지부터 설명하고, 우리 촬영본으로 무엇이 되고 무엇이 안 되는지를 보인 뒤, 그 위에서 Postshot 이라는 상용 도구를 평가한다. 파는 기능의 거의 전부가 공개 구현에 대응하고, 움직이는 사람은 도구가 아니라 동기 카메라가 가른다</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-18 13:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260918-postshot-3dgs-tech-analysis.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 리서치
 입구: survey
-작성: 오흥재 · 2026-09-18 11:40
-근거: jawset.com 공식 문서·릴리스노트 13개 버전 전수 · 홈페이지 영상 7편 ffmpeg 프레임 추출 · 논문 arXiv 원문 · 저장소 LICENSE 와 소스 직접 확인 · 우리 <code>_out/colmap</code> 원자료 재측정
-요지: Postshot 이 파는 것의 거의 전부가 Apache-2.0 공개 구현으로 존재한다. 움직이는 사람은 도구가 아니라 동기 멀티카메라가 가르는 문제이고 오픈소스로 바꿔도 같다. 우리 1차 촬영 실패는 COLMAP 의 삼각측량각 임계로 정확히 설명된다.
+작성: 오흥재 · 2026-09-18 13:40
+근거: jawset.com 공식 문서와 릴리스노트 13개 버전 전수 · 홈페이지 영상 7편 프레임 추출 · 논문 arXiv 원문 · COLMAP 소스 직접 확인 · 우리 1차 PoC 원자료 재측정
+요지: 가우시안 스플래팅이 무엇을 담고 어떻게 화면에 찍히는지부터 설명하고, 우리 촬영본으로 무엇이 되고 무엇이 안 되는지를 보인 뒤, 그 위에서 Postshot 이라는 상용 도구를 평가한다. 파는 기능의 거의 전부가 공개 구현에 대응하고, 움직이는 사람은 도구가 아니라 동기 카메라가 가른다
 상태: 초안
-판: v1.0
+판: v2.0
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></p></blockquote>
 </section>
-<section id="s1"><span id="0"></span><h2>0. 이 문서가 «하지 않는» 것</h2>
-<p><code>inbox/jay/20260916-3dgs-test/DESIGN-real-to-sim.md</code> (작성 오흥재 · v1.3) 가 이미 답한 것은 다시 쓰지 않는다. 아래로 가리키기만 한다.</p>
-<div class="tw"><table><thead><tr><th>물음</th><th>어디</th></tr></thead><tbody><tr><td>트윈을 충돌 지형과 배경으로 왜 쪼개나</td><td>DESIGN 1-2</td></tr><tr><td>1차 PoC 가 왜 실패했나 (제자리 촬영 실측)</td><td>DESIGN 3-2 (가)</td></tr><tr><td>지면 복원 후보 A~E 와 측정표</td><td>DESIGN 5-1 · 5-3</td></tr><tr><td>표면 복원 6종의 Windows 미지원과 WSL2 방침</td><td>DESIGN 5-1-1</td></tr><tr><td>재촬영 설계서 · 현장 체크리스트</td><td>DESIGN 7</td></tr><tr><td>축척 확정 절차</td><td>DESIGN 6</td></tr></tbody></table></div>
-<p><b>이 문서는 그 위에 얹는 것만 다룬다.</b> 곧 Postshot 이라는 상용 도구의 정체, 그것을 쓰지 않고 같은 결과에 이르는 공개 경로, 그리고 DESIGN 이 다루지 않은 «움직이는 피사체» 다.</p>
+<section id="s1"><span id="0"></span><h2>0. 이 문서를 읽는 법</h2>
+<h3>0-1. 무엇을 다루나</h3>
+<p><b>기술 해설이 먼저고 도구 평가가 나중이다.</b> 순서를 바꾸면 「이 제품은 이런 기능이 있다」는 소개문이 되어 버린다. 우리에게 필요한 것은 <b>그 기능이 무엇을 하는 물건인지 알고 우리 것으로 고르는 눈</b>이다.</p>
+<p>1절에서 가우시안 스플래팅 자체를 그림으로 설명한다. 2절에서 <b>우리가 찍은 광주 도로 영상</b>으로 실제로 무엇이 되고 무엇이 안 되는지 본다. 3절과 4절이 그 「안 되는 것」 둘의 원인이다. 5절에서 왜 트윈이 둘로 갈리는지, 6절부터 Postshot 이다.</p>
+<h3>0-2. 이 문서가 다시 쓰지 않는 것</h3>
+<p><code>inbox/jay/20260916-3dgs-test/DESIGN-real-to-sim.md</code> (작성 오흥재) 가 이미 답한 것은 가리키기만 한다.</p>
+<div class="tw"><table><thead><tr><th>물음</th><th>어디</th></tr></thead><tbody><tr><td>트윈을 충돌 지형과 배경으로 왜 쪼개나</td><td>DESIGN 1-2</td></tr><tr><td>1차 PoC 진단 전체</td><td>DESIGN 3</td></tr><tr><td>지면 복원 후보 A부터 E와 측정표</td><td>DESIGN 5-1 · 5-3</td></tr><tr><td>표면 복원 6종의 Windows 미지원과 WSL2 방침</td><td>DESIGN 5-1-1</td></tr><tr><td>재촬영 설계서와 현장 체크리스트</td><td>DESIGN 7</td></tr><tr><td>축척 확정 절차</td><td>DESIGN 6</td></tr></tbody></table></div>
+<h3>0-3. 세 줄</h3>
+<ol><li><b>Postshot 은 배경을 만드는 도구다.</b> 메시를 내보내는 기능이 아예 없어서 충돌 지형에는 원리적으로 쓸 수 없다</li><li><b>그 도구가 파는 기능의 거의 전부가 Apache-2.0 공개 구현에 대응한다.</b> 정체를 모르는 것은 <code>Splat3</code> 프로파일 하나뿐이다</li><li><b>움직이는 사람은 어느 쪽을 써도 동기 카메라 없이는 안 된다.</b> 도구의 한계가 아니라 삼각측량의 한계다</li></ol>
 </section>
-<section id="s2"><span id="1"></span><h2>1. 「영상급」은 하나가 아니라 넷이 동시에 맞아야 나온다</h2>
-<ol><li><b>용량이 데이터를 따라 자란다</b> (densification) · 품질의 대부분이 여기서 갈린다</li><li><b>시점 의존 색</b> (구면조화 SH) · 없으면 하이라이트가 안 미끄러져 죽은 플라스틱처럼 보인다</li><li><b>카메라가 움직일 때 안 깨진다</b> · 앨리어싱과 팝핑</li><li><b>입력 사진이 서로 모순되지 않는다</b> · 노출 · 블러 · 롤링셔터 · 그리고 포즈</li></ol>
-<p><b>3번이 「사진 같다」와 「영상 같다」를 가르는 지점이고, 표준 벤치마크가 이것을 거의 못 잰다.</b></p>
-<div class="tw"><table><thead><tr><th>Mip-NeRF360</th><th>학습 해상도 PSNR</th><th>8배 축소 시점 PSNR</th></tr></thead><tbody><tr><td>3DGS</td><td>29.19</td><td><b>19.59</b></td></tr><tr><td>Mip-Splatting</td><td>29.39</td><td><b>26.22</b></td></tr></tbody></table></div>
-<p>학습 해상도에서는 0.20 dB 차이인데 카메라가 물러서면 <b>6.6 dB</b> 차이다 <span class="ev ev-ok">확인됨</span> (arXiv 2311.16493 Table 3). 로봇이 장면 안을 자유롭게 이동하며 렌더하는 순간 전부 드러난다. <b>우리 용도에서 앤티에일리어싱은 선택 사항이 아니다.</b></p>
+<section id="s2"><span id="1"></span><h2>1. 가우시안 스플래팅이 무엇인가</h2>
+<h3>1-1. 삼각형을 버리고 «흐릿한 타원» 을 쓴다</h3>
+<p>우리가 아는 3D 모델은 삼각형 메시다. 점을 찍고 삼각형으로 잇고 그 위에 사진을 입힌다. 이 방식은 <b>면이 분명한 것</b>에 강하다. 책상, 벽, 기계 부품.</p>
+<p>그런데 실제 장면에는 면이 분명하지 않은 것이 훨씬 많다. 나뭇잎, 잔디, 철망, 머리카락, 반투명한 유리. 삼각형으로 옮기려면 어마어마한 수가 필요하고, 그래도 잎사귀 가장자리는 톱니처럼 남는다.</p>
+<p><b>가우시안 스플래팅은 면을 포기한다.</b> 대신 <b>가운데가 진하고 가장자리로 갈수록 흐려지는 타원</b>을 공간에 수십만 개 띄운다. 그것을 겹쳐 칠해서 장면을 만든다. 잎사귀 한 장을 삼각형으로 재현하는 대신, 잎사귀처럼 보이는 흐릿한 얼룩을 그 자리에 두는 것이다.</p>
+<p><figure class="mdimg"><img src="assets/visual/gs-what-is.svg?v=e3380f91" alt="그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계" loading="lazy"><figcaption>그림 1 · 가우시안 하나가 들고 있는 숫자 59개와, 그것이 화면에 찍히는 네 단계</figcaption></figure></p>
+<h3>1-2. 숫자 59개</h3>
+<p>타원 하나가 들고 있는 것은 위 그림처럼 숫자 <b>59개</b>가 전부다.</p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>개수</th><th>뜻</th></tr></thead><tbody><tr><td>위치</td><td>3</td><td>공간 어디에 있나</td></tr><tr><td>크기</td><td>3</td><td>세 축으로 각각 얼마나 퍼지나</td></tr><tr><td>회전</td><td>4</td><td>어느 쪽으로 누웠나</td></tr><tr><td>불투명도</td><td>1</td><td>얼마나 진한가</td></tr><tr><td>색</td><td>48</td><td><b>보는 각도마다 다른 색</b></td></tr></tbody></table></div>
+<p>크기가 축마다 다른 것이 중요하다. 벽이나 바닥 같은 <b>납작한 면은 얇고 넓은 타원 하나</b>로 덮을 수 있다. 공 모양만 쓸 수 있었다면 같은 면을 덮는 데 수십 배가 든다.</p>
+<h3>1-3. 색이 48개나 되는 이유 · 「사진 같다」의 정체</h3>
+<p>색이 하나가 아니라 48개인 것이 이 기술이 사진처럼 보이는 핵심이다.</p>
+<p>실제 물체의 밝기는 <b>보는 각도에 따라 변한다.</b> 젖은 아스팔트, 광택 나는 바닥, 금속, 유리. 고개를 옮기면 반짝이는 자리가 따라 미끄러진다. 사람 눈은 바로 그것을 보고 「진짜인지 모형인지」를 가른다.</p>
+<p>각도마다 다른 색을 적으려면 숫자가 여러 개 필요하고, 그 표현법이 구면조화 함수(SH)다. 채널마다 16개씩 세 채널이니 48개다.</p>
+<p><b>이것이 없으면 두 가지 중 하나가 일어난다.</b> 모든 각도의 평균 색으로 칠해져 번들거림이 사라진 플라스틱처럼 보이거나, 각도마다 다른 밝기를 <b>기하로 설명하려 들어 허공에 떠다니는 얼룩을 만든다.</b> 뒤쪽이 더 흔하고 더 나쁘다.</p>
+<h3>1-4. 화면에 찍히는 네 단계</h3>
+<p>그림 1의 오른쪽이 그 과정이다.</p>
+<ol><li><b>납작하게 누른다</b> · 공간의 3D 타원을 카메라에서 본 2D 타원으로 투영한다</li><li><b>앞뒤로 줄 세운다</b> · 카메라에 가까운 것부터 정렬한다</li><li><b>겹쳐 칠한다</b> · 앞에서부터 쌓고, 진한 것이 뒤를 가린다</li><li><b>사진과 견준다</b> · 틀린 만큼 59개 숫자를 조금씩 고친다</li></ol>
+<p>4번을 수만 번 반복하면 타원들이 제자리를 찾아간다. <b>학습이라고 부르지만 신경망을 쓰지 않는다.</b> 숫자를 사진에 맞춰 밀어 넣는 것이다.</p>
+<p>NeRF 와 갈리는 지점이 여기다. NeRF 는 픽셀 하나를 칠하려고 그 방향 광선 위 수십 곳을 신경망에 물어본다. 스플래팅은 타원을 화면에 바로 뿌린다. 빈 공간에는 비용이 아예 안 든다. 그래서 학습이 수십 시간에서 수십 분으로 줄었다.</p>
+<h3>1-5. ★ 이것이 «표면» 이 아니라는 것</h3>
+<p><b>우리 프로젝트에서 가장 중요한 한 줄이다.</b></p>
+<p>가우시안은 흐릿한 얼룩이지 면이 아니다. 발을 디딜 수 있는 바닥이 아니고, 광선을 쏘아 높이를 잴 대상도 아니다. <b>보기에 바닥처럼 보이는 것과 물리적으로 바닥인 것은 다른 물건이다.</b></p>
+<p>그래서 시뮬레이션에 쓰려면 <b>충돌 지형을 따로 만들어야 한다.</b> 이것이 DESIGN 1-2 가 말하는 「트윈이 둘로 갈린다」이고, NVIDIA 공식 파이프라인도 같은 구조다 (5절).</p>
 </section>
-<section id="s3"><span id="2"></span><h2>2. Postshot 의 정체 · 못 하는 것부터</h2>
-<p><span class="ev ev-ok">확인됨</span> 표시는 공식 문서·릴리스노트 원문 또는 영상 프레임에서 직접 확인한 것이다.</p>
-<h3>2-1. 출력에 메시가 없다</h3>
-<p>공식 Radiance Field Export 는 <b>HTML · PLY · SPZ 딱 셋</b> <span class="ev ev-ok">확인됨</span>. <b>OBJ · FBX · USDZ · GLB · 메시가 전부 없다.</b> 일부 서드파티 블로그가 「GLB/USDZ 를 내보낸다」고 쓰는데 공식 문서와 정면 배치되는 오정보다.</p>
-<blockquote><p><b>그러므로 Postshot 은 DESIGN 1-2 의 (b) 배경 전용이고 (a) 충돌 지형에는 원리적으로
-쓸 수 없다.</b> 이것이 도구 평가의 결론이다.</p></blockquote>
-<h3>2-2. 정적 장면을 가정한다고 문서가 직접 말한다</h3>
-<p>Capturing Guidelines 원문 <span class="ev ev-ok">확인됨</span>:</p>
-<blockquote><p>&quot;Postshot&#x27;s models assume the input images depict strictly static scenes.&quot;
-&quot;The moving shadows create holes in the ground of the radiance field.&quot;</p></blockquote>
-<p><b>움직이는 그림자가 지면에 구멍을 낸다</b>고 자백한다. 야외 보도 촬영에서 정확히 걸릴 자리다.</p>
-<h3>2-3. 플랫폼과 티어</h3>
-<ul><li><b>Windows 10 이상 · NVIDIA Compute Capability 7.5 이상 전용</b> <span class="ev ev-ok">확인됨</span>. Linux·macOS 빌드 없음</li><li>티어별 경계 <span class="ev ev-ok">확인됨</span></li><ul><li><b>Free</b> · 비상업 전용이고 <b>radiance field 를 파일로 내보낼 수 없다</b></li><li><b>Indie</b> · PLY·SPZ 내보내기 + 상업 사용</li><li><b>Studio</b> · CLI 배치 + <b>AprilTag 정렬</b> + EXR/RAW + 4K 초과 HDR</li></ul></ul>
-<p><b>우리가 실제로 필요한 것 둘(CLI 배치 · AprilTag 미터 스케일)이 전부 Studio 에 있다.</b> 그리고 <b>무료판으로 파일럿을 잡으면 마지막에 내보내기에서 막힌다.</b></p>
-<h3>2-4. 미터 스케일은 AprilTag 하나뿐</h3>
-<p>Rdnc Field &gt; Edit &gt; <b>Align to AprilTag</b> 에 <code>Tag Size</code> 를 <b>밀리미터로</b> 넣는다 <span class="ev ev-ok">확인됨</span>. 그 외에 미터 단위를 보장하는 장치는 없고, 없으면 SfM 관습대로 임의 축척이다.</p>
-<h3>2-5. 조용한 함정 · <code>Recenter Poses &amp; Points</code></h3>
-<p>원문 <span class="ev ev-ok">확인됨</span>: 씬을 원점 근처로 옮긴 오프셋이 <b>PLY 메타데이터에만</b> 저장되고, <i>&quot;software using these exports must reference the world origin stored in the PLY metadata.&quot;</i></p>
-<p><b>우리 로더가 이 값을 안 읽으면 오류 없이 씬 전체가 어긋난 자리에 놓인다.</b> 커널 2-2 원칙 2 의 조용한 실패에 정확히 해당한다.</p>
-<h3>2-6. 그 외 확인된 제약</h3>
-<ul><li>비디오를 넣어도 <b>초당 2~3 프레임만 사용</b> <span class="ev ev-ok">확인됨</span></li><li>학습 시작 후 이미지 추가·삭제 불가 <span class="ev ev-ok">확인됨</span></li><li><b>어안·360 카메라 지원 언급이 문서·릴리스노트 전체에 0건</b> <span class="ev ev-todo">미확인</span> (질의 필요)</li><li>Unreal 패키징 빌드에도 Postshot 앱 설치가 필요 <span class="ev ev-ok">확인됨</span></li><li>Unity 플러그인 없음 · ROS/Isaac Sim 연동 없음 <span class="ev ev-ok">확인됨</span></li></ul>
+<section id="s3"><span id="2"></span><h2>2. 우리 자료로 보면 이렇다</h2>
+<p>말로만 하면 안 와닿는다. <b>우리가 실제로 찍고 돌린 결과</b>다.</p>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-compare.jpg?v=8cad24f7" alt="그림 2 · 같은 장면의 네 모습. 왼쪽 위가 원본 영상, 오른쪽 위가 그것을 복원해 Isaac Sim 에서 렌더한 것, 아래 왼쪽이 스플랫 50만 개와 지면 메시, 아래 오른쪽이 지면 메시만" loading="lazy"><figcaption>그림 2 · 같은 장면의 네 모습. 왼쪽 위가 원본 영상, 오른쪽 위가 그것을 복원해 Isaac Sim 에서 렌더한 것, 아래 왼쪽이 스플랫 50만 개와 지면 메시, 아래 오른쪽이 지면 메시만</figcaption></figure></p>
+<p>이 한 장에 세 가지가 들어 있다.</p>
+<p><b>되는 것</b> · 오른쪽 위를 보면 <b>발밑 노면과 노란 차선, 보도블록 이음매가 원본과 거의 구분이 안 된다.</b> 가까운 바닥은 정말 잘 나온다. 우리가 걷게 할 곳이 바로 거기라는 점에서 다행이다.</p>
+<p><b>안 되는 것 하나</b> · <b>원경 건물이 뭉개져 흐른다.</b> 원본에서 또렷하던 간판과 창문이 물감 번지듯 되어 있다.</p>
+<p><b>안 되는 것 둘</b> · <b>원본 왼쪽에 걸어가던 사람 둘이 사라졌다.</b> 지워진 것이 아니라 애초에 복원되지 않았다.</p>
+<p>그리고 아래 왼쪽의 주황색 고리가 <b>카메라가 움직인 궤적 전부</b>다. 장면 크기에 비해 얼마나 작은지 보인다. 아래 오른쪽은 지면 메시만 남긴 것인데 <b>카메라 주변만 복원되고 나머지는 아예 없다.</b></p>
+<p>3절과 4절이 이 두 가지 「안 되는 것」의 원인이다. <b>둘은 원인이 다르다.</b></p>
 </section>
-<section id="s4"><span id="3"></span><h2>3. 알고리즘 계보 · Jawset 은 논문을 한 곳도 인용하지 않는다</h2>
-<p>Training Configuration 페이지 전문에 학술 인용이 <b>0건</b>이다 <span class="ev ev-ok">확인됨</span>. 아래는 프로파일 이름·동작 서술·릴리스 시점으로 역산한 것이다.</p>
-<div class="tw"><table><thead><tr><th>프로파일</th><th>대응</th><th>확신도</th></tr></thead><tbody><tr><td><b>Splat ADC</b> (legacy)</td><td>원조 3DGS <code>arXiv 2308.04079</code> 의 Adaptive Density Control</td><td>높음 · 논문 Fig.2 블록 이름이 문자 그대로 그것</td></tr><tr><td><b>Splat MCMC</b></td><td>3DGS as MCMC <code>arXiv 2404.09591</code> (NeurIPS 2024)</td><td>높음 · 이름 일치 + &quot;more randomized sampling&quot; + splat 수 상한 고정 + 시점 일치</td></tr><tr><td><b>Splat3</b> (현재 권장)</td><td><b>미확인</b> · Jawset 자체 3세대로 보인다</td><td>근거 없음</td></tr><tr><td>Anti-Aliasing 옵션</td><td>Mip-Splatting <code>arXiv 2311.16493</code></td><td>추론 · 「줌 아웃 시 아티팩트 방지」 + 서드파티 뷰어 비호환 경고가 정확히 일치</td></tr></tbody></table></div>
-<p><code>Splat MCMC</code> 가 무엇을 사는지는 분명하다. 원논문 Table 2 <span class="ev ev-ok">확인됨</span>: 랜덤 초기화 범위를 좁히면 <b>3DGS 는 27.89 에서 22.72 로 5.2 dB 붕괴</b>하는데 <b>MCMC 는 29.72 에서 29.64 로 0.08 만 떨어진다.</b> 곧 <b>SfM 점군이 부실해도 살아남는다.</b> 텍스처 없는 보도·저조도에서 정확히 이 상황이 난다.</p>
+<section id="s4"><span id="3"></span><h2>3. 왜 원경이 뭉개졌나 · 시차</h2>
+<h3>3-1. 깊이는 «각» 에서 나온다</h3>
+<p>한 장의 사진만으로는 거리를 알 수 없다. 작은 것이 가까이 있는지 큰 것이 멀리 있는지 구분할 방법이 없다. 그래서 <b>두 자리에서 같은 점을 보고, 두 시선이 만나는 각으로 거리를 잰다.</b> 사람 눈이 둘인 이유와 같다.</p>
+<p><figure class="mdimg"><img src="assets/visual/gs-parallax.svg?v=6291205f" alt="그림 3 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다" loading="lazy"><figcaption>그림 3 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다</figcaption></figure></p>
+<p>각이 좁아지면 두 광선이 거의 나란해진다. 나란한 두 선은 <b>어디서 만나는지가 불분명하다.</b> 그림 오른쪽의 길쭉한 얼룩이 그 「불분명함」이다.</p>
+<p>관계는 간단하다. <b>깊이 오차는 각에 반비례하고, 거리와는 무관하다.</b></p>
+<div class="tw"><table><thead><tr><th>두 시점이 이루는 각</th><th>깊이 오차</th></tr></thead><tbody><tr><td>16도</td><td>0.18 %</td></tr><tr><td>1.5도</td><td>1.9 %</td></tr><tr><td>0.5도</td><td>5.7 %</td></tr><tr><td>0.1도</td><td><b>29 %</b></td></tr></tbody></table></div>
+<h3>3-2. 한자리에서 돌리면 «수학적으로» 깊이가 없다</h3>
+<p>각이 좁아서 부정확해지는 정도가 아니다. <b>카메라가 제자리에서 회전만 하면 깊이 정보가 원리적으로 0 이다.</b> 회전만 한 두 장 사이의 대응 관계는 거리와 무관한 변환 하나로 완벽히 설명되기 때문이다.</p>
+<p>COLMAP 소스 주석이 이것을 그대로 말한다.</p>
+<blockquote><p>*&quot;it is checked whether the geometry describes a planar scene or panoramic view
+(pure rotation) ... This is a degenerate case, since epipolar geometry is only
+defined for a moving camera.&quot;*</p></blockquote>
+<p>그리고 논문은 <b>그런 쌍에서는 아예 점을 만들지 않는다</b>고 적는다. 결과적으로 모든 쌍이 그렇게 분류되면 <b>유효한 시작 쌍을 영원히 못 찾는다.</b></p>
+<h3>3-3. 우리 촬영이 지탱할 수 있었던 거리</h3>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-path.png?v=218941fe" alt="그림 4 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로" loading="lazy"><figcaption>그림 4 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로</figcaption></figure></p>
+<p>1차 촬영의 실측은 이렇다 (DESIGN 3-2 가).</p>
+<div class="tw"><table><thead><tr><th>잰 것</th><th>값</th></tr></thead><tbody><tr><td>36초 동안 첫 프레임에서 가장 멀리 간 거리</td><td><b>0.80 m</b></td></tr><tr><td>프레임 사이 이동 중앙값</td><td>8.7 mm</td></tr><tr><td>누적 이동거리</td><td>3.28 m</td></tr></tbody></table></div>
+<p><b>누적 3.28 m 는 8.7 mm 씩 287 번 흔들린 합이다.</b> 폰은 사실상 한자리에 서서 둘러봤다.</p>
+<p>COLMAP 이 첫 쌍에 요구하는 각이 16도이고, 그 각을 만들려면 <b>피사체 거리의 약 28 %</b> 만큼 옆으로 움직여야 한다. 0.80 m 를 거꾸로 풀면 <b>2.85 m</b> 다. 영상 입력이면 임계가 절반(8도)으로 낮아지므로 <b>5.72 m</b> 까지다.</p>
+<blockquote><p><b>어느 쪽이든 그 너머는 도구와 무관하게 복원이 불가능했다.</b> 상용 프로그램을
+샀어도 같았다. 이것이 2절에서 원경이 뭉개진 이유다.</p></blockquote>
+<h3>3-4. 그래서 어떻게 찍어야 하나</h3>
+<p>현장 규칙 하나로 줄이면 <b>인접 촬영 시점 사이가 15도에서 30도</b>다. COLMAP 의 16도 임계를 안전하게 감싼다.</p>
+<p>공식 문서가 직접 말하는 것도 같다. <b>「같은 자리에서 회전만 하지 말고 매 촬영마다 몇 걸음 옮길 것」.</b> 그 밖에 노출과 조리개와 ISO 를 수동으로 잠그고, 초점도 수동으로 두고, 손으로 들었으면 최소 1/125 초로 찍는다.</p>
+<p>알아 둘 것이 하나 더 있다. <b>COLMAP 은 피사체를 향해 일직선으로 다가가는 촬영도 거부한다</b>(<code>init_max_forward_motion</code>). 전진 방향으로 생기는 시차는 삼각측량에 거의 쓸모가 없기 때문이다. <b>로봇 주행 경로를 그대로 따라 걸으며 찍으면 정확히 이 함정이다.</b></p>
 </section>
-<section id="s5"><span id="4"></span><h2>4. Postshot 없이 되는가 · 된다. 하나만 빼고</h2>
-<div class="tw"><table><thead><tr><th>Postshot 기능</th><th>공개 대응</th><th>라이선스</th></tr></thead><tbody><tr><td>Splat MCMC</td><td><code>gsplat</code> <code>MCMCStrategy</code> · <code>ns-train splatfacto-mcmc</code></td><td>Apache-2.0</td></tr><tr><td>Splat ADC</td><td><code>DefaultStrategy</code></td><td>Apache-2.0</td></tr><tr><td><b>Splat3</b></td><td><b>대응 불명</b></td><td>미확인</td></tr><tr><td>Photometric Compensation</td><td>bilateral grid <code>arXiv 2406.00448</code></td><td>Apache-2.0</td></tr><tr><td>Anti-Aliasing</td><td>Mip-Splatting · <code>rasterize_mode=&quot;antialiased&quot;</code></td><td>Apache-2.0</td></tr><tr><td>Max Splat Count</td><td><code>cap_max</code> · nerfstudio <code>max_gs_num</code> · Brush <code>--max-splats</code></td><td>Apache-2.0</td></tr><tr><td>Pose Quality</td><td>COLMAP · <code>colmap global_mapper</code></td><td>BSD-3</td></tr><tr><td>Single Lens 제약</td><td>COLMAP <code>--ImageReader.single_camera 1</code></td><td>BSD-3</td></tr><tr><td><b>PLY·SPZ 내보내기</b> (Indie 이상 유료)</td><td><code>splat-transform</code> + <code>spz</code></td><td><b>MIT · 무료</b></td></tr><tr><td>Create Sky Model</td><td>직접 대응 없음</td><td>미확인</td></tr></tbody></table></div>
-<p><b>결론: Postshot 이 파는 것의 거의 전부가 공개 구현으로 있다.</b> 유일한 미지가 <code>Splat3</code> 이다.</p>
-<h3>4-1. Windows 에서 실제로 무엇을 쓰나</h3>
-<div class="tw"><table><thead><tr><th>스택</th><th>라이선스</th><th>Windows</th><th>비고</th></tr></thead><tbody><tr><td><b>gsplat</b></td><td>Apache-2.0</td><td>네이티브</td><td>3DGRUT 저장소 자신이 「프로덕션에는 gsplat 권장」이라 적는다</td></tr><tr><td><b>Brush</b></td><td>Apache-2.0</td><td><b>사전빌드 zip</b></td><td>CUDA·MSVC·Python 전부 불필요. AMD 에서도 돈다</td></tr><tr><td>INRIA 원본</td><td><b>비상업</b></td><td>VS2019 + CUDA 11.8</td><td>참조 구현용. main 이 2024-10 이후 멈춤</td></tr><tr><td>nerfstudio</td><td>Apache-2.0</td><td>공식이 「Linux 권장」</td><td>gsplat 백엔드</td></tr><tr><td>3DGRUT</td><td>Apache-2.0</td><td>공식 지원</td><td>어안·롤링셔터·LiDAR</td></tr></tbody></table></div>
-<p><b>Brush 주의</b> · 미해결 이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/525">#525</a> 로 <b>seed 를 고정해도 결과가 재현되지 않는다</b> (404k~897k splat · 14.5~17.3 dB) <span class="ev ev-ok">확인됨</span>. 재현성이 필요한 파이프라인에는 실질 위험이다.</p>
-<p><b>3DGRUT 관련 정정</b> · 한 조사에서 「Windows 는 PLY 만 나오고 NuRec 내보내기는 <code>usd-core</code> 가 linux 전용이라 Isaac Sim 연동에 Linux 박스가 필요하다」고 보고됐다. <b>우리에게는 틀렸다.</b> 우리 1차 PoC 가 전용 venv 에 <code>usd-core 26.8</code> 을 직접 넣어 <code>transcode</code> 를 CPU 로 돌렸고, NuRec USDZ 267.9 MB 를 만들어 <b>Windows Isaac Sim 5.1 에서 렌더까지 확인</b>했다 (<code>RESULTS-3dgs-terrain.md</code> 7절). pyproject 의 플랫폼 핀은 우회 가능한 제약이었다.</p>
-<h3>4-2. 라이선스 연쇄 · 상용 계획이 있다면 먼저 볼 것</h3>
-<p>원본 3DGS 라이선스 원문 <span class="ev ev-ok">확인됨</span>: <i>&quot;THE USER CANNOT USE, EXPLOIT OR DISTRIBUTE THE SOFTWARE FOR COMMERCIAL PURPOSES WITHOUT PRIOR AND EXPLICIT CONSENT OF LICENSORS.&quot;</i></p>
-<p>파생 저장소 대부분이 <code>diff-gaussian-rasterization</code> 포크를 서브모듈로 단다. <b>자기 코드가 MIT 라도 래스터라이저에서 막힌다.</b> 직접 확인한 것만 해도 <code>graphdeco-inria/gaussian-splatting</code> · <code>ubc-vision/3dgs-mcmc</code> · <code>autonomousvision/mip-splatting</code> 셋이 같은 비상업 라이선스다 <span class="ev ev-ok">확인됨</span>.</p>
-<p>학습 기반 포즈 프런트엔드도 같다. <b>DUSt3R · MASt3R · MASt3R-SfM · VGGSfM 이 전부 비상업</b> 이고, 상용 가능한 것은 <b>VGGT 뿐인데 그것도 기본 가중치가 아니다</b> · <code>facebook/VGGT-1B</code> 는 CC-BY-NC, 별도의 <code>facebook/VGGT-1B-Commercial</code> 만 상업 가능하며 <b>신청 승인이 필요</b>하다 <span class="ev ev-ok">확인됨</span>. <code>pip install</code> 후 기본 가중치를 받으면 모르는 사이에 비상업 의존성이 생긴다.</p>
+<section id="s5"><span id="4"></span><h2>4. 왜 사람이 사라졌나 · 정적 장면 가정</h2>
+<h3>4-1. 원인이 다르다</h3>
+<p>원경이 뭉개진 것은 <b>각이 좁아서</b>다. 사람이 사라진 것은 <b>대상이 움직여서</b>다. 고쳐야 할 것이 서로 다르다.</p>
+<p>가우시안 스플래팅은 <b>장면이 움직이지 않는다고 가정하고 만들어졌다.</b> 여러 사진을 동시에 만족시키는 타원 한 벌을 찾는 방식이라, 사진마다 팔이 다른 자리에 있으면 그 한 벌로는 둘 다 만족시킬 수 없다.</p>
+<p>옵티마이저는 이때 세 가지 중 하나를 한다. 반투명한 타원을 여러 겹 쌓아 두 자리에 반쯤 존재시키거나, 타원을 길게 늘여 궤적 전체를 덮거나, <b>그 각도에서만 보이도록 색에 숨긴다.</b> 우리 자료에서는 사람이 아예 안 잡히는 쪽으로 나타났다.</p>
+<p>Postshot 문서가 이것을 스스로 적어 둔다.</p>
+<blockquote><p><i>&quot;Postshot&#x27;s models assume the input images depict strictly static scenes.&quot;</i>
+<i>&quot;The moving shadows create holes in the ground of the radiance field.&quot;</i></p></blockquote>
+<p><b>움직이는 그림자가 지면에 구멍을 낸다</b>고까지 말한다. 우리가 야외 보도를 찍을 때 정확히 걸릴 자리다.</p>
+<h3>4-2. 왜 카메라 한 대로는 원리적으로 안 되나</h3>
+<p><figure class="mdimg"><img src="assets/visual/gs-moving.svg?v=c5a8397f" alt="그림 5 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다" loading="lazy"><figcaption>그림 5 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다</figcaption></figure></p>
+<p>정지한 대상은 내가 걸어다니는 동안 그대로 있으므로, 시각이 달라도 <b>같은 점</b>에 광선이 모인다. 움직이는 대상은 다르다. <b>어느 한 순간에 그 점을 보는 광선이 하나뿐</b>이다.</p>
+<p>0.5초 뒤 다른 각도에서 어깨를 다시 봐도 소용없다. 그것은 <b>다른 시각의 다른 위치의 어깨</b>다. 삼각측량할 두 광선이 영원히 생기지 않는다.</p>
+<p>그리고 광선이 하나뿐이면 <b>「깊이가 변한 것」과 「물체가 그 광선을 따라 움직인 것」이 구분되지 않는다.</b> 정보 자체가 없다.</p>
+<h3>4-3. 그래서 리그의 본질은 각도가 아니라 «같은 순간» 이다</h3>
+<p>여러 대를 쓰는 이유는 각도를 얻으려는 것이 아니라 <b>동시에 찍으려는</b> 것이다. 그래서 동기 정확도가 그대로 공간 정확도가 된다.</p>
+<div class="tw"><table><thead><tr><th>사지 속도</th><th>1 ms 어긋남</th><th>60 fps 한 프레임 (16.7 ms)</th><th>30 fps 한 프레임 (33.3 ms)</th></tr></thead><tbody><tr><td>1 m/s · 천천히 걷는 손</td><td>1 mm</td><td>17 mm</td><td>33 mm</td></tr><tr><td>3 m/s · 보통 제스처</td><td>3 mm</td><td>50 mm</td><td><b>100 mm</b></td></tr></tbody></table></div>
+<p>30 fps 카메라를 소프트웨어로만 맞춰 한 프레임씩 어긋나면, 움직이는 손이 <b>10 cm 어긋난 두 광선</b>으로 삼각측량된다. 그 교점은 <b>어느 프레임에도 존재하지 않는 점</b>이고, 거기에 허깨비가 생긴다.</p>
+<h3>4-4. 그러면 상용 도구의 「움직이는 사람」 은 무엇인가</h3>
+<p>Postshot 홈페이지에 <b>Model Sequence Rendering</b> 이라는 항목이 있고, 사람이 쿵푸 동작을 하는 장면을 자유롭게 돌려 본다. 4D 복원처럼 보인다.</p>
+<p><b>아니다.</b> 릴리스 노트 원문이다.</p>
+<blockquote><p>*&quot;Import (drag and drop) multiple .PSHT or .PLY files. Each file will correspond
+to one frame.&quot;*</p></blockquote>
+<p><b>이것이 전부다.</b> 시간축을 학습하는 표현이 없다. <b>독립적인 정적 복원을 N개 따로 만들어 놓고 순서대로 재생하는 것</b>이다. 쇼케이스 영상의 타임라인 길이가 737 이니 <b>모델 파일이 737개</b>라는 뜻이다.</p>
+<p>그 영상을 만든 곳은 볼류메트릭 캡처 스튜디오이고, <b>동기화된 6K 머신비전 카메라 어레이</b>로 초당 3.4 GB 를 디스크에 쏟아붓는다. 홈페이지 헤더 영상에서 움직이는 인물이 나오는 네 장면도 마찬가지로 <b>동기 카메라 50대에서 240대</b>를 쓰는 곳들의 작품이다.</p>
+<blockquote><p><b>그 영상들은 「이 프로그램이 움직이는 것을 찍는다」는 증거가 아니라 「한 순간을
+수십 대가 동시에 찍으면 그 정지된 순간을 복원할 수 있다」는 증거다.</b></p></blockquote>
+<h3>4-5. 재생과 재구동은 다른 물건이다</h3>
+<p>움직이는 사람을 다루는 방법은 크게 셋이고, 우리에게 중요한 구분은 <b>결과물로 무엇을 할 수 있느냐</b>다.</p>
+<div class="tw"><table><thead><tr><th></th><th>프레임별 독립</th><th>4D · 변형장</th><th>파라메트릭 아바타</th></tr></thead><tbody><tr><td>필요한 촬영</td><td>동기 멀티카메라</td><td>멀티뷰 권장</td><td><b>모노큘러 가능</b></td></tr><tr><td>가진 입력</td><td>시각 t</td><td>시각 t</td><td><b>자세 값</b></td></tr><tr><td>할 수 있는 것</td><td><b>재생</b></td><td><b>재생</b></td><td><b>새 동작으로 구동</b></td></tr><tr><td>대상</td><td>아무 장면</td><td>아무 장면</td><td>사람만</td></tr></tbody></table></div>
+<p><b>앞의 둘은 찍은 것을 되감기만 한다.</b> 아바타 방식만 「한 번도 찍지 않은 동작」을 시킬 수 있다. 시뮬레이션 안에 사람을 세워 로봇과 상호작용시키려면 마지막 것이어야 한다.</p>
+<p>주의할 것이 하나 있다. 논문들이 「모노큘러로 된다」고 말하는 데이터 상당수가 사실은 멀티뷰다. 피사체가 제자리에서 한 바퀴 도는 촬영은 <b>사람 기준으로 보면 턴테이블 스캔</b>이고, 21대 리그에서 한 대만 뽑아 쓴 것을 모노큘러라 부르기도 한다. 멀티뷰 단서가 진짜로 없으면 품질이 <b>1에서 2 dB, 복잡한 동작에서는 4에서 5 dB</b> 떨어진다는 측정이 있다. 4 dB 는 「조금 나쁨」이 아니라 다른 물건이다.</p>
 </section>
-<section id="s6"><span id="5"></span><h2>5. 움직이는 사람 · 도구가 아니라 촬영이 가른다</h2>
-<h3>5-1. 왜 원리적으로 그런가</h3>
-<p>정적 장면은 3D 점 하나에 광선이 여러 개 생겨 삼각측량이 된다. 그런데 <b>시각 <code>t</code> 에 카메라 1대면 그 점에 광선이 1개</b>다. 광선 위 깊이가 자유일 뿐 아니라 「깊이가 변한 것」과 「물체가 광선을 따라 움직인 것」이 구분되지 않는다.</p>
-<p>폰을 들고 사람 주위를 돌아도 소용없다. 0.5초 뒤 다른 각도에서 본 어깨는 <b>다른 시각의 다른 위치의 어깨</b>다. 삼각측량할 두 광선이 영원히 안 생긴다.</p>
-<p>Dynamic 3D Gaussians 저자 원문 <span class="ev ev-ok">확인됨</span>: <i>&quot;Our method also requires a multi-camera setup and does not work off-the-shelf on monocular video.&quot;</i></p>
-<h3>5-2. 리그의 본질은 각도가 아니라 「같은 순간」이다</h3>
-<p>동기 오차 곱하기 사지 속도가 곧 공간 오차다 (계산).</p>
-<div class="tw"><table><thead><tr><th>사지 속도</th><th>Δt 1 ms</th><th>Δt 16.7 ms (60fps 1프레임)</th><th>Δt 33.3 ms (30fps 1프레임)</th></tr></thead><tbody><tr><td>1 m/s 걷는 손</td><td>1 mm</td><td>17 mm</td><td>33 mm</td></tr><tr><td>3 m/s 보통 제스처</td><td>3 mm</td><td>50 mm</td><td><b>100 mm</b></td></tr></tbody></table></div>
-<p>30fps 카메라를 소프트웨어로만 맞추면 뛰는 손이 <b>10 cm 어긋난 두 광선</b>으로 삼각측량된다. 그 교점은 어느 프레임에도 없는 점이고 거기 floater 가 생긴다. <b>동기 목표는 1 ms 이하, 가능하면 100 µs 이하</b> (추론).</p>
-<h3>5-3. 해법 세 갈래 · 그리고 결정적 구분</h3>
-<div class="tw"><table><thead><tr><th></th><th>프레임별 독립</th><th>4D (canonical + 변형장)</th><th>파라메트릭 아바타</th></tr></thead><tbody><tr><td>필수 입력</td><td>동기 멀티카메라</td><td>멀티뷰 권장</td><td><b>모노큘러 가능</b></td></tr><tr><td>가진 것</td><td>시각 <code>t</code></td><td>시각 <code>t</code></td><td><b>포즈 θ</b></td></tr><tr><td>산출물</td><td><b>재생</b></td><td><b>재생</b></td><td><b>재애니메이션</b></td></tr><tr><td>대상</td><td>아무 장면</td><td>아무 장면</td><td>사람만</td></tr></tbody></table></div>
-<p><b>4D 장면 방법은 <code>t</code> 만 있어서 타임라인 스크럽만 된다. 아바타는 <code>θ</code> 가 있어서 한 번도 안 찍은 동작을 구동할 수 있다.</b> 로봇 시뮬레이션에 사람을 넣으려면 후자여야 한다.</p>
-<h3>5-4. Postshot 의 「Model Sequence Rendering」은 학습이 아니라 재생이다</h3>
-<p>v0.5 릴리스 노트 원문 <span class="ev ev-ok">확인됨</span>: <i>&quot;Import (drag&amp;drop) multiple .PSHT or .PLY files. Each file will correspond to one frame.&quot;</i></p>
-<p><b>이것이 전부다.</b> Postshot 에 4DGS·Deformable·Spacetime 같은 시변 표현은 없다. 독립적인 정적 3DGS 를 N개 각각 학습해 N개 파일로 재생하는 것이고, 학습 시간과 용량이 프레임 수만큼 선형으로 늘어난다.</p>
-<p><b>쇼케이스 영상을 프레임 추출해 확인한 것</b> <span class="ev ev-ok">확인됨</span>: 타임라인 전체 길이 <b>737</b>, 워터마크 <b>© Infinite-Realities</b>. 이 스튜디오는 동기화된 6K 머신비전 어레이 · 글로벌 셔터 · 30 FPS · 디스크 초당 3.4 GB 로 스트리밍한다. <b>737 프레임이면 모델 파일이 737개다.</b></p>
-<p>헤더 영상 78초에서 움직이는 인물이 나오는 4편도 전부 동기 어레이 스튜디오 작품이다 (<b>© New World Designs</b> · 동기 Z CAM E2 4K <b>50대</b>, 많게는 Canon DSLR <b>240대</b> · <b>© Electric Lens Co</b>) <span class="ev ev-ok">확인됨</span>.</p>
-<blockquote><p><b>그 영상들은 「Postshot 이 움직이는 것을 찍을 수 있다」는 증거가 아니라
-「한 순간을 수십 대가 동시에 찍으면 그 정지된 순간을 3DGS 로 만들 수 있다」는 증거다.</b></p></blockquote>
-<h3>5-5. 「모노큘러」라는 단어에 속지 말 것</h3>
-<p>논문들이 모노큘러라 부르는 데이터 대부분이 사실상 멀티뷰다 <span class="ev ev-ok">확인됨</span>.</p>
-<ul><li><b>PeopleSnapshot</b> · 카메라 고정, <b>피사체가 A-포즈로 제자리 회전</b> (사람 기준계에서 턴테이블)</li><li><b>ZJU-MoCap</b> · 애초에 <b>21대 동기 리그</b>이고 「모노」 실험은 거기서 한 대만 뽑은 것</li><li><b>D-NeRF 합성</b> · 카메라가 프레임마다 순간이동</li></ul>
-<p>정량화한 논문이 있다 (EMF · <code>arXiv 2210.13445</code> · NeurIPS 2022) <span class="ev ev-ok">확인됨</span>: 멀티뷰 단서가 없으면 <b>masked PSNR 이 1~2 dB 하락, 복잡한 모션에서는 4~5 dB 하락.</b> 4~5 dB 는 「약간 나쁨」이 아니라 다른 물건이다.</p>
-<p><b>사람 전용 아바타만이 예외</b>다. SMPL-X 사전지식이 뒷면을 채우므로 360도가 보이기는 한다. 다만 <b>그 뒷면은 측정값이 아니라 추정값</b>이고 로보틱스 평가 자료로 쓰면 안 된다.</p>
+<section id="s6"><span id="5"></span><h2>5. 그래서 트윈이 둘로 갈린다</h2>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-ground.jpg?v=a437a73e" alt="그림 6 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다" loading="lazy"><figcaption>그림 6 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다</figcaption></figure></p>
+<p>1-5 에서 말한 대로 가우시안은 표면이 아니다. 그래서 우리 파이프라인은 처음부터 둘로 갈라진다.</p>
+<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>필요한 것</th></tr></thead><tbody><tr><td><b>충돌 지형</b></td><td>발이 닿는 면. 정책의 높이 스캔이 광선을 쏘는 대상</td><td><b>형상 정확도.</b> 1 cm 단차가 보행을 가른다</td></tr><tr><td><b>배경</b></td><td>사람과 카메라에게 보이는 것</td><td><b>보이는 품질</b></td></tr></tbody></table></div>
+<p>이것은 우리만의 발상이 아니다. <b>NVIDIA 공식 스테레오 파이프라인이 정확히 같은 구조</b>다. 깊이에서 메시를 만드는 경로와 외관을 학습하는 경로가 따로 돌고 하나의 파일에 정렬된 채로 담긴다.</p>
+<p>그리고 <b>공식 문서가 「스마트폰 한 대 경로에는 충돌 메시가 없다」고 인정한다.</b> 그 경로의 안내는 「로봇이 딛고 설 것이 있도록 바닥 평면을 직접 추가하라」다. 폰 한 대로 지면 형상을 얻을 수 없다는 것을 만든 쪽이 말하고 있다.</p>
+<p>우리 1차 PoC 는 이 분리가 실제로 동작함을 보였다. 같은 스플랫을 배경으로 띄우고 충돌은 별도 메시가 맡게 해서 <b>Windows Isaac Sim 안에서 정책을 걷게 했다</b> (<code>RESULTS-3dgs-terrain.md</code> 7절).</p>
 </section>
-<section id="s7"><span id="6"></span><h2>6. 촬영 기하 · 인용 가능한 수치</h2>
-<p>DESIGN 7절의 재촬영 설계서를 뒷받침하는 «왜» 에 해당한다.</p>
-<h3>6-1. 한 줄로 쓰면 이것이다</h3>
-<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>σ_Z / Z  ≈  σ_d / (f · α)</pre></div>
-<p><b>상대 깊이 오차는 삼각측량각 α 에 반비례하고 거리와는 무관하다.</b> 기반식 <code>z = f·B/d</code>, <code>|ε_z| = z²/(f·B)·|ε_d|</code> 는 <code>arXiv 1705.05548</code> §2.1 <span class="ev ev-ok">확인됨</span>. 위 정리는 거기에 <code>b = αZ</code> 를 대입한 것이다 (본 문서의 대수).</p>
-<p>f = 1000 px, σ_d = 0.5 px 기준:</p>
-<div class="tw"><table><thead><tr><th>삼각측량각</th><th>상대 깊이 오차</th></tr></thead><tbody><tr><td>16° · COLMAP 초기쌍 임계</td><td>0.18 %</td></tr><tr><td>6° · local BA</td><td>0.5 %</td></tr><tr><td>1.5° · 점 필터 하한 (이 아래는 삭제)</td><td>1.9 %</td></tr><tr><td>0.5°</td><td>5.7 %</td></tr><tr><td>0.1° · 10 m 거리에서 몇 cm 우발 이동</td><td><b>29 %</b></td></tr></tbody></table></div>
-<h3>6-2. COLMAP 이 「한 자리 촬영」을 거부하는 정확한 경로 <span class="ev ev-ok">확인됨</span></h3>
-<p>소스 주석 원문 (<code>estimators/two_view_geometry.h</code>): <i>&quot;it is checked whether the geometry describes a planar scene or panoramic view (pure rotation) described by a homography. This is a degenerate case, since epipolar geometry is only defined for a moving camera.&quot;</i></p>
-<p>CVPR 2016 논문 원문: <i>&quot;we do not triangulate from panoramic image pairs to avoid erroneous triangulation angles due to inaccurate pose estimates.&quot;</i></p>
-<p>결과: 모든 쌍이 PANORAMIC 으로 태깅되어 삼각측량에서 제외되고 <b>유효한 초기 쌍을 영원히 못 찾는다.</b></p>
-<h3>6-3. 알아야 할 기본값 셋 <span class="ev ev-ok">확인됨</span></h3>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>뜻</th></tr></thead><tbody><tr><td><code>init_min_tri_angle</code></td><td>16°</td><td>초기 이미지 쌍. <code>b = 2Z·tan(θ/2)</code> 이므로 5 m 앞이면 측면 이동 <b>1.4 m</b> 필요</td></tr><tr><td><code>ModifyForVideoData()</code></td><td>16° -&gt; <b>8°</b></td><td><b>비디오 입력이면 절반으로 낮춘다.</b> 프레임 추출로 넣는 우리에게 해당</td></tr><tr><td><code>init_max_forward_motion</code></td><td>0.95</td><td><b>피사체를 향해 일직선으로 다가가는 촬영을 거부한다.</b> 전진 방향 시차는 삼각측량에 거의 쓸모가 없다</td></tr></tbody></table></div>
-<p>세 번째가 중요하다. <b>로봇 주행 경로를 그대로 따라 찍으면 정확히 이 함정이다.</b></p>
-<h3>6-4. 현장 규칙</h3>
-<p><b>인접 촬영 시점 간 15~30°.</b> COLMAP 의 16° 임계를 정확히 감싼다. 그 밖에 공식 문서가 직접 말하는 것 <span class="ev ev-ok">확인됨</span>: 노출·조리개·ISO 수동 고정 · 수동 초점 · 핸드헬드 최소 1/125 s · 「같은 자리에서 회전만 하지 말고 매 촬영마다 몇 걸음 옮길 것」.</p>
-<h3>6-5. 프런트엔드를 바꿔서 얻을 것은 거의 없다</h3>
-<p>GLOMAP README 의 「1~2 자릿수 빠름」은 <b>수천 장 이상 규모에만 해당한다</b> <span class="ev ev-ok">확인됨</span>. 논문 표 실측은 <b>1.6배에서 28.6배</b> 범위이고, 물체 중심 촬영(우리와 가장 유사)에서는 <b>1.56배</b>에 COLMAP 정확도가 이미 AUC@3° 96.5 로 포화다.</p>
-<p><b>200~500장 규모 로봇 촬영에서 병목은 프런트엔드가 아니라 촬영이다.</b></p>
+<section id="s7"><span id="6"></span><h2>6. Postshot 은 어떤 물건인가</h2>
+<p>이제 맥락 위에서 보면 평가가 쉽다.</p>
+<h3>6-1. 할 수 있는 것</h3>
+<p>사진이나 영상을 넣으면 카메라 위치를 스스로 풀고 가우시안을 학습해 <b>PLY 또는 SPZ 파일로 내보낸다.</b> Unreal Engine 플러그인이 있다. 처리가 전부 로컬에서 돌아 현장 자료를 클라우드에 올리지 않아도 된다.</p>
+<p><b>미터 단위 정렬 수단이 하나 있다.</b> 현장에 실측 크기를 아는 마커를 깔고 찍으면 그것으로 씬을 실세계 크기에 맞춘다. 단안 복원이 구조적으로 못 정하는 절대 크기를 넣는 유일한 공식 통로다.</p>
+<h3>6-2. 못 하는 것</h3>
+<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>메시 출력</b></td><td><b>기능 자체가 없다.</b> 충돌 지형에 못 쓴다</td></tr><tr><td>움직이는 대상</td><td>정적 장면 가정. 시퀀스는 재생일 뿐</td></tr><tr><td>플랫폼</td><td><b>Windows 전용.</b> Linux 빌드 없음</td></tr><tr><td>Isaac Sim 연동</td><td>없음. PLY 를 직접 다뤄야 한다</td></tr><tr><td>어안 · 360</td><td>문서에 언급 자체가 없다</td></tr></tbody></table></div>
+<h3>6-3. 값과 함정</h3>
+<p>무료판은 <b>비상업용이고 결과물을 파일로 내보낼 수 없다.</b> 시뮬레이터로 옮기려면 유료판이 필요하고, <b>우리가 실제로 쓸 기능 둘(배치 실행과 마커 정렬)은 가장 비싼 등급에 있다.</b></p>
+<p>조용한 함정도 하나 적어 둔다. 씬을 원점 근처로 옮긴 값이 <b>파일 메타데이터에만</b> 저장되고, 공식 문서가 <i>&quot;software using these exports must reference the world origin stored in the PLY metadata&quot;</i> 라고 적는다. <b>우리 로더가 그 값을 안 읽으면 오류 없이 씬 전체가 어긋난 자리에 놓인다.</b></p>
 </section>
-<section id="s8"><span id="7"></span><h2>7. 우리 자료에서 확인한 것</h2>
-<h3>7-1. 1차 촬영이 지탱할 수 있었던 거리</h3>
-<p>DESIGN 3-2 (가) 의 실측(첫 프레임에서 최대 이동 <b>0.80 m</b>)에 6-3 을 적용하면:</p>
-<div class="tw"><table><thead><tr><th>임계</th><th>유효 초기 쌍이 성립하는 최대 거리</th></tr></thead><tbody><tr><td>16° (사진 기본)</td><td><b>2.85 m</b></td></tr><tr><td>8° (비디오 프리셋)</td><td><b>5.72 m</b></td></tr></tbody></table></div>
-<p>어느 쪽이든 그 너머는 <b>알고리즘과 무관하게 구조적으로 복원 불가능했다.</b> 「원경이 흐리고 포인트가 안 잡힌다」의 정량적 원인이고, 상용 도구를 샀어도 같았다.</p>
-<h3>7-2. <code>sparse/</code> 가 세 조각으로 갈려 있다</h3>
-<p><code>_out/colmap/sparse/</code> 를 직접 세었다 <span class="ev ev-ok">확인됨</span>:</p>
-<div class="tw"><table><thead><tr><th>모델</th><th>등록 이미지</th><th>3D 점</th></tr></thead><tbody><tr><td><code>sparse/0</code></td><td><b>3</b></td><td>2,273</td></tr><tr><td><code>sparse/1</code></td><td>12</td><td>1</td></tr><tr><td><b><code>sparse/2</code></b></td><td><b>287</b></td><td><b>32,727</b></td></tr></tbody></table></div>
-<p>COLMAP 기본값이 <code>multiple_models = true</code> · <code>max_num_models = 50</code> 이라, 촬영이 끊기면 <b>오류 없이 여러 조각을 뱉는다.</b> 그리고 <b>3DGS 로더 기본 경로는 <code>sparse/0</code></b> 이다.</p>
-<p><b>우리 세션은 밟지 않았다.</b> <code>RESULTS-3dgs-terrain.md</code> 가 「루프 검출 없음(채택 · <code>sparse/2</code>)」 「287 / 287 등록」이라 명시했고 <code>2_txt</code> 사본까지 만들어 뒀다. <b>다만 3장짜리 조각이 <code>sparse/0</code> 에 남아 있으므로 기본 경로를 쓰는 도구나 다음 사람은 조용히 3장으로 학습한다.</b></p>
+<section id="s8"><span id="7"></span><h2>7. Postshot 없이 되는가</h2>
+<p><b>된다.</b> 프로파일 이름과 동작 서술로 역산하면 대응이 이렇게 붙는다.</p>
+<div class="tw"><table><thead><tr><th>Postshot 기능</th><th>공개 대응</th><th>라이선스</th></tr></thead><tbody><tr><td>Splat MCMC 프로파일</td><td><code>gsplat</code> 의 MCMC 전략</td><td>Apache-2.0</td></tr><tr><td>Splat ADC 프로파일 (구형)</td><td>기본 전략</td><td>Apache-2.0</td></tr><tr><td><b>Splat3 (현재 권장)</b></td><td><b>대응 불명</b></td><td>미확인</td></tr><tr><td>노출 · 비네팅 보정</td><td>bilateral grid</td><td>Apache-2.0</td></tr><tr><td>앤티에일리어싱</td><td>Mip-Splatting 필터</td><td>Apache-2.0</td></tr><tr><td>최대 스플랫 수</td><td>상한 지정 옵션</td><td>Apache-2.0</td></tr><tr><td><b>PLY · SPZ 내보내기</b> (유료)</td><td><code>splat-transform</code> · <code>spz</code></td><td><b>MIT · 무료</b></td></tr></tbody></table></div>
+<p><b>Jawset 은 어떤 논문도 인용하지 않는다.</b> 그래서 위 대응은 이름과 동작으로 푼 것이고, <code>Splat3</code> 만 근거를 못 찾았다.</p>
+<h3>7-1. 그런데 앤티에일리어싱은 옵션이 아니다</h3>
+<p>이 항목 하나가 「사진 같다」와 「영상 같다」를 가른다.</p>
+<div class="tw"><table><thead><tr><th>Mip-NeRF360</th><th>학습한 해상도에서</th><th><b>8배 물러선 시점에서</b></th></tr></thead><tbody><tr><td>기본 3DGS</td><td>29.19</td><td><b>19.59</b></td></tr><tr><td>Mip-Splatting</td><td>29.39</td><td><b>26.22</b></td></tr></tbody></table></div>
+<p><b>학습 해상도에서는 0.2 dB 차이인데 카메라가 물러서면 6.6 dB 차이다.</b> 논문 표준 성적표는 학습 카메라와 같은 자리에서 재기 때문에 이 차이를 거의 못 잡는다. <b>로봇이 장면 안을 자유롭게 돌아다니는 순간 전부 드러난다.</b></p>
+<h3>7-2. Windows 에서 무엇을 쓰나</h3>
+<div class="tw"><table><thead><tr><th>스택</th><th>라이선스</th><th>Windows</th></tr></thead><tbody><tr><td><code>gsplat</code></td><td>Apache-2.0</td><td>네이티브</td></tr><tr><td><code>Brush</code></td><td>Apache-2.0</td><td><b>사전빌드 실행파일.</b> CUDA · 컴파일러 · 파이썬 전부 불필요</td></tr><tr><td>원조 3DGS 구현</td><td><b>비상업</b></td><td>참조용으로만</td></tr><tr><td><code>3DGRUT</code></td><td>Apache-2.0</td><td>공식 지원. 어안 · 롤링셔터</td></tr></tbody></table></div>
+<p><code>Brush</code> 에 주의할 점이 하나 있다. <b>난수 씨앗을 고정해도 결과가 재현되지 않는 미해결 문제</b>가 있다. 재현성이 필요한 파이프라인에는 실질 위험이다.</p>
+<p><b>라이선스 연쇄도 미리 봐야 한다.</b> 원조 3DGS 의 렌더링 커널이 상업 사용을 금지하는데 파생 저장소 대부분이 그것을 그대로 가져다 쓴다. <b>자기 코드가 MIT 라도 그 커널에서 막힌다.</b> 대회나 전시를 넘어설 계획이 있으면 <code>gsplat</code> 이나 <code>Brush</code> 쪽으로 가야 한다.</p>
 </section>
-<section id="s9"><span id="8"></span><h2>8. 관문 제안 셋</h2>
-<ol><li><b>학습 전 등록 수 대조.</b> 「등록 이미지 수 = 입력 이미지 수」인가, <code>sparse/1</code> 이 생기지 않았는가를 확인하고 아니면 막는다. 7-2 가 그 실례다</li><li><b>인접 시점 15~30°</b> 를 현장 규칙으로 고정한다 (6-4)</li><li><b>노출·화이트밸런스·초점 수동 고정.</b> 못 하면 학습에서 bilateral grid 를 켠다</li></ol>
+<section id="s9"><span id="8"></span><h2>8. 우리 프로젝트가 염두에 두는 기술</h2>
+<p>여기까지의 결론을 우리 계획으로 옮기면 이렇다.</p>
+<h3>8-1. 배경 쪽 · 이미 돌려 봤다</h3>
+<p><b>가우시안 스플래팅을 쓴다.</b> 1차 PoC 에서 스플랫을 Isaac Sim 이 읽는 형식으로 바꿔 <b>Windows 에서 렌더까지 확인했다.</b> 그 변환 경로가 CPU 로만 돌아 무거운 개발 도구 설치가 필요 없었다는 점이 우리에게 크다.</p>
+<p>학습은 <code>gsplat</code> 또는 <code>Brush</code> 로 간다. 켤 것은 셋이다. <b>MCMC 전략</b>(점군이 부실해도 살아남는다) · <b>앤티에일리어싱</b>(7-1) · <b>카메라 자세 최적화</b>. 마지막 것이 의외로 크다. 이동하며 찍은 자료에서 <b>자세 최적화를 끈 손실이 롤링셔터나 모션블러 보정을 끈 손실보다 컸다.</b></p>
+<h3>8-2. 충돌 쪽 · 스플랫에서 뽑지 않는다</h3>
+<p><b>보이는 품질로 접촉 물리의 정확도를 주장하지 않는다.</b> 지면은 깊이를 모아 만드는 경로로 간다. 후보 비교는 DESIGN 5-1 에 있고, 이 문서가 더할 것은 <b>「어느 방법이 낫다」고 말해 주는 공개 자료가 우리 용도에는 없다</b>는 사실이다. 표면 복원 논문들은 전부 실내 물체나 건물 벤치마크로 겨루고, <b>야외 지면의 절대 높이 정확도를 잰 것이 없다.</b> 우리가 재야 한다.</p>
+<h3>8-3. 움직이는 사람 · 지금은 안 한다</h3>
+<p>동기 카메라 리그가 필요하고 우리에겐 없다. <b>MVP 범위 밖이다.</b></p>
+<p>다만 나중에 필요해지면 <b>파라메트릭 아바타 쪽</b>이다(4-5). 그것만이 새 동작으로 구동할 수 있고 휴대폰 촬영으로도 된다. 시뮬레이션 안에 보행자를 세워 로봇이 피해 가게 하려면 그 길이다.</p>
+<h3>8-4. 촬영 · 여기가 실제 병목이다</h3>
+<p><b>포즈 추정 도구를 바꿔서 얻을 것이 거의 없다.</b> 우리 규모(수백 장)에서는 지금 쓰는 것이 이미 정확도 포화이고, 더 빠르다는 대안도 실제 배속은 1.6배 수준이다. <b>시간을 쓸 곳은 촬영 프로토콜이다.</b></p>
 </section>
-<section id="s10"><span id="9"></span><h2>9. 확인하지 못한 것</h2>
-<ul><li><code>Splat3</code> 의 알고리즘 정체. Jawset 이 어떤 논문도 인용하지 않는다</li><li>Postshot 의 어안·360 카메라 지원 여부. 문서·릴리스노트 전체에 언급 0건</li><li>Postshot 내부 SfM 이 COLMAP/GLOMAP 을 래핑하는지. 구현 비공개</li><li>Free 티어 파일의 유료 티어 호환 방향. 가격 페이지 문구가 모호하다</li><li><code>gsplat</code> 과 <code>Brush</code> 가 StopThePop 식 픽셀별 정렬을 구현하는지</li><li><code>nvidia/PhysicalAI-Robotics-NuRec</code> 은 <b>Gated</b> 라 접근 승인이 선행 조건이다. 9개 환경 전부에 메시가 있는 것도 아니다 (공식 설명이 &quot;Some datasets also include a mesh and occupancy map&quot;)</li><li>RTX 5080 16 GB 에서 Isaac Lab 과 NuRec 동시 구동의 실제 VRAM 여유. <b>실측 안 함</b></li></ul>
+<section id="s10"><span id="9"></span><h2>9. 관문 제안 셋</h2>
+<ol><li><b>학습 전 등록 수 대조.</b> 복원이 여러 조각으로 갈리면 도구가 오류 없이 조각을 여럿 내놓고 <b>읽는 쪽은 보통 첫 조각만 읽는다.</b> 실제로 우리 1차 자료가 3장 · 12장 · 287장 세 조각이다. 우리 세션은 287장짜리를 골라 기록해 두었지만, 기본 경로를 쓰는 다음 사람은 <b>3장으로 학습하고도 오류를 못 본다</b></li><li><b>인접 시점 15도에서 30도</b> 를 현장 규칙으로 고정한다 (3-4)</li><li><b>노출 · 화이트밸런스 · 초점 수동 고정.</b> 못 하면 학습에서 보정을 켠다</li></ol>
 </section>
-<section id="s11"><span id="10"></span><h2>10. 출처</h2>
-<p><b>논문</b> · 2308.04079 (3DGS) · 2404.09591 (3DGS-MCMC) · 2311.16493 (Mip-Splatting) · 2404.10484 (AbsGS) · 2403.15530 (Pixel-GS) · 2406.15643 (Taming 3DGS) · 2403.14166 (Mini-Splatting) · 2402.00525 (StopThePop) · 2412.12507 (3DGUT) · 2407.07090 (3DGRT) · 2406.00448 (Bilateral Guided) · 2403.13327 (GS on the Move) · 2403.17888 (2DGS) · 2403.17822 (DN-Splatter) · 2308.09713 (Dynamic 3D Gaussians) · 2310.08528 (4D-GS) · 2312.16812 (Spacetime Gaussians) · 2210.13445 (EMF) · 2412.04457 (동적 3DGS 벤치마크) · 2407.21686 (ExAvatar) · 2503.10625 (LHM) · 2407.20219 (GLOMAP) · 2503.11651 (VGGT) · 2409.19152 (MASt3R-SfM) · 1705.05548 (깊이 오차식)</p>
-<p><b>공식 문서</b> · jawset.com/docs (Postshot User Guide 전체 + 릴리스노트 v0.1~v1.1.69) · colmap.github.io/tutorial.html · docs.gsplat.studio · nerfbaselines.github.io</p>
-<p><b>저장소</b> · nerfstudio-project/gsplat · ArthurBrussee/brush · nv-tlabs/3dgrut · playcanvas/supersplat · playcanvas/splat-transform · nianticlabs/spz · colmap/colmap</p>
-<p><b>우리 원자료</b> · <code>inbox/jay/20260916-3dgs-test/_out/colmap/sparse/{0,1,2}</code> · <code>RESULTS-3dgs-terrain.md</code> · <code>DESIGN-real-to-sim.md</code></p>
+<section id="s11"><span id="10"></span><h2>10. 확인하지 못한 것</h2>
+<ul><li><code>Splat3</code> 프로파일의 알고리즘. Jawset 이 어떤 논문도 인용하지 않는다</li><li>Postshot 의 어안 · 360 카메라 지원 여부. 문서에 언급 0건</li><li>Postshot 내부 카메라 추정이 공개 도구를 감싼 것인지. 구현 비공개</li><li>무료판 파일과 유료판의 호환 방향. 가격 페이지 문구가 모호하다</li><li>NVIDIA 공개 데이터셋으로 파이프라인을 세우는 시험. <b>접근 승인이 선행 조건</b>이고 9개 환경 전부에 메시가 있는 것도 아니다</li><li>RTX 5080 16 GB 에서 시뮬레이터와 스플랫 렌더를 함께 돌릴 때의 실제 여유. 미측정</li></ul>
 </section>
-<section id="s12"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-18</td><td>처음 씀. Postshot 전수 분석, 오픈소스 대응표, 움직이는 피사체 세 갈래, 촬영 기하 수치, 우리 <code>sparse/</code> 조각 실측</td><td>공식 문서·논문 원문·저장소 소스·우리 원자료</td></tr></tbody></table></div>
+<section id="s12"><span id="11"></span><h2>11. 출처</h2>
+<p><b>논문</b> · 2308.04079 (3DGS) · 2404.09591 (MCMC) · 2311.16493 (Mip-Splatting) · 2404.10484 · 2403.15530 · 2406.15643 · 2403.14166 · 2402.00525 · 2412.12507 · 2407.07090 · 2406.00448 · 2403.13327 · 2403.17888 · 2403.17822 · 2308.09713 · 2310.08528 · 2312.16812 · 2210.13445 · 2412.04457 · 2407.21686 · 2503.10625 · 2407.20219 · 2503.11651 · 2409.19152 · 1705.05548</p>
+<p><b>공식 문서</b> · jawset.com/docs (User Guide 전체와 릴리스노트 v0.1 ~ v1.1.69) · colmap.github.io/tutorial.html · docs.gsplat.studio · nerfbaselines.github.io · NVIDIA NuRec 재구성 문서</p>
+<p><b>저장소</b> · nerfstudio-project/gsplat · ArthurBrussee/brush · nv-tlabs/3dgrut · playcanvas/splat-transform · nianticlabs/spz · colmap/colmap</p>
+<p><b>우리 원자료</b> · <code>inbox/jay/20260916-3dgs-test/_out/colmap/sparse/{0,1,2}</code> · <code>_out/viewer/</code> · <code>figs/fig7_shooting_path.png</code> · <code>RESULTS-3dgs-terrain.md</code> · <code>DESIGN-real-to-sim.md</code></p>
+</section>
+<section id="s13"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-18</td><td>처음 씀. 조사 결과를 표로 정리</td><td>공식 문서 · 논문 원문 · 우리 원자료</td></tr><tr><td>v2.0</td><td>2026-09-18</td><td><b>다시 씀.</b> 팀장 지적(「기술 설명이 없다 · 그림을 쓰라」)에 따라 해설 중심으로 재구성하고 그림 3장을 새로 그렸다. 우리 촬영본과 지면 메시 사진을 넣고, 기술 설명을 먼저 둔 뒤 도구 평가를 뒤로 옮겼다. 8절(우리가 염두에 두는 기술)을 신설했다</td><td>위와 같음 + 새 그림</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1048,5 +1092,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyra529s7</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkmhhaxv3</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
