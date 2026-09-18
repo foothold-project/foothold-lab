@@ -1,18 +1,28 @@
 # -*- coding: utf-8 -*-
 """`probe_metrics.py` 시험. **2026-09-18 검증에서 잡힌 결함을 못 박는다.**
 
-여기 있는 시험 가운데 넷은 실제로 있었던 결함에서 나왔다. 고쳤다는 것과
-고쳐진 채로 남는 것은 다른 일이라, 그 자리마다 시험을 건다.
+고쳤다는 것과 고쳐진 채로 남는 것은 다른 일이라, 잡힌 자리마다 시험을 건다.
 
-    정지 판정   창이 1초를 못 채워도 통과시켰다
-    낙상 집계   표본이 모자란 env 를 빼서 가장 심하게 실패한 판이 사라졌다
-    접지 판정   접촉력 이력 최댓값을 써서 미끄러짐이 부풀었다
-    낙상 시각   스텝 시작 시각으로 적어 한 스텝 빨랐다
+**무엇을 «어떻게» 막는지 갈라 적는다.** 2회차 검증에서 이 구별을 안 해 둔 것이
+걸렸다. 머리글은 넷을 다 막는다고 적었는데 실제로는 둘만 막고 있었다.
+
+    정지 판정   계산이 틀리면 잡는다        (`probe_metrics` 를 직접 부른다)
+    낙상 집계   계산이 틀리면 잡는다        (같음)
+    접지 판정   계산이 틀리면 잡는다        (같음)
+    수집 경로   **원문 검사로만** 막는다    (`collect_sample` 은 torch 가 필요하다)
+    낙상 시각   **원문 검사로만** 막는다    (Isaac 루프 안에 있다)
+
+뒤 둘은 `probe_command_response.py` 안에 있고 그 파일은 모듈을 읽는 것만으로
+`AppLauncher` 가 돌아 Isaac 없이는 import 가 안 된다. 그래서 **원문을 읽어**
+막는다. 값을 재는 것이 아니라 코드가 그 자리에 있는지만 본다. 약한 관문이지만
+없는 것보다 낫고, 약하다는 것을 여기 적어 둔다.
 
 Isaac 도 GPU 도 없이 돈다.
 """
 
+import io
 import os
+import re
 import sys
 import unittest
 
@@ -258,3 +268,95 @@ class 평균은없는값을0으로안만든다(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+PROBE_SOURCE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "probe_command_response.py",
+)
+
+
+def probe_source():
+    return io.open(PROBE_SOURCE_PATH, encoding="utf-8").read()
+
+
+def probe_function_body(name):
+    """`probe_command_response.py` 의 함수 하나만 원문으로 잘라 온다.
+
+    파일 전체를 훑으면 **주석에 적힌 낱말까지 걸린다.** 실제로 그렇게 한 번
+    헛걸렸다. 「무엇을 안 쓴다」를 볼 때는 반드시 함수 몸통만 본다.
+    """
+    source = probe_source()
+    start = source.index("def {}(".format(name))
+    rest = source[start:]
+    end = rest.find(chr(10) + "def ")
+
+    return rest if end == -1 else rest[:end]
+
+
+class 수집경로는원문으로막는다(unittest.TestCase):
+    """`collect_sample()` 과 낙상 시각. **값이 아니라 코드 자리를 본다.**
+
+    이 둘은 `torch` 와 Isaac 루프 안에 있어 여기서 돌려 볼 수가 없다. 약한
+    관문이라는 것을 알고 건다. 되돌아가는 것만은 막는다.
+    """
+
+    def test_발_접촉력은_이력이_아니라_지금_값을_쓴다(self):
+        collect = probe_function_body("collect_sample")
+
+        self.assertIn(
+            "contact_sensor.data.net_forces_w[:, foot_sensor_slots, :]",
+            collect,
+            "접지는 «지금» 접촉력으로 봐야 한다. 이력 최댓값은 10 ms 앞의 "
+            "힘을 끌어와 이미 뗀 발을 접지로 세게 만든다",
+        )
+
+    def test_발_접촉력에_이력과_amax_를_다시_안_쓴다(self):
+        collect = probe_function_body("collect_sample")
+
+        # 주석은 빼고 코드 줄만 본다. 머리글이 이력 이야기를 «설명» 하기 때문이다.
+        code = chr(10).join(
+            line for line in collect.split(chr(10))
+            if not line.lstrip().startswith("#")
+        )
+
+        for banned in ("net_forces_w_history", "amax"):
+            self.assertNotIn(
+                banned, code,
+                "`collect_sample()` 이 발 접촉력을 이력에서 끌어오는 판으로 "
+                "되돌아갔다",
+            )
+
+    def test_낙상_시각은_스텝이_끝난_시각이다(self):
+        source = probe_source()
+
+        self.assertIn(
+            "fell_at[newly] = t + dt", source,
+            "종료는 env.step() 뒤에 확인하므로 t 가 아니라 t + dt 다. "
+            "t 로 적으면 첫 스텝 낙상이 0.00 초가 된다",
+        )
+
+        self.assertNotIn(
+            "fell_at[newly] = t" + chr(10), source,
+            "낙상 시각이 한 스텝 빠른 판으로 되돌아갔다",
+        )
+
+    def test_판정_하네스를_import_하지_않는다(self):
+        """프로브가 판정 경로를 끌어다 쓰면 불간섭이 깨진다."""
+        source = probe_source()
+
+        self.assertNotIn(
+            "import eval_generalization", source,
+            "판정 하네스를 import 하면 그 파일의 argparse 와 AppLauncher 가 "
+            "함께 돈다. 불간섭이 깨진다",
+        )
+
+    def test_성공률_열을_만들지_않는다(self):
+        """다섯째 판정축 금지. `sim/eval/README.md` 의 못이다."""
+        source = probe_source()
+
+        for banned in ("overall_success", "traversal_success"):
+            self.assertNotIn(
+                banned, source,
+                "프로브는 판정을 내지 않는다. 판정은 하네스의 네 축 AND 하나다",
+            )

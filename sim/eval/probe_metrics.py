@@ -61,8 +61,15 @@ def mean(values):
 def joint_target_deltas(rows, joint_names):
     """스텝마다 관절 목표각이 얼마나 움직였나. `sum |delta|` 12관절.
 
-    **이 도구의 요점이다.** 0 으로 수렴하면 정책 출력이 굳은 것이고, 계속 크면
-    정책은 움직이는데 몸이 안 따라오는 것이다. 둘은 처방이 다르다.
+    **이 도구의 요점이다.** 다만 이 값 하나로 원인을 확정하지는 못한다.
+
+        0 으로 수렴    정책 출력이 굳었다. 이것은 이 값만으로 말할 수 있다
+        계속 큼        정책은 계속 새 목표를 낸다. 몸이 따라오는지 «아닌지» 는
+                       `joint_pos` 와 `base_*` 를 함께 봐야 안다. 정상 보행도
+                       이 값이 크다
+
+    즉 굳었다는 것은 이 열이 혼자 말할 수 있고, 안 따라온다는 것은 못 한다.
+    후자는 목표각과 실제 관절각의 차이를 따로 봐야 한다.
 
     돌려주는 목록의 길이는 `len(rows) - 1` 이다. 첫 스텝에는 «직전» 이 없다.
     """
@@ -233,8 +240,13 @@ def quad_stance_s(rows, dt, contact_threshold_n=DEFAULT_CONTACT_THRESHOLD_N):
 
 def episode_metrics(rows, dt, joint_names, fell_at_s,
                     contact_threshold_n=DEFAULT_CONTACT_THRESHOLD_N,
-                    settle_speed_mps=DEFAULT_SETTLE_SPEED_MPS):
-    """env 하나의 설계 문서 5-3 절 지표. **전부 93열에서 나온다.**"""
+                    settle_speed_mps=DEFAULT_SETTLE_SPEED_MPS,
+                    env_id=None, timeseries_file=None):
+    """env 하나의 설계 문서 5-3 절 지표. **전부 93열에서 나온다.**
+
+    `env_id` 와 `timeseries_file` 은 **이 줄이 어느 로봇의 것인지**를 남긴다.
+    없으면 `per_env.json` 과 parquet 파일을 서로 못 맞춘다.
+    """
     n = len(rows)
     tail_len = max(1, int(round(1.0 / dt)))
     tail = rows[max(0, n - tail_len):]
@@ -245,6 +257,8 @@ def episode_metrics(rows, dt, joint_names, fell_at_s,
     fell = fell_at_s is not None and fell_at_s == fell_at_s
 
     return {
+        "env_id": env_id,
+        "timeseries_file": timeseries_file,
         "samples": n,
         "duration_s": n * dt,
         "fell": fell,
@@ -279,7 +293,7 @@ def episode_metrics(rows, dt, joint_names, fell_at_s,
     }
 
 
-def degenerate_entry(samples, dt, fell_at_s):
+def degenerate_entry(samples, dt, fell_at_s, env_id=None):
     """시계열이 모자란 env 한 대. **낙상 집계에는 들어간다.**
 
     첫 스텝에 넘어지면 표본이 한 개뿐이라 시간 지표를 낼 수 없다. 그렇다고
@@ -288,6 +302,8 @@ def degenerate_entry(samples, dt, fell_at_s):
     fell = fell_at_s is not None and fell_at_s == fell_at_s
 
     return {
+        "env_id": env_id,
+        "timeseries_file": None,
         "samples": samples,
         "duration_s": samples * dt,
         "fell": fell,

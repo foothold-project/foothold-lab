@@ -5,7 +5,7 @@
 > 근거: 실측. 팀장 AI-WS01 기준선 `logs/rsl_rl/unitree_go2_rough/2026-08-11_20-32-58/params/env.yaml`(처음부터 1500 iter) 과 임석헌 원본 `0909_nvidia_gap_v3_seed42_iter900/params/env.yaml`(NAS 백업) 의 키 650 대 674 전수 대조 · `models/foothold-v1.env.yaml`(학습 시각 직렬화본)
 > 요지: foothold-v1 은 석헌 gap 레시피를 정확히 재현한 것이고 레시피 자체가 전진 전용이었다. 명령 손잡이 4개만 되돌린 D 한 판(97분)이 「명령을 좁힐 필요가 있었는가」에 답한다.
 > 상태: 확정
-> 판: v1.0
+> 판: v1.1
 > 이슈: #428 #409 #392
 
 ---
@@ -43,7 +43,7 @@
 | **K1** | **gap 통과** | 0.5 / 1.0 / 1.5 m/s 에서 **90 / 100 / 68 %** |
 | **K2** | **pit · floating_ring · discrete_obstacles · wave · star · repeated_boxes · repeated_cylinders** | 대부분 100 %, floating_ring 95 / 99 / 87 % |
 | **K3** | **rails** | 70 / 48 / 21 % (이미 낮다. 더 떨어뜨리지 않는다) |
-| **K4** | **기존 험지 6종(rough6)** | 99 ~ 100 % |
+| **K4** | **기존 험지 6종(rough6)** | 0.5 m/s **99 ~ 100** · 1.0 m/s **전부 100** · 1.5 m/s **`random_rough` 90 · 나머지 100** |
 | **K5** | **gap 폭 곡선** | 1.0 m/s 에서 폭 1.0 m 까지 100 % |
 
 > **K1 ~ K5 중 하나라도 유의하게 떨어지면 그 판은 채택하지 않는다.** gap 을 되돌리면서 정지를 얻는 것은 손해다.
@@ -91,6 +91,11 @@
 
 ### 2-1. 값이 다른 17개
 
+> 키 단위로 세면 **18개**다. 18번째는 `log_dir` 이고 학습 손잡이가 아니라 기록
+> 필드다. 9절 「학습 전」 관문이 **항목 수**로 판정하므로 세는 규칙을 못 박는다.
+> **17 + `log_dir` = 18.** 키 총수도 같은 규칙으로 651 대 675 이고, 머리글의
+> 650 대 674 는 `log_dir` 을 뺀 셈이다.
+
 | 묶음 | 항목 | 팀장 기준선 | 석헌 = foothold-v1 |
 |---|---|---|---|
 | **명령 6** | `lin_vel_x` | (-1.0, 1.0) | **(0.5, 1.5)** |
@@ -107,10 +112,21 @@
 | **지형 비율 6** | `pyramid_stairs` 외 3종 | 0.2 | **0.18** |
 | | `hf_pyramid_slope` 외 1종 | 0.1 | **0.09** |
 
-### 2-2. 새로 더한 2블록
+### 2-2. 새로 더한 키 24개 `확인됨`
 
-- **`forward_gap`** · proportion 0.1 · `gap_width_range` (0.05, 0.2) · `gap_center_ratio` 0.5 · `approach_distance` 1.5 · `slab_thickness` 1.0 · `minimum_spawn_x` 0.75
-- **`fell_below_terrain`** 종료항 · `minimum_relative_height` -3.0
+**세 곳에서 나온다.** v1.0 은 「2블록」이라고만 적었는데, 관측 매개변수 둘이 빠져 있었다.
+
+| 어디 | 키 수 | 무엇 |
+|---|---:|---|
+| **`forward_gap`** | 9 | proportion 0.1 · `gap_center_ratio` 0.5 · `approach_distance` 1.5 · `slab_thickness` 1.0 · `minimum_spawn_x` 0.75 · `size` · `function` · `flat_patch_sampling` · **`gap_width_range`** |
+| **`fell_below_terrain`** | 13 | 종료항 · `minimum_relative_height` -3.0 · `asset_cfg` 11칸 |
+| **`height_scan.params`** | 2 | `offset` 0.5 · `miss_value` 1.0 |
+| 합계 | **24** | |
+
+> **`gap_width_range` 는 석헌 원본이 (0.05, 0.20) 이고 foothold-v1 은 (0.15, 0.40) 이다.**
+> 2-1 표 머리가 「석헌 = foothold-v1」이라 이 한 줄만 예외다. 그것이 A 와 B 의
+> 차이이고(1-1 절), **D 는 (0.15, 0.40) 을 물려받는다**(4-2 절). 이 절만 떼어 읽고
+> (0.05, 0.20) 으로 D 를 만들면 안 된다.
 
 ### 2-3. 안 바뀐 것
 
@@ -336,4 +352,5 @@ NVIDIA 소스
 
 | 판 | 언제 | 무엇이 바뀌었나 | 근거 |
 |---|---|---|---|
+| v1.1 | 2026-09-18 | K4 를 속도별로 갈랐다(1.5 m/s `random_rough` 가 90 이라 「99 ~ 100」이 정답지와 어긋났다). 2-2 를 「2블록」에서 「세 곳 24키」로 고쳤다(`height_scan.params` 둘이 빠져 있었다). 2-1 에 `log_dir` 을 세는 규칙을 달았다 | rl 세션 재확인 + 발행 전 검증(gpt-6-astra) |
 | v1.0 | 2026-09-18 | 처음 씀. 팀장 기준선과 석헌 원본의 키 전수 대조로 17항목 + 2블록을 확정하고, 손잡이를 기능별로 나눠 ②③만 되돌리는 D 를 설계했다. 목표(G1~G4)와 잃지 말 것(K1~K5)을 0절에 명시했다 | 전수 대조 실측 |

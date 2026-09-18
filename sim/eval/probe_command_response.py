@@ -105,7 +105,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import timeseries  # noqa: E402
 import probe_metrics  # noqa: E402
-from overlay import trace as trace_mod  # noqa: E402,F401
 
 
 # ---------------------------------------------------------------------------
@@ -201,7 +200,6 @@ simulation_app = app_launcher.app
 import gymnasium as gym  # noqa: E402
 from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 
-from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402,F401
 from isaaclab.utils.math import quat_apply  # noqa: E402
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 
@@ -632,7 +630,8 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
             alive = alive & ~newly
 
         if not alive.any():
-            print(f"        {t:.2f} s 에 전부 넘어졌습니다.", flush=True)
+            # 저장값과 같은 눈금으로 적는다. `fell_at` 은 `t + dt` 다.
+            print(f"        {t + dt:.2f} s 에 전부 넘어졌습니다.", flush=True)
             break
 
     return finish_scenario(
@@ -662,12 +661,16 @@ def collect_sample(robot, contact_sensor, command_term, num_envs, device,
         foot_pos = robot.data.body_pos_w[:, foot_body_slots, :]
 
         # **이력 최댓값이 아니라 «지금» 접촉력이다.** 하네스는
-        # `net_forces_w_history` 의 최댓값을 적는데(`eval_generalization.py`
-        # 1036행), 이 센서는 `history_length=3` 이라 60 ms 앞의 힘이 섞여 들어온다
-        # `확인됨` (`velocity_env_cfg.py` 74행).
+        # `net_forces_w_history` 의 최댓값을 적는다(`eval_generalization.py`
+        # 1036행).
+        #
+        # 이 센서는 `history_length=3` 이고(`velocity_env_cfg.py` 74행)
+        # `update_period` 가 `sim.dt` 0.005 초다(같은 파일 320행 · 311행)
+        # `확인됨`. 그래서 이력 세 칸은 **지금 · 5 ms 전 · 10 ms 전**이고
+        # 최댓값은 10 ms 앞까지를 끌어온다. 제어 주기 20 ms 보다는 짧다.
         #
         # 걷는 판을 셀 때는 그것이 문제가 안 되지만 **「서 있는가」를 재는 순간
-        # 치명적이다.** 발이 이미 떨어졌는데 60 ms 전 힘 때문에 접지로 세면
+        # 치명적이다.** 발이 이미 떨어졌는데 10 ms 전 힘 때문에 접지로 세면
         # 미끄러짐과 동시 접지 시간이 둘 다 부풀어 오른다. 검증에서 실제로
         # 잡혔다 (네 발 접촉력이 지금 0 인데 2 N 으로 기록됨).
         #
@@ -691,7 +694,7 @@ def collect_sample(robot, contact_sensor, command_term, num_envs, device,
 
 def rows_from_buffer(block, dt, joint_names, ts_offset, start_xy, fwd_dir,
                      floor_z):
-    """버퍼 한 판을 92열 줄 목록으로. `timeseries_rows()` 와 같은 열 이름이다."""
+    """버퍼 한 판을 93열 줄 목록으로. `timeseries_rows()` 와 같은 열 이름이다."""
     def cut(sample, field):
         low, high = ts_offset[field]
         return sample[low:high]
@@ -819,7 +822,7 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
                   flush=True)
 
             degenerate.append(
-                probe_metrics.degenerate_entry(n, dt, fell_s)
+                probe_metrics.degenerate_entry(n, dt, fell_s, env_id=env_id)
             )
             continue
 
@@ -852,6 +855,8 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
             rows, dt, joint_names, fell_cpu[env_id],
             contact_threshold_n=args_cli.contact_threshold_n,
             settle_speed_mps=args_cli.settle_speed_mps,
+            env_id=env_id,
+            timeseries_file=os.path.basename(path),
         ))
 
     result = probe_metrics.aggregate(
@@ -862,7 +867,11 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
 
     with open(os.path.join(out_dir, "per_env.json"), "w",
               encoding="utf-8") as handle:
-        json.dump(per_env + degenerate, handle, ensure_ascii=False, indent=2)
+        # **env 번호순으로 적는다.** 정상 판과 표본 부족 판을 그냥 이어 붙이면
+        # 순서가 뒤섞여 parquet 파일과 대응이 안 된다.
+        everyone = sorted(per_env + degenerate,
+                          key=lambda entry: entry["env_id"])
+        json.dump(everyone, handle, ensure_ascii=False, indent=2)
 
     return result
 
@@ -944,7 +953,8 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         "foot_contact_semantics": (
             "foot_contact_*_n 은 그 스텝의 «지금» 접촉력이다. "
             "eval_generalization.py 는 같은 이름의 열에 net_forces_w_history "
-            "최댓값(history_length=3, 60 ms)을 적는다. 프로브는 «서 있는가» 를 "
+            "최댓값을 적는다. 그 이력 세 칸은 지금과 5 ms 전과 10 ms 전이다 "
+            "(history_length=3 · update_period=sim.dt=0.005). 프로브는 «서 있는가» 를 "
             "재는 도구라 이력 최댓값을 쓰면 이미 뗀 발이 접지로 세어져 "
             "미끄러짐과 동시 접지 시간이 부푼다. 두 파일의 이 열을 "
             "그대로 견주지 마십시오"
