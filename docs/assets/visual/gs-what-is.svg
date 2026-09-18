@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="412" viewBox="-20 -20 920 412" font-family="Pretendard, Malgun Gothic, sans-serif">
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</style>
+
+<text x="0" y="16" font-size="17" font-weight="700" fill="var(--ink)">가우시안 스플래팅이 담는 것</text>
+<text x="0" y="38" font-size="12" fill="var(--ink-2)">장면을 삼각형 메시가 아니라 «흐릿한 타원» 수십만 개로 적는다</text>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--bad)"/></marker></defs>
+<rect x="0.0" y="58.0" width="330.0" height="292.0" rx="8" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1"/>
+<text x="16.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">가우시안 하나가 들고 있는 숫자</text>
+<ellipse cx="152" cy="152" rx="62" ry="30" transform="rotate(-24 152 152)" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="152" cy="152" r="3.2" fill="var(--accent)"/>
+<text x="16.0" y="218.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink)">위치</text>
+<text x="84.0" y="218.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--accent)">3개</text>
+<text x="124.0" y="218.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">어디에 있나</text>
+<text x="16.0" y="238.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink)">크기</text>
+<text x="84.0" y="238.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--accent)">3개</text>
+<text x="124.0" y="238.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">세 축으로 얼마나 퍼지나</text>
+<text x="16.0" y="258.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink)">회전</text>
+<text x="84.0" y="258.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--accent)">4개</text>
+<text x="124.0" y="258.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">어느 쪽으로 누웠나</text>
+<text x="16.0" y="278.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink)">불투명도</text>
+<text x="84.0" y="278.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--accent)">1개</text>
+<text x="124.0" y="278.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">얼마나 진한가</text>
+<text x="16.0" y="298.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink)">색 (SH)</text>
+<text x="84.0" y="298.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--accent)">48개</text>
+<text x="124.0" y="298.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">보는 각도마다 다른 색</text>
+<text x="16.0" y="324.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--ink-2)">모두 59개. 이 숫자만 사진에 맞춰 바꾼다</text>
+<text x="366.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">이것이 화면에 찍히는 네 단계</text>
+<rect x="366.0" y="102.0" width="494.0" height="52.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<circle cx="392" cy="128" r="13" fill="var(--accent)"/>
+<text x="392.0" y="133.0" font-size="13" font-weight="700" text-anchor="middle" fill="var(--card)">1</text>
+<text x="416.0" y="124.0" font-size="12" font-weight="700" text-anchor="start" fill="var(--ink)">납작하게 누른다</text>
+<text x="416.0" y="142.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">3D 타원을 카메라에서 본 2D 타원으로</text>
+<line x1="613.0" y1="156.0" x2="613.0" y2="162.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="366.0" y="164.0" width="494.0" height="52.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<circle cx="392" cy="190" r="13" fill="var(--accent)"/>
+<text x="392.0" y="195.0" font-size="13" font-weight="700" text-anchor="middle" fill="var(--card)">2</text>
+<text x="416.0" y="186.0" font-size="12" font-weight="700" text-anchor="start" fill="var(--ink)">앞뒤로 줄 세운다</text>
+<text x="416.0" y="204.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">카메라에 가까운 것부터</text>
+<line x1="613.0" y1="218.0" x2="613.0" y2="224.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="366.0" y="226.0" width="494.0" height="52.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<circle cx="392" cy="252" r="13" fill="var(--accent)"/>
+<text x="392.0" y="257.0" font-size="13" font-weight="700" text-anchor="middle" fill="var(--card)">3</text>
+<text x="416.0" y="248.0" font-size="12" font-weight="700" text-anchor="start" fill="var(--ink)">겹쳐 칠한다</text>
+<text x="416.0" y="266.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">진한 것이 뒤를 가린다</text>
+<line x1="613.0" y1="280.0" x2="613.0" y2="286.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="366.0" y="288.0" width="494.0" height="52.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<circle cx="392" cy="314" r="13" fill="var(--accent)"/>
+<text x="392.0" y="319.0" font-size="13" font-weight="700" text-anchor="middle" fill="var(--card)">4</text>
+<text x="416.0" y="310.0" font-size="12" font-weight="700" text-anchor="start" fill="var(--ink)">사진과 견준다</text>
+<text x="416.0" y="328.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">틀린 만큼 59개 숫자를 고친다</text>
+<text x="0.0" y="368.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-2)">NeRF 는 픽셀마다 광선 위 수십 점을 신경망에 묻는다. 스플래팅은 타원을 화면에 바로 뿌린다. 그래서 빠르다</text>
+</svg>
