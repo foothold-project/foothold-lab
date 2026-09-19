@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="456" viewBox="-20 -20 920 456" font-family="Pretendard, Malgun Gothic, sans-serif">
+<style>
+:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--deep:#0c1117;--dim:#3ec7b4;--dim-ink:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ink-soft:#4a5566;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}
+
+</style>
+
+<text x="0" y="16" font-size="17" font-weight="700" fill="var(--ink)">카메라가 움직여야 깊이가 생긴다</text>
+<text x="0" y="38" font-size="12" fill="var(--ink-2)">두 시점에서 같은 점을 보는 «각» 이 깊이의 정확도를 정한다</text>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--bad)"/></marker></defs>
+<rect x="0.0" y="58.0" width="416.0" height="236.0" rx="8" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1"/>
+<text x="16.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">걸어다니며 찍는다</text>
+<text x="16.0" y="100.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">두 시점이 멀다. 광선이 또렷하게 만난다</text>
+<text x="208.0" y="124.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--accent)">각 넓다</text>
+<rect x="111.0" y="136" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<line x1="124.0" y1="153" x2="208" y2="221.0" stroke="var(--accent)" stroke-width="1"/>
+<rect x="279.0" y="136" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<line x1="292.0" y1="153" x2="208" y2="221.0" stroke="var(--accent)" stroke-width="1"/>
+<ellipse cx="208" cy="230" rx="7" ry="9.0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+<line x1="40.0" y1="276" x2="376.0" y2="276" stroke="var(--ink-3)" stroke-width="2"/>
+<text x="208.0" y="292.0" font-size="11" font-weight="400" text-anchor="middle" fill="var(--ink-3)">땅</text>
+<rect x="444.0" y="58.0" width="416.0" height="236.0" rx="8" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1"/>
+<text x="460.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">한자리에서 둘러본다</text>
+<text x="460.0" y="100.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">두 시점이 붙어 있다. 광선이 나란하다</text>
+<text x="652.0" y="124.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--bad)">각 거의 없다</text>
+<rect x="615.0" y="136" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<line x1="628.0" y1="153" x2="652" y2="196.0" stroke="var(--bad)" stroke-width="1"/>
+<rect x="663.0" y="136" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<line x1="676.0" y1="153" x2="652" y2="196.0" stroke="var(--bad)" stroke-width="1"/>
+<ellipse cx="652" cy="230" rx="7" ry="34.0" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.6"/>
+<line x1="484.0" y1="276" x2="820.0" y2="276" stroke="var(--ink-3)" stroke-width="2"/>
+<text x="652.0" y="292.0" font-size="11" font-weight="400" text-anchor="middle" fill="var(--ink-3)">땅</text>
+<text x="0.0" y="330.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">깊이 오차는 각에 반비례한다</text>
+<rect x="0.0" y="342.0" width="286.0" height="46.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<text x="14.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">16도</text>
+<text x="62.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--accent)">0.18 %</text>
+<text x="14.0" y="381.0" font-size="10" font-weight="400" text-anchor="start" fill="var(--ink-3)">COLMAP 이 첫 쌍에 요구하는 각</text>
+<rect x="297.0" y="342.0" width="286.0" height="46.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<text x="311.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">1.5도</text>
+<text x="359.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--accent)">1.9 %</text>
+<text x="311.0" y="381.0" font-size="10" font-weight="400" text-anchor="start" fill="var(--ink-3)">이보다 좁으면 점을 버린다</text>
+<rect x="594.0" y="342.0" width="286.0" height="46.0" rx="8" fill="var(--card)" stroke="var(--rule)" stroke-width="1"/>
+<text x="608.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">0.1도</text>
+<text x="656.0" y="364.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--bad)">29 %</text>
+<text x="608.0" y="381.0" font-size="10" font-weight="400" text-anchor="start" fill="var(--ink-3)">10 m 앞을 몇 cm 움직여 찍은 경우</text>
+<text x="0.0" y="414.0" font-size="11" font-weight="700" text-anchor="start" fill="var(--bad)">우리 1차 촬영은 36초 동안 0.80 m 움직였다. 그 각으로 첫 쌍이 성립하는 거리는 2.85 m 까지다</text>
+</svg>

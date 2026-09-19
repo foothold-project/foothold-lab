@@ -283,8 +283,16 @@ def scatter_svg():
       이 자료는 「거의 다 100 % 이고 둘만 다르다」라서 겹칠 수 있는 형태로
       그리면 안 된다. 막대는 한 줄에 하나라 겹칠 수가 없다.
     """
+    # ★ #435. 「값이 있나」만 보면 모자란다. **전수로 잰 것인가**도 본다.
+    #   참여도는 바닥이 있어야 잴 수 있다. gap 은 바닥이 없어 광선이 맞힐 면이
+    #   없고, 21,640 에피소드 중 값이 나온 것이 5개뿐이다. 그 5개는 전진 1.53 m
+    #   이하로 출발 발판을 못 벗어난 것들이다.
+    #   지금은 gap 의 ratio 가 None 이라 저절로 빠지지만, 표본이 «몇 개라도»
+    #   있으면 그 숫자가 100 % 표본과 같은 모양으로 실린다. 그 자리를 막는다.
+    #   갤러리도 같은 규칙을 쓴다 (`web/gallery/gallery.js` 의 `G.engText`).
     pts = [(t, engage[t]["ratio"], score.get((t, "foothold-v1", "1")))
            for t in TERR if t in engage and engage[t]["ratio"] is not None
+           and engage[t].get("ratio_n") == engage[t].get("n")
            and score.get((t, "foothold-v1", "1")) is not None]
     if not pts:
         return ('<svg viewBox="0 0 780 60" width="100%%" role="img" '

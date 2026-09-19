@@ -323,6 +323,8 @@ td .bt:hover{text-decoration:underline}
 .vids figure{margin:0;background:var(--panel);border:1px solid var(--line);
   border-radius:var(--radius);overflow:hidden}
 .vids video{display:block;width:100%;height:auto;background:#000}
+.vids.wide{grid-template-columns:1fr}
+.vids.wide video{aspect-ratio:16/3;min-height:120px;object-fit:contain}
 .vids figcaption{font-size:12.5px;color:var(--sub);padding:10px 14px 13px;line-height:1.6}
 .vids figcaption b{display:block;color:var(--brand-ink);font-size:15px;font-weight:800}
 
@@ -375,6 +377,20 @@ td .bt:hover{text-decoration:underline}
 .ev.code{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
 .ev.rm{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
 .ev.unk{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
+
+/* ---------- 라이트박스 (app.js 가 img·svg[role=img] 에 .zoomable 을 달고 클릭 시 .lb 를 띄운다) ---------- */
+.zoomable{cursor:zoom-in}
+.no-zoom,.no-zoom *{cursor:auto}
+.lb{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);display:grid;place-items:center;
+  overflow:hidden;touch-action:none;user-select:none;cursor:grab;overscroll-behavior:contain}
+.lb[hidden]{display:none}
+.lb:active{cursor:grabbing}
+.lb-stage{transform-origin:center;will-change:transform;line-height:0}
+.lb-stage img{display:block;max-width:94vw;max-height:90vh;width:auto;height:auto;border-radius:6px}
+.lb-stage svg{display:block;height:auto;max-height:90vh;background:var(--panel);border-radius:10px;padding:16px;box-sizing:border-box}
+.lb-x{position:absolute;top:12px;right:12px;z-index:1;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.45);color:#fff;font-size:26px;line-height:1;cursor:pointer}
+.lb-x:hover,.lb-x:focus-visible{background:var(--brand);border-color:var(--brand);outline:none}
 
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -882,7 +898,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=af548a24').then(function(r){
+    fetch('/assets/search-index.json?v=50e31d7d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1002,7 +1018,7 @@ body>*{flex-shrink:0}
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-16 14:35 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-18 18:49 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <!-- nav:crumb -->
 <nav class="crumb" aria-label="현재 위치"><ol><li><a href="tech-rl.html">기술 문서</a></li><li>강화학습·제어</li><li aria-current="page">시뮬레이션 RL</li></ol></nav>
@@ -1071,5 +1087,5 @@ body>*{flex-shrink:0}
 <!-- nav:pagerow -->
 <!-- /nav:pagerow -->
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpwo0errok</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpq7rtin3q</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
