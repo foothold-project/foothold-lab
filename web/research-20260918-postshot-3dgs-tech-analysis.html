@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=8fc94194').then(function(r){
+    fetch('/assets/search-index.json?v=50e31d7d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -868,7 +868,7 @@ body>*{flex-shrink:0}
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>실제 장소를 시뮬레이션으로 옮기는 기술 · 가우시안 스플래팅 해설과 Postshot 평가</h1>
   <p class="lede">가우시안 스플래팅이 무엇을 담고 어떻게 화면에 찍히는지부터 설명하고, 우리 촬영본으로 무엇이 되고 무엇이 안 되는지를 보인 뒤, 그 위에서 Postshot 이라는 상용 도구를 평가한다. 파는 기능의 거의 전부가 공개 구현에 대응하고, 움직이는 사람은 도구가 아니라 동기 카메라가 가른다</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v2.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-18 13:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260918-postshot-3dgs-tech-analysis.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.1</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-18 13:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260918-postshot-3dgs-tech-analysis.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
@@ -878,16 +878,15 @@ body>*{flex-shrink:0}
 근거: jawset.com 공식 문서와 릴리스노트 13개 버전 전수 · 홈페이지 영상 7편 프레임 추출 · 논문 arXiv 원문 · COLMAP 소스 직접 확인 · 우리 1차 PoC 원자료 재측정
 요지: 가우시안 스플래팅이 무엇을 담고 어떻게 화면에 찍히는지부터 설명하고, 우리 촬영본으로 무엇이 되고 무엇이 안 되는지를 보인 뒤, 그 위에서 Postshot 이라는 상용 도구를 평가한다. 파는 기능의 거의 전부가 공개 구현에 대응하고, 움직이는 사람은 도구가 아니라 동기 카메라가 가른다
 상태: 초안
-판: v2.0
+판: v2.1
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a></p></blockquote>
 </section>
 <section id="s1"><span id="0"></span><h2>0. 이 문서를 읽는 법</h2>
 <h3>0-1. 무엇을 다루나</h3>
 <p><b>기술 해설이 먼저고 도구 평가가 나중이다.</b> 순서를 바꾸면 「이 제품은 이런 기능이 있다」는 소개문이 되어 버린다. 우리에게 필요한 것은 <b>그 기능이 무엇을 하는 물건인지 알고 우리 것으로 고르는 눈</b>이다.</p>
 <p>1절에서 가우시안 스플래팅 자체를 그림으로 설명한다. 2절에서 <b>우리가 찍은 광주 도로 영상</b>으로 실제로 무엇이 되고 무엇이 안 되는지 본다. 3절과 4절이 그 「안 되는 것」 둘의 원인이다. 5절에서 왜 트윈이 둘로 갈리는지, 6절부터 Postshot 이다.</p>
-<h3>0-2. 이 문서가 다시 쓰지 않는 것</h3>
-<p><code>inbox/jay/20260916-3dgs-test/DESIGN-real-to-sim.md</code> (작성 오흥재) 가 이미 답한 것은 가리키기만 한다.</p>
-<div class="tw"><table><thead><tr><th>물음</th><th>어디</th></tr></thead><tbody><tr><td>트윈을 충돌 지형과 배경으로 왜 쪼개나</td><td>DESIGN 1-2</td></tr><tr><td>1차 PoC 진단 전체</td><td>DESIGN 3</td></tr><tr><td>지면 복원 후보 A부터 E와 측정표</td><td>DESIGN 5-1 · 5-3</td></tr><tr><td>표면 복원 6종의 Windows 미지원과 WSL2 방침</td><td>DESIGN 5-1-1</td></tr><tr><td>재촬영 설계서와 현장 체크리스트</td><td>DESIGN 7</td></tr><tr><td>축척 확정 절차</td><td>DESIGN 6</td></tr></tbody></table></div>
+<h3>0-2. 이 문서 하나로 끝난다</h3>
+<p><b>다른 문서를 열지 않아도 되게 썼다.</b> 왜 트윈을 둘로 쪼개는지, 지면을 무엇으로 복원할지, 그 방법들이 Windows 에서 왜 막히는지, 축척을 어떻게 정하는지, 다시 찍을 때 무엇을 지킬지까지 <b>5절 안에 다 적었다.</b> 바깥 사람에게 이 주소 하나만 보내도 읽힌다.</p>
 <h3>0-3. 세 줄</h3>
 <ol><li><b>Postshot 은 배경을 만드는 도구다.</b> 메시를 내보내는 기능이 아예 없어서 충돌 지형에는 원리적으로 쓸 수 없다</li><li><b>그 도구가 파는 기능의 거의 전부가 Apache-2.0 공개 구현에 대응한다.</b> 정체를 모르는 것은 <code>Splat3</code> 프로파일 하나뿐이다</li><li><b>움직이는 사람은 어느 쪽을 써도 동기 카메라 없이는 안 된다.</b> 도구의 한계가 아니라 삼각측량의 한계다</li></ol>
 </section>
@@ -914,7 +913,7 @@ body>*{flex-shrink:0}
 <h3>1-5. ★ 이것이 «표면» 이 아니라는 것</h3>
 <p><b>우리 프로젝트에서 가장 중요한 한 줄이다.</b></p>
 <p>가우시안은 흐릿한 얼룩이지 면이 아니다. 발을 디딜 수 있는 바닥이 아니고, 광선을 쏘아 높이를 잴 대상도 아니다. <b>보기에 바닥처럼 보이는 것과 물리적으로 바닥인 것은 다른 물건이다.</b></p>
-<p>그래서 시뮬레이션에 쓰려면 <b>충돌 지형을 따로 만들어야 한다.</b> 이것이 DESIGN 1-2 가 말하는 「트윈이 둘로 갈린다」이고, NVIDIA 공식 파이프라인도 같은 구조다 (5절).</p>
+<p>그래서 시뮬레이션에 쓰려면 <b>충돌 지형을 따로 만들어야 한다.</b> 이것이 우리가 「트윈이 둘로 갈린다」고 부르는 설계이고, NVIDIA 공식 파이프라인도 같은 구조다. 5절에서 자세히 본다.</p>
 </section>
 <section id="s3"><span id="2"></span><h2>2. 우리 자료로 보면 이렇다</h2>
 <p>말로만 하면 안 와닿는다. <b>우리가 실제로 찍고 돌린 결과</b>다.</p>
@@ -925,11 +924,24 @@ body>*{flex-shrink:0}
 <p><b>안 되는 것 둘</b> · <b>원본 왼쪽에 걸어가던 사람 둘이 사라졌다.</b> 지워진 것이 아니라 애초에 복원되지 않았다.</p>
 <p>그리고 아래 왼쪽의 주황색 고리가 <b>카메라가 움직인 궤적 전부</b>다. 장면 크기에 비해 얼마나 작은지 보인다. 아래 오른쪽은 지면 메시만 남긴 것인데 <b>카메라 주변만 복원되고 나머지는 아예 없다.</b></p>
 <p>3절과 4절이 이 두 가지 「안 되는 것」의 원인이다. <b>둘은 원인이 다르다.</b></p>
+<h3>2-2. 그리고 로봇이 서는 자리가 비어 있었다</h3>
+<p>사진으로는 안 보이지만 더 심각한 것이 하나 더 있었다. <b>Go2 를 스폰시킨 바로 그 자리의 지면이 한 칸도 관측되지 않았다.</b></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-blindspot.png?v=62b08268" alt="그림 3 · 스폰 지점 둘레. 어두운 영역이 관측 없이 지어낸 칸이고 별이 로봇이 서는 자리다" loading="lazy"><figcaption>그림 3 · 스폰 지점 둘레. 어두운 영역이 관측 없이 지어낸 칸이고 별이 로봇이 서는 자리다</figcaption></figure></p>
+<div class="tw"><table><thead><tr><th>원점에서의 반경</th><th>칸 수</th><th>관측된 칸</th><th>지어낸 칸</th></tr></thead><tbody><tr><td><b>0.5 m</b></td><td>316</td><td><b>0 (0.0 %)</b></td><td>316 (100 %)</td></tr><tr><td>1.0 m</td><td>1,260</td><td>411 (32.6 %)</td><td>849 (67.4 %)</td></tr><tr><td>1.5 m</td><td>2,832</td><td>1,698 (60.0 %)</td><td>1,134 (40.0 %)</td></tr><tr><td>2.0 m</td><td>5,033</td><td>3,617 (71.9 %)</td><td>1,416 (28.1 %)</td></tr></tbody></table></div>
+<p><b>폰은 자기가 선 자리의 바닥을 못 본다.</b> 1.4 m 높이에서 앞을 보면 발밑은 화각 밖이다. 그런데 로봇은 바로 그 자리에 세워졌다.</p>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-camgeom.png?v=183527fb" alt="그림 4 · 카메라 높이와 하향각에 따라 바닥이 보이기 시작하는 거리" loading="lazy"><figcaption>그림 4 · 카메라 높이와 하향각에 따라 바닥이 보이기 시작하는 거리</figcaption></figure></p>
+<div class="tw"><table><thead><tr><th>설정</th><th>바닥이 보이기 시작</th><th>보이는 끝</th><th>가장 가까운 곳 해상도</th></tr></thead><tbody><tr><td><b>이번 촬영</b> 1.4 m · 하향 0도</td><td><b>2.17 m</b></td><td>지평선</td><td>1 px = 2.6 mm</td></tr><tr><td>1.4 m · 하향 30도</td><td>0.72 m</td><td>지평선</td><td>1 px = 0.9 mm</td></tr><tr><td><b>권장</b> 0.9 m · 하향 35도</td><td><b>0.37 m</b></td><td>24.2 m</td><td>1 px = 0.4 mm</td></tr><tr><td>0.9 m · 하향 45도</td><td>0.19 m</td><td><b>4.2 m</b></td><td>1 px = 0.2 mm</td></tr></tbody></table></div>
+<p>45도는 너무 숙인 것이다. <b>4.2 m 밖이 안 보이면 멀리 있는 건물과 표지판 같은 원경 특징점이 사라져 카메라 위치 추정 자체가 흔들린다.</b> 35도가 발밑과 원경을 함께 잡는 지점이다.</p>
+<h3>2-3. 관측이 없는 자리는 «지어낸다»</h3>
+<p>빈 칸은 그냥 비어 있지 않고 양쪽 끝을 부드럽게 이어 메운다.</p>
+<div class="tw"><table><thead><tr><th>잰 것</th><th>값</th></tr></thead><tbody><tr><td>가장 긴 무관측 구간</td><td><b>1.90 m</b></td></tr><tr><td>그 구간 안에서 만들어진 높이 변화</td><td><b>14.6 cm</b></td></tr><tr><td>반경 0.5 m 안(관측 0 %)의 높이 폭</td><td><b>13.8 cm</b></td></tr></tbody></table></div>
+<p><b>1.90 m 에 걸쳐 관측이 하나도 없는데 지면이 14.6 cm 오르내린다.</b> 측정된 지형이 아니라 차도와 인도의 높이를 이어 만든 곡선이다. 실제로 거기 무엇이 있었는지는 이 자료로 알 수 없다.</p>
+<p><b>메우는 것 자체가 잘못은 아니다.</b> 문제는 「보행 관심 영역 관측 68.5 %」 같은 숫자가 <b>로봇이 실제로 밟는 자리의 품질을 말해 주지 않는다</b>는 것이다. 로봇이 밟는 중심부가 바로 그 0 % 구간이다.</p>
 </section>
 <section id="s4"><span id="3"></span><h2>3. 왜 원경이 뭉개졌나 · 시차</h2>
 <h3>3-1. 깊이는 «각» 에서 나온다</h3>
 <p>한 장의 사진만으로는 거리를 알 수 없다. 작은 것이 가까이 있는지 큰 것이 멀리 있는지 구분할 방법이 없다. 그래서 <b>두 자리에서 같은 점을 보고, 두 시선이 만나는 각으로 거리를 잰다.</b> 사람 눈이 둘인 이유와 같다.</p>
-<p><figure class="mdimg"><img src="assets/visual/gs-parallax.svg?v=6291205f" alt="그림 3 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다" loading="lazy"><figcaption>그림 3 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-parallax.svg?v=6291205f" alt="그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다" loading="lazy"><figcaption>그림 5 · 두 시점이 멀면 광선이 또렷하게 만나고, 붙어 있으면 광선이 나란해져 만나는 자리가 길게 번진다</figcaption></figure></p>
 <p>각이 좁아지면 두 광선이 거의 나란해진다. 나란한 두 선은 <b>어디서 만나는지가 불분명하다.</b> 그림 오른쪽의 길쭉한 얼룩이 그 「불분명함」이다.</p>
 <p>관계는 간단하다. <b>깊이 오차는 각에 반비례하고, 거리와는 무관하다.</b></p>
 <div class="tw"><table><thead><tr><th>두 시점이 이루는 각</th><th>깊이 오차</th></tr></thead><tbody><tr><td>16도</td><td>0.18 %</td></tr><tr><td>1.5도</td><td>1.9 %</td></tr><tr><td>0.5도</td><td>5.7 %</td></tr><tr><td>0.1도</td><td><b>29 %</b></td></tr></tbody></table></div>
@@ -941,8 +953,8 @@ body>*{flex-shrink:0}
 defined for a moving camera.&quot;*</p></blockquote>
 <p>그리고 논문은 <b>그런 쌍에서는 아예 점을 만들지 않는다</b>고 적는다. 결과적으로 모든 쌍이 그렇게 분류되면 <b>유효한 시작 쌍을 영원히 못 찾는다.</b></p>
 <h3>3-3. 우리 촬영이 지탱할 수 있었던 거리</h3>
-<p><figure class="mdimg"><img src="assets/visual/gs-real-path.png?v=218941fe" alt="그림 4 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로" loading="lazy"><figcaption>그림 4 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로</figcaption></figure></p>
-<p>1차 촬영의 실측은 이렇다 (DESIGN 3-2 가).</p>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-path.png?v=218941fe" alt="그림 6 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로" loading="lazy"><figcaption>그림 6 · 왼쪽이 1차 촬영에서 폰이 실제로 움직인 궤적, 오른쪽이 같은 축척으로 그린 권장 경로</figcaption></figure></p>
+<p>1차 촬영을 다시 재어 보면 이렇다.</p>
 <div class="tw"><table><thead><tr><th>잰 것</th><th>값</th></tr></thead><tbody><tr><td>36초 동안 첫 프레임에서 가장 멀리 간 거리</td><td><b>0.80 m</b></td></tr><tr><td>프레임 사이 이동 중앙값</td><td>8.7 mm</td></tr><tr><td>누적 이동거리</td><td>3.28 m</td></tr></tbody></table></div>
 <p><b>누적 3.28 m 는 8.7 mm 씩 287 번 흔들린 합이다.</b> 폰은 사실상 한자리에 서서 둘러봤다.</p>
 <p>COLMAP 이 첫 쌍에 요구하는 각이 16도이고, 그 각을 만들려면 <b>피사체 거리의 약 28 %</b> 만큼 옆으로 움직여야 한다. 0.80 m 를 거꾸로 풀면 <b>2.85 m</b> 다. 영상 입력이면 임계가 절반(8도)으로 낮아지므로 <b>5.72 m</b> 까지다.</p>
@@ -963,7 +975,7 @@ defined for a moving camera.&quot;*</p></blockquote>
 <i>&quot;The moving shadows create holes in the ground of the radiance field.&quot;</i></p></blockquote>
 <p><b>움직이는 그림자가 지면에 구멍을 낸다</b>고까지 말한다. 우리가 야외 보도를 찍을 때 정확히 걸릴 자리다.</p>
 <h3>4-2. 왜 카메라 한 대로는 원리적으로 안 되나</h3>
-<p><figure class="mdimg"><img src="assets/visual/gs-moving.svg?v=c5a8397f" alt="그림 5 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다" loading="lazy"><figcaption>그림 5 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-moving.svg?v=c5a8397f" alt="그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다" loading="lazy"><figcaption>그림 7 · 정지한 것은 한 대가 걸어다니며 찍으면 광선 여럿이 한 점에서 만나지만, 움직이는 것은 같은 순간에 만날 두 광선이 없다</figcaption></figure></p>
 <p>정지한 대상은 내가 걸어다니는 동안 그대로 있으므로, 시각이 달라도 <b>같은 점</b>에 광선이 모인다. 움직이는 대상은 다르다. <b>어느 한 순간에 그 점을 보는 광선이 하나뿐</b>이다.</p>
 <p>0.5초 뒤 다른 각도에서 어깨를 다시 봐도 소용없다. 그것은 <b>다른 시각의 다른 위치의 어깨</b>다. 삼각측량할 두 광선이 영원히 생기지 않는다.</p>
 <p>그리고 광선이 하나뿐이면 <b>「깊이가 변한 것」과 「물체가 그 광선을 따라 움직인 것」이 구분되지 않는다.</b> 정보 자체가 없다.</p>
@@ -987,12 +999,33 @@ to one frame.&quot;*</p></blockquote>
 <p>주의할 것이 하나 있다. 논문들이 「모노큘러로 된다」고 말하는 데이터 상당수가 사실은 멀티뷰다. 피사체가 제자리에서 한 바퀴 도는 촬영은 <b>사람 기준으로 보면 턴테이블 스캔</b>이고, 21대 리그에서 한 대만 뽑아 쓴 것을 모노큘러라 부르기도 한다. 멀티뷰 단서가 진짜로 없으면 품질이 <b>1에서 2 dB, 복잡한 동작에서는 4에서 5 dB</b> 떨어진다는 측정이 있다. 4 dB 는 「조금 나쁨」이 아니라 다른 물건이다.</p>
 </section>
 <section id="s6"><span id="5"></span><h2>5. 그래서 트윈이 둘로 갈린다</h2>
-<p><figure class="mdimg"><img src="assets/visual/gs-real-ground.jpg?v=a437a73e" alt="그림 6 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다" loading="lazy"><figcaption>그림 6 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다</figcaption></figure></p>
+<p><figure class="mdimg"><img src="assets/visual/gs-real-ground.jpg?v=a437a73e" alt="그림 8 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다" loading="lazy"><figcaption>그림 8 · 지면 메시만 남긴 모습. 보이는 품질과 무관하게 «발이 닿을 면» 은 따로 만들어야 한다</figcaption></figure></p>
 <p>1-5 에서 말한 대로 가우시안은 표면이 아니다. 그래서 우리 파이프라인은 처음부터 둘로 갈라진다.</p>
 <div class="tw"><table><thead><tr><th></th><th>무엇</th><th>필요한 것</th></tr></thead><tbody><tr><td><b>충돌 지형</b></td><td>발이 닿는 면. 정책의 높이 스캔이 광선을 쏘는 대상</td><td><b>형상 정확도.</b> 1 cm 단차가 보행을 가른다</td></tr><tr><td><b>배경</b></td><td>사람과 카메라에게 보이는 것</td><td><b>보이는 품질</b></td></tr></tbody></table></div>
 <p>이것은 우리만의 발상이 아니다. <b>NVIDIA 공식 스테레오 파이프라인이 정확히 같은 구조</b>다. 깊이에서 메시를 만드는 경로와 외관을 학습하는 경로가 따로 돌고 하나의 파일에 정렬된 채로 담긴다.</p>
 <p>그리고 <b>공식 문서가 「스마트폰 한 대 경로에는 충돌 메시가 없다」고 인정한다.</b> 그 경로의 안내는 「로봇이 딛고 설 것이 있도록 바닥 평면을 직접 추가하라」다. 폰 한 대로 지면 형상을 얻을 수 없다는 것을 만든 쪽이 말하고 있다.</p>
-<p>우리 1차 PoC 는 이 분리가 실제로 동작함을 보였다. 같은 스플랫을 배경으로 띄우고 충돌은 별도 메시가 맡게 해서 <b>Windows Isaac Sim 안에서 정책을 걷게 했다</b> (<code>RESULTS-3dgs-terrain.md</code> 7절).</p>
+<p>우리 1차 PoC 는 이 분리가 실제로 동작함을 보였다. 같은 스플랫을 배경으로 띄우고 충돌은 별도 메시가 맡게 해서 <b>Windows Isaac Sim 안에서 정책을 걷게 했다.</b></p>
+<h3>5-2. 충돌 지형을 무엇으로 만드나 · 후보 다섯</h3>
+<p>같은 입력, 같은 카메라 자세, 같은 측정표를 쓴다. <b>입력을 고정하지 않으면 비교가 아니다.</b></p>
+<div class="tw"><table><thead><tr><th>후보</th><th>무엇</th><th>설치</th><th>왜 넣나</th></tr></thead><tbody><tr><td><b>A. 2.5D 높이 격자</b></td><td>지금 방법에 적응형 해상도와 강건 추정을 더한 것</td><td>없음</td><td>현재 기준선. 가장 싸고 빠르다 (3초)</td></tr><tr><td><b>B. 푸아송 표면 복원</b></td><td>점마다 면이 향하는 방향을 추정하고, 그 방향장과 맞는 매끈한 닫힌 면을 한 번에 푼다</td><td>open3d</td><td>곡면이 자연스럽다. 다만 방향이 흔들리면 물결이 생기고 데이터 없는 경계가 부풀어 오른다</td></tr><tr><td><b>C. 고전 다시점 스테레오</b></td><td>카메라 위치를 안 뒤 <b>픽셀마다</b> 이웃 사진과 대조해 깊이를 구하고 합친다</td><td>이미 있음</td><td><b>스플랫과 완전히 무관한 대조군.</b> 사진측량 표준. 허깨비 문제가 없다</td></tr><tr><td><b>D. 2D 가우시안 계열</b></td><td>가우시안을 3D 타원이 아닌 <b>2D 원반</b>으로 만들어 표면에 붙게 강제하고, 렌더한 깊이를 융합해 메시를 뽑는다</td><td><b>CUDA + 컴파일러</b></td><td>1-5절의 「표면 검사가 없다」는 한계를 정면으로 고치는 계열</td></tr><tr><td>E. 한 번에 푸는 모델</td><td>영상을 넣으면 반복 최적화 없이 점구름과 카메라 자세를 한 번에 낸다</td><td>CUDA · <b>Linux</b></td><td>큰 환경에서 대안. <b>우선순위 낮음</b></td></tr></tbody></table></div>
+<p><b>모든 후보에 같은 측정표를 댄다.</b></p>
+<div class="tw"><table><thead><tr><th>항목</th><th>재는 법</th><th>왜</th></tr></thead><tbody><tr><td><b>실측 대비 오차</b></td><td>연석 실측값과 비교</td><td>이것이 본 목적</td></tr><tr><td>보행 구간 관측 비율</td><td>지어내지 않고 실제 관측된 칸의 비율</td><td>지어낸 값의 양</td></tr><tr><td><b>스폰 반경 0.5 m 관측 비율</b></td><td>로봇이 서는 자리만</td><td>2-2절의 재발 방지</td></tr><tr><td>가짜 단차</td><td>실측 평면에서 ±3 cm 밖인 칸의 비율</td><td>없는 턱을 만들었나</td></tr><tr><td>연석 형상 보존</td><td>실제 높이 대비 복원 높이와 <b>옆면 기울기</b></td><td>2.5D 의 근본 한계가 실제로 문제가 되나</td></tr><tr><td>삼각형 수</td><td>메시 통계</td><td>높이 스캔이 매 스텝 광선을 쏘므로 10만 이하</td></tr><tr><td>설치 · 실행 비용</td><td>벽시계 시간</td><td>팀원이 따라 할 수 있는가</td></tr></tbody></table></div>
+<h3>5-3. ★ 표면 복원 계열은 Windows 공식 지원이 하나도 없다</h3>
+<p><b>이것이 이 계획의 가장 큰 기술 위험이다.</b> 조사 결과 여섯 기법 전부 Windows 를 공식 지원하지 않는다.</p>
+<div class="tw"><table><thead><tr><th>기법</th><th>메시 추출 방식</th><th>Windows</th></tr></thead><tbody><tr><td>SuGaR</td><td>푸아송</td><td><b>저장소가 비호환을 직접 인정</b></td></tr><tr><td>2DGS</td><td>TSDF 융합</td><td>공식 지원 없음. 비공식 포크만</td></tr><tr><td>GOF</td><td>Marching Tetrahedra</td><td>공식 지원 없음. WSL 우회 사례만</td></tr><tr><td>MILo</td><td>Delaunay + 학습된 SDF</td><td><b>Windows 언급이 아예 없다</b></td></tr><tr><td>RaDe-GS</td><td>TSDF + Marching Cubes</td><td>구 저장소에 빌드 실패 보고</td></tr><tr><td>PGSR</td><td>TSDF + Marching Cubes</td><td>언급 없음</td></tr></tbody></table></div>
+<p><b>그리고 여섯 전부 「도로 · 지면 전용 정량 평가」가 논문에도 저장소에도 없다.</b> 모두 실내 물체나 건물 벤치마크 기준이다. 곧 <b>우리 용도(야외 지면의 절대 높이 정확도)에서 어느 것이 나은지 말해 주는 공개 자료가 없다. 우리가 재야 한다.</b></p>
+<p><b>그래서 D 는 이렇게 다룬다.</b></p>
+<ol><li><b>WSL2 에서 PGSR 또는 2DGS 하나만</b> 빌드를 시도한다. 둘이 CUDA 요구가 가장 느슨하고 TSDF 경로라 후처리가 이어진다</li><li><b>빌드에 하루 이상 걸리면 중단하고 A · B · C 만으로 비교한다.</b> D 는 「해 보고 안 되면 기록으로 남긴다」 수준이다</li><li>SuGaR 는 저자가 비호환을 명시했으므로 <b>후보에서 뺀다</b></li><li><b>C 는 반드시 돌린다.</b> Windows 에서 확실히 도는 유일한 「스플랫과 무관한」 대조군이기 때문이다</li></ol>
+<h3>5-4. 축척은 노면 도색으로 정한다</h3>
+<p>단안 복원은 <b>절대 크기를 못 정한다.</b> 지금 우리 길이는 전부 「폰 높이 1.4 m」라는 가정 하나에 매달려 있고, 그 가정이 10 % 틀리면 1.27 cm 가 1.14 cm 도 1.40 cm 도 된다.</p>
+<p><b>바닥에 자를 놓고 다시 찍지 않는다.</b> 대신 <b>이미 찍혀 있는 노면 도색</b>을 쓴다. 법으로 규격이 정해져 있기 때문이다.</p>
+<div class="tw"><table><thead><tr><th>순위</th><th>기준자</th><th>규격값</th><th>왜 이 순위인가</th></tr></thead><tbody><tr><td><b>1</b></td><td><b>차선 도색 폭</b></td><td>실선·점선 <b>10 ~ 15 cm</b> · 중앙선 <b>15 ~ 20 cm</b></td><td><b>전국이 같은 값</b>이고 시공 허용오차가 엄격하다. 고대비라 복원에도 잘 잡힌다</td></tr><tr><td><b>2</b></td><td><b>횡단보도 줄무늬 폭</b></td><td><b>45 ~ 50 cm</b> · 간격은 폭의 <b>1.5배</b></td><td>법령 도면에서 직접 확인한 1차 자료. 커서 멀리서도 식별된다</td></tr><tr><td><b>3</b></td><td><b>연석 높이</b></td><td>실무 표준 <b>15 cm</b> · 법정 상한 25 cm</td><td><b>수직 방향</b> 검증에 유용. 다만 실제 편차가 커서 <b>단독 사용 금지</b></td></tr><tr><td>쓰지 않음</td><td>보도블록 · 맨홀</td><td><b>고정 치수 없음</b></td><td>규격이 「설계서에 따른다」이다</td></tr></tbody></table></div>
+<p><b>한계를 분명히 안고 간다.</b> 도색 규격은 값이 아니라 <b>범위</b>다. 그래서 도색만 쓰면 축척이 한 점이 아니라 <b>구간</b>으로 나온다. 구간을 점으로 좁히는 것은 <b>같은 장소에 다시 가서 줄자로 재는 것 한 번</b>이고, 그것은 촬영이 아니라 측정이라 이번 촬영분을 그대로 쓴다. 결과에는 <b>「규격 추정 축척」</b>이라고 적는다.</p>
+<p><b>지금 자료로 바로 되는 검산이 하나 있다.</b> 횡단보도의 <b>줄무늬 폭 대 간격 비 (약 1 대 1.5)는 축척과 무관</b>하다. 규격대로 시공됐는지를 실측 없이 확인할 수 있다.</p>
+<h3>5-5. 다시 찍을 때 지킬 것</h3>
+<div class="tw"><table><thead><tr><th>항목</th><th>1차</th><th>다음</th><th>왜</th></tr></thead><tbody><tr><td><b>이동 거리</b></td><td>0.8 m (제자리)</td><td><b>최소 10 m 이상 걸으면서</b></td><td>시차가 있어야 깊이가 나온다. <b>이것이 1번 문제다</b></td></tr><tr><td><b>카메라 높이</b></td><td>1.4 m</td><td><b>0.9 m</b></td><td>발밑이 화각에 들어온다</td></tr><tr><td><b>하향각</b></td><td>0도</td><td><b>35도</b></td><td>0.37 m 부터 보인다. 45도는 원경을 잃는다</td></tr><tr><td>시점 간격</td><td>8.7 mm</td><td><b>15 ~ 30도</b></td><td>삼각측량 임계를 감싼다</td></tr><tr><td>노출</td><td>자동</td><td><b>수동 고정</b> (조리개 · 셔터 · ISO)</td><td>밝기 변화가 특징점 대응을 깨뜨린다</td></tr><tr><td>초점</td><td>자동</td><td><b>수동 고정</b></td><td></td></tr><tr><td>셔터</td><td>자동</td><td>손으로 들면 <b>1/125 이상</b></td><td>블러는 노이즈보다 나쁘다</td></tr><tr><td>시간대</td><td>강한 직사광</td><td><b>흐린 날이나 그늘이 고른 시간</b></td><td>그림자가 색에 구워진다</td></tr><tr><td>사진 병행</td><td>없음</td><td>같은 구간을 <b>사진으로도</b> (30 % 이상 겹치게)</td><td>사진이 블러가 없어 더 좋다</td></tr></tbody></table></div>
+<p><b>현장에서 잴 것</b> · 횡단보도 줄무늬 폭과 간격 · 연석 높이 · 보도블록 한 장 크기. 잰 자리를 <b>사진으로 한 장</b> 남겨 나중에 영상의 어느 구간인지 맞춘다.</p>
+<p><b>나무 데크 구간은 추가 조치가 필요하다.</b> 반복 무늬라 그냥 찍으면 대응이 틀린다. 마스킹 테이프로 만든 X 자 같은 <b>서로 구별되는 표식</b>을 1 ~ 2 m 간격으로 흩어 두고, 촬영 후 회수한다. <b>표식은 지형이 아니므로 위치를 기록해 메시에서 제외한다.</b></p>
 </section>
 <section id="s7"><span id="6"></span><h2>6. Postshot 은 어떤 물건인가</h2>
 <p>이제 맥락 위에서 보면 평가가 쉽다.</p>
@@ -1024,7 +1057,7 @@ to one frame.&quot;*</p></blockquote>
 <p><b>가우시안 스플래팅을 쓴다.</b> 1차 PoC 에서 스플랫을 Isaac Sim 이 읽는 형식으로 바꿔 <b>Windows 에서 렌더까지 확인했다.</b> 그 변환 경로가 CPU 로만 돌아 무거운 개발 도구 설치가 필요 없었다는 점이 우리에게 크다.</p>
 <p>학습은 <code>gsplat</code> 또는 <code>Brush</code> 로 간다. 켤 것은 셋이다. <b>MCMC 전략</b>(점군이 부실해도 살아남는다) · <b>앤티에일리어싱</b>(7-1) · <b>카메라 자세 최적화</b>. 마지막 것이 의외로 크다. 이동하며 찍은 자료에서 <b>자세 최적화를 끈 손실이 롤링셔터나 모션블러 보정을 끈 손실보다 컸다.</b></p>
 <h3>8-2. 충돌 쪽 · 스플랫에서 뽑지 않는다</h3>
-<p><b>보이는 품질로 접촉 물리의 정확도를 주장하지 않는다.</b> 지면은 깊이를 모아 만드는 경로로 간다. 후보 비교는 DESIGN 5-1 에 있고, 이 문서가 더할 것은 <b>「어느 방법이 낫다」고 말해 주는 공개 자료가 우리 용도에는 없다</b>는 사실이다. 표면 복원 논문들은 전부 실내 물체나 건물 벤치마크로 겨루고, <b>야외 지면의 절대 높이 정확도를 잰 것이 없다.</b> 우리가 재야 한다.</p>
+<p><b>보이는 품질로 접촉 물리의 정확도를 주장하지 않는다.</b> 지면은 깊이를 모아 만드는 경로로 간다. 후보 다섯과 측정표는 5-2절에 있다. 여기에 덧붙일 것은 <b>「어느 방법이 낫다」고 말해 주는 공개 자료가 우리 용도에는 없다</b>는 사실이다. 표면 복원 논문들은 전부 실내 물체나 건물 벤치마크로 겨루고, <b>야외 지면의 절대 높이 정확도를 잰 것이 없다.</b> 우리가 재야 한다.</p>
 <h3>8-3. 움직이는 사람 · 지금은 안 한다</h3>
 <p>동기 카메라 리그가 필요하고 우리에겐 없다. <b>MVP 범위 밖이다.</b></p>
 <p>다만 나중에 필요해지면 <b>파라메트릭 아바타 쪽</b>이다(4-5). 그것만이 새 동작으로 구동할 수 있고 휴대폰 촬영으로도 된다. 시뮬레이션 안에 보행자를 세워 로봇이 피해 가게 하려면 그 길이다.</p>
@@ -1044,7 +1077,7 @@ to one frame.&quot;*</p></blockquote>
 <p><b>우리 원자료</b> · <code>inbox/jay/20260916-3dgs-test/_out/colmap/sparse/{0,1,2}</code> · <code>_out/viewer/</code> · <code>figs/fig7_shooting_path.png</code> · <code>RESULTS-3dgs-terrain.md</code> · <code>DESIGN-real-to-sim.md</code></p>
 </section>
 <section id="s13"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-18</td><td>처음 씀. 조사 결과를 표로 정리</td><td>공식 문서 · 논문 원문 · 우리 원자료</td></tr><tr><td>v2.0</td><td>2026-09-18</td><td><b>다시 씀.</b> 팀장 지적(「기술 설명이 없다 · 그림을 쓰라」)에 따라 해설 중심으로 재구성하고 그림 3장을 새로 그렸다. 우리 촬영본과 지면 메시 사진을 넣고, 기술 설명을 먼저 둔 뒤 도구 평가를 뒤로 옮겼다. 8절(우리가 염두에 두는 기술)을 신설했다</td><td>위와 같음 + 새 그림</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-18</td><td>처음 씀. 조사 결과를 표로 정리</td><td>공식 문서 · 논문 원문 · 우리 원자료</td></tr><tr><td>v2.1</td><td>2026-09-18</td><td><b>다른 문서를 가리키던 표를 없애고 그 내용을 본문에 다 적었다.</b> 웹에 올라가지 않는 파일을 가리키고 있어서 바깥 사람은 클릭할 것도 볼 것도 없었다. 2-2·2-3(스폰 사각지대와 지어낸 지형)과 5-2에서 5-5(복원 후보 다섯과 측정표 · 표면 복원의 Windows 문제 · 축척 · 재촬영 규칙)를 신설하고 그림 2장을 더했다. 이제 이 주소 하나로 읽힌다</td><td>위와 같음</td></tr><tr><td>v2.0</td><td>2026-09-18</td><td><b>다시 씀.</b> 팀장 지적(「기술 설명이 없다 · 그림을 쓰라」)에 따라 해설 중심으로 재구성하고 그림 3장을 새로 그렸다. 우리 촬영본과 지면 메시 사진을 넣고, 기술 설명을 먼저 둔 뒤 도구 평가를 뒤로 옮겼다. 8절(우리가 염두에 두는 기술)을 신설했다</td><td>위와 같음 + 새 그림</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1092,5 +1125,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkmhhaxv3</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpq7rtin3q</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
