@@ -84,7 +84,14 @@ AXIS2_POLICIES = (
     ("nvidia-zero", "NVIDIA 원본 (목표선)"),
     ("foothold-v1", "배포본 (현재선)"),
     ("D", "D · 명령 넷 복원"),
+    ("E", "E · 바라보게 하되 돌 수 있게"),
 )
+
+# 저속 «고정» 시나리오. **판정에 안 들어간다.** 문턱이 없고 원본도 약한
+# 자리라 관측만 한다 (설계 5-1-1절).
+SLOW_SCENARIOS = {
+    "slow010": 0.10, "slow020": 0.20, "slow030": 0.30, "slow040": 0.40,
+}
 
 SPEED_TAGS = {"v0.5": 0.5, "v1.0": 1.0, "v1.5": 1.5}
 
@@ -93,14 +100,12 @@ SPEED_TAGS = {"v0.5": 0.5, "v1.0": 1.0, "v1.5": 1.5}
 # 영상은 `num_envs 1` 한 판이라 **성공률이 아니다.** 64 판(축 2)이나 100 판
 # (축 1)으로 잰 성적과 같은 설정에서 돌린 «예시 한 판»이다. 갤러리에서 이 둘을
 # 같은 것으로 읽으면 안 된다.
-VIDEO_ROOT = os.path.join("sim", "eval", "results", "20260918-D-videos")
-
-AXIS1_VIDEO_TAGS = {
-    ("gap", 0.5): "gap_vx0.5",
-    ("gap", 1.0): "gap_vx1",
-    ("rails", 0.5): "rails_vx0.5",
-    ("floating_ring", 0.5): "floating_ring_vx0.5",
-}
+# 라운드마다 폴더가 다르고 **속도 태그 표기도 다르다**(D 판은 `vx1`, E 판은
+# `vx1.0`). 그래서 이름을 맞추려 들지 말고 **양쪽 폴더에서 여러 표기를 찾아본다.**
+VIDEO_ROOTS = (
+    os.path.join("sim", "eval", "results", "20260918-D-videos"),
+    os.path.join("sim", "eval", "results", "20260920-E-videos"),
+)
 
 # `maindata-v1` 은 속도 폴더 이름이 다르다. 1.0 을 `v1` 로 적었다.
 V1_SPEED_DIRS = {"v0.5": "v0.5", "v1.0": "v1", "v1.5": "v1.5"}
@@ -166,24 +171,39 @@ def compare_wilson(base, test):
 
 
 def axis1_video(terrain, vx, policy):
-    """그 칸의 비교 영상. 없으면 `None`."""
-    tag = AXIS1_VIDEO_TAGS.get((terrain, vx))
+    """그 칸의 비교 영상. 없으면 `None`.
 
-    if tag is None:
-        return None
+    정책 이름과 속도 표기가 라운드마다 달라서 **후보를 다 훑는다.** 없는 것이
+    훨씬 많다. 논지를 지는 컷만 찍었기 때문이다.
+    """
+    speeds = [f"{vx:g}", f"{vx:.1f}"]
+    names = [policy]
 
-    name = f"{tag}_{policy}"
-    path = os.path.join(REPO_ROOT, VIDEO_ROOT, "axis1", name, f"{name}.mp4")
+    if policy == "foothold-v1":
+        names.append("v1")
 
-    return rel(path) if os.path.isfile(path) else None
+    for root in VIDEO_ROOTS:
+        for speed in speeds:
+            for name in names:
+                tag = f"{terrain}_vx{speed}_{name}"
+                path = os.path.join(REPO_ROOT, root, "axis1", tag, f"{tag}.mp4")
+
+                if os.path.isfile(path):
+                    return rel(path)
+
+    return None
 
 
 def axis2_video(policy, scenario):
     """시나리오 영상. 없으면 `None`."""
-    path = os.path.join(REPO_ROOT, VIDEO_ROOT, "axis2", policy, scenario,
-                        f"{policy}_{scenario}.mp4")
+    for root in VIDEO_ROOTS:
+        path = os.path.join(REPO_ROOT, root, "axis2", policy, scenario,
+                            f"{policy}_{scenario}.mp4")
 
-    return rel(path) if os.path.isfile(path) else None
+        if os.path.isfile(path):
+            return rel(path)
+
+    return None
 
 
 def axis1_entries(v1_scores):
@@ -195,6 +215,8 @@ def axis1_entries(v1_scores):
             REPO_ROOT, "sim", "eval", "results", "maindata-v1", "foothold-v1"),
         "D": os.path.join(
             REPO_ROOT, "sim", "eval", "results", "20260918-D-axis1"),
+        "E": os.path.join(
+            REPO_ROOT, "sim", "eval", "results", "20260920-E-axis1"),
     }
 
     for terrain_set in ("unseen10", "rough6"):
@@ -326,6 +348,30 @@ def axis2_entries(root):
                     "passed": passed,
                 }))
 
+            if scenario in SLOW_SCENARIOS:
+                commanded = SLOW_SCENARIOS[scenario]
+
+                for metric in ("tracking_ratio", "tracked_vx_mps",
+                               "residual_lateral_mps", "joint_target_delta_mean",
+                               "fell_ratio"):
+                    value = summary.get(metric)
+
+                    entries.append(dict(common, **{
+                        "compare_key": f"axis2/slow/{commanded:.2f}/{metric}",
+                        "command": f"vx {commanded:.2f} 고정",
+                        "commanded_vx_mps": commanded,
+                        "metric": metric,
+                        "value": None if value is None else round(value, 6),
+                        "threshold": None,
+                        "threshold_note": (
+                            "문턱 없음. 저속 고정은 «관측»이고 판정에 안 들어간다 "
+                            "(설계 5-1-1절). 앞 5초(가속 구간)는 지표에서 뺐다"
+                        ),
+                        "passed": None,
+                    }))
+
+                continue
+
             for grid, value in sorted(summary.get("response_curve", {}).items()):
                 entries.append(dict(common, **{
                     "compare_key": f"axis2/{scenario}/response/{grid}",
@@ -351,7 +397,8 @@ def write_axis2_csv(root):
     for policy, _label in AXIS2_POLICIES:
         rows_all = []
 
-        for scenario in ("stop", "ramp", "turn", "hold", "turn_rest", "turn_rev"):
+        for scenario in ("stop", "ramp", "turn", "hold", "turn_rest", "turn_rev",
+                         "slow010", "slow020", "slow030", "slow040"):
             src = os.path.join(root, policy, scenario, "per_env.json")
 
             if not os.path.isfile(src):

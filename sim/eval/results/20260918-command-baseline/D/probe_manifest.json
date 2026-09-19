@@ -1,7 +1,7 @@
 {
   "probe": "command_response",
   "probe_file": "eval_command_response.py",
-  "policy_label": "D-gapwidecmd",
+  "policy_label": "D",
   "policy_checkpoint": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-18_11-19-19_20260918_gapwidecmd_seed42_iter1500\\model_1500.pt",
   "policy_sha256": "200701acdb21cbf178e6cae20cbd269b16a96c80bcb2952625a5091ed68d85ef",
   "base_task": "Isaac-Velocity-Rough-Unitree-Go2-v0",
@@ -32,7 +32,7 @@
   "foot_contact_semantics": "foot_contact_*_n 은 그 스텝의 «지금» 접촉력이다. eval_generalization.py 는 같은 이름의 열에 net_forces_w_history 최댓값을 적는다. 그 이력 세 칸은 지금과 5 ms 전과 10 ms 전이다 (history_length=3 · update_period=sim.dt=0.005). 프로브는 «서 있는가» 를 재는 도구라 이력 최댓값을 쓰면 이미 뗀 발이 접지로 세어져 미끄러짐과 동시 접지 시간이 부푼다. 두 파일의 이 열을 그대로 견주지 마십시오",
   "contact_threshold_n": 1.0,
   "settle_speed_mps": 0.05,
-  "finished_at_utc": "2026-09-18T04:23:56+00:00",
+  "finished_at_utc": "2026-09-19T17:02:05+00:00",
   "scenarios": {
     "stop": {
       "what": "4초 전진 뒤 명령 0. 정지와 정지 유지",
@@ -57,6 +57,34 @@
     "turn_rev": {
       "what": "회전 계단 · 순서 뒤집음(+1.0 이 처음). 자리가 원인인가",
       "duration_s": 18.0
+    },
+    "slow010": {
+      "what": "전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.1,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T17:02:05+00:00"
+    },
+    "slow020": {
+      "what": "전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.2,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T17:02:05+00:00"
+    },
+    "slow030": {
+      "what": "전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.3,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T17:02:05+00:00"
+    },
+    "slow040": {
+      "what": "전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.4,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T17:02:05+00:00"
     }
   },
   "summary": {
@@ -228,6 +256,134 @@
         "-0.50": 0.5269693037277708,
         "-1.00": 0.57937846832715
       }
+    },
+    "slow010": {
+      "scenario": "slow010",
+      "what": "전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.07629117698159807,
+      "joint_target_delta_mean": 0.19720835866521888,
+      "joint_target_delta_tail": 0.20204227657523008,
+      "pitch_abs_max_deg": 12.851179572560318,
+      "roll_abs_max_deg": 10.5747113845138,
+      "base_z_tail_m": 0.3522891642153262,
+      "foot_slip_m": 2.4476353606163923,
+      "quad_stance_s": 1.3499999999999996,
+      "response_curve": {
+        "0.10": 0.06497507934434728
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.0999999999999999,
+      "tracked_vx_mps": 0.06341737705752513,
+      "tracking_ratio": 0.6341737705752513,
+      "residual_lateral_mps": 0.030631156949648387,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow020": {
+      "scenario": "slow020",
+      "what": "전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.17344784824062484,
+      "joint_target_delta_mean": 0.3917692954172827,
+      "joint_target_delta_tail": 0.3926342625683174,
+      "pitch_abs_max_deg": 6.989018951736393,
+      "roll_abs_max_deg": 9.50026791703652,
+      "base_z_tail_m": 0.35501338235102586,
+      "foot_slip_m": 6.518167273562189,
+      "quad_stance_s": 0.17812499999999992,
+      "response_curve": {
+        "0.20": 0.16627629907510705
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.1999999999999998,
+      "tracked_vx_mps": 0.16637853064139682,
+      "tracking_ratio": 0.831892653206984,
+      "residual_lateral_mps": 0.04168576841844455,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow030": {
+      "scenario": "slow030",
+      "what": "전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.2785584884756586,
+      "joint_target_delta_mean": 0.42677803604194625,
+      "joint_target_delta_tail": 0.43606236975640056,
+      "pitch_abs_max_deg": 6.080299196670875,
+      "roll_abs_max_deg": 6.3553335699074065,
+      "base_z_tail_m": 0.3592282950133087,
+      "foot_slip_m": 9.23698596124356,
+      "quad_stance_s": 0.171875,
+      "response_curve": {
+        "0.30": 0.2731931015471929
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.3000000000000004,
+      "tracked_vx_mps": 0.2734685878197972,
+      "tracking_ratio": 0.9115619593993244,
+      "residual_lateral_mps": 0.041238527263392985,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow040": {
+      "scenario": "slow040",
+      "what": "전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.378507784467006,
+      "joint_target_delta_mean": 0.42906488670354515,
+      "joint_target_delta_tail": 0.4251223850413225,
+      "pitch_abs_max_deg": 3.0669181927613525,
+      "roll_abs_max_deg": 2.228107797084633,
+      "base_z_tail_m": 0.36656466796062886,
+      "foot_slip_m": 12.841019876875446,
+      "quad_stance_s": 0.06093750000000005,
+      "response_curve": {
+        "0.40": 0.3738505159076302
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.3999999999999996,
+      "tracked_vx_mps": 0.37374552474853895,
+      "tracking_ratio": 0.9343638118713473,
+      "residual_lateral_mps": 0.04469392621100361,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
     }
   },
   "not_a_judgement": "이 파일은 성공률을 내지 않는다. 판정은 eval_generalization.py 의 네 축 AND 하나다"

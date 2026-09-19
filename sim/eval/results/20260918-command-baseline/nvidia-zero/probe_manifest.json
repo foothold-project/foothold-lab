@@ -32,7 +32,7 @@
   "foot_contact_semantics": "foot_contact_*_n 은 그 스텝의 «지금» 접촉력이다. eval_generalization.py 는 같은 이름의 열에 net_forces_w_history 최댓값을 적는다. 그 이력 세 칸은 지금과 5 ms 전과 10 ms 전이다 (history_length=3 · update_period=sim.dt=0.005). 프로브는 «서 있는가» 를 재는 도구라 이력 최댓값을 쓰면 이미 뗀 발이 접지로 세어져 미끄러짐과 동시 접지 시간이 부푼다. 두 파일의 이 열을 그대로 견주지 마십시오",
   "contact_threshold_n": 1.0,
   "settle_speed_mps": 0.05,
-  "finished_at_utc": "2026-09-18T02:09:39+00:00",
+  "finished_at_utc": "2026-09-19T16:57:34+00:00",
   "scenarios": {
     "stop": {
       "what": "4초 전진 뒤 명령 0. 정지와 정지 유지",
@@ -49,6 +49,34 @@
     "hold": {
       "what": "20초 내내 전 명령 0. 얼음",
       "duration_s": 20.0
+    },
+    "slow010": {
+      "what": "전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.1,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T16:57:34+00:00"
+    },
+    "slow020": {
+      "what": "전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.2,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T16:57:34+00:00"
+    },
+    "slow030": {
+      "what": "전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.3,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T16:57:34+00:00"
+    },
+    "slow040": {
+      "what": "전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종",
+      "duration_s": 20.0,
+      "commanded_vx_mps": 0.4,
+      "skip_s": 5.0,
+      "ran_at_utc": "2026-09-19T16:57:34+00:00"
     }
   },
   "summary": {
@@ -162,6 +190,134 @@
         "0.00": 1.1544613706316675e-05
       },
       "yaw_follow_ratio": {}
+    },
+    "slow010": {
+      "scenario": "slow010",
+      "what": "전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.00571891886465131,
+      "joint_target_delta_mean": 0.01624027122877096,
+      "joint_target_delta_tail": 0.006667037557344886,
+      "pitch_abs_max_deg": 13.086660626618253,
+      "roll_abs_max_deg": 5.108456126359832,
+      "base_z_tail_m": 0.34296506074722855,
+      "foot_slip_m": 0.6184252109537682,
+      "quad_stance_s": 14.04625,
+      "response_curve": {
+        "0.10": 0.005182018066280008
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.0999999999999999,
+      "tracked_vx_mps": 0.0062118274896824244,
+      "tracking_ratio": 0.062118274896824234,
+      "residual_lateral_mps": 0.004777172329836433,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow020": {
+      "scenario": "slow020",
+      "what": "전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.07488174727998509,
+      "joint_target_delta_mean": 0.14075132403471433,
+      "joint_target_delta_tail": 0.14268036075751298,
+      "pitch_abs_max_deg": 22.65430533564705,
+      "roll_abs_max_deg": 12.541408605304703,
+      "base_z_tail_m": 0.3174051483720541,
+      "foot_slip_m": 3.254859199531381,
+      "quad_stance_s": 8.554999999999996,
+      "response_curve": {
+        "0.20": 0.05937828289978877
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.1999999999999998,
+      "tracked_vx_mps": 0.060660204868706345,
+      "tracking_ratio": 0.3033010243435317,
+      "residual_lateral_mps": 0.026007222436713672,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow030": {
+      "scenario": "slow030",
+      "what": "전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.2256866196071274,
+      "joint_target_delta_mean": 0.3771312942868129,
+      "joint_target_delta_tail": 0.3865972931438593,
+      "pitch_abs_max_deg": 29.313105819468742,
+      "roll_abs_max_deg": 19.395661405986587,
+      "base_z_tail_m": 0.3094468373758718,
+      "foot_slip_m": 6.0124164402049,
+      "quad_stance_s": 0.6943750000000005,
+      "response_curve": {
+        "0.30": 0.21283357570768927
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.3000000000000004,
+      "tracked_vx_mps": 0.21308187266452294,
+      "tracking_ratio": 0.7102729088817432,
+      "residual_lateral_mps": 0.04834015479512618,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
+    },
+    "slow040": {
+      "scenario": "slow040",
+      "what": "전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.35007260338219126,
+      "joint_target_delta_mean": 0.493983258975692,
+      "joint_target_delta_tail": 0.4287919917027464,
+      "pitch_abs_max_deg": 22.90874899352554,
+      "roll_abs_max_deg": 16.163647264822405,
+      "base_z_tail_m": 0.3383979312423617,
+      "foot_slip_m": 7.792731889077167,
+      "quad_stance_s": 0.33281249999999996,
+      "response_curve": {
+        "0.40": 0.34747618353747567
+      },
+      "yaw_follow_ratio": {},
+      "commanded_vx_mps": 0.3999999999999996,
+      "tracked_vx_mps": 0.34711912252552785,
+      "tracking_ratio": 0.8677978063138198,
+      "residual_lateral_mps": 0.04227454161875863,
+      "samples_used": 750.0,
+      "samples_skipped": 250.0,
+      "slow_metrics_count": 64,
+      "slow_metrics_of": 64
     }
   },
   "not_a_judgement": "이 파일은 성공률을 내지 않는다. 판정은 eval_generalization.py 의 네 축 AND 하나다"
