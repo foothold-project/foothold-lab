@@ -768,7 +768,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=ed36ac4e').then(function(r){
+    fetch('/assets/search-index.json?v=50e31d7d').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1392,6 +1392,21 @@ body>*{flex-shrink:0}
 .tkall3{font-size:var(--p-body);color:var(--ink-2);border-left:3px solid var(--dim);
   padding:.15rem 0 .15rem .55rem;margin:0 0 .5rem}
 .tkp3 span,.tkp3 i{margin-left:.35rem}
+/* ★ 2026-09-18 팀장 요청 · 허브 머리 오른쪽의 «바로 가기» 자리.
+   연구 허브(hub-research)와 연구 기록 목록(research.html)은 «같은 문서» 를
+   다른 방식으로 보여준다. 묶어서 보는 눈과 한 줄로 훑는 눈은 쓰임이 다르니
+   둘 다 살려 두고 서로 오갈 길을 낸다. 전에는 그 길이 없었다.
+   HUB_ACTION 에 없는 허브는 이 markup 이 아예 안 나온다. 나머지 다섯은 그대로다. */
+.hd3r{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap}
+.hd3t{min-width:0}
+.hd3a{display:block;flex:0 0 auto;margin-top:.55rem;padding:.55rem .85rem;
+  border:1px solid var(--rule);border-radius:var(--p-radius,10px);
+  background:var(--card);color:inherit;text-decoration:none;
+  font-weight:700;font-size:.9rem;line-height:1.25}
+.hd3a span{display:block;font-weight:500;font-size:.78rem;
+  color:var(--dim);margin-top:.15rem}
+.hd3a:hover,.hd3a:focus-visible{border-color:var(--ink-3);outline:none}
 /* 좁아지면 지형별로 접는다. 열 머리를 접고, 행 머리 아래 네 칸이 2x2 로 선다.
    이때만 칸이 제 단계 이름을 스스로 말한다 */
 @media (max-width:820px){
@@ -1410,7 +1425,7 @@ body>*{flex-shrink:0}
  .ev3{grid-template-columns:4rem 1fr}
  .rr3 b{white-space:normal}
 }
-</style><div class="wks"><div class="w3 dim"><div class="w3h">이번 주 · W38</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><b>마지막으로 연 주는 W36 입니다.</b> 2주째 안 열렸습니다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div><div class="w3 dim"><div class="w3h">차주 · W39</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">D-2</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">오늘</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
+</style><div class="wks"><div class="w3 dim"><div class="w3h">이번 주 · W38</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><b>마지막으로 연 주는 W36 입니다.</b> 2주째 안 열렸습니다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div><div class="w3 dim"><div class="w3h">차주 · W39</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">오늘</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">D-3</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
 (function(){
   /* 매주 반복이라 마감 «날짜» 가 없다. 요일이 데이터다.
      값이 바뀌는 자리는 KST 자정 하나뿐이라 달력 «날짜» 의 일련번호로 센다.
@@ -1459,6 +1474,6 @@ body>*{flex-shrink:0}
     document.addEventListener('DOMContentLoaded',start);
   }else{ start(); }
 })();
-</script><div class="g3s"><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-09-30">D-14</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">2장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>대기</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-11-07">D-52</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-12-11">D-86</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
-</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp851q2fsn</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><div class="g3s"><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-09-30">D-12</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">2장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>대기</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-11-07">D-50</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-12-11">D-84</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
+</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpq7rtin3q</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -2142,6 +2142,21 @@ CSS = '''<style id="hub3-css">
 .tkall3{font-size:var(--p-body);color:var(--ink-2);border-left:3px solid var(--dim);
   padding:.15rem 0 .15rem .55rem;margin:0 0 .5rem}
 .tkp3 span,.tkp3 i{margin-left:.35rem}
+/* ★ 2026-09-18 팀장 요청 · 허브 머리 오른쪽의 «바로 가기» 자리.
+   연구 허브(hub-research)와 연구 기록 목록(research.html)은 «같은 문서» 를
+   다른 방식으로 보여준다. 묶어서 보는 눈과 한 줄로 훑는 눈은 쓰임이 다르니
+   둘 다 살려 두고 서로 오갈 길을 낸다. 전에는 그 길이 없었다.
+   HUB_ACTION 에 없는 허브는 이 markup 이 아예 안 나온다. 나머지 다섯은 그대로다. */
+.hd3r{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap}
+.hd3t{min-width:0}
+.hd3a{display:block;flex:0 0 auto;margin-top:.55rem;padding:.55rem .85rem;
+  border:1px solid var(--rule);border-radius:var(--p-radius,10px);
+  background:var(--card);color:inherit;text-decoration:none;
+  font-weight:700;font-size:.9rem;line-height:1.25}
+.hd3a span{display:block;font-weight:500;font-size:.78rem;
+  color:var(--dim);margin-top:.15rem}
+.hd3a:hover,.hd3a:focus-visible{border-color:var(--ink-3);outline:none}
 /* 좁아지면 지형별로 접는다. 열 머리를 접고, 행 머리 아래 네 칸이 2x2 로 선다.
    이때만 칸이 제 단계 이름을 스스로 말한다 */
 @media (max-width:820px){
@@ -2166,6 +2181,16 @@ RENDER = [('schedule', schedule_html), ('research', research_html),
           ('meeting', meeting_html), ('proposal', proposal_html),
           ('tech', tech_html), ('pipeline', pipeline_html)]
 
+# 허브 머리 오른쪽의 «바로 가기». 키 -> (주소, 제목, 설명).
+#   여기 없는 허브는 머리 markup 이 예전과 한 글자도 다르지 않다.
+#   ★ 파일 이름을 여기 적는다는 것은 그 이름이 바뀌면 길이 끊긴다는 뜻이다.
+#     `research.html` 은 `docs_pages.INDEX` 가 정하므로, 그쪽을 바꾸면
+#     여기도 같이 바꾼다. 관문 `linkcheck` 가 끊긴 링크는 잡는다.
+HUB_ACTION = {
+    'research': ('research.html', '연구 기록 바로 가기',
+                 '같은 문서를 한 줄 목록으로'),
+}
+
 
 def build(assigned, vault, shell, site):
     """여섯 허브를 v3 뼈대로 쓴다. hubgen.main 이 부른다."""
@@ -2177,9 +2202,16 @@ def build(assigned, vault, shell, site):
         if not body_fn:
             continue
         n = sum(1 for v in assigned.values() if v[0] == key)
-        body = ('<h1>%s <span style="font-size:.6em;color:var(--ink-3);'
-                'font-weight:600">%s</span></h1>\n<p class="lede">%s</p>\n%s%s'
-                % (ko, en, lede, CSS,
+        head = ('<h1>%s <span style="font-size:.6em;color:var(--ink-3);'
+                'font-weight:600">%s</span></h1>\n<p class="lede">%s</p>'
+                % (ko, en, lede))
+        act = HUB_ACTION.get(key)
+        if act:
+            head = ('<div class="hd3r"><div class="hd3t">%s</div>'
+                    '<a class="hd3a" href="%s">%s<span>%s</span></a></div>'
+                    % (head, act[0], act[1], act[2]))
+        body = ('%s\n%s%s'
+                % (head, CSS,
                    body_fn(site, assigned) if key == 'meeting'
                    else body_fn(site)))
         io.open(os.path.join(vault, fname), 'w', encoding='utf-8',
