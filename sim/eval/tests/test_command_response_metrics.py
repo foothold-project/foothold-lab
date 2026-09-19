@@ -269,6 +269,74 @@ class 평균은없는값을0으로안만든다(unittest.TestCase):
         self.assertAlmostEqual(cmd_metrics.mean([1.0, None, 3.0]), 2.0)
 
 
+class 저속고정은가속구간을버린다(unittest.TestCase):
+
+    def rows(self, count=300, commanded_vx=0.2, tracked_vx=0.1):
+        rows = [
+            make_row(i, cmd=(commanded_vx, 0.0, 0.0), vx=tracked_vx,
+                     target=i * 0.01)
+            for i in range(count)
+        ]
+
+        for row in rows:
+            row["vy_mps"] = -0.03 if row["frame"] % 2 else 0.03
+
+        return rows
+
+    def test_앞5초를표본수로정확히버린다(self):
+        result = cmd_metrics.slow_walk_metrics(
+            self.rows(), DT, JOINTS, commanded_vx=0.2, skip_s=5.0
+        )
+
+        self.assertEqual(result["samples_skipped"], int(5.0 / DT))
+        self.assertEqual(result["samples_used"], 50)
+        self.assertIsNone(result["note"])
+
+    def test_버린구간의이상값은결과를바꾸지않는다(self):
+        clean = self.rows()
+        poisoned = self.rows()
+
+        for row in poisoned[:int(5.0 / DT)]:
+            row["vx_mps"] = 9999.0
+            row["vy_mps"] = -9999.0
+
+            for name in JOINTS:
+                row["joint_target_{}".format(name)] = 9999.0
+
+        clean_result = cmd_metrics.slow_walk_metrics(
+            clean, DT, JOINTS, commanded_vx=0.2, skip_s=5.0
+        )
+        poisoned_result = cmd_metrics.slow_walk_metrics(
+            poisoned, DT, JOINTS, commanded_vx=0.2, skip_s=5.0
+        )
+
+        self.assertEqual(poisoned_result, clean_result)
+
+    def test_명령0점2에실속도0점1이면추종비0점5다(self):
+        result = cmd_metrics.slow_walk_metrics(
+            self.rows(), DT, JOINTS, commanded_vx=0.2, skip_s=5.0
+        )
+
+        self.assertAlmostEqual(result["tracked_vx_mps"], 0.1, places=9)
+        self.assertAlmostEqual(result["tracking_ratio"], 0.5, places=9)
+        self.assertAlmostEqual(result["residual_lateral_mps"], 0.03, places=9)
+
+    def test_표본이5초보다짧으면None과사유가남는다(self):
+        result = cmd_metrics.slow_walk_metrics(
+            self.rows(count=int(5.0 / DT) - 1), DT, JOINTS,
+            commanded_vx=0.2, skip_s=5.0,
+        )
+
+        for key in (
+                "tracked_vx_mps", "tracking_ratio", "residual_lateral_mps",
+                "joint_target_delta_mean"):
+            self.assertIsNone(result[key])
+
+        self.assertEqual(result["samples_used"], 0)
+        self.assertEqual(result["samples_skipped"], int(5.0 / DT) - 1)
+        self.assertIsNotNone(result["note"])
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -305,6 +373,86 @@ def function_node(name):
 
 def attribute_names(node):
     return {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute)}
+
+
+def scenario_nodes():
+    """`SCENARIOS` 딕셔너리를 구문 나무 노드로 돌려준다."""
+    for node in harness_tree().body:
+        if not isinstance(node, ast.Assign):
+            continue
+
+        if not any(isinstance(target, ast.Name) and target.id == "SCENARIOS"
+                   for target in node.targets):
+            continue
+
+        return {
+            key.value: {
+                inner_key.value: inner_value
+                for inner_key, inner_value in zip(value.keys, value.values)
+            }
+            for key, value in zip(node.value.keys, node.value.values)
+        }
+
+    raise AssertionError("SCENARIOS 를 못 찾았다")
+
+
+class 저속시나리오구성(unittest.TestCase):
+
+    def test_저속프로파일은어느시각에도같은값이다(self):
+        expected = {
+            "_slow010_profile": 0.10,
+            "_slow020_profile": 0.20,
+            "_slow030_profile": 0.30,
+            "_slow040_profile": 0.40,
+        }
+
+        for function_name, commanded_vx in expected.items():
+            module = ast.Module(
+                body=[function_node(function_name)], type_ignores=[]
+            )
+            namespace = {}
+            exec(compile(ast.fix_missing_locations(module),
+                         HARNESS_SOURCE_PATH, "exec"), namespace)
+
+            for t in (0.0, 0.02, 4.98, 5.0, 19.98):
+                self.assertEqual(
+                    namespace[function_name](t),
+                    (commanded_vx, 0.0, 0.0),
+                )
+
+    def test_저속넷은20초이고기본실행에서빠진다(self):
+        scenarios = scenario_nodes()
+
+        for name, commanded_vx in (
+                ("slow010", 0.10), ("slow020", 0.20),
+                ("slow030", 0.30), ("slow040", 0.40)):
+            spec = scenarios[name]
+            self.assertEqual(spec["duration_s"].value, 20.0)
+            self.assertEqual(spec["commanded_vx"].value, commanded_vx)
+            self.assertEqual(spec["skip_s"].id, "SLOW_SETTLE_SKIP_S")
+            self.assertIs(spec["extra"].value, True)
+
+    def test_기존기본넷명세와계산경로는그대로다(self):
+        scenarios = scenario_nodes()
+        expected = {
+            "stop": ("_stop_profile", 10.0),
+            "ramp": ("_ramp_profile", 20.0),
+            "turn": ("_turn_profile", 18.0),
+            "hold": ("_hold_profile", 20.0),
+        }
+
+        default_names = {
+            name for name, spec in scenarios.items()
+            if "extra" not in spec
+        }
+        self.assertEqual(default_names, set(expected))
+
+        for name, (profile, duration_s) in expected.items():
+            spec = scenarios[name]
+            self.assertEqual(spec["profile"].id, profile)
+            self.assertEqual(spec["duration_s"].value, duration_s)
+            self.assertNotIn("skip_s", spec)
+            self.assertNotIn("commanded_vx", spec)
 
 
 class 수집경로는구문나무로막는다(unittest.TestCase):

@@ -83,6 +83,55 @@ def joint_target_deltas(rows, joint_names):
     return out
 
 
+def slow_walk_metrics(rows, dt, joint_names, commanded_vx, skip_s):
+    """저속 고정 명령의 가속 구간을 버리고 남은 표본만 잰다.
+
+    버릴 구간과 측정 구간 사이의 관절 목표각 변화도 세지 않는다. 그 한 스텝은
+    가속 구간의 값에 영향을 받으므로 측정 구간 안에서 생긴 변화가 아니다.
+    표본이 모자라면 0 으로 채우지 않고 수치와 사유를 함께 남긴다.
+    """
+    skip_samples = max(0, int(round(skip_s / dt)))
+    samples_skipped = min(len(rows), skip_samples)
+    samples_used = max(0, len(rows) - skip_samples)
+
+    result = {
+        "commanded_vx_mps": commanded_vx,
+        "tracked_vx_mps": None,
+        "tracking_ratio": None,
+        "residual_lateral_mps": None,
+        "joint_target_delta_mean": None,
+        "samples_used": samples_used,
+        "samples_skipped": samples_skipped,
+        "note": None,
+    }
+
+    if not samples_used:
+        result["note"] = (
+            "표본 {:.2f} 초로는 앞 {:.1f} 초를 버린 뒤 측정할 구간이 없다"
+            .format(len(rows) * dt, skip_s)
+        )
+        return result
+
+    measured = rows[skip_samples:]
+    tracked_vx = mean([row["vx_mps"] for row in measured])
+
+    result.update({
+        "tracked_vx_mps": tracked_vx,
+        "tracking_ratio": (
+            None if tracked_vx is None or commanded_vx == 0
+            else tracked_vx / commanded_vx
+        ),
+        "residual_lateral_mps": mean(
+            [abs(row["vy_mps"]) for row in measured]
+        ),
+        "joint_target_delta_mean": mean(
+            joint_target_deltas(measured, joint_names)
+        ),
+    })
+
+    return result
+
+
 def first_zero_command_index(rows, tolerance=1.0e-9):
     """명령 3축이 처음으로 전부 0 이 되는 자리. 없으면 `None`."""
     for index, row in enumerate(rows):
@@ -342,7 +391,7 @@ def aggregate(per_env, degenerate, name, what):
     def across(key):
         return mean([e[key] for e in per_env])
 
-    return {
+    result = {
         "scenario": name,
         "what": what,
 
@@ -375,3 +424,18 @@ def aggregate(per_env, degenerate, name, what):
         "response_curve": {k: mean(v) for k, v in sorted(merged_response.items())},
         "yaw_follow_ratio": {k: mean(v) for k, v in sorted(merged_yaw.items())},
     }
+
+    # 저속 고정 시나리오에만 있는 값이다. 기존 시나리오의 결과 키와 계산은
+    # 그대로 둔다.
+    if per_env and "commanded_vx_mps" in per_env[0]:
+        for key in (
+                "commanded_vx_mps", "tracked_vx_mps", "tracking_ratio",
+                "residual_lateral_mps", "samples_used", "samples_skipped"):
+            result[key] = across(key)
+
+        result["slow_metrics_count"] = sum(
+            1 for entry in per_env if entry["tracked_vx_mps"] is not None
+        )
+        result["slow_metrics_of"] = len(everyone)
+
+    return result

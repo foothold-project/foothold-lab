@@ -237,6 +237,29 @@ def _hold_profile(t):
     return (0.0, 0.0, 0.0)
 
 
+def _slow010_profile(t):
+    """처음부터 끝까지 전진 명령 0.10 m/s 를 고정한다."""
+    return (0.10, 0.0, 0.0)
+
+
+def _slow020_profile(t):
+    """처음부터 끝까지 전진 명령 0.20 m/s 를 고정한다."""
+    return (0.20, 0.0, 0.0)
+
+
+def _slow030_profile(t):
+    """처음부터 끝까지 전진 명령 0.30 m/s 를 고정한다."""
+    return (0.30, 0.0, 0.0)
+
+
+def _slow040_profile(t):
+    """처음부터 끝까지 전진 명령 0.40 m/s 를 고정한다."""
+    return (0.40, 0.0, 0.0)
+
+
+SLOW_SETTLE_SKIP_S = 5.0
+
+
 SCENARIOS = {
     "stop": {"profile": _stop_profile, "duration_s": 10.0,
              "what": "4초 전진 뒤 명령 0. 정지와 정지 유지"},
@@ -253,8 +276,27 @@ SCENARIOS = {
                   "what": "회전 계단 · 칸 사이 1.5초 쉼. 쌓임이 원인인가",
                   "extra": True},
     "turn_rev": {"profile": _turn_rev_profile, "duration_s": 18.0,
-                 "what": "회전 계단 · 순서 뒤집음(+1.0 이 처음). 자리가 원인인가",
-                 "extra": True},
+                  "what": "회전 계단 · 순서 뒤집음(+1.0 이 처음). 자리가 원인인가",
+                  "extra": True},
+
+    # 저속 고정 시나리오는 가속 구간을 뺀 정상 구간만 관측한다. 판정에는
+    # 넣지 않으며 이름을 직접 찍어 부를 때만 돈다.
+    "slow010": {"profile": _slow010_profile, "duration_s": 20.0,
+                "what": "전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종",
+                "commanded_vx": 0.10, "skip_s": SLOW_SETTLE_SKIP_S,
+                "extra": True},
+    "slow020": {"profile": _slow020_profile, "duration_s": 20.0,
+                "what": "전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종",
+                "commanded_vx": 0.20, "skip_s": SLOW_SETTLE_SKIP_S,
+                "extra": True},
+    "slow030": {"profile": _slow030_profile, "duration_s": 20.0,
+                "what": "전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종",
+                "commanded_vx": 0.30, "skip_s": SLOW_SETTLE_SKIP_S,
+                "extra": True},
+    "slow040": {"profile": _slow040_profile, "duration_s": 20.0,
+                "what": "전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종",
+                "commanded_vx": 0.40, "skip_s": SLOW_SETTLE_SKIP_S,
+                "extra": True},
 }
 
 # `--scenario all` 이 도는 기본 넷. `extra` 가 붙은 것은 빠진다.
@@ -272,7 +314,7 @@ parser.add_argument("--checkpoint", type=str, required=True,
 parser.add_argument("--label", type=str, default=None,
                     help="산출물에 적을 이름. 안 주면 체크포인트 파일 이름")
 parser.add_argument("--scenario", type=str, default="all",
-                    help="stop · ramp · turn · hold · all (쉼표로 여럿). `all` 은 기본 넷만 돈다. turn_rest · turn_rev 는 이름을 찍어야 돈다")
+                    help="stop · ramp · turn · hold · all (쉼표로 여럿). `all` 은 기본 넷만 돈다. 나머지는 이름을 찍어야 돈다")
 parser.add_argument("--num_envs", type=int, default=64,
                     help="같은 명령을 동시에 받는 로봇 수. 초기 자세 흩어짐이 표본")
 parser.add_argument("--env_spacing", type=float, default=8.0,
@@ -1083,13 +1125,20 @@ def finish_scenario(name, spec, label, buffer, n_valid, fell_at, dt, num_envs,
             ts_columns,
         )
 
-        per_env.append(cmd_metrics.episode_metrics(
+        entry = cmd_metrics.episode_metrics(
             rows, dt, joint_names, fell_cpu[env_id],
             contact_threshold_n=args_cli.contact_threshold_n,
             settle_speed_mps=args_cli.settle_speed_mps,
             env_id=env_id,
             timeseries_file=os.path.basename(path),
-        ))
+        )
+
+        if "skip_s" in spec:
+            entry.update(cmd_metrics.slow_walk_metrics(
+                rows, dt, joint_names, spec["commanded_vx"], spec["skip_s"]
+            ))
+
+        per_env.append(entry)
 
     result = cmd_metrics.aggregate(
         per_env, degenerate, name, spec["what"]
@@ -1141,6 +1190,14 @@ def print_scenario_summary(name, result):
             f"{k}:{_fmt(v)}" for k, v in result["yaw_follow_ratio"].items()
         )
         print(f"  요레이트 추종비 : {pairs}")
+
+    if "tracking_ratio" in result:
+        print(f"  저속 명령/실속도: {_fmt(result['commanded_vx_mps'])} / "
+              f"{_fmt(result['tracked_vx_mps'])} m/s")
+        print(f"  저속 추종비     : {_fmt(result['tracking_ratio'])}")
+        print(f"  횡방향 잔류속도 : {_fmt(result['residual_lateral_mps'])} m/s")
+        print(f"  저속 측정 가능  : {result['slow_metrics_count']}/"
+              f"{result['slow_metrics_of']} 대")
 
     print(flush=True)
 
@@ -1232,6 +1289,10 @@ def write_manifest(label, names, summary, dt, num_envs, joint_names,
         name: {
             "what": SCENARIOS[name]["what"],
             "duration_s": SCENARIOS[name]["duration_s"],
+            **({
+                "commanded_vx_mps": SCENARIOS[name]["commanded_vx"],
+                "skip_s": SCENARIOS[name]["skip_s"],
+            } if "skip_s" in SCENARIOS[name] else {}),
             "ran_at_utc": payload["finished_at_utc"],
         }
         for name in names
