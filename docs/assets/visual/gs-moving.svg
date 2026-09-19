@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="396" viewBox="-20 -20 920 396" font-family="Pretendard, Malgun Gothic, sans-serif">
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</style>
+
+<text x="0" y="16" font-size="17" font-weight="700" fill="var(--ink)">정지한 것은 되고 움직이는 사람은 안 되는 이유</text>
+<text x="0" y="38" font-size="12" fill="var(--ink-2)">삼각측량에는 «같은 순간에» 같은 점을 보는 광선이 둘 이상 필요하다</text>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--bad)"/></marker></defs>
+<rect x="0.0" y="58.0" width="416.0" height="230.0" rx="8" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1"/>
+<text x="16.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">정지한 것 · 카메라 한 대로 된다</text>
+<text x="16.0" y="100.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">내가 걸어다니는 동안 대상은 그대로다</text>
+<rect x="75" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<text x="88.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--accent)">t1</text>
+<line x1="88" y1="144" x2="208" y2="220" stroke="var(--accent)" stroke-width="1"/>
+<rect x="195" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<text x="208.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--accent)">t2</text>
+<line x1="208" y1="144" x2="208" y2="220" stroke="var(--accent)" stroke-width="1"/>
+<rect x="315" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--accent)" stroke-width="1.6"/>
+<text x="328.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--accent)">t3</text>
+<line x1="328" y1="144" x2="208" y2="220" stroke="var(--accent)" stroke-width="1"/>
+<circle cx="208" cy="226" r="7" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+<text x="208.0" y="258.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--accent)">광선 셋이 한 점에서 만난다</text>
+<text x="208.0" y="276.0" font-size="11" font-weight="400" text-anchor="middle" fill="var(--ink-2)">깊이가 정해진다</text>
+<rect x="444.0" y="58.0" width="416.0" height="230.0" rx="8" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1"/>
+<text x="460.0" y="82.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">움직이는 것 · 한 대로는 안 된다</text>
+<text x="460.0" y="100.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">내가 도는 동안 대상도 자리를 옮긴다</text>
+<rect x="519" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="532.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--bad)">t1</text>
+<line x1="532" y1="144" x2="586" y2="220" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="586" cy="226" r="6" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.6"/>
+<rect x="639" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="652.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--bad)">t2</text>
+<line x1="652" y1="144" x2="652" y2="220" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="652" cy="226" r="6" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.6"/>
+<rect x="759" y="126" width="26" height="17" rx="3" fill="var(--card)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="772.0" y="121.0" font-size="10" font-weight="700" text-anchor="middle" fill="var(--bad)">t3</text>
+<line x1="772" y1="144" x2="718" y2="220" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="718" cy="226" r="6" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1.6"/>
+<text x="652.0" y="258.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--bad)">만날 두 광선이 «같은 순간» 에 없다</text>
+<text x="652.0" y="276.0" font-size="11" font-weight="400" text-anchor="middle" fill="var(--ink-2)">깊이가 안 정해진다</text>
+<text x="0.0" y="316.0" font-size="13" font-weight="700" text-anchor="start" fill="var(--ink)">그래서 동기화된 카메라 여러 대가 필요하다</text>
+<text x="0.0" y="336.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-2)">한 순간을 수십 대가 동시에 찍으면 그 «정지된 순간» 을 복원할 수 있다. 상용 쇼케이스의 인물 장면이 카메라 50 대에서 240 대를 쓰는 이유다</text>
+<text x="0.0" y="354.0" font-size="11" font-weight="400" text-anchor="start" fill="var(--ink-3)">동기 오차 x 사지 속도가 그대로 공간 오차다. 30 fps 한 프레임(33 ms) 어긋나면 3 m/s 로 움직이는 손이 10 cm 어긋난다</text>
+</svg>
