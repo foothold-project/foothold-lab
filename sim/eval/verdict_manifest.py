@@ -111,7 +111,11 @@ SPEED_TAGS = {"v0.5": 0.5, "v1.0": 1.0, "v1.5": 1.5}
 # 같은 것으로 읽으면 안 된다.
 # 라운드마다 폴더가 다르고 **속도 태그 표기도 다르다**(D 판은 `vx1`, E 판은
 # `vx1.0`). 그래서 이름을 맞추려 들지 말고 **양쪽 폴더에서 여러 표기를 찾아본다.**
+# **H 판을 맨 앞에 둔다.** 같은 이름이 여러 판에 있으면 먼저 찾은 것이 이기는데,
+# H 판만 `--trace_csv` 로 찍어 HUD 를 씌웠다. 이름이 겹치는 것은
+# `floating_ring_vx1.0_F` 와 v1 대조 둘이다. **HUD 가 붙은 쪽을 쓴다.**
 VIDEO_ROOTS = (
+    os.path.join("sim", "eval", "results", "20260920-H-videos"),
     os.path.join("sim", "eval", "results", "20260918-D-videos"),
     os.path.join("sim", "eval", "results", "20260920-E-videos"),
     os.path.join("sim", "eval", "results", "20260920-FG-videos"),
@@ -196,7 +200,16 @@ def axis1_video(terrain, vx, policy):
         for speed in speeds:
             for name in names:
                 tag = f"{terrain}_vx{speed}_{name}"
-                path = os.path.join(REPO_ROOT, root, "axis1", tag, f"{tag}.mp4")
+                folder = os.path.join(REPO_ROOT, root, "axis1", tag)
+
+                # **HUD 가 붙은 것을 먼저 쓴다.** 계측이 얹힌 쪽이 판정과
+                # 나란히 놓기 좋다. 없으면 맨 영상을 쓴다.
+                hud = os.path.join(folder, f"{tag}_hud.mp4")
+
+                if os.path.isfile(hud):
+                    return rel(hud)
+
+                path = os.path.join(folder, f"{tag}.mp4")
 
                 if os.path.isfile(path):
                     return rel(path)
