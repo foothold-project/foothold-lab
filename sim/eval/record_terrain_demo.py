@@ -737,6 +737,24 @@ def main():
             "파일에 프레임이 %d 장 들어갔는데 %d 장을 찍으려 했다. "
             "녹화가 중간에 끊겼거나 인코더가 흘렸다." % (encoded, count))
 
+    # **프레임이 다 들어갔어도 «검을» 수 있다** `확인됨` (2026-09-20 ·
+    # `gap_vx0.5_H` 600 장이 전부 검정인데 종료 코드가 0 이었다).
+    #
+    # 렌더러(`omni.hydra.rtx`)가 안 떠도 물리는 돌고 trace 도 남고 mp4 도
+    # 만들어진다. 그림만 없다. 33 KB · 55 바이트/프레임이었는데 아무도
+    # 그 숫자를 안 짚었고, 로그에 원인이 그대로 있었는데 아무도 안 읽었다.
+    #
+    # **그래서 여기서 파일을 다시 열어 본다.** 밝기 · 바이트/프레임 ·
+    # 프레임 수 · 렌더러 로그 넷이다.
+    from video_check import verify_render
+
+    _render_report = verify_render(video, expected_frames=encoded)
+    print("[PASS] 화면이 그려졌다 · 평균 밝기 %s · %s 바이트/프레임" % (
+        "못 쟀음" if _render_report["mean_luma"] is None
+        else "%.1f" % _render_report["mean_luma"],
+        "못 쟀음" if _render_report["bytes_per_frame"] is None
+        else "%.0f" % _render_report["bytes_per_frame"]), flush=True)
+
     if trace_rows is not None:
         from overlay import trace as trace_mod
         # **읽는 쪽이 요구하는 메타를 다 채운다.** fps 와 command_vx_mps 가 없으면

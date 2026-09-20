@@ -12,7 +12,7 @@ OVERLAY
   frames     : 600 (trace 600줄)
   fps        : 영상 50.000 · trace 50.000
   duration   : 영상 12.000 s · trace 12.000 s
-  size       : 0.43 MB
+  size       : 2.07 MB
   주춤       : 6 구간
      1.56 s ~  1.78 s   최저 0.24 m/s
      3.52 s ~  3.78 s   최저 0.00 m/s

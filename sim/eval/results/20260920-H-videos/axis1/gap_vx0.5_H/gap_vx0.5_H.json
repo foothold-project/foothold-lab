@@ -60,7 +60,7 @@
   "gap_aware_scan": true,
   "height_scan_miss_value": 1.0,
   "video": "flat_army_A_1_track_q.mp4",
-  "bytes": 33080,
+  "bytes": 1093201,
   "num_envs": 1,
   "formation": {
     "columns": 1,
@@ -116,15 +116,15 @@
     "preset": "slow"
   },
   "timing_s": {
-    "app_and_imports": 12.850518499995815,
-    "environment_creation_and_reset": 3.257628899998963,
-    "policy_load": 0.5252451999986079,
-    "render_warmup": 0.04876130001503043,
-    "recording_total": 26.187610900000436,
-    "render_per_frame_mean": 0.008386750833160476,
-    "render_per_frame_median": 0.007678850000957027,
-    "simulation_step_mean": 0.031777488814096644,
-    "process_total": 42.8763891000126
+    "app_and_imports": 15.923982400010573,
+    "environment_creation_and_reset": 3.2847354999976233,
+    "policy_load": 0.35620660000131465,
+    "render_warmup": 1.7044536999892443,
+    "recording_total": 33.029643399990164,
+    "render_per_frame_mean": 0.020323799166847796,
+    "render_per_frame_median": 0.01970170000276994,
+    "simulation_step_mean": 0.028762008179861895,
+    "process_total": 54.30572000000393
   },
   "frame_inspection": {
     "status": "pending external av inspection",

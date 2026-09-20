@@ -1,6 +1,6 @@
 {
   "schema": "foothold-verdict-manifest/1",
-  "generated_at_utc": "2026-09-20T12:23:19+00:00",
+  "generated_at_utc": "2026-09-20T13:04:26+00:00",
   "paths_are": "저장소 기준 상대 경로",
   "built_by": "sim/eval/verdict_manifest.py",
   "note": "판정은 두 축의 AND 다. 이 파일은 이미 정해진 문턱을 적용해 적을 뿐이고 문턱을 새로 만들지 않는다. 축 1 기준값은 models/foothold-v1.json 의 칸 값이고 견주는 방법은 axis1_rule 에 적은 Wilson 95 % 구간이다. **여유(tolerance) 를 두지 않는다.** 축 2 문턱은 NVIDIA 원본 실측에서 뽑았다",

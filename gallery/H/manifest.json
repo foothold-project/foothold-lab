@@ -1,8 +1,8 @@
 {
   "schema": "foothold-gallery-index/1",
   "version": "H",
-  "built_at": "2026-09-20T12:23:54+00:00",
-  "evaluated_at": "2026-09-20T12:23:19+00:00",
+  "built_at": "2026-09-20T13:04:40+00:00",
+  "evaluated_at": "2026-09-20T13:04:26+00:00",
   "main_model": "H",
   "difficulty": 0.5,
   "models": {
@@ -4790,8 +4790,8 @@
     {
       "file": "clips/gap_vx0.5_H.mp4",
       "poster": "posters/gap_vx0.5_H.jpg",
-      "sha256": "0caf7485b1b0c900d0c94ead7935cda77d04bf4205471e79f0ef693946925bbf",
-      "bytes": 33080,
+      "sha256": "af38e659de32192d816f17c419455cc14424f959d491949a66bdcb37f95034ef",
+      "bytes": 1093201,
       "axis": 1,
       "policy": "H",
       "terrain": "gap",
