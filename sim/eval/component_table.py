@@ -121,6 +121,95 @@ def read_rows():
     return rows, missing
 
 
+# 원시 CSV 의 성분 열. **요약 CSV 의 `*_rate` 와 짝이다.**
+#
+# **이름을 틀리면 조용히 0 이 나온다** `확인됨`. `survival_success` 를
+# `survived` 로 찾은 적이 있는데, 열이 없으니 예외가 아니라 **「생존 미달
+# 0 판」**이 나왔다. `rails` 1.5 는 실제로 8 판이 넘어졌다. 오류가 안 났고
+# 요약의 `survival_rate` 0.92 와 안 맞는 것을 보고서야 잡았다.
+#
+# 그래서 아래 `failure_combinations()` 는 **셀 때마다 요약과 대조한다.**
+RAW_COMPONENTS = (
+    ("survival_success", "생존", "survival_rate"),
+    ("progress_success", "전진", "progress_success_rate"),
+    ("tracking_success", "속도추종", "tracking_success_rate"),
+    ("direction_success", "방향", "direction_success_rate"),
+)
+
+
+def _is_true(value):
+    return str(value).strip().lower() == "true"
+
+
+def failure_combinations(policy_root, terrain_set, speed_dir, terrain):
+    """한 칸의 100 판을 **실패 조합별로** 센다.
+
+    최저 성분 하나만 적으면 나머지가 가려진다. `rails` 1.5 는 속도추종이
+    94 판 미달이라 「느리다」로 읽히는데, **속도추종«만» 미달인 것은 33 판**
+    이고 방향이 59 판이다. 「느리게 건넌다」가 절반만 맞는 이야기가 된다.
+
+    **셀 때마다 요약 CSV 와 대조하고 안 맞으면 죽는다.** 열 이름을 틀리면
+    조용히 0 이 나오기 때문이다.
+    """
+    folder = os.path.join(REPO_ROOT, policy_root, terrain_set, "d0.5", speed_dir)
+    raw_path = os.path.join(folder, "generalization_raw.csv")
+    sum_path = os.path.join(folder, "generalization_summary.csv")
+
+    with open(raw_path, encoding="utf-8-sig", newline="") as handle:
+        rows = [r for r in csv.DictReader(handle) if r["terrain"] == terrain]
+
+    if not rows:
+        raise SystemExit(f"{raw_path} 에 {terrain} 판이 없다")
+
+    missing_cols = [c for c, _, _ in RAW_COMPONENTS if c not in rows[0]]
+
+    if missing_cols:
+        raise SystemExit(
+            f"원시 CSV 에 성분 열이 없다: {missing_cols}. "
+            f"있는 열: {sorted(k for k in rows[0] if k.endswith('_success'))}")
+
+    with open(sum_path, encoding="utf-8-sig", newline="") as handle:
+        summary = next(r for r in csv.DictReader(handle) if r["terrain"] == terrain)
+
+    counts = {}
+    per_component = {}
+
+    for column, label, rate_key in RAW_COMPONENTS:
+        failed = sum(1 for r in rows if not _is_true(r[column]))
+        per_component[label] = failed
+
+        # **대조.** 요약의 비율과 원시의 셈이 맞아야 한다.
+        expected = round((1.0 - float(summary[rate_key])) * len(rows))
+
+        if failed != expected:
+            raise SystemExit(
+                f"{terrain} {speed_dir} {label}: 원시에서 {failed} 판 미달인데 "
+                f"요약 {rate_key} 는 {expected} 판을 가리킨다. "
+                "열 이름이나 필터가 틀렸다")
+
+    for row in rows:
+        combo = tuple(label for column, label, _ in RAW_COMPONENTS
+                      if not _is_true(row[column]))
+        counts[combo] = counts.get(combo, 0) + 1
+
+    overall_pass = sum(1 for r in rows if _is_true(r["overall_success"]))
+    clean = counts.get((), 0)
+
+    if overall_pass != clean:
+        raise SystemExit(
+            f"{terrain} {speed_dir}: overall 통과 {overall_pass} 판인데 "
+            f"네 성분이 다 통과한 판은 {clean} 판이다. AND 가 안 맞는다")
+
+    return {
+        "terrain": terrain,
+        "episodes": len(rows),
+        "overall_pass": overall_pass,
+        "per_component_failed": per_component,
+        "combinations": {(" + ".join(k) if k else "실패 없음"): v
+                         for k, v in sorted(counts.items(), key=lambda x: -x[1])},
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default=os.path.join(
