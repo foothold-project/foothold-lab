@@ -46,8 +46,9 @@ heading_command      False       ->  False         (안 바뀐다)
 **heading 제어기 출력의 상하한**으로 쓰이는데 G 에서는 **명령 그 자체**로
 쓰인다.
 
-**E 는 반쪽이다.** `rel_heading_envs=0.75` 라 **환경의 25 % 는 heading 제어기를
-안 거치고 표집된 요 명령을 그대로 받는다.** D 와 F 는 1.0 이라 전부 거친다.
+**E 는 둘을 섞는다.** `rel_heading_envs=0.75` 라 **환경의 75 % 는 heading
+제어기를 거치고 25 % 는 표집된 요 명령을 그대로 받는다.** D 와 F 는 1.0 이라
+전부 거친다.
 
 설정: `sim/policy/gap_g_env_cfg.py` · 등록 id
 `Isaac-Velocity-GapG-Unitree-Go2-v0`.
@@ -67,9 +68,10 @@ heading_command      False       ->  False         (안 바뀐다)
 > **진짜 하락**이다.
 
 **「그러므로 요는 `heading` 으로 배워야 한다」까지는 못 간다.** G 는 D 와
-세 칸이 다르고(`heading_command` · `heading` 범위 · `lin_vel_x` 하한),
-E 와 견주면 **두 속도에서 G 가 더 높다**(E 31 / 41 / 15). 자세한 것은
-판정문 4 절에 있다 `미확인`.
+**네 칸**이 다르다 · `heading_command` · `heading` 범위 · `rel_heading_envs`
+(1.0 -> 0.0 · `heading_command` 가 False 라 동작에는 안 쓰인다) ·
+`lin_vel_x` 하한. 게다가 E 와 견주면 **rails 1.0 에서 G 가 «진짜 상승»**
+이다 (E 41 · G 65). 자세한 것은 판정문 4 절에 있다 `미확인`.
 
 ## 성적 한 줄
 
