@@ -52,6 +52,16 @@
 명부
   한 번에 못 고치는 부류는 명부로 연다. 명부는 면제가 아니다. 매 빌드에
   줄 수를 찍고, 늘어나면 막는다. 줄 수가 남은 일의 크기다.
+
+
+★ 이 관문이 «못 잡는 것»
+  - **렌더링을 안 잰다.** 빌드에 브라우저가 없다. 안전망이 있는지만 본다.
+    화면에서 실제로 사라졌는지는 배포 뒤 이 한 줄이 0 이어야 안다.
+      [...document.querySelectorAll('[hidden]')]
+        .filter(e => getComputedStyle(e).display !== 'none').length
+  - 이 빌드가 «안 만드는» 페이지는 안 본다. 갤러리가 그렇다.
+  - `visibility` · `opacity` · 화면 밖으로 밀어내는 숨김은 안 본다.
+    `hidden` 속성을 쓰는 자리만 본다.
 """
 import io
 import os

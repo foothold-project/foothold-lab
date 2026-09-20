@@ -684,8 +684,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
       ]),
       G.el('div', { class: 'meta' }, [
         G.el('span', { text: ev.episodes + ' 에피소드 중 ' + ev.successes + '개 성공' }),
-        G.el('span', { text: '참여도 ' + (ev.engagement === null ? '측정값 없음'
-                       : ev.engagement.toFixed(2)) })
+        G.el('span', { text: G.engText(ev) })
       ])
     ]);
 

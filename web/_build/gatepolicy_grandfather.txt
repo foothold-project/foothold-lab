@@ -1,0 +1,38 @@
+# 「무엇을 안 막는가」가 아직 안 적힌 관문 (DESIGN.md §13-3).
+#
+# 명부는 면제가 아니다. 이 줄 수가 남은 일의 크기다.
+# 새로 생기는 관문은 명부에 못 들어간다. 적고 만들어야 한다.
+
+asciicheck.py
+assetver.py
+brandcheck.py
+brandmark.py
+chipcheck.py
+claims.py
+completecheck.py
+contentcheck.py
+csscheck.py
+darkmode.py
+dashcheck.py
+docgraph.py
+handpages.py
+issuelink.py
+jsnullcheck.py
+ledgercheck.py
+linkcheck.py
+markercheck.py
+mdlinks.py
+metacheck.py
+rendercheck.py
+secure_docs.py
+selfclaim.py
+stalecheck.py
+svgtext.py
+tablefix.py
+timecheck.py
+tokencheck.py
+varcycle.py
+videocheck.py
+voicecheck.py
+widthcheck.py
+xrefcheck.py

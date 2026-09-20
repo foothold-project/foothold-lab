@@ -16,6 +16,12 @@ Thumbs.db
 **/target/autotune/
 inbox/**/target/
 
+# 세션 작업 산출물
+#   3dgs 세션 제안 (2026-09-19). 그쪽 `_out/` 이 지금 23.4 GB 다. 이미
+#   다른 규칙에 걸려 있지만, 누가 또 `-A` 를 쓰면 같은 일이 난다.
+#   이름으로 한 번 더 못 박아 둔다.
+inbox/**/_out/
+
 # Python (분석 스크립트용)
 __pycache__/
 *.pyc

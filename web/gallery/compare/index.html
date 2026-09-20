@@ -592,8 +592,8 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
       score.appendChild(G.el('span', { class: 'big ' + G.rateClass(ev.success_rate),
                                        text: ev.success_rate.toFixed(1) + ' %' }));
       score.appendChild(G.el('span', { class: 'sub',
-        text: ev.episodes + ' 에피소드 중 ' + ev.successes + '개 · 참여도 ' +
-              (ev.engagement === null ? '측정값 없음' : ev.engagement.toFixed(2)) }));
+        text: ev.episodes + ' 에피소드 중 ' + ev.successes + '개' }));
+      score.appendChild(G.el('span', { class: 'sub', text: G.engText(ev) }));
 
       /* **컷 길이를 적는다.** 세 열의 길이가 다른 것은 결함이 아니라 성적이다.
        * 촬영이 「전진 5.0 m 에서 자른다」라, 빨리 가면 짧고 못 가면 시간

@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "2b375fb381e26316",
+  "hash": "9a28ca823b799857",
   "major": "v2.1",
-  "ver": "v2.15"
+  "ver": "v2.16"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -485,9 +485,9 @@
   "ver": "v2.6"
  },
  "docs/research/20260918-postshot-3dgs-tech-analysis.md": {
-  "hash": "4c13c3454fdd751c",
-  "major": "v2.0",
-  "ver": "v2.0"
+  "hash": "2e448b38c5728bd0",
+  "major": "v2.1",
+  "ver": "v2.1"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

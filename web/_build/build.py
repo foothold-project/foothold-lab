@@ -851,6 +851,17 @@ if __name__ == '__main__':
         print('\n  [!] hidden 이 CSS 에 집니다. 배포를 중단합니다.')
         sys.exit(1)
 
+    # ★ 2026-09-18 팀장 확정 (DESIGN.md §13). 9/14 에 하루 동안 관문이 여섯
+    #   늘었고 기준이 제각각으로 자라고 있었다. 셋 중 «무엇을 안 막는가를
+    #   적었는가» 만 기계가 본다. 나머지 둘은 사람이 §13 을 보고 정한다.
+    #   켜는 날 안 적혀 있던 38개는 명부로 열었다 (§13-1). 새로 생기는
+    #   관문만 막는다.
+    print('\n[3.441] 관문 정책 검사 (무엇을 «안» 막는지 적었는가)')
+    import gatepolicy
+    if not gatepolicy.main():
+        print('\n  [!] 새 관문에 「안 막는 것」이 없습니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('\n[3.45] 브랜드 정합 검사 (그라데이션 · 그림자 · 토글 · hex)')
     import brandcheck
     if not brandcheck.report(SITE):

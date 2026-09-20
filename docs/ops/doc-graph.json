@@ -1830,10 +1830,11 @@
    "430"
   ],
   "areas": [
-   "B/인지"
+   "B/인지",
+   "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 카메라×26 카메라×26 점군×1",
+  "areas_why": "근거 낱말 카메라×32 카메라×32 점군×1 학습×13 관측×13 정책×2",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
