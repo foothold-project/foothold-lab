@@ -1,0 +1,203 @@
+{
+  "argv": [
+    "sim/eval/eval_generalization.py",
+    "--checkpoint",
+    "C:/Users/AI-WS01/AppData/Local/Temp/claude/C--Users-AI-WS01-Desktop-jay----------foothold-lab/85e9e940-5633-48ed-a407-2d9aafc96e93/scratchpad/lim/rails10_3000.pt",
+    "--terrain_set",
+    "unseen10",
+    "--terrains",
+    "all",
+    "--difficulty",
+    "0.5",
+    "--episodes",
+    "100",
+    "--envs_per_terrain",
+    "10",
+    "--command_vx",
+    "0.5",
+    "--eval_duration",
+    "12.0",
+    "--min_progress_m",
+    "3.0",
+    "--max_lateral_drift",
+    "0.75",
+    "--seed",
+    "42",
+    "--headless",
+    "--device",
+    "cuda:1",
+    "--output_dir",
+    "sim/eval/results/20260921-lim-rails10-axis1/unseen10/d0.5/v0.5"
+  ],
+  "command_vx_mps": 0.5,
+  "device": "cuda:1",
+  "direction_gate_m": 3.0,
+  "direction_measured_at": "gate",
+  "environment": {
+    "cuda_version": "12.8",
+    "gpu_names": [
+      "NVIDIA GeForce RTX 5080",
+      "NVIDIA GeForce RTX 5080"
+    ],
+    "hostname": "AI-WS01",
+    "isaaclab_commit": "37ddf626871758333d6ed89cf64ad702aef127d0",
+    "isaaclab_version": "0.54.2",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python_version": "3.11.15",
+    "repo_commit": "843ba50d41b988dd07ec53a64ca73b6f95915c58",
+    "rsl_rl_version": "3.1.2",
+    "torch_version": "2.7.0+cu128"
+  },
+  "envs_per_terrain": 10,
+  "episodes_per_terrain": 100,
+  "episodes_recorded": 1000,
+  "eval_duration_s": 12.0,
+  "eval_spec_version": 2,
+  "finished_at_utc": "2026-09-20T17:27:00+00:00",
+  "gap_aware_scan": true,
+  "gate_speed_measured_at": "gate",
+  "gate_speed_source": "root_lin_vel_b[:, 0]",
+  "harness": "sim/eval/eval_generalization.py",
+  "head_contact_body_ids": [
+    9,
+    10
+  ],
+  "head_contact_body_names": [
+    "Head_upper",
+    "Head_lower"
+  ],
+  "head_contact_in_success_judgement": false,
+  "head_contact_threshold_n": 1.0,
+  "height_scan_miss_value": 1.0,
+  "ideal_distance_m": 6.0,
+  "joint_pos_scale": 0.05,
+  "max_lateral_drift_m": 0.75,
+  "max_velocity_mae_mps": 0.25,
+  "min_progress_m": 3.0,
+  "min_progress_ratio": 0.5,
+  "note": "",
+  "observation_dim": 235,
+  "obstacle_zone_basis": {
+    "discrete_obstacles": "tile_half:HfDiscreteObstaclesTerrainCfg",
+    "floating_ring": "ring_width_range",
+    "gap": "gap_width_range",
+    "pit": "tile_half:MeshPitTerrainCfg",
+    "rails": "rail_2_outer_edge",
+    "repeated_boxes": "tile_half:MeshRepeatedBoxesTerrainCfg",
+    "repeated_cylinders": "tile_half:MeshRepeatedCylindersTerrainCfg",
+    "star": "tile_half:MeshStarTerrainCfg",
+    "stepping_stones": "tile_half:HfSteppingStonesTerrainCfg",
+    "wave": "tile_half:HfWaveTerrainCfg"
+  },
+  "obstacle_zones_m": {
+    "discrete_obstacles": [
+      0.75,
+      4.0
+    ],
+    "floating_ring": [
+      0.75,
+      1.175
+    ],
+    "gap": [
+      0.75,
+      1.025
+    ],
+    "pit": [
+      0.75,
+      4.0
+    ],
+    "rails": [
+      0.75,
+      2.8800000000000003
+    ],
+    "repeated_boxes": [
+      0.75,
+      4.0
+    ],
+    "repeated_cylinders": [
+      0.75,
+      4.0
+    ],
+    "star": [
+      0.75,
+      4.0
+    ],
+    "stepping_stones": [
+      0.75,
+      4.0
+    ],
+    "wave": [
+      0.0,
+      4.0
+    ]
+  },
+  "policy_checkpoint": "C:\\Users\\AI-WS01\\AppData\\Local\\Temp\\claude\\C--Users-AI-WS01-Desktop-jay----------foothold-lab\\85e9e940-5633-48ed-a407-2d9aafc96e93\\scratchpad\\lim\\rails10_3000.pt",
+  "policy_sha256": "dfde082bbcd51606735e4c8aeb32262264a542d18d761759bd382306e317819f",
+  "rail_thickness_fixed_m": null,
+  "rail_thickness_range": [
+    0.08,
+    0.18
+  ],
+  "recorded_terrains": [
+    "discrete_obstacles",
+    "wave",
+    "stepping_stones",
+    "gap",
+    "pit",
+    "rails",
+    "star",
+    "floating_ring",
+    "repeated_boxes",
+    "repeated_cylinders"
+  ],
+  "seed": 42,
+  "spawn_xy_range_m": 0.1,
+  "speed_drop_ratio_definition": "장애물 구간 안 최저 전진 속도 / 명령 전진 속도. 구간은 출발점 기준 전진거리이고 지형 설정에서 계산한다",
+  "started_at_utc": "2026-09-20T17:22:09+00:00",
+  "step_dt_s": 0.02,
+  "success_axes": [
+    "survival_success",
+    "progress_success",
+    "tracking_success",
+    "direction_success"
+  ],
+  "terrain_border_width_changed_from": 10.0,
+  "terrain_border_width_m": 20.0,
+  "terrain_curriculum": true,
+  "terrain_difficulty_overridden": true,
+  "terrain_difficulty_range": [
+    0.5,
+    0.5
+  ],
+  "terrain_forward_extent_m": 24.0,
+  "terrain_num_cols": 10,
+  "terrain_num_rows": 1,
+  "terrain_set": "unseen10",
+  "terrain_set_names": [
+    "discrete_obstacles",
+    "wave",
+    "stepping_stones",
+    "gap",
+    "pit",
+    "rails",
+    "star",
+    "floating_ring",
+    "repeated_boxes",
+    "repeated_cylinders"
+  ],
+  "terrain_size_m": [
+    8.0,
+    8.0
+  ],
+  "timeseries": {
+    "enabled": false
+  },
+  "total_envs_simulated": 100,
+  "traversal_success_axes": [
+    "survival_success",
+    "progress_success",
+    "direction_success"
+  ],
+  "traversal_success_is_a_success_rate": false,
+  "yaw_range_deg": 5.0
+}
