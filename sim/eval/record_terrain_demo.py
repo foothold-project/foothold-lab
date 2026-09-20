@@ -86,10 +86,59 @@ p.add_argument("--yaw_range_deg", type=float, default=5.0); p.add_argument("--jo
 p.add_argument("--hfov", dest="camera_hfov", type=float, default=60.0)
 p.add_argument("--gate", dest="gate_mode", choices=("on", "off"), default="on")
 p.add_argument("--origins_csv", default="")
+p.add_argument("--title", default="",
+               help="HUD 제목을 «직접» 준다. 안 주면 지형·난이도·속도·체크포인트로 "
+                    "만드는데 그 형식은 정책 이름이 맨 뒤라 34 자에서 잘릴 때 "
+                    "정책이 먼저 사라진다. 나란히 놓는 컷은 이것을 주어라. "
+                    "34 자를 넘거나 굽힌 서체에 없는 글자가 있으면 «거부한다».")
 AppLauncher.add_app_launcher_args(p)
 args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
 VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
+
+
+# HUD 제목의 글자 수 상한. `overlay/hud.py` 가 이 길이에서 자른다.
+# 자르면 «맨 뒤»가 사라지는데 기본 형식은 정책 이름이 맨 뒤라, 나란히 놓는
+# 두 컷의 제목이 «글자 하나까지 같아지는» 일이 생긴다 `확인됨`
+# (pyramid_stairs_inv 1.5 의 H 와 v1 이 둘 다
+#  «pyramid_stairs_inv · d0.5 · 1.5 m…» 로 찍힌다).
+_HUD_TITLE_MAX = 34
+
+
+def _hud_title(args):
+    """HUD 에 넘길 제목. `--title` 을 주면 **검사하고** 그대로 쓴다.
+
+    잘라서 내보내지 않는다. **찍기 전에 죽는 편이 싸다.** 97 분짜리 학습과
+    달리 촬영은 다시 걸면 되지만, 잘못 찍힌 제목은 팀장이 볼 영상에 남는다.
+    """
+    title = (args.title or "").strip()
+
+    if not title:
+        return "%s · d%.1f · %.1f m/s · %s" % (
+            args.terrain,
+            args.difficulty if args.difficulty is not None else -1.0,
+            args.command_vx,
+            os.path.splitext(os.path.basename(args.checkpoint))[0])
+
+    if len(title) > _HUD_TITLE_MAX:
+        raise RuntimeError(
+            "--title 이 %d 자다. %d 자를 넘으면 HUD 가 뒤를 자른다: %r"
+            % (len(title), _HUD_TITLE_MAX, title))
+
+    # **굽힌 서체는 부분집합이다.** 없는 글자는 두부로 찍힌다.
+    from overlay import hud as hud_mod
+
+    allowed = set(hud_mod.charset())
+    missing = sorted({c for c in title if c not in allowed})
+
+    if missing:
+        raise RuntimeError(
+            "--title 에 굽힌 서체에 없는 글자가 있다: %r. "
+            "쓰려면 overlay/hud.py 의 LABEL_TEXTS 에 먼저 더하고 "
+            "build_font.py 로 글꼴을 다시 구워라. 제목: %r"
+            % ("".join(missing), title))
+
+    return title
 del args.view, args.camera_hfov, args.gate_mode, args.origins_csv
 launcher_argv = [sys.argv[0]]
 skip_next = False
@@ -732,11 +781,7 @@ def main():
                          # **제목을 직접 적는다.** 안 적으면 HUD 가 env_id·episode 로
                          # 만들려다 «?» 로 떨어지고, 그 글자가 굽힌 서체에 없어
                          # 두부가 찍힌다 `확인됨` (2026-09-11 · gap-side 첫 컷).
-                         "title": "%s · d%.1f · %.1f m/s · %s" % (
-                             args.terrain,
-                             args.difficulty if args.difficulty is not None else -1.0,
-                             args.command_vx,
-                             os.path.splitext(os.path.basename(args.checkpoint))[0])},
+                         "title": _hud_title(args)},
                         trace_rows)
         print("[PASS] trace %d 줄 -> %s" % (len(trace_rows), args.trace_csv), flush=True)
     rec_end = time.perf_counter(); final_hfov, final_ha, final_fl = read_hfov()

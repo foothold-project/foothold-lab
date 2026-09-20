@@ -492,6 +492,67 @@ class FontTest(unittest.TestCase):
                                             "".join(missing)),
             )
 
+    def test_title_longer_than_the_cut_makes_two_cuts_identical(self):
+        """**자르기가 정책 이름을 먹는다.** 이 시험이 그것을 못 박는다.
+
+        `hud.py` 는 34 자에서 자르고, `record_terrain_demo.py` 의 기본 제목
+        형식은 **정책 이름이 맨 뒤**다. 그래서 같은 지형 · 같은 속도의 두 컷을
+        나란히 놓으면 **제목이 글자 하나까지 같아진다.** 그 둘을 구분하려고
+        만든 컷인데 화면에서 못 가른다.
+        """
+        def default_title(terrain, difficulty, vx, checkpoint):
+            return "%s · d%.1f · %.1f m/s · %s" % (
+                terrain, difficulty, vx, checkpoint)
+
+        def cut(title):
+            return title[:33] + "…" if len(title) > 34 else title
+
+        a = default_title("pyramid_stairs_inv", 0.5, 1.5, "model_1500")
+        b = default_title("pyramid_stairs_inv", 0.5, 1.5, "foothold-v1")
+
+        self.assertNotEqual(a, b, "자르기 «전» 에는 달라야 한다")
+        self.assertEqual(
+            cut(a), cut(b),
+            "이 시험의 전제가 깨졌다. 자르기가 더는 정책을 안 먹는다면 "
+            "record_terrain_demo.py 의 --title 검사도 다시 보라",
+        )
+
+        # 정책을 «맨 앞» 에 두면 잘려도 남는다.
+        front_a = "H  · pyr_stairs_inv · 1.5 m/s"
+        front_b = "v1 · pyr_stairs_inv · 1.5 m/s"
+
+        self.assertNotEqual(cut(front_a), cut(front_b))
+        self.assertLessEqual(max(len(front_a), len(front_b)), 34)
+
+    def test_ascii_titles_we_plan_to_use_are_all_in_the_font(self):
+        """쓸 제목을 **찍기 전에** 글꼴과 대조한다.
+
+        `VALUE_CHARS` 밖 글자를 쓰면 두부가 찍히는데, 그것을 영상에서 보면
+        이미 늦다.
+        """
+        allowed = set(hud_mod.charset())
+
+        for title in (
+                "H  · gap · 0.5 m/s",
+                "v1 · gap · 0.5 m/s",
+                "H  · floating_ring · 1.0 m/s",
+                "F  · floating_ring · 1.0 m/s",
+                "H  · rails · 1.5 m/s",
+                "D  · rails · 1.5 m/s",
+                "H  · pyr_stairs_inv · 1.5 m/s",
+                "v1 · pyr_stairs_inv · 1.5 m/s",
+        ):
+            missing = sorted({c for c in title if c not in allowed})
+
+            self.assertEqual(missing, [],
+                             "{!r} 에 글꼴에 없는 글자: {}".format(
+                                 title, "".join(missing)))
+            self.assertLessEqual(len(title), 34, repr(title))
+
+    def test_cut_marker_itself_is_in_the_font(self):
+        """자를 때 붙이는 «…» 도 글꼴에 있어야 한다. 없으면 자를 때마다 두부다."""
+        self.assertIn("…", set(hud_mod.charset()))
+
     def test_reserved_font_name_is_gone(self):
         """OFL 1.1 §3. **이름 자리**에 예약된 이름이 남으면 라이선스 위반이다.
 
