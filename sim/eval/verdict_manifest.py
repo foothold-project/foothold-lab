@@ -19,6 +19,12 @@
 갤러리를 만드는 쪽이 **파일명을 추측하면 틀린다.** 그래서 경로를 이 파일이
 적어 준다. 경로는 전부 **저장소 기준 상대 경로**다.
 
+## 파일 이름이 `20260918-D-verdict-manifest.json` 인 까닭
+
+D 판에서 처음 만들어 이름이 그대로 남았다. **지금은 여섯 정책을 담는다.**
+이름을 바꾸면 `gallery/E/manifest.json` 의 `source_manifest` 가 끊긴다.
+이미 낸 판이 가리키는 자리라 **이름을 유지한다.**
+
 ## 복사하지 않는다
 
 v1 의 축 1 원시 CSV 는 이미 `maindata-v1/` 에 있고 그것이 정본이다. 한 벌 더
@@ -85,6 +91,8 @@ AXIS2_POLICIES = (
     ("foothold-v1", "배포본 (현재선)"),
     ("D", "D · 명령 넷 복원"),
     ("E", "E · 바라보게 하되 돌 수 있게"),
+    ("F", "F · E 에 고리 지형"),
+    ("G", "G · heading 압력만 뺀 대조군"),
 )
 
 # 저속 «고정» 시나리오. **판정에 안 들어간다.** 문턱이 없고 원본도 약한
@@ -162,12 +170,12 @@ def compare_wilson(base, test):
     tl, th = wilson_pct(test[1], test[2])
 
     if th < bl:
-        return (False, f"진짜 하락 (D 상한 {th} < v1 하한 {bl})")
+        return (False, f"진짜 하락 (상한 {th} < v1 하한 {bl})")
 
     if tl > bh:
-        return (True, f"진짜 상승 (D 하한 {tl} > v1 상한 {bh})")
+        return (True, f"진짜 상승 (하한 {tl} > v1 상한 {bh})")
 
-    return (None, f"겹침 (v1 [{bl}, {bh}] · D [{tl}, {th}])")
+    return (None, f"겹침 (v1 [{bl}, {bh}] · 이 정책 [{tl}, {th}])")
 
 
 def axis1_video(terrain, vx, policy):
@@ -217,6 +225,10 @@ def axis1_entries(v1_scores):
             REPO_ROOT, "sim", "eval", "results", "20260918-D-axis1"),
         "E": os.path.join(
             REPO_ROOT, "sim", "eval", "results", "20260920-E-axis1"),
+        "F": os.path.join(
+            REPO_ROOT, "sim", "eval", "results", "20260920-F-axis1"),
+        "G": os.path.join(
+            REPO_ROOT, "sim", "eval", "results", "20260920-G-axis1"),
     }
 
     for terrain_set in ("unseen10", "rough6"):
@@ -496,9 +508,10 @@ def main():
         "built_by": "sim/eval/verdict_manifest.py",
         "note": (
             "판정은 두 축의 AND 다. 이 파일은 이미 정해진 문턱을 적용해 적을 "
-            "뿐이고 문턱을 새로 만들지 않는다. 축 1 문턱은 "
-            "models/foothold-v1.json 의 칸 값이고 여유 3 %p 를 둔다. "
-            "축 2 문턱은 NVIDIA 원본 실측에서 뽑았다"
+            "뿐이고 문턱을 새로 만들지 않는다. 축 1 기준값은 "
+            "models/foothold-v1.json 의 칸 값이고 견주는 방법은 "
+            "axis1_rule 에 적은 Wilson 95 % 구간이다. **여유(tolerance) 를 "
+            "두지 않는다.** 축 2 문턱은 NVIDIA 원본 실측에서 뽑았다"
         ),
         "axis1_rule": (
             "Wilson 95 % 신뢰구간이 겹치면 «달라졌다» 고 말하지 않는다 "
