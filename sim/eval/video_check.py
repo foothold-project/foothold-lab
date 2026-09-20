@@ -106,6 +106,96 @@ def mean_luma(path, samples=5):
     return sum(values) / len(values) if values else None
 
 
+# 한 프레임에 전진이 이만큼 «줄면» 리셋이다. 0.5 m/s 로 0.02 초에
+# 되돌아갈 수 있는 거리가 아니다.
+RESET_FWD_DROP_M = 0.30
+
+# 한 프레임에 몸 높이가 이만큼 «뛰면» 리셋이다. 스폰 높이는 0.40 m 다.
+RESET_Z_JUMP_M = 0.25
+
+
+def split_attempts(rows):
+    """trace 행을 **시도 단위로** 쪼갠다.
+
+    **평가 하네스는 낙상에서 판을 끝내지만 녹화기는 안 끝낸다**
+    (`record_terrain_demo.py:695` 가 `dones` 로 정책만 되돌린다). 그 사이
+    **환경이 스스로 리셋**하므로 **한 컷 안에 여러 시도가 들어간다.**
+
+    그러면 화면의 「전진 N m」는 **마지막 시도의 값**이지 컷 전체가 아니다.
+    캡션을 「12 초에 2.24 m」로 쓰면 틀린다 `확인됨`.
+
+    **두 가지로 잡는다.** 하나만 보면 놓친다.
+
+    - 전진이 한 프레임에 `RESET_FWD_DROP_M` 넘게 «줄면»
+    - 몸 높이가 한 프레임에 `RESET_Z_JUMP_M` 넘게 «뛰면»
+
+    **앞선 판은 전진 낙차에 「직전 높이가 0.25 m 아래」를 «그리고» 로 묶었다가
+    고리 앞에서 0.286 m 로 «서 있다» 리셋된 판을 놓쳤다** `확인됨`.
+    뒤집히지 않고도 리셋된다. 없앤 것은 그 «추가 조건» 이다.
+
+    실제로 아홉 컷에서 갈라진 세 자리는 **전부 전진 낙차로** 잡혔다. 높이
+    도약은 **전진이 별로 안 줄면서 리셋되는 경우**(스폰 근처에서 뒤집힌 판)를
+    받는 그물이다.
+
+    돌려주는 것은 구간 목록이다. 하나면 한 판이다.
+    """
+    if not rows:
+        return []
+
+    cuts = []
+
+    for index in range(1, len(rows)):
+        before, here = rows[index - 1], rows[index]
+
+        dropped = (before["fwd_m"] - here["fwd_m"]) > RESET_FWD_DROP_M
+        jumped = (here["base_z_m"] - before["base_z_m"]) > RESET_Z_JUMP_M
+
+        if dropped or jumped:
+            cuts.append(index)
+
+    segments = []
+    start = 0
+
+    for cut in cuts + [len(rows)]:
+        chunk = rows[start:cut]
+
+        if chunk:
+            segments.append({
+                "t_start_s": chunk[0]["t_s"],
+                "t_end_s": chunk[-1]["t_s"],
+                "reached_m": max(r["fwd_m"] for r in chunk),
+                "max_abs_roll_deg": max(abs(r["roll_deg"]) for r in chunk),
+                "frames": len(chunk),
+            })
+
+        start = cut
+
+    return segments
+
+
+def read_trace_rows(path):
+    """trace CSV 에서 쪼개기에 필요한 열만 읽는다. 머리말(`#`)은 건너뛴다."""
+    import csv
+
+    with open(path, encoding="utf-8-sig") as handle:
+        lines = [line for line in handle if not line.startswith("#")]
+
+    rows = []
+
+    for row in csv.DictReader(lines):
+        try:
+            rows.append({
+                "t_s": float(row["t_s"]),
+                "fwd_m": float(row["fwd_m"]),
+                "base_z_m": float(row["base_z_m"]),
+                "roll_deg": float(row["roll_deg"]),
+            })
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    return rows
+
+
 def verify_render(path, expected_frames=None, log_path=None,
                   min_mean_luma=MIN_MEAN_LUMA,
                   min_bytes_per_frame=MIN_BYTES_PER_FRAME,

@@ -134,5 +134,76 @@ class VerifyRenderTest(unittest.TestCase):
             vc.verify_render(os.path.join(tempfile.gettempdir(), "없다.mp4"))
 
 
+class SplitAttemptsTest(unittest.TestCase):
+    """**한 컷에 여러 시도가 들어간다.** `imageio` 없이도 돈다."""
+
+    @staticmethod
+    def _rows(spec):
+        """(t, fwd, z, roll) 목록을 행 사전으로."""
+        return [{"t_s": t, "fwd_m": f, "base_z_m": z, "roll_deg": r}
+                for t, f, z, r in spec]
+
+    def test_one_clean_run_is_one_attempt(self):
+        rows = self._rows([(i * 0.02, i * 0.01, 0.30, 2.0) for i in range(100)])
+
+        self.assertEqual(len(vc.split_attempts(rows)), 1)
+
+    def test_a_forward_drop_splits(self):
+        """전진이 한 프레임에 크게 줄면 리셋이다."""
+        rows = self._rows(
+            [(i * 0.02, 0.80, 0.30, 5.0) for i in range(10)] +
+            [(0.20 + i * 0.02, 0.10 + i * 0.01, 0.30, 5.0) for i in range(10)])
+
+        got = vc.split_attempts(rows)
+
+        self.assertEqual(len(got), 2, got)
+        self.assertAlmostEqual(got[0]["reached_m"], 0.80)
+
+    def test_an_upright_robot_can_be_reset_too(self):
+        """**뒤집히지 않아도 리셋된다.** 이것이 앞선 판별식의 구멍이었다.
+
+        `floating_ring_vx1.0_F` 가 고리 앞에서 **높이 0.286 m · 롤 16°** 로
+        «서 있다» 리셋됐다. 앞선 판별식은 전진 낙차에 「직전 높이가 0.25 m
+        아래」를 «그리고» 로 묶어서 이것을 놓쳤다 `확인됨`.
+
+        실제 값 그대로 넣는다 (전진 0.74 -> 0.10 · 높이 0.286 -> 0.400).
+        """
+        rows = self._rows(
+            [(i * 0.02, 0.74, 0.286, 16.2) for i in range(10)] +
+            [(0.20 + i * 0.02, 0.10, 0.400, 0.0) for i in range(10)])
+
+        got = vc.split_attempts(rows)
+
+        self.assertEqual(len(got), 2, "서 있어도 갈라야 한다")
+        self.assertAlmostEqual(got[0]["max_abs_roll_deg"], 16.2)
+
+    def test_a_height_jump_alone_splits_when_forward_barely_moves(self):
+        """전진이 거의 안 줄어도 **높이가 스폰으로 튀면** 리셋이다.
+
+        스폰 근처에서 뒤집힌 판이 이렇게 된다. 전진 낙차만 보면 놓친다.
+        """
+        rows = self._rows(
+            [(i * 0.02, 0.12, 0.070, 179.0) for i in range(10)] +
+            [(0.20 + i * 0.02, 0.05, 0.400, 0.0) for i in range(10)])
+
+        got = vc.split_attempts(rows)
+
+        self.assertEqual(len(got), 2, "높이 도약만으로도 갈라야 한다")
+
+    def test_it_reports_reach_and_roll_per_attempt(self):
+        rows = self._rows(
+            [(0.00, 0.50, 0.30, 180.0), (0.02, 0.86, 0.08, 179.0)] +
+            [(0.04, 0.10, 0.40, 0.0), (0.06, 2.24, 0.30, 12.0)])
+
+        got = vc.split_attempts(rows)
+
+        self.assertEqual(len(got), 2)
+        self.assertAlmostEqual(got[0]["max_abs_roll_deg"], 180.0)
+        self.assertAlmostEqual(got[1]["reached_m"], 2.24)
+
+    def test_empty_is_empty(self):
+        self.assertEqual(vc.split_attempts([]), [])
+
+
 if __name__ == "__main__":
     unittest.main()
