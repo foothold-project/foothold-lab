@@ -201,18 +201,39 @@ def axis1_video(terrain, vx, policy):
             for name in names:
                 tag = f"{terrain}_vx{speed}_{name}"
                 folder = os.path.join(REPO_ROOT, root, "axis1", tag)
-
-                # **HUD 가 붙은 것을 먼저 쓴다.** 계측이 얹힌 쪽이 판정과
-                # 나란히 놓기 좋다. 없으면 맨 영상을 쓴다.
-                hud = os.path.join(folder, f"{tag}_hud.mp4")
-
-                if os.path.isfile(hud):
-                    return rel(hud)
-
                 path = os.path.join(folder, f"{tag}.mp4")
 
                 if os.path.isfile(path):
                     return rel(path)
+
+    return None
+
+
+def axis1_video_hud(terrain, vx, policy):
+    """그 칸의 **계측이 얹힌** 컷. 없으면 `None`.
+
+    **`video` 와 따로 둔다.** 갤러리는 `zero` · `A` · `foothold-v1` 과 나란히
+    놓는 자리라 **한 판만 계기가 붙으면 모양이 안 맞는다** (기존 `gallery/E` ·
+    `F` · `G` 의 클립 108 편에 HUD 가 하나도 없다 `확인됨`). 갤러리는 맨
+    영상을 쓰고 **아티팩트가 계측본을 쓴다.**
+
+    매니페스트가 둘 다 들고 있으면 **쓰는 쪽이 고른다.** 한쪽만 들고 있으면
+    다른 쪽은 경로를 추측하게 되고, 그것이 갈라짐의 시작이다.
+    """
+    speeds = [f"{vx:g}", f"{vx:.1f}"]
+    names = [policy]
+
+    if policy == "foothold-v1":
+        names.append("v1")
+
+    for root in VIDEO_ROOTS:
+        for speed in speeds:
+            for name in names:
+                tag = f"{terrain}_vx{speed}_{name}"
+                hud = os.path.join(REPO_ROOT, root, "axis1", tag, f"{tag}_hud.mp4")
+
+                if os.path.isfile(hud):
+                    return rel(hud)
 
     return None
 
@@ -293,6 +314,7 @@ def axis1_entries(v1_scores):
                         "run_manifest": rel(os.path.join(folder, "run_manifest.json"))
                                         if exists(os.path.join(folder, "run_manifest.json")) else None,
                         "video": axis1_video(terrain, vx, policy),
+                        "video_hud": axis1_video_hud(terrain, vx, policy),
                         "video_note": (
                             None if axis1_video(terrain, vx, policy) is None
                             else "num_envs 1 한 판. 성공률이 아니라 예시다"
