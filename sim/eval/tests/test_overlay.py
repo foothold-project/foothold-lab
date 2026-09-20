@@ -512,11 +512,22 @@ class FontTest(unittest.TestCase):
         with self.assertRaises(ValueError) as caught:
             hud_mod.validate_title("H · 계단 · 1.5 m/s")
 
-        # 어느 글자가 문제인지 메시지가 알려 줘야 고칠 수 있다.
-        self.assertIn("계", str(caught.exception))
+        # **어느 글자가 문제인지 «따로» 알려 줘야 고칠 수 있다.**
+        #
+        # 여기서 `assertIn("계", ...)` 로 쓰면 안 된다. 메시지가 제목을 통째로
+        # 되풀이하므로 **빠진 글자 목록이 비어도 통과한다** `확인됨`
+        # (돌연변이 시험에서 그 구멍을 찾았다). 목록 자리를 찍어서 본다.
+        message = str(caught.exception)
 
-        with self.assertRaises(ValueError):
+        self.assertIn("'계단'", message,
+                      "빠진 글자 목록을 따로 찍어야 한다: " + message)
+
+        with self.assertRaises(ValueError) as caught2:
             hud_mod.validate_title("H · 역방향 · 1.5 m/s")
+
+        # 「방향」은 이미 LABEL_TEXTS 에 있어 «역» 만 빠진다. 부분집합 글꼴이라
+        # 낱말 단위가 아니라 «글자» 단위로 걸린다는 것을 같이 못 박는다.
+        self.assertIn("'역'", str(caught2.exception))
 
     def test_the_cut_would_make_two_real_cuts_identical(self):
         """**왜 `--title` 이 필요한가.** 기본 형식은 정책이 맨 뒤라 잘리면
