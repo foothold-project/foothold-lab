@@ -39,7 +39,7 @@ CANDIDATES = _from_single_source("COLLAB.md") + [
     os.path.expanduser(r"~\Desktop\jay\인공지능사관학교\foothold-lab\docs\COLLAB.md"),
     os.path.expanduser(r"~\OneDrive\Desktop\인공지능사관학교\foothold-lab\docs\COLLAB.md"),
     # 노트북 세션의 작업 클론
-    r"C:\Users\bangj\AppData\Local\Temp\claude\C--Users-bangj-OneDrive-Desktop----------Claude\ee46b076-055c-4800-9fd3-9aa63c002829\scratchpad\repos\lab2\docs\COLLAB.md",
+    r"C:\Users\<사용자>\AppData\Local\Temp\claude\C--Users-<사용자>-OneDrive-Desktop----------Claude\ee46b076-055c-4800-9fd3-9aa63c002829\scratchpad\repos\lab2\docs\COLLAB.md",
     # 볼트 미러 (최후)
     os.path.join(__import__('roots').proj(), '02_team', 'COLLAB.md'),
 ]

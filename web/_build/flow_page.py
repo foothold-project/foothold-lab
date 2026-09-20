@@ -36,7 +36,7 @@ CANDIDATES = _from_single_source("FLOW.md") + [
     os.path.expanduser(r"~\Desktop\jay\인공지능사관학교\foothold-lab\docs\FLOW.md"),
     os.path.expanduser(r"~\OneDrive\Desktop\인공지능사관학교\foothold-lab\docs\FLOW.md"),
     # 노트북 세션 작업 클론
-    r"C:\Users\bangj\AppData\Local\Temp\claude\C--Users-bangj-OneDrive-Desktop----------Claude"
+    r"C:\Users\<사용자>\AppData\Local\Temp\claude\C--Users-<사용자>-OneDrive-Desktop----------Claude"
     r"\ee46b076-055c-4800-9fd3-9aa63c002829\scratchpad\repos\lab2\docs\FLOW.md",
     os.path.join(__import__('roots').proj(), '02_team', 'FLOW.md'),
 ]

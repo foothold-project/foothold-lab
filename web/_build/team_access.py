@@ -348,14 +348,15 @@ def build():
         % (' pick' if pick else '', n, t, q, f, cls, badge)
         for n, t, q, f, badge, cls, pick in TOOLS) + '</div>'
 
-    # 이 주소는 scan.REDACT 가 웹으로 나갈 때 자리표시자로 바꾼다.
-    # 원문(md)과 볼트에는 실제 값이 남는다. 팀원은 거기서 본다.
-    TB = 'http://192.168.0.5:6006'
+    # 저장소가 «공개» 로 바뀐 뒤로는 원문에도 실제 주소를 두지 않는다.
+    # 팀원은 FOOTHOLD_TB_URL 로 실제 주소를 넣고, 안 넣으면 자리표시자가 나간다.
+    # scan.REDACT 는 그대로 둔다 (실수로 실제 값이 들어와도 웹에서 한 번 더 막는다).
+    TB = os.environ.get('FOOTHOLD_TB_URL', 'http://&lt;워크스테이션&gt;:6006')
     pin = (
         '<div class="pin">'
         '  <div><div class="lab">가장 자주 쓸 것. TensorBoard</div>'
-        '    <div class="addr"><span class="big">http://192.168.0.5:6006</span>'
-        '      <button class="copy" type="button" data-copy="http://192.168.0.5:6006">복사</button></div>'
+        '    <div class="addr"><span class="big">' + TB + '</span>'
+        '      <button class="copy" type="button" data-copy="' + TB + '">복사</button></div>'
         '    <div style="font-size:.72rem;color:var(--ink-3);margin-top:.35rem">'
         '      학원 내부망에서만 · 여러 명 동시 접속 OK</div></div>'
         '  <div><div class="lab">구조</div>'
@@ -380,9 +381,9 @@ def build():
     # TensorBoard 주소 강조 + 복사 버튼
     body = body.replace(
         '<div class="cb"><div class="cb-h">text<button class="copy" type="button" '
-        'aria-label="복사">복사</button></div><pre>http://192.168.0.5:6006</pre></div>',
-        '<div class="addr" style="margin:1rem 0"><span class="big">http://192.168.0.5:6006</span>'
-        '<button class="copy" type="button" data-copy="http://192.168.0.5:6006">복사</button></div>')
+        'aria-label="복사">복사</button></div><pre>' + TB + '</pre></div>',
+        '<div class="addr" style="margin:1rem 0"><span class="big">' + TB + '</span>'
+        '<button class="copy" type="button" data-copy="' + TB + '">복사</button></div>')
 
     # §6 을 경고 박스로 감싼다
     body = body.replace(
