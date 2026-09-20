@@ -113,6 +113,7 @@ SPEED_TAGS = {"v0.5": 0.5, "v1.0": 1.0, "v1.5": 1.5}
 VIDEO_ROOTS = (
     os.path.join("sim", "eval", "results", "20260918-D-videos"),
     os.path.join("sim", "eval", "results", "20260920-E-videos"),
+    os.path.join("sim", "eval", "results", "20260920-FG-videos"),
 )
 
 # `maindata-v1` 은 속도 폴더 이름이 다르다. 1.0 을 `v1` 로 적었다.

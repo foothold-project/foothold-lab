@@ -46,6 +46,9 @@ heading_command      False       ->  False         (안 바뀐다)
 **heading 제어기 출력의 상하한**으로 쓰이는데 G 에서는 **명령 그 자체**로
 쓰인다.
 
+**E 는 반쪽이다.** `rel_heading_envs=0.75` 라 **환경의 25 % 는 heading 제어기를
+안 거치고 표집된 요 명령을 그대로 받는다.** D 와 F 는 1.0 이라 전부 거친다.
+
 설정: `sim/policy/gap_g_env_cfg.py` · 등록 id
 `Isaac-Velocity-GapG-Unitree-Go2-v0`.
 
