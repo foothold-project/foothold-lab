@@ -94,22 +94,12 @@ p.add_argument("--title", default="",
 AppLauncher.add_app_launcher_args(p)
 args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
-VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
-
-
-# HUD 제목의 글자 수 상한. `overlay/hud.py` 가 이 길이에서 자른다.
-# 자르면 «맨 뒤»가 사라지는데 기본 형식은 정책 이름이 맨 뒤라, 나란히 놓는
-# 두 컷의 제목이 «글자 하나까지 같아지는» 일이 생긴다 `확인됨`
-# (pyramid_stairs_inv 1.5 의 H 와 v1 이 둘 다
-#  «pyramid_stairs_inv · d0.5 · 1.5 m…» 로 찍힌다).
-_HUD_TITLE_MAX = 34
-
 
 def _hud_title(args):
-    """HUD 에 넘길 제목. `--title` 을 주면 **검사하고** 그대로 쓴다.
+    """HUD 에 넘길 제목. `--title` 을 주면 **검사해서** 그대로 쓴다.
 
-    잘라서 내보내지 않는다. **찍기 전에 죽는 편이 싸다.** 97 분짜리 학습과
-    달리 촬영은 다시 걸면 되지만, 잘못 찍힌 제목은 팀장이 볼 영상에 남는다.
+    길이 상한과 글꼴 부분집합은 **HUD 의 사정**이라 `overlay/hud.py` 가
+    갖고 있다. 여기서 숫자를 베껴 두면 둘이 갈라진다.
     """
     title = (args.title or "").strip()
 
@@ -120,25 +110,23 @@ def _hud_title(args):
             args.command_vx,
             os.path.splitext(os.path.basename(args.checkpoint))[0])
 
-    if len(title) > _HUD_TITLE_MAX:
-        raise RuntimeError(
-            "--title 이 %d 자다. %d 자를 넘으면 HUD 가 뒤를 자른다: %r"
-            % (len(title), _HUD_TITLE_MAX, title))
-
-    # **굽힌 서체는 부분집합이다.** 없는 글자는 두부로 찍힌다.
     from overlay import hud as hud_mod
 
-    allowed = set(hud_mod.charset())
-    missing = sorted({c for c in title if c not in allowed})
+    try:
+        return hud_mod.validate_title(title)
+    except ValueError as error:
+        raise RuntimeError("--title 을 못 쓴다: %s" % error) from error
 
-    if missing:
-        raise RuntimeError(
-            "--title 에 굽힌 서체에 없는 글자가 있다: %r. "
-            "쓰려면 overlay/hud.py 의 LABEL_TEXTS 에 먼저 더하고 "
-            "build_font.py 로 글꼴을 다시 구워라. 제목: %r"
-            % ("".join(missing), title))
 
-    return title
+# **제목을 여기서 확정한다. 녹화 «전» 이다.**
+# 앞선 판은 trace 를 쓰는 자리에서야 검사했는데, 그때는 영상이 이미 만들어진
+# 뒤였고 `--trace_csv` 를 안 주면 검사 자체를 건너뛰었다 `확인됨`.
+# 97 분짜리 학습과 달리 촬영은 다시 걸면 되지만, **틀린 줄 알면서 찍는 것과
+# 다 찍고 나서 아는 것은 다르다.**
+HUD_TITLE = _hud_title(args)
+VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
+
+
 del args.view, args.camera_hfov, args.gate_mode, args.origins_csv
 launcher_argv = [sys.argv[0]]
 skip_next = False
@@ -781,7 +769,7 @@ def main():
                          # **제목을 직접 적는다.** 안 적으면 HUD 가 env_id·episode 로
                          # 만들려다 «?» 로 떨어지고, 그 글자가 굽힌 서체에 없어
                          # 두부가 찍힌다 `확인됨` (2026-09-11 · gap-side 첫 컷).
-                         "title": _hud_title(args)},
+                         "title": HUD_TITLE},
                         trace_rows)
         print("[PASS] trace %d 줄 -> %s" % (len(trace_rows), args.trace_csv), flush=True)
     rec_end = time.perf_counter(); final_hfov, final_ha, final_fl = read_hfov()

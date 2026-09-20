@@ -100,6 +100,44 @@ def charset():
     return "".join(sorted(chars))
 
 
+# 제목 글자 수 상한. 아래 `Layout` 이 이 길이에서 자른다.
+#
+# **자르면 «맨 뒤» 가 사라진다.** `record_terrain_demo.py` 의 기본 제목은
+# 정책 이름이 맨 뒤라, 나란히 놓는 두 컷의 제목이 «글자 하나까지 같아지는»
+# 일이 생긴다 `확인됨` (pyramid_stairs_inv 1.5 의 H 와 v1 이 둘 다
+# «pyramid_stairs_inv · d0.5 · 1.5 m…» 로 찍힌다).
+TITLE_MAX = 34
+
+
+def validate_title(title):
+    """제목이 **자르지 않고 두부 없이** 찍히는지 본다. 안 되면 `ValueError`.
+
+    여기 두는 이유. 자르기 길이도 글꼴 부분집합도 **HUD 의 사정**이지 녹화기의
+    사정이 아니다. 녹화기가 숫자를 베껴 두면 둘이 갈라진다.
+
+    Isaac 없이 import 되므로 **시험이 이 함수를 직접 부를 수 있다.**
+    """
+    if not isinstance(title, str):
+        raise ValueError("제목이 문자열이 아니다: {!r}".format(title))
+
+    if len(title) > TITLE_MAX:
+        raise ValueError(
+            "제목이 {}자다. {}자를 넘으면 HUD 가 뒤를 자르고, 기본 형식은 "
+            "정책 이름이 맨 뒤라 나란히 놓는 두 컷이 같아진다: {!r}".format(
+                len(title), TITLE_MAX, title))
+
+    allowed = set(charset())
+    missing = sorted({c for c in title if c not in allowed})
+
+    if missing:
+        raise ValueError(
+            "굽힌 서체에 없는 글자가 있다: {!r}. 쓰려면 LABEL_TEXTS 에 먼저 "
+            "더하고 build_font.py 로 글꼴을 다시 구워라. 제목: {!r}".format(
+                "".join(missing), title))
+
+    return title
+
+
 # ---------------------------------------------------------------- 색
 
 INK = (233, 237, 245, 255)

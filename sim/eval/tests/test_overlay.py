@@ -492,46 +492,57 @@ class FontTest(unittest.TestCase):
                                             "".join(missing)),
             )
 
-    def test_title_longer_than_the_cut_makes_two_cuts_identical(self):
-        """**자르기가 정책 이름을 먹는다.** 이 시험이 그것을 못 박는다.
+    def test_validate_title_accepts_the_boundary_and_rejects_one_over(self):
+        """**실제 `hud.validate_title()` 을 부른다.** 경계는 34 자다.
 
-        `hud.py` 는 34 자에서 자르고, `record_terrain_demo.py` 의 기본 제목
-        형식은 **정책 이름이 맨 뒤**다. 그래서 같은 지형 · 같은 속도의 두 컷을
-        나란히 놓으면 **제목이 글자 하나까지 같아진다.** 그 둘을 구분하려고
-        만든 컷인데 화면에서 못 가른다.
+        앞선 판은 이 시험이 자르기 로직을 **시험 안에 베껴 두었다.** 그러면
+        검사 함수가 틀려도 시험은 통과한다. 그래서 진짜 함수를 부른다.
         """
-        def default_title(terrain, difficulty, vx, checkpoint):
-            return "%s · d%.1f · %.1f m/s · %s" % (
-                terrain, difficulty, vx, checkpoint)
+        ok = "H" * hud_mod.TITLE_MAX
 
-        def cut(title):
-            return title[:33] + "…" if len(title) > 34 else title
+        self.assertEqual(hud_mod.validate_title(ok), ok)
 
-        a = default_title("pyramid_stairs_inv", 0.5, 1.5, "model_1500")
-        b = default_title("pyramid_stairs_inv", 0.5, 1.5, "foothold-v1")
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.validate_title("H" * (hud_mod.TITLE_MAX + 1))
 
-        self.assertNotEqual(a, b, "자르기 «전» 에는 달라야 한다")
-        self.assertEqual(
-            cut(a), cut(b),
-            "이 시험의 전제가 깨졌다. 자르기가 더는 정책을 안 먹는다면 "
-            "record_terrain_demo.py 의 --title 검사도 다시 보라",
-        )
+        self.assertIn(str(hud_mod.TITLE_MAX + 1), str(caught.exception))
 
-        # 정책을 «맨 앞» 에 두면 잘려도 남는다.
-        front_a = "H  · pyr_stairs_inv · 1.5 m/s"
-        front_b = "v1 · pyr_stairs_inv · 1.5 m/s"
+    def test_validate_title_rejects_chars_outside_the_baked_font(self):
+        """굽힌 서체에 없는 글자는 **두부로 찍히기 전에** 걸러야 한다."""
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.validate_title("H · 계단 · 1.5 m/s")
 
-        self.assertNotEqual(cut(front_a), cut(front_b))
-        self.assertLessEqual(max(len(front_a), len(front_b)), 34)
+        # 어느 글자가 문제인지 메시지가 알려 줘야 고칠 수 있다.
+        self.assertIn("계", str(caught.exception))
 
-    def test_ascii_titles_we_plan_to_use_are_all_in_the_font(self):
-        """쓸 제목을 **찍기 전에** 글꼴과 대조한다.
+        with self.assertRaises(ValueError):
+            hud_mod.validate_title("H · 역방향 · 1.5 m/s")
 
-        `VALUE_CHARS` 밖 글자를 쓰면 두부가 찍히는데, 그것을 영상에서 보면
-        이미 늦다.
+    def test_the_cut_would_make_two_real_cuts_identical(self):
+        """**왜 `--title` 이 필요한가.** 기본 형식은 정책이 맨 뒤라 잘리면
+        나란히 놓는 두 컷의 제목이 «글자 하나까지» 같아진다.
+
+        자르기는 `Layout` 안에 있으므로 여기서는 **길이만** 본다. 두 기본
+        제목이 둘 다 상한을 넘고, 넘는 지점이 정책 이름 «앞» 이라는 것.
         """
-        allowed = set(hud_mod.charset())
+        fmt = "%s · d%.1f · %.1f m/s · %s"
+        a = fmt % ("pyramid_stairs_inv", 0.5, 1.5, "model_1500")
+        b = fmt % ("pyramid_stairs_inv", 0.5, 1.5, "foothold-v1")
 
+        self.assertNotEqual(a, b)
+        self.assertGreater(len(a), hud_mod.TITLE_MAX)
+        self.assertGreater(len(b), hud_mod.TITLE_MAX)
+
+        # 상한까지 잘라 보면 둘이 같아진다 = 정책이 잘려 나간다.
+        self.assertEqual(a[:hud_mod.TITLE_MAX - 1], b[:hud_mod.TITLE_MAX - 1])
+
+        # 검사 함수도 둘 다 거부한다.
+        for title in (a, b):
+            with self.assertRaises(ValueError):
+                hud_mod.validate_title(title)
+
+    def test_the_eight_titles_we_plan_to_use_all_pass(self):
+        """쓸 제목 여덟을 **실제 함수로** 통과시켜 본다."""
         for title in (
                 "H  · gap · 0.5 m/s",
                 "v1 · gap · 0.5 m/s",
@@ -542,12 +553,7 @@ class FontTest(unittest.TestCase):
                 "H  · pyr_stairs_inv · 1.5 m/s",
                 "v1 · pyr_stairs_inv · 1.5 m/s",
         ):
-            missing = sorted({c for c in title if c not in allowed})
-
-            self.assertEqual(missing, [],
-                             "{!r} 에 글꼴에 없는 글자: {}".format(
-                                 title, "".join(missing)))
-            self.assertLessEqual(len(title), 34, repr(title))
+            self.assertEqual(hud_mod.validate_title(title), title)
 
     def test_cut_marker_itself_is_in_the_font(self):
         """자를 때 붙이는 «…» 도 글꼴에 있어야 한다. 없으면 자를 때마다 두부다."""
