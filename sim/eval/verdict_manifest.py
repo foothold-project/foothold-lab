@@ -93,6 +93,7 @@ AXIS2_POLICIES = (
     ("E", "E · 바라보게 하되 돌 수 있게"),
     ("F", "F · E 에 고리 지형"),
     ("G", "G · heading 압력만 뺀 대조군"),
+    ("H", "H · F 의 고리 지형에 D 의 lin_vel_x 하한"),
 )
 
 # 저속 «고정» 시나리오. **판정에 안 들어간다.** 문턱이 없고 원본도 약한
@@ -230,6 +231,8 @@ def axis1_entries(v1_scores):
             REPO_ROOT, "sim", "eval", "results", "20260920-F-axis1"),
         "G": os.path.join(
             REPO_ROOT, "sim", "eval", "results", "20260920-G-axis1"),
+        "H": os.path.join(
+            REPO_ROOT, "sim", "eval", "results", "20260920-H-axis1"),
     }
 
     for terrain_set in ("unseen10", "rough6"):
