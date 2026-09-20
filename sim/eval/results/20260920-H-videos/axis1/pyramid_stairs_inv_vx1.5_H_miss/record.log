@@ -355,3 +355,12 @@ Critic MLP: MLP(
     }
   }
 }
+/mesh_0' has corrupted data in primvar 'st_1': buffer size 54198 doesn't match expected size 111120 in faceVarying primvars
+2026-09-20T12:17:37Z [17,798ms] [Warning] [omni.hydra] Mesh '/__Prototype_13474969840495255918/mesh_0' has corrupted data in primvar 'st_2': buffer size 6015 doesn't match expected size 233784 in faceVarying primvars
+2026-09-20T12:17:37Z [17,798ms] [Warning] [omni.hydra] Mesh '/__Prototype_17365619108587152245/mesh_0' has corrupted data in primvar 'st_1': buffer size 55254 doesn't match expected size 90378 in faceVarying primvars
+2026-09-20T12:17:37Z [17,799ms] [Warning] [omni.hydra] Mesh '/__Prototype_13474969840495255918/mesh_0' has corrupted data in primvar 'st': buffer size 178533 doesn't match expected size 233784 in faceVarying primvars
+2026-09-20T12:17:37Z [17,799ms] [Warning] [omni.hydra] Mesh '/__Prototype_13474969840495255918/mesh_0' has corrupted data in primvar 'st_3': buffer size 11886 doesn't match expected size 233784 in faceVarying primvars
+2026-09-20T12:17:37Z [17,799ms] [Warning] [omni.hydra] Mesh '/__Prototype_13474969840495255918/mesh_0' has corrupted data in primvar 'st_4': buffer size 30390 doesn't match expected size 233784 in faceVarying primvars
+2026-09-20T12:17:37Z [17,799ms] [Warning] [omni.hydra] Mesh '/__Prototype_13474969840495255918/mesh_0' has corrupted data in primvar 'st_1': buffer size 6960 doesn't match expected size 233784 in faceVarying primvars
+2026-09-20T12:17:37Z [18,270ms] [Warning] [omni.syntheticdata.plugin] OgnSdPostRenderVarToHost : rendervar copy from texture directly to host buffer is counter-performant. Please use copy from texture to device buffer first.
+2026-09-20T12:17:42Z [23,229ms] [Warning] [carb] Client gpu.foundation.plugin has acquired [gpu::unstable::IMemoryBudgetManagerFactory v0.1] 100 times. Consider accessing this interface with carb::getCachedInterface() (Performance warning)
