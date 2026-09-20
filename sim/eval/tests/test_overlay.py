@@ -566,6 +566,37 @@ class FontTest(unittest.TestCase):
         ):
             self.assertEqual(hud_mod.validate_title(title), title)
 
+    def test_auto_title_is_checked_too_when_the_hud_will_render_it(self):
+        """**가장 위험한 경로가 자동 제목이다.**
+
+        앞선 판은 `--title` 을 «준 경우만» 검사했다. 그런데 자동 제목은
+        `pyramid_stairs_inv` 에서 48 자라 상한을 넘는다. 검사를 붙여 놓고
+        가장 위험한 자리를 그대로 두었다 `확인됨`.
+        """
+        auto = "pyramid_stairs_inv · d0.5 · 1.5 m/s · model_1500"
+
+        self.assertGreater(len(auto), hud_mod.TITLE_MAX)
+
+        # HUD 를 씌우면 화면에 나온다 -> 죽어야 한다.
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.resolve_title("", auto, True)
+
+        self.assertIn(str(len(auto)), str(caught.exception))
+        self.assertIn("--title", str(caught.exception))
+
+        # HUD 를 안 씌우면 화면에 안 나온다 -> 막을 이유가 없다.
+        self.assertEqual(hud_mod.resolve_title("", auto, False), auto)
+
+    def test_given_title_is_checked_even_without_the_hud(self):
+        """손으로 준 제목은 **틀린 줄 알면서 두지 않는다.**"""
+        with self.assertRaises(ValueError):
+            hud_mod.resolve_title("H" * 35, "짧은 자동", False)
+
+        ok = "H  · gap · 0.5 m/s"
+
+        self.assertEqual(hud_mod.resolve_title(ok, "아무거나", False), ok)
+        self.assertEqual(hud_mod.resolve_title("  " + ok + "  ", "x", True), ok)
+
     def test_cut_marker_itself_is_in_the_font(self):
         """자를 때 붙이는 «…» 도 글꼴에 있어야 한다. 없으면 자를 때마다 두부다."""
         self.assertIn("…", set(hud_mod.charset()))

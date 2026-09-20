@@ -138,6 +138,38 @@ def validate_title(title):
     return title
 
 
+def resolve_title(given, auto, will_render):
+    """쓸 제목을 고르고 **쓰일 때는 반드시 검사한다.**
+
+    `given`   손으로 준 제목 (`--title`). 비어 있으면 `auto` 를 쓴다
+    `auto`    녹화기가 만든 기본 제목
+    `will_render`  HUD 를 씌울 것인가 (`--trace_csv` 를 줬는가)
+
+    **자동 제목도 검사한다.** 앞선 판은 손으로 준 것만 검사했는데, 자동
+    제목은 `pyramid_stairs_inv` 에서 48 자라 상한을 넘는다. 즉 검사를 붙여
+    놓고 **가장 위험한 경로를 그대로 두었다** `확인됨`.
+
+    손으로 준 제목은 **HUD 를 안 씌워도** 검사한다. 틀린 줄 알면서 두지
+    않는다. 자동 제목은 **화면에 나올 때만**(`will_render`) 검사한다.
+    HUD 없이 찍는 판까지 막을 이유가 없다.
+    """
+    given = (given or "").strip()
+
+    if given:
+        return validate_title(given)
+
+    if not will_render:
+        return auto
+
+    try:
+        return validate_title(auto)
+    except ValueError as error:
+        raise ValueError(
+            "자동 제목이 HUD 에 안 맞는다 ({}자). --title 로 직접 주어라. "
+            "정책을 «앞» 에 두면 잘려도 남는다. 자동: {!r} · 까닭: {}".format(
+                len(auto), auto, error)) from error
+
+
 # ---------------------------------------------------------------- 색
 
 INK = (233, 237, 245, 255)

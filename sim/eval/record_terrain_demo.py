@@ -96,33 +96,25 @@ args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
 
 def _hud_title(args):
-    """HUD 에 넘길 제목. `--title` 을 주면 **검사해서** 그대로 쓴다.
+    """HUD 에 넘길 제목. 고르고 검사하는 규칙은 `overlay/hud.py` 가 갖는다.
 
-    길이 상한과 글꼴 부분집합은 **HUD 의 사정**이라 `overlay/hud.py` 가
-    갖고 있다. 여기서 숫자를 베껴 두면 둘이 갈라진다.
+    길이 상한도 글꼴 부분집합도 HUD 의 사정이다. 여기서 규칙을 베껴 두면
+    둘이 갈라진다. 이 함수는 **기본 형식을 만들어 넘길 뿐이다.**
     """
-    title = (args.title or "").strip()
-
-    if not title:
-        return "%s · d%.1f · %.1f m/s · %s" % (
-            args.terrain,
-            args.difficulty if args.difficulty is not None else -1.0,
-            args.command_vx,
-            os.path.splitext(os.path.basename(args.checkpoint))[0])
-
     from overlay import hud as hud_mod
 
+    auto = "%s · d%.1f · %.1f m/s · %s" % (
+        args.terrain,
+        args.difficulty if args.difficulty is not None else -1.0,
+        args.command_vx,
+        os.path.splitext(os.path.basename(args.checkpoint))[0])
+
     try:
-        return hud_mod.validate_title(title)
+        return hud_mod.resolve_title(args.title, auto, bool(args.trace_csv))
     except ValueError as error:
-        raise RuntimeError("--title 을 못 쓴다: %s" % error) from error
+        raise RuntimeError("제목을 못 쓴다: %s" % error) from error
 
 
-# **제목을 여기서 확정한다. 녹화 «전» 이다.**
-# 앞선 판은 trace 를 쓰는 자리에서야 검사했는데, 그때는 영상이 이미 만들어진
-# 뒤였고 `--trace_csv` 를 안 주면 검사 자체를 건너뛰었다 `확인됨`.
-# 97 분짜리 학습과 달리 촬영은 다시 걸면 되지만, **틀린 줄 알면서 찍는 것과
-# 다 찍고 나서 아는 것은 다르다.**
 HUD_TITLE = _hud_title(args)
 VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
 
