@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 135 1200 470" role="img" aria-labelledby="title desc">
+  <title id="title">미경험 10종 결과와 실패 병목</title>
+  <desc id="desc">다섯 지형 통과와 다섯 지형 실패를 원인별로 묶은 결과 지도</desc>
+  <defs><style>
+    text{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;fill:#161c26}.title{font-size:32px;font-weight:800}.small{font-size:14px}.tiny{font-size:12px}.muted{fill:#4a5566}.accent{fill:#a3342a}
+  </style></defs>
+  <rect width="1200" height="675" fill="#f6f5f1"/>
+
+  <rect x="56" y="151" width="1088" height="111" rx="5" fill="#ffffff" stroke="#d9d6cd"/>
+  <text x="78" y="183" font-size="22" style="fill:#0e7a6e" font-weight="800">통과 5종</text><text x="183" y="183" class="small muted">전체 97~100%</text>
+  <rect x="78" y="201" width="180" height="39" rx="19" fill="#e0f0ed" stroke="#0e7a6e"/><text x="168" y="226" class="small" text-anchor="middle" font-weight="700">repeated_boxes 100</text>
+  <rect x="270" y="201" width="202" height="39" rx="19" fill="#e0f0ed" stroke="#0e7a6e"/><text x="371" y="226" class="small" text-anchor="middle" font-weight="700">repeated_cylinders 100</text>
+  <rect x="484" y="201" width="130" height="39" rx="19" fill="#e0f0ed" stroke="#0e7a6e"/><text x="549" y="226" class="small" text-anchor="middle" font-weight="700">wave 100</text>
+  <rect x="626" y="201" width="124" height="39" rx="19" fill="#e0f0ed" stroke="#0e7a6e"/><text x="688" y="226" class="small" text-anchor="middle" font-weight="700">star 100</text>
+  <rect x="762" y="201" width="196" height="39" rx="19" fill="#e0f0ed" stroke="#0e7a6e"/><text x="860" y="226" class="small" text-anchor="middle" font-weight="700">discrete_obstacles 97</text>
+  <text x="1088" y="222" font-size="38" font-weight="800" text-anchor="end">5/10</text>
+
+  <text x="56" y="310" font-size="23" font-weight="800">실패 5종이 다음 학습의 좌표다</text>
+  <rect x="56" y="333" width="430" height="236" rx="5" fill="#fbe9e7" stroke="#a3342a" stroke-width="1.5"/>
+  <rect x="56" y="333" width="430" height="50" rx="5" fill="#a3342a"/><text x="78" y="366" font-size="19" style="fill:#ffffff" font-weight="800">생존 병목 · 발판을 유지하지 못함</text>
+  <text x="78" y="419" font-size="26" font-weight="800">stepping_stones</text><text x="442" y="419" font-size="26" style="fill:#a3342a" text-anchor="end" font-weight="800">0%</text>
+  <rect x="78" y="435" width="300" height="10" rx="5" fill="#d9d6cd"/><rect x="78" y="435" width="60" height="10" rx="5" fill="#a3342a"/><text x="390" y="447" class="small" font-weight="700">생존 20%</text>
+  <text x="78" y="488" font-size="26" font-weight="800">gap</text><text x="442" y="488" font-size="26" style="fill:#a3342a" text-anchor="end" font-weight="800">0%</text>
+  <rect x="78" y="504" width="300" height="10" rx="5" fill="#d9d6cd"/><rect x="78" y="504" width="63" height="10" rx="5" fill="#a3342a"/><text x="390" y="516" class="small" font-weight="700">생존 21%</text>
+  <text x="78" y="550" class="tiny muted">보상보다 접촉 유지와 물리 조건을 먼저 확인</text>
+
+  <rect x="504" y="333" width="250" height="236" rx="5" fill="#161c26"/>
+  <text x="526" y="372" font-size="19" style="fill:#e56d5e" font-weight="800">속도 추종 병목</text>
+  <text x="526" y="421" font-size="26" style="fill:#ffffff" font-weight="800">rails</text><text x="724" y="421" font-size="29" style="fill:#e56d5e" text-anchor="end" font-weight="800">4%</text>
+  <text x="526" y="465" class="small" style="fill:#ffffff">전진하지만 목표 속도에 못 미침</text>
+  <text x="526" y="503" font-size="17" style="fill:#e56d5e" font-weight="700">속도 추종 8%</text>
+  <text x="526" y="545" class="tiny" style="fill:#adb5c1">전진 중 속도 기준 미달</text>
+
+  <rect x="772" y="333" width="372" height="236" rx="5" fill="#fbe9e7" stroke="#a3342a" stroke-width="1.5"/>
+  <text x="794" y="372" font-size="19" class="accent" font-weight="800">전진 병목 · 끝까지 가지 못함</text>
+  <text x="794" y="421" font-size="25" font-weight="800">pit</text><text x="1118" y="421" font-size="27" class="accent" text-anchor="end" font-weight="800">3%</text>
+  <text x="794" y="449" class="small muted">전진 15%</text>
+  <line x1="794" y1="468" x2="1120" y2="468" stroke="#d9d6cd"/>
+  <text x="794" y="508" font-size="25" font-weight="800">floating_ring</text><text x="1118" y="508" font-size="27" class="accent" text-anchor="end" font-weight="800">0%</text>
+  <text x="794" y="536" class="small muted">전진 0%</text>
+</svg>

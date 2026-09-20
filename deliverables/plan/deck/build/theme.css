@@ -1,0 +1,70 @@
+:root {
+  --brand: #E85D2A;
+  --bg: #F4F0E8;
+  --fg: #17201D;
+  --muted: #6C746F;
+  --card: #FFFDF8;
+  --line: #C9C5BB;
+  --accent: #275B4B;
+  --verified: #235C49;
+  --remeasure: #88561B;
+  --planned: #66548A;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#121714; --fg:#F5F0E6; --muted:#AAB2AD; --card:#1A211D; --line:#3A443E; --accent:#8BC0A6; --verified:#8BC0A6; --remeasure:#E9B56F; --planned:#C8B5EC; }
+}
+:root[data-theme="dark"] { --bg:#121714; --fg:#F5F0E6; --muted:#AAB2AD; --card:#1A211D; --line:#3A443E; --accent:#8BC0A6; --verified:#8BC0A6; --remeasure:#E9B56F; --planned:#C8B5EC; }
+:root[data-theme="light"] { --bg:#F4F0E8; --fg:#17201D; --muted:#6C746F; --card:#FFFDF8; --line:#C9C5BB; --accent:#275B4B; --verified:#235C49; --remeasure:#88561B; --planned:#66548A; }
+* { box-sizing: border-box; }
+html, body { margin:0; width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--fg); font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; }
+#deck { position:relative; width:100vw; height:100vh; }
+.slide { position:absolute; inset:0; display:none; padding:5.2vh 6.2vw 4.5vh; overflow:hidden; background:var(--bg); }
+.slide.active { display:grid; grid-template-columns: 0.9fr 1.35fr; grid-template-rows:auto auto 1fr auto; column-gap:4vw; animation:enter .28s ease-out; }
+@keyframes enter { from { opacity:.25; transform:translateX(12px); } }
+.kicker { grid-column:1; color:var(--brand); font-size:clamp(13px,1.05vw,21px); font-weight:800; letter-spacing:.18em; }
+h1 { grid-column:1 / -1; max-width:94%; margin:1.3vh 0 1vh; font-size:clamp(38px,4.25vw,82px); line-height:1.07; letter-spacing:-.045em; text-wrap:balance; }
+.copy { grid-column:1; grid-row:3; align-self:center; padding-right:1vw; }
+.copy p { margin:.7em 0; font-size:clamp(18px,1.55vw,30px); line-height:1.48; word-break:keep-all; }
+.copy p:first-child { color:var(--accent); font-weight:750; font-size:clamp(22px,2vw,38px); }
+.visual { grid-column:2; grid-row:3; align-self:stretch; min-height:0; display:flex; align-items:center; justify-content:center; }
+.visual > svg, .visual > img { width:100%; max-height:62vh; height:auto; object-fit:contain; }
+.evidence { grid-column:1 / -1; display:flex; gap:.65vw; align-items:center; flex-wrap:wrap; padding-top:1.4vh; border-top:1px solid var(--line); }
+.chip { padding:.42em .75em; border:1px solid currentColor; border-radius:99px; font-size:clamp(12px,.88vw,18px); white-space:nowrap; }
+.chip.verified { color:var(--verified); }
+.chip.remeasure { color:var(--remeasure); border-style:dashed; }
+.chip.planned { color:var(--planned); border-style:dotted; }
+.folio { position:absolute; right:2.2vw; bottom:2vh; color:var(--muted); font-size:clamp(11px,.8vw,16px); }
+#theme, #notes-toggle { position:fixed; z-index:20; top:18px; width:42px; height:42px; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--fg); font-weight:800; cursor:pointer; }
+#theme { right:18px; }
+#notes-toggle { right:70px; }
+#meta { position:fixed; z-index:10; left:18px; bottom:12px; color:var(--muted); font-size:11px; opacity:.6; }
+#notes { position:fixed; z-index:30; top:0; right:0; width:min(42rem,45vw); height:100%; padding:26px; overflow:auto; background:var(--card); border-left:1px solid var(--line); transform:translateX(102%); transition:transform .2s ease; box-shadow:-16px 0 45px rgba(0,0,0,.18); }
+#notes.open { transform:translateX(0); }
+#notes header { display:flex; justify-content:space-between; gap:20px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+.note { display:none; }
+.note.active { display:block; }
+.note h2 { font-size:28px; line-height:1.25; }
+.note p, .note li { font-size:16px; line-height:1.6; }
+.gate-svg { width:100%; }
+.timeline-wrap { width:100%; display:flex; flex-direction:column; align-items:stretch; }
+.timeline-wrap.compact .gate-svg { transform:scale(1.04); transform-origin:center; }
+.timeline-line { stroke:var(--line); stroke-width:7; }
+.gate-dot { fill:var(--brand); stroke:var(--bg); stroke-width:5; }
+.gate-name { fill:var(--fg); font-size:19px; font-weight:800; }
+.gate-date, .gate-count { fill:var(--muted); font-size:15px; }
+.stage-off { width:92%; margin:-2vh auto 0; padding:1rem 1.4rem; border-top:2px dashed var(--line); display:flex; justify-content:space-between; gap:2rem; color:var(--muted); font-size:clamp(13px,1vw,19px); }
+.stage-off b { color:var(--fg); }
+svg text { font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; }
+@media (max-aspect-ratio: 4/3) {
+  .slide.active { grid-template-columns:1fr; grid-template-rows:auto auto auto 1fr auto; }
+  .copy { grid-column:1; grid-row:3; }
+  .visual { grid-column:1; grid-row:4; }
+  .visual > svg, .visual > img { max-height:48vh; }
+  .evidence { grid-row:5; }
+}
+@media print {
+  @page { size:16in 9in; margin:0; }
+  html, body, #deck { width:16in; height:auto; overflow:visible; }
+  .slide { position:relative; display:grid !important; width:16in; height:9in; break-after:page; }
+  #theme, #notes-toggle, #notes, #meta { display:none; }
+}

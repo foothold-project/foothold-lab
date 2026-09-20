@@ -1,0 +1,9 @@
+<svg viewBox="0 0 1100 650" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
+  <title id="t">정비되지 않은 현장</title><desc id="d">불규칙한 지면과 진행 경계를 추상화했다.</desc>
+  <path d="M35 520 L150 420 L252 458 L370 320 L484 390 L606 245 L735 350 L865 198 L1065 336 L1065 590 L35 590 Z" fill="var(--card)" stroke="var(--line)" stroke-width="4"/>
+  <path d="M35 520 L150 420 L252 458 L370 320 L484 390 L606 245 L735 350 L865 198" fill="none" stroke="var(--brand)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(400 278)" fill="var(--fg)"><rect x="0" y="0" width="196" height="70" rx="18"/><rect x="28" y="-30" width="92" height="38" rx="10" fill="var(--accent)"/><path d="M28 62 L-8 150 M70 62 L44 160 M132 62 L160 153 M174 62 L212 142" stroke="var(--fg)" stroke-width="18" stroke-linecap="round"/></g>
+  <path d="M628 237 Q765 85 998 118" fill="none" stroke="var(--accent)" stroke-width="5" stroke-dasharray="14 16"/>
+  <text x="668" y="92" fill="var(--accent)" font-size="26" font-weight="800">처음 만난 지형에서도 이동할 수 있는가</text>
+  <text x="54" y="626" fill="var(--muted)" font-size="19">비정형 지면 · 시야 제한 · 불연속 경계</text>
+</svg>

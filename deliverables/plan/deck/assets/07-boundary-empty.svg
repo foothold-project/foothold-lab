@@ -1,0 +1,8 @@
+<svg viewBox="0 0 1100 650" role="img" aria-label="데이터 없는 난이도 경계 측정 틀" xmlns="http://www.w3.org/2000/svg">
+  <path d="M115 520 V90 M115 520 H1020" fill="none" stroke="var(--fg)" stroke-width="4"/>
+  <g stroke="var(--line)" stroke-width="2" stroke-dasharray="7 10"><line x1="115" y1="190" x2="1020" y2="190"/><line x1="115" y1="305" x2="1020" y2="305"/><line x1="115" y1="420" x2="1020" y2="420"/></g>
+  <text x="32" y="112" fill="var(--muted)" font-size="19" transform="rotate(-90 32 112)">통과율</text><text x="870" y="570" fill="var(--muted)" font-size="20">지형 난이도</text>
+  <text x="700" y="130" fill="var(--muted)" font-size="19">1 · 기준선 경계를 기록</text><text x="700" y="168" fill="var(--brand)" font-size="19">2 · 학습 후 경계를 같은 축에 기록</text>
+  <path d="M115 590 H1020" stroke="var(--accent)" stroke-width="6"/><text x="115" y="624" fill="var(--accent)" font-size="20" font-weight="800">안전선 · 기존 통과 5종 비후퇴</text>
+  <rect x="392" y="268" width="352" height="105" rx="18" fill="var(--card)" stroke="var(--brand)" stroke-width="4"/><text x="568" y="314" text-anchor="middle" fill="var(--brand)" font-size="26" font-weight="900">측정 계획</text><text x="568" y="350" text-anchor="middle" fill="var(--muted)" font-size="18">실제 곡선 없음</text>
+</svg>
