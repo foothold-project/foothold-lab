@@ -234,8 +234,13 @@ params/env.yaml:372-381
 AME-1 p.14 원문 · 「The map scans also have random drifts sampled from a
 normal distribution **for each terrain at the beginning of training**」 `확인됨`.
 
-**우리와 정확히 반대다.** 그들은 에피소드 단위 상관 드리프트를 켜고 셀별
-잡음은 작게, 우리는 상관 드리프트를 끄고 셀별 ±0.10 m 백색을 건다.
+**우리와 정확히 반대다.** 그들은 **지도 전체가 함께 흔들리는 상관 드리프트**를
+켜고 셀별 잡음은 작게, 우리는 상관을 끄고 셀별 ±0.10 m 백색을 건다.
+
+**주기는 우리 기구가 다르다** `코드확인` · `ray_cast_drift` 는
+`RayCaster.reset(env_ids)` 에서 **에피소드마다 · 환경마다** 다시 뽑힌다.
+AME-1 의 「지형마다 · 학습 시작에」보다 잦다. 한 에피소드가 1000 정책
+스텝이니 **드리프트 1 회 대 백색 잡음 1000 회**, 상관 시간이 1000 배 차이다.
 
 ### (4) 격자를 앞으로 밀 수 있다 · 공짜다
 
