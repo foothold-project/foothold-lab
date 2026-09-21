@@ -69,11 +69,90 @@ def score(summary):
     return out
 
 
+# `--matrix` 가 세로로 늘어놓는 판들. (이름, 폴더) 이고 폴더는 저장소 기준이다.
+BASELINE_ROOT = os.path.join("sim", "eval", "results", "20260918-command-baseline")
+V2AB_ROOT = os.path.join("sim", "eval", "results", "20260921-v2ab-axis2")
+MATRIX_ROWS = (
+    ("NVIDIA 원본", os.path.join(BASELINE_ROOT, "nvidia-zero")),
+    ("foothold-v1", os.path.join(BASELINE_ROOT, "foothold-v1")),
+    ("D", os.path.join(BASELINE_ROOT, "D")),
+    ("E", os.path.join(BASELINE_ROOT, "E")),
+    ("F", os.path.join(BASELINE_ROOT, "F")),
+    ("G", os.path.join(BASELINE_ROOT, "G")),
+    ("H", os.path.join(BASELINE_ROOT, "H")),
+    ("석헌 rails10-2950", os.path.join(BASELINE_ROOT, "lim-rails10")),
+    ("석헌 rails10-3000", os.path.join(BASELINE_ROOT, "lim-rails10-3000")),
+    ("석헌 control-3000", os.path.join(BASELINE_ROOT, "lim-control-3000")),
+) + tuple(
+    ("v2a iter%d" % i, os.path.join(V2AB_ROOT, "v2a-iter%d" % i)) for i in ITERS
+) + tuple(
+    ("v2b iter%d" % i, os.path.join(V2AB_ROOT, "v2b-iter%d" % i)) for i in ITERS
+)
+
+
+def load_dir(folder):
+    path = os.path.join(folder, "probe_manifest.json")
+    if not os.path.exists(path):
+        return None
+    with io.open(path, encoding="utf-8") as handle:
+        return json.load(handle).get("summary", {})
+
+
+def print_matrix():
+    """정책 x 아홉 칸. **이미 잰 것을 펴는 것뿐이다.**"""
+    labels = [c[2] for c in CELLS] + ["wz " + k for k in YAW_KEYS]
+    short = ["정지낙상", "유지낙상", "유지잔류", "유지목표", "회전낙상",
+             "wz-1.0", "wz-0.5", "wz+0.5", "wz+1.0"]
+
+    rows = []
+    for name, folder in MATRIX_ROWS:
+        summary = load_dir(folder)
+        if summary is None:
+            continue
+        rows.append((name, score(summary)))
+
+    print("통과 O · 미달 . · 값 없음 -")
+    print()
+    print("%-18s %s  통과" % ("", " ".join("%8s" % s for s in short)))
+    for name, cells in rows:
+        marks = []
+        for _, value, ok in cells:
+            marks.append("%8s" % ("-" if value is None
+                                  else ("O" if ok else ".")))
+        total = sum(1 for c in cells if c[2])
+        print("%-18s %s   %d" % (name, " ".join(marks), total))
+
+    print()
+    print("**칸마다 «한 번이라도» 넘은 판이 있나**")
+    for index, label in enumerate(labels):
+        winners = [n for n, cells in rows if cells[index][2]]
+        ours = [n for n in winners if n != "NVIDIA 원본"]
+        mark = "**아무도 못 넘음**" if not ours else "%d 판" % len(ours)
+        print("  %-14s 원본 %s · 그 밖 %s" % (
+            label, "O" if any(n == "NVIDIA 원본" and c[index][2]
+                              for n, c in rows) else ".", mark))
+
+    print()
+    print("**값 표** (통과 여부 말고 수치)")
+    print("%-18s %s" % ("", " ".join("%8s" % s for s in short)))
+    for name, cells in rows:
+        print("%-18s %s" % (name, " ".join(
+            "%8s" % ("-" if v is None else "%.4g" % v) for _, v, _ in cells)))
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", required=True)
-    parser.add_argument("--policies", nargs="+", required=True)
+    parser.add_argument("--root")
+    parser.add_argument("--policies", nargs="*")
+    parser.add_argument("--matrix", action="store_true",
+                        help="정책 x 아홉 칸 표만 찍는다")
     args = parser.parse_args()
+
+    if args.matrix:
+        print_matrix()
+        return
+    if not args.root or not args.policies:
+        raise SystemExit("--matrix 가 아니면 --root 와 --policies 가 필요하다")
 
     labels = [c[2] for c in CELLS] + ["wz " + k for k in YAW_KEYS]
 
