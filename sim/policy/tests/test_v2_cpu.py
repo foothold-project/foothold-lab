@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""v2a · v2b 설정 덮어쓰기를 CPU 에서 검증한다.
+"""v2a · v2b · v2c · v2d 설정 덮어쓰기를 CPU 에서 검증한다.
 
 분류: 실험
 작성: Claude 세션 (오흥재 지시) · 2026-09-21
 근거: inbox/jay/20260921-v2-design.md v1.0 (c766f97) 1 절 · 돌고 있는 학습의 params/env.yaml
-요지: 되읽기 관문이 «실제로 막는지» 를 칸마다 깨뜨려 확인하고, v2b 가 v2a 와 한 칸만 다른지를 구조로 확인한다
+요지: 되읽기 관문이 «실제로 막는지» 를 칸마다 깨뜨려 확인하고, 자식 판들이 v2a 와 «자기 칸만» 다른지를 구조로 확인한다
 상태: CPU 단위 검사 · Isaac 환경 통합 검사가 아님
 판: v1.0
 
@@ -88,6 +88,14 @@ class FakeBase(object):
                       lin_vel_x=(0.5, 1.5), lin_vel_y=(0.0, 0.0))))
         self.events = NS(reset_base=NS(params={"pose_range": {
             "x": (-0.10, 0.10), "y": (-0.20, 0.20), "yaw": (-0.05, 0.05)}}))
+        # 상류 기본값. 돌아간 학습의 params/env.yaml 에서 읽은 그대로다.
+        self.scene.height_scanner = NS(
+            ray_cast_drift_range={"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            drift_range=(0.0, 0.0),
+            offset=NS(pos=(0.0, 0.0, 20.0), rot=(1.0, 0.0, 0.0, 0.0)))
+        self.observations = NS(policy=NS(
+            enable_corruption=True,
+            height_scan=NS(noise=NS(n_min=-0.10, n_max=0.10))))
 
 
 def base_namespace():
@@ -112,14 +120,18 @@ def load():
     classes_from_source(
         POLICY_DIR / "v2a_env_cfg.py", {"UnitreeGo2V2aEnvCfg"}, ns_a)
 
-    ns_b = base_namespace()
-    ns_b["UnitreeGo2V2aEnvCfg"] = ns_a["UnitreeGo2V2aEnvCfg"]
-    classes_from_source(
-        POLICY_DIR / "v2b_env_cfg.py", {"UnitreeGo2V2bEnvCfg"}, ns_b)
-    return ns_a["UnitreeGo2V2aEnvCfg"], ns_b["UnitreeGo2V2bEnvCfg"]
+    out = [ns_a["UnitreeGo2V2aEnvCfg"]]
+    for letter in ("b", "c", "d"):
+        child = base_namespace()
+        child["UnitreeGo2V2aEnvCfg"] = ns_a["UnitreeGo2V2aEnvCfg"]
+        classes_from_source(
+            POLICY_DIR / ("v2%s_env_cfg.py" % letter),
+            {"UnitreeGo2V2%sEnvCfg" % letter}, child)
+        out.append(child["UnitreeGo2V2%sEnvCfg" % letter])
+    return out
 
 
-V2A, V2B = load()
+V2A, V2B, V2C, V2D = load()
 
 
 def build(cls):
@@ -275,6 +287,126 @@ class GuardTests(unittest.TestCase):
         """**반대쪽도 본다.** 늘 던지는 관문은 관문이 아니라 고장이다."""
         for cls in (V2A, V2B):
             with self.subTest(cls=cls.__name__):
+                build(cls)._verify_overrides()
+
+
+def scanner_state(cfg):
+    """한 판의 «지각» 설정을 한 덩이로. 두 판을 견줄 때 쓴다."""
+    scanner = cfg.scene.height_scanner
+    noise = cfg.observations.policy.height_scan.noise
+    return {
+        "drift": {k: tuple(v) for k, v in dict(scanner.ray_cast_drift_range).items()},
+        "offset": tuple(scanner.offset.pos),
+        "noise": (noise.n_min, noise.n_max),
+        "sensor_drift": tuple(scanner.drift_range),
+    }
+
+
+def terrain_and_commands(cfg):
+    """지형 비중과 명령 여섯 칸. 자식 판이 건드리면 안 되는 자리."""
+    cmd = cfg.commands.base_velocity
+    return {
+        "terrain": {k: round(v.proportion, 6) for k, v
+                    in cfg.scene.terrain.terrain_generator.sub_terrains.items()},
+        "heading_command": cmd.heading_command,
+        "rel_heading_envs": cmd.rel_heading_envs,
+        "resampling": tuple(cmd.resampling_time_range),
+        "heading": tuple(cmd.ranges.heading),
+        "ang_vel_z": tuple(cmd.ranges.ang_vel_z),
+        "lin_vel_x": tuple(cmd.ranges.lin_vel_x),
+        "lin_vel_y": tuple(cmd.ranges.lin_vel_y),
+    }
+
+
+class PerceptionChildTests(unittest.TestCase):
+    """**v2c · v2d 의 주장** · v2a 에서 자기 칸만 다르다."""
+
+    def test_v2c_overrides_exactly_two_methods(self):
+        self.assertEqual(
+            {n for n in vars(V2C) if not n.startswith("__")},
+            {"scanner_drift_range", "height_scan_noise"})
+
+    def test_v2d_overrides_exactly_one_method(self):
+        self.assertEqual(
+            {n for n in vars(V2D) if not n.startswith("__")},
+            {"scanner_offset_pos"})
+
+    def test_v2c_changes_only_drift_and_noise(self):
+        a, c = scanner_state(build(V2A)), scanner_state(build(V2C))
+        self.assertEqual(
+            c["drift"],
+            {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "z": (-0.05, 0.05)})
+        self.assertEqual(c["noise"], (-0.02, 0.02))
+        self.assertEqual(c["offset"], a["offset"])
+        self.assertEqual(c["sensor_drift"], a["sensor_drift"])
+        self.assertEqual({k for k in a if a[k] != c[k]}, {"drift", "noise"})
+
+    def test_v2d_changes_only_the_grid_offset(self):
+        a, d = scanner_state(build(V2A)), scanner_state(build(V2D))
+        self.assertEqual(d["offset"], (0.2, 0.0, 20.0))
+        self.assertEqual(d["drift"], a["drift"])
+        self.assertEqual(d["noise"], a["noise"])
+        self.assertEqual({k for k in a if a[k] != d[k]}, {"offset"})
+
+    def test_children_do_not_touch_terrain_or_commands(self):
+        want = terrain_and_commands(build(V2A))
+        for name, cls in (("v2b", V2B), ("v2c", V2C), ("v2d", V2D)):
+            with self.subTest(policy=name):
+                self.assertEqual(terrain_and_commands(build(cls)), want)
+
+    def test_v2b_does_not_touch_perception(self):
+        self.assertEqual(scanner_state(build(V2B)), scanner_state(build(V2A)))
+
+    def test_v2c_and_v2d_keep_v2a_standing(self):
+        for name, cls in (("v2c", V2C), ("v2d", V2D)):
+            with self.subTest(policy=name):
+                self.assertEqual(
+                    build(cls).commands.base_velocity.rel_standing_envs, 0.02)
+
+
+class PerceptionGuardTests(unittest.TestCase):
+    """**자식 판의 관문도 깨뜨려 본다.** 물려받은 검사가 자기 값을 본다."""
+
+    def broken(self, cls, mutate):
+        cfg = build(cls)
+        mutate(cfg)
+        with self.assertRaises(RuntimeError) as caught:
+            cfg._verify_overrides()
+        return str(caught.exception)
+
+    def test_v2c_guard_rejects_v2a_drift(self):
+        message = self.broken(V2C, lambda c: setattr(
+            c.scene.height_scanner, "ray_cast_drift_range",
+            {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)}))
+        self.assertIn("ray_cast_drift_range", message)
+
+    def test_v2c_guard_rejects_v2a_noise(self):
+        def mutate(cfg):
+            cfg.observations.policy.height_scan.noise.n_min = -0.10
+            cfg.observations.policy.height_scan.noise.n_max = 0.10
+        self.assertIn("height_scan 잡음", self.broken(V2C, mutate))
+
+    def test_v2d_guard_rejects_v2a_offset(self):
+        message = self.broken(V2D, lambda c: setattr(
+            c.scene.height_scanner.offset, "pos", (0.0, 0.0, 20.0)))
+        self.assertIn("height_scanner.offset.pos", message)
+
+    def test_v2a_guard_rejects_v2c_drift(self):
+        """반대 방향도 본다. v2a 에서 드리프트가 켜져 있으면 막아야 한다."""
+        message = self.broken(V2A, lambda c: setattr(
+            c.scene.height_scanner, "ray_cast_drift_range",
+            {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "z": (-0.05, 0.05)}))
+        self.assertIn("ray_cast_drift_range", message)
+
+    def test_a_partially_applied_drift_is_caught(self):
+        """세 축 중 «하나만» 어긋나도 걸리나."""
+        message = self.broken(V2C, lambda c: c.scene.height_scanner
+                              .ray_cast_drift_range.__setitem__("y", (0.0, 0.0)))
+        self.assertIn("ray_cast_drift_range", message)
+
+    def test_clean_children_do_not_raise(self):
+        for name, cls in (("v2c", V2C), ("v2d", V2D)):
+            with self.subTest(policy=name):
                 build(cls)._verify_overrides()
 
 

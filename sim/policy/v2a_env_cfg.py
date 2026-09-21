@@ -19,6 +19,24 @@
 
 **학습에 넣은 지형으로 평가하므로 `rails` 는 「미경험 험지」주장에서 빠진다.**
 설계 6 절 5 번에 적혀 있다.
+
+## 이 파일을 v2b 와 «한 모듈로 합치지 마십시오** `확인됨`
+
+`standing_envs()` 는 모듈 전역 `REL_STANDING_ENVS` 를 **부를 때** 읽는다.
+두 파일을 합치면 나중에 정의된 v2b 의 0.10 이 v2a 것까지 덮어써서
+**v2a 가 조용히 0.10 으로 학습한다.** 오류도 안 난다.
+`tests/test_v2_cpu.py` 를 짜다 실제로 겪었다.
+
+## 아래 네 «선언» 은 v2c · v2d 가 한 칸씩 물려받아 바꾼다
+
+`standing_envs` · `scanner_drift_range` · `height_scan_noise` ·
+`scanner_offset_pos` 넷은 v2a 가 **바꾸지 않는 값까지 적어 둔 것**이다.
+되읽기가 이 넷을 검사하므로, 자식 판은 **자기가 바꾼 칸만 덮어쓰면**
+나머지가 v2a 와 같다는 것이 구조로 보증된다.
+
+**v2a 의 동작은 이 선언으로 안 바뀐다** · 돌아간 학습의 `params/env.yaml`
+에서 읽은 값 그대로다 (`drift_range` (0,0) · `ray_cast_drift_range` 셋 다
+(0,0) · `offset.pos` (0,0,20) · `height_scan` 잡음 ±0.10).
 """
 
 from __future__ import annotations
@@ -55,6 +73,12 @@ KEEP_POSE_RANGE = {
 }
 REL_STANDING_ENVS = 0.02
 
+# 아래 셋은 v2a 가 «안 건드리는» 값이다. 그래도 적어 두고 검사한다.
+# 상류 기본값이 바뀌면 학습이 시작되기 전에 걸린다.
+SCANNER_DRIFT_RANGE = {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)}
+SCANNER_OFFSET_POS = (0.0, 0.0, 20.0)
+HEIGHT_SCAN_NOISE = (-0.10, 0.10)
+
 
 @configclass
 class UnitreeGo2V2aEnvCfg(UnitreeGo2GapWideEnvCfg):
@@ -89,11 +113,32 @@ class UnitreeGo2V2aEnvCfg(UnitreeGo2GapWideEnvCfg):
         command.rel_standing_envs = self.standing_envs()
         command.ranges.lin_vel_x = (0.4, 1.5)
         command.resampling_time_range = (10.0, 10.0)
+
+        # **네 선언을 실제로 «건다».** v2a 에서는 상류 기본값과 같아 아무
+        # 일도 안 하지만, 자식 판은 선언 하나만 덮어쓰면 적용까지 따라온다.
+        scanner = self.scene.height_scanner
+        scanner.ray_cast_drift_range = dict(self.scanner_drift_range())
+        scanner.offset.pos = tuple(self.scanner_offset_pos())
+        noise = self.observations.policy.height_scan.noise
+        noise.n_min, noise.n_max = self.height_scan_noise()
+
         self._verify_overrides()
 
     def standing_envs(self):
         """v2b 가 **이 한 칸만** 덮어쓴다. 나머지는 물려받아 같다."""
         return REL_STANDING_ENVS
+
+    def scanner_drift_range(self):
+        """v2c 가 덮어쓴다. 에피소드마다 다시 뽑히는 «상관» 드리프트."""
+        return SCANNER_DRIFT_RANGE
+
+    def height_scan_noise(self):
+        """v2c 가 덮어쓴다. **매 정책 스텝** 다시 뽑히는 셀별 백색 잡음."""
+        return HEIGHT_SCAN_NOISE
+
+    def scanner_offset_pos(self):
+        """v2d 가 덮어쓴다. 격자 중심의 몸통 기준 위치."""
+        return SCANNER_OFFSET_POS
 
     def _verify_overrides(self):
         """명령 · 지형 · 비중 · 리셋을 되읽는다. 어긋나면 학습을 시작하지 않는다."""
@@ -154,6 +199,22 @@ class UnitreeGo2V2aEnvCfg(UnitreeGo2GapWideEnvCfg):
                 problems.append(
                     f"rails.platform_width: {rails.platform_width!r} "
                     f"(기대값 {RAILS_PLATFORM_WIDTH!r})")
+
+        scanner = self.scene.height_scanner
+        drift = {k: tuple(v) for k, v in
+                 dict(getattr(scanner, "ray_cast_drift_range", {})).items()}
+        if drift != {k: tuple(v) for k, v in self.scanner_drift_range().items()}:
+            problems.append(
+                f"ray_cast_drift_range: {drift!r} (기대값 {self.scanner_drift_range()!r})")
+        if tuple(scanner.offset.pos) != tuple(self.scanner_offset_pos()):
+            problems.append(
+                f"height_scanner.offset.pos: {tuple(scanner.offset.pos)!r} "
+                f"(기대값 {self.scanner_offset_pos()!r})")
+        noise = self.observations.policy.height_scan.noise
+        if (noise.n_min, noise.n_max) != tuple(self.height_scan_noise()):
+            problems.append(
+                f"height_scan 잡음: {(noise.n_min, noise.n_max)!r} "
+                f"(기대값 {tuple(self.height_scan_noise())!r})")
 
         pose = self.events.reset_base.params["pose_range"]
         for axis, wanted in KEEP_POSE_RANGE.items():
