@@ -98,9 +98,13 @@ IsaacLab 위치가 다르면 `--isaaclab_root` 나 `ISAACLAB_PATH` 로 준다.
 """
 
 import argparse
+import glob
 import os
 import runpy
+import subprocess
 import sys
+import threading
+import time
 
 # **이 세 줄이 이 파일의 존재 이유다.** Kit 보다 먼저 들어가야 한다.
 # 순서를 바꾸거나 아래로 내리지 마십시오.
@@ -109,6 +113,10 @@ from tensordict import TensorDict  # noqa: F401,E402
 import rsl_rl.runners  # noqa: F401,E402
 
 DEFAULT_ISAACLAB = r"C:\isaac\IsaacLab"
+# 런 폴더가 생기고 `params/env.yaml` 이 떨어질 때까지 기다리는 한도.
+WATCH_TIMEOUT_S = 600
+WATCH_POLL_S = 2.0
+NEWLINE = chr(10)
 TRAIN_RELATIVE = os.path.join(
     "scripts", "reinforcement_learning", "rsl_rl", "train.py")
 
@@ -121,6 +129,10 @@ def resolve_train_script(argv):
     """
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--isaaclab_root", type=str, default=None)
+    parser.add_argument("--guard_against", type=str, default=None,
+                        help="이 런 폴더의 env.yaml 과 대조한다")
+    parser.add_argument("--guard_intended", nargs="*", default=[],
+                        help="다를 «예정» 인 평탄화 키들")
 
     known, rest = parser.parse_known_args(argv)
 
@@ -128,11 +140,126 @@ def resolve_train_script(argv):
             or os.environ.get("ISAACLAB_PATH")
             or DEFAULT_ISAACLAB)
 
-    return os.path.join(root, TRAIN_RELATIVE), rest
+    return os.path.join(root, TRAIN_RELATIVE), rest, root, known
+
+
+def run_name_from(rest):
+    """`agent.run_name=...` 값. 없으면 `None`."""
+    for arg in rest:
+        if arg.startswith("agent.run_name="):
+            return arg.split("=", 1)[1]
+    return None
+
+
+def find_run_dir(isaaclab_root, run_name):
+    """그 `run_name` 으로 끝나는 가장 새 런 폴더. 없으면 `None`.
+
+    rsl_rl 이 `<타임스탬프>_<run_name>` 으로 만든다. 이름을 우리가 주므로
+    **다른 사람 런을 집을 일이 없다.**
+    """
+    if not run_name:
+        return None
+    pattern = os.path.join(
+        isaaclab_root, "logs", "rsl_rl", "*", "*_" + run_name)
+    hits = [d for d in glob.glob(pattern) if os.path.isdir(d)]
+    return max(hits, key=os.path.getmtime) if hits else None
+
+
+def write_launch_record(run_dir, rest, train_script):
+    """**무엇으로 띄웠는가** 를 런 폴더에 남긴다.
+
+    런 폴더에 `events.out.tfevents` · `git/` · `params/` 는 있는데 «명령»이
+    없었다. 재현 판을 걸 때 「같은 명령이었나」를 사람 기억에 묻게 된다.
+    """
+    path = os.path.join(run_dir, "launch_command.txt")
+    if os.path.exists(path):
+        return
+    lines = [
+        "# 이 런을 띄운 명령. train_win.py 가 남긴 것이다.",
+        "# 이것이 정본이다. 문서에 적힌 명령과 다르면 «이쪽» 이 맞다.",
+        "",
+        "python " + os.path.basename(__file__) + " " + " ".join(rest),
+        "",
+        "train.py  : " + train_script,
+        "python    : " + sys.executable,
+        "cwd       : " + os.getcwd(),
+        "argv      : " + repr(sys.argv),
+    ]
+    with io_open(path, "w") as handle:
+        handle.write(NEWLINE.join(lines) + NEWLINE)
+    print("[train_win] 명령을 남겼습니다: " + path, flush=True)
+
+
+def io_open(path, mode):
+    import io as _io
+    return _io.open(path, mode, encoding="utf-8")
+
+
+def guard_against(run_dir, reference_run, intended):
+    """이 런의 `env.yaml` 을 기준 런과 견준다. `(문제 있나, 설명)`."""
+    sys.path.insert(0, os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "eval"))
+    import config_diff_guard as diff
+
+    flat_new = diff.load_env_yaml(run_dir)
+    flat_ref = diff.load_env_yaml(reference_run)
+    expected, unexpected, unchanged = diff.compare(
+        flat_ref, flat_new, intended)
+    if not unexpected and not unchanged:
+        return (False, "설정 관문 통과 · 의도한 %d 칸만 다릅니다" % len(expected))
+
+    lines = ["설정 관문이 막았습니다."]
+    for key, left, right in unexpected:
+        lines.append("  모르는 차이  %s : 기준 %s 대 이번 %s" % (key, left, right))
+    for key, value in unchanged:
+        lines.append("  안 바뀜      %s : 둘 다 %s" % (key, value))
+    return (True, NEWLINE.join(lines))
+
+
+def watch_and_check(isaaclab_root, rest, train_script, reference_run, intended):
+    """런 폴더를 기다렸다가 명령을 남기고, 기준 런이 있으면 대조한다.
+
+    **어긋나면 이 프로세스를 죽인다.** 세 시간을 쓴 뒤가 아니라 1 분 안에
+    잡으려는 것이다. 죽이는 것은 «우리 프로세스» 뿐이다.
+    """
+    run_name = run_name_from(rest)
+    if not run_name:
+        print("[train_win] agent.run_name 이 없어 런 폴더를 못 찾습니다. "
+              "명령 기록과 설정 관문을 건너뜁니다.", flush=True)
+        return
+
+    deadline = time.time() + WATCH_TIMEOUT_S
+    while time.time() < deadline:
+        run_dir = find_run_dir(isaaclab_root, run_name)
+        env_yaml = (os.path.join(run_dir, "params", "env.yaml")
+                    if run_dir else None)
+        if env_yaml and os.path.exists(env_yaml):
+            try:
+                write_launch_record(run_dir, rest, train_script)
+            except Exception as error:  # 기록 실패로 학습을 죽이지 않는다
+                print("[train_win] 명령 기록 실패: %r" % (error,), flush=True)
+            if reference_run:
+                try:
+                    bad, message = guard_against(
+                        run_dir, reference_run, intended)
+                except Exception as error:
+                    print("[train_win] 설정 관문이 못 돌았습니다: %r" % (error,),
+                          flush=True)
+                    return
+                print("[train_win] " + message, flush=True)
+                if bad:
+                    print("[train_win] **학습을 멈춥니다.** 어긋난 설정으로 "
+                          "세 시간을 쓰지 않습니다.", flush=True)
+                    sys.stdout.flush()
+                    os._exit(3)
+            return
+        time.sleep(WATCH_POLL_S)
+    print("[train_win] 런 폴더를 %d 초 안에 못 찾았습니다. 명령 기록과 "
+          "설정 관문을 건너뜁니다." % WATCH_TIMEOUT_S, flush=True)
 
 
 def main():
-    train_script, rest = resolve_train_script(sys.argv[1:])
+    train_script, rest, isaaclab_root, opts = resolve_train_script(sys.argv[1:])
 
     if not os.path.isfile(train_script):
         raise SystemExit(
@@ -167,6 +294,17 @@ def main():
     print("[train_win] 인자      : {}".format(" ".join(rest)), flush=True)
     print("[train_win] 시작되면 params/agent.yaml 의 resume 과 "
           "load_checkpoint 를 되읽어 확인하십시오.", flush=True)
+    if opts.guard_against:
+        print("[train_win] 설정 관문 · 기준 런 {} · 의도한 칸 {}"
+              .format(opts.guard_against, opts.guard_intended or "(없음)"),
+              flush=True)
+
+    watcher = threading.Thread(
+        target=watch_and_check,
+        args=(isaaclab_root, rest, train_script,
+              opts.guard_against, opts.guard_intended),
+        daemon=True)
+    watcher.start()
 
     runpy.run_path(train_script, run_name="__main__")
 
