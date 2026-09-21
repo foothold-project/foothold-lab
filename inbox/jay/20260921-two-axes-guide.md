@@ -1,0 +1,209 @@
+# 두 축 판정 기준 · 무엇을 통과라 부르는가
+
+> 분류: 가이드
+> 작성: 오흥재 · 2026-09-21
+> 근거: `sim/eval/verdict_manifest.py` · `sim/eval/eval_command_response.py` 원문 · `20260918-command-baseline/README.md` · D~H 및 임석헌 모델 실측
+> 요지: 모델 하나를 판정할 때 축이 둘이고 둘의 **AND** 다. 축 1 은 험지 주행(문서 둘이 이미 있다), 축 2 는 명령 응답 아홉 칸이고 문턱은 전부 NVIDIA 원본 실측에서 왔다. 숫자를 읽을 때 하면 안 되는 말 다섯을 같이 적는다.
+> 상태: 초안
+> 판: v1.0
+
+## 0. 한 장 요약
+
+```
+판정 = 축 1 AND 축 2
+
+축 1   험지를 «건너는가»          16 지형 x 3 속도 x 100 판
+       1 순위 · foothold-v1 대비 «진짜 하락 0»
+
+축 2   명령을 «듣는가»            평지 · env 64 · 아홉 칸
+       2 순위 · 아홉 칸 중 8 칸 이상
+
+둘 다 넘은 판은 «아직 없다» (2026-09-21 기준)
+```
+
+**왜 축이 둘인가** · 배포본 `foothold-v1` 이 험지는 잘 가는데 **서지도 돌지도 못했다.** 축 1 만 보면 그것이 안 보인다. 축 2 는 그래서 9월 18 일에 새로 만들었다.
+
+## 1. 축 1 · 험지 주행
+
+**이미 문서가 둘 있다. 여기서 되풀이하지 않는다.**
+
+| 문서 | 무엇이 있나 |
+|---|---|
+| [`20260908-success-criteria-anatomy.md`](20260908-success-criteria-anatomy.md) | 네 축(생존·전진·속도추종·방향)의 AND · 각 축의 코드 위치 · 실패 사유가 둘뿐인 이유 |
+| [`20260909-eval-harness-diagram.md`](20260909-eval-harness-diagram.md) | 같은 내용의 그림 · 방향 판정이 「끝점」에서 「통과선」으로 옮겨간 경위 |
+
+**한 줄만 옮기면** · `overall_success = 생존 AND 전진 AND 속도추종 AND 방향` 이고, **한 축만 떨어져도 종합이 그 값이 된다** `확인됨` (`sim/eval/metrics.py:344`).
+
+```
+eval_generalization.py · 난이도 0.5 · 16 지형 x 3 속도(0.5·1.0·1.5) x 100 판 · seed 42
+기준선   foothold-v1 의 «칸 값» (models/foothold-v1.json)
+비교     Wilson 95 % 신뢰구간
+```
+
+## 2. 축 2 · 명령 응답 · **아홉 칸**
+
+```
+eval_command_response.py · 평지 · env 64
+```
+
+**모델이 명령을 듣는지만 본다. 지형이 없다.**
+
+### 2-1. 시나리오 셋이 판정에 들어간다
+
+| 시나리오 | 무엇을 시키나 |
+|---|---|
+| **`stop` 정지** | 4 초 동안 1.0 m/s 로 가다가 **명령을 0 으로 떨어뜨리고 6 초를 본다** |
+| **`hold` 유지** | **처음부터 끝까지 명령 0.** 「서 있으라」만 한다 |
+| **`turn` 회전** | 제자리에서 요레이트를 계단으로 훑는다 · `-1.0 → -0.5 → 0 → +0.5 → +1.0` 각 3 초 |
+
+**`ramp` · `slow010~040` · `turn_rest` · `turn_rev` 는 «관측» 이고 판정에 안 들어간다.** 문턱이 없고 원본도 약한 자리다.
+
+### 2-2. 아홉 칸과 문턱
+
+| # | 시나리오 | 지표 | 문턱 | 무엇을 보나 |
+|---|---|---|---|---|
+| 1 | `stop` | `fell_ratio` | ≤ 0.03 | 멈추라고 했을 때 안 넘어지나 |
+| 2 | `hold` | `fell_ratio` | ≤ 0.03 | 서 있으라고 했을 때 안 넘어지나 |
+| 3 | `hold` | `residual_speed_mps` | ≤ 0.005 | **정말 멈춰 있나** (잔류 속도) |
+| 4 | `hold` | `joint_target_delta_tail` | ≤ 0.01 | **떨지 않나** (끝 1 초 관절 목표각 변화) |
+| 5 | `turn` | `fell_ratio` | ≤ 0.10 | 돌다가 안 넘어지나 |
+| 6 | `turn` | `yaw_follow_ratio` wz **−1.00** | ≥ 0.40 | 명령한 만큼 도나 (부호 포함) |
+| 7 | `turn` | 〃 wz **−0.50** | ≥ 0.40 | 〃 |
+| 8 | `turn` | 〃 wz **+0.50** | ≥ 0.40 | 〃 |
+| 9 | `turn` | 〃 wz **+1.00** | ≥ 0.40 | 〃 |
+
+**`wz` 는 z 축(위) 기준 오른손 법칙이다.** `+` 가 왼쪽, `−` 가 오른쪽이다.
+
+**추종비는 부호를 포함한다.** 반대로 돌면 음수가 나오고 당연히 미달이다.
+
+### 2-3. 문턱은 어디서 왔나
+
+**전부 NVIDIA 원본 실측이다** `확인됨` ([`20260918-command-baseline/README.md`](../../sim/eval/results/20260918-command-baseline/README.md) 4 절).
+
+> **원본이 못 하는 것을 요구하지 않는다.** 원본은 아홉 칸을 **9/9** 통과한다.
+
+`verdict_manifest.py:41` 이 같은 말을 적어 두고 있다 · 축 1 은 **배포본 성적**이 기준선이고 축 2 는 **원본 실측**이 기준선이다.
+
+## 3. 지금 어디에 서 있나 (2026-09-21)
+
+| 정책 | 누적 iter | 축 1 하락 / 상승 | 축 2 | 무엇을 바꿨나 |
+|---|---|---|---|---|
+| **NVIDIA 원본** | 0 | 안 쟀음 | **9 / 9** | 없음 |
+| **foothold-v1** (배포본) | 1500 | 기준선 | **0 / 7** | `ang_vel_z` (0,0) · 정지 0 % |
+| D | 1500 | 4 / 2 | **8 / 9** | 명령을 열었다 |
+| E | 1500 | 2 / 2 | 5 / 9 | heading 을 좁혔다 |
+| F | 1500 | **1 / 3** | 3 / 9 | 고리 지형 |
+| G | 1500 | 7 / 1 | 5 / 9 | heading 을 껐다 (대조군) |
+| H | 1500 | 5 / 1 | 6 / 9 | 고리 + 하한 0.0 |
+| 임석헌 `control_3000` | 3000 | 2 / 3 | 1 / 9 | v1 에서 iter 만 |
+| 임석헌 `rails10_3000` | 3000 | **0 / 5** | 2 / 9 | v1 에 `rails` 지형 |
+
+```
+축 1 을 넘은 판   임석헌 rails10_3000   명령을 «전부 닫은» 판
+축 2 에 가장 가까운 판  D              명령을 «전부 연» 판
+둘 다 넘은 판     없음
+```
+
+**`foothold-v1` 의 축 2 가 0/7 인 것은 능력을 잃어서가 아니라 «명령을 막아 둬서» 다** `확인됨` (저장된 `params/env.yaml` 실측). `ang_vel_z` 가 `(0,0)` 이라 요가 구조적으로 죽어 있고 `rel_standing_envs` 가 0 이라 정지를 한 번도 안 배웠다. D 가 그것을 열자마자 8/9 로 돌아왔다.
+
+## 4. 숫자를 읽을 때 **하면 안 되는 말** 다섯
+
+전부 2026-09-20 ~ 21 에 우리가 실제로 틀린 자리다.
+
+### 4-1. 「겹치는데 달라졌다」
+
+**Wilson 구간이 겹치면 판단 보류다.** 「안 달라졌다」도 아니다. `passed = null` 이고 통과도 미달도 아니다.
+
+> 하루에 여덟 번 이것으로 틀렸다 `확인됨`. 특히 **요인 설계**에서 비싸다 · 「A 는 안 겹치고 B 는 겹치니 A 가 원인」이 성립하지 않는다.
+
+### 4-2. 「한 체크포인트의 값 = 그 모델의 성적」
+
+**같은 학습에서 50 iter 차이로 갈린다.**
+
+```
+임석헌 rails10   2950 에서 축 2 «4/9»   3000 에서 «2/9»      설정은 완전히 같다
+임석헌 rails30   gap 0.5 가 21 ~ 94     일곱 체크포인트 · 폭 73 %p
+```
+
+**한 점을 성적으로 쓰면 운을 성적으로 보고하는 것이다** `확인됨` (위 두 줄은 실측). 체크포인트 여러 점을 재고 **범위를 같이 적는다.**
+
+**다만 「배운 것」은 안 흔들린다** · 같은 학습에서 `rails` 는 1750 에서 100 에 도달하고 그 뒤 안 움직인다. **출렁이는 칸은 대개 «안 배운» 칸이다.**
+
+### 4-3. 「누적 학습량이 다른 둘을 나란히」
+
+```
+우리 D ~ H       NVIDIA + 1500
+임석헌 모델들     NVIDIA + 1500 (= v1) + 1500 = 누적 3000
+```
+
+**두 배 차이다** `확인됨` (설계 문서 [`20260920-H-design.md`](../jay/20260920-H-design.md) 103 행 · `parent_sha256` 실측). 「저쪽이 넘고 우리가 못 넘었다」를 설계 차이로 읽으면 안 된다.
+
+### 4-4. 「종합이 떨어졌다」에서 멈추기
+
+**AND 라서 한 성분만 떨어져도 종합이 그 값이 된다.** 성분을 펴야 원인이 보인다.
+
+```
+pyramid_stairs_inv 1.5 · H     종합 76   생존 100 · 전진 100 · 속도추종 76 · 방향 96
+                               -> 계단을 «100 판 전부» 올라갔다. 속도만 미달이다
+gap 0.5 · H                    종합 35   생존  67                    -> 이건 진짜 추락
+```
+
+**「못 건넌다」와 「느리다」가 같은 숫자로 내려온다.** 하락 칸마다 **최저 성분**을 같이 적는다.
+
+### 4-5. 「영상이 그 칸을 보여 준다」
+
+**숫자는 칸 전체(100 판)를 말하고 화면은 한 판을 보여 준다.** 그리고 **한 판도 아닐 수 있다** · 녹화기는 낙상으로 안 끝나므로 한 영상에 **여러 시도**가 들어갈 수 있다.
+
+**영상을 올릴 때는** 그 판의 실측 · 그 판이 칸의 다수 쪽인지 소수 쪽인지 · 시도가 몇 번인지를 같이 적는다.
+
+## 5. 실행 명령
+
+```
+축 1   python sim/eval/eval_generalization.py \
+         --checkpoint <model.pt> --terrain_set unseen10 --difficulty 0.5 \
+         --command_vx 1.0 --seed 42
+       (terrain_set 은 unseen10 · rough6 둘 · 속도 0.5 · 1.0 · 1.5 로 여섯 판)
+
+축 2   python sim/eval/eval_command_response.py \
+         --checkpoint <model.pt> --device cuda:0
+       ★ cuda:1 에서 죽는다 `확인됨` (isaaclab/utils/math.py:667) · 원인 `미확인`
+
+환경   KMP_DUPLICATE_LIB_OK=TRUE · OMNI_KIT_ACCEPT_EULA=YES
+       ★ 안 채우면 «exit 0» 으로 조용히 죽는다 `확인됨` (docs/notices/2026-09-12.md 92 행)
+
+iter   max_iterations 는 «원하는 값 + 1» 이다
+       rsl_rl 이 range(start, start+N) 으로 돌아 3000 을 주면 마지막이 2999 다
+       model_3000.pt 를 얻으려면 3001 을 준다 `확인됨` (models/foothold-v1.json:39)
+```
+
+## 6. 아직 못 하는 것 · 숨기지 않는다
+
+| | |
+|---|---|
+| **`stepping_stones`** | 일곱 정책 전부 **0 %** `확인됨` · 300 판 중 3 m 에 닿은 것이 **0 판** · 낙상 절반 · 시간초과 절반 |
+| **두 축 동시 통과** | 없다 `확인됨`. 고리 지형은 축 1 을 주고 회전을 뺏고 (D 2/64 → H 22/64), `lin_vel_x` 하한 0.0 은 정지를 주고 축 1 을 6 칸 뺏는다 |
+| **재현 분산** | **안 쟀다** `미측정`. 우리도 임석헌 쪽도 seed 하나 · 체크포인트 하나다 |
+| **`H↔F` 의 6 칸** | 하한 하나만 다른데 축 1 이 6 칸 무너진다 `확인됨`. **기제를 모른다** `미확인` · 커리큘럼 레벨도 학습 지표도 차이가 없다 |
+
+## 7. 출처
+
+| 무엇 | 어디 |
+|---|---|
+| 축 1 네 축의 AND | [`20260908-success-criteria-anatomy.md`](20260908-success-criteria-anatomy.md) · `sim/eval/metrics.py:344` |
+| 축 1 그림 · 방향 판정 변경 | [`20260909-eval-harness-diagram.md`](20260909-eval-harness-diagram.md) |
+| 축 2 시나리오 | `sim/eval/eval_command_response.py:153-262` |
+| 축 2 문턱과 출처 | `sim/eval/verdict_manifest.py:41-90` · `sim/eval/results/20260918-command-baseline/README.md` 4 절 |
+| D~H 설계와 실측 | `inbox/jay/20260918-v2-command-restore.md` · `20260920-H-design.md` |
+| 임석헌 모델 실측 | `inbox/lim/20260917-rails학습.md` (브랜치 `feature/rails30-gap-lim`) |
+| v2a · v2b 설계 | `inbox/jay/20260921-v2-design.md` |
+| 환경변수 함정 | `docs/notices/2026-09-12.md` 92 행 |
+| `max_iterations` 함정 | `models/foothold-v1.json:39` |
+| 학습 환경 정의 (보상 · 커리큘럼 · 명령) | Isaac Lab `manager_based/locomotion/velocity` · <https://github.com/isaac-sim/IsaacLab/tree/main/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity> |
+| `range(start, start+N)` 동작 | rsl_rl `OnPolicyRunner.learn` · <https://github.com/leggedrobotics/rsl_rl/blob/master/rsl_rl/runners/on_policy_runner.py> |
+| 출발 체크포인트 | NVIDIA `Isaac-Velocity-Rough-Unitree-Go2-v0` · <https://docs.robotsfan.com/isaaclab/source/overview/environments.html> |
+
+## 판 이력
+
+| 판 | 날짜 | 무엇 |
+|---|---|---|
+| v1.0 | 2026-09-21 | 처음 씀. 축 1 은 기존 문서 둘을 가리키고 **축 2 아홉 칸을 처음 문서화**했다. 「하면 안 되는 말」 다섯은 전부 09-20 ~ 21 에 실제로 틀린 자리다 |
