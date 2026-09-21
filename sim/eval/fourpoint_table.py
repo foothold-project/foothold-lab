@@ -50,6 +50,10 @@ ITERS = (1500, 2000, 2500, 3000)
 SPEEDS = (("0.5 m/s", "v0.5"), ("1.0 m/s", "v1.0"), ("1.5 m/s", "v1.5"))
 TERRAIN_SETS = ("unseen10", "rough6")
 WOBBLE_PP = 15.0
+# 계보에서 가장 요동친 칸들. 따로 뽑아 본다.
+FOCUS_TERRAINS = ("gap", "floating_ring")
+# 일곱 정책이 전부 0 이었던 칸. 여기서도 0 인지 «세어» 확인한다.
+ALWAYS_ZERO = "stepping_stones"
 
 
 def band(value_pct, total):
@@ -113,6 +117,8 @@ def main():
     parser.add_argument("--policy", required=True)
     parser.add_argument("--baseline", default=os.path.join("models", "foothold-v1.json"))
     parser.add_argument("--wobble_pp", type=float, default=WOBBLE_PP)
+    parser.add_argument("--also", default="",
+                        help="같이 볼 정책들 (쉼표). stepping_stones 를 한 표로 센다")
     args = parser.parse_args()
 
     cells = load_policy(args.root, args.policy)
@@ -157,6 +163,38 @@ def main():
                 " -> ".join("%.0f" % v for v in values), spread,
                 "" if same else "· 네 점이 안 겹친다"))
 
+    # --- 요동 칸 따로 (리드 요청 2) ---
+    print()
+    print("**`gap` · `floating_ring` 만 따로**")
+    print("%-9s %-16s %-8s %6s %6s %6s %6s %7s  %s" % (
+        "set", "terrain", "speed", *("i%d" % i for i in ITERS), "폭", "네 점"))
+    for key in sorted(cells):
+        if key[2] not in FOCUS_TERRAINS or len(cells[key]) < len(ITERS):
+            continue
+        values = [cells[key][i][0] for i in ITERS]
+        print("%-9s %-16s %-8s %6.0f %6.0f %6.0f %6.0f %6.1f  %s" % (
+            key[1], key[2], key[0], *values, max(values) - min(values),
+            "겹침" if all_overlap([cells[key][i] for i in ITERS]) else "**갈림**"))
+
+    # --- stepping_stones (리드 요청 3) ---
+    print()
+    names = [args.policy] + [n for n in args.also.split(",") if n]
+    total_points = zero_points = 0
+    for name in names:
+        source = cells if name == args.policy else load_policy(args.root, name)
+        for key in sorted(source):
+            if key[2] != ALWAYS_ZERO:
+                continue
+            for iteration, (value, _) in sorted(source[key].items()):
+                total_points += 1
+                zero_points += (value == 0.0)
+    if total_points:
+        print("`%s` · 잰 점 %d 개 중 **0 %% 인 점 %d 개**%s"
+              % (ALWAYS_ZERO, total_points, zero_points,
+                 "" if zero_points == total_points else "  <- **0 이 아닌 점이 있다**"))
+    else:
+        print("`%s` · 아직 잰 점이 없다" % ALWAYS_ZERO)
+
     if base:
         print()
         for iteration in ITERS:
@@ -179,6 +217,31 @@ def main():
             for key, bv, pv in drops:
                 print("    하락  %-9s %-20s %-8s  %3.0f -> %3.0f"
                       % (key[1], key[2], key[0], bv, pv))
+
+        # --- 후보는 «가장 높은 점» 이 아니라 «흔들리지 않는 점» (리드 요청 4) ---
+        print()
+        print("**후보 고르기** · 높은 점이 아니라 «그 점이 이웃과 얼마나 다른가» 로 본다")
+        print("%-8s %10s %10s  %s" % ("iter", "v1대비하락", "이웃과갈린칸", "읽는 법"))
+        for index, iteration in enumerate(ITERS):
+            drops = sum(
+                1 for key, (bv, bn) in base.items()
+                if key in cells and iteration in cells[key]
+                and verdict(bv, bn, *cells[key][iteration]) == "하락")
+            neighbours = [i for i in (ITERS[index - 1] if index else None,
+                                      ITERS[index + 1] if index + 1 < len(ITERS) else None)
+                          if i is not None]
+            split = 0
+            for key in cells:
+                if iteration not in cells[key]:
+                    continue
+                for other in neighbours:
+                    if other in cells[key] and not all_overlap(
+                            [cells[key][iteration], cells[key][other]]):
+                        split += 1
+                        break
+            note = "안정" if split == 0 else "이웃 점과 %d 칸이 갈린다" % split
+            print("%-8d %10d %10d  %s" % (iteration, drops, split, note))
+        print("**이웃과 갈린 칸이 많은 점은 그 값이 그 점의 «운» 일 수 있다.**")
 
 
 if __name__ == "__main__":
