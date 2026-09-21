@@ -104,5 +104,37 @@ class ShapeTests(unittest.TestCase):
         self.assertFalse(cells["wz -1.00"])
 
 
+class RowAuditTests(unittest.TestCase):
+    """**손으로 적은 행 목록을 믿지 않는다.**"""
+
+    def test_current_list_is_clean(self):
+        wrong_size, missing = tool.audit_rows()
+        self.assertEqual(wrong_size, [], "env 64 가 아닌 판이 섞였다")
+        self.assertEqual(missing, [], "빠뜨린 env 64 판이 있다")
+
+    def test_a_video_run_would_be_caught(self):
+        """`*-videos/axis2/` 는 `num_envs 1` 이라 성적이 아니다."""
+        extra = os.path.join("sim", "eval", "results",
+                             "20260918-D-videos", "axis2", "D")
+        if not os.path.exists(os.path.join(extra, "probe_manifest.json")):
+            self.skipTest("촬영본이 없다")
+        saved = tool.MATRIX_ROWS
+        try:
+            tool.MATRIX_ROWS = saved + (("촬영본", extra),)
+            wrong_size, _ = tool.audit_rows()
+            self.assertEqual([n for n, _ in wrong_size], ["촬영본"])
+        finally:
+            tool.MATRIX_ROWS = saved
+
+    def test_a_dropped_row_would_be_caught(self):
+        saved = tool.MATRIX_ROWS
+        try:
+            tool.MATRIX_ROWS = tuple(r for r in saved if r[0] != "D")
+            _, missing = tool.audit_rows()
+            self.assertTrue(any(m.endswith("D") for m in missing), missing)
+        finally:
+            tool.MATRIX_ROWS = saved
+
+
 if __name__ == "__main__":
     unittest.main()

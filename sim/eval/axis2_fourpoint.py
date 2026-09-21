@@ -90,12 +90,54 @@ MATRIX_ROWS = (
 )
 
 
-def load_dir(folder):
+# 성적의 정본은 **env 64** 판이다. `*-videos/axis2/` 아래는 `num_envs 1`
+# 한 판짜리 촬영본이라 성적이 아니다. 표에 섞이면 안 된다.
+JUDGEMENT_NUM_ENVS = 64
+
+
+def load_manifest(folder):
     path = os.path.join(folder, "probe_manifest.json")
     if not os.path.exists(path):
         return None
     with io.open(path, encoding="utf-8") as handle:
-        return json.load(handle).get("summary", {})
+        return json.load(handle)
+
+
+def load_dir(folder):
+    manifest = load_manifest(folder)
+    return None if manifest is None else manifest.get("summary", {})
+
+
+def audit_rows(root="."):
+    """**손으로 적은 행 목록을 믿지 않는다.**
+
+    `(섞여 든 것, 빠뜨린 것)`. 저장소를 훑어 `num_envs 64` 인
+    `probe_manifest.json` 을 다 찾고, 표의 목록과 견준다.
+    """
+    import glob
+
+    listed = {os.path.normpath(os.path.join(root, f)) for _, f in MATRIX_ROWS}
+    wrong_size, missing = [], []
+
+    for name, folder in MATRIX_ROWS:
+        manifest = load_manifest(os.path.join(root, folder))
+        if manifest is None:
+            continue
+        if manifest.get("num_envs") != JUDGEMENT_NUM_ENVS:
+            wrong_size.append((name, manifest.get("num_envs")))
+
+    pattern = os.path.join(root, "sim", "eval", "results", "**",
+                           "probe_manifest.json")
+    for path in glob.glob(pattern, recursive=True):
+        folder = os.path.normpath(os.path.dirname(path))
+        if folder in listed:
+            continue
+        with io.open(path, encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        if manifest.get("num_envs") == JUDGEMENT_NUM_ENVS:
+            missing.append(os.path.relpath(folder, root))
+
+    return wrong_size, missing
 
 
 def print_matrix():
@@ -111,6 +153,18 @@ def print_matrix():
             continue
         rows.append((name, score(summary)))
 
+    wrong_size, missing = audit_rows()
+    if wrong_size:
+        print("**표에 env %d 가 아닌 판이 섞였다** · %s"
+              % (JUDGEMENT_NUM_ENVS,
+                 " · ".join("%s(env %s)" % w for w in wrong_size)))
+    if missing:
+        print("**표가 빠뜨린 env %d 판이 있다** · %s"
+              % (JUDGEMENT_NUM_ENVS, " · ".join(missing)))
+    if not wrong_size and not missing:
+        print("행 목록 점검 · env %d 판 %d 개를 빠짐없이 담았다"
+              % (JUDGEMENT_NUM_ENVS, len(MATRIX_ROWS)))
+    print()
     print("통과 O · 미달 . · 값 없음 -")
     print()
     print("%-18s %s  통과" % ("", " ".join("%8s" % s for s in short)))
