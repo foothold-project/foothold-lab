@@ -1,8 +1,8 @@
 # 지각 연구 셋 정밀 조사 · Fable deep-research
 
 > 분류: 리서치
-> 작성: Claude Fable deep-research · 2026-09-21
-> 근거: MARG · https://astrorix.github.io/MARG/ · https://astrorix.github.io/MARG/static/images/succ_tab.png · https://ieeexplore.ieee.org/document/11196002 (빈 페이지) · https://github.com/arclab-hku/Risky_gym · https://raw.githubusercontent.com/arclab-hku/Risky_gym/main/README.md · https://api.github.com/repos/arclab-hku/Risky_gym · https://api.github.com/repos/arclab-hku/Risky_gym/git/trees/main?recursive=1 · https://arxiv.org/abs/2509.20036 · https://arxiv.org/html/2509.20036 · https://arxiv.org/html/2509.20036v2/picture/method/framework.png · https://arxiv.org/html/2509.20036v2/picture/result/Ablation.png · https://arxiv.org/html/2509.20036v2/picture/result/gap_terains_best.png · https://arxiv.org/html/2509.20036v2/picture/result/compare_foot_reward.png · https://arxiv.org/html/2509.20036v2/picture/result/compare_rewards.jpg
+> 작성: 오흥재 · 2026-09-21
+> 근거: **조사는 Claude Fable deep-research(에이전트 9 · 적대 검증)가 수행했고 본 문서는 그 산출물이다.** MARG · https://astrorix.github.io/MARG/ · https://astrorix.github.io/MARG/static/images/succ_tab.png · https://ieeexplore.ieee.org/document/11196002 (빈 페이지) · https://github.com/arclab-hku/Risky_gym · https://raw.githubusercontent.com/arclab-hku/Risky_gym/main/README.md · https://api.github.com/repos/arclab-hku/Risky_gym · https://api.github.com/repos/arclab-hku/Risky_gym/git/trees/main?recursive=1 · https://arxiv.org/abs/2509.20036 · https://arxiv.org/html/2509.20036 · https://arxiv.org/html/2509.20036v2/picture/method/framework.png · https://arxiv.org/html/2509.20036v2/picture/result/Ablation.png · https://arxiv.org/html/2509.20036v2/picture/result/gap_terains_best.png · https://arxiv.org/html/2509.20036v2/picture/result/compare_foot_reward.png · https://arxiv.org/html/2509.20036v2/picture/result/compare_rewards.jpg
 > 요지: 세 논문 중 우리 실패(stepping_stones 0 % · rails · gap 요동)를 직접 건드리는 것은 없고, MARG 의 발 보상 셋과 187→16 인코더 절제, AME-2 의 「8 cm 격자 · ±5 cm 잡음으로 19 cm 빔을 건넜다」는 사례만 부분 관계다. HiPAN 은 내비게이션 논문이라 관계없음. 235 입력을 유지한 채 NVIDIA 가중치를 이어받는 제약 안에서 남는 후보는 관측 잡음 모델 · 보상 · 커리큘럼뿐이며, 인코더·기억을 붙이는 순간 첫 층 이어받기가 끊긴다.
 > 상태: 초안
 > 판: v1.0
