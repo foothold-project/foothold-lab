@@ -88,7 +88,8 @@ def load_policy(root, policy):
 
 
 def load_baseline(path):
-    raw = json.load(io.open(path, encoding="utf-8"))["scores_difficulty_0_5"]
+    with io.open(path, encoding="utf-8") as handle:
+        raw = json.load(handle)["scores_difficulty_0_5"]
     out = {}
     for label in raw:
         for terrain_set in raw[label]:

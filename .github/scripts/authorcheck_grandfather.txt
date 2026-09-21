@@ -4,4 +4,3 @@
 # 명부는 면제가 아니다. 이 줄 수가 남은 일의 크기다.
 # 새로 생기면 CI 가 선다. docs/ROLES.md 를 고치지 않는다.
 
-inbox/jay/20260916-3dgs-test/HANDOFF.md
