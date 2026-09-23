@@ -1,31 +1,65 @@
 {
   "schema": 1,
-  "updated": "2026-09-23T15:00:00+09:00",
-  "updated_by": "초기 생성 · Claude 세션",
+  "updated": "2026-09-23T14:47:00+09:00",
+  "updated_by": "학습 생존과 인자를 확인한 뒤 갱신 · Claude 세션",
   "stage": {
     "branch": "0",
     "name": "기준 재기",
-    "phase": "대기",
-    "note": "[0-a] v2b-r 와 [0-b] v2b-s · 팀장 승인 대기"
+    "phase": "학습 중",
+    "note": "두 판 병렬. 부모 v2a/v2b 도 5 초 차이로 같이 돌았으므로 조건이 같다"
   },
-  "running": [],
+  "running": [
+    {
+      "name": "v2b-r",
+      "branch": "0-a",
+      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+      "seed": 42,
+      "gpu": "cuda:0 (시뮬만. 신경망은 언제나 cuda:0)",
+      "pid": 69380,
+      "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
+      "started": "2026-09-23T14:42:19+09:00",
+      "expected_minutes": 255,
+      "expected_end": "2026-09-23T18:57:00+09:00",
+      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144219_20260923_v2b-r_seed42_iter3000.log",
+      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-r_seed42_iter3000",
+      "changed_vs_parent": "시뮬 GPU 만 (v2b 는 cuda:1)",
+      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다"
+    },
+    {
+      "name": "v2b-s",
+      "branch": "0-b",
+      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+      "seed": 43,
+      "gpu": "cuda:1 (부모와 같음)",
+      "pid": 74392,
+      "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
+      "started": "2026-09-23T14:42:26+09:00",
+      "expected_minutes": 255,
+      "expected_end": "2026-09-23T18:57:00+09:00",
+      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144226_20260923_v2b-s_seed43_iter3000.log",
+      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-s_seed43_iter3000",
+      "changed_vs_parent": "학습 씨앗만 (42 -> 43)",
+      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다"
+    }
+  ],
   "last_result": null,
   "next": {
-    "from_branch_table": "[0-a] · [0-b] 를 두 GPU 에 병렬",
-    "blocked_by": "팀장 승인"
+    "from_branch_table": "학습이 끝나면 체크포인트 1500/2000/2500/3000 넷을 축 1 과 축 2 로 잰다. 평가 씨앗은 42 로 고정",
+    "blocked_by": "학습 종료"
   },
-  "halt_reason": "팀장 승인 전이라 아무것도 안 건다",
+  "halt_reason": null,
   "budget": {
-    "train_runs": 0,
+    "train_runs": 2,
     "train_hours": 0.0,
     "codex_calls_this_week": 0,
     "codex_week_pct_reported": 78,
-    "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함"
+    "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함. 판정문 확정 전 검증 한 회차에만 쓴다"
   },
   "docs": {
     "criteria": "inbox/jay/20260923-lineage/CRITERIA.md",
     "branch_table": "inbox/jay/20260923-lineage/BRANCH-TABLE.md",
     "lineage": "inbox/jay/20260923-lineage/LINEAGE.md",
-    "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md"
+    "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md",
+    "run_plan": "inbox/jay/20260923-lineage/RUN-0.md"
   }
 }
