@@ -86,6 +86,38 @@ AXIS2_THRESHOLDS = {
 }
 YAW_RATIO_MIN = 0.40
 
+# 축 2 «관문». 2026-09-23 팀장 결정으로 8 -> 9 로 올랐다.
+#
+# 까닭 · **NVIDIA 원본이 9/9 다.** 거기서 출발했는데 8/9 를 통과로 부르면
+# 출발점보다 나쁜 것을 배포하면서 성공이라 하는 셈이다.
+#
+# **이 수가 코드에 없어서 문서 여러 장에 흩어져 있었다.** 그래서 여기 둔다.
+AXIS2_TOTAL_CELLS = 9
+AXIS2_GATE_CELLS = 9
+AXIS2_GATE_CHANGED = {
+    "when": "2026-09-23",
+    "from": 8,
+    "to": 9,
+    "why": "NVIDIA 원본이 9/9 이므로 8/9 는 출발점보다 나쁘다",
+    "flipped": ["D"],          # 8/9 · 옛 기준 통과 -> 새 기준 미달
+}
+
+# 최종 성공 기준 (팀장 확정 · 2026-09-23). 세 줄을 «다» 만족해야 한다.
+FINAL_CRITERIA = {
+    "axis1": "네 체크포인트 «전부» 에서 foothold-v1 대비 진짜 하락 0",
+    "axis2": "네 체크포인트 중 «세 점 이상» 에서 %d/%d" % (
+        AXIS2_GATE_CELLS, AXIS2_TOTAL_CELLS),
+    "repeat": "다른 장치에서 한 번 더 · 위 둘을 다시 만족",
+}
+
+
+def axis2_gate(passed):
+    """`(넘었나, 사람이 읽을 말)`. **8/9 를 「한 칸 남음」으로 보인다.**"""
+    if passed >= AXIS2_GATE_CELLS:
+        return (True, "통과 %d/%d" % (passed, AXIS2_TOTAL_CELLS))
+    short = AXIS2_GATE_CELLS - passed
+    return (False, "%d/%d · %d 칸 남음" % (passed, AXIS2_TOTAL_CELLS, short))
+
 AXIS2_POLICIES = (
     ("nvidia-zero", "NVIDIA 원본 (목표선)"),
     ("foothold-v1", "배포본 (현재선)"),

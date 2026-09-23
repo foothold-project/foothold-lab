@@ -136,6 +136,37 @@ class VerifyRenderTest(unittest.TestCase):
                 self.assertEqual({i % 2 for i in picks}, {0, 1}, (count, picks))
                 self.assertTrue(all(0 <= i < count for i in picks), picks)
 
+    def test_unmeasured_luma_is_not_reported_as_measured(self):
+        """**못 쟀다를 통과로 적지 않는다.**
+
+        `imageio` 가 없는 자리에서는 밝기를 못 잰다. 그때 보고서가
+        「쟀다」로 보이면 부르는 쪽이 `[PASS]` 를 찍는다. 실제로 찍고 있었다.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "half.mp4")
+            _write_alternating(p, 180, 0, frames=60)
+
+            saved = vc.luma_samples
+            try:
+                vc.luma_samples = lambda *a, **k: None
+                got = vc.verify_render(p, min_bytes_per_frame=1)
+            finally:
+                vc.luma_samples = saved
+
+            self.assertFalse(got["luma_measured"])
+            self.assertIsNone(got["mean_luma"])
+            self.assertIsNone(got["dark_sample_ratio"])
+
+    def test_measured_luma_says_so(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "ok.mp4")
+            _write_video(p, 180)
+
+            got = vc.verify_render(p, min_bytes_per_frame=1)
+
+            self.assertTrue(got["luma_measured"])
+            self.assertEqual(got["dark_sample_ratio"], 0.0)
+
     def test_frame_count_mismatch_is_caught(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = os.path.join(tmp, "ok.mp4")

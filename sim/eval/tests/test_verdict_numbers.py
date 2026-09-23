@@ -214,8 +214,9 @@ class Axis2Tests(unittest.TestCase):
                                  % (policy, iteration, blank))
                 got.append(sum(1 for c in cells if c[2]))
             self.assertEqual(got, expected, policy)
-        self.assertIn("| **2** | **축 2 아홉 칸 중 8 칸 이상** | **미달** "
-                      "(2 · 5 · 4 · 6) | **미달** (7 · 5 · 6 · 6) |", self.doc)
+        self.assertIn("| **2** | **축 2 아홉 칸 «전부»** | **미달** "
+                      "(2 · 5 · 4 · 6) | **미달** "
+                      "(7 · 5 · 6 · 6 · 최고도 2 칸 남음) |", self.doc)
 
     def test_only_f_passes_wz_plus_one(self):
         """**손으로 적은 주장** · 원본 말고 `wz +1.00` 을 넘은 판은 F 뿐."""

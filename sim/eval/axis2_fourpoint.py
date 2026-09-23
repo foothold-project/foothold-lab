@@ -28,7 +28,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from verdict_manifest import AXIS2_THRESHOLDS, YAW_RATIO_MIN
+from verdict_manifest import (AXIS2_GATE_CELLS, AXIS2_THRESHOLDS,
+                              YAW_RATIO_MIN, axis2_gate)
 
 ITERS = (1500, 2000, 2500, 3000)
 
@@ -174,7 +175,8 @@ def print_matrix():
             marks.append("%8s" % ("-" if value is None
                                   else ("O" if ok else ".")))
         total = sum(1 for c in cells if c[2])
-        print("%-18s %s   %d" % (name, " ".join(marks), total))
+        print("%-18s %s   %s" % (name, " ".join(marks),
+                                  axis2_gate(total)[1]))
 
     print()
     print("**칸마다 «한 번이라도» 넘은 판이 있나**")
@@ -237,6 +239,9 @@ def main():
         totals = {i: sum(1 for c in scored[i] if c[2]) for i in have}
         print("  9 칸 통과   " + " · ".join(
             "iter%d %d" % (i, totals[i]) for i in have))
+        # **관문은 9/9 다** (2026-09-23 팀장 결정 · 원본이 9/9 이므로).
+        print("  관문 %d/9    " % AXIS2_GATE_CELLS + " · ".join(
+            "iter%d %s" % (i, axis2_gate(totals[i])[1]) for i in have))
 
         # 네 점이 «같은 판정» 인 칸이 몇이나 되나.
         stable = sum(

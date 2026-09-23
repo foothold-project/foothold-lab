@@ -76,15 +76,31 @@ def renderer_failed(log_text):
 MAX_DARK_SAMPLE_RATIO = 0.20
 
 
+# 표본을 이보다 적게 잡으면 검사가 «사라진다». 0 을 주면 밝기를 아예 안 본다.
+MIN_SAMPLES = 3
+
+
 def sample_indices(count, samples=5):
     """볼 프레임 자리. **홀짝을 둘 다 덮는다.**
 
     자리마다 «이웃 한 장» 을 더한다. 한 걸러 한 장이 검은 영상은 그래야
     잡힌다 (`luma_samples` 의 설명 참조).
+
+    **퇴화하는 인자를 막는다** · `samples=0` 이면 검사가 통째로 없어지고,
+    아주 짧은 영상에서는 이웃 한 장이 범위를 넘어 홀짝이 한쪽만 남는다.
+    검증에서 둘 다 잡혔다 (`samples=0` 으로 검은 영상이 통과 ·
+    `sample_indices(2, samples=1)` 이 `[1]` 만 돌려줌).
     """
+    if count <= 0:
+        return []
+    samples = max(int(samples), MIN_SAMPLES)
     base = {int(count * f) for f in
             [(i + 1) / (samples + 1) for i in range(samples)]}
-    return sorted({min(i + step, count - 1) for i in base for step in (0, 1)})
+    picks = {min(i + step, count - 1) for i in base for step in (0, 1)}
+    # 이웃이 끝에서 잘려 홀짝이 한쪽만 남으면 앞으로 한 장 더 붙인다.
+    if count > 1 and len({i % 2 for i in picks}) == 1:
+        picks.add(max(0, min(picks) - 1))
+    return sorted(picks)
 
 
 def luma_samples(path, samples=5):
@@ -97,8 +113,13 @@ def luma_samples(path, samples=5):
     `[50, 100, 150, 200, 250]` 로 **전부 짝수**였다.
 
     **그래서 잡힌 것은 운이다.** 검은 쪽이 «홀수» 였으면 표본 다섯 장이
-    전부 밝아 통과했을 것이다. 300 프레임은 우리 표준 길이(6 초 x 50 fps)
-    라 **모든 클립이 같은 사각을 갖고 있었다.**
+    전부 밝아 통과했을 것이다. 300 프레임(6 초)의 옛 자리가 전부 짝수다.
+
+    **같은 날 걸린 둘째 클립은 «다른» 사각이었다** · `gap_vx1.5_E` 는
+    200 프레임이라 옛 자리 `[33,66,100,133,166]` 이 홀짝이 섞여 있었고
+    검은 장이 셋 잡혔다. **그런데 평균이 74.1 이라 문턱 10 을 한참 넘어
+    통과했다.** 그래서 고친 것이 둘이다 · **홀짝을 덮는 것**과
+    **어두운 표본의 «비율» 을 보는 것**.
 
     그래서 각 자리에서 **이웃한 두 장**을 본다. 홀짝이 한 번에 덮인다.
     """
@@ -268,6 +289,9 @@ def verify_render(path, expected_frames=None, log_path=None,
     report["dark_sample_ratio"] = (
         None if not values
         else sum(1 for v in values if v < min_mean_luma) / len(values))
+    # **못 쟀다를 통과로 읽지 못하게 한다.** 이 파일 머리말이 그러지 말라고
+    # 적어 두었는데 부르는 쪽이 `[PASS]` 를 찍고 있었다 (2026-09-23 검증).
+    report["luma_measured"] = values is not None
 
     try:
         import imageio.v2 as imageio

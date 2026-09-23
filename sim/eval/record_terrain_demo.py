@@ -749,11 +749,20 @@ def main():
     from video_check import verify_render
 
     _render_report = verify_render(video, expected_frames=encoded)
-    print("[PASS] 화면이 그려졌다 · 평균 밝기 %s · %s 바이트/프레임" % (
-        "못 쟀음" if _render_report["mean_luma"] is None
-        else "%.1f" % _render_report["mean_luma"],
-        "못 쟀음" if _render_report["bytes_per_frame"] is None
-        else "%.0f" % _render_report["bytes_per_frame"]), flush=True)
+    _bpf = ("못 쟀음" if _render_report["bytes_per_frame"] is None
+            else "%.0f" % _render_report["bytes_per_frame"])
+
+    # **밝기를 못 쟀으면 `[PASS]` 를 안 찍는다.** 검사가 «없었던» 것이지
+    # 통과한 것이 아니다. imageio 가 없으면 이 길로 온다.
+    if not _render_report.get("luma_measured"):
+        print("[확인 못 함] 밝기를 못 쟀다 (imageio · numpy 없음) · "
+              "%s 바이트/프레임 · 프레임 수와 로그만 봤다" % _bpf, flush=True)
+    else:
+        print("[PASS] 화면이 그려졌다 · 평균 밝기 %.1f · 어두운 표본 %.0f %% · "
+              "%s 바이트/프레임" % (
+                  _render_report["mean_luma"],
+                  (_render_report["dark_sample_ratio"] or 0.0) * 100,
+                  _bpf), flush=True)
 
     if trace_rows is not None:
         from overlay import trace as trace_mod
