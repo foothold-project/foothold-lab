@@ -271,14 +271,23 @@ def main():
             rows = terrain_split.range_notes(
                 terrain_split.read_sub_terrain_ranges(args.env_yaml),
                 terrain_split.read_eval_ranges(*args.eval_cfg))
+            trained_ranges = terrain_split.read_sub_terrain_ranges(args.env_yaml)
+            eval_all = terrain_split.read_eval_ranges(*args.eval_cfg)
             outside = [r for r in rows if r[7]]
             unknown = [r for r in rows if r[2] == terrain_split.UNKNOWN_USE]
+            # 이름이 «안» 겹치는 지형·항목은 애초에 견줄 수가 없다.
+            # 그 수를 안 적으면 「전부 봤다」로 읽힌다.
+            pairs_eval = {(t, k) for t in eval_all for k in eval_all[t]}
+            pairs_seen = {(r[0], r[1]) for r in rows}
             print()
             print("**이름이 같은 지형의 «조건»** · 견준 항목 %d · "
                   "학습 범위 «밖» %d · 소비 코드 안 읽은 항목 %d"
                   % (len(rows), len(outside), len(unknown)))
+            print("    견주지 «못한» 평가 항목 %d · 학습에 같은 이름이 없어서다 "
+                  "(학습에 없던 지형이면 견줄 짝이 없다)"
+                  % len(pairs_eval - pairs_seen))
             print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
-                  % ("판정", "지형", "항목", "쓰임", "학습", "평가", "잰값", "출처"))
+                  % ("판정", "지형", "항목", "쓰임", "학습", "평가", "d0.5", "출처"))
             for terrain, key, use, source, rt, re_, value, out in rows:
                 if not (out or use == terrain_split.UNKNOWN_USE):
                     continue
@@ -391,20 +400,29 @@ def main():
                 neighbours = [i for i in (ITERS[index - 1] if index else None,
                                           ITERS[index + 1] if index + 1 < len(ITERS) else None)
                               if i is not None]
-                split = 0
+                # **견준 칸이 몇이었는지도 센다.** 0 칸을 견주고 「안정」이라
+                # 하면 «확인 못 한 것» 이 «흔들리지 않는 것» 으로 읽힌다.
+                split = compared = 0
                 for key in cells:
                     if iteration not in cells[key]:
                         continue
-                    for other in neighbours:
-                        if other in cells[key] and not all_overlap(
-                                [cells[key][iteration], cells[key][other]]):
-                            split += 1
-                            break
+                    pairs = [o for o in neighbours if o in cells[key]]
+                    if not pairs:
+                        continue
+                    compared += 1
+                    if any(not all_overlap([cells[key][iteration], cells[key][o]])
+                           for o in pairs):
+                        split += 1
                 if not any(iteration in cells[key] for key in cells):
                     print("%-8d %10s %10s  **잰 것이 없다**"
                           % (iteration, "-", "-"))
                     continue
-                note = "안정" if split == 0 else "이웃 점과 %d 칸이 갈린다" % split
+                if not compared:
+                    note = "**이웃과 견준 칸이 없다** · 흔들리는지 말할 수 없다"
+                elif split == 0:
+                    note = "안정 (%d 칸을 견줬다)" % compared
+                else:
+                    note = "이웃 점과 %d 칸이 갈린다 (%d 칸 중)" % (split, compared)
                 print("%-8d %10d %10d  %s" % (iteration, drops, split, note))
             print("**이웃과 갈린 칸이 많은 점은 그 값이 그 점의 «운» 일 수 있다.**")
 

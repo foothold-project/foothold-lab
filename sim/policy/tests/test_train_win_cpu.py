@@ -194,6 +194,20 @@ class GuardIntendedSwallowTests(unittest.TestCase):
         self.assertEqual(known.guard_intended, [])
         self.assertIn("agent.run_name=R", rest)
 
+    def test_a_repeated_flag_is_also_split(self):
+        """플래그가 둘이면 둘 다 가른다. 하나만 가르면 뒤엣것이 삼킨다."""
+        _, rest, _, known = self.resolve(
+            ["--guard_intended", "seed", "--guard_intended", "sim.device",
+             "agent.run_name=X"])
+        self.assertEqual(known.guard_intended, ["seed", "sim.device"])
+        self.assertIn("agent.run_name=X", rest)
+
+    def test_a_key_starting_with_a_dash_is_not_captured(self):
+        """그런 키는 의도 목록에서 빠지고 설정 관문이 «막는다»."""
+        _, rest, _, known = self.resolve(["--guard_intended", "-1"])
+        self.assertEqual(known.guard_intended, [])
+        self.assertIn("-1", rest)
+
     def test_no_guard_intended_is_untouched(self):
         _, rest, _, known = self.resolve(["--headless", "agent.run_name=R"])
         self.assertEqual(known.guard_intended, [])

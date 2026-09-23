@@ -127,23 +127,38 @@ def _split_guard_intended(argv):
 
     돌려주는 것: (키를 걷어낸 argv, 걷어낸 키 목록 또는 None)
 
-    평탄화 키에는 `=` 가 없다 (`v2a` · `v2b` · `H` 세 런 2048 칸 중 0 건).
-    `-` 로 시작하지도 않는다. 그 둘 중 하나라도 걸리면 거기서 멈춘다.
-    **차례를 안 바꾼다.** 걷어낸 자리만 비우고 나머지는 그대로 둔다.
+    `--guard_intended` 는 `nargs="*"` 라 뒤에 오는 것을 다 삼킨다. 삼킨 것을
+    «뒤에 붙여» 되돌리면 이번엔 차례가 바뀌고, 하이드라는 «마지막»
+    덮어쓰기를 쓰므로 이기는 값이 뒤집힌다. 그래서 처음부터 안 삼키게
+    가른다. **차례를 안 바꾼다.**
+
+    멈추는 조건은 둘이다. `=` 가 들었거나 `-` 로 시작하면 키가 아니다.
+
+    **`-` 로 시작하는 평탄화 키가 «절대» 없다는 뜻은 아니다.** 사전 열쇠가
+    음수면 `flatten` 이 `'-1'` 을 낼 수 있다. 우리가 본 세 런 2048 칸에는
+    없었을 뿐이다. 그런 키를 주면 여기서 안 걷히고 학습 인자로 넘어가는데,
+    그러면 의도 목록에서 빠져 **설정 관문이 「모르는 차이」로 막는다.**
+    틀리는 방향이 안전한 쪽이다.
+
+    플래그가 여러 번 나오면 **전부** 가른다.
     """
     argv = list(argv)
     if "--guard_intended" not in argv:
         return argv, None
-    at = argv.index("--guard_intended")
-    keys, end = [], at + 1
-    while end < len(argv):
-        item = argv[end]
-        if item.startswith("-") or "=" in item:
-            break
-        keys.append(item)
-        end += 1
-    # 플래그와 그 뒤의 키들을 통째로 들어낸다. 남은 것의 차례는 그대로다.
-    return argv[:at] + argv[end:], keys
+    out, keys, index = [], [], 0
+    while index < len(argv):
+        if argv[index] != "--guard_intended":
+            out.append(argv[index])
+            index += 1
+            continue
+        index += 1
+        while index < len(argv):
+            item = argv[index]
+            if item.startswith("-") or "=" in item:
+                break
+            keys.append(item)
+            index += 1
+    return out, keys
 
 
 def resolve_train_script(argv):

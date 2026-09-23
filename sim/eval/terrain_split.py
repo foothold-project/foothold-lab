@@ -177,7 +177,10 @@ def read_sub_terrain_ranges(path):
     lines, names, head, indent = _sub_terrain_block(path)
     out = {name: {} for name in names}
     current = None
-    for line in lines[head + 1:]:
+    # **`lines.index(line)` 를 쓰지 않는다.** 지형이 달라도 줄 내용이 같을
+    # 수 있어서(`slope_range: !!python/tuple` 는 여러 지형에 그대로 나온다)
+    # 첫 자리로 되돌아가 «앞 지형의 값» 을 읽게 된다. 자리 번호로 센다.
+    for offset, line in enumerate(lines[head + 1:], start=head + 1):
         if not line.strip():
             continue
         depth = len(line) - len(line.lstrip())
@@ -193,8 +196,7 @@ def read_sub_terrain_ranges(path):
         if not key.endswith("_range"):
             continue
         values = []
-        start = lines.index(line, head) + 1
-        for follow in lines[start:]:
+        for follow in lines[offset + 1:]:
             item = follow.strip()
             if not item.startswith("- "):
                 break
@@ -253,14 +255,23 @@ def classify(eval_terrains, trained):
     if not trained:
         raise ValueError("학습 지형이 하나도 없다 · `env.yaml` 을 못 읽은 것이다")
 
+    # 이름도 안 맞고 도랑 근거도 없는 학습 지형. 둘 중 하나다.
+    #   (가) 아직 «결과가 안 온» 평가 지형이다 (부분 자료)
+    #   (나) 우리가 «기하를 안 읽은» 지형이다
+    # (나) 이면 도랑일 수 있고, 그러면 `gap` 을 「학습에 없던」으로 잘못
+    # 센다. 그래서 **도랑 평가 지형이 눈앞에 있을 때만** 멈춘다. 없으면
+    # 잘못 셀 자리가 없으므로 멈추지 않는다.
     unknown = [name for name in trained
                if name not in eval_terrains and name not in TRENCH_TRAINING]
-    if unknown:
+    at_risk = [name for name in eval_terrains if name in TRENCH_EVAL]
+    if unknown and at_risk:
         raise ValueError(
             "학습 지형 %s 를 평가 지형에 못 붙인다 · 이름이 같지도 않고 "
-            "`TRENCH_TRAINING` 에 «생성 코드 기하» 근거도 없다. 그 지형의 "
+            "`TRENCH_TRAINING` 에 «생성 코드 기하» 근거도 없다. 그런데 평가에 "
+            "도랑 지형 %s 가 있어서, 저것이 도랑이면 분류가 뒤집힌다. 그 지형의 "
             "생성 코드를 읽고 바닥 없는 도랑인지 확인해 넣어야 한다"
-            % " · ".join("`%s`" % name for name in sorted(unknown)))
+            % (" · ".join("`%s`" % name for name in sorted(unknown)),
+               " · ".join("`%s`" % name for name in sorted(at_risk))))
 
     dug = [name for name in trained if name in TRENCH_TRAINING]
 
@@ -302,7 +313,9 @@ def floored_notes(eval_terrains, trained):
 INTERPOLATED, SAMPLED, TWO_VALUES, UNKNOWN_USE = "보간", "표본", "두 값", "모름"
 
 RANGE_USE = {
-    "grid_height_range": (INTERPOLATED, "mesh_terrains.py:285"),
+    # 보간한 뒤 `uniform_(-grid_height, grid_height)` 로 «진폭» 이 된다
+    # (mesh_terrains.py:348). 한 값이 아니라 표본 구간의 한쪽 끝이다.
+    "grid_height_range": (INTERPOLATED, "mesh_terrains.py:285 · 348"),
     "step_height_range": (INTERPOLATED, "mesh_terrains.py:76 · 176"),
     "rail_height_range": (INTERPOLATED, "mesh_terrains.py:401"),
     "slope_range": (INTERPOLATED, "hf_terrains.py:111-113"),
@@ -316,20 +329,22 @@ RANGE_USE = {
 def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
     """이름이 같은 지형에서 «평가 조건이 학습 범위 밖» 인 칸.
 
-    돌려주는 것: [(지형, 항목, 쓰임, 출처, 학습범위, 평가범위, 잰값, 밖인가)]
+    돌려주는 것: [(지형, 항목, 쓰임, 출처, 학습범위, 평가범위, d0.5값, 밖인가)]
 
     **항목마다 생성기가 다르게 씁니다.** 전부 선형 보간이라고 놓으면 틀립니다.
 
     ```
-    보간   난이도로 한 값을 뽑는다        잰값 = 아래 + 난이도 x (위 - 아래)
-           그 한 값이 학습 범위 밖인가
+    보간   난이도로 «설정값» 을 뽑는다      d0.5값 = 아래 + 난이도 x (위 - 아래)
+           그 설정값이 학습 범위 밖인가
+           생성기가 그 값을 «그대로» 쓰는지 «진폭» 으로 쓰는지는
+           또 다르다 (`boxes` 는 진폭이다 · mesh_terrains.py:348)
     표본   난이도와 무관하게 구간에서 뽑는다  잰값이 하나가 아니다
            «구간» 이 학습 범위를 벗어나는가
     두 값  범위가 아니라 값 둘이다          두 값이 각각 학습 쪽과 같은가
     모름   소비 코드를 아직 안 읽었다        구간으로 보수적으로 본다 · 그렇게 적는다
     ```
 
-    `잰값` 이 `None` 이면 「한 값으로 말할 수 없다」는 뜻입니다.
+    `d0.5값` 이 `None` 이면 「한 값으로 말할 수 없다」는 뜻입니다.
     **분류는 안 바꾸고 따로 적기만 합니다.**
     """
     out = []

@@ -128,8 +128,9 @@ class ReadGuardTests(unittest.TestCase):
     def test_no_sub_terrains_key(self):
         path = write("terrain:\n  size: 8\n")
         try:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(ValueError) as caught:
                 ts.read_sub_terrains(path)
+            self.assertIn("`sub_terrains:` 가 없다", str(caught.exception))
         finally:
             os.unlink(path)
 
@@ -148,10 +149,13 @@ class ReadGuardTests(unittest.TestCase):
             os.unlink(path)
 
     def test_empty_block(self):
+        """**메시지까지 본다.** `ValueError` 만 보면 «풀기 실패» 같은
+        엉뚱한 오류도 통과로 세어 시험 자체가 거짓이 된다."""
         path = write("terrain:\n  sub_terrains:\n  other: 1\n")
         try:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(ValueError) as caught:
                 ts.read_sub_terrains(path)
+            self.assertIn("비었다", str(caught.exception))
         finally:
             os.unlink(path)
 
@@ -255,6 +259,54 @@ class ClassifyGuardTests(unittest.TestCase):
         flat = [key for bucket in ts.BUCKETS for key in groups[bucket]]
         self.assertEqual(sorted(flat), sorted(keys))
         self.assertEqual(len(flat), 48)
+
+
+class PartialDataTests(unittest.TestCase):
+    """**결과가 아직 덜 온 것** 과 **기하를 모르는 것** 을 가른다."""
+
+    def test_missing_results_do_not_stop_the_report(self):
+        """`rails` 결과가 아직 없어도 rough6 만으로 셀 수 있어야 한다."""
+        marks = ts.classify(list(ROUGH6),
+                            list(ROUGH6) + ["omni_gap", "rails"])
+        self.assertEqual(set(marks.values()), {ts.LEARNED})
+
+    def test_an_unknown_terrain_stops_when_a_trench_is_on_screen(self):
+        """도랑 평가 지형이 있으면 분류가 뒤집힐 수 있으므로 멈춘다."""
+        with self.assertRaises(ValueError) as caught:
+            ts.classify(list(ROUGH6) + ["gap"], list(ROUGH6) + ["수수께끼지형"])
+        self.assertIn("수수께끼지형", str(caught.exception))
+        self.assertIn("gap", str(caught.exception))
+
+    def test_an_unknown_terrain_is_tolerated_with_no_trench_on_screen(self):
+        """뒤집힐 자리가 없으면 멈추지 않는다."""
+        marks = ts.classify(list(ROUGH6), list(ROUGH6) + ["수수께끼지형"])
+        self.assertEqual(set(marks.values()), {ts.LEARNED})
+
+
+class YamlReadingTests(unittest.TestCase):
+    """**줄 내용이 같아도 지형마다 제 값을 읽는다.**"""
+
+    def test_two_terrains_with_the_same_field_line(self):
+        """`lines.index` 를 쓰면 둘 다 앞 지형의 값이 된다."""
+        path = write("\n".join((
+            "terrain:",
+            "  sub_terrains:",
+            "    a:",
+            "      slope_range: !!python/tuple",
+            "      - 0.0",
+            "      - 0.4",
+            "    b:",
+            "      slope_range: !!python/tuple",
+            "      - 0.2",
+            "      - 0.8",
+            "  other: 1",
+            "")))
+        try:
+            ranges = ts.read_sub_terrain_ranges(path)
+            self.assertEqual(ranges["a"]["slope_range"], (0.0, 0.4))
+            self.assertEqual(ranges["b"]["slope_range"], (0.2, 0.8))
+        finally:
+            os.unlink(path)
 
 
 class SourceTests(unittest.TestCase):
