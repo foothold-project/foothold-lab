@@ -1,0 +1,1280 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: C:\isaac\IsaacLab\apps\isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.agents.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg
+
+================================================================================
+TERRAIN DIFFICULTY
+================================================================================
+difficulty_range : (0.5, 0.5)  (덮어씀: True)
+rail_thickness   : (0.08, 0.18)  (덮어씀: False)
+
+[36m=====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\AI-WS01\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-09-21_17-30-53.log[0m
+[36m=====================================================================================================================[0m
+
+[33m17:30:53 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+[INFO] Generating terrains based on curriculum took : 0.059522 seconds
+[INFO]: Time taken for scene creation : 1.453552 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 100
+	Environment spacing   : 2.5
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.422687 seconds
+[33m17:30:55 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:245: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'policy' key. As an observation group with the name 'policy' was found, this is assumed to be the observation set. Consider adding the 'policy' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:291: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'critic' key. As the configuration for 'critic' is missing, the observations from the 'policy' set are used. Consider adding the 'critic' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++------------------------------------------------+
+|              Active Command Terms              |
++-------+---------------+------------------------+
+| Index | Name          |          Type          |
++-------+---------------+------------------------+
+|   0   | base_velocity | UniformVelocityCommand |
++-------+---------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 2 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++----------+---------------------------+
+|  Index   | Name                      |
++----------+---------------------------+
+|    0     | physics_material          |
++----------+---------------------------+
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++---------+---------------------------+
+|  Index  | Name                      |
++---------+---------------------------+
+|    0    | reset_base                |
+|    1    | reset_robot_joints        |
++---------+---------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (235,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_lin_vel                   |     (3,)    |
+|     1     | base_ang_vel                   |     (3,)    |
+|     2     | projected_gravity              |     (3,)    |
+|     3     | velocity_commands              |     (3,)    |
+|     4     | joint_pos                      |    (12,)    |
+|     5     | joint_vel                      |    (12,)    |
+|     6     | actions                        |    (12,)    |
+|     7     | height_scan                    |    (187,)   |
++-----------+--------------------------------+-------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 2 active terms.
++---------------------------------+
+|     Active Termination Terms    |
++-------+--------------+----------+
+| Index | Name         | Time Out |
++-------+--------------+----------+
+|   0   | time_out     |   True   |
+|   1   | base_contact |  False   |
++-------+--------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++-----------------------------------------+
+|           Active Reward Terms           |
++-------+----------------------+----------+
+| Index | Name                 |   Weight |
++-------+----------------------+----------+
+|   0   | track_lin_vel_xy_exp |      1.5 |
+|   1   | track_ang_vel_z_exp  |     0.75 |
+|   2   | lin_vel_z_l2         |     -2.0 |
+|   3   | ang_vel_xy_l2        |    -0.05 |
+|   4   | dof_torques_l2       |  -0.0002 |
+|   5   | dof_acc_l2           | -2.5e-07 |
+|   6   | action_rate_l2       |    -0.01 |
+|   7   | feet_air_time        |     0.01 |
+|   8   | flat_orientation_l2  |      0.0 |
+|   9   | dof_pos_limits       |      0.0 |
++-------+----------------------+----------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+
+================================================================================
+ENV -> TERRAIN MAPPING
+================================================================================
+env 000 | terrain_type= 0 | level=0 | terrain=discrete_obstacles     | origin=(   0.00,  -36.00,   0.10)
+env 010 | terrain_type= 1 | level=0 | terrain=wave                   | origin=(   0.00,  -28.00,   0.07)
+env 020 | terrain_type= 2 | level=0 | terrain=stepping_stones        | origin=(   0.00,  -20.00,   0.12)
+env 030 | terrain_type= 3 | level=0 | terrain=gap                    | origin=(   0.00,  -12.00,   0.00)
+env 040 | terrain_type= 4 | level=0 | terrain=pit                    | origin=(   0.00,   -4.00,  -0.20)
+env 050 | terrain_type= 5 | level=0 | terrain=rails                  | origin=(   0.00,    4.00,   0.00)
+env 060 | terrain_type= 6 | level=0 | terrain=star                   | origin=(   0.00,   12.00,   0.00)
+env 070 | terrain_type= 7 | level=0 | terrain=floating_ring          | origin=(   0.00,   20.00,   0.00)
+env 080 | terrain_type= 8 | level=0 | terrain=repeated_boxes         | origin=(   0.00,   28.00,   0.06)
+env 090 | terrain_type= 9 | level=0 | terrain=repeated_cylinders     | origin=(   0.00,   36.00,   0.06)
+
+[PASS] env-to-terrain mapping is deterministic and correct.
+
+================================================================================
+HEAD CONTACT SENSOR (관측 전용 · 판정에 안 들어감)
+================================================================================
+센서 강체 수 : 19
+머리 링크    : ['Head_upper', 'Head_lower']  -> 번호 [9, 10]
+힘 문턱      : 1.000 N
+
+[PASS] 머리 링크를 접촉 센서에서 찾았습니다.
+
+================================================================================
+COMMAND VERIFICATION
+================================================================================
+env 000 | vx= 0.500 | vy= 0.000 | wz= 0.000
+max deviation from (0.5, 0, 0) = 0.000e+00
+
+[PASS] all robots receive the same velocity command.
+
+[INFO] Loading checkpoint:
+C:\isaac\IsaacLab\logs\rsl_rl\unitree_go2_gap_nvidia\nvidia_pretrained_source\nvidia_pretrained.pt
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+
+================================================================================
+COMMAND VERIFICATION
+================================================================================
+env 000 | vx= 0.500 | vy= 0.000 | wz= 0.000
+max deviation from (0.5, 0, 0) = 0.000e+00
+
+[PASS] all robots receive the same velocity command.
+[PASS] 접촉 부위 · foot 4개 · thigh 4개 · calf 4개 · base 3개
+[PASS] 중심 광선 93 / 187
+
+================================================================================
+OBSTACLE ZONE (speed_drop_ratio 를 재는 구간 · 설정에서 계산)
+================================================================================
+difficulty (대표값) : 0.500    타일 8.00 m
+terrain                    시작 m      끝 m   근거
+discrete_obstacles        0.750    4.000   tile_half:HfDiscreteObstaclesTerrainCfg
+wave                      0.000    4.000   tile_half:HfWaveTerrainCfg
+stepping_stones           0.750    4.000   tile_half:HfSteppingStonesTerrainCfg
+gap                       0.750    1.025   gap_width_range
+pit                       0.750    4.000   tile_half:MeshPitTerrainCfg
+rails                     0.750    2.880   rail_2_outer_edge
+star                      0.750    4.000   tile_half:MeshStarTerrainCfg
+floating_ring             0.750    1.175   ring_width_range
+repeated_boxes            0.750    4.000   tile_half:MeshRepeatedBoxesTerrainCfg
+repeated_cylinders        0.750    4.000   tile_half:MeshRepeatedCylindersTerrainCfg
+
+[PASS] 지형 10종의 장애물 구간을 설정에서 계산했습니다.
+[PASS] 발 강체: 관절체 [15, 16, 17, 18] · 접촉 센서 [4, 8, 14, 18]  (FL · FR · RL · RR 순서)
+
+================================================================================
+GENERALIZATION EVALUATION
+================================================================================
+recorded terrains      : ['discrete_obstacles', 'wave', 'stepping_stones', 'gap', 'pit', 'rails', 'star', 'floating_ring', 'repeated_boxes', 'repeated_cylinders']
+envs / terrain         : 10
+total envs (simulated) : 100
+episodes / terrain     : 100
+total target episodes  : 1000
+evaluation duration    : 12.00 s
+step_dt                : 0.0200 s  (600 steps / episode)
+command vx             : 0.50 m/s
+ideal distance         : 6.00 m
+minimum progress       : 3.00 m  (ratio 0.500)
+max velocity MAE       : 0.25 m/s
+max lateral drift      : 0.750 m  (at the 3.00 m gate)
+terrain border width   : 20.00 m  -> forward extent 24.00 m
+seed                   : 42
+================================================================================
+[rails             ]   1/1000 | env 054 ep 01 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.007m | peak=0.028m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  5스텝/ 1219.4N
+[rails             ]   2/1000 | env 056 ep 01 | ok=0 | surv=0 | fwd=  0.65m | gate=m | end=0.027m | peak=0.042m | vMAE=0.18 | trav=0 | gateV= | drop= | head=  5스텝/  837.2N
+[rails             ]   3/1000 | env 059 ep 01 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.011m | peak=0.023m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  168.4N
+[stepping_stones   ]   4/1000 | env 025 ep 01 | ok=0 | surv=0 | fwd=  0.65m | gate=m | end=0.154m | peak=0.154m | vMAE=0.24 | trav=0 | gateV= | drop= | head=  6스텝/ 1349.4N
+[stepping_stones   ]   5/1000 | env 026 ep 01 | ok=0 | surv=0 | fwd=  0.73m | gate=m | end=0.043m | peak=0.075m | vMAE=0.24 | trav=0 | gateV= | drop= | head=  1스텝/  257.3N
+[rails             ]   6/1000 | env 052 ep 01 | ok=0 | surv=0 | fwd=  0.75m | gate=m | end=0.008m | peak=0.021m | vMAE=0.16 | trav=0 | gateV= | drop=-0.61 | head=  4스텝/ 1574.8N
+[stepping_stones   ]   7/1000 | env 028 ep 01 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.156m | peak=0.156m | vMAE=0.27 | trav=0 | gateV= | drop= | head= 24스텝/  570.0N
+[stepping_stones   ]   8/1000 | env 024 ep 01 | ok=0 | surv=0 | fwd=  0.67m | gate=m | end=0.102m | peak=0.151m | vMAE=0.30 | trav=0 | gateV= | drop= | head=  1스텝/  380.3N
+[stepping_stones   ]   9/1000 | env 020 ep 01 | ok=0 | surv=0 | fwd=  0.74m | gate=m | end=0.137m | peak=0.138m | vMAE=0.27 | trav=0 | gateV= | drop= | head=  9스텝/ 1880.3N
+[gap               ]  10/1000 | env 032 ep 01 | ok=0 | surv=0 | fwd=  0.72m | gate=m | end=0.027m | peak=0.122m | vMAE=0.34 | trav=0 | gateV= | drop= | head=  8스텝/  115.3N
+[stepping_stones   ]  11/1000 | env 021 ep 01 | ok=0 | surv=0 | fwd=  1.26m | gate=m | end=0.187m | peak=0.240m | vMAE=0.33 | trav=0 | gateV= | drop=-1.38 | head=  5스텝/  220.6N
+[rails             ]  12/1000 | env 054 ep 02 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.009m | peak=0.032m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/ 1539.1N
+[rails             ]  13/1000 | env 059 ep 02 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.047m | peak=0.047m | vMAE=0.17 | trav=0 | gateV= | drop= | head=  6스텝/  585.9N
+[rails             ]  14/1000 | env 052 ep 02 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.002m | peak=0.033m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  947.8N
+[gap               ]  15/1000 | env 035 ep 01 | ok=0 | surv=0 | fwd=  0.61m | gate=m | end=0.165m | peak=0.215m | vMAE=0.42 | trav=0 | gateV= | drop= | head= 13스텝/  147.6N
+[stepping_stones   ]  16/1000 | env 025 ep 02 | ok=0 | surv=0 | fwd=  1.28m | gate=m | end=0.283m | peak=0.288m | vMAE=0.32 | trav=0 | gateV= | drop=-2.03 | head=  8스텝/  960.4N
+[stepping_stones   ]  17/1000 | env 028 ep 02 | ok=0 | surv=0 | fwd=  1.38m | gate=m | end=0.339m | peak=0.378m | vMAE=0.28 | trav=0 | gateV= | drop=-1.64 | head=  2스텝/  949.7N
+[rails             ]  18/1000 | env 052 ep 03 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.004m | peak=0.020m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  869.7N
+[gap               ]  19/1000 | env 032 ep 02 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.038m | peak=0.044m | vMAE=0.51 | trav=0 | gateV= | drop= 1.70 | head= 23스텝/  934.2N
+[gap               ]  20/1000 | env 035 ep 02 | ok=0 | surv=0 | fwd=  0.74m | gate=m | end=0.128m | peak=0.129m | vMAE=0.35 | trav=0 | gateV= | drop= | head= 31스텝/ 1299.4N
+[rails             ]  21/1000 | env 052 ep 04 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.041m | peak=0.053m | vMAE=0.15 | trav=0 | gateV= | drop=-0.77 | head=  5스텝/  627.8N
+[rails             ]  22/1000 | env 052 ep 05 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.024m | peak=0.024m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  4스텝/ 2206.1N
+[stepping_stones   ]  23/1000 | env 028 ep 03 | ok=0 | surv=0 | fwd=  1.19m | gate=m | end=0.475m | peak=0.475m | vMAE=0.30 | trav=0 | gateV= | drop=-0.18 | head= 13스텝/  729.2N
+[discrete_obstacles]  24/1000 | env 000 ep 01 | ok=1 | surv=1 | fwd=  5.81m | gate=0.177m | end=0.014m | peak=0.197m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.60 | head=  0스텝/    0.0N
+[discrete_obstacles]  25/1000 | env 001 ep 01 | ok=1 | surv=1 | fwd=  5.74m | gate=0.014m | end=0.274m | peak=0.274m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.81 | head=  0스텝/    0.0N
+[discrete_obstacles]  26/1000 | env 002 ep 01 | ok=1 | surv=1 | fwd=  5.60m | gate=0.445m | end=0.671m | peak=0.671m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.50 | head=  0스텝/    0.0N
+[discrete_obstacles]  27/1000 | env 003 ep 01 | ok=1 | surv=1 | fwd=  5.79m | gate=0.225m | end=0.140m | peak=0.271m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.63 | head=  0스텝/    0.0N
+[discrete_obstacles]  28/1000 | env 004 ep 01 | ok=1 | surv=1 | fwd=  5.81m | gate=0.259m | end=0.163m | peak=0.288m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.58 | head=  0스텝/    0.0N
+[discrete_obstacles]  29/1000 | env 005 ep 01 | ok=1 | surv=1 | fwd=  5.74m | gate=0.263m | end=0.157m | peak=0.285m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.51 | head=  0스텝/    0.0N
+[discrete_obstacles]  30/1000 | env 006 ep 01 | ok=1 | surv=1 | fwd=  5.82m | gate=0.227m | end=0.052m | peak=0.242m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.58 | head=  0스텝/    0.0N
+[discrete_obstacles]  31/1000 | env 007 ep 01 | ok=1 | surv=1 | fwd=  5.74m | gate=0.014m | end=0.242m | peak=0.242m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.73 | head=  0스텝/    0.0N
+[discrete_obstacles]  32/1000 | env 008 ep 01 | ok=1 | surv=1 | fwd=  5.82m | gate=0.162m | end=0.002m | peak=0.179m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.69 | head=  0스텝/    0.0N
+[discrete_obstacles]  33/1000 | env 009 ep 01 | ok=1 | surv=1 | fwd=  5.76m | gate=0.005m | end=0.240m | peak=0.240m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.77 | head=  0스텝/    0.0N
+[wave              ]  34/1000 | env 010 ep 01 | ok=1 | surv=1 | fwd=  5.58m | gate=0.147m | end=0.722m | peak=0.722m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ]  35/1000 | env 011 ep 01 | ok=1 | surv=1 | fwd=  5.51m | gate=0.151m | end=1.136m | peak=1.136m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ]  36/1000 | env 012 ep 01 | ok=1 | surv=1 | fwd=  5.61m | gate=0.090m | end=0.899m | peak=0.899m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ]  37/1000 | env 013 ep 01 | ok=1 | surv=1 | fwd=  5.22m | gate=0.273m | end=1.344m | peak=1.344m | vMAE=0.08 | trav=1 | gateV= 0.41 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ]  38/1000 | env 014 ep 01 | ok=1 | surv=1 | fwd=  5.52m | gate=0.203m | end=1.146m | peak=1.146m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ]  39/1000 | env 015 ep 01 | ok=1 | surv=1 | fwd=  5.26m | gate=0.372m | end=1.718m | peak=1.718m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ]  40/1000 | env 016 ep 01 | ok=1 | surv=1 | fwd=  5.61m | gate=0.080m | end=0.616m | peak=0.616m | vMAE=0.05 | trav=1 | gateV= 0.44 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ]  41/1000 | env 017 ep 01 | ok=1 | surv=1 | fwd=  5.50m | gate=0.112m | end=1.030m | peak=1.030m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ]  42/1000 | env 018 ep 01 | ok=1 | surv=1 | fwd=  5.64m | gate=0.009m | end=0.471m | peak=0.471m | vMAE=0.05 | trav=1 | gateV= 0.44 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ]  43/1000 | env 019 ep 01 | ok=1 | surv=1 | fwd=  5.65m | gate=0.016m | end=0.510m | peak=0.510m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.06 | head=  0스텝/    0.0N
+[stepping_stones   ]  44/1000 | env 022 ep 01 | ok=0 | surv=1 | fwd=  0.78m | gate=m | end=0.029m | peak=0.055m | vMAE=0.45 | trav=0 | gateV= | drop=-0.07 | head=500스텝/ 1044.3N
+[stepping_stones   ]  45/1000 | env 023 ep 01 | ok=0 | surv=1 | fwd=  0.86m | gate=m | end=0.121m | peak=0.121m | vMAE=0.46 | trav=0 | gateV= | drop=-0.08 | head=492스텝/ 1587.5N
+[stepping_stones   ]  46/1000 | env 027 ep 01 | ok=0 | surv=1 | fwd=  0.82m | gate=m | end=0.068m | peak=0.075m | vMAE=0.45 | trav=0 | gateV= | drop=-0.02 | head=455스텝/ 1017.1N
+[stepping_stones   ]  47/1000 | env 029 ep 01 | ok=0 | surv=1 | fwd=  0.68m | gate=m | end=0.086m | peak=0.167m | vMAE=0.43 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ]  48/1000 | env 030 ep 01 | ok=0 | surv=1 | fwd=  0.34m | gate=m | end=0.024m | peak=0.140m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ]  49/1000 | env 031 ep 01 | ok=0 | surv=1 | fwd=  0.36m | gate=m | end=0.173m | peak=0.196m | vMAE=0.48 | trav=0 | gateV= | drop= | head= 16스텝/  445.5N
+[gap               ]  50/1000 | env 033 ep 01 | ok=0 | surv=1 | fwd=  0.49m | gate=m | end=0.099m | peak=0.103m | vMAE=0.47 | trav=0 | gateV= | drop= | head=307스텝/   14.7N
+[gap               ]  51/1000 | env 034 ep 01 | ok=0 | surv=1 | fwd=  0.43m | gate=m | end=0.082m | peak=0.095m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  4스텝/  889.4N
+[gap               ]  52/1000 | env 036 ep 01 | ok=0 | surv=1 | fwd= -0.07m | gate=m | end=0.452m | peak=0.452m | vMAE=23.95 | trav=0 | gateV= | drop=-21.08 | head= 10스텝/ 1421.0N
+[gap               ]  53/1000 | env 037 ep 01 | ok=0 | surv=1 | fwd=  0.54m | gate=m | end=0.226m | peak=0.259m | vMAE=0.45 | trav=0 | gateV= | drop= | head=  3스텝/  455.7N
+[gap               ]  54/1000 | env 038 ep 01 | ok=0 | surv=1 | fwd=  0.23m | gate=m | end=0.291m | peak=0.292m | vMAE=0.50 | trav=0 | gateV= | drop= | head=485스텝/  998.0N
+[gap               ]  55/1000 | env 039 ep 01 | ok=0 | surv=1 | fwd=  0.33m | gate=m | end=0.142m | peak=0.256m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[pit               ]  56/1000 | env 040 ep 01 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.001m | peak=0.048m | vMAE=0.42 | trav=0 | gateV= | drop=-0.28 | head=  9스텝/  763.3N
+[pit               ]  57/1000 | env 041 ep 01 | ok=0 | surv=1 | fwd=  0.96m | gate=m | end=0.024m | peak=0.047m | vMAE=0.43 | trav=0 | gateV= | drop=-0.12 | head=  9스텝/  848.5N
+[pit               ]  58/1000 | env 042 ep 01 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.184m | peak=0.200m | vMAE=0.42 | trav=0 | gateV= | drop=-0.22 | head=  8스텝/  125.1N
+[pit               ]  59/1000 | env 043 ep 01 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.056m | peak=0.075m | vMAE=0.42 | trav=0 | gateV= | drop=-0.04 | head= 11스텝/  334.9N
+[pit               ]  60/1000 | env 044 ep 01 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.114m | peak=0.125m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head=  8스텝/  271.3N
+[pit               ]  61/1000 | env 045 ep 01 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.077m | peak=0.097m | vMAE=0.42 | trav=0 | gateV= | drop=-0.06 | head= 12스텝/  876.6N
+[pit               ]  62/1000 | env 046 ep 01 | ok=0 | surv=1 | fwd=  2.76m | gate=m | end=0.399m | peak=0.399m | vMAE=0.29 | trav=0 | gateV= | drop=-0.42 | head= 11스텝/  165.6N
+[pit               ]  63/1000 | env 047 ep 01 | ok=0 | surv=1 | fwd=  0.99m | gate=m | end=0.188m | peak=0.204m | vMAE=0.43 | trav=0 | gateV= | drop=-0.23 | head=  9스텝/  597.5N
+[pit               ]  64/1000 | env 048 ep 01 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.049m | peak=0.144m | vMAE=0.42 | trav=0 | gateV= | drop=-0.16 | head= 20스텝/  560.0N
+[pit               ]  65/1000 | env 049 ep 01 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.027m | peak=0.137m | vMAE=0.43 | trav=0 | gateV= | drop=-0.16 | head= 20스텝/  598.7N
+[rails             ]  66/1000 | env 050 ep 01 | ok=0 | surv=1 | fwd=  3.07m | gate=0.313m | end=0.361m | peak=0.362m | vMAE=0.26 | trav=1 | gateV= 0.47 | drop=-0.05 | head=  0스텝/    0.0N
+[rails             ]  67/1000 | env 051 ep 01 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.153m | peak=0.167m | vMAE=0.41 | trav=0 | gateV= | drop=-0.11 | head=  1스텝/  204.1N
+[rails             ]  68/1000 | env 053 ep 01 | ok=0 | surv=1 | fwd=  2.73m | gate=m | end=0.473m | peak=0.473m | vMAE=0.29 | trav=0 | gateV= | drop=-0.22 | head=  1스텝/  146.5N
+[rails             ]  69/1000 | env 055 ep 01 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.014m | peak=0.064m | vMAE=0.42 | trav=0 | gateV= | drop=-0.07 | head=  5스텝/  988.1N
+[rails             ]  70/1000 | env 057 ep 01 | ok=0 | surv=1 | fwd=  2.40m | gate=m | end=0.072m | peak=0.072m | vMAE=0.32 | trav=0 | gateV= | drop=-0.47 | head=  7스텝/  544.2N
+[rails             ]  71/1000 | env 058 ep 01 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.041m | peak=0.049m | vMAE=0.42 | trav=0 | gateV= | drop=-0.08 | head=  6스텝/  930.9N
+[star              ]  72/1000 | env 060 ep 01 | ok=1 | surv=1 | fwd=  3.82m | gate=0.561m | end=1.042m | peak=1.050m | vMAE=0.20 | trav=1 | gateV= 0.53 | drop=-0.20 | head=  7스텝/  112.4N
+[star              ]  73/1000 | env 061 ep 01 | ok=1 | surv=1 | fwd=  5.50m | gate=0.265m | end=1.025m | peak=1.025m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop= 0.78 | head=  0스텝/    0.0N
+[star              ]  74/1000 | env 062 ep 01 | ok=1 | surv=1 | fwd=  3.95m | gate=0.699m | end=0.967m | peak=1.024m | vMAE=0.20 | trav=1 | gateV= 0.51 | drop=-0.22 | head=  5스텝/  580.7N
+[star              ]  75/1000 | env 063 ep 01 | ok=1 | surv=1 | fwd=  5.15m | gate=0.727m | end=1.854m | peak=1.854m | vMAE=0.09 | trav=1 | gateV= 0.50 | drop= 0.55 | head=  0스텝/    0.0N
+[star              ]  76/1000 | env 064 ep 01 | ok=1 | surv=1 | fwd=  5.25m | gate=0.349m | end=1.652m | peak=1.652m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.57 | head=  0스텝/    0.0N
+[star              ]  77/1000 | env 065 ep 01 | ok=1 | surv=1 | fwd=  4.94m | gate=0.617m | end=1.900m | peak=1.900m | vMAE=0.08 | trav=1 | gateV= 0.39 | drop= 0.40 | head=  0스텝/    0.0N
+[star              ]  78/1000 | env 066 ep 01 | ok=1 | surv=1 | fwd=  3.79m | gate=0.661m | end=1.133m | peak=1.148m | vMAE=0.19 | trav=1 | gateV= 0.45 | drop=-0.14 | head=  4스텝/ 1073.7N
+[star              ]  79/1000 | env 067 ep 01 | ok=1 | surv=1 | fwd=  5.06m | gate=0.501m | end=1.588m | peak=1.588m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop= 0.44 | head=  1스텝/  630.4N
+[star              ]  80/1000 | env 068 ep 01 | ok=1 | surv=1 | fwd=  5.09m | gate=0.457m | end=1.791m | peak=1.791m | vMAE=0.09 | trav=1 | gateV= 0.55 | drop= 0.51 | head=  0스텝/    0.0N
+[star              ]  81/1000 | env 069 ep 01 | ok=1 | surv=1 | fwd=  3.73m | gate=0.514m | end=0.847m | peak=0.854m | vMAE=0.21 | trav=1 | gateV= 0.54 | drop=-0.29 | head=  8스텝/ 1039.6N
+[floating_ring     ]  82/1000 | env 070 ep 01 | ok=0 | surv=1 | fwd=  1.20m | gate=m | end=0.060m | peak=0.082m | vMAE=0.41 | trav=0 | gateV= | drop=-0.44 | head=  4스텝/   73.1N
+[floating_ring     ]  83/1000 | env 071 ep 01 | ok=0 | surv=1 | fwd=  1.17m | gate=m | end=0.163m | peak=0.192m | vMAE=0.41 | trav=0 | gateV= | drop=-0.27 | head=165스텝/  685.1N
+[floating_ring     ]  84/1000 | env 072 ep 01 | ok=0 | surv=1 | fwd=  0.71m | gate=m | end=0.016m | peak=0.048m | vMAE=0.44 | trav=0 | gateV= | drop= | head=477스텝/  535.1N
+[floating_ring     ]  85/1000 | env 073 ep 01 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.055m | peak=0.075m | vMAE=0.42 | trav=0 | gateV= | drop=-0.40 | head= 28스텝/   89.3N
+[floating_ring     ]  86/1000 | env 074 ep 01 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.081m | peak=0.119m | vMAE=0.42 | trav=0 | gateV= | drop=-0.01 | head=106스텝/  817.7N
+[floating_ring     ]  87/1000 | env 075 ep 01 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.135m | peak=0.135m | vMAE=0.42 | trav=0 | gateV= | drop=-0.43 | head= 34스텝/  570.0N
+[floating_ring     ]  88/1000 | env 076 ep 01 | ok=0 | surv=1 | fwd=  0.70m | gate=m | end=0.015m | peak=0.061m | vMAE=0.45 | trav=0 | gateV= | drop= | head=466스텝/  824.8N
+[floating_ring     ]  89/1000 | env 077 ep 01 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.024m | peak=0.080m | vMAE=0.42 | trav=0 | gateV= | drop=-0.13 | head= 35스텝/  156.7N
+[floating_ring     ]  90/1000 | env 078 ep 01 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.074m | peak=0.097m | vMAE=0.42 | trav=0 | gateV= | drop=-0.08 | head= 17스텝/  762.2N
+[floating_ring     ]  91/1000 | env 079 ep 01 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.114m | peak=0.125m | vMAE=0.42 | trav=0 | gateV= | drop=-0.30 | head=145스텝/  493.9N
+[repeated_boxes    ]  92/1000 | env 080 ep 01 | ok=1 | surv=1 | fwd=  5.14m | gate=0.347m | end=0.465m | peak=0.604m | vMAE=0.09 | trav=1 | gateV= 0.48 | drop=-0.42 | head= 18스텝/ 1422.0N
+[repeated_boxes    ]  93/1000 | env 081 ep 01 | ok=1 | surv=1 | fwd=  5.51m | gate=0.322m | end=1.208m | peak=1.208m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_boxes    ]  94/1000 | env 082 ep 01 | ok=1 | surv=1 | fwd=  3.83m | gate=0.247m | end=0.246m | peak=0.396m | vMAE=0.21 | trav=1 | gateV= 0.48 | drop=-0.16 | head=  0스텝/    0.0N
+[repeated_boxes    ]  95/1000 | env 083 ep 01 | ok=1 | surv=1 | fwd=  5.51m | gate=0.326m | end=1.173m | peak=1.173m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.64 | head=  0스텝/    0.0N
+[repeated_boxes    ]  96/1000 | env 084 ep 01 | ok=1 | surv=1 | fwd=  5.44m | gate=0.521m | end=1.534m | peak=1.534m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.72 | head=  0스텝/    0.0N
+[repeated_boxes    ]  97/1000 | env 085 ep 01 | ok=1 | surv=1 | fwd=  5.45m | gate=0.383m | end=1.192m | peak=1.192m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ]  98/1000 | env 086 ep 01 | ok=1 | surv=1 | fwd=  5.46m | gate=0.400m | end=1.162m | peak=1.162m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.55 | head=  0스텝/    0.0N
+[repeated_boxes    ]  99/1000 | env 087 ep 01 | ok=1 | surv=1 | fwd=  4.81m | gate=0.365m | end=0.092m | peak=0.532m | vMAE=0.12 | trav=1 | gateV= 0.51 | drop=-1.07 | head= 18스텝/  958.2N
+[repeated_boxes    ] 100/1000 | env 088 ep 01 | ok=1 | surv=1 | fwd=  5.32m | gate=0.408m | end=1.199m | peak=1.199m | vMAE=0.07 | trav=1 | gateV= 0.37 | drop= 0.64 | head=  0스텝/    0.0N
+[repeated_boxes    ] 101/1000 | env 089 ep 01 | ok=1 | surv=1 | fwd=  5.35m | gate=0.455m | end=1.491m | peak=1.491m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.41 | head=  0스텝/    0.0N
+[repeated_cylinders] 102/1000 | env 090 ep 01 | ok=1 | surv=1 | fwd=  5.57m | gate=0.299m | end=1.265m | peak=1.265m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.78 | head=  0스텝/    0.0N
+[repeated_cylinders] 103/1000 | env 091 ep 01 | ok=1 | surv=1 | fwd=  5.38m | gate=0.331m | end=1.315m | peak=1.315m | vMAE=0.06 | trav=1 | gateV= 0.20 | drop= 0.36 | head=  0스텝/    0.0N
+[repeated_cylinders] 104/1000 | env 092 ep 01 | ok=1 | surv=1 | fwd=  5.57m | gate=0.325m | end=1.263m | peak=1.263m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.76 | head=  0스텝/    0.0N
+[repeated_cylinders] 105/1000 | env 093 ep 01 | ok=1 | surv=1 | fwd=  5.34m | gate=0.500m | end=1.517m | peak=1.517m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.62 | head=  0스텝/    0.0N
+[repeated_cylinders] 106/1000 | env 094 ep 01 | ok=1 | surv=1 | fwd=  5.41m | gate=0.374m | end=1.368m | peak=1.368m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.52 | head=  0스텝/    0.0N
+[repeated_cylinders] 107/1000 | env 095 ep 01 | ok=1 | surv=1 | fwd=  5.58m | gate=0.304m | end=1.023m | peak=1.023m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 108/1000 | env 096 ep 01 | ok=1 | surv=1 | fwd=  5.58m | gate=0.260m | end=1.088m | peak=1.088m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.78 | head=  0스텝/    0.0N
+[repeated_cylinders] 109/1000 | env 097 ep 01 | ok=1 | surv=1 | fwd=  5.42m | gate=0.291m | end=1.035m | peak=1.035m | vMAE=0.07 | trav=1 | gateV= 0.23 | drop=-0.14 | head=  0스텝/    0.0N
+[repeated_cylinders] 110/1000 | env 098 ep 01 | ok=1 | surv=1 | fwd=  5.55m | gate=0.350m | end=1.216m | peak=1.216m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_cylinders] 111/1000 | env 099 ep 01 | ok=1 | surv=1 | fwd=  5.54m | gate=0.271m | end=1.159m | peak=1.159m | vMAE=0.05 | trav=1 | gateV= 0.32 | drop= 0.64 | head=  0스텝/    0.0N
+[rails             ] 112/1000 | env 052 ep 06 | ok=0 | surv=0 | fwd=  0.82m | gate=m | end=0.033m | peak=0.051m | vMAE=0.17 | trav=0 | gateV= | drop=-0.07 | head=  3스텝/  810.7N
+[rails             ] 113/1000 | env 053 ep 02 | ok=0 | surv=0 | fwd=  0.65m | gate=m | end=0.006m | peak=0.018m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  7스텝/  630.4N
+[rails             ] 114/1000 | env 051 ep 02 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.023m | peak=0.033m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  5스텝/ 1871.3N
+[stepping_stones   ] 115/1000 | env 029 ep 02 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.108m | peak=0.108m | vMAE=0.22 | trav=0 | gateV= | drop= | head= 11스텝/ 1035.8N
+[rails             ] 116/1000 | env 056 ep 02 | ok=0 | surv=1 | fwd=  1.34m | gate=m | end=0.391m | peak=0.391m | vMAE=0.40 | trav=0 | gateV= | drop=-0.92 | head=  0스텝/    0.0N
+[rails             ] 117/1000 | env 058 ep 02 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.020m | peak=0.036m | vMAE=0.18 | trav=0 | gateV= | drop= | head=  6스텝/  846.1N
+[stepping_stones   ] 118/1000 | env 026 ep 02 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.005m | peak=0.068m | vMAE=0.46 | trav=0 | gateV= | drop= | head=505스텝/  884.0N
+[rails             ] 119/1000 | env 057 ep 02 | ok=0 | surv=0 | fwd=  0.85m | gate=m | end=0.065m | peak=0.071m | vMAE=0.12 | trav=0 | gateV= | drop=-0.33 | head=  5스텝/  824.3N
+[rails             ] 120/1000 | env 052 ep 07 | ok=0 | surv=0 | fwd=  0.76m | gate=m | end=0.011m | peak=0.025m | vMAE=0.16 | trav=0 | gateV= | drop=-0.30 | head=  5스텝/  977.2N
+[rails             ] 121/1000 | env 050 ep 02 | ok=0 | surv=0 | fwd=  0.83m | gate=m | end=0.027m | peak=0.029m | vMAE=0.17 | trav=0 | gateV= | drop=-0.56 | head=  6스텝/ 1577.7N
+[stepping_stones   ] 122/1000 | env 024 ep 02 | ok=0 | surv=1 | fwd=  0.85m | gate=m | end=0.074m | peak=0.137m | vMAE=0.46 | trav=0 | gateV= | drop=-0.15 | head=494스텝/  735.4N
+[stepping_stones   ] 123/1000 | env 022 ep 02 | ok=0 | surv=0 | fwd=  0.87m | gate=m | end=0.010m | peak=0.091m | vMAE=0.23 | trav=0 | gateV= | drop= 0.32 | head= 16스텝/  552.0N
+[stepping_stones   ] 124/1000 | env 020 ep 02 | ok=0 | surv=1 | fwd=  0.96m | gate=m | end=0.085m | peak=0.128m | vMAE=0.45 | trav=0 | gateV= | drop=-0.25 | head=481스텝/  833.0N
+[stepping_stones   ] 125/1000 | env 021 ep 02 | ok=0 | surv=1 | fwd=  0.61m | gate=m | end=0.121m | peak=0.121m | vMAE=0.47 | trav=0 | gateV= | drop= | head=518스텝/  922.2N
+[rails             ] 126/1000 | env 051 ep 03 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.028m | peak=0.037m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  314.7N
+[rails             ] 127/1000 | env 054 ep 03 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.149m | peak=0.150m | vMAE=0.42 | trav=0 | gateV= | drop=-0.08 | head=  0스텝/    0.0N
+[rails             ] 128/1000 | env 058 ep 03 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.018m | peak=0.021m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  4스텝/  919.2N
+[rails             ] 129/1000 | env 056 ep 03 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.008m | peak=0.019m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  4스텝/ 1061.7N
+[rails             ] 130/1000 | env 059 ep 03 | ok=0 | surv=1 | fwd=  0.60m | gate=m | end=1.627m | peak=1.627m | vMAE=0.34 | trav=0 | gateV= | drop=-1.39 | head= 13스텝/ 2018.7N
+[stepping_stones   ] 131/1000 | env 026 ep 03 | ok=0 | surv=0 | fwd=  0.64m | gate=m | end=0.117m | peak=0.117m | vMAE=0.25 | trav=0 | gateV= | drop= | head=  9스텝/ 1039.9N
+[rails             ] 132/1000 | env 057 ep 03 | ok=0 | surv=0 | fwd=  0.65m | gate=m | end=0.011m | peak=0.031m | vMAE=0.18 | trav=0 | gateV= | drop= | head=  3스텝/ 1275.9N
+[rails             ] 133/1000 | env 050 ep 03 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.092m | peak=0.092m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/ 1729.3N
+[gap               ] 134/1000 | env 033 ep 02 | ok=0 | surv=0 | fwd=  0.87m | gate=m | end=0.006m | peak=0.137m | vMAE=0.45 | trav=0 | gateV= | drop= 0.29 | head= 27스텝/ 1001.4N
+[stepping_stones   ] 135/1000 | env 025 ep 03 | ok=0 | surv=1 | fwd=  0.90m | gate=m | end=0.007m | peak=0.063m | vMAE=0.44 | trav=0 | gateV= | drop=-0.08 | head=476스텝/  747.8N
+[stepping_stones   ] 136/1000 | env 029 ep 03 | ok=0 | surv=0 | fwd=  0.96m | gate=m | end=0.064m | peak=0.119m | vMAE=0.25 | trav=0 | gateV= | drop=-0.02 | head= 13스텝/ 1762.0N
+[rails             ] 137/1000 | env 058 ep 04 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.008m | peak=0.020m | vMAE=0.14 | trav=0 | gateV= | drop= | head=  5스텝/ 2165.0N
+[rails             ] 138/1000 | env 054 ep 04 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.019m | peak=0.022m | vMAE=0.17 | trav=0 | gateV= | drop= | head=  6스텝/ 1116.9N
+[stepping_stones   ] 139/1000 | env 020 ep 03 | ok=0 | surv=0 | fwd=  1.13m | gate=m | end=0.215m | peak=0.304m | vMAE=0.22 | trav=0 | gateV= | drop=-0.18 | head= 19스텝/ 2010.3N
+[rails             ] 140/1000 | env 056 ep 04 | ok=0 | surv=0 | fwd=  0.72m | gate=m | end=0.000m | peak=0.032m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  793.6N
+[rails             ] 141/1000 | env 050 ep 04 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.028m | peak=0.038m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  148.2N
+[stepping_stones   ] 142/1000 | env 021 ep 03 | ok=0 | surv=0 | fwd=  0.91m | gate=m | end=0.084m | peak=0.084m | vMAE=0.25 | trav=0 | gateV= | drop= 0.08 | head= 19스텝/ 1260.2N
+[gap               ] 143/1000 | env 032 ep 03 | ok=0 | surv=1 | fwd=  0.37m | gate=m | end=0.145m | peak=0.240m | vMAE=0.48 | trav=0 | gateV= | drop= | head= 16스텝/  648.2N
+[gap               ] 144/1000 | env 035 ep 03 | ok=0 | surv=1 | fwd=  0.39m | gate=m | end=0.121m | peak=0.178m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[rails             ] 145/1000 | env 058 ep 05 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.020m | peak=0.039m | vMAE=0.14 | trav=0 | gateV= | drop=-0.84 | head=  3스텝/ 1120.4N
+[rails             ] 146/1000 | env 050 ep 05 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.008m | peak=0.021m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  5스텝/  398.9N
+[gap               ] 147/1000 | env 031 ep 02 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.087m | peak=0.141m | vMAE=0.45 | trav=0 | gateV= | drop= | head=  6스텝/ 1458.1N
+[stepping_stones   ] 148/1000 | env 029 ep 04 | ok=0 | surv=0 | fwd=  0.85m | gate=m | end=0.001m | peak=0.069m | vMAE=0.33 | trav=0 | gateV= | drop= 0.55 | head= 25스텝/  370.0N
+[repeated_cylinders] 149/1000 | env 092 ep 02 | ok=0 | surv=0 | fwd=  3.95m | gate=0.325m | end=0.292m | peak=0.602m | vMAE=0.11 | trav=0 | gateV= 0.51 | drop=-0.14 | head=  0스텝/    0.0N
+[rails             ] 150/1000 | env 050 ep 06 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.026m | peak=0.033m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  5스텝/ 1490.7N
+[rails             ] 151/1000 | env 058 ep 06 | ok=0 | surv=0 | fwd=  0.74m | gate=m | end=0.044m | peak=0.044m | vMAE=0.19 | trav=0 | gateV= | drop=-0.39 | head=  6스텝/ 1053.2N
+[gap               ] 152/1000 | env 032 ep 04 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.034m | peak=0.130m | vMAE=0.38 | trav=0 | gateV= | drop= 0.94 | head=  5스텝/   93.2N
+[stepping_stones   ] 153/1000 | env 028 ep 04 | ok=0 | surv=1 | fwd=  0.63m | gate=m | end=0.140m | peak=0.141m | vMAE=0.47 | trav=0 | gateV= | drop= | head=523스텝/  628.9N
+[rails             ] 154/1000 | env 050 ep 07 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.014m | peak=0.024m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  4스텝/  503.4N
+[rails             ] 155/1000 | env 058 ep 07 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.000m | peak=0.014m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  6스텝/  932.6N
+[discrete_obstacles] 156/1000 | env 000 ep 02 | ok=1 | surv=1 | fwd=  5.64m | gate=0.302m | end=0.305m | peak=0.366m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.16 | head=  0스텝/    0.0N
+[discrete_obstacles] 157/1000 | env 001 ep 02 | ok=1 | surv=1 | fwd=  5.53m | gate=0.425m | end=0.641m | peak=0.643m | vMAE=0.08 | trav=1 | gateV= 0.51 | drop= 0.31 | head=  1스텝/  650.9N
+[discrete_obstacles] 158/1000 | env 002 ep 02 | ok=1 | surv=1 | fwd=  4.90m | gate=0.440m | end=0.388m | peak=0.451m | vMAE=0.14 | trav=1 | gateV= 0.52 | drop=-0.11 | head=  0스텝/    0.0N
+[discrete_obstacles] 159/1000 | env 003 ep 02 | ok=1 | surv=1 | fwd=  5.82m | gate=0.329m | end=0.317m | peak=0.395m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.62 | head=  0스텝/    0.0N
+[discrete_obstacles] 160/1000 | env 004 ep 02 | ok=1 | surv=1 | fwd=  5.63m | gate=0.059m | end=0.070m | peak=0.103m | vMAE=0.08 | trav=1 | gateV= 0.51 | drop= 0.60 | head=  0스텝/    0.0N
+[discrete_obstacles] 161/1000 | env 005 ep 02 | ok=1 | surv=1 | fwd=  5.85m | gate=0.201m | end=0.016m | peak=0.210m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.73 | head=  0스텝/    0.0N
+[discrete_obstacles] 162/1000 | env 006 ep 02 | ok=1 | surv=1 | fwd=  5.79m | gate=0.342m | end=0.478m | peak=0.498m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.60 | head=  0스텝/    0.0N
+[discrete_obstacles] 163/1000 | env 007 ep 02 | ok=1 | surv=1 | fwd=  5.64m | gate=0.234m | end=0.203m | peak=0.282m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.55 | head=  0스텝/    0.0N
+[discrete_obstacles] 164/1000 | env 008 ep 02 | ok=1 | surv=1 | fwd=  5.63m | gate=0.214m | end=0.093m | peak=0.236m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.63 | head=  0스텝/    0.0N
+[discrete_obstacles] 165/1000 | env 009 ep 02 | ok=1 | surv=1 | fwd=  5.87m | gate=0.325m | end=0.401m | peak=0.440m | vMAE=0.06 | trav=1 | gateV= 0.54 | drop= 0.68 | head=  0스텝/    0.0N
+[wave              ] 166/1000 | env 010 ep 02 | ok=1 | surv=1 | fwd=  5.61m | gate=0.073m | end=0.923m | peak=0.923m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 167/1000 | env 011 ep 02 | ok=1 | surv=1 | fwd=  5.27m | gate=0.420m | end=1.633m | peak=1.633m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 168/1000 | env 012 ep 02 | ok=1 | surv=1 | fwd=  5.25m | gate=0.538m | end=1.742m | peak=1.742m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 169/1000 | env 013 ep 02 | ok=1 | surv=1 | fwd=  5.16m | gate=0.495m | end=1.667m | peak=1.667m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 170/1000 | env 014 ep 02 | ok=1 | surv=1 | fwd=  5.28m | gate=0.288m | end=1.540m | peak=1.540m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 171/1000 | env 015 ep 02 | ok=1 | surv=1 | fwd=  5.50m | gate=0.202m | end=1.284m | peak=1.284m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 172/1000 | env 016 ep 02 | ok=1 | surv=1 | fwd=  5.72m | gate=0.060m | end=0.111m | peak=0.111m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 173/1000 | env 017 ep 02 | ok=1 | surv=1 | fwd=  5.31m | gate=0.270m | end=1.553m | peak=1.553m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 174/1000 | env 018 ep 02 | ok=1 | surv=1 | fwd=  5.70m | gate=0.001m | end=0.211m | peak=0.211m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 175/1000 | env 019 ep 02 | ok=1 | surv=1 | fwd=  5.68m | gate=0.025m | end=0.155m | peak=0.155m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.06 | head=  0스텝/    0.0N
+[stepping_stones   ] 176/1000 | env 023 ep 02 | ok=0 | surv=1 | fwd=  0.68m | gate=m | end=0.064m | peak=0.081m | vMAE=0.46 | trav=0 | gateV= | drop= | head=524스텝/   92.4N
+[stepping_stones   ] 177/1000 | env 027 ep 02 | ok=0 | surv=1 | fwd=  0.73m | gate=m | end=0.062m | peak=0.068m | vMAE=0.46 | trav=0 | gateV= | drop= | head=515스텝/  913.8N
+[gap               ] 178/1000 | env 030 ep 02 | ok=0 | surv=1 | fwd=  1.53m | gate=m | end=0.694m | peak=0.694m | vMAE=29.98 | trav=0 | gateV= | drop= 0.55 | head= 29스텝/  900.6N
+[gap               ] 179/1000 | env 034 ep 02 | ok=0 | surv=1 | fwd=  0.46m | gate=m | end=0.184m | peak=0.288m | vMAE=0.48 | trav=0 | gateV= | drop= | head=481스텝/  256.8N
+[gap               ] 180/1000 | env 036 ep 02 | ok=0 | surv=1 | fwd=  0.30m | gate=m | end=0.145m | peak=0.223m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  7스텝/  607.7N
+[gap               ] 181/1000 | env 037 ep 02 | ok=0 | surv=1 | fwd=  0.69m | gate=m | end=0.144m | peak=0.206m | vMAE=0.47 | trav=0 | gateV= | drop= | head=360스텝/ 3498.4N
+[gap               ] 182/1000 | env 038 ep 02 | ok=0 | surv=1 | fwd=  0.39m | gate=m | end=0.123m | peak=0.188m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  1스텝/   80.3N
+[gap               ] 183/1000 | env 039 ep 02 | ok=0 | surv=1 | fwd=  0.86m | gate=m | end=0.392m | peak=0.392m | vMAE=0.47 | trav=0 | gateV= | drop=-0.12 | head= 24스텝/  773.5N
+[pit               ] 184/1000 | env 040 ep 02 | ok=0 | surv=1 | fwd=  1.00m | gate=m | end=0.196m | peak=0.204m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head= 13스텝/  102.8N
+[pit               ] 185/1000 | env 041 ep 02 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.175m | peak=0.203m | vMAE=0.42 | trav=0 | gateV= | drop=-0.16 | head= 12스텝/  633.6N
+[pit               ] 186/1000 | env 042 ep 02 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.185m | peak=0.191m | vMAE=0.43 | trav=0 | gateV= | drop=-0.27 | head= 11스텝/  761.2N
+[pit               ] 187/1000 | env 043 ep 02 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.145m | peak=0.165m | vMAE=0.42 | trav=0 | gateV= | drop=-0.29 | head= 13스텝/  704.3N
+[pit               ] 188/1000 | env 044 ep 02 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.124m | peak=0.132m | vMAE=0.42 | trav=0 | gateV= | drop=-0.23 | head=  9스텝/  878.9N
+[pit               ] 189/1000 | env 045 ep 02 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.019m | peak=0.076m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head=  4스텝/   88.6N
+[pit               ] 190/1000 | env 046 ep 02 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.120m | peak=0.169m | vMAE=0.42 | trav=0 | gateV= | drop=-0.42 | head=  8스텝/  362.5N
+[pit               ] 191/1000 | env 047 ep 02 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.310m | peak=0.342m | vMAE=0.41 | trav=0 | gateV= | drop=-0.16 | head= 28스텝/  295.7N
+[pit               ] 192/1000 | env 048 ep 02 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.049m | peak=0.066m | vMAE=0.42 | trav=0 | gateV= | drop=-0.07 | head=  9스텝/  401.7N
+[pit               ] 193/1000 | env 049 ep 02 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.005m | peak=0.044m | vMAE=0.42 | trav=0 | gateV= | drop=-0.13 | head= 20스텝/  435.4N
+[rails             ] 194/1000 | env 055 ep 02 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.037m | peak=0.054m | vMAE=0.41 | trav=0 | gateV= | drop=-0.01 | head=  0스텝/    0.0N
+[star              ] 195/1000 | env 060 ep 02 | ok=1 | surv=1 | fwd=  3.79m | gate=0.645m | end=1.080m | peak=1.102m | vMAE=0.19 | trav=1 | gateV= 0.51 | drop=-0.05 | head=  0스텝/    0.0N
+[star              ] 196/1000 | env 061 ep 02 | ok=1 | surv=1 | fwd=  3.77m | gate=0.726m | end=1.301m | peak=1.309m | vMAE=0.19 | trav=1 | gateV= 0.57 | drop=-0.06 | head=  0스텝/    0.0N
+[star              ] 197/1000 | env 062 ep 02 | ok=0 | surv=1 | fwd=  3.75m | gate=0.806m | end=1.404m | peak=1.412m | vMAE=0.19 | trav=0 | gateV= 0.52 | drop=-0.12 | head=  0스텝/    0.0N
+[star              ] 198/1000 | env 063 ep 02 | ok=1 | surv=1 | fwd=  3.81m | gate=0.559m | end=1.008m | peak=1.024m | vMAE=0.20 | trav=1 | gateV= 0.54 | drop=-0.09 | head=  0스텝/    0.0N
+[star              ] 199/1000 | env 064 ep 02 | ok=0 | surv=1 | fwd=  5.07m | gate=0.780m | end=2.041m | peak=2.041m | vMAE=0.08 | trav=0 | gateV= 0.47 | drop= 0.51 | head=  0스텝/    0.0N
+[star              ] 200/1000 | env 065 ep 02 | ok=1 | surv=1 | fwd=  3.79m | gate=0.524m | end=0.994m | peak=1.012m | vMAE=0.20 | trav=1 | gateV= 0.57 | drop=-0.09 | head=  1스텝/ 1044.1N
+[star              ] 201/1000 | env 066 ep 02 | ok=1 | surv=1 | fwd=  3.91m | gate=0.523m | end=0.929m | peak=0.952m | vMAE=0.19 | trav=1 | gateV= 0.45 | drop=-0.03 | head=  0스텝/    0.0N
+[star              ] 202/1000 | env 067 ep 02 | ok=0 | surv=1 | fwd=  3.85m | gate=0.862m | end=1.300m | peak=1.323m | vMAE=0.19 | trav=0 | gateV= 0.53 | drop=-0.11 | head=  0스텝/    0.0N
+[star              ] 203/1000 | env 068 ep 02 | ok=1 | surv=1 | fwd=  3.74m | gate=0.747m | end=1.186m | peak=1.197m | vMAE=0.19 | trav=1 | gateV= 0.49 | drop=-0.01 | head=  0스텝/    0.0N
+[star              ] 204/1000 | env 069 ep 02 | ok=1 | surv=1 | fwd=  3.79m | gate=0.579m | end=1.061m | peak=1.066m | vMAE=0.19 | trav=1 | gateV= 0.43 | drop=-0.02 | head=  0스텝/    0.0N
+[floating_ring     ] 205/1000 | env 070 ep 02 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.011m | peak=0.051m | vMAE=0.43 | trav=0 | gateV= | drop=-0.05 | head=  6스텝/  648.7N
+[floating_ring     ] 206/1000 | env 071 ep 02 | ok=0 | surv=1 | fwd=  1.20m | gate=m | end=0.141m | peak=0.161m | vMAE=0.41 | trav=0 | gateV= | drop=-0.20 | head= 23스텝/   78.8N
+[floating_ring     ] 207/1000 | env 072 ep 02 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.102m | peak=0.107m | vMAE=0.42 | trav=0 | gateV= | drop=-0.10 | head=  6스텝/  145.5N
+[floating_ring     ] 208/1000 | env 073 ep 02 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.093m | peak=0.117m | vMAE=0.41 | trav=0 | gateV= | drop=-0.30 | head=136스텝/  652.0N
+[floating_ring     ] 209/1000 | env 074 ep 02 | ok=0 | surv=1 | fwd=  0.76m | gate=m | end=0.050m | peak=0.071m | vMAE=0.44 | trav=0 | gateV= | drop=-0.51 | head=487스텝/  285.9N
+[floating_ring     ] 210/1000 | env 075 ep 02 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.095m | peak=0.105m | vMAE=0.42 | trav=0 | gateV= | drop=-0.09 | head= 36스텝/  197.8N
+[floating_ring     ] 211/1000 | env 076 ep 02 | ok=0 | surv=1 | fwd=  0.66m | gate=m | end=0.025m | peak=0.081m | vMAE=0.45 | trav=0 | gateV= | drop= | head=472스텝/  367.4N
+[floating_ring     ] 212/1000 | env 077 ep 02 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.092m | peak=0.125m | vMAE=0.42 | trav=0 | gateV= | drop=-0.00 | head= 16스텝/  255.0N
+[floating_ring     ] 213/1000 | env 078 ep 02 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.119m | peak=0.184m | vMAE=0.42 | trav=0 | gateV= | drop=-0.41 | head= 19스텝/  473.5N
+[floating_ring     ] 214/1000 | env 079 ep 02 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.079m | peak=0.191m | vMAE=0.41 | trav=0 | gateV= | drop=-0.51 | head= 17스텝/  442.8N
+[repeated_boxes    ] 215/1000 | env 080 ep 02 | ok=1 | surv=1 | fwd=  3.67m | gate=0.437m | end=0.528m | peak=0.548m | vMAE=0.21 | trav=1 | gateV= 0.46 | drop=-0.24 | head=  0스텝/    0.0N
+[repeated_boxes    ] 216/1000 | env 081 ep 02 | ok=1 | surv=1 | fwd=  5.10m | gate=0.690m | end=0.995m | peak=0.995m | vMAE=0.10 | trav=1 | gateV= 0.48 | drop=-0.54 | head= 22스텝/ 1894.6N
+[repeated_boxes    ] 217/1000 | env 082 ep 02 | ok=1 | surv=1 | fwd=  5.47m | gate=0.316m | end=1.295m | peak=1.295m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.55 | head=  0스텝/    0.0N
+[repeated_boxes    ] 218/1000 | env 083 ep 02 | ok=1 | surv=1 | fwd=  5.46m | gate=0.408m | end=1.306m | peak=1.306m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_boxes    ] 219/1000 | env 084 ep 02 | ok=1 | surv=1 | fwd=  5.53m | gate=0.419m | end=1.312m | peak=1.312m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.74 | head=  0스텝/    0.0N
+[repeated_boxes    ] 220/1000 | env 085 ep 02 | ok=1 | surv=1 | fwd=  5.40m | gate=0.440m | end=0.920m | peak=0.920m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop=-0.12 | head=  4스텝/ 1340.3N
+[repeated_boxes    ] 221/1000 | env 086 ep 02 | ok=1 | surv=1 | fwd=  4.96m | gate=0.258m | end=0.375m | peak=0.401m | vMAE=0.11 | trav=1 | gateV= 0.49 | drop=-0.67 | head= 37스텝/ 1203.8N
+[repeated_boxes    ] 222/1000 | env 087 ep 02 | ok=1 | surv=1 | fwd=  5.40m | gate=0.338m | end=1.221m | peak=1.221m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.42 | head=  0스텝/    0.0N
+[repeated_boxes    ] 223/1000 | env 088 ep 02 | ok=1 | surv=1 | fwd=  4.99m | gate=0.211m | end=0.032m | peak=0.388m | vMAE=0.11 | trav=1 | gateV= 0.45 | drop=-0.94 | head= 12스텝/ 1411.0N
+[repeated_boxes    ] 224/1000 | env 089 ep 02 | ok=1 | surv=1 | fwd=  5.23m | gate=0.315m | end=0.585m | peak=0.585m | vMAE=0.09 | trav=1 | gateV= 0.44 | drop=-0.47 | head= 17스텝/ 1186.1N
+[repeated_cylinders] 225/1000 | env 090 ep 02 | ok=1 | surv=1 | fwd=  5.51m | gate=0.361m | end=1.168m | peak=1.168m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_cylinders] 226/1000 | env 091 ep 02 | ok=1 | surv=1 | fwd=  5.51m | gate=0.344m | end=1.133m | peak=1.133m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 227/1000 | env 093 ep 02 | ok=1 | surv=1 | fwd=  5.54m | gate=0.328m | end=1.039m | peak=1.039m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_cylinders] 228/1000 | env 094 ep 02 | ok=1 | surv=1 | fwd=  5.48m | gate=0.271m | end=1.165m | peak=1.165m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop= 0.45 | head=  0스텝/    0.0N
+[repeated_cylinders] 229/1000 | env 095 ep 02 | ok=1 | surv=1 | fwd=  5.49m | gate=0.276m | end=1.193m | peak=1.193m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.60 | head=  0스텝/    0.0N
+[repeated_cylinders] 230/1000 | env 096 ep 02 | ok=1 | surv=1 | fwd=  5.32m | gate=0.343m | end=1.262m | peak=1.262m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop=-0.23 | head=  0스텝/    0.0N
+[repeated_cylinders] 231/1000 | env 097 ep 02 | ok=1 | surv=1 | fwd=  5.46m | gate=0.416m | end=1.214m | peak=1.214m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.55 | head=  0스텝/    0.0N
+[repeated_cylinders] 232/1000 | env 098 ep 02 | ok=1 | surv=1 | fwd=  5.44m | gate=0.448m | end=1.418m | peak=1.418m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_cylinders] 233/1000 | env 099 ep 02 | ok=1 | surv=1 | fwd=  5.57m | gate=0.250m | end=1.055m | peak=1.055m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop= 0.46 | head=  0스텝/    0.0N
+[gap               ] 234/1000 | env 031 ep 03 | ok=0 | surv=0 | fwd=  0.64m | gate=m | end=0.061m | peak=0.184m | vMAE=0.38 | trav=0 | gateV= | drop= | head= 25스텝/ 2709.2N
+[gap               ] 235/1000 | env 032 ep 05 | ok=0 | surv=0 | fwd=  0.37m | gate=m | end=0.320m | peak=0.320m | vMAE=0.51 | trav=0 | gateV= | drop= | head= 12스텝/  411.6N
+[rails             ] 236/1000 | env 050 ep 08 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.057m | peak=0.057m | vMAE=0.16 | trav=0 | gateV= | drop=-0.69 | head=  5스텝/  165.5N
+[rails             ] 237/1000 | env 053 ep 03 | ok=0 | surv=1 | fwd=  1.18m | gate=m | end=0.017m | peak=0.047m | vMAE=0.41 | trav=0 | gateV= | drop=-0.22 | head=  8스텝/ 1278.3N
+[rails             ] 238/1000 | env 058 ep 08 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.101m | peak=0.101m | vMAE=0.19 | trav=0 | gateV= | drop= | head=  7스텝/  371.9N
+[rails             ] 239/1000 | env 055 ep 03 | ok=0 | surv=0 | fwd=  0.80m | gate=m | end=0.027m | peak=0.050m | vMAE=0.14 | trav=0 | gateV= | drop=-0.35 | head=  2스텝/ 1385.6N
+[rails             ] 240/1000 | env 052 ep 08 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.025m | peak=0.042m | vMAE=0.40 | trav=0 | gateV= | drop=-0.63 | head= 16스텝/  119.0N
+[stepping_stones   ] 241/1000 | env 024 ep 03 | ok=0 | surv=1 | fwd=  0.82m | gate=m | end=0.209m | peak=0.259m | vMAE=0.45 | trav=0 | gateV= | drop=-0.41 | head=421스텝/ 1529.6N
+[stepping_stones   ] 242/1000 | env 022 ep 03 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.090m | peak=0.093m | vMAE=0.46 | trav=0 | gateV= | drop= | head=508스텝/ 1119.8N
+[rails             ] 243/1000 | env 051 ep 04 | ok=0 | surv=0 | fwd=  2.67m | gate=m | end=0.687m | peak=0.687m | vMAE=0.27 | trav=0 | gateV= | drop=-1.61 | head=  4스텝/  542.9N
+[stepping_stones   ] 244/1000 | env 027 ep 03 | ok=0 | surv=0 | fwd=  0.95m | gate=m | end=0.020m | peak=0.058m | vMAE=0.23 | trav=0 | gateV= | drop= 0.42 | head=  9스텝/ 2565.2N
+[gap               ] 245/1000 | env 038 ep 03 | ok=0 | surv=0 | fwd=  0.95m | gate=m | end=0.132m | peak=0.147m | vMAE=0.35 | trav=0 | gateV= | drop= 1.25 | head= 11스텝/  384.9N
+[gap               ] 246/1000 | env 039 ep 03 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.055m | peak=0.055m | vMAE=0.36 | trav=0 | gateV= | drop= 0.03 | head= 45스텝/  377.8N
+[gap               ] 247/1000 | env 035 ep 04 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.327m | peak=0.357m | vMAE=0.45 | trav=0 | gateV= | drop= | head= 66스텝/  912.9N
+[gap               ] 248/1000 | env 036 ep 03 | ok=0 | surv=0 | fwd=  0.58m | gate=m | end=0.135m | peak=0.157m | vMAE=0.38 | trav=0 | gateV= | drop= | head= 20스텝/ 1288.5N
+[gap               ] 249/1000 | env 031 ep 04 | ok=0 | surv=0 | fwd=  0.91m | gate=m | end=0.025m | peak=0.145m | vMAE=0.40 | trav=0 | gateV= | drop=-0.29 | head= 25스텝/  846.1N
+[rails             ] 250/1000 | env 050 ep 09 | ok=0 | surv=0 | fwd=  0.80m | gate=m | end=0.028m | peak=0.040m | vMAE=0.14 | trav=0 | gateV= | drop=-0.23 | head=  5스텝/  772.9N
+[rails             ] 251/1000 | env 059 ep 04 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.018m | peak=0.048m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head=  2스텝/  902.8N
+[stepping_stones   ] 252/1000 | env 026 ep 04 | ok=0 | surv=1 | fwd=  0.66m | gate=m | end=0.063m | peak=0.065m | vMAE=0.46 | trav=0 | gateV= | drop= | head=528스텝/  928.9N
+[rails             ] 253/1000 | env 053 ep 04 | ok=0 | surv=0 | fwd=  0.76m | gate=m | end=0.015m | peak=0.021m | vMAE=0.18 | trav=0 | gateV= | drop=-0.59 | head=  6스텝/  205.1N
+[rails             ] 254/1000 | env 057 ep 04 | ok=0 | surv=1 | fwd=  1.20m | gate=m | end=0.145m | peak=0.168m | vMAE=0.41 | trav=0 | gateV= | drop=-0.12 | head=157스텝/  676.6N
+[rails             ] 255/1000 | env 058 ep 09 | ok=0 | surv=0 | fwd=  0.85m | gate=m | end=0.017m | peak=0.049m | vMAE=0.13 | trav=0 | gateV= | drop=-0.58 | head=  3스텝/ 1636.7N
+[rails             ] 256/1000 | env 055 ep 04 | ok=0 | surv=0 | fwd=  0.75m | gate=m | end=0.033m | peak=0.056m | vMAE=0.19 | trav=0 | gateV= | drop=-0.12 | head=  9스텝/ 1650.4N
+[rails             ] 257/1000 | env 051 ep 05 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.025m | peak=0.034m | vMAE=0.14 | trav=0 | gateV= | drop= | head=  5스텝/ 1046.5N
+[gap               ] 258/1000 | env 033 ep 03 | ok=0 | surv=1 | fwd=  0.37m | gate=m | end=0.208m | peak=0.229m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  9스텝/ 1199.6N
+[stepping_stones   ] 259/1000 | env 025 ep 04 | ok=0 | surv=1 | fwd=  0.77m | gate=m | end=0.038m | peak=0.062m | vMAE=0.45 | trav=0 | gateV= | drop=-0.06 | head=514스텝/ 1131.0N
+[gap               ] 260/1000 | env 036 ep 04 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.224m | peak=0.224m | vMAE=0.38 | trav=0 | gateV= | drop= | head= 11스텝/  104.9N
+[rails             ] 261/1000 | env 054 ep 05 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.038m | peak=0.045m | vMAE=0.42 | trav=0 | gateV= | drop=-0.10 | head=  4스텝/  808.0N
+[stepping_stones   ] 262/1000 | env 020 ep 04 | ok=0 | surv=1 | fwd=  0.83m | gate=m | end=0.115m | peak=0.116m | vMAE=0.46 | trav=0 | gateV= | drop=-0.01 | head=497스텝/  788.1N
+[rails             ] 263/1000 | env 056 ep 05 | ok=0 | surv=1 | fwd=  1.26m | gate=m | end=0.261m | peak=0.273m | vMAE=0.41 | trav=0 | gateV= | drop=-0.47 | head=  0스텝/    0.0N
+[floating_ring     ] 264/1000 | env 076 ep 03 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.047m | peak=0.087m | vMAE=0.39 | trav=0 | gateV= | drop= | head=192스텝/  529.9N
+[rails             ] 265/1000 | env 053 ep 05 | ok=0 | surv=0 | fwd=  0.70m | gate=m | end=0.095m | peak=0.095m | vMAE=0.18 | trav=0 | gateV= | drop= | head=  5스텝/  182.4N
+[rails             ] 266/1000 | env 050 ep 10 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.066m | peak=0.072m | vMAE=0.16 | trav=0 | gateV= | drop=-0.66 | head=  7스텝/  207.4N
+[stepping_stones   ] 267/1000 | env 021 ep 04 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.087m | peak=0.089m | vMAE=0.46 | trav=0 | gateV= | drop= | head=511스텝/ 1569.2N
+[rails             ] 268/1000 | env 059 ep 05 | ok=0 | surv=0 | fwd=  0.79m | gate=m | end=0.039m | peak=0.051m | vMAE=0.18 | trav=0 | gateV= | drop=-0.71 | head=  5스텝/ 1545.1N
+[gap               ] 269/1000 | env 032 ep 06 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.182m | peak=0.182m | vMAE=0.42 | trav=0 | gateV= | drop= | head= 11스텝/ 1229.4N
+[rails             ] 270/1000 | env 057 ep 05 | ok=0 | surv=0 | fwd=  0.73m | gate=m | end=0.044m | peak=0.044m | vMAE=0.18 | trav=0 | gateV= | drop= | head=  5스텝/ 1127.8N
+[rails             ] 271/1000 | env 058 ep 10 | ok=0 | surv=0 | fwd=  0.87m | gate=m | end=0.054m | peak=0.058m | vMAE=0.16 | trav=0 | gateV= | drop=-0.44 | head=  5스텝/  312.8N
+[gap               ] 272/1000 | env 039 ep 04 | ok=0 | surv=0 | fwd=  0.76m | gate=m | end=0.113m | peak=0.131m | vMAE=0.37 | trav=0 | gateV= | drop= 1.33 | head= 31스텝/ 1049.2N
+[gap               ] 273/1000 | env 035 ep 05 | ok=0 | surv=0 | fwd=  0.93m | gate=m | end=0.065m | peak=0.292m | vMAE=0.45 | trav=0 | gateV= | drop= 0.29 | head= 37스텝/  803.4N
+[rails             ] 274/1000 | env 053 ep 06 | ok=0 | surv=0 | fwd=  0.65m | gate=m | end=0.015m | peak=0.021m | vMAE=0.17 | trav=0 | gateV= | drop= | head=  6스텝/ 1474.8N
+[rails             ] 275/1000 | env 054 ep 06 | ok=0 | surv=0 | fwd=  0.78m | gate=m | end=0.026m | peak=0.028m | vMAE=0.18 | trav=0 | gateV= | drop=-0.28 | head=  2스텝/ 1114.3N
+[rails             ] 276/1000 | env 056 ep 06 | ok=0 | surv=0 | fwd=  0.74m | gate=m | end=0.042m | peak=0.049m | vMAE=0.18 | trav=0 | gateV= | drop=-0.57 | head=  6스텝/  746.6N
+[rails             ] 277/1000 | env 059 ep 06 | ok=0 | surv=0 | fwd=  0.80m | gate=m | end=0.038m | peak=0.041m | vMAE=0.15 | trav=0 | gateV= | drop=-0.42 | head=  6스텝/ 1077.4N
+[stepping_stones   ] 278/1000 | env 029 ep 05 | ok=0 | surv=1 | fwd=  0.62m | gate=m | end=0.077m | peak=0.089m | vMAE=0.46 | trav=0 | gateV= | drop= | head=525스텝/ 1107.7N
+[gap               ] 279/1000 | env 033 ep 04 | ok=0 | surv=0 | fwd=  0.86m | gate=m | end=0.410m | peak=0.429m | vMAE=0.59 | trav=0 | gateV= | drop=-1.36 | head=  9스텝/ 1904.9N
+[repeated_cylinders] 280/1000 | env 092 ep 03 | ok=1 | surv=1 | fwd=  5.50m | gate=0.390m | end=1.324m | peak=1.324m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.73 | head=  0스텝/    0.0N
+[rails             ] 281/1000 | env 053 ep 07 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.014m | peak=0.017m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  5스텝/ 2119.1N
+[gap               ] 282/1000 | env 036 ep 05 | ok=0 | surv=0 | fwd=  0.61m | gate=m | end=0.027m | peak=0.160m | vMAE=0.39 | trav=0 | gateV= | drop= | head= 17스텝/ 1042.1N
+[rails             ] 283/1000 | env 056 ep 07 | ok=0 | surv=0 | fwd=  0.75m | gate=m | end=0.013m | peak=0.026m | vMAE=0.17 | trav=0 | gateV= | drop=-0.52 | head=  5스텝/  758.1N
+[rails             ] 284/1000 | env 054 ep 07 | ok=0 | surv=0 | fwd=  0.83m | gate=m | end=0.027m | peak=0.051m | vMAE=0.15 | trav=0 | gateV= | drop=-0.70 | head=  5스텝/ 2096.4N
+[stepping_stones   ] 285/1000 | env 021 ep 05 | ok=0 | surv=0 | fwd=  0.86m | gate=m | end=0.141m | peak=0.141m | vMAE=0.34 | trav=0 | gateV= | drop= 0.58 | head= 64스텝/  227.2N
+[gap               ] 286/1000 | env 031 ep 05 | ok=0 | surv=0 | fwd=  0.67m | gate=m | end=0.249m | peak=0.249m | vMAE=0.45 | trav=0 | gateV= | drop= | head= 16스텝/ 1388.8N
+[stepping_stones   ] 287/1000 | env 028 ep 05 | ok=0 | surv=1 | fwd=  0.79m | gate=m | end=0.012m | peak=0.052m | vMAE=0.45 | trav=0 | gateV= | drop=-0.02 | head=513스텝/  779.9N
+[discrete_obstacles] 288/1000 | env 000 ep 03 | ok=1 | surv=1 | fwd=  5.80m | gate=0.061m | end=0.330m | peak=0.330m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.53 | head=  0스텝/    0.0N
+[discrete_obstacles] 289/1000 | env 001 ep 03 | ok=1 | surv=1 | fwd=  5.80m | gate=0.284m | end=0.225m | peak=0.326m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.59 | head=  0스텝/    0.0N
+[discrete_obstacles] 290/1000 | env 002 ep 03 | ok=1 | surv=1 | fwd=  5.56m | gate=0.422m | end=0.513m | peak=0.536m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop=-0.11 | head=  0스텝/    0.0N
+[discrete_obstacles] 291/1000 | env 003 ep 03 | ok=1 | surv=1 | fwd=  5.81m | gate=0.027m | end=0.251m | peak=0.251m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.69 | head=  0스텝/    0.0N
+[discrete_obstacles] 292/1000 | env 004 ep 03 | ok=1 | surv=1 | fwd=  5.77m | gate=0.256m | end=0.193m | peak=0.294m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.51 | head=  0스텝/    0.0N
+[discrete_obstacles] 293/1000 | env 005 ep 03 | ok=1 | surv=1 | fwd=  5.59m | gate=0.412m | end=0.429m | peak=0.482m | vMAE=0.09 | trav=1 | gateV= 0.52 | drop= 0.17 | head=  0스텝/    0.0N
+[discrete_obstacles] 294/1000 | env 006 ep 03 | ok=1 | surv=1 | fwd=  5.53m | gate=0.381m | end=0.384m | peak=0.445m | vMAE=0.09 | trav=1 | gateV= 0.48 | drop= 0.08 | head=  0스텝/    0.0N
+[discrete_obstacles] 295/1000 | env 007 ep 03 | ok=1 | surv=1 | fwd=  5.81m | gate=0.313m | end=0.266m | peak=0.359m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.61 | head=  0스텝/    0.0N
+[discrete_obstacles] 296/1000 | env 008 ep 03 | ok=1 | surv=1 | fwd=  5.84m | gate=0.174m | end=0.021m | peak=0.191m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.63 | head=  0스텝/    0.0N
+[discrete_obstacles] 297/1000 | env 009 ep 03 | ok=1 | surv=1 | fwd=  5.83m | gate=0.332m | end=0.353m | peak=0.417m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.61 | head=  0스텝/    0.0N
+[wave              ] 298/1000 | env 010 ep 03 | ok=1 | surv=1 | fwd=  5.25m | gate=0.420m | end=1.667m | peak=1.667m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 299/1000 | env 011 ep 03 | ok=1 | surv=1 | fwd=  5.68m | gate=0.080m | end=0.031m | peak=0.117m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 300/1000 | env 012 ep 03 | ok=1 | surv=1 | fwd=  5.54m | gate=0.143m | end=1.038m | peak=1.038m | vMAE=0.05 | trav=1 | gateV= 0.44 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 301/1000 | env 013 ep 03 | ok=1 | surv=1 | fwd=  5.14m | gate=0.529m | end=1.867m | peak=1.867m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 302/1000 | env 014 ep 03 | ok=1 | surv=1 | fwd=  5.69m | gate=0.081m | end=0.574m | peak=0.574m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 303/1000 | env 015 ep 03 | ok=1 | surv=1 | fwd=  5.59m | gate=0.164m | end=0.853m | peak=0.853m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 304/1000 | env 016 ep 03 | ok=1 | surv=1 | fwd=  5.59m | gate=0.219m | end=1.026m | peak=1.026m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 305/1000 | env 017 ep 03 | ok=1 | surv=1 | fwd=  5.70m | gate=0.037m | end=0.468m | peak=0.468m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 306/1000 | env 018 ep 03 | ok=1 | surv=1 | fwd=  5.60m | gate=0.183m | end=1.008m | peak=1.008m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 307/1000 | env 019 ep 03 | ok=1 | surv=1 | fwd=  5.63m | gate=0.032m | end=0.185m | peak=0.185m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop=-0.08 | head=  0스텝/    0.0N
+[stepping_stones   ] 308/1000 | env 023 ep 03 | ok=0 | surv=1 | fwd=  0.77m | gate=m | end=0.036m | peak=0.073m | vMAE=0.46 | trav=0 | gateV= | drop=-0.04 | head=512스텝/  821.0N
+[gap               ] 309/1000 | env 030 ep 03 | ok=0 | surv=1 | fwd=  0.58m | gate=m | end=0.122m | peak=0.132m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  7스텝/  925.0N
+[gap               ] 310/1000 | env 034 ep 03 | ok=0 | surv=1 | fwd=  0.54m | gate=m | end=0.039m | peak=0.166m | vMAE=0.46 | trav=0 | gateV= | drop= | head=  1스텝/   39.2N
+[gap               ] 311/1000 | env 037 ep 03 | ok=0 | surv=1 | fwd=  0.27m | gate=m | end=0.250m | peak=0.313m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  1스텝/   82.7N
+[pit               ] 312/1000 | env 040 ep 03 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.141m | peak=0.152m | vMAE=0.42 | trav=0 | gateV= | drop=-0.36 | head=  8스텝/  128.4N
+[pit               ] 313/1000 | env 041 ep 03 | ok=0 | surv=1 | fwd=  0.93m | gate=m | end=0.114m | peak=0.134m | vMAE=0.43 | trav=0 | gateV= | drop=-0.12 | head= 10스텝/  134.1N
+[pit               ] 314/1000 | env 042 ep 03 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.003m | peak=0.034m | vMAE=0.42 | trav=0 | gateV= | drop=-0.06 | head=  9스텝/  343.8N
+[pit               ] 315/1000 | env 043 ep 03 | ok=0 | surv=1 | fwd=  1.00m | gate=m | end=0.003m | peak=0.080m | vMAE=0.43 | trav=0 | gateV= | drop=-0.18 | head=  8스텝/  751.6N
+[pit               ] 316/1000 | env 044 ep 03 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.082m | peak=0.150m | vMAE=0.43 | trav=0 | gateV= | drop=-0.31 | head= 11스텝/  522.3N
+[pit               ] 317/1000 | env 045 ep 03 | ok=1 | surv=1 | fwd=  4.09m | gate=0.393m | end=0.525m | peak=0.525m | vMAE=0.18 | trav=1 | gateV= 0.46 | drop=-0.29 | head=  7스텝/  600.2N
+[pit               ] 318/1000 | env 046 ep 03 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.187m | peak=0.194m | vMAE=0.43 | trav=0 | gateV= | drop=-0.10 | head=  9스텝/  331.7N
+[pit               ] 319/1000 | env 047 ep 03 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.132m | peak=0.148m | vMAE=0.42 | trav=0 | gateV= | drop=-0.33 | head=  9스텝/  119.9N
+[pit               ] 320/1000 | env 048 ep 03 | ok=0 | surv=1 | fwd=  0.95m | gate=m | end=0.114m | peak=0.116m | vMAE=0.43 | trav=0 | gateV= | drop=-0.16 | head=  7스텝/  227.9N
+[pit               ] 321/1000 | env 049 ep 03 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.106m | peak=0.118m | vMAE=0.43 | trav=0 | gateV= | drop=-0.16 | head= 23스텝/  252.5N
+[rails             ] 322/1000 | env 053 ep 08 | ok=0 | surv=0 | fwd=  0.76m | gate=m | end=0.087m | peak=0.087m | vMAE=0.18 | trav=0 | gateV= | drop=-0.40 | head=  6스텝/  991.3N
+[star              ] 323/1000 | env 060 ep 03 | ok=1 | surv=1 | fwd=  3.74m | gate=0.690m | end=1.136m | peak=1.149m | vMAE=0.20 | trav=1 | gateV= 0.40 | drop=-0.05 | head=  0스텝/    0.0N
+[star              ] 324/1000 | env 061 ep 03 | ok=1 | surv=1 | fwd=  3.89m | gate=0.553m | end=1.062m | peak=1.089m | vMAE=0.19 | trav=1 | gateV= 0.33 | drop=-0.23 | head=  1스텝/  797.4N
+[star              ] 325/1000 | env 062 ep 03 | ok=1 | surv=1 | fwd=  5.00m | gate=0.688m | end=1.673m | peak=1.673m | vMAE=0.10 | trav=1 | gateV= 0.38 | drop= 0.01 | head=  1스텝/ 1191.3N
+[star              ] 326/1000 | env 063 ep 03 | ok=1 | surv=1 | fwd=  3.72m | gate=0.502m | end=0.857m | peak=0.863m | vMAE=0.20 | trav=1 | gateV= 0.48 | drop=-0.04 | head=  0스텝/    0.0N
+[star              ] 327/1000 | env 064 ep 03 | ok=1 | surv=1 | fwd=  3.82m | gate=0.495m | end=0.960m | peak=0.970m | vMAE=0.20 | trav=1 | gateV= 0.47 | drop=-0.35 | head=  9스텝/ 1028.5N
+[star              ] 328/1000 | env 065 ep 03 | ok=1 | surv=1 | fwd=  5.09m | gate=0.592m | end=1.925m | peak=1.925m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.52 | head=  0스텝/    0.0N
+[star              ] 329/1000 | env 066 ep 03 | ok=1 | surv=1 | fwd=  3.83m | gate=0.687m | end=1.212m | peak=1.219m | vMAE=0.19 | trav=1 | gateV= 0.51 | drop=-0.00 | head=  0스텝/    0.0N
+[star              ] 330/1000 | env 067 ep 03 | ok=0 | surv=1 | fwd=  3.77m | gate=0.817m | end=1.387m | peak=1.402m | vMAE=0.19 | trav=0 | gateV= 0.54 | drop=-0.15 | head=  0스텝/    0.0N
+[star              ] 331/1000 | env 068 ep 03 | ok=1 | surv=1 | fwd=  5.11m | gate=0.443m | end=1.183m | peak=1.183m | vMAE=0.09 | trav=1 | gateV= 0.43 | drop= 0.12 | head=  1스텝/ 1038.7N
+[star              ] 332/1000 | env 069 ep 03 | ok=1 | surv=1 | fwd=  3.79m | gate=0.631m | end=1.118m | peak=1.126m | vMAE=0.19 | trav=1 | gateV= 0.54 | drop=-0.32 | head=  7스텝/  762.9N
+[floating_ring     ] 333/1000 | env 070 ep 03 | ok=0 | surv=1 | fwd=  1.17m | gate=m | end=0.109m | peak=0.147m | vMAE=0.41 | trav=0 | gateV= | drop=-0.21 | head= 18스텝/  519.1N
+[floating_ring     ] 334/1000 | env 071 ep 03 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.125m | peak=0.162m | vMAE=0.41 | trav=0 | gateV= | drop=-0.33 | head= 15스텝/  260.8N
+[floating_ring     ] 335/1000 | env 072 ep 03 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.074m | peak=0.075m | vMAE=0.42 | trav=0 | gateV= | drop=-0.28 | head= 31스텝/  442.6N
+[floating_ring     ] 336/1000 | env 073 ep 03 | ok=0 | surv=1 | fwd=  0.79m | gate=m | end=0.055m | peak=0.097m | vMAE=0.44 | trav=0 | gateV= | drop=-0.34 | head=485스텝/  851.3N
+[floating_ring     ] 337/1000 | env 074 ep 03 | ok=0 | surv=1 | fwd=  0.71m | gate=m | end=0.013m | peak=0.015m | vMAE=0.45 | trav=0 | gateV= | drop= | head=310스텝/  233.2N
+[floating_ring     ] 338/1000 | env 075 ep 03 | ok=0 | surv=1 | fwd=  0.75m | gate=m | end=0.088m | peak=0.089m | vMAE=0.45 | trav=0 | gateV= | drop=-0.04 | head= 15스텝/  629.1N
+[floating_ring     ] 339/1000 | env 077 ep 03 | ok=0 | surv=1 | fwd=  0.64m | gate=m | end=0.007m | peak=0.058m | vMAE=0.45 | trav=0 | gateV= | drop= | head=475스텝/  113.4N
+[floating_ring     ] 340/1000 | env 078 ep 03 | ok=0 | surv=1 | fwd=  0.68m | gate=m | end=0.063m | peak=0.094m | vMAE=0.45 | trav=0 | gateV= | drop= | head=463스텝/  529.1N
+[floating_ring     ] 341/1000 | env 079 ep 03 | ok=0 | surv=1 | fwd=  1.79m | gate=m | end=2.142m | peak=2.142m | vMAE=0.26 | trav=0 | gateV= | drop=-0.61 | head= 71스텝/  933.3N
+[repeated_boxes    ] 342/1000 | env 080 ep 03 | ok=1 | surv=1 | fwd=  5.04m | gate=0.395m | end=0.213m | peak=0.572m | vMAE=0.10 | trav=1 | gateV= 0.49 | drop=-0.66 | head= 19스텝/ 1542.6N
+[repeated_boxes    ] 343/1000 | env 081 ep 03 | ok=1 | surv=1 | fwd=  5.51m | gate=0.434m | end=1.142m | peak=1.142m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ] 344/1000 | env 082 ep 03 | ok=1 | surv=1 | fwd=  5.47m | gate=0.387m | end=0.781m | peak=0.781m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ] 345/1000 | env 083 ep 03 | ok=1 | surv=1 | fwd=  5.49m | gate=0.228m | end=0.757m | peak=0.757m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.51 | head=  0스텝/    0.0N
+[repeated_boxes    ] 346/1000 | env 084 ep 03 | ok=1 | surv=1 | fwd=  5.36m | gate=0.302m | end=1.118m | peak=1.118m | vMAE=0.07 | trav=1 | gateV= 0.53 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_boxes    ] 347/1000 | env 085 ep 03 | ok=1 | surv=1 | fwd=  5.45m | gate=0.201m | end=0.799m | peak=0.799m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop=-0.00 | head=  2스텝/ 1652.8N
+[repeated_boxes    ] 348/1000 | env 086 ep 03 | ok=1 | surv=1 | fwd=  5.50m | gate=0.321m | end=1.130m | peak=1.130m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.68 | head=  0스텝/    0.0N
+[repeated_boxes    ] 349/1000 | env 087 ep 03 | ok=1 | surv=1 | fwd=  5.55m | gate=0.462m | end=1.322m | peak=1.322m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_boxes    ] 350/1000 | env 088 ep 03 | ok=1 | surv=1 | fwd=  5.37m | gate=0.369m | end=1.432m | peak=1.432m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.63 | head=  0스텝/    0.0N
+[repeated_boxes    ] 351/1000 | env 089 ep 03 | ok=1 | surv=1 | fwd=  5.48m | gate=0.329m | end=1.164m | peak=1.164m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_cylinders] 352/1000 | env 090 ep 03 | ok=1 | surv=1 | fwd=  5.50m | gate=0.429m | end=1.200m | peak=1.200m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_cylinders] 353/1000 | env 091 ep 03 | ok=1 | surv=1 | fwd=  5.41m | gate=0.445m | end=1.375m | peak=1.375m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop= 0.54 | head=  0스텝/    0.0N
+[repeated_cylinders] 354/1000 | env 093 ep 03 | ok=1 | surv=1 | fwd=  5.54m | gate=0.395m | end=1.299m | peak=1.299m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_cylinders] 355/1000 | env 094 ep 03 | ok=1 | surv=1 | fwd=  5.59m | gate=0.289m | end=1.131m | peak=1.131m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.80 | head=  0스텝/    0.0N
+[repeated_cylinders] 356/1000 | env 095 ep 03 | ok=1 | surv=1 | fwd=  5.46m | gate=0.399m | end=1.234m | peak=1.234m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.65 | head=  0스텝/    0.0N
+[repeated_cylinders] 357/1000 | env 096 ep 03 | ok=1 | surv=1 | fwd=  5.53m | gate=0.278m | end=1.173m | peak=1.173m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_cylinders] 358/1000 | env 097 ep 03 | ok=1 | surv=1 | fwd=  5.54m | gate=0.309m | end=1.232m | peak=1.232m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_cylinders] 359/1000 | env 098 ep 03 | ok=1 | surv=1 | fwd=  5.50m | gate=0.281m | end=1.209m | peak=1.209m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.63 | head=  0스텝/    0.0N
+[repeated_cylinders] 360/1000 | env 099 ep 03 | ok=1 | surv=1 | fwd=  5.53m | gate=0.282m | end=1.186m | peak=1.186m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop= 0.58 | head=  0스텝/    0.0N
+[rails             ] 361/1000 | env 056 ep 08 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.071m | peak=0.071m | vMAE=0.19 | trav=0 | gateV= | drop= | head=  4스텝/ 1904.6N
+[stepping_stones   ] 362/1000 | env 029 ep 06 | ok=0 | surv=0 | fwd=  1.34m | gate=m | end=0.477m | peak=0.528m | vMAE=0.31 | trav=0 | gateV= | drop=-1.38 | head= 29스텝/ 1238.1N
+[gap               ] 363/1000 | env 033 ep 05 | ok=0 | surv=0 | fwd=  0.60m | gate=m | end=0.172m | peak=0.172m | vMAE=0.37 | trav=0 | gateV= | drop= | head=  4스텝/  995.6N
+[rails             ] 364/1000 | env 053 ep 09 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.018m | peak=0.030m | vMAE=0.15 | trav=0 | gateV= | drop= | head=  6스텝/ 1763.5N
+[rails             ] 365/1000 | env 052 ep 09 | ok=0 | surv=1 | fwd=  1.84m | gate=m | end=0.311m | peak=0.641m | vMAE=0.37 | trav=0 | gateV= | drop=-1.27 | head=  0스텝/    0.0N
+[stepping_stones   ] 366/1000 | env 024 ep 04 | ok=0 | surv=1 | fwd=  1.29m | gate=m | end=0.486m | peak=0.496m | vMAE=0.45 | trav=0 | gateV= | drop=-1.65 | head=442스텝/ 1417.2N
+[stepping_stones   ] 367/1000 | env 022 ep 04 | ok=0 | surv=1 | fwd=  0.75m | gate=m | end=0.119m | peak=0.119m | vMAE=0.45 | trav=0 | gateV= | drop= | head=507스텝/ 1030.5N
+[stepping_stones   ] 368/1000 | env 027 ep 04 | ok=0 | surv=1 | fwd=  0.83m | gate=m | end=0.138m | peak=0.138m | vMAE=0.43 | trav=0 | gateV= | drop=-0.30 | head=  1스텝/   43.9N
+[gap               ] 369/1000 | env 038 ep 04 | ok=0 | surv=1 | fwd=  0.62m | gate=m | end=0.333m | peak=0.341m | vMAE=0.47 | trav=0 | gateV= | drop= | head= 31스텝/  154.0N
+[rails             ] 370/1000 | env 057 ep 06 | ok=0 | surv=0 | fwd=  2.85m | gate=m | end=0.462m | peak=0.462m | vMAE=0.21 | trav=0 | gateV= | drop=-0.15 | head=  9스텝/ 1063.4N
+[stepping_stones   ] 371/1000 | env 023 ep 04 | ok=0 | surv=0 | fwd=  1.20m | gate=m | end=0.393m | peak=0.393m | vMAE=0.28 | trav=0 | gateV= | drop=-0.88 | head= 18스텝/  963.2N
+[stepping_stones   ] 372/1000 | env 021 ep 06 | ok=0 | surv=0 | fwd=  1.28m | gate=m | end=0.285m | peak=0.285m | vMAE=0.31 | trav=0 | gateV= | drop=-0.73 | head= 23스텝/ 1259.8N
+[stepping_stones   ] 373/1000 | env 026 ep 05 | ok=0 | surv=1 | fwd=  0.68m | gate=m | end=0.056m | peak=0.087m | vMAE=0.46 | trav=0 | gateV= | drop= | head=525스텝/ 1159.6N
+[rails             ] 374/1000 | env 059 ep 07 | ok=0 | surv=0 | fwd=  2.91m | gate=m | end=0.652m | peak=0.652m | vMAE=0.14 | trav=0 | gateV= | drop=-0.05 | head=  0스텝/    0.0N
+[rails             ] 375/1000 | env 055 ep 05 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.107m | peak=0.109m | vMAE=0.42 | trav=0 | gateV= | drop=-0.20 | head=  1스텝/ 1140.8N
+[rails             ] 376/1000 | env 052 ep 10 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.044m | peak=0.044m | vMAE=0.17 | trav=0 | gateV= | drop= | head=  5스텝/  127.6N
+[rails             ] 377/1000 | env 051 ep 06 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.123m | peak=0.147m | vMAE=0.41 | trav=0 | gateV= | drop=-0.41 | head=  9스텝/  721.0N
+[gap               ] 378/1000 | env 036 ep 06 | ok=0 | surv=0 | fwd=  0.75m | gate=m | end=0.166m | peak=0.176m | vMAE=0.45 | trav=0 | gateV= | drop=-0.86 | head= 39스텝/ 1491.0N
+[stepping_stones   ] 379/1000 | env 025 ep 05 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.143m | peak=0.146m | vMAE=0.46 | trav=0 | gateV= | drop= | head=505스텝/ 1316.5N
+[stepping_stones   ] 380/1000 | env 020 ep 05 | ok=0 | surv=1 | fwd=  0.81m | gate=m | end=0.027m | peak=0.061m | vMAE=0.45 | trav=0 | gateV= | drop=-0.02 | head=496스텝/ 1755.2N
+[floating_ring     ] 381/1000 | env 076 ep 04 | ok=0 | surv=1 | fwd=  0.75m | gate=m | end=0.037m | peak=0.054m | vMAE=0.44 | trav=0 | gateV= | drop= | head=462스텝/  390.4N
+[stepping_stones   ] 382/1000 | env 022 ep 05 | ok=0 | surv=0 | fwd=  1.28m | gate=m | end=0.419m | peak=0.471m | vMAE=0.35 | trav=0 | gateV= | drop=-1.24 | head= 39스텝/ 1823.6N
+[gap               ] 383/1000 | env 032 ep 07 | ok=0 | surv=1 | fwd=  0.39m | gate=m | end=0.538m | peak=0.538m | vMAE=0.50 | trav=0 | gateV= | drop= | head=  3스텝/ 1193.0N
+[gap               ] 384/1000 | env 038 ep 05 | ok=0 | surv=0 | fwd=  0.82m | gate=m | end=0.099m | peak=0.152m | vMAE=0.37 | trav=0 | gateV= | drop= 0.77 | head= 16스텝/ 1080.8N
+[rails             ] 385/1000 | env 059 ep 08 | ok=0 | surv=0 | fwd=  0.78m | gate=m | end=0.023m | peak=0.033m | vMAE=0.17 | trav=0 | gateV= | drop=-0.46 | head=  5스텝/ 1146.0N
+[rails             ] 386/1000 | env 051 ep 07 | ok=0 | surv=0 | fwd=  0.67m | gate=m | end=0.024m | peak=0.024m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  5스텝/  386.8N
+[rails             ] 387/1000 | env 055 ep 06 | ok=0 | surv=0 | fwd=  0.85m | gate=m | end=0.067m | peak=0.067m | vMAE=0.17 | trav=0 | gateV= | drop=-0.40 | head=  6스텝/  841.6N
+[gap               ] 388/1000 | env 039 ep 05 | ok=0 | surv=1 | fwd=  0.34m | gate=m | end=0.109m | peak=0.164m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[stepping_stones   ] 389/1000 | env 021 ep 07 | ok=0 | surv=0 | fwd=  1.33m | gate=m | end=0.278m | peak=0.278m | vMAE=0.25 | trav=0 | gateV= | drop=-1.09 | head= 12스텝/  982.6N
+[gap               ] 390/1000 | env 033 ep 06 | ok=0 | surv=0 | fwd=  0.80m | gate=m | end=0.223m | peak=0.223m | vMAE=0.43 | trav=0 | gateV= | drop=-0.35 | head= 16스텝/ 1237.8N
+[stepping_stones   ] 391/1000 | env 023 ep 05 | ok=0 | surv=0 | fwd=  0.86m | gate=m | end=0.719m | peak=0.719m | vMAE=0.38 | trav=0 | gateV= | drop=-1.09 | head=  6스텝/ 1417.7N
+[gap               ] 392/1000 | env 035 ep 06 | ok=0 | surv=1 | fwd=  0.56m | gate=m | end=0.093m | peak=0.236m | vMAE=0.46 | trav=0 | gateV= | drop= | head=  2스텝/   79.3N
+[rails             ] 393/1000 | env 059 ep 09 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.019m | peak=0.042m | vMAE=0.16 | trav=0 | gateV= | drop= | head=  5스텝/  427.5N
+[repeated_cylinders] 394/1000 | env 092 ep 04 | ok=1 | surv=1 | fwd=  5.50m | gate=0.426m | end=1.363m | peak=1.363m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.64 | head=  0스텝/    0.0N
+[rails             ] 395/1000 | env 054 ep 08 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.111m | peak=0.122m | vMAE=0.41 | trav=0 | gateV= | drop=-0.01 | head=  0스텝/    0.0N
+[rails             ] 396/1000 | env 059 ep 10 | ok=0 | surv=0 | fwd=  0.82m | gate=m | end=0.065m | peak=0.065m | vMAE=0.18 | trav=0 | gateV= | drop=-0.24 | head=  6스텝/ 1473.3N
+[gap               ] 397/1000 | env 031 ep 06 | ok=0 | surv=1 | fwd=  0.56m | gate=m | end=0.149m | peak=0.198m | vMAE=0.46 | trav=0 | gateV= | drop= | head=  3스텝/  719.3N
+[gap               ] 398/1000 | env 032 ep 08 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.190m | peak=0.190m | vMAE=0.38 | trav=0 | gateV= | drop= 1.40 | head= 15스텝/ 1712.2N
+[stepping_stones   ] 399/1000 | env 028 ep 06 | ok=0 | surv=1 | fwd=  0.66m | gate=m | end=0.032m | peak=0.059m | vMAE=0.46 | trav=0 | gateV= | drop= | head=516스텝/  935.2N
+[gap               ] 400/1000 | env 038 ep 06 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.090m | peak=0.209m | vMAE=0.41 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ] 401/1000 | env 033 ep 07 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.086m | peak=0.167m | vMAE=0.42 | trav=0 | gateV= | drop= | head= 24스텝/ 3245.5N
+[discrete_obstacles] 402/1000 | env 000 ep 04 | ok=0 | surv=1 | fwd=  2.30m | gate=m | end=0.155m | peak=0.171m | vMAE=0.33 | trav=0 | gateV= | drop=-0.11 | head=  0스텝/    0.0N
+[discrete_obstacles] 403/1000 | env 001 ep 04 | ok=1 | surv=1 | fwd=  5.76m | gate=0.319m | end=0.274m | peak=0.377m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.45 | head=  0스텝/    0.0N
+[discrete_obstacles] 404/1000 | env 002 ep 04 | ok=1 | surv=1 | fwd=  5.75m | gate=0.044m | end=0.398m | peak=0.398m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.79 | head=  0스텝/    0.0N
+[discrete_obstacles] 405/1000 | env 003 ep 04 | ok=1 | surv=1 | fwd=  5.75m | gate=0.184m | end=0.149m | peak=0.237m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.48 | head=  0스텝/    0.0N
+[discrete_obstacles] 406/1000 | env 004 ep 04 | ok=1 | surv=1 | fwd=  5.74m | gate=0.054m | end=0.419m | peak=0.419m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.79 | head=  0스텝/    0.0N
+[discrete_obstacles] 407/1000 | env 005 ep 04 | ok=1 | surv=1 | fwd=  5.67m | gate=0.388m | end=0.441m | peak=0.478m | vMAE=0.08 | trav=1 | gateV= 0.53 | drop= 0.36 | head=  0스텝/    0.0N
+[discrete_obstacles] 408/1000 | env 006 ep 04 | ok=1 | surv=1 | fwd=  5.83m | gate=0.195m | end=0.026m | peak=0.205m | vMAE=0.06 | trav=1 | gateV= 0.54 | drop= 0.56 | head=  0스텝/    0.0N
+[discrete_obstacles] 409/1000 | env 007 ep 04 | ok=0 | surv=1 | fwd=  2.21m | gate=m | end=0.132m | peak=0.152m | vMAE=0.34 | trav=0 | gateV= | drop=-0.20 | head=  0스텝/    0.0N
+[discrete_obstacles] 410/1000 | env 008 ep 04 | ok=1 | surv=1 | fwd=  5.76m | gate=0.009m | end=0.294m | peak=0.294m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.81 | head=  0스텝/    0.0N
+[discrete_obstacles] 411/1000 | env 009 ep 04 | ok=1 | surv=1 | fwd=  5.83m | gate=0.218m | end=0.074m | peak=0.235m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.60 | head=  0스텝/    0.0N
+[wave              ] 412/1000 | env 010 ep 04 | ok=1 | surv=1 | fwd=  5.65m | gate=0.035m | end=0.698m | peak=0.698m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 413/1000 | env 011 ep 04 | ok=1 | surv=1 | fwd=  5.23m | gate=0.393m | end=1.872m | peak=1.872m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 414/1000 | env 012 ep 04 | ok=1 | surv=1 | fwd=  5.60m | gate=0.126m | end=0.886m | peak=0.886m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 415/1000 | env 013 ep 04 | ok=1 | surv=1 | fwd=  5.58m | gate=0.224m | end=1.091m | peak=1.091m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 416/1000 | env 014 ep 04 | ok=1 | surv=1 | fwd=  5.51m | gate=0.059m | end=0.905m | peak=0.905m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 417/1000 | env 015 ep 04 | ok=1 | surv=1 | fwd=  5.66m | gate=0.073m | end=0.074m | peak=0.091m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 418/1000 | env 016 ep 04 | ok=1 | surv=1 | fwd=  5.65m | gate=0.130m | end=0.510m | peak=0.510m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 419/1000 | env 017 ep 04 | ok=1 | surv=1 | fwd=  5.67m | gate=0.192m | end=0.332m | peak=0.338m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 420/1000 | env 018 ep 04 | ok=1 | surv=1 | fwd=  5.63m | gate=0.131m | end=0.699m | peak=0.699m | vMAE=0.05 | trav=1 | gateV= 0.44 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 421/1000 | env 019 ep 04 | ok=1 | surv=1 | fwd=  5.47m | gate=0.114m | end=1.201m | peak=1.201m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.06 | head=  0스텝/    0.0N
+[gap               ] 422/1000 | env 030 ep 04 | ok=0 | surv=1 | fwd=  0.56m | gate=m | end=0.006m | peak=0.213m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ] 423/1000 | env 034 ep 04 | ok=0 | surv=1 | fwd=  0.54m | gate=m | end=0.059m | peak=0.256m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ] 424/1000 | env 037 ep 04 | ok=0 | surv=1 | fwd=  0.39m | gate=m | end=0.133m | peak=0.167m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[pit               ] 425/1000 | env 040 ep 04 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.100m | peak=0.123m | vMAE=0.41 | trav=0 | gateV= | drop=-0.17 | head=  8스텝/  247.1N
+[pit               ] 426/1000 | env 041 ep 04 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.043m | peak=0.047m | vMAE=0.43 | trav=0 | gateV= | drop=-0.18 | head=  7스텝/  314.9N
+[pit               ] 427/1000 | env 042 ep 04 | ok=0 | surv=1 | fwd=  0.99m | gate=m | end=0.226m | peak=0.270m | vMAE=0.43 | trav=0 | gateV= | drop=-0.09 | head= 12스텝/  536.5N
+[pit               ] 428/1000 | env 043 ep 04 | ok=1 | surv=1 | fwd=  5.22m | gate=0.465m | end=0.592m | peak=0.597m | vMAE=0.09 | trav=1 | gateV= 0.47 | drop=-0.18 | head=  2스텝/  265.5N
+[pit               ] 429/1000 | env 044 ep 04 | ok=1 | surv=1 | fwd=  5.04m | gate=0.451m | end=0.364m | peak=0.462m | vMAE=0.11 | trav=1 | gateV= 0.51 | drop=-0.19 | head=  7스텝/  464.2N
+[pit               ] 430/1000 | env 045 ep 04 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.054m | peak=0.135m | vMAE=0.43 | trav=0 | gateV= | drop=-0.35 | head=197스텝/  215.5N
+[pit               ] 431/1000 | env 046 ep 04 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.113m | peak=0.128m | vMAE=0.42 | trav=0 | gateV= | drop=-0.51 | head=  9스텝/ 1002.5N
+[pit               ] 432/1000 | env 047 ep 04 | ok=1 | surv=1 | fwd=  4.84m | gate=0.659m | end=0.800m | peak=0.800m | vMAE=0.12 | trav=1 | gateV= 0.48 | drop=-0.19 | head= 11스텝/  691.1N
+[pit               ] 433/1000 | env 048 ep 04 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.178m | peak=0.199m | vMAE=0.42 | trav=0 | gateV= | drop=-0.26 | head= 12스텝/  510.8N
+[pit               ] 434/1000 | env 049 ep 04 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.059m | peak=0.124m | vMAE=0.43 | trav=0 | gateV= | drop=-0.28 | head= 13스텝/  268.8N
+[star              ] 435/1000 | env 060 ep 04 | ok=1 | surv=1 | fwd=  5.16m | gate=0.440m | end=1.393m | peak=1.393m | vMAE=0.08 | trav=1 | gateV= 0.39 | drop= 0.16 | head=  0스텝/    0.0N
+[star              ] 436/1000 | env 061 ep 04 | ok=1 | surv=1 | fwd=  3.94m | gate=0.572m | end=0.995m | peak=1.013m | vMAE=0.19 | trav=1 | gateV= 0.50 | drop=-0.10 | head=  0스텝/    0.0N
+[star              ] 437/1000 | env 062 ep 04 | ok=1 | surv=1 | fwd=  4.93m | gate=0.584m | end=1.832m | peak=1.832m | vMAE=0.09 | trav=1 | gateV= 0.32 | drop= 0.45 | head=  0스텝/    0.0N
+[star              ] 438/1000 | env 063 ep 04 | ok=1 | surv=1 | fwd=  3.68m | gate=0.406m | end=0.855m | peak=0.861m | vMAE=0.21 | trav=1 | gateV= 0.50 | drop=-0.13 | head=  0스텝/    0.0N
+[star              ] 439/1000 | env 064 ep 04 | ok=1 | surv=1 | fwd=  3.82m | gate=0.603m | end=1.119m | peak=1.145m | vMAE=0.19 | trav=1 | gateV= 0.52 | drop=-0.07 | head=  0스텝/    0.0N
+[star              ] 440/1000 | env 065 ep 04 | ok=0 | surv=1 | fwd=  5.25m | gate=0.960m | end=1.660m | peak=1.660m | vMAE=0.10 | trav=0 | gateV= 0.52 | drop= 0.54 | head=  0스텝/    0.0N
+[star              ] 441/1000 | env 066 ep 04 | ok=1 | surv=1 | fwd=  3.75m | gate=0.514m | end=0.911m | peak=0.928m | vMAE=0.20 | trav=1 | gateV= 0.46 | drop=-0.05 | head=  0스텝/    0.0N
+[star              ] 442/1000 | env 067 ep 04 | ok=0 | surv=1 | fwd=  5.02m | gate=0.750m | end=1.774m | peak=1.774m | vMAE=0.09 | trav=0 | gateV= 0.53 | drop= 0.47 | head=  0스텝/    0.0N
+[star              ] 443/1000 | env 068 ep 04 | ok=1 | surv=1 | fwd=  3.72m | gate=0.443m | end=0.836m | peak=0.856m | vMAE=0.20 | trav=1 | gateV= 0.47 | drop=-0.26 | head=  1스텝/  165.3N
+[star              ] 444/1000 | env 069 ep 04 | ok=1 | surv=1 | fwd=  3.87m | gate=0.462m | end=0.870m | peak=0.883m | vMAE=0.19 | trav=1 | gateV= 0.54 | drop=-0.06 | head=  7스텝/  482.0N
+[floating_ring     ] 445/1000 | env 070 ep 04 | ok=0 | surv=1 | fwd=  0.64m | gate=m | end=0.091m | peak=0.116m | vMAE=0.45 | trav=0 | gateV= | drop= | head=502스텝/  529.2N
+[floating_ring     ] 446/1000 | env 071 ep 04 | ok=0 | surv=1 | fwd=  0.73m | gate=m | end=0.036m | peak=0.036m | vMAE=0.45 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[floating_ring     ] 447/1000 | env 072 ep 04 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.130m | peak=0.167m | vMAE=0.41 | trav=0 | gateV= | drop=-0.44 | head= 24스텝/  595.3N
+[floating_ring     ] 448/1000 | env 073 ep 04 | ok=0 | surv=1 | fwd=  1.16m | gate=m | end=0.030m | peak=0.105m | vMAE=0.41 | trav=0 | gateV= | drop=-0.40 | head=128스텝/  602.8N
+[floating_ring     ] 449/1000 | env 074 ep 04 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.061m | peak=0.115m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head= 30스텝/  753.8N
+[floating_ring     ] 450/1000 | env 075 ep 04 | ok=0 | surv=1 | fwd=  0.87m | gate=m | end=0.129m | peak=0.193m | vMAE=0.44 | trav=0 | gateV= | drop=-0.17 | head= 15스텝/  382.6N
+[floating_ring     ] 451/1000 | env 077 ep 04 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.094m | peak=0.173m | vMAE=0.43 | trav=0 | gateV= | drop=-0.21 | head= 20스텝/  612.5N
+[floating_ring     ] 452/1000 | env 078 ep 04 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.027m | peak=0.130m | vMAE=0.42 | trav=0 | gateV= | drop=-0.20 | head= 19스텝/  782.3N
+[floating_ring     ] 453/1000 | env 079 ep 04 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.075m | peak=0.144m | vMAE=0.42 | trav=0 | gateV= | drop=-0.39 | head= 19스텝/  195.1N
+[repeated_boxes    ] 454/1000 | env 080 ep 04 | ok=1 | surv=1 | fwd=  5.42m | gate=0.307m | end=0.926m | peak=0.926m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop=-0.34 | head=  5스텝/  445.0N
+[repeated_boxes    ] 455/1000 | env 081 ep 04 | ok=1 | surv=1 | fwd=  5.41m | gate=0.362m | end=0.797m | peak=0.797m | vMAE=0.07 | trav=1 | gateV= 0.53 | drop=-0.20 | head=  8스텝/  525.4N
+[repeated_boxes    ] 456/1000 | env 082 ep 04 | ok=1 | surv=1 | fwd=  5.23m | gate=0.396m | end=1.398m | peak=1.398m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.54 | head=  2스텝/  886.3N
+[repeated_boxes    ] 457/1000 | env 083 ep 04 | ok=1 | surv=1 | fwd=  5.50m | gate=0.328m | end=1.031m | peak=1.031m | vMAE=0.07 | trav=1 | gateV= 0.43 | drop= 0.64 | head=  0스텝/    0.0N
+[repeated_boxes    ] 458/1000 | env 084 ep 04 | ok=1 | surv=1 | fwd=  5.45m | gate=0.418m | end=1.506m | peak=1.506m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_boxes    ] 459/1000 | env 085 ep 04 | ok=1 | surv=1 | fwd=  5.50m | gate=0.346m | end=1.353m | peak=1.353m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_boxes    ] 460/1000 | env 086 ep 04 | ok=1 | surv=1 | fwd=  5.42m | gate=0.287m | end=1.076m | peak=1.076m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop= 0.54 | head=  0스텝/    0.0N
+[repeated_boxes    ] 461/1000 | env 087 ep 04 | ok=1 | surv=1 | fwd=  5.49m | gate=0.442m | end=1.304m | peak=1.304m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_boxes    ] 462/1000 | env 088 ep 04 | ok=1 | surv=1 | fwd=  5.52m | gate=0.298m | end=1.123m | peak=1.123m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_boxes    ] 463/1000 | env 089 ep 04 | ok=1 | surv=1 | fwd=  5.47m | gate=0.376m | end=1.201m | peak=1.201m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.40 | head=  0스텝/    0.0N
+[repeated_cylinders] 464/1000 | env 090 ep 04 | ok=1 | surv=1 | fwd=  5.50m | gate=0.300m | end=1.206m | peak=1.206m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_cylinders] 465/1000 | env 091 ep 04 | ok=1 | surv=1 | fwd=  5.52m | gate=0.247m | end=1.100m | peak=1.100m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_cylinders] 466/1000 | env 093 ep 04 | ok=1 | surv=1 | fwd=  5.45m | gate=0.362m | end=1.149m | peak=1.149m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.68 | head=  0스텝/    0.0N
+[repeated_cylinders] 467/1000 | env 094 ep 04 | ok=1 | surv=1 | fwd=  5.50m | gate=0.303m | end=0.965m | peak=0.965m | vMAE=0.07 | trav=1 | gateV= 0.53 | drop= 0.65 | head=  0스텝/    0.0N
+[repeated_cylinders] 468/1000 | env 095 ep 04 | ok=1 | surv=1 | fwd=  5.49m | gate=0.385m | end=1.241m | peak=1.241m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop= 0.75 | head=  0스텝/    0.0N
+[repeated_cylinders] 469/1000 | env 096 ep 04 | ok=1 | surv=1 | fwd=  4.90m | gate=0.525m | end=1.452m | peak=1.452m | vMAE=0.10 | trav=1 | gateV= 0.47 | drop=-1.00 | head=  0스텝/    0.0N
+[repeated_cylinders] 470/1000 | env 097 ep 04 | ok=1 | surv=1 | fwd=  5.45m | gate=0.230m | end=1.109m | peak=1.109m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_cylinders] 471/1000 | env 098 ep 04 | ok=1 | surv=1 | fwd=  5.51m | gate=0.353m | end=1.213m | peak=1.213m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_cylinders] 472/1000 | env 099 ep 04 | ok=1 | surv=1 | fwd=  5.51m | gate=0.221m | end=1.149m | peak=1.149m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.66 | head=  0스텝/    0.0N
+[rails             ] 473/1000 | env 054 ep 09 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.004m | peak=0.015m | vMAE=0.14 | trav=0 | gateV= | drop= | head=  5스텝/ 1229.5N
+[rails             ] 474/1000 | env 056 ep 09 | ok=0 | surv=1 | fwd=  1.34m | gate=m | end=0.305m | peak=0.366m | vMAE=0.41 | trav=0 | gateV= | drop=-0.63 | head=  6스텝/  532.5N
+[stepping_stones   ] 475/1000 | env 029 ep 07 | ok=0 | surv=1 | fwd=  0.59m | gate=m | end=0.039m | peak=0.089m | vMAE=0.46 | trav=0 | gateV= | drop= | head=491스텝/ 1943.6N
+[rails             ] 476/1000 | env 053 ep 10 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.055m | peak=0.097m | vMAE=0.42 | trav=0 | gateV= | drop=-0.02 | head=  3스텝/  178.0N
+[rails             ] 477/1000 | env 056 ep 10 | ok=0 | surv=0 | fwd=  0.83m | gate=m | end=0.074m | peak=0.084m | vMAE=0.13 | trav=0 | gateV= | drop=-0.66 | head=  4스텝/ 1191.3N
+[stepping_stones   ] 478/1000 | env 024 ep 05 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.121m | peak=0.157m | vMAE=0.45 | trav=0 | gateV= | drop= | head=  2스텝/ 1343.6N
+[gap               ] 479/1000 | env 034 ep 05 | ok=0 | surv=0 | fwd=  0.57m | gate=m | end=0.218m | peak=0.218m | vMAE=0.36 | trav=0 | gateV= | drop= | head= 23스텝/  990.7N
+[gap               ] 480/1000 | env 038 ep 07 | ok=0 | surv=0 | fwd=  0.72m | gate=m | end=0.258m | peak=0.262m | vMAE=0.38 | trav=0 | gateV= | drop= | head= 33스텝/  881.5N
+[stepping_stones   ] 481/1000 | env 027 ep 05 | ok=0 | surv=1 | fwd=  0.83m | gate=m | end=0.061m | peak=0.101m | vMAE=0.45 | trav=0 | gateV= | drop=-0.02 | head=491스텝/  920.4N
+[rails             ] 482/1000 | env 057 ep 07 | ok=0 | surv=1 | fwd=  1.23m | gate=m | end=0.836m | peak=0.838m | vMAE=0.40 | trav=0 | gateV= | drop=-0.57 | head=  1스텝/  862.2N
+[stepping_stones   ] 483/1000 | env 026 ep 06 | ok=0 | surv=1 | fwd=  1.29m | gate=m | end=0.042m | peak=0.091m | vMAE=0.46 | trav=0 | gateV= | drop=-0.72 | head=460스텝/ 2402.1N
+[stepping_stones   ] 484/1000 | env 029 ep 08 | ok=0 | surv=0 | fwd=  1.33m | gate=m | end=0.119m | peak=0.133m | vMAE=0.25 | trav=0 | gateV= | drop=-0.25 | head=  1스텝/    8.0N
+[gap               ] 485/1000 | env 036 ep 07 | ok=0 | surv=1 | fwd=  0.47m | gate=m | end=0.015m | peak=0.118m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[stepping_stones   ] 486/1000 | env 025 ep 06 | ok=0 | surv=1 | fwd=  0.66m | gate=m | end=0.046m | peak=0.073m | vMAE=0.46 | trav=0 | gateV= | drop= | head=523스텝/ 1210.2N
+[gap               ] 487/1000 | env 033 ep 08 | ok=0 | surv=0 | fwd=  1.02m | gate=m | end=0.255m | peak=0.255m | vMAE=0.41 | trav=0 | gateV= | drop= 0.72 | head=  7스텝/  273.8N
+[gap               ] 488/1000 | env 030 ep 05 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.049m | peak=0.188m | vMAE=0.40 | trav=0 | gateV= | drop= 0.93 | head= 10스텝/ 1071.5N
+[stepping_stones   ] 489/1000 | env 020 ep 06 | ok=0 | surv=1 | fwd=  0.85m | gate=m | end=0.070m | peak=0.095m | vMAE=0.45 | trav=0 | gateV= | drop=-0.09 | head=488스텝/  572.3N
+[floating_ring     ] 490/1000 | env 076 ep 05 | ok=0 | surv=1 | fwd=  0.62m | gate=m | end=0.053m | peak=0.082m | vMAE=0.45 | trav=0 | gateV= | drop= | head=466스텝/  712.7N
+[stepping_stones   ] 491/1000 | env 022 ep 06 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.043m | peak=0.082m | vMAE=0.46 | trav=0 | gateV= | drop= | head=524스텝/ 1423.6N
+[rails             ] 492/1000 | env 051 ep 08 | ok=0 | surv=1 | fwd=  1.17m | gate=m | end=0.031m | peak=0.055m | vMAE=0.41 | trav=0 | gateV= | drop=-0.48 | head=  5스텝/ 2185.5N
+[gap               ] 493/1000 | env 038 ep 08 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.052m | peak=0.123m | vMAE=0.35 | trav=0 | gateV= | drop= 0.84 | head=  5스텝/   64.1N
+[rails             ] 494/1000 | env 055 ep 07 | ok=0 | surv=1 | fwd=  1.20m | gate=m | end=0.080m | peak=0.100m | vMAE=0.41 | trav=0 | gateV= | drop=-0.01 | head=  0스텝/    0.0N
+[gap               ] 495/1000 | env 035 ep 07 | ok=0 | surv=0 | fwd=  0.68m | gate=m | end=0.283m | peak=0.283m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  6스텝/ 1320.8N
+[gap               ] 496/1000 | env 039 ep 06 | ok=0 | surv=1 | fwd=  0.36m | gate=m | end=0.167m | peak=0.196m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  5스텝/  290.6N
+[stepping_stones   ] 497/1000 | env 021 ep 08 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.024m | peak=0.216m | vMAE=0.43 | trav=0 | gateV= | drop=-0.72 | head=399스텝/ 1142.6N
+[stepping_stones   ] 498/1000 | env 023 ep 06 | ok=0 | surv=1 | fwd=  0.71m | gate=m | end=0.064m | peak=0.079m | vMAE=0.46 | trav=0 | gateV= | drop= | head=515스텝/ 1051.8N
+[stepping_stones   ] 499/1000 | env 020 ep 07 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.012m | peak=0.048m | vMAE=0.23 | trav=0 | gateV= | drop= 0.10 | head=  1스텝/   32.3N
+[rails             ] 500/1000 | env 051 ep 09 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.039m | peak=0.042m | vMAE=0.17 | trav=0 | gateV= | drop= | head=  5스텝/ 1570.4N
+[gap               ] 501/1000 | env 036 ep 08 | ok=0 | surv=0 | fwd=  0.66m | gate=m | end=0.354m | peak=0.354m | vMAE=0.44 | trav=0 | gateV= | drop= | head= 18스텝/  179.8N
+[rails             ] 502/1000 | env 055 ep 08 | ok=0 | surv=0 | fwd=  0.83m | gate=m | end=0.047m | peak=0.047m | vMAE=0.15 | trav=0 | gateV= | drop=-0.25 | head=  5스텝/  991.7N
+[repeated_cylinders] 503/1000 | env 092 ep 05 | ok=1 | surv=1 | fwd=  5.32m | gate=0.431m | end=1.375m | peak=1.375m | vMAE=0.07 | trav=1 | gateV= 0.53 | drop= 0.23 | head=  0스텝/    0.0N
+[gap               ] 504/1000 | env 038 ep 09 | ok=0 | surv=0 | fwd=  0.54m | gate=m | end=0.144m | peak=0.219m | vMAE=0.40 | trav=0 | gateV= | drop= | head= 29스텝/  281.2N
+[gap               ] 505/1000 | env 031 ep 07 | ok=0 | surv=1 | fwd=  0.33m | gate=m | end=0.177m | peak=0.189m | vMAE=0.48 | trav=0 | gateV= | drop= | head= 14스텝/  461.9N
+[rails             ] 506/1000 | env 051 ep 10 | ok=0 | surv=0 | fwd=  0.82m | gate=m | end=0.086m | peak=0.086m | vMAE=0.18 | trav=0 | gateV= | drop=-0.48 | head= 11스텝/  583.3N
+[gap               ] 507/1000 | env 039 ep 07 | ok=0 | surv=0 | fwd=  0.81m | gate=m | end=0.016m | peak=0.126m | vMAE=0.36 | trav=0 | gateV= | drop= 0.69 | head= 22스텝/  700.0N
+[gap               ] 508/1000 | env 032 ep 09 | ok=0 | surv=1 | fwd= -0.66m | gate=m | end=0.971m | peak=0.971m | vMAE=21.08 | trav=0 | gateV= | drop= 1.23 | head= 27스텝/  607.5N
+[stepping_stones   ] 509/1000 | env 028 ep 07 | ok=0 | surv=1 | fwd=  0.87m | gate=m | end=0.694m | peak=0.695m | vMAE=0.47 | trav=0 | gateV= | drop=-2.18 | head= 12스텝/ 1884.9N
+[discrete_obstacles] 510/1000 | env 000 ep 05 | ok=1 | surv=1 | fwd=  5.52m | gate=0.344m | end=0.557m | peak=0.559m | vMAE=0.08 | trav=1 | gateV= 0.49 | drop= 0.11 | head=  2스텝/  163.5N
+[discrete_obstacles] 511/1000 | env 001 ep 05 | ok=1 | surv=1 | fwd=  5.79m | gate=0.283m | end=0.126m | peak=0.301m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.61 | head=  0스텝/    0.0N
+[discrete_obstacles] 512/1000 | env 002 ep 05 | ok=1 | surv=1 | fwd=  5.78m | gate=0.315m | end=0.274m | peak=0.373m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.54 | head=  0스텝/    0.0N
+[discrete_obstacles] 513/1000 | env 003 ep 05 | ok=1 | surv=1 | fwd=  5.77m | gate=0.271m | end=0.175m | peak=0.306m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.73 | head=  0스텝/    0.0N
+[discrete_obstacles] 514/1000 | env 004 ep 05 | ok=1 | surv=1 | fwd=  4.31m | gate=0.579m | end=0.837m | peak=0.837m | vMAE=0.17 | trav=1 | gateV= 0.52 | drop=-0.25 | head= 31스텝/  571.9N
+[discrete_obstacles] 515/1000 | env 005 ep 05 | ok=1 | surv=1 | fwd=  5.84m | gate=0.064m | end=0.118m | peak=0.118m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.66 | head=  0스텝/    0.0N
+[discrete_obstacles] 516/1000 | env 006 ep 05 | ok=1 | surv=1 | fwd=  5.82m | gate=0.310m | end=0.326m | peak=0.395m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.63 | head=  0스텝/    0.0N
+[discrete_obstacles] 517/1000 | env 007 ep 05 | ok=0 | surv=1 | fwd=  2.18m | gate=m | end=0.233m | peak=0.248m | vMAE=0.35 | trav=0 | gateV= | drop=-0.22 | head=  0스텝/    0.0N
+[discrete_obstacles] 518/1000 | env 008 ep 05 | ok=1 | surv=1 | fwd=  4.10m | gate=0.038m | end=0.176m | peak=0.176m | vMAE=0.19 | trav=1 | gateV= 0.52 | drop=-0.77 | head=  9스텝/  715.6N
+[discrete_obstacles] 519/1000 | env 009 ep 05 | ok=1 | surv=1 | fwd=  5.85m | gate=0.226m | end=0.081m | peak=0.251m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.69 | head=  0스텝/    0.0N
+[wave              ] 520/1000 | env 010 ep 05 | ok=1 | surv=1 | fwd=  5.69m | gate=0.042m | end=0.462m | peak=0.462m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 521/1000 | env 011 ep 05 | ok=1 | surv=1 | fwd=  5.66m | gate=0.150m | end=0.651m | peak=0.651m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 522/1000 | env 012 ep 05 | ok=1 | surv=1 | fwd=  5.40m | gate=0.470m | end=1.638m | peak=1.638m | vMAE=0.05 | trav=1 | gateV= 0.41 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 523/1000 | env 013 ep 05 | ok=1 | surv=1 | fwd=  5.28m | gate=0.443m | end=1.643m | peak=1.643m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 524/1000 | env 014 ep 05 | ok=1 | surv=1 | fwd=  5.66m | gate=0.144m | end=0.540m | peak=0.540m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 525/1000 | env 015 ep 05 | ok=1 | surv=1 | fwd=  5.62m | gate=0.040m | end=0.656m | peak=0.656m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 526/1000 | env 016 ep 05 | ok=1 | surv=1 | fwd=  5.15m | gate=0.696m | end=2.050m | peak=2.050m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 527/1000 | env 017 ep 05 | ok=1 | surv=1 | fwd=  5.57m | gate=0.038m | end=0.770m | peak=0.770m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 528/1000 | env 018 ep 05 | ok=1 | surv=1 | fwd=  5.57m | gate=0.241m | end=0.997m | peak=0.997m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 529/1000 | env 019 ep 05 | ok=1 | surv=1 | fwd=  5.62m | gate=0.190m | end=0.774m | peak=0.774m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.06 | head=  0스텝/    0.0N
+[gap               ] 530/1000 | env 037 ep 05 | ok=0 | surv=1 | fwd=  0.38m | gate=m | end=0.056m | peak=0.189m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[pit               ] 531/1000 | env 040 ep 05 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.100m | peak=0.117m | vMAE=0.42 | trav=0 | gateV= | drop=-0.23 | head= 10스텝/  797.4N
+[pit               ] 532/1000 | env 041 ep 05 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.095m | peak=0.104m | vMAE=0.42 | trav=0 | gateV= | drop=-0.13 | head= 14스텝/  624.4N
+[pit               ] 533/1000 | env 042 ep 05 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.199m | peak=0.211m | vMAE=0.42 | trav=0 | gateV= | drop=-0.17 | head=  9스텝/  421.1N
+[pit               ] 534/1000 | env 043 ep 05 | ok=1 | surv=1 | fwd=  4.35m | gate=0.277m | end=0.456m | peak=0.456m | vMAE=0.16 | trav=1 | gateV= 0.46 | drop=-0.30 | head= 10스텝/  634.2N
+[pit               ] 535/1000 | env 044 ep 05 | ok=0 | surv=1 | fwd=  1.00m | gate=m | end=0.152m | peak=0.171m | vMAE=0.43 | trav=0 | gateV= | drop=-0.17 | head= 10스텝/  135.5N
+[pit               ] 536/1000 | env 045 ep 05 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.158m | peak=0.177m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head=  7스텝/  643.0N
+[pit               ] 537/1000 | env 046 ep 05 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.079m | peak=0.081m | vMAE=0.42 | trav=0 | gateV= | drop=-0.25 | head=  7스텝/  735.0N
+[pit               ] 538/1000 | env 047 ep 05 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.121m | peak=0.127m | vMAE=0.42 | trav=0 | gateV= | drop=-0.06 | head=  8스텝/  731.9N
+[pit               ] 539/1000 | env 048 ep 05 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.114m | peak=0.135m | vMAE=0.41 | trav=0 | gateV= | drop=-0.27 | head=  8스텝/  899.8N
+[pit               ] 540/1000 | env 049 ep 05 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.058m | peak=0.063m | vMAE=0.42 | trav=0 | gateV= | drop=-0.42 | head= 12스텝/  100.0N
+[star              ] 541/1000 | env 060 ep 05 | ok=0 | surv=1 | fwd=  5.03m | gate=0.774m | end=2.074m | peak=2.074m | vMAE=0.08 | trav=0 | gateV= 0.45 | drop= 0.58 | head=  0스텝/    0.0N
+[star              ] 542/1000 | env 061 ep 05 | ok=1 | surv=1 | fwd=  5.05m | gate=0.743m | end=1.885m | peak=1.885m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop= 0.39 | head=  0스텝/    0.0N
+[star              ] 543/1000 | env 062 ep 05 | ok=0 | surv=1 | fwd=  3.92m | gate=0.780m | end=1.280m | peak=1.295m | vMAE=0.19 | trav=0 | gateV= 0.52 | drop=-0.05 | head=  0스텝/    0.0N
+[star              ] 544/1000 | env 063 ep 05 | ok=1 | surv=1 | fwd=  5.14m | gate=0.545m | end=1.725m | peak=1.725m | vMAE=0.08 | trav=1 | gateV= 0.55 | drop= 0.52 | head=  0스텝/    0.0N
+[star              ] 545/1000 | env 064 ep 05 | ok=1 | surv=1 | fwd=  3.92m | gate=0.353m | end=0.930m | peak=0.941m | vMAE=0.18 | trav=1 | gateV= 0.56 | drop=-0.25 | head=  8스텝/  909.3N
+[star              ] 546/1000 | env 065 ep 05 | ok=1 | surv=1 | fwd=  3.86m | gate=0.741m | end=1.278m | peak=1.302m | vMAE=0.18 | trav=1 | gateV= 0.45 | drop=-0.02 | head=  0스텝/    0.0N
+[star              ] 547/1000 | env 066 ep 05 | ok=1 | surv=1 | fwd=  4.97m | gate=0.568m | end=1.413m | peak=1.413m | vMAE=0.10 | trav=1 | gateV= 0.34 | drop= 0.34 | head=  0스텝/    0.0N
+[star              ] 548/1000 | env 067 ep 05 | ok=1 | surv=1 | fwd=  5.07m | gate=0.631m | end=1.929m | peak=1.929m | vMAE=0.08 | trav=1 | gateV= 0.54 | drop= 0.53 | head=  0스텝/    0.0N
+[star              ] 549/1000 | env 068 ep 05 | ok=1 | surv=1 | fwd=  5.38m | gate=0.266m | end=1.426m | peak=1.426m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.69 | head=  0스텝/    0.0N
+[star              ] 550/1000 | env 069 ep 05 | ok=0 | surv=1 | fwd=  5.07m | gate=0.813m | end=1.721m | peak=1.721m | vMAE=0.09 | trav=0 | gateV= 0.59 | drop= 0.49 | head=  0스텝/    0.0N
+[floating_ring     ] 551/1000 | env 070 ep 05 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.137m | peak=0.155m | vMAE=0.42 | trav=0 | gateV= | drop=-0.04 | head= 22스텝/  749.3N
+[floating_ring     ] 552/1000 | env 071 ep 05 | ok=0 | surv=1 | fwd=  0.75m | gate=m | end=0.040m | peak=0.099m | vMAE=0.44 | trav=0 | gateV= | drop=-0.16 | head=492스텝/  364.0N
+[floating_ring     ] 553/1000 | env 072 ep 05 | ok=0 | surv=1 | fwd=  1.14m | gate=m | end=0.024m | peak=0.055m | vMAE=0.41 | trav=0 | gateV= | drop=-0.01 | head=212스텝/  508.0N
+[floating_ring     ] 554/1000 | env 073 ep 05 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.006m | peak=0.099m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head= 50스텝/  287.6N
+[floating_ring     ] 555/1000 | env 074 ep 05 | ok=0 | surv=1 | fwd=  0.94m | gate=m | end=0.091m | peak=0.132m | vMAE=0.43 | trav=0 | gateV= | drop=-0.15 | head= 20스텝/  788.2N
+[floating_ring     ] 556/1000 | env 075 ep 05 | ok=0 | surv=1 | fwd=  0.70m | gate=m | end=0.004m | peak=0.068m | vMAE=0.45 | trav=0 | gateV= | drop= | head=454스텝/  329.1N
+[floating_ring     ] 557/1000 | env 077 ep 05 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.108m | peak=0.140m | vMAE=0.42 | trav=0 | gateV= | drop=-0.02 | head= 37스텝/  707.8N
+[floating_ring     ] 558/1000 | env 078 ep 05 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.043m | peak=0.065m | vMAE=0.42 | trav=0 | gateV= | drop=-0.08 | head=  4스텝/  698.7N
+[floating_ring     ] 559/1000 | env 079 ep 05 | ok=0 | surv=1 | fwd=  0.64m | gate=m | end=0.059m | peak=0.111m | vMAE=0.45 | trav=0 | gateV= | drop= | head=495스텝/  592.9N
+[repeated_boxes    ] 560/1000 | env 080 ep 05 | ok=1 | surv=1 | fwd=  5.52m | gate=0.357m | end=1.028m | peak=1.028m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.63 | head=  0스텝/    0.0N
+[repeated_boxes    ] 561/1000 | env 081 ep 05 | ok=1 | surv=1 | fwd=  4.96m | gate=0.350m | end=0.413m | peak=0.579m | vMAE=0.11 | trav=1 | gateV= 0.52 | drop=-1.19 | head= 19스텝/  692.8N
+[repeated_boxes    ] 562/1000 | env 082 ep 05 | ok=1 | surv=1 | fwd=  5.15m | gate=0.423m | end=1.332m | peak=1.332m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop= 0.11 | head=  0스텝/    0.0N
+[repeated_boxes    ] 563/1000 | env 083 ep 05 | ok=1 | surv=1 | fwd=  5.52m | gate=0.357m | end=1.278m | peak=1.278m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.78 | head=  0스텝/    0.0N
+[repeated_boxes    ] 564/1000 | env 084 ep 05 | ok=1 | surv=1 | fwd=  5.44m | gate=0.290m | end=1.111m | peak=1.111m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.37 | head=  0스텝/    0.0N
+[repeated_boxes    ] 565/1000 | env 085 ep 05 | ok=1 | surv=1 | fwd=  5.47m | gate=0.447m | end=1.205m | peak=1.205m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.49 | head=  0스텝/    0.0N
+[repeated_boxes    ] 566/1000 | env 086 ep 05 | ok=1 | surv=1 | fwd=  5.44m | gate=0.398m | end=1.379m | peak=1.379m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.72 | head=  0스텝/    0.0N
+[repeated_boxes    ] 567/1000 | env 087 ep 05 | ok=1 | surv=1 | fwd=  5.45m | gate=0.345m | end=0.972m | peak=0.972m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.32 | head=  3스텝/  788.1N
+[repeated_boxes    ] 568/1000 | env 088 ep 05 | ok=1 | surv=1 | fwd=  4.98m | gate=0.441m | end=0.564m | peak=0.670m | vMAE=0.11 | trav=1 | gateV= 0.49 | drop=-0.82 | head= 21스텝/  971.7N
+[repeated_boxes    ] 569/1000 | env 089 ep 05 | ok=1 | surv=1 | fwd=  5.50m | gate=0.354m | end=1.272m | peak=1.272m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.63 | head=  0스텝/    0.0N
+[repeated_cylinders] 570/1000 | env 090 ep 05 | ok=1 | surv=1 | fwd=  5.53m | gate=0.355m | end=1.281m | peak=1.281m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_cylinders] 571/1000 | env 091 ep 05 | ok=1 | surv=1 | fwd=  5.58m | gate=0.407m | end=1.192m | peak=1.192m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.59 | head=  0스텝/    0.0N
+[repeated_cylinders] 572/1000 | env 093 ep 05 | ok=1 | surv=1 | fwd=  5.59m | gate=0.306m | end=0.854m | peak=0.854m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_cylinders] 573/1000 | env 094 ep 05 | ok=1 | surv=1 | fwd=  5.49m | gate=0.372m | end=1.158m | peak=1.158m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.52 | head=  0스텝/    0.0N
+[repeated_cylinders] 574/1000 | env 095 ep 05 | ok=1 | surv=1 | fwd=  5.58m | gate=0.294m | end=1.217m | peak=1.217m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.79 | head=  0스텝/    0.0N
+[repeated_cylinders] 575/1000 | env 096 ep 05 | ok=1 | surv=1 | fwd=  5.62m | gate=0.249m | end=1.095m | peak=1.095m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_cylinders] 576/1000 | env 097 ep 05 | ok=1 | surv=1 | fwd=  5.51m | gate=0.269m | end=0.950m | peak=0.950m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.64 | head=  0스텝/    0.0N
+[repeated_cylinders] 577/1000 | env 098 ep 05 | ok=1 | surv=1 | fwd=  5.58m | gate=0.296m | end=1.200m | peak=1.200m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.79 | head=  0스텝/    0.0N
+[repeated_cylinders] 578/1000 | env 099 ep 05 | ok=1 | surv=1 | fwd=  5.51m | gate=0.339m | end=1.023m | peak=1.023m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.33 | head=  0스텝/    0.0N
+[rails             ] 579/1000 | env 054 ep 10 | ok=0 | surv=1 | fwd=  1.88m | gate=m | end=0.904m | peak=0.904m | vMAE=0.34 | trav=0 | gateV= | drop=-0.30 | head=  4스텝/  753.8N
+[stepping_stones   ] 580/1000 | env 021 ep 09 | ok=0 | surv=0 | fwd=  1.12m | gate=m | end=0.210m | peak=0.310m | vMAE=0.36 | trav=0 | gateV= | drop=-0.70 | head= 39스텝/ 1709.1N
+[stepping_stones   ] 581/1000 | env 028 ep 08 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.135m | peak=0.135m | vMAE=0.23 | trav=0 | gateV= | drop= | head=  1스텝/  701.8N
+[gap               ] 582/1000 | env 032 ep 10 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.053m | peak=0.086m | vMAE=0.32 | trav=0 | gateV= | drop= | head=  5스텝/  449.7N
+[stepping_stones   ] 583/1000 | env 020 ep 08 | ok=0 | surv=0 | fwd=  1.40m | gate=m | end=0.325m | peak=0.325m | vMAE=0.36 | trav=0 | gateV= | drop=-1.64 | head= 15스텝/  403.4N
+[stepping_stones   ] 584/1000 | env 024 ep 06 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.003m | peak=0.079m | vMAE=0.43 | trav=0 | gateV= | drop=-0.36 | head=448스텝/  446.0N
+[gap               ] 585/1000 | env 034 ep 06 | ok=0 | surv=1 | fwd=  0.46m | gate=m | end=0.166m | peak=0.223m | vMAE=0.49 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ] 586/1000 | env 037 ep 06 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.122m | peak=0.122m | vMAE=0.37 | trav=0 | gateV= | drop= | head= 32스텝/  321.6N
+[stepping_stones   ] 587/1000 | env 027 ep 06 | ok=0 | surv=1 | fwd=  0.77m | gate=m | end=0.138m | peak=0.153m | vMAE=0.43 | trav=0 | gateV= | drop=-0.48 | head=  1스텝/   46.1N
+[rails             ] 588/1000 | env 057 ep 08 | ok=0 | surv=1 | fwd=  1.16m | gate=m | end=0.125m | peak=0.141m | vMAE=0.41 | trav=0 | gateV= | drop=-0.18 | head= 11스텝/ 1078.1N
+[gap               ] 589/1000 | env 039 ep 08 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.023m | peak=0.175m | vMAE=0.38 | trav=0 | gateV= | drop= | head= 17스텝/ 1253.3N
+[stepping_stones   ] 590/1000 | env 028 ep 09 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.083m | peak=0.083m | vMAE=0.31 | trav=0 | gateV= | drop= | head= 53스텝/ 1707.8N
+[stepping_stones   ] 591/1000 | env 026 ep 07 | ok=0 | surv=1 | fwd=  0.94m | gate=m | end=0.011m | peak=0.067m | vMAE=0.44 | trav=0 | gateV= | drop=-0.00 | head=483스텝/  950.2N
+[stepping_stones   ] 592/1000 | env 029 ep 09 | ok=0 | surv=1 | fwd=  0.74m | gate=m | end=0.093m | peak=0.157m | vMAE=0.46 | trav=0 | gateV= | drop= | head=506스텝/  592.1N
+[stepping_stones   ] 593/1000 | env 024 ep 07 | ok=0 | surv=0 | fwd=  0.63m | gate=m | end=0.130m | peak=0.130m | vMAE=0.24 | trav=0 | gateV= | drop= | head=  3스텝/ 1223.0N
+[stepping_stones   ] 594/1000 | env 025 ep 07 | ok=0 | surv=1 | fwd=  0.75m | gate=m | end=0.029m | peak=0.040m | vMAE=0.45 | trav=0 | gateV= | drop=-0.05 | head=515스텝/  945.8N
+[rails             ] 595/1000 | env 055 ep 09 | ok=0 | surv=0 | fwd=  2.70m | gate=m | end=0.128m | peak=0.138m | vMAE=0.21 | trav=0 | gateV= | drop=-0.49 | head=  2스텝/  414.8N
+[gap               ] 596/1000 | env 033 ep 09 | ok=0 | surv=1 | fwd=  0.60m | gate=m | end=0.203m | peak=0.276m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  8스텝/  451.2N
+[gap               ] 597/1000 | env 030 ep 06 | ok=0 | surv=1 | fwd=  0.45m | gate=m | end=0.079m | peak=0.219m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[floating_ring     ] 598/1000 | env 076 ep 06 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.103m | peak=0.128m | vMAE=0.41 | trav=0 | gateV= | drop=-0.03 | head= 44스텝/  162.3N
+[stepping_stones   ] 599/1000 | env 029 ep 10 | ok=0 | surv=0 | fwd=  0.64m | gate=m | end=0.164m | peak=0.164m | vMAE=0.24 | trav=0 | gateV= | drop= | head=  2스텝/   64.7N
+[stepping_stones   ] 600/1000 | env 022 ep 07 | ok=0 | surv=1 | fwd=  0.93m | gate=m | end=0.080m | peak=0.080m | vMAE=0.45 | trav=0 | gateV= | drop=-0.06 | head=491스텝/ 1666.6N
+[gap               ] 601/1000 | env 035 ep 08 | ok=0 | surv=1 | fwd=  0.41m | gate=m | end=0.118m | peak=0.177m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  2스텝/  506.3N
+[stepping_stones   ] 602/1000 | env 023 ep 07 | ok=0 | surv=1 | fwd=  0.88m | gate=m | end=0.005m | peak=0.079m | vMAE=0.45 | trav=0 | gateV= | drop=-0.02 | head=486스텝/  372.3N
+[gap               ] 603/1000 | env 037 ep 07 | ok=0 | surv=0 | fwd=  0.76m | gate=m | end=0.005m | peak=0.158m | vMAE=0.38 | trav=0 | gateV= | drop= 1.31 | head= 45스텝/  705.6N
+[stepping_stones   ] 604/1000 | env 028 ep 10 | ok=0 | surv=0 | fwd=  1.07m | gate=m | end=0.255m | peak=0.255m | vMAE=0.32 | trav=0 | gateV= | drop= 0.60 | head=  0스텝/    0.0N
+[stepping_stones   ] 605/1000 | env 026 ep 08 | ok=0 | surv=0 | fwd=  1.34m | gate=m | end=0.390m | peak=0.392m | vMAE=0.34 | trav=0 | gateV= | drop=-1.05 | head= 28스텝/ 1228.0N
+[gap               ] 606/1000 | env 039 ep 09 | ok=0 | surv=0 | fwd=  0.73m | gate=m | end=0.023m | peak=0.216m | vMAE=0.41 | trav=0 | gateV= | drop= | head= 21스텝/ 2389.5N
+[gap               ] 607/1000 | env 036 ep 09 | ok=0 | surv=1 | fwd=  0.39m | gate=m | end=0.181m | peak=0.249m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[repeated_cylinders] 608/1000 | env 092 ep 06 | ok=1 | surv=1 | fwd=  5.52m | gate=0.421m | end=1.164m | peak=1.164m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.55 | head=  0스텝/    0.0N
+[gap               ] 609/1000 | env 038 ep 10 | ok=0 | surv=1 | fwd=  0.32m | gate=m | end=0.184m | peak=0.191m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  4스텝/  698.7N
+[stepping_stones   ] 610/1000 | env 023 ep 08 | ok=0 | surv=0 | fwd=  0.80m | gate=m | end=0.105m | peak=0.105m | vMAE=0.29 | trav=0 | gateV= | drop=-0.05 | head= 53스텝/ 1233.8N
+[gap               ] 611/1000 | env 031 ep 08 | ok=0 | surv=1 | fwd=  0.82m | gate=m | end=0.289m | peak=0.290m | vMAE=0.47 | trav=0 | gateV= | drop=-0.25 | head= 39스텝/  221.0N
+[discrete_obstacles] 612/1000 | env 000 ep 06 | ok=1 | surv=1 | fwd=  5.87m | gate=0.219m | end=0.087m | peak=0.240m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.61 | head=  0스텝/    0.0N
+[discrete_obstacles] 613/1000 | env 001 ep 06 | ok=1 | surv=1 | fwd=  5.55m | gate=0.405m | end=0.611m | peak=0.612m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop=-0.11 | head=  2스텝/  142.5N
+[discrete_obstacles] 614/1000 | env 002 ep 06 | ok=1 | surv=1 | fwd=  5.76m | gate=0.062m | end=0.153m | peak=0.153m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.78 | head=  0스텝/    0.0N
+[discrete_obstacles] 615/1000 | env 003 ep 06 | ok=1 | surv=1 | fwd=  4.99m | gate=0.549m | end=0.655m | peak=0.656m | vMAE=0.12 | trav=1 | gateV= 0.53 | drop=-0.62 | head= 42스텝/  813.5N
+[discrete_obstacles] 616/1000 | env 004 ep 06 | ok=1 | surv=1 | fwd=  5.76m | gate=0.031m | end=0.199m | peak=0.199m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.78 | head=  0스텝/    0.0N
+[discrete_obstacles] 617/1000 | env 005 ep 06 | ok=0 | surv=1 | fwd=  1.95m | gate=m | end=0.110m | peak=0.138m | vMAE=0.36 | trav=0 | gateV= | drop=-0.53 | head= 55스텝/ 1416.3N
+[discrete_obstacles] 618/1000 | env 006 ep 06 | ok=1 | surv=1 | fwd=  5.75m | gate=0.306m | end=0.237m | peak=0.353m | vMAE=0.07 | trav=1 | gateV= 0.44 | drop= 0.40 | head=  0스텝/    0.0N
+[discrete_obstacles] 619/1000 | env 007 ep 06 | ok=1 | surv=1 | fwd=  5.78m | gate=0.218m | end=0.020m | peak=0.219m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.60 | head=  0스텝/    0.0N
+[discrete_obstacles] 620/1000 | env 008 ep 06 | ok=1 | surv=1 | fwd=  5.78m | gate=0.412m | end=0.513m | peak=0.539m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.59 | head=  0스텝/    0.0N
+[discrete_obstacles] 621/1000 | env 009 ep 06 | ok=1 | surv=1 | fwd=  5.77m | gate=0.019m | end=0.206m | peak=0.206m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.78 | head=  0스텝/    0.0N
+[wave              ] 622/1000 | env 010 ep 06 | ok=1 | surv=1 | fwd=  5.57m | gate=0.209m | end=0.887m | peak=0.887m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 623/1000 | env 011 ep 06 | ok=1 | surv=1 | fwd=  5.63m | gate=0.084m | end=0.531m | peak=0.531m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 624/1000 | env 012 ep 06 | ok=1 | surv=1 | fwd=  5.30m | gate=0.505m | end=1.823m | peak=1.823m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 625/1000 | env 013 ep 06 | ok=1 | surv=1 | fwd=  5.19m | gate=0.460m | end=1.793m | peak=1.793m | vMAE=0.06 | trav=1 | gateV= 0.39 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 626/1000 | env 014 ep 06 | ok=1 | surv=1 | fwd=  5.69m | gate=0.021m | end=0.159m | peak=0.159m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 627/1000 | env 015 ep 06 | ok=1 | surv=1 | fwd=  5.51m | gate=0.271m | end=1.317m | peak=1.317m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.09 | head=  0스텝/    0.0N
+[wave              ] 628/1000 | env 016 ep 06 | ok=1 | surv=1 | fwd=  5.62m | gate=0.151m | end=0.839m | peak=0.839m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 629/1000 | env 017 ep 06 | ok=1 | surv=1 | fwd=  5.50m | gate=0.149m | end=1.228m | peak=1.228m | vMAE=0.06 | trav=1 | gateV= 0.47 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 630/1000 | env 018 ep 06 | ok=1 | surv=1 | fwd=  5.50m | gate=0.124m | end=1.173m | peak=1.173m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 631/1000 | env 019 ep 06 | ok=1 | surv=1 | fwd=  5.44m | gate=0.180m | end=1.333m | peak=1.333m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.05 | head=  0스텝/    0.0N
+[pit               ] 632/1000 | env 040 ep 06 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.160m | peak=0.166m | vMAE=0.43 | trav=0 | gateV= | drop=-0.10 | head=  9스텝/  357.7N
+[pit               ] 633/1000 | env 041 ep 06 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.154m | peak=0.170m | vMAE=0.42 | trav=0 | gateV= | drop=-0.42 | head=  9스텝/  865.4N
+[pit               ] 634/1000 | env 042 ep 06 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.030m | peak=0.074m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head= 16스텝/  387.6N
+[pit               ] 635/1000 | env 043 ep 06 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.117m | peak=0.132m | vMAE=0.42 | trav=0 | gateV= | drop=-0.13 | head=  8스텝/  818.1N
+[pit               ] 636/1000 | env 044 ep 06 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.041m | peak=0.138m | vMAE=0.42 | trav=0 | gateV= | drop=-0.22 | head= 11스텝/  942.1N
+[pit               ] 637/1000 | env 045 ep 06 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.142m | peak=0.156m | vMAE=0.42 | trav=0 | gateV= | drop=-0.40 | head=  8스텝/  525.2N
+[pit               ] 638/1000 | env 046 ep 06 | ok=1 | surv=1 | fwd=  5.07m | gate=0.639m | end=0.790m | peak=0.792m | vMAE=0.10 | trav=1 | gateV= 0.53 | drop=-0.15 | head=  3스텝/  994.0N
+[pit               ] 639/1000 | env 047 ep 06 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.135m | peak=0.165m | vMAE=0.42 | trav=0 | gateV= | drop=-0.45 | head=  9스텝/  144.6N
+[pit               ] 640/1000 | env 048 ep 06 | ok=0 | surv=1 | fwd=  0.96m | gate=m | end=0.059m | peak=0.062m | vMAE=0.43 | trav=0 | gateV= | drop=-0.15 | head=  8스텝/  557.9N
+[pit               ] 641/1000 | env 049 ep 06 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.161m | peak=0.177m | vMAE=0.42 | trav=0 | gateV= | drop=-0.22 | head=  7스텝/  371.0N
+[star              ] 642/1000 | env 060 ep 06 | ok=1 | surv=1 | fwd=  5.00m | gate=0.512m | end=1.577m | peak=1.577m | vMAE=0.10 | trav=1 | gateV= 0.54 | drop=-0.46 | head=  8스텝/  916.3N
+[star              ] 643/1000 | env 061 ep 06 | ok=1 | surv=1 | fwd=  5.02m | gate=0.537m | end=1.443m | peak=1.443m | vMAE=0.10 | trav=1 | gateV= 0.46 | drop= 0.17 | head=  3스텝/  695.0N
+[star              ] 644/1000 | env 062 ep 06 | ok=1 | surv=1 | fwd=  3.79m | gate=0.607m | end=1.050m | peak=1.070m | vMAE=0.19 | trav=1 | gateV= 0.47 | drop=-0.12 | head=  0스텝/    0.0N
+[star              ] 645/1000 | env 063 ep 06 | ok=1 | surv=1 | fwd=  5.27m | gate=0.376m | end=1.544m | peak=1.544m | vMAE=0.08 | trav=1 | gateV= 0.58 | drop= 0.26 | head=  0스텝/    0.0N
+[star              ] 646/1000 | env 064 ep 06 | ok=1 | surv=1 | fwd=  3.70m | gate=0.514m | end=0.945m | peak=0.947m | vMAE=0.21 | trav=1 | gateV= 0.45 | drop=-0.11 | head=  0스텝/    0.0N
+[star              ] 647/1000 | env 065 ep 06 | ok=1 | surv=1 | fwd=  3.73m | gate=0.637m | end=0.971m | peak=0.971m | vMAE=0.20 | trav=1 | gateV= 0.44 | drop=-0.08 | head=  3스텝/  786.4N
+[star              ] 648/1000 | env 066 ep 06 | ok=1 | surv=1 | fwd=  4.93m | gate=0.523m | end=1.506m | peak=1.506m | vMAE=0.10 | trav=1 | gateV= 0.32 | drop= 0.26 | head=  0스텝/    0.0N
+[star              ] 649/1000 | env 067 ep 06 | ok=1 | surv=1 | fwd=  5.30m | gate=0.683m | end=1.755m | peak=1.755m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.69 | head=  0스텝/    0.0N
+[star              ] 650/1000 | env 068 ep 06 | ok=1 | surv=1 | fwd=  3.73m | gate=0.618m | end=0.964m | peak=0.978m | vMAE=0.20 | trav=1 | gateV= 0.37 | drop=-0.05 | head=  2스텝/ 1132.9N
+[star              ] 651/1000 | env 069 ep 06 | ok=1 | surv=1 | fwd=  5.14m | gate=0.518m | end=1.407m | peak=1.407m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop= 0.51 | head=  0스텝/    0.0N
+[floating_ring     ] 652/1000 | env 070 ep 06 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.073m | peak=0.106m | vMAE=0.41 | trav=0 | gateV= | drop=-0.03 | head= 47스텝/  361.5N
+[floating_ring     ] 653/1000 | env 071 ep 06 | ok=0 | surv=1 | fwd=  0.79m | gate=m | end=0.081m | peak=0.124m | vMAE=0.44 | trav=0 | gateV= | drop=-0.41 | head=480스텝/  587.2N
+[floating_ring     ] 654/1000 | env 072 ep 06 | ok=0 | surv=1 | fwd=  1.16m | gate=m | end=0.146m | peak=0.148m | vMAE=0.41 | trav=0 | gateV= | drop=-0.34 | head= 15스텝/  101.4N
+[floating_ring     ] 655/1000 | env 073 ep 06 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.009m | peak=0.069m | vMAE=0.41 | trav=0 | gateV= | drop=-0.10 | head=276스텝/  451.0N
+[floating_ring     ] 656/1000 | env 074 ep 06 | ok=0 | surv=1 | fwd=  1.17m | gate=m | end=0.029m | peak=0.094m | vMAE=0.41 | trav=0 | gateV= | drop=-0.42 | head=  4스텝/  464.6N
+[floating_ring     ] 657/1000 | env 075 ep 06 | ok=0 | surv=1 | fwd=  0.62m | gate=m | end=0.094m | peak=0.095m | vMAE=0.45 | trav=0 | gateV= | drop= | head=475스텝/  384.0N
+[floating_ring     ] 658/1000 | env 077 ep 06 | ok=0 | surv=1 | fwd=  1.18m | gate=m | end=0.083m | peak=0.106m | vMAE=0.41 | trav=0 | gateV= | drop=-0.34 | head=138스텝/  738.9N
+[floating_ring     ] 659/1000 | env 078 ep 06 | ok=0 | surv=1 | fwd=  0.88m | gate=m | end=0.080m | peak=0.157m | vMAE=0.43 | trav=0 | gateV= | drop=-0.34 | head= 20스텝/  752.0N
+[floating_ring     ] 660/1000 | env 079 ep 06 | ok=0 | surv=1 | fwd=  1.17m | gate=m | end=0.085m | peak=0.115m | vMAE=0.41 | trav=0 | gateV= | drop=-0.24 | head=156스텝/  428.7N
+[repeated_boxes    ] 661/1000 | env 080 ep 06 | ok=1 | surv=1 | fwd=  5.36m | gate=0.329m | end=0.979m | peak=0.979m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.28 | head=  0스텝/    0.0N
+[repeated_boxes    ] 662/1000 | env 081 ep 06 | ok=1 | surv=1 | fwd=  5.44m | gate=0.448m | end=1.227m | peak=1.227m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.68 | head=  0스텝/    0.0N
+[repeated_boxes    ] 663/1000 | env 082 ep 06 | ok=1 | surv=1 | fwd=  5.54m | gate=0.459m | end=1.229m | peak=1.229m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.62 | head=  0스텝/    0.0N
+[repeated_boxes    ] 664/1000 | env 083 ep 06 | ok=1 | surv=1 | fwd=  5.48m | gate=0.357m | end=0.543m | peak=0.543m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop=-0.13 | head=  9스텝/  951.2N
+[repeated_boxes    ] 665/1000 | env 084 ep 06 | ok=1 | surv=1 | fwd=  5.52m | gate=0.349m | end=0.807m | peak=0.807m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_boxes    ] 666/1000 | env 085 ep 06 | ok=1 | surv=1 | fwd=  5.45m | gate=0.394m | end=1.108m | peak=1.108m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ] 667/1000 | env 086 ep 06 | ok=1 | surv=1 | fwd=  4.94m | gate=0.343m | end=0.112m | peak=0.529m | vMAE=0.11 | trav=1 | gateV= 0.46 | drop=-0.97 | head= 18스텝/  818.4N
+[repeated_boxes    ] 668/1000 | env 087 ep 06 | ok=1 | surv=1 | fwd=  5.56m | gate=0.252m | end=0.926m | peak=0.926m | vMAE=0.06 | trav=1 | gateV= 0.47 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_boxes    ] 669/1000 | env 088 ep 06 | ok=1 | surv=1 | fwd=  5.45m | gate=0.306m | end=0.686m | peak=0.686m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.48 | head=  1스텝/  573.6N
+[repeated_boxes    ] 670/1000 | env 089 ep 06 | ok=1 | surv=1 | fwd=  5.46m | gate=0.299m | end=1.124m | peak=1.124m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.55 | head=  0스텝/    0.0N
+[repeated_cylinders] 671/1000 | env 090 ep 06 | ok=1 | surv=1 | fwd=  5.48m | gate=0.297m | end=0.866m | peak=0.866m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.65 | head=  0스텝/    0.0N
+[repeated_cylinders] 672/1000 | env 091 ep 06 | ok=1 | surv=1 | fwd=  5.51m | gate=0.249m | end=1.162m | peak=1.162m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.54 | head=  0스텝/    0.0N
+[repeated_cylinders] 673/1000 | env 093 ep 06 | ok=1 | surv=1 | fwd=  5.51m | gate=0.351m | end=1.196m | peak=1.196m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_cylinders] 674/1000 | env 094 ep 06 | ok=1 | surv=1 | fwd=  5.50m | gate=0.430m | end=1.317m | peak=1.317m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.50 | head=  0스텝/    0.0N
+[repeated_cylinders] 675/1000 | env 095 ep 06 | ok=1 | surv=1 | fwd=  5.53m | gate=0.297m | end=1.250m | peak=1.250m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_cylinders] 676/1000 | env 096 ep 06 | ok=1 | surv=1 | fwd=  5.37m | gate=0.324m | end=1.023m | peak=1.023m | vMAE=0.08 | trav=1 | gateV= 0.48 | drop= 0.65 | head=  3스텝/ 1096.0N
+[repeated_cylinders] 677/1000 | env 097 ep 06 | ok=1 | surv=1 | fwd=  5.42m | gate=0.419m | end=1.406m | peak=1.406m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_cylinders] 678/1000 | env 098 ep 06 | ok=1 | surv=1 | fwd=  5.23m | gate=0.411m | end=1.144m | peak=1.144m | vMAE=0.08 | trav=1 | gateV= 0.46 | drop=-0.19 | head=  0스텝/    0.0N
+[repeated_cylinders] 679/1000 | env 099 ep 06 | ok=1 | surv=1 | fwd=  5.45m | gate=0.374m | end=1.319m | peak=1.319m | vMAE=0.05 | trav=1 | gateV= 0.39 | drop= 0.47 | head=  0스텝/    0.0N
+[stepping_stones   ] 680/1000 | env 021 ep 10 | ok=0 | surv=1 | fwd=  0.84m | gate=m | end=0.034m | peak=0.102m | vMAE=0.45 | trav=0 | gateV= | drop=-0.03 | head=487스텝/ 1865.6N
+[stepping_stones   ] 681/1000 | env 020 ep 09 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.255m | peak=0.357m | vMAE=0.43 | trav=0 | gateV= | drop=-0.24 | head= 73스텝/  609.8N
+[gap               ] 682/1000 | env 034 ep 07 | ok=0 | surv=1 | fwd=  0.89m | gate=m | end=0.146m | peak=0.149m | vMAE=0.46 | trav=0 | gateV= | drop=-0.21 | head=406스텝/  670.0N
+[stepping_stones   ] 683/1000 | env 027 ep 07 | ok=0 | surv=1 | fwd=  0.65m | gate=m | end=0.130m | peak=0.170m | vMAE=0.46 | trav=0 | gateV= | drop= | head= 13스텝/  335.9N
+[rails             ] 684/1000 | env 057 ep 09 | ok=0 | surv=1 | fwd=  1.26m | gate=m | end=0.106m | peak=0.146m | vMAE=0.41 | trav=0 | gateV= | drop=-0.62 | head=  2스텝/  891.3N
+[gap               ] 685/1000 | env 036 ep 10 | ok=0 | surv=0 | fwd=  0.96m | gate=m | end=0.637m | peak=0.637m | vMAE=0.54 | trav=0 | gateV= | drop=-2.27 | head= 83스텝/ 1355.1N
+[stepping_stones   ] 686/1000 | env 024 ep 08 | ok=0 | surv=1 | fwd=  0.76m | gate=m | end=0.091m | peak=0.091m | vMAE=0.45 | trav=0 | gateV= | drop=-0.03 | head=512스텝/ 1153.8N
+[stepping_stones   ] 687/1000 | env 025 ep 08 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.118m | peak=0.206m | vMAE=0.43 | trav=0 | gateV= | drop=-0.34 | head=405스텝/  541.5N
+[rails             ] 688/1000 | env 055 ep 10 | ok=0 | surv=1 | fwd=  1.31m | gate=m | end=0.205m | peak=0.214m | vMAE=0.40 | trav=0 | gateV= | drop=-0.53 | head=  7스텝/  757.0N
+[rails             ] 689/1000 | env 057 ep 10 | ok=0 | surv=0 | fwd=  0.84m | gate=m | end=0.037m | peak=0.069m | vMAE=0.14 | trav=0 | gateV= | drop= 0.16 | head=  0스텝/    0.0N
+[gap               ] 690/1000 | env 033 ep 10 | ok=0 | surv=1 | fwd=  0.42m | gate=m | end=0.132m | peak=0.231m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  1스텝/  148.9N
+[gap               ] 691/1000 | env 030 ep 07 | ok=0 | surv=1 | fwd=  0.40m | gate=m | end=0.214m | peak=0.258m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  1스텝/   58.7N
+[floating_ring     ] 692/1000 | env 076 ep 07 | ok=0 | surv=1 | fwd=  0.64m | gate=m | end=0.009m | peak=0.049m | vMAE=0.45 | trav=0 | gateV= | drop= | head=495스텝/  188.6N
+[stepping_stones   ] 693/1000 | env 024 ep 09 | ok=0 | surv=0 | fwd=  0.72m | gate=m | end=0.025m | peak=0.055m | vMAE=0.21 | trav=0 | gateV= | drop= | head=  1스텝/   40.6N
+[stepping_stones   ] 694/1000 | env 022 ep 08 | ok=0 | surv=1 | fwd=  0.74m | gate=m | end=0.201m | peak=0.201m | vMAE=0.45 | trav=0 | gateV= | drop= | head=466스텝/  720.8N
+[gap               ] 695/1000 | env 034 ep 08 | ok=0 | surv=0 | fwd=  0.71m | gate=m | end=0.116m | peak=0.209m | vMAE=0.35 | trav=0 | gateV= | drop= | head= 11스텝/  681.1N
+[stepping_stones   ] 696/1000 | env 027 ep 08 | ok=0 | surv=0 | fwd=  1.27m | gate=m | end=0.348m | peak=0.399m | vMAE=0.34 | trav=0 | gateV= | drop=-1.41 | head= 26스텝/  998.1N
+[stepping_stones   ] 697/1000 | env 025 ep 09 | ok=0 | surv=0 | fwd=  0.69m | gate=m | end=0.072m | peak=0.072m | vMAE=0.21 | trav=0 | gateV= | drop= | head= 10스텝/  952.3N
+[gap               ] 698/1000 | env 035 ep 09 | ok=0 | surv=1 | fwd=  0.35m | gate=m | end=0.230m | peak=0.240m | vMAE=0.47 | trav=0 | gateV= | drop= | head=103스텝/  203.0N
+[stepping_stones   ] 699/1000 | env 020 ep 10 | ok=0 | surv=0 | fwd=  0.98m | gate=m | end=0.166m | peak=0.166m | vMAE=0.34 | trav=0 | gateV= | drop=-0.07 | head= 90스텝/  739.9N
+[gap               ] 700/1000 | env 037 ep 08 | ok=0 | surv=1 | fwd=  0.38m | gate=m | end=0.042m | peak=0.196m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[stepping_stones   ] 701/1000 | env 026 ep 09 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.080m | peak=0.080m | vMAE=0.46 | trav=0 | gateV= | drop= | head=515스텝/  827.0N
+[gap               ] 702/1000 | env 039 ep 10 | ok=0 | surv=1 | fwd=  0.50m | gate=m | end=0.104m | peak=0.121m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  1스텝/   31.3N
+[stepping_stones   ] 703/1000 | env 027 ep 09 | ok=0 | surv=0 | fwd=  0.83m | gate=m | end=0.105m | peak=0.105m | vMAE=0.32 | trav=0 | gateV= | drop=-0.08 | head= 16스텝/  433.0N
+[repeated_cylinders] 704/1000 | env 092 ep 07 | ok=1 | surv=1 | fwd=  5.41m | gate=0.272m | end=1.174m | peak=1.174m | vMAE=0.06 | trav=1 | gateV= 0.22 | drop= 0.36 | head=  0스텝/    0.0N
+[stepping_stones   ] 705/1000 | env 022 ep 09 | ok=0 | surv=0 | fwd=  1.28m | gate=m | end=0.231m | peak=0.231m | vMAE=0.26 | trav=0 | gateV= | drop= 0.54 | head= 22스텝/  453.8N
+[stepping_stones   ] 706/1000 | env 023 ep 09 | ok=0 | surv=1 | fwd=  0.63m | gate=m | end=0.004m | peak=0.069m | vMAE=0.46 | trav=0 | gateV= | drop= | head=517스텝/  639.0N
+[gap               ] 707/1000 | env 031 ep 09 | ok=0 | surv=1 | fwd=  0.49m | gate=m | end=0.049m | peak=0.252m | vMAE=0.48 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[gap               ] 708/1000 | env 035 ep 10 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.026m | peak=0.219m | vMAE=0.37 | trav=0 | gateV= | drop= 1.16 | head=  7스텝/ 1076.6N
+[stepping_stones   ] 709/1000 | env 025 ep 10 | ok=0 | surv=0 | fwd=  1.07m | gate=m | end=0.185m | peak=0.228m | vMAE=0.36 | trav=0 | gateV= | drop=-0.36 | head= 81스텝/ 1029.8N
+[discrete_obstacles] 710/1000 | env 000 ep 07 | ok=1 | surv=1 | fwd=  5.85m | gate=0.154m | end=0.015m | peak=0.181m | vMAE=0.06 | trav=1 | gateV= 0.47 | drop= 0.63 | head=  0스텝/    0.0N
+[discrete_obstacles] 711/1000 | env 001 ep 07 | ok=1 | surv=1 | fwd=  5.81m | gate=0.168m | end=0.003m | peak=0.185m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.66 | head=  0스텝/    0.0N
+[discrete_obstacles] 712/1000 | env 002 ep 07 | ok=1 | surv=1 | fwd=  5.75m | gate=0.345m | end=0.334m | peak=0.411m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.59 | head=  0스텝/    0.0N
+[discrete_obstacles] 713/1000 | env 003 ep 07 | ok=1 | surv=1 | fwd=  5.63m | gate=0.230m | end=0.124m | peak=0.248m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop=-0.02 | head=  0스텝/    0.0N
+[discrete_obstacles] 714/1000 | env 004 ep 07 | ok=1 | surv=1 | fwd=  5.75m | gate=0.007m | end=0.257m | peak=0.257m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.80 | head=  0스텝/    0.0N
+[discrete_obstacles] 715/1000 | env 005 ep 07 | ok=1 | surv=1 | fwd=  5.87m | gate=0.277m | end=0.281m | peak=0.349m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.62 | head=  0스텝/    0.0N
+[discrete_obstacles] 716/1000 | env 006 ep 07 | ok=1 | surv=1 | fwd=  5.80m | gate=0.142m | end=0.248m | peak=0.248m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.66 | head=  0스텝/    0.0N
+[discrete_obstacles] 717/1000 | env 007 ep 07 | ok=1 | surv=1 | fwd=  5.59m | gate=0.388m | end=0.379m | peak=0.442m | vMAE=0.08 | trav=1 | gateV= 0.51 | drop= 0.00 | head=  0스텝/    0.0N
+[discrete_obstacles] 718/1000 | env 008 ep 07 | ok=1 | surv=1 | fwd=  5.17m | gate=0.320m | end=0.239m | peak=0.330m | vMAE=0.11 | trav=1 | gateV= 0.52 | drop=-0.06 | head=  0스텝/    0.0N
+[discrete_obstacles] 719/1000 | env 009 ep 07 | ok=1 | surv=1 | fwd=  5.68m | gate=0.420m | end=0.459m | peak=0.505m | vMAE=0.08 | trav=1 | gateV= 0.47 | drop= 0.44 | head=  0스텝/    0.0N
+[wave              ] 720/1000 | env 010 ep 07 | ok=1 | surv=1 | fwd=  5.64m | gate=0.124m | end=0.620m | peak=0.620m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 721/1000 | env 011 ep 07 | ok=1 | surv=1 | fwd=  5.69m | gate=0.029m | end=0.279m | peak=0.279m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 722/1000 | env 012 ep 07 | ok=1 | surv=1 | fwd=  5.49m | gate=0.185m | end=1.242m | peak=1.242m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 723/1000 | env 013 ep 07 | ok=1 | surv=1 | fwd=  5.65m | gate=0.126m | end=0.493m | peak=0.493m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 724/1000 | env 014 ep 07 | ok=1 | surv=1 | fwd=  5.23m | gate=0.549m | end=1.892m | peak=1.892m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 725/1000 | env 015 ep 07 | ok=1 | surv=1 | fwd=  5.52m | gate=0.153m | end=1.062m | peak=1.062m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 726/1000 | env 016 ep 07 | ok=1 | surv=1 | fwd=  5.68m | gate=0.080m | end=0.210m | peak=0.210m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 727/1000 | env 017 ep 07 | ok=1 | surv=1 | fwd=  5.27m | gate=0.296m | end=1.669m | peak=1.669m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 728/1000 | env 018 ep 07 | ok=1 | surv=1 | fwd=  5.35m | gate=0.326m | end=1.651m | peak=1.651m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 729/1000 | env 019 ep 07 | ok=1 | surv=1 | fwd=  5.68m | gate=0.042m | end=0.154m | peak=0.154m | vMAE=0.06 | trav=1 | gateV= 0.44 | drop=-0.07 | head=  0스텝/    0.0N
+[pit               ] 730/1000 | env 040 ep 07 | ok=0 | surv=1 | fwd=  0.99m | gate=m | end=0.073m | peak=0.076m | vMAE=0.42 | trav=0 | gateV= | drop=-0.14 | head=  9스텝/  108.7N
+[pit               ] 731/1000 | env 041 ep 07 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.165m | peak=0.182m | vMAE=0.43 | trav=0 | gateV= | drop=-0.12 | head=  9스텝/  723.8N
+[pit               ] 732/1000 | env 042 ep 07 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.071m | peak=0.078m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head=  4스텝/  405.6N
+[pit               ] 733/1000 | env 043 ep 07 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.105m | peak=0.125m | vMAE=0.43 | trav=0 | gateV= | drop=-0.19 | head= 12스텝/  132.4N
+[pit               ] 734/1000 | env 044 ep 07 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.040m | peak=0.044m | vMAE=0.41 | trav=0 | gateV= | drop=-0.23 | head= 16스텝/  402.9N
+[pit               ] 735/1000 | env 045 ep 07 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.095m | peak=0.115m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head=  8스텝/  367.8N
+[pit               ] 736/1000 | env 046 ep 07 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.059m | peak=0.119m | vMAE=0.42 | trav=0 | gateV= | drop=-0.34 | head=  6스텝/  756.9N
+[pit               ] 737/1000 | env 047 ep 07 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.115m | peak=0.182m | vMAE=0.43 | trav=0 | gateV= | drop=-0.05 | head=  8스텝/  128.9N
+[pit               ] 738/1000 | env 048 ep 07 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.114m | peak=0.119m | vMAE=0.43 | trav=0 | gateV= | drop=-0.11 | head= 12스텝/  664.0N
+[pit               ] 739/1000 | env 049 ep 07 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.126m | peak=0.177m | vMAE=0.42 | trav=0 | gateV= | drop=-0.51 | head= 14스텝/  159.8N
+[star              ] 740/1000 | env 060 ep 07 | ok=1 | surv=1 | fwd=  3.88m | gate=0.656m | end=1.103m | peak=1.128m | vMAE=0.19 | trav=1 | gateV= 0.50 | drop=-0.04 | head=  0스텝/    0.0N
+[star              ] 741/1000 | env 061 ep 07 | ok=1 | surv=1 | fwd=  4.95m | gate=0.647m | end=1.749m | peak=1.749m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop= 0.34 | head=  1스텝/  372.5N
+[star              ] 742/1000 | env 062 ep 07 | ok=1 | surv=1 | fwd=  5.39m | gate=0.303m | end=1.497m | peak=1.497m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.78 | head=  0스텝/    0.0N
+[star              ] 743/1000 | env 063 ep 07 | ok=1 | surv=1 | fwd=  5.11m | gate=0.445m | end=1.731m | peak=1.731m | vMAE=0.08 | trav=1 | gateV= 0.59 | drop= 0.41 | head=  1스텝/ 1281.7N
+[star              ] 744/1000 | env 064 ep 07 | ok=0 | surv=1 | fwd=  5.19m | gate=0.783m | end=1.937m | peak=1.937m | vMAE=0.08 | trav=0 | gateV= 0.51 | drop= 0.48 | head=  0스텝/    0.0N
+[star              ] 745/1000 | env 065 ep 07 | ok=1 | surv=1 | fwd=  3.73m | gate=0.515m | end=0.896m | peak=0.905m | vMAE=0.19 | trav=1 | gateV= 0.25 | drop=-0.59 | head=  7스텝/  763.4N
+[star              ] 746/1000 | env 066 ep 07 | ok=1 | surv=1 | fwd=  5.17m | gate=0.558m | end=1.485m | peak=1.485m | vMAE=0.09 | trav=1 | gateV= 0.48 | drop= 0.07 | head=  0스텝/    0.0N
+[star              ] 747/1000 | env 067 ep 07 | ok=1 | surv=1 | fwd=  5.03m | gate=0.597m | end=1.764m | peak=1.764m | vMAE=0.08 | trav=1 | gateV= 0.35 | drop= 0.53 | head=  0스텝/    0.0N
+[star              ] 748/1000 | env 068 ep 07 | ok=1 | surv=1 | fwd=  3.86m | gate=0.550m | end=1.108m | peak=1.108m | vMAE=0.18 | trav=1 | gateV= 0.31 | drop=-0.05 | head=  0스텝/    0.0N
+[star              ] 749/1000 | env 069 ep 07 | ok=1 | surv=1 | fwd=  3.85m | gate=0.626m | end=1.065m | peak=1.069m | vMAE=0.19 | trav=1 | gateV= 0.46 | drop=-0.51 | head= 10스텝/  234.0N
+[floating_ring     ] 750/1000 | env 070 ep 07 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.050m | peak=0.094m | vMAE=0.45 | trav=0 | gateV= | drop= | head=467스텝/  518.2N
+[floating_ring     ] 751/1000 | env 071 ep 07 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.185m | peak=0.209m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head= 21스텝/  747.9N
+[floating_ring     ] 752/1000 | env 072 ep 07 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.055m | peak=0.072m | vMAE=0.42 | trav=0 | gateV= | drop=-0.20 | head= 32스텝/  322.9N
+[floating_ring     ] 753/1000 | env 073 ep 07 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.139m | peak=0.157m | vMAE=0.42 | trav=0 | gateV= | drop=-0.01 | head= 22스텝/  230.0N
+[floating_ring     ] 754/1000 | env 074 ep 07 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.044m | peak=0.110m | vMAE=0.42 | trav=0 | gateV= | drop=-0.02 | head= 23스텝/  317.2N
+[floating_ring     ] 755/1000 | env 075 ep 07 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.096m | peak=0.137m | vMAE=0.41 | trav=0 | gateV= | drop=-0.37 | head= 24스텝/  101.3N
+[floating_ring     ] 756/1000 | env 077 ep 07 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.019m | peak=0.050m | vMAE=0.42 | trav=0 | gateV= | drop= 0.00 | head=208스텝/  548.3N
+[floating_ring     ] 757/1000 | env 078 ep 07 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.042m | peak=0.077m | vMAE=0.45 | trav=0 | gateV= | drop= | head=465스텝/  438.7N
+[floating_ring     ] 758/1000 | env 079 ep 07 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.034m | peak=0.113m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head= 48스텝/   92.2N
+[repeated_boxes    ] 759/1000 | env 080 ep 07 | ok=1 | surv=1 | fwd=  5.50m | gate=0.438m | end=0.894m | peak=0.894m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ] 760/1000 | env 081 ep 07 | ok=1 | surv=1 | fwd=  5.50m | gate=0.334m | end=1.117m | peak=1.117m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_boxes    ] 761/1000 | env 082 ep 07 | ok=1 | surv=1 | fwd=  5.59m | gate=0.320m | end=1.096m | peak=1.096m | vMAE=0.05 | trav=1 | gateV= 0.54 | drop= 0.67 | head=  0스텝/    0.0N
+[repeated_boxes    ] 762/1000 | env 083 ep 07 | ok=1 | surv=1 | fwd=  5.43m | gate=0.428m | end=0.939m | peak=0.939m | vMAE=0.08 | trav=1 | gateV= 0.54 | drop= 0.48 | head=  0스텝/    0.0N
+[repeated_boxes    ] 763/1000 | env 084 ep 07 | ok=1 | surv=1 | fwd=  5.00m | gate=0.456m | end=0.250m | peak=0.605m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop=-1.20 | head= 20스텝/  836.9N
+[repeated_boxes    ] 764/1000 | env 085 ep 07 | ok=1 | surv=1 | fwd=  5.40m | gate=0.402m | end=1.234m | peak=1.234m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.52 | head=  0스텝/    0.0N
+[repeated_boxes    ] 765/1000 | env 086 ep 07 | ok=1 | surv=1 | fwd=  5.50m | gate=0.360m | end=1.184m | peak=1.184m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.75 | head=  0스텝/    0.0N
+[repeated_boxes    ] 766/1000 | env 087 ep 07 | ok=1 | surv=1 | fwd=  5.52m | gate=0.355m | end=1.268m | peak=1.268m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_boxes    ] 767/1000 | env 088 ep 07 | ok=1 | surv=1 | fwd=  5.36m | gate=0.545m | end=0.944m | peak=0.944m | vMAE=0.08 | trav=1 | gateV= 0.48 | drop= 0.46 | head=  1스텝/  953.4N
+[repeated_boxes    ] 768/1000 | env 089 ep 07 | ok=1 | surv=1 | fwd=  5.50m | gate=0.350m | end=1.179m | peak=1.179m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.59 | head=  0스텝/    0.0N
+[repeated_cylinders] 769/1000 | env 090 ep 07 | ok=1 | surv=1 | fwd=  5.38m | gate=0.278m | end=1.308m | peak=1.308m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.49 | head=  0스텝/    0.0N
+[repeated_cylinders] 770/1000 | env 091 ep 07 | ok=1 | surv=1 | fwd=  5.51m | gate=0.363m | end=1.231m | peak=1.231m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.67 | head=  0스텝/    0.0N
+[repeated_cylinders] 771/1000 | env 093 ep 07 | ok=1 | surv=1 | fwd=  5.52m | gate=0.328m | end=1.265m | peak=1.265m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.65 | head=  0스텝/    0.0N
+[repeated_cylinders] 772/1000 | env 094 ep 07 | ok=1 | surv=1 | fwd=  5.02m | gate=0.601m | end=1.610m | peak=1.610m | vMAE=0.09 | trav=1 | gateV= 0.44 | drop=-0.75 | head=  0스텝/    0.0N
+[repeated_cylinders] 773/1000 | env 095 ep 07 | ok=1 | surv=1 | fwd=  5.56m | gate=0.314m | end=1.222m | peak=1.222m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_cylinders] 774/1000 | env 096 ep 07 | ok=1 | surv=1 | fwd=  5.45m | gate=0.377m | end=1.332m | peak=1.332m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.52 | head=  0스텝/    0.0N
+[repeated_cylinders] 775/1000 | env 097 ep 07 | ok=1 | surv=1 | fwd=  5.39m | gate=0.377m | end=1.421m | peak=1.421m | vMAE=0.06 | trav=1 | gateV= 0.38 | drop= 0.62 | head=  0스텝/    0.0N
+[repeated_cylinders] 776/1000 | env 098 ep 07 | ok=1 | surv=1 | fwd=  5.38m | gate=0.341m | end=1.167m | peak=1.167m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 777/1000 | env 099 ep 07 | ok=1 | surv=1 | fwd=  5.54m | gate=0.278m | end=1.226m | peak=1.226m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.76 | head=  0스텝/    0.0N
+[stepping_stones   ] 778/1000 | env 023 ep 10 | ok=0 | surv=0 | fwd=  0.78m | gate=m | end=0.065m | peak=0.094m | vMAE=0.25 | trav=0 | gateV= | drop= 0.24 | head=  5스텝/  383.0N
+[gap               ] 779/1000 | env 037 ep 09 | ok=0 | surv=0 | fwd=  0.77m | gate=m | end=0.120m | peak=0.274m | vMAE=0.43 | trav=0 | gateV= | drop= 0.78 | head= 11스텝/ 1011.3N
+[gap               ] 780/1000 | env 034 ep 09 | ok=0 | surv=0 | fwd=  0.61m | gate=m | end=0.121m | peak=0.133m | vMAE=0.42 | trav=0 | gateV= | drop= | head= 41스텝/ 2121.3N
+[gap               ] 781/1000 | env 030 ep 08 | ok=0 | surv=1 | fwd=  0.54m | gate=m | end=0.074m | peak=0.182m | vMAE=0.46 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[floating_ring     ] 782/1000 | env 076 ep 08 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.122m | peak=0.130m | vMAE=0.42 | trav=0 | gateV= | drop=-0.12 | head= 25스텝/  299.2N
+[stepping_stones   ] 783/1000 | env 024 ep 10 | ok=0 | surv=1 | fwd=  0.84m | gate=m | end=0.064m | peak=0.085m | vMAE=0.46 | trav=0 | gateV= | drop=-0.02 | head=503스텝/ 1553.0N
+[stepping_stones   ] 784/1000 | env 026 ep 10 | ok=0 | surv=1 | fwd=  0.81m | gate=m | end=0.043m | peak=0.087m | vMAE=0.44 | trav=0 | gateV= | drop=-0.04 | head=496스텝/ 1772.9N
+[stepping_stones   ] 785/1000 | env 027 ep 10 | ok=0 | surv=1 | fwd=  0.78m | gate=m | end=0.024m | peak=0.113m | vMAE=0.46 | trav=0 | gateV= | drop=-0.02 | head=482스텝/  253.6N
+[repeated_cylinders] 786/1000 | env 092 ep 08 | ok=1 | surv=1 | fwd=  5.46m | gate=0.355m | end=1.150m | peak=1.150m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop= 0.54 | head=  0스텝/    0.0N
+[stepping_stones   ] 787/1000 | env 022 ep 10 | ok=0 | surv=1 | fwd=  0.81m | gate=m | end=0.151m | peak=0.151m | vMAE=0.44 | trav=0 | gateV= | drop=-0.04 | head=470스텝/ 1984.5N
+[gap               ] 788/1000 | env 031 ep 10 | ok=0 | surv=1 | fwd=  0.46m | gate=m | end=0.257m | peak=0.266m | vMAE=0.48 | trav=0 | gateV= | drop= | head= 13스텝/  897.8N
+[discrete_obstacles] 789/1000 | env 000 ep 08 | ok=1 | surv=1 | fwd=  5.74m | gate=0.010m | end=0.279m | peak=0.279m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop= 0.80 | head=  0스텝/    0.0N
+[discrete_obstacles] 790/1000 | env 001 ep 08 | ok=1 | surv=1 | fwd=  5.82m | gate=0.149m | end=0.036m | peak=0.178m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.62 | head=  0스텝/    0.0N
+[discrete_obstacles] 791/1000 | env 002 ep 08 | ok=1 | surv=1 | fwd=  5.82m | gate=0.246m | end=0.224m | peak=0.303m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.59 | head=  0스텝/    0.0N
+[discrete_obstacles] 792/1000 | env 003 ep 08 | ok=1 | surv=1 | fwd=  5.84m | gate=0.260m | end=0.147m | peak=0.289m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.73 | head=  0스텝/    0.0N
+[discrete_obstacles] 793/1000 | env 004 ep 08 | ok=1 | surv=1 | fwd=  5.54m | gate=0.229m | end=0.025m | peak=0.232m | vMAE=0.08 | trav=1 | gateV= 0.53 | drop= 0.43 | head=  0스텝/    0.0N
+[discrete_obstacles] 794/1000 | env 005 ep 08 | ok=1 | surv=1 | fwd=  5.66m | gate=0.212m | end=0.198m | peak=0.268m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.52 | head=  0스텝/    0.0N
+[discrete_obstacles] 795/1000 | env 006 ep 08 | ok=0 | surv=1 | fwd=  2.31m | gate=m | end=0.285m | peak=0.285m | vMAE=0.33 | trav=0 | gateV= | drop=-0.37 | head=  6스텝/  382.1N
+[discrete_obstacles] 796/1000 | env 007 ep 08 | ok=1 | surv=1 | fwd=  5.78m | gate=0.260m | end=0.131m | peak=0.280m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.59 | head=  0스텝/    0.0N
+[discrete_obstacles] 797/1000 | env 008 ep 08 | ok=1 | surv=1 | fwd=  5.75m | gate=0.030m | end=0.261m | peak=0.261m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.82 | head=  0스텝/    0.0N
+[discrete_obstacles] 798/1000 | env 009 ep 08 | ok=1 | surv=1 | fwd=  5.81m | gate=0.180m | end=0.014m | peak=0.191m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.54 | head=  0스텝/    0.0N
+[wave              ] 799/1000 | env 010 ep 08 | ok=1 | surv=1 | fwd=  5.35m | gate=0.215m | end=1.363m | peak=1.363m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 800/1000 | env 011 ep 08 | ok=1 | surv=1 | fwd=  5.54m | gate=0.225m | end=1.235m | peak=1.235m | vMAE=0.05 | trav=1 | gateV= 0.43 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 801/1000 | env 012 ep 08 | ok=1 | surv=1 | fwd=  5.28m | gate=0.311m | end=1.508m | peak=1.508m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 802/1000 | env 013 ep 08 | ok=1 | surv=1 | fwd=  5.28m | gate=0.388m | end=1.684m | peak=1.684m | vMAE=0.06 | trav=1 | gateV= 0.46 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 803/1000 | env 014 ep 08 | ok=1 | surv=1 | fwd=  5.66m | gate=0.118m | end=0.564m | peak=0.564m | vMAE=0.05 | trav=1 | gateV= 0.44 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 804/1000 | env 015 ep 08 | ok=1 | surv=1 | fwd=  5.67m | gate=0.026m | end=0.368m | peak=0.368m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 805/1000 | env 016 ep 08 | ok=1 | surv=1 | fwd=  5.62m | gate=0.023m | end=0.278m | peak=0.278m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 806/1000 | env 017 ep 08 | ok=1 | surv=1 | fwd=  5.59m | gate=0.168m | end=0.291m | peak=0.301m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 807/1000 | env 018 ep 08 | ok=1 | surv=1 | fwd=  5.41m | gate=0.303m | end=1.443m | peak=1.443m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 808/1000 | env 019 ep 08 | ok=1 | surv=1 | fwd=  5.59m | gate=0.120m | end=0.782m | peak=0.782m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.07 | head=  0스텝/    0.0N
+[pit               ] 809/1000 | env 040 ep 08 | ok=0 | surv=1 | fwd=  1.03m | gate=m | end=0.184m | peak=0.208m | vMAE=0.43 | trav=0 | gateV= | drop=-0.15 | head= 12스텝/  472.9N
+[pit               ] 810/1000 | env 041 ep 08 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.046m | peak=0.075m | vMAE=0.43 | trav=0 | gateV= | drop=-0.14 | head=  8스텝/  149.0N
+[pit               ] 811/1000 | env 042 ep 08 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.043m | peak=0.051m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head= 13스텝/  513.6N
+[pit               ] 812/1000 | env 043 ep 08 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.045m | peak=0.085m | vMAE=0.42 | trav=0 | gateV= | drop=-0.36 | head= 10스텝/  453.8N
+[pit               ] 813/1000 | env 044 ep 08 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.143m | peak=0.161m | vMAE=0.43 | trav=0 | gateV= | drop=-0.23 | head= 10스텝/  387.3N
+[pit               ] 814/1000 | env 045 ep 08 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.055m | peak=0.067m | vMAE=0.43 | trav=0 | gateV= | drop=-0.34 | head=  4스텝/  867.9N
+[pit               ] 815/1000 | env 046 ep 08 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.043m | peak=0.062m | vMAE=0.42 | trav=0 | gateV= | drop=-0.39 | head= 10스텝/  618.0N
+[pit               ] 816/1000 | env 047 ep 08 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.095m | peak=0.108m | vMAE=0.43 | trav=0 | gateV= | drop=-0.15 | head= 10스텝/  937.3N
+[pit               ] 817/1000 | env 048 ep 08 | ok=0 | surv=1 | fwd=  0.94m | gate=m | end=0.201m | peak=0.209m | vMAE=0.43 | trav=0 | gateV= | drop=-0.17 | head= 12스텝/  182.4N
+[pit               ] 818/1000 | env 049 ep 08 | ok=0 | surv=1 | fwd=  0.99m | gate=m | end=0.126m | peak=0.142m | vMAE=0.43 | trav=0 | gateV= | drop=-0.16 | head= 11스텝/  109.2N
+[star              ] 819/1000 | env 060 ep 08 | ok=1 | surv=1 | fwd=  5.30m | gate=0.428m | end=1.705m | peak=1.705m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.73 | head=  0스텝/    0.0N
+[star              ] 820/1000 | env 061 ep 08 | ok=0 | surv=1 | fwd=  5.12m | gate=0.771m | end=1.623m | peak=1.623m | vMAE=0.10 | trav=0 | gateV= 0.46 | drop=-0.15 | head=  0스텝/    0.0N
+[star              ] 821/1000 | env 062 ep 08 | ok=1 | surv=1 | fwd=  5.16m | gate=0.677m | end=1.841m | peak=1.841m | vMAE=0.08 | trav=1 | gateV= 0.55 | drop= 0.54 | head=  0스텝/    0.0N
+[star              ] 822/1000 | env 063 ep 08 | ok=1 | surv=1 | fwd=  3.77m | gate=0.614m | end=1.130m | peak=1.146m | vMAE=0.20 | trav=1 | gateV= 0.51 | drop=-0.07 | head=  0스텝/    0.0N
+[star              ] 823/1000 | env 064 ep 08 | ok=1 | surv=1 | fwd=  5.04m | gate=0.659m | end=1.744m | peak=1.744m | vMAE=0.09 | trav=1 | gateV= 0.50 | drop= 0.23 | head=  3스텝/  614.3N
+[star              ] 824/1000 | env 065 ep 08 | ok=1 | surv=1 | fwd=  3.83m | gate=0.601m | end=1.016m | peak=1.042m | vMAE=0.19 | trav=1 | gateV= 0.34 | drop=-0.25 | head=  1스텝/  568.9N
+[star              ] 825/1000 | env 066 ep 08 | ok=1 | surv=1 | fwd=  3.80m | gate=0.572m | end=1.013m | peak=1.041m | vMAE=0.20 | trav=1 | gateV= 0.55 | drop=-0.08 | head=  2스텝/  972.3N
+[star              ] 826/1000 | env 067 ep 08 | ok=0 | surv=1 | fwd=  3.83m | gate=0.816m | end=1.195m | peak=1.215m | vMAE=0.20 | trav=0 | gateV= 0.49 | drop=-0.14 | head=  0스텝/    0.0N
+[star              ] 827/1000 | env 068 ep 08 | ok=1 | surv=1 | fwd=  5.52m | gate=0.038m | end=0.428m | peak=0.428m | vMAE=0.07 | trav=1 | gateV= 0.41 | drop= 0.58 | head=  0스텝/    0.0N
+[star              ] 828/1000 | env 069 ep 08 | ok=0 | surv=1 | fwd=  5.00m | gate=0.849m | end=1.967m | peak=1.967m | vMAE=0.09 | trav=0 | gateV= 0.51 | drop= 0.48 | head=  0스텝/    0.0N
+[floating_ring     ] 829/1000 | env 070 ep 08 | ok=0 | surv=1 | fwd=  0.66m | gate=m | end=0.050m | peak=0.089m | vMAE=0.45 | trav=0 | gateV= | drop= | head=494스텝/  597.5N
+[floating_ring     ] 830/1000 | env 071 ep 08 | ok=0 | surv=1 | fwd=  0.93m | gate=m | end=0.181m | peak=0.181m | vMAE=0.43 | trav=0 | gateV= | drop=-0.36 | head=103스텝/  467.6N
+[floating_ring     ] 831/1000 | env 072 ep 08 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.124m | peak=0.141m | vMAE=0.42 | trav=0 | gateV= | drop=-0.37 | head= 19스텝/  246.4N
+[floating_ring     ] 832/1000 | env 073 ep 08 | ok=0 | surv=1 | fwd=  0.64m | gate=m | end=0.015m | peak=0.042m | vMAE=0.45 | trav=0 | gateV= | drop= | head=504스텝/  309.0N
+[floating_ring     ] 833/1000 | env 074 ep 08 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.069m | peak=0.129m | vMAE=0.42 | trav=0 | gateV= | drop=-0.10 | head= 11스텝/  365.2N
+[floating_ring     ] 834/1000 | env 075 ep 08 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.160m | peak=0.186m | vMAE=0.42 | trav=0 | gateV= | drop=-0.07 | head= 16스텝/  200.2N
+[floating_ring     ] 835/1000 | env 077 ep 08 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.106m | peak=0.120m | vMAE=0.42 | trav=0 | gateV= | drop=-0.49 | head= 25스텝/  640.8N
+[floating_ring     ] 836/1000 | env 078 ep 08 | ok=0 | surv=1 | fwd=  0.67m | gate=m | end=0.070m | peak=0.088m | vMAE=0.45 | trav=0 | gateV= | drop= | head=472스텝/  633.1N
+[floating_ring     ] 837/1000 | env 079 ep 08 | ok=1 | surv=1 | fwd=  4.15m | gate=0.412m | end=0.566m | peak=0.566m | vMAE=0.19 | trav=1 | gateV= 0.50 | drop=-0.66 | head= 34스텝/  734.3N
+[repeated_boxes    ] 838/1000 | env 080 ep 08 | ok=1 | surv=1 | fwd=  5.25m | gate=0.343m | end=1.179m | peak=1.179m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.23 | head=  0스텝/    0.0N
+[repeated_boxes    ] 839/1000 | env 081 ep 08 | ok=1 | surv=1 | fwd=  5.59m | gate=0.370m | end=1.045m | peak=1.045m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.72 | head=  0스텝/    0.0N
+[repeated_boxes    ] 840/1000 | env 082 ep 08 | ok=1 | surv=1 | fwd=  5.37m | gate=0.431m | end=1.046m | peak=1.046m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop= 0.54 | head=  1스텝/  506.2N
+[repeated_boxes    ] 841/1000 | env 083 ep 08 | ok=1 | surv=1 | fwd=  5.57m | gate=0.243m | end=0.961m | peak=0.961m | vMAE=0.06 | trav=1 | gateV= 0.47 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_boxes    ] 842/1000 | env 084 ep 08 | ok=1 | surv=1 | fwd=  5.51m | gate=0.301m | end=1.025m | peak=1.025m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.58 | head=  0스텝/    0.0N
+[repeated_boxes    ] 843/1000 | env 085 ep 08 | ok=1 | surv=1 | fwd=  5.02m | gate=0.367m | end=0.391m | peak=0.623m | vMAE=0.10 | trav=1 | gateV= 0.47 | drop=-0.98 | head= 15스텝/ 1305.6N
+[repeated_boxes    ] 844/1000 | env 086 ep 08 | ok=1 | surv=1 | fwd=  5.57m | gate=0.284m | end=1.127m | peak=1.127m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_boxes    ] 845/1000 | env 087 ep 08 | ok=1 | surv=1 | fwd=  5.50m | gate=0.306m | end=1.232m | peak=1.232m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.75 | head=  0스텝/    0.0N
+[repeated_boxes    ] 846/1000 | env 088 ep 08 | ok=1 | surv=1 | fwd=  5.21m | gate=0.423m | end=1.403m | peak=1.403m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.42 | head=  1스텝/  288.0N
+[repeated_boxes    ] 847/1000 | env 089 ep 08 | ok=1 | surv=1 | fwd=  5.51m | gate=0.350m | end=1.268m | peak=1.268m | vMAE=0.05 | trav=1 | gateV= 0.54 | drop= 0.77 | head=  0스텝/    0.0N
+[repeated_cylinders] 848/1000 | env 090 ep 08 | ok=1 | surv=1 | fwd=  5.52m | gate=0.397m | end=1.212m | peak=1.212m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.69 | head=  0스텝/    0.0N
+[repeated_cylinders] 849/1000 | env 091 ep 08 | ok=1 | surv=1 | fwd=  5.44m | gate=0.291m | end=1.223m | peak=1.223m | vMAE=0.06 | trav=1 | gateV= 0.34 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 850/1000 | env 093 ep 08 | ok=1 | surv=1 | fwd=  5.50m | gate=0.269m | end=1.172m | peak=1.172m | vMAE=0.05 | trav=1 | gateV= 0.50 | drop= 0.76 | head=  0스텝/    0.0N
+[repeated_cylinders] 851/1000 | env 094 ep 08 | ok=1 | surv=1 | fwd=  5.52m | gate=0.407m | end=1.120m | peak=1.120m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.56 | head=  0스텝/    0.0N
+[repeated_cylinders] 852/1000 | env 095 ep 08 | ok=1 | surv=1 | fwd=  5.52m | gate=0.351m | end=1.212m | peak=1.212m | vMAE=0.06 | trav=1 | gateV= 0.39 | drop= 0.60 | head=  0스텝/    0.0N
+[repeated_cylinders] 853/1000 | env 096 ep 08 | ok=1 | surv=1 | fwd=  5.52m | gate=0.301m | end=1.091m | peak=1.091m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop= 0.74 | head=  0스텝/    0.0N
+[repeated_cylinders] 854/1000 | env 097 ep 08 | ok=1 | surv=1 | fwd=  5.48m | gate=0.369m | end=1.308m | peak=1.308m | vMAE=0.05 | trav=1 | gateV= 0.42 | drop= 0.53 | head=  0스텝/    0.0N
+[repeated_cylinders] 855/1000 | env 098 ep 08 | ok=1 | surv=1 | fwd=  5.47m | gate=0.291m | end=1.244m | peak=1.244m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 856/1000 | env 099 ep 08 | ok=1 | surv=1 | fwd=  5.53m | gate=0.258m | end=1.145m | peak=1.145m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.75 | head=  0스텝/    0.0N
+[gap               ] 857/1000 | env 037 ep 10 | ok=0 | surv=1 | fwd=  0.48m | gate=m | end=0.040m | peak=0.159m | vMAE=0.48 | trav=0 | gateV= | drop= | head= 18스텝/  818.1N
+[gap               ] 858/1000 | env 034 ep 10 | ok=0 | surv=1 | fwd=  0.47m | gate=m | end=0.003m | peak=0.273m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  2스텝/  800.9N
+[gap               ] 859/1000 | env 030 ep 09 | ok=0 | surv=1 | fwd=  0.60m | gate=m | end=0.067m | peak=0.176m | vMAE=0.46 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[floating_ring     ] 860/1000 | env 076 ep 09 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.111m | peak=0.149m | vMAE=0.42 | trav=0 | gateV= | drop=-0.00 | head= 40스텝/  526.7N
+[repeated_cylinders] 861/1000 | env 092 ep 09 | ok=1 | surv=1 | fwd=  5.62m | gate=0.275m | end=1.058m | peak=1.058m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.71 | head=  0스텝/    0.0N
+[discrete_obstacles] 862/1000 | env 000 ep 09 | ok=1 | surv=1 | fwd=  5.82m | gate=0.214m | end=0.070m | peak=0.229m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.64 | head=  0스텝/    0.0N
+[discrete_obstacles] 863/1000 | env 001 ep 09 | ok=1 | surv=1 | fwd=  5.44m | gate=0.255m | end=0.310m | peak=0.339m | vMAE=0.09 | trav=1 | gateV= 0.48 | drop=-0.39 | head=  9스텝/  390.2N
+[discrete_obstacles] 864/1000 | env 002 ep 09 | ok=1 | surv=1 | fwd=  5.73m | gate=0.027m | end=0.277m | peak=0.277m | vMAE=0.05 | trav=1 | gateV= 0.49 | drop= 0.77 | head=  0스텝/    0.0N
+[discrete_obstacles] 865/1000 | env 003 ep 09 | ok=1 | surv=1 | fwd=  5.49m | gate=0.364m | end=0.576m | peak=0.578m | vMAE=0.09 | trav=1 | gateV= 0.55 | drop=-0.14 | head=  0스텝/    0.0N
+[discrete_obstacles] 866/1000 | env 004 ep 09 | ok=1 | surv=1 | fwd=  5.86m | gate=0.165m | end=0.020m | peak=0.185m | vMAE=0.07 | trav=1 | gateV= 0.51 | drop= 0.75 | head=  0스텝/    0.0N
+[discrete_obstacles] 867/1000 | env 005 ep 09 | ok=1 | surv=1 | fwd=  5.79m | gate=0.059m | end=0.147m | peak=0.147m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.79 | head=  0스텝/    0.0N
+[discrete_obstacles] 868/1000 | env 006 ep 09 | ok=1 | surv=1 | fwd=  5.69m | gate=0.191m | end=0.125m | peak=0.228m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.69 | head=  0스텝/    0.0N
+[discrete_obstacles] 869/1000 | env 007 ep 09 | ok=1 | surv=1 | fwd=  5.72m | gate=0.069m | end=0.431m | peak=0.431m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.78 | head=  0스텝/    0.0N
+[discrete_obstacles] 870/1000 | env 008 ep 09 | ok=1 | surv=1 | fwd=  5.83m | gate=0.218m | end=0.055m | peak=0.241m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop= 0.64 | head=  0스텝/    0.0N
+[discrete_obstacles] 871/1000 | env 009 ep 09 | ok=1 | surv=1 | fwd=  5.77m | gate=0.118m | end=0.091m | peak=0.122m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.77 | head=  0스텝/    0.0N
+[wave              ] 872/1000 | env 010 ep 09 | ok=1 | surv=1 | fwd=  5.21m | gate=0.471m | end=1.834m | peak=1.834m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 873/1000 | env 011 ep 09 | ok=1 | surv=1 | fwd=  5.30m | gate=0.344m | end=1.507m | peak=1.507m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 874/1000 | env 012 ep 09 | ok=1 | surv=1 | fwd=  5.26m | gate=0.363m | end=1.634m | peak=1.634m | vMAE=0.07 | trav=1 | gateV= 0.47 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 875/1000 | env 013 ep 09 | ok=1 | surv=1 | fwd=  5.34m | gate=0.489m | end=1.754m | peak=1.754m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 876/1000 | env 014 ep 09 | ok=1 | surv=1 | fwd=  5.16m | gate=0.619m | end=1.864m | peak=1.864m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 877/1000 | env 015 ep 09 | ok=1 | surv=1 | fwd=  5.63m | gate=0.021m | end=0.661m | peak=0.661m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 878/1000 | env 016 ep 09 | ok=1 | surv=1 | fwd=  5.66m | gate=0.014m | end=0.599m | peak=0.599m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 879/1000 | env 017 ep 09 | ok=1 | surv=1 | fwd=  5.52m | gate=0.093m | end=1.053m | peak=1.053m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 880/1000 | env 018 ep 09 | ok=1 | surv=1 | fwd=  5.63m | gate=0.019m | end=0.076m | peak=0.076m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 881/1000 | env 019 ep 09 | ok=1 | surv=1 | fwd=  5.45m | gate=0.098m | end=1.106m | peak=1.106m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop=-0.04 | head=  0스텝/    0.0N
+[pit               ] 882/1000 | env 040 ep 09 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.054m | peak=0.101m | vMAE=0.42 | trav=0 | gateV= | drop=-0.24 | head=  1스텝/  792.1N
+[pit               ] 883/1000 | env 041 ep 09 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.123m | peak=0.132m | vMAE=0.43 | trav=0 | gateV= | drop=-0.27 | head= 11스텝/  512.3N
+[pit               ] 884/1000 | env 042 ep 09 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.123m | peak=0.139m | vMAE=0.42 | trav=0 | gateV= | drop=-0.26 | head= 12스텝/  696.2N
+[pit               ] 885/1000 | env 043 ep 09 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.161m | peak=0.166m | vMAE=0.42 | trav=0 | gateV= | drop=-0.29 | head=  8스텝/  784.0N
+[pit               ] 886/1000 | env 044 ep 09 | ok=0 | surv=1 | fwd=  1.08m | gate=m | end=0.100m | peak=0.106m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head=  3스텝/  187.2N
+[pit               ] 887/1000 | env 045 ep 09 | ok=0 | surv=1 | fwd=  0.95m | gate=m | end=0.229m | peak=0.242m | vMAE=0.43 | trav=0 | gateV= | drop=-0.13 | head= 13스텝/  233.6N
+[pit               ] 888/1000 | env 046 ep 09 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.122m | peak=0.135m | vMAE=0.42 | trav=0 | gateV= | drop=-0.11 | head=  8스텝/  374.1N
+[pit               ] 889/1000 | env 047 ep 09 | ok=0 | surv=1 | fwd=  1.14m | gate=m | end=0.075m | peak=0.095m | vMAE=0.41 | trav=0 | gateV= | drop=-0.41 | head= 10스텝/  602.5N
+[pit               ] 890/1000 | env 048 ep 09 | ok=0 | surv=1 | fwd=  1.10m | gate=m | end=0.131m | peak=0.151m | vMAE=0.42 | trav=0 | gateV= | drop=-0.43 | head= 11스텝/  166.0N
+[pit               ] 891/1000 | env 049 ep 09 | ok=0 | surv=1 | fwd=  1.11m | gate=m | end=0.139m | peak=0.198m | vMAE=0.42 | trav=0 | gateV= | drop=-0.18 | head=  8스텝/  627.5N
+[star              ] 892/1000 | env 060 ep 09 | ok=1 | surv=1 | fwd=  4.53m | gate=0.524m | end=1.102m | peak=1.102m | vMAE=0.14 | trav=1 | gateV= 0.50 | drop=-0.17 | head=  9스텝/ 1228.8N
+[star              ] 893/1000 | env 061 ep 09 | ok=1 | surv=1 | fwd=  5.56m | gate=0.255m | end=0.924m | peak=0.924m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.78 | head=  0스텝/    0.0N
+[star              ] 894/1000 | env 062 ep 09 | ok=1 | surv=1 | fwd=  3.78m | gate=0.426m | end=0.834m | peak=0.872m | vMAE=0.20 | trav=1 | gateV= 0.49 | drop=-0.30 | head=  0스텝/    0.0N
+[star              ] 895/1000 | env 063 ep 09 | ok=1 | surv=1 | fwd=  5.32m | gate=0.299m | end=1.484m | peak=1.484m | vMAE=0.07 | trav=1 | gateV= 0.60 | drop= 0.78 | head=  0스텝/    0.0N
+[star              ] 896/1000 | env 064 ep 09 | ok=1 | surv=1 | fwd=  3.75m | gate=0.539m | end=0.897m | peak=0.913m | vMAE=0.20 | trav=1 | gateV= 0.40 | drop=-0.13 | head=  2스텝/  670.7N
+[star              ] 897/1000 | env 065 ep 09 | ok=1 | surv=1 | fwd=  3.79m | gate=0.479m | end=0.876m | peak=0.898m | vMAE=0.20 | trav=1 | gateV= 0.41 | drop=-0.04 | head=  0스텝/    0.0N
+[star              ] 898/1000 | env 066 ep 09 | ok=1 | surv=1 | fwd=  5.19m | gate=0.534m | end=1.506m | peak=1.506m | vMAE=0.08 | trav=1 | gateV= 0.49 | drop= 0.55 | head=  0스텝/    0.0N
+[star              ] 899/1000 | env 067 ep 09 | ok=1 | surv=1 | fwd=  3.80m | gate=0.746m | end=1.029m | peak=1.043m | vMAE=0.20 | trav=1 | gateV= 0.46 | drop=-0.06 | head=  4스텝/  428.5N
+[star              ] 900/1000 | env 068 ep 09 | ok=0 | surv=1 | fwd=  5.08m | gate=0.766m | end=1.801m | peak=1.801m | vMAE=0.09 | trav=0 | gateV= 0.47 | drop= 0.33 | head=  1스텝/  822.7N
+[star              ] 901/1000 | env 069 ep 09 | ok=1 | surv=1 | fwd=  3.67m | gate=0.528m | end=0.872m | peak=0.875m | vMAE=0.20 | trav=1 | gateV= 0.48 | drop=-0.50 | head=  7스텝/  120.1N
+[floating_ring     ] 902/1000 | env 070 ep 09 | ok=0 | surv=1 | fwd=  1.05m | gate=m | end=0.035m | peak=0.146m | vMAE=0.42 | trav=0 | gateV= | drop=-0.30 | head= 37스텝/  653.0N
+[floating_ring     ] 903/1000 | env 071 ep 09 | ok=0 | surv=1 | fwd=  1.02m | gate=m | end=0.040m | peak=0.090m | vMAE=0.42 | trav=0 | gateV= | drop=-0.14 | head= 67스텝/  277.7N
+[floating_ring     ] 904/1000 | env 072 ep 09 | ok=0 | surv=1 | fwd=  0.65m | gate=m | end=0.008m | peak=0.059m | vMAE=0.45 | trav=0 | gateV= | drop= | head=490스텝/  857.0N
+[floating_ring     ] 905/1000 | env 073 ep 09 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.046m | peak=0.085m | vMAE=0.42 | trav=0 | gateV= | drop= 0.12 | head=429스텝/  287.4N
+[floating_ring     ] 906/1000 | env 074 ep 09 | ok=0 | surv=1 | fwd=  1.00m | gate=m | end=0.021m | peak=0.032m | vMAE=0.42 | trav=0 | gateV= | drop=-0.08 | head=  4스텝/  697.0N
+[floating_ring     ] 907/1000 | env 075 ep 09 | ok=0 | surv=1 | fwd=  1.16m | gate=m | end=0.034m | peak=0.057m | vMAE=0.41 | trav=0 | gateV= | drop=-0.07 | head=  5스텝/  582.1N
+[floating_ring     ] 908/1000 | env 077 ep 09 | ok=0 | surv=1 | fwd=  0.69m | gate=m | end=0.089m | peak=0.089m | vMAE=0.45 | trav=0 | gateV= | drop= | head=485스텝/  219.9N
+[floating_ring     ] 909/1000 | env 078 ep 09 | ok=0 | surv=1 | fwd=  1.15m | gate=m | end=0.193m | peak=0.203m | vMAE=0.41 | trav=0 | gateV= | drop=-0.41 | head= 19스텝/   96.8N
+[floating_ring     ] 910/1000 | env 079 ep 09 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.010m | peak=0.048m | vMAE=0.42 | trav=0 | gateV= | drop=-0.33 | head= 42스텝/  247.6N
+[repeated_boxes    ] 911/1000 | env 080 ep 09 | ok=1 | surv=1 | fwd=  5.49m | gate=0.388m | end=1.289m | peak=1.289m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_boxes    ] 912/1000 | env 081 ep 09 | ok=1 | surv=1 | fwd=  5.28m | gate=0.324m | end=0.935m | peak=0.935m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop=-0.12 | head=  4스텝/ 1578.3N
+[repeated_boxes    ] 913/1000 | env 082 ep 09 | ok=1 | surv=1 | fwd=  5.52m | gate=0.342m | end=1.205m | peak=1.205m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_boxes    ] 914/1000 | env 083 ep 09 | ok=1 | surv=1 | fwd=  5.50m | gate=0.326m | end=1.255m | peak=1.255m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.75 | head=  0스텝/    0.0N
+[repeated_boxes    ] 915/1000 | env 084 ep 09 | ok=1 | surv=1 | fwd=  5.46m | gate=0.384m | end=1.066m | peak=1.066m | vMAE=0.06 | trav=1 | gateV= 0.43 | drop= 0.59 | head=  0스텝/    0.0N
+[repeated_boxes    ] 916/1000 | env 085 ep 09 | ok=1 | surv=1 | fwd=  4.92m | gate=0.253m | end=0.055m | peak=0.490m | vMAE=0.11 | trav=1 | gateV= 0.49 | drop=-1.08 | head= 12스텝/ 1229.2N
+[repeated_boxes    ] 917/1000 | env 086 ep 09 | ok=1 | surv=1 | fwd=  5.32m | gate=0.303m | end=0.810m | peak=0.810m | vMAE=0.08 | trav=1 | gateV= 0.46 | drop= 0.26 | head=  0스텝/    0.0N
+[repeated_boxes    ] 918/1000 | env 087 ep 09 | ok=1 | surv=1 | fwd=  5.46m | gate=0.383m | end=1.211m | peak=1.211m | vMAE=0.08 | trav=1 | gateV= 0.48 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_boxes    ] 919/1000 | env 088 ep 09 | ok=1 | surv=1 | fwd=  5.43m | gate=0.465m | end=1.298m | peak=1.298m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.67 | head=  0스텝/    0.0N
+[repeated_boxes    ] 920/1000 | env 089 ep 09 | ok=1 | surv=1 | fwd=  5.26m | gate=0.510m | end=1.403m | peak=1.403m | vMAE=0.09 | trav=1 | gateV= 0.53 | drop=-0.18 | head=  2스텝/ 2204.8N
+[repeated_cylinders] 921/1000 | env 090 ep 09 | ok=1 | surv=1 | fwd=  5.37m | gate=0.561m | end=1.612m | peak=1.612m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.61 | head=  0스텝/    0.0N
+[repeated_cylinders] 922/1000 | env 091 ep 09 | ok=1 | surv=1 | fwd=  5.49m | gate=0.415m | end=1.320m | peak=1.320m | vMAE=0.06 | trav=1 | gateV= 0.47 | drop= 0.56 | head=  0스텝/    0.0N
+[repeated_cylinders] 923/1000 | env 093 ep 09 | ok=1 | surv=1 | fwd=  5.56m | gate=0.342m | end=1.172m | peak=1.172m | vMAE=0.05 | trav=1 | gateV= 0.53 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_cylinders] 924/1000 | env 094 ep 09 | ok=1 | surv=1 | fwd=  5.48m | gate=0.336m | end=1.339m | peak=1.339m | vMAE=0.06 | trav=1 | gateV= 0.38 | drop= 0.64 | head=  0스텝/    0.0N
+[repeated_cylinders] 925/1000 | env 095 ep 09 | ok=1 | surv=1 | fwd=  5.50m | gate=0.299m | end=0.710m | peak=0.710m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.06 | head=  6스텝/  469.6N
+[repeated_cylinders] 926/1000 | env 096 ep 09 | ok=1 | surv=1 | fwd=  5.61m | gate=0.211m | end=1.050m | peak=1.050m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.78 | head=  0스텝/    0.0N
+[repeated_cylinders] 927/1000 | env 097 ep 09 | ok=1 | surv=1 | fwd=  5.54m | gate=0.319m | end=1.191m | peak=1.191m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.71 | head=  0스텝/    0.0N
+[repeated_cylinders] 928/1000 | env 098 ep 09 | ok=1 | surv=1 | fwd=  5.38m | gate=0.420m | end=1.440m | peak=1.440m | vMAE=0.06 | trav=1 | gateV= 0.48 | drop= 0.42 | head=  0스텝/    0.0N
+[repeated_cylinders] 929/1000 | env 099 ep 09 | ok=1 | surv=1 | fwd=  5.32m | gate=0.500m | end=1.599m | peak=1.599m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.40 | head=  0스텝/    0.0N
+[gap               ] 930/1000 | env 030 ep 10 | ok=0 | surv=1 | fwd=  0.43m | gate=m | end=0.113m | peak=0.161m | vMAE=0.47 | trav=0 | gateV= | drop= | head=  4스텝/  615.4N
+[floating_ring     ] 931/1000 | env 070 ep 10 | ok=0 | surv=0 | fwd=  0.59m | gate=m | end=0.018m | peak=0.053m | vMAE=0.40 | trav=0 | gateV= | drop= | head=189스텝/  674.9N
+[floating_ring     ] 932/1000 | env 076 ep 10 | ok=0 | surv=1 | fwd=  1.12m | gate=m | end=0.104m | peak=0.112m | vMAE=0.42 | trav=0 | gateV= | drop=-0.01 | head= 35스텝/  605.3N
+[repeated_cylinders] 933/1000 | env 092 ep 10 | ok=1 | surv=1 | fwd=  5.59m | gate=0.272m | end=1.140m | peak=1.140m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop= 0.72 | head=  0스텝/    0.0N
+[discrete_obstacles] 934/1000 | env 000 ep 10 | ok=1 | surv=1 | fwd=  5.80m | gate=0.245m | end=0.117m | peak=0.269m | vMAE=0.07 | trav=1 | gateV= 0.53 | drop= 0.60 | head=  0스텝/    0.0N
+[discrete_obstacles] 935/1000 | env 001 ep 10 | ok=1 | surv=1 | fwd=  5.80m | gate=0.153m | end=0.135m | peak=0.156m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.72 | head=  0스텝/    0.0N
+[discrete_obstacles] 936/1000 | env 002 ep 10 | ok=1 | surv=1 | fwd=  5.78m | gate=0.077m | end=0.100m | peak=0.106m | vMAE=0.06 | trav=1 | gateV= 0.54 | drop= 0.79 | head=  0스텝/    0.0N
+[discrete_obstacles] 937/1000 | env 003 ep 10 | ok=1 | surv=1 | fwd=  5.84m | gate=0.247m | end=0.167m | peak=0.293m | vMAE=0.06 | trav=1 | gateV= 0.53 | drop= 0.72 | head=  0스텝/    0.0N
+[discrete_obstacles] 938/1000 | env 004 ep 10 | ok=1 | surv=1 | fwd=  5.75m | gate=0.019m | end=0.204m | peak=0.204m | vMAE=0.05 | trav=1 | gateV= 0.48 | drop= 0.73 | head=  0스텝/    0.0N
+[discrete_obstacles] 939/1000 | env 005 ep 10 | ok=0 | surv=1 | fwd=  2.24m | gate=m | end=0.282m | peak=0.296m | vMAE=0.34 | trav=0 | gateV= | drop=-0.15 | head=  0스텝/    0.0N
+[discrete_obstacles] 940/1000 | env 006 ep 10 | ok=1 | surv=1 | fwd=  5.83m | gate=0.362m | end=0.263m | peak=0.401m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.64 | head=  0스텝/    0.0N
+[discrete_obstacles] 941/1000 | env 007 ep 10 | ok=1 | surv=1 | fwd=  5.78m | gate=0.323m | end=0.476m | peak=0.493m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.64 | head=  0스텝/    0.0N
+[discrete_obstacles] 942/1000 | env 008 ep 10 | ok=1 | surv=1 | fwd=  5.75m | gate=0.034m | end=0.356m | peak=0.356m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.81 | head=  0스텝/    0.0N
+[discrete_obstacles] 943/1000 | env 009 ep 10 | ok=1 | surv=1 | fwd=  5.81m | gate=0.113m | end=0.115m | peak=0.120m | vMAE=0.06 | trav=1 | gateV= 0.51 | drop= 0.67 | head=  0스텝/    0.0N
+[wave              ] 944/1000 | env 010 ep 10 | ok=1 | surv=1 | fwd=  5.57m | gate=0.104m | end=0.942m | peak=0.942m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 945/1000 | env 011 ep 10 | ok=1 | surv=1 | fwd=  5.67m | gate=0.124m | end=0.413m | peak=0.413m | vMAE=0.06 | trav=1 | gateV= 0.45 | drop=-0.06 | head=  0스텝/    0.0N
+[wave              ] 946/1000 | env 012 ep 10 | ok=1 | surv=1 | fwd=  5.65m | gate=0.049m | end=0.288m | peak=0.288m | vMAE=0.06 | trav=1 | gateV= 0.42 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 947/1000 | env 013 ep 10 | ok=1 | surv=1 | fwd=  5.58m | gate=0.124m | end=1.007m | peak=1.007m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.07 | head=  0스텝/    0.0N
+[wave              ] 948/1000 | env 014 ep 10 | ok=1 | surv=1 | fwd=  5.69m | gate=0.048m | end=0.308m | peak=0.308m | vMAE=0.05 | trav=1 | gateV= 0.45 | drop=-0.08 | head=  0스텝/    0.0N
+[wave              ] 949/1000 | env 015 ep 10 | ok=1 | surv=1 | fwd=  5.61m | gate=0.070m | end=0.825m | peak=0.825m | vMAE=0.05 | trav=1 | gateV= 0.46 | drop=-0.04 | head=  0스텝/    0.0N
+[wave              ] 950/1000 | env 016 ep 10 | ok=1 | surv=1 | fwd=  5.21m | gate=0.445m | end=1.752m | peak=1.752m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 951/1000 | env 017 ep 10 | ok=1 | surv=1 | fwd=  5.52m | gate=0.102m | end=0.932m | peak=0.932m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 952/1000 | env 018 ep 10 | ok=1 | surv=1 | fwd=  5.68m | gate=0.017m | end=0.312m | peak=0.312m | vMAE=0.05 | trav=1 | gateV= 0.47 | drop=-0.05 | head=  0스텝/    0.0N
+[wave              ] 953/1000 | env 019 ep 10 | ok=1 | surv=1 | fwd=  5.50m | gate=0.033m | end=0.938m | peak=0.938m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop=-0.07 | head=  0스텝/    0.0N
+[pit               ] 954/1000 | env 040 ep 10 | ok=0 | surv=1 | fwd=  1.09m | gate=m | end=0.103m | peak=0.138m | vMAE=0.42 | trav=0 | gateV= | drop=-0.57 | head= 14스텝/  395.3N
+[pit               ] 955/1000 | env 041 ep 10 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.039m | peak=0.055m | vMAE=0.43 | trav=0 | gateV= | drop=-0.13 | head= 10스텝/  120.7N
+[pit               ] 956/1000 | env 042 ep 10 | ok=0 | surv=1 | fwd=  1.01m | gate=m | end=0.095m | peak=0.105m | vMAE=0.42 | trav=0 | gateV= | drop=-0.15 | head= 10스텝/   78.0N
+[pit               ] 957/1000 | env 043 ep 10 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.080m | peak=0.087m | vMAE=0.42 | trav=0 | gateV= | drop=-0.10 | head= 11스텝/  137.2N
+[pit               ] 958/1000 | env 044 ep 10 | ok=0 | surv=1 | fwd=  1.13m | gate=m | end=0.137m | peak=0.161m | vMAE=0.41 | trav=0 | gateV= | drop=-0.31 | head= 12스텝/  123.9N
+[pit               ] 959/1000 | env 045 ep 10 | ok=0 | surv=1 | fwd=  1.06m | gate=m | end=0.102m | peak=0.147m | vMAE=0.43 | trav=0 | gateV= | drop=-0.20 | head=  2스텝/  587.9N
+[pit               ] 960/1000 | env 046 ep 10 | ok=1 | surv=1 | fwd=  4.46m | gate=0.195m | end=0.297m | peak=0.297m | vMAE=0.16 | trav=1 | gateV= 0.46 | drop=-0.27 | head= 12스텝/  730.5N
+[pit               ] 961/1000 | env 047 ep 10 | ok=0 | surv=1 | fwd=  0.97m | gate=m | end=0.084m | peak=0.088m | vMAE=0.43 | trav=0 | gateV= | drop=-0.14 | head=  7스텝/  838.9N
+[pit               ] 962/1000 | env 048 ep 10 | ok=0 | surv=1 | fwd=  0.99m | gate=m | end=0.142m | peak=0.170m | vMAE=0.43 | trav=0 | gateV= | drop=-0.07 | head=  8스텝/  834.7N
+[pit               ] 963/1000 | env 049 ep 10 | ok=0 | surv=1 | fwd=  0.98m | gate=m | end=0.091m | peak=0.092m | vMAE=0.43 | trav=0 | gateV= | drop=-0.13 | head= 10스텝/  930.6N
+[star              ] 964/1000 | env 060 ep 10 | ok=1 | surv=1 | fwd=  5.13m | gate=0.431m | end=1.843m | peak=1.843m | vMAE=0.08 | trav=1 | gateV= 0.47 | drop= 0.52 | head=  0스텝/    0.0N
+[star              ] 965/1000 | env 061 ep 10 | ok=1 | surv=1 | fwd=  3.85m | gate=0.666m | end=0.984m | peak=1.000m | vMAE=0.20 | trav=1 | gateV= 0.55 | drop=-0.15 | head=  0스텝/    0.0N
+[star              ] 966/1000 | env 062 ep 10 | ok=1 | surv=1 | fwd=  5.11m | gate=0.712m | end=2.007m | peak=2.007m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.58 | head=  0스텝/    0.0N
+[star              ] 967/1000 | env 063 ep 10 | ok=1 | surv=1 | fwd=  5.11m | gate=0.737m | end=1.963m | peak=1.963m | vMAE=0.07 | trav=1 | gateV= 0.50 | drop= 0.58 | head=  0스텝/    0.0N
+[star              ] 968/1000 | env 064 ep 10 | ok=1 | surv=1 | fwd=  5.22m | gate=0.436m | end=1.401m | peak=1.401m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop= 0.52 | head=  1스텝/  953.4N
+[star              ] 969/1000 | env 065 ep 10 | ok=1 | surv=1 | fwd=  3.92m | gate=0.487m | end=0.900m | peak=0.939m | vMAE=0.19 | trav=1 | gateV= 0.30 | drop=-0.45 | head=  0스텝/    0.0N
+[star              ] 970/1000 | env 066 ep 10 | ok=1 | surv=1 | fwd=  3.79m | gate=0.707m | end=1.120m | peak=1.138m | vMAE=0.20 | trav=1 | gateV= 0.41 | drop=-0.17 | head=  5스텝/  156.1N
+[star              ] 971/1000 | env 067 ep 10 | ok=1 | surv=1 | fwd=  5.08m | gate=0.656m | end=1.855m | peak=1.855m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.54 | head=  0스텝/    0.0N
+[star              ] 972/1000 | env 068 ep 10 | ok=1 | surv=1 | fwd=  3.94m | gate=0.747m | end=1.205m | peak=1.228m | vMAE=0.19 | trav=1 | gateV= 0.53 | drop=-0.07 | head=  0스텝/    0.0N
+[star              ] 973/1000 | env 069 ep 10 | ok=1 | surv=1 | fwd=  3.78m | gate=0.481m | end=0.898m | peak=0.900m | vMAE=0.20 | trav=1 | gateV= 0.62 | drop=-0.27 | head= 96스텝/  643.0N
+[floating_ring     ] 974/1000 | env 071 ep 10 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.028m | peak=0.075m | vMAE=0.45 | trav=0 | gateV= | drop= | head=452스텝/  210.8N
+[floating_ring     ] 975/1000 | env 072 ep 10 | ok=0 | surv=1 | fwd=  1.04m | gate=m | end=0.080m | peak=0.114m | vMAE=0.42 | trav=0 | gateV= | drop=-0.00 | head= 35스텝/  733.1N
+[floating_ring     ] 976/1000 | env 073 ep 10 | ok=0 | surv=1 | fwd=  1.07m | gate=m | end=0.083m | peak=0.098m | vMAE=0.42 | trav=0 | gateV= | drop=-0.17 | head= 70스텝/  536.2N
+[floating_ring     ] 977/1000 | env 074 ep 10 | ok=0 | surv=1 | fwd=  1.19m | gate=m | end=0.177m | peak=0.217m | vMAE=0.41 | trav=0 | gateV= | drop=-0.41 | head= 16스텝/  170.3N
+[floating_ring     ] 978/1000 | env 075 ep 10 | ok=0 | surv=1 | fwd=  0.68m | gate=m | end=0.003m | peak=0.020m | vMAE=0.45 | trav=0 | gateV= | drop= | head=  0스텝/    0.0N
+[floating_ring     ] 979/1000 | env 077 ep 10 | ok=0 | surv=1 | fwd=  0.72m | gate=m | end=0.040m | peak=0.070m | vMAE=0.45 | trav=0 | gateV= | drop= | head=441스텝/  563.1N
+[floating_ring     ] 980/1000 | env 078 ep 10 | ok=0 | surv=1 | fwd=  1.21m | gate=m | end=0.110m | peak=0.142m | vMAE=0.41 | trav=0 | gateV= | drop=-0.33 | head= 27스텝/  297.0N
+[floating_ring     ] 981/1000 | env 079 ep 10 | ok=0 | surv=1 | fwd=  0.79m | gate=m | end=0.075m | peak=0.119m | vMAE=0.44 | trav=0 | gateV= | drop=-0.36 | head=481스텝/  615.0N
+[repeated_boxes    ] 982/1000 | env 080 ep 10 | ok=1 | surv=1 | fwd=  5.45m | gate=0.291m | end=1.142m | peak=1.142m | vMAE=0.07 | trav=1 | gateV= 0.46 | drop= 0.67 | head=  0스텝/    0.0N
+[repeated_boxes    ] 983/1000 | env 081 ep 10 | ok=1 | surv=1 | fwd=  5.54m | gate=0.292m | end=1.012m | peak=1.012m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_boxes    ] 984/1000 | env 082 ep 10 | ok=1 | surv=1 | fwd=  5.36m | gate=0.377m | end=1.073m | peak=1.073m | vMAE=0.07 | trav=1 | gateV= 0.48 | drop= 0.10 | head=  0스텝/    0.0N
+[repeated_boxes    ] 985/1000 | env 083 ep 10 | ok=1 | surv=1 | fwd=  5.54m | gate=0.286m | end=1.085m | peak=1.085m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_boxes    ] 986/1000 | env 084 ep 10 | ok=1 | surv=1 | fwd=  5.48m | gate=0.345m | end=1.229m | peak=1.229m | vMAE=0.06 | trav=1 | gateV= 0.49 | drop= 0.67 | head=  0스텝/    0.0N
+[repeated_boxes    ] 987/1000 | env 085 ep 10 | ok=1 | surv=1 | fwd=  5.30m | gate=0.206m | end=0.223m | peak=0.425m | vMAE=0.09 | trav=1 | gateV= 0.45 | drop=-0.49 | head= 18스텝/  684.9N
+[repeated_boxes    ] 988/1000 | env 086 ep 10 | ok=1 | surv=1 | fwd=  5.19m | gate=0.446m | end=0.864m | peak=0.864m | vMAE=0.09 | trav=1 | gateV= 0.51 | drop=-0.20 | head= 17스텝/  301.9N
+[repeated_boxes    ] 989/1000 | env 087 ep 10 | ok=1 | surv=1 | fwd=  5.36m | gate=0.305m | end=0.791m | peak=0.791m | vMAE=0.08 | trav=1 | gateV= 0.49 | drop= 0.23 | head=  0스텝/    0.0N
+[repeated_boxes    ] 990/1000 | env 088 ep 10 | ok=1 | surv=1 | fwd=  5.30m | gate=0.341m | end=0.850m | peak=0.850m | vMAE=0.09 | trav=1 | gateV= 0.49 | drop= 0.25 | head=  0스텝/    0.0N
+[repeated_boxes    ] 991/1000 | env 089 ep 10 | ok=1 | surv=1 | fwd=  5.45m | gate=0.412m | end=1.048m | peak=1.048m | vMAE=0.07 | trav=1 | gateV= 0.49 | drop= 0.54 | head=  0스텝/    0.0N
+[repeated_cylinders] 992/1000 | env 090 ep 10 | ok=1 | surv=1 | fwd=  5.54m | gate=0.392m | end=1.301m | peak=1.301m | vMAE=0.05 | trav=1 | gateV= 0.51 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_cylinders] 993/1000 | env 091 ep 10 | ok=1 | surv=1 | fwd=  5.38m | gate=0.302m | end=1.077m | peak=1.077m | vMAE=0.06 | trav=1 | gateV= 0.50 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_cylinders] 994/1000 | env 093 ep 10 | ok=1 | surv=1 | fwd=  5.46m | gate=0.262m | end=1.028m | peak=1.028m | vMAE=0.07 | trav=1 | gateV= 0.52 | drop= 0.11 | head=  0스텝/    0.0N
+[repeated_cylinders] 995/1000 | env 094 ep 10 | ok=1 | surv=1 | fwd=  5.45m | gate=0.338m | end=1.206m | peak=1.206m | vMAE=0.06 | trav=1 | gateV= 0.41 | drop= 0.65 | head=  0스텝/    0.0N
+[repeated_cylinders] 996/1000 | env 095 ep 10 | ok=1 | surv=1 | fwd=  5.63m | gate=0.380m | end=1.015m | peak=1.015m | vMAE=0.06 | trav=1 | gateV= 0.52 | drop= 0.73 | head=  0스텝/    0.0N
+[repeated_cylinders] 997/1000 | env 096 ep 10 | ok=1 | surv=1 | fwd=  5.32m | gate=0.345m | end=1.277m | peak=1.277m | vMAE=0.06 | trav=1 | gateV= 0.37 | drop= 0.08 | head=  0스텝/    0.0N
+[repeated_cylinders] 998/1000 | env 097 ep 10 | ok=1 | surv=1 | fwd=  5.43m | gate=0.302m | end=0.752m | peak=0.752m | vMAE=0.08 | trav=1 | gateV= 0.52 | drop= 0.70 | head=  0스텝/    0.0N
+[repeated_cylinders] 999/1000 | env 098 ep 10 | ok=1 | surv=1 | fwd=  5.51m | gate=0.298m | end=0.880m | peak=0.880m | vMAE=0.07 | trav=1 | gateV= 0.45 | drop= 0.66 | head=  0스텝/    0.0N
+[repeated_cylinders] 1000/1000 | env 099 ep 10 | ok=1 | surv=1 | fwd=  5.52m | gate=0.310m | end=1.131m | peak=1.131m | vMAE=0.05 | trav=1 | gateV= 0.52 | drop= 0.71 | head=  0스텝/    0.0N
+
+================================================================================
+RESULT FILES
+================================================================================
+sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v0.5\generalization_raw.csv
+sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v0.5\generalization_summary.csv
+sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v0.5\run_manifest.json
+
+================================================================================
+SUMMARY
+================================================================================
+Loading user config located at: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260921_173048.log
+2026-09-21T08:30:49Z [361ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-09-21T08:30:49Z [1,139ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-09-21T08:30:49Z [1,158ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 15979   MB | 10de      | 5fce0100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 1 |     | 15979   MB | 10de      | 5de30100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.9444
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 212265
+| Total Page/Swap (MB): 278025 | Free Page/Swap: 219130
+|---------------------------------------------------------------------------------------------|
+2026-09-21T08:30:56Z [7,414ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-09-21T08:30:56Z [7,414ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.

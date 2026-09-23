@@ -1,0 +1,154 @@
+{
+  "terrain": "rails",
+  "difficulty": 0.5,
+  "command_vx_mps": 1.0,
+  "episodes_per_cell": 100,
+  "seed": 42,
+  "judgement": "Wilson 95 % · 겹치면 달라졌다고 말하지 않는다",
+  "mixed_thickness_reference_pct": {
+    "foothold-v1": 48,
+    "D": 89,
+    "E": 41,
+    "F": 75,
+    "G": 65
+  },
+  "cells": {
+    "foothold-v1": {
+      "t008": {
+        "pct": 61.0,
+        "episodes": 100,
+        "successes": 61,
+        "low": 51.2,
+        "high": 70.0
+      },
+      "t013": {
+        "pct": 49.0,
+        "episodes": 100,
+        "successes": 49,
+        "low": 39.4,
+        "high": 58.7
+      },
+      "t018": {
+        "pct": 52.0,
+        "episodes": 100,
+        "successes": 52,
+        "low": 42.3,
+        "high": 61.5
+      }
+    },
+    "D": {
+      "t008": {
+        "pct": 86.0,
+        "episodes": 100,
+        "successes": 86,
+        "low": 77.9,
+        "high": 91.5
+      },
+      "t013": {
+        "pct": 92.0,
+        "episodes": 100,
+        "successes": 92,
+        "low": 85.0,
+        "high": 95.9
+      },
+      "t018": {
+        "pct": 95.0,
+        "episodes": 100,
+        "successes": 95,
+        "low": 88.8,
+        "high": 97.8
+      }
+    },
+    "E": {
+      "t008": {
+        "pct": 48.0,
+        "episodes": 100,
+        "successes": 48,
+        "low": 38.5,
+        "high": 57.7
+      },
+      "t013": {
+        "pct": 20.0,
+        "episodes": 100,
+        "successes": 20,
+        "low": 13.3,
+        "high": 28.9
+      },
+      "t018": {
+        "pct": 22.0,
+        "episodes": 100,
+        "successes": 22,
+        "low": 15.0,
+        "high": 31.1
+      }
+    },
+    "F": {
+      "t008": {
+        "pct": 87.0,
+        "episodes": 100,
+        "successes": 87,
+        "low": 79.0,
+        "high": 92.2
+      },
+      "t013": {
+        "pct": 74.0,
+        "episodes": 100,
+        "successes": 74,
+        "low": 64.6,
+        "high": 81.6
+      },
+      "t018": {
+        "pct": 85.0,
+        "episodes": 100,
+        "successes": 85,
+        "low": 76.7,
+        "high": 90.7
+      }
+    },
+    "G": {
+      "t008": {
+        "pct": 73.0,
+        "episodes": 100,
+        "successes": 73,
+        "low": 63.6,
+        "high": 80.7
+      },
+      "t013": {
+        "pct": 61.0,
+        "episodes": 100,
+        "successes": 61,
+        "low": 51.2,
+        "high": 70.0
+      },
+      "t018": {
+        "pct": 58.0,
+        "episodes": 100,
+        "successes": 58,
+        "low": 48.2,
+        "high": 67.2
+      }
+    }
+  },
+  "vs_v1": {
+    "D": {
+      "t008": "진짜 상승",
+      "t013": "진짜 상승",
+      "t018": "진짜 상승"
+    },
+    "E": {
+      "t008": "겹침",
+      "t013": "진짜 하락",
+      "t018": "진짜 하락"
+    },
+    "F": {
+      "t008": "진짜 상승",
+      "t013": "진짜 상승",
+      "t018": "진짜 상승"
+    },
+    "G": {
+      "t008": "겹침",
+      "t013": "겹침",
+      "t018": "겹침"
+    }
+  }
+}

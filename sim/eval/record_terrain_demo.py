@@ -86,10 +86,39 @@ p.add_argument("--yaw_range_deg", type=float, default=5.0); p.add_argument("--jo
 p.add_argument("--hfov", dest="camera_hfov", type=float, default=60.0)
 p.add_argument("--gate", dest="gate_mode", choices=("on", "off"), default="on")
 p.add_argument("--origins_csv", default="")
+p.add_argument("--title", default="",
+               help="HUD 제목을 «직접» 준다. 안 주면 지형·난이도·속도·체크포인트로 "
+                    "만드는데 그 형식은 정책 이름이 맨 뒤라 34 자에서 잘릴 때 "
+                    "정책이 먼저 사라진다. 나란히 놓는 컷은 이것을 주어라. "
+                    "34 자를 넘거나 굽힌 서체에 없는 글자가 있으면 «거부한다».")
 AppLauncher.add_app_launcher_args(p)
 args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
+
+def _hud_title(args):
+    """HUD 에 넘길 제목. 고르고 검사하는 규칙은 `overlay/hud.py` 가 갖는다.
+
+    길이 상한도 글꼴 부분집합도 HUD 의 사정이다. 여기서 규칙을 베껴 두면
+    둘이 갈라진다. 이 함수는 **기본 형식을 만들어 넘길 뿐이다.**
+    """
+    from overlay import hud as hud_mod
+
+    auto = "%s · d%.1f · %.1f m/s · %s" % (
+        args.terrain,
+        args.difficulty if args.difficulty is not None else -1.0,
+        args.command_vx,
+        os.path.splitext(os.path.basename(args.checkpoint))[0])
+
+    try:
+        return hud_mod.resolve_title(args.title, auto, bool(args.trace_csv))
+    except ValueError as error:
+        raise RuntimeError("제목을 못 쓴다: %s" % error) from error
+
+
+HUD_TITLE = _hud_title(args)
 VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
+
+
 del args.view, args.camera_hfov, args.gate_mode, args.origins_csv
 launcher_argv = [sys.argv[0]]
 skip_next = False
@@ -708,6 +737,33 @@ def main():
             "파일에 프레임이 %d 장 들어갔는데 %d 장을 찍으려 했다. "
             "녹화가 중간에 끊겼거나 인코더가 흘렸다." % (encoded, count))
 
+    # **프레임이 다 들어갔어도 «검을» 수 있다** `확인됨` (2026-09-20 ·
+    # `gap_vx0.5_H` 600 장이 전부 검정인데 종료 코드가 0 이었다).
+    #
+    # 렌더러(`omni.hydra.rtx`)가 안 떠도 물리는 돌고 trace 도 남고 mp4 도
+    # 만들어진다. 그림만 없다. 33 KB · 55 바이트/프레임이었는데 아무도
+    # 그 숫자를 안 짚었고, 로그에 원인이 그대로 있었는데 아무도 안 읽었다.
+    #
+    # **그래서 여기서 파일을 다시 열어 본다.** 밝기 · 바이트/프레임 ·
+    # 프레임 수 · 렌더러 로그 넷이다.
+    from video_check import verify_render
+
+    _render_report = verify_render(video, expected_frames=encoded)
+    _bpf = ("못 쟀음" if _render_report["bytes_per_frame"] is None
+            else "%.0f" % _render_report["bytes_per_frame"])
+
+    # **밝기를 못 쟀으면 `[PASS]` 를 안 찍는다.** 검사가 «없었던» 것이지
+    # 통과한 것이 아니다. imageio 가 없으면 이 길로 온다.
+    if not _render_report.get("luma_measured"):
+        print("[확인 못 함] 밝기를 못 쟀다 (imageio · numpy 없음) · "
+              "%s 바이트/프레임 · 프레임 수와 로그만 봤다" % _bpf, flush=True)
+    else:
+        print("[PASS] 화면이 그려졌다 · 평균 밝기 %.1f · 어두운 표본 %.0f %% · "
+              "%s 바이트/프레임" % (
+                  _render_report["mean_luma"],
+                  (_render_report["dark_sample_ratio"] or 0.0) * 100,
+                  _bpf), flush=True)
+
     if trace_rows is not None:
         from overlay import trace as trace_mod
         # **읽는 쪽이 요구하는 메타를 다 채운다.** fps 와 command_vx_mps 가 없으면
@@ -732,11 +788,7 @@ def main():
                          # **제목을 직접 적는다.** 안 적으면 HUD 가 env_id·episode 로
                          # 만들려다 «?» 로 떨어지고, 그 글자가 굽힌 서체에 없어
                          # 두부가 찍힌다 `확인됨` (2026-09-11 · gap-side 첫 컷).
-                         "title": "%s · d%.1f · %.1f m/s · %s" % (
-                             args.terrain,
-                             args.difficulty if args.difficulty is not None else -1.0,
-                             args.command_vx,
-                             os.path.splitext(os.path.basename(args.checkpoint))[0])},
+                         "title": HUD_TITLE},
                         trace_rows)
         print("[PASS] trace %d 줄 -> %s" % (len(trace_rows), args.trace_csv), flush=True)
     rec_end = time.perf_counter(); final_hfov, final_ha, final_fl = read_hfov()
