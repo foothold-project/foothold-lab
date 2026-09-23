@@ -245,13 +245,38 @@ def main() -> int:
     with io.open(args.state, encoding="utf-8") as h:
         state = json.load(h)
 
+    # 멈춤 사유가 있으면 아무것도 걸지 않는다. 4 차 감사 지적이다.
+    # 사람이 정해야 하는 상태에서 기계가 계속 가면 그 멈춤이 무의미해진다.
+    if state.get("halt_reason") and not args.dry_run:
+        log("멈춤 사유가 있다. 아무것도 걸지 «않는다»: %s" % state["halt_reason"])
+        return 0
+
     ready, waiting = [], []
     for run in state.get("running") or []:
+        if (run.get("status") or "").strip() in ("죽음", "실패", "취소"):
+            log("%s 는 %s 로 기록돼 있다. 평가하지 «않는다»"
+                % (run["name"], run.get("status")))
+            continue
         ok, why = training_done(run)
         (ready if ok else waiting).append((run, why))
 
     for run, why in waiting:
         log("%s 아직 · %s" % (run["name"], why))
+
+    # **학습이 하나라도 돌고 있으면 평가를 걸지 않는다.**
+    #
+    # 2026-09-23 4 차 감사가 짚었다. v2b-r 이 먼저 끝나면 평가 24 건이
+    # cuda:1 로 들어가는데 그 GPU 에서 v2b-s2 가 학습 중이다. 그러면
+    # 학습의 조건이 바뀌고 메모리도 부족해질 수 있다.
+    #
+    # 「GPU 를 놀리지 말라」와 「학습 조건을 지켜라」가 부딪히면
+    # **학습 조건이 이긴다.** 평가는 나중에 돌려도 같은 값이 나오지만
+    # 오염된 학습은 세 시간을 버린다.
+    if waiting:
+        log("학습이 %d 개 돌고 있다. 평가를 «미룬다» (%s)"
+            % (len(waiting), " · ".join(r["name"] for r, _ in waiting)))
+        return 0
+
     if not ready:
         log("평가할 것이 없다")
         return 0

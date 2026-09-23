@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated": "2026-09-23T16:55:00+09:00",
-  "updated_by": "v2b-s 학습 실패를 기록 · Claude 세션",
+  "updated": "2026-09-23T17:40:00+09:00",
+  "updated_by": "v2b-s2 재시도를 상태 파일에 올림 · 4 차 감사 지적 반영",
   "stage": {
     "branch": "0",
     "name": "기준 재기",
@@ -48,16 +48,36 @@
       "exit_code": 1,
       "auto_restart": "안 함 (설계상 금지)",
       "died_at_note": "체크포인트 시각을 사망 시각으로 쓰지 않는다"
+    },
+    {
+      "name": "v2b-s2",
+      "branch": "0-b",
+      "attempt": 2,
+      "retry_of": "v2b-s",
+      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+      "seed": 43,
+      "gpu": "cuda:1 (부모와 같음)",
+      "pid": 76292,
+      "pid_kind": "학습 python 자체",
+      "started": "2026-09-23T17:08:47+09:00",
+      "expected_minutes": 255,
+      "expected_end": "2026-09-23T21:25:00+09:00",
+      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_170847_20260923_v2b-s2_seed43_iter3000.log",
+      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_17-08-57_20260923_v2b-s2_seed43_iter3000",
+      "out_dir_kind": "«확정 절대 경로». wildcard 를 쓰지 않는다 (3 차 감사 지적)",
+      "changed_vs_parent": "학습 시드만 (42 -> 43)",
+      "why": "v2b-s 가 1670 에서 죽어 같은 시드로 재시도. 팀장 승인 2026-09-23",
+      "watch": "step 1500~1700 의 Loss/value_function 과 Train/mean_reward 를 «연속으로» 본다"
     }
   ],
   "last_result": null,
   "next": {
-    "from_branch_table": "없음. 「학습이 죽었다」는 분기표에 없는 결과다",
-    "blocked_by": "팀장 판단 · 같은 시드로 재시도할지, 다른 시드로 갈지, [0-b] 를 버릴지"
+    "from_branch_table": "v2b-r 과 v2b-s2 가 «둘 다» 끝난 뒤 평가. 학습 중에는 평가를 안 건다",
+    "blocked_by": "학습 종료"
   },
-  "halt_reason": "[0-b] v2b-s 가 학습 중 죽었다. 분기표에 «학습 실패» 칸이 없다. 사람이 정해야 한다. [0-a] v2b-r 은 계속 돈다",
+  "halt_reason": null,
   "budget": {
-    "train_runs": 2,
+    "train_runs": 3,
     "train_hours": 0.0,
     "codex_calls_this_week": 0,
     "codex_week_pct_reported": 78,
