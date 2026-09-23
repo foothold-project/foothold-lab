@@ -65,7 +65,7 @@ boxes   학습 grid_height_range (0.025, 0.10)
        -> random_rough 는 어느 난이도에서도 학습 상한 0.06 을 넘는다
 두 값  범위가 아니라 값 둘이다             rail_thickness_range  mesh_terrains.py:406
        -> `rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range`
-모름   소비 코드를 아직 안 읽었다          구간으로 보수적으로 보고 그렇게 적는다
+모름   소비 코드를 아직 안 읽었다          «밖인지 확인 못 함» 으로 남긴다
 ```
 
 `RANGE_USE` 가 그 표이고 `range_notes()` 가 셉니다.
@@ -399,10 +399,12 @@ def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
     표본   난이도와 무관하게 구간에서 뽑는다  잰값이 하나가 아니다
            «구간» 이 학습 범위를 벗어나는가
     두 값  범위가 아니라 값 둘이다          두 값이 각각 학습 쪽과 같은가
-    모름   소비 코드를 아직 안 읽었다        구간으로 보수적으로 본다 · 그렇게 적는다
+    모름   소비 코드를 아직 안 읽었다        «밖인지 확인 못 함» 으로 남긴다
     ```
 
-    `d0.5값` 이 `None` 이면 「한 값으로 말할 수 없다」는 뜻입니다.
+    `d0.5값` 이 `None` 이면 「한 값으로 말할 수 없다」는 뜻이고,
+    `밖인가` 가 `None` 이면 **「밖인지 «확인 못 했다»」** 는 뜻입니다.
+    소비 방식을 모르면 넓다는 것만으로 밖이라 세지 않습니다.
     **분류는 안 바꾸고 따로 적기만 합니다.**
     """
     out = []
@@ -418,11 +420,17 @@ def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
             elif use == TWO_VALUES:
                 value = None
                 outside = (low_e, high_e) != (low_t, high_t)
-            else:
-                # 표본 · 모름 · 구간이 학습 범위를 벗어나면 «벗어난 조건이
+            elif use == SAMPLED:
+                # 구간 전체에서 뽑으므로, 구간이 벗어나면 «벗어난 조건이
                 # 실제로 나온다». 한 점으로 말하지 않는다.
                 value = None
                 outside = low_e < low_t or high_e > high_t
+            else:
+                # 소비 방식을 모르면 **밖인지도 모른다.** 구간이 넓다고
+                # 「밖」으로 세면 안 된다. 보간하는 항목이면 난이도 0.5 의
+                # 값이 학습 범위 «안» 일 수 있다. `None` 은 «확인 못 함» 이다.
+                value = None
+                outside = None
             out.append((terrain, key, use, source,
                         (low_t, high_t), (low_e, high_e), value, outside))
     return out

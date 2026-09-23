@@ -418,13 +418,26 @@ class RangeTests(unittest.TestCase):
             self.assertIn(use, (ts.INTERPOLATED, ts.SAMPLED, ts.TWO_VALUES), key)
             self.assertIn(".py:", source, key)
 
-    def test_an_unlisted_range_is_marked_unknown_not_guessed(self):
-        rows = ts.range_notes({"t": {"mystery_range": (0.0, 1.0)}},
-                              {"t": {"mystery_range": (0.0, 2.0)}})
+    def test_an_unlisted_range_is_unknown_not_declared_outside(self):
+        """**모르면 「밖」이라고도 안 한다.**
+
+        구간이 넓다는 것만으로 밖이라 세면 틀린다. 보간하는 항목이면
+        난이도 0.5 의 값이 학습 범위 «안» 일 수 있다. `gap_width_range`
+        가 실제로 그렇다 (mesh_terrains.py:579 · 보간한다).
+        """
+        rows = ts.range_notes({"t": {"mystery_range": (0.15, 0.40)}},
+                              {"t": {"mystery_range": (0.10, 0.45)}})
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0][2], ts.UNKNOWN_USE)
         self.assertIsNone(rows[0][6])
-        self.assertTrue(rows[0][7])
+        self.assertIsNone(rows[0][7], "모르면 True/False 로 «확정» 하면 안 된다")
+
+    def test_sampled_and_interpolated_still_give_a_verdict(self):
+        """모름만 보류다. 아는 것은 판정한다."""
+        rows = self.rows()
+        self.assertIs(rows[("random_rough", "noise_range")][7], True)
+        self.assertIs(rows[("boxes", "grid_height_range")][7], True)
+        self.assertIs(rows[("rails", "rail_height_range")][7], False)
 
     def test_terrain_names_include_ones_with_no_range_args(self):
         """`repeated_boxes` 는 `*_range` 인자가 없다. 이름 목록에는 있어야

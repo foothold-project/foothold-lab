@@ -176,7 +176,12 @@ def resolve_train_script(argv):
     `--isaaclab_root` 는 **우리가 더한 팔**이라 여기서 걷어낸다. 그대로 넘기면
     `train.py` 의 argparse 가 모르는 인자라고 죽는다.
     """
-    parser = argparse.ArgumentParser(add_help=False)
+    # **`allow_abbrev=False` 가 중요하다.** 기본값이면 argparse 가
+    # `--guard_intend` 같은 «줄임» 도 받아들이는데, 앞의 전처리는 온전한
+    # 이름만 보므로 그 길로 들어오면 다시 삼킨다. 줄임을 끄면 그런 인자는
+    # 그대로 `train.py` 에 가서 «큰 소리로» 죽는다. 조용히 사라지는 것보다
+    # 낫다.
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.add_argument("--isaaclab_root", type=str, default=None)
     parser.add_argument("--guard_against", type=str, default=None,
                         help="이 런 폴더의 env.yaml 과 대조한다")

@@ -298,7 +298,8 @@ def main():
                 terrain_split.read_eval_ranges(*args.eval_cfg))
             trained_ranges = terrain_split.read_sub_terrain_ranges(args.env_yaml)
             eval_all = terrain_split.read_eval_ranges(*args.eval_cfg)
-            outside = [r for r in rows if r[7]]
+            outside = [r for r in rows if r[7] is True]
+            unsure = [r for r in rows if r[7] is None]
             unknown = [r for r in rows if r[2] == terrain_split.UNKNOWN_USE]
             # 이름이 «안» 겹치는 지형·항목은 애초에 견줄 수가 없다.
             # 그 수를 안 적으면 「전부 봤다」로 읽힌다.
@@ -306,8 +307,9 @@ def main():
             pairs_seen = {(r[0], r[1]) for r in rows}
             print()
             print("**이름이 같은 지형의 «조건»** · 견준 항목 %d · "
-                  "학습 범위 «밖» %d · 소비 코드 안 읽은 항목 %d"
-                  % (len(rows), len(outside), len(unknown)))
+                  "학습 범위 «밖» %d · «밖인지 확인 못 함» %d · "
+                  "소비 코드 안 읽은 항목 %d"
+                  % (len(rows), len(outside), len(unsure), len(unknown)))
             print("    견주지 «못한» 평가 항목 %d · 학습에 같은 이름이 없어서다 "
                   "(학습에 없던 지형이면 견줄 짝이 없다)"
                   % len(pairs_eval - pairs_seen))
@@ -317,13 +319,15 @@ def main():
             print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
                   % ("판정", "지형", "항목", "쓰임", "학습", "평가", "d0.5", "출처"))
             for terrain, key, use, source, rt, re_, value, out in rows:
-                if not (out or use == terrain_split.UNKNOWN_USE):
+                if out is False:
                     continue
                 print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
-                      % ("**밖**" if out else "모름", terrain, key, use,
+                      % ("**밖**" if out else "확인못함", terrain, key, use,
                          "(%g, %g)" % rt, "(%g, %g)" % re_,
                          "%.3f" % value if value is not None else "-", source))
             print("    **범위 밖인 칸은 「배운 조건을 지켰나」로 읽으면 안 된다.**")
+            print("    «확인못함» 은 밖이라는 뜻도 안이라는 뜻도 아니다 · "
+                  "소비 코드를 읽어야 갈린다")
             print("    쓰임 · 보간=난이도로 한 값 · 표본=구간에서 뽑음 · "
                   "두 값=범위가 아님 · 모름=소비 코드 안 읽음")
         else:
@@ -397,10 +401,16 @@ def main():
         # --- 성공률 «자체» 가 0 인 칸 (CRITERIA v1.0 8-2 절) ---
         # 기준선도 0 이면 「하락」이 아니라 통과로 «셈된다». 못 하는
         # 것이 통과가 되므로 통과 판정과 «별개 줄» 로 적는다.
+        read_here = [key for key in cells if iteration in cells[key]]
+        short = EXPECTED_CELLS - len(read_here)
+        seen_note = ("" if not short else
+                     " · **이 점은 %d / %d 칸만 읽었다. 나머지 %d 칸은 "
+                     "«안 잰 것»**" % (len(read_here), EXPECTED_CELLS, short))
         zero = [key for key in sorted(cells)
                 if iteration in cells[key] and cells[key][iteration][0] == 0.0]
         if not zero:
-            print("    «미해결» 성공률 0 인 칸 없음")
+            print("    «미해결» 읽은 %d 칸에는 성공률 0 인 칸 없음%s"
+                  % (len(read_here), seen_note))
             continue
         if base:
             both = sum(1 for k in zero if k in base and base[k][0] == 0.0)
@@ -410,7 +420,8 @@ def main():
             # 기준선을 안 읽었으면 「v1 도 0 인 칸」을 «셀 수 없다».
             # 0 이라고 적으면 «확인 못 한 것» 을 «0 건» 으로 단정하게 된다.
             tail = "기준선이 없어 v1 도 0 인지는 못 센다"
-        print("    «미해결» 성공률 0 인 칸 %d  (%s)" % (len(zero), tail))
+        print("    «미해결» 성공률 0 인 칸 %d / 읽은 %d 칸  (%s)%s"
+              % (len(zero), len(read_here), tail, seen_note))
         for key in zero:
             print("      미해결  %-9s %-20s %-8s  v1 %s -> 0"
                   % (key[1], key[2], key[0],
