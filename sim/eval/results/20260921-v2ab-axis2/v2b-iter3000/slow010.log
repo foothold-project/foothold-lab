@@ -1,0 +1,273 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: C:\isaac\IsaacLab\apps\isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg:UnitreeGo2RoughEnvCfg
+
+[36m=====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\AI-WS01\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-09-21_16-33-29.log[0m
+[36m=====================================================================================================================[0m
+
+[33m16:33:29 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+[33m16:33:30 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:245: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'policy' key. As an observation group with the name 'policy' was found, this is assumed to be the observation set. Consider adding the 'policy' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:291: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'critic' key. As the configuration for 'critic' is missing, the observations from the 'policy' set are used. Consider adding the 'critic' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+[INFO]: Time taken for scene creation : 1.138477 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 64
+	Environment spacing   : 8.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.463589 seconds
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++------------------------------------------------+
+|              Active Command Terms              |
++-------+---------------+------------------------+
+| Index | Name          |          Type          |
++-------+---------------+------------------------+
+|   0   | base_velocity | UniformVelocityCommand |
++-------+---------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 2 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++----------+---------------------------+
+|  Index   | Name                      |
++----------+---------------------------+
+|    0     | physics_material          |
+|    1     | add_base_mass             |
++----------+---------------------------+
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++---------+---------------------------+
+|  Index  | Name                      |
++---------+---------------------------+
+|    0    | reset_base                |
+|    1    | reset_robot_joints        |
++---------+---------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (235,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_lin_vel                   |     (3,)    |
+|     1     | base_ang_vel                   |     (3,)    |
+|     2     | projected_gravity              |     (3,)    |
+|     3     | velocity_commands              |     (3,)    |
+|     4     | joint_pos                      |    (12,)    |
+|     5     | joint_vel                      |    (12,)    |
+|     6     | actions                        |    (12,)    |
+|     7     | height_scan                    |    (187,)   |
++-----------+--------------------------------+-------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 2 active terms.
++---------------------------------+
+|     Active Termination Terms    |
++-------+--------------+----------+
+| Index | Name         | Time Out |
++-------+--------------+----------+
+|   0   | time_out     |   True   |
+|   1   | base_contact |  False   |
++-------+--------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++-----------------------------------------+
+|           Active Reward Terms           |
++-------+----------------------+----------+
+| Index | Name                 |   Weight |
++-------+----------------------+----------+
+|   0   | track_lin_vel_xy_exp |      1.5 |
+|   1   | track_ang_vel_z_exp  |     0.75 |
+|   2   | lin_vel_z_l2         |     -2.0 |
+|   3   | ang_vel_xy_l2        |    -0.05 |
+|   4   | dof_torques_l2       |  -0.0002 |
+|   5   | dof_acc_l2           | -2.5e-07 |
+|   6   | action_rate_l2       |    -0.01 |
+|   7   | feet_air_time        |     0.01 |
+|   8   | flat_orientation_l2  |      0.0 |
+|   9   | dof_pos_limits       |      0.0 |
++-------+----------------------+----------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.agents.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+[PASS] 관측 235 차원이 정책과 맞습니다.
+
+==============================================================================
+명령 반응 프로브
+==============================================================================
+정책        : v2b-iter3000
+체크포인트  : C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-21_11-03-28_20260921_v2b_seed42_iter3000/model_3000.pt
+sha256      : 9293fd67285e6097e9525030e5be93143cab14f081110ef7a7de1b270af66da1
+env         : 64 대 · 간격 8.0 m · 평지
+스텝        : dt 0.0200 s  (50.0 Hz)
+관절 12개 : ['FL_hip_joint', 'FR_hip_joint', 'RL_hip_joint', 'RR_hip_joint', 'FL_thigh_joint', 'FR_thigh_joint', 'RL_thigh_joint', 'RR_thigh_joint', 'FL_calf_joint', 'FR_calf_joint', 'RL_calf_joint', 'RR_calf_joint']
+열 수       : 93
+시나리오    : ['slow010', 'slow020', 'slow030', 'slow040']
+[PASS] 설정이 전부 덮였습니다.
+
+------------------------------------------------------------------------------
+[slow010] 전진 0.10 m/s 고정. 가속 구간 뒤 저속 추종
+        20.0 초 · 1000 스텝
+------------------------------------------------------------------------------
+
+  env 64 대 · 낙상 3 대 (5 %)
+  잔류속도(끝 1초): 0.1359 m/s
+  관절목표각 변화 : 전체 0.4279 · 끝 1초 0.4245 rad/스텝
+  피치 최대       : 48.7798 도
+  롤 최대         : 119.0230 도
+  발 미끄러짐     : 3.3811 m
+  네 발 동시접지  : 2.1641 s
+  응답곡선        : 0.10->0.0674
+  저속 명령/실속도: 0.1000 / 0.0843 m/s
+  저속 추종비     : 0.8432
+  횡방향 잔류속도 : 0.0843 m/s
+  저속 측정 가능  : 63/64 대
+
+
+------------------------------------------------------------------------------
+[slow020] 전진 0.20 m/s 고정. 가속 구간 뒤 저속 추종
+        20.0 초 · 1000 스텝
+------------------------------------------------------------------------------
+
+  env 64 대 · 낙상 0 대 (0 %)
+  잔류속도(끝 1초): 0.2340 m/s
+  관절목표각 변화 : 전체 0.3980 · 끝 1초 0.4092 rad/스텝
+  피치 최대       : 20.3122 도
+  롤 최대         : 13.4689 도
+  발 미끄러짐     : 8.2619 m
+  네 발 동시접지  : 0.3719 s
+  응답곡선        : 0.20->0.2185
+  저속 명령/실속도: 0.2000 / 0.2211 m/s
+  저속 추종비     : 1.1056
+  횡방향 잔류속도 : 0.0600 m/s
+  저속 측정 가능  : 64/64 대
+
+
+------------------------------------------------------------------------------
+[slow030] 전진 0.30 m/s 고정. 가속 구간 뒤 저속 추종
+        20.0 초 · 1000 스텝
+------------------------------------------------------------------------------
+
+  env 64 대 · 낙상 0 대 (0 %)
+  잔류속도(끝 1초): 0.3029 m/s
+  관절목표각 변화 : 전체 0.4003 · 끝 1초 0.3966 rad/스텝
+  피치 최대       : 6.5424 도
+  롤 최대         : 4.4261 도
+  발 미끄러짐     : 11.3570 m
+  네 발 동시접지  : 0.1356 s
+  응답곡선        : 0.30->0.2985
+  저속 명령/실속도: 0.3000 / 0.3004 m/s
+  저속 추종비     : 1.0012
+  횡방향 잔류속도 : 0.0506 m/s
+  저속 측정 가능  : 64/64 대
+
+
+------------------------------------------------------------------------------
+[slow040] 전진 0.40 m/s 고정. 가속 구간 뒤 저속 추종
+        20.0 초 · 1000 스텝
+------------------------------------------------------------------------------
+
+  env 64 대 · 낙상 0 대 (0 %)
+  잔류속도(끝 1초): 0.3935 m/s
+  관절목표각 변화 : 전체 0.3878 · 끝 1초 0.3847 rad/스텝
+  피치 최대       : 2.7625 도
+  롤 최대         : 3.2868 도
+  발 미끄러짐     : 12.8675 m
+  네 발 동시접지  : 0.1066 s
+  응답곡선        : 0.40->0.3914
+  저속 명령/실속도: 0.4000 / 0.3913 m/s
+  저속 추종비     : 0.9784
+  횡방향 잔류속도 : 0.0361 m/s
+  저속 측정 가능  : 64/64 대
+
+
+[PASS] 앞서 돌린 시나리오를 그대로 두었습니다: ['hold', 'ramp', 'stop', 'turn']
+[PASS] 요약을 적었습니다: sim/eval/results/20260921-v2ab-axis2/v2b-iter3000\probe_manifest.json
+Loading user config located at: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260921_163323.log
+2026-09-21T07:33:23Z [429ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-09-21T07:33:24Z [1,358ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-09-21T07:33:24Z [1,383ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 15979   MB | 10de      | 5fce0100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 1 |     | 15979   MB | 10de      | 5de30100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.9444
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 212837
+| Total Page/Swap (MB): 278025 | Free Page/Swap: 219676
+|---------------------------------------------------------------------------------------------|
+2026-09-21T07:33:31Z [8,490ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-09-21T07:33:31Z [8,490ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.

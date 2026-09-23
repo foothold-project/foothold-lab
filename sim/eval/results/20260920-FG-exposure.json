@@ -1,0 +1,91 @@
+{
+  "seed": 42,
+  "difficulty": 0.5,
+  "tile_size_m": [
+    8,
+    8
+  ],
+  "gap_width_range_m": [
+    0.15,
+    0.4
+  ],
+  "gap_width_m": 0.275,
+  "ring_radius_m": 2.5,
+  "ring_num_sides": 64,
+  "heading_range_rad": [
+    -3.141592653589793,
+    3.141592653589793
+  ],
+  "vx_range_m_s": [
+    0.4,
+    1.5
+  ],
+  "command_interval_s": 10,
+  "episode_duration_s": 20,
+  "initial_yaw_rad": 0,
+  "method": "실제 메시 도랑과 직선 교차. 첫 구간 끝에서 둘째 구간 시작. 최초 타일 이탈에서 종료.",
+  "limits": "회전 동역학 · 정지 명령 · 리셋 잡음 · 추락 미포함. 정책 성공률이 아니다.",
+  "ring_radius_rationale": "중심선 2.5/0.4=6.25초. 최대폭 바깥반지름 2.70m, 착지판 최소 1.30m, 승급거리 4m 안쪽.",
+  "source_sha256": {
+    "gap_terrain.py": "7ed3bc1fa29b61ae4abff987bda048b37b85fc86241e95dace546d63fd9ba48d",
+    "omni_gap_terrain.py": "a3a17a919715ba4174854bf76c288b9c7090c4189d00beef5e4a2fd5a93ed53d",
+    "gap_exposure.py": "5f9a5a3d7ac3d7cc5e5381f3c167d37c767663ce51736f4bda9d598317dedc72"
+  },
+  "results": [
+    {
+      "terrain": "forward_gap",
+      "episodes": 10000,
+      "exposed_episodes": 3900,
+      "exposure_rate": 0.39,
+      "mean_first_exposure_distance_m": 2.1266719091233854,
+      "first_tile_360_direction_hits": 135
+    },
+    {
+      "terrain": "rotated",
+      "episodes": 10000,
+      "exposed_episodes": 3910,
+      "exposure_rate": 0.391,
+      "mean_first_exposure_distance_m": 2.1127951664780267,
+      "first_tile_360_direction_hits": 136,
+      "rotation_histogram": {
+        "edges_rad": [
+          -3.141592653589793,
+          -2.6179938779914944,
+          -2.0943951023931957,
+          -1.5707963267948966,
+          -1.0471975511965979,
+          -0.5235987755982991,
+          0.0,
+          0.5235987755982987,
+          1.0471975511965974,
+          1.5707963267948966,
+          2.094395102393195,
+          2.617993877991494,
+          3.141592653589793
+        ],
+        "counts": [
+          875,
+          820,
+          822,
+          826,
+          840,
+          881,
+          806,
+          818,
+          847,
+          802,
+          810,
+          853
+        ]
+      }
+    },
+    {
+      "terrain": "ring",
+      "episodes": 10000,
+      "exposed_episodes": 10000,
+      "exposure_rate": 1.0,
+      "mean_first_exposure_distance_m": 2.360604145384491,
+      "first_tile_360_direction_hits": 360
+    }
+  ]
+}
