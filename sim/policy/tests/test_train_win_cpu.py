@@ -57,6 +57,12 @@ class RunNameTests(unittest.TestCase):
             MOD["run_name_from"](["--headless", "agent.run_name=20260921_v2a"]),
             "20260921_v2a")
 
+    def test_the_last_one_wins_like_hydra(self):
+        """하이드라가 마지막을 쓰므로 감시 대상도 마지막이어야 한다."""
+        self.assertEqual(
+            MOD["run_name_from"](["agent.run_name=A", "--headless",
+                                  "agent.run_name=B"]), "B")
+
     def test_none_when_absent(self):
         self.assertIsNone(MOD["run_name_from"](["--headless"]))
 
@@ -174,7 +180,7 @@ class GuardIntendedSwallowTests(unittest.TestCase):
         overrides = [a for a in rest if a.startswith("agent.run_name=")]
         self.assertEqual(overrides, ["agent.run_name=first",
                                      "agent.run_name=last"])
-        self.assertEqual(MOD["run_name_from"](list(reversed(rest))), "last")
+        self.assertEqual(MOD["run_name_from"](rest), "last")
 
     def test_a_following_flag_stops_the_capture(self):
         _, rest, _, known = self.resolve(
@@ -207,6 +213,12 @@ class GuardIntendedSwallowTests(unittest.TestCase):
         _, rest, _, known = self.resolve(["--guard_intended", "-1"])
         self.assertEqual(known.guard_intended, [])
         self.assertIn("-1", rest)
+
+    def test_the_equals_form_is_not_lost(self):
+        """`--guard_intended=seed` 를 따로 안 받으면 뒤엣것이 덮어쓴다."""
+        _, _, _, known = self.resolve(
+            ["--guard_intended=seed", "--guard_intended", "sim.device"])
+        self.assertEqual(known.guard_intended, ["seed", "sim.device"])
 
     def test_no_guard_intended_is_untouched(self):
         _, rest, _, known = self.resolve(["--headless", "agent.run_name=R"])

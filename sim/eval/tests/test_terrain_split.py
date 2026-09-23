@@ -223,7 +223,8 @@ class ClassifyGuardTests(unittest.TestCase):
 
     def test_unknown_trained_terrain_stops_and_names_it(self):
         with self.assertRaises(ValueError) as caught:
-            ts.classify(EVAL16, list(ROUGH6) + ["새로운지형"])
+            ts.classify(EVAL16, list(ROUGH6) + ["새로운지형"],
+                        known_eval=EVAL16)
         self.assertIn("새로운지형", str(caught.exception))
 
     def test_empty_eval_stops(self):
@@ -245,7 +246,7 @@ class ClassifyGuardTests(unittest.TestCase):
     def test_unknown_bucket_name_stops(self):
         """`classify` 가 모르는 이름을 내면 그 칸이 조용히 사라진다."""
         saved = ts.classify
-        ts.classify = lambda ev, tr: {t: "??" for t in ev}
+        ts.classify = lambda ev, tr, **kw: {t: "??" for t in ev}
         try:
             with self.assertRaises(ValueError) as caught:
                 ts.split_cells(cells_of(EVAL16), list(ROUGH6))
@@ -273,14 +274,38 @@ class PartialDataTests(unittest.TestCase):
     def test_an_unknown_terrain_stops_when_a_trench_is_on_screen(self):
         """도랑 평가 지형이 있으면 분류가 뒤집힐 수 있으므로 멈춘다."""
         with self.assertRaises(ValueError) as caught:
-            ts.classify(list(ROUGH6) + ["gap"], list(ROUGH6) + ["수수께끼지형"])
+            ts.classify(list(ROUGH6) + ["gap"], list(ROUGH6) + ["수수께끼지형"],
+                        known_eval=EVAL16)
         self.assertIn("수수께끼지형", str(caught.exception))
         self.assertIn("gap", str(caught.exception))
 
     def test_an_unknown_terrain_is_tolerated_with_no_trench_on_screen(self):
         """뒤집힐 자리가 없으면 멈추지 않는다."""
-        marks = ts.classify(list(ROUGH6), list(ROUGH6) + ["수수께끼지형"])
+        marks = ts.classify(list(ROUGH6), list(ROUGH6) + ["수수께끼지형"],
+                            known_eval=EVAL16)
         self.assertEqual(set(marks.values()), {ts.LEARNED})
+
+    def test_results_not_in_yet_do_not_look_like_unknown_geometry(self):
+        """`gap` 만 와 있고 `boxes`·`rails` 결과가 아직 없는 판.
+
+        전체 목록을 주면 저것들이 «평가 지형» 인 줄 알므로 안 멈춘다.
+        예전에는 여기서 보고가 통째로 죽었다.
+        """
+        marks = ts.classify(["gap"], list(ROUGH6) + ["omni_gap", "rails"],
+                            known_eval=EVAL16)
+        self.assertEqual(marks, {"gap": ts.TRENCH_REACH})
+
+    def test_without_the_full_list_it_does_not_cry_wolf(self):
+        """못 가르는데 멈추면 부분 자료마다 헛경보가 난다."""
+        marks = ts.classify(["gap"], list(ROUGH6) + ["omni_gap", "rails"])
+        self.assertEqual(marks, {"gap": ts.TRENCH_REACH})
+
+    def test_unknown_trained_is_a_question_not_a_verdict(self):
+        self.assertEqual(
+            ts.unknown_trained(list(ROUGH6) + ["omni_gap", "수수께끼"], EVAL16),
+            ["수수께끼"])
+        self.assertEqual(
+            ts.unknown_trained(list(ROUGH6) + ["omni_gap"], EVAL16), [])
 
 
 class YamlReadingTests(unittest.TestCase):

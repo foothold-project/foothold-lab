@@ -246,10 +246,22 @@ def read_eval_ranges(*paths):
     return out
 
 
-def classify(eval_terrains, trained):
-    """평가 지형마다 묶음 이름을 붙인다. 근거가 없으면 «멈춘다»."""
+def classify(eval_terrains, trained, known_eval=None, strict=None):
+    """평가 지형마다 묶음 이름을 붙인다. 근거가 없으면 «멈춘다».
+
+    `known_eval` 은 **평가 지형 «전체» 목록** 이다. `eval_terrains` 는
+    「지금 결과가 «와 있는» 지형」이라 부분 자료에서는 더 짧다. 둘을 안
+    가르면 «아직 결과가 안 온» 학습 지형을 «기하를 모르는» 지형으로 잘못
+    보고 멈춘다.
+
+    `strict` 는 기본으로 «`known_eval` 을 받았는가» 다. 전체 목록을 모르면
+    「결과가 안 온 것」과 「기하를 모르는 것」을 «가를 수 없으므로» 멈추지
+    않는다. 대신 `unknown_trained()` 로 물어보고 경고를 찍는 것은 부르는
+    쪽의 몫이다. **못 가르는데 멈추면 부분 자료에서 헛경보가 난다.**
+    """
     eval_terrains = list(eval_terrains)
     trained = list(trained)
+    universe = set(eval_terrains if known_eval is None else known_eval)
     if not eval_terrains:
         raise ValueError("평가 지형이 하나도 없다 · 결과를 못 읽은 것이다")
     if not trained:
@@ -262,9 +274,11 @@ def classify(eval_terrains, trained):
     # 센다. 그래서 **도랑 평가 지형이 눈앞에 있을 때만** 멈춘다. 없으면
     # 잘못 셀 자리가 없으므로 멈추지 않는다.
     unknown = [name for name in trained
-               if name not in eval_terrains and name not in TRENCH_TRAINING]
+               if name not in universe and name not in TRENCH_TRAINING]
     at_risk = [name for name in eval_terrains if name in TRENCH_EVAL]
-    if unknown and at_risk:
+    if strict is None:
+        strict = known_eval is not None
+    if strict and unknown and at_risk:
         raise ValueError(
             "학습 지형 %s 를 평가 지형에 못 붙인다 · 이름이 같지도 않고 "
             "`TRENCH_TRAINING` 에 «생성 코드 기하» 근거도 없다. 그런데 평가에 "
@@ -286,9 +300,17 @@ def classify(eval_terrains, trained):
     return out
 
 
-def trench_sources(eval_terrains, trained):
+def unknown_trained(trained, known_eval=None):
+    """기하 근거가 없는 학습 지형. 평가 전체 목록을 모르면 «부분 자료» 일
+    수도 있으므로, 이 목록은 «물음» 이지 «판정» 이 아니다."""
+    universe = set(known_eval or ())
+    return sorted(name for name in trained
+                  if name not in universe and name not in TRENCH_TRAINING)
+
+
+def trench_sources(eval_terrains, trained, known_eval=None):
     """`도랑이 닿는` 으로 분류된 칸마다 «생성 코드의 근거» 를 돌려준다."""
-    marks = classify(eval_terrains, trained)
+    marks = classify(eval_terrains, trained, known_eval=known_eval)
     dug = [name for name in trained if name in TRENCH_TRAINING]
     out = []
     for terrain in eval_terrains:
@@ -299,9 +321,9 @@ def trench_sources(eval_terrains, trained):
     return out
 
 
-def floored_notes(eval_terrains, trained):
+def floored_notes(eval_terrains, trained, known_eval=None):
     """바닥이 있어서 «도랑이 아닌» 지형. 거꾸로 분류한 전례가 있어 적는다."""
-    marks = classify(eval_terrains, trained)
+    marks = classify(eval_terrains, trained, known_eval=known_eval)
     return [(terrain, marks[terrain]) + FLOORED_EVAL[terrain]
             for terrain in eval_terrains if terrain in FLOORED_EVAL]
 
@@ -370,10 +392,11 @@ def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
     return out
 
 
-def split_cells(keys, trained, terrain_of=lambda key: key[2]):
+def split_cells(keys, trained, terrain_of=lambda key: key[2], known_eval=None):
     """칸 열쇠들을 세 묶음으로 가른다 -> {묶음: [열쇠]}."""
     keys = list(keys)
-    marks = classify(sorted({terrain_of(key) for key in keys}), trained)
+    marks = classify(sorted({terrain_of(key) for key in keys}), trained,
+                     known_eval=known_eval)
 
     # `classify` 가 모르는 이름을 돌려주면 그 칸은 어느 묶음에도 안 들어가고
     # 조용히 사라진다. 사라진 칸은 «없는 칸» 이 되므로 여기서 막는다.

@@ -87,6 +87,8 @@ WOBBLE_PP = 15.0
 FOCUS_TERRAINS = ("gap", "floating_ring")
 # 일곱 정책이 전부 0 이었던 칸. 여기서도 0 인지 «세어» 확인한다.
 ALWAYS_ZERO = "stepping_stones"
+# 평가 지형 16 종 x 속도 3. 이보다 적으면 부분 자료다.
+EXPECTED_CELLS = 48
 
 
 def band(value_pct, total):
@@ -173,6 +175,12 @@ def main():
     partial = [k for k, v in cells.items() if 0 < len(v) < len(ITERS)]
     print("칸 %d 개 · 네 점 다 있는 칸 %d · 덜 찬 칸 %d"
           % (len(cells), len(complete), len(partial)))
+    # **몇 칸이 «아예 없는지» 를 말한다.** 한 칸만 두고 돌려도 「덜 찬 칸 0」
+    # 이 나와서, 「미해결 없음」이 «확인해서 없다» 로 읽힌다.
+    if len(cells) < EXPECTED_CELLS:
+        print("**칸이 %d / %d 뿐이다.** 나머지 %d 칸은 «안 잰 것» 이지 "
+              "«없는 것» 이 아니다. 아래의 「없음」을 확인으로 읽지 마십시오."
+              % (len(cells), EXPECTED_CELLS, EXPECTED_CELLS - len(cells)))
     if partial:
         print("**아직 덜 찼다. 아래 표를 «모델 성적» 으로 읽지 마십시오.**")
     print()
@@ -240,6 +248,12 @@ def main():
 
     # 학습 지형은 «정책마다 다르다». 손으로 안 적고 그 학습이 남긴
     # env.yaml 에서 읽는다 (CRITERIA v1.0 2 절).
+    # 평가 지형 «전체» 목록. 부분 자료일 때 「결과가 아직 안 온 지형」과
+    # 「기하를 모르는 지형」을 가르는 데 쓴다.
+    universe = None
+    if args.eval_cfg:
+        universe = sorted(terrain_split.read_eval_ranges(*args.eval_cfg))
+
     trained = None
     if args.env_yaml:
         # 정책 이름이 경로에 없으면 «다른 학습의» env.yaml 을 준 것일 수 있다.
@@ -258,11 +272,22 @@ def main():
         print("  %s" % " · ".join("`%s`" % name for name in trained))
         print("  분류는 «생성 코드의 기하» 로 한다 · 이름이나 주석으로 안 한다 "
               "(CRITERIA v1.1 2 절)")
-        for terrain, dug, where, why in terrain_split.trench_sources(seen, trained):
+        if universe is None:
+            print("  **평가 지형 전체 목록을 모른다** (`--eval_cfg` 없음) · "
+                  "「결과가 아직 안 온 지형」과 「기하를 모르는 지형」을 "
+                  "못 가른다")
+        else:
+            strange = terrain_split.unknown_trained(trained, universe)
+            if strange:
+                print("  **기하 근거 없는 학습 지형** %s · 도랑이면 분류가 "
+                      "뒤집힌다" % " · ".join("`%s`" % n for n in strange))
+        for terrain, dug, where, why in terrain_split.trench_sources(
+                seen, trained, known_eval=universe):
             print("  도랑  평가 `%s` <- 학습 %s"
                   % (terrain, " · ".join("`%s`" % d for d in dug)))
             print("        %s · %s" % (where, why))
-        for terrain, bucket, where, why in terrain_split.floored_notes(seen, trained):
+        for terrain, bucket, where, why in terrain_split.floored_notes(
+                seen, trained, known_eval=universe):
             print("  바닥  평가 `%s` 은 «%s» 이다 · %s" % (terrain, bucket, where))
             print("        %s" % why)
 
@@ -286,6 +311,9 @@ def main():
             print("    견주지 «못한» 평가 항목 %d · 학습에 같은 이름이 없어서다 "
                   "(학습에 없던 지형이면 견줄 짝이 없다)"
                   % len(pairs_eval - pairs_seen))
+            print("    위의 「소비 코드 안 읽은 항목」은 «견준 %d 개 안에서만» "
+                  "센 것이다. 못 견준 %d 개의 소비 방식은 «안 봤다»"
+                  % (len(rows), len(pairs_eval - pairs_seen)))
             print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
                   % ("판정", "지형", "항목", "쓰임", "학습", "평가", "d0.5", "출처"))
             for terrain, key, use, source, rt, re_, value, out in rows:
@@ -349,7 +377,8 @@ def main():
             print("    **지형 분류 못 함** · `--env_yaml` 을 안 줬다 · "
                   "학습한 지형과 학습에 없던 지형을 못 가른다")
         elif here:
-            groups = terrain_split.split_cells(here, trained)
+            groups = terrain_split.split_cells(
+                here, trained, known_eval=universe)
             for bucket in terrain_split.BUCKETS:
                 keys = groups[bucket]
                 if not keys:

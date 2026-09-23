@@ -143,20 +143,28 @@ def _split_guard_intended(argv):
     플래그가 여러 번 나오면 **전부** 가른다.
     """
     argv = list(argv)
-    if "--guard_intended" not in argv:
+    if not any(a == "--guard_intended" or a.startswith("--guard_intended=")
+               for a in argv):
         return argv, None
     out, keys, index = [], [], 0
     while index < len(argv):
-        if argv[index] != "--guard_intended":
-            out.append(argv[index])
+        item = argv[index]
+        # `--guard_intended=seed` 꼴도 여기서 받는다. 안 받으면 argparse 가
+        # 따로 읽고, 우리가 나중에 `taken` 으로 덮어써서 그 값이 사라진다.
+        if item.startswith("--guard_intended="):
+            keys.append(item.split("=", 1)[1])
+            index += 1
+            continue
+        if item != "--guard_intended":
+            out.append(item)
             index += 1
             continue
         index += 1
         while index < len(argv):
-            item = argv[index]
-            if item.startswith("-") or "=" in item:
+            nxt = argv[index]
+            if nxt.startswith("-") or "=" in nxt:
                 break
-            keys.append(item)
+            keys.append(nxt)
             index += 1
     return out, keys
 
@@ -197,11 +205,17 @@ def resolve_train_script(argv):
 
 
 def run_name_from(rest):
-    """`agent.run_name=...` 값. 없으면 `None`."""
+    """`agent.run_name=...` 값. 없으면 `None`.
+
+    **여럿이면 «마지막» 을 쓴다.** 하이드라가 마지막 덮어쓰기를 쓰므로,
+    앞엣것을 고르면 «감시하는 런» 과 «실제로 생기는 런» 이 달라진다.
+    그러면 설정 관문이 엉뚱한 폴더를 보거나 아예 못 찾고 건너뛴다.
+    """
+    found = None
     for arg in rest:
         if arg.startswith("agent.run_name="):
-            return arg.split("=", 1)[1]
-    return None
+            found = arg.split("=", 1)[1]
+    return found
 
 
 def find_run_dir(isaaclab_root, run_name):
