@@ -1,0 +1,231 @@
+# -*- coding: utf-8 -*-
+"""루프 감시 · «읽기만» 하는 판.
+
+분류: 운영
+작성: 오흥재 · 2026-09-23
+근거: `inbox/jay/20260923-lineage/LOOP-RUNTIME.md` 3 절 · 8 절
+요지: 상태 파일을 읽고 실제 상황과 맞는지 확인해 `STATE.md` 를 다시 쓴다.
+      **아무것도 걸지 않는다.** 거는 기능은 신뢰가 쌓인 뒤에 켠다.
+상태: 초안
+판: v1.0
+
+왜 PowerShell 이 아니라 Python 인가
+    2026-09-23 에 PowerShell 판을 먼저 썼다가 버렸다. Windows PowerShell
+    5.1 은 BOM 없는 UTF-8 을 ANSI 로 읽는다. 한글 주석이 깨지고 파싱까지
+    실패했다. 저장소의 다른 도구가 전부 Python 이므로 여기에 맞춘다.
+
+왜 읽기만 하나
+    잘못 걸면 GPU 세 시간을 잃는다. 며칠 돌려서 상태 파일이 실제를
+    따라오는지 확인한 뒤에 거는 기능을 켠다 (LOOP-RUNTIME 8 절).
+
+돌리는 법
+    python _out/loop/watchdog.py
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import io
+import json
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+STATE = os.path.join(HERE, "state.json")
+HUMAN = os.path.join(HERE, "STATE.md")
+LOG = os.path.join(HERE, "watchdog.log")
+
+# 학습으로 볼 프로세스의 최소 메모리. v2a/v2b 가 6.3 ~ 6.4 GB 였다.
+TRAIN_MIN_BYTES = 1 * 1024 ** 3
+
+
+def log(msg: str) -> None:
+    line = "%s  %s\n" % (dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg)
+    with io.open(LOG, "a", encoding="utf-8") as handle:
+        handle.write(line)
+
+
+def read_gpu() -> list[str]:
+    """`nvidia-smi` 한 줄씩. 못 부르면 그 사실을 문자열로 남긴다."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=index,utilization.gpu,memory.used",
+             "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=20, check=True).stdout
+        return [ln.strip() for ln in out.splitlines() if ln.strip()]
+    except Exception as exc:                                  # noqa: BLE001
+        return ["nvidia-smi 실패: %s" % exc]
+
+
+def read_big_python() -> list[tuple[int, float]]:
+    """메모리가 큰 python 프로세스. (pid, GB) 목록."""
+    rows = []
+    try:
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-Process python -ErrorAction SilentlyContinue | "
+             "ForEach-Object { \"$($_.Id) $($_.WorkingSet64)\" }"],
+            capture_output=True, text=True, timeout=30).stdout
+        for ln in out.splitlines():
+            parts = ln.split()
+            if len(parts) != 2:
+                continue
+            pid, ws = int(parts[0]), int(parts[1])
+            if ws >= TRAIN_MIN_BYTES:
+                rows.append((pid, ws / 1024 ** 3))
+    except Exception as exc:                                  # noqa: BLE001
+        log("프로세스 조회 실패: %s" % exc)
+    return rows
+
+
+def find_mismatch(state: dict, big: list) -> list[str]:
+    """상태 파일이 실제와 어긋나는 곳. **고치지 않고 적기만 한다.**"""
+    out = []
+    declared = state.get("running") or []
+
+    if declared and not big:
+        out.append("상태 파일은 «학습 중» 인데 큰 python 프로세스가 없다. "
+                   "죽었을 수 있다. 자동으로 다시 걸지 «않는다»")
+    if not declared and big:
+        out.append("상태 파일은 «없음» 인데 큰 python 프로세스가 %d 개 돈다"
+                   % len(big))
+
+    now = dt.datetime.now()
+    for run in declared:
+        end = run.get("expected_end")
+        if not end:
+            continue
+        try:
+            when = dt.datetime.fromisoformat(end)
+        except ValueError:
+            out.append("«%s» 의 expected_end 를 못 읽는다: %r"
+                       % (run.get("name"), end))
+            continue
+        over = (now - when.replace(tzinfo=None)).total_seconds() / 60.0
+        budget = float(run.get("expected_minutes") or 0) * 0.5
+        if over > max(budget, 15.0):
+            out.append("«%s» 이 예상 종료를 %d 분 넘겼다"
+                       % (run.get("name"), int(over)))
+    return out
+
+
+def render(state: dict, gpu: list, big: list, mismatch: list) -> str:
+    stage = state.get("stage") or {}
+    nxt = state.get("next") or {}
+    budget = state.get("budget") or {}
+    docs = state.get("docs") or {}
+    declared = state.get("running") or []
+
+    if declared:
+        running = "\n          ".join(
+            "%s  GPU %s  PID %s  시작 %s"
+            % (r.get("name"), r.get("gpu"), r.get("pid"), r.get("started"))
+            for r in declared)
+    else:
+        running = "없음"
+
+    mm = "없음" if not mismatch else "\n".join("- " + m for m in mismatch)
+
+    return """# 루프 상태 · 사람이 읽는 판
+
+> 이 파일은 `watchdog.py` 가 `state.json` 에서 자동으로 만듭니다.
+> 손으로 고치지 마십시오. 고치려면 `state.json` 을 고치십시오.
+
+**갱신** {now} · 감시 스크립트 (읽기 전용 판)
+
+## 지금
+
+```
+단계      [{branch}] {sname} · {phase}
+          {note}
+도는 것   {running}
+막힌 것   {halt}
+다음      {nxt}
+          (막는 것: {blocked})
+```
+
+## 실제로 잰 것
+
+```
+GPU       {gpu}
+큰 python 프로세스   {nbig} 개{biglist}
+```
+
+## 상태 파일과 실제가 어긋나는 것
+
+{mm}
+
+## 예산
+
+```
+학습 판   {runs} 회 · 누적 {hours} 시간
+codex     이번 주 {pct} %
+          {bnote}
+```
+
+## 이어받는 사람이 읽을 순서
+
+```
+1  git pull origin main
+2  이 파일
+3  {criteria}
+4  {branch_table}
+5  막힌 것이 있으면 그것부터
+   없으면 감시 스크립트가 도는지만 확인하고 «건드리지 않는다»
+```
+
+**대화 기록을 읽을 필요가 없어야 합니다.** 읽어야 했다면 이 파일이 부족한 것입니다.
+
+## 이 스크립트가 지금 «안» 하는 것
+
+```
+학습을 걸지 않는다 · 평가를 걸지 않는다 · 커밋하지 않는다
+읽고 이 파일을 다시 쓸 뿐이다 (LOOP-RUNTIME.md 8 절의 2 번)
+죽은 학습을 «자동으로 다시 걸지 않는다» · 같은 이름의 결과가 둘 생기면
+어느 것이 무엇인지 알 수 없게 된다
+```
+""".format(
+        now=dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        branch=stage.get("branch"), sname=stage.get("name"),
+        phase=stage.get("phase"), note=stage.get("note") or "",
+        running=running,
+        halt=state.get("halt_reason") or "없음",
+        nxt=nxt.get("from_branch_table") or "",
+        blocked=nxt.get("blocked_by") or "없음",
+        gpu="\n          ".join(gpu),
+        nbig=len(big),
+        biglist="" if not big else "\n          " + "\n          ".join(
+            "PID %d · %.1f GB" % (p, g) for p, g in big),
+        mm=mm,
+        runs=budget.get("train_runs", 0), hours=budget.get("train_hours", 0),
+        pct=budget.get("codex_week_pct_reported", "?"),
+        bnote=budget.get("note", ""),
+        criteria=docs.get("criteria", ""), branch_table=docs.get("branch_table", ""))
+
+
+def main() -> int:
+    if not os.path.isfile(STATE):
+        log("state.json 이 없다. 멈춘다")
+        return 1
+    with io.open(STATE, encoding="utf-8") as handle:
+        state = json.load(handle)
+
+    gpu = read_gpu()
+    big = read_big_python()
+    mismatch = find_mismatch(state, big)
+
+    with io.open(HUMAN, "w", encoding="utf-8") as handle:
+        handle.write(render(state, gpu, big, mismatch))
+
+    stage = state.get("stage") or {}
+    log("갱신 · 단계 [%s] %s · 도는 것 %d · 어긋남 %d"
+        % (stage.get("branch"), stage.get("phase"),
+           len(state.get("running") or []), len(mismatch)))
+    for m in mismatch:
+        log("  어긋남 · " + m)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
