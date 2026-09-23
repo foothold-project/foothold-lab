@@ -111,3 +111,93 @@
 2026-09-23 20:19:03    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set rough6 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 1.5 --eval_duration 4.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.5
 2026-09-23 20:19:03    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set unseen10 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 0.5 --eval_duration 12.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v0.5
 2026-09-23 20:19:03  «--dry-run 이라 아무것도 안 걸었다»
+2026-09-23 20:21:49    v2b-r-iter1500 축1 cuda:1 · 4.5 분 · exit=0 · 산출물 있음
+2026-09-23 20:24:06    v2b-r-iter1500 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-23 20:25:42    v2b-r-iter1500 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-23 20:30:21    v2b-r-iter1500 축1 cuda:1 · 4.7 분 · exit=0 · 산출물 있음
+2026-09-23 20:32:51    v2b-r-iter1500 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-23 20:34:35    v2b-r-iter1500 축1 cuda:1 · 1.7 분 · exit=0 · 산출물 있음
+2026-09-23 20:39:00    v2b-r-iter2000 축1 cuda:1 · 4.4 분 · exit=0 · 산출물 있음
+2026-09-23 20:41:20    v2b-r-iter2000 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-23 20:42:58    v2b-r-iter2000 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-23 20:47:53    v2b-r-iter2000 축1 cuda:1 · 4.9 분 · exit=0 · 산출물 있음
+2026-09-23 20:50:27    v2b-r-iter2000 축1 cuda:1 · 2.6 분 · exit=0 · 산출물 있음
+2026-09-23 20:52:16    v2b-r-iter2000 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-23 20:56:50    v2b-r-iter2500 축1 cuda:1 · 4.6 분 · exit=0 · 산출물 있음
+2026-09-23 20:59:12    v2b-r-iter2500 축1 cuda:1 · 2.4 분 · exit=0 · 산출물 있음
+2026-09-23 21:00:53    v2b-r-iter2500 축1 cuda:1 · 1.7 분 · exit=0 · 산출물 있음
+2026-09-23 21:05:40    v2b-r-iter2500 축1 cuda:1 · 4.8 분 · exit=0 · 산출물 있음
+2026-09-23 21:08:09    v2b-r-iter2500 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-23 21:09:52    v2b-r-iter2500 축1 cuda:1 · 1.7 분 · exit=0 · 산출물 있음
+2026-09-23 21:14:14    v2b-r-iter3000 축1 cuda:1 · 4.4 분 · exit=0 · 산출물 있음
+2026-09-23 21:16:31    v2b-r-iter3000 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-23 21:18:06    v2b-r-iter3000 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-23 21:22:48    v2b-r-iter3000 축1 cuda:1 · 4.7 분 · exit=0 · 산출물 있음
+2026-09-23 21:25:18    v2b-r-iter3000 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-23 21:27:02    v2b-r-iter3000 축1 cuda:1 · 1.7 분 · exit=0 · 산출물 있음
+2026-09-23 21:27:02  끝 · 28 건 중 실패 4
+2026-09-23 21:27:02    실패 · sim/eval/results/20260923-v2rs-axis2/v2b-r-iter1500
+2026-09-23 21:27:02    실패 · sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2000
+2026-09-23 21:27:02    실패 · sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2500
+2026-09-23 21:27:02    실패 · sim/eval/results/20260923-v2rs-axis2/v2b-r-iter3000
+2026-09-23 21:40:17  v2b-s 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 21:40:17  v2b-s2 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 21:40:17  v2b-r 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v0.5
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.0
+2026-09-23 21:40:17    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.5
+2026-09-23 21:40:17  걸 것 4 건 · 축1 0 · 축2 4
+2026-09-23 21:40:17    [예시] sim/eval/eval_command_response.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --label v2b-r-iter1500 --scenario all --num_envs 64 --seed 42 --output_dir sim/eval/results/20260923-v2rs-axis2/v2b-r-iter1500
+2026-09-23 21:40:17    [예시] sim/eval/eval_command_response.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_2000.pt --label v2b-r-iter2000 --scenario all --num_envs 64 --seed 42 --output_dir sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2000
+2026-09-23 21:40:17    [예시] sim/eval/eval_command_response.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_2500.pt --label v2b-r-iter2500 --scenario all --num_envs 64 --seed 42 --output_dir sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2500
+2026-09-23 21:40:17    [예시] sim/eval/eval_command_response.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_3000.pt --label v2b-r-iter3000 --scenario all --num_envs 64 --seed 42 --output_dir sim/eval/results/20260923-v2rs-axis2/v2b-r-iter3000
+2026-09-23 21:40:17  «--dry-run 이라 아무것도 안 걸었다»
+2026-09-23 21:40:38  v2b-s 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 21:40:38  v2b-s2 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 21:40:38  v2b-r 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v0.5
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.0
+2026-09-23 21:40:38    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.5
+2026-09-23 21:40:38  걸 것 4 건 · 축1 0 · 축2 4

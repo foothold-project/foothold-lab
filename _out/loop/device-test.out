@@ -1,0 +1,14 @@
+cuda:0 에서 v2b model_3000 을 6 칸 평가한다
+  rough6    v0.5  4.6 분 · exit=0
+  rough6    v1.0  2.4 분 · exit=0
+  rough6    v1.5  1.7 분 · exit=0
+  unseen10  v0.5  5.0 분 · exit=0
+  unseen10  v1.0  2.7 분 · exit=0
+  unseen10  v1.5  1.8 분 · exit=0
+
+같은 체크포인트 · 같은 시드 · «장치만» 다름
+
+지형 / 속도                       칸   cuda:1   cuda:0      차이
+
+기존 cuda:1 결과가 이 브랜치에 «없다» (PR #444 에 있다).
+비교를 건너뛴다. 지어내지 않는다.
