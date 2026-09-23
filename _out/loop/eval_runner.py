@@ -172,6 +172,25 @@ def jobs_for(run: dict) -> list[dict]:
 # 한 건 실행
 
 
+def preflight(job: dict) -> str | None:
+    """걸기 «전에» 막을 것. 없으면 None.
+
+    2026-09-23 · 축 2 네 건을 띄웠다가 네 번 다 즉시 죽었다. 하네스 파일이
+    이 브랜치에 «없었다» (PR #444 에만 있다). 프로세스를 띄워 보고 알 것이
+    아니라 **걸기 전에** 알아야 한다. 3 차 감사의 1 단계 preflight 다.
+    """
+    script = os.path.join(REPO, job["argv"][0].replace("/", os.sep))
+    if not os.path.isfile(script):
+        return "하네스가 없다: %s" % job["argv"][0]
+    ck = None
+    for i, a in enumerate(job["argv"]):
+        if a == "--checkpoint":
+            ck = job["argv"][i + 1]
+    if ck and not os.path.isfile(ck):
+        return "체크포인트가 없다: %s" % ck
+    return None
+
+
 def run_job(job: dict) -> int:
     odir = os.path.join(REPO, job["out"].replace("/", os.sep))
     os.makedirs(odir, exist_ok=True)
@@ -291,6 +310,10 @@ def main() -> int:
             if not args.force and os.path.isfile(
                     os.path.join(REPO, job["done_marker"])):
                 log("  건너뜀 (이미 있음) %s" % job["out"])
+                continue
+            bad = preflight(job)
+            if bad:
+                log("  «걸지 않음» %s · %s" % (job["out"], bad))
                 continue
             if job["device"] in busy:
                 log("  미룸 (%s 에서 %s 학습 중) %s"
