@@ -131,22 +131,42 @@ def launch_eval() -> str:
         return "평가를 못 띄웠다: %s" % exc
 
 
+FINAL_CKPT = "model_3000.pt"
+
+# 사람이 이미 판정해 둔 상태. 감시가 다시 짚지 않는다.
+TERMINAL = ("완료", "죽음", "실패", "취소")
+
+
+def run_dir_of(run: dict):
+    """실행 폴더의 확정 경로. wildcard 는 «모호하면 포기한다»."""
+    pat = run.get("out_dir") or ""
+    if not pat:
+        return None
+    base, tail = os.path.split(pat)
+    if "*" not in tail:
+        return pat if os.path.isdir(pat) else None
+    if not os.path.isdir(base):
+        return None
+    suffix = tail.lstrip("*")
+    hits = [n for n in os.listdir(base) if n.endswith(suffix)]
+    # 3 차 감사 지적 · 여러 개면 «정렬상 마지막» 을 조용히 고르지 않는다
+    return os.path.join(base, hits[0]) if len(hits) == 1 else None
+
+
+def final_checkpoint_exists(run: dict) -> bool:
+    d = run_dir_of(run)
+    return bool(d and os.path.isfile(os.path.join(d, FINAL_CKPT)))
+
+
 def checkpoint_stale_minutes(run: dict):
     """마지막 체크포인트가 몇 분 전인지. 못 찾으면 None.
 
     **프로세스가 살아 있는 것과 진행하는 것은 다르다.** 물리 엔진이
     멎거나 교착에 걸리면 프로세스는 그대로 남는다.
     """
-    pat = run.get("out_dir") or ""
-    base, tail = os.path.split(pat)
-    if not os.path.isdir(base):
+    base = run_dir_of(run)
+    if not base:
         return None
-    if "*" in tail:
-        suffix = tail.lstrip("*")
-        hits = sorted(n for n in os.listdir(base) if n.endswith(suffix))
-        if not hits:
-            return None
-        base = os.path.join(base, hits[-1])
     newest = None
     try:
         for n in os.listdir(base):
@@ -165,7 +185,12 @@ def checkpoint_stale_minutes(run: dict):
 def find_mismatch(state: dict, big: list) -> list[str]:
     """상태 파일이 실제와 어긋나는 곳. **고치지 않고 적기만 한다.**"""
     out = []
-    declared = state.get("running") or []
+    # **끝난 것은 세지 않는다.** 사람이 이미 판정해 둔 실행을 계속 짚으면
+    # 진짜 어긋남이 그 잡음에 묻힌다. 2026-09-23 에 실제로 묻혔다.
+    declared = [r for r in (state.get("running") or [])
+                if (r.get("status") or "").strip() not in TERMINAL]
+    settled = [r for r in (state.get("running") or [])
+               if (r.get("status") or "").strip() in TERMINAL]
 
     # **PID 마다 따로 본다.** 2026-09-23 에 여기서 한 번 놓쳤다.
     # 예전 판은 「선언은 있는데 큰 python 이 «하나도» 없다」만 봤다.
@@ -174,10 +199,21 @@ def find_mismatch(state: dict, big: list) -> list[str]:
     live = set(p for p, _ in big)
     for run in declared:
         pid = run.get("pid")
-        if pid and int(pid) not in live:
-            out.append("«%s» (PID %s) 이 «죽었다». 자동으로 다시 걸지 «않는다». "
-                       "로그를 보고 사람이 정한다: %s"
-                       % (run.get("name"), pid, run.get("log") or "로그 경로 없음"))
+        status = (run.get("status") or "").strip()
+        if status in ("죽음", "실패", "취소", "완료"):
+            continue                      # 이미 사람이 판정해 둔 것은 다시 안 짚는다
+        if not pid or int(pid) in live:
+            continue
+        # **프로세스가 없는 것과 죽은 것은 다르다.** 4 차 감사 지적이다.
+        # 마지막 체크포인트가 있으면 «정상 완료» 일 수 있다.
+        if final_checkpoint_exists(run):
+            out.append("«%s» 가 «완료» 로 보인다. 마지막 체크포인트가 있고 "
+                       "프로세스가 끝났다. 상태 파일에 «완료» 로 적어야 한다"
+                       % run.get("name"))
+        else:
+            out.append("«%s» (PID %s) 이 «끝났는데 마지막 체크포인트가 없다». "
+                       "죽었을 수 있다. 자동으로 다시 걸지 «않는다». 로그: %s"
+                       % (run.get("name"), pid, run.get("log") or "없음"))
 
     if declared and not big:
         out.append("상태 파일은 «학습 중» 인데 큰 python 프로세스가 «하나도» 없다")
@@ -220,7 +256,11 @@ def render(state: dict, gpu: list, big: list, mismatch: list) -> str:
     nxt = state.get("next") or {}
     budget = state.get("budget") or {}
     docs = state.get("docs") or {}
-    declared = state.get("running") or []
+    allruns = state.get("running") or []
+    declared = [r for r in allruns
+                if (r.get("status") or "").strip() not in TERMINAL]
+    settled = [r for r in allruns
+               if (r.get("status") or "").strip() in TERMINAL]
 
     if declared:
         running = "\n          ".join(
@@ -250,6 +290,7 @@ def render(state: dict, gpu: list, big: list, mismatch: list) -> str:
 단계      [{branch}] {sname} · {phase}
           {note}
 도는 것   {running}
+끝난 것   {settled}
 막힌 것   {halt}
 다음      {nxt}
           (막는 것: {blocked})
@@ -302,6 +343,8 @@ codex     이번 주 {pct} %
         branch=stage.get("branch"), sname=stage.get("name"),
         phase=stage.get("phase"), note=stage.get("note") or "",
         running=running,
+        settled=("없음" if not settled else "  ".join(
+            "%s(%s)" % (r.get("name"), r.get("status")) for r in settled)),
         halt=state.get("halt_reason") or "없음",
         nxt=nxt.get("from_branch_table") or "",
         blocked=nxt.get("blocked_by") or "없음",

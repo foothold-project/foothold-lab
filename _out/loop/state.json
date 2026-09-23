@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "updated": "2026-09-23T17:40:00+09:00",
-  "updated_by": "v2b-s2 재시도를 상태 파일에 올림 · 4 차 감사 지적 반영",
+  "updated": "2026-09-23T18:05:57",
+  "updated_by": "v2b-r 완료 기록 · Claude 세션",
   "stage": {
     "branch": "0",
     "name": "기준 재기",
-    "phase": "학습 중",
+    "phase": "학습 중 (v2b-s2) · v2b-r 완료",
     "note": "두 판 병렬. 부모 v2a/v2b 도 5 초 차이로 같이 돌았으므로 조건이 같다"
   },
   "running": [
@@ -23,7 +23,10 @@
       "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144219_20260923_v2b-r_seed42_iter3000.log",
       "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-r_seed42_iter3000",
       "changed_vs_parent": "시뮬 GPU 만 (v2b 는 cuda:1)",
-      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다"
+      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
+      "status": "완료",
+      "finished": "2026-09-23T18:05:00+09:00 쯤 · model_3000.pt 존재로 확인",
+      "condition_note": "부모 v2b 는 «끝까지» 이웃(v2a)이 있었다. v2b-r 은 16:39 까지 v2b-s, 17:08 부터 v2b-s2 가 이웃이었고 그 사이 29 분은 혼자였다. 판정문에 적는다"
     },
     {
       "name": "v2b-s",
@@ -67,18 +70,19 @@
       "out_dir_kind": "«확정 절대 경로». wildcard 를 쓰지 않는다 (3 차 감사 지적)",
       "changed_vs_parent": "학습 시드만 (42 -> 43)",
       "why": "v2b-s 가 1670 에서 죽어 같은 시드로 재시도. 팀장 승인 2026-09-23",
-      "watch": "step 1500~1700 의 Loss/value_function 과 Train/mean_reward 를 «연속으로» 본다"
+      "watch": "step 1500~1700 의 Loss/value_function 과 Train/mean_reward 를 «연속으로» 본다",
+      "condition_note": "18:05 에 v2b-r 이 끝나 그 뒤로 «혼자» 돈다. 부모 v2b 는 끝까지 이웃이 있었다. 조건이 같지 않다. 판정문에 적는다"
     }
   ],
   "last_result": null,
   "next": {
-    "from_branch_table": "v2b-r 과 v2b-s2 가 «둘 다» 끝난 뒤 평가. 학습 중에는 평가를 안 건다",
-    "blocked_by": "학습 종료"
+    "from_branch_table": "v2b-s2 가 끝나면 두 판을 «cuda:1» 에서 평가한다 (v2b 기준선과 같은 장치)",
+    "blocked_by": "v2b-s2 종료"
   },
   "halt_reason": null,
   "budget": {
     "train_runs": 3,
-    "train_hours": 0.0,
+    "train_hours": 3.4,
     "codex_calls_this_week": 0,
     "codex_week_pct_reported": 78,
     "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함. 판정문 확정 전 검증 한 회차에만 쓴다"
