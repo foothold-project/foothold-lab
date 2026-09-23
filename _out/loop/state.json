@@ -41,12 +41,13 @@
       "changed_vs_parent": "학습 시드만 (42 -> 43)",
       "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
       "status": "죽음",
-      "died_at": "2026-09-23T16:39:26+09:00",
+      "died_at": "2026-09-23 16:39~16:41 사이 · 마지막 체크포인트 16:39:26 · 종료 경고 16:41",
       "died_at_iteration": "1670 언저리 (마지막 체크포인트 model_1650)",
       "error": "RuntimeError: normal expects all elements of std >= 0.0",
-      "error_where": "torch/distributions/normal.py:74 · PPO 행동 분포의 표준편차가 0 이하",
+      "error_where": "torch/distributions/normal.py:74 · PPO 행동 분포의 scale 에 «음수나 NaN 등» 조건 위반 값이 들어갔다. 로그는 「모든 원소가 >= 0 이어야 한다」만 말한다. «0 이하» 로 단정하면 안 된다 (3 차 감사 지적)",
       "exit_code": 1,
-      "auto_restart": "안 함 (설계상 금지)"
+      "auto_restart": "안 함 (설계상 금지)",
+      "died_at_note": "체크포인트 시각을 사망 시각으로 쓰지 않는다"
     }
   ],
   "last_result": null,
@@ -72,7 +73,7 @@
   "incidents": [
     {
       "when": "2026-09-23T16:39:26+09:00",
-      "what": "v2b-s 학습이 RuntimeError 로 죽음 (std <= 0)",
+      "what": "v2b-s 학습이 RuntimeError 로 죽음 (normal 의 scale 조건 위반)",
       "why_it_matters": "같은 설정을 시드만 바꿔 돌렸더니 «완주하지 못했다». 재현 분산이 「숫자가 흔들린다」가 아니라 「판이 안 끝날 수도 있다」를 포함한다",
       "gate_defect": "감시 스크립트가 18 분 동안 못 잡았다. 「선언은 있는데 큰 python 이 하나도 없다」만 봤고 둘 중 하나가 죽은 경우를 안 봤다. 같은 날 고쳤다",
       "side_effect": "v2b-r 의 조건이 도중에 바뀌었다. 16:39 까지는 이웃이 있었고 그 뒤로는 혼자다. 부모 v2b 는 끝까지 이웃이 있었다. 이것을 판정문에 적는다"
