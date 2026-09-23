@@ -28,6 +28,7 @@ import datetime as dt
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -132,7 +133,12 @@ def render(state: dict, gpu: list, big: list, mismatch: list) -> str:
 > 이 파일은 `watchdog.py` 가 `state.json` 에서 자동으로 만듭니다.
 > 손으로 고치지 마십시오. 고치려면 `state.json` 을 고치십시오.
 
-**갱신** {now} · 감시 스크립트 (읽기 전용 판)
+**이 내용이 된 때** {now} · 감시 스크립트 (읽기 전용 판)
+
+> 이 시각은 «마지막으로 확인한 때» 가 아니라 «내용이 마지막으로 바뀐 때» 입니다.
+> 내용이 그대로면 이 파일을 다시 쓰지 않습니다. 10 분마다 다시 쓰면 작업 트리가
+> 늘 더러워져서 진짜 변경이 묻힙니다.
+> 마지막 확인 시각은 `_out/loop/watchdog.log` 의 마지막 줄에 있습니다.
 
 ## 지금
 
@@ -204,6 +210,48 @@ codex     이번 주 {pct} %
         criteria=docs.get("criteria", ""), branch_table=docs.get("branch_table", ""))
 
 
+# 첫 줄은 「GPU       0, 0 %, 0 MiB」이고 이어지는 줄은 「1, 7 %, 1873 MiB」다.
+# 접두어를 선택으로 두지 않으면 첫 줄이 그물을 빠져나간다.
+# 2026-09-23 에 실제로 빠져나갔고, GPU 0 이 마침 0 % 0 MiB 로 안 흔들려서
+# 시험이 «운으로» 통과했다.
+GPU_ROW = re.compile(r"^(?:GPU\s+)?(\d+),\s*(\d+)\s*%,\s*(\d+)\s*MiB$")
+PID_ROW = re.compile(r"^PID (\d+) · ([\d.]+) GB$")
+
+# 이 아래면 「비어 있다」로 본다. 데스크톱 앱이 항상 1 ~ 2 GB 를 쓴다.
+GPU_IDLE_MIB = 3000
+
+
+def strip_volatile(text: str) -> str:
+    """매번 흔들리는 값을 «뭉개서» 비교용 본문을 만든다.
+
+    왜 필요한가
+        이것이 없으면 10 분마다 시각과 GPU 사용률만 바뀐 파일이 다시 쓰여
+        `git status` 가 늘 더럽다. 진짜 변경이 그 잡음에 묻힌다.
+
+    왜 «지우지» 않고 «뭉개는가»
+        지우면 GPU 가 0 MiB 에서 12 GB 로 올라가도 파일이 안 바뀐다.
+        그러면 STATE.md 가 거짓말을 한다. 그래서 잡음만 없애고
+        «비었다 / 쓰는 중» 같은 상태 전이는 그대로 남긴다.
+    """
+    keep = []
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("**이 내용이 된 때**"):
+            continue
+        m = GPU_ROW.match(s)
+        if m:
+            used = int(m.group(3))
+            keep.append("GPU%s %s" % (
+                m.group(1), "비었음" if used < GPU_IDLE_MIB else "쓰는중"))
+            continue
+        m = PID_ROW.match(s)
+        if m:
+            keep.append("PID%s %.0fGB" % (m.group(1), float(m.group(2))))
+            continue
+        keep.append(line)
+    return "\n".join(keep)
+
+
 def main() -> int:
     if not os.path.isfile(STATE):
         log("state.json 이 없다. 멈춘다")
@@ -215,13 +263,22 @@ def main() -> int:
     big = read_big_python()
     mismatch = find_mismatch(state, big)
 
-    with io.open(HUMAN, "w", encoding="utf-8") as handle:
-        handle.write(render(state, gpu, big, mismatch))
+    fresh = render(state, gpu, big, mismatch)
+    old = ""
+    if os.path.isfile(HUMAN):
+        with io.open(HUMAN, encoding="utf-8") as handle:
+            old = handle.read()
+
+    changed = strip_volatile(fresh) != strip_volatile(old)
+    if changed:
+        with io.open(HUMAN, "w", encoding="utf-8") as handle:
+            handle.write(fresh)
 
     stage = state.get("stage") or {}
-    log("갱신 · 단계 [%s] %s · 도는 것 %d · 어긋남 %d"
+    log("확인 · 단계 [%s] %s · 도는 것 %d · 어긋남 %d · %s"
         % (stage.get("branch"), stage.get("phase"),
-           len(state.get("running") or []), len(mismatch)))
+           len(state.get("running") or []), len(mismatch),
+           "STATE.md 다시 씀" if changed else "내용 그대로"))
     for m in mismatch:
         log("  어긋남 · " + m)
     return 0
