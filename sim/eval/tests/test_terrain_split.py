@@ -393,8 +393,11 @@ class RangeTests(unittest.TestCase):
     def test_noise_range_is_sampled_not_interpolated(self):
         """`random_uniform_terrain` 은 난이도를 «안» 쓴다.
 
-        구간 전체에서 뽑으므로 학습 상한 0.06 을 넘는 조건이 난이도와
-        무관하게 «이미» 나온다. 보간으로 보면 0.060 이라 놓친다.
+        구간 전체에서 뽑으므로 학습 상한 0.06 을 넘는 값이 난이도와
+        무관하게 «나올 수 있다». 이 대조는 설정 범위만 보므로 실제로
+        그 값이 나왔는지까지는 말하지 않는다 (`np.random.choice` ·
+        hf_terrains.py:67-69). 보간으로 보면 0.060 이라 이 «가능성» 을
+        놓친다.
         """
         row = self.rows()[("random_rough", "noise_range")]
         self.assertEqual(row[2], ts.SAMPLED)
