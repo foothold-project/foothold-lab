@@ -3,10 +3,10 @@
 
 분류: 도구
 작성: Claude 세션 (오흥재 지시) · 2026-09-21
-근거: inbox/jay/20260921-v2-design.md v1.1 3-1 절 (리드가 박은 판정 규칙)
+근거: inbox/jay/20260921-v2-design.md v1.1 3-1 절 (리드가 박은 판정 규칙) · inbox/jay/20260923-lineage/CRITERIA.md v1.0 2 절 · 8-2 절
 요지: 한 점의 숫자를 모델 성적으로 읽지 않기 위한 도구다
 상태: 확정
-판: v1.0
+판: v1.1
 
 ## 왜 필요한가
 
@@ -24,11 +24,28 @@
 「출렁인다」           네 점의 폭(max-min)이 15 %p 이상인 칸은 폭을 적는다
 ```
 
+## 축 1 을 «세 묶음» 으로 나눠 읽는다 (CRITERIA v1.0 2 절)
+
+`--env_yaml` 에 **그 학습이 남긴** `params/env.yaml` 을 주면 48 칸을
+`학습 지형` · `닮은 지형` · `새 지형` 으로 갈라 적는다. 분류는 손으로 안
+적고 그 파일의 `sub_terrains` 에서 읽는다. **정책마다 학습 지형이 다르고**
+(`rails` 는 `v2a`·`v2b` 에만 학습 지형이다) 손으로 적으면 조용히 어긋난다.
+
+**통과 판정은 48 칸 전체로 한다.** 나누는 것은 보고할 때이고 통과선을
+둘로 만들지 않는다.
+
+## 성공률 0 인 칸 (CRITERIA v1.0 8-2 절)
+
+기준선도 0 인 칸은 **「하락」이 아니라서 통과로 셈된다.** 못 하는 것이
+통과가 된다. 그래서 통과 판정과 «별개 줄» 로 `미해결` 을 적는다.
+
 ## 쓰는 법
 
 ```
 python sim/eval/fourpoint_table.py --root sim/eval/results/20260921-v2ab --policy v2a
 python sim/eval/fourpoint_table.py --root ... --policy v2a --baseline models/foothold-v1.json
+python sim/eval/fourpoint_table.py --root ... --policy v2b ^
+  --env_yaml C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/<v2b 런>/params/env.yaml
 ```
 """
 
@@ -45,6 +62,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # **Wilson 을 다시 짜지 않는다.** 이 저장소에 이미 넷이 있고 다섯째를 더하면
 # 갈라진다. 판정 경로(`metrics.py`)는 안 건드리고, 이미 있는 것을 부른다.
 from verdict_manifest import compare_wilson, wilson_pct
+# 지형 분류도 여기서 다시 안 적는다. `env.yaml` 에서 읽는 쪽 하나만 쓴다.
+import terrain_split
 
 ITERS = (1500, 2000, 2500, 3000)
 SPEEDS = (("0.5 m/s", "v0.5"), ("1.0 m/s", "v1.0"), ("1.5 m/s", "v1.5"))
@@ -120,6 +139,10 @@ def main():
     parser.add_argument("--wobble_pp", type=float, default=WOBBLE_PP)
     parser.add_argument("--also", default="",
                         help="같이 볼 정책들 (쉼표). stepping_stones 를 한 표로 센다")
+    parser.add_argument("--env_yaml", default="",
+                        help="이 정책이 «학습할 때» 남긴 params/env.yaml. "
+                             "축 1 을 학습 지형 / 새 지형으로 가르는 데 쓴다 "
+                             "(CRITERIA v1.0 2 절)")
     args = parser.parse_args()
 
     cells = load_policy(args.root, args.policy)
@@ -196,28 +219,86 @@ def main():
     else:
         print("`%s` · 아직 잰 점이 없다" % ALWAYS_ZERO)
 
+    # 학습 지형은 «정책마다 다르다». 손으로 안 적고 그 학습이 남긴
+    # env.yaml 에서 읽는다 (CRITERIA v1.0 2 절).
+    trained = None
+    if args.env_yaml:
+        # 정책 이름이 경로에 없으면 «다른 학습의» env.yaml 을 준 것일 수 있다.
+        # 도구는 어느 학습이 이 결과를 냈는지 모르므로 사람에게 되묻는다.
+        if args.policy not in args.env_yaml.replace("\\", "/"):
+            raise SystemExit(
+                "`--env_yaml` 경로에 정책 이름 `%s` 이 없다: %s\n"
+                "다른 학습의 설정을 준 것이 아닌지 확인하십시오. "
+                "일부러 그런 것이면 `--policy` 를 그 학습 이름으로 주십시오."
+                % (args.policy, args.env_yaml))
+        trained = terrain_split.read_sub_terrains(args.env_yaml)
+        print()
+        print("학습 지형 %d 종 (`%s` 에서 읽음)"
+              % (len(trained), args.env_yaml))
+        print("  %s" % " · ".join("`%s`" % name for name in trained))
+        for terrain, name, source, quote in terrain_split.sources(
+                sorted({key[2] for key in cells}), trained):
+            print("  닮음  평가 `%s` <- 학습 `%s`  · %s" % (terrain, name, source))
+            print("        「%s」" % quote)
+        for note in terrain_split.width_notes(trained):
+            print("  덧    %s" % note)
+
     if base:
         print()
         for iteration in ITERS:
-            drops, rises, laps, missing = [], [], 0, 0
+            marks, missing = {}, 0
             for key, (bv, bn) in sorted(base.items()):
                 if key not in cells or iteration not in cells[key]:
                     missing += 1
                     continue
                 pv, pn = cells[key][iteration]
-                mark = verdict(bv, bn, pv, pn)
-                if mark == "하락":
-                    drops.append((key, bv, pv))
-                elif mark == "상승":
-                    rises.append((key, bv, pv))
-                else:
-                    laps += 1
+                marks[key] = (verdict(bv, bn, pv, pn), bv, pv)
+            drops = [(k, b, p) for k, (m, b, p) in sorted(marks.items()) if m == "하락"]
+            rises = [k for k, (m, _, _) in marks.items() if m == "상승"]
+            laps = sum(1 for m, _, _ in marks.values() if m == "겹침")
             tail = " · 아직 없는 칸 %d" % missing if missing else ""
             print("iter %-5d v1 대비  진짜 하락 %d · 진짜 상승 %d · 겹침 %d%s"
                   % (iteration, len(drops), len(rises), laps, tail))
             for key, bv, pv in drops:
                 print("    하락  %-9s %-20s %-8s  %3.0f -> %3.0f"
                       % (key[1], key[2], key[0], bv, pv))
+
+            # --- 두 줄로 나눠 읽기 (CRITERIA v1.0 2 절) ---
+            # **통과 판정은 위의 48 칸 한 줄로 한다.** 아래는 보고용 분해다.
+            if trained is None:
+                print("    **지형 분류 못 함** · `--env_yaml` 을 안 줬다 · "
+                      "학습 지형과 새 지형을 못 가른다")
+            else:
+                groups = terrain_split.split_cells(marks.keys(), trained)
+                for bucket, label, note in (
+                        (terrain_split.LEARNED, "학습 지형", "배운 것을 지켰나"),
+                        (terrain_split.SIMILAR_TO, "닮은 지형", "학습 지형과 모양이 닮았다"),
+                        (terrain_split.UNSEEN, "새 지형", "**일반화 주장은 이 칸들에만 선다**")):
+                    keys = groups[bucket]
+                    if not keys:
+                        continue
+                    print("    %-9s %2d 칸  하락 %d · 상승 %d · 겹침 %d   %s"
+                          % (label, len(keys),
+                             sum(1 for k in keys if marks[k][0] == "하락"),
+                             sum(1 for k in keys if marks[k][0] == "상승"),
+                             sum(1 for k in keys if marks[k][0] == "겹침"),
+                             note))
+
+            # --- 성공률 «자체» 가 0 인 칸 (CRITERIA v1.0 8-2 절) ---
+            # 기준선도 0 이면 「하락」이 아니라 통과로 «셈된다». 못 하는
+            # 것이 통과가 되므로 통과 판정과 «별개 줄» 로 적는다.
+            zero = [key for key in sorted(cells)
+                    if iteration in cells[key] and cells[key][iteration][0] == 0.0]
+            if zero:
+                both = [k for k in zero if k in base and base[k][0] == 0.0]
+                print("    «미해결» 성공률 0 인 칸 %d  (그중 v1 도 0 인 칸 %d · "
+                      "하락이 아니라서 통과로 셈된다)" % (len(zero), len(both)))
+                for key in zero:
+                    print("      미해결  %-9s %-20s %-8s  v1 %3.0f -> 0"
+                          % (key[1], key[2], key[0],
+                             base[key][0] if key in base else float("nan")))
+            else:
+                print("    «미해결» 성공률 0 인 칸 없음")
 
         # --- 후보는 «가장 높은 점» 이 아니라 «흔들리지 않는 점» (리드 요청 4) ---
         print()

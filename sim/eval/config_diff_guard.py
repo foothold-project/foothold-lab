@@ -38,7 +38,7 @@ python sim/eval/config_diff_guard.py ^
 `--ignore` 는 기본으로 `log_dir` 하나다. **`sim.device` 는 기본으로 안
 무시한다** · 그것이 이 도구가 생긴 까닭이다.
 
-## 재현 판(`v2b-r`)에는 «새 설정 파일이 필요 없다** `확인됨`
+## 재현 판(`v2b-r`)에는 «새 설정 파일이 필요 없다» `확인됨`
 
 장치는 설정 클래스가 아니라 **`--device` 팔**에서 온다
 (`SimulationCfg.device` · `simulation_cfg.py:355`). 그리고 **`env.yaml` 에는
