@@ -2,10 +2,11 @@
 
 > 분류: 계획
 > 작성: Claude 세션 (오흥재 지시) · 2026-09-23
-> 근거: `CRITERIA.md` v1.0 9 절 · `cli_args.py:71-75` · `train.py:126` · 저장된 `params/env.yaml` 네 벌 · 관문 예행 4 건 (아래 3 절)
-> 요지: **둘 다 새 설정 파일이 필요 없다.** 씨앗도 GPU 도 실행 인자다. 관문 명령을 가짜 런으로 미리 걸어 네 경우를 확인했다
+> 근거: `CRITERIA.md` v1.1 9 절 · `cli_args.py:71-75` · `train.py:126-127` · `train.py:199` · `rl_cfg.py:144` · 저장된 `params/env.yaml` · `agent.yaml` 네 벌 · 관문 예행 4 건 (아래 3 절)
+> 요지: **둘 다 새 설정 파일이 필요 없다** · 씨앗도 장치도 실행 인자다. 관문을 가짜 런으로 미리 걸어 네 경우를 봤다. 그러다 **한 학습에 장치가 둘**인 것을 봤다 · `--device` 는 시뮬레이션만 옮기고 학습 runner 는 네 런 모두 `cuda:0` 이다 (2 절)
 > 상태: 확정 · **아직 안 걸었다**
-> 기준: `CRITERIA.md` v1.0 으로 판정함
+> 판: v1.2
+> 기준: `CRITERIA.md` v1.1 을 따름 (이 문서는 판정문이 아니라 준비입니다)
 
 **승인 전이라 걸지 않았습니다.** 이 문서는 설정과 관문만 준비한 것입니다.
 
@@ -38,33 +39,53 @@ train.py:126               agent_cfg.seed -> env_cfg.seed
 
 ## 1. 걸 명령 (아직 걸지 마십시오)
 
-부모 `v2b` 는 `cuda:1` 에서 돌았습니다 (`env.yaml` 의 `sim.device`).
+부모 `v2b` 는 시뮬레이션을 `cuda:1` 에서 돌렸습니다 (`env.yaml` 의
+`sim.device` · 다만 2 절을 같이 보십시오).
+
+**작업 디렉터리가 `C:\isaac\IsaacLab` 이어야 합니다.** rsl_rl 이 `logs/` 를
+현재 디렉터리 기준으로 풀고, `train_win.py` 는 디렉터리를 «안» 바꿉니다
+(`os.getcwd()` 를 적기만 합니다). 실제로 지금까지의 학습 기록이 전부
+`C:\isaac\IsaacLab\logs\rsl_rl\` 아래에 있고, 이어받을 원본도
+`logs\rsl_rl\unitree_go2_gap_nvidia\nvidia_pretrained_source\nvidia_pretrained.pt`
+입니다 `실측`.
+
+**그래서 스크립트는 절대 경로로 부릅니다.** 저장소 안에서
+`python sim\policy\train_win.py` 로 부르면 `logs\...` 도 사전학습 원본도
+못 찾습니다.
 
 ```bat
 REM v2b-r · 부모와 «GPU 만» 다르다 · GPU0 · 결정성을 잰다
-python sim\policy\train_win.py ^
+cd /d C:\isaac\IsaacLab
+python C:\Users\AI-WS01\orca\workspaces\foothold-lab\rl-v2-command-restore\sim\policy\train_win.py ^
   --task Isaac-Velocity-V2b-Unitree-Go2-v0 ^
   --num_envs 4096 --seed 42 --max_iterations 3001 ^
   --headless --device cuda:0 ^
   --resume --load_run nvidia_pretrained_source ^
   --checkpoint nvidia_pretrained.pt ^
   --guard_against logs\rsl_rl\unitree_go2_gap_nvidia\2026-09-21_11-03-28_20260921_v2b_seed42_iter3000 ^
-  --guard_intended sim.device ^
-  agent.run_name=20260923_v2br_seed42_iter3000
+  agent.run_name=20260923_v2br_seed42_iter3000 ^
+  --guard_intended sim.device
 ```
 
 ```bat
 REM v2b-s · 부모와 «씨앗만» 다르다 · GPU1 (부모와 같은 GPU) · 재현 분산을 잰다
-python sim\policy\train_win.py ^
+cd /d C:\isaac\IsaacLab
+python C:\Users\AI-WS01\orca\workspaces\foothold-lab\rl-v2-command-restore\sim\policy\train_win.py ^
   --task Isaac-Velocity-V2b-Unitree-Go2-v0 ^
   --num_envs 4096 --seed 7 --max_iterations 3001 ^
   --headless --device cuda:1 ^
   --resume --load_run nvidia_pretrained_source ^
   --checkpoint nvidia_pretrained.pt ^
   --guard_against logs\rsl_rl\unitree_go2_gap_nvidia\2026-09-21_11-03-28_20260921_v2b_seed42_iter3000 ^
-  --guard_intended seed ^
-  agent.run_name=20260923_v2bs_seed7_iter3000
+  agent.run_name=20260923_v2bs_seed7_iter3000 ^
+  --guard_intended seed
 ```
+
+**`agent.run_name=` 이 `--guard_intended` «앞» 에 있는 것이 중요합니다.**
+`--guard_intended` 는 `nargs="*"` 라 **뒤에 오는 것을 다 삼킵니다.**
+뒤에 두면 런 이름이 의도한 키 목록으로 들어가고 `train.py` 에는 안
+넘어갑니다. 삼키면 그 자리에서 멈추도록 `train_win.py` 에 관문을
+넣었습니다 (`=` 가 든 항목을 거른다 · 시험 넷).
 
 **지켜야 할 것 셋.**
 
@@ -82,30 +103,88 @@ CUDA_VISIBLE_DEVICES   쓰지 않는다 · --device 로 고른다
 
 ---
 
-## 2. `agent.yaml` 의 `device` 를 믿으면 안 됩니다 `실측`
+## 2. 한 학습에 «장치가 둘» 입니다 `코드확인`
 
-관문이 `env.yaml` 을 읽는 것이 맞는지 보려고 네 런을 열었습니다.
+관문이 `env.yaml` 을 읽는 것이 맞는지 보려다 이것을 봤습니다.
+**`--device` 는 장치 둘 중 «하나만» 정합니다.**
 
-| 런 | `agent.yaml` 의 `device` | `env.yaml` 의 `sim.device` | 실제 |
-|---|---|---|---|
-| `v2a` | `cuda:0` | `cuda:0` | GPU0 |
-| **`v2b`** | **`cuda:0`** | **`cuda:1`** | **GPU1** |
-| `gapF` | `cuda:0` | `cuda:0` | GPU0 |
-| **`gapG`** | **`cuda:0`** | **`cuda:1`** | **GPU1** |
+```
+train.py:127   env_cfg.sim.device = args_cli.device      <- 시뮬레이션 장치
+               --device 가 여기에 닿는다 · env.yaml 에 남는다
+train.py:199   OnPolicyRunner(..., device=agent_cfg.device)   <- 학습 runner 장치
+               --device 가 여기에 «안» 닿는다 · agent.yaml 에 남는다
+```
 
-**`agent.yaml` 의 `device` 는 네 런 모두 `cuda:0` 입니다.** 실제 GPU 와
-무관하게 같은 값입니다. **그 칸으로는 GPU 를 가릴 수 없습니다.**
-`config_diff_guard` 가 `env.yaml` 을 읽는 것은 그래서 맞습니다.
+**`cli_args.py` 에는 `device` 라는 글자가 한 번도 안 나옵니다** (0 건).
+그래서 **`--device` 로는** `agent_cfg.device` 가 안 바뀌고 기본값이
+남습니다.
 
-**이것은 「`agent.yaml` 이 GPU 를 안 적는다」까지만 말합니다.** 왜 안 적는지는
-안 봤습니다.
+```
+rl_cfg.py:144   device: str = "cuda:0"      <- «기본값» 이다
+```
+
+**「고정」이 아닙니다.** 기본값일 뿐이고 바꿀 길이 둘 있습니다.
+
+```
+agent.device=... 로 하이드라 덮어쓰기
+--distributed     train.py:137-139 이 두 장치를 local_rank 로 같이 맞춘다
+```
+
+우리가 돌린 넷은 **둘 다 안 썼으므로** 기본값이 남은 것입니다.
+
+네 런의 두 파일을 열어 봤습니다.
+
+| 런 | `agent.yaml` `device` (runner) | `env.yaml` `sim.device` (시뮬) |
+|---|---|---|
+| `v2a` | `cuda:0` | `cuda:0` |
+| **`v2b`** | **`cuda:0`** | **`cuda:1`** |
+| `gapF` | `cuda:0` | `cuda:0` |
+| **`gapG`** | **`cuda:0`** | **`cuda:1`** |
+
+**`--device cuda:1` 로 건 두 런에서도 runner 는 `cuda:0` 입니다** (이 네 런에서 그렇다는 것이고, 상류가 그렇게 «못 바꾸게» 한다는 뜻은 아닙니다).
+
+### 이것이 9 절 계획에 무슨 뜻인가
+
+`CRITERIA.md` 9 절은 `v2b-r` 을 GPU0 에, `v2b-s` 를 GPU1 에 두고 **GPU 가
+변수가 되지 않게** 짠 것입니다. 그런데 `--device` 가 시뮬레이션만 옮기므로
+
+```
+v2b-r   시뮬 GPU0 · runner GPU0
+v2b-s   시뮬 GPU1 · runner GPU0     <- runner 가 GPU0 에 «같이» 올라간다
+```
+
+**「자식이 부모와 한 항목만 다르다」는 여전히 성립합니다.** 부모 `v2b` 도
+runner 가 `cuda:0` 이었으므로, `v2b-s` 는 부모와 씨앗만 다르고 `v2b-r` 은
+부모와 시뮬 장치만 다릅니다. 관문이 보는 `env.yaml` 도 그대로 맞습니다.
+
+**다만 「GPU 를 나눠 쓴다」는 그림은 절반만 맞습니다.** 둘을 동시에 걸면
+runner 둘이 GPU0 을 같이 씁니다. 메모리와 속도에 영향이 있을 수 있습니다.
+**재 본 적은 없습니다** `미측정`.
+
+**그리고 `v2b-r` 이 재는 「GPU 효과」는 «시뮬레이션 장치» 의 효과입니다.**
+runner 장치는 부모와 같으므로 그 부분은 안 갈립니다. 9 절이 기대한 것과
+같은지는 팀장이 보셔야 합니다.
+
+### 이 절이 «말하지 않는» 것
+
+```
+실제로 어느 GPU 가 얼마나 일했는지   안 쟀다 · 두 설정 칸을 읽은 것뿐이다
+runner 가 cuda:0 인 것이 성능에      모른다 · v2b 는 그 상태로 끝까지 돌았다
+  문제였는지
+왜 cli_args 가 device 를 안 넘기나   상류 설계이고 까닭은 안 봤다
+```
 
 ---
 
 ## 3. 관문을 «미리» 걸어 봤습니다 `실측`
 
 부모 `v2b` 의 `env.yaml` 을 복사해 손으로 한 칸씩 바꾼 가짜 런 셋을 만들고,
-위에 적은 그 명령을 그대로 걸었습니다. **네 경우가 다 제대로 났습니다.**
+**`config_diff_guard.py` 를 직접** 걸었습니다. **네 경우가 다 제대로
+났습니다.**
+
+**이것은 «관문» 을 시험한 것이지 1 절의 «학습 명령» 을 돌려 본 것이
+아닙니다.** 학습은 안 걸었습니다. 1 절 명령이 통째로 도는 것은 확인한
+적이 없습니다.
 
 | 가짜 런 | `--intended` | 바라는 것 | 결과 |
 |---|---|---|---|
@@ -131,13 +210,20 @@ CUDA_VISIBLE_DEVICES   쓰지 않는다 · --device 로 고른다
 씨앗 7 이 적당한 수인지        모른다 · 씨앗 하나로는 분산을 «재는» 것이지
                               분산이 «작다» 를 보이는 것이 아니다
 자식 둘을 서로 견주는 것       못 한다 · GPU 와 씨앗이 «동시에» 다르다
-                              (CRITERIA 9 절이 금지한 자리다)
+                              (CRITERIA v1.1 9 절이 금지한 자리다)
 학습이 실제로 3000 까지 가는지  안 걸었으므로 모른다
 ```
 
-**`v2b-r` 이 병렬의 전제입니다** (CRITERIA 9 절). GPU 효과가 0 에 가까우면
-그 뒤로 자유롭게 병렬하고, 크면 직렬로 바꿉니다. 그 판단은 `v2b-r` 이
-끝나야 섭니다.
+**`v2b-r` 이 병렬의 전제입니다** (CRITERIA 9 절). 다만 **한 번 돌린
+`v2b-r` 로 「GPU 효과」를 확정할 수는 없습니다.** 같은 GPU · 같은 씨앗으로
+다시 돌려도 얼마나 흔들리는지를 모르면, `v2b-r` 에서 본 차이가 장치 탓인지
+그냥 실행 편차인지 못 가릅니다. `CRITERIA.md` v1.1 이 판 이력 ⑦ 에
+그렇게 적고 있습니다.
+
+**그래서 `v2b-r` 과 `v2b-s` 를 같이 읽어야 합니다.** `v2b-s` 가 씨앗을
+바꿨을 때의 폭을 주고, 그 폭보다 `v2b-r` 의 차이가 작으면 장치 효과를
+「크다」고 말할 수 없습니다. **두 자식을 서로 견주는 것이 아니라**, 각각을
+부모와 견준 «차이의 크기» 를 나란히 놓는 것입니다.
 
 ---
 
@@ -162,4 +248,6 @@ CUDA_VISIBLE_DEVICES   쓰지 않는다 · --device 로 고른다
 
 | 판 | 날짜 | 무엇 | 근거 |
 |---|---|---|---|
+| v1.2 | 2026-09-23 | 검증 2 회차에서 넷. **작업 디렉터리를 안 적었다** · `logs\...` 상대 경로는 `C:\isaac\IsaacLab` 에서만 풀리고 `train_win.py` 는 디렉터리를 안 바꾼다 · 명령을 절대 경로로 고쳤다. **「runner 가 cuda:0 «고정»」이 지나쳤다** · 기본값일 뿐이고 하이드라와 `--distributed` 로 바뀐다. **`v2b-r` 한 번으로 GPU 효과를 확정할 수 없다** (`CRITERIA` v1.1 판 이력 ⑦) · `v2b-s` 의 폭과 같이 읽어야 한다. 삼킴 관문을 «막는 것» 에서 «되돌려 놓는 것» 으로 바꿨다 | 코드확인 |
+| v1.1 | 2026-09-23 | 검증에서 셋을 고쳤다. **2 절을 갈아엎었다** · 「`agent.yaml` 이 GPU 를 안 적는다」가 아니라 **한 학습에 장치가 둘**이고 `--device` 는 시뮬레이션 쪽만 정한다 (`train.py:199` 의 runner 는 `agent_cfg.device` = `cuda:0` 고정). 9 절 계획에 무슨 뜻인지 같이 적었다. **1 절 명령의 인자 순서가 틀렸다** · `--guard_intended` 가 `agent.run_name=` 을 삼켜 런 이름이 `train.py` 에 안 넘어간다 · 순서를 고치고 `train_win.py` 에 삼킴 관문을 넣었다 (시험 넷). **3 절의 「그 명령을 그대로 걸었다」를 물렸다** · 관문만 걸었고 학습은 안 걸었다 | 코드확인 |
 | v1.0 | 2026-09-23 | 처음 씀. 두 자식 모두 **새 설정 파일이 필요 없다**는 것을 `--seed` 가 `env.yaml` 까지 닿는 네 단계로 확인했다. 관문 명령을 가짜 런으로 미리 걸어 네 경우를 봤다. **`agent.yaml` 의 `device` 가 실제 GPU 를 안 적는다**는 것을 네 런에서 확인했다 | 코드확인 · 실측 |

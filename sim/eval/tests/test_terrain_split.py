@@ -3,20 +3,25 @@
 
 분류: 실험
 작성: Claude 세션 (오흥재 지시) · 2026-09-23
-근거: inbox/jay/20260923-lineage/CRITERIA.md v1.0 2 절 (21 / 3 / 24) · 각 학습이 남긴 params/env.yaml
+근거: inbox/jay/20260923-lineage/CRITERIA.md v1.1 2 절 (21 / 3 / 24) · 생성 코드 기하 (mesh_terrains.py) · 각 학습이 남긴 params/env.yaml
 요지: 분류가 맞는지만 보지 않고, 근거가 없을 때 «멈추는지» 를 같이 본다
 상태: 확정
-판: v1.0
+판: v2.0
 
 ## 무엇을 시험하나
 
 ```
-알려진 답    v2a·v2b -> 21 / 3 / 24   CRITERIA 2 절이 적은 수와 같아야 한다
-             D·E     -> 18 / 0 / 30   rails 를 «안» 배웠으므로 rails 가 새 지형이다
-             F·H     -> 18 / 3 / 27
+알려진 답    v2a·v2b   -> 21 / 3 / 24   CRITERIA 2 절이 적은 수와 같아야 한다
+             D·E·F·G·H -> 18 / 3 / 27   rails 를 «안» 배웠다
+             가운데 묶음은 «gap» 이다    floating_ring 이 아니다
 
-멈추는가     파일 없음 · sub_terrains 없음 · 둘임 · 비었음
-             출처 없는 학습 지형 · 학습이면서 닮은 짝인 지형
+기하로 가른다 gap 은 바닥 없는 도랑 · floating_ring 은 «바닥 위» 물체
+             주석이 아니라 생성 코드로 정한다 (CRITERIA v1.1 2 절)
+
+범위          이름이 같아도 조건이 다르다 · boxes 는 평가가 학습 범위 «밖»
+
+멈추는가      파일 없음 · sub_terrains 없음 · 둘임 · 비었음
+             근거 없는 학습 지형 · 모르는 묶음 이름
 ```
 
 **「멈추는가」쪽이 이 시험의 요지입니다.** 분류를 못 하는데 조용히
@@ -50,6 +55,7 @@ RUNS = {
     "D": "2026-09-18_11-19-19_20260918_gapwidecmd_seed42_iter1500",
     "E": "2026-09-20_00-04-33_20260920_gapE_seed42_iter1500",
     "F": "2026-09-20_09-45-06_20260920_gapF_seed42_iter1500",
+    "G": "2026-09-20_09-45-11_20260920_gapG_seed42_iter1500",
     "H": "2026-09-20_16-00-26_20260920_gapH_seed42_iter1500",
     "v2a": "2026-09-21_11-03-23_20260921_v2a_seed42_iter3000",
     "v2b": "2026-09-21_11-03-28_20260921_v2b_seed42_iter3000",
@@ -156,24 +162,35 @@ class KnownAnswerTests(unittest.TestCase):
     def counts(self, trained):
         groups = ts.split_cells(cells_of(EVAL16), trained)
         return tuple(len(groups[bucket]) for bucket in
-                     (ts.LEARNED, ts.SIMILAR_TO, ts.UNSEEN))
+                     (ts.LEARNED, ts.TRENCH_REACH, ts.UNSEEN))
 
     def test_v2_is_21_3_24(self):
         self.assertEqual(
             self.counts(list(ROUGH6) + ["omni_gap", "rails"]), (21, 3, 24))
 
-    def test_de_is_18_0_30_because_rails_was_not_trained(self):
+    def test_de_is_18_3_27_because_rails_was_not_trained(self):
         trained = list(ROUGH6) + ["forward_gap"]
-        self.assertEqual(self.counts(trained), (18, 0, 30))
+        self.assertEqual(self.counts(trained), (18, 3, 27))
         self.assertEqual(ts.classify(EVAL16, trained)["rails"], ts.UNSEEN)
 
     def test_fh_is_18_3_27(self):
         self.assertEqual(self.counts(list(ROUGH6) + ["omni_gap"]), (18, 3, 27))
 
+    def test_the_middle_bucket_is_gap_not_floating_ring(self):
+        """v1.0 이 여기서 거꾸로였다. 기하로 다시 갈랐다."""
+        marks = ts.classify(EVAL16, list(ROUGH6) + ["omni_gap"])
+        self.assertEqual(marks["gap"], ts.TRENCH_REACH)
+        self.assertEqual(marks["floating_ring"], ts.UNSEEN)
+
+    def test_gap_is_unseen_when_no_trench_was_trained(self):
+        marks = ts.classify(EVAL16, list(ROUGH6))
+        self.assertEqual(marks["gap"], ts.UNSEEN)
+
     def test_every_recorded_run_matches(self):
         """기계에 남아 있는 학습 기록으로 다시 센다."""
-        wanted = {"D": (18, 0, 30), "E": (18, 0, 30), "F": (18, 3, 27),
-                  "H": (18, 3, 27), "v2a": (21, 3, 24), "v2b": (21, 3, 24)}
+        wanted = {"D": (18, 3, 27), "E": (18, 3, 27), "F": (18, 3, 27),
+                  "G": (18, 3, 27), "H": (18, 3, 27),
+                  "v2a": (21, 3, 24), "v2b": (21, 3, 24)}
         seen = 0
         for name, run in sorted(RUNS.items()):
             path = LOGS % run
@@ -185,17 +202,16 @@ class KnownAnswerTests(unittest.TestCase):
         if not seen:
             self.skipTest("학습 기록이 이 기계에 없다")
 
-    def test_gap_is_new_terrain_even_for_forward_gap_policies(self):
-        """폭을 맞춘 것은 «모양이 닮은 것» 이 아니다 (`gap_wide_env_cfg.py`)."""
+    def test_forward_gap_also_reaches_the_eval_trench(self):
+        """`forward_gap` 도 바닥 없는 틈을 만든다."""
         marks = ts.classify(EVAL16, list(ROUGH6) + ["forward_gap"])
-        self.assertEqual(marks["gap"], ts.UNSEEN)
+        self.assertEqual(marks["gap"], ts.TRENCH_REACH)
 
-    def test_floating_ring_only_similar_when_omni_gap_trained(self):
-        self.assertEqual(
-            ts.classify(EVAL16, list(ROUGH6) + ["omni_gap"])["floating_ring"],
-            ts.SIMILAR_TO)
-        self.assertEqual(
-            ts.classify(EVAL16, list(ROUGH6))["floating_ring"], ts.UNSEEN)
+    def test_floating_ring_is_never_the_middle_bucket(self):
+        for trained in (list(ROUGH6), list(ROUGH6) + ["omni_gap"],
+                        list(ROUGH6) + ["forward_gap"]):
+            self.assertEqual(
+                ts.classify(EVAL16, trained)["floating_ring"], ts.UNSEEN)
 
 
 class ClassifyGuardTests(unittest.TestCase):
@@ -214,16 +230,13 @@ class ClassifyGuardTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ts.classify(EVAL16, [])
 
-    def test_double_counting_stops(self):
-        """학습 지형이면서 닮은 짝이기도 하면 두 번 센다."""
-        saved = dict(ts.SIMILAR["omni_gap"])
-        ts.SIMILAR["omni_gap"] = dict(saved, eval="rails")
-        try:
-            with self.assertRaises(ValueError) as caught:
-                ts.classify(EVAL16, list(ROUGH6) + ["omni_gap", "rails"])
-            self.assertIn("두 번", str(caught.exception))
-        finally:
-            ts.SIMILAR["omni_gap"] = saved
+    def test_learned_wins_over_trench(self):
+        """`gap` 을 «직접» 배웠으면 「학습한 지형」이다. 두 번 안 센다."""
+        marks = ts.classify(EVAL16, list(ROUGH6) + ["omni_gap", "gap"])
+        self.assertEqual(marks["gap"], ts.LEARNED)
+        groups = ts.split_cells(cells_of(EVAL16),
+                                list(ROUGH6) + ["omni_gap", "gap"])
+        self.assertEqual(sum(len(v) for v in groups.values()), 48)
 
     def test_unknown_bucket_name_stops(self):
         """`classify` 가 모르는 이름을 내면 그 칸이 조용히 사라진다."""
@@ -245,26 +258,80 @@ class ClassifyGuardTests(unittest.TestCase):
 
 
 class SourceTests(unittest.TestCase):
-    """**닮았다는 말에는 그렇게 적은 줄이 붙는다.**"""
+    """**닮았다는 말에는 «생성 코드의» 근거가 붙는다.**"""
 
-    def test_similar_entries_all_cite_a_source(self):
-        for name, entry in ts.SIMILAR.items():
-            self.assertTrue(entry.get("source"), name)
-            self.assertTrue(entry.get("quote"), name)
+    def test_every_geometry_entry_cites_code(self):
+        for table in (ts.TRENCH_TRAINING, ts.TRENCH_EVAL, ts.FLOORED_EVAL):
+            for name, (where, why) in table.items():
+                self.assertTrue(where, name)
+                self.assertTrue(why, name)
 
-    def test_sources_only_for_cells_actually_marked_similar(self):
-        rows = ts.sources(EVAL16, list(ROUGH6) + ["omni_gap"])
-        self.assertEqual([(r[0], r[1]) for r in rows],
-                         [("floating_ring", "omni_gap")])
-        self.assertIn("omni_gap_terrain.py", rows[0][2])
-        # forward_gap 은 닮은 짝이 없으므로 줄이 안 나온다
-        self.assertEqual(ts.sources(EVAL16, list(ROUGH6) + ["forward_gap"]), [])
+    def test_trench_sources_only_for_cells_marked_so(self):
+        rows = ts.trench_sources(EVAL16, list(ROUGH6) + ["omni_gap"])
+        self.assertEqual([r[0] for r in rows], ["gap"])
+        self.assertEqual(rows[0][1], ["omni_gap"])
+        self.assertIn("mesh_terrains.py", rows[0][2])
+        # 도랑을 안 배웠으면 줄이 안 나온다
+        self.assertEqual(ts.trench_sources(EVAL16, list(ROUGH6)), [])
 
-    def test_width_note_only_for_forward_gap(self):
-        self.assertEqual(ts.width_notes(list(ROUGH6) + ["omni_gap"]), [])
-        notes = ts.width_notes(list(ROUGH6) + ["forward_gap"])
-        self.assertEqual(len(notes), 1)
-        self.assertIn("0.15", notes[0])
+    def test_floored_note_explains_why_it_is_not_a_trench(self):
+        rows = ts.floored_notes(EVAL16, list(ROUGH6) + ["omni_gap"])
+        self.assertEqual([r[0] for r in rows], ["floating_ring"])
+        self.assertEqual(rows[0][1], ts.UNSEEN)
+        self.assertIn("바닥", rows[0][3])
+
+
+class RangeTests(unittest.TestCase):
+    """**이름이 같아도 같은 조건이 아니다** (CRITERIA v1.1 2 절)."""
+
+    EVAL_CFGS = (
+        os.path.join(os.path.dirname(os.path.dirname(HERE)), "eval",
+                     "generalization_env_cfg.py"),
+        "C:/isaac/IsaacLab/source/isaaclab/isaaclab/terrains/config/rough.py",
+    )
+
+    def rows(self):
+        path = LOGS % RUNS["v2a"]
+        if not os.path.exists(path) or not all(
+                os.path.exists(p) for p in self.EVAL_CFGS):
+            self.skipTest("학습 기록이나 평가 설정이 이 기계에 없다")
+        return ts.range_notes(ts.read_sub_terrain_ranges(path),
+                              ts.read_eval_ranges(*self.EVAL_CFGS))
+
+    def test_boxes_is_outside_the_training_range(self):
+        """CRITERIA 2 절이 든 예다 · 평가 0.125 · 학습 상한 0.10."""
+        rows = {(r[0], r[1]): r for r in self.rows()}
+        terrain, key, trained, evaluated, value, outside, wider = rows[
+            ("boxes", "grid_height_range")]
+        self.assertEqual(trained, (0.025, 0.1))
+        self.assertEqual(evaluated, (0.05, 0.2))
+        self.assertAlmostEqual(value, 0.125)
+        self.assertTrue(outside)
+
+    def test_matching_ranges_are_not_flagged(self):
+        rows = {(r[0], r[1]): r for r in self.rows()}
+        self.assertFalse(rows[("rails", "rail_height_range")][5])
+        self.assertFalse(rows[("rails", "rail_height_range")][6])
+
+    def test_wider_eval_range_is_flagged_even_when_the_point_is_inside(self):
+        """`random_rough` 는 난이도 0.5 에서 학습 상한에 «닿는다»."""
+        rows = {(r[0], r[1]): r for r in self.rows()}
+        row = rows[("random_rough", "noise_range")]
+        self.assertFalse(row[5])
+        self.assertTrue(row[6])
+
+    def test_reading_a_missing_eval_cfg_stops(self):
+        with self.assertRaises(ValueError):
+            ts.read_eval_ranges(os.path.join(HERE, "없는설정.py"))
+
+    def test_ranges_come_from_the_yaml_not_a_table(self):
+        path = LOGS % RUNS["v2a"]
+        if not os.path.exists(path):
+            self.skipTest("v2a 학습 기록이 이 기계에 없다")
+        ranges = ts.read_sub_terrain_ranges(path)
+        self.assertEqual(ranges["boxes"]["grid_height_range"], (0.025, 0.1))
+        self.assertEqual(ranges["pyramid_stairs"]["step_height_range"],
+                         (0.05, 0.23))
 
 
 if __name__ == "__main__":

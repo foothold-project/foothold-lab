@@ -136,6 +136,26 @@ def resolve_train_script(argv):
 
     known, rest = parser.parse_known_args(argv)
 
+    # `--guard_intended` 는 `nargs="*"` 라 **뒤에 오는 것을 다 삼킨다.**
+    # `--guard_intended seed agent.run_name=X` 로 쓰면 `agent.run_name=X` 가
+    # 의도한 키 목록에 들어가고 `train.py` 에는 «안 넘어간다». 런 이름이
+    # 조용히 사라진다.
+    #
+    # 막지 않고 «제자리로 돌려보낸다.** 실제 평탄화 키에는 `=` 가 없다
+    # (v2a·v2b·H 세 런 2048 칸 중 0 건). 혹시 `=` 가 든 키가 생기더라도
+    # 그것은 의도 목록에서 빠질 뿐이고, 그러면 설정 관문이 「모르는 차이」로
+    # **막는다.** 틀리는 방향이 안전한 쪽이다.
+    swallowed = [item for item in known.guard_intended if "=" in item]
+    if swallowed:
+        known.guard_intended = [item for item in known.guard_intended
+                                if "=" not in item]
+        rest = list(rest) + swallowed
+        print("[알림] `--guard_intended` 가 %s 를 삼켰다. 되돌려 놓았다.%s"
+              "       `--guard_intended` 는 «평탄화 키» 만 받는다 (`=` 가 없다).%s"
+              "       다음부터는 `agent.run_name=...` 을 «앞» 에 두십시오."
+              % (" · ".join("`%s`" % item for item in swallowed),
+                 NEWLINE, NEWLINE))
+
     root = (known.isaaclab_root
             or os.environ.get("ISAACLAB_PATH")
             or DEFAULT_ISAACLAB)

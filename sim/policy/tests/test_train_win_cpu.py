@@ -22,7 +22,8 @@ import tempfile
 import unittest
 
 POLICY_DIR = Path(__file__).resolve().parents[1]
-WANTED = {"run_name_from", "find_run_dir", "write_launch_record", "io_open"}
+WANTED = {"run_name_from", "find_run_dir", "write_launch_record", "io_open",
+          "resolve_train_script"}
 
 
 def functions_from_source(path, names):
@@ -35,7 +36,7 @@ def functions_from_source(path, names):
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             body.append(node)
     namespace = {"os": os, "sys": _FakeSys(), "glob": __import__("glob"),
-                 "__file__": str(path)}
+                 "argparse": __import__("argparse"), "__file__": str(path)}
     exec(compile(ast.fix_missing_locations(
         ast.Module(body=body, type_ignores=[])), str(path), "exec"), namespace)
     return namespace
@@ -147,6 +148,50 @@ class LaunchRecordTests(unittest.TestCase):
         MOD["write_launch_record"](self.run, ["--task", "X"], "t.py")
         self.assertGreater(len(self.read().splitlines()), 5)
 
+class GuardIntendedSwallowTests(unittest.TestCase):
+    """`--guard_intended` 는 `nargs="*"` 라 **뒤를 다 삼킨다.**
+
+    삼켜지면 `agent.run_name=...` 이 `train.py` 에 «안 넘어가고» 런 이름이
+    조용히 사라진다. 막지 않고 «제자리로 돌려보낸다». 실제 평탄화 키에는
+    `=` 가 없다 (세 런 2048 칸 중 0 건).
+    """
+
+    def resolve(self, argv):
+        return MOD["resolve_train_script"](argv)
+
+    def test_swallowed_override_goes_back_to_train_py(self):
+        _, rest, _, known = self.resolve(
+            ["--guard_against", "X", "--guard_intended", "seed",
+             "agent.run_name=R"])
+        self.assertEqual(known.guard_intended, ["seed"])
+        self.assertIn("agent.run_name=R", rest)
+
+    def test_several_swallowed_items_all_go_back(self):
+        _, rest, _, known = self.resolve(
+            ["--guard_intended", "seed", "sim.device",
+             "agent.run_name=R", "env.x=1"])
+        self.assertEqual(known.guard_intended, ["seed", "sim.device"])
+        self.assertIn("agent.run_name=R", rest)
+        self.assertIn("env.x=1", rest)
+
+    def test_correct_order_is_untouched(self):
+        _, rest, _, known = self.resolve(
+            ["agent.run_name=R", "--guard_against", "X",
+             "--guard_intended", "seed"])
+        self.assertEqual(known.guard_intended, ["seed"])
+        self.assertIn("agent.run_name=R", rest)
+
+    def test_plain_keys_are_fine(self):
+        _, rest, _, known = self.resolve(
+            ["--guard_intended", "seed", "sim.device"])
+        self.assertEqual(known.guard_intended, ["seed", "sim.device"])
+        self.assertEqual(rest, [])
+
+    def test_no_guard_intended_is_fine(self):
+        _, rest, _, known = self.resolve(["--headless", "agent.run_name=R"])
+        self.assertEqual(known.guard_intended, [])
+        self.assertIn("agent.run_name=R", rest)
+
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)
