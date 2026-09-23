@@ -34,6 +34,7 @@ sys.path.insert(0, EVAL)
 
 import axis2_fourpoint as axis2
 import fourpoint_table as axis1
+import verdict_manifest as vm
 
 RESULTS = os.path.join(EVAL, "results")
 BASELINE_JSON = os.path.join(ROOT, "models", "foothold-v1.json")
@@ -302,6 +303,58 @@ class SteppingStonesTests(unittest.TestCase):
                       % (counts["v2a"], counts["v2b"]), doc)
         self.assertIn("v2a 2500 의 0.5 m/s 1 % · 1.0 m/s 4 % "
                       "· v2a 3000 의 1.0 m/s 1 %", doc)
+
+
+class AxisTwoPointsTests(unittest.TestCase):
+    """축 2 를 «몇 점에서» 넘어야 하나 (CRITERIA v1.2 1 절)."""
+
+    def scores(self):
+        """매니페스트의 «실측» 성적. (이름, 아홉 칸 중 통과 수)."""
+        out = []
+        for name, folder in axis2.MATRIX_ROWS:
+            summary = axis2.load_dir(os.path.join(ROOT, folder))
+            if summary is None:
+                continue
+            out.append((name, sum(1 for cell in axis2.score(summary) if cell[2])))
+        return out
+
+    def test_four_of_four(self):
+        self.assertEqual(vm.AXIS2_POINTS_REQUIRED, 4)
+        self.assertEqual(vm.AXIS2_POINTS_TOTAL, 4)
+        self.assertIn("«전부»", vm.FINAL_CRITERIA["axis2"])
+        self.assertNotIn("세 점", vm.FINAL_CRITERIA["axis2"])
+
+    def test_the_change_is_recorded_with_its_reason(self):
+        change = vm.AXIS2_POINTS_CHANGED
+        self.assertEqual((change["from"], change["to"]), (3, 4))
+        self.assertTrue(change["why"])
+        self.assertIn("CRITERIA.md v1.2", change["source"])
+
+    def test_nothing_flipped_and_that_is_counted_not_assumed(self):
+        """**빈 목록이 「안 찾았다」면 안 된다** (CRITERIA 4 절 2 번).
+
+        9/9 를 «한 점에서라도» 낸 후보가 있으면 3/4 와 4/4 가 갈린다.
+        매니페스트의 실측 성적을 «세어» 그런 후보가 없음을 확인한다.
+        """
+        scores = self.scores()
+        if not scores:
+            self.skipTest("축 2 매니페스트가 없다")
+        full = [name for name, passed in scores
+                if name != "NVIDIA 원본" and passed >= vm.AXIS2_GATE_CELLS]
+        self.assertEqual(full, [], "9/9 를 낸 후보가 있으면 판정이 갈린다")
+        self.assertEqual(vm.AXIS2_POINTS_CHANGED["flipped"], [])
+
+    def test_the_original_does_reach_nine(self):
+        """위 시험이 «아무도 9 를 못 낸다» 로 통과하는 것이 아님을 보인다."""
+        scores = dict(self.scores())
+        if "NVIDIA 원본" not in scores:
+            self.skipTest("원본 매니페스트가 없다")
+        self.assertEqual(scores["NVIDIA 원본"], vm.AXIS2_GATE_CELLS)
+
+    def test_stepping_stones_is_excluded_with_its_wording_rule(self):
+        self.assertIn("stepping_stones", vm.EXCLUDED_FROM_VERDICT)
+        self.assertIn("신경망", vm.EXCLUDED_WHY)
+        self.assertIn("아직 안 배웠다", vm.EXCLUDED_WHY)
 
 
 if __name__ == "__main__":

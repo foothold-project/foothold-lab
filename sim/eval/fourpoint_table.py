@@ -75,7 +75,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # **Wilson 을 다시 짜지 않는다.** 이 저장소에 이미 넷이 있고 다섯째를 더하면
 # 갈라진다. 판정 경로(`metrics.py`)는 안 건드리고, 이미 있는 것을 부른다.
-from verdict_manifest import compare_wilson, wilson_pct
+from verdict_manifest import (EXCLUDED_FROM_VERDICT, EXCLUDED_WHY,
+                              compare_wilson, wilson_pct)
 # 지형 분류도 여기서 다시 안 적는다. `env.yaml` 에서 읽는 쪽 하나만 쓴다.
 import terrain_split
 
@@ -374,6 +375,19 @@ def main():
                          "견주지 못했다**" % no_base)
             print("iter %-5d v1 대비  진짜 하락 %d · 진짜 상승 %d · 겹침 %d%s"
                   % (iteration, len(drops), len(rises), laps, tail))
+            # CRITERIA v1.2 7-2 절 · 판정에서 «빼는» 지형이 있다. 뺀 수를
+            # 따로 적는다. 빼는 것은 판정에서이고 «보고에는 남긴다».
+            judged = [k for k in marks if k[2] not in EXCLUDED_FROM_VERDICT]
+            cut = len(marks) - len(judged)
+            if cut:
+                print("    판정 대상 %d 칸 (%s 제외 %d 칸) · "
+                      "하락 %d · 상승 %d · 겹침 %d"
+                      % (len(judged),
+                         " · ".join("`%s`" % t for t in EXCLUDED_FROM_VERDICT),
+                         cut,
+                         sum(1 for k in judged if marks[k][0] == "하락"),
+                         sum(1 for k in judged if marks[k][0] == "상승"),
+                         sum(1 for k in judged if marks[k][0] == "겹침")))
             for key, bv, pv in drops:
                 print("    하락  %-9s %-20s %-8s  %3.0f -> %3.0f"
                       % (key[1], key[2], key[0], bv, pv))
@@ -437,6 +451,9 @@ def main():
             tail = "기준선이 없어 v1 도 0 인지는 못 센다"
         print("    «미해결» 성공률 0 인 칸 %d / 읽은 %d 칸  (%s)%s"
               % (len(zero), len(read_here), tail, seen_note))
+        if any(k[2] in EXCLUDED_FROM_VERDICT for k in zero):
+            print("      («%s» 는 판정에서 뺀 지형이다 · %s)"
+                  % (" · ".join(EXCLUDED_FROM_VERDICT), EXCLUDED_WHY))
         for key in zero:
             print("      미해결  %-9s %-20s %-8s  v1 %s -> 0"
                   % (key[1], key[2], key[0],
