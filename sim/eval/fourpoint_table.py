@@ -252,7 +252,7 @@ def main():
     # 「기하를 모르는 지형」을 가르는 데 쓴다.
     universe = None
     if args.eval_cfg:
-        universe = sorted(terrain_split.read_eval_ranges(*args.eval_cfg))
+        universe = terrain_split.read_eval_terrains(*args.eval_cfg)
 
     trained = None
     if args.env_yaml:
@@ -422,10 +422,15 @@ def main():
             print("**후보 고르기** · 높은 점이 아니라 «그 점이 이웃과 얼마나 다른가» 로 본다")
             print("%-8s %10s %10s  %s" % ("iter", "v1대비하락", "이웃과갈린칸", "읽는 법"))
             for index, iteration in enumerate(ITERS):
+                # 기준선 «파일» 이 있는 것과 «견줄 칸» 이 있는 것은 다르다.
+                # 견준 칸이 0 인데 「하락 0」 이라고 적으면 확인 못 한 것이
+                # 확인해서 없는 것으로 읽힌다.
+                against = [key for key in base
+                           if key in cells and iteration in cells[key]]
                 drops = sum(
-                    1 for key, (bv, bn) in base.items()
-                    if key in cells and iteration in cells[key]
-                    and verdict(bv, bn, *cells[key][iteration]) == "하락")
+                    1 for key in against
+                    if verdict(base[key][0], base[key][1],
+                               *cells[key][iteration]) == "하락")
                 neighbours = [i for i in (ITERS[index - 1] if index else None,
                                           ITERS[index + 1] if index + 1 < len(ITERS) else None)
                               if i is not None]
@@ -444,6 +449,10 @@ def main():
                         split += 1
                 if not any(iteration in cells[key] for key in cells):
                     print("%-8d %10s %10s  **잰 것이 없다**"
+                          % (iteration, "-", "-"))
+                    continue
+                if not against:
+                    print("%-8d %10s %10s  **기준선과 견준 칸이 없다**"
                           % (iteration, "-", "-"))
                     continue
                 if not compared:

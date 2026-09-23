@@ -426,6 +426,24 @@ class RangeTests(unittest.TestCase):
         self.assertIsNone(rows[0][6])
         self.assertTrue(rows[0][7])
 
+    def test_terrain_names_include_ones_with_no_range_args(self):
+        """`repeated_boxes` 는 `*_range` 인자가 없다. 이름 목록에는 있어야
+        한다. 없으면 그 지형을 배운 정책에서 헛경보가 난다."""
+        if not all(os.path.exists(p) for p in self.EVAL_CFGS):
+            self.skipTest("평가 설정이 이 기계에 없다")
+        names = ts.read_eval_terrains(*self.EVAL_CFGS)
+        self.assertEqual(sorted(names), sorted(EVAL16))
+        self.assertIn("repeated_boxes", names)
+        self.assertNotIn("repeated_boxes", ts.read_eval_ranges(*self.EVAL_CFGS))
+
+    def test_non_terrain_dicts_are_not_counted_as_terrains(self):
+        """지형이 아닌 사전까지 세면 관문이 헐거워진다."""
+        if not all(os.path.exists(p) for p in self.EVAL_CFGS):
+            self.skipTest("평가 설정이 이 기계에 없다")
+        names = ts.read_eval_terrains(*self.EVAL_CFGS)
+        for stray in ("sensor_cfg", "miss_value"):
+            self.assertNotIn(stray, names)
+
     def test_reading_a_missing_eval_cfg_stops(self):
         with self.assertRaises(ValueError):
             ts.read_eval_ranges(os.path.join(HERE, "없는설정.py"))

@@ -132,7 +132,8 @@ def _split_guard_intended(argv):
     덮어쓰기를 쓰므로 이기는 값이 뒤집힌다. 그래서 처음부터 안 삼키게
     가른다. **차례를 안 바꾼다.**
 
-    멈추는 조건은 둘이다. `=` 가 들었거나 `-` 로 시작하면 키가 아니다.
+    멈추는 조건은 셋이다. `=` 가 들었거나 `-` 또는 `~` 로 시작하면 키가
+    아니다. `~key` 는 하이드라의 «삭제» 문법이라 `=` 가 없다.
 
     **`-` 로 시작하는 평탄화 키가 «절대» 없다는 뜻은 아니다.** 사전 열쇠가
     음수면 `flatten` 이 `'-1'` 을 낼 수 있다. 우리가 본 세 런 2048 칸에는
@@ -162,7 +163,7 @@ def _split_guard_intended(argv):
         index += 1
         while index < len(argv):
             nxt = argv[index]
-            if nxt.startswith("-") or "=" in nxt:
+            if nxt.startswith(("-", "~")) or "=" in nxt:
                 break
             keys.append(nxt)
             index += 1

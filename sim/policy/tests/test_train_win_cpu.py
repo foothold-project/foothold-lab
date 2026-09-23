@@ -214,6 +214,13 @@ class GuardIntendedSwallowTests(unittest.TestCase):
         self.assertEqual(known.guard_intended, [])
         self.assertIn("-1", rest)
 
+    def test_hydra_delete_syntax_is_not_swallowed(self):
+        """`~key` 는 하이드라의 «삭제» 문법이라 `=` 가 없다."""
+        _, rest, _, known = self.resolve(
+            ["--guard_intended", "seed", "~agent.run_name", "--headless"])
+        self.assertEqual(known.guard_intended, ["seed"])
+        self.assertIn("~agent.run_name", rest)
+
     def test_the_equals_form_is_not_lost(self):
         """`--guard_intended=seed` 를 따로 안 받으면 뒤엣것이 덮어쓴다."""
         _, _, _, known = self.resolve(

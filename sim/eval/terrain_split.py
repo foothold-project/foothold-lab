@@ -209,6 +209,42 @@ def read_sub_terrain_ranges(path):
     return out
 
 
+def read_eval_terrains(*paths):
+    """평가 지형 설정 파일들 -> 지형 «이름» 전체.
+
+    `read_eval_ranges` 와 다르다. 저쪽은 `*_range` 가 «있는» 지형만
+    돌려준다. `repeated_boxes` · `repeated_cylinders` 처럼 범위 인자가
+    없는 지형은 빠진다. 전체 목록으로 그것을 쓰면 그 지형을 배운 정책에서
+    「기하 근거 없는 학습 지형」으로 잘못 보고 멈춘다.
+
+    **`*TerrainCfg(...)` 만 센다.** 설정 파일에는 지형이 아닌 사전도 있어서
+    (`sensor_cfg` · `miss_value` 같은 것) 아무 호출이나 세면 목록이 부풀고,
+    그만큼 「기하 근거 없는 학습 지형」 관문이 헐거워진다.
+    """
+    out = set()
+    for path in paths:
+        if not os.path.exists(path):
+            raise ValueError("평가 설정이 없다: %s" % path)
+        with io.open(path, encoding="utf-8") as handle:
+            tree = ast.parse(handle.read())
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Dict):
+                continue
+            for key, value in zip(node.keys, node.values):
+                if not (isinstance(key, ast.Constant)
+                        and isinstance(key.value, str)
+                        and isinstance(value, ast.Call)):
+                    continue
+                called = value.func
+                name = (called.attr if isinstance(called, ast.Attribute)
+                        else getattr(called, "id", ""))
+                if name.endswith("TerrainCfg"):
+                    out.add(key.value)
+    if not out:
+        raise ValueError("평가 지형 이름을 하나도 못 읽었다: %s" % ", ".join(paths))
+    return sorted(out)
+
+
 def read_eval_ranges(*paths):
     """평가 지형 설정 파일들 -> {지형: {`*_range`: (아래, 위)}}.
 
