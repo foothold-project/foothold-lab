@@ -5,18 +5,26 @@
 작성: 오흥재 · 2026-09-23
 근거: `inbox/jay/20260923-lineage/LOOP-RUNTIME.md` 3 절 · 8 절
 요지: 상태 파일을 읽고 실제 상황과 맞는지 확인해 `STATE.md` 를 다시 쓴다.
-      **아무것도 걸지 않는다.** 거는 기능은 신뢰가 쌓인 뒤에 켠다.
+      그리고 학습이 끝났으면 **평가만** 건다.
 상태: 초안
-판: v1.0
+판: v1.1
+
+무엇을 걸고 무엇을 안 거는가 (2026-09-23 · 팀장 승인)
+    건다      평가. `eval_runner.py` 를 떼어 놓고 띄운다
+              걸 것이 없으면 그쪽이 스스로 판단해 바로 나온다
+    안 건다   학습. 잘못 걸면 세 시간이고 같은 이름의 결과가 둘 생기면
+              어느 것이 무엇인지 알 수 없게 된다
+    안 건다   죽은 것 다시 걸기. 위와 같은 까닭
 
 왜 PowerShell 이 아니라 Python 인가
     2026-09-23 에 PowerShell 판을 먼저 썼다가 버렸다. Windows PowerShell
     5.1 은 BOM 없는 UTF-8 을 ANSI 로 읽는다. 한글 주석이 깨지고 파싱까지
     실패했다. 저장소의 다른 도구가 전부 Python 이므로 여기에 맞춘다.
 
-왜 읽기만 하나
-    잘못 걸면 GPU 세 시간을 잃는다. 며칠 돌려서 상태 파일이 실제를
-    따라오는지 확인한 뒤에 거는 기능을 켠다 (LOOP-RUNTIME 8 절).
+왜 «평가만» 거는가
+    잘못 걸었을 때 잃는 것이 다르다. 학습은 세 시간이고 같은 이름의 결과가
+    둘 생긴다. 평가는 수 분이고 같은 자리에 덮어쓸 뿐이다.
+    학습 거는 기능은 판정과 분기 코드가 시험을 통과한 뒤에 켠다.
 
 돌리는 법
     python _out/loop/watchdog.py
@@ -36,6 +44,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(HERE, "state.json")
 HUMAN = os.path.join(HERE, "STATE.md")
 LOG = os.path.join(HERE, "watchdog.log")
+EVAL = os.path.join(HERE, "eval_runner.py")
+EVAL_LOCK = os.path.join(HERE, "eval_runner.lock")
 
 # 학습으로 볼 프로세스의 최소 메모리. v2a/v2b 가 6.3 ~ 6.4 GB 였다.
 TRAIN_MIN_BYTES = 1 * 1024 ** 3
@@ -78,6 +88,47 @@ def read_big_python() -> list[tuple[int, float]]:
     except Exception as exc:                                  # noqa: BLE001
         log("프로세스 조회 실패: %s" % exc)
     return rows
+
+
+def eval_running() -> bool:
+    """평가가 이미 돌고 있나. 잠금 파일의 PID 로 본다."""
+    if not os.path.isfile(EVAL_LOCK):
+        return False
+    try:
+        with io.open(EVAL_LOCK, encoding="utf-8") as handle:
+            pid = int((handle.read().split() or ["0"])[0])
+    except Exception:                                         # noqa: BLE001
+        return False
+    if not pid:
+        return False
+    try:
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "if (Get-Process -Id %d -ErrorAction SilentlyContinue) "
+             "{ 'yes' } else { 'no' }" % pid],
+            capture_output=True, text=True, timeout=30).stdout
+        return "yes" in out
+    except Exception:                                         # noqa: BLE001
+        return True      # 모르면 «돌고 있다» 로 본다. 두 번 거는 것보다 낫다
+
+
+def launch_eval() -> str:
+    """평가를 떼어 놓고 띄운다. **학습은 절대 안 띄운다.**
+
+    걸 것이 있는지는 `eval_runner.py` 가 스스로 판단한다. 여기서 또
+    판단하면 같은 규칙이 두 곳에 생기고 반드시 갈라진다.
+    """
+    if eval_running():
+        return "평가가 이미 돌고 있다"
+    try:
+        subprocess.Popen(
+            [sys.executable, EVAL],
+            cwd=os.path.abspath(os.path.join(HERE, "..", "..")),
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+        return "평가를 띄웠다"
+    except Exception as exc:                                  # noqa: BLE001
+        return "평가를 못 띄웠다: %s" % exc
 
 
 def find_mismatch(state: dict, big: list) -> list[str]:
@@ -133,7 +184,7 @@ def render(state: dict, gpu: list, big: list, mismatch: list) -> str:
 > 이 파일은 `watchdog.py` 가 `state.json` 에서 자동으로 만듭니다.
 > 손으로 고치지 마십시오. 고치려면 `state.json` 을 고치십시오.
 
-**이 내용이 된 때** {now} · 감시 스크립트 (읽기 전용 판)
+**이 내용이 된 때** {now} · 감시 스크립트 (평가를 거는 판)
 
 > 이 시각은 «마지막으로 확인한 때» 가 아니라 «내용이 마지막으로 바뀐 때» 입니다.
 > 내용이 그대로면 이 파일을 다시 쓰지 않습니다. 10 분마다 다시 쓰면 작업 트리가
@@ -186,10 +237,12 @@ codex     이번 주 {pct} %
 ## 이 스크립트가 지금 «안» 하는 것
 
 ```
-학습을 걸지 않는다 · 평가를 걸지 않는다 · 커밋하지 않는다
-읽고 이 파일을 다시 쓸 뿐이다 (LOOP-RUNTIME.md 8 절의 2 번)
+학습을 걸지 않는다 · 커밋하지 않는다
 죽은 학습을 «자동으로 다시 걸지 않는다» · 같은 이름의 결과가 둘 생기면
 어느 것이 무엇인지 알 수 없게 된다
+
+«평가는» 건다 (2026-09-23 팀장 승인) · eval_runner.py 를 떼어 놓고 띄운다
+걸 것이 없으면 그쪽이 스스로 판단해 바로 나온다
 ```
 """.format(
         now=dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -275,6 +328,9 @@ def main() -> int:
             handle.write(fresh)
 
     stage = state.get("stage") or {}
+    if stage.get("phase") in ("학습 중", "평가 중"):
+        log("  " + launch_eval())
+
     log("확인 · 단계 [%s] %s · 도는 것 %d · 어긋남 %d · %s"
         % (stage.get("branch"), stage.get("phase"),
            len(state.get("running") or []), len(mismatch),
