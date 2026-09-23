@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated": "2026-09-23T14:47:00+09:00",
-  "updated_by": "학습 생존과 인자를 확인한 뒤 갱신 · Claude 세션",
+  "updated": "2026-09-23T16:55:00+09:00",
+  "updated_by": "v2b-s 학습 실패를 기록 · Claude 세션",
   "stage": {
     "branch": "0",
     "name": "기준 재기",
@@ -39,15 +39,22 @@
       "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144226_20260923_v2b-s_seed43_iter3000.log",
       "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-s_seed43_iter3000",
       "changed_vs_parent": "학습 시드만 (42 -> 43)",
-      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다"
+      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
+      "status": "죽음",
+      "died_at": "2026-09-23T16:39:26+09:00",
+      "died_at_iteration": "1670 언저리 (마지막 체크포인트 model_1650)",
+      "error": "RuntimeError: normal expects all elements of std >= 0.0",
+      "error_where": "torch/distributions/normal.py:74 · PPO 행동 분포의 표준편차가 0 이하",
+      "exit_code": 1,
+      "auto_restart": "안 함 (설계상 금지)"
     }
   ],
   "last_result": null,
   "next": {
-    "from_branch_table": "학습이 끝나면 체크포인트 1500/2000/2500/3000 넷을 축 1 과 축 2 로 잰다. 평가 시드은 42 로 고정",
-    "blocked_by": "학습 종료"
+    "from_branch_table": "없음. 「학습이 죽었다」는 분기표에 없는 결과다",
+    "blocked_by": "팀장 판단 · 같은 시드로 재시도할지, 다른 시드로 갈지, [0-b] 를 버릴지"
   },
-  "halt_reason": null,
+  "halt_reason": "[0-b] v2b-s 가 학습 중 죽었다. 분기표에 «학습 실패» 칸이 없다. 사람이 정해야 한다. [0-a] v2b-r 은 계속 돈다",
   "budget": {
     "train_runs": 2,
     "train_hours": 0.0,
@@ -61,5 +68,14 @@
     "lineage": "inbox/jay/20260923-lineage/LINEAGE.md",
     "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md",
     "run_plan": "inbox/jay/20260923-lineage/RUN-0.md"
-  }
+  },
+  "incidents": [
+    {
+      "when": "2026-09-23T16:39:26+09:00",
+      "what": "v2b-s 학습이 RuntimeError 로 죽음 (std <= 0)",
+      "why_it_matters": "같은 설정을 시드만 바꿔 돌렸더니 «완주하지 못했다». 재현 분산이 「숫자가 흔들린다」가 아니라 「판이 안 끝날 수도 있다」를 포함한다",
+      "gate_defect": "감시 스크립트가 18 분 동안 못 잡았다. 「선언은 있는데 큰 python 이 하나도 없다」만 봤고 둘 중 하나가 죽은 경우를 안 봤다. 같은 날 고쳤다",
+      "side_effect": "v2b-r 의 조건이 도중에 바뀌었다. 16:39 까지는 이웃이 있었고 그 뒤로는 혼자다. 부모 v2b 는 끝까지 이웃이 있었다. 이것을 판정문에 적는다"
+    }
+  ]
 }

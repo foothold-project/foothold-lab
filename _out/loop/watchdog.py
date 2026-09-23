@@ -131,17 +131,70 @@ def launch_eval() -> str:
         return "평가를 못 띄웠다: %s" % exc
 
 
+def checkpoint_stale_minutes(run: dict):
+    """마지막 체크포인트가 몇 분 전인지. 못 찾으면 None.
+
+    **프로세스가 살아 있는 것과 진행하는 것은 다르다.** 물리 엔진이
+    멎거나 교착에 걸리면 프로세스는 그대로 남는다.
+    """
+    pat = run.get("out_dir") or ""
+    base, tail = os.path.split(pat)
+    if not os.path.isdir(base):
+        return None
+    if "*" in tail:
+        suffix = tail.lstrip("*")
+        hits = sorted(n for n in os.listdir(base) if n.endswith(suffix))
+        if not hits:
+            return None
+        base = os.path.join(base, hits[-1])
+    newest = None
+    try:
+        for n in os.listdir(base):
+            if not n.startswith("model_") or not n.endswith(".pt"):
+                continue
+            t = os.path.getmtime(os.path.join(base, n))
+            if newest is None or t > newest:
+                newest = t
+    except OSError:
+        return None
+    if newest is None:
+        return None
+    return (dt.datetime.now().timestamp() - newest) / 60.0
+
+
 def find_mismatch(state: dict, big: list) -> list[str]:
     """상태 파일이 실제와 어긋나는 곳. **고치지 않고 적기만 한다.**"""
     out = []
     declared = state.get("running") or []
 
+    # **PID 마다 따로 본다.** 2026-09-23 에 여기서 한 번 놓쳤다.
+    # 예전 판은 「선언은 있는데 큰 python 이 «하나도» 없다」만 봤다.
+    # 둘을 걸고 하나가 죽으면 나머지 하나가 남아서 그물을 빠져나갔다.
+    # 실제로 v2b-s 가 죽고 18 분을 조용히 지나갔다.
+    live = set(p for p, _ in big)
+    for run in declared:
+        pid = run.get("pid")
+        if pid and int(pid) not in live:
+            out.append("«%s» (PID %s) 이 «죽었다». 자동으로 다시 걸지 «않는다». "
+                       "로그를 보고 사람이 정한다: %s"
+                       % (run.get("name"), pid, run.get("log") or "로그 경로 없음"))
+
     if declared and not big:
-        out.append("상태 파일은 «학습 중» 인데 큰 python 프로세스가 없다. "
-                   "죽었을 수 있다. 자동으로 다시 걸지 «않는다»")
+        out.append("상태 파일은 «학습 중» 인데 큰 python 프로세스가 «하나도» 없다")
+    if len(declared) != len(big):
+        out.append("선언 %d 개 · 실제 %d 개. 수가 다르다"
+                   % (len(declared), len(big)))
     if not declared and big:
         out.append("상태 파일은 «없음» 인데 큰 python 프로세스가 %d 개 돈다"
                    % len(big))
+
+    # 진행이 «멎은» 것도 죽은 것이다. 프로세스는 살아 있는데 체크포인트가
+    # 안 늘어나는 경우를 프로세스 확인만으로는 못 잡는다.
+    for run in declared:
+        stale = checkpoint_stale_minutes(run)
+        if stale is not None and stale > 30:
+            out.append("«%s» 의 마지막 체크포인트가 %d 분 전이다. 멎었을 수 있다"
+                       % (run.get("name"), int(stale)))
 
     now = dt.datetime.now()
     for run in declared:
