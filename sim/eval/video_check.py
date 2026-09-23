@@ -71,10 +71,36 @@ def renderer_failed(log_text):
             if RENDERER_FAILURE.search(line)]
 
 
-def mean_luma(path, samples=5):
-    """표본 프레임의 평균 밝기. 읽을 도구가 없으면 `None`.
+# 표본 중 이만큼이 어두우면 «반만 검은» 영상으로 본다.
+# 한 장쯤 어두운 것과 절반이 어두운 것을 가르는 자리다.
+MAX_DARK_SAMPLE_RATIO = 0.20
 
-    **`None` 을 통과로 보지 않는다.** 부르는 쪽이 「못 쟀다」로 적는다.
+
+def sample_indices(count, samples=5):
+    """볼 프레임 자리. **홀짝을 둘 다 덮는다.**
+
+    자리마다 «이웃 한 장» 을 더한다. 한 걸러 한 장이 검은 영상은 그래야
+    잡힌다 (`luma_samples` 의 설명 참조).
+    """
+    base = {int(count * f) for f in
+            [(i + 1) / (samples + 1) for i in range(samples)]}
+    return sorted({min(i + step, count - 1) for i in base for step in (0, 1)})
+
+
+def luma_samples(path, samples=5):
+    """표본 프레임들의 밝기 목록. 읽을 도구가 없으면 `None`.
+
+    ## 왜 «이웃 프레임» 까지 보나 `확인됨`
+
+    2026-09-23. `gap_vx1_foothold-v1` 이 **짝수 프레임 150 장만 검은**
+    영상이었다 (홀수는 멀쩡). 그런데 옛 표본 자리는 300 프레임에서
+    `[50, 100, 150, 200, 250]` 로 **전부 짝수**였다.
+
+    **그래서 잡힌 것은 운이다.** 검은 쪽이 «홀수» 였으면 표본 다섯 장이
+    전부 밝아 통과했을 것이다. 300 프레임은 우리 표준 길이(6 초 x 50 fps)
+    라 **모든 클립이 같은 사각을 갖고 있었다.**
+
+    그래서 각 자리에서 **이웃한 두 장**을 본다. 홀짝이 한 번에 덮인다.
     """
     try:
         import imageio.v2 as imageio
@@ -93,17 +119,22 @@ def mean_luma(path, samples=5):
         if not count:
             return None
 
-        picks = sorted({int(count * f) for f in
-                        [(i + 1) / (samples + 1) for i in range(samples)]})
+        picks = sample_indices(count, samples)
         values = []
 
         for index in picks:
-            frame = np.asarray(reader.get_data(min(index, count - 1)))
+            frame = np.asarray(reader.get_data(index))
             values.append(float(frame.mean()))
     finally:
         reader.close()
 
-    return sum(values) / len(values) if values else None
+    return values or None
+
+
+def mean_luma(path, samples=5):
+    """표본 평균 밝기. `luma_samples` 의 얇은 껍데기다."""
+    values = luma_samples(path, samples=samples)
+    return None if values is None else sum(values) / len(values)
 
 
 # 한 프레임에 전진이 이만큼 «줄면» 리셋이다. 0.5 m/s 로 0.02 초에
@@ -230,8 +261,13 @@ def verify_render(path, expected_frames=None, log_path=None,
                 "\n      ".join(hits[:3]))
 
     # -- 프레임 수
-    luma = mean_luma(path, samples=samples)
+    values = luma_samples(path, samples=samples)
+    luma = None if values is None else sum(values) / len(values)
     report["mean_luma"] = luma
+    report["luma_samples"] = values
+    report["dark_sample_ratio"] = (
+        None if not values
+        else sum(1 for v in values if v < min_mean_luma) / len(values))
 
     try:
         import imageio.v2 as imageio
@@ -263,6 +299,16 @@ def verify_render(path, expected_frames=None, log_path=None,
         problems.append(
             "표본 프레임 평균 밝기가 %.1f 다 (문턱 %.0f). 화면이 검다"
             % (luma, min_mean_luma))
+
+    # **평균만 보면 «반만 검은» 영상을 놓친다.** 150/300 이 검어도 평균은
+    # 92.9 라 문턱 10 을 한참 넘는다. 그래서 어두운 표본의 «비율» 도 본다.
+    ratio = report["dark_sample_ratio"]
+    if ratio is not None and ratio > MAX_DARK_SAMPLE_RATIO:
+        problems.append(
+            "표본 %d 장 중 %d 장이 문턱(%.0f) 아래다 (%.0f %%). "
+            "한 걸러 한 장씩 검은 영상이 이 모양이다"
+            % (len(values), sum(1 for v in values if v < min_mean_luma),
+               min_mean_luma, ratio * 100))
 
     if problems:
         raise RuntimeError(

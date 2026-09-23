@@ -50,6 +50,21 @@ def _write_video(path, luma, frames=30, size=(240, 320)):
                                .astype(np.uint8))
 
 
+def _write_alternating(path, bright, dark_parity, frames=300, size=(240, 320)):
+    """**한 걸러 한 장** 이 검은 mp4.
+
+    `dark_parity` 가 0 이면 짝수 프레임이, 1 이면 홀수 프레임이 검다.
+    2026-09-23 에 실제로 난 모양이다 (300 장 중 짝수 150 장이 검었다).
+    """
+    with imageio.get_writer(path, fps=50, macro_block_size=None) as writer:
+        for i in range(frames):
+            level = 0 if i % 2 == dark_parity else bright
+            data = np.full((size[0], size[1], 3), level, dtype=np.uint8)
+            noise = np.random.randint(0, 2, data.shape, dtype=np.uint8)
+            writer.append_data(np.clip(data.astype(int) + noise, 0, 255)
+                               .astype(np.uint8))
+
+
 class RendererLogTest(unittest.TestCase):
     """로그 검사는 **imageio 없이도** 돈다."""
 
@@ -91,6 +106,35 @@ class VerifyRenderTest(unittest.TestCase):
                 vc.verify_render(p, min_bytes_per_frame=1)
 
             self.assertIn("검", str(caught.exception))
+
+    def test_half_black_is_caught_whichever_parity(self):
+        """**옛 표본 자리가 놓쳤을 쪽까지 본다.**
+
+        300 프레임에서 옛 자리는 `[50,100,150,200,250]` 로 전부 짝수였다.
+        그래서 «짝수» 가 검으면 잡히고 «홀수» 가 검으면 통과했다.
+        이제 이웃 한 장을 더 보므로 어느 쪽이든 잡혀야 한다.
+        """
+        for parity, label in ((0, "짝수가 검음"), (1, "홀수가 검음")):
+            with self.subTest(parity=label):
+                with tempfile.TemporaryDirectory() as tmp:
+                    p = os.path.join(tmp, "half.mp4")
+                    _write_alternating(p, 180, parity)
+
+                    with self.assertRaises(RuntimeError) as caught:
+                        vc.verify_render(p, min_bytes_per_frame=1)
+
+                    self.assertIn("한 걸러", str(caught.exception))
+
+    def test_samples_cover_both_parities(self):
+        """표본 자리가 한쪽 홀짝으로 쏠리면 위 시험이 «운으로» 통과한다.
+
+        옛 자리는 300 프레임에서 전부 짝수였다. 그것이 사각이었다.
+        """
+        for count in (300, 299, 301, 600, 150, 1000):
+            with self.subTest(frames=count):
+                picks = vc.sample_indices(count, samples=5)
+                self.assertEqual({i % 2 for i in picks}, {0, 1}, (count, picks))
+                self.assertTrue(all(0 <= i < count for i in picks), picks)
 
     def test_frame_count_mismatch_is_caught(self):
         with tempfile.TemporaryDirectory() as tmp:
