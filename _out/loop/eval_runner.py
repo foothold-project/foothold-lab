@@ -263,19 +263,22 @@ def main() -> int:
     for run, why in waiting:
         log("%s 아직 · %s" % (run["name"], why))
 
-    # **학습이 하나라도 돌고 있으면 평가를 걸지 않는다.**
+    # **규칙을 고쳤다 (2026-09-23).** 처음에 「학습이 하나라도 돌면 평가 금지」로
+    # 잡았는데 «근거 없이 과했다». 팀장이 지적했고 실측이 그것을 확인했다.
     #
-    # 2026-09-23 4 차 감사가 짚었다. v2b-r 이 먼저 끝나면 평가 24 건이
-    # cuda:1 로 들어가는데 그 GPU 에서 v2b-s2 가 학습 중이다. 그러면
-    # 학습의 조건이 바뀌고 메모리도 부족해질 수 있다.
+    #   같은 시드 · 같은 장치의 두 학습이 «비트 동일» 하다 (최대차 0.000e+00).
+    #   이웃이 있든 없든 결과가 같다. 곧 이웃 부하는 학습 결과를 «못 바꾼다».
     #
-    # 「GPU 를 놀리지 말라」와 「학습 조건을 지켜라」가 부딪히면
-    # **학습 조건이 이긴다.** 평가는 나중에 돌려도 같은 값이 나오지만
-    # 오염된 학습은 세 시간을 버린다.
-    if waiting:
-        log("학습이 %d 개 돌고 있다. 평가를 «미룬다» (%s)"
-            % (len(waiting), " · ".join(r["name"] for r, _ in waiting)))
-        return 0
+    # 그래서 막을 이유는 「학습 보호」가 아니라 **한 GPU 에 두 작업을 올리지
+    # 않는 것** 하나다. 메모리와 처리량 때문이다.
+    busy = {}
+    for run, _why in waiting:
+        dev = (run.get("gpu") or "").split()[0]
+        if dev:
+            busy[dev] = run["name"]
+    if busy:
+        log("학습이 쓰는 GPU: " + " · ".join("%s(%s)" % (d, n)
+                                             for d, n in busy.items()))
 
     if not ready:
         log("평가할 것이 없다")
@@ -288,6 +291,10 @@ def main() -> int:
             if not args.force and os.path.isfile(
                     os.path.join(REPO, job["done_marker"])):
                 log("  건너뜀 (이미 있음) %s" % job["out"])
+                continue
+            if job["device"] in busy:
+                log("  미룸 (%s 에서 %s 학습 중) %s"
+                    % (job["device"], busy[job["device"]], job["out"]))
                 continue
             todo.append(job)
 

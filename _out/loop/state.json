@@ -80,10 +80,10 @@
   ],
   "last_result": null,
   "next": {
-    "from_branch_table": "v2b-s2 가 끝나면 두 판을 «cuda:1» 에서 평가한다 (v2b 기준선과 같은 장치)",
-    "blocked_by": "v2b-s2 종료"
+    "from_branch_table": "v2b-r 네 체크포인트를 두 축으로 평가",
+    "blocked_by": null
   },
-  "halt_reason": "[0-b] 를 시드 43 으로는 완주할 수 없다. 결정론적으로 죽는다. 다른 시드로 갈지 팀장이 정한다. [0-a] v2b-r 은 완주했으므로 평가할 수 있다",
+  "halt_reason": null,
   "budget": {
     "train_runs": 3,
     "train_hours": 3.4,
@@ -118,5 +118,6 @@
         "시드 43 은 이 설정에서 «결정론적으로» 죽는다. [0-b] 는 다른 시드가 필요하다"
       ]
     }
-  ]
+  ],
+  "halt_note": "[0-b] 는 시드 43 으로 완주 불가 (결정론적 실패). 다른 시드는 팀장이 정한다. 그것과 별개로 [0-a] v2b-r 평가는 막을 이유가 없다"
 }

@@ -81,3 +81,12 @@
 2026-09-23 18:05:12  v2b-s 는 죽음 로 기록돼 있다. 평가하지 «않는다»
 2026-09-23 18:05:12  v2b-s2 아직 · model_3000.pt 가 없다
 2026-09-23 18:05:12  학습이 1 개 돌고 있다. 평가를 «미룬다» (v2b-s2)
+2026-09-23 20:17:06  v2b-s 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 20:17:06  v2b-s2 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-23 20:17:06  v2b-r 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-23 20:17:06  걸 것 28 건 · 축1 24 · 축2 4
+2026-09-23 20:17:06    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set rough6 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 0.5 --eval_duration 12.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v0.5
+2026-09-23 20:17:06    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set rough6 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 1.0 --eval_duration 6.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.0
+2026-09-23 20:17:06    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set rough6 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 1.5 --eval_duration 4.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.5
+2026-09-23 20:17:06    [예시] sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_1500.pt --terrain_set unseen10 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 0.5 --eval_duration 12.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:1 --output_dir sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v0.5
+2026-09-23 20:17:06  «--dry-run 이라 아무것도 안 걸었다»
