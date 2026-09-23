@@ -271,19 +271,24 @@ def main():
             rows = terrain_split.range_notes(
                 terrain_split.read_sub_terrain_ranges(args.env_yaml),
                 terrain_split.read_eval_ranges(*args.eval_cfg))
-            outside = [r for r in rows if r[5]]
-            wider = [r for r in rows if r[6] and not r[5]]
+            outside = [r for r in rows if r[7]]
+            unknown = [r for r in rows if r[2] == terrain_split.UNKNOWN_USE]
             print()
-            print("**이름이 같은 지형의 «범위»** · 견준 항목 %d · "
-                  "난이도 0.5 에서 학습 범위 «밖» %d · "
-                  "평가 범위가 더 넓은 것 %d" % (len(rows), len(outside), len(wider)))
-            for terrain, key, rt, re_, value, out, wide in rows:
-                if not (out or wide):
+            print("**이름이 같은 지형의 «조건»** · 견준 항목 %d · "
+                  "학습 범위 «밖» %d · 소비 코드 안 읽은 항목 %d"
+                  % (len(rows), len(outside), len(unknown)))
+            print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
+                  % ("판정", "지형", "항목", "쓰임", "학습", "평가", "잰값", "출처"))
+            for terrain, key, use, source, rt, re_, value, out in rows:
+                if not (out or use == terrain_split.UNKNOWN_USE):
                     continue
-                print("    %-9s %-20s %-22s 학습 %s · 평가 %s · d0.5 %.3f"
-                      % ("**밖**" if out else "더넓음", terrain, key,
-                         "(%g, %g)" % rt, "(%g, %g)" % re_, value))
+                print("    %-9s %-20s %-22s %-5s %-14s %-14s %8s  %s"
+                      % ("**밖**" if out else "모름", terrain, key, use,
+                         "(%g, %g)" % rt, "(%g, %g)" % re_,
+                         "%.3f" % value if value is not None else "-", source))
             print("    **범위 밖인 칸은 「배운 조건을 지켰나」로 읽으면 안 된다.**")
+            print("    쓰임 · 보간=난이도로 한 값 · 표본=구간에서 뽑음 · "
+                  "두 값=범위가 아님 · 모름=소비 코드 안 읽음")
         else:
             print("  범위 대조 안 함 · `--eval_cfg` 를 안 줬다")
 
@@ -296,6 +301,13 @@ def main():
         print("**기준선이 없다** · v1 대비 하락·상승은 못 적는다 "
               "(`--baseline` 이 없거나 파일이 없다)")
     for iteration in ITERS:
+        # **안 잰 체크포인트를 「없음」·「안정」으로 말하지 않는다.**
+        # 자료가 0 건인데 「미해결 없음」이라고 적으면 «확인 못 한 것» 이
+        # «확인해서 없는 것» 으로 읽힌다.
+        if not any(iteration in cells[key] for key in cells):
+            print("iter %-5d **잰 것이 없다** · 이 점은 아무것도 말할 수 없다"
+                  % iteration)
+            continue
         marks, missing = {}, 0
         for key, (bv, bn) in sorted(base.items()):
             if key not in cells or iteration not in cells[key]:
@@ -388,6 +400,10 @@ def main():
                                 [cells[key][iteration], cells[key][other]]):
                             split += 1
                             break
+                if not any(iteration in cells[key] for key in cells):
+                    print("%-8d %10s %10s  **잰 것이 없다**"
+                          % (iteration, "-", "-"))
+                    continue
                 note = "안정" if split == 0 else "이웃 점과 %d 칸이 갈린다" % split
                 print("%-8d %10d %10d  %s" % (iteration, drops, split, note))
             print("**이웃과 갈린 칸이 많은 점은 그 값이 그 점의 «운» 일 수 있다.**")

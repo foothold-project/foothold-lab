@@ -23,7 +23,7 @@ import unittest
 
 POLICY_DIR = Path(__file__).resolve().parents[1]
 WANTED = {"run_name_from", "find_run_dir", "write_launch_record", "io_open",
-          "resolve_train_script"}
+          "resolve_train_script", "_split_guard_intended"}
 
 
 def functions_from_source(path, names):
@@ -152,45 +152,52 @@ class GuardIntendedSwallowTests(unittest.TestCase):
     """`--guard_intended` 는 `nargs="*"` 라 **뒤를 다 삼킨다.**
 
     삼켜지면 `agent.run_name=...` 이 `train.py` 에 «안 넘어가고» 런 이름이
-    조용히 사라진다. 막지 않고 «제자리로 돌려보낸다». 실제 평탄화 키에는
-    `=` 가 없다 (세 런 2048 칸 중 0 건).
+    조용히 사라진다. 되돌려 붙이면 이번엔 «차례» 가 바뀌어 하이드라가
+    이기는 값이 뒤집힌다. 그래서 처음부터 안 삼키게 가른다.
     """
 
     def resolve(self, argv):
         return MOD["resolve_train_script"](argv)
 
-    def test_swallowed_override_goes_back_to_train_py(self):
+    def test_override_after_the_flag_still_reaches_train_py(self):
         _, rest, _, known = self.resolve(
             ["--guard_against", "X", "--guard_intended", "seed",
              "agent.run_name=R"])
         self.assertEqual(known.guard_intended, ["seed"])
         self.assertIn("agent.run_name=R", rest)
 
-    def test_several_swallowed_items_all_go_back(self):
-        _, rest, _, known = self.resolve(
-            ["--guard_intended", "seed", "sim.device",
-             "agent.run_name=R", "env.x=1"])
-        self.assertEqual(known.guard_intended, ["seed", "sim.device"])
-        self.assertIn("agent.run_name=R", rest)
-        self.assertIn("env.x=1", rest)
+    def test_order_is_preserved_so_hydra_still_wins_with_the_last(self):
+        """되돌려 «붙이면» 이 시험이 깨진다. 마지막 값이 이겨야 한다."""
+        _, rest, _, _ = self.resolve(
+            ["--guard_intended", "seed", "agent.run_name=first",
+             "--headless", "agent.run_name=last"])
+        overrides = [a for a in rest if a.startswith("agent.run_name=")]
+        self.assertEqual(overrides, ["agent.run_name=first",
+                                     "agent.run_name=last"])
+        self.assertEqual(MOD["run_name_from"](list(reversed(rest))), "last")
 
-    def test_correct_order_is_untouched(self):
+    def test_a_following_flag_stops_the_capture(self):
         _, rest, _, known = self.resolve(
-            ["agent.run_name=R", "--guard_against", "X",
-             "--guard_intended", "seed"])
+            ["--guard_intended", "seed", "--headless", "--num_envs", "4096"])
         self.assertEqual(known.guard_intended, ["seed"])
-        self.assertIn("agent.run_name=R", rest)
+        self.assertEqual(rest, ["--headless", "--num_envs", "4096"])
 
-    def test_plain_keys_are_fine(self):
+    def test_plain_keys_are_all_taken(self):
         _, rest, _, known = self.resolve(
             ["--guard_intended", "seed", "sim.device"])
         self.assertEqual(known.guard_intended, ["seed", "sim.device"])
         self.assertEqual(rest, [])
 
-    def test_no_guard_intended_is_fine(self):
-        _, rest, _, known = self.resolve(["--headless", "agent.run_name=R"])
+    def test_empty_key_list_is_kept_as_empty_not_none(self):
+        _, rest, _, known = self.resolve(
+            ["--guard_intended", "agent.run_name=R"])
         self.assertEqual(known.guard_intended, [])
         self.assertIn("agent.run_name=R", rest)
+
+    def test_no_guard_intended_is_untouched(self):
+        _, rest, _, known = self.resolve(["--headless", "agent.run_name=R"])
+        self.assertEqual(known.guard_intended, [])
+        self.assertEqual(rest, ["--headless", "agent.run_name=R"])
 
 
 if __name__ == "__main__":

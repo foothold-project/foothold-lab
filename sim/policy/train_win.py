@@ -121,6 +121,31 @@ TRAIN_RELATIVE = os.path.join(
     "scripts", "reinforcement_learning", "rsl_rl", "train.py")
 
 
+
+def _split_guard_intended(argv):
+    """`--guard_intended` 가 «평탄화 키만» 먹게 미리 가른다.
+
+    돌려주는 것: (키를 걷어낸 argv, 걷어낸 키 목록 또는 None)
+
+    평탄화 키에는 `=` 가 없다 (`v2a` · `v2b` · `H` 세 런 2048 칸 중 0 건).
+    `-` 로 시작하지도 않는다. 그 둘 중 하나라도 걸리면 거기서 멈춘다.
+    **차례를 안 바꾼다.** 걷어낸 자리만 비우고 나머지는 그대로 둔다.
+    """
+    argv = list(argv)
+    if "--guard_intended" not in argv:
+        return argv, None
+    at = argv.index("--guard_intended")
+    keys, end = [], at + 1
+    while end < len(argv):
+        item = argv[end]
+        if item.startswith("-") or "=" in item:
+            break
+        keys.append(item)
+        end += 1
+    # 플래그와 그 뒤의 키들을 통째로 들어낸다. 남은 것의 차례는 그대로다.
+    return argv[:at] + argv[end:], keys
+
+
 def resolve_train_script(argv):
     """`train.py` 경로와, 그것을 뺀 나머지 인자.
 
@@ -134,27 +159,20 @@ def resolve_train_script(argv):
     parser.add_argument("--guard_intended", nargs="*", default=[],
                         help="다를 «예정» 인 평탄화 키들")
 
-    known, rest = parser.parse_known_args(argv)
-
     # `--guard_intended` 는 `nargs="*"` 라 **뒤에 오는 것을 다 삼킨다.**
     # `--guard_intended seed agent.run_name=X` 로 쓰면 `agent.run_name=X` 가
     # 의도한 키 목록에 들어가고 `train.py` 에는 «안 넘어간다». 런 이름이
     # 조용히 사라진다.
     #
-    # 막지 않고 «제자리로 돌려보낸다.** 실제 평탄화 키에는 `=` 가 없다
-    # (v2a·v2b·H 세 런 2048 칸 중 0 건). 혹시 `=` 가 든 키가 생기더라도
-    # 그것은 의도 목록에서 빠질 뿐이고, 그러면 설정 관문이 「모르는 차이」로
-    # **막는다.** 틀리는 방향이 안전한 쪽이다.
-    swallowed = [item for item in known.guard_intended if "=" in item]
-    if swallowed:
-        known.guard_intended = [item for item in known.guard_intended
-                                if "=" not in item]
-        rest = list(rest) + swallowed
-        print("[알림] `--guard_intended` 가 %s 를 삼켰다. 되돌려 놓았다.%s"
-              "       `--guard_intended` 는 «평탄화 키» 만 받는다 (`=` 가 없다).%s"
-              "       다음부터는 `agent.run_name=...` 을 «앞» 에 두십시오."
-              % (" · ".join("`%s`" % item for item in swallowed),
-                 NEWLINE, NEWLINE))
+    # 삼킨 것을 «뒤에 붙여» 되돌리면 이번엔 차례가 바뀐다. 하이드라는
+    # «마지막» 덮어쓰기를 쓰므로 `agent.run_name` 이 둘이면 이긴 쪽이
+    # 뒤집힌다. 그래서 되돌리지 않고 **처음부터 안 삼키게** 가른다.
+    # 원래 차례가 그대로 남는다.
+    argv, taken = _split_guard_intended(argv)
+
+    known, rest = parser.parse_known_args(argv)
+    if taken is not None:
+        known.guard_intended = taken
 
     root = (known.isaaclab_root
             or os.environ.get("ISAACLAB_PATH")

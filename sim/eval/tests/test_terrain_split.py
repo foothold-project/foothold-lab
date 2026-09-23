@@ -282,7 +282,11 @@ class SourceTests(unittest.TestCase):
 
 
 class RangeTests(unittest.TestCase):
-    """**이름이 같아도 같은 조건이 아니다** (CRITERIA v1.1 2 절)."""
+    """**이름이 같아도 같은 조건이 아니다** (CRITERIA v1.1 2 절).
+
+    그리고 **이름이 `_range` 라고 범위도 아니다.** 항목마다 생성기가
+    다르게 쓴다. 전부 선형 보간으로 놓으면 틀린다.
+    """
 
     EVAL_CFGS = (
         os.path.join(os.path.dirname(os.path.dirname(HERE)), "eval",
@@ -295,30 +299,55 @@ class RangeTests(unittest.TestCase):
         if not os.path.exists(path) or not all(
                 os.path.exists(p) for p in self.EVAL_CFGS):
             self.skipTest("학습 기록이나 평가 설정이 이 기계에 없다")
-        return ts.range_notes(ts.read_sub_terrain_ranges(path),
-                              ts.read_eval_ranges(*self.EVAL_CFGS))
+        return {(r[0], r[1]): r for r in ts.range_notes(
+            ts.read_sub_terrain_ranges(path),
+            ts.read_eval_ranges(*self.EVAL_CFGS))}
 
     def test_boxes_is_outside_the_training_range(self):
         """CRITERIA 2 절이 든 예다 · 평가 0.125 · 학습 상한 0.10."""
-        rows = {(r[0], r[1]): r for r in self.rows()}
-        terrain, key, trained, evaluated, value, outside, wider = rows[
-            ("boxes", "grid_height_range")]
+        row = self.rows()[("boxes", "grid_height_range")]
+        _, _, use, _, trained, evaluated, value, outside = row
+        self.assertEqual(use, ts.INTERPOLATED)
         self.assertEqual(trained, (0.025, 0.1))
         self.assertEqual(evaluated, (0.05, 0.2))
         self.assertAlmostEqual(value, 0.125)
         self.assertTrue(outside)
 
-    def test_matching_ranges_are_not_flagged(self):
-        rows = {(r[0], r[1]): r for r in self.rows()}
-        self.assertFalse(rows[("rails", "rail_height_range")][5])
-        self.assertFalse(rows[("rails", "rail_height_range")][6])
+    def test_noise_range_is_sampled_not_interpolated(self):
+        """`random_uniform_terrain` 은 난이도를 «안» 쓴다.
 
-    def test_wider_eval_range_is_flagged_even_when_the_point_is_inside(self):
-        """`random_rough` 는 난이도 0.5 에서 학습 상한에 «닿는다»."""
-        rows = {(r[0], r[1]): r for r in self.rows()}
-        row = rows[("random_rough", "noise_range")]
-        self.assertFalse(row[5])
-        self.assertTrue(row[6])
+        구간 전체에서 뽑으므로 학습 상한 0.06 을 넘는 조건이 난이도와
+        무관하게 «이미» 나온다. 보간으로 보면 0.060 이라 놓친다.
+        """
+        row = self.rows()[("random_rough", "noise_range")]
+        self.assertEqual(row[2], ts.SAMPLED)
+        self.assertIsNone(row[6])
+        self.assertTrue(row[7])
+
+    def test_rail_thickness_is_two_values_not_a_range(self):
+        """`rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range`."""
+        row = self.rows()[("rails", "rail_thickness_range")]
+        self.assertEqual(row[2], ts.TWO_VALUES)
+        self.assertIsNone(row[6])
+        self.assertFalse(row[7])
+
+    def test_matching_interpolated_ranges_are_not_flagged(self):
+        row = self.rows()[("rails", "rail_height_range")]
+        self.assertEqual(row[2], ts.INTERPOLATED)
+        self.assertFalse(row[7])
+
+    def test_every_use_entry_cites_the_consuming_code(self):
+        for key, (use, source) in ts.RANGE_USE.items():
+            self.assertIn(use, (ts.INTERPOLATED, ts.SAMPLED, ts.TWO_VALUES), key)
+            self.assertIn(".py:", source, key)
+
+    def test_an_unlisted_range_is_marked_unknown_not_guessed(self):
+        rows = ts.range_notes({"t": {"mystery_range": (0.0, 1.0)}},
+                              {"t": {"mystery_range": (0.0, 2.0)}})
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][2], ts.UNKNOWN_USE)
+        self.assertIsNone(rows[0][6])
+        self.assertTrue(rows[0][7])
 
     def test_reading_a_missing_eval_cfg_stops(self):
         with self.assertRaises(ValueError):

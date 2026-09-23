@@ -6,7 +6,7 @@
 근거: inbox/jay/20260923-lineage/CRITERIA.md v1.1 2 절 · 생성 코드 기하 (mesh_terrains.py) · 각 정책이 남긴 params/env.yaml 의 sub_terrains
 요지: 「하락 0 / 48」 한 숫자가 여러 종류를 섞는다. 분류는 «생성 코드의 기하» 로 하고 손으로 안 적는다
 상태: 확정
-판: v2.0
+판: v2.1
 
 ## 판 v2.0 에서 뒤집힌 것
 
@@ -56,7 +56,20 @@ boxes   학습 grid_height_range (0.025, 0.10)
         -> 학습 범위 «밖» 이다
 ```
 
-`range_notes()` 가 이것을 셉니다. **분류는 안 바꾸고 따로 적습니다.**
+**그리고 이름이 `_range` 라고 범위인 것도 아닙니다.** 항목마다 생성기가
+다르게 씁니다. 전부 선형 보간으로 놓으면 틀립니다.
+
+```
+보간   난이도로 한 값을 뽑는다            grid_height · step_height · slope · rail_height
+표본   난이도와 «무관하게» 구간에서 뽑는다  noise_range   hf_terrains.py:62-70
+       -> random_rough 는 어느 난이도에서도 학습 상한 0.06 을 넘는다
+두 값  범위가 아니라 값 둘이다             rail_thickness_range  mesh_terrains.py:406
+       -> `rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range`
+모름   소비 코드를 아직 안 읽었다          구간으로 보수적으로 보고 그렇게 적는다
+```
+
+`RANGE_USE` 가 그 표이고 `range_notes()` 가 셉니다.
+**분류는 안 바꾸고 따로 적습니다.**
 
 ## 통과선을 둘로 만들지 않습니다
 
@@ -282,30 +295,63 @@ def floored_notes(eval_terrains, trained):
             for terrain in eval_terrains if terrain in FLOORED_EVAL]
 
 
+# --- `*_range` 를 «생성기가 어떻게 쓰는가» --------------------------------
+#
+# **이름이 `_range` 라고 범위가 아니다.** 소비하는 코드를 읽고 적는다.
+# 여기 없는 이름은 «모른다» 로 다루고 추측하지 않는다.
+INTERPOLATED, SAMPLED, TWO_VALUES, UNKNOWN_USE = "보간", "표본", "두 값", "모름"
+
+RANGE_USE = {
+    "grid_height_range": (INTERPOLATED, "mesh_terrains.py:285"),
+    "step_height_range": (INTERPOLATED, "mesh_terrains.py:76 · 176"),
+    "rail_height_range": (INTERPOLATED, "mesh_terrains.py:401"),
+    "slope_range": (INTERPOLATED, "hf_terrains.py:111-113"),
+    # 난이도가 «안» 들어간다. 어느 난이도에서도 이 구간 전체에서 뽑는다.
+    "noise_range": (SAMPLED, "hf_terrains.py:62-70"),
+    # 범위가 아니라 «안쪽 두께 · 바깥쪽 두께» 두 값이다.
+    "rail_thickness_range": (TWO_VALUES, "mesh_terrains.py:406"),
+}
+
+
 def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
-    """이름이 같은 지형에서 «평가 값이 학습 범위 밖» 인 칸.
+    """이름이 같은 지형에서 «평가 조건이 학습 범위 밖» 인 칸.
 
-    돌려주는 것: [(지형, 항목, 학습범위, 평가범위, 평가값, 밖인가, 더넓은가)]
+    돌려주는 것: [(지형, 항목, 쓰임, 출처, 학습범위, 평가범위, 잰값, 밖인가)]
 
-    `밖인가`    이 난이도에서 «잰 값» 이 학습 범위 밖이다
-    `더넓은가`  «평가 범위 자체» 가 학습 범위를 넘어선다. 지금 난이도에서는
-                안 걸려도 난이도를 올리면 걸리는 자리다. 실제로
-                `random_rough` 가 난이도 0.5 에서 정확히 학습 상한에 닿는다
+    **항목마다 생성기가 다르게 씁니다.** 전부 선형 보간이라고 놓으면 틀립니다.
 
-    난이도 보간은 `아래 + 난이도 x (위 - 아래)` 로 본다. 생성기가 거꾸로
-    보간하는 항목(`floating_ring` 의 고리 높이)은 이름이 안 겹쳐서 여기
-    안 들어온다. **분류는 안 바꾸고 따로 적기만 한다.**
+    ```
+    보간   난이도로 한 값을 뽑는다        잰값 = 아래 + 난이도 x (위 - 아래)
+           그 한 값이 학습 범위 밖인가
+    표본   난이도와 무관하게 구간에서 뽑는다  잰값이 하나가 아니다
+           «구간» 이 학습 범위를 벗어나는가
+    두 값  범위가 아니라 값 둘이다          두 값이 각각 학습 쪽과 같은가
+    모름   소비 코드를 아직 안 읽었다        구간으로 보수적으로 본다 · 그렇게 적는다
+    ```
+
+    `잰값` 이 `None` 이면 「한 값으로 말할 수 없다」는 뜻입니다.
+    **분류는 안 바꾸고 따로 적기만 합니다.**
     """
     out = []
     for terrain in sorted(set(trained_ranges) & set(eval_ranges)):
         for key in sorted(set(trained_ranges[terrain]) & set(eval_ranges[terrain])):
             low_t, high_t = trained_ranges[terrain][key]
             low_e, high_e = eval_ranges[terrain][key]
-            value = low_e + difficulty * (high_e - low_e)
-            outside = value < low_t or value > high_t
-            wider = low_e < low_t or high_e > high_t
-            out.append((terrain, key, (low_t, high_t), (low_e, high_e),
-                        value, outside, wider))
+            use, source = RANGE_USE.get(key, (UNKNOWN_USE, "소비 코드 안 읽음"))
+
+            if use == INTERPOLATED:
+                value = low_e + difficulty * (high_e - low_e)
+                outside = value < low_t or value > high_t
+            elif use == TWO_VALUES:
+                value = None
+                outside = (low_e, high_e) != (low_t, high_t)
+            else:
+                # 표본 · 모름 · 구간이 학습 범위를 벗어나면 «벗어난 조건이
+                # 실제로 나온다». 한 점으로 말하지 않는다.
+                value = None
+                outside = low_e < low_t or high_e > high_t
+            out.append((terrain, key, use, source,
+                        (low_t, high_t), (low_e, high_e), value, outside))
     return out
 
 
