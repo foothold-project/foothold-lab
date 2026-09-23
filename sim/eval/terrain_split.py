@@ -62,7 +62,8 @@ boxes   학습 grid_height_range (0.025, 0.10)
 ```
 보간   난이도로 한 값을 뽑는다            grid_height · step_height · slope · rail_height
 표본   난이도와 «무관하게» 구간에서 뽑는다  noise_range   hf_terrains.py:62-70
-       -> random_rough 는 어느 난이도에서도 학습 상한 0.06 을 넘는다
+       -> random_rough 는 어느 난이도에서도 학습 상한 0.06 을 넘는 값을
+          «뽑을 수 있다» (뽑았다는 뜻은 아니다 · np.random.choice)
 두 값  범위가 아니라 값 둘이다             rail_thickness_range  mesh_terrains.py:406
        -> `rail_1_thickness, rail_2_thickness = cfg.rail_thickness_range`
 모름   소비 코드를 아직 안 읽었다          «밖인지 확인 못 함» 으로 남긴다
@@ -397,7 +398,8 @@ def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
            생성기가 그 값을 «그대로» 쓰는지 «진폭» 으로 쓰는지는
            또 다르다 (`boxes` 는 진폭이다 · mesh_terrains.py:348)
     표본   난이도와 무관하게 구간에서 뽑는다  잰값이 하나가 아니다
-           «구간» 이 학습 범위를 벗어나는가
+           «구간» 이 학습 범위를 벗어나는가 · 벗어나면 학습 밖 값이
+           «나올 수 있다» 는 뜻이지 «나왔다» 는 뜻이 아니다
     두 값  범위가 아니라 값 둘이다          두 값이 각각 학습 쪽과 같은가
     모름   소비 코드를 아직 안 읽었다        «밖인지 확인 못 함» 으로 남긴다
     ```
@@ -421,8 +423,10 @@ def range_notes(trained_ranges, eval_ranges, difficulty=0.5):
                 value = None
                 outside = (low_e, high_e) != (low_t, high_t)
             elif use == SAMPLED:
-                # 구간 전체에서 뽑으므로, 구간이 벗어나면 «벗어난 조건이
-                # 실제로 나온다». 한 점으로 말하지 않는다.
+                # 구간 전체에서 «뽑으므로», 구간이 벗어나면 학습 범위 밖
+                # 값이 «나올 수 있다». `np.random.choice` 라 실제로 그 값이
+                # 나왔는지까지는 이 대조가 못 말한다 (hf_terrains.py:69).
+                # 한 점으로도 말하지 않는다.
                 value = None
                 outside = low_e < low_t or high_e > high_t
             else:

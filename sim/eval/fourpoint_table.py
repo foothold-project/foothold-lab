@@ -178,9 +178,10 @@ def main():
     # **몇 칸이 «아예 없는지» 를 말한다.** 한 칸만 두고 돌려도 「덜 찬 칸 0」
     # 이 나와서, 「미해결 없음」이 «확인해서 없다» 로 읽힌다.
     if len(cells) < EXPECTED_CELLS:
-        print("**칸이 %d / %d 뿐이다.** 나머지 %d 칸은 «안 잰 것» 이지 "
-              "«없는 것» 이 아니다. 아래의 「없음」을 확인으로 읽지 마십시오."
-              % (len(cells), EXPECTED_CELLS, EXPECTED_CELLS - len(cells)))
+        print("**칸이 %d / %d 뿐이다.** 나머지 %d 칸은 이 입력에서 «못 읽은» "
+              "것이지 «0 인» 것이 아니다. 아래의 「없음」을 확인으로 읽지 "
+              "마십시오." % (len(cells), EXPECTED_CELLS,
+                             EXPECTED_CELLS - len(cells)))
     if partial:
         print("**아직 덜 찼다. 아래 표를 «모델 성적» 으로 읽지 마십시오.**")
     print()
@@ -346,7 +347,8 @@ def main():
         # 자료가 0 건인데 「미해결 없음」이라고 적으면 «확인 못 한 것» 이
         # «확인해서 없는 것» 으로 읽힌다.
         if not any(iteration in cells[key] for key in cells):
-            print("iter %-5d **잰 것이 없다** · 이 점은 아무것도 말할 수 없다"
+            print("iter %-5d **이 입력에서 결과를 못 읽었다** · 이 점은 "
+                  "아무것도 말할 수 없다 (안 쟀는지 딴 데 있는지는 모른다)"
                   % iteration)
             continue
         marks, missing = {}, 0
@@ -361,7 +363,14 @@ def main():
             drops = [(k, b, p) for k, (m, b, p) in sorted(marks.items()) if m == "하락"]
             rises = [k for k, (m, _, _) in marks.items() if m == "상승"]
             laps = sum(1 for m, _, _ in marks.values() if m == "겹침")
-            tail = " · 아직 없는 칸 %d" % missing if missing else ""
+            # 기준선에 «없는» 칸은 견주지 못한 칸이다. 안 적으면 「하락 0」
+            # 이 48 칸을 다 봤다는 말로 읽힌다.
+            no_base = sum(1 for key in cells
+                          if iteration in cells[key] and key not in base)
+            tail = " · 기준선에 있는데 결과가 없는 칸 %d" % missing if missing else ""
+            if no_base:
+                tail += (" · **결과는 있는데 기준선에 없는 칸 %d · 이 칸들은 "
+                         "견주지 못했다**" % no_base)
             print("iter %-5d v1 대비  진짜 하락 %d · 진짜 상승 %d · 겹침 %d%s"
                   % (iteration, len(drops), len(rises), laps, tail))
             for key, bv, pv in drops:
@@ -405,7 +414,8 @@ def main():
         short = EXPECTED_CELLS - len(read_here)
         seen_note = ("" if not short else
                      " · **이 점은 %d / %d 칸만 읽었다. 나머지 %d 칸은 "
-                     "«안 잰 것»**" % (len(read_here), EXPECTED_CELLS, short))
+                     "이 입력에서 «못 읽은» 것이다**"
+                     % (len(read_here), EXPECTED_CELLS, short))
         zero = [key for key in sorted(cells)
                 if iteration in cells[key] and cells[key][iteration][0] == 0.0]
         if not zero:
@@ -414,8 +424,12 @@ def main():
             continue
         if base:
             both = sum(1 for k in zero if k in base and base[k][0] == 0.0)
+            absent = sum(1 for k in zero if k not in base)
             tail = ("그중 v1 도 0 인 칸 %d · 하락이 아니라서 통과로 셈된다"
                     % both)
+            if absent:
+                tail += (" · **기준선에 없는 칸 %d 은 v1 이 0 인지 못 봤다**"
+                         % absent)
         else:
             # 기준선을 안 읽었으면 「v1 도 0 인 칸」을 «셀 수 없다».
             # 0 이라고 적으면 «확인 못 한 것» 을 «0 건» 으로 단정하게 된다.
@@ -459,19 +473,30 @@ def main():
                            for o in pairs):
                         split += 1
                 if not any(iteration in cells[key] for key in cells):
-                    print("%-8d %10s %10s  **잰 것이 없다**"
+                    print("%-8d %10s %10s  **이 입력에서 결과를 못 읽었다**"
                           % (iteration, "-", "-"))
                     continue
                 if not against:
                     print("%-8d %10s %10s  **기준선과 견준 칸이 없다**"
                           % (iteration, "-", "-"))
                     continue
+                # 어느 이웃을 «실제로» 견줬는지 적는다. 이웃 자료가 없으면
+                # 「안정」은 그 이웃에 대해 아무 말도 안 한 것이다.
+                live = [o for o in neighbours
+                        if any(o in cells[k] for k in cells)]
+                missed = [o for o in neighbours if o not in live]
+                where = " · 견준 이웃 %s" % ("·".join(str(o) for o in live)
+                                             if live else "없음")
+                if missed:
+                    where += " · **자료 없는 이웃 %s**" % "·".join(
+                        str(o) for o in missed)
                 if not compared:
                     note = "**이웃과 견준 칸이 없다** · 흔들리는지 말할 수 없다"
                 elif split == 0:
-                    note = "안정 (%d 칸을 견줬다)" % compared
+                    note = "견준 %d 칸은 다 겹쳤다%s" % (compared, where)
                 else:
-                    note = "이웃 점과 %d 칸이 갈린다 (%d 칸 중)" % (split, compared)
+                    note = "이웃 점과 %d 칸이 갈린다 (%d 칸 중)%s" % (
+                        split, compared, where)
                 print("%-8d %10d %10d  %s" % (iteration, drops, split, note))
             print("**이웃과 갈린 칸이 많은 점은 그 값이 그 점의 «운» 일 수 있다.**")
 
