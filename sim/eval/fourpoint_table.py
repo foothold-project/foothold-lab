@@ -245,7 +245,8 @@ def main():
               % (ALWAYS_ZERO, total_points, zero_points,
                  "" if zero_points == total_points else "  <- **0 이 아닌 점이 있다**"))
     else:
-        print("`%s` · 아직 잰 점이 없다" % ALWAYS_ZERO)
+        print("`%s` · **이 입력에서 이 지형의 결과를 못 읽었다** "
+              "(안 쟀는지 딴 데 있는지는 모른다)" % ALWAYS_ZERO)
 
     # 학습 지형은 «정책마다 다르다». 손으로 안 적고 그 학습이 남긴
     # env.yaml 에서 읽는다 (CRITERIA v1.0 2 절).
@@ -482,14 +483,25 @@ def main():
                     continue
                 # 어느 이웃을 «실제로» 견줬는지 적는다. 이웃 자료가 없으면
                 # 「안정」은 그 이웃에 대해 아무 말도 안 한 것이다.
+                # 이웃에 자료가 «있다» 와 이 점과 «견줄 수 있다» 는 다르다.
+                # 같은 칸이 하나도 없으면 견준 것이 아니다.
                 live = [o for o in neighbours
-                        if any(o in cells[k] for k in cells)]
+                        if any(o in cells[k] and iteration in cells[k]
+                               for k in cells)]
                 missed = [o for o in neighbours if o not in live]
+                # 「자료가 아예 없는 이웃」과 「자료는 있는데 겹치는 칸이
+                # 없는 이웃」을 갈라 적는다.
+                empty = [o for o in missed
+                         if not any(o in cells[k] for k in cells)]
+                disjoint = [o for o in missed if o not in empty]
                 where = " · 견준 이웃 %s" % ("·".join(str(o) for o in live)
                                              if live else "없음")
-                if missed:
+                if empty:
                     where += " · **자료 없는 이웃 %s**" % "·".join(
-                        str(o) for o in missed)
+                        str(o) for o in empty)
+                if disjoint:
+                    where += (" · **겹치는 칸이 없는 이웃 %s**"
+                              % "·".join(str(o) for o in disjoint))
                 if not compared:
                     note = "**이웃과 견준 칸이 없다** · 흔들리는지 말할 수 없다"
                 elif split == 0:
