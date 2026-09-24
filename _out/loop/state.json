@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "updated": "2026-09-23T19:47:19",
-  "updated_by": "결정론 실측과 s2 실패 기록",
+  "updated": "2026-09-24T11:07:57",
+  "updated_by": "[0-a] 판정과 3 차 device 검증 반영",
   "stage": {
     "branch": "0",
     "name": "기준 재기",
-    "phase": "학습 끝 · 판정 대기",
-    "note": "두 판 병렬. 부모 v2a/v2b 도 5 초 차이로 같이 돌았으므로 조건이 같다"
+    "phase": "[0-a] 판정 끝 · [0-b] 막힘",
+    "note": "v2b-r 미달. 다만 iter2500 이 축 2 첫 9/9"
   },
   "running": [
     {
@@ -78,12 +78,36 @@
       "finding": "s 와 «비트 동일» 하다. model_0·25·500·1000·1650 다섯 개가 최대차 0.000e+00. 무작위 사건이 아니라 (설정, 시드 43, cuda:1) 의 결정론적 성질이다"
     }
   ],
-  "last_result": null,
-  "next": {
-    "from_branch_table": "v2b-r 네 체크포인트를 두 축으로 평가",
-    "blocked_by": null
+  "last_result": {
+    "run": "v2b-r",
+    "verdict": "미달",
+    "axis1_drops": [
+      2,
+      0,
+      0,
+      0
+    ],
+    "axis2_passed": [
+      4,
+      5,
+      9,
+      6
+    ],
+    "absolute_min_cells": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "doc": "inbox/jay/20260923-lineage/VERDICT-0a.md",
+    "note": "iter2500 축 2 9/9 는 프로젝트 최초. 3 차 검증이 per_env 에서 재확인",
+    "caveat": "#463 코드 결함 반영 «전» 의 판정"
   },
-  "halt_reason": null,
+  "next": {
+    "from_branch_table": "팀장 결정 대기 · (가) [0-b] 를 다른 seed 로 (나) v2a 대 v2b-r 재해석 (다) [1] 로 진행",
+    "blocked_by": "팀장 판단"
+  },
+  "halt_reason": "[0-a] 판정 완료. 분기표에 없는 상황 · device 교란이 계보 해석을 바꿈",
   "budget": {
     "train_runs": 3,
     "train_hours": 3.4,
@@ -119,5 +143,15 @@
       ]
     }
   ],
-  "halt_note": "[0-b] 는 시드 43 으로 완주 불가 (결정론적 실패). 다른 시드는 팀장이 정한다. 그것과 별개로 [0-a] v2b-r 평가는 막을 이유가 없다"
+  "halt_note": "[0-b] 는 시드 43 으로 완주 불가 (결정론적 실패). 다른 시드는 팀장이 정한다. 그것과 별개로 [0-a] v2b-r 평가는 막을 이유가 없다",
+  "decisions": [
+    "「학습 중 평가 금지」 철회 · 근거 없었음",
+    "평가 device 는 축1 v2b-iter3000 규격에서 결과를 안 바꿈 (raw 4,800 행 전부 동일)",
+    "학습 device 배치가 판정을 양쪽으로 바꿈 · 기전은 «난수 생성기 공유 여부» 로 추정",
+    "같은 seed·같은 device 재실행은 비트 동일 (67 checkpoint) · «독립 표본 아님»",
+    "seed 43 은 이 설정에서 결정론적으로 발산 (step 1578) · 13 판 중 처음",
+    "device 배정은 «변수가 아니라 고정 조건» · BRANCH-TABLE 규칙 5 교체 (v2.6)",
+    "v2a 대 v2b 비교에 sim 배치 교란 · v2a 대 v2b-r 이 더 나은 쌍",
+    "완성 checkpoint 성능 비교는 하드웨어가 달라도 «성립» · recipe 인과는 «불가»"
+  ]
 }
