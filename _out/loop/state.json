@@ -1,157 +1,217 @@
 {
-  "schema": 1,
-  "updated": "2026-09-24T11:07:57",
-  "updated_by": "[0-a] 판정과 3 차 device 검증 반영",
-  "stage": {
-    "branch": "0",
-    "name": "기준 재기",
-    "phase": "[0-a] 판정 끝 · [0-b] 막힘",
-    "note": "v2b-r 미달. 다만 iter2500 이 축 2 첫 9/9"
+ "schema": 1,
+ "updated": "2026-09-25T09:00:00",
+ "updated_by": "v2g·v2n 완료 등록 · seed 43 원인 확정 기록",
+ "stage": {
+  "branch": "1",
+  "name": "1 순위·2 순위 단일 변수 시험",
+  "phase": "v2g·v2n 학습 끝 · 평가 대기",
+  "note": "astra AUDIT8 v1.1 반영. A+B 묶기는 철회. S 와 (ㄱ)noise_std_type=log 는 astra 재검증 중"
+ },
+ "running": [
+  {
+   "name": "v2b-r",
+   "branch": "0-a",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 42,
+   "gpu": "cuda:0 (시뮬만. 신경망은 언제나 cuda:0)",
+   "pid": 69380,
+   "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
+   "started": "2026-09-23T14:42:19+09:00",
+   "expected_minutes": 255,
+   "expected_end": "2026-09-23T18:57:00+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144219_20260923_v2b-r_seed42_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-r_seed42_iter3000",
+   "changed_vs_parent": "시뮬 GPU 만 (v2b 는 cuda:1)",
+   "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
+   "status": "완료",
+   "finished": "2026-09-23T18:05:00+09:00 쯤 · model_3000.pt 존재로 확인",
+   "condition_note": "부모 v2b 는 «끝까지» 이웃(v2a)이 있었다. v2b-r 은 16:39 까지 v2b-s, 17:08 부터 v2b-s2 가 이웃이었고 그 사이 29 분은 혼자였다. 판정문에 적는다"
   },
-  "running": [
-    {
-      "name": "v2b-r",
-      "branch": "0-a",
-      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
-      "seed": 42,
-      "gpu": "cuda:0 (시뮬만. 신경망은 언제나 cuda:0)",
-      "pid": 69380,
-      "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
-      "started": "2026-09-23T14:42:19+09:00",
-      "expected_minutes": 255,
-      "expected_end": "2026-09-23T18:57:00+09:00",
-      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144219_20260923_v2b-r_seed42_iter3000.log",
-      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-r_seed42_iter3000",
-      "changed_vs_parent": "시뮬 GPU 만 (v2b 는 cuda:1)",
-      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
-      "status": "완료",
-      "finished": "2026-09-23T18:05:00+09:00 쯤 · model_3000.pt 존재로 확인",
-      "condition_note": "부모 v2b 는 «끝까지» 이웃(v2a)이 있었다. v2b-r 은 16:39 까지 v2b-s, 17:08 부터 v2b-s2 가 이웃이었고 그 사이 29 분은 혼자였다. 판정문에 적는다"
-    },
-    {
-      "name": "v2b-s",
-      "branch": "0-b",
-      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
-      "seed": 43,
-      "gpu": "cuda:1 (부모와 같음)",
-      "pid": 74392,
-      "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
-      "started": "2026-09-23T14:42:26+09:00",
-      "expected_minutes": 255,
-      "expected_end": "2026-09-23T18:57:00+09:00",
-      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144226_20260923_v2b-s_seed43_iter3000.log",
-      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-s_seed43_iter3000",
-      "changed_vs_parent": "학습 시드만 (42 -> 43)",
-      "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
-      "status": "죽음",
-      "died_at": "2026-09-23 16:39~16:41 사이 · 마지막 체크포인트 16:39:26 · 종료 경고 16:41",
-      "died_at_iteration": "1670 언저리 (마지막 체크포인트 model_1650)",
-      "error": "RuntimeError: normal expects all elements of std >= 0.0",
-      "error_where": "torch/distributions/normal.py:74 · PPO 행동 분포의 scale 에 «음수나 NaN 등» 조건 위반 값이 들어갔다. 로그는 「모든 원소가 >= 0 이어야 한다」만 말한다. «0 이하» 로 단정하면 안 된다 (3 차 감사 지적)",
-      "exit_code": 1,
-      "auto_restart": "안 함 (설계상 금지)",
-      "died_at_note": "체크포인트 시각을 사망 시각으로 쓰지 않는다"
-    },
-    {
-      "name": "v2b-s2",
-      "branch": "0-b",
-      "attempt": 2,
-      "retry_of": "v2b-s",
-      "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
-      "seed": 43,
-      "gpu": "cuda:1 (부모와 같음)",
-      "pid": 76292,
-      "pid_kind": "학습 python 자체",
-      "started": "2026-09-23T17:08:47+09:00",
-      "expected_minutes": 255,
-      "expected_end": "2026-09-23T21:25:00+09:00",
-      "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_170847_20260923_v2b-s2_seed43_iter3000.log",
-      "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_17-08-57_20260923_v2b-s2_seed43_iter3000",
-      "out_dir_kind": "«확정 절대 경로». wildcard 를 쓰지 않는다 (3 차 감사 지적)",
-      "changed_vs_parent": "학습 시드만 (42 -> 43)",
-      "why": "v2b-s 가 1670 에서 죽어 같은 시드로 재시도. 팀장 승인 2026-09-23",
-      "watch": "step 1500~1700 의 Loss/value_function 과 Train/mean_reward 를 «연속으로» 본다",
-      "condition_note": "18:05 에 v2b-r 이 끝나 그 뒤로 «혼자» 돈다. 부모 v2b 는 끝까지 이웃이 있었다. 조건이 같지 않다. 판정문에 적는다",
-      "status": "죽음",
-      "died_at": "2026-09-23 18:0x · step 1670 · s 와 «같은 자리»",
-      "error": "RuntimeError · normal 의 scale 조건 위반 (s 와 같음)",
-      "finding": "s 와 «비트 동일» 하다. model_0·25·500·1000·1650 다섯 개가 최대차 0.000e+00. 무작위 사건이 아니라 (설정, 시드 43, cuda:1) 의 결정론적 성질이다"
-    }
+  {
+   "name": "v2b-s",
+   "branch": "0-b",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 43,
+   "gpu": "cuda:1 (부모와 같음)",
+   "pid": 74392,
+   "pid_kind": "학습 python 자체. Win32_Process 의 CommandLine 으로 확인함",
+   "started": "2026-09-23T14:42:26+09:00",
+   "expected_minutes": 255,
+   "expected_end": "2026-09-23T18:57:00+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_144226_20260923_v2b-s_seed43_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260923_v2b-s_seed43_iter3000",
+   "changed_vs_parent": "학습 시드만 (42 -> 43)",
+   "eta_note": "첫 판에서 rsl_rl 이 보고한 ETA 04:09:38 로 잡았다. 부모 v2b 는 3 시간 31 분이었고 이번은 둘이 같이 돈다",
+   "status": "죽음",
+   "died_at": "2026-09-23 16:39~16:41 사이 · 마지막 체크포인트 16:39:26 · 종료 경고 16:41",
+   "died_at_iteration": "1670 언저리 (마지막 체크포인트 model_1650)",
+   "error": "RuntimeError: normal expects all elements of std >= 0.0",
+   "error_where": "torch/distributions/normal.py:74 · PPO 행동 분포의 scale 에 «음수나 NaN 등» 조건 위반 값이 들어갔다. 로그는 「모든 원소가 >= 0 이어야 한다」만 말한다. «0 이하» 로 단정하면 안 된다 (3 차 감사 지적)",
+   "exit_code": 1,
+   "auto_restart": "안 함 (설계상 금지)",
+   "died_at_note": "체크포인트 시각을 사망 시각으로 쓰지 않는다"
+  },
+  {
+   "name": "v2b-s2",
+   "branch": "0-b",
+   "attempt": 2,
+   "retry_of": "v2b-s",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 43,
+   "gpu": "cuda:1 (부모와 같음)",
+   "pid": 76292,
+   "pid_kind": "학습 python 자체",
+   "started": "2026-09-23T17:08:47+09:00",
+   "expected_minutes": 255,
+   "expected_end": "2026-09-23T21:25:00+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260923_170847_20260923_v2b-s2_seed43_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-23_17-08-57_20260923_v2b-s2_seed43_iter3000",
+   "out_dir_kind": "«확정 절대 경로». wildcard 를 쓰지 않는다 (3 차 감사 지적)",
+   "changed_vs_parent": "학습 시드만 (42 -> 43)",
+   "why": "v2b-s 가 1670 에서 죽어 같은 시드로 재시도. 팀장 승인 2026-09-23",
+   "watch": "step 1500~1700 의 Loss/value_function 과 Train/mean_reward 를 «연속으로» 본다",
+   "condition_note": "18:05 에 v2b-r 이 끝나 그 뒤로 «혼자» 돈다. 부모 v2b 는 끝까지 이웃이 있었다. 조건이 같지 않다. 판정문에 적는다",
+   "status": "죽음",
+   "died_at": "2026-09-23 18:0x · step 1670 · s 와 «같은 자리»",
+   "error": "RuntimeError · normal 의 scale 조건 위반 (s 와 같음)",
+   "finding": "s 와 «비트 동일» 하다. model_0·25·500·1000·1650 다섯 개가 최대차 0.000e+00. 무작위 사건이 아니라 (설정, 시드 43, cuda:1) 의 결정론적 성질이다"
+  },
+  {
+   "name": "v2g-feetair1",
+   "branch": "1-a",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 42,
+   "gpu": "cuda:0",
+   "pid": null,
+   "pid_kind": "끝났다. exit=0 · Learning iteration 3000/3001 까지 로그에 있다",
+   "started": "2026-09-24T19:20:29+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260924_192029_20260924_v2g-feetair1_seed42_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260924_v2g-feetair1_seed42_iter3000",
+   "changed_vs_parent": "feet_air_time.weight 0.01 -> 1.0 «한 칸만» (Hydra override)",
+   "status": "완료",
+   "finished": "2026-09-24T22:2x+09:00 · model_3000.pt 존재 + exit=0",
+   "hypothesis": "발 체공 보상을 100 배로 키우면 발 들기가 늘어 험지가 오르는가",
+   "control": "v2b-r / v2b-p11 (같은 시드 42 · 같은 3001 판 · 같은 지형)",
+   "condition_note": "SYNTHESIS 6 절의 2 순위다. 1 순위(관측 잡음)보다 먼저 걸었다. astra AUDIT8 v1.1 은 «순서를 바꾼 것이 실험을 무효로 하지 않는다» 고 판정했다"
+  },
+  {
+   "name": "v2n-noise02",
+   "branch": "1-b",
+   "task": "Isaac-Velocity-V2n-Unitree-Go2-v0",
+   "seed": 42,
+   "gpu": "cuda:1",
+   "pid": null,
+   "pid_kind": "끝났다. exit=0 · Learning iteration 3000/3001 까지 로그에 있다",
+   "started": "2026-09-24T22:15:25+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260924_221516_20260924_v2n-noise02_seed42_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260924_v2n-noise02_seed42_iter3000",
+   "changed_vs_parent": "height_scan 백색 잡음 ±0.10 -> ±0.02 «한 칸만». env.yaml 대조로 n_min·n_max 둘 말고 차이 없음을 확인함",
+   "status": "완료",
+   "finished": "2026-09-25 새벽 · model_3000.pt 존재 + exit=0",
+   "hypothesis": "매 스텝 셀마다 다시 뽑히는 높이 오차가 학습을 방해했는가 (SYNTHESIS 6 절 1 순위)",
+   "control": "v2b-r / v2b-p11",
+   "condition_note": "sim 과 PPO 를 짝지은 첫 실험이다 (--device cuda:1 agent.device=cuda:1). drift 는 0 유지 · offset 유지 · enable_corruption 유지"
+  },
+  {
+   "name": "v2b-s3instr",
+   "branch": "0-b",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 43,
+   "gpu": "cuda:1 (sim) + cuda:0 (PPO) · 원본 v2b-s 와 «일부러» 같은 배치",
+   "pid": null,
+   "pid_kind": "죽었다",
+   "started": "2026-09-24T19:05:27+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260924_190527_20260924_v2b-s3instr_seed43_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260924_v2b-s3instr_seed43_iter3000",
+   "changed_vs_parent": "train_instrumented.py 로 계측만 켰다. 계산은 안 바꿨다",
+   "status": "죽음",
+   "finished": "2026-09-24T21:03+09:00 · Learning iteration 1670/3001",
+   "death": "RuntimeError: normal expects all elements of std >= 0.0 (torch/distributions/normal.py:74)",
+   "root_cause": "actor_critic.py:31 의 기본값 noise_std_type='scalar' 때문에 self.std 가 제약 없는 nn.Parameter(:93) 이고 Normal(mean,std)(:146) 로 직접 들어간다. Adam 이 0 아래로 민다. noise_std_type='log' 면 std=exp(log_std)(:142) 라 구조적으로 불가능하다",
+   "evidence": "inbox/jay/20260923-lineage/seed43/per_iter.csv · 1610 판부터 grad_norm 이 정확히 0 인 판 23 개 · std 가 7 판 비트 고정 · 비유한수 0 개",
+   "condition_note": "v2b-s · v2b-s2 와 «같은 판(1670)» 에서 같은 오류. 결정론이 지켜졌다. 평가하지 않는다"
+  }
+ ],
+ "last_result": {
+  "run": "v2b-r",
+  "verdict": "미달",
+  "axis1_drops": [
+   2,
+   0,
+   0,
+   0
   ],
-  "last_result": {
-    "run": "v2b-r",
-    "verdict": "미달",
-    "axis1_drops": [
-      2,
-      0,
-      0,
-      0
-    ],
-    "axis2_passed": [
-      4,
-      5,
-      9,
-      6
-    ],
-    "absolute_min_cells": [
-      0,
-      0,
-      0,
-      0
-    ],
-    "doc": "inbox/jay/20260923-lineage/VERDICT-0a.md",
-    "note": "iter2500 축 2 9/9 는 프로젝트 최초. 3 차 검증이 per_env 에서 재확인",
-    "caveat": "#463 코드 결함 반영 «전» 의 판정"
-  },
-  "next": {
-    "from_branch_table": "팀장 결정 대기 · (가) [0-b] 를 다른 seed 로 (나) v2a 대 v2b-r 재해석 (다) [1] 로 진행",
-    "blocked_by": "팀장 판단"
-  },
-  "halt_reason": "[0-a] 판정 완료. 분기표에 없는 상황 · device 교란이 계보 해석을 바꿈",
-  "budget": {
-    "train_runs": 3,
-    "train_hours": 3.4,
-    "codex_calls_this_week": 0,
-    "codex_week_pct_reported": 78,
-    "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함. 판정문 확정 전 검증 한 회차에만 쓴다"
-  },
-  "docs": {
-    "criteria": "inbox/jay/20260923-lineage/CRITERIA.md",
-    "branch_table": "inbox/jay/20260923-lineage/BRANCH-TABLE.md",
-    "lineage": "inbox/jay/20260923-lineage/LINEAGE.md",
-    "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md",
-    "run_plan": "inbox/jay/20260923-lineage/RUN-0.md"
-  },
-  "incidents": [
-    {
-      "when": "2026-09-23T16:39:26+09:00",
-      "what": "v2b-s 학습이 RuntimeError 로 죽음 (normal 의 scale 조건 위반)",
-      "why_it_matters": "같은 설정을 시드만 바꿔 돌렸더니 «완주하지 못했다». 재현 분산이 「숫자가 흔들린다」가 아니라 「판이 안 끝날 수도 있다」를 포함한다",
-      "gate_defect": "감시 스크립트가 18 분 동안 못 잡았다. 「선언은 있는데 큰 python 이 하나도 없다」만 봤고 둘 중 하나가 죽은 경우를 안 봤다. 같은 날 고쳤다",
-      "side_effect": "v2b-r 의 조건이 도중에 바뀌었다. 16:39 까지는 이웃이 있었고 그 뒤로는 혼자다. 부모 v2b 는 끝까지 이웃이 있었다. 이것을 판정문에 적는다"
-    },
-    {
-      "when": "2026-09-23T18:30:00+09:00",
-      "what": "학습이 (시드, 시뮬 장치) 에 대해 «완전히 결정론적» 임을 실측",
-      "evidence": "s 와 s2 는 같은 시드 43 · 같은 cuda:1 · 다른 시각에 돌았는데 체크포인트 다섯 개가 비트 동일(0.000e+00). v2b 와 v2b-r 은 같은 시드 42 · «다른» 장치라 model_0 에서 6.3e-3, model_1000 에서 5.4e-1 갈라졌다",
-      "so_what": [
-        "[0-a] 의 물음에 답이 나왔다 · 시뮬 장치는 «실제로» 결과를 바꾼다",
-        "「같은 GPU 재실행의 변동」은 «0» 이다. 그것을 재려던 계획이 불필요해졌다",
-        "이웃 부하는 학습 결과를 «못» 바꾼다. 비트 동일이 그 증거다",
-        "그래서 「학습 중 평가 금지」는 과했다. 팀장 지적이 맞다",
-        "시드 43 은 이 설정에서 «결정론적으로» 죽는다. [0-b] 는 다른 시드가 필요하다"
-      ]
-    }
+  "axis2_passed": [
+   4,
+   5,
+   9,
+   6
   ],
-  "halt_note": "[0-b] 는 시드 43 으로 완주 불가 (결정론적 실패). 다른 시드는 팀장이 정한다. 그것과 별개로 [0-a] v2b-r 평가는 막을 이유가 없다",
-  "decisions": [
-    "「학습 중 평가 금지」 철회 · 근거 없었음",
-    "평가 device 는 축1 v2b-iter3000 규격에서 결과를 안 바꿈 (raw 4,800 행 전부 동일)",
-    "학습 device 배치가 판정을 양쪽으로 바꿈 · 기전은 «난수 생성기 공유 여부» 로 추정",
-    "같은 seed·같은 device 재실행은 비트 동일 (67 checkpoint) · «독립 표본 아님»",
-    "seed 43 은 이 설정에서 결정론적으로 발산 (step 1578) · 13 판 중 처음",
-    "device 배정은 «변수가 아니라 고정 조건» · BRANCH-TABLE 규칙 5 교체 (v2.6)",
-    "v2a 대 v2b 비교에 sim 배치 교란 · v2a 대 v2b-r 이 더 나은 쌍",
-    "완성 checkpoint 성능 비교는 하드웨어가 달라도 «성립» · recipe 인과는 «불가»"
-  ]
+  "absolute_min_cells": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "doc": "inbox/jay/20260923-lineage/VERDICT-0a.md",
+  "note": "iter2500 축 2 9/9 는 프로젝트 최초. 3 차 검증이 per_env 에서 재확인",
+  "caveat": "#463 코드 결함 반영 «전» 의 판정"
+ },
+ "next": {
+  "from_branch_table": "팀장 결정 대기 · (가) [0-b] 를 다른 seed 로 (나) v2a 대 v2b-r 재해석 (다) [1] 로 진행",
+  "blocked_by": "팀장 판단"
+ },
+ "budget": {
+  "train_runs": 3,
+  "train_hours": 3.4,
+  "codex_calls_this_week": 0,
+  "codex_week_pct_reported": 78,
+  "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함. 판정문 확정 전 검증 한 회차에만 쓴다"
+ },
+ "docs": {
+  "criteria": "inbox/jay/20260923-lineage/CRITERIA.md",
+  "branch_table": "inbox/jay/20260923-lineage/BRANCH-TABLE.md",
+  "lineage": "inbox/jay/20260923-lineage/LINEAGE.md",
+  "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md",
+  "run_plan": "inbox/jay/20260923-lineage/RUN-0.md"
+ },
+ "incidents": [
+  {
+   "when": "2026-09-23T16:39:26+09:00",
+   "what": "v2b-s 학습이 RuntimeError 로 죽음 (normal 의 scale 조건 위반)",
+   "why_it_matters": "같은 설정을 시드만 바꿔 돌렸더니 «완주하지 못했다». 재현 분산이 「숫자가 흔들린다」가 아니라 「판이 안 끝날 수도 있다」를 포함한다",
+   "gate_defect": "감시 스크립트가 18 분 동안 못 잡았다. 「선언은 있는데 큰 python 이 하나도 없다」만 봤고 둘 중 하나가 죽은 경우를 안 봤다. 같은 날 고쳤다",
+   "side_effect": "v2b-r 의 조건이 도중에 바뀌었다. 16:39 까지는 이웃이 있었고 그 뒤로는 혼자다. 부모 v2b 는 끝까지 이웃이 있었다. 이것을 판정문에 적는다"
+  },
+  {
+   "when": "2026-09-23T18:30:00+09:00",
+   "what": "학습이 (시드, 시뮬 장치) 에 대해 «완전히 결정론적» 임을 실측",
+   "evidence": "s 와 s2 는 같은 시드 43 · 같은 cuda:1 · 다른 시각에 돌았는데 체크포인트 다섯 개가 비트 동일(0.000e+00). v2b 와 v2b-r 은 같은 시드 42 · «다른» 장치라 model_0 에서 6.3e-3, model_1000 에서 5.4e-1 갈라졌다",
+   "so_what": [
+    "[0-a] 의 물음에 답이 나왔다 · 시뮬 장치는 «실제로» 결과를 바꾼다",
+    "「같은 GPU 재실행의 변동」은 «0» 이다. 그것을 재려던 계획이 불필요해졌다",
+    "이웃 부하는 학습 결과를 «못» 바꾼다. 비트 동일이 그 증거다",
+    "그래서 「학습 중 평가 금지」는 과했다. 팀장 지적이 맞다",
+    "시드 43 은 이 설정에서 «결정론적으로» 죽는다. [0-b] 는 다른 시드가 필요하다"
+   ]
+  }
+ ],
+ "halt_note": "[0-b] 는 시드 43 으로 완주 불가 (결정론적 실패). 다른 시드는 팀장이 정한다. 그것과 별개로 [0-a] v2b-r 평가는 막을 이유가 없다",
+ "decisions": [
+  "「학습 중 평가 금지」 철회 · 근거 없었음",
+  "평가 device 는 축1 v2b-iter3000 규격에서 결과를 안 바꿈 (raw 4,800 행 전부 동일)",
+  "학습 device 배치가 판정을 양쪽으로 바꿈 · 기전은 «난수 생성기 공유 여부» 로 추정",
+  "같은 seed·같은 device 재실행은 비트 동일 (67 checkpoint) · «독립 표본 아님»",
+  "seed 43 은 이 설정에서 결정론적으로 발산 (step 1578) · 13 판 중 처음",
+  "device 배정은 «변수가 아니라 고정 조건» · BRANCH-TABLE 규칙 5 교체 (v2.6)",
+  "v2a 대 v2b 비교에 sim 배치 교란 · v2a 대 v2b-r 이 더 나은 쌍",
+  "완성 checkpoint 성능 비교는 하드웨어가 달라도 «성립» · recipe 인과는 «불가»"
+ ],
+ "halt_cleared": {
+  "when": "2026-09-25T09:00+09:00",
+  "was": "[0-a] 판정 완료. 분기표에 없는 상황 · device 교란이 계보 해석을 바꿈",
+  "why": "멈춤 사유가 적어 둔 것이 «device 교란이 계보 해석을 바꿈» 하나였고 그것이 실측으로 닫혔다. v2b-r(sim0+PPO0) 와 v2b-p11(sim1+PPO1) 의 체크포인트 121 개가 «전부» 일치한다. GPU 번호는 무관하고 sim·PPO 배치가 변수다. 평가 장치는 48 칸 0 개 차이. REPORT-20260924.md 1 절 · 팀장 승인(2026-09-24).",
+  "still_open": "foothold-v1 대 v2b 는 배치가 갈린 채 비교됐다. 깨끗한 짝은 v2a 대 v2b-r 이다. 이 교란은 «해석» 에 적는 것이고 평가를 막을 이유가 아니다."
+ }
 }
