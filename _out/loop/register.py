@@ -100,8 +100,20 @@ def _tail(p: str) -> dict:
     }
 
 
+# **다시 등록하지 않을 판** (2026-09-26).
+# 한 번 지웠는데 register.py 가 또 넣어서 평가를 낭비했다.
+NEVER = {
+    "v2a": "20260921-v2ab 뿌리에서 이미 평가했다",
+    "v2b": "20260921-v2ab 뿌리에서 이미 평가했다",
+    "v2b-p11": "v2b-r 과 체크포인트가 같다 (네 시점 state_dict 일치 확인)",
+    "nvidia_gap_repro": "1500 판에서 끝난 옛 판",
+    "gapwide": "1500 판에서 끝난 옛 판",
+}
+
+
 def scan(state: dict) -> list[dict]:
     known = {(r.get("name") or "") for r in state.get("running") or []}
+    known |= set(NEVER)
     out = []
     for d in sorted(glob.glob(os.path.join(RUNDIR, "*"))):
         if not os.path.isdir(d):

@@ -135,6 +135,34 @@ def run_dir(run: dict):
 # 할 일 목록
 
 
+def running_trainers() -> dict:
+    """**실제로 도는** 학습이 쓰는 장치 -> 실행 이름. 없으면 빈 딕셔너리.
+
+    `--device` 를 읽는다. `--run_name` 이 있는 python 프로세스만 학습이다.
+    평가에는 `--run_name` 이 없다.
+    """
+    out = {}
+    try:
+        txt = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+             "ForEach-Object { if ($_.CommandLine -match '--run_name\\s+(\\S+)') "
+             "{ $n=$Matches[1]; $d='?'; "
+             "if ($_.CommandLine -match '--device\\s+(\\S+)') { $d=$Matches[1] }; "
+             "\"$d|$n\" } }"],
+            capture_output=True, text=True, timeout=45).stdout
+    except Exception as exc:                                   # noqa: BLE001
+        # **못 읽으면 「바쁘다」고 «보수적으로» 본다.** 한 GPU 에 둘을 올리지 않는다.
+        log("도는 학습을 못 읽었다. 두 GPU 를 «바쁘다» 고 본다: %s" % exc)
+        return {"cuda:0": "확인 실패", "cuda:1": "확인 실패"}
+    for ln in txt.splitlines():
+        if "|" in ln:
+            dev, name = ln.strip().split("|", 1)
+            if dev.startswith("cuda"):
+                out[dev] = name
+    return out
+
+
 def jobs_for(run: dict) -> list[dict]:
     d = run_dir(run)
     name = run["name"]
@@ -266,7 +294,24 @@ def main() -> int:
                     help="이미 산출물이 있어도 다시 돈다")
     ap.add_argument("--state", default=STATE,
                     help="다른 상태 파일로 시험할 때만 쓴다")
+    # **장치를 손으로 정할 수 있게 한다 (2026-09-26).**
+    # 한 GPU 에 예상 못 한 학습이 돌면 그 축이 «영구히» 미뤄진다.
+    # 학습을 죽이는 것보다 빈 GPU 로 평가를 돌리는 것이 안전하다.
+    # 평가 장치는 결과를 바꾸지 않는다 (48 칸 4800 행이 0 개 다름, 2026-09-23).
+    ap.add_argument("--axis1-device", default=None,
+                    help="축 1 을 이 장치에서 돈다 (예: cuda:0)")
+    ap.add_argument("--axis2-device", default=None,
+                    help="축 2 를 이 장치에서 돈다")
     args = ap.parse_args()
+
+    # 전역 상수를 «바꿔서» jobs_for 가 그것을 쓰게 한다. 인자를 실어 나르지 않는다.
+    global AXIS1_DEVICE, AXIS2_DEVICE
+    if args.axis1_device:
+        log("축 1 장치를 손으로 정했다: %s -> %s" % (AXIS1_DEVICE, args.axis1_device))
+        AXIS1_DEVICE = args.axis1_device
+    if args.axis2_device:
+        log("축 2 장치를 손으로 정했다: %s -> %s" % (AXIS2_DEVICE, args.axis2_device))
+        AXIS2_DEVICE = args.axis2_device
 
     with io.open(args.state, encoding="utf-8") as h:
         state = json.load(h)
@@ -283,6 +328,12 @@ def main() -> int:
             log("%s 는 %s 로 기록돼 있다. 평가하지 «않는다»"
                 % (run["name"], run.get("status")))
             continue
+        # **「완료」인데 평가할 «까닭이 없는» 판 (2026-09-26).**
+        # status 를 「취소」로 바꿔 막으면 사실이 아닌 상태가 기록에 남는다.
+        # 그 판들은 취소된 것이 아니라 완료다. 까닭을 따로 적는다.
+        if run.get("skip_eval"):
+            log("%s 는 평가를 건너뛴다 · %s" % (run["name"], run["skip_eval"]))
+            continue
         ok, why = training_done(run)
         (ready if ok else waiting).append((run, why))
 
@@ -297,14 +348,21 @@ def main() -> int:
     #
     # 그래서 막을 이유는 「학습 보호」가 아니라 **한 GPU 에 두 작업을 올리지
     # 않는 것** 하나다. 메모리와 처리량 때문이다.
-    busy = {}
-    for run, _why in waiting:
-        dev = (run.get("gpu") or "").split()[0]
-        if dev:
-            busy[dev] = run["name"]
+    # **선언이 아니라 «실제로 도는 프로세스» 에서 읽는다 (2026-09-26).**
+    #
+    # 전에는 `waiting`(선언됐고 아직 안 끝난 판) 에서 만들었다. 그래서
+    # 죽거나 «잘못 판정된» 판이 그 GPU 를 영구히 잠갔다. 2026-09-26 에
+    # 축 1 48 건이 전부 「미룸」이 됐고, 원인은 완주한 판을 내 사슬이
+    # 완주하지 않았다고 본 것이었다. 그리고 gpu 가 「미기재」인 옛 판이
+    # busy["미기재"] 라는 쓰레기 칸을 만들었다.
+    #
+    # 선언은 틀릴 수 있고 프로세스는 틀리지 않는다.
+    busy = running_trainers()
     if busy:
-        log("학습이 쓰는 GPU: " + " · ".join("%s(%s)" % (d, n)
-                                             for d, n in busy.items()))
+        log("학습이 «실제로» 쓰는 GPU: "
+            + " · ".join("%s(%s)" % (d, n) for d, n in sorted(busy.items())))
+    else:
+        log("도는 학습이 없다. 두 GPU 를 다 쓴다")
 
     if not ready:
         log("평가할 것이 없다")
