@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "updated": "2026-09-25T09:00:00",
- "updated_by": "v2g·v2n 완료 등록 · seed 43 원인 확정 기록",
+ "updated": "2026-09-25T21:08:33",
+ "updated_by": "v2s · v2g2 완료 등록 · s4paired 죽음 등록 (가설은 사람이 적었다)",
  "stage": {
   "branch": "1",
-  "name": "1 순위·2 순위 단일 변수 시험",
-  "phase": "v2g·v2n 학습 끝 · 평가 대기",
-  "note": "astra AUDIT8 v1.1 반영. A+B 묶기는 철회. S 와 (ㄱ)noise_std_type=log 는 astra 재검증 중"
+  "name": "단일 변수 시험 넷 (보상 두 점 · 노이즈 · 지형 혼합)",
+  "phase": "v2s · v2g2 학습 끝 · 평가 대기",
+  "note": "stones 0 % 가 남은 유일한 약점이다. 발 체공 1.0 이 진행을 1 -> 31 로 올렸고 회전을 죽였다. 0.1 로 꼭짓점을 찾는 중이고 지형 혼합을 나란히 잰다"
  },
  "running": [
   {
@@ -131,6 +131,61 @@
    "root_cause": "actor_critic.py:31 의 기본값 noise_std_type='scalar' 때문에 self.std 가 제약 없는 nn.Parameter(:93) 이고 Normal(mean,std)(:146) 로 직접 들어간다. Adam 이 0 아래로 민다. noise_std_type='log' 면 std=exp(log_std)(:142) 라 구조적으로 불가능하다",
    "evidence": "inbox/jay/20260923-lineage/seed43/per_iter.csv · 1610 판부터 grad_norm 이 정확히 0 인 판 23 개 · std 가 7 판 비트 고정 · 비유한수 0 개",
    "condition_note": "v2b-s · v2b-s2 와 «같은 판(1670)» 에서 같은 오류. 결정론이 지켜졌다. 평가하지 않는다"
+  },
+  {
+   "name": "v2s-stones10",
+   "branch": "1-c",
+   "task": "Isaac-Velocity-V2s-Unitree-Go2-v0",
+   "seed": 42,
+   "gpu": "cuda:0 (시뮬과 신경망 «둘 다»)",
+   "pid": null,
+   "pid_kind": "끝났다. exit=0",
+   "started": "2026-09-25T15:54:57+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260925_155457_20260925_v2s-stones10_seed42_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260925_v2s-stones10_seed42_iter3000",
+   "changed_vs_parent": "훈련 지형 혼합 하나. boxes 0.15 -> 0.10 · random_rough 0.15 -> 0.10 · stepping_stones 0 -> 0.10. 저장 YAML 의 proportion 아홉 줄로 확인함 (합 1.00)",
+   "hypothesis": "stepping_stones 를 훈련 분포에 넣으면 그 지형족을 배우는가. 세 판 · 네 시점 전부 절대 최저 칸이 stones 0.5 의 0 % 였고 보상 100 배와 노이즈 5 분의 1 로는 안 움직였다",
+   "control": "v2b-r / v2b-p11 (같은 시드 42 · 같은 3001 판 · 같은 보상·노이즈)",
+   "status": "완료",
+   "finished": "2026-09-25 저녁 · model_3000.pt 존재 + exit=0",
+   "condition_note": "astra AUDIT9 6~9 절 명세대로 짰다. 가설은 «이 혼합» 이고 「stones 추가 효과만」이 아니다. 줄인 두 지형의 노출 감소가 같이 들어간다. 평가 집합의 stones 는 이 정책에 «경험» 이 되므로 CRITERIA v1.4 2 절대로 경험 분류를 다시 하되 판정은 48 칸 유지. 난이도 0.1 은 틈이 0 셀이므로 «실제 틈 노출» 을 따로 확인할 것"
+  },
+  {
+   "name": "v2g2-feetair01",
+   "branch": "1-d",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 42,
+   "gpu": "cuda:1 (시뮬과 신경망 «둘 다»)",
+   "pid": null,
+   "pid_kind": "끝났다. exit=0",
+   "started": "2026-09-25T17:29:27+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260925_172927_20260925_v2g2-feetair01_seed42_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260925_v2g2-feetair01_seed42_iter3000",
+   "changed_vs_parent": "feet_air_time.weight 0.01 -> 0.1 «한 칸만» (Hydra override). 저장 YAML 로 확인함",
+   "hypothesis": "발 체공 보상의 «꼭짓점» 이 어디인가. 1.0(100 배)에서 stones 진행이 1 -> 31 로 올랐지만 회전이 죽었다 (yaw_follow 0.036 · 0.016 · -0.003). 10 배면 이득을 남기고 회전을 지키는가",
+   "control": "v2b-r (0.01) 과 v2g-feetair1 (1.0). 세 점으로 반응 곡선을 만든다",
+   "status": "완료",
+   "finished": "2026-09-25 저녁 · model_3000.pt 존재 + exit=0",
+   "condition_note": "astra AUDIT9 10 절 3 번 · 「좋아 보이는 설정들을 한꺼번에 합쳐 그중 하나의 효과라고 부르지 않는다」. 이 판은 보상 하나만 움직이고 지형·노이즈는 기준선 그대로다"
+  },
+  {
+   "name": "v2b-s4paired",
+   "branch": "0-b",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 43,
+   "gpu": "cuda:1 (시뮬과 신경망 «둘 다» · env.yaml:20 과 agent.yaml:2 로 확인)",
+   "pid": null,
+   "pid_kind": "죽었다",
+   "started": "2026-09-25T15:55:11+09:00",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260925_155511_20260925_v2b-s4paired_seed43_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260925_v2b-s4paired_seed43_iter3000",
+   "changed_vs_parent": "시뮬과 신경망을 «같은» GPU 에 둔 것 하나",
+   "hypothesis": "시드 43 의 죽음이 장치 분리 때문인가. 죽은 세 번은 모두 시뮬 1 번 + 신경망 0 번이었다",
+   "status": "죽음",
+   "finished": "2026-09-25 17:2x · Learning iteration 875/3001",
+   "death": "RuntimeError: normal expects all elements of std >= 0.0",
+   "result": "**가설이 기각됐다.** 같은 GPU 에서도 같은 오류로 죽는다. 다만 자리가 다르다 · 다른 GPU 는 1670 판(3 번 다), 같은 GPU 는 875 판. GPU 마다 난수 생성기가 따로라 처음부터 다른 난수를 받는다. 곧 «배치는 원인이 아니고 언제 죽느냐만 바꾼다». 원인 후보는 표준편차 매개화로 좁혀진다",
+   "condition_note": "평가하지 않는다. 마지막 체크포인트가 없다"
   }
  ],
  "last_result": {
