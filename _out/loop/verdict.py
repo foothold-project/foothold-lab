@@ -318,15 +318,21 @@ def to_markdown(v: dict) -> str:
         a1, a2 = d["axis1"], d["axis2"]
         nv = a1["vs_nvidia"]
         mn = a1["absolute_min_cell"] or {}
-        rows.append("| %d | %s %% | %d / %d | %s | %s | %s %% (%s %.1f) | %d | %d |" % (
+        # **「미판정」을 한 칸에 두지 않는다 (팀장 지적 2026-09-25).**
+        # 「둘 다 만점이라 더 나을 수 없어서」와 「둘 다 0 이라 둘 다 못 해서」는
+        # 사람이 읽을 때 «정반대» 의 뜻인데 같은 숫자로 내려온다.
+        sp = (a1.get("undecided_split") or {}).get("vs_nvidia") or {}
+        top = sp.get("둘 다 만점", 0)
+        bot = sp.get("둘 다 0", 0)
+        hold = (nv["undecided"] - top - bot) if nv else 0
+        rows.append("| %d | %s %% | %d / %d | %s | %s | %s %% (%s %.1f) | %d | %d | %d |" % (
             c,
             a1.get("mean_pct"),
             a1["vs_foothold_v1"]["drop"], a1["vs_foothold_v1"]["rise"],
             "%d / %d" % (nv["drop"], nv["rise"]) if nv else "기준선 없음",
             "%s / %s" % (a2.get("passed"), a2.get("total")),
             mn.get("pct"), mn.get("terrain"), mn.get("vx") or 0,
-            a1["vs_foothold_v1"]["undecided"],
-            len(a1["zero_cells"])))
+            top, bot, hold))
 
     zero = sorted({z for c in CKPTS
                    for z in v["checkpoints"][str(c)]["axis1"]["zero_cells"]})
@@ -342,8 +348,11 @@ def to_markdown(v: dict) -> str:
         if nv:
             nvl.append("  iter%-5d 48 칸 중  상승 %2d  ·  하락 %d  ·  미판정 %2d"
                        % (c, nv["rise"], nv["drop"], nv["undecided"]))
-            undl.append("  iter%-5d 둘 다 만점 %2d 칸  ·  둘 다 0 %d 칸"
-                        % (c, sp.get("둘 다 만점", 0), sp.get("둘 다 0", 0)))
+            _t = sp.get("둘 다 만점", 0)
+            _b = sp.get("둘 다 0", 0)
+            undl.append("  iter%-5d 둘 다 만점 %2d 칸  ·  둘 다 0 %d 칸  "
+                        "·  진짜 판정 보류 %d 칸"
+                        % (c, _t, _b, nv["undecided"] - _t - _b))
         else:
             nvl.append("  iter%-5d NVIDIA 기준선 없음" % c)
 
@@ -356,9 +365,14 @@ def to_markdown(v: dict) -> str:
 
 ## 한 장
 
-| 체크포인트 | 48 칸 평균 | v1 대비 하락/상승 | NVIDIA 대비 하락/상승 | 축 2 | 절대 최저 칸 | 미판정 | 0 인 칸 |
-|---|---:|---|---|---|---|---:|---:|
+| 체크포인트 | 48 칸 평균 | v1 대비 하락/상승 | NVIDIA 대비 하락/상승 | 축 2 | 절대 최저 칸 | 둘 다 만점 | 둘 다 0 | 판정 보류 |
+|---|---:|---|---|---|---|---:|---:|---:|
 {rows}
+
+> **뒤 세 칸은 NVIDIA 대비입니다.** 「둘 다 만점」은 우리도 NVIDIA 도 100 % 라
+> 구간이 겹친 칸입니다. **더 나을 수가 없어서** 판정이 안 나옵니다.
+> 「둘 다 0」은 **둘 다 못 해서** 판정이 안 나옵니다. 「판정 보류」만이
+> 진짜 「모르겠다」입니다. 이 셋을 한 숫자로 합치면 정반대의 뜻이 섞입니다.
 
 ```
 축 1   네 체크포인트 전부 하락 0 ?   {a1}
