@@ -1,7 +1,7 @@
 # 판정 · v2b-r
 
 > 분류: 판정
-> 작성: `_out/loop/verdict.py` · 2026-09-25T23:31:26
+> 작성: `_out/loop/verdict.py` · 2026-09-26T00:19:52
 > 근거: `CRITERIA.md` v1.4 · `sim/eval/verdict_manifest.py` 의 판단 함수
 > 상태: 자동 생성. **손으로 고치지 마십시오**
 
@@ -41,11 +41,12 @@ NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 
 
 **절대 최저 칸 네 값을 평균 내지 마십시오** (`CRITERIA.md` 3-0-1). 시점마다 다른 지형에서 나옵니다.
 
-## 성공률이 0 인 칸
+## 성공률이 0 인 칸 · **시점별로** 봅니다
 
-- `stepping_stones 0.5`
-- `stepping_stones 1.0`
-- `stepping_stones 1.5`
+- **iter1500** (3 개) · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter2000** (3 개) · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter2500** (3 개) · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter3000** (3 개) · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
 
 ## 경고
 

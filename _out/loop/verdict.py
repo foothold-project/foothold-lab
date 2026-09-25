@@ -334,8 +334,27 @@ def to_markdown(v: dict) -> str:
             mn.get("pct"), mn.get("terrain"), mn.get("vx") or 0,
             top, bot, hold))
 
-    zero = sorted({z for c in CKPTS
+    # **시점별로 갈라 적는다.** 합집합만 적으면 「지금도 0 이다」로 읽힌다.
+    # astra AUDIT10 7 절 · G3000 의 stones 1.0 m/s 는 24 % 인데 앞 시점의 0 %
+    # 때문에 합집합 목록에 들어갔다.
+    zlines = []
+    for c in CKPTS:
+        zc = v["checkpoints"][str(c)]["axis1"]["zero_cells"]
+        zlines.append("- **iter%d** (%d 개) · %s"
+                      % (c, len(zc), " · ".join("`%s`" % z for z in zc) or "없음"))
+    allz = sorted({z for c in CKPTS
                    for z in v["checkpoints"][str(c)]["axis1"]["zero_cells"]})
+    only_some = []
+    for z in allz:
+        hits = [c for c in CKPTS
+                if z in v["checkpoints"][str(c)]["axis1"]["zero_cells"]]
+        if len(hits) < len(CKPTS):
+            only_some.append("`%s` (0 인 시점: %s)"
+                             % (z, " · ".join(str(x) for x in hits)))
+    zero = "\n".join(zlines)
+    if only_some:
+        zero += ("\n\n> **네 시점 «전부» 0 인 것이 아닌 칸이 있습니다.** "
+                 "합집합으로 읽지 마십시오 · " + " · ".join(only_some))
     warn = [v["checkpoints"][str(c)]["axis2"].get("count_warning")
             for c in CKPTS]
     warn = [w for w in warn if w]
@@ -390,7 +409,7 @@ NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 
 
 **절대 최저 칸 네 값을 평균 내지 마십시오** (`CRITERIA.md` 3-0-1). 시점마다 다른 지형에서 나옵니다.
 
-## 성공률이 0 인 칸
+## 성공률이 0 인 칸 · **시점별로** 봅니다
 
 {zeros}
 
@@ -407,7 +426,7 @@ NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 
         a2="예" if v["axis2_met"] else "아니오",
         verdict="**배포 후보**" if v["candidate"] else "미달",
         nvline="\n".join(nvl), undline="\n".join(undl),
-        zeros="\n".join("- `%s`" % z for z in zero) or "없음",
+        zeros=zero or "없음",
         warns="\n".join("- " + w for w in warn) or "없음")
 
 
