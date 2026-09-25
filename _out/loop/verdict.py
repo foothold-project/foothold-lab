@@ -82,6 +82,10 @@ def axis1_one_checkpoint(vm, tag: str, v1_scores: dict) -> dict:
     drop_v1 = rise_v1 = undecided_v1 = 0
     drop_nv = rise_nv = undecided_nv = 0
     worst = None
+    # **완결성을 «세어» 둔다.** 아래 return 의 까닭을 보라.
+    files_expected = len(SETS) * len(SPEEDS)
+    files_found = 0
+    nv_seen = False
 
     for ts in SETS:
         for sp in SPEEDS:
@@ -91,6 +95,7 @@ def axis1_one_checkpoint(vm, tag: str, v1_scores: dict) -> dict:
                 "generalization_summary.csv"))
             if not here:
                 continue
+            files_found += 1
 
             # foothold-v1 · 정본은 모델 카드의 «칸 값» 이다 (100 판 기준).
             ref_v1 = (v1_scores.get("%s m/s" % vx) or {}).get(ts) or {}
@@ -98,6 +103,8 @@ def axis1_one_checkpoint(vm, tag: str, v1_scores: dict) -> dict:
             ref_nv = vm.read_summary(os.path.join(
                 REPO, NVIDIA_ROOT, ts, "d0.5", sp,
                 "generalization_summary.csv"))
+            if ref_nv:
+                nv_seen = True
 
             for terrain, cell in sorted(here.items()):
                 pct, succ, n = cell
@@ -136,10 +143,17 @@ def axis1_one_checkpoint(vm, tag: str, v1_scores: dict) -> dict:
 
     return {
         "cells_measured": len(cells),
+        # **덜 끝난 평가를 판정으로 읽지 못하게 한다.**
+        # 2026-09-25 · 축 1 산출물이 하나도 없으면 drop 이 0 이라서
+        # `axis1_met = all(d == 0)` 이 «참» 이 됐다. 데이터 0 개에
+        # 「하락 0 · 후보 통과」가 나왔다. 허위 통과다.
+        "files_expected": files_expected,
+        "files_found": files_found,
+        "complete": files_found == files_expected,
         "vs_foothold_v1": {"drop": drop_v1, "rise": rise_v1,
                            "undecided": undecided_v1},
         "vs_nvidia": {"drop": drop_nv, "rise": rise_nv,
-                      "undecided": undecided_nv} if ref_nv else None,
+                      "undecided": undecided_nv} if nv_seen else None,
         # 3-0-1 · 체크포인트마다 «하나». 네 값을 평균 내지 않는다.
         "absolute_min_cell": None if worst is None else {
             "pct": round(worst[0], 2), "terrain": worst[1], "vx": worst[2]},
@@ -246,7 +260,13 @@ def verdict(vm, run: str) -> dict:
     mins = [(per_ckpt[str(c)]["axis1"]["absolute_min_cell"] or {}).get("pct")
             for c in CKPTS]
 
-    axis1_met = all(d == 0 for d in drops)
+    # **완결성이 판정보다 «먼저» 다.** 덜 끝난 것은 미달도 통과도 아니다.
+    a1_complete = [per_ckpt[str(c)]["axis1"]["complete"] for c in CKPTS]
+    a1_found = [per_ckpt[str(c)]["axis1"]["files_found"] for c in CKPTS]
+    a1_need = [per_ckpt[str(c)]["axis1"]["files_expected"] for c in CKPTS]
+    complete = all(a1_complete) and None not in a2
+
+    axis1_met = all(a1_complete) and all(d == 0 for d in drops)
     axis2_met = all(p == vm.AXIS2_GATE_CELLS for p in a2 if p is not None) \
         and None not in a2
 
@@ -259,9 +279,12 @@ def verdict(vm, run: str) -> dict:
         "axis1_drops": drops,
         "axis2_passed": a2,
         "absolute_min_cells": mins,      # 3-0-1 · 네 값. 평균 내지 않는다
+        "axis1_files": ["%d/%d" % (f, n) for f, n in zip(a1_found, a1_need)],
+        "complete": complete,
         "axis1_met": axis1_met,
         "axis2_met": axis2_met,
-        "candidate": bool(axis1_met and axis2_met),
+        "candidate": bool(complete and axis1_met and axis2_met),
+        "verdict_status": ("판정" if complete else "미완 · 판정하지 않는다"),
         "note": "재현은 이 파일이 판정하지 않는다. 별도 판이다 (CRITERIA 1 절)",
     }
 
