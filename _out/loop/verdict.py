@@ -141,8 +141,30 @@ def axis1_one_checkpoint(vm, tag: str, v1_scores: dict) -> dict:
                     "vs_nvidia": ok_nv, "vs_nvidia_why": why_nv,
                 })
 
+    # **미판정을 쪼갠다 (2026-09-25 · 팀장 물음).**
+    # 「미판정 17」은 「모른다 17」이 아니다. 실측하면
+    #   둘 다 만점이라 «더 나을 수가 없는» 칸과
+    #   둘 다 0 이라 «둘 다 못 하는» 칸으로 갈린다.
+    # 숫자 하나로 두면 이 구분이 사라진다.
+    und_nv_max = sum(1 for x in cells
+                     if x["vs_nvidia"] is None and x["pct"] >= 99.999)
+    und_nv_zero = sum(1 for x in cells
+                      if x["vs_nvidia"] is None and x["pct"] <= 0.001)
+    und_v1_max = sum(1 for x in cells
+                     if x["vs_v1"] is None and x["pct"] >= 99.999)
+    und_v1_zero = sum(1 for x in cells
+                      if x["vs_v1"] is None and x["pct"] <= 0.001)
+    mean_pct = (sum(x["pct"] for x in cells) / len(cells)) if cells else None
+
     return {
         "cells_measured": len(cells),
+        "mean_pct": None if mean_pct is None else round(mean_pct, 2),
+        "undecided_split": {
+            "vs_nvidia": {"둘 다 만점": und_nv_max, "둘 다 0": und_nv_zero,
+                          "그 밖": (len(cells) - und_nv_max - und_nv_zero
+                                   if cells else 0)},
+            "vs_foothold_v1": {"둘 다 만점": und_v1_max, "둘 다 0": und_v1_zero},
+        },
         # **덜 끝난 평가를 판정으로 읽지 못하게 한다.**
         # 2026-09-25 · 축 1 산출물이 하나도 없으면 drop 이 0 이라서
         # `axis1_met = all(d == 0)` 이 «참» 이 됐다. 데이터 0 개에
@@ -296,8 +318,9 @@ def to_markdown(v: dict) -> str:
         a1, a2 = d["axis1"], d["axis2"]
         nv = a1["vs_nvidia"]
         mn = a1["absolute_min_cell"] or {}
-        rows.append("| %d | %d / %d | %s | %s | %s %% (%s %.1f) | %d | %d |" % (
+        rows.append("| %d | %s %% | %d / %d | %s | %s | %s %% (%s %.1f) | %d | %d |" % (
             c,
+            a1.get("mean_pct"),
             a1["vs_foothold_v1"]["drop"], a1["vs_foothold_v1"]["rise"],
             "%d / %d" % (nv["drop"], nv["rise"]) if nv else "기준선 없음",
             "%s / %s" % (a2.get("passed"), a2.get("total")),
@@ -311,6 +334,19 @@ def to_markdown(v: dict) -> str:
             for c in CKPTS]
     warn = [w for w in warn if w]
 
+    nvl, undl = [], []
+    for c in CKPTS:
+        a1 = v["checkpoints"][str(c)]["axis1"]
+        nv = a1["vs_nvidia"]
+        sp = (a1.get("undecided_split") or {}).get("vs_nvidia") or {}
+        if nv:
+            nvl.append("  iter%-5d 48 칸 중  상승 %2d  ·  하락 %d  ·  미판정 %2d"
+                       % (c, nv["rise"], nv["drop"], nv["undecided"]))
+            undl.append("  iter%-5d 둘 다 만점 %2d 칸  ·  둘 다 0 %d 칸"
+                        % (c, sp.get("둘 다 만점", 0), sp.get("둘 다 0", 0)))
+        else:
+            nvl.append("  iter%-5d NVIDIA 기준선 없음" % c)
+
     return """# 판정 · {run}
 
 > 분류: 판정
@@ -320,14 +356,20 @@ def to_markdown(v: dict) -> str:
 
 ## 한 장
 
-| 체크포인트 | v1 대비 하락/상승 | NVIDIA 대비 하락/상승 | 축 2 | 절대 최저 칸 | 미판정 | 0 인 칸 |
-|---|---|---|---|---|---:|---:|
+| 체크포인트 | 48 칸 평균 | v1 대비 하락/상승 | NVIDIA 대비 하락/상승 | 축 2 | 절대 최저 칸 | 미판정 | 0 인 칸 |
+|---|---:|---|---|---|---|---:|---:|
 {rows}
 
 ```
 축 1   네 체크포인트 전부 하락 0 ?   {a1}
 축 2   네 체크포인트 전부 9 / 9 ?    {a2}
 판정   {verdict}
+
+NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 2026-09-25)
+{nvline}
+
+«미판정» 을 쪼갠 것 · 「모른다」가 아니다
+{undline}
 ```
 
 **「하락 0」은 「잘한다」가 아닙니다.** 배포본보다 나쁘지 않다는 뜻뿐입니다. 절대 최저 칸을 같이 보십시오.
@@ -350,6 +392,7 @@ def to_markdown(v: dict) -> str:
         a1="예" if v["axis1_met"] else "아니오",
         a2="예" if v["axis2_met"] else "아니오",
         verdict="**배포 후보**" if v["candidate"] else "미달",
+        nvline="\n".join(nvl), undline="\n".join(undl),
         zeros="\n".join("- `%s`" % z for z in zero) or "없음",
         warns="\n".join("- " + w for w in warn) or "없음")
 
