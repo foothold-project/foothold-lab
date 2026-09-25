@@ -107,6 +107,46 @@ def stale_minutes(name: str):
     return (dt.datetime.now().timestamp() - newest) / 60.0
 
 
+def evals() -> dict:
+    """도는 평가와 산출물 진행. **학습이 없어도 이것은 본다.**
+
+    2026-09-25 · heartbeat 가 `--run_name` 있는 프로세스만 세서 평가를
+    «못 봤다». 평가 56 건이 한 시간 반 돌고 끝나도 알림이 없었다.
+    팀장이 손으로 물어야 알았다.
+    """
+    out = {"procs": 0, "runs": {}}
+    try:
+        txt = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+             "ForEach-Object { if ($_.CommandLine -match "
+             "'eval_(generalization|command_response)') { 'E' } }"],
+            capture_output=True, text=True, timeout=45).stdout
+        out["procs"] = sum(1 for l in txt.splitlines() if l.strip() == "E")
+    except Exception:                                          # noqa: BLE001
+        pass
+
+    # 상태 파일에 «완료» 로 적힌 판마다 산출물을 센다.
+    try:
+        with io.open(os.path.join(HERE, "state.json"), encoding="utf-8") as h:
+            state = json.load(h)
+    except Exception:                                          # noqa: BLE001
+        return out
+    a1root = os.path.join(REPO, "sim", "eval", "results", "20260923-v2rs")
+    a2root = os.path.join(REPO, "sim", "eval", "results", "20260923-v2rs-axis2")
+    for r in state.get("running") or []:
+        if (r.get("status") or "").strip() != "완료":
+            continue
+        nm = r.get("name") or ""
+        a1 = len(glob.glob(os.path.join(a1root, "%s-iter*" % nm, "*", "d0.5",
+                                        "*", "generalization_summary.csv")))
+        a2 = len(glob.glob(os.path.join(a2root, "%s-iter*" % nm,
+                                        "probe_manifest.json")))
+        if a1 or a2:
+            out["runs"][nm] = (a1, a2)
+    return out
+
+
 def gpu() -> list[str]:
     try:
         out = subprocess.run(
@@ -118,14 +158,29 @@ def gpu() -> list[str]:
         return []
 
 
-def build() -> tuple[str, bool]:
-    """(본문, 급한가). 본문이 비면 안 보낸다."""
+def already_told() -> set:
+    """이미 「끝났다」고 알린 판. **도배를 막는다.**"""
+    try:
+        with io.open(STATE, encoding="utf-8") as h:
+            return set(json.load(h).get("eval_done_told") or [])
+    except Exception:                                          # noqa: BLE001
+        return set()
+
+
+def build() -> tuple[str, bool, list]:
+    """(본문, 급한가, 새로 끝난 판 목록). 본문이 비면 안 보낸다."""
     runs = running()
-    if not runs:
-        return ("", False)
+    ev = evals()
+    told = already_told()
+    fresh = []
+    # **학습이 없어도 평가가 있으면 보낸다.** 여기가 조용해서 사람이 손으로 물었다.
+    if not runs and not ev["procs"] and not ev["runs"]:
+        return ("", False, [])
 
     urgent = False
-    lines = ["[학습 진행] %s" % dt.datetime.now().strftime("%m/%d %H:%M"), ""]
+    lines = ["[진행] %s" % dt.datetime.now().strftime("%m/%d %H:%M"), ""]
+    if not runs:
+        lines.append("도는 학습 없음")
     for r in runs:
         pr = progress(r["name"])
         st = stale_minutes(r["name"])
@@ -145,12 +200,31 @@ def build() -> tuple[str, bool]:
             lines.append("  ** 마지막 체크포인트가 %d 분 전입니다 **" % st)
             urgent = True
 
+    # 평가 절 · 끝난 것과 도는 것을 나눠 적는다
+    if ev["runs"] or ev["procs"]:
+        lines += ["", "평가  (도는 프로세스 %d 개)" % ev["procs"]]
+        for nm, (a1, a2) in sorted(ev["runs"].items()):
+            done = (a1 >= 24 and a2 >= 4)
+            mark = ""
+            if done:
+                mark = "   << 끝났다 (새로)" if nm not in told else "   << 끝남"
+            lines.append("  %-18s 축1 %2d/24  축2 %d/4%s"
+                         % (nm, a1, a2, mark))
+            # **새로 끝난 평가만 «급함» 으로 올린다.** 다음 칸이 판정이기 때문이다.
+            # 이미 알린 것을 매번 급함으로 하면 20 분마다 알림이 온다.
+            if done and nm not in told:
+                urgent = True
+                fresh.append(nm)
+
     g = gpu()
     if g:
         lines += ["", "GPU"] + ["  " + x for x in g]
     if not urgent:
         lines += ["", "문제 없습니다."]
-    return ("\n".join(lines), urgent)
+    if fresh:
+        lines += ["", "**평가가 끝났습니다. 다음 칸은 판정입니다** · "
+                      + " · ".join(fresh)]
+    return ("\n".join(lines), urgent, fresh)
 
 
 def main() -> int:
@@ -158,7 +232,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    body, urgent = build()
+    body, urgent, fresh = build()
     if not body:
         print("도는 학습이 없다. 안 보낸다")
         return 0
@@ -182,7 +256,9 @@ def main() -> int:
     from tg import send
     ok = send(body)
     with io.open(STATE, "w", encoding="utf-8") as h:
-        h.write(json.dumps({"last": now, "urgent": urgent}))
+        h.write(json.dumps({"last": now, "urgent": urgent,
+                            "eval_done_told": sorted(already_told() | set(fresh))},
+                           ensure_ascii=False))
     print("보냄:", ok, "· 급함:", urgent)
     return 0
 
