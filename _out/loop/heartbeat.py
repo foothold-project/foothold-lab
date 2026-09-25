@@ -49,6 +49,9 @@ sys.path.insert(0, HERE)
 
 ITER = re.compile(r"Learning iteration\s+(\d+)/(\d+)")
 ETA = re.compile(r"ETA:\s*([\d:]+)")
+# watchdog 과 «같은» 모양을 쓴다. 2026-09-24 에 앞 꼬리를 빼먹어
+# 첫 줄을 놓친 적이 있다.
+GPU_ROW = re.compile(r"^(?:GPU\s+)?(\d+),\s*(\d+)\s*%,\s*(\d+)\s*MiB$")
 
 
 def running() -> list[dict]:
@@ -158,6 +161,31 @@ def gpu() -> list[str]:
         return []
 
 
+def idle_with_work(runs, ev) -> str:
+    """**GPU 가 비었는데 할 일이 남았는가.** 비면 빈 문자열.
+
+    2026-09-25 · v2g 와 v2n 이 밤새 끝났는데 평가가 안 걸렸고 GPU 둘이
+    놀았다. 알림이 «학습만» 봐서 아무 말이 없었다. 이 칸이 그 자리다.
+    """
+    if runs or ev.get("procs"):
+        return ""                      # 뭔가 돌고 있다
+    g = gpu()
+    busy = 0
+    for row in g:
+        m = GPU_ROW.match(row.strip())
+        if m and (int(m.group(2)) > 20 or int(m.group(3)) > 2000):
+            busy += 1
+    if busy:
+        return ""
+    # 아무것도 안 돌고 GPU 도 비었다. 할 일이 남았나.
+    pending = [nm for nm, (a1, a2) in (ev.get("runs") or {}).items()
+               if a1 < 24 or a2 < 4]
+    if pending:
+        return ("평가가 덜 끝났는데 아무것도 안 돕니다: "
+                + " · ".join(sorted(pending)))
+    return "GPU 둘이 비었고 도는 것이 «하나도» 없습니다"
+
+
 def already_told() -> set:
     """이미 「끝났다」고 알린 판. **도배를 막는다.**"""
     try:
@@ -216,6 +244,13 @@ def build() -> tuple[str, bool, list]:
                 urgent = True
                 fresh.append(nm)
 
+    # **GPU 가 놀면 알린다.** 팀장이 「GPU 가 놀지 않게」를 여러 번 지시했다.
+    idle = idle_with_work(runs, ev)
+    if idle:
+        lines += ["", "** %s **" % idle]
+        urgent = True
+        fresh.append("GPU 유휴")
+
     g = gpu()
     if g:
         lines += ["", "GPU"] + ["  " + x for x in g]
@@ -249,8 +284,11 @@ def main() -> int:
         except Exception:                                      # noqa: BLE001
             last = 0.0
     now = dt.datetime.now().timestamp()
-    if not urgent and now - last < 3300:
-        print("한 시간이 안 됐다. 안 보낸다")
+    # **급하지 않으면 여섯 시간에 한 번만.** 팀장 지시 (2026-09-25) ·
+    # 「달라진 점이 없거나 굳이 보고하지 않아도 되면 안 해도 된다」.
+    # 알릴 일은 급함으로 즉시 나가므로 이 줄이 정보를 막지 않는다.
+    if not urgent and now - last < 21600:
+        print("급한 일이 없고 여섯 시간이 안 됐다. 안 보낸다")
         return 0
 
     from tg import send
