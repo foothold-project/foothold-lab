@@ -264,7 +264,11 @@ document.addEventListener('DOMContentLoaded',function(){
         res.innerHTML='<div class="none">'+msg+'</div>';}
       else{res.innerHTML=hits.map(function(h){
         return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
-          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
           +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
     });
   }
@@ -440,6 +444,34 @@ FROM_SITE = ['gallery/index.html', 'gallery/view/index.html',
 SITE_DIR = None          # build.py 가 배포본 경로를 넣어 준다
 
 
+GNAV = re.compile(r'<div class="gnav".*?</div>\s*</div>', re.S)
+
+
+def site_title(raw_title, rel):
+    """배포본 전용 페이지의 <title> 에서 «그 페이지 이름» 만 남긴다.
+
+    ★ 2026-09-13 실측. 전에는 «·» 로 잘라 첫 조각을 썼다. 우리 페이지는
+      「제목 · FOOTHOLD」 라 그게 맞는데, 갤러리는 「FOOTHOLD · 갤러리 ·
+      3열 비교」 로 브랜드가 «앞» 에 온다. 그래서 세 페이지가 검색 결과에서
+      전부 「FOOTHOLD」 로 보였다. 서로 구별이 안 된다.
+      브랜드 조각을 빼고 나머지를 잇는다. 남는 게 없으면 파일 이름을 쓴다.
+    """
+    parts = [p.strip() for p in (raw_title or '').split('·')]
+    parts = [p for p in parts if p and p.upper() != 'FOOTHOLD']
+    return ' · '.join(parts) if parts else rel
+
+
+def drop_gnav(html):
+    """전역바를 걷어낸다.
+
+    ★ 2026-09-13 실측. 갤러리 넷의 색인 본문이 전부 「기획 일정 회의 연구
+      갤러리 기술 …」 로 시작했다. 전역바 글자다. 모든 페이지에 똑같이 들어가
+      검색을 흐린다. 우리 페이지는 이 글자가 <div class="wrap"> 밖이라
+      애초에 안 담겼는데, 배포본 페이지는 <body> 를 통째로 읽어 함께 왔다.
+    """
+    return GNAV.sub(' ', html)
+
+
 def build_index(vault, pages):
     idx = []
     # ★ 2026-09-03 (foothold-lab#137). 색인 순서를 이름으로 못박는다.
@@ -517,9 +549,9 @@ def build_index(vault, pages):
                 continue
             t = io.open(fp, encoding='utf-8', errors='replace').read()
             mt = re.search(r'<title>([^<]+)</title>', t)
-            ttl = (mt.group(1).split('·')[0].strip() if mt else rel)
+            ttl = site_title(mt.group(1) if mt else '', rel)
             body = re.search(r'<body[^>]*>(.*)', t, re.S)
-            txt = strip_tags(body.group(1) if body else t)
+            txt = strip_tags(drop_gnav(body.group(1) if body else t))
             if not txt:
                 continue
             idx.append({'p': rel, 't': ttl, 'h': ttl, 'a': '', 'x': txt})
