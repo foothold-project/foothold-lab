@@ -617,6 +617,11 @@ def load_policy(env, checkpoint_path, device):
     if not isinstance(agent_cfg, dict):
         agent_cfg = agent_cfg.to_dict()
 
+    # **체크포인트의 표준편차 형식에 agent 설정을 맞춘다 (2026-09-26).**
+    # 축 1 과 «같은» 함수를 쓴다. 두 하네스가 갈리면 판정이 갈린다.
+    from std_form import apply_std_form
+    apply_std_form(agent_cfg, checkpoint_path)
+
     runner = OnPolicyRunner(env, agent_cfg, log_dir=None, device=device)
     runner.load(checkpoint_path)
 

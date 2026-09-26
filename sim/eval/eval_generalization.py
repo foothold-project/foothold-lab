@@ -788,6 +788,12 @@ def main():
     print("\n[INFO] Loading checkpoint:")
     print(resume_path)
 
+    # **체크포인트의 표준편차 형식에 agent 설정을 맞춘다 (2026-09-26).**
+    # 레지스트리 기본은 `scalar` 다. `log` 로 학습한 체크포인트는 열쇠가
+    # `log_std` 라 strict 로딩에서 죽는다. 둘 다/둘 다 없으면 «오류» 로 죽는다.
+    from std_form import apply_std_form
+    apply_std_form(agent_cfg, resume_path)
+
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
     runner.load(resume_path)
 
