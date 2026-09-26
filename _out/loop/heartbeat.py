@@ -138,7 +138,13 @@ def evals() -> dict:
     a1root = os.path.join(REPO, "sim", "eval", "results", "20260923-v2rs")
     a2root = os.path.join(REPO, "sim", "eval", "results", "20260923-v2rs-axis2")
     for r in state.get("running") or []:
-        if (r.get("status") or "").strip() != "완료":
+        # **「완료」만 보면 «빠진다» (2026-09-26 · fable 지적).**
+        # 사람이 「학습 중」으로 미리 적어 둔 판은 register.py 가
+        # 이름이 이미 있다고 건드리지 않아 상태가 갇힌다.
+        # 그래서 산출물이 «있으면» 상태와 무관하게 센다.
+        if (r.get("status") or "").strip() in ("죽음", "실패", "취소"):
+            continue
+        if r.get("skip_eval"):
             continue
         nm = r.get("name") or ""
         a1 = len(glob.glob(os.path.join(a1root, "%s-iter*" % nm, "*", "d0.5",

@@ -424,7 +424,13 @@ NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 
         run=v["run"], made=v["made_at"], rows="\n".join(rows),
         a1="예" if v["axis1_met"] else "아니오",
         a2="예" if v["axis2_met"] else "아니오",
-        verdict="**배포 후보**" if v["candidate"] else "미달",
+        # **완결성을 «먼저» 본다 (2026-09-26 · fable 지적).**
+        # 어제 허위 «통과» 를 고쳤는데 같은 함수의 반대쪽이 남아 있었다.
+        # 자료가 0 개인 판에 Markdown 이 「판정 미달」을 찍었다.
+        # 미달은 «재 보고 못 넘은 것» 이고, 미완은 «아직 안 잰 것» 이다.
+        verdict=("**미완 · 판정하지 않습니다** (축 1 파일 %s)"
+                 % " · ".join(v["axis1_files"]) if not v["complete"]
+                 else ("**배포 후보**" if v["candidate"] else "미달")),
         nvline="\n".join(nvl), undline="\n".join(undl),
         zeros=zero or "없음",
         warns="\n".join("- " + w for w in warn) or "없음")
