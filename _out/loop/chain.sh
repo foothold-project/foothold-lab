@@ -26,25 +26,67 @@ WATCH="${WATCH_RUNS:-v2g4-feetair01-s44 v2r4-base-s44}"
 
 say() { echo "[사슬 $(date '+%m/%d %H:%M:%S')] $*"; }
 
+# **PowerShell 의 .Count 가 «정확히 1 개» 일 때 «빈다» (2026-09-26 실측).**
+#   $x = ... | Where-Object {...}   하나만 맞으면 CimInstance «한 개» 다
+#   $x.Count    -> []  «빈다»
+#   @($x).Count -> 1   «맞다»
+#   0 개면 $null.Count = 0 이고 2 개 이상이면 배열이라 맞는다.
+#   **정확히 1 개일 때만 틀린다.** 그래서 18:12 에 한 판이 죽고 하나가
+#   남은 «바로 그 순간» 에 「학습 없음」으로 읽혔다. 전량 @() 로 싼다.
+#
+# **조회 실패를 「없음」과 구별한다 (2026-09-26).**
+# 전에는 powershell 이 실패하면 빈 문자열이 나오고 그것이 0 이 되어
+# 「학습 없음」으로 읽혔다. 18:12 에 그 일이 났고, 0.1 판이 도는 중인데
+# 사슬이 빠져나와 평가 0 건을 걸고 판정문을 냈다.
+# 숫자가 «아니면» 「모른다」를 뜻하는 -1 을 낸다.
 trainers_left() {
-  powershell -NoProfile -Command \
-    "(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match 'run_name' }).Count" \
-    2>/dev/null | tr -d '\r '
+  local out
+  out=$(powershell -NoProfile -Command \
+    "@(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match 'run_name' }).Count" \
+    2>/dev/null | tr -d '\r ')
+  case "$out" in
+    ''|*[!0-9]*) echo -1 ;;      # 못 읽었다. «모른다»
+    *)           echo "$out" ;;
+  esac
 }
 evals_left() {
-  powershell -NoProfile -Command \
-    "(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match 'eval_' }).Count" \
-    2>/dev/null | tr -d '\r '
+  local out
+  out=$(powershell -NoProfile -Command \
+    "@(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match 'eval_' }).Count" \
+    2>/dev/null | tr -d '\r ')
+  case "$out" in
+    ''|*[!0-9]*) echo -1 ;;      # 못 읽었다. «모른다»
+    *)           echo "$out" ;;
+  esac
 }
 
 # ---------------------------------------------------------------- 1 단계 · 학습
 say "학습이 끝나기를 기다린다 · $WATCH"
+# **0 을 «두 번 연속» 확인해야 끝난 것으로 본다.** 한 번의 조회 실패나
+# 프로세스 교체 사이의 빈 순간에 빠져나오지 않게 한다.
+ZERO=0
+UNKNOWN=0
 while :; do
   N=$(trainers_left)
-  [ "${N:-0}" = "0" ] && break
+  if [ "$N" = "-1" ]; then
+    UNKNOWN=$((UNKNOWN + 1))
+    ZERO=0
+    say "  프로세스를 «못 읽었다» ($UNKNOWN 회). 계속 기다린다"
+    if [ "$UNKNOWN" -ge 10 ]; then
+      say "** 열 번 연속 못 읽었다. 사슬을 멈춘다. 사람이 확인할 것 **"
+      exit 3
+    fi
+  elif [ "$N" = "0" ]; then
+    UNKNOWN=0
+    ZERO=$((ZERO + 1))
+    [ "$ZERO" -ge 2 ] && break
+  else
+    UNKNOWN=0
+    ZERO=0
+  fi
   sleep 120
 done
-say "도는 학습이 없다"
+say "도는 학습이 없다 (0 을 두 번 연속 확인했다)"
 
 for r in $WATCH; do
   if ls "$RUNS"/*"$r"*/model_3000.pt >/dev/null 2>&1; then
@@ -68,7 +110,13 @@ say "평가가 끝나기를 기다린다"
 STALL=0
 while :; do
   E=$(evals_left)
-  if [ "${E:-0}" = "0" ]; then
+  if [ "$E" = "-1" ]; then
+    say "  평가 프로세스를 «못 읽었다». 계속 기다린다"
+    STALL=0
+    sleep 60
+    continue
+  fi
+  if [ "$E" = "0" ]; then
     STALL=$((STALL + 1))
     # 두 번 연속 0 이면 정말 끝난 것이다 (다음 건을 띄우는 사이의 0 을 피한다)
     [ "$STALL" -ge 2 ] && break
