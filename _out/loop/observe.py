@@ -39,12 +39,25 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 PYTHON = r"C:\Users\AI-WS01\anaconda3\envs\isaac311\python.exe"
 
-# 후보 1 · v2b-r iter2500
-CKPT = ("C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/"
-        "2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000/model_2500.pt")
-TAG = "v2b-r-iter2500"
+# **판을 인자로 받는다 (2026-09-26).** 전에는 여기 체크포인트가 박혀 있어
+# `v2b-r iter2500` 한 시점만 잴 수 있었다.
+RUNDIR = "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia"
+CKPT = None                # main() 에서 정한다
+TAG = None
 ROOT = "sim/eval/results/20260924-observe"
-DEVICE = "cuda:0"          # 학습이 cuda:1 을 쓰는 동안 이쪽을 쓴다
+DEVICE = "cuda:0"
+
+
+def resolve(run: str, ckpt: int):
+    """판 이름과 판 수로 체크포인트 경로와 표를 만든다. 없으면 (None, 까닭)."""
+    import glob
+    hits = sorted(glob.glob(os.path.join(RUNDIR, "*_%s_seed*" % run)))
+    if not hits:
+        return (None, "실행 폴더를 못 찾는다: *_%s_seed*" % run)
+    p = os.path.join(hits[-1], "model_%d.pt" % ckpt).replace("\\", "/")
+    if not os.path.isfile(p):
+        return (None, "체크포인트가 없다: %s" % p)
+    return (p, "%s-iter%d" % (run, ckpt))
 
 # 난이도 0.5 는 이미 있다. 그 양쪽을 채운다.
 DIFFS = ("0.1", "0.3", "0.7", "0.9")
@@ -117,9 +130,16 @@ def run(job) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--run", default="v2b-r", help="판 이름 (예: v2g2-feetair01)")
+    ap.add_argument("--ckpt", type=int, default=2500, help="판 수 (예: 3000)")
+    ap.add_argument("--device", default=None, help="이 장치에서 돈다")
     args = ap.parse_args()
-    if not os.path.isfile(CKPT):
-        print("체크포인트가 없다:", CKPT)
+    global CKPT, TAG, DEVICE
+    CKPT, TAG = resolve(args.run, args.ckpt)
+    if args.device:
+        DEVICE = args.device
+    if CKPT is None:
+        print("못 돈다:", TAG)
         return 1
     todo = [j for j in jobs()
             if not os.path.isfile(os.path.join(REPO, j["marker"]))]
