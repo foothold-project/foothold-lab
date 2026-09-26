@@ -15,13 +15,14 @@
 #   학습이 죽어도, 평가가 죽어도 빠져나와 «무엇이 어떻게 됐는지» 적는다.
 
 set -u
+set -o pipefail          # **파이프에 묻힌 종료 코드를 살린다** (astra AUDIT12 11 절)
 cd "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab" || exit 1
 
 RUNS="C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia"
 LOGS="C:/isaac/IsaacLab/logs/gap_run_logs"
 A1="sim/eval/results/20260923-v2rs"
 A2="sim/eval/results/20260923-v2rs-axis2"
-WATCH="v2sg-stones10feet01 v2g3-feetair01-s43"
+WATCH="${WATCH_RUNS:-v2g4-feetair01-s44 v2r4-base-s44}"
 
 say() { echo "[사슬 $(date '+%m/%d %H:%M:%S')] $*"; }
 
