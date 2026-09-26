@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "updated": "2026-09-26T02:41:27",
- "updated_by": "register.py 가 5 개를 등록했다 · 가설과 대조군은 «미기재»",
+ "updated": "2026-09-26T15:23:57",
+ "updated_by": "시드 44 짝 등록 · 두 검증자가 1 순위로 합의한 비교",
  "stage": {
-  "branch": "1",
-  "name": "2 x 2 요인 배치 · 결합의 상호작용",
-  "phase": "결합 판과 시드 43 재현 판이 학습 중 (02:52 예정)",
-  "note": "astra AUDIT10 이 설계를 통과시켰다 (「실험은 유지, 해석은 정정」). 주 지표는 stones d0.5 1.0 m/s 진행 성공률의 I 이고 I=0 이면 52 % 다. 부호 해석과 fell_ratio 방향, 노출 미측정 한계를 문서에 적었다"
+  "branch": "2",
+  "name": "짝지은 시드 비교 (보상 효과의 재현)",
+  "phase": "시드 44 의 0.1 과 0.01 이 학습 중 (18:40 예정)",
+  "note": "astra AUDIT12 와 fable AUDIT12 가 «둘 다» 이것을 1 순위로 꼽았다. 「설정 완성 -> 신경망」이 아니라 「믿을 수 있는 측정 -> 짝지은 기준 비교 -> 병목 하나 개입 -> 증거에 따른 구조 -> 분리 검증」이 최종 순서다"
  },
  "running": [
   {
@@ -325,6 +325,42 @@
    "last_iter": 3000,
    "registered_by": "_out/loop/register.py · 2026-09-26T02:41:27",
    "skip_eval": "v2b-r 과 «같은 학습 결과» 다. astra 가 네 시점의 model_state_dict 와 optimizer_state_dict 를 직접 비교해 전부 일치함을 확인했다. 독립 반복도 아니고 더 좋은 대조군도 아니다"
+  },
+  {
+   "name": "v2g4-feetair01-s44",
+   "branch": "2-a",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 44,
+   "gpu": "cuda:0 (시뮬과 신경망 둘 다)",
+   "pid": null,
+   "pid_kind": "학습 중",
+   "started": "2026-09-26T15:21:52+09:00",
+   "expected_minutes": 200,
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260926_152152_20260926_v2g4-feetair01-s44_seed44_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260926_v2g4-feetair01-s44_seed44_iter3000",
+   "changed_vs_parent": "feet_air_time.weight 0.01 -> 0.1 · 시드 44",
+   "hypothesis": "발 체공 0.1 의 개선이 «셋째 시드» 에서도 유지되는가",
+   "control": "«같은 시드 44» 의 기본 보상 판 v2r4-base-s44 (짝)",
+   "status": "학습 중",
+   "condition_note": "astra AUDIT11 2 절 · fable AUDIT12 17-5 단계 1 · 두 검증자가 «같은 것» 을 1 순위로 꼽았다. 시드 43 의 기본 보상이 실패해 완주 쌍이 시드 42 하나뿐이었다"
+  },
+  {
+   "name": "v2r4-base-s44",
+   "branch": "2-a",
+   "task": "Isaac-Velocity-V2b-Unitree-Go2-v0",
+   "seed": 44,
+   "gpu": "cuda:1 (시뮬과 신경망 둘 다)",
+   "pid": null,
+   "pid_kind": "학습 중",
+   "started": "2026-09-26T15:21:53+09:00",
+   "expected_minutes": 200,
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260926_152153_20260926_v2r4-base-s44_seed44_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_20260926_v2r4-base-s44_seed44_iter3000",
+   "changed_vs_parent": "시드만 (42 -> 44). 보상은 NVIDIA 기본 0.01",
+   "hypothesis": "«짝 대조군» · 시드 44 에서 기본 보상의 성적은 얼마인가",
+   "control": "v2g4-feetair01-s44 (같은 시드 · 보상만 다르다)",
+   "status": "학습 중",
+   "condition_note": "내가 «빠뜨린» 칸이다. G44 만 돌리면 낮은 성적이 시드 탓인지 보상 효과인지 다시 못 가른다 (astra AUDIT11 2 절)"
   }
  ],
  "last_result": {
