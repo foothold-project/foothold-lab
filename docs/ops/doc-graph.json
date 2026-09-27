@@ -242,11 +242,11 @@
   "issues": [],
   "areas": [
    "C/운영",
-   "C/기록",
-   "A/정책학습"
+   "A/정책학습",
+   "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 회의록×1 문서×19 백과×2 학습×12 보상×1",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 학습×16 보상×2 관측×3 회의록×1 문서×19",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -744,6 +744,25 @@
   ],
   "areas_sure": true,
   "areas_why": "근거 낱말 일반화 벤치마크×4 벤치마크×4 benchmark×4 학습×5 관측×3 정책×3",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "digest/2026-W39-material.md",
+  "title": "다이제스트 재료: 2026-W39",
+  "kind": "운영",
+  "evidence": "깃",
+  "issues": [],
+  "areas": [
+   "C/기록",
+   "C/운영"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 문서×6 다이제스트×16 GitHub×12 Runpod×1",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],
@@ -1835,6 +1854,24 @@
   ],
   "areas_sure": true,
   "areas_why": "근거 낱말 카메라×32 카메라×32 점군×1 학습×13 관측×13 정책×2",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [],
+  "children": [],
+  "web_worthy": "낮음",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260928-rl-lineage.md",
+  "title": "우리는 왜 여덟 번 방향을 틀었나 · A 에서 처음부터 학습까지",
+  "kind": "리서치",
+  "evidence": "각",
+  "issues": [],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×29 보상×2 관측×3",
   "purpose": null,
   "purpose_src": "확인 필요",
   "parents": [],

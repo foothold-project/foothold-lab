@@ -1,0 +1,172 @@
+{
+  "probe": "command_response",
+  "probe_file": "eval_command_response.py",
+  "policy_label": "v2g3-feetair01-s43-iter3000",
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_23-32-28_20260925_v2g3-feetair01-s43_seed43_iter3000\\model_3000.pt",
+  "policy_sha256": "623aef5f2a32e547ecc209a0404dd95a52dd95e5ed24d78d2f46e04e30d0d638",
+  "base_task": "Isaac-Velocity-Rough-Unitree-Go2-v0",
+  "terrain": "plane (무한 평면)",
+  "terrain_note": "평지라 높이 스캔 광선이 안 빗나간다. height_scan 과 height_scan_with_gap 이 같은 값을 내므로 어느 쪽으로 학습한 정책이든 같은 관측을 본다",
+  "num_envs": 64,
+  "env_spacing_m": 8.0,
+  "seed": 42,
+  "step_dt_s": 0.02,
+  "joint_names": [
+    "FL_hip_joint",
+    "FR_hip_joint",
+    "RL_hip_joint",
+    "RR_hip_joint",
+    "FL_thigh_joint",
+    "FR_thigh_joint",
+    "RL_thigh_joint",
+    "RR_thigh_joint",
+    "FL_calf_joint",
+    "FR_calf_joint",
+    "RL_calf_joint",
+    "RR_calf_joint"
+  ],
+  "timeseries_schema": "foothold-timeseries/1",
+  "timeseries_columns": 93,
+  "pushes_enabled": false,
+  "overwrote_previous_run": false,
+  "foot_contact_semantics": "foot_contact_*_n 은 그 스텝의 «지금» 접촉력이다. eval_generalization.py 는 같은 이름의 열에 net_forces_w_history 최댓값을 적는다. 그 이력 세 칸은 지금과 5 ms 전과 10 ms 전이다 (history_length=3 · update_period=sim.dt=0.005). 프로브는 «서 있는가» 를 재는 도구라 이력 최댓값을 쓰면 이미 뗀 발이 접지로 세어져 미끄러짐과 동시 접지 시간이 부푼다. 두 파일의 이 열을 그대로 견주지 마십시오",
+  "contact_threshold_n": 1.0,
+  "settle_speed_mps": 0.05,
+  "finished_at_utc": "2026-09-25T21:14:17+00:00",
+  "scenarios": {
+    "stop": {
+      "what": "4초 전진 뒤 명령 0. 정지와 정지 유지",
+      "duration_s": 10.0,
+      "ran_at_utc": "2026-09-25T21:14:17+00:00"
+    },
+    "ramp": {
+      "what": "0 에서 1.5 까지 선형 증가. 응답곡선",
+      "duration_s": 20.0,
+      "ran_at_utc": "2026-09-25T21:14:17+00:00"
+    },
+    "turn": {
+      "what": "제자리 요레이트 계단 다섯. 회전 추종비",
+      "duration_s": 18.0,
+      "ran_at_utc": "2026-09-25T21:14:17+00:00"
+    },
+    "hold": {
+      "what": "20초 내내 전 명령 0. 얼음",
+      "duration_s": 20.0,
+      "ran_at_utc": "2026-09-25T21:14:17+00:00"
+    }
+  },
+  "summary": {
+    "stop": {
+      "scenario": "stop",
+      "what": "4초 전진 뒤 명령 0. 정지와 정지 유지",
+      "envs": 64,
+      "fell_count": 1,
+      "fell_ratio": 0.015625,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": 1.2080000000000004,
+      "stop_reached_count": 60,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.05940140424331217,
+      "joint_target_delta_mean": 0.31347350426164633,
+      "joint_target_delta_tail": 0.18671535648754797,
+      "pitch_abs_max_deg": 14.875664531580016,
+      "roll_abs_max_deg": 14.138586640083787,
+      "base_z_tail_m": 0.3545571355801077,
+      "foot_slip_m": 1.5648990270472238,
+      "quad_stance_s": 4.292812500000002,
+      "response_curve": {
+        "0.00": 0.01868574384645758,
+        "1.00": 0.987612523566932
+      },
+      "yaw_follow_ratio": {}
+    },
+    "ramp": {
+      "scenario": "ramp",
+      "what": "0 에서 1.5 까지 선형 증가. 응답곡선",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": null,
+      "stop_reached_count": 0,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 1.4140792549494483,
+      "joint_target_delta_mean": 0.47360102566729595,
+      "joint_target_delta_tail": 0.7945807884004901,
+      "pitch_abs_max_deg": 6.9497139999806725,
+      "roll_abs_max_deg": 6.217069646964091,
+      "base_z_tail_m": 0.3682024448551238,
+      "foot_slip_m": 7.005843110660805,
+      "quad_stance_s": 0.1781249999999999,
+      "response_curve": {
+        "0.00": 0.04657276234117008,
+        "0.10": 0.11712920170623076,
+        "0.20": 0.219213476702434,
+        "0.30": 0.28673038612503343,
+        "0.40": 0.3726287922438453,
+        "0.50": 0.478347442098752,
+        "0.75": 0.7454970155239982,
+        "1.00": 1.0011571509599249,
+        "1.25": 1.2409269818488289,
+        "1.50": 1.4367822794353262
+      },
+      "yaw_follow_ratio": {}
+    },
+    "turn": {
+      "scenario": "turn",
+      "what": "제자리 요레이트 계단 다섯. 회전 추종비",
+      "envs": 64,
+      "fell_count": 7,
+      "fell_ratio": 0.109375,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": 0.5177777777777779,
+      "stop_reached_count": 63,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.09288296803193812,
+      "joint_target_delta_mean": 0.20014986087995448,
+      "joint_target_delta_tail": 0.34477947676670734,
+      "pitch_abs_max_deg": 24.61906369191562,
+      "roll_abs_max_deg": 53.563460410031574,
+      "base_z_tail_m": 0.3442552071833051,
+      "foot_slip_m": 2.9158551689344385,
+      "quad_stance_s": 3.3843750000000004,
+      "response_curve": {
+        "0.00": 0.014460730552295088
+      },
+      "yaw_follow_ratio": {
+        "+0.50": 0.2678784652112703,
+        "+1.00": 0.1547520942754528,
+        "-0.50": 0.05040478938430774,
+        "-1.00": 0.20404453352614532
+      }
+    },
+    "hold": {
+      "scenario": "hold",
+      "what": "20초 내내 전 명령 0. 얼음",
+      "envs": 64,
+      "fell_count": 0,
+      "fell_ratio": 0.0,
+      "envs_with_timeseries": 64,
+      "envs_degenerate": 0,
+      "stop_time_s": 0.38093750000000004,
+      "stop_reached_count": 64,
+      "stop_reached_of": 64,
+      "residual_speed_mps": 0.0006521846585926379,
+      "joint_target_delta_mean": 0.010835841433222014,
+      "joint_target_delta_tail": 0.00016999195097014302,
+      "pitch_abs_max_deg": 5.041633029654456,
+      "roll_abs_max_deg": 6.406843233916186,
+      "base_z_tail_m": 0.37539214588701725,
+      "foot_slip_m": 0.028545117225282787,
+      "quad_stance_s": 3.6640625000000027,
+      "response_curve": {
+        "0.00": 0.0005961149228680825
+      },
+      "yaw_follow_ratio": {}
+    }
+  },
+  "not_a_judgement": "이 파일은 성공률을 내지 않는다. 판정은 eval_generalization.py 의 네 축 AND 하나다"
+}

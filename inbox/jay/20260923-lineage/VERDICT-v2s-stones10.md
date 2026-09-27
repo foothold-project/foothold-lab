@@ -1,7 +1,7 @@
 # 판정 · v2s-stones10
 
 > 분류: 판정
-> 작성: `_out/loop/verdict.py` · 2026-09-26T03:38:24
+> 작성: `_out/loop/verdict.py` · 2026-09-28T00:53:07
 > 근거: `CRITERIA.md` v1.4 · `sim/eval/verdict_manifest.py` 의 판단 함수
 > 상태: 자동 생성. **손으로 고치지 마십시오**
 

@@ -28,6 +28,7 @@ digest-2026-W36-material.html 0 1 0 19 0 0
 digest-2026-W36.html 0 1 0 19 0 0
 digest-2026-W37-material.html 0 1 0 19 0 0
 digest-2026-W37.html 0 1 0 19 0 0
+digest-2026-W39-material.html 0 1 0 19 0 0
 doc-graph.html 0 1 0 20 0 0
 encyclopedia.html 0 2 0 13 0 0
 field-check-0813.html 0 1 0 19 0 0
@@ -88,6 +89,7 @@ research-20260909-eval-harness-diagram.html 0 1 0 19 0 0
 research-20260909-head-contact-observation.html 0 1 0 19 0 0
 research-20260911-eval-protocol-v2.html 0 1 0 19 0 0
 research-20260918-postshot-3dgs-tech-analysis.html 0 1 0 19 0 0
+research-20260928-rl-lineage.html 0 1 0 19 0 0
 research-NVIDIA공식체크포인트_속도단차교차평가분석.html 0 1 0 19 0 0
 research-architecture-decision.html 0 1 0 19 0 0
 research-benchmark-repro-protocol.html 0 1 0 19 0 0

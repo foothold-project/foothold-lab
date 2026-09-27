@@ -90,9 +90,9 @@
   "ver": "v1.0"
  },
  "docs/DECISIONS.md": {
-  "hash": "cb6e5b020133b0c3",
+  "hash": "0b900cd730ba4d92",
   "major": "v2.1",
-  "ver": "v2.4"
+  "ver": "v2.5"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "9a28ca823b799857",
+  "hash": "923e33620814ed52",
   "major": "v2.1",
-  "ver": "v2.16"
+  "ver": "v2.18"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -231,6 +231,11 @@
  },
  "docs/digest/2026-W37.md": {
   "hash": "7c9ee2243c83eefe",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W39-material.md": {
+  "hash": "b590eef896ea29e4",
   "major": "",
   "ver": ""
  },
@@ -488,6 +493,11 @@
   "hash": "2e448b38c5728bd0",
   "major": "v2.1",
   "ver": "v2.1"
+ },
+ "docs/research/20260928-rl-lineage.md": {
+  "hash": "48e07c8ec9fbaf75",
+  "major": "v1.0",
+  "ver": "v1.2"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

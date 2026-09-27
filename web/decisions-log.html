@@ -768,7 +768,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=ac1de9b7').then(function(r){
+    fetch('/assets/search-index.json?v=fadc465f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -904,8 +904,6 @@ body>*{flex-shrink:0}
 상태: 확정
 판: v2.1
 이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/3">#3</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/117">#117</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/66">#66</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/125">#125</a></p></blockquote>
-<blockquote><p><b>이 페이지에서 가린 것</b>: 계약·대여 <b>금액 2곳</b>. 팀 내부에서는 저장소의
-원본(<code>foothold-lab / docs/DECISIONS.md</code>)에 그대로 남아 있습니다. 금액은 상대가 있는 정보라 공개하지 않습니다.</p></blockquote>
 <blockquote><p><b>규칙</b>: 결정은 나는 즉시 여기 적는다. 대화·채팅에만 있는 결정은 결정이 아니다.
 뒤집을 때는 지우지 말고 취소선 + 새 행으로. &quot;왜 그렇게 했더라&quot;가 반복되는 것을 막는 문서다.</p></blockquote>
 </section>
@@ -924,7 +922,7 @@ body>*{flex-shrink:0}
 <ol><li><b>답변마다 어떤 전문가 관점인지 표기</b>한다.</li><li><b>웹에 올리는 구조도는 ASCII 금지</b>. SVG·이미지·표로. (채팅·md 원문은 무방)</li><li>방대한 요청은 <b>우선순위로 분류해 단계 진행</b>, 병렬 가능한 것은 병렬로.</li><li>정보가 부족하면 <b>grilling(되묻기)</b> 한다. 추측으로 메우지 않는다.</li><li><b>결정·발견은 즉시 이 문서에</b> 적는다. 채팅은 휘발이다.</li><li>기술 답변은 <b>&quot;7단계 지도의 어디인가&quot;를 먼저 찍고</b> 시작한다. 질문의 근원이 대부분 &quot;전체 흐름을 모름&quot;이기 때문 (팀장 자가진단 08-08).</li></ol>
 </section>
 <section id="s3"><h2>🔶 미결: 팀 회의 안건</h2>
-<div class="tw"><table><thead><tr><th>#</th><th>안건</th><th>상태</th></tr></thead><tbody><tr><td><s>D1</s></td><td><s>RL 범위 (시뮬만 vs 실기 도전)</s></td><td><b>닫힘 (08-19).</b> 두 트랙으로 확정. 저수준 실기 이전은 목표에서 뺐다</td></tr><tr><td><s>D2</s></td><td><s>증류 채택 여부</s></td><td><b>닫힘 (08-19).</b> 증류는 실기 이전을 전제한 장치라 함께 빠졌다</td></tr><tr><td>D3</td><td>험지 1종</td><td>계곡형 실물 레퍼런스 확보(unitree 공식 영상: 하천 자갈밭)</td></tr><tr><td>D4</td><td>KPI 북극성 (통과율 vs 한계 스펙)</td><td>메뉴 12종 plan.html §4</td></tr><tr><td>D5</td><td>Go2 대여 옵션 1(「금액 대외비」·조선대) vs 2(「금액 대외비」·상시)</td><td>잠정: 1→성과 후 2</td></tr><tr><td>D6</td><td>학습 컴퓨팅 (WS/RunPod/A6000)</td><td>실험 병렬 필요성 보고 판단</td></tr><tr><td>D7</td><td>end date 자동화: <code>done date</code> 필드 신설(사용자 클릭) + 닫힘 시 자동 기입 + 실적 로드맵 뷰 + 초과 알림 cron</td><td>설계 확정, 구현 대기</td></tr><tr><td>D8</td><td>docs→웹 포스팅 파이프라인 (자동 감지 → 초안 → <b>사람 컨펌</b> → 게시)</td><td>08-08 신규</td></tr><tr><td>D9</td><td><s>시크릿 공유 장소</s> → 단기 #resources 채널 + 중기 NAS Vaultwarden <b>확정</b>. 구축은 인프라 세션에서</td><td>08-08 결정</td></tr><tr><td>D10</td><td>README 역할 재정리: 공통 규칙은 COLLAB 로, README 는 레포 고유만</td><td>08-08 신규</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>#</th><th>안건</th><th>상태</th></tr></thead><tbody><tr><td><s>D1</s></td><td><s>RL 범위 (시뮬만 vs 실기 도전)</s></td><td><b>닫힘 (08-19).</b> 두 트랙으로 확정. 저수준 실기 이전은 목표에서 뺐다</td></tr><tr><td><s>D2</s></td><td><s>증류 채택 여부</s></td><td><b>닫힘 (08-19).</b> 증류는 실기 이전을 전제한 장치라 함께 빠졌다</td></tr><tr><td>D3</td><td>험지 1종</td><td>계곡형 실물 레퍼런스 확보(unitree 공식 영상: 하천 자갈밭)</td></tr><tr><td>D4</td><td>KPI 북극성 (통과율 vs 한계 스펙)</td><td>메뉴 12종 plan.html §4</td></tr><tr><td>D5</td><td>Go2 대여 옵션 1(조선대) vs 2(상시) · 금액 비공개</td><td>잠정: 1→성과 후 2</td></tr><tr><td>D6</td><td>학습 컴퓨팅 (WS/RunPod/A6000)</td><td>실험 병렬 필요성 보고 판단</td></tr><tr><td>D7</td><td>end date 자동화: <code>done date</code> 필드 신설(사용자 클릭) + 닫힘 시 자동 기입 + 실적 로드맵 뷰 + 초과 알림 cron</td><td>설계 확정, 구현 대기</td></tr><tr><td>D8</td><td>docs→웹 포스팅 파이프라인 (자동 감지 → 초안 → <b>사람 컨펌</b> → 게시)</td><td>08-08 신규</td></tr><tr><td>D9</td><td><s>시크릿 공유 장소</s> → 단기 #resources 채널 + 중기 NAS Vaultwarden <b>확정</b>. 구축은 인프라 세션에서</td><td>08-08 결정</td></tr><tr><td>D10</td><td>README 역할 재정리: 공통 규칙은 COLLAB 로, README 는 레포 고유만</td><td>08-08 신규</td></tr></tbody></table></div>
 </section>
 <section id="s4"><h2>다음 작업 큐</h2>
 <div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>이슈</th></tr></thead><tbody><tr><td>①</td><td>휘발 방지 3종</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/3">#3</a> ✅</td></tr><tr><td>②</td><td>COLLAB.md (Ⅰ~Ⅻ) → collab.html: README 공통규칙 재배치 포함</td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/4">#4</a></td></tr><tr><td>②b</td><td>메인 페이지 문서 분류 재설계: 섹션당 최신 3 + 「전체 보기」 목록 페이지 (캐러셀 대신)</td><td>예정</td></tr><tr><td>③</td><td>도구 백과: Isaac Sim/Lab·Omniverse·MuJoCo·Gazebo·ROS·SLAM·path tracing (그림 포함)</td><td>예정</td></tr><tr><td>④</td><td>rl 폴더 골격 생성</td><td>예정</td></tr><tr><td>⑤</td><td>plan.html 의 ASCII 블록 → SVG 교체 (세션 규칙 2 위반 해소)</td><td>예정</td></tr><tr><td>⑥</td><td>end date 리포트·초과 알림 (D7)</td><td>예정</td></tr><tr><td>⑦</td><td>회의 파이프라인 Phase 1 구현 (NAS 폴더 → 전사 → 보고서)</td><td>예정</td></tr></tbody></table></div>
@@ -968,5 +966,5 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp70o6s7v9</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpvrdsgfv0</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
