@@ -52,7 +52,35 @@ LOG = os.path.join(HERE, "eval_runner.log")
 LOCK = os.path.join(HERE, "eval_runner.lock")
 
 PYTHON = r"C:\Users\AI-WS01\anaconda3\envs\isaac311\python.exe"
-CKPTS = (1500, 2000, 2500, 3000)
+
+# 어느 체크포인트를 평가하나.
+#
+# 기본은 v2 계보와 «같은 네 점» 이다. 판정 관문(`verdict.py:41`)이 이 넷을 보므로
+# 기본값을 바꾸면 관문의 뜻이 바뀐다. 그래서 여기서 기본을 안 바꾼다.
+#
+# 처음부터 학습하는 판은 4500 까지 간다. 그 뒤쪽을 «보고용» 으로 더 재려면
+# 환경 변수로 준다. 관문은 그대로 넷을 본다.
+#
+#     FOOTHOLD_EVAL_CKPTS=1500,2000,2500,3000,4500
+#
+# 근거: 2026-09-28 · 팀장 지시로 fs1·fs2 가 4500 판을 돈다. 박아 둔 넷만 보면
+#       4500 이 평가되지 않는다 (`eval_runner.py` 옛 55 행).
+def _ckpts_from_env():
+    raw = os.environ.get("FOOTHOLD_EVAL_CKPTS", "").strip()
+    if not raw:
+        return (1500, 2000, 2500, 3000)
+    try:
+        vals = tuple(int(x) for x in raw.replace(" ", "").split(",") if x)
+    except ValueError:
+        raise SystemExit("FOOTHOLD_EVAL_CKPTS 를 못 읽었다: %r" % raw)
+    if not vals:
+        raise SystemExit("FOOTHOLD_EVAL_CKPTS 가 비었다")
+    if sorted(vals) != list(vals):
+        raise SystemExit("FOOTHOLD_EVAL_CKPTS 가 오름차순이 아니다: %r" % (vals,))
+    return vals
+
+
+CKPTS = _ckpts_from_env()
 
 # 축 1 · 실행 기록에서 그대로 읽은 값. 속도마다 평가창이 다르다.
 # 명령 거리 6 m 를 맞추려고 12 · 6 · 4 초다. 20 초는 인자 기본값이지 우리 값이 아니다.

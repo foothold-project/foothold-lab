@@ -287,7 +287,11 @@ git push -u origin feature/작업명-이름
 
 ## 6. 공식 문서를 내기 전에 반드시 (검증 없이 발행 금지)
 
-보고서 · 정본 · 웹 게시물 · 팀 공유물을 내기 전에 **반드시** `codex exec --model gpt-6-astra -c model_reasoning_effort=high` 로 검증받는다. 「다 됐다」 다음이 아니라 **발행 «전»** 이다.
+보고서 · 정본 · 웹 게시물 · 팀 공유물을 내기 전에 **반드시** astra 검증을 받는다.
+「다 됐다」 다음이 아니라 **발행 «전»** 이다.
+
+> **`codex exec` 를 쓰지 않습니다** (2026-09-28 팀장 확정). **Orca TUI 세션**에
+> 붙입니다. 아래 「어떻게 거는가」가 유일한 방법입니다.
 
 ### 무엇을 보게 하나
 
@@ -330,12 +334,38 @@ git push -u origin feature/작업명-이름
 
 ### 어떻게 거는가
 
+**`codex exec` 를 쓰지 않습니다.** TUI 세션에 붙입니다.
+
 ```bash
-codex exec --model gpt-6-astra -c model_reasoning_effort=high \
-  -s danger-full-access --skip-git-repo-check \
-  "<의뢰서 파일>을 읽고 전부 수행하라. 의뢰서의 주장을 근거로 삼지 말고
-   인용된 수치도 직접 다시 재라. 한국어 표현 · 근거 · 오해 소지 · 과장을 본다."
+# 1) 세션을 띄운다 (이미 있으면 terminal list 로 handle 을 찾아 재사용한다)
+orca terminal create --worktree active --command codex --json
+
+# 2) TUI 가 준비되기를 기다린다. --timeout-ms 를 «반드시» 준다
+orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
+
+# 3) wait 결과의 satisfied 가 true 일 때만 보낸다
+orca terminal send --terminal <handle> --wait-submit 20 --enter --json \
+  --text "<의뢰서 파일>을 읽고 전부 수행하라. 의뢰서의 주장을 근거로 삼지 말고
+          인용된 수치도 직접 다시 재라. 한국어 표현 · 근거 · 오해 소지 · 과장을 본다."
 ```
+
+**왜 `exec` 가 아닌가** `확인됨` (2026-09-28)
+
+| | `codex exec` | TUI 세션 |
+|---|---|---|
+| 맥락 | **새로 시작.** 쌓인 프로젝트 지식이 없다 | 이전 감사 맥락이 남는다 |
+| Orca 에서 | **안 보인다.** 이어서 물어볼 수 없다 | 보이고 이어 쓸 수 있다 |
+| 부른 세션이 죽으면 | **같이 죽는다** | 살아남는다 |
+
+**확인 규칙**
+
+- `wait` 는 시간이 지나도 «정상 결과» 를 찍는다. 찍혔다는 사실이 아니라
+  **`wait.satisfied`** 를 읽는다. `false` 면 `--timeout-ms` 를 늘려 한 번 더 하고,
+  그래도 아니면 **보내지 않는다.** 시작 중인 TUI 에 넣은 프롬프트는 사라진다.
+- `accepted: true` 는 **접수** 증거일 뿐이다. 시작 증거는 **`turn_started`** 다.
+  침묵에 다시 보내지 않는다.
+- 세션을 정리할 때 `terminal close --worktree ... --all` 을 **쓰지 않는다.**
+  agent-resume 기록을 영구히 지운다. 워크스페이스 **Sleep** 을 쓴다.
 
 검증 결과에서 나온 지적은 **고치고 다시 검증**한다. 한 번으로 끝내지 않는다.
 
