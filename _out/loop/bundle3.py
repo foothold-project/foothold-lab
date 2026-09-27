@@ -111,9 +111,19 @@ def collect_axis2(missing):
                 n = s.get("envs") or 0
                 k = s.get("fell_count")
                 lo, hi = wilson(k, n) if isinstance(k, int) else (None, None)
+                # 요 추종비를 «반드시» 같이 싣는다.
+                # 2026-09-28: 「낙상 0」이 「안 넘어진다」와 「명령을 아예 안 따른다」
+                # 두 가지로 내려왔다. 낙상만 보면 뒤의 것이 통과로 읽힌다.
+                yf = s.get("yaw_follow_ratio") or {}
+                yf_lo = min(yf.values()) if yf else None
+                yf_hi = max(yf.values()) if yf else None
+                yf_ok = sum(1 for v in yf.values() if v >= 0.40) if yf else None
                 rows.append({
                     "model": model, "ckpt": ckpt, "probe": probe,
                     "envs": n, "fell_count": k, "fell_ratio": s.get("fell_ratio"),
+                    "yaw_follow_min": None if yf_lo is None else round(yf_lo, 4),
+                    "yaw_follow_max": None if yf_hi is None else round(yf_hi, 4),
+                    "yaw_follow_pass": yf_ok,
                     "wilson_lo": None if lo is None else round(lo, 5),
                     "wilson_hi": None if hi is None else round(hi, 5),
                     "stop_time_s": s.get("stop_time_s"),

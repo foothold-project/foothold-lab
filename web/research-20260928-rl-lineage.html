@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=34b4d24a').then(function(r){
+    fetch('/assets/search-index.json?v=05000675').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1038,10 +1038,10 @@ clip_grad_norm_(..., 1.0) 통과 후
 <p>(기존 보고서의 「파일 해시까지 같다」는 틀렸다. <code>model_3000.pt</code> 의 SHA-256 은 <code>v2b-r</code> 이 <code>8931d8a1...</code>, <code>v2b-p11</code> 이 <code>1e70ab6f...</code> 로 다르다. <b>직렬화된 파일 바이트의 동일성과 CPU 로 읽은 텐서의 동일성은 다르다.</b>)</p>
 </section>
 <section id="s16"><span id="14"></span><h2>14. 이 문서가 「미확인」으로 남기는 것</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>우리 v2b 지형 여덟에서 처음부터가 안 터지나</td><td>fs1 · fs2 가 재는 것이다</td></tr><tr><td>4500 판이 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td><code>max_init_terrain_level</code> 2 가 처음부터에 맞나</td><td>NVIDIA 값은 <code>None</code> 이다. 별도 실험</td></tr><tr><td><code>lin_vel_y</code> 를 (0,0) 으로 닫은 것이 옳은가</td><td>「횡보행 수요가 낮고 바꾸는 것을 늘리면 원인 분리가 흐려진다」가 그 문서에 적힌 이유다. 열어 본 적은 <b>없다</b></td></tr><tr><td><b>처음부터 학습에서의 GPU 효과</b></td><td>resume 계보에서는 sim·PPO 동거 조건에서 텐서가 같았다 (체크포인트 121 개). 처음부터에서도 같은지는 <b>미확인</b>. 장치를 바꾼 짝이 잰다</td></tr><tr><td>초기 난이도 2 · 5 · <code>None</code> 중 무엇이 나은가</td><td>2 는 「학습 가능성을 지키는 장치」로 적혀 있다. 비교한 적은 <b>없다</b></td></tr><tr><td>축 2 의 <code>turn</code> 문턱을 n=64 에서 판정하는 것</td><td>아래 15 절</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>우리 v2b 지형 여덟에서 처음부터가 안 터지나</td><td>fs1 · fs2 가 재는 것이다</td></tr><tr><td>4500 판이 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td><code>max_init_terrain_level</code> 2 가 처음부터에 맞나</td><td>NVIDIA <b>학습</b> 기본값은 <b>5</b> 다 (<code>None</code> 은 <code>_PLAY</code> 설정). 비교한 적이 없다</td></tr><tr><td><code>lin_vel_y</code> 를 (0,0) 으로 닫은 것이 옳은가</td><td>「횡보행 수요가 낮고 바꾸는 것을 늘리면 원인 분리가 흐려진다」가 그 문서에 적힌 이유다. 열어 본 적은 <b>없다</b></td></tr><tr><td><b>처음부터 학습에서의 GPU 효과</b></td><td>resume 계보에서는 sim·PPO 동거 조건에서 텐서가 같았다 (체크포인트 121 개). 처음부터에서도 같은지는 <b>미확인</b>. 장치를 바꾼 짝이 잰다</td></tr><tr><td>초기 난이도 2 · 5 · <code>None</code> 중 무엇이 나은가</td><td>2 는 「학습 가능성을 지키는 장치」로 적혀 있다. 비교한 적은 <b>없다</b></td></tr><tr><td>축 2 의 <code>turn</code> 문턱을 n=64 에서 판정하는 것</td><td>아래 15 절</td></tr></tbody></table></div>
 </section>
 <section id="s17"><span id="15"></span><h2>15. 남아 있는 판정 문제 · 문턱이 잡음보다 좁다</h2>
-<p><code>v2g2-feetair01</code> 이 축 2 에서 못 넘는 유일한 칸이 <code>turn/fell_ratio</code> 다.</p>
+<p><code>v2g2-feetair01</code> 이 <b>iter3000 에서</b> 못 넘는 유일한 칸이 <code>turn/fell_ratio</code> 다. 앞 세 점에는 다른 미달도 있다 (축 2 통과 6/9 · 2/9 · 5/9).</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>문턱     &lt;= 0.10   (verdict_manifest.py)
 관측     7 / 64 = 0.1094
 Wilson 95 %  [0.0540, 0.2090]   &lt;- 문턱 0.10 이 «구간 안» 에 있다</pre></div>
@@ -1111,5 +1111,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp41h9pl2p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpo4uw9l79</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
