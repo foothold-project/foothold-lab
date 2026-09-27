@@ -171,6 +171,8 @@ if ! done_stage "bundle"; then
   say "숫자를 한 곳에 모은다 -> $BUNDLE"
   mkdir -p "$BUNDLE"
   $PY _out/loop/bundle3.py --out "$BUNDLE" 2>&1 | tail -8 | sed 's/^/          /' | tee -a "$LOG"
+  say "상세 표를 만든다 (지형별 · 집합별 · 성분별 · 체크포인트별)"
+  $PY _out/loop/detail3.py --out "$BUNDLE" 2>&1 | tail -8 | sed 's/^/          /' | tee -a "$LOG"
   mark_stage "bundle"; exit 0
 fi
 

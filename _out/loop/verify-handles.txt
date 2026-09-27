@@ -1,1 +1,2 @@
 astra term_fe1daede-bf82-4891-a5d3-8538636257b1 inbox/jay/20260927-methodology/VERIFY-scratch-astra-2.md
+fable term_a5e99585-58d2-40cf-9b8b-721e13d3745d inbox/jay/20260927-methodology/VERIFY-scratch-fable-2.md

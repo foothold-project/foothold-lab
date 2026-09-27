@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "updated": "2026-09-27T23:39:42",
- "updated_by": "register.py 가 3 개를 등록했다 · 가설과 대조군은 «미기재»",
+ "updated": "2026-09-28T06:33:45",
+ "updated_by": "register.py 가 2 개를 등록했다 · 가설과 대조군은 «미기재»",
  "stage": {
   "branch": "3",
   "name": "표준편차 매개화",
@@ -458,6 +458,44 @@
    "finished": "RuntimeError: normal expects all elements of std >= 0.0\r",
    "last_iter": 2594,
    "registered_by": "_out/loop/register.py · 2026-09-27T23:39:42"
+  },
+  {
+   "name": "fs1-scratch-f001",
+   "branch": "미기재",
+   "task": "미기재 · 로그의 --task 로 확인할 것",
+   "seed": null,
+   "gpu": "미기재 · params/env.yaml 과 params/agent.yaml 로 확인할 것",
+   "pid": null,
+   "pid_kind": "끝났다",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260928_010413_20260928_fs1-scratch-f001.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_fs1-scratch-f001",
+   "log_warning": null,
+   "changed_vs_parent": "**미기재** · 사람이 적는다",
+   "hypothesis": "**미기재** · 사람이 적는다",
+   "control": "**미기재** · 사람이 적는다",
+   "status": "완료",
+   "finished": "model_3000.pt 존재 + exit=0",
+   "last_iter": 4500,
+   "registered_by": "_out/loop/register.py · 2026-09-28T06:33:45"
+  },
+  {
+   "name": "fs2-scratch-f01",
+   "branch": "미기재",
+   "task": "미기재 · 로그의 --task 로 확인할 것",
+   "seed": null,
+   "gpu": "미기재 · params/env.yaml 과 params/agent.yaml 로 확인할 것",
+   "pid": null,
+   "pid_kind": "끝났다",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260928_010434_20260928_fs2-scratch-f01.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_fs2-scratch-f01",
+   "log_warning": null,
+   "changed_vs_parent": "**미기재** · 사람이 적는다",
+   "hypothesis": "**미기재** · 사람이 적는다",
+   "control": "**미기재** · 사람이 적는다",
+   "status": "완료",
+   "finished": "model_3000.pt 존재 + exit=0",
+   "last_iter": 4500,
+   "registered_by": "_out/loop/register.py · 2026-09-28T06:33:45"
   }
  ],
  "last_result": {

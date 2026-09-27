@@ -116,6 +116,37 @@ def verdict_rows():
     return "\n".join(rows)
 
 
+CLIPS = (
+    ("stepping_stones", "d0.5 1.0 m/s", "축 1 최대 구멍"),
+    ("gap", "d0.5 1.0 m/s", "omni_gap 학습이 gap 으로 옮겨가나"),
+    ("rails", "d0.5 1.5 m/s", "성적이 가장 크게 오른 칸 (학습 지형이다)"),
+    ("pit", "d0.5 1.0 m/s", "학습에 없는데 잘 되던 칸"),
+)
+CLIP_ROOT = "sim/eval/results/20260928-scratch-clips"
+
+
+def video_rows():
+    """찍힌 영상을 «그대로 볼 수 있게» 넣는다. 없으면 없다고 적는다."""
+    import glob
+    if not os.path.isdir(CLIP_ROOT):
+        return "_영상은 평가가 끝난 뒤에 찍습니다._"
+    out, n = [], 0
+    for label, _, _ in MODELS:
+        for name, cond, why in CLIPS:
+            mp4 = sorted(glob.glob(os.path.join(CLIP_ROOT, label, name, "*.mp4")))
+            if not mp4:
+                continue
+            rel = "/" + mp4[0].replace(os.sep, "/").replace("\\", "/")
+            out.append(
+                "**%s · %s** · %s\n\n"
+                '<video src="%s" controls preload="metadata" '
+                'playsinline muted loop style="width:100%%;height:auto"></video>\n'
+                % (label, name, why, rel))
+            n += 1
+    if n == 0:
+        return "_아직 찍힌 영상이 없습니다._"
+    return "\n".join(out)
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", required=True)
@@ -129,9 +160,34 @@ def main() -> int:
     cmp_md = os.path.join(a.bundle, "compare.md")
 
     t = section(t, "판정", verdict_rows())
-    t = section(t, "축1", pick(cmp_md, "축 1"))
     t = section(t, "축2", pick(cmp_md, "축 2"))
     t = section(t, "폭주", blowup_rows())
+
+    # detail3.py 가 낸 상세 표. 없으면 「아직 없습니다」로 둔다.
+    for name, fn in (("ckptflow", "detail-ckptflow.md"),
+                     ("set", "detail-set.md"),
+                     ("terrain", "detail-terrain.md"),
+                     ("components", "detail-components.md")):
+        fp = os.path.join(a.bundle, fn)
+        body = (io.open(fp, encoding="utf-8").read().strip()
+                if os.path.isfile(fp) else "_아직 자료가 없습니다._")
+        t = section(t, name, body)
+
+    t = section(t, "영상", video_rows())
+
+    # 원자료를 «웹으로» 내보낸다. 경로만 적으면 아무도 못 연다.
+    pub = os.path.join("web", "assets", "eval")
+    os.makedirs(pub, exist_ok=True)
+    import shutil
+    n = 0
+    for fn in ("axis1_long.csv", "axis2_long.csv", "compare.md", "MISSING.md",
+               "detail-terrain.md", "detail-set.md",
+               "detail-components.md", "detail-ckptflow.md"):
+        src = os.path.join(a.bundle, fn)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(pub, "scratch-" + fn))
+            n += 1
+    print("  웹으로 내보낸 원자료 %d 개 -> web/assets/eval/scratch-*" % n)
 
     # em dash 가 섞이면 웹 빌드가 막는다. 넣기 전에 본다.
     if "\u2014" in t:

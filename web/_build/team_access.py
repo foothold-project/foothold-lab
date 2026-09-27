@@ -160,6 +160,11 @@ td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;
 td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:var(--paper-2)}
 

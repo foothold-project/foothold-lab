@@ -115,6 +115,11 @@ td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;
 td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:var(--paper-2)}
 
@@ -582,7 +587,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+<!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -743,7 +748,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=c03ef698').then(function(r){
+    fetch('/assets/search-index.json?v=34b4d24a').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -868,71 +873,112 @@ body>*{flex-shrink:0}
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>모델 셋을 나란히 · resume 최고 대 처음부터 둘</h1>
   <p class="lede">이것은 2차 배포 단계의 중간 성적표다. 최종이 아니다. 그리고 셋 중 어느 것도 CRITERIA v1.4 를 통과하지 못했다.</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 02:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-scratch-vs-resume.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.0</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 07:40</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-scratch-vs-resume.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 리서치
-작성: 오흥재 · 2026-09-28 02:30
-근거: <code>sim/eval/results/20260923-v2rs</code> 축 1 원자료 · <code>20260923-v2rs-axis2</code> 축 2 manifest · <code>_out/loop/bundle3.py</code> 재집계 · 각 판 <code>params/*.yaml</code>
+작성: 오흥재 · 2026-09-28 07:40
+근거: <code>sim/eval/results/20260923-v2rs</code> 축 1 원자료 · <code>20260923-v2rs-axis2</code> 축 2 manifest · <code>20260921-nvidia-axis1</code> 기준선 · <code>models/foothold-v1.json</code> 모델 카드 · <code>_out/loop/bundle3.py</code> 와 <code>detail3.py</code> 재집계
 요지: 이것은 <b>2차 배포 단계</b>의 중간 성적표다. 최종이 아니다. 그리고 셋 중 어느 것도 CRITERIA v1.4 를 통과하지 못했다.
-상태: 초안 · 처음부터 학습 진행 중
-판: v1.0</p></blockquote>
+상태: 초안 · 처음부터 학습 평가 진행 중
+판: v2.0</p></blockquote>
 </section>
-<section id="s1"><span id="0"></span><h2>0. 이 문서를 읽을 때 조심할 것</h2>
-<p><b>셋을 나란히 놓지만 같은 자로 잰 것이 아니다.</b> 아래를 먼저 읽지 않으면 숫자를 잘못 읽는다.</p>
-<div class="tw"><table><thead><tr><th>조심할 것</th><th>왜</th></tr></thead><tbody><tr><td><b>계보가 다르다</b></td><td><code>v2g2</code> 는 NVIDIA 에서 resume 한 판이고 <code>fs1</code> · <code>fs2</code> 는 처음부터다. 같은 「3000 판」이 다른 뜻이다</td></tr><tr><td><b>GPU 가 갈렸다</b></td><td><code>fs1</code> 은 <code>cuda:0</code> · <code>fs2</code> 는 <code>cuda:1</code> 이다. <code>CRITERIA.md:495</code> 가 금지한 배치이고 <code>:544</code> 가 GPU 효과를 «미측정» 으로 둔다. 그래서 <code>fs1</code> 대 <code>fs2</code> 의 보상 대비는 <b>장치 효과를 품고 있다</b></td></tr><tr><td><b><code>v2g2</code> 는 4500 판이 없다</b></td><td>3000 까지만 돌았다. 4500 칸은 비어 있는 것이 정상이다</td></tr><tr><td><b>어느 것도 배포 후보가 아니다</b></td><td>아래 2 절</td></tr></tbody></table></div>
-<p><code>v2g2-feetair01</code> 은 iter3000 기준 48칸 평균이 가장 높지만 <b>일반화 후보로 확정된 것은 아니다.</b> 축 2 가 네 체크포인트에서 6/9 · 2/9 · 5/9 · 8/9 이고 CRITERIA v1.4 의 「네 점 전부 통과」를 못 넘는다. <b>지금까지 성적이 가장 좋은 판</b>일 뿐이다.</p>
+<section id="s1"><span id="0"></span><h2>0. 한 화면 요약</h2>
+<p><b>처음부터 학습한 두 판이 4500 회를 관문 없이 완주했다.</b> resume 계보에서는 실행 이름 여덟 개가 같은 문구로 죽었다.</p>
+<div class="tw"><table><thead><tr><th></th><th>v2g2-feetair01</th><th>fs1-scratch-f001</th><th>fs2-scratch-f01</th></tr></thead><tbody><tr><td>출발</td><td>NVIDIA 에서 resume</td><td><b>처음부터</b></td><td><b>처음부터</b></td></tr><tr><td>feet_air_time</td><td>0.1</td><td>0.01</td><td>0.1</td></tr><tr><td>learning_rate</td><td>1.0e-4</td><td><b>1.0e-3</b></td><td><b>1.0e-3</b></td></tr><tr><td>GPU</td><td>미기재</td><td>cuda:0</td><td>cuda:1</td></tr><tr><td>돌린 회수</td><td>3001</td><td><b>4501</b></td><td><b>4501</b></td></tr><tr><td>완주</td><td>예</td><td><b>예</b></td><td><b>예</b></td></tr><tr><td>std 폭주</td><td>없음</td><td><b>없음</b></td><td><b>없음</b></td></tr></tbody></table></div>
+<p><b>다만 이것으로 「처음부터는 안 터진다」고 말할 수 없다.</b> 시드 하나, 환경 하나다. 그리고 resume 이 폭주의 원인이라는 근거도 여전히 없다.</p>
 </section>
-<section id="s2"><span id="1"></span><h2>1. 무엇을 비교하나</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>출발</th><th><code>feet_air_time</code></th><th><code>learning_rate</code></th><th>GPU</th><th>판 수</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>NVIDIA 에서 resume</td><td>0.1</td><td>1.0e-4</td><td>미기재</td><td>3000</td></tr><tr><td><code>fs1-scratch-f001</code></td><td><b>처음부터</b></td><td>0.01</td><td><b>1.0e-3</b></td><td>cuda:0</td><td>4500</td></tr><tr><td><code>fs2-scratch-f01</code></td><td><b>처음부터</b></td><td>0.1</td><td><b>1.0e-3</b></td><td>cuda:1</td><td>4500</td></tr></tbody></table></div>
+<section id="s2"><span id="0-1"></span><h2>0-1. 이 문서를 읽을 때 조심할 것</h2>
+<p><b>셋을 나란히 놓지만 같은 자로 잰 것이 아니다.</b></p>
+<div class="tw"><table><thead><tr><th>조심할 것</th><th>왜</th></tr></thead><tbody><tr><td><b>계보가 다르다</b></td><td><code>v2g2</code> 는 NVIDIA 에서 resume 한 판이고 <code>fs1</code> · <code>fs2</code> 는 처음부터다. 같은 「3000」이 다른 뜻이다</td></tr><tr><td><b>GPU 가 갈렸다</b></td><td><code>fs1</code> 은 cuda:0 · <code>fs2</code> 는 cuda:1 이다. <code>CRITERIA.md:495</code> 가 금지한 배치다. 그래서 <code>fs1</code> 대 <code>fs2</code> 의 보상 대비는 <b>장치 효과를 품고 있다.</b> 장치를 바꾼 짝이 그것을 가른다</td></tr><tr><td><b><code>v2g2</code> 는 4500 이 없다</b></td><td>3000 까지만 돌았다. 4500 칸이 빈 것이 정상이다</td></tr><tr><td><b>어느 것도 배포 후보가 아니다</b></td><td>아래 2 절</td></tr><tr><td><b>평가 집합을 되풀이해 썼다</b></td><td>개발 과정에서 같은 16 지형을 계속 봤다. <b>독립 보류 집합이 아니다</b></td></tr></tbody></table></div>
+<p><code>v2g2-feetair01</code> 은 iter3000 기준 48칸 평균이 가장 높지만 <b>일반화 후보로 확정된 것이 아니다.</b> 축 2 가 네 체크포인트에서 6/9 · 2/9 · 5/9 · 8/9 이고 CRITERIA v1.4 의 「네 점 전부 통과」를 못 넘는다.</p>
+</section>
+<section id="s3"><span id="1"></span><h2>1. 무엇을 비교하나</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>출발</th><th>feet_air_time</th><th>learning_rate</th><th>GPU</th><th>돌린 회수</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>NVIDIA 에서 resume</td><td>0.1</td><td>1.0e-4</td><td>미기재</td><td>3001</td></tr><tr><td><code>fs1-scratch-f001</code></td><td><b>처음부터</b></td><td>0.01</td><td><b>1.0e-3</b></td><td>cuda:0</td><td>4501</td></tr><tr><td><code>fs2-scratch-f01</code></td><td><b>처음부터</b></td><td>0.1</td><td><b>1.0e-3</b></td><td>cuda:1</td><td>4501</td></tr></tbody></table></div>
 <p>공통 · 환경 <code>Isaac-Velocity-V2b-Unitree-Go2-v0</code> · 4096 대 · 시드 42 · <code>max_init_terrain_level</code> 2 · <code>rel_standing_envs</code> 0.10 · <b>σ 하한 관문 없음</b></p>
 <p><b>관문을 일부러 안 넣었다.</b> 「처음부터도 터지나」를 재는 판이라 관문을 넣으면 그 물음이 사라진다.</p>
-<p>계보의 전체 흐름은 짝 문서에 있다. <code>20260928-rl-lineage.md</code></p>
+<h3>학습 지형 여덟 (v2b)</h3>
+<div class="tw"><table><thead><tr><th>지형</th><th>비중</th><th>평가에서</th></tr></thead><tbody><tr><td>pyramid_stairs · pyramid_stairs_inv · boxes · random_rough</td><td>각 0.15</td><td>rough6</td></tr><tr><td>hf_pyramid_slope · hf_pyramid_slope_inv</td><td>각 0.10</td><td>rough6</td></tr><tr><td>omni_gap</td><td>0.10</td><td><b>평가에 없다</b></td></tr><tr><td><b>rails</b></td><td>0.10</td><td><b>unseen10 에 «있다»</b></td></tr></tbody></table></div>
+<p><code>rails</code> 가 학습과 평가에 둘 다 있다. <b>미경험은 열 종이 아니라 아홉 종</b>이고, 그것도 이름의 차집합이다.</p>
+<h3>명령</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>lin_vel_x  (0.4, 1.5)      후진과 저속이 없다
+lin_vel_y  (0.0, 0.0)      횡 이동이 없다
+ang_vel_z  (-1.0, 1.0)     heading 추종이 덮어쓴다
+rel_standing_envs   0.10   정지는 이것으로 산다
+heading_command     True · rel_heading_envs 1.0</pre></div>
+<p><code>lin_vel_x</code> 하한이 0.4 라 <b>제자리 회전(vx 가 0 에 가깝고 wz 가 0 이 아닌 것)을 학습이 한 번도 안 뽑는다.</b> 축 2 의 <code>turn</code> 칸이 그것을 잰다.</p>
+<p>계보의 전체 흐름은 짝 문서에 있다. <a href="research-20260928-rl-lineage.html">우리는 왜 여덟 번 방향을 틀었나</a></p>
 </section>
-<section id="s3"><span id="2"></span><h2>2. 판정 (CRITERIA v1.4)</h2>
+<section id="s4"><span id="2"></span><h2>2. 판정 (CRITERIA v1.4)</h2>
 <p>축 1 · 네 체크포인트에서 <code>foothold-v1</code> 대비 하락 0 · Wilson 95 % 축 2 · 네 체크포인트에서 아홉 칸 전부 통과 <b>둘의 AND</b> 다.</p>
 <p>_판정문이 아직 없습니다._ </p>
-<p>판정문 원본은 <code>inbox/jay/20260927-methodology/VERDICT-*.md</code> 에 있다.</p>
 </section>
-<section id="s4"><span id="3"></span><h2>3. 축 1 · 48 칸 평균</h2>
+<section id="s5"><span id="3"></span><h2>3. 축 1 · 체크포인트별 48칸 평균</h2>
 <p><code>rough6</code> 6 종 + <code>unseen10</code> 10 종 × 속도 0.5 · 1.0 · 1.5 m/s = 48 칸. 난이도 0.5 · 지형마다 100 판 · 시드 42.</p>
-<p><b><code>rails</code> 는 「미경험」주장에서 빠진다.</b> 학습 지형에 들어 있다 (<code>v2a_env_cfg.py:20</code>). 미경험은 <b>아홉 종</b>이다.</p>
-<div class="tw"><table><thead><tr><th>판</th><th>iter1500</th><th>iter2000</th><th>iter2500</th><th>iter3000</th><th>iter4500</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td><b>92.94</b></td><td><b>93.56</b></td><td><b>93.19</b></td><td><b>94.19</b></td><td>미완 (0/48)</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td></tr><tr><td><code>fs2-scratch-f01</code></td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td></tr></tbody></table></div>
-<p>칸이 48 이 아니면 평균을 내지 않고 «미완» 으로 둡니다. </p>
-<p>빈 칸을 0 으로 채우지 않는다. 무엇이 없는지는 <code>MISSING.md</code> 에만 있다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>iter1500</th><th>iter2000</th><th>iter2500</th><th>iter3000</th><th>iter4500</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td><b>92.94</b></td><td><b>93.56</b></td><td><b>93.19</b></td><td><b>94.19</b></td><td>미완 (0/48)</td></tr><tr><td><code>fs1-scratch-f001</code></td><td><b>44.00</b></td><td>미완 (18/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td></tr><tr><td><code>fs2-scratch-f01</code></td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td><td>미완 (0/48)</td></tr></tbody></table></div>
+<p>칸이 48 이 아니면 평균을 내지 않고 <b>미완</b>으로 둔다. 빈 칸을 0 으로 채우지 않는다.</p>
 </section>
-<section id="s5"><span id="4"></span><h2>4. 축 2 · 프로브별 넘어짐</h2>
+<section id="s6"><span id="4"></span><h2>4. 축 1 · 지형 집합별 · 속도별</h2>
+<p>평균 하나로는 어디가 오르고 어디가 내렸는지 안 보인다. 집합과 속도로 나눈다.</p>
+<div class="tw"><table><thead><tr><th>지형 집합</th><th>속도</th><th>NVIDIA</th><th>foothold-v1</th><th>v2g2</th><th>fs1</th><th>fs2</th><th>fs1 - v1</th><th>fs2 - v1</th></tr></thead><tbody><tr><td>rough6</td><td>0.5 m/s</td><td>65.8</td><td>99.7</td><td>100</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr><tr><td>rough6</td><td>1.0 m/s</td><td>69</td><td>100</td><td>100</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr><tr><td>rough6</td><td>1.5 m/s</td><td>17.5</td><td>98.3</td><td>100</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr><tr><td>unseen10</td><td>0.5 m/s</td><td>48.7</td><td>85.5</td><td>89.9</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr><tr><td>unseen10</td><td>1.0 m/s</td><td>50.5</td><td>84.7</td><td>92.4</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr><tr><td>unseen10</td><td>1.5 m/s</td><td>7</td><td>77.6</td><td>89.8</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td></tr></tbody></table></div>
+<p>마지막 두 열은 <b>foothold-v1 대비 %p</b> 다. 양수면 올랐다. </p>
+</section>
+<section id="s7"><span id="5"></span><h2>5. 축 1 · 지형별 · 속도별 <b>전부</b></h2>
+<p>48 칸을 다 편다. 기준선 둘(NVIDIA · foothold-v1)을 왼쪽에 둔다.</p>
+<div class="tw"><table><thead><tr><th>지형</th><th>속도</th><th>NVIDIA</th><th>foothold-v1</th><th>v2g2</th><th>fs1</th><th>fs2</th></tr></thead><tbody><tr><td>boxes *</td><td>0.5 m/s</td><td>76</td><td>99</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>boxes *</td><td>1.0 m/s</td><td>34</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>boxes *</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope *</td><td>0.5 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope *</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope *</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope_inv *</td><td>0.5 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope_inv *</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>hf_pyramid_slope_inv *</td><td>1.5 m/s</td><td>24</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs *</td><td>0.5 m/s</td><td>10</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs *</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs *</td><td>1.5 m/s</td><td>81</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs_inv *</td><td>0.5 m/s</td><td>24</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs_inv *</td><td>1.0 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pyramid_stairs_inv *</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>random_rough *</td><td>0.5 m/s</td><td>85</td><td>99</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>random_rough *</td><td>1.0 m/s</td><td>80</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>random_rough *</td><td>1.5 m/s</td><td>0</td><td>90</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>discrete_obstacles</td><td>0.5 m/s</td><td>94</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>discrete_obstacles</td><td>1.0 m/s</td><td>94</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>discrete_obstacles</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>floating_ring</td><td>0.5 m/s</td><td>1</td><td>95</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>floating_ring</td><td>1.0 m/s</td><td>0</td><td>99</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>floating_ring</td><td>1.5 m/s</td><td>0</td><td>87</td><td>99</td><td>없음</td><td>없음</td></tr><tr><td>gap</td><td>0.5 m/s</td><td>0</td><td>90</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>gap</td><td>1.0 m/s</td><td>1</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>gap</td><td>1.5 m/s</td><td>0</td><td>68</td><td>99</td><td>없음</td><td>없음</td></tr><tr><td>pit</td><td>0.5 m/s</td><td>7</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pit</td><td>1.0 m/s</td><td>2</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>pit</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>rails *</td><td>0.5 m/s</td><td>0</td><td>70</td><td>99</td><td>없음</td><td>없음</td></tr><tr><td>rails *</td><td>1.0 m/s</td><td>8</td><td>48</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>rails *</td><td>1.5 m/s</td><td>0</td><td>21</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_boxes</td><td>0.5 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_boxes</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_boxes</td><td>1.5 m/s</td><td>1</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_cylinders</td><td>0.5 m/s</td><td>99</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_cylinders</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>repeated_cylinders</td><td>1.5 m/s</td><td>7</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>star</td><td>0.5 m/s</td><td>86</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>star</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>star</td><td>1.5 m/s</td><td>62</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>stepping_stones</td><td>0.5 m/s</td><td>0</td><td>0</td><td>0</td><td>없음</td><td>없음</td></tr><tr><td>stepping_stones</td><td>1.0 m/s</td><td>0</td><td>0</td><td>24</td><td>없음</td><td>없음</td></tr><tr><td>stepping_stones</td><td>1.5 m/s</td><td>0</td><td>0</td><td>0</td><td>없음</td><td>없음</td></tr><tr><td>wave</td><td>0.5 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>wave</td><td>1.0 m/s</td><td>100</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr><tr><td>wave</td><td>1.5 m/s</td><td>0</td><td>100</td><td>100</td><td>없음</td><td>없음</td></tr></tbody></table></div>
+<p><code>*</code> 는 <b>학습 지형</b>이다. 미경험 주장에서 빠진다. </p>
+</section>
+<section id="s8"><span id="6"></span><h2>6. 축 1 · 실패 성분 분해</h2>
+<p>종합 성공률은 <b>생존 · 진행 · 추종 · 방향</b> 네 성분의 AND 다. 종합만 보면 「못 건넌다」와 「느리다」가 같은 숫자로 내려온다. 100 이 아닌 칸을 성분까지 편다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>지형</th><th>속도</th><th>종합</th><th>생존</th><th>진행</th><th>추종</th><th>방향</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>rails</td><td>0.5 m/s</td><td><b>99</b></td><td>100</td><td>100</td><td>100</td><td>99</td></tr><tr><td><code>v2g2-feetair01</code></td><td>stepping_stones</td><td>0.5 m/s</td><td><b>0</b></td><td>36</td><td>7</td><td>49</td><td>8</td></tr><tr><td><code>v2g2-feetair01</code></td><td>stepping_stones</td><td>1.0 m/s</td><td><b>24</b></td><td>48</td><td>45</td><td>31</td><td>45</td></tr><tr><td><code>v2g2-feetair01</code></td><td>floating_ring</td><td>1.5 m/s</td><td><b>99</b></td><td>99</td><td>99</td><td>99</td><td>99</td></tr><tr><td><code>v2g2-feetair01</code></td><td>gap</td><td>1.5 m/s</td><td><b>99</b></td><td>100</td><td>99</td><td>99</td><td>99</td></tr><tr><td><code>v2g2-feetair01</code></td><td>stepping_stones</td><td>1.5 m/s</td><td><b>0</b></td><td>53</td><td>23</td><td>0</td><td>24</td></tr></tbody></table></div>
+<p>종합은 네 성분의 <b>AND</b> 다. 어느 하나가 낮으면 종합이 낮다. 「못 건넌다」와 「느리다」가 같은 숫자로 내려오지 않게 성분을 편다. </p>
+</section>
+<section id="s9"><span id="7"></span><h2>7. 축 2 · 명령 응답 아홉 칸</h2>
 <p>평지에서 명령에만 반응시킨다. 지형을 섞으면 정지 실패가 명령 탓인지 지형 탓인지 안 갈린다.</p>
-<div class="tw"><table><thead><tr><th>판</th><th>체크포인트</th><th>hold</th><th>ramp</th><th>stop</th><th>turn</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>1500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>36/64 = 0.5625<br>[0.44086, 0.67706]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>2000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>48/64 = 0.7500<br>[0.63184, 0.83985]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>2500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>23/64 = 0.3594<br>[0.25288, 0.48179]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>3000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>7/64 = 0.1094<br>[0.054, 0.20899]</td></tr></tbody></table></div>
-<p><b>문턱이 잡음보다 좁다.</b> 환경이 64 대라 눈금이 <code>1/64 = 0.0156</code> 이고, <code>turn</code> 의 문턱 0.10 근처에서 나올 수 있는 값이 6/64(통과) 와 7/64(미달) <b>둘뿐이다.</b> 한 판 차이가 판정을 뒤집고 그 차이는 잡음과 구별되지 않는다. 이슈 <b><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/469">#469</a></b> 로 올렸다.</p>
+<div class="tw"><table><thead><tr><th>프로브</th><th>무엇을 보내나</th><th>문턱</th></tr></thead><tbody><tr><td><code>hold</code></td><td>일정 속도 유지</td><td>낙상 0.03 이하</td></tr><tr><td><code>ramp</code></td><td>속도를 올렸다 내린다</td><td>낙상 0.03 이하</td></tr><tr><td><code>stop</code></td><td>달리다 정지 명령</td><td>낙상 0.03 이하 · 정지 시간</td></tr><tr><td><code>turn</code></td><td><b>제자리 회전</b> · wz 를 −1.0 에서 +1.0 까지 계단으로</td><td>낙상 0.10 이하 · 요 추종비 0.40 이상</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>체크포인트</th><th>hold</th><th>ramp</th><th>stop</th><th>turn</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>1500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>36/64 = 0.5625<br>[0.44086, 0.67706]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>2000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>48/64 = 0.7500<br>[0.63184, 0.83985]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>2500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>23/64 = 0.3594<br>[0.25288, 0.48179]</td></tr><tr><td><code>v2g2-feetair01</code></td><td>3000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>7/64 = 0.1094<br>[0.054, 0.20899]</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>1500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>2000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>2500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>3000</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td></tr><tr><td><code>fs1-scratch-f001</code></td><td>4500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>47/64 = 0.7344<br>[0.61517, 0.82704]</td></tr><tr><td><code>fs2-scratch-f01</code></td><td>1500</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td><td>0/64 = 0.0000<br>[0.0, 0.05662]</td></tr></tbody></table></div>
+<h3>문턱이 잡음보다 좁다</h3>
+<p>환경이 64 대라 눈금이 <code>1/64 = 0.0156</code> 이다. <code>turn</code> 문턱 0.10 의 양옆 인접값이 6/64(통과)와 7/64(미달)이고 <b>한 판 차이</b>다. 그리고 관문은 신뢰구간 없는 딱딱한 부등호다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>7/64 = 0.1094   Wilson 95 % [0.0540, 0.2090]   &lt;- 문턱 0.10 이 구간 «안» 에 있다
+6/64 = 0.0938   Wilson 95 % [0.0437, 0.1898]</pre></div>
+<p><b>반대 방향 문제도 있다.</b> 신뢰구간 판정으로 바꾸면 <code>0/64</code> 의 상한이 0.0566 이라 <code>stop</code> · <code>hold</code> 의 문턱 <b>0.03 은 어떤 정책도 못 넘게 된다.</b> 완화가 아니라 판정을 다시 설계하는 일이다. 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/469" target="_blank" rel="noopener">#469</a> 로 올렸다.</p>
 </section>
-<section id="s6"><span id="5"></span><h2>5. 폭주 · 처음부터도 터지나</h2>
-<p>resume 계보에서 <b>여덟 판</b>이 죽었다. 전부 같은 문구다.</p>
+<section id="s10"><span id="8"></span><h2>8. 폭주 · 처음부터도 터지나</h2>
+<p>resume 계보에서 <b>실패 로그 9 건 · 서로 다른 실행 이름 8 개</b>가 같은 문구로 끝났다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>RuntimeError: normal expects all elements of std &gt;= 0.0</pre></div>
-<p>매개화 · 보상 가중치 · 시드 · optimizer 처리 <b>한 손잡이로는</b> 갈리지 않는다. 그리고 <b>모든 판에 똑같이 있던 것</b>이 <code>resume</code> 이다. 다만 그것이 원인이라는 근거는 <b>미확인</b>이다. <code>fs1</code> · <code>fs2</code> 가 그것을 잰다.</p>
-<div class="tw"><table><thead><tr><th>판</th><th>완주</th><th>마지막 체크포인트</th><th>오류</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td><b>예</b></td><td>3000</td><td></td></tr><tr><td><code>fs1-scratch-f001</code></td><td><b>아니오</b></td><td>1175</td><td></td></tr><tr><td><code>fs2-scratch-f01</code></td><td><b>아니오</b></td><td>1150</td><td></td></tr></tbody></table></div>
+<p>매개화 · 보상 가중치 · 시드 · optimizer 처리 <b>설정 하나로는</b> 갈리지 않는다. 모든 판에 똑같이 있던 것이 <code>resume</code> 이지만 <b>그것이 원인이라는 근거는 없다.</b></p>
+<div class="tw"><table><thead><tr><th>판</th><th>완주</th><th>마지막 체크포인트</th><th>오류</th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td><b>예</b></td><td>3000</td><td></td></tr><tr><td><code>fs1-scratch-f001</code></td><td><b>예</b></td><td>4500</td><td></td></tr><tr><td><code>fs2-scratch-f01</code></td><td><b>예</b></td><td>4500</td><td></td></tr></tbody></table></div>
+<h3>라이브러리에 관문이 없다</h3>
+<p><code>rsl_rl/modules/actor_critic.py</code> 전체에서 <code>clamp</code> · <code>clip</code> · <code>isnan</code> · <code>isfinite</code> 를 찾았다. <b>하나도 없다.</b> gradient 자르기는 있는데 NaN 을 막지 않는다. 실측했다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>넣은 gradient   [1.0, 2.0, NaN, 3.0]
+clip_grad_norm_(..., 1.0) 통과 후
+나온 gradient   [NaN, NaN, NaN, NaN]</pre></div>
+<p>전체 norm 이 NaN 이면 곱하는 계수가 NaN 이라 전부 NaN 이 된다. <b>막는 것이 아니라 퍼뜨린다.</b></p>
 <p><b>완주해도 「처음부터는 안 터진다」로 일반화하면 안 된다.</b> 시드 하나이고 환경 하나다. 터지면 전환 근거 하나가 사라지고, 그것도 결과다.</p>
 </section>
-<section id="s7"><span id="6"></span><h2>6. 영상</h2>
+<section id="s11"><span id="9"></span><h2>9. 영상</h2>
 <p>같은 지형 · 같은 난이도 · 같은 속도에서 셋을 찍는다. 나란히 놓고 보려면 조건이 같아야 한다.</p>
 <div class="tw"><table><thead><tr><th>칸</th><th>왜 찍나</th></tr></thead><tbody><tr><td><code>stepping_stones</code> d0.5 1.0 m/s</td><td>축 1 최대 구멍</td></tr><tr><td><code>gap</code> d0.5 1.0 m/s</td><td><code>omni_gap</code> 학습이 <code>gap</code> 으로 옮겨가나</td></tr><tr><td><code>rails</code> d0.5 1.5 m/s</td><td>성적이 가장 크게 오른 칸 (학습 지형이다)</td></tr><tr><td><code>pit</code> d0.5 1.0 m/s</td><td>학습에 없는데 잘 되던 칸</td></tr></tbody></table></div>
-<p>산출 <code>sim/eval/results/20260928-scratch-clips/</code></p>
+<p>_영상은 평가가 끝난 뒤에 찍습니다._ </p>
 </section>
-<section id="s8"><span id="7"></span><h2>7. 원자료</h2>
-<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>축 1 칸별 전부</td><td><code>sim/eval/results/20260928-scratch-vs-resume/axis1_long.csv</code></td></tr><tr><td>축 2 프로브별 전부</td><td><code>.../axis2_long.csv</code></td></tr><tr><td>비교 표 (자동)</td><td><code>.../compare.md</code></td></tr><tr><td><b>없는 것</b></td><td><code>.../MISSING.md</code></td></tr><tr><td>판정문</td><td><code>inbox/jay/20260927-methodology/VERDICT-*.md</code></td></tr></tbody></table></div>
-<p><code>MISSING.md</code> 를 같이 읽어야 한다. <b>빈 칸을 0 으로 채우지 않기 때문에</b> 무엇이 없는지는 그 파일에만 있다.</p>
+<section id="s12"><span id="10"></span><h2>10. 원자료 · 눌러서 볼 수 있습니다</h2>
+<div class="tw"><table><thead><tr><th>무엇</th><th>링크</th></tr></thead><tbody><tr><td>축 1 칸별 전부</td><td><span class="vlink">scratch-axis1_long.csv<i>assets/eval/scratch-axis1_long.csv</i></span></td></tr><tr><td>축 2 프로브별 전부</td><td><span class="vlink">scratch-axis2_long.csv<i>assets/eval/scratch-axis2_long.csv</i></span></td></tr><tr><td>지형별 상세 표</td><td><span class="vlink">scratch-detail-terrain.md<i>assets/eval/scratch-detail-terrain.md</i></span></td></tr><tr><td>집합별 요약</td><td><span class="vlink">scratch-detail-set.md<i>assets/eval/scratch-detail-set.md</i></span></td></tr><tr><td>실패 성분</td><td><span class="vlink">scratch-detail-components.md<i>assets/eval/scratch-detail-components.md</i></span></td></tr><tr><td><b>없는 것</b></td><td><span class="vlink">scratch-MISSING.md<i>assets/eval/scratch-MISSING.md</i></span></td></tr></tbody></table></div>
+<p><code>MISSING.md</code> 를 같이 보십시오. <b>빈 칸을 0 으로 채우지 않기 때문에</b> 무엇이 없는지는 그 파일에만 있습니다.</p>
 </section>
-<section id="s9"><span id="8"></span><h2>8. 미확인으로 남기는 것</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td>4500 판이 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td><b>GPU 차이의 크기</b></td><td><code>CRITERIA.md:544</code> 가 「아직 재지 않았습니다」로 둔 칸이다. 장치를 바꾼 짝이 잰다</td></tr><tr><td><code>max_init_terrain_level</code> 2 · 5 · <code>None</code></td><td>비교한 적이 없다</td></tr><tr><td>폭주의 최초 원인</td><td>오류 문구는 «발생 지점» 이지 원인 규명이 아니다</td></tr></tbody></table></div>
+<section id="s13"><span id="11"></span><h2>11. 미확인으로 남기는 것</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td>4500 회가 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td>처음부터 학습에서의 GPU 효과</td><td>resume 계보에서는 sim 과 PPO 동거 조건에서 체크포인트 121 개의 텐서가 같았다. 처음부터에서도 같은지는 <b>미확인</b></td></tr><tr><td><code>max_init_terrain_level</code> 2 · 5 · <code>None</code></td><td>비교한 적이 없다</td></tr><tr><td>폭주의 최초 원인</td><td>오류 문구는 <b>발생 지점</b>이지 원인 규명이 아니다</td></tr><tr><td><code>lin_vel_y</code> 를 닫은 것이 옳은가</td><td>열어 본 적이 없다</td></tr></tbody></table></div>
 </section>
-<section id="s10"><span id="9"></span><h2>9. 독립 검증</h2>
-<p>이 문서와 짝 문서의 주장은 astra 와 fable 이 <b>각각</b> 검증했다. 두 검증이 독립으로 같은 것 셋을 잡았다.</p>
-<div class="tw"><table><thead><tr><th>검증</th><th>산출</th><th>이슈</th></tr></thead><tbody><tr><td>astra 1 회차</td><td><code>inbox/jay/20260927-methodology/VERIFY-scratch-astra.md</code></td><td><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/467">#467</a></td></tr><tr><td>fable 1 회차</td><td><code>.../VERIFY-scratch-fable.md</code></td><td></td></tr><tr><td>astra 2 회차</td><td><code>.../VERIFY-scratch-astra-2.md</code></td><td></td></tr></tbody></table></div>
-<p>실험은 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/468">#468</a> · 축 2 문턱 재설계는 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/469">#469</a>.</p>
+<section id="s14"><span id="12"></span><h2>12. 독립 검증</h2>
+<p>이 문서와 짝 문서의 주장은 astra 와 fable 이 <b>각각</b> 검증했다.</p>
+<div class="tw"><table><thead><tr><th>검증</th><th>언제</th><th>요지</th></tr></thead><tbody><tr><td>astra 1 회차</td><td>09-28 01:17</td><td>필수 전환이라는 근거는 없다. 학습 기본값 오독 · 반복 횟수 혼동 · GPU 교란부터 고쳐야 한다</td></tr><tr><td>fable 1 회차</td><td>09-28 01:43</td><td>「확인됨」이라 적은 것 중 셋이 틀렸다. 폭주는 9 건이 아니라 8 판이다</td></tr><tr><td>astra 2 회차</td><td>09-28 02:00</td><td><b>장치 대조 자료가 없다는 전제가 틀렸다.</b> 계보 초안은 아직 발행할 수 없다</td></tr><tr><td>fable 2 회차</td><td>진행 중</td><td></td></tr></tbody></table></div>
+<p><b>두 검증이 독립으로 같이 잡은 셋</b></p>
+<ol><li><code>max_init_terrain_level</code> 의 <code>None</code> 은 학습값이 아니다 (학습 5 · <code>_PLAY</code> 만 <code>None</code>)</li><li><code>fs1</code> · <code>fs2</code> 가 GPU 까지 두 칸 다르다</li><li><code>v2g2</code> 의 「축 2 8/9」는 iter3000 한 점이다</li></ol>
+<p><b>astra 2 회차의 가장 큰 정정</b> · <code>v2b-r</code> 대 <code>v2b-p11</code> 의 공통 체크포인트 <b>121 개</b>에서 모델과 optimizer 텐서가 전부 같았다. 곧 sim 과 PPO 가 같은 장치에 함께 있으면 번호를 옮겨도 저장 상태가 같았다.</p>
+<p>이슈 · <a href="https://github.com/foothold-project/foothold-lab/issues/467" target="_blank" rel="noopener">#467</a> 검증 · <a href="https://github.com/foothold-project/foothold-lab/issues/468" target="_blank" rel="noopener">#468</a> 실험 · <a href="https://github.com/foothold-project/foothold-lab/issues/469" target="_blank" rel="noopener">#469</a> 축 2 문턱 · <a href="https://github.com/foothold-project/foothold-lab/issues/470" target="_blank" rel="noopener">#470</a> 웹 게재</p>
 </section>
-<section id="s11"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 팀장 지시로 resume 최고 판과 처음부터 둘을 나란히 놓는 성적표. 숫자 표는 <code>bundle3.py</code> 가 채우고 서사는 사람이 쓴다</td><td>실측</td></tr></tbody></table></div>
+<section id="s15"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇</th><th>근거</th></tr></thead><tbody><tr><td>v2.0</td><td>2026-09-28</td><td>팀장 지적으로 <b>종합 보고서 수준</b>으로 늘렸다. 48칸 평균 하나였던 것을 지형별·속도별·집합별·성분별로 폈고 기준선 둘을 나란히 뒀다. 경로만 적던 원자료를 <b>눌러서 볼 수 있는 링크</b>로 바꿨다. 「손잡이」를 없앴다</td><td>실측 · <code>report-v1</code> 대조</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 숫자 표는 <code>bundle3.py</code> 가 채우고 서사는 사람이 쓴다</td><td>실측</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -980,5 +1026,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyo4k7pw6</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp41h9pl2p</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
