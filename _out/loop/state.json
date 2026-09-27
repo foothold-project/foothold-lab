@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "updated": "2026-09-26T15:23:57",
- "updated_by": "시드 44 짝 등록 · 두 검증자가 1 순위로 합의한 비교",
+ "updated": "2026-09-27T16:25:07",
+ "updated_by": "log 대 scalar 짝 판정 · log 완주 · scalar 2040 판에 죽음",
  "stage": {
-  "branch": "2",
-  "name": "짝지은 시드 비교 (보상 효과의 재현)",
-  "phase": "시드 44 의 0.1 과 0.01 이 학습 중 (18:40 예정)",
-  "note": "astra AUDIT12 와 fable AUDIT12 가 «둘 다» 이것을 1 순위로 꼽았다. 「설정 완성 -> 신경망」이 아니라 「믿을 수 있는 측정 -> 짝지은 기준 비교 -> 병목 하나 개입 -> 증거에 따른 구조 -> 분리 검증」이 최종 순서다"
+  "branch": "3",
+  "name": "표준편차 매개화",
+  "phase": "log 완주 · scalar 죽음 · log 판 평가 대기",
+  "note": "같은 시드 44 · 같은 보상 0.01 · 둘 다 optimizer 새로 시작 · noise_std_type «하나만» 다름. log 완주 · scalar 2040 판 사망. 단일 변수 대조가 «깨끗하게» 성립한다"
  },
  "running": [
   {
@@ -361,6 +361,44 @@
    "control": "v2g4-feetair01-s44 (같은 시드 · 보상만 다르다)",
    "status": "학습 중",
    "condition_note": "내가 «빠뜨린» 칸이다. G44 만 돌리면 낮은 성적이 시드 탓인지 보상 효과인지 다시 못 가른다 (astra AUDIT11 2 절)"
+  },
+  {
+   "name": "v2L-logstd-s44",
+   "branch": "미기재",
+   "task": "미기재 · 로그의 --task 로 확인할 것",
+   "seed": 44,
+   "gpu": "미기재 · params/env.yaml 과 params/agent.yaml 로 확인할 것",
+   "pid": null,
+   "pid_kind": "끝났다",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260927_131719_20260927_v2L-logstd-s44_seed44_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_v2L-logstd-s44_seed44_iter3000",
+   "log_warning": "같은 이름의 로그가 2 개다. 마지막을 읽었다",
+   "changed_vs_parent": "**미기재** · 사람이 적는다",
+   "hypothesis": "**미기재** · 사람이 적는다",
+   "control": "**미기재** · 사람이 적는다",
+   "status": "완료",
+   "finished": "model_3000.pt 존재 + exit=0",
+   "last_iter": 3000,
+   "registered_by": "_out/loop/register.py · 2026-09-27T16:21:20"
+  },
+  {
+   "name": "v2Sc-scalar-s44",
+   "branch": "미기재",
+   "task": "미기재 · 로그의 --task 로 확인할 것",
+   "seed": 44,
+   "gpu": "미기재 · params/env.yaml 과 params/agent.yaml 로 확인할 것",
+   "pid": null,
+   "pid_kind": "끝났다",
+   "log": "C:/isaac/IsaacLab/logs/gap_run_logs/20260927_131720_20260927_v2Sc-scalar-s44_seed44_iter3000.log",
+   "out_dir": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/*_v2Sc-scalar-s44_seed44_iter3000",
+   "log_warning": null,
+   "changed_vs_parent": "**미기재** · 사람이 적는다",
+   "hypothesis": "**미기재** · 사람이 적는다",
+   "control": "**미기재** · 사람이 적는다",
+   "status": "죽음",
+   "finished": "RuntimeError: normal expects all elements of std >= 0.0\r",
+   "last_iter": 2040,
+   "registered_by": "_out/loop/register.py · 2026-09-27T16:21:20"
   }
  ],
  "last_result": {
