@@ -187,6 +187,26 @@ if ! done_stage "video"; then
   fi
 fi
 
+# ---------------------------------------------------------------- 6.5 · 보고서와 웹
+if ! done_stage "report"; then
+  say "보고서에 표를 끼워 넣는다 (서사는 사람 것 · 표식 사이만 갈아 끼운다)"
+  $PY _out/loop/splice_report.py \
+      --report docs/research/20260928-scratch-vs-resume.md \
+      --bundle "$BUNDLE" 2>&1 | sed 's/^/          /' | tee -a "$LOG"
+
+  say "웹을 굽는다 (관문 80 여 개를 지난다)"
+  ( cd web && timeout 900 "$PY" _build/build.py > "$OUT/night.build.r$ROUND.log" 2>&1 )
+  RC=$?
+  if [ "$RC" -eq 0 ]; then
+    say "  웹 빌드 통과 · 로그 _out/loop/night.build.r$ROUND.log"
+  else
+    say "  ** 웹 빌드가 막혔다 (종료 $RC). 사람이 로그를 볼 것 **"
+    grep -E "🔴|배포를 중단|Traceback" "$OUT/night.build.r$ROUND.log" 2>/dev/null \
+      | head -6 | sed 's/^/            /' | tee -a "$LOG"
+  fi
+  mark_stage "report"; exit 0
+fi
+
 # ---------------------------------------------------------------- 7 · 알림과 다음 회차
 if ! done_stage "notify"; then
   say "텔레그램을 보낸다"
