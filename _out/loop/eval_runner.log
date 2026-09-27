@@ -2096,3 +2096,248 @@
 2026-09-26 18:12:50    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/unseen10/d0.5/v1.5
 2026-09-26 18:12:50    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g3-feetair01-s43-iter3000
 2026-09-26 18:12:50  걸 것 0 건 · 축1 0 · 축2 0
+2026-09-26 18:27:46  v2b-s 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-26 18:27:46  v2b-s2 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-26 18:27:46  v2b-s3instr 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-26 18:27:46  v2b-s4paired 는 죽음 로 기록돼 있다. 평가하지 «않는다»
+2026-09-26 18:27:47  nvidia_gap_repro 는 평가를 건너뛴다 · 1500 판에서 끝난 옛 판. 네 체크포인트 관문에 안 맞는다
+2026-09-26 18:27:47  gapwide 는 평가를 건너뛴다 · 1500 판에서 끝난 옛 판
+2026-09-26 18:27:47  v2a 는 평가를 건너뛴다 · 20260921-v2ab 뿌리에서 이미 평가했다. 20260923-v2rs 로 다시 돌리면 낭비다
+2026-09-26 18:27:47  v2b 는 평가를 건너뛴다 · 20260921-v2ab 뿌리에서 이미 평가했다
+2026-09-26 18:27:47  v2b-p11 는 평가를 건너뛴다 · v2b-r 과 «같은 학습 결과» 다. astra 가 네 시점의 model_state_dict 와 optimizer_state_dict 를 직접 비교해 전부 일치함을 확인했다. 독립 반복도 아니고 더 좋은 대조군도 아니다
+2026-09-26 18:27:47  v2r4-base-s44 아직 · model_3000.pt 가 없다
+2026-09-26 18:27:49  도는 학습이 없다. 두 GPU 를 다 쓴다
+2026-09-26 18:27:49  v2b-r 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2b-r-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2b-r-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2b-r-iter3000
+2026-09-26 18:27:49  v2g-feetair1 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g-feetair1-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g-feetair1-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g-feetair1-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g-feetair1-iter3000
+2026-09-26 18:27:49  v2n-noise02 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2n-noise02-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2n-noise02-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2n-noise02-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2n-noise02-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2n-noise02-iter3000
+2026-09-26 18:27:49  v2s-stones10 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2s-stones10-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2s-stones10-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2s-stones10-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2s-stones10-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2s-stones10-iter3000
+2026-09-26 18:27:49  v2g2-feetair01 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g2-feetair01-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g2-feetair01-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g2-feetair01-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g2-feetair01-iter3000
+2026-09-26 18:27:49  v2sg-stones10feet01 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2sg-stones10feet01-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2sg-stones10feet01-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2sg-stones10feet01-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2sg-stones10feet01-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2sg-stones10feet01-iter3000
+2026-09-26 18:27:49  v2g3-feetair01-s43 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter1500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g3-feetair01-s43-iter1500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g3-feetair01-s43-iter2000
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter2500/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g3-feetair01-s43-iter2500
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/rough6/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/rough6/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/rough6/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/unseen10/d0.5/v0.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/unseen10/d0.5/v1.0
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs/v2g3-feetair01-s43-iter3000/unseen10/d0.5/v1.5
+2026-09-26 18:27:49    건너뜀 (이미 있음) sim/eval/results/20260923-v2rs-axis2/v2g3-feetair01-s43-iter3000
+2026-09-26 18:27:49  v2g4-feetair01-s44 준비됨 · 체크포인트 넷이 있고 프로세스가 끝났다
+2026-09-26 18:27:49  걸 것 28 건 · 축1 24 · 축2 4
+2026-09-26 18:31:48    v2g4-feetair01-s44-iter1500 축2 cuda:0 · 4.0 분 · exit=0 · 산출물 있음
+2026-09-26 18:32:37    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 4.8 분 · exit=0 · 산출물 있음
+2026-09-26 18:35:10    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-26 18:35:48    v2g4-feetair01-s44-iter2000 축2 cuda:0 · 4.0 분 · exit=0 · 산출물 있음
+2026-09-26 18:36:55    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-26 18:39:45    v2g4-feetair01-s44-iter2500 축2 cuda:0 · 3.9 분 · exit=0 · 산출물 있음
+2026-09-26 18:42:01    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 5.1 분 · exit=0 · 산출물 있음
+2026-09-26 18:43:42    v2g4-feetair01-s44-iter3000 축2 cuda:0 · 3.9 분 · exit=0 · 산출물 있음
+2026-09-26 18:44:39    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 2.6 분 · exit=0 · 산출물 있음
+2026-09-26 18:46:26    v2g4-feetair01-s44-iter1500 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-26 18:50:51    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 4.4 분 · exit=0 · 산출물 있음
+2026-09-26 18:53:09    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-26 18:54:46    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-26 18:59:29    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 4.7 분 · exit=0 · 산출물 있음
+2026-09-26 19:02:01    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-26 19:03:49    v2g4-feetair01-s44-iter2000 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-26 19:08:15    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 4.4 분 · exit=0 · 산출물 있음
+2026-09-26 19:10:34    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-26 19:12:11    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-26 19:16:56    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 4.7 분 · exit=0 · 산출물 있음
+2026-09-26 19:19:25    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-26 19:21:12    v2g4-feetair01-s44-iter2500 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-26 19:25:35    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 4.4 분 · exit=0 · 산출물 있음
+2026-09-26 19:27:54    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 2.3 분 · exit=0 · 산출물 있음
+2026-09-26 19:29:30    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 1.6 분 · exit=0 · 산출물 있음
+2026-09-26 19:34:16    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 4.8 분 · exit=0 · 산출물 있음
+2026-09-26 19:36:48    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 2.5 분 · exit=0 · 산출물 있음
+2026-09-26 19:38:33    v2g4-feetair01-s44-iter3000 축1 cuda:1 · 1.8 분 · exit=0 · 산출물 있음
+2026-09-26 19:38:33  끝 · 28 건 중 실패 0
