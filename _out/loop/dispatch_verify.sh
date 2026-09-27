@@ -28,8 +28,12 @@ command -v "$ORCA" >/dev/null 2>&1 || die "$ORCA 를 못 찾았다"
 
 WHO="${1:-}"
 case "$WHO" in
-  astra) AGENT=codex  ; OUT="inbox/jay/20260927-methodology/VERIFY-scratch-astra.md" ;;
-  fable) AGENT=claude ; OUT="inbox/jay/20260927-methodology/VERIFY-scratch-fable.md" ;;
+  # `terminal create --agent codex` 는 모델·노력 인자를 «못 받는다» (Orca CLI 가이드).
+  # 그래서 `--command` 에 전체 명령을 넣는다.
+  astra) AGENT="codex --model gpt-6-astra -c model_reasoning_effort=high"
+         OUT="${OUT_DOC:-inbox/jay/20260927-methodology/VERIFY-scratch-astra.md}" ;;
+  fable) AGENT="claude --model claude-fable-5-1"
+         OUT="${OUT_DOC:-inbox/jay/20260927-methodology/VERIFY-scratch-fable.md}" ;;
   *) echo "쓰는 법: bash _out/loop/dispatch_verify.sh {astra|fable}"; exit 2 ;;
 esac
 
