@@ -45,9 +45,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 A1 = os.path.join(REPO, "sim", "eval", "results", "20260923-v2rs")
 
-# 요인 배치의 네 칸. 이름을 바꾸지 말 것 · 판정문과 상태 파일이 같은 이름을 쓴다.
-CELLS = {"R0": "v2b-r", "S": "v2s-stones10", "G": "v2g2-feetair01"}
-DEFAULT_C = "v2sg-stones10feet01"
+# **미리 박아 둔 요인 배치들.** `--design` 으로 고른다.
+# 새 배치가 생기면 여기에 «이름과 함께» 더한다. 인자로 흩어 놓지 않는다.
+DESIGNS = {
+    # 1 차 · 지형 x 보상 · 시드 42
+    "stones-x-feet": {
+        "설명": "훈련 지형 stones 10 % x 발 체공 0.1 · 시드 42",
+        "R0": "v2b-r",                 # 개입 없음
+        "S":  "v2s-stones10",          # 지형만
+        "G":  "v2g2-feetair01",        # 보상만
+        "C":  "v2sg-stones10feet01",   # 둘 다
+    },
+    # 2 차 · 매개화 x 보상 · 시드 44
+    "logstd-x-feet": {
+        "설명": "표준편차 매개화 log x 발 체공 0.1 · 시드 44",
+        "R0": "v2Sc-scalar-s44",       # scalar · 보상 0.01   (**2040 판 사망**)
+        "S":  "v2L-logstd-s44",        # log 만
+        "G":  "v2g4-feetair01-s44",    # 보상만 (scalar)
+        "C":  "v2LG-log-feet01-s44",   # 둘 다
+    },
+}
+DEFAULT_DESIGN = "logstd-x-feet"
 
 # 주 지표를 «하나» 로 못박는다 (astra AUDIT10 2 절).
 # 결과가 좋은 시점으로 «바꾸지 않는다».
@@ -86,9 +104,11 @@ def mean48(tag: str, ckpt: int):
     return (tot / cnt) if cnt else None
 
 
-def report(c_tag: str, ckpt: int) -> int:
-    tags = dict(CELLS, C=c_tag)
+def report(design: str, ckpt: int) -> int:
+    d = DESIGNS[design]
+    tags = {k: d[k] for k in ("R0", "S", "G", "C")}
     rows = []
+    missing = []
 
     def add(label, fn, lower_better=False, note=""):
         v = {k: fn(t) for k, t in tags.items()}
@@ -112,7 +132,8 @@ def report(c_tag: str, ckpt: int) -> int:
         lambda t: stones_rate(t, "v0.5", "survival_success", ckpt))
     add("48 칸 평균", lambda t: mean48(t, ckpt))
 
-    print("# 2 x 2 상호작용 · iter%d" % ckpt)
+    print("# 2 x 2 상호작용 · %s · iter%d" % (design, ckpt))
+    print("#   %s" % d["설명"])
     print("#   R0=%s  S=%s  G=%s  C=%s" % (tags["R0"], tags["S"], tags["G"],
                                            tags["C"]))
     print("#   I = Y(C) - Y(S) - Y(G) + Y(R0)")
@@ -142,10 +163,17 @@ def report(c_tag: str, ckpt: int) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--combined", default=DEFAULT_C)
+    ap.add_argument("--design", default=DEFAULT_DESIGN,
+                    choices=sorted(DESIGNS), help="어느 요인 배치를 재나")
     ap.add_argument("--ckpt", type=int, default=PRIMARY[4])
+    ap.add_argument("--list", action="store_true", help="배치 목록만 본다")
     args = ap.parse_args()
-    return report(args.combined, args.ckpt)
+    if args.list:
+        for k, v in sorted(DESIGNS.items()):
+            print("%-16s %s" % (k, v["설명"]))
+            print("    R0=%(R0)s  S=%(S)s  G=%(G)s  C=%(C)s" % v)
+        return 0
+    return report(args.design, args.ckpt)
 
 
 if __name__ == "__main__":

@@ -341,8 +341,9 @@
    "changed_vs_parent": "feet_air_time.weight 0.01 -> 0.1 · 시드 44",
    "hypothesis": "발 체공 0.1 의 개선이 «셋째 시드» 에서도 유지되는가",
    "control": "«같은 시드 44» 의 기본 보상 판 v2r4-base-s44 (짝)",
-   "status": "학습 중",
-   "condition_note": "astra AUDIT11 2 절 · fable AUDIT12 17-5 단계 1 · 두 검증자가 «같은 것» 을 1 순위로 꼽았다. 시드 43 의 기본 보상이 실패해 완주 쌍이 시드 42 하나뿐이었다"
+   "status": "완료",
+   "condition_note": "astra AUDIT11 2 절 · fable AUDIT12 17-5 단계 1 · 두 검증자가 «같은 것» 을 1 순위로 꼽았다. 시드 43 의 기본 보상이 실패해 완주 쌍이 시드 42 하나뿐이었다",
+   "finished": "model_3000.pt 존재 · 평가 24/24·4/4 완료"
   },
   {
    "name": "v2r4-base-s44",
@@ -359,8 +360,9 @@
    "changed_vs_parent": "시드만 (42 -> 44). 보상은 NVIDIA 기본 0.01",
    "hypothesis": "«짝 대조군» · 시드 44 에서 기본 보상의 성적은 얼마인가",
    "control": "v2g4-feetair01-s44 (같은 시드 · 보상만 다르다)",
-   "status": "학습 중",
-   "condition_note": "내가 «빠뜨린» 칸이다. G44 만 돌리면 낮은 성적이 시드 탓인지 보상 효과인지 다시 못 가른다 (astra AUDIT11 2 절)"
+   "status": "죽음",
+   "condition_note": "내가 «빠뜨린» 칸이다. G44 만 돌리면 낮은 성적이 시드 탓인지 보상 효과인지 다시 못 가른다 (astra AUDIT11 2 절)",
+   "finished": "2700 판에 std>=0 오류 · model_3000.pt 없음"
   },
   {
    "name": "v2L-logstd-s44",
