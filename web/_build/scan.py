@@ -175,6 +175,29 @@ def mask_geometry(text):
     return GEOMETRY_ATTR.sub(lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text)
 
 
+# 긴 16진 문자열(해시)은 개인정보가 아니다. 갤러리 manifest 의 sha256 안에 있는
+#   13자리 숫자열이 주민등록번호로 잡혔다(2026-09-28). 값을 ALLOW 로 미는 대신
+#   규칙을 고친다 (2026-08-11 SVG 좌표 때와 같은 처리다).
+#
+#   **BLOCK 은 ALLOW 를 안 본다** (`scan_text` 의 BLOCK 순회에 allowed 검사가
+#   없다). 그래서 이 종류의 과탐은 «가리기» 로만 풀린다.
+#
+#   가려도 안전한 근거: BLOCK 의 비밀 규칙은 전부 고유한 접두사나 모양을 가진다.
+#   맨 16진 문자열인 규칙이 하나도 없다. WARN 의 MAC 주소도 콜론을 쓴다.
+#   곧 32자 이상 16진 연속을 가려도 «가려지는 비밀이 없다».
+HEX_RUN = re.compile(r'\b[0-9a-fA-F]{32,}\b')
+
+
+def mask_hashes(text):
+    """긴 16진 문자열을 공백으로 덮는다. 줄바꿈은 보존한다."""
+    return HEX_RUN.sub(lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text)
+
+
+def mask_noise(text):
+    """검사 전에 «개인정보가 살지 않는 자리» 를 덮는다."""
+    return mask_hashes(mask_geometry(text))
+
+
 # 자가검증에서 **잡히면 안 되는** 것도 확인한다. 과탐은 검사기를 무력화시킨다
 #   (거짓 경보가 잦으면 사람이 ALLOW 로 다 밀어넣고, 그때부터 문은 없는 것과 같다).
 SELFTEST_NEGATIVE = [
@@ -190,6 +213,11 @@ SELFTEST_NEGATIVE = [
     # 2026-09-21 실제 과탐: 렌더 밝기 측정값. 소수점이 `\b` 를 만들었다
     ('주민등록번호', '"first": 184.1442413330078,'),
     ('주민등록번호', '[184.1496124267578, 44.47393417]'),
+    # 2026-09-28 실제 과탐: 갤러리 manifest 의 sha256 안 13자리 숫자열
+    ('주민등록번호',
+     '"sha256": "f8ca0347664793797e29b6e76a42b6dbb1045fddec186a4e3de071642ed94bbb"'),
+    ('주민등록번호',
+     '"sha256": "9f34f7905314930720cf7e8a902c7d54cf6eb5be383b3f71bb414339a0ccb731"'),
 ]
 
 
@@ -207,7 +235,7 @@ def selftest():
             dead.append((label, sample, '못 잡음'))
     for label, sample in SELFTEST_NEGATIVE:
         pat = rules.get(label)
-        if pat and re.search(pat, mask_geometry(sample)):
+        if pat and re.search(pat, mask_noise(sample)):
             dead.append((label, sample, '과탐: 잡으면 안 되는데 잡음'))
     return dead
 
@@ -266,7 +294,7 @@ def scan_text(name, text):
     #   앞뒤 말과 HTML 태그가 섞여 들어와 ALLOW 가 한 건도 안 맞았다.
     #   허용의 뜻은 «이 값을 안다»이지 «이 문장을 안다»가 아니다. 부분 일치로 본다.
     allowed = [(r, v) for r, v, _, _ in ALLOW]
-    text = mask_geometry(text)
+    text = mask_noise(text)
     fatal, warn = [], []
     for label, pat in BLOCK:
         for m in re.finditer(pat, text):
