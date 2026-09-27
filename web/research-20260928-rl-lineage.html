@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>우리는 왜 여덟 번 방향을 틀었나 · A 에서 처음부터 학습까지 · FOOTHOLD</title>
-<meta name="description" content="방향을 튼 자리마다 무엇이 안 됐고 왜 그것이 안 됐는지가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 모든 판에 똑같이 있던 것을 놓친 것을 팀장이 잡아낸 것이다.">
+<meta name="description" content="방향을 튼 자리마다 무엇이 안 됐고 그때 무엇을 가설로 세웠는지가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 모든 판에 똑같이 있던 것을 놓친 것을 팀장이 잡아낸 것이다. 원인이 밝혀진 전환은 없다. 아래는 판단의 사슬이지 인과의 사슬이 아니다.">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=0ada0be3').then(function(r){
+    fetch('/assets/search-index.json?v=c03ef698').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -867,25 +867,31 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>우리는 왜 여덟 번 방향을 틀었나 · A 에서 처음부터 학습까지</h1>
-  <p class="lede">방향을 튼 자리마다 무엇이 안 됐고 왜 그것이 안 됐는지가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 모든 판에 똑같이 있던 것을 놓친 것을 팀장이 잡아낸 것이다.</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 01:25</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-rl-lineage.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 1</span></div></div>
+  <p class="lede">방향을 튼 자리마다 무엇이 안 됐고 그때 무엇을 가설로 세웠는지가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 모든 판에 똑같이 있던 것을 놓친 것을 팀장이 잡아낸 것이다. 원인이 밝혀진 전환은 없다. 아래는 판단의 사슬이지 인과의 사슬이 아니다.</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.1</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 01:25</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-rl-lineage.md</span></div><div><span class="k">증거</span><span class="v">확인 0 · 추측 0 · 미측정 0</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 리서치
 작성: 오흥재 · 2026-09-28 01:25
 근거: 각 절이 인용하는 설계 문서와 판정 매니페스트 · 학습 시각 저장본 <code>params/env.yaml</code> 전수 · <code>rsl_rl</code> 과 Isaac Lab 소스 직접 확인
-요지: 방향을 튼 자리마다 <b>무엇이 안 됐고 왜 그것이 안 됐는지</b>가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 <b>모든 판에 똑같이 있던 것</b>을 놓친 것을 팀장이 잡아낸 것이다.
-상태: 초안
-판: v1.0</p></blockquote>
+요지: 방향을 튼 자리마다 <b>무엇이 안 됐고 그때 무엇을 가설로 세웠는지</b>가 있다. 마지막 전환은 「어느 손잡이가 문제인가」를 묻다가 <b>모든 판에 똑같이 있던 것</b>을 놓친 것을 팀장이 잡아낸 것이다. <b>원인이 밝혀진 전환은 없다.</b> 아래는 판단의 사슬이지 인과의 사슬이 아니다.
+상태: 초안 · <b>독립 검증에서 남은 지적 24 건</b> (아래 0-1 절)
+판: v1.1</p></blockquote>
 </section>
-<section id="s1"><span id="0"></span><h2>0. 이 문서가 답하는 것</h2>
+<section id="s1"><span id="0-1"></span><h2>0-1. 먼저 · 이 초안에 남은 지적 24 건</h2>
+<p>astra 와 fable 이 각각 검증했고 <b>지적 열하나는 고쳤다.</b> 그런데 astra 2 회차가 <b>아직 남은 것 24 개</b>를 짚었다. 이 판(v1.1)은 그중 <b>사실 오류만</b> 고친 것이다.</p>
+<div class="tw"><table><thead><tr><th>남은 것</th><th>무엇</th></tr></thead><tbody><tr><td><b>인과 단정</b></td><td>4 · 5 · 6 절이 「원인은 노출 구조다」 「손잡이 셋이 축을 지배한다」로 쓰였다. <b>통제 대조가 없다.</b> 가설로 읽어야 한다</td></tr><tr><td><b>NVIDIA 학습 이력</b></td><td>1 절의 설정은 <b>8 월 재현본과 현재 소스에서 읽은 것</b>이다. 공식 배포본의 전체 학습 이력은 <b>미확인</b></td></tr><tr><td><b>「가장 좋다」의 범위</b></td><td>9 절의 비교는 개발용 평가의 특정 지표·시점이다. 전체 능력 순위가 아니다</td></tr><tr><td><b>「미경험 아홉 종」</b></td><td>이름 차집합이다. CRITERIA 의 기하 구분은 다르다 (학습 21칸 · 도랑 3칸 · 나머지 24칸)</td></tr><tr><td><b>폭주의 개별 원인</b></td><td>저장 시점 관측은 맞지만 «마지막 정상 저장과 오류 사이» 를 못 봤다. <code>log_std=NaN</code> 은 <b>미확인</b></td></tr></tbody></table></div>
+<p>전문은 <code>inbox/jay/20260927-methodology/VERIFY-scratch-astra-2.md</code> 4 절에 있다.</p>
+</section>
+<section id="s2"><span id="0"></span><h2>0. 이 문서가 답하는 것</h2>
 <p>FOOTHOLD 의 강화학습 계보를 처음 보는 사람에게 <b>왜 지금 여기 있는지</b>를 설명한다. 숫자표가 아니라 <b>판단의 사슬</b>이다. 각 절은 이 모양을 지킨다.</p>
 <ol><li>무엇을 하려고 했나</li><li>무엇이 안 됐나</li><li>왜 안 됐다고 판단했나 (근거)</li><li>그래서 무엇을 바꿨나</li></ol>
 <p>성적표는 짝 문서에 있다. <code>20260928-scratch-vs-resume.md</code></p>
 </section>
-<section id="s2"><span id="1"></span><h2>1. 출발 · NVIDIA Go2 rough</h2>
+<section id="s3"><span id="1"></span><h2>1. 출발 · NVIDIA Go2 rough</h2>
 <p>우리가 기준으로 삼은 것은 NVIDIA 가 공개한 Unitree Go2 rough 정책이다.</p>
+<p><b>아래 설정은 «우리 쪽에서 읽은 것» 이다.</b> 8 월 재현본의 저장 YAML 과 현재 Isaac Lab 소스에서 읽었다. <b>공식 배포본이 실제로 어떤 이력으로 학습됐는지는 미확인</b>이다. 체크포인트 파일에는 설정이 안 들어 있다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>지형 6 종   pyramid_stairs · pyramid_stairs_inv · boxes · random_rough
             hf_pyramid_slope · hf_pyramid_slope_inv
 학습량      1500 «회» · learning_rate 1.0e-3 · 처음부터
@@ -894,19 +900,19 @@ body>*{flex-shrink:0}
 신경망      actor · critic 각 [512, 256, 128] · elu · 관측 235 차원</pre></div>
 <p><b>우리 주제는 그 정책이 «안 배운» 지형이다.</b> 미경험 험지 지형 정책 적응. 평가는 두 집합으로 나눈다. 학습한 6 종(<code>rough6</code>)과 안 배운 것들(<code>unseen10</code>).</p>
 </section>
-<section id="s3"><span id="2"></span><h2>2. A · B · 첫 배포 <code>foothold-v1</code></h2>
+<section id="s4"><span id="2"></span><h2>2. A · B · 첫 배포 <code>foothold-v1</code></h2>
 <p>임석헌이 만든 gap 레시피를 재현한 것이 A 이고, 학습 틈 폭을 평가 기준과 같게 넓힌 것이 B 다. 둘 다 NVIDIA 체크포인트에서 출발했고 <b>차이는 <code>gap_width_range</code> 한 줄뿐이다</b> (<code>docs/DECISIONS.md</code> 09-15 행).</p>
 <p>B 가 <code>foothold-v1</code> 으로 배포됐다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>resume: true · load_run: nvidia_pretrained_source
-1500 판 · learning_rate 1.0e-4
-iter = 1500 · actor.0.weight (512, 235)</pre></div>
+max_iterations 1501 «회» · learning_rate 1.0e-4
+저장된 iter = 1500 (0 부터 세는 번호) · actor.0.weight (512, 235)</pre></div>
 <p><b>여기서 첫 갈림길이 생겼다.</b> 레시피가 <b>전진 전용</b>이었다.</p>
 <div class="tw"><table><thead><tr><th>명령</th><th>NVIDIA rough</th><th>foothold-v1</th></tr></thead><tbody><tr><td><code>lin_vel_x</code></td><td>(-1.0, 1.0)</td><td><b>(0.5, 1.5)</b></td></tr><tr><td><code>lin_vel_y</code></td><td>(-1.0, 1.0)</td><td><b>(0.0, 0.0)</b></td></tr><tr><td><code>ang_vel_z</code></td><td>(-1.0, 1.0)</td><td><b>(0.0, 0.0)</b></td></tr><tr><td><code>rel_standing_envs</code></td><td>0.02</td><td><b>0.0</b></td></tr></tbody></table></div>
 <p>곧 배포본은 <b>멈출 줄도 돌 줄도 모른다.</b> 그리고 우리는 그것을 <b>재지도 않고 있었다.</b> 능력 13 가지 중 평가하는 것이 셋뿐이었다 (<code>inbox/jay/20260918-v2-command-restore.md</code> 능력 표).</p>
 </section>
-<section id="s4"><span id="3"></span><h2>3. 전환 ① · 명령 능력을 되찾는다 (D)</h2>
+<section id="s5"><span id="3"></span><h2>3. 전환 ① · 명령 능력을 되찾는다 (D)</h2>
 <p><b>문제 제기.</b> 「험지를 통과한다」와 「명령에 안전하게 반응한다」는 둘 다 필요하다. 통과만 하고 못 멈추면 사람 앞에서 못 선다.</p>
-<p><b>바꾼 것.</b> <code>foothold-v1</code> 설정을 그대로 복사하고 <b>명령 손잡이 넷만</b> 되돌렸다.</p>
+<p><b>바꾼 것.</b> <code>foothold-v1</code> 설정을 그대로 복사하고 <b>필드 다섯</b>을 되돌렸다. (<code>heading_command</code> 와 <code>rel_heading_envs</code> 를 한 쌍으로 세어 당시 문서는 「손잡이 넷」이라고 적었다.)</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>lin_vel_x         (0.5, 1.5) -&gt; (0.0, 1.5)
 ang_vel_z         (0.0, 0.0) -&gt; (-1.0, 1.0)
 heading_command   False      -&gt; True
@@ -916,38 +922,40 @@ rel_standing_envs 0.0        -&gt; 0.02</pre></div>
 <p>여기서 소스를 읽어 한 쌍을 찾았다. <b><code>heading_command</code> 와 <code>ang_vel_z</code> 는 한 쌍이다.</b> <code>velocity_command.py:155</code> 가 <code>clip(stiffness × heading_error, ang_vel_z[0], ang_vel_z[1])</code> 이라, <code>ang_vel_z</code> 가 (0,0) 이면 heading 을 켜도 <b>회전이 죽는다.</b></p>
 <p><b>안 된 것.</b> D 가 멈추고 도는 것은 배웠는데 <b>gap 을 잃었다.</b></p>
 </section>
-<section id="s5"><span id="4"></span><h2>4. 전환 ② · gap 하락은 학습량이 아니었다</h2>
+<section id="s6"><span id="4"></span><h2>4. 전환 ② · gap 하락은 학습량이 아니었다</h2>
 <p><b>처음 가설.</b> 「학습량이 모자라다.」</p>
-<p><b>틀렸다.</b> <code>inbox/jay/20260918-why-gap-fell-rails-rose.md</code> 가 원인을 <b>노출 구조</b>로 짚었다. 명령을 넓히면 로봇이 틈을 향해 서지 않는다. 그러면 커리큘럼이 틈을 올려 주지 않고, 안 만난 것은 못 배운다.</p>
-<p><b>그리고 더 불편한 것을 찾았다.</b> <code>foothold-v1</code> 의 gap 성적은 <b>능력이 아니라 구조가 만든 값</b>이었다. 전진 전용이라 항상 틈을 향해 서 있었던 것이다.</p>
+<p><b>그 가설을 버렸다.</b> <code>inbox/jay/20260918-why-gap-fell-rails-rose.md</code> 가 <b>노출 구조</b>를 새 가설로 세웠다. 명령을 넓히면 로봇이 틈을 향해 서지 않는다. 그러면 커리큘럼이 틈을 올려 주지 않고, 안 만난 것은 못 배운다.</p>
+<p><b>이것도 가설이다.</b> 소스는 이 방향을 지지하지만 <b>학습량 대조도, 실제 노출 계측도 없다.</b> 유일 원인으로 확정할 수 없다 (astra 2 회차 지적).</p>
+<p><b>그리고 불편한 해석이 따라왔다.</b> <code>foothold-v1</code> 의 gap 성적은 <b>전진 전용이라 항상 틈을 향해 서 있던 조건에서 나온 값</b>이다. 그 조건의 주행 성적이지 일반화 능력의 크기는 아니다.</p>
 <p><b>바꾼 것.</b> 명령을 되돌리는 방향을 버렸다. 대신 <b>바라보는 비율</b>과 <b>요 신호 크기</b>를 갈라서 교환 없이 가기로 했다 (E · <code>20260919-E-design.md</code>).</p>
 </section>
-<section id="s6"><span id="5"></span><h2>5. 전환 ③ · 한 손잡이가 두 일을 한다 (F · G)</h2>
+<section id="s7"><span id="5"></span><h2>5. 전환 ③ · 한 손잡이가 두 일을 한다 (F · G)</h2>
 <p><b>안 된 것.</b> E 로도 안 갈렸다.</p>
 <p><b>왜.</b> <code>heading</code> 한 손잡이가 <b>노출</b>과 <b>방향 유지 압력</b> 두 일을 같이 한다. 범위를 어디에 둬도 둘이 같이 움직인다 (<code>20260920-FG-design.md</code>).</p>
 <p><b>바꾼 것.</b> 둘을 떼어 냈다.</p>
 <ul><li><b>F</b> · 노출을 <b>지형으로</b> 옮긴다 (<code>omni_gap</code> · 사방에서 틈을 만난다)</li><li><b>G</b> · 방향 유지 압력만 뗀다</li></ul>
 </section>
-<section id="s7"><span id="6"></span><h2>6. 전환 ④ · 손잡이 셋이 서로 다른 축을 지배한다 (H)</h2>
+<section id="s8"><span id="6"></span><h2>6. 전환 ④ · 손잡이 셋이 서로 다른 축을 지배한다 (H)</h2>
 <p>정책 여섯 판의 판정 매니페스트 506 항목을 펴 보고 나온 결론이다 (<code>20260920-H-design.md</code>).</p>
 <blockquote><p>손잡이 셋이 <b>서로 다른 축</b>을 지배한다. 그래서 한 손잡이로 두 축을 다
 넘으려던 것이 안 되는 일이었다.</p></blockquote>
-<p><b>바꾼 것.</b> 축 1 을 지배한 것과 축 2 를 지배한 것을 <b>합친다.</b></p>
+<p><b>이 문장은 당시 H 설계의 «판단» 이다.</b> 통제 대조가 없고, 기존 계보도 E 와 G 의 sim 배치 차이를 기록하고 있다. <b>「지배」나 단독 원인으로 읽으면 안 된다</b> (astra 2 회차 지적).</p>
+<p><b>바꾼 것.</b> 축 1 에서 좋았던 것과 축 2 에서 좋았던 것을 <b>합친다.</b></p>
 </section>
-<section id="s8"><span id="7"></span><h2>7. 전환 ⑤ · 축을 둘로 못 박고 AND 로 판정한다</h2>
+<section id="s9"><span id="7"></span><h2>7. 전환 ⑤ · 축을 둘로 못 박고 AND 로 판정한다</h2>
 <p><code>20260921-two-axes-guide.md</code> 가 판정을 확정했다.</p>
-<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>어떻게</th></tr></thead><tbody><tr><td><b>축 1</b></td><td>험지 주행</td><td>16 지형 × 3 속도 × 100 판 · 난이도 0.5 · 시드 42 · <code>foothold-v1</code> 대비 Wilson 95 %</td></tr><tr><td><b>축 2</b></td><td>명령 응답</td><td>평지 · 프로브 아홉 칸 · 문턱은 전부 NVIDIA 원본 실측에서 왔다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>어떻게</th></tr></thead><tbody><tr><td><b>축 1</b></td><td>험지 주행</td><td>16 지형 × 3 속도 × 100 판 · 난이도 0.5 · 시드 42 · <code>foothold-v1</code> 대비 Wilson 95 %</td></tr><tr><td><b>축 2</b></td><td>명령 응답</td><td>평지 · 프로브 아홉 칸 · 문턱은 NVIDIA 원본 실측을 <b>참고해 사람이 정한 허용선</b>이다 (원본과 같은 성능을 뜻하지 않는다)</td></tr></tbody></table></div>
 <p><b>둘의 AND 다.</b> 그리고 체크포인트 넷(1500 · 2000 · 2500 · 3000)에서 <b>다</b> 통과해야 한다.</p>
 </section>
-<section id="s9"><span id="8"></span><h2>8. v2a · v2b · 지형과 명령을 같이 고친다</h2>
+<section id="s10"><span id="8"></span><h2>8. v2a · v2b · 지형과 명령을 같이 고친다</h2>
 <p><b>바꾼 것.</b> 지형에 <code>rails</code> 를 더해 여덟 종으로 만들고, 명령은 D 의 복원을 유지하되 <code>lin_vel_x</code> 하한을 <b>0.4 로 다시 좁혔다.</b> 정지는 하한이 아니라 <code>rel_standing_envs</code> 로 산다는 설계다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>pyramid_stairs 0.15 · pyramid_stairs_inv 0.15 · boxes 0.15 · random_rough 0.15
 hf_pyramid_slope 0.10 · hf_pyramid_slope_inv 0.10 · omni_gap 0.10 · rails 0.10</pre></div>
 <p><b>여기서 스스로 한 칸을 깎았다.</b> <code>rails</code> 가 학습과 <code>unseen10</code> 에 <b>둘 다</b> 있다. 그래서 <code>v2a_env_cfg.py</code> 머리글이 이렇게 적어 두었다.</p>
 <blockquote><p>학습에 넣은 지형으로 평가하므로 <code>rails</code> 는 「미경험 험지」주장에서 빠진다.</p></blockquote>
-<p><b>미경험은 열 종이 아니라 아홉 종이다.</b></p>
+<p><b>미경험은 열 종이 아니라 아홉 종이다.</b> 다만 이것은 <b>이름의 차집합</b>이다. CRITERIA 의 기하 구분은 다르게 나눈다 (학습 21 칸 · 도랑 관련 3 칸 · 나머지 24 칸). 그리고 이 평가 집합은 개발 과정에서 <b>되풀이해 썼다.</b> 독립 보류 집합이 아니다.</p>
 </section>
-<section id="s10"><span id="9"></span><h2>9. v2b 의 자식들 · 한 실험에 한 가설</h2>
+<section id="s11"><span id="9"></span><h2>9. v2b 의 자식들 · 한 실험에 한 가설</h2>
 <p>v2b 에서 <b>한 칸만</b> 바꾼 판들을 걸었다.</p>
 <div class="tw"><table><thead><tr><th>판</th><th>바꾼 한 칸</th></tr></thead><tbody><tr><td><code>v2b-r</code></td><td>없음 (기준)</td></tr><tr><td><code>v2n-noise02</code></td><td>height scan 잡음 ±0.10 -&gt; ±0.02</td></tr><tr><td><code>v2s-stones10</code></td><td>stepping_stones 10 % 추가</td></tr><tr><td><code>v2g-feetair1</code> · <code>v2g2-feetair01</code></td><td><code>feet_air_time</code> 1.0 · 0.1</td></tr><tr><td><code>v2sg-stones10feet01</code></td><td>위 둘의 <b>결합</b></td></tr></tbody></table></div>
 <p><b>성적이 가장 좋았던 것이 <code>v2g2-feetair01</code> 이다.</b> <code>feet_air_time</code> 0.1 · 시드 42. 축 1 을 네 체크포인트에서 <b>다 통과</b>했다.</p>
@@ -955,20 +963,23 @@ hf_pyramid_slope 0.10 · hf_pyramid_slope_inv 0.10 · omni_gap 0.10 · rails 0.1
 <div class="tw"><table><thead><tr><th>체크포인트</th><th>hold</th><th>ramp</th><th>stop</th><th><b>turn</b></th><th>축 2 통과</th></tr></thead><tbody><tr><td>1500</td><td>0/64</td><td>0/64</td><td>0/64</td><td><b>36/64</b></td><td>6/9</td></tr><tr><td>2000</td><td>0/64</td><td>0/64</td><td>0/64</td><td><b>48/64</b></td><td>2/9</td></tr><tr><td>2500</td><td>0/64</td><td>0/64</td><td>0/64</td><td><b>23/64</b></td><td>5/9</td></tr><tr><td>3000</td><td>0/64</td><td>0/64</td><td>0/64</td><td><b>7/64</b></td><td>8/9</td></tr></tbody></table></div>
 <p>CRITERIA v1.4 는 <b>네 점 전부</b>를 본다. 그래서 <code>v2g2</code> 는 <b>일반화 후보로 확정된 것이 아니다.</b> 지금까지 성적이 가장 좋은 판일 뿐이다.</p>
 <p><code>turn</code> 이 1500 에서 2000 으로 나빠졌다가 2500 · 3000 에 급격히 좋아진다. 제자리 회전이 늦게 배워지는 모양이고, 그것이 왜인지는 <b>미확인</b>이다.</p>
-<p>그리고 결합 판이 <b>더 나쁘다.</b> 좋은 것 둘을 합치면 좋아진다는 가정이 깨졌다.</p>
+<p>그리고 결합 판(<code>v2sg</code>)이 <b>이 지표·이 시점에서 더 낮다.</b> 다만 <code>v2sg</code> 는 두 가지를 한꺼번에 바꾼 판이라 단일 변경이 아니고, 이 대비 하나로 「좋은 것 둘을 합치면 나빠진다」는 일반 법칙을 말할 수 없다.</p>
+<p><b>「가장 좋다」의 범위도 밝힌다.</b> 위 비교는 <b>개발용 평가의 48 칸 평균</b>이고 <b>iter3000 한 시점</b>이다. 전체 능력의 순위가 아니다.</p>
 </section>
-<section id="s11"><span id="10"></span><h2>10. 전환 ⑥ · 판이 터진다</h2>
+<section id="s12"><span id="10"></span><h2>10. 전환 ⑥ · 판이 터진다</h2>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>RuntimeError: normal expects all elements of std &gt;= 0.0</pre></div>
-<p>시드를 바꾸면 터지고, 같은 설정이 다른 시드에서 완주했다. <b>여덟 판이 죽었다.</b></p>
-<p>(처음에 「아홉」이라고 적었다. 로그 파일이 아홉 개인데 <code>v2b-s3instr</code> 이 두 번 걸려 두 번 다 같은 1670 에서 죽었기 때문이다. <b>판으로 세면 여덟</b>이다. fable 이 잡았고 로그를 판 이름으로 다시 세어 확인했다.)</p>
+<p>시드를 바꾸면 터지고, 같은 설정이 다른 시드에서 완주했다. <b>실패 로그 9 건 · 서로 다른 실행 이름 8 개</b>다.</p>
+<p><code>v2b-s3instr</code> 이 두 번 걸려 두 번 다 같은 1670 에서 죽었다. 재실행도 <b>실제 실패 1 건</b>이므로 9 와 8 을 같이 적는다. 그리고 이 숫자는 <b>독립 설정의 수가 아니다</b> (astra 2 회차 지적). 처음에 「아홉 판」이라고 적었던 것을 fable 이 잡았고, 로그를 실행 이름으로 다시 세어 확인했다.</p>
 <p><b>내가 한 판단.</b> 「표준편차 매개화가 원인이다. <code>log</code> 로 바꾸면 음수가 안 나온다.」</p>
 <p><b>그래서 <code>scalar</code> 대 <code>log</code> 2 × 2 를 걸었다.</b></p>
 </section>
-<section id="s12"><span id="11"></span><h2>11. 전환 ⑦ · <b>그 판단이 틀렸고, 더 큰 것을 놓치고 있었다</b></h2>
+<section id="s13"><span id="11"></span><h2>11. 전환 ⑦ · <b>그 판단이 틀렸고, 더 큰 것을 놓치고 있었다</b></h2>
 <h3>11-1. <code>log</code> 도 터졌다</h3>
-<p><code>v2LG-log-feet01-s44</code> 가 <b>2923 판에서 같은 문구로 죽었다.</b> 저장된 체크포인트 2800 · 2850 · 2875 · 2900 을 다 열어 봤는데 비유한수가 <b>하나도 없었다.</b></p>
-<p><code>exp()</code> 는 항상 양수지만 <code>log_std</code> 가 NaN 이 되면 <code>exp(NaN) = NaN</code> 이고, torch 의 <code>std.min() &gt;= 0</code> 검사는 <b>NaN 에서도 실패한다.</b> 문구만 같고 속이 다르다.</p>
-<div class="tw"><table><thead><tr><th>매개화</th><th>실제로 일어난 일</th></tr></thead><tbody><tr><td><code>scalar</code></td><td>std 가 <b>진짜 음수</b>가 됐다</td></tr><tr><td><code>log</code></td><td><code>log_std</code> 가 <b>NaN</b> 이 됐다</td></tr></tbody></table></div>
+<p><code>v2LG-log-feet01-s44</code> 의 <b>마지막 완료 출력 번호가 2923</b> 이고 같은 문구로 끝났다. 저장된 체크포인트 2800 · 2850 · 2875 · 2900 을 다 열어 봤는데 텐서 68 개에 비유한수가 <b>하나도 없었다</b> (astra 도 직접 재확인했다).</p>
+<p><b>최초로 비유한수가 생긴 갱신 번호는 미확인이다.</b> 마지막 정상 저장과 오류 사이를 못 봤다.</p>
+<p>수학적으로 <code>exp()</code> 는 양수지만 float 연산에서는 underflow · overflow · NaN 이 모두 가능하고, torch 의 <code>std.min() &gt;= 0</code> 검사는 <b>NaN 에서도 실패한다.</b></p>
+<div class="tw"><table><thead><tr><th>매개화</th><th>일어났을 수 있는 것</th></tr></thead><tbody><tr><td><code>scalar</code></td><td>std 가 음수가 됐을 수 있다</td></tr><tr><td><code>log</code></td><td><code>log_std</code> 가 NaN 이 됐을 수 있다</td></tr></tbody></table></div>
+<p><b>두 칸 다 «개별 원인 미확인» 이다.</b> 실패 직전 텐서를 못 봤다. 문구가 같다는 것이 속이 같다는 뜻도, 다르다는 뜻도 아니다.</p>
 <h3>11-2. 라이브러리에 관문이 없다</h3>
 <p><code>rsl_rl/modules/actor_critic.py</code> 전체에서 <code>clamp</code> · <code>clip</code> · <code>isnan</code> · <code>isfinite</code> 를 찾았다. <b>하나도 없다.</b> std 를 가두지 않고 비유한수를 검사하지 않는다.</p>
 <p>gradient 자르기는 있는데 <b>NaN 을 막지 않는다.</b> 실측했다.</p>
@@ -978,33 +989,35 @@ clip_grad_norm_(..., 1.0) 통과 후
 <p>전체 norm 이 NaN 이면 곱하는 계수가 NaN 이라 <b>전부</b> NaN 이 된다. 막는 것이 아니라 <b>퍼뜨린다.</b></p>
 <h3>11-3. 팀장이 잡은 것</h3>
 <p>폭주 여덟 판을 모두 펴 놓으면 이렇다.</p>
-<p><b>한 손잡이로는 안 갈린다.</b> 매개화 · 보상 가중치 · 시드 · optimizer 처리 어느 하나로도 완주와 사망이 갈리지 않는다.</p>
-<p><b>다만 「어느 손잡이로도 안 갈린다」는 과했다</b> (fable 지적). 16 판은 요인 설계가 아니다. 시드 43 안에서는 <code>feet_air_time</code> 0.01 넷이 다 죽고 0.1 하나가 살았고, 시드 44 안에서는 <code>scalar</code> 0.01 둘이 죽고 <code>log</code> 0.01 이 살았다. 표본이 작아 <b>어느 쪽으로도 단정하지 못한다</b> 가 맞다.</p>
+<p><b>지금 자료로는 단일 원인을 특정하지 못한다.</b></p>
+<p>16 판은 요인 설계가 아니고 교란이 섞여 있다. 시드 43 안에서는 <code>feet_air_time</code> 0.01 넷이 다 죽고 0.1 하나가 살았고, 시드 44 안에서는 <code>scalar</code> 0.01 둘이 죽고 <code>log</code> 0.01 이 살았다. <b>표본이 작고 조건이 통제되지 않아 어느 쪽으로도 말할 수 없다.</b></p>
 <p>그런데 <b>모든 판에 똑같이 있던 것</b>이 하나 있었다. <code>resume</code> 이다.</p>
 <p>팀장이 여러 번 「터지는 게 뭔가 이상하다」고 말했다. 나는 그것을 <b>「어느 손잡이가 터뜨리나」</b>로 옮겨 읽었다. 실험하는 사람이 보는 자리다. <b>변하지 않는 변수는 그 방법으로 안 보인다.</b></p>
 <p>그리고 팀장이 더 근본을 물었다.</p>
 <blockquote><p>resume 한다는 것은 그대로 학습 설정을 이어서 하는 것이 의미가 있는 것이지 않나?
 즉, 우리도 처음부터 시작했어야 하지 않았을까?</p></blockquote>
 </section>
-<section id="s13"><span id="12"></span><h2>12. 전환 ⑧ · 「비교 기준」과 「출발점」을 섞어 썼다</h2>
+<section id="s14"><span id="12"></span><h2>12. 전환 ⑧ · 「비교 기준」과 「출발점」을 섞어 썼다</h2>
 <p>우리는 「NVIDIA 가 비교 기준이니 NVIDIA 에서 resume 한다」고 했다. <b>그것이 따라 나오지 않는다.</b></p>
-<div class="tw"><table><thead><tr><th></th><th>무엇인가</th><th>무엇을 요구하나</th></tr></thead><tbody><tr><td><b>비교 기준</b></td><td>NVIDIA 정책을 우리 평가판에 올려 숫자를 낸다</td><td><b>평가가 같을 것.</b> 출발점과 무관</td></tr><tr><td><b>출발점</b></td><td>우리 최적화가 어디서 시작하나</td><td><b>아무것도 요구하지 않는다</b></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>무엇인가</th><th>무엇을 요구하나</th></tr></thead><tbody><tr><td><b>비교 기준</b></td><td>NVIDIA 정책을 우리 평가판에 올려 숫자를 낸다</td><td><b>평가가 같을 것.</b> 출발점과 무관</td></tr><tr><td><b>출발점</b></td><td>우리 최적화가 어디서 시작하나</td><td><b>비교 기준이 요구하지 않는다.</b> 다만 출발점끼리의 «인과» 를 비교하려면 초기 상태 · optimizer · 학습률 · 예산을 통제해야 한다</td></tr></tbody></table></div>
 <p>그리고 소스를 다시 열어 보니 <b>우리 설정 셋이 「fine-tuning 이라서」 정해진 값</b>이었다.</p>
 <div class="tw"><table><thead><tr><th>칸</th><th>NVIDIA 학습</th><th>우리</th><th>근거</th></tr></thead><tbody><tr><td><code>learning_rate</code></td><td>1.0e-3</td><td><b>1.0e-4</b></td><td><code>gap_ppo_cfg.py</code> docstring 에 「<b>gentler</b> learning rate」</td></tr><tr><td><code>max_init_terrain_level</code></td><td><b>5</b> (난이도 0~5)</td><td><b>2</b> (0~2)</td><td><code>velocity_env_cfg.py:48</code> · <code>gap_env_cfg.py:70</code></td></tr></tbody></table></div>
+<p><b>두 칸의 근거는 성격이 다르다.</b> 낮은 <code>learning_rate</code> 는 docstring 이 「파인튜닝이라 낮춘다」고 적은 값이다. 초기 난이도 2 는 <b>「학습 가능성을 지키는 장치」</b> 로 적혀 있고, <b>처음부터 학습해도 쉬운 지형부터 노출하는 선택은 유효하다.</b> 최적값이 무엇인지가 미확인일 뿐이다 (astra 2 회차 지적).</p>
 <p><b>처음 쓴 표가 틀렸다.</b> 「NVIDIA 는 <code>None</code> (0~9)」라고 적었는데, <code>None</code> 은 <code>rough_env_cfg.py:74</code> 의 값이고 그 줄은 <b>65 행의 <code>UnitreeGo2RoughEnvCfg_PLAY</code></b> 안이다. 평가·재생용 설정이다. <b>학습 클래스는 <code>velocity_env_cfg.py:48</code> 의 5 를 물려받고</b>, 2 로 바꾸는 것은 <code>gap_env_cfg.py:70</code> 즉 <b>gap 레시피</b> 다. 학습 설정과 재생 설정을 섞은 것이다. astra 와 fable 이 독립으로 같은 것을 잡았다.</p>
 <p>그리고 <code>feet_air_time</code> 을 이 표에 넣었던 것도 어긋난다. <b>0.01 은 NVIDIA 기본값이자 foothold-v1 값이고</b>, 0.1 은 우리가 고른 <b>실험 변수</b> 다. 「fine-tuning 때문에 정해진 값」은 실제로 <b>둘</b> (<code>learning_rate</code> · 초기 난이도) 이다.</p>
 <p><b>처음부터 학습하면 그 둘이 근거를 잃는다.</b></p>
 <h3>resume 이 우리에게 물린 값</h3>
 <p><b>관측 차원을 못 바꾼다.</b> <code>actor.0.weight</code> 가 <code>(512, 235)</code> 로 고정된다. 235 = 48 (몸통 · 명령 · 관절 · 행동) + 187 (높이 스캔 17 x 11) 이라, height scan 해상도를 바꾸면 <b>표준 <code>load_state_dict</code> 경로에서</b> resume 이 안 된다.</p>
-<p><b>「봉쇄」는 과했다.</b> 첫 층만 빼고 싣는 부분 로딩이라는 우회가 있다 (fable 지적). 정확히는 <b>「표준 resume 경로에서 막힌다」</b> 다.</p>
+<p><b>「봉쇄」는 과했다.</b> 정확히는 <b>「최종 관측 폭이 달라지면 표준 전체 로드가 불일치한다」</b> 다. 사상이나 부분 로드 같은 별도 설계는 가능하다 (fable · astra 2 회차 지적).</p>
 <p><b>총 학습량을 애매하게 만든다.</b> 우리가 말하는 「3000 판」은 우리의 3000 판이고 아래에 NVIDIA 의 1500 회가 깔려 있다. 학습률도 다르다.</p>
 <p><b>그리고 이 전환은 팀장 확정 결정을 뒤집는다.</b> <code>docs/DECISIONS.md</code> 09-02 행이 「기준선 정책 = NVIDIA 공식 체크포인트. <b>파인튜닝은 여기서 resume 한다</b>」이고 이유가 「10종 벤치마크 500 에피소드 · 실패 5종 배정 · 5인 이슈(<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/65">#65</a>~<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/69">#69</a>)가 전부 이 모델 위에 서 있다」다. 전환하려면 그 위에 선 것들을 어떻게 할지 같이 정해야 한다.</p>
 <p><b>또 하나.</b> <code>docs/research/terrain-finetune-plan.md</code> 4-2 절이 <b>이미</b> 「resume 대 scratch 비교 · resume 런과 scratch 런을 1개씩 병행해 비교한다」를 계획해 두었다. 이번 전환은 새 발견이 아니라 <b>그 계획을 늦게 실행하는 것</b>이다.</p>
 <h3>그리고 처음부터 판이 이미 하나 있었다</h3>
-<p>팀장이 2026-08-11 에 돌린 재현본이 <b>처음부터 학습한 판</b>이다. <code>resume: false</code> · <code>lr 0.001</code> · <b>1499 완주</b> · 관문 없이 · <code>scalar</code>. std 가 0.426~0.788 로 NVIDIA 배포본 0.443~0.810 과 거의 같은 자리에 수렴했다.</p>
+<p>팀장이 2026-08-11 에 돌린 재현본이 <b>처음부터 학습한 판</b>이다. <code>resume: false</code> · <code>lr 0.001</code> · <b>1500 회 완주</b> (저장 번호 1499) · 관문 없이 · <code>scalar</code>. 마지막 std 범위가 0.426~0.788 로 NVIDIA 배포본 0.443~0.810 과 가깝다.</p>
+<p><b>다만 마지막 std 의 최솟값·최댓값만으로 수렴이나 성능 재현을 판정할 수 없다</b> (astra 2 회차 지적).</p>
 <p><b>터지지 않았다.</b> 다만 지형 6 종 환경이고 명령이 넓다. 그래서 「우리 v2b 지형 여덟에서도 안 터진다」의 근거는 <b>아니다.</b></p>
 </section>
-<section id="s14"><span id="13"></span><h2>13. 그래서 지금 · fs1 · fs2</h2>
+<section id="s15"><span id="13"></span><h2>13. 그래서 지금 · fs1 · fs2</h2>
 <p><b>처음부터 돌린다. 한 칸만 다르게 둘.</b></p>
 <div class="tw"><table><thead><tr><th></th><th><code>fs1-scratch-f001</code></th><th><code>fs2-scratch-f01</code></th></tr></thead><tbody><tr><td>출발</td><td><b>처음부터</b> (resume 없음)</td><td>같음</td></tr><tr><td><code>learning_rate</code></td><td><b>1.0e-3</b></td><td>같음</td></tr><tr><td><b><code>feet_air_time</code></b></td><td><b>0.01</b> (NVIDIA 값)</td><td><b>0.1</b> (v2g2 값)</td></tr><tr><td>시드</td><td>42</td><td>42</td></tr><tr><td><code>--max_iterations</code></td><td><b>4501</b> (<code>model_4500.pt</code> 를 얻으려면 N+1)</td><td>같음</td></tr><tr><td><code>max_init_terrain_level</code></td><td>2 (v2b 그대로)</td><td>같음</td></tr><tr><td><code>rel_standing_envs</code></td><td><b>0.10</b> (v2b 값)</td><td>같음</td></tr><tr><td><b>GPU</b></td><td><b>cuda:0</b></td><td><b>cuda:1</b></td></tr><tr><td>σ 하한 관문</td><td><b>없음</b></td><td>없음</td></tr></tbody></table></div>
 <p><b>관문을 일부러 안 넣었다.</b> 「처음부터도 터지나」를 재는 판인데 관문을 넣으면 그 물음이 사라진다.</p>
@@ -1012,32 +1025,40 @@ clip_grad_norm_(..., 1.0) 통과 후
 <h3>이 짝은 «한 칸» 이 아니다</h3>
 <p><b>GPU 가 갈렸다.</b> <code>fs1</code> 은 <code>cuda:0</code>, <code>fs2</code> 는 <code>cuda:1</code> 이고 저장된 설정에 <code>agent.device</code> 와 <code>env.sim.device</code> 가 그대로 적혀 있다. <code>CRITERIA.md:495</code> 가 「자식끼리 비교하는데 GPU 가 갈려 있는 것」을 금지한다. astra 와 fable 이 독립으로 같은 것을 잡았다.</p>
 <p><b>판 «안에서»</b> sim 과 ppo 는 일치한다 (fs1 둘 다 <code>cuda:0</code> · fs2 둘 다 <code>cuda:1</code>). 2026-09-23 에 찾은 「한 학습에 장치가 둘」 문제는 여기 없다.</p>
-<p><b>남은 것은 판끼리의 차이다.</b> 그리고 <code>CRITERIA.md:544</code> 가 「GPU 차이의 크기 · 아직 재지 않았습니다 · <span class="ev ev-todo">미측정</span>」이라고 적어 두었다. 그래서 이 짝이 끝나면 <b>장치를 바꾼 짝을 더 돌려</b> 2 x 2 로 갈라 낸다. 그때까지 이 짝의 보상 대비는 <b>장치 효과를 포함한 값</b>이다.</p>
+<p><b>남은 것은 판끼리의 차이다.</b> 그런데 여기서 이 세션이 또 틀렸다.</p>
+<p><code>CRITERIA.md:544</code> 의 「GPU 차이의 크기 · 아직 재지 않았습니다」를 그대로 믿고 「미측정」이라고 적었는데, <b>후속 실측이 이미 있다</b> (astra 2 회차가 체크포인트를 직접 열어 확인했다).</p>
+<div class="tw"><table><thead><tr><th>대조</th><th>결과</th></tr></thead><tbody><tr><td><code>v2b-r</code> 대 <code>v2b-p11</code> (시드 42 · sim·PPO 를 함께 0 -&gt; 1)</td><td><b>공통 체크포인트 121 개에서 모델·optimizer 텐서가 전부 같다</b></td></tr><tr><td><code>v2b-s</code> 대 <code>v2b-s2</code> (시드 43 · sim1·PPO0 두 실행)</td><td>공통 체크포인트 67 개 텐서 동일 · 마지막 번호도 둘 다 1670</td></tr></tbody></table></div>
+<p><b>곧 sim 과 PPO 가 «같은 장치에 함께» 있으면 번호를 옮겨도 저장 상태가 같았다.</b> <code>fs1</code> · <code>fs2</code> 가 바로 그 배치다 (각각 sim0·PPO0 · sim1·PPO1).</p>
+<p><b>그래도 장치를 바꾼 짝은 돌린다.</b> 위 실측은 resume 계보의 조건이고 <b>처음부터 학습에서도 같은지는 미확인</b>이기 때문이다.</p>
+<p>(기존 보고서의 「파일 해시까지 같다」는 틀렸다. <code>model_3000.pt</code> 의 SHA-256 은 <code>v2b-r</code> 이 <code>8931d8a1...</code>, <code>v2b-p11</code> 이 <code>1e70ab6f...</code> 로 다르다. <b>직렬화된 파일 바이트의 동일성과 CPU 로 읽은 텐서의 동일성은 다르다.</b>)</p>
 </section>
-<section id="s15"><span id="14"></span><h2>14. 이 문서가 「미확인」으로 남기는 것</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>우리 v2b 지형 여덟에서 처음부터가 안 터지나</td><td>fs1 · fs2 가 재는 것이다</td></tr><tr><td>4500 판이 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td><code>max_init_terrain_level</code> 2 가 처음부터에 맞나</td><td>NVIDIA 값은 <code>None</code> 이다. 별도 실험</td></tr><tr><td><code>lin_vel_y</code> 를 (0,0) 으로 닫은 것이 옳은가</td><td>「횡보행 수요가 낮고 손잡이를 늘리면 원인 분리가 흐려진다」가 적힌 이유다. 열어 본 적은 <b>없다</b></td></tr><tr><td><b>GPU 차이의 크기</b></td><td><code>CRITERIA.md:544</code> 가 「아직 재지 않았습니다」로 둔 칸이다. 장치를 바꾼 짝이 잰다</td></tr><tr><td>초기 난이도 2 · 5 · <code>None</code> 중 무엇이 나은가</td><td>2 는 「학습 가능성을 지키는 장치」로 적혀 있다. 비교한 적은 <b>없다</b></td></tr><tr><td>축 2 의 <code>turn</code> 문턱을 n=64 에서 판정하는 것</td><td>아래 15 절</td></tr></tbody></table></div>
+<section id="s16"><span id="14"></span><h2>14. 이 문서가 「미확인」으로 남기는 것</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>왜</th></tr></thead><tbody><tr><td>우리 v2b 지형 여덟에서 처음부터가 안 터지나</td><td>fs1 · fs2 가 재는 것이다</td></tr><tr><td>4500 판이 수렴에 충분한가</td><td>곡선을 봐야 한다</td></tr><tr><td>처음부터가 resume 성적에 도달하나</td><td>도달 못 할 수도 있다. 그러면 그것이 결과다</td></tr><tr><td><code>max_init_terrain_level</code> 2 가 처음부터에 맞나</td><td>NVIDIA 값은 <code>None</code> 이다. 별도 실험</td></tr><tr><td><code>lin_vel_y</code> 를 (0,0) 으로 닫은 것이 옳은가</td><td>「횡보행 수요가 낮고 손잡이를 늘리면 원인 분리가 흐려진다」가 적힌 이유다. 열어 본 적은 <b>없다</b></td></tr><tr><td><b>처음부터 학습에서의 GPU 효과</b></td><td>resume 계보에서는 sim·PPO 동거 조건에서 텐서가 같았다 (체크포인트 121 개). 처음부터에서도 같은지는 <b>미확인</b>. 장치를 바꾼 짝이 잰다</td></tr><tr><td>초기 난이도 2 · 5 · <code>None</code> 중 무엇이 나은가</td><td>2 는 「학습 가능성을 지키는 장치」로 적혀 있다. 비교한 적은 <b>없다</b></td></tr><tr><td>축 2 의 <code>turn</code> 문턱을 n=64 에서 판정하는 것</td><td>아래 15 절</td></tr></tbody></table></div>
 </section>
-<section id="s16"><span id="15"></span><h2>15. 남아 있는 판정 문제 · 문턱이 잡음보다 좁다</h2>
+<section id="s17"><span id="15"></span><h2>15. 남아 있는 판정 문제 · 문턱이 잡음보다 좁다</h2>
 <p><code>v2g2-feetair01</code> 이 축 2 에서 못 넘는 유일한 칸이 <code>turn/fell_ratio</code> 다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>문턱     &lt;= 0.10   (verdict_manifest.py)
 관측     7 / 64 = 0.1094
 Wilson 95 %  [0.0540, 0.2090]   &lt;- 문턱 0.10 이 «구간 안» 에 있다</pre></div>
-<p>환경이 64 대라 눈금이 1/64 = 0.0156 이다. 문턱 근처에서 나올 수 있는 값이 6/64(통과) 와 7/64(미달) <b>둘뿐이고 한 판 차이</b>다. 그리고 관문은 신뢰구간 없는 딱딱한 부등호다.</p>
-<p><b>곧 「미달」이라고 적힌 것 자체가 측정 한계일 수 있다.</b> 그리고 참값이 0.0907 ~ 0.1092 안에 있으면 <b>n 을 4096 으로 올려도 안 갈린다.</b></p>
-<p>이것은 측정이 아니라 <b>문턱 설계</b>의 문제다.</p>
+<p>환경이 64 대라 눈금이 1/64 = 0.0156 이다. 6/64(통과) 와 7/64(미달) 은 <b>문턱 양옆의 인접값</b>이고 한 판 차이다. 그리고 관문은 신뢰구간 없는 딱딱한 부등호다.</p>
+<p><b>곧 「미달」이라고 적힌 것 자체가 측정 한계일 수 있다.</b></p>
+<p>n=4096 에서 구간이 문턱을 포함하는 <b>관측 낙상 수</b>는 372 ~ 447 이다. 이것은 <b>관측값의 띠</b>이고 참값의 영구 판정 불가 구간이 아니다 (astra 2 회차 정정).</p>
+<p>이것은 <b>문턱 설계</b>와 <b>표본 설계</b>가 함께 걸린 문제다. 불확실성 표시, 표본 수, 독립성, 목표 정밀도를 같이 봐야 한다 (astra 2 회차 지적).</p>
 <p><b>「관문을 느슨하게 만드는 일」이라고 적었던 것은 절반이 틀렸다</b> (fable 지적). 상한 규칙은 통과를 <b>어렵게</b> 만든다. n=64 에서 <code>0/64</code> 의 Wilson 상한이 0.0566 이라, <code>stop</code> 과 <code>hold</code> 의 문턱 <b>0.03 은 어떤 정책도 넘을 수 없게 된다.</b> 곧 이 변경은 완화가 아니라 <b>판정 자체를 다시 설계하는 일</b>이다.</p>
 <p>그래서 독립 검증에 넘겼다 (<code>inbox/jay/20260927-methodology/TASK-verify-scratch.md</code> Q4 · <code>TASK-verify-scratch-2.md</code> Q7).</p>
 </section>
-<section id="s17"><span id="16"></span><h2>16. 되돌아보면 반복된 실수 한 가지</h2>
+<section id="s18"><span id="16"></span><h2>16. 되돌아보면 반복된 실수 한 가지</h2>
 <p>전환 여덟 중 <b>다섯</b>이 같은 모양이었다.</p>
 <blockquote><p><b>기본값으로 들어온 설정을 의심하지 않았다.</b></p></blockquote>
-<p><code>ang_vel_z</code> (0,0) 이 회전을 죽이는 것도, <code>rails</code> 가 평가와 겹치는 것도, <code>learning_rate</code> 가 fine-tuning 전용인 것도, <code>max_init_terrain_level</code> 이 2 인 것도, <code>resume</code> 자체도 그랬다. <b>오류를 내지 않고 조용히 틀린 값</b>들이다.</p>
+<p>다만 이것들은 <b>성격이 다르다.</b> 섞어서 「전부 틀린 값」으로 부르면 안 된다 (astra 2 회차 지적).</p>
+<div class="tw"><table><thead><tr><th>성격</th><th>무엇</th></tr></thead><tbody><tr><td><b>과제와 안 맞은 설정</b></td><td><code>ang_vel_z</code> (0,0) 이 회전을 죽였다</td></tr><tr><td><b>평가 노출 중복</b></td><td><code>rails</code> 가 학습과 평가에 둘 다 있다</td></tr><tr><td><b>최적성 미확인인 학습 선택</b></td><td><code>learning_rate</code> 1e-4 · <code>max_init_terrain_level</code> 2</td></tr><tr><td><b>팀장 확정 결정</b></td><td><code>resume</code> · <code>docs/DECISIONS.md</code> 09-02. <b>오류라는 근거가 없다</b></td></tr></tbody></table></div>
+<p>공통점은 「틀렸다」가 아니라 <b>「오류를 내지 않아서 아무도 다시 안 봤다」</b> 이다.</p>
 <p>그래서 이 계보에서 배운 규칙은 이것이다.</p>
 <blockquote><p>실험이 안 될 때 <b>판끼리 다른 것</b>만 보지 않는다.
 <b>모든 판에 똑같이 있는 것</b>을 한 번은 의심한다.</p></blockquote>
 </section>
-<section id="s18"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇을</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 팀장 지시 「계보 흐름, 어떻게 가설 세우고 학습하고 문제제기까지 해서 fs1·fs2 까지 진행되었는지 다른 사람들도 볼 수 있게」</td><td>설계 문서 여덟 · 소스 실측</td></tr></tbody></table></div>
+<section id="s19"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇을</th><th>근거</th></tr></thead><tbody><tr><td>v1.1</td><td>2026-09-28</td><td><b>astra 2 회차 지적 24 건 중 사실 오류와 인과 단정을 고쳤다.</b> 가장 큰 것은 「GPU 효과 미측정」이 틀렸다는 것이다. <code>v2b-r</code> 대 <code>v2b-p11</code> 의 공통 체크포인트 121 개에서 텐서가 전부 같았다. <code>CRITERIA.md:544</code> 를 그대로 믿은 것이 잘못이었다. 그 밖에 노출 구조·「지배」·「가장 좋다」를 가설과 범위로 내렸고, 실패를 「로그 9 건 · 실행 이름 8 개」로 병기했고, NaN 단정을 「개별 원인 미확인」으로 물렸다. <b>남은 지적은 0-1 절에 드러냈다</b></td><td><code>VERIFY-scratch-astra-2.md</code> 4 절 · 세션 재확인</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 팀장 지시 「계보 흐름, 어떻게 가설 세우고 학습하고 문제제기까지 해서 fs1·fs2 까지 진행되었는지 다른 사람들도 볼 수 있게」</td><td>설계 문서 여덟 · 소스 실측</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1085,5 +1106,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpuaxh309b</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpyo4k7pw6</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
