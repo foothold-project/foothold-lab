@@ -316,6 +316,20 @@ def _kat_cells():
 
 _SVG_OPEN = re.compile(r'^\s*<svg[\s>]')
 _HTML_COMMENT = re.compile(r'^\s*<!--.*-->\s*$')
+
+# ★ 2026-09-28. 셋째를 연다. `<details>` 와 `<summary>` 다.
+#
+#   팀장 지시: 「중간에 > 접기로 왜 랜덤 시드 다른 거에서 학습이 터졌고
+#   어떻게 해결하려고 했었는지도 참고로 적어주면 좋을 것 같다
+#   (보여주기용x, 실험 기록용o)」.
+#
+#   기록이되 첫눈에는 안 보여야 하는 덩이가 있다. 그것을 브라우저가 이미
+#   갖고 있는 태그로 한다. 자바스크립트가 필요 없다.
+#
+#   **속성을 하나도 안 받는다.** `<details>` · `</details>` ·
+#   `<summary>...</summary>` 세 모양만이다. 속성을 열면 `onclick` 이
+#   들어올 자리가 생긴다. 여는 문을 넓히지 않는다.
+_DETAILS = re.compile(r'^\s*(?:<details>|</details>|<summary>.*</summary>)\s*$')
 # 통과시키더라도 실행되는 것은 막는다. 도식에 script 나 이벤트 핸들러가 있을 이유가 없다.
 _SVG_UNSAFE = re.compile(r'<\s*script|\son[a-z]+\s*=|javascript:', re.I)
 
@@ -384,6 +398,14 @@ def render(md):
                 i = j
                 continue
             # 닫는 태그가 없거나 안전하지 않으면 지금까지처럼 본문으로 떨어뜨린다.
+
+        # ── 접기 (details · summary) ──
+        #   한 줄에 하나씩 온 것만 받는다. 안에 든 마크다운은 아래에서
+        #   여느 본문처럼 변환된다.
+        if _DETAILS.match(L) and not _SVG_UNSAFE.search(L):
+            out.append(L.strip())
+            i += 1
+            continue
 
         # ── 표식 주석 줄 ──
         if _HTML_COMMENT.match(L):

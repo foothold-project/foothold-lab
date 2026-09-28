@@ -70,6 +70,11 @@ p.add_argument("--slowmo", type=int, default=1, choices=(1, 2, 4),
 p.add_argument("--horizon_dist", type=float, default=180.0)
 p.add_argument("--decel_start", type=float, default=-1.0, help="이 초부터 감속을 시작한다")
 p.add_argument("--decel_secs", type=float, default=2.0, help="감속에 걸리는 시간")
+p.add_argument("--max_init_level", type=int, default=None,
+               help="지형 «행» 을 얼마나 퍼뜨릴까. 평가 설정은 0 이라 모든 로봇이 "
+                    "0 행 한 줄에 몰린다 (rough6_env_cfg.py:139 · "
+                    "generalization_env_cfg.py:174). 대군 촬영처럼 여러 행에 "
+                    "걸치게 하려면 num_rows-1 을 준다. 안 주면 설정 그대로다")
 p.add_argument("--terrain_rows", type=int, default=8)
 p.add_argument("--terrain_cols", type=int, default=8)
 p.add_argument("--cut", required=True, choices=("A", "B", "F"))
@@ -182,6 +187,12 @@ def configure(cfg, agent):
             for v in keep.values(): v.proportion = 1.0
             tg.sub_terrains = keep
         tg.num_rows = args.terrain_rows; tg.num_cols = args.terrain_cols
+        # 평가 설정은 `max_init_terrain_level = 0` 이다. 난이도를 행이 아니라
+        # `--difficulty` 로 주기 때문이고 평가에서는 그것이 옳다. 그런데 대군을
+        # 찍을 때는 **로봇 전부가 0 행 한 줄에 몰린다.** 실측으로 확인했다
+        # (`[지형] ... x -76.0~-76.0` · 4096 마리가 8 m 폭 한 줄에 섰다).
+        if args.max_init_level is not None:
+            cfg.scene.terrain.max_init_terrain_level = args.max_init_level
         tg.curriculum = False
         # curriculum 이 꺼져 있으면 IsaacLab 은 difficulty_range 에서 타일마다
         # uniform 으로 뽑는다 (terrain_generator.py:229 실측). 범위를 (d, d) 로
