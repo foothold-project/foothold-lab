@@ -19,12 +19,16 @@
 #
 # 몇 판이면 될지는 실측 성공률에서 나온다 (`sweep_long.csv` · 100 판씩).
 #
-#   지형 · 난이도 · 속도            판    성공률   원하는 것   기대 시도
-#   stepping_stones d0.5 1.0    v1     0.0 %   실패        1
-#   stepping_stones d0.5 1.0    v2    24.0 %   실패        1 ~ 2
-#   stepping_stones d0.5 1.0    v2    24.0 %   성공        4 ~ 8
-#   pyramid_stairs_inv d0.9 1.5 v2     3.0 %   실패        1
-#   gap d0.5 1.0                D     33.3 %   실패        1 ~ 2
+#   지형 · 난이도 · 속도            판   종합   전진   원하는 것   실제 타수
+#   stepping_stones d0.5 1.0    v1    0 %    0 %   실패        1 (시드 42)
+#   stepping_stones d0.5 1.0    v2   24 %   45 %   실패        1 (시드 42)
+#   stepping_stones d0.5 1.0    v2   24 %   45 %   성공        **0 / 12**
+#   pyramid_stairs_inv d0.9 1.5 v2    3 %   99 %   실패        (rough6 로 고친 뒤)
+#   gap d0.5 1.0                D    33 %      -   실패        5 (시드 46)
+#
+# **성공률은 «종합» 이 아니라 «전진» 과 견주어야 한다.** 이 스크립트의
+# 판정은 전진 거리 하나이고, 종합은 생존 · 추종 · 방향까지 and 로 묶은
+# 값이다. `stepping_stones` v2 는 종합 24 % 인데 전진만 보면 45 % 다.
 #
 # **`stepping_stones` v2 의 8.0 % 는 세 속도 평균이다.** 이 컷은 1.0 m/s 라
 # 그 칸의 값인 24.0 % 로 읽어야 한다 (0.5 와 1.5 는 둘 다 0.0 % 다).
@@ -53,9 +57,9 @@ for f in "$V1" "$D" "$V2"; do
 done
 
 # 시드를 훑어 한 판을 찍는다.
-#   이름 · 체크포인트 · 지형 · 난이도 · 속도 · 시간 · 원하는것(fail|pass) · 제목
+#   이름 · 체크포인트 · 지형 · 집합 · 난이도 · 속도 · 시간 · 원하는것(fail|pass) · 제목
 hunt() {
-  local name="$1" ck="$2" terr="$3" diff="$4" vx="$5" dur="$6" want="$7" title="$8"
+  local name="$1" ck="$2" terr="$3" tset="$4" diff="$5" vx="$6" dur="$7" want="$8" title="$9"
   local final="$OUT/$name"
 
   if ls "$final"/*.mp4 >/dev/null 2>&1; then
@@ -69,7 +73,7 @@ hunt() {
 
     "$PY" sim/eval/record_terrain_demo.py \
       --checkpoint "$ck" --output_dir "$o" \
-      --terrain "$terr" --terrain_set unseen10 --difficulty "$diff" \
+      --terrain "$terr" --terrain_set "$tset" --difficulty "$diff" \
       --cut A --view track_high --title "$title" \
       --num_envs 1 --columns 1 --rows 1 --spacing 3.0 \
       --width 1920 --height 1080 --seed "$seed" \
@@ -136,11 +140,25 @@ PYJUDGE
 
 mkdir -p "$OUT"
 
-hunt "ss-v1-fail"   "$V1" stepping_stones    0.5 1.0 6.0 fail "v1 · stepping_stones · 1.0 m/s"
-hunt "ss-v2-fail"   "$V2" stepping_stones    0.5 1.0 6.0 fail "v2 · stepping_stones · 1.0 m/s"
-hunt "ss-v2-pass"   "$V2" stepping_stones    0.5 1.0 6.0 pass "v2 · stepping_stones · 1.0 m/s"
-hunt "stairsinv-v2-fail" "$V2" pyramid_stairs_inv 0.9 1.5 6.0 fail "v2 · stairs_inv d0.9 · 1.5 m/s"
-hunt "gap-D-fail"   "$D"  gap                0.5 1.0 6.0 fail "D · gap · 1.0 m/s"
+# **집합을 틀리면 조용히 안 난다.** `pyramid_stairs_inv` 는 «학습» 지형
+# 여섯 종(rough6) 쪽이고 `unseen10` 에 없다. unseen10 으로 주면 녹화기가
+# Isaac 을 띄운 «뒤» 에 「모르는 지형」으로 죽어서 16 초를 쓰고 산출물만
+# 없다. 시드 열둘을 그렇게 날렸다 `확인됨`.
+hunt "ss-v1-fail"       "$V1" stepping_stones    unseen10 0.5 1.0 6.0 fail "v1 · stepping_stones · 1.0 m/s"
+hunt "ss-v2-fail"       "$V2" stepping_stones    unseen10 0.5 1.0 6.0 fail "v2 · stepping_stones · 1.0 m/s"
+hunt "stairsinv-v2-fail" "$V2" pyramid_stairs_inv rough6 0.9 1.5 6.0 fail "v2 · stairs_inv d0.9 · 1.5 m/s"
+hunt "gap-D-fail"       "$D"  gap                unseen10 0.5 1.0 6.0 fail "D · gap · 1.0 m/s"
+
+# **`ss-v2-pass` 는 여기서 뺀다.** 시드 열둘을 훑어 0/12 였다. 그 칸의
+# 실측 «전진» 성공률이 45 % 이므로 0/12 는 확률 0.0008 이다. 잣대(통과선
+# 3.0 m · 6.0 초)와 스폰(±0.10 m · ±5 도)이 스윕과 같은 것을 회차
+# manifest 로 확인했으니 **남은 차이를 먼저 찾아야 한다.** 찾기 전에 컷을
+# 걸면 「v2 는 못 건넌다」를 자리 하나로 말하게 된다.
+#
+#   스윕      지형마다 env 10 개 · terrains all · 100 판
+#   이 촬영   env 1 개 · 지형 하나로 걸러 8x8 격자 · 언제나 칸 (0,0)
+#
+# 다음 회차에서 env 를 여럿 두고 «건너는 env» 를 따라가는 길을 만든다.
 
 say "끝"
 ls -d "$OUT"/*/ 2>/dev/null | grep -v '\.try' | while read -r d; do
