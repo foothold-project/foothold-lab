@@ -304,7 +304,18 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     const recent = order.slice(-2);
     const mainOf = v => (mans[v] && mans[v].main_model) || null;
     const picks = [];
-    picks.push((index.latest && index.latest + ':baseline') || null);
+
+    /* **기준선은 "최신판 자신"이 아니라 baseline 모델을 가진 가장 최근 판**
+     * 에서 찾는다. 판이 늘어도 baseline(NVIDIA)은 계속 첫 판에만 있고
+     * 새 판은 그 클립을 재사용한다 — `index.latest` 는 판이 쌓일수록 그
+     * 모델을 «안 가질» 가능성이 높아진다. `index.latest + ':baseline'`
+     * 로 고정하면 v2 가 올라간 순간 이 자리가 빈 채로 열린다 (확인됨
+     * 2026-09-28 · v2 manifest 는 foothold-v2 하나뿐이다). 뒤에서부터
+     * 훑어 처음 만나는 것을 쓴다 — «가장 최근에 그 모델을 실은 판». */
+    const baselineVersion = [...order].reverse()
+      .find(v => mans[v] && mans[v].models && ('baseline' in mans[v].models));
+    picks.push(((baselineVersion || index.latest) &&
+                (baselineVersion || index.latest) + ':baseline') || null);
 
     if (recent.length >= 2) {
       picks.push(recent[0] + ':' + mainOf(recent[0]));
