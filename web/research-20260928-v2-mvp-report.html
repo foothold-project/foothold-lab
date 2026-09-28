@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f41867d3').then(function(r){
+    fetch('/assets/search-index.json?v=f4a6c06c').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -873,7 +873,7 @@ body>*{flex-shrink:0}
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>v2 종합보고서 · 처음 보는 지형에서 무엇을 얻었나</h1>
   <p class="lede">어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 stepping_stones 하나다</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v2.5</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 23:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-v2-mvp-report.md</span></div><div><span class="k">증거</span><span class="v">확인 5 · 추측 0 · 미측정 4</span></div></div>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.6</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 23:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-v2-mvp-report.md</span></div><div><span class="k">증거</span><span class="v">확인 8 · 추측 0 · 미측정 4</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
@@ -882,7 +882,7 @@ body>*{flex-shrink:0}
 근거: 실측 (<code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code> 1,182 줄 · 지형마다 속도마다 100 에피소드) · 각 판의 학습 시각 저장본 <code>params/env.yaml</code> 전수 · Isaac Lab 과 rsl_rl 소스 직접 확인
 요지: 어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 <code>stepping_stones</code> 하나다
 상태: 확정
-판: v2.5</p></blockquote>
+판: v2.6</p></blockquote>
 </section>
 <section id="s1"><span id="0"></span><h2>0. 이번에 한 일</h2>
 <p><code>foothold-v2</code> 로 <b><code>v2g2-feetair01</code> iter3000</b> 을 배포한다. 이 문서는 그 판이 무엇을 할 수 있고 무엇을 못 하는지, 그리고 <b>어떤 물음을 거쳐 거기에 닿았는지</b>를 적는다.</p>
@@ -991,6 +991,23 @@ rel_standing_envs 0.0        -&gt; 0.02</pre></div>
 <p><b>문제 파악.</b> <b>노출 구조</b>다. 명령을 넓히면 로봇이 틈을 향해 서지 않는다. 그러면 커리큘럼이 틈 난이도를 올려 주지 않고, <b>안 만난 것은 못 배운다.</b></p>
 <p><code>terrain_levels_vel</code> 이 <b>직선 거리</b>로 승급을 정하는데 (<code>curriculums.py:47-51</code> · size/2 = 4 m), 로봇이 옆으로 돌면 그 거리가 안 늘어난다.</p>
 <p><b>학습량 대조도 실제 노출 계측도 아직 안 했다</b> <span class="ev ev-todo">미확인</span>.</p>
+<h4>같은 <code>gap</code> 을 세 판이 어떻게 건너나</h4>
+<p><b>볼 것: 같은 <code>gap</code> 을 세 판이 어떻게 건너는가.</b> 명령을 열었더니 (<code>foothold-v1</code> -&gt; <code>D</code>) 틈을 잃었고, <code>omni_gap</code> 을 넣었더니 (<code>D</code> -&gt; <code>v2</code>) 되찾았다. <code>gap</code> 성공률이 <b>86.0 -&gt; 33.3 -&gt; 99.7</b> 이다.</p>
+<p><b>그 수는 난이도 0.5 의 «세 속도 평균» 이다.</b> 세 컷은 전부 난이도 0.5 · <b>1.0 m/s 한 칸</b>이고, 그 칸만 보면 <code>foothold-v1</code> 도 <code>v2</code> 도 100 % 다 (<code>sweep_long.csv</code> 실측). 곧 <b>이 컷들은 하락을 숫자로 보이는 자리가 아니라 건너는 «방식» 이 어떻게 달라졌는지를 보이는 자리다.</b></p>
+<p><code>foothold-v1</code> 의 <code>gap</code> 세 칸을 펴 보면 <b>0.5 m/s 90 % · 1.0 m/s 100 % · 1.5 m/s 68 %</b> 이고 평균이 86.0 이다. 곧 평균을 끌어내린 것은 <b>1.5 m/s</b> 다. <code>v2</code> 는 같은 세 칸이 100 · 100 · 99 다.</p>
+<blockquote><p><b>이 세 컷은 다 «건너는» 판이다</b> <span class="ev ev-ok">확인됨</span>. trace 로 재니 전진이 각각
+5.68 m · 5.60 m · 5.87 m 로 통과선 3 m 를 넘었다. 하락을 <b>장면으로</b> 보려면
+실패하는 판을 골라 다시 구워야 한다. 그것은 다음 회차로 적어 둔다.
+지금 이 셋이 보여 주는 것은 <b>건너는 «방식»</b> 이다.</p>
+<p>지형은 셋 다 평가 지형 <code>gap</code> 이다. <b><code>omni_gap</code> 컷이 아니다.</b> <code>omni_gap</code> 은
+v2 의 «학습» 지형이라 평가 목록에 없고 컷도 없다. 생김새는 그림 1 의
+<code>gap</code> 과 <code>floating_ring</code> 타일로 견준다.</p></blockquote>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v1.jpg" src="assets/video/v2/lineage-gap-v1.mp4?v=6706c33d"></video><figcaption>gap · foothold-v1 · 난이도 0.5 · 1.0 m/s. 전진 5.68 m 로 건넌다</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-D.jpg" src="assets/video/v2/lineage-gap-D.mp4?v=f60b4204"></video><figcaption>gap · D · 같은 칸. 명령을 연 판. 이 판도 전진 5.60 m 로 건넌다. 평균 33.3 % 는 세 속도를 합친 값이다</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v2.jpg" src="assets/video/v2/lineage-gap-v2.mp4?v=da2d630c"></video><figcaption>gap · v2 · 같은 칸. 전진 5.87 m. omni_gap 으로 학습한 판이지 지형이 omni_gap 인 것은 아니다</figcaption></figure></p>
+<p><b>그런데 v2 가 학습한 것은 <code>gap</code> 이 아니라 <code>omni_gap</code> 이다.</b> 둘은 함수가 다르다. 지형 자체의 생김새는 <b>그림 1</b> 에서 볼 수 있다.</p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th><th>생김새</th></tr></thead><tbody><tr><td>평가의 <code>gap</code></td><td>그림 1 · <code>gap</code> 타일</td><td>사각 구멍이 바닥에 뚫려 있다 (<code>MeshGapTerrainCfg</code>)</td></tr><tr><td>v1 이 학습한 <code>forward_gap</code></td><td>평가 목록에 없다</td><td>스폰 <b>+x 쪽에만</b> 틈이 있다</td></tr><tr><td>v2 가 학습한 <code>omni_gap</code></td><td>평가 목록에 없다</td><td>스폰을 <b>둘러싼 고리</b>다 (<code>mode=ring</code>)</td></tr><tr><td>고리의 눈으로 보는 것</td><td>그림 1 · <code>floating_ring</code> 타일</td><td>사각 테두리가 스폰을 감싼 모양</td></tr></tbody></table></div>
+<p><code>forward_gap</code> 은 앞으로만 가면 되는 틈이라 <b>명령을 열면 옆·뒤에서 틈을 만난다.</b> 그것이 <code>D</code> 에서 33.3 % 로 떨어진 까닭이고, <code>omni_gap</code> 으로 바꾼 것이 99.7 % 로 되돌린 까닭이다.</p>
 <h3>6-5. E · F · G · 설정 하나가 두 일을 한다</h3>
 <p><b>문제 파악.</b> <code>heading</code> <b>하나가 두 일</b>을 한다.</p>
 <div class="tw"><table><thead><tr><th><code>heading</code> 이 하는 일</th><th>무엇을 정하나</th></tr></thead><tbody><tr><td><b>노출</b></td><td>로봇이 틈을 향해 서는가</td></tr><tr><td><b>방향 유지 압력</b></td><td>진로를 얼마나 지키는가</td></tr></tbody></table></div>
@@ -1037,6 +1054,12 @@ rel_standing_envs 올림  일부만 완전 정지 · 나머지는 0.4 ~ 1.5 m/s 
 <p><b>검증</b></p>
 <div class="tw"><table><thead><tr><th></th><th>iter 1500</th><th>iter 2000</th><th>iter 2500</th><th>iter 3000</th></tr></thead><tbody><tr><td>48칸 평균</td><td>93.08</td><td>93.31</td><td><b>93.60</b></td><td>93.44</td></tr><tr><td>축 1 진짜 하락</td><td><b>0</b></td><td><b>0</b></td><td><b>0</b></td><td><b>0</b></td></tr><tr><td>축 2 회전 낙상</td><td><b>0.0625</b></td><td><b>0</b></td><td>0.2969</td><td><b>0.0469</b></td></tr></tbody></table></div>
 <p><b>한 칸이 두 축을 같이 올렸다.</b> 회전 낙상 0.9219 -&gt; 0.0625.</p>
+<h4>그 한 칸을 장면으로</h4>
+<p><b>볼 것: <code>rel_standing_envs</code> 한 칸을 0 에서 0.1 로 올린 것이 회전을 살린다.</b></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2a-iter1500.jpg" src="assets/video/v2/turnfall-v2a-iter1500.mp4?v=a70af92f"></video><figcaption>v2a iter1500 · turn. 64 판 중 59 판이 옆으로 자빠진다</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2b-iter1500.jpg" src="assets/video/v2/turnfall-v2b-iter1500.mp4?v=873a454e"></video><figcaption>v2b iter1500 · turn. 같은 명령에서 네 발로 버티며 돈다. 64 판 중 4 판만 넘어진다</figcaption></figure></p>
+<p><b><code>rel_standing_envs</code> 한 칸</b>만 다른 두 판이다. 숫자로는 0.9219 대 0.0625 인데 화면에서는 옆으로 자빠지는 것과 네 발로 버티며 도는 것으로 갈린다.</p>
+<p><b>판정에는 이 컷의 수를 쓰지 않는다.</b> <code>--scenario turn</code> 만 따로 돌리면 <code>stop -&gt; ramp -&gt; turn -&gt; hold</code> 를 이어 돌 때와 난수 소비가 달라 0.8438 대 0.0312 가 나온다. <b>판정 값은 네 시나리오를 이어 돈 것</b>이고 이 컷은 <b>장면으로 보여 주는 용도</b>다.</p>
 <h3>6-10. v2b 의 자식들 · <code>feet_air_time</code> 을 왜 건드렸나</h3>
 <p><b>문제 파악.</b> 우리 기획서가 이미 적어 둔 것이다.</p>
 <blockquote><p>현재 정책은 관절이 <b>63.7 cm 까지 발을 들 수 있는데 3.25 cm 만 든다.</b>
@@ -1227,29 +1250,17 @@ random_rough          0.15      rails                 0.10</pre></div>
 <p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-turn-v1.jpg" src="assets/video/v2/axis2-turn-v1.mp4?v=b0eb2723"></video><figcaption>turn · foothold-v1. <b>4.9 초에서 끝난다.</b> 잘린 것이 아니라 넘어져서 끝난 것이다 (낙상 1.0000 · 64 판 전부)</figcaption></figure></p>
 <p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-turn-v2.jpg" src="assets/video/v2/axis2-turn-v2.mp4?v=fd16cb6f"></video><figcaption>turn · foothold-v2. 계단 다섯을 다 돈다 (낙상 0.1094)</figcaption></figure></p>
 <p>세 컷의 길이가 다른 것이 <b>결과 그 자체다.</b> <code>stop</code> 10 초 · <code>hold</code> 20 초 · <code>turn</code> 18 초가 규격인데 <code>foothold-v1</code> 의 <code>turn</code> 만 4.9 초에서 멈춘다.</p>
-<h3>그 한 칸을 왜 못 넘나 · 회전 낙상</h3>
-<p><b>볼 것: <code>rel_standing_envs</code> 한 칸을 0 에서 0.1 로 올린 것이 회전을 살린다.</b></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2a-iter1500.jpg" src="assets/video/v2/turnfall-v2a-iter1500.mp4?v=a70af92f"></video><figcaption>v2a iter1500 · turn. 64 판 중 59 판이 옆으로 자빠진다</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2b-iter1500.jpg" src="assets/video/v2/turnfall-v2b-iter1500.mp4?v=873a454e"></video><figcaption>v2b iter1500 · turn. 같은 명령에서 네 발로 버티며 돈다. 64 판 중 4 판만 넘어진다</figcaption></figure></p>
-<p><b><code>rel_standing_envs</code> 한 칸</b>만 다른 두 판이다. 숫자로는 0.9219 대 0.0625 인데 화면에서는 옆으로 자빠지는 것과 네 발로 버티며 도는 것으로 갈린다.</p>
-<p><b>판정에는 이 컷의 수를 쓰지 않는다.</b> <code>--scenario turn</code> 만 따로 돌리면 <code>stop -&gt; ramp -&gt; turn -&gt; hold</code> 를 이어 돌 때와 난수 소비가 달라 0.8438 대 0.0312 가 나온다. <b>판정 값은 네 시나리오를 이어 돈 것</b>이고 이 컷은 <b>장면으로 보여 주는 용도</b>다.</p>
-<h3>계보의 전환점</h3>
-<p><b>볼 것: 같은 <code>gap</code> 을 세 판이 어떻게 건너는가.</b> 명령을 열었더니 (<code>foothold-v1</code> -&gt; <code>D</code>) 틈을 잃었고, <code>omni_gap</code> 을 넣었더니 (<code>D</code> -&gt; <code>v2</code>) 되찾았다. <code>gap</code> 성공률이 <b>86.0 -&gt; 33.3 -&gt; 99.7</b> 이다.</p>
-<p><b>그 수는 난이도 0.5 의 «세 속도 평균» 이다.</b> 세 컷은 전부 난이도 0.5 · <b>1.0 m/s 한 칸</b>이고, 그 칸만 보면 <code>foothold-v1</code> 도 <code>v2</code> 도 100 % 다 (<code>sweep_long.csv</code> 실측). 곧 <b>이 컷들은 하락을 숫자로 보이는 자리가 아니라 건너는 «방식» 이 어떻게 달라졌는지를 보이는 자리다.</b></p>
-<p><code>foothold-v1</code> 의 <code>gap</code> 세 칸을 펴 보면 <b>0.5 m/s 90 % · 1.0 m/s 100 % · 1.5 m/s 68 %</b> 이고 평균이 86.0 이다. 곧 평균을 끌어내린 것은 <b>1.5 m/s</b> 다. <code>v2</code> 는 같은 세 칸이 100 · 100 · 99 다.</p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v1.jpg" src="assets/video/v2/lineage-gap-v1.mp4?v=6706c33d"></video><figcaption>gap · foothold-v1 · 난이도 0.5 · 1.0 m/s. 세 속도 평균 86.0 %</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-D.jpg" src="assets/video/v2/lineage-gap-D.mp4?v=f60b4204"></video><figcaption>gap · D · 같은 칸. 명령을 연 판이다. 세 속도 평균 33.3 %</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v2.jpg" src="assets/video/v2/lineage-gap-v2.mp4?v=da2d630c"></video><figcaption>gap · v2 · 같은 칸. omni_gap 을 넣은 뒤다. 세 속도 평균 99.7 %</figcaption></figure></p>
-<p><b>그런데 v2 가 학습한 것은 <code>gap</code> 이 아니라 <code>omni_gap</code> 이다.</b> 둘은 함수가 다르다. 지형 자체의 생김새는 <b>그림 1</b> 에서 볼 수 있다.</p>
-<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th><th>생김새</th></tr></thead><tbody><tr><td>평가의 <code>gap</code></td><td>그림 1 · <code>gap</code> 타일</td><td>사각 구멍이 바닥에 뚫려 있다 (<code>MeshGapTerrainCfg</code>)</td></tr><tr><td>v1 이 학습한 <code>forward_gap</code></td><td>평가 목록에 없다</td><td>스폰 <b>+x 쪽에만</b> 틈이 있다</td></tr><tr><td>v2 가 학습한 <code>omni_gap</code></td><td>평가 목록에 없다</td><td>스폰을 <b>둘러싼 고리</b>다 (<code>mode=ring</code>)</td></tr><tr><td>고리의 눈으로 보는 것</td><td>그림 1 · <code>floating_ring</code> 타일</td><td>사각 테두리가 스폰을 감싼 모양</td></tr></tbody></table></div>
-<p><code>forward_gap</code> 은 앞으로만 가면 되는 틈이라 <b>명령을 열면 옆·뒤에서 틈을 만난다.</b> 그것이 <code>D</code> 에서 33.3 % 로 떨어진 까닭이고, <code>omni_gap</code> 으로 바꾼 것이 99.7 % 로 되돌린 까닭이다.</p>
 <h3>아직 못 넘는 것 · 되레 나빠진 것</h3>
 <p><b>볼 것: 무엇을 못 하는가.</b> <code>stepping_stones</code> 는 미경험 여덟 중 <b>유일하게 못 넘는다</b> (8.0 %). 디딜 곳이 점점이 떨어져 있어 발을 «어디에» 놓을지가 문제인데, 지금 정책이 지형을 아는 통로는 <code>height_scan</code> 하나다 (11 절).</p>
 <p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/stepping-stones-v2.jpg" src="assets/video/v2/stepping-stones-v2.mp4?v=85275061"></video><figcaption>stepping_stones · foothold-v2 · 1.0 m/s. 100 판 중 8 판만 건넌다</figcaption></figure></p>
 <p>세 속도 전부는 <span class="vlink">갤러리<i>/gallery/</i></span> 에서 <code>stepping_stones</code> 를 고르면 볼 수 있다.</p>
 <p><b>볼 것: 축 1 이 안 재는 자리에서 v2 가 v1 보다 나빠진다.</b> <code>pyramid_stairs_inv</code> 난이도 0.9 · 1.5 m/s 에서 <code>foothold-v1</code> 이 90 % 인데 <code>foothold-v2</code> 는 3 % 다. <b>축 1 은 난이도 0.5 에서만 재므로 이 87 %p 하락은 성적표에 한 줄도 안 나온다.</b></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v1.jpg" src="assets/video/v2/regress-stairsinv-d09-v1.mp4?v=50ed7be7"></video><figcaption>pyramid_stairs_inv d0.9 1.5 m/s · foothold-v1. 90 %</figcaption></figure></p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v2.jpg" src="assets/video/v2/regress-stairsinv-d09-v2.mp4?v=8fa662a2"></video><figcaption>pyramid_stairs_inv d0.9 1.5 m/s · foothold-v2. 3 %. 계단 코에 걸려 넘어진다</figcaption></figure></p>
+<blockquote><p><b>두 컷 다 «건너는» 판이다</b> <span class="ev ev-ok">확인됨</span>. trace 로 재니 전진이 4.56 m 와
+4.46 m 로 둘 다 통과선을 넘었다. 곧 <b>이 컷은 87 %p 하락을 장면으로 보여
+주지 못한다.</b> v2 가 3 % 인 칸이므로 실패하는 판을 골라 다시 굽는 것이
+맞다. 다음 회차로 적어 둔다.</p></blockquote>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v1.jpg" src="assets/video/v2/regress-stairsinv-d09-v1.mp4?v=50ed7be7"></video><figcaption>pyramid_stairs_inv d0.9 1.5 m/s · foothold-v1. 90 % · 이 판은 전진 4.56 m</figcaption></figure></p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v2.jpg" src="assets/video/v2/regress-stairsinv-d09-v2.mp4?v=8fa662a2"></video><figcaption>pyramid_stairs_inv d0.9 1.5 m/s · foothold-v2. 3 % · 다만 이 판은 전진 4.46 m 로 건넌 쪽이다</figcaption></figure></p>
 <h3>학습 진행 · 48.4 초</h3>
 <p>같은 지형 · 같은 카메라에서 <b>정책만 갈아 끼운다.</b> 저장본 열여섯을 고르게 뽑았다 (0 · 200 ~ 2800 · 3000). 각 조각 왼쪽 위에 <code>v2 · iter N</code> 이 붙는다.</p>
 <div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>   0 ~ 12 초   model_0     정속   이어 학습 시작점
@@ -1259,10 +1270,9 @@ random_rough          0.15      rails                 0.10</pre></div>
 <p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/posters/v2-train-progress.jpg" src="assets/video/v2-train-progress.mp4?v=cbd099a2"></video><figcaption>v2 학습 진행 · 저장본 열여섯을 같은 지형 같은 카메라에서 이어 붙인 48.4 초</figcaption></figure></p>
 <p>2,420 장 · 48.4 초 · 검은 장 0. 원본 1080p 는 <code>sim/eval/results/20260928-train-progress/train-progress.mp4</code> 에 있고 여기 실린 것은 720 p 사본이다.</p>
 <h3>여러 험지 위 로봇 무리</h3>
-<p><b>볼 것: 한 마리가 운이 좋았던 것이 아니다.</b> 학습에 쓴 험지 여섯 종 타일 위에 1,024 마리를 한꺼번에 세웠다.</p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/army-wide.jpg" src="assets/video/v2/army-wide.mp4?v=6c78e194"></video><figcaption>험지 여섯 종 위 1,024 마리 · 위에서</figcaption></figure></p>
-<p>전체 컷은 로봇이 점처럼 작다. 그래서 한 구역만 크게 본다.</p>
-<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/army-macro.jpg" src="assets/video/v2/army-macro.mp4?v=ba896f2e"></video><figcaption>같은 판 한 구역 확대</figcaption></figure></p>
+<p><b>볼 것: 타일마다 다른 험지이고 타일마다 무리가 따로 에피소드를 돈다.</b> 학습에 쓴 험지 여섯 종 격자 위에 1,024 마리를 한꺼번에 세웠다.</p>
+<p><figure class="mdimg mdvid"><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/army-terrains.jpg" src="assets/video/v2/army-terrains.mp4?v=de86d3dd"></video><figcaption>험지 여섯 종 격자 위 1,024 마리. 타일마다 지형이 다르고 무리가 각각 돈다</figcaption></figure></p>
+<p><b>앞서 올렸던 두 컷은 버렸다</b> <span class="ev ev-ok">확인됨</span>. 축척을 재니 로봇 0.7 m 가 7 px 과 8 px 이어서 아예 안 보였다 (9.9 px/m · 11.5 px/m). 이 컷은 37.8 px/m 로 로봇이 26 px 이다.</p>
 <p>지형은 <code>rough6</code> 다. <b>우리 학습 지형 여덟 종 중 여섯</b>이고 <code>omni_gap</code> 과 <code>rails</code> 가 빠진다 (집합 등록이 <code>unseen10</code> · <code>rough6</code> 둘뿐이다 · <code>sim/eval/terrains.py:TERRAIN_SETS</code>). 그래서 「학습 지형」이라고 뭉뚱그리지 않고 <b>「학습에 쓴 험지 6 종」</b> 이라고 적는다.</p>
 <h3>한 섹션 확대</h3>
 <p><code>random_rough</code> 난이도 0.5 를 10 초. 갤러리 컷(6 초)보다 길게 두어 <b>걸음 주기와 발 놓는 자리</b>를 볼 수 있게 했다.</p>
@@ -1276,7 +1286,7 @@ random_rough          0.15      rails                 0.10</pre></div>
 <div class="tw"><table><thead><tr><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>스윕 원자료 1,182 줄</td><td><code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code></td></tr><tr><td>난이도 x 속도 요약</td><td>같은 폴더 <code>sweep_matrix.md</code></td></tr><tr><td>지형 x 난이도 (속도별)</td><td>같은 폴더 <code>sweep_terrain_v*.md</code></td></tr><tr><td>빠진 칸</td><td>같은 폴더 <code>MISSING.md</code> · <b>0 건</b></td></tr><tr><td>갤러리 v2</td><td><code>/gallery/</code> 에서 v2 를 고른다</td></tr><tr><td>계보 실측</td><td><code>inbox/jay/20260928-v2-mvp/LINEAGE-FACTS.md</code></td></tr><tr><td>멈출 기준 정본</td><td><code>inbox/jay/20260928-v2-mvp/STOPPING-RULE.md</code> · <b>규칙과 수는 8 절에 본문으로 다 적었다</b></td></tr><tr><td>평가 규격</td><td><a href="research-20260911-eval-protocol-v2.html">평가 프로토콜 정본</a></td></tr><tr><td>계보 전체</td><td><a href="research-20260928-rl-lineage.html">우리는 왜 여덟 번 방향을 틀었나</a></td></tr><tr><td>지형 카탈로그 스틸 16 장</td><td><code>sim/eval/results/20260928-terrain-shots/stills/</code> · 펴기 전후 값은 같은 폴더 <code>index.json</code></td></tr><tr><td>학습 진행 48.4 초</td><td><code>sim/eval/results/20260928-train-progress/train-progress.mp4</code> · 웹 사본 <code>docs/assets/video/v2-train-progress.mp4</code></td></tr><tr><td>한 섹션 확대 10 초</td><td><code>sim/eval/results/20260928-v2-clips/army-section/army-section.hud.mp4</code> · 웹 사본 <code>docs/assets/video/v2-one-section.mp4</code></td></tr><tr><td>확장 축 2 (v2g2)</td><td><code>sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json</code></td></tr></tbody></table></div>
 </section>
 <section id="s16"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v2.5</td><td>2026-09-29</td><td>2 절에 <b>세 속도 평균임과 허브 카드(1.0 m/s 단독)와의 차이</b>를 속도별 표로 밝힘 · 13 절에 <b>HUD 없는 컷 13 편</b>을 전수로 적음 · 허브 첫 화면이 정정 전 10종 대신 <b>정직한 8종</b>을 머리기사로 쓰게 고침</td></tr><tr><td>v2.4</td><td>2026-09-28</td><td><b>그림 8 · 실제 촬영 위에 그린 <code>height_scan</code></b> (187 점을 점마다 투영 · 체크포인트 235-48 로 반증) · <code>stepping_stones</code> 컷을 보고서에 직접 검 · <code>omni_gap</code> 과 <code>forward_gap</code> 차이 설명</td></tr><tr><td>v2.3</td><td>2026-09-28</td><td><b>구워 놓고 웹에 안 올렸던 컷 18 편을 건다</b> · 축 2 세 판 나란히(stop·hold·turn × NVIDIA·v1·v2) · 회전 낙상 v2a·v2b · 계보 gap D·v1·v2 · 판정 밖 하락 · 대군 1,024</td></tr><tr><td>v2.2</td><td>2026-09-28</td><td>지형 카탈로그 열여섯 종(그림 1) · <b>7 절에 시작점(<code>resume: true</code>) 추가</b> · 학습 진행 48.4 초와 한 섹션 확대 10 초 · 확장 축 2 에 v2g2 줄 · 그림 번호 문서 차례로</td></tr><tr><td>v2.1</td><td>2026-09-28</td><td>계보 도식 · 터진 판 도식 · 근거 영상 전체 절</td></tr><tr><td>v2.0</td><td>2026-09-28</td><td>계보 절(A -&gt; v2g2 · 자식들 · 시드 재현) · 성분 분해 · 레시피 · 축 2 아홉 칸 · 학습이 터진 기록 · 재현 · 난이도 0.8 실측 · NVIDIA 난이도 곡선 열 점</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 「미경험」을 여덟 종으로 바로잡음 · 도식 넉 장 · 멈출 기준 · 다음 단계</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v2.6</td><td>2026-09-29</td><td><b>팀장 피드백 1 차</b> · 회전 낙상 컷을 6-9 로 · 계보 <code>gap</code> 컷을 6-4 로 옮겨 흐름에 붙임 · 대군 컷을 «로봇이 보이는» 판으로 갈아 끼움(7 px -&gt; 26 px) · <b>틀린 자막 셋을 trace 로 재서 고침</b> (<code>gap</code> D 와 <code>stairs_inv</code> v2 는 둘 다 건너는 판이었다 · <code>omni_gap</code> 은 지형이 아니라 학습 지형)</td></tr><tr><td>v2.5</td><td>2026-09-29</td><td>2 절에 <b>세 속도 평균임과 허브 카드(1.0 m/s 단독)와의 차이</b>를 속도별 표로 밝힘 · 13 절에 <b>HUD 없는 컷 13 편</b>을 전수로 적음 · 허브 첫 화면이 정정 전 10종 대신 <b>정직한 8종</b>을 머리기사로 쓰게 고침</td></tr><tr><td>v2.4</td><td>2026-09-28</td><td><b>그림 8 · 실제 촬영 위에 그린 <code>height_scan</code></b> (187 점을 점마다 투영 · 체크포인트 235-48 로 반증) · <code>stepping_stones</code> 컷을 보고서에 직접 검 · <code>omni_gap</code> 과 <code>forward_gap</code> 차이 설명</td></tr><tr><td>v2.3</td><td>2026-09-28</td><td><b>구워 놓고 웹에 안 올렸던 컷 18 편을 건다</b> · 축 2 세 판 나란히(stop·hold·turn × NVIDIA·v1·v2) · 회전 낙상 v2a·v2b · 계보 gap D·v1·v2 · 판정 밖 하락 · 대군 1,024</td></tr><tr><td>v2.2</td><td>2026-09-28</td><td>지형 카탈로그 열여섯 종(그림 1) · <b>7 절에 시작점(<code>resume: true</code>) 추가</b> · 학습 진행 48.4 초와 한 섹션 확대 10 초 · 확장 축 2 에 v2g2 줄 · 그림 번호 문서 차례로</td></tr><tr><td>v2.1</td><td>2026-09-28</td><td>계보 도식 · 터진 판 도식 · 근거 영상 전체 절</td></tr><tr><td>v2.0</td><td>2026-09-28</td><td>계보 절(A -&gt; v2g2 · 자식들 · 시드 재현) · 성분 분해 · 레시피 · 축 2 아홉 칸 · 학습이 터진 기록 · 재현 · 난이도 0.8 실측 · NVIDIA 난이도 곡선 열 점</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 「미경험」을 여덟 종으로 바로잡음 · 도식 넉 장 · 멈출 기준 · 다음 단계</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1324,5 +1334,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkvh1ta47</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx3gp8gyq</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
