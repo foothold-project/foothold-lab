@@ -132,9 +132,6 @@
   .recent .rt{flex-basis:100%}
 }
 
-/* 선택 목록에서 «숫자만 있고 컷은 없는» 조합을 흐리게 (2026-09-28 팀장 지적).
-   감추지 않는다. 숫자만 보려고 일부러 고르는 것도 유효한 쓰임이다. */
-option.novideo{color:var(--ink-3);font-style:italic}
 
 /* 컷 길이. 세 열이 다른 것이 정상이라 그 까닭을 옆에 적는다. */
 .colscore .len{font-variant-numeric:tabular-nums}
@@ -252,17 +249,44 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
        * 페이지의 목적이라 그것이 열의 «주소» 다. 다만 화면 이름은 아래에서
        * 셋이 같은 판일 때 판을 뗀다 `확인됨` (2026-09-12 팀장: 「앞에 v1 은
        * 왜 들어가?」). 주소와 이름은 다른 것이다. */
-      /* v2 manifest 부터 144 평가 칸에 컷 48개만 실린다 (팀장 지시 ·
-       * 세 모델을 한 화면에 실으려고 baseline·foothold-v1 은 숫자만
-       * 싣고 clips 는 재사용 안 함). 그 조합을 고르면 화면이 영상
-       * 없이 숫자만 뜬다. 선택 목록에서 미리 표시해 둔다 (팀장
-       * 2026-09-28 지적 · 감추지 않고 흐리게 하는 쪽을 택했다. 숫자만
-       * 보려고 «일부러» 고르는 것도 유효한 쓰임이라 옵션 자체는
-       * 남긴다). */
-      const hasClip = (m.clips || []).some(c => c.model === model);
+      /* **컷이 없는 짝은 아예 만들지 않는다.**
+       *
+       * v2 manifest 는 평가 칸 144 개에 컷을 48 개만 싣는다 (세 모델을 한
+       * 화면에 놓으려고 baseline·foothold-v1 은 숫자만 싣고 clips 는 재사용
+       * 안 함). 그래서 `v2:baseline` 같은 짝은 **영상이 있을 수가 없다.**
+       *
+       * 처음에는 흐리게 남겼다 (2026-09-28 · 「숫자만 보려고 일부러 고르는
+       * 것도 쓰임이다」). 팀장이 다시 지적했다 `확인됨`. 「v2 의 베이스라인이
+       * 어딨어」. 없는 것을 고를 수 있게 두면 목록이 거짓말을 한다. 뺀다.
+       *
+       * 같은 숫자는 `v1:baseline` · `v1:foothold-v1` 로 «컷과 함께» 볼 수
+       * 있으므로 잃는 것이 없다. URL 로 옛 주소가 들어오면 기존대로
+       * 「거절하고 빈 열」로 알린다 (조용히 바꿔치기하지 않는다). */
+      if (!(m.clips || []).some(c => c.model === model)) return;
+
       pairs.push({ id: m.version + ':' + model, version: m.version, model: model,
-                   label: m.version + ' · ' + model, hasClip: hasClip });
+                   label: m.version + ' · ' + model });
     });
+  });
+
+  /* **계보 차례로 줄 세운다** (팀장 지시 2026-09-28: 「baseline A
+   * foothold-v1 foothold-v2 이게 순서잖아」).
+   *
+   * `Object.keys(m.models)` 의 차례는 색인이 적힌 차례고, 그것은 우리가
+   * 걸어온 차례가 아니다. 모르는 이름이 새로 생기면 뒤에 붙이고, 그 안에서는
+   * 판 번호로 다시 줄 세운다. */
+  const MODEL_ORDER = ['baseline', 'A', 'foothold-v1', 'foothold-v2'];
+  const verNum = v => {
+    const m = /(\d+)/.exec(v || '');
+    return m ? parseInt(m[1], 10) : 0;
+  };
+  pairs.sort((a, b) => {
+    const ia = MODEL_ORDER.indexOf(a.model), ib = MODEL_ORDER.indexOf(b.model);
+    const ra = ia < 0 ? MODEL_ORDER.length : ia;
+    const rb = ib < 0 ? MODEL_ORDER.length : ib;
+    if (ra !== rb) return ra - rb;
+    if (a.model !== b.model) return a.model < b.model ? -1 : 1;
+    return verNum(a.version) - verNum(b.version);
   });
 
   /* 지형·속도는 **선택된 판들의 합집합**이다. 목록을 각각 합쳐 곱하면
@@ -650,12 +674,12 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     const col = G.el('div', { class: 'col' });
     const head = G.el('div', { class: 'colhead' });
 
+    /* **(비움) 을 두지 않는다** (팀장 지시 2026-09-28). 이 화면의 일은
+     * 세 열을 견주는 것이고, 빈 열은 그 일을 못 하게만 한다. 열을 바꾸려면
+     * 다른 짝을 고르면 된다. */
     const sel = G.el('select');
-    sel.appendChild(G.el('option', { value: '', text: '(비움)' }));
     pairs.forEach(p => {
-      const label = columnLabel(p) + (p.hasClip ? '' : ' · 영상 없음');
-      const o = G.el('option', { value: p.id, text: label,
-                                 class: p.hasClip ? null : 'novideo' });
+      const o = G.el('option', { value: p.id, text: columnLabel(p) });
       if (p.id === state[slot]) o.selected = true;
       sel.appendChild(o);
     });

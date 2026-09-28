@@ -108,3 +108,11 @@ sim/eval/results/**/hud/*.png
 #   같은 컷의 «고친 뒤» 판은 20260911-v1-clips/stepping_stones-high 에 있다.
 #   둘을 다 넣으면 받는 사람이 어느 쪽이 정본인지 헷갈린다.
 sim/eval/results/20260911-camprobe/
+
+# 렌더 중간 산출물 (2026-09-28). 통째로 763 MB · 추적된 것은 0 개였다.
+#   `20260928-v2-clips` 는 컷 90여 편의 원본·미리보기·로그가 다 들어 있고
+#   `train-progress` 는 조각 32 편(원본 16 + HUD 16)이 78 MB 다.
+#   **이은 한 편과 확대 컷 한 편만** `git add -f` 로 따로 넣는다.
+sim/eval/results/20260928-v2-clips/
+sim/eval/results/20260928-train-progress/slow-*/
+sim/eval/results/20260928-train-progress/sweep-*/
