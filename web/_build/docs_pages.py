@@ -262,15 +262,31 @@ def _report_eyebrows(html):
 
 
 def find_lab():
-    """문서와 자산을 가져올 «정본 한 트리». collect_docs 도 이것을 쓴다 (#408)."""
-    best, n = None, -1
+    """문서와 자산을 가져올 «정본 한 트리». collect_docs 도 이것을 쓴다 (#408).
+
+    ★ 2026-09-28 실측 사고. #408 은 «전부 훑어 합치던» 것을 «한 트리만
+      읽는다」로 고쳤는데, 그 «한 트리를 고르는 규칙» 이 여전히 옛 방식
+      (docs/research 안 .md 파일이 «가장 많은» 후보)이었다. `FOOTHOLD_LAB`
+      로 `_lab-main` 을 명시해 불러도, 다른 세션이 작업 중인 `foothold-lab`
+      (미커밋 변경 265개 · 연구문서가 더 많음)이 «더 많다» 는 이유로
+      뽑혔다. 명시가 있어도 무시됐다 — 있으나 마나였다.
+
+      즉 #408 은 «여러 트리를 섞어 읽는 것» 은 막았지만, «어느 트리를
+      고를지» 는 여전히 «지금 파일이 더 많은 쪽」이라는 암묵 규칙에
+      맡겨져 있었다. 다른 세션이 무엇을 커밋하는지에 따라 이 함수의
+      답이 «오늘은 A, 내일은 B」로 조용히 바뀔 수 있었다.
+
+    지금은 «순서가 곧 우선순위» 다. `LAB_CANDIDATES` 의 앞에서부터 훑어
+    «유효한 첫 후보» 를 쓴다 (docs/research 폴더가 있으면 유효). 파일
+    개수는 더는 순위에 안 끼어든다. `FOOTHOLD_LAB` 를 주면 그 값이
+    `LAB_CANDIDATES` 맨 앞에 서므로(roots.lab_candidates 참고) 이제
+    «명시하면 반드시 그것을 쓴다» 가 실제로 성립한다.
+    """
     for p in LAB_CANDIDATES:
         d = os.path.join(p, 'docs', PUBLISH_DIR)
         if os.path.isdir(d):
-            c = len([f for f in os.listdir(d) if f.endswith('.md')])
-            if c > n:
-                best, n = p, c
-    return best
+            return p
+    return None
 
 
 def collect_docs():
