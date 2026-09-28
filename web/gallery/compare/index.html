@@ -132,6 +132,10 @@
   .recent .rt{flex-basis:100%}
 }
 
+/* 선택 목록에서 «숫자만 있고 컷은 없는» 조합을 흐리게 (2026-09-28 팀장 지적).
+   감추지 않는다. 숫자만 보려고 일부러 고르는 것도 유효한 쓰임이다. */
+option.novideo{color:var(--ink-3);font-style:italic}
+
 /* 컷 길이. 세 열이 다른 것이 정상이라 그 까닭을 옆에 적는다. */
 .colscore .len{font-variant-numeric:tabular-nums}
 .colscore .len b{font-weight:700;color:var(--ink)}
@@ -248,8 +252,16 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
        * 페이지의 목적이라 그것이 열의 «주소» 다. 다만 화면 이름은 아래에서
        * 셋이 같은 판일 때 판을 뗀다 `확인됨` (2026-09-12 팀장: 「앞에 v1 은
        * 왜 들어가?」). 주소와 이름은 다른 것이다. */
+      /* v2 manifest 부터 144 평가 칸에 컷 48개만 실린다 (팀장 지시 ·
+       * 세 모델을 한 화면에 실으려고 baseline·foothold-v1 은 숫자만
+       * 싣고 clips 는 재사용 안 함). 그 조합을 고르면 화면이 영상
+       * 없이 숫자만 뜬다. 선택 목록에서 미리 표시해 둔다 (팀장
+       * 2026-09-28 지적 · 감추지 않고 흐리게 하는 쪽을 택했다. 숫자만
+       * 보려고 «일부러» 고르는 것도 유효한 쓰임이라 옵션 자체는
+       * 남긴다). */
+      const hasClip = (m.clips || []).some(c => c.model === model);
       pairs.push({ id: m.version + ':' + model, version: m.version, model: model,
-                   label: m.version + ' · ' + model });
+                   label: m.version + ' · ' + model, hasClip: hasClip });
     });
   });
 
@@ -299,8 +311,17 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      *   v2 뒤     baseline · foothold-v1 · foothold-v2
      *   v3 뒤     baseline · foothold-v2 · foothold-v3
      *
-     * 「최근 두 판」은 `versions.json` 의 차례를 따른다. 손으로 안 고친다. */
-    const order = (index.versions || []).map(v => v.version);
+     * 「최근 두 판」은 옛 -> 최신 순으로 줄 세운 뒤 뒤에서 둘을 집는다.
+     *
+     * ★ 2026-09-28. `versions.json` 자체는 `latest` 순(최신이 먼저)이다
+     * (`gallery_versions.py` 의 색인 용도). 그 차례를 그대로 썼더니
+     * `order.slice(-2)` 가 [v2, v1] 을 집어 mid·right 가 뒤집혔다
+     * (팀장이 화면에서 직접 잡음). 판 이름의 숫자만 뽑아 옛 -> 최신으로
+     * 다시 줄 세운다. `v10` 이 `v2` 보다 앞에 오지 않게 문자열이 아니라
+     * 숫자로 비교한다 (`gallery_versions.py` 자신의 정렬 방식과 같다). */
+    const order = (index.versions || []).map(v => v.version)
+      .sort((a, b) => (parseInt(a.replace(/\D/g, ''), 10) || 0) -
+                       (parseInt(b.replace(/\D/g, ''), 10) || 0));
     const recent = order.slice(-2);
     const mainOf = v => (mans[v] && mans[v].main_model) || null;
     const picks = [];
@@ -541,6 +562,25 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
                                  class: 'btn', text: '이 지형 전부 보기' }));
     body.appendChild(cond);
 
+    /* **어느 지형이 어느 판의 «학습» 지형인지는 manifest 에 없는 사실이라
+     * 여기 적는다** (`env.yaml sub_terrains` 실측 · 평가 쪽과 같은 함수·
+     * 인자로 확인함. 팀장 2026-09-28 지적 · rails 를 기본 칸으로 두면서
+     * 「이 칸이 일반화가 아니라 학습을 보여준다」는 것을 안 적으면 숫자만
+     * 보고 일반화 성능으로 오해한다). 새 판이 다른 지형을 학습에 넣으면
+     * 이 표에 한 줄 추가한다. */
+    const TRAINED_TERRAIN = { rails: 'foothold-v2' };
+    const trainedBy = TRAINED_TERRAIN[cell.terrain];
+    if (trainedBy && chosenVersions().some(v => mans[v] &&
+        Object.keys(mans[v].models || {}).includes(trainedBy) &&
+        mans[v].main_model === trainedBy)) {
+      body.appendChild(G.el('div', { class: 'note' }, [
+        G.el('b', { text: cell.terrain + ' 는 ' + trainedBy + ' 의 학습 지형입니다. ' }),
+        G.el('span', { text: '이 칸의 ' + trainedBy + ' 성적은 «일반화» 가 아니라 ' +
+          '«학습» 을 보여줍니다. 학습에 없던 지형에서의 성적은 다른 지형 칸을 ' +
+          '보십시오.' })
+      ]));
+    }
+
     /* 조건이 서로 다른 판을 섞고 있지 않은가 */
     const diffs = [];
     const picked = chosenVersions().map(v => mans[v]).filter(Boolean);
@@ -613,7 +653,9 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     const sel = G.el('select');
     sel.appendChild(G.el('option', { value: '', text: '(비움)' }));
     pairs.forEach(p => {
-      const o = G.el('option', { value: p.id, text: columnLabel(p) });
+      const label = columnLabel(p) + (p.hasClip ? '' : ' · 영상 없음');
+      const o = G.el('option', { value: p.id, text: label,
+                                 class: p.hasClip ? null : 'novideo' });
       if (p.id === state[slot]) o.selected = true;
       sel.appendChild(o);
     });
