@@ -1064,11 +1064,19 @@ def _release_block():
 
     원장이 없거나 수치가 없으면 **그 칸을 안 그린다.** 빈 칸이나 「미정」을
     그리면 그것이 사실처럼 읽힌다.
+
+    ★ 2026-09-28. `rels[-1]`(«마지막») 이 최신인 줄 알았는데, `read_releases()`
+    가 `versions.json` 차례를 그대로 옮긴다. 그 파일은 `gallery_versions.py`
+    가 «최신이 위로»(`latest` = `versions[0]`) 로 뒤집어 쓴다. 그래서 실제로는
+    `rels[0]` 이 최신이고 `rels[-1]` 은 «가장 오래된» 판이다. v2 를 올렸더니
+    이 카드가 v1 로 한 판 늦게 그려졌다 (lead 가 찾음, `gallery/compare/index.html`
+    의 #479 와 같은 뿌리 — 한 파일이 두 곳에서 다르게 읽혔다). `read_releases()`
+    가 `versions.json` 을 그대로 베끼므로 `rels[0]` 이 옳다.
     """
     rels = (catalog().get('releases') or [])
     if not rels:
         return ''
-    r = rels[-1]
+    r = rels[0]
     s = r.get('summary') or {}
     un, kn = s.get('unseen'), s.get('known')
     if not un:
