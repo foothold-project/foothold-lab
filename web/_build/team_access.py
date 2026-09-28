@@ -263,6 +263,27 @@ section .addr .big{font-size:1.2rem}
 .mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
   border-radius:4px;background:#0f141b}
 .mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
 """
 CSS += hl.CSS          # 코드 문법 강조 (hl.py 가 단일 원본)
 
@@ -325,7 +346,69 @@ def mark_unverified(html):
       ★ 태그 안(<b>미확인</b> 의 꺾쇠 사이)을 건드리면 HTML 이 깨진다.
         그래서 태그 단위로 쪼개 **텍스트 조각에만** 적용한다.
         (앞서 정규식 lookaround 로 피하려다 정작 <b>로 감싼 것들을 전부 놓쳤다.)
-    """
+    
+/* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
+   갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
+   부품으로 못 가져온다.
+
+   **있을 때만 붙인다.** 이 파일 머리말에 적힌 F-05 와 같은 종류의 실수를
+   반복하지 않는다 (없는 요소에 리스너를 붙여 98 장이 죽었다). */
+document.querySelectorAll('[data-vcmp]').forEach(function (box) {
+  var vids = Array.prototype.slice.call(box.querySelectorAll('video'));
+  if (!vids.length) { return; }
+
+  var play = box.querySelector('[data-vcmp-play]');
+  var rew = box.querySelector('[data-vcmp-rewind]');
+  var rateBtns = Array.prototype.slice.call(
+    box.querySelectorAll('[data-vcmp-rate]'));
+  var rate = 1;
+
+  function label() {
+    if (!play) { return; }
+    var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+    play.textContent = playing ? '함께 멈춤' : '함께 재생';
+  }
+
+  /* `load()` 가 playbackRate 를 1 로 되돌린다. 갤러리에서 겪은 것과 같다
+     (gallery.js 105행). 그래서 metadata 가 올 때마다 다시 박는다. */
+  vids.forEach(function (v) {
+    v.addEventListener('loadedmetadata', function () { v.playbackRate = rate; });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+    v.addEventListener('ended', label);
+  });
+
+  if (play) {
+    play.addEventListener('click', function () {
+      var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+      vids.forEach(function (v) {
+        v.playbackRate = rate;
+        if (playing) { v.pause(); } else { v.play().catch(function () {}); }
+      });
+      label();
+    });
+  }
+
+  if (rew) {
+    rew.addEventListener('click', function () {
+      vids.forEach(function (v) { v.currentTime = 0; v.playbackRate = rate; });
+      label();
+    });
+  }
+
+  rateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rate = parseFloat(btn.getAttribute('data-vcmp-rate')) || 1;
+      rateBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      vids.forEach(function (v) { v.playbackRate = rate; });
+    });
+  });
+
+  label();
+});
+"""
     words = ('미확인', '미정', '미설치', '미조사', '미측정')
     out = []
     for chunk in re.split(r'(<[^>]*>)', html):

@@ -42,6 +42,57 @@ SVG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 
+def _compare_block(rows):
+    """```compare 한 덩이를 «3 열 + 공용 조작줄» 로 만든다.
+
+    한 줄이 한 칸이다. `이름 | 경로 | 설명`. 설명은 없어도 된다.
+
+    **빈 칸을 만들지 않는다.** 경로가 없는 줄은 버리고, 남은 것이 없으면
+    아무것도 안 그린다 (빈 상자를 그리면 그것이 사실처럼 읽힌다).
+    """
+    cells = []
+
+    for line in rows:
+        line = line.strip()
+
+        if not line or line.startswith('#'):
+            continue
+
+        parts = [p.strip() for p in line.split('|')]
+
+        if len(parts) < 2 or not parts[1]:
+            continue
+
+        name, src = parts[0], re.sub(r'^(\.\./)+', '', parts[1])
+        note = parts[2] if len(parts) > 2 else ''
+        cells.append((name, src, note))
+
+    if not cells:
+        return ''
+
+    out = []
+    for name, src, note in cells:
+        cap = ('<figcaption>%s</figcaption>' % inline(note)) if note else ''
+        out.append(
+            '<figure class="vcmp-cell"><b class="vcmp-name">%s</b>'
+            '<video controls muted playsinline preload="metadata"%s src="%s">'
+            '</video>%s</figure>'
+            % (inline(name), _poster_attr(src), src, cap))
+
+    rates = ''.join(
+        '<button type="button" class="vcmp-btn" data-vcmp-rate="%s"%s>%sx</button>'
+        % (r, ' aria-pressed="true"' if r == '1' else '', r)
+        for r in ('0.25', '0.5', '1', '2'))
+
+    return ('<div class="vcmp" data-vcmp>'
+            '<div class="vcmp-bar">'
+            '<button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button>'
+            '<button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button>'
+            '<span class="vcmp-lab">배속</span>%s</div>'
+            '<div class="vcmp-grid" style="--vcmp-n:%d">%s</div></div>'
+            % (rates, len(cells), ''.join(out)))
+
+
 def _poster_attr(src):
     """영상 옆 `posters/<같은이름>.jpg` 가 있으면 ` poster="..."` 를 돌려준다.
 
@@ -419,6 +470,13 @@ def render(md):
             while i < n and not lines[i].startswith('```'):
                 body.append(lines[i]); i += 1
             i += 1
+
+            # ★ 2026-09-29. `compare` 는 코드가 아니라 «나란히 놓는 영상» 이다.
+            #   갤러리 비교 화면과 같은 조작(함께 재생 · 처음으로 · 배속)을 준다.
+            #   한 줄이 한 칸이고 `이름 | 경로 | 설명` 이다.
+            if lang == 'compare':
+                out.append(_compare_block(body))
+                continue
             # ★ 강조는 hl.py 가 한다. 이스케이프를 먼저 하고 그 위에 span 만 씌우므로
             #   오탐이 나도 코드 자체는 절대 깨지지 않는다.
             out.append('<div class="cb"><div class="cb-h">%s%s</div><pre>%s</pre></div>'
