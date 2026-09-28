@@ -962,14 +962,82 @@
      "baseline_pct": 50.5,
      "main_pct": 92.4,
      "delta_pp": 41.9,
-     "at_or_above": 10
+     "at_or_above": 10,
+     "by_terrain": {
+      "discrete_obstacles": [
+       94.0,
+       100.0
+      ],
+      "floating_ring": [
+       0.0,
+       100.0
+      ],
+      "gap": [
+       1.0,
+       100.0
+      ],
+      "pit": [
+       2.0,
+       100.0
+      ],
+      "rails": [
+       8.0,
+       100.0
+      ],
+      "repeated_boxes": [
+       100.0,
+       100.0
+      ],
+      "repeated_cylinders": [
+       100.0,
+       100.0
+      ],
+      "star": [
+       100.0,
+       100.0
+      ],
+      "stepping_stones": [
+       0.0,
+       24.0
+      ],
+      "wave": [
+       100.0,
+       100.0
+      ]
+     }
     },
     "known": {
      "terrains": 6,
      "baseline_pct": 69.0,
      "main_pct": 100.0,
      "delta_pp": 31.0,
-     "at_or_above": 6
+     "at_or_above": 6,
+     "by_terrain": {
+      "boxes": [
+       34.0,
+       100.0
+      ],
+      "hf_pyramid_slope": [
+       100.0,
+       100.0
+      ],
+      "hf_pyramid_slope_inv": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs_inv": [
+       0.0,
+       100.0
+      ],
+      "random_rough": [
+       80.0,
+       100.0
+      ]
+     }
     },
     "scorecard_episodes": 14400
    },
@@ -995,14 +1063,82 @@
      "baseline_pct": 50.5,
      "main_pct": 84.7,
      "delta_pp": 34.2,
-     "at_or_above": 10
+     "at_or_above": 10,
+     "by_terrain": {
+      "discrete_obstacles": [
+       94.0,
+       100.0
+      ],
+      "floating_ring": [
+       0.0,
+       99.0
+      ],
+      "gap": [
+       1.0,
+       100.0
+      ],
+      "pit": [
+       2.0,
+       100.0
+      ],
+      "rails": [
+       8.0,
+       48.0
+      ],
+      "repeated_boxes": [
+       100.0,
+       100.0
+      ],
+      "repeated_cylinders": [
+       100.0,
+       100.0
+      ],
+      "star": [
+       100.0,
+       100.0
+      ],
+      "stepping_stones": [
+       0.0,
+       0.0
+      ],
+      "wave": [
+       100.0,
+       100.0
+      ]
+     }
     },
     "known": {
      "terrains": 6,
      "baseline_pct": 69.0,
      "main_pct": 100.0,
      "delta_pp": 31.0,
-     "at_or_above": 6
+     "at_or_above": 6,
+     "by_terrain": {
+      "boxes": [
+       34.0,
+       100.0
+      ],
+      "hf_pyramid_slope": [
+       100.0,
+       100.0
+      ],
+      "hf_pyramid_slope_inv": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs_inv": [
+       0.0,
+       100.0
+      ],
+      "random_rough": [
+       80.0,
+       100.0
+      ]
+     }
     },
     "scorecard_episodes": 14400
    },

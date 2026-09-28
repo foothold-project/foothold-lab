@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=f391c014').then(function(r){
+    fetch('/assets/search-index.json?v=f41867d3').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -873,7 +873,7 @@ body>*{flex-shrink:0}
   <div class="eyebrow">Research · 근거 기록</div>
   <h1>v2 종합보고서 · 처음 보는 지형에서 무엇을 얻었나</h1>
   <p class="lede">어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 stepping_stones 하나다</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v2.4</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 23:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-v2-mvp-report.md</span></div><div><span class="k">증거</span><span class="v">확인 4 · 추측 0 · 미측정 4</span></div></div>
+  <div class="meta"><div><span class="k">판</span><span class="v">v2.5</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 23:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-v2-mvp-report.md</span></div><div><span class="k">증거</span><span class="v">확인 5 · 추측 0 · 미측정 4</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
@@ -882,7 +882,7 @@ body>*{flex-shrink:0}
 근거: 실측 (<code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code> 1,182 줄 · 지형마다 속도마다 100 에피소드) · 각 판의 학습 시각 저장본 <code>params/env.yaml</code> 전수 · Isaac Lab 과 rsl_rl 소스 직접 확인
 요지: 어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 <code>stepping_stones</code> 하나다
 상태: 확정
-판: v2.4</p></blockquote>
+판: v2.5</p></blockquote>
 </section>
 <section id="s1"><span id="0"></span><h2>0. 이번에 한 일</h2>
 <p><code>foothold-v2</code> 로 <b><code>v2g2-feetair01</code> iter3000</b> 을 배포한다. 이 문서는 그 판이 무엇을 할 수 있고 무엇을 못 하는지, 그리고 <b>어떤 물음을 거쳐 거기에 닿았는지</b>를 적는다.</p>
@@ -910,7 +910,11 @@ body>*{flex-shrink:0}
 </section>
 <section id="s3"><span id="2"></span><h2>2. 일반화 성적 · 한 장</h2>
 <p><figure class="mdimg"><img src="assets/visual/v2-generalization-summary.svg?v=2df8b28f" alt="그림 2 · 네 묶음에서 세 판의 성공률. 어느 판도 학습 안 한 여덟 지형에서 NVIDIA 43.9 %가 v2 88.5 %가 됐습니다" loading="lazy"><figcaption>그림 2 · 네 묶음에서 세 판의 성공률. 어느 판도 학습 안 한 여덟 지형에서 NVIDIA 43.9 %가 v2 88.5 %가 됐습니다</figcaption></figure></p>
-<p>난이도 0.5 · 지형마다 속도마다 100 판.</p>
+<p>난이도 0.5 · 지형마다 속도마다 100 판. <b>칸은 지형 x 속도 셋</b>이다 (8종이면 8 x 3 = 24 칸). 곧 아래 값은 <b>세 속도(0.5 · 1.0 · 1.5 m/s)의 평균</b>이다.</p>
+<blockquote><p><b>허브 첫 화면 카드와 수가 다른 까닭.</b> 그 카드는 <b>1.0 m/s 한 속도</b>만 잰다 (카드에 조건이 적혀 있다). 같은 여덟 종이 거기서는 62 -&gt; 90 이고 여기서는 43.9 -&gt; 88.5 다. 둘 다 맞고 <b>재는 범위가 다르다.</b></p>
+<p>속도별로 펴 보면 까닭이 한 줄이다. 여덟 종 난이도 0.5 실측이다.</p>
+<div class="tw"><table><thead><tr><th>속도</th><th>NVIDIA</th><th><b>v2</b></th></tr></thead><tbody><tr><td>0.5 m/s</td><td>60.9</td><td>87.5</td></tr><tr><td>1.0 m/s</td><td>62.0</td><td>90.5</td></tr><tr><td><b>1.5 m/s</b></td><td><b>8.8</b></td><td>87.4</td></tr><tr><td>세 속도 평균</td><td><b>43.88</b></td><td><b>88.46</b></td></tr></tbody></table></div>
+<p><b>NVIDIA 만 1.5 m/s 에서 무너진다</b> (8.8 %). 그래서 세 속도 평균에서 차이가 +44.6 %p 로 벌어지고, 1.0 m/s 만 보면 +28.5 %p 다. 다만 1.5 m/s 는 NVIDIA 의 학습 명령 범위 밖이므로 그 사실을 같이 읽어야 한다 (3 절).</p></blockquote>
 <div class="tw"><table><thead><tr><th>묶음</th><th>칸</th><th>NVIDIA</th><th>foothold-v1</th><th><b>v2</b></th></tr></thead><tbody><tr><td>평가 전체</td><td>48</td><td>41.17</td><td>88.88</td><td><b>94.19</b></td></tr><tr><td>셋 다 학습한 6종</td><td>18</td><td>50.78</td><td>99.33</td><td><b>100.00</b></td></tr><tr><td><b>어느 판도 학습 안 한 8종</b></td><td>24</td><td><b>43.88</b></td><td>86.71</td><td><b>88.46</b></td></tr><tr><td>그 중 7종 (<code>stepping_stones</code> 뺀)</td><td>21</td><td>50.14</td><td>99.10</td><td><b>99.95</b></td></tr></tbody></table></div>
 <p><b>읽는 법이 셋이다.</b></p>
 <ol><li><b>NVIDIA 대비</b>는 크다. 여덟 종에서 43.88 -&gt; 88.46, <b>+44.58 %p</b> 다</li><li><b>v1 대비</b>는 작다. 86.71 -&gt; 88.46, <b>+1.75 %p</b> 다. 이것은 시드만 바꿔도 생기는 흔들림 1.25 %p 와 같은 크기다 (8 절)</li><li><b>여덟 종 평균 88 을 끌어내리는 것은 <code>stepping_stones</code> 하나다.</b> 그것을 빼면 99.95 % 다</li></ol>
@@ -1169,7 +1173,7 @@ random_rough          0.15      rails                 0.10</pre></div>
 <div class="tw"><table><thead><tr><th>남는 것</th><th>왜</th></tr></thead><tbody><tr><td>평가 하네스</td><td>정책을 지형에 올리고 행동만 잰다. 관측이 무엇이든 상관없다</td></tr><tr><td>기준선 숫자</td><td>새 구조가 넘어야 할 선. 없으면 「더 낫다」를 반증할 수 없다</td></tr><tr><td>환경의 함정</td><td>커리큘럼 붕괴 · <code>ang_vel_z</code> 와 <code>heading</code> 의 한 쌍 · 노출 구조</td></tr><tr><td>명령·보상 설정</td><td>새 구조도 명령을 받고 보상으로 배운다. 출발 설정이 된다</td></tr><tr><td>멈출 기준</td><td>시드 폭보다 작은 차이는 차이가 아니다</td></tr></tbody></table></div>
 <p><b>진짜로 버려지는 것은 「정책 수준에서 마지막 몇 %p 를 더 짜내는 시간」이다.</b> 그래서 신경망 교체가 예정돼 있으면 <b>규칙 1 에 닿는 순간 멈추는 것</b>이 맞다.</p>
 <h3>다음에 주목할 것 여섯</h3>
-<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td><b>가</b></td><td><b>관측을 어떻게 다룰 것인가</b></td><td>지형 통로가 <code>height_scan</code> 하나다. 격자 그대로 넣을까 · 요약해 넣을까 · 기억을 둘까 · 가려진 곳의 값을 무엇으로 둘까</td></tr><tr><td><b>나</b></td><td><b>축 2 확장 축을 v2 부터 쌓는다</b></td><td>저속 넷 · <code>turn_rest</code> · <code>turn_rev</code> 는 <b>배포본까지 쟀다</b> (9-2). 남은 것은 험지 회전 · 횡보 · 장거리 · <code>push_robot</code> 이고 <b>하네스가 없다.</b> <code>turn_rev</code> 가 0.1562 로 나빠진 것부터 본다. <b>평가 지표로는 안 쓰고 자료와 영상으로 남긴다</b></td></tr><tr><td><b>다</b></td><td><b>축 2 의 자를 고친다</b></td><td>값과 Wilson 구간을 같이 적는다 (비용 0). 표본을 1024 로 올린다</td></tr><tr><td><b>라</b></td><td><b>resume 실험을 재개한다</b></td><td>터진 판 열여섯에 공통으로 있던 것이 <code>resume</code> 이다. <code>fs1</code> · <code>fs2</code> 를 v2 정리 뒤에 다시 본다</td></tr><tr><td><b>마</b></td><td><b>난이도 구멍을 메운다</b></td><td>0.8 이 아무 판에도 없었다. 이번에 v1 · v2 열두 칸을 새로 쟀다</td></tr><tr><td><b>바</b></td><td><b>최종 배포본 확정 뒤 학습 전체 영상</b></td><td>정속 20 초 두 번으로 「이렇게 학습된다」를 보이고, 빨리감기로 학습이 되어 가는 과정을 40 ~ 50 초에 담는다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td><b>가</b></td><td><b>관측을 어떻게 다룰 것인가</b></td><td>지형 통로가 <code>height_scan</code> 하나다. 격자 그대로 넣을까 · 요약해 넣을까 · 기억을 둘까 · 가려진 곳의 값을 무엇으로 둘까</td></tr><tr><td><b>나</b></td><td><b>축 2 확장 축을 v2 부터 쌓는다</b></td><td>저속 넷 · <code>turn_rest</code> · <code>turn_rev</code> 는 <b>배포본까지 쟀다</b> (9-2). 남은 것은 험지 회전 · 횡보 · 장거리 · <code>push_robot</code> 이고 <b>하네스가 없다.</b> <code>turn_rev</code> 가 0.1562 로 나빠진 것부터 본다. <b>평가 지표로는 안 쓰고 자료와 영상으로 남긴다.</b> 같이 고칠 것 하나 더 · <b>축 2 하네스가 trace 를 안 내서 그 컷 아홉에 HUD 를 못 붙인다</b> (13 절)</td></tr><tr><td><b>다</b></td><td><b>축 2 의 자를 고친다</b></td><td>값과 Wilson 구간을 같이 적는다 (비용 0). 표본을 1024 로 올린다</td></tr><tr><td><b>라</b></td><td><b>resume 실험을 재개한다</b></td><td>터진 판 열여섯에 공통으로 있던 것이 <code>resume</code> 이다. <code>fs1</code> · <code>fs2</code> 를 v2 정리 뒤에 다시 본다</td></tr><tr><td><b>마</b></td><td><b>난이도 구멍을 메운다</b></td><td>0.8 이 아무 판에도 없었다. 이번에 v1 · v2 열두 칸을 새로 쟀다</td></tr><tr><td><b>바</b></td><td><b>최종 배포본 확정 뒤 학습 전체 영상</b></td><td>정속 20 초 두 번으로 「이렇게 학습된다」를 보이고, 빨리감기로 학습이 되어 가는 과정을 40 ~ 50 초에 담는다</td></tr></tbody></table></div>
 <p><b><code>stepping_stones</code> 가 「가」의 시험지다.</b> 정책 수준에서 여덟 종 중 일곱을 풀었는데 이것 하나가 8.0 % 로 남았다. 발 디딜 곳이 띄엄띄엄한 지형이라 「발밑 한 점의 높이」로는 부족한 것이 아닌가를 검증할 자리다. <b>아직 그 가설을 시험하지 않았다</b> <span class="ev ev-todo">미측정</span>.</p>
 </section>
 <section id="s13"><span id="12"></span><h2>12. 재현</h2>
@@ -1195,6 +1199,10 @@ random_rough          0.15      rails                 0.10</pre></div>
 </section>
 <section id="s14"><span id="13"></span><h2>13. 근거 영상 전체</h2>
 <p><b>영상마다 «무엇을 보여 주려고 찍었는지» 를 적는다.</b> 실험 하나를 그냥 랜더한 것이 아니다.</p>
+<blockquote><p><b>HUD 가 붙은 컷과 안 붙은 컷이 있다</b> <span class="ev ev-ok">확인됨</span>. 21 편을 전수로 재서 적는다.</p>
+<div class="tw"><table><thead><tr><th>HUD</th><th>컷</th></tr></thead><tbody><tr><td>있음 (8)</td><td>계보 <code>gap</code> 셋 · 판정 밖 하락 둘 · <code>stepping_stones</code> · 한 섹션 확대 · 학습 진행</td></tr><tr><td><b>없음 (13)</b></td><td><b>축 2 아홉</b> · 회전 낙상 둘 · 대군 둘</td></tr></tbody></table></div>
+<p>까닭은 하네스가 다르기 때문이다. HUD 는 <code>overlay/render.py</code> 가 «trace» (<code>foothold-trace/2</code>) 를 읽어 그린다. 그 trace 는 축 1 녹화기 (<code>record_terrain_demo.py --trace_csv</code>) 가 낸다. <b>축 2 는 다른 하네스</b> (<code>eval_command_response.py</code>) 로 도는데 그것은 trace 를 안 낸다 (<code>per_env.json</code> 과 시계열 parquet 만 남긴다). 그래서 지금 있는 컷에 HUD 를 «나중에» 붙일 수가 없다. 붙이려면 축 2 를 영상과 trace 를 함께 내도록 고쳐 다시 돌려야 한다. <b>다음 단계로 적어 둔다</b> (11 절 (나)).</p>
+<p>갤러리 48 컷은 전부 HUD 가 붙어 있다 (48/48 전수 확인).</p></blockquote>
 <h3>축 1 · 48 칸 (갤러리)</h3>
 <p>지형 열여섯 종 × 속도 셋. <code>foothold-v1</code> 판의 기준선 둘(NVIDIA · v1)과 같은 자리를 같은 카메라로 찍었으므로 <b>세 열을 나란히 견줄 수 있다.</b></p>
 <div class="tw"><table><thead><tr><th>어디서 보나</th><th>무엇</th></tr></thead><tbody><tr><td><span class="vlink">갤러리 · v2<i>/gallery/</i></span></td><td>48 컷 전부 · 평가 칸 144</td></tr><tr><td><span class="vlink">판 비교 (3열)<i>/gallery/compare/</i></span></td><td>NVIDIA · v1 · v2 를 같은 칸에서</td></tr></tbody></table></div>
@@ -1268,7 +1276,7 @@ random_rough          0.15      rails                 0.10</pre></div>
 <div class="tw"><table><thead><tr><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>스윕 원자료 1,182 줄</td><td><code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code></td></tr><tr><td>난이도 x 속도 요약</td><td>같은 폴더 <code>sweep_matrix.md</code></td></tr><tr><td>지형 x 난이도 (속도별)</td><td>같은 폴더 <code>sweep_terrain_v*.md</code></td></tr><tr><td>빠진 칸</td><td>같은 폴더 <code>MISSING.md</code> · <b>0 건</b></td></tr><tr><td>갤러리 v2</td><td><code>/gallery/</code> 에서 v2 를 고른다</td></tr><tr><td>계보 실측</td><td><code>inbox/jay/20260928-v2-mvp/LINEAGE-FACTS.md</code></td></tr><tr><td>멈출 기준 정본</td><td><code>inbox/jay/20260928-v2-mvp/STOPPING-RULE.md</code> · <b>규칙과 수는 8 절에 본문으로 다 적었다</b></td></tr><tr><td>평가 규격</td><td><a href="research-20260911-eval-protocol-v2.html">평가 프로토콜 정본</a></td></tr><tr><td>계보 전체</td><td><a href="research-20260928-rl-lineage.html">우리는 왜 여덟 번 방향을 틀었나</a></td></tr><tr><td>지형 카탈로그 스틸 16 장</td><td><code>sim/eval/results/20260928-terrain-shots/stills/</code> · 펴기 전후 값은 같은 폴더 <code>index.json</code></td></tr><tr><td>학습 진행 48.4 초</td><td><code>sim/eval/results/20260928-train-progress/train-progress.mp4</code> · 웹 사본 <code>docs/assets/video/v2-train-progress.mp4</code></td></tr><tr><td>한 섹션 확대 10 초</td><td><code>sim/eval/results/20260928-v2-clips/army-section/army-section.hud.mp4</code> · 웹 사본 <code>docs/assets/video/v2-one-section.mp4</code></td></tr><tr><td>확장 축 2 (v2g2)</td><td><code>sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json</code></td></tr></tbody></table></div>
 </section>
 <section id="s16"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v2.4</td><td>2026-09-28</td><td><b>그림 8 · 실제 촬영 위에 그린 <code>height_scan</code></b> (187 점을 점마다 투영 · 체크포인트 235-48 로 반증) · <code>stepping_stones</code> 컷을 보고서에 직접 검 · <code>omni_gap</code> 과 <code>forward_gap</code> 차이 설명</td></tr><tr><td>v2.3</td><td>2026-09-28</td><td><b>구워 놓고 웹에 안 올렸던 컷 18 편을 건다</b> · 축 2 세 판 나란히(stop·hold·turn × NVIDIA·v1·v2) · 회전 낙상 v2a·v2b · 계보 gap D·v1·v2 · 판정 밖 하락 · 대군 1,024</td></tr><tr><td>v2.2</td><td>2026-09-28</td><td>지형 카탈로그 열여섯 종(그림 1) · <b>7 절에 시작점(<code>resume: true</code>) 추가</b> · 학습 진행 48.4 초와 한 섹션 확대 10 초 · 확장 축 2 에 v2g2 줄 · 그림 번호 문서 차례로</td></tr><tr><td>v2.1</td><td>2026-09-28</td><td>계보 도식 · 터진 판 도식 · 근거 영상 전체 절</td></tr><tr><td>v2.0</td><td>2026-09-28</td><td>계보 절(A -&gt; v2g2 · 자식들 · 시드 재현) · 성분 분해 · 레시피 · 축 2 아홉 칸 · 학습이 터진 기록 · 재현 · 난이도 0.8 실측 · NVIDIA 난이도 곡선 열 점</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 「미경험」을 여덟 종으로 바로잡음 · 도식 넉 장 · 멈출 기준 · 다음 단계</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v2.5</td><td>2026-09-29</td><td>2 절에 <b>세 속도 평균임과 허브 카드(1.0 m/s 단독)와의 차이</b>를 속도별 표로 밝힘 · 13 절에 <b>HUD 없는 컷 13 편</b>을 전수로 적음 · 허브 첫 화면이 정정 전 10종 대신 <b>정직한 8종</b>을 머리기사로 쓰게 고침</td></tr><tr><td>v2.4</td><td>2026-09-28</td><td><b>그림 8 · 실제 촬영 위에 그린 <code>height_scan</code></b> (187 점을 점마다 투영 · 체크포인트 235-48 로 반증) · <code>stepping_stones</code> 컷을 보고서에 직접 검 · <code>omni_gap</code> 과 <code>forward_gap</code> 차이 설명</td></tr><tr><td>v2.3</td><td>2026-09-28</td><td><b>구워 놓고 웹에 안 올렸던 컷 18 편을 건다</b> · 축 2 세 판 나란히(stop·hold·turn × NVIDIA·v1·v2) · 회전 낙상 v2a·v2b · 계보 gap D·v1·v2 · 판정 밖 하락 · 대군 1,024</td></tr><tr><td>v2.2</td><td>2026-09-28</td><td>지형 카탈로그 열여섯 종(그림 1) · <b>7 절에 시작점(<code>resume: true</code>) 추가</b> · 학습 진행 48.4 초와 한 섹션 확대 10 초 · 확장 축 2 에 v2g2 줄 · 그림 번호 문서 차례로</td></tr><tr><td>v2.1</td><td>2026-09-28</td><td>계보 도식 · 터진 판 도식 · 근거 영상 전체 절</td></tr><tr><td>v2.0</td><td>2026-09-28</td><td>계보 절(A -&gt; v2g2 · 자식들 · 시드 재현) · 성분 분해 · 레시피 · 축 2 아홉 칸 · 학습이 터진 기록 · 재현 · 난이도 0.8 실측 · NVIDIA 난이도 곡선 열 점</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 「미경험」을 여덟 종으로 바로잡음 · 도식 넉 장 · 멈출 기준 · 다음 단계</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1316,5 +1324,5 @@ document.addEventListener('click', function(e){
   padding:10px;box-sizing:border-box}
 </style>
 
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpf6lwshzk</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpkvh1ta47</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
