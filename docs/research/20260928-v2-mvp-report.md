@@ -5,7 +5,7 @@
 > 근거: 실측 (`sim/eval/results/20260928-v2-sweep/sweep_long.csv` 1,182 줄 · 지형마다 속도마다 100 에피소드) · 각 판의 학습 시각 저장본 `params/env.yaml` 전수 · Isaac Lab 과 rsl_rl 소스 직접 확인
 > 요지: 어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 `stepping_stones` 하나다
 > 상태: 확정
-> 판: v2.8
+> 판: v3.0
 
 ---
 
@@ -370,8 +370,8 @@ foothold-v2 | ../assets/video/v2/lineage-gap-v2.mp4 | 전진 5.87 m · `gap` 평
 | 무엇 | 어디 | 생김새 |
 |---|---|---|
 | 평가의 `gap` | 그림 1 · `gap` 타일 | 사각 구멍이 바닥에 뚫려 있다 (`MeshGapTerrainCfg`) |
-| v1 이 학습한 `forward_gap` | 평가 목록에 없다 | 스폰 **+x 쪽에만** 틈이 있다 |
-| v2 가 학습한 `omni_gap` | 평가 목록에 없다 | 스폰을 **둘러싼 고리**다 (`mode=ring`) |
+| v1 이 학습한 `forward_gap` | **6-6 의 컷** (평가 목록에는 없다) | 스폰 **+x 쪽에만** 틈이 있다 |
+| v2 가 학습한 `omni_gap` | **6-6 의 컷** (평가 목록에는 없다) | 스폰을 **둘러싼 고리**다 (`mode=ring`) |
 | 고리의 눈으로 보는 것 | 그림 1 · `floating_ring` 타일 | 사각 테두리가 스폰을 감싼 모양 |
 
 `forward_gap` 은 앞으로만 가면 되는 틈이라 **명령을 열면 옆·뒤에서 틈을
@@ -426,6 +426,29 @@ H = F 의 지형 + D 의 명령 (하한 0.0 으로 되돌림)
 forward_gap   +x 에만 있는 한 줄 틈.  로봇이 돌면 안 만난다
 omni_gap      스폰을 둘러싼 고리.      어디로 돌든 만난다  (mode: ring · ring_radius 2.5)
 ```
+
+**볼 것: 학습 지형이 어떻게 바뀌었는가.** 둘 다 바로 위에서 본 것이고 3x3
+타일이다. 왼쪽은 **직선 도랑 하나**가 화면을 가로지르고, 오른쪽은 **고리
+아홉 개**가 타일마다 스폰을 감싼다. 로봇이 크기 자를 겸한다.
+
+```compare
+forward_gap · v1 이 학습 | ../assets/video/v2/train-gap-forward.mp4 | 스폰 앞을 가로지르는 직선 도랑. 돌아서면 안 만난다
+omni_gap · v2 가 학습 | ../assets/video/v2/train-gap-omni.mp4 | 스폰을 둘러싼 고리 (`mode=ring` · 반지름 2.5 m). 어디로 돌든 만난다
+```
+
+> **이 두 컷의 출처.** 학습 cfg 를 **Isaac Lab 설치본**에서 가져와 찍었다
+> (`isaaclab_tasks...config.go2.gap_training.gap_e_env_cfg` ·
+> `...gap_h_env_cfg`). 저장소 사본 `sim/policy/gap_e_env_cfg.py` 로는 못
+> 찍는다. 그것이 부르는 `gap_wide_env_cfg` 가 저장소에 없고 (PR #461 이
+> 들고 있다), 그 다음 `gap_env_cfg` 는 Isaac Lab 의 `rough_env_cfg` 를
+> 부른다. **사슬이 저장소 안에서 닫히지 않는다** `확인됨`.
+>
+> 설치본은 **학습을 실제로 돌린 파일**이고, 저장소 사본 셋(`gap_e` ·
+> `gap_h` · `omni_gap_terrain`)과 줄끝만 빼고 한 글자도 같다 `확인됨`.
+>
+> 저 검은 띠가 타일 경계가 아니라 «틈» 인 것은 **`omni_gap` 쪽에 직선 띠가
+> 없는 것**으로 갈랐다. 같은 격자 · 같은 테두리인데 한쪽에만 난다.
+> 2x2 로 먼저 찍었더니 도랑이 화면 테두리에 잘려서 3x3 으로 다시 찍었다.
 
 ### 6-7. 축을 둘로 못 박는다
 
@@ -976,12 +999,12 @@ iter1500 에 하락 2 가 있고 `v2g2` 는 넷 다 0 이다. 체크포인트를
 **영상마다 «무엇을 보여 주려고 찍었는지» 를 적는다.** 실험 하나를 그냥
 랜더한 것이 아니다.
 
-> **HUD 가 붙은 컷과 안 붙은 컷이 있다** `확인됨`. 전수로 재서 적는다.
+> **HUD 가 붙은 컷과 안 붙은 컷이 있다** `확인됨`. 걸린 19 편을 전수로 재서 적는다.
 >
 > | HUD | 컷 |
 > |---|---|
-> | 있음 (7) | 계보 `gap` 셋 · 판정 밖 하락 둘 · `stepping_stones` · 학습 진행 |
-> | **없음 (12)** | **축 2 아홉** · 회전 낙상 둘 · 대군 |
+> | 있음 (6) | 계보 `gap` 셋 · 판정 밖 하락 둘 · `stepping_stones` |
+> | **없음 (13)** | **축 2 아홉** · 회전 낙상 둘 · 대군 · 학습 진행 |
 >
 > 까닭은 하네스가 다르기 때문이다. HUD 는 `overlay/render.py` 가 «trace»
 > (`foothold-trace/2`) 를 읽어 그린다. 그 trace 는 축 1 녹화기
@@ -1024,14 +1047,30 @@ iter1500 에 하락 2 가 있고 `v2g2` 는 넷 다 0 이다. 체크포인트를
 `foothold-v1` 의 `turn` 은 **64 판이 64 판 다 넘어진다.** 전진 성공률만 보고
 달렸을 때 무엇을 잃었는지가 이 한 칸에 있다.
 
+> **세 컷은 같은 판(env 8)이다** `확인됨`. 앞 회차는 env 0 이었고 거기서는
+> `foothold-v1` 이 안 넘어져서 숫자와 장면이 안 맞았다. `per_env.json` 을 읽어
+> **v1 이 `stop` · `hold` · `turn` 셋 다 넘어지는 번호** 를 골랐다. 세 판에
+> 같은 번호를 주므로 초기 자세가 같다.
+>
+> | env 8 | NVIDIA | `foothold-v1` | `foothold-v2` |
+> |---|---|---|---|
+> | `stop` | 안 넘어짐 | **넘어짐** | 안 넘어짐 |
+> | `hold` | 안 넘어짐 | **넘어짐** | 안 넘어짐 |
+> | `turn` | 안 넘어짐 | **넘어짐** | 안 넘어짐 |
+>
+> **카메라가 로봇을 따라 도느라 하늘을 보는 구간이 있다** `확인됨` (전 프레임
+> 실측 · 연속 덩이라 렌더 결함이 아니다). `stop` NVIDIA 는 출발 뒤 51 장
+> (0.16 ~ 1.2 초), `turn` 은 회전 중에 v1 50 장 · v2 80 장 · NVIDIA 4 장이다.
+> `hold` 는 세 판 다 0 장이다.
+
 #### `stop` · 4 초 전진 뒤 명령 0
 
 **볼 것: 명령이 0 이 된 뒤에도 미끄러져 나가는가.**
 
 ```compare
-NVIDIA | ../assets/video/v2/axis2-stop-nvidia.mp4 | 낙상 0.0000 · 명령이 끊기면 그 자리에 선다
-foothold-v1 | ../assets/video/v2/axis2-stop-v1.mp4 | 낙상 0.2031 · 64 판 중 13 판
-foothold-v2 | ../assets/video/v2/axis2-stop-v2.mp4 | 낙상 0.0000
+NVIDIA | ../assets/video/v2/axis2-stop-nvidia.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.0000
+foothold-v1 | ../assets/video/v2/axis2-stop-v1.mp4 | **env 8 넘어짐** · 64 판 낙상 0.2031 (13 판)
+foothold-v2 | ../assets/video/v2/axis2-stop-v2.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.0000
 ```
 
 #### `hold` · 20 초 내내 명령 0
@@ -1042,9 +1081,9 @@ foothold-v2 | ../assets/video/v2/axis2-stop-v2.mp4 | 낙상 0.0000
 계속 고쳐 딛는 것으로 보인다.
 
 ```compare
-NVIDIA | ../assets/video/v2/axis2-hold-nvidia.mp4 | 낙상 0.0000 · 관절 떨림 0.0015
-foothold-v1 | ../assets/video/v2/axis2-hold-v1.mp4 | 낙상 0.0781 · 관절 떨림 0.1258
-foothold-v2 | ../assets/video/v2/axis2-hold-v2.mp4 | 낙상 0.0000 · 관절 떨림 0.0003
+NVIDIA | ../assets/video/v2/axis2-hold-nvidia.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0015
+foothold-v1 | ../assets/video/v2/axis2-hold-v1.mp4 | **env 8 넘어짐** · 64 판 낙상 0.0781 (5 판) · 관절 떨림 0.1258
+foothold-v2 | ../assets/video/v2/axis2-hold-v2.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0003
 ```
 
 #### `turn` · 제자리 요레이트 계단 다섯
@@ -1052,9 +1091,9 @@ foothold-v2 | ../assets/video/v2/axis2-hold-v2.mp4 | 낙상 0.0000 · 관절 떨
 **볼 것: 도는가, 아니면 자빠지는가.**
 
 ```compare
-NVIDIA | ../assets/video/v2/axis2-turn-nvidia.mp4 | 낙상 0.0625 · 계단 다섯을 다 돈다
-foothold-v1 | ../assets/video/v2/axis2-turn-v1.mp4 | 낙상 **1.0000** · 64 판 전부 · 4.9 초에서 넘어져 끝난다
-foothold-v2 | ../assets/video/v2/axis2-turn-v2.mp4 | 낙상 0.1094 · 계단 다섯을 다 돈다
+NVIDIA | ../assets/video/v2/axis2-turn-nvidia.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.0625 · 계단 다섯을 다 돈다
+foothold-v1 | ../assets/video/v2/axis2-turn-v1.mp4 | **env 8 넘어짐** · 64 판 낙상 **1.0000** (전부) · 6.5 초에서 넘어져 끝난다
+foothold-v2 | ../assets/video/v2/axis2-turn-v2.mp4 | env 8 안 넘어짐 · 64 판 낙상 0.1094 · 계단 다섯을 다 돈다
 ```
 
 세 컷의 길이가 다른 것이 **결과 그 자체다.** `stop` 10 초 · `hold` 20 초 ·
@@ -1066,7 +1105,9 @@ foothold-v2 | ../assets/video/v2/axis2-turn-v2.mp4 | 낙상 0.1094 · 계단 다
 못 넘는다** (8.0 %). 디딜 곳이 점점이 떨어져 있어 발을 «어디에» 놓을지가
 문제인데, 지금 정책이 지형을 아는 통로는 `height_scan` 하나다 (11 절).
 
-![stepping_stones · foothold-v2 · 1.0 m/s. 100 판 중 8 판만 건넌다](../assets/video/v2/stepping-stones-v2.mp4)
+```compare
+foothold-v2 | ../assets/video/v2/stepping-stones-v2.mp4 | `stepping_stones` d0.5 · 1.0 m/s. 100 판 중 8 판만 건넌다
+```
 
 세 속도 전부는 [갤러리](/gallery/) 에서 `stepping_stones` 를 고르면 볼 수 있다.
 
@@ -1085,33 +1126,53 @@ foothold-v1 | ../assets/video/v2/regress-stairsinv-d09-v1.mp4 | 90 % · 이 판�
 foothold-v2 | ../assets/video/v2/regress-stairsinv-d09-v2.mp4 | 3 % · 다만 이 판은 전진 4.46 m 로 건넌 쪽이다
 ```
 
-### 학습 진행 · 48.4 초
+### 학습 진행 · 44.4 초 · 대군이 여러 험지에서
 
-같은 지형 · 같은 카메라에서 **정책만 갈아 끼운다.** 저장본 열여섯을 고르게
-뽑았다 (0 · 200 ~ 2800 · 3000). 각 조각 왼쪽 위에 `v2 · iter N` 이 붙는다.
+**볼 것: 무리가 흩어져 헤매던 것이 한 덩이로 뭉쳐 같이 나아가게 된다.**
+
+같은 격자 · 같은 카메라에서 **정책만 갈아 끼운다.** 저장본 열여섯을 고르게
+뽑았다 (0 · 200 ~ 2800 · 3000). 조각마다 왼쪽 위에 `iter N` 이 태워져 있다.
 
 ```
-   0 ~ 12 초   model_0     정속   이어 학습 시작점
-  12 ~ 34 초   14 자리     훑기   200 -> 2800 · 자리마다 1.6 초
-  34 ~ 48 초   model_3000  정속   3000 회 뒤
+   0 ~ 10 초   model_0     10.0 초
+  10 ~ 32 초   14 자리      1.6 초씩
+  32 ~ 44 초   model_3000  12.0 초
 ```
+
+격자는 `--terrain all --terrain_set rough6 --terrain_cols 6 --terrain_rows 5`
+이고 `--max_init_level 4` 다. 곧 **열마다 다른 하위 지형**이 오고 로봇이 다섯
+행에 퍼진다. 한 화면에 여섯 지형 x 다섯 난이도 층의 무리가 같이 나온다.
+1,024 마리다.
+
+**축척을 재서 이 시점을 골랐다.** 로봇 0.7 m 가 몇 px 인가.
+
+| 시점 | px/m | 로봇 |
+|---|---|---|
+| 앞서 올렸던 넓은 컷 | 9.9 | 7 px · 안 보인다 |
+| 앞서 올렸던 확대 컷 | 11.5 | 8 px · 안 보인다 |
+| **이 컷** | **37.8** | **26 px** |
+
+```compare
+v2 학습 진행 | ../assets/video/v2/train-army.mp4 | 험지 여섯 종 격자 위 1,024 마리 · 저장본 열여섯을 이어 붙인 44.4 초
+```
+
+2,220 장 · 44.4 초 · 검은 장 0 (전 프레임 확인).
 
 **이 영상은 「못 걷다가 걷게 된다」가 아니다.** 7 절에 적었듯 v2 는 NVIDIA
-가중치에서 이어 학습했으므로 `model_0` 이 이미 1 m/s 로 걷는다. 이 영상이
-보이는 것은 **3000 회 동안 걸음이 어떻게 다듬어지는가** 다.
+가중치에서 이어 학습했으므로 `model_0` 이 이미 걷는다. 이 영상이 보이는 것은
+**3000 회 동안 무리가 어떻게 정돈되는가** 다.
 
-![v2 학습 진행 · 저장본 열여섯을 같은 지형 같은 카메라에서 이어 붙인 48.4 초](../assets/video/v2-train-progress.mp4)
-
-2,420 장 · 48.4 초 · 검은 장 0. 원본 1080p 는
-`sim/eval/results/20260928-train-progress/train-progress.mp4` 에 있고 여기
-실린 것은 720 p 사본이다.
+HUD 는 없다. HUD 는 `overlay/render.py` 가 «한 마리를 따라간 trace» 를 읽어
+그리는 것이고 여기는 1,024 마리를 위에서 본다. 그래서 `iter N` 만 태웠다.
 
 ### 여러 험지 위 로봇 무리
 
 **볼 것: 타일마다 다른 험지이고 타일마다 무리가 따로 에피소드를 돈다.**
 학습에 쓴 험지 여섯 종 격자 위에 1,024 마리를 한꺼번에 세웠다.
 
-![험지 여섯 종 격자 위 1,024 마리. 타일마다 지형이 다르고 무리가 각각 돈다](../assets/video/v2/army-terrains.mp4)
+```compare
+여러 험지 위 무리 | ../assets/video/v2/army-terrains.mp4 | 타일마다 지형이 다르고 타일마다 무리가 따로 에피소드를 돈다
+```
 
 **앞서 올렸던 두 컷은 버렸다** `확인됨`. 축척을 재니 로봇 0.7 m 가 7 px 과
 8 px 이어서 아예 안 보였다 (9.9 px/m · 11.5 px/m). 이 컷은 37.8 px/m 로
@@ -1142,7 +1203,9 @@ foothold-v2 | ../assets/video/v2/regress-stairsinv-d09-v2.mp4 | 3 % · 다만 �
 | 평가 규격 | [평가 프로토콜 정본](research-20260911-eval-protocol-v2.html) |
 | 계보 전체 | [우리는 왜 여덟 번 방향을 틀었나](research-20260928-rl-lineage.html) |
 | 지형 카탈로그 스틸 16 장 | `sim/eval/results/20260928-terrain-shots/stills/` · 펴기 전후 값은 같은 폴더 `index.json` |
-| 학습 진행 48.4 초 | `sim/eval/results/20260928-train-progress/train-progress.mp4` · 웹 사본 `docs/assets/video/v2-train-progress.mp4` |
+| 학습 진행 44.4 초 (대군) | `sim/eval/results/20260929-train-army/train-army.mp4` · 웹 사본 `docs/assets/video/v2/train-army.mp4` |
+| 학습 지형 비교 컷 둘 (6-6) | `sim/eval/results/20260929-traingap/{forward_gap,omni_gap}/flat_army_A_9_topdown.mp4` · 웹 사본 `docs/assets/video/v2/train-gap-{forward,omni}.mp4` |
+| 그 컷을 찍은 것 | `_out/loop/shoot_traingap.sh` · 지형 등록은 `sim/eval/terrains.py` 의 `train_fwdgap` · `train_omnigap` |
 | 확장 축 2 (v2g2) | `sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json` |
 
 ---
@@ -1151,6 +1214,8 @@ foothold-v2 | ../assets/video/v2/regress-stairsinv-d09-v2.mp4 | 3 % · 다만 �
 
 | 판 | 날짜 | 무엇 |
 |---|---|---|
+| v3.0 | 2026-09-29 | **팀장 피드백 2 차** · `forward_gap` 대 `omni_gap` **학습 지형 비교 컷**을 6-6 에 넣음 (설치본 cfg 로 찍음 · 저장소 사슬이 닫히지 않는 것을 확인하고 PR #461 을 근거로 적음) · 보고서에 남아 있던 **단독 영상 셋을 갤러리 포맷으로** 옮겨 배속·함께 재생을 붙임 (울타리 밖 단독 영상 0 편) |
+| v2.9 | 2026-09-29 | **학습 진행 영상을 대군 시점으로 다시** (험지 여섯 종 격자 위 1,024 마리 · 조각마다 `iter N` 을 태움 · 37.8 px/m 로 로봇 26 px) |
 | v2.8 | 2026-09-29 | 「한 섹션 확대」를 뺌 (팀장: 별 의미 없다) · 대군 컷 하나로 정리 |
 | v2.7 | 2026-09-29 | **비교 묶음 여섯을 갤러리 포맷 3 열로** · 함께 재생 · 처음으로 · 배속 0.25/0.5/1/2 (`mdpage` 에 `compare` 울타리 추가) |
 | v2.6 | 2026-09-29 | **팀장 피드백 1 차** · 회전 낙상 컷을 6-9 로 · 계보 `gap` 컷을 6-4 로 옮겨 흐름에 붙임 · 대군 컷을 «로봇이 보이는» 판으로 갈아 끼움(7 px -> 26 px) · **틀린 자막 셋을 trace 로 재서 고침** (`gap` D 와 `stairs_inv` v2 는 둘 다 건너는 판이었다 · `omni_gap` 은 지형이 아니라 학습 지형) |

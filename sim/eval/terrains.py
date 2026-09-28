@@ -86,9 +86,42 @@ ROUGH6_TERRAIN_NAMES = (
 )
 
 # 하네스가 `--terrain_set` 으로 고르는 자리. 값은 (이름 목록, 설정 모듈, 설정 클래스).
+# ★ 2026-09-29. **학습 지형 둘을 찍을 수 있게 등록한다.**
+#
+# 팀장 지시 「omni_gap 이 어떻게 생겼는지, forward_gap 은 어떻게 생겼는지 보고
+# 『아 이렇게 학습 지형이 바뀐거구나』 하는 정도의 인사이트를 주고 싶다」.
+#
+# 이 둘은 **평가 목록에 없다.** 평가 지형은 `gap` (`MeshGapTerrainCfg`) 이고,
+# `forward_gap` 은 v1 이, `omni_gap` 은 v2 가 «학습에» 쓴 것이다. 그래서
+# 지금까지 컷이 없었다.
+#
+# **판정에 쓰는 집합이 아니다.** 지형 생김새를 보이는 용도다. 이름에 `train`
+# 을 넣어 성적표에 섞이지 않게 한다.
+# 학습 cfg 가 사는 Isaac Lab 설치 패키지. 위 주석에 왜인지 적었다.
+_TRAIN_PKG = ("isaaclab_tasks.manager_based.locomotion.velocity"
+              ".config.go2.gap_training")
+
 TERRAIN_SETS = {
     "unseen10": (TERRAIN_NAMES, "generalization_env_cfg", "UnitreeGo2GeneralizationEnvCfg"),
     "rough6": (ROUGH6_TERRAIN_NAMES, "rough6_env_cfg", "UnitreeGo2Rough6EnvCfg"),
+    # **학습 cfg 는 저장소 사본이 아니라 Isaac Lab 설치본에서 가져온다.**
+    #
+    # 저장소의 `sim/policy/gap_e_env_cfg.py` 로는 못 가져온다. 그 파일이
+    # 부르는 `gap_wide_env_cfg` 가 저장소에 없고 (PR #461 에 있다), 그것이
+    # 다시 부르는 `gap_env_cfg` 는 `..rough_env_cfg` 를 부른다. 그 파일은
+    # Isaac Lab 것이라 저장소에 둘 물건이 아니다. 사슬이 저장소 안에서
+    # 닫히지 않는다 `확인됨`.
+    #
+    # 설치본은 사슬이 온전하고 **학습을 실제로 돌린 그 파일**이다. 저장소
+    # 사본 셋(gap_e · gap_h · omni_gap_terrain)과 줄끝만 빼고 한 글자도
+    # 같다 `확인됨`. 그래서 「설치본으로 찍었다」가 「학습 지형으로 찍었다」다.
+    #
+    # 녹화기는 Isaac 을 띄운 뒤(139행) `isaaclab_tasks` 를 넣고(147행) 나서
+    # 이 모듈을 가져온다(169행). 그 자리에서는 이 경로가 잡힌다.
+    "train_fwdgap": (("forward_gap",), _TRAIN_PKG + ".gap_e_env_cfg",
+                     "UnitreeGo2GapEEnvCfg"),
+    "train_omnigap": (("omni_gap",), _TRAIN_PKG + ".gap_h_env_cfg",
+                      "UnitreeGo2GapHEnvCfg"),
 }
 
 

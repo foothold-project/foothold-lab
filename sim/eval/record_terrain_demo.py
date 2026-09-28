@@ -149,6 +149,15 @@ import terrains
 from isaaclab_tasks.utils import load_cfg_from_registry
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path: sys.path.insert(0, HERE)
+# ★ 2026-09-29. 학습 지형 집합(`train_fwdgap` · `train_omnigap`)의 env cfg 는
+#   `sim/policy` 에 있고 **상대 import 를 쓴다** (`from .gap_wide_env_cfg`).
+#   그래서 그 폴더를 경로에 넣는 것으로는 안 되고 (`attempted relative import
+#   with no known parent package` `확인됨`) **패키지로** 가져와야 한다.
+#   저장소 뿌리를 넣으면 `sim.policy.<모듈>` 이 namespace package 로 잡힌다.
+#   평가 집합 둘은 `sim/eval` 에 그대로 있다.
+_ROOT = os.path.dirname(os.path.dirname(HERE))
+if os.path.isdir(os.path.join(_ROOT, "sim")) and _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 # **지형 집합에 맞는 설정을 고른다.** 예전에는 `unseen10` 설정 하나만
 # 가져와서, `rough6` 지형을 주면 하위 지형 목록에 없어 죽었다 `확인됨`
 # (2026-09-11 · `pyramid_stairs` 를 찍으려다 걸렸다).
