@@ -1167,10 +1167,11 @@ if __name__ == '__main__':
         print('  [!] 영상 규격이 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖)')
+    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖 · 선 굵기)')
     import svgtext
-    if not svgtext.main(VAULT):
-        print('\n  [!] 그림 안에서 글자가 겹칩니다. 배포를 중단합니다.')
+    _ok, _why = svgtext.main(VAULT)
+    if not _ok:
+        print('\n  [!] %s. 배포를 중단합니다.' % _why)
         sys.exit(1)
     print('[3.476] 렌더 검사 (마크다운 문법이 글자로 보이는가)')
     import rendercheck
