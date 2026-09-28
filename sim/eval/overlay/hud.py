@@ -294,10 +294,28 @@ class Hud(object):
     COL_B = 0.44
 
     def __init__(self, size, trace, fonts=None, title=None,
-                 slowdown_ratio=0.6, slowdown_min_s=0.15, anchor="top"):
+                 slowdown_ratio=0.6, slowdown_min_s=0.15, anchor="top",
+                 mode="terrain", span_s=None, fell_at_s=None):
         if anchor not in ("top", "bottom"):
             raise ValueError("anchor 는 top 이나 bottom 입니다: {}".format(anchor))
 
+        if mode not in ("terrain", "flat"):
+            raise ValueError("mode 는 terrain 이나 flat 입니다: {}".format(mode))
+
+        self.mode = mode
+        self._frame = 0
+        self._row_index = 0
+
+        # **가로축은 «영상» 길이다.** 자료가 영상보다 짧을 수 있다. 축 2 는
+        # 넘어진 env 의 기록을 그 자리에서 멈추는데(하네스 858행) 영상은
+        # 64 판 전체가 끝날 때까지 돈다. v1 `turn` 은 자료 3.70 초 · 영상
+        # 6.48 초다 `확인됨`.
+        #
+        # 자료 길이를 가로축으로 쓰면 재생 머리가 3.70 초에 오른쪽 끝에 닿아
+        # 남은 2.8 초 동안 붙어 있는다. 그러면 화면이 「끝까지 갔다」고 거짓말을
+        # 한다. 그래서 축은 영상에 맞추고 **곡선은 끊긴 자리에서 끝낸다.**
+        self.span_s = float(span_s) if span_s else None
+        self.fell_at = float(fell_at_s) if fell_at_s is not None else None
         self.width, self.height = size
         self.trace = trace
         self.fonts = fonts or Fonts()
@@ -306,7 +324,36 @@ class Hud(object):
 
         meta = trace.meta
 
-        self.command = trace.command_vx
+        if mode == "flat":
+            # **평지 프로브는 명령이 시간에 따라 바뀐다.** 축 1 은 «한 판 내내
+            # 같은 vx» 라 상수 하나로 그리면 맞지만, `stop` 은 1.0 에서 0 으로
+            # 떨어지고 `turn` 은 wz 가 계단으로 오른다. 상수로 그리면 화면이
+            # 거짓말을 한다. 그래서 줄마다 읽어 **계단**으로 그린다.
+            #
+            # 팀장 지시 「어떤 명령이 언제 들어갔는지 보이게」가 이것이다.
+            self.cmd_vx = [(r["t_s"], float(r.get("cmd_vx_mps") or 0.0))
+                           for r in trace.rows]
+            self.cmd_wz = [(r["t_s"], float(r.get("cmd_wz_rps") or 0.0))
+                           for r in trace.rows]
+
+            # 세로축 위 끝을 정하는 값. 명령의 최대 크기다.
+            self.command = max([abs(v) for _t, v in self.cmd_vx] or [0.0])
+            self.wz_full = max([abs(v) for _t, v in self.cmd_wz] or [0.0]) or 1.0
+
+            # 누적 회전각. **잰 값을 펴서** 쌓는다 (`base_yaw_deg`).
+            #
+            # `base_yaw_deg` 는 ±180 에서 접힌다. v1 `turn` env 8 이 실제로
+            # 접혔다 (범위 -179.3 ~ 179.9 · 90도 넘는 점프 2 개 `확인됨`).
+            # 접힌 값을 그냥 빼면 「179 에서 -179 로 갔다」가 -358 도로 찍힌다.
+            #
+            # **펴는 것은 추정이 아니라 복원이다.** 스텝이 0.02 초이고 명령
+            # 요레이트가 최대 1.0 rad/s 라 한 스텝의 각변화가 1.15 도를
+            # 넘지 못한다. 그래서 «180 도 넘는 차이는 접힌 것» 이라는 판정이
+            # 틀릴 수 없다.
+            self.turned_deg = self._unwrap_turn(trace.rows)
+        else:
+            self.command = trace.command_vx
+
         self.gate_m = float(meta.get("gate_m", meta.get("min_progress_m", 0.0)))
         self.max_lat = float(meta.get("max_lateral_drift_m", 0.05))
         self.max_mae = float(meta.get("max_velocity_mae_mps", 0.25))
@@ -332,13 +379,61 @@ class Hud(object):
 
         from . import trace as trace_mod
 
-        self.spans = trace_mod.slowdown_spans(
-            trace, ratio=slowdown_ratio, min_duration_s=slowdown_min_s
-        )
+        if mode == "flat":
+            # **주춤은 축 1 의 뜻이다.** 「명령의 60 % 아래로 머문 구간」인데
+            # `stop` 에서는 그것이 하려는 일 그 자체다. 평지에서 세면 거짓
+            # 경보만 난다. 그래서 안 센다.
+            self.spans = []
+        else:
+            self.spans = trace_mod.slowdown_spans(
+                trace, ratio=slowdown_ratio, min_duration_s=slowdown_min_s
+            )
         self._trace_mod = trace_mod
+
+        if self.span_s is None:
+            self.span_s = trace.duration_s
+
+        # 자료가 실제로 있는 마지막 시각. 이 뒤로는 아무것도 안 그린다.
+        self.data_end_s = trace.duration_s
 
         self._layout()
         self._base = self._render_static()
+
+    @staticmethod
+    def _unwrap_turn(rows):
+        """`base_yaw_deg` 를 펴서 «첫 줄 기준 누적 회전각» 목록으로.
+
+        접힌 자리(한 스텝에 180 도 넘는 차이)를 360 으로 되돌립니다. 값이
+        없는 줄은 직전 값을 잇습니다 (`None` 을 0 으로 읽으면 회전이 없던
+        것처럼 보입니다).
+        """
+        out = []
+        total = 0.0
+        prev = None
+
+        for row in rows:
+            raw = row.get("base_yaw_deg")
+
+            if raw is None:
+                out.append(total)
+                continue
+
+            now = float(raw)
+
+            if prev is not None:
+                step = now - prev
+
+                while step > 180.0:
+                    step -= 360.0
+                while step < -180.0:
+                    step += 360.0
+
+                total += step
+
+            prev = now
+            out.append(total)
+
+        return out
 
     # ------------------------------------------------------------ 자리 잡기
 
@@ -427,18 +522,46 @@ class Hud(object):
 
     def _chart_xy(self, t_s, speed):
         x0, y0, x1, y1 = self.chart_box
-        duration = max(self.trace.duration_s, 1.0e-6)
+        duration = max(self.span_s, 1.0e-6)
 
         x = x0 + (x1 - x0) * min(max(t_s / duration, 0.0), 1.0)
         y = y1 - (y1 - y0) * min(max(speed / self._y_top(), 0.0), 1.0)
 
         return x, y
 
+    def _cmd_at_x(self, x):
+        """그 x 자리의 «명령» 속도 크기.
+
+        축 1 은 한 판 내내 상수라 `self.command` 를 그대로 돌려줍니다. 평지
+        프로브는 명령이 바뀌므로 그 시각의 줄에서 읽습니다. 안 그러면
+        `stop` 에서 **정지한 뒤 구간이 통째로 「미달」로 칠해집니다** (명령이
+        0 인데 1.0 과 견주게 되어서다).
+        """
+        if self.mode != "flat":
+            return self.command
+
+        x0, _y0, x1, _y1 = self.chart_box
+        duration = self.span_s
+        t = duration * (x - x0) / max(x1 - x0, 1.0e-6)
+
+        if t > self.data_end_s + 1.0e-9:
+            return None
+
+        row = self.trace.at_time(t)
+
+        return abs(float((row or {}).get("cmd_vx_mps") or 0.0))
+
     def _speed_at_x(self, x):
         x0, _y0, x1, _y1 = self.chart_box
-        duration = self.trace.duration_s
+        duration = self.span_s
 
         t = duration * (x - x0) / max(x1 - x0, 1.0e-6)
+
+        # **자료가 끝난 뒤는 안 그린다.** `at_time` 은 가장 가까운 줄을
+        # 돌려주므로 그냥 쓰면 마지막 값이 꼬리 내내 이어진다.
+        if t > self.data_end_s + 1.0e-9:
+            return None
+
         row = self.trace.at_time(t)
 
         return (row or {}).get("speed_mps")
@@ -482,26 +605,62 @@ class Hud(object):
             _, y = self._chart_xy(0.0, value)
             draw.line((x0, y, x1, y), fill=GRID, width=1)
 
-        # 명령선. 점선으로 둬 실제 곡선과 안 헷갈리게 한다.
-        _, cy = self._chart_xy(0.0, self.command)
-        dashed_line(draw, x0, cy, x1, CMD_LINE, dash=s(8), gap=s(7),
-                    width=max(1, int(s(2))))
+        if self.mode == "flat":
+            # **계단 명령선.** 줄마다의 `cmd_vx` 를 그대로 잇는다. 평지 프로브는
+            # 명령이 도중에 바뀌므로 수평선 하나로는 못 그린다.
+            pts = [self._chart_xy(t, abs(v)) for t, v in self.cmd_vx]
 
-        # 명령 라벨은 **왼쪽 끝 위**에 둔다. 오른쪽에 두면 큰 숫자와 겹친다
-        # `확인됨` (2026-09-09).
-        draw_text(draw, (x0 + s(3), cy - s(3)), "명령 {:.2f}".format(self.command),
-                  f.get(s(12.5)), CMD_LINE, anchor="ld")
+            if len(pts) >= 2:
+                draw.line(pts, fill=CMD_LINE, width=max(1, int(s(2))))
+
+            # **명령이 바뀐 시각에 세로 금.** 팀장이 보려는 「언제 들어갔나」가
+            # 이 금이다. vx 와 wz 를 둘 다 본다. `turn` 은 vx 가 0 으로 가만히
+            # 있고 wz 만 계단으로 오르기 때문이다.
+            self.cmd_marks = []
+            prev = None
+
+            for (t, vx), (_t2, wz) in zip(self.cmd_vx, self.cmd_wz):
+                now = (round(vx, 4), round(wz, 4))
+
+                if prev is not None and now != prev:
+                    self.cmd_marks.append((t, now))
+                prev = now
+
+            # **명령이 바뀐 자리에 세로 금.** 글자를 안 붙인다. 붙여 보니
+            # 차트 부제(「명령 대 실제」)와 같은 줄에 앉아 겹쳤다 `확인됨`.
+            # 지금 값은 왼쪽 칸에 숫자로 적으므로 글자가 두 번 필요 없다.
+            for t, (vx, wz) in self.cmd_marks:
+                mx, _ = self._chart_xy(t, 0.0)
+                draw.line((mx, y0, mx, y1), fill=_fade(WARN, 190),
+                          width=max(1, int(s(2))))
+        else:
+            # 명령선. 점선으로 둬 실제 곡선과 안 헷갈리게 한다.
+            _, cy = self._chart_xy(0.0, self.command)
+            dashed_line(draw, x0, cy, x1, CMD_LINE, dash=s(8), gap=s(7),
+                        width=max(1, int(s(2))))
+
+            # 명령 라벨은 **왼쪽 끝 위**에 둔다. 오른쪽에 두면 큰 숫자와
+            # 겹친다 `확인됨` (2026-09-09).
+            draw_text(draw, (x0 + s(3), cy - s(3)),
+                      "명령 {:.2f}".format(self.command),
+                      f.get(s(12.5)), CMD_LINE, anchor="ld")
 
         # 세로 눈금. 1초마다(길면 5초마다).
-        duration = self.trace.duration_s
+        duration = self.span_s
         step = 1.0 if duration <= 12.0 else 5.0
         mark = step
 
         while mark < duration - 1.0e-9:
             x, _ = self._chart_xy(mark, 0.0)
             draw.line((x, y0, x, y1), fill=_fade((255, 255, 255), 16), width=1)
-            draw_text(draw, (x, y1 + s(2)), "{:g}".format(mark), f.get(s(11.5)),
-                      MUTED, anchor="ma")
+
+            # **오른쪽 끝 길이 라벨과 붙으면 눈금 글자를 뺀다.** 금은 남긴다.
+            # 길이가 6.48 초일 때 눈금 `6` 이 92.6 % 자리에 앉아 라벨 `6.48s`
+            # 와 붙어 **「66.48s」 로 읽혔다** `확인됨`.
+            if x <= x1 - s(30):
+                draw_text(draw, (x, y1 + s(2)), "{:g}".format(mark),
+                          f.get(s(11.5)), MUTED, anchor="ma")
+
             mark += step
 
         draw_text(draw, (x1, y1 + s(2)), "{:g}s".format(round(duration, 2)),
@@ -549,10 +708,17 @@ class Hud(object):
 
         x0 = self.col_c[0]
 
-        draw_text(draw, (x0, self.prog_box[1] - s(21)), "전진",
-                  f.get(s(14), bold=True), INK)
-        draw_text(draw, (x0 + s(32), self.prog_box[1] - s(19)), "통과선까지",
-                  f.get(s(12.5)), MUTED)
+        if self.mode == "flat":
+            # 평지에는 통과선이 없다. 그 자리에 **방향 명령**을 둔다.
+            draw_text(draw, (x0, self.prog_box[1] - s(21)), "방향",
+                      f.get(s(14), bold=True), INK)
+            draw_text(draw, (x0 + s(32), self.prog_box[1] - s(19)),
+                      "명령 대 실제", f.get(s(12.5)), MUTED)
+        else:
+            draw_text(draw, (x0, self.prog_box[1] - s(21)), "전진",
+                      f.get(s(14), bold=True), INK)
+            draw_text(draw, (x0 + s(32), self.prog_box[1] - s(19)),
+                      "통과선까지", f.get(s(12.5)), MUTED)
 
         draw_text(draw, (x0, self.drift_box[1] - s(21)), "좌우",
                   f.get(s(14), bold=True), INK)
@@ -561,21 +727,42 @@ class Hud(object):
 
     # ------------------------------------------------------------ 프레임
 
-    def draw(self, image, frame_index):
+    def draw(self, image, frame_index, video_index=None):
         """프레임 하나에 HUD 를 얹은 새 이미지.
 
         `image` 는 RGB PIL 이미지입니다. 원본은 안 건드립니다.
+
+        ## `video_index`
+
+        `frame_index` 는 **자료 줄 번호**이고 랜더가 `len(trace) - 1` 로
+        자릅니다. 자료가 영상보다 짧으면 그 뒤로 번호가 안 움직입니다.
+
+        평지 컷에서 그것을 시각으로 쓰면 **시계가 낙상 시각에 멈춥니다**
+        `확인됨` (stop v1 · 장 475 인데 8.76 초로 찍혔다. 9.50 초여야 한다).
+        그래서 랜더가 «안 자른» 영상 프레임 번호를 따로 넘깁니다.
         """
-        row = self.trace.rows[min(frame_index, len(self.trace.rows) - 1)]
+        self._row_index = min(max(frame_index, 0), len(self.trace.rows) - 1)
+        row = self.trace.rows[self._row_index]
+        self._frame = frame_index if video_index is None else video_index
 
         layer = self._base.copy()
         draw = ImageDraw.Draw(layer)
 
         self._draw_clock(draw, row)
         self._draw_chart(draw, row)
-        self._draw_progress(draw, row)
+
+        if self.mode == "flat":
+            # **판정 램프를 안 그린다.** 넷 다 축 1 의 판정이고 (생존 · 추종 ·
+            # 방향 · 판정) 평지 프로브는 그 잣대로 안 잰다. 그려 두면 화면이
+            # 「이 판이 통과했다」고 말하는데 그런 판정을 여기서 안 한다.
+            self._draw_yaw(draw, row)
+        else:
+            self._draw_progress(draw, row)
+
         self._draw_drift(draw, row)
-        self._draw_lamps(draw, row)
+
+        if self.mode != "flat":
+            self._draw_lamps(draw, row)
 
         out = image.convert("RGBA")
         out.alpha_composite(layer)
@@ -588,7 +775,14 @@ class Hud(object):
         x0 = self.col_a[0]
 
         big = f.get(s(38), bold=True)
-        text = "{:.2f}".format(row["t_s"])
+
+        # 평지에서는 **영상 시각**이다. 자료가 먼저 끝나도 시계는 돈다.
+        if self.mode == "flat":
+            now = self._frame * self.trace.dt_s
+        else:
+            now = row["t_s"]
+
+        text = "{:.2f}".format(now)
 
         baseline = self.inner_top + s(58)
 
@@ -602,10 +796,28 @@ class Hud(object):
                   anchor="ls")
 
         draw_text(draw, (x0, baseline + s(18)),
-                  "경과 / {:g}초".format(round(self.trace.duration_s, 2)),
+                  "경과 / {:g}초".format(round(self.span_s, 2)),
                   f.get(s(14)), MUTED)
 
-        if self.spans:
+        if self.mode == "flat":
+            # **지금 무슨 명령이 들어가 있나.** 평지 프로브에서 이것이 「주춤」
+            # 자리를 대신한다. 두 칸을 같이 적는다. `stop` 은 vx 가 움직이고
+            # `turn` 은 wz 가 움직인다.
+            now = self._frame * self.trace.dt_s
+
+            if self.fell_at is not None and now >= self.fell_at - 1.0e-9:
+                # **넘어진 뒤는 명령을 안 적는다.** 그 뒤의 기록이 없다.
+                draw_text(draw, (x0, baseline + s(44)),
+                          "넘어짐 {:.2f}초".format(self.fell_at),
+                          f.get(s(15), bold=True), BAD)
+            else:
+                cvx = float(row.get("cmd_vx_mps") or 0.0)
+                cwz = float(row.get("cmd_wz_rps") or 0.0)
+
+                draw_text(draw, (x0, baseline + s(44)),
+                          "명령 vx {:+.2f} wz {:+.2f}".format(cvx, cwz),
+                          f.get(s(14), bold=True), CMD_LINE)
+        elif self.spans:
             seen = sum(1 for start, _e, _l in self.spans if start <= row["t_s"])
             color = BAD if seen else MUTED
 
@@ -621,11 +833,16 @@ class Hud(object):
         f = self.fonts
         x0, y0, x1, y1 = self.chart_box
 
-        now_t = row["t_s"]
-        speed = row.get("speed_mps")
-        px, _ = self._chart_xy(now_t, 0.0)
+        if self.mode == "flat":
+            now_t = self._frame * self.trace.dt_s
 
-        _, cy = self._chart_xy(0.0, self.command)
+            # 자료가 끝난 뒤에는 점을 안 찍는다. 재생 머리만 계속 간다.
+            speed = row.get("speed_mps") if now_t <= self.data_end_s else None
+        else:
+            now_t = row["t_s"]
+            speed = row.get("speed_mps")
+
+        px, _ = self._chart_xy(now_t, 0.0)
 
         # 명령에 못 미친 만큼을 채운다. **주춤이 면적으로 보이는 자리다.**
         step = max(1, int(s(1)))
@@ -633,8 +850,10 @@ class Hud(object):
 
         while x <= px:
             value = self._speed_at_x(x)
+            want = self._cmd_at_x(x)
 
-            if value is not None and value < self.command:
+            if value is not None and want and value < want:
+                _, cy = self._chart_xy(0.0, want)
                 _, sy = self._chart_xy(0.0, value)
                 draw.line((x, cy, x, sy), fill=SHORTFALL, width=step)
 
@@ -697,6 +916,52 @@ class Hud(object):
                   f.get(s(15), bold=True), INK)
         draw_text(draw, (x1, y1 + s(5)), "통과선 {:g} m".format(self.gate_m),
                   f.get(s(12.5)), MUTED, anchor="ra")
+
+    def _draw_yaw(self, draw, row):
+        """방향 명령(`cmd_wz`)과 **잰** 누적 회전각.
+
+        평지 프로브에서 「통과선까지」 자리를 대신합니다.
+
+        ## 왜 회전«각» 인가
+
+        회전 «속도» 의 실측값이 이 자료에 없습니다. 있는 것은 `base_yaw_deg`
+        이고, 그것을 스텝으로 나누면 **추정량**이 됩니다. 잰 것과 지은 것을
+        한 화면에 섞지 않으려고, 실제 쪽은 **첫 줄 기준 누적 회전각**을
+        그대로 씁니다. 이것은 잰 값입니다.
+
+        명령은 rad/s, 실제는 deg 라 단위가 다릅니다. 그래서 **같은 게이지에
+        겹치지 않고** 게이지는 명령만 그리고 회전각은 숫자로 적습니다.
+        """
+        s = self._s
+        f = self.fonts
+        x0, y0, x1, y1 = self.prog_box
+
+        cwz = float(row.get("cmd_wz_rps") or 0.0)
+
+        draw.rounded_rectangle((x0, y0, x1, y1), radius=s(7),
+                               fill=(255, 255, 255, 20))
+
+        mid = (x0 + x1) / 2.0
+        half = (x1 - x0) / 2.0
+
+        draw.line((mid, y0 - s(3), mid, y1 + s(3)), fill=_fade(INK, 150), width=1)
+
+        ratio = min(max(cwz / self.wz_full, -1.0), 1.0)
+
+        if abs(ratio) > 1.0e-9:
+            end = mid + half * ratio
+            lo, hi = (min(mid, end), max(mid, end))
+            draw.rounded_rectangle((lo, y0, hi, y1), radius=s(7), fill=CMD_LINE)
+
+        draw_text(draw, (x0, y1 + s(3)), "{:+.2f} rad/s".format(cwz),
+                  f.get(s(15), bold=True), INK)
+
+        if self.turned_deg:
+            turned = self.turned_deg[min(self._row_index,
+                                         len(self.turned_deg) - 1)]
+
+            draw_text(draw, (x1, y1 + s(5)), "실제 {:+.0f} deg".format(turned),
+                      f.get(s(12.5)), MUTED, anchor="ra")
 
     def _draw_drift(self, draw, row):
         s = self._s
