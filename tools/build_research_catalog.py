@@ -300,7 +300,13 @@ def read_terrain_consts():
 RESULTS = os.path.join(LAB, 'sim', 'eval', 'results')
 
 # 배포 판 -> 그 판을 낸 실측 폴더. 판이 늘면 여기 한 줄 늘린다.
-RUN_FOLDER = {'v1': '20260911-v3-fixedscan'}
+# v2: lead 가 measure_release() 로 직접 돌려 확인한 값 (2026-09-28), site 세션이
+#   같은 원자료를 다시 읽어 같은 수치를 재현해서 확인했다. 처음 준
+#   20260928-v2-gallery-raw 는 <뿌리>/<모델>/<집합>/d0.5/v1.0/... 모양이라 맞지
+#   않았고, fixedscan 과 같은 <뿌리>/<모델>/<집합>/runs/v1.0-d0.5/... 모양으로
+#   20260928-v2-release-raw 에 다시 깔았다.
+RUN_FOLDER = {'v1': '20260911-v3-fixedscan',
+              'v2': '20260928-v2-release-raw'}
 
 
 def _rates(run_dir, model, group, speed, diff):
