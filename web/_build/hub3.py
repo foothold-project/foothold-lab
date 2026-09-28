@@ -1070,7 +1070,7 @@ def _release_block():
     가 «최신이 위로»(`latest` = `versions[0]`) 로 뒤집어 쓴다. 그래서 실제로는
     `rels[0]` 이 최신이고 `rels[-1]` 은 «가장 오래된» 판이다. v2 를 올렸더니
     이 카드가 v1 로 한 판 늦게 그려졌다 (lead 가 찾음, `gallery/compare/index.html`
-    의 #479 와 같은 뿌리 — 한 파일이 두 곳에서 다르게 읽혔다). `read_releases()`
+    의 #479 와 같은 뿌리다. 한 파일이 두 곳에서 다르게 읽혔다. `read_releases()`
     가 `versions.json` 을 그대로 베끼므로 `rels[0]` 이 옳다.
     """
     rels = (catalog().get('releases') or [])
@@ -1093,6 +1093,21 @@ def _release_block():
     if kn:
         lead += (' 기존 험지 %d종은 <b>%d종 전부</b> 기준선 이상입니다.'
                  % (kn['terrains'], kn['at_or_above']))
+
+    # ★ 2026-09-28. 「미경험 N종」 숫자에 그 판이 «학습에 넣은» 지형이 섞여
+    #   있으면 숫자는 맞아도 말이 틀린다 (외부 인원이 첫 화면에서 보는 자리라
+    #   우리 성과를 부풀린 것으로 읽힌다). `measure_release()` 출력에는 어느
+    #   지형이 걸렸는지가 없어(개수만 있다) 여기서 판별할 수 없다. 그래서
+    #   `env.yaml sub_terrains` 실측(lead 2026-09-28. gallery/compare/index.html
+    #   의 TRAINED_TERRAIN 과 같은 사실, 같은 방식)으로 판마다 손으로 적는다.
+    TRAINED_UNSEEN = {
+        'v2': 'rails',
+    }
+    trained = TRAINED_UNSEEN.get(r.get('id'))
+    caveat = (('%s 는 %s 가 학습에 넣은 지형이라 이 숫자에 포함됩니다. '
+               '학습 없이 넘은 지형만 보려면 종합보고서를 확인하십시오.'
+               % (trained, r.get('main_model') or r.get('id')))
+              if trained else '')
 
     cells = [('미경험 %d종 · 종합' % un['terrains'],
               '%.0f <i>→</i> %.0f<i>%%</i>' % (un['baseline_pct'], un['main_pct']),
@@ -1128,11 +1143,14 @@ def _release_block():
     return ('<section class="rel3"><div class="rk3">지금 어디까지 왔나'
             '<span class="rkm3">%s%s</span></div>'
             '<p class="rl3">%s</p>'
+            '%s'
             '<div class="rvs">%s</div>'
             '<div class="rgs3">%s</div></section>'
             % (esc(r.get('main_model') or ''),
                (' · 평가 %s · 판 %s' % (when, r.get('id'))) if when else '',
-               lead, grid, links))
+               lead,
+               ('<p class="rn3">%s</p>' % esc(caveat)) if caveat else '',
+               grid, links))
 
 
 def research_html(site):
@@ -1837,6 +1855,8 @@ CSS = '''<style id="hub3-css">
 .rl3{margin:.45rem 0 .8rem;font-size:.92rem;font-weight:650;line-height:1.55;
  color:var(--ink);word-break:keep-all}
 .rl3 b{font-weight:850;color:var(--dim)}
+.rn3{margin:-.35rem 0 .8rem;font-size:.76rem;line-height:1.5;
+ color:var(--ink-3);word-break:keep-all}
 .rvs{display:grid;gap:.5rem;grid-template-columns:repeat(4,1fr)}
 @media(max-width:760px){.rvs{grid-template-columns:repeat(2,1fr)}}
 .rv3{border-top:2px solid var(--rule);padding-top:.4rem;min-width:0}
