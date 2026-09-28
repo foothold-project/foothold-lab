@@ -371,11 +371,31 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     cell = cells.find(c => G.sameNumber(c.speed, rawSpeed)) || null;
     if (!cell) rejected.push('speed=' + rawSpeed);
   } else {
-    /* **기본은 gap 0.5 다** (팀장 확정 2026-09-12). 전에는 `cells[0]` 이라
-     * 알파벳 첫 지형이 잡혔다. gap 은 기준선 1 % 에서 foothold-v1 100 % 로
-     * 가장 크게 벌어지는 자리라 세 열을 견주기에 제일 잘 보인다. */
-    cell = cells.find(c => c.terrain === 'gap' && G.sameNumber(c.speed, 0.5))
-        || cells.find(c => c.terrain === 'gap')
+    /* **기본은 rails 1.0 이다** (팀장 지시 2026-09-28 · v2 배포).
+     *
+     * 전에는 gap 0.5 였다 (팀장 확정 2026-09-12 · 기준선 1 % 에서
+     * foothold-v1 100 % 로 가장 크게 벌어지는 자리라서). v2 가 나오면서
+     * 「v1 보다 나아진 자리」를 기본으로 두기로 바꿨다.
+     *
+     * rails 의 실측 (난이도 0.5 · 지형마다 100 판)
+     *
+     *          NVIDIA    v1     v2    v1 -> v2
+     *   0.5 m/s     0    70     99     +29 %p
+     *   1.0 m/s     8    48    100     +52 %p
+     *   1.5 m/s     0    21    100     +79 %p
+     *
+     * **1.5 가 차이는 가장 큰데 기본값으로 안 쓴다.** 1.5 m/s 는 NVIDIA 의
+     * 학습 명령 범위 «밖» 이다 (`lin_vel_x` (-1.0, 1.0) ·
+     * `20260921-nvidia-axis1/README.md` 4 절). 기본값을 범위 밖 칸으로 두면
+     * 기준선 열이 부당하게 0 이 되고, 보는 사람은 그것을 능력 차이로 읽는다.
+     * 1.0 은 세 판 모두의 학습 범위 «안» 이고 세 열이 8 · 48 · 100 으로 갈린다.
+     *
+     * 모델 열은 여기서 안 고른다. 위 `picks` 가 `baseline` 을 박고 최근 두 판을
+     * 자동으로 붙이므로, `versions.json` 에 v2 가 들어가면 NVIDIA · v1 · v2 가
+     * 된다. 그것도 실제로 확인했다. */
+    cell = cells.find(c => c.terrain === 'rails' && G.sameNumber(c.speed, 1.0))
+        || cells.find(c => c.terrain === 'rails')
+        || cells.find(c => c.terrain === 'gap' && G.sameNumber(c.speed, 0.5))
         || cells[0];
     guessed = true;
   }
