@@ -310,7 +310,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      *
      * 처음엔 「models 에 baseline 키가 있는 판」까지만 봤다 (2026-09-28
      * 1차 고침). 그런데 v2 manifest 가 schema 2 의 의도대로 baseline·
-     * foothold-v1 을 «숫자만» 144 칸으로 실었다 — clips 는 0 개다
+     * foothold-v1 을 «숫자만» 144 칸으로 실었다. clips 는 0 개다
      * (`counts.comparison_clips: 0`). 그러면 1차 고침이 v2 를 먼저
      * 찾아내 기본 화면이 「영상 없음」으로 열린다. rails 1.0 을 기본
      * 칸으로 고른 까닭이 «세 열을 영상으로 견주기 좋아서」 인데 그
@@ -318,7 +318,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      *
      * 그래서 두 단계로 찾는다. 먼저 «그 모델의 clip 이 실제로 있는»
      * 판을 우선한다. 아무도 없으면(전부 숫자만) 1차 고침대로 «모델
-     * 자체가 있는» 판으로 물러난다 — 그러면 최소한 숫자는 뜬다. */
+     * 자체가 있는» 판으로 물러난다. 그러면 최소한 숫자는 뜬다. */
     const hasClipFor = (v, model) => !!(mans[v] && (mans[v].clips || [])
       .some(c => c.model === model));
     const hasModel = (v, model) => !!(mans[v] && mans[v].models && (model in mans[v].models));
