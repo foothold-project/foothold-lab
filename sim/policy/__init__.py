@@ -114,3 +114,27 @@ gym.register(
         "rsl_rl_cfg_entry_point": f"{__name__}.gap_ppo_cfg:UnitreeGo2GapPPORunnerCfg",
     },
 )
+
+
+# N 조건 · v2b 에서 height_scan 백색 잡음 한 칸만 (±0.10 -> ±0.02).
+gym.register(
+    id="Isaac-Velocity-V2n-Unitree-Go2-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.v2n_env_cfg:UnitreeGo2V2nEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{__name__}.gap_ppo_cfg:UnitreeGo2GapPPORunnerCfg",
+    },
+)
+
+
+# S 조건 · 훈련 지형에 stepping_stones 10 % (boxes·random_rough 에서 각 5 %p).
+gym.register(
+    id="Isaac-Velocity-V2s-Unitree-Go2-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.v2s_env_cfg:UnitreeGo2V2sEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{__name__}.gap_ppo_cfg:UnitreeGo2GapPPORunnerCfg",
+    },
+)
