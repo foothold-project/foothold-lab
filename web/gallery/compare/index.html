@@ -241,8 +241,13 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     }
   }
 
-  /* 고를 수 있는 열은 (판, 모델) 쌍 전부다. */
+  /* 고를 수 있는 열은 (판, 모델) 쌍 전부다.
+   *
+   *   `pairs`     목록(select)에 뜨는 것. 제 컷이 있는 짝만.
+   *   `allPairs`  주소로 지목할 수 있는 것. 재사용 컷 짝도 들어간다.
+   */
   const pairs = [];
+  const allPairs = [];
   Object.values(mans).forEach(m => {
     Object.keys(m.models).forEach(model => {
       /* 주소에는 판을 남긴다 (`v1:baseline`). 판을 넘나드는 비교가 이
@@ -272,10 +277,37 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
        * 격자(`gallery/view`)는 그 컷을 그대로 쓴다. 거기서는 «모든 칸에
        * 영상이 있어야» 하고, 여기서는 «판을 가로질러 견주어야» 한다.
        * 목적이 다르므로 판정도 다르다. */
-      if (!(m.clips || []).some(c => c.model === model && !c.reused)) return;
+      /* ★ 2026-09-29 (3 차). **주소로는 뜨게 한다.**
+       *
+       * 팀장이 `?left=v2:baseline&mid=v2:foothold-v2` 에서 세 번 같은 것을
+       * 지적했다. 나는 세 번 「설계대로다」라고 답했고 그것이 틀렸다.
+       *
+       * 재사용 컷 칸은 **열로 그릴 것을 다 갖고 있다** `확인됨`
+       * (`file: '../v1/clips/boxes-v0.5-baseline.mp4'` · `poster` · `sha256`
+       * · `frames` · `seconds` · `reused_from: 'v1'`). 체크포인트도 같다
+       * (`versions.json` 의 sha 동일). 그러니 못 그릴 까닭이 없다.
+       *
+       * 「조용히 바꿔치기 안 한다」 규칙은 **다른 측정을 보여 주는 것** 을
+       * 막으려는 것이다 (`speed=9` -> 0.5). 여기서는 모델 · 체크포인트 ·
+       * 지형 · 속도 · 성공률이 다 그대로고 컷 파일만 v1 폴더에 있다.
+       * 바꿔치기가 아니라 **같은 것을 찾아 주는 것** 이다.
+       *
+       * 「같은 파일을 두 번 고를 이유가 없다」 는 2026-09-29 지적은
+       * **목록** 이야기였다. 그래서 목록(`pairs`)은 그대로 두고 주소
+       * 해석용 목록(`allPairs`)을 따로 둔다. 재사용 열에는 화면에
+       * 「v1 컷 재사용」 딱지를 붙여 다시 구운 것이 아님을 밝힌다. */
+      const entry = { id: m.version + ':' + model, version: m.version,
+                      model: model, label: m.version + ' · ' + model };
+      const own = (m.clips || []).some(c => c.model === model && !c.reused);
+      const borrowed = (m.clips || []).find(c => c.model === model && c.reused);
 
-      pairs.push({ id: m.version + ':' + model, version: m.version, model: model,
-                   label: m.version + ' · ' + model });
+      if (!own && !borrowed) return;        // 컷이 아예 없으면 열이 안 된다
+
+      entry.reused = !own;
+      entry.reusedFrom = own ? null : (borrowed.reused_from || null);
+
+      allPairs.push(entry);
+      if (own) pairs.push(entry);          // 목록에는 «제 컷이 있는 것» 만
     });
   });
 
@@ -290,14 +322,16 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     const m = /(\d+)/.exec(v || '');
     return m ? parseInt(m[1], 10) : 0;
   };
-  pairs.sort((a, b) => {
+  const byLineage = (a, b) => {
     const ia = MODEL_ORDER.indexOf(a.model), ib = MODEL_ORDER.indexOf(b.model);
     const ra = ia < 0 ? MODEL_ORDER.length : ia;
     const rb = ib < 0 ? MODEL_ORDER.length : ib;
     if (ra !== rb) return ra - rb;
     if (a.model !== b.model) return a.model < b.model ? -1 : 1;
     return verNum(a.version) - verNum(b.version);
-  });
+  };
+  pairs.sort(byLineage);
+  allPairs.sort(byLineage);
 
   /* 지형·속도는 **선택된 판들의 합집합**이다. 목록을 각각 합쳐 곱하면
      어느 판에도 없는 가짜 조합이 생긴다. */
@@ -345,7 +379,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     const raw = q.get(slot);
     if (raw === null || raw === '') return;
     addressed[slot] = true;
-    const hit = pairs.find(p => p.id === raw);
+    const hit = allPairs.find(p => p.id === raw);   // 재사용 짝도 받는다
     if (hit) state[slot] = hit.id;
     else rejected.push(slot + '=' + raw);   // 빈 열로 둔다. 대신 채우지 않는다
   });
@@ -416,6 +450,8 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      * 안 쓰인 것을 찾아 쓴다. 쓸 것이 없으면 비워 둔다 (억지로 채우지
      * 않는다 · 이 페이지의 규칙이다). */
     const taken = SLOTS.map(s => state[s]).filter(Boolean);
+    /* **자동 고르기는 `pairs` 만 본다.** 기본 화면이 재사용 열로 열리면
+     * 「이 판이 다시 구운 컷」으로 읽힌다. 주소로 지목할 때만 쓴다. */
     const free = id => !!id && !!pairs.find(p => p.id === id)
       && taken.indexOf(id) < 0;
 
@@ -765,8 +801,15 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      * 세 열을 견주는 것이고, 빈 열은 그 일을 못 하게만 한다. 열을 바꾸려면
      * 다른 짝을 고르면 된다. */
     const sel = G.el('select');
-    pairs.forEach(p => {
-      const o = G.el('option', { value: p.id, text: columnLabel(p) });
+    /* 목록에 없는 값이 주소로 들어왔으면 **그것도 옵션으로 보여 준다.**
+     * 안 그러면 select 가 엉뚱한 것을 고른 것처럼 보인다. */
+    const listed = pairs.slice();
+    const cur = allPairs.find(p => p.id === state[slot]);
+    if (cur && !listed.find(p => p.id === cur.id)) listed.unshift(cur);
+    listed.forEach(p => {
+      const o = G.el('option', { value: p.id,
+        text: columnLabel(p) + (p.reused ? '  (' + (p.reusedFrom || '다른 판')
+                                            + ' 컷 재사용)' : '') });
       if (p.id === state[slot]) o.selected = true;
       sel.appendChild(o);
     });
@@ -776,7 +819,17 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     });
     head.appendChild(sel);
 
-    const pair = pairs.find(p => p.id === state[slot]);
+    const pair = allPairs.find(p => p.id === state[slot]);
+
+    /* **재사용 열임을 화면에 적는다.**
+     *
+     * 목록 이름에만 적으면 열을 고른 뒤에는 안 보인다. 이 판이 컷을 다시
+     * 구운 것으로 읽히면 안 된다. 체크포인트는 같고 컷 파일만 다른 판
+     * 폴더에 있다 (`versions.json` 의 sha 로 대조함). */
+    if (pair && pair.reused) {
+      head.appendChild(G.el('span', { class: 'sub',
+        text: '컷은 ' + (pair.reusedFrom || '다른 판') + ' 판의 것 · 같은 체크포인트' }));
+    }
     const man = pair && mans[pair.version];
     const ev = man && man.evaluations.find(e =>
       e.terrain === cell.terrain && G.sameNumber(e.speed_mps, cell.speed) &&

@@ -1,9 +1,12 @@
 /* compare 의 «열 고르기» 를 알려진 답으로 시험한다. 브라우저 없이 돈다.
  *
- * 근거: 팀장이 같은 자리에서 두 번 막혔다 (2026-09-29).
+ * 근거: 팀장이 같은 자리에서 **세 번** 지적했다 (2026-09-29).
  *   `?left=v2:baseline&mid=v2:foothold-v2`
- *     - 왼쪽이 빈다      -> 설계대로다 (v2 는 baseline 컷을 reused 로만 든다)
- *     - 오른쪽이 가운데와 같아진다 -> **결함** 이다
+ *     - 왼쪽이 빈다               -> **결함이었다.** 재사용 컷 짝을 열로
+ *       안 그렸다. 파일·포스터·sha 가 다 있는데 필터 한 줄이 막았다.
+ *       나는 세 번 「설계대로다」라고 답했고 그것이 틀렸다.
+ *     - 오른쪽이 가운데와 같아진다 -> 결함. 자동 고르기가 이미 쓴 짝을
+ *       피하지 않았다.
  *
  * ## 구현을 복제하지 않는다
  *
@@ -88,39 +91,41 @@ if (fs.existsSync(path.join(DEPLOYED, 'versions.json'))) {
 
 console.log('자료: ' + 자료);
 
-/* 열 목록(`pairs`)도 규칙을 복제하지 않고 index.html 의 판정을 그대로 쓴다. */
-const PSTART = '      if (!(m.clips || []).some(c => c.model === model && !c.reused)) return;';
-if (html.indexOf(PSTART) < 0) {
-  console.error('** pairs 판정 줄을 못 찾았다. 시험이 낡았다 **');
+/* 열 목록도 **규칙을 복제하지 않고** index.html 에서 떼어 낸다.
+ * `pairs`(목록에 뜨는 것) 와 `allPairs`(주소로 지목 가능한 것) 를 가르는
+ * 판정이 여기 들어 있다. */
+const P0 = '  Object.values(mans).forEach(m => {';
+const P1 = '  allPairs.sort(byLineage);';
+const pa = html.indexOf(P0);
+const pb = html.indexOf(P1);
+
+if (pa < 0 || pb < 0) {
+  console.error('** 열 목록 블록을 못 찾았다. 시험이 낡았다 (' + pa + ' · ' + pb + ') **');
   process.exit(1);
 }
 
+const PAIRS_BLOCK = html.slice(pa, pb + P1.length);
+
 function buildPairs() {
   const pairs = [];
-  const order = index.versions.map(v => v.version)
-    .sort((x, y) => (parseInt(x.replace(/\D/g, ''), 10) || 0) -
-                    (parseInt(y.replace(/\D/g, ''), 10) || 0));
-  order.forEach(ver => {
-    const m = mans[ver];
-    Object.keys(m.models || {}).forEach(model => {
-      if (!(m.clips || []).some(c => c.model === model && !c.reused)) return;
-      pairs.push({ id: ver + ':' + model, version: ver, model: model,
-                   label: ver + ' · ' + model });
-    });
-  });
-  return pairs;
+  const allPairs = [];
+  eval(PAIRS_BLOCK);
+  return { pairs: pairs, allPairs: allPairs };
 }
 
 const SLOTS = ['left', 'mid', 'right'];
 
 function run(query) {
   const q = new URLSearchParams(query);
-  const pairs = buildPairs();
+  const built = buildPairs();
+  const pairs = built.pairs;
+  const allPairs = built.allPairs;
   const state = { left: null, mid: null, right: null };
   const rejected = [];
   let guessed = false;
   eval(BLOCK);
-  return { state: state, rejected: rejected, guessed: guessed };
+  return { state: state, rejected: rejected, guessed: guessed,
+           pairs: pairs, allPairs: allPairs };
 }
 
 let ran = 0, fails = 0;
@@ -135,16 +140,31 @@ function check(name, got, want) {
   }
 }
 
-console.log('열 목록: ' + buildPairs().map(p => p.id).join(' · '));
+const B0 = buildPairs();
+console.log('목록에 뜨는 열: ' + B0.pairs.map(p => p.id).join(' · '));
+console.log('주소로 되는 열: ' + B0.allPairs.map(p => p.id
+  + (p.reused ? '(재사용)' : '')).join(' · '));
 console.log();
 
 /* 1. 팀장이 막힌 주소. 왼쪽은 비고 오른쪽은 가운데와 «달라야» 한다. */
 const r1 = run('left=v2:baseline&mid=v2:foothold-v2');
-check('팀장 주소 · 왼쪽은 빈다 (거절)', r1.state.left, null);
-check('팀장 주소 · 거절을 알린다', r1.rejected, ['left=v2:baseline']);
+check('팀장 주소 · 왼쪽이 v2:baseline 으로 뜬다', r1.state.left, 'v2:baseline');
+check('팀장 주소 · 거절 없다', r1.rejected, []);
 check('팀장 주소 · 가운데는 준 대로', r1.state.mid, 'v2:foothold-v2');
 check('팀장 주소 · 오른쪽이 가운데와 다르다',
       r1.state.right !== r1.state.mid, true);
+check('팀장 주소 · 세 열이 서로 다르다',
+      new Set(SLOTS.map(s => r1.state[s]).filter(Boolean)).size, 3);
+
+/* 1b. 목록에는 중복이 안 생긴다 (2026-09-29 지적을 지킨다). */
+check('v2:baseline 은 목록(select)에 없다',
+      B0.pairs.some(p => p.id === 'v2:baseline'), false);
+check('v2:baseline 은 주소로는 된다',
+      B0.allPairs.some(p => p.id === 'v2:baseline'), true);
+check('그 열은 재사용으로 표시된다',
+      (B0.allPairs.find(p => p.id === 'v2:baseline') || {}).reused, true);
+check('어느 판 컷인지 적힌다',
+      (B0.allPairs.find(p => p.id === 'v2:baseline') || {}).reusedFrom, 'v1');
 
 /* 2. 아무것도 안 주면 계보 차례 셋이 서로 달라야 한다. */
 const r2 = run('');
@@ -152,6 +172,9 @@ check('기본 · 셋이 다 채워진다',
       SLOTS.every(s => !!r2.state[s]), true);
 check('기본 · 셋이 서로 다르다',
       new Set(SLOTS.map(s => r2.state[s])).size, 3);
+check('기본 · 재사용 열로 열리지 않는다',
+      SLOTS.some(s => (B0.allPairs.find(p => p.id === r2.state[s]) || {}).reused),
+      false);
 
 /* 3. 가운데만 줘도 나머지가 겹치지 않는다. */
 const r3 = run('mid=v1:baseline');
@@ -166,7 +189,7 @@ check('셋 다 줌 · 그대로', [r4.state.left, r4.state.mid, r4.state.right],
 check('셋 다 줌 · 자동 고르기 안 함', r4.guessed, false);
 
 /* 5. 틀린 값 둘도 둘 다 알린다. */
-const r5 = run('left=v9:nope&right=v2:baseline');
+const r5 = run('left=v9:nope&right=v2:nosuchmodel');
 check('틀린 값 둘 · 둘 다 알린다', r5.rejected.length, 2);
 check('틀린 값 둘 · 그 자리는 빈다',
       [r5.state.left, r5.state.right], [null, null]);
