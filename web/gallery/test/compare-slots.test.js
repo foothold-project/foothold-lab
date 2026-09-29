@@ -22,6 +22,19 @@ const GAL = path.join(SITE, 'gallery');
 
 const html = fs.readFileSync(path.join(GAL, 'compare', 'index.html'), 'utf8');
 
+/* `compare` 가 `G.MODEL_ORDER` 를 쓰므로 `gallery.js` 를 먼저 올린다.
+ * `G.el` 이 document 를 쓰므로 아주 작은 DOM 을 흉내낸다. */
+function Node(tag) {
+  this.tag = tag; this.children = []; this.attrs = {}; this.className = '';
+  this.textContent = ''; this.handlers = [];
+}
+Node.prototype.appendChild = function (c) { this.children.push(c); return c; };
+Node.prototype.setAttribute = function (k, v) { this.attrs[k] = String(v); };
+Node.prototype.addEventListener = function () {};
+global.document = { createElement: t => new Node(t), currentScript: null };
+eval(fs.readFileSync(path.join(GAL, 'gallery.js'), 'utf8')
+       .replace("'use strict';", '') + '; global.G = G;');
+
 /* 떼어 낼 구간: 「주소가 준 자리를 «먼저 다» 정한다」 주석부터
  * 자동 고르기 forEach 의 닫는 `});` 까지. */
 const START = '/* **주소가 준 자리를 «먼저 다» 정한다.**';
@@ -158,6 +171,8 @@ function run(query) {
   const state = { left: null, mid: null, right: null };
   const rejected = [];
   let guessed = false;
+  let touched = false;
+  void touched;
   eval(BLOCK);
   return { state: state, rejected: rejected, guessed: guessed,
            pairs: pairs, findPair: findPair };
@@ -187,6 +202,12 @@ check('거절 없다', r1.rejected, []);
 check('오른쪽이 가운데와 다르다', r1.state.right !== r1.state.mid, true);
 check('세 열이 서로 다르다',
       new Set(SLOTS.map(s => r1.state[s]).filter(Boolean)).size, 3);
+check('세 번째 열이 A 가 아니라 foothold-v1', r1.state.right, 'foothold-v1');
+
+/* v1 쪽 주소도 같은 규칙이어야 한다 (팀장이 「이건 원하는대로 됬다」 한 것). */
+const r1v1 = run('left=v1:baseline&mid=v1:foothold-v1');
+check('v1 주소 · 세 열', [r1v1.state.left, r1v1.state.mid, r1v1.state.right],
+      ['baseline', 'foothold-v1', 'foothold-v2']);
 
 /* 1b. **baseline 은 하나다.** 판 딱지가 안 붙는다. */
 check('baseline 열이 정확히 하나',
@@ -212,6 +233,15 @@ check('기본 · 셋이 다 채워진다',
 check('기본 · 셋이 서로 다르다',
       new Set(SLOTS.map(s => r2.state[s])).size, 3);
 
+/* **「서로 다르다」만 보면 안 된다.**
+ *
+ * 6 차 지적에서 세 번째 열이 `foothold-v1` 대신 `A` 로 잡혔는데 「서로
+ * 다르다」 는 통과했다. 계보 차례를 **값으로** 못 박는다 (팀장 확정
+ * 2026-09-12: 「기준선은 고정, 나머지 둘은 최근 두 판」). */
+check('기본 · 계보 차례 그대로',
+      [r2.state.left, r2.state.mid, r2.state.right],
+      ['baseline', 'foothold-v1', 'foothold-v2']);
+
 /* 3. 가운데만 줘도 나머지가 겹치지 않는다. */
 const r3 = run('mid=baseline');
 check('가운데만 줌 · 겹침 없다',
@@ -229,6 +259,61 @@ const r5 = run('left=nope&right=nosuchmodel');
 check('틀린 값 둘 · 둘 다 알린다', r5.rejected.length, 2);
 check('틀린 값 둘 · 그 자리는 빈다',
       [r5.state.left, r5.state.right], [null, null]);
+
+/* 5b. **`?v=<판>` 하나로 갤러리별 기본값이 갈린다.** 주소는 짧게 남는다. */
+const rv1 = run('v=v1');
+check('?v=v1 · 세 열', [rv1.state.left, rv1.state.mid, rv1.state.right],
+      ['baseline', 'A', 'foothold-v1']);
+const rv2 = run('v=v2');
+check('?v=v2 · 세 열', [rv2.state.left, rv2.state.mid, rv2.state.right],
+      ['baseline', 'foothold-v1', 'foothold-v2']);
+check('?v= 둘이 다르다',
+      JSON.stringify([rv1.state.left, rv1.state.mid, rv1.state.right])
+        !== JSON.stringify([rv2.state.left, rv2.state.mid, rv2.state.right]), true);
+const rvx = run('v=v9');
+check('모르는 판이면 최신으로 (거절 아님)',
+      [rvx.state.left, rvx.state.mid, rvx.state.right],
+      ['baseline', 'foothold-v1', 'foothold-v2']);
+
+/* 갤러리 카드가 «짧은 한 칸» 만 넘기는가. */
+const gsrc = fs.readFileSync(path.join(GAL, 'index.html'), 'utf8');
+check('갤러리 카드가 ?v= 만 넘긴다',
+      /compare\/'\) \+ '\?v=' \+ encodeURIComponent\(v\.version\)/.test(gsrc), true);
+check('갤러리 카드가 left·mid·right 를 안 박는다',
+      /\['left',\s*'mid',\s*'right'\]/.test(gsrc), false);
+
+/* 6. **갤러리별 기본 세 열.** 어느 갤러리에서 왔느냐로 달라야 한다
+ * (팀장 지시 2026-09-29). 규칙은 `G.defaultColumns` 하나다. */
+const modelsOf = ver => Object.keys((mans[ver] || {}).models || {});
+
+check('v1 갤러리의 기본 세 열', G.defaultColumns(modelsOf('v1')),
+      ['baseline', 'A', 'foothold-v1']);
+check('v2 갤러리의 기본 세 열', G.defaultColumns(modelsOf('v2')),
+      ['baseline', 'foothold-v1', 'foothold-v2']);
+check('둘이 다르다',
+      JSON.stringify(G.defaultColumns(modelsOf('v1')))
+        !== JSON.stringify(G.defaultColumns(modelsOf('v2'))), true);
+
+/* 넷 이상이면 기준선 + 뒤 둘. 대표가 빠지지 않는다. */
+check('넷이면 기준선 + 뒤 둘',
+      G.defaultColumns(['baseline', 'A', 'foothold-v1', 'foothold-v2']),
+      ['baseline', 'foothold-v1', 'foothold-v2']);
+check('모르는 이름은 뒤에 붙는다',
+      G.lineage(['zzz', 'foothold-v1', 'baseline']),
+      ['baseline', 'foothold-v1', 'zzz']);
+
+/* 갤러리 첫 화면에서 **판을 안 고르고도** 들어갈 수 있는가
+ * (팀장 지적: 「찾아서 들어갈 수도 없어」). */
+check('갤러리 첫 화면에 compare 로 가는 링크가 있다',
+      /href="compare\/"/.test(gsrc), true);
+check('view 로 가는 링크도 있다', /href="view\/"/.test(gsrc), true);
+
+/* `compare` 가 규칙을 쓰는가 (갤러리가 아니라 여기가 쓴다). */
+const csrc = fs.readFileSync(path.join(GAL, 'compare', 'index.html'), 'utf8');
+check('compare 가 G.defaultColumns 를 쓴다',
+      csrc.indexOf('G.defaultColumns') >= 0, true);
+check('compare 가 공유 계보 순서를 쓴다',
+      csrc.indexOf('G.MODEL_ORDER') >= 0, true);
 
 console.log();
 console.log(fails ? ('** ' + fails + ' / ' + ran + ' 실패 **')

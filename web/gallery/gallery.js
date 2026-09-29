@@ -236,6 +236,46 @@ G.chipRow = function (label, values, current, countOf, onPick) {
 /* 지형 무리 이름. 색인의 열쇠는 영어라 화면에 그대로 내지 않는다.
  * **모르는 열쇠가 와도 지우지 않고 그 열쇠를 그대로 보여준다.** 조용히
  * 빠지면 새 무리가 생겼을 때 아무도 모른다. */
+/* ── 계보 차례 ─────────────────────────────────────────────
+ *
+ * ★ 2026-09-29. **규칙을 한 곳에만 둔다.**
+ *
+ * `compare/index.html` 이 자기 `MODEL_ORDER` 를 들고 있었고, 갤러리 카드는
+ * 그 규칙을 아예 몰라서 판 비교 링크에 두 열만 넘겼다. 그래서 세 번째 열이
+ * 어느 갤러리에서 와도 똑같이 «알아서» 골라졌다 (팀장 지적 2026-09-29:
+ * 「gallery-v1 에서 판비교 할 때랑 gallery-v2 에서 할 때 기본 셋업값이
+ * 다르면 좋을 것 같아서」).
+ *
+ * 두 파일에 나눠 적으면 갈라진다. 여기 한 번만 적는다.
+ */
+G.MODEL_ORDER = ['baseline', 'A', 'foothold-v1', 'foothold-v2'];
+
+/** 모델 이름을 계보 차례로 줄 세운다. 모르는 이름은 뒤에 붙인다. */
+G.lineage = function (names) {
+  const rank = n => {
+    const i = G.MODEL_ORDER.indexOf(n);
+    return i < 0 ? G.MODEL_ORDER.length : i;
+  };
+  return [...names].sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
+};
+
+/** 그 판의 «기본 세 열». 기준선을 먼저 두고, 나머지는 계보의 «뒤» 에서 집는다.
+ *
+ * 모델이 셋이면 그대로 셋이다.
+ *   v1   baseline · A · foothold-v1
+ *   v2   baseline · foothold-v1 · foothold-v2
+ *
+ * 넷 이상이면 기준선 + 뒤 둘이다. 대표(main)가 빠지지 않는다.
+ */
+G.defaultColumns = function (names, want) {
+  const n = want || 3;
+  const all = G.lineage(names);
+  const base = all.filter(x => x === 'baseline');
+  const rest = all.filter(x => x !== 'baseline');
+  const tail = rest.slice(Math.max(0, rest.length - (n - base.length)));
+  return base.concat(tail).slice(0, n);
+};
+
 G.SET_NAME = { rough6: '기존 험지', unseen10: '미경험 험지' };
 
 /* 읽는 순서. 학습에 쓴 것을 먼저 놓고 안 본 것을 뒤에 놓는다. 여기 없는
