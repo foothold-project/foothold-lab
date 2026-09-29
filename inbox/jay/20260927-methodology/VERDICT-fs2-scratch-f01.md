@@ -1,0 +1,59 @@
+# 판정 · fs2-scratch-f01
+
+> 분류: 판정
+> 작성: `_out/loop/verdict.py` · 2026-09-28T12:23:46
+> 근거: `CRITERIA.md` v1.4 · `sim/eval/verdict_manifest.py` 의 판단 함수
+> 상태: 자동 생성. **손으로 고치지 마십시오**
+
+## 한 장
+
+| 체크포인트 | 48 칸 평균 | v1 대비 하락/상승 | NVIDIA 대비 하락/상승 | 축 2 | 절대 최저 칸 | 둘 다 만점 | 둘 다 0 | 판정 보류 |
+|---|---:|---|---|---|---|---:|---:|---:|
+| 1500 | 42.29 % | 31 / 0 | 13 / 10 | 5 / 9 | 0.0 % (pyramid_stairs_inv 1.0) | 7 | 14 | 4 |
+| 2000 | 42.29 % | 31 / 1 | 14 / 10 | 5 / 9 | 0.0 % (pyramid_stairs_inv 1.0) | 6 | 15 | 3 |
+| 2500 | 47.1 % | 31 / 0 | 10 / 13 | 4 / 9 | 0.0 % (pyramid_stairs_inv 1.0) | 6 | 13 | 6 |
+| 3000 | 46.96 % | 32 / 0 | 10 / 14 | 4 / 9 | 0.0 % (boxes 1.5) | 7 | 11 | 6 |
+
+> **뒤 세 칸은 NVIDIA 대비입니다.** 「둘 다 만점」은 우리도 NVIDIA 도 100 % 라
+> 구간이 겹친 칸입니다. **더 나을 수가 없어서** 판정이 안 나옵니다.
+> 「둘 다 0」은 **둘 다 못 해서** 판정이 안 나옵니다. 「판정 보류」만이
+> 진짜 「모르겠다」입니다. 이 셋을 한 숫자로 합치면 정반대의 뜻이 섞입니다.
+
+```
+축 1   네 체크포인트 전부 하락 0 ?   아니오
+축 2   네 체크포인트 전부 9 / 9 ?    아니오
+판정   미달
+
+NVIDIA 배포본 대비 (관문이 아니라 «상설 보고» · 팀장 지시 2026-09-25)
+  iter1500  48 칸 중  상승 10  ·  하락 13  ·  미판정 25
+  iter2000  48 칸 중  상승 10  ·  하락 14  ·  미판정 24
+  iter2500  48 칸 중  상승 13  ·  하락 10  ·  미판정 25
+  iter3000  48 칸 중  상승 14  ·  하락 10  ·  미판정 24
+
+«미판정» 을 쪼갠 것 · 「모른다」가 아니다
+  iter1500  둘 다 만점  7 칸  ·  둘 다 0 14 칸  ·  진짜 판정 보류 4 칸
+  iter2000  둘 다 만점  6 칸  ·  둘 다 0 15 칸  ·  진짜 판정 보류 3 칸
+  iter2500  둘 다 만점  6 칸  ·  둘 다 0 13 칸  ·  진짜 판정 보류 6 칸
+  iter3000  둘 다 만점  7 칸  ·  둘 다 0 11 칸  ·  진짜 판정 보류 6 칸
+```
+
+**「하락 0」은 「잘한다」가 아닙니다.** 배포본보다 나쁘지 않다는 뜻뿐입니다. 절대 최저 칸을 같이 보십시오.
+
+**절대 최저 칸 네 값을 평균 내지 마십시오** (`CRITERIA.md` 3-0-1). 시점마다 다른 지형에서 나옵니다.
+
+## 성공률이 0 인 칸 · **시점별로** 봅니다
+
+- **iter1500** (15 개) · `boxes 1.5` · `floating_ring 0.5` · `floating_ring 1.0` · `floating_ring 1.5` · `pit 0.5` · `pit 1.0` · `pit 1.5` · `pyramid_stairs_inv 1.0` · `pyramid_stairs_inv 1.5` · `rails 0.5` · `rails 1.0` · `rails 1.5` · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter2000** (16 개) · `boxes 1.5` · `floating_ring 0.5` · `floating_ring 1.0` · `floating_ring 1.5` · `pit 0.5` · `pit 1.0` · `pit 1.5` · `pyramid_stairs_inv 1.0` · `pyramid_stairs_inv 1.5` · `rails 0.5` · `rails 1.0` · `rails 1.5` · `random_rough 1.5` · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter2500** (14 개) · `boxes 1.5` · `floating_ring 0.5` · `floating_ring 1.0` · `floating_ring 1.5` · `pit 1.0` · `pit 1.5` · `pyramid_stairs_inv 1.0` · `pyramid_stairs_inv 1.5` · `rails 0.5` · `rails 1.0` · `rails 1.5` · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+- **iter3000** (12 개) · `boxes 1.5` · `floating_ring 0.5` · `floating_ring 1.0` · `floating_ring 1.5` · `pit 0.5` · `pit 1.5` · `pyramid_stairs_inv 1.5` · `rails 1.0` · `rails 1.5` · `stepping_stones 0.5` · `stepping_stones 1.0` · `stepping_stones 1.5`
+
+> **네 시점 «전부» 0 인 것이 아닌 칸이 있습니다.** 합집합으로 읽지 마십시오 · `pit 0.5` (0 인 시점: 1500 · 2000 · 3000) · `pit 1.0` (0 인 시점: 1500 · 2000 · 2500) · `pyramid_stairs_inv 1.0` (0 인 시점: 1500 · 2000 · 2500) · `rails 0.5` (0 인 시점: 1500 · 2000 · 2500) · `random_rough 1.5` (0 인 시점: 2000)
+
+## 경고
+
+없음
+
+## 재현
+
+이 파일은 재현을 판정하지 «않습니다». 조건을 하나 바꿔 한 번 더 돌린 판이 따로 필요합니다 (`CRITERIA.md` 1 절).
