@@ -541,6 +541,20 @@ G.syncGroup = function (opts) {
         players[key].duration = video.duration || duration || 0;
         clock();
       });
+
+      /* **브라우저가 스스로 멈추는 일이 있다.** 숨은 탭, 전원 절약,
+       * 자동재생 규칙, 사용자의 직접 조작. 그때 우리 상태만 「도는 중」으로
+       * 남으면 단추가 거짓말을 하고 ▶ 가 흐린 채로 굳는다 `확인됨`
+       * (2026-09-29 · 숨은 탭에서 실제로 그렇게 됐다).
+       *
+       * 그래서 **화면을 자료로 믿지 않고 video 에게 되묻는다.** 다 멈췄으면
+       * 우리도 멈춘 것이다. `stop()` 이 부르는 `pause` 는 이미 running 이
+       * 꺼진 뒤라 다시 안 들어온다. */
+      video.addEventListener('pause', () => {
+        if (!running) return;
+        if (live().every(p => p.video.paused)) stop();
+      });
+
       return players[key];
     },
 
