@@ -459,8 +459,14 @@ NO_UI = {'assets/deliverables/proposal-deck-presented.html'}
 #   그 페이지는 «배포본이 곧 원본» 이다. 거기서 읽는 것은 두 번째 진실을
 #   만드는 것이 아니라 유일한 진실을 읽는 것이다.
 #   영상 자체는 대상이 아니다. 그 페이지들의 «글자» 만 담는다.
-FROM_SITE = ['gallery/index.html', 'gallery/view/index.html',
-             'gallery/compare/index.html', 'report-v1.html']
+#   ★ 2026-09-29. **갤러리 셋을 여기서 뺐다.** 이 목록이 만들어진 9/13
+#     에는 갤러리가 배포본에만 있었는데, 그 뒤 뷰어의 정본이 lab 으로
+#     옮겨졌다 (`build.py` 의 `GALLERY_VIEWER`). 그래서 `public_pages` 가
+#     볼트에서 이미 담는다.
+#     둘 다 담으니 **갤러리 네 장에 레코드가 일곱** 이 됐고, 손 목록에 없는
+#     `axis2` 만 옛 제목 「FOOTHOLD」 로 남았다 `확인됨` (라이브 실측).
+#     손으로 적은 목록은 새 페이지가 생기면 또 어긋난다. 걷는다.
+FROM_SITE = ['report-v1.html']
 SITE_DIR = None          # build.py 가 배포본 경로를 넣어 준다
 
 
@@ -506,7 +512,14 @@ def build_index(vault, pages):
             continue
         t = io.open(p, encoding='utf-8').read()
         mt = re.search(r'<title>([^<]+)</title>', t)
-        ptitle = (mt.group(1).split('·')[0].strip() if mt else f)
+        # ★ 2026-09-29. 「·」 로 잘라 첫 조각을 쓰는 규칙은 «우리 페이지» 것이다
+        #   (「제목 · FOOTHOLD」). 갤러리는 브랜드가 «앞» 에 와서
+        #   (「FOOTHOLD · 갤러리 · 3열 비교」) 그 규칙을 쓰면 네 장이 전부
+        #   「FOOTHOLD」 가 된다. 브랜드 조각을 빼는 쪽으로 간다.
+        if f.startswith('gallery/'):
+            ptitle = site_title(mt.group(1) if mt else '', f)
+        else:
+            ptitle = (mt.group(1).split('·')[0].strip() if mt else f)
         # 절 단위 ①: <section id="..."> … (문서형 페이지의 표준 구조)
         # ★ 2026-09-09. 여기는 원래 <section id><h2> 가 «곧바로» 붙은 것만 찾는
         #   정규식이었다. 그런데 docs_pages 가 나중에 그 사이에 눈썹 줄을 끼운다
