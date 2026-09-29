@@ -378,7 +378,8 @@ def to_markdown(v: dict) -> str:
     return """# 판정 · {run}
 
 > 분류: 판정
-> 작성: `_out/loop/verdict.py` · {made}
+> 작성: 자동 생성 · {made}
+> 생성기: `_out/loop/verdict.py`
 > 근거: `CRITERIA.md` v1.4 · `sim/eval/verdict_manifest.py` 의 판단 함수
 > 상태: 자동 생성. **손으로 고치지 마십시오**
 

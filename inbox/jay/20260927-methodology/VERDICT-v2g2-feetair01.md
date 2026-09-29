@@ -1,7 +1,8 @@
 # 판정 · v2g2-feetair01
 
 > 분류: 판정
-> 작성: `_out/loop/verdict.py` · 2026-09-28T12:23:45
+> 작성: 자동 생성 · 2026-09-28T12:23:45
+> 생성기: `_out/loop/verdict.py`
 > 근거: `CRITERIA.md` v1.4 · `sim/eval/verdict_manifest.py` 의 판단 함수
 > 상태: 자동 생성. **손으로 고치지 마십시오**
 
