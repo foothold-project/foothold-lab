@@ -451,9 +451,25 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
      * 않는다 · 이 페이지의 규칙이다). */
     const taken = SLOTS.map(s => state[s]).filter(Boolean);
     /* **자동 고르기는 `pairs` 만 본다.** 기본 화면이 재사용 열로 열리면
-     * 「이 판이 다시 구운 컷」으로 읽힌다. 주소로 지목할 때만 쓴다. */
+     * 「이 판이 다시 구운 컷」으로 읽힌다. 주소로 지목할 때만 쓴다.
+     *
+     * ★ 2026-09-29 (4 차). **짝 이름이 아니라 «컷의 정체» 로 겹침을 본다.**
+     *
+     * `v2:baseline` 과 `v1:baseline` 은 이름이 다르지만 **같은 파일** 을
+     * 가리킨다 (앞이 뒤를 재사용한다). 이름으로만 걸렀더니 팀장 주소에서
+     * 왼쪽과 오른쪽이 `v1/clips/rails-v1-baseline.mp4` 로 같았다 `확인됨`
+     * (브라우저에서 잡았다 · 시험 17 칸은 통과했는데도 그랬다).
+     *
+     * 재사용 짝의 정체는 «빌려 온 판» 의 것이다. 그것으로 견준다. */
+    const clipId = id => {
+      const p = allPairs.find(x => x.id === id);
+      if (!p) return id;
+      return (p.reusedFrom || p.version) + ':' + p.model;
+    };
+    const takenClips = taken.map(clipId);
     const free = id => !!id && !!pairs.find(p => p.id === id)
-      && taken.indexOf(id) < 0;
+      && taken.indexOf(id) < 0
+      && takenClips.indexOf(clipId(id)) < 0;
 
     let guess = free(picks[i]) ? picks[i] : null;
 

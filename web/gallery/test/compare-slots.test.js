@@ -49,14 +49,24 @@ const BLOCK = html.slice(a, b + END.length);
  *
  * 실제 매니페스트가 있으면 대역 자료가 그 모양과 어긋나지 않는지도 본다.
  */
-const DEPLOYED = path.resolve(SITE, '..', '..', 'foothold-site', 'gallery');
+const DEPLOYED = process.env.FH_GALLERY
+  || path.resolve(SITE, '..', '..', 'foothold-site', 'gallery');
 
 function fixture() {
   const mk = (ver, models) => ({
     version: ver,
     models: models.reduce((a, m) => { a[m.name] = 'sha-' + m.name; return a; }, {}),
-    clips: models.map(m => ({ id: 'boxes-v1', model: m.name,
-                              reused: !!m.reused, file: 'clips/boxes-v1.mp4' })),
+    /* **실물에 있는 칸을 빠뜨리면 시험이 거짓으로 통과한다** `확인됨`
+     * (2026-09-29 · `reused_from` 을 안 넣어서 깨뜨리기 시험이 엉뚱한 칸을
+     * 실패로 냈고 정작 겹침 회귀는 가려졌다). */
+    clips: models.map(m => ({
+      id: m.reused ? 'boxes-v1-' + m.name : 'boxes-v1',
+      model: m.name,
+      reused: !!m.reused,
+      reused_from: m.reused ? 'v1' : undefined,
+      file: m.reused ? '../v1/clips/boxes-v1-' + m.name + '.mp4'
+                     : 'clips/boxes-v1.mp4',
+    })),
     evaluations: [],
     main_model: models.filter(m => !m.reused).slice(-1)[0].name,
   });
@@ -90,6 +100,27 @@ if (fs.existsSync(path.join(DEPLOYED, 'versions.json'))) {
 }
 
 console.log('자료: ' + 자료);
+
+/* **대역 자료가 실물 모양에서 벗어나면 알린다.**
+ * 벗어난 대역 자료로 도는 시험은 거짓으로 통과한다. */
+if (자료 === '배포 저장소') {
+  const f = fixture();
+  const realKeys = new Set();
+  Object.values(mans).forEach(m => (m.clips || []).forEach(c =>
+    Object.keys(c).forEach(k => realKeys.add(k))));
+  const fixKeys = new Set();
+  Object.values(f.mans).forEach(m => (m.clips || []).forEach(c =>
+    Object.keys(c).forEach(k => fixKeys.add(k))));
+  const needed = ['model', 'reused', 'reused_from', 'file', 'id'];
+  const 빠진 = needed.filter(k => realKeys.has(k) && !fixKeys.has(k));
+  if (빠진.length) {
+    console.log('  ** 대역 자료에 실물의 칸이 없다: ' + 빠진.join(', ') + ' **');
+    process.exitCode = 1;
+  } else {
+    console.log('대역 자료가 실물의 필요한 칸을 다 갖고 있다 ('
+      + needed.join(' · ') + ')');
+  }
+}
 
 /* 열 목록도 **규칙을 복제하지 않고** index.html 에서 떼어 낸다.
  * `pairs`(목록에 뜨는 것) 와 `allPairs`(주소로 지목 가능한 것) 를 가르는
@@ -166,12 +197,24 @@ check('그 열은 재사용으로 표시된다',
 check('어느 판 컷인지 적힌다',
       (B0.allPairs.find(p => p.id === 'v2:baseline') || {}).reusedFrom, 'v1');
 
+/* 1c. **같은 파일이 두 열에 오면 안 된다.**
+ * `v2:baseline` 은 `v1:baseline` 의 컷을 재사용한다. 이름은 달라도 파일이
+ * 같다. 4 차 지적에서 왼쪽·오른쪽이 같은 파일로 떴다. */
+const clipIdOf = id => {
+  const p = B0.allPairs.find(x => x.id === id);
+  return p ? (p.reusedFrom || p.version) + ':' + p.model : id;
+};
+check('팀장 주소 · 세 열의 «컷» 이 서로 다르다',
+      new Set(SLOTS.map(s => clipIdOf(r1.state[s])).filter(Boolean)).size, 3);
+
 /* 2. 아무것도 안 주면 계보 차례 셋이 서로 달라야 한다. */
 const r2 = run('');
 check('기본 · 셋이 다 채워진다',
       SLOTS.every(s => !!r2.state[s]), true);
 check('기본 · 셋이 서로 다르다',
       new Set(SLOTS.map(s => r2.state[s])).size, 3);
+check('기본 · 세 열의 컷도 서로 다르다',
+      new Set(SLOTS.map(s => clipIdOf(r2.state[s]))).size, 3);
 check('기본 · 재사용 열로 열리지 않는다',
       SLOTS.some(s => (B0.allPairs.find(p => p.id === r2.state[s]) || {}).reused),
       false);
