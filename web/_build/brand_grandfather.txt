@@ -10,6 +10,7 @@ deliverable-brainstorming.html 0 1 0 20 0 0
 deliverable-final-report.html 0 1 0 20 0 0
 deliverable-generalization-report.html 0 1 0 20 0 0
 deliverable-mentoring-log.html 0 1 0 20 0 0
+deliverable-mvp-submission.html 0 1 0 20 0 0
 deliverable-nav-report.html 0 1 0 20 0 0
 deliverable-policy-metrics.html 0 1 0 20 0 0
 deliverable-progress-log.html 0 1 0 20 0 0
@@ -69,6 +70,7 @@ notice-20260826.html 0 1 0 21 0 0
 notice-20260827.html 0 1 0 21 0 0
 notice-20260902.html 0 1 0 21 0 0
 notice-20260912.html 0 1 0 21 0 0
+notice-20260929.html 0 1 0 21 0 0
 notice-latest.html 0 1 0 21 0 0
 personal-plans.html 0 1 0 21 0 0
 pitch.html 0 1 0 1 0 0

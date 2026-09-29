@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=5ed523b0').then(function(r){
+    fetch('/assets/search-index.json?v=f4d8e8e5').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -935,7 +935,7 @@ body>*{flex-shrink:0}
 상태: 대기</p></blockquote>
 <blockquote><p><b>완료 기준</b>: §2 영상 목록이 실제 파일로 존재하고, §3 렌더 조건이 기록되고,
 중간발표에서 상영 가능한 길이로 편집되면 상태를 <code>확정</code> 으로 바꾼다.
-관문: <code>MVP · 중간발표</code> (2026-09-30) -&gt; <b><code>FINAL · 최종발표</code> (2026-12-11) 로 옮긴다</b></p>
+관문: <code>MVP · 중간발표</code> (2026-09-30) 에서 <code>FINAL · 최종발표</code> (2026-12-11) 로 옮긴다 (2026-09-29 팀장 확정)</p>
 <p><b>채우는 사람</b>: 맹라현 (A/트윈렌더). 오흥재 · 이민우 가 촬영과 렌더를 돕는다.
 채운 사람이 위 「작성」을 자기 이름과 그때 시각으로 바꾼다.</p></blockquote>
 </section>
@@ -1076,5 +1076,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp3bqvp7mm</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpj4_ugplx</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
