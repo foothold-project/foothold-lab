@@ -302,11 +302,37 @@ check('모르는 이름은 뒤에 붙는다',
       G.lineage(['zzz', 'foothold-v1', 'baseline']),
       ['baseline', 'foothold-v1', 'zzz']);
 
+/* 7. **기본 칸이 판마다 달라야 한다** (팀장 지시 2026-09-29:
+ * 「gallery-v1 에서 판비교 들어가면 gap 이 기본 지형이어야할 꺼 아니야」).
+ * 손으로 두 번 고른 답을 규칙이 그대로 내는지 본다. */
+check('v1 의 기본 칸은 gap 0.5', G.defaultCell(mans['v1']),
+      { terrain: 'gap', speed: 0.5 });
+check('v2 의 기본 칸은 rails 1.0', G.defaultCell(mans['v2']),
+      { terrain: 'rails', speed: 1.0 });
+check('기본 칸이 판마다 다르다',
+      JSON.stringify(G.defaultCell(mans['v1']))
+        !== JSON.stringify(G.defaultCell(mans['v2'])), true);
+check('1.5 m/s 를 기본으로 안 고른다',
+      [G.defaultCell(mans['v1']).speed, G.defaultCell(mans['v2']).speed]
+        .every(x => x < 1.5), true);
+
+/* 버튼 링크가 실제로 풀리는 주소인가 (내가 상대경로로 적어 404 였다). */
+check('갤러리 버튼이 절대경로다',
+      /href="\/gallery\/compare"/.test(gsrc), true);
+check('상대경로 compare/ 를 안 쓴다',
+      /href="compare\/"/.test(gsrc), false);
+
+/* view 의 «이 조건으로 3열 비교» 가 판을 넘기는가. */
+const vsrc = fs.readFileSync(path.join(GAL, 'view', 'index.html'), 'utf8');
+check('view 가 ?v= 로 판을 넘긴다', vsrc.indexOf("'&v=' + encodeURIComponent(man.version)") >= 0, true);
+check('view 가 옛 «판:모델» 을 안 넘긴다',
+      vsrc.indexOf("':baseline'") >= 0, false);
+
 /* 갤러리 첫 화면에서 **판을 안 고르고도** 들어갈 수 있는가
  * (팀장 지적: 「찾아서 들어갈 수도 없어」). */
 check('갤러리 첫 화면에 compare 로 가는 링크가 있다',
-      /href="compare\/"/.test(gsrc), true);
-check('view 로 가는 링크도 있다', /href="view\/"/.test(gsrc), true);
+      /href="\/gallery\/compare"/.test(gsrc), true);
+check('view 로 가는 링크도 있다', /href="\/gallery\/view"/.test(gsrc), true);
 
 /* `compare` 가 규칙을 쓰는가 (갤러리가 아니라 여기가 쓴다). */
 const csrc = fs.readFileSync(path.join(GAL, 'compare', 'index.html'), 'utf8');

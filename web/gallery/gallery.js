@@ -276,6 +276,60 @@ G.defaultColumns = function (names, want) {
   return base.concat(tail).slice(0, n);
 };
 
+/** 그 판의 «기본 칸» (지형 · 속도).
+ *
+ * ★ 2026-09-29. 팀장: 「gallery-v1 에서 판비교 들어가면 gap 이 기본
+ * 지형이어야할 꺼 아니야」. 맞다. 전에는 코드에 한 칸이 박혀 있어서 어느
+ * 판에서 와도 같았다 (v1 때 `gap 0.5` -> v2 배포 때 `rails 1.0` 으로
+ * 손으로 갈았다).
+ *
+ * 규칙: **그 판의 대표가 «계보에서 바로 앞» 대비 가장 크게 벌어지는 칸.**
+ * 1.5 m/s 는 뺀다 (NVIDIA 학습 명령 범위 밖이라 0 % 가 흔하고, 그것을
+ * 기본으로 두면 기준선이 억울하게 보인다).
+ *
+ * 손으로 두 번 고른 답을 이 규칙이 그대로 낸다 `확인됨`.
+ *
+ *   v1 -> gap 0.5     (A 0.0 -> foothold-v1 90.0 · +90.0 %p)
+ *   v2 -> rails 1.0   (foothold-v1 48.0 -> foothold-v2 100.0 · +52.0 %p)
+ */
+G.defaultCell = function (man, opts) {
+  const skipFast = !(opts && opts.allowFast);
+  const models = G.lineage(Object.keys((man && man.models) || {}));
+  const main = man && man.main_model;
+  const i = models.indexOf(main);
+
+  if (!man || i < 0) return null;
+
+  const prev = i > 0 ? models[i - 1] : null;
+  const rate = {};
+
+  (man.evaluations || []).forEach(e => {
+    rate[e.model + '|' + e.terrain + '|' + e.speed_mps] = e.success_rate;
+  });
+
+  let best = null;
+
+  (man.evaluations || []).forEach(e => {
+    if (e.model !== main) return;
+    if (skipFast && e.speed_mps >= 1.5) return;
+
+    const before = prev
+      ? rate[prev + '|' + e.terrain + '|' + e.speed_mps]
+      : undefined;
+
+    /* 앞 모델이 없으면 «가장 낮은 칸» 을 고른다. 볼 것이 있는 자리다. */
+    const gain = (before === undefined) ? -e.success_rate
+                                        : (e.success_rate - before);
+
+    if (!best || gain > best.gain
+        || (gain === best.gain && e.speed_mps < best.speed)) {
+      best = { terrain: e.terrain, speed: e.speed_mps, gain: gain };
+    }
+  });
+
+  return best ? { terrain: best.terrain, speed: best.speed } : null;
+};
+
 G.SET_NAME = { rough6: '기존 험지', unseen10: '미경험 험지' };
 
 /* 읽는 순서. 학습에 쓴 것을 먼저 놓고 안 본 것을 뒤에 놓는다. 여기 없는
