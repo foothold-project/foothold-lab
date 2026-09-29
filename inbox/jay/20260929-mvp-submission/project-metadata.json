@@ -1,0 +1,20 @@
+{
+  "title": "Unitree Go2 미경험 험지 적응 시뮬레이션 및 실기 자율주행 프로젝트",
+  "period": "2026.07 ~ 2026.12.11",
+  "mvp_date": "2026.09.30",
+  "data_date": "2026.09.29",
+  "team": "FOOTHOLD",
+  "leader": "오흥재",
+  "members": [
+    "임석헌",
+    "오현민",
+    "맹라현",
+    "이민우"
+  ],
+  "sources": {
+    "title": "docs/REPORT.md:1",
+    "period": "web/_src/pitch.base.html:332",
+    "roster": "docs/ROLES.md:68-110",
+    "mvp_date": "docs/REPORT.md:23"
+  }
+}

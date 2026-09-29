@@ -1,0 +1,305 @@
+{
+  "rates_percent": {
+    "nv": 43.875,
+    "v1": 86.70833333333333,
+    "v2": 88.45833333333333
+  },
+  "cells": {
+    "nv": 24,
+    "v1": 24,
+    "v2": 24
+  },
+  "episodes_per_cell": 100,
+  "stepping_v2_percent": 8.0,
+  "falls_per_64": {
+    "nvidia": {
+      "stop": 0,
+      "hold": 0,
+      "turn": 4
+    },
+    "v1": {
+      "stop": 13,
+      "hold": 5,
+      "turn": 64
+    },
+    "v2": {
+      "stop": 0,
+      "hold": 0,
+      "turn": 7
+    }
+  },
+  "slow010_tracked_vx": {
+    "nvidia": 0.006211827489682425,
+    "v2": 0.16698073907017844
+  },
+  "stairs": {
+    "v1": {
+      "model": "v1",
+      "model_label": "foothold-v1",
+      "difficulty": "0.9",
+      "set": "rough6",
+      "speed": "1.5",
+      "terrain": "pyramid_stairs_inv",
+      "episodes": "100",
+      "overall_success_rate": "0.9",
+      "survival_rate": "1.0",
+      "progress_success_rate": "1.0",
+      "tracking_success_rate": "0.9",
+      "direction_success_rate": "1.0"
+    },
+    "v2": {
+      "model": "v2",
+      "model_label": "v2 · v2g2 @3000",
+      "difficulty": "0.9",
+      "set": "rough6",
+      "speed": "1.5",
+      "terrain": "pyramid_stairs_inv",
+      "episodes": "100",
+      "overall_success_rate": "0.03",
+      "survival_rate": "1.0",
+      "progress_success_rate": "0.99",
+      "tracking_success_rate": "0.03",
+      "direction_success_rate": "0.98"
+    }
+  },
+  "sources": [
+    {
+      "path": "sim/eval/results/20260928-v2-sweep/sweep_long.csv",
+      "sha256": "51d4faee0dab222760ed477b66d117d5b2ea4d2becef21067c0d3e283266e706"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/nvidia/stop/per_env.json",
+      "sha256": "4889e145536f2a5e54cfe1a3c7685f5d85f58fc25aed840a0b1420c3d473cf3a"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/nvidia/hold/per_env.json",
+      "sha256": "b101d052f525608e11d129248a79ac7f745af266bc3f57d3ec2bc5d3118a0ee5"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/nvidia/turn/per_env.json",
+      "sha256": "4701273f80e72022b11e9b1f7da34512964217e4f2039527e8205867acf49728"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v1/stop/per_env.json",
+      "sha256": "dae23fc31815d7bdf5f2f44410829c5d928b9c91e7d2416f317808002e194005"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v1/hold/per_env.json",
+      "sha256": "b34800cc4d1b8989f6c63d9349b7478832eea61b2f7081c6eeedb00be360f297"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v1/turn/per_env.json",
+      "sha256": "bffd3e9c195a6239cf58f06e2607052941e9ec9c75b3bf9c1eb5f4081accf7ca"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v2/stop/per_env.json",
+      "sha256": "2481ecdfeb264d3d14dbba92189c8682023fc30ac3aebe362751a589d7edcdf5"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v2/hold/per_env.json",
+      "sha256": "3e5bc911af2e8d7df4ab732813f6575b8baa793380edd75f913e7756b2fe525e"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-fall/v2/turn/per_env.json",
+      "sha256": "f1ccf93c74f6405453e188b6247de79ad826230dee5f796ea6a07d84dfe72c55"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-ext-clips/nvidia/slow010/per_env.json",
+      "sha256": "2c8aac57f13fb1e62625c9c20382753d43ffe995ad1acc8828a501c4080dea69"
+    },
+    {
+      "path": "sim/eval/results/20260929-axis2-ext-clips/v2/slow010/per_env.json",
+      "sha256": "15d8d2a79bcccbc7cc98a72e404e4f93b8c7d675d5961b3ee052c557554da10f"
+    }
+  ],
+  "summary_sha256": "f392bf32ec11a6e8063854cc7a70905e77176189ad077caea836cd4800d8ff48",
+  "pages": 2,
+  "paragraph_bounds": [
+    {
+      "page": 1,
+      "top": 43,
+      "bottom": 56,
+      "text": "MVP 종합보고서 · 심사자용 요약"
+    },
+    {
+      "page": 1,
+      "top": 101,
+      "bottom": 163,
+      "text": "미경험 지형의 보행 성능을 높이고,<br/>명령 수행의 손실을 함께 평가했다"
+    },
+    {
+      "page": 1,
+      "top": 175,
+      "bottom": 190,
+      "text": "Unitree Go2 미경험 험지 적응 시뮬레이션 및 실기 자율주행 프로젝트"
+    },
+    {
+      "page": 1,
+      "top": 202,
+      "bottom": 232,
+      "text": "본 요약은 전체 프로젝트 중 시뮬레이션 정책 학습과 평가 결과를 다룬다. 실제 로봇의 험지 적응과 실기 자율주행 완성을 주장하는 결과는 아니다."
+    },
+    {
+      "page": 1,
+      "top": 253,
+      "bottom": 272,
+      "text": "연구 질문과 접근"
+    },
+    {
+      "page": 1,
+      "top": 280,
+      "bottom": 310,
+      "text": "NVIDIA Go2 Rough 정책을 출발점으로, 학습하지 않은 지형에서도 전진 보행이 가능한지 평가했다. 지형을 만나는 경험을 늘리도록 학습 조건을 조정하고, 그 과정에서 정지와 회전 능력이 손상되는지도 별도로 확인했다."
+    },
+    {
+      "page": 1,
+      "top": 319,
+      "bottom": 349,
+      "text": "foothold-v2는 사전학습 정책에서 추가 학습한 모델이다. 지형 통과(축 1)와 명령 수행·외란 대응(축 2)을 구분한다. 정지·회전과 저속 명령을 평가하고, 아직 평가하지 않은 범위도 명시했다."
+    },
+    {
+      "page": 1,
+      "top": 372,
+      "bottom": 391,
+      "text": "핵심 결과 · 미경험 8종 평균 성공률"
+    },
+    {
+      "page": 1,
+      "top": 401,
+      "bottom": 416,
+      "text": "NVIDIA"
+    },
+    {
+      "page": 1,
+      "top": 401,
+      "bottom": 417,
+      "text": "43.9%"
+    },
+    {
+      "page": 1,
+      "top": 436,
+      "bottom": 451,
+      "text": "foothold-v1"
+    },
+    {
+      "page": 1,
+      "top": 436,
+      "bottom": 452,
+      "text": "86.7%"
+    },
+    {
+      "page": 1,
+      "top": 471,
+      "bottom": 486,
+      "text": "foothold-v2"
+    },
+    {
+      "page": 1,
+      "top": 471,
+      "bottom": 487,
+      "text": "88.5%"
+    },
+    {
+      "page": 1,
+      "top": 511,
+      "bottom": 539,
+      "text": "조건: 난이도 0.5, 미경험 지형 8종, 속도 0.5·1.0·1.5 m/s. 모델별 24개 조건에서 조건당 100회 평가한 성공률의 단순 평균이다. 성공은 생존·전진·속도 추종·방향 기준을 함께 충족해야 한다."
+    },
+    {
+      "page": 1,
+      "top": 560,
+      "bottom": 579,
+      "text": "성과의 범위"
+    },
+    {
+      "page": 1,
+      "top": 587,
+      "bottom": 617,
+      "text": "foothold-v2는 NVIDIA 대비 44.6%p, foothold-v1 대비 1.75%p 향상했다. 다만 stepping stones 평균은 8.0%에 머물렀다. 평균 성능의 향상이 모든 지형의 해결이나 모든 난이도에서의 우위를 뜻하지 않는다."
+    },
+    {
+      "page": 1,
+      "top": 626,
+      "bottom": 656,
+      "text": "기여는 미경험 지형 평가와 명령 수행 평가를 연결해, 개선된 능력과 남은 실패를 같은 보고서에서 드러낸 데 있다."
+    },
+    {
+      "page": 2,
+      "top": 43,
+      "bottom": 56,
+      "text": "남은 실패 · 해석 범위 · 다음 연구"
+    },
+    {
+      "page": 2,
+      "top": 102,
+      "bottom": 121,
+      "text": "명령 수행은 별도 검증이 필요하다"
+    },
+    {
+      "page": 2,
+      "top": 129,
+      "bottom": 159,
+      "text": "전진 중심의 학습에서 지형 성능이 좋아져도 정지·회전 능력은 함께 좋아지지 않았다. 아래는 각 시나리오 64개 환경에서 낙상한 환경 수다. 시나리오별 수치이며 전체 명령 공간의 성공률이 아니다."
+    },
+    {
+      "page": 2,
+      "top": 287,
+      "bottom": 317,
+      "text": "v2는 이 검사에서 정지 시 낙상이 없었지만, 회전에서는 7/64가 넘어졌다. NVIDIA의 회전 낙상 4/64보다 많았다. 횡이동·후퇴·외란 등 전체 축 2 능력을 이 세 검사만으로 판정할 수 없다."
+    },
+    {
+      "page": 2,
+      "top": 474.296375,
+      "bottom": 487.296375,
+      "text": "foothold-v1 · 넘어지는 장면"
+    },
+    {
+      "page": 2,
+      "top": 474.296375,
+      "bottom": 487.296375,
+      "text": "foothold-v2 · 서 있는 장면"
+    },
+    {
+      "page": 2,
+      "top": 494.296375,
+      "bottom": 520.296375,
+      "text": "같은 env 8, 영상 3.5초의 사례. v1의 실패 사례를 골라 비교했다. v1 낙상 판정은 3.70초이며, 이 한 장면으로 각 모델의 전체 낙상률을 대신할 수 없다."
+    },
+    {
+      "page": 2,
+      "top": 537.296375,
+      "bottom": 556.296375,
+      "text": "남은 실패와 다음 연구"
+    },
+    {
+      "page": 2,
+      "top": 564.296375,
+      "bottom": 594.296375,
+      "text": "저속 명령은 덜 움직일수록 좋은 것이 아니다. 0.10 m/s 명령에서 실제 전진 속도 평균은 NVIDIA 0.006, v2 0.167 m/s였다. 명령에 대한 미달과 초과를 구분해 평가해야 한다."
+    },
+    {
+      "page": 2,
+      "top": 602.296375,
+      "bottom": 632.296375,
+      "text": "고난도 하강 계단(난이도 0.9, 1.5 m/s)에서는 성공률이 v1 90%에서 v2 3%로 낮아졌다. 두 모델 모두 생존율은 100%였다. 이는 낙상과 속도 추종 실패를 구분해야 하는 사례다."
+    },
+    {
+      "page": 2,
+      "top": 640.296375,
+      "bottom": 685.296375,
+      "text": "평가 지형 배치가 제한돼 있어 새로운 배치로의 일반화는 추가 검증이 필요하다. 다음 단계는 명령 범위를 넓히면서 지형 경험을 확보하고, 관측·기억·지형 인지 구조의 효과를 동일한 두 축에서 비교하는 것이다. 아직 검증된 개선책은 아니다."
+    },
+    {
+      "page": 2,
+      "top": 706.296375,
+      "bottom": 732.296375,
+      "text": "프로젝트 2026.07 ~ 2026.12.11 · FOOTHOLD<br/>팀장 오흥재 · 팀원 임석헌 · 오현민 · 맹라현 · 이민우"
+    },
+    {
+      "page": 2,
+      "top": 737.296375,
+      "bottom": 750.296375,
+      "text": "<link href=\"https://foothold-project.vercel.app/research-20260928-v2-mvp-report\" color=\"#0b6459\">공개 종합보고서와 영상 보기</link> · 상세 조건과 전체 자료는 동봉한 종합보고서 참조"
+    }
+  ]
+}
