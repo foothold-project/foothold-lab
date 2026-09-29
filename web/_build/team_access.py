@@ -262,7 +262,7 @@ section .addr .big{font-size:1.2rem}
   border-radius:4px;background:var(--card)}
 .mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
   border-radius:4px;background:#0f141b}
-.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
 
 /* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
    갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
@@ -322,31 +322,6 @@ document.addEventListener('click', function(e){
     setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
   });
 });
-"""
-
-# 원문 §2 표를 카드로: 내용은 TEAM_ACCESS.md 에서 그대로 가져온 것이다
-TOOLS = [
-    ('01', 'TensorBoard', '학습이 잘 되고 있나<br>곡선 · 보상 · 성공률',
-     '동시 <b>제한 없음</b><br>RAM 78 MB', '가장 많이 씀', '', True),
-    ('02', 'SSH → <code>--headless</code>', '학습 실행 · 중지',
-     '여러 명<br>무거운 건 GPU 2장 = 2명', '설정 예정', 'warn', False),
-    ('03', 'Isaac Sim GUI', '로봇이 <b>어떻게 걷는지</b> (3D)',
-     '워크스테이션 앞 <b>1명</b><br>RAM 13.5GB · VRAM 9GB', '무거움', 'off', False),
-    ('04', 'Isaac Sim 스트리밍', '3D 화면을 <b>원격으로</b>',
-     '화면 <b>1개 공유</b><br>RAM 13.5GB · VRAM 9GB', '미확인', 'warn', False),
-]
-
-
-def mark_unverified(html):
-    """「미확인 / 미정 / 미설치」에 빨간 배지를 붙인다.
-
-      왜: 이 문서에는 확정 사실과 미확정이 섞여 있다. 팀원이 둘을 구분 못 하면
-      "스트리밍으로 5명이 각자 본다" 같은 잘못된 계획이 선다. 사용자가 명시한 제약이다.
-
-      ★ 태그 안(<b>미확인</b> 의 꺾쇠 사이)을 건드리면 HTML 이 깨진다.
-        그래서 태그 단위로 쪼개 **텍스트 조각에만** 적용한다.
-        (앞서 정규식 lookaround 로 피하려다 정작 <b>로 감싼 것들을 전부 놓쳤다.)
-    
 /* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
    갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
    부품으로 못 가져온다.
@@ -408,6 +383,30 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
+"""
+
+# 원문 §2 표를 카드로: 내용은 TEAM_ACCESS.md 에서 그대로 가져온 것이다
+TOOLS = [
+    ('01', 'TensorBoard', '학습이 잘 되고 있나<br>곡선 · 보상 · 성공률',
+     '동시 <b>제한 없음</b><br>RAM 78 MB', '가장 많이 씀', '', True),
+    ('02', 'SSH → <code>--headless</code>', '학습 실행 · 중지',
+     '여러 명<br>무거운 건 GPU 2장 = 2명', '설정 예정', 'warn', False),
+    ('03', 'Isaac Sim GUI', '로봇이 <b>어떻게 걷는지</b> (3D)',
+     '워크스테이션 앞 <b>1명</b><br>RAM 13.5GB · VRAM 9GB', '무거움', 'off', False),
+    ('04', 'Isaac Sim 스트리밍', '3D 화면을 <b>원격으로</b>',
+     '화면 <b>1개 공유</b><br>RAM 13.5GB · VRAM 9GB', '미확인', 'warn', False),
+]
+
+
+def mark_unverified(html):
+    """「미확인 / 미정 / 미설치」에 빨간 배지를 붙인다.
+
+      왜: 이 문서에는 확정 사실과 미확정이 섞여 있다. 팀원이 둘을 구분 못 하면
+      "스트리밍으로 5명이 각자 본다" 같은 잘못된 계획이 선다. 사용자가 명시한 제약이다.
+
+      ★ 태그 안(<b>미확인</b> 의 꺾쇠 사이)을 건드리면 HTML 이 깨진다.
+        그래서 태그 단위로 쪼개 **텍스트 조각에만** 적용한다.
+        (앞서 정규식 lookaround 로 피하려다 정작 <b>로 감싼 것들을 전부 놓쳤다.)
 """
     words = ('미확인', '미정', '미설치', '미조사', '미측정')
     out = []

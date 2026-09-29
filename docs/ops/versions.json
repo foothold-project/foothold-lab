@@ -115,9 +115,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "923e33620814ed52",
+  "hash": "30691b85a58dff26",
   "major": "v2.1",
-  "ver": "v2.18"
+  "ver": "v2.19"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -500,9 +500,14 @@
   "ver": "v1.4"
  },
  "docs/research/20260928-scratch-vs-resume.md": {
-  "hash": "0fdde26d7ce887c6",
+  "hash": "182e860080e023b5",
   "major": "v2.0",
-  "ver": "v2.1"
+  "ver": "v2.2"
+ },
+ "docs/research/20260928-v2-mvp-report.md": {
+  "hash": "ff5697ff62035fe0",
+  "major": "v3.5",
+  "ver": "v3.5"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

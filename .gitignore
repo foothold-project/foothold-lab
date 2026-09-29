@@ -116,3 +116,16 @@ sim/eval/results/20260911-camprobe/
 sim/eval/results/20260928-v2-clips/
 sim/eval/results/20260928-train-progress/slow-*/
 sim/eval/results/20260928-train-progress/sweep-*/
+
+# 대군 시점 학습 진행 조각 (2026-09-29). 폴더 셋이 328 MB 다.
+#   `20260929-train-army`      1,024 마리 · 앞 판
+#   `20260929-train-army-4096` 4,096 마리 · 칸당 136 이라 흰 덩이가 돼서 버렸다
+#   `20260929-train-army-d20`  600 마리 · 칸당 20 으로 학습과 밀도를 맞춘 정본
+#   **이은 한 편(`train-army.mp4`) 만** `git add -f` 로 따로 넣는다.
+#   버린 4096 판도 남겨 둔다. 「흰 덩이가 된다」 의 근거가 그 조각들이다.
+sim/eval/results/20260929-train-army/slow-*/
+sim/eval/results/20260929-train-army/sweep-*/
+sim/eval/results/20260929-train-army-4096/slow-*/
+sim/eval/results/20260929-train-army-4096/sweep-*/
+sim/eval/results/20260929-train-army-d20/slow-*/
+sim/eval/results/20260929-train-army-d20/sweep-*/

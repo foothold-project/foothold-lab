@@ -106,11 +106,14 @@ TERRAIN_SETS = {
     "rough6": (ROUGH6_TERRAIN_NAMES, "rough6_env_cfg", "UnitreeGo2Rough6EnvCfg"),
     # **학습 cfg 는 저장소 사본이 아니라 Isaac Lab 설치본에서 가져온다.**
     #
-    # 저장소의 `sim/policy/gap_e_env_cfg.py` 로는 못 가져온다. 그 파일이
-    # 부르는 `gap_wide_env_cfg` 가 저장소에 없고 (PR #461 에 있다), 그것이
-    # 다시 부르는 `gap_env_cfg` 는 `..rough_env_cfg` 를 부른다. 그 파일은
-    # Isaac Lab 것이라 저장소에 둘 물건이 아니다. 사슬이 저장소 안에서
-    # 닫히지 않는다 `확인됨`.
+    # 저장소의 `sim/policy/gap_e_env_cfg.py` 로는 못 가져온다. **사슬이
+    # 저장소 안에서 닫히지 않는다** `확인됨`.
+    #
+    # 까닭이 한 고리 뒤로 옮겨 갔다. 처음에는 `gap_wide_env_cfg` 가 아예
+    # 없었고 PR #461 이 머지되어(`472f0432`) 이제 있다. 그런데 그 다음
+    # 고리인 `gap_env_cfg` 13 행이 `..rough_env_cfg` 를 부르고, 그 파일은
+    # Isaac Lab 것이라 저장소에 없다 (`sim/rough_env_cfg.py` 도
+    # `sim/policy/rough_env_cfg.py` 도 없다 `확인됨`).
     #
     # 설치본은 사슬이 온전하고 **학습을 실제로 돌린 그 파일**이다. 저장소
     # 사본 셋(gap_e · gap_h · omni_gap_terrain)과 줄끝만 빼고 한 글자도
