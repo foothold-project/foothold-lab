@@ -351,10 +351,29 @@ const a2src = fs.readFileSync(path.join(GAL, 'axis2', 'index.html'), 'utf8');
 check('축 2 화면이 있다', a2src.length > 1000, true);
 check('축 2 화면이 축 2 색인을 읽는다',
       a2src.indexOf('foothold-gallery-axis2/') >= 0, true);
-check('축 2 화면이 통과·미달을 안 찍는다',
-      a2src.indexOf('찍지 않는다') >= 0, true);
+/* **판정 도장을 안 찍는가.** 글자가 아니라 «어디서 오는가» 로 센다.
+ * 딱지는 색인이 정하고(`data.badge`), 화면이 통과·미달을 «만들어» 붙이면
+ * 안 된다. 주석 말고 실제 그리는 줄만 본다. */
+{
+  const drawn = a2src.split(String.fromCharCode(10)).filter(l => {
+    const t = l.trim();
+    return t && !t.startsWith('*') && !t.startsWith('/*') && !t.startsWith('//');
+  }).join(String.fromCharCode(10));
+  check('축 2 딱지는 색인이 정한다', drawn.indexOf('data.badge') >= 0, true);
+  check('축 2 화면이 통과 도장을 안 만든다',
+        /text:\s*['\"][^'\"]*통과/.test(drawn), false);
+  check('축 2 화면이 미달 도장을 안 만든다',
+        /text:\s*['\"][^'\"]*미달/.test(drawn), false);
+}
 check('축 2 화면이 공유 계보 순서를 쓴다', a2src.indexOf('G.lineage') >= 0, true);
 check('축 2 화면이 공유 재생기를 쓴다', a2src.indexOf('G.syncGroup') >= 0, true);
+
+/* ★ 2026-09-29. 축 2 화면이 «자기 축 탭» 을 한 벌 더 들고 있었다. 그래서
+ * 공용 쪽에 준 여백이 이 화면에만 안 붙었고 팀장이 그것을 봤다. 규칙이
+ * 두 곳에 있으면 갈라진다. 사본이 다시 생기면 여기서 걸린다. */
+check('축 2 화면이 공유 축 탭을 쓴다', a2src.indexOf('G.axisTabs') >= 0, true);
+check('축 2 화면이 자기 축 탭을 안 만든다',
+      /function\s+axisTabs/.test(a2src), false);
 
 /* 탭 규칙. **`G.axisTabs` 를 실제로 불러서** 센다. 글자만 찾으면
  * 규칙이 죽어도 통과한다 (내 시험이 그 부류로 여러 번 허위 통과했다). */

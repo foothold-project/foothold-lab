@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FOOTHOLD · 축 2 명령 응답</title>
-<meta name="description" content="평지에서 명령에만 반응시킨 프로브. 문턱을 정하지 않았으므로 기록으로만 남긴다">
+<meta name="description" content="평지에서 명령에만 반응시킨 프로브 스물일곱 칸. 문턱을 안 정했으므로 기록으로만 남긴다">
 <link rel="stylesheet" href="/gallery/gallery.css">
 <style>.top .sp{flex:1}
 .tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=60a445b8').then(function(r){
+    fetch('/assets/search-index.json?v=27b1024f').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -455,9 +455,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <div class="crumb"><a href="/">FOOTHOLD</a> · <a href="/gallery/">갤러리</a> · 축 2</div>
   <div class="eyebrow">Command Response</div>
   <h1>평지에서 명령에만 반응시킨다</h1>
-  <p class="lede">지형을 섞으면 정지 실패가 <b>명령 탓인지 지형 탓인지</b> 안 갈린다.
-     그래서 평평한 바닥에 세워 놓고 명령만 준다. 시나리오 하나를 고르면 세 판이
-     같은 명령을 받는 모습을 나란히 볼 수 있다.</p>
+  <p class="lede" id="lede"></p>
   <div id="axistab"></div>
 </header>
 
@@ -475,8 +473,8 @@ document.addEventListener('DOMContentLoaded',function(){
   'use strict';
   const body = document.getElementById('body');
 
-  /* ── 색인 읽기 ─────────────────────────────────────────── */
-  let index, data, version;
+  /* ── 색인 ──────────────────────────────────────────────── */
+  let index, data, picked;
 
   try {
     index = G.checkSchema(await G.loadJSON(G.at('versions.json')),
@@ -486,22 +484,25 @@ document.addEventListener('DOMContentLoaded',function(){
     return;
   }
 
-  /* **축 2 색인이 있는 판만 고를 수 있다.** 없는 판을 고르게 두면 빈 화면이
-   * 된다. `versions.json` 이 적어 준 것만 믿는다. */
-  const withAxis2 = (index.versions || []).filter(v => v.axis2 && v.axis2.index);
+  /* **축 2 색인이 있는 판만.** 없는 판을 고르게 두면 빈 화면이 된다. */
+  const vers = (index.versions || []).filter(G.hasAxis2);
 
-  if (!withAxis2.length) {
+  if (!vers.length) {
     body.appendChild(G.warn(
       '축 2 색인을 가진 판이 아직 없습니다. `gallery_axis2.py` 를 돌린 뒤 ' +
       '`gallery_versions.py` 로 판 목록을 다시 만드십시오.', true));
     return;
   }
 
-  const allowed = { v: withAxis2.map(v => v.version) };
-  const read = G.readParams(allowed);
-  version = read.value.v || withAxis2[0].version;
+  const MODES = [
+    { id: 'list', label: '목록', hint: '시나리오마다 판 셋을 나란히' },
+    { id: 'grid', label: '격자', hint: '스물일곱 칸을 한 표에' },
+    { id: 'compare', label: '비교', hint: '한 시나리오를 함께 재생' }
+  ];
 
-  const picked = withAxis2.find(v => v.version === version);
+  const pre = G.readParams({ v: vers.map(v => v.version) });
+  const version = pre.value.v || vers[0].version;
+  picked = vers.find(v => v.version === version);
 
   try {
     data = G.checkSchema(await G.loadJSON(G.at(picked.axis2.index)),
@@ -511,21 +512,45 @@ document.addEventListener('DOMContentLoaded',function(){
     return;
   }
 
-  /* 시나리오도 색인에 있는 것만 받는다. */
-  const allowed2 = { scenario: data.facets.scenario, v: allowed.v };
-  const read2 = G.readParams(allowed2);
-  const rejected = read.rejected.concat(read2.rejected)
+  const allowed = {
+    v: vers.map(v => v.version),
+    mode: MODES.map(m => m.id),
+    scenario: data.facets.scenario,
+    group: data.facets.group,
+    model: data.facets.model
+  };
+  const read = G.readParams(allowed);
+  const rejected = pre.rejected.concat(read.rejected)
     .filter((x, i, a) => a.indexOf(x) === i);
 
-  let scenario = read2.value.scenario || data.scenarios[0].id;
+  const state = {
+    mode: read.value.mode || 'list',
+    scenario: read.value.scenario || null,
+    group: read.value.group || null,
+    model: read.value.model || null
+  };
 
-  /* 열 차례는 **갤러리와 같은 규칙**을 쓴다 (`G.lineage`). 여기 따로 적으면
-   * 갈라진다. 축 2 는 판이 셋뿐이라 셋을 다 보인다. */
+  /* 비교 모드는 시나리오 하나가 있어야 뜻이 선다. */
+  if (state.mode === 'compare' && !state.scenario) {
+    state.scenario = data.scenarios[0].id;
+  }
+
   const models = G.lineage(Object.keys(data.models || {}));
   const cellOf = {};
   (data.cells || []).forEach(c => { cellOf[c.scenario + '|' + c.model] = c; });
   const scOf = {};
   (data.scenarios || []).forEach(s => { scOf[s.id] = s; });
+
+  document.getElementById('lede').textContent =
+    '지형을 섞으면 정지 실패가 명령 탓인지 지형 탓인지 안 갈린다. 그래서 ' +
+    '평평한 바닥에 세워 놓고 명령만 준다. 시나리오 ' + data.counts.scenarios +
+    ' 종 x 판 ' + data.counts.models + ' = ' + data.counts.cells +
+    ' 칸이고, 칸마다 그 실행에서 찍은 컷이 하나씩 붙어 있다.';
+
+  {
+    const tabs = G.axisTabs({ version: version, current: 'command', has2: true });
+    if (tabs) document.getElementById('axistab').appendChild(tabs);
+  }
 
   /* ── 재생 묶기. `compare` 와 **같은 것을 쓴다** ──────────── */
   const endedTag = {};
@@ -535,70 +560,163 @@ document.addEventListener('DOMContentLoaded',function(){
     onClock: t => { if (ui) ui.clock.textContent = t; },
     onButton: t => { if (ui) ui.button.textContent = t; },
     onNote: t => { if (ui) ui.note.textContent = t; },
-    onEnded: (key, done) => { if (endedTag[key]) endedTag[key].hidden = !done; }
+    onEnded: (k, done) => { if (endedTag[k]) endedTag[k].hidden = !done; }
   });
 
   /* ── 숫자를 글자로 ─────────────────────────────────────── */
-
-  /* 자릿수는 **값의 크기로** 정한다. 비율 0.03 을 「0.0」 으로 적으면
-   * 0 과 구별이 안 된다. */
   function num(v) {
-    if (v === null || v === undefined || !isFinite(v)) return '측정값 없음';
+    if (v === null || v === undefined || !isFinite(v)) return '--';
     const a = Math.abs(v);
     if (a === 0) return '0';
     if (a < 0.01) return v.toFixed(4);
-    if (a < 1) return v.toFixed(3);
+    if (a < 1) return v.toFixed(2);
     if (a < 10) return v.toFixed(2);
     return v.toFixed(1);
   }
 
-  /* **좋고 나쁨을 색으로 말하지 않는다.** 문턱을 안 정했으니 어디부터
-   * 나쁜지 우리가 모른다. 색을 칠하면 모르는 것을 아는 척하게 된다.
-   * 대신 «1.00 에서 얼마나 떨어졌나» 처럼 읽는 법을 글로 적는다. */
-  function readAs(cell) {
-    const head = cell.headline;
-    if (head.good === 'one') {
-      if (head.value === null || head.value === undefined) return '';
-      const d = head.value - 1;
+  /* 값이 무엇을 뜻하나. **한 줄로.** 색으로 좋고 나쁨을 말하지 않는다
+   * (문턱을 안 정한 칸이 있어서 어디부터 나쁜지 우리가 모른다). */
+  function meaning(cell, sc) {
+    const h = cell.headline;
+    if (h.value === null || h.value === undefined) return '측정값 없음';
+
+    if (h.good === 'one') {
+      const d = h.value - 1;
       if (Math.abs(d) < 0.005) return '명령과 거의 같다';
       return d > 0 ? '명령보다 ' + num(d) + ' 넘어섰다'
                    : '명령보다 ' + num(-d) + ' 못 미쳤다';
     }
-    if (head.good === 'low') {
-      const n = cell.envs || 0;
-      const k = Math.round((head.value || 0) * n);
-      return n ? k + ' / ' + n + ' env' : '';
+    const n = cell.envs || 0;
+    const k = Math.round(h.value * n);
+    return n ? k + ' / ' + n + ' env 가 넘어졌다' : '';
+  }
+
+  /* **자가 그려진 막대.** 자는 선으로만 긋는다. 통과·미달은 안 찍는다
+   * (이 표본은 배포 판정의 표본이 아니다 · 아래 「어떻게 읽나」). */
+  function bar(cell, sc) {
+    const spec = sc.bar;
+    const v = cell.headline.value;
+    if (!spec || v === null || v === undefined) return null;
+
+    const lo = spec.min, hi = spec.max;
+    const pct = x => Math.max(0, Math.min(100, (x - lo) / (hi - lo) * 100));
+
+    const box = G.el('div', { class: 'a2bar' + (spec.kind === 'around1' ? ' center' : '') });
+    const fill = G.el('div', { class: 'fill' });
+
+    if (spec.kind === 'around1') {
+      /* 1.00 에서 값까지를 채운다. 어느 쪽으로 얼마나 빗나갔는지가 길이다. */
+      const a = Math.min(pct(spec.mid), pct(v));
+      const b = Math.max(pct(spec.mid), pct(v));
+      fill.style.left = a + '%';
+      fill.style.width = Math.max(1, b - a) + '%';
+    } else {
+      fill.style.width = Math.max(1, pct(v)) + '%';
     }
-    return '';
-  }
+    box.appendChild(fill);
 
-  /* ── 그리기 ────────────────────────────────────────────── */
+    if (spec.kind === 'around1') {
+      const mid = G.el('div', { class: 'mid' });
+      mid.style.left = pct(spec.mid) + '%';
+      box.appendChild(mid);
+    }
 
-  function push(replace) {
-    G.writeParams({
-      v: withAxis2.length > 1 ? version : null,
-      scenario: scenario === data.scenarios[0].id ? null : scenario
-    }, replace);
-  }
+    const gate = sc.headline_threshold;
+    if (gate) {
+      const tick = G.el('div', { class: 'gate' });
+      tick.style.left = pct(gate.limit) + '%';
+      box.appendChild(tick);
+    }
 
-  function axisTabs() {
-    const wrap = G.el('div', { class: 'viewsw' });
-    const one = (href, text, on) => {
-      const a = G.el('a', { class: 'rb' + (on ? ' on' : ''), href: href, text: text });
-      if (on) a.setAttribute('aria-current', 'page');
-      return a;
-    };
-    /* **절대경로로 적는다.** 이 페이지는 `/gallery/axis2` (슬래시 없이) 로
-     * 서빙되므로 상대경로는 한 칸 위로 풀린다. 갤러리 첫 화면에서 같은
-     * 실수로 404 를 낸 적이 있다 `확인됨`. */
-    wrap.appendChild(one('/gallery/view?v=' + encodeURIComponent(version),
-                         '축 1 · 험지 통과', false));
-    wrap.appendChild(one('#', data.label || '축 2 · 명령 응답', true));
+    const wrap = G.el('div', {}, [box]);
+    wrap.appendChild(G.el('div', { class: 'a2scale' }, [
+      G.el('span', { text: String(lo) }),
+      G.el('span', { text: gate ? ('관문 자 ' + gate.op + ' ' + gate.limit)
+                                : (spec.kind === 'around1' ? '가운데 선 = 명령' : '') }),
+      G.el('span', { text: String(hi) })
+    ]));
     return wrap;
   }
 
-  function scenarioRows() {
-    const wrap = G.el('div', { class: 'tgrp' });
+  function bigNumber(cell) {
+    const mt = (data.metrics || {})[cell.headline.metric] || {};
+    return G.el('div', {}, [
+      G.el('div', { class: 'a2unit', text: mt.label || cell.headline.metric }),
+      G.el('div', { class: 'a2big', text: num(cell.headline.value) })
+    ]);
+  }
+
+  /* ── 주소 ──────────────────────────────────────────────── */
+  function push(replace) {
+    G.writeParams({
+      v: vers.length > 1 ? version : null,
+      mode: state.mode === 'list' ? null : state.mode,
+      group: state.group,
+      scenario: state.scenario,
+      model: state.model
+    }, replace);
+  }
+
+  function go(patch) {
+    Object.assign(state, patch);
+    if (state.mode === 'compare' && !state.scenario) {
+      state.scenario = visibleScenarios()[0] || data.scenarios[0].id;
+    }
+    push(); draw();
+  }
+
+  /* ── 무엇을 볼 수 있는 화면인가 (접힌 상자 하나) ────────── */
+  function intro() {
+    const d = G.el('details', { class: 'a2intro' });
+    d.appendChild(G.el('summary', { text: '이 화면에서 무엇을 알 수 있나' }));
+    const inn = G.el('div', { class: 'in' });
+
+    const p = (nodes) => inn.appendChild(G.el('p', {}, nodes));
+
+    p([G.el('b', { text: '알 수 있는 것. ' }),
+       G.el('span', { text: '평평한 바닥에서 «명령을 얼마나 따르는가» 를 ' +
+         '판 셋이 같은 자로 견준 값이다. 지형이 섞이지 않으므로 실패가 ' +
+         '명령 탓이라고 말할 수 있다.' })]);
+
+    p([G.el('b', { text: '알 수 없는 것. ' }),
+       G.el('span', { text: '험지에서도 같은지는 여기서 모른다. 그것은 ' }),
+       G.el('a', { href: '/gallery/view?v=' + encodeURIComponent(version),
+                   text: '축 1' }),
+       G.el('span', { text: ' 이다. 그리고 이 값은 ' }),
+       G.el('b', { text: 'env ' + data.protocol.num_envs + ' 칸 한 번의 실행' }),
+       G.el('span', { text: ' 이다.' })]);
+
+    p([G.el('b', { text: '판정 도장을 왜 안 찍나. ' }),
+       G.el('span', { text: data.why_not_judged }),
+       G.el('span', { text: ' ' + data.not_the_verdict })]);
+
+    (data.groups || []).forEach(g => {
+      p([G.el('b', { text: g.label + ' · ' }), G.el('span', { text: g.note })]);
+    });
+
+    p([G.el('b', { text: '막대 읽는 법. ' }),
+       G.el('span', { text: '채워진 길이가 값이다. 굵은 세로 선이 ' +
+         '아홉 관문의 자이고, 추종비 막대의 가운데 선은 명령(1.00)이다. ' +
+         '색으로 좋고 나쁨을 칠하지 않는다 · 문턱을 안 정한 칸이 있어서 ' +
+         '어디부터 나쁜지 우리가 모른다.' })]);
+
+    d.appendChild(inn);
+    return d;
+  }
+
+  /* ── 거르개 ────────────────────────────────────────────── */
+  function visibleScenarios() {
+    return (data.scenarios || [])
+      .filter(s => !state.group || s.group === state.group)
+      .map(s => s.id);
+  }
+
+  function visibleModels() {
+    return state.model ? [state.model] : models;
+  }
+
+  function filters() {
+    const wrap = G.el('div', { class: 'filters' });
 
     (data.groups || []).forEach(g => {
       const list = (data.scenarios || []).filter(s => s.group === g.id);
@@ -608,110 +726,234 @@ document.addEventListener('DOMContentLoaded',function(){
         G.el('span', { class: 'flabel', text: g.label + ' ' + list.length + '종' })
       ]);
 
+      const whole = state.group === g.id && !state.scenario;
+      const chip0 = G.el('button', {
+        class: 'chip whole', type: 'button',
+        'aria-pressed': whole ? 'true' : 'false'
+      }, [G.el('span', { text: '무리 전체' }),
+          G.el('span', { class: 'n', text: String(list.length * visibleModels().length) })]);
+      chip0.addEventListener('click', () => go(whole
+        ? { group: null }
+        : { group: g.id, scenario: state.mode === 'compare' ? list[0].id : null }));
+      row.appendChild(chip0);
+
       list.forEach(s => {
-        const on = scenario === s.id;
-        const n = models.filter(m => cellOf[s.id + '|' + m]).length;
+        const on = state.scenario === s.id;
         const chip = G.el('button', {
-          class: 'chip', type: 'button',
-          'aria-pressed': on ? 'true' : 'false',
-          disabled: (n === 0 && !on) || null
+          class: 'chip', type: 'button', 'aria-pressed': on ? 'true' : 'false'
         }, [G.el('span', { text: s.label }),
-            G.el('span', { class: 'n', text: String(n) })]);
-        chip.addEventListener('click', () => {
-          if (on) return;
-          scenario = s.id; push(); draw();
-        });
+            G.el('span', { class: 'n', text: String(visibleModels().length) })]);
+        chip.addEventListener('click', () => go(on && state.mode !== 'compare'
+          ? { scenario: null }
+          : { scenario: s.id, group: null }));
         row.appendChild(chip);
       });
 
       wrap.appendChild(row);
-      wrap.appendChild(G.el('div', { class: 'note' },
-                            [G.el('span', { text: g.note })]));
     });
+
+    const mrow = G.el('div', { class: 'frow' }, [
+      G.el('span', { class: 'flabel', text: '판' })
+    ]);
+    const all = !state.model;
+    const c0 = G.el('button', { class: 'chip', type: 'button',
+                                'aria-pressed': all ? 'true' : 'false' },
+                    [G.el('span', { text: '전부' }),
+                     G.el('span', { class: 'n', text: String(data.counts.cells) })]);
+    c0.addEventListener('click', () => go({ model: null }));
+    mrow.appendChild(c0);
+
+    models.forEach(m => {
+      const on = state.model === m;
+      const n = (data.cells || []).filter(c => c.model === m).length;
+      const chip = G.el('button', { class: 'chip', type: 'button',
+                                    'aria-pressed': on ? 'true' : 'false' },
+                        [G.el('span', { text: m }),
+                         G.el('span', { class: 'n', text: String(n) })]);
+      /* 비교 모드는 판 셋을 나란히 놓는 것이 일이라 한 판만 고르지 않는다. */
+      chip.addEventListener('click', () => go({
+        model: on ? null : m,
+        mode: state.mode === 'compare' && !on ? 'list' : state.mode
+      }));
+      mrow.appendChild(chip);
+    });
+    wrap.appendChild(mrow);
 
     return wrap;
   }
 
-  function column(model) {
-    const cell = cellOf[scenario + '|' + model];
-    const col = G.el('div', { class: 'col' });
-    const head = G.el('div', { class: 'colhead' });
-
-    head.appendChild(G.el('div', { class: 'chead' }, [
-      G.el('b', { text: model }),
-      G.el('span', { class: 'tag ' + (data.judged ? 'main' : 'warn'),
-                     text: data.badge })
-    ]));
-
-    const score = G.el('div', { class: 'colscore' });
-
-    if (!cell) {
-      score.appendChild(G.el('span', { class: 'tag stop', text: '미측정' }));
-      score.appendChild(G.el('span', { class: 'sub',
-        text: '이 판은 이 시나리오를 돌리지 않았습니다' }));
-      head.appendChild(score);
-      col.appendChild(head);
-      return col;
-    }
-
-    const mt = (data.metrics || {})[cell.headline.metric] || {};
-
-    /* **성공률처럼 보이는 큰 숫자를 쓰지 않는다** (팀장: 「평가 대상은
-     * 아니고 기록」). `big` 은 축 1 의 성공률 자리다. 여기서는 한 단계
-     * 작은 글자로 두고 무엇을 잰 값인지 이름을 먼저 적는다. */
-    score.appendChild(G.el('span', { class: 'sub', text: mt.label || cell.headline.metric }));
-    score.appendChild(G.el('span', { class: 'num', text: num(cell.headline.value) }));
-
-    const how = readAs(cell);
-    if (how) score.appendChild(G.el('span', { class: 'sub', text: how }));
-
-    score.appendChild(G.el('span', { class: 'sub', text: 'env ' + cell.envs + ' 칸' }));
-
-    Object.entries(cell.extra || {}).forEach(([k, v]) => {
-      const t = (data.metrics || {})[k] || {};
-      score.appendChild(G.el('span', { class: 'sub',
-        text: (t.label || k) + ' ' + num(v) + (t.unit ? ' ' + t.unit : '') }));
+  function modeRow() {
+    const row = G.el('div', { class: 'a2modes' }, [
+      G.el('span', { class: 'lab', text: '보기' })
+    ]);
+    MODES.forEach(m => {
+      const on = state.mode === m.id;
+      const b = G.el('button', { class: 'rb' + (on ? ' on' : ''), type: 'button',
+                                 title: m.hint, text: m.label });
+      if (on) b.setAttribute('aria-current', 'true');
+      b.addEventListener('click', () => { if (!on) go({ mode: m.id }); });
+      row.appendChild(b);
     });
-
-    if (Object.keys(cell.yaw_follow_ratio || {}).length) {
-      score.appendChild(G.el('span', { class: 'sub mono',
-        text: '요 추종비 ' + Object.entries(cell.yaw_follow_ratio)
-          .map(([k, v]) => k + ' ' + num(v)).join(' · ') }));
-    }
-
-    head.appendChild(score);
-    col.appendChild(head);
-
-    const box = G.el('div', { class: 'slot' });
-    const video = G.video({ preload: 'auto' });
-    const src = G.at(picked.folder + '/' + cell.clip.file);
-
-    if (cell.clip.poster) {
-      video.poster = G.at(picked.folder + '/' + cell.clip.poster);
-    }
-    video.src = src;
-
-    const tag = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
-    box.appendChild(video);
-    box.appendChild(tag);
-    endedTag[model] = tag;
-    group.add(model, video, cell.clip.seconds);
-    video.addEventListener('click', () => group.toggle());
-    col.appendChild(box);
-
-    col.appendChild(G.el('div', { class: 'cut' }, [
-      G.el('figcaption', {}, [
-        G.el('div', { class: 'meta' }, [
-          G.el('span', { class: 'mono', text: scenario }),
-          G.el('span', { text: (cell.clip.seconds || 0).toFixed(1) + '초' }),
-          G.el('span', { text: (cell.clip.bytes / 1048576).toFixed(1) + ' MB' })
-        ])
-      ])
-    ]));
-
-    return col;
+    row.appendChild(G.el('span', { class: 'a2sub',
+      text: (MODES.find(m => m.id === state.mode) || {}).hint }));
+    return row;
   }
 
+  /* ── 격자 모드 ─────────────────────────────────────────── */
+  function gridView(ids) {
+    const t = G.el('table', { class: 'a2grid' });
+    const head = G.el('thead');
+    const hr = G.el('tr', {}, [G.el('th', { text: '시나리오' })]);
+    visibleModels().forEach(m => hr.appendChild(G.el('th', { text: m })));
+    head.appendChild(hr);
+    t.appendChild(head);
+
+    const tb = G.el('tbody');
+    let prevGroup = null;
+
+    ids.forEach(id => {
+      const sc = scOf[id];
+      const tr = G.el('tr', prevGroup && prevGroup !== sc.group ? { class: 'gsep' } : {});
+      prevGroup = sc.group;
+
+      const th = G.el('th', {}, [
+        G.el('span', { text: sc.label }),
+        G.el('span', { class: 'q', text: sc.what || '' })
+      ]);
+      tr.appendChild(th);
+
+      visibleModels().forEach(m => {
+        const cell = cellOf[id + '|' + m];
+        const td = G.el('td');
+
+        if (!cell) {
+          td.appendChild(G.el('span', { class: 'tag stop', text: '미측정' }));
+          tr.appendChild(td);
+          return;
+        }
+
+        const btn = G.el('button', { class: 'cellbtn', type: 'button',
+                                     title: '이 시나리오를 함께 재생' });
+        btn.appendChild(bigNumber(cell));
+        const b = bar(cell, sc);
+        if (b) btn.appendChild(b);
+        btn.appendChild(G.el('div', { class: 'a2sub', text: meaning(cell, sc) }));
+        btn.addEventListener('click',
+          () => go({ mode: 'compare', scenario: id, model: null }));
+        td.appendChild(btn);
+        tr.appendChild(td);
+      });
+
+      tb.appendChild(tr);
+    });
+
+    t.appendChild(tb);
+    return t;
+  }
+
+  /* ── 목록 모드 ─────────────────────────────────────────── */
+  function scenarioBlock(id, withVideo) {
+    const sc = scOf[id];
+    const sec = G.el('div', { class: 'a2sec' });
+
+    const h = G.el('div', { class: 'a2head' }, [
+      G.el('h3', { text: sc.label }),
+      G.el('span', { class: 'mono', text: id }),
+      sc.duration_s ? G.el('span', { class: 'mono', text: sc.duration_s + '초' }) : null,
+      G.el('span', { class: 'tag warn', text: data.badge })
+    ]);
+    sec.appendChild(h);
+
+    if (sc.what) {
+      sec.appendChild(G.el('div', { class: 'a2sub', text: sc.what }));
+    }
+
+    /* **무엇을 볼 것인가.** 머리 숫자가 재는 것과 같은 것을 가리킨다. */
+    if (sc.watch) {
+      const w = G.el('p', { class: 'a2watch' });
+      sc.watch.split('**').forEach((part, i) => {
+        w.appendChild(G.el(i % 2 ? 'b' : 'span', { text: part }));
+      });
+      sec.appendChild(w);
+    }
+
+    if (sc.skip_s) {
+      sec.appendChild(G.el('div', { class: 'a2gate' }, [
+        G.el('span', { text: '앞 ' + sc.skip_s + '초는 재기에서 빠진다 (가속 구간). ' +
+          '컷에도 그 구간에 띠가 깔려 있다.' })
+      ]));
+    }
+
+    if ((sc.thresholds || []).length) {
+      sec.appendChild(G.el('div', { class: 'a2gate' }, [
+        G.el('span', { text: '아홉 관문의 자 · ' }),
+        G.el('span', { class: 'mono', text: sc.thresholds.map(t =>
+          t.metric + ' ' + t.op + ' ' + t.limit +
+          (t.per_step ? ' (요 명령 네 크기 각각)' : '')).join('  ·  ') })
+      ]));
+    }
+
+    const cols = G.el('div', { class: 'a2cols' });
+
+    visibleModels().forEach(m => {
+      const cell = cellOf[id + '|' + m];
+      const col = G.el('div', { class: 'a2col' });
+      col.appendChild(G.el('div', { class: 'who', text: m }));
+
+      if (!cell) {
+        col.appendChild(G.el('span', { class: 'tag stop', text: '미측정' }));
+        cols.appendChild(col);
+        return;
+      }
+
+      col.appendChild(bigNumber(cell));
+      const b = bar(cell, sc);
+      if (b) col.appendChild(b);
+      col.appendChild(G.el('div', { class: 'a2sub', text: meaning(cell, sc) }));
+      col.appendChild(G.el('div', { class: 'a2sub',
+        text: 'env ' + cell.envs + ' 칸 · 컷 ' +
+              (cell.clip.seconds || 0).toFixed(1) + '초' }));
+
+      Object.entries(cell.extra || {}).forEach(([k, v]) => {
+        const mt = (data.metrics || {})[k] || {};
+        col.appendChild(G.el('div', { class: 'a2sub',
+          text: (mt.label || k) + ' ' + num(v) + (mt.unit ? ' ' + mt.unit : '') }));
+      });
+
+      if (withVideo) {
+        const video = G.video({ preload: 'auto' });
+        if (cell.clip.poster) {
+          video.poster = G.at(picked.folder + '/' + cell.clip.poster);
+        }
+        video.src = G.at(picked.folder + '/' + cell.clip.file);
+        const tag = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
+        col.appendChild(video);
+        col.appendChild(tag);
+        endedTag[m] = tag;
+        group.add(m, video, cell.clip.seconds);
+        video.addEventListener('click', () => group.toggle());
+      } else {
+        /* **목록에서는 표지만 깐다.** 스물일곱 개를 한꺼번에 걸면 다 받아 온다.
+         * 누르면 그 시나리오의 비교 모드로 간다. */
+        const btn = G.el('button', { class: 'poster has-shot', type: 'button' }, [
+          G.el('span', { class: 'play', text: '▶' }),
+          G.el('span', { text: '함께 재생' })
+        ]);
+        btn.style.backgroundImage =
+          'url("' + G.at(picked.folder + '/' + cell.clip.poster) + '")';
+        btn.addEventListener('click',
+          () => go({ mode: 'compare', scenario: id, model: null }));
+        col.appendChild(btn);
+      }
+
+      cols.appendChild(col);
+    });
+
+    sec.appendChild(cols);
+    return sec;
+  }
+
+  /* ── 그리기 ────────────────────────────────────────────── */
   function draw() {
     group.clear();
     models.forEach(m => delete endedTag[m]);
@@ -723,89 +965,80 @@ document.addEventListener('DOMContentLoaded',function(){
         ' 은 지금 색인에 없는 값입니다. 다른 값으로 몰래 바꾸지 않았습니다.', true));
     }
 
-    /* 판 고르개는 축 2 를 가진 판이 둘 이상일 때만 낸다. */
-    if (withAxis2.length > 1) {
+    body.appendChild(intro());
+
+    if (vers.length > 1) {
       const row = G.el('div', { class: 'frow' }, [
         G.el('span', { class: 'flabel', text: '판' })
       ]);
-      withAxis2.forEach(v => {
+      vers.forEach(v => {
         const on = v.version === version;
         const chip = G.el('button', { class: 'chip', type: 'button',
                                       'aria-pressed': on ? 'true' : 'false' },
                           [G.el('span', { text: 'gallery-' + v.version })]);
         chip.addEventListener('click', () => {
-          if (on) return;
-          location.search = '?v=' + encodeURIComponent(v.version);
+          if (!on) location.search = '?v=' + encodeURIComponent(v.version);
         });
         row.appendChild(chip);
       });
       body.appendChild(row);
     }
 
-    body.appendChild(scenarioRows());
+    body.appendChild(filters());
+    body.appendChild(modeRow());
 
-    const s = scOf[scenario] || {};
+    let ids = visibleScenarios();
+    if (state.scenario) ids = [state.scenario];
 
-    /* 이 시나리오가 무엇을 묻는지. **프로브가 적어 둔 글을 그대로 쓴다.** */
-    const about = G.el('div', { class: 'cmpcond' }, [
-      G.el('b', { text: s.label + ' · ' }),
-      G.el('span', { text: s.what || '' })
+    const tally = G.el('div', { class: 'tally' }, [
+      G.el('b', { text: String(ids.length * visibleModels().length) }),
+      G.el('span', { text: ' 칸' }),
+      G.el('span', { class: 'a2sub',
+        text: '  (시나리오 ' + ids.length + ' x 판 ' + visibleModels().length + ')' })
     ]);
-    if (s.duration_s) {
-      about.appendChild(G.el('span', { class: 'mono',
-        text: '  ' + s.duration_s + '초' }));
-    }
-    if (s.commanded_vx_mps) {
-      about.appendChild(G.el('span', { class: 'mono',
-        text: '  명령 ' + s.commanded_vx_mps.toFixed(2) + ' m/s' }));
-    }
-    body.appendChild(about);
+    body.appendChild(tally);
 
-    /* 앞 구간을 재기에서 빼는 시나리오는 **화면에서도 말해 준다.**
-     * 컷에는 20 초가 다 나오는데 표는 5 초 뒤부터만 센다. */
-    if (s.skip_s) {
-      body.appendChild(G.warn(
-        '이 시나리오는 앞 ' + s.skip_s + '초를 재기에서 뺍니다 (가속 구간). ' +
-        '컷에는 처음부터 다 나오므로, 위 숫자와 같은 구간을 보려면 ' +
-        s.skip_s + '초 뒤부터 보십시오.'));
+    if (!ids.length) {
+      body.appendChild(G.emptyBox('고른 조건에 칸이 없습니다', '조건을 풀어 보십시오',
+                                  () => go({ group: null, scenario: null, model: null })));
+      return;
     }
 
-    /* 관문 자는 «적기만» 한다. 통과·미달을 찍지 않는다. */
-    if ((s.thresholds || []).length) {
+    if (state.mode === 'grid') {
+      body.appendChild(gridView(ids));
       body.appendChild(G.el('div', { class: 'note' }, [
-        G.el('b', { text: '아홉 관문이 이 시나리오에 대는 자 · ' }),
-        G.el('span', { class: 'mono', text: s.thresholds.map(t =>
-          t.metric + ' ' + t.op + ' ' + t.limit +
-          (t.per_step ? ' (요 명령 네 크기 각각)' : '')).join('  ·  ') })
+        G.el('span', { text: '칸을 누르면 그 시나리오를 세 판 함께 재생합니다.' })
       ]));
+      foot();
+      return;
     }
 
-    body.appendChild(G.warn(data.why_not_judged));
-    body.appendChild(G.warn(data.not_the_verdict));
+    if (state.mode === 'compare') {
+      ui = G.transport(group);
+      body.appendChild(ui.row);
+      group.clock();
+      body.appendChild(scenarioBlock(ids[0], true));
+      body.appendChild(G.el('p', { class: 'cmpnote' }, [
+        G.el('b', { text: '컷과 숫자는 같은 실행에서 나왔습니다. ' }),
+        G.el('span', { text: '위 숫자는 그 실행의 env ' + data.protocol.num_envs +
+          ' 칸 집계이고, 컷은 그중 한 칸입니다. 한 칸이 ' +
+          data.protocol.num_envs + ' 칸을 대표한다고 읽지 마십시오.' })
+      ]));
+      foot();
+      return;
+    }
 
-    ui = G.transport(group);
-    body.appendChild(ui.row);
-    group.clock();
-
-    const cmp = G.el('div', { class: 'cmp' });
-    models.forEach(m => cmp.appendChild(column(m)));
-    body.appendChild(cmp);
-
-    body.appendChild(G.el('p', { class: 'cmpnote' }, [
-      G.el('b', { text: '컷과 숫자는 같은 실행에서 나왔습니다. ' }),
-      G.el('span', { text: '옆에 적은 값은 그 실행의 env ' +
-        data.protocol.num_envs + '칸 집계이고, 컷은 그중 한 칸입니다. ' +
-        '한 칸이 ' + data.protocol.num_envs + '칸을 대표한다고 읽지 마십시오.' })
-    ]));
-
-    const foot = document.getElementById('foot');
-    foot.textContent = '하네스 ' + data.protocol.harness + ' · env ' +
-      data.protocol.num_envs + ' · 시드 ' + data.protocol.seed + ' · ' +
-      data.protocol.terrain + ' · 평가 ' +
-      (data.evaluated_at ? data.evaluated_at.slice(0, 10) : '미기록');
+    ids.forEach(id => body.appendChild(scenarioBlock(id, false)));
+    foot();
   }
 
-  document.getElementById('axistab').appendChild(axisTabs());
+  function foot() {
+    document.getElementById('foot').textContent =
+      '하네스 ' + data.protocol.harness + ' · env ' + data.protocol.num_envs +
+      ' · 시드 ' + data.protocol.seed + ' · ' + data.protocol.terrain +
+      ' · 평가 ' + (data.evaluated_at ? data.evaluated_at.slice(0, 10) : '미기록');
+  }
+
   window.addEventListener('popstate', () => location.reload());
   if (!rejected.length) push(true);
   draw();

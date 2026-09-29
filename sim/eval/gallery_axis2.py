@@ -180,6 +180,30 @@ EXTRA = {
     "turn_rev":  ["residual_speed_mps"],
 }
 
+# 컷에서 **무엇을 볼 것인가.** 팀장 지시로 시나리오마다 한 줄 단다.
+#
+# **머리 숫자가 재는 것과 같은 것을 가리켜야 한다.** 화면은 A 를 보라고
+# 하고 숫자는 B 를 재면 읽는 사람이 둘을 잇지 못한다.
+WATCH = {
+    "stop": "4 초에 명령선이 0 으로 떨어진다. **그 뒤에 서는가, 넘어지는가.**",
+    "hold": "명령선이 20 초 내내 0 이다. **서 있는 동안 흔들리거나 미끄러지는가.**",
+    "turn": "요 명령이 계단으로 오른다. **그 계단을 따라 도는가, 도는 중에 넘어지는가.**",
+    "slow010": "연한 가로선(명령 0.10)과 흰 실선(실제)의 **거리**. 선 위로 넘어서는가 아래로 못 미치는가.",
+    "slow020": "연한 가로선(명령 0.20)과 흰 실선(실제)의 **거리**.",
+    "slow030": "연한 가로선(명령 0.30)과 흰 실선(실제)의 **거리**.",
+    "slow040": "연한 가로선(명령 0.40)과 흰 실선(실제)의 **거리**.",
+    "turn_rest": "회전 계단 사이에 1.5 초 쉼이 들어간다. **쉬면 안 넘어지는가.**",
+    "turn_rev": "회전 계단 순서가 뒤집혀 +1.0 이 먼저 온다. **차례가 원인인가.**",
+}
+
+# 막대를 어떻게 그리나. **자를 선으로 긋고 값은 채운 길이로 읽는다.**
+#   ratio0    0 ~ 1 · 0 에서 채운다 · 낮을수록 좋다 (낙상 비율)
+#   around1   0 ~ 2 · 1.00 에 가운데 선 · 그 선에 가까울수록 좋다 (추종비)
+BAR = {
+    "fell_ratio": {"kind": "ratio0", "min": 0.0, "max": 1.0},
+    "tracking_ratio": {"kind": "around1", "min": 0.0, "max": 2.0, "mid": 1.0},
+}
+
 SCENARIO_LABEL = {
     "stop": "정지",
     "hold": "정지 유지",
@@ -344,7 +368,10 @@ def build(gallery_dir, version, clip_prefix, web_root):
             seen.add(scenario)
             meta = (probe.get("scenarios") or {}).get(scenario) or {}
             head = HEADLINE[scenario]
+            gate = [t for t in thresholds_for(scenario)
+                    if t["metric"] == head["metric"] and not t.get("per_step")]
             scenarios.append({
+                "headline_threshold": (gate[0] if gate else None),
                 "id": scenario,
                 "label": SCENARIO_LABEL.get(scenario, scenario),
                 "group": src["group"],
@@ -354,6 +381,8 @@ def build(gallery_dir, version, clip_prefix, web_root):
                 "skip_s": meta.get("skip_s"),
                 "headline_metric": head["metric"],
                 "good": head["good"],
+                "watch": WATCH.get(scenario),
+                "bar": BAR.get(head["metric"]),
                 "thresholds": thresholds_for(scenario),
             })
 
