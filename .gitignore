@@ -157,8 +157,11 @@ sim/eval/results/20260929-train-army-ramp/concat.txt
 # 인용한 경로가 저장소에서 사라지지 않으면서 크기는 안 는다.
 #
 # 영상은 배포본(`foothold-site/assets/video/`)에 웹용으로 다시 구워 올린다.
-sim/eval/results/20260929-*/**/*.mp4
-sim/eval/results/20260929-*/**/*.parquet
-sim/eval/results/20260929-*/**/*.png
-sim/eval/results/20260929-*/**/*.jpg
-sim/eval/results/20260929-*/**/*.log
+# 날짜 폴더를 가리지 않고 같은 규칙을 쓴다. 2026-09-29 에 20260929-* 만
+# 막았더니 20260928-turn1024 가 1,481 MB 로 그대로 남아 있었다.
+# **이미 추적 중인 파일은 이 규칙이 안 건드린다** (git 규칙).
+sim/eval/results/**/*.mp4
+sim/eval/results/**/*.parquet
+sim/eval/results/**/*.png
+sim/eval/results/**/*.jpg
+sim/eval/results/**/*.log
