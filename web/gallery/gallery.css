@@ -244,6 +244,11 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
    격자 보기는 「보기」 단추로 남겨 둔다. */
 
 .viewsw{display:flex;align-items:center;gap:.4rem;margin:0 0 20px}
+/* 축 탭은 머리글 «아래» 에 놓인다. 위 여백이 없으면 설명문에 붙는다
+   (팀장 지적 2026-09-29: 「축1, 축2 버튼이 너무 위에 글과 붙어있는데?」).
+    는 필터 안에서도 쓰이므로 축 탭에만 준다. */
+.viewsw.axistab{margin:18px 0 4px;padding-top:14px;
+  border-top:1px solid var(--rule)}
 .viewsw .lab{font-size:.7rem;font-weight:800;letter-spacing:.1em;
   color:var(--ink-3);margin-right:.3rem}
 

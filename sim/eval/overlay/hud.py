@@ -79,6 +79,9 @@ LABEL_TEXTS = (
     "시간초과",
     "기준",
     "지형",
+    # 2026-09-29. 저속 프로브의 앞 구간(가속)은 재기에서 빠진다. 화면에도
+    # 그 띠를 그리려면 이 두 낱말이 필요하다 (측·제·외 가 새 글자다).
+    "측정 제외",
 )
 
 # 라벨 말고 값에 쓰는 글자. 숫자 · 단위 · 지형 이름(영문) · 구분자.
@@ -186,6 +189,8 @@ WARN = (243, 179, 58, 255)
 BAD = (255, 94, 94, 255)
 IDLE = (93, 101, 119, 255)
 
+# 재기에서 빠지는 앞 구간. **아주 옅게.** 곡선과 명령선이 그 위로 지나간다.
+SKIPBAND = (255, 255, 255, 14)
 SHORTFALL = (243, 179, 58, 74)
 SLOWBAND = (255, 94, 94, 132)
 
@@ -296,7 +301,7 @@ class Hud(object):
     def __init__(self, size, trace, fonts=None, title=None,
                  slowdown_ratio=0.6, slowdown_min_s=0.15, anchor="top",
                  mode="terrain", span_s=None, fell_at_s=None,
-                 y_top=None):
+                 y_top=None, skip_s=None):
         if anchor not in ("top", "bottom"):
             raise ValueError("anchor 는 top 이나 bottom 입니다: {}".format(anchor))
 
@@ -324,6 +329,14 @@ class Hud(object):
         # (2026-09-29 · `slow010` 이 0.50 · 0.81 · 0.58 이었다). 그때 세 컷에
         # 같은 값을 줘서 나란히 읽히게 한다.
         self.y_top_fixed = float(y_top) if y_top is not None else None
+        # **재기에서 빠지는 앞 구간.** 기본은 None 이고 그때는 아무것도 안
+        # 그린다 (기존 컷은 한 픽셀도 안 바뀐다).
+        #
+        # 저속 프로브는 앞 5 초를 집계에서 뺀다 (`skip_s`). 그런데 컷에는
+        # 20 초가 다 나온다. 아무 표시가 없으면 화면과 표가 «다른 구간» 을
+        # 말하는데 읽는 사람은 같은 구간인 줄 안다 `확인됨` (앞 판에서는
+        # 보고서 자막에 글로만 적어 두었다).
+        self.skip_s = float(skip_s) if skip_s else None
         self.width, self.height = size
         self.trace = trace
         self.fonts = fonts or Fonts()
@@ -611,6 +624,17 @@ class Hud(object):
         x0, y0, x1, y1 = self.chart_box
 
         top = self._y_top()
+
+        # **재기에서 빠지는 앞 구간을 깔아 둔다.** 격자보다 먼저 그려서
+        # 뒤에 앉힌다. 곡선을 가리면 안 된다.
+        if self.skip_s and self.span_s and self.skip_s < self.span_s:
+            kx, _ = self._chart_xy(self.skip_s, 0.0)
+            draw.rectangle((x0, y0, kx, y1), fill=SKIPBAND)
+            draw.line((kx, y0, kx, y1), fill=_fade(MUTED, 150),
+                      width=max(1, int(s(2))))
+            draw_text(draw, (x0 + s(4), y0 + s(3)),
+                      "측정 제외 {:g}초".format(round(self.skip_s, 2)),
+                      f.get(s(11.5)), _fade(MUTED, 210), anchor="la")
 
         for value in (0.0, top):
             _, y = self._chart_xy(0.0, value)

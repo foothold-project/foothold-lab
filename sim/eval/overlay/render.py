@@ -177,7 +177,7 @@ def render(video_path, trace_path, out_path, crf=20, preset="slow",
            max_drift_s=0.10, allow_fps_mismatch=False, limit_frames=0,
            title=None, slowdown_ratio=0.6, slowdown_min_s=0.15,
            stills_dir="", progress_every=100, mode="terrain", trace_obj=None,
-           y_top=None):
+           y_top=None, skip_s=None):
     """겹쳐 그린 mp4 를 만든다. 돌려주는 것은 요약 딕셔너리.
 
     ## `trace_obj` 와 `mode`
@@ -224,7 +224,7 @@ def render(video_path, trace_path, out_path, crf=20, preset="slow",
                           slowdown_ratio=slowdown_ratio,
                           slowdown_min_s=slowdown_min_s, mode=mode,
                           span_s=span_s, fell_at_s=fell_at_s,
-                          y_top=y_top)
+                          y_top=y_top, skip_s=skip_s)
 
     out_dir = os.path.dirname(os.path.abspath(out_path))
 

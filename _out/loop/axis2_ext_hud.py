@@ -51,6 +51,8 @@ parquet 이름은 `env_id + 1` 이라 `ep0052.parquet` 이다.
 from __future__ import print_function
 
 import argparse
+import io
+import json
 import os
 import sys
 
@@ -75,6 +77,32 @@ EPISODE = "ep{:04d}.parquet".format(VIDEO_ENV + 1)
 WHO = (("nvidia", "NVIDIA"), ("v1", "foothold-v1"), ("v2", "foothold-v2"))
 SCENARIOS = ("slow010", "slow020", "slow030", "slow040",
              "turn_rest", "turn_rev")
+
+
+def skip_of(scenario):
+    """그 시나리오가 앞 몇 초를 재기에서 빼나. **프로브가 적어 둔 값을 읽는다.**
+
+    손으로 5.0 이라고 적으면 하네스가 바뀔 때 화면만 옛말을 한다. 세 판의
+    기록이 다르면 그것 자체가 사고이므로 멈춘다.
+    """
+    seen = set()
+
+    for who, _label in WHO:
+        mf = os.path.join(SRC, who, "probe_manifest.json")
+
+        if not os.path.isfile(mf):
+            continue
+
+        with io.open(mf, encoding="utf-8") as handle:
+            meta = json.load(handle)
+
+        sc = (meta.get("scenarios") or {}).get(scenario) or {}
+        seen.add(sc.get("skip_s"))
+
+    if len(seen) > 1:
+        raise SystemExit("%s 의 skip_s 가 판마다 다르다: %s" % (scenario, seen))
+
+    return (seen.pop() if seen else None) or None
 
 
 def fence_y_top(scenario):
@@ -104,7 +132,7 @@ def fence_y_top(scenario):
     return max(tops) if tops else None
 
 
-def one(who, scenario, write, force=False, y_top=None):
+def one(who, scenario, write, force=False, y_top=None, skip_s=None):
     src_dir = os.path.join(SRC, who, scenario)
     video = os.path.join(src_dir, "{}_{}.mp4".format(who, scenario))
     parquet = os.path.join(src_dir, "timeseries", EPISODE)
@@ -151,12 +179,14 @@ def one(who, scenario, write, force=False, y_top=None):
     summary = render_mod.render(
         video, None, out, crf=26, preset="slow",
         mode="flat", trace_obj=tr, progress_every=0, y_top=y_top,
+        skip_s=skip_s,
     )
 
-    print("     굽음 %s · %d 장 · %.2f MB · 속도축 %s"
+    print("     굽음 %s · %d 장 · %.2f MB · 속도축 %s · 제외 %s"
           % (os.path.basename(out), summary.get("frames", 0),
              os.path.getsize(out) / 1e6,
-             ("%.2f" % y_top) if y_top is not None else "스스로"))
+             ("%.2f" % y_top) if y_top is not None else "스스로",
+             ("%g초" % skip_s) if skip_s else "없음"))
     return True
 
 
@@ -165,22 +195,37 @@ def main(argv=None):
     p.add_argument("--write", action="store_true", help="실제로 굽는다")
     p.add_argument("--force", action="store_true",
                    help="이미 있어도 다시 굽는다")
+    p.add_argument("--scenarios", default="",
+                   help="쉼표로 고른 시나리오만. 비우면 전부. "
+                        "**안 고른 컷은 손대지 않는다** (바이트가 그대로 남아야 "
+                        "색인의 해시가 안 깨진다)")
     args = p.parse_args(argv)
 
     print("확장 축 열여덟 편 · env %d · %s" % (VIDEO_ENV, EPISODE))
     print()
 
+    want_sc = [x.strip() for x in args.scenarios.split(",") if x.strip()]
+
+    for name in want_sc:
+        if name not in SCENARIOS:
+            raise SystemExit("모르는 시나리오: %s (있는 것 %s)" % (name, list(SCENARIOS)))
+
+    todo = want_sc or list(SCENARIOS)
     ok = 0
-    for scenario in SCENARIOS:
+
+    for scenario in todo:
         top = fence_y_top(scenario)
-        print("  [%s] 울타리 공통 속도축 %s"
-              % (scenario, ("%.2f" % top) if top is not None else "없다"))
+        skip = skip_of(scenario)
+        print("  [%s] 울타리 공통 속도축 %s · 재기 제외 %s"
+              % (scenario, ("%.2f" % top) if top is not None else "없다",
+                 ("%g초" % skip) if skip else "없음"))
         for who, _label in WHO:
-            if one(who, scenario, args.write, args.force, y_top=top):
+            if one(who, scenario, args.write, args.force, y_top=top,
+                   skip_s=skip):
                 ok += 1
         print()
 
-    want = len(SCENARIOS) * len(WHO)
+    want = len(todo) * len(WHO)
     print("된 것 %d / %d" % (ok, want))
     return 0 if ok == want else 1
 
