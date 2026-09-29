@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "updated": "2026-09-23T15:00:00+09:00",
+  "updated_by": "초기 생성 · Claude 세션",
+  "stage": {
+    "branch": "0",
+    "name": "기준 재기",
+    "phase": "대기",
+    "note": "[0-a] v2b-r 와 [0-b] v2b-s · 팀장 승인 대기"
+  },
+  "running": [],
+  "last_result": null,
+  "next": {
+    "from_branch_table": "[0-a] · [0-b] 를 두 GPU 에 병렬",
+    "blocked_by": "팀장 승인"
+  },
+  "halt_reason": "팀장 승인 전이라 아무것도 안 건다",
+  "budget": {
+    "train_runs": 0,
+    "train_hours": 0.0,
+    "codex_calls_this_week": 0,
+    "codex_week_pct_reported": 78,
+    "note": "codex 한도는 팀장이 알려 준 값 · 직접 조회 안 함"
+  },
+  "docs": {
+    "criteria": "inbox/jay/20260923-lineage/CRITERIA.md",
+    "branch_table": "inbox/jay/20260923-lineage/BRANCH-TABLE.md",
+    "lineage": "inbox/jay/20260923-lineage/LINEAGE.md",
+    "runtime": "inbox/jay/20260923-lineage/LOOP-RUNTIME.md"
+  }
+}
