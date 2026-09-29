@@ -65,8 +65,8 @@
   "ver": "v1.2"
  },
  "deliverables/plan/wbs-official.md": {
-  "hash": "46e42ce548288b23",
-  "major": "v1.1",
+  "hash": "2e176eb162c500ad",
+  "major": "v1.2",
   "ver": "v1.2"
  },
  "deliverables/plan/wbs.md": {
@@ -490,9 +490,9 @@
   "ver": "v1.1"
  },
  "docs/research/20260911-eval-protocol-v2.md": {
-  "hash": "2725315bc737a8b7",
-  "major": "v2.0",
-  "ver": "v2.6"
+  "hash": "6c2577da4342104c",
+  "major": "v2.1",
+  "ver": "v2.1"
  },
  "docs/research/20260918-postshot-3dgs-tech-analysis.md": {
   "hash": "2e448b38c5728bd0",
