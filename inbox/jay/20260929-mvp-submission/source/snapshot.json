@@ -1,0 +1,13 @@
+{
+  "url": "https://foothold-project.vercel.app/research-20260928-v2-mvp-report",
+  "retrieved_at": "2026-09-29T11:22:06.416502+09:00",
+  "sha256": "92f8729d1c6066fb0cb0bb9ad6c8f319715cc0449ffadb94c551c63cd84e6346",
+  "counts": {
+    "h2": 16,
+    "h3": 34,
+    "img": 10,
+    "video": 22,
+    "table": 45,
+    "svg": 0
+  }
+}

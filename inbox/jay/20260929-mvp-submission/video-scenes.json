@@ -1,0 +1,402 @@
+[
+  {
+    "id": "V01",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-v1.mp4?v=6706c33d",
+    "file": "lineage-gap-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "건넌다 · 전진 5.68 m · gap 세 속도 평균 86.0 %",
+    "section": "s7",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 1.6,
+      "reason": "틈을 건너는 중간 동작"
+    },
+    "still": "stills/lineage-gap-v1.jpg"
+  },
+  {
+    "id": "V02",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-D-fail.mp4?v=ec2cd0e4",
+    "file": "lineage-gap-D-fail.mp4",
+    "title": "D (명령을 연 판)",
+    "caption": "못 건넌다 · 전진 0.99 m (시드 46) · gap 세 속도 평균 33.3 %",
+    "section": "s7",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.4,
+      "reason": "틈 앞에서 몸이 걸려 진행하지 못하는 장면"
+    },
+    "still": "stills/lineage-gap-D-fail.jpg"
+  },
+  {
+    "id": "V03",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-v2.mp4?v=da2d630c",
+    "file": "lineage-gap-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "건넌다 · 전진 5.87 m · gap 세 속도 평균 99.7 %",
+    "section": "s7",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 1.6,
+      "reason": "동일 시점에서 틈을 건너는 동작"
+    },
+    "still": "stills/lineage-gap-v2.jpg"
+  },
+  {
+    "id": "V04",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/train-gap-forward.mp4?v=a7feb68c",
+    "file": "train-gap-forward.mp4",
+    "title": "forward_gap · v1 이 학습",
+    "caption": "스폰 앞을 가로지르는 직선 도랑. 돌아서면 안 만난다",
+    "section": "s7",
+    "duration": 3.0,
+    "fps": 50.0,
+    "frame_count": 150,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 1.5,
+      "reason": "직선 도랑과 시작 위치의 관계"
+    },
+    "still": "stills/train-gap-forward.jpg"
+  },
+  {
+    "id": "V05",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/train-gap-omni.mp4?v=9e60fec6",
+    "file": "train-gap-omni.mp4",
+    "title": "omni_gap · v2 가 학습",
+    "caption": "스폰을 둘러싼 고리 ( mode=ring · 반지름 2.5 m). 어디로 돌든 만난다",
+    "section": "s7",
+    "duration": 3.0,
+    "fps": 50.0,
+    "frame_count": 150,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 1.5,
+      "reason": "시작 위치를 둘러싼 고리형 틈"
+    },
+    "still": "stills/train-gap-omni.jpg"
+  },
+  {
+    "id": "V06",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/turnfall-v2a-iter1500.mp4?v=800d7382",
+    "file": "turnfall-v2a-iter1500.mp4",
+    "title": "v2a iter1500",
+    "caption": "rel_standing_envs 0.02 · 64 판 중 59 판이 옆으로 자빠진다",
+    "section": "s7",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 5.1,
+      "reason": "회전 중 몸이 옆으로 넘어지는 장면. 리셋 이전"
+    },
+    "still": "stills/turnfall-v2a-iter1500.jpg"
+  },
+  {
+    "id": "V07",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/turnfall-v2b-iter1500.mp4?v=9602b1b6",
+    "file": "turnfall-v2b-iter1500.mp4",
+    "title": "v2b iter1500",
+    "caption": "rel_standing_envs 0.1 · 네 발로 버티며 돈다 · 64 판 중 4 판",
+    "section": "s7",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 5.1,
+      "reason": "비교 모델과 동일 시점에서 지지한 회전 자세"
+    },
+    "still": "stills/turnfall-v2b-iter1500.jpg"
+  },
+  {
+    "id": "V08",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-nvidia.mp4?v=b501ea72",
+    "file": "axis2-stop-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.0000",
+    "section": "s14",
+    "duration": 10.0,
+    "fps": 50.0,
+    "frame_count": 500,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 8.6,
+      "reason": "정지 명령 이후 자세. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-stop-nvidia.jpg"
+  },
+  {
+    "id": "V09",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-v1.mp4?v=881d7ac7",
+    "file": "axis2-stop-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "env 8 넘어짐 · 64 판 낙상 0.2031 (13 판)",
+    "section": "s14",
+    "duration": 10.0,
+    "fps": 50.0,
+    "frame_count": 500,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 8.6,
+      "reason": "정지 명령 이후 낙상. 리셋 이전"
+    },
+    "still": "stills/axis2-stop-v1.jpg"
+  },
+  {
+    "id": "V10",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-v2.mp4?v=2eebdc77",
+    "file": "axis2-stop-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.0000",
+    "section": "s14",
+    "duration": 10.0,
+    "fps": 50.0,
+    "frame_count": 500,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 8.6,
+      "reason": "정지 명령 이후 자세. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-stop-v2.jpg"
+  },
+  {
+    "id": "V11",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-nvidia.mp4?v=a866b701",
+    "file": "axis2-hold-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0015",
+    "section": "s14",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 17.1,
+      "reason": "정지 유지 후반부. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-hold-nvidia.jpg"
+  },
+  {
+    "id": "V12",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-v1.mp4?v=00a26325",
+    "file": "axis2-hold-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "env 8 넘어짐 · 64 판 낙상 0.0781 (5 판) · 관절 떨림 0.1258",
+    "section": "s14",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 17.1,
+      "reason": "정지 유지 중 옆으로 넘어진 자세. 리셋 이전"
+    },
+    "still": "stills/axis2-hold-v1.jpg"
+  },
+  {
+    "id": "V13",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-v2.mp4?v=49b6a6d9",
+    "file": "axis2-hold-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0003",
+    "section": "s14",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 17.1,
+      "reason": "정지 유지 후반부. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-hold-v2.jpg"
+  },
+  {
+    "id": "V14",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-nvidia.mp4?v=f484a063",
+    "file": "axis2-turn-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.0625 · 계단 다섯을 다 돈다",
+    "section": "s14",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.5,
+      "reason": "첫 회전 구간. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-turn-nvidia.jpg"
+  },
+  {
+    "id": "V15",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-v1.mp4?v=99b280c4",
+    "file": "axis2-turn-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "env 8 넘어짐 · 64 판 낙상 1.0000 (전부) · 6.5 초에서 넘어져 끝난다",
+    "section": "s14",
+    "duration": 6.48,
+    "fps": 50.0,
+    "frame_count": 324,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.5,
+      "reason": "첫 회전 구간에서 넘어지는 장면. 리셋 이전"
+    },
+    "still": "stills/axis2-turn-v1.jpg"
+  },
+  {
+    "id": "V16",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-v2.mp4?v=078c225d",
+    "file": "axis2-turn-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "env 8 안 넘어짐 · 64 판 낙상 0.1094 · 계단 다섯을 다 돈다",
+    "section": "s14",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.5,
+      "reason": "첫 회전 구간. v1 낙상 장면과 같은 시점"
+    },
+    "still": "stills/axis2-turn-v2.jpg"
+  },
+  {
+    "id": "V17",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/ss-v1-fail.mp4?v=85ae4dcf",
+    "file": "ss-v1-fail.mp4",
+    "title": "foothold-v1 · 1.0 m/s",
+    "caption": "못 건넌다 · 전진 0.93 m · 그 칸 전진 성공률 0 %",
+    "section": "s14",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.4,
+      "reason": "희소 발판 사이에서 진행하지 못하는 장면"
+    },
+    "still": "stills/ss-v1-fail.jpg"
+  },
+  {
+    "id": "V18",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/stepping-stones-v2.mp4?v=85275061",
+    "file": "stepping-stones-v2.mp4",
+    "title": "foothold-v2 · 1.0 m/s",
+    "caption": "못 건넌다 · 전진 0.86 m · 그 칸 전진 성공률 45 % · 종합 24 %",
+    "section": "s14",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 5.8,
+      "reason": "희소 발판에서 몸이 기울고 통과하지 못하는 장면"
+    },
+    "still": "stills/stepping-stones-v2.jpg"
+  },
+  {
+    "id": "V19",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/stepping-stones-v2-cross.mp4?v=4642ff27",
+    "file": "stepping-stones-v2-cross.mp4",
+    "title": "foothold-v2 · 1.5 m/s",
+    "caption": "건넌다 · 전진 3.26 m · 다만 종합은 0 % 다 (추종 0 %)",
+    "section": "s14",
+    "duration": 4.0,
+    "fps": 50.0,
+    "frame_count": 200,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.88,
+      "reason": "통과선 이후의 위치. 통과와 속도 추종 성공은 구분"
+    },
+    "still": "stills/stepping-stones-v2-cross.jpg"
+  },
+  {
+    "id": "V20",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/regress-stairsinv-d09-v1.mp4?v=50ed7be7",
+    "file": "regress-stairsinv-d09-v1.mp4",
+    "title": "foothold-v1 · d0.9 · 1.5 m/s",
+    "caption": "명령 1.50 m/s · 종합 90 % = 추종 90 % · 이 판은 전진 4.56 m 로 건넜고 추종 MAE 0.209 로 문턱 0.25 아래 · 램프 넷이 다 초록이다",
+    "section": "s14",
+    "duration": 4.0,
+    "fps": 50.0,
+    "frame_count": 200,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.6,
+      "reason": "계단을 지난 뒤의 자세와 추종 HUD"
+    },
+    "still": "stills/regress-stairsinv-d09-v1.jpg"
+  },
+  {
+    "id": "V21",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/regress-stairsinv-d09-v2.mp4?v=8fa662a2",
+    "file": "regress-stairsinv-d09-v2.mp4",
+    "title": "foothold-v2 · d0.9 · 1.5 m/s",
+    "caption": "명령 1.50 m/s · 종합 3 % = 추종 3 % · 이 판도 전진 4.46 m 로 건넜고 안 넘어졌다 · 추종 램프만 빨간 X 이고 속도 차트의 명령선 1.50 아래 베이지색 면적이 그 미달이다 (MAE 0.263)",
+    "section": "s14",
+    "duration": 4.0,
+    "fps": 50.0,
+    "frame_count": 200,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.6,
+      "reason": "넘어지지 않고 건넜지만 속도 추종이 미달한 HUD"
+    },
+    "still": "stills/regress-stairsinv-d09-v2.jpg"
+  },
+  {
+    "id": "V22",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/train-army.mp4?v=bc942cc2",
+    "file": "train-army.mp4",
+    "title": "v2 학습 진행",
+    "caption": "험지 여섯 종 30 칸 위 600 마리 · 칸당 약 20 마리로 학습과 같은 밀도 · 저장본 열여섯을 이어 붙였다",
+    "section": "s14",
+    "duration": 44.4,
+    "fps": 50.0,
+    "frame_count": 2220,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 43.0,
+      "extra_seconds": [
+        2.0,
+        23.0
+      ],
+      "reason": "초기·중간·최종 체크포인트에서 무리의 변화. 초기에도 보행 가능"
+    },
+    "still": "stills/train-army.jpg"
+  }
+]

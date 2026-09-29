@@ -1,0 +1,137 @@
+{
+  "network_disabled": true,
+  "videos": [
+    {
+      "file": "media/lineage-gap-v1.mp4",
+      "time": 0.035795,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/lineage-gap-D-fail.mp4",
+      "time": 0.031194,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/lineage-gap-v2.mp4",
+      "time": 0.036116,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/train-gap-forward.mp4",
+      "time": 0.050626,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/train-gap-omni.mp4",
+      "time": 0.053005,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/turnfall-v2a-iter1500.mp4",
+      "time": 0.042568,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/turnfall-v2b-iter1500.mp4",
+      "time": 0.042253,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-stop-nvidia.mp4",
+      "time": 0.044093,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-stop-v1.mp4",
+      "time": 0.04372,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-stop-v2.mp4",
+      "time": 0.041814,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-hold-nvidia.mp4",
+      "time": 0.037652,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-hold-v1.mp4",
+      "time": 0.037401,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-hold-v2.mp4",
+      "time": 0.040568,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-turn-nvidia.mp4",
+      "time": 0.028922,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-turn-v1.mp4",
+      "time": 0.030592,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2-turn-v2.mp4",
+      "time": 0.028657,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/ss-v1-fail.mp4",
+      "time": 0.031582,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/stepping-stones-v2.mp4",
+      "time": 0.028076,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/stepping-stones-v2-cross.mp4",
+      "time": 0.027839,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/regress-stairsinv-d09-v1.mp4",
+      "time": 0.034426,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/regress-stairsinv-d09-v2.mp4",
+      "time": 0.034315,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/train-army.mp4",
+      "time": 0.038573,
+      "error": null,
+      "local": true
+    }
+  ]
+}

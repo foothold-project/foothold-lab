@@ -1,0 +1,21 @@
+{
+  "mobile": {
+    "width": 390,
+    "scrollWidth": 390,
+    "broken": 0
+  },
+  "native_print": {
+    "pages": 34,
+    "blocks": 306
+  },
+  "native_pdf_pages": 34,
+  "afterprint_web_visible": true,
+  "print_button": true,
+  "pdf": {
+    "pages": 34,
+    "toc_destinations": 16,
+    "valid_destinations": true,
+    "video_links": 22,
+    "sha256": "e355b87d7bfd87b9e702408ae6bde2d70929c184c4a1dbc2d6b969713768f961"
+  }
+}

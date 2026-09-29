@@ -1,0 +1,106 @@
+{
+  "zip_bytes": 45982745,
+  "zip_sha256": "137db918a69ca77837ffebdd4f76b6d13562acf0bce6adabc3849b82f8b654eb",
+  "files": {
+    "FOOTHOLD-MVP.html": {
+      "bytes": 18267503,
+      "sha256": "f04191256c40adcc148d51ea9db1739e484e2793f2e2d71e75ae1dad5a78b0f8"
+    },
+    "FOOTHOLD-MVP.pdf": {
+      "bytes": 6214550,
+      "sha256": "e355b87d7bfd87b9e702408ae6bde2d70929c184c4a1dbc2d6b969713768f961"
+    },
+    "읽어주세요.txt": {
+      "bytes": 852,
+      "sha256": "40698f0a3f04193f79a670129ab7d6e7555759ba077fcf5d1b1bf3cd4c3383a8"
+    },
+    "media/lineage-gap-v1.mp4": {
+      "bytes": 498311,
+      "sha256": "6706c33d503a649784aa292aa9f8a908c7946a4e32ed5b11f0f28c6bbe279627"
+    },
+    "media/lineage-gap-D-fail.mp4": {
+      "bytes": 571945,
+      "sha256": "ec2cd0e4baa213f0cac74ffed72a750ec6de4a20830d36b10926c1c4238f25db"
+    },
+    "media/lineage-gap-v2.mp4": {
+      "bytes": 496651,
+      "sha256": "da2d630cb981477daf6a39bb118f040dbe9ad1a0cb169fa0a8404b7c3444e983"
+    },
+    "media/train-gap-forward.mp4": {
+      "bytes": 129178,
+      "sha256": "a7feb68ca8d6feb77ea765456cc31dc107b1a5a325c9c1c9581983f762aa264f"
+    },
+    "media/train-gap-omni.mp4": {
+      "bytes": 128793,
+      "sha256": "9e60fec65479331f6a0d55aa9e65a5c329071f502b412f6985d8b6555c0f7b6c"
+    },
+    "media/turnfall-v2a-iter1500.mp4": {
+      "bytes": 2817720,
+      "sha256": "800d7382d528b2d7695b49ee8cedbc97fe304f6013fab13b49f4a51cee57bf2e"
+    },
+    "media/turnfall-v2b-iter1500.mp4": {
+      "bytes": 2612303,
+      "sha256": "9602b1b66e99611c776bbcfd48aaadb79be2cd46c86c5688b7c3921441862dfa"
+    },
+    "media/axis2-stop-nvidia.mp4": {
+      "bytes": 1128833,
+      "sha256": "b501ea72176b4616c30eddc4d0151a31f84e11284d6f4d16938d004a564c05ad"
+    },
+    "media/axis2-stop-v1.mp4": {
+      "bytes": 1601243,
+      "sha256": "881d7ac7b1aa5036cbbd7606ba67aadc39de16e2e1fcad7d256b8a4b30a55361"
+    },
+    "media/axis2-stop-v2.mp4": {
+      "bytes": 1353892,
+      "sha256": "2eebdc77bd551d8eca3677daac80c261c5cabdf1d86a9c24aec62f968f7d5a44"
+    },
+    "media/axis2-hold-nvidia.mp4": {
+      "bytes": 927581,
+      "sha256": "a866b701d10ddb3ba9eaa06c06fbb72abac7ea3d40ca743a301ee938cc79846a"
+    },
+    "media/axis2-hold-v1.mp4": {
+      "bytes": 1519019,
+      "sha256": "00a26325c8b2ae78c38c4f30d9091e13e434b44c6aefbafb8c6399be6d301bc7"
+    },
+    "media/axis2-hold-v2.mp4": {
+      "bytes": 705715,
+      "sha256": "49b6a6d91c5d8b30c4850e36e5f9bbd713f359abf4b2e89d64f23357e1019479"
+    },
+    "media/axis2-turn-nvidia.mp4": {
+      "bytes": 2715266,
+      "sha256": "f484a063ee804ad400eff42c80e5bff71cc7bb0a8d7bcd757a744c94b4731959"
+    },
+    "media/axis2-turn-v1.mp4": {
+      "bytes": 1356524,
+      "sha256": "99b280c4281a9dea79ce89651aaa150962a9ea4d3bb0ca557c0b402d6375cdfc"
+    },
+    "media/axis2-turn-v2.mp4": {
+      "bytes": 2613231,
+      "sha256": "078c225ddb73bab43b808ed946dcc4e86a926ee513b2b14e5031dd3da2a20b37"
+    },
+    "media/ss-v1-fail.mp4": {
+      "bytes": 832056,
+      "sha256": "85ae4dcf7b6743b03d97913c1131289f1d26aca6c5e2054655e7e8c144547a45"
+    },
+    "media/stepping-stones-v2.mp4": {
+      "bytes": 841599,
+      "sha256": "852750613e6b394d8bb26bf068328bc4ba7bc4bceec705115fd2017fb3a24398"
+    },
+    "media/stepping-stones-v2-cross.mp4": {
+      "bytes": 884296,
+      "sha256": "4642ff277c336d35b7836f64bd6a1486fae5c1513bf9a3e09e1c4f4503367ac0"
+    },
+    "media/regress-stairsinv-d09-v1.mp4": {
+      "bytes": 426855,
+      "sha256": "50ed7be7fbb3d467d0bc292b5af9594284d7af619d08cd6f257a1c2bdd922377"
+    },
+    "media/regress-stairsinv-d09-v2.mp4": {
+      "bytes": 430343,
+      "sha256": "8fa662a2d6c53f7f81b139600335eeee1db86637d4163d25809419e6c25dabf6"
+    },
+    "media/train-army.mp4": {
+      "bytes": 2958087,
+      "sha256": "bc942cc21832b61027ffd78c2aa7055535f3a73570307db4481452ab1f455ff5"
+    }
+  }
+}
