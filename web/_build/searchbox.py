@@ -410,6 +410,26 @@ def public_pages(vault, pages):
                                 .replace(os.sep, '/'))
         elif f.endswith('.html') and os.path.exists(p):
             out.add(f)
+    # ★ 2026-09-29. **갤러리가 또 새어 나갔다.**
+    #
+    #   위 주석이 「루트만 보는 암묵 규칙을 없애고 여기서 한 번만 정한다」고
+    #   적어 두었는데, `gallery/` 는 `pages` 에도 없고 `assets/` 밑도 아니라
+    #   이 목록에서 빠져 있었다. 그래서 파비콘 주입 · 워드마크 · ascii ·
+    #   chip · hidden 검사 **다섯이 한꺼번에** 갤러리를 안 봤다 `확인됨`
+    #   (팀장 지적 「gallery 페이지에 favicon 왜 없어졌냐」 · 세 페이지 다
+    #   favicon 0 개였고 다른 페이지는 2 개였다).
+    #
+    #   손으로 세 파일에 링크를 박으면 다음 갤러리 페이지에서 또 새어 나간다.
+    #   목록에서 한 번만 고친다.
+    gdir = os.path.join(vault, 'gallery')
+    for r, _, xs in os.walk(gdir):
+        for x in xs:
+            if not x.endswith('.html'):
+                continue
+            p = os.path.join(r, x)
+            if is_page(p):
+                out.add(os.path.relpath(p, vault).replace(os.sep, '/'))
+
     adir = os.path.join(vault, 'assets')          # assets 는 통째로 배포된다
     for r, _, xs in os.walk(adir):
         rel_dir = os.path.relpath(r, vault).replace(os.sep, '/')

@@ -300,3 +300,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
 .chead .open{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--brand)}
 .chead .none{margin-left:auto;font-size:.68rem;color:var(--ink-3)}
 .cvid video{width:100%;display:block;border-radius:6px;background:#0d0f12}
+
+/* ★ 2026-09-29. `el.hidden` 이 제작자 CSS 에 지지 않게 한다.
+   갤러리 페이지가 새로 생겨도 자동으로 얻는다. */
+[hidden]{display:none!important}

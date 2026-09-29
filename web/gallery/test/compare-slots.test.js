@@ -55,7 +55,10 @@ const DEPLOYED = process.env.FH_GALLERY
 function fixture() {
   const mk = (ver, models) => ({
     version: ver,
-    models: models.reduce((a, m) => { a[m.name] = 'sha-' + m.name; return a; }, {}),
+    /* 실물 manifest 는 객체다 (`checkpoint_sha256`). 대역도 그렇게 둔다. */
+    models: models.reduce((a, m) => {
+      a[m.name] = { role: 'compare', checkpoint_sha256: 'sha-' + m.name };
+      return a; }, {}),
     /* **실물에 있는 칸을 빠뜨리면 시험이 거짓으로 통과한다** `확인됨`
      * (2026-09-29 · `reused_from` 을 안 넣어서 깨뜨리기 시험이 엉뚱한 칸을
      * 실패로 냈고 정작 겹침 회귀는 가려졌다). */
@@ -125,8 +128,8 @@ if (자료 === '배포 저장소') {
 /* 열 목록도 **규칙을 복제하지 않고** index.html 에서 떼어 낸다.
  * `pairs`(목록에 뜨는 것) 와 `allPairs`(주소로 지목 가능한 것) 를 가르는
  * 판정이 여기 들어 있다. */
-const P0 = '  Object.values(mans).forEach(m => {';
-const P1 = '  allPairs.sort(byLineage);';
+const P0 = '  /* `models[이름]` 의 모양이 두 가지다';
+const P1 = '    || null;';
 const pa = html.indexOf(P0);
 const pb = html.indexOf(P1);
 
@@ -137,11 +140,11 @@ if (pa < 0 || pb < 0) {
 
 const PAIRS_BLOCK = html.slice(pa, pb + P1.length);
 
+/* `eval` 안의 `const` 는 바깥 변수에 안 닿는다. 내보내는 줄을 붙여서 받는다. */
+let __built = null;
 function buildPairs() {
-  const pairs = [];
-  const allPairs = [];
-  eval(PAIRS_BLOCK);
-  return { pairs: pairs, allPairs: allPairs };
+  eval(PAIRS_BLOCK + '; __built = { pairs: pairs, findPair: findPair };');
+  return __built;
 }
 
 const SLOTS = ['left', 'mid', 'right'];
@@ -150,13 +153,14 @@ function run(query) {
   const q = new URLSearchParams(query);
   const built = buildPairs();
   const pairs = built.pairs;
-  const allPairs = built.allPairs;
+  const findPair = built.findPair;
+  void pairs; void findPair;
   const state = { left: null, mid: null, right: null };
   const rejected = [];
   let guessed = false;
   eval(BLOCK);
   return { state: state, rejected: rejected, guessed: guessed,
-           pairs: pairs, allPairs: allPairs };
+           pairs: pairs, findPair: findPair };
 }
 
 let ran = 0, fails = 0;
@@ -172,40 +176,34 @@ function check(name, got, want) {
 }
 
 const B0 = buildPairs();
-console.log('목록에 뜨는 열: ' + B0.pairs.map(p => p.id).join(' · '));
-console.log('주소로 되는 열: ' + B0.allPairs.map(p => p.id
-  + (p.reused ? '(재사용)' : '')).join(' · '));
+console.log('열 목록: ' + B0.pairs.map(p => p.id + ' [' + p.label + ']').join(' · '));
 console.log();
 
-/* 1. 팀장이 막힌 주소. 왼쪽은 비고 오른쪽은 가운데와 «달라야» 한다. */
+/* 1. 팀장이 막힌 주소. 옛 `판:모델` 도 받고 세 열이 서로 달라야 한다. */
 const r1 = run('left=v2:baseline&mid=v2:foothold-v2');
-check('팀장 주소 · 왼쪽이 v2:baseline 으로 뜬다', r1.state.left, 'v2:baseline');
-check('팀장 주소 · 거절 없다', r1.rejected, []);
-check('팀장 주소 · 가운데는 준 대로', r1.state.mid, 'v2:foothold-v2');
-check('팀장 주소 · 오른쪽이 가운데와 다르다',
-      r1.state.right !== r1.state.mid, true);
-check('팀장 주소 · 세 열이 서로 다르다',
+check('옛 주소 v2:baseline 이 baseline 열로 붙는다', r1.state.left, 'baseline');
+check('옛 주소 v2:foothold-v2 도 붙는다', r1.state.mid, 'foothold-v2');
+check('거절 없다', r1.rejected, []);
+check('오른쪽이 가운데와 다르다', r1.state.right !== r1.state.mid, true);
+check('세 열이 서로 다르다',
       new Set(SLOTS.map(s => r1.state[s]).filter(Boolean)).size, 3);
 
-/* 1b. 목록에는 중복이 안 생긴다 (2026-09-29 지적을 지킨다). */
-check('v2:baseline 은 목록(select)에 없다',
-      B0.pairs.some(p => p.id === 'v2:baseline'), false);
-check('v2:baseline 은 주소로는 된다',
-      B0.allPairs.some(p => p.id === 'v2:baseline'), true);
-check('그 열은 재사용으로 표시된다',
-      (B0.allPairs.find(p => p.id === 'v2:baseline') || {}).reused, true);
-check('어느 판 컷인지 적힌다',
-      (B0.allPairs.find(p => p.id === 'v2:baseline') || {}).reusedFrom, 'v1');
+/* 1b. **baseline 은 하나다.** 판 딱지가 안 붙는다. */
+check('baseline 열이 정확히 하나',
+      B0.pairs.filter(p => p.model === 'baseline').length, 1);
+check('baseline 이름에 판이 안 붙는다',
+      (B0.pairs.find(p => p.model === 'baseline') || {}).label, 'baseline');
+check('foothold-v1 도 하나',
+      B0.pairs.filter(p => p.model === 'foothold-v1').length, 1);
+check('어느 이름에도 콜론이 없다',
+      B0.pairs.every(p => p.id.indexOf(':') < 0), true);
+check('열 개수는 모델 수와 같다',
+      B0.pairs.length, new Set(B0.pairs.map(p => p.model)).size);
 
-/* 1c. **같은 파일이 두 열에 오면 안 된다.**
- * `v2:baseline` 은 `v1:baseline` 의 컷을 재사용한다. 이름은 달라도 파일이
- * 같다. 4 차 지적에서 왼쪽·오른쪽이 같은 파일로 떴다. */
-const clipIdOf = id => {
-  const p = B0.allPairs.find(x => x.id === id);
-  return p ? (p.reusedFrom || p.version) + ':' + p.model : id;
-};
-check('팀장 주소 · 세 열의 «컷» 이 서로 다르다',
-      new Set(SLOTS.map(s => clipIdOf(r1.state[s])).filter(Boolean)).size, 3);
+/* 1c. 짧은 주소도 받는다. */
+const r1c = run('left=baseline&mid=foothold-v2');
+check('짧은 주소 · 그대로', [r1c.state.left, r1c.state.mid],
+      ['baseline', 'foothold-v2']);
 
 /* 2. 아무것도 안 주면 계보 차례 셋이 서로 달라야 한다. */
 const r2 = run('');
@@ -213,14 +211,9 @@ check('기본 · 셋이 다 채워진다',
       SLOTS.every(s => !!r2.state[s]), true);
 check('기본 · 셋이 서로 다르다',
       new Set(SLOTS.map(s => r2.state[s])).size, 3);
-check('기본 · 세 열의 컷도 서로 다르다',
-      new Set(SLOTS.map(s => clipIdOf(r2.state[s]))).size, 3);
-check('기본 · 재사용 열로 열리지 않는다',
-      SLOTS.some(s => (B0.allPairs.find(p => p.id === r2.state[s]) || {}).reused),
-      false);
 
 /* 3. 가운데만 줘도 나머지가 겹치지 않는다. */
-const r3 = run('mid=v1:baseline');
+const r3 = run('mid=baseline');
 check('가운데만 줌 · 겹침 없다',
       new Set(SLOTS.map(s => r3.state[s]).filter(Boolean)).size,
       SLOTS.map(s => r3.state[s]).filter(Boolean).length);
@@ -228,11 +221,11 @@ check('가운데만 줌 · 겹침 없다',
 /* 4. 셋을 다 주면 그대로 둔다 (바꿔치기 금지). */
 const r4 = run('left=v1:baseline&mid=v1:foothold-v1&right=v2:foothold-v2');
 check('셋 다 줌 · 그대로', [r4.state.left, r4.state.mid, r4.state.right],
-      ['v1:baseline', 'v1:foothold-v1', 'v2:foothold-v2']);
+      ['baseline', 'foothold-v1', 'foothold-v2']);
 check('셋 다 줌 · 자동 고르기 안 함', r4.guessed, false);
 
 /* 5. 틀린 값 둘도 둘 다 알린다. */
-const r5 = run('left=v9:nope&right=v2:nosuchmodel');
+const r5 = run('left=nope&right=nosuchmodel');
 check('틀린 값 둘 · 둘 다 알린다', r5.rejected.length, 2);
 check('틀린 값 둘 · 그 자리는 빈다',
       [r5.state.left, r5.state.right], [null, null]);
