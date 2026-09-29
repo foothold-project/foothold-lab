@@ -4,11 +4,13 @@ from bs4 import BeautifulSoup, NavigableString
 from urllib.parse import urljoin, urlparse
 import json, base64, mimetypes, re, hashlib
 import xml.etree.ElementTree as ET
+from submission_edit import edit_section,cover,PROJECT
 
 ROOT=Path(__file__).resolve().parent
 URL='https://foothold-project.vercel.app/research-20260928-v2-mvp-report'
 
 REPLACE={
+    'NVIDIA 는 1.5 m/s 에서 무너진다.':'NVIDIA는 1.5 m/s에서 종합 성공률이 크게 낮아진다. 낙상 여부는 생존 지표와 구분해 해석한다.',
     '임석헌이 만든':'선행 실험에서 개발한',
     '팀장 피드백':'검토 의견 반영', '팀장 지적으로 펼친다.':'검토를 거쳐 본문에 공개했다.',
     '그리고 팀장이 잡은 것.':'추가 검토에서 확인한 한계는 다음과 같다.',
@@ -29,7 +31,7 @@ TITLES={
     's9':'8. 탐색 중단의 기준과 한계', 's10':'9. 명령 수행 능력 평가',
     's11':'10. 배포 모델과 참고 비교군', 's12':'11. 관측과 정책의 다음 연구 과제',
     's13':'12. 재현 방법', 's14':'13. 영상으로 확인하는 결과와 한계',
-    's15':'14. 근거 자료', 's16':'부록. 원보고서 개정 이력',
+    's15':'14. 근거 자료',
 }
 
 def uri(path):
@@ -42,7 +44,7 @@ def main():
     scenes={v['file']:v for v in json.loads((ROOT/'video-scenes.json').read_text(encoding='utf-8'))}
     inventory=json.loads((ROOT/'inventory.json').read_text(encoding='utf-8'))
     output=ROOT/'output';output.mkdir(exist_ok=True)
-    edits=[];sections=[];mapping=[]
+    edits=[];sections=[];mapping=[];excluded=[]
     for sec in source.select('section'):
         sid=sec['id']
         for i,node in enumerate(sec.find_all(recursive=False)):
@@ -51,6 +53,7 @@ def main():
                 mapping.append({'source_id':node['data-source-id'],'section':sid,'kind':node.name})
         for node in list(sec.select('script,style,.cb .bar,.cb-h,.vcmp-toolbar,.vcmp-controls')):
             node.decompose()
+        if not edit_section(sec,edits,excluded):continue
         if sid=='s7':
             paragraph=sec.select_one('[data-source-id="s7-b124"]')
             old=paragraph.get_text();new='반복적인 학습 중단을 검토하면서 원인 탐색이 「어느 설정이 중단을 유발하는가」에 한정돼 있었음을 확인했다. 변한 설정만 비교하는 방법으로는 모든 실험에서 변하지 않은 변수의 영향을 찾기 어렵다.'
@@ -81,7 +84,7 @@ def main():
                 if name=='v2-difficulty-curve.svg':
                     replacement['data-part-one']=uri(ROOT/'print-figures/v2-difficulty-curve-1.svg')
                     replacement['data-part-two']=uri(ROOT/'print-figures/v2-difficulty-curve-2.svg')
-                if name in ['v2-next-step.svg','v2-blown-runs.svg']:
+                if name in ['v2-next-step.svg','v2-blown-runs.svg','v2-terrain-bars.svg']:
                     parts=[]
                     for i in range(1,4 if name=='v2-next-step.svg' else 3):
                         path=ROOT/'print-figures'/name.replace('.svg',f'-{i}.svg');geometry=ET.parse(path).getroot()
@@ -113,7 +116,7 @@ def main():
             meta.append(f' · 대표 장면 {scene["selected"]["seconds"]:g}초 / {scene["duration"]:g}초')
             fig.append(meta)
             note=source.new_tag('div',attrs={'class':'scene-note'});note.string=scene['selected']['reason'];fig.append(note)
-            if scene['id'] in ['V01','V02','V03','V20','V21']:
+            if name in ['lineage-gap-v1.mp4','lineage-gap-D-fail.mp4','lineage-gap-v2.mp4','regress-stairsinv-d09-v1.mp4','regress-stairsinv-d09-v2.mp4']:
                 note.append(' 캡션의 전진 거리는 영상 전체의 최종값이며, 대표 장면 시각의 HUD 값과 다를 수 있다.')
             for t in scene['selected'].get('extra_seconds',[]):
                 extra=source.new_tag('figure',attrs={'class':'training-extra'})
@@ -127,26 +130,30 @@ def main():
         sections.append(str(sec))
     toc=''.join(f'<a href="#{k}"><span>{i:02}</span>{re.sub(r"^\d+\. ","",v)}</a>' for i,(k,v) in enumerate(TITLES.items()))
     logo=uri(ROOT/'source/media/foothold-wordmark-ink.svg')
+    cover_html=cover(logo)
     css=(ROOT/'report.css').read_text(encoding='utf-8')
     js=(ROOT/'report.js').read_text(encoding='utf-8')
     html=f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FOOTHOLD MVP 종합보고서</title><meta name="description" content="Unitree Go2의 미경험 험지 적응과 명령 수행 능력에 관한 실험 보고서"><style>{css}</style></head><body>
-<nav class="topbar"><a class="brand" href="#top"><img src="{logo}" alt="FOOTHOLD"></a><span>MVP RESEARCH REPORT</span><a href="#contents">목차</a><a href="FOOTHOLD-MVP.pdf">PDF</a><button id="print-button">인쇄</button></nav>
-<main id="web-content"><header class="hero" id="top"><div class="eyebrow">FOOTHOLD · MVP RESEARCH REPORT · 2026.09</div><h1>FOOTHOLD<br>MVP 종합보고서</h1><p class="hero-subtitle">처음 보는 지형에서 무엇을 얻었나</p><div class="hero-rule"></div><div class="abstract"><p>Unitree Go2의 미경험 험지 적응을 평가하고, 전진 보행 성능의 개선이 기본 명령 수행 능력과 어떻게 연결되는지 살폈다. 지형 통과와 명령 응답을 두 평가 축으로 나누고, 학습 지형·명령·보상 변경의 결과를 비교했다.</p><p>학습 여부를 다시 분류한 미경험 8종의 성능을 중심으로 결과를 제시한다. 성공률의 개선과 함께 속도 추종 실패, 회전 낙상, 희소 발판의 한계를 기록하며, 배포 모델의 성능과 아직 충족하지 못한 기준을 구분한다.</p></div><div class="hero-findings"><div><span>미경험 8종 · 세 속도 평균</span><strong>43.9<span class="arrow">→</span>88.5<span class="unit">%</span></strong><small>NVIDIA 기준선 → foothold-v2 · 난이도 0.5</small></div><div><span>보고서가 집중한 두 축</span><strong class="axis-label">험지 통과<br>명령 수행</strong><small>성공률의 증가와 남은 실패를 함께 기록</small></div></div></header>
-<div class="edition-note">공개 원보고서 기준 제출본 · 본문 그림 8개 / 표 45개 / 영상 22편<br>HTML은 영상을 재생하며, PDF는 실제 영상의 주요 장면과 원본 링크를 제공한다.</div>
+<nav class="topbar"><a class="brand" href="#top"><img src="{logo}" alt="FOOTHOLD"></a><span>MVP RESEARCH REPORT</span><a href="#contents">목차</a><a href="FOOTHOLD-MVP-summary.pdf">요약본</a><a href="FOOTHOLD-MVP.pdf">PDF</a><button id="print-button">인쇄</button></nav>
+<main id="web-content">{cover_html}<header class="hero"><div class="eyebrow">RESEARCH OVERVIEW</div><h2 class="overview-title">험지 통과와 명령 수행을 함께 평가한다</h2><div class="abstract"><p>Unitree Go2의 미경험 험지 적응을 평가하고, 전진 보행 성능의 개선이 기본 명령 수행 능력과 어떻게 연결되는지 살폈다. 지형 통과와 명령 응답을 두 평가 축으로 나누고, 학습 지형·명령·보상 변경의 결과를 비교했다.</p><p>학습 여부를 다시 분류한 미경험 8종의 성능을 중심으로 결과를 제시한다. 성공률의 개선과 함께 속도 추종 실패, 회전 낙상, 희소 발판의 한계를 기록하며, 배포 모델의 성능과 아직 충족하지 못한 기준을 구분한다.</p></div><div class="hero-findings"><div><span>미경험 8종 · 세 속도 평균</span><strong>43.9<span class="arrow">→</span>88.5<span class="unit">%</span></strong><small>NVIDIA 기준선 → foothold-v2 · 난이도 0.5</small></div><div><span>보고서가 집중한 두 축</span><strong class="axis-label">험지 통과<br>명령 수행</strong><small>성공률의 증가와 남은 실패를 함께 기록</small></div></div></header>
+<div class="edition-note">MVP 공식 제출본 · 결과 기준 2026.09.29<br>HTML은 영상을 재생하며, PDF는 실제 영상의 주요 장면과 원본 링크를 제공한다.</div>
 <nav id="contents" class="contents"><h2>보고서의 흐름</h2><div>{toc}</div></nav>
 <div class="report-body">{''.join(sections)}</div>
-<footer class="report-end"><b>FOOTHOLD</b><p>원보고서와 근거 자료: <a href="{URL}">FOOTHOLD v2 종합보고서</a></p><p>기준 공개본 수집: {inventory['source']['retrieved_at'][:19].replace('T',' ')} KST. 개인 이름과 내부 직함은 외부 독자용 표현으로 바꾸고, 실험 조건·수치·그림·표·영상의 대응 관계는 보존했다.</p></footer></main>
+<footer class="report-end"><b>FOOTHOLD</b><p>원보고서와 근거 자료: <a href="{URL}">FOOTHOLD v2 종합보고서</a></p><p>이 보고서는 전체 프로젝트 중 시뮬레이션 보행 정책의 학습과 평가를 중심으로 MVP 결과를 제시한다. 결과 기준일: 2026.09.29.</p></footer></main>
 <div id="print-root"></div><script>{js}</script></body></html>'''
     (output/'FOOTHOLD-MVP.html').write_bytes(html.encode('utf-8'))
     (ROOT/'editorial-changes.json').write_text(json.dumps(edits,ensure_ascii=False,indent=2),encoding='utf-8')
     check=BeautifulSoup(html,'html.parser')
+    retained={n['data-source-id'] for n in check.select('.report-body [data-source-id]')}
     coverage={'source_sha256':inventory['source']['sha256'],'sections':len(check.select('.report-body section')),
         'tables':len(check.select('.report-body table')),'source_figures':len(check.select('.source-figure')),
         'videos':len(check.select('video')),'video_ids':[x['data-video-id'] for x in check.select('[data-video-id]')],
-        'source_blocks':mapping,'editorial_changes':len(edits),'forbidden_names':{x:check.select_one('.report-body').get_text().count(x) for x in ['팀장','오흥재','임석헌']}}
-    assert coverage['sections']==16 and coverage['tables']==45 and coverage['videos']==22,coverage
+        'source_blocks':[n for n in mapping if n['source_id'] in retained],'excluded_blocks':excluded,'original_blocks':len(mapping),'editorial_changes':len(edits),'forbidden_names':{x:check.select_one('.report-body').get_text().count(x) for x in ['팀장','오흥재','임석헌']}}
+    assert coverage['sections']==15 and coverage['source_figures']==8 and coverage['videos']==len(inventory['videos']),coverage
+    assert len(retained)+len(excluded)==len(mapping)
     assert all(v==0 for v in coverage['forbidden_names'].values()),coverage
     (ROOT/'coverage.json').write_text(json.dumps(coverage,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(json.dumps({k:v for k,v in coverage.items() if k not in ['source_blocks','video_ids']},ensure_ascii=False))
+    (ROOT/'project-metadata.json').write_text(json.dumps(PROJECT,ensure_ascii=False,indent=2),encoding='utf-8')
+    print(json.dumps({k:v for k,v in coverage.items() if k not in ['source_blocks','video_ids','excluded_blocks']},ensure_ascii=False))
 
 if __name__=='__main__':main()

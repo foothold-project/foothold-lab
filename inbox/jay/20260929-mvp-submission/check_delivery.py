@@ -26,11 +26,12 @@ def main():
         browser.close()
     doc=fitz.open(ROOT/'output/FOOTHOLD-MVP.pdf')
     links=[l for pg in doc for l in pg.get_links()]
-    toc=[l for l in doc[0].get_links() if l.get('page',-1)>=0]
+    toc=[l for pg in doc for l in pg.get_links() if l.get('page',-1)>=0]
     result['pdf']={'pages':len(doc),'toc_destinations':len(toc),'valid_destinations':all(0<=l['page']<len(doc) for l in toc),'video_links':len([l for l in links if '.mp4' in l.get('uri','')]),'sha256':hashlib.sha256((ROOT/'output/FOOTHOLD-MVP.pdf').read_bytes()).hexdigest()}
     assert result['mobile']['width']==result['mobile']['scrollWidth'] and result['mobile']['broken']==0,result
     assert result['native_print']['pages']==result['pdf']['pages']==result['native_pdf_pages'],result
-    assert result['native_print']['blocks']==306 and len(toc)==16 and result['pdf']['video_links']==22,result
+    coverage=json.loads((ROOT/'coverage.json').read_text(encoding='utf-8'))
+    assert result['native_print']['blocks']==len(coverage['source_blocks']) and len(toc)==coverage['sections'] and result['pdf']['video_links']==coverage['videos'],result
     assert result['afterprint_web_visible'],result
     (ROOT/'delivery-check.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(result,ensure_ascii=False))

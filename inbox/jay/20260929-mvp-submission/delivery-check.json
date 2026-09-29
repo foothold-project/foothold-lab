@@ -5,17 +5,17 @@
     "broken": 0
   },
   "native_print": {
-    "pages": 34,
-    "blocks": 306
+    "pages": 40,
+    "blocks": 346
   },
-  "native_pdf_pages": 34,
+  "native_pdf_pages": 40,
   "afterprint_web_visible": true,
   "print_button": true,
   "pdf": {
-    "pages": 34,
-    "toc_destinations": 16,
+    "pages": 40,
+    "toc_destinations": 15,
     "valid_destinations": true,
-    "video_links": 22,
-    "sha256": "e355b87d7bfd87b9e702408ae6bde2d70929c184c4a1dbc2d6b969713768f961"
+    "video_links": 49,
+    "sha256": "f227277eff1a2dbe5ab3d1c4406675d9a98b2dff873fb10a616cf967408bdf94"
   }
 }

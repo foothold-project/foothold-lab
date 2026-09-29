@@ -1,2 +1,3 @@
 *.html text eol=lf
 *.svg text eol=lf
+source/evidence/** -text whitespace=cr-at-eol

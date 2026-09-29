@@ -68,9 +68,12 @@ window.preparePrint=async function(sync=false){
   while(queue.length){
     if(++safety>4000)throw Error('Pagination did not converge');
     const item=queue.shift();
+    if(item.matches('.cover')){if(body.children.length)newPage();sheet.classList.add('cover-sheet');body.append(item);newPage();continue}
     if(item.matches('h2,h3,h4')&&body.children.length&&body.clientHeight-lastBottom()<95)newPage();
-    if(item.matches('h2,h3,h4')&&body.children.length&&queue[0]&&!queue[0].matches('table')){
-      const probe=queue[0].cloneNode(true);body.append(item,probe);const together=fits();probe.remove();item.remove();if(!together)newPage();
+    if(item.matches('h2,h3,h4')&&body.children.length&&queue[0]){
+      const probe=queue[0].cloneNode(true);
+      if(probe.matches('table'))[...probe.querySelectorAll('tbody>tr')].slice(2).forEach(row=>row.remove());
+      body.append(item,probe);const together=fits();probe.remove();item.remove();if(!together)newPage();
     }
     body.append(item);
     if(fits())continue;

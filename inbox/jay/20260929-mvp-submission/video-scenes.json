@@ -1,6 +1,168 @@
 [
   {
     "id": "V01",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-floatingring-v15-nvidia.mp4?v=60c9c8d6",
+    "file": "hero-floatingring-v15-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "100 판 성공률 0 % · 이 컷은 4.00 초 한 판",
+    "section": "s3",
+    "duration": 4.0,
+    "fps": 50.0,
+    "frame_count": 200,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-floatingring-v15-nvidia.jpg"
+  },
+  {
+    "id": "V02",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-floatingring-v15-v1.mp4?v=66c6b425",
+    "file": "hero-floatingring-v15-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "100 판 성공률 87 % · 이 컷은 3.80 초 한 판",
+    "section": "s3",
+    "duration": 3.8,
+    "fps": 50.0,
+    "frame_count": 190,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-floatingring-v15-v1.jpg"
+  },
+  {
+    "id": "V03",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-floatingring-v15-v2.mp4?v=7469c26d",
+    "file": "hero-floatingring-v15-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "100 판 성공률 99 % · 이 컷은 3.72 초 한 판",
+    "section": "s3",
+    "duration": 3.72,
+    "fps": 50.0,
+    "frame_count": 186,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-floatingring-v15-v2.jpg"
+  },
+  {
+    "id": "V04",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-pit-v15-nvidia.mp4?v=59cf2d20",
+    "file": "hero-pit-v15-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "100 판 성공률 0 % · 이 컷은 4.00 초 한 판",
+    "section": "s3",
+    "duration": 4.0,
+    "fps": 50.0,
+    "frame_count": 200,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-pit-v15-nvidia.jpg"
+  },
+  {
+    "id": "V05",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-pit-v15-v1.mp4?v=959229e0",
+    "file": "hero-pit-v15-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "100 판 성공률 100 % · 이 컷은 3.74 초 한 판",
+    "section": "s3",
+    "duration": 3.74,
+    "fps": 50.0,
+    "frame_count": 187,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-pit-v15-v1.jpg"
+  },
+  {
+    "id": "V06",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-pit-v15-v2.mp4?v=d2f6aba0",
+    "file": "hero-pit-v15-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "100 판 성공률 100 % · 이 컷은 3.68 초 한 판",
+    "section": "s3",
+    "duration": 3.68,
+    "fps": 50.0,
+    "frame_count": 184,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.2,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-pit-v15-v2.jpg"
+  },
+  {
+    "id": "V07",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-steppingstones-v10-nvidia.mp4?v=73dd70f4",
+    "file": "hero-steppingstones-v10-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "100 판 성공률 0 % · 이 컷은 6.00 초 한 판",
+    "section": "s3",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.4,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-steppingstones-v10-nvidia.jpg"
+  },
+  {
+    "id": "V08",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-steppingstones-v10-v1.mp4?v=d79e1152",
+    "file": "hero-steppingstones-v10-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "100 판 성공률 0 % · 이 컷은 6.00 초 한 판",
+    "section": "s3",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 2.4,
+      "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+    },
+    "still": "stills/hero-steppingstones-v10-v1.jpg"
+  },
+  {
+    "id": "V09",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/hero-steppingstones-v10-v2.mp4?v=43381b2c",
+    "file": "hero-steppingstones-v10-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "100 판 성공률 24 % · 이 컷은 6.00 초 한 판",
+    "section": "s3",
+    "duration": 6.0,
+    "fps": 50.0,
+    "frame_count": 300,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 5.8,
+      "reason": "디딤돌 사이에서 자세가 무너지는 장면. 이 사례가 전체 평가 성공률 24%를 대표하지는 않는다."
+    },
+    "still": "stills/hero-steppingstones-v10-v2.jpg"
+  },
+  {
+    "id": "V10",
     "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-v1.mp4?v=6706c33d",
     "file": "lineage-gap-v1.mp4",
     "title": "foothold-v1",
@@ -18,7 +180,7 @@
     "still": "stills/lineage-gap-v1.jpg"
   },
   {
-    "id": "V02",
+    "id": "V11",
     "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-D-fail.mp4?v=ec2cd0e4",
     "file": "lineage-gap-D-fail.mp4",
     "title": "D (명령을 연 판)",
@@ -36,7 +198,7 @@
     "still": "stills/lineage-gap-D-fail.jpg"
   },
   {
-    "id": "V03",
+    "id": "V12",
     "url": "https://foothold-project.vercel.app/assets/video/v2/lineage-gap-v2.mp4?v=da2d630c",
     "file": "lineage-gap-v2.mp4",
     "title": "foothold-v2",
@@ -54,7 +216,7 @@
     "still": "stills/lineage-gap-v2.jpg"
   },
   {
-    "id": "V04",
+    "id": "V13",
     "url": "https://foothold-project.vercel.app/assets/video/v2/train-gap-forward.mp4?v=a7feb68c",
     "file": "train-gap-forward.mp4",
     "title": "forward_gap · v1 이 학습",
@@ -72,7 +234,7 @@
     "still": "stills/train-gap-forward.jpg"
   },
   {
-    "id": "V05",
+    "id": "V14",
     "url": "https://foothold-project.vercel.app/assets/video/v2/train-gap-omni.mp4?v=9e60fec6",
     "file": "train-gap-omni.mp4",
     "title": "omni_gap · v2 가 학습",
@@ -90,7 +252,7 @@
     "still": "stills/train-gap-omni.jpg"
   },
   {
-    "id": "V06",
+    "id": "V15",
     "url": "https://foothold-project.vercel.app/assets/video/v2/turnfall-v2a-iter1500.mp4?v=800d7382",
     "file": "turnfall-v2a-iter1500.mp4",
     "title": "v2a iter1500",
@@ -108,7 +270,7 @@
     "still": "stills/turnfall-v2a-iter1500.jpg"
   },
   {
-    "id": "V07",
+    "id": "V16",
     "url": "https://foothold-project.vercel.app/assets/video/v2/turnfall-v2b-iter1500.mp4?v=9602b1b6",
     "file": "turnfall-v2b-iter1500.mp4",
     "title": "v2b iter1500",
@@ -126,7 +288,331 @@
     "still": "stills/turnfall-v2b-iter1500.jpg"
   },
   {
-    "id": "V08",
+    "id": "V17",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow010-nvidia.mp4?v=5e94c455",
+    "file": "axis2ext-slow010-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 실제 0.001 m/s · 추종비 0.01 · 20 초 내내 안 움직인다 (오른쪽 위 숫자가 0.00 에 붙어 있다) · 64 칸 추종비 0.06 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 10.1,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow010-nvidia.jpg"
+  },
+  {
+    "id": "V18",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow010-v1.mp4?v=7f2c4156",
+    "file": "axis2ext-slow010-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "이 칸 실제 0.053 m/s · 추종비 0.53 · 10.14 초에 넘어진다 (빨간 「넘어짐」 이 뜨고 그래프가 멈춘다) · 64 칸 추종비 0.92 (추종비를 낼 수 있던 칸 48/64) · 낙상 23/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 10.1,
+      "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+    },
+    "still": "stills/axis2ext-slow010-v1.jpg"
+  },
+  {
+    "id": "V19",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow010-v2.mp4?v=367deec1",
+    "file": "axis2ext-slow010-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 실제 0.174 m/s · 추종비 1.74 · 명령선 위로 계속 넘어선다 · 64 칸 추종비 1.67 · 낙상 2/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 10.1,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow010-v2.jpg"
+  },
+  {
+    "id": "V20",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow020-nvidia.mp4?v=9fca29cf",
+    "file": "axis2ext-slow020-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 실제 0.028 m/s · 추종비 0.14 · 64 칸 추종비 0.30 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow020-nvidia.jpg"
+  },
+  {
+    "id": "V21",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow020-v1.mp4?v=184dc14a",
+    "file": "axis2ext-slow020-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "이 칸 실제 0.200 m/s · 추종비 1.00 · 이 울타리에서 명령선에 가장 가깝다 · 64 칸 추종비 1.00 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow020-v1.jpg"
+  },
+  {
+    "id": "V22",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow020-v2.mp4?v=554d3eaf",
+    "file": "axis2ext-slow020-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 실제 0.236 m/s · 추종비 1.18 · 64 칸 추종비 1.33 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow020-v2.jpg"
+  },
+  {
+    "id": "V23",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow030-nvidia.mp4?v=7608d4e1",
+    "file": "axis2ext-slow030-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 실제 0.199 m/s · 추종비 0.66 · 64 칸 추종비 0.71 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow030-nvidia.jpg"
+  },
+  {
+    "id": "V24",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow030-v1.mp4?v=150e715b",
+    "file": "axis2ext-slow030-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "이 칸 실제 0.281 m/s · 추종비 0.94 · 64 칸 추종비 0.94 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow030-v1.jpg"
+  },
+  {
+    "id": "V25",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow030-v2.mp4?v=04b74030",
+    "file": "axis2ext-slow030-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 실제 0.309 m/s · 추종비 1.03 · 64 칸 추종비 1.04 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow030-v2.jpg"
+  },
+  {
+    "id": "V26",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow040-nvidia.mp4?v=3b09be76",
+    "file": "axis2ext-slow040-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 실제 0.352 m/s · 추종비 0.88 · 64 칸 추종비 0.87 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow040-nvidia.jpg"
+  },
+  {
+    "id": "V27",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow040-v1.mp4?v=2fb1254a",
+    "file": "axis2ext-slow040-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "이 칸 실제 0.371 m/s · 추종비 0.93 · 64 칸 추종비 0.93 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow040-v1.jpg"
+  },
+  {
+    "id": "V28",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-slow040-v2.mp4?v=5e340a6a",
+    "file": "axis2ext-slow040-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 실제 0.372 m/s · 추종비 0.93 · 64 칸 추종비 0.94 · 낙상 0/64",
+    "section": "s10",
+    "duration": 20.0,
+    "fps": 50.0,
+    "frame_count": 1000,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 12,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-slow040-v2.jpg"
+  },
+  {
+    "id": "V29",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrest-nvidia.mp4?v=3be11438",
+    "file": "axis2ext-turnrest-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 요레이트 추종비 -1.00 에서 0.84 · +1.00 에서 0.62 · 64 칸 낙상 1/64",
+    "section": "s10",
+    "duration": 25.0,
+    "fps": 50.0,
+    "frame_count": 1250,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.8,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-turnrest-nvidia.jpg"
+  },
+  {
+    "id": "V30",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrest-v1.mp4?v=81821b1d",
+    "file": "axis2ext-turnrest-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "3.92 초에 넘어진다. 첫 계단(-1.00)에서 추종비가 -0.26 으로 반대로 돈다 · 64 칸 낙상 64/64 (전판)",
+    "section": "s10",
+    "duration": 5.38,
+    "fps": 50.0,
+    "frame_count": 269,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.8,
+      "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+    },
+    "still": "stills/axis2ext-turnrest-v1.jpg"
+  },
+  {
+    "id": "V31",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrest-v2.mp4?v=0eade97c",
+    "file": "axis2ext-turnrest-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 요레이트 추종비 -1.00 에서 0.73 · +1.00 에서 0.44 · 64 칸 낙상 5/64",
+    "section": "s10",
+    "duration": 25.0,
+    "fps": 50.0,
+    "frame_count": 1250,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 3.8,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-turnrest-v2.jpg"
+  },
+  {
+    "id": "V32",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrev-nvidia.mp4?v=84b1c5d4",
+    "file": "axis2ext-turnrev-nvidia.mp4",
+    "title": "NVIDIA",
+    "caption": "이 칸 요레이트 추종비 -1.00 에서 0.70 · +0.50 에서 0.23 · 64 칸 낙상 5/64",
+    "section": "s10",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 13.9,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-turnrev-nvidia.jpg"
+  },
+  {
+    "id": "V33",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrev-v1.mp4?v=2b564e92",
+    "file": "axis2ext-turnrev-v1.mp4",
+    "title": "foothold-v1",
+    "caption": "13.96 초에 넘어진다. +0.50 에서 추종비 -0.00 · +1.00 에서 0.01 로 아예 안 돈다 · 64 칸 낙상 64/64 (전판)",
+    "section": "s10",
+    "duration": 16.1,
+    "fps": 50.0,
+    "frame_count": 805,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 13.9,
+      "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+    },
+    "still": "stills/axis2ext-turnrev-v1.jpg"
+  },
+  {
+    "id": "V34",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/axis2ext-turnrev-v2.mp4?v=9fe4824e",
+    "file": "axis2ext-turnrev-v2.mp4",
+    "title": "foothold-v2",
+    "caption": "이 칸 요레이트 추종비 -1.00 에서 0.67 · +0.50 에서 0.00 · 양의 요레이트를 못 따른다 · 64 칸 낙상 10/64",
+    "section": "s10",
+    "duration": 18.0,
+    "fps": 50.0,
+    "frame_count": 900,
+    "width": 1280,
+    "height": 720,
+    "selected": {
+      "seconds": 13.9,
+      "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+    },
+    "still": "stills/axis2ext-turnrev-v2.jpg"
+  },
+  {
+    "id": "V35",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-nvidia.mp4?v=b501ea72",
     "file": "axis2-stop-nvidia.mp4",
     "title": "NVIDIA",
@@ -144,7 +630,7 @@
     "still": "stills/axis2-stop-nvidia.jpg"
   },
   {
-    "id": "V09",
+    "id": "V36",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-v1.mp4?v=881d7ac7",
     "file": "axis2-stop-v1.mp4",
     "title": "foothold-v1",
@@ -162,7 +648,7 @@
     "still": "stills/axis2-stop-v1.jpg"
   },
   {
-    "id": "V10",
+    "id": "V37",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-stop-v2.mp4?v=2eebdc77",
     "file": "axis2-stop-v2.mp4",
     "title": "foothold-v2",
@@ -180,7 +666,7 @@
     "still": "stills/axis2-stop-v2.jpg"
   },
   {
-    "id": "V11",
+    "id": "V38",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-nvidia.mp4?v=a866b701",
     "file": "axis2-hold-nvidia.mp4",
     "title": "NVIDIA",
@@ -198,7 +684,7 @@
     "still": "stills/axis2-hold-nvidia.jpg"
   },
   {
-    "id": "V12",
+    "id": "V39",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-v1.mp4?v=00a26325",
     "file": "axis2-hold-v1.mp4",
     "title": "foothold-v1",
@@ -216,7 +702,7 @@
     "still": "stills/axis2-hold-v1.jpg"
   },
   {
-    "id": "V13",
+    "id": "V40",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-hold-v2.mp4?v=49b6a6d9",
     "file": "axis2-hold-v2.mp4",
     "title": "foothold-v2",
@@ -234,7 +720,7 @@
     "still": "stills/axis2-hold-v2.jpg"
   },
   {
-    "id": "V14",
+    "id": "V41",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-nvidia.mp4?v=f484a063",
     "file": "axis2-turn-nvidia.mp4",
     "title": "NVIDIA",
@@ -252,7 +738,7 @@
     "still": "stills/axis2-turn-nvidia.jpg"
   },
   {
-    "id": "V15",
+    "id": "V42",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-v1.mp4?v=99b280c4",
     "file": "axis2-turn-v1.mp4",
     "title": "foothold-v1",
@@ -270,7 +756,7 @@
     "still": "stills/axis2-turn-v1.jpg"
   },
   {
-    "id": "V16",
+    "id": "V43",
     "url": "https://foothold-project.vercel.app/assets/video/v2/axis2-turn-v2.mp4?v=078c225d",
     "file": "axis2-turn-v2.mp4",
     "title": "foothold-v2",
@@ -288,7 +774,7 @@
     "still": "stills/axis2-turn-v2.jpg"
   },
   {
-    "id": "V17",
+    "id": "V44",
     "url": "https://foothold-project.vercel.app/assets/video/v2/ss-v1-fail.mp4?v=85ae4dcf",
     "file": "ss-v1-fail.mp4",
     "title": "foothold-v1 · 1.0 m/s",
@@ -306,7 +792,7 @@
     "still": "stills/ss-v1-fail.jpg"
   },
   {
-    "id": "V18",
+    "id": "V45",
     "url": "https://foothold-project.vercel.app/assets/video/v2/stepping-stones-v2.mp4?v=85275061",
     "file": "stepping-stones-v2.mp4",
     "title": "foothold-v2 · 1.0 m/s",
@@ -324,7 +810,7 @@
     "still": "stills/stepping-stones-v2.jpg"
   },
   {
-    "id": "V19",
+    "id": "V46",
     "url": "https://foothold-project.vercel.app/assets/video/v2/stepping-stones-v2-cross.mp4?v=4642ff27",
     "file": "stepping-stones-v2-cross.mp4",
     "title": "foothold-v2 · 1.5 m/s",
@@ -342,7 +828,7 @@
     "still": "stills/stepping-stones-v2-cross.jpg"
   },
   {
-    "id": "V20",
+    "id": "V47",
     "url": "https://foothold-project.vercel.app/assets/video/v2/regress-stairsinv-d09-v1.mp4?v=50ed7be7",
     "file": "regress-stairsinv-d09-v1.mp4",
     "title": "foothold-v1 · d0.9 · 1.5 m/s",
@@ -360,7 +846,7 @@
     "still": "stills/regress-stairsinv-d09-v1.jpg"
   },
   {
-    "id": "V21",
+    "id": "V48",
     "url": "https://foothold-project.vercel.app/assets/video/v2/regress-stairsinv-d09-v2.mp4?v=8fa662a2",
     "file": "regress-stairsinv-d09-v2.mp4",
     "title": "foothold-v2 · d0.9 · 1.5 m/s",
@@ -378,24 +864,24 @@
     "still": "stills/regress-stairsinv-d09-v2.jpg"
   },
   {
-    "id": "V22",
-    "url": "https://foothold-project.vercel.app/assets/video/v2/train-army.mp4?v=bc942cc2",
+    "id": "V49",
+    "url": "https://foothold-project.vercel.app/assets/video/v2/train-army.mp4?v=195a291a",
     "file": "train-army.mp4",
     "title": "v2 학습 진행",
-    "caption": "험지 여섯 종 30 칸 위 600 마리 · 칸당 약 20 마리로 학습과 같은 밀도 · 저장본 열여섯을 이어 붙였다",
+    "caption": "험지 여섯 종 30 칸 위 600 마리 (칸당 약 20 마리로 학습과 같은 밀도) · 저장본 열여섯 · iter 0 과 3000 은 정속 · 가운데는 5 배에서 10 배로 빨라진다 (왼쪽 위에 iter N   x5 처럼 적어 둔다)",
     "section": "s14",
-    "duration": 44.4,
+    "duration": 41.28,
     "fps": 50.0,
-    "frame_count": 2220,
+    "frame_count": 2064,
     "width": 1280,
     "height": 720,
     "selected": {
-      "seconds": 43.0,
+      "seconds": 39,
       "extra_seconds": [
-        2.0,
-        23.0
+        2,
+        20
       ],
-      "reason": "초기·중간·최종 체크포인트에서 무리의 변화. 초기에도 보행 가능"
+      "reason": "저장 정책 iter 3000의 보행 장면. 추가 장면은 초기 정책과 학습 중간을 비교하며, 중간 구간은 표시된 배속으로 재생된다."
     },
     "still": "stills/train-army.jpg"
   }

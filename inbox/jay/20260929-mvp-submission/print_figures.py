@@ -156,6 +156,12 @@ def terrain():
         for x,xx in [(604,577),(622,620),(682,647),(750,715)]:f.text(get(x,y),xx,yy,13,color=GREEN if x>=682 else DIM,bold=x==682)
     f.text(get(0,516),12,682,14,color=DIM,width=772)
     f.finish(720,ts)
+    full=ET.parse(OUT/name).getroot()
+    children=''.join(ET.tostring(e,encoding='unicode') for e in full)
+    for number,top,height in [(1,105,267),(2,372,348)]:
+        total=105+height
+        svg=f'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="{total}" viewBox="0 0 800 {total}" font-family="Malgun Gothic, sans-serif"><svg width="800" height="105" viewBox="0 0 800 105" overflow="hidden">{children}</svg><svg y="105" width="800" height="{height}" viewBox="0 {top} 800 {height}" overflow="hidden">{children}</svg></svg>'
+        (OUT/name.replace('.svg',f'-{number}.svg')).write_bytes(svg.encode())
 
 def blown():
     name='v2-blown-runs.svg';root,ts=source(name);f=Figure(name)

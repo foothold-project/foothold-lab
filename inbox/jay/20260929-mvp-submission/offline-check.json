@@ -2,136 +2,302 @@
   "network_disabled": true,
   "videos": [
     {
+      "file": "media/hero-floatingring-v15-nvidia.mp4",
+      "time": 0.154963,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-floatingring-v15-v1.mp4",
+      "time": 0.154827,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-floatingring-v15-v2.mp4",
+      "time": 0.158098,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-pit-v15-nvidia.mp4",
+      "time": 0.155903,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-pit-v15-v1.mp4",
+      "time": 0.151502,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-pit-v15-v2.mp4",
+      "time": 0.154811,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-steppingstones-v10-nvidia.mp4",
+      "time": 0.15617,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-steppingstones-v10-v1.mp4",
+      "time": 0.157828,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/hero-steppingstones-v10-v2.mp4",
+      "time": 0.16608,
+      "error": null,
+      "local": true
+    },
+    {
       "file": "media/lineage-gap-v1.mp4",
-      "time": 0.035795,
+      "time": 0.155758,
       "error": null,
       "local": true
     },
     {
       "file": "media/lineage-gap-D-fail.mp4",
-      "time": 0.031194,
+      "time": 0.151673,
       "error": null,
       "local": true
     },
     {
       "file": "media/lineage-gap-v2.mp4",
-      "time": 0.036116,
+      "time": 0.150964,
       "error": null,
       "local": true
     },
     {
       "file": "media/train-gap-forward.mp4",
-      "time": 0.050626,
+      "time": 0.165338,
       "error": null,
       "local": true
     },
     {
       "file": "media/train-gap-omni.mp4",
-      "time": 0.053005,
+      "time": 0.152209,
       "error": null,
       "local": true
     },
     {
       "file": "media/turnfall-v2a-iter1500.mp4",
-      "time": 0.042568,
+      "time": 0.150957,
       "error": null,
       "local": true
     },
     {
       "file": "media/turnfall-v2b-iter1500.mp4",
-      "time": 0.042253,
+      "time": 0.165317,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow010-nvidia.mp4",
+      "time": 0.152176,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow010-v1.mp4",
+      "time": 0.150483,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow010-v2.mp4",
+      "time": 0.163296,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow020-nvidia.mp4",
+      "time": 0.165267,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow020-v1.mp4",
+      "time": 0.154941,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow020-v2.mp4",
+      "time": 0.15234,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow030-nvidia.mp4",
+      "time": 0.165402,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow030-v1.mp4",
+      "time": 0.161933,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow030-v2.mp4",
+      "time": 0.164497,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow040-nvidia.mp4",
+      "time": 0.151606,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow040-v1.mp4",
+      "time": 0.15067,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-slow040-v2.mp4",
+      "time": 0.159271,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrest-nvidia.mp4",
+      "time": 0.16482,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrest-v1.mp4",
+      "time": 0.164844,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrest-v2.mp4",
+      "time": 0.162183,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrev-nvidia.mp4",
+      "time": 0.164781,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrev-v1.mp4",
+      "time": 0.161109,
+      "error": null,
+      "local": true
+    },
+    {
+      "file": "media/axis2ext-turnrev-v2.mp4",
+      "time": 0.167883,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-stop-nvidia.mp4",
-      "time": 0.044093,
+      "time": 0.159851,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-stop-v1.mp4",
-      "time": 0.04372,
+      "time": 0.165869,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-stop-v2.mp4",
-      "time": 0.041814,
+      "time": 0.165552,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-hold-nvidia.mp4",
-      "time": 0.037652,
+      "time": 0.150902,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-hold-v1.mp4",
-      "time": 0.037401,
+      "time": 0.152911,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-hold-v2.mp4",
-      "time": 0.040568,
+      "time": 0.164363,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-turn-nvidia.mp4",
-      "time": 0.028922,
+      "time": 0.163821,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-turn-v1.mp4",
-      "time": 0.030592,
+      "time": 0.152417,
       "error": null,
       "local": true
     },
     {
       "file": "media/axis2-turn-v2.mp4",
-      "time": 0.028657,
+      "time": 0.15076,
       "error": null,
       "local": true
     },
     {
       "file": "media/ss-v1-fail.mp4",
-      "time": 0.031582,
+      "time": 0.164564,
       "error": null,
       "local": true
     },
     {
       "file": "media/stepping-stones-v2.mp4",
-      "time": 0.028076,
+      "time": 0.16597,
       "error": null,
       "local": true
     },
     {
       "file": "media/stepping-stones-v2-cross.mp4",
-      "time": 0.027839,
+      "time": 0.164743,
       "error": null,
       "local": true
     },
     {
       "file": "media/regress-stairsinv-d09-v1.mp4",
-      "time": 0.034426,
+      "time": 0.152157,
       "error": null,
       "local": true
     },
     {
       "file": "media/regress-stairsinv-d09-v2.mp4",
-      "time": 0.034315,
+      "time": 0.152697,
       "error": null,
       "local": true
     },
     {
       "file": "media/train-army.mp4",
-      "time": 0.038573,
+      "time": 0.16365,
       "error": null,
       "local": true
     }
+  ],
+  "pdf_links": [
+    "FOOTHOLD-MVP-summary.pdf",
+    "FOOTHOLD-MVP.pdf"
   ]
 }
