@@ -1,0 +1,45 @@
+{
+  "source_kind": "existing simulation per_env aggregates, not new rollouts",
+  "date": "2026-09-29",
+  "records": [
+    {
+      "name": "v2slow",
+      "source": "sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/slow010/per_env.json",
+      "sha256": "15d8d2a79bcccbc7cc98a72e404e4f93b8c7d675d5961b3ee052c557554da10f",
+      "n": 64,
+      "fell": 2,
+      "mean_tracked_vx_mps": 0.16698073907017844
+    },
+    {
+      "name": "nvslow",
+      "source": "sim/eval/results/20260918-command-baseline/nvidia-zero/slow010/per_env.json",
+      "sha256": "2c8aac57f13fb1e62625c9c20382753d43ffe995ad1acc8828a501c4080dea69",
+      "n": 64,
+      "fell": 0,
+      "mean_tracked_vx_mps": 0.006211827489682425
+    },
+    {
+      "name": "turn",
+      "source": "sim/eval/results/20260928-turn1024/v2g2-feetair01-iter3000/turn/per_env.json",
+      "sha256": "97b1c5819cf2660dc6c4f5d552141b44a91958a32e5c93e7c480b58393f81e17",
+      "n": 1024,
+      "fell": 79
+    },
+    {
+      "name": "stop",
+      "source": "sim/eval/results/20260928-stophold1024/v2g2-feetair01-iter3000/stop/per_env.json",
+      "sha256": "83169e4e45529d308f2473dac5e0ec0943c9c8ac8f5f23052a785b5448b2eb67",
+      "n": 1024,
+      "fell": 0,
+      "missing_stop_time_s": 167,
+      "missing_stop_note": "1.0초 내내 문턱 아래로 유지된 창이 없다"
+    },
+    {
+      "name": "hold",
+      "source": "sim/eval/results/20260928-stophold1024/v2g2-feetair01-iter3000/hold/per_env.json",
+      "sha256": "bb48830417a6bbfb72e7ecf63f70fb06bbf0ecee2c58d36f8cd984a661d7c9ac",
+      "n": 1024,
+      "fell": 0
+    }
+  ]
+}
