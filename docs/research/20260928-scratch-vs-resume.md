@@ -102,7 +102,11 @@ heading_command     True · rel_heading_envs 1.0
 **둘의 AND** 다.
 
 <!-- 자동:판정 시작 -->
-_판정문이 아직 없습니다._
+| 판 | 판정 |
+|---|---|
+| [`v2g2-feetair01`](../../inbox/jay/20260927-methodology/VERDICT-v2g2-feetair01.md) | 읽지 못했다 |
+| [`fs1-scratch-f001`](../../inbox/jay/20260927-methodology/VERDICT-fs1-scratch-f001.md) | 읽지 못했다 |
+| [`fs2-scratch-f01`](../../inbox/jay/20260927-methodology/VERDICT-fs2-scratch-f01.md) | 읽지 못했다 |
 <!-- 자동:판정 끝 -->
 
 ---
@@ -113,11 +117,11 @@ _판정문이 아직 없습니다._
 난이도 0.5 · 지형마다 100 판 · 시드 42.
 
 <!-- 자동:ckptflow 시작 -->
-| 판 | iter1500 | iter2000 | iter2500 | iter3000 | iter4500 |
-|---|---|---|---|---|---|
-| `v2g2-feetair01` | **92.94** | **93.56** | **93.19** | **94.19** | 미완 (0/48) |
-| `fs1-scratch-f001` | **44.00** | **40.83** | 미완 (18/48) | 미완 (0/48) | 미완 (0/48) |
-| `fs2-scratch-f01` | 미완 (0/48) | 미완 (0/48) | 미완 (0/48) | 미완 (0/48) | 미완 (0/48) |
+| 판 | iter1500 | iter2000 | iter2500 | iter3000 | iter3750 | iter4000 | iter4500 |
+|---|---|---|---|---|---|---|---|
+| `v2g2-feetair01` | **92.94** | **93.56** | **93.19** | **94.19** | 미완 (0/48) | 미완 (0/48) | 미완 (0/48) |
+| `fs1-scratch-f001` | **44.00** | **40.83** | **53.77** | **63.00** | **62.38** | **62.29** | **61.27** |
+| `fs2-scratch-f01` | **42.29** | **42.29** | **47.10** | **46.96** | **58.98** | **55.15** | **56.17** |
 <!-- 자동:ckptflow 끝 -->
 
 칸이 48 이 아니면 평균을 내지 않고 **미완**으로 둔다. 빈 칸을 0 으로 채우지
@@ -132,12 +136,12 @@ _판정문이 아직 없습니다._
 <!-- 자동:set 시작 -->
 | 지형 집합 | 속도 | NVIDIA | foothold-v1 | v2g2 | fs1 | fs2 | fs1 - v1 | fs2 - v1 |
 |---|---|---|---|---|---|---|---|---|
-| rough6 | 0.5 m/s | 65.8 | 99.7 | 100 | 없음 | 없음 | 없음 | 없음 |
-| rough6 | 1.0 m/s | 69 | 100 | 100 | 없음 | 없음 | 없음 | 없음 |
-| rough6 | 1.5 m/s | 17.5 | 98.3 | 100 | 없음 | 없음 | 없음 | 없음 |
-| unseen10 | 0.5 m/s | 48.7 | 85.5 | 89.9 | 없음 | 없음 | 없음 | 없음 |
-| unseen10 | 1.0 m/s | 50.5 | 84.7 | 92.4 | 없음 | 없음 | 없음 | 없음 |
-| unseen10 | 1.5 m/s | 7 | 77.6 | 89.8 | 없음 | 없음 | 없음 | 없음 |
+| rough6 | 0.5 m/s | 65.8 | 99.7 | 100 | **82.3** | **70.8** | **-17.3** | **-28.8** |
+| rough6 | 1.0 m/s | 69 | 100 | 100 | **89.7** | **80.3** | **-10.3** | **-19.7** |
+| rough6 | 1.5 m/s | 17.5 | 98.3 | 100 | **50.3** | **55.5** | **-48.0** | **-42.8** |
+| unseen10 | 0.5 m/s | 48.7 | 85.5 | 89.9 | **54.8** | **31** | **-30.7** | **-54.5** |
+| unseen10 | 1.0 m/s | 50.5 | 84.7 | 92.4 | **73.3** | **77** | **-11.4** | **-7.7** |
+| unseen10 | 1.5 m/s | 7 | 77.6 | 89.8 | **32.6** | **37.6** | **-45.0** | **-40.0** |
 
 마지막 두 열은 **foothold-v1 대비 %p** 다. 양수면 올랐다.
 <!-- 자동:set 끝 -->
@@ -151,54 +155,54 @@ _판정문이 아직 없습니다._
 <!-- 자동:terrain 시작 -->
 | 지형 | 속도 | NVIDIA | foothold-v1 | v2g2 | fs1 | fs2 |
 |---|---|---|---|---|---|---|
-| boxes * | 0.5 m/s | 76 | 99 | 100 | 없음 | 없음 |
-| boxes * | 1.0 m/s | 34 | 100 | 100 | 없음 | 없음 |
-| boxes * | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope * | 0.5 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope * | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope * | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope_inv * | 0.5 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope_inv * | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| hf_pyramid_slope_inv * | 1.5 m/s | 24 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs * | 0.5 m/s | 10 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs * | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs * | 1.5 m/s | 81 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs_inv * | 0.5 m/s | 24 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs_inv * | 1.0 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| pyramid_stairs_inv * | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| random_rough * | 0.5 m/s | 85 | 99 | 100 | 없음 | 없음 |
-| random_rough * | 1.0 m/s | 80 | 100 | 100 | 없음 | 없음 |
-| random_rough * | 1.5 m/s | 0 | 90 | 100 | 없음 | 없음 |
-| discrete_obstacles | 0.5 m/s | 94 | 100 | 100 | 없음 | 없음 |
-| discrete_obstacles | 1.0 m/s | 94 | 100 | 100 | 없음 | 없음 |
-| discrete_obstacles | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| floating_ring | 0.5 m/s | 1 | 95 | 100 | 없음 | 없음 |
-| floating_ring | 1.0 m/s | 0 | 99 | 100 | 없음 | 없음 |
-| floating_ring | 1.5 m/s | 0 | 87 | 99 | 없음 | 없음 |
-| gap | 0.5 m/s | 0 | 90 | 100 | 없음 | 없음 |
-| gap | 1.0 m/s | 1 | 100 | 100 | 없음 | 없음 |
-| gap | 1.5 m/s | 0 | 68 | 99 | 없음 | 없음 |
-| pit | 0.5 m/s | 7 | 100 | 100 | 없음 | 없음 |
-| pit | 1.0 m/s | 2 | 100 | 100 | 없음 | 없음 |
-| pit | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
-| rails * | 0.5 m/s | 0 | 70 | 99 | 없음 | 없음 |
-| rails * | 1.0 m/s | 8 | 48 | 100 | 없음 | 없음 |
-| rails * | 1.5 m/s | 0 | 21 | 100 | 없음 | 없음 |
-| repeated_boxes | 0.5 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| repeated_boxes | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| repeated_boxes | 1.5 m/s | 1 | 100 | 100 | 없음 | 없음 |
-| repeated_cylinders | 0.5 m/s | 99 | 100 | 100 | 없음 | 없음 |
-| repeated_cylinders | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| repeated_cylinders | 1.5 m/s | 7 | 100 | 100 | 없음 | 없음 |
-| star | 0.5 m/s | 86 | 100 | 100 | 없음 | 없음 |
-| star | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| star | 1.5 m/s | 62 | 100 | 100 | 없음 | 없음 |
-| stepping_stones | 0.5 m/s | 0 | 0 | 0 | 없음 | 없음 |
-| stepping_stones | 1.0 m/s | 0 | 0 | 24 | 없음 | 없음 |
-| stepping_stones | 1.5 m/s | 0 | 0 | 0 | 없음 | 없음 |
-| wave | 0.5 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| wave | 1.0 m/s | 100 | 100 | 100 | 없음 | 없음 |
-| wave | 1.5 m/s | 0 | 100 | 100 | 없음 | 없음 |
+| boxes * | 0.5 m/s | 76 | 99 | 100 | 71 | 53 |
+| boxes * | 1.0 m/s | 34 | 100 | 100 | 97 | 89 |
+| boxes * | 1.5 m/s | 0 | 100 | 100 | 3 | 1 |
+| hf_pyramid_slope * | 0.5 m/s | 100 | 100 | 100 | 100 | 100 |
+| hf_pyramid_slope * | 1.0 m/s | 100 | 100 | 100 | 87 | 100 |
+| hf_pyramid_slope * | 1.5 m/s | 0 | 100 | 100 | 98 | 100 |
+| hf_pyramid_slope_inv * | 0.5 m/s | 100 | 100 | 100 | 100 | 100 |
+| hf_pyramid_slope_inv * | 1.0 m/s | 100 | 100 | 100 | 98 | 93 |
+| hf_pyramid_slope_inv * | 1.5 m/s | 24 | 100 | 100 | 98 | 86 |
+| pyramid_stairs * | 0.5 m/s | 10 | 100 | 100 | 100 | 80 |
+| pyramid_stairs * | 1.0 m/s | 100 | 100 | 100 | 100 | 100 |
+| pyramid_stairs * | 1.5 m/s | 81 | 100 | 100 | 100 | 100 |
+| pyramid_stairs_inv * | 0.5 m/s | 24 | 100 | 100 | 99 | 89 |
+| pyramid_stairs_inv * | 1.0 m/s | 0 | 100 | 100 | 66 | 34 |
+| pyramid_stairs_inv * | 1.5 m/s | 0 | 100 | 100 | 0 | 0 |
+| random_rough * | 0.5 m/s | 85 | 99 | 100 | 24 | 3 |
+| random_rough * | 1.0 m/s | 80 | 100 | 100 | 90 | 66 |
+| random_rough * | 1.5 m/s | 0 | 90 | 100 | 3 | 46 |
+| discrete_obstacles | 0.5 m/s | 94 | 100 | 100 | 38 | 7 |
+| discrete_obstacles | 1.0 m/s | 94 | 100 | 100 | 61 | 91 |
+| discrete_obstacles | 1.5 m/s | 0 | 100 | 100 | 44 | 75 |
+| floating_ring | 0.5 m/s | 1 | 95 | 100 | 53 | 24 |
+| floating_ring | 1.0 m/s | 0 | 99 | 100 | 100 | 72 |
+| floating_ring | 1.5 m/s | 0 | 87 | 99 | 0 | 0 |
+| gap | 0.5 m/s | 0 | 90 | 100 | 79 | 64 |
+| gap | 1.0 m/s | 1 | 100 | 100 | 90 | 100 |
+| gap | 1.5 m/s | 0 | 68 | 99 | 100 | 79 |
+| pit | 0.5 m/s | 7 | 100 | 100 | 100 | 76 |
+| pit | 1.0 m/s | 2 | 100 | 100 | 100 | 98 |
+| pit | 1.5 m/s | 0 | 100 | 100 | 0 | 0 |
+| rails * | 0.5 m/s | 0 | 70 | 99 | 26 | 63 |
+| rails * | 1.0 m/s | 8 | 48 | 100 | 64 | 94 |
+| rails * | 1.5 m/s | 0 | 21 | 100 | 0 | 0 |
+| repeated_boxes | 0.5 m/s | 100 | 100 | 100 | 85 | 50 |
+| repeated_boxes | 1.0 m/s | 100 | 100 | 100 | 70 | 72 |
+| repeated_boxes | 1.5 m/s | 1 | 100 | 100 | 42 | 41 |
+| repeated_cylinders | 0.5 m/s | 99 | 100 | 100 | 60 | 19 |
+| repeated_cylinders | 1.0 m/s | 100 | 100 | 100 | 73 | 78 |
+| repeated_cylinders | 1.5 m/s | 7 | 100 | 100 | 33 | 26 |
+| star | 0.5 m/s | 86 | 100 | 100 | 96 | 7 |
+| star | 1.0 m/s | 100 | 100 | 100 | 92 | 68 |
+| star | 1.5 m/s | 62 | 100 | 100 | 35 | 56 |
+| stepping_stones | 0.5 m/s | 0 | 0 | 0 | 0 | 0 |
+| stepping_stones | 1.0 m/s | 0 | 0 | 24 | 0 | 0 |
+| stepping_stones | 1.5 m/s | 0 | 0 | 0 | 0 | 0 |
+| wave | 0.5 m/s | 100 | 100 | 100 | 11 | 0 |
+| wave | 1.0 m/s | 100 | 100 | 100 | 83 | 97 |
+| wave | 1.5 m/s | 0 | 100 | 100 | 72 | 99 |
 
 `*` 는 **학습 지형**이다. 미경험 주장에서 빠진다.
 <!-- 자동:terrain 끝 -->
@@ -220,6 +224,86 @@ _판정문이 아직 없습니다._
 | `v2g2-feetair01` | floating_ring | 1.5 m/s | **99** | 99 | 99 | 99 | 99 |
 | `v2g2-feetair01` | gap | 1.5 m/s | **99** | 100 | 99 | 99 | 99 |
 | `v2g2-feetair01` | stepping_stones | 1.5 m/s | **0** | 53 | 23 | 0 | 24 |
+| `fs1-scratch-f001` | boxes | 0.5 m/s | **71** | 79 | 91 | 92 | 91 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 0.5 m/s | **99** | 100 | 100 | 100 | 99 |
+| `fs1-scratch-f001` | random_rough | 0.5 m/s | **24** | 47 | 37 | 79 | 29 |
+| `fs1-scratch-f001` | boxes | 1.0 m/s | **97** | 98 | 100 | 99 | 100 |
+| `fs1-scratch-f001` | hf_pyramid_slope | 1.0 m/s | **87** | 87 | 87 | 100 | 87 |
+| `fs1-scratch-f001` | hf_pyramid_slope_inv | 1.0 m/s | **98** | 98 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 1.0 m/s | **66** | 100 | 100 | 96 | 70 |
+| `fs1-scratch-f001` | random_rough | 1.0 m/s | **90** | 91 | 92 | 97 | 92 |
+| `fs1-scratch-f001` | boxes | 1.5 m/s | **3** | 94 | 90 | 3 | 91 |
+| `fs1-scratch-f001` | hf_pyramid_slope | 1.5 m/s | **98** | 98 | 98 | 98 | 98 |
+| `fs1-scratch-f001` | hf_pyramid_slope_inv | 1.5 m/s | **98** | 98 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | random_rough | 1.5 m/s | **3** | 85 | 90 | 3 | 89 |
+| `fs1-scratch-f001` | discrete_obstacles | 0.5 m/s | **38** | 45 | 45 | 100 | 38 |
+| `fs1-scratch-f001` | floating_ring | 0.5 m/s | **53** | 100 | 53 | 53 | 53 |
+| `fs1-scratch-f001` | gap | 0.5 m/s | **79** | 100 | 97 | 97 | 79 |
+| `fs1-scratch-f001` | rails | 0.5 m/s | **26** | 83 | 43 | 26 | 43 |
+| `fs1-scratch-f001` | repeated_boxes | 0.5 m/s | **85** | 86 | 95 | 99 | 95 |
+| `fs1-scratch-f001` | repeated_cylinders | 0.5 m/s | **60** | 61 | 89 | 99 | 89 |
+| `fs1-scratch-f001` | star | 0.5 m/s | **96** | 96 | 97 | 100 | 97 |
+| `fs1-scratch-f001` | stepping_stones | 0.5 m/s | **0** | 68 | 0 | 12 | 0 |
+| `fs1-scratch-f001` | wave | 0.5 m/s | **11** | 100 | 100 | 100 | 11 |
+| `fs1-scratch-f001` | discrete_obstacles | 1.0 m/s | **61** | 61 | 61 | 81 | 61 |
+| `fs1-scratch-f001` | gap | 1.0 m/s | **90** | 100 | 100 | 100 | 90 |
+| `fs1-scratch-f001` | rails | 1.0 m/s | **64** | 99 | 98 | 64 | 98 |
+| `fs1-scratch-f001` | repeated_boxes | 1.0 m/s | **70** | 70 | 94 | 100 | 94 |
+| `fs1-scratch-f001` | repeated_cylinders | 1.0 m/s | **73** | 73 | 94 | 100 | 94 |
+| `fs1-scratch-f001` | star | 1.0 m/s | **92** | 92 | 95 | 100 | 95 |
+| `fs1-scratch-f001` | stepping_stones | 1.0 m/s | **0** | 5 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | wave | 1.0 m/s | **83** | 83 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | discrete_obstacles | 1.5 m/s | **44** | 69 | 69 | 44 | 69 |
+| `fs1-scratch-f001` | floating_ring | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | pit | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | rails | 1.5 m/s | **0** | 100 | 99 | 0 | 99 |
+| `fs1-scratch-f001` | repeated_boxes | 1.5 m/s | **42** | 97 | 100 | 42 | 100 |
+| `fs1-scratch-f001` | repeated_cylinders | 1.5 m/s | **33** | 100 | 100 | 33 | 100 |
+| `fs1-scratch-f001` | star | 1.5 m/s | **35** | 72 | 82 | 46 | 82 |
+| `fs1-scratch-f001` | stepping_stones | 1.5 m/s | **0** | 10 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | wave | 1.5 m/s | **72** | 72 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | boxes | 0.5 m/s | **53** | 66 | 59 | 89 | 56 |
+| `fs2-scratch-f01` | pyramid_stairs | 0.5 m/s | **80** | 100 | 100 | 100 | 80 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 0.5 m/s | **89** | 94 | 96 | 98 | 93 |
+| `fs2-scratch-f01` | random_rough | 0.5 m/s | **3** | 5 | 25 | 100 | 20 |
+| `fs2-scratch-f01` | boxes | 1.0 m/s | **89** | 93 | 93 | 93 | 92 |
+| `fs2-scratch-f01` | hf_pyramid_slope_inv | 1.0 m/s | **93** | 93 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 1.0 m/s | **34** | 100 | 100 | 37 | 97 |
+| `fs2-scratch-f01` | random_rough | 1.0 m/s | **66** | 74 | 86 | 93 | 78 |
+| `fs2-scratch-f01` | boxes | 1.5 m/s | **1** | 97 | 81 | 1 | 83 |
+| `fs2-scratch-f01` | hf_pyramid_slope_inv | 1.5 m/s | **86** | 86 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 1.5 m/s | **0** | 87 | 5 | 0 | 4 |
+| `fs2-scratch-f01` | random_rough | 1.5 m/s | **46** | 92 | 96 | 48 | 93 |
+| `fs2-scratch-f01` | discrete_obstacles | 0.5 m/s | **7** | 71 | 92 | 99 | 16 |
+| `fs2-scratch-f01` | floating_ring | 0.5 m/s | **24** | 72 | 24 | 25 | 24 |
+| `fs2-scratch-f01` | gap | 0.5 m/s | **64** | 100 | 67 | 66 | 65 |
+| `fs2-scratch-f01` | pit | 0.5 m/s | **76** | 100 | 77 | 77 | 76 |
+| `fs2-scratch-f01` | rails | 0.5 m/s | **63** | 65 | 65 | 88 | 64 |
+| `fs2-scratch-f01` | repeated_boxes | 0.5 m/s | **50** | 68 | 77 | 100 | 57 |
+| `fs2-scratch-f01` | repeated_cylinders | 0.5 m/s | **19** | 27 | 26 | 98 | 20 |
+| `fs2-scratch-f01` | star | 0.5 m/s | **7** | 12 | 17 | 100 | 12 |
+| `fs2-scratch-f01` | stepping_stones | 0.5 m/s | **0** | 28 | 0 | 26 | 0 |
+| `fs2-scratch-f01` | wave | 0.5 m/s | **0** | 98 | 100 | 100 | 0 |
+| `fs2-scratch-f01` | discrete_obstacles | 1.0 m/s | **91** | 91 | 91 | 100 | 91 |
+| `fs2-scratch-f01` | floating_ring | 1.0 m/s | **72** | 93 | 80 | 72 | 80 |
+| `fs2-scratch-f01` | pit | 1.0 m/s | **98** | 100 | 99 | 98 | 99 |
+| `fs2-scratch-f01` | rails | 1.0 m/s | **94** | 100 | 100 | 94 | 100 |
+| `fs2-scratch-f01` | repeated_boxes | 1.0 m/s | **72** | 74 | 74 | 100 | 72 |
+| `fs2-scratch-f01` | repeated_cylinders | 1.0 m/s | **78** | 78 | 80 | 100 | 80 |
+| `fs2-scratch-f01` | star | 1.0 m/s | **68** | 68 | 69 | 100 | 69 |
+| `fs2-scratch-f01` | stepping_stones | 1.0 m/s | **0** | 31 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | wave | 1.0 m/s | **97** | 97 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | discrete_obstacles | 1.5 m/s | **75** | 93 | 93 | 75 | 93 |
+| `fs2-scratch-f01` | floating_ring | 1.5 m/s | **0** | 97 | 5 | 0 | 5 |
+| `fs2-scratch-f01` | gap | 1.5 m/s | **79** | 100 | 100 | 79 | 100 |
+| `fs2-scratch-f01` | pit | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | rails | 1.5 m/s | **0** | 100 | 100 | 0 | 100 |
+| `fs2-scratch-f01` | repeated_boxes | 1.5 m/s | **41** | 100 | 100 | 41 | 100 |
+| `fs2-scratch-f01` | repeated_cylinders | 1.5 m/s | **26** | 74 | 76 | 36 | 76 |
+| `fs2-scratch-f01` | star | 1.5 m/s | **56** | 79 | 80 | 75 | 80 |
+| `fs2-scratch-f01` | stepping_stones | 1.5 m/s | **0** | 3 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | wave | 1.5 m/s | **99** | 99 | 100 | 100 | 100 |
 
 종합은 네 성분의 **AND** 다. 어느 하나가 낮으면 종합이 낮다. 「못 건넌다」와 「느리다」가 같은 숫자로 내려오지 않게 성분을 편다.
 <!-- 자동:components 끝 -->
@@ -249,11 +333,15 @@ _판정문이 아직 없습니다._
 | `fs1-scratch-f001` | 2000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs1-scratch-f001` | 2500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs1-scratch-f001` | 3000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 3750 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 15/64 = 0.2344<br>[0.1475, 0.35133] |
+| `fs1-scratch-f001` | 4000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs1-scratch-f001` | 4500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 47/64 = 0.7344<br>[0.61517, 0.82704] |
 | `fs2-scratch-f01` | 1500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs2-scratch-f01` | 2000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs2-scratch-f01` | 2500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
 | `fs2-scratch-f01` | 3000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 11/64 = 0.1719<br>[0.09878, 0.28213] |
+| `fs2-scratch-f01` | 3750 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 31/64 = 0.4844<br>[0.36634, 0.60418] |
+| `fs2-scratch-f01` | 4000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 43/64 = 0.6719<br>[0.54999, 0.77429] |
 | `fs2-scratch-f01` | 4500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 64/64 = 1.0000<br>[0.94338, 1.0] |
 <!-- 자동:축2 끝 -->
 
@@ -359,7 +447,53 @@ clip_grad_norm_(..., 1.0) 통과 후
 | `pit` d0.5 1.0 m/s | 학습에 없는데 잘 되던 칸 |
 
 <!-- 자동:영상 시작 -->
-_영상은 평가가 끝난 뒤에 찍습니다._
+**v2g2-feetair01 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
 <!-- 자동:영상 끝 -->
 
 ---
