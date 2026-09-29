@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=66c4e0c2').then(function(r){
+    fetch('/assets/search-index.json?v=eb8c06fd').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -457,6 +457,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <h1>같은 자리를 세 열로 견준다</h1>
   <p class="lede">지형과 속도를 하나로 고정하고, 열마다 <b>(버전, 모델)</b>을 고른다.
      기준선 NVIDIA · foothold-v1 · foothold-v2 처럼 세대를 가로질러 놓을 수 있다.</p>
+  <div id="axistab"></div>
 </header>
 
 <div id="body"></div>
@@ -779,72 +780,22 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   /* ── 재생 묶기 ────────────────────────────────────────── */
-  const players = {};   // slot -> {video, ended}
-  let base = 0;         // 기준 시각 (초)
-  let running = false;
-  let raf = 0;
+  /* ★ 2026-09-29. 이 코드는 여기 안에만 있었다. 축 2 화면도 칸을 나란히
+   * 재생해야 해서 `gallery.js` 의 `G.syncGroup` 으로 옮겼다. 두 곳에 나눠
+   * 적으면 갈라진다 (`MODEL_ORDER` 로 한 번 당했다). 화면에 쓰는 글자는
+   * 여기서 정하고, 시계와 재생은 그쪽이 한다. */
+  const ended = {};          // slot -> 「영상 종료」 딱지
 
-  function everyVideo() {
-    return SLOTS.map(s => players[s]).filter(p => p && p.video.getAttribute('src'));
-  }
+  const group = G.syncGroup({
+    onClock: text => { if (ui) ui.clock.textContent = text; },
+    onButton: text => { if (ui) ui.button.textContent = text; },
+    onNote: text => {
+      if (ui) ui.note.textContent = text ? text.replace(' 이 재생을', ' 열이 재생을') : '';
+    },
+    onEnded: (slot, done) => { if (ended[slot]) ended[slot].hidden = !done; }
+  });
 
-  function longest() {
-    return Math.max(0, ...everyVideo().map(p => p.duration || 0));
-  }
-
-  function tick() {
-    if (!running) return;
-    const now = Math.max(0, ...everyVideo().map(p => p.video.currentTime));
-    base = now;
-    say('clock', G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
-
-    everyVideo().forEach(p => {
-      const done = p.duration && base >= p.duration - 0.04;
-      p.tagEnded.hidden = !done;
-    });
-
-    if (base >= longest() - 0.04) { stop(); return; }
-    raf = requestAnimationFrame(tick);
-  }
-
-  async function playAll() {
-    running = true;
-    const results = await Promise.all(everyVideo().map(async p => {
-      if (p.duration && p.video.currentTime >= p.duration - 0.04) return null;
-      const r = await G.play(p.video);
-      return r && r.error ? p.slot : null;
-    }));
-    const failed = results.filter(Boolean);
-    say('playnote', failed.length
-        ? failed.join(' · ') + ' 열이 재생을 시작하지 못했습니다' : '');
-    say('playbtn', '멈춤');
-    raf = requestAnimationFrame(tick);
-  }
-
-  /* `draw()` 첫 줄이 이것을 부른다. 그때는 조종간이 아직 없다. */
-  function say(id, text) {
-    const node = document.getElementById(id);
-    if (node) node.textContent = text;
-  }
-
-  function stop() {
-    running = false;
-    cancelAnimationFrame(raf);
-    everyVideo().forEach(p => p.video.pause());
-    say('playbtn', '함께 재생');
-  }
-
-  function seekAll(t) {
-    base = t;
-    everyVideo().forEach(p => {
-      p.video.currentTime = Math.min(t, Math.max(0, (p.duration || t) - 0.01));
-    });
-    say('clock', G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
-  }
-
-  function rateAll(x) {
-    everyVideo().forEach(p => { p.video.playbackRate = x; });
-  }
+  let ui = null;             // 조종간. `draw()` 가 만든다
 
   /* ── 그리기 ───────────────────────────────────────────── */
   /* **기본값은 주소에 안 적는다.** 그래야 갤러리에서 들어와도 주소가
@@ -865,8 +816,9 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   function draw() {
-    stop();
-    SLOTS.forEach(s => delete players[s]);
+    group.clear();
+    SLOTS.forEach(s => delete ended[s]);
+    ui = null;
     body.textContent = '';
 
     if (rejected.length) {
@@ -1007,31 +959,10 @@ document.addEventListener('DOMContentLoaded',function(){
         '. 같은 시험이 아니므로 수치를 그대로 빼면 시험 조건 변화를 모델 개선으로 오해합니다.', true));
     }
 
-    /* 조종간 */
-    const transport = G.el('div', { class: 'transport' }, [
-      G.el('button', { class: 'chip', type: 'button', id: 'playbtn', text: '함께 재생' }),
-      G.el('button', { class: 'chip', type: 'button', id: 'rewind', text: '처음으로' }),
-      G.el('span', { class: 'clock', id: 'clock', text: '0:00.0 / 0:00.0' }),
-      G.el('span', { class: 'flabel', text: '배속' })
-    ]);
-    [0.25, 0.5, 1, 2].forEach(x => {
-      const b = G.el('button', { class: 'chip', type: 'button',
-                                 'aria-pressed': x === 1 ? 'true' : 'false',
-                                 text: x + '×' });
-      b.addEventListener('click', () => {
-        transport.querySelectorAll('.chip[aria-pressed]').forEach(o => o.setAttribute('aria-pressed', 'false'));
-        b.setAttribute('aria-pressed', 'true');
-        rateAll(x);
-      });
-      transport.appendChild(b);
-    });
-    transport.appendChild(G.el('span', { id: 'playnote', class: 'tag warn' }));
-    body.appendChild(transport);
-
-    transport.querySelector('#playbtn').addEventListener('click', () => {
-      if (running) stop(); else playAll();
-    });
-    transport.querySelector('#rewind').addEventListener('click', () => { stop(); seekAll(0); });
+    /* 조종간. **축 2 화면과 같은 것을 쓴다** (`G.transport`). */
+    ui = G.transport(group);
+    body.appendChild(ui.row);
+    group.clock();
 
     /* 세 열 */
     const cmp = G.el('div', { class: 'cmp' });
@@ -1125,7 +1056,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if (clip) {
       // 열이 셋뿐이라 통째로 받아도 된다. 멈춰 있을 때 **첫 장면이 보여야**
       // 무엇을 견주는지 알 수 있다. `metadata` 만 받으면 검은 칸이 남는다.
-      const video = G.el('video', { preload: 'auto', playsinline: true, muted: true });
+      const video = G.video({ preload: 'auto' });
 
       // 첫 장이 그려지기 전에도 무엇을 견주는지 보이게 한다
       if (clip.poster) video.poster = G.at(man._folder + '/' + clip.poster);
@@ -1135,16 +1066,16 @@ document.addEventListener('DOMContentLoaded',function(){
        * 피라미드 컷은 첫 프레임에 지형이 아예 안 보인다
        * `확인됨` (2026-09-12 codex 7회차 · 표준편차 2.23). */
       if (clip.poster) video.poster = G.at(man._folder + '/' + clip.poster);
-      const ended = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
+      const tag = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
       slotBox.appendChild(video);
-      slotBox.appendChild(ended);
-      players[slot] = { slot: slot, video: video, duration: clip.seconds, tagEnded: ended };
+      slotBox.appendChild(tag);
+      ended[slot] = tag;
+      group.add(slot, video, clip.seconds);
       video.addEventListener('loadedmetadata', () => {
-        players[slot].duration = video.duration || clip.seconds;
         /* 표지가 있으면 굳이 첫 프레임으로 감을 필요가 없다. */
         if (!clip.poster && video.currentTime === 0) video.currentTime = 0.04;
       });
-      video.addEventListener('click', () => { if (running) stop(); else playAll(); });
+      video.addEventListener('click', () => group.toggle());
     } else {
       slotBox.appendChild(G.el('div', { class: 'state' }, [
         G.el('b', { text: ev ? '영상 없음' : (pair ? '미평가' : '비어 있음') }),
@@ -1166,6 +1097,16 @@ document.addEventListener('DOMContentLoaded',function(){
       ])
     ]));
     return col;
+  }
+
+  /* 축 탭. **규칙은 `gallery.js` 한 곳에 있다** (`G.axisTabs`). */
+  {
+    const asked = q.get('v');
+    const entry = (index.versions || []).find(v => v.version === asked)
+      || (index.versions || []).find(v => G.hasAxis2(v));
+    const tabs = G.axisTabs({ version: entry && entry.version,
+                              current: 'terrain', has2: G.hasAxis2(entry) });
+    if (tabs) document.getElementById('axistab').appendChild(tabs);
   }
 
   window.addEventListener('popstate', () => location.reload());

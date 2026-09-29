@@ -341,6 +341,55 @@ check('compare 가 G.defaultColumns 를 쓴다',
 check('compare 가 공유 계보 순서를 쓴다',
       csrc.indexOf('G.MODEL_ORDER') >= 0, true);
 
+/* ── 축 2 (2026-09-29 팀장 지시로 새로 난 축) ─────────────────
+ *
+ * **없어도 조용한 것을 막는다.** 축 2 는 자료가 있는 판에서만 탭이 뜬다.
+ * 그 「있을 때만」 이 「영영 안 뜸」 으로 조용히 바뀔 수 있어서 둘 다 센다.
+ */
+const a2src = fs.readFileSync(path.join(GAL, 'axis2', 'index.html'), 'utf8');
+
+check('축 2 화면이 있다', a2src.length > 1000, true);
+check('축 2 화면이 축 2 색인을 읽는다',
+      a2src.indexOf('foothold-gallery-axis2/') >= 0, true);
+check('축 2 화면이 통과·미달을 안 찍는다',
+      a2src.indexOf('찍지 않는다') >= 0, true);
+check('축 2 화면이 공유 계보 순서를 쓴다', a2src.indexOf('G.lineage') >= 0, true);
+check('축 2 화면이 공유 재생기를 쓴다', a2src.indexOf('G.syncGroup') >= 0, true);
+
+/* 탭 규칙. **`G.axisTabs` 를 실제로 불러서** 센다. 글자만 찾으면
+ * 규칙이 죽어도 통과한다 (내 시험이 그 부류로 여러 번 허위 통과했다). */
+const noData = G.axisTabs({ version: 'v1', current: 'terrain', has2: false });
+const hasData = G.axisTabs({ version: 'v2', current: 'terrain', has2: true });
+
+check('축 2 자료가 없으면 탭을 안 그린다', noData, null);
+check('축 2 자료가 있으면 탭이 둘이다', hasData && hasData.children.length, 2);
+check('탭 주소가 절대경로다',
+      hasData.children.map(c => c.attrs.href).filter(Boolean)
+        .every(h => h.indexOf('/gallery/') === 0), true);
+check('지금 보는 축은 링크가 아니다',
+      hasData.children.filter(c => c.tag === 'a').length, 1);
+
+/* `versions.json` 이 적어 준 것만 믿는가. */
+check('hasAxis2 는 색인의 index 를 본다', G.hasAxis2({ axis2: {} }), false);
+check('hasAxis2 는 index 가 있으면 참',
+      G.hasAxis2({ axis2: { index: 'v2/axis2.json' } }), true);
+check('hasAxis2 는 없는 것에 거짓', G.hasAxis2(null), false);
+
+/* 세 화면이 다 축 2 로 가는 길을 가졌나. */
+check('갤러리 첫 화면에 축 2 로 가는 길이 있다',
+      gsrc.indexOf('href="/gallery/axis2"') >= 0, true);
+check('view 에 축 탭 자리가 있다', vsrc.indexOf('id="axistab"') >= 0, true);
+check('compare 에 축 탭 자리가 있다', csrc.indexOf('id="axistab"') >= 0, true);
+
+/* 영상은 **성질로** 음소거해야 한다 (속성만으로는 자동재생이 막힌다). */
+const jssrc = fs.readFileSync(path.join(GAL, 'gallery.js'), 'utf8');
+check('G.video 가 muted 를 성질로 건다',
+      /v\.muted\s*=\s*true/.test(jssrc), true);
+[['view', vsrc], ['compare', csrc], ['축 2', a2src]].forEach(pair => {
+  check(pair[0] + ' 이 el(video) 를 직접 안 쓴다',
+        pair[1].indexOf("el('video'") >= 0, false);
+});
+
 console.log();
 console.log(fails ? ('** ' + fails + ' / ' + ran + ' 실패 **')
                   : (ran + ' / ' + ran + ' 통과'));

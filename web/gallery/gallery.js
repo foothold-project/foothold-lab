@@ -433,3 +433,208 @@ G.warn = function (text, bad) {
     G.el('span', { text: text })
   ]);
 };
+
+/* 영상 한 칸. **`muted` 는 속성만으로는 안 걸린다.**
+ *
+ * ★ 2026-09-29 실측. `createElement('video')` 로 만든 다음
+ * `setAttribute('muted','')` 를 하면 **속성은 true 인데 성질은 false** 다
+ * (`v.hasAttribute('muted')` true · `v.muted` false) `확인됨`.
+ * 속성은 파서가 만든 태그의 «처음 값» 만 정한다.
+ *
+ * 크롬의 자동재생 규칙은 «성질» 을 본다. 그래서 사람이 단추를 누르지 않은
+ * 재생은 전부 거절된다.
+ *
+ *     NotAllowedError: play() failed because the user didn't interact
+ *
+ * 사람이 누를 때는 그 누름이 허락이 되므로 화면은 멀쩡해 보인다. 그래서
+ * 아무도 못 봤다. 그리고 소리가 든 컷이 들어오면 **실제로 소리가 난다.**
+ * 여기 한 곳에서 성질로 건다.
+ */
+G.video = function (attrs) {
+  const v = G.el('video', Object.assign({
+    preload: 'auto', playsinline: true, muted: true
+  }, attrs || {}));
+  v.muted = true;                 /* 속성 말고 성질 */
+  v.defaultMuted = true;          /* 다시 읽어도 꺼진 채로 */
+  return v;
+};
+
+/* ── 여러 칸을 한 시계로 묶어 재생 ──────────────────────────
+ *
+ * ★ 2026-09-29. **규칙을 한 곳에만 둔다** (커널 철칙 4).
+ *
+ * 이 코드는 `compare/index.html` 안에만 있었다. 축 2 화면도 세 칸을 나란히
+ * 재생해야 하는데, 거기에 똑같은 것을 한 벌 더 적으면 **갈라진다.** 이미
+ * `MODEL_ORDER` 를 두 곳에 나눠 적어서 한 번 당했다.
+ *
+ * 쓰는 쪽은 칸을 `add` 로 넣고 단추를 `toggle`·`seek`·`rate` 에 건다.
+ * 글자를 어디에 쓸지는 `on*` 로 받는다. 이 코드가 DOM 을 찾지 않는다.
+ *
+ *   const g = G.syncGroup({ onClock: t => ..., onButton: t => ..., ... });
+ *   g.add('left', videoEl, 4.0);
+ *   playbtn.onclick = () => g.toggle();
+ *
+ * **`duration` 은 색인이 적어 준 값으로 먼저 잡고**, `loadedmetadata` 가
+ * 오면 실제 값으로 바꾼다. 안 그러면 시계가 0 에서 안 움직인다.
+ */
+G.syncGroup = function (opts) {
+  const o = opts || {};
+  const players = {};
+  let order = [];
+  let running = false, raf = 0, base = 0;
+
+  const live = () => order.map(k => players[k])
+    .filter(p => p && p.video.getAttribute('src'));
+
+  const longest = () => Math.max(0, ...live().map(p => p.duration || 0));
+
+  const clock = () => {
+    if (o.onClock) o.onClock(G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
+  };
+
+  function tick() {
+    if (!running) return;
+    base = Math.max(0, ...live().map(p => p.video.currentTime));
+    clock();
+
+    live().forEach(p => {
+      const done = !!(p.duration && base >= p.duration - 0.04);
+      if (o.onEnded) o.onEnded(p.key, done);
+    });
+
+    if (base >= longest() - 0.04) { stop(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  async function play() {
+    running = true;
+    /* `play()` 는 비동기로 거절될 수 있다. **어느 칸이 못 떴는지 적는다.** */
+    const results = await Promise.all(live().map(async p => {
+      if (p.duration && p.video.currentTime >= p.duration - 0.04) return null;
+      const r = await G.play(p.video);
+      return r && r.error ? p.key : null;
+    }));
+    const failed = results.filter(Boolean);
+    if (o.onNote) {
+      o.onNote(failed.length
+        ? failed.join(' · ') + ' 이 재생을 시작하지 못했습니다' : '');
+    }
+    if (o.onButton) o.onButton('멈춤');
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(raf);
+    live().forEach(p => p.video.pause());
+    if (o.onButton) o.onButton('함께 재생');
+  }
+
+  return {
+    /* 다시 그리기 전에 부른다. 안 부르면 사라진 칸이 시계에 남는다. */
+    clear() { stop(); order = []; Object.keys(players).forEach(k => delete players[k]); },
+
+    add(key, video, duration) {
+      players[key] = { key: key, video: video, duration: duration || 0 };
+      if (order.indexOf(key) < 0) order.push(key);
+      video.addEventListener('loadedmetadata', () => {
+        players[key].duration = video.duration || duration || 0;
+        clock();
+      });
+      return players[key];
+    },
+
+    playing() { return running; },
+    toggle() { if (running) stop(); else play(); },
+    play: play,
+    stop: stop,
+
+    seek(t) {
+      base = t;
+      live().forEach(p => {
+        p.video.currentTime = Math.min(t, Math.max(0, (p.duration || t) - 0.01));
+      });
+      clock();
+    },
+
+    rate(x) { live().forEach(p => { p.video.playbackRate = x; }); },
+    longest: longest,
+    clock: clock
+  };
+};
+
+/* 조종간 한 줄. 「함께 재생 · 처음으로 · 시계 · 배속」.
+ * **`compare` 와 축 2 화면이 같은 것을 쓴다.** 따로 그리면 갈라진다. */
+G.transport = function (group, extra) {
+  const btn = G.el('button', { class: 'chip', type: 'button', text: '함께 재생' });
+  const rew = G.el('button', { class: 'chip', type: 'button', text: '처음으로' });
+  const clock = G.el('span', { class: 'clock', text: '0:00.0 / 0:00.0' });
+  const note = G.el('span', { class: 'tag warn' });
+
+  const row = G.el('div', { class: 'transport' }, [
+    btn, rew, clock, G.el('span', { class: 'flabel', text: '배속' })
+  ]);
+
+  (extra && extra.rates || [0.25, 0.5, 1, 2]).forEach(x => {
+    const b = G.el('button', {
+      class: 'chip', type: 'button',
+      'aria-pressed': x === 1 ? 'true' : 'false', text: x + '×'
+    });
+    b.addEventListener('click', () => {
+      row.querySelectorAll('.chip[aria-pressed]')
+         .forEach(other => other.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      group.rate(x);
+    });
+    row.appendChild(b);
+  });
+
+  row.appendChild(note);
+  btn.addEventListener('click', () => group.toggle());
+  rew.addEventListener('click', () => { group.stop(); group.seek(0); });
+
+  return { row: row, button: btn, clock: clock, note: note };
+};
+
+/* ── 축 탭 ──────────────────────────────────────────────────
+ *
+ * ★ 2026-09-29 팀장 지시: 「gallery-v2 부터는 저속 영상이랑, 턴, 등 …
+ * 비교해서 볼 수 있게 … 이 후로는 축2에 대해서 더 확장이 될 예정이니,
+ * 평가 대상으로는 안해도 기록으로 남긴다」.
+ *
+ * 축이 둘이 됐다. 어느 화면에서도 같은 자리에서 갈아탈 수 있어야 한다.
+ * **주소는 절대경로로 적는다.** 이 화면들은 `/gallery/view` 처럼 슬래시
+ * 없이 서빙되므로 `axis2/` 같은 상대경로는 한 칸 위로 풀려 404 가 된다
+ * `확인됨` (갤러리 첫 화면에서 같은 실수를 한 적이 있다).
+ *
+ * `has2` 가 거짓이면 **탭을 아예 그리지 않는다.** 누르면 빈 화면이 나오는
+ * 탭을 두느니 없는 편이 낫다 (v1 판에는 축 2 자료가 없다).
+ */
+G.AXES = [
+  { id: 'terrain', label: '축 1 · 험지 통과', href: '/gallery/view' },
+  { id: 'command', label: '축 2 · 명령 응답', href: '/gallery/axis2' },
+];
+
+G.axisTabs = function (opts) {
+  const o = opts || {};
+  if (!o.has2) return null;
+
+  const wrap = G.el('div', { class: 'viewsw axistab' });
+
+  G.AXES.forEach(ax => {
+    const on = ax.id === o.current;
+    const href = ax.href + (o.version ? '?v=' + encodeURIComponent(o.version) : '');
+    const node = on
+      ? G.el('span', { class: 'rb on', text: ax.label, 'aria-current': 'page' })
+      : G.el('a', { class: 'rb', href: href, text: ax.label });
+    wrap.appendChild(node);
+  });
+
+  return wrap;
+};
+
+/* 그 판이 축 2 자료를 가졌나. **`versions.json` 이 적어 준 것만 믿는다.**
+ * 폴더 이름으로 추측하면 파일이 없는데 있다고 하게 된다. */
+G.hasAxis2 = function (entry) {
+  return !!(entry && entry.axis2 && entry.axis2.index);
+};

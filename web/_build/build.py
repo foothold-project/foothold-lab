@@ -177,6 +177,9 @@ OTHER_MADE = set(OTHER_MADE_SOURCE)
 GALLERY_VIEWER = [
     'gallery.js', 'gallery.css', 'index.html',
     'view/index.html', 'compare/index.html',
+    # 2026-09-29. 축 2 (명령 응답) 화면. 팀장 지시로 «평가 대상이 아니라
+    # 기록» 이지만 뷰어인 것은 같으므로 정본은 lab 이다.
+    'axis2/index.html',
     'test/terrain-rows.test.js',
 ]
 

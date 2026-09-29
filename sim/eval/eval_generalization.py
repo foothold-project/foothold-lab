@@ -217,6 +217,25 @@ def configure_evaluation(env_cfg, agent_cfg, envs_per_terrain):
     if terrain_gen is None:
         raise RuntimeError("Benchmark task does not use a TerrainGenerator.")
 
+    # ★ 2026-09-29 실측. **이 줄은 지형 «모양» 을 안 정한다.**
+    #
+    # `TerrainGeneratorCfg.seed` 는 `terrain_generator.py:141-148` 에서
+    # `self.np_rng` 하나만 만든다. 주석이 「전역 상태를 건드리지 않으려고
+    # 새 난수기를 만든다」고 적혀 있다. 그런데 **지형을 실제로 그리는
+    # 함수들은 전역 `np.random` 을 쓴다** `확인됨`.
+    #
+    #   hf_terrains.py    전역 np.random 12 곳 · cfg.seed 0 곳
+    #   mesh_terrains.py  전역 np.random  4 곳 · cfg.seed 0 곳
+    #   np_rng 가 쓰이는 곳: 색 · 하위지형 고르기 · 난이도. 모양은 아니다
+    #
+    # 그래서 이 값만 바꾸면 **지형이 한 점도 안 달라진다.** 실제로 이 값을
+    # 42 · 1 · 2 · 3 · 4 로 바꿔 열 판을 돌렸더니 1,000 에피소드가 전부
+    # 바이트로 같았다 (`sim/eval/results/20260929-terrain-instance`).
+    #
+    # 지형 모양을 실제로 정하는 것은 **전역 난수 상태** 이고, 그것은
+    # `env_cfg.seed` 가 정한다 (`ManagerBasedEnv` 가 초기화 때 건다).
+    # 즉 지형과 출발 흔들기는 **이 하네스에서 따로 뗄 수 없다.**
+    # 떼려면 Isaac Lab 쪽을 고쳐야 한다.
     terrain_gen.seed = args_cli.seed
     terrain_gen.curriculum = True
 
@@ -1900,6 +1919,12 @@ def main():
             "terrain_curriculum": terrain_cfg.curriculum,
             "terrain_border_width_changed_from": 10.0,
             "seed": args_cli.seed,
+
+            # **cfg 에서 되읽는다.** 다만 이 값은 지형 «모양» 을 안 정한다
+            # (위 `terrain_gen.seed` 자리의 주석). 모양을 정하는 것은 전역
+            # 난수이고 그것은 `seed` 다. 헷갈리지 않게 이름에 적어 둔다.
+            "terrain_cfg_seed_does_not_set_layout": terrain_cfg.seed,
+
             "spawn_xy_range_m": args_cli.spawn_xy_range,
             "yaw_range_deg": args_cli.yaw_range_deg,
             "joint_pos_scale": args_cli.joint_pos_scale,

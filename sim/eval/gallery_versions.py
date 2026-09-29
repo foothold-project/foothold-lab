@@ -112,6 +112,70 @@ def read_version(root, folder):
         return None, "%s 의 영상 %d개가 색인과 안 맞는다 (%s …)" % (
             folder, len(missing), missing[0])
 
+    # ── 축 2 색인이 옆에 있으면 같이 싣는다 ─────────────────────────
+    #
+    # ★ 2026-09-29 팀장 지시: 「gallery-v2 부터는 저속 영상이랑, 턴, 등 …
+    #   비교해서 볼 수 있게 … 평가 대상으로는 안해도 기록으로 남긴다」.
+    #
+    # **축 2 컷도 축 1 과 똑같이 잰다.** 있는지만 보면 0 바이트도 통과한다.
+    # 축 1 에서 그것으로 한 번 당했으므로 새 축에도 같은 자를 댄다.
+    axis2 = None
+    axis2_path = os.path.join(root, folder, "axis2.json")
+
+    if os.path.isfile(axis2_path):
+        a2 = json.load(io.open(axis2_path, encoding="utf-8"))
+
+        if not str(a2.get("schema", "")).startswith("foothold-gallery-axis2/"):
+            return None, "%s 의 axis2 schema 가 %s 다" % (folder, a2.get("schema"))
+
+        bad = []
+
+        for cell in a2.get("cells", []):
+            clip = cell.get("clip") or {}
+            p = os.path.join(root, folder, clip.get("file", ""))
+
+            if not clip.get("file") or not os.path.isfile(p):
+                bad.append("%s (없다)" % clip.get("file"))
+                continue
+
+            size = os.path.getsize(p)
+
+            if size <= 0 or size != clip.get("bytes"):
+                bad.append("%s (크기 %d, 색인은 %s)"
+                           % (clip["file"], size, clip.get("bytes")))
+                continue
+
+            want = clip.get("sha256")
+
+            if not (isinstance(want, str) and len(want) == 64
+                    and all(c in "0123456789abcdef" for c in want)):
+                bad.append("%s (색인에 쓸 만한 sha256 이 없다)" % clip["file"])
+                continue
+
+            if sha256_of(p) != want:
+                bad.append(clip["file"] + " (내용이 색인과 다르다)")
+                continue
+
+            poster = clip.get("poster")
+
+            if not poster or not os.path.isfile(
+                    os.path.join(root, folder, poster)):
+                bad.append("%s (포스터가 없다)" % clip["file"])
+
+        if bad:
+            return None, "%s 의 축 2 컷 %d개가 색인과 안 맞는다 (%s …)" % (
+                folder, len(bad), bad[0])
+
+        axis2 = {
+            "index": "%s/axis2.json" % folder,
+            "label": a2.get("label"),
+            "judged": bool(a2.get("judged")),
+            "badge": a2.get("badge"),
+            "cells": a2.get("counts", {}).get("cells"),
+            "clips": a2.get("counts", {}).get("clips"),
+            "scenarios": a2.get("counts", {}).get("scenarios"),
+        }
+
     release = {}
     release_path = os.path.join(root, folder, "release.json")
 
@@ -132,6 +196,9 @@ def read_version(root, folder):
         "evaluations": data["counts"]["evaluations"],
         "terrains": data["counts"]["terrains"],
     }
+
+    if axis2:
+        entry["axis2"] = axis2
 
     for key in RELEASE_KEYS:
         if release.get(key):
@@ -180,6 +247,38 @@ def main():
 
     data, skipped = build(args.root)
     out = args.out or os.path.join(args.root, "versions.json")
+
+    # ── 이미 올라가 있던 판이 «빠지는» 것은 사고다 ──────────────────
+    #
+    # ★ 2026-09-29. 축 2 관문을 깨뜨려 보다가 찾았다.
+    #
+    # 덜 올라간 «새» 판이 목록에서 빠지는 것은 정한 대로다
+    # (`docs/research/20260911-eval-protocol-v2.md` 4 번). 그런데 **이미
+    # 배포돼 있던 판**이 빠질 때도 같은 길로 조용히 빠지고 종료 0 이 나온다.
+    # 컷 하나의 해시가 어긋나면 갤러리 한 판이 통째로 사라지는데 빌드는
+    # 「됐다」고 찍는다.
+    #
+    # 실측: v2 의 축 2 컷 하나를 망가뜨리자 versions.json 이 판 2 -> 1 로
+    # 줄고 종료코드는 0 이었다 `확인됨`.
+    #
+    # 「없어진 것」과 「원래 없던 것」은 다르다. 앞의 것만 막는다.
+    had = set()
+
+    if os.path.isfile(out):
+        try:
+            prev = json.load(io.open(out, encoding="utf-8"))
+            had = {v.get("version") for v in prev.get("versions", [])}
+        except Exception:
+            had = set()
+
+    lost = sorted(had - {v["version"] for v in data["versions"]})
+
+    if lost:
+        print("  [X] 이미 올라가 있던 판이 빠집니다: %s" % ", ".join(lost))
+        for why in skipped:
+            print("      %s" % why)
+        print("  versions.json 을 쓰지 않았습니다. 원인을 고치고 다시 도십시오.")
+        raise SystemExit(1)
 
     with io.open(out, "w", encoding="utf-8") as handle:
         json.dump(data, handle, ensure_ascii=False, indent=2)

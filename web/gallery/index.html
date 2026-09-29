@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=66c4e0c2').then(function(r){
+    fetch('/assets/search-index.json?v=eb8c06fd').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -456,6 +456,7 @@ document.addEventListener('DOMContentLoaded',function(){
          그런거야?」 · 내 실수다). head 의 `gallery.css` 도 절대경로다. -->
     <a class="btn go" href="/gallery/compare">세 열로 견주기</a>
     <a class="btn" href="/gallery/view">지형 격자로 보기</a>
+    <a class="btn" href="/gallery/axis2">축 2 · 명령 응답</a>
   </div>
 </header>
 
@@ -502,7 +503,12 @@ document.addEventListener('DOMContentLoaded',function(){
       G.el('span', {}, [G.el('b', { text: String(v.evaluations) }), G.el('span', { text: ' 평가 칸' })]),
       G.el('span', {}, [G.el('b', { text: String(v.terrains) }), G.el('span', { text: ' 지형' })]),
       G.el('span', { text: '난이도 ' + v.difficulty }),
-      G.el('span', { text: '평가 ' + (v.evaluated_at ? v.evaluated_at.slice(0, 10) : '미기록') })
+      G.el('span', { text: '평가 ' + (v.evaluated_at ? v.evaluated_at.slice(0, 10) : '미기록') }),
+      /* 축 2 가 있는 판만. **`versions.json` 이 적어 준 것만 믿는다.** */
+      G.hasAxis2(v)
+        ? G.el('span', {}, [G.el('b', { text: String(v.axis2.cells) }),
+                            G.el('span', { text: ' 축 2 칸' })])
+        : null
     ]);
     card.appendChild(stats);
 
@@ -527,6 +533,13 @@ document.addEventListener('DOMContentLoaded',function(){
       G.el('a', { class: 'btn',
                   href: G.at('compare/') + '?v=' + encodeURIComponent(v.version),
                   text: '판 비교' }),
+      /* **축 2 · 명령 응답.** 팀장 지시로 «평가 대상이 아니라 기록» 이므로
+       * 성공률 단추와 같은 무게로 두지 않는다 (`btn go` 를 안 쓴다). */
+      G.hasAxis2(v)
+        ? G.el('a', { class: 'btn',
+                      href: '/gallery/axis2?v=' + encodeURIComponent(v.version),
+                      text: '축 2 · 명령 응답 ' + v.axis2.clips + '컷' })
+        : null,
       v.report ? G.el('a', { class: 'btn', href: v.report, text: '종합보고서' }) : null
     ]);
     card.appendChild(links);

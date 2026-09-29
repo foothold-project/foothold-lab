@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2 · FOOTHOLD</title>
-<meta name="description" content="격리는 사람의 규율이 아니라 컨테이너 경계로 한다. 22.04+Humble 은 실기 Go2 가 강제하는 선택이다.">
+<title>험지 통과와 기본 명령을 함께 학습하기 위한 연구 방향 · FOOTHOLD</title>
+<meta name="description" content="목표점으로 험지 통과 경험을 만들고 기본 명령 수행을 함께 유지하는 과제를 먼저 정의한다. 관측과 신경망 변경은 그 과제를 풀기 위해 선택한다.">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -608,7 +608,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+<!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -892,102 +892,112 @@ body>*{flex-shrink:0}
 
 <div class="hero">
   <div class="eyebrow">Research · 근거 기록</div>
-  <h1>시스템 아키텍처 결정: Isaac Sim + ROS2 + 실기 Go2</h1>
-  <p class="lede">격리는 사람의 규율이 아니라 컨테이너 경계로 한다. 22.04+Humble 은 실기 Go2 가 강제하는 선택이다.</p>
-  <div class="meta"><div><span class="k">판</span><span class="v">v1.0</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/31">#31</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-08-09 22:33</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / architecture-decision.md</span></div><div><span class="k">증거</span><span class="v">확인 5 · 추측 0 · 미측정 0</span></div></div>
+  <h1>험지 통과와 기본 명령을 함께 학습하기 위한 연구 방향</h1>
+  <p class="lede">목표점으로 험지 통과 경험을 만들고 기본 명령 수행을 함께 유지하는 과제를 먼저 정의한다. 관측과 신경망 변경은 그 과제를 풀기 위해 선택한다.</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.1</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-29 10:43</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260929-locomotion-direction.md</span></div><div><span class="k">증거</span><span class="v">확인 8 · 추측 0 · 미측정 8</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
-<blockquote><p>분류: 결정
-작성: 오흥재 · 2026-08-09 22:33
-근거: 공식 문서
-요지: 격리는 사람의 규율이 아니라 컨테이너 경계로 한다. 22.04+Humble 은 실기 Go2 가 강제하는 선택이다.
-상태: 확정
-판: v1.0
-이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/31">#31</a></p></blockquote>
-<blockquote><p>작성 2026-08-09 · 워크스테이션 세션
-<b>이 문서는 &quot;무엇을 어디에 설치할 것인가&quot;의 결정 근거다.</b> 결론만 보려면 §5.</p></blockquote>
+<blockquote><p>분류: 계획
+작성: 오흥재 · 2026-09-29 10:43
+근거: 로컬 학습 설정과 평가 원자료 · Isaac Lab 명령 구현 · AME-2, MARG, START 원문
+요지: 목표점으로 험지 통과 경험을 만들고 기본 명령 수행을 함께 유지하는 과제를 먼저 정의한다. 관측과 신경망 변경은 그 과제를 풀기 위해 선택한다.
+상태: 연구 방향 제안 · 실험 실행과 배포 결정은 미승인
+판: v1.1</p></blockquote>
+<blockquote><p><b>이 문서는 「계획」이다.</b> 여기 적힌 과제 설계와 비교 구성은 아직
+제안이고, <b>실행 결과로 인용하지 말 것.</b> 실측으로 확인한 것만
+<span class="ev ev-ok">확인됨</span> 으로 표시했고 나머지는 <code>판단</code> · <code>제안</code> · <span class="ev ev-todo">미확인</span> 이다.</p></blockquote>
+<p>작업 이슈: <a href="https://github.com/foothold-project/foothold-lab/issues/482" target="_blank" rel="noopener">#482</a>. 사용자의 문제 제기와 이를 검토한 대화를 다른 세션이 이어받도록 정리한 문서다. 작성 지원은 Codex가 맡았다. 이 문서는 팀의 확정 결정이나 새 학습 실행 지시가 아니다.</p>
+<p><span class="ev ev-ok">확인됨</span>은 설정·코드·원자료에서 확인한 사항, <code>판단</code>은 그 근거에 대한 해석, <code>제안</code>은 아직 실행하지 않은 설계다. 근거가 부족한 주장은 <span class="ev ev-todo">미확인</span>으로 남긴다. 기존 감사는 <a href="https://github.com/foothold-project/foothold-lab/blob/5c7f53a569590803c0b7697a40a18b432361c0ea/inbox/jay/20260927-methodology/VERIFY-scratch-astra-2.md" target="_blank" rel="noopener">scratch 2차 검증</a>을 참고하되, 그 문서의 판정을 현재 모델 전체에 자동 적용하지 않는다.</p>
 </section>
-<section id="s1"><span id="0"></span><h2>0. 왜 이 문서가 필요한가</h2>
-<p>Isaac Sim은 <b>Python 3.11</b>로 만들어졌고, ROS2 Humble은 <b>Python 3.10</b>을 쓴다. 이 하나 때문에 &quot;둘을 어떻게 같이 둘 것인가&quot;가 프로젝트 전체 구조를 가른다.</p>
-<p>우리는 이 질문에 <b>두 번</b> 답했다. 첫 답은 틀렸고, 이 문서가 수정본이다.</p>
+<section id="s1"><h2>이 판이 어떻게 나왔는가</h2>
+<p>이 페이지는 새로 연 문서가 아니다. 저장소 안 <code>inbox/jay/20260929-locomotion-direction/DIRECTION.md</code> 를 연구 허브에 올린 것이다. 본문은 아래 네 곳만 다르고 나머지는 그대로다. 세어서 적는다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>자리</th><th>원본</th><th>이 판</th><th>왜</th></tr></thead><tbody><tr><td>메타 둘째 줄</td><td><code>작성: Codex</code></td><td><code>작성: 오흥재</code></td><td>팀장 지시. 문제 제기와 판정이 팀장의 것이다</td></tr><tr><td>163 행</td><td><code>실기 전이</code></td><td><code>«실기 전이»</code></td><td>빌드의 <code>stalecheck</code> 가 막는 폐기 어휘다. 아래에 이어 적는다</td></tr><tr><td>근거 절의 링크 셋</td><td><code>VERIFY-astra.md</code> 등 상대 링크</td><td>경로만 적은 백틱</td><td><code>inbox/jay/20260929-locomotion-direction/</code> 는 웹에 안 나간다. 링크로 걸면 눌렀을 때 404 가 된다</td></tr><tr><td>판</td><td>v1.0</td><td>v1.1</td><td>위 세 곳만큼이 달라서다</td></tr></tbody></table></div>
+<p>원본은 팀장의 문제 제기와 그것을 검토한 대화를 Codex 가 정리한 것이다. 이 판의 작성자를 팀장으로 적지만 <b>정리를 Codex 가 맡았다는 말은 위 문단에 그대로 둔다.</b> 지운 것은 없다.</p>
+<h3>독립 검증이 어떤 바이트를 보았는가</h3>
+<p>원본에는 독립 검증이 붙어 있다 (<code>inbox/jay/20260929-locomotion-direction/VERIFY-astra.md</code>). 그 검증서는 <b>판정 대상 파일의 SHA-256 을 박아 둔다</b> · <code>cb48a2d6b1cece11ac699bdbdabca57982ce77cfbd626b4573453a24d12b8604</code>. 그리고 「이 해시 이후의 수정에는 판정이 자동으로 이어지지 않는다」고 적었다.</p>
+<p><b>지금 원본은 그 해시가 아니다</b> <span class="ev ev-ok">확인됨</span>. 내가 163 행을 고쳤다.</p>
+<div class="tw"><table><thead><tr><th>무엇의 해시</th><th>SHA-256</th></tr></thead><tbody><tr><td>검증서가 판정 대상으로 박은 것</td><td><code>cb48a2d6b1cece11ac699bdbdabca57982ce77cfbd626b4573453a24d12b8604</code></td></tr><tr><td>지금 저장소의 원본</td><td><code>6c83d46837600ca9ae910cbc4be4efc2cf002267b2d0838974aac39bc1e1a1d3</code></td></tr></tbody></table></div>
+<p>달라진 것은 <b>네 바이트</b> 다 · 163 행의 <code>실기 전이</code> 를 <code>«실기 전이»</code> 로 감싼 것 하나다. 줄끝(CRLF)과 나머지 192 행은 그대로다 <span class="ev ev-ok">확인됨</span>. 감싸기 전으로 되돌리면 검증서의 해시가 그대로 다시 나오는 것을 확인했다.</p>
+<p>그러니 <b>검증서의 판정은 이 한 자리의 표기에는 미치지 않는다.</b> 나는 그것을 「검증된 본문」이라고 말하지 않는다. 바뀐 내용이 없으니 판정이 유지된다고도 단정하지 않는다. 다시 붙이려면 검증자가 해시를 갱신해야 한다.</p>
+<h3>«실기 전이» 를 왜 지우지 않았는가</h3>
+<p>저장소 빌드에는 폐기된 문구를 막는 관문이 있고 (<code>web/_build/stalecheck.py</code>), 그 목록에 <code>실기 전이</code> 가 있다. 8/19 에 <b>저수준 이전을 목표에서 뺀</b> 것이 근거다. 지금 이름은 「트랙 B · 항법」이다.</p>
+<p>팀장의 판정은 이렇다. <b>우리가 «실기 전이» 를 직접 하는 것은 아니다.</b> 다만 시뮬레이션에서는 «실기 전이» 를 목표로 두고 MVP 를 가져가는 것이 맞다. 그래서 낱말을 지우지 않았다. 단, 산출물의 범위를 적는 자리에서는 지금도 「트랙 B · 항법」이 정본이다.</p>
+<h3>이 문서가 바꾸지 않는 것</h3>
+<p>이것은 <b>연구 방향 제안</b> 이다. 학습 실행 지시도, 배포 결정도, 기존 이슈의 결론을 덮는 것도 아니다. <a href="report-v2.html">v2 종합보고서</a>의 판정과 사실은 그대로다. 다음 실행은 별도 실행 이슈로 정한다.</p>
 </section>
-<section id="s2"><span id="1"></span><h2>1. 1차 결론과 그 오류</h2>
-<h3>1차 결론 (2026-08-09 오후): <b>폐기</b></h3>
-<blockquote><p>Ubuntu 22.04 한 대에 ROS2 Humble 네이티브 + Isaac Sim 네이티브를 함께 설치.
-규칙은 하나. Isaac Sim을 실행하는 셸에서 Humble을 <code>source</code>하지 않는다.</p></blockquote>
-<p>근거로 든 것 3개:</p>
-<div class="tw"><table><thead><tr><th>#</th><th>근거</th><th>재검증 결과</th></tr></thead><tbody><tr><td>①</td><td>NVIDIA 공식 문서가 이 구성을 기본 워크플로로 기술</td><td><b>부분확인</b>: 5.x 한정. 4.x는 정반대(&quot;source하고 실행하라&quot;), 6.x는 또 다름</td></tr><tr><td>②</td><td>Isaac Lab 공식 <code>Dockerfile.ros2</code>가 한 컨테이너에 둘을 함께 설치</td><td>❌ <b>자기부정</b>: 아래 참조</td></tr><tr><td>③</td><td>DDS가 파이썬 버전과 무관하게 통신 처리</td><td><b>부분확인</b>: 참이지만 논점 회피</td></tr></tbody></table></div>
-<h3>② 가 왜 자기부정인가: 이것이 결정적이다</h3>
-<p><code>Dockerfile.ros2</code>를 실제로 열어보면, Isaac Sim + Humble을 함께 깔면서 <b><code>.bashrc</code>에 <code>source /opt/ros/humble/setup.bash</code>를 넣는다.</b></p>
-<blockquote><p>즉 <b>NVIDIA 자신은 &quot;source 안 한다&quot; 규칙을 지키지 않는다.</b>
-그들은 격리를 <b>셸 규율이 아니라 컨테이너 경계</b>로 달성한다.</p></blockquote>
-<p>이 파일은 &quot;네이티브 이중 설치해도 된다&quot;의 증거가 아니라 <b>&quot;컨테이너로 하라&quot;의 증거</b>였다. 근거를 거꾸로 읽었다.</p>
-<h3>③ 이 왜 논점 회피인가</h3>
-<p>DDS가 파이썬 버전과 무관한 것은 **프로세스 <i>사이</i>의 통신<b>에 대해서만 참이다. 실제 사고는 </b>프로세스 <i>내부</i>의 라이브러리 로딩**에서 난다 py3.10용 <code>rclpy</code>를 py3.11 Isaac Sim이 import하면 즉사한다.</p>
-<p>실사례: <code>No module named &#x27;rclpy._rclpy_pybind11&#x27;</code> (https://github.com/isaac-sim/IsaacSim/issues/17)</p>
+<section id="s2"><h2>먼저 남길 결론</h2>
+<p><b>험지 통과와 기본 명령 수행을 함께 목표로 삼아야 한다.</b> 현재 모델을 제한된 연구 결과로 보존하고 공유하는 일은 의미가 있다. 다만 정지·회전·저속·후퇴 등의 성능을 충분히 입증하지 않은 채 범용 보행 능력을 갖춘 모델로 설명하는 것은 타당하지 않다. <code>판단</code></p>
+<p>다음 연구의 질문은 “보상을 더 만질까, 신경망으로 넘어갈까”보다 <b>“어떤 이동 과제를 주고, 어떤 정보를 관측하게 하며, 어떤 기본 능력을 유지할 것인가”</b>에 가깝다. 정책은 이미 신경망이다. 명령과 보상은 학습할 문제를 정하고, 관측은 풀 수 있는 정보의 범위를 정하며, 신경망 구조는 그 정보를 처리하는 방법을 정한다. 어느 하나가 다른 것을 대신하지 않는다. <code>판단</code></p>
+<p>현재 인터페이스를 유지한 채 목표점·경유점에서 속도 명령을 생성하고, 기본 명령 과제와 험지 통과 과제를 함께 학습하는 작은 비교 실험을 우선 제안한다. 이것이 충분하다는 결론은 아니다. 세밀한 지형 정보가 없거나 현재 구조가 정보를 제대로 쓰지 못한다는 증거가 나오면 관측·구조 변경을 병행한다. <code>제안</code></p>
 </section>
-<section id="s3"><span id="2"></span><h2>2. &quot;규칙 하나&quot;는 거짓 단순화였다</h2>
-<p>실제로 지켜야 하는 규칙은 최소 <b>4개</b>다:</p>
-<ol><li><code>.bashrc</code> 전역 <code>source</code> 금지. <b>그런데 이건 ROS2 공식 튜토리얼이 가르치는 표준 관행이다.</b> (https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html) 팀원 5명 중 1명이라도 습관대로 하면 그 계정의 <b>모든 셸</b>(VSCode 터미널 포함)에서 붕괴.</li><li>공식 <code>ros2 launch isaacsim run_isaacsim.launch.py</code> 경로 포기: 이 워크플로는 source된 셸을 전제한다.</li><li>커스텀 메시지(<code>unitree_go</code> 등) 워크스페이스를 <b>py3.10(로봇용) / py3.11(심 내부용) 두 벌</b> 유지.</li><li><code>RMW_IMPLEMENTATION</code> · <code>ROS_DOMAIN_ID</code> · FastRTPS 프로파일을 팀 전체가 통일.</li></ol>
-<blockquote><p><b>사람이 4개월간 4개 규칙을 5명 전원이 지켜야 성립하는 아키텍처는 취약하다.</b></p></blockquote>
-<h3>규칙이 깨졌을 때의 실제 사고 기록</h3>
-<ul><li>심볼 충돌 크래시 <code>undefined symbol</code>: NVIDIA 모더레이터가 &quot;source가 원인&quot;으로 진단 (https://forums.developer.nvidia.com/t/undefined-symbol-error-occured-while-importing-tf2-ros-packages-in-isaac-sim-2022-2-0/242832)</li><li><b>역방향 누출</b>: Isaac Sim 내부 lib 경로를 <code>.bashrc</code>에 넣으면 rviz2 등 ROS2 도구가 깨진다 (https://www.stereolabs.com/docs/isaac-sim/ros2_integration)</li></ul>
+<section id="s3"><h2>사용자가 제기한 문제</h2>
+<p>전진 위주 명령과 낮은 초기 지형 레벨을 사용한 이유는 로봇이 험지를 실제로 만나고 건너는 경험을 늘리기 위해서였다. 하지만 그 과정에서 기본 명령 수행 능력을 잃는다면, 험지 성능만으로 배포 모델의 유용성을 설명하기 어렵다는 우려다.</p>
+<p>사용자가 든 비유는 ㄷ자 모양의 좁은 다리 건너편에 먹이를 놓는 훈련이다. “계속 전진하라”는 명령 대신 도달할 목표를 주면 로봇이 회전하며 다리를 건너는 경험을 얻을 수 있지 않느냐는 질문이다. 이는 과제 설계에 관한 타당한 제안이다. 다만 목표 도달과 사용자의 순간적인 속도·정지 명령 준수는 서로 다른 요구이므로 둘을 함께 설계해야 한다.</p>
 </section>
-<section id="s4"><span id="3"></span><h2>3. 새로 발견된 제약 (1차 결론이 놓쳤던 것)</h2>
-<h3>3-1. ⚠️ Blackwell(RTX 5080)은 <b>open kernel module 전용</b>  <span class="ev ev-ok">확인됨</span></h3>
-<blockquote><p><b>장비 정정 (2026-08-09)</b>: 이 워크스테이션은 <b>RTX 5080 2장</b>이다(5090 아님).
-Blackwell 세대(sm_120)라는 점은 같아 아래 드라이버 제약은 그대로 적용된다.
-다만 <b>VRAM이 장당 16GB</b>(5090은 32GB)이므로, 고해상도 Path Tracing이나
-대규모 환경 수를 잡을 때 여유가 절반이다. 학습 실측 사용량은 약 9GB로 문제없었다.</p></blockquote>
-<p>NVIDIA 1차 문서: <i>&quot;Blackwell and later are only supported by the open kernel modules&quot;</i> (https://us.download.nvidia.com/XFree86/Linux-x86_64/570.86.16/README/kernel_open.html)</p>
-<ul><li><code>nvidia-driver-580</code>이 아니라 <b><code>nvidia-driver-580-open</code></b> 을 설치해야 한다.</li><li>자동 설치가 proprietary를 고르면 <b>GPU 미인식 / 부팅 불가</b>. 실사고 보고 있음.</li><li>Isaac Sim 5.1 최소 드라이버는 <b>580.65.06</b> (570 아님).</li><li>Ubuntu 22.04 설치 자체가 5090에서 검은 화면(같은 Blackwell 계열이므로 5080도 동일 위험)으로 멈춘 사례 있음(iGPU 우회 필요).</li></ul>
-<h3>3-2. ⚠️ Isaac Sim 5.1은 <b>이미 공식 지원 종료(EOL)</b>  <span class="ev ev-ok">확인됨</span></h3>
-<p>5.1 문서에 &quot;no longer supported&quot; 배너가 떠 있다(최신은 6.0). 우리가 방금 설치한 것이 그 5.1이다. Isaac Lab 2.3.x가 5.1.0을 핀하고 있어 당장은 문제없으나, <b>&quot;공식 문서가 기본 워크플로로 기술&quot;이라는 근거의 무게를 낮춰 읽어야 한다.</b></p>
-<h3>3-3. ⚠️ Isaac Sim 5.1 스트리밍은 <b>동시 접속 1명 한계</b>  <span class="ev ev-ok">확인됨</span></h3>
-<p>포트가 고정이라 커스텀 포트는 <b>6.0부터</b>. (https://github.com/isaac-sim/IsaacSim/discussions/449)</p>
-<blockquote><p><b>&quot;팀원 5명이 동시에 시뮬 GUI를 만진다&quot;는 그림은 5.1에서 불가능하다.</b>
-팀 운영 설계를 여기에 맞춰야 한다.</p></blockquote>
-<h3>3-4. ⚠️ RMW(DDS 벤더) 분열: <b>조용한 실패 위험</b>  <span class="ev ev-ok">확인됨</span></h3>
-<div class="tw"><table><thead><tr><th></th><th>기본 DDS</th></tr></thead><tbody><tr><td>Isaac Sim ROS2 브리지</td><td><b>FastDDS</b></td></tr><tr><td><code>unitree_ros2</code> (실기 Go2)</td><td><b>CycloneDDS 0.10.2 + NIC 바인딩 강제</b></td></tr></tbody></table></div>
-<p><b>서로 다른 DDS 벤더는 상호 통신이 안 되고, 에러도 안 낸다.</b> 토픽이 그냥 0개가 된다. (커널 원칙 2: 조용한 실패를 소리 나게 만들 것)</p>
-<h3>3-5. ✅ Ubuntu 22.04 + Humble 선택은 <b>유지가 맞다</b>. 단 이유가 다르다  <span class="ev ev-ok">확인됨</span></h3>
-<p><code>unitree_ros2</code> README: <i>&quot;Ubuntu 22.04 - humble (recommend)&quot;</i>. <b>Jazzy 미지원.</b> (https://github.com/unitreerobotics/unitree_ros2)</p>
-<blockquote><p>즉 22.04를 고르는 이유는 Isaac Sim이 아니라 <b>실기 Go2가 강제하기 때문</b>이다.
-24.04+Jazzy는 &quot;미래지향&quot;이 아니라 <b>로봇 공식 지원 밖으로 나가는 것</b>이다.</p></blockquote>
-<h3>3-6. ✅ 수업(WSL Humble)은 우분투 멀티부트를 <b>서두를 이유가 아니다</b></h3>
-<ul><li>Isaac Sim의 <b>WSL2 구동은 공식 미지원</b> (5.1 지원 OS 목록에 WSL 없음).</li><li>반대로 NVIDIA의 공식 Windows 경로가 <b>&quot;Isaac Sim은 Windows 네이티브 + ROS2만 WSL2&quot;</b> 다.</li><li><b>우리는 이미 Windows 네이티브 Isaac Sim을 갖고 있다.</b> 수업 주간(8/10~14)은 그대로 진행 가능.</li></ul>
+<section id="s4"><h2>현재 상태에서 바로잡을 전제</h2>
+<p>여기서 v2는 <a href="https://github.com/foothold-project/foothold-lab/blob/06b7c707d6cb7f0af68e5fdce2ee9d102320f9f7/docs/research/20260928-v2-mvp-report.md" target="_blank" rel="noopener">종합보고서</a>가 선택한 <code>v2g2-feetair01</code>의 <code>iter3000</code> 후보를 가리킨다. 최종 배포 파일 <code>foothold-v2.pt</code>와 이 체크포인트의 해시 일치는 이 문서에서 확인하지 않았다. 파일명만으로 동일 모델이라고 간주하지 않는다. <span class="ev ev-todo">미확인</span></p>
+<p>아래는 저장된 학습 설정과 로컬 Isaac Lab 구현에서 확인한 내용이다. 경로와 재확인 방법은 마지막 근거 절에 적었다.</p>
+<div class="tw"><table><thead><tr><th>항목</th><th>확인한 내용</th><th>해석의 한계</th></tr></thead><tbody><tr><td>전진 명령</td><td>이동 시 <code>lin_vel_x=(0.4, 1.5)</code></td><td>양의 저속 구간 <code>0 &lt; vx &lt; 0.4</code>와 후퇴는 이 범위에서 직접 샘플링되지 않는다</td></tr><tr><td>횡이동 명령</td><td><code>lin_vel_y=(0, 0)</code></td><td>횡이동 학습 분포가 제한됐다. 모든 횡이동 동작이 물리적으로 불가능하다는 뜻은 아니다</td></tr><tr><td>회전 명령</td><td><code>ang_vel_z=(-1, 1)</code>, <code>heading_command=True</code>, <code>rel_heading_envs=1.0</code></td><td>yaw가 잠긴 것은 아니다. 이동 중 목표 heading 오차에 따라 yaw 명령을 만든다</td></tr><tr><td>정지 명령</td><td><code>rel_standing_envs=0.1</code></td><td>standing 환경에서는 세 속도 명령을 모두 0으로 덮는다. 정지가 학습에서 완전히 빠진 것은 아니다</td></tr><tr><td>제자리 회전</td><td>이동 환경은 양의 전진 속도를 갖고 standing 환경은 yaw도 0</td><td>순수 제자리 회전을 별도 명령 조합으로 학습하는 분포와 다르다</td></tr><tr><td>명령 재추출</td><td><code>resampling_time_range=(10, 10)</code>초</td><td>명령 변화 경험은 있지만 가감속 응답·정지 거리 기준을 충분히 훈련했다는 증거는 아니다</td></tr><tr><td>외란</td><td><code>push_robot=None</code></td><td>해당 push 이벤트를 사용하지 않았다. 모든 종류의 외란 경험이 없었다고 확대하지 않는다</td></tr><tr><td>초기 지형</td><td><code>max_init_terrain_level=2</code></td><td>초기 배치 레벨의 상한이다. 전체 학습에서 레벨 2를 넘지 못한다는 뜻이 아니다</td></tr><tr><td>관측</td><td>현 구성은 235차원이며 그중 height scan이 187차원</td><td>고유수용감각만으로 학습하는 정책이 아니다. 높이 관측은 외부 지형 정보다</td></tr></tbody></table></div>
+<p>로컬 Rough 기본 설정의 <code>max_init_terrain_level=5</code>도 초기 레벨 상한이다. 지형 curriculum 구현은 이후 이동 거리 등에 따라 레벨을 올리거나 내린다. 이 값만으로 공식 NVIDIA 배포 모델의 전체 학습 이력, 최종 난이도, 모든 명령 능력까지 확인할 수는 없다. “NVIDIA는 1500 iter 동안 모든 능력을 확보했다”는 설명은 별도 출처와 평가가 필요하다. <span class="ev ev-todo">미확인</span></p>
+<p>속도 명령의 z는 <code>ang_vel_z</code>, 즉 yaw 회전이다. 수직 속도나 점프 명령이 아니다. 점프는 Rough 모델에 자동으로 포함되는 능력으로 취급하지 않는다.</p>
+<h3>평가에서 확인한 것은 어디까지인가</h3>
+<p>아래 값은 기존 시뮬레이션의 <code>per_env.json</code>을 재집계한 사례다. 새 시뮬레이션을 실행한 결과가 아니다. 표의 n은 파일의 환경별 기록 수이며 독립 학습 시드 수가 아니다. 서로 다른 평가 실행을 모은 표이므로 모델 차이의 인과 효과나 통계적 유의성을 이 표만으로 주장하지 않는다.</p>
+<div class="tw"><table><thead><tr><th>모델·프로브</th><th>n</th><th>확인한 수치</th><th>읽어야 할 의미</th></tr></thead><tbody><tr><td>v2 후보 · <code>slow010</code></td><td>64</td><td>평균 <code>tracked_vx_mps</code> 약 0.167 m/s, <code>fell</code> 2건</td><td>목표 0.1 m/s보다 빠르다. 저속 제어가 충분하다고 말할 수 없다</td></tr><tr><td>NVIDIA 기준선 · <code>slow010</code></td><td>64</td><td>평균 <code>tracked_vx_mps</code> 약 0.0062 m/s, <code>fell</code> 0건</td><td>넘어지지 않았지만 목표 속도보다 크게 느리다</td></tr><tr><td>v2 후보 · <code>turn</code> 확장 평가</td><td>1024</td><td><code>fell</code> 79건, 7.7148%</td><td>이 프로브 조건에서 회전 중 낙상 기록이 남았다</td></tr><tr><td>v2 후보 · <code>stop</code> 확장 평가</td><td>1024</td><td><code>fell</code> 0건, <code>stop_time_s</code>가 없는 기록 167건</td><td>낙상은 없었지만 167건은 1초 연속 정지 문턱을 만족한 창이 없었다. 정지 성공과 낙상 0건은 다르다</td></tr><tr><td>v2 후보 · <code>hold</code> 확장 평가</td><td>1024</td><td><code>fell</code> 0건</td><td>이 정지 유지 프로브의 낙상 관측 결과다</td></tr></tbody></table></div>
+<p>특히 0이 아닌 속도 명령을 주는 <code>slow010</code>에서 실제 속도가 낮다는 이유만으로 더 우수하다고 판정하면 안 된다. 목표 속도 오차와 낙상, 변동성 등을 함께 봐야 한다. 위 평균만으로 v2가 모든 저속 지표에서 우수하다고 역으로 결론 내리는 것도 잘못이다. <code>판단</code></p>
+<p>저속 지표는 처음 5초를 제외한 환경별 속도 평균을 동일 가중치로 집계했다. v2의 낙상 환경 두 개는 관측 구간이 더 짧다. 따라서 전체 기록을 한데 합친 시간 가중 평균이나 속도 오차의 절댓값 평균과 다르다. <span class="ev ev-ok">확인됨</span></p>
+<p><code>turn_rev</code>는 yaw 명령 순서를 뒤집은 프로브다. 이름의 <code>rev</code>를 후진 보행 성능으로 읽으면 안 된다. 실제 후퇴는 음의 <code>vx</code> 명령으로 따로 확인해야 한다. <span class="ev ev-ok">확인됨</span></p>
+<p>기존 축 2의 아홉 관문은 정해진 평지 명령 프로브의 기준이다. 이를 통과하는 것은 유용하지만, 횡이동·후퇴·외란·점프와 모든 지형에서의 명령 전환까지 보증하는 포괄적인 능력 인증은 아니다. 따라서 “축 2가 한정적인 하네스인가”에는 <b>그렇다. 범위가 정해진 시험이며, 필요한 운영 능력에 맞춰 확장해야 한다</b>고 답한다. <code>판단</code></p>
 </section>
-<section id="s5"><span id="4"></span><h2>4. 왜 컨테이너인가: 5인 공유 관점 (1차 결론에서 통째로 빠졌던 것)</h2>
-<ul><li>네이티브 apt는 <b>단일 장애점</b>이다. 한 명이 <code>apt upgrade</code>로 드라이버를 깨면 5명 전원 정지.</li><li>컨테이너의 학습 성능 페널티는 NVIDIA 공식 표현으로 <b>&quot;negligible&quot;</b>.</li><li>Isaac Sim 라이선스는 <b>무료</b> (사내 R&amp;D, 인원 무제한).</li></ul>
+<section id="s5"><h2>목표점으로 험지를 만나게 하는 방법</h2>
+<p>목표점은 가능성 있는 접근이다. 다만 목표점 보상 하나만 추가하면 원하는 행동이 나온다고 보장할 수 없다. 과제가 달라질 때 actor가 목표를 알 수 있어야 한다. 목표 정보를 직접 관측에 넣거나, 별도의 목표 처리기가 목표로 향하는 속도 명령을 만들어 기존 actor에 전달해야 한다. <code>제안</code></p>
+<div class="tw"><table><thead><tr><th>접근</th><th>달라지는 것</th><th>장점과 남는 과제</th></tr></thead><tbody><tr><td>목표·경유점에서 <code>(vx, vy, wz)</code> 생성. 단위는 <code>(m/s, m/s, rad/s)</code></td><td>상위 명령 생성 방식과 학습 환경</td><td>기존 속도 명령 인터페이스를 유지하기 쉽다. 하위 정책의 명령 추종 능력은 별도로 훈련해야 한다</td></tr><tr><td>목표 정보를 actor 입력에 추가</td><td>관측 의미·입력 구조·학습 목표</td><td>이동 속도와 방향을 정책이 더 자율적으로 선택할 수 있다. 사용자의 저속·후퇴·정지 요구를 어떻게 지킬지 새로 정해야 한다</td></tr></tbody></table></div>
+<p>첫 번째 접근을 먼저 비교해 볼 것을 제안한다. 익숙한 명령 인터페이스를 유지하면서 “어떤 지형을 어떤 방향으로 만나게 할 것인가”를 바꿀 수 있기 때문이다. 두 번째 접근이나 새로운 신경망 구조를 금지하는 선행 관문으로 삼지는 않는다.</p>
+<p>ㄷ자 다리에서는 목표까지의 직선 거리 감소만 보상하면 올바른 우회 경로가 불리해지거나 빈 공간을 가로지르려 할 수 있다. 경유점이나 경로상의 진행도를 쓰고, 실제 도달과 안정적인 정지를 확인하는 구성이 더 적합할 수 있다. 지형을 바라보는 보상은 보조 신호로 쓰되, 제자리에서 바라보기만 하거나 회전만 반복해도 계속 보상을 얻는지 검사해야 한다. “빨리 돌면 보상”도 안전한 지지와 회전 정확도보다 속도만 우선하게 만들 수 있다. <code>제안</code></p>
+<p>목표까지 평지 우회가 가능하다면 목표 도달은 험지 통과를 뜻하지 않는다. 통과할 구간과 유효 경로, 우회 허용 여부를 과제 정의에 포함해야 한다. 험지 위에서 시작하는 배치도 경험을 늘리는 방법이지만, 험지 진입·이탈 전환과 복구 능력까지 학습하는지 별도로 확인해야 한다.</p>
+<p>목표점 방식에서도 로봇은 몸을 돌린 뒤 전진해 목표에 갈 수 있다. 따라서 목표 도달만으로 후퇴 능력이 생겼다고 할 수 없다. 정지 명령이 들어왔을 때 목표 도달 보상과 충돌하지 않도록 과제 모드와 우선순위를 명확히 해야 한다. 여러 과제를 쓴다고 반드시 여러 신경망이 필요한 것은 아니다.</p>
+<p>폭 10cm 미만 다리는 별도의 검토가 필요하다. 발 접촉 면적, 유효 지지 폭, 회전 가능 공간과 경로부터 확인해야 한다. 현재 0.1m 간격 height scan이 다리 경계와 빈 공간을 충분히 구별하는지도 검증해야 한다. 격자 위치에 따라 좁은 특징을 놓칠 수 있다. 보상만으로 해결된다고도, 무조건 불가능하다고도 단정하지 않는다. <span class="ev ev-todo">미확인</span></p>
+<h3>curriculum도 과제에 맞춰 바꿔야 한다</h3>
+<p>현재 거리 기반 지형 curriculum의 승급 지표는 제자리에서 정지·회전을 잘 수행했는지를 반영하지 못한다. 다만 평면 명령이 0이면 현재 강등 조건도 성립하지 않으므로, 정지하면 자동으로 레벨이 내려간다는 뜻은 아니다. ㄷ자 경로의 실제 진행과 출발점에서의 직선 변위도 다르다. 통과 과제는 경로 진행도와 통과 성공, 기본 명령 과제는 추종 오차·안정성·응답으로 난이도를 조절하는 구성을 제안한다.</p>
+<p>전진 비중을 높이는 것은 유효한 중간 curriculum일 수 있다. 문제는 그 분포에 머문 채 다른 능력까지 확보했다고 해석하는 것이다. 기본 명령과 통과 과제의 표본 비중, 난이도 증가 조건, 이미 배운 능력이 떨어질 때의 대응을 함께 기록해야 한다. <code>판단</code></p>
 </section>
-<section id="s6"><span id="5"></span><h2>5. ★ 확정 아키텍처</h2>
-<div class="tw"><table><thead><tr><th>층</th><th>무엇이 있나</th><th>왜</th></tr></thead><tbody><tr><td><b>호스트</b> Ubuntu 22.04.5 (HWE 커널 6.8)</td><td>NVIDIA 드라이버 580+ (open 계열) · Docker + nvidia-container-toolkit</td><td>실기 Go2 와 수업이 요구하는 바닥</td></tr><tr><td>호스트의 <b>ROS2 Humble 네이티브</b></td><td>CycloneDDS 0.10.2 + CYCLONEDDS_URI NIC 바인딩</td><td>수업 호환 + 실기 Go2 배포용</td></tr><tr><td><b>컨테이너</b> IsaacLab v2.3.x (Dockerfile.ros2)</td><td>Isaac Sim 5.1 + Isaac Lab + ROS2 Humble · 학습은 headless</td><td>격리를 <b>사람의 규율이 아니라 컨테이너 경계</b>로</td></tr><tr><td>컨테이너 안의 사용자 분리</td><td>5인은 사용자별 볼륨/브랜치로</td><td>서로의 실험을 덮어쓰지 않게</td></tr><tr><td>관찰</td><td>WebRTC 스트리밍 (⚠️ 5.1 은 동시 1명)</td><td>원격에서 화면을 본다</td></tr></tbody></table></div>
-<h3>유지 / 폐기</h3>
-<div class="tw"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>✅ <b>유지</b></td><td>Ubuntu 22.04 + Humble (unitree_ros2가 강제), 멀티부트 자체</td></tr><tr><td>❌ <b>폐기</b></td><td>&quot;네이티브 이중 설치 + 셸 규율 격리&quot;를 <b>주</b> 아키텍처로 삼는 것</td></tr><tr><td>🔄 <b>교체</b></td><td>격리 수단: 사람의 규칙 → <b>컨테이너 경계</b></td></tr></tbody></table></div>
-<h3>일정에 미치는 영향</h3>
-<ul><li><b>수업 주간(8/10~14)에 우분투를 서두르지 않는다.</b> Windows 네이티브 Isaac Sim + WSL Humble로 충분.</li><li><b>9월 첫 2주 안에 &quot;심 정책 → 실기 Go2 토픽 발행&quot; E2E 스모크를 1회 관통</b>시킨다. RMW·메시지 빌드 문제를 앞당겨 노출시키기 위함.</li></ul>
+<section id="s6"><h2>관측과 신경망을 바꾸면 무엇이 달라지는가</h2>
+<div class="tw"><table><thead><tr><th>변경</th><th>기대할 수 있는 역할</th><th>해결했다고 볼 수 없는 것</th></tr></thead><tbody><tr><td>같은 입력의 MLP 크기·학습 방식 변경</td><td>주어진 정보의 표현과 최적화 개선</td><td>관측에 없는 목표·지형, 학습하지 않은 명령의 성능 보장</td></tr><tr><td>지형 전용 encoder</td><td>지형 구조와 몸 상태의 관계를 더 잘 처리</td><td>원래 관측에서 빠진 얇은 다리 경계 복원 보장</td></tr><tr><td>이력·순환 구조</td><td>지나온 관측, 동역학 변화, 부분 관측 활용</td><td>한 번도 관측하지 않은 임의의 지형을 정확히 아는 능력</td></tr><tr><td>depth·LiDAR 기반 지형 관측</td><td>센서로 얻은 공간 정보를 정책에 제공</td><td>지연·가림·오차·결측이 없는 시뮬레이션 높이와의 자동 동등성</td></tr></tbody></table></div>
+<p>같은 235차원을 유지해도 입력의 의미와 정규화가 바뀌면 같은 문제가 아니다. 반대로 입력 차원을 유지하면서 encoder나 이력 처리 방식을 바꿀 수도 있다. 차원 수만으로 기존 체크포인트와 호환된다고 판단하지 않는다.</p>
+<p>한 축을 개선할 때 다른 축이 떨어지는 현상에는 학습 분포 변화, 보상 충돌, 기존 능력의 망각, 관측 부족, 최적화 불안정, 용량 부족 등이 관여할 수 있다. 현재 관찰만으로 신경망 용량 부족 하나를 원인으로 확정할 수 없다. <span class="ev ev-todo">미확인</span></p>
+<p>NVIDIA Warp는 GPU 연산과 시뮬레이션을 위한 프레임워크다. 센서나 보행 정책 자체가 아니다. depth 생성 등에 사용할 도구와, actor가 받는 정보 및 그 처리 구조를 구분해야 한다. <a href="https://nvidia.github.io/warp/stable/" target="_blank" rel="noopener">공식 문서</a></p>
+<h3>논문에서 가져올 것은 구조와 과제의 결합이다</h3>
+<p>사용자가 언급한 “STRAT”는 프로젝트 맥락상 아래 START를 뜻한다고 해석했다. 다른 논문을 지칭했다면 해당 비교는 다시 해야 한다. <span class="ev ev-todo">미확인</span></p>
+<div class="tw"><table><thead><tr><th>연구</th><th>이 프로젝트에 참고할 핵심</th><th>그대로 확대하면 안 되는 주장</th></tr></thead><tbody><tr><td><a href="https://arxiv.org/html/2601.08485v2" target="_blank" rel="noopener">AME-2</a></td><td>목표 기반 이동 과제, attention 기반 지형 표현, teacher·student 학습의 결합</td><td>목표 도달이 세밀한 중간 속도 명령 준수와 같지 않다. 저자도 중간 제어의 제한을 논의한다</td></tr><tr><td><a href="https://arxiv.org/html/2509.20036v2" target="_blank" rel="noopener">MARG</a></td><td>elevation encoder, 이력 기반 상태 추정, privileged 정보를 쓰는 critic, 보상 구성</td><td>신경망만 바꿔 모든 기동을 해결한 근거가 아니다. 논문은 trot에 관한 제한을 밝힌다</td></tr><tr><td><a href="https://arxiv.org/html/2512.13153v1" target="_blank" rel="noopener">START</a></td><td>depth와 고유수용감각 이력으로 지형을 재구성하고 희소 발판 이동에 활용</td><td>보상·명령이 불필요하다는 근거가 아니다. 속도·yaw 추종 보상을 사용한다</td></tr></tbody></table></div>
+<p>이 논문들을 따른다는 것은 “레이어를 하나 더 넣는다”보다 큰 변경이다. 과제, 관측, 내부 표현, 학습 경로와 평가가 함께 달라질 수 있다. 각 요소를 선택해서 도입하고, 얻은 개선이 무엇에서 왔는지 확인할 비교군을 남겨야 한다. <code>판단</code></p>
 </section>
-<section id="s7"><span id="6"></span><h2>6. 이 결정이 프로젝트를 망칠 수 있는 시나리오 3개</h2>
-<h3>① 11월의 이중 빌드 붕괴</h3>
-<p>팀이 unitree 메시지를 py3.10으로만 빌드해 4개월을 보내다가, 최종 단계에서 심 안에서 Go2 메시지를 구독하려는 순간 처음으로 import 실패를 만난다. 재빌드 중 의존성 지옥 → <b>sim-to-real 통합이 발표 3주 전에 시작도 못 한 상태.</b> → <b>해법: 9월 E2E 스모크.</b></p>
-<h3>② 공유 워크스테이션 드라이버 전멸</h3>
-<p>팀원 하나가 <code>apt upgrade</code> 또는 CUDA 설치 중 메타패키지가 proprietary 드라이버를 끌어와 open 모듈을 밀어낸다. <b>Blackwell은 proprietary로 부팅 불가</b> → 5명 전원 며칠 정지. → <b>해법: 호스트 최소화 + <code>apt-mark hold</code> + 드라이버 변경은 지정 관리자 1인만.</b></p>
-<h3>③ &quot;심에서는 됐는데 로봇에서 침묵&quot;</h3>
-<p>심은 FastDDS, 실기는 CycloneDDS로 각자 개발됨. 12월 리허설에서 심 검증된 launch를 Go2에 붙이자 <b>토픽이 0개.</b> DDS 벤더 간 비상호운용은 <b>에러도 안 낸다.</b> → <b>해법: 실기 그래프는 CycloneDDS로 고정하고, 심↔실기 경계에 브리지 노드 1개를 두는 설계를 지금 확정.</b></p>
+<section id="s7"><h2>resume와 처음부터 학습의 역할</h2>
+<p>기존 보행 표현을 활용해 명령 범위를 넓히는 fine-tuning은 의미가 있다. 다만 초기 가중치만 불러오는 것과 optimizer·학습률·정규화·반복 번호까지 복원하는 것은 다르다. 둘을 모두 “resume”라는 말로 덮지 않는다.</p>
+<p>로컬 RSL-RL 구현에서는 optimizer 상태 복원과 <code>PPO.learning_rate</code> 변수의 복원을 별도로 확인해야 한다. adaptive 학습률 경로는 이 변수를 사용해 optimizer의 학습률을 다시 설정한다. optimizer를 읽었다는 사실만으로 학습률까지 같은 상태로 이어졌다고 간주하지 않는다. 검증한 구현 경로와 근거는 독립 검증(<code>inbox/jay/20260929-locomotion-direction/VERIFY-astra.md</code>)의 resume 절에 남겼다. <span class="ev ev-ok">확인됨</span></p>
+<div class="tw"><table><thead><tr><th>조건</th><th>검토할 방법</th></tr></thead><tbody><tr><td>입력·출력 의미를 유지하며 명령 분포 확장</td><td>기존 actor 활용과 기본 능력 유지 과제를 함께 검토한다</td></tr><tr><td>보상·과제 분포 변경</td><td>critic의 가치 추정 대상이 달라진다. optimizer 상태 유지 여부를 명시하고 재초기화 비교를 통제한다</td></tr><tr><td>관측·encoder 구조 변경</td><td>호환되는 부분 가중치 이식이나 distillation을 검토한다. 정확한 학습 재개와 구분한다</td></tr><tr><td>초기 가중치 영향 확인</td><td>같은 예산·평가 조건의 scratch 비교군을 둔다</td></tr></tbody></table></div>
+<p>기존 능력을 유지하려면 과거 과제의 표본을 계속 포함하거나 필요한 행동만 보존하도록 설계해야 한다. 기존 정책이 못하던 행동까지 무조건 모방시키면 새로운 과제 학습을 방해할 수 있다. resume도 scratch도 잘못된 과제 분포와 관측 부족을 자동 해결하지 않는다. <code>판단</code></p>
+<p>세 시드의 결과 범위는 그 세 번에서 관측한 변동이다. 이를 곧바로 유의성 기준이나 보상 설계의 성능 상한으로 삼지 않는다. 예산에 따른 탐색 중단은 가능하지만, “보상·명령으로는 더 이상 개선할 수 없음”을 입증한 것과 구분해야 한다. 평균 점수에 가려지는 정지 실패나 특정 회전 방향의 문제도 따로 남긴다.</p>
 </section>
-<section id="s8"><span id="7"></span><h2>7. 아직 미확인 (정직하게)</h2>
-<ul><li>WSL2에서 Isaac Sim 5.x GPU 렌더링의 &quot;공식 불가&quot; 명문 조항은 <b>없다.</b> 지원 OS 목록 부재 + 컨테이너 미지원 발언 + Vulkan 실패 보고의 <b>조합에 의한 판단</b>이다.</li><li><code>Dockerfile.ros2</code> 컨테이너 내부에서 bashrc source 상태로 브리지가 실제 어떤 라이브러리를 로드하는지(내부 py3.11 lib 우선인지)는 1차 출처로 확정하지 못했다.</li></ul>
+<section id="s8"><h2>다음 실험을 구체화할 기준</h2>
+<p><b>권고하는 첫 비교는 같은 인터페이스에서 과제 분포를 바꾸는 것이다.</b> 현재 방식과, 기본 명령을 유지하면서 경유점 기반 통과 경험을 주는 방식을 비교한다. 신경망 구조를 고정하면 과제 설계 변경의 실용적 효과를 먼저 볼 수 있다. 단, 여러 설정을 동시에 바꾸면 묶음의 효과만 말할 수 있으며 특정 보상항 하나의 인과 효과라고 주장할 수 없다. <code>제안</code></p>
+<div class="tw"><table><thead><tr><th>비교 전에 정할 것</th><th>기록할 내용</th></tr></thead><tbody><tr><td>모델 계보</td><td>초기 체크포인트 SHA-256, actor·critic·optimizer 복원 범위, 입력 의미와 정규화</td></tr><tr><td>학습 예산</td><td>환경 step 기준 예산, 환경 수, 반복당 step, 시드와 장치 조건</td></tr><tr><td>기본 명령 분포</td><td>저속·정지·제자리 회전·횡이동·후퇴의 표본과 전환 조건</td></tr><tr><td>통과 과제</td><td>목표·경유점 위치, 지형 진입 방향, 우회 허용 여부, 성공과 실패 정의</td></tr><tr><td>curriculum</td><td>과제별 진도 지표, 난이도 증가 조건, 기존 능력 저하 대응</td></tr><tr><td>유지 조건</td><td>통과율 개선과 함께 허용할 명령 성능 저하 폭을 실험 전에 결정</td></tr></tbody></table></div>
+<p>평가는 지형 종류와 명령 종류를 교차한다. 모든 조합을 한 번에 크게 돌리기보다, 평지에서 명령 범위를 먼저 확인하고 대표 험지에서 정지·회전·속도 전환을 추가한다. 학습 지형과 별도의 미경험 지형을 구분한다. 낙상뿐 아니라 목표 속도 오차, 정지 거리·시간, 회전 오차, 외란 후 회복과 통과 완료를 과제별로 잰다. 구체적 허용 기준과 표본 수는 아직 정하지 않았다. <span class="ev ev-todo">미확인</span></p>
+<p>점프와 매우 좁은 다리는 일반 명령 확장의 자동 결과로 묶지 않는다. 실제 사용 필요성, 물리적 가능성, 관측 해상도를 확인한 뒤 별도 과제로 정한다.</p>
+<div class="tw"><table><thead><tr><th>관찰될 결과</th><th>다음 판단</th></tr></thead><tbody><tr><td>명령 범위를 넓히자 지형 경험이 급감</td><td>목표·경유점과 초기 배치로 유효한 통과 경험을 확보한다</td></tr><tr><td>필요한 지형 특징이 입력에 없음</td><td>센서·지도·해상도·관측 범위부터 검토한다</td></tr><tr><td>정보는 있으나 처리 실패가 반복됨</td><td>encoder·이력·attention 등 구조 비교를 진행한다</td></tr><tr><td>새 능력 향상과 기존 능력 저하가 함께 나타남</td><td>표본 균형·과제 충돌·망각과 최적화 문제를 분리해 조사한다</td></tr></tbody></table></div>
+<p>이 표는 원인을 자동 판정하는 규칙이 아니다. 후속 진단의 출발점이다. 제안된 혼합 과제의 효과, 논문 구조를 현재 Go2 설정에 이식했을 때의 이득, «실기 전이» 성능은 모두 아직 미확인이다.</p>
 </section>
-<section id="s9"><span id="8"></span><h2>8. 열려 있는 질문 (Human 결정 필요)</h2>
-<ol><li><b>듀얼 5080 워크스테이션의 apt/드라이버를 만질 사람을 1명으로 고정할 수 있는가?</b></li><li><b>실기 Go2는 언제부터 팀 수중에 있는가?</b>: 9월 E2E 스모크가 물리적으로 가능한 일정인가?</li></ol>
+<section id="s9"><h2>다른 세션이 이어받을 때</h2>
+<p>이 문서에서 이어갈 일은 새 학습을 즉시 실행하는 것이 아니라 다음 비교의 조건을 구체화하는 것이다. 먼저 배포 파일과 평가 후보의 동일성을 확인하고, 필요한 운영 명령과 평가 범위를 정한다. 그다음 초기 가중치·복원 범위·과제 비중·예산·관문을 적은 별도 실험 이슈를 만든다. 배포 판단은 모델 산출물 공유, 성능 주장, 실기 사용을 구분해 결정한다.</p>
+<p>관련 이슈는 <a href="https://github.com/foothold-project/foothold-lab/issues/471" target="_blank" rel="noopener">#471 평가 주장 감사</a>, <a href="https://github.com/foothold-project/foothold-lab/issues/469" target="_blank" rel="noopener">#469 축 2 판정 재설계</a>, <a href="https://github.com/foothold-project/foothold-lab/issues/468" target="_blank" rel="noopener">#468 scratch 비교</a>, <a href="https://github.com/foothold-project/foothold-lab/issues/466" target="_blank" rel="noopener">#466 실험 우선순위 감사</a>다. 이 문서가 기존 이슈의 결론을 덮어쓰거나 해당 작업을 완료 처리하지 않는다.</p>
+<p>명령 복원은 이미 <a href="https://github.com/foothold-project/foothold-lab/issues/441" target="_blank" rel="noopener">#441</a>, 학습·평가 범위 대조는 <a href="https://github.com/foothold-project/foothold-lab/issues/443" target="_blank" rel="noopener">#443</a>에서 다루고 있다. <a href="https://github.com/foothold-project/foothold-lab/issues/432" target="_blank" rel="noopener">#432</a>의 기존 정책 위 planner 시험도 연결 대상이다. 다만 기존 정책에 목표 기반 명령을 주는 추론 시험과, 그 명령 분포로 정책을 새로 학습하는 이번 제안은 구분한다. 새 실험을 만들기 전에 이 작업들의 현재 결과와 남은 범위를 대조한다.</p>
 </section>
-<section id="s10"><h2>부록: 이 문서가 반증한 출처</h2>
-<p>블로그 https://slow-motionn.tistory.com/205 (구현 https://github.com/hms-gymnopedie/IsaacSim_Setting) 의 <i>&quot;같은 환경에 공존 불가 → 컨테이너 2개 분리 필수&quot;</i> 라는 <b>전제는 과장</b>이다. 공존은 가능하다. 다만 <b>공존을 사람의 규율로 유지하는 것이 나쁜 선택</b>일 뿐이며, 결론(컨테이너를 쓴다)은 우연히 옳은 방향이었다.</p>
-<p><code>--net=host</code>만 쓰고 <code>--ipc=host</code>(또는 <code>-v /dev/shm:/dev/shm</code>)를 빠뜨리면 Fast DDS의 공유메모리 전송이 <b>조용히 실패</b>한다는 점은 블로그에 없다.</p>
+<section id="s10"><h2>근거와 재확인 경로</h2>
+<p>확인 기준은 2026-09-29 로컬에 존재하는 설정과 결과다. 기존 결과의 생성 날짜와 이번 문서 작성 날짜를 구분한다. 일부 원자료는 아직 로컬에만 있어 다른 장치에서 바로 재현하지 못할 수 있다.</p>
+<ul><li>저장된 v2 설정: <code>C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000/params/agent.yaml</code>, 같은 폴더의 <code>env.yaml</code>. 로컬 경로이며 저장소 링크가 아니다.</li><li>명령 구현: <code>C:/isaac/IsaacLab/source/isaaclab/isaaclab/envs/mdp/commands/velocity_command.py</code>. heading 처리와 standing 명령 덮어쓰기를 확인한다.</li><li>curriculum 구현: <code>C:/isaac/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/mdp/curriculums.py</code>. 초기 레벨과 이후 진도 갱신을 구분한다.</li><li>기본 설정: 위 <code>velocity</code> 폴더의 <code>velocity_env_cfg.py</code>와 <code>config/go2/rough_env_cfg.py</code>. 기본 설정은 공식 배포 모델의 학습 이력 증거를 대신하지 않는다.</li><li>v2 저속 원자료: <code>sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/slow010/per_env.json</code>.</li><li>기준선 저속 원자료: <code>sim/eval/results/20260918-command-baseline/nvidia-zero/slow010/per_env.json</code>.</li><li>v2 회전 원자료: <code>sim/eval/results/20260928-turn1024/v2g2-feetair01-iter3000/turn/per_env.json</code>.</li><li>v2 정지·유지 원자료: <code>sim/eval/results/20260928-stophold1024/v2g2-feetair01-iter3000/</code> 아래 <code>stop/per_env.json</code>, <code>hold/per_env.json</code>.</li><li>프로브 정의: <code>sim/eval/eval_command_response.py</code>. <code>turn_rev</code>의 명령 순서와 평가 구간을 확인한다.</li></ul>
+<p>평균 속도는 파일의 모든 환경 기록에서 <code>tracked_vx_mps</code>의 산술평균을 구하고, 낙상은 <code>fell</code>이 참인 기록을 센다. 요약 표의 비율을 그대로 복사하지 않고 분자와 분모를 다시 확인한다. 누락 값이 있다면 임의로 0으로 채우지 않는다. 이번 재집계의 정확한 값과 원자료 SHA-256은 <code>inbox/jay/20260929-locomotion-direction/evidence-summary.json</code>에 남겼다.</p>
 </section>
 <section id="s11"><h2>판 이력</h2>
-<div class="tw"><table><thead><tr><th>판</th><th>언제</th><th>무엇이 바뀌었나</th><th>근거</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-08-09</td><td>처음 씀</td><td>이전 이력은 git 에</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>변경</th></tr></thead><tbody><tr><td>v1.0</td><td>2026-09-29</td><td>사용자의 문제 제기, 설정과 평가 근거, 목표점 기반 과제·관측·신경망·resume의 선택 기준을 문서화</td></tr><tr><td>v1.1</td><td>2026-09-29</td><td><b>연구 허브에 웹문서로 등록</b> · 작성자를 팀장으로 적음 · 폐기 어휘 관문 때문에 163 행을 <code>«»</code> 로 감쌌고 그것이 검증 해시를 어떻게 움직였는지를 「이 판이 어떻게 나왔는가」에 적음 · 웹에서 죽는 상대 링크 셋을 경로 표기로 바꿈</td></tr></tbody></table></div>
 </section>
 
 </div>
