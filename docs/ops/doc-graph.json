@@ -246,7 +246,7 @@
    "C/기록"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 학습×17 보상×2 관측×3 회의록×1 문서×19",
+  "areas_why": "근거 낱말 인프라×2 자동화×2 예산×1 학습×18 보상×2 관측×3 회의록×1 문서×19",
   "purpose": "운영",
   "purpose_src": "human",
   "parents": [],
@@ -1907,7 +1907,7 @@
    "A/정책학습"
   ],
   "areas_sure": true,
-  "areas_why": "근거 낱말 학습×116 보상×9 관측×5",
+  "areas_why": "근거 낱말 학습×139 보상×9 관측×5",
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],

@@ -129,3 +129,18 @@ sim/eval/results/20260929-train-army-4096/slow-*/
 sim/eval/results/20260929-train-army-4096/sweep-*/
 sim/eval/results/20260929-train-army-d20/slow-*/
 sim/eval/results/20260929-train-army-d20/sweep-*/
+
+# 확장 축 컷과 대군 램프판의 중간 산출물 (2026-09-29).
+#   `20260929-axis2-ext-clips`  판 셋 x 시나리오 여섯의 원본 mp4 와 시계열
+#   `20260929-axis2-ext-hud`    HUD 를 얹은 열여덟 편 (웹 사본이 정본이다)
+#   `20260929-train-army-ramp`  대군 10 초 조각 열여섯과 배속 사본
+#   **웹 사본(`docs/assets/video/v2/`) 만 올린다.** 앞선 대군 판과 같은 규칙.
+#   단 `per_env.json` 과 `probe_manifest.json` 은 근거라 올린다.
+sim/eval/results/20260929-axis2-ext-clips/*/*/timeseries/
+sim/eval/results/20260929-axis2-ext-clips/*/*/*.mp4
+sim/eval/results/20260929-axis2-ext-clips/*/run.log
+sim/eval/results/20260929-axis2-ext-hud/
+sim/eval/results/20260929-train-army-ramp/slow-*/
+sim/eval/results/20260929-train-army-ramp/sweep-*/
+sim/eval/results/20260929-train-army-ramp/train-army.mp4
+sim/eval/results/20260929-train-army-ramp/concat.txt

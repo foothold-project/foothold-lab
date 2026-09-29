@@ -295,7 +295,8 @@ class Hud(object):
 
     def __init__(self, size, trace, fonts=None, title=None,
                  slowdown_ratio=0.6, slowdown_min_s=0.15, anchor="top",
-                 mode="terrain", span_s=None, fell_at_s=None):
+                 mode="terrain", span_s=None, fell_at_s=None,
+                 y_top=None):
         if anchor not in ("top", "bottom"):
             raise ValueError("anchor 는 top 이나 bottom 입니다: {}".format(anchor))
 
@@ -316,6 +317,13 @@ class Hud(object):
         # 한다. 그래서 축은 영상에 맞추고 **곡선은 끊긴 자리에서 끝낸다.**
         self.span_s = float(span_s) if span_s else None
         self.fell_at = float(fell_at_s) if fell_at_s is not None else None
+        # **속도 축 위 끝을 밖에서 지정하는 길.** 기본은 None 이고 그때는
+        # `_y_top` 이 스스로 정한다 (기존 컷은 한 픽셀도 안 바뀐다).
+        #
+        # 3 열 비교에서 판마다 축이 달라지면 «같은 자» 가 아니다 `확인됨`
+        # (2026-09-29 · `slow010` 이 0.50 · 0.81 · 0.58 이었다). 그때 세 컷에
+        # 같은 값을 줘서 나란히 읽히게 한다.
+        self.y_top_fixed = float(y_top) if y_top is not None else None
         self.width, self.height = size
         self.trace = trace
         self.fonts = fonts or Fonts()
@@ -511,6 +519,9 @@ class Hud(object):
         한 프레임의 튀는 값 때문에 축이 늘어나면 나머지 전부가 바닥에 눌립니다.
         그래서 최댓값이 아니라 **위에서 2% 를 버린 값**을 봅니다.
         """
+        if self.y_top_fixed is not None:
+            return self.y_top_fixed
+
         values = sorted(v for v in self.trace.column("speed_mps") if v is not None)
 
         if values:
