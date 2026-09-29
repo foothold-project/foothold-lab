@@ -326,15 +326,32 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
    * (2026-09-12 검증 2회차 7번 · 브라우저에서 재현됐다). */
   let guessed = false;
 
-  SLOTS.forEach((slot, i) => {
-    const raw = q.get(slot);
+  /* **주소가 준 자리를 «먼저 다» 정한다.**
+   *
+   * 예전에는 한 번의 순회에서 주소와 자동 고르기를 같이 했다. 그러면 앞
+   * 자리를 자동으로 고를 때 «뒤 자리에 무엇이 올지» 를 모른다. 실제로
+   * `?left=v2:baseline&mid=v2:foothold-v2` 에서 right 가 자동으로
+   * `v2:foothold-v2` 를 집어 **가운데와 똑같은 열이 둘** 이 됐다 `확인됨`
+   * (팀장이 화면에서 잡음 2026-09-29). 그래서 두 번에 나눈다. */
+  /* **주소가 «말을 건» 자리를 따로 센다.**
+   *
+   * 거절된 자리는 `state` 가 null 이다. 그것을 「안 준 자리」로 보면 2 차
+   * 순회가 채워 버려서 「거절하고 빈 열로 둔다」 규칙이 무너진다 `확인됨`
+   * (`test/compare-slots.test.js` 가 잡았다). 값이 아니라 **주소가 그
+   * 자리를 언급했는지** 로 가른다. */
+  const addressed = {};
 
-    if (raw !== null && raw !== '') {
-      const hit = pairs.find(p => p.id === raw);
-      if (hit) state[slot] = hit.id;
-      else rejected.push(slot + '=' + raw);   // 빈 열로 둔다. 대신 채우지 않는다
-      return;
-    }
+  SLOTS.forEach(slot => {
+    const raw = q.get(slot);
+    if (raw === null || raw === '') return;
+    addressed[slot] = true;
+    const hit = pairs.find(p => p.id === raw);
+    if (hit) state[slot] = hit.id;
+    else rejected.push(slot + '=' + raw);   // 빈 열로 둔다. 대신 채우지 않는다
+  });
+
+  SLOTS.forEach((slot, i) => {
+    if (addressed[slot]) return;             // 주소가 준 자리는 건드리지 않는다
 
     /* 아예 «안 준» 자리만 우리가 고른다.
      *
@@ -393,8 +410,24 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
       picks.push(one ? one + ':' + mainOf(one) : null);
     }
 
-    const guess = picks[i];
-    if (guess && pairs.find(p => p.id === guess)) { state[slot] = guess; guessed = true; }
+    /* **이미 다른 열이 쓰는 짝은 안 집는다.**
+     *
+     * 같은 파일이 두 열에 뜨면 견주는 화면이 아니다. 계보 차례대로 아직
+     * 안 쓰인 것을 찾아 쓴다. 쓸 것이 없으면 비워 둔다 (억지로 채우지
+     * 않는다 · 이 페이지의 규칙이다). */
+    const taken = SLOTS.map(s => state[s]).filter(Boolean);
+    const free = id => !!id && !!pairs.find(p => p.id === id)
+      && taken.indexOf(id) < 0;
+
+    let guess = free(picks[i]) ? picks[i] : null;
+
+    if (!guess) guess = picks.find(free) || null;
+    if (!guess) {
+      const any = pairs.find(p => free(p.id));
+      guess = any ? any.id : null;
+    }
+
+    if (guess) { state[slot] = guess; guessed = true; }
   });
 
   /** 화면에 보일 열 이름. 셋이 같은 판이면 판을 뗀다. */
@@ -538,9 +571,53 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
     body.textContent = '';
 
     if (rejected.length) {
-      body.appendChild(G.warn('링크의 ' + rejected.join(' · ') +
+      const note = G.warn('링크의 ' + rejected.join(' · ') +
         ' 은 지금 색인에 없는 값입니다. 그 자리는 비워 두었고, 다른 값의 성적을 '
-        + '대신 그리지 않았습니다.', true));
+        + '대신 그리지 않았습니다.', true);
+
+      /* **막다른 길로 두지 않는다.**
+       *
+       * 바꿔치기는 여전히 안 한다 (위 규칙). 대신 «같은 모델의 컷이 실제로
+       * 있는 판» 을 찾아 **갈 곳을 링크로** 준다. 눌러야 바뀐다.
+       *
+       * `v2:baseline` 이 그 자리다. v2 색인은 baseline 컷을 v1 것을
+       * 가리키는 `reused` 로만 들고 있어서 열이 될 수 없다. 같은
+       * 체크포인트의 컷은 `v1:baseline` 에 있다 (`versions.json` 의 sha 가
+       * 같다). 팀장이 두 번 같은 자리에서 막혔다 `확인됨` (2026-09-29). */
+      const hasRealClip = (v, model) => !!(mans[v] && (mans[v].clips || [])
+        .some(c => c.model === model && !c.reused));
+
+      rejected.forEach(function (text) {
+        const m = /^(left|mid|right)=(.+?):(.+)$/.exec(text);
+        if (!m) return;
+
+        const slot = m[1];
+        const model = m[3];
+        const order = (index.versions || []).map(v => v.version);
+        const altVer = order.find(v => hasRealClip(v, model));
+
+        if (!altVer) return;
+
+        const altId = altVer + ':' + model;
+        const params = { terrain: cell ? cell.terrain : null,
+                         speed: cell ? cell.speed : null,
+                         left: state.left, mid: state.mid, right: state.right };
+        params[slot] = altId;
+
+        const qs = Object.keys(params)
+          .filter(k => params[k] !== null && params[k] !== undefined)
+          .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+          .join('&');
+
+        note.appendChild(G.el('span', {
+          text: ' 같은 체크포인트(' + model + ')의 컷은 ' + altId + ' 에 있습니다. '
+        }));
+        note.appendChild(G.el('a', {
+          href: '?' + qs, text: altId + ' 로 보기',
+        }));
+      });
+
+      body.appendChild(note);
     }
 
     cells = cellsOf(chosenVersions());
