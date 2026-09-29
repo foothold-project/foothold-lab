@@ -428,3 +428,6 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
 .a2vid .ended{position:absolute;right:.4rem;bottom:.4rem}
 /* 섹션 조종간. 그 섹션의 셋만 묶는다. */
 .a2sec .transport{margin:.2rem 0 .7rem}
+/* 무리를 «왜 갈랐나» 한 줄. 칩 줄 바로 아래에 붙는다. */
+.a2why{font-size:.72rem;color:var(--ink-3);line-height:1.55;
+  margin:.1rem 0 .7rem 0;padding-left:.2rem}
