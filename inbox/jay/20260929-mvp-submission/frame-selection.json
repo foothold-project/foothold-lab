@@ -1,0 +1,202 @@
+{
+  "lineage-gap-v1.mp4": {
+    "seconds": 1.6,
+    "reason": "틈을 건너는 중간 동작"
+  },
+  "lineage-gap-D-fail.mp4": {
+    "seconds": 2.4,
+    "reason": "틈 앞에서 몸이 걸려 진행하지 못하는 장면"
+  },
+  "lineage-gap-v2.mp4": {
+    "seconds": 1.6,
+    "reason": "동일 시점에서 틈을 건너는 동작"
+  },
+  "train-gap-forward.mp4": {
+    "seconds": 1.5,
+    "reason": "직선 도랑과 시작 위치의 관계"
+  },
+  "train-gap-omni.mp4": {
+    "seconds": 1.5,
+    "reason": "시작 위치를 둘러싼 고리형 틈"
+  },
+  "turnfall-v2a-iter1500.mp4": {
+    "seconds": 5.1,
+    "reason": "회전 중 몸이 옆으로 넘어지는 장면. 리셋 이전"
+  },
+  "turnfall-v2b-iter1500.mp4": {
+    "seconds": 5.1,
+    "reason": "비교 모델과 동일 시점에서 지지한 회전 자세"
+  },
+  "axis2-stop-nvidia.mp4": {
+    "seconds": 8.6,
+    "reason": "정지 명령 이후 자세. v1 낙상 장면과 같은 시점"
+  },
+  "axis2-stop-v1.mp4": {
+    "seconds": 8.6,
+    "reason": "정지 명령 이후 낙상. 리셋 이전"
+  },
+  "axis2-stop-v2.mp4": {
+    "seconds": 8.6,
+    "reason": "정지 명령 이후 자세. v1 낙상 장면과 같은 시점"
+  },
+  "axis2-hold-nvidia.mp4": {
+    "seconds": 17.1,
+    "reason": "정지 유지 후반부. v1 낙상 장면과 같은 시점"
+  },
+  "axis2-hold-v1.mp4": {
+    "seconds": 17.1,
+    "reason": "정지 유지 중 옆으로 넘어진 자세. 리셋 이전"
+  },
+  "axis2-hold-v2.mp4": {
+    "seconds": 17.1,
+    "reason": "정지 유지 후반부. v1 낙상 장면과 같은 시점"
+  },
+  "axis2-turn-nvidia.mp4": {
+    "seconds": 3.5,
+    "reason": "첫 회전 구간. v1 낙상 장면과 같은 시점"
+  },
+  "axis2-turn-v1.mp4": {
+    "seconds": 3.5,
+    "reason": "첫 회전 구간에서 넘어지는 장면. 리셋 이전"
+  },
+  "axis2-turn-v2.mp4": {
+    "seconds": 3.5,
+    "reason": "첫 회전 구간. v1 낙상 장면과 같은 시점"
+  },
+  "ss-v1-fail.mp4": {
+    "seconds": 2.4,
+    "reason": "희소 발판 사이에서 진행하지 못하는 장면"
+  },
+  "stepping-stones-v2.mp4": {
+    "seconds": 5.8,
+    "reason": "희소 발판에서 몸이 기울고 통과하지 못하는 장면"
+  },
+  "stepping-stones-v2-cross.mp4": {
+    "seconds": 3.88,
+    "reason": "통과선 이후의 위치. 통과와 속도 추종 성공은 구분"
+  },
+  "regress-stairsinv-d09-v1.mp4": {
+    "seconds": 3.6,
+    "reason": "계단을 지난 뒤의 자세와 추종 HUD"
+  },
+  "regress-stairsinv-d09-v2.mp4": {
+    "seconds": 3.6,
+    "reason": "넘어지지 않고 건넜지만 속도 추종이 미달한 HUD"
+  },
+  "train-army.mp4": {
+    "seconds": 39,
+    "extra_seconds": [
+      2,
+      20
+    ],
+    "reason": "저장 정책 iter 3000의 보행 장면. 추가 장면은 초기 정책과 학습 중간을 비교하며, 중간 구간은 표시된 배속으로 재생된다."
+  },
+  "hero-floatingring-v15-nvidia.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-floatingring-v15-v1.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-floatingring-v15-v2.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-pit-v15-nvidia.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-pit-v15-v1.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-pit-v15-v2.mp4": {
+    "seconds": 2.2,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-steppingstones-v10-nvidia.mp4": {
+    "seconds": 2.4,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-steppingstones-v10-v1.mp4": {
+    "seconds": 2.4,
+    "reason": "지형을 마주한 보행 장면. 이 한 판의 모습과 캡션의 100회 평가 성공률을 구분한다."
+  },
+  "hero-steppingstones-v10-v2.mp4": {
+    "seconds": 5.8,
+    "reason": "디딤돌 사이에서 자세가 무너지는 장면. 이 사례가 전체 평가 성공률 24%를 대표하지는 않는다."
+  },
+  "axis2ext-slow010-nvidia.mp4": {
+    "seconds": 10.1,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow010-v1.mp4": {
+    "seconds": 10.1,
+    "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+  },
+  "axis2ext-slow010-v2.mp4": {
+    "seconds": 10.1,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow020-nvidia.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow020-v1.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow020-v2.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow030-nvidia.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow030-v1.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow030-v2.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow040-nvidia.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow040-v1.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-slow040-v2.mp4": {
+    "seconds": 12,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-turnrest-nvidia.mp4": {
+    "seconds": 3.8,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-turnrest-v1.mp4": {
+    "seconds": 3.8,
+    "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+  },
+  "axis2ext-turnrest-v2.mp4": {
+    "seconds": 3.8,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-turnrev-nvidia.mp4": {
+    "seconds": 13.9,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  },
+  "axis2ext-turnrev-v1.mp4": {
+    "seconds": 13.9,
+    "reason": "env 51에서 넘어지는 시점 부근의 실제 장면. 이후 초기화된 자세가 낙상 사례를 가리지 않도록 선정했다."
+  },
+  "axis2ext-turnrev-v2.mp4": {
+    "seconds": 13.9,
+    "reason": "같은 env 51의 명령 응답 장면. 화면의 순간값과 캡션의 평가 구간 평균은 다를 수 있다."
+  }
+}
