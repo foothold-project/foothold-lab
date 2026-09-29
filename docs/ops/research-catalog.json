@@ -1042,7 +1042,7 @@
     "scorecard_episodes": 14400
    },
    "headline": "학습에 없던 지형 8종에서 NVIDIA 43.9 % -> v2 88.5 %. 못 넘는 것은 stepping_stones 하나뿐이고 (8.0 %) 나머지 7종은 99.7 % 이상이다 (지형·속도마다 100판)",
-   "report": "/research-20260928-v2-mvp-report.html",
+   "report": "/report-v2.html",
    "note": "컷 48 편은 v2 것이다. 기준선 NVIDIA 와 foothold-v1 은 숫자만 싣고 영상은 v1 판에 있는 것을 쓴다 (같은 체크포인트 · sha 대조함). 평가 16종 중 rails 는 v2 가 «학습에 넣은» 지형이므로 미경험이 아니다. 성적표는 난이도 0.5 · 지형마다 100판. 영상은 그 자리의 시연 1회다."
   },
   {
