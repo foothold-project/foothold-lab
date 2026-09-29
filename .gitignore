@@ -144,3 +144,21 @@ sim/eval/results/20260929-train-army-ramp/slow-*/
 sim/eval/results/20260929-train-army-ramp/sweep-*/
 sim/eval/results/20260929-train-army-ramp/train-army.mp4
 sim/eval/results/20260929-train-army-ramp/concat.txt
+
+# ── 2026-09-29 랜더·프로브 산출물 ────────────────────────────────
+#
+# 종합보고서 v4.0 이 이 폴더들을 근거로 가리킨다. 그런데 통째로는 못 넣는다.
+#
+#   20260929-failcuts     346 MB    20260929-train-army-d20  132 MB
+#   20260929-axis2-fall   121 MB    20260929-axis2-hud        19 MB
+#
+# 무게는 전부 mp4 · parquet · png 다. **판별에 쓰는 것은 json 과 csv 뿐이고
+# 그것은 다 합쳐 1 MB 가 안 된다.** 그래서 근거 파일만 담고 무거운 것은 뺀다.
+# 인용한 경로가 저장소에서 사라지지 않으면서 크기는 안 는다.
+#
+# 영상은 배포본(`foothold-site/assets/video/`)에 웹용으로 다시 구워 올린다.
+sim/eval/results/20260929-*/**/*.mp4
+sim/eval/results/20260929-*/**/*.parquet
+sim/eval/results/20260929-*/**/*.png
+sim/eval/results/20260929-*/**/*.jpg
+sim/eval/results/20260929-*/**/*.log
