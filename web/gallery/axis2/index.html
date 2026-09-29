@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=27b1024f').then(function(r){
+    fetch('/assets/search-index.json?v=f7f686de').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -494,11 +494,20 @@ document.addEventListener('DOMContentLoaded',function(){
     return;
   }
 
+  /* ★ 2026-09-29 2 차. **「비교」 모드를 없앴다.**
+   *
+   * 팀장 지적: 「목록에서 왜 영상 클릭하면 3개만 비교로 들어가냐? ... 재생
+   * 버튼 누르면 페이지 넘어가는 것도 좀 이상하고」. 맞다. 단추에 「함께
+   * 재생」이라 써 놓고 누르면 화면이 바뀌었다.
+   *
+   * 이제 **목록이 그 자리에서** 섹션마다 셋을 같이 돌린다. 그러면 「한
+   * 시나리오만」은 시나리오 거르개가 이미 하는 일이라 모드가 따로 필요
+   * 없다. 옛 링크(`mode=compare`)는 목록으로 받는다. */
   const MODES = [
-    { id: 'list', label: '목록', hint: '시나리오마다 판 셋을 나란히' },
-    { id: 'grid', label: '격자', hint: '스물일곱 칸을 한 표에' },
-    { id: 'compare', label: '비교', hint: '한 시나리오를 함께 재생' }
+    { id: 'list', label: '목록', hint: '시나리오마다 판 셋을 나란히 · 그 자리에서 함께 재생' },
+    { id: 'grid', label: '격자', hint: '스물일곱 칸을 한 표에 · 숫자로 훑기' }
   ];
+  const MODE_ALIAS = { compare: 'list' };
 
   const pre = G.readParams({ v: vers.map(v => v.version) });
   const version = pre.value.v || vers[0].version;
@@ -514,7 +523,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   const allowed = {
     v: vers.map(v => v.version),
-    mode: MODES.map(m => m.id),
+    mode: MODES.map(m => m.id).concat(Object.keys(MODE_ALIAS)),
     scenario: data.facets.scenario,
     group: data.facets.group,
     model: data.facets.model
@@ -524,16 +533,11 @@ document.addEventListener('DOMContentLoaded',function(){
     .filter((x, i, a) => a.indexOf(x) === i);
 
   const state = {
-    mode: read.value.mode || 'list',
+    mode: MODE_ALIAS[read.value.mode] || read.value.mode || 'list',
     scenario: read.value.scenario || null,
     group: read.value.group || null,
     model: read.value.model || null
   };
-
-  /* 비교 모드는 시나리오 하나가 있어야 뜻이 선다. */
-  if (state.mode === 'compare' && !state.scenario) {
-    state.scenario = data.scenarios[0].id;
-  }
 
   const models = G.lineage(Object.keys(data.models || {}));
   const cellOf = {};
@@ -552,16 +556,33 @@ document.addEventListener('DOMContentLoaded',function(){
     if (tabs) document.getElementById('axistab').appendChild(tabs);
   }
 
-  /* ── 재생 묶기. `compare` 와 **같은 것을 쓴다** ──────────── */
-  const endedTag = {};
-  let ui = null;
+  /* ── 재생 묶기 · **섹션마다 한 벌** ──────────────────────────
+   *
+   * 섹션이 아홉이고 각 섹션이 판 셋을 같은 시계로 돌린다. 한 벌로 묶으면
+   * 아래 섹션의 컷이 위 섹션의 시계에 끌려간다. `G.syncGroup` 은 만들어
+   * 쓰는 것이라 섹션마다 하나씩 만든다.
+   *
+   * 다시 그릴 때 **전부 멈춘다.** 안 그러면 사라진 칸이 계속 돈다. */
+  const groups = [];
 
-  const group = G.syncGroup({
-    onClock: t => { if (ui) ui.clock.textContent = t; },
-    onButton: t => { if (ui) ui.button.textContent = t; },
-    onNote: t => { if (ui) ui.note.textContent = t; },
-    onEnded: (k, done) => { if (endedTag[k]) endedTag[k].hidden = !done; }
-  });
+  function newSectionGroup() {
+    const tags = {};
+    const box = { ui: null, tags: tags };
+    box.group = G.syncGroup({
+      onClock: t => { if (box.ui) box.ui.clock.textContent = t; },
+      onButton: t => {
+        if (box.ui) box.ui.button.textContent = t;
+        /* 재생 중에는 칸 위의 ▶ 를 숨긴다. */
+        Object.values(tags).forEach(o => {
+          if (o.wrap) o.wrap.classList.toggle('playing', t === '멈춤');
+        });
+      },
+      onNote: t => { if (box.ui) box.ui.note.textContent = t; },
+      onEnded: (k, done) => { if (tags[k] && tags[k].ended) tags[k].ended.hidden = !done; }
+    });
+    groups.push(box);
+    return box;
+  }
 
   /* ── 숫자를 글자로 ─────────────────────────────────────── */
   function num(v) {
@@ -659,9 +680,6 @@ document.addEventListener('DOMContentLoaded',function(){
 
   function go(patch) {
     Object.assign(state, patch);
-    if (state.mode === 'compare' && !state.scenario) {
-      state.scenario = visibleScenarios()[0] || data.scenarios[0].id;
-    }
     push(); draw();
   }
 
@@ -734,7 +752,7 @@ document.addEventListener('DOMContentLoaded',function(){
           G.el('span', { class: 'n', text: String(list.length * visibleModels().length) })]);
       chip0.addEventListener('click', () => go(whole
         ? { group: null }
-        : { group: g.id, scenario: state.mode === 'compare' ? list[0].id : null }));
+        : { group: g.id, scenario: null }));
       row.appendChild(chip0);
 
       list.forEach(s => {
@@ -743,7 +761,7 @@ document.addEventListener('DOMContentLoaded',function(){
           class: 'chip', type: 'button', 'aria-pressed': on ? 'true' : 'false'
         }, [G.el('span', { text: s.label }),
             G.el('span', { class: 'n', text: String(visibleModels().length) })]);
-        chip.addEventListener('click', () => go(on && state.mode !== 'compare'
+        chip.addEventListener('click', () => go(on
           ? { scenario: null }
           : { scenario: s.id, group: null }));
         row.appendChild(chip);
@@ -770,11 +788,7 @@ document.addEventListener('DOMContentLoaded',function(){
                                     'aria-pressed': on ? 'true' : 'false' },
                         [G.el('span', { text: m }),
                          G.el('span', { class: 'n', text: String(n) })]);
-      /* 비교 모드는 판 셋을 나란히 놓는 것이 일이라 한 판만 고르지 않는다. */
-      chip.addEventListener('click', () => go({
-        model: on ? null : m,
-        mode: state.mode === 'compare' && !on ? 'list' : state.mode
-      }));
+      chip.addEventListener('click', () => go({ model: on ? null : m }));
       mrow.appendChild(chip);
     });
     wrap.appendChild(mrow);
@@ -838,8 +852,10 @@ document.addEventListener('DOMContentLoaded',function(){
         const b = bar(cell, sc);
         if (b) btn.appendChild(b);
         btn.appendChild(G.el('div', { class: 'a2sub', text: meaning(cell, sc) }));
+        /* 칸을 누르면 그 시나리오만 목록으로 펼친다. 거기서 그 자리에서
+         * 함께 재생한다. **화면을 다른 데로 안 보낸다.** */
         btn.addEventListener('click',
-          () => go({ mode: 'compare', scenario: id, model: null }));
+          () => go({ mode: 'list', scenario: id, model: null }));
         td.appendChild(btn);
         tr.appendChild(td);
       });
@@ -852,9 +868,10 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   /* ── 목록 모드 ─────────────────────────────────────────── */
-  function scenarioBlock(id, withVideo) {
+  function scenarioBlock(id) {
     const sc = scOf[id];
     const sec = G.el('div', { class: 'a2sec' });
+    const box = newSectionGroup();
 
     const h = G.el('div', { class: 'a2head' }, [
       G.el('h3', { text: sc.label }),
@@ -886,12 +903,16 @@ document.addEventListener('DOMContentLoaded',function(){
 
     if ((sc.thresholds || []).length) {
       sec.appendChild(G.el('div', { class: 'a2gate' }, [
-        G.el('span', { text: '아홉 관문의 자 · ' }),
+        G.el('span', { text: '넘어야 하는 값 · ' }),
         G.el('span', { class: 'mono', text: sc.thresholds.map(t =>
           t.metric + ' ' + t.op + ' ' + t.limit +
           (t.per_step ? ' (요 명령 네 크기 각각)' : '')).join('  ·  ') })
       ]));
     }
+
+    /* **이 섹션의 조종간.** 페이지를 안 넘기고 여기서 셋을 같이 돌린다. */
+    box.ui = G.transport(box.group);
+    sec.appendChild(box.ui.row);
 
     const cols = G.el('div', { class: 'a2cols' });
 
@@ -920,44 +941,44 @@ document.addEventListener('DOMContentLoaded',function(){
           text: (mt.label || k) + ' ' + num(v) + (mt.unit ? ' ' + mt.unit : '') }));
       });
 
-      if (withVideo) {
-        const video = G.video({ preload: 'auto' });
-        if (cell.clip.poster) {
-          video.poster = G.at(picked.folder + '/' + cell.clip.poster);
-        }
-        video.src = G.at(picked.folder + '/' + cell.clip.file);
-        const tag = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
-        col.appendChild(video);
-        col.appendChild(tag);
-        endedTag[m] = tag;
-        group.add(m, video, cell.clip.seconds);
-        video.addEventListener('click', () => group.toggle());
-      } else {
-        /* **목록에서는 표지만 깐다.** 스물일곱 개를 한꺼번에 걸면 다 받아 온다.
-         * 누르면 그 시나리오의 비교 모드로 간다. */
-        const btn = G.el('button', { class: 'poster has-shot', type: 'button' }, [
-          G.el('span', { class: 'play', text: '▶' }),
-          G.el('span', { text: '함께 재생' })
-        ]);
-        btn.style.backgroundImage =
-          'url("' + G.at(picked.folder + '/' + cell.clip.poster) + '")';
-        btn.addEventListener('click',
-          () => go({ mode: 'compare', scenario: id, model: null }));
-        col.appendChild(btn);
+      /* **`preload: none` 이다.** 스물일곱 칸에 src 를 걸어도 누르기 전에는
+       * 아무것도 안 받아 온다. 표지가 첫 장면을 보여 준다. */
+      const wrap = G.el('div', { class: 'a2vid' });
+      const video = G.video({ preload: 'none' });
+      if (cell.clip.poster) {
+        video.poster = G.at(picked.folder + '/' + cell.clip.poster);
       }
+      video.src = G.at(picked.folder + '/' + cell.clip.file);
+      wrap.appendChild(video);
 
+      const play = G.el('button', { class: 'a2play', type: 'button',
+                                    'aria-label': '이 시나리오 세 판을 함께 재생' }, [
+        G.el('span', { class: 'ico', text: '▶' }),
+        G.el('span', { text: '함께 재생' })
+      ]);
+      play.addEventListener('click', () => box.group.toggle());
+      wrap.appendChild(play);
+
+      const ended = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
+      wrap.appendChild(ended);
+
+      box.tags[m] = { wrap: wrap, ended: ended };
+      box.group.add(m, video, cell.clip.seconds);
+      video.addEventListener('click', () => box.group.toggle());
+
+      col.appendChild(wrap);
       cols.appendChild(col);
     });
 
     sec.appendChild(cols);
+    box.group.clock();
     return sec;
   }
 
   /* ── 그리기 ────────────────────────────────────────────── */
   function draw() {
-    group.clear();
-    models.forEach(m => delete endedTag[m]);
-    ui = null;
+    groups.forEach(b => b.group.clear());
+    groups.length = 0;
     body.textContent = '';
 
     if (rejected.length) {
@@ -1007,28 +1028,21 @@ document.addEventListener('DOMContentLoaded',function(){
     if (state.mode === 'grid') {
       body.appendChild(gridView(ids));
       body.appendChild(G.el('div', { class: 'note' }, [
-        G.el('span', { text: '칸을 누르면 그 시나리오를 세 판 함께 재생합니다.' })
+        G.el('span', { text: '칸을 누르면 그 시나리오만 목록으로 펼칩니다. ' +
+          '재생은 그 자리에서 합니다.' })
       ]));
       foot();
       return;
     }
 
-    if (state.mode === 'compare') {
-      ui = G.transport(group);
-      body.appendChild(ui.row);
-      group.clock();
-      body.appendChild(scenarioBlock(ids[0], true));
-      body.appendChild(G.el('p', { class: 'cmpnote' }, [
-        G.el('b', { text: '컷과 숫자는 같은 실행에서 나왔습니다. ' }),
-        G.el('span', { text: '위 숫자는 그 실행의 env ' + data.protocol.num_envs +
-          ' 칸 집계이고, 컷은 그중 한 칸입니다. 한 칸이 ' +
-          data.protocol.num_envs + ' 칸을 대표한다고 읽지 마십시오.' })
-      ]));
-      foot();
-      return;
-    }
+    ids.forEach(id => body.appendChild(scenarioBlock(id)));
 
-    ids.forEach(id => body.appendChild(scenarioBlock(id, false)));
+    body.appendChild(G.el('p', { class: 'cmpnote' }, [
+      G.el('b', { text: '컷과 숫자는 같은 실행에서 나왔습니다. ' }),
+      G.el('span', { text: '위 숫자는 그 실행의 env ' + data.protocol.num_envs +
+        ' 칸 집계이고, 컷은 그중 한 칸입니다. 한 칸이 ' +
+        data.protocol.num_envs + ' 칸을 대표한다고 읽지 마십시오.' })
+    ]));
     foot();
   }
 

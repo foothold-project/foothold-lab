@@ -404,3 +404,27 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
 /* 격자의 막대는 칸을 다 먹지 않게. 숫자가 주인공이고 막대는 자다. */
 .a2grid .a2bar,.a2grid .a2scale{max-width:15rem}
 .a2grid td{width:26%}
+
+/* ── 목록에서 «그 자리에서» 재생 ──────────────────────────────
+ *
+ * 팀장 지적 2026-09-29: 「재생 버튼 누르면 페이지 넘어가는 것도 좀 이상하고
+ * 각 목록 세션을 '함께 재생'해서 볼 수 있게 버튼 배치한 것도 아니고」.
+ *
+ * 맞다. 단추에 「함께 재생」이라 써 놓고 누르면 화면이 바뀌었다. 이제
+ * 섹션마다 조종간을 두고 그 자리에서 셋을 같이 돌린다.
+ */
+.a2vid{position:relative;margin-top:.55rem;border-radius:6px;overflow:hidden;
+  background:#000;aspect-ratio:16/9}
+.a2vid video{width:100%;height:100%;display:block;object-fit:cover;margin:0}
+.a2play{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;border:0;cursor:pointer;
+  background:rgba(6,9,14,.34);color:#fff;font:inherit;font-size:.74rem;
+  font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.9);
+  transition:opacity .15s}
+.a2play .ico{width:38px;height:38px;border-radius:50%;border:2px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.a2play:hover{background:rgba(6,9,14,.18)}
+.a2vid.playing .a2play{opacity:0;pointer-events:none}
+.a2vid .ended{position:absolute;right:.4rem;bottom:.4rem}
+/* 섹션 조종간. 그 섹션의 셋만 묶는다. */
+.a2sec .transport{margin:.2rem 0 .7rem}
