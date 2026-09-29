@@ -1911,8 +1911,30 @@
   "purpose": "운영",
   "purpose_src": "auto",
   "parents": [],
+  "children": [
+   "research/20260929-locomotion-direction.md"
+  ],
+  "web_worthy": "보통",
+  "web_worthy_src": "auto"
+ },
+ {
+  "path": "research/20260929-locomotion-direction.md",
+  "title": "험지 통과와 기본 명령을 함께 학습하기 위한 연구 방향",
+  "kind": "계획",
+  "evidence": "로컬",
+  "issues": [],
+  "areas": [
+   "A/정책학습"
+  ],
+  "areas_sure": true,
+  "areas_why": "근거 낱말 학습×43 보상×17 관측×31",
+  "purpose": null,
+  "purpose_src": "확인 필요",
+  "parents": [
+   "research/20260928-v2-mvp-report.md"
+  ],
   "children": [],
-  "web_worthy": "낮음",
+  "web_worthy": "보통",
   "web_worthy_src": "auto"
  },
  {

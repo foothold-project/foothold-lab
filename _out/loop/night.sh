@@ -142,8 +142,16 @@ fi
 # ---------------------------------------------------------------- 3 · 평가
 if ! done_stage "eval"; then
   if [ "$E" -gt 0 ]; then say "평가가 도는 중 ($E 개). 기다린다"; exit 0; fi
-  if [ -f "$OUT/night.eval-started.r$ROUND" ]; then
-    say "평가가 끝났다"; mark_stage "eval"
+  if [ -f "$OUT/night.eval2-started.r$ROUND" ]; then
+    say "평가가 끝났다 (최고점 구간 포함)"; mark_stage "eval"
+  elif [ -f "$OUT/night.eval-started.r$ROUND" ]; then
+    # 1 차가 끝났다. «최고점 구간» 을 더 잰다.
+    # 근거: 학습 곡선에서 fs1 이 step 3765 · fs2 가 3892 에서 총 보상 최고를 찍고
+    #       4500 에서 내려왔다. 다섯 점만 보면 그 구간을 건너뛴다 (팀장 지시).
+    say "최고점 구간을 더 잰다 (3750 · 4000)"
+    date > "$OUT/night.eval2-started.r$ROUND"
+    FOOTHOLD_EVAL_CKPTS=3750,4000       $PY _out/loop/eval_runner.py 2>&1 | tail -4 | sed 's/^/          /' | tee -a "$LOG"
+    exit 0
   else
     say "평가를 건다 (1500 · 2000 · 2500 · 3000 · 4500)"
     date > "$OUT/night.eval-started.r$ROUND"
@@ -220,14 +228,34 @@ if ! done_stage "notify"; then
   say "  자료     $BUNDLE"
   say "  영상     sim/eval/results/20260928-scratch-clips"
 
-  if [ "$ROUND" -eq 1 ]; then
-    echo 2 > "$ROUNDF"
-    say "**회차 2 로 넘어간다** · 장치를 바꾼 짝 (fs1b @cuda:1 · fs2b @cuda:0)"
-    say "  왜: CRITERIA 9 절이 자식끼리 GPU 가 갈리는 것을 금지하고 544 행이"
-    say "      GPU 효과를 «미측정» 으로 둔다. 2 x 2 로 갈라 낸다"
-  else
-    say "**두 회차가 다 끝났다.** 보고서 두 장의 «본문» 은 사람이 쓴다"
-  fi
+  # **회차 2 를 뺐다** (팀장 지시 2026-09-28 · 「회차 2 빼고」)
+  #
+  # 원래 이유는 「장치 효과와 보상 효과를 2 x 2 로 가른다」였다. 그 사이에
+  # 장치 효과를 «0 으로» 측정했다. 그래서 회차 2 는 이미 있는 파일을 복제한다.
+  #
+  #   v2b-r 대 v2b-p11 · resume · lr 1e-4 · sim 과 PPO 를 «같이» 옮긴 짝
+  #     v2b-r   agent cuda:0 · sim cuda:0
+  #     v2b-p11 agent cuda:1 · sim cuda:1
+  #     체크포인트 121 개 «전수» · 정책 가중치와 optimizer 상태 텐서까지 전부 동일
+  #     최대 차 0.000e+00
+  #   probe-det-g0 (cuda:0) 대 fs2 (cuda:1) · 처음부터 · lr 1e-3 · 26 회
+  #     model_0 과 model_25 가 완전 동일
+  #
+  # **한정이 있다. 0 인 것은 둘을 «같이» 옮긴 짝에서다.**
+  #   v2b 는 agent cuda:0 · sim cuda:1 로 «갈라» 놓았고, v2b-p11 과
+  #   model_0 부터 다르다 (0.0063 -> 25 에서 0.0897 -> 1500 에서 0.6216 ->
+  #   3000 에서 1.1519). 그래서 「GPU 효과 0」을 조건 없이 쓰면 틀린다.
+  #   회차 2 를 뺄 수 있는 이유는 `launch_run` 이 `-Device` 와
+  #   `agent.device` 를 **같은 값으로** 주기 때문이다 (둘을 같이 옮긴다).
+  #
+  # 함정 하나를 같이 적는다. **파일 sha256 은 121 개가 전부 다르다.**
+  # `torch.save` 가 텐서의 device 를 함께 적기 때문이다. 해시로만 보면
+  # 「다르다」로 읽힌다. 내용은 같다. CRITERIA 가 이 칸을 오래 「미측정」으로
+  # 둔 것도 이 함정일 수 있다.
+  say "**회차 1 로 끝낸다.** 회차 2 (장치 교차) 는 «뺐다»"
+  say "  왜: sim·PPO 를 같이 옮긴 짝에서 장치 효과가 0 이다 (121 개 전수 동일)"
+  say "      fs1b 는 fs1 과, fs2b 는 fs2 와 비트 단위로 같은 파일이 된다"
+  say "  보고서 두 장의 «본문» 은 사람이 쓴다"
 fi
 
 exit 0

@@ -505,9 +505,14 @@
   "ver": "v2.2"
  },
  "docs/research/20260928-v2-mvp-report.md": {
-  "hash": "1268c0b39acdc3e8",
-  "major": "v3.9",
-  "ver": "v3.9"
+  "hash": "3c83228b351ea6c0",
+  "major": "v4.0",
+  "ver": "v4.0"
+ },
+ "docs/research/20260929-locomotion-direction.md": {
+  "hash": "a445ee1da18c4862",
+  "major": "v1.1",
+  "ver": "v1.3"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

@@ -1,0 +1,257 @@
+원본 : C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-lab\web
+배포 : C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-site
+
+[0.6] 손 관리 페이지를 소스에서 생성
+  3장 소스에서 생성: brief.html <- brief.base.html · index.html <- index.base.html · setup.html <- setup.base.html
+[0] 슬라이드 병합 (팀소개 + 킥오프)
+  격리 검사  : 새는 규칙 0개
+    병합      : 팀소개 3장 + 킥오프 3장(1P 중복 제외) = 6장
+    범위 격리 : 킥오프 CSS 13,480 bytes → [data-deck="ko"]
+    크기      : 52,604 bytes
+
+[1] 커리큘럼 생성
+  신설 절    : A5→A5.5, A12→A12.5, A14→A14.5
+  ASCII 교체 : 5개 / 남은 <pre class="dia"> 0개
+  도식 주입 : 7개  → A2, A3, A4, A5, A9, A10, A12
+  실전 기록 : A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17
+  논문 카드 : A4(1), A6(1), A8(1), A9(1), A10(1), A11(1), A12(3), A14(2), A15(1)
+  용어 감쌈 : 10종 / 총 70회
+     정책             26회
+     관측             14회
+     보상             11회
+     도메인 랜덤화        5회
+     IMU            4회
+     토크             3회
+     각속도            3회
+     체크포인트          2회
+     DOF            1회
+     쿼터니언           1회
+  크기      : 73,088 → 199,327 bytes
+
+[1.05] 발표 덱 생성 (_src/pitch.base.html → pitch.html)
+  pitch.html 재생성 (정본 = _src + docs/ROLES.md)
+
+[1.33] 시간 입력 관문 (buildtime 한 곳인가)
+  자기시험 통과 · 시간 호출이 buildtime 한 곳에만 있습니다 · 암호 난수 보존 확인
+
+[1.34] 판 원장 (문서가 바뀌면 소수점을 붙인다)
+  문서 131장 · 그대로 129 · 새로 0 · 판 올림 2
+     docs/LEDGER.md                                 v2.18 -> v2.19 (자동)
+     docs/research/20260928-scratch-vs-resume.md    v2.1 -> v2.2 (자동)
+
+[1.35] 문서 관계표 다시 그리기 (유형 · 작업 영역 · 참조 · 활동)
+  문서 117장 · 참조 92개 · 새로 들어옴 0 · 빠짐 0
+  출처 이슈가 적힌 문서 53 / 117 (#111 · 나머지는 아직 «> 이슈:» 가 없다)
+  확인 필요 30건: DECISIONS.md (작업 영역) · digest/2026-W37-material.md (작업 영역) · notices/2026-08-09.md (작업 영역) · notices/2026-08-24.md (작업 영역)
+  ★ COLLAB.md: 영역 규칙=C/기록 사람=C/운영
+  ★ FLOW.md: 영역 규칙=A/정책학습 사람=C/운영
+  ★ WORKFLOW.md: 영역 규칙=C/기록 사람=C/운영
+  ★ ops/VERIFIED.md: 활동 규칙=운영 사람=파이프라인점검
+    규칙과 사람 판정이 어긋납니다. 사람 값을 썼습니다.
+    규칙이 맞으면 doc-graph-overrides.json 에서 그 줄을 지우십시오.
+
+[1.4] md -> 웹 연결표 작성
+  연결 규칙 99개 (lab 찾음)
+
+[1.5] 백과 용어 사전 보강
+용어 사전  : 앵커 20 · 자세히 20 · 신규 19개 · 링크 75개(39항목)
+
+[1.7] 팀원 가이드 생성 (02_team/TEAM_ACCESS.md → team-access.html)
+  28965 bytes · 섹션 8 · 표 6
+
+[1.72] 설계도 페이지 (04_plan/PLAN.md → plan.html)
+  25225 bytes · 표 6
+
+[1.73] 협업 규칙 페이지 (lab docs/COLLAB.md → collab.html)
+  31136 bytes · SVG 0
+
+[1.74] 프로젝트 흐름 페이지 (lab docs/FLOW.md → flow.html)
+  31388 bytes · 표 20 · SVG 0
+
+[1.75] 브랜드 변수(--brand) 확인
+  team-access.html                   2곳
+  --brand: 파일 1개 · 정의 2곳 (이미 반영된 것 제외)
+
+[1.8] setup.html 코드 문법 강조
+  강조 12블록 · 건너뜀 5블록(출력·로그) · CSS OK
+
+[1.78] lab 문서 자동 게시 (docs/research/ → 웹)
+  자산 106개 반영 (assets/visual · assets/eval)
+  [경고] 20260903-default-1500iter-terrain-analysis: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] 20260918-postshot-3dgs-tech-analysis: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] 20260928-rl-lineage: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] 20260928-scratch-vs-resume: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] NVIDIA공식체크포인트_속도단차교차평가분석: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] benchmark-setup-lim: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] parkour-ablation-대조분석: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [경고] pretrained-vs-model99-7terrain: 증거 표기(`확인됨`/`추측`)가 하나도 없음
+  [가림] foothold-lab / docs/research/직진성-외부표준.md: 금액 1곳
+  게시 43편 + 목록 1 · 건너뜀 1
+     - rough-terrain-study-plan (상태가 「폐기」 (저장소에는 남는다))
+
+[1.895] 팀 자료실 (조선대 자료 암호화)
+  [!] manifest 가 없습니다: C:\Users\AI-WS01\AppData\Local\Temp\tmpkkli0j7l\assets\secure\manifest.json
+      오래된 HTML 로 물러서지 않습니다. 암호화 자산을 먼저 갖추세요
+  chosun-materials.html · budget.html 생성 (템플릿에서 결정론적으로 · 암호화 없음)
+  chosun-materials.html · budget.html 생성 (템플릿에서 결정론적으로 · 암호화 없음)
+  [!] manifest 와 암호문이 어긋납니다 1건
+     assets/secure/a.enc 없음
+  [!] manifest 와 암호문이 어긋납니다 1건
+     assets/secure/a.enc 태그 불일치 (9d6f965a != 305531dc)
+  chosun-materials.html · budget.html 생성 (템플릿에서 결정론적으로 · 암호화 없음)
+  이 작업 공간은 secure 소유자가 아닙니다 (기존 산출물 유지)
+     릴리스 공간에서만 돕니다 · _build/.secure-owner 또는 FOOTHOLD_SECURE_OWNER
+  릴리스 소유 작업 공간이 아님: 기존 암호화 산출물 유지 (재생성 건너뜀)
+  chosun-materials.html · budget.html 생성 (템플릿에서 결정론적으로 · 암호화 없음)
+
+[1.897] 팀원 개인 소개 페이지
+  개인 페이지 5개 생성 (오흥재→team-lead.html, 임석헌→team-lim.html, 맹라현→team-meang/index.html, 이민우→team-lee.html, 오현민→team-oh.html)
+
+[1.76] 팔레트 ↔ brand 토큰 정본 대조
+  정본: foothold.tokens.json
+  팔레트 14종 · 라이트/다크 모두 정본과 일치
+
+[1.79] 문구 ↔ brand VOICE 정본 대조
+  정본: VOICE_AND_MESSAGE.md · 지향 문구 1 · 승인 문구 5: 위반 없음
+
+[1.82] 웹 ASCII 도식 검사 (세션 규칙 2)
+  검사 86장 · 새 위반 없음 · 유예 명부 1건 (아직 안 고친 빚)
+     research-20260903-default-1500iter-terrain-analysis.html:423  도형문자[─└├]  BASE
+
+[1.85] 다크모드 + 사용자 토글 주입 (DESIGN-GUIDE §2)
+  index.html           hex→var 0곳
+  encyclopedia.html    hex→var 449곳
+  curriculum.html      hex→var 3곳
+  setup.html           hex→var 12곳
+  plan.html            hex→var 2곳
+  collab.html          hex→var 2곳
+  team-access.html     hex→var 2곳
+  brief.html           hex→var 0곳
+  team-intro.html      hex→var 4곳
+  flow.html            hex→var 2곳
+  research-20260903-default-1500iter-terrain-analysis.html hex→var 2곳
+  research-20260903-rails-isaac-sweep-design.html hex→var 2곳
+  research-20260903-render-blackframe.html hex→var 2곳
+  research-20260904-rail-reward-literature.html hex→var 2곳
+  research-20260906-rails-speed-tracking-diagnosis.html hex→var 2곳
+  research-20260907-go2-joint-limits.html hex→var 2곳
+  research-20260908-go2-spec-sim-vs-real.html hex→var 2곳
+  research-20260908-pit-diagnosis.html hex→var 2곳
+  research-20260908-success-criteria-anatomy.html hex→var 2곳
+  research-20260909-eval-harness-diagram.html hex→var 2곳
+  research-20260909-head-contact-observation.html hex→var 2곳
+  research-20260911-eval-protocol-v2.html hex→var 2곳
+  research-20260918-postshot-3dgs-tech-analysis.html hex→var 2곳
+  research-20260928-rl-lineage.html hex→var 2곳
+  research-20260928-scratch-vs-resume.html hex→var 2곳
+  research-NVIDIA공식체크포인트_속도단차교차평가분석.html hex→var 2곳
+  research-architecture-decision.html hex→var 2곳
+  research-benchmark-repro-protocol.html hex→var 2곳
+  research-benchmark-setup-lim.html hex→var 2곳
+  research-cloud-gpu-options.html hex→var 2곳
+  research-compute-resources.html hex→var 2곳
+  research-flat-straight-baseline-10m.html hex→var 2곳
+  research-generalization-benchmark-10-terrains.html hex→var 2곳
+  research-go2-pretrained-policies.html hex→var 2곳
+  research-go2-rough-training.html hex→var 2곳
+  research-nvidia-curriculum-alignment.html hex→var 2곳
+  research-omniverse-stack.html hex→var 2곳
+  research-parkour-ablation-대조분석.html hex→var 2곳
+  research-pretrained-vs-model99-7terrain.html hex→var 2곳
+  research-rails-diagnosis.html hex→var 2곳
+  research-render-benchmarks.html hex→var 2곳
+  research-robogauge-observation-mapping.html hex→var 2곳
+  research-role-map-careers.html hex→var 2곳
+  research-ros2-isaacsim-integration.html hex→var 2곳
+  research-runpod-team-ops.html hex→var 2곳
+  research-terrain-finetune-plan.html hex→var 2곳
+  research-terrain-guide-isaaclab.html hex→var 2곳
+  research-terrain-rl-study-plan-0818.html hex→var 2곳
+  research-training-benchmarks.html hex→var 2곳
+  research-visual-evidence.html hex→var 2곳
+  research-발보상-시간아니고높이아님.html hex→var 2곳
+  research-직진성-외부표준.html hex→var 2곳
+  research-평가하네스-수정본.html hex→var 2곳
+  digest-2026-W33.html hex→var 2곳
+  digest-2026-W34.html hex→var 2곳
+  digest-2026-W35.html hex→var 2곳
+  digest-2026-W36-material.html hex→var 2곳
+  digest-2026-W36.html hex→var 2곳
+  digest-2026-W37-material.html hex→var 2곳
+  digest-2026-W37.html hex→var 2곳
+  digest-2026-W39-material.html hex→var 2곳
+  questions.html       hex→var 2곳
+  project-report.html  hex→var 2곳
+  field-check-0813.html hex→var 2곳
+  field-check-go2-intake.html hex→var 2곳
+  meeting-20260813-ops-alignment.html hex→var 2곳
+  meeting-20260814-east-ops.html hex→var 2곳
+  meeting-20260819-team-lock.html hex→var 2곳
+  meeting-20260820-kickoff.html hex→var 2곳
+  meeting-20260821-team-meeting.html hex→var 2곳
+  meeting-20260824-park-mentoring.html hex→var 2곳
+  meeting-20260825-park-mentoring.html hex→var 2곳
+  meeting-20260826-mentor-sync.html hex→var 2곳
+  meeting-20260831-park-mentoring.html hex→var 2곳
+  meeting-20260902-park-mentoring.html hex→var 2곳
+  meeting-20260904-east-midterm-review.html hex→var 2곳
+  research.html        hex→var 2곳
+  chosun-materials.html hex→var 5곳
+  pitch.html           hex→var 0곳
+  automation.html      hex→var 16곳
+  team-lead.html       hex→var 2곳
+  team-lee.html        hex→var 2곳
+  team-lim.html        hex→var 2곳
+  team-oh.html         hex→var 2곳
+
+[1.87] 브랜드 정본 자산 적용 (파비콘 · 워드마크)
+  정본 자산 4개 복사 (sha: favico=08e237 brand.=1712f4 ink.sv=2f7349 revers=4113d2)
+  파비콘 주입 83개 페이지 (공개 86장 중)
+  워드마크 → 정본 SVG 교체 1개 ['team-intro.html']
+
+[1.88] NEW 배지 (등록 후 일정 기간 자동 표시)
+  (다시 해서 됐습니다 2번째: research.html)
+  카드 링크 38개에 등록일 부여 · 방문 기록 스크립트 84페이지(전부) · 창 7일
+
+[1.89] 사이트 검색 (색인 생성 + 검색창 주입)
+  배포본 전용 페이지 4장도 색인에 넣었습니다: gallery/index.html · gallery/view/index.html · gallery/compare/index.html · report-v1.html
+  배포본 전용 페이지 4장도 색인에 넣었습니다: gallery/index.html · gallery/view/index.html · gallery/compare/index.html · report-v1.html
+  (다시 해서 됐습니다 2번째: automation.html)
+  자기시험 통과 · 공개 86장 = 색인 90장 · 절단 0 · 보호 문서 0
+  색인 844개 절 · 본문 803540자 · 최장 레코드 60037자 · 1577KB · 오버레이 85페이지 (Ctrl/Cmd+K)
+  오버레이 제외 1장 (전체화면 발표본. 색인에는 들어감): assets/deliverables/proposal-deck-presented.html
+  도식 138개 · 내용까지 30 · 이름만 15 · 장식(담을 것 없음) 90 · 맨것 3
+  화면에서 JS 가 그리는 도식 2개 · 이름으로만 찾힙니다 (정적 파일에 글자가 없음):
+      encyclopedia.html #gaitChart  «보행 패턴 접지 타이밍 도식»
+      encyclopedia.html #gaitTop  «위에서 본 접지 상태»
+
+[1.8954] foothold-wiki 이식 (#72 1단계)
+  글자 크기 40개 규칙을 우리 척도로 옮겼습니다
+  wiki 이식 4쪽 (겉 규칙 42개 제거): ROS 2 레퍼런스 7절 · 시뮬레이션 RL 레퍼런스 3절 · SLAM · Nav2 레퍼런스 9절 · 컴퓨터 비전 교재 12절
+
+[1.8955] 운영 문서 게시 (작업 흐름 · 개인 계획 · 결정 · 공지)
+  [웹제외] foothold-lab / docs/guides/ros2-03-tf-rviz2.md: 절 1개
+  31개: workflow.html · personal-plans.html · decisions-20260827.html · automation.html · decisions-log.html · robot-spec.html · roles.html · ledger.html · info-model.html · research-taxonomy.html · doc-graph.html · runpod-setup.html · ros2-01-setup.html · ros2-02-python.html · ros2-03-tf-rviz2.html · notice-20260912.html · notice-latest.html · notice-20260902.html · notice-20260827.html · notice-20260826.html · notice-20260825.html · notice-20260824.html · notice-20260823.html · notice-20260822.html · notice-20260820.html · notice-20260818.html · notice-20260814.html · notice-20260813.html · notice-20260812.html · notice-20260811.html · notice-20260809.html
+
+[1.896] 산출물 문서 게시 (lab deliverables/*.md -> 웹)
+  proposal: 제출본 제외 구간 2곳 뺌
+  brainstorming: 제출본 제외 구간 3곳 뺌
+  wbs-official: 제출본 제외 구간 2곳 뺌
+  roles-responsibilities: 제출본 제외 구간 2곳 뺌
+  발표본 복사: proposal-deck-presented.html (9.6 MB)
+  14개: 프로젝트 기획서 · 브레인스토밍 · WBS 설계 · 팀 역할·책임 정의서 · 프로젝트 기획서 요약 · 프로젝트 기획서 (기획발표 · 3.1 WBS 설계 · 기준 정책 · 지표 세트 · 일반화 평가표 · 디지털 트윈 · 렌더 시연 · 실기 항법 검증 리포트 · 최종 실증결과 보고서 · 3.2 프로젝트 진행일지 · 3.3 멘토링 일지
+
+[1.8965] 브랜드 재적용 (덮어쓴 뒤 · 공개 전수)
+  정본 자산 4개 복사 (sha: favico=08e237 brand.=1712f4 ink.sv=2f7349 revers=4113d2)
+  파비콘 주입 36개 페이지 (공개 120장 중)
+  워드마크 → 정본 SVG 교체 0개 
+[1.897] WBS 표 주입 (xlsx -> 웹)
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-lab\web\_build\build.py", line 606, in <module>
+    wbs_web.main(VAULT)
+  File "C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-lab\web\_build\wbs_web.py", line 357, in main
+    meta, body, why = read(lab)
+                      ^^^^^^^^^
+  File "C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-lab\web\_build\wbs_web.py", line 35, in read
+    import openpyxl
+ModuleNotFoundError: No module named 'openpyxl'

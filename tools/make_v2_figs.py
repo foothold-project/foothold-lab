@@ -439,8 +439,11 @@ def fig_curve(rows):
                 c.text(ox - 10, y + 4, str(tick), size=9.5,
                        fill="var(--ink-3)", anchor="end", font=MONO)
 
+        # **눈금은 「%.1f」 로 찍는다.** `%g` 는 1.0 을 「1」 로 주는데
+        # 나머지가 「0.1」 ~ 「0.9」 라 마지막 칸만 표기가 어긋난다
+        # `확인됨` (2026-09-29 · 팀장 지적).
         for d in diffs:
-            c.text(px(d), top + plot_h + 18, "%g" % d, size=9.5,
+            c.text(px(d), top + plot_h + 18, "%.1f" % d, size=9.5,
                    fill="var(--ink-3)", anchor="middle", font=MONO)
 
         # **안 잰 난이도를 먼저 그린다.** 0.8 은 아무도 안 쟀다. 그 자리를
@@ -452,7 +455,7 @@ def fig_curve(rows):
         for h in holes:
             c.line(px(h), top - 6, px(h), top + plot_h,
                    stroke="var(--warn)", width=1.6, dash="3 4")
-            c.text(px(h), top + plot_h + 18, "%g" % h, size=9.5,
+            c.text(px(h), top + plot_h + 18, "%.1f" % h, size=9.5,
                    fill="var(--warn)", anchor="middle", font=MONO)
             if pi == 0:
                 c.text(px(h), top - 14, "안 쟀다", size=9.5,
@@ -498,7 +501,7 @@ def fig_curve(rows):
                 short.setdefault(pts[-1][0], []).append(label.split(" ")[0])
 
         if short:
-            note = " · ".join("%s 는 %g 까지 쟀다" % (" · ".join(v), k)
+            note = " · ".join("%s 는 %.1f 까지 쟀다" % (" · ".join(v), k)
                               for k, v in sorted(short.items()))
             c.text(ox, top + plot_h + 32, note, size=9.5,
                    fill="var(--ink-3)")

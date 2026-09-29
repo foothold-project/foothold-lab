@@ -32,7 +32,7 @@ V1 = os.path.join(LAB, "models", "foothold-v1.json")
 
 SETS = ("rough6", "unseen10")
 SPEEDS = (("v0.5", "0.5 m/s"), ("v1.0", "1.0 m/s"), ("v1.5", "1.5 m/s"))
-CKPTS = (1500, 2000, 2500, 3000, 4500)
+CKPTS = (1500, 2000, 2500, 3000, 3750, 4000, 4500)
 
 # 팀장이 정한 비교 대상 셋
 OURS = (
