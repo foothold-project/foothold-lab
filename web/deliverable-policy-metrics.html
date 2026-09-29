@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>기준 정책 · 지표 세트 · FOOTHOLD</title>
-<meta name="description" content="우리가 정한 험지로 학습한 정책과, 이후 모든 실험이 대조할 기준 지표.">
+<meta name="description" content="기준선은 NVIDIA 공식 체크포인트다. 지표 다섯을 그 위에서 재고, 이후 모든 실험이 이 숫자와 비교된다.">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=7048890f').then(function(r){
+    fetch('/assets/search-index.json?v=ba2be9f3').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -922,17 +922,17 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">산출물 · A-정책 · 9월 12일</div>
   <h1>기준 정책 · 지표 세트</h1>
-  <p class="lede">우리가 정한 험지로 학습한 정책과, 이후 모든 실험이 대조할 기준 지표.</p>
-  <div class="meta"><div><span class="k">관문</span><span class="v">A-정책 · 9월 12일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-08-27 11:20</span></div><div><span class="k">상태</span><span class="v">대기</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/policy-metrics.md</span></div></div>
+  <p class="lede">기준선은 NVIDIA 공식 체크포인트다. 지표 다섯을 그 위에서 재고, 이후 모든 실험이 이 숫자와 비교된다.</p>
+  <div class="meta"><div><span class="k">관문</span><span class="v">A-정책 · 9월 12일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-29 21:20</span></div><div><span class="k">상태</span><span class="v">확정</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/policy-metrics.md</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 실험
-작성: 오흥재 · 2026-08-27 11:20
+작성: 오흥재 · 2026-09-29 21:20
 담당: 임석헌 · A/정책학습
-근거: 실측
-요지: 우리가 정한 험지로 학습한 정책과, 이후 모든 실험이 대조할 기준 지표.
-상태: 대기</p></blockquote>
+근거: 실측 (<code>sim/eval/results/20260928-v2-gallery-raw/</code> 세 판 x 16 지형 x 3 속도 x 100 판 = 판마다 4,800 에피소드)
+요지: 기준선은 NVIDIA 공식 체크포인트다. 지표 다섯을 그 위에서 재고, 이후 모든 실험이 이 숫자와 비교된다.
+상태: 확정</p></blockquote>
 <blockquote><p><b>완료 기준</b>: 아래 §2 표의 여섯 지표가 모두 숫자로 채워지고, §3 학습 조건이
 재현 가능하게 적히고, 체크포인트 경로가 남으면 상태를 <code>확정</code> 으로 바꾼다.
 관문: <code>A-정책</code> (2026-09-12)</p>
@@ -942,18 +942,42 @@ body>*{flex-shrink:0}
 <section id="s1"><span id="1"></span><h2>1. 이 문서가 하는 일</h2>
 <p>앞으로 모든 실험은 <b>「기준 대비 얼마나 나아졌나」</b> 로 말한다. 그 기준이 여기서 정해진다. 한 번 고정하면 중간발표까지 바꾸지 않는다. 기준이 흔들리면 비교가 무의미해진다.</p>
 </section>
-<section id="s2"><span id="2"></span><h2>2. 지표 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>지표</th><th>정의</th><th>기준 정책</th><th>측정 조건</th></tr></thead><tbody><tr><td>통과 성공률</td><td>지정 거리를 시간 안에 완주한 비율</td><td></td><td>에피소드 N회</td></tr><tr><td>낙상률</td><td>몸통이 지면에 닿은 에피소드 비율</td><td></td><td></td></tr><tr><td>속도추종 오차</td><td>명령 속도와 실제 속도의 차 (m/s)</td><td></td><td></td></tr><tr><td>평균 이동 거리</td><td>에피소드당 전진 거리 (m)</td><td></td><td></td></tr><tr><td>생존 시간</td><td>종료까지 걸린 시간 (초)</td><td></td><td></td></tr><tr><td>난이도 도달</td><td>커리큘럼에서 올라간 최고 행</td><td></td><td></td></tr></tbody></table></div>
-<blockquote><p>참고 기준선: NVIDIA 공식 체크포인트 1,500 iteration 의 통과율 <b>86.7%</b>
-(학습에 쓴 지형 기준, 30회 중 26회). 우리 정책은 이 숫자와 비교된다.
-근거: <code>docs/research/training-benchmarks.md</code> §5-3</p></blockquote>
+<section id="s2"><span id="2"></span><h2>2. 지표</h2>
+<p><b>기준 정책은 <code>NVIDIA</code> 열이다.</b> 나머지 두 열은 그 기준에 대고 잰 우리 판이다. 전부 <b>규격 2</b> 로 같은 날 같은 하네스에서 쟀다. 지형 16 종 x 속도 3 종 x 100 판 = 판마다 4,800 에피소드이고, 평균은 <b>에피소드 수로 가중</b> 했다.</p>
+<div class="tw"><table><thead><tr><th>지표</th><th>정의</th><th><b>NVIDIA (기준)</b></th><th>foothold-v1</th><th>foothold-v2</th><th>측정 조건</th></tr></thead><tbody><tr><td>통과 성공률</td><td>네 축을 <b>모두</b> 통과한 에피소드 비율 (<code>overall_success</code>)</td><td><b>41.17 %</b></td><td>88.88 %</td><td>94.19 %</td><td>48 칸 · 4,800 판</td></tr><tr><td>낙상률</td><td>생존 축을 못 넘은 에피소드 비율 (<code>1 - survival_rate</code>)</td><td><b>12.69 %</b></td><td>4.96 %</td><td>3.42 %</td><td>같음</td></tr><tr><td>속도추종 오차</td><td>명령 속도와 실제 속도의 차 (<code>mean_velocity_mae_mps</code>)</td><td><b>0.379 m/s</b></td><td>0.148 m/s</td><td>0.125 m/s</td><td>같음</td></tr><tr><td>평균 이동 거리</td><td>에피소드당 전진 거리 (<code>mean_forward_progress_m</code>)</td><td><b>3.77 m</b></td><td>5.14 m</td><td>5.37 m</td><td>같음</td></tr><tr><td>생존 시간</td><td>종료까지 걸린 시간 (<code>mean_episode_duration_s</code>)</td><td><b>6.72 초</b></td><td>7.13 초</td><td>7.20 초</td><td>같음</td></tr><tr><td>난이도 도달</td><td>커리큘럼에서 올라간 최고 행</td><td><span class="ev ev-todo">미측정</span></td><td><span class="ev ev-todo">미측정</span></td><td><span class="ev ev-todo">미측정</span></td><td><b>평가가 안 재는 값</b> (아래)</td></tr></tbody></table></div>
+<blockquote><p><b>난이도 도달만 비어 있는 까닭.</b> 평가 하네스는 난이도를 <b>0.5 로 고정</b>해서
+돌린다. 커리큘럼을 타고 올라간 최고 행은 «학습» 쪽 기록이지 «평가» 가 내는
+값이 아니다. 없는 값을 0 이나 추정치로 채우지 않고 <span class="ev ev-todo">미측정</span> 으로 둔다.</p></blockquote>
+<p><b>묶음을 갈라 보면 이렇다.</b> 「미학습 8 종」은 세 판 <b>어느 것도</b> 학습에 안 쓴 지형이다.</p>
+<div class="tw"><table><thead><tr><th>묶음</th><th>칸</th><th><b>NVIDIA (기준)</b></th><th>foothold-v1</th><th>foothold-v2</th></tr></thead><tbody><tr><td>평가 전체</td><td>48</td><td><b>41.17 %</b></td><td>88.88 %</td><td>94.19 %</td></tr><tr><td>셋 다 학습한 6 종</td><td>18</td><td><b>50.78 %</b></td><td>99.33 %</td><td>100.00 %</td></tr><tr><td>어느 판도 학습 안 한 8 종</td><td>24</td><td><b>43.88 %</b></td><td>86.71 %</td><td>88.46 %</td></tr></tbody></table></div>
+<blockquote><p><b><code>86.7 %</code> 라는 옛 숫자를 여기 쓰지 않는다.</b> 전에 이 자리에 있던
+「NVIDIA 1,500 iteration 통과율 86.7 % (30 회 중 26 회)」는 <b>규격 1</b> 로
+학습 지형에서 <b>30 판</b>만 잰 값이다. 위 표는 규격 2 · 4,800 판이라 <b>같은 자가
+아니다.</b> 두 숫자를 나란히 놓으면 「기준선이 86.7 에서 41.17 로 떨어졌다」로
+읽히는데 그런 일은 없었다. 재는 법이 바뀐 것이다. 옛 값은
+<code>docs/research/training-benchmarks.md</code> §5-3 에 그 조건과 함께 남아 있다.</p></blockquote>
 </section>
-<section id="s3"><span id="3"></span><h2>3. 학습 조건 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>지형 구성</td><td>(우리가 정한 험지 세트)</td></tr><tr><td>iteration</td><td></td></tr><tr><td>환경 수</td><td></td></tr><tr><td>보상 설정</td><td>기본 대비 바꾼 항목만</td></tr><tr><td>관측 구성</td><td></td></tr><tr><td>시드</td><td></td></tr><tr><td>체크포인트 경로</td><td></td></tr><tr><td>학습 시간 · 장비</td><td></td></tr></tbody></table></div>
+<section id="s3"><span id="3"></span><h2>3. 학습 조건</h2>
+<p><b>기준 정책(NVIDIA)</b> 은 공식 배포 체크포인트라 우리가 돌린 학습이 아니다. 아래는 <b>이 기준과 비교되는 우리 배포본 <code>foothold-v2</code></b> 의 조건이고, 학습 시각에 <code>rsl_rl</code> 이 적은 <code>params/env.yaml</code> · <code>params/agent.yaml</code> 에서 기계로 뽑았다.</p>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>지형 구성</td><td><code>pyramid_stairs</code> .15 · <code>pyramid_stairs_inv</code> .15 · <code>boxes</code> .15 · <code>random_rough</code> .15 · <code>hf_pyramid_slope</code> .10 · <code>hf_pyramid_slope_inv</code> .10 · <code>omni_gap</code> .10 · <code>rails</code> .10</td></tr><tr><td>iteration</td><td>3000 (<code>max_iterations</code> 3001 · 저장 체크포인트 3000)</td></tr><tr><td>환경 수</td><td>4096</td></tr><tr><td>보상 설정</td><td><b><code>feet_air_time</code> 0.01 -&gt; 0.1 하나만</b> 바꿨다. 나머지 열 항은 NVIDIA 기본값</td></tr><tr><td>관측 구성</td><td>NVIDIA Go2 rough 그대로 (높이 스캔 포함)</td></tr><tr><td>명령 범위</td><td><code>lin_vel_x</code> (0.4, 1.5) · <code>lin_vel_y</code> (0, 0) <b>잠금</b> · <code>ang_vel_z</code> (-1.0, 1.0) · <code>heading_command</code> true · <code>rel_standing_envs</code> 0.1</td></tr><tr><td>시드</td><td>42</td></tr><tr><td>체크포인트 경로</td><td><code>models/foothold-v2.pt</code> (sha256 <code>e5c213219b45…</code> · 6,882,293 바이트)</td></tr><tr><td>학습 기록 원본</td><td><code>models/foothold-v2.env.yaml</code> · <code>models/foothold-v2.agent.yaml</code></td></tr><tr><td>출발점</td><td><b>맨바닥이 아니다.</b> <code>resume: true</code> · <code>load_checkpoint: nvidia_pretrained.pt</code></td></tr><tr><td>학습 시간 · 장비</td><td><code>미기록</code> (실행 폴더에 벽시계 시간이 안 남았다)</td></tr></tbody></table></div>
 <p><b>재현할 수 있게 적는다.</b> 다른 사람이 이 표만 보고 같은 학습을 돌릴 수 있어야 한다.</p>
+<blockquote><p><b>레시피가 파일 하나로 있지는 않다.</b> <code>feet_air_time 0.1</code> 을 적은 cfg 가
+저장소에도 설치본에도 없다. 명령줄 덮어쓰기로 줬고, <b>정본은 위의
+<code>models/foothold-v2.env.yaml</code></b> 이다. 카드
+(<code>models/foothold-v2.json</code>) 의 <code>training.recipe_is_not_a_file</code> 에 같은 말이
+적혀 있다.</p></blockquote>
 </section>
 <section id="s4"><span id="4"></span><h2>4. 판정</h2>
-<div class="tw"><table><thead><tr><th>무엇</th><th>통과 조건</th></tr></thead><tbody><tr><td>안정성</td><td>시드 3개로 같은 결과가 나온다</td></tr><tr><td>기준 자격</td><td>이후 실험이 이 숫자와 비교될 수 있다</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>무엇</th><th>통과 조건</th><th>결과</th></tr></thead><tbody><tr><td>안정성</td><td>시드 3개로 같은 결과가 나온다</td><td><b>부분 통과.</b> 아래</td></tr><tr><td>기준 자격</td><td>이후 실험이 이 숫자와 비교될 수 있다</td><td><b>통과.</b> 규격 2 하나로 세 판을 같은 날 같은 하네스에서 쟀다</td></tr></tbody></table></div>
+<p><b>안정성을 시드 다섯(42 · 1 · 2 · 3 · 4)으로 다시 쟀다.</b> 1.0 m/s · 난이도 0.5 · 장치 고정이다.</p>
+<ul><li><b>16 칸 중 13 칸은 폭 0</b> 이다. 다섯 판이 같은 값을 냈다</li><li>움직인 칸은 셋이다. <code>stepping_stones</code> <b>24 %p</b> · <code>random_rough</code> 6 %p · <code>discrete_obstacles</code> 1 %p</li><li><b>움직인 셋 모두에서 배포 시드(42)의 값이 다섯 중 가장 높다.</b> 우연으로 보기 어렵다. 안 움직인 칸도 유리한 쪽일 수 있다</li><li>미경험 열 종 평균도 92.40 · 90.10 · 90.30 · 91.80 · 90.00 으로 <b>폭 2.40 %p</b> 이고 배포 시드가 가장 높다</li></ul>
+<p>그래서 <code>stepping_stones</code> 를 성적으로 인용할 때는 24 % 가 아니라 <b>0 ~ 24 %</b> 로 적는다. 근거: <code>docs/research/20260928-v2-mvp-report.md</code> §4-0-1 · 원자료 <code>sim/eval/results/20260929-seed-spread/</code>.</p>
+<blockquote><p><b>시드를 완전히 떼어 내지는 못했다.</b> 지형 판의 운과 출발 흔들기의 운을 가르려고
+<code>--terrain_seed</code> 를 냈다가, 열 판 1,000 에피소드가 바이트로 전부 같은 것을 보고
+소스를 열었다. <code>TerrainGeneratorCfg.seed</code> 는 지형 <b>모양</b> 을 안 정한다
+<span class="ev ev-ok">확인됨</span> (<code>terrain_generator.py:141-148</code> · 지형 함수는 전역 <code>np.random</code> 을 쓴다 ·
+<code>hf_terrains.py</code> 12 곳 · <code>mesh_terrains.py</code> 4 곳 · 양쪽 다 <code>cfg.seed</code> 0 곳).
+그래서 위 폭은 둘이 섞인 값이고 <b>지형 운 하나의 위 한계</b> 로만 읽어야 한다.</p></blockquote>
 <blockquote><p><b>주의</b>: 보상 값이 높다고 잘 걷는 것이 아니다. 보상 13.94 를 받은 정책의 실제
 통과율이 <b>0%</b> 였던 사례가 있다 (웅크리고 버티기만 함).
 학습 로그가 아니라 <b>평가 파이프라인의 숫자</b>로 판정한다.
@@ -1056,5 +1080,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpcu3t4x27</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp9r_3y105</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

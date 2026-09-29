@@ -25,7 +25,7 @@ GATES = [
     # 2026-09-04 정정: 여기가 기획서 «요약본» 과 초안 WBS 를 걸고 있었다. 낸 것은
     # proposal.md 와 wbs-official.md 인데 웹 페이지 자체가 없어서 걸 수도 없었다.
     # ★ 2026-09-05 팀장 지정 순서. 「관련성 순」이 아니라는 지적을 받고 바로잡았다.
-    #   기획서 -> 요약 -> 브레인스토밍 -> WBS -> 역할과 책임 -> 발표 자료.
+    #   기획서 -> 요약 -> 브레인스토밍 -> WBS -> 역할과 책임 -> 기획 발표 자료.
     #   제출 3종을 앞에 몰던 이전 순서는 팀장 지정과 달랐다. 지정이 이긴다.
     ('기획발표', datetime.date(2026, 9, 4), '운영진 제출 3종. 기획서 · 브레인스토밍 · WBS', [
         ('deliverables/plan/proposal.md', '프로젝트 기획서'),
@@ -33,12 +33,15 @@ GATES = [
         ('deliverables/plan/brainstorming.md', '브레인스토밍'),
         ('deliverables/plan/wbs-official.md', 'WBS'),
         ('deliverables/plan/roles-responsibilities.md', '역할과 책임'),
-        ('deliverables/plan/proposal-deck.md', '발표 자료'),
+        ('deliverables/plan/proposal-deck.md', '기획 발표 자료'),
     ]),
     ('A-정책', datetime.date(2026, 9, 12), '우리 지형으로 학습한 정책과 지표 세트', [
         ('deliverables/midterm/policy-metrics.md', '기준 정책 · 지표 세트'),
     ]),
+    # ★ 2026-09-29 팀장 지시. 제출본(PDF · HTML)을 이 표에서 바로 열 수 있게 한다.
+    #   요약 2장짜리는 뺐다 (「큰 의미 없는 파일」).
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
+        ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>일반화 평가표 · FOOTHOLD</title>
-<meta name="description" content="학습에 쓰지 않은 지형에서 우리 정책이 기준선보다 나은가를 숫자로 답한다.">
+<meta name="description" content="어느 판도 학습에 안 쓴 여덟 지형에서 기준선 43.88 % 가 88.46 % 가 됐다. 못 넘는 것은 `stepping_stones` 하나다">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=7048890f').then(function(r){
+    fetch('/assets/search-index.json?v=ba2be9f3').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -922,17 +922,17 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">산출물 · MVP 중간발표 · 9월 30일</div>
   <h1>일반화 평가표</h1>
-  <p class="lede">학습에 쓰지 않은 지형에서 우리 정책이 기준선보다 나은가를 숫자로 답한다.</p>
-  <div class="meta"><div><span class="k">관문</span><span class="v">MVP 중간발표 · 9월 30일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-08-27 11:20</span></div><div><span class="k">상태</span><span class="v">대기</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/generalization-report.md</span></div></div>
+  <p class="lede">어느 판도 학습에 안 쓴 여덟 지형에서 기준선 43.88 % 가 88.46 % 가 됐다. 못 넘는 것은 `stepping_stones` 하나다</p>
+  <div class="meta"><div><span class="k">관문</span><span class="v">MVP 중간발표 · 9월 30일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-29 21:35</span></div><div><span class="k">상태</span><span class="v">확정</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/generalization-report.md</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 실험
-작성: 오흥재 · 2026-08-27 11:20
+작성: 오흥재 · 2026-09-29 21:35
 담당: 오현민 · A/평가
-근거: 실측
-요지: 학습에 쓰지 않은 지형에서 우리 정책이 기준선보다 나은가를 숫자로 답한다.
-상태: 대기</p></blockquote>
+근거: 실측 (<code>sim/eval/results/20260928-v2-gallery-raw/</code> 세 판 x 16 지형 x 3 속도 x 100 판)
+요지: 어느 판도 학습에 안 쓴 여덟 지형에서 기준선 43.88 % 가 88.46 % 가 됐다. 못 넘는 것은 <code>stepping_stones</code> 하나다
+상태: 확정</p></blockquote>
 <blockquote><p><b>완료 기준</b>: §3 비교표의 세 비교군이 모두 채워지고, §2 지형 분리가 명시되고,
 §4 핵심 질문에 숫자로 답이 되면 상태를 <code>확정</code> 으로 바꾼다.
 관문: <code>MVP · 중간발표</code> (2026-09-30)</p>
@@ -943,28 +943,55 @@ body>*{flex-shrink:0}
 <blockquote><p><b>우리가 학습한 정책이 Isaac Lab 기준선보다 미학습 환경에서 더 높은 일반화 성능을
 보이는가.</b></p></blockquote>
 <p>이 한 줄이 트랙 A 전체의 판정 기준이다. 중간발표에서 이 질문에 숫자로 답한다.</p>
+<p><b>답은 예다.</b> 어느 판도 학습에 안 쓴 여덟 지형 24 칸에서 <b>43.88 % -&gt; 88.46 %</b> 다 (<code>+44.58 %p</code>). 자세한 것은 §5.</p>
 </section>
-<section id="s2"><span id="2"></span><h2>2. 지형 분리 (채울 것)</h2>
+<section id="s2"><span id="2"></span><h2>2. 지형 분리</h2>
 <p><b>평가 지형은 학습에 쓰지 않는다.</b> 이 분리가 무너지면 결과가 아무것도 말하지 않는다.</p>
-<div class="tw"><table><thead><tr><th>구분</th><th>지형</th><th>개수</th></tr></thead><tbody><tr><td>학습에 쓴 지형</td><td></td><td></td></tr><tr><td>평가에만 쓰는 지형</td><td></td><td></td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>구분</th><th>지형</th><th>개수</th></tr></thead><tbody><tr><td><code>foothold-v2</code> 가 학습에 쓴 지형</td><td><code>pyramid_stairs</code> · <code>pyramid_stairs_inv</code> · <code>boxes</code> · <code>random_rough</code> · <code>hf_pyramid_slope</code> · <code>hf_pyramid_slope_inv</code> · <code>omni_gap</code> · <code>rails</code></td><td>8</td></tr><tr><td>평가에만 쓰는 지형</td><td><code>discrete_obstacles</code> · <code>wave</code> · <code>star</code> · <code>repeated_boxes</code> · <code>repeated_cylinders</code> · <code>stepping_stones</code> · <code>pit</code> · <code>floating_ring</code></td><td>8</td></tr><tr><td>평가에 쓰지만 <b>분리가 깨끗하지 않은</b> 지형</td><td><code>gap</code> (친척 <code>omni_gap</code> 을 학습) · <code>rails</code> (v2 가 직접 학습)</td><td>2</td></tr></tbody></table></div>
+<blockquote><p><b><code>gap</code> 과 <code>rails</code> 를 「미학습」 이라고 부르지 않는다.</b> <code>rails</code> 는 v2 가 그대로
+학습했고, <code>gap</code> 은 학습 지형 <code>omni_gap</code> 의 친척이다. 그래서 §5 의 머리 숫자
+「여덟 종」은 위 표의 가운데 줄 여덟만 세고 이 둘은 뺀다. 둘을 넣으면 숫자가
+올라가는데 그것은 일반화가 아니라 학습 성적이다.</p></blockquote>
 <h3>이미 측정된 출발점 (2026-08-22)</h3>
 <p>기준 정책을 학습 밖 지형 10종에 올린 결과다. <b>5종 통과 · 5종 실패.</b></p>
 <div class="tw"><table><thead><tr><th>지형</th><th>성공률</th><th>생존</th><th>평균 전진</th><th>판정</th></tr></thead><tbody><tr><td>discrete_obstacles</td><td>100%</td><td>100%</td><td>2.85 m</td><td>통과</td></tr><tr><td>wave</td><td>100%</td><td>100%</td><td>2.78 m</td><td>통과</td></tr><tr><td>star</td><td>100%</td><td>100%</td><td>2.67 m</td><td>통과</td></tr><tr><td>repeated_boxes</td><td>100%</td><td>100%</td><td>2.72 m</td><td>통과</td></tr><tr><td>repeated_cylinders</td><td>100%</td><td>100%</td><td>2.76 m</td><td>통과</td></tr><tr><td>stepping_stones</td><td>0%</td><td>100%</td><td>0.75 m</td><td>실패 · 전진불능</td></tr><tr><td>pit</td><td>0%</td><td>100%</td><td>1.03 m</td><td>실패 · 전진불능</td></tr><tr><td>floating_ring</td><td>0%</td><td>100%</td><td>0.74 m</td><td>실패 · 전진불능</td></tr><tr><td>gap</td><td>0%</td><td>0%</td><td>0.77 m</td><td>실패 · 낙상 (평균 3.2초)</td></tr><tr><td>rails</td><td>0%</td><td>0%</td><td>0.76 m</td><td>실패 · 낙상 (평균 2.1초)</td></tr></tbody></table></div>
 <p>근거: <code>docs/research/generalization-benchmark-10-terrains.md</code></p>
+<blockquote><p><b>이 표와 아래 §3 은 같은 자가 아니다.</b> 위는 <b>규격 1</b> (0.5 m/s · 6 초 ·
+목표 3 m · 지형당 10 판) 이고 아래는 <b>규격 2</b> (세 속도 · 목표 6 m ·
+지형당 100 판 · 네 축 AND) 다. 그래서 같은 기준선인데도 위에서 <code>pit</code> 0 % 가
+아래에서 2 % 로 나온다. <b>두 표의 숫자를 빼서 개선폭을 말하지 않는다.</b>
+개선폭은 §3 안에서 «같은 규격끼리» 만 읽는다.</p></blockquote>
 </section>
-<section id="s3"><span id="3"></span><h2>3. 비교표 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>지형</th><th>기준선</th><th>우리 정책</th><th>우리 정책 + DR</th></tr></thead><tbody><tr><td>stepping_stones</td><td>0%</td><td></td><td></td></tr><tr><td>pit</td><td>0%</td><td></td><td></td></tr><tr><td>floating_ring</td><td>0%</td><td></td><td></td></tr><tr><td>gap</td><td>0%</td><td></td><td></td></tr><tr><td>rails</td><td>0%</td><td></td><td></td></tr><tr><td>(통과했던 5종)</td><td>100%</td><td></td><td></td></tr></tbody></table></div>
-<p><b>통과했던 5종도 반드시 다시 잰다.</b> 새 지형을 배우면서 원래 되던 것이 무너지는지 (forgetting) 보는 것이 이 줄의 목적이다.</p>
+<section id="s3"><span id="3"></span><h2>3. 비교표</h2>
+<p><b>규격 2 · 난이도 0.5 · 지형마다 속도마다 100 판.</b> 세 판 모두 같은 날 같은 하네스에서 쟀다. 칸은 네 축(생존 · 전진 · 추종 · 방향)을 <b>모두</b> 통과한 비율이다.</p>
+<div class="tw"><table><thead><tr><th>지형</th><th>08-22 판정</th><th>속도</th><th>기준선 (NVIDIA)</th><th>foothold-v1</th><th><b>foothold-v2</b></th></tr></thead><tbody><tr><td><code>discrete_obstacles</code></td><td>통과</td><td>0.5 m/s</td><td>94 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>94 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>wave</code></td><td>통과</td><td>0.5 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>star</code></td><td>통과</td><td>0.5 m/s</td><td>86 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>62 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>repeated_boxes</code></td><td>통과</td><td>0.5 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>1 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>repeated_cylinders</code></td><td>통과</td><td>0.5 m/s</td><td>99 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>100 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>7 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>stepping_stones</code></td><td>실패 · 전진불능</td><td>0.5 m/s</td><td>0 %</td><td>0 %</td><td><b>0 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>0 %</td><td>0 %</td><td><b>24 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>0 %</td><td><b>0 %</b></td></tr><tr><td><code>pit</code></td><td>실패 · 전진불능</td><td>0.5 m/s</td><td>7 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>2 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td><code>floating_ring</code></td><td>실패 · 전진불능</td><td>0.5 m/s</td><td>1 %</td><td>95 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>0 %</td><td>99 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>87 %</td><td><b>99 %</b></td></tr><tr><td><code>gap</code></td><td>실패 · 낙상</td><td>0.5 m/s</td><td>0 %</td><td>90 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>1 %</td><td>100 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>68 %</td><td><b>99 %</b></td></tr><tr><td><code>rails</code></td><td>실패 · 낙상</td><td>0.5 m/s</td><td>0 %</td><td>70 %</td><td><b>99 %</b></td></tr><tr><td></td><td></td><td>1.0 m/s</td><td>8 %</td><td>48 %</td><td><b>100 %</b></td></tr><tr><td></td><td></td><td>1.5 m/s</td><td>0 %</td><td>21 %</td><td><b>100 %</b></td></tr></tbody></table></div>
+<p><b>통과했던 5종도 반드시 다시 잰다.</b> 새 지형을 배우면서 원래 되던 것이 무너지는지 (forgetting) 보는 것이 이 줄의 목적이다. <b>15 칸 모두 100 % 로 유지됐다.</b></p>
+<blockquote><p><b>「우리 정책 + DR」 열은 뺐다.</b> 도메인 랜덤화를 <b>안 썼기 때문</b>이다.
+<code>foothold-v2</code> 는 NVIDIA 기본 설정에서 <code>feet_air_time</code> 하나만 바꿨고
+(0.01 -&gt; 0.1) 랜덤화 항목은 손대지 않았다. 빈 열을 남겨 두면 「쟀는데 효과가
+없었다」로 읽히므로 열 자체를 뺀다. 판정: <code>해당 없음</code>.</p></blockquote>
+<p><b><code>foothold-v2</code> 의 다른 축도 같이 (1.0 m/s).</b> 성공률만 보면 왜 됐는지 안 보인다.</p>
+<div class="tw"><table><thead><tr><th>지형</th><th>성공률</th><th>생존</th><th>평균 전진</th><th>속도추종 오차</th></tr></thead><tbody><tr><td><code>discrete_obstacles</code></td><td>100 %</td><td>100 %</td><td>5.67 m</td><td>0.091 m/s</td></tr><tr><td><code>wave</code></td><td>100 %</td><td>100 %</td><td>5.74 m</td><td>0.083 m/s</td></tr><tr><td><code>star</code></td><td>100 %</td><td>100 %</td><td>5.76 m</td><td>0.069 m/s</td></tr><tr><td><code>repeated_boxes</code></td><td>100 %</td><td>100 %</td><td>5.81 m</td><td>0.069 m/s</td></tr><tr><td><code>repeated_cylinders</code></td><td>100 %</td><td>100 %</td><td>5.79 m</td><td>0.071 m/s</td></tr><tr><td><b><code>stepping_stones</code></b></td><td><b>24 %</b></td><td><b>48 %</b></td><td><b>3.20 m</b></td><td><b>0.388 m/s</b></td></tr><tr><td><code>pit</code></td><td>100 %</td><td>100 %</td><td>5.78 m</td><td>0.075 m/s</td></tr><tr><td><code>floating_ring</code></td><td>100 %</td><td>100 %</td><td>5.74 m</td><td>0.091 m/s</td></tr><tr><td><code>gap</code></td><td>100 %</td><td>100 %</td><td>5.83 m</td><td>0.085 m/s</td></tr><tr><td><code>rails</code></td><td>100 %</td><td>100 %</td><td>5.77 m</td><td>0.079 m/s</td></tr></tbody></table></div>
+<p><code>stepping_stones</code> 만 생존이 48 % 다. 나머지 아홉은 «못 걷는» 것이 아니라 <b>잘 걷는다.</b> 한 지형만 성질이 다르다.</p>
 </section>
-<section id="s4"><span id="4"></span><h2>4. 평가 조건 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>왜 적어야 하나</th></tr></thead><tbody><tr><td>명령 속도</td><td></td><td>조건이 다르면 수치를 직접 비교할 수 없다</td></tr><tr><td>에피소드 길이</td><td></td><td></td></tr><tr><td>목표 거리</td><td></td><td></td></tr><tr><td>지형당 시행 횟수</td><td></td><td></td></tr><tr><td>지형 고유 행 (변동 주입)</td><td></td><td>결정론적 평가는 50회를 돌려도 1회와 같다</td></tr></tbody></table></div>
+<section id="s4"><span id="4"></span><h2>4. 평가 조건</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>왜 적어야 하나</th></tr></thead><tbody><tr><td>규격</td><td><b>2</b> (<code>eval_spec_version: 2</code>)</td><td>규격 1 과 숫자를 섞으면 안 된다</td></tr><tr><td>명령 속도</td><td>0.5 · 1.0 · 1.5 m/s <b>각각</b></td><td>조건이 다르면 수치를 직접 비교할 수 없다</td></tr><tr><td>에피소드 길이</td><td>12 · 6 · 4 초 (속도 순)</td><td>어느 속도든 6 m 를 갈 시간이 되게</td></tr><tr><td>목표 거리</td><td>6.0 m (<code>ideal_distance_m</code>) · 전진 관문 3.0 m</td><td></td></tr><tr><td>지형당 시행 횟수</td><td><b>100</b></td><td></td></tr><tr><td>난이도</td><td>0.5 고정</td><td></td></tr><tr><td>성공 정의</td><td>네 축 <b>AND</b> (생존 · 전진 · 추종 · 방향)</td><td>한 축만 보면 「느린 것」과 「못 건너는 것」이 같은 숫자가 된다</td></tr><tr><td>축 문턱</td><td>전진 &gt;= 3.0 m · 횡이탈 &lt;= 0.75 m · 속도 MAE &lt;= 0.25 m/s · 방향 관문 3.0 m</td><td></td></tr><tr><td>시드</td><td>42</td><td></td></tr><tr><td>지형 고유 행 (변동 주입)</td><td><b><code>num_rows</code> = 1</b> <span class="ev ev-ok">확인됨</span></td><td>아래</td></tr></tbody></table></div>
+<blockquote><p><b><code>num_rows</code> 가 1 이라 지형은 «타일 한 장» 이다.</b> 그 지형의 100 판은 같은 한 장
+위를 x/y ±0.10 m · yaw ±5 도만 다르게 출발해 걷는다. 그래서 100 판은 «지형
+100 가지» 가 아니라 «출발 100 가지» 다. 시드를 다섯으로 갈아 다시 재니 16 칸 중
+13 칸은 폭 0 이고 셋이 움직였다 (<code>stepping_stones</code> 24 %p · <code>random_rough</code> 6 %p ·
+<code>discrete_obstacles</code> 1 %p). <b>움직인 셋 모두 위 표의 값이 다섯 중 가장 높다.</b>
+근거: <code>docs/research/20260928-v2-mvp-report.md</code> §4-0-1.</p></blockquote>
 <blockquote><p><b>실측으로 배운 것</b>: 조건이 다른 두 평가를 나란히 놓고 비교했다가 정정한 적이 있다
 (8월 초 평가는 1.0 m/s · 20초 · 10m, 8/22 평가는 0.5 m/s · 6초 · 3m).
 <b>조건을 적지 않은 숫자는 비교에 쓸 수 없다.</b>
 근거: <code>docs/research/benchmark-repro-protocol.md</code></p></blockquote>
 </section>
-<section id="s5"><span id="5"></span><h2>5. 답 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody><tr><td>실패 5종 중 몇 종이 통과로 바뀌었나</td><td></td></tr><tr><td>통과했던 5종이 유지되었나</td><td></td></tr><tr><td>도메인 랜덤화가 도움이 되었나</td><td></td></tr><tr><td>남은 벽은 무엇인가</td><td></td></tr></tbody></table></div>
+<section id="s5"><span id="5"></span><h2>5. 답</h2>
+<div class="tw"><table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody><tr><td>실패 5종 중 몇 종이 통과로 바뀌었나</td><td><b>넷이 완전히 바뀌었다.</b> <code>pit</code> · <code>floating_ring</code> · <code>gap</code> · <code>rails</code> 가 세 속도 모두 99~100 % 다. <code>stepping_stones</code> 는 1.0 m/s 에서만 24 % 이고 나머지 두 속도는 0 % 다</td></tr><tr><td>통과했던 5종이 유지되었나</td><td><b>유지됐다.</b> 15 칸 모두 100 % 다. 기준선이 1.5 m/s 에서 무너지던 칸(<code>discrete_obstacles</code> 0 % · <code>wave</code> 0 % · <code>repeated_boxes</code> 1 % · <code>repeated_cylinders</code> 7 %)까지 100 % 다</td></tr><tr><td>도메인 랜덤화가 도움이 되었나</td><td><b><code>해당 없음</code>.</b> 안 썼다. 랜덤화 없이 지형 구성과 명령 범위, <code>feet_air_time</code> 하나로 얻은 결과다</td></tr><tr><td>남은 벽은 무엇인가</td><td><b><code>stepping_stones</code> 하나다.</b> 여덟 종 평균 88.46 % 를 끌어내리는 것이 이 지형이고, 빼면 99.95 % 다. 생존이 48 % 라 «느린» 것이 아니라 «빠진다»</td></tr></tbody></table></div>
+<p><b>머리 숫자 한 줄.</b> 어느 판도 학습에 안 쓴 여덟 종 24 칸에서 <b>기준선 43.88 % -&gt; foothold-v2 88.46 %</b> (<code>+44.58 %p</code>). <code>foothold-v1</code> 대비로는 86.71 % -&gt; 88.46 % (<code>+1.75 %p</code>) 이고, 이것은 <b>시드만 바꿔도 생기는 흔들림 (미경험 열 종 평균 폭 2.40 %p) 과 같은 크기</b> 라 «v1 보다 낫다» 고 단정하지 않는다.</p>
+<h3><code>stepping_stones</code> 를 인용하는 법</h3>
+<p>이 칸의 24 % 는 시드 다섯 중 <b>가장 높은 값</b>이다 (중앙값 3 % · 최저 0 %). 지형을 새로 만들어 찍은 열다섯 판은 <b>0/15</b> 였다. 그래서 성적으로 쓸 때는 <b><code>0 ~ 24 %</code></b> 로 적는다. 24 % 라고만 쓰지 않는다.</p>
 </section>
 
 </div>
@@ -1063,5 +1090,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpcu3t4x27</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp9r_3y105</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

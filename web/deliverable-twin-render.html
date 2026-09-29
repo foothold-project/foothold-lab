@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>디지털 트윈 · 렌더 시연물 · FOOTHOLD</title>
-<meta name="description" content="학습 결과를 실사급 렌더와 디지털 트윈으로 보이는 시연물. 중간발표에서 상영한다.">
+<meta name="description" content="시연물은 MVP 에 못 낸다. 최종(12/11)으로 미룬다. 파이프라인은 끝까지 한 번 통했고 남은 것은 씬 제작이다">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -633,7 +633,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<!--search:v8--><style>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=7048890f').then(function(r){
+    fetch('/assets/search-index.json?v=ba2be9f3').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -922,42 +922,62 @@ body>*{flex-shrink:0}
 <div class="hero">
   <div class="eyebrow">산출물 · MVP 중간발표 · 9월 30일</div>
   <h1>디지털 트윈 · 렌더 시연물</h1>
-  <p class="lede">학습 결과를 실사급 렌더와 디지털 트윈으로 보이는 시연물. 중간발표에서 상영한다.</p>
-  <div class="meta"><div><span class="k">관문</span><span class="v">MVP 중간발표 · 9월 30일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-08-27 11:20</span></div><div><span class="k">상태</span><span class="v">대기</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/twin-render.md</span></div></div>
+  <p class="lede">시연물은 MVP 에 못 낸다. 최종(12/11)으로 미룬다. 파이프라인은 끝까지 한 번 통했고 남은 것은 씬 제작이다</p>
+  <div class="meta"><div><span class="k">관문</span><span class="v">MVP 중간발표 · 9월 30일</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-29 21:45</span></div><div><span class="k">상태</span><span class="v">대기</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/twin-render.md</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
 <blockquote><p>분류: 실험
-작성: 오흥재 · 2026-08-27 11:20
+작성: 오흥재 · 2026-09-29 21:45
 담당: 맹라현 · A/트윈렌더
-근거: 실측
-요지: 학습 결과를 실사급 렌더와 디지털 트윈으로 보이는 시연물. 중간발표에서 상영한다.
+근거: 실측 (<code>inbox/jay/20260916-3dgs-test/RESULTS-3dgs-terrain.md</code> v1.10 · 워커 보고서 7편 · 이슈 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/430">#430</a> <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/438">#438</a>)
+요지: 시연물은 MVP 에 못 낸다. 최종(12/11)으로 미룬다. 파이프라인은 끝까지 한 번 통했고 남은 것은 씬 제작이다
 상태: 대기</p></blockquote>
 <blockquote><p><b>완료 기준</b>: §2 영상 목록이 실제 파일로 존재하고, §3 렌더 조건이 기록되고,
 중간발표에서 상영 가능한 길이로 편집되면 상태를 <code>확정</code> 으로 바꾼다.
-관문: <code>MVP · 중간발표</code> (2026-09-30)</p>
+관문: <code>MVP · 중간발표</code> (2026-09-30) -&gt; <b><code>FINAL · 최종발표</code> (2026-12-11) 로 옮긴다</b></p>
 <p><b>채우는 사람</b>: 맹라현 (A/트윈렌더). 오흥재 · 이민우 가 촬영과 렌더를 돕는다.
 채운 사람이 위 「작성」을 자기 이름과 그때 시각으로 바꾼다.</p></blockquote>
 </section>
-<section id="s1"><span id="1"></span><h2>1. 이것이 왜 산출물인가</h2>
+<section id="s1"><span id="0"></span><h2>0. 일정 변경 · MVP 에서 최종으로 <code>2026-09-29 팀장 확정</code></h2>
+<p><b>이번 MVP(9/30)에 디지털 트윈 렌더 시연까지 내려고 했으나 못 낸다.</b> 최종(12/11)까지 이어서 진행한다.</p>
+<div class="tw"><table><thead><tr><th></th><th>원래</th><th>바뀐 것</th></tr></thead><tbody><tr><td>시연물 제출 관문</td><td>MVP · 중간발표 (2026-09-30)</td><td><b>FINAL · 최종발표 (2026-12-11)</b></td></tr><tr><td>MVP 에서 내는 것</td><td>시연 영상</td><td><b>없다.</b> 아래 §1-1 의 파이프라인 기록까지</td></tr></tbody></table></div>
+<p><b>미룬 것이지 접은 것이 아니다.</b> 아래 §1-1 이 그 근거다. 파이프라인은 폰 영상 한 편에서 Isaac Sim 렌더까지 <b>끝까지 한 번 통했고</b>, 남은 일은 기술 검증이 아니라 <b>보여줄 씬을 만드는 시간</b>이다 (§3 의 「병목은 씬을 만드는 시간」과 같은 말이다).</p>
+<blockquote><p><b>MVP 산출물 표에서 이 줄을 지우지 않는다.</b> 지우면 「원래 계획에 없었다」로
+읽힌다. 계획에 있었고, 못 냈고, 옮겼다. 셋 다 적어 둔다.</p></blockquote>
+</section>
+<section id="s2"><span id="1"></span><h2>1. 이것이 왜 산출물인가</h2>
 <p>숫자만으로는 「걷는다」가 전달되지 않는다. 통과율 표 옆에 <b>같은 정책이 실제로 걷는 장면</b>이 있어야 심사위원이 판단할 수 있다.</p>
 <p>그리고 이미 실증된 것이 하나 있다. <b>학습 씬과 렌더 씬은 완전히 분리된다.</b> 회색 험지에서 학습한 정책을 <b>정책 파일 하나만 들고</b> 창고 씬에서 걷게 하는 데 성공했다. 근거: <code>docs/research/visual-evidence.md</code> §03</p>
+<h3>1-1. MVP 까지 실제로 한 것</h3>
+<div class="tw"><table><thead><tr><th>단계</th><th>상태</th><th>근거</th></tr></thead><tbody><tr><td>폰 영상 -&gt; SfM (COLMAP)</td><td><b>됐다</b></td><td><code>RESULTS-3dgs-terrain.md</code> · 35.9 초 영상 한 편</td></tr><tr><td>SfM -&gt; 3DGS 스플랫 (Brush)</td><td><b>됐다</b></td><td>같은 문서 · 워커 보고서 <code>REPORT-03</code></td></tr><tr><td>스플랫 -&gt; 지면 2.5D 메시</td><td><b>됐다</b></td><td><code>REPORT-04</code> · <code>REPORT-05</code></td></tr><tr><td>메시 -&gt; Isaac Lab 충돌체 USD</td><td><b>됐다</b></td><td><code>REPORT-05</code> · Go2 두 판이 로드·추론·이동</td></tr><tr><td>스플랫 -&gt; NuRec USDZ -&gt; Windows Isaac Sim 5.1 배경 렌더</td><td><b>됐다</b></td><td><code>REPORT-07</code> · 시스템 설치 없이</td></tr><tr><td>실제 축척 확정</td><td><b>안 됐다</b></td><td>노면 도색·연석을 법정 규격과 대조해 가설별 구간까지 (k 0.986~1.134 / 1.184~1.512). <b>단일 값 미확정</b></td></tr><tr><td>상영용 컷 렌더</td><td><b>안 됐다</b></td><td>마스터 14 컷이 전멸했다 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/438">#438</a>)</td></tr></tbody></table></div>
+<blockquote><p><b>「됐다」가 「보여줄 수 있다」는 아니다.</b> 위 여섯 줄은 파이프라인이 통했다는
+기록이고, 품질 판정이 아니다. 각 12 초 실행에는 낙상과 재시작이 섞여 있다.
+원문이 그렇게 적고 있고 여기서도 그대로 옮긴다.</p></blockquote>
 </section>
-<section id="s2"><span id="2"></span><h2>2. 만들 것 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>길이</th><th>상태</th></tr></thead><tbody><tr><td>1</td><td>실패 5종 · 개선 전후 나란히 비교</td><td></td><td></td></tr><tr><td>2</td><td>우리가 정한 험지를 통과하는 장면 (실사급 렌더)</td><td></td><td></td></tr><tr><td>3</td><td>디지털 트윈 씬 안에서의 주행</td><td></td><td></td></tr><tr><td>4</td><td>학습 과정 요약 (커리큘럼 승급이 보이게)</td><td></td><td></td></tr></tbody></table></div>
+<section id="s3"><span id="2"></span><h2>2. 만들 것 (최종까지)</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>무엇</th><th>길이</th><th>상태</th></tr></thead><tbody><tr><td>1</td><td>실패 5종 · 개선 전후 나란히 비교</td><td></td><td><b>MVP 에서는 갤러리가 대신한다</b> (아래)</td></tr><tr><td>2</td><td>우리가 정한 험지를 통과하는 장면 (실사급 렌더)</td><td></td><td>대기 · 최종</td></tr><tr><td>3</td><td>디지털 트윈 씬 안에서의 주행</td><td></td><td>대기 · 최종</td></tr><tr><td>4</td><td>학습 과정 요약 (커리큘럼 승급이 보이게)</td><td></td><td>대기 · 최종</td></tr></tbody></table></div>
 <p><b>1번이 핵심이다.</b> 「무엇이 안 되었고 무엇이 되었나」를 한 화면에서 보이는 것이 발표에서 가장 강하다.</p>
+<blockquote><p><b>1 번의 «내용» 은 MVP 에 나갔다. 실사급 렌더가 아닐 뿐이다.</b> 웹 갤러리
+(<code>/gallery/view</code>) 가 16 지형 x 3 속도로 세 판(NVIDIA · v1 · v2)을 <b>나란히
+재생</b>한다. 축 2(명령 응답)도 같은 방식으로 있다. 발표에서 「개선 전후」는
+이 화면으로 보인다. 이 줄이 최종까지 남는 이유는 <b>실사급 렌더</b> 쪽이다.</p></blockquote>
 </section>
-<section id="s3"><span id="3"></span><h2>3. 렌더 조건 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>실측 기준</th></tr></thead><tbody><tr><td>해상도</td><td></td><td>1080p</td></tr><tr><td>샘플 수 (spp)</td><td></td><td>128spp</td></tr><tr><td>프레임당 시간</td><td></td><td><b>1.75초</b> (1080p · 128spp Path Tracing)</td></tr><tr><td>총 렌더 시간</td><td></td><td>30초 영상 = 약 44분</td></tr><tr><td>장비</td><td></td><td>RTX 5080</td></tr></tbody></table></div>
+<section id="s4"><span id="3"></span><h2>3. 렌더 조건</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th><th>실측 기준</th></tr></thead><tbody><tr><td>해상도</td><td><code>미정</code></td><td>1080p</td></tr><tr><td>샘플 수 (spp)</td><td><code>미정</code></td><td>128spp</td></tr><tr><td>프레임당 시간</td><td><code>미정</code></td><td><b>1.75초</b> (1080p · 128spp Path Tracing)</td></tr><tr><td>총 렌더 시간</td><td><code>미정</code></td><td>30초 영상 = 약 44분</td></tr><tr><td>장비</td><td>RTX 5080</td><td>RTX 5080</td></tr></tbody></table></div>
 <blockquote><p><b>렌더 시간은 병목이 아니다.</b> 30초 영상이 44분이면 하루에 여러 번 다시 뽑을 수 있다.
 병목은 <b>씬을 만드는 시간</b>이다.
 근거: <code>docs/research/render-benchmarks.md</code></p></blockquote>
+<blockquote><p><b>렌더에서 걸린 것 하나를 적어 둔다.</b> Isaac 렌더는 <b>화면용 GPU</b> 를 쓴다.
+<code>CUDA_VISIBLE_DEVICES</code> 로 가리면 창 생성에서 조용히 멈춘다. 마스터 14 컷이
+전멸한 원인이 여기였다 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/438">#438</a>). 최종 렌더를 걸 때 같은 자리에서 또 멈추지
+않도록 이 줄을 남긴다.</p></blockquote>
 </section>
-<section id="s4"><span id="4"></span><h2>4. 트윈 구성 (채울 것)</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>재구성 대상 공간</td><td></td></tr><tr><td>방식</td><td>3DGS · 실측 스캔 · 수작업 모델링 중 무엇</td></tr><tr><td>물리 표현</td><td>렌더용 GS 와 물리용 메시를 어떻게 나눴나</td></tr><tr><td>Isaac Sim 임포트 절차</td><td></td></tr></tbody></table></div>
+<section id="s5"><span id="4"></span><h2>4. 트윈 구성</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>재구성 대상 공간</td><td>스마트폰으로 찍은 실외 노면 (35.9 초 영상 한 편)</td></tr><tr><td>방식</td><td><b>3DGS.</b> COLMAP 으로 SfM · Brush 로 스플랫 · 지면만 2.5D 메시로</td></tr><tr><td>물리 표현</td><td><b>렌더용 스플랫과 물리용 메시를 나눴다.</b> 스플랫은 충돌체가 아니라서 지면 메시를 따로 복원한다</td></tr><tr><td>Isaac Sim 임포트 절차</td><td>충돌체는 USD · 배경은 NuRec USDZ. Windows Isaac Sim 5.1 에서 시스템 설치 없이 열린다</td></tr><tr><td>축척</td><td><b>미확정.</b> 노면 도색·연석을 법정 규격과 대조해 가설별 구간까지 냈다 (H1 k 0.986~1.134 · H3 1.184~1.512). 규격이 범위라 단일 k 가 안 나온다</td></tr></tbody></table></div>
 </section>
-<section id="s5"><span id="5"></span><h2>5. 하지 않을 것</h2>
-<div class="tw"><table><thead><tr><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td>학습에 기여하지 않는 렌더를 「성과」로 제시</td><td>렌더는 보여주기다. 학습 기여도는 0이다</td></tr><tr><td>로봇 렌더를 설명 없이 화면 채우기용으로</td><td>브랜드 규범: 로봇 렌더는 증거나 설명 요소로만 쓴다</td></tr></tbody></table></div>
+<section id="s6"><span id="5"></span><h2>5. 하지 않을 것</h2>
+<div class="tw"><table><thead><tr><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td>학습에 기여하지 않는 렌더를 「성과」로 제시</td><td>렌더는 보여주기다. 학습 기여도는 0이다</td></tr><tr><td>로봇 렌더를 설명 없이 화면 채우기용으로</td><td>브랜드 규범: 로봇 렌더는 증거나 설명 요소로만 쓴다</td></tr><tr><td>축척 미확정인 복원물의 치수를 숫자로 인용</td><td>k 가 가설별 «구간» 이다. 단일 값이 아니다</td></tr></tbody></table></div>
 </section>
 
 </div>
@@ -1056,5 +1076,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpcu3t4x27</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp9r_3y105</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

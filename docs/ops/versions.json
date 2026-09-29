@@ -10,9 +10,9 @@
   "ver": ""
  },
  "deliverables/logs/mentoring-log.md": {
-  "hash": "f8d2d95e4f4c83ef",
+  "hash": "b959492576fb0db5",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/logs/progress-log.md": {
   "hash": "b784941ccdc6f77d",
@@ -20,19 +20,24 @@
   "ver": ""
  },
  "deliverables/midterm/generalization-report.md": {
-  "hash": "ad0d2405b4d596b0",
+  "hash": "dd981df019ad40da",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
+ },
+ "deliverables/midterm/mvp-submission.md": {
+  "hash": "5e68003d5a77b92d",
+  "major": "",
+  "ver": "v1.1"
  },
  "deliverables/midterm/policy-metrics.md": {
-  "hash": "f17e4847947f1217",
+  "hash": "b99801e5d782dd39",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/midterm/twin-render.md": {
-  "hash": "d200328848d347ad",
+  "hash": "cce4ed48f55beb01",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/plan/brainstorming.md": {
   "hash": "400b3bca5f4b66e0",
@@ -80,9 +85,9 @@
   "ver": "v1.4"
  },
  "docs/COLLAB.md": {
-  "hash": "c2e5a8e53622f74f",
+  "hash": "b5d4835e704d2436",
   "major": "v2.1",
-  "ver": "v2.1"
+  "ver": "v2.2"
  },
  "docs/CSV-SPEC-v1.md": {
   "hash": "e98d24c5e7f0aa42",
@@ -115,9 +120,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "05e4d6aca2a0e06e",
+  "hash": "899d04127560faa8",
   "major": "v2.1",
-  "ver": "v2.22"
+  "ver": "v2.23"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
