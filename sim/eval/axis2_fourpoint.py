@@ -109,6 +109,38 @@ def load_dir(folder):
     return None if manifest is None else manifest.get("summary", {})
 
 
+# ★ 2026-09-30. 판정 표는 «후보» 를 견주는 표다. 스윕 체크포인트와 촬영본까지
+#   다 넣으면 표가 비교를 못 한다. 그런데 관문의 뜻은 「조용히 빠지는 것을 막는다」
+#   이므로, 표에 «안 넣은» 폴더는 여기에 **까닭과 함께** 적는다.
+#   여기에도 없는 새 64-env 판이 나오면 관문은 여전히 막는다.
+#
+#   ★ `not_a_judgement` 칸으로 가르려다 말았다. 그 칸은 판정에 쓰는 18 판에도
+#     «다 있다» (실측). 「이 매니페스트가 성공률을 담지 않는다」는 뜻이라
+#     판별자가 아니다. 그것으로 건너뛰게 했으면 관문이 통째로 죽었다.
+NOT_IN_MATRIX = (
+    ("20260923-v2rs-axis2",
+     "계보 스윕의 체크포인트 전수. 표는 v2a · v2b 의 네 지점만 견준다"),
+    ("20260928-v2g2-axis2-ext",
+     "확장 시나리오. 문턱이 없어 «기록만» 한다 (보고서 9-2)"),
+    ("20260929-axis2-ext-clips",
+     "확장 축 컷 촬영본. 판정이 아니라 화면용이다"),
+    ("20260928-turnfall-clips", "회전 낙상 컷 촬영본"),
+    ("20260928-v2-clips", "배포본 컷 촬영본"),
+    ("20260929-axis2-fall",
+     "낙상 프로브 재측정. 표의 판정은 command-baseline 쪽을 쓴다"),
+    ("20260929-axis2-fall.old",
+     "위 낙상 프로브의 8 시간 «앞» 측정. 정책 sha 와 프로브가 같은 반복이라 "
+     "지우지 않고 남긴다"),
+    ("20260929-ghost-probe", "유령 프로브 점검용 한 판"),
+)
+
+
+def _excused(folder):
+    """표에 안 넣기로 «까닭을 적어 둔» 폴더인가."""
+    flat = folder.replace("\\", "/")
+    return any(("/" + key + "/") in flat + "/" for key, _why in NOT_IN_MATRIX)
+
+
 def audit_rows(root="."):
     """**손으로 적은 행 목록을 믿지 않는다.**
 
@@ -136,6 +168,8 @@ def audit_rows(root="."):
         with io.open(path, encoding="utf-8") as handle:
             manifest = json.load(handle)
         if manifest.get("num_envs") == JUDGEMENT_NUM_ENVS:
+            if _excused(folder):
+                continue
             missing.append(os.path.relpath(folder, root))
 
     return wrong_size, missing

@@ -70,6 +70,11 @@ p.add_argument("--slowmo", type=int, default=1, choices=(1, 2, 4),
 p.add_argument("--horizon_dist", type=float, default=180.0)
 p.add_argument("--decel_start", type=float, default=-1.0, help="이 초부터 감속을 시작한다")
 p.add_argument("--decel_secs", type=float, default=2.0, help="감속에 걸리는 시간")
+p.add_argument("--max_init_level", type=int, default=None,
+               help="지형 «행» 을 얼마나 퍼뜨릴까. 평가 설정은 0 이라 모든 로봇이 "
+                    "0 행 한 줄에 몰린다 (rough6_env_cfg.py:139 · "
+                    "generalization_env_cfg.py:174). 대군 촬영처럼 여러 행에 "
+                    "걸치게 하려면 num_rows-1 을 준다. 안 주면 설정 그대로다")
 p.add_argument("--terrain_rows", type=int, default=8)
 p.add_argument("--terrain_cols", type=int, default=8)
 p.add_argument("--cut", required=True, choices=("A", "B", "F"))
@@ -144,6 +149,15 @@ import terrains
 from isaaclab_tasks.utils import load_cfg_from_registry
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path: sys.path.insert(0, HERE)
+# ★ 2026-09-29. 학습 지형 집합(`train_fwdgap` · `train_omnigap`)의 env cfg 는
+#   `sim/policy` 에 있고 **상대 import 를 쓴다** (`from .gap_wide_env_cfg`).
+#   그래서 그 폴더를 경로에 넣는 것으로는 안 되고 (`attempted relative import
+#   with no known parent package` `확인됨`) **패키지로** 가져와야 한다.
+#   저장소 뿌리를 넣으면 `sim.policy.<모듈>` 이 namespace package 로 잡힌다.
+#   평가 집합 둘은 `sim/eval` 에 그대로 있다.
+_ROOT = os.path.dirname(os.path.dirname(HERE))
+if os.path.isdir(os.path.join(_ROOT, "sim")) and _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 # **지형 집합에 맞는 설정을 고른다.** 예전에는 `unseen10` 설정 하나만
 # 가져와서, `rough6` 지형을 주면 하위 지형 목록에 없어 죽었다 `확인됨`
 # (2026-09-11 · `pyramid_stairs` 를 찍으려다 걸렸다).
@@ -182,6 +196,12 @@ def configure(cfg, agent):
             for v in keep.values(): v.proportion = 1.0
             tg.sub_terrains = keep
         tg.num_rows = args.terrain_rows; tg.num_cols = args.terrain_cols
+        # 평가 설정은 `max_init_terrain_level = 0` 이다. 난이도를 행이 아니라
+        # `--difficulty` 로 주기 때문이고 평가에서는 그것이 옳다. 그런데 대군을
+        # 찍을 때는 **로봇 전부가 0 행 한 줄에 몰린다.** 실측으로 확인했다
+        # (`[지형] ... x -76.0~-76.0` · 4096 마리가 8 m 폭 한 줄에 섰다).
+        if args.max_init_level is not None:
+            cfg.scene.terrain.max_init_terrain_level = args.max_init_level
         tg.curriculum = False
         # curriculum 이 꺼져 있으면 IsaacLab 은 difficulty_range 에서 타일마다
         # uniform 으로 뽑는다 (terrain_generator.py:229 실측). 범위를 (d, d) 로

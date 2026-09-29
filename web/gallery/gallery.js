@@ -236,6 +236,100 @@ G.chipRow = function (label, values, current, countOf, onPick) {
 /* 지형 무리 이름. 색인의 열쇠는 영어라 화면에 그대로 내지 않는다.
  * **모르는 열쇠가 와도 지우지 않고 그 열쇠를 그대로 보여준다.** 조용히
  * 빠지면 새 무리가 생겼을 때 아무도 모른다. */
+/* ── 계보 차례 ─────────────────────────────────────────────
+ *
+ * ★ 2026-09-29. **규칙을 한 곳에만 둔다.**
+ *
+ * `compare/index.html` 이 자기 `MODEL_ORDER` 를 들고 있었고, 갤러리 카드는
+ * 그 규칙을 아예 몰라서 판 비교 링크에 두 열만 넘겼다. 그래서 세 번째 열이
+ * 어느 갤러리에서 와도 똑같이 «알아서» 골라졌다 (팀장 지적 2026-09-29:
+ * 「gallery-v1 에서 판비교 할 때랑 gallery-v2 에서 할 때 기본 셋업값이
+ * 다르면 좋을 것 같아서」).
+ *
+ * 두 파일에 나눠 적으면 갈라진다. 여기 한 번만 적는다.
+ */
+G.MODEL_ORDER = ['baseline', 'A', 'foothold-v1', 'foothold-v2'];
+
+/** 모델 이름을 계보 차례로 줄 세운다. 모르는 이름은 뒤에 붙인다. */
+G.lineage = function (names) {
+  const rank = n => {
+    const i = G.MODEL_ORDER.indexOf(n);
+    return i < 0 ? G.MODEL_ORDER.length : i;
+  };
+  return [...names].sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
+};
+
+/** 그 판의 «기본 세 열». 기준선을 먼저 두고, 나머지는 계보의 «뒤» 에서 집는다.
+ *
+ * 모델이 셋이면 그대로 셋이다.
+ *   v1   baseline · A · foothold-v1
+ *   v2   baseline · foothold-v1 · foothold-v2
+ *
+ * 넷 이상이면 기준선 + 뒤 둘이다. 대표(main)가 빠지지 않는다.
+ */
+G.defaultColumns = function (names, want) {
+  const n = want || 3;
+  const all = G.lineage(names);
+  const base = all.filter(x => x === 'baseline');
+  const rest = all.filter(x => x !== 'baseline');
+  const tail = rest.slice(Math.max(0, rest.length - (n - base.length)));
+  return base.concat(tail).slice(0, n);
+};
+
+/** 그 판의 «기본 칸» (지형 · 속도).
+ *
+ * ★ 2026-09-29. 팀장: 「gallery-v1 에서 판비교 들어가면 gap 이 기본
+ * 지형이어야할 꺼 아니야」. 맞다. 전에는 코드에 한 칸이 박혀 있어서 어느
+ * 판에서 와도 같았다 (v1 때 `gap 0.5` -> v2 배포 때 `rails 1.0` 으로
+ * 손으로 갈았다).
+ *
+ * 규칙: **그 판의 대표가 «계보에서 바로 앞» 대비 가장 크게 벌어지는 칸.**
+ * 1.5 m/s 는 뺀다 (NVIDIA 학습 명령 범위 밖이라 0 % 가 흔하고, 그것을
+ * 기본으로 두면 기준선이 억울하게 보인다).
+ *
+ * 손으로 두 번 고른 답을 이 규칙이 그대로 낸다 `확인됨`.
+ *
+ *   v1 -> gap 0.5     (A 0.0 -> foothold-v1 90.0 · +90.0 %p)
+ *   v2 -> rails 1.0   (foothold-v1 48.0 -> foothold-v2 100.0 · +52.0 %p)
+ */
+G.defaultCell = function (man, opts) {
+  const skipFast = !(opts && opts.allowFast);
+  const models = G.lineage(Object.keys((man && man.models) || {}));
+  const main = man && man.main_model;
+  const i = models.indexOf(main);
+
+  if (!man || i < 0) return null;
+
+  const prev = i > 0 ? models[i - 1] : null;
+  const rate = {};
+
+  (man.evaluations || []).forEach(e => {
+    rate[e.model + '|' + e.terrain + '|' + e.speed_mps] = e.success_rate;
+  });
+
+  let best = null;
+
+  (man.evaluations || []).forEach(e => {
+    if (e.model !== main) return;
+    if (skipFast && e.speed_mps >= 1.5) return;
+
+    const before = prev
+      ? rate[prev + '|' + e.terrain + '|' + e.speed_mps]
+      : undefined;
+
+    /* 앞 모델이 없으면 «가장 낮은 칸» 을 고른다. 볼 것이 있는 자리다. */
+    const gain = (before === undefined) ? -e.success_rate
+                                        : (e.success_rate - before);
+
+    if (!best || gain > best.gain
+        || (gain === best.gain && e.speed_mps < best.speed)) {
+      best = { terrain: e.terrain, speed: e.speed_mps, gain: gain };
+    }
+  });
+
+  return best ? { terrain: best.terrain, speed: best.speed } : null;
+};
+
 G.SET_NAME = { rough6: '기존 험지', unseen10: '미경험 험지' };
 
 /* 읽는 순서. 학습에 쓴 것을 먼저 놓고 안 본 것을 뒤에 놓는다. 여기 없는
@@ -338,4 +432,223 @@ G.warn = function (text, bad) {
   return G.el('div', { class: bad ? 'note bad' : 'note' }, [
     G.el('span', { text: text })
   ]);
+};
+
+/* 영상 한 칸. **`muted` 는 속성만으로는 안 걸린다.**
+ *
+ * ★ 2026-09-29 실측. `createElement('video')` 로 만든 다음
+ * `setAttribute('muted','')` 를 하면 **속성은 true 인데 성질은 false** 다
+ * (`v.hasAttribute('muted')` true · `v.muted` false) `확인됨`.
+ * 속성은 파서가 만든 태그의 «처음 값» 만 정한다.
+ *
+ * 크롬의 자동재생 규칙은 «성질» 을 본다. 그래서 사람이 단추를 누르지 않은
+ * 재생은 전부 거절된다.
+ *
+ *     NotAllowedError: play() failed because the user didn't interact
+ *
+ * 사람이 누를 때는 그 누름이 허락이 되므로 화면은 멀쩡해 보인다. 그래서
+ * 아무도 못 봤다. 그리고 소리가 든 컷이 들어오면 **실제로 소리가 난다.**
+ * 여기 한 곳에서 성질로 건다.
+ */
+G.video = function (attrs) {
+  const v = G.el('video', Object.assign({
+    preload: 'auto', playsinline: true, muted: true
+  }, attrs || {}));
+  v.muted = true;                 /* 속성 말고 성질 */
+  v.defaultMuted = true;          /* 다시 읽어도 꺼진 채로 */
+  return v;
+};
+
+/* ── 여러 칸을 한 시계로 묶어 재생 ──────────────────────────
+ *
+ * ★ 2026-09-29. **규칙을 한 곳에만 둔다** (커널 철칙 4).
+ *
+ * 이 코드는 `compare/index.html` 안에만 있었다. 축 2 화면도 세 칸을 나란히
+ * 재생해야 하는데, 거기에 똑같은 것을 한 벌 더 적으면 **갈라진다.** 이미
+ * `MODEL_ORDER` 를 두 곳에 나눠 적어서 한 번 당했다.
+ *
+ * 쓰는 쪽은 칸을 `add` 로 넣고 단추를 `toggle`·`seek`·`rate` 에 건다.
+ * 글자를 어디에 쓸지는 `on*` 로 받는다. 이 코드가 DOM 을 찾지 않는다.
+ *
+ *   const g = G.syncGroup({ onClock: t => ..., onButton: t => ..., ... });
+ *   g.add('left', videoEl, 4.0);
+ *   playbtn.onclick = () => g.toggle();
+ *
+ * **`duration` 은 색인이 적어 준 값으로 먼저 잡고**, `loadedmetadata` 가
+ * 오면 실제 값으로 바꾼다. 안 그러면 시계가 0 에서 안 움직인다.
+ */
+G.syncGroup = function (opts) {
+  const o = opts || {};
+  const players = {};
+  let order = [];
+  let running = false, raf = 0, base = 0;
+
+  const live = () => order.map(k => players[k])
+    .filter(p => p && p.video.getAttribute('src'));
+
+  const longest = () => Math.max(0, ...live().map(p => p.duration || 0));
+
+  const clock = () => {
+    if (o.onClock) o.onClock(G.fmtSeconds(base) + ' / ' + G.fmtSeconds(longest()));
+  };
+
+  function tick() {
+    if (!running) return;
+    base = Math.max(0, ...live().map(p => p.video.currentTime));
+    clock();
+
+    live().forEach(p => {
+      const done = !!(p.duration && base >= p.duration - 0.04);
+      if (o.onEnded) o.onEnded(p.key, done);
+    });
+
+    if (base >= longest() - 0.04) { stop(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  async function play() {
+    running = true;
+    /* `play()` 는 비동기로 거절될 수 있다. **어느 칸이 못 떴는지 적는다.** */
+    const results = await Promise.all(live().map(async p => {
+      if (p.duration && p.video.currentTime >= p.duration - 0.04) return null;
+      const r = await G.play(p.video);
+      return r && r.error ? p.key : null;
+    }));
+    const failed = results.filter(Boolean);
+    if (o.onNote) {
+      o.onNote(failed.length
+        ? failed.join(' · ') + ' 이 재생을 시작하지 못했습니다' : '');
+    }
+    if (o.onButton) o.onButton('멈춤');
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(raf);
+    live().forEach(p => p.video.pause());
+    if (o.onButton) o.onButton('함께 재생');
+  }
+
+  return {
+    /* 다시 그리기 전에 부른다. 안 부르면 사라진 칸이 시계에 남는다. */
+    clear() { stop(); order = []; Object.keys(players).forEach(k => delete players[k]); },
+
+    add(key, video, duration) {
+      players[key] = { key: key, video: video, duration: duration || 0 };
+      if (order.indexOf(key) < 0) order.push(key);
+      video.addEventListener('loadedmetadata', () => {
+        players[key].duration = video.duration || duration || 0;
+        clock();
+      });
+
+      /* **브라우저가 스스로 멈추는 일이 있다.** 숨은 탭, 전원 절약,
+       * 자동재생 규칙, 사용자의 직접 조작. 그때 우리 상태만 「도는 중」으로
+       * 남으면 단추가 거짓말을 하고 ▶ 가 흐린 채로 굳는다 `확인됨`
+       * (2026-09-29 · 숨은 탭에서 실제로 그렇게 됐다).
+       *
+       * 그래서 **화면을 자료로 믿지 않고 video 에게 되묻는다.** 다 멈췄으면
+       * 우리도 멈춘 것이다. `stop()` 이 부르는 `pause` 는 이미 running 이
+       * 꺼진 뒤라 다시 안 들어온다. */
+      video.addEventListener('pause', () => {
+        if (!running) return;
+        if (live().every(p => p.video.paused)) stop();
+      });
+
+      return players[key];
+    },
+
+    playing() { return running; },
+    toggle() { if (running) stop(); else play(); },
+    play: play,
+    stop: stop,
+
+    seek(t) {
+      base = t;
+      live().forEach(p => {
+        p.video.currentTime = Math.min(t, Math.max(0, (p.duration || t) - 0.01));
+      });
+      clock();
+    },
+
+    rate(x) { live().forEach(p => { p.video.playbackRate = x; }); },
+    longest: longest,
+    clock: clock
+  };
+};
+
+/* 조종간 한 줄. 「함께 재생 · 처음으로 · 시계 · 배속」.
+ * **`compare` 와 축 2 화면이 같은 것을 쓴다.** 따로 그리면 갈라진다. */
+G.transport = function (group, extra) {
+  const btn = G.el('button', { class: 'chip', type: 'button', text: '함께 재생' });
+  const rew = G.el('button', { class: 'chip', type: 'button', text: '처음으로' });
+  const clock = G.el('span', { class: 'clock', text: '0:00.0 / 0:00.0' });
+  const note = G.el('span', { class: 'tag warn' });
+
+  const row = G.el('div', { class: 'transport' }, [
+    btn, rew, clock, G.el('span', { class: 'flabel', text: '배속' })
+  ]);
+
+  (extra && extra.rates || [0.25, 0.5, 1, 2]).forEach(x => {
+    const b = G.el('button', {
+      class: 'chip', type: 'button',
+      'aria-pressed': x === 1 ? 'true' : 'false', text: x + '×'
+    });
+    b.addEventListener('click', () => {
+      row.querySelectorAll('.chip[aria-pressed]')
+         .forEach(other => other.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      group.rate(x);
+    });
+    row.appendChild(b);
+  });
+
+  row.appendChild(note);
+  btn.addEventListener('click', () => group.toggle());
+  rew.addEventListener('click', () => { group.stop(); group.seek(0); });
+
+  return { row: row, button: btn, clock: clock, note: note };
+};
+
+/* ── 축 탭 ──────────────────────────────────────────────────
+ *
+ * ★ 2026-09-29 팀장 지시: 「gallery-v2 부터는 저속 영상이랑, 턴, 등 …
+ * 비교해서 볼 수 있게 … 이 후로는 축2에 대해서 더 확장이 될 예정이니,
+ * 평가 대상으로는 안해도 기록으로 남긴다」.
+ *
+ * 축이 둘이 됐다. 어느 화면에서도 같은 자리에서 갈아탈 수 있어야 한다.
+ * **주소는 절대경로로 적는다.** 이 화면들은 `/gallery/view` 처럼 슬래시
+ * 없이 서빙되므로 `axis2/` 같은 상대경로는 한 칸 위로 풀려 404 가 된다
+ * `확인됨` (갤러리 첫 화면에서 같은 실수를 한 적이 있다).
+ *
+ * `has2` 가 거짓이면 **탭을 아예 그리지 않는다.** 누르면 빈 화면이 나오는
+ * 탭을 두느니 없는 편이 낫다 (v1 판에는 축 2 자료가 없다).
+ */
+G.AXES = [
+  { id: 'terrain', label: '축 1 · 험지 통과', href: '/gallery/view' },
+  { id: 'command', label: '축 2 · 명령 응답', href: '/gallery/axis2' },
+];
+
+G.axisTabs = function (opts) {
+  const o = opts || {};
+  if (!o.has2) return null;
+
+  const wrap = G.el('div', { class: 'viewsw axistab' });
+
+  G.AXES.forEach(ax => {
+    const on = ax.id === o.current;
+    const href = ax.href + (o.version ? '?v=' + encodeURIComponent(o.version) : '');
+    const node = on
+      ? G.el('span', { class: 'rb on', text: ax.label, 'aria-current': 'page' })
+      : G.el('a', { class: 'rb', href: href, text: ax.label });
+    wrap.appendChild(node);
+  });
+
+  return wrap;
+};
+
+/* 그 판이 축 2 자료를 가졌나. **`versions.json` 이 적어 준 것만 믿는다.**
+ * 폴더 이름으로 추측하면 파일이 없는데 있다고 하게 된다. */
+G.hasAxis2 = function (entry) {
+  return !!(entry && entry.axis2 && entry.axis2.index);
 };

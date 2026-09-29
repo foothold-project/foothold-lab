@@ -1,0 +1,150 @@
+{
+ "note": "휘도 백분위 0.5~99.5 를 0~255 로 편 그림이다",
+ "source": "sim/eval/results/20260928-terrain-shots",
+ "stills": [
+  {
+   "terrain": "pyramid_stairs",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 28.7,
+   "std_stretched": 53.7,
+   "lo": 81.9,
+   "hi": 219.3
+  },
+  {
+   "terrain": "pyramid_stairs_inv",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 30.2,
+   "std_stretched": 56.3,
+   "lo": 79.6,
+   "hi": 217.4
+  },
+  {
+   "terrain": "boxes",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 30.2,
+   "std_stretched": 55.4,
+   "lo": 77.3,
+   "hi": 216.9
+  },
+  {
+   "terrain": "random_rough",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 31.5,
+   "std_stretched": 51.4,
+   "lo": 81.3,
+   "hi": 239.0
+  },
+  {
+   "terrain": "hf_pyramid_slope",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 11.1,
+   "std_stretched": 24.3,
+   "lo": 115.4,
+   "hi": 228.0
+  },
+  {
+   "terrain": "hf_pyramid_slope_inv",
+   "set": "rough6",
+   "tag": "trained",
+   "std_raw": 9.7,
+   "std_stretched": 23.1,
+   "lo": 117.8,
+   "hi": 217.4
+  },
+  {
+   "terrain": "rails",
+   "set": "unseen10",
+   "tag": "v2-trained",
+   "std_raw": 22.2,
+   "std_stretched": 41.9,
+   "lo": 84.2,
+   "hi": 219.6
+  },
+  {
+   "terrain": "gap",
+   "set": "unseen10",
+   "tag": "kin",
+   "std_raw": 26.5,
+   "std_stretched": 38.6,
+   "lo": 45.1,
+   "hi": 220.9
+  },
+  {
+   "terrain": "discrete_obstacles",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 15.4,
+   "std_stretched": 28.5,
+   "lo": 90.6,
+   "hi": 227.3
+  },
+  {
+   "terrain": "wave",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 10.1,
+   "std_stretched": 23.2,
+   "lo": 113.3,
+   "hi": 219.3
+  },
+  {
+   "terrain": "stepping_stones",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 55.0,
+   "std_stretched": 102.5,
+   "lo": 66.0,
+   "hi": 202.0
+  },
+  {
+   "terrain": "pit",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 14.3,
+   "std_stretched": 26.4,
+   "lo": 87.4,
+   "hi": 223.3
+  },
+  {
+   "terrain": "star",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 21.4,
+   "std_stretched": 40.0,
+   "lo": 82.6,
+   "hi": 218.9
+  },
+  {
+   "terrain": "floating_ring",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 19.1,
+   "std_stretched": 35.8,
+   "lo": 84.4,
+   "hi": 220.3
+  },
+  {
+   "terrain": "repeated_boxes",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 13.9,
+   "std_stretched": 27.7,
+   "lo": 93.5,
+   "hi": 218.9
+  },
+  {
+   "terrain": "repeated_cylinders",
+   "set": "unseen10",
+   "tag": "unseen",
+   "std_raw": 12.4,
+   "std_stretched": 25.0,
+   "lo": 96.1,
+   "hi": 219.3
+  }
+ ]
+}

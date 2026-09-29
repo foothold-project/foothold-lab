@@ -1100,18 +1100,76 @@ def _release_block():
     #   지형이 걸렸는지가 없어(개수만 있다) 여기서 판별할 수 없다. 그래서
     #   `env.yaml sub_terrains` 실측(lead 2026-09-28. gallery/compare/index.html
     #   의 TRAINED_TERRAIN 과 같은 사실, 같은 방식)으로 판마다 손으로 적는다.
+    #
+    # ★★ 2026-09-28 (2 차). 주의 문구만 다는 것으로는 모자랐다. **머리기사가
+    #   여전히 정정 «전» 숫자였다.** 종합보고서 1 절이 통째로 「v2 에게
+    #   10 종은 틀린 말이다」를 밝히는데, 허브에 처음 닿는 사람은 그 정정을
+    #   읽기 전에 10 종 수치를 먼저 본다.
+    #
+    #   원장이 이제 지형별 값을 싣는다 (`measure_release` 의 `by_terrain`).
+    #   그것으로 «빼고» 계산해 **정직한 묶음을 머리기사로** 쓴다. 10 종 값은
+    #   버리지 않고 아래 칸에 같이 남긴다.
+    #
+    #   실측 (난이도 0.5 · 1.0 m/s)
+    #
+    #       10 종  50.5 -> 92.4   +41.9 %p     rails · gap 이 들어 있다
+    #        8 종  62.0 -> 90.5   +28.5 %p     둘을 뺀 것
+    #
+    #   `rails` 는 v2 가 학습에 넣은 바로 그 지형이고 (`params/env.yaml`
+    #   `sub_terrains` 실측), `gap` 은 평가가 `MeshGapTerrainCfg` 인데 v2 학습은
+    #   `omni_gap_terrain(mode=ring)` 이라 **함수가 다르다.** 그래서 「친척을
+    #   봤다」로 따로 센다. 종합보고서 1 절과 같은 가름이다.
     TRAINED_UNSEEN = {
-        'v2': 'rails',
+        'v2': {'trained': ['rails'], 'kin': ['gap']},
     }
-    trained = TRAINED_UNSEEN.get(r.get('id'))
-    caveat = (('%s 는 %s 가 학습에 넣은 지형이라 이 숫자에 포함됩니다. '
-               '학습 없이 넘은 지형만 보려면 종합보고서를 확인하십시오.'
-               % (trained, r.get('main_model') or r.get('id')))
-              if trained else '')
+    mark = TRAINED_UNSEEN.get(r.get('id')) or {}
+    drop = list(mark.get('trained') or []) + list(mark.get('kin') or [])
+    by_t = un.get('by_terrain') or {}
+    honest = dict((t, v) for t, v in by_t.items() if t not in drop)
 
-    cells = [('미경험 %d종 · 종합' % un['terrains'],
-              '%.0f <i>→</i> %.0f<i>%%</i>' % (un['baseline_pct'], un['main_pct']),
-              cond)]
+    caveat = ''
+    if drop and honest and len(honest) < len(by_t):
+        hb = sum(v[0] for v in honest.values()) / len(honest)
+        hm = sum(v[1] for v in honest.values()) / len(honest)
+        lead = ('어느 판도 학습하지 않은 <b>%d종</b>에서 기준선보다 '
+                '<b>%.1f %%p</b> 높습니다.' % (len(honest), hm - hb))
+        if kn:
+            lead += (' 기존 험지 %d종은 <b>%d종 전부</b> 기준선 이상입니다.'
+                     % (kn['terrains'], kn['at_or_above']))
+        who = r.get('main_model') or r.get('id')
+        # **역따옴표를 쓰지 않는다.** 이 문구는 `esc()` 를 거쳐 글자 그대로
+        # 나오므로 역따옴표가 화면에 찍힌다.
+        bits = []
+        if mark.get('trained'):
+            bits.append('%s 는 %s 가 학습에 넣은 지형이고'
+                        % (' · '.join(mark['trained']), who))
+        if mark.get('kin'):
+            bits.append('%s 은 친척 지형(omni_gap)만 본 것이라'
+                        % ' · '.join(mark['kin']))
+        caveat = ('%s 이 %d종에서 뺐습니다. 둘을 넣은 %d종 값은 아래 칸에 '
+                  '있습니다.' % (' '.join(bits), len(honest), len(by_t)))
+        cells_extra = [('둘을 넣은 %d종' % len(by_t),
+                        '%.0f <i>→</i> %.0f<i>%%</i>'
+                        % (un['baseline_pct'], un['main_pct']),
+                        '%s 이 들어 있다' % ' 와 '.join(drop))]
+    elif drop:
+        caveat = ('%s 가 이 숫자에 포함됩니다. 학습 없이 넘은 지형만 보려면 '
+                  '종합보고서를 확인하십시오.' % ' · '.join(drop))
+        cells_extra = []
+    else:
+        cells_extra = []
+
+    if cells_extra:
+        cells = [('어느 판도 학습 안 한 %d종' % len(honest),
+                  '%.0f <i>→</i> %.0f<i>%%</i>'
+                  % (sum(v[0] for v in honest.values()) / len(honest),
+                     sum(v[1] for v in honest.values()) / len(honest)),
+                  cond)] + cells_extra
+    else:
+        cells = [('미경험 %d종 · 종합' % un['terrains'],
+                  '%.0f <i>→</i> %.0f<i>%%</i>'
+                  % (un['baseline_pct'], un['main_pct']),
+                  cond)]
     if kn:
         cells.append(('기존 %d종 · 종합' % kn['terrains'],
                       '%.0f <i>→</i> %.0f<i>%%</i>' % (kn['baseline_pct'], kn['main_pct']),

@@ -1,0 +1,2 @@
+# omni_gap 학습이 gap 으로 옮겨가나
+# fs1-scratch-f001 · gap d0.5 1.0 m/s

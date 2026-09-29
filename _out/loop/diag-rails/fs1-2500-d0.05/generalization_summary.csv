@@ -1,0 +1,2 @@
+terrain,episodes,overall_success_rate,survival_rate,progress_success_rate,tracking_success_rate,direction_success_rate,mean_forward_progress_m,mean_lateral_drift_m,mean_velocity_mae_mps,mean_episode_duration_s,mean_fall_time_s,mean_reward_per_step
+rails,30,0.23333333333333334,0.5333333333333333,0.7,0.3,0.7,3.8566300000000004,0.11707000000000004,0.2611733333333333,5.0233333333333325,3.9071428571428575,0.029293699999999995

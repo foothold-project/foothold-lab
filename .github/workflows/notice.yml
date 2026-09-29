@@ -108,9 +108,14 @@ jobs:
         run: |
           set -euo pipefail
           [ -n "$HOOK" ] || { echo "DISCORD_NOTICE_WEBHOOK 미설정"; exit 1; }
-          # 디스코드 한 메시지 2000자 제한. 1900자 단위로 쪼개 순서대로 보낸다
-          split -b 1900 "$FILE" /tmp/part_
-          for p in /tmp/part_*; do
+          # ★ 2026-09-29 (#379). 전에는 `split -b 1900` 이었다. 그것은 «바이트»를
+          #   자르는데 한글은 3바이트라 1900 이 절대 글자 경계에 안 떨어진다.
+          #   실측: 7,560바이트 공지가 4조각 중 2조각에서 UTF-8 이 깨졌다.
+          #   그런데 판정이 HTTP 코드뿐이라 «깨진 채로» 발송 완료가 찍혔다.
+          #   이제 글자와 줄 경계로 자르고, 되붙여 원본과 같은지 확인한 뒤 보낸다.
+          rm -rf /tmp/parts
+          python3 .github/scripts/split_notice.py "$FILE" /tmp/parts 1900
+          for p in /tmp/parts/part_*; do
             CODE=$(jq -n --rawfile c "$p" '{content:$c}' \
                    | curl -sS -o /dev/null -w "%{http_code}" -X POST \
                           -H "Content-Type: application/json" -d @- "$HOOK")

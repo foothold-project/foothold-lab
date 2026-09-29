@@ -140,6 +140,10 @@ from isaaclab.app import AppLauncher  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import timeseries  # noqa: E402
+# **검은 프레임 관문.** Replicator 가 전부 0 인 버퍼를 한 걸러 한 장 내보낸다
+# (2026-09-03 · 이슈 #99). 정본 도구가 `render_capture.py` 에 있는데 이 파일이
+# 안 부르고 있었다. 실측: `v2_hold.mp4` 1000 장 중 500 장이 검정이었다.
+from render_capture import capture_lit_frame  # noqa: E402
 import command_response_metrics as cmd_metrics  # noqa: E402
 
 
@@ -617,6 +621,11 @@ def load_policy(env, checkpoint_path, device):
     if not isinstance(agent_cfg, dict):
         agent_cfg = agent_cfg.to_dict()
 
+    # **체크포인트의 표준편차 형식에 agent 설정을 맞춘다 (2026-09-26).**
+    # 축 1 과 «같은» 함수를 쓴다. 두 하네스가 갈리면 판정이 갈린다.
+    from std_form import apply_std_form
+    apply_std_form(agent_cfg, checkpoint_path)
+
     runner = OnPolicyRunner(env, agent_cfg, log_dir=None, device=device)
     runner.load(checkpoint_path)
 
@@ -834,8 +843,14 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
         follow_camera(raw_env, robot, args_cli.video_env)
 
         # 첫 프레임이 검게 나오지 않게 몇 장 버린다.
+        #
+        # **버리는 것만으로는 안 막힌다.** 결함은 「처음 몇 장」이 아니라
+        # 「한 걸러 한 장」이다. 그래서 여기서도 밝기를 확인한다. 첫 장이
+        # 끝내 어두우면 «여기서 죽는 편이» 낫다. 600 장을 찍고 나서 버리는
+        # 것보다 낫다.
         for _ in range(8):
             raw_env.render()
+        capture_lit_frame(raw_env)
 
         print(f"        영상: {video_path}", flush=True)
 
@@ -883,8 +898,24 @@ def run_scenario(name, env, raw_env, robot, contact_sensor, command_term,
         env.step(action)
 
         if writer is not None:
+            # **카메라를 옮긴 뒤 한 장을 버린다.** `set_camera_view` 가 바로
+            # 안 먹어서, 그 직후 `render()` 가 «카메라가 아직 로봇을 안 따라갈
+            # 때의 화면»(하늘돔)을 되돌려 주는 것으로 보인다. 그 결과 제대로 된
+            # 화면과 하늘돔이 세 장 주기로 번갈아 나왔다 `확인됨`
+            # (2026-09-29 · NVIDIA 세 컷에서 인접 장 밝기 차 6 넘는 이음이
+            #  4 ~ 5 % · v1 · v2 는 0 %).
+            #
+            # `capture_lit_frame` 은 「밝기 10 아래」만 막으므로 밝기 142 인
+            # 하늘돔은 그냥 지나간다. 그래서 여기서 막는다.
             follow_camera(raw_env, robot, args_cli.video_env)
-            writer.append_data(np.ascontiguousarray(raw_env.render()))
+            raw_env.render()
+            follow_camera(raw_env, robot, args_cli.video_env)
+
+            # `capture_lit_frame` 이 어두우면 `render()` 를 더 부른다.
+            # 세 번 다 어두우면 `RuntimeError` 로 죽는다. 조용히 검은 영상을
+            # 만들어 「실패 0」으로 보고되는 것보다 낫다.
+            _frame, _attempt, _means = capture_lit_frame(raw_env)
+            writer.append_data(_frame)
 
         # 넘어짐. `time_out` 이 아닌 종료만 낙상으로 센다.
         terminated = raw_env.termination_manager.terminated

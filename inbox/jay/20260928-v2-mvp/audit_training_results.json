@@ -1,0 +1,4287 @@
+{
+  "checkpoints": {
+    "nv": {
+      "path": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\nvidia_pretrained_source\\nvidia_pretrained.pt",
+      "sha256": "1891ab2bd6e7ccae1c6ef62bbc952f5e311e75361e53d4ab3314bf361def96f3",
+      "iter": 0,
+      "tensor_count": 17,
+      "actor": [
+        512,
+        235
+      ],
+      "critic": [
+        512,
+        235
+      ],
+      "optimizer_steps": [
+        30000.0
+      ]
+    },
+    "v2": {
+      "path": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000\\model_3000.pt",
+      "sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+      "iter": 3000,
+      "tensor_count": 17,
+      "actor": [
+        512,
+        235
+      ],
+      "critic": [
+        512,
+        235
+      ],
+      "optimizer_steps": [
+        90020.0
+      ]
+    },
+    "fs1": {
+      "path": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-28_01-04-22_20260928_fs1-scratch-f001\\model_3000.pt",
+      "sha256": "ecd19e13ccfc34d56ad9e34d968230f69ac2ebf766f169f46d0664b8b71d8717",
+      "iter": 3000,
+      "tensor_count": 17,
+      "actor": [
+        512,
+        235
+      ],
+      "critic": [
+        512,
+        235
+      ],
+      "optimizer_steps": [
+        60020.0
+      ]
+    },
+    "ctrl": {
+      "path": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_rough\\2026-08-11_20-32-58\\model_1499.pt",
+      "sha256": "512d543ab195712da5a26c87b685ac657193c3a0bd9872483a84fc53b34e9ac3",
+      "iter": 1499,
+      "tensor_count": 17,
+      "actor": [
+        512,
+        235
+      ],
+      "critic": [
+        512,
+        235
+      ],
+      "optimizer_steps": [
+        30000.0
+      ]
+    }
+  },
+  "events": {
+    "ctrl": {
+      "Episode_Reward/feet_air_time": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": -2.006607610383071e-05,
+          "6": -0.00029351364355534315,
+          "8": -0.0003753791097551584,
+          "175": -0.0013469124678522348,
+          "500": -0.001588764600455761,
+          "1499": -0.0014199253637343645,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          -2.006607610383071e-05
+        ],
+        "mean": -0.001478610596030194
+      },
+      "Curriculum/terrain_levels": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 3.5275371074676514,
+          "6": 3.3575644493103027,
+          "8": 3.2778525352478027,
+          "175": 0.5244039297103882,
+          "500": 3.140380859375,
+          "1499": 5.6317138671875,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          1468,
+          5.640411376953125
+        ],
+        "mean": 3.94535999417305
+      },
+      "Episode_Termination/time_out": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 0.011484782211482525,
+          "6": 0.1524251401424408,
+          "8": 0.1945902556180954,
+          "175": 0.8270060420036316,
+          "500": 0.9006856679916382,
+          "1499": 0.9357808828353882,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          1352,
+          0.94256591796875
+        ],
+        "mean": 0.8689659487772733
+      },
+      "Episode_Termination/base_contact": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 0.0,
+          "6": 0.0343831405043602,
+          "8": 0.0696512907743454,
+          "175": 0.1729939877986908,
+          "500": 0.0993143767118454,
+          "1499": 0.0642191618680954,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          47,
+          0.6024882197380066
+        ],
+        "mean": 0.11999644979213675
+      },
+      "Loss/learning_rate": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 8.77914935699664e-05,
+          "6": 0.007593750022351742,
+          "8": 0.006666666828095913,
+          "175": 0.0005852766335010529,
+          "500": 0.00039018443203531206,
+          "1499": 0.0002601229352876544,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          6,
+          0.007593750022351742
+        ],
+        "mean": 0.0004672517447925202
+      },
+      "Perf/collection time": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 6.731191158294678,
+          "6": 5.109968662261963,
+          "8": 5.136750221252441,
+          "175": 5.5097126960754395,
+          "500": 5.2266035079956055,
+          "1499": 4.901156425476074,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 3,
+        "peak": [
+          802,
+          7.13938045501709
+        ],
+        "mean": 5.18866758219401
+      },
+      "Perf/learning_time": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 0,
+        "max_step": 1499,
+        "points": {
+          "0": 0.3018839359283447,
+          "6": 0.1260814666748047,
+          "8": 0.13067102432250977,
+          "175": 0.14003324508666992,
+          "500": 0.16476941108703613,
+          "1499": 0.11680746078491211,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          0.3018839359283447
+        ],
+        "mean": 0.1464734985033671
+      },
+      "Train/mean_reward/time": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 7,
+        "max_step": 8002,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": null,
+          "1500": 12.784337997436523,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 1404,
+        "peak": [
+          7897,
+          24.147363662719727
+        ],
+        "mean": 17.303519262259204
+      },
+      "Train/mean_episode_length/time": {
+        "count": 1500,
+        "unique_steps": 1500,
+        "min_step": 7,
+        "max_step": 8002,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": null,
+          "1500": 933.1300048828125,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 1500,
+        "peak": [
+          5452,
+          1000.0
+        ],
+        "mean": 927.6472279434204
+      }
+    },
+    "v2": {
+      "Episode_Reward/feet_air_time": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": -0.00020135054364800453,
+          "6": -0.0020661044400185347,
+          "8": -0.002487282268702984,
+          "175": -0.009462698362767696,
+          "500": -0.010847995989024639,
+          "1499": -0.009713207371532917,
+          "1500": -0.00996688287705183,
+          "3000": -0.010101180523633957,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          -0.00020135054364800453
+        ],
+        "mean": -0.009500103131576228
+      },
+      "Curriculum/terrain_levels": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 1.9805196523666382,
+          "6": 1.8480733633041382,
+          "8": 1.8003438711166382,
+          "175": 4.8004255294799805,
+          "500": 5.9477643966674805,
+          "1499": 6.0157270431518555,
+          "1500": 6.017537593841553,
+          "3000": 5.959310054779053,
+          "4500": null
+        },
+        "ge5_9": 2735,
+        "peak": [
+          314,
+          6.557149410247803
+        ],
+        "mean": 5.840982779627123
+      },
+      "Episode_Termination/time_out": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 0.014017741195857525,
+          "6": 0.1547953337430954,
+          "8": 0.2053426206111908,
+          "175": 0.8859965205192566,
+          "500": 0.8482767939567566,
+          "1499": 0.9454244375228882,
+          "1500": 0.945648193359375,
+          "3000": 0.9564310908317566,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          2513,
+          0.971466064453125
+        ],
+        "mean": 0.9141620787472571
+      },
+      "Episode_Termination/base_contact": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 0.0,
+          "6": 0.0057271323166787624,
+          "8": 0.01442464254796505,
+          "175": 0.1130269393324852,
+          "500": 0.1492818295955658,
+          "1499": 0.0524495467543602,
+          "1500": 0.0522664412856102,
+          "3000": 0.0416158065199852,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          362,
+          0.2108561247587204
+        ],
+        "mean": 0.07771971130659676
+      },
+      "Episode_Termination/fell_below_terrain": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 0.0,
+          "6": 0.0,
+          "8": 0.0,
+          "175": 0.0009765625,
+          "500": 0.002685546875,
+          "1499": 0.0021260580979287624,
+          "1500": 0.0020853679161518812,
+          "3000": 0.001953125,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          1553,
+          0.00494384765625
+        ],
+        "mean": 0.0015612166699435328
+      },
+      "Loss/learning_rate": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 0.00022499999613501132,
+          "6": 0.0003375000087544322,
+          "8": 0.0003375000087544322,
+          "175": 0.00038443360244855285,
+          "500": 0.00038443360244855285,
+          "1499": 0.0002562890585977584,
+          "1500": 0.0002562890585977584,
+          "3000": 0.0002562890585977584,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          5,
+          0.0005062500131316483
+        ],
+        "mean": 0.000286884351138147
+      },
+      "Perf/collection time": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 4.995204448699951,
+          "6": 3.7816853523254395,
+          "8": 3.7795159816741943,
+          "175": 3.541560649871826,
+          "500": 3.6489882469177246,
+          "1499": 3.678179979324341,
+          "1500": 3.630305528640747,
+          "3000": 3.8375606536865234,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          4.995204448699951
+        ],
+        "mean": 3.6226334789521455
+      },
+      "Perf/learning_time": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 0,
+        "max_step": 3000,
+        "points": {
+          "0": 0.22761797904968262,
+          "6": 0.11807680130004883,
+          "8": 0.13761568069458008,
+          "175": 0.11490106582641602,
+          "500": 0.13051939010620117,
+          "1499": 0.11944746971130371,
+          "1500": 0.12287664413452148,
+          "3000": 0.11918497085571289,
+          "4500": null
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          0.22761797904968262
+        ],
+        "mean": 0.12225159801113251
+      },
+      "Train/mean_reward/time": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 5,
+        "max_step": 11238,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": 0.428208589553833,
+          "175": 23.838916778564453,
+          "500": null,
+          "1499": null,
+          "1500": 22.272573471069336,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 2988,
+        "peak": [
+          9114,
+          32.26319122314453
+        ],
+        "mean": 27.50480224199963
+      },
+      "Train/mean_episode_length/time": {
+        "count": 3001,
+        "unique_steps": 3001,
+        "min_step": 5,
+        "max_step": 11238,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": 32.650001525878906,
+          "175": 939.8400268554688,
+          "500": null,
+          "1499": null,
+          "1500": 900.5999755859375,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 3001,
+        "peak": [
+          7057,
+          1000.0
+        ],
+        "mean": 947.0223491570823
+      }
+    },
+    "fs1": {
+      "Episode_Reward/feet_air_time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": -1.862057797552552e-05,
+          "6": -0.00027890619821846485,
+          "8": -0.0003504960041027516,
+          "175": -0.0015201419591903687,
+          "500": -0.0009536322904750705,
+          "1499": -0.0009869011119008064,
+          "1500": -0.0009946714853867888,
+          "3000": -0.0011252728290855885,
+          "4500": -0.0010040741181001067
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          -1.862057797552552e-05
+        ],
+        "mean": -0.0009813849607724894
+      },
+      "Curriculum/terrain_levels": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 1.9805196523666382,
+          "6": 1.8206889629364014,
+          "8": 1.7405294179916382,
+          "175": 0.00244140625,
+          "500": 3.5846762657165527,
+          "1499": 4.841145992279053,
+          "1500": 4.84423828125,
+          "3000": 5.5357160568237305,
+          "4500": 5.660888671875
+        },
+        "ge5_9": 0,
+        "peak": [
+          4118,
+          5.8136091232299805
+        ],
+        "mean": 4.707182422042929
+      },
+      "Episode_Termination/time_out": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.014017741195857525,
+          "6": 0.15234375,
+          "8": 0.19677734375,
+          "175": 0.9379984736442566,
+          "500": 0.591094970703125,
+          "1499": 0.5725606679916382,
+          "1500": 0.5729166865348816,
+          "3000": 0.61041259765625,
+          "4500": 0.5897115468978882
+        },
+        "ge5_9": 0,
+        "peak": [
+          160,
+          0.9829203486442566
+        ],
+        "mean": 0.5665150529288469
+      },
+      "Episode_Termination/base_contact": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.0,
+          "6": 0.039031982421875,
+          "8": 0.0804036483168602,
+          "175": 0.0620015487074852,
+          "500": 0.407928466796875,
+          "1499": 0.4274393916130066,
+          "1500": 0.427154541015625,
+          "3000": 0.38909912109375,
+          "4500": 0.4093119502067566
+        },
+        "ge5_9": 0,
+        "peak": [
+          51,
+          0.8288065791130066
+        ],
+        "mean": 0.42963899744231016
+      },
+      "Episode_Termination/fell_below_terrain": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.0,
+          "6": 0.0,
+          "8": 0.0,
+          "175": 0.0,
+          "500": 0.001220703125,
+          "1499": 0.00048828125,
+          "1500": 0.00041707357740961015,
+          "3000": 0.000732421875,
+          "4500": 0.0009765625
+        },
+        "ge5_9": 0,
+        "peak": [
+          2253,
+          0.004364013671875
+        ],
+        "mean": 0.0008730630992715646
+      },
+      "Loss/learning_rate": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 9.999999747378752e-06,
+          "6": 0.004378939047455788,
+          "8": 0.0065684085711836815,
+          "175": 0.00038443360244855285,
+          "500": 0.0002562890585977584,
+          "1499": 0.00038443360244855285,
+          "1500": 0.00017085937724914402,
+          "3000": 7.593750342493877e-05,
+          "4500": 0.0002562890585977584
+        },
+        "ge5_9": 0,
+        "peak": [
+          8,
+          0.0065684085711836815
+        ],
+        "mean": 0.00027397941813412724
+      },
+      "Perf/collection time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 5.206538200378418,
+          "6": 3.7467293739318848,
+          "8": 3.7797300815582275,
+          "175": 4.009742259979248,
+          "500": 3.9463770389556885,
+          "1499": 4.0110697746276855,
+          "1500": 4.051230430603027,
+          "3000": 4.036346435546875,
+          "4500": 4.027429580688477
+        },
+        "ge5_9": 1,
+        "peak": [
+          1581,
+          7.329070091247559
+        ],
+        "mean": 4.046334550794404
+      },
+      "Perf/learning_time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.2447052001953125,
+          "6": 0.13088035583496094,
+          "8": 0.11275291442871094,
+          "175": 0.14087796211242676,
+          "500": 0.11842679977416992,
+          "1499": 0.12530827522277832,
+          "1500": 0.11950826644897461,
+          "3000": 0.11909985542297363,
+          "4500": 0.11410331726074219
+        },
+        "ge5_9": 0,
+        "peak": [
+          2233,
+          0.3749361038208008
+        ],
+        "mean": 0.1187780128005239
+      },
+      "Train/mean_reward/time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 5,
+        "max_step": 18747,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": null,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 4413,
+        "peak": [
+          15672,
+          21.239267349243164
+        ],
+        "mean": 14.695070877133677
+      },
+      "Train/mean_episode_length/time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 5,
+        "max_step": 18747,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": null,
+          "1500": null,
+          "3000": null,
+          "4500": null
+        },
+        "ge5_9": 4501,
+        "peak": [
+          450,
+          1000.0
+        ],
+        "mean": 719.3462539194849
+      }
+    },
+    "fs2": {
+      "Episode_Reward/feet_air_time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": -0.00018620576884131879,
+          "6": -0.002771110273897648,
+          "8": -0.00345052732154727,
+          "175": -0.014941158704459667,
+          "500": -0.007743669208139181,
+          "1499": -0.009278079494833946,
+          "1500": -0.008221106603741646,
+          "3000": -0.008531173691153526,
+          "4500": -0.009874614886939526
+        },
+        "ge5_9": 0,
+        "peak": [
+          0,
+          -0.00018620576884131879
+        ],
+        "mean": -0.008959412521497259
+      },
+      "Curriculum/terrain_levels": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 1.9805196523666382,
+          "6": 1.8184611797332764,
+          "8": 1.73846435546875,
+          "175": 0.002685546875,
+          "500": 1.8258260488510132,
+          "1499": 4.0970563888549805,
+          "1500": 4.098876953125,
+          "3000": 5.64154052734375,
+          "4500": 5.802785396575928
+        },
+        "ge5_9": 62,
+        "peak": [
+          3935,
+          5.940277099609375
+        ],
+        "mean": 4.447690797124783
+      },
+      "Episode_Termination/time_out": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.014017741195857525,
+          "6": 0.1522623747587204,
+          "8": 0.1963399350643158,
+          "175": 0.9850972890853882,
+          "500": 0.4539896845817566,
+          "1499": 0.3642171323299408,
+          "1500": 0.3671061396598816,
+          "3000": 0.6405538320541382,
+          "4500": 0.726593017578125
+        },
+        "ge5_9": 0,
+        "peak": [
+          179,
+          0.9868062734603882
+        ],
+        "mean": 0.5758989242956016
+      },
+      "Episode_Termination/base_contact": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.0,
+          "6": 0.0412190780043602,
+          "8": 0.083404541015625,
+          "175": 0.014902750961482525,
+          "500": 0.5460103750228882,
+          "1499": 0.634521484375,
+          "1500": 0.6316732168197632,
+          "3000": 0.3592020869255066,
+          "4500": 0.272674560546875
+        },
+        "ge5_9": 0,
+        "peak": [
+          49,
+          0.8258463740348816
+        ],
+        "mean": 0.42029148167231045
+      },
+      "Episode_Termination/fell_below_terrain": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.0,
+          "6": 0.0,
+          "8": 0.0,
+          "175": 0.0,
+          "500": 0.0,
+          "1499": 0.0012613933067768812,
+          "1500": 0.001220703125,
+          "3000": 0.00048828125,
+          "4500": 0.000732421875
+        },
+        "ge5_9": 0,
+        "peak": [
+          1816,
+          0.004150390625
+        ],
+        "mean": 0.0009019986375286356
+      },
+      "Loss/learning_rate": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 9.999999747378752e-06,
+          "6": 0.004378939047455788,
+          "8": 0.004378939047455788,
+          "175": 0.00038443360244855285,
+          "500": 0.00038443360244855285,
+          "1499": 0.00038443360244855285,
+          "1500": 0.00017085937724914402,
+          "3000": 0.00017085937724914402,
+          "4500": 0.0002562890585977584
+        },
+        "ge5_9": 0,
+        "peak": [
+          6,
+          0.004378939047455788
+        ],
+        "mean": 0.0002926200522080109
+      },
+      "Perf/collection time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 5.305612564086914,
+          "6": 3.9813485145568848,
+          "8": 4.0463409423828125,
+          "175": 4.196283340454102,
+          "500": 4.420754432678223,
+          "1499": 4.3167877197265625,
+          "1500": 4.226566791534424,
+          "3000": 4.274959564208984,
+          "4500": 4.262324333190918
+        },
+        "ge5_9": 1,
+        "peak": [
+          1527,
+          7.465372085571289
+        ],
+        "mean": 4.1613103762861625
+      },
+      "Perf/learning_time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 0,
+        "max_step": 4500,
+        "points": {
+          "0": 0.23996400833129883,
+          "6": 0.14142942428588867,
+          "8": 0.13377904891967773,
+          "175": 0.12970805168151855,
+          "500": 0.1508181095123291,
+          "1499": 0.11272788047790527,
+          "1500": 0.13045144081115723,
+          "3000": 0.1156768798828125,
+          "4500": 0.1222383975982666
+        },
+        "ge5_9": 0,
+        "peak": [
+          2233,
+          0.33577823638916016
+        ],
+        "mean": 0.12269400263118681
+      },
+      "Train/mean_reward/time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 5,
+        "max_step": 19282,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": 11.18322467803955,
+          "1500": null,
+          "3000": null,
+          "4500": 10.134590148925781
+        },
+        "ge5_9": 4408,
+        "peak": [
+          16695,
+          20.288677215576172
+        ],
+        "mean": 14.050818929370097
+      },
+      "Train/mean_episode_length/time": {
+        "count": 4501,
+        "unique_steps": 4501,
+        "min_step": 5,
+        "max_step": 19282,
+        "points": {
+          "0": null,
+          "6": null,
+          "8": null,
+          "175": null,
+          "500": null,
+          "1499": 753.0900268554688,
+          "1500": null,
+          "3000": null,
+          "4500": 528.6599731445312
+        },
+        "ge5_9": 4501,
+        "peak": [
+          590,
+          1000.0
+        ],
+        "mean": 720.9226126205759
+      }
+    }
+  },
+  "diffs": {
+    "fs1/env.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -19,3 +19,3 @@\n",
+      "   physics_prim_path: /physicsScene",
+      "-  device: cuda:1",
+      "+  device: cuda:0",
+      "   dt: 0.005",
+      "@@ -850,3 +850,3 @@\n",
+      " export_io_descriptors: false",
+      "-log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000",
+      "+log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-28_01-04-22_20260928_fs1-scratch-f001",
+      " is_finite_horizon: false",
+      "@@ -914,3 +914,3 @@\n",
+      "       threshold: 0.5",
+      "-    weight: 0.1",
+      "+    weight: 0.01",
+      "   undesired_contacts: null"
+    ],
+    "fs1/agent.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -1,5 +1,5 @@\n",
+      " seed: 42",
+      "-device: cuda:1",
+      "+device: cuda:0",
+      " num_steps_per_env: 24",
+      "-max_iterations: 3001",
+      "+max_iterations: 4501",
+      " empirical_normalization: null",
+      "@@ -9,3 +9,3 @@\n",
+      " experiment_name: unitree_go2_gap_nvidia",
+      "-run_name: 20260925_v2g2-feetair01_seed42_iter3000",
+      "+run_name: 20260928_fs1-scratch-f001",
+      " logger: tensorboard",
+      "@@ -13,5 +13,5 @@\n",
+      " wandb_project: isaaclab",
+      "-resume: true",
+      "-load_run: nvidia_pretrained_source",
+      "-load_checkpoint: nvidia_pretrained.pt",
+      "+resume: false",
+      "+load_run: .*",
+      "+load_checkpoint: model_.*.pt",
+      " class_name: OnPolicyRunner",
+      "@@ -37,3 +37,3 @@\n",
+      "   num_mini_batches: 4",
+      "-  learning_rate: 0.0001",
+      "+  learning_rate: 0.001",
+      "   schedule: adaptive"
+    ],
+    "fs2/env.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -850,3 +850,3 @@\n",
+      " export_io_descriptors: false",
+      "-log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000",
+      "+log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-28_01-04-43_20260928_fs2-scratch-f01",
+      " is_finite_horizon: false"
+    ],
+    "fs2/agent.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -3,3 +3,3 @@\n",
+      " num_steps_per_env: 24",
+      "-max_iterations: 3001",
+      "+max_iterations: 4501",
+      " empirical_normalization: null",
+      "@@ -9,3 +9,3 @@\n",
+      " experiment_name: unitree_go2_gap_nvidia",
+      "-run_name: 20260925_v2g2-feetair01_seed42_iter3000",
+      "+run_name: 20260928_fs2-scratch-f01",
+      " logger: tensorboard",
+      "@@ -13,5 +13,5 @@\n",
+      " wandb_project: isaaclab",
+      "-resume: true",
+      "-load_run: nvidia_pretrained_source",
+      "-load_checkpoint: nvidia_pretrained.pt",
+      "+resume: false",
+      "+load_run: .*",
+      "+load_checkpoint: model_.*.pt",
+      " class_name: OnPolicyRunner",
+      "@@ -37,3 +37,3 @@\n",
+      "   num_mini_batches: 4",
+      "-  learning_rate: 0.0001",
+      "+  learning_rate: 0.001",
+      "   schedule: adaptive"
+    ],
+    "ctrl/env.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -19,3 +19,3 @@\n",
+      "   physics_prim_path: /physicsScene",
+      "-  device: cuda:1",
+      "+  device: cuda:0",
+      "   dt: 0.005",
+      "@@ -208,3 +208,3 @@\n",
+      "           function: isaaclab.terrains.trimesh.mesh_terrains:pyramid_stairs_terrain",
+      "-          proportion: 0.15",
+      "+          proportion: 0.2",
+      "           size: !!python/tuple",
+      "@@ -222,3 +222,3 @@\n",
+      "           function: isaaclab.terrains.trimesh.mesh_terrains:inverted_pyramid_stairs_terrain",
+      "-          proportion: 0.15",
+      "+          proportion: 0.2",
+      "           size: !!python/tuple",
+      "@@ -236,3 +236,3 @@\n",
+      "           function: isaaclab.terrains.trimesh.mesh_terrains:random_grid_terrain",
+      "-          proportion: 0.15",
+      "+          proportion: 0.2",
+      "           size: !!python/tuple",
+      "@@ -249,3 +249,3 @@\n",
+      "           function: isaaclab.terrains.height_field.hf_terrains:random_uniform_terrain",
+      "-          proportion: 0.15",
+      "+          proportion: 0.2",
+      "           size: !!python/tuple",
+      "@@ -295,33 +295,2 @@\n",
+      "           inverted: true",
+      "-        omni_gap:",
+      "-          function: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.gap_training.omni_gap_terrain:omni_gap_terrain",
+      "-          proportion: 0.1",
+      "-          size: !!python/tuple",
+      "-          - 8.0",
+      "-          - 8.0",
+      "-          flat_patch_sampling: null",
+      "-          gap_width_range: !!python/tuple",
+      "-          - 0.15",
+      "-          - 0.4",
+      "-          gap_center_ratio: 0.5",
+      "-          approach_distance: 1.5",
+      "-          slab_thickness: 1.0",
+      "-          minimum_spawn_x: 0.75",
+      "-          mode: ring",
+      "-          ring_radius: 2.5",
+      "-          num_sides: 64",
+      "-        rails:",
+      "-          function: isaaclab.terrains.trimesh.mesh_terrains:rails_terrain",
+      "-          proportion: 0.1",
+      "-          size: !!python/tuple",
+      "-          - 8.0",
+      "-          - 8.0",
+      "-          flat_patch_sampling: null",
+      "-          rail_thickness_range: !!python/tuple",
+      "-          - 0.08",
+      "-          - 0.18",
+      "-          rail_height_range: !!python/tuple",
+      "-          - 0.05",
+      "-          - 0.18",
+      "-          platform_width: 1.5",
+      "       difficulty_range: !!python/tuple",
+      "@@ -351,3 +320,3 @@\n",
+      "       compliant_contact_damping: 0.0",
+      "-    max_init_terrain_level: 2",
+      "+    max_init_terrain_level: 5",
+      "     debug_vis: false",
+      "@@ -630,3 +599,3 @@\n",
+      "     height_scan:",
+      "-      func: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.gap_training.gap_observations:height_scan_with_gap",
+      "+      func: isaaclab.envs.mdp.observations:height_scan",
+      "       params:",
+      "@@ -655,4 +624,2 @@\n",
+      "           preserve_order: false",
+      "-        offset: 0.5",
+      "-        miss_value: 1.0",
+      "       modifiers: null",
+      "@@ -798,10 +765,10 @@\n",
+      "         x: !!python/tuple",
+      "-        - -0.1",
+      "-        - 0.1",
+      "+        - -0.5",
+      "+        - 0.5",
+      "         y: !!python/tuple",
+      "-        - -0.2",
+      "-        - 0.2",
+      "+        - -0.5",
+      "+        - 0.5",
+      "         yaw: !!python/tuple",
+      "-        - -0.05",
+      "-        - 0.05",
+      "+        - -3.14",
+      "+        - 3.14",
+      "       velocity_range:",
+      "@@ -850,3 +817,3 @@\n",
+      " export_io_descriptors: false",
+      "-log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000",
+      "+log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_rough\\2026-08-11_20-32-58",
+      " is_finite_horizon: false",
+      "@@ -914,3 +881,3 @@\n",
+      "       threshold: 0.5",
+      "-    weight: 0.1",
+      "+    weight: 0.01",
+      "   undesired_contacts: null",
+      "@@ -957,30 +924,2 @@\n",
+      "     time_out: false",
+      "-  fell_below_terrain:",
+      "-    func: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.gap_training.gap_terminations:root_too_far_below_origin",
+      "-    params:",
+      "-      minimum_relative_height: -3.0",
+      "-      asset_cfg:",
+      "-        name: robot",
+      "-        joint_names: null",
+      "-        joint_ids: !!python/object/apply:builtins.slice",
+      "-        - null",
+      "-        - null",
+      "-        - null",
+      "-        fixed_tendon_names: null",
+      "-        fixed_tendon_ids: !!python/object/apply:builtins.slice",
+      "-        - null",
+      "-        - null",
+      "-        - null",
+      "-        body_names: null",
+      "-        body_ids: !!python/object/apply:builtins.slice",
+      "-        - null",
+      "-        - null",
+      "-        - null",
+      "-        object_collection_names: null",
+      "-        object_collection_ids: !!python/object/apply:builtins.slice",
+      "-        - null",
+      "-        - null",
+      "-        - null",
+      "-        preserve_order: false",
+      "-    time_out: false",
+      " curriculum:",
+      "@@ -999,3 +938,3 @@\n",
+      "     heading_control_stiffness: 0.5",
+      "-    rel_standing_envs: 0.1",
+      "+    rel_standing_envs: 0.02",
+      "     rel_heading_envs: 1.0",
+      "@@ -1003,7 +942,7 @@\n",
+      "       lin_vel_x: !!python/tuple",
+      "-      - 0.4",
+      "-      - 1.5",
+      "+      - -1.0",
+      "+      - 1.0",
+      "       lin_vel_y: !!python/tuple",
+      "-      - 0.0",
+      "-      - 0.0",
+      "+      - -1.0",
+      "+      - 1.0",
+      "       ang_vel_z: !!python/tuple"
+    ],
+    "ctrl/agent.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -1,5 +1,5 @@\n",
+      " seed: 42",
+      "-device: cuda:1",
+      "+device: cuda:0",
+      " num_steps_per_env: 24",
+      "-max_iterations: 3001",
+      "+max_iterations: 1500",
+      " empirical_normalization: null",
+      "@@ -7,5 +7,5 @@\n",
+      " clip_actions: null",
+      "-save_interval: 25",
+      "-experiment_name: unitree_go2_gap_nvidia",
+      "-run_name: 20260925_v2g2-feetair01_seed42_iter3000",
+      "+save_interval: 50",
+      "+experiment_name: unitree_go2_rough",
+      "+run_name: ''",
+      " logger: tensorboard",
+      "@@ -13,5 +13,5 @@\n",
+      " wandb_project: isaaclab",
+      "-resume: true",
+      "-load_run: nvidia_pretrained_source",
+      "-load_checkpoint: nvidia_pretrained.pt",
+      "+resume: false",
+      "+load_run: .*",
+      "+load_checkpoint: model_.*.pt",
+      " class_name: OnPolicyRunner",
+      "@@ -37,3 +37,3 @@\n",
+      "   num_mini_batches: 4",
+      "-  learning_rate: 0.0001",
+      "+  learning_rate: 0.001",
+      "   schedule: adaptive"
+    ],
+    "resume/env.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -19,3 +19,3 @@\n",
+      "   physics_prim_path: /physicsScene",
+      "-  device: cuda:0",
+      "+  device: cuda:1",
+      "   dt: 0.005",
+      "@@ -850,3 +850,3 @@\n",
+      " export_io_descriptors: false",
+      "-log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-23_14-42-33_20260923_v2b-r_seed42_iter3000",
+      "+log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-24_14-59-36_20260924_v2b-p11_seed42_iter3000",
+      " is_finite_horizon: false"
+    ],
+    "resume/agent.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -1,3 +1,3 @@\n",
+      " seed: 42",
+      "-device: cuda:0",
+      "+device: cuda:1",
+      " num_steps_per_env: 24",
+      "@@ -9,3 +9,3 @@\n",
+      " experiment_name: unitree_go2_gap_nvidia",
+      "-run_name: 20260923_v2b-r_seed42_iter3000",
+      "+run_name: 20260924_v2b-p11_seed42_iter3000",
+      " logger: tensorboard"
+    ],
+    "scratch/env.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -19,3 +19,3 @@\n",
+      "   physics_prim_path: /physicsScene",
+      "-  device: cuda:0",
+      "+  device: cuda:1",
+      "   dt: 0.005",
+      "@@ -850,3 +850,3 @@\n",
+      " export_io_descriptors: false",
+      "-log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-28_10-28-18_20260928_probe-det-g0",
+      "+log_dir: C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-28_01-04-43_20260928_fs2-scratch-f01",
+      " is_finite_horizon: false"
+    ],
+    "scratch/agent.yaml": [
+      "--- \n",
+      "+++ \n",
+      "@@ -1,5 +1,5 @@\n",
+      " seed: 42",
+      "-device: cuda:0",
+      "+device: cuda:1",
+      " num_steps_per_env: 24",
+      "-max_iterations: 26",
+      "+max_iterations: 4501",
+      " empirical_normalization: null",
+      "@@ -9,3 +9,3 @@\n",
+      " experiment_name: unitree_go2_gap_nvidia",
+      "-run_name: 20260928_probe-det-g0",
+      "+run_name: 20260928_fs2-scratch-f01",
+      " logger: tensorboard"
+    ]
+  },
+  "rough_vs_nv": {
+    "model_0.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.7473039627075195
+    },
+    "model_100.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3039629459381104
+    },
+    "model_1000.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3017356395721436
+    },
+    "model_1050.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3197309970855713
+    },
+    "model_1100.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3313636779785156
+    },
+    "model_1150.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3448848724365234
+    },
+    "model_1200.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.352536678314209
+    },
+    "model_1250.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3644814491271973
+    },
+    "model_1300.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3727030754089355
+    },
+    "model_1350.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3756039142608643
+    },
+    "model_1400.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.373222827911377
+    },
+    "model_1450.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3753867149353027
+    },
+    "model_1499.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3936526775360107
+    },
+    "model_150.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3095171451568604
+    },
+    "model_200.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.306335926055908
+    },
+    "model_250.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2841763496398926
+    },
+    "model_300.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2737812995910645
+    },
+    "model_350.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2791049480438232
+    },
+    "model_400.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2663633823394775
+    },
+    "model_450.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.262509346008301
+    },
+    "model_50.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.3130686283111572
+    },
+    "model_500.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2681877613067627
+    },
+    "model_550.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2608625888824463
+    },
+    "model_600.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2595622539520264
+    },
+    "model_650.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2658910751342773
+    },
+    "model_700.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.2700586318969727
+    },
+    "model_750.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.262636661529541
+    },
+    "model_800.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.277712106704712
+    },
+    "model_850.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.281268358230591
+    },
+    "model_900.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.28214693069458
+    },
+    "model_950.pt": {
+      "tensor_count": 17,
+      "key_equal": true,
+      "diffs": [
+        "/std",
+        "/actor.0.weight",
+        "/actor.0.bias",
+        "/actor.2.weight",
+        "/actor.2.bias",
+        "/actor.4.weight",
+        "/actor.4.bias",
+        "/actor.6.weight",
+        "/actor.6.bias",
+        "/critic.0.weight",
+        "/critic.0.bias",
+        "/critic.2.weight",
+        "/critic.2.bias",
+        "/critic.4.weight",
+        "/critic.4.bias",
+        "/critic.6.weight",
+        "/critic.6.bias"
+      ],
+      "max_abs_diff": 2.298431634902954
+    }
+  },
+  "gpu_pairs": {
+    "resume": [
+      {
+        "file": "model_0.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_100.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1000.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1025.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1050.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1075.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1100.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1125.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1150.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1175.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1200.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1225.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_125.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1250.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1275.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1300.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1325.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1350.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1375.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1400.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1425.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1450.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1475.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_150.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1500.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1525.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1550.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1575.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1600.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1625.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1650.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1675.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1700.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1725.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_175.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1750.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1775.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1800.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1825.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1850.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1875.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1900.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1925.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1950.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_1975.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_200.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2000.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2025.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2050.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2075.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2100.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2125.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2150.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2175.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2200.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2225.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_225.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2250.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2275.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2300.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2325.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2350.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2375.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2400.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2425.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2450.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2475.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_25.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_250.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2500.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2525.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2550.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2575.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2600.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2625.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2650.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2675.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2700.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2725.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_275.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2750.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2775.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2800.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2825.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2850.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2875.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2900.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2925.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2950.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_2975.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_300.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_3000.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_325.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_350.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_375.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_400.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_425.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_450.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_475.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_50.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_500.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_525.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_550.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_575.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_600.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_625.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_650.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_675.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_700.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_725.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_75.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_750.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_775.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_800.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_825.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_850.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_875.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_900.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_925.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_950.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_975.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      }
+    ],
+    "scratch": [
+      {
+        "file": "model_0.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      },
+      {
+        "file": "model_25.pt",
+        "same_file_sha": false,
+        "model": {
+          "tensor_count": 17,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer": {
+          "tensor_count": 51,
+          "key_equal": true,
+          "diffs": [],
+          "max_abs_diff": 0
+        },
+        "optimizer_param_groups_equal": true,
+        "iter_equal": true
+      }
+    ]
+  },
+  "timeseries_recount": {
+    "files": 2304,
+    "errors": [],
+    "max_numeric_error": 5.178701800723218e-09,
+    "absolute_tolerance": 1e-07
+  }
+}

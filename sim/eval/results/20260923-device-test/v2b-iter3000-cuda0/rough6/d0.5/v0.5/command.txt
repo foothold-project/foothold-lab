@@ -1,0 +1,2 @@
+C:\Users\AI-WS01\anaconda3\envs\isaac311\python.exe sim/eval/eval_generalization.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-21_11-03-28_20260921_v2b_seed42_iter3000/model_3000.pt --terrain_set rough6 --terrains all --difficulty 0.5 --episodes 100 --envs_per_terrain 10 --command_vx 0.5 --eval_duration 12.0 --min_progress_m 3.0 --max_lateral_drift 0.75 --seed 42 --headless --device cuda:0 --output_dir sim/eval/results/20260923-device-test/v2b-iter3000-cuda0/rough6/d0.5/v0.5
+# 이 시험의 목적 · 평가 장치만 바꿔 기존 cuda:1 결과와 견준다

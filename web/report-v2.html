@@ -1,0 +1,1605 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>v2 종합보고서 · 처음 보는 지형에서 무엇을 얻었나 · FOOTHOLD</title>
+<meta name="description" content="어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 stepping_stones 하나다">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
+   올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
+   여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><script id="fh-figs">window.fhFigs=function(t){try{var g=document.querySelectorAll('img[data-themed]'),i,e,u,q,b;for(i=0;i<g.length;i++){e=g[i];u=e.getAttribute('src');if(!u)continue;q=u.indexOf('?');b=(q<0?u:u.slice(0,q));if(!e.dataset.fhLight)e.dataset.fhLight=b.replace(/\.dark\.svg$/,'.svg');b=e.dataset.fhLight;if(t==='dark')b=b.replace(/\.svg$/,'.dark.svg');if(b!==(q<0?u:u.slice(0,q)))e.setAttribute('src',b+(q<0?'':u.slice(q)));}}catch(err){}};document.addEventListener("DOMContentLoaded",function(){window.fhFigs(document.documentElement.dataset.theme)});</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=f4d8e8e5').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>v2 종합보고서 · 처음 보는 지형에서 무엇을 얻었나</h1>
+  <p class="lede">어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 stepping_stones 하나다</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v4.0</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-09-28 23:30</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20260928-v2-mvp-report.md</span></div><div><span class="k">증거</span><span class="v">확인 34 · 추측 0 · 미측정 6</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 리서치
+작성: 오흥재 · 2026-09-28 23:30
+근거: 실측 (<code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code> 1,182 줄 · 지형마다 속도마다 100 에피소드) · 각 판의 학습 시각 저장본 <code>params/env.yaml</code> 전수 · Isaac Lab 과 rsl_rl 소스 직접 확인
+요지: 어느 판도 학습에 넣지 않은 여덟 지형에서 NVIDIA 43.9 % 가 88.5 % 가 됐다. 못 넘는 것은 <code>stepping_stones</code> 하나다
+상태: 확정
+판: v4.0</p></blockquote>
+</section>
+<section id="s1"><span id="0"></span><h2>0. 이번에 한 일</h2>
+<p><code>foothold-v2</code> 로 <b><code>v2g2-feetair01</code> iter3000</b> 을 배포한다. 이 문서는 그 판이 무엇을 할 수 있고 무엇을 못 하는지, 그리고 <b>어떤 물음을 거쳐 거기에 닿았는지</b>를 적는다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>1  학습에 없던 여덟 지형에서  NVIDIA 43.9 %  -&gt;  v2 88.5 %
+2  그 중 일곱은 99.7 % 이상이고 stepping_stones 하나만 8.0 % 다
+3  정책 수준(보상·명령)의 탐색은 멈출 선에 닿았다. 다음은 관측이다</pre></div>
+<p><b>배포 기준을 다 채운 것은 아니다.</b> 축 2 아홉 칸 중 여덟이다. 그런데도 이것을 2 차 배포로 내세우는 까닭은 (1) 축 1 이 네 체크포인트 전부에서 진짜 하락 0 이고 (2) 축 2 를 처음으로 재서 <b>남은 한 칸을 이름으로 적을 수 있게</b> 되었기 때문이다. 남은 칸은 다음 실험의 목표다.</p>
+</section>
+<section id="s2"><span id="1"></span><h2>1. 먼저 「미경험」이라는 말부터 바로잡는다 <span class="ev ev-ok">확인됨</span></h2>
+<p>평가 지형 열여섯 종 중 열 종을 우리는 <code>unseen10</code> 이라고 불러 왔다. 그런데 <b>v2 에게는 그 말이 틀리다.</b> 학습 설정을 열어서 확인했다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>params/env.yaml  sub_terrains        (2026-09-28 · 학습 로그에서 직접 읽음)
+
+  NVIDIA 배포본   6종   rough6
+  foothold-v1     7종   rough6 + forward_gap
+  v2 (v2g2)       8종   rough6 + omni_gap + rails</pre></div>
+<p><code>rails</code> 는 <b>평가 목록에 있는 바로 그 지형</b>이고 v2 가 학습에 넣었다. 함수도 인자도 같다 (<code>mesh_terrains:rails_terrain</code> · thickness (0.08, 0.18) · height (0.05, 0.18) · platform 1.5). <b>미경험이 아니다.</b></p>
+<p><code>gap</code> 은 사정이 다르다. 평가는 <code>MeshGapTerrainCfg</code> 이고 v2 학습은 <code>omni_gap_terrain(mode=ring)</code> 이다. <b>함수가 다르다.</b> 폭 범위만 같다. 그래서 「친척을 봤다」로 따로 센다.</p>
+<p>그래서 이 보고서는 숫자를 <b>네 묶음</b>으로 나눠 적고, <b>머리기사는 여덟 종으로</b> 쓴다.</p>
+<div class="tw"><table><thead><tr><th>묶음</th><th>지형</th><th>뜻</th></tr></thead><tbody><tr><td><b>어느 판도 학습 안 한 8종</b></td><td><code>discrete_obstacles</code> · <code>floating_ring</code> · <code>pit</code> · <code>repeated_boxes</code> · <code>repeated_cylinders</code> · <code>star</code> · <code>stepping_stones</code> · <code>wave</code></td><td><b>머리기사는 이것으로 쓴다</b></td></tr><tr><td>친척 학습 1종</td><td><code>gap</code></td><td>v1 은 <code>forward_gap</code>, v2 는 <code>omni_gap</code></td></tr><tr><td>v2 학습 1종</td><td><code>rails</code></td><td>v2 에게는 학습 지형이다</td></tr><tr><td>셋 다 학습 6종</td><td><code>rough6</code></td><td>NVIDIA 가 연습한 지형</td></tr></tbody></table></div>
+<h3>네 묶음이 실제로 어떻게 생겼나</h3>
+<p><figure class="mdimg"><img src="assets/visual/v2-terrain-catalog.png?v=8e000d3d" alt="그림 1 · 평가 지형 열여섯 종을 바로 위에서 본 것. 띠 색이 묶음입니다. 파랑은 v2 가 학습한 rails, 금색은 친척만 본 gap, 검정은 어느 판도 학습 안 한 여덟 종입니다" loading="lazy"><figcaption>그림 1 · 평가 지형 열여섯 종을 바로 위에서 본 것. 띠 색이 묶음입니다. 파랑은 v2 가 학습한 rails, 금색은 친척만 본 gap, 검정은 어느 판도 학습 안 한 여덟 종입니다</figcaption></figure></p>
+<p>한 칸은 타일 2 x 2 이고 로봇 넷이 크기 자를 겸한다. 배포본 <code>v2g2-feetair01</code> iter3000 을 같은 카메라로 태워 찍었다.</p>
+<p><b>대비를 폈다.</b> 원본은 밝기가 184 ~ 191 에 몰려 있어 일곱 종이 거의 안 읽혔다 (흩어짐 9.7 ~ 15.4). 재질이 균일한 밝은 회색이고 조명이 부드러워서다. 카메라를 45 도로 기울여도 안 고쳐졌다 (9.7 -&gt; 8.6). 각도가 아니라 조명 문제였다. 그래서 <b>휘도만</b> 백분위 0.5 ~ 99.5 로 폈다. 채널마다 펴면 없는 색이 생긴다 (<code>hf_pyramid_slope_inv</code> 가 보라색이 됐다).</p>
+<p><b>펴는 것은 표시 방식이지 없는 요철을 만드는 것이 아니다.</b> 원본 스틸과 펴기 전후 값은 <code>sim/eval/results/20260928-terrain-shots/stills/index.json</code> 에 그대로 있다.</p>
+</section>
+<section id="s3"><span id="2"></span><h2>2. 일반화 성적 · 한 장</h2>
+<p><figure class="mdimg"><img src="assets/visual/v2-generalization-summary.svg?v=2df8b28f" alt="그림 2 · 네 묶음에서 세 판의 성공률. 어느 판도 학습 안 한 여덟 지형에서 NVIDIA 43.9 %가 v2 88.5 %가 됐습니다" loading="lazy"><figcaption>그림 2 · 네 묶음에서 세 판의 성공률. 어느 판도 학습 안 한 여덟 지형에서 NVIDIA 43.9 %가 v2 88.5 %가 됐습니다</figcaption></figure></p>
+<p>난이도 0.5 · 지형마다 속도마다 100 판. <b>칸은 지형 x 속도 셋</b>이다 (8종이면 8 x 3 = 24 칸). 곧 아래 값은 <b>세 속도(0.5 · 1.0 · 1.5 m/s)의 평균</b>이다.</p>
+<blockquote><p><b>허브 첫 화면 카드와 수가 다른 까닭.</b> 그 카드는 <b>1.0 m/s 한 속도</b>만 잰다 (카드에 조건이 적혀 있다). 같은 여덟 종이 거기서는 62 -&gt; 90 이고 여기서는 43.9 -&gt; 88.5 다. 둘 다 맞고 <b>재는 범위가 다르다.</b></p>
+<p>속도별로 펴 보면 까닭이 한 줄이다. 여덟 종 난이도 0.5 실측이다.</p>
+<div class="tw"><table><thead><tr><th>속도</th><th>NVIDIA</th><th><b>v2</b></th></tr></thead><tbody><tr><td>0.5 m/s</td><td>60.9</td><td>87.5</td></tr><tr><td>1.0 m/s</td><td>62.0</td><td>90.5</td></tr><tr><td><b>1.5 m/s</b></td><td><b>8.8</b></td><td>87.4</td></tr><tr><td>세 속도 평균</td><td><b>43.88</b></td><td><b>88.46</b></td></tr></tbody></table></div>
+<p><b>NVIDIA 만 1.5 m/s 에서 무너진다</b> (8.8 %). 그래서 세 속도 평균에서 차이가 +44.6 %p 로 벌어지고, 1.0 m/s 만 보면 +28.5 %p 다. 다만 1.5 m/s 는 NVIDIA 의 학습 명령 범위 밖이므로 그 사실을 같이 읽어야 한다 (3 절).</p></blockquote>
+<div class="tw"><table><thead><tr><th>묶음</th><th>칸</th><th>NVIDIA</th><th>foothold-v1</th><th><b>v2</b></th></tr></thead><tbody><tr><td>평가 전체</td><td>48</td><td>41.17</td><td>88.88</td><td><b>94.19</b></td></tr><tr><td>셋 다 학습한 6종</td><td>18</td><td>50.78</td><td>99.33</td><td><b>100.00</b></td></tr><tr><td><b>어느 판도 학습 안 한 8종</b></td><td>24</td><td><b>43.88</b></td><td>86.71</td><td><b>88.46</b></td></tr><tr><td>그 중 7종 (<code>stepping_stones</code> 뺀)</td><td>21</td><td>50.14</td><td>99.10</td><td><b>99.95</b></td></tr></tbody></table></div>
+<p><b>읽는 법이 셋이다.</b></p>
+<ol><li><b>NVIDIA 대비</b>는 크다. 여덟 종에서 43.88 -&gt; 88.46, <b>+44.58 %p</b> 다</li><li><b>v1 대비</b>는 작다. 86.71 -&gt; 88.46, <b>+1.75 %p</b> 다. 이것은 시드만 바꿔도 생기는 흔들림 1.25 %p 와 같은 크기다 (8 절)</li><li><b>여덟 종 평균 88 을 끌어내리는 것은 <code>stepping_stones</code> 하나다.</b> 그것을 빼면 99.95 % 다</li></ol>
+<h3>2-1. 눈으로 먼저 · 목적성 세 화면</h3>
+<p><b>숫자를 보기 전에 화면으로 본다.</b> 주제가 「미경험 험지 지형 정책 적응」이니 <b>어느 판도 학습 안 한 8 종</b> 안에서 세 칸을 골랐다. 기준을 먼저 적고 그 기준으로 골랐다.</p>
+<div class="tw"><table><thead><tr><th>고른 칸</th><th>NVIDIA -&gt; v1 -&gt; v2</th><th>왜 이 칸인가</th></tr></thead><tbody><tr><td><code>floating_ring</code> 1.5 m/s</td><td><b>0 -&gt; 87 -&gt; 99</b></td><td>세 판의 값이 <b>다 다른 유일한 칸</b> · 계보 전체가 한 화면에 들어온다</td></tr><tr><td><code>pit</code> 1.5 m/s</td><td><b>0 -&gt; 100 -&gt; 100</b></td><td>NVIDIA 가 <b>아예 못 하는</b> 칸</td></tr><tr><td><code>stepping_stones</code> 1.0 m/s</td><td><b>0 -&gt; 0 -&gt; 24</b></td><td><b>아직 못 하는</b> 칸 · v2 가 v1 을 넘은 가장 큰 칸. 다만 이 24 는 <b>시드 하나의 값이고 다섯 중 가장 높다</b> (나머지 넷은 19 · 3 · 1 · 0 · 4-0-1 절)</td></tr></tbody></table></div>
+<p><code>gap</code> 과 <code>rails</code> 는 v2 에게 학습 지형이라 뺐다 (1 절의 네 묶음). <b>잘하는 칸만 걸면 자기 참조가 된다.</b> 그래서 못 하는 칸을 같이 넣었다.</p>
+<blockquote><p><b>컷은 <code>num_envs 1</code> 한 판의 예시다</b> <span class="ev ev-ok">확인됨</span>
+(<code>sim/eval/gallery_build.py</code> 머리말 · 「영상은 성공률이 아니다」).
+옆에 적은 성공률은 <b>지형·속도마다 100 판</b> 으로 따로 잰 값이다.
+<b>한 판이 그 100 판을 대표한다고 읽지 말 것.</b></p>
+<p>울타리 안에서 컷 길이가 다르다 (예 <code>floating_ring</code> 1.5 는 4.00 · 3.80 ·
+3.72 초). 한 판이 끝나는 시점이 판마다 달라서다. <b>왜 다른지는 안 쟀다</b>
+이므로 길이로 성공·실패를 읽지 말 것.</p></blockquote>
+<h4><code>floating_ring</code> · 1.5 m/s · 세 판이 다 다르다</h4>
+<p><b>볼 것: 고리를 넘는가.</b> NVIDIA 는 0 %, <code>foothold-v1</code> 은 87 %, <code>foothold-v2</code> 는 99 % 다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-floatingring-v15-nvidia.jpg" src="assets/video/v2/hero-floatingring-v15-nvidia.mp4?v=60c9c8d6"></video><figcaption>100 판 성공률 <b>0 %</b> · 이 컷은 4.00 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-floatingring-v15-v1.jpg" src="assets/video/v2/hero-floatingring-v15-v1.mp4?v=66c6b425"></video><figcaption>100 판 성공률 <b>87 %</b> · 이 컷은 3.80 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-floatingring-v15-v2.jpg" src="assets/video/v2/hero-floatingring-v15-v2.mp4?v=7469c26d"></video><figcaption>100 판 성공률 <b>99 %</b> · 이 컷은 3.72 초 한 판</figcaption></figure></div></div>
+<h4><code>pit</code> · 1.5 m/s · NVIDIA 가 아예 못 한다</h4>
+<p><b>볼 것: 구덩이를 건너는가.</b> NVIDIA 0 % · v1 100 % · v2 100 %. <b>이 칸은 <code>foothold-v1</code> 이 이미 풀었다.</b> v2 가 더한 것이 없다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-pit-v15-nvidia.jpg" src="assets/video/v2/hero-pit-v15-nvidia.mp4?v=59cf2d20"></video><figcaption>100 판 성공률 <b>0 %</b> · 이 컷은 4.00 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-pit-v15-v1.jpg" src="assets/video/v2/hero-pit-v15-v1.mp4?v=959229e0"></video><figcaption>100 판 성공률 <b>100 %</b> · 이 컷은 3.74 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-pit-v15-v2.jpg" src="assets/video/v2/hero-pit-v15-v2.mp4?v=d2f6aba0"></video><figcaption>100 판 성공률 <b>100 %</b> · 이 컷은 3.68 초 한 판</figcaption></figure></div></div>
+<h4><code>stepping_stones</code> · 1.0 m/s · 아직 못 하는 칸</h4>
+<p><b>볼 것: 디딤돌 사이로 발이 빠지는가.</b> 세 판 다 0 % 인데 <b><code>v2</code> 만 1.0 m/s 에서 24 %</b> 다. 0.5 와 1.5 에서는 v2 도 0 % 다.</p>
+<blockquote><p><b>그 24 % 는 시드 하나의 값이다.</b> 같은 조건에서 시드를 다섯으로 갈아
+재니 24 % · 1 % · 3 % · 19 % · 0 % 였다 <span class="ev ev-ok">확인됨</span>. 24 는 그중 가장 높다.
+<b>이 칸은 0 ~ 24 % 로 읽어야 한다</b> (4-0-1 절).</p></blockquote>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-steppingstones-v10-nvidia.jpg" src="assets/video/v2/hero-steppingstones-v10-nvidia.mp4?v=73dd70f4"></video><figcaption>100 판 성공률 <b>0 %</b> · 이 컷은 6.00 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-steppingstones-v10-v1.jpg" src="assets/video/v2/hero-steppingstones-v10-v1.mp4?v=d79e1152"></video><figcaption>100 판 성공률 <b>0 %</b> · 이 컷은 6.00 초 한 판</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/hero-steppingstones-v10-v2.jpg" src="assets/video/v2/hero-steppingstones-v10-v2.mp4?v=43381b2c"></video><figcaption>100 판 성공률 <b>24 %</b> · 이 컷은 6.00 초 한 판</figcaption></figure></div></div>
+<blockquote><p><b>여덟 종에서 큰 몫은 NVIDIA -&gt; <code>foothold-v1</code> 이다</b> (43.88 -&gt; 86.71).
+<code>v2</code> 가 더한 것은 <b>1.75 %p</b> 다 (86.71 -&gt; 88.46 · 2 절 표). 위 세 화면이
+그것을 그대로 보인다 · <code>pit</code> 은 v1 이 이미 풀었고, v2 가 눈에 보이게 더한
+칸은 <code>floating_ring</code> 1.5(+12 %p)와 <code>stepping_stones</code> 1.0(+24 %p) 둘이다.</p></blockquote>
+</section>
+<section id="s4"><span id="3"></span><h2>3. 성공률만으로는 안 보이는 것</h2>
+<p>성공률은 넷의 AND 다. 그 넷을 펴 보면 <b>NVIDIA 가 왜 41 % 인지</b>가 달라진다.</p>
+<div class="tw"><table><thead><tr><th>성분 (d0.5 · 48칸)</th><th>NVIDIA</th><th>v1</th><th><b>v2</b></th><th>무엇을 재나</th></tr></thead><tbody><tr><td><code>survival_rate</code></td><td><b>87.3</b></td><td>95.0</td><td><b>96.6</b></td><td>안 넘어졌나</td></tr><tr><td><code>progress_success_rate</code></td><td>66.8</td><td>92.4</td><td><b>95.3</b></td><td>앞으로 갔나</td></tr><tr><td><code>tracking_success_rate</code></td><td><b>44.5</b></td><td>90.7</td><td><b>95.4</b></td><td>명령 속도를 따라갔나</td></tr><tr><td><code>direction_success_rate</code></td><td>63.8</td><td>90.7</td><td><b>95.3</b></td><td>진로를 지켰나</td></tr></tbody></table></div>
+<p><b>NVIDIA 의 41 % 는 「넘어져서」가 아니다.</b> 넘어지지 않는 비율은 87.3 이다. <b>명령 속도를 못 따라간다</b> (44.5). 험지에서 느려지고, 그러면 통과 판정에 걸린다.</p>
+<p><b>이것을 안 펴면 「NVIDIA 는 험지에서 자빠진다」고 잘못 읽는다.</b></p>
+<h3>속도별</h3>
+<div class="tw"><table><thead><tr><th>판</th><th>0.5 m/s</th><th>1.0 m/s</th><th>1.5 m/s</th></tr></thead><tbody><tr><td>NVIDIA</td><td>55.1</td><td>57.4</td><td><b>10.9</b></td></tr><tr><td>foothold-v1</td><td>90.8</td><td>90.4</td><td>85.4</td></tr><tr><td><b>v2</b></td><td>93.7</td><td>95.2</td><td><b>93.6</b></td></tr></tbody></table></div>
+<p><b>1.5 m/s 에서 갈린다.</b> 다만 1.5 m/s 는 NVIDIA 의 학습 명령 범위 <code>lin_vel_x (-1, 1)</code> <b>밖</b>이다. 그 사실을 같이 적어야 공정하다.</p>
+</section>
+<section id="s5"><span id="4"></span><h2>4. 지형 하나하나</h2>
+<h3>4-0. 지형 열여섯 종을 한 표에서 · 컷은 갤러리로</h3>
+<p><b>여기서 숫자를 보고 궁금한 칸만 눌러 갑니다.</b> 칸은 <code>NVIDIA / v1 / **v2**</code> 순서이고 <b>지형·속도마다 100 판</b> 이다 (난이도 0.5). 「컷」 을 누르면 갤러리의 그 칸으로 가서 세 판을 나란히 재생할 수 있다.</p>
+<div class="tw"><table><thead><tr><th>지형</th><th>묶음</th><th>0.5 m/s</th><th>1.0 m/s</th><th>1.5 m/s</th><th>컷</th></tr></thead><tbody><tr><td><code>discrete_obstacles</code></td><td><b>어느 판도 학습 안 함</b></td><td>94 / 100 / <b>100</b></td><td>94 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=discrete_obstacles&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>floating_ring</code></td><td><b>어느 판도 학습 안 함</b></td><td>1 / 95 / <b>100</b></td><td>0 / 99 / <b>100</b></td><td>0 / 87 / <b>99</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=floating_ring&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>pit</code></td><td><b>어느 판도 학습 안 함</b></td><td>7 / 100 / <b>100</b></td><td>2 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=pit&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>repeated_boxes</code></td><td><b>어느 판도 학습 안 함</b></td><td>100 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>1 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=repeated_boxes&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>repeated_cylinders</code></td><td><b>어느 판도 학습 안 함</b></td><td>99 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>7 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=repeated_cylinders&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>star</code></td><td><b>어느 판도 학습 안 함</b></td><td>86 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>62 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=star&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>stepping_stones</code></td><td><b>어느 판도 학습 안 함</b></td><td>0 / 0 / <b>0</b></td><td>0 / 0 / <b>24</b></td><td>0 / 0 / <b>0</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=stepping_stones&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>wave</code></td><td><b>어느 판도 학습 안 함</b></td><td>100 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=wave&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>boxes</code></td><td>셋 다 학습</td><td>76 / 99 / <b>100</b></td><td>34 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=boxes&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>gap</code></td><td>친척 학습</td><td>0 / 90 / <b>100</b></td><td>1 / 100 / <b>100</b></td><td>0 / 68 / <b>99</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=gap&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>hf_pyramid_slope</code></td><td>셋 다 학습</td><td>100 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=hf_pyramid_slope&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>hf_pyramid_slope_inv</code></td><td>셋 다 학습</td><td>100 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>24 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=hf_pyramid_slope_inv&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>pyramid_stairs</code></td><td>셋 다 학습</td><td>10 / 100 / <b>100</b></td><td>100 / 100 / <b>100</b></td><td>81 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=pyramid_stairs&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>pyramid_stairs_inv</code></td><td>셋 다 학습</td><td>24 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td>0 / 100 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=pyramid_stairs_inv&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>rails</code></td><td>v2 학습</td><td>0 / 70 / <b>99</b></td><td>8 / 48 / <b>100</b></td><td>0 / 21 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=rails&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr><tr><td><code>random_rough</code></td><td>셋 다 학습</td><td>85 / 99 / <b>100</b></td><td>80 / 100 / <b>100</b></td><td>0 / 90 / <b>100</b></td><td><a href="https://foothold-project.vercel.app/gallery/compare/?terrain=random_rough&amp;speed=1.0" target="_blank" rel="noopener">갤러리</a></td></tr></tbody></table></div>
+<p><b>표가 말하는 것 셋.</b></p>
+<ol><li><b>NVIDIA 는 1.5 m/s 에서 무너진다.</b> <code>discrete_obstacles</code> 94 -&gt; 0 · <code>repeated_boxes</code> 100 -&gt; 1 · <code>wave</code> 100 -&gt; 0 · <code>repeated_cylinders</code> 100 -&gt; 7. 느린 데서 되던 것이 빠르면 안 된다.</li><li><b>48 칸 모두 v2 &gt;= NVIDIA 다</b> <span class="ev ev-ok">확인됨</span>. 내려간 칸이 <b>0 개</b> 다.</li><li><b>이 표의 숫자는 시드 하나의 값이다.</b> 1.0 m/s 열여섯 칸을 시드 다섯으로 다시 재니 열셋은 그대로이고 셋이 움직였다. <b>움직인 셋 모두 위 값이 다섯 중 가장 높다</b> (4-0-1 절).</li><li><b>v2 가 100 % 가 아닌 칸은 6 / 48 뿐이다</b> (<code>floating_ring</code> 1.5 m/s 99 % · <code>gap</code> 1.5 m/s 99 % · <code>rails</code> 0.5 m/s 99 % · <code>stepping_stones</code> 0.5 m/s 0 % · <code>stepping_stones</code> 1.0 m/s 24 % · <code>stepping_stones</code> 1.5 m/s 0 %).</li></ol>
+<h3>4-0-1. 이 숫자에 «한 판의 운» 이 얼마나 실렸나</h3>
+<p><b>열어 둔 물음 「사」의 답이다</b> (12 절). 평가 설정은 <code>num_rows=1</code> 이다 <span class="ev ev-ok">확인됨</span> (<code>generalization_env_cfg.py:48</code> · <code>rough6_env_cfg.py:66</code> · 두 하네스의 <code>run_manifest.json</code> 둘 다 <code>terrain_num_rows 1</code>). 지형 하나에 <b>타일 한 장</b>이고, 그 지형의 100 판은 <b>같은 한 장</b> 위를 x/y ±0.10 m · yaw ±5 도만 다르게 출발해 걷는다.</p>
+<p>그래서 같은 조건에서 <b>시드만 다섯으로</b> 갈아 다시 쟀다 (<code>--seed</code> 42 · 1 · 2 · 3 · 4 · 배포 후보 <code>v2g2</code> iter3000 · 난이도 0.5 · <b>1.0 m/s</b> · 장치 고정).</p>
+<blockquote><p><b>떼어 내지 못했다.</b> 지형 판과 출발 흔들기를 따로 가르려고
+<code>--terrain_seed</code> 를 냈다가 <b>열 판 1,000 에피소드가 바이트로 전부 같은</b>
+것을 보고 소스를 열었다. <code>TerrainGeneratorCfg.seed</code> 는 지형 «모양» 을
+안 정한다 <span class="ev ev-ok">확인됨</span> · <code>terrain_generator.py:141-148</code> 이 <code>np_rng</code> 하나만
+만들고(「전역 상태를 안 건드리려고」라는 주석까지 있다), 지형을 그리는
+함수는 전역 <code>np.random</code> 을 쓴다 (<code>hf_terrains.py</code> 12 곳 ·
+<code>mesh_terrains.py</code> 4 곳 · 양쪽 다 <code>cfg.seed</code> 0 곳).</p>
+<p>그러니 아래 폭은 <b>「지형 판의 운」 + 「출발 흔들기의 운」</b> 이고, 지형
+운 하나의 <b>위 한계</b> 로만 읽어야 한다. 그 인자는 도로 뺐다.</p></blockquote>
+<p><b>답 아는 판을 먼저 걸었다.</b> <code>s42</code> 는 갤러리가 쓴 실행과 조건이 한 글자도 다르지 않고, 지형별 성공률이 <b>16 / 16 칸 모두 같았다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<p><b>16 칸 중 13 칸은 폭 0 이다.</b> 움직인 칸은 3 개다.</p>
+<div class="tw"><table><thead><tr><th>집합</th><th>지형</th><th>s42 (보고서 값)</th><th>s1</th><th>s2</th><th>s3</th><th>s4</th><th>폭</th></tr></thead><tbody><tr><td><code>unseen10</code></td><td><code>stepping_stones</code></td><td><b>24</b></td><td>1</td><td>3</td><td>19</td><td>0</td><td><b>24 %p</b></td></tr><tr><td><code>rough6</code></td><td><code>random_rough</code></td><td><b>100</b></td><td>100</td><td>94</td><td>99</td><td>99</td><td><b>6 %p</b></td></tr><tr><td><code>unseen10</code></td><td><code>discrete_obstacles</code></td><td><b>100</b></td><td>100</td><td>100</td><td>99</td><td>100</td><td><b>1 %p</b></td></tr></tbody></table></div>
+<p><b>여기서 물러설 것 셋.</b></p>
+<ol><li><b><code>stepping_stones</code> 1.0 m/s 의 24 % 는 다섯 중 가장 높은 값이다.</b> 중앙값은 3 % 이고 가장 낮은 판은 0 % 다. 13 절의 「지형을 새로 만들어 찍은 열다섯 판이 0/15」와 <b>같은 방향</b>이다. 이 칸을 성적으로 인용할 때는 24 % 가 아니라 <b>0 ~ 24 %</b> 라고 적어야 한다.</li><li><b>움직인 3 칸 모두에서 보고서 값(<code>s42</code>)이 다섯 중 가장 높다</b> <span class="ev ev-ok">확인됨</span>. 우연으로 보기 어렵다. 배포 시드가 유리한 쪽이었다는 뜻이고, <b>안 움직인 칸도 유리한 쪽에 있을 수 있다.</b></li><li><b>미경험 열 종 평균도 시드에 따라 움직인다.</b> 92.40 · 90.10 · 90.30 · 91.80 · 90.00 으로 <b>폭 2.40 %p</b> 이고 보고서 값이 가장 높다.</li></ol>
+<p><b>바뀌지 않는 것.</b> 폭이 0 인 13 칸은 다섯 판에서 같은 값을 냈다. 「NVIDIA 가 못 하는 자리를 v2 가 한다」는 큰 그림은 그 칸들이 떠받친다. 움직인 것은 <b>이미 못 하던 칸 하나와, 100 % 에서 1 ~ 6 %p 내려간 칸 둘</b>이다.</p>
+<blockquote><p><b>이 측정이 닫지 않는 물음.</b> <code>v2</code> 만 쟀다. NVIDIA 와 <code>foothold-v1</code> 의
+폭은 <b>안 쟀다</b> <span class="ev ev-todo">미확인</span>. 속도도 1.0 m/s 한 칸만 쟀다. 0.5 · 1.5 는
+<b>안 쟀다</b> <span class="ev ev-todo">미확인</span>. 48 칸 표 전체에 이 폭을 곱해 읽지 말 것.</p>
+<p>자료 <code>sim/eval/results/20260929-seed-spread/</code> · 스크립트
+<code>_out/loop/seed_spread.sh</code></p></blockquote>
+<p><figure class="mdimg"><img src="assets/visual/v2-terrain-bars.svg?v=50f72fb0" alt="그림 3 · 지형 열여섯 종의 성공률. 왼쪽 꼬리표가 그 지형이 각 판에게 학습이었는지 미경험이었는지를 밝힙니다" loading="lazy"><figcaption>그림 3 · 지형 열여섯 종의 성공률. 왼쪽 꼬리표가 그 지형이 각 판에게 학습이었는지 미경험이었는지를 밝힙니다</figcaption></figure></p>
+<div class="tw"><table><thead><tr><th>꼬리표</th><th>지형</th><th>NVIDIA</th><th>v1</th><th><b>v2</b></th><th>v2 - NVIDIA</th></tr></thead><tbody><tr><td>미경험</td><td><code>stepping_stones</code></td><td>0.0</td><td>0.0</td><td><b>8.0</b></td><td>+8.0</td></tr><tr><td>미경험</td><td><code>floating_ring</code></td><td>0.3</td><td>93.7</td><td><b>99.7</b></td><td>+99.3</td></tr><tr><td>미경험</td><td><code>discrete_obstacles</code></td><td>62.7</td><td>100.0</td><td><b>100.0</b></td><td>+37.3</td></tr><tr><td>미경험</td><td><code>pit</code></td><td>3.0</td><td>100.0</td><td><b>100.0</b></td><td>+97.0</td></tr><tr><td>미경험</td><td><code>repeated_boxes</code></td><td>67.0</td><td>100.0</td><td><b>100.0</b></td><td>+33.0</td></tr><tr><td>미경험</td><td><code>repeated_cylinders</code></td><td>68.7</td><td>100.0</td><td><b>100.0</b></td><td>+31.3</td></tr><tr><td>미경험</td><td><code>star</code></td><td>82.7</td><td>100.0</td><td><b>100.0</b></td><td>+17.3</td></tr><tr><td>미경험</td><td><code>wave</code></td><td>66.7</td><td>100.0</td><td><b>100.0</b></td><td>+33.3</td></tr><tr><td>친척 학습</td><td><code>gap</code></td><td>0.3</td><td>86.0</td><td><b>99.7</b></td><td>+99.3</td></tr><tr><td><b>v2 학습</b></td><td><code>rails</code></td><td>2.7</td><td>46.3</td><td><b>99.7</b></td><td>+97.0</td></tr><tr><td>셋 다 학습</td><td><code>boxes</code></td><td>36.7</td><td>99.7</td><td><b>100.0</b></td><td>+63.3</td></tr><tr><td>셋 다 학습</td><td><code>hf_pyramid_slope</code></td><td>66.7</td><td>100.0</td><td><b>100.0</b></td><td>+33.3</td></tr><tr><td>셋 다 학습</td><td><code>hf_pyramid_slope_inv</code></td><td>74.7</td><td>100.0</td><td><b>100.0</b></td><td>+25.3</td></tr><tr><td>셋 다 학습</td><td><code>pyramid_stairs</code></td><td>63.7</td><td>100.0</td><td><b>100.0</b></td><td>+36.3</td></tr><tr><td>셋 다 학습</td><td><code>pyramid_stairs_inv</code></td><td>8.0</td><td>100.0</td><td><b>100.0</b></td><td>+92.0</td></tr><tr><td>셋 다 학습</td><td><code>random_rough</code></td><td>55.0</td><td>96.3</td><td><b>100.0</b></td><td>+45.0</td></tr></tbody></table></div>
+<p><b><code>rails</code> 의 46.3 -&gt; 99.7 은 일반화가 아니라 학습이다.</b> v1 은 안 배웠고 v2 는 배웠다. 그래서 이 줄을 일반화 근거로 인용하지 않는다.</p>
+<p><b><code>pyramid_stairs_inv</code> 에서 NVIDIA 가 8.0 인 것</b>은 그것이 NVIDIA 의 학습 지형인데도 그렇다. 1500 회 배포본의 한계이지 우리 평가의 결함이 아니다 (같은 하네스에서 v1 과 v2 가 100.0 을 낸다).</p>
+</section>
+<section id="s6"><span id="5"></span><h2>5. 난이도를 올리면 어떻게 되나</h2>
+<p><figure class="mdimg"><img src="assets/visual/v2-difficulty-curve.svg?v=8edf902e" alt="그림 4 · 두 묶음을 나란히. 어느 지형을 미경험이라고 부르냐에 따라 v1 과의 차이가 벌어지기도 하고 좁아지기도 합니다" loading="lazy"><figcaption>그림 4 · 두 묶음을 나란히. 어느 지형을 미경험이라고 부르냐에 따라 v1 과의 차이가 벌어지기도 하고 좁아지기도 합니다</figcaption></figure></p>
+<p><b>어느 판도 학습 안 한 여덟 종</b></p>
+<div class="tw"><table><thead><tr><th>난이도</th><th>NVIDIA</th><th>v1</th><th><b>v2</b></th><th>v2 - NVIDIA</th></tr></thead><tbody><tr><td>0.1</td><td>53.7</td><td>86.8</td><td><b>93.5</b></td><td>+39.8</td></tr><tr><td>0.2</td><td>48.2</td><td>76.5</td><td><b>85.0</b></td><td>+36.7</td></tr><tr><td>0.3</td><td>46.4</td><td>79.6</td><td><b>87.0</b></td><td>+40.7</td></tr><tr><td>0.4</td><td>43.9</td><td>83.7</td><td><b>88.5</b></td><td>+44.6</td></tr><tr><td>0.5</td><td>43.9</td><td>86.7</td><td><b>88.5</b></td><td>+44.6</td></tr><tr><td>0.6</td><td>41.5</td><td>87.3</td><td><b>87.5</b></td><td>+46.0</td></tr><tr><td>0.7</td><td>39.9</td><td>87.0</td><td><b>87.5</b></td><td>+47.6</td></tr><tr><td>0.8</td><td>36.6</td><td>85.4</td><td><b>87.4</b></td><td>+50.8</td></tr><tr><td>0.9</td><td>34.4</td><td>83.6</td><td><b>87.2</b></td><td><b>+52.8</b></td></tr><tr><td>1.0</td><td>31.9</td><td>없음</td><td>없음</td><td></td></tr></tbody></table></div>
+<p><b>NVIDIA 는 53.7 에서 31.9 로 내려가고 v2 는 93.5 에서 87.2 로 버틴다.</b> 차이가 +39.8 에서 +52.8 로 <b>벌어진다.</b></p>
+<p><b>그런데 v1 과의 차이는 반대로 간다.</b> +6.8 에서 시작해 중간 난이도에서 +0.2 까지 좁아졌다가 +3.6 으로 끝난다. <b>중간 난이도의 여유는 시드 폭 1.25 %p 안이라 구별되지 않는다</b> (8 절).</p>
+<h3>여기서 조심할 것</h3>
+<p><code>unseen10</code> 열 종으로 그리면 v1 과의 차이가 +9.3 에서 +11.7 로 <b>벌어진다.</b> 두 묶음이 다른 것은 <code>rails</code> 와 <code>gap</code> 뿐이고 <b>그 둘이 v2 가 학습한 지형이다.</b> 어려워질수록 학습 지형의 우위가 커지는 것은 일반화가 아니다.</p>
+<p>그래서 이 보고서는 <b>여덟 종 쪽을 정본으로</b> 쓴다.</p>
+<h3>지형마다 난이도를 다르게 탄다</h3>
+<div class="tw"><table><thead><tr><th>지형</th><th>v2 · d0.1</th><th>v2 · d0.9</th></tr></thead><tbody><tr><td><code>stepping_stones</code></td><td>100.0</td><td><b>0.0</b></td></tr><tr><td><code>floating_ring</code></td><td>48.0</td><td><b>100.0</b></td></tr><tr><td><code>pit</code></td><td>100.0</td><td>98.0</td></tr><tr><td>나머지 다섯</td><td>100.0</td><td>100.0</td></tr></tbody></table></div>
+<p><b><code>floating_ring</code> 은 어려울수록 «쉬워진다».</b> 난이도가 고리 치수를 바꾸는 방향 때문으로 보이나 <b>아직 안 뜯어봤다</b> <span class="ev ev-todo">미확인</span>.</p>
+</section>
+<section id="s7"><span id="6"></span><h2>6. 여기까지 어떻게 왔나 · 문제 파악 · 가설 · 실험 · 검증</h2>
+<p>여기서부터가 <b>이 판이 어떻게 나왔는지</b>다. 숫자만 보면 어느 설정을 왜 건드렸는지 안 보인다.</p>
+<p><figure class="mdimg"><img src="assets/visual/v2-lineage.svg?v=ce12f925" alt="그림 5 · A 에서 v2g2 까지. 판마다 무엇을 한 칸 바꿨고 그때 48칸 평균이 얼마였나" loading="lazy"><figcaption>그림 5 · A 에서 v2g2 까지. 판마다 무엇을 한 칸 바꿨고 그때 48칸 평균이 얼마였나</figcaption></figure></p>
+<p><b>G 가 가장 낮고 (82.83) F 가 가장 높다 (89.71).</b> <code>heading</code> 을 아예 끄면 무너지고, 노출을 지형으로 옮긴 쪽이 이겼다. 아래에서 하나씩 본다.</p>
+<h3>6-0. 출발점 · NVIDIA Go2 rough</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>학습 지형 6종   pyramid_stairs · pyramid_stairs_inv · boxes · random_rough
+                hf_pyramid_slope · hf_pyramid_slope_inv
+명령            lin_vel_x (-1, 1) · lin_vel_y (-1, 1) · ang_vel_z (-1, 1)
+학습량          1500 회 · learning_rate 1.0e-3 · 처음부터
+신경망          actor · critic 각 [512, 256, 128] · elu · 관측 235 차원</pre></div>
+<h3>6-1. A · B → <code>foothold-v1</code> · 왜 하필 <code>gap</code> 이 첫 타자였나</h3>
+<p><b>문제 파악.</b> 높이 스캔 한 줄기가 내는 값이 이렇다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>평지        -0.10   바닥이 발밑에 있다
+턱이 솟음   -0.30   값이 더 음수로
+바닥이 꺼짐  +1     광선이 아무것도 못 맞힌다</pre></div>
+<p><b>기존 학습 6종에는 솟은 것만 있고 꺼진 것이 없다.</b> 그래서 <b>구멍을 어떻게 처리하는지 코드로 다룬 적이 한 번도 없었다.</b> 양수 쪽 값을 정책이 학습에서 만난 적이 없다는 뜻이다.</p>
+<p><b>가설.</b> 기대 효과가 가장 클 자리가 여기다. 학습 지형에 틈을 넣으면 건넌다.</p>
+<p><b>실험.</b> 임석헌이 만든 gap 레시피를 재현한 것이 A 이고, 학습 틈 폭을 평가 기준과 같게 넓힌 것이 B 다. <b>둘의 차이는 <code>gap_width_range</code> 한 줄뿐이다.</b></p>
+<p><b>검증.</b> B 가 <code>gap</code> 86 % 까지 올라 <code>foothold-v1</code> 으로 배포됐다.</p>
+<p><b>그런데 대가를 치렀다.</b></p>
+<div class="tw"><table><thead><tr><th>명령</th><th>NVIDIA</th><th><code>foothold-v1</code></th></tr></thead><tbody><tr><td><code>lin_vel_x</code></td><td>(-1, 1)</td><td><b>(0.5, 1.5)</b></td></tr><tr><td><code>lin_vel_y</code></td><td>(-1, 1)</td><td><b>(0, 0)</b></td></tr><tr><td><code>ang_vel_z</code></td><td>(-1, 1)</td><td><b>(0, 0)</b></td></tr><tr><td><code>rel_standing_envs</code></td><td>0.02</td><td><b>0.0</b></td></tr></tbody></table></div>
+<p><b>전진 전용이다. 멈출 줄도 돌 줄도 모른다.</b></p>
+<h3>6-2. 「전진 성공률만 보고 있다」가 왜 문제인가</h3>
+<p><b>(1) 숫자가 능력보다 커 보인다.</b> <code>foothold-v1</code> 의 <code>gap</code> 86 % 는 <b>항상 틈을 향해 서 있던 조건</b>에서 나온 값이다. 명령이 전진뿐이라 로봇이 딴 데를 볼 수가 없었다. 그 조건의 주행 성적이지 일반화 능력의 크기가 아니다.</p>
+<p><b>(2) 못하는 것이 안 보인다.</b> 능력 열세 가지 중 재고 있던 것이 셋뿐이었다. 못 멈추고 못 도는데 성적표에 그 칸이 없었다.</p>
+<p><b>(3) 쓸 수가 없다.</b> 사람 앞에서 못 서는 로봇은 험지를 아무리 잘 건너도 내보낼 수 없다.</p>
+<h3>6-3. D · 명령 능력을 되찾는다</h3>
+<p><b>가설.</b> 닫았던 명령을 열면 되찾는다.</p>
+<p><b>실험.</b> <code>foothold-v1</code> 설정에서 <b>필드 다섯</b>을 되돌렸다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>lin_vel_x         (0.5, 1.5) -&gt; (0.0, 1.5)
+ang_vel_z         (0.0, 0.0) -&gt; (-1.0, 1.0)
+heading_command   False      -&gt; True
+rel_heading_envs  0.0        -&gt; 1.0
+rel_standing_envs 0.0        -&gt; 0.02</pre></div>
+<p><b>그리고 축 2 하네스를 새로 만들었다.</b> 평지에서 명령에만 반응시키는 프로브다. 지형을 섞으면 정지 실패가 명령 탓인지 지형 탓인지 안 갈린다.</p>
+<p>여기서 소스를 읽어 한 쌍을 찾았다. <b><code>heading_command</code> 와 <code>ang_vel_z</code> 는 한 쌍이다</b> (<code>velocity_command.py:155</code>).</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="f">clip</span>(stiffness × heading_error, ang_vel_z[<span class="n">0</span>], ang_vel_z[<span class="n">1</span>])</pre></div>
+<p><code>ang_vel_z</code> 가 (0,0) 이면 heading 을 켜도 <b>회전이 죽는다.</b></p>
+<p><b>검증.</b> 멈추고 도는 것은 배웠는데 <b><code>gap</code> 을 잃었다</b> (86 -&gt; <b>33.3</b>).</p>
+<h3>6-4. <code>gap</code> 하락의 원인 · 이것은 <b>문제 파악</b>이다</h3>
+<p><b>처음 가설</b> 「학습량이 모자라다」 -&gt; <b>버렸다.</b></p>
+<p><b>문제 파악.</b> <b>노출 구조</b>다. 명령을 넓히면 로봇이 틈을 향해 서지 않는다. 그러면 커리큘럼이 틈 난이도를 올려 주지 않고, <b>안 만난 것은 못 배운다.</b></p>
+<p><code>terrain_levels_vel</code> 이 <b>직선 거리</b>로 승급을 정하는데 (<code>curriculums.py:47-51</code> · size/2 = 4 m), 로봇이 옆으로 돌면 그 거리가 안 늘어난다.</p>
+<p><b>학습량 대조도 실제 노출 계측도 아직 안 했다</b> <span class="ev ev-todo">미확인</span>.</p>
+<h4>같은 <code>gap</code> 을 세 판이 어떻게 건너나</h4>
+<p><b>볼 것: 같은 <code>gap</code> 을 세 판이 어떻게 건너는가.</b> 명령을 열었더니 (<code>foothold-v1</code> -&gt; <code>D</code>) 틈을 잃었고, <code>omni_gap</code> 을 넣었더니 (<code>D</code> -&gt; <code>v2</code>) 되찾았다. <code>gap</code> 성공률이 <b>86.0 -&gt; 33.3 -&gt; 99.7</b> 이다.</p>
+<p><b>그 수는 난이도 0.5 의 «세 속도 평균» 이다.</b> 세 컷은 전부 난이도 0.5 · <b>1.0 m/s 한 칸</b>이고, 그 칸만 보면 <code>foothold-v1</code> 도 <code>v2</code> 도 100 % 다 (<code>sweep_long.csv</code> 실측). 곧 <b>이 컷들은 하락을 숫자로 보이는 자리가 아니라 건너는 «방식» 이 어떻게 달라졌는지를 보이는 자리다.</b></p>
+<p><code>foothold-v1</code> 의 <code>gap</code> 세 칸을 펴 보면 <b>0.5 m/s 90 % · 1.0 m/s 100 % · 1.5 m/s 68 %</b> 이고 평균이 86.0 이다. 곧 평균을 끌어내린 것은 <b>1.5 m/s</b> 다. <code>v2</code> 는 같은 세 칸이 100 · 100 · 99 다.</p>
+<blockquote><p><b>D 의 컷을 «못 건너는» 판으로 갈았다.</b> 앞 판은 세 컷이 다 건너는 판이라
+하락이 장면에 안 보였다 (전진 5.68 · 5.60 · 5.87 m). 시드를 훑어 다시
+찍었고 <b>시드 46 에서 전진 0.99 m</b> 로 떨어지는 판을 잡았다.</p>
+<p><b>그 판은 이 속도에서 소수 쪽이다</b> <span class="ev ev-ok">확인됨</span>. 같은 조건에서 시드 다섯을
+훑으니 42 · 43 · 44 · 45 는 5.60 · 5.50 · 5.40 · 5.41 m 로 건넜고 46 만
+0.99 m 였다. <b>33.3 % 는 세 속도 평균이고 1.0 m/s 칸의 값이 아니다.</b>
+그래서 이 컷은 「D 는 대개 못 건넌다」가 아니라 <b>「D 는 떨어질 때가
+있는데 그 모습이 이렇다」</b> 로 읽어야 한다.</p>
+<p>지형은 셋 다 평가 지형 <code>gap</code> 이다. <b><code>omni_gap</code> 컷이 아니다.</b> <code>omni_gap</code> 은
+v2 의 «학습» 지형이라 평가 목록에 없다. 생김새는 <b>6-6 의 비교 컷</b>에서
+볼 수 있다.</p></blockquote>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v1.jpg" src="assets/video/v2/lineage-gap-v1.mp4?v=6706c33d"></video><figcaption>건넌다 · 전진 5.68 m · <code>gap</code> 세 속도 평균 86.0 %</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">D (명령을 연 판)</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-D-fail.jpg" src="assets/video/v2/lineage-gap-D-fail.mp4?v=ec2cd0e4"></video><figcaption><b>못 건넌다</b> · 전진 0.99 m (시드 46) · <code>gap</code> 세 속도 평균 33.3 %</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/lineage-gap-v2.jpg" src="assets/video/v2/lineage-gap-v2.mp4?v=da2d630c"></video><figcaption>건넌다 · 전진 5.87 m · <code>gap</code> 세 속도 평균 99.7 %</figcaption></figure></div></div>
+<p><b>그런데 v2 가 학습한 것은 <code>gap</code> 이 아니라 <code>omni_gap</code> 이다.</b> 둘은 함수가 다르다. 지형 자체의 생김새는 <b>그림 1</b> 에서 볼 수 있다.</p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th><th>생김새</th></tr></thead><tbody><tr><td>평가의 <code>gap</code></td><td>그림 1 · <code>gap</code> 타일</td><td>사각 구멍이 바닥에 뚫려 있다 (<code>MeshGapTerrainCfg</code>)</td></tr><tr><td>v1 이 학습한 <code>forward_gap</code></td><td><b>6-6 의 컷</b> (평가 목록에는 없다)</td><td>스폰 <b>+x 쪽에만</b> 틈이 있다</td></tr><tr><td>v2 가 학습한 <code>omni_gap</code></td><td><b>6-6 의 컷</b> (평가 목록에는 없다)</td><td>스폰을 <b>둘러싼 고리</b>다 (<code>mode=ring</code>)</td></tr><tr><td>고리의 눈으로 보는 것</td><td>그림 1 · <code>floating_ring</code> 타일</td><td>사각 테두리가 스폰을 감싼 모양</td></tr></tbody></table></div>
+<p><code>forward_gap</code> 은 앞으로만 가면 되는 틈이라 <b>명령을 열면 옆·뒤에서 틈을 만난다.</b> 그것이 <code>D</code> 에서 33.3 % 로 떨어진 까닭이고, <code>omni_gap</code> 으로 바꾼 것이 99.7 % 로 되돌린 까닭이다.</p>
+<h3>6-5. E · F · G · 설정 하나가 두 일을 한다</h3>
+<p><b>문제 파악.</b> <code>heading</code> <b>하나가 두 일</b>을 한다.</p>
+<div class="tw"><table><thead><tr><th><code>heading</code> 이 하는 일</th><th>무엇을 정하나</th></tr></thead><tbody><tr><td><b>노출</b></td><td>로봇이 틈을 향해 서는가</td></tr><tr><td><b>방향 유지 압력</b></td><td>진로를 얼마나 지키는가</td></tr></tbody></table></div>
+<p>범위를 어디에 둬도 둘이 같이 움직인다. <b>어느 쪽이 효과인지 못 가른다.</b></p>
+<p><b>실험.</b> 셋을 걸었다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>E = D + lin_vel_x 하한 0.4 + rel_heading 0.75
+F = D + lin_vel_x 하한 0.4 + 지형을 omni_gap 으로   &lt;- 노출을 지형으로 옮긴다
+G = D + lin_vel_x 하한 0.4 + heading 끔             &lt;- 방향 유지 압력만 뗀다
+H = F 의 지형 + D 의 명령 (하한 0.0 으로 되돌림)</pre></div>
+<p><b>검증</b> (난이도 0.5 · 48칸)</p>
+<div class="tw"><table><thead><tr><th>판</th><th>48칸</th><th>미경험 10종</th><th>학습 6종</th><th><b>8종</b></th><th><b><code>gap</code></b></th></tr></thead><tbody><tr><td>D</td><td>87.19</td><td>80.40</td><td>98.50</td><td>85.71</td><td><b>33.3</b></td></tr><tr><td>E</td><td>88.23</td><td>82.17</td><td>98.33</td><td>86.62</td><td><b>99.7</b></td></tr><tr><td>F</td><td><b>89.71</b></td><td><b>83.93</b></td><td>99.33</td><td>84.25</td><td>99.0</td></tr><tr><td>G</td><td><b>82.83</b></td><td><b>73.10</b></td><td>99.06</td><td><b>76.46</b></td><td>80.7</td></tr><tr><td>H</td><td>86.33</td><td>79.20</td><td>98.22</td><td>85.71</td><td>73.7</td></tr></tbody></table></div>
+<ol><li><b>E 가 <code>gap</code> 을 되찾았다</b> (33.3 -&gt; 99.7)</li><li><b>F 가 48칸 89.71 로 가장 높다.</b> 노출을 지형으로 옮긴 쪽이 이겼다</li><li><b>G 가 82.83 으로 가장 낮다.</b> <code>heading</code> 을 아예 끄니 8종이 76.46 으로 무너졌다. <b>방향 유지 압력을 다 떼면 안 된다</b></li></ol>
+<p><b>다만 셋 다 D 에서 «두 칸» 씩 바뀌었다.</b> <code>lin_vel_x</code> 하한 0.4 가 공통이라 <b>단일 원인 귀속이 안 된다</b> <span class="ev ev-todo">미확인</span>.</p>
+<h3>6-6. 왜 <code>omni_gap</code> 이었나</h3>
+<p><b>틈을 «사방에» 두면 로봇이 어디를 보든 틈을 만난다.</b> 명령을 열어 둔 채로도 노출이 유지된다. 명령으로 노출을 만들려다 실패했으니 <b>지형이 대신 만들게</b> 한 것이다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>forward_gap   +x 에만 있는 한 줄 틈.  로봇이 돌면 안 만난다
+omni_gap      스폰을 둘러싼 고리.      어디로 돌든 만난다  (mode: ring · ring_radius 2.5)</pre></div>
+<p><b>볼 것: 학습 지형이 어떻게 바뀌었는가.</b> 둘 다 바로 위에서 본 것이고 3x3 타일이다. 왼쪽은 <b>직선 도랑 하나</b>가 화면을 가로지르고, 오른쪽은 <b>고리 아홉 개</b>가 타일마다 스폰을 감싼다. 로봇이 크기 자를 겸한다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:2"><figure class="vcmp-cell"><b class="vcmp-name">forward_gap · v1 이 학습</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/train-gap-forward.jpg" src="assets/video/v2/train-gap-forward.mp4?v=a7feb68c"></video><figcaption>스폰 앞을 가로지르는 직선 도랑. 돌아서면 안 만난다</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">omni_gap · v2 가 학습</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/train-gap-omni.jpg" src="assets/video/v2/train-gap-omni.mp4?v=9e60fec6"></video><figcaption>스폰을 둘러싼 고리 (<code>mode=ring</code> · 반지름 2.5 m). 어디로 돌든 만난다</figcaption></figure></div></div>
+<blockquote><p><b>이 두 컷의 출처.</b> 학습 cfg 를 <b>Isaac Lab 설치본</b>에서 가져와 찍었다
+(<code>isaaclab_tasks...config.go2.gap_training.gap_e_env_cfg</code> ·
+<code>...gap_h_env_cfg</code>). 저장소 사본 <code>sim/policy/gap_e_env_cfg.py</code> 로는 못
+찍는다. <b>사슬이 저장소 안에서 닫히지 않기 때문이다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<p>그 까닭이 이 판에서 한 고리 뒤로 옮겨 갔다. 처음에는 <code>gap_wide_env_cfg</code>
+가 저장소에 아예 없었고, <b>PR <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/461">#461</a> 이 머지되어 (<code>472f0432</code>) 이제 있다.</b>
+그런데 그 다음 고리인 <code>gap_env_cfg</code> <b>13 행</b>이 <code>..rough_env_cfg</code> 를 부르고,
+그 파일은 Isaac Lab 것이라 저장소에 없다 (<code>sim/rough_env_cfg.py</code> 도
+<code>sim/policy/rough_env_cfg.py</code> 도 없다 <span class="ev ev-ok">확인됨</span>). <b>그래서 컷은 여전히
+설치본으로 찍는다.</b></p>
+<p>설치본은 <b>학습을 실제로 돌린 파일</b>이고, 저장소 사본 셋(<code>gap_e</code> ·
+<code>gap_h</code> · <code>omni_gap_terrain</code>)과 줄끝만 빼고 한 글자도 같다 <span class="ev ev-ok">확인됨</span>.</p>
+<p>저 검은 띠가 타일 경계가 아니라 «틈» 인 것은 <b><code>omni_gap</code> 쪽에 직선 띠가
+없는 것</b>으로 갈랐다. 같은 격자 · 같은 테두리인데 한쪽에만 난다.
+2x2 로 먼저 찍었더니 도랑이 화면 테두리에 잘려서 3x3 으로 다시 찍었다.</p></blockquote>
+<h3>6-7. 축을 둘로 못 박는다</h3>
+<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>어떻게</th></tr></thead><tbody><tr><td><b>축 1</b></td><td>험지 주행</td><td>16 지형 × 3 속도 × 100 판 · d0.5 · 시드 42 · <code>foothold-v1</code> 대비 Wilson 95 %</td></tr><tr><td><b>축 2</b></td><td>명령 응답</td><td>평지 · 프로브 아홉 칸</td></tr></tbody></table></div>
+<p><b>둘의 AND 이고 체크포인트 넷(1500 · 2000 · 2500 · 3000)에서 다</b> 통과해야 한다.</p>
+<h3>6-8. v2a · 왜 <code>rails</code> 를 넣었나</h3>
+<p><b>문제 파악.</b> <code>omni_gap</code> 으로 노출은 풀었는데 학습 지형이 여전히 <b>평면 위의 요철</b> 중심이다. <b>솟은 것을 넘는 동작</b>이 학습에 없다.</p>
+<p><b>근거가 된 경험.</b> A 에서 <code>gap</code> 을 0.1 비율로 넣었을 때 얻은 것이 있었다. <b>지형 한 종을 0.1 로 더하는 것만으로 그 종류의 능력이 붙는다</b>는 것이다.</p>
+<p><b>가설.</b> 같은 관점으로 <code>rails</code> 를 0.1 로 더하면 솟은 것을 넘는 능력이 붙는다.</p>
+<p><b>실험.</b> 학습 지형을 8종으로. 명령은 D 의 복원을 유지하되 <code>lin_vel_x</code> 하한을 0.4 로 다시 좁혔다. <code>lin_vel_y</code> 는 <b>잠근 채</b>(0,0) 뒀다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>pyramid_stairs 0.15 · pyramid_stairs_inv 0.15 · boxes 0.15 · random_rough 0.15
+hf_pyramid_slope 0.10 · hf_pyramid_slope_inv 0.10 · omni_gap 0.10 · rails 0.10</pre></div>
+<p><b>검증</b></p>
+<div class="tw"><table><thead><tr><th></th><th>iter 1500</th><th>iter 2000</th><th>iter 2500</th><th>iter 3000</th></tr></thead><tbody><tr><td>48칸 평균</td><td>90.79</td><td>92.62</td><td>91.96</td><td><b>93.00</b></td></tr><tr><td>축 1 진짜 하락</td><td>2</td><td>1</td><td>2</td><td><b>0</b></td></tr><tr><td>축 2 회전 낙상</td><td><b>0.9219</b></td><td>0.1562</td><td>0.2812</td><td>0.3438</td></tr></tbody></table></div>
+<p><b>축 1 은 올랐고 축 2 회전이 무너졌다.</b> iter1500 에서 64 판 중 59 판이 넘어진다.</p>
+<p><b>그리고 스스로 한 칸을 깎았다.</b> <code>rails</code> 가 학습과 평가에 둘 다 있으므로 「미경험 험지」 주장에서 뺀다.</p>
+<h3>6-9. v2b · 왜 «속도 하한» 이 아니라 <code>rel_standing_envs</code> 였나</h3>
+<p><b>문제 파악.</b> 회전 낙상. 그리고 v2a 는 <code>lin_vel_x</code> 하한이 0.4 라 <b>「멈춤」을 명령으로 배울 기회가 거의 없다.</b></p>
+<p><b>왜 속도 하한을 0 으로 안 내렸나.</b> 원문을 열어서 확인했다 (<code>velocity_command.py:141,162-163</code>).</p>
+<div class="cb"><div class="cb-h">Python<button class="copy" type="button" aria-label="복사">복사</button></div><pre><span class="k">self</span>.is_standing_env[env_ids] = r.<span class="f">uniform_</span>(<span class="n">0.0</span>, <span class="n">1.0</span>) &lt;= <span class="k">self</span>.cfg.rel_standing_envs
+standing_env_ids = <span class="k">self</span>.is_standing_env.<span class="f">nonzero</span>(as_tuple=<span class="k">False</span>).<span class="f">flatten</span>()
+<span class="k">self</span>.vel_command_b[standing_env_ids, :] = <span class="n">0.0</span></pre></div>
+<p><b><code>rel_standing_envs</code> 는 환경의 «일부» 를 골라 명령을 통째로 0 으로 만든다.</b> 안 고른 환경은 <code>lin_vel_x</code> 에서 뽑은 속도를 그대로 받는다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>속도 하한을 0 으로      모든 환경이 느려질 수 있다 -&gt; 직선 거리가 안 늘어난다
+                       -&gt; 커리큘럼이 안 올린다 -&gt; 6-4 의 노출 붕괴가 다시 온다
+rel_standing_envs 올림  일부만 완전 정지 · 나머지는 0.4 ~ 1.5 m/s 로 그대로 간다</pre></div>
+<p><b>정지를 배우는 자리와 험지를 배우는 자리를 나눈 것이다.</b></p>
+<p><b>실험.</b> <b>한 칸만</b> 바꿨다. <code>rel_standing_envs</code> 0.02 -&gt; <b>0.1</b>.</p>
+<p><b>검증</b></p>
+<div class="tw"><table><thead><tr><th></th><th>iter 1500</th><th>iter 2000</th><th>iter 2500</th><th>iter 3000</th></tr></thead><tbody><tr><td>48칸 평균</td><td>93.08</td><td>93.31</td><td><b>93.60</b></td><td>93.44</td></tr><tr><td>축 1 진짜 하락</td><td><b>0</b></td><td><b>0</b></td><td><b>0</b></td><td><b>0</b></td></tr><tr><td>축 2 회전 낙상</td><td><b>0.0625</b></td><td><b>0</b></td><td>0.2969</td><td><b>0.0469</b></td></tr></tbody></table></div>
+<p><b>한 칸이 두 축을 같이 올렸다.</b> 회전 낙상 0.9219 -&gt; 0.0625.</p>
+<h4>그 한 칸을 장면으로</h4>
+<p><b>볼 것: <code>rel_standing_envs</code> 한 칸을 0 에서 0.1 로 올린 것이 회전을 살린다.</b></p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:2"><figure class="vcmp-cell"><b class="vcmp-name">v2a iter1500</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2a-iter1500.jpg" src="assets/video/v2/turnfall-v2a-iter1500.mp4?v=800d7382"></video><figcaption><code>rel_standing_envs</code> 0.02 · 64 판 중 59 판이 옆으로 자빠진다</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">v2b iter1500</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/turnfall-v2b-iter1500.jpg" src="assets/video/v2/turnfall-v2b-iter1500.mp4?v=9602b1b6"></video><figcaption><code>rel_standing_envs</code> <b>0.1</b> · 네 발로 버티며 돈다 · 64 판 중 4 판</figcaption></figure></div></div>
+<p><b><code>rel_standing_envs</code> 한 칸</b>만 다른 두 판이다. 숫자로는 0.9219 대 0.0625 인데 화면에서는 옆으로 자빠지는 것과 네 발로 버티며 도는 것으로 갈린다.</p>
+<p><b>판정에는 이 컷의 수를 쓰지 않는다.</b> <code>--scenario turn</code> 만 따로 돌리면 <code>stop -&gt; ramp -&gt; turn -&gt; hold</code> 를 이어 돌 때와 난수 소비가 달라 0.8438 대 0.0312 가 나온다. <b>판정 값은 네 시나리오를 이어 돈 것</b>이고 이 컷은 <b>장면으로 보여 주는 용도</b>다.</p>
+<h3>6-10. v2b 의 자식들 · <code>feet_air_time</code> 을 왜 건드렸나</h3>
+<p><b>문제 파악.</b> 우리 기획서가 이미 적어 둔 것이다.</p>
+<blockquote><p>현재 정책은 관절이 <b>63.7 cm 까지 발을 들 수 있는데 3.25 cm 만 든다.</b>
+<code>feet_air_time</code> 이 <b>높이가 아니라 시간</b>을 점수로 주고, 발 높이 항이 없다.
+<b>여기가 실패 5종의 공통 뿌리다</b></p></blockquote>
+<p>그리고 <code>rails</code> 는 <b>평지 위로 솟은 사각 테두리 두 겹</b>이다. 넘으려면 <b>발을 들어야</b> 한다.</p>
+<p><b>가설.</b> 발 드는 행동에 보상을 <b>조금</b> 주면 넘는다.</p>
+<p><b>실험.</b> <code>feet_air_time</code> 이 발 관련 보상항의 전부다. 한 칸만 바꿔 둘을 걸었다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>기준 (v2a · v2b · v2n · v2s)   0.01
+v2g                            1.0     (100 배)
+v2g2                           0.1     ( 10 배)</pre></div>
+<p><b>검증</b> (네 체크포인트 · 48칸 평균)</p>
+<div class="tw"><table><thead><tr><th>판</th><th>바꾼 한 칸</th><th>iter 1500</th><th>iter 2000</th><th>iter 2500</th><th><b>iter 3000</b></th></tr></thead><tbody><tr><td><code>v2b-r</code></td><td>없음 (기준 재현)</td><td>92.06</td><td>93.08</td><td>93.12</td><td>92.79</td></tr><tr><td><code>v2n-noise02</code></td><td>height scan 잡음 ±0.10 -&gt; ±0.02</td><td>91.88</td><td>92.90</td><td>93.06</td><td>93.44</td></tr><tr><td><code>v2s-stones10</code></td><td><code>stepping_stones</code> 10 % 추가</td><td>92.77</td><td>91.92</td><td>93.38</td><td>91.79</td></tr><tr><td><code>v2g-feetair1</code></td><td><code>feet_air_time</code> <b>1.0</b></td><td>91.29</td><td>92.71</td><td>93.23</td><td>93.08</td></tr><tr><td><b><code>v2g2-feetair01</code></b></td><td><b><code>feet_air_time</code> 0.1</b></td><td><b>92.94</b></td><td><b>93.56</b></td><td>93.19</td><td><b>94.19</b></td></tr><tr><td><code>v2sg</code></td><td>위 둘 결합</td><td>91.25</td><td>90.25</td><td>92.27</td><td>91.69</td></tr></tbody></table></div>
+<p><b>0.1 이 최고이고 1.0 은 오히려 낮다. 「조금」이 맞았다.</b></p>
+<p>그리고 <code>stepping_stones</code> 를 학습에 넣은 <code>v2s</code> 가 오히려 91.79 로 낮다. <b>그 지형을 학습에 넣는 것이 답이 아니었다.</b></p>
+<h3>6-11. 시드 재현 · v2g3 · v2g4</h3>
+<p>같은 레시피를 시드만 바꿔 둘 더 걸었다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>시드</th><th>iter 1500</th><th>iter 2000</th><th>iter 2500</th><th><b>iter 3000</b></th></tr></thead><tbody><tr><td><code>v2g2-feetair01</code></td><td>42</td><td>92.94</td><td>93.56</td><td>93.19</td><td><b>94.19</b></td></tr><tr><td><code>v2g3-feetair01-s43</code></td><td>43</td><td>91.83</td><td>92.83</td><td>93.27</td><td>92.94</td></tr><tr><td><code>v2g4-feetair01-s44</code></td><td>44</td><td>92.48</td><td>93.08</td><td>93.44</td><td>93.52</td></tr></tbody></table></div>
+<p><b>이 셋의 폭이 멈출 기준의 바닥선이 된다</b> (8 절).</p>
+<h3>6-12. 학습이 터진 기록 · <code>std</code> 와 NaN</h3>
+<p><b>앞 판에서는 이 절을 접어 두었다</b> (<code>&lt;details&gt;</code>). 펼치지 않으면 안 보이므로 <b>접어 둔 것은 안 남긴 것과 화면에서 같았다.</b> 팀장 지적으로 펼친다.</p>
+<p><b>볼 것: 열한 판이 목표 3000 회를 못 채우고 죽었다.</b> 막대가 마지막 저장 번호다. 원인은 아래에서 하나씩 가른다.</p>
+<p><figure class="mdimg"><img src="assets/visual/v2-blown-runs.svg?v=a4f73558" alt="그림 6 · 학습이 터진 열한 판. 막대는 목표 3000 회 중 마지막 저장 번호입니다" loading="lazy"><figcaption>그림 6 · 학습이 터진 열한 판. 막대는 목표 3000 회 중 마지막 저장 번호입니다</figcaption></figure></p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>RuntimeError: normal expects all elements of std &gt;= 0.0</pre></div>
+<p><b>시드를 바꾸면 터지고 같은 설정이 다른 시드에서 완주했다.</b></p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>실패 로그 9 건 · 서로 다른 실행 이름 8 개</pre></div>
+<p>둘을 같이 적는 까닭 · <code>v2b-s3instr</code> 이 두 번 걸려 <b>두 번 다 같은 1670 에서</b> 죽었다. 재실행도 실제 실패 1 건이다. <b>이 수는 독립 설정의 수가 아니다.</b></p>
+<p><b>내가 세운 가설</b> 「표준편차 매개화가 원인이다. <code>log</code> 로 바꾸면 음수가 안 나온다.」 -&gt; <b><code>scalar</code> 대 <code>log</code> 2 × 2 를 걸었다.</b></p>
+<p><b>가설이 틀렸다.</b> <code>log</code> 도 터졌다 (<code>v2LG-log-feet01-s44</code> · 마지막 완료 출력 번호 2923 · 같은 문구).</p>
+<p>체크포인트 2800 · 2850 · 2875 · 2900 을 다 열어 텐서 68 개를 봤는데 비유한수가 <b>하나도 없었다.</b> <b>최초로 비유한수가 생긴 갱신 번호는 미확인이다.</b></p>
+<p>수학에서 <code>exp()</code> 는 양수지만 float 연산에서는 underflow · overflow · NaN 이 다 가능하고, torch 의 <code>std.min() &gt;= 0</code> 검사는 <b>NaN 에서도 실패한다.</b></p>
+<div class="tw"><table><thead><tr><th>매개화</th><th>일어났을 수 있는 것</th></tr></thead><tbody><tr><td><code>scalar</code></td><td>std 가 음수가 됐을 수 있다</td></tr><tr><td><code>log</code></td><td><code>log_std</code> 가 NaN 이 됐을 수 있다</td></tr></tbody></table></div>
+<p><b>두 칸 다 개별 원인 미확인이다.</b></p>
+<p><b>라이브러리에 관문이 없다</b> <span class="ev ev-ok">확인됨</span>. <code>rsl_rl/modules/actor_critic.py</code> 전체에서 <code>clamp</code> · <code>clip</code> · <code>isnan</code> · <code>isfinite</code> 를 찾았다. <b>하나도 없다.</b></p>
+<p>gradient 자르기는 있는데 <b>NaN 을 막지 않는다. 퍼뜨린다.</b></p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>넣은 gradient               [1.0, 2.0, NaN, 3.0]
+clip_grad_norm_(..., 1.0)
+나온 gradient               [NaN, NaN, NaN, NaN]</pre></div>
+<p>전체 norm 이 NaN 이면 곱하는 계수가 NaN 이라 <b>전부</b> NaN 이 된다.</p>
+<p><b>그리고 팀장이 잡은 것.</b> 16 판은 요인 설계가 아니고 교란이 섞여 있다. 시드 43 안에서는 <code>feet_air_time</code> 0.01 넷이 다 죽고 0.1 하나가 살았고, 시드 44 안에서는 <code>scalar</code> 0.01 둘이 죽고 <code>log</code> 0.01 이 살았다. <b>표본이 작고 조건이 통제되지 않아 어느 쪽으로도 말할 수 없다.</b></p>
+<p>그런데 <b>모든 판에 똑같이 있던 것</b>이 하나 있었다. <b><code>resume</code></b> 이다.</p>
+<p>팀장이 여러 번 「터지는 게 뭔가 이상하다」고 말했다. 나는 그것을 <b>「어느 설정이 터뜨리나」</b> 로 옮겨 읽었다. 실험하는 사람이 보는 자리다. <b>변하지 않는 변수는 그 방법으로 안 보인다.</b></p>
+</section>
+<section id="s8"><span id="7"></span><h2>7. 레시피 · v2 가 무엇으로 학습했나</h2>
+<p>배포본 <code>v2g2-feetair01</code> 의 학습 시각 저장본 <code>params/env.yaml</code> 과 <code>params/agent.yaml</code> 에서 읽었다.</p>
+<h3>시작점 · 맨바닥에서 배운 것이 아니다 <span class="ev ev-ok">확인됨</span></h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>params/agent.yaml   (2026-09-28 · 학습 로그에서 직접 읽음)
+
+  resume: true
+  load_run: nvidia_pretrained_source
+  load_checkpoint: nvidia_pretrained.pt</pre></div>
+<p><b>v2 는 NVIDIA 가중치에서 «이어» 3000 회를 돈 판이다.</b> 그래서 이 보고서의 「NVIDIA 대비」는 서로 다른 두 학습의 비교가 아니라 <b>같은 가중치에서 3000 회를 더 돌린 것과 안 돌린 것의 비교</b>다.</p>
+<p><code>model_0.pt</code> 를 「NVIDIA 원본」이라고 부르지는 않는다. actor 가중치를 직접 맞춰 봤더니 원본과 다르다 (<code>a32b4ad7..</code> 대 <code>df93a7e1..</code>). 첫 갱신 «뒤» 저장본이다. 원본 자체는 <code>nvidia_pretrained.pt</code> 하나뿐이고, 축 1 · 축 2 의 <code>NVIDIA</code> 열이 그것이다.</p>
+<h3>학습 지형 여덟 종</h3>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>pyramid_stairs        0.15      hf_pyramid_slope      0.10
+pyramid_stairs_inv    0.15      hf_pyramid_slope_inv  0.10
+boxes                 0.15      omni_gap              0.10
+random_rough          0.15      rails                 0.10</pre></div>
+<h3>명령</h3>
+<div class="tw"><table><thead><tr><th>설정</th><th>값</th><th>뜻</th></tr></thead><tbody><tr><td><code>lin_vel_x</code></td><td>(0.4, 1.5)</td><td>앞으로 가는 속도 명령의 범위</td></tr><tr><td><code>lin_vel_y</code></td><td>(0, 0)</td><td>옆으로 가는 명령. <b>잠가 뒀다</b></td></tr><tr><td><code>ang_vel_z</code></td><td>(-1.0, 1.0)</td><td>제자리에서 도는 속도 명령</td></tr><tr><td><code>heading_command</code></td><td>true</td><td>바라볼 방향을 주고 요를 자동으로 맞춘다</td></tr><tr><td><code>rel_heading_envs</code></td><td>1.0</td><td>그 방식을 쓰는 환경의 비율</td></tr><tr><td><code>rel_standing_envs</code></td><td><b>0.1</b></td><td><b>명령을 통째로 0 으로 두는 환경의 비율</b></td></tr><tr><td><code>heading_control_stiffness</code></td><td>0.5</td><td>방향 오차를 요 명령으로 바꾸는 계수</td></tr></tbody></table></div>
+<h3>커리큘럼과 규모</h3>
+<div class="tw"><table><thead><tr><th>설정</th><th>값</th><th>뜻</th></tr></thead><tbody><tr><td><code>max_init_terrain_level</code></td><td><b>2</b></td><td>학습 시작 때 열어 두는 난이도 층. 0 이면 전부 가장 쉬운 줄에서 시작한다</td></tr><tr><td><code>num_envs</code></td><td>4096</td><td>동시에 돌리는 환경 수</td></tr><tr><td><code>max_iterations</code></td><td>3000</td><td>학습 횟수</td></tr><tr><td>커리큘럼 규칙</td><td><code>terrain_levels_vel</code></td><td><b>직선 거리</b> &gt; size/2 = 4 m 면 올리고, <code>|cmd_xy| × 길이 × 0.5</code> 보다 짧으면 내린다</td></tr></tbody></table></div>
+<h3>보상항 · 무엇을 잘하라고 가르쳤나</h3>
+<p><code>feet_air_time</code> 만 기준에서 바꿨다 (0.01 -&gt; <b>0.1</b>). 나머지는 NVIDIA 기본값 그대로다. <b>발 관련 보상항은 이것 하나뿐이고, 높이가 아니라 «떠 있던 시간» 을 점수로 준다.</b></p>
+</section>
+<section id="s9"><span id="8"></span><h2>8. 어디서 멈췄나 · 멈출 기준</h2>
+<p>규칙은 두 줄이다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>규칙 1   한 칸 바꿔 얻은 것 &lt;= 시드만 바꿔 생기는 흔들림
+         -&gt; 정책 탐색을 멈춘다. 더 흔들면 잡음을 재는 것이다
+
+규칙 2   시드 흔들림이 판정 폭만큼 크다
+         -&gt; 튜닝 말고 «자» 를 고친다. 표본을 늘리거나 값과 구간을 같이 적는다</pre></div>
+<p><b>둘은 다른 상황이다.</b> 규칙 1 은 「정책이 천장에 닿았다」이고 규칙 2 는 「자가 무뎌서 천장이 어디인지 못 본다」이다.</p>
+<h3>바닥선을 어떻게 얻나</h3>
+<p><b>같은 레시피를 시드만 바꿔 최소 셋 돌리고 그 지표의 폭을 잰다.</b> 그 폭이 그 뒤 모든 비교의 바닥선이다. 그보다 작은 차이는 차이가 아니다.</p>
+<div class="tw"><table><thead><tr><th>지표</th><th>시드 폭</th><th>어떻게 얻었나</th></tr></thead><tbody><tr><td>축 1 · 48 칸 평균</td><td><b>1.25 %p</b></td><td>시드 42 · 43 · 44 = 94.19 · 92.94 · 93.52</td></tr><tr><td>축 2 · 아홉 칸</td><td><b>4 칸 / 9</b></td><td>같은 세 시드 = 8/9 · 4/9 · 7/9</td></tr></tbody></table></div>
+<h3>실제로 어디서 멈췄어야 했나</h3>
+<p><code>v2b</code> 에서 한 칸씩 바꾼 자식 여섯의 폭은 <b>2.50 %p</b> 이고 최고 자식이 기준보다 <b>+1.40 %p</b> 였다.</p>
+<p><b>+1.40 과 1.25 가 거의 같다. 규칙 1 에 걸린다.</b></p>
+<div class="tw"><table><thead><tr><th>구간</th><th>얻은 것</th><th>시드 폭</th><th>판정</th></tr></thead><tbody><tr><td><code>v2a</code> -&gt; <code>v2b</code></td><td>축 1 하락 <code>2·1·2·0</code> -&gt; <code>0·0·0·0</code></td><td>1.25 %p</td><td><b>잡음보다 큼. 계속할 이유가 있었다</b></td></tr><tr><td><code>v2b</code> -&gt; <code>v2g2</code></td><td>48 칸 93.44 -&gt; 94.19 (+0.75)</td><td>1.25 %p</td><td><b>잡음 안. 멈출 자리였다</b></td></tr></tbody></table></div>
+<p><b><code>v2b</code> 에서 멈췄어야 했고 자식 다섯 판과 시드 두 판이 초과였다.</b></p>
+<p>그리고 규칙을 그대로 적용하면 이렇게 된다.</p>
+<blockquote><p><b><code>v2g2</code> 가 <code>v2b</code> 보다 낫다고 말할 수 없다.</b> 48 칸 평균이 94.19 대 93.44 로
+<code>v2g2</code> 가 높지만 시드 폭 1.25 %p 안에 들어간다.</p></blockquote>
+<p><b>그러면 왜 <code>v2g2</code> 를 골랐나.</b> 성적이 나아서가 아니라 <b>가장 두껍게 잰 판</b>이기 때문이다. 기준선은 잘하는 판이 아니라 잘 잰 판이어야 한다.</p>
+<h3>축 2 는 왜 사정이 다른가</h3>
+<p>축 2 는 <b>규칙 2</b> 에 해당한다. 아홉 칸이 전부 문턱을 넘었나 못 넘었나 둘 중 하나인데, 정책들이 하필 문턱 위아래에 몰려 있다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>v2g2 의 wz +1.00    0.3994      문턱 0.40
+                    0.0006 차이로 한 칸이 통째로 미달이 된다</pre></div>
+<p><b>표본을 늘려도 참값이 문턱 위에 앉아 있으면 안 갈린다.</b> 64 env 에서 1024 env 로 올려 실제로 확인했더니 <b>미달 칸이 <code>회전 낙상</code> 에서 <code>wz +1.00</code> 으로 옮겼을 뿐 개수는 8/9 그대로</b>였다.</p>
+<p><b>그래서 축 2 에서 할 일은 정책을 흔드는 것이 아니라 자를 고치는 것이다.</b></p>
+<div class="tw"><table><thead><tr><th>무엇</th><th>기준이 바뀌나</th><th>다시 재야 하나</th><th>비용</th></tr></thead><tbody><tr><td>값과 구간(Wilson)을 같이 <b>적는다</b></td><td>아니오</td><td><b>아니오</b></td><td><b>0</b></td></tr><tr><td>표본을 64 -&gt; 1024 로</td><td>아니오</td><td>예</td><td>칸당 약 2.5 분</td></tr><tr><td>문턱 값 자체를 바꾼다</td><td><b>예</b></td><td>아니오</td><td>절차 필요 · <b>결과를 본 뒤에는 하지 않는다</b></td></tr></tbody></table></div>
+</section>
+<section id="s10"><span id="9"></span><h2>9. 축 2 · 아홉 칸이 무엇인가</h2>
+<p>평지에서 명령에만 반응시키는 프로브다. 지형을 섞으면 정지 실패가 명령 탓인지 지형 탓인지 안 갈린다.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>시나리오</th><th>지표</th><th>문턱</th><th>무엇을 묻나</th></tr></thead><tbody><tr><td>1</td><td><code>stop</code></td><td><code>fell_ratio</code></td><td>&lt;= 0.03</td><td>4 초 전진 뒤 명령 0 을 주면 넘어지지 않고 서나</td></tr><tr><td>2</td><td><code>hold</code></td><td><code>fell_ratio</code></td><td>&lt;= 0.03</td><td>20 초 내내 명령 0 이어도 안 넘어지나</td></tr><tr><td>3</td><td><code>hold</code></td><td><code>residual_speed_mps</code></td><td>&lt;= 0.005</td><td>선 뒤에 미끄러지지 않나</td></tr><tr><td>4</td><td><code>hold</code></td><td><code>joint_target_delta_tail</code></td><td>&lt;= 0.01</td><td>선 뒤에 관절이 떨지 않나</td></tr><tr><td>5</td><td><code>turn</code></td><td><code>fell_ratio</code></td><td>&lt;= 0.10</td><td>제자리 회전에서 안 넘어지나</td></tr><tr><td>6~9</td><td><code>turn</code></td><td><code>yaw_follow_ratio</code> (-1.0 · -0.5 · +0.5 · +1.0)</td><td>&gt;= 0.40</td><td>요 명령 네 크기를 각각 따라 도나</td></tr></tbody></table></div>
+<p><b>아홉 칸이 된 까닭도 코드에 적혀 있다</b> (<code>verdict_manifest.py:89-102</code>). 2026-09-23 에 8 에서 9 로 올렸다.</p>
+<blockquote><p><b>NVIDIA 원본이 9/9 다.</b> 거기서 출발했는데 8/9 를 통과로 부르면 출발점보다
+나쁜 것을 배포하면서 성공이라 하는 셈이다.</p></blockquote>
+<p>그때 <code>D</code> 판정이 뒤집혔다 (옛 기준 통과 -&gt; 새 기준 미달).</p>
+<p><b><code>ramp</code> 는 재지만 판정하지 않는다.</b> <code>AXIS2_THRESHOLDS</code> 에 키가 없다.</p>
+<h3>9-2. 확장 축 · 판정에 안 쓰고 «기록만» 한다</h3>
+<p>아홉 칸 말고도 하네스가 들고 있는 시나리오가 더 있다. <b>판정에 넣지 않는다.</b> 문턱을 결과를 본 뒤에 정하면 그것은 자가 아니다. 대신 <b>자료를 쌓는다.</b></p>
+<p><b>「돌린 판」 은 서로 다른 체크포인트의 수다</b> (<code>policy_sha256</code> 으로 센다). 이름이 달라도 같은 파일이면 한 판이다 <span class="ev ev-ok">확인됨</span> (<code>nvidia</code> = <code>nvidia-zero</code> · <code>foothold-v1</code> = <code>v1</code> · <code>v2</code> = <code>v2g2-feetair01-iter3000</code>).</p>
+<div class="tw"><table><thead><tr><th>시나리오</th><th>무엇을 묻나</th><th>하네스</th><th>돌린 판</th></tr></thead><tbody><tr><td><code>slow010</code> ~ <code>slow040</code></td><td>아주 느린 명령(0.10 ~ 0.40 m/s)을 따라가나</td><td>있음</td><td>19</td></tr><tr><td><code>turn_rest</code></td><td>멈춘 채로 도는가</td><td>있음</td><td><b>4</b></td></tr><tr><td><code>turn_rev</code></td><td>반대로 도는가</td><td>있음</td><td><b>4</b></td></tr><tr><td><code>push_robot</code></td><td>외란을 견디나</td><td>있음</td><td>0</td></tr><tr><td>험지 회전 · 횡보 · 장거리</td><td></td><td><b>없음</b></td><td>0</td></tr></tbody></table></div>
+<blockquote><h4>이 표의 자를 고쳤다 · 결론 둘을 철회한다</h4><p><b>앞 판은 <code>residual_speed_mps</code> 를 「낮을수록 좋다」로 읽었다.</b> 그것은 <b>끝 1 초의 평균 속도</b> 다 (<code>sim/eval/command_response_metrics.py</code> 320 행). 명령이 0 인 <code>hold</code> 에서는 낮을수록 좋다. 그런데 <b><code>slow010</code> 은 0.10 m/s 로 가라고 명령한 것</b> 이다. 0 에 가까우면 「안 움직였다」는 뜻이고 그것은 좋은 것이 아니다.</p>
+<p>하네스가 이미 <code>tracked_vx_mps</code> 와 <code>tracking_ratio</code> 를 주고 있었다. 자를 바꿔 재니 <b>네 칸 모두 1 위가 바뀐다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>자</th><th><code>slow010</code></th><th><code>slow020</code></th><th><code>slow030</code></th><th><code>slow040</code></th></tr></thead><tbody><tr><td>잔류 속도가 가장 낮은 판 (앞 판의 자)</td><td>NVIDIA</td><td>NVIDIA</td><td>NVIDIA</td><td>NVIDIA</td></tr><tr><td><b>명령 대비 오차가 가장 작은 판</b></td><td><b>v2a</b></td><td><b>v2a</b></td><td><b>v2b</b></td><td><b>v2b</b></td></tr></tbody></table></div>
+<p><b>철회 1 · 「NVIDIA 가 저속에서 가장 낫다」.</b> NVIDIA 는 저속 명령을 거의 안 따른다 (추종비 0.06 · 0.30 · 0.71 · 0.87). 잔류 속도가 낮은 것은 <b>안 움직였기 때문</b> 이다.</p>
+<p><b>철회 2 · 「저속은 v2 계열이 계속 지고 있는 자리다」.</b> 오차로 재면 네 칸 모두 v2 계열이 1 위다.</p>
+<p><b>살아남는 것.</b> <code>v2g2</code> 가 <code>v2b</code> 보다 저속에서 나쁜 것은 자를 바꿔도 맞다 (오차 0.067 대 0.016 · 0.065 대 0.021 · 0.012 대 0.000 · 0.024 대 0.009). 다만 <b>까닭이 반대</b> 다. 덜 가는 것이 아니라 <b>넘어선다</b> (추종비 1.67).</p></blockquote>
+<p><b>저속 명령 · 실제 전진 속도 (m/s · 64 env 평균 · 명령에 가까울수록 좋다)</b></p>
+<div class="tw"><table><thead><tr><th>판</th><th><code>slow010</code> 명령 0.10</th><th><code>slow020</code> 명령 0.20</th><th><code>slow030</code> 명령 0.30</th><th><code>slow040</code> 명령 0.40</th></tr></thead><tbody><tr><td>NVIDIA</td><td>0.006</td><td>0.061</td><td>0.213</td><td>0.347</td></tr><tr><td><code>foothold-v1</code></td><td>0.092</td><td>0.199</td><td>0.281</td><td>0.371</td></tr><tr><td>D</td><td>0.063</td><td>0.166</td><td>0.273</td><td>0.374</td></tr><tr><td>v2a @3000</td><td>0.107</td><td>0.199</td><td>0.276</td><td>0.369</td></tr><tr><td>v2b @3000</td><td>0.084</td><td>0.221</td><td>0.300</td><td>0.391</td></tr><tr><td><b><code>v2g2</code> @3000 (배포본)</b></td><td>0.167</td><td>0.265</td><td>0.312</td><td>0.376</td></tr></tbody></table></div>
+<p><b>추종비 (실제 / 명령 · 1.00 이 딱 맞는 것 · 1 보다 크면 넘어선 것)</b></p>
+<div class="tw"><table><thead><tr><th>판</th><th><code>slow010</code></th><th><code>slow020</code></th><th><code>slow030</code></th><th><code>slow040</code></th></tr></thead><tbody><tr><td>NVIDIA</td><td><b>0.06</b></td><td><b>0.30</b></td><td>0.71</td><td>0.87</td></tr><tr><td><code>foothold-v1</code></td><td>0.92</td><td>1.00</td><td>0.94</td><td>0.93</td></tr><tr><td>D</td><td>0.63</td><td>0.83</td><td>0.91</td><td>0.93</td></tr><tr><td>v2a @3000</td><td>1.07</td><td>1.00</td><td>0.92</td><td>0.92</td></tr><tr><td>v2b @3000</td><td>0.84</td><td>1.11</td><td>1.00</td><td>0.98</td></tr><tr><td><b><code>v2g2</code> @3000 (배포본)</b></td><td><b>1.67</b></td><td><b>1.33</b></td><td>1.04</td><td>0.94</td></tr></tbody></table></div>
+<p><b>|추종 오차| (m/s · 낮을수록 좋다 · 굵은 것이 그 칸 1 위)</b></p>
+<div class="tw"><table><thead><tr><th>판</th><th><code>slow010</code></th><th><code>slow020</code></th><th><code>slow030</code></th><th><code>slow040</code></th></tr></thead><tbody><tr><td>NVIDIA</td><td>0.094</td><td>0.139</td><td>0.087</td><td>0.053</td></tr><tr><td><code>foothold-v1</code></td><td>0.008</td><td>0.001</td><td>0.019</td><td>0.029</td></tr><tr><td>D</td><td>0.037</td><td>0.034</td><td>0.027</td><td>0.026</td></tr><tr><td>v2a @3000</td><td><b>0.007</b></td><td><b>0.001</b></td><td>0.024</td><td>0.031</td></tr><tr><td>v2b @3000</td><td>0.016</td><td>0.021</td><td><b>0.000</b></td><td><b>0.009</b></td></tr><tr><td><b><code>v2g2</code> @3000 (배포본)</b></td><td>0.067</td><td>0.065</td><td>0.012</td><td>0.024</td></tr></tbody></table></div>
+<p><b>두 판이 반대 방향으로 틀린다.</b> NVIDIA 는 <b>아주 느리게 가라고 하면 안 간다</b> (0.10 을 줘도 0.006). <code>v2g2</code> 는 <b>느리게 못 가서 넘어선다</b> (0.10 을 줘도 0.167). 우리가 <code>lin_vel_x</code> 하한을 0.4 로 좁혀 0.4 아래를 명령으로 배울 기회가 거의 없던 대가는 <b>이 넘어섬</b> 으로 나타난다. 앞 판이 적었던 「그 대가」의 방향이 틀렸다.</p>
+<blockquote><p><b><code>foothold-v1</code> 의 0.92 는 살아남은 칸만의 값이다</b> <span class="ev ev-ok">확인됨</span>. <code>slow010</code> 에서
+64 칸 중 <b>23 칸이 넘어져</b> 추종비가 48 칸에서만 나온다. 넘어진 칸을 빼고
+잰 값이라 <b>유리하게 읽힌다.</b> 낙상률을 같이 봐야 한다 (아래 표).</p></blockquote>
+<p><code>slow010</code> 낙상은 <code>foothold-v1</code> 이 <b>0.359</b> 로 가장 나쁘다 (64 판 중 23 판). 전진 전용 레시피가 아주 느린 명령에서 무너지는 자리다. <b>추종비가 좋아 보이는 것과 같은 판에서 나온 숫자다.</b></p>
+<p><b>배포본 <code>v2g2</code> 를 같은 조건으로 쟀다</b> (2026-09-28). <code>v2b</code> 와 한 글자도 다르지 않다 · env 64 · 시드 42 · <code>pushes_enabled</code> False · 지형 plane (무한 평면). 그래서 같은 표에 올릴 수 있다.</p>
+<p><b>낙상 (64 env · 낮을수록 좋다)</b></p>
+<div class="tw"><table><thead><tr><th>판</th><th><code>slow010</code></th><th><code>turn_rest</code></th><th><code>turn_rev</code></th></tr></thead><tbody><tr><td>NVIDIA</td><td>0.0000</td><td>0.0156</td><td>0.0781</td></tr><tr><td><code>foothold-v1</code></td><td>0.3594</td><td><b>1.0000</b></td><td><b>1.0000</b></td></tr><tr><td>D</td><td>0.0000</td><td>0.0312</td><td>0.0156</td></tr><tr><td><b><code>v2g2</code> @3000 (배포본)</b></td><td>0.0312</td><td>0.0781</td><td>0.1562</td></tr></tbody></table></div>
+<blockquote><p><b>NVIDIA 와 <code>foothold-v1</code> 의 회전 두 칸을 2026-09-29 에 처음 쟀다.</b> 앞 판은
+「안 쟀다」 로 비워 두고 있었다. 영상을 찍으면서 같은 조건으로 같이 돌렸다
+(env 64 · 시드 42 · <code>pushes_enabled</code> False · 지형 plane).</p>
+<p><b><code>foothold-v1</code> 이 두 칸 모두 64/64 전판 낙상이다.</b> 전진 전용 레시피가
+제자리 회전에서 통째로 무너진다. 그래서 <code>v2g2</code> 의 <code>turn_rev</code> 0.1562 은
+<b><code>foothold-v1</code> 대비로는 1.0000 -&gt; 0.1562</b> 이다.</p>
+<p><b>그래도 D 보다는 나쁘다</b> (0.0156 · 한 판). 새로 잰 것이 닫는 물음은
+「v1 과 NVIDIA 는 어떠했나」뿐이고, 「<code>v2g2</code> 의 회전이 충분한가」는
+안 닫힌다.</p></blockquote>
+<p><b><code>turn_rev</code> 0.1562 은 64 판 중 열 판이다.</b> D 의 0.0156(한 판)보다 열 배 나쁘다. 반대로 도는 명령에서 무너지는 자리가 남아 있다. <b>판정 아홉 칸에는 <code>turn_rev</code> 가 없다.</b> 그래서 이 하락은 성적표에 안 나온다.</p>
+<h3>9-2-1. 확장 축 컷 열여덟 편</h3>
+<p><b>앞 판까지 이 절에는 숫자만 있었다.</b> 11 절에 「평가 지표로는 안 쓰고 자료와 <b>영상</b> 으로 남긴다」고 적어 놓고 영상이 0 편이었다 <span class="ev ev-ok">확인됨</span>. 2026-09-29 에 찍었다.</p>
+<p><b>모두 <code>env 51</code> 한 칸이다.</b> 저속 넷 · 판 셋 · 열두 칸에서 추종비가 중앙값에 가장 가까운 칸이다 (대표성 64 칸 중 <b>1 위</b>) <span class="ev ev-ok">확인됨</span>. <b>유리한 칸을 고르면 컷이 표를 설명하지 못한다.</b> 자막에 그 칸의 값과 64 칸 집계를 나란히 적는다.</p>
+<p><b>세 칸의 속도 축을 같게 맞췄다.</b> 울타리마다 셋 중 가장 큰 축을 골라 같이 준다 (<code>sim/eval/overlay/hud.py</code> 의 <code>y_top</code>). 안 그러면 <code>slow010</code> 이 0.50 · 0.81 · 0.58 로 갈라져서 <b>「명령선 아래로 얼마나 내려갔나」를 칸끼리 못 견준다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<blockquote><p><b>저속 넷은 앞 5 초가 측정에서 빠진다</b> (<code>skip_s</code> 5.0). 가속 구간이다.
+화면에는 20 초가 다 나온다. <b>그 구간을 컷 안에 띠로 깔았다</b> · 속도
+그래프의 왼쪽 5 초가 옅게 깔리고 「측정 제외 5초」 라고 적힌다
+<span class="ev ev-ok">확인됨</span> (2026-09-29 · <code>overlay/hud.py</code> 의 <code>skip_s</code>).</p>
+<p>앞 판에서는 이 말이 <b>자막에만</b> 있었다. 그러면 화면과 표가 다른 구간을
+말하는데 읽는 사람은 같은 구간인 줄 안다. 띠 값은 손으로 적지 않고
+프로브 기록(<code>probe_manifest.json</code> 의 <code>skip_s</code>)에서 읽는다.</p></blockquote>
+<h4>저속 0.10 m/s · 두 판이 «반대 방향으로» 틀린다</h4>
+<p><b>볼 것: 연한 가로선(명령 0.10)과 흰 실선(실제)의 거리.</b> 그 사이 베이지색 면적이 미달분이다. 세 칸의 속도 축은 0.81 로 같다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow010-nvidia.jpg" src="assets/video/v2/axis2ext-slow010-nvidia.mp4?v=5e94c455"></video><figcaption>이 칸 실제 0.001 m/s · 추종비 0.01 · <b>20 초 내내 안 움직인다</b> (오른쪽 위 숫자가 0.00 에 붙어 있다) · 64 칸 추종비 0.06 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow010-v1.jpg" src="assets/video/v2/axis2ext-slow010-v1.mp4?v=7f2c4156"></video><figcaption>이 칸 실제 0.053 m/s · 추종비 0.53 · <b>10.14 초에 넘어진다</b> (빨간 「넘어짐」 이 뜨고 그래프가 멈춘다) · 64 칸 추종비 0.92 (추종비를 낼 수 있던 칸 48/64) · 낙상 <b>23/64</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow010-v2.jpg" src="assets/video/v2/axis2ext-slow010-v2.mp4?v=367deec1"></video><figcaption>이 칸 실제 0.174 m/s · 추종비 <b>1.74</b> · <b>명령선 위로 계속 넘어선다</b> · 64 칸 추종비 1.67 · 낙상 2/64</figcaption></figure></div></div>
+<h4>저속 0.20 m/s</h4>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow020-nvidia.jpg" src="assets/video/v2/axis2ext-slow020-nvidia.mp4?v=9fca29cf"></video><figcaption>이 칸 실제 0.028 m/s · 추종비 0.14 · 64 칸 추종비 0.30 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow020-v1.jpg" src="assets/video/v2/axis2ext-slow020-v1.mp4?v=184dc14a"></video><figcaption>이 칸 실제 0.200 m/s · 추종비 <b>1.00</b> · 이 울타리에서 명령선에 가장 가깝다 · 64 칸 추종비 1.00 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow020-v2.jpg" src="assets/video/v2/axis2ext-slow020-v2.mp4?v=554d3eaf"></video><figcaption>이 칸 실제 0.236 m/s · 추종비 1.18 · 64 칸 추종비 1.33 · 낙상 0/64</figcaption></figure></div></div>
+<h4>저속 0.30 m/s</h4>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow030-nvidia.jpg" src="assets/video/v2/axis2ext-slow030-nvidia.mp4?v=7608d4e1"></video><figcaption>이 칸 실제 0.199 m/s · 추종비 0.66 · 64 칸 추종비 0.71 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow030-v1.jpg" src="assets/video/v2/axis2ext-slow030-v1.mp4?v=150e715b"></video><figcaption>이 칸 실제 0.281 m/s · 추종비 0.94 · 64 칸 추종비 0.94 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow030-v2.jpg" src="assets/video/v2/axis2ext-slow030-v2.mp4?v=04b74030"></video><figcaption>이 칸 실제 0.309 m/s · 추종비 <b>1.03</b> · 64 칸 추종비 1.04 · 낙상 0/64</figcaption></figure></div></div>
+<h4>저속 0.40 m/s · 학습 명령 하한과 같은 속도</h4>
+<p><b>여기가 <code>lin_vel_x</code> 하한 0.4 다.</b> 세 판이 다 비슷해진다. 명령이 학습 구간에 들어오면 차이가 없어진다는 뜻이다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow040-nvidia.jpg" src="assets/video/v2/axis2ext-slow040-nvidia.mp4?v=3b09be76"></video><figcaption>이 칸 실제 0.352 m/s · 추종비 0.88 · 64 칸 추종비 0.87 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow040-v1.jpg" src="assets/video/v2/axis2ext-slow040-v1.mp4?v=2fb1254a"></video><figcaption>이 칸 실제 0.371 m/s · 추종비 0.93 · 64 칸 추종비 0.93 · 낙상 0/64</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-slow040-v2.jpg" src="assets/video/v2/axis2ext-slow040-v2.mp4?v=5e340a6a"></video><figcaption>이 칸 실제 0.372 m/s · 추종비 0.93 · 64 칸 추종비 0.94 · 낙상 0/64</figcaption></figure></div></div>
+<h4><code>turn_rest</code> · 제자리 회전 계단 · 칸 사이 1.5 초 쉼</h4>
+<p><b>볼 것: 주황 세로선이 명령 계단 경계다.</b> 선 두 개가 붙어 있는 자리가 쉼 구간이다. 오른쪽 「방향」 칸의 <code>실제 N deg</code> 가 누적 회전이다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrest-nvidia.jpg" src="assets/video/v2/axis2ext-turnrest-nvidia.mp4?v=3be11438"></video><figcaption>이 칸 요레이트 추종비 -1.00 에서 0.84 · +1.00 에서 0.62 · 64 칸 낙상 <b>1/64</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrest-v1.jpg" src="assets/video/v2/axis2ext-turnrest-v1.mp4?v=81821b1d"></video><figcaption><b>3.92 초에 넘어진다.</b> 첫 계단(-1.00)에서 추종비가 -0.26 으로 <b>반대로 돈다</b> · 64 칸 낙상 <b>64/64 (전판)</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrest-v2.jpg" src="assets/video/v2/axis2ext-turnrest-v2.mp4?v=0eade97c"></video><figcaption>이 칸 요레이트 추종비 -1.00 에서 0.73 · +1.00 에서 0.44 · 64 칸 낙상 <b>5/64</b></figcaption></figure></div></div>
+<h4><code>turn_rev</code> · 같은 계단을 순서만 뒤집음 (<code>+1.0</code> 이 처음)</h4>
+<p><b>이 칸이 <code>v2g2</code> 가 가장 나쁜 자리다</b> (10/64). 그래도 <code>foothold-v1</code> 은 64/64 다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrev-nvidia.jpg" src="assets/video/v2/axis2ext-turnrev-nvidia.mp4?v=84b1c5d4"></video><figcaption>이 칸 요레이트 추종비 -1.00 에서 0.70 · +0.50 에서 0.23 · 64 칸 낙상 <b>5/64</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrev-v1.jpg" src="assets/video/v2/axis2ext-turnrev-v1.mp4?v=2b564e92"></video><figcaption><b>13.96 초에 넘어진다.</b> +0.50 에서 추종비 -0.00 · +1.00 에서 0.01 로 <b>아예 안 돈다</b> · 64 칸 낙상 <b>64/64 (전판)</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2ext-turnrev-v2.jpg" src="assets/video/v2/axis2ext-turnrev-v2.mp4?v=9fe4824e"></video><figcaption>이 칸 요레이트 추종비 -1.00 에서 0.67 · +0.50 에서 0.00 · <b>양의 요레이트를 못 따른다</b> · 64 칸 낙상 <b>10/64</b></figcaption></figure></div></div>
+<blockquote><p><b>양의 요레이트가 세 판 모두 약하다.</b> <code>+0.50</code> 추종비가 NVIDIA 0.43 ·
+<code>foothold-v1</code> -0.00 · <code>v2g2</code> 0.01 이다 (64 칸 평균). 왼쪽으로 도는 것이
+오른쪽보다 훨씬 나쁘고 <b>그것은 세 판에 공통이다.</b> 우리 레시피가 만든
+하락이 아니다.</p></blockquote>
+<p><code>push_robot</code> 은 안 넣었다. 견줄 판이 하나도 없어서 혼자 재면 읽을 수가 없다.</p>
+<h3>9-3. 앞으로 축 2 를 어떻게 넓힐 것인가</h3>
+<p><b>지금 아홉 칸은 「평지에서 명령을 따르나」만 묻는다.</b> 미경험 험지 일반화를 근거로 내세우려면 축 2 도 <b>험지와 방향</b> 으로 넓혀야 한다. 넷은 아직 <b>하네스가 없다.</b> 없는 것을 없다고 적고, 무엇이 있어야 만들 수 있는지 적는다.</p>
+<div class="tw"><table><thead><tr><th>넓힐 축</th><th>무엇을 묻나</th><th>왜 아직 없나 (근거)</th><th>만들려면</th></tr></thead><tbody><tr><td><b>횡이동</b> (<code>vy</code>)</td><td>옆으로 가라는 명령을 따르나</td><td>시나리오 <b>열 개가 모두 <code>vy</code> 를 0.0 으로 고정</b> 한다 <span class="ev ev-ok">확인됨</span> (<code>sim/eval/eval_command_response.py</code> 157 ~ 262 행의 프로필 열 개를 0.1 초 간격으로 돌려 보니 가운데 값이 전부 0.0)</td><td>프로필에 <code>vy</code> 를 열고, <b>문턱을 결과를 보기 전에</b> 정한다</td></tr><tr><td><b>험지 회전</b></td><td>평지가 아니라 험지에서 제자리 회전이 되나</td><td>축 2 는 지형이 <b><code>plane</code>(무한 평면) 에 고정</b> 이다 <span class="ev ev-ok">확인됨</span> (축 2 <code>probe_manifest.json</code> <b>99 개 전수</b> 가 <code>terrain</code> 을 <code>plane (무한 평면)</code> 으로 적는다)</td><td>축 2 하네스가 <code>--terrain</code> 을 받게 하고 축 1 의 지형 등록(<code>sim/eval/terrains.py</code>) 을 재사용한다</td></tr><tr><td><b>장거리</b></td><td>20 초가 아니라 분 단위로 가도 안 무너지나</td><td>가장 긴 시나리오가 <b>25 초</b> 다 (<code>turn_rest</code>)</td><td><code>episode_length_s</code> 를 늘리고 드리프트 <b>누적</b> 을 잰다 (지금은 끝 1 초만 본다)</td></tr><tr><td><b><code>push_robot</code></b></td><td>외란을 견디나</td><td>하네스에 <b>있다.</b> 견줄 판이 하나도 없다</td><td>기준선 셋(NVIDIA · <code>foothold-v1</code> · 배포본) 을 같은 조건으로 <b>한 번에</b> 돈다</td></tr></tbody></table></div>
+<p><b>문턱을 결과 뒤에 정하지 않는다.</b> 이것이 넷을 판정에 안 넣고 기록만 하는 까닭이고, 9-2 의 저속 표에서 <b>자를 잘못 골라 결론이 뒤집혔던 것</b> 과 같은 자리다. 자를 먼저 정하고 그 자가 무엇을 재는지 적어야 한다.</p>
+<p><b>쌓는 순서는 「견줄 판이 있는 것」부터다.</b> <code>push_robot</code> 은 하네스가 이미 있어서 기준선 셋만 돌리면 읽을 수 있다. 횡이동은 프로필 한 줄이지만 문턱을 새로 정해야 한다. 험지 회전과 장거리는 하네스를 고쳐야 한다.</p>
+</section>
+<section id="s11"><span id="10"></span><h2>10. 배포본과 참고 비교군</h2>
+<p><b>배포는 <code>v2g2</code> iter3000. 강력한 참고 비교군은 <code>v2b-r</code> iter2500.</b></p>
+<div class="tw"><table><thead><tr><th></th><th><code>v2b-r</code> @2500</th><th><code>v2g2</code> @3000</th><th>시드 폭</th></tr></thead><tbody><tr><td>48 칸 평균 (d0.5)</td><td>93.12</td><td><b>94.19</b></td><td>1.25 %p</td></tr><tr><td>미경험 10종</td><td>89.10</td><td><b>90.70</b></td><td></td></tr><tr><td>셋 다 학습 6종</td><td>99.83</td><td><b>100.00</b></td><td></td></tr><tr><td>축 1 진짜 하락 (그 점)</td><td>0</td><td>0</td><td></td></tr><tr><td>축 1 진짜 상승 (그 점)</td><td>5</td><td><b>8</b></td><td></td></tr><tr><td><b>축 1 네 점 하락</b></td><td><b>2 · 0 · 0 · 0</b></td><td><b>0 · 0 · 0 · 0</b></td><td></td></tr><tr><td>축 2 (1024 env)</td><td><b>9 / 9</b></td><td>8 / 9</td><td>4 칸</td></tr><tr><td><code>stepping_stones</code> 1.0 m/s</td><td>0 %</td><td><b>24 %</b></td><td></td></tr><tr><td>시드 재현</td><td><b>없음</b></td><td>있음 (43 · 44)</td><td></td></tr></tbody></table></div>
+<p><b>두 판은 성적으로 구별되지 않는다.</b> 48 칸 차이 1.07 %p 는 시드 폭 안이고, 축 2 의 한 칸 차이도 시드 폭 네 칸 안이다.</p>
+<p><b><code>v2g2</code> 를 고른 근거는 「더 잘한다」가 아니다.</b> 축 1 네 점에서 <code>v2b-r</code> 은 iter1500 에 하락 2 가 있고 <code>v2g2</code> 는 넷 다 0 이다. 체크포인트를 골라야 하는 부담이 <code>v2g2</code> 쪽이 작다. 그리고 <code>v2g2</code> 만 다른 시드로 재현을 재 봤다.</p>
+<p><code>v2b-r</code> 의 9/9 는 네 점 중 한 점이고 회전 낙상이 0.344 -&gt; 0.109 -&gt; <b>0.031</b> -&gt; 0.3125 로 한 점만 내려앉는다. <b>봉우리다.</b></p>
+</section>
+<section id="s12"><span id="11"></span><h2>11. 다음 단계</h2>
+<p><figure class="mdimg"><img src="assets/visual/v2-next-step.svg?v=13c30b09" alt="그림 7 · 지금 정책이 보는 여덟 항목, 신경망을 바꿔도 남는 것, 다음 단계가 답할 물음" loading="lazy"><figcaption>그림 7 · 지금 정책이 보는 여덟 항목, 신경망을 바꿔도 남는 것, 다음 단계가 답할 물음</figcaption></figure></p>
+<h3>지금 정책이 보는 것</h3>
+<p><figure class="mdimg"><img src="assets/visual/v2-height-scan.png?v=142b7383" alt="그림 8 · 실제 촬영 위에 그린 height_scan. 몸통 밑 1.6 x 1.0 m 를 0.1 m 간격 187 점으로 훑습니다. 레일 모서리가 스캔 범위를 가로지릅니다" loading="lazy"><figcaption>그림 8 · 실제 촬영 위에 그린 height_scan. 몸통 밑 1.6 x 1.0 m 를 0.1 m 간격 187 점으로 훑습니다. 레일 모서리가 스캔 범위를 가로지릅니다</figcaption></figure></p>
+<p>그림은 <b>실제 촬영 위에 실척으로 그린 것</b>이다. 카메라를 trace 에서 그대로 세워 점마다 투영했고 (<code>target</code> 이 화면 정중앙으로 떨어지는 것으로 검산했다), 격자 규격은 <code>params/env.yaml</code> 의 <code>height_scanner</code> 에서 읽었다.</p>
+<p><b>187 이라는 수를 체크포인트로 반증했다.</b> <code>actor.0.weight</code> 가 (512, 235) 이고 몸통·관절이 3+3+3+3+12+12+12 = 48 이므로 235 - 48 = 187 이다 <span class="ev ev-ok">확인됨</span>.</p>
+<p><code>params/env.yaml</code> 의 <code>observations.policy</code> 여덟 항목이다.</p>
+<div class="tw"><table><thead><tr><th>항목</th><th>무엇인가</th></tr></thead><tbody><tr><td><code>base_lin_vel</code></td><td>몸통이 지금 나아가는 속도 (앞뒤 · 좌우 · 위아래)</td></tr><tr><td><code>base_ang_vel</code></td><td>몸통이 지금 도는 속도 (구르기 · 끄덕임 · 요)</td></tr><tr><td><code>projected_gravity</code></td><td>중력이 몸통 기준으로 어느 쪽인가. 기울기를 아는 자리</td></tr><tr><td><code>velocity_commands</code></td><td>지금 받은 명령 (앞으로 얼마 · 옆으로 얼마 · 얼마나 돌라)</td></tr><tr><td><code>joint_pos</code></td><td>관절 열둘이 지금 어디에 있나 (기준 자세에서의 차이)</td></tr><tr><td><code>joint_vel</code></td><td>관절 열둘이 지금 얼마나 빨리 움직이나</td></tr><tr><td><code>actions</code></td><td>바로 앞 걸음에 내보낸 관절 목표각</td></tr><tr><td><b><code>height_scan</code></b></td><td><b>발밑 격자에 광선을 쏘아 잰 바닥 높이. 지형 정보는 이것 하나뿐이다</b></td></tr></tbody></table></div>
+<p><b>앞 일곱은 몸통과 관절의 상태다.</b> 지형을 아는 통로는 <code>height_scan</code> 하나다.</p>
+<h3>신경망을 바꾸면 이 일이 버려지나</h3>
+<p><b>버려지는 것은 가중치 파일 하나다.</b> 관측 차원과 뜻이 바뀌면 resume 이 안 되므로 체크포인트는 못 쓴다. 그 외는 남는다.</p>
+<div class="tw"><table><thead><tr><th>남는 것</th><th>왜</th></tr></thead><tbody><tr><td>평가 하네스</td><td>정책을 지형에 올리고 행동만 잰다. 관측이 무엇이든 상관없다</td></tr><tr><td>기준선 숫자</td><td>새 구조가 넘어야 할 선. 없으면 「더 낫다」를 반증할 수 없다</td></tr><tr><td>환경의 함정</td><td>커리큘럼 붕괴 · <code>ang_vel_z</code> 와 <code>heading</code> 의 한 쌍 · 노출 구조</td></tr><tr><td>명령·보상 설정</td><td>새 구조도 명령을 받고 보상으로 배운다. 출발 설정이 된다</td></tr><tr><td>멈출 기준</td><td>시드 폭보다 작은 차이는 차이가 아니다</td></tr></tbody></table></div>
+<p><b>진짜로 버려지는 것은 「정책 수준에서 마지막 몇 %p 를 더 짜내는 시간」이다.</b> 그래서 신경망 교체가 예정돼 있으면 <b>규칙 1 에 닿는 순간 멈추는 것</b>이 맞다.</p>
+<h3>다음에 주목할 것 여섯</h3>
+<div class="tw"><table><thead><tr><th></th><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td><b>가</b></td><td><b>관측을 어떻게 다룰 것인가</b></td><td>지형 통로가 <code>height_scan</code> 하나다. 격자 그대로 넣을까 · 요약해 넣을까 · 기억을 둘까 · 가려진 곳의 값을 무엇으로 둘까</td></tr><tr><td><b>나</b></td><td><b>축 2 확장 축을 v2 부터 쌓는다</b></td><td>저속 넷 · <code>turn_rest</code> · <code>turn_rev</code> 는 <b>배포본까지 쟀다</b> (9-2). 남은 것은 험지 회전 · 횡보 · 장거리 · <code>push_robot</code> 이고 <b>하네스가 없다.</b> <code>turn_rev</code> 가 0.1562 로 나빠진 것부터 본다. <b>평가 지표로는 안 쓰고 자료와 영상으로 남긴다</b> (영상은 9-2 에 열여덟 편 · 2026-09-29 에 찍었다 · 앞 판까지 0 편이었다). 넓힐 넷은 9-3 에 무엇이 있어야 만들 수 있는지 적었다. 축 2 컷 HUD 는 <b>이 판에서 붙였다</b> (13 절). 하네스를 고칠 필요가 없었고, 이미 굽던 시계열 parquet 을 읽으면 됐다</td></tr><tr><td><b>다</b></td><td><b>축 2 의 자를 고친다</b></td><td>값과 Wilson 구간을 같이 적는다 (비용 0). 표본을 1024 로 올린다</td></tr><tr><td><b>라</b></td><td><b>resume 실험을 재개한다</b></td><td>터진 판 열여섯에 공통으로 있던 것이 <code>resume</code> 이다. <code>fs1</code> · <code>fs2</code> 를 v2 정리 뒤에 다시 본다</td></tr><tr><td><b>마</b></td><td><b>난이도 구멍을 메운다</b></td><td>0.8 이 아무 판에도 없었다. 이번에 v1 · v2 열두 칸을 새로 쟀다</td></tr><tr><td><b>바</b></td><td><b>최종 배포본 확정 뒤 학습 전체 영상</b></td><td>정속 20 초 두 번으로 「이렇게 학습된다」를 보이고, 빨리감기로 학습이 되어 가는 과정을 40 ~ 50 초에 담는다</td></tr><tr><td><b>사</b> · <b>닫았다 (4-0-1 절)</b></td><td><b>지형별 성공률이 «지형 판 하나» 의 값인지 확인한다</b></td><td>평가 설정이 <code>num_rows=1 · num_cols=10</code> 이라 지형마다 8 x 8 m <b>한 칸</b>이고 env 열 개가 그 한 판을 나눠 쓴다. 곧 100 판이 <b>한 레이아웃에 스폰 흔들림 100 번</b>이다. <code>stepping_stones</code> 1.0 m/s 에서 그 칸의 전진 성공률이 45 % 인데, 지형을 새로 만들어 찍은 <b>열다섯 판이 0/15</b> 였다 (확률 0.0001 · 13 절). 다른 설정은 전부 같은 것을 확인했고 「모서리 칸이 어렵다」 가설은 기각했다. <b><code>num_rows</code> 를 올려 여러 판에서 재 보면 갈린다.</b> 갈리면 축 1 의 지형별 숫자에 판 편차를 같이 적어야 한다</td></tr></tbody></table></div>
+<p><b><code>stepping_stones</code> 가 「가」의 시험지다.</b> 정책 수준에서 여덟 종 중 일곱을 풀었는데 이것 하나가 8.0 % 로 남았다. 발 디딜 곳이 띄엄띄엄한 지형이라 「발밑 한 점의 높이」로는 부족한 것이 아닌가를 검증할 자리다. <b>아직 그 가설을 시험하지 않았다</b> <span class="ev ev-todo">미측정</span>.</p>
+</section>
+<section id="s13"><span id="12"></span><h2>12. 재현</h2>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>평가 (축 1 · 한 칸)
+  python sim/eval/eval_generalization.py \
+      --checkpoint &lt;정책.pt&gt; --terrain_set unseen10 --terrains all \
+      --difficulty 0.5 --episodes 100 --envs_per_terrain 10 \
+      --command_vx 1.0 --eval_duration 6.0 \
+      --min_progress_m 3.0 --max_lateral_drift 0.75 \
+      --seed 42 --headless --output_dir &lt;결과폴더&gt;
+
+판정 (축 2 · 네 점)
+  python sim/eval/axis2_fourpoint.py --root &lt;축2결과&gt; --policies v2g2-feetair01
+
+표 다시 굽기
+  python _out/loop/v2_sweep.py --out sim/eval/results/20260928-v2-sweep
+
+도식 다시 굽기
+  python tools/make_v2_figs.py --write
+  python tools/svg_selfcontained.py --dir docs/assets/visual --write
+  python tools/svg_theme.py --write</pre></div>
+<p><b>도식의 숫자는 손으로 적은 것이 하나도 없다.</b> 넉 장 전부 <code>sweep_long.csv</code> 를 읽어서 그린다. 표가 바뀌면 그림도 같이 바뀐다.</p>
+</section>
+<section id="s14"><span id="13"></span><h2>13. 근거 영상 전체</h2>
+<p><b>영상마다 «무엇을 보여 주려고 찍었는지» 를 적는다.</b> 실험 하나를 그냥 랜더한 것이 아니다.</p>
+<blockquote><p><b>HUD 가 붙은 컷과 안 붙은 컷이 있다</b> <span class="ev ev-ok">확인됨</span>. 걸린 22 편을 전수로 재서 적는다.</p>
+<div class="tw"><table><thead><tr><th>HUD</th><th>컷</th></tr></thead><tbody><tr><td>있음 (19)</td><td><b>축 2 프로브 아홉</b> · <b>회전 낙상 둘</b> · 계보 <code>gap</code> 셋 · 판정 밖 하락 둘 · <code>stepping_stones</code> 셋</td></tr><tr><td>없음 (3)</td><td>학습 진행 (대군) · 학습 지형 비교 둘</td></tr></tbody></table></div>
+<p><b>앞 판에 적었던 「축 2 컷에는 HUD 를 나중에 붙일 수 없다」를 철회한다.</b> 붙는다. 그때 근거로 삼은 것은 「축 2 하네스가 trace CSV 를 안 낸다」였고 그것은 맞지만, <b>그 하네스는 env 마다 93열 시계열 parquet 을 이미 굽고 그 앞 16열이 <code>trace.TRACE_COLUMNS</code> 그대로다</b> (<code>timeseries.py</code> 머리말). 게다가 평지에 필요한 <code>cmd_wz_rps</code> 와 <code>base_yaw_deg</code> 도 그 안에 있다. <b>trace CSV 가 없는 것을 「자료가 없는 것」으로 읽은 것이 틀렸다.</b></p>
+<p>그래서 <b>판정 하네스를 한 줄도 안 고치고</b> 읽어서 얹었다 (<code>_out/loop/axis2_hud.py</code>). trace «규격» 도 안 올렸다. <code>timeseries.columns_for()</code> 가 93열을 <code>TRACE_COLUMNS</code> 에서 지으므로 칸을 더하면 <b>93열이 96열이 되어 이미 구운 parquet 이 전부 깨진다.</b> 대신 <code>overlay/render.py</code> 에 「이미 읽은 trace 를 받는 길」을 냈다.</p>
+<p>남은 셋은 붙일 자료가 <b>정말로</b> 없다. 600 마리를 위에서 본 컷 하나와 3x3 지형 컷 둘이라 «한 마리를 따라간 기록» 이 없다.</p>
+<p>갤러리 48 컷은 전부 HUD 가 붙어 있다 (48/48 전수 확인).</p></blockquote>
+<h3>축 1 · 48 칸 (갤러리)</h3>
+<p>지형 열여섯 종 × 속도 셋. <code>foothold-v1</code> 판의 기준선 둘(NVIDIA · v1)과 같은 자리를 같은 카메라로 찍었으므로 <b>세 열을 나란히 견줄 수 있다.</b></p>
+<div class="tw"><table><thead><tr><th>어디서 보나</th><th>무엇</th></tr></thead><tbody><tr><td><span class="vlink">갤러리 · v2<i>/gallery/</i></span></td><td>48 컷 전부 · 평가 칸 144</td></tr><tr><td><span class="vlink">판 비교 (3열)<i>/gallery/compare/</i></span></td><td>NVIDIA · v1 · v2 를 같은 칸에서</td></tr></tbody></table></div>
+<p><b>기본으로 뜨는 칸은 <code>rails 1.0</code> 이다.</b> 세 판이 8 · 48 · 100 으로 가장 크게 갈리는 자리다 (48 칸 전부를 「세 값의 이웃 간 최소 간격」으로 줄 세워 골랐다). 다만 <b><code>rails</code> 는 v2 가 학습에 넣은 지형</b>이므로 그 칸은 일반화가 아니라 학습을 보여 준다. 화면에도 그렇게 적는다.</p>
+<h3>축 2 · 명령 응답 · 세 판을 같은 컷으로</h3>
+<p><b>여기가 v2 의 핵심이다.</b> 축 1(전진 성공률)만 보면 <code>foothold-v1</code> 은 좋은 판이다. 그런데 명령을 주면 무너진다. 같은 시나리오를 세 판에 걸어 봤다.</p>
+<div class="tw"><table><thead><tr><th>시나리오 · 값</th><th>NVIDIA</th><th><code>foothold-v1</code></th><th><b><code>foothold-v2</code></b></th></tr></thead><tbody><tr><td><code>stop</code> 낙상</td><td>0.0000</td><td><b>0.2031</b></td><td>0.0000</td></tr><tr><td><code>hold</code> 낙상</td><td>0.0000</td><td><b>0.0781</b></td><td>0.0000</td></tr><tr><td><code>hold</code> 잔류 속도 (m/s)</td><td>0.0011</td><td>0.0240</td><td><b>0.0005</b></td></tr><tr><td><code>hold</code> 관절 떨림</td><td>0.0015</td><td><b>0.1258</b></td><td><b>0.0003</b></td></tr><tr><td><code>turn</code> 낙상</td><td>0.0625</td><td><b>1.0000</b></td><td>0.1094</td></tr></tbody></table></div>
+<p><code>foothold-v1</code> 의 <code>turn</code> 은 <b>64 판이 64 판 다 넘어진다.</b> 전진 성공률만 보고 달렸을 때 무엇을 잃었는지가 이 한 칸에 있다.</p>
+<blockquote><p><b>세 컷은 같은 판(env 8)이다</b> <span class="ev ev-ok">확인됨</span>. 앞 회차는 env 0 이었고 거기서는 <code>foothold-v1</code> 이 안 넘어져서 숫자와 장면이 안 맞았다. <code>per_env.json</code> 을 읽어 <b>v1 이 <code>stop</code> · <code>hold</code> · <code>turn</code> 셋 다 넘어지는 번호</b> 를 골랐다. 세 판에 같은 번호를 주므로 초기 자세가 같다.</p>
+<div class="tw"><table><thead><tr><th>env 8</th><th>NVIDIA</th><th><code>foothold-v1</code></th><th><code>foothold-v2</code></th></tr></thead><tbody><tr><td><code>stop</code></td><td>안 넘어짐</td><td><b>넘어짐</b></td><td>안 넘어짐</td></tr><tr><td><code>hold</code></td><td>안 넘어짐</td><td><b>넘어짐</b></td><td>안 넘어짐</td></tr><tr><td><code>turn</code></td><td>안 넘어짐</td><td><b>넘어짐</b></td><td>안 넘어짐</td></tr></tbody></table></div>
+<p><b>카메라가 로봇을 따라 도느라 하늘을 보는 구간이 있다</b> <span class="ev ev-ok">확인됨</span> (전 프레임 실측 · 연속 덩이라 렌더 결함이 아니다). <code>stop</code> NVIDIA 는 출발 뒤 51 장 (0.16 ~ 1.2 초), <code>turn</code> 은 회전 중에 v1 50 장 · v2 80 장 · NVIDIA 4 장이다. <code>hold</code> 는 세 판 다 0 장이다.</p></blockquote>
+<h4><code>stop</code> · 4 초 전진 뒤 명령 0</h4>
+<p><b>볼 것: 명령이 0 이 된 뒤에도 미끄러져 나가는가.</b></p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-stop-nvidia.jpg" src="assets/video/v2/axis2-stop-nvidia.mp4?v=b501ea72"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.0000</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-stop-v1.jpg" src="assets/video/v2/axis2-stop-v1.mp4?v=881d7ac7"></video><figcaption><b>env 8 넘어짐</b> · 64 판 낙상 0.2031 (13 판)</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-stop-v2.jpg" src="assets/video/v2/axis2-stop-v2.mp4?v=2eebdc77"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.0000</figcaption></figure></div></div>
+<h4><code>hold</code> · 20 초 내내 명령 0</h4>
+<p><b>볼 것: 선 채로 떨지 않는가.</b> 관절 떨림이 <code>foothold-v1</code> 0.125841 대 <code>foothold-v2</code> 0.000257 로 <b>490 배</b>다 (위 표는 넷째 자리에서 끊은 값이라 그것끼리 나누면 419 가 나온다. 배율은 원자료로 잰 것이다). 화면에서는 발을 계속 고쳐 딛는 것으로 보인다.</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-hold-nvidia.jpg" src="assets/video/v2/axis2-hold-nvidia.mp4?v=a866b701"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0015</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-hold-v1.jpg" src="assets/video/v2/axis2-hold-v1.mp4?v=00a26325"></video><figcaption><b>env 8 넘어짐</b> · 64 판 낙상 0.0781 (5 판) · 관절 떨림 0.1258</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-hold-v2.jpg" src="assets/video/v2/axis2-hold-v2.mp4?v=49b6a6d9"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.0000 · 관절 떨림 0.0003</figcaption></figure></div></div>
+<h4><code>turn</code> · 제자리 요레이트 계단 다섯</h4>
+<p><b>볼 것: 도는가, 아니면 자빠지는가.</b></p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">NVIDIA</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-turn-nvidia.jpg" src="assets/video/v2/axis2-turn-nvidia.mp4?v=f484a063"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.0625 · 계단 다섯을 다 돈다</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-turn-v1.jpg" src="assets/video/v2/axis2-turn-v1.mp4?v=99b280c4"></video><figcaption><b>env 8 넘어짐</b> · 64 판 낙상 <b>1.0000</b> (전부) · 6.5 초에서 넘어져 끝난다</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/axis2-turn-v2.jpg" src="assets/video/v2/axis2-turn-v2.mp4?v=078c225d"></video><figcaption>env 8 안 넘어짐 · 64 판 낙상 0.1094 · 계단 다섯을 다 돈다</figcaption></figure></div></div>
+<p>세 컷의 길이가 다른 것이 <b>결과 그 자체다.</b> <code>stop</code> 10 초 · <code>hold</code> 20 초 · <code>turn</code> 18 초가 규격인데 <code>foothold-v1</code> 의 <code>turn</code> 만 4.9 초에서 멈춘다.</p>
+<h3>아직 못 넘는 것 · 되레 나빠진 것</h3>
+<p><b>볼 것: 무엇을 못 하는가.</b> <code>stepping_stones</code> 는 미경험 여덟 중 <b>유일하게 못 넘는다</b> (8.0 %). 디딜 곳이 점점이 떨어져 있어 발을 «어디에» 놓을지가 문제인데, 지금 정책이 지형을 아는 통로는 <code>height_scan</code> 하나다 (11 절).</p>
+<blockquote><p><b>8.0 % 는 세 속도 평균이다.</b> 속도마다 성분까지 펴면 이렇다 <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th>속도</th><th>종합</th><th>생존</th><th>전진</th><th>추종</th><th>방향</th></tr></thead><tbody><tr><td>0.5 m/s</td><td><b>0 %</b></td><td>36 %</td><td>7 %</td><td>49 %</td><td>8 %</td></tr><tr><td>1.0 m/s</td><td><b>24 %</b></td><td>48 %</td><td>45 %</td><td>31 %</td><td>45 %</td></tr><tr><td>1.5 m/s</td><td><b>0 %</b></td><td>53 %</td><td>23 %</td><td><b>0 %</b></td><td>24 %</td></tr></tbody></table></div>
+<p><b>매끄러운 속도 추세가 아니다.</b> 느려도 0 이고 빨라도 0 인데 가운데만 24 % 다. 「천천히 가면 디딜 곳을 고를 여유가 생긴다」가 <b>아니라는 뜻</b> 이다. 0.5 m/s 는 전진이 7 % 로 아예 못 나아가고, 1.5 m/s 는 전진 23 % 인데 <b>추종이 0 %</b> 라 종합이 0 이 된다. 곧 <b>같은 0 % 가 서로 다른 까닭</b>이다.</p>
+<p>통과선은 세 속도 다 3.0 m 다 (이상 거리 6 m × <code>min_progress_ratio</code> 0.5). 시간이 속도에 맞춰 12 · 6 · 4 초라 이상 거리가 언제나 6 m 다.</p>
+<p><b>난이도 0.5 와 0.6 사이에 벼랑이 있다</b> <span class="ev ev-ok">확인됨</span> (1.0 m/s 칸).</p>
+<div class="tw"><table><thead><tr><th>난이도</th><th>종합</th><th>생존</th><th>전진</th></tr></thead><tbody><tr><td>0.1</td><td><b>100 %</b></td><td>100 %</td><td>100 %</td></tr><tr><td>0.2</td><td>24 %</td><td>44 %</td><td>38 %</td></tr><tr><td>0.3</td><td>20 %</td><td>51 %</td><td>41 %</td></tr><tr><td>0.4</td><td>24 %</td><td>49 %</td><td>41 %</td></tr><tr><td>0.5</td><td>24 %</td><td>48 %</td><td>45 %</td></tr><tr><td><b>0.6</b></td><td><b>0 %</b></td><td>52 %</td><td><b>0 %</b></td></tr><tr><td>0.7 ~ 0.9</td><td><b>0 %</b></td><td>32 ~ 47 %</td><td><b>0 %</b></td></tr></tbody></table></div>
+<p><b>0.1 에서는 세 속도 다 100 % 다.</b> 그리고 0.6 부터는 전진이 0 % 로 <b>한 걸음도 못 나아간다</b> (생존은 여전히 절반이라 «넘어져서» 가 아니다).</p>
+<p>곧 「<code>stepping_stones</code> 를 못 넘는다」는 <b>한 문장이 세 가지 이야기</b>다.</p>
+<div class="tw"><table><thead><tr><th>난이도</th><th>무엇이 막는가</th></tr></thead><tbody><tr><td>0.1</td><td>막는 것이 없다</td></tr><tr><td>0.2 ~ 0.5</td><td>속도다. 1.0 m/s 에서만 건너고 0.5 와 1.5 는 0 % 다</td></tr><tr><td>0.6 이상</td><td>지형이다. 속도를 바꿔도 전진이 0 % 다</td></tr></tbody></table></div>
+<p><b>축 1 은 난이도 0.5 에서만 재므로 이 벼랑도 성적표에 안 나온다.</b> <code>pyramid_stairs_inv</code> 의 87 %p 하락과 같은 부류다.</p></blockquote>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:3"><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1 · 1.0 m/s</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/ss-v1-fail.jpg" src="assets/video/v2/ss-v1-fail.mp4?v=85ae4dcf"></video><figcaption><b>못 건넌다</b> · 전진 0.93 m · 그 칸 전진 성공률 <b>0 %</b></figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2 · 1.0 m/s</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/stepping-stones-v2.jpg" src="assets/video/v2/stepping-stones-v2.mp4?v=85275061"></video><figcaption><b>못 건넌다</b> · 전진 0.86 m · 그 칸 전진 성공률 45 % · 종합 24 %</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2 · 1.5 m/s</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/stepping-stones-v2-cross.jpg" src="assets/video/v2/stepping-stones-v2-cross.mp4?v=4642ff27"></video><figcaption><b>건넌다</b> · 전진 3.26 m · 다만 종합은 0 % 다 (추종 0 %)</figcaption></figure></div></div>
+<blockquote><p><b>셋째 칸을 「1.5 m/s」 로 둔 까닭.</b> 팀장 요청은 「v2 넘는 거」였다.
+1.0 m/s 에서 건너는 판을 찍으려고 <b>시드 열다섯을 훑었으나 0 / 15</b> 였다
+(전진 0.01 ~ 2.35 m). 그 칸의 전진 성공률이 45 % 이므로 0/15 는 확률
+0.0001 이다. <b>무언가 체계적으로 다르다.</b></p>
+<p>같은 것을 하나씩 확인했다. 통과선 3.0 m · 시간 6.0 초 · 스폰 ±0.10 m ·
+요 ±5 도 · <code>gap_aware_scan</code> True · <code>height_scan_miss_value</code> 1.0 ·
+<code>difficulty_range</code> [0.5, 0.5] · dt 0.02 · <code>eval_spec_version</code> 2 ·
+체크포인트 파일. <b>전부 같다.</b></p>
+<p>가설 하나를 세워 재 보고 <b>기각했다.</b> 「8x8 격자의 모서리 칸(-28, -28)이
+유난히 어렵다」. 격자를 1x1 로 두어 자리를 (0, 0) 으로 옮기고 같은 시드
+셋을 돌리니 1.10 · 0.93 · 2.35 m 였다 (모서리에서는 0.86 · 0.89 · 2.09 m).
+<b>자리 탓이 아니다.</b></p>
+<p>남은 차이는 <b>지형 «판»</b> 이다. 평가 설정은 <code>num_rows=1 · num_cols=10</code>
+이라 <code>stepping_stones</code> 가 8 x 8 m <b>한 칸</b>이고, env 열 개가 그 한 판을
+나눠 쓴다. 곧 <b>100 판은 「한 레이아웃에 스폰 흔들림 100 번」</b> 이다.
+반면 녹화기는 지형 하나로 걸러 격자를 새로 만들므로 <b>시드마다 새
+레이아웃</b>이 나온다.</p>
+<p><b>그래서 두 숫자는 서로 다른 것을 재고 있다.</b> 45 % 는 그 한 판에서의
+값이고, 내 0/15 는 열다섯 판에서의 값이다. 이것이 참이면 <b>축 1 의
+지형별 성공률은 «그 한 판의 운» 을 안고 있다.</b> 확인하지 못했으므로
+단정하지 않고 <b>열어 둔 물음으로 남긴다</b> (11 절).</p></blockquote>
+<p>세 속도 전부는 <span class="vlink">갤러리<i>/gallery/</i></span> 에서 <code>stepping_stones</code> 를 고르면 볼 수 있다.</p>
+<p><b>볼 것: 축 1 이 안 재는 자리에서 v2 가 v1 보다 나빠진다.</b> <code>pyramid_stairs_inv</code> 난이도 0.9 · 1.5 m/s 에서 <code>foothold-v1</code> 이 90 % 인데 <code>foothold-v2</code> 는 3 % 다. <b>축 1 은 난이도 0.5 에서만 재므로 이 87 %p 하락은 성적표에 한 줄도 안 나온다.</b></p>
+<blockquote><p><b>앞 판에 적었던 「실패하는 판을 골라 다시 굽는 것이 맞다」를 철회한다.</b> 다시 구울 것이 없다. <b>걸린 이 컷이 바로 그 판이다.</b></p>
+<p>그때는 「전진이 둘 다 통과선을 넘었으니 하락을 못 보여 준다」고 읽었다. 종합 3 % 를 «못 건넌다» 로 읽은 것이 틀렸다. 성분을 펴 보면 이렇다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>종합</th><th>생존</th><th>전진</th><th><b>추종</b></th><th>방향</th></tr></thead><tbody><tr><td><code>foothold-v1</code></td><td>90 %</td><td>100 %</td><td>100 %</td><td><b>90 %</b></td><td>100 %</td></tr><tr><td><code>foothold-v2</code></td><td><b>3 %</b></td><td>100 %</td><td><b>99 %</b></td><td><b>3 %</b></td><td>98 %</td></tr></tbody></table></div>
+<p><b>생존 100 % · 전진 99 % 다. 넘어지지도 않고 건넌다.</b> 3 % 로 내려온 것은 추종 한 칸이고, 종합이 AND 라 그 한 칸이 전체를 끌어내렸다. 곧 87 %p 하락은 <b>「못 건넌다」가 아니라 「명령 속도를 못 따라간다」</b> 다.</p>
+<p>걸린 두 컷의 trace 를 재니 그 칸의 값과 맞는다.</p>
+<div class="tw"><table><thead><tr><th>판</th><th>명령</th><th>평균 속도</th><th>전진</th><th>추종 MAE</th><th>문턱 0.25</th></tr></thead><tbody><tr><td>v1</td><td>1.50</td><td>1.30</td><td>4.56 m</td><td><b>0.209</b></td><td>안 넘는다 → 통과</td></tr><tr><td>v2</td><td>1.50</td><td>1.25</td><td>4.46 m</td><td><b>0.263</b></td><td><b>넘는다 → 실패</b></td></tr></tbody></table></div>
+<p><b>v2 컷은 예외가 아니라 97 % 쪽이다.</b> 화면에서 볼 것은 「계단 코에 걸려 넘어지나」가 아니라 <b>속도 그래프가 명령선 1.50 아래에 얼마나 머무나</b> 다.</p>
+<p>HUD 가 그것을 세 곳에서 보여 준다 <span class="ev ev-ok">확인됨</span> (v2 컷 3.60 초 자리).</p>
+<div class="tw"><table><thead><tr><th>화면의 어디</th><th>무엇을 말하나</th></tr></thead><tbody><tr><td>오른쪽 위 램프 넷</td><td>생존 <code>-</code> · <b>전진 초록</b> · <b>추종 빨간 X</b> · 방향 초록</td></tr><tr><td>전진 막대</td><td>그 자리 3.91 m (끝값 4.46 m) · 통과선 3 m 를 넘어 꽉 찼다</td></tr><tr><td>속도 차트</td><td>명령선 <b>1.50</b> 아래 베이지색 면적이 미달분이다</td></tr></tbody></table></div>
+<p>곧 <b>떨어진 칸이 화면에 빨간 X 하나로 찍혀 있다.</b> 「성공한 영상 같은데」로 보이는 것이 맞고, 그것이 이 칸의 이야기다 (건너지만 못 따라간다).</p></blockquote>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:2"><figure class="vcmp-cell"><b class="vcmp-name">foothold-v1 · d0.9 · <b>1.5 m/s</b></b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v1.jpg" src="assets/video/v2/regress-stairsinv-d09-v1.mp4?v=50ed7be7"></video><figcaption>명령 1.50 m/s · 종합 90 % = <b>추종 90 %</b> · 이 판은 전진 4.56 m 로 건넜고 추종 MAE 0.209 로 문턱 0.25 <b>아래</b> · 램프 넷이 다 초록이다</figcaption></figure><figure class="vcmp-cell"><b class="vcmp-name">foothold-v2 · d0.9 · <b>1.5 m/s</b></b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/regress-stairsinv-d09-v2.jpg" src="assets/video/v2/regress-stairsinv-d09-v2.mp4?v=8fa662a2"></video><figcaption>명령 1.50 m/s · 종합 3 % = <b>추종 3 %</b> · 이 판도 전진 4.46 m 로 건넜고 안 넘어졌다 · <b>추종 램프만 빨간 X</b> 이고 속도 차트의 명령선 1.50 아래 베이지색 면적이 그 미달이다 (MAE 0.263)</figcaption></figure></div></div>
+<h3>학습 진행 · 41.3 초 · 대군이 여러 험지에서</h3>
+<p><b>볼 것: 무리가 흩어져 헤매던 것이 한 덩이로 뭉쳐 같이 나아가게 된다.</b></p>
+<p>같은 격자 · 같은 카메라에서 <b>정책만 갈아 끼운다.</b> 저장본 열여섯을 고르게 뽑았다 (0 · 200 ~ 2800 · 3000). 조각마다 왼쪽 위에 <code>iter N</code> 이 태워져 있다.</p>
+<div class="cb"><div class="cb-h">출력<button class="copy" type="button" aria-label="복사">복사</button></div><pre>   0 ~ 10 초   model_0     10.0 초
+  10 ~ 32 초   14 자리      1.6 초씩
+  32 ~ 44 초   model_3000  12.0 초</pre></div>
+<p>격자는 <code>--terrain all --terrain_set rough6 --terrain_cols 6 --terrain_rows 5</code> 이고 <code>--max_init_level 4</code> 다. 곧 <b>열마다 다른 하위 지형</b>이 오고 로봇이 다섯 행에 퍼진다. 한 화면에 여섯 지형 x 다섯 난이도 층의 무리가 같이 나온다.</p>
+<blockquote><p><b>팀장 물음: 「원래 이렇게 4096 마리가 각 iter 에서 겹쳐서 걷는 걸 학습하고 그래?」</b> 재 보고 답한다.</p>
+<p><b>겹쳐 보이는 것은 학습에서도 맞다.</b> Isaac Lab 은 env 여러 개를 «같은 지형 칸» 에 놓는다. env 끼리는 물리적으로 격리돼 서로 부딪지 않고, 리셋 자세 흔들림만큼만 벌어져 있다.</p>
+<p><b>다른 것은 밀도였다</b> <span class="ev ev-ok">확인됨</span>.</p>
+<div class="tw"><table><thead><tr><th></th><th>env</th><th>격자</th><th>칸</th><th>칸당</th></tr></thead><tbody><tr><td><b>학습</b></td><td>4,096</td><td>10 x 20</td><td><b>200</b></td><td><b>약 20 마리</b></td></tr><tr><td>앞 판 컷</td><td>1,024</td><td>5 x 6</td><td>30</td><td>34 마리</td></tr><tr><td>4,096 으로 올려 본 컷</td><td>4,096</td><td>5 x 6</td><td>30</td><td><b>136 마리</b> · 흰 덩이가 된다</td></tr><tr><td><b>이 컷</b></td><td><b>600</b></td><td>5 x 6</td><td>30</td><td><b>약 20 마리</b></td></tr></tbody></table></div>
+<p>근거는 <code>params/env.yaml</code> 86 · 189 행(<code>num_envs: 4096</code>) 과 200 · 201 행 (<code>num_rows: 10</code> · <code>num_cols: 20</code>) 이다.</p>
+<p><b>학습 격자 200 칸으로는 못 찍는다.</b> 지형이 80 x 160 m 가 되어 로봇 0.7 m 가 8 px 이다. 앞서 7 px · 8 px 컷을 「안 보인다」고 버린 것과 같은 자리다.</p>
+<p>그래서 <b>칸은 보이는 30 칸으로 두고 마리 수를 600 으로 낮춰 칸당 밀도를 학습과 같게</b> 맞췄다. <b>화면에 보이는 한 칸이 학습의 한 칸과 같다.</b> 화면 전체가 학습 전체는 아니다 (학습은 이런 칸이 200 개다).</p></blockquote>
+<p><b>축척을 재서 이 시점을 골랐다.</b> 로봇 0.7 m 가 몇 px 인가.</p>
+<p><b>어느 해상도에서 재느냐를 같이 적는다.</b> 아래 px/m 은 <b>랜더 원본 1920</b> 기준이다. 나가는 파일은 1280 이고 페이지에 그려지는 폭은 약 992 px 라 그만큼 작아진다 <span class="ev ev-ok">확인됨</span> (라이브에서 재 봤다).</p>
+<div class="tw"><table><thead><tr><th>시점</th><th>px/m (원본 1920)</th><th>로봇 · 원본</th><th>로봇 · 나가는 파일 1280</th><th>로봇 · 페이지 992</th></tr></thead><tbody><tr><td>앞서 올렸던 넓은 컷</td><td>9.9</td><td>7 px · 안 보인다</td><td>5 px</td><td>3 px</td></tr><tr><td>앞서 올렸던 확대 컷</td><td>11.5</td><td>8 px · 안 보인다</td><td>5 px</td><td>4 px</td></tr><tr><td><b>이 컷</b></td><td><b>37.8</b></td><td><b>26 px</b></td><td><b>18 px</b></td><td><b>14 px</b></td></tr></tbody></table></div>
+<p><b>페이지에서 14 px 은 무리가 점 뭉치로 보이는 크기다.</b> 한 마리씩 가르려면 전체화면으로 본다 (1920 화면이면 다시 26 px 이 된다).</p>
+<div class="vcmp" data-vcmp><div class="vcmp-bar"><button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button><button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button><span class="vcmp-lab">배속</span><button type="button" class="vcmp-btn" data-vcmp-rate="0.25">0.25x</button><button type="button" class="vcmp-btn" data-vcmp-rate="0.5">0.5x</button><button type="button" class="vcmp-btn" data-vcmp-rate="1" aria-pressed="true">1x</button><button type="button" class="vcmp-btn" data-vcmp-rate="2">2x</button></div><div class="vcmp-grid" style="--vcmp-n:1"><figure class="vcmp-cell"><b class="vcmp-name">v2 학습 진행</b><video controls muted playsinline preload="metadata" poster="assets/video/v2/posters/train-army.jpg" src="assets/video/v2/train-army.mp4?v=195a291a"></video><figcaption>험지 여섯 종 30 칸 위 <b>600 마리</b> (칸당 약 20 마리로 학습과 같은 밀도) · 저장본 열여섯 · <b>iter 0 과 3000 은 정속 · 가운데는 5 배에서 10 배로 빨라진다</b> (왼쪽 위에 <code>iter N   x5</code> 처럼 적어 둔다)</figcaption></figure></div></div>
+<p>2,064 장 · 41.3 초 · 검은 장 0 (전 프레임 확인).</p>
+<p><b>이 영상은 「못 걷다가 걷게 된다」가 아니다.</b> 7 절에 적었듯 v2 는 NVIDIA 가중치에서 이어 학습했으므로 <code>model_0</code> 이 이미 걷는다. 이 영상이 보이는 것은 <b>3000 회 동안 무리가 어떻게 정돈되는가</b> 다.</p>
+<blockquote><p><b>「여러 험지 위 로봇 무리」 절을 뺐다</b> (앞 판에 있었다). 팀장 지적
+「v2 학습진행 영상이랑 여러 험지 위 로봇 무리랑 큰 차이가 없네?」가 맞다.
+두 컷이 <b>같은 카메라 · 같은 지형 · 같은 마리 수</b>였고 차이는 이 컷이
+저장본 열여섯을 이어 붙였다는 것뿐이었다 <span class="ev ev-ok">확인됨</span> (가운데 장 밝기
+186.6 대 186.3). 이 컷이 그것을 포함하는 상위 컷이라 하나만 남긴다.</p></blockquote>
+<p>HUD 는 없다. HUD 는 <code>overlay/render.py</code> 가 «한 마리를 따라간 trace» 를 읽어 그리는 것이고 여기는 600 마리를 위에서 본다. 그래서 <code>iter N</code> 과 배속만 태웠다.</p>
+<blockquote><h4>가운데를 1.6 초에서 10 초로 늘리고 배속으로 줄였다</h4><p><b>앞 판은 가운데 열넷이 1.6 초였다.</b> 에피소드의 첫 토막이라 「걷기 시작하는 장면」만 열네 번 반복됐고 무리가 정돈되는 과정이 안 보였다 (팀장 지적 「중간에 200 iter 부터 2800 iter 까지는 처음 일부만 보여줘서 큰 의미가 없어보여」).</p>
+<p><b>조각을 다 10 초로 다시 찍고 배속으로 줄였다.</b> 그러면 한 iter 의 에피소드 <b>전체</b> 가 보이면서도 전체 길이가 안 늘어난다.</p>
+<div class="tw"><table><thead><tr><th>구간</th><th>원본</th><th>배속</th><th>화면</th></tr></thead><tbody><tr><td><code>iter 0</code></td><td>10.0 초</td><td><b>x1</b></td><td>10.0 초</td></tr><tr><td><code>iter 200</code> ~ <code>800</code></td><td>10.0 초</td><td>x5 ~ x6</td><td>2.0 ~ 1.7 초</td></tr><tr><td><code>iter 1000</code> ~ <code>2000</code></td><td>10.0 초</td><td>x7 ~ x9</td><td>1.5 ~ 1.1 초</td></tr><tr><td><code>iter 2200</code> ~ <code>2800</code></td><td>10.0 초</td><td><b>x10</b></td><td>1.0 초</td></tr><tr><td><code>iter 3000</code></td><td>12.0 초</td><td><b>x1</b></td><td>12.0 초</td></tr></tbody></table></div>
+<p>원본 162.0 초를 41.3 초로 줄였다. <b>배속을 화면에 적는다.</b> 안 적으면 10 배 구간에서 로봇이 비현실적으로 빨리 걷는 것처럼 보여 화면이 거짓말을 한다.</p></blockquote>
+<p><b>앞서 올렸던 두 컷은 버렸다</b> <span class="ev ev-ok">확인됨</span>. 축척을 재니 로봇 0.7 m 가 7 px 과 8 px 이어서 아예 안 보였다 (9.9 px/m · 11.5 px/m). 이 컷은 원본 37.8 px/m 로 로봇이 26 px 이고, 나가는 1280 파일에서는 18 px · 페이지에서는 14 px 이다.</p>
+<p>지형은 <code>rough6</code> 다. <b>우리 학습 지형 여덟 종 중 여섯</b>이고 <code>omni_gap</code> 과 <code>rails</code> 가 빠진다 (집합 등록이 <code>unseen10</code> · <code>rough6</code> 둘뿐이다 · <code>sim/eval/terrains.py:TERRAIN_SETS</code>). 그래서 「학습 지형」이라고 뭉뚱그리지 않고 <b>「학습에 쓴 험지 6 종」</b> 이라고 적는다.</p>
+<h3>처음부터 학습 (참고)</h3>
+<p><code>fs1</code> · <code>fs2</code> 는 MVP 판정에서 뺀다. 기록으로만 남긴다.</p>
+</section>
+<section id="s15"><span id="14"></span><h2>14. 자료</h2>
+<div class="tw"><table><thead><tr><th>무엇</th><th>어디</th></tr></thead><tbody><tr><td>스윕 원자료 1,182 줄</td><td><code>sim/eval/results/20260928-v2-sweep/sweep_long.csv</code></td></tr><tr><td>난이도 x 속도 요약</td><td>같은 폴더 <code>sweep_matrix.md</code></td></tr><tr><td>지형 x 난이도 (속도별)</td><td>같은 폴더 <code>sweep_terrain_v*.md</code></td></tr><tr><td>빠진 칸</td><td>같은 폴더 <code>MISSING.md</code> · <b>0 건</b></td></tr><tr><td>갤러리 v2</td><td><code>/gallery/</code> 에서 v2 를 고른다</td></tr><tr><td>계보 실측</td><td><code>inbox/jay/20260928-v2-mvp/LINEAGE-FACTS.md</code></td></tr><tr><td>멈출 기준 정본</td><td><code>inbox/jay/20260928-v2-mvp/STOPPING-RULE.md</code> · <b>규칙과 수는 8 절에 본문으로 다 적었다</b></td></tr><tr><td>평가 규격</td><td><a href="research-20260911-eval-protocol-v2.html">평가 프로토콜 정본</a></td></tr><tr><td>계보 전체</td><td><a href="research-20260928-rl-lineage.html">우리는 왜 여덟 번 방향을 틀었나</a></td></tr><tr><td>지형 카탈로그 스틸 16 장</td><td><code>sim/eval/results/20260928-terrain-shots/stills/</code> · 펴기 전후 값은 같은 폴더 <code>index.json</code></td></tr><tr><td>학습 진행 41.3 초 (대군 · 칸당 20 · 배속 곡선)</td><td><code>sim/eval/results/20260929-train-army-ramp/train-army.mp4</code> · 웹 사본 <code>docs/assets/video/v2/train-army.mp4</code> · 찍은 것 <code>_out/loop/train_army_ramp.sh</code> · 이은 것 <code>_out/loop/train_army_ramp_join.py</code> · 앞 판(가운데가 1.6 초)은 <code>20260929-train-army-d20/</code> · 버린 4,096 판은 <code>20260929-train-army-4096/</code></td></tr><tr><td>학습 지형 비교 컷 둘 (6-6)</td><td><code>sim/eval/results/20260929-traingap/{forward_gap,omni_gap}/flat_army_A_9_topdown.mp4</code> · 웹 사본 <code>docs/assets/video/v2/train-gap-{forward,omni}.mp4</code></td></tr><tr><td>그 컷을 찍은 것</td><td><code>_out/loop/shoot_traingap.sh</code> · 지형 등록은 <code>sim/eval/terrains.py</code> 의 <code>train_fwdgap</code> · <code>train_omnigap</code></td></tr><tr><td>평지 HUD 를 얹은 것</td><td><code>_out/loop/axis2_hud.py</code> · 원본은 <code>sim/eval/results/20260929-axis2-fall/</code> 와 <code>20260928-turnfall-clips/</code> 의 시계열 parquet · 결과는 <code>20260929-axis2-hud/</code></td></tr><tr><td>HUD 유무를 센 것</td><td><code>tools/count_hud.py</code> · 걸린 <b>49 편</b> 전수 · <b>있음 46 · 없음 3</b> (없는 셋은 <code>train-army</code> 와 학습 지형 비교 둘로, 위에서 본 다마리 컷이라 한 마리 기록이 없다)</td></tr><tr><td>실패 판을 찾아 찍은 것</td><td><code>_out/loop/shoot_failcuts.sh</code> · 결과는 <code>sim/eval/results/20260929-failcuts/</code> · 채택한 시드는 그 폴더의 <code>chosen.txt</code></td></tr><tr><td>자리 가설을 기각한 진단</td><td><code>_out/loop/probe_ss_origin.sh</code> · 결과는 <code>sim/eval/results/20260929-ss-origin/</code></td></tr><tr><td>판마다의 전진 거리 (100 판)</td><td><code>sim/eval/results/20260928-devicecheck/v2g2-iter3000-unseen10-d0.5-v1.0-cuda0/generalization_raw.csv</code></td></tr><tr><td>확장 축 2 (v2g2)</td><td><code>sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json</code></td></tr><tr><td>목적성 세 화면의 컷 아홉 편</td><td>갤러리에서 가져왔다 · NVIDIA 는 <code>gallery/v1/clips/&lt;지형&gt;-v&lt;속도&gt;-baseline.mp4</code> · v1 은 같은 폴더의 <code>-baseline</code> 없는 것 · v2 는 <code>gallery/v2/clips/</code> · 체크포인트 sha 는 <code>gallery/versions.json</code> 이 적어 둔 것과 대조했다 · 가져온 도구는 <code>_out/loop</code> 밖 임시 스크립트가 아니라 이 표에 경로로 남긴다</td></tr><tr><td>지형 열여섯 표의 숫자</td><td><code>gallery/v2/manifest.json</code> 의 <code>evaluations</code> 144 칸 (16 지형 x 3 속도 x 3 판) · 손으로 안 적고 읽어서 생성했다</td></tr><tr><td>확장 축 컷 열여덟 편을 찍은 것</td><td><code>_out/loop/shoot_axis2_ext.sh</code> · 판 셋 x 시나리오 여섯 · env 64 · 시드 42 · 영상 env 51 · 원본은 <code>sim/eval/results/20260929-axis2-ext-clips/</code></td></tr><tr><td>그 컷에 HUD 를 얹은 것</td><td><code>_out/loop/axis2_ext_hud.py</code> · <code>axis2_hud.py</code> 의 <code>build_trace</code> 를 그대로 가져다 쓴다 · 결과는 <code>20260929-axis2-ext-hud/</code> · 울타리마다 속도 축을 같게 맞춘다</td></tr><tr><td>NVIDIA · <code>foothold-v1</code> 의 회전 두 칸 (새로 잼)</td><td><code>sim/eval/results/20260929-axis2-ext-clips/{nvidia,v1}/{turn_rest,turn_rev}/per_env.json</code></td></tr></tbody></table></div>
+</section>
+<section id="s16"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th></tr></thead><tbody><tr><td>v4.0</td><td>2026-09-29</td><td><b>열어 둔 물음 「사」를 닫았다 · 새 절 4-0-1</b> · 지형별 성공률이 지형 판 하나의 값인지 시드 다섯으로 재측정 (집합 둘 · 10 판 · 1.0 m/s). 16 칸 중 13 칸은 폭 0, <b>움직인 셋 모두 보고서 값이 다섯 중 가장 높다</b> · <code>stepping_stones</code> 1.0 의 24 % 를 <b>0 ~ 24 %</b> 로 고쳐 적음 (다섯 판이 24 · 1 · 3 · 19 · 0) · <code>TerrainGeneratorCfg.seed</code> 가 지형 모양을 안 정한다는 것을 소스에서 확인하고 잠깐 넣었던 <code>--terrain_seed</code> 를 도로 뺌 · <b>저속 넷 컷에 「측정 제외 5초」 띠를 화면에 깔았다</b> (앞 판은 자막에만 있었다)</td></tr><tr><td>v3.9</td><td>2026-09-29</td><td><b>판 1 컷 아홉 편을 웹 규격(1280x720)으로 줄임</b> · 갤러리에서 그대로 가져와서 1920x1080 이었고 <b>한 페이지에 규격이 둘</b> 이었다 (나머지 마흔 편은 1280x720) · 12.1 MB -&gt; 5.3 MB · 장수와 길이는 그대로다 · 페이지 영상 합 85.0 MB -&gt; 78.2 MB</td></tr><tr><td>v3.8</td><td>2026-09-29</td><td><b>2-1 「목적성 세 화면」 을 넣음</b> (<code>floating_ring</code> 1.5 · <code>pit</code> 1.5 · <code>stepping_stones</code> 1.0 x 판 셋 · 어느 판도 학습 안 한 8 종 안에서 기준을 먼저 적고 골랐다 · 컷은 갤러리에 이미 있던 것을 가져왔다) · <b>4-0 「지형 열여섯 표」 를 넣음</b> (48 칸을 <code>manifest.json</code> 에서 읽어 생성 · 칸마다 갤러리 딥링크) · <b>갤러리에 안 가도 보고서 안에서 세 판을 견줄 수 있다</b> · v2 가 100 % 아닌 칸은 6 / 48 이고 내려간 칸은 0 개다 (세어서 확인)</td></tr><tr><td>v3.7</td><td>2026-09-29</td><td><b>확장 축 컷 열여덟 편을 찍어 9-2-1 에 걺</b> (저속 넷 · <code>turn_rest</code> · <code>turn_rev</code> x 판 셋 · env 51 · HUD 는 평지 모드를 그대로 재사용) · <b>9-2 저속 표의 자를 고치고 결론 둘을 철회</b> (<code>residual_speed_mps</code> 는 끝 1 초 평균 속도라 명령이 0 이 아닌 칸에서는 「낮을수록 좋다」가 아니다 · NVIDIA 는 저속 명령을 거의 안 따른다) · <b>NVIDIA 와 <code>foothold-v1</code> 의 <code>turn_rest</code> · <code>turn_rev</code> 를 처음 쟀다</b> (둘 다 64/64 전판 낙상) · <b>9-3 「앞으로 축 2 를 어떻게 넓힐 것인가」</b> (횡이동 · 험지 회전 · 장거리 · <code>push_robot</code> 이 왜 없고 무엇이 있어야 만들 수 있는지) · <code>hud.py</code> 에 <code>y_top</code> 을 더해 울타리 셋의 속도 축을 같게 맞춤 (기본값은 기존 컷과 sha256 동일)</td></tr><tr><td>v3.6</td><td>2026-09-29</td><td><b>px 표가 어느 해상도 값인지 밝힘</b> · 라이브에서 재 보니 표의 26 px 은 «랜더 원본 1920» 값이고 나가는 파일은 1280 (18 px) · 페이지에 그려지는 폭은 992 px (14 px) 였다 · 읽는 사람이 화면에서 확인할 수 없는 숫자를 적어 두었다</td></tr><tr><td>v3.5</td><td>2026-09-29</td><td><b>팀장 피드백 4 차</b> · NVIDIA 축 2 컷 <b>깜빡임을 잡고 아홉 편을 다시 구움</b> (카메라를 옮긴 직후 랜더가 하늘돔을 돌려주던 것 · 이음 19·38·42 -&gt; 0 · 낙상 시각과 장수는 그대로) · <b>「학습이 터진 기록」 접힘을 없애 6-12 절로 올림</b> (접어 둔 것은 안 남긴 것과 화면에서 같았다) · <code>stairs_inv</code> 자막에 <b>1.5 m/s</b> 와 «화면의 어디를 보나» 표 · <b>대군 컷의 «칸당 밀도» 를 학습과 같게 맞춤</b> (30 칸에 600 마리 = 칸당 20 · 학습은 200 칸에 4,096 으로 칸당 20 이다 · 4,096 을 30 칸에 넣어 보니 칸당 136 으로 흰 덩이가 됐다) · 같은 화면이던 <b>「여러 험지 위 무리」 절을 뺌</b> · <b>「함께 재생」·「처음으로」·배속 JS 가 페이지에 안 나가던 것을 고침</b> (docstring 안에 넣어 두었다) · 그림 자막 위 여백 .45rem -&gt; .8rem</td></tr><tr><td>v3.4</td><td>2026-09-29</td><td><b>PR <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/461">#461</a> 머지 반영</b> (<code>472f0432</code>). <code>gap_wide_env_cfg</code> · <code>gap_terrain</code> 이 이제 저장소에 있다. 그래도 컷은 설치본으로 찍는다 · <b>까닭이 한 고리 뒤로 옮겨 갔다</b>: <code>gap_env_cfg</code> 가 부르는 <code>..rough_env_cfg</code> 는 Isaac Lab 것이라 저장소에 없다</td></tr><tr><td>v3.3</td><td>2026-09-29</td><td>HUD 유무 숫자를 지금 걸린 편 수로 맞춤 (21 편 · 있음 17 -&gt; <b>23 편 · 있음 19</b>). 실패 판 컷 셋을 넣고 낡은 <code>lineage-gap-D</code> 를 뺀 뒤의 값이고 <b>세어서 넣었다</b></td></tr><tr><td>v3.2</td><td>2026-09-29</td><td><b>팀장 피드백 3 차</b> · <code>stepping_stones</code> 를 <b>3 열</b>로 (v1 못 건넘 · v2 못 건넘 · <b>v2 건넘</b>) 하고 속도별 성분표를 넣음 · <code>gap</code> D 를 <b>못 건너는 판</b>(전진 0.99 m · 시드 46)으로 갈고 그것이 이 속도에서 소수 쪽임을 밝힘 · <b><code>stairs_inv</code> 의 「다시 구워야 한다」 를 철회</b> (3 % 는 추종 한 칸이고 생존 100 % · 전진 99 % 라 걸린 컷이 이미 그 판이다) · <b>열어 둔 물음 (사)</b>: 지형별 성공률이 지형 판 하나의 값일 수 있다 · <b><code>stepping_stones</code> 난이도 벼랑</b>을 적음 (0.1 은 100 % · 0.6 부터 전진 0 %)</td></tr><tr><td>v3.1</td><td>2026-09-29</td><td><b>평지 축 2 컷 열한 편에 HUD</b> (프로브 아홉 + 회전 낙상 둘) · 명령 vx·wz 를 숫자로 적고 <b>명령이 바뀐 시각에 세로 금</b> · 방향 명령 게이지와 <b>잰 누적 회전각</b> · 넘어진 시각 표시 · <b>판정 하네스를 한 줄도 안 고쳤다</b> (이미 굽던 시계열 parquet 을 읽는다) · 「축 2 컷에는 HUD 를 못 붙인다」 던 앞 판 서술을 <b>철회</b> (13 절)</td></tr><tr><td>v3.0</td><td>2026-09-29</td><td><b>팀장 피드백 2 차</b> · <code>forward_gap</code> 대 <code>omni_gap</code> <b>학습 지형 비교 컷</b>을 6-6 에 넣음 (설치본 cfg 로 찍음 · 저장소 사슬이 닫히지 않는 것을 확인하고 PR <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/461">#461</a> 을 근거로 적음) · 보고서에 남아 있던 <b>단독 영상 셋을 갤러리 포맷으로</b> 옮겨 배속·함께 재생을 붙임 (울타리 밖 단독 영상 0 편)</td></tr><tr><td>v2.9</td><td>2026-09-29</td><td><b>학습 진행 영상을 대군 시점으로 다시</b> (험지 여섯 종 격자 위 1,024 마리 · 조각마다 <code>iter N</code> 을 태움 · 원본 37.8 px/m 로 로봇 26 px)</td></tr><tr><td>v2.8</td><td>2026-09-29</td><td>「한 섹션 확대」를 뺌 (팀장: 별 의미 없다) · 대군 컷 하나로 정리</td></tr><tr><td>v2.7</td><td>2026-09-29</td><td><b>비교 묶음 여섯을 갤러리 포맷 3 열로</b> · 함께 재생 · 처음으로 · 배속 0.25/0.5/1/2 (<code>mdpage</code> 에 <code>compare</code> 울타리 추가)</td></tr><tr><td>v2.6</td><td>2026-09-29</td><td><b>팀장 피드백 1 차</b> · 회전 낙상 컷을 6-9 로 · 계보 <code>gap</code> 컷을 6-4 로 옮겨 흐름에 붙임 · 대군 컷을 «로봇이 보이는» 판으로 갈아 끼움(원본 기준 7 px -&gt; 26 px) · <b>틀린 자막 셋을 trace 로 재서 고침</b> (<code>gap</code> D 와 <code>stairs_inv</code> v2 는 둘 다 건너는 판이었다 · <code>omni_gap</code> 은 지형이 아니라 학습 지형)</td></tr><tr><td>v2.5</td><td>2026-09-29</td><td>2 절에 <b>세 속도 평균임과 허브 카드(1.0 m/s 단독)와의 차이</b>를 속도별 표로 밝힘 · 13 절에 <b>HUD 없는 컷 13 편</b>을 전수로 적음 · 허브 첫 화면이 정정 전 10종 대신 <b>정직한 8종</b>을 머리기사로 쓰게 고침</td></tr><tr><td>v2.4</td><td>2026-09-28</td><td><b>그림 8 · 실제 촬영 위에 그린 <code>height_scan</code></b> (187 점을 점마다 투영 · 체크포인트 235-48 로 반증) · <code>stepping_stones</code> 컷을 보고서에 직접 검 · <code>omni_gap</code> 과 <code>forward_gap</code> 차이 설명</td></tr><tr><td>v2.3</td><td>2026-09-28</td><td><b>구워 놓고 웹에 안 올렸던 컷 18 편을 건다</b> · 축 2 세 판 나란히(stop·hold·turn × NVIDIA·v1·v2) · 회전 낙상 v2a·v2b · 계보 gap D·v1·v2 · 판정 밖 하락 · 대군 1,024</td></tr><tr><td>v2.2</td><td>2026-09-28</td><td>지형 카탈로그 열여섯 종(그림 1) · <b>7 절에 시작점(<code>resume: true</code>) 추가</b> · 학습 진행 48.4 초와 한 섹션 확대 10 초 · 확장 축 2 에 v2g2 줄 · 그림 번호 문서 차례로</td></tr><tr><td>v2.1</td><td>2026-09-28</td><td>계보 도식 · 터진 판 도식 · 근거 영상 전체 절</td></tr><tr><td>v2.0</td><td>2026-09-28</td><td>계보 절(A -&gt; v2g2 · 자식들 · 시드 재현) · 성분 분해 · 레시피 · 축 2 아홉 칸 · 학습이 터진 기록 · 재현 · 난이도 0.8 실측 · NVIDIA 난이도 곡선 열 점</td></tr><tr><td>v1.0</td><td>2026-09-28</td><td>처음 씀. 「미경험」을 여덟 종으로 바로잡음 · 도식 넉 장 · 멈출 기준 · 다음 단계</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+/* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
+   갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
+   부품으로 못 가져온다.
+
+   **있을 때만 붙인다.** 이 파일 머리말에 적힌 F-05 와 같은 종류의 실수를
+   반복하지 않는다 (없는 요소에 리스너를 붙여 98 장이 죽었다). */
+document.querySelectorAll('[data-vcmp]').forEach(function (box) {
+  var vids = Array.prototype.slice.call(box.querySelectorAll('video'));
+  if (!vids.length) { return; }
+
+  var play = box.querySelector('[data-vcmp-play]');
+  var rew = box.querySelector('[data-vcmp-rewind]');
+  var rateBtns = Array.prototype.slice.call(
+    box.querySelectorAll('[data-vcmp-rate]'));
+  var rate = 1;
+
+  function label() {
+    if (!play) { return; }
+    var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+    play.textContent = playing ? '함께 멈춤' : '함께 재생';
+  }
+
+  /* `load()` 가 playbackRate 를 1 로 되돌린다. 갤러리에서 겪은 것과 같다
+     (gallery.js 105행). 그래서 metadata 가 올 때마다 다시 박는다. */
+  vids.forEach(function (v) {
+    v.addEventListener('loadedmetadata', function () { v.playbackRate = rate; });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+    v.addEventListener('ended', label);
+  });
+
+  if (play) {
+    play.addEventListener('click', function () {
+      var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+      vids.forEach(function (v) {
+        v.playbackRate = rate;
+        if (playing) { v.pause(); } else { v.play().catch(function () {}); }
+      });
+      label();
+    });
+  }
+
+  if (rew) {
+    rew.addEventListener('click', function () {
+      vids.forEach(function (v) { v.currentTime = 0; v.playbackRate = rate; });
+      label();
+    });
+  }
+
+  rateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rate = parseFloat(btn.getAttribute('data-vcmp-rate')) || 1;
+      rateBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      vids.forEach(function (v) { v.playbackRate = rate; });
+    });
+  });
+
+  label();
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<style>
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
+   그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
+   `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+</style>
+
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpj4_ugplx</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>
