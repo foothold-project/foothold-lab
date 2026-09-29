@@ -667,6 +667,192 @@ def environment_record():
     return record
 
 
+def policy_provenance(checkpoint_path):
+    """이 정책이 «어떤 조건으로 학습됐는가» 를 평가 기록에 같이 남긴다.
+
+    2026-09-11 에 배포한 foothold-v1 이 NVIDIA Go2 rough 에서 명령 6줄과
+    리셋 3줄을 좁힌 전진 전용 설정으로 학습됐는데, 그 사실이 어느 실행
+    기록에도 없었다. 평가는 0.5 · 1.0 · 1.5 m/s 직진만 재므로 **학습 명령
+    범위 안에서만 시험을 본 셈**이었고, 잃은 능력(정지 · 저속 · 회전)이
+    한 달 가까이 안 보였다.
+
+    세 가지를 적는다.
+
+    - `training_agent_cfg` · **출발 체크포인트**. rsl_rl 이 학습 시각에
+      남긴 agent.yaml 의 resume · load_run · load_checkpoint
+    - `training_env_cfg` · **학습한 명령 범위**. 같은 시각의 env.yaml 에서
+      기계가 뽑는다. 이것이 근거다
+    - `model_card` 와 `card_matches_env_cfg` · 모델 카드는 **사람이 적은
+      것**이라 실물과 어긋날 수 있다. 그래서 근거로 쓰지 않고 env.yaml 과
+      **대조만** 한다. 어긋나면 그 사실을 적는다
+
+    셋 다 없어도 평가는 그대로 돈다. 못 읽은 것은 못 읽었다고 적는다.
+    """
+    record = {"checkpoint": checkpoint_path}
+
+    def attempt(key, fn):
+        try:
+            record[key] = fn()
+        except Exception as error:  # noqa: BLE001
+            record[key] = f"<못 읽음: {error}>"
+
+    ckpt_dir = os.path.dirname(checkpoint_path or "")
+    stem = os.path.splitext(os.path.basename(checkpoint_path or ""))[0]
+
+    def sidecar(suffix):
+        """rsl_rl 로그는 <런>/params/<이름>, models/ 는 <정책>.<이름> 이다."""
+        candidates = [
+            os.path.join(ckpt_dir, "params", suffix),
+            os.path.join(ckpt_dir, stem + "." + suffix),
+        ]
+
+        return next((c for c in candidates if os.path.isfile(c)), None), candidates
+
+    def training_agent_cfg():
+        path, candidates = sidecar("agent.yaml")
+
+        if path is None:
+            return "<없음: %s>" % " · ".join(candidates)
+
+        wanted = ("resume", "load_run", "load_checkpoint", "max_iterations",
+                  "experiment_name", "run_name", "seed")
+        found = {}
+
+        with io.open(path, encoding="utf-8") as f:
+            for line in f:
+                key = line.split(":", 1)[0].strip()
+
+                if key in wanted and key not in found:
+                    found[key] = line.split(":", 1)[1].strip()
+
+        return found or "<빈 값>"
+
+    attempt("training_agent_cfg", training_agent_cfg)
+
+    def training_env_cfg():
+        """학습 시각 저장본에서 «기계가 적은» 명령 조건을 뽑는다."""
+        import yaml  # Isaac 환경에 이미 있다. 없으면 attempt 가 잡는다
+
+        path, candidates = sidecar("env.yaml")
+
+        if path is None:
+            return "<없음: %s>" % " · ".join(candidates)
+
+        # 저장본에 !!python/tuple 같은 꼬리표가 붙어 SafeLoader 로는 못 읽는다.
+        # 꼬리표를 무시하고 값만 가져온다. 어떤 객체도 만들지 않는다.
+        class Loose(yaml.SafeLoader):
+            pass
+
+        def ignore_tag(loader, tag_suffix, node):
+            if isinstance(node, yaml.SequenceNode):
+                return loader.construct_sequence(node, deep=True)
+
+            if isinstance(node, yaml.MappingNode):
+                return loader.construct_mapping(node, deep=True)
+
+            return loader.construct_scalar(node)
+
+        Loose.add_multi_constructor("", ignore_tag)
+
+        with io.open(path, encoding="utf-8") as f:
+            cfg = yaml.load(f, Loose)
+
+        def dig(*keys):
+            node = cfg
+
+            for key in keys:
+                if not isinstance(node, dict) or key not in node:
+                    return None
+
+                node = node[key]
+
+            return node
+
+        command = dig("commands", "base_velocity") or {}
+        ranges = command.get("ranges") or {}
+
+        return {
+            "source": os.path.basename(path),
+            "lin_vel_x": ranges.get("lin_vel_x"),
+            "lin_vel_y": ranges.get("lin_vel_y"),
+            "ang_vel_z": ranges.get("ang_vel_z"),
+            "heading_command": command.get("heading_command"),
+            "rel_heading_envs": command.get("rel_heading_envs"),
+            "rel_standing_envs": command.get("rel_standing_envs"),
+            "reset_pose_range": dig("events", "reset_base", "params", "pose_range"),
+            "max_init_terrain_level": dig("scene", "terrain", "max_init_terrain_level"),
+        }
+
+    attempt("training_env_cfg", training_env_cfg)
+
+    def model_card():
+        path = os.path.join(_HERE, "models", stem + ".json")
+
+        if not os.path.isfile(path):
+            return "<없음: %s>" % path
+
+        with io.open(path, encoding="utf-8") as f:
+            card = json.load(f)
+
+        training = card.get("training", {})
+
+        return {
+            "path": os.path.relpath(path, _HERE).replace("\\", "/"),
+            "started_from": training.get("started_from"),
+            "command_conditions": training.get("command_conditions"),
+            "known_limits_count": len(card.get("known_limits", [])),
+        }
+
+    attempt("model_card", model_card)
+
+    def card_matches_env_cfg():
+        """카드가 실물과 맞는가. 어긋나면 카드가 거짓말을 시작한 것이다."""
+        machine = record.get("training_env_cfg")
+        card = record.get("model_card")
+
+        if not isinstance(machine, dict) or not isinstance(card, dict):
+            return "<대조 못 함: 한쪽을 못 읽었다>"
+
+        stated = card.get("command_conditions")
+
+        if not isinstance(stated, dict):
+            return "<대조 못 함: 카드에 command_conditions 가 없다>"
+
+        pairs = (
+            ("lin_vel_x_mps", "lin_vel_x"),
+            ("lin_vel_y_mps", "lin_vel_y"),
+            ("ang_vel_z_radps", "ang_vel_z"),
+            ("heading_command", "heading_command"),
+            ("rel_heading_envs", "rel_heading_envs"),
+            ("rel_standing_envs", "rel_standing_envs"),
+            ("max_init_terrain_level", "max_init_terrain_level"),
+        )
+        mismatch = {}
+
+        for card_key, env_key in pairs:
+            entry = stated.get(card_key)
+            said = entry.get("this") if isinstance(entry, dict) else entry
+
+            if said is None:
+                continue
+
+            actual = machine.get(env_key)
+
+            if isinstance(said, (list, tuple)) or isinstance(actual, (list, tuple)):
+                same = list(said or []) == list(actual or [])
+            else:
+                same = said == actual
+
+            if not same:
+                mismatch[card_key] = {"card": said, "env_yaml": actual}
+
+        return "일치" if not mismatch else {"어긋남": mismatch}
+
+    attempt("card_matches_env_cfg", card_matches_env_cfg)
+
+    return record
+
+
 def save_run_manifest(output_dir, extra):
     """무엇으로 어떻게 쟀는지. 사람이 읽는 조건 기록은 이것을 근거로 쓴다."""
     path = os.path.join(output_dir, "run_manifest.json")
@@ -1778,6 +1964,8 @@ def main():
             "harness": "sim/eval/eval_generalization.py",
             "policy_checkpoint": resume_path,
             "policy_sha256": file_sha256(resume_path),
+            # 학습 조건의 출처. 없으면 「없음」 이라고 적힌다 (policy_provenance 주석 참고)
+            "policy_provenance": policy_provenance(resume_path),
             "started_at_utc": started_at,
             "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "environment": environment_record(),
