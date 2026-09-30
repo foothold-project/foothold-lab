@@ -48,4 +48,8 @@ candidate = ROOT / 'assets/go2-reference/go2-side-neutral-v2.png'
 if candidate.exists():
     section = '''<section id="generated-reference"><h2>배경 정리 후보 · 원본과 비교</h2><p>공식 측면 보행 프레임을 참조해 Higgsfield에 배경 정리를 요청한 결과입니다. 생성 이미지이므로 공식 원본과 구분합니다. 최종 캐릭터 시트 승인은 아직 하지 않았습니다.</p><a href="../assets/go2-reference/go2-side-neutral-v2.png"><img style="width:100%;height:auto" src="../assets/go2-reference/go2-side-neutral-v2.png" alt="공식 측면 프레임 기반 배경 정리 후보"></a><p>첫 다면 생성 시트는 별도 머리·센서 중복·다리와 후면 변형 때문에 제외했습니다. 여러 방향을 한꺼번에 발명하는 대신 공식 각도별 원본의 외형을 보존하는 방식으로 수정합니다.</p></section>'''
     page = page.replace('</div></div></div><section>', '</div></div></div>'+section+'<section>',1)
+sunburst = ROOT / 'assets/go2-reference/go2-character-sunburst-v1.png'
+if sunburst.exists():
+    section = '''<section id="sunburst-sheet"><h2>Go2 캐릭터 시트 · Sunburst 시안</h2><p>공식 측면·정면·후면 자료 3장으로 생성한 4방향 전신 시트입니다. GPT Image 2.5 Sunburst · 2K · high · 1회 요청. 제작 참조 후보이며 공식 제품 사진이나 도면은 아닙니다.</p><a href="../assets/go2-reference/go2-character-sunburst-v1.png"><img style="width:100%;height:auto" src="../assets/go2-reference/go2-character-sunburst-v1.png" alt="Go2 정면 측면 후면 사선 캐릭터 시트"></a><p>검토: 첫 결과의 별도 머리와 중복 센서 오류는 보이지 않습니다. 발끝 마모와 후면 그릴 세부는 원본 그대로라고 확인할 수 없으며, 실제 제품의 세부 치수를 검증한 결과는 아닙니다. <a href="../GO2-SUNBURST-PROMPT.md">프롬프트·입력 자료</a></p></section>'''
+    page = page.replace('</header>', '</header>'+section,1)
 (ROOT / 'output/FOOTHOLD-Go2-character-sheet.html').write_text(page,encoding='utf-8')
