@@ -4,12 +4,14 @@
 > 작성: Codex · 2026-09-30 21:00
 > 근거: 사용자 최신 조명 참고·바닥 카메라 통과·정면 앉기 요청
 > 요지: E2는 고정광 분위기 공개, E5는 낮은 카메라 통과 후 후면 오르기와 정면 앉기로 연결한다.
-> 상태: 이미지·HTML 반영 · 영상 문안 준비 · Higgsfield 미제출
-> 판: v0.2
+> 상태: E2 참조 기반 이미지 시안 제작 · 영상 문안 준비 · 영상 미제출
+> 판: v0.3
 
 이슈: [#490](https://github.com/foothold-project/foothold-lab/issues/490). 이전 E2 탐색광과 E5 후면 앉기 설계를 대체한다. 현재 HTML은 정지 이미지 전환이며 아래 동작을 실제 영상으로 생성한 것은 아니다.
 
 ## 공통 생성 조건 · 최신 기준
+
+O1의 손전등 표현은 빛의 움직임을 이해시키기 위한 비유다. 실제 손전등 소품·손·사람을 생성하지 않는다. E2는 탐색광이 아니라 고정된 빛 속으로 Go2가 걸어 들어오는 장면이다. 캐릭터 시트 적용 후 E2 이미지부터 확인하며, 다른 컷과 영상 일괄 생성은 아직 승인 범위가 아니다.
 
 [전체 연출 점검](FILM-DIRECTOR-NOTES.md)을 함께 따른다. Seedance 초안은 `generate_audio=true`로 현장 소리를 포함한다. 전체 사운드는 이후 새로 구성·믹싱한다. 아래 문안은 기존 정지 원화가 동작을 완성했다는 뜻이 아니다.
 
@@ -24,7 +26,7 @@ Photographic realism with restrained local contrast and natural highlight roll-o
 기존 원화 v6는 조명 방향 참고다. 새 동작은 로봇이 더 뒤쪽 어둠에서 빛 안으로 걸어 나온다. 영상 제작 전 시작 프레임의 로봇을 뒤로 배치하고 주변을 더 어둡게 맞춘다. 현재 같은 위치의 두 원화를 그대로 시작·끝에 고정하지 않는다. 끝은 assets/ending-e2-mood-end-v6.png의 중앙 중경 위치. 기본 5초 후보.
 
 ```text
-One continuous 5-second cinematic reveal, 16:9. Locked frontal camera, slightly elevated, looking into a vast almost black ruined industrial hall. A fixed overhead/backlight remains visible as a restrained shaft in thin haze. Go2 begins farther back in deep darkness, only a faint silhouette. The same silver quadruped walks slowly forward along the central axis, entering the fixed pool of light until its face, shell and limbs become clearly readable in the central midground. Reveal the robot THROUGH ITS MOTION into light, not by a sweeping flashlight or global exposure ramp. Stop before it becomes a foreground close-up. Consistent four-legged gait and contact, no gliding. Light direction and camera remain stable. No torch, searching beam, orbit, zoom, teleportation, human, text or HUD. Sparse distant drips and footfalls approach naturally; restrained motor sound and room reverberation, no music or speech.
+One continuous 5-second cinematic reveal, 16:9. Locked frontal camera, slightly elevated, looking into a vast almost black ruined industrial hall. A fixed overhead/backlight remains visible as a restrained shaft in thin haze. Go2 begins farther back in deep darkness, only a faint silhouette. The same matte light-gray Unitree Go2 quadruped walks slowly forward along the central axis, entering the fixed pool of light until its face, shell and limbs become clearly readable in the central midground. Reveal the robot THROUGH ITS MOTION into light, not by a sweeping flashlight or global exposure ramp. Stop before it becomes a foreground close-up. Consistent four-legged gait and contact, no gliding. Light direction and camera remain stable. No torch, searching beam, orbit, zoom, teleportation, human, text or HUD. Sparse distant drips and footfalls approach naturally; restrained motor sound and room reverberation, no music or speech.
 ```
 
 ## E5pre · 바닥 카메라 위를 통과
@@ -74,3 +76,4 @@ HUD는 별도 그래픽으로 정확히 합성한다. 자세·속도·관측 갱
 |---|---|---|
 | v0.2 | 2026-09-30 | E2 뒤에서 걸어 나옴, 더 어두운 시작, E5 발 위치 강제 제거·앉기 직전 컷, 원본 소리 포함·사진 재질 기준 |
 | v0.1 | 2026-09-30 | 고정광 공개·바닥 카메라 통과·정면 앉기 이미지와 영상 문안 |
+| v0.3 | 2026-09-30 | 손전등 소품 배제, 공식 회색 Go2 외형과 이미지 우선 승인 범위 명시 |
