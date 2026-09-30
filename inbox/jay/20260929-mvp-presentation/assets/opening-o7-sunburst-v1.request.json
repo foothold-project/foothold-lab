@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "5f199bbc-a368-46d4-acaa-0dc1fd244a77"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "acda2e91-a241-4e2e-908c-31e0adfa48b2"
+    }
+  ],
+  "prompt": "Create ONE full-bleed 16:9 live-action cinema close-up, the foot-contact keyframe O7, continuing the same ruined industrial environment as image 4.\n\nREFERENCE ROLES: Image 1 is the approved LOW FIXED CAMERA / FOOT CONTACT / BROKEN CONCRETE composition, not an authoritative foot anatomy reference. Images 2 and 3 are the APPROVED ACTUAL UNITREE GO2 detail and character anatomy. Image 4 defines the dark industrial atmosphere and restrained materials; do not reproduce its distant camera or full-body robot.\n\nPreserve image 1's intimate low near-ground view, focus on a SINGLE near front foot just planted securely on the RIGHT/HAND FAR concrete lip, with the slender curved lower leg entering from upper left. This robot is traveling SCREEN LEFT TO SCREEN RIGHT across a narrow gap. Show a little of the departure lip at lower left, the dark gap between the lips, and the solid landing surface continuing to screen right. Keep the close-up compelling: primary foot near center-right, enough negative space for following legs to cross later in video. No whole robot reveal, face, giant hip or full body. Other legs, if visible at all, must be physically plausible soft out-of-focus background fragments, not extra disconnected feet. The planted foot must have a clear load-bearing contact and contact shadow, no floating, penetration or impossible overhang. Gap edges stay rigid and support the robot. A few loose small grains and concrete chips rest at the edge ready to fall later, not a frozen explosion.\n\nReplace the old reference's chunky cylindrical rubber boot with the exact SMALL ROUNDED BLACK RUBBER FOOT and SLIM curved gray lower leg from images 2/3. Match seam placement, taper, material and mild wear from the approved detail sheet. Do not exaggerate scratches, invent panels or thicken the shin.\n\nMATERIAL AND LIGHTING CONTINUITY IS ESSENTIAL: Low-key practical cinematic light, dark room, restrained highlights illuminating the contact locally. Satin-gray painted leg with fine uneven surface roughness, matte black rubber that absorbs light. Concrete has irregular DRY dusty patches, damp darker patches and only a few tiny localized wet highlights. Sparse dull rust on exposed rebar. NO pervasive mirror-wet floor, HDR tone-mapping, crunchy microcontrast, oversharpened pebbles, sparkly highlights, chrome leg, waxy plastic, glossy rubber or synthetic grit filter. Soft natural highlight roll-off; darkness remains real without hiding the foot contact. Real photographic shallow depth of field, focus on rubber/concrete contact and nearby crumbling edge. Faint deep background haze only. No text, HUD, laser scan, collage, labels, flashlight, person or camera motion blur."
+}

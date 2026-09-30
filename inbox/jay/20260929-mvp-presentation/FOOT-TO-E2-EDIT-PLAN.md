@@ -4,8 +4,8 @@
 > 작성: Codex · 2026-10-01 00:55
 > 근거: 사용자 두 영상 직접 평가, 좌→우 발 통과와 블랙 연결 지시, 기존 O7 원화 직접 열람
 > 요지: Seedance를 우선 후보로 두고 앞 발 컷·블랙·E2를 먼저 연결한다.
-> 상태: 사용자 승인 대기. 추가 영상 생성·편집 미실행
-> 판: v1.0
+> 상태: 이미지 사용자 승인 완료. 영상 1편·연결 시안 제작 완료, 사용자 확인 대기
+> 판: v1.2
 
 ## 사용자 판단과 작업 선택
 
@@ -15,7 +15,7 @@
 
 ## 이번 승인 범위
 
-1. 기존에 선택한 O7 발 접촉 구도와 승인 Go2 디테일 시트를 참조해 Seedance 2.5 발 통과 영상 **1편** 제작. 5초·480p·음향 포함. 새 이미지나 다른 모델 비교를 추가하지 않는다.
+1. 사용자 후속 지시에 따라 **O7 이미지 한 장을 먼저 제작·확인**한다. 구도는 사용자가 고른 발 접촉 이미지, 외형은 승인 캐릭터·디테일 시트, 재질·분위기는 승인 E2a를 참조한다. Sunburst 2K high 견적 2.75크레딧. 이미지 승인 후 Seedance 2.5 발 통과 영상 **1편**을 제작한다. 5초·480p·음향 포함.
 2. 발 통과 원본과 기존 Seedance E2를 편집해 **연결 시안 1편** 제작. E2 원본은 재생성하지 않는다.
 3. 원본·연결본·요청·비용·검토 결과를 HTML과 Git에 기록하고 사용자에게 보여준다.
 
@@ -23,7 +23,7 @@
 
 ## 발 컷 생성 문안
 
-기존 원화는 `assets/opening-storyboard-v3.png`의 우하단 O7이다. 시트 전체를 시작 이미지로 보내지 않고 해당 컷만 사용한다. 다른 패널의 로봇이나 HUD를 참조로 섞지 않는다. 외형은 승인 캐릭터·디테일 참조로 보완한다.
+기존 원화는 `assets/opening-storyboard-v3.png`의 우하단 O7이며, 사용자가 직접 첨부한 단독 발 컷을 [구도 참조](assets/opening-o7-user-selected-reference.png)로 보존했다. 시트 전체가 아닌 이 단독 컷을 이미지 제작에 사용한다. 다른 패널의 로봇이나 HUD를 참조로 섞지 않는다. 외형은 승인 캐릭터·디테일 참조로 보완한다.
 
 ```text
 One continuous five-second close-up at ground level, camera locked. Match the approved foot-contact composition and the same Unitree Go2's slim leg links and rounded black rubber foot caps. The robot travels from SCREEN LEFT TO SCREEN RIGHT across this narrow gap. Show the front feet landing on the far concrete ledge first, then the hind feet clearing and landing as the body continues to the right. Show the feet sequentially in the close crop, not four feet squeezed into the frame at once. Coherent quadrupedal stepping and weight transfer, no simultaneous leap, sliding, extra legs or foot penetration. A few loose grains and small concrete chips crumble naturally from the ledge as the hind feet push off, falling down into the gap. Keep the load-bearing ledge intact. No large collapse or explosive dust. Hold the locked framing long enough to retain the last hind-foot exit and falling debris as editing handles. Same dark industrial environment, restrained highlights and uneven damp concrete, no glossy plastic or HDR. Generate synchronized rubber foot contacts, restrained motors, granular scraping and small falling fragments with the same cavernous room ambience. No speech, score, text, HUD or camera whip. Deliver clean footage without a baked wipe, fade or black frame; the left-to-right black transition will be matched in the edit.
@@ -55,3 +55,19 @@ E2는 기존 원본에서 사용할 구간을 고른다. 후반의 틈 접근이
 | 판 | 날짜 | 변경 |
 |---|---|---|
 | v1.0 | 2026-10-01 | 사용자 Seedance 선호 반영, 앞 발 컷 1편과 기존 E2 연결 편집 승인안 |
+
+## 이미지 먼저 확인하는 순서와 재질 기준
+
+사용자가 “응 진행해. 발컷은 근데 이미지 먼저 하고 진행 안해도 되?”라고 물었고, 발·관절 클로즈업은 외형과 디딤 위치를 먼저 확인하는 순서로 수정했다. 이어 HDR·재질의 일관성을 재강조했다. 현재 승인 범위는 발 이미지 한 장 제작이다. 생성 결과 승인 전에 발 영상·편집 작업을 시작하지 않는다.
+
+기존 컷의 두꺼운 원통형 발을 그대로 복제하지 않고 승인한 작은 둥근 발고무와 가느다란 회색 링크를 반영한다. 회색 외장은 은은한 반사, 발고무는 무광. 콘크리트는 마른 먼지·어둡게 젖은 곳·작은 국소 반사를 구분한다. 과한 HDR, 강한 미세 대비, 지나친 선명도, 플라스틱 광택, 전체적으로 거울처럼 젖은 바닥을 금지한다. 임의로 상처를 늘리지 않는다.
+
+실제 이미지 요청: [O7 Sunburst v1](assets/opening-o7-sunburst-v1.request.json). 구도·외형·재질 참조의 역할을 각각 명시했다. 이미지에서는 접촉 위치와 외형을 확인하며, 앞발 두 개 이후 뒷발이 통과하는 시간 순서는 영상에서 확인한다.
+
+| v1.1 | 2026-10-01 | 사용자 지시에 따라 이미지 선확인 단계 복원, HDR·외형·재질 공통 기준 명시 |
+
+## 제작 결과
+
+2026-10-01 사용자가 O7 이미지를 승인했다. 이에 따라 Seedance 영상 1편과 기존 E2 연결 편집을 완료했다. 위 이미지 승인 대기 설명은 당시 제작 순서 기록이며 현재 승인 상태는 이 절을 따른다. [결과·미확인 항목](O7-VIDEO-AND-CONNECTION.md), [재생 페이지](output/FOOTHOLD-foot-to-E2.html).
+
+| v1.2 | 2026-10-01 | O7 이미지 승인, 영상·블랙 연결 시안 제작 결과 반영 |
