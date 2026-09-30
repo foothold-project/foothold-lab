@@ -1,0 +1,23 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 8,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "f9215028-d71e-4f17-8fd8-921e7f38c2b8"
+    },
+    {
+      "role": "end_image",
+      "value": "adae6dc1-97bc-4815-8970-4b00abe9bdd3"
+    }
+  ],
+  "prompt": "O1 THROUGH O2 APPROACH: eight seconds, one continuous first-person view in the SAME large industrial hall as image 1. Image 1 is a GEOMETRY reference only: replace its ambient daylight entirely. Image 2 is the final downward-looking floor framing.\n\nCRITICAL LIGHT SOURCE: one unseen search light is immediately BEHIND/ALONGSIDE THE CAMERA LENS, shining FORWARD along the viewing direction. The source travels and aims with the camera. It does NOT originate inside the hall, from a wall, pillar, window or ceiling. Never show a diagonal white shaft entering from a distant left column. The audience sees illuminated SURFACE PATCHES ahead, NOT a spotlight source or giant visible cone in the room. No hand, torch prop, person, robot or limbs.\n\n0.0–1.2 seconds: COMPLETELY BLACK image except a tiny far-away central RED beacon giving TWO short pulses at about 0.25 and 0.8 seconds. No columns, roof, windows or floor visible yet. Lock ambient illumination near zero for the ENTIRE shot.\n1.2–3.0 seconds: the camera-side light aims slightly left; a small soft-edged patch finds the near column and its base, then sweeps down across the jagged slab edge beside dark water. Only the illuminated surfaces become visible. Unlit surfaces stay black. Reveal porous concrete, rusted pipe and broken edges, not the whole room at once.\n3.0–4.8 seconds: camera gently looks across the centered forward route. Light from the LENS SIDE tracks across a broken slab top and its missing section, briefly catches water lower down, then a farther disconnected foothold. The far red target stays tiny. Convey dangerous irregular footing and large scale through isolated discoveries. No floodlight, ceiling activation, sunlight, exposure lift or brightening of the surrounding dark hall.\n4.8–7.2 seconds: physically pitch the same low camera DOWN toward the rubble-covered supporting floor immediately beneath/in front of the lens. The forward hall exits the TOP of frame as nearby gravel rises into view. The same camera-origin light pool moves down with the gaze. End at image 2's localized lit coarse gravel floor. No zoom, dolly across a gap, morph, dissolve or teleport.\n7.2–8.0 seconds: hold the close floor with a slight continuing local light sweep, ready for the separate O2 close inspection. Never restore room lighting.\n\nRough diffuse uneven dry/damp concrete, dull rust, tiny irregular reflections only within the light patch. Soft highlight roll-off, no HDR glare, crunchy sharpness or wet plastic surfaces. Fine haze only in physically lit patches, not a bright cloud over the whole view. Sound: quiet cavernous industrial room, sparse drips, faint sensor-pivot hum following the gaze. No footsteps yet, voices, music, alarms or dramatic impact. Black beginning and camera-origin light are mandatory. Exact source-side direction is more important than a theatrical visible beam."
+}

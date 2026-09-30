@@ -41,5 +41,5 @@ export default async ({project}) => {
  // Short horizontal signal interruption, then genuine black before Q&A.
  for(const [dt,h,y] of [[0,5,164],[.08,2,308],[.16,4,241]])p.compose(<rect x={0} y={y} width={854} height={h} fill="#87908b" opacity={.25}/>,{at:plan.e7+4.65+dt,dur:.042,name:'Signal interference'});
  p.compose(<rect x={0} y={0} width={854} height={480} fill="#000" animate={[{property:'opacity',from:0,to:1,at:0,duration:.15}]}/>,{at:plan.e7+4.85,dur:.65,name:'Signal off, final black'});
- await p.render(root+'/master-picture.mp4',{draft:false,bitrate:'3M'});
+ await p.render(root+'/master-picture.mp4',{draft:false,bitrate:3000000});
 };

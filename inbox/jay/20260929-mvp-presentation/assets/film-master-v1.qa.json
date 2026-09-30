@@ -1,0 +1,99 @@
+{
+  "videos": [
+    {
+      "file": "film-master-v1.mp4",
+      "duration": 69.502035,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-opening-v1.mp4",
+      "duration": 31.125,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-ending-v1.mp4",
+      "duration": 38.375,
+      "width": 854,
+      "height": 480
+    }
+  ],
+  "shots": [
+    {
+      "id": "O1",
+      "button": true
+    },
+    {
+      "id": "O2",
+      "button": true
+    },
+    {
+      "id": "O3",
+      "button": true
+    },
+    {
+      "id": "O3b",
+      "button": true
+    },
+    {
+      "id": "O4",
+      "button": true
+    },
+    {
+      "id": "O5",
+      "button": true
+    },
+    {
+      "id": "O6",
+      "button": true
+    },
+    {
+      "id": "O7",
+      "button": true
+    },
+    {
+      "id": "E2",
+      "button": true
+    },
+    {
+      "id": "E3",
+      "button": true
+    },
+    {
+      "id": "E4",
+      "button": true
+    },
+    {
+      "id": "E5pre",
+      "button": true
+    },
+    {
+      "id": "E5",
+      "button": true
+    },
+    {
+      "id": "E5b",
+      "button": true
+    },
+    {
+      "id": "E6",
+      "button": true
+    }
+  ],
+  "missingFiles": 0,
+  "e7Modal": {
+    "open": true,
+    "time": 65.000935,
+    "file": "film-master-v1.mp4"
+  },
+  "pageErrors": [],
+  "audioMeasurement": {
+    "integratedLUFS": -17.51,
+    "truePeakDBTP": -0.78,
+    "loudnessRangeLU": 3.3,
+    "source": "ffmpeg loudnorm on exported master",
+    "listeningReview": "not claimed"
+  },
+  "status": "480p review, user approval pending; frame review does not certify every generated motion"
+}

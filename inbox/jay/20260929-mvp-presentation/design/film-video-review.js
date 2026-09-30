@@ -53,3 +53,7 @@ const povIndex=all.findIndex(x=>x.d[0]==='E5pre');
 all[povIndex].fig.insertAdjacentHTML('beforeend',`<div class="extra">${mediaButtons('E5pre',povIndex)}</div>`);
 e5preState.textContent='Kling 후보 제외. E4 음원 참조 Seedance 수정본 생성 완료. 몸체 없는 보행 POV 후보이며, 스캔 표현과 발소리·앞뒤 연결은 검토 전입니다.';
 document.querySelector('#e5pre-summary-status').textContent='Seedance 수정본 생성. 표본에서 몸체 없음. 스캔 표현·발소리·앞뒤 연결 검토 전.';
+e5preState.textContent='v2는 몸체 없는 POV이지만 보행 진동이 약하고 스캔이 선 위주입니다. O6 스캔 영상과 E4 원음을 참조한 v3 생성 중. 아래 v2는 비교용입니다.';
+document.querySelector('#e5pre-summary-status').textContent='v3 생성 중. O6 표면 점군 참조·접지 충격과 보행 진동 강화.';
+const e7statusRow=[...productionSummary.querySelectorAll('tr')].find(r=>r.cells[0]?.textContent==='E7');
+e7statusRow.cells[1].textContent='v2 생성 중. 전송률 상승→적색 완료→신호 끊김→블랙까지 요청.';
