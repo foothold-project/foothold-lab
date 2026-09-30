@@ -1,0 +1,16 @@
+{
+  "job_id": "acda2e91-a241-4e2e-908c-31e0adfa48b2",
+  "status": "completed",
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_151234_acda2e91-a241-4e2e-908c-31e0adfa48b2.png",
+  "balance_before": 4978.75,
+  "balance_after": 4976,
+  "observed_balance_delta": 2.75,
+  "e2a_total_credits": 8.25,
+  "user_image_approval": "approved",
+  "review": "직접 이미지 열람: 어두운 공간을 유지하고 Go2가 뒤쪽으로 이동. 앞쪽 빛이 닿는 자리는 비어 있음. 발밑 지지면과 실제 보행의 연속성은 정지 이미지로 확정하지 않음.",
+  "user_approval_note": "사용자: 너무 뒤로 간 느낌이 있으나 승인. 이동 속도와 전체 흐름은 영상에서 확인 요청."
+}

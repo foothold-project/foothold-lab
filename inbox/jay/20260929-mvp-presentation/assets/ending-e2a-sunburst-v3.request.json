@@ -1,0 +1,20 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "08ffdb4d-4936-4712-99a3-4cecf0adc48d"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    }
+  ],
+  "prompt": "Make a precise localized edit of IMAGE 1. Preserve its near-black ROOM, camera, architecture, broken platforms, fixed overhead light shaft, small illuminated concrete patch, reflections and photographic materials. Do not brighten the environment.\n\nMOVE the single Go2 BACK, away from the camera, from its current fully readable central silhouette INTO the dark rear portion of that SAME supporting concrete platform, immediately BEHIND the lit patch. It should now be only 7-9% of the image height, centered horizontally, with its feet around 49-51% of frame height instead of the current approximately 60%. Use physically plausible perspective. Leave the original illuminated standing position EMPTY, showing its undisturbed concrete texture. No second robot, no ghost and no remaining shadow of the old robot.\n\nAt its new position the Go2 is almost swallowed by darkness: only a tiny broken rim on its head and shoulders suggests its presence. Do not render a complete clearly readable silver body. Keep the overhead light and its empty foreground pool visibly alive. It must be possible for this robot to walk FORWARD a few steps on continuous concrete into that empty light pool. Keep its feet grounded on the REAR EXTENSION OF THE SAME PLATFORM, never in a gap, water, or air. Do not add a bridge or alter the foreground gaps.\n\nImage 2 is anatomy reference only, not lighting: preserve the compact stock Unitree Go2 proportions, slim legs and small black rubber feet. Do not relocate the camera or simply darken the robot at its old position. This is the moment BEFORE the reveal, with an empty patch of light in front and the faint robot farther back. One 16:9 image, no text or HUD."
+}

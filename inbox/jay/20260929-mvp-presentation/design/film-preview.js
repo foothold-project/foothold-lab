@@ -9,8 +9,8 @@ function preview(mode){
  if(mode==='observe'){stopPreview();showStage('O5','still','원경 HUD · 로그 미연결 수치는 비워둠')}
  if(mode==='height'){stopPreview();showStage('O6','still','근거리 height scan만 · 주변 HUD 없음')}
  if(mode==='foot'){stopPreview();showStage('O7','still','복원한 발 접촉 구도 · 이후 연속 발걸음으로 연결')}
- if(mode==='reveal-start'){stopPreview();showStage('E2a','still','E2a v2 · 공간 어둠 수정 후보. 뒤쪽 출발 위치 미해결. 실제 영상 아님')}
- if(mode==='reveal'){stopPreview();showStage('E2','still','E2 새 시안 · 고정광에 도착한 상태. E2a v2는 분위기 수정 후보. 영상은 다음 단계')}
+ if(mode==='reveal-start'){stopPreview();showStage('E2a','still','E2a v3 · 뒤쪽 어둠으로 이동. 사용자 승인 완료, 실제 영상 아님')}
+ if(mode==='reveal'){stopPreview();showStage('E2','still','E2 새 시안 · 고정광에 도착한 상태. E2a v3는 뒤쪽 출발 후보. 영상은 다음 단계')}
  if(mode==='approach')schedule([[0,()=>showStage('E5pre','still','바닥 고정 카메라 · Go2가 위를 통과하는 동작은 영상 제작 문안에 기록')],[2000,()=>showStage('E5','still','뒤에서 턱을 오르는 자세')],[4200,()=>showStage('E5b','still','조금 높은 정면 원경 · 앉아 목표 응시')],[6500,()=>showStage('E6','still','목표 설비 POV · 인식과 촬영')]],7800);
  if(mode==='sit'){stopPreview();showStage('E5b','still','정면 원경 · 앞다리 지지 · 뒷다리 접고 응시')}
  if(mode==='ending')schedule([[0,()=>{completed=false;showStage('E7','still','현장 영상 전송 중')}],[1800,()=>{completed=true;showStage('E7','still','수신 확인 · MISSION COMPLETE')}],[4000,()=>{stage.dataset.phase='flicker';statusLine.textContent='신호 끊김 · 화면 종료'}],[4350,()=>{stage.dataset.phase='shutdown'}],[4550,()=>{stage.dataset.phase='off';statusLine.textContent='영상 종료 · 블랙 유지. 다음 슬라이드로 이동'}]],5000);
