@@ -1,0 +1,16 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "25c7e823-2656-4abb-97b1-105a77413e3f"
+    }
+  ],
+  "prompt": "Precisely edit the supplied image. KEEP the current camera, framing, robot SIZE, robot POSITION, robot standing pose, columns, water, and distant irregular route unchanged.\nONE essential spatial correction: the Go2 is standing on the SAME DESTINATION LANDING as the camera. There must be a continuous supported concrete floor from the robot's feet all the way to the bottom edge of the image. REMOVE the conspicuous dark vertical cliff directly IN FRONT OF the robot and REMOVE the intervening chasm between the robot's slab and foreground. Join those two surfaces into ONE continuous rough concrete upper landing at the SAME elevation. Fill this specific intervening cliff/chasm area with ground surface, matching perspective and rough dry/damp concrete. The robot must NOT remain on an isolated island.\nThe single climbed step is BEHIND the robot's hind feet, toward the distant narrow path. The path beyond its hind feet is lower. Do not add any step, cliff, trench or gap between robot and camera. Side water beyond the left/right outer edges of this modest landing stays.\nPreserve slender real gray Unitree Go2 legs and small black foot caps. Dark restrained photographic tonality, subdued local contrast, mostly matte concrete with irregular damp patches and limited puddles; soften glittering reflections. No HDR sharpening, plastic gloss, text or HUD. This is a geometry repair, not a new composition."
+}

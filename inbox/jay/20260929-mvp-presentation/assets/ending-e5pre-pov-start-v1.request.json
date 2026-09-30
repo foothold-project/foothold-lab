@@ -1,0 +1,20 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "4c80351d-e15e-469e-a601-d8cf0e24e5d4"
+    },
+    {
+      "role": "image",
+      "value": "afde734c-fce5-4e92-8dec-2c71973157d1"
+    }
+  ],
+  "prompt": "Create ONE START KEYFRAME for a robot-mounted forward POV approach shot in the SAME destination environment as the references. Reference 1 identifies the target cabinet, red beacon, one low concrete threshold and surrounding pipes. Reference 2 identifies the exact threshold crossed in the following rear-view shot; do NOT show that robot or copy its external camera.\n\nCHANGE CAMERA to the real Go2's front sensor height, approximately 40 cm above its current walking surface, starting roughly 1 meter farther BACK from reference 1's floor-camera position. This is the robot's own view facing the cabinet and threshold, not an external camera on the ground, not human eye level, not a rear follow camera. Moderate-wide optical perspective, no fisheye. No visible robot body, legs or camera apparatus. Look forward and slightly down enough to read the approach ground and upcoming low step; target cabinet and its red beacon remain centered and farther behind the step. Keep the same cabinet, asymmetrical rust patterns, large curved pipe on right, columns, destination landing and water beside approach. Preserve actual small-step scale, no giant wall or new obstacle.\n\nThis is the beginning of E5pre AFTER crossing the previous gap. A short supported uneven concrete approach lies ahead before the final step. The camera has not climbed that step. It will walk slowly forward and later scan the step, but in THIS start frame keep the scene natural-color and without scan, HUD or labels. No hole directly under the camera, no floating route. No new scene or other cabinet.\n\nMaterial and tone: visibly restrained photographic contrast and soft highlight rolloff, matte dusty concrete interspersed with darker damp patches and isolated shallow puddles. Dull rust, subdued broad water reflections, tiny red practical beacon, sparse thin mist. Suppress glittering highlights, harsh edge contrast and plastic wet coating from the references. Do not merely underexpose, fog over or blur. Do not add overhead spotlight or alter the established light direction. One coherent film frame, no collage."
+}

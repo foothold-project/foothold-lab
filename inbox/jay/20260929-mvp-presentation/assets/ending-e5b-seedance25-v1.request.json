@@ -1,0 +1,23 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "79552373-d67e-40f4-a5a0-ce195aa1c4a2"
+    },
+    {
+      "role": "end_image",
+      "value": "e5e211e7-e93a-4223-8031-1a791da6f06f"
+    }
+  ],
+  "prompt": "ONE continuous five-second cinematic shot, from the supplied APPROVED standing start frame to the supplied APPROVED seated end frame. These are the same Unitree Go2 in the same location. Keep the square-on frontal, slightly elevated, moderately wide camera LOCKED to preserve the precise start/end perspective. Do not zoom, orbit, pan, dolly or cut.\n\nACTION: The Go2 has JUST climbed the low step behind it and already taken one or two short steps onto this upper destination landing in the preceding shot. Do not repeat the climb or walk forward again. For the first roughly half second let its small body movement settle naturally. Then over about two seconds articulate the actual hip and knee joints to fold the rear legs and lower the hindquarters IN PLACE into the supplied sitting pose. Front legs remain weight bearing, front feet planted on the same points, with physically plausible small joint adjustment. No sliding feet, stretchy links, rubber morph, extra legs, human-like pelvis or falling onto the belly. Preserve compact torso, slim curved legs, small rounded rubber foot caps and front sensors throughout. Hold the settled seated pose for the final two seconds, calmly looking toward the inspection equipment immediately behind camera. Natural minute servo stabilization, not breathing like an animal.\n\nSPATIAL CONTINUITY: Keep the foreground landing, climbed rear lip, irregular narrower causeway BEHIND the Go2, surrounding black water, tall columns, pipes and debris in exactly the same positions. No new gap before the robot, isolated island, moving masonry or changes in flood level. This camera is at the destination looking BACK along the traveled path. The target and beacon are behind camera, never add a second target in the distance.\n\nPhotographic tonal/material continuity with the supplied frames: muted contrast, soft highlight rolloff, predominantly matte dusty concrete with uneven damp patches, isolated subdued puddles, dull rust, satin gray robot and matte black rubber. Do not add HDR clarity, sparkling reflections, plastic shine, aggressive sharpening, global exposure changes or brighter overhead lighting. Sparse faint mist drifting gently and an occasional small drip/ripple only; no smoke plume hiding the feet.\n\nGENERATE SYNCHRONIZED DIEGETIC AUDIO: restrained servo whirr synchronized with rear joint folding, a soft rubber contact adjustment on concrete as weight settles, sparse drips and low airy industrial room ambience with long restrained reverberation. No dialogue, lyrics, music score, trailer hit or transition whoosh. Preserve a natural sound tail for later whole-film mixing.\n\nEDIT CONTEXT ONLY: This shot follows E5 rear-view climbing and ends before E6 target POV with CV recording HUD. Deliver ONLY the frontal sitting shot with a clean stable end for that cut. Do not generate the preceding climb, following target view, HUD, titles, a fade, black frames or transition inside this clip."
+}
