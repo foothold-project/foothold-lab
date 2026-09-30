@@ -20,3 +20,8 @@
 | 원래 접지 위치와 통과 자세 | 접지와 형상이 충돌하면 지형을 임의로 바꾸지 않고 검토 대상으로 남김 |
 
 수정 문안: [E3](assets/ending-e3-v2-edit-proposal.prompt.txt), [E4](assets/ending-e4-v2-edit-proposal.prompt.txt). 두 문안 모두 기존 ending-storyboard-v2의 해당 패널을 직접 장면 참조로 지정한다. v1 실패 시안을 배경 정본으로 재사용하지 않는다. 실제 모델 제출 JSON과 참조 첨부는 아직 만들지 않았고, 추가 크레딧을 사용하지 않았다.
+
+
+## 후속 실행
+
+v2·v3 실제 제출과 결과는 [작업 목록](FILM-IMAGE-WORKLIST.md)에 기록했다. v2는 HDR 지적으로 미채택. 현재 HTML에는 재질 수정 v3를 반영했으며 사용자 승인 전이다. 위의 미실행 기록은 요청 준비 당시의 상태다.

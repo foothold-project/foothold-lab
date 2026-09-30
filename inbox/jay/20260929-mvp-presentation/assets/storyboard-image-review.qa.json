@@ -1,0 +1,54 @@
+{
+  "checked": "2026-10-01",
+  "shots": {
+    "O1": {
+      "current": "background-image:url('../assets/opening-o1-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/opening-storyboard-v6.png');background-size:200% 307.2%;background-position:0% 0.1287001287001287%",
+      "inline_comparison": true
+    },
+    "O2": {
+      "current": "background-image:url('../assets/opening-o2-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/opening-o2-overhead-v1.png');background-size:cover;background-position:center",
+      "inline_comparison": true
+    },
+    "O3": {
+      "current": "background-image:url('../assets/opening-o3-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/opening-storyboard-v3.png');background-size:200% 307.2%;background-position:100% 0.1287001287001287%",
+      "inline_comparison": true
+    },
+    "O3b": {
+      "current": "background-image:url('../assets/opening-o3b-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/opening-storyboard-v6.png');background-size:200% 307.2%;background-position:100% 0.1287001287001287%",
+      "inline_comparison": true
+    },
+    "E3": {
+      "current": "background-image:url('../assets/ending-e3-sunburst-v3.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/ending-storyboard-v2.png');background-size:200% 405.4878048780488%;background-position:0% 33.23353293413174%",
+      "inline_comparison": true
+    },
+    "E4": {
+      "current": "background-image:url('../assets/ending-e4-sunburst-v3.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/ending-storyboard-v2.png');background-size:200% 405.4878048780488%;background-position:100% 33.23353293413174%",
+      "inline_comparison": true
+    },
+    "E5pre": {
+      "current": "background-image:url('../assets/ending-e5pre-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/ending-e5-step-v1.png');background-size:cover;background-position:center",
+      "inline_comparison": true
+    },
+    "E5": {
+      "current": "background-image:url('../assets/ending-e5-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/ending-e5a-climb-centered-v2.png');background-size:cover;background-position:center",
+      "inline_comparison": true
+    },
+    "E5b": {
+      "current": "background-image:url('../assets/ending-e5b-sunburst-v1.png');background-size:cover;background-position:center",
+      "source": "background-image:url('../assets/ending-e5b-seated-front-v3.png');background-size:cover;background-position:center",
+      "inline_comparison": true
+    }
+  },
+  "errors": [],
+  "broken_images": [],
+  "mobile_overflow": false,
+  "o1_image_mask": "none"
+}

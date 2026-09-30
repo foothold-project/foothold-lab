@@ -1,5 +1,8 @@
 # FOOTHOLD 영상 다음 제작 순서
 
+> 최신 상태는 [이미지 작업 목록](FILM-IMAGE-WORKLIST.md)과 [HUD 제작 설계](HUD-VIDEO-PRODUCTION-PLAN.md)를 따른다. E3·E4 v3는 생성·스토리보드 반영 완료, 사용자 승인 전. 아래 과거의 미제작 상태와 HUD 전량 별도 합성 계획은 현재 상태가 아니다.
+
+
 > 분류: 계획
 > 작성: Codex · 2026-09-30 22:04
 > 근거: 사용자 합의 · FILM-DIRECTOR-NOTES · HIGGSFIELD-SHOT-PROMPTS · 공식 Go2 참조

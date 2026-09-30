@@ -1,5 +1,8 @@
 # 영상 최종 연출 방향과 Higgsfield 시험 제작안
 
+> 최신 상태는 [이미지 작업 목록](FILM-IMAGE-WORKLIST.md)과 [HUD 제작 설계](HUD-VIDEO-PRODUCTION-PLAN.md)를 따른다. E3·E4 v3는 생성·스토리보드 반영 완료, 사용자 승인 전. 아래 과거의 미제작 상태와 HUD 전량 별도 합성 계획은 현재 상태가 아니다.
+
+
 최신 변경: [Higgsfield 컷별 연출 문안](HIGGSFIELD-SHOT-PROMPTS.md). E2는 이동광 대신 고정광 실루엣 공개, E5는 바닥 카메라 통과·후면 오르기·정면 원경 앉기로 수정했다. 원화와 HTML 반영 완료, 영상 미제작.
 
 > 분류: 계획

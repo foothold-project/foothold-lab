@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "id": "f9433453-bd3a-4042-b384-8a3eb53309ff",
+      "type": "image",
+      "status": "pending",
+      "model": "gpt_image_2_5",
+      "params": {
+        "prompt": "SELECT ONLY SECOND ROW, RIGHT PANEL of reference image 1 (panel 4 of 8, counting left to right, top to bottom). It is the LOW SIDE VIEW of Go2 crossing broken concrete from LEFT TO RIGHT, with jagged irregular gap edges and pipes below. Output only this view. Preserve the ORIGINAL camera, robot scale and crossing pose, original asymmetrical fractured lips and cramped supports, not clean-cut parallel edges. Do not enlarge the gap or reduce it; keep the original image's geometry. This follows E3 rear travel with a cut to the side camera, not a change in robot route. It will lead to E5pre, a fixed ground camera that the robot walks over from behind toward the same mission cabinet; maintain left-to-right progression in this side shot, no reversal or new destination.\n\nThis is an EDIT of reference image 1's selected panel. Reference image 1 is the ORIGINAL approved eight-panel ending storyboard and is the sole scene/composition master. Images 2 and 3 define ONLY the Unitree Go2 identity and small foot/link details. Image 4 defines ONLY the robot's actual rear anatomy. Ignore every robot reference background, white studio, labels, grass, people and graphics. The rejected newer E3/E4 scenes are not supplied and must not be reconstructed.\n\nLOCK THE ORIGINAL SCENE: Preserve the chosen original panel's camera angle, height, perspective, robot position and apparent size, foot support locations, path silhouette, every major slab contour and relative height, irregular narrow widths, jagged missing-concrete edges, surrounding flooded pits and visible dark water, old pipework, columns, haze distribution, light-source positions and depth. Do not straighten or parallelize broken edges; do not level or resize landing slabs; do not widen the route, fill holes or add regular rectangular platforms. Do not impose a new numerical gap width. Keep exactly the original visual danger and constricted route. Do not simplify this into a safer traversable test course. No new obstacle, new wall, new room or relocated destination.\n\nONLY REQUESTED EDIT: replace the panel's approximate robot with the faithful real Unitree Go2 in images 2/3/4, maintaining original placement, pose and support locations. Compact low horizontal gray torso; front camera integrated into the front end, black housing under the front; four slim gray articulated legs with gray round upper motor housings and small rounded matte-black foot tips. Correct rear from image 4 with NO face on its rear. No thick boots, added head, neck, tail, modules, armor or extra legs. Natural occlusion. Small existing scuffs, no artificially heavy damage.\n\nMATERIAL AND TONAL CORRECTION IS ESSENTIAL, not a subtle optional finish. The scene reference is approved ONLY for geometry and composition, NOT its current glossy HDR rendering. Replace that rendering throughout the ENTIRE ENVIRONMENT, not just the robot.\nPhotographic low-key exposure with restrained contrast and soft highlight roll-off. Reduce hard white sparkles across foreground concrete, pipework and water. Preserve surrounding water and a few subdued, broken reflections; do not dry the flooded space. Concrete is predominantly rough, porous and diffuse, with irregular dusty dry patches, damp dark patches and isolated small puddles, not an evenly lacquered glossy surface. Rust is dull and coarse, not polished copper. Rubber feet absorb light; painted gray robot shell has broad soft satin reflections, never chrome or plastic glare.\nRemove crunchy local contrast, clarity enhancement, edge halos, excessive sharpening, saturated orange rust and blue/orange grading. Shadows remain dark yet contain modest natural texture. Do not merely darken the whole picture, gray-wash it, blur detail or add haze to hide the problem. Keep original light direction and practical beacon position, but soften reflected highlights and tonal transitions visibly. Natural imperfect surface variation, muted neutral color, no showroom polish.\nNo HUD, captions, inset panels or storyboard grid. ONE 16:9 image.",
+        "aspect_ratio": "16:9",
+        "reference_images": [
+          "e12b4c08-4a87-4117-bffb-c30511b0a085",
+          "35542b56-3446-4bf4-8538-c738c3376e5b",
+          "f6c09dcc-cab0-4e71-b272-231f317ce90c",
+          "46c33950-5496-44cc-a112-8e5602f1ade1"
+        ],
+        "variant": "sunburst",
+        "quality": "high",
+        "resolution": "2k"
+      }
+    }
+  ],
+  "adjustments": {
+    "medias[0].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[1].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[2].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[3].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    }
+  }
+}
