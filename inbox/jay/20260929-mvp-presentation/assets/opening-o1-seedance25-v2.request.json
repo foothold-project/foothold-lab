@@ -1,0 +1,23 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "1735a407-2574-41b4-bf69-39addd069e03"
+    },
+    {
+      "role": "end_image",
+      "value": "adae6dc1-97bc-4815-8970-4b00abe9bdd3"
+    }
+  ],
+  "prompt": "CRITICAL REVISION O1. A continuous 5-second exploration shot that stays in nearly total darkness and ENDS EXACTLY at the supplied downward-looking close floor image. Reference 1 gives ONLY the hall geometry and the restricted pool of light, never permission to brighten the hall. The END IMAGE is the immediately following O2 first frame: achieve it by physically tilting the SAME low camera downward to its own nearby floor, NOT by a dissolve, morph, location change, zoom, hole appearing or a cut.\nTIMING: 0.0-1.1 seconds: pure BLACK except ONE pin-sized distant red beacon blinking twice softly. No visible ceiling, columns or floor. 1.1-2.7: a SINGLE off-camera localized neutral light pool glides over a short part of one column and the broken nearby floor, briefly revealing the dangerous discontinuous route. The rest stays almost black. 2.7-5.0: gaze physically tilts steadily DOWN at the SAME location; the same light pool travels with that gaze toward the near gritty floor and settles into the supplied O2 end-frame composition. Close rubble fills the final frame, modest light patch surrounded by deep black, so the subsequent O2 clip continues without a wide-to-close jump. No digital zoom or forward flying movement. The distant beacon leaves the frame naturally due to tilt.\nEXPOSURE IS LOCKED for all five seconds. Maintain near-zero ambient illumination. NO skylight, ceiling light, sun rays, daylight, broad fill, whole-room illumination, automatic exposure increase or bright reveal. NO fade from a dark frame into a bright wide hall. At every instant outside the localized light pool the room remains almost invisible. Light moves, exposure does not. No flashlight object, person, hand, robot or HUD. The light source stays behind/outside the camera, not a new glowing column in view. Retain rough diffuse concrete and muted highlights, no HDR or sparkle. Native audio is only spacious quiet industrial room tone, sparse dripping, faint sensor pivot motor; no music or voice. End settled with an ambient tail. This clip must supply the missing physical O1-to-O2 gaze transition, not another disconnected wide view."
+}

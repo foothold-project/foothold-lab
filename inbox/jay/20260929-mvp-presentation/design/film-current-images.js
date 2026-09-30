@@ -50,6 +50,10 @@ const approachEntry=all.find(x=>x.d[0]==='E5pre');
 approachEntry.d[1]='보행 POV로 턱에 접근 · 새 이미지 제작 전';
 approachEntry.d[2]='확정 연출: 틈을 건넌 뒤 보행 POV로 접근, 턱이 가까워지면 표면 스캔, 턱 바로 앞에서 컷, E5 후면 오르기로 연결. 현재 그림은 보존한 이전 바닥 카메라안입니다.';
 approachEntry.fig.querySelector('figcaption').innerHTML=`<strong>E5pre</strong>${approachEntry.d[1]}<div class="caption-note">${approachEntry.d[2]}</div>`;
+const rejectedO5Note=document.createElement('p');
+rejectedO5Note.className='caption-note';
+rejectedO5Note.textContent='O5 영상 v2 제외: 화면 왼쪽에 사람 신발처럼 보이는 발·사지가 생성되어 Go2 센서 POV 조건을 위반했습니다. 연결 편집에 사용하지 않습니다. 기존 v1도 수치 반응 수정이 남아 있어 최종 승인본이 아닙니다.';
+all.find(x=>x.d[0]==='O5').fig.append(rejectedO5Note);
 // Generated HUD is integrated into image pixels; the old SVG-only switch cannot hide it.
 document.querySelector('#toggle').textContent='HUD 통합 이미지';
 document.querySelector('#toggle').disabled=true;
@@ -65,8 +69,8 @@ for(const [id,key] of [['O5','o5'],['E5b','e5b']]){
  shotVideos[id]=[key];const index=all.findIndex(x=>x.d[0]===id);
  all[index].fig.insertAdjacentHTML('beforeend',`<div class="extra">${mediaButtons(id,index)}</div>`);
 }
-approachEntry.d[1]='보행 POV로 턱에 접근 · 시작 이미지 후보';
-approachEntry.d[2]='새 POV 시작 후보입니다. 보행하며 턱에 접근하고 표면 스캔 후 턱 바로 앞에서 컷, E5 후면 오르기로 연결합니다. 시작 이미지 승인 전이며 스캔 끝 프레임은 남아 있습니다. 원화 버튼으로 이전 바닥 카메라안을 보존합니다.';
+approachEntry.d[1]='보행 POV로 턱에 접근 · 시작 이미지 승인';
+approachEntry.d[2]='새 POV 시작 후보입니다. 보행하며 턱에 접근하고 표면 스캔 후 턱 바로 앞에서 컷, E5 후면 오르기로 연결합니다. 시작 이미지 사용자 승인. 접근·표면 스캔은 생성 영상에서 이어갑니다. 원화 버튼으로 이전 바닥 카메라안을 보존합니다.';
 approachEntry.fig.querySelector('.photo').setAttribute('style',singleImageStyle('ending-e5pre-pov-start-v1'));
 approachEntry.fig.dataset.currentPhoto=singleImageStyle('ending-e5pre-pov-start-v1');
 approachEntry.fig.querySelector('figcaption').innerHTML=`<strong>E5pre</strong>${approachEntry.d[1]}<div class="caption-note">${approachEntry.d[2]}</div>`;

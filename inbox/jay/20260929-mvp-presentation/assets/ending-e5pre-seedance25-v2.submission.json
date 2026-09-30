@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "id": "169314ee-3d67-473d-afef-f44476099e72",
+      "type": "video",
+      "status": "pending",
+      "model": "seedance_2_5",
+      "params": {
+        "prompt": "E5pre: FIRST-PERSON ONBOARD CAMERA VIEW ONLY. The approved starting image is the entire visual scene. Keep the view EMPTY of characters throughout: no robot, animal, human, limbs, feet, shoes, body, camera rig or silhouettes anywhere. The observer is behind the lens and NEVER visible. Do not show anything walking in front of this camera, do not follow a subject, do not switch to a third-person view.\n\nAdvance THIS low forward-facing camera toward the SAME raised threshold and cabinet in the supplied image. Camera center about 40 cm above the ground, with gentle small vertical oscillation and alternating roll characteristic of an onboard quadruped camera. Match the measured-feeling cautious contact rhythm of the supplied AUDIO REFERENCE, which is the actual previous shot's soundtrack. This is locomotion perceived entirely through camera translation and subtle sway, never through visible limbs. Move along existing supported ground at a steady slow pace, then decelerate and stop immediately BEFORE the riser. Do not climb or cross the threshold. End looking slightly downward at the riser and landing. Preserve cabinet, beacon, piping, water, path width and ragged geometry.\n\nDuring second 2 through 4 a sparse low-intensity green scan sweeps across the near floor, vertical riser and upper landing. Small sample dots adhere to actual surfaces, change perspective and occlude as camera advances. Show the step discontinuity without an outlined neon box, flat holographic plane or points in empty water. Natural image colors, no full-frame green tint, no peripheral HUD, no labels. Match source restrained contrast, diffuse concrete, irregular dry/damp patches, dull rust and soft highlights. No HDR, glitter, plastic wet gloss, sharp microcontrast, exposure pumping or new lighting. Thin existing haze and tiny water ripples only.\n\nAUDIO: use the supplied preceding-shot audio as the reference for the same small rubber contact timbre, quiet servos and industrial room resonance. Continue its cautious rhythm under this onboard view, aligning gentle camera settling with contact sounds, then stop contacts as camera stops. Faint scan ticks only during scanning. No human shoe heel clicks, giant metallic stomps, running, music, voice or added alarm. Single continuous five-second shot. Previous separate scene crosses a gap; the NEXT separate scene shows the rear-view climb. Neither external scene or robot appearance belongs in this clip.",
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "reference_images": [
+          "6af8dc4d-6188-488d-b067-39adddcaadb4",
+          "567dae6b-c111-4e54-a0c6-80a241851d0f"
+        ],
+        "mode": "omni_reference",
+        "resolution": "480p",
+        "generate_audio": true,
+        "bitrate_mode": "standard",
+        "draft": false
+      }
+    }
+  ],
+  "adjustments": {
+    "medias[1].role": {
+      "requested": "audio",
+      "used": "audio_references",
+      "reason": "Seedance 2.5 backend expects schema-key media roles"
+    }
+  }
+}
