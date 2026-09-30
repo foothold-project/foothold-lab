@@ -1,0 +1,19 @@
+Tool: built-in image_gen
+Reference: cover-go2-terrain-v1.png
+Output: opening-storyboard-v1.png
+Status: Image direction review. Do not generate video before user confirmation.
+
+Create a high-resolution CINEMATIC STORYBOARD CONTACT SHEET for a robotics presentation opening. Exactly SIX equal landscape 16:9 frames arranged in TWO columns and THREE rows, reading left-to-right then down. Overall aspect ratio approximately 32:27. Thin dark gutters only. NO TITLES, NO NUMBERS, NO TEXT anywhere. Each frame must be a finished photorealistic cinematic still, NOT pencil sketches.
+
+REFERENCE: the supplied image defines silver Unitree Go2 identity and the approved visual atmosphere: navy shadows, restrained cool light, dust and low fog, damaged underground industrial concrete corridor, broken slabs and narrow gaps, a distant small red beacon. Preserve this identity and world throughout ALL SIX frames. Robot has four legs, three joints per leg, compact silver body and black front sensor housing. No added payload or fantasy armor. The storyboard is a future concept, not actual experiment evidence.
+
+CONTINUITY: establish a single corridor running from foreground lower-left toward background upper-right. The small red mission beacon is always deep in the upper-right direction, mounted on the same distant industrial platform. One narrow transverse crack in the foreground and broken but traversable slabs farther along. Camera remains on the SAME SIDE of this axis. Same pillars, overhead pipes, wet concrete texture and obstacle geography. Empty environment for frames 1 through 4. Robot enters in frame 5 FROM LOWER LEFT, facing and moving INTO THE CORRIDOR toward the distant beacon. This is a new camera viewpoint within the cover's world; do not force the cover robot's original facing direction.
+
+FRAME 1 top left: dark establishing wide view of the corridor. Very low fog, only faint geometry visible, ominous but realistic. No robot yet. No obvious bright goal yet.
+FRAME 2 top right: SAME wide view and geography. A single narrow pale searchlight from just offscreen lower-left sweeps the floor, visible in haze, revealing first rough edges of concrete. No robot.
+FRAME 3 middle left: SAME axis, slightly closer floor-level viewpoint. The beam clearly reveals narrow gaps, uneven broken slabs and a step. The tiny RED beacon is now visible far upper-right. Make the route legible. No robot.
+FRAME 4 middle right: Slightly raised wider view connecting those exact obstacles to the same red beacon and target platform. A subtle thin teal graphic bracket around the remote target is permitted, but absolutely NO TEXT or invented interface clutter. Leave dark negative space near the left side for a mission message to be added separately later. No robot.
+FRAME 5 bottom left: The recognizable silver Go2 has entered from lower-left and pauses at the first narrow crack, shown in rear three-quarter SIDE view, whole body and all four legs readable. It faces INTO the corridor toward upper-right. The same red beacon remains in background. Serious industrial realism, natural quadruped stance.
+FRAME 6 bottom right: A close, low side view of the SAME Go2's front half and forelegs at the SAME first crack. One front paw is being placed on the solid slab immediately beyond this NARROW crack while other feet support the body. This is ONE CAUTIOUS FIRST STEP, not jumping, flying, finishing the mission, or crossing a chasm. Clear tactile foot contact, naturally articulated joints. Distant red goal is still not reached.
+
+Consistent realistic optical lighting, sharp robot and ground, cinematic natural depth of field. Avoid neon sci-fi, gore, people, explosions, giant impossible chasms, flames, extra robot legs, deformation, logo changes, completed-mission imagery. Preserve visible terrain details even in dark frames. Six different moments from ONE continuous story. The robot must NOT appear before frame 5. NO text, no watermark.

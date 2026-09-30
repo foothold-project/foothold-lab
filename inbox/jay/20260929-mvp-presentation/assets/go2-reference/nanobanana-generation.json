@@ -1,0 +1,46 @@
+{
+  "project": {
+    "project_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "default_folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "workspace_id": "1bf1c8a5-5057-410d-afdd-e862946b16a5",
+    "name": "FOOTHOLD MVP film · Go2 reference and production"
+  },
+  "requested": {
+    "model": "nano_banana_pro",
+    "prompt": "Create ONE highly accurate photorealistic Unitree Go2 character turnaround reference sheet for cinematic continuity. Use the supplied OFFICIAL product images and real walking video frames as strict geometry references, not the people, lawns, watermarks, marketing graphics or backgrounds. Image 1 front face, image 2 head details, image 3 full side real robot, image 4 real REAR. Reconstruct the SAME unmodified standard gray Go2 across all views, no accessories. Landscape 3:2 high resolution, clean warm light-gray seamless studio, diffuse neutral soft light, consistent body proportions and scale, grounded subtle shadows, dry matte engineering polymer and gray metal microtexture, realistic minor manufacturing variation, no HDR, chrome, wet highlights, drama, concept redesign or plastic toy look. Sophisticated technical character sheet: top two thirds show 4 complete standing views with generous separation, FRONT, LEFT SIDE, REAR, FRONT 3/4, arranged as two rows of two, every foot fully visible. Bottom strip has three close-ups of FRONT SENSOR MODULE, LEG JOINT, RUBBER FOOT. Use tiny restrained English labels, no arrows, no invented specifications, no dimensions, no decorative HUD. Specific identity constraints: low elongated rounded gray torso; four slender curved tapered leg assemblies with round hip motor housings and visible small fasteners; small rounded black rubber tips only at ends, NEVER thick boots or hooves; front narrow vertical black camera/lamp panel with separate black rounded caged LiDAR housing suspended below the snout; preserve the rear center grille and dark vertical hardware structure seen in the rear video reference, do not put a face or front LiDAR on the rear. No tail. Neutral standing stance with natural joint bends, not humanoid legs. Keep authentic Go2 branding only if faithfully reproduced. Prioritize faithful component placement and consistent thin lower-leg width over aesthetic reinterpretation. This is an image reference for the exact real product, not a new robot design.",
+    "aspect_ratio": "3:2",
+    "resolution": "4k",
+    "count": 1,
+    "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "medias": [
+      {
+        "role": "image",
+        "value": "https://www.unitree.com/images/b5fffd3e4fc04e6f9fcafedb9516b341_3840x2146.jpg"
+      },
+      {
+        "role": "image",
+        "value": "https://www.unitree.com/images/c2555e3813074ba6a1f2e124ee7e90cf_3840x2160.jpg"
+      },
+      {
+        "role": "image",
+        "value": "6ad9596c-1bcc-4225-ab00-7dbea4ceadf1"
+      },
+      {
+        "role": "image",
+        "value": "46c33950-5496-44cc-a112-8e5602f1ade1"
+      }
+    ]
+  },
+  "job_id": "6d6f6997-7c7a-4e34-95af-b70080e9960a",
+  "completed_model": "nano_banana_2",
+  "model_note": "Requested nano_banana_pro; completion API reports nano_banana_2. Mapping or fallback not independently confirmed.",
+  "estimated_credits": 4,
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_130342_6d6f6997-7c7a-4e34-95af-b70080e9960a.png",
+  "review_status": "rejected",
+  "review_findings": [
+    "Invented raised head",
+    "Duplicated front sensors",
+    "Changed leg structure",
+    "Invented rear structure"
+  ]
+}
