@@ -1,0 +1,39 @@
+{
+  "requested": {
+    "model": "gpt_image_2_5",
+    "variant": "sunburst",
+    "quality": "high",
+    "resolution": "2k",
+    "aspect_ratio": "3:2",
+    "count": 1,
+    "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "medias": [
+      {
+        "role": "image",
+        "value": "6ad9596c-1bcc-4225-ab00-7dbea4ceadf1"
+      },
+      {
+        "role": "image",
+        "value": "e437b786-dacc-4bf2-a464-14ec0a8e2d3c"
+      },
+      {
+        "role": "image",
+        "value": "https://www.unitree.com/images/e41651fe455e463bb25f1ef33ece3809_1920x1370.jpg"
+      }
+    ],
+    "prompt": "Create ONE photorealistic CHARACTER DETAIL REFERENCE SHEET for the exact real Unitree Go2 in the supplied OFFICIAL references. This is a companion to an existing whole-body turnaround, not a redesigned robot and not another whole-body sheet.\n\nREFERENCE ROLES: Image 1 real side-view walking photograph is the primary reference for the actual slender curved legs, circular upper joint housings, knee articulation and small black rubber foot caps. Image 2 official close-up of the FRONT END OF THE TORSO provides exact camera/lamp placement and black lower LiDAR guard. Image 3 official annotated product render provides supplementary leg and component context; DO NOT copy its marketing text or invent any internal mechanics. These official source images, not imagined robot anatomy, determine geometry.\n\nDELIVERABLE: landscape 3:2, four large well separated photographic close-up panels in a clean 2x2 layout on a consistent warm light-gray studio background.\nTOP LEFT: FOOT / LOWER LEG. Side-oblique close-up of one actual small rounded black rubber cap and the lower curved gray leg entering it, grounded on a plain floor, enough lower leg visible to convey taper and scale. Preserve the real rubber-to-gray boundary; no thick boot, hoof, toe divisions or invented sole tread. Do not show the underside since it is not clearly documented.\nTOP RIGHT: KNEE / LINK. Side close-up of the actual visible knee joint and the adjacent upper and lower curved links, intact and connected, preserve the small circular hinge and real exterior geometry.\nBOTTOM LEFT: UPPER JOINT. Side close-up of the round upper motor housing attached to the body and the top of the leg, exact casing shape, screws and shell junction as the reference, no exploded view.\nBOTTOM RIGHT: FRONT SENSORS. Close-up of the actual torso front, including the vertical black panel with camera above lamp and the separate rounded black LiDAR guard below. Keep the actual surrounding body shell and part of the adjacent shoulder for context. This is NOT a detached head. Never add a neck, upper head, extra sensor box, duplicated camera face or humanoid anatomy.\n\nEach panel is an intact close-up of the SAME gray Go2, believable manufactured materials and reference-faithful exterior details, neutral soft product-photo light, matte gray surfaces and restrained local highlights, no HDR gloss. Natural mild use wear is acceptable but do NOT amplify white chips, scratches, dirt or damage; wear is not a design feature. Physical form and attachment relationships are more important than microscopic invented detail. No speculative internal structure, cables, gadgets, trusses or additional holes. Only the four short English panel labels listed above, small and unobtrusive. No specifications, dimensions, arrows, HUD, humans or scenery. Fill each panel with meaningful close-up detail while avoiding cropping the defining component boundaries."
+  },
+  "job_id": "f6c09dcc-cab0-4e71-b272-231f317ce90c",
+  "estimated_credits": 2.75,
+  "status": "completed",
+  "completed_model": "gpt_image_2_5",
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_133205_f6c09dcc-cab0-4e71-b272-231f317ce90c.png",
+  "review_status": "visual_reference_candidate",
+  "review": "Four requested component closeups present. Mild wear, small rubber cap, connected knee and upper joint, camera/lamp panel without extra head. Bottommost LiDAR edge is cropped; use official head-detail.jpg for complete guard silhouette. Fine geometry and fastener counts are not measurement-verified.",
+  "max_generations_authorized": 1,
+  "reference_files": [
+    "side-walk.png",
+    "head-detail.jpg",
+    "component-map.jpg"
+  ]
+}

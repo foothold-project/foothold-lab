@@ -52,4 +52,10 @@ sunburst = ROOT / 'assets/go2-reference/go2-character-sunburst-v1.png'
 if sunburst.exists():
     section = '''<section id="sunburst-sheet"><h2>Go2 캐릭터 시트 · Sunburst 시안</h2><p>공식 측면·정면·후면 자료 3장으로 생성한 4방향 전신 시트입니다. GPT Image 2.5 Sunburst · 2K · high · 1회 요청. 제작 참조 후보이며 공식 제품 사진이나 도면은 아닙니다.</p><a href="../assets/go2-reference/go2-character-sunburst-v1.png"><img style="width:100%;height:auto" src="../assets/go2-reference/go2-character-sunburst-v1.png" alt="Go2 정면 측면 후면 사선 캐릭터 시트"></a><p>검토: 첫 결과의 별도 머리와 중복 센서 오류는 보이지 않습니다. 발끝 마모와 후면 그릴 세부는 원본 그대로라고 확인할 수 없으며, 실제 제품의 세부 치수를 검증한 결과는 아닙니다. <a href="../GO2-SUNBURST-PROMPT.md">프롬프트·입력 자료</a></p></section>'''
     page = page.replace('</header>', '</header>'+section,1)
+detail_sheet = ROOT / 'assets/go2-reference/go2-detail-sunburst-v1.png'
+if detail_sheet.exists():
+    section = '''<section id="detail-sheet"><h2>근접 장면을 위한 디테일 시트</h2><p>공식 측면 영상·전면 근접 렌더·제품 도해를 참조했습니다. 발과 하단 다리, 무릎, 상부 관절, 전면 센서를 한 장에 담았습니다. 기존 생성 시트를 확대해 참조하지 않았습니다.</p><a href="../assets/go2-reference/go2-detail-sunburst-v1.png"><img style="width:100%;height:auto" src="../assets/go2-reference/go2-detail-sunburst-v1.png" alt="Go2 발·무릎·상부 관절·전면 센서 디테일 시트"></a><p>Sunburst · 2K · high · 1회 요청, 사전 견적 2.75크레딧. 생성된 제작 참조이며 공식 제품 도면이 아닙니다. 발의 마모를 고정 기준으로 삼지 않으며 나사 수·작은 표면 무늬는 원본과 대조해 사용합니다. <a href="../GO2-SUNBURST-PROMPT.md">입력 자료와 요청 기록</a></p></section>'''
+    marker = '<section><p class="eyebrow">UNITREE GO2 / OFFICIAL VISUAL REFERENCES'
+    page = page.replace(marker,section+marker,1)
+    page = page.replace('나사 수·작은 표면 무늬는 원본과 대조해 사용합니다.', '나사 수·작은 표면 무늬는 원본과 대조해 사용합니다. 전면 컷의 LiDAR 아래 끝은 조금 잘려 있으므로 아래 공식 근접 원본을 함께 참조합니다.')
 (ROOT / 'output/FOOTHOLD-Go2-character-sheet.html').write_text(page,encoding='utf-8')

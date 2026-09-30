@@ -45,3 +45,15 @@ Only four small English view labels. No detail insets, no specification text, no
 작업 ID: `35542b56-3446-4bf4-8538-c738c3376e5b`. 요청 원문과 설정은 [JSON](assets/go2-reference/sunburst-generation.json)에 보존한다.
 
 사용자가 웹의 Nano Banana Pro 가격을 2K 2크레딧, 4K 4크레딧으로 확인했다. 동일 해상도의 MCP 사전 견적과 같으므로 현재 확인한 조건에서는 경로별 가격 차이가 없다.
+
+## 추가 디테일 시트 · 2026-09-30 22:32
+
+사용자가 4방향 시트를 유지하고 디테일 한 장을 추가하는 방안을 승인했다. 동일한 Sunburst · 2K · high · 3:2, 사전 견적 2.75크레딧으로 한 건만 요청했다.
+
+참조는 [실제 측면 보행](assets/go2-reference/side-walk.png), [공식 전면 근접 렌더](assets/go2-reference/head-detail.jpg), [공식 구성 도해](assets/go2-reference/component-map.jpg)다. 생성된 4방향 시트를 확대해 세부 형상의 근거로 사용하지 않았다. 다리·발은 실제 측면 영상에서 보이는 범위가 기준이며, 나사 규격이나 숨은 내부 구조까지 확인한 것은 아니다.
+
+구성은 발·하단 다리, 무릎 연결부, 상부 관절, 전면 카메라·조명·하부 LiDAR의 4개 근접 패널이다. 작은 검은 발고무와 가느다란 다리 비율을 우선하고, 상처를 증폭하지 않으며, 보이지 않는 발바닥 무늬나 내부 구조는 그리지 않도록 지시했다.
+
+요청 전체: [디테일 생성 기록](assets/go2-reference/sunburst-detail-generation.json). 작업 ID: `f6c09dcc-cab0-4e71-b272-231f317ce90c`.
+
+`확인됨` [디테일 시트](assets/go2-reference/go2-detail-sunburst-v1.png) 생성 완료. 요청한 4개 근접 패널을 직접 확인했다. 작은 발고무와 다리 연결, 무릎, 원형 상부 관절, 전면 카메라·조명·LiDAR 배치가 보이며 별도 머리나 센서 중복은 보이지 않는다. 과한 흰색 마모는 줄었다. 전면 컷의 LiDAR 맨 아래는 조금 잘려 있어 전체 보호대 윤곽은 공식 head-detail.jpg를 함께 참조한다. 나사 수·재질 미세 무늬·세부 치수 일치는 미검증이다. 추가 생성은 하지 않았다.
