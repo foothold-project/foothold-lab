@@ -23,9 +23,11 @@ function hud(type){if(!type)return '';if(type==='brand')return '<div class="qa-s
  s+=tx(91,759,'INPUT / BODY STATE',17,'soft')+tx(91,791,'INPUT / TERRAIN HEIGHT',17,'soft')+tx(818,759,'VISUAL FEED : STANDBY',17)+tx(818,791,'AWAITING TERRAIN SCAN_',16,'soft');
  }
  if(type==='observe'){
- s+=cutFrame(72,174,300,385,'BODY / ATTITUDE')+attitude(222,349,82)+tx(94,497,'ROLL   --°',21)+tx(94,533,'PITCH  --°',21);
+ s+=cutFrame(72,174,300,385,'BODY / ATTITUDE')+attitude(222,349,82)+tx(94,497,'ROLL   +0.0°',21)+tx(94,533,'PITCH  +0.0°',21);
  s+=cutFrame(1230,174,300,284,'VELOCITY / TRACKING')+tx(1250,241,'AXIS',15,'soft')+tx(1350,241,'CMD',15,'soft')+tx(1440,241,'STATE',15,'soft');
- ['VX','VY','WZ'].forEach((v,i)=>s+=tx(1250,291+i*48,v,20)+tx(1350,291+i*48,'--',20)+tx(1440,291+i*48,'--',20));
+ // Illustrative frame values, not measurements. CMD can remain constant in video;
+ // STATE and attitude must respond to motion rather than randomizing every digit.
+ [['VX','0.30','0.28'],['VY','0.00','0.01'],['WZ','0.00','0.02']].forEach(([v,cmd,state],i)=>s+=tx(1250,291+i*48,v,20)+tx(1350,291+i*48,cmd,20)+tx(1440,291+i*48,state,20));
  s+=tx(1250,430,'VX,VY m/s / WZ rad/s',12,'soft')+tx(93,625,'BODY ORIENTATION',15,'soft')+tx(1250,517,'COMMAND / RESPONSE',15,'soft');
  s+=`<path class="stroke soft" d="M431 258v-28h57M1112 230h57v28M431 609v28h57M1112 637h57v-28"/>`+tx(625,719,'TERRAIN OBSERVATION',18,'soft spaced');
  }
