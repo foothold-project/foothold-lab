@@ -120,9 +120,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "85f5622b8cc9d0ce",
+  "hash": "a4d7023e7c1ddc3b",
   "major": "v2.1",
-  "ver": "v2.24"
+  "ver": "v2.25"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -515,9 +515,9 @@
   "ver": "v2.2"
  },
  "docs/research/20260928-v2-mvp-report.md": {
-  "hash": "3c83228b351ea6c0",
-  "major": "v4.0",
-  "ver": "v4.0"
+  "hash": "d542d65559167222",
+  "major": "v4.1",
+  "ver": "v4.2"
  },
  "docs/research/20260929-locomotion-direction.md": {
   "hash": "a445ee1da18c4862",
