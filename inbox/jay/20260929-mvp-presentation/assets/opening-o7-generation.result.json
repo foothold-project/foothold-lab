@@ -17,5 +17,6 @@
   "balance_before": 4943.5,
   "balance_after": 4925.75,
   "balance_delta": 17.75,
-  "video_user_approval": "pending"
+  "video_user_approval": "approved",
+  "edit_user_approval": "pending"
 }
