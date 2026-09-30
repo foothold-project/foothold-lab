@@ -5,7 +5,7 @@
 > 근거: 사용자 최신 조명 참고·바닥 카메라 통과·정면 앉기 요청
 > 요지: E2는 고정광 분위기 공개, E5는 낮은 카메라 통과 후 후면 오르기와 정면 앉기로 연결한다.
 > 상태: E2 참조 기반 이미지 시안 제작 · 영상 문안 준비 · 영상 미제출
-> 판: v0.3
+> 판: v0.4
 
 이슈: [#490](https://github.com/foothold-project/foothold-lab/issues/490). 이전 E2 탐색광과 E5 후면 앉기 설계를 대체한다. 현재 HTML은 정지 이미지 전환이며 아래 동작을 실제 영상으로 생성한 것은 아니다.
 
@@ -23,11 +23,9 @@ Photographic realism with restrained local contrast and natural highlight roll-o
 
 사용자 참고 2건을 직접 확인했다. 넓은 어둠 속 집중된 빛과 실루엣이 핵심이다. 두 번째 참고는 사용자가 정확한 예시가 아니라고 했으므로 그대로 따르지 않는다. O1의 탐색광은 유지하되 E2에서는 빛을 움직이지 않는다.
 
-기존 원화 v6는 조명 방향 참고다. 새 동작은 로봇이 더 뒤쪽 어둠에서 빛 안으로 걸어 나온다. 영상 제작 전 시작 프레임의 로봇을 뒤로 배치하고 주변을 더 어둡게 맞춘다. 현재 같은 위치의 두 원화를 그대로 시작·끝에 고정하지 않는다. 끝은 assets/ending-e2-mood-end-v6.png의 중앙 중경 위치. 기본 5초 후보.
+최신 입력은 승인 E2a v3 시작 이미지와 승인 E2 외형·도착 구도 참조다. v6 원화와 예전 고정 카메라 문안은 이 컷의 실제 제출용으로 사용하지 않는다. [시험 준비 v1.2](E2-VIDEO-TEST-PREP.md)와 그 문서의 두 요청 JSON을 따른다. 처음 약 0.5초 구도 유지 후 짧고 느린 달리인, 광원은 고정이다.
 
-```text
-One continuous 5-second cinematic reveal, 16:9. Locked frontal camera, slightly elevated, looking into a vast almost black ruined industrial hall. A fixed overhead/backlight remains visible as a restrained shaft in thin haze. Go2 begins farther back in deep darkness, only a faint silhouette. The same matte light-gray Unitree Go2 quadruped walks slowly forward along the central axis, entering the fixed pool of light until its face, shell and limbs become clearly readable in the central midground. Reveal the robot THROUGH ITS MOTION into light, not by a sweeping flashlight or global exposure ramp. Stop before it becomes a foreground close-up. Consistent four-legged gait and contact, no gliding. Light direction and camera remain stable. No torch, searching beam, orbit, zoom, teleportation, human, text or HUD. Sparse distant drips and footfalls approach naturally; restrained motor sound and room reverberation, no music or speech.
-```
+앞 컷은 픽스 카메라의 발 클로즈업이다. 앞발 두 개가 건넌 뒤 뒷발이 건너며 돌 부스러기가 떨어지고, 화면을 쓸어 블랙으로 닫는다. 블랙에서 E2a로 이어지며 발소리·낙하음 잔향과 공간음을 연결한다. E2 원본 생성에 앞 컷을 중복 요청하지 않는다. 두 컷과 블랙 전환을 편집에서 함께 검토한다.
 
 ## E5pre · 바닥 카메라 위를 통과
 
