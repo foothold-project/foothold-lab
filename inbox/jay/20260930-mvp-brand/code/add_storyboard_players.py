@@ -27,15 +27,20 @@ VIDEOS = {
     "s07": S + "tone/s07.mp4", "s08": S + "tone/s08.mp4", "s09": S + "tone/s09.mp4",
     "s11": S + "tone/s11.mp4", "s14": S + "tone/s14.mp4",
 }
+# 원하는 컷 카드 뒤에 끼우는 카드: (카드 id, 뒤에 붙을 카드 alt, 제목, 경로 표기, 영상, 썸네일 시각)
+INSERT = [
+    ("s12i", "s12", "삽입 · 폭풍과 대치 원경", "가까이서 본 폭풍 스케일 · 해가 먹힘 · 측면 Go2 대열 · Seedance 2.5 (G 이미지 → 영상 5ea3aad7) · 2초 (10/01)", S + "tone/s12ins.mp4", 1.0),
+    ("s12b", "s12i", "s12_v2 · 박차고 들어감", "s12_v2 3.79초(돌 다 솟은 뒤)부터 흙에 덮일 때까지 · 분홍 보라 색 돌림 (10/01)", S + "tone/s12b.mp4", 0.6),
+]
 # (카드 id, 제목, 경로 표기, 영상, 썸네일 시각)
 EXTRA = [
-    ("s11-15", "폭풍 구간 이어보기 s11→s15", "전조 → 진입 → 더 깊이 → 치고 나옴 → 착착 · 디졸브 없음 (10/01 v3)", S + "storm_s11_s15.mp4", 20.0),
+    ("s11-15", "폭풍 구간 이어보기 s11→s15", "s11 3초 → s12 2.5초 → 대치 원경 → s12_v2 → s13 3초부터 → s14 → s15 착착 · 디졸브 없음 (10/01 v6)", S + "storm_s11_s15.mp4", 20.0),
     ("s19A", "엔딩 모션그래픽 A", "Higgsfield 배경판 + 원본 로고 레이어 · 과감", S + "ending_v2A.mp4", 3.0),
     ("s19B", "엔딩 모션그래픽 B", "Higgsfield 배경판 + 원본 로고 레이어 · 절제", S + "ending_v2B.mp4", 11.0),
     ("s19C", "엔딩 C · 빛 라인 → 로고 윤곽 두르기", "s1718 대열 → B 배경 + 윤곽 광 (팀장 아이디어)", S + "s1718_tail_C.mp4", 6.8),
     ("s19D", "엔딩 D · LiDAR 스캔 리빌", "s1718 대열 → B 배경 + 청록 스캔 (제안)", S + "s1718_tail_D.mp4", 6.65),
 ]
-FULL = (S + "FULL_v6.mp4", "전체 v6 · 10/01 · 디졸브 없음 · 폭풍: s11 3초 → s12 2.5초 → 대치 원경(해 먹힘) 2초 → s12_v2 흙에 덮임 → s13 3초부터 · s14 s15 먼지 · s17 크림")
+FULL = (S + "FULL_v6.mp4", "전체 v6 · 10/01 · 디졸브 없음 · 폭풍: s11 3초 → s12 2.5초 → 대치 원경(해 먹힘) 2초 → s12_v2 흙에 덮임 → s13 3초부터 · s14 s15 HDR 낮춤 · 로봇 흙빛 · s17 크림")
 DROP = {"s10b": "제외 (그림상 안 맞음 · 10/01)", "s14_old": ""}
 B0, B1 = "<!-- players:start -->", "<!-- players:end -->"
 
@@ -58,6 +63,11 @@ def main():
         for cid, title, route, v, s in EXTRA if (ROOT / v).exists())
     for cid, *_ , v, _s in EXTRA:
         if (ROOT / v).exists(): vids[cid] = v
+    ins = [(after, f'<figure class="card b" data-extra="{cid}"><img src="{thumb(v, s)}" alt="{cid}"><figcaption><b>{cid}</b> {title}'
+                   f'<span class="route b">{route}</span></figcaption></figure>')
+           for cid, after, title, route, v, s in INSERT if (ROOT / v).exists()]
+    for cid, _a, *_ , v, _s in INSERT:
+        if (ROOT / v).exists(): vids[cid] = v
     block = B0 + """
 <style>
 figure.card.has-v{cursor:pointer;position:relative}
@@ -73,10 +83,11 @@ figure.card.has-v::after{content:"\\25B6";position:absolute;left:10px;top:10px;w
 <div id="vp"><video id="vpv" controls playsinline></video><p id="vpc"></p></div>
 <script>
 (function(){
-var V=""" + json.dumps(vids, ensure_ascii=False) + """, D=""" + json.dumps(DROP, ensure_ascii=False) + """, EX=""" + json.dumps(extra, ensure_ascii=False) + """;
+var V=""" + json.dumps(vids, ensure_ascii=False) + """, D=""" + json.dumps(DROP, ensure_ascii=False) + """, EX=""" + json.dumps(extra, ensure_ascii=False) + """, IN=""" + json.dumps(ins, ensure_ascii=False) + """;
 var g=document.querySelector('.grid'); if(!g)return;
 var F=""" + json.dumps(FULL, ensure_ascii=False) + """; var h=document.querySelector('h2.sec');
 if(F&&h){h.insertAdjacentHTML('beforebegin','<h2 class="sec">0. '+F[1]+'</h2><video src="'+F[0]+'" controls preload="metadata" style="width:100%;max-height:72vh;background:#000;border-radius:6px;margin:0 0 28px"></video>');}
+IN.forEach(function(x){var a=g.querySelector('img[alt="'+x[0]+'"]'); if(a)a.closest('figure').insertAdjacentHTML('afterend',x[1]);});
 var last=g.querySelector('img[alt="s1718"]'); if(last&&EX){last.closest('figure').insertAdjacentHTML('afterend',EX);}
 g.querySelectorAll('figure.card').forEach(function(f){
   var a=f.querySelector('img').getAttribute('alt');

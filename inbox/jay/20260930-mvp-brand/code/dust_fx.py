@@ -2,7 +2,7 @@
 """폭풍을 뚫고 나온 대열을 덜 깨끗하게 · 덜 HDR 하게 (10/01 팀장: s14 · s15 「대비가 뚜렷 · 제법 깨끗 · HDR 강함 · 불규칙성이 있어야」).
 
 1) 세부 대비 줄이기: 큰 반경으로 흐린 바탕 + (원본 - 바탕) × DETAIL. 밝은 끝은 부드럽게 누르고 깊은 그늘은 살짝 올림.
-2) 흐르는 먼지 층: 여러 옥타브의 부드러운 잡음을 바람 방향으로 흘려 짙고 옅은 곳이 계속 바뀌게. 아래쪽 · 지평선 근처일수록 짙게.
+2) 흐르는 먼지 층 (지금 꺼 둠, DUST=0): 여러 옥타브의 부드러운 잡음을 바람 방향으로 흘려 짙고 옅은 곳이 계속 바뀌게. 아래쪽 · 지평선 근처일수록 짙게.
    먼지 색은 장면의 중간 밝기 영역 평균(그 컷의 흙먼지 색).
 3) 로봇 흙빛: 밝고 채도 낮은 픽셀(흰 몸체)을 마스크로 따서, 흙먼지 색 쪽으로 물들이고 조금 어둡게.
    물드는 정도를 먼지 층과 같은 잡음으로 흔들어, 먼지가 지나가며 묻는 것처럼 보이게(화면에 고정된 때 무늬는 로봇이 움직이면 미끄러져 보임).
@@ -18,7 +18,7 @@ import cv2
 FF = r"C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe"
 W, H, FPS = 1920, 1080, 24
 DETAIL = 0.72        # 세부 대비 남기는 비율
-DUST = 0.38          # 먼지 층 최대 불투명도
+DUST = 0.0           # 흐르는 먼지 층 끔 (10/01 팀장: 「에러 레이어 같아 보여」). 켜려면 0.38
 DIRT = 0.42          # 흰 몸체 물드는 최대 비율
 WIND = (-38.0, 6.0)  # 먼지 흐름 px/프레임 (왼쪽으로, 살짝 아래로)
 rng = np.random.default_rng(11)
@@ -52,7 +52,7 @@ def process(img, k):
     # 흙먼지 색: 중간 밝기 영역 평균
     m = (lum[..., 0] > 70) & (lum[..., 0] < 170)
     dust_col = f[m].mean(0) if m.any() else np.array([110, 120, 140], np.float32)
-    n = noise(k)
+    n = noise(k) if DUST > 0 else None
     if VERT is None:
         y = np.linspace(0, 1, H, dtype=np.float32)[:, None]
         VERT = 0.55 + 0.45 * np.exp(-((y - 0.5) / 0.18) ** 2) + 0.25 * y   # 지평선 · 아래쪽 짙게
@@ -60,12 +60,13 @@ def process(img, k):
     hsv = cv2.cvtColor(np.clip(f, 0, 255).astype(np.uint8), cv2.COLOR_BGR2HSV).astype(np.float32)
     robot = np.clip((hsv[..., 2] - 150) / 40, 0, 1) * np.clip((70 - hsv[..., 1]) / 30, 0, 1)
     robot = cv2.GaussianBlur(robot, (0, 0), 1.2)
-    dirt = (DIRT * (0.55 + 0.45 * n) * robot)[..., None]
+    dirt = (DIRT * 0.75 * robot)[..., None]                       # 고르게 (무늬로 흔들면 먼지 층과 같은 이유로 덧씌운 막처럼 보임)
     tint = f * 0.86 * (dust_col / max(dust_col.mean(), 1)) ** 0.9
     f = f * (1 - dirt) + tint * dirt
     # 2) 흐르는 먼지 층
-    a = (DUST * n * VERT)[..., None]
-    f = f * (1 - a) + dust_col * a
+    if DUST > 0:
+        a = (DUST * n * VERT)[..., None]
+        f = f * (1 - a) + dust_col * a
     return np.clip(f, 0, 255).astype(np.uint8)
 
 
