@@ -176,6 +176,11 @@
       "steps": 0
     },
     {
+      "title": "잘 걷는 로봇을, 어느 현장에 먼저 보낼 것인가",
+      "section": "다음 걸음",
+      "steps": 0
+    },
+    {
       "title": "Q&A",
       "section": "다음 걸음",
       "steps": 0
@@ -186,7 +191,7 @@
       "steps": 0
     }
   ],
-  "count": 37,
+  "count": 38,
   "speed_success_percent": {
     "nv": [
       60.875,

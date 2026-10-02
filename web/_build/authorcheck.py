@@ -114,6 +114,31 @@ def _lab():
     return None
 
 
+def _scan(lab, bases, people):
+    """bases 밑 .md 의 머리말 작성자를 명부와 대조한다. (seen, bad, blank)"""
+    seen, bad, blank = 0, [], []
+    for base in bases:
+        if not os.path.isdir(base):
+            continue
+        for r, dirs, fs in os.walk(base):
+            dirs[:] = sorted(x for x in dirs if not x.startswith('.'))
+            for f in sorted(fs):
+                if not f.endswith('.md'):
+                    continue
+                rel = os.path.relpath(os.path.join(r, f), lab).replace(os.sep, '/')
+                t = io.open(os.path.join(r, f), encoding='utf-8',
+                            errors='replace').read()
+                who = author_of(t)
+                if who is None:
+                    continue
+                seen += 1
+                if not who:
+                    blank.append(rel)
+                elif who not in people and who not in NOT_PERSON:
+                    bad.append('%s -> %s' % (rel, who))
+    return seen, bad, blank
+
+
 def main(vault=None, pages=None):
     ok, why = _kat()
     if not ok:
@@ -133,24 +158,12 @@ def main(vault=None, pages=None):
         print('  [!] ROLES.md 에서 사람 이름을 하나도 못 읽었습니다')
         return False
 
-    seen, bad, blank = 0, [], []
-    base = os.path.join(lab, 'docs')
-    for r, dirs, fs in os.walk(base):
-        dirs[:] = sorted(x for x in dirs if not x.startswith('.'))
-        for f in sorted(fs):
-            if not f.endswith('.md'):
-                continue
-            rel = os.path.relpath(os.path.join(r, f), lab).replace(os.sep, '/')
-            t = io.open(os.path.join(r, f), encoding='utf-8',
-                        errors='replace').read()
-            who = author_of(t)
-            if who is None:
-                continue
-            seen += 1
-            if not who:
-                blank.append(rel)
-            elif who not in people and who not in NOT_PERSON:
-                bad.append('%s -> %s' % (rel, who))
+    # ★ 2026-10-02. 여기가 `docs/` 만 훑었다. 산출물 `deliverables/` 도 웹으로
+    #   나가는데(deliverable-*.html) 검사 밖이었고, 2026-09-09 에 잡았던 바로 그
+    #   지어낸 이름(「방재혁」)이 deliverables/midterm/mvp-presentation.md 머리말로
+    #   들어가 «라이브까지» 나갔다. 관문은 「없음」이라고 찍었다. 발행되는 곳은 전부 본다.
+    seen, bad, blank = _scan(lab, [os.path.join(lab, 'docs'),
+                                   os.path.join(lab, 'deliverables')], people)
 
     # ★ 검사 «개수» 를 항상 찍는다. 0이면 정규식이 아무것도 못 본 것이다.
     print('  사람 명부 %d명 (%s) · 작성자 줄 %d개 검사'

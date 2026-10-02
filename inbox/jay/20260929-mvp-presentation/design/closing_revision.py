@@ -93,8 +93,16 @@ def closing_slides():
     result.append(make(
         'FOOTHOLD가 추구하는 가치',
         film('../../20260930-mvp-brand/_out/review/FULL_v6.mp4', 'FOOTHOLD 브랜드 영상', '../../20260930-mvp-brand/_out/keyvis/lib_thumbs/38-1355-nano-opening.jpg', sound=True),
-        '영상을 시청합니다. 영상이 끝나면 다음 버튼으로 Q&A에 들어갑니다.',
+        '영상을 시청합니다. 영상이 끝나면 다음 버튼으로 마무리 한 장, 이 로봇을 어느 현장에 먼저 보낼 것인지로 넘어갑니다.',
         kind='cinema', note='사용자가 승인한 브랜드 영상 파일을 그대로 사용. 소리 포함 자동 재생, 반복하지 않음. 브라우저가 재생을 막으면 controls의 재생 버튼을 사용.'))
+    # ★ 2026-10-02 팀장 지시. 영상 뒤에 «어느 현장에 먼저 보낼 것인가» 로 마무리한다.
+    #   숫자와 사례는 전부 기획서(deliverables/plan/proposal.md 2절) 인용이다.
+    result.append(make(
+        '잘 걷는 로봇을, 어느 현장에 먼저 보낼 것인가',
+        '<div class="closing-target"><div class="target-primary"><span>먼저 겨냥하는 현장</span><h3>사람이 들어가기 어려운 곳의<br>반복 점검</h3><div class="target-sites"><div><b>산업 설비 플랜트</b><p>제철 · 양조 · 전력 설비의<br>고위험 구역 정기 점검</p></div><div><b>지하 공동구 · 터널</b><p>계단 · 경사 · 협소 통로가 섞인<br>반복 순찰 구간</p></div></div><p class="target-why">작업을 대신하는 로봇이 아닙니다. 사람보다 먼저 들어가<br>영상 · 온도 · 가스 · 설비 상태를 확인하는 로봇입니다.</p></div><div class="target-market"><div><span class="experiment-label">이미 도입</span><h3>National Grid</h3><p>고위험 설비 점검 주기 <b>연 1회 → 2주</b></p></div><div><span class="experiment-label">이미 도입</span><h3>AB InBev</h3><p>매주 약 <b>1,800건</b> 점검 · 첫 6개월에 이상 상태 <b>약 150건</b> 발견</p></div><div><span class="experiment-label">국내</span><h3>KCC건설 · 한국수자원공사</h3><p>공사 현장 안전관리 · 고위험 반복 점검에 도입 시작 (2026)</p></div><div class="target-path"><span>서비스까지</span><b>보행 검증 · MVP</b><i></i><b>목표 지점 자율 주행 · 11.07</b><i></i><b>현장 시연 · 12.11</b></div></div></div><p class="target-note">이번 단계의 범위는 보행 검증까지입니다. 실제 산업 투입과 방폭 운용은 그다음 단계입니다.</p>',
+        '영상에서 보신 것처럼 저희가 만드는 것은 잘 걷는 로봇입니다. 그 로봇을 어디에 먼저 보낼지도 정했습니다. 사람이 들어가기 어려운 현장의 반복 점검입니다. 제철소나 양조장 같은 산업 설비, 그리고 지하 공동구와 터널입니다. 이미 실제 도입 사례가 있습니다. National Grid 는 로봇 도입 뒤 고위험 설비 점검 주기를 연 1회에서 2주로 줄였고, AB InBev 는 매주 1,800건을 점검합니다. 국내에서도 KCC건설과 한국수자원공사가 도입을 시작했습니다. 저희는 보행 검증을 지나 목표 지점 자율 주행, 그리고 현장 시연으로 갑니다. 이번 단계의 범위는 보행 검증까지이고, 실제 산업 투입은 그다음입니다.',
+        link('기획서 2절 · 도입 사례와 적용 후보', '../../../../deliverables/plan/proposal.md'),
+        note='팀장 지시(2026-10-02): 단순 실험이 아니라 비즈니스·서비스로 보이게 특정 타깃으로 마무리. 근거는 기획서 2절(도입 사례 · National Grid, AB InBev, KCC건설, 한국수자원공사)과 적용 후보(지하 공동구·터널·산업 설비 점검). 1차 타깃을 산업 설비 플랜트로 둔 것은 덱 6~7쪽의 사례(AB InBev, 제철)와 맞춘 선택이다. 기획서 「실제 산업 투입·재난 대응·방폭 운용은 범위 밖」을 화면에서 지우지 않는다. 숫자는 기획서 인용이며 우리 실측이 아니다.'))
     result.append(make(
         'Q&A', '<div class="closing-qa">Q&amp;A</div>',
         '질문 있으시면 말씀해 주십시오. 질의응답이 끝나면 마지막 장으로 넘기겠습니다.',

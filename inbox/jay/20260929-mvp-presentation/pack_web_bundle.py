@@ -31,6 +31,11 @@ SRC = LAB / 'inbox/jay/20260929-mvp-presentation/output/FOOTHOLD-MVP-cover.html'
 OUTDIR = LAB / 'web/assets/mvp-deck'
 GO2SRC = LAB / 'inbox/jay/20260929-mvp-presentation/assets/go2-blender'
 GH = 'https://github.com/foothold-project/foothold-lab/blob/main/'
+# ★ 2026-10-02 라이브에서 이미지·영상이 전부 안 떴다. Vercel cleanUrls 가
+#   /assets/mvp-deck/index.html 을 /assets/mvp-deck 로 돌리고, 그 주소는
+#   «파일» 로 취급돼 상대경로 media/x 가 /assets/media/x 로 풀렸다(404).
+#   로컬 시험은 돌림이 없어서 통과했다. 참조를 전부 절대경로로 쓴다.
+WEB = '/assets/mvp-deck/'
 
 MEDIA_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.mp4', '.svg', '.gif', '.m4a'}
 
@@ -95,7 +100,7 @@ for r in local:
             shutil.copy2(q, dst)
             copied += 1
             copied_bytes += q.stat().st_size
-        rewrite[r] = 'media/' + name
+        rewrite[r] = WEB + 'media/' + name
     elif q.name == 'proposal-deck-presented.html':
         rewrite[r] = '/assets/deliverables/proposal-deck-presented.html'
     else:
@@ -169,9 +174,27 @@ def sub_js(m):
 
 html2 = JSPAT.sub(sub_js, html2)
 
+# ★ 메모(deckNotes)는 JSON 문자열이라 따옴표가 \" 다. 위 속성 정규식에 안 걸려
+#   발표자 메모의 출처 링크가 lab 상대경로로 남았다. 같은 규칙으로 GitHub 로 보낸다.
+import posixpath
+DECK_OUT = 'inbox/jay/20260929-mvp-presentation/output'
+def sub_note(m):
+    u = m.group(1)
+    if u.startswith(('http://', 'https://', '#', 'mailto:', '/')):
+        return m.group(0)
+    rel = posixpath.normpath(posixpath.join(DECK_OUT, u))
+    if rel.startswith('..'):
+        return m.group(0)
+    return 'href=' + chr(92) + '"' + GH + rel + chr(92) + '"'
+# JSON 안이라 따옴표가 역슬래시+따옴표 다. 집합 안의 역슬래시는 «둘» 이어야 한다
+#   (하나면 `[^"\]` 가 닫는 괄호를 먹어 unterminated character set).
+NOTE_HREF = re.compile('href=' + chr(92) * 2 + '"([^"' + chr(92) * 2 + ']+)' + chr(92) * 2 + '"')
+assert NOTE_HREF.search('href=' + chr(92) + '"../x.md' + chr(92) + '"'), '메모 링크 정규식 자기시험 실패'
+html2 = NOTE_HREF.sub(sub_note, html2)
+
 # player base
 before = html2.count("'../assets/go2-blender'")
-html2 = html2.replace("'../assets/go2-blender'", "'go2-blender'")
+html2 = html2.replace("'../assets/go2-blender'", "'" + WEB + "go2-blender'")
 assert before > 0, 'go2 base munjayeol eul mot chajatda'
 
 (OUTDIR / 'index.html').write_text(html2, encoding='utf-8')
@@ -185,14 +208,20 @@ for m in re.finditer(r'url\(\s*["\']?([^"\')]+)', html2):
     refs2.add(m.group(1))
 for m in JSPAT.finditer(html2):
     refs2.add(m.group(1))
-for m in re.finditer(r'''['"](media/[^'"\s]+)['"]''', html2):
+for m in re.finditer(r'''['"](/assets/mvp-deck/[^'"\s]+)['"]''', html2):
     refs2.add(m.group(1))
 for r in sorted(refs2):
     if r.startswith(('data:', 'http://', 'https://', '#', 'mailto:',
-                     'javascript:', '//', '/assets/')):
+                     'javascript:', '//')):
         continue
-    if not (OUTDIR / r).exists():
-        bad.append(r)
+    if r.startswith(WEB):
+        if not (OUTDIR / r[len(WEB):]).exists():
+            bad.append(r)
+        continue
+    if r.startswith('/assets/'):
+        continue                       # 사이트의 다른 자산 (발표본 등)
+    # ★ 여기 오면 «상대경로» 다. 라이브에서는 전부 깨진다. 하나도 허용 안 한다.
+    bad.append('상대경로(라이브에서 깨짐): ' + r)
 
 print('원본 참조 %d · 로컬 %d · 못 찾음 %d' % (len(refs), len(local), len(notfound)))
 print('media 복사 %d개 %.1f MB' % (copied, copied_bytes / 1048576))
@@ -211,4 +240,9 @@ if notfound:
     print('원본에서 못 찾은 것', notfound[:6])
 if go2_missing:
     print('go2 빠짐', go2_missing[:6])
+if not (bad or notfound or go2_missing):
+    # 모바일 대본 페이지도 같이 만든다 (2026-10-02 팀장 요청)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import make_script_page
+    make_script_page.build()
 sys.exit(1 if (bad or notfound or go2_missing) else 0)

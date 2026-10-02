@@ -85,3 +85,25 @@
    밀려 아래 그림과 겹쳤다 (실측 y446~475 vs 그림 y453~). 영상에 캡션
    자리를 남긴다. */
 .poc-sources > .closing-film video{height:198px;max-height:198px}
+
+/* 36쪽 · 어느 현장에 먼저 보낼 것인가 (2026-10-02 팀장 지시). 33쪽 실험 장과 같은 어법. */
+.closing-target{height:calc(100% - 78px);display:grid;grid-template-columns:1fr 1.02fr;gap:64px}
+.target-primary{padding:24px 0 0;border-top:3px solid #0e7a6e}
+.target-primary>span{font-size:20px;color:#0e7a6e;font-weight:650}
+.target-primary h3{font-size:36px;line-height:1.4;margin:18px 0 24px}
+.target-sites{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:20px 0;border-top:1px solid #c4cec7;border-bottom:1px solid #c4cec7}
+.target-sites b{display:block;font-size:24px;font-weight:650;margin-bottom:8px}
+.target-sites p{margin:0;font-size:20px;line-height:1.45;color:#4a5566}
+.target-why{font-size:22px;line-height:1.5;color:#4a5566;margin:22px 0 0}
+.target-market{display:grid;grid-template-rows:repeat(3,1fr) auto}
+.target-market>div{position:relative;border-top:1px solid #c4cec7;padding:14px 0 12px 126px}
+.target-market>div:first-child{border-top:3px solid #0e7a6e}
+.target-market h3{font-size:24px;margin:4px 0 6px}
+.target-market p{margin:0;font-size:21px;line-height:1.45}
+.target-market p b{color:#0e7a6e;font-weight:650}
+.target-market .target-path{display:flex;align-items:center;gap:16px;padding:18px 0 0;border-top:1px solid #c4cec7}
+.target-path>span{font-size:18px;color:#0e7a6e;font-weight:650;flex:none}
+.target-path>b{font-size:19px;font-weight:650;flex:none;white-space:nowrap}
+.target-path>i{height:2px;background:#b4c7c0;flex:1;position:relative;min-width:18px}
+.target-path>i::after{content:"";position:absolute;right:0;top:-4px;width:8px;height:8px;border-top:2px solid #0e7a6e;border-right:2px solid #0e7a6e;transform:rotate(45deg)}
+.target-note{margin:22px 0 0;padding-top:14px;border-top:2px solid #c4cec7;font-size:23px;font-weight:600;color:#1d2b33}

@@ -1,6 +1,12 @@
 const slides=[...document.querySelectorAll('.slide')];
 let current=0,step=0,presenterWindow=null,started=Date.now();
-function fit(){document.documentElement.style.setProperty('--scale',Math.min(innerWidth/1600,innerHeight/900))}fit();addEventListener('resize',fit);
+// 2026-10-02 모바일: 바가 바닥에 붙으면 그 높이만큼 뺀 영역에 무대를 맞춘다 (--stage-bottom).
+const MOBILE_Q='(max-width:900px),(hover:none) and (pointer:coarse)';
+function fit(){const bar=document.querySelector('#controls');const m=matchMedia(MOBILE_Q).matches;const h=(m&&bar)?bar.offsetHeight:0;document.documentElement.style.setProperty('--stage-bottom',h+'px');document.documentElement.style.setProperty('--scale',Math.min(innerWidth/1600,(innerHeight-h)/900))}fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,80));
+// 좌우 스와이프로 넘긴다. 영상·버튼·메모 위에서 시작한 손짓은 건드리지 않는다.
+let swX=null,swY=null;
+addEventListener('touchstart',e=>{const t=e.touches[0];swX=t.clientX;swY=t.clientY},{passive:true});
+addEventListener('touchend',e=>{if(swX===null)return;const t=e.changedTouches[0];const dx=t.clientX-swX,dy=t.clientY-swY;swX=swY=null;if(e.target.closest('#controls,#notes,#toc,video,button,input,a'))return;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)next();else prev()}},{passive:true});
 function show(index,atStep=0){
  const oldIndex=current;const oldShared=typeof captureShared==='function'?captureShared(slides[current]):[];
  current=Math.max(0,Math.min(slides.length-1,index));step=atStep;
