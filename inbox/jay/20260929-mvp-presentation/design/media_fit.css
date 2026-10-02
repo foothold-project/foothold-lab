@@ -19,3 +19,8 @@
 .mobility-option{display:flex;flex-direction:column;justify-content:flex-end}
 .mobility-option figure{margin-bottom:auto!important}
 .mobility-option{padding-bottom:72px;box-sizing:border-box}   /* 아래 결론 줄(absolute)과 안 겹치게 */
+
+/* 23쪽 feet_air_time 간격 (팀장: 코드 카드가 위 설명·아래 막대와 붙음) */
+.fat-side>p small{margin-bottom:10px}
+.fat-code{margin:12px 0 18px!important}
+.fat-side .rr-reward-chart{padding-top:4px}
