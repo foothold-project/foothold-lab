@@ -24,6 +24,11 @@
   "major": "",
   "ver": "v1.1"
  },
+ "deliverables/midterm/mvp-presentation.md": {
+  "hash": "a94086dbd7cfce84",
+  "major": "",
+  "ver": "v1.3"
+ },
  "deliverables/midterm/mvp-submission.md": {
   "hash": "5e68003d5a77b92d",
   "major": "",
@@ -120,9 +125,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "a4d7023e7c1ddc3b",
+  "hash": "fbb4d2f2a17f972c",
   "major": "v2.1",
-  "ver": "v2.25"
+  "ver": "v2.26"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",

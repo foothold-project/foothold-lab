@@ -1,0 +1,71 @@
+{
+ "segments": [
+  {
+   "id": "front_to_side",
+   "start": 300,
+   "end": 359,
+   "endState": "side_grid6"
+  },
+  {
+   "id": "scan_rays",
+   "start": 360,
+   "end": 431,
+   "endState": "scan_done"
+  },
+  {
+   "id": "joints",
+   "start": 432,
+   "end": 503,
+   "endState": "joints_close"
+  },
+  {
+   "id": "contact",
+   "start": 504,
+   "end": 563,
+   "endState": "stance"
+  },
+  {
+   "id": "feedback",
+   "start": 564,
+   "end": 623,
+   "endState": "feedback_end"
+  },
+  {
+   "id": "sensors",
+   "start": 624,
+   "end": 719,
+   "endState": "sensors_end"
+  },
+  {
+   "id": "commands",
+   "start": 720,
+   "end": 863,
+   "endState": "commands_end"
+  },
+  {
+   "id": "walk_side",
+   "start": 864,
+   "end": 935,
+   "endState": "side_walk"
+  },
+  {
+   "id": "to_commands",
+   "start": 936,
+   "end": 959,
+   "endState": "commands_start"
+  }
+ ],
+ "states": {
+  "front6": 300,
+  "side_grid6": 359,
+  "scan_done": 431,
+  "assembled6": 432,
+  "joints_close": 503,
+  "stance": 563,
+  "feedback_end": 623,
+  "sensors_end": 719,
+  "commands_end": 863,
+  "side_walk": 864,
+  "commands_start": 959
+ }
+}

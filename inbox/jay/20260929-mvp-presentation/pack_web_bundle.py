@@ -112,7 +112,7 @@ for r in local:
 
 # ---- 3. go2-blender bucunjip ----------------------------------------
 need = set()
-for mf in ['v4-manifest.js', 'v5-manifest.js']:
+for mf in ['v4-manifest.js', 'v5-manifest.js', 'v6-manifest.js']:
     obj = json.loads(GO2SRC.joinpath(mf).read_text(encoding='utf-8')
                      .split('=', 1)[1].rstrip().rstrip(';'))
     for s in obj.get('states', {}).values():
@@ -127,7 +127,7 @@ for mf in ['v4-manifest.js', 'v5-manifest.js']:
             if seg.get(k):
                 need.add(seg[k])
 # player ga fetch haneun manifest json do ganchi.
-for extra in ['v4-manifest.json', 'v5-manifest.json',
+for extra in ['v4-manifest.json', 'v5-manifest.json', 'v6-manifest.json',
               'v4-sensor-and-joint-anchors.json', 'geometry-manifest.json']:
     if (GO2SRC / extra).exists():
         need.add(extra)
@@ -197,6 +197,17 @@ before = html2.count("'../assets/go2-blender'")
 html2 = html2.replace("'../assets/go2-blender'", "'" + WEB + "go2-blender'")
 assert before > 0, 'go2 base munjayeol eul mot chajatda'
 
+# ★ 폰 리모트 설정 (공개용 publishable key · 비밀 아님). 파일이 없으면 리모트는 꺼진 채 나간다.
+CFG = Path(__file__).resolve().parent / 'remote.config.json'
+if CFG.exists():
+    cfg = json.loads(CFG.read_text(encoding='utf-8'))
+    tag = ('<script>window.FOOTHOLD_REMOTE=' + json.dumps({'url': cfg['url'], 'key': cfg['key']})
+           + ';window.FOOTHOLD_REMOTE_ROLE="deck";</script>')
+    assert html2.count('<script>const deckMeta=') == 1
+    html2 = html2.replace('<script>const deckMeta=', tag + '<script>const deckMeta=', 1)
+    print('리모트 설정 주입 (덱 역할)')
+else:
+    print('리모트 설정 없음 (remote.config.json) · 리모트 꺼짐')
 (OUTDIR / 'index.html').write_text(html2, encoding='utf-8')
 
 # ---- 5. gwanmun: namneun kkaejin chamjo ------------------------------

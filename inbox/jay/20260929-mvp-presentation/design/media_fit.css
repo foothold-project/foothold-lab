@@ -1,0 +1,16 @@
+/* 검은 띠 금지 · media_audit.py 2026-10-02 결과 (★ 27개) 를 전부 비율 맞춤으로 푼다 */
+/* 20쪽 틈 지형 영상 둘: 720x308 상자에 16:9 → 좌우 86px 띠. 높이를 지키고 폭을 비율대로 */
+.exp-page .content:not(:has(.lineage-ledger)) .evidence-videos .film video{height:308px!important;width:auto!important;max-width:100%;aspect-ratio:16/9;display:block;margin:0 auto;object-fit:cover}
+/* 27쪽 pit 세 영상: 472x310 → 16:9 로 높이를 비율대로 */
+.rr-film video{aspect-ratio:16/9;height:auto!important;max-height:none!important;width:100%;object-fit:cover}
+/* 30쪽 내리막 계단 둘: 720x245 → 높이 유지, 폭 비율대로 */
+.rr-regression-videos .rr-film video{height:245px!important;width:auto!important;max-width:100%;margin:0 auto;display:block}
+/* 32쪽 3DGS PoC: 상자를 못 키우니 cover 로 띠만 없앤다 (가장자리 조금 잘림) */
+.closing-film video,.poc-comparison img,.poc-comparison video{object-fit:cover!important}
+/* 12쪽 카드 안 줄 간격 (검사기 6~8px → 10px) */
+.cond-card h3{margin:9px 0 6px!important}.cond-card .hard{margin-top:6px}
+
+/* 16쪽 실패 유형 조건 줄: 13px 넘침 */
+.ft-page .ft-cond{font-size:13px!important;line-height:1.35!important}
+.ft-page .ft-cond{font-size:12px!important;margin-top:2px!important}
+.ft-page .finding{font-size:19px!important}

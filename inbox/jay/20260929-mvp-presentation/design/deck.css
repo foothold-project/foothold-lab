@@ -104,3 +104,12 @@ table{width:100%;border-collapse:collapse;font-size:20px;line-height:1.55}th{tex
     border:0!important;border-radius:0!important;font-size:17px!important;line-height:1.65!important}
   #toc{inset:0!important;width:auto!important;border-radius:0!important}
 }
+
+/* 발표자 메모의 (클릭) 칩과 폰 리모트 패널 (2026-10-02) */
+.cue-click{display:inline-block;font-style:normal;font-weight:700;font-size:.82em;line-height:1;padding:3px 7px;margin:0 4px;border-radius:999px;background:#0e7a6e;color:#fff;vertical-align:middle}
+#remoteChip{align-self:center;font-size:13px;color:#7ee0cf;padding:0 8px;white-space:nowrap}
+#remote{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:35;background:#07131cf5;color:#e9e7e1;border:1px solid #52747b;border-radius:10px;padding:14px 16px;width:min(480px,calc(100vw - 32px));font-size:15px;line-height:1.5}
+#remote p{margin:6px 0 10px;color:#b9c6c4;font-size:14px}#remote label{display:inline-flex;align-items:center;gap:8px;margin-right:8px}
+#remote input{font:inherit;font-size:16px;padding:6px 8px;border:1px solid #52747b;border-radius:6px;background:#0b202b;color:#fff;width:150px}
+#remote button{font:inherit;font-size:14px;padding:7px 12px;border-radius:6px;border:1px solid #52747b;background:#0e7a6e;color:#fff;margin-right:6px}
+#remoteStatus{display:block;margin-top:8px;font-size:13px;color:#b9c6c4}

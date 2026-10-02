@@ -25,3 +25,7 @@
 @media print{.army-caption h3{display:block!important}}
 .policy-diagram-note{position:absolute;bottom:35px;left:410px;right:410px;text-align:center;font-size:12px!important;color:#536b5c}.policy-page[data-current-step="0"] .policy-diagram-note{visibility:hidden}
 @media print{.policy-diagram-note{visibility:visible!important}}
+/* v6 카드 글줄 점등: data-from 은 build_v6.py 프레임 번호. 로봇이 그 동작을 하는 프레임에 닿으면 켜진다. 인쇄는 전부 켜진 상태. */
+.tech-label [data-from],.joint-key[data-from]{opacity:.3;transition:opacity .45s}
+.tech-label [data-from].on,.joint-key[data-from].on{opacity:1}
+@media print{.tech-label [data-from],.joint-key[data-from]{opacity:1!important}}

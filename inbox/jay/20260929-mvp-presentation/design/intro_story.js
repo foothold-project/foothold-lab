@@ -63,48 +63,52 @@ function pixelArrival(slide,stage,previous){
 function renderStoryState(slide,stage){
  const previous=Number(slide.dataset.currentStep??-1);slide.dataset.currentStep=stage;
  // Stop off-screen model motion and explanatory soundless clips.
- document.querySelectorAll('.technical-player,.continuous-player,.policy-v5-player').forEach(c=>{if(!slide.contains(c)){c.seq=(c.seq||0)+1;c.go2Technical?.stop();c.go2V5?.stop()}});
+ document.querySelectorAll('.technical-player,.continuous-player,.policy-v5-player,.axes-player,.fat-player').forEach(c=>{if(!slide.contains(c)){c.seq=(c.seq||0)+1;c.go2Technical?.stop();c.go2V5?.stop()}});
  slide.querySelectorAll('[data-only-step]').forEach(el=>el.classList.toggle('is-current',el.dataset.onlyStep.split(' ').includes(String(stage))));
  // U206: page 3 has no pixel migration; the route starts on page 4.
  if(slide.classList.contains('hardware-page'))playHardware(slide,stage);
  if(slide.classList.contains('policy-page'))playPolicy(slide,stage,previous);
  if(slide.classList.contains('army-page'))playArmy(slide,stage,previous);
+ if(slide.classList.contains('axes-page')&&typeof playAxes==='function')playAxes(slide,stage,previous);
+ if(slide.classList.contains('feetair-page')&&typeof playFeetAir==='function')playFeetAir(slide);
 }
 async function playHardware(slide,stage){
- const canvas=slide.querySelector('.technical-player');if(!window.Go2TechnicalPlayer)return;
- const continuous=slide.querySelector('.continuous-player');
- if(continuous){continuous.go2V5?.stop();continuous.seq=(continuous.seq||0)+1;continuous.style.opacity='';canvas.style.visibility='';}
- // ★ 2026-10-02. 0단계도 같은 v5 캔버스를 쓴다. 전에는 0단계가 v4 정지
- // 그림(go2-front-v4.png)이고 1단계가 v5 캔버스였다. 둘은 화각도 위치도
- // 달랐고 정지 그림에 0.5초 페이드가 걸려 있어 «잔상» 으로 겹쳤다.
- // 같은 캔버스에서 front 로 서 있다가 그대로 돌기 시작하면 바꿔칠 것이 없다.
- if(stage===0||stage===1||stage===2){
-  canvas.seq=(canvas.seq||0)+1;canvas.go2Technical?.stop();
-  if(!continuous.go2V5)continuous.go2V5=new Go2V5Player(continuous,'../assets/go2-blender');
-  const seq=continuous.seq;await continuous.go2V5.ready;
-  if(continuous.seq!==seq||!slide.classList.contains('active'))return;
-  await continuous.go2V5.setState(stage===2?'three_quarter':'front');
-  if(continuous.seq!==seq)return;
-  if(stage===0)return;                      // 0단계는 서 있기만 한다
-  await continuous.go2V5.playSegment(stage===1?'turntable':'four_legs');return;
- }
- const seq=(canvas.seq||0)+1;canvas.seq=seq;
- if(!canvas.go2Technical)canvas.go2Technical=new Go2TechnicalPlayer(canvas,'../assets/go2-blender');
- const p=canvas.go2Technical;p.stop();await p.ready;if(canvas.seq!==seq)return;
- if(stage===3){
-  if(continuous?.go2V5){continuous.style.opacity='1';canvas.style.visibility='hidden';await continuous.go2V5.setState('four_legs');if(canvas.seq!==seq)return;await continuous.go2V5.playSegment('assemble');if(canvas.seq!==seq||!slide.classList.contains('active'))return;continuous.style.opacity='';canvas.style.visibility='';}
-  await p.setState('single_leg');for(const id of ['hip','thigh','calf']){if(canvas.seq!==seq||!slide.classList.contains('active'))return;await p.playSegment(id)}if(canvas.seq===seq)await p.setState('twelve_axes');}
- else if(stage===7){for(const id of ['forward','lateral','yaw']){if(canvas.seq!==seq||!slide.classList.contains('active'))return;await p.playSegment(id)}}
- else await p.setState('front');
+ // ★ 2026-10-02 v6: 캔버스 하나(.continuous-player)로 0~7 단계를 잇는다. 0~2 는 v5 그대로
+ // (front · turntable · four_legs), 3 부터는 v6 구간(assemble 뒤 joints · contact+feedback ·
+ // sensors · commands). 단계 n 의 시작 상태 = n-1 의 끝 상태라 넘어갈 때 바꿔칠 것이 없다.
+ // 되돌릴 때(이전)는 그 단계의 끝 상태 정지화. v4 technical-player 는 더 안 쓴다(인쇄는 정지화).
+ // 프레임은 build_v6.py 의 설명용 기구학이지 정책 출력이 아니다.
+ const continuous=slide.querySelector('.continuous-player');if(!continuous||!window.Go2V5Player)return;
+ if(window.GO2_V6_MANIFEST&&window.GO2_V5_MANIFEST&&!GO2_V5_MANIFEST.segments.commands){Object.assign(GO2_V5_MANIFEST.states,GO2_V6_MANIFEST.states);Object.assign(GO2_V5_MANIFEST.segments,GO2_V6_MANIFEST.segments);}
+ slide.querySelector('.technical-player')?.go2Technical?.stop();
+ const previous=continuous.lastStage;continuous.lastStage=stage;
+ const seq=(continuous.seq||0)+1;continuous.seq=seq;
+ const END=['front','three_quarter','four_legs','joints_close','feedback_end','sensors_end','sensors_end','commands_end'];
+ const PLAY={1:['turntable'],2:['four_legs'],3:['assemble','joints'],4:['contact','feedback'],5:['sensors'],7:['commands']};
+ // 카드 글줄 점등: 현재 층의 [data-from] 은 그 프레임에 닿으면 켜진다(정지화도 끝 프레임이라 전부 켜진다).
+ const light=f=>{const fr=Number(f.frame)||0;slide.querySelectorAll('.tech-layer.is-current [data-from]').forEach(el=>el.classList.toggle('on',fr>=Number(el.dataset.from)));};
+ if(!continuous.go2V5)continuous.go2V5=new Go2V5Player(continuous,'../assets/go2-blender',{cacheLimit:420,initial:END[stage],onFrame:light});
+ const p=continuous.go2V5;p.stop();await p.ready;if(continuous.seq!==seq||!slide.classList.contains('active'))return;
+ const prefetch=ids=>{for(const id of ids||[]){const seg=p.manifest.segments[id];if(!seg)continue;for(let f=seg.start;f<=seg.end;f++)p.load(seg.pattern.replace('{frame:04d}',String(f).padStart(4,'0'))).catch(()=>{});}};
+ const backward=previous!==undefined&&previous>=stage;
+ if(backward||!PLAY[stage]){await p.setState(END[stage]);if(continuous.seq===seq&&!backward)prefetch(PLAY[stage+1]);return;}
+ await p.setState(END[stage-1]);if(continuous.seq!==seq)return;
+ for(const id of PLAY[stage]){if(continuous.seq!==seq||!slide.classList.contains('active'))return;await p.playSegment(id);}
+ if(continuous.seq===seq)prefetch(PLAY[stage+1]);
 }
 async function playPolicy(slide,stage,previous){
+ // ★ 2026-10-02 v6: 0단계 정면(front6 · v5 front 와 같은 카메라) → 1단계 클릭에 그 자리에서 돌아
+ // 측면(front_to_side) → 레이저가 위에서 내려와 187 점을 훑는다(scan_rays) → 2~4 단계는 scan_done 정지.
+ // 캔버스 위치는 단계마다 같다(CSS). 되돌릴 때는 정지화.
  const canvas=slide.querySelector('.policy-v5-player');if(!canvas||!window.Go2V5Player)return;
+ if(window.GO2_V6_MANIFEST&&window.GO2_V5_MANIFEST&&!GO2_V5_MANIFEST.segments.scan_rays){Object.assign(GO2_V5_MANIFEST.states,GO2_V6_MANIFEST.states);Object.assign(GO2_V5_MANIFEST.segments,GO2_V6_MANIFEST.segments);}
  const seq=(canvas.seq||0)+1;canvas.seq=seq;
- if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender');
- const p=canvas.go2V5;p.stop();await p.ready;if(canvas.seq!==seq)return;
- if(stage===0){await p.setState('front');return;}
- if(stage===1&&previous===0){await p.setState('assembled');if(canvas.seq!==seq)return;await p.playSegment('to_side');if(canvas.seq!==seq)return;await p.playSegment('scan');}
- else await p.setState('scan');
+ if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender',{cacheLimit:200,initial:stage===0?'front6':'scan_done'});
+ const p=canvas.go2V5;p.stop();await p.ready;if(canvas.seq!==seq||!slide.classList.contains('active'))return;
+ const prefetch=ids=>{for(const id of ids){const seg=p.manifest.segments[id];if(!seg)continue;for(let f=seg.start;f<=seg.end;f++)p.load(seg.pattern.replace('{frame:04d}',String(f).padStart(4,'0'))).catch(()=>{});}};
+ if(stage===0){await p.setState('front6');if(canvas.seq===seq)prefetch(['front_to_side','scan_rays']);return;}
+ if(stage===1&&previous<1){await p.setState('front6');if(canvas.seq!==seq)return;await p.playSegment('front_to_side');if(canvas.seq!==seq)return;await p.playSegment('scan_rays');return;}
+ await p.setState('scan_done');
 }
 function playArmy(slide,stage,previous){
  const video=slide.querySelector('video'),counter=slide.querySelector('.env-counter');

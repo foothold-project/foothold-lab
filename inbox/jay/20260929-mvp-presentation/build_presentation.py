@@ -1,12 +1,13 @@
 """Build the presentation in the user-approved cover URL. Sources remain editable."""
 from pathlib import Path
-import csv, json, re, html, shutil
+import csv, json, re, html, shutil, os, importlib
 from design.evidence_layouts import enrich
 from design.intro_story import revise, COVER_NOTES
 from design.scene_revision import refine, USER_COVER_NOTES
 from design.research_revision import revise_research
 from design.closing_revision import revise_closing
 from design.media_u206 import revise_media
+from design import spoken_steps, axes_scene, experiment_frame, failure_types, terrain_catalog, charts_u209, compare_tables, bridge_slide
 COVER_NOTES=USER_COVER_NOTES
 
 HERE=Path(__file__).resolve().parent
@@ -231,7 +232,12 @@ def speed_chart():
 
 def build():
     SLIDES.clear();make_slides();apply_user_story_order();enrich(SLIDES,globals());revise(SLIDES);refine(SLIDES);revise_research(SLIDES);revise_closing(SLIDES)
-    revise_media(SLIDES)
+    revise_media(SLIDES); axes_scene.apply(SLIDES); spoken_steps.apply(SLIDES); experiment_frame.apply(SLIDES)
+    # 2026-10-02 병렬 작업 모듈 (순서 중요: 띠 뒤에 실패 유형 · 삽입 장은 제목 기준)
+    failure_types.apply(SLIDES); terrain_catalog.apply(SLIDES); charts_u209.apply(SLIDES); compare_tables.apply(SLIDES); bridge_slide.apply(SLIDES)
+    # 병렬 작업용 확장 고리 (2026-10-02): FOOTHOLD_DECK_EXTRA=design.a,design.b 의 apply(SLIDES) 를 차례로 부른다.
+    for _m in [m for m in os.environ.get('FOOTHOLD_DECK_EXTRA','').split(',') if m.strip()]:
+        importlib.import_module(_m.strip()).apply(SLIDES)  # 단계 장 멘트에 (클릭) 박기 (2026-10-02)
     chart,data=speed_chart()
     original=(HERE/'design/cover-approved.template.html').read_text(encoding='utf-8')
     basecss=re.search(r'<style>([\s\S]*?)</style>',original).group(1).replace('#slide','#cover')
@@ -258,14 +264,16 @@ def build():
         else: cue.append('<b>마지막 장</b>입니다')
         allnotes.append('<h2>'+esc(s['title'])+'</h2>'
           +'<p class="note-cue">'+' · '.join(cue)+'</p>'
-          +'<h3>발표 멘트</h3><p>'+esc(spoken)+'</p>'
+          +'<h3>발표 멘트</h3><p>'+esc(spoken).replace('(클릭)','<i class="cue-click">클릭</i>')+'</p>'
           +'<details><summary>자료 해석·제작 확인</summary><p>'+esc(s['note'])+'</p><p>'+s['source']+'</p></details>')
-    css='\n'.join((HERE/('design/'+x)).read_text(encoding='utf8') for x in ['deck.css','intro_story.css','scene_revision.css','technical_scene.css','presentation_u206.css','research_revision.css','closing_revision.css'])
-    js='\n'.join((HERE/x).read_text(encoding='utf8') for x in ['assets/go2-blender/v4-manifest.js','assets/go2-blender/v4-player.js','assets/go2-blender/v5-manifest.js','assets/go2-blender/v5-player.js','design/deck.js','design/intro_story.js'])
-    controls='''<nav id="controls"><button onclick="prev()">← 이전</button><button onclick="next()">다음 →</button><span id="counter"></span><button onclick="toggleTOC()">목차</button><button class="m-hide" onclick="fullscreen()">F 전체화면</button><button onclick="toggleNotes()">N 메모</button><button class="m-hide" onclick="openPresenter()">P 별도 창</button><button class="m-hide" onclick="playVideos()">V 영상</button><button class="m-hide" onclick="window.print()">PDF 출력</button></nav><aside id="notes" hidden><div class="note-actions"><button onclick="document.querySelector('#notes').classList.toggle('left')">좌우 이동</button><button onclick="openPresenter()">별도 창</button><button onclick="toggleNotes()">닫기</button></div><div id="notesContent"></div></aside><div id="blank" hidden></div><aside id="toc" hidden><button onclick="toggleTOC()">닫기</button><h2>발표 목차</h2><div id="tocItems"></div></aside>'''
+    css='\n'.join((HERE/('design/'+x)).read_text(encoding='utf8') for x in ['deck.css','intro_story.css','scene_revision.css','technical_scene.css','presentation_u206.css','research_revision.css','closing_revision.css','experiment_frame.css','axes_scene.css','failure_types.css','terrain_catalog.css','charts_u209.css','compare_tables.css','bridge_slide.css','media_fit.css']+[x.strip() for x in os.environ.get('FOOTHOLD_DECK_EXTRA_CSS','').split(',') if x.strip()]+['layout_u208.css'])
+    js='\n'.join((HERE/x).read_text(encoding='utf8') for x in ['assets/go2-blender/v4-manifest.js','assets/go2-blender/v4-player.js','assets/go2-blender/v5-manifest.js','assets/go2-blender/v6-manifest.js','assets/go2-blender/v5-player.js','design/remote.js','design/deck.js','design/intro_story.js','design/axes_scene.js','design/compare_tables.js']+[x.strip() for x in os.environ.get('FOOTHOLD_DECK_EXTRA_JS','').split(',') if x.strip()])
+    controls='''<nav id="controls"><button onclick="prev()">← 이전</button><button onclick="next()">다음 →</button><span id="counter"></span><button onclick="toggleTOC()">목차</button><button class="m-hide" onclick="fullscreen()">F 전체화면</button><button onclick="toggleNotes()">N 메모</button><button class="m-hide" onclick="openPresenter()">P 별도 창</button><button class="m-hide" onclick="playVideos()">V 영상</button><button class="m-hide" onclick="window.print()">PDF 출력</button><button onclick="toggleRemote()">리모트</button><span id="remoteChip" hidden></span></nav><div id="remote" hidden><b>폰 리모트</b><p>폰에서 대본 페이지를 열고 같은 방 코드를 넣으면, 폰에서 넘길 때 이 화면이 넘어갑니다.</p><label>방 코드 <input type="text" maxlength="24" placeholder="예: foothold" autocomplete="off"></label><button onclick="remoteConnect()">연결</button><button onclick="remoteOff()">끊기</button><span id="remoteStatus">리모트 꺼짐</span></div><aside id="notes" hidden><div class="note-actions"><button onclick="document.querySelector('#notes').classList.toggle('left')">좌우 이동</button><button onclick="openPresenter()">별도 창</button><button onclick="toggleNotes()">닫기</button></div><div id="notesContent"></div></aside><div id="blank" hidden></div><aside id="toc" hidden><button onclick="toggleTOC()">닫기</button><h2>발표 목차</h2><div id="tocItems"></div></aside>'''
     meta=[dict(title='FOOTHOLD · 미경험 험지 적응 정책',section='표지',steps=0)]+[{k:s[k] for k in ['title','section','steps']} for s in SLIDES]
     output='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FOOTHOLD · MVP 중간발표</title><style>'+basecss+'\n'+css+'</style></head><body><main id="viewport">'+cover+''.join(sections)+'</main>'+controls+'<script>const deckMeta='+json.dumps(meta,ensure_ascii=False)+';const deckNotes='+json.dumps(allnotes,ensure_ascii=False).replace('</',r'<\/')+';'+js+'</script></body></html>'
     assert '\u2014' not in output
+    if os.environ.get('FOOTHOLD_DECK_OUT'):   # 미리보기 빌드: 공용 산출물(매니페스트·대본 지도)은 안 건드린다
+        _o=Path(os.environ['FOOTHOLD_DECK_OUT']); _o.write_text(output,encoding='utf-8'); print(f'{len(meta)} slides -> {_o} (preview)'); return
     (OUT/'FOOTHOLD-MVP-cover.html').write_text(output,encoding='utf-8')
     (HERE/'PPT-BUILD-MANIFEST.json').write_text(json.dumps({'slides':meta,'count':len(meta),'speed_success_percent':data,'entry':'output/FOOTHOLD-MVP-cover.html','template':'design/cover-approved.template.html'},ensure_ascii=False,indent=2),encoding='utf-8')
     mapping=['# 발표 원문과 실제 화면 대응','', '근거: [사용자가 직접 전달한 멘트 원문](USER-SPOKEN-NARRATIVE.md). 아래는 현재 구현 상태이며 최종 승인표가 아니다.','', '| 화면 | 발표 흐름 | 다음 장면과의 연결 |','|---|---|---|']

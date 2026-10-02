@@ -1,6 +1,6 @@
 # 압축 직전 인계
 
-> 자동 생성 · 2026-09-29 15:15:04
+> 자동 생성 · 2026-10-02 13:16:18
 > 방아쇠: "trigger":"auto"
 > 이 파일은 PreCompact 훅이 씁니다. 압축 뒤 요약본만 받았으면 이것을 먼저 읽으십시오.
 
@@ -31,27 +31,27 @@
 
 ## 저장소
 ```
-af5a5faa web: 종합보고서를 /report-v2 로 옮긴다 (1 차와 나란히)
-6bcdc9d1 web(gallery): 기본 지형도 판에서 뽑는다 · 내 버튼이 404 였다 · view 가 판을 넘긴다
-afa6bdd6 web(gallery): 기본 세 열을 계보 차례로 · 갤러리별로 다르게 · 주소는 짧게
-a165e060 web: /report-v2 를 종합보고서 주소로 더한다
-f8cfc2f1 web(gallery): baseline 앞의 판 딱지를 없앤다 · 갤러리에 favicon 이 없던 것을 고친다
+fb8bdb3e 발표 화면: 라이브 깨짐 수정 · 36쪽 타깃 · 모바일 · 대본 · 작성자 관문
+6f98ec54 발표 화면: 팀장 검토 전수 반영
+780f7519 웹: 산출물 목록 둘이 어긋나면 빌드를 세운다
+60da76b3 웹: MVP 발표 화면 37장을 deliverables 에 건다
+f649a2ec brand: 스토리보드에 삽입 컷 카드 추가 · s14 s15 흐르는 먼지 층 제거 (#490)
 
  M _out/loop/HANDOFF-precompact.md
- M _out/loop/bundle3.py
- M _out/loop/detail3.py
- M _out/loop/eval_runner.log
- D _out/loop/night.lock
- M _out/loop/night.log
- M _out/loop/night.sh
- M _out/loop/night.stage.r1
- M _out/loop/verify-handles.txt
- M docs/research/20260928-scratch-vs-resume.md
- M sim/eval/results/20260928-scratch-vs-resume/MISSING.md
- M sim/eval/results/20260928-scratch-vs-resume/axis1_long.csv
- M sim/eval/results/20260928-scratch-vs-resume/axis2_long.csv
- M sim/eval/results/20260928-scratch-vs-resume/compare.md
- M sim/eval/results/20260928-scratch-vs-resume/detail-ckptflow.md
+ M docs/ops/versions.json
+ M inbox/jay/20260929-mvp-presentation/PPT-SPOKEN-FLOW-MAP.md
+ M inbox/jay/20260929-mvp-presentation/build_presentation.py
+ M inbox/jay/20260929-mvp-presentation/design/deck.css
+ M inbox/jay/20260929-mvp-presentation/design/deck.js
+ M inbox/jay/20260929-mvp-presentation/output/FOOTHOLD-MVP-cover.html
+ M inbox/jay/20260929-mvp-presentation/pack_web_bundle.py
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/build_v6.py
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-assembled6-v6.png
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-commands_end-v6.png
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-feedback_end-v6.png
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-front6-v6.png
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-joints_close-v6.png
+?? inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-scan_done-v6.png
 ```
 
 ## 열려 있는 결정

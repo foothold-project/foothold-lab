@@ -1,0 +1,210 @@
+{
+ "pyramid_stairs": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/pyramid_stairs-v1/pyramid_stairs-v1.trim.mp4",
+  "frame": 175,
+  "frames": 275,
+  "texture": 38.8,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "pyramid_stairs_inv": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/pyramid_stairs_inv-v1/pyramid_stairs_inv-v1.trim.mp4",
+  "frame": 180,
+  "frames": 270,
+  "texture": 32.0,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "boxes": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/boxes-v1/boxes-v1.trim.mp4",
+  "frame": 173,
+  "frames": 264,
+  "texture": 45.9,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "random_rough": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/random_rough-v1/random_rough-v1.trim.mp4",
+  "frame": 222,
+  "frames": 272,
+  "texture": 23.8,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "hf_pyramid_slope": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/hf_pyramid_slope-v1/hf_pyramid_slope-v1.trim.mp4",
+  "frame": 214,
+  "frames": 261,
+  "texture": 15.0,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "hf_pyramid_slope_inv": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/hf_pyramid_slope_inv-v1/hf_pyramid_slope_inv-v1.trim.mp4",
+  "frame": 215,
+  "frames": 266,
+  "texture": 19.9,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "gap": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/gap-v1/gap-v1.trim.mp4",
+  "frame": 100,
+  "frames": 257,
+  "texture": 21.9,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "rails": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/rails-v1/rails-v1.trim.mp4",
+  "frame": 196,
+  "frames": 261,
+  "texture": 25.0,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "discrete_obstacles": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/discrete_obstacles-v1/discrete_obstacles-v1.trim.mp4",
+  "frame": 216,
+  "frames": 268,
+  "texture": 29.8,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "floating_ring": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/floating_ring-v1/floating_ring-v1.trim.mp4",
+  "frame": 46,
+  "frames": 261,
+  "texture": 30.3,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "pit": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/pit-v1/pit-v1.trim.mp4",
+  "frame": 46,
+  "frames": 261,
+  "texture": 15.8,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "repeated_boxes": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/repeated_boxes-v1/repeated_boxes-v1.trim.mp4",
+  "frame": 100,
+  "frames": 260,
+  "texture": 19.2,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "repeated_cylinders": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/repeated_cylinders-v1/repeated_cylinders-v1.trim.mp4",
+  "frame": 100,
+  "frames": 261,
+  "texture": 17.8,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "star": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/star-v1/star-v1.trim.mp4",
+  "frame": 59,
+  "frames": 263,
+  "texture": 38.0,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "stepping_stones": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/stepping_stones-v1/stepping_stones-v1.trim.mp4",
+  "frame": 126,
+  "frames": 300,
+  "texture": 52.2,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ },
+ "wave": {
+  "clip": "sim/eval/results/20260928-v2-gallery/cuts/wave-v1/wave-v1.trim.mp4",
+  "frame": 149,
+  "frames": 265,
+  "texture": 14.7,
+  "command_vx_mps": 1.0,
+  "difficulty": 0.5,
+  "crop_top": 310,
+  "size": [
+   960,
+   385
+  ]
+ }
+}

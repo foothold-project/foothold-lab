@@ -17,7 +17,7 @@ function show(index,atStep=0){
  if(oldIndex!==current)slides[current].querySelectorAll('video[data-autoplay],video[autoplay]').forEach(v=>{v.currentTime=0;v.play().catch(()=>{v.controls=true})});
  document.querySelector('#counter').textContent=`${current+1} / ${slides.length}`;
  document.querySelector('#notesContent').innerHTML=deckNotes[current];
- history.replaceState(null,'','#slide-'+(current+1));syncPresenter();
+ history.replaceState(null,'','#slide-'+(current+1));syncPresenter();if(window.footholdRemote&&!footholdRemote.applying)footholdRemote.send(current,step);
 }
 function next(){const max=Number(slides[current].dataset.steps||0);if(step<max)show(current,step+1);else show(current+1)}
 function prev(){if(step>0)show(current,step-1);else {const j=Math.max(0,current-1);show(j,Number(slides[j].dataset.steps||0))}}
@@ -46,3 +46,10 @@ document.querySelector('#blank').onclick=()=>document.querySelector('#blank').hi
 let controlTimer;addEventListener('pointermove',()=>{document.body.classList.add('controls');clearTimeout(controlTimer);controlTimer=setTimeout(()=>document.body.classList.remove('controls'),1800)});
 const initial=Number(location.hash.replace('#slide-',''))-1;queueMicrotask(()=>show(Number.isFinite(initial)&&initial>=0?initial:0));
 window.footholdDeck={show,next,prev,get state(){return {current,step,count:slides.length}}};
+// 폰 리모트 (design/remote.js 가 앞에 로드된다). 받은 상태를 그대로 보여 준다.
+window.__remoteApply=p=>{show(Number(p.index)||0,Number(p.step)||0)};
+function toggleRemote(){const r=document.querySelector('#remote');r.hidden=!r.hidden;if(!r.hidden){const i=r.querySelector('input');try{i.value=i.value||localStorage.getItem('foothold-room')||''}catch(e){}i.focus()}}
+function remoteConnect(){const i=document.querySelector('#remote input');if(window.footholdRemote)footholdRemote.connect(i.value)}
+function remoteOff(){if(window.footholdRemote)footholdRemote.disconnect()}
+if(window.footholdRemote){footholdRemote.onStatus((st,room)=>{const el=document.querySelector('#remoteStatus');if(el)el.textContent='리모트 '+st+(room?' · 방 '+room:'');const chip=document.querySelector('#remoteChip');if(chip){chip.hidden=(st!=='연결됨');chip.textContent='● 리모트 '+room}});
+ if(!footholdRemote.enabled){const b=[...document.querySelectorAll('#controls button')].find(x=>x.textContent==='리모트');if(b)b.hidden=true}}

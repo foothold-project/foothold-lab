@@ -1,0 +1,41 @@
+/* ── Isaac Sim 학습 지형 장 (technical-page 틀 · 무대 1600×900 절대 좌표) · 2026-10-02 ──
+   왼쪽 2×4 학습 8종 · 가운데 2×4 미경험 8종 · 오른쪽 설명 상자.
+   타일 그림 상자 비율 = 원본(960×385) 비율 · object-fit:cover 라 검은 띠가 없다.
+   세로 예산: 제목 아래 196 ~ 푸터 위 800. 묶음 제목 22+6, 타일 4줄 (94.6 + 캡션 36 + 테두리 2 + 여백 5) + 틈 8×3 = 798. */
+.tc-world{background:var(--p-bg)}
+.tc-group{position:absolute;top:196px;width:480px}
+.tc-trained{left:64px}
+.tc-unseen{left:584px}
+.tc-group h3{height:22px;margin:0 0 6px!important;font-size:16px;line-height:22px;font-weight:700;color:var(--p-ink);white-space:nowrap;display:flex;align-items:baseline;gap:10px}
+.tc-trained h3 b{color:#0e7a6e}
+.tc-unseen h3 b{color:var(--p-ink)}
+.tc-group h3 span{font-size:15px;font-weight:500;color:var(--p-muted)}
+.tc-grid{display:grid;grid-template-columns:repeat(2,236px);gap:8px 8px}
+.tc-tile{margin:0;border-bottom:2px solid #778783;transition:opacity .6s ease,filter .6s ease}
+.tc-pic{position:relative;width:236px;aspect-ratio:960/385;overflow:hidden;background:#172126}
+.tc-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.tc-share{position:absolute;right:5px;top:5px;font:700 15px/1 Pretendard,sans-serif;font-style:normal;color:#fff;background:rgba(22,28,38,.74);padding:3px 6px 2px;border-radius:2px}
+.tc-from{position:absolute;left:5px;top:5px;font:700 15px/1 Pretendard,sans-serif;font-style:normal;color:#fff;background:#0e7a6e;padding:3px 6px 2px;border-radius:2px}
+.tc-tile figcaption{display:flex;flex-direction:column;padding:3px 0 2px;line-height:1.15}
+.tc-tile figcaption span{font-size:16px;font-weight:700;color:var(--p-ink);white-space:nowrap}
+.tc-tile figcaption small{font-size:15px;color:var(--p-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 단계 0: 미경험 묶음은 흐리게 있다가, (클릭) 1 에서 켜진다. deck.js 가 data-current-step 을 준다. */
+.terrain-page:not([data-current-step="1"]) .tc-unseen .tc-tile{opacity:.16;filter:grayscale(1)}
+.terrain-page:not([data-current-step="1"]) .tc-unseen h3{opacity:.42}
+.tc-unseen h3{transition:opacity .6s ease}
+.tc-step1{transition:opacity .6s ease .15s,transform .6s ease .15s}
+.terrain-page:not([data-current-step="1"]) .tc-step1{opacity:0;transform:translateY(8px)}
+
+/* 오른쪽 설명 상자 */
+.tc-panel{position:absolute;left:1112px;top:196px;width:424px;box-sizing:border-box;border-top:2px solid #0e7a6e;padding-top:12px;color:var(--p-ink)}
+.tc-panel small{display:block;font-size:15px;font-weight:700;letter-spacing:.03em;color:#0a7b69}
+.tc-panel .tc-easy{font-size:24px!important;line-height:1.35!important;font-weight:700;letter-spacing:-.02em;margin:10px 0 0;word-break:keep-all}
+.tc-panel .tc-easy.tc-step1{margin-top:14px;color:#0e7a6e}
+.tc-hard{margin:22px 0 0;padding:14px 0 0;border-top:1px solid var(--p-rule)}
+.tc-hard>div{display:grid;grid-template-columns:52px 1fr;gap:8px;margin:0 0 9px;font-size:15px;line-height:1.45}
+.tc-hard dt{margin:0;font-weight:700;color:#0a7b69}
+.tc-hard dd{margin:0;color:var(--p-ink);word-break:keep-all;overflow-wrap:anywhere}
+.tc-prov{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--p-rule);font-size:15px!important;line-height:1.45!important;color:var(--p-muted);word-break:keep-all}
+
+@media print{.terrain-page .tc-unseen .tc-tile,.terrain-page .tc-unseen h3,.terrain-page .tc-step1{opacity:1!important;filter:none!important;transform:none!important}}

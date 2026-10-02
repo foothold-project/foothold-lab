@@ -54,29 +54,25 @@
 .module-strip figure:first-child img{padding:30px 0;box-sizing:border-box}
 .module-strip figcaption{padding-top:28px;border-top:1px solid #96b0a5;gap:10px}
 .module-strip figcaption span{font-size:20px;color:#40584c}
-.hardware-page[data-current-step="4"] .technical-robot{opacity:0}
 @media print{.questions-page .question-robot{transform:none!important}.slide:not(.cover) footer{bottom:32px}.industry-page .industry-robot{width:330px!important;height:350px!important;left:571px!important;top:103px!important}}
-.hardware-page .technical-robot{opacity:1!important;transform:none!important}
-/* ★ 2026-10-02 팀장 지적: 「정면보고 서있는 Go2 잔상」.
-   .technical-robot 에 transition:opacity .5s 가 걸려 있어 0->1 에서
-   정지 그림이 0.5초 남고 그 위로 v5 턴테이블이 떴다. 0단계부터 같은
-   v5 캔버스를 쓰면 바꿔칠 것이 없어 잔상 자체가 안 생기고,
-   0 -> 1 -> 2 가 같은 기체·카메라로 이어진다. */
-.hardware-page:is([data-current-step="0"],[data-current-step="1"],[data-current-step="2"],[data-current-step="3"],[data-current-step="6"],[data-current-step="7"]) .technical-robot{opacity:0!important;transition:none}
-.hardware-page .technical-player{opacity:0!important}
-.hardware-page:is([data-current-step="3"],[data-current-step="7"]) .technical-player{opacity:1!important}
-.continuous-player{position:absolute;left:438px;top:205px;width:880px;height:660px;opacity:0;pointer-events:none}
-.hardware-page:is([data-current-step="0"],[data-current-step="1"],[data-current-step="2"]) .continuous-player{opacity:1}
+/* ★ 2026-10-02 팀장 지적: 「정면보고 서있는 Go2 잔상」 → 캔버스 하나로. 그리고 v6:
+   10쪽은 .continuous-player 캔버스 하나가 0~7 단계를 잇는다(0~2 v5 · 3~7 v6, intro_story.js playHardware).
+   정면 정지화(technical-robot)와 v4 technical-player 는 화면에서 안 쓴다(인쇄 정지화는 아래 print 규칙).
+   캔버스 720×540 at (440,265): v6 관절·피드백 근접 컷은 프레임 폭을 가득 채우므로 양쪽 카드
+   (80~440 · 1160~1520) 사이에 꼭 맞춰야 카드가 다리 위에 안 올라간다. 단계마다 같은 자리·크기. */
+.hardware-page .technical-robot{opacity:0!important;transition:none;transform:none!important}
+.hardware-page .technical-player{display:none!important}
+.continuous-player{position:absolute;left:440px;top:265px;width:720px;height:540px;opacity:1;pointer-events:none;transition:opacity .4s}
+/* 6단계(모듈 띠)는 띠가 로봇 자리를 덮으므로 캔버스를 잠깐 감춘다(sensors_end 가 그려진 채). 7단계에 같은 그림으로 돌아와 commands 로 이어진다. */
+.hardware-page[data-current-step="6"] .continuous-player{opacity:0}
 .hardware-page .tech-layer[data-only-step="2"] .label-left{top:340px}
 .hardware-page .tech-layer[data-only-step="4"] .label-left{top:495px}
 .continuous-print,.policy-v5-print{display:none}
 .policy-front{position:absolute;left:530px;top:247px;width:540px;height:510px;object-fit:contain;max-height:none!important}
 .policy-page:not([data-current-step="0"]) .policy-front{visibility:hidden}
-.policy-v5-player{position:absolute;left:415px;top:300px;width:770px;height:577.5px;opacity:1;pointer-events:none}
-.policy-page[data-current-step="0"] .policy-v5-player{opacity:0}
+/* v6: 11쪽 캔버스는 0단계(정면 front6)부터 끝까지 한 자리(top 255). 전에는 1단계만 top 300 이라 튀었다. */
+.policy-v5-player{position:absolute;left:415px;top:255px;width:770px;height:577.5px;opacity:1;pointer-events:none}
 .policy-total{bottom:91px}
-.policy-page:not([data-current-step="0"]) .policy-v5-player{top:255px}
-.policy-page[data-current-step="1"] .policy-v5-player{top:300px}
 .policy-page .learning-caption{bottom:123px}
 .policy-page .learning-loop{bottom:79px}
 .policy-diagram-note{bottom:42px;font-size:14px!important;color:#40584c}
