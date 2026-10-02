@@ -43,10 +43,10 @@ GATES = [
     # ★ 2026-10-02 팀장 지시. 발표에서 실제로 띄우는 화면을 밖에서 볼 수 있게
     #   건다. 이것은 단일 html 이 아니라 영상·프레임이 딸린 «묶음» 이라
     #   `-presented.html` 경로(copy_presented)로는 못 건다. 문서 안에서
-    #   `/assets/mvp-deck/index.html` 로 직접 링크한다.
+    #   `/assets/mvp-deck/index.html?v=20261002b` 로 직접 링크한다.
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
         ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
-        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (38장)'),
+        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (44장)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),
@@ -67,8 +67,8 @@ CLS = {'대기': ('wait', '대기'), '초안': ('go', '진행중'),
 #   «안내» 로만 건다. (lab 경로 -> (실물 주소, 부속 링크들))
 DIRECT = {
     'deliverables/midterm/mvp-presentation.md': (
-        '/assets/mvp-deck/index.html',
-        [('모바일 대본', '/assets/mvp-deck/script.html')]),
+        '/assets/mvp-deck/index.html?v=20261002b',
+        [('모바일 대본', '/assets/mvp-deck/script.html?v=20261002b')]),
 }
 
 
