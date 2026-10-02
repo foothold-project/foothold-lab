@@ -15,7 +15,7 @@
   - 이 덱 31·32·33·34쪽(closing_revision.py)         현재 상태 문구와 톤
 
 끼우는 자리: 「실제 공간을, 보행을 시험할 공간으로 가져오고 있습니다」 바로 앞 · 같은 section(다음 걸음).
-단계: steps=2 · spoken 의 (클릭) 2개 == steps (아래 assert).
+단계: steps=1 · 「지금 어디까지」는 0단계부터(팀장: 아래가 비어 보였다) · spoken 의 (클릭) 1개 == steps (아래 assert).
 """
 from .intro_story import make, src
 
@@ -34,7 +34,7 @@ def _pillar(cls, kicker, question, easy, tools, now_lines):
             f'<h3>{question}</h3>'
             f'<p class="easy">{easy}</p>'
             f'<ul class="tools">{tools_html}</ul>'
-            f'<div class="now reveal" data-step="1"><span>지금 어디까지</span>{now_html}</div>'
+            f'<div class="now reveal" data-step="0"><span>지금 어디까지</span>{now_html}</div>'
             f'</article>')
 
 
@@ -68,7 +68,7 @@ def bridge_slide():
         ('정책 실행', '걸려 본다', 'sim/eval 하네스 · heading 고정<br>100판 · 평지 기준선과 나란히'),
         ('검증', '맞는지 잰다', '축척(규격 대조 · 실측) · 바닥 오차<br>±2 cm(제안 합격선) · 스캔 유한값'),
     ]
-    flow = '<div class="poc-flow reveal" data-step="2"><small>다음 PoC · DIGITAL TWIN 의 흐름 · 아직 수행 전</small><div class="cells">'
+    flow = '<div class="poc-flow reveal" data-step="1"><small>다음 PoC · DIGITAL TWIN 의 흐름 · 아직 수행 전</small><div class="cells">'
     for i, (name, easy, hard) in enumerate(flow_cells):
         flow += f'<div class="cell"><b>{name}</b><p>{easy}</p><span>{hard}</span></div>'
         if i < len(flow_cells) - 1:
@@ -81,17 +81,17 @@ def bridge_slide():
               '가운데 Bridge, Digital Twin 은 실제 공간을 3DGS 로 복원해 두 트랙이 평가에 쓸 공간을 만듭니다. '
               '오른쪽 Track B 는 실제 로봇이 「목표까지 스스로 갈 수 있는가」를 묻습니다. '
               '두 트랙을 하나의 제어 파이프라인으로 잇지 않고, 같은 실제 공간을 기준으로 각각 검증합니다. '
-              '(클릭) 지금 어디까지 왔는지 보면, Track A 는 오늘 보여드린 v2 까지입니다. '
+              '지금 어디까지 왔는지 보면, Track A 는 오늘 보여드린 v2 까지입니다. '
               'Bridge 는 촬영에서 3DGS 복원, 충돌 메시, Isaac Sim USD, 정책 실행까지 한 번 이어 본 PoC 단계이고 다음 장에서 보여드립니다. '
               'Track B 는 순정 Go2 보행 위에 ROS 2, SLAM, Nav2 를 올리는 항법이고, 저희 학습 정책을 실기에 옮기는 것은 목표가 아닙니다. 그다음 장에서 설명합니다. '
               '(클릭) 그래서 다음 PoC 는 Digital Twin 입니다. 흐름은 한 줄입니다. 다시 촬영하고, 3DGS 로 복원하고, 발이 닿을 충돌 메시를 만들고, '
               'Isaac Sim USD 로 넣고, 정책을 걸려 보고, 축척과 관측과 바닥이 맞는지 검증합니다. '
               '복원이 보기 좋은 것과 물리적으로 맞는 바닥인 것은 다릅니다. 축척, 실제 지면 대비 정확도, 충돌과 관측의 정합은 아직 남은 일입니다.')
-    assert spoken.count(CLICK) == 2
+    assert spoken.count(CLICK) == 1
     source = (src('기획서 1절 · 세 축', '../../../../deliverables/plan/proposal.md') + ' · '
               + src('Real-to-Sim 설계안 · 다음 PoC 절차', '../../20260916-3dgs-test/DESIGN-real-to-sim.md'))
     return make('다음 걸음', BRIDGE_TITLE, body, spoken, source,
-                kind='closing-revision bridge-page', steps=2,
+                kind='closing-revision bridge-page', steps=1,
                 note='세 기둥의 제목·물음·도구 줄은 기획서 overview.svg 문구를 그대로 옮겼다. '
                      '「지금 어디까지」는 이 덱의 앞 장(v2 성과)과 9/16 PoC 결과(RESULTS-3dgs-terrain.md), 8/19 합의(기획서 1절 범위 밖)에서만 가져왔다. '
                      'PoC 흐름 여섯 칸은 DESIGN-real-to-sim.md 의 재촬영(7절) · 방법 비교(5-1) · 축척(6절) · 평가 하네스(11-2) · 합격선(4절, 제안)이다. '
