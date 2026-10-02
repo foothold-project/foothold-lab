@@ -671,7 +671,7 @@ table{width:100%;border-collapse:collapse;font-size:20px;line-height:1.55}th{tex
 .axes-player{position:absolute;left:440px;top:351px;width:520px;height:390px;pointer-events:none;transform-origin:center center;z-index:2}
 .axes-print{display:none;position:absolute;left:440px;top:351px;width:520px;height:390px;max-height:none;object-fit:contain;z-index:2}
 .axes-page[data-pos="1"] .axes-player,.axes-page[data-pos="1"] .lane-dot{transform:translateX(560px)}
-.axes-page[data-pos="2"] .axes-player{transform:translate(100px,-14px) scale(1.3)}
+.axes-page[data-pos="2"] .axes-player{transform:translate(100px,40px) scale(1.05)}   /* 팀장: 명령 카드가 로봇을 덮었다 → 카드 아래로 */
 .axes-page.axes-animating .axes-player,.axes-page.axes-animating .lane-dot{transition:transform 4.5s linear}
 .axes-page.axes-turning .axes-player{transition:transform .9s ease}
 .axes-page[data-axis="2"] .axes-track,.axes-page[data-axis="2"] .lane-dot{opacity:0}
@@ -916,6 +916,11 @@ svg.u209-speed .u209-dot{stroke-width:2.5}
 .ft-page .ft-cond{font-size:13px!important;line-height:1.35!important}
 .ft-page .ft-cond{font-size:12px!important;margin-top:2px!important}
 .ft-page .finding{font-size:19px!important}
+
+/* 8쪽 세 칸: 가운데 칸(공유 Go2 그림 · figure 없음)의 글 묶음이 40px 낮았다 → 세 칸 글을 아래 기준으로 맞춘다 */
+.mobility-option{display:flex;flex-direction:column;justify-content:flex-end}
+.mobility-option figure{margin-bottom:auto!important}
+.mobility-option{padding-bottom:72px;box-sizing:border-box}   /* 아래 결론 줄(absolute)과 안 겹치게 */
 
 /* U208 · 레이아웃 재검사 (2026-10-02 팀장 지적)
    기준 셋: 1) 장끼리 통일성 2) 글·선 사이 간격이 안정감 있는 비율 3) 빈 곳·몰린 곳 없이 균형.

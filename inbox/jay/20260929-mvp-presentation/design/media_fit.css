@@ -14,3 +14,8 @@
 .ft-page .ft-cond{font-size:13px!important;line-height:1.35!important}
 .ft-page .ft-cond{font-size:12px!important;margin-top:2px!important}
 .ft-page .finding{font-size:19px!important}
+
+/* 8쪽 세 칸: 가운데 칸(공유 Go2 그림 · figure 없음)의 글 묶음이 40px 낮았다 → 세 칸 글을 아래 기준으로 맞춘다 */
+.mobility-option{display:flex;flex-direction:column;justify-content:flex-end}
+.mobility-option figure{margin-bottom:auto!important}
+.mobility-option{padding-bottom:72px;box-sizing:border-box}   /* 아래 결론 줄(absolute)과 안 겹치게 */

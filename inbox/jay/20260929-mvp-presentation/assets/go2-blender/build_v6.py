@@ -301,8 +301,8 @@ def apply(frame, res=(960, 720)):
         t = ease((frame-432)/14.)
         bpy.context.view_layer.update()
         hip_w = joint_world('FL_hip_joint')
-        tgt = (mix(0, hip_w.x-.05, t), mix(0, hip_w.y, t), mix(.22, hip_w.z-.12, t))
-        camera(mix(45, 35, t), mix(1.13, .66, t), mix(1.02, .62, t), tgt)
+        tgt = (mix(0, hip_w.x*.45, t), mix(0, hip_w.y*.45, t), mix(.22, .17, t))
+        camera(mix(45, 35, t), mix(1.13, 1.0, t), mix(1.02, .72, t), tgt)   # 2026-10-02 줌을 풀어 로봇이 안 잘리게
         for k, (jn, amp) in enumerate([('FL_hip_joint', .28), ('FL_thigh_joint', .34), ('FL_calf_joint', -.40)]):
             a, b = 448 + k*14, 448 + k*14 + 14
             if a <= frame < b + 4:
@@ -321,8 +321,8 @@ def apply(frame, res=(960, 720)):
         # 접촉: 낮은 3/4 로 물러나고, 바닥 등장, FL 발이 들렸다 내려와 닿는다
         t = ease((frame-504)/16.)
         bpy.context.view_layer.update(); hip_w = joint_world('FL_hip_joint')
-        tgt = (mix(hip_w.x-.05, .05, t), mix(hip_w.y, 0, t), mix(hip_w.z-.12, .14, t))
-        camera(mix(35, 60, t), mix(.66, 1.28, t), mix(.62, .55, t), tgt)
+        tgt = (mix(hip_w.x*.45, .05, t), mix(hip_w.y*.45, 0, t), mix(.17, .14, t))
+        camera(mix(35, 60, t), mix(1.0, 1.28, t), mix(.72, .55, t), tgt)
         ground.hide_render = False; gs = ease((frame-506)/8.); ground.scale = (gs, gs, 1)
         lift = 0.
         if 520 <= frame < 534: lift = ease((frame-520)/13.)
@@ -338,17 +338,18 @@ def apply(frame, res=(960, 720)):
         # 피드백: 무릎에 토크 호살표, 종아리 회전, 발 궤적, 몸으로 되돌아가는 선
         t = ease((frame-564)/14.)
         bpy.context.view_layer.update(); knee = joint_world('FL_calf_joint')
-        tgt = (mix(.05, knee.x, t), mix(0, knee.y-.1, t), mix(.14, knee.z-.03, t))
-        camera(mix(60, 70, t), mix(1.28, .72, t), mix(.55, .45, t), tgt)
+        tgt = (mix(.05, knee.x*.55, t), mix(0, knee.y*.55, t), mix(.14, .15, t))
+        camera(mix(60, 70, t), mix(1.28, 1.02, t), mix(.55, .5, t), tgt)
         ground.hide_render = False; ground.scale = (1, 1, 1)
         u = clamp01((frame-580)/28.); d = -.42*math.sin(math.pi*u)
         set_joint('FL_calf_joint', d); set_joint('FL_thigh_joint', -.10*math.sin(math.pi*u))
         bpy.context.view_layer.update()
         knee = joint_world('FL_calf_joint'); ax = joint_axis_world('FL_calf_joint')
+        cd = (Vector(cam.location) - knee).normalized()   # 카메라 쪽 · 설명 선을 다리 앞으로 띄운다
         g = ease((frame-566)/10.)
         torque_arc.hide_render = torque_tip.hide_render = g <= 0
         if g > 0:
-            torque_arc.location = knee; torque_arc.rotation_mode = 'QUATERNION'
+            torque_arc.location = knee + cd*.10; torque_arc.rotation_mode = 'QUATERNION'
             torque_arc.rotation_quaternion = ax.to_track_quat('Y', 'Z')
             torque_arc.data.bevel_factor_end = g
             pts = torque_arc.data.splines[0].points; n = len(pts)
@@ -363,7 +364,7 @@ def apply(frame, res=(960, 720)):
             for f in range(580, min(frame, 608)+1, 1):
                 uu = clamp01((f-580)/28.)
                 set_joint('FL_calf_joint', -.42*math.sin(math.pi*uu)); set_joint('FL_thigh_joint', -.10*math.sin(math.pi*uu))
-                bpy.context.view_layer.update(); pts.append(tuple(world(bpy.data.objects['FL_foot'])))
+                bpy.context.view_layer.update(); pts.append(tuple(world(bpy.data.objects['FL_foot']) + cd*.06))
             bpy.data.objects['FL_calf'].rotation_quaternion, bpy.data.objects['FL_thigh'].rotation_quaternion = saved
             bpy.context.view_layer.update()
             while len(pts) < 40: pts.append(pts[-1])
@@ -371,20 +372,20 @@ def apply(frame, res=(960, 720)):
         if frame >= 604:
             g2 = ease((frame-604)/14.)
             bw = world(base, (0, 0, .02)); kw = joint_world('FL_calf_joint'); hw = joint_world('FL_hip_joint')
-            set_points(feedback_line, [tuple(kw), tuple(hw), tuple(kw + (bw-kw)*g2)])
+            set_points(feedback_line, [tuple(kw + cd*.06), tuple(hw + cd*.06), tuple(kw + (bw-kw)*g2 + cd*.06)])
             feedback_line.hide_render = False
     elif 624 <= frame <= 719:
         # 센서: 돌아서 앞·측면을 보이고, 머리에서 시야뿔 -> RGB 프레임 -> LiDAR 링
         t = ease((frame-624)/22.)
         bpy.context.view_layer.update(); knee = joint_world('FL_calf_joint')
-        tgt = (mix(knee.x, .22, t), mix(knee.y-.1, .05, t), mix(knee.z-.03, .12, t))
-        camera(mix(70, -28, t), mix(.72, 1.22, t), mix(.45, .72, t), tgt)
+        tgt = (mix(knee.x*.55, .42, t), mix(knee.y*.55, .05, t), mix(.15, .12, t))
+        camera(mix(70, -28, t), mix(1.02, 1.45, t), mix(.5, .72, t), tgt)
         bpy.context.view_layer.update()
         cam_pt = world(base, sensor_source['front_camera']['point'])
         fwd = (base.matrix_world.to_3x3() @ Vector((1, 0, 0))).normalized()
         left = (base.matrix_world.to_3x3() @ Vector((0, 1, 0))).normalized()
         up = (base.matrix_world.to_3x3() @ Vector((0, 0, 1))).normalized()
-        far = cam_pt + fwd*.52; hw_, hh_ = .22, .165
+        far = cam_pt + fwd*.85; hw_, hh_ = .15, .11   # 팀장: 이미지가 Go2 앞에 너무 크고 가까웠다
         corners = [far + left*hw_ + up*hh_, far - left*hw_ + up*hh_, far - left*hw_ - up*hh_, far + left*hw_ - up*hh_]
         g = ease((frame-640)/18.)
         for k in range(4):
@@ -415,7 +416,7 @@ def apply(frame, res=(960, 720)):
     elif 720 <= frame <= 863:
         # 명령: vx 제자리 트롯 -> vy 횡이동 -> wz 회전. 화살표가 설명 순서대로.
         t = ease((frame-720)/16.)
-        camera(mix(-28, 38, t), mix(1.22, 1.34, t), mix(.72, .95, t), (mix(.22, 0, t), mix(.05, 0, t), mix(.12, .20, t)))
+        camera(mix(-28, 38, t), mix(1.45, 1.34, t), mix(.72, .95, t), (mix(.42, 0, t), mix(.05, 0, t), mix(.12, .20, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         phase = (frame-720)/24.
         if frame < 768:
@@ -443,7 +444,7 @@ def apply(frame, res=(960, 720)):
         gait_pose((frame-864)/24., 'trot', ease((frame-868)/8.))
     elif 936 <= frame <= 959:
         t = ease((frame-936)/23.)
-        camera(mix(-90, -28, t), mix(1.30, 1.22, t), mix(.62, .72, t), (mix(0, .22, t), mix(0, .05, t), mix(.26, .12, t)))
+        camera(mix(-90, -28, t), mix(1.30, 1.45, t), mix(.62, .72, t), (mix(0, .42, t), mix(0, .05, t), mix(.26, .12, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         gait_pose((frame-864)/24., 'trot', 1-ease((frame-936)/12.))
     for o in grid_objects: o.hide_render = not grid
