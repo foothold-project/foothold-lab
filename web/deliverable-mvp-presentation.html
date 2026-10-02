@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정 · FOOTHOLD</title>
-<meta name="description" content="원안이 확정됐다. 그리고 미팅 도중 조선대가 「Go2 저수준 제어 가능」으로 정정해 왔다. 전날의 최대 쟁점이 하루 만에 뒤집혔다.">
+<title>MVP 중간발표 화면 · FOOTHOLD</title>
+<meta name="description" content="중간발표에서 실제로 띄우는 37장 화면. 클릭으로 단계가 진행되고 영상이 안에서 재생된다">
 <style>
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -194,7 +194,7 @@ section .addr .big{font-size:1.2rem}
 @media print{
   @page{size:A4 portrait;margin:14mm 12mm}
   html{font-size:10.5px}
-  body{background:var(--card)!important;background-image:none!important}
+  body{background:#fff!important;background-image:none!important}
   .top,.pdfbtn,.copy{display:none!important}
   .wrap{max-width:none;padding:0}
   section{break-inside:auto;margin-top:1.4rem}
@@ -204,7 +204,7 @@ section .addr .big{font-size:1.2rem}
   .tool,.pin>div{margin-bottom:.5rem}
   .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
   .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
-  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre{color:#161c26!important;white-space:pre-wrap!important;word-break:break-all}
   .cb pre .c{color:#666!important}
   a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -312,8 +312,33 @@ section .addr .big{font-size:1.2rem}
 .stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
 .stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
 .stand .sv i{font-style:normal;color:var(--ink-3)}
+/*themefix*/html[data-theme="dark"]{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+html[data-theme="light"]{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}/*/themefix*/
 </style>
-<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2">
 <style id="ia-css">
 /* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
    ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
@@ -608,7 +633,7 @@ span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14
   window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
 })();
 </script>
-<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+<!--search:v8--><style>
 @media (max-width:640px){
   .top .row{flex-wrap:nowrap}
   .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
@@ -891,76 +916,48 @@ body>*{flex-shrink:0}
 </style>
 </head>
 <body>
-<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="on" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="on" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <div class="wrap">
 
 <div class="hero">
-  <div class="eyebrow">Meeting · 회의 기록</div>
-  <h1>8/14 운영 미팅: 원안 확정, 그리고 저수준 「가능」 정정</h1>
-  <p class="lede">원안이 확정됐다. 그리고 미팅 도중 조선대가 「Go2 저수준 제어 가능」으로 정정해 왔다. 전날의 최대 쟁점이 하루 만에 뒤집혔다.</p>
-  <div class="meta"><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/44">#44</a></span></div><div><span class="k">작성</span><span class="v">오흥재 · 맹라현 · 2026-08-14 12:20</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / meetings / 20260814-east-ops.md</span></div><div><span class="k">상세</span><span class="v">전체 전사·화자 기록은 내부 볼트 00_meetings</span></div></div>
+  <div class="eyebrow">산출물 · MVP 중간발표 · 9월 30일</div>
+  <h1>MVP 중간발표 화면</h1>
+  <p class="lede">중간발표에서 실제로 띄우는 37장 화면. 클릭으로 단계가 진행되고 영상이 안에서 재생된다</p>
+  <div class="meta"><div><span class="k">관문</span><span class="v">MVP 중간발표 · 9월 30일</span></div><div><span class="k">작성</span><span class="v">방재혁 · 2026-10-02</span></div><div><span class="k">상태</span><span class="v">초안</span></div><div><span class="k">원본</span><span class="v">foothold-lab / deliverables/midterm/mvp-presentation.md</span></div></div>
   <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
 </div>
 
-<blockquote><p>분류: 회의록
-자리: 운영진
-작성: 오흥재 · 맹라현 · 2026-08-14 12:20
-근거: MOSS 화자분리 전사 258세그먼트 (19분 7초) · 회의 PDF 노트 · 맹라현 회의 노트
-요지: 원안이 확정됐다. 그리고 미팅 도중 조선대가 「Go2 저수준 제어 가능」으로 정정해 왔다. 전날의 최대 쟁점이 하루 만에 뒤집혔다.
-상태: 확정
-이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/44">#44</a></p></blockquote>
-<blockquote><p>정본은 오흥재가 2026-08-14에 전사로 작성했다. 맹라현이 2026-08-25에 같은 자리의 브리프를 제출했고, 2026-08-26에 그중 정본에 없던 것을 표시해 합쳤다. 「맹라현 추가」로 적힌 절이 그것이다.
-자료: 녹음 19분 7초 → MOSS 화자분리 전사 258세그먼트. 전 인용에 타임코드.
-참석: 이스트소프트 이사 · 전승묵 운영진 · 김민수 담임 · 팀 전원.
-화자 매핑: S01 = 오흥재 팀장 · S02 = 이스트 이사 · S03 = 운영진·담임 측(조선대 연락 담당) · S04 = 팀원 · S05 = 단발 1명.
-<b>확정값은 운영 재확인</b>이 남아 있다. 어제 자리: <a href="meeting-20260813-ops-alignment.html">8/13 조선대 미팅</a>.</p></blockquote>
+<blockquote><p>분류: 발표
+작성: 방재혁 · 2026-10-02
+담당: 방재혁 · 발표
+근거: <code>inbox/jay/20260929-mvp-presentation/</code> 생성기와 빌드 산출물 · <code>PPT-BUILD-MANIFEST.json</code>
+요지: 중간발표에서 실제로 띄우는 37장 화면. 클릭으로 단계가 진행되고 영상이 안에서 재생된다
+상태: 초안</p></blockquote>
+<blockquote><p><b>완료 기준</b>: 37장 전체가 1600x900 에서 겹침 없이 배치되고, 팀장 검토 지적이
+모두 반영되고, 발표자 메모에 넘김 지점이 표시되면 상태를 <code>확정</code> 으로 바꾼다.
+관문: <code>MVP · 중간발표</code></p>
+<p><b>채우는 사람</b>: 방재혁. 실험 근거와 수치는 종합보고서 v4.1 을 따른다.</p></blockquote>
 </section>
-<section id="s1"><h2>한 줄 요약</h2>
-<p><b>원안 확정이다.</b> 이사: <i>&quot;이거는 했으면 하기로 결론은 난 거예요. 이왕이면 성공을 해야&quot;</i> <code>[06:26~06:32]</code>. 김유진 멘토 때 추린 방향 그대로 가고 미세 조정만 한다 <code>[18:12~18:22]</code>.</p>
-<p>그리고 <b>미팅 도중에 어제의 최대 쟁점이 뒤집혔다.</b></p>
+<section id="s1"><span id="1"></span><h2>1. 지금 바로 보는 곳</h2>
+<p><b><a href="/assets/mvp-deck/index.html">발표 화면 열기 (37장)</a></b></p>
+<p>브라우저에서 그대로 돌아갑니다. 설치할 것은 없습니다.</p>
+<div class="tw"><table><thead><tr><th>키</th><th>하는 일</th></tr></thead><tbody><tr><td><code>→</code> · <code>Space</code> · 클릭</td><td>다음 단계. 한 장 안에서 단계가 끝나면 다음 장으로</td></tr><tr><td><code>←</code></td><td>이전</td></tr><tr><td><code>N</code></td><td>발표자 메모</td></tr><tr><td><code>P</code></td><td>메모를 별도 창으로 (두 화면 발표용)</td></tr><tr><td><code>F</code></td><td>전체 화면</td></tr><tr><td><code>B</code></td><td>암전</td></tr></tbody></table></div>
+<p>한 장 안에 여러 단계가 있는 화면이 있습니다. 자동으로 다음 장으로 넘어가지 않습니다. 넘기는 것은 발표자입니다.</p>
 </section>
-<section id="s2"><h2>F0 대반전: 저수준 제어는 「가능」이었다</h2>
-<p>미팅 중 조선대에서 연락이 왔다.</p>
-<blockquote><p><i>&quot;방금까지 안 된다고 했는데 전화가 와서는 된다고&quot;</i> <code>[03:41]</code>
-<i>&quot;된다고, 가입까지 보내주셨어요&quot;</i> <code>[05:22]</code></p></blockquote>
-<p><b>경위</b>: 교수님이 <b>저수준을 직접 다뤄본 적이 없어</b> 그렇게 말했던 것이고, <b>공식 문서를 찾아보고 「가능」으로 정정</b>했다 <code>[13:28~13:58]</code>.</p>
-<p>단서도 함께 왔다. <i>&quot;가능은 한데 이쪽 부분은 만만치 않다&quot;</i> <code>[14:09]</code>.</p>
-<p><b>남은 것은 실기 실측뿐이다.</b> 그날 오후 실측으로 마무리하기로 했다 <code>[15:42]</code> <code>[17:54~17:58]</code>.</p>
-<blockquote><p>이 정정으로 <a href="meeting-20260813-ops-alignment.html">8/13</a>의 F0(「조선대 Go2 EDU에서 저수준 전환이 되는가」)은 <b>문서상 「가능」으로 기울었다.</b> 다만 그것도 전언이고, <b>최종 판정은 현장 실측</b>이다. 전날 문서의 <span class="ev ev-todo">미확인</span> 표기는 그 뜻이다.</p></blockquote>
+<section id="s2"><span id="2"></span><h2>2. 무엇이 들어 있나</h2>
+<p>37장은 다섯 묶음입니다.</p>
+<div class="tw"><table><thead><tr><th>묶음</th><th>장</th><th>내용</th></tr></thead><tbody><tr><td>현장의 필요</td><td>2 ~ 9</td><td>왜 이 연구인가. 임무와 이동 방식의 선택</td></tr><tr><td>로봇과 정책의 이해</td><td>10 ~ 12</td><td>관측과 출력, 병렬 학습</td></tr><tr><td>실패에서 시작한 실험</td><td>13 ~ 21</td><td>gap 을 고른 이유, 관측 보정, 명령과 지형의 계보</td></tr><tr><td>MVP 성과</td><td>22 ~ 30</td><td>두 축 평가, 16종 결과, 속도별 비교, 남은 과제</td></tr><tr><td>다음 걸음</td><td>31 ~ 37</td><td>실제 공간 복원, 실기 연결, 다음 실험</td></tr></tbody></table></div>
+<p>영상은 화면에 들어갈 때 재생됩니다. 실험 영상은 무음 반복이고, 전체 영화와 브랜드 영화는 원음으로 한 번만 재생됩니다.</p>
 </section>
-<section id="s3"><h2>전사에서 확정된 결정들</h2>
-<div class="tw"><table><thead><tr><th>#</th><th>결정</th><th>근거</th></tr></thead><tbody><tr><td>1</td><td><b>원안 확정.</b> 김유진 멘토 때 추린 방향 그대로, 미세 조정만</td><td><code>[06:26~06:32]</code> <code>[18:12~18:22]</code></td></tr><tr><td>2</td><td><b>F0 정정.</b> 조선대가 미팅 중 「저수준 가능」으로 회신. 오늘 오후 실기 실측으로 마무리</td><td><code>[03:41]</code> <code>[05:22]</code> <code>[13:28~13:58]</code> <code>[15:42]</code></td></tr><tr><td>3</td><td><b>전담 전문가 배치.</b> 멘토가 아니라 <b>데일리로 같이 할 수 있는 로봇 전문가</b>를 이스트가 섭외. 단 NIPA 승인 필요(학습 취지 훼손 우려로 「제한적 보조」 형태). 다음 주까지 선정</td><td><code>[06:50~07:22]</code> <code>[11:41~12:08]</code> <code>[17:29~17:35]</code></td></tr><tr><td>4</td><td><b>10월 MVP는 시뮬레이션 영상으로.</b> <i>&quot;10월 발표에는 시뮬레이션밖에 못 보실 것&quot;</i> → 이사 <i>&quot;그래도 돼, 영상&quot;</i>. 로봇 실기 투입은 10~12월 반복 테스트</td><td><code>[12:48~12:56]</code> <code>[04:47~05:06]</code></td></tr><tr><td>5</td><td><b>조선대 활용 범위.</b> 실기 붙이기엔 교내 공간이 작다. 학습은 교내에서 하되 외부 사용·<b>발표 반출은 협의</b>. 저수준에 들어가면 조선대는 가이드 수준, ROS 학습 지원은 가능, 강화학습은 별도 전문가 필요</td><td><code>[10:56]</code> <code>[11:06~11:24]</code> <code>[15:55~16:25]</code></td></tr><tr><td>6</td><td><b>GPU 자원.</b> 이스트 물리서버 존재. Windows 기반, <b>RTX 2000 두 장</b>, 환경 미구성, 외부 접속 가능. GIST 서버도 언급됨</td><td><code>[14:44~15:22]</code> <code>[14:47]</code></td></tr><tr><td>7</td><td><b>방향 충돌 정리.</b> 조선대 커리큘럼은 훌륭하나 우리 방향과 다르다 → <i>&quot;우리 거에 맞춰달라고&quot;</i> 의견 개진하기로. 기존 프로젝트 방향 유지</td><td><code>[16:29~17:19]</code></td></tr><tr><td>8</td><td><b>이번 주·다음 주.</b> 오늘 저수준 확인 마무리 → 다음 주 목표 설정·스케줄링·외부 전문가 섭외·김유진 멘토 로드맵 미팅</td><td><code>[18:40~18:53]</code></td></tr></tbody></table></div>
+<section id="s3"><span id="3"></span><h2>3. 아직 아닌 것</h2>
+<p>이 화면은 <b>초안</b>입니다. 팀장 검토에서 나온 다음 지적이 아직 남아 있습니다.</p>
+<ul><li>일부 화면이 위쪽으로 쏠려 아래가 비어 있다</li><li>12쪽 설명 상자가 영상을 가린다</li><li>16쪽 도식에서 글씨가 선과 겹친다</li><li>23쪽 표의 막대가 칸 경계를 넘는다</li><li>25쪽 속도 라벨이 축 라벨과 붙는다</li><li>27쪽 두 영상의 표시 크기가 서로 다르다</li><li>10쪽 첫 전환에 정지 화면 잔상이 남는다</li><li>계보 설명에 「얻은 것」만 있고 「잃은 것」이 없다</li><li>발표자 메모에 넘김 지점 표시가 3쪽에만 있다</li></ul>
+<p>고치는 대로 이 주소의 내용이 갱신됩니다. 주소는 바뀌지 않습니다.</p>
 </section>
-<section id="s4"><h2>확정·공유 사항</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td><b>일정 앵커</b></td><td><b>9/30(수) MVP 중간 발표</b> · 12/11(금) 최종 발표</td></tr><tr><td>방향</td><td><b>원안(김유진 멘토 통해 기획한 방안)으로 진행하는 쪽으로 이야기됨.</b> 단 팀장 판단: 재검토·재질문 필요</td></tr><tr><td>전담 멘토</td><td>이스트 차원에서 별도 마련 예정. 되는시간 서브멘토와 별개이고 <b>인사이트·김유진 계열</b></td></tr><tr><td><b>F0 외부 진행</b></td><td><b>조선대가 오늘 실기 SDK 저수준 제어 가능 여부를 파악해 결과 보고</b>하기로 함</td></tr><tr><td>대여 양안</td><td><b>A안</b> 조선대(교내, 멘토링·시설 딸림) · <b>B안</b> 이스트가 사설 업체 통해 대여(상시 보유, 계속 테스트 가능). 둘 다 열려 있고 판단이 필요하다</td></tr><tr><td>조선대 커리큘럼</td><td>지원받을 수 있는 부분 열려 있음. 팀 도입 그림 필요</td></tr><tr><td>이스트 인프라</td><td>Win 물리서버 GPU 두 장(RTX 2000) 활용 가능 · 컨테이너 GPU 확인 예정</td></tr><tr><td>지원 축</td><td>이스트 = ROS2 교육·인프라. 자율주행·SLAM은 별도 인력 트랙</td></tr></tbody></table></div>
-</section>
-<section id="s5"><h2>그날 무슨 일이었나 (맹라현 추가)</h2>
-<blockquote><p>아래는 정리 맹라현 (2026-08-25 제출) 브리프다. 근거는 본인 회의 노트다. 두 기록은 초점이 다르므로 함께 본다. 장소는 이스트, 어제 조선대 OT·조율의 후속 자리다.</p></blockquote>
-<p>어제 조선대에서 기획과 제시안이 갈린 다음 날, 이스트 창구와 멘토 라인을 한 테이블에 올려 역할을 나눴다. 질문은 「지원을 어디서 받고, 멘토는 누구 라인인가」였다.</p>
-<p>이스트가 맡는 축은 <b>ROS2 교육과 인프라</b>로 고정했다. Win 물리서버, GPU 두 장(RTX 2000), 컨테이너 GPU 사용 가능 여부는 아직 확인 전이다. 자율주행·SLAM을 이스트 교육 트랙에 넣지 않는다. 그건 별도 인력 트랙이다.</p>
-<p>멘토 전담은 이스트 인프라 라인에만 기대지 않는다. <b>인사이트(김유진) 계열</b>로 보강하고, 구이사 가이드를 체크한 뒤 담당 강사 배치를 요청한다. 교육은 팀이 진행하되 난이도를 조율하고, 전담강사 코드 리뷰를 넣는다. 전담강사 없이 팀만으로 코드 리뷰를 닫지 않는다.</p>
-<p>범위 조정안은 유지한다. 일정을 맞추려고 범위를 줄이지 않는다. 일정만 늘리고 목표를 방치하지도 않는다. 프로세스는 <b>목표 설정(제안서·범위 유지) → 스케줄링(ROS2 1~2개월 → 실기 3~4개월, 시뮬 포함) → 구체 로드맵(10~12월 테스트 · 영상 시연)</b>이다.</p>
-<p>10월 축은 ROS2 학습 다음에 로봇 구현과 영상 시연이다. 산출물도 그 영상 시연으로 잡았다.</p>
-<p><b>하드웨어·SDK, 아직 물어봐야 하는 것.</b> 교육용 SDK가 하드웨어에 붙어 있는지, 발표 때 로봇을 반출할 수 있는지는 유진님께 다시 묻는다. SDK를 확인하기 전에 발표 반출을 가정하지 않는다. Cmd 코드 스위치 on/off도 같이 본다.</p>
-<p>GPU를 확인하기 전에 시뮬 일정을 확정하지 않는다. 이스트 컨테이너 GPU와 Win 물리서버 RTX 2000 두 장을 금주에 확인한다. 조선대 트랙과 역할은 어제 OT 후속으로 다시 정렬한다.</p>
-<div class="tw"><table><thead><tr><th>#</th><th>그날 고정한 것</th></tr></thead><tbody><tr><td>1</td><td>이스트 지원 축 = ROS2 교육 · 인프라 (Win 물리서버)</td></tr><tr><td>2</td><td>멘토 전담 = 인사이트(김유진) 계열. 구이사 가이드 체크 후 강사 배정</td></tr><tr><td>3</td><td>범위 조정안 유지. 일정만 목표 → 스케줄 → 로드맵으로 푼다</td></tr><tr><td>4</td><td>10월 축: ROS2 학습 → 로봇 구현 · 영상 시연</td></tr><tr><td>5</td><td>자율주행·SLAM은 별도 인력 트랙. 이스트 교육에 넣지 않는다</td></tr><tr><td>6</td><td>교육 = 팀 진행 + 난이도 조율 + 전담강사 코드 리뷰</td></tr></tbody></table></div>
-<p><b>지키면 되는 것, 늦으면.</b> 범위는 유지한다. 이스트는 ROS2와 인프라, 멘토는 인사이트, 10월은 영상 시연이다. 늦어도 SLAM을 이스트에 넣지 않는다. GPU·SDK가 늦어도 제안서 방향은 유지한다. 교육 난이도를 확인 없이 고정하지 않는다.</p>
-<p>사슬은 이렇다. 제안서 확인 → 내부 정렬 → 목표 · 스케줄 · 로드맵 → 강사 · GPU · SDK.</p>
-</section>
-<section id="s6"><h2>회의 PDF 노트의 일정 골격</h2>
-<ul><li>ROS2 1~2개월 → 실기 3~4개월(시뮬 포함) → 10~12월 테스트</li><li>10월 목표: ROS2 학습 후 로봇 구현. 영상 시연</li><li>하드웨어 액션: 교육용 SDK 부착 여부를 유진님께 재확인 · <b>발표 반출 가능</b>(B안 개체로 추정)</li></ul>
-</section>
-<section id="s7"><h2>바로 할 일</h2>
-<div class="tw"><table><thead><tr><th>항목</th><th>기한</th></tr></thead><tbody><tr><td>제안서(방향·범위) 확인 후 이어서 논의</td><td>당일</td></tr><tr><td>내부 정렬 필요 항목 재논의</td><td>금주</td></tr><tr><td>목표 → 스케줄 → 로드맵 초안</td><td>차주</td></tr><tr><td>인사이트 담당 강사 배치 요청</td><td>금주</td></tr><tr><td>SDK 하드웨어 부착 여부 유진님 재확인</td><td>차주</td></tr><tr><td>이스트 컨테이너 GPU · Win/RTX2000 두 장 확인</td><td>금주</td></tr></tbody></table></div>
-<p>풀어 적으면 이렇다. <b>당일</b>은 제안서 방향·범위를 확인한 뒤 이어서 논의한다. <b>금주</b>는 내부 정렬이 필요한 항목을 재논의하고, 인사이트 담당 강사 배치를 요청하고, 컨테이너 GPU와 Win/RTX 2000×2를 확인한다. <b>차주</b>는 목표 → 스케줄 → 로드맵 초안을 잡고, SDK 하드웨어 부착 여부와 발표 반출을 유진님께 재확인한다.</p>
-</section>
-<section id="s8"><h2>팀장 소견</h2>
-<ul><li>우리 기획(각자 탐구 영역 + 전체 그림)의 방향은 좋다. <b>관건은 「무엇을 해결할 것이고 어떤 이야기로 풀 것인가」</b>이다.</li><li>조선대 커리큘럼은 개인적으로 매우 원하던 학습 내용이다. 단 <b>팀 프로젝트 관점은 별개</b>다. 미답 논의점들을 다시 grilling 해서 진행할 것.</li><li>개인 일정: 차주 월요일까지 서울. WS는 원격 제어로 운영한다. 워크스테이션 이야기다.</li></ul>
-</section>
-<section id="s9"><h2>다음</h2>
-<ol><li>8/14 녹음 MOSS 전사 (8/13 전사 완료 후 순차)</li><li>재기획 갱신: 9/30 앵커 반영(D-47), A/B 판단 프레임</li><li>조선대 저수준 확인 결과 수신 → F0 종결</li></ol>
-<p>8/20에 전담 현직자 멘토가 확정되면서 멘토 축은 다시 갱신된다. 이 날의 「인사이트 계열 보강」은 그 전 단계의 운영 합의로 읽으면 된다.</p>
-<p>→ <a href="meeting-20260813-ops-alignment.html">8/13 조선대 미팅</a> · <a href="meeting-20260820-kickoff.html">8/20 멘토 확정·킥오프</a> · <a href="project-report.html">프로젝트 보고서</a></p>
+<section id="s4"><span id="4"></span><h2>4. 수치의 출처</h2>
+<p>화면의 모든 성공률과 비교는 종합보고서 v4.1 과 그 원자료에서 다시 집계한 것입니다. 화면 안에 손으로 적은 숫자는 두지 않았습니다.</p>
+<ul><li>전체 지형 결과: 16종 x 3속도 x 100판 = 모델당 4,800판</li><li>축 2 명령 수행은 지형 통과율과 합치지 않고 따로 봅니다</li><li>공통 미학습 8종은 개발 중 반복 평가했으므로 엄격한 최종 홀드아웃이 아닙니다</li></ul>
+<p>근거는 <span class="vlink">종합보고서<i>/research-20260928-v2-mvp-report</i></span> 를 보십시오.</p>
 </section>
 
 </div>
@@ -1059,15 +1056,5 @@ document.querySelectorAll('[data-vcmp]').forEach(function (box) {
 
   label();
 });
-</script>
-<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
-<style>
-/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
-   그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
-   `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
-[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
-  padding:10px;box-sizing:border-box}
-</style>
-
-<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmplxc25z71</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmplxc25z71</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

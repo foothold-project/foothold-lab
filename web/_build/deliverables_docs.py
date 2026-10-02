@@ -41,6 +41,8 @@ DOCS = [
      'MVP 중간발표 · 9월 30일'),
     ('deliverables/midterm/generalization-report.md', 'generalization-report',
      'MVP 중간발표 · 9월 30일'),
+    ('deliverables/midterm/mvp-presentation.md', 'mvp-presentation',
+     'MVP 중간발표 · 9월 30일'),
     ('deliverables/midterm/twin-render.md', 'twin-render', 'MVP 중간발표 · 9월 30일'),
     ('deliverables/final/nav-report.md', 'nav-report', 'NAV 실기항법 · 11월 7일'),
     ('deliverables/final/final-report.md', 'final-report', 'FINAL 최종발표 · 12월 11일'),
@@ -191,11 +193,42 @@ def copy_pdf(rel):
     return web
 
 
+def _gates_vs_docs():
+    """산출물 목록이 «둘» 이다. 어긋나면 조용히 링크가 빠진다.
+
+    ★ 2026-10-02 실측. `deliverables_page.GATES` 에만 넣고 여기 `DOCS` 에
+      안 넣었더니, 산출물 표에 이름은 떴는데 **링크가 없었고** 문서 페이지는
+      404 였다. 오류는 하나도 안 났다. 배포하고 나서 라이브를 긁어 보고 알았다.
+      목록 둘을 손으로 맞추는 규칙은 다음번에 또 깨진다. 여기서 대조한다.
+    """
+    try:
+        import deliverables_page
+    except ImportError as e:
+        return ['산출물 표 목록을 못 읽음: %s' % e]
+    want = {rel for _, _, _, items in deliverables_page.GATES
+            for rel, _ in items}
+    have = {rel for rel, _, _ in DOCS}
+    # ★ 한 방향만 치명이다. 깨뜨려 보고 알았다.
+    #   `have - want` 는 정상인 것이 이미 셋 있다 (progress-log · mentoring-log ·
+    #   옛 wbs.md). 진행 기록은 관문 표에 들어갈 자리가 없고 문서로만 낸다.
+    #   그쪽까지 막았다면 이 관문이 빌드를 통째로 세웠을 것이다.
+    bad = []
+    for rel in sorted(want - have):
+        bad.append('표에는 있는데 문서 목록에 없음 (링크가 안 걸린다): %s' % rel)
+    return bad
+
+
 def build():
     lab = lab_root()
     if not lab:
         print('  [!] foothold-lab 을 못 찾음. 산출물 문서 게시 건너뜀')
         return []
+    drift = _gates_vs_docs()
+    if drift:
+        print('  [!] 산출물 목록 둘이 어긋납니다:')
+        for d in drift:
+            print('      %s' % d)
+        raise SystemExit(1)
     made, missing = [], []
     for rel, slug, gate in DOCS:
         src = os.path.join(lab, rel.replace('/', os.sep))
