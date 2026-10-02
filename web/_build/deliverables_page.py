@@ -40,8 +40,13 @@ GATES = [
     ]),
     # ★ 2026-09-29 팀장 지시. 제출본(PDF · HTML)을 이 표에서 바로 열 수 있게 한다.
     #   요약 2장짜리는 뺐다 (「큰 의미 없는 파일」).
+    # ★ 2026-10-02 팀장 지시. 발표에서 실제로 띄우는 화면을 밖에서 볼 수 있게
+    #   건다. 이것은 단일 html 이 아니라 영상·프레임이 딸린 «묶음» 이라
+    #   `-presented.html` 경로(copy_presented)로는 못 건다. 문서 안에서
+    #   `/assets/mvp-deck/index.html` 로 직접 링크한다.
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
         ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
+        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (37장)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),

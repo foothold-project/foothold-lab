@@ -76,8 +76,6 @@ aside.pagetoc.notoc{visibility:hidden}
 .hero{margin-bottom:44px;padding:34px 38px;background:var(--panel);
   border:1px solid var(--line);border-radius:20px;
   position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;
-  border-radius:50%;pointer-events:none}
 .eyebrow{font-size:12.16px;font-weight:800;color:var(--brand);letter-spacing:.14em;text-transform:uppercase}
 .hero h1{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:.25em 0 .35em}
 .hero .lede{color:var(--sub);margin:0;font-size:16.5px}
@@ -331,6 +329,22 @@ td .bt:hover{text-decoration:underline}
 .vids.wide video{aspect-ratio:16/3;min-height:120px;object-fit:contain}
 .vids figcaption{font-size:12.5px;color:var(--sub);padding:10px 14px 13px;line-height:1.6}
 .vids figcaption b{display:block;color:var(--brand-ink);font-size:15px;font-weight:800}
+.vids.three{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:6px}
+@media (max-width:640px){.vids.three{grid-template-columns:1fr}}
+.vids.four{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:6px}
+@media (max-width:1100px){.vids.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.vids.four{grid-template-columns:1fr}}
+/* 본문 폭(약 760px)에서 5열이면 카드가 145px 라 Chrome 기본 컨트롤이 전체화면 버튼을 숨긴다 → 3열 */
+.vids.five{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+@media (max-width:900px){.vids.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.vids.five{grid-template-columns:1fr}}
+/* 전체화면 버튼 (app.js 가 .vids 영상마다 붙인다 · 좁은 카드에선 기본 컨트롤에 전체화면이 안 보인다) */
+.fsbtn{float:right;margin:0 0 6px 8px;font:600 11.5px/1 "Pretendard Variable",Pretendard,sans-serif;
+  color:var(--sub);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+.fsbtn:hover,.fsbtn:focus-visible{color:var(--brand-ink);border-color:var(--brand-line)}
+.vids .miss{display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;background:var(--code);color:var(--sub);font-size:15px;font-weight:700}
+.vidrow{margin:20px 0 0;font-size:15px;color:var(--sub)}
+.vidrow b{color:var(--ink)}
 
 .was{margin:14px 0;padding:12px 16px 13px;
   background:var(--panel);border-radius:0 var(--radius) var(--radius) 0}
@@ -453,6 +467,18 @@ pre.cc>code,pre:not(.cc){}
 @media (max-width:639px){.scrollhint{display:block}}
 @media (max-width:720px){.mach .nt{white-space:normal;margin-left:0}}
 .badge.obs{color:var(--brand-ink);background:transparent;border-color:var(--brand-line)}
+
+/* ---------- 연구기록 양식 (09-30): hero 메타 격자 · 증거 범례 · 증거 3단계 ---------- */
+.hero .meta{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:10px 20px;margin:22px 0 0;padding:16px 0 0;border-top:1px solid var(--line);font-size:15px}
+.hero .meta>div{min-width:0}
+.hero .meta dt{font-size:11.68px;font-weight:800;color:var(--sub);letter-spacing:.04em}
+.hero .meta dd{margin:2px 0 0;color:var(--ink);overflow-wrap:anywhere}
+.evlegend{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;
+  margin:14px 0 0;font-size:12.5px;color:var(--sub)}
+.ev.ok{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
+.ev.guess{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.ev.todo{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
 
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -960,7 +986,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
+    fetch('/assets/search-index.json?v=b68be58e').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -1084,7 +1110,7 @@ body>*{flex-shrink:0}
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-30 13:39 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-10-02 09:48 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <!-- nav:crumb -->
 <nav class="crumb" aria-label="현재 위치"><ol><li><a href="tech-rl.html">기술 문서</a></li><li>센서·자율주행</li><li aria-current="page">컴퓨터 비전</li></ol></nav>
@@ -2191,5 +2217,5 @@ print(r.box.map50, r.box.map)     # mAP50, mAP50-95</pre></div>
 <!-- nav:pagerow -->
 <!-- /nav:pagerow -->
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmp0r9aop1i</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

@@ -450,7 +450,10 @@ def public_pages(vault, pages):
 
 # 오버레이를 «넣지 않는» 페이지. 전체화면 발표본은 자체 키보드 조작이 있어
 # 오버레이가 슬라이드를 덮고 Ctrl+K 가 덱 조작과 부딪힌다. 색인에는 넣는다.
-NO_UI = {'assets/deliverables/proposal-deck-presented.html'}
+# ★ 2026-10-02. MVP 발표 화면도 같은 부류다. 방향키·Space·클릭으로 단계를
+#   넘기고 N·P·F·B 를 쓴다. 오버레이가 슬라이드를 덮으면 발표 중에 사고가 난다.
+NO_UI = {'assets/deliverables/proposal-deck-presented.html',
+         'assets/mvp-deck/index.html'}
 
 
 # ★ 2026-09-13. 이 빌드가 «안 만드는» 배포본 페이지. 볼트에 없고 배포본에만
@@ -537,7 +540,16 @@ def build_index(vault, pages):
             #   절만 담으면 그 부분이 통째로 빠진다 (실측: 48장이 56~81%).
             wrap = re.search(r'<div class="wrap">(.*)', t[:marks[0][0]], re.S)
             head0 = strip_tags(wrap.group(1) if wrap else t[:marks[0][0]])
-            if len(head0) >= 40:
+            # ★ 2026-10-02. 문턱이 40자였다. 「잡음 거르기」로 둔 값인데
+            #   **제목만 있는 페이지의 제목을 통째로 색인 밖으로 보냈다.**
+            #   실측: assets/mvp-deck/index.html 은 첫 절 앞이 <title> 19자뿐이라
+            #   레코드가 안 생겼고, [1.8995] 가 「빠진 글 40자」로 배포를 세웠다.
+            #   (화면 글자는 제목부터 세는데 색인은 <section id> 부터 담아서
+            #    경계를 걸친 창이 어느 레코드에도 없다.)
+            #   내리기 «전에» 영향을 쟀다. web/ 밑 페이지 156장 전수에서
+            #   1~39자인 것은 이 한 장뿐이고 0자는 없다. 다른 페이지의 색인은
+            #   바이트로 그대로다. 제목은 페이지의 글자이므로 담는 쪽이 맞다.
+            if head0:
                 secs.append(('', ptitle, t[:marks[0][0]]))
         for k, (pos, sid) in enumerate(marks):
             end = marks[k + 1][0] if k + 1 < len(marks) else len(t)
