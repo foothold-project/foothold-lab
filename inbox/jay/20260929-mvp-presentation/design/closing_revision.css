@@ -1,0 +1,87 @@
+/* U206: evidence-led closing. All rules scoped; do not import proposal globals. */
+.slide.closing-revision .content{top:210px;bottom:100px;height:590px}
+.closing-revision .content p{font-size:22px;line-height:1.5;margin:12px 0}
+.closing-revision .content h3{font-size:25px;line-height:1.4;margin:8px 0 15px;letter-spacing:-.025em}
+.closing-film{margin:0;min-width:0}
+.closing-film video{display:block;width:100%;object-fit:contain;background:#0d1117;border:0}
+.closing-film figcaption,.poc-comparison figcaption{font-size:20px;line-height:1.45;margin-top:10px;color:#4a5566}
+.closing-poc{display:grid;grid-template-columns:550px 1fr;gap:38px;height:100%}
+.poc-sources{display:grid;grid-template-rows:236px 1fr;gap:16px;min-width:0}
+.poc-sources video{height:235px}
+/* ★ 2026-10-02 팀장 지시로 옆 배치(310px + 글)에서 «위 그림 · 아래 글» 로. */
+.poc-comparison{margin:0;min-width:0;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.poc-comparison img{width:100%;height:auto;max-height:330px;object-fit:contain;object-position:center;background:#10161a}
+.poc-comparison figcaption span{display:block;margin-top:6px;font-size:16px;color:var(--p-muted)}
+.closing-revision .poc-comparison img{height:260px;max-height:260px;object-fit:contain}
+.poc-comparison figcaption{font-size:20px;margin:0}
+.poc-result video{height:390px}
+.poc-result-note{margin-top:20px;border-top:2px solid #0e7a6e;padding-top:13px}
+.poc-result-note>b{font-size:20px;color:#0e7a6e}
+.closing-revision .poc-result-note p{font-size:24px;margin:5px 0 7px}
+.poc-result-note>span{font-size:20px;line-height:1.4;color:#4a5566}
+.nav-purpose{display:flex;align-items:center;gap:32px}
+.nav-purpose>span{font-size:20px;letter-spacing:.04em;color:#0e7a6e;font-weight:650;flex:none}
+.closing-navigation .nav-purpose p{font-size:25px;margin:0}
+.closing-nav-svg{width:100%;height:370px;display:block;margin-top:26px}
+.closing-nav-svg text{font-family:inherit;fill:#161c26}
+.closing-nav-svg .nav-kicker{font-size:20px;fill:#0e7a6e}
+.closing-nav-svg .nav-title{font-size:27px;font-weight:700}
+.closing-nav-svg .nav-line{font-size:20px}
+.closing-nav-svg .nav-goal{font-size:21px;font-weight:650;fill:#0e7a6e}
+.nav-arrow{stroke:#0e7a6e;stroke-width:2.4;fill:none;marker-end:url(#closing-nav-arrow)}
+.nav-feedback{stroke:#61707d;stroke-width:1.8;fill:none;stroke-dasharray:7 5}
+.nav-boundary{border-top:1px solid #c4cec7;margin-top:26px;padding-top:19px;display:grid;grid-template-columns:280px 1fr;gap:25px;align-items:start}
+.nav-boundary>b{font-size:22px;color:#0e7a6e}
+.closing-revision .nav-boundary p{font-size:22px;margin:0}
+.closing-experiments{height:100%;display:grid;grid-template-columns:1.02fr 1fr;gap:64px}
+.experiment-question{padding:26px 0;border-top:3px solid #0e7a6e}
+.experiment-question>span{font-size:20px;color:#0e7a6e;font-weight:650}
+.closing-revision .experiment-question h3{font-size:37px;line-height:1.42;margin:26px 0 33px}
+.experiment-sequence{display:flex;align-items:center;gap:12px;padding:22px 0;border-top:1px solid #c4cec7;border-bottom:1px solid #c4cec7;margin:26px 0}
+.experiment-sequence span{font-size:22px;white-space:nowrap;font-weight:650}
+.experiment-sequence i{font-style:normal;color:#0e7a6e}
+.closing-revision .experiment-question p{font-size:23px;color:#4a5566;margin-top:26px}
+.experiment-design{display:grid;grid-template-rows:repeat(3,1fr)}
+.experiment-design>div{position:relative;border-top:1px solid #c4cec7;padding:16px 0 14px 126px}
+.experiment-design>div:first-child{border-top:3px solid #0e7a6e}
+.experiment-label{position:absolute;left:0;top:26px;font-size:20px;color:#0e7a6e;font-weight:650}
+.closing-revision .experiment-design h3{font-size:25px;margin:5px 0 8px}
+.closing-revision .experiment-design p{margin:0;font-size:22px}
+.roadmap-head,.roadmap-row{display:grid;grid-template-columns:230px 1fr 1.05fr;gap:34px;align-items:center}
+.roadmap-head{border-bottom:2px solid #0e7a6e;padding:0 0 16px;font-size:20px;color:#0e7a6e}
+.roadmap-row{min-height:123px;border-bottom:1px solid #c4cec7}
+.roadmap-row>div{display:flex;flex-direction:column;gap:5px}
+.roadmap-row strong{font-size:25px;font-weight:650}
+.roadmap-row span{font-size:19px;color:#0e7a6e;letter-spacing:.04em}
+.closing-revision .roadmap-row p{font-size:22px;line-height:1.5;margin:8px 0}
+.roadmap-gates{display:flex;align-items:center;gap:24px;margin-top:29px}
+.roadmap-gates>span{display:flex;flex-direction:column;font-size:20px;color:#4a5566;gap:6px;flex:none}
+.roadmap-gates b{font-size:23px;font-weight:650;color:#0e7a6e}
+.roadmap-gates i{height:2px;background:#b4c7c0;flex:1;position:relative}
+.roadmap-gates i::after{content:'';position:absolute;right:0;top:-4px;width:8px;height:8px;border-top:2px solid #0e7a6e;border-right:2px solid #0e7a6e;transform:rotate(45deg)}
+.cinema>.content>.closing-film,.cinema>.content>.closing-film video{width:1600px;height:900px;max-height:none}
+.cinema>.content>.closing-film figcaption{display:none}
+.closing-qa{position:absolute;inset:0;display:grid;place-items:center;font-size:100px;font-weight:650;letter-spacing:-.04em;color:#e9e7e1;background:#0d1117}
+.closing-original{position:absolute;inset:0;width:1600px;height:900px;background:#0d1117;color:#e9ecef;container-type:size}
+.closing-original .pad{position:absolute;inset:0;padding:4cqw 5cqw;display:flex;flex-direction:column}
+.closing-original .finis{display:flex;flex-direction:column;align-items:center;gap:1.6cqw;text-align:center}
+.closing-original .lockup-hero{display:flex;align-items:center;gap:2.2cqw}
+.closing-original .lockup-hero img.sym{height:9.5cqw;width:auto;max-height:none;object-fit:contain}
+.closing-original .lockup-hero img.wm{height:5.6cqw;width:auto;max-height:none;object-fit:contain}
+.closing-original .finis img.qr{width:11cqw;height:11cqw;display:block;max-height:none;object-fit:contain;background:#fff;padding:.7cqw;border-radius:2px;box-sizing:content-box}
+.closing-original .finis .url{font-family:var(--p-font,'Pretendard'),sans-serif;font-variant-numeric:tabular-nums slashed-zero;font-size:1.5cqw;color:#3ec7b4;letter-spacing:.02em}
+.closing-original .names{font-size:1.35cqw;color:#b6c0cb;letter-spacing:.02em}
+.closing-original .org{font-family:'Pretendard',sans-serif;font-size:1.22cqw;letter-spacing:.04em;color:#93a0ae}
+.closing-original{--mono:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif}
+@media print{
+ .closing-film video{display:none!important}
+ .closing-film .print-poster{display:block!important;width:100%;height:auto;max-height:430px;object-fit:contain}
+ .poc-sources .closing-film .print-poster{height:235px}
+ .cinema>.content>.closing-film .print-poster{max-height:none;height:900px}
+ .closing-original .finis{gap:25.6px}.closing-original .pad{padding:64px 80px}
+}
+
+/* ★ 윗 칸을 236px 로 줄였더니 영상이 235px 를 다 먹고 캡션이 칸 밖으로
+   밀려 아래 그림과 겹쳤다 (실측 y446~475 vs 그림 y453~). 영상에 캡션
+   자리를 남긴다. */
+.poc-sources > .closing-film video{height:198px;max-height:198px}

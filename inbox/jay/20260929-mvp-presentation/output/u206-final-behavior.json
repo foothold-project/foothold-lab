@@ -1,0 +1,56 @@
+{
+  "27": [
+    {
+      "playing": true,
+      "time": 1.512469,
+      "muted": true,
+      "loop": true
+    },
+    {
+      "playing": true,
+      "time": 1.510621,
+      "muted": true,
+      "loop": true
+    }
+  ],
+  "35": [
+    {
+      "playing": true,
+      "time": 1.41496,
+      "muted": false,
+      "loop": false
+    }
+  ],
+  "hardware_after_interrupt": {
+    "current": 9,
+    "step": 3,
+    "count": 37
+  },
+  "policy_back": {
+    "current": 10,
+    "step": 0,
+    "count": 37
+  },
+  "print_hardware_layers": [
+    "5"
+  ],
+  "errors": [],
+  "screen_behavior_sha256": "d0b9414ad2dc3b9dfd07f0f6d12ca1f36212376611f6a30bc02eb320b00b6a6a",
+  "final_print_fix_sha256": "c686dd7ae83724bb78fe579a3311d59169d8093e61b51f24779fbfe318448bb1",
+  "print_recheck": {
+    "hardware_robot_visible": true,
+    "policy_image_css_width": 770,
+    "policy_image_css_height": 577.5,
+    "screenshots": [
+      "u206-print-hardware.png",
+      "u206-print-policy.png"
+    ]
+  },
+  "final_sha256": "c37844341adbd47528557027520336f60171cda1dbfe924da744ed2ede46b4c4",
+  "policy_front_recheck": {
+    "width": 540,
+    "height": 510,
+    "back_visibility": "visible",
+    "screenshot": "u206-final-policy-front.png"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "initial": {
+    "current": {
+      "state": "front",
+      "frame": null
+    },
+    "width": 1600,
+    "height": 1600
+  },
+  "segments": [
+    {
+      "state": "hip",
+      "frame": 48
+    },
+    {
+      "state": "thigh",
+      "frame": 96
+    },
+    {
+      "state": "calf",
+      "frame": 144
+    },
+    {
+      "state": "fl",
+      "frame": 180
+    },
+    {
+      "state": "fr",
+      "frame": 216
+    },
+    {
+      "state": "rl",
+      "frame": 252
+    },
+    {
+      "state": "rr",
+      "frame": 288
+    },
+    {
+      "state": "forward",
+      "frame": 336
+    },
+    {
+      "state": "lateral",
+      "frame": 384
+    },
+    {
+      "state": "yaw",
+      "frame": 432
+    }
+  ],
+  "reverse": {
+    "state": "hip",
+    "frame": 1
+  },
+  "restore": {
+    "state": "front",
+    "frame": null
+  },
+  "browserErrors": []
+}

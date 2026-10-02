@@ -1,0 +1,141 @@
+{
+  "source_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/58d3bc1f-d674-4c39-adb9-3d9e804103b4.mp4",
+  "changed_frames": [
+    1193,
+    1212
+  ],
+  "changed_seconds": [
+    49.708333333333336,
+    50.541666666666664
+  ],
+  "method": "Reframe first 20 E5 frames to align target cabinet with outgoing POV. Smoothly release to native rear view. No dissolve, hold, optical-flow or speed change.",
+  "parameters": [
+    {
+      "frame": 1193,
+      "scale": 1.18,
+      "x": -60.0,
+      "y": -64.0
+    },
+    {
+      "frame": 1194,
+      "scale": 1.1785566409097536,
+      "x": -59.5188803032512,
+      "y": -63.48680565680128
+    },
+    {
+      "frame": 1195,
+      "scale": 1.174436506779414,
+      "x": -58.14550225980464,
+      "y": -62.02186907712495
+    },
+    {
+      "frame": 1196,
+      "scale": 1.16795451231958,
+      "x": -55.98483743986004,
+      "y": -59.71715993585071
+    },
+    {
+      "frame": 1197,
+      "scale": 1.1594255722408515,
+      "x": -53.141857413617146,
+      "y": -56.68464790785829
+    },
+    {
+      "frame": 1198,
+      "scale": 1.149164601253827,
+      "x": -49.7215337512757,
+      "y": -53.03630266802741
+    },
+    {
+      "frame": 1199,
+      "scale": 1.1374865140691064,
+      "x": -45.82883802303543,
+      "y": -48.8840938912378
+    },
+    {
+      "frame": 1200,
+      "scale": 1.1247062253972882,
+      "x": -41.56874179909608,
+      "y": -44.33999125236915
+    },
+    {
+      "frame": 1201,
+      "scale": 1.1111386499489722,
+      "x": -37.04621664965738,
+      "y": -39.51596442630121
+    },
+    {
+      "frame": 1202,
+      "scale": 1.0970987024347572,
+      "x": -32.36623414491908,
+      "y": -34.52398308791369
+    },
+    {
+      "frame": 1203,
+      "scale": 1.0829012975652428,
+      "x": -27.63376585508092,
+      "y": -29.476016912086315
+    },
+    {
+      "frame": 1204,
+      "scale": 1.0688613500510278,
+      "x": -22.953783350342615,
+      "y": -24.48403557369879
+    },
+    {
+      "frame": 1205,
+      "scale": 1.0552937746027118,
+      "x": -18.431258200903926,
+      "y": -19.660008747630854
+    },
+    {
+      "frame": 1206,
+      "scale": 1.0425134859308938,
+      "x": -14.171161976964573,
+      "y": -15.11590610876221
+    },
+    {
+      "frame": 1207,
+      "scale": 1.030835398746173,
+      "x": -10.27846624872431,
+      "y": -10.963697331972597
+    },
+    {
+      "frame": 1208,
+      "scale": 1.0205744277591486,
+      "x": -6.858142586382852,
+      "y": -7.315352092141708
+    },
+    {
+      "frame": 1209,
+      "scale": 1.01204548768042,
+      "x": -4.0151625601399665,
+      "y": -4.282840064149298
+    },
+    {
+      "frame": 1210,
+      "scale": 1.0055634932205861,
+      "x": -1.8544977401953622,
+      "y": -1.978130922875053
+    },
+    {
+      "frame": 1211,
+      "scale": 1.0014433590902465,
+      "x": -0.4811196967487996,
+      "y": -0.5131943431987196
+    },
+    {
+      "frame": 1212,
+      "scale": 1.0,
+      "x": -0.0,
+      "y": -0.0
+    }
+  ],
+  "audio_bitstream_preserved": true,
+  "audio_sha256": "cfc414c91d1f8c258da6365f3531cc07fd2ab28c59e83a47ec6113d01b784a2d",
+  "master_frames": 1935,
+  "duration_seconds": 80.625,
+  "ending_duration_seconds": 49.5,
+  "opening_unchanged": "film-opening-v7.mp4",
+  "native_comparison_script": "export default async ({project})=>{\nconst r='/home/user/e5-transition-v8';const p=await project({dir:r+'/comparison-project',size:'854x480',fps:24,background:'#000'});\nfor(const [label,file,at] of [['BEFORE','master-v7.mp4',0],['AFTER','film-master-v8.mp4',6.5]]){\nconst m=await p.add(r+'/'+file);p.compose(<media file={m} trimStart={47.504} x={0} y={0} width={854} height={480} muted={true}/>,{at,dur:6,name:label});\np.compose(<group><rect x={12} y={12} width={130} height={34} fill=\"#06131d\" opacity={.85}/><text x={22} y={19} width={114} height={22} fontFamily=\"Metropolis\" fontSize={18} color=\"#fff\">{label}</text></group>,{at,dur:6,name:label+' title'});\n}await p.render(r+'/compare-picture.mp4',{draft:false,bitrate:3500000});};"
+}

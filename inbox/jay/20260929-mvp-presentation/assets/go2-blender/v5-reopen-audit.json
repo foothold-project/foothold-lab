@@ -1,0 +1,41 @@
+{
+  "editable_scene_keyframes_match_rendered_states": true,
+  "checks": [
+    {
+      "state": "front",
+      "frame": 1,
+      "max_anchor_error": 4.933738708690072e-07,
+      "passes": true
+    },
+    {
+      "state": "three_quarter",
+      "frame": 97,
+      "max_anchor_error": 4.92513656635829e-07,
+      "passes": true
+    },
+    {
+      "state": "four_legs",
+      "frame": 145,
+      "max_anchor_error": 4.682426452684574e-07,
+      "passes": true
+    },
+    {
+      "state": "assembled",
+      "frame": 193,
+      "max_anchor_error": 4.92513656635829e-07,
+      "passes": true
+    },
+    {
+      "state": "side_grid",
+      "frame": 241,
+      "max_anchor_error": 4.6479797366494324e-07,
+      "passes": true
+    },
+    {
+      "state": "scan",
+      "frame": 265,
+      "max_anchor_error": 4.6479797366494324e-07,
+      "passes": true
+    }
+  ]
+}

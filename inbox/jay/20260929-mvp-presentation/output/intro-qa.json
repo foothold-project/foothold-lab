@@ -1,0 +1,50 @@
+{
+  "html_sha256": "85b5ef1b9fb72fb0476fa9f5572dc331cb167ac025c954a9cee38162cfa04605",
+  "viewport_checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "slides": "passed"
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "slides": "passed"
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "slides": "passed"
+    }
+  ],
+  "errors": [],
+  "issues": [],
+  "media": [
+    {
+      "src": "../assets/film-master-v8.mp4",
+      "duration": 80.625
+    },
+    {
+      "src": "../../20260930-mvp-brand/_out/review/FULL_v6.mp4",
+      "duration": 83.588
+    }
+  ],
+  "story_sequence": "passed",
+  "click_forward_backward": "passed",
+  "rapid_reverse_shared_transition": "passed",
+  "presenter_notes": "passed",
+  "reviewed_slides": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    43,
+    44
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "version": 4,
+  "source": "go2-technical-v4.blend",
+  "states": {
+    "front": {
+      "image": "go2-front-v4.png",
+      "width": 1600,
+      "height": 1600
+    },
+    "three_axes": {
+      "image": "go2-three-axes-v4.png",
+      "width": 1280,
+      "height": 960
+    },
+    "single_leg": {
+      "image": "go2-fl-leg-v4.png",
+      "width": 1280,
+      "height": 960
+    },
+    "twelve_axes": {
+      "image": "go2-twelve-axes-v4.png",
+      "width": 1280,
+      "height": 960
+    }
+  },
+  "segments": {
+    "hip": {
+      "id": "hip",
+      "label": "외전·내전",
+      "start": 1,
+      "end": 48,
+      "camera": "technical",
+      "axes": [
+        "FL"
+      ],
+      "kind": "single-joint kinematic rotation",
+      "pattern": "v4-web-frames/hip-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-hip-v4.png",
+      "preview": "go2-hip-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    },
+    "thigh": {
+      "id": "thigh",
+      "label": "고관절 굽힘·폄",
+      "start": 49,
+      "end": 96,
+      "camera": "technical",
+      "axes": [
+        "FL"
+      ],
+      "kind": "single-joint kinematic rotation",
+      "pattern": "v4-web-frames/thigh-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-thigh-v4.png",
+      "preview": "go2-thigh-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    },
+    "calf": {
+      "id": "calf",
+      "label": "무릎 굽힘·폄",
+      "start": 97,
+      "end": 144,
+      "camera": "technical",
+      "axes": [
+        "FL"
+      ],
+      "kind": "single-joint kinematic rotation",
+      "pattern": "v4-web-frames/calf-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-calf-v4.png",
+      "preview": "go2-calf-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    },
+    "fl": {
+      "id": "fl",
+      "label": "FL 다리의 3관절",
+      "start": 145,
+      "end": 180,
+      "camera": "fourlegs",
+      "axes": [
+        "FL"
+      ],
+      "kind": "leg-joint demonstration, not walking",
+      "pattern": "v4-web-frames/fl-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-fl-v4.png",
+      "preview": "go2-fl-v4.mp4",
+      "verifiedFrames": 36,
+      "verifiedRate": "24"
+    },
+    "fr": {
+      "id": "fr",
+      "label": "FR 다리의 3관절",
+      "start": 181,
+      "end": 216,
+      "camera": "fourlegs",
+      "axes": [
+        "FR"
+      ],
+      "kind": "leg-joint demonstration, not walking",
+      "pattern": "v4-web-frames/fr-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-fr-v4.png",
+      "preview": "go2-fr-v4.mp4",
+      "verifiedFrames": 36,
+      "verifiedRate": "24"
+    },
+    "rl": {
+      "id": "rl",
+      "label": "RL 다리의 3관절",
+      "start": 217,
+      "end": 252,
+      "camera": "fourlegs",
+      "axes": [
+        "RL"
+      ],
+      "kind": "leg-joint demonstration, not walking",
+      "pattern": "v4-web-frames/rl-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-rl-v4.png",
+      "preview": "go2-rl-v4.mp4",
+      "verifiedFrames": 36,
+      "verifiedRate": "24"
+    },
+    "rr": {
+      "id": "rr",
+      "label": "RR 다리의 3관절",
+      "start": 253,
+      "end": 288,
+      "camera": "fourlegs",
+      "axes": [
+        "RR"
+      ],
+      "kind": "leg-joint demonstration, not walking",
+      "pattern": "v4-web-frames/rr-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-rr-v4.png",
+      "preview": "go2-rr-v4.mp4",
+      "verifiedFrames": 36,
+      "verifiedRate": "24"
+    },
+    "forward": {
+      "id": "forward",
+      "label": "전후 명령",
+      "start": 289,
+      "end": 336,
+      "camera": "commands",
+      "axes": [],
+      "kind": "command direction only, not locomotion",
+      "pattern": "v4-web-frames/forward-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-forward-v4.png",
+      "preview": "go2-forward-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    },
+    "lateral": {
+      "id": "lateral",
+      "label": "횡이동 명령",
+      "start": 337,
+      "end": 384,
+      "camera": "commands",
+      "axes": [],
+      "kind": "command direction only, not locomotion",
+      "pattern": "v4-web-frames/lateral-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-lateral-v4.png",
+      "preview": "go2-lateral-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    },
+    "yaw": {
+      "id": "yaw",
+      "label": "회전 명령",
+      "start": 385,
+      "end": 432,
+      "camera": "commands",
+      "axes": [],
+      "kind": "command direction only, not locomotion",
+      "pattern": "v4-web-frames/yaw-{frame:04d}.webp",
+      "fps": 24,
+      "width": 960,
+      "height": 720,
+      "poster": "go2-yaw-v4.png",
+      "preview": "go2-yaw-v4.mp4",
+      "verifiedFrames": 48,
+      "verifiedRate": "24"
+    }
+  },
+  "anchors": "v4-sensor-and-joint-anchors.json",
+  "caveat": "Explanatory kinematic animation. Not an Isaac policy rollout or calibrated sensor measurement."
+}

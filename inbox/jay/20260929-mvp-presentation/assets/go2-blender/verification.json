@@ -1,0 +1,34 @@
+{
+  "source_meshes": 17,
+  "revolute_joints": 12,
+  "source_normals_restored": [
+    "base_visual",
+    "FL_hip_visual",
+    "FL_thigh_visual",
+    "FL_calf_visual",
+    "FL_foot_visual",
+    "FR_hip_visual",
+    "FR_thigh_visual",
+    "FR_calf_visual",
+    "FR_foot_visual",
+    "RL_hip_visual",
+    "RL_thigh_visual",
+    "RL_calf_visual",
+    "RL_foot_visual",
+    "RR_hip_visual",
+    "RR_thigh_visual",
+    "RR_calf_visual",
+    "RR_foot_visual"
+  ],
+  "assembly_max_transform_error": 0.0,
+  "preview_resolution": [
+    960,
+    720
+  ],
+  "frame_range": [
+    1,
+    264
+  ],
+  "fps": 24,
+  "notes": "Kinematic explanatory animation, not policy rollout. Geometry originates in IsaacLab Go2 USD. No external Orin/D435i/HESAI module added."
+}

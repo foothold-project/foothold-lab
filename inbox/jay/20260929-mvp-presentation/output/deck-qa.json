@@ -1,0 +1,111 @@
+{
+  "slides": 46,
+  "errors": [],
+  "issues": [],
+  "media": [
+    {
+      "src": "../assets/film-opening-v1.mp4",
+      "ok": true,
+      "duration": 31.125
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/lineage-gap-v2.mp4",
+      "ok": true,
+      "duration": 6
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/train-army.mp4",
+      "ok": true,
+      "duration": 41.28
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/train-gap-forward.mp4",
+      "ok": true,
+      "duration": 3
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/train-gap-forward.mp4",
+      "ok": true,
+      "duration": 3
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/lineage-gap-v1.mp4",
+      "ok": true,
+      "duration": 6
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/axis2-stop-v1.mp4",
+      "ok": true,
+      "duration": 10
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/lineage-gap-v1.mp4",
+      "ok": true,
+      "duration": 6
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/lineage-gap-D-fail.mp4",
+      "ok": true,
+      "duration": 6
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/train-gap-forward.mp4",
+      "ok": true,
+      "duration": 3
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/train-gap-omni.mp4",
+      "ok": true,
+      "duration": 3
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/hero-floatingring-v15-nvidia.mp4",
+      "ok": true,
+      "duration": 4
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/hero-floatingring-v15-v1.mp4",
+      "ok": true,
+      "duration": 3.8
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/hero-floatingring-v15-v2.mp4",
+      "ok": true,
+      "duration": 3.72
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/axis2-stop-v1.mp4",
+      "ok": true,
+      "duration": 10
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/axis2-stop-v2.mp4",
+      "ok": true,
+      "duration": 10
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/axis2-turn-v2.mp4",
+      "ok": true,
+      "duration": 18
+    },
+    {
+      "src": "../../20260929-mvp-submission/source/media/stepping-stones-v2.mp4",
+      "ok": true,
+      "duration": 6
+    },
+    {
+      "src": "../../20260916-3dgs-test/_out/nurec/go2_B_mesh_hidden/run.mp4",
+      "ok": true,
+      "duration": 12
+    },
+    {
+      "src": "../assets/film-ending-v3.mp4",
+      "ok": true,
+      "duration": 50.083333
+    }
+  ],
+  "navigation": "passed",
+  "notes_popup": "passed",
+  "blackout": "passed",
+  "narrative_order": "passed; visual continuity still incomplete"
+}

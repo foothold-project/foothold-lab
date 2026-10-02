@@ -1,0 +1,28 @@
+{
+  "framePattern": "web-frames/frame-{frame:04d}.webp",
+  "frameCount": 264,
+  "fps": 24,
+  "size": [
+    640,
+    480
+  ],
+  "stops": [
+    1,
+    96,
+    156,
+    216,
+    240
+  ],
+  "labels": [
+    "정면",
+    "턴테이블",
+    "강체 링크 분리",
+    "재조립",
+    "12개 관절"
+  ],
+  "preview": "go2-spec-preview.mp4",
+  "source": "go2-presentation-v3.blend",
+  "kind": "USD-based kinematic illustration, not learned policy rollout",
+  "validatedFrames": 264,
+  "validatedRate": "24"
+}

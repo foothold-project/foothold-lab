@@ -1,0 +1,113 @@
+{
+  "videos": [
+    {
+      "file": "film-master-v4.mp4",
+      "duration": 81.212321,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-e5pre-outpoint-comparison-v6.mp4",
+      "duration": 14.5,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-o1-o2-lookaround-v4.mp4",
+      "duration": 10.25,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-e5pre-footsteps-comparison-v4.mp4",
+      "duration": 30,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-opening-v1.mp4",
+      "duration": 31.125,
+      "width": 854,
+      "height": 480
+    },
+    {
+      "file": "film-ending-v4.mp4",
+      "duration": 50.083333,
+      "width": 854,
+      "height": 480
+    }
+  ],
+  "shots": [
+    {
+      "id": "O1",
+      "button": true
+    },
+    {
+      "id": "O2",
+      "button": true
+    },
+    {
+      "id": "O3",
+      "button": true
+    },
+    {
+      "id": "O3b",
+      "button": true
+    },
+    {
+      "id": "O4",
+      "button": true
+    },
+    {
+      "id": "O5",
+      "button": true
+    },
+    {
+      "id": "O6",
+      "button": true
+    },
+    {
+      "id": "O7",
+      "button": true
+    },
+    {
+      "id": "E2",
+      "button": true
+    },
+    {
+      "id": "E3",
+      "button": true
+    },
+    {
+      "id": "E4",
+      "button": true
+    },
+    {
+      "id": "E5pre",
+      "button": true
+    },
+    {
+      "id": "E5",
+      "button": true
+    },
+    {
+      "id": "E5b",
+      "button": true
+    },
+    {
+      "id": "E6",
+      "button": true
+    }
+  ],
+  "missingFiles": 0,
+  "e7Modal": {
+    "open": true,
+    "time": 64.998002,
+    "file": "film-master-v4.mp4"
+  },
+  "pageErrors": [],
+  "audioMeasurement": {
+    "status": "Audio patch audited in film-footsteps-v4.audit.json. Not final music or mix."
+  },
+  "status": "480p review, user approval pending; frame review does not certify every generated motion"
+}

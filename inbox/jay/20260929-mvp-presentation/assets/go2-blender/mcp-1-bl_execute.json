@@ -1,0 +1,28 @@
+{
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"job_id\":\"9326e7c250d581444048b8023dc14991\",\"state\":\"completed\",\"ok\":true,\"result\":{\"geometry_17_match\":true,\"all_bounds_inside\":true,\"camera\":\"CAM_Go2_front\",\"frame_range\":[1,264]},\"stdout\":\"\",\"stderr\":\"\"}"
+      }
+    ],
+    "structuredContent": {
+      "job_id": "9326e7c250d581444048b8023dc14991",
+      "state": "completed",
+      "ok": true,
+      "result": {
+        "geometry_17_match": true,
+        "all_bounds_inside": true,
+        "camera": "CAM_Go2_front",
+        "frame_range": [
+          1,
+          264
+        ]
+      },
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "jsonrpc": "2.0",
+  "id": 3
+}

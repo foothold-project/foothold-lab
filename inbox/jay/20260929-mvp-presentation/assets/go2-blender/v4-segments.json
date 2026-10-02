@@ -1,0 +1,106 @@
+[
+  {
+    "id": "hip",
+    "label": "외전·내전",
+    "start": 1,
+    "end": 48,
+    "camera": "technical",
+    "axes": [
+      "FL"
+    ],
+    "kind": "single-joint kinematic rotation"
+  },
+  {
+    "id": "thigh",
+    "label": "고관절 굽힘·폄",
+    "start": 49,
+    "end": 96,
+    "camera": "technical",
+    "axes": [
+      "FL"
+    ],
+    "kind": "single-joint kinematic rotation"
+  },
+  {
+    "id": "calf",
+    "label": "무릎 굽힘·폄",
+    "start": 97,
+    "end": 144,
+    "camera": "technical",
+    "axes": [
+      "FL"
+    ],
+    "kind": "single-joint kinematic rotation"
+  },
+  {
+    "id": "fl",
+    "label": "FL 다리의 3관절",
+    "start": 145,
+    "end": 180,
+    "camera": "fourlegs",
+    "axes": [
+      "FL"
+    ],
+    "kind": "leg-joint demonstration, not walking"
+  },
+  {
+    "id": "fr",
+    "label": "FR 다리의 3관절",
+    "start": 181,
+    "end": 216,
+    "camera": "fourlegs",
+    "axes": [
+      "FR"
+    ],
+    "kind": "leg-joint demonstration, not walking"
+  },
+  {
+    "id": "rl",
+    "label": "RL 다리의 3관절",
+    "start": 217,
+    "end": 252,
+    "camera": "fourlegs",
+    "axes": [
+      "RL"
+    ],
+    "kind": "leg-joint demonstration, not walking"
+  },
+  {
+    "id": "rr",
+    "label": "RR 다리의 3관절",
+    "start": 253,
+    "end": 288,
+    "camera": "fourlegs",
+    "axes": [
+      "RR"
+    ],
+    "kind": "leg-joint demonstration, not walking"
+  },
+  {
+    "id": "forward",
+    "label": "전후 명령",
+    "start": 289,
+    "end": 336,
+    "camera": "commands",
+    "axes": [],
+    "kind": "command direction only, not locomotion"
+  },
+  {
+    "id": "lateral",
+    "label": "횡이동 명령",
+    "start": 337,
+    "end": 384,
+    "camera": "commands",
+    "axes": [],
+    "kind": "command direction only, not locomotion"
+  },
+  {
+    "id": "yaw",
+    "label": "회전 명령",
+    "start": 385,
+    "end": 432,
+    "camera": "commands",
+    "axes": [],
+    "kind": "command direction only, not locomotion"
+  }
+]

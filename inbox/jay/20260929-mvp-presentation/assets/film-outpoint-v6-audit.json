@@ -1,0 +1,62 @@
+{
+  "source": "film-master-v4.mp4",
+  "rejected": "v5 -2 frames leaves near-static tail",
+  "removed_source_frames": [
+    1193,
+    1206
+  ],
+  "removed_count": 14,
+  "removed_seconds": 0.5833333333333334,
+  "first_e5_frame": 1193,
+  "last_contact_global_seconds": 49.37,
+  "last_contact_tail_seconds": 49.575,
+  "outpoint_seconds": 49.708333333333336,
+  "delivered_frame_change": [
+    {
+      "frame": 1187,
+      "mean_abs_change": 22.76530373831776
+    },
+    {
+      "frame": 1188,
+      "mean_abs_change": 11.518964174454828
+    },
+    {
+      "frame": 1189,
+      "mean_abs_change": 8.970833333333333
+    },
+    {
+      "frame": 1190,
+      "mean_abs_change": 5.533411214953271
+    },
+    {
+      "frame": 1191,
+      "mean_abs_change": 3.308995327102804
+    },
+    {
+      "frame": 1192,
+      "mean_abs_change": 3.3403426791277258
+    },
+    {
+      "frame": 1193,
+      "mean_abs_change": 33.163317757009345
+    },
+    {
+      "frame": 1194,
+      "mean_abs_change": 1.4202492211838007
+    },
+    {
+      "frame": 1195,
+      "mean_abs_change": 1.0031931464174455
+    },
+    {
+      "frame": 1196,
+      "mean_abs_change": 0.8649143302180685
+    },
+    {
+      "frame": 1197,
+      "mean_abs_change": 0.8491433021806853
+    }
+  ],
+  "native_comparison_script": "export default async ({project})=>{\nconst r='/home/user/e5-out-v6';const p=await project({dir:r+'/comparison-project',size:'854x480',fps:24,background:'#000'});\nfor(const [label,file,at] of [['PREVIOUS -2 FRAMES','master-v5.mp4',0],['HOLD REMOVED','film-master-v6.mp4',7.5]]){\nconst m=await p.add(r+'/'+file);\np.compose(<media file={m} trimStart={47.5+.004} x={0} y={0} width={854} height={480} muted={true}/>,{at,dur:7,name:label});\np.compose(<group><rect x={12} y={12} width={260} height={34} fill=\"#06131d\" opacity={.85}/><text x={22} y={19} width={240} height={22} fontFamily=\"Metropolis\" fontSize={18} color=\"#fff\">{label}</text></group>,{at,dur:7,name:label+' title'});\n}await p.render(r+'/comparison-picture.mp4',{draft:false,bitrate:3500000});};",
+  "status": "Review candidate, not approved"
+}

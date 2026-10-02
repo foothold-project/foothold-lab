@@ -1,0 +1,18 @@
+{
+  "original_mesh_counts_preserved": true,
+  "frames": 289,
+  "grid_points": 187,
+  "robot_fits_all_frames": true,
+  "leg_internal_joint_rotations_unchanged": true,
+  "reassembled_original_hip_locations": true,
+  "grid_data": "Geometric teaching terrain, not recorded Isaac observations",
+  "source": "go2-technical-v4.blend",
+  "states": {
+    "front": 1,
+    "three_quarter": 97,
+    "four_legs": 145,
+    "assembled": 193,
+    "side_grid": 241,
+    "scan": 265
+  }
+}

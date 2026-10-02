@@ -1,0 +1,46 @@
+{
+  "html_sha256": "0993887ccac945302b98bd279ce688d1b546ed6c5919cbc0640ed8d621bf06c1",
+  "errors": [],
+  "checks": {
+    "film_autoplay_on_next": true,
+    "terrain_background_fixed": true,
+    "header_coordinates_identical": {
+      "x": 64,
+      "y": 46,
+      "width": 1472,
+      "height": 142
+    },
+    "industry_initial_lines_hidden": true,
+    "technical_reverse": true,
+    "reverse_to_animated_model_no_duplicate": true,
+    "parallel_preview_does_not_claim_one_environment": true,
+    "viewport_bounds": true,
+    "user_script_presenter": true,
+    "print_grid_independent_of_canvas_history": true,
+    "real_alpha": true
+  },
+  "screenshots": [
+    "u205-03-0.png",
+    "u205-03-1.png",
+    "u205-03-2.png",
+    "u205-04-1.png",
+    "u205-05-3.png",
+    "u205-06-0.png",
+    "u205-06-2.png",
+    "u205-07-2.png",
+    "u205-08-1.png",
+    "u205-09-2.png",
+    "u205-10-0.png",
+    "u205-10-1.png",
+    "u205-10-2.png",
+    "u205-10-3.png",
+    "u205-10-4.png",
+    "u205-10-5.png",
+    "u205-11-1.png",
+    "u205-11-2.png",
+    "u205-11-3.png",
+    "u205-11-4.png",
+    "u205-12-0.png",
+    "u205-12-2.png"
+  ]
+}

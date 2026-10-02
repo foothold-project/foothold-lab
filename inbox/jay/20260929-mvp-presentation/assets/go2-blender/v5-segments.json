@@ -1,0 +1,27 @@
+[
+  {
+    "id": "turntable",
+    "start": 1,
+    "end": 97
+  },
+  {
+    "id": "four_legs",
+    "start": 97,
+    "end": 145
+  },
+  {
+    "id": "assemble",
+    "start": 145,
+    "end": 193
+  },
+  {
+    "id": "to_side",
+    "start": 193,
+    "end": 241
+  },
+  {
+    "id": "scan",
+    "start": 241,
+    "end": 289
+  }
+]
