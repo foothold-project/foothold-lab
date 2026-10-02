@@ -46,7 +46,7 @@ GATES = [
     #   `/assets/mvp-deck/index.html?v=20261002b` 로 직접 링크한다.
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
         ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
-        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (44장)'),
+        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (43장)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),

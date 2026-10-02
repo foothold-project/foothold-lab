@@ -235,6 +235,9 @@ def build():
     revise_media(SLIDES); axes_scene.apply(SLIDES); spoken_steps.apply(SLIDES); experiment_frame.apply(SLIDES)
     # 2026-10-02 병렬 작업 모듈 (순서 중요: 띠 뒤에 실패 유형 · 삽입 장은 제목 기준)
     failure_types.apply(SLIDES); terrain_catalog.apply(SLIDES); charts_u209.apply(SLIDES); compare_tables.apply(SLIDES); bridge_slide.apply(SLIDES)
+    # 팀장 마지막 수정 2026-10-02 16:4x: 내리막 계단 속도 추종 장은 뺀다 · 29쪽 정지 전환 영상은 3초부터
+    _drop='더 어려운 내리막 계단에서는 속도 추종이 낮아졌습니다'; assert sum(x['title']==_drop for x in SLIDES)==1; SLIDES[:]=[x for x in SLIDES if x['title']!=_drop]
+    _st=next(x for x in SLIDES if x['title']=='정지 명령 전환 때의 낙상이 줄었습니다'); _n=_st['body'].count('<video '); assert _n==2,_n; _st['body']=_st['body'].replace('<video ','<video data-start="3" ')
     # 병렬 작업용 확장 고리 (2026-10-02): FOOTHOLD_DECK_EXTRA=design.a,design.b 의 apply(SLIDES) 를 차례로 부른다.
     for _m in [m for m in os.environ.get('FOOTHOLD_DECK_EXTRA','').split(',') if m.strip()]:
         importlib.import_module(_m.strip()).apply(SLIDES)  # 단계 장 멘트에 (클릭) 박기 (2026-10-02)

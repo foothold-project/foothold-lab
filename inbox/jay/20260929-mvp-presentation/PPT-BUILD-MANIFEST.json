@@ -151,11 +151,6 @@
       "steps": 0
     },
     {
-      "title": "더 어려운 내리막 계단에서는 속도 추종이 낮아졌습니다",
-      "section": "남은 과제",
-      "steps": 0
-    },
-    {
       "title": "디딤돌에서는 평가 시드에 따라 성공률이 흔들렸습니다",
       "section": "남은 과제",
       "steps": 0
@@ -221,7 +216,7 @@
       "steps": 0
     }
   ],
-  "count": 44,
+  "count": 43,
   "speed_success_percent": {
     "nv": [
       60.875,
