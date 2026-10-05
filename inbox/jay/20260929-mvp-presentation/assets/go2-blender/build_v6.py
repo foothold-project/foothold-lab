@@ -334,6 +334,8 @@ SEGMENTS = [
 STATES = {'front6': 300, 'side_grid6': 359, 'scan_done': 431, 'assembled6': 432, 'joints_close': 503,
           'stance': 563, 'feedback_end': 623, 'sensors_end': 719, 'commands_end': 863, 'side_walk': 864, 'commands_start': 959, 'modules_end': 1319}
 ASSEMBLED = dict(angle=45, scale=1.13, z=1.02, target=(0, 0, .22))   # v5 frame 193 과 같다
+# 센서 장면 끝(719 = 720 = 959 = 1128 = 1319) 공통 카메라. 2026-10-06 팀장: 로봇이 너무 왼쪽 → 목표를 뒤로(.42→.27), 화각을 넓혀(1.45→1.62) 카메라 이미지는 그대로 담는다.
+SX, SS = .12, 1.62   # (.27 은 화각 확대와 상쇄돼 로봇 중심 0.37 그대로였다 → .12 에서 0.45)
 
 def apply(frame, res=(960, 720)):
     s.frame_set(frame); reset_pose(); hide_all_props()
@@ -441,8 +443,8 @@ def apply(frame, res=(960, 720)):
         # 센서: 돌아서 앞·측면을 보이고, 머리에서 시야뿔 -> RGB 프레임 -> LiDAR 링
         t = ease((frame-624)/22.)
         bpy.context.view_layer.update(); knee = joint_world('FL_calf_joint')
-        tgt = (mix(knee.x*.55, .42, t), mix(knee.y*.55, .05, t), mix(.15, .12, t))
-        camera(mix(70, -28, t), mix(1.02, 1.45, t), mix(.5, .72, t), tgt)
+        tgt = (mix(knee.x*.55, SX, t), mix(knee.y*.55, .05, t), mix(.15, .12, t))
+        camera(mix(70, -28, t), mix(1.02, SS, t), mix(.5, .72, t), tgt)
         bpy.context.view_layer.update()
         cam_pt = world(base, sensor_source['front_camera']['point'])
         fwd = (base.matrix_world.to_3x3() @ Vector((1, 0, 0))).normalized()
@@ -479,7 +481,7 @@ def apply(frame, res=(960, 720)):
     elif 720 <= frame <= 863:
         # 명령: vx 제자리 트롯 -> vy 횡이동 -> wz 회전. 화살표가 설명 순서대로.
         t = ease((frame-720)/16.)
-        camera(mix(-28, 38, t), mix(1.45, 1.34, t), mix(.72, .95, t), (mix(.42, 0, t), mix(.05, 0, t), mix(.12, .20, t)))
+        camera(mix(-28, 38, t), mix(SS, 1.34, t), mix(.72, .95, t), (mix(SX, 0, t), mix(.05, 0, t), mix(.12, .20, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         phase = (frame-720)/24.
         if frame < 768:
@@ -507,7 +509,7 @@ def apply(frame, res=(960, 720)):
         gait_pose((frame-864)/24., 'trot', ease((frame-868)/8.))
     elif 936 <= frame <= 959:
         t = ease((frame-936)/23.)
-        camera(mix(-90, -28, t), mix(1.30, 1.45, t), mix(.62, .72, t), (mix(0, .42, t), mix(0, .05, t), mix(.26, .12, t)))
+        camera(mix(-90, -28, t), mix(1.30, SS, t), mix(.62, .72, t), (mix(0, SX, t), mix(0, .05, t), mix(.26, .12, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         gait_pose((frame-864)/24., 'trot', 1-ease((frame-936)/12.))
     elif 960 <= frame <= 1019:
@@ -534,7 +536,7 @@ def apply(frame, res=(960, 720)):
         if frame <= 1150: t = ease((frame-1128)/22.)
         elif frame >= 1296: t = 1-ease((frame-1296)/23.)
         else: t = 1.
-        camera(mix(-28, -42, t), mix(1.45, 1.30, t), mix(.72, 1.15, t), (mix(.42, .13, t), mix(.05, 0, t), mix(.12, .33, t)))
+        camera(mix(-28, -42, t), mix(SS, 1.30, t), mix(.72, 1.15, t), (mix(SX, .13, t), mix(.05, 0, t), mix(.12, .33, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         drop = {'dock': (1140, .34), 'hesai': (1163, .40), 'd435': (1186, .30)}
         expl = {'dock': Vector((-.06, 0, .13)), 'hesai': Vector((.06, 0, .22)), 'd435': Vector((.13, 0, .14))}
@@ -557,8 +559,8 @@ def apply(frame, res=(960, 720)):
         bpy.context.view_layer.update()
         b = bounds(); cx = (b[0]+b[2])/2.
         right = cam.matrix_world.to_3x3() @ Vector((1, 0, 0))
-        tgt = Vector((mix(.42, .13, t), mix(.05, 0, t), mix(.12, .33, t))) + right*((cx-.5)*cam.data.ortho_scale)*t
-        camera(mix(-28, -42, t), mix(1.45, 1.30, t), mix(.72, 1.15, t), tuple(tgt))
+        tgt = Vector((mix(SX, .13, t), mix(.05, 0, t), mix(.12, .33, t))) + right*((cx-.5)*cam.data.ortho_scale)*t
+        camera(mix(-28, -42, t), mix(SS, 1.30, t), mix(.72, 1.15, t), tuple(tgt))
     for o in grid_objects: o.hide_render = not grid
     if grid:
         for idx, o in enumerate(point_objects):
