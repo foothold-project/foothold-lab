@@ -9,7 +9,7 @@ function sharedVisible(el){
 }
 function captureShared(slide){return [...slide.querySelectorAll('[data-shared]')].filter(sharedVisible).map(el=>({key:el.dataset.shared,el,rect:el.getBoundingClientRect()}))}
 function animateShared(before,slide){
- sharedMoves.splice(0).forEach(x=>{x.animation.cancel();x.dest.style.visibility='';x.el.remove()});
+ sharedMoves.splice(0).forEach(x=>{x.animation.cancel();x.dest.style.visibility='';(x.mates||[]).forEach(m=>m.style.visibility='');x.el.remove()});
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  for(const old of before){
   if(old.key==='progress')continue;
@@ -19,8 +19,10 @@ function animateShared(before,slide){
   const clone=dest.cloneNode(true);clone.removeAttribute('data-shared');clone.className='scene-traveler '+(dest.classList.contains('robot-cutout')?'robot-cutout':'');
   Object.assign(clone.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',opacity:'1',border:'0',background:'transparent',objectFit:'contain'});
   document.body.append(clone);dest.style.visibility='hidden';
+  // 2026-10-05 팀장: 9→10 에서 로봇이 둘로 보였다. 날아오는 동안 같은 그림을 그리는 캔버스도 숨긴다.
+  const mates=[...slide.querySelectorAll('.continuous-player,.army-player')];mates.forEach(m=>m.style.visibility='hidden');
   const animation=clone.animate([{transform:`translate(${old.rect.left-r.left}px,${old.rect.top-r.top}px) scale(${old.rect.width/r.width},${old.rect.height/r.height})`},{transform:'translate(0,0) scale(1)'}],{duration:800,easing:'cubic-bezier(.22,.7,.25,1)',fill:'forwards'});
-  const item={el:clone,animation,dest};sharedMoves.push(item);animation.finished.catch(()=>{}).finally(()=>{dest.style.visibility='';clone.remove();const i=sharedMoves.indexOf(item);if(i>=0)sharedMoves.splice(i,1)});
+  const item={el:clone,animation,dest,mates};sharedMoves.push(item);animation.finished.catch(()=>{}).finally(()=>{dest.style.visibility='';mates.forEach(m=>m.style.visibility='');clone.remove();const i=sharedMoves.indexOf(item);if(i>=0)sharedMoves.splice(i,1)});
  }
 }
 function addRoutePets(){
