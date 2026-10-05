@@ -421,10 +421,10 @@ def apply(frame, res=(960, 720)):
         phase = (frame-720)/24.
         if frame < 768:
             gait_pose(phase, 'trot', ease((frame-724)/8.))
-            arrow(arrow_fwd, cones['fwd'], (.18, 0, .36), (.62, 0, .36), ease((frame-726)/10.))
+            arrow(arrow_fwd, cones['fwd'], (.34, 0, .36), (.74, 0, .36), ease((frame-726)/10.))   # 꼬리가 몸통에 묻히지 않게 코 앞에서 시작 (2026-10-05)
         elif frame < 816:
             gait_pose(phase, 'lateral', 1.)
-            arrow(arrow_lat, cones['lat'], (0, .18, .36), (0, .62, .36), ease((frame-770)/10.))
+            arrow(arrow_lat, cones['lat'], (0, .17, .36), (0, .60, .36), ease((frame-770)/10.))
         else:
             u = (frame-816)/47.
             rig.rotation_euler = (0, 0, .28*math.sin(2*math.pi*u))
