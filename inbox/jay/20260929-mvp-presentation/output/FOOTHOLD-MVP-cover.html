@@ -985,6 +985,14 @@ svg.u209-speed .u209-dot{stroke-width:2.5}
 .module-strip figure{opacity:.35;transition:opacity .45s}
 .module-strip figure.on{opacity:1}
 @media print{.module-strip figure{opacity:1!important}}
+/* 10쪽 6단계 · 모듈 사진 세 장이 3D 캔버스(440~1160)를 덮고 있었다 → 왼쪽 세로 열로. 3D 장착 장면이 가운데 보인다. (2026-10-06) */
+.module-strip{left:80px!important;right:auto!important;width:330px!important;top:236px!important;grid-template-columns:1fr!important;gap:12px!important;z-index:3}
+.module-strip figure{width:330px!important;padding-bottom:8px!important}
+.module-strip figure:nth-child(2){grid-column:auto!important}
+.module-strip figure img{width:330px!important;height:112px!important;object-fit:contain}
+.module-strip figcaption{flex-direction:row!important;align-items:baseline;gap:10px!important;padding-top:6px!important;font-size:18px!important}
+.module-strip figcaption span{font-size:14px!important}
+.hardware-page[data-current-step="6"] .continuous-player{opacity:1!important;visibility:visible!important}
 
 /* U208 · 레이아웃 재검사 (2026-10-02 팀장 지적)
    기준 셋: 1) 장끼리 통일성 2) 글·선 사이 간격이 안정감 있는 비율 3) 빈 곳·몰린 곳 없이 균형.
