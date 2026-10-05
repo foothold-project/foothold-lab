@@ -39,3 +39,23 @@
 .cmp-cond{flex:none;margin:0!important;padding-top:8px;border-top:1px solid var(--p-rule);font-size:15px!important;line-height:1.4;color:var(--p-muted)}
 .cmp-cond b{color:#0e7a6e;font-weight:600}
 @media print{.cmp-row{flex-grow:1!important;background:none!important}.compare-page .cmp-frame video,.cmp-play{display:none!important}.compare-page .cmp-frame img{opacity:1}}
+
+/* ── 2026-10-05 팀장 지적: 켜진 행이 열 폭을 넘어 숫자가 잘리고, 작은 행 라벨이 위에서 잘렸다.
+   팀장 제안대로 왼쪽 열을 230 → 150 으로 줄여 그 폭을 영상 열에 주고, 켜진 행의 영상은 «열 폭 − 숫자 칸» 으로 폭을 정한다(높이는 따라옴).
+   작은 행은 최소 높이를 두고 라벨은 자르지 않는다. */
+.cmp-head,.cmp-row{grid-template-columns:150px 1fr 1fr 1fr}
+.cmp-row{min-height:56px}
+.cmp-key{overflow:visible;padding-left:6px}
+.cmp-key b{font-size:17px}
+.cmp-key span{font-size:14px}
+.cmp-tag{font-size:13px;padding:0 8px;margin-top:2px}
+.cmp-row.on{flex:none}                                       /* 켜진 행 높이는 영상 높이가 정한다 */
+.cmp-row.on .cmp-key b{font-size:22px}
+.cmp-row.on .cmp-key span{font-size:16px}
+.cmp-row.on .cmp-cell{height:auto;align-items:center}
+.cmp-row.on .cmp-frame{height:auto;width:calc(100% - 104px);aspect-ratio:16/9}
+.cmp-row.on .cmp-cell figcaption{flex:none;width:92px}
+.cmp-row.on .cmp-cell figcaption b{font-size:30px}
+.cmp-row.on .cmp-cell figcaption small{font-size:14px}
+.cmp-cell figcaption{min-width:0}
+.cmp-row.on .cmp-bar{max-width:100%}

@@ -71,7 +71,7 @@ PAGES = [
      [('gap', .5), ('gap', 1.), ('gap', 1.5), ('rails', .5), ('rails', 1.), ('rails', 1.5)],
      '뒤쪽 실험 영상을 표로 모았습니다. 왼쪽부터 NVIDIA 공식 정책, v1, v2 이고, 세 판을 같은 자리에서 같은 카메라로 찍었습니다. '
      '틈은 v1 과 v2 가, 턱은 v2 가 학습에 넣은 지형이라 일반화가 아니라 학습 결과입니다. '
-     '장에 들어오면 모든 영상이 함께 재생되고, 행을 누르면 그 행만 봅니다. 숫자는 그 칸 100판의 성공률입니다.'),
+     '장에 들어오면 첫 행부터 차례로 크게 재생되고, 행을 누르면 그 행이 고정됩니다. 숫자는 그 칸 100판의 성공률입니다.'),
     ('미경험 고리와 함몰에서, 세 속도를 나란히 봅니다',
      [('floating_ring', .5), ('floating_ring', 1.), ('floating_ring', 1.5), ('pit', .5), ('pit', 1.), ('pit', 1.5)],
      '고리와 함몰은 세 모델 모두 학습에 넣지 않은 지형입니다. 속도를 올릴수록 어떻게 갈리는지 행마다 보시면 됩니다. '
@@ -177,7 +177,7 @@ def _page(title, rows, spoken, rates, page_no, total):
     head = ('<div class="cmp-head"><span>지형 · 속도</span>'
             + ''.join(f'<span data-model="{m}">{LABEL[m]}</span>' for m in ROOTS) + '</div>')
     table = '<div class="cmp-table">' + ''.join(_row(t, sp, rates) for t, sp in rows) + '</div>'
-    cond = ('<p class="cmp-cond"><b>장에 들어오면 모든 영상이 함께 재생 · 행을 누르면 그 행만</b> · 난이도 0.5 · 지형·속도당 100판 · 평가 시드 42 · '
+    cond = ('<p class="cmp-cond"><b>장에 들어오면 첫 행부터 차례로 크게 재생 · 행을 누르면 그 행 고정</b> · 난이도 0.5 · 지형·속도당 100판 · 평가 시드 42 · '
             '세 판을 같은 자리 같은 카메라로 · 영상은 각 한 판의 예시 · * NVIDIA 학습 명령 범위 밖'
             f' · 비교표 {page_no}/{total}</p>')
     source = (src('v1 갤러리 (NVIDIA · v1)', WEB1 + '../gallery.html') + ' · '
