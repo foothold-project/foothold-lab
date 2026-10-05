@@ -7,7 +7,7 @@ const AXES_BASE='../assets/go2-blender';
 const WALK_T0=864,WALK_LO=888,WALK_HI=935,WALK_CYCLE=24;      // build_v6.py gait_pose: (frame-864)/24 주기
 const LEG_PHASE={FL:0,RR:0,FR:Math.PI,RL:Math.PI};            // 트롯: FL·RR 같이, FR·RL 같이
 function v6Frames(p,segId,lo,hi){const seg=p.manifest.segments[segId];return Promise.all(Array.from({length:hi-lo+1},(_,i)=>p.load(seg.pattern.replace('{frame:04d}',String(lo+i).padStart(4,'0')))));}
-function v6Player(canvas,onFrame){if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,AXES_BASE,{initial:'side_walk',onFrame:onFrame||(()=>{})});return canvas.go2V5;}
+function v6Player(canvas,onFrame,initial){if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,AXES_BASE,{initial:initial||'side_walk',cacheLimit:260,onFrame:onFrame||(()=>{})});return canvas.go2V5;}
 // 램프(864~887) 한 번 뒤 루프(888~935)를 ms 동안 24 fps 로 그린다. canvas.seq 가 바뀌면 멈춘다.
 function walkFor(canvas,p,seq,ramp,loop,ms){return new Promise(res=>{const t0=performance.now();
  const tick=now=>{if(canvas.seq!==seq){res(false);return;}const el=now-t0;const k=Math.floor(el/1000*24);let im,f;
@@ -21,16 +21,18 @@ async function playAxes(slide,stage,previous){
  if(stage===7)slide.querySelectorAll('.cmd-card').forEach(c=>c.classList.add('on'));
  slide.dataset.axis=stage>=6?'2':'1';
  const setPos=(pos,cls)=>{slide.classList.remove('axes-animating','axes-turning');if(cls)slide.classList.add(cls);slide.dataset.pos=String(pos);};
- const p=v6Player(canvas,f=>axesFrame(slide,f));p.stop();await p.ready;if(canvas.seq!==seq)return;
- if(stage===0){setPos(0);await p.setState('side_walk');return;}
+ const p=v6Player(canvas,f=>axesFrame(slide,f),'scan_done');p.stop();await p.ready;if(canvas.seq!==seq)return;
+ if(stage===0){setPos(0);await p.setState('scan_done');return;}   // 11쪽 끝 포즈(격자)에서 시작
  if(stage<=5){
-  const restart=previous<=0||previous>=6||slide.dataset.pos!=='1';
+  const restart=previous<=0||previous>=6||slide.dataset.pos!=='w1';
   if(!restart)return;                                   // 1~5 사이 이동: 로봇은 그 자리, 카드만 켜진다
-  await p.setState('side_walk');if(canvas.seq!==seq)return;
-  setPos(0);void canvas.offsetWidth;                    // 출발점에서 전환 없이 시작
+  await p.setState('scan_done');if(canvas.seq!==seq)return;
+  setPos(0);void canvas.offsetWidth;
+  setPos('w0','axes-turning');                          // 격자가 꺼지고 정면을 지나 오른쪽 옆모습으로 돈다 · 캔버스는 트랙 출발점으로
+  await p.playSegment('scan_to_walk');if(canvas.seq!==seq)return;
   const ramp=await v6Frames(p,'walk_side',WALK_T0,WALK_LO-1),loop=await v6Frames(p,'walk_side',WALK_LO,WALK_HI);
   if(canvas.seq!==seq)return;
-  setPos(1,'axes-animating');                           // 4.5 s 동안 트랙을 건넌다
+  setPos('w1','axes-animating');                        // 4.5 s 동안 트랙을 건넌다
   await walkFor(canvas,p,seq,ramp,loop,4500);
   return;
  }

@@ -53,6 +53,24 @@
    "start": 936,
    "end": 959,
    "endState": "commands_start"
+  },
+  {
+   "id": "cmd_to_side",
+   "start": 960,
+   "end": 1019,
+   "endState": "side_grid6"
+  },
+  {
+   "id": "scan_to_walk",
+   "start": 1020,
+   "end": 1079,
+   "endState": "side_walk"
+  },
+  {
+   "id": "cmd_to_front",
+   "start": 1080,
+   "end": 1127,
+   "endState": "front6"
   }
  ],
  "states": {

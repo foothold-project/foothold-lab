@@ -2,7 +2,7 @@
 import re
 from .intro_story import make, src, TERRAIN
 
-FRONT='../assets/go2-blender/go2-front-v4.png'
+FRONT='../assets/go2-blender/go2-front-v5.png'   # 2026-10-05: 10쪽 캔버스 첫 프레임과 같은 카메라(v4 는 화각이 달랐다)
 def hero(cls='',shared=True):
     return f'<div class="robot-cutout {cls}"'+(' data-shared="go2"' if shared else '')+f'><img src="{FRONT}" alt="정면을 바라보는 Unitree Go2"></div>'
 

@@ -103,17 +103,24 @@ async function playPolicy(slide,stage,previous){
  const canvas=slide.querySelector('.policy-v5-player');if(!canvas||!window.Go2V5Player)return;
  if(window.GO2_V6_MANIFEST&&window.GO2_V5_MANIFEST&&!GO2_V5_MANIFEST.segments.scan_rays){Object.assign(GO2_V5_MANIFEST.states,GO2_V6_MANIFEST.states);Object.assign(GO2_V5_MANIFEST.segments,GO2_V6_MANIFEST.segments);}
  const seq=(canvas.seq||0)+1;canvas.seq=seq;
- if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender',{cacheLimit:200,initial:stage===0?'front6':'scan_done'});
+ if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender',{cacheLimit:260,initial:stage===0?'commands_end':'scan_done'});
  const p=canvas.go2V5;p.stop();await p.ready;if(canvas.seq!==seq||!slide.classList.contains('active'))return;
  const prefetch=ids=>{for(const id of ids){const seg=p.manifest.segments[id];if(!seg)continue;for(let f=seg.start;f<=seg.end;f++)p.load(seg.pattern.replace('{frame:04d}',String(f).padStart(4,'0'))).catch(()=>{});}};
- if(stage===0){await p.setState('front6');if(canvas.seq===seq)prefetch(['front_to_side','scan_rays']);return;}
+ if(stage===0){await p.setState('commands_end');if(canvas.seq===seq)prefetch(['cmd_to_side','scan_rays']);return;}   // 10쪽 끝 포즈에서 시작 (2026-10-05)
  // 팀장 2026-10-05: 스캔은 한 번으로 끝내지 말고 반복. 431(끝)→360(시작)은 격자가 그대로라 안 튄다. 장을 떠나거나 0단계로 가면 멈춘다.
  const loopScan=async()=>{while(canvas.seq===seq&&slide.classList.contains('active')&&slide.dataset.currentStep!=='0'){const ok=await p.playSegment('scan_rays');if(!ok)break;}};
- if(stage===1&&previous<1){await p.setState('front6');if(canvas.seq!==seq)return;await p.playSegment('front_to_side');if(canvas.seq!==seq)return;await loopScan();return;}
+ if(stage===1&&previous<1){await p.setState('commands_end');if(canvas.seq!==seq)return;await p.playSegment('cmd_to_side');if(canvas.seq!==seq)return;await loopScan();return;}
  await p.setState('scan_done');if(canvas.seq===seq)await loopScan();
 }
-function playArmy(slide,stage,previous){
+async function playArmy(slide,stage,previous){
  const video=slide.querySelector('video'),counter=slide.querySelector('.env-counter');
+ // 2026-10-05: 12쪽 끝(명령 3/4)에서 받아 정면으로 돈 뒤(cmd_to_front) 대군 속으로 줄어든다 (.shrunk)
+ const single=slide.querySelector('.army-single'),canvas=slide.querySelector('.army-player');
+ if(canvas&&window.Go2V5Player){const seq=(canvas.seq||0)+1;canvas.seq=seq;if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender',{initial:'commands_end'});const p=canvas.go2V5;p.stop();await p.ready;if(canvas.seq!==seq)return;
+  if(stage===0){single.classList.remove('shrunk');await p.setState('commands_end');}
+  else if(stage===1&&previous<1){single.classList.remove('shrunk');await p.setState('commands_end');if(canvas.seq!==seq)return;await p.playSegment('cmd_to_front');if(canvas.seq!==seq)return;single.classList.add('shrunk');}
+  else{await p.setState('front6');single.classList.add('shrunk');}
+  if(canvas.seq!==seq)return;}
  if(stage===0){video.pause();video.currentTime=0;counter.textContent='1';return;}
  if(stage===1&&previous!==1){video.currentTime=0;video.play().catch(()=>{});counter.textContent='1';return;}
  if(stage===2){video.play().catch(()=>{});const start=performance.now(),serial=(slide.counterSerial||0)+1;slide.counterSerial=serial;

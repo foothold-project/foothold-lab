@@ -14,7 +14,7 @@ import json, sys
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent
-web = ROOT / 'v6c-web-frames'; web.mkdir(exist_ok=True)   # v6b: 2026-10-02 재렌더 뒤 캐시 우회용 새 이름
+web = ROOT / 'v6d-web-frames'; web.mkdir(exist_ok=True)   # v6b: 2026-10-02 재렌더 뒤 캐시 우회용 새 이름
 seg_doc = json.loads((ROOT / 'v6-segments.json').read_text(encoding='utf-8'))
 segments, states = seg_doc['segments'], seg_doc['states']
 lo = min(s['start'] for s in segments); hi = max(s['end'] for s in segments)
@@ -31,11 +31,11 @@ if '--metadata-only' not in sys.argv:
     with ThreadPoolExecutor(max_workers=8) as pool: list(pool.map(convert, files))
 
 for name in states:
-    assert (ROOT / f'go2-{name}-v6c.png').exists(), f'정지화 없음 go2-{name}-v6.png'
+    assert (ROOT / f'go2-{name}-v6d.png').exists(), f'정지화 없음 go2-{name}-v6.png'
 manifest = {
     'version': 6, 'canvas': {'width': 1600, 'height': 1200}, 'source': 'go2-technical-v4.blend + build_v6.py',
-    'states': {name: {'image': f'go2-{name}-v6c.png', 'frame': f, 'width': 1600, 'height': 1200} for name, f in states.items()},
-    'segments': {s['id']: dict(s, pattern='v6c-web-frames/frame-{frame:04d}.webp', width=960, height=720, fps=24) for s in segments},
+    'states': {name: {'image': f'go2-{name}-v6d.png', 'frame': f, 'width': 1600, 'height': 1200} for name, f in states.items()},
+    'segments': {s['id']: dict(s, pattern='v6d-web-frames/frame-{frame:04d}.webp', width=960, height=720, fps=24) for s in segments},
     'notes': '설명용 기구학(gait_pose)과 카메라. 정책 출력이나 실측 로그가 아니다. 투명 WebP.',
 }
 (ROOT / 'v6-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding='utf-8')

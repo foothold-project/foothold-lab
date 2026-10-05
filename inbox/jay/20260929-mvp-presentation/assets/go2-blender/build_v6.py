@@ -241,7 +241,9 @@ def gait_pose(t, mode='trot', amp=1.):
         p = 2*math.pi*t + phase[leg]
         lift = max(0., math.sin(p))
         if mode == 'trot':
-            set_joint(leg+'_thigh_joint', amp*(.28*lift - .14*math.cos(p)))
+            # 2026-10-05 팀장 지적: 뒤로 걷는 것처럼 보였다. thigh 양(+)은 발이 뒤로 가는 방향(y축 회전)이라
+            # 공중(lift>0, p 0→π)에서 발이 앞으로 가려면 +cos 이어야 한다. 전에는 -cos 이라 공중에서 뒤로 갔다.
+            set_joint(leg+'_thigh_joint', amp*(.28*lift + .14*math.cos(p)))
             set_joint(leg+'_calf_joint', amp*(-.50*lift))
             set_joint(leg+'_hip_joint', 0.)
         elif mode == 'lateral':
@@ -267,6 +269,10 @@ SEGMENTS = [
     {'id': 'walk_side',     'start': 864, 'end': 935, 'endState': 'side_walk'},
     # 옆모습에서 명령 장면(720 의 카메라 -28°)으로 «그 자리에서» 돈다. 다리는 걷기에서 서기로 가라앉는다.
     {'id': 'to_commands',   'start': 936, 'end': 959, 'endState': 'commands_start'},
+    # 2026-10-05 팀장: 장과 장 사이에도 한 흐름. 이전 장의 끝 포즈에서 다음 장이 시작한다.
+    {'id': 'cmd_to_side',   'start': 960, 'end': 1019, 'endState': 'side_grid6'},    # 10쪽 끝(명령 ¾) → 11쪽 측면 격자
+    {'id': 'scan_to_walk',  'start': 1020, 'end': 1079, 'endState': 'side_walk'},    # 11쪽 끝(격자) → 12쪽 오른쪽 옆모습(정면을 지나 돈다)
+    {'id': 'cmd_to_front',  'start': 1080, 'end': 1127, 'endState': 'front6'},       # 12쪽 끝(명령 ¾) → 13쪽 정면
 ]
 STATES = {'front6': 300, 'side_grid6': 359, 'scan_done': 431, 'assembled6': 432, 'joints_close': 503,
           'stance': 563, 'feedback_end': 623, 'sensors_end': 719, 'commands_end': 863, 'side_walk': 864, 'commands_start': 959}
@@ -447,6 +453,25 @@ def apply(frame, res=(960, 720)):
         camera(mix(-90, -28, t), mix(1.30, 1.45, t), mix(.62, .72, t), (mix(0, .42, t), mix(0, .05, t), mix(.26, .12, t)))
         ground.hide_render = False; ground.scale = (1, 1, 1)
         gait_pose((frame-864)/24., 'trot', 1-ease((frame-936)/12.))
+    elif 960 <= frame <= 1019:
+        # 명령 장면 끝(863 카메라) → 측면 격자(359). 화살표는 바로 사라지고 다리는 서기로, 격자는 끝에서 드러난다.
+        t = ease((frame-960)/59.)
+        camera(mix(38, 90, t), mix(1.34, 1.93, t), mix(.95, 1.80, t), (0, 0, mix(.20, .12, t)))
+        ground.hide_render = False; gs = 1-ease((frame-960)/20.); ground.scale = (max(gs, .001), max(gs, .001), 1)
+        gait_pose((frame-720)/24., 'yaw', 1-ease((frame-960)/12.))
+        grid = frame >= 1000; reveal = ease((frame-1000)/19.)
+    elif 1020 <= frame <= 1079:
+        # 측면 격자(431) → 오른쪽 옆모습(864). 격자가 먼저 꺼지고 카메라가 정면을 지나 반대쪽으로 돈다.
+        t = ease((frame-1020)/59.)
+        camera(mix(90, -90, t), mix(1.93, 1.30, t), mix(1.80, .62, t), (0, 0, mix(.12, .26, t)))
+        grid = frame < 1036; reveal = 1-ease((frame-1020)/15.)
+        ground.hide_render = False; gs = ease((frame-1050)/20.); ground.scale = (max(gs, .001), max(gs, .001), 1)
+    elif 1080 <= frame <= 1127:
+        # 명령 장면 끝(863) → 정면(300). 13쪽은 여기서 받아 대군 영상으로 넘어간다.
+        t = ease((frame-1080)/47.)
+        camera(mix(38, 0, t), mix(1.34, .76, t), mix(.95, .53, t), (0, 0, mix(.20, .22, t)))
+        ground.hide_render = False; gs = 1-ease((frame-1090)/24.); ground.scale = (max(gs, .001), max(gs, .001), 1)
+        gait_pose((frame-720)/24., 'yaw', 1-ease((frame-1080)/12.))
     for o in grid_objects: o.hide_render = not grid
     if grid:
         for idx, o in enumerate(point_objects):
