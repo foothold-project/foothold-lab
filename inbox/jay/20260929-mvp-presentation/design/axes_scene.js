@@ -22,14 +22,11 @@ async function playAxes(slide,stage,previous){
  slide.dataset.axis=stage>=6?'2':'1';
  const setPos=(pos,cls)=>{slide.classList.remove('axes-animating','axes-turning');if(cls)slide.classList.add(cls);slide.dataset.pos=String(pos);};
  const p=v6Player(canvas,f=>axesFrame(slide,f),'scan_done');p.stop();await p.ready;if(canvas.seq!==seq)return;
- if(stage===0){setPos(0);await p.setState('scan_done');return;}   // 11쪽 끝 포즈(격자)에서 시작
+ if(stage===0){await p.setState('scan_done');if(canvas.seq!==seq)return;setPos(0);void canvas.offsetWidth;setPos('w0','axes-turning');await p.playSegment('scan_to_walk');return;}   // 들어오면 격자가 꺼지며 오른쪽 옆모습으로 돈다
  if(stage<=5){
   const restart=previous<=0||previous>=6||slide.dataset.pos!=='w1';
   if(!restart)return;                                   // 1~5 사이 이동: 로봇은 그 자리, 카드만 켜진다
-  await p.setState('scan_done');if(canvas.seq!==seq)return;
-  setPos(0);void canvas.offsetWidth;
-  setPos('w0','axes-turning');                          // 격자가 꺼지고 정면을 지나 오른쪽 옆모습으로 돈다 · 캔버스는 트랙 출발점으로
-  await p.playSegment('scan_to_walk');if(canvas.seq!==seq)return;
+  if(p.current.state!=='side_walk'||slide.dataset.pos!=='w0'){await p.setState('side_walk');if(canvas.seq!==seq)return;setPos('w0');void canvas.offsetWidth;}
   const ramp=await v6Frames(p,'walk_side',WALK_T0,WALK_LO-1),loop=await v6Frames(p,'walk_side',WALK_LO,WALK_HI);
   if(canvas.seq!==seq)return;
   setPos('w1','axes-animating');                        // 4.5 s 동안 트랙을 건넌다

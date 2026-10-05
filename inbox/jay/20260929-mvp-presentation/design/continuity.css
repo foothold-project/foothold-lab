@@ -24,8 +24,10 @@
 @media print{.army-single{display:none!important}}
 /* 12쪽 끝(명령 장면 · 작게 둔 자리)과 13쪽 0단계가 같은 자리·같은 크기. 1단계에서 정면으로 돌며 제 크기로 커졌다가 대군 속으로 */
 .army-single{transform-origin:0 0!important}
-.army-page[data-current-step="0"] .army-single{transform:translate(87px,116px) scale(.75833)!important}
-.army-page .army-single.shrunk{transform:translate(295px,221px) scale(.18)!important}
+.army-single:not(.arrived){transform:translate(87px,116px) scale(.75833)!important}
+.army-single.arrived{transform:none!important}
+.army-page .army-single.shrunk{display:none!important}   /* 팀장: 디졸브 말고 컷 · 600개 환경 영상과 겹치지 않게 */
+.army-page[data-current-step="1"] .army-film,.army-page[data-current-step="2"] .army-film{transition:none!important;opacity:1}
 /* 12쪽 0단계: 11쪽 격자 그대로인 로봇 위로 조건 카드가 걸치지 않게 카드는 1단계부터 */
 .axes-page[data-pos="0"] .cond-cards{opacity:0}
 .axes-page .cond-cards{transition:opacity .45s}
