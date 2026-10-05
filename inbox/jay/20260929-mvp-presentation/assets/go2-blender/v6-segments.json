@@ -71,6 +71,12 @@
    "start": 1080,
    "end": 1127,
    "endState": "front6"
+  },
+  {
+   "id": "modules",
+   "start": 1128,
+   "end": 1319,
+   "endState": "modules_end"
   }
  ],
  "states": {
@@ -84,6 +90,7 @@
   "sensors_end": 719,
   "commands_end": 863,
   "side_walk": 864,
-  "commands_start": 959
+  "commands_start": 959,
+  "modules_end": 1319
  }
 }

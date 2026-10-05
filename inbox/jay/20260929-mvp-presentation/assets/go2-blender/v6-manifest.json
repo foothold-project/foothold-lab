@@ -7,68 +7,74 @@
  "source": "go2-technical-v4.blend + build_v6.py",
  "states": {
   "front6": {
-   "image": "go2-front6-v6d.png",
+   "image": "go2-front6-v6e.png",
    "frame": 300,
    "width": 1600,
    "height": 1200
   },
   "side_grid6": {
-   "image": "go2-side_grid6-v6d.png",
+   "image": "go2-side_grid6-v6e.png",
    "frame": 359,
    "width": 1600,
    "height": 1200
   },
   "scan_done": {
-   "image": "go2-scan_done-v6d.png",
+   "image": "go2-scan_done-v6e.png",
    "frame": 431,
    "width": 1600,
    "height": 1200
   },
   "assembled6": {
-   "image": "go2-assembled6-v6d.png",
+   "image": "go2-assembled6-v6e.png",
    "frame": 432,
    "width": 1600,
    "height": 1200
   },
   "joints_close": {
-   "image": "go2-joints_close-v6d.png",
+   "image": "go2-joints_close-v6e.png",
    "frame": 503,
    "width": 1600,
    "height": 1200
   },
   "stance": {
-   "image": "go2-stance-v6d.png",
+   "image": "go2-stance-v6e.png",
    "frame": 563,
    "width": 1600,
    "height": 1200
   },
   "feedback_end": {
-   "image": "go2-feedback_end-v6d.png",
+   "image": "go2-feedback_end-v6e.png",
    "frame": 623,
    "width": 1600,
    "height": 1200
   },
   "sensors_end": {
-   "image": "go2-sensors_end-v6d.png",
+   "image": "go2-sensors_end-v6e.png",
    "frame": 719,
    "width": 1600,
    "height": 1200
   },
   "commands_end": {
-   "image": "go2-commands_end-v6d.png",
+   "image": "go2-commands_end-v6e.png",
    "frame": 863,
    "width": 1600,
    "height": 1200
   },
   "side_walk": {
-   "image": "go2-side_walk-v6d.png",
+   "image": "go2-side_walk-v6e.png",
    "frame": 864,
    "width": 1600,
    "height": 1200
   },
   "commands_start": {
-   "image": "go2-commands_start-v6d.png",
+   "image": "go2-commands_start-v6e.png",
    "frame": 959,
+   "width": 1600,
+   "height": 1200
+  },
+  "modules_end": {
+   "image": "go2-modules_end-v6e.png",
+   "frame": 1319,
    "width": 1600,
    "height": 1200
   }
@@ -79,7 +85,7 @@
    "start": 300,
    "end": 359,
    "endState": "side_grid6",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -89,7 +95,7 @@
    "start": 360,
    "end": 431,
    "endState": "scan_done",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -99,7 +105,7 @@
    "start": 432,
    "end": 503,
    "endState": "joints_close",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -109,7 +115,7 @@
    "start": 504,
    "end": 563,
    "endState": "stance",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -119,7 +125,7 @@
    "start": 564,
    "end": 623,
    "endState": "feedback_end",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -129,7 +135,7 @@
    "start": 624,
    "end": 719,
    "endState": "sensors_end",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -139,7 +145,7 @@
    "start": 720,
    "end": 863,
    "endState": "commands_end",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -149,7 +155,7 @@
    "start": 864,
    "end": 935,
    "endState": "side_walk",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -159,7 +165,7 @@
    "start": 936,
    "end": 959,
    "endState": "commands_start",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -169,7 +175,7 @@
    "start": 960,
    "end": 1019,
    "endState": "side_grid6",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -179,7 +185,7 @@
    "start": 1020,
    "end": 1079,
    "endState": "side_walk",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24
@@ -189,7 +195,17 @@
    "start": 1080,
    "end": 1127,
    "endState": "front6",
-   "pattern": "v6d-web-frames/frame-{frame:04d}.webp",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
+   "width": 960,
+   "height": 720,
+   "fps": 24
+  },
+  "modules": {
+   "id": "modules",
+   "start": 1128,
+   "end": 1319,
+   "endState": "modules_end",
+   "pattern": "v6e-web-frames/frame-{frame:04d}.webp",
    "width": 960,
    "height": 720,
    "fps": 24

@@ -85,8 +85,8 @@ async function playHardware(slide,stage){
  slide.querySelector('.technical-player')?.go2Technical?.stop();
  const previous=continuous.lastStage;continuous.lastStage=stage;
  const seq=(continuous.seq||0)+1;continuous.seq=seq;
- const END=['front','three_quarter','four_legs','joints_close','feedback_end','sensors_end','sensors_end','commands_end'];
- const PLAY={1:['turntable'],2:['four_legs'],3:['assemble','joints'],4:['contact','feedback'],5:['sensors'],7:['commands']};
+ const END=['front','three_quarter','four_legs','joints_close','feedback_end','sensors_end','modules_end','commands_end'];
+ const PLAY={1:['turntable'],2:['four_legs'],3:['assemble','joints'],4:['contact','feedback'],5:['sensors'],6:['modules'],7:['commands']};   // 6: 모듈 장착 → 분해도 → 결합 → 빠짐 (2026-10-06)
  // 카드 글줄 점등: 현재 층의 [data-from] 은 그 프레임에 닿으면 켜진다(정지화도 끝 프레임이라 전부 켜진다).
  const light=f=>{const fr=Number(f.frame)||0;slide.querySelectorAll('.tech-layer.is-current [data-from]').forEach(el=>el.classList.toggle('on',fr>=Number(el.dataset.from)));};
  if(!continuous.go2V5)continuous.go2V5=new Go2V5Player(continuous,'../assets/go2-blender',{cacheLimit:420,initial:END[stage],onFrame:light});

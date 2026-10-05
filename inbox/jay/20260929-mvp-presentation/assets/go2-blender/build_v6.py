@@ -179,6 +179,61 @@ PROPS = ([ground, contact_ring, torque_arc, torque_tip, foot_trail, feedback_lin
           arrow_fwd, arrow_lat, arrow_yaw] + list(cones.values()) + frustum + lidar_rays
          + [o for pair in joint_markers.values() for o in pair])
 
+
+# ── 추가 모듈 (2026-10-06 · 팀장: 유니트리 Go2 EDU 영상과 같은 자리에 달았다) ──────────
+#   확장 도크(연산 모듈 · Orin NX 16GB) 등 뒤쪽 위 · HESAI-360 등 앞쪽 도크 위 · D435i 머리 위 앞.
+#   치수: D435i 는 RealSense 공식 메시(d435.dae · 90×25×25 mm). 도크·HESAI 는 영상 비율로 만든 근사(캡션에 적는다).
+#   본체(base_visual) 실측: x -0.128~0.332 · y ±0.097 · z 0.244~0.430 (719 프레임 자세).
+def _bevel(o, w=.004):
+    m = o.modifiers.new('bevel', 'BEVEL'); m.width = w; m.segments = 3
+def box(name, size, loc, color, emission=.06, bevel=.004):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=loc); o = bpy.context.object; o.name = name
+    o.scale = (size[0], size[1], size[2]); o.data.materials.append(mat('V6_m_'+name, color, emission)); _bevel(o, bevel)
+    return o
+def cyl(name, r, h, loc, color, emission=.06):
+    bpy.ops.mesh.primitive_cylinder_add(radius=r, depth=h, location=loc, vertices=64); o = bpy.context.object; o.name = name
+    o.data.materials.append(mat('V6_m_'+name, color, emission)); _bevel(o, .003); return o
+BODY_TOP = .430; HEAD_X = .332
+MOD_HOME = {
+    'dock':  (-.015, 0, BODY_TOP + .018),      # 160×100×36 mm 납작한 연산 모듈
+    'hesai': (.165, 0, BODY_TOP + .010 + .036), # 지름 80 · 높이 72 mm 원통 + 받침 10 mm
+    'd435':  (.262, 0, BODY_TOP + .010 + .0125),# 머리 위 앞 · 받침 10 mm
+}
+dock = box('dock', (.16, .10, .036), MOD_HOME['dock'], (.16, .17, .19), bevel=.006)
+dock_lid = box('dock_lid', (.11, .07, .004), (MOD_HOME['dock'][0], 0, MOD_HOME['dock'][2] + .020), (.07, .55, .48), .4, .001)  # Orin 표시 띠
+hesai_post = cyl('hesai_post', .022, .010, (MOD_HOME['hesai'][0], 0, BODY_TOP + .005), (.12, .12, .13))
+hesai = cyl('hesai', .040, .072, MOD_HOME['hesai'], (.06, .06, .07))
+hesai_band = cyl('hesai_band', .0405, .018, (MOD_HOME['hesai'][0], 0, MOD_HOME['hesai'][2] + .006), (.10, .34, .40), .35)  # 창(라이다 띠)
+d435_mount = box('d435_mount', (.03, .05, .010), (MOD_HOME['d435'][0], 0, BODY_TOP + .005), (.12, .12, .13), .02, .002)
+# D435i 공식 메시
+_before = set(bpy.data.objects)
+bpy.ops.wm.collada_import(filepath=str(ROOT.parents[1] / '_out/cad/d435.dae'))
+_d435_parts = [o for o in bpy.data.objects if o not in _before and o.type == 'MESH']
+for o in _d435_parts: o.select_set(True)
+bpy.context.view_layer.objects.active = _d435_parts[0]; bpy.ops.object.join(); d435 = bpy.context.object; d435.name = 'd435'
+for o in list(bpy.data.objects):
+    if o not in _before and o.type != 'MESH' and o is not d435: bpy.data.objects.remove(o)
+d435.rotation_mode = 'XYZ'; d435.rotation_euler = (0, 0, math.radians(90))   # 긴 축(x)을 가로(y)로 · 렌즈는 +x
+d435.location = MOD_HOME['d435']
+d435mat = mat('V6_m_d435', (.86, .87, .88), .04)
+d435.data.materials.clear(); d435.data.materials.append(d435mat)
+MODULES = {'dock': [dock, dock_lid], 'hesai': [hesai_post, hesai, hesai_band], 'd435': [d435_mount, d435]}
+MOD_LINES = {k: line('V6_modline_'+k, [(0, 0, 0), (0, 0, 0)], accentmat, .0012) for k in MODULES}
+MODULE_OBJS = [o for v in MODULES.values() for o in v] + list(MOD_LINES.values())
+_mod_base = {o.name: tuple(o.location) for o in MODULE_OBJS if o.type == 'MESH'}
+PROPS = list(PROPS) + MODULE_OBJS
+def place_modules(offsets, lines=None):
+    """offsets: {'dock': Vector, ...} 각 모듈 묶음을 제자리에서 그만큼 옮긴다. None 이면 숨김."""
+    for k, objs in MODULES.items():
+        off = offsets.get(k)
+        for o in objs:
+            o.hide_render = off is None
+            if off is not None: o.location = Vector(_mod_base[o.name]) + Vector(off)
+        ln = MOD_LINES[k]
+        if lines and k in lines and off is not None:
+            ln.hide_render = False; home = Vector(MOD_HOME[k]); set_points(ln, [tuple(home), tuple(home + Vector(off))])
+        else: ln.hide_render = True
+
 def hide_all_props():
     for o in PROPS: o.hide_render = True
     for o in grid_objects: o.hide_render = True
@@ -273,9 +328,11 @@ SEGMENTS = [
     {'id': 'cmd_to_side',   'start': 960, 'end': 1019, 'endState': 'side_grid6'},    # 10쪽 끝(명령 ¾) → 11쪽 측면 격자
     {'id': 'scan_to_walk',  'start': 1020, 'end': 1079, 'endState': 'side_walk'},    # 11쪽 끝(격자) → 12쪽 오른쪽 옆모습(정면을 지나 돈다)
     {'id': 'cmd_to_front',  'start': 1080, 'end': 1127, 'endState': 'front6'},       # 12쪽 끝(명령 ¾) → 13쪽 정면
+    # 2026-10-06 모듈 장착: 센서 끝(719 카메라)에서 날아와 장착 → 분해도 → 결합 → 떠오르며 빠짐 → 720 카메라로 (10쪽 6단계)
+    {'id': 'modules',       'start': 1128, 'end': 1319, 'endState': 'modules_end'},
 ]
 STATES = {'front6': 300, 'side_grid6': 359, 'scan_done': 431, 'assembled6': 432, 'joints_close': 503,
-          'stance': 563, 'feedback_end': 623, 'sensors_end': 719, 'commands_end': 863, 'side_walk': 864, 'commands_start': 959}
+          'stance': 563, 'feedback_end': 623, 'sensors_end': 719, 'commands_end': 863, 'side_walk': 864, 'commands_start': 959, 'modules_end': 1319}
 ASSEMBLED = dict(angle=45, scale=1.13, z=1.02, target=(0, 0, .22))   # v5 frame 193 과 같다
 
 def apply(frame, res=(960, 720)):
@@ -472,6 +529,29 @@ def apply(frame, res=(960, 720)):
         camera(mix(38, 0, t), mix(1.34, .76, t), mix(.95, .53, t), (0, 0, mix(.20, .22, t)))
         ground.hide_render = False; gs = 1-ease((frame-1090)/24.); ground.scale = (max(gs, .001), max(gs, .001), 1)
         gait_pose((frame-720)/24., 'yaw', 1-ease((frame-1080)/12.))
+    elif 1128 <= frame <= 1319:
+        # 모듈: 719 카메라 → 등이 보이는 높은 ¾ → 도크 · HESAI · D435i 가 위에서 내려와 장착 → 분해도(가는 안내선) → 결합 → 위로 떠올라 빠짐 → 720 카메라
+        if frame <= 1150: t = ease((frame-1128)/22.)
+        elif frame >= 1296: t = 1-ease((frame-1296)/23.)
+        else: t = 1.
+        camera(mix(-28, -42, t), mix(1.45, 1.30, t), mix(.72, 1.15, t), (mix(.42, .13, t), mix(.05, 0, t), mix(.12, .33, t)))
+        ground.hide_render = False; ground.scale = (1, 1, 1)
+        drop = {'dock': (1140, .34), 'hesai': (1163, .40), 'd435': (1186, .30)}
+        expl = {'dock': Vector((-.06, 0, .13)), 'hesai': Vector((.06, 0, .22)), 'd435': Vector((.13, 0, .14))}
+        offs = {}; lines = set()
+        for k, (f0, h) in drop.items():
+            if frame < f0: continue
+            u = ease((frame-f0)/28.)                       # 내려와 장착
+            off = Vector((0, 0, h*(1-u)))
+            if frame >= 1232:                               # 분해도
+                e = ease((frame-1232)/28.) if frame < 1280 else 1-ease((frame-1280)/24.)
+                off = expl[k]*e
+                if e > .05: lines.add(k)
+            if frame >= 1304:                               # 떠올라 빠진다
+                r = ease((frame-1304)/15.); off = Vector((0, 0, .55*r*r))
+                if r >= 1.: off = None
+            offs[k] = off
+        place_modules(offs, lines)
     for o in grid_objects: o.hide_render = not grid
     if grid:
         for idx, o in enumerate(point_objects):

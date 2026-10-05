@@ -31,3 +31,8 @@
 /* 12쪽 0단계: 11쪽 격자 그대로인 로봇 위로 조건 카드가 걸치지 않게 카드는 1단계부터 */
 .axes-page[data-pos="0"] .cond-cards{opacity:0}
 .axes-page .cond-cards{transition:opacity .45s}
+
+/* 10쪽 6단계 · 모듈 사진 띠는 3D 에서 그 모듈이 장착되는 프레임에 켜진다 */
+.module-strip figure{opacity:.35;transition:opacity .45s}
+.module-strip figure.on{opacity:1}
+@media print{.module-strip figure{opacity:1!important}}
