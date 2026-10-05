@@ -108,10 +108,10 @@ async function playPolicy(slide,stage,previous){
  if(!canvas.go2V5)canvas.go2V5=new Go2V5Player(canvas,'../assets/go2-blender',{cacheLimit:260,initial:stage===0?'commands_end':'scan_done'});
  const p=canvas.go2V5;p.stop();await p.ready;if(canvas.seq!==seq||!slide.classList.contains('active'))return;
  const prefetch=ids=>{for(const id of ids){const seg=p.manifest.segments[id];if(!seg)continue;for(let f=seg.start;f<=seg.end;f++)p.load(seg.pattern.replace('{frame:04d}',String(f).padStart(4,'0'))).catch(()=>{});}};
- if(stage===0){await p.setState('commands_end');if(canvas.seq!==seq)return;prefetch(['scan_rays']);await p.playSegment('cmd_to_side');return;}   // 들어오면 10쪽 끝 포즈에서 측면 격자로 돈다 (2026-10-05)
+ if(stage===0){await p.setState('commands_end');if(canvas.seq!==seq)return;prefetch(['front_to_side','scan_rays']);await p.playSegment('cmd_to_front');return;}   // 들어오면 10쪽 끝 포즈에서 «정면»으로 돈다 (질문 장은 원래대로 정면 · 2026-10-05)
  // 팀장 2026-10-05: 스캔은 한 번으로 끝내지 말고 반복. 431(끝)→360(시작)은 격자가 그대로라 안 튄다. 장을 떠나거나 0단계로 가면 멈춘다.
  const loopScan=async()=>{while(canvas.seq===seq&&slide.classList.contains('active')&&slide.dataset.currentStep!=='0'){const ok=await p.playSegment('scan_rays');if(!ok)break;}};
- if(stage===1&&previous<1){await p.setState('side_grid6');if(canvas.seq!==seq)return;await loopScan();return;}
+ if(stage===1&&previous<1){await p.setState('front6');if(canvas.seq!==seq)return;await p.playSegment('front_to_side');if(canvas.seq!==seq)return;await loopScan();return;}   // 클릭 1: 그 자리에서 측면으로 돌아 격자 → 레이저 반복
  await p.setState('scan_done');if(canvas.seq===seq)await loopScan();
 }
 async function playArmy(slide,stage,previous){
