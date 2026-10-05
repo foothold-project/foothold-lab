@@ -552,6 +552,13 @@ def apply(frame, res=(960, 720)):
                 if r >= 1.: off = None
             offs[k] = off
         place_modules(offs, lines)
+        # 2026-10-06 팀장: 이 구간에서 로봇이 왼쪽으로 쏠렸다. 로봇 메시의 화면 상자를 재서 가로 중앙(0.5)에 오도록
+        # 카메라 목표점을 카메라 오른쪽 축으로 민다. 가중치 t 라 719/720 카메라와 만나는 양 끝은 그대로다.
+        bpy.context.view_layer.update()
+        b = bounds(); cx = (b[0]+b[2])/2.
+        right = cam.matrix_world.to_3x3() @ Vector((1, 0, 0))
+        tgt = Vector((mix(.42, .13, t), mix(.05, 0, t), mix(.12, .33, t))) + right*((cx-.5)*cam.data.ortho_scale)*t
+        camera(mix(-28, -42, t), mix(1.45, 1.30, t), mix(.72, 1.15, t), tuple(tgt))
     for o in grid_objects: o.hide_render = not grid
     if grid:
         for idx, o in enumerate(point_objects):

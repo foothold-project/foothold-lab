@@ -39,6 +39,7 @@ s.cycles.max_bounces = 6
 s.render.film_transparent = False
 s.view_settings.view_transform = 'AgX'
 s.view_settings.look = 'AgX - Medium High Contrast'
+s.view_settings.exposure = -0.35   # 1차 시험: 흰 로봇이 날아갔다(2026-10-06) → 빛을 줄이고 배경을 중간 회색으로
 s.render.image_settings.file_format = 'PNG'; s.render.image_settings.color_mode = 'RGB'
 
 # ── 재질 ──────────────────────────────────────────────────────
@@ -56,7 +57,8 @@ for m in bpy.data.materials:
             bs.inputs['Roughness'].default_value = .85; bs.inputs['Specular IOR Level'].default_value = .3
             bs.inputs['Base Color'].default_value = (.03, .03, .03, 1)
         else:
-            bs.inputs['Roughness'].default_value = .32; bs.inputs['Specular IOR Level'].default_value = .5
+            bs.inputs['Roughness'].default_value = .28; bs.inputs['Specular IOR Level'].default_value = .55
+            c = bs.inputs['Base Color'].default_value; bs.inputs['Base Color'].default_value = (c[0]*.86, c[1]*.86, c[2]*.87, 1)   # 순백을 살짝 눌러 음영이 보이게
             if 'Coat Weight' in bs.inputs: bs.inputs['Coat Weight'].default_value = .25; bs.inputs['Coat Roughness'].default_value = .08
     elif n.startswith('v6_m_'):   # 모듈 근사체: 알루미늄 주조 느낌
         bs.inputs['Metallic'].default_value = .6; bs.inputs['Roughness'].default_value = .38
@@ -64,20 +66,20 @@ for m in bpy.data.materials:
         bs.inputs['Emission Strength'].default_value = max(.6, bs.inputs['Emission Strength'].default_value)
 
 # ── 조명 · 배경 ───────────────────────────────────────────────
-PAPER = (.93, .92, .89)
+PAPER = (.62, .63, .62)   # 월드·바닥: 중간 회색이어야 흰 로봇의 윤곽이 산다
 w = s.world or bpy.data.worlds.new('V6_world'); s.world = w; w.use_nodes = True
-bg = w.node_tree.nodes.get('Background'); bg.inputs['Color'].default_value = (*PAPER, 1); bg.inputs['Strength'].default_value = .9
+bg = w.node_tree.nodes.get('Background'); bg.inputs['Color'].default_value = (*PAPER, 1); bg.inputs['Strength'].default_value = .45
 def area(name, loc, target, power, size):
     bpy.ops.object.light_add(type='AREA', location=loc); L = bpy.context.object; L.name = name
     L.data.energy = power; L.data.size = size; L.data.shape = 'SQUARE'
     L.rotation_mode = 'QUATERNION'; L.rotation_quaternion = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y')
     return L
-key = area('V6_key', (-1.6, 2.2, 2.6), (0, 0, .3), 900, 2.2)
-fill = area('V6_fill', (2.6, -1.4, 1.6), (0, 0, .3), 260, 3.0)
-rim = area('V6_rim', (-2.4, -2.2, 1.9), (0, 0, .35), 420, 1.6)
+key = area('V6_key', (-1.6, 2.2, 2.6), (0, 0, .3), 420, 1.6)
+fill = area('V6_fill', (2.6, -1.4, 1.6), (0, 0, .3), 110, 3.0)
+rim = area('V6_rim', (-2.4, -2.2, 1.9), (0, 0, .35), 360, 1.2)
 bpy.ops.mesh.primitive_plane_add(size=40, location=(0, 0, 0)); floor = bpy.context.object; floor.name = 'V6_floor'
 fm = bpy.data.materials.new('V6_floor_mat'); fm.use_nodes = True
-fb = fm.node_tree.nodes.get('Principled BSDF'); fb.inputs['Base Color'].default_value = (*PAPER, 1); fb.inputs['Roughness'].default_value = .9; fb.inputs['Specular IOR Level'].default_value = .15
+fb = fm.node_tree.nodes.get('Principled BSDF'); fb.inputs['Base Color'].default_value = (*PAPER, 1); fb.inputs['Roughness'].default_value = .55; fb.inputs['Specular IOR Level'].default_value = .35   # 바닥에 희미한 반사
 floor.data.materials.append(fm)
 
 def apply_real(frame, res=(1280, 960)):
