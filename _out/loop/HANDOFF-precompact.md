@@ -87,3 +87,9 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
 - 10-06 08:37Z PR #508(maengu86 · inbox/meang/20261001-ops-mentoring.md) 머지 22e8668f → 승격 PR #509 머지 bcfc37f6 (docs/meetings/20261001-ops-mentoring.md · 내용 그대로 · 작성 �ағ라현 표기는 제출본 그대로 「맹라현」) → 작업 트리에도 같은 파일 커밋 6b5a9154 → 사이트 빌드 통과 → foothold-site 8dd49616 푸시(meeting-20261001-ops-mentoring.html). 「haeng」은 ROLES.md 명부에 없는 git identity(haeng@haengui-Macmini.local · 커밋 34건 전부 inbox/meang/) · PR 본문의 「haeng 검토본」. 사람은 미확인.
 - 라이브 확인: https://foothold-project.vercel.app/meeting-20261001-ops-mentoring (제목·작성 맹라현·날짜 확인됨 · Vercel 배포 6879622210 success). #510 닫음.
 - **선행 과제(새 작업 전)**: Vercel 무료 배포 저장소 10 GB 100 % 메일. 실측 foothold-site 858 MB(mp4 580 MB · gallery/v1/clips 245 · mvp-deck/media 154 · gallery/v2/clips 84 · assets/video/v2 75) · .git 4.6 GB. 영상을 팀장 NAS 로 옮기고 웹은 그대로 → 이슈 #511. 이후 과제(ASTRA-MVP 와): #512 험지 일반화 모델 논문 · #513 앱 + ROS2-SLAM-Nav2 아키텍처(Hypan · Jev 는 팀장 표기 그대로, 미확인) · #514 디지털 트윈 실제 적용 · #515 덱 보강(사용자·비즈니스·서비스 앱). 메모리 post-mvp-roadmap-20261006.md.
+
+## 2026-10-06 저녁 · respawn 뒤 (Opus 5.5 · CLI 2.1.291)
+- lead 가 Opus 5.5 를 못 고른 원인: 9/27 에 뜬 백그라운드 프로세스(2.1.275)에 resume 이 붙기만 했다. `claude respawn 09bbf294` 로 해결. 다른 세션도 전부 옛 프로세스 → 팀장이 `claude respawn --all`(super 는 busy 라 끝난 뒤).
+- ~/.claude/settings.json 의 model 줄(claude-fable-5-1[1m])이 /model 선택으로 지워져 새 세션 기본은 Opus 5.5. 재개 세션은 자기 모델을 복원하므로 세션마다 `/model` 확인.
+- #511 착수: 전수 목록 `_out/nas-migration/media-inventory.csv` · 요약 `media-summary.json` · 계획 `_out/nas-migration/PLAN.md`(v0.1) · 도구 `_out/tools/nas_media_inventory.py`. 영상 345개 580.5 MB, 갤러리 클립 192개 328 MB 는 site 유일본. Vercel 배포 기록 311건. NAS ai-nas01(Tailscale 100.80.160.84) SMB·HTTPS 응답, 공유 폴더 미마운트.
+- 팀장 결정 대기: 서빙 경로(A Tailscale Funnel 권장 · B Cloudflare Tunnel) · NAS 공유 폴더 마운트 · Vercel 대시보드 옛 배포 정리.
