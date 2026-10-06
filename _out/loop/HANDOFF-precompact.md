@@ -84,3 +84,4 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
 - 커밋: 필름 스크립트 둘 + 이 핸드오프만(팀장 지시). 나머지 214개 변경은 그대로.
 - Mods 는 터미널 Claude Code **v2.1.287 이상**에서만 켜진다(문서 확인). 지금 2.1.286 → `claude update` 가 선행 조건. 샘플 token-weather(anthropics/claude-code-playground · claude-code/mods) 를 `--plugin-dir` 로 먼저 시험. 메모리 mods-context-management-plan.md.
 - «Products Come to Life» 의 프롬프트·파이프라인·비용 전문은 OpenMontage 유튜브 채널(@OpenMontage) 영상 설명에 있다(README 주장). PROMPT_GALLERY.md 에는 없음. 재시작 뒤 `yt-dlp --js-runtimes node --skip-download --write-description` 으로 받아 읽는다.
+- 10-06 08:37Z PR #508(maengu86 · inbox/meang/20261001-ops-mentoring.md) 머지 22e8668f → 승격 PR #509 머지 bcfc37f6 (docs/meetings/20261001-ops-mentoring.md · 내용 그대로 · 작성 �ағ라현 표기는 제출본 그대로 「맹라현」) → 작업 트리에도 같은 파일 커밋 6b5a9154 → 사이트 빌드 통과 → foothold-site 8dd49616 푸시(meeting-20261001-ops-mentoring.html). 「haeng」은 ROLES.md 명부에 없는 git identity(haeng@haengui-Macmini.local · 커밋 34건 전부 inbox/meang/) · PR 본문의 「haeng 검토본」. 사람은 미확인.
