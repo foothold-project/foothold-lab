@@ -82,3 +82,5 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
 - 생성·TTS 는 **Higgsfield MCP**(이미 결제 중 · Atlas/fal 등 다른 API 가입 안 함)로 하되 **건별 승인**(get_cost 견적 → 승인 → 호출). 히어로 정지화는 기존 Blender Cycles 렌더(film-cycles-frames · v6-cycles-frames · v5-cycles-frames)에서. 합성은 HyperFrames. OpenMontage 는 파이프라인 구조·스킬 참고용(설치됨).
 - **Mods 작업(세션 재시작 뒤)**: https://code.claude.com/docs/ko/plugins/mods/overview 로 CLI 화면에 컨텍스트 사용량 · 도구 호출 · 턴별 토큰 · 도구별 토큰/비용 표시, 훅으로 컨텍스트 50 % · 75 % · 85 % 에서 작업 단위 정리(자동 컴팩트로 작업이 유실되는 문제 해결). 팀장: 「외 아이디어 제공」.
 - 커밋: 필름 스크립트 둘 + 이 핸드오프만(팀장 지시). 나머지 214개 변경은 그대로.
+- Mods 는 터미널 Claude Code **v2.1.287 이상**에서만 켜진다(문서 확인). 지금 2.1.286 → `claude update` 가 선행 조건. 샘플 token-weather(anthropics/claude-code-playground · claude-code/mods) 를 `--plugin-dir` 로 먼저 시험. 메모리 mods-context-management-plan.md.
+- «Products Come to Life» 의 프롬프트·파이프라인·비용 전문은 OpenMontage 유튜브 채널(@OpenMontage) 영상 설명에 있다(README 주장). PROMPT_GALLERY.md 에는 없음. 재시작 뒤 `yt-dlp --js-runtimes node --skip-download --write-description` 으로 받아 읽는다.
