@@ -93,3 +93,6 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
 - ~/.claude/settings.json 의 model 줄(claude-fable-5-1[1m])이 /model 선택으로 지워져 새 세션 기본은 Opus 5.5. 재개 세션은 자기 모델을 복원하므로 세션마다 `/model` 확인.
 - #511 착수: 전수 목록 `_out/nas-migration/media-inventory.csv` · 요약 `media-summary.json` · 계획 `_out/nas-migration/PLAN.md`(v0.1) · 도구 `_out/tools/nas_media_inventory.py`. 영상 345개 580.5 MB, 갤러리 클립 192개 328 MB 는 site 유일본. Vercel 배포 기록 311건. NAS ai-nas01(Tailscale 100.80.160.84) SMB·HTTPS 응답, 공유 폴더 미마운트.
 - 팀장 결정 대기: 서빙 경로(A Tailscale Funnel 권장 · B Cloudflare Tunnel) · NAS 공유 폴더 마운트 · Vercel 대시보드 옛 배포 정리.
+- 미리보기 서버 8400·8401 은 팀장이 직접 껐다(자동 모드가 내 종료를 막음). 그 종료 알림이 super 를 깨웠다. super 미결 셋 중 둘이 lead 일과 겹침(갤러리 NAS = #511 · 훅 1단계 ≈ Mods). 세션별 메모리가 폴더마다 갈린다(lead 53 · super/site 23 · Orca 작업 폴더 세션 0).
+- #516 [설계] 세션·폴더·파이프라인을 한 공간으로 + 지난 구조 회고(팀장 요청: 폴더 트리 · 세션 관리 · 파이프라인을 어떻게 했어야 했나). 훅 1단계 + Mods 통합 담당은 팀장 결정 대기.
+- super 에게 보낼 메시지(팀장 「보내」 승인)는 super 가 새 판으로 다시 뜬 뒤 보낸다(옛 프로세스에서 턴이 끊기지 않게). 본문 사본: 이 잡 tmp/msg-to-super.txt.
