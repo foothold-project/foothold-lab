@@ -16,8 +16,8 @@
 <text x="12.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">목표 자세 도달 정책 (PPO)</text>
 <text x="12.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평지 2000회까지 · 시드 1개</text>
 <text x="12.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">논문 예산 80,000회의 2.5 %</text>
-<line x1="203.0" y1="144.0" x2="229.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
-<rect x="233.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<line x1="203.0" y1="144.0" x2="229.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ar)"/>
+<rect x="233.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1" stroke-dasharray="5 4"/>
 <text x="245.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Mapper</text>
 <rect x="368.0" y="71.0" width="55.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
 <text x="395.5" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">안 함</text>
@@ -26,8 +26,8 @@
 <text x="245.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가려진 지형 높이·불확실성 예측</text>
 <text x="245.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">센서·격자 검사만 (9/22~9/23)</text>
 <text x="245.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 안 함</text>
-<line x1="436.0" y1="144.0" x2="462.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
-<rect x="466.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<line x1="436.0" y1="144.0" x2="462.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ar)"/>
+<rect x="466.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1" stroke-dasharray="5 4"/>
 <text x="478.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">student</text>
 <rect x="601.0" y="71.0" width="55.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
 <text x="628.5" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">안 함</text>
@@ -36,8 +36,8 @@
 <text x="478.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">teacher 행동과 지도 표현 증류</text>
 <text x="478.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실제 로봇에 올라가는 정책</text>
 <text x="478.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 안 함</text>
-<line x1="669.0" y1="144.0" x2="695.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
-<rect x="699.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<line x1="669.0" y1="144.0" x2="695.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.6" marker-end="url(#ar)"/>
+<rect x="699.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1" stroke-dasharray="5 4"/>
 <text x="711.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실기·sim2sim</text>
 <rect x="845.0" y="71.0" width="44.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
 <text x="867.0" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">없음</text>

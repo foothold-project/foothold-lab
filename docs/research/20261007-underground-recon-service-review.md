@@ -70,7 +70,7 @@ v1→v2의 종합 성공 변화는 **42회 증가·+1.75%p**다. 조건별 100�
 | 정지 유지 | 5 / 64 | 0 / 64 | 정지 유지 중 낙상 감소 |
 | 제자리 회전 | 64 / 64 | 7 / 64 | 회전 중 낙상 감소. 실패 7개가 남음 |
 
-v2의 정지 조건, 즉 속도 0.05 m/s 미만을 1초 연속 유지한 최초 시점에 도달한 환경은 **55 / 64개**다. 낙상 0개를 정지 완료 64개로 표시하면 다른 지표를 바꿔 쓰게 된다. v1의 조건 도달은 53개지만 이후 넘어지는 경우도 있어 도달 수만으로 안전한 유지까지 판정할 수 없다. [명령 평가 원자료](https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-axis2-fall), [판정 코드](https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/command_response_metrics.py), [선택 장면 비교 영상과 판정 범위](20261007-underground-recon-evidence.md#별도-험지-집계와-선택-영상).
+v2의 정지 조건, 즉 속도 0.05 m/s 미만을 1초 연속 유지한 최초 시점에 도달한 환경은 **55 / 64개**다. 낙상 0개를 정지 완료 64개로 표시하면 다른 지표를 바꿔 쓰게 된다. v1의 조건 도달은 53개지만 이후 넘어지는 경우도 있어 도달 수만으로 안전한 유지까지 판정할 수 없다. [명령 평가 원자료](https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-axis2-fall), [판정 코드](https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/command_response_metrics.py), [선택 장면 비교 영상과 판정 범위](20261007-underground-recon-evidence.md#1).
 
 여기서 설명할 기여는 **지형 통과 성적만 보면 놓치기 쉬운 정지·유지·회전 실패를 분리해 개선을 확인했다**는 점이다. 여러 학습 설정이 함께 바뀌어 특정 보상 항목 하나의 효과로 귀속하지 않는다. 이 시험은 평지이고 험지는 별도 시험이다. 험지 접근·정지·관측·복귀를 한 임무로 완료한 결과는 아니다.
 
