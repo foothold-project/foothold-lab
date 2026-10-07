@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="500" height="215" preserveAspectRatio="xMinYMin meet" viewBox="0 0 500 215" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="500" height="215"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-215)" style="clip-path: url(#clip)">
+		<g transform="">
+			<text x="0" y="197" style="font-family: Malgun-Bold; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,394) scale(1,-1)">평지 명령 시험의 낙상 수 / 동작별 64개</text>
+			<rect x="320" y="180" width="11" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(14%,45%,65%); fill-rule: evenodd;"/>
+			<text x="337" y="182" style="font-family: Malgun; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,364) scale(1,-1)">v1</text>
+			<rect x="393" y="180" width="11" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(8%,20%,28%); fill-rule: evenodd;"/>
+			<text x="410" y="182" style="font-family: Malgun; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,364) scale(1,-1)">v2</text>
+			<path d="M 137,27 L 137,172 Z" style="stroke: rgb(86%,89%,92%); stroke-linecap: butt; stroke-width: 0.6;"/>
+			<text x="134.521484375" y="10" style="font-family: Malgun; font-size: 9px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,20) scale(1,-1)">0</text>
+			<path d="M 281,27 L 281,172 Z" style="stroke: rgb(86%,89%,92%); stroke-linecap: butt; stroke-width: 0.6;"/>
+			<text x="276.04296875" y="10" style="font-family: Malgun; font-size: 9px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,20) scale(1,-1)">32</text>
+			<path d="M 425,27 L 425,172 Z" style="stroke: rgb(86%,89%,92%); stroke-linecap: butt; stroke-width: 0.6;"/>
+			<text x="420.04296875" y="10" style="font-family: Malgun; font-size: 9px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,20) scale(1,-1)">64</text>
+			<text x="0" y="150" style="font-family: Malgun; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,300) scale(1,-1)">전진 뒤 정지</text>
+			<rect x="137" y="151" width="58.5" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(14%,45%,65%); fill-rule: evenodd;"/>
+			<text x="201.5" y="152" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,304) scale(1,-1)">13</text>
+			<rect x="137" y="137" width="0" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(8%,20%,28%); fill-rule: evenodd;"/>
+			<text x="143.0" y="138" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,276) scale(1,-1)">0</text>
+			<text x="0" y="104" style="font-family: Malgun; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,208) scale(1,-1)">정지 유지</text>
+			<rect x="137" y="105" width="22.5" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(14%,45%,65%); fill-rule: evenodd;"/>
+			<text x="165.5" y="106" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,212) scale(1,-1)">5</text>
+			<rect x="137" y="91" width="0" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(8%,20%,28%); fill-rule: evenodd;"/>
+			<text x="143.0" y="92" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,184) scale(1,-1)">0</text>
+			<text x="0" y="58" style="font-family: Malgun; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,116) scale(1,-1)">제자리 회전</text>
+			<rect x="137" y="59" width="288.0" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(14%,45%,65%); fill-rule: evenodd;"/>
+			<text x="431.0" y="60" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,120) scale(1,-1)">64</text>
+			<rect x="137" y="45" width="31.5" height="11" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(8%,20%,28%); fill-rule: evenodd;"/>
+			<text x="174.5" y="46" style="font-family: Malgun-Bold; font-size: 10px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,92) scale(1,-1)">7</text>
+		</g>
+	</g>
+</svg>
