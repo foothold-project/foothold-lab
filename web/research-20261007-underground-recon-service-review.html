@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서비스 방향 검토: 성과에서 활용 방향까지 · FOOTHOLD</title>
+<meta name="description" content="Go2 개발·통합팀의 조건별 보행 평가와 개선 분석을 활용 후보로 제안하고, 선택 이유·기존 대안·환경 연결을 근거별로 검토한다.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
+   올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
+   여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><script id="fh-figs">window.fhFigs=function(t){try{var g=document.querySelectorAll('img[data-themed]'),i,e,u,q,b;for(i=0;i<g.length;i++){e=g[i];u=e.getAttribute('src');if(!u)continue;q=u.indexOf('?');b=(q<0?u:u.slice(0,q));if(!e.dataset.fhLight)e.dataset.fhLight=b.replace(/\.dark\.svg$/,'.svg');b=e.dataset.fhLight;if(t==='dark')b=b.replace(/\.svg$/,'.dark.svg');if(b!==(q<0?u:u.slice(0,q)))e.setAttribute('src',b+(q<0?'':u.slice(q)));}}catch(err){}};document.addEventListener("DOMContentLoaded",function(){window.fhFigs(document.documentElement.dataset.theme)});</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=b4d76755').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>서비스 방향 검토: 성과에서 활용 방향까지</h1>
+  <p class="lede">Go2 개발·통합팀의 조건별 보행 평가와 개선 분석을 활용 후보로 제안하고, 선택 이유·기존 대안·환경 연결을 근거별로 검토한다.</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v1.1</span></div><div><span class="k">이슈</span><span class="v"><a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/518">#518</a></span></div><div><span class="k">작성</span><span class="v">맹라현 · 2026-10-07 15:06</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20261007-underground-recon-service-review.md</span></div><div><span class="k">증거</span><span class="v">확인 2 · 추측 0 · 미측정 0</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 리서치
+작성: 맹라현 · 2026-10-07 15:06
+근거: 팀 평가·결정 원자료 · 공공기관·운영기관 자료 · 학술논문 · 작성 도구 Codex (맹라현 요청 · 승격 때 작성자 줄에서 옮김)
+요지: Go2 개발·통합팀의 조건별 보행 평가와 개선 분석을 활용 후보로 제안하고, 선택 이유·기존 대안·환경 연결을 근거별로 검토한다.
+상태: 조사완료
+판: v1.1
+이슈: <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/518">#518</a>
+입구: survey</p></blockquote>
+<blockquote><p><b>승격 주의 (팀장 10/7 결정)</b> · 이 문서의 성과 수치는 MVP 배포 기준(9/30 제출 · 10/2 발표) 시뮬 실측이다.
+유료 수요 · 기존 대안 대비 우위 · 현장 타당성은 이 문서도 «검증하지 않았다» 고 밝힌다.
+조사 기록으로 게시하며, 서비스 위치 결정은 MVP 이후 최종 설계와 함께 <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/515">#515</a> 에서 한다.</p></blockquote>
+<p><b>이 문서는 “Go2 개발·통합팀을 위한 조건별 시뮬 보행 평가와 개선 분석”을 활용 후보로 제안한다.</b> 팀은 정책 변경 전후의 보행 성적과 명령 수행 실패를 비교했다. 이 기록으로 변경안을 판단할 때 볼 조건과 남은 실패를 설명할 수 있다. 고객·유료 서비스는 이 성과에서 도출한 가설이다. <code>추론</code></p>
+<p>핵심 질문은 <b>“이 기록이 누구의 어떤 판단에 쓰일 수 있는가?”</b>다. 본문은 평가의 쓰임 → 팀 성과와 실패 → 활용 대상과 결과물 → 기존 대안 → 환경 적용의 경계 순서로 검토한다. 지하 공동구·케이블 터널은 환경 연결을 따져 보는 참고 후보로 다룬다.</p>
+</section>
+<section id="s1"><span id="1"></span><h2>1. 검토 범위와 근거의 역할</h2>
+<p>팀 결정은 시뮬 정책·평가·트윈 연구와 순정 Go2 위 SLAM·Nav2 항법을 구분한다. <b>자체 학습 정책의 실기 이전은 목표에서 제외됐다.</b> 따라서 아래 정책 비교는 시뮬 연구의 결과이며, 별도 항법 계획이 이 정책의 현장 검증을 의미하지 않는다. <code>B1</code> <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/DECISIONS.md" target="_blank" rel="noopener">팀 결정</a>, <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/REPORT.md" target="_blank" rel="noopener">프로젝트 계획</a>.</p>
+<div class="tw"><table><thead><tr><th>구분</th><th>본문에서 하는 일</th><th>대표 자료</th></tr></thead><tbody><tr><td>A · 직접 판단 근거</td><td>제안의 출발점을 만든다. 평가의 쓰임과 팀 성과를 확인한다</td><td>NIST 평가 원칙, 팀 명령 시험, 조건별 험지 집계</td></tr><tr><td>B · 주장 범위를 정하는 근거</td><td>성과의 적용 범위와 남은 실패를 설명한다</td><td>자체 정책 실기 이전 제외, 시험 조건, 시드별 실패, 비교 대상의 차이</td></tr><tr><td>C · 참고 자료</td><td>실제 업무·기술·환경을 이해하고 후보를 검토하는 질문을 구체화한다</td><td>UKPN·AutoInspect·ITRI, 기존 제품, 외부 제어 연구, 국내 사고·기관 계획</td></tr></tbody></table></div>
+<p>A는 확인한 성과와 평가 용도를, B는 그 해석 범위를 정한다. C는 사례의 업무·환경·기술을 이해하는 자료다. <b>참고 사례가 우리 고객의 구매 의향이나 우리 정책의 현장 효과를 대신하지 않는다.</b> 원문 수치와 상세 조건은 이 문서 끝의 근거 부록(7~10절)에 보관한다.</p>
+</section>
+<section id="s2"><span id="2"></span><h2>2. 왜 보행 평가·개선 분석을 활용 후보로 보는가</h2>
+<h3>2.1 평가가 돕는 판단은 구체적이어야 한다</h3>
+<p>NIST는 반복 시험으로 능력과 실패를 비교해 개발·구매·배치 판단에 사용하는 원칙을 설명한다. 시험에는 장치·절차·지표·실패 조건이 필요하다. 이는 평가 자료의 의사결정 용도를 뒷받침한다. 다만 <b>우리 분석을 구매할 고객이 있다는 근거는 아니며</b>, 현재 시뮬 시험을 NIST 표준 시험과 동등하게 인증한 자료도 아니다. <code>A1</code> <a href="https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots/ground-robot-tests" target="_blank" rel="noopener">NIST 공식 설명</a>.</p>
+<p>도움이 되는 결과는 “잘 걷는다”는 총평보다 <b>조건과 지표를 연결한 설명</b>이다. 정지 지시 뒤 넘어지지 않은 결과와 정지 속도 조건에 도달한 결과는 다르다. 평균 성공률이 높아져도 특정 발판의 실패가 남을 수 있다. 개발팀이 변경안을 판단하려면 무엇이 개선됐고 무엇은 그대로인지 분리해서 볼 수 있어야 한다. 아래 기록은 그 구분을 실제 수치로 보여준다. <code>A1→A2·A3에서 도출한 활용 해석</code></p>
+<h3>2.2 팀 성과는 두 종류의 비교로 나눠 봐야 한다</h3>
+<p>첫째는 <b>NVIDIA의 시뮬 사전학습 기준 정책과 팀 정책의 비교</b>, 둘째는 <b>팀의 이전 정책 v1과 개선 정책 v2의 비교</b>다. 기준 정책은 Unitree가 실기 Go2에 탑재한 순정 보행 제어기가 아니다. 두 비교를 합쳐 “순정 로봇보다 개선됐다”고 쓰면 실제로 비교하지 않은 대상을 이겼다는 주장이 된다.</p>
+<p>미학습 지형 8종·난이도 0.5·시드 42·속도 세 조건에서 모델당 2,400회 집계를 복원했다. 종합 성공은 생존·전진·속도 추종·진로 유지의 동시 충족이다. <b>NVIDIA 기준 정책 1,053회(43.88%), v1 2,081회(86.71%), v2 2,123회(88.46%)</b>다. 속도별로 나누면 전체 평균이 가리는 차이가 보인다. <code>A3 · 집계 CSV 확인</code></p>
+<div class="tw"><table><thead><tr><th>명령 속도 · 각 800회</th><th>NVIDIA 시뮬 기준 정책</th><th>팀 v1</th><th>팀 v2</th></tr></thead><tbody><tr><td>0.5 m/s</td><td>487 / 800 · 60.88%</td><td>695 / 800 · 86.88%</td><td>700 / 800 · 87.50%</td></tr><tr><td>1.0 m/s</td><td>496 / 800 · 62.00%</td><td>699 / 800 · 87.38%</td><td>724 / 800 · 90.50%</td></tr><tr><td>1.5 m/s</td><td>70 / 800 · 8.75%</td><td>687 / 800 · 85.88%</td><td>699 / 800 · 87.38%</td></tr></tbody></table></div>
+<p><b>1.5 m/s는 기준 정책의 학습 전진 명령 범위 -1~1 m/s를 벗어난다.</b> 학습 지형·명령·목표도 달라 큰 평균 격차를 동등한 학습 조건의 우위나 변경 하나의 효과로 해석하지 않는다. 이 표는 정해진 평가 조건에서 세 정책이 보인 결과를 설명한다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/results/20260928-v2-sweep/sweep_long.csv" target="_blank" rel="noopener">집계 CSV</a>, <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/research/20260928-v2-mvp-report.md" target="_blank" rel="noopener">학습 범위·팀 보고서</a>.</p>
+<p>v1→v2의 종합 성공 변화는 <b>42회 증가·+1.75%p</b>다. 조건별 100회는 지형 타일 하나에서 출발 위치·방향을 흔든 반복이다. 2,400개 독립 실현장 표본이 아니므로 수치를 실제 터널의 성공 확률로 읽지 않는다. <code>B2</code></p>
+<h3>2.3 평균에 가려진 실패도 분석의 결과에 포함한다</h3>
+<p>좁은 디딤돌 stepping_stones의 1.0 m/s·난이도 0.5 평가에서 <b>v2</b>의 시드 42·1·2·3·4별 성공은 <b>24·1·3·19·0 / 100회</b>다. 개별 500행을 재집계했다. 실행 기록에는 <b>지형 생성과 출발 조건이 함께 바뀐다</b>고 명시돼 있다. 따라서 차이를 출발 조건 하나의 영향으로 귀속할 수 없다. 24회는 확인한 다섯 시드 중 최고값이며, 보고할 범위는 <b>0~24 / 100회</b>다. <code>B3</code> <a href="https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-seed-spread" target="_blank" rel="noopener">시드별 원자료</a>.</p>
+<p>구체적으로 1.0 m/s의 v2 <b>724 / 800회(90.50%)</b>는 나머지 7종의 700 / 700회와 디딤돌의 24 / 100회를 합친 값이다. 평균만 읽으면 약 90%지만 발 지지가 끊기는 특정 조건에서는 실패가 더 많다. 그래서 “성공률이 충분히 높은가?”라는 질문을 “어떤 지형을 얼마나 포함한 평균인가?”로 바꿔 읽어야 한다. 조건별 표와 실패 기록을 함께 제공하는 분석의 쓰임이 이 예시에 있다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/results/20260928-v2-sweep/sweep_long.csv" target="_blank" rel="noopener">같은 집계 CSV</a>.</p>
+<p>시드 점검은 v2의 1.0 m/s 결과에 대한 것이다. v1·NVIDIA 기준 정책이나 다른 속도에도 같은 편차가 있다고 확장할 수 없다. 또 발 지지 문제는 통로 폭·몸체 회전 여유·낮은 천장 통과와 평가 대상이 다르다. 이는 5절에서 환경 요구와 대조한다.</p>
+<h3>2.4 평지 명령 수행에서는 구체적인 개선이 확인된다</h3>
+<p>같은 가상 Go2·평지·시드 42·동작별 64개 환경에서 v1과 v2를 비교했다. 전진 후 정지는 4초 전진 뒤 속도 명령을 0으로 바꾸고 전체 10초 관측했다. 정지 유지는 20초, 제자리 회전은 최대 18초다. 낙상은 개별 결과 6개 파일·384행과 실행 집계를 대조했다. <code>A2 · 원자료 확인</code> <span class="ev ev-ok">확인됨</span></p>
+<div class="tw"><table><thead><tr><th>평지 명령 시험</th><th>v1 낙상 / 64개</th><th>v2 낙상 / 64개</th><th>확인된 변화</th></tr></thead><tbody><tr><td>전진 후 정지</td><td>13 / 64</td><td>0 / 64</td><td>정지 지시 중 낙상 감소</td></tr><tr><td>정지 유지</td><td>5 / 64</td><td>0 / 64</td><td>정지 유지 중 낙상 감소</td></tr><tr><td>제자리 회전</td><td>64 / 64</td><td>7 / 64</td><td>회전 중 낙상 감소. 실패 7개가 남음</td></tr></tbody></table></div>
+<p>v2의 정지 조건, 즉 속도 0.05 m/s 미만을 1초 연속 유지한 최초 시점에 도달한 환경은 <b>55 / 64개</b>다. 낙상 0개를 정지 완료 64개로 표시하면 다른 지표를 바꿔 쓰게 된다. v1의 조건 도달은 53개지만 이후 넘어지는 경우도 있어 도달 수만으로 안전한 유지까지 판정할 수 없다. <a href="https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-axis2-fall" target="_blank" rel="noopener">명령 평가 원자료</a>, <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/command_response_metrics.py" target="_blank" rel="noopener">판정 코드</a>, 선택 장면 비교 영상과 판정 범위(부록 7절).</p>
+<p>여기서 설명할 기여는 <b>지형 통과 성적만 보면 놓치기 쉬운 정지·유지·회전 실패를 분리해 개선을 확인했다</b>는 점이다. 여러 학습 설정이 함께 바뀌어 특정 보상 항목 하나의 효과로 귀속하지 않는다. 이 시험은 평지이고 험지는 별도 시험이다. 험지 접근·정지·관측·복귀를 한 임무로 완료한 결과는 아니다.</p>
+</section>
+<section id="s3"><span id="3"></span><h2>3. 누구에게 무엇을 제공하는 방향인가</h2>
+<h3>3.1 개발·통합팀을 먼저 후보로 두는 이유</h3>
+<p>2절의 기록이 답하는 질문은 <b>“정책을 바꾸면 어느 동작·지형·속도에서 결과가 달라지는가?”</b>다. 이 질문을 다루는 개발·통합팀을 활용 대상 후보로 둔다. 실제 고객 요청에서 정한 고객군은 아니며 기존 팀 기록의 용도에서 도출한 제안이다. <code>추론</code></p>
+<p><b>공개 시설 점검 사례가 다루는 업무는 더 넓다.</b> UKPN은 영상·열화상과 과거 기록으로 시설 상태 변화를 읽는 목표를 설명한다. AutoInspect는 위치 추정·임무 일정·검사 동작·기록 수집을 이동과 묶었다. 두 사례의 업무 범위에는 보행 외 구성이 포함된다. 이를 운영기관 전체의 구매 선호나 우리 서비스 수요로 일반화하지 않는다. <code>C1</code> <a href="https://innovation.ukpowernetworks.co.uk/projects/automatic-tunnel-and-shaft-inspections" target="_blank" rel="noopener">UKPN</a>, <a href="https://robots.ox.ac.uk/~mfallon/publications/2025TFR_staniaszek.pdf" target="_blank" rel="noopener">AutoInspect</a>.</p>
+<div class="tw"><table><thead><tr><th>고객 후보의 판단</th><th>연결할 수 있는 결과물</th><th>근거와 현재 범위</th></tr></thead><tbody><tr><td>정책 변경안을 유지할지 판단</td><td>변경 전후 지형·속도별 성적과 명령 시험 비교</td><td>기존 팀 정책의 비교 기록이 있음. 타 고객 정책 분석 실적은 아님</td></tr><tr><td>평균 뒤의 취약 조건 파악</td><td>실패 지형·시드 편차·판정 기준과 영상의 관계</td><td>디딤돌 실패와 정지 판정 차이를 설명할 수 있음</td></tr><tr><td>현장 적용 가능성 설명 검토</td><td>시뮬 결과와 환경 요구의 대응 범위·제약</td><td>적용 주장의 조건을 구분하는 분석. 현장 적합성을 승인하는 결과는 아님</td></tr></tbody></table></div>
+<p>결과물 후보는 <b>조건별 성능표와 실패 분석을 실행 조건·판정 기준·원자료에 연결한 보고서</b>다. 위 표는 기존 자료를 어떻게 활용할 수 있는지 설명하며, 다른 고객에게 같은 분석을 제공한 실적을 뜻하지 않는다.</p>
+<h3>3.2 선택 이유 후보와 근거의 연결</h3>
+<div class="tw"><table><thead><tr><th>선택 이유로 제안할 내용</th><th>연결되는 팀 기록</th><th>도울 판단</th></tr></thead><tbody><tr><td>평균 뒤의 취약 조건을 설명한다</td><td>시드 42의 1.0 m/s 평균 90.50%와 v2 다섯 시드의 디딤돌 0~24 / 100회</td><td>평균의 지형 구성과 다른 시드에서의 실패 범위를 해석</td></tr><tr><td>이동 성적과 명령 수행을 구분한다</td><td>험지 평균 +1.75%p와 별도 평지 정지·유지·회전 낙상 감소</td><td>변경 뒤 어떤 지표가 달라졌고 실패가 남는지 판단</td></tr></tbody></table></div>
+<p>이는 <b>분석의 활용 이유</b>다. 기록을 고객의 내부 평가보다 빠르게 처리하거나 더 정확한 판단을 내리게 한다는 효과까지 측정한 것은 아니다. 현시점에는 고객의 선택을 확인한 이유로 표현하지 않는다.</p>
+</section>
+<section id="s4"><span id="4"></span><h2>4. 기존 대안과 우리의 차이는 무엇인가</h2>
+<h3>4.1 제품·연구·기준 정책의 역할을 같은 축에서 비교한다</h3>
+<div class="tw"><table><thead><tr><th>비교 대상</th><th>이미 제공하거나 연구한 범위</th><th>FOOTHOLD와 비교할 때의 판단</th></tr></thead><tbody><tr><td>Spot / Orbit</td><td>영상·열화상·음향 검사, 경로 반복, 검사 데이터·기체 관리, 디지털 트윈 관련 기능</td><td>촬영·지도·관제·트윈이 있다는 사실은 독자 차별점이 아님. 우리는 같은 현장 운용 범위를 검증하지 않음</td></tr><tr><td>Unitree 순정 Go2</td><td>보행, 라이다 지도, 지정 경로 이동 등</td><td>Go2 사용·지도 기능 자체가 차별점은 아님. 팀 시뮬 정책과 순정 실기 제어기의 동일 조건 비교는 없음</td></tr><tr><td>AutoInspect</td><td>위치 추정·항법·센서·임무·일정·검사 기록의 통합과 장기 현장 배치</td><td>운용 신뢰성은 전체 시스템 결과. 우리 보행 개선과 같은 지표로 순위를 매길 수 없음</td></tr><tr><td>Lee·Miki·DreamWaQ++</td><td>지형 대응 학습 보행, 감각 입력·구성 비교, 실기 이동</td><td>학습 보행 자체는 기존 연구. 우리 기여는 Go2 시뮬의 조건별 평가와 명령 실패 개선 기록</td></tr><tr><td>NVIDIA 시뮬 기준 정책</td><td>팀 평가에서 사용하는 사전학습 비교 기준</td><td>수치 비교가 있으나 학습 범위가 다름. Unitree 상용 순정 제어기와 구분</td></tr></tbody></table></div>
+<p><a href="https://bostondynamics.com/products/spot/" target="_blank" rel="noopener">Spot 공식 설명</a>, <a href="https://www.unitree.com/go2/" target="_blank" rel="noopener">Go2 공식 설명</a>, <a href="https://robots.ox.ac.uk/~mfallon/publications/2025TFR_staniaszek.pdf" target="_blank" rel="noopener">AutoInspect</a>, <a href="https://arxiv.org/pdf/2010.11251" target="_blank" rel="noopener">Lee</a>, <a href="https://leggedrobotics.github.io/rl-perceptiveloco/assets/pdf/wild_anymal.pdf" target="_blank" rel="noopener">Miki</a>, <a href="https://arxiv.org/html/2409.19709v2" target="_blank" rel="noopener">DreamWaQ++</a>. 외부 실험 수치와 비교 조건은 부록 C3에 있다.</p>
+<h3>4.2 이 비교로 설명할 수 있는 차이</h3>
+<p><b>현재 설명할 차이는 분석 대상과 결과물의 범위다.</b> FOOTHOLD의 기록은 Go2 시뮬 정책을 지형·속도·명령별로 나누고 변경 전후 성적과 실패를 설명한다. 현장 검사 제품과 비교하면 아직 설명하는 단위가 다르다. 또한 기존 제어 연구도 조건별 비교를 하므로 이런 분석 방식 자체를 독점 기능이나 새로운 연구 방법으로 주장하지 않는다.</p>
+<p>원자료·실행 조건·판정 코드를 연결하면 팀의 결과를 검토할 수 있다. 다만 타사에 같은 기능이 없다는 조사나 같은 조건의 상용 제어기 비교가 없으므로, 이 연구 기여를 경쟁 우위로 표현할 수는 없다.</p>
+</section>
+<section id="s5"><span id="5"></span><h2>5. 지하 환경과는 어디까지 맞닿아 있는가</h2>
+<h3>5.1 업무의 연관성과 적용 적합성은 구분한다</h3>
+<p>UKPN은 <b>47개 터널·연 160회 초과 점검</b>을 공개한다. 지하 환경에 반복 업무가 있다는 참고다. 그러나 후속 2023/24 보고서에는 터널 안에서 사람의 조종이 필요했던 한계가 있고, 초기 ENA 종료 기록에는 해당 단계에서 성과·새 교훈을 충분히 내지 못했다는 내용이 있다. 서로 다른 단계의 기록이므로 사업 전체를 실패로 묶거나 반대로 완전 자율 점검이 실현됐다고 읽지 않는다. <code>C1</code> <a href="https://innovation.ukpowernetworks.co.uk/projects/automatic-tunnel-and-shaft-inspections" target="_blank" rel="noopener">UKPN</a>, <a href="https://smarter.energynetworks.org/media/nhhp0cbs/uk-power-networks-annual-nia-summary-202324.pdf#page=45" target="_blank" rel="noopener">후속 보고서 45~46쪽</a>, <a href="https://smarter.energynetworks.org/projects/nia_ukpn0085/" target="_blank" rel="noopener">초기 종료 기록</a>.</p>
+<p>AutoInspect의 JET 배치는 <b>35일·81회 임무·검사 동작 571 / 653개 성공(87.44%)</b>이었다. 분모는 임무가 아닌 검사 동작이며 중단에는 소프트웨어·운용 사유도 포함된다. 이 사례는 현장 업무가 보행 외 지표로 평가된다는 점을 보여준다. 팀의 시뮬 종합 성공률과 숫자의 크기로 비교할 수 없다. <a href="https://robots.ox.ac.uk/~mfallon/publications/2025TFR_staniaszek.pdf#page=14" target="_blank" rel="noopener">AutoInspect 13~14쪽</a>.</p>
+<p>정지·회전 안정성은 이동 뒤 관측할 때 검토할 구성 요소다. 다만 AutoInspect의 PTZ 카메라는 로봇 몸체와 별도로 세계 좌표의 목표점을 바라본다. 관측할 때 항상 몸체 회전이 필요하다는 가정은 맞지 않는다. 본체 자세가 조종 영상의 기준에 영향을 줄 수 있다는 NIST의 정성적 설명도 우리 낙상 감소가 영상 품질·결함 탐지 정확도를 높였다는 근거는 아니다. <code>C3 · 기술적 연결</code> <a href="https://robots.ox.ac.uk/~mfallon/publications/2025TFR_staniaszek.pdf#page=12" target="_blank" rel="noopener">AutoInspect 12~14쪽</a>, <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=922383" target="_blank" rel="noopener">NIST 영상·조종 설명</a>.</p>
+<h3>5.2 환경 요구와 평가를 맞춰 읽으면 공백이 구체화된다</h3>
+<div class="tw"><table><thead><tr><th>환경·업무 요구</th><th>현재 자료와 맞닿는 부분</th><th>연결이 확인되지 않은 부분</th></tr></thead><tbody><tr><td>계단·바닥 변화 속 이동</td><td>지형·속도별 시뮬 보행 성적</td><td>실제 공동구 바닥 분포·젖음·잔해·탑재 질량을 대표하지 않음</td></tr><tr><td>정지 후 관측·방향 변경</td><td>평지 정지·유지·회전 실패 비교</td><td>험지 관측 수행·센서 품질 향상 결과는 없음</td></tr><tr><td>낮은 천장·협소 구간</td><td>ITRI 자료가 요구를 보여줌</td><td>몸체 높이·통로 폭·회전 여유·낮은 자세 통과 평가는 없음</td></tr><tr><td>긴 경로의 통신·복귀·기록</td><td>UKPN·AutoInspect가 운용 구성의 중요성을 보여줌</td><td>8×8 m 타일·짧은 명령 시험으로 장거리 임무 신뢰성을 대표할 수 없음</td></tr></tbody></table></div>
+<p>ITRI의 공동구 기체 설명은 계단·낮은 공간 통과·최대 1 km 경로를 다룬다. 1 km는 설계 설명이며 성공한 실임무 거리로 쓰지 않는다. Go2 EDU의 공식 단차 약 16 cm·중량 15 kg도 제조사 사양이며, 탑재 장비와 실제 공간을 반영한 적합성 시험의 대체 자료가 아니다. <b>계단이 있다는 공통점보다 다른 요구를 얼마나 포함하는지가 환경 연결의 기준</b>이다. <code>C2</code> <a href="https://itritoday.itri.org/126/content/en/unit_01-2.html" target="_blank" rel="noopener">ITRI</a>, <a href="https://www.unitree.com/go2/" target="_blank" rel="noopener">Go2 사양</a>.</p>
+<h3>5.3 사람 진입 감소와 사족보행 선택은 별개다</h3>
+<p>EU-OSHA의 2023 사례는 압력 탱크에 4 m 검사 암·보어스코프·초음파와 자석 바퀴 로봇을 사용한다. NASA/JPL은 정찰 후 바퀴·궤도·다리·비행 기체를 환경에 맞게 선택하는 구성을 설명한다. 사람 진입을 줄여야 한다는 필요성만으로 Go2를 선택할 이유가 생기지는 않는다. 수직·벽면·막힌 구간 등은 다른 이동 대안도 검토 대상이라는 지식으로 보관한다. <code>C2 · 대안</code> <a href="https://osha.europa.eu/sites/default/files/AI-support-inspection-maintenance-oil-en.pdf#page=2" target="_blank" rel="noopener">EU-OSHA</a>, <a href="https://www.nasa.gov/centers-and-facilities/jpl/nasa-robots-compete-in-darpas-subterranean-challenge-final/" target="_blank" rel="noopener">NASA/JPL</a>.</p>
+<p>지하 환경의 업무는 참고로 설명하고, 우리 성과로 답할 수 있는 판단은 조건별 보행 분석으로 한정한다. <b>지하 점검 수요 → 사족보행 필요 → 우리 정책 효과 → 서비스 구매</b>를 하나의 검증된 연쇄로 표시하지 않는다.</p>
+</section>
+<section id="s6"><span id="6"></span><h2>6. 종합 판단과 참고 자료의 위치</h2>
+<p>현재 기록은 <b>조건별 시뮬 보행 성적, 명령 수행의 낙상 감소, 남은 취약 조건</b>을 설명할 수 있다. 이를 개발·통합팀의 정책 변경 판단에 쓰는 분석 결과물로 묶는 방향을 제안한다. 사업으로 성립한다고 확정할 근거와는 구분한다.</p>
+<div class="tw"><table><thead><tr><th>판단 수준</th><th>현재 문서의 결론</th></tr></thead><tbody><tr><td>확인된 성과</td><td>정해진 조건에서 정책 비교·명령 실패 개선·시드별 실패 범위를 기록함</td></tr><tr><td>활용 제안</td><td>개발·통합팀이 변경 전후 성능과 적용 주장 범위를 읽는 분석 보고서</td></tr><tr><td>확인되지 않은 효과</td><td>유료 구매 의향, 고객의 시간·비용 절감, 타사 대비 우위, 시뮬의 현장 예측 정확도, 통합 점검 효과</td></tr></tbody></table></div>
+<p>따라서 지하 공동구를 우선 시장으로 확정하거나 현장 점검 서비스를 완성했다고 표시하지 않는다. 참고 지식은 아래 목적에 맞춰 부록에서 읽는다.</p>
+<div class="tw"><table><thead><tr><th>부록 묶음</th><th>읽는 목적</th></tr></thead><tbody><tr><td>C1 · 점검 사례·사업 형태</td><td>검사 기록·임무·운용 책임의 범위를 이해. 예산·예상 절감·조달 공고액은 출처 단계와 함께 보관</td></tr><tr><td>C2 · 환경 요구·이동 대안</td><td>낮은 천장·통신·수직/벽면 등에서 필요한 구성과 기존 대안 파악</td></tr><tr><td>C3 · 외부 제어·통합 연구</td><td>기술 가능성과 비교 설계를 이해. 기체·센서·적재·명령이 다른 수치를 우리 효과로 전용하지 않음</td></tr><tr><td>C4 · 안전·기관 업무·실패 유형</td><td>위험 배경과 기관 계획, 서로 다른 실패 원인 파악. 사고·시설 수를 시장으로 환산하지 않음</td></tr></tbody></table></div>
+<p>현장 실패 표의 F1~F8은 <b>8개 사례 항목</b>이며 동일 연구의 기록을 포함한다. 독립 사고 8건이나 우리 정책이 해결한 8건으로 세지 않는다. 상세 원문·수치·그림은 이 문서 끝의 근거 부록(7~10절)에 있다. 이번 검토는 기존 자료에 대한 문서 검토이며 신규 사용자 인터뷰나 통합 정찰 실험을 실행 과제로 추가하지 않는다.</p>
+</section>
+<section id="s7"><span id="7"></span><h2>7. 부록 A · 판단에 직접 쓰는 근거</h2>
+<p>이 부록은 <b>자료의 사실 여부와 자료를 쓰는 목적을 함께 표시</b>한다. A와 B가 본문의 판단에 쓰인다. C는 참고용이며 항목 수·사고 규모·타사 성과를 더해 우리 서비스의 효과나 구매 의향으로 환산하지 않는다. 환경 후보를 확정하는 팀 결정이나 새 인터뷰·실험 계획은 포함하지 않는다.</p>
+<p><b>A1 · 성능 평가가 의사결정에 쓰이는 근거.</b> NIST는 반복 시험으로 능력을 객관적으로 비교하고 구매·배치 판단에 활용하는 원칙을 설명한다. 공식 페이지의 6천만 달러 초과 조달은 C-IED 대응 로봇의 요구 사양에 시험 방법이 쓰인 기록이다. 우리가 NIST 시험·인증을 수행했거나 이 규모가 우리 시장이라는 뜻은 아니다. 시뮬 평가가 실기 시험과 동등하다는 근거도 아니다. <a href="https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots/ground-robot-tests" target="_blank" rel="noopener">NIST 원칙과 조달 활용</a>.</p>
+<p><b>A2·A3 · 팀의 실제 분석 기록.</b> 본문의 활용 후보에 직접 연결되는 것은 아래의 실행 조건·낙상·정지 판정·조건별 보행 집계다. 평지 명령 수행과 험지 보행은 별도 시험이다. 이를 한 번의 점검 임무로 합치지 않는다.</p>
+<h3>평지 명령 시험</h3>
+<p>판단 근거 A2의 표는 2026년 9월 29일 v1·v2의 평지·시드 42·동작별 64개 환경 결과다. 시드는 난수 설정이며 이 환경들이 독립적인 실현장 64건인 것은 아니다. 4초 전진 뒤 정지 시험은 전체 10초, 정지 유지는 20초, 제자리 회전은 최대 18초다. per_env.json 6개·384행의 낙상 수를 manifest 집계와 대조하고 두 정책 파일 해시·실행 설정을 확인했다. <span class="ev ev-ok">확인됨</span> <a href="https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-axis2-fall" target="_blank" rel="noopener">평가 원자료</a>.</p>
+<p><figure class="mdimg"><img src="assets/visual/20261007-command-falls.svg?v=b0408171" alt="평지 명령 시험에서 낙상한 환경 수, 동작별 64개, v1과 v2의 같은 시뮬 조건 비교" loading="lazy"><figcaption>평지 명령 시험에서 낙상한 환경 수, 동작별 64개, v1과 v2의 같은 시뮬 조건 비교</figcaption></figure></p>
+<p>원자료의 fell은 낙상 여부다. stop_time_s는 정지 명령 뒤 전 명령이 0인 상태에서 속도 <b>0.05 m/s 미만을 1초 연속 유지한 최초 시간</b>이다. 전진 후 정지 조건 도달은 v1 53 / 64개, v2 55 / 64개다. 그 후 넘어질 수 있으므로 조건 도달 수만으로 성공을 판정하지 않는다. 종료 시각까지 생존·정지 유지 여부를 함께 봐야 한다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/command_response_metrics.py" target="_blank" rel="noopener">정지 판정 코드</a>.</p>
+<p>비교한 두 모델은 정지 학습·회전 명령·다방향 틈 노출 등 여러 설정이 달라 개별 변경 하나의 효과를 귀속하지 않는다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/research/20260928-v2-mvp-report.md" target="_blank" rel="noopener">팀 보고서 6·9·13절</a>.</p>
+<h3>별도 험지 집계와 선택 영상</h3>
+<div class="tw"><table><thead><tr><th>선택 장면</th><th>v1</th><th>v2</th></tr></thead><tbody><tr><td>전진 후 정지</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-stop-v1.mp4" target="_blank" rel="noopener">v1</a></td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-stop-v2.mp4" target="_blank" rel="noopener">v2</a></td></tr><tr><td>정지 유지</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-hold-v1.mp4" target="_blank" rel="noopener">v1</a></td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-hold-v2.mp4" target="_blank" rel="noopener">v2</a></td></tr><tr><td>제자리 회전</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-turn-v1.mp4" target="_blank" rel="noopener">v1</a></td><td><a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/assets/video/v2/axis2-turn-v2.mp4" target="_blank" rel="noopener">v2</a></td></tr></tbody></table></div>
+<p>아래 험지 집계는 평지 명령 시험과 별도다. 선택한 8종·속도·난이도·성공 판정과 집계 복원 방법은 다음 항목에 명시한다. 조건별 100회는 한 지형 타일에서 출발 위치·방향을 흔든 반복으로, 여러 실현장의 바닥·폭·높이 분포를 대표하는 표본이 아니다.</p>
+<p>위의 명령 응답 비교 영상은 기존 팀 기록의 환경 번호 8이다. v1은 정지·유지·회전에서 모두 넘어지고 v2는 모두 넘어지지 않은 선택 장면이다. 동작별 전체 64개 결과를 함께 표시하며 장면 하나를 전체 성과로 일반화하지 않는다. 시뮬 외부 카메라 기록이므로 실제 관측 카메라 영상·피해자 탐지의 성과도 아니다.</p>
+<h3>험지 집계의 비교 대상·필터·분모</h3>
+<p>본문의 세 정책은 NVIDIA 시뮬 사전학습 기준 정책 nv, 팀 v1, 팀 v2다. <b>nv는 실기 Unitree 순정 제어기가 아니다.</b> 비교 집계는 sweep_long.csv의 난이도 0.5·속도 0.5/1.0/1.5 m/s·아래 8종을 모델별로 선택한 24행에서 복원했다. 팀 보고서의 기준 시드는 42다. 종합 성공은 생존·전진·속도 추종·진로 유지의 동시 충족이다. 행마다 episodes=100이며 성공률×100이 정수 성공 수에 대응하는지 확인했다. 모델당 2,400개 원시 시행을 다시 판정했다고 표시하지 않는다.</p>
+<p>8종은 discrete_obstacles·floating_ring·pit·repeated_boxes·repeated_cylinders·star·stepping_stones·wave다. rails는 v2 학습에 포함되므로 이 미학습 묶음에서 제외한다. 학습 지형까지 포함한 16종 집계와 이 8종 집계를 섞지 않는다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/research/20260928-v2-mvp-report.md" target="_blank" rel="noopener">팀 보고서의 학습·평가 구분</a>.</p>
+<div class="tw"><table><thead><tr><th>속도 · 각 모델 800회</th><th>nv 성공</th><th>v1 성공</th><th>v2 성공</th></tr></thead><tbody><tr><td>0.5 m/s</td><td>487 · 60.88%</td><td>695 · 86.88%</td><td>700 · 87.50%</td></tr><tr><td>1.0 m/s</td><td>496 · 62.00%</td><td>699 · 87.38%</td><td>724 · 90.50%</td></tr><tr><td>1.5 m/s</td><td>70 · 8.75%</td><td>687 · 85.88%</td><td>699 · 87.38%</td></tr><tr><td>합계 · 각 모델 2,400회</td><td>1,053 · 43.88%</td><td>2,081 · 86.71%</td><td>2,123 · 88.46%</td></tr></tbody></table></div>
+<p>nv의 학습 전진 명령은 -1~1 m/s다. 1.5 m/s의 큰 차이를 같은 명령 범위에서의 성능 우위라고 읽지 않는다. v1→v2의 총 차이는 42 / 2,400 × 100 = <b>+1.75%p</b>다. 이 값에 유의성·현장 성공률·개별 변경의 인과 효과를 부여하지 않는다. 보고서의 1.0 m/s 비교만 보더라도 학습 조건이 달라 상용 제어기보다 우수하다는 결론으로 이어지지 않는다.</p>
+<h3>평균 성적을 실패 분석으로 바꿔 읽는 예시</h3>
+<div class="tw"><table><thead><tr><th>미학습 지형 · 1.0 m/s · 각 100회</th><th>v1 성공</th><th>v2 성공</th></tr></thead><tbody><tr><td>discrete_obstacles</td><td>100</td><td>100</td></tr><tr><td>floating_ring</td><td>99</td><td>100</td></tr><tr><td>pit</td><td>100</td><td>100</td></tr><tr><td>repeated_boxes</td><td>100</td><td>100</td></tr><tr><td>repeated_cylinders</td><td>100</td><td>100</td></tr><tr><td>star</td><td>100</td><td>100</td></tr><tr><td>stepping_stones</td><td>0</td><td>24</td></tr><tr><td>wave</td><td>100</td><td>100</td></tr></tbody></table></div>
+<p>v2의 90.50%는 7종 700 / 700회와 디딤돌 24 / 100회를 묶은 값이다. v1→v2의 이 속도에서의 증가 25회 중 24회가 디딤돌에 해당한다. <b>자료의 쓰임은 개선이 어디에 집중됐고 높은 평균에도 어떤 실패가 남는지 설명하는 것</b>이다. 다른 시드의 디딤돌 결과 1·3·19·0회와 함께 읽으면 24회를 안정적 환경 성능으로 일반화할 수 없다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/results/20260928-v2-sweep/sweep_long.csv" target="_blank" rel="noopener">집계 CSV</a>, <a href="https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-seed-spread" target="_blank" rel="noopener">시드별 개별 기록</a>.</p>
+<p>조건별 표·판정 코드·실행 설정·실패 영상을 연결하면 “평균이 높다”에서 “어떤 조건에서 어떤 지표가 남는가”로 판단의 단위를 바꿀 수 있다. 이 설명은 현재 기록으로 만들 수 있지만, 분석 보고서의 유료 수요나 다른 도구보다 높은 편의성은 이 집계의 측정 대상이 아니다.</p>
+</section>
+<section id="s8"><span id="8"></span><h2>8. 부록 B · 결론의 범위를 제한하는 근거</h2>
+<p><b>B1 · 팀 목표의 범위.</b> 8월 19일 결정과 계획은 A의 시뮬 정책·평가·트윈과 B의 순정 Go2 보행 위 SLAM·Nav2 항법을 구분한다. 자체 정책의 실기 이전은 목표에서 제외됐다. 두 트랙을 자체 정책의 현장 효과로 연결하지 않는다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/DECISIONS.md" target="_blank" rel="noopener">팀 결정</a>, <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/REPORT.md" target="_blank" rel="noopener">프로젝트 계획</a>.</p>
+<p><b>B2 · 시험과 환경의 대응 범위.</b> 명령 응답 manifest의 지형은 무한 평면이다. 별도 험지 평가의 타일 크기는 8×8 m이고 지형별 행 수는 1이다. 지하 공동구의 폭·천장·바닥 상태나 긴 관측 경로를 대표하도록 검증한 결과는 이번 평가에 없다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/results/20260929-axis2-fall/v2/probe_manifest.json" target="_blank" rel="noopener">명령 시험 조건</a>, <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/eval/generalization_env_cfg.py" target="_blank" rel="noopener">험지 설정</a>.</p>
+<p><b>B3 · 실패 범위와 시드 해석.</b> v2의 좁은 디딤돌 stepping_stones는 1.0 m/s·난이도 0.5·시드별 100회에서 시드 42·1·2·3·4의 종합 성공이 <b>24·1·3·19·0회</b>다. 개별 500행을 재집계했다. 24회는 다섯 시드 중 최고값으로 보고할 범위는 0~24 / 100회다. 실행 manifest는 지형 생성과 출발 조건이 함께 바뀐다고 명시한다. 어느 한쪽 원인만 분리한 시험이 아니다. 시드 점검은 v2·1.0 m/s에 한정되므로 v1·nv·다른 속도까지 같은 편차로 읽지 않는다. 발 지지 문제를 통로 폭·회전 여유·천장 통과 성능으로 바꾸지도 않는다. <a href="https://github.com/foothold-project/foothold-lab/tree/main/sim/eval/results/20260929-seed-spread" target="_blank" rel="noopener">팀 원자료</a>.</p>
+<p><b>B4 · 기존 대안과 비교 조건.</b> 본문 4절은 역할 비교이며 성능 순위가 아니다. 우리 v1·v2 비교의 기준선은 팀의 이전 학습 정책이다. 동일 조건의 상용 제품 대비 결과가 없으므로 촬영·지도·디지털 트윈·학습 제어 자체를 고유한 경쟁 차별성으로 제시하지 않는다.</p>
+<p>비교 대상별 기능과 FOOTHOLD의 제공 범위는 본문 4절의 표에 모았다. 근거가 되는 제조사 기능 설명은 <a href="https://bostondynamics.com/products/spot/" target="_blank" rel="noopener">Spot</a>, <a href="https://www.unitree.com/go2/" target="_blank" rel="noopener">Go2</a>이고, 외부 운용·학습 제어기의 상세 수치는 아래 C1·C3에 기록한다.</p>
+</section>
+<section id="s9"><span id="9"></span><h2>9. 부록 C · 참고로 알아둘 자료</h2>
+<h3>C1. 반복 점검 업무·검사 기록·사업 형태</h3>
+<p><b>참고 목적:</b> 실제 기관이 무엇을 점검하고 어떤 데이터를 모으는지, 어떤 서비스 형태를 요구하는지 이해한다. <b>결론에 사용하지 않는 주장:</b> FOOTHOLD의 구매 의향·현장 효과·매출·특정 환경 우선 채택.</p>
+<p>UK Power Networks는 <b>47개 터널·연 160회 초과 점검·터널과 수직구 유지관리비 연 £100만 초과</b>를 공개한다. 2022-10-03~2024-08-30 프로젝트 예산은 £43.2만이다. 위험 장소 체류시간 최대 50% 감소·연 £15만 초과(2028년 £30만 초과) 절감은 예상이다. 예산·추정 절감액을 실제 집행·기체 가격·우리 매출로 사용하지 않는다. <a href="https://innovation.ukpowernetworks.co.uk/projects/automatic-tunnel-and-shaft-inspections" target="_blank" rel="noopener">운영기관 원문</a>.</p>
+<p>초기 ENA 종료 기록은 성과·새 교훈 미도출을 명시한다. 해당 단계는 2022~2023년이고 Expenditure는 £25만으로 표시된다. 후속 UKPN 2023/24 보고서 45~46쪽은 자체 자금 전환·시험 진행과 <b>터널 안에서 사람의 조종이 필요했던 한계</b>를 설명한다. 단계·기간·회계 항목이 다르므로 두 금액을 합치지 않는다. 이 사례가 필요한 기술은 항법·센싱·통신 통합을 포함하므로 우리 보행 개선만으로 해결됐다고 읽지 않는다. <a href="https://smarter.energynetworks.org/projects/nia_ukpn0085/" target="_blank" rel="noopener">초기 종료 기록</a>, <a href="https://smarter.energynetworks.org/media/nhhp0cbs/uk-power-networks-annual-nia-summary-202324.pdf#page=45" target="_blank" rel="noopener">후속 보고서</a>.</p>
+<p>AutoInspect의 <b>IEEE Transactions on Field Robotics 2025 논문</b>, DOI 10.1109/TFR.2025.3586831은 JET의 35일 배치에서 <b>81회 임무·검사 동작 571 / 653개 성공(87.44%)</b>을 보고한다. 3회는 일부 성공·8회는 실패이며 실패 중 4회는 계획된 중단이다. 최장 15일 중대 개입 없는 운용은 달력 기간이고 실제 임무 수행은 총 19시간 30분이었다. 영상 60장 쌍별 비교의 오프셋은 1920×1000 픽셀 영상에서 가로 54±71·세로 51±42 픽셀이다. 정지 제어 하나의 효과·결함 탐지 정확도·보행 실패율이 아니다. <a href="https://robots.ox.ac.uk/~mfallon/publications/2025TFR_staniaszek.pdf#page=14" target="_blank" rel="noopener">수락본 12~14쪽</a>, <a href="https://ora.ox.ac.uk/objects/uuid%3Ac11ae19f-8649-43a1-ac51-29839cb692dc" target="_blank" rel="noopener">Oxford 최종 서지</a>. UKAEA의 하루 두 차례 수집 발표는 같은 배치이므로 독립 실증으로 합산하지 않는다. <a href="https://www.gov.uk/government/news/autonomous-robot-paves-the-way-for-future-fusion-maintenance" target="_blank" rel="noopener">UKAEA 공식 발표</a>.</p>
+<p>Sellafield의 2026-01-29 공식 사례는 2023/24 C5 구역에서 맞춤 Spot의 검사 경로·영상·방사선 수집과 2025년 부지 경계 밖 원격 시연을 기록한다. Go2나 지하 공동구의 효과·비용 절감률로 전용하지 않는다. <a href="https://www.gov.uk/government/case-studies/how-are-robot-dogs-helping-clean-up-sellafield" target="_blank" rel="noopener">운영기관 원문</a>.</p>
+<p>2026년 9월 정부 조달 공고는 Scottish Hydro Electric Transmission의 로봇 장비·분석·유지보수·수명주기 책임을 묶은 <b>£455만(VAT 포함) 관리형 검사 서비스</b>를 명시한다. 2026년 9월 공고의 계약 상태 표기는 Pending이다. 실제 집행·절감 실적이나 FOOTHOLD의 제공 능력으로 해석하지 않는다. <a href="https://www.sell2wales.gov.wales/search/show/search_view.aspx?ID=SEP658487&amp;catID=" target="_blank" rel="noopener">정부 조달 공고</a>.</p>
+<h3>C2. 환경별 요구와 기존 대안</h3>
+<p><b>참고 목적:</b> 적용 환경마다 요구하는 기체·센서·항법·통신이 다르다는 점을 이해한다. <b>결론에 사용하지 않는 주장:</b> Go2의 지하 특화·재난 적합성·우선 환경 확정.</p>
+<p>ITRI의 2026년 가을 공식 설명은 화재 정찰과 좁은 공동구 검사용 기체를 구분한다. 공동구용 설계는 계단·낮은 공간 통과·최대 1 km의 점검 경로를 다룬다. 이 설계 요구를 우리가 충족했다는 자료는 없다. Go2 공식 표의 EDU 단차 약 16 cm·기체 15 kg은 제조사 사양이며 센서 장착 후 통로 적합성·현장 인증이 아니다. “$1,600부터”를 EDU 가격으로 쓰지 않는다. <a href="https://itritoday.itri.org/126/content/en/unit_01-2.html" target="_blank" rel="noopener">ITRI 원문</a>, <a href="https://www.unitree.com/go2/" target="_blank" rel="noopener">Go2 공식 사양</a>.</p>
+<p>EU-OSHA의 2023 사례 연구 ID10은 압력 탱크에 4 m 검사 암·보어스코프·초음파와 자석 바퀴 로봇을 사용하는 방식을 기록한다. 기존 관계자 인터뷰 기반 사례이며 무작위 비교가 아니다. 사람 진입을 줄이는 가치가 사족보행만의 가치인 것은 아니다. <a href="https://osha.europa.eu/sites/default/files/AI-support-inspection-maintenance-oil-en.pdf#page=2" target="_blank" rel="noopener">기관 원문 1~2쪽</a>.</p>
+<p>NASA/JPL의 SubT 구성은 정찰 후 바퀴·궤도·다리·비행 로봇을 환경에 맞게 선택한다. 이동 방식 우열의 동일 조건 시험이 아니다. Spot의 공식 설명에는 경로 재생·영상 수집·환경 변화 대응이 이미 존재한다. NIOSH의 2018 SME 학회 프리프린트는 Gemini-Scout 이동과 배터리·구동 모터·조명 요구를 기록하며 CDC 서지는 Peer Reviewed False다. 공급사 Elios 3의 Lyon 싱크홀·Swiss Alps 붕괴 터널 사례도 기존 대안의 참고이고 동일 조건 비교가 아니다. <a href="https://www.nasa.gov/centers-and-facilities/jpl/nasa-robots-compete-in-darpas-subterranean-challenge-final/" target="_blank" rel="noopener">NASA/JPL</a>, <a href="https://bostondynamics.com/blog/automated-inspections-made-simple/" target="_blank" rel="noopener">Spot 설명</a>, <a href="https://stacks.cdc.gov/view/cdc/227698/cdc_227698_DS1.pdf#page=2" target="_blank" rel="noopener">NIOSH 원문</a>, <a href="https://stacks.cdc.gov/view/cdc/227698" target="_blank" rel="noopener">CDC 서지</a>, <a href="https://www.flyability.com/casestudies/underground-drone-emergency-response" target="_blank" rel="noopener">Lyon 사례</a>, <a href="https://www.flyability.com/casestudies/collapsed-tunnel-landslide" target="_blank" rel="noopener">Swiss Alps 사례</a>.</p>
+<h3>C3. 보행 제어·관측·통합 운용의 기술 배경</h3>
+<p><b>참고 목적:</b> 제어기 개선의 기술적 가능성, 명령 수행·관측의 관계, 통합 운용에 필요한 구성과 기존 연구를 이해한다. <b>결론에 사용하지 않는 주장:</b> 우리 정책의 실기 효과·새 학습법·경쟁 우위·지하 환경의 특화 성능.</p>
+<p>Lee의 <b>Science Robotics 2020 논문</b>, DOI 10.1126/scirobotics.abc5986 표 1은 ANYmal의 기존/학습 제어기 속도를 이끼 0.199/0.452 m/s·진흙 0.197/0.338 m/s, 기계적 COT를 0.625/0.423·0.931/0.692로 기록한다. 속도 비는 2.27배·1.72배, COT 감소는 32.3%·25.7%다. 기준선이 걸은 구간만 측정하고 실패 후 사람이 재설정했으며 표에 반복 수·신뢰구간은 없다. 배터리 수명·운영비·Go2 수치가 아니다. <a href="https://arxiv.org/pdf/2010.11251#page=5" target="_blank" rel="noopener">수락본 5쪽</a>.</p>
+<p>Miki의 <b>Science Robotics 2022 논문</b>, DOI 10.1126/scirobotics.abk2822는 단차 높이별 10회·5초 이내 통과를 평가한다. 제안 제어기는 30.5 cm까지 통과 성능을 유지했고 그림 4의 장애물 경로 실행은 33초·보조 없음 대 75초·인력 보조 있음이다. 반복 평균이 아니다. <a href="https://leggedrobotics.github.io/rl-perceptiveloco/assets/pdf/wild_anymal.pdf#page=7" target="_blank" rel="noopener">저자본 5·7·8쪽</a>.</p>
+<p>DreamWaQ++의 <b>IEEE T-RO 2026 논문</b>, DOI 10.1109/TRO.2026.3653774의 arXiv v2는 Go1의 50계단 경주에서 35초·수평 30.03 m, 내장 제어기 기체 6.38 m 후 미완료를 기록한다. 기체·센서·적재·명령이 달라 제어기 하나의 효과로 해석하지 않는다. V.B.2의 동일 Go1 순차 비교는 별도 기록이다. 표 IV의 시뮬 1,000개·20초·20 cm 계단에서 전체 모델 97.8%·정보 융합 제거 60.7%의 차이는 37.1%p다. 순정 제어기·Go2·실기 성공률이 아니다. <a href="https://arxiv.org/html/2409.19709v2" target="_blank" rel="noopener">v2 원문</a>, <a href="https://doi.org/10.1109/TRO.2026.3653774" target="_blank" rel="noopener">출판 DOI</a>.</p>
+<p>CERBERUS의 <b>Field Robotics 2024 논문</b>, DOI 10.55417/fr.2024009 표 3은 2021 SubT 결선 60분 동안 네 ANYmal 합계 <b>1,738 m·유효 물체 보고 23개·낙상 없음</b>을 기록한다. 센서·SLAM·통신·감독자를 포함한 대회 결과이며 실제 구조 성과가 아니다. Miki의 결선 기록과 같은 사건이므로 독립 실증으로 합산하지 않는다. <a href="https://ora.ox.ac.uk/objects/uuid%3Ac203da77-8014-4ad5-924d-042dd2bf9870/files/sjm214r20w#page=39" target="_blank" rel="noopener">Oxford 수락본 39·54쪽</a>.</p>
+<p>NIST 연구자의 2018 원문 15쪽은 몸체 기울기가 원격 카메라의 운용자 기준을 뒤틀어 조종을 방해할 수 있다고 설명한다. 명령·자세와 관측의 관련성을 이해하는 참고이며 정지 제어에 따른 영상 판독률 향상을 측정하지 않았다. NIST의 2026 로봇 프로그램도 환경·응용 요구와 검증의 연결을 강조한다. 우리 시뮬이 실제 환경을 대표한다고 승인한 자료는 아니다. <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=922383#page=15" target="_blank" rel="noopener">2018 원문</a>, <a href="https://www.nist.gov/el/robotics" target="_blank" rel="noopener">2026 프로그램</a>.</p>
+<h3>C4. 국내 안전·기관 업무·실패 사례</h3>
+<p><b>참고 목적:</b> 위험의 배경·기관 계획·실패 유형을 파악한다. <b>결론에 사용하지 않는 주장:</b> 전체 사고·시설 수를 우리 고객·시장으로 환산하거나 타사 실패를 우리 정책의 해결 성과로 해석.</p>
+<div class="tw"><table><thead><tr><th>공식 자료</th><th>확인한 사실</th><th>참고할 범위</th></tr></thead><tbody><tr><td>2026 고용노동부·안전보건공단 가이드</td><td>2016~2025년 154건·재해자 315명·사망자 132명, 구조 진입 사망 30명</td><td>전체 밀폐공간 통계. Go2 적용 가능 현장 수가 아님</td></tr><tr><td>서울소방 2026 계획</td><td>공동구 등 선제 투입·라이다·8종 가스·통신 대응</td><td>기관의 추진 업무. 출동 성적·우리 구매 의향과 구분</td></tr><tr><td>서울시 2025 예산안</td><td>순찰 2대·사족보행 1대 시범 사업 합계 3억원 제안</td><td>1대 가격·낙찰·집행액이 아님</td></tr><tr><td>서울시 2025 시설 집계</td><td>38개 사업소·98개 사업장 내 밀폐공간 2,399개</td><td>탱크·맨홀 포함. 고객 수·Go2 통로 수가 아님</td></tr><tr><td>인천항만공사 2026 S-D-24</td><td>실시간 가스 감시·경보·자동 환기·관제 요구</td><td>설치형 센서·공조 수요. 사족보행 구매 요구가 아님</td></tr></tbody></table></div>
+<p><a href="https://info.cak.or.kr/download.do?uuid=08d223c3-5233-436a-8427-0ddbf304da60.pdf#page=14" target="_blank" rel="noopener">2026 가이드 14·42쪽</a>, <a href="https://news.seoul.go.kr/safe/archives/517409" target="_blank" rel="noopener">서울소방 계획</a>, <a href="https://www.seoul.go.kr/news/news_report.do?nttNo=421947" target="_blank" rel="noopener">서울시 예산안</a>, <a href="https://news.seoul.go.kr/safe/archives/516791" target="_blank" rel="noopener">시설 집계</a>, <a href="https://www.inu.ac.kr/bbs/startup/592/380374/download#page=48" target="_blank" rel="noopener">공공 수요기술 PDF 48쪽</a>.</p>
+<p>132/315=41.9%는 재해자 중 사망 비율, 30/132=22.7%는 사망자 중 구조 진입 사망 비율이다. 구조하러 들어간 전체 사람의 사망 확률이 아니다. 2025 보도자료의 2015~2024년 재해자 298명·사망자 126명·확인·구조 진입 사망 23명은 기간이 겹치므로 합산하지 않는다. 가이드 25~26쪽의 교정·실제 작업 위치 측정·감시·통제와 외부 채기관 측정은 이동 로봇만으로 대체할 수 있다는 근거가 아니다. <a href="https://www.korea.kr/common/download.do?fileId=198158641&amp;tblKey=GMN" target="_blank" rel="noopener">2025 보도자료</a>.</p>
+<p>Robinson의 ACM THRI 최종 초록은 모의 수색 16회·10시간에서 사람 개입 조건의 발견 수 10.52%·거리 12.71%·탐색 범위 10.56%·안전 사건 간 시간 34% 증가와 통상 조건의 비슷한 성적을 보고한다. 최종 통계표를 검증하지 않았고 혼합 로봇 팀의 결과다. DARPA의 5 m 위치 보고 채점도 대회 규칙이며 우리 요구 정밀도가 아니다. <a href="https://research.monash.edu/en/publications/human-robot-team-performance-compared-to-full-robot-autonomy-in-1/" target="_blank" rel="noopener">최종 출판 기록</a>, <a href="https://www.darpa.mil/research/programs/darpa-subterranean-challenge" target="_blank" rel="noopener">DARPA 설명</a>.</p>
+<p>CDC의 Sago 사고 보고는 내부 정보 부재를, MSHA 원문은 영상·가스 전송 뒤 주행 중 선로 이탈·기울음·구동부 손상으로 중단된 상황을 기록한다. MSHA는 구조팀 시간 손실이 없었다고 명시한다. Murphy의 2010 해설은 선정 재난 5곳·지상 로봇 9대의 이동 제약을, CSIR의 2013 학회 자료는 관계자 21명 워크숍의 영상·관측·개입 요구를 정리한다. 국내 고객 조사나 우리 제어기의 효과가 아니다. <a href="https://www.cdc.gov/mmwr/preview/mmwrhtml/mm5751a3.htm" target="_blank" rel="noopener">CDC</a>, <a href="https://arlweb.msha.gov/sagomine/sagominerescueeffortq%26a.pdf#page=3" target="_blank" rel="noopener">MSHA 질의응답</a>, <a href="https://arlweb.msha.gov/Readroom/FOIA/2007InternalReviews/Sago%20Internal%20Review%20Report.pdf#page=124" target="_blank" rel="noopener">MSHA 내부 검토</a>, <a href="https://www.jstage.jst.go.jp/article/jrsj/28/2/28_2_142/_pdf#page=2" target="_blank" rel="noopener">Murphy 원문</a>, <a href="https://researchspace.csir.co.za/bitstream/handle/10204/7208/Green_2013.pdf#page=5" target="_blank" rel="noopener">CSIR 원문</a>.</p>
+<h3>실제 실패 기록과 기존 팀 평가의 관계</h3>
+<p><b>이 표는 C4의 참고 사례</b>다. 실패 현상·원인·우리 평가 범위를 구분한다. 행 수를 독립 사고 수나 우리 해결 성과로 세지 않는다.</p>
+<p>표의 근거 수준은 연구진의 원인 설명, 연구진의 추정, 실패 현상 확인을 구분한다. CTU는 체코공과대학교 팀이고, MARBLE은 별도 참가팀 이름이다. 외부 실패와 팀 평가의 관계는 해석 범위를 설명한다. 여러 행이 같은 연구에서 나온 경우가 있어 사고 건수로 합산하지 않는다.</p>
+<div class="tw"><table><thead><tr><th>ID</th><th>장비·실패 유형</th><th>원문에서 확인한 내용과 수준</th><th>기존 팀 평가와의 관계</th></tr></thead><tbody><tr><td>F1</td><td>LT2-F 궤도 로봇 · 레일 걸림</td><td>낮은 지상고로 120 m 이동 후 걸림. 연구진 원인 설명</td><td>레일·몸통 접촉 문제의 참고. 해당 외부 실패를 해결한 결과는 없음</td></tr><tr><td>F2</td><td>Vision60 초기형 · 레일 주행 실패</td><td>최장 40 m. 레일에서 미끄러졌다는 연구진 추정</td><td>접촉·미끄러짐 문제의 참고. 현장 레일 마찰과 직접 비교한 결과는 없음</td></tr><tr><td>F3</td><td>MARBLE팀 Spot · 거친 지형 낙상</td><td>넘어져 남은 주행에서 이동 중단. 실패 현상 확인</td><td>낙상 현상의 참고. 구체적인 원인과 팀 모델의 해결 효과는 미확인</td></tr><tr><td>F4</td><td>CTU팀 Spot 1 · 지형 오판 후 낙상</td><td>미관측 구역을 통과 가능으로 판단하고 너무 늦게 수정. 연구진 원인 설명</td><td>현재 보행 평가가 실제 관측 누락·진입 오판을 해결한 근거는 없음</td></tr><tr><td>F5</td><td>LT2-F · 체인·궤도 이탈</td><td>작은 돌이 구동부에 끼어 이탈·정비 부담 발생. 연구진 원인 설명</td><td>구동계 고장은 기존 보행 평가에 포함되지 않음</td></tr><tr><td>F6</td><td>MARBLE팀 Spot · 내려가는 계단 탐사 제한</td><td>라이다가 바로 앞 아래쪽 바닥을 충분히 관측하지 못함. 연구진 원인 설명</td><td>실제 센서 시야의 한계는 기존 보행 평가에 포함되지 않음</td></tr><tr><td>F7</td><td>CTU팀 Spot 2 · 라이다 데이터 단절</td><td>라이다 연결 컴퓨터 고장·재시작 후 데이터 소실. 연구진 원인 설명</td><td>보행 학습의 개선 대상으로 포함하지 않음</td></tr><tr><td>F8</td><td>후쿠시마 변형 크롤러 · 틈새 끼임</td><td>그레이팅 판 사이 접합 틈에 오른쪽 궤도부가 끼인 상태 확인</td><td>틈·접촉 폭 참고 사례. Go2의 해당 현장 적용 근거는 아님</td></tr></tbody></table></div>
+<p>F1·F2·F5의 출처는 Hudson 등의 <b>Field Robotics 2022 출판 논문 저자 공개본</b>이다. F4·F7은 Bayer 등의 <b>Field Robotics 2023 출판 논문 저자 공개본</b>, F3·F6은 Miles 등의 <b>Frontiers in Robotics and AI 2023 출판 논문</b>이다. F8은 도쿄전력(TEPCO)의 조사 결과를 국제폐로연구개발기구(IRID)가 공개한 공식 자료다. MARBLE과 CTU는 서로 다른 팀이다.</p>
+<p><a href="https://sites.cc.gatech.edu/ai/robot-lab/online-publications/FRJ.pdf#page=30" target="_blank" rel="noopener">Hudson PDF 9·30·31쪽</a>, <a href="https://comrob.fel.cvut.cz/papers/fr23mre.pdf#page=27" target="_blank" rel="noopener">Bayer PDF 26·27쪽</a>, <a href="https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2023.1249586/full" target="_blank" rel="noopener">Miles 4.3절·그림 14</a>, <a href="https://irid.or.jp/wp-content/uploads/2015/04/20150430_e.pdf#page=14" target="_blank" rel="noopener">TEPCO 결과 PDF 14쪽</a>.</p>
+<p><b>F1~F3은 이동 중 접촉·미끄러짐·낙상과 이동 중단에 관한 참고다.</b> 팀의 기존 평가가 이 현장 실패를 재현하거나 해결한 것은 아니다. F4·F6은 관측·센서 판단, F5·F7은 하드웨어 고장으로 보행 성과와 구분한다. F8은 틈 접촉의 참고이며 Go2 투입처 근거가 아니다.</p>
+<h3>실제 낙상 장면</h3>
+<p>Miles, Biggie, Heckman의 2023년 논문 그림 14는 MARBLE팀 Spot의 낙상 과정을 보여준다. CTU팀 Spot 1의 지형 오판과 다른 사례다. 사진은 실패 현상의 근거이며 마찰·발 디딤·충돌 중 세부 원인을 확정하지 않는다. 원본 그림 변경 없음. Photo credit DARPA. Article CC BY 4.0. <a href="https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2023.1249586/full" target="_blank" rel="noopener">논문 4.3절·그림 14</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">라이선스</a>.</p>
+<p><a href="https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2023.1249586/full#F14" target="_blank" rel="noopener">원본 낙상 그림 14 보기</a>. 원본 이미지는 제출 묶음에 복제하지 않는다.</p>
+</section>
+<section id="s10"><span id="10"></span><h2>10. 부록 · 기존 자료에서 판단할 수 있는 범위</h2>
+<p><b>A의 자료 쓰임·팀 기록과 B의 범위 제약을 연결해 Go2 보행 평가·개선 분석의 활용 후보를 제안한다. C는 그 결론에 더하지 않는 참고 자료다.</b> 고객 구매·상용 우위·지하 특화·자체 정책의 실기 효과는 확인되지 않았다. 시뮬 광선 처리를 실제 라이다 가림 대응으로 읽지 않는다. 신규 인터뷰·통합 정찰 실험을 실행 과제로 추가하지 않는다. <a href="https://github.com/foothold-project/foothold-lab/blob/main/sim/policy/gap_observations.py" target="_blank" rel="noopener">관측 코드</a>.</p>
+</section>
+<section id="s11"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>변경</th></tr></thead><tbody><tr><td>v1.1</td><td>2026-10-07</td><td>근거 부록(따로 있던 문서 v1.0)을 7~10절로 합침 · 웹 묶음을 조사·비교로 고정 · 본문 문장은 그대로 (팀장 10/7 결정)</td></tr><tr><td>v1.0</td><td>2026-10-07</td><td>최초 제출 준비. 전체 흐름·비교 조건·근거의 역할을 점검하고 본문 논증과 부록을 정리</td></tr><tr><td>부록 v1.0</td><td>2026-10-07</td><td>제출 전 정리. A 직접 근거·B 범위 제약·C 참고의 역할과 금지 추론을 명시 (따로 있던 근거 부록의 이력)</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+/* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
+   갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
+   부품으로 못 가져온다.
+
+   **있을 때만 붙인다.** 이 파일 머리말에 적힌 F-05 와 같은 종류의 실수를
+   반복하지 않는다 (없는 요소에 리스너를 붙여 98 장이 죽었다). */
+document.querySelectorAll('[data-vcmp]').forEach(function (box) {
+  var vids = Array.prototype.slice.call(box.querySelectorAll('video'));
+  if (!vids.length) { return; }
+
+  var play = box.querySelector('[data-vcmp-play]');
+  var rew = box.querySelector('[data-vcmp-rewind]');
+  var rateBtns = Array.prototype.slice.call(
+    box.querySelectorAll('[data-vcmp-rate]'));
+  var rate = 1;
+
+  function label() {
+    if (!play) { return; }
+    var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+    play.textContent = playing ? '함께 멈춤' : '함께 재생';
+  }
+
+  /* `load()` 가 playbackRate 를 1 로 되돌린다. 갤러리에서 겪은 것과 같다
+     (gallery.js 105행). 그래서 metadata 가 올 때마다 다시 박는다. */
+  vids.forEach(function (v) {
+    v.addEventListener('loadedmetadata', function () { v.playbackRate = rate; });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+    v.addEventListener('ended', label);
+  });
+
+  if (play) {
+    play.addEventListener('click', function () {
+      var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+      vids.forEach(function (v) {
+        v.playbackRate = rate;
+        if (playing) { v.pause(); } else { v.play().catch(function () {}); }
+      });
+      label();
+    });
+  }
+
+  if (rew) {
+    rew.addEventListener('click', function () {
+      vids.forEach(function (v) { v.currentTime = 0; v.playbackRate = rate; });
+      label();
+    });
+  }
+
+  rateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rate = parseFloat(btn.getAttribute('data-vcmp-rate')) || 1;
+      rateBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      vids.forEach(function (v) { v.playbackRate = rate; });
+    });
+  });
+
+  label();
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<style>
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
+   그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
+   `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+</style>
+
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmplukingg8</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

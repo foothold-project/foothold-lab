@@ -1,0 +1,1147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AME-2 기반 Go2 보행 실험 경과 보고 (임석헌 · v1~v6) · FOOTHOLD</title>
+<meta name="description" content="석헌의 v1~v6 은 내부 실험 experiment_C · v7 · v8 · v11 · v13 · v14 에 대응하고 그가 적은 숫자는 파일과 전부 일치한다 · 다만 v6 수정군은 「정면 목표 비율」 외에 「거리 curriculum 승급」도 함께 바뀌었고 판마다 평가 ">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:var(--card)!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:var(--ink)!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<style id="ia-css">
+/* ★ 허브 이동 때 «흔들림» 실측 원인 셋 (2026-08-31 팀장 지적)
+   ① 문서가 짧은 페이지엔 스크롤바가 없어 좌우가 15px 튄다 -> 항상 자리를 잡는다
+   ② 허브 본문 폭이 824, 표지가 1000 -> PRD §4-1 대로 1040 한 벌
+   ③ navctl 안에 <script> 가 인라인 요소로 들어가 바 높이가 2px 달랐다 */
+html{scrollbar-gutter:stable}
+/* ★ 실측 (팀장 8/31 · 백과): 페이지가 가진 «고정» 요소(사이드바 · 떠 있는 버튼)가
+   top:0 이라 sticky 전역바 «뒤» 로 깔려 안 보였다. 바 높이(2.94rem)만큼 내린다.
+   바 자신과 그 안의 것은 제외한다. */
+/* ★ 9/1 실측: 2.94rem = 47.04px 인데 바의 실제 높이는 48px 이었다.
+   1px 틈이 생겨 아래 요소가 바 밑으로 비쳤다. 실측값을 쓴다. */
+body :not(.gnav):not(.gnav *){--navh:48px}
+nav:not(.gnav),aside{top:var(--navh)!important;height:calc(100vh - var(--navh))!important}
+/* ★ 9/1 실측 (커리큘럼): 「1 / 44 · 표지로 · PDF」 줄이 top:0 sticky 라
+   전역바와 48px «전부» 겹쳐 스크롤 중 아예 안 보였다. nav·aside 만 내리던
+   규칙이 <div> 로 만든 상단 줄을 통째로 비켜간 것이다 (철칙 4: 관문이 한
+   층위만 봤다). 이름이 아니라 «역할» 로 잡는다. */
+body .topbar:not(.gnav),body .subnav,body .deckbar,body .pagebar{
+  top:var(--navh)!important}
+body .topbar .row{max-width:1040px!important;box-sizing:border-box}
+body>button[class]:not(.gnav *),body>a[class]:not(.gnav *){top:calc(var(--navh) + 7px)!important}
+/* PRD §4-1: 바깥 컨테이너 1040 한 벌. 셸(research.html)이 --measure 기반 824 를
+   물려주고 표지는 1000 이라 페이지마다 본문 좌표가 달랐다 (실측 179 vs 91). */
+/* box-sizing 이 content-box 인 페이지는 패딩이 폭 밖에 붙어 1080 이 됐다
+   (예산·자료실 실측). 컨테이너는 border-box 로 못박는다. */
+body .wrap,main.wrap,div.wrap{max-width:1040px!important;box-sizing:border-box}
+/* .wrap 을 안 쓰고 main 을 컨테이너로 쓰는 페이지(커리큘럼 784 · 백과 931)도
+   같은 폭으로. 실측으로 잡았다. */
+/* ⑤ 커리큘럼만 784. #deck 제외 규칙이 커리큘럼을 통째로 비켜갔다.
+   덱 슬라이드 «안» 은 그대로 두고 컨테이너 폭만 맞춘다. */
+main#deck{max-width:1040px!important;margin-left:auto;margin-right:auto}
+body main:not(.wrap):not(#deck){max-width:1040px!important;
+  margin-left:auto;margin-right:auto}
+@media print{.wrap{max-width:none!important}}
+.gnav .navctl script{display:none}
+/* ★ 9/1: 검색 버튼은 런타임에 JS 가 만든다. 그때 «그 페이지의 PDF 버튼
+   클래스» 를 복사해 페이지마다 크기가 달랐다 (팀장: 돋보기 크기가 변한다).
+   복사는 searchbox 에서 없앴고, 여기서 바의 규격으로 못박는다. */
+.gnav .fh-sbtn{font-size:.8rem!important;font-weight:600!important;letter-spacing:-.01em!important;line-height:1.5!important;padding:.34rem .55rem!important;height:1.85rem!important;gap:.28rem!important;border:0!important;background:transparent!important;position:static!important;box-sizing:border-box!important}
+.gnav .fh-sbtn svg{width:11px!important;height:11px!important;flex:none}
+.gnav{position:sticky;top:0;z-index:220;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:.82rem}
+/* ★ 바 높이가 44 / 48 / 50 세 가지였다 (실측). 바가 «페이지의 line-height» 를
+   물려받아 링크 높이가 27 / 31 / 33 으로 달라졌다. 바는 자기 값으로 선다. */
+/* 바도 border-box 로. content-box 인 페이지에서 1078px 이 되어 좌표가
+   51 로 밀렸다 (예산·자료실 실측). */
+.gnav *{box-sizing:border-box}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+.gnav{z-index:220}
+.gnav .in{max-width:1040px;margin:0 auto;padding:.5rem 1.2rem;display:flex;
+  align-items:center;gap:.1rem;flex-wrap:wrap;line-height:1.5;min-height:2.6rem;
+  box-sizing:border-box;height:2.94rem}
+/* 높이를 값으로 못박는다. 페이지마다 제어 버튼 수가 달라 45~47px 로 흔들렸다. */
+.gnav a,.gnav .q,.gnav .navctl>*{line-height:1.5}
+/* ★ 팀장 3차 지적 (8/31). 실측으로 남아 있던 어긋남:
+     굵기 650 / 600 두 종 · 색 두 종 · 높이 25 / 26 / 29px 세 종 ·
+     세로 위치 9 / 10 / 11px 세 종 («다크» 버튼만 3px 낮고 1px 위로 밀림).
+   상단바 «모든» 항목이 같은 상자로 선다. 하나라도 예외를 두면 또 어긋난다. */
+/* ★ 9/1 실측: 버튼 폭이 페이지마다 2px 달랐다. 원인은 «선언된 폰트 스택» 이
+   달라서다 (기획 Arial · 백과·커리큘럼 Pretendard). 같은 글자여도 폭이 다르다.
+   바는 자기 폰트를 갖는다. 그래야 페이지를 옮겨도 안 흔들린다. */
+.gnav a,.gnav button,.gnav .navctl>*{
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Segoe UI',system-ui,sans-serif!important;letter-spacing:-.01em!important;  font-size:.8rem!important;font-weight:600!important;
+  line-height:1.5!important;color:var(--ink-3)!important;
+  padding:.34rem .55rem!important;border-radius:4px!important;
+  border:0!important;background:transparent!important;
+  display:inline-flex!important;align-items:center!important;
+  height:1.85rem!important;box-sizing:border-box!important;
+  white-space:nowrap;text-decoration:none;cursor:pointer}
+.gnav a:hover,.gnav button:hover,.gnav .navctl>*:hover{
+  color:var(--ink)!important;background:var(--paper-2)!important}
+.gnav a.home{margin-right:.6rem;padding:.34rem .3rem!important}
+.gnav .lgi,.gnav .lgr{display:block}
+.gnav .lgr{display:none}
+@media (prefers-color-scheme:dark){.gnav .lgi{display:none}.gnav .lgr{display:block}}
+html[data-theme="dark"] .gnav .lgi{display:none}
+html[data-theme="dark"] .gnav .lgr{display:block}
+html[data-theme="light"] .gnav .lgi{display:block}
+html[data-theme="light"] .gnav .lgr{display:none}
+/* ★ 현재 위치 (팀장 8/31: 밑줄이 별로다). 글자를 진하게 + 옅은 면.
+   밑줄·알약 대신 «지금 여기» 를 조용히 말한다. */
+.gnav a.on{color:var(--ink)!important;font-weight:800!important;
+  background:var(--paper-2)!important}
+.gnav a.on:hover{background:var(--paper-2)!important}
+.gnav .sp{flex:1}
+
+/* ★ 2026-08-28. 검색·다크 버튼이 position:fixed 로 «떠다니며» 상단바를 덮었다.
+   모바일 실측: 검색 버튼이 「파이프라인」 글자를 가렸고(둘 다 z-index:70 이라
+   나중에 그려지는 쪽이 이긴다), 다크 버튼은 iOS 에서 주소창이 접히자
+   화면 중간으로 튀어 카드 글씨를 덮었다(fixed 의 고질적 재계산).
+   떠다니게 두는 대신 **상단바 안의 정상 요소**로 앉힌다.
+   상단바는 이미 sticky 라 따라오고, 흐름 안이라 아무것도 안 가린다. */
+.gnav .navctl{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto}
+/* ★ 통일성 실측 (팀장 8/31): 바 안에 폰트 3종(13.1 / 12.2 / 9.9px) ·
+   반경 2종(4px / 99px) · 굵기 3종이 섞여 있었다. 두 등급으로 줄인다.
+   허브(주) .82rem 700 · 바로가기와 제어(부) .76rem 600 · 반경은 전부 4px. */
+.gnav .navctl>*{position:static!important;inset:auto!important;top:auto!important;
+  right:auto!important;bottom:auto!important;left:auto!important;z-index:auto!important;
+  margin:0!important}
+/* ★ 모바일 실측 (2026-08-31 · 390px): 상단바가 13개 항목을 wrap 해 3줄이 되고
+   화면 상단 1/8 을 먹었다. 모바일에서는 **허브 여섯만** 한 줄로 두고
+   가로 스크롤로 넘긴다. 바로가기는 접는다 (표지와 각 허브에서 닿는다). */
+@media (max-width:720px){
+  .gnav{height:auto}
+  .gnav .in{padding:.4rem .7rem;flex-wrap:nowrap;overflow-x:auto;height:auto;
+    min-height:2.7rem;scrollbar-width:none}
+  .gnav .in::-webkit-scrollbar{display:none}
+  .gnav .q{display:none}
+  .gnav .sp{display:none}
+  .gnav a.home{margin-right:.35rem;flex:none}
+  .gnav a{flex:none;padding:.3rem .45rem}
+  /* ★ 2026-09-08 팀장 지적: 모바일에서 검색·테마가 화면 밖이다.
+     실측(390px · 같은 출처 iframe · 높이 30000): .navctl 오른쪽 끝이 x=860.
+     바가 가로로 스크롤되는 것은 8/31 팀장 확정이라 그대로 둔다. 다만 그 결정은
+     «허브 링크» 를 한 줄에 두려던 것이었고, 검색·테마까지 밀려날 이유는 없었다.
+     완비 관문 [3.46] 은 「토글이 있는가」만 보고 「닿는가」는 아무도 안 봤다.
+     스크롤 컨테이너 안에서 sticky 로 오른쪽에 붙여 언제나 닿게 한다. */
+  .gnav .navctl{margin-left:auto;flex:none;position:sticky;right:0;
+    background:var(--paper);padding-left:.35rem;z-index:1}
+}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림 5장은 다크에서 흰 판 위에
+   올린다. 그림을 한 획도 안 고치고도 어두운 페이지에서 읽힌다. 어느 그림이
+   여기 드는지는 `tools/svg_theme.py` 가 «파일을 재서» 정하고 빌드가 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+</style>
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script><script id="fh-figs">window.fhFigs=function(t){try{var g=document.querySelectorAll('img[data-themed]'),i,e,u,q,b;for(i=0;i<g.length;i++){e=g[i];u=e.getAttribute('src');if(!u)continue;q=u.indexOf('?');b=(q<0?u:u.slice(0,q));if(!e.dataset.fhLight)e.dataset.fhLight=b.replace(/\.dark\.svg$/,'.svg');b=e.dataset.fhLight;if(t==='dark')b=b.replace(/\.svg$/,'.dark.svg');if(b!==(q<0?u:u.slice(0,q)))e.setAttribute('src',b+(q<0?'':u.slice(q)));}}catch(err){}};document.addEventListener("DOMContentLoaded",function(){window.fhFigs(document.documentElement.dataset.theme)});</script><!--newbadge:v7--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){s=(s||'').split('/').pop().split('#')[0].split('?')[0]
+    .replace(/\.html$/,'');return s||'index'}
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<style>a.ilink{color:var(--dim);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--dim) 35%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}a.ilink:hover{border-bottom-color:var(--dim)}</style><!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=b4d76755').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+<style id="stamp-css">
+/* ★ 실측 (팀장 8/31): 푸터 폭이 944 / 995 / 1100 / 1136 로 제각각이었다.
+   페이지마다 다른 --w 를 따라갔기 때문. 본문과 같은 1040 한 값으로. */
+/* ★ 9/1 팀장 지적 「페이지 넘어갈 때마다 위아래로 흔들리지 말고 고정하자」.
+   실측: 문서 높이가 678(기획) ~ 2514(연구) 로 제각각이라 짧은 허브에서는
+   푸터가 화면 «중간» 에 떴다. body 를 세로 flex 로 세우고 푸터에 margin-top:auto
+   를 주면, 내용이 짧아도 푸터가 늘 화면 바닥 같은 자리에 선다. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body>.bstamp{margin-top:auto}
+/* ★ 9/1 두 번째 실측 · 팀장 지적 「brief 컨텐츠가 1040 으로 안 늘어난다」.
+   내가 만든 회귀다. body 를 flex 로 세우면 margin:0 auto 를 가진 자식은
+   «내용 크기» 로 줄어든다. 푸터에만 width:100% 를 줬고 본문 컨테이너는
+   안 쓸었다 (brief 938 · hub-tech 944 · 나머지는 내용이 넓어 우연히 1040).
+   flex 아이템이 되는 모든 블록 컨테이너에 같은 처방을 준다. */
+body>.wrap,body>main,body>.shell,body>section,body>article{width:100%}
+body>*{flex-shrink:0}
+/* ★ 9/1 두 번째 실측: body 를 flex 로 세우자 푸터가 «내용 크기» 로 줄었다
+   (1040 -> 605). flex 아이템에 margin:auto 를 주면 그렇게 된다.
+   width:100% 로 먼저 채우고 max-width 로 자른다. */
+.bstamp{width:100%;max-width:1040px!important;box-sizing:border-box;
+  margin:40px auto 22px;
+  padding:12px 18px 0;
+  border-top:1px solid var(--line,#e5e2dc);display:flex;flex-wrap:wrap;gap:6px 14px;
+  align-items:baseline;font-size:.74rem;color:var(--ink-3,#8a8580);line-height:1.7}
+.bstamp b{color:var(--ink-2,#57534e);font-weight:600}
+.bstamp .sv{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.bstamp .gap{flex:1}
+/* ★ 2026-09-09 실측. width:100% 에 좀은 화면용 좌우 마진 14px 을 더하니
+   띄가 본문보다 28px 커졌다. tech-* 네 장이 390px 에서 가로로 30px 밀렸다.
+   (다른 페이지는 .wrap 안이라 드러나지 않았다. 생김새가 가린 결함이다.)
+   좀은 화면에서는 width 를 다시 auto 로 돌려 마진이 폭을 «빼가게» 한다. */
+@media (max-width:640px){.bstamp{width:auto;margin:28px 14px 18px}}
+</style>
+</head>
+<body>
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="on" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 근거 기록</div>
+  <h1>AME-2 기반 Go2 보행 실험 경과 보고 (임석헌 · v1~v6)</h1>
+  <p class="lede">석헌의 v1~v6 은 내부 실험 experiment_C · v7 · v8 · v11 · v13 · v14 에 대응하고 그가 적은 숫자는 파일과 전부 일치한다 · 다만 v6 수정군은 「정면 목표 비율」 외에 「거리 curriculum 승급」도 함께 바뀌었고 판마다 평가 규약이 달라 v2→</p>
+  <div class="meta"><div><span class="k">판</span><span class="v">v0.2</span></div><div><span class="k">작성</span><span class="v">오흥재 · 2026-10-07 21:45</span></div><div><span class="k">원본</span><span class="v">foothold-lab / docs / research / 20261007-ame2-go2-v1-v6.md</span></div><div><span class="k">증거</span><span class="v">확인 44 · 추측 0 · 미측정 4</span></div></div>
+  <div class="evlegend"><span><span class="ev ev-ok">확인됨</span> 직접 확인·실측</span><span><span class="ev ev-guess">추측</span> 근거는 있으나 미검증</span><span><span class="ev ev-todo">미측정</span> 아직 하지 않음</span></div>
+</div>
+
+<blockquote><p>분류: 실험
+작성: 오흥재 · 2026-10-07 21:45
+근거: RunPod 공유 볼륨 limseokheon/ame2_go2 (docs · reports · experiments · 실험·평가는 임석헌) · 석헌 진행 보고 PR <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/524">#524</a> (머지하지 않고 닫음)
+요지: 석헌의 v1~v6 은 내부 실험 experiment_C · v7 · v8 · v11 · v13 · v14 에 대응하고 그가 적은 숫자는 파일과 전부 일치한다 · 다만 v6 수정군은 「정면 목표 비율」 외에 「거리 curriculum 승급」도 함께 바뀌었고 판마다 평가 규약이 달라 v2→v6 을 한 줄 진척으로 읽으면 안 된다 · 전부 평지 · 명목 물성 · 학습 시드 1개 결과이며 험지 · student · sim2sim · foothold-v2 대조는 아직 없다
+상태: 확인 보고 · 석헌 확인 전 (9절 열린 물음)
+판: v0.2</p></blockquote>
+</section>
+<section id="s1"><span id="0"></span><h2>0. 한눈에</h2>
+<ol><li><b>석헌이 보고한 숫자는 파일과 모두 맞는다.</b> v4 · v5 · v6 표의 성공 횟수 · 분모 · 합계 · 백분율을 결과 파일에서 하나씩 대조했고 어긋난 숫자는 없다 (7절). <span class="ev ev-ok">확인됨</span></li><li><b>어긋나는 것은 숫자가 아니라 설명이다.</b> 가장 큰 것은 v6: 수정군은 정면 목표를 늘린 것 말고도 1500회 시점에 학습 목표 거리를 1~1.5 m 에서 1~2.5 m 로 올렸다. 두 요인이 섞여 있다 (4.6절). <span class="ev ev-ok">확인됨</span></li><li><b>v2→v6 은 같은 잣대로 잰 진척이 아니다.</b> 평가 사례 구성(v2·v3 과 v4 이후가 다름)과 도착 마감(8초 → 15초)이 중간에 바뀌었고, v4→v5 는 학습량도 500 → 1000 회로 늘었다 (6절). <span class="ev ev-ok">확인됨</span></li><li><b>최신 보존 모델은 v14 candidate 2000회</b>(<code>model_1999.pt</code>)로, 평지 1040 에피소드 885 성공(85.10 %)이다 (<code>reports/flat_recovery_v14_20261006/best_model.json</code> · <code>REPORT_2000_ko.txt</code>). 학습 시드 1개, 평가는 명목 물성 · 결정론 행동 · 외란 없음이다. <span class="ev ev-ok">확인됨</span></li><li><b>AME-2 의 핵심인 Mapper · student · 깊이 카메라 입력은 아직 학습되지 않았다.</b> 지금 있는 것은 정답 높이지도를 쓰는 teacher 뿐이고, 평지에서만 목표 도달을 학습했다. <span class="ev ev-ok">확인됨</span></li><li><b>오늘(10/7) 내부 v15 가 새로 돌고 있다.</b> 공개 코드 <code>leggedrobotics/ame2_minimal</code> 의 teacher 를 Go2 로 옮긴 것이고 12종 험지에서 학습 중이다(21:18 기준 2466/5000회, <code>reports/public_go2_v15_20261007/training/status.json</code>). 석헌의 「다음: AME-2 구조 디벨롭」이 이것을 가리키는지는 <code>추정</code> 이다.</li></ol>
+<p><figure class="mdimg"><img src="assets/visual/ame2-timeline.svg?v=e607770d" alt="석헌의 v1~v6 사이에는 서사에 안 나온 판이 13개 있다. 색칠한 칸이 서사에 나온 판이다" loading="lazy"><figcaption>석헌의 v1~v6 사이에는 서사에 안 나온 판이 13개 있다. 색칠한 칸이 서사에 나온 판이다</figcaption></figure></p>
+</section>
+<section id="s2"><span id="1"></span><h2>1. 범위와 표기</h2>
+<ul><li><b>볼륨 경로</b>는 모두 <code>limseokheon/ame2_go2/</code> (팟 안에서는 <code>/network-volume/limseokheon/ame2_go2/</code>) 아래 상대 경로로 적는다. 저장소 경로는 <code>repo:</code> 를 앞에 붙인다.</li><li><b>날짜 · 시각</b>은 볼륨 목록의 수정 시각(KST)이다. 목록 시각이 KST 인 것은 <code>reports/experiment_C_progress_500_20260924/result.json</code> 의 <code>updated_utc 14:28</code> 과 목록 시각 23:28 이 9시간 차이인 것으로 확인했다.</li><li><b>표기</b></li><ul><li><span class="ev ev-ok">확인됨</span> · 파일에서 직접 읽은 값이나 문장.</li><li><code>계산</code> · 파일 값으로 이 보고서가 계산한 값(계산 방법을 같이 적음).</li><li><code>추정</code> · 파일에 직접 적혀 있지 않고 정황으로 판단한 것.</li></ul><li><b>읽은 범위</b>: 텍스트 약 1,460개를 내려받아 그중 <code>reports/</code> 의 보고서(md · txt) 전부, 각 판 manifest · 비교 json · 평가 요약 json, <code>docs/</code> 중 RESUME · PGCL 명세 · HiPAN 검토 · 구현 계획(일부 절), v14 candidate <code>bootstrap</code> 의 신경망 · 관측 · 보상 .py, <code>archives/</code> 요약 json 4개, PR <a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/524">#524</a> 의 inbox 파일을 읽었다. <code>docs/</code> 의 나머지 12편(Full_Audit · Recommended_Settings 등)은 이 보고서에 쓰지 않았다. 원격과 저장소는 읽기만 했고 내려받은 것은 텍스트뿐이다(모델 · 영상 · npz 없음).</li><li>이 보고서에서 <b>「서사 vN」은 석헌의 inbox 번호</b>, <b>「내부 vN」은 볼륨 폴더 번호</b>다. 둘은 다르다.</li></ul>
+</section>
+<section id="s3"><span id="2"></span><h2>2. AME-2 가 무엇이고 여기서 무엇을 만들었나</h2>
+<h3>2.1 논문의 구조 <span class="ev ev-ok">확인됨</span></h3>
+<p>논문은 arXiv 2601.08485 v3 「Agile and Generalized Legged Locomotion via Attention-Based Neural Map Encoding」이다. 완성된 시스템에는 학습 결과가 셋 필요하다 (<code>docs/AME2_Go2_Implementation_Plan_ko.md</code> 1절).</p>
+<div class="tw"><table><thead><tr><th>구성</th><th>입력</th><th>역할</th></tr></thead><tbody><tr><td>teacher</td><td>깨끗한 몸 상태 + <b>정답 높이지도</b> + 목표</td><td>목적지 도달 정책 (PPO)</td></tr><tr><td>Mapper</td><td>깊이 카메라 점군 → 국소 격자</td><td>가려진 지형의 높이와 불확실성 예측 (지도학습)</td></tr><tr><td>student</td><td>Mapper 지도 누적 + 상태 이력 20프레임(LSIO) + 목표</td><td>teacher 행동과 지도 표현을 배우는 실배포용 정책 (PPO + 증류)</td></tr></tbody></table></div>
+<ul><li>과제는 <b>속도 추종이 아니라 「목표 위치 + 도착 방향」 도달</b>이다. 논문 자체가 중간 운동의 직접 제어에 한계가 있다고 적는다 (<code>docs/AME2_HiPAN_Integration_Review_ko.md</code> 2절).</li><li>논문 수치는 ANYmal-D 시뮬레이션 기준 미학습 지형 평균 성공률 teacher 95.2 %, student 82.4 % 다. Go2 수치가 아니다 (<code>docs/AME2_Go2_Implementation_Plan_ko.md</code> 18절).</li><li>논문 학습 예산은 teacher 80,000회 · student 40,000회, 전체 약 60 RTX 4090 GPU-days 다 (같은 문서 14절).</li></ul>
+<p><figure class="mdimg"><img src="assets/visual/ame2-system-status.svg?v=87b420a0" alt="AME-2 완성 시스템 셋 중 지금 있는 것은 teacher 하나(평지)" loading="lazy"><figcaption>AME-2 완성 시스템 셋 중 지금 있는 것은 teacher 하나(평지)</figcaption></figure></p>
+<h3>2.2 볼륨에 실제로 구현된 teacher <span class="ev ev-ok">확인됨</span></h3>
+<p>코드: <code>experiments/ame2_flat_recovery_v14_candidate_20261006/bootstrap/teacher_network.py</code>, <code>policy_observations.py</code>, <code>teacher_env_cfg.py</code>. 신경망 파일 해시는 내부 v7 과 v12 에서 같다(<code>reports/flat_fresh_3322_20260929/manifest.json</code> 과 <code>reports/flat_gait_design_v12_20261006/comparison_plan.json</code> 의 <code>teacher_network.py</code> 1bcf8af6…). v13 은 <code>architecture_unchanged: true</code> (<code>reports/flat_precise_arrival_v13_20261006/manifest.json</code>), v14 는 「핵심 네트워크/보상/제어 코드 동일성 통과」(<code>reports/flat_recovery_v14_20261006/HANDOFF_ko.txt</code>)를 기록한다. v13 · v14 의 해시 자체는 대조하지 않았다.</p>
+<p><figure class="mdimg"><img src="assets/visual/ame2-teacher-net.svg?v=c1fe6525" alt="teacher actor 와 critic 구조" loading="lazy"><figcaption>teacher actor 와 critic 구조</figcaption></figure></p>
+<p><b>actor 입력 1,102 = 상태 49 + 지도 27×13×3</b></p>
+<div class="tw"><table><thead><tr><th>묶음</th><th>차원</th><th>내용</th></tr></thead><tbody><tr><td>몸 상태</td><td>45</td><td>몸체 선속도 3 · 각속도 3 · 중력 방향 3 · 기본 자세 대비 관절각 12 · 관절속도 12 · 직전 행동 12</td></tr><tr><td>목표 명령</td><td>4</td><td>몸 좌표 목표 x · y (벡터 길이 2 m 로 자름) · sin · cos(상대 도착 yaw). 학습 중 2 m 밖 목표는 yaw 를 무작위로 가림</td></tr><tr><td>지도</td><td>1,053</td><td>27×13 격자(6 cm, 중심 x 0.36 m) 각 셀의 [상대 x, 상대 y, 상대 높이 z]</td></tr></tbody></table></div>
+<p><b>actor 구조</b></p>
+<ul><li>상태 encoder: MLP 49 → 128 → 64.</li><li>지도 encoder: 셀별 위치 MLP 3 → 32 → 16, 높이만 넣는 CNN(5×5 두 층) → 48채널, 점별 MLP 64 → 96 → 96, 전역 MLP 96 → 128 → 64 를 max pool 해 전역 64. 상태 64 + 전역 64 로 query 96 을 만들어 351개 점에 <b>multi-head attention(96차원, 32 head)</b> → 국소 96. 합쳐 지도 표현 160.</li><li>decoder: 224 → 512 → 256 → 128 → 12 (12관절 목표 offset). 활성함수 ELU.</li><li>은닉층 크기 · ELU 는 논문 미공개라 「구현 선택」으로 코드 주석에 표시돼 있다.</li></ul>
+<p><b>critic 입력 420 = 몸 45 + 전체 목표 5 + 정답 높이 351 + 링크 접촉 19</b></p>
+<ul><li>목표 5 는 자르지 않은 상대 x · y · sin · cos · 남은 시간 비율.</li><li>구조: <b>MoE 16 expert</b>(각 420 → 256 → 256 → 128 → 1) + softmax gate(420 → 128 → 128 → 16). 좌우 대칭 증강은 critic 에만 쓴다 (<code>experiments/ame2_restore_v1/README_ko.md</code>).</li></ul>
+<p><b>제어와 PPO</b></p>
+<ul><li>물리 400 Hz, 정책 50 Hz (decimation 8), 행동 1 = 관절 목표 0.25 rad (<code>teacher_env_cfg.py</code> 25 · 31 · 77행).</li><li>Go2 용 보호: 목표각은 기본 자세 ±0.5 rad 안, 정책 주기당 변화 4 rad/s 이하. 출력 배율은 이동 중 0.8, 목표 근처 0.4 (내부 v8 이후, <code>reports/flat_move_focus_v11_20260930/manifest.json</code> 의 <code>control</code>).</li><li>PPO: 4096 환경(논문 4800), rollout 24 step, 4 epoch, 3 minibatch, entropy 0.004 → 0.001, microbatch 512 (<code>experiments/ame2_restore_v1/README_ko.md</code>).</li></ul>
+<h3>2.3 센서 · 지형 · 무작위화 (teacher 학습 전 단계) <span class="ev ev-ok">확인됨</span></h3>
+<p>9/22~9/23 에 다음을 만들고 0 행동 진단으로만 검사했다 (<code>docs/AME2_RESUME_ko.md</code>).</p>
+<ul><li>전방 · 하부 깊이 카메라 2대 160×120 · 25 Hz, Mapper 입력용 37×23 격자(4 cm), teacher 용 27×13 격자.</li><li>논문 부록 A 의 12종 지형을 Go2 크기로 줄여 40열에 배치(오르기 · 내리기 단차 상한 0.40 m).</li><li>payload ±5 kg, 마찰 0.3~1.0, PD 지연 0~20 ms, 지도 잡음 ±0.05 m · 조회 drift ±0.03 m.</li><li>19개 링크 접촉 센서로 자기충돌과 지면 접촉을 나눠 보상에 사용.</li></ul>
+<h3>2.4 만들지 않은 것 <span class="ev ev-ok">확인됨</span></h3>
+<ul><li>Mapper 학습, 전역 지도 누적, LSIO, student 학습은 시작하지 않았다. <code>docs/AME2_RESUME_ko.md</code> 의 「남은 순서」가 그대로이고, <code>reports/public_go2_v15_20261007/HANDOFF_ko.txt</code> 도 「현재 학생/실센서 neural mapping은 구현한 것이 아니다」라고 적는다.</li><li>볼륨 목록 7,709개에서 <code>mapper</code> · <code>lsio</code> · <code>sim2sim</code> · <code>mujoco</code> · <code>foothold</code> 는 0건, <code>student</code> 는 rsl_rl 라이브러리 파일 4건뿐이다 (<code>계산</code>: 목록 grep).</li><li>평지 학습 판(내부 v7~v14)은 시작 시 무작위화 단계 <code>robustness=0</code> 을 단언한다 (<code>reports/flat_precise_arrival_v13_20261006/train_fresh.py</code> 45 · 56행, <code>reports/flat_recovery_v14_20261006/candidate/train_continue.py</code> 67행). 학습 중 올라가지 않았다는 것은 <code>추정</code>(이 스크립트들이 거리 curriculum 함수만 부름).</li></ul>
+</section>
+<section id="s4"><span id="3"></span><h2>3. 서사 v1~v6 ↔ 내부 실험 대응표</h2>
+<div class="tw"><table><thead><tr><th>서사</th><th>석헌 요지</th><th>내부 실험 (<code>experiments/</code>)</th><th>결과 · 보고 (<code>reports/</code>)</th><th>날짜 (KST)</th><th>대응</th></tr></thead><tbody><tr><td>v1</td><td>험지 처음부터 → 네 발 점프 보행</td><td>당시 공용 <code>bootstrap/</code> 의 experiment C(<code>experiment_variant=progress</code>). 같은 날 A · B 갈래도 있음</td><td><code>experiment_C_progress_500_20260924/</code> · <code>experiment_C_progress_901_to_1000_box_seam_20260928/</code> · <code>teacher_500_vs_1000_same_env_20260928/comparison_report_ko.md</code> · <code>yaw_control_20260928/final_analysis/README_ko.md</code> · <code>gait_quick_check_20260928/README_ko.md</code> · <code>archives/…/experiment_series_status_20260924.json</code></td><td>9/24 ~ 9/28</td><td><code>추정</code>(강함). 숫자 서사가 없어 내용으로만 맞춤. 「험지 · 처음부터 · 반복 도약」이 파일과 일치</td></tr><tr><td>v2</td><td>평지 3:3:2:2 → 전부 0 %</td><td><code>ame2_flat_goal_v7_fresh_3322</code></td><td><code>flat_fresh_3322_20260929/</code> (REPORT · DIAGNOSIS · REWARD_CONTROL_VALIDATION · manifest · evaluation_500)</td><td>9/29 17:45 ~ 23:02</td><td><b>확실</b>. 3:3:2:2 비율은 이 판에만 있고 결과도 0. 다만 그 앞 9/28~9/29 평지 시도(5절)도 모두 0 이라 서사 v2 가 이들을 묶어 말했을 수 있음(<code>추정</code>)</td></tr><tr><td>v3</td><td>이동 · 회전 보상 추가 → 정지만 100 %</td><td><code>ame2_flat_goal_v8_reward_control</code></td><td><code>flat_reward_control_v8_20260929/</code> (EXPERIMENT_PLAN · CONTROL_VALIDATION · REPORT · evaluation_500)</td><td>9/29 17:51 ~ 9/30 03:55</td><td><b>확실</b>. 정지 80/80 · 나머지 0 이 일치</td></tr><tr><td>v4</td><td>49:49:2 → 37/320 · 23/320 · 224/280</td><td><code>ame2_flat_goal_v11_move_focus</code></td><td><code>flat_move_focus_v11_20260930/</code> (REPORT · manifest · distance_curriculum.txt · evaluation_500)</td><td>9/30 15:41 ~ 19:08</td><td><b>확실</b>. 비율 · 숫자 일치</td></tr><tr><td>v5</td><td>20초 · 정확 도착/제동/정지 보상 · 1000회 → 186 · 239 · 277 · 28</td><td><code>ame2_flat_precise_arrival_v13_20261006</code></td><td><code>flat_precise_arrival_v13_20261006/</code> (REPORT_ko.txt · comparison_final.json · manifest · evaluation_1000)</td><td>10/6 (REPORT 19:32 · 비교 23:12)</td><td><b>확실</b>. 숫자 일치</td></tr><tr><td>v6</td><td>+1000회(총 2000) · 정면 목표 증가</td><td>「v5 설정 유지」 = <code>ame2_flat_recovery_v14_control_20261006</code> · 「v6 수정군」 = <code>ame2_flat_recovery_v14_candidate_20261006</code></td><td><code>flat_recovery_v14_20261006/</code> (REPORT_1500 · REPORT_2000 · comparison_1500/2000.json · best_model.json · HANDOFF)</td><td>10/6 ~ 10/7 (REPORT_2000 14:07)</td><td><b>확실</b>. 숫자 일치. <code>reports/public_go2_v15_20261007/HANDOFF_ko.txt</code> 의 「버전비교 명칭 정정」도 같은 대응을 적음</td></tr></tbody></table></div>
+</section>
+<section id="s5"><span id="4"></span><h2>4. 판별 상세</h2>
+<h3>4.1 서사 v1 · 험지 teacher (experiment C) <code>추정</code> 대응</h3>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span></p>
+<ul><li>9/24 에 AME-2 teacher 를 12종 험지(10행, 4096 환경, 시드 42)에서 처음부터 학습하는 세 갈래를 각각 500회 돌렸다. A = baseline, B = flat_mirror, C = progress (<code>archives/reports_cleanup_20260928_042933/01_previous_experiments/experiment_series_status_20260924.json</code>).</li><li><b>C 는 논문에 없는 실험용 진척 보상 10/m(step 당 0.04 m 로 자름)을 더한 갈래</b>다 (<code>experiments/ame2_flat_recovery_v14_candidate_20261006/bootstrap/teacher_experiment_env.py</code> 11~13행). 이 값은 v14 candidate 에 남은 사본에서 읽었다. 9/24 실행 당시 파일과 같은지는 <span class="ev ev-todo">미확인</span>.</li><li>C 만 1000회까지 이었다(9/27 box seam 수정 포함). 1000회 시점 지형 단계 최고 9, 지형 성공 EMA 평균 0.332 (<code>reports/experiment_C_progress_901_to_1000_box_seam_20260928/result.json</code>).</li></ul>
+<p><b>결과</b> <span class="ev ev-ok">확인됨</span></p>
+<div class="tw"><table><thead><tr><th>지표</th><th>값</th><th>근거</th></tr></thead><tbody><tr><td>500회 · 험지 120판 도달</td><td>A 0 · B 0 · C 26</td><td><code>archives/…/experiment_series_status_20260924.json</code></td></tr><tr><td>500회 · 평지 40판 도달</td><td>A 0 · B 0 · C 19</td><td>같은 파일</td></tr><tr><td>험지 400판 · 조기 실패 없이 최종 거리 &lt; 0.5 m</td><td>500회 44 (11.0 %) → 1000회 75 (18.75 %)</td><td><code>reports/teacher_500_vs_1000_same_env_20260928/comparison_report_ko.md</code></td></tr><tr><td>위 조건 + 방향 오차 &lt; 0.5 rad</td><td>8 → 32 /400</td><td>같은 파일</td></tr><tr><td>뒤쪽 목표</td><td>0/107 → 0/107</td><td>같은 파일</td></tr><tr><td>평지 초기 방향 평가 도착</td><td>70/120 → 60/120 · ±90° · ±135° · 180° 는 둘 다 0/50</td><td><code>reports/yaw_control_20260928/final_analysis/README_ko.md</code></td></tr><tr><td>이동 중 네 발 모두 비접촉</td><td>36.30 % → 32.18 % · 대각 두 발 지지 0 % · 0 %</td><td>같은 파일. 결론 문장 「반복 도약이 유지되며」</td></tr><tr><td>도약 감점 ×3 · 100회 추가 (C1100)</td><td>도착 4/6 → 2/6 · 「교정 성공으로 볼 수 없습니다」</td><td><code>reports/gait_quick_check_20260928/README_ko.md</code></td></tr></tbody></table></div>
+<ul><li>「네 발 점프 보행」은 위 yaw_control 분석의 「반복 도약」 · 비접촉 비율과 맞는다. <span class="ev ev-ok">확인됨</span></li><li>×1 대조 갈래는 9/28 14:52 에 「평지 보행 · 두 속도 정책 우선」 사유로 사용자 중단 (<code>reports/gait_correction_newpod_20260928/queue_status.json</code>). <span class="ev ev-ok">확인됨</span></li></ul>
+<p><b>평가 규약</b>: 성공 기준이 「0.5 m 이내」 등으로 이후 평지 판(20 cm · 15° · 5초 유지)과 다르다. 서사 v2 이후 숫자와 직접 비교할 수 없다. <span class="ev ev-ok">확인됨</span></p>
+<h3>4.2 서사 v2 · 내부 v7 <code>flat_fresh_3322</code></h3>
+<p>이 절의 파일은 따로 적지 않으면 <code>reports/flat_fresh_3322_20260929/</code> 아래다.</p>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span> (<code>reports/flat_fresh_3322_20260929/manifest.json</code>, <code>START_REPORT_ko.md</code>)</p>
+<ul><li>신경망 · Adam 새로 초기화, 500회. 이동(진행 방향 정렬) 30 · 이동(독립 최종 방향) 30 · 제자리 회전 20 · 정지 20.</li><li>초기 방향 360° 무작위, 목표 방위 독립 균등, 이동 거리 0.6~1.5 m, 에피소드 8초.</li><li>출력 배율 0.8 · ±0.5 rad · 4 rad/s, 토크 보상 한계 수정본, 평지 단계 0 · 명목 물성.</li></ul>
+<p><b>결과</b> <span class="ev ev-ok">확인됨</span> (<code>REPORT_ko.md</code>, <code>evaluation_500/summary.json</code>)</p>
+<div class="tw"><table><thead><tr><th>과제</th><th>성공</th><th>도착</th></tr></thead><tbody><tr><td>move</td><td>0/320</td><td>0</td></tr><tr><td>pose</td><td>0/320</td><td>0</td></tr><tr><td>turn</td><td>0/280</td><td>0</td></tr><tr><td>stand</td><td>0/80</td><td>80</td></tr><tr><td>sequence</td><td>0/40</td><td>0</td></tr></tbody></table></div>
+<ul><li>학습 중 끝난 에피소드 142,524개에서 과제 성공 0 (<code>DIAGNOSIS_ko.md</code>).</li><li><b>정지 0/80 은 평가기 오류가 섞인 값이다.</b> 원래 평가기는 첫 진입 후 정확히 5초에 판정해 시작 안정화 0.4초도 실패로 셌다. 「13초 안에 5초 연속 안정」으로 보정하면 이 정책은 20/80, 관절 행동 0 의 기본 자세는 80/80 (<code>REWARD_CONTROL_VALIDATION_ko.md</code> 1절, <code>DIAGNOSIS_ko.md</code> 첫 단락).</li><li>원인 진단: 위치 보상이 마지막 4초에 거리와 무관하게 양수라 1 m 떨어져 서 있어도 약 80점, 이동 보상 조건(0.3 m/s 이상)은 에피소드당 평균 0.045초만 켜졌다 (<code>REWARD_CONTROL_VALIDATION_ko.md</code> 3절).</li></ul>
+<p><b>평가 규약</b> <span class="ev ev-ok">확인됨</span> (<code>evaluation_500/plan.json</code>): 5 시드 × 208 = 1040. move 0.6/1.0/1.5/2.5 m × 8방향 × 2, pose 0.6/1.5 m × 8 × 4, turn 7각 × 8, stand 16, sequence 8 (시드당). 도착 마감 8초.</p>
+<h3>4.3 서사 v3 · 내부 v8 <code>flat_reward_control_v8</code></h3>
+<p>이 절의 파일은 따로 적지 않으면 <code>reports/flat_reward_control_v8_20260929/</code> 아래다.</p>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span> (<code>reports/flat_reward_control_v8_20260929/EXPERIMENT_PLAN_ko.md</code>, <code>manifest.json</code>)</p>
+<ul><li>새로 초기화, 500회, 비율 3:3:2:2 유지.</li><li><b>보상 셋 추가</b>(논문에 없는 Go2 보조 항): 목표 거리 진척 20점/m(부호 유지), 회전 과제 또는 목표 근처 yaw 진척 4점/rad, 목표 근처 8° 초과 기울기 벌점.</li><li><b>제어도 바뀌었다</b>: 목표 근처 출력 배율 0.4, 거리 0.5 m 또는 yaw 0.5 rad 이상이면 0.8, 사이는 선형.</li><li><b>평가 판정도 바뀌었다</b>: 50 Hz 연속 250 안정 샘플(5초), 도착 마감 8초 · 구간 최대 13초, 기울기 10° 포함.</li></ul>
+<p><b>결과</b> <span class="ev ev-ok">확인됨</span> (<code>REPORT_ko.md</code>, <code>evaluation_500/summary.json</code>): move 0/320 · pose 0/320 · turn 0/280 · <b>stand 80/80</b> · sequence 0/40. 종료 사유 합계는 arrival_timeout 606 · stagnation 342 · bad_orientation 12.</p>
+<p><b>정지 100 % 의 출처</b> <code>추정</code>: 학습 전 검사에서 v7 정책을 고정한 채 v8 제어만 적용해도 정지 40건 성공이 10 → 40 으로 올랐다 (<code>CONTROL_VALIDATION_ko.md</code>). 따라서 정지 성공은 보상보다 목표 근처 출력 배율 변경의 몫이 클 수 있다.</p>
+<h3>4.4 서사 v4 · 내부 v11 <code>flat_move_focus_v11</code></h3>
+<p>이 절의 파일은 따로 적지 않으면 <code>reports/flat_move_focus_v11_20260930/</code> 아래다.</p>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span> (<code>reports/flat_move_focus_v11_20260930/REPORT_ko.md</code>, <code>manifest.json</code>, <code>distance_curriculum.txt</code>)</p>
+<ul><li>새로 초기화, 500회. 과제 move 49 · pose 49 · turn 2 · stand 0.</li><li>이동 목표 최소 1 m, 거리 단계 [1, 1.5] → [1, 2.5] → [1.5, 4] m, 상위 단계에서도 20 % 는 1~1.5 m. 승급 조건 move ≥ 0.8 · pose ≥ 0.8 · turn ≥ 0.6 · 물리 실패 ≤ 2 % 를 두 번 연속.</li><li>「보상·제어·초기360도 방향·8초 에피소드는 v10과 동일」 (REPORT). 즉 v8 보조 보상 + 내부 v9 의 행동 급변 벌점 입력 변경 + 내부 v10 의 원시 행동 2차 차분 벌점을 물려받았다 (<code>reports/flat_second_difference_v10_20260930/manifest.json</code> 의 <code>change</code>).</li><li>학습 중 거리 단계가 실제로 올라갔는지는 파일에서 찾지 못했다. <span class="ev ev-todo">미확인</span></li></ul>
+<p><b>결과</b> <span class="ev ev-ok">확인됨</span> (<code>REPORT_ko.md</code>, <code>evaluation_500/summary.json</code>)</p>
+<div class="tw"><table><thead><tr><th>과제</th><th>성공</th><th>도착</th></tr></thead><tbody><tr><td>move</td><td>37/320</td><td>42</td></tr><tr><td>pose</td><td>23/320</td><td>36</td></tr><tr><td>turn</td><td>224/280</td><td>254</td></tr><tr><td>stand</td><td>80/80</td><td>80</td></tr><tr><td>sequence</td><td>0/40</td><td>7</td></tr><tr><td>합계</td><td>364/1040</td><td></td></tr></tbody></table></div>
+<ul><li>종료 사유 합계: arrival_timeout 426, high_thigh_acceleration 177 (<code>evaluation_500/summary.json</code>).</li><li>뒤 분석: 이동 320판 모두 출발은 했고 154판이 목표 밖에서 저속으로 멈췄다. 이동 중 대각 지지 0.40 %, 전후 지지 38.23 %, 체공 8.47 % (<code>reports/flat_gait_design_v12_20261006/DESIGN_ko.txt</code>).</li></ul>
+<p><b>평가 규약</b> <span class="ev ev-ok">확인됨</span> (<code>evaluation_500/plan.json</code>): move 1.0/1.5/2.5/4.0 m, pose 1.0/2.5 m 로 <b>v2 · v3 와 사례 구성이 다르다</b>. 도착 마감 8초.</p>
+<h3>4.5 서사 v5 · 내부 v13 <code>flat_precise_arrival_v13</code></h3>
+<p>이 절의 파일은 따로 적지 않으면 <code>reports/flat_precise_arrival_v13_20261006/</code> 아래다.</p>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span> (<code>reports/flat_precise_arrival_v13_20261006/manifest.json</code>, <code>REPORT_ko.txt</code>, <code>experiments/ame2_flat_recovery_v14_candidate_20261006/bootstrap/precision_goal_rewards.py</code>)</p>
+<ul><li>새로 초기화(v11 과 같은 초기 가중치), <b>1000회</b>, 에피소드 <b>20초</b>, 도착 마감 15초, 5초 연속 유지.</li><li>과제 49/49/2/0 유지, 거리 1.0~1.5 m 고정(단계 0 고정).</li><li>보상 재설계:</li><ul><li>위치 · 방향 보상을 마지막 몇 초가 아니라 전 구간 연속으로 준다(초당 5 · 2.5, 20초 적분 최대 100 · 50).</li><li>이동 보상의 최소 속도를 목표에 가까울수록 낮춘다(0.8 m 부터).</li><li>제동 벌점 <code>approach_overspeed</code> -2: 남은 거리에서 0.8 m/s² 로 멈출 수 있는 속도를 넘으면 감점.</li><li>안정 도착 보너스 5 · 5초 유지 보너스 10 (각각 한 번).</li><li>진척 20/m · 방향 potential 4 · 근처 기울기 -500 유지. 보행 위상 보상은 없다.</li></ul></ul>
+<p><b>결과</b> <span class="ev ev-ok">확인됨</span> (<code>REPORT_ko.txt</code>, <code>evaluation_1000/summary.json</code>, <code>comparison_final.json</code>)</p>
+<div class="tw"><table><thead><tr><th>모델 · 판정</th><th>move</th><th>pose</th><th>turn</th><th>stand</th><th>sequence</th><th>합계</th></tr></thead><tbody><tr><td>v13 / 1000 · 20초</td><td>186/320</td><td>239/320</td><td>277/280</td><td>80/80</td><td>28/40</td><td>810/1040</td></tr><tr><td>v13 / 1000 · 옛 8초 재채점</td><td>177</td><td>236</td><td>277</td><td>80</td><td>27</td><td></td></tr><tr><td>v13 / 500 · 20초</td><td>54</td><td>87</td><td>170</td><td>80</td><td>0</td><td>391/1040</td></tr><tr><td>v11 / 500 · 20초 재평가</td><td>38</td><td>23</td><td>224</td><td>80</td><td>0</td><td>365/1040</td></tr></tbody></table></div>
+<ul><li>v13 / 1000 의 약점은 v14 에서 진단했다: 정면 가까운 목표 6/20, 4 m 목표 16/80, 2.5 m 30/80, 물리 실패 87/1040 (<code>reports/flat_recovery_v14_20261006/comparison_2000.json</code> 의 <code>v13_reference</code>). 정면 실패 일부는 목표에서 20.2~24.8 cm 떨어져 거의 멈춤, 학습 중 탐색 std 약 0.65 라 마지막 50회 4,968 에피소드의 5초 정지 성공은 0 (<code>reports/flat_recovery_v14_20261006/HANDOFF_ko.txt</code>).</li><li>학습 1000회 소요 10,936초(약 3.0시간) (<code>training/status.json</code>).</li><li>REPORT 스스로 「v13/1000은 학습량이 더 많으므로 보상만의 효과와 동일시하지 않습니다」라고 적는다.</li></ul>
+<h3>4.6 서사 v6 · 내부 v14 <code>flat_recovery_v14</code> (control 대 candidate)</h3>
+<p>이 절의 파일은 따로 적지 않으면 <code>reports/flat_recovery_v14_20261006/</code> 아래다.</p>
+<p><b>바뀐 것</b> <span class="ev ev-ok">확인됨</span></p>
+<ul><li>두 갈래 모두 v13 / 1000 의 정책 · optimizer 에서 이어 2000회까지 (<code>HANDOFF_ko.txt</code>, 부모 SHA be1ec411…).</li><li>control: 설정 변경 없음 (<code>experiments/ame2_flat_recovery_v14_control_20261006/bootstrap/recovery_settings.json</code> 의 <code>front_fraction 0.0</code>).</li><li>candidate 의 변경은 <b>둘</b>이다.</li><ul><li>move · pose 목표의 30 % 를 현재 몸 방향 ±15° 안에서 뽑는다. 정면 ±15° 비율이 8.3 % → 약 35.8 % (<code>HANDOFF_ko.txt</code>, candidate <code>flat_goal_task.py</code> 의 3줄 추가).</li><li><b>1500회 고정 평가가 승급 기준을 넘어 학습 거리 단계가 1 (1.0~2.5 m) 로 올라갔다.</b> 1500→2000 구간은 candidate 만 더 먼 목표로 학습했다 (<code>reports/flat_recovery_v14_20261006/candidate/curriculum_decision_1500.json</code> <code>passed: true · stage 1</code>, <code>candidate/training/curriculum_applied_1500.json</code>, <code>run_training_pipeline.py</code> 49~50행 「<code>1 if n==&#x27;candidate&#x27; and promotion</code>」).</li></ul><li>출력 배율 하한 0.4 · 0.6 · 0.8 탐침(각 270판)에서 완화는 정면에 도움이 되지만 전체 안전 · 성공을 떨어뜨려 채택하지 않았다 (<code>HANDOFF_ko.txt</code>).</li></ul>
+<p><b>결과 · 2000회</b> <span class="ev ev-ok">확인됨</span> (<code>REPORT_2000_ko.txt</code>, <code>comparison_2000.json</code>). 괄호 안은 Wilson 95 % (<code>계산</code>, 평가 에피소드 기준).</p>
+<div class="tw"><table><thead><tr><th>과제</th><th>control (v5 설정 유지)</th><th>candidate (v6 수정군)</th></tr></thead><tbody><tr><td>가까운 정면 (move 의 부분집합, 20판)</td><td>13/20 (43~82 %)</td><td>20/20 (84~100 %)</td></tr><tr><td>move 전체</td><td>242/320</td><td>233/320</td></tr><tr><td>└ 학습 거리 1.0 · 1.5 m</td><td>139/160</td><td>160/160</td></tr><tr><td>└ 2.5 m</td><td>55/80</td><td>52/80</td></tr><tr><td>└ 4.0 m</td><td>48/80</td><td>21/80</td></tr><tr><td>pose</td><td>231/320</td><td>259/320</td></tr><tr><td>turn</td><td>272/280</td><td>276/280</td></tr><tr><td>stand</td><td>80/80</td><td>80/80</td></tr><tr><td>sequence</td><td>25/40 (47~76 %)</td><td>37/40 (80~97 %)</td></tr><tr><td><b>합계</b></td><td><b>850/1040 (81.73 %, 79.3~84.0 %)</b></td><td><b>885/1040 (85.10 %, 82.8~87.1 %)</b></td></tr><tr><td>물리 실패 (기울기 · 몸통 충돌 · 허벅지 급가속)</td><td>154</td><td>70</td></tr><tr><td>시드별 (/208)</td><td>176 · 173 · 170 · 166 · 165</td><td>176 · 175 · 181 · 176 · 177</td></tr></tbody></table></div>
+<p><figure class="mdimg"><img src="assets/visual/ame2-v14-2000.svg?v=d076057d" alt="2000회 control 대 candidate 과제별 성공률과 Wilson 95 %" loading="lazy"><figcaption>2000회 control 대 candidate 과제별 성공률과 Wilson 95 %</figcaption></figure></p>
+<ul><li><b>1500회에서는 두 갈래 합계가 813/1040 으로 같았고</b> candidate 의 sequence 는 17/40 으로 control 33/40 보다 낮았다 (<code>REPORT_1500_ko.txt</code>, <code>comparison_1500.json</code>). 차이는 거리 승급 뒤 1500→2000 구간에서 생겼다. <span class="ev ev-ok">확인됨</span></li></ul>
+<p><figure class="mdimg"><img src="assets/visual/ame2-v14-1500-2000.svg?v=b34343ac" alt="1500회와 2000회 사이에 갈린 것 · 합계 · sequence · 물리 실패" loading="lazy"><figcaption>1500회와 2000회 사이에 갈린 것 · 합계 · sequence · 물리 실패</figcaption></figure></p>
+<ul><li>선택 기준 다섯(과제 점수 · 물리 안전 · 회전 · 연속 · 보행 품질)을 2000회 candidate 가 모두 통과해 <code>candidate/training/checkpoints/model_1999.pt</code> 가 보존 모델이다 (<code>best_model.json</code>). 과제 점수(move 0.49 · pose 0.49 · turn 0.02 가중) control 0.744 · candidate 0.773 (<code>comparison_2000.json</code>).</li><li>두 모델이 모두 성공한 move · pose 366판의 품질: pitch RMS 8.71° → 7.33°, roll RMS 9.36° → 7.65°, 속도 0.668 → 0.785 m/s, 네 발 비접촉 5.27 % → 4.68 %, 발 외 접촉 1.11 % → 0.07 % (<code>comparison_2000.json</code> <code>matched_quality</code>). <span class="ev ev-ok">확인됨</span></li><li>같은 초기 상태끼리 짝지은 성공 교차: 둘 다 성공 739, control 만 111, candidate 만 146, 둘 다 실패 44. 정확 McNemar 양측 p ≈ 0.034. 과제별 「control 만 / candidate 만」은 move 63/54, pose 44/72, turn 3/7, sequence 1/13 (<code>계산</code>: 두 갈래 <code>evaluation_2000/episode_metrics.csv</code> 1040행을 행 순서로 짝지음, 시드 · 과제 · 거리 · 각도 열 일치 확인). <b>이 p 는 평가 초기 상태의 변동만 반영한다. 학습 시드는 갈래당 1개라 학습 재현성은 말해 주지 않는다.</b></li><li>1500회 control 의 정면 1 m 이동 5판을 보면 몸 방향과 진행 방향이 30° 이내인 시간이 35 %, 옆걸음(60~120°)이 32 % 였다 (<code>front_motion_diagnosis_20261007.json</code>). 정면 목표를 곧게 걸어가지 않는다는 것이 candidate 설계 동기다. <span class="ev ev-ok">확인됨</span> (5판은 탐색용 선택 표본이라고 파일이 밝힘)</li></ul>
+</section>
+<section id="s6"><span id="5"></span><h2>5. 서사에 없는 내부 판</h2>
+<div class="tw"><table><thead><tr><th>내부 판 · 날짜</th><th>바꾼 것</th><th>결과</th><th>근거</th></tr></thead><tbody><tr><td><code>flat_goal_v1</code> · 9/28</td><td>평지 목표 과제에 속도 명령 2칸(<code>speed_enabled</code> · <code>speed_mps</code>) 추가, actor 1104 · critic 422, 과제 70/20/10, 300회 방위 curriculum</td><td>결과 보고 폴더가 9/29 정리에서 삭제돼 <span class="ev ev-todo">미확인</span> (model_299 존재 기록만)</td><td><code>experiments/flat_goal_v1/branch_manifest.json</code> · <code>experiments/ame2_restore_v1/README_ko.md</code> · <code>reports/cleanup_20260929.json</code></td></tr><tr><td><code>ame2_restore_v1</code> · 9/28</td><td>명령 · 보상(Table I) · 종료 · PPO 4/3 을 논문 기준으로 복원한 teacher</td><td>2회 smoke 만, 장기 학습 없음</td><td><code>reports/ame2_restore_v1_20260928/restoration_manifest.json</code></td></tr><tr><td><code>ame2_flat_goal_v2</code> · 9/28</td><td>복원본 위 평지 curriculum(단계 0 비율 60/20/0/20, 8초)</td><td>200회 평가 move · turn · pose · stand 각 0/50. 1,280판 정밀 평가에서 move 0/640 · turn 0/560 · sequence 0/80, 전부 허벅지 급가속 종료</td><td><code>reports/ame2_flat_goal_v2_20260928/train_4096/evaluations/eval_000200.json</code> · <code>reports/detailed_flat_eval_200_20260928/REPORT_ko.md</code></td></tr><tr><td><code>v3_control_guard</code> · 9/29</td><td>출력 0.2배 · ±0.5 rad · 4 rad/s 가드</td><td>급가속 0/155 이 됐지만 도착 0/120</td><td><code>reports/thigh_acc_fix_20260929/REPORT_ko.md</code></td></tr><tr><td><code>v4_movement_probe</code> · 9/29</td><td>탐색 std 2배 · 접근 보상 갈래(부모 220회)</td><td>도착 0/320 전 갈래</td><td><code>reports/flat_movement_fix_20260929/REPORT_ko.md</code></td></tr><tr><td><code>v5_reward_limits</code> · 9/29</td><td>토크 보상 한계 입력 10억 Nm → 23.5 Nm, 출력 0.8, 101 → 151회</td><td>도착 0/320</td><td><code>reports/flat_reward_integrity_20260929/REPORT_ko.md</code></td></tr><tr><td><code>v6_heading_curriculum</code> · 9/29</td><td>이동 목표 80 % 를 전방 ±45° 에서</td><td>도착 0/320 · 1151회 연장은 173 · 226회에서 사용자 중단</td><td><code>reports/flat_reward_integrity_20260929/heading_curriculum/REPORT_ko.md</code> · <code>…/long_run/pipeline_status.json</code></td></tr><tr><td><code>v9_raw_action_cost</code> · 9/30</td><td>행동 급변 벌점 입력을 필터 전 정책 출력으로, 새로 500회</td><td>stand 53/80, 나머지 0</td><td><code>reports/flat_raw_action_cost_v9_20260930/REPORT_ko.md</code></td></tr><tr><td><code>v10_second_difference</code> · 9/30</td><td>v9 200회에서 이어 원시 행동 2차 차분 벌점 + 비율 40/40/15/5</td><td>284회에서 사용자 폐기(「fresh v11 49/49/2/0 minimum 1m」)</td><td><code>reports/flat_second_difference_v10_20260930/pipeline_status.json</code></td></tr><tr><td><code>v12_20261006</code> · 10/6</td><td>보행 주기(trot) 보상 유무 대조, 98 % 목표 정렬 이동 · ±15°</td><td>대조군 31회 무렵 사용자 취소(「no artificial gait cycle training」). 평가 없음</td><td><code>reports/flat_gait_design_v12_20261006/comparison_status.json</code> · <code>control/training/status.json</code></td></tr><tr><td><code>v15_20261007</code> · 10/7 (최신)</td><td>공개 <code>leggedrobotics/ame2_minimal</code> commit 8beb9a6 의 G1 teacher 를 Go2 로 이식. 공개 12종 지형 · 21개 보상 · MoE critic · Muon/bf16 PPO(5 epoch · 4 minibatch) · 16초 에피소드 · 200 Hz 물리 · 지도 26×15 · critic 453. GPU 용량 때문에 1024 환경(4096 · 2048 은 OOM). 5000회 목표</td><td>결과 없음. 21:18 기준 2466/5000회. 끝나면 500 · 2000 · 5000 정책을 v14 와 같은 1040판 평지 평가에 넣을 계획</td><td><code>reports/public_go2_v15_20261007/HANDOFF_ko.txt</code> · <code>training/status.json</code></td></tr></tbody></table></div>
+</section>
+<section id="s7"><span id="6"></span><h2>6. 평가 규약과 성공 정의</h2>
+<h3>6.1 공통 <span class="ev ev-ok">확인됨</span></h3>
+<p>출처: 각 판 <code>evaluation_*/plan.json</code> 의 <code>notes</code> 와 임계값 칸 (예: <code>reports/flat_recovery_v14_20261006/candidate/evaluation_2000/plan.json</code>).</p>
+<ul><li>5개 평가 시드(111101 · 222203 · 333307 · 444409 · 555503) × 시드당 208판 = <b>1040판</b>. 평가 시드는 독립 학습 시드가 아니다. 학습 시드는 42 하나.</li><li>PPO 갱신 없음, 결정론 행동(평균), 밀기 · 물성 무작위화 · 지도 잡음 없음, 평지.</li><li><b>성공</b> = 위치 ≤ 0.2 m, 최종 yaw ≤ 15°, 수평 속도 ≤ 0.1 m/s, yaw 속도 ≤ 0.15 rad/s, 기울기 ≤ 10° 를 <b>5초 연속</b> 유지. turn · stand 는 위치 이탈 최대 0.2 m 이하도 요구. 이동(move)도 최종 yaw(출발 시 경로 방위)를 채점한다.</li><li>첫 조기 종료(기울기 · 몸통 충돌 · 허벅지 급가속 · 정체)에서 그 판은 실패. 「물리 실패」는 앞의 셋을 뜻한다 (<code>reports/flat_recovery_v14_20261006/analysis_common.py</code> 5행).</li><li>sequence = 1 m 이동 → 90° 회전 → 뒤쪽 0.8 m → 180° 회전 → 처음 위치. 모든 구간을 통과해야 성공.</li><li>「가까운 정면」 = move 중 거리 ≤ 1.5 m · 각도 0° 인 20판. move 320 안에 들어 있어 합계에 중복되지 않는다 (<code>analysis_common.py</code> 36행).</li></ul>
+<h3>6.2 판마다 다른 것 <span class="ev ev-ok">확인됨</span></h3>
+<div class="tw"><table><thead><tr><th>서사 판 (내부)</th><th>move 거리</th><th>pose 거리</th><th>도착 마감 · 구간</th><th>5초 판정 방식</th><th>근거</th></tr></thead><tbody><tr><td>v2 (v7)</td><td>0.6 · 1.0 · 1.5 · 2.5 m</td><td>0.6 · 1.5 m</td><td>8초</td><td>첫 진입 후 정확히 5초(오류, 뒤에 보정)</td><td><code>reports/flat_fresh_3322_20260929/evaluation_500/plan.json</code> · <code>REWARD_CONTROL_VALIDATION_ko.md</code></td></tr><tr><td>v3 (v8)</td><td>0.6 · 1.0 · 1.5 · 2.5 m</td><td>0.6 · 1.5 m</td><td>8초 · 13초</td><td>연속 250 샘플</td><td><code>reports/flat_reward_control_v8_20260929/evaluation_500/plan.json</code> · <code>EXPERIMENT_PLAN_ko.md</code></td></tr><tr><td>v4 (v11)</td><td>1.0 · 1.5 · 2.5 · 4.0 m</td><td>1.0 · 2.5 m</td><td>8초</td><td>연속 250 샘플</td><td><code>reports/flat_move_focus_v11_20260930/evaluation_500/plan.json</code></td></tr><tr><td>v5 · v6 (v13 · v14)</td><td>1.0 · 1.5 · 2.5 · 4.0 m</td><td>1.0 · 2.5 m</td><td>15초 · 20초</td><td>연속 5초</td><td><code>reports/flat_precise_arrival_v13_20261006/evaluation_1000/plan.json</code></td></tr></tbody></table></div>
+<ul><li><b>v2 · v3 와 v4 이후는 평가 사례가 다르고, v4 와 v5 는 도착 마감이 다르다.</b> v13 보고서가 옛 8초 재채점(4.5절 표)을 같이 남겨 v4 ↔ v5 비교만은 맞출 수 있다.</li></ul>
+<p><figure class="mdimg"><img src="assets/visual/ame2-same-ruler.svg?v=03fb667f" alt="같은 20초 잣대로 다시 잰 v11 · v13/500 · v13/1000" loading="lazy"><figcaption>같은 20초 잣대로 다시 잰 v11 · v13/500 · v13/1000</figcaption></figure></p>
+<ul><li>서사 v1 의 험지 평가는 0.5 m 도달 기준 등 전혀 다른 규약이다 (4.1절).</li></ul>
+</section>
+<section id="s8"><span id="7"></span><h2>7. 석헌 숫자 대조 결과</h2>
+<h3>7.1 숫자: 어긋남 없음 <span class="ev ev-ok">확인됨</span></h3>
+<div class="tw"><table><thead><tr><th>서사 항목</th><th>석헌 값</th><th>파일 값</th><th>근거</th></tr></thead><tbody><tr><td>v4 이동 · 방향정렬 · 회전</td><td>37/320 · 23/320 · 224/280</td><td>같음</td><td><code>reports/flat_move_focus_v11_20260930/REPORT_ko.md</code></td></tr><tr><td>v5 이동 · 방향정렬 · 회전 · 연속</td><td>186/320 · 239/320 · 277/280 · 28/40</td><td>같음</td><td><code>reports/flat_precise_arrival_v13_20261006/REPORT_ko.txt</code></td></tr><tr><td>v6 표 12칸(합산 행 제외 · 가까운 정면 · 전체 이동 · 정렬 · 회전 · 연속 · 정지)</td><td>13/20 · 242/320 · 231/320 · 272/280 · 25/40 · 80/80 / 20/20 · 233/320 · 259/320 · 276/280 · 37/40 · 80/80</td><td>같음</td><td><code>reports/flat_recovery_v14_20261006/REPORT_2000_ko.txt</code></td></tr><tr><td>v6 합계</td><td>850/1040 ≈ 81.73 % · 885/1040 ≈ 85.10 %</td><td>같음(가까운 정면을 빼고 다섯 과제 합)</td><td><code>reports/flat_recovery_v14_20261006/comparison_2000.json</code> <code>stats.*.all</code></td></tr><tr><td>v6 백분율</td><td>75.625 · 72.8125 · 72.1875 · 80.9375 · 97.14 · 98.57 · 62.5 · 92.5</td><td>같음</td><td><code>계산</code></td></tr><tr><td>v2 · v3 「0 %」 · 「정지 100 %」</td><td></td><td>공식 REPORT 와 같음</td><td>4.2 · 4.3절</td></tr></tbody></table></div>
+<h3>7.2 설명: 고쳐 적을 것</h3>
+<div class="tw"><table><thead><tr><th>#</th><th>서사</th><th>파일이 말하는 것</th><th>근거</th><th>중요도</th></tr></thead><tbody><tr><td>1</td><td>v6 「목적지가 정면에 더 자주 생성되도록 비율을 조정」</td><td>candidate 는 정면 목표 30 % <b>와</b> 1500회 거리 단계 승급(1~2.5 m)이 함께 바뀌었다. 두 요인을 가르지 못한다</td><td><code>reports/flat_recovery_v14_20261006/candidate/curriculum_decision_1500.json</code> · <code>reports/flat_recovery_v14_20261006/run_training_pipeline.py</code> 49~50행</td><td>높음</td></tr><tr><td>2</td><td>v6 표</td><td>1500회에서는 두 갈래 합계가 813 으로 같았고 candidate 의 연속은 17/40 으로 더 낮았다. 4 m 이동은 candidate 21/80 · control 48/80 으로 candidate 가 낮다. 물리 실패 154 대 70 도 표에 없다</td><td><code>reports/flat_recovery_v14_20261006/comparison_1500.json</code> · <code>…/comparison_2000.json</code></td><td>중간</td></tr><tr><td>3</td><td>v1 「논문과 동일하게」</td><td>점프 보행 모델(C)에는 논문에 없는 진척 보상 10/m 이 더해져 있었다. 논문형 A 갈래는 500회에서 험지 0/120 · 평지 0/40 으로 움직이지 않았다</td><td><code>experiments/ame2_flat_recovery_v14_candidate_20261006/bootstrap/teacher_experiment_env.py</code> 11~13행 · <code>archives/reports_cleanup_20260928_042933/01_previous_experiments/experiment_series_status_20260924.json</code></td><td>중간</td></tr><tr><td>4</td><td>v2 「모든 태스크 0 %」</td><td>공식 숫자는 맞지만 정지 0/80 은 평가기 오류. 보정 판정 20/80</td><td><code>reports/flat_fresh_3322_20260929/REWARD_CONTROL_VALIDATION_ko.md</code> 1절</td><td>낮음</td></tr><tr><td>5</td><td>v3 「이동, 회전 관련 보상 추가」</td><td>보상 외에 목표 근처 출력 배율(0.4)과 평가 판정 방식도 같이 바뀌었다. 정지 100 % 는 제어 변경 몫이 클 수 있다</td><td><code>reports/flat_reward_control_v8_20260929/EXPERIMENT_PLAN_ko.md</code> · <code>…/CONTROL_VALIDATION_ko.md</code></td><td>중간</td></tr><tr><td>6</td><td>v4 → v5</td><td>도착 마감 8 → 15초, 학습 500 → 1000회, 보상 재설계가 겹친다. 같은 20초 잣대로는 v11 365 · v13/500 391 · v13/1000 810 이며 v13/500 에서 회전은 224 → 170 으로 떨어졌다</td><td><code>reports/flat_precise_arrival_v13_20261006/REPORT_ko.txt</code></td><td>중간</td></tr><tr><td>7</td><td>v4</td><td>v8 보조 보상 · v9 · v10 의 행동 벌점, 이동 최소 1 m, 거리 curriculum 을 물려받은 판이다. 서사에는 비율만 있다</td><td><code>reports/flat_move_focus_v11_20260930/manifest.json</code> · <code>…/REPORT_ko.md</code></td><td>낮음</td></tr><tr><td>8</td><td>v1 과 v2 사이 · v3 와 v4 사이 · v4 와 v5 사이</td><td>내부 판 9개(5절)가 생략됐다. 실패 진단(허벅지 급가속 · 토크 한계 입력 오류 · 평가기 오류)이 대부분 여기 있다</td><td>5절 표</td><td>낮음</td></tr></tbody></table></div>
+</section>
+<section id="s9"><span id="8"></span><h2>8. 아직 안 한 것</h2>
+<div class="tw"><table><thead><tr><th>항목</th><th>상태</th><th>근거</th></tr></thead><tbody><tr><td>지금 구조의 험지 학습</td><td>평지 판(v7~v14)은 험지로 돌아가지 않았다. 석헌의 「다음 1」이 이것. v15 는 공개 코드로 12종 험지를 학습 중이지만 v14 와 다른 구조다</td><td>inbox 8절 · <code>reports/public_go2_v15_20261007/HANDOFF_ko.txt</code></td></tr><tr><td>Mapper · LSIO · student · 깊이 입력 정책</td><td>착수 전. 센서 · 격자 검사(9/22~9/23)까지만</td><td><code>docs/AME2_RESUME_ko.md</code> · v15 HANDOFF</td></tr><tr><td>무작위화 · 외란 하 성능</td><td>학습 <code>robustness=0</code>, 평가는 명목 물성 · 외란 없음</td><td>2.4절 · 6.1절</td></tr><tr><td>학습 시드 재현성</td><td>갈래당 학습 시드 1개</td><td><code>REPORT_2000_ko.txt</code> 마지막 줄</td></tr><tr><td>sim2sim (MuJoCo 등)</td><td>산출물 없음</td><td>목록 grep 0건 (<code>계산</code>)</td></tr><tr><td>우리 foothold-v2 와 같은 하네스 대조</td><td>없음. 과제 자체가 다르다(목표 자세 대 속도 명령)</td><td>목록 grep 0건 (<code>계산</code>) · 10절</td></tr><tr><td>실기</td><td>없음</td><td>문서 전체 범위 문구</td></tr><tr><td>논문 학습 예산 대비</td><td>최대 2000회 = teacher 예산 80,000회의 2.5 %</td><td><code>계산</code> (<code>docs/AME2_Go2_Implementation_Plan_ko.md</code> 14절)</td></tr></tbody></table></div>
+</section>
+<section id="s10"><span id="9"></span><h2>9. 위험과 열린 물음</h2>
+<ol><li><b>v6 개선의 원인 분리.</b> 정면 목표 비율 하나만 바꾼 갈래, 거리 승급만 한 갈래가 없다. 「정면 목표가 효과 있었다」고 쓰려면 갈래가 더 필요하다. <span class="ev ev-ok">확인됨</span>(설계) · 해석은 <code>추정</code></li><li><b>학습 시드 1개.</b> 평가 1040판의 McNemar p ≈ 0.034(<code>계산</code>)는 평가 초기 상태 변동만 반영한다. 1500회에 합계가 같았던 것을 보면 학습 경로 변동이 클 수 있다. <code>추정</code></li><li><b>먼 목표.</b> 4 m 이동 성공 candidate 21/80, control 48/80 (<code>comparison_2000.json</code>). 정책 actor 는 목표를 2 m 로 잘라 보므로 먼 목표에서의 동작은 따로 봐야 한다. <span class="ev ev-ok">확인됨</span>(수치 · 2 m 자름) · 원인은 <span class="ev ev-todo">미확인</span></li><li><b>물리 실패가 남았다.</b> candidate 물리 실패 70/1040(종료 사유 중 허벅지 급가속 61), 이와 별도로 정체 종료 66 (<code>reports/flat_recovery_v14_20261006/comparison_2000.json</code> <code>stats.candidate.all</code>, 사유는 한 판에 겹칠 수 있음). <span class="ev ev-ok">확인됨</span></li><li><b>보행 품질.</b> 성공 판에서도 발 미끄러짐 대리 지표(접촉 중 발 속도 &gt; 0.1 m/s 비율)가 발별 38~51 % (<code>REPORT_2000_ko.txt</code> candidate <code>slip_over_01_fraction</code>). 우리 기준선과 비교한 적이 없어 높고 낮음을 말할 수 없다. <span class="ev ev-ok">확인됨</span>(수치)</li><li><b>논문 보상에서 멀어졌다.</b> v13 이후 위치 · 방향 보상 곡선, 보조 진척 · 제동 · 도착 보너스는 논문 Table I 이 아니다. 험지로 돌아갈 때 이 보상이 등반 행동과 충돌할지 모른다. <code>추정</code></li><li><b>평가 규약 변화.</b> 판마다 사례 · 마감이 바뀌어 장기 추세를 하나의 그래프로 그리면 틀린다. <span class="ev ev-ok">확인됨</span>(변화). 제안: 다음 판부터 v14 규약을 고정한다(결정은 석헌 · 팀장).</li><li><b>v15 와 v14 의 관계.</b> v15 는 지도 · critic · PPO · 물리 주기 · 에피소드 길이가 모두 다르다. 같은 평지 1040판 평가를 계획했지만 v15 HANDOFF 도 「native early termination 및 physics/control 차이는 유지하므로 실패건수를 단독 안전성 비교로 쓰지 않는다」고 적는다. <span class="ev ev-ok">확인됨</span></li><li><b>열린 물음 (석헌에게)</b></li><ul><li>서사 v1 을 experiment C 로 본 것이 맞나? A · B 갈래와 restore_v1 을 서사에서 뺀 이유는?</li><li>「다음 2. AME-2 구조 디벨롭」은 v15(공개 코드 이식)를 말하나, 자체 구조(v14)를 키우는 것인가?</li><li>평지:험지 비율 실험은 v14 구조로 하나, v15 로 하나?</li><li>student · Mapper 착수 계획과 GPU 예산은? (v15 는 4096 환경에서 OOM)</li></ul></ul></ol>
+</section>
+<section id="s11"><span id="10"></span><h2>10. 프로젝트와의 연결</h2>
+<h3>10.1 두 트랙과 AME-2 의 자리</h3>
+<ul><li>저장소 결정: 트랙 A = 시뮬 RL + 트윈, 트랙 B = 순정 보행 위 SLAM · Nav2 (<code>repo:docs/DECISIONS.md</code> 95행). <span class="ev ev-ok">확인됨</span></li><li>최종 트랙 A 는 「우리 정책이 ACC 디지털 트윈 안에서 걷는 것」이다(팀장 10/7 방향 · 일정과 완료 기준은 팀장과 설계 중).</li><li>트랙 B 는 Go2 순정 보행을 쓰므로 <b>AME-2 가 트랙 B 에 직접 들어갈 자리는 없다.</b> AME-2 가 쓰일 곳은 트랙 A 의 「우리 정책」 후보다. <code>추정</code></li></ul>
+<h3>10.2 인터페이스가 다르다</h3>
+<ul><li>AME-2 actor 의 명령은 <code>[dx, dy, sin dψ, cos dψ]</code> 목표 자세이고 속도는 정책이 스스로 정한다 (2.2절). <span class="ev ev-ok">확인됨</span></li><li>우리 foothold 계열은 Isaac Lab 속도 명령(<code>lin_vel_x</code> · <code>ang_vel_z</code> · heading)을 따른다 (<code>repo:docs/research/20260929-locomotion-direction.md</code> 95~98행). 같은 문서 175행도 「목표 도달이 세밀한 중간 속도 명령 준수와 같지 않다」고 적는다. <span class="ev ev-ok">확인됨</span></li><li>Nav2 의 controller 는 속도 명령(cmd_vel)을 낸다. 이것은 Nav2 의 일반 구조이고 이 볼륨의 근거는 아니다.</li><li>그래서 AME-2 를 Nav2 아래에 붙이려면 둘 중 하나다. <code>추정</code></li><ul><li>(가) controller 를 거치지 않고 전역 경로의 앞쪽 지점을 AME 목표로 넘긴다(waypoint 추종형).</li><li>(나) cmd_vel 을 「현재 위치 + 속도 × 시간」 목표로 바꾼다. HiPAN 검토 문서는 이 방식이 속도 · 도착 시점을 강제하지 못하고, 0.3 m/s × 1초 = 0.3 m 목표는 AME 의 도착 · 정지 영역에 들어가 0.3 m/s 추종과 같지 않다고 적는다 (<code>docs/AME2_HiPAN_Integration_Review_ko.md</code> 3절 A). <span class="ev ev-ok">확인됨</span></li></ul></ul>
+<p><figure class="mdimg"><img src="assets/visual/ame2-nav2-interface.svg?v=f9c02806" alt="AME-2 의 목표 자세 명령과 Nav2 속도 명령 사이" loading="lazy"><figcaption>AME-2 의 목표 자세 명령과 Nav2 속도 명령 사이</figcaption></figure></p>
+<h3>10.3 석헌 쪽 상위 설계 문서 요약 (9/22, 실행 전 설계) <span class="ev ev-ok">확인됨</span></h3>
+<p><b><code>docs/AME2_HiPAN_Integration_Review_ko.md</code></b></p>
+<ul><li>HiPAN(상위 10 Hz 경로 정책 + 하위 보행, 명령 vx · vy · ωz · 몸 높이 h · roll)과 AME-2 를 붙이는 네 방식을 비교했다.</li><ul><li>A: HiPAN 출력을 수식으로 AME 목표로 변환. 연결 확인용, 최종 비추천.</li><li><b>B: 상위 정책이 목표 위치 · 도착 방향을 내도록 학습. 사용자 채택.</b></li><li>C: AME 를 속도 · 높이 · roll 추종기로 확장. 미채택.</li><li>D: 목표 + 자세 6차원 절충. 미채택.</li></ul><li>두 카메라 160×120 계약(전방 아래 15°, 하부 아래 60°, 25 Hz)을 정했다. 통합 학습 · 성능 측정은 하지 않았다고 명시한다.</li></ul>
+<p><b><code>docs/AME2_PGCL_Navigation_Spec_ko.md</code></b></p>
+<ul><li>AME-2 를 단독 학습한 뒤 <b>student 를 고정</b>하고, 상위 정책이 10 Hz 로 다음 목표 <code>[dx, dy, dyaw]</code> 를 낸다. 목표는 발행 시점 world 좌표로 저장해 다음 갱신까지 고정한다(<code>LocalPoseCommandBridge</code>).</li><li>상위 정책은 PGCL(경로 안내 curriculum)로 학습한다.</li><ul><li>학습 때만 정답 지도에서 경로를 만들고 1 m 간격으로 중간 목표를 둔다.</li><li>순서대로 다 지나면 간격을 1 m 늘린다. 마지막 단계는 최종 목적지만 준다.</li><li>도달 판정은 실제 로봇 위치로 한다.</li></ul><li>모듈 6개(<code>FrozenLocomotionRunner</code> · <code>LocalPoseCommandBridge</code> · <code>PGCLScheduler</code> · <code>NavigationEnv</code> · <code>NavigationPolicy</code> · <code>NavigationTrainer</code>)를 정의했지만 「이미 존재하는 실행 파일 목록이 아니다」.</li></ul>
+<p><b>이 프로젝트에 주는 함의</b> <code>추정</code> · lead 의견이며 계획은 팀장과 정한다</p>
+<ul><li>PGCL 경로는 고정된 AME student 를 전제로 하는데 student 가 아직 없다(2.4절). 그래서 12/11 일정 안에 트랙 A 나 B 에 들어오기는 멀다.</li><li>다만 「목표 자세를 받는 하위 + 경로 지점을 주는 상위」라는 B 안의 인터페이스는 10.2 (가)와 같은 모양이다. 트랙 B 의 Nav2 전역 경로를 상위 대신 쓰는 시험(teacher 로 평지에서)은 비교적 싸게 해 볼 수 있다.</li><li>트랙 A 트윈에서 쓰려면 먼저 v14 candidate 를 우리 평가 하네스(속도 명령 과제)와 AME 목표 과제 양쪽에서 재는 대조표가 필요하다. 지금은 어느 쪽도 같은 잣대로 비교된 적이 없다(8절).</li></ul>
+</section>
+<section id="s12"><span id="11"></span><h2>11. 자료</h2>
+<div class="tw"><table><thead><tr><th>무엇</th><th>파일</th></tr></thead><tbody><tr><td>v14 2000회 과제별 성공 수 · Wilson 95 % (그림 4 의 값)</td><td><a href="https://foothold-project.vercel.app/assets/eval/ame2-v14-2000-by-task.csv" target="_blank" rel="noopener">ame2-v14-2000-by-task.csv</a></td></tr><tr><td>서사 v1~v6 ↔ 내부 실험 · 결과 · 볼륨 경로 (3절 표의 값)</td><td><a href="https://foothold-project.vercel.app/assets/eval/ame2-versions.csv" target="_blank" rel="noopener">ame2-versions.csv</a></td></tr><tr><td>그림을 다시 그리는 스크립트</td><td><code>_out/tools/ame2_figs.py</code> (lab 저장소)</td></tr><tr><td>원자료</td><td>RunPod 공유 볼륨 <code>limseokheon/ame2_go2/reports/</code> · 팀원만 접근</td></tr></tbody></table></div>
+<p>그림의 숫자는 결과 파일에서 손으로 옮겼고 Wilson 구간만 스크립트가 계산한다. 원자료와 다르면 원자료가 맞다.</p>
+</section>
+<section id="s13"><h2>판 이력</h2>
+<div class="tw"><table><thead><tr><th>판</th><th>날짜</th><th>무엇</th><th>왜</th></tr></thead><tbody><tr><td>v0.2</td><td>2026-10-07</td><td>그림 일곱 장(대응 타임라인 · 완성 시스템 상태 · teacher 구조 · v14 과제별 · 1500→2000 · 같은 잣대 · Nav2 연결)과 자료 CSV 둘 · 11절 자료</td><td>팀장 「텍스트만 넣지 말고 표 · 도식 · 자료」</td></tr><tr><td>v0.1</td><td>2026-10-07</td><td>처음 씀. 핵심 수치(v6 거리 승급 · 1500/2000 합계 · McNemar · v2 보정 20/80 · A/B/C · 진척 보상)는 원 파일에서 두 번째로 다시 계산해 일치 확인</td><td>팀장 10/7 「<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/524">#524</a> 는 RunPod 에서 내용 파악해 정리」</td></tr></tbody></table></div>
+</section>
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+/* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
+   갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
+   부품으로 못 가져온다.
+
+   **있을 때만 붙인다.** 이 파일 머리말에 적힌 F-05 와 같은 종류의 실수를
+   반복하지 않는다 (없는 요소에 리스너를 붙여 98 장이 죽었다). */
+document.querySelectorAll('[data-vcmp]').forEach(function (box) {
+  var vids = Array.prototype.slice.call(box.querySelectorAll('video'));
+  if (!vids.length) { return; }
+
+  var play = box.querySelector('[data-vcmp-play]');
+  var rew = box.querySelector('[data-vcmp-rewind]');
+  var rateBtns = Array.prototype.slice.call(
+    box.querySelectorAll('[data-vcmp-rate]'));
+  var rate = 1;
+
+  function label() {
+    if (!play) { return; }
+    var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+    play.textContent = playing ? '함께 멈춤' : '함께 재생';
+  }
+
+  /* `load()` 가 playbackRate 를 1 로 되돌린다. 갤러리에서 겪은 것과 같다
+     (gallery.js 105행). 그래서 metadata 가 올 때마다 다시 박는다. */
+  vids.forEach(function (v) {
+    v.addEventListener('loadedmetadata', function () { v.playbackRate = rate; });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+    v.addEventListener('ended', label);
+  });
+
+  if (play) {
+    play.addEventListener('click', function () {
+      var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+      vids.forEach(function (v) {
+        v.playbackRate = rate;
+        if (playing) { v.pause(); } else { v.play().catch(function () {}); }
+      });
+      label();
+    });
+  }
+
+  if (rew) {
+    rew.addEventListener('click', function () {
+      vids.forEach(function (v) { v.currentTime = 0; v.playbackRate = rate; });
+      label();
+    });
+  }
+
+  rateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rate = parseFloat(btn.getAttribute('data-vcmp-rate')) || 1;
+      rateBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      vids.forEach(function (v) { v.playbackRate = rate; });
+    });
+  });
+
+  label();
+});
+</script>
+<style>html[data-theme="light"]{--paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--rule:#d9d6cd;--brand:#0e7a6e;--dim:#0e7a6e;--dim-soft:#e0f0ed;--note:#a86a08;--note-soft:#fbf0dc;--stop:#a3342a;--stop-soft:#fbe9e7;--dim-ink:#0b6459;--grid:rgba(22,28,38,.04);--note-ink:#8a5600;}html[data-theme="dark"]{--paper:#12161d;--paper-2:#191e27;--card:#181d26;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--rule:#2b323d;--brand:#3ec7b4;--dim:#3ec7b4;--dim-soft:#11302c;--note:#dc9a30;--note-soft:#332710;--stop:#e56d5e;--stop-soft:#331c19}</style><!--dark:v1-->
+<style>
+/* 2026-09-14. 아직 다크 색을 못 정한 손그림 그림은 밝은 판 위에 올린다.
+   그림을 고치지 않고도 다크에서 읽힌다. 어느 그림이 여기 드는지는
+   `tools/svg_theme.py` 가 정하고 빌드가 data-plate 를 붙인다. */
+[data-theme="dark"] img[data-plate]{background:#fff;border-radius:8px;
+  padding:10px;box-sizing:border-box}
+</style>
+
+<!--/dark:v1--><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmplukingg8</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</html>

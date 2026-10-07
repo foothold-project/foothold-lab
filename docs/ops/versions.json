@@ -25,9 +25,9 @@
   "ver": "v1.1"
  },
  "deliverables/midterm/mvp-presentation.md": {
-  "hash": "a94086dbd7cfce84",
+  "hash": "e80995b3d873454f",
   "major": "",
-  "ver": "v1.3"
+  "ver": "v1.5"
  },
  "deliverables/midterm/mvp-submission.md": {
   "hash": "5e68003d5a77b92d",
@@ -125,9 +125,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "fbb4d2f2a17f972c",
+  "hash": "50121574995dbb7d",
   "major": "v2.1",
-  "ver": "v2.26"
+  "ver": "v2.29"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -249,6 +249,11 @@
   "major": "",
   "ver": ""
  },
+ "docs/digest/2026-W40-material.md": {
+  "hash": "5bc24cd21ecb7931",
+  "major": "",
+  "ver": ""
+ },
  "docs/guides/ros2-01-setup.md": {
   "hash": "134819c0ab6febdd",
   "major": "v1.0",
@@ -323,6 +328,11 @@
   "hash": "f7fc5da990c2b6fe",
   "major": "v1.0",
   "ver": "v1.0"
+ },
+ "docs/meetings/20261001-ops-mentoring.md": {
+  "hash": "51038be37fec5f29",
+  "major": "",
+  "ver": ""
  },
  "docs/meetings/README.md": {
   "hash": "5282241ecb9979b4",
@@ -408,6 +418,16 @@
   "hash": "bc687168cf97727f",
   "major": "v1.0",
   "ver": "v1.0"
+ },
+ "docs/notices/2026-10-07-board.md": {
+  "hash": "e935f3c5e200239a",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
+ "docs/notices/2026-10-07.md": {
+  "hash": "0e2a58a2059d81a2",
+  "major": "",
+  "ver": ""
  },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
@@ -528,6 +548,16 @@
   "hash": "a445ee1da18c4862",
   "major": "v1.1",
   "ver": "v1.3"
+ },
+ "docs/research/20261007-ame2-go2-v1-v6.md": {
+  "hash": "e72ea89d14574d87",
+  "major": "v0.2",
+  "ver": "v0.2"
+ },
+ "docs/research/20261007-underground-recon-service-review.md": {
+  "hash": "d63a5dac3c0947ae",
+  "major": "v1.1",
+  "ver": "v1.1"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",
