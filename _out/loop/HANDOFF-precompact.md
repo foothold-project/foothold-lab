@@ -1,6 +1,6 @@
 # 압축 직전 인계
 
-> 자동 생성 · 2026-10-06 02:21:33
+> 자동 생성 · 2026-10-07 18:35:15
 > 방아쇠: "trigger":"auto"
 > 이 파일은 PreCompact 훅이 씁니다. 압축 뒤 요약본만 받았으면 이것을 먼저 읽으십시오.
 
@@ -31,14 +31,17 @@
 
 ## 저장소
 ```
-0564767c 발표 화면: 5단계 끝 카메라 가운데 쪽으로 · 의존 구간 재렌더 · 프레임 v6g · v5 Cycles 스크립트 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
-e40a629c 발표 화면: 모듈 구간 로봇 가로 중앙 보정 · 프레임 v6f · Cycles 포장 스크립트 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
-e72ae46f 발표 화면: 10쪽 6단계 카드 높이를 다른 단계와 맞춤 · Cycles 렌더 스크립트 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
-2f10a6cb 발표 화면: 10쪽 6단계 좌우 카드 틀 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
-a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노출 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+7e13247b 보드 정리: 열린 이슈 132건 판정표 (완료 45 · 폐기 28 · 진행 8 · 대기 51)
+712019e1 merge: origin/main 을 받는다 · LEDGER 는 봇의 10-07 자동 집계(145건)를 쓴다
+7ce368fc chore: 원장 열린 이슈 전수 자동 집계 (145건 · 2026-10-07)
+513c2597 chore: RunPod 잔액 등급 갱신 (2026-10-07)
+1b8bf561 chore: 원장 열린 이슈 전수 자동 집계 (145건 · 2026-10-06)
 
  M _out/loop/HANDOFF-precompact.md
+ M docs/ops/doc-graph.json
  M docs/ops/versions.json
+ M inbox/jay/20260927-methodology/DECISIONS-resume-vs-scratch.md
+ M inbox/jay/20260929-mvp-presentation/STARRED-REPOS.md
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-assembled6-v6d.png
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-commands_end-v6d.png
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-commands_start-v6d.png
@@ -49,9 +52,6 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-sensors_end-v6d.png
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-side_grid6-v6d.png
  D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-side_walk-v6d.png
- D inbox/jay/20260929-mvp-presentation/assets/go2-blender/go2-stance-v6d.png
- M web/assets/deliverables/mvp-submission-presented.html
- M web/automation.html
 ```
 
 ## 열려 있는 결정
@@ -60,39 +60,8 @@ a53afbf9 발표 화면: 10쪽 모듈 사진 왼쪽 열 · 3D 장착 장면 노�
 - `inbox/jay/20260927-methodology/QUESTIONS-20260927.md` · 팀장 물음 원본
 - `_out/loop/supervisor.log` · 감독 스크립트 기록
 
-## 2026-10-06 새벽 · Go2 설명 필름 (덱과 별개)
-- 팀장 지시: 덱은 손대지 말고, 덱 내용 기반 유튜브용 «한 흐름» 제품 영상(레퍼런스 AMD EPYC · 애플 폴더블 1:08~1:13 · 부품 조립 · 내부 액추에이터 · 모듈은 상자 금지).
-- 산출: assets/go2-blender/build_film.py(10장면 76초 · build_v6 exec · 궤도 카메라 · 카메라 방위각에 묶인 3점 조명 · 액추에이터 근사 · 모듈 디테일 · 3D 라벨 · 대군 48대 복제) · package_film.py(PIL 자막·워드마크·엔드카드 · mp4 1280/960 · 접촉 인쇄) · film-frames/(EEVEE 1,825) · film-cycles-frames/(Cycles 1,825) · go2-film-1280.mp4 · go2-film-cycles-1280.mp4.
-- 아티팩트 https://claude.ai/artifact/K5KH9pNn3eoAT4QT2LyZC7 (v2 = Cycles 위 · EEVEE 아래) · 텔레그램 2회 보냄. 팀장 판정 미수신.
-- 미커밋: build_film.py · package_film.py · _out/film-review/ (git 커밋은 팀장 지시 뒤). 프레임 폴더(film-frames · film-cycles-frames · 각 1,825 PNG)는 커밋 대상 아님(.gitignore 확인 필요).
-- 걸린 것은 메모리 go2-film-pipeline-gotchas.md.
-
-## 2026-10-06 오전 · 세션 재시작 직전 상태 (Opus 5.5 · 최신 CLI 로 resume 예정)
-- 세션 id 09bbf294-fda0-4c7b-81c5-e23f793f2be2 (bg job). 이어갈 일: **G 필름 2차** (Go2 섹션: 제원 → 입력 → 시뮬 학습 과정 → 평가 축, 한 흐름) → 그 다음 **F 필름**(프로젝트 전체 · G 포함). 기획·규칙은 메모리 foothold-films-f-and-g.md · no-paid-credits-without-approval.md.
-- 팀장 규칙: Higgsfield 크레딧 등 유료 호출 금지(승인 없이). 오픈 소스로만. 덱은 건드리지 않는다.
-- OpenMontage 설치됨: C:/Users/AI-WS01/Desktop/jay/OpenMontage (git clone --depth 1 · .venv = py3.10 · requirements + piper-tts · remotion-composer npm 199개 · .env 는 example 복사, 키 없음). FFmpeg 9.0.2 는 winget(Gyan.FFmpeg) 로 설치 → 새 셸에서 PATH. HyperFrames 는 `npx hyperframes` (Node 24 있음).
-- 로컬 TTS 후보(오픈): Chatterbox Multilingual(한국어 포함) · Qwen3-TTS. torch 2.7.0+cu128 이 isaac311 env 에 있고 sm_120 지원 확인됨 → 별도 venv 에 같은 torch 를 깔아 쓰면 된다. 음악: MusicGen small(transformers) 또는 CC0.
-- 1차 G 필름(킵): build_film.py · package_film.py · film-frames/ · film-cycles-frames/ · go2-film(-cycles)-1280.mp4 · 아티팩트 https://claude.ai/artifact/K5KH9pNn3eoAT4QT2LyZC7. 전부 미커밋. 프레임 폴더 3,650장은 .gitignore 에 없음 → 커밋 때 제외.
-- 1차가 어긋난 이유(팀장 확인): «Go2 가 무엇인가» 에 42초, «학습이 어떻게 진행되는가» 없음. 2차 G 는 11쪽(관측 → 신경망 → 행동 · PD) · 13쪽(4,096) · 12쪽(두 잣대) · 21쪽(feet_air_time 보상) 을 넣는다.
-- 미해결 그대로: #72 전장 이해도(컨펌 대기) · 발표 멘트 원복 판 선택 대기.
-- 남은 연구 과제(팀장 10-06): GitHub star 논문들 + 추가 탐색으로 시뮬 보행 모델 개선 · 신경망 알고리즘 직접 구현 → 우리 시스템 적용 가능성 판단. 덱 보강(사용자·비즈니스·서비스 앱)은 ASTRA-MVP 와.
-
-### 같은 날 추가 결정 (팀장)
-- **G 먼저, F 는 나중.** G 의 본보기는 OpenMontage README 의 «Products Come to Life»(승인된 히어로 정지화 → 첫·끝 프레임 고정 image-to-video 로 부품이 벌어졌다 재조립 · 맞춤 사운드 · 내레이션 · 맞춤 합성). 「그게 내가 원하는 거였어.」
-- 생성·TTS 는 **Higgsfield MCP**(이미 결제 중 · Atlas/fal 등 다른 API 가입 안 함)로 하되 **건별 승인**(get_cost 견적 → 승인 → 호출). 히어로 정지화는 기존 Blender Cycles 렌더(film-cycles-frames · v6-cycles-frames · v5-cycles-frames)에서. 합성은 HyperFrames. OpenMontage 는 파이프라인 구조·스킬 참고용(설치됨).
-- **Mods 작업(세션 재시작 뒤)**: https://code.claude.com/docs/ko/plugins/mods/overview 로 CLI 화면에 컨텍스트 사용량 · 도구 호출 · 턴별 토큰 · 도구별 토큰/비용 표시, 훅으로 컨텍스트 50 % · 75 % · 85 % 에서 작업 단위 정리(자동 컴팩트로 작업이 유실되는 문제 해결). 팀장: 「외 아이디어 제공」.
-- 커밋: 필름 스크립트 둘 + 이 핸드오프만(팀장 지시). 나머지 214개 변경은 그대로.
-- Mods 는 터미널 Claude Code **v2.1.287 이상**에서만 켜진다(문서 확인). 지금 2.1.286 → `claude update` 가 선행 조건. 샘플 token-weather(anthropics/claude-code-playground · claude-code/mods) 를 `--plugin-dir` 로 먼저 시험. 메모리 mods-context-management-plan.md.
-- «Products Come to Life» 의 프롬프트·파이프라인·비용 전문은 OpenMontage 유튜브 채널(@OpenMontage) 영상 설명에 있다(README 주장). PROMPT_GALLERY.md 에는 없음. 재시작 뒤 `yt-dlp --js-runtimes node --skip-download --write-description` 으로 받아 읽는다.
-- 10-06 08:37Z PR #508(maengu86 · inbox/meang/20261001-ops-mentoring.md) 머지 22e8668f → 승격 PR #509 머지 bcfc37f6 (docs/meetings/20261001-ops-mentoring.md · 내용 그대로 · 작성 �ағ라현 표기는 제출본 그대로 「맹라현」) → 작업 트리에도 같은 파일 커밋 6b5a9154 → 사이트 빌드 통과 → foothold-site 8dd49616 푸시(meeting-20261001-ops-mentoring.html). 「haeng」은 ROLES.md 명부에 없는 git identity(haeng@haengui-Macmini.local · 커밋 34건 전부 inbox/meang/) · PR 본문의 「haeng 검토본」. 사람은 미확인.
-- 라이브 확인: https://foothold-project.vercel.app/meeting-20261001-ops-mentoring (제목·작성 맹라현·날짜 확인됨 · Vercel 배포 6879622210 success). #510 닫음.
-- **선행 과제(새 작업 전)**: Vercel 무료 배포 저장소 10 GB 100 % 메일. 실측 foothold-site 858 MB(mp4 580 MB · gallery/v1/clips 245 · mvp-deck/media 154 · gallery/v2/clips 84 · assets/video/v2 75) · .git 4.6 GB. 영상을 팀장 NAS 로 옮기고 웹은 그대로 → 이슈 #511. 이후 과제(ASTRA-MVP 와): #512 험지 일반화 모델 논문 · #513 앱 + ROS2-SLAM-Nav2 아키텍처(Hypan · Jev 는 팀장 표기 그대로, 미확인) · #514 디지털 트윈 실제 적용 · #515 덱 보강(사용자·비즈니스·서비스 앱). 메모리 post-mvp-roadmap-20261006.md.
-
-## 2026-10-06 저녁 · respawn 뒤 (Opus 5.5 · CLI 2.1.291)
-- lead 가 Opus 5.5 를 못 고른 원인: 9/27 에 뜬 백그라운드 프로세스(2.1.275)에 resume 이 붙기만 했다. `claude respawn 09bbf294` 로 해결. 다른 세션도 전부 옛 프로세스 → 팀장이 `claude respawn --all`(super 는 busy 라 끝난 뒤).
-- ~/.claude/settings.json 의 model 줄(claude-fable-5-1[1m])이 /model 선택으로 지워져 새 세션 기본은 Opus 5.5. 재개 세션은 자기 모델을 복원하므로 세션마다 `/model` 확인.
-- #511 착수: 전수 목록 `_out/nas-migration/media-inventory.csv` · 요약 `media-summary.json` · 계획 `_out/nas-migration/PLAN.md`(v0.1) · 도구 `_out/tools/nas_media_inventory.py`. 영상 345개 580.5 MB, 갤러리 클립 192개 328 MB 는 site 유일본. Vercel 배포 기록 311건. NAS ai-nas01(Tailscale 100.80.160.84) SMB·HTTPS 응답, 공유 폴더 미마운트.
-- 팀장 결정 대기: 서빙 경로(A Tailscale Funnel 권장 · B Cloudflare Tunnel) · NAS 공유 폴더 마운트 · Vercel 대시보드 옛 배포 정리.
-- 미리보기 서버 8400·8401 은 팀장이 직접 껐다(자동 모드가 내 종료를 막음). 그 종료 알림이 super 를 깨웠다. super 미결 셋 중 둘이 lead 일과 겹침(갤러리 NAS = #511 · 훅 1단계 ≈ Mods). 세션별 메모리가 폴더마다 갈린다(lead 53 · super/site 23 · Orca 작업 폴더 세션 0).
-- #516 [설계] 세션·폴더·파이프라인을 한 공간으로 + 지난 구조 회고(팀장 요청: 폴더 트리 · 세션 관리 · 파이프라인을 어떻게 했어야 했나). 훅 1단계 + Mods 통합 담당은 팀장 결정 대기.
-- super 에게 보낼 메시지(팀장 「보내」 승인)는 super 가 새 판으로 다시 뜬 뒤 보낸다(옛 프로세스에서 턴이 끊기지 않게). 본문 사본: 이 잡 tmp/msg-to-super.txt.
+## 2026-10-07 오후 · 보드 정리 (팀장 승인)
+- gh 토큰에 project 스코프 추가(팀장 인증). 열린 이슈 148 → 35. 팀장 계정 132건을 읽기 전용 조사 4묶음으로 판정(판정표 `_out/board-audit/20261007-open-issues.md` · 7e13247b) 뒤 113건을 근거 댓글과 함께 닫음(완료 45 · 진행하지 않음 68). 닫힌 이슈는 전부 보드 Done.
+- 남긴 팀장 이슈 19: In Progress #463 #505 #511 #515 #516 #520 · Todo #124 #350 #367 #374 #375 #376 #377 #378 #443 #469 #512 #513 #514. 남긴 기준: 지금 진행 중 · 돌고 있는 자동화의 결함 · 공개 문서의 틀린 주장 · 다음 평가에 쓸 평가 장치 · MVP 이후 새 과제.
+- 팀원 이슈 16건은 손대지 않음(보고 #520 을 받은 뒤 본인이 갱신).
+- 규칙(메모리 move-issues-on-the-board): 시작하면 In Progress · 끝나면 근거 댓글 · 닫기 · Done.
