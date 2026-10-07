@@ -6,7 +6,7 @@
 > 근거: 실측 (10/7 Funnel 경로 속도 · Vercel 배포 저장소 10 GB)
 > 요지: 배포본에서 영상 파일을 빼고 NAS 에 있는지 sha256 으로 확인한다. 페이지의 영상 주소는 그대로 두고 vercel.json 의 돌림 규칙 한 줄이 NAS 로 보낸다.
 > 상태: 확정
-> 판: v1.0
+> 판: v1.1
 
 ## 왜
 
@@ -46,6 +46,7 @@ Vercel 은 배포마다 사이트 한 벌을 통째로 보관한다. 10/7 한 �
 | 판 | 날짜 | 무엇 | 왜 |
 |---|---|---|---|
 | v1.0 | 2026-10-08 | 처음 씀 | 팀장 10/7 「원본은 foothold 공유 그대로」 · Funnel 실측 통과 |
+| v1.1 | 2026-10-08 | PDF 도 넘긴다 (7개 19.6 MB) · vercel.json 규칙에 pdf | 팀장 10/8 경량화 ② 승인 |
 """
 import hashlib
 import io
@@ -58,7 +59,7 @@ import tempfile
 MEDIA_BASE = 'https://ai-nas01.tail025053.ts.net'
 # 순서대로 찾는다. UNC 는 `net use` 로 자격이 이 로그인 세션에 들어 있어야 열린다.
 NAS_ROOTS = (r'\\100.80.160.84\foothold\media\site', r'N:\media\site')
-VID = ('.mp4', '.webm', '.mov', '.m4v')
+VID = ('.mp4', '.webm', '.mov', '.m4v', '.pdf')   # 10/8 경량화 ②: 산출물 PDF 도 NAS 로
 MANIFEST = 'MANIFEST.sha256'
 HOW_TO_MOUNT = ('NAS 를 붙이십시오 (별도 PowerShell 창):\n'
                 '      net use N: \\\\100.80.160.84\\foothold /user:VFXPEDIA * /persistent:no')
