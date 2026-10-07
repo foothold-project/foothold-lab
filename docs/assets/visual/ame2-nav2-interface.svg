@@ -1,0 +1,45 @@
+<svg viewBox="-20 -20 940 420" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="AME-2 의 목표 자세 명령과 Nav2 속도 명령 사이" width="900" height="380">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/></marker></defs>
+<title>AME-2 의 목표 자세 명령과 Nav2 속도 명령 사이</title>
+<text x="0.0" y="14.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">AME-2 는 속도가 아니라 「어디에 어느 방향으로 서라」를 받는다</text>
+<text x="0.0" y="34.0" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">근거: 보고서 2.2 · 10.2절 · docs/AME2_HiPAN_Integration_Review_ko.md 3절 · docs/AME2_PGCL_Navigation_Spec_ko.md (9/22 설계 · 실행 전)</text>
+<text x="0.0" y="60.0" font-size="12.5" fill="var(--accent)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지금 우리 foothold 계열</text>
+<rect x="0.0" y="72.0" width="170.0" height="48.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="85.0" y="93.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Nav2 planner</text>
+<text x="85.0" y="110.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">전역 경로</text>
+<rect x="220.0" y="72.0" width="170.0" height="48.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="305.0" y="93.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Nav2 controller</text>
+<text x="305.0" y="110.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">cmd_vel</text>
+<rect x="440.0" y="72.0" width="220.0" height="48.0" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="550.0" y="93.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold 정책</text>
+<text x="550.0" y="110.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">lin_vel_x · ang_vel_z</text>
+<line x1="170.0" y1="96.0" x2="218.0" y2="96.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="390.0" y1="96.0" x2="438.0" y2="96.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="680.0" y="101.0" font-size="11.5" fill="var(--ok)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">명령 모양이 그대로 맞는다</text>
+<text x="0.0" y="150.0" font-size="12.5" fill="var(--warn)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">AME-2 를 붙이려면 (둘 다 아직 안 해 봄 · 추정)</text>
+<rect x="0.0" y="162.0" width="170.0" height="48.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="85.0" y="183.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Nav2 planner</text>
+<text x="85.0" y="200.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">전역 경로</text>
+<rect x="220.0" y="162.0" width="170.0" height="48.0" rx="6" fill="var(--card)" stroke="var(--warn)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="305.0" y="183.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">(가) 앞쪽 지점 고르기</text>
+<text x="305.0" y="200.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">controller 우회</text>
+<rect x="440.0" y="162.0" width="220.0" height="48.0" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/>
+<text x="550.0" y="183.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">AME-2 정책</text>
+<text x="550.0" y="200.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">[dx, dy, sin ψ, cos ψ]</text>
+<line x1="170.0" y1="186.0" x2="218.0" y2="186.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="390.0" y1="186.0" x2="438.0" y2="186.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="220.0" y="226.0" width="170.0" height="48.0" rx="6" fill="var(--card)" stroke="var(--bad)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="305.0" y="247.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">(나) cmd_vel × Δt</text>
+<text x="305.0" y="264.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">→ 목표 자세</text>
+<line x1="390.0" y1="250.0" x2="438.0" y2="210.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="680.0" y="180.0" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">(가) 경로 지점 추종형</text>
+<text x="680.0" y="248.0" font-size="11.5" fill="var(--bad)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">(나) 속도·도착 시점을 강제 못 함</text>
+<text x="680.0" y="266.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">0.3 m 목표는 도착·정지 영역에 들어감</text>
+<rect x="0.0" y="300.0" width="900.0" height="64.0" rx="8" fill="var(--paper-2)"/>
+<text x="14.0" y="324.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">석헌 쪽 상위 설계 (HiPAN 검토 B 안 · PGCL)</text>
+<text x="14.0" y="346.0" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">상위 정책이 10 Hz 로 다음 목표 [dx, dy, dyaw] 를 내고 하위는 고정한 AME student 가 걷는다. student 가 아직 없어서 지금 바로는 못 돈다</text>
+</svg>
