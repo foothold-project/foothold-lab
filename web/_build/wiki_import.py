@@ -444,7 +444,12 @@ def main():
         body = codeblocks(body)
         n_h2 = len(re.findall(r'<h2', body))
         # ★ 원칙 2: 내용이 얇아졌으면 소리를 낸다. 원문 h2 수와 대조.
-        n_src = len(re.findall(r'<h2', t))
+        # ★ 2026-10-07. 원문 수를 «페이지 전체» 에서 셌더니, 상류 wiki 가 <main> 밖
+        #   전역 내비에 <h2> 다섯 개(「홈 글 목록」 등)를 새로 달자 본문은 그대로인데
+        #   rl 3/8 · ros2 7/12 · nav 9/14 · cv 12/17 로 «절이 사라졌다» 고 오판해
+        #   tech-* 넉 장이 배포에서 내려갈 뻔했다(죽은 링크 관문이 막음).
+        #   비교는 같은 범위끼리 한다: 우리가 가져오는 것은 <main> 안이다.
+        n_src = len(re.findall(r'<h2', m.group(1)))
         if n_h2 < n_src:
             print('  [!] %s: 절 %d/%d 만 남음. 이식 중단' % (src, n_h2, n_src))
             continue
