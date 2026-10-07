@@ -61,3 +61,4 @@
 - `_out/loop/supervisor.log` · 감독 스크립트 기록
 - 부수 효과 실측: 디스코드 알림 113건(닫힘마다 「완료 · 제목」 · not planned 68건도 「완료」 표기) · ledger-sync 113회 성공 0(사람 표의 닫힌 번호 경고가 GITHUB_OUTPUT 을 깸) → PR #525 로 사람 표 정리 · 수동 실행 성공 · 원장 35건. 스크립트 결함과 알림 문구는 super 에 넘김. 팀원 배정 이슈 11건(#28 #65 #66 #67 #68 #78 #79 #81 #82 #83 #84)도 닫혔다.
 - 10/7 저녁: 보드 정리 안내 공지(docs/notices/2026-10-07-board.md · PR #527)를 팀장 확인 뒤 디스코드 발송. 텔레그램 「[진행] 도는 학습 없음」 발신처 = Windows 예약 작업 foothold-heartbeat(_out/loop/heartbeat.py · 20분마다 · 9/24 lead 가 만듦) → 팀장 지시로 Disable. 다시 켜려면 `Enable-ScheduledTask -TaskName foothold-heartbeat`. FOOTHOLD-night(night.sh)는 Ready 지만 9/30 01:03 이후 다음 실행 예정 없음.
+- FOOTHOLD-night 도 팀장 지시로 Disable(10/7). 9/28 에 만든 무인 학습 파이프라인(scratch vs resume · fs1 @cuda:0 · fs2 @cuda:1 · 10분마다 한 단계 · 2일 반복). 9/28 14:23 회차 1 로 끝냈고 회차 2 는 장치 효과 0(121 파일 동일)이라 뺐다고 night.log 에 있다. #468 에 근거 보강 댓글.
