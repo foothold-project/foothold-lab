@@ -1299,97 +1299,65 @@ def research_html(site):
     #
     #   옛 `purpose` 는 안 지운다. `docs_pages._front_picks()` 등이 읽는다.
     #   화면에서 «묶는 기준» 으로만 안 쓴다.
+    # ★ 2026-10-08 팀장 확정: 목록을 «하나로» 합친다 (9/13 「한 기준으로 묶는다」의 끝).
+    #
+    #   9/13 에 두 목록의 묶는 기준은 여섯 입구로 맞췄지만 목록 자체는 둘로
+    #   남았다. 위는 «근거: 실측», 아래는 그 밖(공식·코드·본인)이다. 사이에
+    #   제목이 없어 화면에는 「결과 보고」 「진단·분석」 이 두 번씩, 열 칸으로
+    #   보였다 (팀장 10/7 「섹션이 이상하지 않아?」).
+    #
+    #   그래서 입구마다 한 번만 낸다. 묶음 안에서는 실측을 앞에, 그 밖을 뒤에
+    #   세운다. 출처는 카드 왼쪽 표식(수치 · `실측`·`조사`·`코드`)으로 이미 보인다.
+    #   카드 모양은 두 종류 그대로다(실측 카드는 수치와 영역, 그 밖은 출처 표식).
     cat = catalog()
     PO = [(g['key'], g['name']) for g in (cat.get('groups') or [])]
     rest = list(scored[1:]) if hero else list(scored)
-    bag = {}
-    for it in rest:
-        bag.setdefault(_fn_of(it[2]) or '', []).append(it)
-    for key, label in PO + [(k, k or '입구가 안 정해진 것')
-                            for k in sorted(bag) if k not in dict(PO)]:
-        rows = []
-        for _n2, _c2, rel, m, page, _m2 in sorted(
-                bag.get(key, []), key=lambda x: _newest_first(x[3]),
-                reverse=True):
-            g = graph().get(rel) or {}
-            n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
-            ar = ' '.join('<u class="ar-%s">%s</u>'
-                          % (AREA_HUE.get(a, 'x'), esc(a))
-                          for a in (g.get('areas') or [])[:2])
-            who, when = _who_when(m)
-            rows.append(
-                '<a class="ev3" data-fn="%s" href="%s"><span class="ex3">%02d</span>'
-                '<span class="en3">%s</span>'
-                '<span class="eb3"><b>%s</b><span>%s</span>'
-                '<span class="em3">%s %s</span></span>%s</a>'
-                % (esc(_fn_of(rel)), page, len(rows) + 1, esc(n) or '·',
-                   esc(m.get('제목', '')),
-                   esc(_gist(m, 70)),
-                   esc('%s · %s' % (who, when) if who else when), ar,
-                   _thumb(page)))
+    cards = {}                          # 입구 -> [카드 틀 · 번호 자리는 \x00N\x00]
+    for _n2, _c2, rel, m, page, _m2 in sorted(
+            rest, key=lambda x: _newest_first(x[3]), reverse=True):
+        g = graph().get(rel) or {}
+        n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
+        ar = ' '.join('<u class="ar-%s">%s</u>'
+                      % (AREA_HUE.get(a, 'x'), esc(a))
+                      for a in (g.get('areas') or [])[:2])
+        who, when = _who_when(m)
+        cards.setdefault(_fn_of(rel) or '', []).append(
+            ('<a class="ev3" data-fn="%s" href="%s"><span class="ex3">\x00N\x00</span>'
+             '<span class="en3">%s</span>'
+             '<span class="eb3"><b>%s</b><span>%s</span>'
+             '<span class="em3">%s %s</span></span>%s</a>')
+            % (esc(_fn_of(rel)), page, esc(n) or '·',
+               esc(m.get('제목', '')),
+               esc(_gist(m, 70)),
+               esc('%s · %s' % (who, when) if who else when), ar,
+               _thumb(page)))
+    # ★ 카드를 내는 자리가 «둘» 이었다 (9/13 · 조사 문서 16장이 입구 표식을
+    #   못 받았다). 이제 두 종류가 같은 묶음 통에 들어간다. 표식은 그대로 단다.
+    for _rel, m, page, _g in sorted(read, key=lambda x: _newest_first(x[1]),
+                                    reverse=True):
+        who, when = _who_when(m)
+        cards.setdefault(_fn_of(_rel) or '', []).append(
+            ('<a class="ev3" data-fn="%s" href="%s">'
+             '<span class="ex3">\x00N\x00</span>'
+             '<span class="en3 src s-%s">%s</span>'
+             '<span class="eb3"><b>%s</b><span>%s</span>'
+             '<span class="em3">%s</span></span>%s</a>')
+            % (esc(_fn_of(_rel)), page, ev_short(m.get('근거')),
+               esc(ev_short(m.get('근거'))),
+               esc(m.get('제목', '')), esc(_gist(m, 78)),
+               esc('%s · %s' % (who, when) if who else when),
+               _thumb(page)))
+    known = dict(PO)
+    for key, label in PO + [(k, '입구가 안 정해진 것')
+                            for k in sorted(cards) if k not in known]:
+        rows = [c.replace('\x00N\x00', '%02d' % (i + 1))
+                for i, c in enumerate(cards.get(key, []))]
         if rows:
             # `data-label` 은 거르개가 건수를 다시 쓸 때 쓴다. 글자에서
             # 숫자를 떼어내려 하면 묶음 이름에 숫자가 들어간 날 깨진다.
             parts.append('<div class="eg3" data-label="%s">%s <span>%d</span></div>'
                          '<div class="evs3">%s</div>'
                          % (esc(label), label, len(rows), ''.join(rows)))
-
-    # ★ 팀장 지적 (8/31): 「누가 언제 조사했는지」가 안 보이고 제목도 잘렸다.
-    #   실측 카드와 같은 줄 구조로 통일한다. 근거 · 제목 · 요지 · 작성자 · 날짜.
-    # ★ 2026-09-09 팀장 지적: 「외부 자료 조사가 아닌데 거기 들어간 문서가 많다.
-    #   Track A MVP 를 위해 우리가 올린 보고서들 아니냐」. 맞다.
-    #   이 통은 «실측이 아닌 것 전부» 였다 (read = ev != '실측'). 그래서
-    #   우리 코드를 뜯어본 것(근거: 코드)과 우리 계획 노트(근거: 본인)까지
-    #   외부 자료로 묶였다. 실측 9 · 공식 12 · 코드 1 · 본인 2 · 표기미비 1.
-    #   「무엇이 아니다」로 묶지 않고 «근거 종류» 로 가른다.
-    #   표기가 어긋난 것은 숨기지 말고 그 이름으로 드러낸다. 그래야 고쳐진다.
-    # ★ 2026-09-13 팀장 확정: 목록을 «한 기준» 으로 묶는다.
-    #
-    #   전에는 위쪽(실측)이 여섯 입구로, 아래쪽(조사)이 «출처»(공식·코드·본인)로
-    #   묶였다. 그래서 「도구·운영」을 눌렀는데 묶음 제목이 「외부 자료 조사」로
-    #   나왔다. 클릭한 이름과 제목이 달라 읽는 사람이 멈춘다.
-    #
-    #   출처는 **카드 왼쪽 표식**(`실측`·`조사`·`코드`)에 이미 있다. 목록을
-    #   묶는 축까지 그것으로 쓸 이유가 없다. 찾는 사람이 쓰는 말은 «무슨 글인가»
-    #   이지 «어디서 났나» 가 아니다.
-    #
-    #   설계 문서의 「출처와 확실성은 다른 축」은 그대로다. 축이 다른 것과
-    #   «목록을 묶는 기준» 은 다른 문제다. 거르개는 두 축을 다 둔다.
-    cat2 = catalog()
-    READ_GROUPS = [(g['key'], g['name']) for g in (cat2.get('groups') or [])]
-    known = dict(READ_GROUPS)
-    bins = {}
-    for d in read:
-        bins.setdefault(_fn_of(d[0]) or '', []).append(d)
-    order = [(k, known[k]) for k, _ in READ_GROUPS if k in bins] + \
-            [(k, '입구가 안 정해진 것') for k in sorted(bins) if k not in known]
-    for key, label in order:
-        reads, _i = '', 0
-        for _rel, m, page, _g in sorted(
-                bins[key], key=lambda x: _newest_first(x[1]), reverse=True):
-            who, when = _who_when(m)
-            _i += 1
-            # ★ 카드를 내는 자리가 «둘» 이다. 위(실측)와 여기(조사).
-            #   처음에 위만 고쳐서 조사 문서 16장이 입구 표식을 못 받았고,
-            #   거르개를 눌렀을 때 그 16장이 통째로 사라졌다. 규칙을 만들면
-            #   그 규칙이 사는 «다른 자리» 를 먼저 센다 (철칙 4).
-            reads += ('<a class="ev3" data-fn="%s" href="%s">'
-                      '<span class="ex3">%02d</span>'
-                      '<span class="en3 src s-%s">%s</span>'
-                      '<span class="eb3"><b>%s</b><span>%s</span>'
-                      '<span class="em3">%s</span></span>%s</a>'
-                      % (esc(_fn_of(_rel)), page, _i, ev_short(m.get('근거')),
-                         esc(ev_short(m.get('근거'))),
-                         esc(m.get('제목', '')), esc(_gist(m, 78)),
-                         esc('%s · %s' % (who, when) if who else when),
-                         _thumb(page)))
-        # ★ 조사 절 제목은 `.eh3` 라 거르개가 «못 봤다». 걸렀더니 카드 5장이
-        #   제목 없이 떠 있었다 (실측 `?fn=tooling`). 클래스가 다르다고 규칙을
-        #   따로 만들면 또 어긋난다. **같은 표식** 을 달아 한 규칙으로 다룬다.
-        parts.append(
-            '<div class="eh3" data-label="%s">%s %d</div>'
-            '<div class="evs3">%s</div>'
-            % (esc(label), label, len(bins[key]), reads))
     return ''.join(parts)
 
 
