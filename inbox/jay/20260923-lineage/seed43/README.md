@@ -39,4 +39,4 @@
 
 - `value_loss` 열은 세 파일 모두 **전부 빈칸**입니다 (`AUDIT12-zerobase.md:240` 이 같은 것을 적었다).
 - 9/24 런만 보려면 `per_iter.csv` 를 쓰십시오. `per_iter-install-20260926.csv` 를 한 런으로 읽으면 it 축이 두 번 지나갑니다.
-- `AUDIT9-approve.md:26` 과 `AUDIT12-zerobase.md:240` 은 설치본 경로를 직접 인용합니다. 그 경로의 파일이 지금 이 폴더의 `per_iter-install-20260926.csv` 와 바이트까지 같습니다 (2026-10-08 확인).
+- `AUDIT9-approve.md:26` 과 `AUDIT12-zerobase.md:240` 은 설치본 경로를 직접 인용합니다. 그 경로의 파일과 이 폴더의 `per_iter-install-20260926.csv` 는 **줄끝만 빼고 같습니다** (2026-10-08 확인). 설치본은 CRLF 이고 저장소에는 LF 로 들어갑니다. 윈도우 체크아웃은 CRLF 로 돌아와 바이트까지 같습니다.

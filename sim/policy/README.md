@@ -62,5 +62,5 @@
 줄이 등록을 보장한다. **지우고 돌려 본 적은 없다.** 빼기 전에 시험할 것.
 
 설치본의 `train.py` 수정(+17 −1 · optimizer 없는 체크포인트를 받는다)은
-`_out/loop/train.py.patched` 와 바이트가 같다 (2026-10-08 확인 ·
+`_out/loop/train.py.patched` 와 git blob 이 같다 · 곧 줄끝을 맞춘 뒤 같다 (2026-10-08 확인 ·
 [mai-os#31](https://github.com/vfxpedia/mai-os/issues/31)).

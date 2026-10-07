@@ -63,7 +63,7 @@ EULA 를 빼면 동의 프롬프트에서 멈춘다. 임석헌이 확인해 알�
 ## 2026-10-08 · `run_gap_train.ps1` 을 더 옮겼다
 
 같은 이유로 설치본에만 있던 것이다 ([mai-os#31](https://github.com/vfxpedia/mai-os/issues/31) 전수 조사).
-설치본 `C:/isaac/IsaacLab/run_gap_train.ps1` 과 **바이트가 같다** `실측`.
+설치본 `C:/isaac/IsaacLab/run_gap_train.ps1` 과 **줄끝만 빼고 같다** `실측`. 설치본은 CRLF 이고 저장소에는 `core.autocrlf` 로 LF 가 되어 들어간다. 윈도우에서 체크아웃하면 CRLF 로 돌아와 바이트까지 같다.
 
 - **9/10 ~ 9/28 판 넷 중 마지막 판만** 옮겼다. `.bak` · `.bak2` · `.bak-20260928` 셋은 옛 판이라 안 옮겼다 (팀장 결정).
 - 머리말이 적은 `s3://` 경로는 석헌의 원본 학습 위치다. 같은 경로가 이미 `sim/eval/results/20260921-lim-axis2/` 두 문서에 있다.
