@@ -150,7 +150,7 @@ resume은 3.1에서 학습을 이어가는 출발점을 설명하는 데 필요�
 
 도구 도입 시 확인할 것: 기존 HTML의 전체화면·단축키·직접 페이지 이동을 유지할 수 있는지, 앞뒤 이동 시 상태가 올바른지, 영상 재생과 충돌하지 않는지, PDF에는 모든 핵심 정보가 정적으로 남는지, 생성물이 편집 가능하며 팀이 유지할 수 있는지.
 
-Star 저장소 조사: 사용자 요청에 따라 Luna가 현재 연결 계정 `vfxpedia`의 저장소를 읽기 전용으로 조사한다. 별도 이슈 [#503](https://github.com/foothold-project/foothold-lab/issues/503). 목록은 197개로 확인했다. 사용자가 언급한 후보는 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)로 확인했으며, 공식 README는 HTML·CSS·미디어와 시간 위치를 지정할 수 있는 애니메이션을 MP4로 렌더하는 프레임워크라고 설명한다. 기존 발표 조작과의 통합 적합성은 아직 미확인이다. 설치·clone·실행·도입을 승인한 것으로 확대하지 않는다. 결과는 `STARRED-REPOS.md`에 기록한다.
+Star 저장소 조사: 사용자 요청에 따라 Luna가 현재 연결 계정 `vfxpedia`의 저장소를 읽기 전용으로 조사한다. 별도 이슈 [#503](https://github.com/foothold-project/foothold-lab/issues/503). 목록은 197개로 확인했다. 사용자가 언급한 후보는 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)로 확인했으며, 공식 README는 HTML·CSS·미디어와 시간 위치를 지정할 수 있는 애니메이션을 MP4로 렌더하는 프레임워크라고 설명한다. 기존 발표 조작과의 통합 적합성은 아직 미확인이다. 설치·clone·실행·도입을 승인한 것으로 확대하지 않는다. 결과는 `STARRED-REPOS.md`(팀장 개인 저장소 mai-os 의 `research/starred-repos/` 로 옮겼다(10/7))에 기록한다.
 
 ## 9. 다음 작업의 순서
 
