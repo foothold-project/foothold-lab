@@ -1306,22 +1306,26 @@ def research_html(site):
     #   제목이 없어 화면에는 「결과 보고」 「진단·분석」 이 두 번씩, 열 칸으로
     #   보였다 (팀장 10/7 「섹션이 이상하지 않아?」).
     #
-    #   그래서 입구마다 한 번만 낸다. 묶음 안에서는 실측을 앞에, 그 밖을 뒤에
-    #   세운다. 출처는 카드 왼쪽 표식(수치 · `실측`·`조사`·`코드`)으로 이미 보인다.
-    #   카드 모양은 두 종류 그대로다(실측 카드는 수치와 영역, 그 밖은 출처 표식).
+    #   그래서 입구마다 한 번만 낸다. 묶음 안은 **날짜 최신순 하나** 다(9/14 팀장
+    #   「최신 글이 맨 위로」). 출처는 카드 왼쪽 표식(수치 · `실측`·`조사`·`코드`)으로
+    #   이미 보인다. 카드 모양은 두 종류 그대로다(실측 카드는 수치와 영역, 그 밖은 출처 표식).
+    #
+    #   ★ 10/8 첫 판은 «실측을 앞에, 그 밖을 뒤에» 세웠다. 두 통을 각자 날짜순으로
+    #   깔고 이어 붙인 것이라, 근거가 실측이 아닌 최신 글(AME-2 보고서 10/7)이
+    #   결과 보고 맨 아래로 갔다(팀장 10/8 「날짜 기준 정렬이 왜 틀어졌지」).
+    #   통을 나눈 채 정렬하면 합친 뒤에는 날짜순이 아니다. 합친 다음 한 번만 센다.
     cat = catalog()
     PO = [(g['key'], g['name']) for g in (cat.get('groups') or [])]
     rest = list(scored[1:]) if hero else list(scored)
-    cards = {}                          # 입구 -> [카드 틀 · 번호 자리는 \x00N\x00]
-    for _n2, _c2, rel, m, page, _m2 in sorted(
-            rest, key=lambda x: _newest_first(x[3]), reverse=True):
+    cards = {}                  # 입구 -> [(날짜 열쇠, 카드 틀 · 번호 자리는 \x00N\x00)]
+    for _n2, _c2, rel, m, page, _m2 in rest:
         g = graph().get(rel) or {}
         n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
         ar = ' '.join('<u class="ar-%s">%s</u>'
                       % (AREA_HUE.get(a, 'x'), esc(a))
                       for a in (g.get('areas') or [])[:2])
         who, when = _who_when(m)
-        cards.setdefault(_fn_of(rel) or '', []).append(
+        cards.setdefault(_fn_of(rel) or '', []).append((_newest_first(m),
             ('<a class="ev3" data-fn="%s" href="%s"><span class="ex3">\x00N\x00</span>'
              '<span class="en3">%s</span>'
              '<span class="eb3"><b>%s</b><span>%s</span>'
@@ -1330,13 +1334,12 @@ def research_html(site):
                esc(m.get('제목', '')),
                esc(_gist(m, 70)),
                esc('%s · %s' % (who, when) if who else when), ar,
-               _thumb(page)))
+               _thumb(page))))
     # ★ 카드를 내는 자리가 «둘» 이었다 (9/13 · 조사 문서 16장이 입구 표식을
     #   못 받았다). 이제 두 종류가 같은 묶음 통에 들어간다. 표식은 그대로 단다.
-    for _rel, m, page, _g in sorted(read, key=lambda x: _newest_first(x[1]),
-                                    reverse=True):
+    for _rel, m, page, _g in read:
         who, when = _who_when(m)
-        cards.setdefault(_fn_of(_rel) or '', []).append(
+        cards.setdefault(_fn_of(_rel) or '', []).append((_newest_first(m),
             ('<a class="ev3" data-fn="%s" href="%s">'
              '<span class="ex3">\x00N\x00</span>'
              '<span class="en3 src s-%s">%s</span>'
@@ -1346,12 +1349,13 @@ def research_html(site):
                esc(ev_short(m.get('근거'))),
                esc(m.get('제목', '')), esc(_gist(m, 78)),
                esc('%s · %s' % (who, when) if who else when),
-               _thumb(page)))
+               _thumb(page))))
     known = dict(PO)
     for key, label in PO + [(k, '입구가 안 정해진 것')
                             for k in sorted(cards) if k not in known]:
+        ordered = sorted(cards.get(key, []), key=lambda kc: kc[0], reverse=True)
         rows = [c.replace('\x00N\x00', '%02d' % (i + 1))
-                for i, c in enumerate(cards.get(key, []))]
+                for i, (_k, c) in enumerate(ordered)]
         if rows:
             # `data-label` 은 거르개가 건수를 다시 쓸 때 쓴다. 글자에서
             # 숫자를 떼어내려 하면 묶음 이름에 숫자가 들어간 날 깨진다.
