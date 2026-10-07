@@ -1,0 +1,116 @@
+<svg viewBox="-20 -20 940 585" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="v14 2000회 control 대 candidate 과제별 성공률" width="900" height="545">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/></marker></defs>
+<title>v14 2000회 control 대 candidate 과제별 성공률</title>
+<text x="0.0" y="14.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">2000회: candidate 가 합계에서 앞서지만 4 m 이동은 크게 뒤진다</text>
+<text x="0.0" y="34.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">막대 = 성공률 · 가는 선 = Wilson 95 % (평가 1040판 기준 · 학습 시드는 갈래당 1개) · 근거 reports/flat_recovery_v14_20261006/comparison_2000.json</text>
+<rect x="166.0" y="48.0" width="14.0" height="10.0" rx="2" fill="var(--ink-3)"/>
+<text x="186.0" y="57.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">control (v5 설정 유지)</text>
+<rect x="356.0" y="48.0" width="14.0" height="10.0" rx="2" fill="var(--accent)"/>
+<text x="376.0" y="57.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">candidate (v6 수정군 · 정면 30 % + 1500회 거리 승급)</text>
+<line x1="170.0" y1="68.0" x2="170.0" y2="491.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="170.0" y="505.0" font-size="10" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">0 %</text>
+<line x1="310.0" y1="68.0" x2="310.0" y2="491.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="310.0" y="505.0" font-size="10" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">25 %</text>
+<line x1="450.0" y1="68.0" x2="450.0" y2="491.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="450.0" y="505.0" font-size="10" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">50 %</text>
+<line x1="590.0" y1="68.0" x2="590.0" y2="491.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="590.0" y="505.0" font-size="10" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">75 %</text>
+<line x1="730.0" y1="68.0" x2="730.0" y2="491.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="730.0" y="505.0" font-size="10" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">100 %</text>
+<text x="0.0" y="87.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가까운 정면</text>
+<text x="0.0" y="103.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 20</text>
+<rect x="170.0" y="74.0" width="364.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="412.4" y1="80.5" x2="628.5" y2="80.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="85.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">13/20</text>
+<text x="814.0" y="85.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">65.0 %</text>
+<rect x="170.0" y="91.0" width="560.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="639.8" y1="97.5" x2="730.0" y2="97.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="102.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">20/20</text>
+<text x="814.0" y="102.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">100.0 %</text>
+<text x="0.0" y="134.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">move 1.0 · 1.5 m</text>
+<text x="0.0" y="150.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 160</text>
+<rect x="170.0" y="121.0" width="486.5" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="622.3" y1="127.5" x2="681.0" y2="127.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="132.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">139/160</text>
+<text x="814.0" y="132.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">86.9 %</text>
+<rect x="170.0" y="138.0" width="560.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="716.9" y1="144.5" x2="730.0" y2="144.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="149.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">160/160</text>
+<text x="814.0" y="149.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">100.0 %</text>
+<text x="0.0" y="181.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">move 2.5 m</text>
+<text x="0.0" y="197.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 80</text>
+<rect x="170.0" y="168.0" width="385.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="494.4" y1="174.5" x2="606.0" y2="174.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="179.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">55/80</text>
+<text x="814.0" y="179.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">68.8 %</text>
+<rect x="170.0" y="185.0" width="364.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="472.8" y1="191.5" x2="587.5" y2="191.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="196.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">52/80</text>
+<text x="814.0" y="196.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">65.0 %</text>
+<text x="0.0" y="228.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">move 4.0 m</text>
+<text x="0.0" y="244.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 80</text>
+<rect x="170.0" y="215.0" width="336.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="444.7" y1="221.5" x2="562.2" y2="221.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="226.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">48/80</text>
+<text x="814.0" y="226.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">60.0 %</text>
+<rect x="170.0" y="232.0" width="147.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="270.0" y1="238.5" x2="376.2" y2="238.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="243.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">21/80</text>
+<text x="814.0" y="243.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">26.2 %</text>
+<text x="0.0" y="275.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">pose</text>
+<text x="0.0" y="291.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 320</text>
+<rect x="170.0" y="262.0" width="404.2" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="545.4" y1="268.5" x2="600.1" y2="268.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="273.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">231/320</text>
+<text x="814.0" y="273.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">72.2 %</text>
+<rect x="170.0" y="279.0" width="453.2" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="597.1" y1="285.5" x2="645.2" y2="285.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="290.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">259/320</text>
+<text x="814.0" y="290.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">80.9 %</text>
+<text x="0.0" y="322.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">turn</text>
+<text x="0.0" y="338.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 280</text>
+<rect x="170.0" y="309.0" width="544.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="699.0" y1="315.5" x2="721.9" y2="315.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="320.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">272/280</text>
+<text x="814.0" y="320.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">97.1 %</text>
+<rect x="170.0" y="326.0" width="552.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="709.8" y1="332.5" x2="726.9" y2="332.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="337.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">276/280</text>
+<text x="814.0" y="337.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">98.6 %</text>
+<text x="0.0" y="369.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">stand</text>
+<text x="0.0" y="385.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 80</text>
+<rect x="170.0" y="356.0" width="560.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="704.3" y1="362.5" x2="730.0" y2="362.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="367.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">80/80</text>
+<text x="814.0" y="367.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">100.0 %</text>
+<rect x="170.0" y="373.0" width="560.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="704.3" y1="379.5" x2="730.0" y2="379.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="384.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">80/80</text>
+<text x="814.0" y="384.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">100.0 %</text>
+<text x="0.0" y="416.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="500" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">sequence</text>
+<text x="0.0" y="432.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 40</text>
+<rect x="170.0" y="403.0" width="350.0" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="433.4" y1="409.5" x2="594.4" y2="409.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="414.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">25/40</text>
+<text x="814.0" y="414.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">62.5 %</text>
+<rect x="170.0" y="420.0" width="518.0" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="618.8" y1="426.5" x2="715.5" y2="426.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="431.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">37/40</text>
+<text x="814.0" y="431.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">92.5 %</text>
+<line x1="0.0" y1="442.0" x2="900.0" y2="442.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="0.0" y="463.0" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">합계</text>
+<text x="0.0" y="479.0" font-size="10" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">n = 1040</text>
+<rect x="170.0" y="450.0" width="457.7" height="13.0" rx="2" fill="var(--ink-3)"/>
+<line x1="613.9" y1="456.5" x2="640.2" y2="456.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="461.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">850/1040</text>
+<text x="814.0" y="461.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">81.7 %</text>
+<rect x="170.0" y="467.0" width="476.5" height="13.0" rx="2" fill="var(--accent)"/>
+<line x1="633.7" y1="473.5" x2="657.9" y2="473.5" stroke="var(--ink)" stroke-width="1.1"/>
+<text x="744.0" y="478.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, Consolas, monospace">885/1040</text>
+<text x="814.0" y="478.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">85.1 %</text>
+<text x="0.0" y="538.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">「가까운 정면」은 move 안의 부분집합(거리 ≤ 1.5 m · 0°) 이라 합계에 따로 더하지 않는다 · 물리 실패 control 154 · candidate 70</text>
+</svg>

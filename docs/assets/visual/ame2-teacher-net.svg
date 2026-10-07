@@ -1,0 +1,70 @@
+<svg viewBox="-20 -20 940 440" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="AME-2 teacher 의 actor 와 critic 구조" width="900" height="400">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/></marker></defs>
+<title>AME-2 teacher 의 actor 와 critic 구조</title>
+<text x="0.0" y="14.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">teacher actor 는 지도 351점에 attention 을 건다 · critic 은 정답 정보로 MoE 16개</text>
+<text x="0.0" y="34.0" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">근거: experiments/ame2_flat_recovery_v14_candidate_20261006/bootstrap/teacher_network.py · policy_observations.py · 은닉 크기와 ELU 는 논문 미공개라 구현 선택</text>
+<text x="0.0" y="66.0" font-size="12.5" fill="var(--accent)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">actor (정책) · 입력 1,102</text>
+<rect x="0.0" y="80.0" width="150.0" height="50.0" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="75.0" y="102.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">몸 상태 45 + 목표 4</text>
+<text x="75.0" y="119.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">[dx, dy, sin, cos]</text>
+<rect x="0.0" y="150.0" width="150.0" height="50.0" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="75.0" y="172.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지도 27×13×3</text>
+<text x="75.0" y="189.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">351점 · 6 cm 격자</text>
+<rect x="190.0" y="80.0" width="150.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="265.0" y="102.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">상태 encoder</text>
+<text x="265.0" y="119.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">MLP 49→128→64</text>
+<rect x="190.0" y="150.0" width="150.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="265.0" y="172.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">점별 특징</text>
+<text x="265.0" y="189.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">MLP + CNN → 96</text>
+<rect x="380.0" y="150.0" width="150.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="455.0" y="172.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">전역 특징</text>
+<text x="455.0" y="189.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">max pool → 64</text>
+<rect x="380.0" y="80.0" width="150.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="455.0" y="102.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">query 96</text>
+<text x="455.0" y="119.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">상태 64 + 전역 64</text>
+<rect x="570.0" y="110.0" width="150.0" height="60.0" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/>
+<text x="645.0" y="137.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">multi-head attention</text>
+<text x="645.0" y="154.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">32 head · 96차원</text>
+<rect x="760.0" y="80.0" width="140.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="830.0" y="102.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">decoder</text>
+<text x="830.0" y="119.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">224→512→256→128</text>
+<rect x="760.0" y="150.0" width="140.0" height="50.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="830.0" y="172.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">관절 12개 목표</text>
+<text x="830.0" y="189.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">× 0.25 rad</text>
+<line x1="150.0" y1="105.0" x2="188.0" y2="105.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="150.0" y1="175.0" x2="188.0" y2="175.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="340.0" y1="175.0" x2="378.0" y2="175.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="340.0" y1="105.0" x2="378.0" y2="105.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="455.0" y1="150.0" x2="455.0" y2="132.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="530.0" y1="105.0" x2="568.0" y2="130.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="530.0" y1="175.0" x2="568.0" y2="150.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="720.0" y1="140.0" x2="758.0" y2="112.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="830.0" y1="130.0" x2="830.0" y2="148.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="560.0" y="218.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">국소 96 + 전역 64 = 지도 표현 160 → 상태 64 와 합쳐 224</text>
+<text x="0.0" y="250.0" font-size="12.5" fill="var(--ink-2)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">critic (가치) · 입력 420 · 학습 때만 쓰는 정답 정보</text>
+<rect x="0.0" y="264.0" width="270.0" height="54.0" rx="6" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="135.0" y="288.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">몸 45 + 목표 5 + 정답 높이 351 + 접촉 19</text>
+<text x="135.0" y="305.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">목표 5 = x · y · sin · cos · 남은 시간</text>
+<rect x="300.0" y="264.0" width="230.0" height="54.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="415.0" y="288.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">expert 16개</text>
+<text x="415.0" y="305.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">각 420→256→256→128→1</text>
+<rect x="300.0" y="332.0" width="230.0" height="46.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="415.0" y="352.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">softmax gate</text>
+<text x="415.0" y="369.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">420→128→128→16</text>
+<rect x="580.0" y="290.0" width="140.0" height="54.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2"/>
+<text x="650.0" y="314.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="600" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가치 V</text>
+<text x="650.0" y="331.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">가중합</text>
+<line x1="270.0" y1="291.0" x2="298.0" y2="291.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="270.0" y1="302.0" x2="298.0" y2="354.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="530.0" y1="291.0" x2="578.0" y2="312.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="530.0" y1="354.0" x2="578.0" y2="324.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="760.0" y="282.0" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">제어</text>
+<text x="760.0" y="304.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">물리 400 Hz · 정책 50 Hz</text>
+<text x="760.0" y="324.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">목표각 기본 자세 ±0.5 rad</text>
+<text x="760.0" y="344.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">변화 4 rad/s 이하</text>
+<text x="760.0" y="364.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">출력 배율 이동 0.8 · 근처 0.4</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg viewBox="-20 -20 940 370" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="AME-2 완성 시스템 셋 중 무엇이 만들어졌나" width="900" height="330">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/></marker></defs>
+<title>AME-2 완성 시스템 셋 중 무엇이 만들어졌나</title>
+<text x="0.0" y="14.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">AME-2 완성 시스템에는 학습 결과가 셋 필요하다 · 지금 있는 것은 teacher 하나(평지)</text>
+<text x="0.0" y="34.0" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, Consolas, monospace">근거: docs/AME2_Go2_Implementation_Plan_ko.md 1절 · docs/AME2_RESUME_ko.md · reports/public_go2_v15_20261007/HANDOFF_ko.txt</text>
+<rect x="0.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--ok)" stroke-width="1.6"/>
+<text x="12.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">teacher</text>
+<rect x="80.0" y="71.0" width="110.0" height="22.0" rx="11" fill="var(--ok-soft)"/>
+<text x="135.0" y="86.0" font-size="11" fill="var(--ok)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">만듦 · 평지만</text>
+<text x="12.0" y="110.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">정답 높이지도 + 몸 상태 + 목표</text>
+<line x1="12.0" y1="122.0" x2="188.0" y2="122.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="12.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">목표 자세 도달 정책 (PPO)</text>
+<text x="12.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평지 2000회까지 · 시드 1개</text>
+<text x="12.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">논문 예산 80,000회의 2.5 %</text>
+<line x1="203.0" y1="144.0" x2="229.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="233.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="245.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Mapper</text>
+<rect x="368.0" y="71.0" width="55.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
+<text x="395.5" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">안 함</text>
+<text x="245.0" y="110.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">깊이 카메라 2대 → 국소 격자</text>
+<line x1="245.0" y1="122.0" x2="421.0" y2="122.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="245.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가려진 지형 높이·불확실성 예측</text>
+<text x="245.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">센서·격자 검사만 (9/22~9/23)</text>
+<text x="245.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 안 함</text>
+<line x1="436.0" y1="144.0" x2="462.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="466.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="478.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">student</text>
+<rect x="601.0" y="71.0" width="55.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
+<text x="628.5" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">안 함</text>
+<text x="478.0" y="110.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Mapper 지도 누적 + 상태 20프레임</text>
+<line x1="478.0" y1="122.0" x2="654.0" y2="122.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="478.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">teacher 행동과 지도 표현 증류</text>
+<text x="478.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실제 로봇에 올라가는 정책</text>
+<text x="478.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습 안 함</text>
+<line x1="669.0" y1="144.0" x2="695.0" y2="144.0" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="699.0" y="60.0" width="200.0" height="168.0" rx="6" fill="var(--card)" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="711.0" y="86.0" font-size="15" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실기·sim2sim</text>
+<rect x="845.0" y="71.0" width="44.0" height="22.0" rx="11" fill="var(--bad-soft)"/>
+<text x="867.0" y="86.0" font-size="11" fill="var(--bad)" text-anchor="middle" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">없음</text>
+<text x="711.0" y="110.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">Go2 실기 · MuJoCo 등</text>
+<line x1="711.0" y1="122.0" x2="887.0" y2="122.0" stroke="var(--rule-2)" stroke-width="1"/>
+<text x="711.0" y="146.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">다른 시뮬레이터로 옮겨 재기</text>
+<text x="711.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">실제 Go2 에서 재기</text>
+<text x="711.0" y="194.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">산출물 없음</text>
+<rect x="0.0" y="252.0" width="900.0" height="62.0" rx="8" fill="var(--warn-soft)"/>
+<text x="14.0" y="276.0" font-size="13" fill="var(--warn)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">10/7 새로 도는 것 · 내부 v15</text>
+<text x="14.0" y="298.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">공개 leggedrobotics/ame2_minimal 의 teacher 를 Go2 로 옮겨 12종 험지에서 학습 중 (1024 환경 · 21:18 기준 2466/5000회). v14 와 구조가 달라 결과를 그대로 잇지 못한다</text>
+</svg>
