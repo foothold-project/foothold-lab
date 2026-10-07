@@ -40,3 +40,27 @@
     3. 대조 대상이 0개면 통과가 아니라 실패다
 
 3번이 빠지면 자료가 없을 때 검사가 조용히 사라진다.
+
+## 설치본의 상류 파일에 붙은 한 줄 (2026-10-08 추가)
+
+사본 폴더 말고도 설치본에는 **상류 파일 하나에 한 줄이 더 붙어 있다.** 위 표에 없는
+파일이라 여기 적어 둔다. 설치본을 새로 깔 때 이 줄이 빠질 수 있다.
+
+    파일   C:\isaac\IsaacLab\source\isaaclab_tasks\isaaclab_tasks\
+           manager_based\locomotion\velocity\config\go2\__init__.py
+    상류   isaac-sim/IsaacLab 37ddf62 (v2.3.2)
+
+```diff
+ from . import agents
++from . import gap_training  # 0905 gap training v1
+```
+
+**이 줄이 꼭 있어야 하는지는 확인하지 않았다** `미확인`. 상류의 `import_packages()` 는
+`_walk_packages` 로 하위 패키지를 «재귀로» 훑어 import 한다
+(`isaaclab_tasks/utils/importer.py`). 그러면 `gap_training` 도 이 줄 없이 불릴 수
+있다. `isaaclab_tasks` 를 거치지 않고 `config.go2` 를 바로 import 하는 경로에서는 이
+줄이 등록을 보장한다. **지우고 돌려 본 적은 없다.** 빼기 전에 시험할 것.
+
+설치본의 `train.py` 수정(+17 −1 · optimizer 없는 체크포인트를 받는다)은
+`_out/loop/train.py.patched` 와 바이트가 같다 (2026-10-08 확인 ·
+[mai-os#31](https://github.com/vfxpedia/mai-os/issues/31)).
