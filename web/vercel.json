@@ -7,6 +7,11 @@
       "source": "/research-20260928-v2-mvp-report",
       "destination": "/report-v2",
       "permanent": false
+    },
+    {
+      "source": "/(.*)\\.(mp4|webm|mov|m4v)",
+      "destination": "https://ai-nas01.tail025053.ts.net/$1.$2",
+      "permanent": false
     }
   ],
   "headers": [
