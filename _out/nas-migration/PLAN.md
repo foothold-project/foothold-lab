@@ -5,7 +5,7 @@
 > 근거: foothold-site 미러 실측 · GitHub deployments API · Tailscale 상태
 > 요지: 배포 한 건에 영상 580 MiB 가 실려 Vercel 배포 저장소가 찼다. 영상은 NAS 를 원본으로 두고 NAS 주소에서 서빙하며, 웹 화면은 바꾸지 않는다.
 > 상태: 1단계 끝 · 2단계 서빙 경로 팀장 결정 대기
-> 판: v0.2
+> 판: v0.3
 
 ## 실측 (2026-10-06)
 
@@ -66,9 +66,32 @@ v0.1 은 이 값들을 «MB» 로 적었으나 스크립트는 2^20 으로 나�
 5. **Vercel 정리** · 대시보드에서 배포 보존 기간을 줄이거나 옛 배포 삭제(팀장 계정 작업). 이것을 해야 10 GB 가 실제로 내려간다.
 6. site 저장소 git 4.3 GiB 의 옛 영상 이력 정리는 별도 판단(이력 재작성이라 팀장 결정).
 
+## 10/7 밤 실측과 조사 (v0.3)
+
+**영상 크기** · 345개 · 중앙값 1.28 MiB · 90 % 가 2.64 MiB 이하 · 5 MiB 넘는 것 3개(덱 원본 74.2 · 17.3 · 11.7 MiB). 10 GB 가 찬 까닭은 한 벌이 커서가 아니라 배포마다 858 MB 가 통째로 보관돼 쌓여서다. site 저장소는 브랜치 1개 · 배포 전부 Production 이라 «브랜치 preview 가 주범» 가설은 해당 없음(조사 문서 1절의 미확인 가설).
+
+**속도 (워크스테이션에서 잼 · 우리 회선이 양쪽 다 상한일 수 있음)**
+
+| 경로 | 74.2 MiB 한 파일 | 작은 클립 |
+|---|---|---|
+| Vercel 지금 | 12.5 초 · 약 50 Mbit/s · 첫 바이트 3.2 초 | 4.1 MiB 0.56 초 · 1.3 MiB 0.94 초 · Range 206 |
+| NAS 직접(SMB 무버퍼) | 9.3 초 · 약 67 Mbit/s | (345개 연속 평균 3.9 MiB/s) |
+| Funnel | **미측정** · 켜야 잴 수 있음 · 한도 비공개 | |
+
+**NAS 사실** · Tailscale 직결(DERP 아님) 9 ms · NAS 는 다른 공인 IP(다른 장소). Tailscale 은 UGOS 안에 격리돼 SSH 계정(sudo 없음 · docker 권한 없음)으로는 `tailscale funnel` 을 못 부른다. 공유 `foothold`(= /volume1/foothold) 와 별개로 `/volume1/01_AI_WORK/인공지능사관학교/` 는 워크스테이션 바탕화면의 SyncSpace 동기본이라 foothold-site 영상 345개가 이미 있지만, 3단계에서 사이트가 영상을 빼면 같이 사라지므로 원본 자리로 못 쓴다.
+
+**조사 요약** (`RESEARCH-hosting-domain-20261007.md` · 출처 전부 10/7)
+- Vercel 10 GB = Hobby Deployment Storage(8/21 신설). 넘으면 «배포가 막힐 수 있다». 10/7 배포는 성공.
+- Funnel: HTTPS 인증서 켜면 기기 이름 · tailnet 이름이 공개 CT 로그에 영구히 남는다(접근 통제는 그대로). 정책 `funnel` nodeAttr 는 권한만 준다. 한도 비공개 · *.ts.net 주소만.
+- B Cloudflare Tunnel 은 도메인이 필요하고, 무료 CDN 으로 영상을 내보내는 것은 Cloudflare 약관이 제한한다. 차선은 도메인 없이 GitHub Pages 영상 전용 저장소(서울 엣지 · Range · CORS 실측 · 1 GB 한도), 도메인을 사면 Cloudflare R2 + media.<도메인>.
+- foothold.dev 는 이미 등록됨(다른 업체). 빈 후보 footholdlab.dev · foothold-project.dev · foothold.kr. 원화 증빙은 가비아(.dev 31,900원/년 VAT 포함).
+
+**다음** · 팀장 결정 둘(원본 자리 · Funnel 켜기) → Funnel 실측 관문(외부 LTE 에서 5 MB 클립 단일 속도 · 20개 동시 완료 시간 · 오류 수 · Vercel 값과 비교) → 통과하면 3단계.
+
 ## 판 이력
 
 | 판 | 날짜 | 무엇 | 왜 |
 |---|---|---|---|
 | v0.1 | 2026-10-06 | 실측·원인·단계 초안 | Vercel 배포 저장소 10 GB 100 % 메일 |
+| v0.3 | 2026-10-07 | 속도 실측 · NAS 사실 · 호스팅 · 도메인 조사 | 팀장 질문(Funnel 설정 · 속도 · 대안 · 도메인 · 경로) |
 | v0.2 | 2026-10-07 | 1단계 결과 · 단위 MB→MiB 정정 · Funnel 조건 | 팀장이 #511 을 lead 에 맡기고 NAS 를 붙임 |
