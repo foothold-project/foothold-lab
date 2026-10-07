@@ -30,10 +30,16 @@ jobs:
         env:
           EV: ${{ github.event_name }}
           ACT: ${{ github.event.action }}
+          REASON: ${{ github.event.issue.state_reason }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if [ "$EV" = "issues" ] && [ "$ACT" = "closed" ]; then
+          # 닫힘 사유로 문구를 가른다. not planned 를 「완료」로 찍지 않는다 (#526).
+          if [ "$EV" = "issues" ] && [ "$ACT" = "closed" ] && [ "$REASON" != "completed" ]; then
+            TITLE="안 하기로 닫음 · ${{ github.event.issue.title }}"
+            BODY="닫은 사람 **${{ github.event.sender.login }}** · 사유 ${REASON:-없음}"
+            URL="${{ github.event.issue.html_url }}"; COLOR="9807270"
+          elif [ "$EV" = "issues" ] && [ "$ACT" = "closed" ]; then
             TITLE="완료 · ${{ github.event.issue.title }}"
             BODY="닫은 사람 **${{ github.event.sender.login }}** · 보드가 Done 으로 넘어갑니다"
             URL="${{ github.event.issue.html_url }}"; COLOR="1801806"
