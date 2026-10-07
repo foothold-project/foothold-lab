@@ -1,0 +1,15 @@
+{
+ "summary": {
+  "copied": 345,
+  "skipped": 0,
+  "src_changed": 0,
+  "dest_mismatch": 0,
+  "missing_src": 0,
+  "rows": 345,
+  "seconds": 276,
+  "dest": "N:\\media\\site",
+  "MiB": 580.5,
+  "note": "10/7 실행 때는 MB=608.7(10^6) 으로 찍혔다. 같은 양이다. sha256sum -c MANIFEST.sha256 로 345개 다시 대조 · 전부 일치(2분 29초)."
+ },
+ "failures": {}
+}
