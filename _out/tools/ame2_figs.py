@@ -4,7 +4,8 @@
 산출: docs/assets/visual/ame2-*.svg (+ .dark.svg 는 tools/svg_theme.write_pair 로)
       docs/assets/eval/ame2-v14-2000-by-task.csv · ame2-versions.csv
 숫자 출처: RunPod limseokheon/ame2_go2 reports/ (보고서 본문과 같은 값 · 손으로 옮김).
-Wilson 95 % 는 여기서 계산한다."""
+Wilson 95 % 는 여기서 계산한다.
+선 굵기는 사이트 한 벌(1 · 1.6 · 2 · 2.8 · 6)만 쓴다 (빌드 [3.48])."""
 import math, os, sys, csv
 from pathlib import Path
 LAB = Path(__file__).resolve().parents[2]
@@ -30,12 +31,12 @@ class Fig:
         self.o.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="var({fill})" text-anchor="{anchor}" '
                       f'font-weight="{weight}" font-family="{MONO if mono else SANS}">{esc(s)}</text>')
 
-    def r(self, x, y, w, h, fill='--card', stroke='--rule', rx=6, dash=False, sw=1.2):
+    def r(self, x, y, w, h, fill='--card', stroke='--rule', rx=6, dash=False, sw=1):
         d = ' stroke-dasharray="5 4"' if dash else ''
         st = f' stroke="var({stroke})" stroke-width="{sw}"' if stroke else ''
         self.o.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="var({fill})"{st}{d}/>')
 
-    def l(self, x1, y1, x2, y2, stroke='--ink-3', sw=1.4, arrow=False, dash=False):
+    def l(self, x1, y1, x2, y2, stroke='--ink-3', sw=1.6, arrow=False, dash=False):
         a = ' marker-end="url(#ar)"' if arrow else ''
         d = ' stroke-dasharray="5 4"' if dash else ''
         self.o.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="var({stroke})" stroke-width="{sw}"{a}{d}/>')
@@ -116,7 +117,7 @@ def fig_system():
     for i, (nm, inp, lines, st, chip) in enumerate(boxes):
         x = i * (bw + gap)
         soft = '--ok-soft' if st == 'ok' else '--bad-soft'
-        f.r(x, y, bw, 168, '--card', '--ok' if st == 'ok' else '--rule', sw=1.6 if st == 'ok' else 1.2, dash=st != 'ok')
+        f.r(x, y, bw, 168, '--card', '--ok' if st == 'ok' else '--rule', sw=1.6 if st == 'ok' else 1, dash=st != 'ok')
         f.t(x + 12, y + 26, nm, 15, weight=700)
         cwid = 22 + 11 * len(chip)
         f.r(x + bw - 10 - cwid, y + 11, cwid, 22, soft, None, rx=11)
@@ -126,7 +127,7 @@ def fig_system():
         for j, s in enumerate(lines):
             f.t(x + 12, y + 86 + j * 24, s, 11.5, '--ink')
         if i < 3:
-            f.l(x + bw + 3, y + 84, x + bw + gap - 4, y + 84, '--ink-3', 1.4, arrow=True)
+            f.l(x + bw + 3, y + 84, x + bw + gap - 4, y + 84, '--ink-3', 1.6, arrow=True)
     y2 = 252
     f.r(0, y2, 900, 62, '--warn-soft', None, rx=8)
     f.t(14, y2 + 24, '10/7 새로 도는 것 · 내부 v15', 13, '--warn', weight=700)
@@ -202,7 +203,7 @@ def fig_v14():
             yy = y + k * 17
             f.r(x0, yy, bw * v / n, 13, col, None, rx=2)
             lo, hi = wilson(v, n)
-            f.l(x0 + bw * lo, yy + 6.5, x0 + bw * hi, yy + 6.5, '--ink', 1.1)
+            f.l(x0 + bw * lo, yy + 6.5, x0 + bw * hi, yy + 6.5, '--ink', 1)
             f.t(x0 + bw + 14, yy + 11, f'{v}/{n}', 11, '--ink' if k else '--ink-2', mono=True, weight=700 if k else 400)
             f.t(x0 + bw + 84, yy + 11, f'{100 * v / n:.1f} %', 11, '--ink-2', mono=True)
     f.t(0, 538, '「가까운 정면」은 move 안의 부분집합(거리 ≤ 1.5 m · 0°) 이라 합계에 따로 더하지 않는다 · 물리 실패 control 154 · candidate 70', 11, '--ink-2')
@@ -227,7 +228,7 @@ def fig_1500():
         f.l(X1, top + 22, X1, top + ph + 12, '--rule', 1); f.l(X2, top + 22, X2, top + ph + 12, '--rule', 1)
         f.t(X1, top + ph + 30, '1500회', 11, '--ink-2', anchor='middle'); f.t(X2, top + ph + 30, '2000회', 11, '--ink-2', anchor='middle')
         for (a, b), col, nmb in ((c, '--ink-3', 'control'), (k, '--accent', 'candidate')):
-            f.l(X1, Y(a), X2, Y(b), col, 2.4)
+            f.l(X1, Y(a), X2, Y(b), col, 2)
             f.c(X1, Y(a), 4.5, col); f.c(X2, Y(b), 4.5, col)
             f.t(X2 + 10, Y(b) + 4, f'{b}', 12, col if col == '--accent' else '--ink-2', mono=True, weight=700)
         same = c[0] == k[0]
