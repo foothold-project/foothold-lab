@@ -3,7 +3,7 @@
 작성 목적: Claude Code와 Codex가 같은 작업을 중복하거나 서로의 파일을 꼬이게 만들지 않도록, 현재 `DESIGN.md`의 역할을 보존한 채 `FOOTHOLD Design System v1`를 별도 브랜드 레이어로 정의하기 위한 협업 기준 문서.
 
 대상 `DESIGN.md`: [`_build/DESIGN.md`](./_build/DESIGN.md)  
-절대 경로: `C:\Users\bangj\OneDrive\Desktop\인공지능사관학교\MAI_UNIVERSE\03_PROJECTS\doyak-final\05_deliverables\_build\DESIGN.md`
+절대 경로: `C:\Users\<사용자>\OneDrive\Desktop\인공지능사관학교\MAI_UNIVERSE\03_PROJECTS\doyak-final\05_deliverables\_build\DESIGN.md`
 
 참고 범위: 업로드된 `DESIGN.md`에 대해 이전 논의에서 추출된 내용과 라인 범위를 기준으로 정리했다. Claude Code 세션에서는 실제 원본 파일을 열어 라인 범위를 한 번 더 대조한 뒤 반영하는 것을 권장한다.
 

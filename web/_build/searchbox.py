@@ -264,7 +264,11 @@ document.addEventListener('DOMContentLoaded',function(){
         res.innerHTML='<div class="none">'+msg+'</div>';}
       else{res.innerHTML=hits.map(function(h){
         return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
-          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
           +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
     });
   }
@@ -410,6 +414,26 @@ def public_pages(vault, pages):
                                 .replace(os.sep, '/'))
         elif f.endswith('.html') and os.path.exists(p):
             out.add(f)
+    # ★ 2026-09-29. **갤러리가 또 새어 나갔다.**
+    #
+    #   위 주석이 「루트만 보는 암묵 규칙을 없애고 여기서 한 번만 정한다」고
+    #   적어 두었는데, `gallery/` 는 `pages` 에도 없고 `assets/` 밑도 아니라
+    #   이 목록에서 빠져 있었다. 그래서 파비콘 주입 · 워드마크 · ascii ·
+    #   chip · hidden 검사 **다섯이 한꺼번에** 갤러리를 안 봤다 `확인됨`
+    #   (팀장 지적 「gallery 페이지에 favicon 왜 없어졌냐」 · 세 페이지 다
+    #   favicon 0 개였고 다른 페이지는 2 개였다).
+    #
+    #   손으로 세 파일에 링크를 박으면 다음 갤러리 페이지에서 또 새어 나간다.
+    #   목록에서 한 번만 고친다.
+    gdir = os.path.join(vault, 'gallery')
+    for r, _, xs in os.walk(gdir):
+        for x in xs:
+            if not x.endswith('.html'):
+                continue
+            p = os.path.join(r, x)
+            if is_page(p):
+                out.add(os.path.relpath(p, vault).replace(os.sep, '/'))
+
     adir = os.path.join(vault, 'assets')          # assets 는 통째로 배포된다
     for r, _, xs in os.walk(adir):
         rel_dir = os.path.relpath(r, vault).replace(os.sep, '/')
@@ -435,9 +459,43 @@ NO_UI = {'assets/deliverables/proposal-deck-presented.html'}
 #   그 페이지는 «배포본이 곧 원본» 이다. 거기서 읽는 것은 두 번째 진실을
 #   만드는 것이 아니라 유일한 진실을 읽는 것이다.
 #   영상 자체는 대상이 아니다. 그 페이지들의 «글자» 만 담는다.
-FROM_SITE = ['gallery/index.html', 'gallery/view/index.html',
-             'gallery/compare/index.html', 'report-v1.html']
+#   ★ 2026-09-29. **갤러리 셋을 여기서 뺐다.** 이 목록이 만들어진 9/13
+#     에는 갤러리가 배포본에만 있었는데, 그 뒤 뷰어의 정본이 lab 으로
+#     옮겨졌다 (`build.py` 의 `GALLERY_VIEWER`). 그래서 `public_pages` 가
+#     볼트에서 이미 담는다.
+#     둘 다 담으니 **갤러리 네 장에 레코드가 일곱** 이 됐고, 손 목록에 없는
+#     `axis2` 만 옛 제목 「FOOTHOLD」 로 남았다 `확인됨` (라이브 실측).
+#     손으로 적은 목록은 새 페이지가 생기면 또 어긋난다. 걷는다.
+FROM_SITE = ['report-v1.html']
 SITE_DIR = None          # build.py 가 배포본 경로를 넣어 준다
+
+
+GNAV = re.compile(r'<div class="gnav".*?</div>\s*</div>', re.S)
+
+
+def site_title(raw_title, rel):
+    """배포본 전용 페이지의 <title> 에서 «그 페이지 이름» 만 남긴다.
+
+    ★ 2026-09-13 실측. 전에는 «·» 로 잘라 첫 조각을 썼다. 우리 페이지는
+      「제목 · FOOTHOLD」 라 그게 맞는데, 갤러리는 「FOOTHOLD · 갤러리 ·
+      3열 비교」 로 브랜드가 «앞» 에 온다. 그래서 세 페이지가 검색 결과에서
+      전부 「FOOTHOLD」 로 보였다. 서로 구별이 안 된다.
+      브랜드 조각을 빼고 나머지를 잇는다. 남는 게 없으면 파일 이름을 쓴다.
+    """
+    parts = [p.strip() for p in (raw_title or '').split('·')]
+    parts = [p for p in parts if p and p.upper() != 'FOOTHOLD']
+    return ' · '.join(parts) if parts else rel
+
+
+def drop_gnav(html):
+    """전역바를 걷어낸다.
+
+    ★ 2026-09-13 실측. 갤러리 넷의 색인 본문이 전부 「기획 일정 회의 연구
+      갤러리 기술 …」 로 시작했다. 전역바 글자다. 모든 페이지에 똑같이 들어가
+      검색을 흐린다. 우리 페이지는 이 글자가 <div class="wrap"> 밖이라
+      애초에 안 담겼는데, 배포본 페이지는 <body> 를 통째로 읽어 함께 왔다.
+    """
+    return GNAV.sub(' ', html)
 
 
 def build_index(vault, pages):
@@ -454,7 +512,14 @@ def build_index(vault, pages):
             continue
         t = io.open(p, encoding='utf-8').read()
         mt = re.search(r'<title>([^<]+)</title>', t)
-        ptitle = (mt.group(1).split('·')[0].strip() if mt else f)
+        # ★ 2026-09-29. 「·」 로 잘라 첫 조각을 쓰는 규칙은 «우리 페이지» 것이다
+        #   (「제목 · FOOTHOLD」). 갤러리는 브랜드가 «앞» 에 와서
+        #   (「FOOTHOLD · 갤러리 · 3열 비교」) 그 규칙을 쓰면 네 장이 전부
+        #   「FOOTHOLD」 가 된다. 브랜드 조각을 빼는 쪽으로 간다.
+        if f.startswith('gallery/'):
+            ptitle = site_title(mt.group(1) if mt else '', f)
+        else:
+            ptitle = (mt.group(1).split('·')[0].strip() if mt else f)
         # 절 단위 ①: <section id="..."> … (문서형 페이지의 표준 구조)
         # ★ 2026-09-09. 여기는 원래 <section id><h2> 가 «곧바로» 붙은 것만 찾는
         #   정규식이었다. 그런데 docs_pages 가 나중에 그 사이에 눈썹 줄을 끼운다
@@ -517,9 +582,9 @@ def build_index(vault, pages):
                 continue
             t = io.open(fp, encoding='utf-8', errors='replace').read()
             mt = re.search(r'<title>([^<]+)</title>', t)
-            ttl = (mt.group(1).split('·')[0].strip() if mt else rel)
+            ttl = site_title(mt.group(1) if mt else '', rel)
             body = re.search(r'<body[^>]*>(.*)', t, re.S)
-            txt = strip_tags(body.group(1) if body else t)
+            txt = strip_tags(drop_gnav(body.group(1) if body else t))
             if not txt:
                 continue
             idx.append({'p': rel, 't': ttl, 'h': ttl, 'a': '', 'x': txt})

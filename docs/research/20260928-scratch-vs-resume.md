@@ -1,0 +1,563 @@
+# 모델 셋을 나란히 · resume 최고 대 처음부터 둘
+
+> 분류: 리서치
+> 작성: 오흥재 · 2026-09-28 07:40
+> 근거: `sim/eval/results/20260923-v2rs` 축 1 원자료 · `20260923-v2rs-axis2` 축 2 manifest · `20260921-nvidia-axis1` 기준선 · `models/foothold-v1.json` 모델 카드 · `_out/loop/bundle3.py` 와 `detail3.py` 재집계
+> 요지: 이것은 **2차 배포 단계**의 중간 성적표다. 최종이 아니다. 그리고 셋 중 어느 것도 CRITERIA v1.4 를 통과하지 못했다.
+> 상태: 초안 · 처음부터 학습 평가 진행 중
+> 판: v2.0
+
+---
+
+## 0. 한 화면 요약
+
+**처음부터 학습한 두 판이 4500 회를 관문 없이 완주했다.** resume 계보에서는
+실행 이름 여덟 개가 같은 문구로 죽었다.
+
+**그런데 완주가 좋은 성적을 뜻하지 않는다.** 축 2 의 `turn` 에서 두 판 모두
+제자리 회전을 못 한다 (7 절). `fs2` 는 4500 에서 **64/64 가 넘어진다.**
+완주는 **수치 안정성**의 이야기이고 명령 응답은 별개다.
+
+| | v2g2-feetair01 | fs1-scratch-f001 | fs2-scratch-f01 |
+|---|---|---|---|
+| 출발 | NVIDIA 에서 resume | **처음부터** | **처음부터** |
+| feet_air_time | 0.1 | 0.01 | 0.1 |
+| learning_rate | 1.0e-4 | **1.0e-3** | **1.0e-3** |
+| GPU | 미기재 | cuda:0 | cuda:1 |
+| 돌린 회수 | 3001 | **4501** | **4501** |
+| 완주 | 예 | **예** | **예** |
+| std 폭주 | 없음 | **없음** | **없음** |
+
+**다만 이것으로 「처음부터는 안 터진다」고 말할 수 없다.** 시드 하나, 환경
+하나다. 그리고 resume 이 폭주의 원인이라는 근거도 여전히 없다.
+
+---
+
+## 0-1. 이 문서를 읽을 때 조심할 것
+
+**셋을 나란히 놓지만 같은 자로 잰 것이 아니다.**
+
+| 조심할 것 | 왜 |
+|---|---|
+| **계보가 다르다** | `v2g2` 는 NVIDIA 에서 resume 한 판이고 `fs1` · `fs2` 는 처음부터다. 같은 「3000」이 다른 뜻이다 |
+| **GPU 가 갈렸다** | `fs1` 은 cuda:0 · `fs2` 는 cuda:1 이다. `CRITERIA.md:495` 가 금지한 배치다. 그래서 `fs1` 대 `fs2` 의 보상 대비는 **장치 효과를 품고 있다.** 장치를 바꾼 짝이 그것을 가른다 |
+| **`v2g2` 는 4500 이 없다** | 3000 까지만 돌았다. 4500 칸이 빈 것이 정상이다 |
+| **어느 것도 배포 후보가 아니다** | 아래 2 절 |
+| **평가 집합을 되풀이해 썼다** | 개발 과정에서 같은 16 지형을 계속 봤다. **독립 보류 집합이 아니다** |
+
+`v2g2-feetair01` 은 iter3000 기준 48칸 평균이 가장 높지만 **일반화 후보로
+확정된 것이 아니다.** 축 2 가 네 체크포인트에서 6/9 · 2/9 · 5/9 · 8/9 이고
+CRITERIA v1.4 의 「네 점 전부 통과」를 못 넘는다.
+
+---
+
+## 1. 무엇을 비교하나
+
+| 판 | 출발 | feet_air_time | learning_rate | GPU | 돌린 회수 |
+|---|---|---|---|---|---|
+| `v2g2-feetair01` | NVIDIA 에서 resume | 0.1 | 1.0e-4 | 미기재 | 3001 |
+| `fs1-scratch-f001` | **처음부터** | 0.01 | **1.0e-3** | cuda:0 | 4501 |
+| `fs2-scratch-f01` | **처음부터** | 0.1 | **1.0e-3** | cuda:1 | 4501 |
+
+공통 · 환경 `Isaac-Velocity-V2b-Unitree-Go2-v0` · 4096 대 · 시드 42 ·
+`max_init_terrain_level` 2 · `rel_standing_envs` 0.10 · **σ 하한 관문 없음**
+
+**관문을 일부러 안 넣었다.** 「처음부터도 터지나」를 재는 판이라 관문을 넣으면
+그 물음이 사라진다.
+
+### 학습 지형 여덟 (v2b)
+
+| 지형 | 비중 | 평가에서 |
+|---|---|---|
+| pyramid_stairs · pyramid_stairs_inv · boxes · random_rough | 각 0.15 | rough6 |
+| hf_pyramid_slope · hf_pyramid_slope_inv | 각 0.10 | rough6 |
+| omni_gap | 0.10 | **평가에 없다** |
+| **rails** | 0.10 | **unseen10 에 «있다»** |
+
+`rails` 가 학습과 평가에 둘 다 있다. **미경험은 열 종이 아니라 아홉 종**이고,
+그것도 이름의 차집합이다.
+
+### 명령
+
+```
+lin_vel_x  (0.4, 1.5)      후진과 저속이 없다
+lin_vel_y  (0.0, 0.0)      횡 이동이 없다
+ang_vel_z  (-1.0, 1.0)     heading 추종이 덮어쓴다
+rel_standing_envs   0.10   정지는 이것으로 산다
+heading_command     True · rel_heading_envs 1.0
+```
+
+`lin_vel_x` 하한이 0.4 라 **제자리 회전(vx 가 0 에 가깝고 wz 가 0 이 아닌 것)을
+학습이 한 번도 안 뽑는다.** 축 2 의 `turn` 칸이 그것을 잰다.
+
+계보의 전체 흐름은 짝 문서에 있다.
+[우리는 왜 여덟 번 방향을 틀었나](research-20260928-rl-lineage.html)
+
+---
+
+## 2. 판정 (CRITERIA v1.4)
+
+축 1 · 네 체크포인트에서 `foothold-v1` 대비 하락 0 · Wilson 95 %
+축 2 · 네 체크포인트에서 아홉 칸 전부 통과
+**둘의 AND** 다.
+
+<!-- 자동:판정 시작 -->
+| 판 | 판정 |
+|---|---|
+| [`v2g2-feetair01`](../../inbox/jay/20260927-methodology/VERDICT-v2g2-feetair01.md) | 읽지 못했다 |
+| [`fs1-scratch-f001`](../../inbox/jay/20260927-methodology/VERDICT-fs1-scratch-f001.md) | 읽지 못했다 |
+| [`fs2-scratch-f01`](../../inbox/jay/20260927-methodology/VERDICT-fs2-scratch-f01.md) | 읽지 못했다 |
+<!-- 자동:판정 끝 -->
+
+---
+
+## 3. 축 1 · 체크포인트별 48칸 평균
+
+`rough6` 6 종 + `unseen10` 10 종 × 속도 0.5 · 1.0 · 1.5 m/s = 48 칸.
+난이도 0.5 · 지형마다 100 판 · 시드 42.
+
+<!-- 자동:ckptflow 시작 -->
+| 판 | iter1500 | iter2000 | iter2500 | iter3000 | iter3750 | iter4000 | iter4500 |
+|---|---|---|---|---|---|---|---|
+| `v2g2-feetair01` | **92.94** | **93.56** | **93.19** | **94.19** | 미완 (0/48) | 미완 (0/48) | 미완 (0/48) |
+| `fs1-scratch-f001` | **44.00** | **40.83** | **53.77** | **63.00** | **62.38** | **62.29** | **61.27** |
+| `fs2-scratch-f01` | **42.29** | **42.29** | **47.10** | **46.96** | **58.98** | **55.15** | **56.17** |
+<!-- 자동:ckptflow 끝 -->
+
+칸이 48 이 아니면 평균을 내지 않고 **미완**으로 둔다. 빈 칸을 0 으로 채우지
+않는다.
+
+---
+
+## 4. 축 1 · 지형 집합별 · 속도별
+
+평균 하나로는 어디가 오르고 어디가 내렸는지 안 보인다. 집합과 속도로 나눈다.
+
+<!-- 자동:set 시작 -->
+| 지형 집합 | 속도 | NVIDIA | foothold-v1 | v2g2 | fs1 | fs2 | fs1 - v1 | fs2 - v1 |
+|---|---|---|---|---|---|---|---|---|
+| rough6 | 0.5 m/s | 65.8 | 99.7 | 100 | **82.3** | **70.8** | **-17.3** | **-28.8** |
+| rough6 | 1.0 m/s | 69 | 100 | 100 | **89.7** | **80.3** | **-10.3** | **-19.7** |
+| rough6 | 1.5 m/s | 17.5 | 98.3 | 100 | **50.3** | **55.5** | **-48.0** | **-42.8** |
+| unseen10 | 0.5 m/s | 48.7 | 85.5 | 89.9 | **54.8** | **31** | **-30.7** | **-54.5** |
+| unseen10 | 1.0 m/s | 50.5 | 84.7 | 92.4 | **73.3** | **77** | **-11.4** | **-7.7** |
+| unseen10 | 1.5 m/s | 7 | 77.6 | 89.8 | **32.6** | **37.6** | **-45.0** | **-40.0** |
+
+마지막 두 열은 **foothold-v1 대비 %p** 다. 양수면 올랐다.
+<!-- 자동:set 끝 -->
+
+---
+
+## 5. 축 1 · 지형별 · 속도별 **전부**
+
+48 칸을 다 편다. 기준선 둘(NVIDIA · foothold-v1)을 왼쪽에 둔다.
+
+<!-- 자동:terrain 시작 -->
+| 지형 | 속도 | NVIDIA | foothold-v1 | v2g2 | fs1 | fs2 |
+|---|---|---|---|---|---|---|
+| boxes * | 0.5 m/s | 76 | 99 | 100 | 71 | 53 |
+| boxes * | 1.0 m/s | 34 | 100 | 100 | 97 | 89 |
+| boxes * | 1.5 m/s | 0 | 100 | 100 | 3 | 1 |
+| hf_pyramid_slope * | 0.5 m/s | 100 | 100 | 100 | 100 | 100 |
+| hf_pyramid_slope * | 1.0 m/s | 100 | 100 | 100 | 87 | 100 |
+| hf_pyramid_slope * | 1.5 m/s | 0 | 100 | 100 | 98 | 100 |
+| hf_pyramid_slope_inv * | 0.5 m/s | 100 | 100 | 100 | 100 | 100 |
+| hf_pyramid_slope_inv * | 1.0 m/s | 100 | 100 | 100 | 98 | 93 |
+| hf_pyramid_slope_inv * | 1.5 m/s | 24 | 100 | 100 | 98 | 86 |
+| pyramid_stairs * | 0.5 m/s | 10 | 100 | 100 | 100 | 80 |
+| pyramid_stairs * | 1.0 m/s | 100 | 100 | 100 | 100 | 100 |
+| pyramid_stairs * | 1.5 m/s | 81 | 100 | 100 | 100 | 100 |
+| pyramid_stairs_inv * | 0.5 m/s | 24 | 100 | 100 | 99 | 89 |
+| pyramid_stairs_inv * | 1.0 m/s | 0 | 100 | 100 | 66 | 34 |
+| pyramid_stairs_inv * | 1.5 m/s | 0 | 100 | 100 | 0 | 0 |
+| random_rough * | 0.5 m/s | 85 | 99 | 100 | 24 | 3 |
+| random_rough * | 1.0 m/s | 80 | 100 | 100 | 90 | 66 |
+| random_rough * | 1.5 m/s | 0 | 90 | 100 | 3 | 46 |
+| discrete_obstacles | 0.5 m/s | 94 | 100 | 100 | 38 | 7 |
+| discrete_obstacles | 1.0 m/s | 94 | 100 | 100 | 61 | 91 |
+| discrete_obstacles | 1.5 m/s | 0 | 100 | 100 | 44 | 75 |
+| floating_ring | 0.5 m/s | 1 | 95 | 100 | 53 | 24 |
+| floating_ring | 1.0 m/s | 0 | 99 | 100 | 100 | 72 |
+| floating_ring | 1.5 m/s | 0 | 87 | 99 | 0 | 0 |
+| gap | 0.5 m/s | 0 | 90 | 100 | 79 | 64 |
+| gap | 1.0 m/s | 1 | 100 | 100 | 90 | 100 |
+| gap | 1.5 m/s | 0 | 68 | 99 | 100 | 79 |
+| pit | 0.5 m/s | 7 | 100 | 100 | 100 | 76 |
+| pit | 1.0 m/s | 2 | 100 | 100 | 100 | 98 |
+| pit | 1.5 m/s | 0 | 100 | 100 | 0 | 0 |
+| rails * | 0.5 m/s | 0 | 70 | 99 | 26 | 63 |
+| rails * | 1.0 m/s | 8 | 48 | 100 | 64 | 94 |
+| rails * | 1.5 m/s | 0 | 21 | 100 | 0 | 0 |
+| repeated_boxes | 0.5 m/s | 100 | 100 | 100 | 85 | 50 |
+| repeated_boxes | 1.0 m/s | 100 | 100 | 100 | 70 | 72 |
+| repeated_boxes | 1.5 m/s | 1 | 100 | 100 | 42 | 41 |
+| repeated_cylinders | 0.5 m/s | 99 | 100 | 100 | 60 | 19 |
+| repeated_cylinders | 1.0 m/s | 100 | 100 | 100 | 73 | 78 |
+| repeated_cylinders | 1.5 m/s | 7 | 100 | 100 | 33 | 26 |
+| star | 0.5 m/s | 86 | 100 | 100 | 96 | 7 |
+| star | 1.0 m/s | 100 | 100 | 100 | 92 | 68 |
+| star | 1.5 m/s | 62 | 100 | 100 | 35 | 56 |
+| stepping_stones | 0.5 m/s | 0 | 0 | 0 | 0 | 0 |
+| stepping_stones | 1.0 m/s | 0 | 0 | 24 | 0 | 0 |
+| stepping_stones | 1.5 m/s | 0 | 0 | 0 | 0 | 0 |
+| wave | 0.5 m/s | 100 | 100 | 100 | 11 | 0 |
+| wave | 1.0 m/s | 100 | 100 | 100 | 83 | 97 |
+| wave | 1.5 m/s | 0 | 100 | 100 | 72 | 99 |
+
+`*` 는 **학습 지형**이다. 미경험 주장에서 빠진다.
+<!-- 자동:terrain 끝 -->
+
+---
+
+## 6. 축 1 · 실패 성분 분해
+
+종합 성공률은 **생존 · 진행 · 추종 · 방향** 네 성분의 AND 다. 종합만 보면
+「못 건넌다」와 「느리다」가 같은 숫자로 내려온다. 100 이 아닌 칸을 성분까지
+편다.
+
+<!-- 자동:components 시작 -->
+| 판 | 지형 | 속도 | 종합 | 생존 | 진행 | 추종 | 방향 |
+|---|---|---|---|---|---|---|---|
+| `v2g2-feetair01` | rails | 0.5 m/s | **99** | 100 | 100 | 100 | 99 |
+| `v2g2-feetair01` | stepping_stones | 0.5 m/s | **0** | 36 | 7 | 49 | 8 |
+| `v2g2-feetair01` | stepping_stones | 1.0 m/s | **24** | 48 | 45 | 31 | 45 |
+| `v2g2-feetair01` | floating_ring | 1.5 m/s | **99** | 99 | 99 | 99 | 99 |
+| `v2g2-feetair01` | gap | 1.5 m/s | **99** | 100 | 99 | 99 | 99 |
+| `v2g2-feetair01` | stepping_stones | 1.5 m/s | **0** | 53 | 23 | 0 | 24 |
+| `fs1-scratch-f001` | boxes | 0.5 m/s | **71** | 79 | 91 | 92 | 91 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 0.5 m/s | **99** | 100 | 100 | 100 | 99 |
+| `fs1-scratch-f001` | random_rough | 0.5 m/s | **24** | 47 | 37 | 79 | 29 |
+| `fs1-scratch-f001` | boxes | 1.0 m/s | **97** | 98 | 100 | 99 | 100 |
+| `fs1-scratch-f001` | hf_pyramid_slope | 1.0 m/s | **87** | 87 | 87 | 100 | 87 |
+| `fs1-scratch-f001` | hf_pyramid_slope_inv | 1.0 m/s | **98** | 98 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 1.0 m/s | **66** | 100 | 100 | 96 | 70 |
+| `fs1-scratch-f001` | random_rough | 1.0 m/s | **90** | 91 | 92 | 97 | 92 |
+| `fs1-scratch-f001` | boxes | 1.5 m/s | **3** | 94 | 90 | 3 | 91 |
+| `fs1-scratch-f001` | hf_pyramid_slope | 1.5 m/s | **98** | 98 | 98 | 98 | 98 |
+| `fs1-scratch-f001` | hf_pyramid_slope_inv | 1.5 m/s | **98** | 98 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | pyramid_stairs_inv | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | random_rough | 1.5 m/s | **3** | 85 | 90 | 3 | 89 |
+| `fs1-scratch-f001` | discrete_obstacles | 0.5 m/s | **38** | 45 | 45 | 100 | 38 |
+| `fs1-scratch-f001` | floating_ring | 0.5 m/s | **53** | 100 | 53 | 53 | 53 |
+| `fs1-scratch-f001` | gap | 0.5 m/s | **79** | 100 | 97 | 97 | 79 |
+| `fs1-scratch-f001` | rails | 0.5 m/s | **26** | 83 | 43 | 26 | 43 |
+| `fs1-scratch-f001` | repeated_boxes | 0.5 m/s | **85** | 86 | 95 | 99 | 95 |
+| `fs1-scratch-f001` | repeated_cylinders | 0.5 m/s | **60** | 61 | 89 | 99 | 89 |
+| `fs1-scratch-f001` | star | 0.5 m/s | **96** | 96 | 97 | 100 | 97 |
+| `fs1-scratch-f001` | stepping_stones | 0.5 m/s | **0** | 68 | 0 | 12 | 0 |
+| `fs1-scratch-f001` | wave | 0.5 m/s | **11** | 100 | 100 | 100 | 11 |
+| `fs1-scratch-f001` | discrete_obstacles | 1.0 m/s | **61** | 61 | 61 | 81 | 61 |
+| `fs1-scratch-f001` | gap | 1.0 m/s | **90** | 100 | 100 | 100 | 90 |
+| `fs1-scratch-f001` | rails | 1.0 m/s | **64** | 99 | 98 | 64 | 98 |
+| `fs1-scratch-f001` | repeated_boxes | 1.0 m/s | **70** | 70 | 94 | 100 | 94 |
+| `fs1-scratch-f001` | repeated_cylinders | 1.0 m/s | **73** | 73 | 94 | 100 | 94 |
+| `fs1-scratch-f001` | star | 1.0 m/s | **92** | 92 | 95 | 100 | 95 |
+| `fs1-scratch-f001` | stepping_stones | 1.0 m/s | **0** | 5 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | wave | 1.0 m/s | **83** | 83 | 100 | 100 | 100 |
+| `fs1-scratch-f001` | discrete_obstacles | 1.5 m/s | **44** | 69 | 69 | 44 | 69 |
+| `fs1-scratch-f001` | floating_ring | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | pit | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | rails | 1.5 m/s | **0** | 100 | 99 | 0 | 99 |
+| `fs1-scratch-f001` | repeated_boxes | 1.5 m/s | **42** | 97 | 100 | 42 | 100 |
+| `fs1-scratch-f001` | repeated_cylinders | 1.5 m/s | **33** | 100 | 100 | 33 | 100 |
+| `fs1-scratch-f001` | star | 1.5 m/s | **35** | 72 | 82 | 46 | 82 |
+| `fs1-scratch-f001` | stepping_stones | 1.5 m/s | **0** | 10 | 0 | 0 | 0 |
+| `fs1-scratch-f001` | wave | 1.5 m/s | **72** | 72 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | boxes | 0.5 m/s | **53** | 66 | 59 | 89 | 56 |
+| `fs2-scratch-f01` | pyramid_stairs | 0.5 m/s | **80** | 100 | 100 | 100 | 80 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 0.5 m/s | **89** | 94 | 96 | 98 | 93 |
+| `fs2-scratch-f01` | random_rough | 0.5 m/s | **3** | 5 | 25 | 100 | 20 |
+| `fs2-scratch-f01` | boxes | 1.0 m/s | **89** | 93 | 93 | 93 | 92 |
+| `fs2-scratch-f01` | hf_pyramid_slope_inv | 1.0 m/s | **93** | 93 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 1.0 m/s | **34** | 100 | 100 | 37 | 97 |
+| `fs2-scratch-f01` | random_rough | 1.0 m/s | **66** | 74 | 86 | 93 | 78 |
+| `fs2-scratch-f01` | boxes | 1.5 m/s | **1** | 97 | 81 | 1 | 83 |
+| `fs2-scratch-f01` | hf_pyramid_slope_inv | 1.5 m/s | **86** | 86 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | pyramid_stairs_inv | 1.5 m/s | **0** | 87 | 5 | 0 | 4 |
+| `fs2-scratch-f01` | random_rough | 1.5 m/s | **46** | 92 | 96 | 48 | 93 |
+| `fs2-scratch-f01` | discrete_obstacles | 0.5 m/s | **7** | 71 | 92 | 99 | 16 |
+| `fs2-scratch-f01` | floating_ring | 0.5 m/s | **24** | 72 | 24 | 25 | 24 |
+| `fs2-scratch-f01` | gap | 0.5 m/s | **64** | 100 | 67 | 66 | 65 |
+| `fs2-scratch-f01` | pit | 0.5 m/s | **76** | 100 | 77 | 77 | 76 |
+| `fs2-scratch-f01` | rails | 0.5 m/s | **63** | 65 | 65 | 88 | 64 |
+| `fs2-scratch-f01` | repeated_boxes | 0.5 m/s | **50** | 68 | 77 | 100 | 57 |
+| `fs2-scratch-f01` | repeated_cylinders | 0.5 m/s | **19** | 27 | 26 | 98 | 20 |
+| `fs2-scratch-f01` | star | 0.5 m/s | **7** | 12 | 17 | 100 | 12 |
+| `fs2-scratch-f01` | stepping_stones | 0.5 m/s | **0** | 28 | 0 | 26 | 0 |
+| `fs2-scratch-f01` | wave | 0.5 m/s | **0** | 98 | 100 | 100 | 0 |
+| `fs2-scratch-f01` | discrete_obstacles | 1.0 m/s | **91** | 91 | 91 | 100 | 91 |
+| `fs2-scratch-f01` | floating_ring | 1.0 m/s | **72** | 93 | 80 | 72 | 80 |
+| `fs2-scratch-f01` | pit | 1.0 m/s | **98** | 100 | 99 | 98 | 99 |
+| `fs2-scratch-f01` | rails | 1.0 m/s | **94** | 100 | 100 | 94 | 100 |
+| `fs2-scratch-f01` | repeated_boxes | 1.0 m/s | **72** | 74 | 74 | 100 | 72 |
+| `fs2-scratch-f01` | repeated_cylinders | 1.0 m/s | **78** | 78 | 80 | 100 | 80 |
+| `fs2-scratch-f01` | star | 1.0 m/s | **68** | 68 | 69 | 100 | 69 |
+| `fs2-scratch-f01` | stepping_stones | 1.0 m/s | **0** | 31 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | wave | 1.0 m/s | **97** | 97 | 100 | 100 | 100 |
+| `fs2-scratch-f01` | discrete_obstacles | 1.5 m/s | **75** | 93 | 93 | 75 | 93 |
+| `fs2-scratch-f01` | floating_ring | 1.5 m/s | **0** | 97 | 5 | 0 | 5 |
+| `fs2-scratch-f01` | gap | 1.5 m/s | **79** | 100 | 100 | 79 | 100 |
+| `fs2-scratch-f01` | pit | 1.5 m/s | **0** | 100 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | rails | 1.5 m/s | **0** | 100 | 100 | 0 | 100 |
+| `fs2-scratch-f01` | repeated_boxes | 1.5 m/s | **41** | 100 | 100 | 41 | 100 |
+| `fs2-scratch-f01` | repeated_cylinders | 1.5 m/s | **26** | 74 | 76 | 36 | 76 |
+| `fs2-scratch-f01` | star | 1.5 m/s | **56** | 79 | 80 | 75 | 80 |
+| `fs2-scratch-f01` | stepping_stones | 1.5 m/s | **0** | 3 | 0 | 0 | 0 |
+| `fs2-scratch-f01` | wave | 1.5 m/s | **99** | 99 | 100 | 100 | 100 |
+
+종합은 네 성분의 **AND** 다. 어느 하나가 낮으면 종합이 낮다. 「못 건넌다」와 「느리다」가 같은 숫자로 내려오지 않게 성분을 편다.
+<!-- 자동:components 끝 -->
+
+---
+
+## 7. 축 2 · 명령 응답 아홉 칸
+
+평지에서 명령에만 반응시킨다. 지형을 섞으면 정지 실패가 명령 탓인지 지형
+탓인지 안 갈린다.
+
+| 프로브 | 무엇을 보내나 | 문턱 |
+|---|---|---|
+| `hold` | 일정 속도 유지 | 낙상 0.03 이하 |
+| `ramp` | 속도를 올렸다 내린다 | 낙상 0.03 이하 |
+| `stop` | 달리다 정지 명령 | 낙상 0.03 이하 · 정지 시간 |
+| `turn` | **제자리 회전** · wz 를 −1.0 에서 +1.0 까지 계단으로 | 낙상 0.10 이하 · 요 추종비 0.40 이상 |
+
+<!-- 자동:축2 시작 -->
+| 판 | 체크포인트 | hold | ramp | stop | turn |
+|---|---|---|---|---|---|
+| `v2g2-feetair01` | 1500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 36/64 = 0.5625<br>[0.44086, 0.67706] |
+| `v2g2-feetair01` | 2000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 48/64 = 0.7500<br>[0.63184, 0.83985] |
+| `v2g2-feetair01` | 2500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 23/64 = 0.3594<br>[0.25288, 0.48179] |
+| `v2g2-feetair01` | 3000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 7/64 = 0.1094<br>[0.054, 0.20899] |
+| `fs1-scratch-f001` | 1500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 2000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 2500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 3000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 3750 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 15/64 = 0.2344<br>[0.1475, 0.35133] |
+| `fs1-scratch-f001` | 4000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs1-scratch-f001` | 4500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 47/64 = 0.7344<br>[0.61517, 0.82704] |
+| `fs2-scratch-f01` | 1500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs2-scratch-f01` | 2000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs2-scratch-f01` | 2500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] |
+| `fs2-scratch-f01` | 3000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 11/64 = 0.1719<br>[0.09878, 0.28213] |
+| `fs2-scratch-f01` | 3750 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 31/64 = 0.4844<br>[0.36634, 0.60418] |
+| `fs2-scratch-f01` | 4000 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 43/64 = 0.6719<br>[0.54999, 0.77429] |
+| `fs2-scratch-f01` | 4500 | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 0/64 = 0.0000<br>[0.0, 0.05662] | 64/64 = 1.0000<br>[0.94338, 1.0] |
+<!-- 자동:축2 끝 -->
+
+### 「낙상 0」이 통과가 아니다 · fable 2 회차가 잡았다
+
+`turn` 프로브는 **제자리 회전**을 시킨다. 그런데 정책이 명령을 **아예 안 따르면**
+넘어질 일이 없어서 **낙상이 0 으로 내려온다.** 문턱만 보면 통과로 읽힌다.
+
+그래서 낙상과 **요 추종비**를 같이 봐야 한다. 직접 다시 셌다.
+
+| 판 | iter | 낙상 | 요 추종비 | 0.40 넘은 칸 | 무슨 일인가 |
+|---|---|---|---|---|---|
+| `fs1-scratch-f001` | 1500 | 0/64 | −0.03 ~ +0.03 | 0/4 | **안 돈다** |
+| | 2000 | 0/64 | −0.05 ~ +0.03 | 0/4 | 안 돈다 |
+| | 2500 | 0/64 | −0.11 ~ +0.06 | 0/4 | 안 돈다 |
+| | 3000 | 0/64 | −0.05 ~ +0.07 | 0/4 | 안 돈다 |
+| | **4500** | **47/64** | 0.14 ~ 0.43 | 1/4 | 돌기 시작하자 넘어진다 |
+| `fs2-scratch-f01` | 1500 | 0/64 | −0.02 ~ 0.18 | 0/4 | 안 돈다 |
+| | 2000 | 0/64 | 0.01 ~ 0.09 | 0/4 | 안 돈다 |
+| | 2500 | 0/64 | 0.02 ~ 0.40 | 0/4 | 거의 안 돈다 |
+| | 3000 | 11/64 | 0.12 ~ 0.38 | 0/4 | |
+| | **4500** | **64/64** | −0.01 ~ 0.17 | 0/4 | **전부 넘어지고 여전히 안 돈다** |
+| `v2g2-feetair01` | 3000 | 7/64 | **0.402 ~ 0.760** | **4/4** | **돌면서 거의 안 넘어진다** |
+
+**돌면서 서 있는 것은 `v2g2` iter3000 하나뿐이다.**
+
+이것이 「처음부터 학습이 완주했다」를 좋은 소식으로만 읽으면 안 되는 이유다.
+완주는 **수치 안정성**의 이야기이고, 명령 응답은 **별개**다. 지금 자료로는
+처음부터 학습한 두 판이 **제자리 회전을 못 한다.**
+
+내 기억 파일에 적힌 것과 같은 자리다. 「AND 종합 지표는 성분까지 펴 본다 ·
+「못 건넌다」와 「느리다」가 같은 숫자로 내려온다」. 여기서는 **「안 넘어진다」와
+「안 움직인다」가 같은 0 으로 내려왔다.**
+
+### 문턱이 잡음보다 좁다
+
+환경이 64 대라 눈금이 `1/64 = 0.0156` 이다. `turn` 문턱 0.10 의 양옆 인접값이
+6/64(통과)와 7/64(미달)이고 **한 판 차이**다. 그리고 관문은 신뢰구간 없는
+딱딱한 부등호다.
+
+```
+7/64 = 0.1094   Wilson 95 % [0.0540, 0.2090]   <- 문턱 0.10 이 구간 «안» 에 있다
+6/64 = 0.0938   Wilson 95 % [0.0437, 0.1898]
+```
+
+**반대 방향 문제도 있다.** 신뢰구간 판정으로 바꾸면 `0/64` 의 상한이 0.0566
+이라 `stop` · `hold` 의 문턱 **0.03 은 어떤 정책도 못 넘게 된다.** 완화가
+아니라 판정을 다시 설계하는 일이다.
+이슈 [#469](https://github.com/foothold-project/foothold-lab/issues/469) 로 올렸다.
+
+---
+
+## 8. 폭주 · 처음부터도 터지나
+
+resume 계보에서 **실패 로그 9 건 · 서로 다른 실행 이름 8 개**가 같은 문구로
+끝났다.
+
+```
+RuntimeError: normal expects all elements of std >= 0.0
+```
+
+매개화 · 보상 가중치 · 시드 · optimizer 처리 **설정 하나로는** 갈리지 않는다.
+모든 판에 똑같이 있던 것이 `resume` 이지만 **그것이 원인이라는 근거는 없다.**
+
+<!-- 자동:폭주 시작 -->
+| 판 | 완주 | 마지막 체크포인트 | 오류 |
+|---|---|---|---|
+| `v2g2-feetair01` | **예** | 3000 |  |
+| `fs1-scratch-f001` | **예** | 4500 |  |
+| `fs2-scratch-f01` | **예** | 4500 |  |
+<!-- 자동:폭주 끝 -->
+
+### 라이브러리에 관문이 없다
+
+`rsl_rl/modules/actor_critic.py` 전체에서 `clamp` · `clip` · `isnan` ·
+`isfinite` 를 찾았다. **하나도 없다.** gradient 자르기는 있는데 NaN 을 막지
+않는다. 실측했다.
+
+```
+넣은 gradient   [1.0, 2.0, NaN, 3.0]
+clip_grad_norm_(..., 1.0) 통과 후
+나온 gradient   [NaN, NaN, NaN, NaN]
+```
+
+전체 norm 이 NaN 이면 곱하는 계수가 NaN 이라 전부 NaN 이 된다. **막는 것이
+아니라 퍼뜨린다.**
+
+**완주해도 「처음부터는 안 터진다」로 일반화하면 안 된다.** 시드 하나이고
+환경 하나다. 터지면 전환 근거 하나가 사라지고, 그것도 결과다.
+
+---
+
+## 9. 영상
+
+같은 지형 · 같은 난이도 · 같은 속도에서 셋을 찍는다. 나란히 놓고 보려면
+조건이 같아야 한다.
+
+| 칸 | 왜 찍나 |
+|---|---|
+| `stepping_stones` d0.5 1.0 m/s | 축 1 최대 구멍 |
+| `gap` d0.5 1.0 m/s | `omni_gap` 학습이 `gap` 으로 옮겨가나 |
+| `rails` d0.5 1.5 m/s | 성적이 가장 크게 오른 칸 (학습 지형이다) |
+| `pit` d0.5 1.0 m/s | 학습에 없는데 잘 되던 칸 |
+
+<!-- 자동:영상 시작 -->
+**v2g2-feetair01 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**v2g2-feetair01 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/v2g2-feetair01/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs1-scratch-f001 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs1-scratch-f001/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · stepping_stones** · 축 1 최대 구멍
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/stepping_stones/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · gap** · omni_gap 학습이 gap 으로 옮겨가나
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/gap/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · rails** · 성적이 가장 크게 오른 칸 (학습 지형이다)
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/rails/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+
+**fs2-scratch-f01 · pit** · 학습에 없는데 잘 되던 칸
+
+<video src="/sim/eval/results/20260928-scratch-clips/fs2-scratch-f01/pit/flat_army_A_1_track_side.mp4" controls preload="metadata" playsinline muted loop style="width:100%;height:auto"></video>
+<!-- 자동:영상 끝 -->
+
+---
+
+## 10. 원자료 · 눌러서 볼 수 있습니다
+
+| 무엇 | 링크 |
+|---|---|
+| 축 1 칸별 전부 | [scratch-axis1_long.csv](assets/eval/scratch-axis1_long.csv) |
+| 축 2 프로브별 전부 | [scratch-axis2_long.csv](assets/eval/scratch-axis2_long.csv) |
+| 지형별 상세 표 | [scratch-detail-terrain.md](assets/eval/scratch-detail-terrain.md) |
+| 집합별 요약 | [scratch-detail-set.md](assets/eval/scratch-detail-set.md) |
+| 실패 성분 | [scratch-detail-components.md](assets/eval/scratch-detail-components.md) |
+| **없는 것** | [scratch-MISSING.md](assets/eval/scratch-MISSING.md) |
+
+`MISSING.md` 를 같이 보십시오. **빈 칸을 0 으로 채우지 않기 때문에** 무엇이
+없는지는 그 파일에만 있습니다.
+
+---
+
+## 11. 미확인으로 남기는 것
+
+| 항목 | 왜 |
+|---|---|
+| 처음부터가 resume 성적에 도달하나 | 도달 못 할 수도 있다. 그러면 그것이 결과다 |
+| 4500 회가 수렴에 충분한가 | 곡선을 봐야 한다 |
+| 처음부터 학습에서의 GPU 효과 | resume 계보에서는 sim 과 PPO 동거 조건에서 체크포인트 121 개의 텐서가 같았다. 처음부터에서도 같은지는 **미확인** |
+| `max_init_terrain_level` 2 · 5 · `None` | 비교한 적이 없다 |
+| 폭주의 최초 원인 | 오류 문구는 **발생 지점**이지 원인 규명이 아니다 |
+| `lin_vel_y` 를 닫은 것이 옳은가 | 열어 본 적이 없다 |
+
+---
+
+## 12. 독립 검증
+
+이 문서와 짝 문서의 주장은 astra 와 fable 이 **각각** 검증했다.
+
+| 검증 | 언제 | 요지 |
+|---|---|---|
+| astra 1 회차 | 09-28 01:17 | 필수 전환이라는 근거는 없다. 학습 기본값 오독 · 반복 횟수 혼동 · GPU 교란부터 고쳐야 한다 |
+| fable 1 회차 | 09-28 01:43 | 「확인됨」이라 적은 것 중 셋이 틀렸다. 폭주는 9 건이 아니라 8 판이다 |
+| astra 2 회차 | 09-28 02:00 | **장치 대조 자료가 없다는 전제가 틀렸다.** 계보 초안은 아직 발행할 수 없다 |
+| fable 2 회차 | 진행 중 | |
+
+**두 검증이 독립으로 같이 잡은 셋**
+
+1. `max_init_terrain_level` 의 `None` 은 학습값이 아니다 (학습 5 · `_PLAY` 만 `None`)
+2. `fs1` · `fs2` 가 GPU 까지 두 칸 다르다
+3. `v2g2` 의 「축 2 8/9」는 iter3000 한 점이다
+
+**astra 2 회차의 가장 큰 정정** · `v2b-r` 대 `v2b-p11` 의 공통 체크포인트
+**121 개**에서 모델과 optimizer 텐서가 전부 같았다. 곧 sim 과 PPO 가 같은 장치에
+함께 있으면 번호를 옮겨도 저장 상태가 같았다.
+
+이슈 · [#467](https://github.com/foothold-project/foothold-lab/issues/467) 검증 ·
+[#468](https://github.com/foothold-project/foothold-lab/issues/468) 실험 ·
+[#469](https://github.com/foothold-project/foothold-lab/issues/469) 축 2 문턱 ·
+[#470](https://github.com/foothold-project/foothold-lab/issues/470) 웹 게재
+
+---
+
+## 판 이력
+
+| 판 | 언제 | 무엇 | 근거 |
+|---|---|---|---|
+| v2.0 | 2026-09-28 | 팀장 지적으로 **종합 보고서 수준**으로 늘렸다. 48칸 평균 하나였던 것을 지형별·속도별·집합별·성분별로 폈고 기준선 둘을 나란히 뒀다. 경로만 적던 원자료를 **눌러서 볼 수 있는 링크**로 바꿨다. 「손잡이」를 없앴다 | 실측 · `report-v1` 대조 |
+| v1.0 | 2026-09-28 | 처음 씀. 숫자 표는 `bundle3.py` 가 채우고 서사는 사람이 쓴다 | 실측 |

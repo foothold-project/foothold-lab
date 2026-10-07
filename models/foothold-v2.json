@@ -1,0 +1,305 @@
+{
+  "name": "foothold-v2",
+  "file": "models/foothold-v2.pt",
+  "sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+  "bytes": 6882293,
+  "released": "2026-09-29",
+  "eval_spec_version": 2,
+  "generated_by": "tools/make_v2_model_card.py (손으로 적은 칸이 없다)",
+  "source_run": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000",
+  "training": {
+    "task": "Isaac-Velocity-Rough-Unitree-Go2-v0 파생 (로그 폴더 unitree_go2_gap_nvidia)",
+    "recipe": "v2g2-feetair01",
+    "recipe_is_not_a_file": {
+      "why": "feet_air_time 0.1 을 적은 cfg 파일이 저장소에도 설치본에도 없다. 명령줄 덮어쓰기로 줬다",
+      "base_task": "Isaac-Velocity-V2a-Unitree-Go2-v0 (sim/policy/v2a_env_cfg.py · gap_ppo_cfg.py)",
+      "override": {
+        "rewards.feet_air_time.weight": {
+          "nvidia": 0.01,
+          "this": 0.1
+        }
+      },
+      "authoritative_record": "models/foothold-v2.env.yaml (학습 시각에 rsl_rl 이 적은 것)",
+      "training_code_state": "logs/.../git/IsaacLab.diff · 학습은 추적 밖 폴더 gap_training/ 으로 돌았고 추적된 변경은 __init__.py 의 import 한 줄뿐이다"
+    },
+    "started_from": "NVIDIA 공식 체크포인트 (load_run nvidia_pretrained_source · nvidia_pretrained.pt · resume True)",
+    "num_envs": 4096,
+    "seed": 42,
+    "max_iterations": 3001,
+    "checkpoint_iter": 3000,
+    "terrain_grid": {
+      "num_rows": 10,
+      "num_cols": 20,
+      "size_m": [
+        8.0,
+        8.0
+      ],
+      "curriculum": true,
+      "difficulty_range": [
+        0.0,
+        1.0
+      ],
+      "max_init_terrain_level": 2
+    },
+    "terrain_mix": {
+      "boxes": 0.15,
+      "hf_pyramid_slope": 0.1,
+      "hf_pyramid_slope_inv": 0.1,
+      "omni_gap": 0.1,
+      "pyramid_stairs": 0.15,
+      "pyramid_stairs_inv": 0.15,
+      "rails": 0.1,
+      "random_rough": 0.15
+    },
+    "commands": {
+      "ang_vel_z": [
+        -1.0,
+        1.0
+      ],
+      "heading": [
+        -3.141592653589793,
+        3.141592653589793
+      ],
+      "lin_vel_x": [
+        0.4,
+        1.5
+      ],
+      "lin_vel_y": [
+        0.0,
+        0.0
+      ]
+    },
+    "command_flags": {
+      "heading_command": true,
+      "rel_heading_envs": 1.0,
+      "rel_standing_envs": 0.1,
+      "resampling_time_range": [
+        10.0,
+        10.0
+      ]
+    },
+    "reset_pose_range": {
+      "x": [
+        -0.1,
+        0.1
+      ],
+      "y": [
+        -0.2,
+        0.2
+      ],
+      "yaw": [
+        -0.05,
+        0.05
+      ]
+    },
+    "push_robot": "없음",
+    "reward_weights": {
+      "action_rate_l2": -0.01,
+      "ang_vel_xy_l2": -0.05,
+      "dof_acc_l2": -2.5e-07,
+      "dof_pos_limits": 0.0,
+      "dof_torques_l2": -0.0002,
+      "feet_air_time": 0.1,
+      "flat_orientation_l2": 0.0,
+      "lin_vel_z_l2": -2.0,
+      "track_ang_vel_z_exp": 0.75,
+      "track_lin_vel_xy_exp": 1.5
+    },
+    "diff_from_v1": {
+      "note": "두 카드의 같은 칸을 기계가 견준 것이다. v1 카드의 `training.command_conditions.*.this` 와 이 실행의 env.yaml.",
+      "changed": {
+        "lin_vel_x": {
+          "v1": [
+            0.5,
+            1.5
+          ],
+          "v2": [
+            0.4,
+            1.5
+          ]
+        },
+        "ang_vel_z": {
+          "v1": [
+            0.0,
+            0.0
+          ],
+          "v2": [
+            -1.0,
+            1.0
+          ]
+        },
+        "heading_command": {
+          "v1": false,
+          "v2": true
+        },
+        "rel_heading_envs": {
+          "v1": 0.0,
+          "v2": 1.0
+        },
+        "rel_standing_envs": {
+          "v1": 0.0,
+          "v2": 0.1
+        }
+      },
+      "terrain_mix": {
+        "v1": {
+          "pyramid_stairs": 0.18,
+          "pyramid_stairs_inv": 0.18,
+          "boxes": 0.18,
+          "random_rough": 0.18,
+          "hf_pyramid_slope": 0.09,
+          "hf_pyramid_slope_inv": 0.09,
+          "forward_gap": 0.1
+        },
+        "v2": {
+          "boxes": 0.15,
+          "hf_pyramid_slope": 0.1,
+          "hf_pyramid_slope_inv": 0.1,
+          "omni_gap": 0.1,
+          "pyramid_stairs": 0.15,
+          "pyramid_stairs_inv": 0.15,
+          "rails": 0.1,
+          "random_rough": 0.15
+        }
+      },
+      "feet_air_time": {
+        "v1": "NVIDIA 기본값 그대로 (v1 카드: 보상 11항 전부 NVIDIA Go2 rough 와 같음)",
+        "v2": 0.1,
+        "why": "레시피 이름 `feetair01` 의 출처다"
+      }
+    }
+  },
+  "evaluation": {
+    "spec": {
+      "eval_spec_version": 2,
+      "seed": 42,
+      "episodes_per_terrain": 100,
+      "min_progress_m": 3.0,
+      "max_lateral_drift_m": 0.75,
+      "max_velocity_mae_mps": 0.25,
+      "direction_gate_m": 3.0,
+      "height_scan_miss_value": 1.0,
+      "ideal_distance_m": 6.0,
+      "success_axes": [
+        "survival_success",
+        "progress_success",
+        "tracking_success",
+        "direction_success"
+      ],
+      "eval_duration_s": [
+        4.0,
+        6.0,
+        12.0
+      ]
+    },
+    "harness": "sim/eval/eval_generalization.py (규격 2 가 기본값)",
+    "terrain_sets": {
+      "unseen10": [
+        "discrete_obstacles",
+        "wave",
+        "stepping_stones",
+        "gap",
+        "pit",
+        "rails",
+        "star",
+        "floating_ring",
+        "repeated_boxes",
+        "repeated_cylinders"
+      ],
+      "rough6": [
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "boxes",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv"
+      ]
+    },
+    "raw": "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/ · sim/eval/results/20260928-v2-gallery-raw/foothold-v2/",
+    "gallery": "https://foothold-project.vercel.app/gallery/view?v=v2",
+    "report": "https://foothold-project.vercel.app/report-v2"
+  },
+  "scores_difficulty_0_5": {
+    "0.5 m/s": {
+      "rough6": {
+        "boxes": 100.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0,
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "random_rough": 100.0
+      },
+      "unseen10": {
+        "discrete_obstacles": 100.0,
+        "floating_ring": 100.0,
+        "gap": 100.0,
+        "pit": 100.0,
+        "rails": 99.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0,
+        "star": 100.0,
+        "stepping_stones": 0.0,
+        "wave": 100.0
+      }
+    },
+    "1.0 m/s": {
+      "rough6": {
+        "boxes": 100.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0,
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "random_rough": 100.0
+      },
+      "unseen10": {
+        "discrete_obstacles": 100.0,
+        "floating_ring": 100.0,
+        "gap": 100.0,
+        "pit": 100.0,
+        "rails": 100.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0,
+        "star": 100.0,
+        "stepping_stones": 24.0,
+        "wave": 100.0
+      }
+    },
+    "1.5 m/s": {
+      "rough6": {
+        "boxes": 100.0,
+        "hf_pyramid_slope": 100.0,
+        "hf_pyramid_slope_inv": 100.0,
+        "pyramid_stairs": 100.0,
+        "pyramid_stairs_inv": 100.0,
+        "random_rough": 100.0
+      },
+      "unseen10": {
+        "discrete_obstacles": 100.0,
+        "floating_ring": 99.0,
+        "gap": 99.0,
+        "pit": 100.0,
+        "rails": 100.0,
+        "repeated_boxes": 100.0,
+        "repeated_cylinders": 100.0,
+        "star": 100.0,
+        "stepping_stones": 0.0,
+        "wave": 100.0
+      }
+    }
+  },
+  "axis2_command_response": {
+    "note": "평지에서 명령에만 반응시킨 프로브다. **판정이 아니라 기록**이다 (팀장 결정). 문턱을 정한 것은 셋뿐이다.",
+    "index": "gallery/v2/axis2.json",
+    "page": "https://foothold-project.vercel.app/gallery/axis2"
+  },
+  "known_limits": [
+    "`stepping_stones` 1.0 m/s 의 24 % 는 **시드 하나의 값이고 다섯 중 가장 높다.** 같은 조건에서 시드를 다섯으로 갈아 재니 24 · 1 · 3 · 19 · 0 이었다. 이 칸은 0 ~ 24 % 로 읽어야 한다 (보고서 4-0-1 절 · sim/eval/results/20260929-seed-spread/).",
+    "시드를 갈면 `random_rough` 1.0 m/s 도 100 · 100 · 94 · 99 · 99 로 움직인다 (폭 6 %p). **움직인 세 칸 모두 배포 시드가 가장 높다.**",
+    "그 시드 측정은 **v2 만 · 1.0 m/s 만** 했다. NVIDIA 와 foothold-v1 의 폭, 0.5 · 1.5 m/s 의 폭은 안 쟀다 `미확인`.",
+    "평가 하네스는 `num_rows=1` 이라 지형 하나에 타일 한 장이다. 한 지형의 100 판은 같은 한 장 위를 x/y ±0.10 m · yaw ±5 도만 다르게 출발한다.",
+    "`rails` 는 **v2 가 학습에 넣은 지형**이다 (proportion 0.1). 미경험이 아니므로 미경험 여덟 평균에 넣지 않는다.",
+    "축 2 는 문턱을 셋만 정했고 여섯은 안 정했다. 그 여섯의 숫자를 성적으로 읽지 말 것 (gallery/v2/axis2.json 의 `judged: false`).",
+    "머리 위에 천장이 있는 지형은 높이 스캔이 표현하지 못한다. 광선이 아래로만 간다.",
+    "학습에 `push_robot` 이벤트를 쓰지 않았다. 외란 견딤은 **안 쟀다** `미확인`."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "e26874a1-d536-407e-a299-7ba1dd94d0ff"
+    },
+    {
+      "role": "image",
+      "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    }
+  ],
+  "prompt": "Create ONE full-bleed 16:9 photographic cinema still for shot E2, not a storyboard, collage or character sheet.\n\nREFERENCE PRIORITY: Image 1 is the APPROVED composition and architecture, not a reliable robot design or material style. Keep its exact camera position, frontal central perspective, large scale, tall ruined industrial columns/pipes, broken foreground platforms, abyss openings and overhead light direction. Images 2, 3 and 4 define the actual Unitree Go2 robot: official frontal product reference first, approved multi-view character sheet second, details sheet third. Replace only the incorrect robot identity and re-render all materials and light realistically while preserving the scene layout. Do not copy reference-sheet layouts, labels, white backgrounds or studio lights.\n\nCAMERA AND BLOCKING: locked frontal wide view from slightly above the robot, looking gently down, on the hall's central axis. Exactly ONE Go2 in the CENTER MIDGROUND on the same sound concrete platform as image 1, facing directly toward the camera. Preserve its small apparent size: body and legs together around 15 percent of image height, not a foreground hero close-up. Huge surrounding architecture and deep darkness must dwarf it. Four anatomically correct articulated legs, with rear legs naturally visible only where perspective allows. Credible planted foot contact; no floating. The pose is a quiet forward-facing stance at the end of walking into light, not a leap or a sit.\n\nIDENTITY: faithful stock Unitree Go2 as in official image 2. Matte/satin light-gray curved shell, compact body and face, correct vertically organized dark front sensor panel, separate black lower LiDAR housing, gray circular joint housings, slim curved gray leg links and short rounded black rubber foot caps. Keep reference proportions. No bulky armor, black shoulder spheres, extra ears, tail, canine face, human features, added modules or invented white hoof markings. Small non-dominant natural scuffs are fine; no extensive artificial damage.\n\nLIGHT AND PHOTOGRAPHIC MATERIALS: critically REPLACE image 1's excessive HDR, glossy plastic and universal shiny wet surfaces. Low-key live-action cinematography, deep unlit shadows, soft highlight roll-off, restrained local contrast. A fixed overhead/backlight shaft in thin atmospheric haze reveals the robot now that it has reached the pool of light; subtle plausible bounce lets its front shape read without studio fill. Most concrete is rough matte or merely damp, with only a few localized puddles reflecting light. Dry rubble should scatter light diffusely. Pipes have uneven aged paint and sparse dull rust, not polished metal. Robot shell is satin gray polymer, rubber feet are matte black, joints not chrome. Fine irregular surface wear and patchy dampness, not repetitive noise or oversharpened gritty outlines. The frame must feel like a photograph in a real vast ruined structure, not a glossy videogame render. Keep fine mist sparse enough to see foot contacts.\n\nThis is the LIGHT-REVEALED END STATE of a later continuous shot: the robot will begin farther back in darkness and walk into this fixed light. Do not add a visible flashlight, searching spotlight, person, moving lamp, HUD, green scan, text, frame, extra robot, illustration or plastic toy aesthetic."
+}

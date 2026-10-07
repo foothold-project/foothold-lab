@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9"
+    },
+    {
+      "role": "image",
+      "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    }
+  ],
+  "prompt": "Edit image 1 into the DARK OPENING STATE of this cinematic Go2 reveal. The main edit is the LIGHTING OF THE ENTIRE ENVIRONMENT, not the color or brightness of the robot alone.\n\nCreate a genuinely near-black vast industrial chamber. Remove the broad ambient fill illuminating the hall. Let most pillars, side walls, ceiling, distant rubble and foreground recesses disappear into real black shadow. About 80% of the frame should be near black, with only restrained fragments of architecture readable. Preserve ONE narrow fixed overhead/back light: its pale shaft is faintly visible in thin airborne mist, and it catches a SMALL isolated patch of broken concrete in the central midground and a few dim wet edge reflections. No broad silvery reflective floor, no illuminated entire corridor, no bright fog filling the room. A barely readable black silhouette of a single Go2 waits just behind that small pool of light, one or two short steps deeper than its image-1 position. Only a hairline rim on the head/shoulder may reveal it. Its torso and legs must NOT be clearly readable or lit like a product photo. This is a suspenseful almost-dark atmosphere shot before the robot walks FORWARD INTO the fixed light. The light is alive but the space is overwhelmingly dark. Do not just darken Go2 while leaving the background bright.\n\nUse image 1 ONLY to lock the camera, perspective, framing, vast architectural layout, pillars, pipes, existing broken concrete platforms, and robot identity. You MUST change its broad environmental illumination as described. Keep the camera frontal, slightly elevated, locked, and the robot small and centered in the midground. Put all its feet on the same continuous supporting concrete surface toward its image-1 destination, never on water or hovering. Do not add gaps or bridges. Preserve geometry even when shadow conceals it.\n\nImages 2-4 are Go2 anatomy references ONLY: compact gray torso, black lower LiDAR housing, slim curved legs, small rounded black rubber feet. Keep the same actual Unitree Go2 shape. Darkness should conceal its gray material naturally, not repaint the robot black.\n\nPhotographic low-key cinema lighting, restrained highlights, uneven matte concrete with sparse damp patches, satin shell, matte rubber. No HDR, plastic shine, uniform wet gloss, oversharpened textures. No moving searchlight, no flashlight object, no person, no glowing eyes, no HUD or text. One full-bleed 16:9 frame. Prioritize the near-black ROOM and isolated living light over visible detail."
+}

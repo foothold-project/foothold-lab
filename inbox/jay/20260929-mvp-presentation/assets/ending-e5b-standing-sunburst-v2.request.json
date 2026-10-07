@@ -1,0 +1,32 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "73da25e0-b572-4a71-b46e-daac3274f7ee"
+    },
+    {
+      "role": "image",
+      "value": "afde734c-fce5-4e92-8dec-2c71973157d1"
+    },
+    {
+      "role": "image",
+      "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+    },
+    {
+      "role": "image",
+      "value": "6ad9596c-1bcc-4225-ab00-7dbea4ceadf1"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    }
+  ],
+  "prompt": "Create ONE 16:9 cinematic REVERSE-ANGLE continuity shot of the SAME ruined flooded hall shown in references 1 and 2. The camera has moved to the destination equipment and is looking BACK toward the starting point. This is a spatial reconstruction from the opposite direction, NOT the same forward view, NOT a horizontally mirrored image, and NOT a new generic ruin.\n\nReference 1: master for the narrow irregular broken concrete causeway and the large black water basins on BOTH sides, tall hall columns and corroded pipework.\nReference 2: master for the destination's single low step and modest upper equipment landing. The Go2 has climbed that step and taken one or two short steps onto the upper landing.\nReferences 3, 4, 5: ONLY real Unitree Go2 front, side proportions and approved identity. Ignore their backgrounds and labels.\n\nCAMERA: square-on FRONT view of the Go2, slightly above its body height looking gently down, moderate wide distance, centered robot occupying roughly one quarter of image height, monumental room remains larger than it. No oblique robot portrait, no dramatic overhead, no orbit. The camera is on the destination landing near the inspection cabinet. The CABINET AND RED BEACON ARE BEHIND THE CAMERA and therefore absent from the background. A faint red reflection near the camera is permitted, not a second beacon.\n\nSPATIAL CONTINUITY: Go2 stands entirely ON the upper landing in the lower-middle image. A short distance behind its hind feet is the rear lip of the single step it just climbed. The approach path beyond that lip lies modestly LOWER. Show the landing's side corners and surrounding water so this elevation relationship is legible; do not expose an impossible backwards-facing vertical riser to this upper-side camera. Beyond the robot the SAME narrow, uneven, asymmetrically broken causeway recedes toward the departure direction, bordered by wide open black water on BOTH sides. Each support is constrained and irregular, with missing sections, occasional short rusty pipes, and no full-width transverse bands. The landing is only wider locally at the destination. No immense new terrace occupying the whole hall, no continuous floor, no repeated broad staircase running into the distance, no new bridge, barriers, or changed flood level. Columns and pipes are seen from their reverse sides, not copied from the forward image.\n\nPOSE: start keyframe immediately BEFORE sitting. Authentic compact low gray Go2 in a relaxed four-foot STAND, looking straight toward the equipment beyond camera. Real slender curved solid links, small knee hinges, gray round upper motor housings, small rounded matte-black foot caps. Natural limb overlap; no thick rectangular shin pieces, boots, giant elbows, duplicate legs, extra head, rear face or invented modules. Keep the real torso length and height. This is not yet a crouch or seated pose.\n\nPhotographic materials with irregular dry dusty concrete, dark damp patches and localized puddles. Water remains visible but not white glitter. Dull rust, satin gray body, matte rubber. Soft highlight roll-off and restrained local clarity; no HDR crunch, plastic gloss, global orange wash or excessive damage. Match the neutral dark atmosphere of the scene references while accounting for the reversed camera direction. Foreground robot and support readable, far hall recedes into darkness. Sparse thin mist, no fog hiding the route. No HUD, arrows, words, layout panels or labels."
+}

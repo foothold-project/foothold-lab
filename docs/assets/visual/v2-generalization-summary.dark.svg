@@ -1,0 +1,69 @@
+<svg viewBox="-20 -20 844 276" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="v2 일반화 요약 · 묶음 넷에서 세 판의 성공률" width="804" height="236">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#3ec7b4;--accent-soft:#11302c;--bad:#e56d5e;--bad-soft:#331c19;--card:#181d26;--deep:#0c1117;--dim:#3ec7b4;--dim-ink:#3ec7b4;--ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;--ink-soft:#4a5566;--ok:#3ec7b4;--ok-soft:#11302c;--paper:#12161d;--paper-2:#191e27;--rule:#2b323d;--rule-2:#232a35;--warn:#dc9a30;--warn-soft:#332710;}
+
+</style>
+
+<text x="0.0" y="14.0" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 는 처음 보는 지형에서 무엇을 얻었나</text>
+<text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">난이도 0.5 · 지형마다 속도마다 100판 · 값은 성공률 %</text>
+<rect x="0.0" y="45.0" width="11.0" height="9.0" rx="2" fill="var(--ink-3)" stroke="none"/>
+<text x="16.0" y="52.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">NVIDIA</text>
+<rect x="59.6" y="45.0" width="11.0" height="9.0" rx="2" fill="var(--ink-2)" stroke="none"/>
+<text x="75.6" y="52.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1</text>
+<rect x="152.2" y="45.0" width="11.0" height="9.0" rx="2" fill="var(--accent)" stroke="none"/>
+<text x="168.2" y="52.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 (v2g2 @3000)</text>
+<rect x="0.0" y="62.0" width="186.0" height="142.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="12.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평가 전체 48 칸</text>
+<rect x="12.0" y="88.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="12.0" y="88.0" width="47.8" height="18.0" rx="3" fill="var(--ink-3)" stroke="none"/>
+<text x="174.0" y="99.0" font-size="13" fill="var(--ink-3)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">41.2</text>
+<rect x="12.0" y="123.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="12.0" y="123.0" width="103.1" height="18.0" rx="3" fill="var(--ink-2)" stroke="none"/>
+<text x="174.0" y="134.0" font-size="13" fill="var(--ink-2)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">88.9</text>
+<rect x="12.0" y="158.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="12.0" y="158.0" width="109.3" height="18.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="174.0" y="169.0" font-size="13" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">94.2</text>
+<text x="12.0" y="196.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지형 16 x 속도 3</text>
+<text x="174.0" y="196.0" font-size="10" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">48 칸</text>
+<rect x="206.0" y="62.0" width="186.0" height="142.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="218.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">셋 다 학습한 6종</text>
+<rect x="218.0" y="88.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="218.0" y="88.0" width="58.9" height="18.0" rx="3" fill="var(--ink-3)" stroke="none"/>
+<text x="380.0" y="99.0" font-size="13" fill="var(--ink-3)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">50.8</text>
+<rect x="218.0" y="123.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="218.0" y="123.0" width="115.2" height="18.0" rx="3" fill="var(--ink-2)" stroke="none"/>
+<text x="380.0" y="134.0" font-size="13" fill="var(--ink-2)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">99.3</text>
+<rect x="218.0" y="158.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="218.0" y="158.0" width="116.0" height="18.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="380.0" y="169.0" font-size="13" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">100.0</text>
+<text x="218.0" y="196.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">NVIDIA 가 연습한 지형</text>
+<text x="380.0" y="196.0" font-size="10" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">18 칸</text>
+<rect x="412.0" y="62.0" width="186.0" height="142.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="424.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어느 판도 학습 안 한 8종</text>
+<rect x="424.0" y="88.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="424.0" y="88.0" width="50.9" height="18.0" rx="3" fill="var(--ink-3)" stroke="none"/>
+<text x="586.0" y="99.0" font-size="13" fill="var(--ink-3)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">43.9</text>
+<rect x="424.0" y="123.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="424.0" y="123.0" width="100.6" height="18.0" rx="3" fill="var(--ink-2)" stroke="none"/>
+<text x="586.0" y="134.0" font-size="13" fill="var(--ink-2)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">86.7</text>
+<rect x="424.0" y="158.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="424.0" y="158.0" width="102.6" height="18.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="586.0" y="169.0" font-size="13" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">88.5</text>
+<text x="424.0" y="196.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">처음 보는 지형</text>
+<text x="586.0" y="196.0" font-size="10" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">24 칸</text>
+<rect x="618.0" y="62.0" width="186.0" height="142.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="630.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">그 중 7종 (stepping_stones 뺀)</text>
+<rect x="630.0" y="88.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="630.0" y="88.0" width="58.2" height="18.0" rx="3" fill="var(--ink-3)" stroke="none"/>
+<text x="792.0" y="99.0" font-size="13" fill="var(--ink-3)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">50.1</text>
+<rect x="630.0" y="123.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="630.0" y="123.0" width="115.0" height="18.0" rx="3" fill="var(--ink-2)" stroke="none"/>
+<text x="792.0" y="134.0" font-size="13" fill="var(--ink-2)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">99.1</text>
+<rect x="630.0" y="158.0" width="116.0" height="18.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="630.0" y="158.0" width="115.9" height="18.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="792.0" y="169.0" font-size="13" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">100.0</text>
+<text x="630.0" y="196.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 가 사실상 푼 것</text>
+<text x="792.0" y="196.0" font-size="10" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">21 칸</text>
+<text x="0.0" y="228.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">rails 는 v2 가 학습에 넣은 지형이라 «어느 판도 학습 안 한» 묶음에서 뺐다 · gap 은 v1·v2 가 친척(forward_gap · omni_gap)을 학습해서 뺐다</text>
+</svg>

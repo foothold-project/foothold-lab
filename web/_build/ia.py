@@ -109,6 +109,13 @@ VAULT_PAGE = {
     'team-access.html': ('pipeline', '워크스테이션 접속', '원격 접속과 운영'),
     'automation.html': ('pipeline', '자동화 지도', '무엇이 자동이고 무엇이 사람인가'),
     'research.html': ('research', '연구 기록 안내', '조사와 실측의 원본 기록'),
+    # ★ 2026-09-29. 종합보고서 2 차는 «짧은 주소» 를 쓴다 (`/report-v2`).
+    #   1 차가 `/report-v1` 이라 2 차만 긴 주소인 것이 어긋났다
+    #   (팀장 지적). 아래 404 행의 «research- 로 시작하면 연구 칸» 규칙에
+    #   안 걸리므로 여기 한 줄로 배정한다. 원본은 여전히
+    #   `docs/research/20260928-v2-mvp-report.md` 다.
+    'report-v2.html': ('research', 'v2 종합보고서',
+                       '미경험 험지 일반화 · 배포본 v2g2-feetair01 iter3000'),
     'deliverables.html': ('schedule', '산출물 현황', '무엇을 언제까지 내는가'),
     'workflow.html': ('pipeline', '작업 흐름', '이슈부터 머지까지 한 장. 흐름의 정본'),
     'personal-plans.html': ('schedule', '개인 계획', '팀원이 스스로 세운 계획의 원본'),

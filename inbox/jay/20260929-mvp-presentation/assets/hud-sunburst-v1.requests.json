@@ -1,0 +1,124 @@
+[
+  {
+    "index": 0,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "ccb336d4-a845-4361-a688-61a73664fdf2"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nUse the supplied mission reference for layout and visual family, improve line hierarchy and precision. Pure BLACK background behind the HUD, absolutely no visible hall or camera feed yet. Green mission reception UI. Dominant exact title \"MISSION\", subtitle \"INCOMING ASSIGNMENT\", two clearly readable objectives \"REACH THE TARGET\" and \"CAPTURE SITE STATUS\". Smaller sequence \"APPROACH > CAPTURE > TRANSFER\". Left geometry communicates unmapped terrain through contour lines, not a rotating radar pretending to be height scan. Small \"FOOTHOLD / FIELD SYSTEM\". No progress 100% or mission completion here. This frame follows discovery of the distant beacon and a cut to black, before observation feed fades in."
+    }
+  },
+  {
+    "index": 1,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "94bd9678-f00c-4920-9914-542b477a0f70"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nReference is the intended WIDE forward robot POV with a broken foreground edge, open gap, farther concrete support and distant target. Preserve that framing and terrain, upgrade photographic detail without inventing a new route. Green night-vision treatment, not merely a flat green tint. Show fine height-sampling dots attached to actual near and farther concrete surfaces, conforming to uneven heights, with NO lines or mesh bridging empty gaps or water. Keep center terrain readable. Left compact attitude ring with exact \"ROLL +0.0\" and \"PITCH +0.0\"; level horizon. Right compact table \"AXIS  CMD  STATE\", rows \"VX  0.30  0.28\", \"VY  0.00  0.01\", \"WZ  0.00  0.02\"; footer \"VX,VY m/s / WZ rad/s\". Main top \"TERRAIN ANALYSIS\", small \"FOOTHOLD / FIELD SYSTEM\". These are illustrative frame values. Do not add random waveform panels. Background target red beacon is physically small; no robot body visible. This cut establishes body state and forward terrain before a tighter scan-only cut."
+    }
+  },
+  {
+    "index": 2,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "00a05ad2-9546-4ee6-a65e-0c45f7501613"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nUse the supplied near-ground scan reference as exact close-up composition. NO surrounding HUD, NO panels, NO typography, NO interface border, NO gauges. Just photographic uneven broken concrete at the foot approach with a thin green surface-following point grid, visible irregular edges, dark open gap and next support. Fine green points and short connecting lines conform to actual rough surfaces; stop at broken edges, leave the void empty. Preserve close camera view distinct from the preceding wide observation frame. Sparse mild scanline texture, delicate light not thick luminous spaghetti. Match green night-vision atmosphere while retaining real material irregularity. No visible robot or floating digital terrain model."
+    }
+  },
+  {
+    "index": 3,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "b6f2da78-2727-4c26-afad-e7612be95b2a"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nPreserve reference camera, cabinet position, cabinet shape, pipes and beacon. This is the same goal equipment reached after climbing and sitting. Green night-vision target POV. Refine computer-vision acquisition graphics: one thin fitted box on the cabinet and a separate small fitted box on beacon, a few feature points located on actual corners, no giant decorative crosshair. Clear red \"REC\" dot and exact timer \"00:00:03\"; exact labels \"01 / INSPECTION TARGET\", \"02 / BEACON\", \"TRACK / LOCKED\", small \"FIELD CAPTURE\". Small side status \"CAPTURE / ACTIVE\". No confidence percentages or claimed fault diagnosis. Fine geometric peripheral frame leaves the cabinet readable. The UI communicates locating and recording this equipment, not firing a weapon. Do not change the target to a different machine."
+    }
+  },
+  {
+    "index": 4,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "2b6c1484-19fc-4921-942c-b6e956fce05f"
+        },
+        {
+          "role": "image",
+          "value": "b6f2da78-2727-4c26-afad-e7612be95b2a"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nReference 1 is the exact transfer layout. Reference 2 identifies the same cabinet camera background as the preceding recording cut. Keep that cabinet, lens and perspective unchanged, gently subdued behind interface. Green geometric transmission UI, clear central circular progress at \"68%\" and exact \"DATA TRANSFER\", \"SENDING SITE RECORDING\". Smaller sequential states \"CAPTURE COMPLETE\", \"TRANSFER IN PROGRESS\", \"AWAITING RECEIPT\". A segmented loading bar at 68 percent. No \"MISSION COMPLETE\" or red success yet. Crisp compact monospaced typography, detailed engineering tick marks only where they support progress/state. Interface frame matches supplied family. This precedes confirmed 100 percent completion."
+    }
+  },
+  {
+    "index": 5,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "a4761d6c-0aee-422d-a2de-20a4d9fff19e"
+        },
+        {
+          "role": "image",
+          "value": "b6f2da78-2727-4c26-afad-e7612be95b2a"
+        }
+      ],
+      "prompt": "Produce ONE full-frame 16:9 cinematic film keyframe, not a storyboard or collage. Refine the supplied composited design into a coherent instrument interface with crisp English monospaced coding-terminal typography, precision etched geometric lines, restrained concentric ticks, subtle CRT scanlines and controlled phosphor bloom. Preserve legibility and prioritize the specified information. No meaningless invented statistics, medical diagnostics, weapons reticles, giant opaque panels or random glyphs. The interface is a cinematic concept, not real sensor measurements. Keep physical materials photographic with restrained microcontrast, rough matte concrete and uneven damp patches, dull rust and black water. No HDR crunch, excessive sharpening, plastic varnish or glitter.\n\nReference 1 is the exact completed-state layout. Reference 2 identifies the SAME cabinet, SAME perspective as recording/transfer, held faintly in the background. Clear transition to a RED interface. Dominant exact \"MISSION COMPLETE\", large exact \"100%\", smaller \"SITE DATA RECEIVED\" and \"RECEIPT CONFIRMED\". Fully filled progress bar. Previous side panels have cleared so this state feels decisive. Refined concentric confirmation geometry with precise ticks and restrained red phosphor bloom. No warning triangles, error message, green completion text or \"MISSION CLEAR\". No Q&A or brand end card here. This final confirmed frame will glitch OFF to full black in video."
+    }
+  }
+]

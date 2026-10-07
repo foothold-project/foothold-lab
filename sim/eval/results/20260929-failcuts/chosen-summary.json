@@ -1,0 +1,1 @@
+{'ss-v1-fail': {'seed': 42, 'verdict': 'fail', 'dist': 0.93}, 'ss-v2-fail': {'seed': 42, 'verdict': 'fail', 'dist': 0.86}, 'gap-D-fail': {'seed': 46, 'verdict': 'fail', 'dist': 0.99}}

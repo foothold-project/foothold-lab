@@ -42,6 +42,57 @@ SVG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 
+def _compare_block(rows):
+    """```compare 한 덩이를 «3 열 + 공용 조작줄» 로 만든다.
+
+    한 줄이 한 칸이다. `이름 | 경로 | 설명`. 설명은 없어도 된다.
+
+    **빈 칸을 만들지 않는다.** 경로가 없는 줄은 버리고, 남은 것이 없으면
+    아무것도 안 그린다 (빈 상자를 그리면 그것이 사실처럼 읽힌다).
+    """
+    cells = []
+
+    for line in rows:
+        line = line.strip()
+
+        if not line or line.startswith('#'):
+            continue
+
+        parts = [p.strip() for p in line.split('|')]
+
+        if len(parts) < 2 or not parts[1]:
+            continue
+
+        name, src = parts[0], re.sub(r'^(\.\./)+', '', parts[1])
+        note = parts[2] if len(parts) > 2 else ''
+        cells.append((name, src, note))
+
+    if not cells:
+        return ''
+
+    out = []
+    for name, src, note in cells:
+        cap = ('<figcaption>%s</figcaption>' % inline(note)) if note else ''
+        out.append(
+            '<figure class="vcmp-cell"><b class="vcmp-name">%s</b>'
+            '<video controls muted playsinline preload="metadata"%s src="%s">'
+            '</video>%s</figure>'
+            % (inline(name), _poster_attr(src), src, cap))
+
+    rates = ''.join(
+        '<button type="button" class="vcmp-btn" data-vcmp-rate="%s"%s>%sx</button>'
+        % (r, ' aria-pressed="true"' if r == '1' else '', r)
+        for r in ('0.25', '0.5', '1', '2'))
+
+    return ('<div class="vcmp" data-vcmp>'
+            '<div class="vcmp-bar">'
+            '<button type="button" class="vcmp-btn" data-vcmp-play>함께 재생</button>'
+            '<button type="button" class="vcmp-btn" data-vcmp-rewind>처음으로</button>'
+            '<span class="vcmp-lab">배속</span>%s</div>'
+            '<div class="vcmp-grid" style="--vcmp-n:%d">%s</div></div>'
+            % (rates, len(cells), ''.join(out)))
+
+
 def _poster_attr(src):
     """영상 옆 `posters/<같은이름>.jpg` 가 있으면 ` poster="..."` 를 돌려준다.
 
@@ -316,6 +367,20 @@ def _kat_cells():
 
 _SVG_OPEN = re.compile(r'^\s*<svg[\s>]')
 _HTML_COMMENT = re.compile(r'^\s*<!--.*-->\s*$')
+
+# ★ 2026-09-28. 셋째를 연다. `<details>` 와 `<summary>` 다.
+#
+#   팀장 지시: 「중간에 > 접기로 왜 랜덤 시드 다른 거에서 학습이 터졌고
+#   어떻게 해결하려고 했었는지도 참고로 적어주면 좋을 것 같다
+#   (보여주기용x, 실험 기록용o)」.
+#
+#   기록이되 첫눈에는 안 보여야 하는 덩이가 있다. 그것을 브라우저가 이미
+#   갖고 있는 태그로 한다. 자바스크립트가 필요 없다.
+#
+#   **속성을 하나도 안 받는다.** `<details>` · `</details>` ·
+#   `<summary>...</summary>` 세 모양만이다. 속성을 열면 `onclick` 이
+#   들어올 자리가 생긴다. 여는 문을 넓히지 않는다.
+_DETAILS = re.compile(r'^\s*(?:<details>|</details>|<summary>.*</summary>)\s*$')
 # 통과시키더라도 실행되는 것은 막는다. 도식에 script 나 이벤트 핸들러가 있을 이유가 없다.
 _SVG_UNSAFE = re.compile(r'<\s*script|\son[a-z]+\s*=|javascript:', re.I)
 
@@ -385,6 +450,14 @@ def render(md):
                 continue
             # 닫는 태그가 없거나 안전하지 않으면 지금까지처럼 본문으로 떨어뜨린다.
 
+        # ── 접기 (details · summary) ──
+        #   한 줄에 하나씩 온 것만 받는다. 안에 든 마크다운은 아래에서
+        #   여느 본문처럼 변환된다.
+        if _DETAILS.match(L) and not _SVG_UNSAFE.search(L):
+            out.append(L.strip())
+            i += 1
+            continue
+
         # ── 표식 주석 줄 ──
         if _HTML_COMMENT.match(L):
             i += 1
@@ -397,6 +470,13 @@ def render(md):
             while i < n and not lines[i].startswith('```'):
                 body.append(lines[i]); i += 1
             i += 1
+
+            # ★ 2026-09-29. `compare` 는 코드가 아니라 «나란히 놓는 영상» 이다.
+            #   갤러리 비교 화면과 같은 조작(함께 재생 · 처음으로 · 배속)을 준다.
+            #   한 줄이 한 칸이고 `이름 | 경로 | 설명` 이다.
+            if lang == 'compare':
+                out.append(_compare_block(body))
+                continue
             # ★ 강조는 hl.py 가 한다. 이스케이프를 먼저 하고 그 위에 span 만 씌우므로
             #   오탐이 나도 코드 자체는 절대 깨지지 않는다.
             out.append('<div class="cb"><div class="cb-h">%s%s</div><pre>%s</pre></div>'

@@ -54,7 +54,7 @@ C:   : 549.3 GB 여유 / 923.7 GB
 
 **브라우저에 이 주소를 칩니다.**
 ```
-http://192.168.0.5:6006
+http://<워크스테이션>:6006
 ```
 - 같은 네트워크(학원 내부망)에서만 접속됩니다
 - 방화벽 규칙 `TensorBoard 6006 (LocalSubnet)` 이 열려 있습니다
@@ -190,7 +190,7 @@ isaacsim isaacsim.exp.full.streaming
 ```
 
 **하지만 브라우저로는 못 붙습니다.**
-- `http://192.168.0.5:8011`의 `/`·`/streaming/webrtc-client`·`/streaming/client` **전부 404**
+- `http://<워크스테이션>:8011`의 `/`·`/streaming/webrtc-client`·`/streaming/client` **전부 404**
 - webrtc 확장 폴더에 **HTML·JS 클라이언트가 하나도 없음**(전부 `.dll`과 파이썬)
 - → **NVIDIA가 별도 배포하는 「Isaac Sim WebRTC Streaming Client」 앱을 각자 설치해야 합니다**
 

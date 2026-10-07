@@ -10,9 +10,9 @@
   "ver": ""
  },
  "deliverables/logs/mentoring-log.md": {
-  "hash": "f8d2d95e4f4c83ef",
+  "hash": "ca46878ece87672e",
   "major": "",
-  "ver": ""
+  "ver": "v1.2"
  },
  "deliverables/logs/progress-log.md": {
   "hash": "b784941ccdc6f77d",
@@ -20,19 +20,24 @@
   "ver": ""
  },
  "deliverables/midterm/generalization-report.md": {
-  "hash": "ad0d2405b4d596b0",
+  "hash": "dd981df019ad40da",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
+ },
+ "deliverables/midterm/mvp-submission.md": {
+  "hash": "5e68003d5a77b92d",
+  "major": "",
+  "ver": "v1.1"
  },
  "deliverables/midterm/policy-metrics.md": {
-  "hash": "f17e4847947f1217",
+  "hash": "b99801e5d782dd39",
   "major": "",
-  "ver": ""
+  "ver": "v1.1"
  },
  "deliverables/midterm/twin-render.md": {
-  "hash": "d200328848d347ad",
+  "hash": "c585ed777a971cce",
   "major": "",
-  "ver": ""
+  "ver": "v1.2"
  },
  "deliverables/plan/brainstorming.md": {
   "hash": "400b3bca5f4b66e0",
@@ -60,8 +65,8 @@
   "ver": "v1.2"
  },
  "deliverables/plan/wbs-official.md": {
-  "hash": "46e42ce548288b23",
-  "major": "v1.1",
+  "hash": "2e176eb162c500ad",
+  "major": "v1.2",
   "ver": "v1.2"
  },
  "deliverables/plan/wbs.md": {
@@ -80,9 +85,9 @@
   "ver": "v1.4"
  },
  "docs/COLLAB.md": {
-  "hash": "c2e5a8e53622f74f",
+  "hash": "720d1e858b2ea6c0",
   "major": "v2.1",
-  "ver": "v2.1"
+  "ver": "v2.3"
  },
  "docs/CSV-SPEC-v1.md": {
   "hash": "e98d24c5e7f0aa42",
@@ -90,9 +95,9 @@
   "ver": "v1.0"
  },
  "docs/DECISIONS.md": {
-  "hash": "cb6e5b020133b0c3",
+  "hash": "0b900cd730ba4d92",
   "major": "v2.1",
-  "ver": "v2.4"
+  "ver": "v2.5"
  },
  "docs/DESIGN-GUIDE.md": {
   "hash": "e64f3feeb170bdd8",
@@ -115,9 +120,9 @@
   "ver": "v2.0"
  },
  "docs/LEDGER.md": {
-  "hash": "b3192648905beed7",
+  "hash": "a4d7023e7c1ddc3b",
   "major": "v2.1",
-  "ver": "v2.13"
+  "ver": "v2.25"
  },
  "docs/PR-REVIEW-FLOW.md": {
   "hash": "8bb2cf051b08e621",
@@ -231,6 +236,11 @@
  },
  "docs/digest/2026-W37.md": {
   "hash": "7c9ee2243c83eefe",
+  "major": "",
+  "ver": ""
+ },
+ "docs/digest/2026-W39-material.md": {
+  "hash": "b590eef896ea29e4",
   "major": "",
   "ver": ""
  },
@@ -389,6 +399,11 @@
   "major": "v1.1",
   "ver": "v1.2"
  },
+ "docs/notices/2026-09-29.md": {
+  "hash": "bc687168cf97727f",
+  "major": "v1.0",
+  "ver": "v1.0"
+ },
  "docs/notices/report-web.md": {
   "hash": "933d7478a7148b07",
   "major": "",
@@ -430,9 +445,9 @@
   "ver": "v1.0"
  },
  "docs/research/20260903-rails-isaac-sweep-design.md": {
-  "hash": "de230ac7e97cd51a",
+  "hash": "a751514ee89c78f2",
   "major": "v1.2",
-  "ver": "v1.3"
+  "ver": "v1.4"
  },
  "docs/research/20260903-render-blackframe.md": {
   "hash": "230cbecf4748c5e8",
@@ -480,9 +495,34 @@
   "ver": "v1.1"
  },
  "docs/research/20260911-eval-protocol-v2.md": {
-  "hash": "2725315bc737a8b7",
+  "hash": "6c2577da4342104c",
+  "major": "v2.1",
+  "ver": "v2.1"
+ },
+ "docs/research/20260918-postshot-3dgs-tech-analysis.md": {
+  "hash": "2e448b38c5728bd0",
+  "major": "v2.1",
+  "ver": "v2.1"
+ },
+ "docs/research/20260928-rl-lineage.md": {
+  "hash": "5c6fcf8560af166b",
+  "major": "v1.1",
+  "ver": "v1.4"
+ },
+ "docs/research/20260928-scratch-vs-resume.md": {
+  "hash": "182e860080e023b5",
   "major": "v2.0",
-  "ver": "v2.6"
+  "ver": "v2.2"
+ },
+ "docs/research/20260928-v2-mvp-report.md": {
+  "hash": "d542d65559167222",
+  "major": "v4.1",
+  "ver": "v4.2"
+ },
+ "docs/research/20260929-locomotion-direction.md": {
+  "hash": "a445ee1da18c4862",
+  "major": "v1.1",
+  "ver": "v1.3"
  },
  "docs/research/NVIDIA공식체크포인트_속도단차교차평가분석.md": {
   "hash": "aa7c615724d8db25",

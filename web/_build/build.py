@@ -177,6 +177,9 @@ OTHER_MADE = set(OTHER_MADE_SOURCE)
 GALLERY_VIEWER = [
     'gallery.js', 'gallery.css', 'index.html',
     'view/index.html', 'compare/index.html',
+    # 2026-09-29. 축 2 (명령 응답) 화면. 팀장 지시로 «평가 대상이 아니라
+    # 기록» 이지만 뷰어인 것은 같으므로 정본은 lab 이다.
+    'axis2/index.html',
     'test/terrain-rows.test.js',
 ]
 
@@ -851,6 +854,17 @@ if __name__ == '__main__':
         print('\n  [!] hidden 이 CSS 에 집니다. 배포를 중단합니다.')
         sys.exit(1)
 
+    # ★ 2026-09-18 팀장 확정 (DESIGN.md §13). 9/14 에 하루 동안 관문이 여섯
+    #   늘었고 기준이 제각각으로 자라고 있었다. 셋 중 «무엇을 안 막는가를
+    #   적었는가» 만 기계가 본다. 나머지 둘은 사람이 §13 을 보고 정한다.
+    #   켜는 날 안 적혀 있던 38개는 명부로 열었다 (§13-1). 새로 생기는
+    #   관문만 막는다.
+    print('\n[3.441] 관문 정책 검사 (무엇을 «안» 막는지 적었는가)')
+    import gatepolicy
+    if not gatepolicy.main():
+        print('\n  [!] 새 관문에 「안 막는 것」이 없습니다. 배포를 중단합니다.')
+        sys.exit(1)
+
     print('\n[3.45] 브랜드 정합 검사 (그라데이션 · 그림자 · 토글 · hex)')
     import brandcheck
     if not brandcheck.report(SITE):
@@ -1156,10 +1170,11 @@ if __name__ == '__main__':
         print('  [!] 영상 규격이 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖)')
+    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖 · 선 굵기)')
     import svgtext
-    if not svgtext.main(VAULT):
-        print('\n  [!] 그림 안에서 글자가 겹칩니다. 배포를 중단합니다.')
+    _ok, _why = svgtext.main(VAULT)
+    if not _ok:
+        print('\n  [!] %s. 배포를 중단합니다.' % _why)
         sys.exit(1)
     print('[3.476] 렌더 검사 (마크다운 문법이 글자로 보이는가)')
     import rendercheck

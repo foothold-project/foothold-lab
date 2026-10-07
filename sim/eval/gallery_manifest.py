@@ -345,6 +345,49 @@ def probe(path):
     }
 
 
+def reuse_clips(prev_manifest, prefix, cells, have):
+    """이전 판 색인에서 «이번 판에 없는» 컷을 가져다 쓴다.
+
+    한 판을 새로 굽을 때 모든 모델을 다 다시 굽지는 않는다. v2 는
+    `foothold-v2` 만 굽고 기준선 둘은 숫자만 실었다. 그러면 격자에 96 칸이
+    빈다. **그 컷은 이전 판에 이미 있다.** 파일을 복사하지 않고 «가리킨다».
+
+    `file` 은 색인 기준 상대 경로다 (`publish_gallery.py` 머리말). v2 색인은
+    `gallery/v2/manifest.json` 에 있으므로 `../v1/clips/x.mp4` 가
+    `gallery/v1/clips/x.mp4` 로 풀린다.
+
+    가져온 것은 `reused` 로 표시한다. **배포 단계가 그것을 보고 복사를
+    건너뛰고, 대신 대상에 실제로 있는지 «확인» 한다.** 표시가 없으면 배포가
+    `<갤러리>/web/` 에서 찾다가 죽는다.
+    """
+    if not prev_manifest:
+        return [], []
+
+    prev = json.load(io.open(prev_manifest, encoding="utf-8"))
+    key = lambda c: (c.get("model"), c.get("terrain"),
+                     float(c.get("speed_mps") or 0))
+    by_key = {}
+    for c in (prev.get("clips") or []):
+        by_key.setdefault(key(c), c)
+
+    out, missing = [], []
+    for k in sorted(cells - have):
+        src = by_key.get(k)
+        if src is None:
+            missing.append(k)
+            continue
+        got = dict(src)
+        got["file"] = prefix + src["file"]
+        if src.get("poster"):
+            got["poster"] = prefix + src["poster"]
+        got["role"] = "compare"
+        got["reused"] = True
+        got["reused_from"] = prev.get("version")
+        out.append(got)
+
+    return out, missing
+
+
 def read_clips(web_dir, main_model, clip_prefix):
     clips = []
     unparsed = []
@@ -424,7 +467,7 @@ ENGAGEMENT_BANDS = [
 
 
 def build(gallery_dir, raw_dir, version, main_model, difficulty, clip_prefix,
-          checkpoints, allow_missing):
+          checkpoints, allow_missing, reuse_from=None, reuse_prefix="../v1/"):
     web = os.path.join(gallery_dir, "web")
 
     if not os.path.isdir(web):
@@ -433,6 +476,27 @@ def build(gallery_dir, raw_dir, version, main_model, difficulty, clip_prefix,
     cells, runs = read_cells(raw_dir, difficulty)
     check_required(runs)
     clips = read_clips(web, main_model, clip_prefix)
+
+    # **이번 판에 없는 컷은 이전 판에서 가져다 쓴다.**
+    #
+    # 한 판을 새로 굽을 때 모든 모델을 다시 굽지는 않는다. v2 는
+    # `foothold-v2` 만 굽고 기준선 둘은 숫자만 실었다. 그러면 격자에 96 칸이
+    # 빈다 `확인됨` (팀장 지적 2026-09-29 · 「기존 영상 가져다 쓴다고 했잖아」).
+    # 그 96 개가 전부 v1 에 있다.
+    key = lambda c: (c.get("model"), c.get("terrain"),
+                     float(c.get("speed_mps") or 0))
+    borrowed, still = reuse_clips(
+        reuse_from, reuse_prefix,
+        {key(c) for c in cells.values()}, {key(c) for c in clips})
+
+    if borrowed:
+        print("  이전 판에서 가져온 컷 %d 개 (%s)"
+              % (len(borrowed), reuse_prefix))
+    if still:
+        print("  ** 이전 판에도 없는 조합 %d 개 · 보기 %s **"
+              % (len(still), sorted(still)[:3]))
+
+    clips = clips + borrowed
 
     # 컷을 평가 칸에 건다. 걸 자리가 없으면 그 컷은 근거가 없는 것이다.
     by_id = {cell["id"]: cell for cell in cells.values()}
@@ -541,6 +605,11 @@ def main():
                         "v2 색인에 v1 이름이 붙는 사고를 막는다")
     p.add_argument("--difficulty", type=float, default=0.5,
                    help="성적을 어느 난이도에서 읽나. 성적표는 0.5 다")
+    p.add_argument("--reuse_from", default=None,
+                   help="이전 판 색인(manifest.json). 이번 판에 없는 컷을 "
+                        "«가리켜서» 쓴다. 파일은 복사하지 않는다")
+    p.add_argument("--reuse_prefix", default="../v1/",
+                   help="가져온 컷 경로 앞에 붙일 것. 색인 기준 상대 경로다")
     p.add_argument("--clip_prefix", default="clips/",
                    help="색인 기준 영상 경로 앞머리. 배포에서 web/ 을 여기로 옮긴다")
     p.add_argument("--checkpoint", action="append", default=[], metavar="이름=경로",
@@ -553,7 +622,8 @@ def main():
     checkpoints = dict(pair.split("=", 1) for pair in args.checkpoint)
     data, _no_clip = build(args.gallery, args.raw_csv, args.version, args.main_model,
                            args.difficulty, args.clip_prefix, checkpoints,
-                           args.allow_missing)
+                           args.allow_missing, args.reuse_from,
+                           args.reuse_prefix)
     out = args.out or os.path.join(args.gallery, "manifest.json")
 
     with io.open(out, "w", encoding="utf-8") as handle:

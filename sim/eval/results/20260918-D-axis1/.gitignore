@@ -1,0 +1,10 @@
+# 판마다 남는 Isaac 콘솔 로그. 저장소에 넣지 않는다.
+#
+# 여섯 판 합계 2.0 MB 이고 대부분이 Kit 시동 잡음이다. 그 안의 판별 정보는
+# 전부 `generalization_raw.csv` 와 `run_manifest.json` 에 이미 있다.
+# 원시 CSV 합계가 1.9 MB 인데 로그가 2.0 MB 라 배보다 배꼽이 크다.
+#
+# **실행 조건은 지운 것이 아니다.** `run_manifest.json` 이 인자와 정책
+# sha256 과 시각을 기계가 적은 그대로 갖고 있다. 다시 뽑는 명령은 이 폴더
+# README.md 에 있다.
+*/d0.5/*/run.log

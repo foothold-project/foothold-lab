@@ -82,8 +82,10 @@ aside.pagetoc.notoc{visibility:hidden}
 .hero h1{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:.25em 0 .35em}
 .hero .lede{color:var(--sub);margin:0;font-size:16.5px}
 .stamp{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--sub);
-  border:1px solid var(--line);border-radius:999px;padding:3px 13px;background:var(--bg)}
+  border:1px solid var(--line);border-radius:12px;padding:3px 13px;background:var(--bg)}
 
+/* 🖥(U+1F5A5)는 기본이 글자 모양이라 FE0F 없이 쓰면 검은 막대로 보인다 → 이 한 글자만 컬러 이모지 글꼴로(숫자·# 는 건드리지 않음) */
+@font-face{font-family:Emo;src:local("Noto Color Emoji"),local("Apple Color Emoji"),local("Segoe UI Emoji");unicode-range:U+1F5A5}
 /* ---------- 본문 타이포 ---------- */
 h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:60px 0 10px;
   padding-top:26px;border-top:1px solid var(--line)}
@@ -97,7 +99,7 @@ ul,ol{padding-left:22px;margin:.4em 0 1em}
 li{margin:4px 0}
 strong{font-weight:700}
 code{background:var(--code);border-radius:6px;padding:2px 6px;font-size:.86em;overflow-wrap:anywhere;
-  font-family:Consolas,"Cascadia Mono",monospace}
+  font-family:Emo,Consolas,"Cascadia Mono",monospace}
 pre{background:var(--code);border-radius:12px;padding:14px 18px;overflow-x:auto;
   font-size:13px;line-height:1.6}
 pre code{background:none;padding:0}
@@ -158,6 +160,8 @@ td.neg{color:var(--accent);font-weight:600}
 a.card{display:block;text-decoration:none;color:var(--ink)}
 a.card:hover{border-color:var(--brand-line)}
 a.card .go{color:var(--brand);font-weight:700;font-size:15px}
+.card ul{margin:0;padding-left:18px;font-size:15px;color:var(--sub)}
+.card p+p{margin-top:6px}
 
 /* ---------- 페이즈 바 ---------- */
 .phasebar{display:flex;margin:22px 0 10px;border-radius:var(--radius);overflow:hidden;
@@ -231,11 +235,11 @@ footer a{color:var(--sub)}
 
 /* ---------- 학습 자료: 작업 폴더(패키지) 배지 ---------- */
 .tag.ch{background:transparent;color:var(--brand-ink);border:1px dashed var(--brand-line);
-  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+  font-family:Emo,Consolas,"Cascadia Mono",monospace;letter-spacing:0}
 .tag.fh{background:transparent;color:var(--accent);border:1px dashed var(--accent);
-  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+  font-family:Emo,Consolas,"Cascadia Mono",monospace;letter-spacing:0}
 .tag.nb{background:transparent;color:var(--sub);border:1px dashed var(--line);
-  font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:0}
+  font-family:Emo,Consolas,"Cascadia Mono",monospace;letter-spacing:0}
 .wherebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;color:var(--sub);
   background:var(--code);border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:12px 0 20px}
 .wherebar b{color:var(--ink);font-weight:800}
@@ -264,7 +268,7 @@ main h5{font-size:15px;font-weight:800;margin:22px 0 4px;color:var(--sub);letter
 
 /* ---------- 스텝별 작업 폴더 배지 ---------- */
 h3 .dirtag, h4 .dirtag{float:right;font-size:11px;font-weight:600;letter-spacing:0;
-  font-family:Consolas,"Cascadia Mono",monospace;padding:2px 9px;border-radius:999px;
+  font-family:Emo,Consolas,"Cascadia Mono",monospace;padding:2px 9px;border-radius:999px;
   border:1px dashed var(--line);color:var(--sub);background:var(--panel);
   margin-left:12px;position:relative;top:3px}
 h3 .dirtag.pkg, h4 .dirtag.pkg{color:var(--brand-ink);border-color:var(--brand-line);background:var(--brand-soft)}
@@ -323,6 +327,8 @@ td .bt:hover{text-decoration:underline}
 .vids figure{margin:0;background:var(--panel);border:1px solid var(--line);
   border-radius:var(--radius);overflow:hidden}
 .vids video{display:block;width:100%;height:auto;background:#000}
+.vids.wide{grid-template-columns:1fr}
+.vids.wide video{aspect-ratio:16/3;min-height:120px;object-fit:contain}
 .vids figcaption{font-size:12.5px;color:var(--sub);padding:10px 14px 13px;line-height:1.6}
 .vids figcaption b{display:block;color:var(--brand-ink);font-size:15px;font-weight:800}
 
@@ -375,6 +381,78 @@ td .bt:hover{text-decoration:underline}
 .ev.code{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
 .ev.rm{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
 .ev.unk{color:var(--sub);background:transparent;border-color:var(--sub);border-style:dashed}
+
+/* ---------- 라이트박스 (app.js 가 img·svg[role=img] 에 .zoomable 을 달고 클릭 시 .lb 를 띄운다) ---------- */
+.zoomable{cursor:zoom-in}
+.no-zoom,.no-zoom *{cursor:auto}
+.lb{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);display:grid;place-items:center;
+  overflow:hidden;touch-action:none;user-select:none;cursor:grab;overscroll-behavior:contain}
+.lb[hidden]{display:none}
+.lb:active{cursor:grabbing}
+.lb-stage{transform-origin:center;will-change:transform;line-height:0}
+.lb-stage img{display:block;max-width:94vw;max-height:90vh;width:auto;height:auto;border-radius:6px}
+.lb-stage svg{display:block;height:auto;max-height:90vh;background:var(--panel);border-radius:10px;padding:16px;box-sizing:border-box}
+.lb-x{position:absolute;top:12px;right:12px;z-index:1;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.45);color:#fff;font-size:26px;line-height:1;cursor:pointer}
+.lb-x:hover,.lb-x:focus-visible{background:var(--brand);border-color:var(--brand);outline:none}
+
+/* ---------- Go2 교재: 머신 박스(명령 블록 위) · 결과 박스(명령 블록 아래) · 두 터미널 나란히 (2026-09-22 R5) ----------
+   <div class="cmd"><div class="mach ros"><b>🖥 ROS PC</b><span>Ubuntu 24.04 · Jazzy</span><span>📂 <code>~/…</code></span><span>새 터미널</span></div><pre>…</pre>…</div>
+   .mach.ros = ROS PC(브랜드색) · .mach.pod = RunPod/Isaac 머신(오렌지) · .mach.any = 아무 PC(회색)
+   <div class="res ok"><b>✅ 정상이라면</b><pre>…</pre></div>  .res.warn ⚠️ · .res.err ❌ */
+.mach{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:12.5px;line-height:1.5;
+  color:var(--sub);background:var(--brand-soft);border:1px solid var(--brand-line);border-bottom:0;
+  border-radius:12px 12px 0 0;padding:7px 14px}
+.mach b{color:var(--brand-ink);font-weight:800;font-size:15px;white-space:nowrap}
+.mach code{background:transparent;padding:0;color:var(--ink);font-weight:700;font-size:12px}
+.mach .nt{margin-left:auto;font-weight:700;color:var(--ink);white-space:nowrap}
+.mach.pod{background:var(--accent-soft);border-color:var(--accent)}
+.mach.pod b{color:var(--accent)}
+.mach.any{background:var(--code);border-color:var(--line)}
+.mach.any b{color:var(--sub)}
+.mach+pre,.cmd .mach+pre{border-radius:0;margin:0}
+.mach.pod+pre{border-left:1px solid var(--accent);border-right:1px solid var(--accent)}
+.mach.ros+pre{border-left:1px solid var(--brand-line);border-right:1px solid var(--brand-line)}
+.mach.any+pre{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.cmd .mach+pre{border-radius:0 0 12px 12px} .cmd .mach+pre:has(+.anno){border-radius:0}
+.cmd pre+.res{margin-top:8px}
+.res.ok code{color:var(--brand-ink)}
+.res{margin:0 0 22px;border:1px solid var(--brand-line);
+  border-radius:0 12px 12px 0;background:var(--panel);font-size:15px;padding:9px 16px 11px}
+.cmd .res,.cmd .anno+.res{margin-top:8px}
+.res b{display:block;font-size:12.16px;font-weight:800;letter-spacing:.04em;color:var(--brand-ink);margin-bottom:3px}
+.res pre{margin:6px 0 4px;font-size:12.5px;padding:10px 14px;border-radius:8px}
+.res p{margin:.2em 0;color:var(--sub)}
+.res.warn{border-color:var(--accent-soft);border-left-color:var(--accent);background:var(--accent-soft)}
+.res.warn b{color:var(--accent)}
+.res.err{border-color:var(--line);border-left-color:var(--sub);background:var(--code)}
+.res.err b{color:var(--sub)}
+/* 장 시작·끝 흐름 띠: 센서 → SLAM → 지도 → Nav2 → [vx,vy,wz] → PPO → 관절 중 이 장의 칸을 굵게 */
+.call.flow .strip{font-size:15px;color:var(--sub);letter-spacing:.01em;overflow-wrap:anywhere}
+.call.flow .strip strong{color:var(--brand-ink);background:var(--panel);border:1px solid var(--brand-line);
+  border-radius:6px;padding:0 6px;white-space:nowrap}
+.call.flow .strip strong.pod{color:var(--accent);border-color:var(--accent)}
+/* ---------- 코드 블록: 복사 버튼·가로 넘침 그림자 (app.js 가 pre.cp 와 .copybtn 을 붙인다) ---------- */
+pre.cp{position:relative;padding-top:34px}
+/* 내용이 code 하나뿐이면 스크롤을 code 로 옮겨 버튼이 제자리에 남게(.cc) */
+pre.cc{overflow-x:visible}
+pre.cc>code{display:block;overflow-x:auto}
+/* 넘치면 스크롤 방향 끝에 그림자(내용이 끝나면 덮개가 따라와 사라진다) */
+pre.cc>code,pre:not(.cc){}
+.copybtn{position:absolute;top:6px;right:8px;font:600 11.5px/1 "Pretendard Variable",Pretendard,sans-serif;
+  color:var(--sub);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+.copybtn:hover,.copybtn:focus-visible{color:var(--brand-ink);border-color:var(--brand-line)}
+.copybtn.done{color:var(--brand-ink);background:var(--brand-soft);border-color:var(--brand-line)}
+/* .anno 왼쪽 칸: app.js 가 설명 앞 조각들을 .k 하나로 묶는다(「·」 가 별도 칸이 되던 문제) */
+.anno>div>.k{min-width:0}
+/* 표 첫 열이 ID·명령 이름일 때 줄바꿈 금지(표에 idcol 을 붙여 선택) */
+.tablewrap.idcol td:first-child{white-space:nowrap}
+/* Ch03 8절 경로표 전용: 390px 에서 4열이 짓눌리지 않게 표 안에서 가로 스크롤 */
+.tablewrap.paths table{min-width:600px}
+.scrollhint{display:none;margin:8px 0 -12px;font-size:.85em;color:var(--sub)}
+@media (max-width:639px){.scrollhint{display:block}}
+@media (max-width:720px){.mach .nt{white-space:normal;margin-left:0}}
+.badge.obs{color:var(--brand-ink);background:transparent;border-color:var(--brand-line)}
 
 :root{
   --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
@@ -882,7 +960,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=af548a24').then(function(r){
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -947,7 +1025,11 @@ document.addEventListener('DOMContentLoaded',function(){
         res.innerHTML='<div class="none">'+msg+'</div>';}
       else{res.innerHTML=hits.map(function(h){
         return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
-          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
           +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
     });
   }
@@ -1002,7 +1084,7 @@ body>*{flex-shrink:0}
 <body>
 <!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="index.html"><img class="lgi" src="assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="hub-proposal.html">기획</a><a class="" href="hub-schedule.html">일정</a><a class="" href="hub-meeting.html">회의</a><a class="" href="hub-research.html">연구</a><a class="" href="/gallery/">갤러리</a><a class="on" href="hub-tech.html">기술</a><a class="" href="hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="chosun-materials.html">팀 자료실</a><a class="q" href="encyclopedia.html">도메인 백과</a><a class="q" href="curriculum.html">학습 커리큘럼</a><a class="q" href="budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){};if(window.fhFigs)window.fhFigs(t)" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
 <main class="fh-doc">
-<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-16 14:35 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
+<p style="font-size:.74rem;color:var(--ink-3,#8b949e);border:1px dashed var(--rule,#30363d);border-radius:7px;padding:.55rem .9rem">작성 오현민 · foothold-wiki 에서 이식 (<a class="ilink" href="https://github.com/foothold-project/foothold-lab/issues/72">#72</a> 1단계) · 이식 2026-09-30 13:39 · 고칠 것이 있으면 이슈로. md 정본화(2단계)가 남아 있다</p>
 
 <!-- nav:crumb -->
 <nav class="crumb" aria-label="현재 위치"><ol><li><a href="tech-rl.html">기술 문서</a></li><li>강화학습·제어</li><li aria-current="page">시뮬레이션 RL</li></ol></nav>
@@ -1071,5 +1153,5 @@ body>*{flex-shrink:0}
 <!-- nav:pagerow -->
 <!-- /nav:pagerow -->
 
-</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpwo0errok</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</main><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>

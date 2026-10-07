@@ -1,0 +1,50 @@
+[
+  {
+    "file": "v2-next-step.svg",
+    "source_texts": 35,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-generalization-summary.svg",
+    "source_texts": 30,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-difficulty-curve.svg",
+    "source_texts": 41,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-difficulty-curve-1.svg",
+    "source_texts": 0,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-difficulty-curve-2.svg",
+    "source_texts": 0,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-terrain-bars.svg",
+    "source_texts": 104,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-blown-runs.svg",
+    "source_texts": 76,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  },
+  {
+    "file": "v2-lineage.svg",
+    "source_texts": 34,
+    "missing_texts": [],
+    "method": "원본 문구와 수치를 자동 추출하고 인쇄용으로 재배치"
+  }
+]

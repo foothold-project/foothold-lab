@@ -695,7 +695,17 @@ p.append('<div class="note"><b>A와 B는 둘 다 NVIDIA 공식 체크포인트�
          '100 → 500 → 900회로 <b>이어붙인 누적 1,500회</b>이고, '
          'A와 B는 NVIDIA에서 <b>각각 한 번에 1,500회</b>입니다. '
          '<a href="https://github.com/foothold-project/foothold-lab/issues/428">#428</a>'
-         '에 계보를 적어 두었습니다.</div>')
+         '에 계보를 적어 두었습니다.'
+         '<br><b>「NVIDIA에서 출발했다」도 파일을 열어 확인했습니다.</b> '
+         '학습이 이어받은 <span class="mono">nvidia_pretrained.pt</span>는 '
+         '공식 <span class="mono">checkpoint.pt</span>와 파일이 같지 않습니다'
+         '(<span class="mono">1891ab2b</span> 대 <span class="mono">f2aa77bf</span> · '
+         '217바이트 차이). 그래서 열어 보니 <b>가중치 17개가 하나도 빠짐없이 같고</b> '
+         '<span class="mono">optimizer_state_dict</span>와 '
+         '<span class="mono">infos</span>도 같았습니다. '
+         '<b>다른 것은 <span class="mono">iter</span> 값 하나뿐입니다(1499에서 0).</b> '
+         '반복 횟수만 0으로 되감은 같은 가중치라는 뜻입니다. '
+         '<span class="mono">2026-09-18 실측</span></div>')
 p.append('<p><b>왜 범위를 바꿨나.</b> 평가 하네스에 설정된 틈 폭 범위는 '
          '<span class="mono">gap_width_range=(0.15, 0.40)</span>이고, '
          '기준 평가 조건인 난이도 0.5에서 실제 틈은 <b>0.275 m</b>입니다. '

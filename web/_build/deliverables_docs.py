@@ -37,6 +37,8 @@ DOCS = [
     ('deliverables/plan/proposal-deck.md', 'proposal-deck', '기획발표 · 9월 4일'),
     ('deliverables/plan/wbs.md', 'wbs', '기획발표 · 9월 4일'),
     ('deliverables/midterm/policy-metrics.md', 'policy-metrics', 'A-정책 · 9월 12일'),
+    ('deliverables/midterm/mvp-submission.md', 'mvp-submission',
+     'MVP 중간발표 · 9월 30일'),
     ('deliverables/midterm/generalization-report.md', 'generalization-report',
      'MVP 중간발표 · 9월 30일'),
     ('deliverables/midterm/twin-render.md', 'twin-render', 'MVP 중간발표 · 9월 30일'),

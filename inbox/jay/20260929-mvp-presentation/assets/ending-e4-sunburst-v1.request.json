@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "c685c1cf-8a04-484f-90b1-c455996c5f63"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    },
+    {
+      "role": "image",
+      "value": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9"
+    }
+  ],
+  "prompt": "Create ONE full-frame cinematic photograph, E4, a SIDE CAMERA view of the same Unitree Go2 stepping across the nearest narrow transverse gap on the central industrial walkway in reference 1. Reference 1 establishes the continuing route, departure and landing slabs, rust pipe under the gap, concrete columns and industrial setting. Move the camera to the SIDE of this same crossing and advance the robot into the crossing moment. Do NOT reproduce the rear angle. References 2 and 3 are the master for the EXACT Go2 anatomy, slim legs, small rounded black rubber feet and satin gray finishes. Reference 4 sets low-key photographic exposure and material response. None of the references should appear as an inset or collage.\n\nCAMERA: medium-wide near true left-side profile, slightly above the robot's torso looking gently down so solid foot contact is visible. Robot travels SCREEN LEFT TO SCREEN RIGHT. Its entire body and all naturally visible feet fit in the middle of the frame, total standing height around 32 percent of picture height, length about 42 percent of frame width. Plenty of dark architecture and foreground void remains for scale. Not a tight foot shot, not a front or rear shot, not a high overhead shot. Keep the two concrete lips and leg contacts sharp enough to read, realistic restrained depth of field.\n\nMATCHED CROSSING: departure slab on screen LEFT and landing slab on RIGHT. The transverse gap runs down into shadow near center frame; it is only about 25 cm along travel relative to a real Go2, with two top surfaces almost level, not a meter-wide leap or tall step. A dull rust pipe lies well BELOW the gap and never touches or supports the feet. Rough fractured concrete edges, sparse short rebars protruding below the lip, a few loose grains, not a collapsing bridge. Both slabs belong to the same narrow central walkway from reference 1. The walkway's longitudinal direction now runs across the picture because we have cut to a side camera; do not keep the old frontal vanishing point as if the robot turned sideways off the path. Repeated columns and service pipes in the background run consistently with this new camera. The red-beacon mission cabinet is farther AHEAD along the path, therefore beyond the RIGHT edge of this side shot, not behind the robot and not duplicated in the background.\n\nPOSE: calm deliberate supported step across the small gap. Both front feet are planted securely a little inside the solid RIGHT landing surface; the two hind feet remain planted inside the solid LEFT departure surface, one hind leg poised to follow next. Body weight transfers forward with modest joint flexion, horizontal low torso, no dramatic leap, floating feet or extreme stretch. Four legs total, with the far pair naturally partly occluded and offset just enough to distinguish contacts. Do not fan limbs unnaturally to reveal all feet. Front of the actual Go2 is on the RIGHT: front camera/lamp integrated into the rounded end of the low long torso, separate compact black lower LiDAR housing under it. No neck, separate head, armor, added modules or invented mechanisms. Gray round upper motor housings, slim solid gray leg links, short round matte rubber tips. Do not copy thick boot-like feet or chrome from any earlier concept.\n\nPHOTOGRAPHY: same sparse fixed cool overhead light, deep dark background and thin localized low haze. Natural irregular roughness, restrained highlight rolloff and local contrast. Concrete alternates dry dusty patches and damp patches, few small wet reflections. Satin gray robot shell, matte black rubber, dull rust and weathered pipes. No HDR, plastic sheen, mirror-wet floor everywhere, rim-lit toy, crunchy sharpening, artificial added scars, huge flying debris or fog obscuring contacts. This is a clean single still for later motion: no motion blur, HUD, scan, green filter, text, diagram, split screen, people or extra robot."
+}

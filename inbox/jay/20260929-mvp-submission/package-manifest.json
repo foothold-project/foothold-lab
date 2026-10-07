@@ -1,0 +1,218 @@
+{
+  "zip_bytes": 108648739,
+  "zip_sha256": "652473e55b052d3a8546cbf6bd9110525406c57922ec84ccc87eb81849c0b555",
+  "files": {
+    "FOOTHOLD-MVP.html": {
+      "bytes": 31753554,
+      "sha256": "150cf9365c33cb9d490f9d64d2b239517ceff7da09dd21bc25f84292e0687433"
+    },
+    "FOOTHOLD-MVP.pdf": {
+      "bytes": 9476013,
+      "sha256": "f227277eff1a2dbe5ab3d1c4406675d9a98b2dff873fb10a616cf967408bdf94"
+    },
+    "읽어주세요.txt": {
+      "bytes": 1110,
+      "sha256": "471a0eea55fb35292518f3b76b878dbfe4f162ad1e404172f71868b0f6b22b77"
+    },
+    "FOOTHOLD-MVP-summary.pdf": {
+      "bytes": 418631,
+      "sha256": "f392bf32ec11a6e8063854cc7a70905e77176189ad077caea836cd4800d8ff48"
+    },
+    "media/hero-floatingring-v15-nvidia.mp4": {
+      "bytes": 374856,
+      "sha256": "60c9c8d685270878b94e3965f9feab58937be91826f38fef357db65775b9f449"
+    },
+    "media/hero-floatingring-v15-v1.mp4": {
+      "bytes": 407503,
+      "sha256": "66c6b425cb6a6b6910851c5dac4de1d46772dbcd45b96874e0fac813f1ce3b24"
+    },
+    "media/hero-floatingring-v15-v2.mp4": {
+      "bytes": 408978,
+      "sha256": "7469c26d5ffff0ed1139bcb2ca57c17f300748075bcd52b2bb62355132b4fa81"
+    },
+    "media/hero-pit-v15-nvidia.mp4": {
+      "bytes": 294730,
+      "sha256": "59cf2d204b133b2985d5c3dff30857829bd3189fe996fe4105889391e6dd385b"
+    },
+    "media/hero-pit-v15-v1.mp4": {
+      "bytes": 376082,
+      "sha256": "959229e0737ab804d283c1c42881ae3ddb288c9c01b2430d1a29dbee5ada619a"
+    },
+    "media/hero-pit-v15-v2.mp4": {
+      "bytes": 379033,
+      "sha256": "d2f6aba0b4e36613c6ad5cab43dc2f47340b5f9b6b4c80defcb2a58ab1ba8137"
+    },
+    "media/hero-steppingstones-v10-nvidia.mp4": {
+      "bytes": 992849,
+      "sha256": "73dd70f4579214573963cdef9a7f4c30d957adf641e9c2ed442e88e09cc87d32"
+    },
+    "media/hero-steppingstones-v10-v1.mp4": {
+      "bytes": 816679,
+      "sha256": "d79e115204f451c8308a397e465956f6a9efc913efe742d8ba9d399052b62e31"
+    },
+    "media/hero-steppingstones-v10-v2.mp4": {
+      "bytes": 1234110,
+      "sha256": "43381b2cb87541bddfcd448022f911583d4f2064f90699e4ed09753e2738c865"
+    },
+    "media/lineage-gap-v1.mp4": {
+      "bytes": 498311,
+      "sha256": "6706c33d503a649784aa292aa9f8a908c7946a4e32ed5b11f0f28c6bbe279627"
+    },
+    "media/lineage-gap-D-fail.mp4": {
+      "bytes": 571945,
+      "sha256": "ec2cd0e4baa213f0cac74ffed72a750ec6de4a20830d36b10926c1c4238f25db"
+    },
+    "media/lineage-gap-v2.mp4": {
+      "bytes": 496651,
+      "sha256": "da2d630cb981477daf6a39bb118f040dbe9ad1a0cb169fa0a8404b7c3444e983"
+    },
+    "media/train-gap-forward.mp4": {
+      "bytes": 129178,
+      "sha256": "a7feb68ca8d6feb77ea765456cc31dc107b1a5a325c9c1c9581983f762aa264f"
+    },
+    "media/train-gap-omni.mp4": {
+      "bytes": 128793,
+      "sha256": "9e60fec65479331f6a0d55aa9e65a5c329071f502b412f6985d8b6555c0f7b6c"
+    },
+    "media/turnfall-v2a-iter1500.mp4": {
+      "bytes": 2817720,
+      "sha256": "800d7382d528b2d7695b49ee8cedbc97fe304f6013fab13b49f4a51cee57bf2e"
+    },
+    "media/turnfall-v2b-iter1500.mp4": {
+      "bytes": 2612303,
+      "sha256": "9602b1b66e99611c776bbcfd48aaadb79be2cd46c86c5688b7c3921441862dfa"
+    },
+    "media/axis2ext-slow010-nvidia.mp4": {
+      "bytes": 726738,
+      "sha256": "5e94c45565cb1af11b16bce041f38c0e00a3d2f244af226180eea10165128a56"
+    },
+    "media/axis2ext-slow010-v1.mp4": {
+      "bytes": 2678624,
+      "sha256": "7f2c4156a82f864f1c47ed38da8f0036c8fad20fe63fe2c7d30810c2ac59bd16"
+    },
+    "media/axis2ext-slow010-v2.mp4": {
+      "bytes": 2822587,
+      "sha256": "367deec100dc9b7ef3e0a56cc70713c019128ea51674a660de56739696ce4a96"
+    },
+    "media/axis2ext-slow020-nvidia.mp4": {
+      "bytes": 1531246,
+      "sha256": "9fca29cf118f4f0c667ff271cd898757c4f6ee8fc3a86e8977759fd15238c585"
+    },
+    "media/axis2ext-slow020-v1.mp4": {
+      "bytes": 2579815,
+      "sha256": "184dc14a0650f42c53374267b469d2e913bac7b7471691f7424a675c9484f548"
+    },
+    "media/axis2ext-slow020-v2.mp4": {
+      "bytes": 2745518,
+      "sha256": "554d3eafb11da22ea8c2d7bce01c7e4f16a119a59bd16ea43b75f12277e72bba"
+    },
+    "media/axis2ext-slow030-nvidia.mp4": {
+      "bytes": 2619001,
+      "sha256": "7608d4e1d2e3c770021872887b6dcba3a31d8dec198d72369759b5adf9691341"
+    },
+    "media/axis2ext-slow030-v1.mp4": {
+      "bytes": 2357174,
+      "sha256": "150e715b1506eed6838be740b3b24e86f623d332085ee622d7fb7ec72c67d712"
+    },
+    "media/axis2ext-slow030-v2.mp4": {
+      "bytes": 2626655,
+      "sha256": "04b7403087bf94ebddb2aa2b2ea09e939b67e19e9383907bb292f2e2ef0ee183"
+    },
+    "media/axis2ext-slow040-nvidia.mp4": {
+      "bytes": 2855621,
+      "sha256": "3b09be7620475dd87b155024681176d856b3288397ddebf0ebc85a042c44ea19"
+    },
+    "media/axis2ext-slow040-v1.mp4": {
+      "bytes": 2550342,
+      "sha256": "2fb1254aa4266463e541f88ffd62c0d2e3f5aa61b51860184afcac60b2760635"
+    },
+    "media/axis2ext-slow040-v2.mp4": {
+      "bytes": 2205317,
+      "sha256": "5e340a6aac892ce0d0593dca10c1daeb67f0576e62e09ab35ae0725d0dce555d"
+    },
+    "media/axis2ext-turnrest-nvidia.mp4": {
+      "bytes": 3500717,
+      "sha256": "3be114388fc303b4b85b4cd25e6d7e3dc3663006093050f4ae230eb013d88c29"
+    },
+    "media/axis2ext-turnrest-v1.mp4": {
+      "bytes": 967554,
+      "sha256": "81821b1d221df421f91fd00b74d33eb613a4cd5c9d4a057f7a7c2c71adb33192"
+    },
+    "media/axis2ext-turnrest-v2.mp4": {
+      "bytes": 3786348,
+      "sha256": "0eade97c3b7fefabc6c3f0f53cea2f202585589ac78e1dca6b7ec4a726ce335f"
+    },
+    "media/axis2ext-turnrev-nvidia.mp4": {
+      "bytes": 2852879,
+      "sha256": "84b1c5d442e42d21659f49c43b13339838964e4d250e8e45fb82c39f79963cbe"
+    },
+    "media/axis2ext-turnrev-v1.mp4": {
+      "bytes": 2413723,
+      "sha256": "2b564e92ad264898d90a66fe9ca12b516735e2df818d6cc081798d30746418a0"
+    },
+    "media/axis2ext-turnrev-v2.mp4": {
+      "bytes": 2508096,
+      "sha256": "9fe4824e4be8663769cec7164974167e821babfdd9ef330306282f6422413f44"
+    },
+    "media/axis2-stop-nvidia.mp4": {
+      "bytes": 1128833,
+      "sha256": "b501ea72176b4616c30eddc4d0151a31f84e11284d6f4d16938d004a564c05ad"
+    },
+    "media/axis2-stop-v1.mp4": {
+      "bytes": 1601243,
+      "sha256": "881d7ac7b1aa5036cbbd7606ba67aadc39de16e2e1fcad7d256b8a4b30a55361"
+    },
+    "media/axis2-stop-v2.mp4": {
+      "bytes": 1353892,
+      "sha256": "2eebdc77bd551d8eca3677daac80c261c5cabdf1d86a9c24aec62f968f7d5a44"
+    },
+    "media/axis2-hold-nvidia.mp4": {
+      "bytes": 927581,
+      "sha256": "a866b701d10ddb3ba9eaa06c06fbb72abac7ea3d40ca743a301ee938cc79846a"
+    },
+    "media/axis2-hold-v1.mp4": {
+      "bytes": 1519019,
+      "sha256": "00a26325c8b2ae78c38c4f30d9091e13e434b44c6aefbafb8c6399be6d301bc7"
+    },
+    "media/axis2-hold-v2.mp4": {
+      "bytes": 705715,
+      "sha256": "49b6a6d91c5d8b30c4850e36e5f9bbd713f359abf4b2e89d64f23357e1019479"
+    },
+    "media/axis2-turn-nvidia.mp4": {
+      "bytes": 2715266,
+      "sha256": "f484a063ee804ad400eff42c80e5bff71cc7bb0a8d7bcd757a744c94b4731959"
+    },
+    "media/axis2-turn-v1.mp4": {
+      "bytes": 1356524,
+      "sha256": "99b280c4281a9dea79ce89651aaa150962a9ea4d3bb0ca557c0b402d6375cdfc"
+    },
+    "media/axis2-turn-v2.mp4": {
+      "bytes": 2613231,
+      "sha256": "078c225ddb73bab43b808ed946dcc4e86a926ee513b2b14e5031dd3da2a20b37"
+    },
+    "media/ss-v1-fail.mp4": {
+      "bytes": 832056,
+      "sha256": "85ae4dcf7b6743b03d97913c1131289f1d26aca6c5e2054655e7e8c144547a45"
+    },
+    "media/stepping-stones-v2.mp4": {
+      "bytes": 841599,
+      "sha256": "852750613e6b394d8bb26bf068328bc4ba7bc4bceec705115fd2017fb3a24398"
+    },
+    "media/stepping-stones-v2-cross.mp4": {
+      "bytes": 884296,
+      "sha256": "4642ff277c336d35b7836f64bd6a1486fae5c1513bf9a3e09e1c4f4503367ac0"
+    },
+    "media/regress-stairsinv-d09-v1.mp4": {
+      "bytes": 426855,
+      "sha256": "50ed7be7fbb3d467d0bc292b5af9594284d7af619d08cd6f257a1c2bdd922377"
+    },
+    "media/regress-stairsinv-d09-v2.mp4": {
+      "bytes": 430343,
+      "sha256": "8fa662a2d6c53f7f81b139600335eeee1db86637d4163d25809419e6c25dabf6"
+    },
+    "media/train-army.mp4": {
+      "bytes": 3916500,
+      "sha256": "195a291a6ef6c6c53a20891997e65e5f42fc0033651ba1421c16bc103fd71bd8"
+    }
+  }
+}

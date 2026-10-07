@@ -1,0 +1,63 @@
+<svg viewBox="-20 -20 968 448" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="다음 단계 · 관측을 어떻게 다룰 것인가" width="928" height="408">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</style>
+
+<text x="0.0" y="14.0" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">여기까지 무엇을 세웠고, 다음은 어디를 건드리나</text>
+<text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">정책 수준(보상·명령)의 탐색은 멈출 선에 닿았다. 다음은 관측이다</text>
+<rect x="0.0" y="58.0" width="292.0" height="258.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="12.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">① 지금 정책이 보는 것</text>
+<text x="12.0" y="98.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">env.yaml 의 observations.policy 여덟 항목</text>
+<rect x="12.0" y="109.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="122.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">base_lin_vel</text>
+<rect x="12.0" y="131.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="144.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">base_ang_vel</text>
+<rect x="12.0" y="153.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="166.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">projected_gravity</text>
+<rect x="12.0" y="175.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="188.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">velocity_commands</text>
+<rect x="12.0" y="197.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="210.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">joint_pos</text>
+<rect x="12.0" y="219.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="232.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">joint_vel</text>
+<rect x="12.0" y="241.0" width="268.0" height="18.0" rx="4" fill="var(--card)" stroke="var(--rule-2)"/>
+<text x="20.0" y="254.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">actions</text>
+<rect x="12.0" y="263.0" width="268.0" height="18.0" rx="4" fill="var(--accent-soft)" stroke="var(--rule-2)"/>
+<text x="20.0" y="276.0" font-size="10.5" fill="var(--accent)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">height_scan</text>
+<text x="272.0" y="276.0" font-size="9.5" fill="var(--accent)" text-anchor="end" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">여기가 다음 자리</text>
+<rect x="318.0" y="58.0" width="292.0" height="248.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="330.0" y="78.0" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">② 신경망을 바꿔도 남는 것</text>
+<rect x="330.0" y="86.0" width="3.0" height="30.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="342.0" y="99.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">평가 하네스</text>
+<text x="342.0" y="114.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지형에 올리고 행동만 잰다. 관측이 무엇이든 상관없다</text>
+<rect x="330.0" y="126.0" width="3.0" height="30.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="342.0" y="139.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">기준선 숫자</text>
+<text x="342.0" y="154.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">새 구조가 넘어야 할 선. 없으면 «더 낫다» 를 반증 못 한다</text>
+<rect x="330.0" y="166.0" width="3.0" height="30.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="342.0" y="179.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">환경의 함정</text>
+<text x="342.0" y="194.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">커리큘럼 붕괴 · ang_vel_z 와 heading 의 한 쌍</text>
+<rect x="330.0" y="206.0" width="3.0" height="30.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="342.0" y="219.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">명령·보상 설정</text>
+<text x="342.0" y="234.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">새 구조도 명령을 받고 보상으로 배운다</text>
+<rect x="330.0" y="246.0" width="3.0" height="30.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="342.0" y="259.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">멈출 기준</text>
+<text x="342.0" y="274.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">시드 폭보다 작은 차이는 차이가 아니다</text>
+<rect x="636.0" y="58.0" width="292.0" height="208.0" rx="8" fill="var(--paper-2)" stroke="var(--rule-2)"/>
+<text x="648.0" y="78.0" font-size="11.5" fill="var(--warn)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">③ 다음 단계가 답할 물음</text>
+<rect x="648.0" y="86.0" width="3.0" height="30.0" rx="1.5" fill="var(--warn)" stroke="none"/>
+<text x="660.0" y="99.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">관측을 무엇으로 채울까</text>
+<text x="660.0" y="114.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지금은 발밑 격자를 직접 읽는다</text>
+<rect x="648.0" y="126.0" width="3.0" height="30.0" rx="1.5" fill="var(--warn)" stroke="none"/>
+<text x="660.0" y="139.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어떻게 압축할까</text>
+<text x="660.0" y="154.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">격자 그대로 넣을까 · 요약해 넣을까</text>
+<rect x="648.0" y="166.0" width="3.0" height="30.0" rx="1.5" fill="var(--warn)" stroke="none"/>
+<text x="660.0" y="179.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">기억을 둘까</text>
+<text x="660.0" y="194.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">지금은 한 시점만 본다</text>
+<rect x="648.0" y="206.0" width="3.0" height="30.0" rx="1.5" fill="var(--warn)" stroke="none"/>
+<text x="660.0" y="219.0" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">못 본 자리를 어떻게 메울까</text>
+<text x="660.0" y="234.0" font-size="9.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가려진 곳의 값을 무엇으로 둘까</text>
+<text x="0.0" y="380.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">버려지는 것은 가중치 파일 하나다. 관측 차원이 바뀌면 resume 이 안 되므로 체크포인트는 못 쓴다.</text>
+<text x="0.0" y="398.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">그 외는 남는다. 그래서 신경망 교체가 예정돼 있으면 정책 탐색은 멈출 선에 닿는 순간 멈추는 것이 맞다.</text>
+</svg>

@@ -1,0 +1,23 @@
+{
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "acda2e91-a241-4e2e-908c-31e0adfa48b2"
+    },
+    {
+      "role": "image",
+      "value": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9"
+    }
+  ],
+  "prompt": "One continuous five-second cinematic shot, beginning exactly from the supplied start image. Frontal slightly elevated wide camera. Hold the opening composition for about 0.5 seconds, then make a VERY SLOW, SHORT physical DOLLY-IN over the rest of the shot, with gentle easing and subtle true parallax. Keep the wide monumental room composition: camera movement alone should change the scale of fixed architecture by only a few percent. The robot approaches independently and provides the main motion. No optical or digital zoom, pan, tilt, orbit, sudden push, handheld shake, cuts, dissolves or time-lapse. The overhead light source remains stationary in the world.\n\nThe one Unitree Go2 in the rear darkness immediately begins a measured, natural quadrupedal WALK straight toward the camera along the existing central concrete support toward the empty patch of fixed overhead light. It remains small within the monumental room. Reveal its real gray shell gradually by its physical movement into the light, not by changing exposure. Smooth steady translation with clearly alternating foot placements, brief planted weight-bearing contacts, small natural body movement. No skating, teleportation, sudden acceleration, running, jumping, or resizing in place. Preserve four slim legs, the same compact torso, black lower LiDAR and small rounded black rubber feet throughout. The legs must not merge or change length. Keep every support contact on concrete; do not walk over open foreground gaps or create a bridge. By the end the robot is more clearly revealed, approaching the composition in reference image 2. Do not accelerate unnaturally just to match that reference exactly.\n\nReference image 2 guides ONLY the visible Go2 identity and approximate destination/framing. Do NOT copy its brighter background. Preserve the start image's near-black walls and floor, constant fixed overhead beam and restrained highlights for the entire take. The room must not brighten globally. The robot's increase in size comes from real approach. No sweep of light or flashlight. Subtle thin drifting haze, an occasional water droplet, restrained photographic material response; no HDR, plastic gloss, new geometry or rubbery morphing.\n\nGenerate synchronized diegetic audio: small rubber-foot contacts on damp concrete, restrained joint motor whir, sparse dripping water with spacious industrial reverberation and a quiet low air rumble. No voice, lyrics, music score, trailer boom or whoosh. Retain sound tails naturally for later full-film sound design. No HUD or on-screen text.\n\nEDIT CONTEXT ONLY: This wide reveal follows a separate locked close-up of the same robot crossing a gap: forefeet clear first, hind feet clear, loose grit falls, then an occlusion wipe takes that preceding shot to black. This requested clip is ONLY the next wide reveal from the supplied start image. Do not regenerate that close-up, add a wipe, or add black frames inside this clip. Preserve a clean beginning and natural audio tails so the editor can join the preceding black and debris decay to this scene. Do not add a new impact, debris burst or transition whoosh.",
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "bitrate_mode": "standard",
+  "draft": false
+}

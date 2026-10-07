@@ -300,7 +300,13 @@ def read_terrain_consts():
 RESULTS = os.path.join(LAB, 'sim', 'eval', 'results')
 
 # 배포 판 -> 그 판을 낸 실측 폴더. 판이 늘면 여기 한 줄 늘린다.
-RUN_FOLDER = {'v1': '20260911-v3-fixedscan'}
+# v2: lead 가 measure_release() 로 직접 돌려 확인한 값 (2026-09-28), site 세션이
+#   같은 원자료를 다시 읽어 같은 수치를 재현해서 확인했다. 처음 준
+#   20260928-v2-gallery-raw 는 <뿌리>/<모델>/<집합>/d0.5/v1.0/... 모양이라 맞지
+#   않았고, fixedscan 과 같은 <뿌리>/<모델>/<집합>/runs/v1.0-d0.5/... 모양으로
+#   20260928-v2-release-raw 에 다시 깔았다.
+RUN_FOLDER = {'v1': '20260911-v3-fixedscan',
+              'v2': '20260928-v2-release-raw'}
 
 
 def _rates(run_dir, model, group, speed, diff):
@@ -382,6 +388,19 @@ def measure_release(folder, main_model, difficulty, model_shas=None):
             'main_pct': round(mm, 1),
             'delta_pp': round(mm - mb, 1),
             'at_or_above': sum(1 for t in ts if main.get(t, 0.0) >= base[t]),
+            # ★ 2026-09-28. **지형별 값을 같이 싣는다.**
+            #
+            # 평균만 내보냈더니 첫 화면 카드가 「미경험 N 종」에서 «그 판이
+            # 학습에 넣은 지형» 을 빼지 못했다. 숫자는 맞는데 말이 틀리는
+            # 자리다 (`web/_build/hub3.py:_release_block` 이 그 사실을 알고도
+            # 주의 문구밖에 못 달았다. 개수만 있어서다).
+            #
+            # 여기서 «빼는 일» 을 하지는 않는다. 어느 지형이 학습이었는지는
+            # 학습 시각 저장본(`params/env.yaml` 의 `sub_terrains`)에 있고
+            # 이 도구는 그것을 안 읽는다. 값을 실어 두면 읽는 쪽이 고른다.
+            'by_terrain': dict(
+                (t, [round(base[t], 1), round(main.get(t, 0.0), 1)])
+                for t in ts),
         }
 
     # 성적표 전체 표본. 난이도 0.5 의 모든 모델·속도·지형을 센다.

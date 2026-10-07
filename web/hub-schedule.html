@@ -115,6 +115,11 @@ td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;
 td .n,td .o{white-space:nowrap;overflow-wrap:normal}
 th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
   letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:var(--paper-2)}
 
@@ -212,7 +217,28 @@ section .addr .big{font-size:1.2rem}
   border-radius:4px;background:var(--card)}
 .mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
   border-radius:4px;background:#0f141b}
-.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin-top:.45rem;line-height:1.5}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
 
 /* ── 코드 문법 강조 ──
    실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
@@ -768,7 +794,7 @@ document.addEventListener('DOMContentLoaded',function(){
      상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
   var IDXERR=null;
   function load(cb){if(IDX)return cb();
-    fetch('/assets/search-index.json?v=af548a24').then(function(r){
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
         if(!r.ok)throw new Error('HTTP '+r.status);
         return r.json();})
       .then(function(j){
@@ -833,7 +859,11 @@ document.addEventListener('DOMContentLoaded',function(){
         res.innerHTML='<div class="none">'+msg+'</div>';}
       else{res.innerHTML=hits.map(function(h){
         return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
-          +'</div><div class="sp2">'+esc(h.e.h)+'</div>'
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
           +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
     });
   }
@@ -1082,6 +1112,8 @@ body>*{flex-shrink:0}
 .rl3{margin:.45rem 0 .8rem;font-size:.92rem;font-weight:650;line-height:1.55;
  color:var(--ink);word-break:keep-all}
 .rl3 b{font-weight:850;color:var(--dim)}
+.rn3{margin:-.35rem 0 .8rem;font-size:.76rem;line-height:1.5;
+ color:var(--ink-3);word-break:keep-all}
 .rvs{display:grid;gap:.5rem;grid-template-columns:repeat(4,1fr)}
 @media(max-width:760px){.rvs{grid-template-columns:repeat(2,1fr)}}
 .rv3{border-top:2px solid var(--rule);padding-top:.4rem;min-width:0}
@@ -1392,6 +1424,21 @@ body>*{flex-shrink:0}
 .tkall3{font-size:var(--p-body);color:var(--ink-2);border-left:3px solid var(--dim);
   padding:.15rem 0 .15rem .55rem;margin:0 0 .5rem}
 .tkp3 span,.tkp3 i{margin-left:.35rem}
+/* ★ 2026-09-18 팀장 요청 · 허브 머리 오른쪽의 «바로 가기» 자리.
+   연구 허브(hub-research)와 연구 기록 목록(research.html)은 «같은 문서» 를
+   다른 방식으로 보여준다. 묶어서 보는 눈과 한 줄로 훑는 눈은 쓰임이 다르니
+   둘 다 살려 두고 서로 오갈 길을 낸다. 전에는 그 길이 없었다.
+   HUB_ACTION 에 없는 허브는 이 markup 이 아예 안 나온다. 나머지 다섯은 그대로다. */
+.hd3r{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap}
+.hd3t{min-width:0}
+.hd3a{display:block;flex:0 0 auto;margin-top:.55rem;padding:.55rem .85rem;
+  border:1px solid var(--rule);border-radius:var(--p-radius,10px);
+  background:var(--card);color:inherit;text-decoration:none;
+  font-weight:700;font-size:.9rem;line-height:1.25}
+.hd3a span{display:block;font-weight:500;font-size:.78rem;
+  color:var(--dim);margin-top:.15rem}
+.hd3a:hover,.hd3a:focus-visible{border-color:var(--ink-3);outline:none}
 /* 좁아지면 지형별로 접는다. 열 머리를 접고, 행 머리 아래 네 칸이 2x2 로 선다.
    이때만 칸이 제 단계 이름을 스스로 말한다 */
 @media (max-width:820px){
@@ -1410,7 +1457,7 @@ body>*{flex-shrink:0}
  .ev3{grid-template-columns:4rem 1fr}
  .rr3 b{white-space:normal}
 }
-</style><div class="wks"><div class="w3 dim"><div class="w3h">이번 주 · W38</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><b>마지막으로 연 주는 W36 입니다.</b> 2주째 안 열렸습니다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div><div class="w3 dim"><div class="w3h">차주 · W39</div><div class="w3sub">아직 안 열렸다. 일요일에 이슈 템플릿 「주간 팀 목표」로 연다. 열리면 여기에 저절로 뜬다.<br><a href="https://github.com/foothold-project/foothold-lab/issues/new?template=weekly-team.md">지금 열기</a></div></div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">D-2</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">오늘</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
+</style><div class="w3"><div class="w3h">이번 주</div><div class="w3sub">주간 이슈를 못 읽었다. <a href="https://github.com/orgs/foothold-project/projects/1">프로젝트 보드</a>에서 확인.</div></div><div class="w3"><div class="w3h">조선대 멘토링<span class="w3b mdd" data-wd="4" style="border-color:var(--note);color:var(--note)">D-2</span></div><div class="w3sub">금 14~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:조선대</code></div></div><div class="w3sub mclash" data-wd="4" data-on="2026-09-04" hidden style="color:var(--note)">오전 기획발표 · 오후 조선대 멘토링. 같은 날이다</div><div class="w3"><div class="w3h">박철제 멘토링<span class="w3b mdd" data-wd="0,2" style="border-color:var(--note);color:var(--note)">오늘</span></div><div class="w3sub">월·수 15~18 · 모인 질문 없음 · 이슈 템플릿 「멘토링 질문」 + 라벨 <code>mentor:박철제</code></div></div><script id="mentor-dday">
 (function(){
   /* 매주 반복이라 마감 «날짜» 가 없다. 요일이 데이터다.
      값이 바뀌는 자리는 KST 자정 하나뿐이라 달력 «날짜» 의 일련번호로 센다.
@@ -1459,6 +1506,6 @@ body>*{flex-shrink:0}
     document.addEventListener('DOMContentLoaded',start);
   }else{ start(); }
 })();
-</script><div class="g3s"><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-09-30">D-14</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">2장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>대기</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-11-07">D-52</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-12-11">D-86</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
-</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpwo0errok</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
+</script><div class="g3s"><div class="g3 near"><div class="g3l"><span class="g3d ddate" data-due="2026-09-30">D-0</span><span class="g3n">MVP · 중간발표</span><span class="g3u">9월 30일</span></div><div class="g3r"><div class="g3t">확정 2 · 대기 1</div><div class="chips3"><a class="c3 done" href="deliverable-mvp-submission.html"><b>MVP 종합보고서 (제출본)</b><i>오흥재</i><span>확정</span></a><a class="c3 done" href="deliverable-generalization-report.html"><b>일반화 평가표</b><i>오현민</i><span>확정</span></a><a class="c3 wait" href="deliverable-twin-render.html"><b>디지털 트윈 · 렌더 시연물</b><i>맹라현</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-11-07">D-38</span><span class="g3n">NAV · 실기 항법</span><span class="g3u">11월 7일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-nav-report.html"><b>실기 항법 검증 리포트</b><i>오흥재</i><span>대기</span></a></div></div></div><div class="g3"><div class="g3l"><span class="g3d ddate" data-due="2026-12-11">D-72</span><span class="g3n">FINAL · 최종발표</span><span class="g3u">12월 11일</span></div><div class="g3r"><div class="g3t">1장 전부 대기</div><div class="chips3"><a class="c3 wait" href="deliverable-final-report.html"><b>최종 실증결과 보고서</b><i>이민우</i><span>대기</span></a></div></div></div></div><div class="eh3">관련 문서 <span>7</span></div><div class="deep3"><a class="dp3" data-added="2026-08-27" href="deliverables.html"><b>산출물 현황</b><span>제출 산출물 · 상태 한눈에</span></a><a class="dp3" data-added="2026-08-28" href="ledger.html"><b>진행 현황</b><span>올린 것이 지금 어디 있나</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-wbs.html"><b>WBS</b><span>3층 분해 · 계획율과 완료율</span></a><a class="dp3" data-added="2026-08-27" href="personal-plans.html"><b>개인 계획</b><span>팀원이 스스로 세운 것</span></a><a class="dp3" data-added="2026-08-07" href="plan.html"><b>프로젝트 설계도</b><span>흐름 · 퀘스트 · 결정 안건</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-progress-log.html"><b>진행일지</b><span>무엇을 언제 했는가</span></a><a class="dp3" data-added="2026-08-27" href="deliverable-mentoring-log.html"><b>멘토링 일지</b><span>무엇을 받았고 무엇을 반영했나</span></a></div>
+</div><!--stamp:v1--><div class="bstamp"><span><b>FOOTHOLD</b> 프로젝트 웹 <span class="sv">v2.1.7</span></span><span>이 페이지 갱신 <span class="sv">C:\Users\AI-WS01\AppData\Local\Temp\tmpx1g7mkmw</span></span><span class="gap"></span><span>바뀐 내용은 <a href="notice-latest.html">팀 공지</a>와 <a href="decisions-log.html">결정 로그</a>에</span></div><!--/stamp:v1--></body>
 </html>
