@@ -1,11 +1,11 @@
 # GitHub Star 저장소 용도와 발표 시각화 후보
 
 > 분류: 리서치
-> 작성: Codex (GPT-6 Luna) · 2026-09-30 13:30
-> 근거: GitHub 공식 저장소 설명과 일부 README
-> 요지: vfxpedia 계정 Star 207개의 용도를 정리하고 발표용 애니메이션·시각화 후보와 연구 참고 자료를 추렸다
-> 상태: 조사 초안
-> 판: v0.2
+> 작성: Codex · 2026-10-07 13:38
+> 근거: GitHub Star API, 각 저장소 설명과 관련 README
+> 요지: vfxpedia 계정 Star 227개의 용도와 FOOTHOLD 작업별 참고 경로를 정리했다
+> 상태: 조사 갱신
+> 판: v0.3
 
 이슈: [#503](https://github.com/foothold-project/foothold-lab/issues/503)
 
@@ -14,6 +14,12 @@
 - 계정: `vfxpedia` · 확인 시각: 2026-09-30 13:30 KST · Star 목록 207개. `gh api users/vfxpedia/starred --paginate` 응답을 기준으로 2026-09-29 목록 197개와 대조했다. 새 저장소 10개, 제거 0개다.
 - 저장소 설명을 바탕으로 한 줄 용도를 썼고, 설명이 없던 기존 저장소 8개와 새 저장소 10개는 README를 추가로 읽어 구체화했다. 연구 참고 자료의 논문 초록·프로젝트 링크도 확인했으나, 논문 전체 정독이나 코드 실행은 하지 않았다.
 - README의 자기소개·성능 주장은 저장소가 내세운 내용으로 기록했다. 기능 실행, 결과 재현, 시스템 프롬프트 자료의 진위는 독립 검증하지 않았다.
+- 2026-10-07 13:38 KST에 API를 다시 조회해 227개를 확인했다. 직전 207개와 비교한 새 Star 20개를 아래에 추가했다. 본문에 인용한 `foothold-project/foothold-lab` 링크는 Star 목록 항목이 아니라 비교에서 제외했다.
+- `확인됨`: Star 목록의 저장소 수와 새 항목의 링크·설명은 GitHub API 응답과 대조했다. `미확인`: 각 도구의 현재 환경 설치 가능성, 우리 자산과의 호환성, 성능 및 결과 재현은 검증하지 않았다.
+
+### 다른 에이전트가 이 목록을 쓰는 방법
+
+작업 영역에 맞는 아래 `2026-10-07 Star 추가 20개` 표의 **FOOTHOLD 연결**을 먼저 본다. 각 저장소 링크가 원문 진입점이다. `직접 검토`는 기존 자산이나 구현과 비교할 가치가 있다는 뜻이고, `참고`는 즉시 도입할 근거가 없다는 뜻이다. Star는 채택·설치·성능 검증을 뜻하지 않는다. 코드나 모델을 가져오기 전에는 해당 저장소의 README, 라이선스, 의존성, 최근 변경 사항을 다시 확인하고 우리 실험 조건과 맞는지 별도로 기록한다.
 
 ## 발표 애니메이션·시각화 후보
 
@@ -267,14 +273,43 @@
 | [wty-yy/RoboGauge](https://github.com/wty-yy/RoboGauge) | MuJoCo에서 Go2 보행 정책의 추종·안전·안정성 지표를 여러 지형 난이도와 물성 무작위화 조건으로 평가한다. | README 추가 확인 |
 | [wty-yy/go2_rl_gym](https://github.com/wty-yy/go2_rl_gym) | Isaac Gym에서 Go2용 CTS/MoE-CTS 정책을 학습하고 MuJoCo와 실물 Go2로 평가하는 RSS 2026 구현이다. | README 추가 확인 |
 
+### 2026-10-07 Star 추가 20개
+
+아래의 연결 판단은 **FOOTHOLD에서 검토할 위치**를 안내한다. 우리 코드에 연결하거나 결과를 재현했다는 뜻은 아니다. `README 확인`은 해당 저장소의 첫 안내문을 읽은 범위이고, `설명 확인`은 GitHub 저장소 설명만 확인한 범위다.
+
+| 작업 영역 | 저장소 | 용도와 FOOTHOLD 연결 | 근거 범위 |
+|---|---|---|---|
+| Go2 3D·발표 | [blender/blender](https://github.com/blender/blender) | Blender 공식 소스 미러. 기존 Go2 USD·메시를 이용한 턴테이블, 관절, 센서 설명 애니메이션의 제작 도구 출처다. 프로젝트 자산 자체는 이 저장소에 없다. | 설명 확인 |
+| Go2 3D·발표 | [ahujasid/mcp-for-blender](https://github.com/ahujasid/mcp-for-blender) | Blender 애드온과 MCP 서버를 연결해 장면 정보 조회, 객체·재질 편집, 여러 각도의 시각 검토를 한다. Go2 원본 형상과 관절 연결을 보존한 채 설명용 컷을 만들 때 **직접 검토**할 후보. 현재 연결·실행 여부는 별도 확인해야 한다. | README 확인 |
+| Go2 3D·발표 | [SpatiaOS/Procedura](https://github.com/SpatiaOS/Procedura) | 문장을 편집 가능한 절차적 3D 프로그램으로 바꾸고 OpenUSD·URDF 관절 내보내기를 안내한다. 설명용 추가 구조물 제작의 **참고** 후보이며, 실제 Go2 형상을 대신할 근거는 없다. | README 확인 |
+| 영상 제작 | [higgsfield-ai/cli](https://github.com/higgsfield-ai/cli) | Higgsfield 이미지·영상·오디오 작업을 명령줄에서 호출한다. 기존 MCP 작업과 기능·요금을 대조한 뒤 영상 제작 자동화에 쓸지 판단할 **직접 검토** 후보. Star나 CLI 사용만으로 비용 절감이 입증되지는 않는다. | README 확인 |
+| 센서·항법 | [ankitdhall/lidar_camera_calibration](https://github.com/ankitdhall/lidar_camera_calibration) | LiDAR와 카메라 사이 회전·이동을 추정하는 ROS 패키지. Hesai 설정과 ROS2 Humble 안내가 있어 실기 센서 외부 보정의 **직접 검토** 후보. 실제 장착·토픽·캘리브레이션 타깃 적합성은 확인해야 한다. | README 확인 |
+| 센서·항법 | [hku-mars/loam_livox](https://github.com/hku-mars/loam_livox) | Livox LiDAR용 오도메트리·매핑 구현. 항법 알고리즘의 **참고** 자료이며, 우리 센서에 바로 호환된다고 보면 안 된다. README의 Ubuntu·구형 ROS 전제도 확인해야 한다. | README 확인 |
+| 3DGS·트윈 | [yanyan-li/4DGS-SLAM](https://github.com/yanyan-li/4DGS-SLAM) | 연속 RGB-D 영상으로 카메라 위치와 동적 장면의 4D Gaussian 표현을 추정한다. 현재 3DGS PoC와 동적 장면 처리 방식을 비교할 **참고** 후보. 충돌 메시의 정확도를 보증하지 않는다. | README·설명 확인 |
+| 3DGS·트윈 | [hustvl/4DGaussians](https://github.com/hustvl/4DGaussians) | 동적 장면을 4D Gaussian Splatting으로 렌더링하는 CVPR 2024 구현. 시간에 따라 변하는 복원 장면의 **참고** 자료이며, 로봇 주행용 충돌 지형은 별도다. | 설명 확인 |
+| 3DGS·트윈 | [aigc3d/Glob3R](https://github.com/aigc3d/Glob3R) | 3D 파운데이션 모델을 이용한 전역 Structure-from-Motion 연구 구현. 다중 시점 카메라 정합의 **참고** 후보. 현재 3DGS 파이프라인 교체나 성능 우위는 미확인이다. | README·설명 확인 |
+| 3DGS·트윈 | [baranowskibrt/onecanvas](https://github.com/baranowskibrt/onecanvas) | 위치가 주어진 RGB-D 장면 뷰를 바탕으로 3D 장면 질문에 답하는 연구 구현. 복원 공간의 의미 정보 설명에 **참고**할 수 있으나, 지형 충돌 검증 도구는 아니다. | README 확인 |
+| 3DGS·트윈 | [nv-tlabs/lyra](https://github.com/nv-tlabs/lyra) | 생성형 3D 월드 모델. 합성 장면 아이디어의 **참고** 자료이며, 실제 현장 측량이나 디지털 트윈의 근거로 사용할 수 없다. | README·설명 확인 |
+| 인지·영상 | [google-deepmind/tapnet](https://github.com/google-deepmind/tapnet) | 영상 속 임의 지점 추적 모델과 벤치마크를 제공한다. 카메라 영상에서 특징점 이동을 관찰하는 연구의 **참고** 후보이며, Go2 위치 추정·보행 관측으로 검증된 것은 아니다. | README 확인 |
+| 이동 방식 비교 | [RomanSlack/jev-drone](https://github.com/RomanSlack/jev-drone) | MuJoCo에서 카메라 기반 드론 장애물 코스와 판단 모델을 실험한다. 발표의 이동 방식 비교에서 시뮬레이션 사례로만 **참고**한다. 사족보행 성능과 직접 비교할 근거는 없다. | README 확인 |
+| 발표·미디어 | [freemocap/freemocap](https://github.com/freemocap/freemocap) | 영상 기반 모션 캡처 도구. 움직임 설명 연출의 **참고** 자료이며, Go2 관절값의 실측·정답 데이터로 간주하지 않는다. | 설명 확인 |
+| 발표·미디어 | [shitagaki-lab/see-through](https://github.com/shitagaki-lab/see-through) | 애니메이션 캐릭터 단일 이미지를 레이어로 분해하는 연구. 픽셀 캐릭터·도해 분리 기법의 **참고** 자료이며, 실사 Go2 이미지에 적용 가능하다는 근거는 없다. | 설명 확인 |
+| 발표·미디어 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | 로컬 음성 합성·복제·더빙·전사 도구. 발표 음성 작업의 **참고** 후보. 기존 영화의 전체 음악 믹싱 도구로 확인한 것은 아니다. | 설명 확인 |
+| 연구 운영 | [aipoch/open-science](https://github.com/aipoch/open-science) | 로컬 우선 연구 워크벤치와 추적 가능한 연구 산출물 관리를 표방한다. 실험 근거 연결 방식의 **참고** 자료. 현재 보고서 원장이나 평가 하네스를 대체하지 않는다. | 설명 확인 |
+| 에이전트 운영 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | 다중 에이전트 작업·메모리·도구 연동 프레임워크. 병렬 조사 운영의 **참고** 자료이며, 우리 Git 이슈·검토 흐름과 통합 검증은 하지 않았다. | 설명 확인 |
+| 에이전트 운영 | [666ghj/MiroFish](https://github.com/666ghj/MiroFish) | 군집 에이전트를 이용한 사회·의견 예측 엔진. 현재 Go2 보행·발표 제작과 직접 연결되는 확인된 용도는 없다. | 설명 확인 |
+| 에이전트 운영 | [KKKKhazix/AIHOT](https://github.com/KKKKhazix/AIHOT) | 정보원과 선정 기준을 설정하는 업계 동향·일일 보고 사이트 틀. 기술 동향 수집용 **참고** 자료이며, 연구 근거의 1차 출처는 아니다. | 설명 확인 |
+
 ## 출처
 
 - [GitHub Star API: vfxpedia Star 저장소](https://api.github.com/users/vfxpedia/starred)
 - 각 행의 저장소 링크에 있는 GitHub description. `README 추가 확인` 표시는 저장소 README 또는 프로필 README를 읽은 항목이다. GIF와 영상은 README에 연결된 자료로만 확인했으며, 재생해 확인하지 않았다.
+- 2026-10-07 추가 항목의 `README 확인`은 각 저장소의 GitHub README를 직접 읽은 것이다. Star 목록은 조회 시점에 변할 수 있으므로 자동 동기화된 장부가 아니다.
 
 ## 판 이력
 
 | 판 | 언제 | 무엇이 바뀌었나 | 근거 |
 |---|---|---|---|
+| v0.3 | 2026-10-07 | Star 227개로 갱신하고 신규 20개와 작업별 활용·검증 경계를 추가 | 이슈 #503 · GitHub Star API · 저장소 README |
 | v0.2 | 2026-09-30 | 최신 Star 207개로 갱신하고 README 확인 범위와 연구 참고 문서를 추가 | 이슈 #503 |
 | v0.1 | 2026-09-29 | Star 197개를 목록화하고 발표 후보를 조사 | 이슈 #503 |
