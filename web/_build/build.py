@@ -788,6 +788,13 @@ if __name__ == '__main__':
             print('\n  [!] 영상 넘기기 실패. 배포를 중단합니다.')
             sys.exit(1)
 
+        # ★ 2026-10-08 #511 경량화 ①. 큰 PNG 를 배포본에서만 WebP 로 (보이는 모습 그대로).
+        print('\n[3.06] 큰 PNG 를 WebP 로 (투명은 무손실 · 사진형은 품질 90)')
+        import image_slim
+        if not image_slim.main(SITE):
+            print('\n  [!] 그림 줄이기 실패. 배포를 중단합니다.')
+            sys.exit(1)
+
     # ★ 복사한 뒤에 검사한다. 볼트가 아니라 **실제로 공개될 파일**을 봐야 한다.
     #   foothold-site 는 PUBLIC 이고, 한 번 push 하면 되돌려도 히스토리에 남는다.
     #   (2026-08-05 워크스테이션 LAN 주소가 이 문 없이 공개 저장소로 나갔다.)

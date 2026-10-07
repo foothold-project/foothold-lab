@@ -14,7 +14,7 @@
       "permanent": false
     },
     {
-      "source": "/(.*)\\.(mp4|webm|mov|m4v)",
+      "source": "/(.*)\\.(mp4|webm|mov|m4v|pdf)",
       "destination": "https://ai-nas01.tail025053.ts.net/$1.$2",
       "permanent": false
     }
