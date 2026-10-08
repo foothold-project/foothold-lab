@@ -1,0 +1,419 @@
+{
+ "wall_start": 1791365883.6123443,
+ "env": {
+  "ROS_DOMAIN_ID": "58",
+  "GZ_PARTITION": "fh-app-2802539"
+ },
+ "checks": {
+  "M0 조종권·영상·위치 전제": {
+   "ok": true,
+   "pose": [
+    -1.971,
+    -0.512,
+    1.583,
+    0.02
+   ],
+   "target": [
+    -1.98,
+    0.49,
+    0.0
+   ],
+   "state": {
+    "mode": "IDLE",
+    "stop": "",
+    "owner": "7e08945f-1",
+    "out": [
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0
+    ],
+    "auth_rej": 0,
+    "auth_why": "",
+    "msg": "해제됨 - 조종하거나 목표를 찍으세요",
+    "video": {
+     "ok": true,
+     "why": "",
+     "shot_age": 0.03,
+     "render_age": 0.13
+    }
+   },
+   "state_age_s": 0.0
+  },
+  "M0b 임무 시작 → 실제 이동(NAV·odom) → 도착 확인 질문": {
+   "ok": true,
+   "ack": {
+    "command_id": "opA-mission.start-120577.474",
+    "ok": true,
+    "why": "",
+    "op": "mission.start"
+   },
+   "arrive_s": 4.9,
+   "active": {
+    "id": "m-20261007-183809-1",
+    "state": "PAUSED",
+    "step": 1,
+    "question": {
+     "kind": "check",
+     "text": "현장에 도착했습니다. 주변을 확인한 뒤 골라 주세요.",
+     "options": [
+      [
+       "next",
+       "확인함 - 복귀하기"
+      ],
+      [
+       "abort",
+       "임무 중단"
+      ]
+     ]
+    }
+   },
+   "state_age_s": 0.01
+  },
+  "M1 다른 계정(opB)의 답 → 거절, 임무 그대로": {
+   "ok": true,
+   "ack": {
+    "command_id": "opB-mission.answer-120582.678",
+    "ok": false,
+    "why": "조종권이 있는 화면에서만 임무를 바꿀 수 있습니다",
+    "op": "mission.answer"
+   },
+   "state_age_s": 0.06
+  },
+  "M2 opA 답 → 복귀 → SUCCEEDED": {
+   "ok": true,
+   "ack": {
+    "command_id": "opA-mission.answer-120582.729",
+    "ok": true,
+    "why": "",
+    "op": "mission.answer"
+   },
+   "back_s": 10.47,
+   "last": {
+    "id": "m-20261007-183809-1",
+    "title": "지점 확인 다녀오기",
+    "state": "SUCCEEDED",
+    "rev": 10,
+    "step": 2,
+    "pause": null,
+    "question": null,
+    "by": "7e08945f-1",
+    "t0": 1791365889.4653857,
+    "t1": 1791365905.2143598,
+    "steps": [
+     {
+      "title": "현장으로 이동",
+      "kind": "move_to",
+      "result": "succeeded",
+      "why": null
+     },
+     {
+      "title": "현장 확인",
+      "kind": "operator_check",
+      "result": "succeeded",
+      "why": null
+     },
+     {
+      "title": "출발 위치로 복귀",
+      "kind": "return",
+      "result": "succeeded",
+      "why": null
+     }
+    ]
+   },
+   "state_age_s": 0.08
+  },
+  "M3 상세: 단계 3 성공·답의 영상 근거 ok(gz_camera·파일 없음)·주체 opA·B 거절 기록": {
+   "ok": true,
+   "steps": [
+    {
+     "title": "현장으로 이동",
+     "kind": "move_to",
+     "attempts": 1,
+     "result": "succeeded",
+     "why": null,
+     "evidence": {
+      "nav": "SUCCEEDED",
+      "err_m": 0.07,
+      "pose": [
+       -1.91,
+       0.467,
+       0.221
+      ]
+     }
+    },
+    {
+     "title": "현장 확인",
+     "kind": "operator_check",
+     "attempts": 1,
+     "result": "succeeded",
+     "why": null,
+     "evidence": {
+      "answer": "next",
+      "answer_label": "확인함 - 복귀하기",
+      "by": "7e08945f-1",
+      "actor": {
+       "account": "opA",
+       "device": "308f8c"
+      },
+      "video": {
+       "state": "ok",
+       "why": "",
+       "src": "gz_camera",
+       "clock": "ros",
+       "stamp": 33.702,
+       "shot_age": 0.03,
+       "render_vs": 33.501,
+       "render_age": 0.23,
+       "file": null
+      }
+     }
+    },
+    {
+     "title": "출발 위치로 복귀",
+     "kind": "return",
+     "attempts": 1,
+     "result": "succeeded",
+     "why": null,
+     "evidence": {
+      "nav": "SUCCEEDED",
+      "err_m": 0.02,
+      "pose": [
+       -1.983,
+       -0.495,
+       1.427
+      ]
+     }
+    }
+   ],
+   "answered": [
+    {
+     "seq": 9,
+     "t": 1791365894.7215385,
+     "type": "answered",
+     "by": "7e08945f-1",
+     "text": "운영자 선택: 확인함 - 복귀하기 (영상 gz_camera 촬영 0.03 s 전 · 영상 파일 미보존)",
+     "actor": {
+      "account": "opA",
+      "device": "308f8c"
+     },
+     "video": {
+      "state": "ok",
+      "why": "",
+      "src": "gz_camera",
+      "clock": "ros",
+      "stamp": 33.702,
+      "shot_age": 0.03,
+      "render_vs": 33.501,
+      "render_age": 0.23,
+      "file": null
+     }
+    }
+   ],
+   "opB_rejected": [
+    {
+     "seq": 7,
+     "t": 1791365894.6698442,
+     "type": "command",
+     "by": "393b182f-1",
+     "text": "command",
+     "actor": {
+      "account": "opB",
+      "device": "199a7f"
+     },
+     "video": null
+    }
+   ],
+   "state_age_s": 0.03
+  },
+  "M4 지난 임무 첫 줄 = 이 임무(끝난 순서)": {
+   "ok": true,
+   "first": {
+    "id": "m-20261007-183809-1",
+    "title": "지점 확인 다녀오기",
+    "state": "SUCCEEDED",
+    "t0": 1791365889.4653857,
+    "t1": 1791365905.2143598,
+    "by": "7e08945f-1",
+    "steps": 3
+   },
+   "total": 1,
+   "state_age_s": 0.08
+  },
+  "M5 화면이 영상을 안 그리는 동안의 답 → 영상 근거 bad(이유 포함)·ABORTED": {
+   "ok": true,
+   "video": {
+    "state": "bad",
+    "why": "조종 화면의 영상이 1.5 s 전 촬영(화면 영상 끊김)",
+    "src": "gz_camera",
+    "clock": "ros",
+    "stamp": 51.3,
+    "shot_age": 0.02,
+    "render_vs": 49.8,
+    "render_age": 1.52,
+    "file": null
+   },
+   "last_state": "ABORTED",
+   "start_ack": {
+    "command_id": "opA-mission.start-120593.351",
+    "ok": true,
+    "why": "",
+    "op": "mission.start"
+   },
+   "arrive_s": 5.46,
+   "at_arrival": {
+    "id": "m-20261007-183825-2",
+    "state": "PAUSED",
+    "step": 1,
+    "question": {
+     "kind": "check",
+     "text": "현장에 도착했습니다. 주변을 확인한 뒤 골라 주세요.",
+     "options": [
+      [
+       "next",
+       "확인함 - 복귀하기"
+      ],
+      [
+       "abort",
+       "임무 중단"
+      ]
+     ]
+    }
+   },
+   "pose_at_arrival": [
+    -1.919,
+    0.503,
+    0.165,
+    0.0
+   ],
+   "target": [
+    -1.98,
+    0.49,
+    0.0
+   ],
+   "video_bad_s": 1.41,
+   "answer_ack": {
+    "command_id": "opA-mission.answer-120600.277",
+    "ok": true,
+    "why": "",
+    "op": "mission.answer"
+   },
+   "end_s": 0.0,
+   "steps": [
+    {
+     "title": "현장으로 이동",
+     "kind": "move_to",
+     "attempts": 1,
+     "result": "succeeded",
+     "why": null,
+     "evidence": {
+      "nav": "SUCCEEDED",
+      "err_m": 0.06,
+      "pose": [
+       -1.919,
+       0.503,
+       0.165
+      ]
+     }
+    },
+    {
+     "title": "현장 확인",
+     "kind": "operator_check",
+     "attempts": 1,
+     "result": null,
+     "why": null,
+     "evidence": null
+    },
+    {
+     "title": "출발 위치로 복귀",
+     "kind": "return",
+     "attempts": 0,
+     "result": null,
+     "why": null,
+     "evidence": null
+    }
+   ],
+   "events": [
+    {
+     "type": "created",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "step_started",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "step_done",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "step_started",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "paused",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "command",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "answered",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    },
+    {
+     "type": "ended",
+     "step": null,
+     "result": null,
+     "why": null,
+     "kind": null,
+     "answer": null,
+     "err_m": null
+    }
+   ],
+   "state_age_s": 0.01
+  }
+ },
+ "timeline": [],
+ "ok": true,
+ "unsigned_app_cmd": {},
+ "wall_end": 1791365912.3692422
+}
