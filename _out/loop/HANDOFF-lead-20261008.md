@@ -49,6 +49,13 @@ super 가 정리한 MVP 이후 설계 논의를 lead 가 팀장과 진행한다.
 - **Tailscale 이 켜진 기기(팀장 기기)는 Chrome 이 «로컬 네트워크 접근» 허용을 물은 뒤에야 영상 · PDF 가 열린다.** 사이트마다 한 번. 외부 방문자는 해당 없음.
 - NAS 쪽 되돌리기: `sudo docker exec ai-nas01-tailscale tailscale funnel reset` · `sudo docker rm -f foothold-media`.
 
+## 3-1. 10/9 갱신: 영상 · PDF 는 다시 Vercel 에서 (팀장 결정 「가」)
+
+- 10/8 NAS(Funnel) 경로는 바깥 망에서 갤러리 8~17초였다(첫 바이트 0.3~4초 · 50 KB/s~1 MB/s). lead 가 테일넷 안에서만 재고 통과라 했던 것이 원인이다.
+- 지금: vercel.json 돌림 삭제 · 빌드 `[3.05] media_offload` 끔 · `[3.04] video_faststart` 켬(moov 앞으로 · 지문 대조). 갤러리 클립 192개는 NAS 에서 배포본으로 되가져왔다. 축 2 「함께 재생」 0.11~0.22초.
+- **빌드에 NAS 가 더는 필요 없다.** 위 3절의 `net use` 안내는 M2 전까지 해당 없음.
+- 다음: M2 Cloudflare R2 (조사 `_out/nas-migration/M2-cloudflare-20261009.md` · 팀장이 계정 만듦 · R2 구독은 «스토리지 및 데이터베이스 → R2 객체 스토리지 → 내 계정에 R2 구독 추가»). M3 배포 뒤 재생 측정기는 ASTRA 2차 지적대로 새로 쓴다.
+
 ## 4. 팀장 결정 대기 · 팀장 손이 필요한 것
 
 - ~~Vercel 보관 기간 7일~~ **10/8 팀장 설정 완료**: Production · Pre-Production 1 week · Canceled · Errored 1 day (위치는 아래 5절).
