@@ -143,7 +143,7 @@
 |---|---|---|---|---|---|
 | foothold-v2 (민우가 Nav2 아래 사용) | 속도 `(vx, vy, wz)` · 학습은 heading_command | lin_vel_x 0.4~1.5 · lin_vel_y 0 · ang_vel_z -1~1 · standing 10 % · 재추출 10 s | 관측 235 중 height scan 187 | 미확인 | 〔LD 95~103〕 〔민우 21〕 `확인됨` |
 | 현민 goal1r3 | `[dx_b, dy_b, sinΔψ, cosΔψ, v_cap, h]` 6 | 벡터 2.0 m 로 자름 · v_cap low 0.15~0.30 / general 0.5~1.0 · stop · turn 은 v_cap 0 · 목표 0.8~2.0 m | GT 1,222 (33×17 · 0.05 m 높이 · 상태 + 발 링 100) | 관절 12 · 50 Hz (dt 0.005 × 4) | 〔FROZEN-CONFIG:15 · 18 · 23~28〕 〔현민 68〕 `확인됨` |
-| 석헌 AME-2 teacher (v14) | `[dx, dy, sin dψ, cos dψ]` 4 · 속도는 정책이 정함 | 2 m 로 자름 · 2 m 밖 목표는 학습 중 yaw 가림 | 정답 높이지도 27×13×3 = 1,053 | 관절 12 · 정책 50 Hz (물리 400 Hz × 8) | 〔AME2 69~70 · 86 · 404〕 `확인됨` |
+| 석헌 AME-2 teacher (v14) | `[dx, dy, sin dψ, cos dψ]` 4 · 속도는 정책이 정함 | 2 m 로 자름 · 2 m 밖 목표는 학습 중 yaw 가림 | 정답 높이지도 27×13×3 = 1,053 | 관절 12 · 정책 50 Hz (물리 400 Hz ÷ 8) | 〔AME2 69~70 · 86 · 404〕 `확인됨` |
 
 - Nav2 출력(vx, wz)을 목표형 둘에 잇는 코드는 아무도 만들지 않았다. 현민 「두 시스템 연결 결과 없음」 〔현민 15〕, 석헌 쪽은 설계 문서만 있음: 상위 10 Hz `[dx, dy, dyaw]` · `LocalPoseCommandBridge` · 「실행 파일 목록이 아니다」 〔AME2 426 · 431〕 `확인됨`
 - 연결 방식 (가) 전역 경로 앞 지점을 목표로 · (나) cmd_vel 을 위치 목표로 변환, (나)는 속도 · 도착 시점을 강제 못 한다고 석헌 HiPAN 검토가 적음 〔AME2 407~409〕 `확인됨`(문서 인용) · 효과는 미측정
@@ -177,7 +177,7 @@
 - 저장소의 실기 라이다 모델명은 「미확인」이다 〔docs/ROBOT-SPEC.md:21 · 109〕. 민우는 XT16 · L1 이라 적음 `확인됨`(두 문서가 다름)
 - 「Nav2 SUCCEEDED 인데 실제는 미도착」이 두 사람에게서 따로 나왔다: 민우 0.367 m 〔95〕, 현민 0.53 m 〔89 · 146〕 `확인됨`
 - 트랙 B 정의는 「순정 보행 위 SLAM · Nav2」 〔DECISIONS:95〕. 민우는 순정 보행이 아니라 `foothold-v2` 를 Nav2 아래에 쓴다 〔민우 15〕 `확인됨`
-- 트랙 A 최종은 「우리 정책이 ACC 디지털 트윈 안에서 걷는 것」 〔AME2 399〕. ACC 메시를 Isaac 에 올리거나 Go2 를 걷게 한 기록은 아무에게도 없다 〔ACC report-summary.json `robotDrivingValidated: false`〕 `확인됨`
+- 트랙 A 최종은 「우리 정책이 ACC 디지털 트윈 안에서 걷는 것」 〔AME2 399〕. ACC 메시를 Isaac 에 올리거나 Go2 를 걷게 한 기록은 이번에 열람한 제출물에서 확인하지 못했다(팀원 로컬 전체의 부재는 미확인 · ASTRA-MVP 검증 10/8 정정) 〔ACC report-summary.json `robotDrivingValidated: false`〕 `확인됨`
 - ACC 계단 13.5 cm 가 현민 RL 계단 레벨 치수 안에 드는지는 `spec.LEVEL_PLAN` 이 공개되지 않아 미확인
 
 **3-2. 중복 작업** `확인됨`

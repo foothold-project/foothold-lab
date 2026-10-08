@@ -51,7 +51,7 @@ super 가 정리한 MVP 이후 설계 논의를 lead 가 팀장과 진행한다.
 
 ## 4. 팀장 결정 대기 · 팀장 손이 필요한 것
 
-- Vercel 보관 기간 7일 (팀장 계정 · 위치는 아래 5절).
+- ~~Vercel 보관 기간 7일~~ **10/8 팀장 설정 완료**: Production · Pre-Production 1 week · Canceled · Errored 1 day (위치는 아래 5절).
 - Vercel Fast Data Transfer 117 GB / 100 GB 초과 (10/8 화면). 영상 · PDF 를 NAS 로 넘겼으니 앞으로는 줄어든다. 남은 큰 것은 제출본 HTML 두 장(31.8 MB · 9.6 MB, 그림이 안에 박힘). 이것도 NAS 로 돌릴지 결정 필요.
 - 도메인 구매: 프로젝트 `foothold-project.dev` 1년 · 개인 `mai-universe.dev` 또는 `vfxpedia.dev`. `vfxpedia.com` 이 팀장 것인지 확인 필요(2006 Gandi · Blackmagic Fusion 페이지로 넘어감).
 - #520 석헌 칸 체크 여부.

@@ -59,31 +59,63 @@ a{color:var(--signal)}
 <div class="wrap">
 <header>
   <h1>MVP 이후 설계 논의 자료 · #546</h1>
-  <div class="meta">작성 오흥재(lead) · 2026-10-08 · 상태: 논의 전 · 근거: PR #542 · #543 · #544 원문과 링크 자료, AME-2 보고서, 9/29 방향 문서, 팀장 star 저장소</div>
+  <div class="meta">작성 오흥재(lead) · 2026-10-08 · 3판 · 상태: 논의 전 · 근거: PR #542 · #543 · #544 원문과 링크 자료, AME-2 보고서, 9/29 방향 문서, 팀장 star 저장소</div>
   <div class="lede">
     <p><b>이 문서는 사실과 물음만 담습니다.</b> 권고는 하지 않습니다. 숫자마다 출처를 달았고, lead 가 원문과 대조한 것만 적었습니다.</p>
+    <p><b>ASTRA-MVP 검증(10/8 23:52, astra xhigh): 판정 «안 닫힘».</b> 처음 일곱 칸을 다 정해도 «누구의 어떤 임무를, 어느 실행 경로로, 트윈에서 무엇을 넘겨받아, 어떤 증거로 완료라 하는지» 가 남는다는 판정입니다. 그래서 순서를 아홉 칸으로 고쳤고, 지적받은 오류 여섯 건을 정정했습니다. 원문은 <code>inbox/jay/20261008-546-design/VERIFY-astra.md</code>.</p>
     <p style="margin:0">이음매 B 의 갈림길(속도 명령이냐 목표 위치냐)이 D(RL 재설계)와 현민 · 석헌 분담을 같이 정합니다. 그래서 B 부터 묻습니다. 계획은 이 자리에서 팀장과 정합니다.</p>
   </div>
 </header>
 
 <nav class="jump" aria-label="바로 가기">
-  <a href="#order">순서</a><a href="#b">B 이음매</a><a href="#c">C 점검</a><a href="#a">A 팀원 문서</a><a href="#d">D RL</a><a href="#e">E 영상</a>
+  <a href="#order">순서</a><a href="#work">작업 단위</a><a href="#b">B 이음매</a><a href="#c">C 점검</a><a href="#a">A 팀원 문서</a><a href="#d">D RL</a><a href="#e">E 영상</a>
 </nav>
 
 <section id="order">
-  <h2>논의 순서 제안</h2>
-  <p class="note">팀장 결정(10/8) 「통합 문서는 B 결정 뒤」를 따랐습니다. 한 번에 하나씩 묻습니다.</p>
+  <h2>논의 순서 (3판 · 검증 반영)</h2>
+  <p class="note">팀장 결정(10/8) 「통합 문서는 B 결정 뒤」를 따릅니다. 다만 B 를 정리한 <b>초안</b>과 전체 설계가 닫힌 <b>최종본</b>은 다른 시점입니다. 한 번에 하나씩 묻습니다.</p>
   <ol class="order">
-    <li><span class="n">1</span><div><div class="q">Nav2 아래 보행 정책이 속도 명령을 받는가, 목표 위치를 받는가</div><div class="why">이 답이 D 의 하위 정책 인터페이스와 현민 · 석헌 분담을 같이 정합니다 (B-2)</div></div></li>
-    <li><span class="n">2</span><div><div class="q">현민 목표형 교사와 석헌 AME-2 의 코드 소유 · 후속 학습 · 최종 채택</div><div class="why">1 의 답에 따라 둘 중 하나가 하위 정책이 되거나, 둘 다 상위로 갑니다</div></div></li>
-    <li><span class="n">3</span><div><div class="q">D 의 첫 단계: star 저장소 중 어느 코드에서 출발하는가</div><div class="why">AME-2 는 마지막 도입(팀장 10/8). 1 · 2 가 정해져야 «무엇을 학습하는가» 가 정해집니다</div></div></li>
-    <li><span class="n">4</span><div><div class="q">실기 빈칸(SDK 제어권 · 로봇 측 끊김 감시 · 정지거리)을 누가 언제</div><div class="why">아무도 안 맡았습니다. 트랙 B 일정(12/11)에 걸립니다</div></div></li>
-    <li><span class="n">5</span><div><div class="q">방향 점검: 트랙 B 정의와 민우 구성의 차이 · 라현 피드백 경로</div><div class="why">사실은 드러났고 판단만 남았습니다</div></div></li>
-    <li><span class="n">6</span><div><div class="q">A 팀원 문서 게시 확인 · 저장소 밖 자료를 받을지</div><div class="why">정리는 결정 없이 바로 됩니다. 예고 → 컨펌 → 게시 → 공지 순서는 정해져 있습니다</div></div></li>
-    <li><span class="n">7</span><div><div class="q">E 브랜드 영상은 파악만</div><div class="why">우선순위 낮음</div></div></li>
+    <li><span class="n">0</span><div><div class="q">최종 범위 확인: 사용자 · 대표 임무 · Track B 순정 보행 유지 · 세 흐름 병행</div><div class="why">#515 10/7 댓글은 현장 점검 사용자와 Go2 개발 · 통합팀을 아직 고르지 않은 채 남겼습니다. 이 답이 앱 결과물과 완료 기준을 정합니다 (검증 4-가)</div></div></li>
+    <li><span class="n">1</span><div><div class="q">실행 경로별 명령 계약: 시뮬 정책 입력(속도형 · 목표형) 과 실기 SDK 입력을 나눠서</div><div class="why">시뮬은 우리 학습 정책, 실기는 순정 보행이 기준입니다. 목표 좌표 기준 · 수명 · 정지 우선순위 · 앱 STOP 까지 한 계약으로 (검증 4-나)</div></div></li>
+    <li><span class="n">2</span><div><div class="q">현민 목표형 교사와 석헌 AME-2 의 코드 소유 · 후속 학습</div><div class="why">소유는 먼저 정할 수 있고, 최종 채택은 합의한 공통 시험 결과로 정합니다. 둘 다 관절 12개를 내는 하위 정책입니다</div></div></li>
+    <li><span class="n">3</span><div><div class="q">RL 실험 설계: 출발 코드 + 과제 · 관측 · 학습 예산 · 시드 · 기존 능력 유지 · 비교군 · AME-2 도입 조건 + deep-research 논문 목록</div><div class="why">코드 선택만으로는 RL 설계가 닫히지 않습니다. «논문 수준 성과» 를 우리 조건에서 판정할 과제와 수치도 같이 (검증 4-라)</div></div></li>
+    <li><span class="n">4</span><div><div class="q">Bridge(Digital Twin) 결정표</div><div class="why">어느 공간 · 판을 넘길지, 시각 · 충돌 · 관측 형상 구분, 축척 · 정렬 확인, Isaac 적재 담당과 인수 시험, 학습용인지 평가용인지, Track B 와 무엇을 공유할지 (검증 4-다 · #514)</div></div></li>
+    <li><span class="n">5</span><div><div class="q">실기 실행 계약: 앱 → 항법 → SDK → 실제 정지 · 재개 · 결과 반환, 그리고 담당</div><div class="why">Nav2 SUCCEEDED 와 실제 도착이 다를 때 앱에 무엇을 보일지, 끊김 · 위치 상실 뒤 누가 재개하는지 (검증 4-마)</div></div></li>
+    <li><span class="n">6</span><div><div class="q">통합 완료 조건: 대표 임무 · 계층별 판정 · 코드 · 모델 · 지도 판 · 증거 로그</div><div class="why">도착 기준 셋(0.25 · 0.5 · 0.2 m)은 계층이 달라 오류는 아니지만 어느 계층 책임인지 정해야 합니다. 관문 NAV 11/7 · FINAL 12/11 (docs/FLOW.md 266~267행)</div></div></li>
+    <li><span class="n">7</span><div><div class="q">A 팀원 문서 게시 · 저장소 밖 자료를 받을지</div><div class="why">정리는 결정 없이 바로 됩니다</div></div></li>
+    <li><span class="n">8</span><div><div class="q">E 브랜드 영상은 파악만</div><div class="why">우선순위 낮음</div></div></li>
   </ol>
 </section>
 
+<section id="work">
+  <h2>작업 단위 <span class="chip wait">팀장 지시 대기</span></h2>
+  <p class="note">단위마다 «무엇 · 필요한 것 · 끝의 기준». 결정이 필요 없는 것은 바로 시작할 수 있다고 표시했습니다. 어느 단위부터 할지는 팀장이 정합니다.</p>
+
+  <h3>사이트 영상 (#511 다시 엶)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>단위</th><th>무엇</th><th>필요한 것</th><th>끝의 기준</th></tr></thead>
+    <tbody>
+      <tr><td><b>M1</b><br><span class="chip done">바로 가능</span></td><td>moov 가 끝에 붙은 영상 98개를 앞으로 옮김(faststart, 화질 그대로 재포장) · 빌드 관문에 «faststart 아님 0» 추가</td><td>없음</td><td>NAS 의 mp4 345개 전부 faststart · 바깥 경로에서 «함께 재생» 시작 시간 재측정</td></tr>
+      <tr><td><b>M2</b><br><span class="chip sig">결정 필요</span></td><td>영상 서버를 Funnel 에서 CDN 으로 옮김</td><td>팀장 결정 · 후보 Cloudflare R2(무료 범위 저장 10 GB · 전송료 없음) + 우리 도메인(r2.dev 주소는 개발용 · 속도 제한). 계정 만들기는 팀장 · 결제수단 요구 여부 미확인</td><td>바깥 경로 첫 바이트 &lt; 0.5 초 · 「함께 재생」 3칸 2초 안에 움직임 · 테일넷 기기 로컬 네트워크 허용 창 사라짐</td></tr>
+      <tr><td><b>M3</b><br><span class="chip done">바로 가능</span></td><td>배포 뒤 바깥 경로 재생 실측을 관문으로 (헤드리스 Chrome · 공개 IP 고정)</td><td>없음 · 도구 <code>_out/tools/cdp_play.py</code></td><td>배포마다 대표 화면 셋의 재생 시작 시간이 기록되고 기준을 넘으면 실패</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>설계 (#546)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>단위</th><th>무엇</th><th>필요한 것</th><th>끝의 기준</th></tr></thead>
+    <tbody>
+      <tr><td><b>S0</b><br><span class="chip done">끝남</span></td><td>lead 자료 오류 정정 (검증 지적 여섯 건)</td><td>없음</td><td>이 3판 · BRIEF-abc.md 반영</td></tr>
+      <tr><td><b>S1</b><br><span class="chip sig">팀장 논의</span></td><td>순서 0: 최종 범위 (사용자 · 대표 임무 · 순정 유지 · 세 흐름 병행)</td><td>팀장 논의 · lead 는 #515 댓글 · 덱 41쪽 사실 준비</td><td>범위 한 문단이 #546 에 기록됨</td></tr>
+      <tr><td><b>S2</b><br><span class="chip sig">팀장 논의</span></td><td>순서 1 · 2: 실행 경로별 명령 계약 + 현민 · 석헌 소유</td><td>S1 · 민우에게 「시뮬 시험인지 실기 계획인지」 확인</td><td>계약 표(입력 · 좌표 · 수명 · STOP · 담당) · 통합 문서 <b>초안</b></td></tr>
+      <tr><td><b>S3</b><br><span class="chip wait">S2 뒤</span></td><td>순서 3: RL 실험 설계 문서 + 논문별 deep-research + astra 검증</td><td>S2 의 인터페이스 · 로컬 GPU 2장</td><td>첫 실험 한 장(출발 코드 · 과제 · 관측 · 예산 · 시드 · 비교군 · 유지 조건 · AME-2 도입 조건)</td></tr>
+      <tr><td><b>S4</b><br><span class="chip wait">S1 뒤</span></td><td>순서 4: Bridge 결정표 (#514)</td><td>라현 원본 자료 위치(요청 중) · 라현과 논의</td><td>입력 · 출력 · 좌표 · 축척 · 충돌 · 관측 · 용도 · 담당 · 인수 시험이 채워진 표</td></tr>
+      <tr><td><b>S5</b><br><span class="chip wait">S2 뒤</span></td><td>순서 5: 실기 실행 계약 (앱 → 항법 → SDK → 정지 · 재개 · 결과)</td><td>현민 앱 코드 · 민우 · Go2 현장 점검 항목</td><td>정상 · 실패 경로 표 · 담당 · NAV 11/7 전 시험 목록</td></tr>
+      <tr><td><b>S6</b><br><span class="chip wait">S2~S5 뒤</span></td><td>순서 6: 통합 완료 조건</td><td>S2~S5</td><td>대표 임무 판정표 · 계층별 기준 · 판 · 증거 로그 · 인수 담당 · 통합 문서 <b>최종본</b></td></tr>
+      <tr><td><b>S7</b><br><span class="chip done">바로 가능</span></td><td>순서 7: 팀원 문서 셋 정리 (라현 · 민우 · 현민 각각)</td><td>게시는 예고 → 팀장 컨펌 → 게시 → 공지</td><td>세 문서 초안 · 저장소 밖 자료 목록</td></tr>
+    </tbody>
+  </table></div>
+</section>
 <section id="b">
   <h2>B. 이음매 셋</h2>
 
@@ -103,7 +135,7 @@ a{color:var(--signal)}
     <li>팀장 star 저장소 9개 중 목표형 명령은 AME-2 하나뿐입니다 (D 참고). Nav2 <code>Twist</code> 를 정책 명령에 그대로 넣는 예는 isaac-go2-ros2 에 있습니다.</li>
     <li>「Nav2 SUCCEEDED 인데 실제로는 못 갔다」가 두 사람에게서 따로 나왔습니다. 민우 참값 <span class="num">0.367 m</span>(허용 0.25 m) · 현민 <span class="num">0.53 m</span>(허용 0.5 m).</li>
   </ul>
-  <div class="ask"><b>물음 1.</b> 하위 보행 정책의 입력을 속도형으로 둘지, 목표형으로 바꿀지, 둘을 모드로 같이 둘지.</div>
+  <div class="ask"><b>물음 1.</b> 시뮬 정책의 입력을 속도형으로 둘지, 목표형으로 바꿀지, 둘을 모드로 같이 둘지. 실기는 순정 SDK 입력으로 따로.</div>
 
   <h3>B-1 · 앱 ↔ 게이트웨이 (현민)</h3>
   <ul>
@@ -119,7 +151,7 @@ a{color:var(--signal)}
     <li>로봇 측 끊김 감시 · 제어권 이양 · 실측 정지거리: 코드도 측정도 없습니다.</li>
     <li>문서상 결정: <code>MotionSwitcherClient</code> 확정(08-14) · 「저수준 실기 이전은 제외」(08-19).</li>
   </ul>
-  <div class="ask"><b>물음 4.</b> 이 빈칸을 누가, 트랙 B 일정 안에서 언제.</div>
+  <div class="ask"><b>물음 5.</b> 이 빈칸을 누가, NAV 11/7 · FINAL 12/11 안에서 언제.</div>
 </section>
 
 <section id="c">
@@ -127,11 +159,11 @@ a{color:var(--signal)}
   <div class="tbl"><table>
     <thead><tr><th>어긋난 것</th><th>사실</th></tr></thead>
     <tbody>
-      <tr><td>트랙 B 정의</td><td>DECISIONS 95행 「트랙 B = <b>순정 보행</b> 위 SLAM · Nav2」. 민우는 순정 보행이 아니라 foothold-v2 를 Nav2 아래에 씁니다</td></tr>
+      <tr><td>트랙 B 정의</td><td>DECISIONS 95행 「트랙 B = <b>순정 보행</b> 위 SLAM · Nav2」는 실기 기준입니다. 민우의 foothold-v2 사용은 <b>Isaac Sim 시험</b>이라(PR #542 9~21행) 그 자체로 위반은 아닙니다. 실기에서도 바꿀 계획인지는 미확인 <span class="src">(검증 정정)</span></td></tr>
       <tr><td>목표형 교사가 둘</td><td>현민 goal1r3(MLP) 와 석헌 AME-2 teacher. 둘 다 몸 좌표 목표 + sin · cos 방향 + 2 m 자름. 분담 합의 기록 없음</td></tr>
       <tr><td>SLAM · Nav2 스택이 둘</td><td>민우(Go2 · rko_lio · slam_toolbox 2.8.5) 와 현민(TB3 · AMCL · slam_toolbox 2.8.5). 둘 다 ROS 2 Jazzy</td></tr>
       <tr><td>도착 판정이 셋</td><td>민우 0.25 m · 14.32° / 현민 0.5 m · 0.5 rad · 1 s / 석헌 0.2 m · 15° · 5 s</td></tr>
-      <tr><td>트랙 A 최종</td><td>「우리 정책이 ACC 트윈 안에서 걷는 것」. ACC 메시를 Isaac 에 올리거나 Go2 를 걷게 한 기록은 없습니다 (<code>robotDrivingValidated: false</code>)</td></tr>
+      <tr><td>트랙 A 최종</td><td>「우리 정책이 ACC 트윈 안에서 걷는 것」. ACC 메시를 Isaac 에 올리거나 Go2 를 걷게 한 기록은 <b>이번에 열람한 제출물에서</b> 확인하지 못했습니다 (<code>robotDrivingValidated: false</code>). 팀원 로컬 전체는 미확인 <span class="src">(검증 정정)</span></td></tr>
       <tr><td>실기 라이다</td><td>민우 「XT16 · L1」 · ROBOT-SPEC 은 모델명 미확인</td></tr>
     </tbody>
   </table></div>
@@ -146,7 +178,7 @@ a{color:var(--signal)}
       <tr><td>수정본</td><td>팀장 코멘트(10/8 17:56 KST) 뒤 새 커밋 없음. #545 시작 조건 미충족</td></tr>
     </tbody>
   </table></div>
-  <div class="ask"><b>물음 5.</b> 트랙 B 를 «순정 보행» 으로 되돌릴지, 정의를 고칠지. 라현에게 SuperSplat 정리를 시각화 쪽 먼저로 줄지, 메시까지로 줄지.</div>
+  <div class="ask"><b>물음 0 · 4 에 붙음.</b> 민우의 시뮬 시험과 실기 목표(순정)의 관계 확인. 라현에게 SuperSplat 정리를 시각화 쪽 먼저로 줄지, 메시까지로 줄지는 Bridge 결정표 안에서.</div>
 </section>
 
 <section id="a">
@@ -190,7 +222,7 @@ a{color:var(--signal)}
   <h3>논의에 걸리는 발견</h3>
   <ul>
     <li><b>목표형은 AME-2 하나</b>입니다. 나머지 여덟은 속도형입니다. 물음 1(B-2)에서 목표형을 고르면 참고할 코드가 AME-2 뿐이고, 그것도 G1 용입니다.</li>
-    <li><b>«발 놓을 곳» 을 배포 정책에 어떻게 보이느냐가 저장소마다 다릅니다.</b> height scan 을 배포 입력에 그대로 넣는 것은 legged_gym 기본과 isaac-go2-ros2 뿐입니다. MoE-CTS 와 JEPLO 는 지형을 teacher 만 보고, 배포 student 는 몸 감각 이력이나 LiDAR depth 로 추정합니다.</li>
+    <li><b>«발 놓을 곳» 을 배포 정책에 어떻게 보이느냐가 저장소마다 다릅니다.</b> 정답 height scan 을 배포 입력에 그대로 넣는 것은 legged_gym 기본과 isaac-go2-ros2 뿐입니다. 정답 높이지도는 teacher 만 받고, 배포 student 는 MoE-CTS 가 몸 감각 이력으로, <b>JEPLO 는 LiDAR depth 로 지형을 직접 봅니다</b> <span class="src">(검증 정정)</span>.</li>
     <li><b>ame2_minimal 은 논문이 안 준 숫자를 줍니다.</b> proprio encoder 82 → 512 → 512 → 128 · attention 96차원 32 head · decoder 288 → 512 → 512 · critic MoE 16 expert · PPO 5 epoch · 4 mini-batch(논문 부록은 4 · 3).</li>
     <li><b>우리 환경과 판이 같은 것</b>은 ame2_minimal · go2_rl_robotlab · JEPLO (Isaac Lab 2.3.2) 셋입니다. 셋 다 자기 rsl_rl 개조본(5.0.0 · 3.3.0 · 2.3.1)을 쓰고 우리는 3.1.2 입니다. Isaac Gym 계열 셋은 Python 3.6~3.8 · Linux 가 필요합니다.</li>
     <li>ame2_minimal 코드 주석이 <b>우리 GPU(RTX 5080 · sm_120) + torch 2.7.0+cu128</b> 에서 bf16 attention 역전파가 죽는 문제와 회피책을 적어 두었습니다.</li>
@@ -208,7 +240,7 @@ a{color:var(--signal)}
     </tbody>
   </table></div>
   <p class="src">석헌 쪽은 10/7 보고서 기준이고, RunPod 의 v15 이식본은 열지 않았습니다. 공식 코드는 G1 용이라 차이가 모두 «틀림» 은 아닙니다.</p>
-  <div class="ask"><b>물음 3.</b> 첫 단계를 어느 코드에서 출발할지. 지형 정보를 배포 정책에 직접 넣을지(legged_gym 꼴), teacher 만 보게 할지(MoE-CTS · JEPLO 꼴). 그리고 deep-research 할 논문 목록 확정.</div>
+  <div class="ask"><b>물음 3.</b> 첫 단계를 어느 코드에서 출발할지. 정답 지형을 배포 정책에 직접 넣을지(legged_gym 꼴), 정답은 teacher 만 주고 배포는 몸 감각 이력(MoE-CTS 꼴) 이나 센서 depth(JEPLO 꼴)로 볼지. 그리고 deep-research 할 논문 목록 확정.</div>
 </section>
 
 <section id="e">
@@ -223,5 +255,5 @@ a{color:var(--signal)}
   </table></div>
 </section>
 
-<p class="src">팀원 자료 원값 전체(부록 R)와 출처 행 번호는 lead 작업 파일 <code>brief_546.md</code> 에 있습니다. 논의 뒤 저장소 <code>inbox/jay/</code> 로 옮깁니다.</p>
+<p class="src">근거 파일: <code>inbox/jay/20261008-546-design/</code> 의 BRIEF-abc.md(팀원 원값 부록 R) · SURVEY-star-code.md · VERIFY-astra.md · TASK-verify-astra.md.</p>
 </div>
