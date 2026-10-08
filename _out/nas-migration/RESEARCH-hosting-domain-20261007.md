@@ -29,7 +29,7 @@
 - 지운 배포는 30일 복구 기간에 들어간다 (Settings > Security > Recently Deleted) [V1]. 복구 기간 중인 배포가 저장량에 잡히는지는 문서에 없다 (미확인).
 - 계량은 GB-month 다. 프로젝트별 하루 최대 저장량을 청구 기간 동안 더한다 [V4]. Hobby 10 GB 가 순간값인지 GB-month 인지는 문서가 구분하지 않는다 (미확인). 반영 시점도 "After Usage refreshes" 로만 적혀 있다 [V9].
 
-**Retention 설정이 Hobby 에 있나.** 있다. "available on all plans" [V1]. 프로젝트 Settings > Security > Deployment Retention Policy. Hobby 는 2026-04-29 부터 최대 30일 [V10].
+**Retention 설정이 Hobby 에 있나.** 있다. "available on all plans" [V1]. 프로젝트 Settings > Build and Deployment > 맨 아래 Deployment Retention Policy (10/8 실제 화면 확인 · 문서는 Security 라고 적지만 화면에 없다). Hobby 는 2026-04-29 부터 최대 30일 [V10].
 - 기간이 지나도 남는 예외 (Hobby): 마지막 배포 3개, Ready 상태 production 3개 [V1].
 - 모든 플랜 공통 예외: production alias 배포, **활성 브랜치의 최신 preview** (브랜치가 안 지워졌고 PR 이 merge/close 안 됨) [V1].
 

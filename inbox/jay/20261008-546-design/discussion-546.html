@@ -1,0 +1,227 @@
+<title>#546 설계 논의 자료</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 한 줄 기둥: 위에서 아래로 «물음 → 근거» 를 읽는 논의 노트. 물음만 신호색, 나머지는 잉크색 */
+:root{
+  --paper:#f5f6f3; --sheet:#ffffff; --ink:#1d2430; --muted:#5b6474; --rule:#d9ddd6;
+  --signal:#b4471c; --signal-bg:#fbeee6; --done:#2f6b4f; --done-bg:#e6f1ea; --wait:#7a5a12; --wait-bg:#f6efdc;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14171c; --sheet:#1b1f26; --ink:#e4e7ec; --muted:#9aa3b2; --rule:#2c323c;
+  --signal:#f08a5d; --signal-bg:#3a241a; --done:#7cc4a0; --done-bg:#1d2e26; --wait:#e2c068; --wait-bg:#33291a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14171c; --sheet:#1b1f26; --ink:#e4e7ec; --muted:#9aa3b2; --rule:#2c323c;
+  --signal:#f08a5d; --signal-bg:#3a241a; --done:#7cc4a0; --done-bg:#1d2e26; --wait:#e2c068; --wait-bg:#33291a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15.5px;line-height:1.65;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 64px}
+h1{font-size:1.55rem;line-height:1.3;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.2rem;margin:0 0 10px;text-wrap:balance}
+h3{font-size:1.02rem;margin:18px 0 6px}
+p{margin:0 0 10px}
+.meta{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+.lede{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;margin-bottom:16px}
+nav.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:8px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--rule);margin-bottom:18px}
+nav.jump a{font-size:.85rem;text-decoration:none;color:var(--ink);border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:3px 11px}
+nav.jump a:focus-visible,a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+section{margin-bottom:30px;scroll-margin-top:56px}
+.order{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.order li{display:grid;grid-template-columns:2rem 1fr;gap:8px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 12px}
+.order .n{font-family:var(--font-mono);font-weight:500;color:var(--signal);font-size:1.05rem}
+.order .q{font-weight:700}
+.order .why{color:var(--muted);font-size:.9rem}
+.ask{background:var(--signal-bg);border-left:3px solid var(--signal);padding:10px 12px;margin:12px 0;border-radius:0 6px 6px 0}
+.ask b{color:var(--signal)}
+.tbl{overflow-x:auto;margin:8px 0 12px;border:1px solid var(--rule);border-radius:6px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--rule)}
+th{font-weight:700;color:var(--muted);font-size:.8rem;letter-spacing:.02em;background:var(--paper)}
+tr:last-child td{border-bottom:0}
+code,.mono{font-family:var(--font-mono);font-size:.86em;font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+ul{margin:0 0 10px;padding-left:1.2em}
+li{margin-bottom:4px}
+.chip{display:inline-block;font-size:.75rem;border-radius:999px;padding:1px 8px;font-weight:500;vertical-align:1px}
+.chip.done{background:var(--done-bg);color:var(--done)}
+.chip.wait{background:var(--wait-bg);color:var(--wait)}
+.chip.sig{background:var(--signal-bg);color:var(--signal)}
+.note{color:var(--muted);font-size:.85rem}
+.src{color:var(--muted);font-size:.8rem}
+a{color:var(--signal)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>MVP 이후 설계 논의 자료 · #546</h1>
+  <div class="meta">작성 오흥재(lead) · 2026-10-08 · 상태: 논의 전 · 근거: PR #542 · #543 · #544 원문과 링크 자료, AME-2 보고서, 9/29 방향 문서, 팀장 star 저장소</div>
+  <div class="lede">
+    <p><b>이 문서는 사실과 물음만 담습니다.</b> 권고는 하지 않습니다. 숫자마다 출처를 달았고, lead 가 원문과 대조한 것만 적었습니다.</p>
+    <p style="margin:0">이음매 B 의 갈림길(속도 명령이냐 목표 위치냐)이 D(RL 재설계)와 현민 · 석헌 분담을 같이 정합니다. 그래서 B 부터 묻습니다. 계획은 이 자리에서 팀장과 정합니다.</p>
+  </div>
+</header>
+
+<nav class="jump" aria-label="바로 가기">
+  <a href="#order">순서</a><a href="#b">B 이음매</a><a href="#c">C 점검</a><a href="#a">A 팀원 문서</a><a href="#d">D RL</a><a href="#e">E 영상</a>
+</nav>
+
+<section id="order">
+  <h2>논의 순서 제안</h2>
+  <p class="note">팀장 결정(10/8) 「통합 문서는 B 결정 뒤」를 따랐습니다. 한 번에 하나씩 묻습니다.</p>
+  <ol class="order">
+    <li><span class="n">1</span><div><div class="q">Nav2 아래 보행 정책이 속도 명령을 받는가, 목표 위치를 받는가</div><div class="why">이 답이 D 의 하위 정책 인터페이스와 현민 · 석헌 분담을 같이 정합니다 (B-2)</div></div></li>
+    <li><span class="n">2</span><div><div class="q">현민 목표형 교사와 석헌 AME-2 의 코드 소유 · 후속 학습 · 최종 채택</div><div class="why">1 의 답에 따라 둘 중 하나가 하위 정책이 되거나, 둘 다 상위로 갑니다</div></div></li>
+    <li><span class="n">3</span><div><div class="q">D 의 첫 단계: star 저장소 중 어느 코드에서 출발하는가</div><div class="why">AME-2 는 마지막 도입(팀장 10/8). 1 · 2 가 정해져야 «무엇을 학습하는가» 가 정해집니다</div></div></li>
+    <li><span class="n">4</span><div><div class="q">실기 빈칸(SDK 제어권 · 로봇 측 끊김 감시 · 정지거리)을 누가 언제</div><div class="why">아무도 안 맡았습니다. 트랙 B 일정(12/11)에 걸립니다</div></div></li>
+    <li><span class="n">5</span><div><div class="q">방향 점검: 트랙 B 정의와 민우 구성의 차이 · 라현 피드백 경로</div><div class="why">사실은 드러났고 판단만 남았습니다</div></div></li>
+    <li><span class="n">6</span><div><div class="q">A 팀원 문서 게시 확인 · 저장소 밖 자료를 받을지</div><div class="why">정리는 결정 없이 바로 됩니다. 예고 → 컨펌 → 게시 → 공지 순서는 정해져 있습니다</div></div></li>
+    <li><span class="n">7</span><div><div class="q">E 브랜드 영상은 파악만</div><div class="why">우선순위 낮음</div></div></li>
+  </ol>
+</section>
+
+<section id="b">
+  <h2>B. 이음매 셋</h2>
+
+  <h3>B-2 · Nav2 ↔ 보행 정책 <span class="chip sig">갈림길</span></h3>
+  <div class="tbl"><table>
+    <thead><tr><th>정책</th><th>받는 명령</th><th>범위</th><th>지형 입력</th></tr></thead>
+    <tbody>
+      <tr><td>foothold-v2<br><span class="src">민우가 Nav2 아래에 씀</span></td><td>속도 <code>(vx, vy, wz)</code></td><td><code>lin_vel_x</code> 0.4~1.5 · <code>lin_vel_y</code> 0 · <code>ang_vel_z</code> -1~1 · 정지 10 %</td><td>관측 235 중 height scan 187</td></tr>
+      <tr><td>현민 goal1r3</td><td>목표 <code>[dx, dy, sinΔψ, cosΔψ, v_cap, h]</code> 6값</td><td>목표 2.0 m 로 자름 · v_cap 저속 0.15~0.3, 일반 0.5~1.0 · 정지 · 회전은 v_cap 0</td><td>정답 높이 33×17 (0.05 m) 등 1,222</td></tr>
+      <tr><td>석헌 AME-2 teacher v14</td><td>목표 <code>[dx, dy, sin dψ, cos dψ]</code> 4값 · 속도는 정책이 정함</td><td>2 m 로 자름</td><td>정답 높이지도 27×13×3 = 1,053</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">출처: 방향 문서 95~103행 · PR #544 FROZEN-CONFIG 15 · 18 · 23~28행 · AME-2 보고서 2.2절</p>
+  <ul>
+    <li>Nav2 MPPI 는 속도 명령을 냅니다. 민우 구성에서 실제 <code>cmd_vx</code> 중앙은 상한 0.5 의 33.6 % = <b class="num">약 0.168 m/s</b>. <b>foothold-v2 가 학습에서 직접 뽑지 않은 0 &lt; vx &lt; 0.4 구간</b>입니다. 이게 주춤거림 원인인지는 안 쟀습니다.</li>
+    <li>Nav2 속도 출력을 목표형 정책에 잇는 코드는 <b>아무도 안 만들었습니다.</b> 현민 「두 시스템을 연결한 결과는 아직 없다」. 석헌 쪽은 설계 문서뿐입니다.</li>
+    <li>팀장 star 저장소 9개 중 목표형 명령은 AME-2 하나뿐입니다 (D 참고). Nav2 <code>Twist</code> 를 정책 명령에 그대로 넣는 예는 isaac-go2-ros2 에 있습니다.</li>
+    <li>「Nav2 SUCCEEDED 인데 실제로는 못 갔다」가 두 사람에게서 따로 나왔습니다. 민우 참값 <span class="num">0.367 m</span>(허용 0.25 m) · 현민 <span class="num">0.53 m</span>(허용 0.5 m).</li>
+  </ul>
+  <div class="ask"><b>물음 1.</b> 하위 보행 정책의 입력을 속도형으로 둘지, 목표형으로 바꿀지, 둘을 모드로 같이 둘지.</div>
+
+  <h3>B-1 · 앱 ↔ 게이트웨이 (현민)</h3>
+  <ul>
+    <li>경로: 브라우저 → <code>phone_gate.py</code>(HTTPS/WSS) → rosbridge → <code>app_gateway.py</code> → <code>/cmd_vel_mux</code> → Nav2 <code>collision_monitor</code> → <code>/cmd_vel</code> → Gazebo 만료 플러그인 → TurtleBot3 대역.</li>
+    <li><b>앱 코드는 저장소에 없습니다.</b> 현민 로컬에만 있고 PR 에는 시험 판정 JSON 만 있습니다.</li>
+    <li>정지 래치(자동 재개 없음) · 손 뗌 <span class="num">0.012 s</span> · 네트워크 끊김 <span class="num">0.327 s</span> · 임무 서버 강제 종료 <span class="num">0.95 s</span> 안에 0.</li>
+    <li>만료 시간이 셋: Gazebo 플러그인 0.5 s(시뮬 시간) · Go2 mock 0.3 s(실측 0.304 s) · 민우 어댑터 0.5 s.</li>
+  </ul>
+
+  <h3>B-3 · 정책 ↔ 실기</h3>
+  <ul>
+    <li><b>저장소에 코드가 없습니다.</b> <code>nav/</code> 는 README 넷뿐이고 <code>unitree_sdk2</code> · <code>SportClient</code> 를 쓰는 코드는 0 (용어집에만 나옴).</li>
+    <li>로봇 측 끊김 감시 · 제어권 이양 · 실측 정지거리: 코드도 측정도 없습니다.</li>
+    <li>문서상 결정: <code>MotionSwitcherClient</code> 확정(08-14) · 「저수준 실기 이전은 제외」(08-19).</li>
+  </ul>
+  <div class="ask"><b>물음 4.</b> 이 빈칸을 누가, 트랙 B 일정 안에서 언제.</div>
+</section>
+
+<section id="c">
+  <h2>C. 방향 점검 재료</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>어긋난 것</th><th>사실</th></tr></thead>
+    <tbody>
+      <tr><td>트랙 B 정의</td><td>DECISIONS 95행 「트랙 B = <b>순정 보행</b> 위 SLAM · Nav2」. 민우는 순정 보행이 아니라 foothold-v2 를 Nav2 아래에 씁니다</td></tr>
+      <tr><td>목표형 교사가 둘</td><td>현민 goal1r3(MLP) 와 석헌 AME-2 teacher. 둘 다 몸 좌표 목표 + sin · cos 방향 + 2 m 자름. 분담 합의 기록 없음</td></tr>
+      <tr><td>SLAM · Nav2 스택이 둘</td><td>민우(Go2 · rko_lio · slam_toolbox 2.8.5) 와 현민(TB3 · AMCL · slam_toolbox 2.8.5). 둘 다 ROS 2 Jazzy</td></tr>
+      <tr><td>도착 판정이 셋</td><td>민우 0.25 m · 14.32° / 현민 0.5 m · 0.5 rad · 1 s / 석헌 0.2 m · 15° · 5 s</td></tr>
+      <tr><td>트랙 A 최종</td><td>「우리 정책이 ACC 트윈 안에서 걷는 것」. ACC 메시를 Isaac 에 올리거나 Go2 를 걷게 한 기록은 없습니다 (<code>robotDrivingValidated: false</code>)</td></tr>
+      <tr><td>실기 라이다</td><td>민우 「XT16 · L1」 · ROBOT-SPEC 은 모델명 미확인</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>팀장 피드백(라현)과 산출물</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>팀장 피드백 (PR #543 · 10/8)</th><th>산출물의 사실</th></tr></thead>
+    <tbody>
+      <tr><td>가비지 스플랫이 너무 많다</td><td>하늘 처리는 가우시안을 <b>지우지 않고</b> 렌더 기여만 뺍니다(<code>removedGaussians: 0</code>). 「실제 구조물을 복원 찌꺼기로 지우지 않도록」 보존 원칙. 운영 모델 가우시안 <span class="num">1,018,491</span>개</td></tr>
+      <tr><td>바닥 메시가 제대로 안 나온다</td><td>높이장 0.03 m 판: 연결 덩어리 357 · 최대 덩어리 60.5 %. 자동 바닥 후보 약 18° 기울어짐. 최신 접촉 검사 353/354 · 71/74 · 벽 간섭 2곳</td></tr>
+      <tr><td>SuperSplat 으로 먼저 정리한 뒤 메시</td><td>SuperSplat 기록 없음. 라현 사이트 7절 잠정 방향: 「<b>충돌용은 조밀점에서 바닥 분리</b>, <b>시각화용은 개선한 가우시안 유지</b>」, 「가우시안 유래 메시는 SuGaR 와 2DGS 를 먼저 비교하고 결정」. 지금 충돌 메시 경로에는 스플랫이 안 들어가고, 스플랫 정리가 효과를 낼 자리는 시각화와 아직 안 고른 가우시안 유래 메시 쪽입니다</td></tr>
+      <tr><td>수정본</td><td>팀장 코멘트(10/8 17:56 KST) 뒤 새 커밋 없음. #545 시작 조건 미충족</td></tr>
+    </tbody>
+  </table></div>
+  <div class="ask"><b>물음 5.</b> 트랙 B 를 «순정 보행» 으로 되돌릴지, 정의를 고칠지. 라현에게 SuperSplat 정리를 시각화 쪽 먼저로 줄지, 메시까지로 줄지.</div>
+</section>
+
+<section id="a">
+  <h2>A. 팀원 문서 셋 <span class="chip wait">정리 가능</span></h2>
+  <p>각각 따로 만들고, 통합 문서는 B 결정 뒤에 만듭니다. 막히는 곳은 «링크만 적지 말고 내용을 담으라» 는 조건에서 자료가 저장소 밖에 있는 경우입니다.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>팀원</th><th>담을 내용 (이미 열어 봄)</th><th>저장소 밖이라 못 담는 것</th></tr></thead>
+    <tbody>
+      <tr><td>맹라현<br><span class="src">PR #543</span></td><td>ACC 운영 모델 값 · 입력 등록 수 · 계단 실측 반영 · 형상 · 접촉 검사 · 하늘 처리 v1~v5 · 메시 연구 15개 방법</td><td>원본 자료(영상 · depth · COLMAP · <code>.ply</code> · 처리 코드) 위치. 팀장 요청에 아직 답 없음</td></tr>
+      <tr><td>이민우<br><span class="src">PR #542</span></td><td>ㄱ자 코스 1~12차시 결과 · 구성 원표 · Nav2 MPPI 값 · 궤적 그림 2장 · 다음 할 일 일곱</td><td>런 원자료와 영상(런당 약 100 MB) · 12차시 MPPI 실값 · <code>cmd_vel</code> 토픽과 어댑터 파일 이름</td></tr>
+      <tr><td>오현민<br><span class="src">PR #544</span></td><td>앱 시험 판정 22개 파일 · RL r3 · S · T · A · B 결과 · FROZEN-CONFIG · 공개 위키의 관측 · PD 값</td><td>앱 코드 · RL 동결 코드 · checkpoint (해시만 공개)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="ask"><b>물음 6.</b> 저장소 밖 자료를 받을지, 받는다면 NAS(<code>foothold</code> 공유)로 받을지.</div>
+</section>
+
+<section id="d">
+  <h2>D. RL Top-down 의 출발점 <span class="chip done">코드 조사 끝</span></h2>
+  <ul>
+    <li><b>순서: AME-2 는 마지막 도입</b> (팀장 10/8). 석헌 v1~v6 은 AME-2 부터 쌓았고 지금 평지로 돌아가 있습니다.</li>
+    <li>9/29 방향 문서는 논문 셋(AME-2 · MARG · START)을 본문으로만 봤습니다. 이번에는 팀장 star 저장소 9개의 <b>코드</b>를 읽었습니다. 아무것도 설치 · 실행하지 않았으니 아래 「있다」는 코드가 있다는 뜻이지 돌아간다는 뜻이 아닙니다.</li>
+  </ul>
+
+  <h3>저장소마다 무엇을 주는가</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>저장소</th><th>명령</th><th>배포 정책이 보는 지형</th><th>Go2 · 실기 코드</th></tr></thead>
+    <tbody>
+      <tr><td><code>leggedrobotics/ame2_minimal</code><br><span class="src">10/8 star · AME-2 저자 재구현</span></td><td><b>목표형</b> (목표 x, y + 도착 heading)</td><td>높이지도 26×15 · 8 cm</td><td><b>G1 휴머노이드만</b> · Go2 없음 · 실기 없음</td></tr>
+      <tr><td><code>wty-yy/go2_rl_gym</code><br><span class="src">MoE-CTS · RSS 2026 · Isaac Gym</span></td><td>속도형</td><td>없음. 높이 187 은 teacher · critic 만, 배포 student 는 고유수용감각 45 × 5 프레임</td><td>Go2 · Python unitree_sdk2</td></tr>
+      <tr><td><code>wertyuilife2/go2_rl_robotlab</code><br><span class="src">같은 논문 · Isaac Lab 2.3.2</span></td><td>속도형</td><td>위와 같음 (45 × 10 프레임)</td><td>Go2 · MuJoCo · ONNX 까지, 실기 없음</td></tr>
+      <tr><td><code>ASIG-X/JEPLO</code></td><td>속도형 (일부 지형은 waypoint 방향을 속도로)</td><td>LiDAR 구면 depth 25×60 + JEPA. 높이 맵은 teacher 만</td><td>Go2 · C++ Jetson</td></tr>
+      <tr><td><code>leggedrobotics/legged_gym</code></td><td>속도형 + heading</td><td>height scan 187 (관측 235 = 48 + 187, 우리와 같은 꼴)</td><td>ANYmal · A1 · 실기 없음</td></tr>
+      <tr><td><code>unitreerobotics/unitree_rl_lab</code></td><td>속도형</td><td><b>평지</b> (actor 45, height scan 주석 처리)</td><td>Go2 · C++ unitree_sdk2 · ONNX</td></tr>
+      <tr><td><code>unitreerobotics/unitree_rl_gym</code></td><td>속도형 + heading</td><td>평지</td><td>Go2 숫자가 A1 과 같음 · Go2 실기 없음</td></tr>
+      <tr><td><code>wty-yy/RoboGauge</code></td><td>속도형 평가 시퀀스</td><td>없음 (45차원 평가 계약)</td><td>MuJoCo Go2 평가기 · 지표 8 · 지형 7</td></tr>
+      <tr><td><code>Zhefan-Xu/isaac-go2-ros2</code></td><td>속도형: ROS2 <code>Twist</code> 가 그대로 정책 명령 3칸</td><td>체크포인트 관측 235</td><td>Go2 추론만 · 학습 코드 없음</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">논문 코드 공개: MARG 는 공식 저장소(arclab-hku/Risky_gym)에 「Code Coming Soon」만 있음(마지막 push 2025-05-14). START 공식 코드는 못 찾음.</p>
+
+  <h3>논의에 걸리는 발견</h3>
+  <ul>
+    <li><b>목표형은 AME-2 하나</b>입니다. 나머지 여덟은 속도형입니다. 물음 1(B-2)에서 목표형을 고르면 참고할 코드가 AME-2 뿐이고, 그것도 G1 용입니다.</li>
+    <li><b>«발 놓을 곳» 을 배포 정책에 어떻게 보이느냐가 저장소마다 다릅니다.</b> height scan 을 배포 입력에 그대로 넣는 것은 legged_gym 기본과 isaac-go2-ros2 뿐입니다. MoE-CTS 와 JEPLO 는 지형을 teacher 만 보고, 배포 student 는 몸 감각 이력이나 LiDAR depth 로 추정합니다.</li>
+    <li><b>ame2_minimal 은 논문이 안 준 숫자를 줍니다.</b> proprio encoder 82 → 512 → 512 → 128 · attention 96차원 32 head · decoder 288 → 512 → 512 · critic MoE 16 expert · PPO 5 epoch · 4 mini-batch(논문 부록은 4 · 3).</li>
+    <li><b>우리 환경과 판이 같은 것</b>은 ame2_minimal · go2_rl_robotlab · JEPLO (Isaac Lab 2.3.2) 셋입니다. 셋 다 자기 rsl_rl 개조본(5.0.0 · 3.3.0 · 2.3.1)을 쓰고 우리는 3.1.2 입니다. Isaac Gym 계열 셋은 Python 3.6~3.8 · Linux 가 필요합니다.</li>
+    <li>ame2_minimal 코드 주석이 <b>우리 GPU(RTX 5080 · sm_120) + torch 2.7.0+cu128</b> 에서 bf16 attention 역전파가 죽는 문제와 회피책을 적어 두었습니다.</li>
+  </ul>
+
+  <h3>석헌 v14 와 공식 재구현의 차이</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>항목</th><th>석헌 v14 (보고서)</th><th>ame2_minimal 코드</th></tr></thead>
+    <tbody>
+      <tr><td>지도 격자</td><td>27×13 · 6 cm</td><td>26×15 · 8 cm</td></tr>
+      <tr><td>decoder</td><td>224 → 512 → 256 → 128</td><td>288 → 512 → 512</td></tr>
+      <tr><td>물리 주기</td><td>400 Hz · decimation 8</td><td>200 Hz · decimation 4</td></tr>
+      <tr><td>critic 입력</td><td>420</td><td>499 (G1 기준)</td></tr>
+      <tr><td>지형 curriculum</td><td>거리 단계 · move · pose · turn 문턱</td><td>목표 0.5 m 안 + 성공 EMA &gt; 0.5 승급 · 4 m 넘게 남으면 강등</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">석헌 쪽은 10/7 보고서 기준이고, RunPod 의 v15 이식본은 열지 않았습니다. 공식 코드는 G1 용이라 차이가 모두 «틀림» 은 아닙니다.</p>
+  <div class="ask"><b>물음 3.</b> 첫 단계를 어느 코드에서 출발할지. 지형 정보를 배포 정책에 직접 넣을지(legged_gym 꼴), teacher 만 보게 할지(MoE-CTS · JEPLO 꼴). 그리고 deep-research 할 논문 목록 확정.</div>
+</section>
+
+<section id="e">
+  <h2>E. 브랜드 영상 <span class="chip done">파악만</span></h2>
+  <div class="tbl"><table>
+    <thead><tr><th>영상</th><th>어디까지</th><th>남은 일</th><th>막힌 곳</th></tr></thead>
+    <tbody>
+      <tr><td>런칭 A (39초 대군)</td><td>9/13 프리비주얼 확정 · 9/16 s03 첫발을 Isaac 블로킹 → Seedream 편집으로 전환</td><td>s03 Seedance video_edit 시험(1080p 36 크레딧) → 컷별 변환</td><td>유료 호출 건별 승인 · 작업 공간 마지막 커밋 9/18</td></tr>
+      <tr><td>G (Go2 섹션)</td><td>10/6 1차 필름 · 팀장 「킵, 느낌 불일치」</td><td>«학습 과정» 구간 빠짐. 2차는 히어로 정지화 → I2V → 내레이션(로컬 TTS) → HyperFrames</td><td>I2V 는 Higgsfield 건별 승인</td></tr>
+      <tr><td>F (전체)</td><td>기획 틀만 (덱 뼈대 · 팀장 「정확하다」)</td><td>G 뒤. «왜» 구간은 #515 가 채워진 뒤</td><td>#515 · B 결정</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<p class="src">팀원 자료 원값 전체(부록 R)와 출처 행 번호는 lead 작업 파일 <code>brief_546.md</code> 에 있습니다. 논의 뒤 저장소 <code>inbox/jay/</code> 로 옮깁니다.</p>
+</div>

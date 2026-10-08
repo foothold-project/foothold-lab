@@ -58,7 +58,11 @@ super 가 정리한 MVP 이후 설계 논의를 lead 가 팀장과 진행한다.
 
 ## 5. Vercel 보관 기간 바꾸는 곳
 
-Vercel 대시보드 → 프로젝트 **foothold** → 위 **Settings** → 왼쪽 **Security** → 아래로 내려 **Deployment Retention Policy** → 상태별(Canceled · Errored · Pre-Production · Production) 기간을 고르고 **Save**. Hobby 는 30일이 최대. 예외로 남는 것: 최근 배포 3개 · Ready 운영 배포 3개 · 현재 연결된 배포.
+Vercel 대시보드 → 프로젝트 **foothold** → **Settings** → 왼쪽 **Build and Deployment** → 맨 아래 **Deployment Retention Policy** → 상태별(Canceled · Errored · Pre-Production · Production) 기간을 고르고 **Save**. 고를 수 있는 값은 30 days · 2 weeks · 1 week · 1 day 이고, 10/8 21:40 현재 넷 다 30 days 다(팀장 화면에서 lead 가 읽기만 함).
+
+- **Vercel 공식 문서(9/16 갱신)는 Settings → Security 라고 적지만 실제 화면에는 없다.** 10/8 팀장이 Security 화면을 찍어 지적했고, Chrome 으로 확인한 실제 자리는 위와 같다.
+- 팀 전체 기본값은 팀 **Settings → Build and Deployment → Deployment Retention Policy** 에 따로 있다. 「Apply this policy to all existing projects」를 켜면 hire-sift · mood-lens-ai 에도 들어간다.
+- 예외로 남는 것(Hobby): 최근 배포 3개 · Ready 운영 배포 3개 · 운영 주소가 붙은 배포. 9/16 부터 팀이 10 GB 를 넘으면 예외 밖 배포는 30일을 안 기다리고 바로 지워진다(Vercel 변경 기록).
 
 ## 6. 이 세션이 배운 것 (메모리에 있음)
 
