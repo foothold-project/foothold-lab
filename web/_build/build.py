@@ -779,14 +779,19 @@ if __name__ == '__main__':
                   % (os.path.basename(REAL_SITE), SITE))
         print('  %d개 반영' % deploy())
 
-        # ★ 2026-10-08 #511. 영상은 NAS 에서 나간다. 배포본에서 영상을 빼고
-        #   NAS 에 같은 sha256 이 있는지 본다. 페이지 주소는 그대로이고
-        #   vercel.json 돌림 규칙이 NAS 로 보낸다. NAS 에 못 닿으면 막는다.
-        print('\n[3.05] 영상은 NAS 로 (배포본에서 빼고 sha256 대조)')
-        import media_offload
-        if not media_offload.main(SITE, write=not REPRO):
-            print('\n  [!] 영상 넘기기 실패. 배포를 중단합니다.')
+        # ★ 2026-10-09 #511 M1. 배포본 mp4 의 moov 를 앞으로 옮긴다(위치값만 고침).
+        #   재생 시작 전 왕복 한 번을 없앤다. 원본 web/ 은 안 건드린다.
+        print('\n[3.04] 영상 재생 정보(moov)를 앞으로 (데이터는 그대로 · 지문 대조)')
+        import video_faststart
+        if not video_faststart.main(SITE):
+            print('\n  [!] 영상 재포장 실패. 배포를 중단합니다.')
             sys.exit(1)
+
+        # ★ 2026-10-09 팀장 결정 「가」: 영상 · PDF 를 다시 Vercel 에서 내보낸다.
+        #   10/8 의 NAS(Tailscale Funnel) 경로는 바깥 망에서 첫 바이트 0.3~4초 ·
+        #   50 KB/s~1 MB/s 로 휴대폰 갤러리가 8~17초 걸렸다(#511 10/8 댓글).
+        #   media_offload.py 는 지우지 않고 부르지만 않는다. M2(Cloudflare R2) 로 옮길 때
+        #   저장 대상을 바꿔 다시 쓴다(ASTRA 2차 검증 5절: NAS 파일시스템에 묶여 있음).
 
         # ★ 2026-10-08 #511 경량화 ①. 큰 PNG 를 배포본에서만 WebP 로 (보이는 모습 그대로).
         print('\n[3.06] 큰 PNG 를 WebP 로 (투명은 무손실 · 사진형은 품질 90)')
