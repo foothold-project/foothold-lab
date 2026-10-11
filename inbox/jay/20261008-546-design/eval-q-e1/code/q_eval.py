@@ -30,7 +30,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--checkpoint", default=None)
-parser.add_argument("--policy", choices=["student", "zero"], default="student")
+parser.add_argument("--policy", choices=["student", "zero", "teacher"], default="student")
+parser.add_argument("--height_perm_seed", type=int, default=-1,
+                    help="D1: >=0 applies one frozen permutation (this seed) to the teacher height block")
 parser.add_argument("--families", default="flat")
 parser.add_argument("--cells", default="all")
 parser.add_argument("--episodes", type=int, default=100)
@@ -366,6 +368,74 @@ with torch.inference_mode():
     lat, _ = pnn.student_moe_encoder(pnn.actor_obs_normalizer(obs["policy"]))
     a_manual = pnn.actor(torch.cat([lat, pnn.single_obs_normalizer(obs["single_obs"])], dim=-1))
     checks["manual_student_path_vs_act_inference_max_abs"] = float((a_manual - a0).abs().max())
+
+# --- D1: teacher mean path and frozen height permutation -----------------------------
+# critic layout from the observation manager (not assumed)
+om = u.observation_manager
+c_names = list(om.active_terms["critic"])
+c_dims = [int(np.prod(d)) for d in om.group_obs_term_dim["critic"]]
+h_off = sum(c_dims[: c_names.index("height_scan")])
+h_len = c_dims[c_names.index("height_scan")]
+meta["critic_layout"] = {"names": c_names, "dims": c_dims, "height_offset": h_off, "height_len": h_len}
+with torch.inference_mode():
+    _hs = u.scene["height_scanner"].data
+    _ref = torch.clamp(_hs.pos_w[:, 2].unsqueeze(1) - _hs.ray_hits_w[..., 2] - 0.5, -1.0, 1.0) * 2.5  # env_cfg.py:225-229
+    checks["critic_dims_sum_equals_width"] = bool(sum(c_dims) == obs["critic"].shape[1])
+    checks["height_block_vs_raycaster_recomputed_max_abs"] = float(
+        (obs["critic"][:, h_off:h_off + h_len] - _ref).abs().max())
+perm_t = None
+if args.height_perm_seed >= 0:
+    perm_np = np.random.RandomState(args.height_perm_seed).permutation(h_len)
+    perm_t = torch.as_tensor(perm_np, device=dev, dtype=torch.long)
+    meta["height_perm"] = {"seed": args.height_perm_seed, "perm": perm_np.tolist(),
+                           "sha256": sha256_arr(perm_np.astype(np.int64)),
+                           "fixed_points": int((perm_np == np.arange(h_len)).sum())}
+
+
+def permute_height(o, p):
+    o = o.clone()
+    blk = o["critic"][:, h_off:h_off + h_len]
+    o["critic"] = torch.cat([o["critic"][:, :h_off], blk[:, p], o["critic"][:, h_off + h_len:]], dim=-1)
+    return o
+
+
+def teacher_mean(o):
+    """Mean action of the teacher branch: actor_critic_moe_cts.py:210-222 (act, is_teacher=True)
+    with the mean of _update_distribution :186-208 (state_dependent_std False -> mean = actor(...))."""
+    if perm_t is not None:
+        o = permute_height(o, perm_t)
+    single = pnn.single_obs_normalizer(o["single_obs"])
+    latent = pnn.teacher_encoder(pnn.critic_obs_normalizer(pnn.get_critic_obs(o)))
+    return pnn.actor(torch.cat([latent, single], dim=-1))
+
+
+with torch.inference_mode():
+    ident = torch.arange(h_len, device=dev)
+    perm_chk = perm_t if perm_t is not None else torch.as_tensor(
+        np.random.RandomState(2026).permutation(h_len), device=dev, dtype=torch.long)
+    op = permute_height(obs, perm_chk)
+    checks["height_block_values_same_multiset"] = bool(torch.equal(
+        torch.sort(op["critic"][:, h_off:h_off + h_len], dim=1).values,
+        torch.sort(obs["critic"][:, h_off:h_off + h_len], dim=1).values))
+    checks["non_height_critic_unchanged_max_abs"] = float(torch.cat([
+        (op["critic"][:, :h_off] - obs["critic"][:, :h_off]).abs().flatten(),
+        (op["critic"][:, h_off + h_len:] - obs["critic"][:, h_off + h_len:]).abs().flatten(),
+        torch.zeros(1, device=dev)]).max())
+    # negative control: student must not see the height block
+    checks["student_height_permuted_max_abs_action_change"] = float((policy(op) - a0).abs().max())
+    # teacher mean path equals the module's own act(is_teacher=True) mean; fork_rng keeps env RNG untouched
+    with torch.random.fork_rng(devices=[torch.cuda.current_device()]):
+        pnn.act(obs, is_teacher=True)
+        a_mod = pnn.action_mean.clone()
+    saved = perm_t
+    perm_t = None
+    a_t = teacher_mean(obs)
+    checks["teacher_manual_vs_module_act_mean_max_abs"] = float((a_t - a_mod).abs().max())
+    checks["teacher_identity_perm_vs_normal_max_abs"] = float((teacher_mean(permute_height(obs, ident)) - a_t).abs().max())
+    # positive control: teacher reacts to the permuted height block
+    checks["teacher_height_permuted_max_abs_action_change"] = float((teacher_mean(op) - a_t).abs().max())
+    checks["teacher_vs_student_first_obs_max_abs"] = float((a_t - a0).abs().max())
+    perm_t = saved
 meta["checks_pre"] = checks
 
 # --- rollout -------------------------------------------------------------------
@@ -411,6 +481,8 @@ with torch.inference_mode():
         cmd_err_hist = max(cmd_err_hist, float((obs["policy"][:, 87:90] - target).abs().max()))
         if args.policy == "student":
             act = policy(obs)
+        elif args.policy == "teacher":
+            act = teacher_mean(obs)
         else:
             act = torch.zeros(N, 12, device=dev)
         nonfinite += int((~torch.isfinite(act)).sum()) + int((~torch.isfinite(obs["policy"])).sum())

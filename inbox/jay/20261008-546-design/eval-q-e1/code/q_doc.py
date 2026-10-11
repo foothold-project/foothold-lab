@@ -7,8 +7,9 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-src = open(os.path.join(HERE, "Q-E1.src.md"), encoding="utf-8").read()
-tab = open(os.path.join(HERE, "out", "Q-E1-tables.md"), encoding="utf-8").read()
+NAME = sys.argv[1] if len(sys.argv) > 1 else "Q-E1"  # Q-E1 or D1-E1
+src = open(os.path.join(HERE, f"{NAME}.src.md"), encoding="utf-8").read()
+tab = open(os.path.join(HERE, "out", f"{NAME}-tables.md"), encoding="utf-8").read()
 parts = re.split(r"(?m)^(?=### 표 \d+ )", tab)
 sec = {}
 for p in parts:
@@ -37,6 +38,9 @@ for m in sorted(glob.glob(os.path.join(HERE, "out", "*", "meta.json"))):
     tag = os.path.basename(os.path.dirname(m))
     if tag.startswith("_pre") or tag == "smoke_zero":
         continue
+    is_d1 = re.match(r"^tp?\d+_", tag) is not None  # D1 teacher runs: t20000_*, tp20000_*
+    if is_d1 != (NAME == "D1-E1"):
+        continue
     d = json.load(open(m, encoding="utf-8"))
     nlog += 1
     pol.append(d["checks_pre"]["policy_history_perturbed_max_abs_action_change"])
@@ -59,7 +63,7 @@ t3 = sec.get("3", "")
 n_worse = sum(1 for line in t3.splitlines() if line.startswith("| ") and not line.startswith("| 지형") and "---" not in line)
 fill = {"PERT_POL": f"{min(pol):.2f}~{max(pol):.2f}", "PERT_SGL": f"{min(sgl):.2f}~{max(sgl):.2f}",
         "N_LOGS": str(nlog), "MEM_ADD": mem_add, "MEM_FREE": f"{min(free) / 1024:.1f} GB", "N_WORSE": str(n_worse)}
-fp = os.path.join(HERE, "Q-E1.fill.json")
+fp = os.path.join(HERE, f"{NAME}.fill.json")
 if os.path.exists(fp):
     fill.update(json.load(open(fp, encoding="utf-8")))
 left = []
@@ -76,6 +80,6 @@ def sub2(m):
 doc = re.sub(r"\{\{([A-Z_0-9]+)\}\}", sub2, doc)
 print("unfilled tokens:", left)
 bad = [c for c in (chr(0x2014), chr(0x2013)) if c in doc]  # em dash, en dash
-open(os.path.join(HERE, "Q-E1.md"), "w", encoding="utf-8", newline="\n").write(doc)
+open(os.path.join(HERE, f"{NAME}.md"), "w", encoding="utf-8", newline="\n").write(doc)
 print("missing tables:", missing, "| dash chars found:", bad)
 sys.exit(1 if bad else 0)
