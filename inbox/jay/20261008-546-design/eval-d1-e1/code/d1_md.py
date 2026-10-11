@@ -135,7 +135,7 @@ for key in ("height_block_values_same_multiset", "critic_dims_sum_equals_width")
 pv_ = [x["perm_sha256"] for x in checks["pairing"].values() if isinstance(x, dict)]
 print(f"| permutation (시드 2026) | 모든 실행이 같은 순열 | sha256 {len(set(pv_))} 종류 · {pv_[0][:16] if pv_ else '-'} |")
 pp = [x for x in checks["pairing"].values() if isinstance(x, dict)]
-print(f"| 짝 (student · teacher · teacher perm 의 초기 상태 · DR · 메시 · 설정) | 같음 | "
+print(f"| 짝 (student · teacher · teacher perm 의 초기 root 자세 · 관절각 · 질량 · 메시 · 체크포인트 · 설정. 넓힌 DR 은 1절) | 같음 | "
       f"{sum(x['init_and_dr_equal_S_T_Tp'] and x['mesh_equal_S_T_Tp'] and x['ckpt_equal'] and x['args_equal_except_policy_perm'] for x in pp)} / {len(pp)} 같음 |")
 print()
 print("### 표 2 · 양성 대조 · 첫 관측에서 height 순열이 teacher 행동을 바꾸는 양 (최대 절대 차)\n")

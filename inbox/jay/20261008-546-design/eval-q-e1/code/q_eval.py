@@ -44,6 +44,7 @@ parser.add_argument("--outdir", default=os.path.join(HERE, "out"))
 parser.add_argument("--heading_hold", type=float, default=0.0,
                     help="LEAD_TEMP variant: for lin cells wz_cmd = clip(K * wrap(heading0 - heading)); 0 = off (Q as written)")
 parser.add_argument("--heading_clip", type=float, default=0.5)
+parser.add_argument("--fingerprint_only", action="store_true", help="record pairing fingerprints after the seeded reset, then exit")
 parser.add_argument("--spawn_offset", default="",
                     help="LEAD_TEMP start offset along world +x per cell kind, e.g. stand=2.5,yaw=2.5,stop=1.75 [m]")
 AppLauncher.add_app_launcher_args(parser)
@@ -348,6 +349,46 @@ meta["pairing_sha256"] = {
     "body_masses": sha256_arr(np.round(masses, 5)),
     "joint_stiffness": sha256_arr(np.round(stiff, 5)),
 }
+# ASTRA 4: extended fingerprint of every DR term that is sampled before the rollout.
+# For explicit actuators Isaac Lab writes sim joint stiffness/damping as 0 and keeps the randomized
+# gains on the actuator object, so the old "joint_stiffness" entry did not cover the gain DR.
+_ext, _dr = {}, {}
+_coms = robot.root_physx_view.get_coms().cpu().numpy()
+_mats = robot.root_physx_view.get_material_properties().cpu().numpy()
+_ext["com"] = sha256_arr(np.round(_coms, 5))
+_ext["material_static_dynamic_restitution"] = sha256_arr(np.round(_mats, 5))
+_dr["com_xyz_std_over_envs"] = _coms[:, 0, :3].std(axis=0).round(6).tolist()
+_dr["material_static_friction_min_max"] = [float(_mats[..., 0].min()), float(_mats[..., 0].max())]
+for _name, _act in robot.actuators.items():
+    _st = _act.stiffness.cpu().numpy()
+    _dp = _act.damping.cpu().numpy()
+    _ext[f"actuator_{_name}_stiffness"] = sha256_arr(np.round(_st, 5))
+    _ext[f"actuator_{_name}_damping"] = sha256_arr(np.round(_dp, 5))
+    _dr[f"actuator_{_name}_stiffness_min_max"] = [float(_st.min()), float(_st.max())]
+    _dr[f"actuator_{_name}_damping_min_max"] = [float(_dp.min()), float(_dp.max())]
+    if hasattr(_act, "positions_delay_buffer"):
+        _lags = _act.positions_delay_buffer.time_lags.cpu().numpy()
+        _ext[f"actuator_{_name}_delay_lags"] = sha256_arr(_lags.astype(np.int64))
+        _dr[f"actuator_{_name}_delay_lag_counts"] = np.bincount(_lags.astype(np.int64)).tolist()
+_jt = u.action_manager.get_term("joint_pos")
+_off = _jt._offset
+_off = _off.cpu().numpy() if hasattr(_off, "cpu") else np.asarray(_off)
+_ext["motor_zero_offset"] = sha256_arr(np.round(_off, 6))
+# the action term is in JOINT_NAMES order; map the articulation defaults to that order
+_dpos = robot.data.default_joint_pos[:, _jt._joint_ids].cpu().numpy()
+_dr["motor_zero_offset_minus_default_min_max"] = [float((_off - _dpos).min()), float((_off - _dpos).max())]
+meta["pairing_sha256_ext"] = _ext
+meta["dr_summary"] = _dr
+meta["sim_joint_stiffness_min_max"] = [float(stiff.min()), float(stiff.max())]
+if args.fingerprint_only:
+    meta["t_end"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    meta["fingerprint_only"] = True
+    with open(os.path.join(OUT, "meta.json"), "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=1, default=str)
+    print("[Q-EVAL] fingerprint only", args.tag, json.dumps(_ext)[:200])
+    env.close()
+    simulation_app.close()
+    sys.exit(0)
 
 # --- checks before the rollout -----------------------------------------------------
 g = torch.Generator(device=dev)

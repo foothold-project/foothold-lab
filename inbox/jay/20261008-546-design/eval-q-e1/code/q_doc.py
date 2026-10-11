@@ -10,10 +10,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 NAME = sys.argv[1] if len(sys.argv) > 1 else "Q-E1"  # Q-E1 or D1-E1
 src = open(os.path.join(HERE, f"{NAME}.src.md"), encoding="utf-8").read()
 tab = open(os.path.join(HERE, "out", f"{NAME}-tables.md"), encoding="utf-8").read()
-parts = re.split(r"(?m)^(?=### 표 \d+ )", tab)
+for _extra in ("astra4",):  # optional extra table files: out/<NAME>-<extra>-tables.md
+    _p = os.path.join(HERE, "out", f"{NAME}-{_extra}-tables.md")
+    if os.path.exists(_p):
+        tab += "\n" + open(_p, encoding="utf-8").read()
+parts = re.split(r"(?m)^(?=### 표 [A-Z]?\d+ )", tab)
 sec = {}
 for p in parts:
-    m = re.match(r"### 표 (\d+) ", p)
+    m = re.match(r"### 표 ([A-Z]?\d+) ", p)
     if m:
         sec[m.group(1)] = p.rstrip() + "\n"
 missing = []
@@ -27,7 +31,7 @@ def sub(m):
     return sec[k]
 
 
-doc = re.sub(r"\{\{T(\d+)\}\}", sub, src)
+doc = re.sub(r"\{\{T([A-Z]?\d+)\}\}", sub, src)
 
 # computed tokens from raw files
 import glob  # noqa: E402
@@ -42,6 +46,8 @@ for m in sorted(glob.glob(os.path.join(HERE, "out", "*", "meta.json"))):
     if is_d1 != (NAME == "D1-E1"):
         continue
     d = json.load(open(m, encoding="utf-8"))
+    if d.get("fingerprint_only"):  # stopped before the rollout: no checks, no memory peak of a rollout
+        continue
     nlog += 1
     pol.append(d["checks_pre"]["policy_history_perturbed_max_abs_action_change"])
     sgl.append(d["checks_pre"]["single_obs_perturbed_max_abs_action_change"])

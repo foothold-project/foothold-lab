@@ -157,7 +157,7 @@ print()
 
 # ---- table 4: stop ----------------------------------------------------------------
 print("### 표 4 · 정지 (stop03 · vx 0.3 5초 뒤 0 · 값은 20000 / 20499)\n")
-print("| 지형 · 출발 | Q2 통과 % | 1초 넘게 걸림 | 창 안에 못 멈춤 | 정지 시각 중앙값 s | 정지 시각 p90 s | 정지 거리 중앙값 m | yaw drift 평균 rad |")
+print("| 지형 · 출발 | Q2 통과 % | 1초 넘게 걸림 | 창 안에 못 멈춤 | 정지 시각 중앙값 s | 정지 시각 p90 s | 순변위 중앙값 m | yaw drift 평균 rad |")
 print("|---|---|---|---|---|---|---|---|")
 
 
@@ -205,7 +205,7 @@ if oa and ob:
     print()
 
 # ---- table 6: Q3 gate/corridor, open loop vs heading hold -------------------------------
-print("### 표 6 · 4 m gate · corridor (Q3) · 명령 그대로 대 heading hold 변형 (값은 20000 / 20499)\n")
+print("### 표 6 · 4 m gate · corridor (Q3-open) · 명령 그대로 대 heading hold 변형 (yaw 만 보정 · Q3-closed 아님) (값은 20000 / 20499)\n")
 print("| 지형 묶음 | cell | 그대로: gate 도달 | 그대로: corridor ≤0.30 | 그대로: Q3 통과 | hold: gate 도달 | hold: corridor ≤0.30 | hold: Q3 통과 | hold: Q1 통과 |")
 print("|---|---|---|---|---|---|---|---|---|")
 

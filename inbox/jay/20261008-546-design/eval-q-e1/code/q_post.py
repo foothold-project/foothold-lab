@@ -14,6 +14,9 @@ sys.path.insert(0, HERE)
 import q_metrics as Q  # noqa: E402
 
 SPAWN_ROWS = 8
+# per-episode keys recomputed under the ASTRA 4 "span" time definition (prefix span_)
+SPAN_KEYS = ("survived", "fall_reason", "fall_t", "q1_pass", "q1m_pass", "q1a_pass", "q2_pass", "q2_stop_only",
+             "q2_cat", "stop_t", "stop_dist_m", "q3_pass")
 
 
 def postprocess(out_dir: str) -> list[dict]:
@@ -36,8 +39,11 @@ def postprocess(out_dir: str) -> list[dict]:
         if cmd_hist is not None:  # recorded command (heading-hold variant changes wz per step)
             cmd = cmd_hist[:, e].astype(np.float64)
         tr = traj[:, e].astype(np.float64)
-        m = Q.episode_metrics(c, pos=tr[:, 0:3], yaw=tr[:, 3], vb=tr[:, 4:7], wb=tr[:, 7:10],
-                              grav_z=tr[:, 10], hag=tr[:, 11], term=term[:, e], cmd=cmd)
+        kw = dict(pos=tr[:, 0:3], yaw=tr[:, 3], vb=tr[:, 4:7], wb=tr[:, 7:10], grav_z=tr[:, 10], hag=tr[:, 11],
+                  term=term[:, e], cmd=cmd)
+        m = Q.episode_metrics(c, **kw)  # current Q-E1 definition (n50)
+        m2 = Q.episode_metrics(c, **kw, time_def="span")
+        m.update({f"span_{k}": m2[k] for k in SPAN_KEYS})
         row = {"family": families[int(fam[e])], "cell": c["name"], "episode": int(epi[e]), "env": e,
                "start_row": int(epi[e] % SPAWN_ROWS), "act_abs_mean": float(act_abs[e])}
         row.update(m)
@@ -69,6 +75,19 @@ def postprocess(out_dir: str) -> list[dict]:
             if c["kind"] == "stop":
                 s["q2_stop_only_pass"] = int(sum(r["q2_stop_only"] for r in rr))
                 s["moving_phase_q1_pass"] = int(sum(r["q1_pass"] for r in rr))
+            sa = Q.cell_summary(rr, "q1a_pass")
+            s["q1a_pass"], s["q1a_pass_rate"], s["q1a_pass_ci"], s["q1a_cell_pass"] = (
+                sa["pass"], sa["pass_rate"], sa["pass_ci"], sa["cell_pass"])
+            # span time definition: survival, falls and the cell rule recomputed
+            rs = [{**r, "survived": r["span_survived"], "fall_reason": r["span_fall_reason"], key: r["span_" + key]}
+                  for r in rr]
+            ss = Q.cell_summary(rs, key)
+            for k_ in ("survived", "survival", "survival_ci", "pass", "pass_rate", "pass_ci", "cell_pass", "fall_reasons"):
+                s["span_" + k_] = ss[k_]
+            if c["kind"] == "stop":
+                for pre in ("", "span_"):
+                    for cat in ("fwd_fail", "stop_fail", "both_ok"):
+                        s[f"{pre}q2_split_{cat}"] = int(sum(r[pre + "q2_cat"] == cat for r in rr))
             hd = np.array([r["heading_err_rad"] for r in rr], dtype=float)
             hd = hd[np.isfinite(hd)]
             s["abs_heading_err_rad_mean"] = float(np.abs(hd).mean()) if hd.size else float("nan")

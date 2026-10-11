@@ -42,6 +42,15 @@ TILT_HOLD_S = 0.2
 # LEAD_TEMP: auxiliary "it actually moved" check. Not in Q. Added because the
 # zero-action run passes Q1 at vx=0.1 (standing still gives MAE 0.10 <= 0.15).
 MOVE_RATIO = 0.5      # progress (or heading change) >= 50% of commanded
+# ASTRA 4 proposal (a), not adopted: commanded linear axis MAE <= min(0.15, 0.5*|command|)
+REL_MAE = 0.5
+# Time definitions for "held for T seconds" (ASTRA 4 section 2):
+#   "n50"  current Q-E1 rule: round(T/dt) consecutive samples (1 s -> 50 samples, 0.2 s -> 10)
+#   "span" ASTRA proposal: samples j..j+round(T/dt) inclusive (1 s -> 51 samples, 0.2 s -> 11)
+# Both keep the stop origin at t=5.00 s (state j=250) and the start deadline j <= 300.
+TIME_DEFS = ("n50", "span")
+AUX_RMS_WIN = 5      # auxiliary 0.10 s window = 5 policy samples (not used for any pass/fail)
+
 
 
 def wilson(k: int, n: int, z: float = 1.959963984540054) -> tuple[float, float]:
@@ -101,7 +110,12 @@ def _runs_start(mask: np.ndarray, hold: int) -> int:
     return int(idx[0]) if idx.size else -1
 
 
-def fall_index(term: np.ndarray, grav_z: np.ndarray, hag: np.ndarray, dt: float = DT):
+def hold_samples(hold_s: float, dt: float, time_def: str) -> int:
+    assert time_def in TIME_DEFS, time_def
+    return int(round(hold_s / dt)) + (1 if time_def == "span" else 0)
+
+
+def fall_index(term: np.ndarray, grav_z: np.ndarray, hag: np.ndarray, dt: float = DT, time_def: str = "n50"):
     """Earliest fall state index and reason.
 
     term   : (J+1,) bool, termination flag per state (base contact > 1 N in this env)
@@ -118,7 +132,7 @@ def fall_index(term: np.ndarray, grav_z: np.ndarray, hag: np.ndarray, dt: float 
     valid = np.arange(n) < j_term
     cos_lim = math.cos(math.radians(TILT_DEG))
     tilted = (-grav_z < cos_lim) & valid
-    hold = int(round(TILT_HOLD_S / dt))
+    hold = hold_samples(TILT_HOLD_S, dt, time_def)
     j_tilt = _runs_start(tilted, hold)
     j_tilt = n if j_tilt < 0 else j_tilt
     below = (hag < 0.0) & valid & np.isfinite(hag)
@@ -145,12 +159,13 @@ def episode_metrics(
     term: np.ndarray,     # (J+1,) bool
     cmd: np.ndarray,      # (J+1, 3) command in force for each state
     dt: float = DT,
+    time_def: str = "n50",
 ) -> dict:
     """All per-episode numbers for one env. `cell` holds kind, duration_s, switch_s."""
     J = int(round(cell["duration_s"] / dt))  # last state index used
     pos, yaw, vb, wb = pos[: J + 1], yaw[: J + 1], vb[: J + 1], wb[: J + 1]
     grav_z, hag, term, cmd = grav_z[: J + 1], hag[: J + 1], term[: J + 1], cmd[: J + 1]
-    j_fall, why = fall_index(term, grav_z, hag, dt)
+    j_fall, why = fall_index(term, grav_z, hag, dt, time_def)
     survived = j_fall > J
     j_last = min(J, j_fall - 1)  # last valid state
     out = {
@@ -188,6 +203,16 @@ def episode_metrics(
         and out["mae_wz"] <= MAE_YAW
     )
     out["q1_pass"] = bool(track_ok)
+    # proposal (a): relative MAE bound on commanded linear axes; other axes keep the Q-E1 bounds
+    if jj.size:
+        thr = []
+        for ax in (0, 1):
+            cmag = abs(float(cmd[jj, ax].mean()))
+            thr.append(min(MAE_LIN, REL_MAE * cmag) if cmag > 1e-9 else MAE_LIN)
+        out["q1a_pass"] = bool(alive_track and out["mae_vx"] <= thr[0] and out["mae_vy"] <= thr[1]
+                               and out["mae_wz"] <= MAE_YAW)
+    else:
+        out["q1a_pass"] = False
 
     # path frame from the commanded direction at the initial heading
     c = cmd[min(1, J)]
@@ -249,7 +274,7 @@ def episode_metrics(
         out["still_frac"] = float("nan")
 
     if kind == "stop":
-        hold = int(round(STOP_HOLD_S / dt))
+        hold = hold_samples(STOP_HOLD_S, dt, time_def)
         seg = still[j_sw : j_last + 1]  # window must be complete and alive
         k = _runs_start(seg, hold)
         p_sw = pos[j_sw, :2]
@@ -270,11 +295,47 @@ def episode_metrics(
         )
         out["q2_stop_only"] = bool(stop_ok)
         out["q2_pass"] = bool(stop_ok and track_ok)  # LEAD_TEMP: moving phase must track
+        # Q2 split over the full denominator (ASTRA 4): forward phase failed / forward ok but stop failed / both ok
+        out["q2_cat"] = "fwd_fail" if not track_ok else ("stop_fail" if not stop_ok else "both_ok")
+        # stop_dist_m is the NET displacement from t_sw to the start of the still window
+        out["stop_net_disp_m"] = out["stop_dist_m"]
+        # 5 s after the switch (states j_sw..j_last): max excursion, yaw, RMS of the actual base motion
+        js = np.arange(j_sw, j_last + 1)  # empty if the episode fell before the switch
+        jv = js[js > j_sw]
+        if js.size:
+            dev = np.linalg.norm(pos[js, :2] - p_sw, axis=1)
+            out["stop_max_dev_m"] = float(dev.max())
+            out["stop_yaw_change_rad"] = float(yu[j_last] - yu[j_sw])
+            out["stop_yaw_maxdev_rad"] = float(np.abs(yu[js] - yu[j_sw]).max())
+        else:
+            out["stop_max_dev_m"] = out["stop_yaw_change_rad"] = out["stop_yaw_maxdev_rad"] = float("nan")
+        if jv.size:
+            out["stop_speed_rms"] = float(np.sqrt(np.mean(vb[jv, 0] ** 2 + vb[jv, 1] ** 2)))
+            out["stop_yawrate_rms"] = float(np.sqrt(np.mean(wb[jv, 2] ** 2)))
+        else:
+            out["stop_speed_rms"] = out["stop_yawrate_rms"] = float("nan")
+        # auxiliary (never a pass/fail input): 0.10 s windows after the 1 s deadline, RMS of the
+        # squared signals (signed velocities are NOT averaged first)
+        ja = np.arange(j_sw + int(round(STOP_WITHIN_S / dt)) + 1, j_last + 1)
+        if ja.size >= AUX_RMS_WIN:
+            sq_s = vb[ja, 0] ** 2 + vb[ja, 1] ** 2
+            sq_w = wb[ja, 2] ** 2
+            kern = np.ones(AUX_RMS_WIN) / AUX_RMS_WIN
+            rs = np.sqrt(np.convolve(sq_s, kern, mode="valid"))
+            rw = np.sqrt(np.convolve(sq_w, kern, mode="valid"))
+            out["aux10_speed_rms_max"] = float(rs.max())
+            out["aux10_yawrate_rms_max"] = float(rw.max())
+            out["aux10_still_frac"] = float(((rs < STOP_SPEED) & (rw < STOP_YAW)).mean())
+        else:
+            out["aux10_speed_rms_max"] = out["aux10_yawrate_rms_max"] = out["aux10_still_frac"] = float("nan")
     else:
-        for k_ in ("stop_t", "stop_dist_m", "post_stop_drift_m", "yaw_drift_rad"):
+        for k_ in ("stop_t", "stop_dist_m", "post_stop_drift_m", "yaw_drift_rad", "stop_net_disp_m", "stop_max_dev_m",
+                   "stop_yaw_change_rad", "stop_yaw_maxdev_rad", "stop_speed_rms", "stop_yawrate_rms",
+                   "aux10_speed_rms_max", "aux10_yawrate_rms_max", "aux10_still_frac"):
             out[k_] = float("nan")
         out["q2_stop_only"] = False
         out["q2_pass"] = False
+        out["q2_cat"] = ""
     return out
 
 
@@ -297,7 +358,9 @@ def cell_summary(rows: list[dict], key: str) -> dict:
     }
     for m in ("mae_vx", "mae_vy", "mae_wz", "mean_vx", "mean_vy", "mean_wz", "corridor_max_m",
               "progress_m", "stop_t", "stop_dist_m", "yaw_drift_rad", "heading_err_rad", "disp_m",
-              "still_frac", "post_stop_drift_m", "move_ratio"):
+              "still_frac", "post_stop_drift_m", "move_ratio", "stop_net_disp_m", "stop_max_dev_m", "stop_yaw_change_rad",
+              "stop_yaw_maxdev_rad", "stop_speed_rms", "stop_yawrate_rms", "aux10_speed_rms_max", "aux10_yawrate_rms_max",
+              "aux10_still_frac"):
         v = np.array([r.get(m, np.nan) for r in rows], dtype=float)
         v = v[np.isfinite(v)]
         out[m + "_n"] = int(v.size)
@@ -312,3 +375,16 @@ def cell_summary(rows: list[dict], key: str) -> dict:
             reasons[r["fall_reason"]] = reasons.get(r["fall_reason"], 0) + 1
     out["fall_reasons"] = reasons
     return out
+
+
+def holm_reject(pvals, alpha: float = 0.05) -> list[bool]:
+    """Holm step-down. Returns, in the input order, whether each hypothesis is rejected."""
+    m = len(pvals)
+    order = sorted(range(m), key=lambda i: pvals[i])
+    rej = [False] * m
+    for rank, i in enumerate(order):
+        if pvals[i] <= alpha / (m - rank):
+            rej[i] = True
+        else:
+            break
+    return rej

@@ -10,7 +10,7 @@
 | `height_block_values_same_multiset` | 참 | 36 / 36 참 |
 | `critic_dims_sum_equals_width` | 참 | 36 / 36 참 |
 | permutation (시드 2026) | 모든 실행이 같은 순열 | sha256 1 종류 · 8c40566f6c545a9b |
-| 짝 (student · teacher · teacher perm 의 초기 상태 · DR · 메시 · 설정) | 같음 | 18 / 18 같음 |
+| 짝 (student · teacher · teacher perm 의 초기 root 자세 · 관절각 · 질량 · 메시 · 체크포인트 · 설정. 넓힌 DR 은 1절) | 같음 | 18 / 18 같음 |
 
 ### 표 2 · 양성 대조 · 첫 관측에서 height 순열이 teacher 행동을 바꾸는 양 (최대 절대 차)
 
