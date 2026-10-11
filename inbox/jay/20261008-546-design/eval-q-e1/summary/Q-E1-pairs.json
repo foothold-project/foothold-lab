@@ -1,0 +1,244 @@
+{
+ "_pre_m20000_flat_v0": "partner missing",
+ "m20000_flat": {
+  "partner": "m20499_flat",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_hh_A": {
+  "partner": "m20499_hh_A",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_hh_B": {
+  "partner": "m20499_hh_B",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_noise_flat": {
+  "partner": "m20499_noise_flat",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_noise_stairs_up": {
+  "partner": "m20499_noise_stairs_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_obstacles": {
+  "partner": "m20499_obstacles",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_offplat": {
+  "partner": "m20499_offplat",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_rough_slope": {
+  "partner": "m20499_rough_slope",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_slope_down": {
+  "partner": "m20499_slope_down",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_slope_up": {
+  "partner": "m20499_slope_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_stairs_down": {
+  "partner": "m20499_stairs_down",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_stairs_up": {
+  "partner": "m20499_stairs_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "m20000_wave": {
+  "partner": "m20499_wave",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "repro_m20000_flat": "partner missing",
+ "x500_m20000_flat": {
+  "partner": "x500_m20499_flat",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_obstacles": {
+  "partner": "x500_m20499_obstacles",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_offplat_obstacles": {
+  "partner": "x500_m20499_offplat_obstacles",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_offplat_stairs_down": {
+  "partner": "x500_m20499_offplat_stairs_down",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_offplat_stairs_up": {
+  "partner": "x500_m20499_offplat_stairs_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_rough_slope": {
+  "partner": "x500_m20499_rough_slope",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_slope_down": {
+  "partner": "x500_m20499_slope_down",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_slope_up": {
+  "partner": "x500_m20499_slope_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_stairs_down": {
+  "partner": "x500_m20499_stairs_down",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_stairs_up": {
+  "partner": "x500_m20499_stairs_up",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ },
+ "x500_m20000_wave": {
+  "partner": "x500_m20499_wave",
+  "pairing_equal": true,
+  "mesh_equal": true,
+  "args_equal_except_ckpt": true,
+  "ckpts": [
+   "model_20000.pt",
+   "model_20499.pt"
+  ]
+ }
+}
