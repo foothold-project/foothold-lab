@@ -232,6 +232,11 @@ def build(page, G):
     T['v2_ss'] = ' · '.join(f"{k} {v['unseen10']['stepping_stones']:.0f} %" for k, v in sc.items())
     T['v2_iter'] = str(v2card['training']['max_iterations'] - 1)
     T['v2_envs'] = f"{v2card['training']['num_envs']:,}"
+    # z_t · z_s 어긋남 (tb_latent_json.py 가 학습 기록에서 뽑은 latent.json)
+    lat = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'latent.json'), encoding='utf-8'))
+    for k, v in lat.items():
+        assert v['n'] >= 90, (k, v['n'])
+        T[f'lat_{k}'] = f"{v['angle_deg']:.1f}"
     return T
 
 

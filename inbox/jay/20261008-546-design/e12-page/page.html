@@ -42,7 +42,8 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
-.wrap{margin:0;padding:0 clamp(16px,3.2vw,56px)}
+.wrap{margin:0 auto;padding:0 16px}
+@media (min-width:1100px){.wrap{width:80vw;padding:0}}
 .prose{max-width:none}
 a{color:var(--brand-ink)}
 code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -180,6 +181,10 @@ dl.glossary{display:grid;grid-template-columns:max-content minmax(0,1fr) max-con
 dl.glossary dt{font-weight:600;white-space:nowrap}
 dl.glossary dd{margin:0;color:var(--ink-2)}
 .netsvg .pt{font-family:var(--sans);font-size:14px;font-weight:600}
+#qa .qa{grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:4px 40px}
+.quad{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+@media (max-width:1100px){.quad{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (max-width:720px){.quad{grid-template-columns:minmax(0,1fr)!important}}
 .split table.def td:not(:first-child),.split table.def th{white-space:normal}
 .split table.def td.num{white-space:nowrap}
 .split table.def td:first-child{white-space:normal;font-family:var(--sans);font-size:13.5px;min-width:5.5em}
@@ -211,7 +216,7 @@ dl.glossary dd{margin:0;color:var(--ink-2)}
 .ex{font:inherit;font-size:13px;text-align:left;border:1px solid var(--rule);background:var(--paper-2);color:var(--brand-ink);border-radius:6px;padding:5px 8px;cursor:pointer}.ex:hover{border-color:var(--brand)}
 .vd.redo{background:var(--paper-2);color:var(--ink-3);border:1px dashed var(--ink-3)}
 .vmode #crit{display:block}
-.vmode #why,.vmode #net,.vmode #sum,.vmode #repro,.vmode #vs2,.vmode #see,.vmode #gap,.vmode #drop,.vmode #noise,.vmode #terms{display:none}
+.vmode #why,.vmode #net,.vmode #sum,.vmode #repro,.vmode #vs2,.vmode #see,.vmode #gap,.vmode #drop,.vmode #noise,.vmode #terms,.vmode #qa{display:none}
 .card2 td:first-child{color:var(--ink-3);font-family:var(--sans);font-size:12.5px}
 .card2 td{font-family:var(--sans);white-space:normal}
 .h3gap{margin-top:26px}
@@ -1194,6 +1199,31 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
       </ul>
     </div>
   </div>
+</section>
+
+<section id="qa">
+  <h2>팀장 질문과 답 (10/12 밤)</h2>
+  <p class="sub">위 절에 없던 답만 모았습니다. 근거는 코드 · 학습 기록 · 저장소 문서입니다. 결정이 아니라 지금까지의 사실과 의견입니다.</p>
+  <dl class="qa">
+    <div><dt>RoboGauge 는 무엇을 재고, 우리도 써야 하나</dt>
+    <dd>논문 저자들의 평가 도구입니다. 정책을 MuJoCo 라는 <b>다른 물리 엔진</b> 으로 옮겨 걷게 합니다 (sim2sim). 명령 지연 · 몸통 무게 −1 ~ +3 kg · 마찰 0.2 ~ 1.0 을 무작위로 건 채 평지 · 물결 · 경사 · 계단 오르기 / 내리기 · 장애물을 난이도별로 걷습니다. 속도 오차 · 관절 한계 · 전력 · 몸 흔들림 · 토크 매끄러움 · 미끄러짐 여유 등 8 개 지표를 0 ~ 1 로 매기고, 시드 셋이 모두 통과한 최고 난이도를 Level 로 냅니다. 우리는 8/12 에 이 점수표의 공개 정책 4 종을 받아 실행까지 확인했고 (<code>C:/isaac/checkpoints/robogauge/</code> · 이슈 #28), 「평가 기준은 RoboGauge 방식을 참조하고 공개 정책을 대조군으로」 라고 적어 두었지만 실행하지 못한 채 #28 이 닫혔습니다. <b>쓰는 것이 좋습니다.</b> 논문 표와 같은 자로 재고, 다른 엔진에서도 버티는지 봅니다. 다만 gap · 징검다리 · 미경험 지형은 RoboGauge 에도 없어 우리 평가가 따로 필요합니다. v2 는 지도 입력 235 칸이라 RoboGauge 로 못 잽니다. <span class="sub">10/12 밤부터 CPU 로 돌리는 중입니다. 저자 정책 (이름에 0.6953) 으로 먼저 같은 점수가 나오는지 확인한 뒤 E1 · E2 를 잽니다. 결과 · 영상은 다음 판에.</span></dd></div>
+    <div><dt>학습 중에 보상 설정이 바뀔 수 있나 · 그것도 정하는 것인가</dt>
+    <dd>네. 이 코드는 iteration 에 따라 설정을 바꾸는 <b>커리큘럼</b> 을 설정 파일에 적어 둡니다. 몸 위아래 튐 벌점은 0 ~ 1,500 iteration 동안 −2 에서 0 으로, 몸통 높이 벌점은 0 ~ 5,000 동안 −1 에서 −10 으로 바뀝니다. 정지 명령 비율은 0 ~ 1,500 동안 0 에서 10 % 로, 명령 범위는 20,000 · 50,000 에서 넓어집니다. 처음에는 넘어지지 않고 걷는 법부터, 나중에는 자세를 엄격하게 가르치는 식입니다. 시작 · 끝 iteration 과 값은 우리가 정할 수 있습니다. v2 는 처음부터 끝까지 한 설정이었습니다.</dd></div>
+    <div><dt>명령을 모든 방향으로 열었는데, 로봇이 gap 을 어떻게 만나서 배우나</dt>
+    <dd>gap 지형은 가운데 평지를 틈이 <b>사방으로</b> 두른 고리 모양이고, 징검다리도 가운데 평지 둘레에 돌이 깔립니다 (Isaac Lab <code>gap_terrain</code> · <code>stepping_stones_terrain</code>). 지형 레벨을 올리려면 출발점에서 칸 크기의 절반인 4 m 넘게 나가야 하고 (<code>terrain_levels_vel_gym</code>), 명령은 남은 시간 안에 그만큼 가도록 최소 속도가 정해집니다 (<code>vel_low_bound</code>). 그래서 어느 방향으로 걷든 레벨을 올리려면 틈을 건너야 합니다.</dd></div>
+    <div><dt>gap 을 켜면 주말 2 만 회를 버리고 처음부터 다시 학습하나</dt>
+    <dd>아닙니다. 설계 문서는 E1 의 20,000 체크포인트를 부모로 삼아 「gap 10 %」 군과 「gap 0 %」 대조군을 각각 +8,000 iteration 이어 학습합니다 (G1). student 에게 지도를 줄 때 (P1) 도 부모 가중치를 옮기고 새로 생긴 입력 부분만 초기화합니다. v2 도 NVIDIA 정책에서 이어 gap 을 배웠습니다. 주의할 것: 이 코드의 이어 학습은 가중치만 되살리고 명령 · 보상 일정과 지형 레벨은 처음으로 돌아가므로 분기 실행기가 맞춰 줍니다 (관문 통과 · 10/11). Linux 에서 env 를 16,384 로 늘리면 부모 (8,192) 와 조건이 달라지니, 갈라 비교하는 두 군은 env 수를 같게 둡니다.</dd></div>
+    <div><dt>신경망 구조가 다른 AME-2 · JEPLO 같은 것으로 바꾸면, 학습한 것이 이어지나 · v2 에서 이어 갈 수도 있나</dt>
+    <dd><b>가중치는 모양과 뜻이 같은 부분만 그대로 옮길 수 있습니다.</b> 입력 칸의 순서 · 의미, 층의 크기, 출력 (관절 12 개 · 같은 순서 · 같은 배율) 이 같아야 합니다. 구조가 다르면 <b>행동을 옮기는</b> 방법을 씁니다. 이미 잘 걷는 정책을 선생으로 두고 새 구조가 같은 상황에서 같은 행동을 내도록 따라 하게 하는 「증류 (distillation · DAgger)」 입니다. MoE-CTS 의 teacher → student 도 같은 생각이고, v2 나 E1 을 새 구조의 선생으로 쓸 수도 있습니다. 그래서 「v2 에서 이어 가기」 도 방법상 가능합니다 (v2 는 지도를 보는 선생 역할). 다만 선생이 못하는 것 (예: 징검다리) 은 따라 해도 생기지 않아 새 학습이 필요합니다. 이것은 일반적인 방법론이고, 우리 Go2 에서 몇 iteration 이면 되는지는 재 보지 않았습니다 (미확인). 어느 구조로 갈지는 P1 (지도를 주면 얼마나 좋아지나) 결과를 보고 정하는 것이 순서입니다.</dd></div>
+    <div><dt>z_t 와 z_s 가 얼마나 맞는지가 관건인가 · L2 정규화가 핵심인가</dt>
+    <dd>둘 다 맞습니다. 두 요약의 길이가 1 이면 차이의 크기는 2 − 2 cos θ 가 되어 「방향이 몇 도 어긋났나」 만 남습니다. 그래서 latent loss 를 줄이는 것이 곧 같은 방향을 보게 하는 것입니다. 학습 기록의 실제 값으로 바꾸면, 평균 어긋남이 E1 은 1,000 iteration 무렵 %%lat_E1_early%% 도 → 10,000 무렵 %%lat_E1_mid%% 도 → 20,000 직전 %%lat_E1_pre%% 도 → 20,499 무렵 %%lat_E1_post%% 도, E2 는 %%lat_E2_early%% → %%lat_E2_mid%% → %%lat_E2_pre%% → %%lat_E2_post%% 도입니다. 학습할수록 teacher 요약이 더 많은 것을 담아 student 가 따라가기 조금 어려워진 것으로 보입니다 (추정). 방향이 맞는 것만으로 충분하지는 않습니다. 남은 몇 도에 「앞의 틈」 처럼 student 가 원리상 알 수 없는 정보가 들어 있을 수 있습니다.</dd></div>
+    <div><dt>지금 평가는 명령 기준인가 · 다른 지형은</dt>
+    <dd>네. 이 페이지는 학습 지형 8 종 × 명령 11 가지 (난이도 0.5 · 그리고 난이도 세 단계) 를 쟀고, 영상은 명령 칸별 첫 성공 · 첫 실패입니다. v2 의 미경험 지형 10 종 (gap · 징검다리 · pit · 레일 등) 은 E1 · E2 로 아직 안 쟀습니다. 10/12 밤부터 GPU 1 에서 평가를 만들고 있습니다 (결과 · 실패 영상은 다음 판에).</dd></div>
+    <div><dt>오늘 밤 GPU 에서 도는 것</dt>
+    <dd>GPU 0: CMD-R 한 쌍. E1 20,000 에서 갈라 「그대로」 와 「리셋 직후 명령 치우침만 고침」 을 4,000 iteration 씩 차례로 학습합니다 (env 8,192 · 아침 9 시쯤 끝). 멈추기 · 저속 약점이 그 치우침 때문인지 가립니다. ASTRA 가 띄운 조건을 검증하고 있습니다 (의뢰 7). GPU 1 · CPU: 미경험 지형 평가와 RoboGauge.</dd></div>
+    <div><dt>실기 Go2 와 센서 (운영진 회신 · 10/12)</dt>
+    <dd>빌리는 실기는 Go2 EDU 순정 모델입니다. Hesai 라이다는 팀 예산으로 사기 어렵고, Depth 카메라 RealSense D435i 는 사서 HiPAN 같은 주행 (트랙 B) 에 쓸 수 있습니다. 8/19 결정대로 이 페이지의 RL 정책은 실기에 올리지 않고 시뮬에서 완결합니다.</dd></div>
+  </dl>
 </section>
 
 <section id="terms">
