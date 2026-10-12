@@ -148,6 +148,16 @@ table.def{border-collapse:collapse;font-size:14px;width:100%}
 ul.plain{padding-left:18px;margin:8px 0}
 ul.plain li{margin:4px 0}
 /* 3판 */
+.gaitwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:10px 0}.gaitfig{min-width:0}
+.gaitfig h3{font-size:15px;margin:0 0 4px}
+.gaitbox{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px}
+.gaitsvg{display:block;width:100%;min-width:720px;height:auto}
+.gaitsvg .air{fill:var(--paper-2)} .gaitsvg .cf{fill:var(--brand)} .gaitsvg .ch{fill:var(--note)}
+.gaitsvg .gl{stroke:var(--grid)} .gaitsvg text{font-family:var(--sans);fill:var(--ink-2)}
+.gaitsvg .hd{font-size:13px;font-weight:600;fill:var(--ink)} .gaitsvg .st{font-size:12px;font-family:var(--mono)} .gaitsvg .ft{font-size:11px}
+.gaitsvg .tk{font-size:11px;fill:var(--ink-3)} .gaitsvg .mid{text-anchor:middle} .gaitsvg .end{text-anchor:end}
+.vmode #gait{display:none}
+
 .vlist td:not(.whyc),.vlist th{white-space:nowrap}.seg{flex-wrap:wrap}.seg button{white-space:nowrap}.def td:last-child{white-space:nowrap}.card2 td:last-child,.crit td:last-child{white-space:normal}
 .vmode .crit th:nth-child(4),.vmode .crit td:nth-child(4){display:none}.vmode .crit{min-width:640px}
 .vbox{max-height:70vh;overflow:auto}
@@ -419,6 +429,331 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 <section id="find">
   <h2>결론</h2>
   <ol class="find prose" id="findings"></ol>
+</section>
+
+<section id="gait">
+  <h2>저속에서 걸음 모양이 바뀐다</h2>
+  <p class="prose">팀장 관찰 「저속에서 앞발 둘은 거의 같이 움직이고 뒷발이 하나씩 따라온다」 를 발 접촉 기록으로 쟀습니다. 색 막대는 발이 땅을 디딘 구간 (수직 접촉력 5 N 초과), 빈칸은 발이 떠 있는 구간입니다. 그림은 8~11 s 의 3 초, 오른쪽 숫자는 2~19 s 전체에서 잰 값입니다.</p>
+  <div class="gaitwrap"><figure class="gaitfig"><h3>E1 · model_20499 · 평지 · episode 0</h3><div class="gaitbox"><svg viewBox="0 0 980 380" class="gaitsvg" role="img" aria-label="E1 model_20499 평지 전진 속도별 발 접촉 시간표">
+<line x1="94.0" x2="94.0" y1="20" y2="358" class="gl"/>
+<text x="94.0" y="372" class="tk mid">8.0 s</text>
+<line x1="216.7" x2="216.7" y1="20" y2="358" class="gl"/>
+<text x="216.7" y="372" class="tk mid">8.5 s</text>
+<line x1="339.3" x2="339.3" y1="20" y2="358" class="gl"/>
+<text x="339.3" y="372" class="tk mid">9.0 s</text>
+<line x1="462.0" x2="462.0" y1="20" y2="358" class="gl"/>
+<text x="462.0" y="372" class="tk mid">9.5 s</text>
+<line x1="584.7" x2="584.7" y1="20" y2="358" class="gl"/>
+<text x="584.7" y="372" class="tk mid">10.0 s</text>
+<line x1="707.3" x2="707.3" y1="20" y2="358" class="gl"/>
+<text x="707.3" y="372" class="tk mid">10.5 s</text>
+<line x1="830.0" x2="830.0" y1="20" y2="358" class="gl"/>
+<text x="830.0" y="372" class="tk mid">11.0 s</text>
+<text x="0" y="36" class="hd">전진 0.1 m/s 명령</text>
+<text x="842" y="36" class="st">실제 0.09 m/s</text>
+<text x="842" y="54" class="st">앞발 같이 85 %</text>
+<text x="842" y="70" class="st">대각선 같이 68 %</text>
+<text x="842" y="86" class="st">디딤 앞 15 · 뒤 89</text>
+<text x="86" y="52" class="ft end">앞 왼발</text>
+<rect x="94" y="43" width="736" height="10" class="air"/>
+<rect x="94.0" y="43" width="471.0" height="10" class="cf"/>
+<rect x="574.9" y="43" width="14.7" height="10" class="cf"/>
+<rect x="609.2" y="43" width="225.7" height="10" class="cf"/>
+<text x="86" y="65" class="ft end">앞 오른발</text>
+<rect x="94" y="56" width="736" height="10" class="air"/>
+<rect x="94.0" y="56" width="422.0" height="10" class="cf"/>
+<rect x="530.7" y="56" width="304.2" height="10" class="cf"/>
+<text x="86" y="78" class="ft end">뒤 왼발</text>
+<rect x="94" y="69" width="736" height="10" class="air"/>
+<rect x="94.0" y="69" width="191.4" height="10" class="ch"/>
+<rect x="295.2" y="69" width="24.5" height="10" class="ch"/>
+<rect x="349.1" y="69" width="14.7" height="10" class="ch"/>
+<rect x="368.8" y="69" width="4.9" height="10" class="ch"/>
+<rect x="378.6" y="69" width="9.8" height="10" class="ch"/>
+<rect x="393.3" y="69" width="4.9" height="10" class="ch"/>
+<rect x="560.1" y="69" width="274.8" height="10" class="ch"/>
+<text x="86" y="91" class="ft end">뒤 오른발</text>
+<rect x="94" y="82" width="736" height="10" class="air"/>
+<rect x="94.0" y="82" width="230.6" height="10" class="ch"/>
+<rect x="329.5" y="82" width="14.7" height="10" class="ch"/>
+<rect x="349.1" y="82" width="14.7" height="10" class="ch"/>
+<rect x="368.8" y="82" width="4.9" height="10" class="ch"/>
+<rect x="378.6" y="82" width="19.6" height="10" class="ch"/>
+<rect x="412.9" y="82" width="19.6" height="10" class="ch"/>
+<rect x="437.5" y="82" width="4.9" height="10" class="ch"/>
+<rect x="452.2" y="82" width="14.7" height="10" class="ch"/>
+<rect x="506.2" y="82" width="328.7" height="10" class="ch"/>
+<text x="0" y="118" class="hd">전진 0.2 m/s 명령</text>
+<text x="842" y="118" class="st">실제 0.18 m/s</text>
+<text x="842" y="136" class="st">앞발 같이 94 %</text>
+<text x="842" y="152" class="st">대각선 같이 40 %</text>
+<text x="842" y="168" class="st">디딤 앞 43 · 뒤 98</text>
+<text x="86" y="134" class="ft end">앞 왼발</text>
+<rect x="94" y="125" width="736" height="10" class="air"/>
+<rect x="94.0" y="125" width="122.7" height="10" class="cf"/>
+<rect x="221.6" y="125" width="191.4" height="10" class="cf"/>
+<rect x="417.8" y="125" width="44.2" height="10" class="cf"/>
+<rect x="466.9" y="125" width="142.3" height="10" class="cf"/>
+<rect x="619.0" y="125" width="93.2" height="10" class="cf"/>
+<rect x="717.1" y="125" width="34.3" height="10" class="cf"/>
+<rect x="756.4" y="125" width="54.0" height="10" class="cf"/>
+<rect x="815.3" y="125" width="19.6" height="10" class="cf"/>
+<text x="86" y="147" class="ft end">앞 오른발</text>
+<rect x="94" y="138" width="736" height="10" class="air"/>
+<rect x="94.0" y="138" width="593.7" height="10" class="cf"/>
+<rect x="692.6" y="138" width="142.3" height="10" class="cf"/>
+<text x="86" y="160" class="ft end">뒤 왼발</text>
+<rect x="94" y="151" width="736" height="10" class="air"/>
+<rect x="123.4" y="151" width="14.7" height="10" class="ch"/>
+<rect x="221.6" y="151" width="19.6" height="10" class="ch"/>
+<rect x="285.4" y="151" width="9.8" height="10" class="ch"/>
+<rect x="305.0" y="151" width="14.7" height="10" class="ch"/>
+<rect x="496.3" y="151" width="14.7" height="10" class="ch"/>
+<rect x="555.2" y="151" width="14.7" height="10" class="ch"/>
+<rect x="614.1" y="151" width="9.8" height="10" class="ch"/>
+<rect x="731.9" y="151" width="4.9" height="10" class="ch"/>
+<rect x="805.5" y="151" width="14.7" height="10" class="ch"/>
+<text x="86" y="173" class="ft end">뒤 오른발</text>
+<rect x="94" y="164" width="736" height="10" class="air"/>
+<rect x="94.0" y="164" width="19.6" height="10" class="ch"/>
+<rect x="152.9" y="164" width="19.6" height="10" class="ch"/>
+<rect x="241.2" y="164" width="63.8" height="10" class="ch"/>
+<rect x="329.5" y="164" width="34.3" height="10" class="ch"/>
+<rect x="388.4" y="164" width="19.6" height="10" class="ch"/>
+<rect x="437.5" y="164" width="19.6" height="10" class="ch"/>
+<rect x="491.4" y="164" width="49.1" height="10" class="ch"/>
+<rect x="579.8" y="164" width="29.4" height="10" class="ch"/>
+<rect x="643.5" y="164" width="24.5" height="10" class="ch"/>
+<rect x="692.6" y="164" width="14.7" height="10" class="ch"/>
+<rect x="751.5" y="164" width="49.1" height="10" class="ch"/>
+<rect x="830.0" y="164" width="4.9" height="10" class="ch"/>
+<text x="0" y="200" class="hd">전진 0.3 m/s 명령</text>
+<text x="842" y="200" class="st">실제 0.24 m/s</text>
+<text x="842" y="218" class="st">앞발 같이 88 %</text>
+<text x="842" y="234" class="st">대각선 같이 72 %</text>
+<text x="842" y="250" class="st">디딤 앞 44 · 뒤 65</text>
+<text x="86" y="216" class="ft end">앞 왼발</text>
+<rect x="94" y="207" width="736" height="10" class="air"/>
+<rect x="94.0" y="207" width="107.9" height="10" class="cf"/>
+<rect x="216.7" y="207" width="98.1" height="10" class="cf"/>
+<rect x="319.7" y="207" width="117.8" height="10" class="cf"/>
+<rect x="442.4" y="207" width="196.3" height="10" class="cf"/>
+<rect x="643.5" y="207" width="191.4" height="10" class="cf"/>
+<text x="86" y="229" class="ft end">앞 오른발</text>
+<rect x="94" y="220" width="736" height="10" class="air"/>
+<rect x="94.0" y="220" width="73.6" height="10" class="cf"/>
+<rect x="182.3" y="220" width="206.1" height="10" class="cf"/>
+<rect x="408.0" y="220" width="318.9" height="10" class="cf"/>
+<rect x="741.7" y="220" width="93.2" height="10" class="cf"/>
+<text x="86" y="242" class="ft end">뒤 왼발</text>
+<rect x="94" y="233" width="736" height="10" class="air"/>
+<rect x="128.3" y="233" width="34.3" height="10" class="ch"/>
+<rect x="201.9" y="233" width="73.6" height="10" class="ch"/>
+<rect x="309.9" y="233" width="78.5" height="10" class="ch"/>
+<rect x="422.7" y="233" width="157.0" height="10" class="ch"/>
+<rect x="619.0" y="233" width="103.0" height="10" class="ch"/>
+<rect x="756.4" y="233" width="78.5" height="10" class="ch"/>
+<text x="86" y="255" class="ft end">뒤 오른발</text>
+<rect x="94" y="246" width="736" height="10" class="air"/>
+<rect x="94.0" y="246" width="39.3" height="10" class="ch"/>
+<rect x="162.7" y="246" width="44.2" height="10" class="ch"/>
+<rect x="251.0" y="246" width="73.6" height="10" class="ch"/>
+<rect x="373.7" y="246" width="137.4" height="10" class="ch"/>
+<rect x="550.3" y="246" width="93.2" height="10" class="ch"/>
+<rect x="697.5" y="246" width="98.1" height="10" class="ch"/>
+<text x="0" y="282" class="hd">전진 0.5 m/s 명령</text>
+<text x="842" y="282" class="st">실제 0.52 m/s</text>
+<text x="842" y="300" class="st">앞발 같이 37 %</text>
+<text x="842" y="316" class="st">대각선 같이 92 %</text>
+<text x="842" y="332" class="st">디딤 앞 63 · 뒤 63</text>
+<text x="86" y="298" class="ft end">앞 왼발</text>
+<rect x="94" y="289" width="736" height="10" class="air"/>
+<rect x="94.0" y="289" width="29.4" height="10" class="cf"/>
+<rect x="172.5" y="289" width="83.4" height="10" class="cf"/>
+<rect x="305.0" y="289" width="83.4" height="10" class="cf"/>
+<rect x="437.5" y="289" width="83.4" height="10" class="cf"/>
+<rect x="569.9" y="289" width="83.4" height="10" class="cf"/>
+<rect x="702.4" y="289" width="83.4" height="10" class="cf"/>
+<text x="86" y="311" class="ft end">앞 오른발</text>
+<rect x="94" y="302" width="736" height="10" class="air"/>
+<rect x="103.8" y="302" width="93.2" height="10" class="cf"/>
+<rect x="236.3" y="302" width="93.2" height="10" class="cf"/>
+<rect x="368.8" y="302" width="93.2" height="10" class="cf"/>
+<rect x="496.3" y="302" width="98.1" height="10" class="cf"/>
+<rect x="628.8" y="302" width="98.1" height="10" class="cf"/>
+<rect x="761.3" y="302" width="73.6" height="10" class="cf"/>
+<text x="86" y="324" class="ft end">뒤 왼발</text>
+<rect x="94" y="315" width="736" height="10" class="air"/>
+<rect x="113.6" y="315" width="83.4" height="10" class="ch"/>
+<rect x="246.1" y="315" width="83.4" height="10" class="ch"/>
+<rect x="373.7" y="315" width="88.3" height="10" class="ch"/>
+<rect x="506.2" y="315" width="88.3" height="10" class="ch"/>
+<rect x="638.6" y="315" width="83.4" height="10" class="ch"/>
+<rect x="771.1" y="315" width="63.8" height="10" class="ch"/>
+<text x="86" y="337" class="ft end">뒤 오른발</text>
+<rect x="94" y="328" width="736" height="10" class="air"/>
+<rect x="94.0" y="328" width="39.3" height="10" class="ch"/>
+<rect x="172.5" y="328" width="88.3" height="10" class="ch"/>
+<rect x="305.0" y="328" width="88.3" height="10" class="ch"/>
+<rect x="432.6" y="328" width="93.2" height="10" class="ch"/>
+<rect x="565.0" y="328" width="93.2" height="10" class="ch"/>
+<rect x="697.5" y="328" width="93.2" height="10" class="ch"/>
+<rect x="830.0" y="328" width="4.9" height="10" class="ch"/>
+</svg></div></figure>
+<figure class="gaitfig"><h3>E2 · model_20499 · 평지 · episode 0</h3><div class="gaitbox"><svg viewBox="0 0 980 380" class="gaitsvg" role="img" aria-label="E2 model_20499 평지 전진 속도별 발 접촉 시간표">
+<line x1="94.0" x2="94.0" y1="20" y2="358" class="gl"/>
+<text x="94.0" y="372" class="tk mid">8.0 s</text>
+<line x1="216.7" x2="216.7" y1="20" y2="358" class="gl"/>
+<text x="216.7" y="372" class="tk mid">8.5 s</text>
+<line x1="339.3" x2="339.3" y1="20" y2="358" class="gl"/>
+<text x="339.3" y="372" class="tk mid">9.0 s</text>
+<line x1="462.0" x2="462.0" y1="20" y2="358" class="gl"/>
+<text x="462.0" y="372" class="tk mid">9.5 s</text>
+<line x1="584.7" x2="584.7" y1="20" y2="358" class="gl"/>
+<text x="584.7" y="372" class="tk mid">10.0 s</text>
+<line x1="707.3" x2="707.3" y1="20" y2="358" class="gl"/>
+<text x="707.3" y="372" class="tk mid">10.5 s</text>
+<line x1="830.0" x2="830.0" y1="20" y2="358" class="gl"/>
+<text x="830.0" y="372" class="tk mid">11.0 s</text>
+<text x="0" y="36" class="hd">전진 0.1 m/s 명령</text>
+<text x="842" y="36" class="st">실제 0.16 m/s</text>
+<text x="842" y="54" class="st">앞발 같이 81 %</text>
+<text x="842" y="70" class="st">대각선 같이 54 %</text>
+<text x="842" y="86" class="st">디딤 앞 28 · 뒤 54</text>
+<text x="86" y="52" class="ft end">앞 왼발</text>
+<rect x="94" y="43" width="736" height="10" class="air"/>
+<rect x="103.8" y="43" width="49.1" height="10" class="cf"/>
+<rect x="157.8" y="43" width="358.2" height="10" class="cf"/>
+<rect x="545.4" y="43" width="166.8" height="10" class="cf"/>
+<rect x="717.1" y="43" width="117.8" height="10" class="cf"/>
+<text x="86" y="65" class="ft end">앞 오른발</text>
+<rect x="94" y="56" width="736" height="10" class="air"/>
+<rect x="94.0" y="56" width="9.8" height="10" class="cf"/>
+<rect x="123.4" y="56" width="431.8" height="10" class="cf"/>
+<rect x="574.9" y="56" width="260.1" height="10" class="cf"/>
+<text x="86" y="78" class="ft end">뒤 왼발</text>
+<rect x="94" y="69" width="736" height="10" class="air"/>
+<rect x="162.7" y="69" width="152.1" height="10" class="ch"/>
+<rect x="324.6" y="69" width="14.7" height="10" class="ch"/>
+<rect x="354.1" y="69" width="24.5" height="10" class="ch"/>
+<rect x="403.1" y="69" width="4.9" height="10" class="ch"/>
+<rect x="589.6" y="69" width="235.5" height="10" class="ch"/>
+<text x="86" y="91" class="ft end">뒤 오른발</text>
+<rect x="94" y="82" width="736" height="10" class="air"/>
+<rect x="123.4" y="82" width="54.0" height="10" class="ch"/>
+<rect x="285.4" y="82" width="103.0" height="10" class="ch"/>
+<rect x="412.9" y="82" width="24.5" height="10" class="ch"/>
+<rect x="555.2" y="82" width="142.3" height="10" class="ch"/>
+<rect x="795.7" y="82" width="39.3" height="10" class="ch"/>
+<text x="0" y="118" class="hd">전진 0.2 m/s 명령</text>
+<text x="842" y="118" class="st">실제 0.19 m/s</text>
+<text x="842" y="136" class="st">앞발 같이 92 %</text>
+<text x="842" y="152" class="st">대각선 같이 46 %</text>
+<text x="842" y="168" class="st">디딤 앞 29 · 뒤 52</text>
+<text x="86" y="134" class="ft end">앞 왼발</text>
+<rect x="94" y="125" width="736" height="10" class="air"/>
+<rect x="94.0" y="125" width="245.3" height="10" class="cf"/>
+<rect x="344.2" y="125" width="152.1" height="10" class="cf"/>
+<rect x="516.0" y="125" width="318.9" height="10" class="cf"/>
+<text x="86" y="147" class="ft end">앞 오른발</text>
+<rect x="94" y="138" width="736" height="10" class="air"/>
+<rect x="94.0" y="138" width="495.6" height="10" class="cf"/>
+<rect x="594.5" y="138" width="240.4" height="10" class="cf"/>
+<text x="86" y="160" class="ft end">뒤 왼발</text>
+<rect x="94" y="151" width="736" height="10" class="air"/>
+<rect x="94.0" y="151" width="9.8" height="10" class="ch"/>
+<rect x="133.3" y="151" width="98.1" height="10" class="ch"/>
+<rect x="344.2" y="151" width="14.7" height="10" class="ch"/>
+<rect x="388.4" y="151" width="39.3" height="10" class="ch"/>
+<rect x="511.1" y="151" width="73.6" height="10" class="ch"/>
+<rect x="609.2" y="151" width="132.5" height="10" class="ch"/>
+<rect x="800.6" y="151" width="29.4" height="10" class="ch"/>
+<text x="86" y="173" class="ft end">뒤 오른발</text>
+<rect x="94" y="164" width="736" height="10" class="air"/>
+<rect x="94.0" y="164" width="44.2" height="10" class="ch"/>
+<rect x="221.6" y="164" width="44.2" height="10" class="ch"/>
+<rect x="560.1" y="164" width="73.6" height="10" class="ch"/>
+<rect x="741.7" y="164" width="34.3" height="10" class="ch"/>
+<text x="0" y="200" class="hd">전진 0.3 m/s 명령</text>
+<text x="842" y="200" class="st">실제 0.27 m/s</text>
+<text x="842" y="218" class="st">앞발 같이 80 %</text>
+<text x="842" y="234" class="st">대각선 같이 73 %</text>
+<text x="842" y="250" class="st">디딤 앞 42 · 뒤 67</text>
+<text x="86" y="216" class="ft end">앞 왼발</text>
+<rect x="94" y="207" width="736" height="10" class="air"/>
+<rect x="94.0" y="207" width="117.8" height="10" class="cf"/>
+<rect x="231.4" y="207" width="29.4" height="10" class="cf"/>
+<rect x="285.4" y="207" width="157.0" height="10" class="cf"/>
+<rect x="452.2" y="207" width="318.9" height="10" class="cf"/>
+<rect x="776.0" y="207" width="58.9" height="10" class="cf"/>
+<text x="86" y="229" class="ft end">앞 오른발</text>
+<rect x="94" y="220" width="736" height="10" class="air"/>
+<rect x="94.0" y="220" width="73.6" height="10" class="cf"/>
+<rect x="192.1" y="220" width="186.5" height="10" class="cf"/>
+<rect x="388.4" y="220" width="112.9" height="10" class="cf"/>
+<rect x="530.7" y="220" width="279.7" height="10" class="cf"/>
+<text x="86" y="242" class="ft end">뒤 왼발</text>
+<rect x="94" y="233" width="736" height="10" class="air"/>
+<rect x="103.8" y="233" width="54.0" height="10" class="ch"/>
+<rect x="206.9" y="233" width="152.1" height="10" class="ch"/>
+<rect x="403.1" y="233" width="88.3" height="10" class="ch"/>
+<rect x="530.7" y="233" width="166.8" height="10" class="ch"/>
+<rect x="751.5" y="233" width="54.0" height="10" class="ch"/>
+<text x="86" y="255" class="ft end">뒤 오른발</text>
+<rect x="94" y="246" width="736" height="10" class="air"/>
+<rect x="94.0" y="246" width="14.7" height="10" class="ch"/>
+<rect x="162.7" y="246" width="44.2" height="10" class="ch"/>
+<rect x="216.7" y="246" width="44.2" height="10" class="ch"/>
+<rect x="270.6" y="246" width="14.7" height="10" class="ch"/>
+<rect x="295.2" y="246" width="14.7" height="10" class="ch"/>
+<rect x="324.6" y="246" width="93.2" height="10" class="ch"/>
+<rect x="471.8" y="246" width="122.7" height="10" class="ch"/>
+<rect x="677.9" y="246" width="73.6" height="10" class="ch"/>
+<rect x="800.6" y="246" width="34.3" height="10" class="ch"/>
+<text x="0" y="282" class="hd">전진 0.5 m/s 명령</text>
+<text x="842" y="282" class="st">실제 0.52 m/s</text>
+<text x="842" y="300" class="st">앞발 같이 29 %</text>
+<text x="842" y="316" class="st">대각선 같이 88 %</text>
+<text x="842" y="332" class="st">디딤 앞 56 · 뒤 62</text>
+<text x="86" y="298" class="ft end">앞 왼발</text>
+<rect x="94" y="289" width="736" height="10" class="air"/>
+<rect x="98.9" y="289" width="78.5" height="10" class="cf"/>
+<rect x="246.1" y="289" width="78.5" height="10" class="cf"/>
+<rect x="393.3" y="289" width="83.4" height="10" class="cf"/>
+<rect x="540.5" y="289" width="78.5" height="10" class="cf"/>
+<rect x="682.8" y="289" width="83.4" height="10" class="cf"/>
+<rect x="830.0" y="289" width="4.9" height="10" class="cf"/>
+<text x="86" y="311" class="ft end">앞 오른발</text>
+<rect x="94" y="302" width="736" height="10" class="air"/>
+<rect x="94.0" y="302" width="29.4" height="10" class="cf"/>
+<rect x="162.7" y="302" width="107.9" height="10" class="cf"/>
+<rect x="309.9" y="302" width="107.9" height="10" class="cf"/>
+<rect x="457.1" y="302" width="107.9" height="10" class="cf"/>
+<rect x="604.3" y="302" width="107.9" height="10" class="cf"/>
+<rect x="751.5" y="302" width="83.4" height="10" class="cf"/>
+<text x="86" y="324" class="ft end">뒤 왼발</text>
+<rect x="94" y="315" width="736" height="10" class="air"/>
+<rect x="94.0" y="315" width="24.5" height="10" class="ch"/>
+<rect x="162.7" y="315" width="103.0" height="10" class="ch"/>
+<rect x="309.9" y="315" width="103.0" height="10" class="ch"/>
+<rect x="462.0" y="315" width="98.1" height="10" class="ch"/>
+<rect x="604.3" y="315" width="103.0" height="10" class="ch"/>
+<rect x="751.5" y="315" width="83.4" height="10" class="ch"/>
+<text x="86" y="337" class="ft end">뒤 오른발</text>
+<rect x="94" y="328" width="736" height="10" class="air"/>
+<rect x="94.0" y="328" width="112.9" height="10" class="ch"/>
+<rect x="241.2" y="328" width="112.9" height="10" class="ch"/>
+<rect x="388.4" y="328" width="112.9" height="10" class="ch"/>
+<rect x="535.6" y="328" width="112.9" height="10" class="ch"/>
+<rect x="682.8" y="328" width="112.9" height="10" class="ch"/>
+<rect x="830.0" y="328" width="4.9" height="10" class="ch"/>
+</svg></div></figure></div>
+  <ul class="plain prose">
+    <li><b>0.5 m/s 는 trot 입니다.</b> 대각선 두 쌍이 88~92 % 같은 상태로 움직이고, 앞 · 뒤 발이 거의 같은 횟수로 디딥니다.</li>
+    <li><b>0.1~0.3 m/s 는 앞발을 거의 붙여 두고 뒷발로 밉니다.</b> 앞발 둘은 80~94 % 같은 상태이고 시간의 88~97 % 를 땅에 붙어 있습니다. 17 초 동안 앞발 디딤이 15~44 번, 뒷발이 52~98 번입니다.</li>
+    <li><b>왜 (추정 · 아직 시험 안 함).</b> 이 코드의 보상에는 걸음 모양을 정하는 항 (발 공중 시간 · 대각 리듬 등) 이 없습니다. 속도 추종 보상은 exp(−오차² / 0.5²) 꼴이라 0.1 m/s 를 틀려도 4 % 만 깎입니다. 그래서 정책은 「빠른 trot 을 천천히」 가 아니라 속도마다 보상이 가장 높은 걸음을 따로 배웠고, 저속에서는 앞발을 고정하고 뒷발로 조금씩 미는 쪽이 된 것으로 보입니다. 보상에 걸음 항을 넣고 다시 학습해야 가를 수 있습니다.</li>
+    <li>한계: 속도마다 episode 하나 · 평지 · model_20499 만 쟀습니다.</li>
+  </ul>
 </section>
 
 <section id="tasks">
