@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 운영 · Linux 이전 매니페스트
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20 (드라이버 칸 23:50 갱신)
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20 (드라이버 칸 23:50 · 자리 칸 10/13 00:05 갱신)
 > 근거: 팀장 10/12 23:00 「리눅스 넘어가기 위한 매니페스트 정리 시작 · 아직 확정 아님」 · 이 기계 실측 (아래 「Windows 실측」 칸) · 시스템 런북 mai-os `os/linux-runbook.md` (super · 6c37e44 · vfxpedia/mai-os#34)
 > 요지: FOOTHOLD RL (트랙 A 시뮬) 을 Ubuntu 로 옮겨 같은 숫자를 다시 낼 수 있게, 코드 · 환경 · 체크포인트 · 데이터 · 실행 명령 · 다시 세울 기준선을 한곳에 적는다. 시스템 셋업은 super 런북이 맡고 여기는 RL 만 적는다
 > 상태: 초안 (확정 아님 · 팀장 · super · pipeline 검토 전) · 설치 시기는 팀장이 정함
@@ -10,10 +10,10 @@
 
 ## 1. 옮길 것 (재고)
 
-| 무엇 | Windows 자리 | 크기 (확인됨) | 판 · 해시 | Linux 자리 (제안 · 런북 0-4 와 맞춤) | 옮기는 법 |
+| 무엇 | Windows 자리 | 크기 (확인됨) | 판 · 해시 | Linux 자리 (제안 · 런북 0-4b · 최종은 팀장) | 옮기는 법 |
 |---|---|---|---|---|---|
-| foothold-lab 저장소 | `Desktop/jay/인공지능사관학교/foothold-lab` | git | 브랜치 `feature/verify-v2-mvp-jay` | `~/mai/project/foothold-lab` | 새로 clone (한글 경로 문제 사라짐) |
-| MoE-CTS 학습 코드 | `C:/isaac/ext/go2_rl_robotlab` | 코드 | 공식 `wertyuilife2/go2_rl_robotlab @28b4516d` · 추적 파일 무수정 (git status: `_eval/` · `_smoke/` 만 추적 밖) | 미정 (`~/mai/project/ext/go2_rl_robotlab` 제안) | clone @28b4516d + 아래 추적 밖 폴더 복사 |
+| foothold-lab 저장소 | `Desktop/jay/인공지능사관학교/foothold-lab` | git | 브랜치 `feature/verify-v2-mvp-jay` | `~/mai/projects/foothold-lab` | 새로 clone (한글 경로 문제 사라짐) |
+| MoE-CTS 학습 코드 | `C:/isaac/ext/go2_rl_robotlab` | 코드 | 공식 `wertyuilife2/go2_rl_robotlab @28b4516d` · 추적 파일 무수정 (git status: `_eval/` · `_smoke/` 만 추적 밖) | `~/mai/projects/go2_rl_robotlab` (제안) | clone @28b4516d + 아래 추적 밖 폴더 복사 |
 | 우리 평가 · 분기 도구 | `go2_rl_robotlab/_eval/` (코드) | 코드는 작음 · 결과 `_eval/out` 74 GB | 추적 밖 | 같은 상대 경로 | 코드는 foothold-lab 사본 (`inbox/jay/20261008-546-design/eval-*/code/`) 과 대조 뒤 복사 |
 | 학습 기록 · 체크포인트 | `go2_rl_robotlab/logs/` | 2.3 GB | 아래 3 절 해시 | 같은 상대 경로 | NAS 경유 복사 · 해시 대조 |
 | 평가 결과 · 기록 영상 · CSV | `go2_rl_robotlab/_eval/out/` | **74 GB** | 결함본은 `_bad/` 에 따로 | NAS 우선 · 필요한 것만 Linux | **NAS 백업 먼저** (지금 백업 없음) |
@@ -22,6 +22,8 @@
 | 공개 체크포인트 | `C:/isaac/checkpoints/` | 미확인 (나눠 안 잼) | NVIDIA 공식 Go2 rough · RoboGauge 4 종 (8/12) | 같은 이름 | 복사 · 해시 대조 |
 | RoboGauge | `C:/isaac/ext/RoboGauge` (10/13 밤 하위 작업이 옮기는 중) | 미확인 | v1.1.9 add2c7e | 같은 상대 경로 | clone 같은 커밋 |
 | v1 · v2 모델 | foothold-lab `models/` | git | v2 sha256 `e5c21321…` | 저장소와 함께 | clone 으로 따라옴 |
+
+자리 이름은 정본 AGENTS.md 4 절 (D-029) 의 `mai/` 아래 `projects/<이름>` 을 따른다 (lead 가 읽어 확인 · super 런북 429d158 의 0-4b 제안과 같음). go2_rl_robotlab 안의 `logs/` · `_eval/` · `_runs/` 는 그 아래 같은 상대 경로로 둔다.
 
 C:/isaac 전체 161 GB (확인됨). 10/12 아침 lead 가 말한 「약 23 GB」 는 낡은 값이다. 오늘 기록 영상 · CSV 로 `_eval/out` 만 74 GB 가 됐다.
 
