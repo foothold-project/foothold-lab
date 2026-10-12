@@ -180,17 +180,26 @@ famorder = list(TER)
 V = [x for x in V if x['ck'] == CK]
 V.sort(key=lambda x: (x['band'], famorder.index(x['fam']), CELLS.index(x['cell']), x['ck'], x['run'], x['ep']))
 
+def _sha(p):
+    import hashlib
+    return hashlib.sha256(open(p, 'rb').read()).hexdigest()
+
+
+COPIED = []
 if 'novideo' not in ONLY:
     for x in V:
         if x['bad']:
             continue
         dst = os.path.join(SITE, x['v'])
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if not os.path.exists(dst) or os.path.getsize(dst) != os.path.getsize(x['src']):
+        # 크기만 보면 같은 이름으로 다시 만든 영상을 놓친다 (10/12 재렌더 24 편). 내용으로 비교한다
+        fresh = not os.path.exists(dst) or os.path.getsize(dst) != os.path.getsize(x['src']) or _sha(dst) != _sha(x['src'])
+        if fresh:
             shutil.copy2(x['src'], dst)
+            COPIED.append(x['v'])
         pst = os.path.join(SITE, x['p'])
         os.makedirs(os.path.dirname(pst), exist_ok=True)
-        if not os.path.exists(pst):
+        if fresh or not os.path.exists(pst):   # 영상이 바뀌면 포스터도 새로 뜬다
             # 출발 직후보다 걷는 중인 장면이 낫다. stop 은 멈춘 뒤를 보여 준다
             ss = 7.5 if x['cell'] == 'stop03' else 4.0
             dur = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', x['src']],
@@ -211,4 +220,6 @@ os.makedirs(SITE, exist_ok=True)
 open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8', newline='\n').write(html)
 tot = sum(x['mb'] for x in V)
 print(json.dumps({'cells': len(M), 'groups': len(G), 'curve_pts': len(C['E1']['it']), 'videos': len(V), 'video_MB': round(tot, 1),
-                  'html_KB': round(len(html.encode('utf-8')) / 1024, 1)}, ensure_ascii=False))
+                  'copied': len(COPIED), 'html_KB': round(len(html.encode('utf-8')) / 1024, 1)}, ensure_ascii=False))
+for v in COPIED:
+    print('copied', v)

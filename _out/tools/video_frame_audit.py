@@ -2,10 +2,13 @@
 """영상 프레임 전수 검사 (10/12 E1·E2 HUD 영상 24 편 결함을 잡은 것)
 
 원래 이름 audit_frames.py. 사용: python video_frame_audit.py [경로 일부 ...] (WEB 상수의 폴더를 훑는다)
+환경 변수: AUDIT_WEB (훑을 폴더) · AUDIT_OUT (결과 json) · AUDIT_FPS (기본 all = 전 프레임 · 숫자면 그 fps 로 표본)
 
 웹 사본 영상 전수 검사: 카메라가 가려져 의미 없는 프레임 · 검은 프레임 · 단색(파란) 프레임.
 
-3D 화면 영역만 본다 (위 HUD 판 · 아래 판정 띠 제외). 4 fps 로 표본.
+3D 화면 영역만 본다 (위 HUD 판 · 아래 판정 띠 제외). 기본은 전 프레임.
+4 fps 표본은 검은 프레임 한 장을 놓친다 (10/12 하위 작업이 깨 보고 확인 · 1/501 이 4 fps 에서 0).
+전 프레임 판은 옛 결함 24 편을 24/24 잡았고, 바꾼 332 편 282,190 프레임에서 0 이었다 (10/12 lead).
 판정 (프레임):
   dark    : 영역 평균 밝기 < 20
   flat    : 영역 밝기 표준편차 < 6 (단색으로 덮임)
@@ -19,13 +22,23 @@ import sys
 
 import numpy as np
 
-WEB = 'C:/isaac/ext/go2_rl_robotlab/_eval/out/web'
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'audit_frames.json')
-W, H, FPS = 160, 90, 4
+WEB = os.environ.get('AUDIT_WEB', 'C:/isaac/ext/go2_rl_robotlab/_eval/out/web')
+OUT = os.environ.get('AUDIT_OUT', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'audit_frames.json'))
+W, H = 160, 90
+SAMPLE = os.environ.get('AUDIT_FPS', 'all')
 Y0, Y1 = 28, 77          # 720p 기준 y 224 ~ 616 (HUD 판 아래 · 판정 띠 위)
 
+
+def src_fps(path):
+    r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate',
+                        '-of', 'csv=p=0', path], capture_output=True, text=True, check=True).stdout.strip()
+    a, b = r.split('/')
+    return float(a) / float(b)
+
+
 def frames(path):
-    p = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-vf', f'fps={FPS},scale={W}:{H}',
+    vf = f'scale={W}:{H}' if SAMPLE == 'all' else f'fps={SAMPLE},scale={W}:{H}'
+    p = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-vf', vf,
                         '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], capture_output=True, check=True)
     a = np.frombuffer(p.stdout, np.uint8)
     return a.reshape(-1, H, W, 3)
@@ -44,6 +57,7 @@ for i, f in enumerate(files):
     blue = ((b > r + 25) & (b > g + 10)).mean(axis=(1, 2))
     bad = (mean < 20) | (std < 6) | (blue > 0.35)
     idx = np.nonzero(bad)[0]
+    FPS = src_fps(f) if SAMPLE == 'all' else float(SAMPLE)
     spans = []
     for k in idx:
         t = k / FPS
