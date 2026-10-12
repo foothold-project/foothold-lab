@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 운영 · Linux 이전 매니페스트
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20 (드라이버 칸 23:35 · 자리 칸 23:57 고침)
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20 (드라이버 칸 23:35 · 자리 칸 23:57 고침 · 경로 변수 00:49)
 > 근거: 팀장 10/12 23:00 「리눅스 넘어가기 위한 매니페스트 정리 시작 · 아직 확정 아님」 · 이 기계 실측 (아래 「Windows 실측」 칸) · 시스템 런북 mai-os `os/linux-runbook.md` (super · 6c37e44 · vfxpedia/mai-os#34)
 > 요지: FOOTHOLD RL (트랙 A 시뮬) 을 Ubuntu 로 옮겨 같은 숫자를 다시 낼 수 있게, 코드 · 환경 · 체크포인트 · 데이터 · 실행 명령 · 다시 세울 기준선을 한곳에 적는다. 시스템 셋업은 super 런북이 맡고 여기는 RL 만 적는다
 > 상태: 초안 (확정 아님 · 팀장 · super · pipeline 검토 전) · 설치 시기는 팀장이 정함
@@ -28,6 +28,9 @@
 - go2_rl_robotlab (공식 @28b4516d · 추적 파일 무수정) 은 Isaac Lab 과 같은 **외부 의존 코드**다. 어디에 둘지는 팀장 결정 (Windows 는 `C:/isaac/ext/` 아래).
 - 그 안의 추적 밖 `_eval/` (우리 평가 · 분기 도구) 의 **정본은 foothold-lab** 이어야 한다. 지금은 실행 사본이 `C:/isaac/ext/go2_rl_robotlab/_eval/` 에 있고 foothold-lab 에는 `inbox/jay/20261008-546-design/eval-*/code/` 사본만 있다. Linux 로 옮길 때 foothold-lab 쪽을 정본으로 세우고 실행 자리는 그것을 가리키게 하는 방법은 팀장과 정한다.
 - `logs/` (체크포인트) · `_eval/out/` (74 GB) 은 git 이 아니라 NAS 백업 대상 (AGENTS.md 4 절 「큰 산출물은 NAS · 저장소에는 목록과 해시만」).
+- **경로 변수 두 개 (super 런북 49a0333 와 맞춤):** `FOOTHOLD_GO2_RL_ROOT` (공식 go2_rl_robotlab 자리 · Linux 제안 `~/isaac/ext/go2_rl_robotlab` · Windows `C:/isaac/ext/go2_rl_robotlab`) · `FOOTHOLD_DATA` (체크포인트 · 결과 자리 · Linux 제안 `~/data/foothold` · NAS 가 보존 정본). 두 OS 모두 같은 이름의 사용자 환경 변수로 두고, lab 으로 옮긴 코드는 이 둘만 읽는다. 값은 팀장 결정 대기.
+- **이전 전 조건:** lab 밖 코드 191 개를 `inbox/jay/20261013-eval-code-snapshot/` 에 sha256 과 함께 커밋했다 (488f154a). 설치 직전에 다시 대조해 바뀐 것만 새로 커밋한다.
+- **이전 후 관문:** 비 ASCII 경로 확인 (런북 6-1) → 같은 숫자 시험 (5 절 2 단계 · E1 model_20000 · 평지 stop03 · 100 판 · noise 켬 · 시드 1000 · `traj.npz` sha256 이 이전 전과 같음) 통과 전에는 학습을 다시 시작하지 않는다 (런북 8 절 11).
 
 C:/isaac 전체 161 GB (확인됨). 10/12 아침 lead 가 말한 「약 23 GB」 는 낡은 값이다. 오늘 기록 영상 · CSV 로 `_eval/out` 만 74 GB 가 됐다.
 
