@@ -20,10 +20,15 @@
 #
 # 훅은 stdin 으로 JSON 을 받는다. 실패해도 세션을 막지 않게 «항상 0» 으로 끝낸다.
 
-LAB="C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab"
+# 자리는 기기에 묶지 않는다 (2026-10-09). 이 훅은 저장소의 .claude/settings.json 에 걸려
+# 이 프로젝트 세션에서만 돈다. 저장소는 Claude Code 가 주는 CLAUDE_PROJECT_DIR, 없으면 이 파일 자리로 찾는다.
+# 학습 로그 자리는 기기마다 다르므로 환경 변수로 바꿀 수 있고, 없으면 지금까지의 기본값을 쓴다.
+LAB="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)}"
 OUT="$LAB/_out/loop/HANDOFF-precompact.md"
-RUNS="C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia"
-LOGS="C:/isaac/IsaacLab/logs/gap_run_logs"
+RUNS="${FOOTHOLD_RUNS_DIR:-C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia}"
+LOGS="${FOOTHOLD_RUN_LOGS_DIR:-C:/isaac/IsaacLab/logs/gap_run_logs}"
+# PowerShell 이 없는 기기(Linux · macOS)에서는 그 줄만 건너뛴다.
+PS=$(command -v powershell 2>/dev/null || command -v pwsh 2>/dev/null)
 
 IN=$(cat 2>/dev/null)
 TRIG=$(echo "$IN" | grep -oE '"(trigger|matcher|reason)"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1)
@@ -36,13 +41,13 @@ TRIG=$(echo "$IN" | grep -oE '"(trigger|matcher|reason)"[[:space:]]*:[[:space:]]
   echo "> 이 파일은 PreCompact 훅이 씁니다. 압축 뒤 요약본만 받았으면 이것을 먼저 읽으십시오."
   echo
   echo '## 도는 학습'
-  powershell -NoProfile -Command \
+  [ -n "$PS" ] && "$PS" -NoProfile -Command \
     "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match 'run_name' } | ForEach-Object { if (\$_.CommandLine -match 'run_name +([^ ]+)') { '- ' + \$matches[1] } }" \
     2>/dev/null | tr -d '\r'
   echo
-  echo '## 판마다 어디까지'
+  echo '## 런마다 어디까지'
   echo
-  echo '| 판 | 마지막 iteration | 마지막 체크포인트 | 완주 | 오류 |'
+  echo '| 런 | 마지막 iteration | 마지막 체크포인트 | 완주 | 오류 |'
   echo '|---|---|---|---|---|'
   for L in $(ls -t "$LOGS"/*.log 2>/dev/null | head -12); do
     n=$(basename "$L" .log | sed 's/^[0-9]\{8\}_[0-9]\{6\}_//')
@@ -55,7 +60,7 @@ TRIG=$(echo "$IN" | grep -oE '"(trigger|matcher|reason)"[[:space:]]*:[[:space:]]
   done
   echo
   echo '## 예약 작업'
-  powershell -NoProfile -Command \
+  [ -n "$PS" ] && "$PS" -NoProfile -Command \
     "Get-ScheduledTask -TaskName 'FOOTHOLD-*' -EA SilentlyContinue | ForEach-Object { '- ' + \$_.TaskName + ' : ' + \$_.State }" \
     2>/dev/null | tr -d '\r'
   echo

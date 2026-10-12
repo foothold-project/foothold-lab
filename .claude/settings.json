@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/_out/loop/precompact_handoff.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
