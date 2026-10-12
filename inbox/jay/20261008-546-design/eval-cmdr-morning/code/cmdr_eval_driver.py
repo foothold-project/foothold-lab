@@ -26,6 +26,9 @@
 # again before stamping, positive-reaction diagnostics recorded as warnings (not invalid). Every run uses
 # --physx_small_buffers (GPU 1 headroom; same for all five models); test 2b checks it is bitwise equal to the default
 # buffers on the flat training terrain. q_eval.py is pinned only for the known-answer tests.
+# v3.1 (04:30): Isaac Kit exited 0 after the AssertionError in test 3 (wrong train_yaml refused, exit 0). A Python
+# traceback in the run log now counts as error 1 in guarded() and as invalid in validate(); test 3 also requires that
+# no cells.json / traj.npz was written.
 # Usage: python cmdr_eval_driver.py [--until "2026-10-13 14:00"]
 import argparse
 import csv
@@ -147,6 +150,17 @@ def ready(m):
     return True
 
 
+def py_traceback(name):
+    """True if out/<name>.log holds a Python traceback. Isaac Kit can exit 0 after an uncaught exception (04:21 test 3:
+    AssertionError in the log, exit 0), so the exit code alone does not tell a refused or crashed run from a good one.
+    Checked on the 586 logs in out/ at 04:30: the 5 with a traceback are all failed runs, none of the others has one."""
+    try:
+        with open(os.path.join(OUT, f"{name}.log"), encoding="utf-8", errors="replace") as f:
+            return "Traceback (most recent call last)" in f.read()
+    except FileNotFoundError:
+        return False
+
+
 def guarded(name, cmd, tries=4, wait_s=300):
     rc = None
     for k in range(1, tries + 1):
@@ -164,6 +178,9 @@ def guarded(name, cmd, tries=4, wait_s=300):
         rc = subprocess.run([PY, "gpu_guard.py", "--gpu", "1", "--min_free_mib", "4096", "--log", f"out/{name}.log",
                              "--summary", f"out/{name}.guard.json", "--"] + cmd, cwd=HERE, env=ENV).returncode
         say(f"RUN {name} try {k} EXIT {rc} {time.time() - t0:.0f}s")
+        if rc == 0 and py_traceback(name):
+            say(f"  {name}: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)")
+            rc = 1
         if rc == 0:
             return 0, k
         if rc == 99:
@@ -202,6 +219,8 @@ def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_
         g = json.load(open(os.path.join(OUT, f"{tag}.guard.json"), encoding="utf-8"))
         if g.get("exit_code") != 0 or g.get("stopped_by_guard"):
             return f"guard exit {g.get('exit_code')} stopped {g.get('stopped_by_guard')}"
+        if py_traceback(tag):
+            return "Python Traceback in log"
         m = json.load(open(os.path.join(d, "meta.json"), encoding="utf-8"))
         c = json.load(open(os.path.join(d, "cells.json"), encoding="utf-8"))
         rows = list(csv.DictReader(open(os.path.join(d, "episodes.csv"), encoding="utf-8")))
@@ -343,8 +362,9 @@ def tests(P):
         t = f"cq_test_{pin8}_wrong_yaml_{name}"
         rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000, train_yaml=bad), tries=1)
         log = open(os.path.join(OUT, f"{t}.log"), encoding="utf-8", errors="replace").read()
-        refused = rc != 0 and "train_yaml is not the parent run's" in log
-        LOG["tests"][f"wrong_yaml_{name}"] = {"exit": rc, "refused": refused}
+        wrote = os.path.exists(os.path.join(OUT, t, "cells.json")) or os.path.exists(os.path.join(OUT, t, "traj.npz"))
+        refused = rc != 0 and "AssertionError: train_yaml is not the parent run's" in log and not wrote
+        LOG["tests"][f"wrong_yaml_{name}"] = {"exit": rc, "refused": refused, "wrote_result": wrote}
         save()
         if not refused:
             return False

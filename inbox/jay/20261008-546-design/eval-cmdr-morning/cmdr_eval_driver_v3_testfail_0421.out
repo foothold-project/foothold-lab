@@ -1,0 +1,13 @@
+00:19:32 pins 11 files · q_eval_cmdr 24aeaf6358ef7909
+04:13:52 unseen driver not running: GPU 1 is ours
+GUARD rc=0 stopped=False min_free=5905 MiB max_used=10397 MiB samples=396 wall=79.4s
+04:17:12 RUN cq_test_8d384fcb_smoke try 1 EXIT 0 80s
+GUARD rc=0 stopped=False min_free=6526 MiB max_used=9776 MiB samples=250 wall=50.1s
+04:18:02 RUN cq_test_8d384fcb_ka_orig try 1 EXIT 0 50s
+GUARD rc=0 stopped=False min_free=6518 MiB max_used=9784 MiB samples=258 wall=51.7s
+04:18:54 RUN cq_test_8d384fcb_ka_copy try 1 EXIT 0 52s
+GUARD rc=0 stopped=False min_free=4273 MiB max_used=12029 MiB samples=621 wall=126.1s
+04:21:01 RUN cq_test_8d384fcb_ka_copy_default_buffers try 1 EXIT 0 126s
+GUARD rc=0 stopped=False min_free=9341 MiB max_used=6961 MiB samples=57 wall=11.4s
+04:21:13 RUN cq_test_8d384fcb_wrong_yaml_other_run try 1 EXIT 0 12s
+04:21:13 TESTS FAILED {'smoke': 'ok', 'q_eval_py_sha256': '0dc6a37605d57ca63788aff9b2cbbd4131536a2ff0312fe315d0fce2714c5fcb', 'known_answer': {'orig_vs_copy_same': True}, 'small_buffers_vs_default_same': True, 'wrong_yaml_other_run': {'exit': 0, 'refused': False}}
