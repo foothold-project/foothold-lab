@@ -74,4 +74,15 @@ def build(post_path=None, summary_path=None, bundle_path=None):
         else:
             st.append(f"<li>{u}: 두 갈래가 다 재지지 않아 아직 비교 없음.</li>")
     t["cmdr_status"] = "".join(st)
+    # 안 고친 갈래 (E1 20,000 에서 넓힌 범위 그대로 이어 학습) 의 목표 칸 · 관찰만 (원인 주장 없음)
+    tg = post["targets"]
+    def r_(c, m):
+        v = tg.get(c, {}).get(m)
+        return f"{100 * v['rate']:.0f} %" if v else "아직"
+    if "off22000" in tg.get("stop03", {}):
+        t["cmdr_offarm"] = (f" 지금까지 잰 값: 평지 · noise 켬 걷다 멈춤은 부모 {r_('stop03', 'p20000')} → 22,000 {r_('stop03', 'off22000')} → 24,000 {r_('stop03', 'off24000')}, "
+                            f"앞 0.1 m/s 는 {r_('fwd01', 'p20000')} → {r_('fwd01', 'off22000')} → {r_('fwd01', 'off24000')} 입니다 (체크포인트마다 500 판 · {asof} 집계). "
+                            f"이 한 갈래에서는 이어 학습만으로 멈춤이 돌아오지 않았습니다. 학습 시드 하나의 관찰이고 원인은 말하지 않습니다.")
+    else:
+        t["cmdr_offarm"] = ""
     return t
