@@ -42,8 +42,8 @@ DOCS = [
     ('deliverables/midterm/generalization-report.md', 'generalization-report',
      'MVP 중간발표 · 9월 30일'),
     ('deliverables/midterm/twin-render.md', 'twin-render', 'MVP 중간발표 · 9월 30일'),
-    ('deliverables/final/nav-report.md', 'nav-report', 'NAV 실기항법 · 11월 7일'),
-    ('deliverables/final/final-report.md', 'final-report', 'FINAL 최종발표 · 12월 11일'),
+    ('deliverables/final/nav-report.md', 'nav-report', 'NAV 실기항법 · 11월 30일'),
+    ('deliverables/final/final-report.md', 'final-report', 'FINAL 최종발표 · 12월 7일'),
     ('deliverables/logs/progress-log.md', 'progress-log', '진행 기록'),
     ('deliverables/logs/mentoring-log.md', 'mentoring-log', '진행 기록'),
 ]
