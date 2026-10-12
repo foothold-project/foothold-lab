@@ -218,7 +218,11 @@ if MODE == 'videos':
 html = tpl.replace('/*__DATA__*/', 'const D = ' + json.dumps(data, ensure_ascii=False, separators=(',', ':')) + ';')
 # 4판: 본문의 %%이름%% 자리를 원자료에서 계산한 값으로 채운다 (facts4.py · 손으로 쓴 숫자 없음)
 import facts4
-html = facts4.fill(html, facts4.build(page, G))
+T4 = facts4.build(page, G)
+# 5판: 밤사이 · 처음 보는 지형 · CMD-R 절의 자리도 원자료에서 채운다 (facts5_*.py)
+import facts5_night, facts5_unseen, facts5_cmdr
+T4.update(facts5_night.build()); T4.update(facts5_unseen.build()[0]); T4.update(facts5_cmdr.build())
+html = facts4.fill(html, T4)
 os.makedirs(SITE, exist_ok=True)
 open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8', newline='\n').write(html)
 tot = sum(x['mb'] for x in V)

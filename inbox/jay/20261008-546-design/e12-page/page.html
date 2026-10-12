@@ -183,6 +183,24 @@ dl.glossary dd{margin:0;color:var(--ink-2)}
 .netsvg .pt{font-family:var(--sans);font-size:14px;font-weight:600}
 #qa .qa{grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:4px 40px}
 .quad{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+/* 5판 */
+.vmode #night,.vmode #unseen,.vmode #rg,.vmode #cmdr,.vmode #next,.vmode #app{display:none}
+.urow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:10px 0 14px}
+@media (max-width:1100px){.urow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.urow{grid-template-columns:1fr}}
+.sub2{color:var(--ink-3);font-size:12px;font-weight:400}
+table.def.unseen td{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.def.unseen th[scope="row"]{white-space:nowrap;color:var(--ink);font-size:13.5px;font-weight:500}
+table.def.unseen th[scope="row"] .sub2{display:block}
+table.def.night td:first-child{font-family:var(--sans);font-weight:600;font-size:14px;white-space:nowrap}
+table.def.night td:nth-child(3){color:var(--ink-2);font-size:13.5px;min-width:15em}
+table.def.night td:nth-child(4){font-size:13.5px;min-width:12em}
+table.def.night{min-width:900px}
+.split .tbl table.def.wrap td:not(:first-child){white-space:normal}
+.split .tbl table.def.wrap td:first-child,.split .tbl table.def.wrap th{white-space:nowrap}
+.urow .tile .tag{flex:none}
+.urow .tile .th{flex-wrap:wrap}
+.superseded{margin:6px 0 10px;padding:8px 12px;background:var(--note-soft);color:var(--note-ink);border-radius:6px;font-size:13.5px}
 @media (max-width:1100px){.quad{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media (max-width:720px){.quad{grid-template-columns:minmax(0,1fr)!important}}
 .split table.def td:not(:first-child),.split table.def th{white-space:normal}
@@ -279,19 +297,19 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 <div class="wrap">
 
 <header class="top">
-  <div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-12</div>
+  <div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-13 아침</div>
   <div class="headgrid">
     <div>
       <h1>E1 · E2 시뮬 평가 <span class="seed">MoE-CTS student · 시드 42 / 43</span></h1>
-      <p class="lead">공개된 최신 보행 정책 코드 (MoE-CTS) 를 우리 컴퓨터에서 시드만 바꿔 두 번 학습하고, 같은 시험지로 쟀습니다. 이 정책은 <b>지형을 보지 않고 몸 감각만으로</b> 걷습니다. 걷기 명령은 대부분 넘고, 멈추기가 약점이며, 마지막 500 iteration 에서 두 시드 모두 나빠졌습니다. 결론이 아니라 <b>중간 정리</b> 입니다.</p>
-      <div class="keys"><span><span class="dot" style="background:var(--e1)"></span>E1 · 시드 42</span><span><span class="dot" style="background:var(--e2)"></span>E2 · 시드 43</span><span>체크포인트 <span class="num">model_20000</span> = 명령 상한 0.5 m/s 로 학습한 끝 · <span class="num">model_20499</span> = 상한을 1.0 m/s 로 넓힌 뒤 500 iteration</span></div>
+      <p class="lead">공개된 최신 보행 정책 코드 (MoE-CTS) 를 우리 컴퓨터에서 시드만 바꿔 두 번 학습하고, 같은 시험지로 쟀습니다. 이 정책은 <b>지형을 보지 않고 몸 감각만으로</b> 걷습니다. 걷기 명령은 대부분 넘고, 멈추기가 약점이며, 마지막 500 iteration 에서 두 시드 모두 나빠졌습니다. 결론이 아니라 <b>중간 정리</b> 입니다. 5판은 밤사이 결과 (v2 의 미경험 지형 10 종 · 다른 물리 엔진 시험 · CMD-R 진행) 와 다음 실험 계획을 위에 더했습니다.</p>
+      <div class="keys"><span><span class="dot" style="background:var(--e1)"></span>E1 · 시드 42</span><span><span class="dot" style="background:var(--e2)"></span>E2 · 시드 43</span><span>체크포인트 <span class="num">model_20000</span> = 대부분 명령 상한 0.5 m/s 로 학습 · 상한을 1.0 m/s 로 넓힌 첫 학습 한 번 포함 · <span class="num">model_20499</span> = 그 뒤 499 iteration</span></div>
     </div>
     <dl class="meta">
       <dt>분류</dt><dd>A/정책학습 · 평가 · E1 대 E2</dd>
-      <dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12</dd>
-      <dt>근거</dt><dd>평가 원자료 <code>episodes.csv</code> (칸마다 100 판) · 학습 기록 <code>E1/E2_curves.csv</code> · 학습 때 저장된 설정 <code>env.yaml</code> · 코드 <code>go2_rl_robotlab @28b4516d</code> · v2 모델 카드 <code>models/foothold-v2.json</code>. 이 페이지의 숫자는 생성 스크립트가 원자료에서 읽어 넣었습니다</dd>
-      <dt>요지</dt><dd>걷기 통과 · 멈추기 약점 · 20499 하락은 명령 범위를 넓힌 직후 · 지형을 보지 않아 gap · 징검다리는 아직 못 배움</dd>
-      <dt>상태</dt><dd>4판 (10/12 밤) · 중간 정리 · v2 와 비교 · 쉬운 설명 추가 · 판정 기준 (Q) 은 lead 임시 조건이며 팀장 확정 전 · 학습은 Linux 이전까지 멈춤</dd>
+      <dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12 · 5판 2026-10-13</dd>
+      <dt>근거</dt><dd>평가 원자료 <code>episodes.csv</code> (칸마다 100 판) · 학습 기록 <code>E1/E2_curves.csv</code> · 학습 때 저장된 설정 <code>env.yaml</code> · 코드 <code>go2_rl_robotlab @28b4516d</code> · v2 모델 카드 <code>models/foothold-v2.json</code> · 미경험 지형 <code>un_*</code> 100 실행 · RoboGauge 원출력 7 개 · CMD-R 학습 · 평가 로그 · ASTRA 검증 7 ~ 14. 이 페이지의 숫자는 생성 스크립트가 원자료에서 읽어 넣었습니다</dd>
+      <dt>요지</dt><dd>걷기 통과 · 멈추기 약점 · 20499 는 명령 범위를 넓힌 직후 하락 (원인 미확인) · v2 미경험 지형에서 gap · 징검다리는 기준선에 거의 · 전혀 못 닿음 (원인 미확인) · 다른 엔진 시험은 20499 가 높아 두 시험이 다른 능력을 잼 · 다음은 같은 시험지부터</dd>
+      <dt>상태</dt><dd>5판 (10/13 아침) · 밤사이 결과 · CMD-R 은 진행 중 (최종 24,000 비교는 낮에 갱신) · 판정 기준 (Q) 은 lead 임시 조건 · ASTRA 14 로 미경험 지형 해석 고침</dd>
     </dl>
   </div>
 </header>
@@ -309,18 +327,267 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
       <ul class="plain">
         <li><b>걷기 명령은 대부분 넘습니다.</b> 전진 · 후진 · 옆걸음 · 제자리 회전의 칸 대부분이 통과율 90 % 이상입니다.</li>
         <li><b>멈추기가 약점입니다.</b> 0.3 m/s 로 걷다 멈추라고 하면 4 cm 안에서 서지만, 1 초 동안 완전히 가만히 있지를 못합니다. 센서 noise 를 켜면 거의 다 실패합니다 (<a href="#noise">아래</a>).</li>
-        <li><b>20,499 가 20,000 보다 나쁜 것은 명령 범위를 두 배로 넓힌 직후이기 때문으로 보입니다</b> (추정 · <a href="#drop">아래</a>).</li>
+        <li><b>20,499 는 20,000 보다 우리 시험에서 나쁩니다.</b> 명령 범위를 두 배로 넓힌 직후에 나빠졌지만, 범위를 넓힌 것이 원인인지는 아직 모릅니다 (<a href="#drop">아래</a>). 다른 물리 엔진 시험에서는 반대로 20,499 가 높습니다 (<a href="#rg">위</a>).</li>
         <li><b>느리게 걸으라고 하면 걸음 모양이 바뀝니다.</b> 앞발 둘은 땅에 붙이고 뒷발만 디딥니다 (<a href="#gait">아래</a>).</li>
-        <li><b>gap · 징검다리는 이 실험으로는 못 배웁니다.</b> 배포하는 student 가 지형을 보지 않고, 학습 지형에 그 둘이 0 % 입니다 (<a href="#gap">아래</a>).</li>
+        <li><b>gap · 징검다리는 이 실험으로는 못 배웁니다.</b> 배포하는 student 가 지형을 보지 않고, 학습 지형에 그 둘이 0 % 입니다. v2 의 미경험 지형 시험에서도 0.5 m/s 이하 gap 기준선 도달 0 ~ 4 % · 징검다리 0 % 였습니다 (<a href="#unseen">위</a>).</li>
       </ul>
     </div>
     <div>
       <h3>아직 모르는 것 · 정할 것</h3>
       <ul class="plain">
-        <li>20,499 의 하락이 학습을 더 하면 회복되는지. 저장소 기본 학습 길이는 300,000 iteration 인데 우리는 20,500 에서 멈췄습니다.</li>
+        <li>20,499 의 하락이 학습을 더 하면 회복되는지. 밤에 E1 20,000 에서 4,000 iteration 이어 학습한 CMD-R 「안 고친」 갈래가 첫 관찰입니다 (<a href="#cmdr">위</a>).</li>
         <li>판정 기준 (팀장 결정): 경계 (기준 ±10 %) 를 통과로 셀지 · 저속 명령은 비율로 잴지 · noise 켬을 주 조건으로 할지.</li>
-        <li>다음 학습 순서 (팀장 결정): gap 을 학습 지형에 넣기 → student 에게 지형 지도 주기 → 마지막에 AME-2. Linux 로 옮긴 뒤 돌립니다.</li>
+        <li>다음 순서 (팀장 확인 전): 같은 시험지 → Linux 이전 → 「지도를 주면 달라지나」 한 시드 예비 (<a href="#next">위</a>).</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<section id="night">
+  <h2>밤사이 한 일 (10/12 23:00 ~ 10/13 아침)</h2>
+  <p class="prose">팀장 지시 (10/12 23:00): 자는 동안에도 GPU 두 장이 계속 돌고, 다른 세션 (ASTRA) 의 검증을 받으며 아침까지 이어 간다. 아래 시각은 로그 · 커밋에 찍힌 실제 시각입니다. 「≈」 는 진행 속도로 계산한 예상입니다.</p>
+  <div class="tbl"><table class="def night">
+    <thead><tr><th>일</th><th>쉽게 한 줄</th><th>어디서 · 언제</th><th>지금</th></tr></thead>
+    <tbody>
+      <tr><td>CMD-R 쌍 학습</td><td>학습 중 다시 시작할 때 명령이 「빠른 대각선」 으로 치우치는 코드 문제를 고치면 멈추기 · 저속이 나아지는지, 고친 갈래와 안 고친 갈래를 같은 조건으로 4,000 iteration 씩 더 학습합니다</td><td>GPU 0 · 23:13 시작 · 안 고친 갈래 끝 ≈ 05:20 · 고친 갈래 끝 ≈ 11:30</td><td>%%night_train%%</td></tr>
+      <tr><td>미경험 지형 평가</td><td>v2 가 「미경험 지형」 시험에 쓰던 10 종 (둘은 비슷한 종류를 학습함) 에 E1 · E2 를 올려 어디서 깨지는지 봅니다</td><td>GPU 1 · 평가 23:25 ~ 02:02 · 영상 ~ 04:10 · 보고 04:21</td><td>끝 · <a href="#unseen">아래</a> · ASTRA 14 검증 (원표 재현 · 해석 고침)</td></tr>
+      <tr><td>RoboGauge</td><td>논문 저자가 쓴 다른 물리 엔진 (MuJoCo) 의 공개 시험으로 같은 정책을 다시 잽니다. 저자 정책의 점수도 같이 재서 시험이 제대로 도는지 확인합니다</td><td>CPU · 23:26 ~ 01:45</td><td>끝 · <a href="#rg">아래</a> · ASTRA 13 검증</td></tr>
+      <tr><td>CMD-R 평가</td><td>위 두 갈래의 체크포인트를 같은 시험지 · 같은 시드 · 같은 출발 상태로 잽니다</td><td>GPU 1 · 04:24 시작 · 14:00 까지</td><td>%%night_eval%%</td></tr>
+      <tr><td>구조 논의 · 조사</td><td>MARG · START 등 논문의 신경망 구조를 읽고, star 저장소와 인용을 끝까지 따라가 다음 실험 후보를 모았습니다</td><td>00:10 ~ 02:34</td><td>다음 실험 계획 · <a href="#next">아래</a></td></tr>
+      <tr><td>Go2 앱 분석</td><td>실제 Unitree Go 앱을 받아 지도를 깔끔하게 그리는 방법을 rea 로 뜯어봤습니다</td><td>ASTRA 10 · 00:39 ~ 02:01</td><td>끝 · <a href="#app">아래</a></td></tr>
+      <tr><td>ASTRA 검증</td><td>lead 의 계획 · 도구 · 숫자를 다른 세션이 반박합니다. 반박받은 곳은 고친 뒤에 진행했습니다</td><td>의뢰 7 (23:14) ~ 14 (04:29 ~ 04:55)</td><td>끝 · 다음 의뢰는 아침 페이지 문구</td></tr>
+      <tr><td>Linux 이전 준비</td><td>목 10/15 마감 · 토 10/17 마지노선. 경로 · 드라이버 · 코드 사본 · 같은 숫자 시험을 정했습니다</td><td>RL 매니페스트 (lead) · 설치 런북 (super)</td><td>NAS 백업 14:00 뒤 (super)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub">밤사이 고친 실수: 평가 드라이버의 시험 하나가 「거부되면 종료 코드가 0 이 아니다」 라고 가정했는데, Isaac 은 오류로 끝나도 0 을 돌려줬습니다 (04:21). 평가기는 제대로 거부했고, 판정을 로그의 오류 기록으로 바꿔 04:24 에 다시 시작했습니다 (v3.1). ASTRA 14 가 로그가 없거나 검사값이 NaN 이어도 통과하는 구멍을 더 찾아 04:58 에 고쳐 다시 띄웠습니다 (v3.2 · 이미 끝난 실행도 새 기준으로 다시 검사).</p>
+</section>
+
+<section id="unseen">
+  <h2>v2 의 「미경험 지형」 10 종에서는 어디서 깨지나</h2>
+  <div class="split w32">
+    <div>
+      <h3>표 · 0.5 m/s 와 1.0 m/s 전진</h3>
+      <div class="tbl"><table class="def unseen">
+        <thead>
+          <tr><th rowspan="2">지형</th><th colspan="4">0.5 m/s</th><th colspan="2">1.0 m/s</th></tr>
+          <tr><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th><th>E1 20,499</th><th>E2 20,499</th></tr>
+        </thead>
+        <tbody>
+%%un_rows%%
+        </tbody>
+      </table></div>
+      <p class="sub">칸마다 100 판 · 관측 noise 끔 · 난이도 0.5 · 20 초 · +x 앞으로. 칸 읽는 법: <b>굵은 숫자</b> = 몸통이 장애물 너머 기준선에 닿은 판 % · 괄호 = 그 가운데 20 초 끝까지 넘어지지 않은 판 % · 작은 숫자 = 20 초 생존 %. 기준선 도달은 「몸 중심이 선을 한 번 넘었다」 일 뿐, 네 발이 안정되게 건넜다는 뜻은 아닙니다. 1.0 m/s 는 범위를 넓힌 뒤인 20,499 만 쟀습니다.</p>
+    </div>
+    <div>
+      <h3>무엇을 했나</h3>
+      <p>v2 가 「미경험 지형」 시험에 쓰던 10 종을 lab 코드에서 그대로 불러와 (사본이 아니라 import) 네 체크포인트를 올렸습니다. 100 조건 · 1 만 판입니다. 이 가운데 물결 · 흩어진 장애물은 비슷한 종류를 학습 때 봤고, 나머지 8 종은 이번 정책의 학습 지형에 없었습니다 (gap · 징검다리는 설정에 이름만 있고 비율 0).</p>
+      <p>student 는 지형 높이를 입력으로 받지 않습니다. 몸의 회전 속도 · 기울기 · 명령 · 관절 각도와 속도 · 직전 행동을 10 걸음 쌓은 이력만 봅니다.</p>
+      <h3 class="h3gap">한눈에</h3>
+      <ul class="plain">
+        <li><b>나머지 7 종 (물결 · 흩어진 장애물 · 구덩이 · 레일 · 별 모양 다리 · 상자 · 기둥) 은 대부분 기준선에 닿고 끝까지 섭니다</b> (0.5 · 1.0 m/s 에서 91 ~ 100 %).</li>
+        <li><b>gap 은 0.5 m/s 이하에서 기준선 도달이 0 ~ 4 % 입니다.</b> 100 판 가운데 54 ~ 75 판이 넘어졌고 그 대부분 (50 ~ 73 판) 이 플랫폼 끝 (가운데에서 0.6 ~ 1.0 m) 에서였습니다. 넘어지지도 닿지도 않은 판은 모두 끝에서 멈춘 채 20 초를 버텼습니다.</li>
+        <li><b>1.0 m/s 에서는 gap 기준선 도달이 %%un_gap10_cross%% 이지만, 도달 뒤 20 초 끝까지 생존한 판은 %%un_gap10_alive%% 입니다.</b> 도달 뒤 넘어진 판 대부분은 1 초 안에 넘어졌고, E1 3 판 · E2 2 판은 6 초 넘게 더 걸어가 다음 타일의 틈 근처에서 넘어졌습니다. 1.0 m/s 에서는 실제로 틈에 다가가는 속도도 높았습니다 (중앙값 1.00 m/s · 0.5 m/s 명령은 0.53). 왜 더 멀리 닿는지는 아직 재지 않았습니다.</li>
+        <li><b>징검다리는 어느 조건에서도 기준선 (4 m) 에 닿지 못했습니다.</b> 모든 판이 넘어졌다는 뜻은 아닙니다 (생존 9 ~ 29 %).</li>
+        <li><b>떠 있는 고리는 이번 다섯 조건 모두에서 E2 의 기준선 도달이 E1 보다 높았습니다</b> (+12 ~ 21 %p). 다만 E2 는 일부 gap 조건의 생존 (−14 ~ −32 %p) 과 경로 유지에서 E1 보다 낮았습니다. 어느 한 정책이 모든 요구에서 앞선 결과는 아닙니다.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>gap 에서 실제로 일어난 일</h3>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 2.9 s</span></div><span class="why">플랫폼 끝 (0.71 m) 까지 걸어가 앞발이 틈으로 빠지며 몸통이 닿았습니다. 0.5 m/s 에서 가장 흔한 모습입니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존</span></div><span class="why">끝 (0.74 m) 에서 앞발을 틈에 걸친 채 20 초를 버텼습니다. 넘어지지는 않았지만 건너지도 못했습니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">닿고 끝까지 생존</span></div><span class="why">빠르게 다가가 틈을 넘고 끝까지 걸었습니다. 1.0 m/s 에서 이런 판이 100 판 중 14 판입니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 2.7 s</span></div><span class="why">몸 중심은 틈 건너편 기준선 (1.20 m) 까지 갔지만 0.2 초 뒤 몸이 돌며 넘어졌습니다. 표의 굵은 숫자에는 이런 판도 들어 있습니다.</span></div></article>
+  </div>
+  <p class="sub">기록으로 본 순서 (조건부): 하위 작업이 고른 감속 대표판 17 개 가운데 16 개에서 앞발 높이가 플랫폼보다 5 cm 넘게 낮아진 뒤 몸통의 전진 속도가 크게 줄었습니다. 틈에 들어간 뒤 지지를 잃는 모습과 맞지만, 대표판은 무작위로 뽑은 것이 아니고 (Q1 기준으로 고름) 몸이 앞으로 숙여진 각도도 판마다 다릅니다 (−9 ~ +40°).</p>
+  <h3>다른 지형</h3>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 징검다리 · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.9 s</span></div><span class="why">플랫폼을 벗어나자 발이 돌 사이 구멍에 빠졌습니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 떠 있는 고리 · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 4.5 s</span></div><span class="why">고리 가장자리 (0.73 m) 에서 넘어졌습니다. 왜 넘어지는지는 아직 재지 않았습니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 떠 있는 고리 · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">닿고 끝까지 생존</span></div><span class="why">같은 출발 자리에서 E2 20,000 은 고리를 넘어 끝까지 걸었습니다.</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · gap · 0.5 m/s</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">닿고 끝까지 생존 · 드묾</span></div><span class="why">0.5 m/s 에서 닿고 끝까지 선 단 한 판입니다 (E1 20,000 · 100 판 중 1).</span></div></article>
+  </div>
+  <p class="sub">영상은 기록을 다시 그린 것입니다 (물리를 다시 계산하지 않음). 하위 작업이 칸마다 「Q1 첫 통과 판 · 첫 미달 판」 으로 고른 144 편 가운데 lead 가 원자료로 다시 확인해 여덟 편을 골랐습니다. 144 편 모두 어둠 · 단색 · 푸른 화면 기준으로 모든 프레임을 검사해 위반 0 입니다 (이 검사로는 멈춘 화면 · 로봇 누락은 못 잡습니다). %%un_gallery_link%%</p>
+  <div class="split">
+    <div>
+      <h3>v2 와 견주면 (과거 별도 평가 참고)</h3>
+      <p>v2 카드에는 같은 10 종 · 난이도 0.5 에서 gap 이 0.5 · 1.0 m/s 모두 100 % 로 적혀 있습니다. 징검다리는 0.5 m/s 0 % · 1.0 m/s 0 ~ 24 % (지형 시드 다섯) 입니다. 이번 student 의 별도 평가에서는 0.5 m/s 이하 gap 기준선 도달이 0 ~ 4 % 였습니다.</p>
+      <p><b>이 차이의 원인은 확정할 수 없습니다.</b> v2 는 발밑 높이 지도를 볼 뿐 아니라 gap 을 학습했습니다 (전방위 gap 10 %). 출발 (±0.1 m · 방향 ±5°) · 판 길이 (0.5 m/s 12 초) · 판정 (3 m 진행 · 속도 오차 0.25 · 방향 · 생존) · 물리 모델 · 무작위화도 다릅니다. 그래서 두 숫자를 같은 성적 열에 놓지 않습니다.</p>
+    </div>
+    <div>
+      <h3>그래서</h3>
+      <p>이 결과만으로 「지도가 없어서 gap 을 못 건넌다」 고 할 수는 없습니다. 학습 경험 · 보상 · 제어도 함께 다르고, 이번 student 도 일부 판은 기준선에 닿았습니다. 그래서 다음 실험은 <b>같은 학습 조건에서 지도 입력만 바꿔 보는</b> 「이상적 지도 입력 비교」 이고, 그 앞에 v2 와 같은 시험지를 먼저 세웁니다 (<a href="#next">아래</a>). 앱의 집수정 개구부 · 문턱이 바로 이런 자리입니다 (<a href="#app">아래</a>).</p>
+      <p class="sub">조심할 것: 지형 시드 하나 · 평가 시드 하나 · 학습 시드 각각 하나의 결과입니다. 열 장의 타일은 같은 난이도에서 모양이 바뀌지 않는 지형이 많아 독립된 지형 열 개로 세지 않습니다. 0.3 m/s 는 표에서 뺐습니다. 명령대로면 20 초에 6 m 를 가서 기준선 (최대 4.5 m) 에 닿을 수 있지만, 실제로는 느리게 따라가거나 옆으로 새서 닿지 못한 판이 섞입니다. ASTRA 14 가 이 결과를 검증했습니다 (원표 재현 · 해석 고침).</p>
+    </div>
+  </div>
+</section>
+
+<section id="rg">
+  <h2>다른 물리 엔진 시험 (RoboGauge) 에서는 20,499 가 더 높습니다</h2>
+  <div class="split">
+    <div>
+      <h3>무엇을 했나</h3>
+      <p>RoboGauge 는 MoE-CTS 저자들이 쓴 공개 시험입니다 (v1.1.9). 정책을 Isaac 이 아닌 <b>MuJoCo</b> 로 옮겨 7 과제 × 바닥 마찰 9 가지에서 잽니다. 과제는 평지 · 물결 · 경사 앞으로 · 경사 뒤로 · 계단 앞으로 · 계단 뒤로 · 장애물입니다. 「뒤로」 는 같은 경사 · 계단을 <b>뒤로 걸어 오르는</b> 과제이고, 내려가기가 아닙니다 (하위 작업 보고의 「내리기」 를 ASTRA 13 이 바로잡음).</p>
+      <p>점수는 「얼마나 어려운 단계까지 갔나」 와 「그 단계에서 얼마나 깔끔하게 따랐나」 를 합친 값입니다. <b>성공률이 아닙니다.</b> 0.614 를 「61 % 성공」 으로 읽으면 틀립니다.</p>
+      <p>먼저 저자 정책을 같은 방법으로 쟀습니다. 저자 README 의 0.6953 에 대해 우리 실행은 <b>0.6954</b> 였습니다. 시험이 우리 기계에서 제대로 돈다는 확인입니다.</p>
+    </div>
+    <div>
+      <h3>점수 (RoboGauge 자체 총점)</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>정책</th><th>총점</th><th>20,000 → 20,499</th></tr></thead>
+        <tbody>
+          <tr><td>저자 정책 (symmetry v5.1 · 52k)</td><td class="num">0.6954</td><td></td></tr>
+          <tr><td>저자 정책 (176k)</td><td class="num">0.6970</td><td></td></tr>
+          <tr><td>E1 20,000 → 20,499</td><td class="num">0.5258 → 0.5867</td><td class="num">+0.061</td></tr>
+          <tr><td>E2 20,000 → 20,499</td><td class="num">0.5400 → 0.6141</td><td class="num">+0.074</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">원출력 yaml 의 benchmark_score (ASTRA 13 이 7 개 원출력을 직접 대조). 저자 정책은 52,000 · 176,000 iteration 의 가장 좋은 체크포인트이고 우리는 20,000 근처라 학습량이 다릅니다.</p>
+    </div>
+  </div>
+  <div class="split">
+    <div>
+      <h3>우리 시험에서는 반대입니다</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>평지 · 칸</th><th>E1 noise 끔</th><th>E2 noise 끔</th><th>E1 noise 켬</th><th>E2 noise 켬</th></tr></thead>
+        <tbody>
+          <tr><td>걷다 멈춤 (stop03)</td><td class="num">97 → 87</td><td class="num">99 → 86</td><td class="num">15 → 6</td><td class="num">20 → 13</td></tr>
+          <tr><td>앞 0.1 m/s (상대 오차)</td><td class="num">36 → 5</td><td class="num">26 → 3</td><td class="num">38 → 23</td><td class="num">43 → 35</td></tr>
+          <tr><td>앞 0.2 m/s (상대 오차)</td><td class="num">100 → 95</td><td class="num">93 → 73</td><td class="num">100 → 98</td><td class="num">100 → 96</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">통과율 % (20,000 → 20,499 · 칸마다 100 판). 앞 0.1 · 0.2 m/s 는 속도 오차가 명령의 절반 이하일 때 통과로 센 별도 판정입니다 (기본 판정은 0.1 m/s 에서 서 있어도 통과해 약점을 가립니다).</p>
+    </div>
+    <div>
+      <h3>그래서 어떻게 읽나</h3>
+      <p><b>두 시험이 서로 다른 능력을 잽니다.</b> RoboGauge 의 명령은 최대 1.0 m/s 와 대각선 반전 중심이고, 0.1 ~ 0.3 m/s 를 오래 따르거나 멈춰서 1 초를 버티는 칸이 따로 없습니다. 우리 시험은 바로 그 저속 · 멈춤을 잽니다. 20,499 에서 RoboGauge 의 도달 단계 · 평지 추종 점수는 올랐고, 우리 저속 · 멈춤 판정은 내려갔습니다. 여기까지가 관찰이고 원인은 아직 모릅니다.</p>
+      <ul class="plain">
+        <li><b>말할 수 없는 것:</b> 「명령 범위를 넓혀서 좋아졌다」 (범위를 그대로 두고 같은 만큼 더 학습한 대조가 없음) · 「처음 보는 gap · 징검다리를 잘 걷는다」 (RoboGauge 에 그 과제가 없음) · 「실기에서 더 안전하다」.</li>
+        <li><b>바로잡은 것:</b> model_20000 은 「넓히기 직전」 이 아니라 넓힌 첫 iteration 의 학습을 한 번 포함한 체크포인트입니다. 20,499 는 그 뒤 499 번 더 학습한 것입니다.</li>
+        <li>E1 은 장애물 과제가 0.738 → 0.630 으로 떨어졌고 E2 는 올랐습니다. 총점 하나로 「험지 전반 개선」 이라 하지 않습니다.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="cmdr">
+  <h2>밤 실험: 리셋 직후 명령 치우침을 고치면 멈추기 · 저속이 나아지나 (CMD-R)</h2>
+  <div class="split">
+    <div>
+      <h3>무엇을 의심했나</h3>
+      <p>학습 중 한 판이 시간이 다 돼 끝나면 로봇은 새 자리에서 다시 시작하고 새 명령을 받습니다. 그런데 이 코드에서는 리셋 순서 때문에 명령을 고르는 부분이 로봇을 「오래 걸은 로봇」 으로 착각합니다. 그래서 다시 시작한 직후 명령이 <b>앞 · 옆 최대 속도 쪽 (대각선 구석) 으로 치우칩니다</b>.</p>
+      <p>10/11 관문 실험에서 센 값입니다. 시간이 다 돼 다시 시작한 판 가운데 이 구석 명령을 받은 비율이 <b>%%cmdr_corner_off%% %</b> 였습니다. 고치면 <b>%%cmdr_corner_on%% %</b> 로 내려갑니다.</p>
+      <p class="sub">그래서: 정책이 「서 있기 · 천천히 걷기」 를 연습할 시간을 이 치우친 명령이 빼앗았을 수 있습니다. E1 · E2 가 멈추기 · 저속에 약한 까닭 후보 하나입니다 (추정).</p>
+      <h3 class="h3gap">어떻게 가렸나</h3>
+      <p>같은 부모 (E1 의 20,000 체크포인트) 에서 두 갈래로 4,000 iteration 씩 더 학습했습니다. 시드 (1042) · env 수 (8,192) · GPU 를 같게 두고, <b>「그대로」 (off)</b> 와 <b>「치우침만 고침」 (on)</b> 하나만 다르게 했습니다. 두 갈래의 시작 상태가 같은지는 학습 시작 때 저장한 값으로 대조했습니다 (%%cmdr_bundle_verdict%%).</p>
+      <p>평가는 다섯 체크포인트 (부모 20,000 · off · on 각각 22,000 · 24,000) 를 같은 시험지 · 같은 시드 · 같은 출발 상태로 쟀습니다. 학습 때와 같이 관측 noise 를 켠 것이 주 결과입니다. <b>최종 비교는 24,000</b> 이고 22,000 은 중간 관찰입니다 (결과를 보기 전에 정함).</p>
+      <p class="sub">덤으로 얻는 것: 「안 고친」 off 갈래는 E1 을 20,000 에서 그대로 이어 학습한 것이라, <a href="#drop">20,499 하락</a> 뒤 계속 학습하면 저속 · 멈춤이 돌아오는지에 대한 첫 관찰이 됩니다. 다만 학습 시드가 42 가 아니라 1042 이고, 20,499 가 아니라 20,000 에서 갈라졌습니다.</p>
+    </div>
+    <div>
+      <h3>목표 세 칸 (평지 · noise 켬)</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>칸</th><th>부모 20,000</th><th>off 22,000</th><th>on 22,000</th><th>off 24,000</th><th>on 24,000</th></tr></thead>
+        <tbody>%%cmdr_target_rows%%</tbody>
+      </table></div>
+      <p class="sub">통과율 % (판 수). 통과 기준 · stop03: 명령이 0 이 된 뒤 1 초 안에 1 초 동안 가만히 섬 · fwd01 · fwd02: 앞 속도 오차가 명령의 절반 이하 (0.05 · 0.10 m/s). 시드 %%cmdr_seeds%% 을 묶었습니다.</p>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>칸</th><th>on − off (22,000)</th><th>on − off (24,000)</th></tr></thead>
+        <tbody>%%cmdr_diff_rows%%</tbody>
+      </table></div>
+      <p class="sub">같은 시드 · 같은 판끼리 짝지은 차이 %p 와 95 % 구간. 구간이 0 을 걸치면 「차이를 확인 못 함」 입니다.</p>
+    </div>
+  </div>
+  <div class="split">
+    <div>
+      <h3>시작 직후 1 초</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>칸 · 모델</th><th>1 초 채움</th><th>1 초 안 끝남</th><th>속도 오차 적분 (m)</th><th>5 초 생존</th></tr></thead>
+        <tbody>%%cmdr_startup_rows%%</tbody>
+      </table></div>
+      <p class="sub">속도 오차 적분: 처음 1 초 동안 앞 · 옆 속도가 명령에서 벗어난 양을 더한 것 (작을수록 명령을 빨리 따름). 1 초 안에 넘어진 판은 따로 셉니다.</p>
+    </div>
+    <div>
+      <h3>판정과 남은 것</h3>
+      <ul class="plain">%%cmdr_status%%</ul>
+      <p class="sub">판정선 (결과를 보기 전에 정함 · 팀장 10/13 01:10 「제안 · 권고대로」): 목표 세 칸을 칸마다 500 판 (평가 시드 다섯) 으로 재서, 세 칸 모두 on − off 의 95 % 구간 아래 끝이 0 보다 크고 평균이 +10 %p 이상이면 「개선」. 다른 칸은 100 판으로 훑고, −5 %p 이하로 나빠진 칸만 500 판으로 다시 잽니다. 속도 오차가 10 % 넘게 나빠지면 퇴행입니다. 퇴행이 없으면 「규약 교정」 으로 받아들일 수 있고, 「성능 개선」 이라고 부르려면 시드 1043 으로 한 번 더 해야 합니다. 최종 비교는 24,000 입니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <h2>다음 실험: v2 와 견줘 왜 새로 하고, 무엇을 얻나</h2>
+  <p class="prose">팀장 (10/13 01:10): v2 를 꼭 이어받을 필요는 없지만, MVP 뒤 실험마다 「왜 v2 와 다르게 접근했고 무엇을 얻었나」 를 v2 와 견줘 설명할 수 있어야 한다. 아래 계획은 lead 안을 ASTRA 9 · 11 이 반박하고 고친 판입니다 (팀장 확인 전).</p>
+  <div class="split">
+    <div>
+      <h3>지금까지: v2 와 E1 · E2</h3>
+      <div class="tbl"><table class="def wrap">
+        <thead><tr><th></th><th>v2 (9월)</th><th>E1 · E2 (MoE-CTS)</th></tr></thead>
+        <tbody>
+          <tr><td>지형을 보나</td><td>발밑 높이 지도 187 칸을 봄</td><td>배포하는 student 는 안 봄 (학습용 teacher 만 봄)</td></tr>
+          <tr><td>출발</td><td>NVIDIA 공개 정책에서 이어 gap 지형을 더 학습</td><td>공개 코드 그대로 처음부터 학습 (시드 둘)</td></tr>
+          <tr><td>얻은 것</td><td>gap 건넘 (v2 시험 기준)</td><td>저속 · 멈춤 · 명령 추종을 칸마다 재는 시험지 · v2 미경험 지형 10 종에서 깨지는 자리 · 다른 엔진 시험 점수</td></tr>
+          <tr><td>잃은 것</td><td></td><td>gap · 징검다리 (지형을 보지 않음)</td></tr>
+          <tr><td>새로 드러난 약점</td><td>같은 방식으로 잰 적 없음</td><td>멈추기 (noise 켜면 대부분 실패) · 0.1 m/s 저속</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub"><b>아직 같은 잣대가 아닙니다 (ASTRA 12).</b> v2 는 Isaac Go2 USD · DCMotor, MoE-CTS 는 URDF · Go2HV 구동기 모델이라 같은 Kp · Kd 라도 물리가 다릅니다. v2 평가는 몸무게 · 무게중심 무작위화를 끄고 우리 평가는 켜 둡니다. 출발 위치 · 판 길이 · 판정도 다릅니다. 그래서 위 표는 「같은 시험에서 이겼다 · 졌다」 가 아니라 「무엇을 바꿨고 무엇이 달라 보였나」 입니다.</p>
+    </div>
+    <div>
+      <h3>11/7 까지 순서 (GPU 한 장 기준)</h3>
+      <ol class="steps">
+        <li><b>10/13 ~ 14 · 같은 시험지부터</b><span>동결한 v2 와 CMD-R 후보를 같은 물리 · 지형 · 출발 · 명령 시간열로 잽니다. 저속은 명령 크기에 맞춘 상대 오차로, 멈춤은 정지 시간 · 거리 · 남은 움직임으로, 장애물은 만남 · 돌아감 · 도착 · 떨어짐 · 멈춰 섬으로 따로 셉니다.</span></li>
+        <li><b>10/15 ~ 17 · Linux 로 옮기기</b><span>옮긴 뒤 같은 체크포인트가 같은 숫자를 내는지부터 확인합니다. 다르면 구조 실험과 섞지 않습니다.</span></li>
+        <li><b>10/18 ~ 22 · 「지도를 주면 달라지나」 한 시드 예비</b><span>같은 gap · 징검다리를 학습시키고, A 는 지도 자리에 상수, B 는 시뮬이 주는 이상적인 지도를 줍니다. 센서 정책이 아니라 「이상적 지도 입력 비교」 입니다. 10/22 까지 유효한 비교가 없으면 새 구조를 넓히지 않습니다.</span></li>
+        <li><b>10/23 ~ 27 · 병목 하나</b><span>결과가 살아 있으면 시드를 늘리고, 아니면 관측 · 만남 · 보상 중 확인된 병목 하나만 고칩니다.</span></li>
+        <li><b>10/28 ~ 11/7 · 확인과 동결</b><span>처음 보는 지형 · 기존 능력 · 저속 · 멈춤이 퇴행했는지 보고, v2 대비 얻은 것 · 잃은 것을 나란히 적습니다. 막판에 새 구조를 넣지 않습니다.</span></li>
+      </ol>
+      <p class="sub">11/7 범위에서 뺀 것: CTS-MoE 전체 재현 · DAWN · DELTA · AME-2 · JEPA · D435i / LiDAR 지각 경로 새로 만들기 · 여러 요소를 한 번에 바꾸기. 조사 숫자 가운데 lead 가 잘못 옮긴 것 (CTS-MoE 대조 40.0 % · DAWN 은 시뮬 · v2 징검다리 24 % 는 다섯 시드 중 최댓값 등) 은 ASTRA 11 로 바로잡았습니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="app">
+  <h2>앱에서 보면: 왜 저속 · 멈춤 · 처음 보는 험지인가</h2>
+  <div class="split">
+    <div>
+      <h3>관제 UI 기획 (오현민) 과 RL 이 만나는 곳</h3>
+      <p><a href="https://claude.ai/artifact/9q2JtTgeitsnhFTGHTVPgw" target="_blank" rel="noopener">FOOTHOLD 관제 UI</a> 화면 19 장은 「사람이 들어가기 전에 로봇이 먼저」 위험 현장 (예: 지하 펌프실) 을 걷고 · 보고 · 재고 · 기록하는 관제 PC · 휴대폰 · 보고서입니다. 이 기획이 로봇에게 주는 명령은 다음과 같습니다.</p>
+      <div class="tbl"><table class="def wrap">
+        <thead><tr><th>앱이 요구하는 것</th><th>기획의 값</th><th>지금 E1 · E2</th></tr></thead>
+        <tbody>
+          <tr><td>감속 구역</td><td>문턱 0.3 m/s · 집수정 개구부 0.2 m/s</td><td>평지 0.2 m/s 73 ~ 100 % · 0.1 m/s 3 ~ 43 % (상대 오차 판정 · <a href="#rg">위 표</a>)</td></tr>
+          <tr><td>STOP · 그 자리 정지</td><td>언제나 같은 자리의 STOP · deadman 0.3 s</td><td>멈춤이 가장 약함 (noise 켬 6 ~ 20 %)</td></tr>
+          <tr><td>자율 이동 상한</td><td>0.5 m/s</td><td>학습 지형에서는 대부분 통과</td></tr>
+          <tr><td>처음 보는 바닥</td><td>집수정 개구부 · 문턱 · 계단실</td><td>0.5 m/s 이하에서 gap 기준선 도달 0 ~ 4 % · 징검다리 0 % (<a href="#unseen">위</a>)</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">그래서: 「왜 시뮬에서 처음 보는 험지 일반화와 저속 명령 추종을 하나」 를 이 앱의 감속 구역 · 개구부 장면으로 설명할 수 있습니다 (lead 해석). 위치 추정 · 금지 구역은 Nav2 (실기 트랙) 몫이고, 우리 RL 정책은 그 아래에서 속도 명령을 정확히 따르는 층입니다. 나중에 이 앱을 실제 Go2 에 SDK 로 연결합니다 (팀장 10/12).</p>
+    </div>
+    <div>
+      <h3>실제 Unitree Go 앱을 뜯어보니 (ASTRA 10)</h3>
+      <p>공식 앱 2.0.0 (APK) 을 받아 rea 로 분석했습니다. 앱은 네이티브 껍데기 안에 웹 화면 (Vue · Three.js · WASM) 이 들어 있는 구조입니다.</p>
+      <ul class="plain">
+        <li><b>깔끔해 보이는 이유:</b> 점을 작은 정육면체 (복셀) 로 묶어 겉면만 그리고, 점을 쌓아 가며, 높이에 따라 색을 칠합니다. 표시를 정돈하는 기법이지, 잡음을 똑똑하게 지우는 기법은 아닙니다.</li>
+        <li><b>찾지 못한 것:</b> 통계적 이상점 제거 · 바닥 분류 · 시간에 따른 잡음 판정. 그래서 기획의 「지우개」 를 없앨 근거는 없습니다. 자동화는 「지울 후보를 보여 주고 사람이 확인」 부터가 맞습니다.</li>
+        <li><b>조심할 것:</b> 집수정 개구부는 라이다에 「점이 없는 빈 곳」 으로 보일 수 있습니다. 점이 없다고 바닥이 안전하다는 뜻이 아닙니다. 모르는 칸으로 두거나 낙차 근거로 막아야 합니다.</li>
+      </ul>
+      <p class="sub">보고 · 증거 · 스크립트: <code>inbox/jay/20261013-go2-app-study/REPORT-astra-10.md</code>. 로봇 쪽에서 보내기 전에 하는 정제는 APK 로는 알 수 없어 미확인입니다.</p>
     </div>
   </div>
 </section>
@@ -634,7 +901,8 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
       <p>그래서 미경험 험지를 건너려면 <b>① 그런 지형을 연습하고 ② 앞의 지형을 보고 ③ 발 놓을 곳을 고르는</b> 세 가지가 필요합니다. 이번 E1 · E2 는 그 셋이 모두 없는 상태의 기준선입니다.</p>
     </div>
     <div>
-      <h3>다음 실험 순서 (설계 문서 · 팀장 결정 대기)</h3>
+      <h3>다음 실험 순서 (10/12 설계 문서)</h3>
+      <p class="superseded">10/13 에 바뀌었습니다. G1 은 따로 돌리지 않고, P1 자리는 「이상적 지도 입력 비교」 한 시드 예비가 되며, 그 앞에 v2 와 같은 시험지를 먼저 세웁니다 (ASTRA 9 · 11 · <a href="#next">다음 실험 절</a>). 아래는 기록으로 남깁니다.</p>
       <p class="sub">한 번에 하나만 바꿔서 「무엇 때문에 좋아졌는지」 를 남기는 순서입니다. 근거: <code>inbox/jay/20261008-546-design/DESIGN-astra-rl-topdown.md</code></p>
       <ol class="steps">
         <li><b>D1 · teacher 는 지도를 쓰나</b><span>지도 칸 순서를 섞으면 teacher 성적이 떨어지는지. 재 봤고, 떨어지니 쓰긴 씁니다 (아래 「체크포인트 · 난이도 · teacher」 그림).</span></li>
@@ -705,8 +973,8 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
         <tbody>%%worst_rows%%</tbody>
       </table></div>
       <h3 class="h3gap">해석 (추정 · 시험 안 함)</h3>
-      <p>우리 시험지는 0.1 ~ 0.5 m/s 와 「멈춤」 만 잽니다. 20,000 까지 정책은 바로 그 범위만 연습했고, 20,000 부터는 1.0 m/s 까지 빠른 명령을 연습하기 시작했습니다. 20,499 는 <b>새 범위로 넘어간 지 499 iteration, 전체 학습의 약 2.4 % 밖에 지나지 않은 중간 상태</b> 입니다. 빠른 걸음을 배우는 동안 느린 걸음과 멈추기가 흔들린 것으로 보입니다. 시험 범위가 넓어진 직후 예전 단원을 잠깐 헷갈리는 것과 비슷합니다.</p>
-      <p><b>확인하는 방법</b>: 20,500 에서 이어 학습해 (예: 25,000 · 30,000) 같은 시험지로 다시 잽니다. 회복하면 「전환기의 흔들림」, 회복하지 않으면 「빠른 명령을 배우며 느린 동작을 잃음」 입니다. 이어 학습할 때는 iteration 번호 · 명령 일정 · 학습률을 맞춰야 합니다 (그냥 이어 붙이면 일정이 처음으로 돌아갑니다 · #546 기록). 학습은 Linux 이전까지 멈춰 있어 아직 돌리지 않았습니다.</p>
+      <p>우리 시험지는 0.1 ~ 0.5 m/s 와 「멈춤」 만 잽니다. 20,000 앞까지의 학습은 대부분 그 범위에서 했고, 20,000 부터 1.0 m/s 까지 빠른 명령을 연습하기 시작했습니다 (model_20000 은 넓힌 첫 iteration 의 학습을 한 번 포함합니다 · ASTRA 13). 20,499 는 <b>새 범위로 넘어간 지 499 iteration, 전체 학습의 약 2.4 % 밖에 지나지 않은 중간 상태</b> 입니다. 빠른 걸음을 배우는 동안 느린 걸음과 멈추기가 흔들린 것으로 보입니다. 시험 범위가 넓어진 직후 예전 단원을 잠깐 헷갈리는 것과 비슷합니다.</p>
+      <p><b>확인하는 방법</b>: 이어 학습해 같은 시험지로 다시 잽니다. 회복하면 「전환기의 흔들림」, 회복하지 않으면 「빠른 명령을 배우며 느린 동작을 잃음」 입니다. 밤에 돌린 CMD-R 「안 고친」 갈래 (E1 20,000 에서 넓힌 범위 그대로 4,000 iteration · 시드 1042) 가 그 첫 관찰입니다 (<a href="#cmdr">CMD-R 절</a>). 범위를 넓히지 않고 같은 만큼 더 학습한 대조가 없으므로, 회복 여부와 상관없이 「범위 확대가 원인」 이라고는 쓰지 않습니다 (ASTRA 13).</p>
     </div>
   </div>
 </section>
@@ -1202,11 +1470,15 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 </section>
 
 <section id="qa">
-  <h2>팀장 질문과 답 (10/12 밤)</h2>
+  <h2>팀장 질문과 답 (10/12 밤 · 10/13 더함)</h2>
   <p class="sub">위 절에 없던 답만 모았습니다. 근거는 코드 · 학습 기록 · 저장소 문서입니다. 결정이 아니라 지금까지의 사실과 의견입니다.</p>
   <dl class="qa">
+    <div><dt>ASTRA 가 반대해서 밤사이 Top-down 계획이 바뀌었나 · P1 까지 아니었나 (10/13)</dt>
+    <dd><b>밤에 돌린 것은 그대로 끝까지 갔습니다</b> (CMD-R 쌍 학습 · 미경험 지형 평가 · RoboGauge · CMD-R 평가). 바뀐 것은 그 다음 학습의 설계입니다. G1 (지형을 안 보는 정책에 gap 연습만 시키기) 은 따로 돌리지 않고, P1 (student 에게 지도 주기) 은 「이상적 지도 입력 비교」 한 시드 예비로 이름과 범위를 줄였습니다. 그 앞에 v2 와 같은 시험지 · Linux 이전이 들어갑니다. P1 뒤 설계를 안 한다는 뜻이 아니라, P1 결과가 살아 있을 때만 확인된 병목 하나를 다음으로 고른다는 뜻입니다 (<a href="#next">다음 실험 절</a>).</dd></div>
+    <div><dt>1.0 m/s 에서 gap 을 더 건너는 것은 빨라서인가 (10/13)</dt>
+    <dd>아직 모릅니다. 1.0 m/s 에서 몸통이 기준선에 닿은 판은 E1 30 % · E2 27 % 이고, 그 가운데 20 초 끝까지 넘어지지 않은 판은 각각 14 % 입니다. 실제로 틈에 다가가는 속도는 높았습니다 (중앙값 1.00 m/s 대 0.53 m/s). 하지만 보폭 · 발이 공중에 있는 시간 · 착지 순서는 전체 판에서 재지 않았으므로 「빨라서 넘었다」 는 가설로만 둡니다. 「속도를 높이면 더 안전하다」 는 뜻도 아닙니다 (ASTRA 14).</dd></div>
     <div><dt>RoboGauge 는 무엇을 재고, 우리도 써야 하나</dt>
-    <dd>논문 저자들의 평가 도구입니다. 정책을 MuJoCo 라는 <b>다른 물리 엔진</b> 으로 옮겨 걷게 합니다 (sim2sim). 명령 지연 · 몸통 무게 −1 ~ +3 kg · 마찰 0.2 ~ 1.0 을 무작위로 건 채 평지 · 물결 · 경사 · 계단 오르기 / 내리기 · 장애물을 난이도별로 걷습니다. 속도 오차 · 관절 한계 · 전력 · 몸 흔들림 · 토크 매끄러움 · 미끄러짐 여유 등 8 개 지표를 0 ~ 1 로 매기고, 시드 셋이 모두 통과한 최고 난이도를 Level 로 냅니다. 우리는 8/12 에 이 점수표의 공개 정책 4 종을 받아 실행까지 확인했고 (<code>C:/isaac/checkpoints/robogauge/</code> · 이슈 #28), 「평가 기준은 RoboGauge 방식을 참조하고 공개 정책을 대조군으로」 라고 적어 두었지만 실행하지 못한 채 #28 이 닫혔습니다. <b>쓰는 것이 좋습니다.</b> 논문 표와 같은 자로 재고, 다른 엔진에서도 버티는지 봅니다. 다만 gap · 징검다리 · 미경험 지형은 RoboGauge 에도 없어 우리 평가가 따로 필요합니다. v2 는 지도 입력 235 칸이라 RoboGauge 로 못 잽니다. <span class="sub">10/12 밤부터 CPU 로 돌리는 중입니다. 저자 정책 (이름에 0.6953) 으로 먼저 같은 점수가 나오는지 확인한 뒤 E1 · E2 를 잽니다. 결과 · 영상은 다음 판에.</span></dd></div>
+    <dd>논문 저자들의 평가 도구입니다. 정책을 MuJoCo 라는 <b>다른 물리 엔진</b> 으로 옮겨 걷게 합니다 (sim2sim). 평지 · 물결 · 경사 앞으로 / 뒤로 · 계단 앞으로 / 뒤로 · 장애물 7 과제를 마찰 9 가지 (0.2 ~ 1.0 고정) 에서, 0 ~ 18 ms 명령 지연과 관측 잡음을 건 채 걷습니다 (이번 실행은 몸통 무게를 바꾸지 않았습니다). 「뒤로」 는 같은 경사 · 계단을 뒤로 걸어 오르는 과제입니다. 단계마다 목표에 80 % 이상 닿는 가장 어려운 단계 (Level) 를 찾고, 그 단계에서 속도 추종 · 관절 한계 · 전력 · 자세 등 8 개 지표로 품질을 매겨 합칩니다 (ASTRA 13 이 코드에서 확인해 바로잡음). 우리는 8/12 에 이 점수표의 공개 정책 4 종을 받아 실행까지 확인했고 (<code>C:/isaac/checkpoints/robogauge/</code> · 이슈 #28), 「평가 기준은 RoboGauge 방식을 참조하고 공개 정책을 대조군으로」 라고 적어 두었지만 실행하지 못한 채 #28 이 닫혔습니다. <b>쓰는 것이 좋습니다.</b> 논문 표와 같은 자로 재고, 다른 엔진에서도 버티는지 봅니다. 다만 gap · 징검다리 · 미경험 지형은 RoboGauge 에도 없어 우리 평가가 따로 필요합니다. v2 는 지도 입력 235 칸이라 RoboGauge 로 못 잽니다. <span class="sub">10/13 01:45 에 끝났습니다. 저자 정책 0.6953 을 0.6954 로 재현했고, 결과는 <a href="#rg">RoboGauge 절</a> 에 있습니다.</span></dd></div>
     <div><dt>학습 중에 보상 설정이 바뀔 수 있나 · 그것도 정하는 것인가</dt>
     <dd>네. 이 코드는 iteration 에 따라 설정을 바꾸는 <b>커리큘럼</b> 을 설정 파일에 적어 둡니다. 몸 위아래 튐 벌점은 0 ~ 1,500 iteration 동안 −2 에서 0 으로, 몸통 높이 벌점은 0 ~ 5,000 동안 −1 에서 −10 으로 바뀝니다. 정지 명령 비율은 0 ~ 1,500 동안 0 에서 10 % 로, 명령 범위는 20,000 · 50,000 에서 넓어집니다. 처음에는 넘어지지 않고 걷는 법부터, 나중에는 자세를 엄격하게 가르치는 식입니다. 시작 · 끝 iteration 과 값은 우리가 정할 수 있습니다. v2 는 처음부터 끝까지 한 설정이었습니다.</dd></div>
     <div><dt>명령을 모든 방향으로 열었는데, 로봇이 gap 을 어떻게 만나서 배우나</dt>
@@ -1293,11 +1565,11 @@ const g = (name) => G[name] || [null, null, null, null];
     ['g', `<b>두 시드는 거의 같은 길로 학습했습니다.</b> iteration 19,999 에서 student 보상 ${pct(at(C1,'s',19999))} / ${pct(at(C2,'s',19999))}, 지형 레벨 ${at(C1,'lv',19999).toFixed(2)} / ${at(C2,'lv',19999).toFixed(2)}. 같은 설정이면 결과가 시드에 크게 흔들리지 않는다는 뜻입니다 (20,000 까지는).`],
     ['g', `<b>걷기 명령은 대부분 넘습니다.</b> model_20000 · noise 끔에서 7 지형 가운데 출발의 전진 · 후진 · 옆걸음 · 회전 칸은 ${mv7[0]}~${mv7[1]} %, 장애물은 ${mvO[0]}~${mvO[1]} % 입니다.`],
     ['b', `<b>멈추기가 약점입니다.</b> 0.3 m/s 로 걷다 멈추는 칸이 model_20000 에서 noise 끔 ${st0[0]}~${st0[1]} %, noise 켬 ${st1[0]}~${st1[1]} % 입니다. 멀리 미끄러지는 것이 아니라 몇 cm 안에서 멈추되, 1 초 동안 완전히 가만히 있지 못합니다 (<a href="#noise">noise 절</a>).`],
-    ['w', `<b>마지막 500 iteration 에서 두 시드 모두 나빠졌습니다.</b> 116 칸 평균 (noise 끔) E1 ${s0[0]} → ${s1[0]} %, E2 ${s0[1]} → ${s1[1]} %. 20,000 에서 명령 범위를 두 배로 넓힌 직후라 생긴 흔들림으로 보입니다 (추정 · <a href="#drop">20499 절</a>). E2 는 평지 0.2 m/s 전진 100 판 중 21 판에서 거의 서 있었고 (평균 0.00~0.04 m/s), 오른쪽 회전 14 판은 명령의 절반 안팎 (−0.20~−0.30 rad/s) 으로 돌았습니다.`],
+    ['w', `<b>마지막 500 iteration 에서 두 시드 모두 나빠졌습니다.</b> 116 칸 평균 (noise 끔) E1 ${s0[0]} → ${s1[0]} %, E2 ${s0[1]} → ${s1[1]} %. 20,000 에서 명령 범위를 두 배로 넓힌 직후입니다. 원인은 아직 모릅니다 (<a href="#drop">20499 절</a>). E2 는 평지 0.2 m/s 전진 100 판 중 21 판에서 거의 서 있었고 (평균 0.00~0.04 m/s), 오른쪽 회전 14 판은 명령의 절반 안팎 (−0.20~−0.30 rad/s) 으로 돌았습니다.`],
     ['w', `<b>시드 차이는 20499 에서 커집니다.</b> 두 시드가 10 pp 넘게 갈린 칸이 116 개 중 20000 에서 ${s0[2]} (noise 끔) · ${n0[2]} (켬), 20499 에서 ${s1[2]} · ${n1[2]} 개. 20499 근처에서는 시드 하나로 결론을 내면 흔들립니다.`],
     ['w', `<b>넘어지지 않았는데 미달인 판은 대부분 「느리게 따라감」 이나 「늦게 섬」 입니다.</b> 이 페이지 영상 (model_${D.CK}) 의 미달 ${D.V.filter(v => v.vd === '미달').length} 편 가운데 ${D.V.filter(v => v.vd === '미달' && v.close).length} 편은 기준을 10 % 안쪽으로 넘긴 경계 판입니다 (예: 오른쪽 옆걸음 0.30 m/s 명령에 평균 0.15 m/s, 오차 0.151 대 기준 0.15). 기준이 lead 임시 조건이라 경계는 팀장 결정에 따라 바뀔 수 있습니다.`],
     ['', `<b>noise 를 켜면 평균이 내려가는 것은 거의 멈추기 때문입니다.</b> 116 칸 평균 20000 기준 noise 켬 ${n0[0]} / ${n0[1]} %. 걷는 칸은 noise 를 켜도 거의 그대로입니다.`],
-    ['b', `<b>지형을 보지 않는 정책이라 gap · 징검다리는 아직 못 배웁니다.</b> 학습 지형에도 0 % 입니다. 다음 단계는 gap 을 연습시키고, student 에게 지도를 주는 순서입니다 (<a href="#gap">gap 절</a>).`],
+    ['b', `<b>지형을 보지 않는 정책이라 gap · 징검다리는 아직 못 배웁니다.</b> 학습 지형에도 0 % 이고, v2 의 미경험 지형 시험에서도 0.5 m/s 이하 gap 기준선 도달 0 ~ 4 % · 징검다리 0 % 입니다. 다음은 같은 시험지를 세운 뒤 「지도를 주면 달라지나」 를 봅니다 (<a href="#next">다음 실험 절</a>).`],
   ];
   const ol = $('#findings');
   items.forEach(([c, h]) => ol.appendChild(el('li', {class: c}, h)));

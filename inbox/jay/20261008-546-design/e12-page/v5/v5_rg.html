@@ -1,0 +1,47 @@
+<section id="rg">
+  <h2>다른 물리 엔진 시험 (RoboGauge) 에서는 20,499 가 더 높습니다</h2>
+  <div class="split">
+    <div>
+      <h3>무엇을 했나</h3>
+      <p>RoboGauge 는 MoE-CTS 저자들이 쓴 공개 시험입니다 (v1.1.9). 정책을 Isaac 이 아닌 <b>MuJoCo</b> 로 옮겨 7 과제 × 바닥 마찰 9 가지에서 잽니다. 과제는 평지 · 물결 · 경사 앞으로 · 경사 뒤로 · 계단 앞으로 · 계단 뒤로 · 장애물입니다. 「뒤로」 는 같은 경사 · 계단을 <b>뒤로 걸어 오르는</b> 과제이고, 내려가기가 아닙니다 (하위 작업 보고의 「내리기」 를 ASTRA 13 이 바로잡음).</p>
+      <p>점수는 「얼마나 어려운 단계까지 갔나」 와 「그 단계에서 얼마나 깔끔하게 따랐나」 를 합친 값입니다. <b>성공률이 아닙니다.</b> 0.614 를 「61 % 성공」 으로 읽으면 틀립니다.</p>
+      <p>먼저 저자 정책을 같은 방법으로 쟀습니다. 저자 README 의 0.6953 에 대해 우리 실행은 <b>0.6954</b> 였습니다. 시험이 우리 기계에서 제대로 돈다는 확인입니다.</p>
+    </div>
+    <div>
+      <h3>점수 (RoboGauge 자체 총점)</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>정책</th><th>총점</th><th>20,000 → 20,499</th></tr></thead>
+        <tbody>
+          <tr><td>저자 정책 (symmetry v5.1 · 52k)</td><td class="num">0.6954</td><td></td></tr>
+          <tr><td>저자 정책 (176k)</td><td class="num">0.6970</td><td></td></tr>
+          <tr><td>E1 20,000 → 20,499</td><td class="num">0.5258 → 0.5867</td><td class="num">+0.061</td></tr>
+          <tr><td>E2 20,000 → 20,499</td><td class="num">0.5400 → 0.6141</td><td class="num">+0.074</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">원출력 yaml 의 benchmark_score (ASTRA 13 이 7 개 원출력을 직접 대조). 저자 정책은 52,000 · 176,000 iteration 의 가장 좋은 체크포인트이고 우리는 20,000 근처라 학습량이 다릅니다.</p>
+    </div>
+  </div>
+  <div class="split">
+    <div>
+      <h3>우리 시험에서는 반대입니다</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>평지 · 칸</th><th>E1 noise 끔</th><th>E2 noise 끔</th><th>E1 noise 켬</th><th>E2 noise 켬</th></tr></thead>
+        <tbody>
+          <tr><td>걷다 멈춤 (stop03)</td><td class="num">97 → 87</td><td class="num">99 → 86</td><td class="num">15 → 6</td><td class="num">20 → 13</td></tr>
+          <tr><td>앞 0.1 m/s (상대 오차)</td><td class="num">36 → 5</td><td class="num">26 → 3</td><td class="num">38 → 23</td><td class="num">43 → 35</td></tr>
+          <tr><td>앞 0.2 m/s (상대 오차)</td><td class="num">100 → 95</td><td class="num">93 → 73</td><td class="num">100 → 98</td><td class="num">100 → 96</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">통과율 % (20,000 → 20,499 · 칸마다 100 판). 앞 0.1 · 0.2 m/s 는 속도 오차가 명령의 절반 이하일 때 통과로 센 별도 판정입니다 (기본 판정은 0.1 m/s 에서 서 있어도 통과해 약점을 가립니다).</p>
+    </div>
+    <div>
+      <h3>그래서 어떻게 읽나</h3>
+      <p><b>두 시험이 서로 다른 능력을 잽니다.</b> RoboGauge 의 명령은 최대 1.0 m/s 와 대각선 반전 중심이고, 0.1 ~ 0.3 m/s 를 오래 따르거나 멈춰서 1 초를 버티는 칸이 따로 없습니다. 우리 시험은 바로 그 저속 · 멈춤을 잽니다. 20,499 에서 RoboGauge 의 도달 단계 · 평지 추종 점수는 올랐고, 우리 저속 · 멈춤 판정은 내려갔습니다. 여기까지가 관찰이고 원인은 아직 모릅니다.</p>
+      <ul class="plain">
+        <li><b>말할 수 없는 것:</b> 「명령 범위를 넓혀서 좋아졌다」 (범위를 그대로 두고 같은 만큼 더 학습한 대조가 없음) · 「처음 보는 gap · 징검다리를 잘 걷는다」 (RoboGauge 에 그 과제가 없음) · 「실기에서 더 안전하다」.</li>
+        <li><b>바로잡은 것:</b> model_20000 은 「넓히기 직전」 이 아니라 넓힌 첫 iteration 의 학습을 한 번 포함한 체크포인트입니다. 20,499 는 그 뒤 499 번 더 학습한 것입니다.</li>
+        <li>E1 은 장애물 과제가 0.738 → 0.630 으로 떨어졌고 E2 는 올랐습니다. 총점 하나로 「험지 전반 개선」 이라 하지 않습니다.</li>
+      </ul>
+    </div>
+  </div>
+</section>
