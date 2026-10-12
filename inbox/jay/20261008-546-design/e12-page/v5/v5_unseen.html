@@ -12,18 +12,18 @@
 %%un_rows%%
         </tbody>
       </table></div>
-      <p class="sub">칸마다 100 판 · 관측 noise 끔 · 난이도 0.5 · 20 초 · +x 앞으로. 칸 읽는 법: <b>굵은 숫자</b> = 몸통이 장애물 너머 기준선에 닿은 판 % · 괄호 = 그 가운데 20 초 끝까지 넘어지지 않은 판 % · 작은 숫자 = 20 초 생존 %. 기준선 도달은 「몸 중심이 선을 한 번 넘었다」 일 뿐, 네 발이 안정되게 건넜다는 뜻은 아닙니다. 1.0 m/s 는 범위를 넓힌 뒤인 20,499 만 쟀습니다.</p>
+      <p class="sub">칸마다 100 판 · 관측 noise 끔 · 난이도 0.5 · 20 초 · +x 앞으로. 칸 읽는 법: <b>굵은 숫자</b> = 몸통이 장애물 너머 기준선에 닿은 판 % · 괄호 = 닿고 20 초 끝까지 넘어지지 않은 판 % · 작은 숫자 = 20 초 생존 %. 세 숫자 모두 분모는 100 판입니다 (괄호는 「닿은 판 가운데 비율」 이 아님). 기준선 도달은 「몸 중심이 선을 한 번 넘었다」 일 뿐, 네 발이 안정되게 건넜다는 뜻은 아닙니다. 1.0 m/s 는 범위를 넓힌 뒤인 20,499 만 쟀습니다.</p>
     </div>
     <div>
       <h3>무엇을 했나</h3>
       <p>v2 가 「미경험 지형」 시험에 쓰던 10 종을 lab 코드에서 그대로 불러와 (사본이 아니라 import) 네 체크포인트를 올렸습니다. 100 조건 · 1 만 판입니다. 이 가운데 물결 · 흩어진 장애물은 비슷한 종류를 학습 때 봤고, 나머지 8 종은 이번 정책의 학습 지형에 없었습니다 (gap · 징검다리는 설정에 이름만 있고 비율 0).</p>
-      <p>student 는 지형 높이를 입력으로 받지 않습니다. 몸의 회전 속도 · 기울기 · 명령 · 관절 각도와 속도 · 직전 행동을 10 걸음 쌓은 이력만 봅니다.</p>
+      <p>student 는 지형 높이를 입력으로 받지 않습니다. 몸의 회전 속도 · 기울기 · 명령 · 관절 각도와 속도 · 직전 행동을 10 제어 시점 (약 0.2 초) 쌓은 이력만 봅니다.</p>
       <h3 class="h3gap">한눈에</h3>
       <ul class="plain">
         <li><b>나머지 7 종 (물결 · 흩어진 장애물 · 구덩이 · 레일 · 별 모양 다리 · 상자 · 기둥) 은 대부분 기준선에 닿고 끝까지 섭니다</b> (0.5 · 1.0 m/s 에서 91 ~ 100 %).</li>
-        <li><b>gap 은 0.5 m/s 이하에서 기준선 도달이 0 ~ 4 % 입니다.</b> 100 판 가운데 54 ~ 75 판이 넘어졌고 그 대부분 (50 ~ 73 판) 이 플랫폼 끝 (가운데에서 0.6 ~ 1.0 m) 에서였습니다. 넘어지지도 닿지도 않은 판은 모두 끝에서 멈춘 채 20 초를 버텼습니다.</li>
+        <li><b>gap 은 0.5 m/s 이하에서 기준선 도달이 0 ~ 4 % 입니다.</b> 0.5 m/s 에서는 100 판 가운데 54 ~ 75 판이 넘어졌고, 그중 50 ~ 73 판은 마지막 몸통 위치가 플랫폼 끝 (가운데에서 0.6 ~ 1.0 m) 이었습니다. 0.5 m/s 에서 넘어지지도 닿지도 않은 판은 끝 부근 (0.70 ~ 0.88 m) 까지 다가간 뒤 머물렀습니다.</li>
         <li><b>1.0 m/s 에서는 gap 기준선 도달이 %%un_gap10_cross%% 이지만, 도달 뒤 20 초 끝까지 생존한 판은 %%un_gap10_alive%% 입니다.</b> 도달 뒤 넘어진 판 대부분은 1 초 안에 넘어졌고, E1 3 판 · E2 2 판은 6 초 넘게 더 걸어가 다음 타일의 틈 근처에서 넘어졌습니다. 1.0 m/s 에서는 실제로 틈에 다가가는 속도도 높았습니다 (중앙값 1.00 m/s · 0.5 m/s 명령은 0.53). 왜 더 멀리 닿는지는 아직 재지 않았습니다.</li>
-        <li><b>징검다리는 어느 조건에서도 기준선 (4 m) 에 닿지 못했습니다.</b> 모든 판이 넘어졌다는 뜻은 아닙니다 (생존 9 ~ 29 %).</li>
+        <li><b>징검다리는 어느 조건에서도 기준선 (4 m) 에 닿지 못했습니다.</b> 모든 판이 넘어졌다는 뜻은 아닙니다 (표의 0.5 · 1.0 m/s 에서 생존 9 ~ 29 % · 0.3 m/s 까지 넣으면 9 ~ 50 %).</li>
         <li><b>떠 있는 고리는 이번 다섯 조건 모두에서 E2 의 기준선 도달이 E1 보다 높았습니다</b> (+12 ~ 21 %p). 다만 E2 는 일부 gap 조건의 생존 (−14 ~ −32 %p) 과 경로 유지에서 E1 보다 낮았습니다. 어느 한 정책이 모든 요구에서 앞선 결과는 아닙니다.</li>
       </ul>
     </div>
@@ -32,32 +32,32 @@
   <div class="urow">
     <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd fall">넘어짐 2.9 s</span></div><span class="why">플랫폼 끝 (0.71 m) 까지 걸어가 앞발이 틈으로 빠지며 몸통이 닿았습니다. 0.5 m/s 에서 가장 흔한 모습입니다.</span></div></article>
+      <div class="cap"><div><span class="vd fall">넘어짐 2.9 s</span></div><span class="why">플랫폼 끝 (0.71 m) 까지 걸어가 앞발이 틈으로 빠지며 몸통이 닿았습니다. 끝 부근에서 넘어진 판의 한 예입니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd ng">못 닿음 · 생존</span></div><span class="why">끝 (0.74 m) 에서 앞발을 틈에 걸친 채 20 초를 버텼습니다. 넘어지지는 않았지만 건너지도 못했습니다.</span></div></article>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존</span></div><span class="why">최대 0.74 m 까지 다가간 뒤 약 0.71 m 부근에 머물렀습니다. 앞발은 플랫폼 높이 아래로 내려간 채였고, 20 초를 넘어지지 않고 버텼지만 건너지 못했습니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.mp4" type="video/mp4"></video>
       <div class="cap"><div><span class="vd ok">닿고 끝까지 생존</span></div><span class="why">빠르게 다가가 틈을 넘고 끝까지 걸었습니다. 1.0 m/s 에서 이런 판이 100 판 중 14 판입니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 2.7 s</span></div><span class="why">몸 중심은 틈 건너편 기준선 (1.20 m) 까지 갔지만 0.2 초 뒤 몸이 돌며 넘어졌습니다. 표의 굵은 숫자에는 이런 판도 들어 있습니다.</span></div></article>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 2.7 s</span></div><span class="why">몸 중심이 1.025 m 기준선에 닿은 뒤 약 0.2 초 만에, 몸 중심이 약 1.20 m 에 있을 때 몸이 돌며 넘어졌습니다. 표의 굵은 숫자에는 이런 판도 들어 있습니다.</span></div></article>
   </div>
   <p class="sub">기록으로 본 순서 (조건부): 하위 작업이 고른 감속 대표판 17 개 가운데 16 개에서 앞발 높이가 플랫폼보다 5 cm 넘게 낮아진 뒤 몸통의 전진 속도가 크게 줄었습니다. 틈에 들어간 뒤 지지를 잃는 모습과 맞지만, 대표판은 무작위로 뽑은 것이 아니고 (Q1 기준으로 고름) 몸이 앞으로 숙여진 각도도 판마다 다릅니다 (−9 ~ +40°).</p>
   <h3>다른 지형</h3>
   <div class="urow">
     <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 징검다리 · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd fall">넘어짐 3.9 s</span></div><span class="why">플랫폼을 벗어나자 발이 돌 사이 구멍에 빠졌습니다.</span></div></article>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.9 s</span></div><span class="why">플랫폼 끝을 지난 뒤 앞발이 플랫폼 높이 아래로 내려가며 넘어졌습니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 떠 있는 고리 · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd fall">넘어짐 4.5 s</span></div><span class="why">고리 가장자리 (0.73 m) 에서 넘어졌습니다. 왜 넘어지는지는 아직 재지 않았습니다.</span></div></article>
+      <div class="cap"><div><span class="vd fall">넘어짐 4.5 s</span></div><span class="why">최대 약 0.73 m 까지 다가간 뒤 약 0.72 m 에서 넘어졌습니다. 왜 넘어지는지는 아직 재지 않았습니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 떠 있는 고리 · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
       <div class="cap"><div><span class="vd ok">닿고 끝까지 생존</span></div><span class="why">같은 출발 자리에서 E2 20,000 은 고리를 넘어 끝까지 걸었습니다.</span></div></article>
     <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · gap · 0.5 m/s</b></div>
       <video controls preload="none" playsinline muted poster="p/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.mp4" type="video/mp4"></video>
-      <div class="cap"><div><span class="vd ok">닿고 끝까지 생존 · 드묾</span></div><span class="why">0.5 m/s 에서 닿고 끝까지 선 단 한 판입니다 (E1 20,000 · 100 판 중 1).</span></div></article>
+      <div class="cap"><div><span class="vd ok">닿고 끝까지 생존 · 드묾</span></div><span class="why">E1 20,000 · 0.5 m/s 의 100 판 가운데 닿고 끝까지 선 한 판입니다.</span></div></article>
   </div>
   <p class="sub">영상은 기록을 다시 그린 것입니다 (물리를 다시 계산하지 않음). 하위 작업이 칸마다 「Q1 첫 통과 판 · 첫 미달 판」 으로 고른 144 편 가운데 lead 가 원자료로 다시 확인해 여덟 편을 골랐습니다. 144 편 모두 어둠 · 단색 · 푸른 화면 기준으로 모든 프레임을 검사해 위반 0 입니다 (이 검사로는 멈춘 화면 · 로봇 누락은 못 잡습니다). %%un_gallery_link%%</p>
   <div class="split">

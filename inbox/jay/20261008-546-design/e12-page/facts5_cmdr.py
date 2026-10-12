@@ -3,6 +3,7 @@
 _eval/out/branch/cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json (두 갈래 시작 상태 대조)."""
 import json
 import os
+import time
 
 EV = "C:/isaac/ext/go2_rl_robotlab/_eval/out"
 MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
@@ -28,7 +29,12 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     t["cmdr_corner_on"] = f"{100 * summ['on']['reset_timeout']['both_planar_at_+bound']:.1f}"
     if os.path.exists(bpath):
         b = json.load(open(bpath, encoding="utf-8"))
-        t["cmdr_bundle_verdict"] = "같음 · 의도한 두 칸 (갈래 이름 · 시작 시각) 말고 다른 값 0" if b["verdict"] == "SAME" else \
+        ko_diff = {"meta.args.cmdr": "CMD-R 켜고 끔", "meta.args.tag": "갈래 이름", "meta.t_start": "시작 시각"}
+        dp = [ko_diff.get(x, x) for x in b.get("diff_paths", [])]
+        arr = b.get("arrays", {})
+        same_arr = sum(1 for v in arr.values() if v == "same")
+        t["cmdr_bundle_verdict"] = (f"같음 · 다른 칸은 의도한 {len(dp)} 개 ({' · '.join(dp)}) 뿐이고, 명령 · 관절 · 지형 레벨 · 위치 · "
+                                    f"난수 상태 등 배열 {same_arr} / {len(arr)} 개가 같음") if b["verdict"] == "SAME" else \
             f"<b>다름</b> · {len(b['problems'])} 곳 (on 갈래 평가는 보류)"
     else:
         t["cmdr_bundle_verdict"] = "on 갈래 시작 전이라 아직 대조 안 함"
@@ -59,7 +65,8 @@ def build(post_path=None, summary_path=None, bundle_path=None):
                          f"<td class=\"num\">{s['early_fail_1s']}</td><td class=\"num\">{li}</td><td class=\"num\">{s['survive_5s']}/{s['n']}</td></tr>")
     t["cmdr_startup_rows"] = "".join(srows) or "<tr><td colspan=\"5\" class=\"sub\">아직 없음</td></tr>"
     st = []
-    st.append(f"<li>유효한 평가 실행 <b>{post['n_valid_runs']}</b> 개 · 시작 상태가 짝이 안 맞아 뺀 것 {len(post['driver_pair_fail'])} · 검사에서 떨어진 것 {len(post['driver_invalid'])}.</li>")
+    asof = time.strftime("%H:%M", time.localtime(os.path.getmtime(post_path or os.path.join(EV, "cmdr_post.json"))))
+    st.append(f"<li>{asof} 집계 · 유효한 평가 실행 <b>{post['n_valid_runs']}</b> 개 · 시작 상태가 짝이 안 맞아 뺀 것 {len(post['driver_pair_fail'])} · 검사에서 떨어진 것 {len(post['driver_invalid'])}.</li>")
     for u in ("22000", "24000"):
         pl = post["proposal_lines"].get(u)
         if pl:
