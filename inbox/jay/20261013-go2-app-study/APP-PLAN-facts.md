@@ -1,5 +1,5 @@
 > 분류: 앱 기획 요약 (사실 · 오현민 「FOOTHOLD 관제 UI」 화면 19 장에서 옮김)
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 00:48
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 00:45
 > 근거: https://claude.ai/artifact/9q2JtTgeitsnhFTGHTVPgw 의 게시 파일 `project/*.dc.html` 19 개 · `project/canvas.json` (판 1791793497-1a83 · 파일 sha256 은 lead 작업 기록)
 > 요지: 앱은 「사람이 들어가기 전에 로봇이 먼저」 위험 현장 (예: 지하 펌프실 가스 사전 측정) 을 걷고 · 보고 · 재고 · 기록하는 관제 PC + 휴대폰 + 보고서다. 지도 (slam_toolbox · L1 라이다 · 0.05 m 칸 · 2D + 3D 점군 · 잡음 지우개) 와 감속 구역 (0.2 ~ 0.3 m/s) · STOP 이 핵심이다
 > 상태: 사실 요약 · 해석은 끝 절에 lead 의견으로 따로
