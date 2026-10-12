@@ -2,7 +2,7 @@
 > 작성: 오흥재 · ASTRA 검토 · 2026-10-10
 > 근거: TASK-astra-3-rl-design.md · EXP-weekend-moects.md · SURVEY-star-code.md · VERIFY-astra.md · VERIFY-astra-2.md · #546 · 아래 고정 SHA의 코드 직접 열람
 > 요지: MoE-CTS의 Isaac Lab 재현은 몸 감각 기반 비교군으로 시작한다. 실행·평가·재시작 조건을 보완하고, 지형 노출과 지형 입력을 분리해 시험한 뒤 AME-2를 판단한다
-> 상태: 설계 초안 · 실행하지 않음 · 예산과 수치 기준은 팀장 확정 전 제안
+> 상태: 설계 초안 · E0 · E1 · E2 · D1-A · G0 실행됨 (10/10~10/12) · 고칠 점은 VERIFY-astra-4/5/6.md · 예산과 수치 기준은 팀장 확정 전 제안
 
 # S3 · 주말 재현 카드 검증과 RL Top-down 실험 설계
 

@@ -5,7 +5,7 @@
 > 근거: 이 세션 실행 기록 · 커밋 · 이슈 댓글
 > 요지: 10/7~10/8 lead 세션이 한 일과 남은 일. 다음 lead 는 이 파일과 #546 부터 읽는다.
 > 상태: 인계
-> 판: v1.0
+> 판: v1.1
 
 `HANDOFF-precompact.md` 는 PreCompact 훅이 다시 쓰므로 거기에 덧붙인 줄은 다음 압축 때 사라진다. 이 파일은 손으로 쓴 인계라 훅이 건드리지 않는다.
 
@@ -56,6 +56,19 @@ super 가 정리한 MVP 이후 설계 논의를 lead 가 팀장과 진행한다.
 - **빌드에 NAS 가 더는 필요 없다.** 위 3절의 `net use` 안내는 M2 전까지 해당 없음.
 - 다음: M2 Cloudflare R2 (조사 `_out/nas-migration/M2-cloudflare-20261009.md` · 팀장이 계정 만듦 · R2 구독은 «스토리지 및 데이터베이스 → R2 객체 스토리지 → 내 계정에 R2 구독 추가»). M3 배포 뒤 재생 측정기는 ASTRA 2차 지적대로 새로 쓴다.
 
+## 3-2. 10/10~10/12 갱신: 주말 로컬 GPU 실험 (#546 D · 팀장 「일요일까지 GPU 놀게 할 수 없다」)
+
+- 코드: `wertyuilife2/go2_rl_robotlab` 28b4516d (MoE-CTS Isaac Lab 판) · `C:/isaac/ext/go2_rl_robotlab` (한글 경로 금지) · env `isaac311-moects`
+- E1 시드 42 · 20,500 iter · 8192 env 끝 (10/11 12:38) · E2 시드 43 GPU 0 진행 (10/12 낮 끝)
+- 평가 · 진단 문서 (전부 `inbox/jay/20261008-546-design/` · 원자료는 `C:/isaac/ext/go2_rl_robotlab/_eval/out/` 21 GB · 저장소에는 문서 · 코드 · 요약표 사본만):
+  - `eval-q-e1/` Q-E1 판 2 · `eval-d1-e1/` D1-A · `eval-g0/` G0 · `eval-qd-e1/` 난이도 · `eval-qc-e1/` 능력 곡선
+  - `eval-d1b-harness/` D1-B 하네스 (본 평가는 계약 확정 뒤 · 확정 표시 없으면 거부)
+  - `eval-cmd-resume/` 명령 분포 · resume · `eval-branch-cmdr/` 분기 실행기 · CMD-R adapter (실험 학습 안 함)
+- ASTRA 의뢰 4 · 5 · 6 = 「고친 뒤 진행」 (`VERIFY-astra-4/5/6.md`). 확정 대기: Q 계약 · D1-B 계약 · 분기 규약 · CMD-R 을 G1 앞에 · 예산
+- 큰 사실: time-out 직후 학습 명령이 +상한 대각선으로 치우침 (reset 순서) · 완전 정지 명령 경로 없음 · resume 은 가중치 · Adam 만 · legacy height scan 은 no-hit 을 1 m 벽(-2.5)으로 읽음
+- **GPU 1 은 화면용 GPU 라 바탕 4.7~5.3 GB 를 쓴다.** 10/12 9/29 렌더(pid 25916) 를 팀장 허락으로 끈 뒤에도 여유 약 11 GB · 8192 env 학습(14.6 GB)은 GPU 1 에 안 들어간다
+- 이 세션의 하위 작업이 GPU 1 여유 4 GB 규칙을 한 번 어겼다 (1024 env update 순간 0.6 GB). 다음 GPU 1 작업은 실행 중 측정 · 자동 중단
+
 ## 4. 팀장 결정 대기 · 팀장 손이 필요한 것
 
 - ~~Vercel 보관 기간 7일~~ **10/8 팀장 설정 완료**: Production · Pre-Production 1 week · Canceled · Errored 1 day (위치는 아래 5절).
@@ -82,3 +95,4 @@ Vercel 대시보드 → 프로젝트 **foothold** → **Settings** → 왼쪽 **
 | 판 | 날짜 | 무엇 | 왜 |
 |---|---|---|---|
 | v1.0 | 2026-10-08 | 처음 씀 | 팀장 「핸드오프 정리해줘」 |
+| v1.1 | 2026-10-12 | 3-2절 주말 실험 | 팀장 10/12 「놓치거나 누수된 작업 재검토」 |
