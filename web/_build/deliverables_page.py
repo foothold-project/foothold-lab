@@ -45,10 +45,18 @@ GATES = [
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),
-    ('NAV · 실기 항법', datetime.date(2026, 11, 7), '조선대 단계 종료', [
+    # ★ 2026-10-12 팀장 확정 일정. 11/7 은 시뮬 쪽 완성 관문으로 바뀌었고,
+    #   실기 항법(SLAM · Nav2)은 11/30 으로 갔다. FINAL 은 «완성 마감» 12/7 이다.
+    #   실제 발표는 12/9 또는 12/10 (학교 · 이스트소프트 공유 대기) · 12/11 수료식.
+    #   SIM 관문은 아직 산출물 문서가 없어 목록이 비어 있다. 문서가 생기면
+    #   deliverables_docs.DOCS 와 여기 둘 다에 넣는다 (_gates_vs_docs 가 대조).
+    ('SIM · 시뮬 · 트윈 · 앱', datetime.date(2026, 11, 7),
+     '시뮬 RL · 디지털 트윈 · dashboard · app 완성', []),
+    ('NAV · 실기 항법', datetime.date(2026, 11, 30), '순정 보행 + 자율주행 SLAM · Nav2 완성', [
         ('deliverables/final/nav-report.md', '실기 항법 검증 리포트'),
     ]),
-    ('FINAL · 최종발표', datetime.date(2026, 12, 11), '지정 코스 자율주행 시연', [
+    ('FINAL · 최종발표', datetime.date(2026, 12, 7),
+     '완성 마감. 실제 발표는 12/9 또는 12/10 (학교 공유 대기) · 12/11 수료식', [
         ('deliverables/final/final-report.md', '최종 실증결과 보고서'),
     ]),
 ]

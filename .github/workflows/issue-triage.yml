@@ -71,6 +71,7 @@ jobs:
           GATES = {
               'A-정책': 'A-정책',
               'MVP': 'MVP · 중간발표',
+              'SIM': 'SIM · 시뮬 · 트윈 · 앱',
               'NAV': 'NAV · 실기 항법',
               'FINAL': 'FINAL · 최종발표',
           }
