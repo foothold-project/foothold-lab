@@ -216,6 +216,9 @@ tpl = open(os.path.join(HERE, 'page.html'), encoding='utf-8').read()
 if MODE == 'videos':
     tpl = tpl.replace('<title>E1 · E2 시뮬 평가</title>', f'<title>E1 · E2 영상 {CK}</title>')
 html = tpl.replace('/*__DATA__*/', 'const D = ' + json.dumps(data, ensure_ascii=False, separators=(',', ':')) + ';')
+# 4판: 본문의 %%이름%% 자리를 원자료에서 계산한 값으로 채운다 (facts4.py · 손으로 쓴 숫자 없음)
+import facts4
+html = facts4.fill(html, facts4.build(page, G))
 os.makedirs(SITE, exist_ok=True)
 open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8', newline='\n').write(html)
 tot = sum(x['mb'] for x in V)

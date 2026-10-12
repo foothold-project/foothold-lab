@@ -42,8 +42,8 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
-.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
-.prose{max-width:70ch}
+.wrap{margin:0;padding:0 clamp(16px,3.2vw,56px)}
+.prose{max-width:none}
 a{color:var(--brand-ink)}
 code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 code{font-size:.88em;background:var(--paper-2);padding:.05em .35em;border-radius:3px}
@@ -147,6 +147,52 @@ table.def{border-collapse:collapse;font-size:14px;width:100%}
 .def td:first-child{font-family:var(--mono);font-size:13px;white-space:nowrap}
 ul.plain{padding-left:18px;margin:8px 0}
 ul.plain li{margin:4px 0}
+/* 4판: 화면 전체 폭을 격자로 나눈다 */
+.headgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px 48px;align-items:start}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 48px;align-items:start}
+.split.w32{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.tri{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);gap:22px 44px;align-items:start}
+.split p,.tri p{margin:0 0 12px}
+.qa{margin:0;display:grid;gap:4px}
+.qa dt{font-weight:600;color:var(--ink)}
+.qa>dt:not(:first-child){margin-top:10px}
+.qa>div{padding:6px 0}
+.qa dd{margin:0;color:var(--ink-2);font-size:15px}
+ol.chain{list-style:none;padding:0;margin:14px 0 20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;counter-reset:c}
+ol.chain li{position:relative;padding:12px 18px 12px 16px;border-top:3px solid var(--rule);display:grid;gap:4px;font-size:14.5px}
+ol.chain li:nth-child(n+3){border-top-color:var(--note)}
+ol.chain li b{font-size:15px}
+ol.chain li span{color:var(--ink-2)}
+ol.chain li+li::before{content:"→";position:absolute;left:-9px;top:-14px;color:var(--ink-3);font-size:14px}
+ol.steps{padding-left:0;list-style:none;margin:10px 0;display:grid;gap:10px;counter-reset:s}
+ol.steps li{display:grid;gap:2px;padding-left:14px;border-left:3px solid var(--rule)}
+ol.steps li:nth-child(-n+1){border-left-color:var(--brand)}
+ol.steps li span{color:var(--ink-2);font-size:14.5px}
+.note-line{margin:18px 0 0;padding:12px 16px;background:var(--paper-2);border-radius:6px}
+.vd.new{background:var(--brand-soft);color:var(--brand-ink)} .vd.gone{background:var(--stop-soft);color:var(--stop-ink)}
+.vd.same{background:var(--paper-2);color:var(--ink-3)} .vd.diff{background:var(--note-soft);color:var(--note-ink)}
+.rew td:first-child,.cmp td:first-child{white-space:nowrap}
+.rew td,.cmp td{font-family:var(--sans)}
+.rew td:nth-child(3),.rew td:nth-child(4){white-space:nowrap;font-family:var(--mono);font-size:13px}
+.rew{min-width:900px}.cmp{min-width:980px}
+.cmp td:last-child{color:var(--ink-2)}
+dl.glossary{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content minmax(0,1fr);gap:8px 18px;margin:8px 0 0;font-size:14.5px}
+dl.glossary dt{font-weight:600;white-space:nowrap}
+dl.glossary dd{margin:0;color:var(--ink-2)}
+.netsvg .pt{font-family:var(--sans);font-size:14px;font-weight:600}
+.split table.def td:not(:first-child),.split table.def th{white-space:normal}
+.split table.def td.num{white-space:nowrap}
+.split table.def td:first-child{white-space:normal;font-family:var(--sans);font-size:13.5px;min-width:5.5em}
+.split table.def.card2 td:first-child{white-space:nowrap}
+.cmp td:first-child{font-family:var(--sans);font-weight:600;font-size:13.5px;color:var(--ink)}
+.netgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px 48px;align-items:start}
+@media (max-width:1500px){.netgrid{grid-template-columns:minmax(0,1fr)}.netgrid .qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:4px 36px}.netgrid .qa>div{break-inside:avoid}}
+.split .tbl table.def td:not(:first-child){white-space:nowrap}
+@media (max-width:1100px){.tri{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tri>div:first-child{grid-column:1/-1}}
+@media (max-width:980px){.headgrid,.split,.split.w32,.tri{grid-template-columns:minmax(0,1fr)}.tri>div:first-child{grid-column:auto}
+  ol.chain{grid-template-columns:minmax(0,1fr)}ol.chain li+li::before{content:"↓";left:16px;top:-12px}
+  dl.glossary{grid-template-columns:max-content minmax(0,1fr)}}
+@media (max-width:560px){dl.glossary{grid-template-columns:minmax(0,1fr)}dl.glossary dt{margin-top:6px}}
 /* 3판 */
 .gaitwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:10px 0}.gaitfig{min-width:0}
 .gaitfig h3{font-size:15px;margin:0 0 4px}
@@ -165,7 +211,7 @@ ul.plain li{margin:4px 0}
 .ex{font:inherit;font-size:13px;text-align:left;border:1px solid var(--rule);background:var(--paper-2);color:var(--brand-ink);border-radius:6px;padding:5px 8px;cursor:pointer}.ex:hover{border-color:var(--brand)}
 .vd.redo{background:var(--paper-2);color:var(--ink-3);border:1px dashed var(--ink-3)}
 .vmode #crit{display:block}
-.vmode #why,.vmode #net{display:none}
+.vmode #why,.vmode #net,.vmode #sum,.vmode #repro,.vmode #vs2,.vmode #see,.vmode #gap,.vmode #drop,.vmode #noise,.vmode #terms{display:none}
 .card2 td:first-child{color:var(--ink-3);font-family:var(--sans);font-size:12.5px}
 .card2 td{font-family:var(--sans);white-space:normal}
 .h3gap{margin-top:26px}
@@ -229,26 +275,59 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 
 <header class="top">
   <div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-12</div>
-  <h1>E1 · E2 시뮬 평가 <span class="seed">MoE-CTS student · 시드 42 / 43</span></h1>
-  <p class="lead prose">같은 설정에서 시드만 바꿔 두 번 학습한 보행 정책을 같은 시험지로 쟀습니다. 걷기 명령은 대부분 넘고, 멈추기가 약점이며, 마지막 500 iter 에서 두 시드 모두 나빠졌습니다.</p>
-  <dl class="meta">
-    <dt>분류</dt><dd>A/정책학습 · 평가 · E1 대 E2</dd>
-    <dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12</dd>
-    <dt>근거</dt><dd>평가 원자료 <code>episodes.csv</code> (cell 당 100 episode) · <code>E12-cells.csv</code> · 학습 기록 <code>E1/E2_curves.csv</code> · HUD 영상 (기록 재생). 표의 숫자 중 16 개와 묶음 평균 6 개를 원자료에서 다시 세어 맞춤</dd>
-    <dt>요지</dt><dd>걷기 명령 통과 · 멈추기 약점 · 20499 가 20000 보다 나쁨 · 시드 차는 20499 에서 커짐</dd>
-    <dt>상태</dt><dd>3판 (10/12 밤) · 실험 배경 · 신경망 그림 · 판정 근거 · 나란히 재생 추가 · 결함 영상 24 편 교체 · 판정 기준(Q)은 lead 임시 조건이며 팀장 확정 전 · 학습은 Linux 이전까지 멈춤</dd>
-  </dl>
-  <div class="keys"><span><span class="dot" style="background:var(--e1)"></span>E1 · 시드 42</span><span><span class="dot" style="background:var(--e2)"></span>E2 · 시드 43</span><span>체크포인트 <span class="num">model_20000</span> = 명령 상한 0.5 m/s 의 끝 · <span class="num">model_20499</span> = 상한 1.0 m/s 로 넓힌 뒤 500 iter</span></div>
+  <div class="headgrid">
+    <div>
+      <h1>E1 · E2 시뮬 평가 <span class="seed">MoE-CTS student · 시드 42 / 43</span></h1>
+      <p class="lead">공개된 최신 보행 정책 코드 (MoE-CTS) 를 우리 컴퓨터에서 시드만 바꿔 두 번 학습하고, 같은 시험지로 쟀습니다. 이 정책은 <b>지형을 보지 않고 몸 감각만으로</b> 걷습니다. 걷기 명령은 대부분 넘고, 멈추기가 약점이며, 마지막 500 iteration 에서 두 시드 모두 나빠졌습니다. 결론이 아니라 <b>중간 정리</b> 입니다.</p>
+      <div class="keys"><span><span class="dot" style="background:var(--e1)"></span>E1 · 시드 42</span><span><span class="dot" style="background:var(--e2)"></span>E2 · 시드 43</span><span>체크포인트 <span class="num">model_20000</span> = 명령 상한 0.5 m/s 로 학습한 끝 · <span class="num">model_20499</span> = 상한을 1.0 m/s 로 넓힌 뒤 500 iteration</span></div>
+    </div>
+    <dl class="meta">
+      <dt>분류</dt><dd>A/정책학습 · 평가 · E1 대 E2</dd>
+      <dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12</dd>
+      <dt>근거</dt><dd>평가 원자료 <code>episodes.csv</code> (칸마다 100 판) · 학습 기록 <code>E1/E2_curves.csv</code> · 학습 때 저장된 설정 <code>env.yaml</code> · 코드 <code>go2_rl_robotlab @28b4516d</code> · v2 모델 카드 <code>models/foothold-v2.json</code>. 이 페이지의 숫자는 생성 스크립트가 원자료에서 읽어 넣었습니다</dd>
+      <dt>요지</dt><dd>걷기 통과 · 멈추기 약점 · 20499 하락은 명령 범위를 넓힌 직후 · 지형을 보지 않아 gap · 징검다리는 아직 못 배움</dd>
+      <dt>상태</dt><dd>4판 (10/12 밤) · 중간 정리 · v2 와 비교 · 쉬운 설명 추가 · 판정 기준 (Q) 은 lead 임시 조건이며 팀장 확정 전 · 학습은 Linux 이전까지 멈춤</dd>
+    </dl>
+  </div>
 </header>
+
+<section id="sum">
+  <h2>중간 정리: 지금까지 알게 된 것</h2>
+  <div class="tri">
+    <div>
+      <h3>한 것</h3>
+      <p>9월의 v2 는 NVIDIA 가 공개한 Go2 정책에서 출발해, <b>발밑 지형 높이 지도를 보는</b> 정책을 틈 (gap) 지형으로 더 학습시킨 것이었습니다. 이번에는 거꾸로 <b>지형을 보지 않는</b> 최신 공개 구현 MoE-CTS (RSS 2026) 를 코드 그대로 가져와 처음부터 학습했습니다.</p>
+      <p>GPU 한 장에서 24 시간씩 두 번 (시드 42 · 43) 학습했고, 학습 지형 8 종 × 명령 11 가지 × 출발 자리 두 종류 = 116 칸을 칸마다 100 판씩 평가했습니다. 관측 noise 를 끈 판과 켠 판을 따로 쟀습니다.</p>
+    </div>
+    <div>
+      <h3>알게 된 것</h3>
+      <ul class="plain">
+        <li><b>걷기 명령은 대부분 넘습니다.</b> 전진 · 후진 · 옆걸음 · 제자리 회전의 칸 대부분이 통과율 90 % 이상입니다.</li>
+        <li><b>멈추기가 약점입니다.</b> 0.3 m/s 로 걷다 멈추라고 하면 4 cm 안에서 서지만, 1 초 동안 완전히 가만히 있지를 못합니다. 센서 noise 를 켜면 거의 다 실패합니다 (<a href="#noise">아래</a>).</li>
+        <li><b>20,499 가 20,000 보다 나쁜 것은 명령 범위를 두 배로 넓힌 직후이기 때문으로 보입니다</b> (추정 · <a href="#drop">아래</a>).</li>
+        <li><b>느리게 걸으라고 하면 걸음 모양이 바뀝니다.</b> 앞발 둘은 땅에 붙이고 뒷발만 디딥니다 (<a href="#gait">아래</a>).</li>
+        <li><b>gap · 징검다리는 이 실험으로는 못 배웁니다.</b> 배포하는 student 가 지형을 보지 않고, 학습 지형에 그 둘이 0 % 입니다 (<a href="#gap">아래</a>).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>아직 모르는 것 · 정할 것</h3>
+      <ul class="plain">
+        <li>20,499 의 하락이 학습을 더 하면 회복되는지. 저장소 기본 학습 길이는 300,000 iteration 인데 우리는 20,500 에서 멈췄습니다.</li>
+        <li>판정 기준 (팀장 결정): 경계 (기준 ±10 %) 를 통과로 셀지 · 저속 명령은 비율로 잴지 · noise 켬을 주 조건으로 할지.</li>
+        <li>다음 학습 순서 (팀장 결정): gap 을 학습 지형에 넣기 → student 에게 지형 지도 주기 → 마지막에 AME-2. Linux 로 옮긴 뒤 돌립니다.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
 <section id="why">
   <h2>이 실험은 무엇인가</h2>
-  <div class="prose">
-    <p><b>출발점은 위에서 아래로 (Top-down) 입니다.</b> 보상과 관측을 하나씩 쌓아 올리는 대신, 이미 공개된 최신 보행 정책 구현을 우리 기계에서 그대로 돌려 「코드가 주는 숫자」 로 기준선을 먼저 세웠습니다. AME-2 를 논문만 보고 재현한 v1~v6 에서 시작점이 달라 결과가 나오지 않은 교훈 때문입니다 (팀장 10/8 방향: star 저장소의 코드까지 보고 다시 설계 · AME-2 는 마지막).</p>
-    <p><b>왜 MoE-CTS 인가.</b> 팀이 모은 보행 저장소 가운데 우리와 판이 같은 구현입니다 (Isaac Lab 2.3.2 · Unitree Go2 · 험지 · 속도 명령). RSS 2026 논문 MoE-CTS (arXiv 2602.00678) 를 Isaac Lab 으로 옮긴 공개 코드입니다. 이 구조에서 지형 높이 지도는 학습용 teacher 만 보고, 실제로 쓰는 student 는 몸 감각 이력만 봅니다. 그래서 이 실험은 <b>「지형을 직접 보지 않고 몸 감각만으로 어디까지 걷나」</b> 의 기준선입니다. 「발 놓을 곳을 미리 안다」 는 student 에 지형 입력을 넣는 다음 실험이 답할 물음입니다.</p>
-    <p><b>E1 과 E2 는 시드만 다릅니다.</b> 같은 코드 · 같은 설정 · 무작위 초기화에서 시드 42 와 43 으로 두 번 학습했습니다. E1 의 성능과 실패가 시드 하나의 우연인지 가르는 반복입니다.</p>
-  </div>
-  <div class="cols" style="margin-top:12px">
+  <div class="split w32">
+    <div>
+      <p><b>출발점은 위에서 아래로 (Top-down) 입니다.</b> 보상과 관측을 하나씩 쌓아 올리는 대신, 이미 공개된 최신 보행 정책 구현을 우리 기계에서 그대로 돌려 「코드가 주는 숫자」 로 기준선을 먼저 세웠습니다. AME-2 를 논문만 보고 재현한 v1~v6 에서 시작점이 달라 결과가 나오지 않은 교훈 때문입니다 (팀장 10/8 방향: star 저장소의 코드까지 보고 다시 설계 · AME-2 는 마지막).</p>
+      <p><b>왜 MoE-CTS 인가.</b> 팀이 모은 보행 저장소 가운데 우리와 판이 같은 구현입니다 (Isaac Lab 2.3.2 · Unitree Go2 · 험지 · 속도 명령). RSS 2026 논문 MoE-CTS (arXiv 2602.00678) 를 저자들이 Isaac Lab 으로 옮긴 공개 코드입니다. 이 구조에서 지형 높이 지도는 학습용 teacher 만 보고, 실제로 쓰는 student 는 몸 감각 이력만 봅니다. 그래서 이 실험은 <b>「지형을 보지 않고 몸 감각만으로 어디까지 걷나」</b> 의 기준선입니다.</p>
+      <p><b>E1 과 E2 는 시드만 다릅니다.</b> 시드는 무작위 수의 출발값입니다. 같은 코드 · 같은 설정이라도 시드가 다르면 처음 신경망 값과 연습 상황이 달라 학습 경로가 조금씩 갈립니다. 두 번 돌려서 E1 의 성적과 실패가 우연인지 가립니다.</p>
+    </div>
     <div>
       <h3>실험 카드</h3>
       <table class="def card2">
@@ -257,35 +336,155 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
           <tr><td>시드</td><td>42</td><td>43</td></tr>
           <tr><td>학습</td><td>10/10 12:48 → 10/11 12:38 · 23.8 h</td><td>10/11 12:40 → 10/12 12:49 · 24.2 h</td></tr>
           <tr><td>장비</td><td colspan="2">RTX 5080 16 GB 한 장 · Windows · Isaac Lab 2.3.2</td></tr>
-          <tr><td>env</td><td colspan="2">8,192 (teacher 6,144 · student 2,048)</td></tr>
-          <tr><td>iteration</td><td colspan="2">20,500 · env 당 24 step → 약 40 억 step (시뮬 시간 약 2.6 년)</td></tr>
-          <tr><td>저장</td><td colspan="2">500 iter 간격 · 42 개 체크포인트</td></tr>
+          <tr><td>env</td><td colspan="2">8,192 대의 가상 로봇을 동시에 (teacher 6,144 · student 2,048)</td></tr>
+          <tr><td>iteration</td><td colspan="2">20,500 번. 1 번 = 모든 로봇이 24 step (0.48 초) 걷고 그 경험으로 신경망을 한 번 고침 · 합계 약 40 억 step (시뮬 시간 약 2.6 년)</td></tr>
+          <tr><td>저장</td><td colspan="2">500 iteration 마다 · 42 개 체크포인트</td></tr>
           <tr><td>코드</td><td colspan="2"><code>wertyuilife2/go2_rl_robotlab @28b4516d</code> · task <code>RobotLab-Go2-v0</code></td></tr>
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section id="repro">
+  <h2>논문 재현이라고 부르지 않는 까닭</h2>
+  <p class="sub">논문 숫자와 이 페이지 숫자 사이에는 네 번의 「다름」 이 있습니다. 앞의 두 번은 저자들이 README 에 직접 적은 것이고, 뒤의 두 번은 우리가 만든 것입니다.</p>
+  <ol class="chain">
+    <li><b>논문의 원래 코드</b><span>Isaac Gym 판 <code>go2_rl_gym</code>. 논문 표의 숫자는 이 코드에서 나왔습니다.</span></li>
+    <li><b>저자들의 Isaac Lab 이식</b><span>우리가 받은 코드. README 「Differences from go2_rl_gym」 이 아래 다섯 가지가 다르다고 밝힙니다.</span></li>
+    <li><b>우리 실행</b><span>env 16,384 → 8,192 (GPU 메모리 16 GB 에 안 들어감) · iteration 300,000 → 20,500 (기본 길이의 약 7 %, 주말 예산).</span></li>
+    <li><b>우리 평가</b><span>저자들은 RoboGauge 라는 자기들 평가 도구의 점수를 냅니다. 우리는 Q 라는 별도 시험지 (아래 판정 기준) 로 쟀습니다.</span></li>
+  </ol>
+  <div class="split">
     <div>
-      <h3>저장소 기본값과 다르게 둔 것</h3>
+      <h3>README 가 밝힌 다섯 가지 차이</h3>
+      <table class="def">
+        <thead><tr><th>무엇</th><th>무엇이 다른가</th><th>쉬운 말로</th></tr></thead>
+        <tbody>
+          <tr><td>모터</td><td>단순 PD 제어기 대신 Unitree 공식 모터 모형</td><td>관절 모터를 「용수철 + 완충기」 로 단순하게 흉내 내던 것을, 실제 Go2 모터가 힘을 내는 방식 (늦게 반응하는 것 포함) 대로 계산합니다.</td></tr>
+          <tr><td>보상</td><td>속도 따라가기 점수 2 배 · 오차 허용 폭 고정 · 관절 가속 벌점 작게 · 관절 자세 벌점 추가</td><td>「명령대로 가면 주는 점수」 를 키우고, 채점 방식 몇 가지를 Isaac Lab 에 맞게 바꿨습니다.</td></tr>
+          <tr><td>무작위화</td><td>행동 단계의 명령 지연 무작위 없음 (대신 모터 모형 안에서 0 ~ 4 물리 step, 곧 0 ~ 20 ms 지연을 무작위로) · 모터 힘 무작위 없음</td><td>아래 「무작위화란」 참고. 원래 코드는 매 판마다 「명령이 모터에 닿는 시간」 과 「모터 힘」 을 일부러 바꿨습니다. 이 판은 모터 힘은 바꾸지 않고, 지연은 모터 모형 안에서 0 ~ 20 ms 사이로 바꿉니다.</td></tr>
+          <tr><td>관측 이력</td><td>5 프레임 → 10 프레임</td><td>student 가 기억하는 과거가 0.1 초에서 0.2 초로 늘었습니다.</td></tr>
+          <tr><td>지형 난이도</td><td>계단식 단계 → 연속 값</td><td>난이도를 1 단계 · 2 단계가 아니라 0.43 처럼 이어진 값으로 정합니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>무작위화 (domain randomization) 란</h3>
+      <p>시뮬레이터 속 로봇과 바닥은 실제와 똑같을 수 없습니다. 그래서 학습할 때 <b>바닥의 미끄러움, 몸무게, 모터 세기 같은 값을 일부러 매번 조금씩 바꿔서</b> 연습시킵니다. 운동화를 바꿔 신고, 가방 무게를 바꿔 가며 걷기 연습을 하는 것과 같습니다. 그러면 실제 로봇이 시뮬과 조금 달라도 넘어지지 않습니다.</p>
+      <p>이 코드 (E1 · E2 학습) 가 실제로 바꾸는 것:</p>
       <ul class="plain">
-        <li><b>env 16,384 → 8,192.</b> 16 GB 에 들어가지 않았습니다. 같은 iteration 에서 표본이 절반입니다.</li>
-        <li><b>iteration 300,000 → 20,500.</b> 주말 예산입니다. 명령 범위가 처음 넓어지는 20,000 직후까지만 학습했습니다.</li>
-        <li><b>명령 범위 단계.</b> 전진 상한 0.5 m/s 로 시작해 20,000 iter 에 ±1.0 m/s (옆 ±1.0 · 회전 ±1.5 rad/s), 50,000 iter 에 ±2.0 m/s 로 넓어집니다. 우리는 50,000 에 가지 않았습니다.</li>
+        <li>바닥과 발의 마찰 0 ~ 2 (얼음 ~ 고무) · 튀는 정도 0 ~ 0.5</li>
+        <li>몸통 무게 ±1 kg · 다른 부위 무게 ±10 % · 몸통 무게중심 ±3 cm</li>
+        <li>관절 모터의 단단함 · 완충 ±10 % · 관절 0 점 어긋남 ±0.035 rad (약 2 도)</li>
+        <li>모터가 명령을 받는 지연 0 ~ 20 ms (모터 모형 안에서)</li>
+        <li>4 초마다 몸을 밀기 (앞뒤 · 옆 ±0.4 m/s, 기울기 · 회전 ±0.6 rad/s 의 속도를 갑자기 줌)</li>
+        <li>출발 자리 ±0.5 m · 방향 360 도 · 처음 관절 자세 ×0.5~1.5</li>
       </ul>
-      <h3 style="margin-top:14px">논문 재현이라고 부르지 않는 까닭</h3>
-      <ul class="plain">
-        <li>저장소 README 가 원 논문 (Isaac Gym 판) 과 보상 · 모터 · 관측 이력 · 무작위화가 다르다고 밝힙니다.</li>
-        <li>gap · stepping stones 지형은 이 코드에서 학습 비중이 0 입니다.</li>
-        <li>저자 공개 정책 (176k iter) 은 예산 · 조건이 달라 참고군이고 비교군이 아닙니다.</li>
-      </ul>
+      <p class="sub">평가 때는 밀기를 끄고 출발 자세를 고정했습니다 (아래 「명령과 평가 조건」). v2 는 이보다 훨씬 적게 바꿨습니다 (아래 비교표).</p>
     </div>
   </div>
+  <p class="note-line">그래서 이 페이지의 결과는 「논문 숫자를 다시 낸 것」 이 아니라 <b>「공개 코드를 우리 조건에서 돌린 기준선」</b> 입니다. 저자 공개 정책 (176k iteration) 은 예산과 조건이 달라 참고군이고 비교군이 아닙니다.</p>
+</section>
+
+<section id="vs2">
+  <h2>v2 에서 무엇이 바뀌었나</h2>
+  <p class="sub">v2 (9/29 배포 · <code>models/foothold-v2.pt</code>) 와 이번 E1 · E2 를 같은 칸끼리 놓았습니다. 왼쪽 v2 는 NVIDIA 공개 정책에서 이어 학습한 것이고, 오른쪽은 다른 구조를 처음부터 학습한 것입니다. 숫자는 두 체크포인트의 가중치 모양과 학습 때 저장된 설정에서 읽었습니다.</p>
+  <div class="netbox">
+  <svg viewBox="0 0 1240 360" role="img" aria-labelledby="vsT vsD" class="netsvg">
+    <title id="vsT">v2 와 MoE-CTS 신경망 비교</title>
+    <desc id="vsD">v2 는 몸 감각 48 과 발밑 높이 지도 187 을 합친 235 를 actor 하나가 받아 관절 목표 12 를 낸다. MoE-CTS 의 배포 student 는 몸 감각 이력 450 만 받아 MoE encoder 로 32 차원 요약을 만들고, actor 가 그 요약과 현재 몸 감각 45 로 관절 목표 12 를 낸다. 지형 지도는 학습 때 teacher 만 본다.</desc>
+    <text x="16" y="24" class="lane lT">v2 · 9/29 · NVIDIA 정책에서 이어 학습</text>
+    <rect x="16" y="40" width="262" height="150" rx="8" class="box bS"/>
+    <text x="30" y="64" class="bt">몸 감각 48</text>
+    <text x="30" y="88" class="bx">몸 속도 3 (실제 값) · 각속도 3</text>
+    <text x="30" y="110" class="bx">중력 방향 3 · 명령 3</text>
+    <text x="30" y="132" class="bx">관절 각도 12 · 속도 12</text>
+    <text x="30" y="154" class="bx">직전 행동 12 · 한 프레임만</text>
+    <text x="30" y="176" class="bx dim">기억 (이력) 없음</text>
+    <rect x="16" y="206" width="262" height="86" rx="8" class="box bS"/>
+    <text x="30" y="230" class="bt">발밑 높이 지도 187</text>
+    <text x="30" y="254" class="bx">앞뒤 1.6 m × 좌우 1.0 m · 10 cm 간격</text>
+    <text x="30" y="276" class="bx">시뮬레이터가 주는 정답 지도</text>
+    <rect x="330" y="86" width="230" height="106" rx="8" class="box bK"/>
+    <text x="344" y="112" class="bt">Actor</text>
+    <text x="344" y="136" class="bx">입력 48 + 187 = %%v2_actor_in%%</text>
+    <text x="344" y="158" class="bm">MLP 512 · 256 · 128</text>
+    <text x="344" y="180" class="bx">→ 관절 목표 %%v2_out%%</text>
+    <rect x="330" y="214" width="230" height="78" rx="8" class="box bK dash"/>
+    <text x="344" y="240" class="bt">Critic · 학습 때만</text>
+    <text x="344" y="262" class="bx">actor 와 같은 입력 %%v2_critic_in%%</text>
+    <text x="344" y="282" class="bx">→ 가치 (앞으로 받을 점수)</text>
+    <line x1="278" y1="115" x2="326" y2="128" class="ln lS" marker-end="url(#mS)"/>
+    <path d="M278,249 C306,249 300,170 326,165" class="ln lS" marker-end="url(#mS)"/>
+    <text x="16" y="322" class="bx">배포 · 평가 때도 지도 187 이 들어갑니다. 지형을 <tspan class="bs lS">보고</tspan> 딛는 정책입니다.</text>
+
+    <line x1="600" y1="20" x2="600" y2="340" class="ax"/>
+
+    <text x="630" y="24" class="lane lS">E1 · E2 · MoE-CTS · 처음부터 학습</text>
+    <rect x="630" y="40" width="250" height="120" rx="8" class="box bS"/>
+    <text x="644" y="64" class="bt">몸 감각 이력 %%e1_student_in%%</text>
+    <text x="644" y="88" class="bx">45 × 10 프레임 (최근 0.2 초)</text>
+    <text x="644" y="110" class="bx">몸 속도 없음 · 지형 지도 없음</text>
+    <text x="644" y="132" class="bx">관측 noise 있음 (학습 때)</text>
+    <rect x="904" y="58" width="150" height="84" rx="8" class="box bS"/>
+    <text x="918" y="84" class="bt">MoE encoder</text>
+    <text x="918" y="106" class="bx">전문가 %%e1_experts%% 명</text>
+    <text x="918" y="128" class="bm">→ z_s %%e1_latent%%</text>
+    <rect x="1078" y="40" width="150" height="120" rx="8" class="box bK"/>
+    <text x="1092" y="66" class="bt">Actor</text>
+    <text x="1092" y="90" class="bx">z 32 + 현재 45</text>
+    <text x="1092" y="112" class="bx">= %%e1_actor_in%%</text>
+    <text x="1092" y="134" class="bm">→ 관절 목표 12</text>
+    <line x1="880" y1="100" x2="900" y2="100" class="ln lS" marker-end="url(#mS)"/>
+    <line x1="1054" y1="100" x2="1074" y2="100" class="ln lS" marker-end="url(#mS)"/>
+    <rect x="630" y="206" width="250" height="86" rx="8" class="box bT dash"/>
+    <text x="644" y="230" class="bt">특권 관측 %%e1_teacher_in%% · 학습 때만</text>
+    <text x="644" y="254" class="bx">지형 지도 187 · 발 힘 · 몸 속도</text>
+    <text x="644" y="276" class="bx">관절 가속 · 토크 · noise 없음</text>
+    <rect x="904" y="216" width="150" height="66" rx="8" class="box bT dash"/>
+    <text x="918" y="242" class="bt">teacher enc</text>
+    <text x="918" y="266" class="bm">→ z_t %%e1_latent%%</text>
+    <line x1="880" y1="249" x2="900" y2="249" class="ln lT dashl" marker-end="url(#mT)"/>
+    <line x1="979" y1="212" x2="979" y2="146" class="ln lL dashl" marker-end="url(#mS)"/>
+    <text x="970" y="186" class="bx lLt end">z_s 를 z_t 에 맞춤</text>
+    <path d="M1054,249 C1070,249 1066,160 1090,160" class="ln lT dashl" marker-end="url(#mT)"/>
+    <rect x="1078" y="214" width="150" height="78" rx="8" class="box bK dash"/>
+    <text x="1092" y="240" class="bt">Critic</text>
+    <text x="1092" y="262" class="bx">z 32 + 275 = %%e1_critic_in%%</text>
+    <text x="1092" y="282" class="bx">학습 때만</text>
+    <text x="630" y="322" class="bx">배포 · 평가 때는 실선 길만 씁니다. 지형을 <tspan class="bs lT">보지 않고</tspan> 몸 감각으로 딛는 정책입니다.</text>
+  </svg>
+  </div>
+  <div class="tbl" style="margin-top:14px"><table class="def cmp">
+    <thead><tr><th>칸</th><th>v2 (9/29)</th><th>E1 · E2 (MoE-CTS)</th><th>그래서</th></tr></thead>
+    <tbody>
+      <tr><td>출발</td><td>NVIDIA 공개 Go2 정책에서 이어서 %%v2_iter%% iteration · env %%v2_envs%%</td><td>아무것도 모르는 상태에서 20,500 iteration · env 8,192</td><td>v2 는 이미 걷는 정책을 고쳤고, E1 은 걷기부터 새로 배웠습니다.</td></tr>
+      <tr><td>정책이 보는 것</td><td>몸 감각 48 (실제 몸 속도 포함) + 발밑 높이 지도 187. 한 프레임</td><td>몸 감각 45 × 10 프레임. 몸 속도 · 지도 없음</td><td>실제 Go2 에는 정확한 몸 속도계와 정답 지도가 없습니다. E1 의 입력이 실기에 더 가깝지만 지형을 못 봅니다.</td></tr>
+      <tr><td>신경망</td><td>actor · critic 각각 MLP 하나</td><td>teacher · MoE student encoder · 공유 actor · critic</td><td>아래 「신경망 구조」.</td></tr>
+      <tr><td>명령</td><td>%%v2_cmd%% · env %%v2_stand%% % 는 제자리 · %%v2_resample%% 초마다 바뀜</td><td>%%e1_cmd0%% 로 시작 → %%e1_cmd_steps%% · %%e1_resample%% 초마다 바뀜 · %%e1_limitp%% % 는 범위 끝값 · 정지 명령 %%e1_zero%% %</td><td>v2 는 앞으로만 가는 정책이고, E1 은 앞뒤 · 옆 · 회전 · 정지를 모두 배웁니다. 대신 상한이 0.5 m/s 로 시작해 낮습니다.</td></tr>
+      <tr><td>학습 지형</td><td>%%v2_terrain%%</td><td>%%e1_terrain%%</td><td>v2 는 틈 (gap) 을 10 % 연습했고, E1 은 gap · 징검다리를 0 % 연습했습니다.</td></tr>
+      <tr><td>무작위화</td><td>마찰 고정 (0.8 · 0.6) · 몸통 무게 −1 ~ +3 kg · 밀기 없음 · 출발 자세 거의 고정</td><td>마찰 0 ~ 2 · 무게 · 무게중심 · 모터 세기 · 관절 0 점 · 4 초마다 밀기 · 출발 자세 넓게</td><td>E1 은 훨씬 거친 연습을 했습니다. 실기에 버티는 쪽은 E1 의 방식입니다.</td></tr>
+      <tr><td>판이 끝나는 조건</td><td>몸통이 닿음 (1 N) · 지형 아래로 3 m 추락 · 20 초</td><td>몸통이 닿음 (1 N, <code>illegal_contact</code>) · 25 초</td><td>둘 다 「몸통이 땅에 닿으면 넘어진 것」 으로 보고 그 판을 끝냅니다.</td></tr>
+      <tr><td>보상 항</td><td>%%v2_nrew%% 개 (0 으로 꺼 둔 둘 제외)</td><td>%%e1_nrew%% 개</td><td>아래 표. E1 에는 걸음 모양 보상 (<code>feet_air_time</code>) 이 없습니다.</td></tr>
+      <tr><td>gap · 징검다리 성적</td><td>gap: %%v2_gap%% · 징검다리: %%v2_ss%% (난이도 0.5 · 규격 2 · 징검다리 1.0 m/s 는 시드 다섯에서 0 ~ 24 %)</td><td>재지 않음 (학습 지형에 없음 · 지형을 못 봄)</td><td>v2 와 E1 은 평가 잣대가 달라 숫자를 직접 견주지 않습니다.</td></tr>
+    </tbody>
+  </table></div>
+  <h3 class="h3gap">보상 항 하나하나</h3>
+  <p class="sub">강화학습은 매 step (0.02 초) 점수를 주며 가르칩니다. + 는 받는 점수, − 는 벌점이고 숫자가 클수록 그 항이 중요합니다. 이 점수는 학습용이고, 이 페이지의 「통과 · 미달」 판정과는 다른 것입니다.</p>
+  <div class="tbl"><table class="def rew">
+    <thead><tr><th>보상 항</th><th>무엇을 하면 점수 · 벌점인가</th><th>v2</th><th>E1 · E2</th><th></th></tr></thead>
+    <tbody>%%reward_rows%%</tbody>
+  </table></div>
 </section>
 
 <section id="net">
   <h2>신경망 구조</h2>
-  <p class="prose">우리가 돌린 코드 (<code>actor_critic_moe_cts.py</code> · <code>moe.py</code> · <code>moe_cts.py</code>) 와 학습 때 저장된 설정 (<code>agent.yaml</code> · <code>env.yaml</code>) 에서 읽은 그대로 그렸습니다. 논문 그림을 옮긴 것이 아닙니다. 숫자는 차원 수입니다.</p>
-  <div class="netbox">
-  <svg viewBox="0 0 1040 610" role="img" aria-labelledby="netT netD" class="netsvg">
+  <div class="netgrid">
+    <div>
+      <p class="sub">우리가 돌린 코드 (<code>actor_critic_moe_cts.py</code> · <code>moe.py</code> · <code>moe_cts.py</code>) 와 학습 때 저장된 설정 (<code>agent.yaml</code> · <code>env.yaml</code>) 에서 읽은 그대로 그렸습니다. 숫자는 칸 수 (차원) 이고, E1 체크포인트 가중치 모양과 맞춰 확인했습니다 (teacher 입력 %%e1_teacher_in%% · student 입력 %%e1_student_in%% · actor 입력 %%e1_actor_in%% · critic 입력 %%e1_critic_in%%).</p>
+      <div class="netbox">
+<svg viewBox="0 0 1040 610" role="img" aria-labelledby="netT netD" class="netsvg">
     <title id="netT">MoE-CTS 신경망 구조</title>
     <desc id="netD">특권 관측 275 차원이 teacher encoder 를 거쳐 z_t 32 가 되고, 몸 감각 이력 450 차원이 MoE student encoder 를 거쳐 z_s 32 가 된다. 공유 actor 는 z 와 현재 몸 감각 45 를 받아 관절 목표 12 를 낸다. critic 은 z 와 특권 관측으로 가치를 낸다. student encoder 는 z_s 를 z_t 에 맞추는 latent loss 로 학습한다.</desc>
     <defs>
@@ -379,20 +578,71 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
     <text x="332" y="570" class="bx">학습 때만 쓰는 길 (teacher · critic · latent loss)</text>
     <text x="10" y="598" class="bx">학습: 매 iteration 마다 6,144 env 는 teacher 길로, 2,048 env 는 student 길로 걷고, 두 경험 모두 PPO 로 같은 actor · critic 을 고칩니다.</text>
   </svg>
-  </div>
-  <div class="cols" style="margin-top:10px">
-    <ul class="plain">
-      <li><b>배포 · 평가 때 쓰는 길.</b> 몸 감각 이력 450 → MoE encoder → z_s 32 → actor (+ 현재 몸 감각 45) → 관절 목표 12. 지형 정보는 어디에도 들어가지 않습니다. 이 페이지의 평가는 모두 이 길입니다.</li>
-      <li><b>동시 학습 (CTS · Concurrent Teacher-Student).</b> teacher 를 먼저 다 키운 뒤 student 를 따로 가르치는 방식이 아닙니다. 한 iteration 안에서 env 의 75 % 는 teacher 길로, 25 % 는 student 길로 걷고, 두 쪽 경험이 같은 actor 와 critic 을 PPO 로 함께 학습합니다.</li>
-    </ul>
-    <ul class="plain">
-      <li><b>student encoder 는 따로 배웁니다.</b> PPO 기울기는 들어가지 않고, 「z_s 를 z_t 에 맞추라」 는 latent loss 만으로 학습합니다 (별도 Adam · 학습률 0.001).</li>
-      <li><b>MoE (전문가 섞기).</b> 공유 MLP 위에서 전문가 8 개가 각자 32 차원 잠재값을 내고, gating 망이 상황마다 8 개 가중치 (합 1) 를 정해 섞습니다. 부하 균형 손실 (계수 0.01) 이 한 전문가로 쏠리는 것을 막습니다.</li>
-      <li><b>PPO 설정.</b> clip 0.2 · env 당 24 step / iteration · 5 epoch × 4 mini-batch · 학습률 0.001 (KL 0.01 에 맞춰 조절) · γ 0.99 · λ 0.95 · entropy 0.01.</li>
-    </ul>
+      </div>
+    </div>
+    <dl class="qa">
+      <div><dt>왜 teacher 와 student 둘을 두나</dt>
+      <dd>teacher 는 <b>눈을 뜨고 걷는 선생</b> 입니다. 시뮬레이터만 아는 정답 (발밑 지형 지도, 정확한 몸 속도, 발이 땅을 누르는 힘) 을 봅니다. 이것을 <b>특권 관측</b> 이라 부릅니다. student 는 <b>실제 Go2 가 가진 감각만으로 걷는 학생</b> 입니다. 관절 각도 · 속도와 몸의 기울기 · 회전만 봅니다. 실제 로봇에는 정답 지도가 없으니 배포하는 것은 student 이고, teacher 는 학습 때만 쓰고 버립니다.</dd></div>
+      <div><dt>z 는 무엇인가 · 32 는</dt>
+      <dd>z 는 <b>「지금 상황」 을 숫자 32 개로 줄인 요약</b> 입니다. 「앞이 오르막이고 바닥이 미끄럽다」 같은 내용이 32 개 숫자에 담기지만, 칸마다 사람이 정한 뜻은 없고 신경망이 스스로 정합니다. teacher 가 정답을 보고 만든 요약이 <b>z_t</b>, student 가 지난 0.2 초의 몸 감각으로 추측한 요약이 <b>z_s</b> 입니다. 32 는 저자 설정 (<code>latent_dim</code>) 이고 우리가 바꿔 보지 않았습니다.</dd></div>
+      <div><dt>L2 정규화는 왜 하나</dt>
+      <dd>32 개 숫자를 화살표 하나로 보고 <b>화살표 길이를 늘 1 로 맞추는 것</b> 입니다. 방향만 남고 크기는 같아집니다. 코드는 teacher · student 요약 모두에 이것을 겁니다. 흔히 드는 까닭은 두 가지입니다. student 가 따라 할 목표 z_t 의 크기가 들쭉날쭉하지 않아 맞추기 쉽고, actor 가 요약의 「크기」 에만 기대지 않게 됩니다. 논문이 이 선택의 까닭을 어떻게 적었는지는 아직 확인하지 않았습니다.</dd></div>
+      <div><dt>학습 75 % · 학습 25 % · 배포 100 % 는</dt>
+      <dd>학습 때 가상 로봇 8,192 대 가운데 <b>6,144 대 (75 %) 는 teacher 의 요약 z_t 로</b>, <b>2,048 대 (25 %) 는 student 의 요약 z_s 로</b> 걷습니다. 두 무리의 경험이 같은 actor 를 함께 고칩니다. 그래서 actor 는 정답 요약으로도, 추측한 요약으로도 걸을 수 있게 됩니다. 이렇게 둘을 한 번에 키우는 방식을 CTS (Concurrent Teacher-Student) 라 합니다. 배포 · 평가 때는 100 % student 입니다.</dd></div>
+      <div><dt>student 는 무엇으로 배우나</dt>
+      <dd>「z_s 를 z_t 에 맞추라」 는 latent loss 하나로 배웁니다. 두 요약의 차이를 제곱해 평균낸 값이고, 이 값이 작아지도록 student encoder 만 고칩니다 (student 무리 25 % 의 경험으로 · 따로 Adam · 학습률 0.001). 걷기 점수 (보상) 는 student encoder 로 직접 흘러가지 않습니다.</dd></div>
+      <div><dt>MoE (전문가 섞기) 는</dt>
+      <dd>student encoder 안에 <b>전문가 %%e1_experts%% 명</b> 이 각자 요약을 내고, 판단 망 (gating) 이 「지금은 2 번 60 %, 5 번 30 % …」 처럼 비율을 정해 섞습니다. 계단 · 경사 · 평지처럼 다른 상황을 다른 전문가가 맡게 하려는 구조입니다. 한 전문가에게만 쏠리지 않게 부하 균형 손실 (계수 0.01) 을 더합니다. 실제로 전문가가 지형별로 나뉘었는지는 우리가 재지 않았습니다 (미확인).</dd></div>
+      <div><dt>critic 과 PPO 는</dt>
+      <dd>critic 은 <b>「이 상황에서 앞으로 점수를 얼마나 받을지」 를 예측하는 채점 보조</b> 입니다. 학습 때만 씁니다. PPO 는 강화학습 방법 이름입니다. 해 보고 점수를 받아 정책을 고치되, 한 번에 너무 크게 바꾸지 않게 막습니다 (clip 0.2 · 24 step × 5 번 반복 × 4 묶음 · 학습률 0.001 을 KL 0.01 에 맞춰 조절 · γ 0.99 · λ 0.95 · entropy 0.01).</dd></div>
+    </dl>
   </div>
 </section>
 
+<section id="see">
+  <h2>지형을 보고 딛나, 감각으로 딛나</h2>
+  <div class="split">
+    <div>
+      <p><b>감각으로만 딛습니다.</b> 평가하고 배포하는 student 의 입력은 몸 감각 이력 %%e1_student_in%% 칸 (각속도 · 중력 방향 · 명령 · 관절 각도 · 관절 속도 · 직전 행동 × 10 프레임) 이 전부입니다. 카메라 · LiDAR · 지형 지도가 들어가지 않습니다 (<code>act_inference</code> 가 student encoder 만 부릅니다).</p>
+      <p>눈을 감고 발끝으로 더듬으며 계단을 오르는 것과 비슷합니다. 앞발이 단에 걸리면 관절 각도와 몸 기울기가 바뀌고, student 는 지난 0.2 초의 그 변화로 「계단이구나」 를 알아챕니다. 그래서 <b>밟아 보기 전에는 앞을 모릅니다.</b></p>
+      <p>v2 는 달랐습니다. 정책 입력에 발밑 높이 지도 187 칸 (앞뒤 1.6 m × 좌우 1.0 m, 10 cm 간격) 이 있었습니다. 다만 시뮬레이터가 주는 <b>정답 지도</b> 라 실제 로봇이 그대로 가질 수 있는 입력은 아닙니다.</p>
+    </div>
+    <div>
+      <h3>illegal contact 는 무엇인가</h3>
+      <p>코드 이름 <code>illegal_contact</code> 는 <b>몸통 (base) 이 땅이나 장애물에 1 N 넘게 닿으면 그 판을 바로 끝내는 규칙</b> 입니다. 1 N 은 100 g 짜리 물건을 올려놓은 정도의 힘이라, 몸통이 바닥에 스치기만 해도 끝납니다. 사실상 「넘어짐」 입니다.</p>
+      <p>학습 곡선의 illegal contact 값은 <b>판이 이 규칙으로 끝난 비율</b> 입니다. 20,000 iteration 직전 500 번 평균 E1 %%E1_ic_pre%% % · E2 %%E2_ic_pre%% % 였다가, 명령 범위를 넓힌 뒤 마지막 100 번 평균 E1 %%E1_ic_post%% % · E2 %%E2_ic_post%% % 로 늘었습니다.</p>
+      <p class="sub">허벅지 · 종아리가 닿는 것은 판을 끝내지 않고 벌점 (<code>undesired_contacts</code>) 만 줍니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="gap">
+  <h2>gap · 징검다리를 건너려면</h2>
+  <div class="split">
+    <div>
+      <h3>지금 못 하는 까닭 (코드로 확인)</h3>
+      <ul class="plain">
+        <li><b>연습하지 않았습니다.</b> 이 코드의 학습 지형 목록에 <code>gap</code> 과 <code>stepping_stones</code> 이 들어 있지만 비중이 둘 다 0 % 입니다 (<code>terrains.py</code>). 저자들이 꺼 두었습니다.</li>
+        <li><b>볼 수 없습니다.</b> 배포 student 는 지형을 보지 않습니다. 틈은 발이 빠진 다음에야 압니다. 앞발이 허공을 디디면 그때는 이미 늦습니다.</li>
+        <li><b>징검다리는 보는 것만으로도 모자랍니다.</b> 돌 위에 발을 하나하나 골라 놓아야 합니다. v2 는 지형을 보고 gap 을 연습해서 gap 은 %%v2_gap%% 였지만, 연습하지 않은 징검다리는 %%v2_ss%% 였습니다 (1.0 m/s 는 시드 다섯에서 0 ~ 24 %).</li>
+      </ul>
+      <p>그래서 미경험 험지를 건너려면 <b>① 그런 지형을 연습하고 ② 앞의 지형을 보고 ③ 발 놓을 곳을 고르는</b> 세 가지가 필요합니다. 이번 E1 · E2 는 그 셋이 모두 없는 상태의 기준선입니다.</p>
+    </div>
+    <div>
+      <h3>다음 실험 순서 (설계 문서 · 팀장 결정 대기)</h3>
+      <p class="sub">한 번에 하나만 바꿔서 「무엇 때문에 좋아졌는지」 를 남기는 순서입니다. 근거: <code>inbox/jay/20261008-546-design/DESIGN-astra-rl-topdown.md</code></p>
+      <ol class="steps">
+        <li><b>D1 · teacher 는 지도를 쓰나</b><span>지도 칸 순서를 섞으면 teacher 성적이 떨어지는지. 재 봤고, 떨어지니 쓰긴 씁니다 (아래 「체크포인트 · 난이도 · teacher」 그림).</span></li>
+        <li><b>G0 · 지도의 빈 곳 표기</b><span>레이저가 바닥을 못 찾은 칸을 지금은 1 m 높은 벽과 같은 값으로 적습니다. 구멍과 벽을 구분하게 고칩니다.</span></li>
+        <li><b>G1 · gap 을 연습시키기</b><span>학습 지형에 gap 을 10 % 넣고 (평지에서 10 % 덜어냄) 나머지는 그대로. 보지 못해도 연습만으로 나아지는지.</span></li>
+        <li><b>P1 · student 에게 지도 주기</b><span>student 입력에 높이 지도 187 칸과 「유효한 칸」 표시 187 칸을 더합니다. 지형을 보면 얼마나 나아지는지.</span></li>
+        <li><b>P2 · 늦게 온 지도에도 견디나</b><span>지도가 40 ms 늦게 와도 성적이 5 pp 넘게 안 떨어지는지. 실제 센서는 늘 조금 늦습니다.</span></li>
+        <li><b>A1 · AME-2 의 지도 인코더</b><span>발 놓을 곳을 고르는 구조. 팀장 방향대로 마지막에 들입니다.</span></li>
+      </ol>
+      <p class="sub">시뮬레이터의 정답 지도와 실제 Go2 LiDAR 로 만든 지도는 다릅니다. P1 · P2 를 통과해도 「실기 지형 인지 완료」 라고 부르지 않습니다.</p>
+    </div>
+  </div>
+</section>
 
 <section id="crit">
   <h2>판정 기준 (먼저 읽기)</h2>
@@ -401,7 +651,7 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
     <thead><tr><th>명령</th><th>통과 조건</th><th>미달 표기 예</th><th>예시 영상 (model_20499 · 평지)</th></tr></thead>
     <tbody>
       <tr><td>이동<br><span class="sub">전진 · 후진 · 옆걸음 · 회전</span></td>
-          <td>첫 1 s 를 뺀 나머지에서 「명령 − 실제」 의 평균 크기 (MAE) 가 앞뒤 · 옆 속도 각 <b>0.15 m/s 이하</b>, 회전 <b>0.20 rad/s 이하</b>. 명령하지 않은 방향은 0 이 목표. 넘어지지 않음</td>
+          <td>첫 1 s (출발해서 속도를 올리는 구간) 를 뺀 나머지에서 「명령 − 실제」 의 평균 크기 (MAE · 평균 절대 오차) 가 앞뒤 · 옆 속도 각 <b>0.15 m/s 이하</b>, 회전 <b>0.20 rad/s 이하</b>. 명령하지 않은 방향은 0 이 목표. 넘어지지 않음. <span class="sub">예: 오른쪽 0.30 m/s 명령에 평균 0.15 m/s 로 갔다면 오차가 0.15 쯤 되어 경계에 걸립니다.</span></td>
           <td><code>미달 · MAE vy 0.151 &gt; 0.15</code></td>
           <td><button class="ex" data-open="평지|right03">E1 right03 · ep 30 미달 (실제 평균 0.15 m/s = 명령 0.30 의 50 %) · ep 0 통과 (96 %)</button></td></tr>
       <tr><td>멈추기<br><span class="sub">stop03</span></td>
@@ -428,12 +678,79 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 
 <section id="find">
   <h2>결론</h2>
-  <ol class="find prose" id="findings"></ol>
+  <ol class="find" id="findings"></ol>
+</section>
+
+<section id="drop">
+  <h2>20,000 은 좋은데 20,499 는 왜 나빠졌나</h2>
+  <div class="split">
+    <div>
+      <h3>재서 확인한 것</h3>
+      <ul class="plain">
+        <li><b>20,000 iteration 에서 명령 범위가 두 배가 됐습니다.</b> 코드 일정 (<code>command_range_curriculum</code>) 대로 앞뒤 · 옆 상한이 0.5 → 1.0 m/s, 회전 상한이 1.0 → 1.5 rad/s 가 됐고, 학습 로그에 <code>Command range updated at iter 20000</code> 이 찍혔습니다. 학습 기록의 「최대 앞뒤 명령」 도 19,999 에서 0.5, 20,000 에서 1.0 입니다.</li>
+        <li><b>그 순간부터 학습 성적이 떨어졌습니다.</b> student 보상 (한 판 점수 평균) 은 직전 500 번 평균 E1 %%E1_rw_pre%% · E2 %%E2_rw_pre%% 에서 마지막 100 번 평균 E1 %%E1_rw_post%% · E2 %%E2_rw_post%% 로, 몸통이 닿아 끝난 판 (illegal contact) 은 E1 %%E1_ic_pre%% → %%E1_ic_post%% % · E2 %%E2_ic_pre%% → %%E2_ic_post%% % 로 바뀌었습니다.</li>
+        <li><b>정책이 다시 「여러 가지를 시험해 보는」 상태로 돌아갔습니다.</b> 학습 때 행동에 일부러 섞는 흔들림의 크기 (행동 noise std) 가 E1 %%E1_ns_pre%% → %%E1_ns_post%% · E2 %%E2_ns_pre%% → %%E2_ns_post%% 로 커졌습니다. 새 명령에 맞는 걸음을 찾느라 다시 넓게 탐색한다는 뜻입니다.</li>
+        <li><b>평가 칸이 떨어진 쪽으로만 움직였습니다.</b> 칸 × 시드 × noise %%drop_n%% 개 가운데 10 pp 넘게 떨어진 것이 %%drop10%% 개, 10 pp 넘게 오른 것은 %%rise10%% 개입니다. 떨어진 %%drop10%% 개 중 %%drop10_stop%% 개가 「걷다 멈춤」 입니다. 116 칸 평균 (noise 끔) 은 E1 %%avg_e1_20000%% → %%avg_e1_20499%% %, E2 %%avg_e2_20000%% → %%avg_e2_20499%% % 로, 평균만 보면 작지만 특정 칸에서 크게 떨어졌습니다.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>가장 많이 떨어진 칸</h3>
+      <div class="tbl"><table class="def">
+        <thead><tr><th>시드</th><th>noise</th><th>지형 · 출발</th><th>명령</th><th>20000</th><th>20499</th><th>차이</th></tr></thead>
+        <tbody>%%worst_rows%%</tbody>
+      </table></div>
+      <h3 class="h3gap">해석 (추정 · 시험 안 함)</h3>
+      <p>우리 시험지는 0.1 ~ 0.5 m/s 와 「멈춤」 만 잽니다. 20,000 까지 정책은 바로 그 범위만 연습했고, 20,000 부터는 1.0 m/s 까지 빠른 명령을 연습하기 시작했습니다. 20,499 는 <b>새 범위로 넘어간 지 499 iteration, 전체 학습의 약 2.4 % 밖에 지나지 않은 중간 상태</b> 입니다. 빠른 걸음을 배우는 동안 느린 걸음과 멈추기가 흔들린 것으로 보입니다. 시험 범위가 넓어진 직후 예전 단원을 잠깐 헷갈리는 것과 비슷합니다.</p>
+      <p><b>확인하는 방법</b>: 20,500 에서 이어 학습해 (예: 25,000 · 30,000) 같은 시험지로 다시 잽니다. 회복하면 「전환기의 흔들림」, 회복하지 않으면 「빠른 명령을 배우며 느린 동작을 잃음」 입니다. 이어 학습할 때는 iteration 번호 · 명령 일정 · 학습률을 맞춰야 합니다 (그냥 이어 붙이면 일정이 처음으로 돌아갑니다 · #546 기록). 학습은 Linux 이전까지 멈춰 있어 아직 돌리지 않았습니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="noise">
+  <h2>관측 noise 켬 · 끔은 무엇이고, 왜 멈추기만 크게 달라지나</h2>
+  <div class="split">
+    <div>
+      <h3>무엇인가</h3>
+      <p>실제 로봇의 센서 값은 늘 조금씩 떨립니다. 그래서 학습 때 student 가 받는 감각 값에 <b>매 step 작은 무작위 오차를 일부러 더합니다</b>. 「noise 켬」 은 평가 때도 학습 때와 똑같이 더한 것, 「noise 끔」 은 오차 없는 깨끗한 값을 준 것입니다. 판정은 둘 다 시뮬레이터의 실제 몸 속도로 합니다.</p>
+      <table class="def">
+        <thead><tr><th>감각</th><th>더하는 오차 (매 step 고르게 무작위)</th></tr></thead>
+        <tbody>
+          <tr><td>몸 회전 속도</td><td>±0.2 rad/s</td></tr>
+          <tr><td>중력 방향 (몸 기울기)</td><td>±0.05 (약 3 도)</td></tr>
+          <tr><td>관절 각도</td><td>±0.03 rad (약 1.7 도)</td></tr>
+          <tr><td>관절 속도</td><td>±2.0 rad/s</td></tr>
+          <tr><td>명령 · 직전 행동</td><td>없음</td></tr>
+        </tbody>
+      </table>
+      <p class="sub">noise 켬이 실제 로봇에 더 가깝습니다. 어느 쪽을 주 조건으로 삼을지는 팀장 결정 대기입니다.</p>
+    </div>
+    <div>
+      <h3>무엇이 달라지나 (E1 · model_20499 · 평지 · 걷다 멈춤 100 판)</h3>
+      <table class="def">
+        <thead><tr><th></th><th>noise 끔</th><th>noise 켬</th></tr></thead>
+        <tbody>
+          <tr><td>통과 판</td><td class="num">%%nz_off_pass%%</td><td class="num">%%nz_on_pass%%</td></tr>
+          <tr><td>멈춘 뒤 움직인 거리 (가운데 값)</td><td class="num">%%nz_off_dist%% cm</td><td class="num">%%nz_on_dist%% cm</td></tr>
+          <tr><td>1 초 동안 완전히 선 적이 없는 판</td><td class="num">%%nz_off_never%%</td><td class="num">%%nz_on_never%%</td></tr>
+          <tr><td>완전히 서기까지 (선 판의 가운데 값)</td><td class="num">%%nz_off_stopt%% s</td><td class="num">%%nz_on_stopt%% s</td></tr>
+          <tr><td>멈춘 뒤 회전 흔들림 (RMS · 가운데 값)</td><td class="num">%%nz_off_yaw%% rad/s</td><td class="num">%%nz_on_yaw%% rad/s</td></tr>
+          <tr><td>멈춘 뒤 평면 속도 흔들림 (RMS · 가운데 값)</td><td class="num">%%nz_off_spd%% m/s</td><td class="num">%%nz_on_spd%% m/s</td></tr>
+          <tr><td>제자리 (stand) 통과 판</td><td class="num">%%nz_off_stand%%</td><td class="num">%%nz_on_stand%%</td></tr>
+        </tbody>
+      </table>
+      <p><b>그래서</b>: noise 를 켜도 로봇은 미끄러지거나 넘어지지 않고 몇 cm 안에서 멈춥니다. 다만 떨리는 감각에 반응해 몸을 조금씩 돌리고 발을 고쳐 딛느라, 「1 초 내내 평면 속도 0.05 m/s 미만 · 회전 0.10 rad/s 미만」 이라는 엄격한 기준을 넘지 못합니다. 걷는 칸은 noise 를 켜도 거의 그대로입니다.</p>
+      <p class="sub">같은 「가만히 있기」 인데 제자리 칸은 평균 오차 (MAE) 기준이라 noise 를 켜도 모두 통과하고, 멈춤 칸은 「1 초 연속」 기준이라 거의 다 실패합니다. 두 기준이 서로 다른 점도 판정 기준을 정할 때 같이 볼 일입니다.</p>
+    </div>
+  </div>
 </section>
 
 <section id="gait">
   <h2>저속에서 걸음 모양이 바뀐다</h2>
   <p class="prose">팀장 관찰 「저속에서 앞발 둘은 거의 같이 움직이고 뒷발이 하나씩 따라온다」 를 발 접촉 기록으로 쟀습니다. 색 막대는 발이 땅을 디딘 구간 (수직 접촉력 5 N 초과), 빈칸은 발이 떠 있는 구간입니다. 그림은 8~11 s 의 3 초, 오른쪽 숫자는 2~19 s 전체에서 잰 값입니다.</p>
+  <div class="split" style="margin:6px 0 4px">
+    <p><b>읽는 법.</b> 0.5 m/s 에서는 대각선 두 발이 같이 움직이는 trot (개가 빨리 걸을 때의 걸음) 입니다. 「대각선 같이」 가 90 % 안팎이면 trot 입니다. 0.1~0.3 m/s 로 느리게 하면 「앞발 같이」 가 80~94 % 로 올라가고 앞발 막대가 거의 끊기지 않습니다. 앞발 둘은 땅에 붙여 버티고 뒷발만 바꿔 디디며 조금씩 미는 걸음입니다.</p>
+    <p><b>왜 그런가 (추정 · 시험 안 함).</b> 보상에 걸음 모양 항이 없습니다 (v2 에 있던 <code>feet_air_time</code> 이 이 코드에는 없음). 그리고 속도 따라가기 점수가 오차에 너그러워 0.1 m/s 틀려도 점수의 96 % 를 받습니다. 느린 명령에서는 「적게 움직이고 벌점을 덜 받는」 쪽이 유리했을 수 있습니다.</p>
+  </div>
   <div class="gaitwrap"><figure class="gaitfig"><h3>E1 · model_20499 · 평지 · episode 0</h3><div class="gaitbox"><svg viewBox="0 0 980 380" class="gaitsvg" role="img" aria-label="E1 model_20499 평지 전진 속도별 발 접촉 시간표">
 <line x1="94.0" x2="94.0" y1="20" y2="358" class="gl"/>
 <text x="94.0" y="372" class="tk mid">8.0 s</text>
@@ -758,7 +1075,7 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 
 <section id="tasks">
   <h2>과제별 통과율</h2>
-  <p class="prose">칸마다 왼쪽이 E1, 오른쪽이 E2 의 episode 통과 % 입니다 (100 episode). 행은 지형과 출발 자리, 열은 명령입니다. 모든 명령은 몸 기준이고 정지 상태에서 출발합니다.</p>
+  <p>칸마다 왼쪽이 E1, 오른쪽이 E2 의 통과 판 % 입니다 (100 판 중). 행은 지형과 출발 자리, 열은 명령입니다. 모든 명령은 로봇 몸 기준이고 (「앞」 은 로봇이 보는 쪽) 서 있는 상태에서 출발합니다. 「띠」 행은 피라미드형 지형의 가운데 평지가 아니라 경사 · 계단 면 위에서 출발한 것입니다. 위의 단추로 체크포인트와 noise 를 바꿔 볼 수 있습니다.</p>
   <div class="ctl">
     <span class="lab">체크포인트</span>
     <div class="seg" id="segCk" role="group" aria-label="체크포인트">
@@ -782,17 +1099,23 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
 
 <section id="trend">
   <h2>체크포인트 · 난이도 · teacher</h2>
-  <p class="prose">아래 세 그림은 116 cell 의 평균 통과 % 입니다. 평균은 멈추기 cell 의 차이를 많이 묽히므로, 같은 그림에서 기울기만 읽고 크기는 위 표에서 확인하십시오.</p>
+  <p>아래 세 그림은 116 칸의 평균 통과 % 입니다. 평균은 멈추기 칸의 차이를 많이 묽히므로, 그림에서는 오르내리는 방향만 읽고 크기는 위 표에서 확인하십시오.</p>
   <div class="charts">
     <figure><h3>학습이 진행되면서</h3><div id="chCk"></div><figcaption>실선 noise 끔 · 점선 noise 켬. 5,000 부터 평균이 거의 평평하고, 20499 에서 두 시드 모두 내려갑니다.</figcaption></figure>
-    <figure><h3>지형 난이도</h3><div id="chDf"></div><figcaption>noise 끔 · 평가 시드 2000 (위 표는 1000). 난이도 0.8 에서 20499 의 하락이 큽니다.</figcaption></figure>
-    <figure><h3>teacher 와 student</h3><div id="chT"></div><figcaption>noise 끔. teacher 는 높이 지도를 받는 학습용 정책입니다. 지도를 섞으면 떨어지니 지도를 쓰긴 하지만, 정상 상태에서 student 보다 뚜렷하게 낫지 않습니다.</figcaption></figure>
+    <figure><h3>지형 난이도</h3><div id="chDf"></div><figcaption>noise 끔 · 평가 시드 2000 (위 표는 1000). 난이도는 0 (쉬움) ~ 1 (가장 어려움) 이고 위 표는 0.5 입니다. 0.8 처럼 어려울수록 20499 의 하락이 큽니다.</figcaption></figure>
+    <figure><h3>teacher 와 student</h3><div id="chT"></div><figcaption>noise 끔. teacher 는 지형 지도를 받는 학습용 정책입니다. 지도 칸의 순서를 일부러 뒤섞어 주면 teacher 성적이 떨어지므로 지도를 쓰긴 씁니다 (D1 시험). 그런데 지도를 제대로 줘도 student 보다 뚜렷하게 낫지 않습니다. 이 학습 지형에서는 지도가 큰 차이를 만들지 않는다는 뜻입니다.</figcaption></figure>
   </div>
 </section>
 
 <section id="train">
   <h2>학습 곡선</h2>
-  <p class="prose">두 시드가 거의 같은 길을 갑니다. 20,000 iter 에서 전진 명령 상한을 0.5 에서 1.0 m/s 로 넓힌 뒤 보상이 떨어지고 지형 밖 접촉 종료가 늘었습니다. 이 500 iter 가 평가의 20499 입니다.</p>
+  <p>두 시드가 거의 같은 길을 갑니다. 20,000 iteration 에서 명령 상한을 0.5 에서 1.0 m/s 로 넓힌 뒤 보상이 떨어지고, 몸통이 땅에 닿아 끝난 판 (illegal contact) 이 늘었습니다. 이 마지막 500 iteration 이 평가의 20499 입니다 (<a href="#drop">위 설명</a>).</p>
+  <dl class="qa" style="margin:6px 0 4px">
+    <dt>보상</dt><dd>student 무리가 한 판 동안 받은 점수 합의 평균. 클수록 명령을 잘 따르고 벌점을 덜 받은 것입니다.</dd>
+    <dt>지형 레벨</dt><dd>0 (쉬움) ~ 9 (어려움) 줄 가운데 로봇들이 평균 몇 번째 줄에 있는지. 잘 걸으면 더 어려운 줄로 올라가고, 못 걸으면 내려갑니다.</dd>
+    <dt>illegal contact</dt><dd>판이 「몸통이 1 N 넘게 닿음」 으로 끝난 비율. 사실상 넘어진 비율입니다.</dd>
+    <dt>행동 noise std</dt><dd>학습 때 행동에 일부러 섞는 흔들림의 크기. 클수록 여러 동작을 더 시험해 봅니다. 평가 때는 섞지 않습니다.</dd>
+  </dl>
   <div class="trainbox">
     <div class="seg" id="segTr" role="group" aria-label="학습 지표">
       <button data-v="s" aria-pressed="true">보상</button><button data-v="lv" aria-pressed="false">지형 레벨</button><button data-v="ic" aria-pressed="false">illegal contact</button><button data-v="ns" aria-pressed="false">행동 noise std</button>
@@ -873,6 +1196,27 @@ footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
   </div>
 </section>
 
+<section id="terms">
+  <h2>용어 풀이</h2>
+  <dl class="glossary">
+    <dt>강화학습 (RL)</dt><dd>해 보고 점수를 받으며 더 나은 행동을 스스로 찾는 학습 방법. 정답 동작을 보여 주지 않고 점수 규칙 (보상) 만 줍니다.</dd>
+    <dt>정책 (policy)</dt><dd>지금 감각을 받아 다음 관절 목표를 내는 신경망. 로봇의 「뇌」 에 해당합니다.</dd>
+    <dt>env</dt><dd>가상 로봇 한 대와 그 지형 한 칸. GPU 한 장에서 8,192 대를 동시에 돌립니다.</dd>
+    <dt>step · iteration</dt><dd>step 은 정책이 한 번 행동하는 단위 (0.02 초). iteration 은 모든 로봇이 24 step 걷고 그 경험으로 신경망을 한 번 고치는 단위입니다.</dd>
+    <dt>판 (episode)</dt><dd>로봇이 출발해서 끝날 때까지 한 번. 평가는 칸마다 100 판입니다.</dd>
+    <dt>체크포인트</dt><dd>학습 중 500 iteration 마다 저장한 신경망. model_20000 은 20,000 iteration 때 저장한 것입니다.</dd>
+    <dt>시드</dt><dd>무작위 수의 출발값. 같은 설정이라도 시드가 다르면 학습 경로가 조금씩 달라집니다.</dd>
+    <dt>보상 (reward)</dt><dd>학습 때 매 step 주는 점수. 이 페이지의 「통과 · 미달」 판정과는 다른 것입니다.</dd>
+    <dt>특권 관측</dt><dd>시뮬레이터만 알고 실제 로봇은 모르는 정보. 정답 지형 지도, 발이 땅을 누르는 힘, 정확한 몸 속도 같은 것입니다.</dd>
+    <dt>latent (잠재값) · z</dt><dd>신경망이 만든 상황 요약 숫자. 이 페이지에서는 32 칸입니다.</dd>
+    <dt>MAE</dt><dd>평균 절대 오차. 0.3 m/s 명령에 0.25 · 0.35 · 0.30 으로 갔다면 오차는 0.05 · 0.05 · 0 이고 평균은 0.033 입니다.</dd>
+    <dt>pp (퍼센트 포인트)</dt><dd>퍼센트끼리의 차이. 90 % 에서 80 % 로 내려가면 10 pp 하락입니다.</dd>
+    <dt>trot</dt><dd>대각선 두 발 (앞 왼발 + 뒤 오른발, 앞 오른발 + 뒤 왼발) 이 같이 움직이는 걸음. 개가 빠르게 걸을 때의 걸음입니다.</dd>
+    <dt>RMS</dt><dd>값을 제곱해 평균낸 뒤 제곱근을 씌운 것. 「평균적으로 얼마나 흔들렸나」 를 잴 때 씁니다.</dd>
+    <dt>LiDAR</dt><dd>레이저를 쏘아 주변까지의 거리를 재는 센서. Go2 머리에 달려 있고, 실제 로봇에서 지형 지도를 만들 때 씁니다.</dd>
+  </dl>
+</section>
+
 <section id="records">
   <h2>기록</h2>
   <div class="prose">
@@ -916,13 +1260,14 @@ const g = (name) => G[name] || [null, null, null, null];
   const st0 = rng(sel('끔', r => r[2] === 'stop03'), 6);
   const st1 = rng(sel('켬', r => r[2] === 'stop03'), 6);
   const items = [
-    ['g', `<b>두 시드는 거의 같은 길로 학습했습니다.</b> iter 19,999 에서 student 보상 ${pct(at(C1,'s',19999))} / ${pct(at(C2,'s',19999))}, 지형 레벨 ${at(C1,'lv',19999).toFixed(2)} / ${at(C2,'lv',19999).toFixed(2)}.`],
-    ['g', `<b>걷기 명령은 대부분 넘습니다.</b> model_20000 · noise 끔에서 7 지형 중앙 출발의 전진 · 후진 · 옆걸음 · 회전은 ${mv7[0]}~${mv7[1]} %, 장애물은 ${mvO[0]}~${mvO[1]} %.`],
-    ['b', `<b>멈추기가 약점입니다.</b> 0.3 m/s 로 걷다 멈추는 stop03 이 model_20000 에서 noise 끔 ${st0[0]}~${st0[1]} %, noise 켬 ${st1[0]}~${st1[1]} % 입니다. 멀리 미끄러지는 것이 아니라 1 초 안에 완전히 서지 못하고 발을 계속 디딥니다.`],
-    ['w', `<b>마지막 500 iter 에서 두 시드 모두 나빠졌습니다.</b> 116 cell 평균 (noise 끔) E1 ${s0[0]} → ${s1[0]} %, E2 ${s0[1]} → ${s1[1]} %. E2 는 평지 0.2 m/s 전진 100 판 중 21 판에서 거의 서 있었고 (평균 0.00~0.04 m/s), 오른쪽 회전 14 판은 명령의 절반 안팎 (−0.20~−0.30 rad/s) 으로 돌았습니다.`],
-    ['w', `<b>시드 차이는 20499 에서 커집니다.</b> 두 시드가 10 pp 넘게 갈린 cell 이 116 개 중 20000 에서 ${s0[2]} (noise 끔) · ${n0[2]} (켬), 20499 에서 ${s1[2]} · ${n1[2]} 개. 시드 하나로 낸 결론은 20499 근처에서 흔들립니다.`],
-    ['w', `<b>넘어지지 않았는데 미달인 판은 대부분 「느리게 따라감」 이나 「늦게 섬」 입니다.</b> 이 페이지 영상 (model_${D.CK}) 의 미달 ${D.V.filter(v => v.vd === '미달').length} 편 가운데 ${D.V.filter(v => v.vd === '미달' && v.close).length} 편은 기준을 10 % 안쪽으로 넘긴 경계 판입니다 (예: 오른쪽 옆걸음 0.30 m/s 명령에 평균 0.15 m/s, 오차 0.151 대 기준 0.15). 기준이 lead 임시 조건이라 이 경계는 팀장 결정에 따라 바뀔 수 있습니다.`],
-    ['', `<b>noise 를 켜면 평균이 내려가는 것은 거의 멈추기 때문입니다.</b> 116 cell 평균 20000 기준 noise 켬 ${n0[0]} / ${n0[1]} %. 이동 cell 은 noise 를 켜도 거의 그대로입니다.`],
+    ['g', `<b>두 시드는 거의 같은 길로 학습했습니다.</b> iteration 19,999 에서 student 보상 ${pct(at(C1,'s',19999))} / ${pct(at(C2,'s',19999))}, 지형 레벨 ${at(C1,'lv',19999).toFixed(2)} / ${at(C2,'lv',19999).toFixed(2)}. 같은 설정이면 결과가 시드에 크게 흔들리지 않는다는 뜻입니다 (20,000 까지는).`],
+    ['g', `<b>걷기 명령은 대부분 넘습니다.</b> model_20000 · noise 끔에서 7 지형 가운데 출발의 전진 · 후진 · 옆걸음 · 회전 칸은 ${mv7[0]}~${mv7[1]} %, 장애물은 ${mvO[0]}~${mvO[1]} % 입니다.`],
+    ['b', `<b>멈추기가 약점입니다.</b> 0.3 m/s 로 걷다 멈추는 칸이 model_20000 에서 noise 끔 ${st0[0]}~${st0[1]} %, noise 켬 ${st1[0]}~${st1[1]} % 입니다. 멀리 미끄러지는 것이 아니라 몇 cm 안에서 멈추되, 1 초 동안 완전히 가만히 있지 못합니다 (<a href="#noise">noise 절</a>).`],
+    ['w', `<b>마지막 500 iteration 에서 두 시드 모두 나빠졌습니다.</b> 116 칸 평균 (noise 끔) E1 ${s0[0]} → ${s1[0]} %, E2 ${s0[1]} → ${s1[1]} %. 20,000 에서 명령 범위를 두 배로 넓힌 직후라 생긴 흔들림으로 보입니다 (추정 · <a href="#drop">20499 절</a>). E2 는 평지 0.2 m/s 전진 100 판 중 21 판에서 거의 서 있었고 (평균 0.00~0.04 m/s), 오른쪽 회전 14 판은 명령의 절반 안팎 (−0.20~−0.30 rad/s) 으로 돌았습니다.`],
+    ['w', `<b>시드 차이는 20499 에서 커집니다.</b> 두 시드가 10 pp 넘게 갈린 칸이 116 개 중 20000 에서 ${s0[2]} (noise 끔) · ${n0[2]} (켬), 20499 에서 ${s1[2]} · ${n1[2]} 개. 20499 근처에서는 시드 하나로 결론을 내면 흔들립니다.`],
+    ['w', `<b>넘어지지 않았는데 미달인 판은 대부분 「느리게 따라감」 이나 「늦게 섬」 입니다.</b> 이 페이지 영상 (model_${D.CK}) 의 미달 ${D.V.filter(v => v.vd === '미달').length} 편 가운데 ${D.V.filter(v => v.vd === '미달' && v.close).length} 편은 기준을 10 % 안쪽으로 넘긴 경계 판입니다 (예: 오른쪽 옆걸음 0.30 m/s 명령에 평균 0.15 m/s, 오차 0.151 대 기준 0.15). 기준이 lead 임시 조건이라 경계는 팀장 결정에 따라 바뀔 수 있습니다.`],
+    ['', `<b>noise 를 켜면 평균이 내려가는 것은 거의 멈추기 때문입니다.</b> 116 칸 평균 20000 기준 noise 켬 ${n0[0]} / ${n0[1]} %. 걷는 칸은 noise 를 켜도 거의 그대로입니다.`],
+    ['b', `<b>지형을 보지 않는 정책이라 gap · 징검다리는 아직 못 배웁니다.</b> 학습 지형에도 0 % 입니다. 다음 단계는 gap 을 연습시키고, student 에게 지도를 주는 순서입니다 (<a href="#gap">gap 절</a>).`],
   ];
   const ol = $('#findings');
   items.forEach(([c, h]) => ol.appendChild(el('li', {class: c}, h)));
