@@ -26,7 +26,12 @@ STATE_KEYS = ["where", "label_next", "common_step_counter", "iter_from_counter",
               "origins_vs_terrain_origins_max_abs", "scene_env_origins_vs_terrain_max_abs", "root_xy_minus_origin_max_abs",
               "episode_length_buf", "alg_learning_rate", "optimizer", "optimizer_stu_enc", "model_sha", "rng", "sha", "obs_sha",
               "obs_cmd_vs_commands_max_abs", "synced_reward_terms", "first_commands"]
-NPZ_KEYS = ["commands", "episode_length_buf", "joint_pos", "levels", "origins", "root_pose", "torch_cpu_rng"]
+NPZ_KEYS = ["commands", "episode_length_buf", "joint_pos", "levels", "origins", "root_pose", "torch_cpu_rng", "torch_cuda_rng"]
+# required sub-keys whose values must be present and non-empty on both sides (VERIFY-astra-8b 1)
+SUB_KEYS = {"rng": ["torch_cpu", "torch_cuda", "numpy", "python"],
+            "sha": ["levels", "origins", "root_pose", "joint_pos", "masses", "coms", "materials", "gains"],
+            "obs_sha": ["policy", "critic", "single_obs"],
+            "optimizer": ["lr_groups", "steps", "n", "sha"], "optimizer_stu_enc": ["lr_groups", "steps", "n", "sha"]}
 
 ap = argparse.ArgumentParser()
 ap.add_argument("dirs", nargs="*")
@@ -74,6 +79,12 @@ for side, j in (("off", ja), ("on", jb)):
     for k in STATE_KEYS:
         if k not in j.get("state", {}):
             problems.append(f"{side}: state.{k} missing")
+    for k, subs in SUB_KEYS.items():
+        v = j.get("state", {}).get(k)
+        for sk in subs:
+            x = v.get(sk) if isinstance(v, dict) else None
+            if x is None or x == "" or x == {} or x == []:
+                problems.append(f"{side}: state.{k}.{sk} missing or empty")
 # run contract, both sides
 gate = a.gate.lower() == "true"
 for side, j, arm in (("off", ja, "off"), ("on", jb, "on")):

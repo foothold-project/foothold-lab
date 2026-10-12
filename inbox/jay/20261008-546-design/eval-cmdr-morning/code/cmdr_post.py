@@ -12,6 +12,10 @@
 #               Newcombe method 10 interval, exact McNemar p (q_metrics). Holm over the three targets per update.
 #   lines     : +10 pp on the target mean, -5 pp regression bound on the interval, MAE +10 % are the ASTRA 7 PROPOSAL
 #               (team lead: "권고" confirmed 10/12; 2(c) is labelled 제안 and not yet confirmed). Shown, never adopted.
+# v3 (00:30, VERIFY-astra-8b 3): startup split into episodes that completed the first second and early failures
+# (counts, valid time, integrals of each group); empty groups give None, not an error; 5 s progress carries its n.
+# MAE regression: relative +10 % when the control MAE > 0, otherwise absolute 10 % of the Q tolerance
+# (vx, vy 0.15 m/s -> 0.015; wz 0.20 rad/s -> 0.02), as VERIFY-astra-7 2(c).
 # Usage: python cmdr_post.py    (CMDR_POST_OUT=<folder> for tests)
 import csv
 import json
@@ -112,8 +116,12 @@ def compare(mx, my, fam, cell, noise, seeds):
     ys = sum((R[(my, fam, cell, noise, s)]["main"] for s in common), [])
     r = paired(xs, ys)
     r["seeds"] = common
-    r["mae_change"] = {k: (np.mean([R[(my, fam, cell, noise, s)]["mae"][k] for s in common]) /
-                           max(1e-9, np.mean([R[(mx, fam, cell, noise, s)]["mae"][k] for s in common])) - 1.0) for k in ("vx", "vy", "wz")}
+    r["mae"] = {}
+    for k, tol in (("vx", 0.15), ("vy", 0.15), ("wz", 0.20)):
+        x = float(np.mean([R[(mx, fam, cell, noise, s)]["mae"][k] for s in common]))
+        y = float(np.mean([R[(my, fam, cell, noise, s)]["mae"][k] for s in common]))
+        worse = (y / x - 1.0 > 0.10) if x > 0 else (y - x > 0.1 * tol)
+        r["mae"][k] = {"x": x, "y": y, "rel": (y / x - 1.0) if x > 0 else None, "abs": y - x, "worse_than_line": bool(worse)}
     return r
 
 
@@ -127,13 +135,19 @@ for cell in TARGETS:
                       "per_seed": {s: float(np.mean(R[(m, "flat", cell, "on", s)]["main"])) for s in have},
                       "ref_rate_s1000": float(np.mean(R[(m, "flat", cell, "on", 1000)]["ref"])) if 1000 in have else None}
             st = sum((R[(m, "flat", cell, "on", s)]["startup"] for s in have), [])
+            full = [x for x in st if x["valid_steps_1s"] == 50]
+            early = [x for x in st if x["valid_steps_1s"] < 50]
+            prog = [x["progress_5s_m"] for x in st if not np.isnan(x["progress_5s_m"])]
+            mean = lambda v: float(np.mean(v)) if v else None  # noqa: E731
             res["startup"].setdefault(cell, {})[m] = {
-                "n": len(st), "contact_1s": sum(x["contact_1s"] for x in st), "survive_5s": sum(x["survive_5s"] for x in st),
-                "lin_err_int_m_mean": float(np.mean([x["lin_err_int_m"] for x in st])),
-                "yaw_err_int_rad_mean": float(np.mean([x["yaw_err_int_rad"] for x in st])),
-                "yaw_err_max_p90": float(np.percentile([x["yaw_err_max"] for x in st if x["valid_steps_1s"]], 90)),
-                "progress_5s_m_mean": float(np.nanmean([x["progress_5s_m"] for x in st])) if any(
-                    not np.isnan(x["progress_5s_m"]) for x in st) else None}
+                "n": len(st), "completed_1s": len(full), "early_fail_1s": len(early),
+                "early_valid_s_mean": mean([x["valid_steps_1s"] * Q.DT for x in early]),
+                "contact_1s": sum(x["contact_1s"] for x in st), "survive_5s": sum(x["survive_5s"] for x in st),
+                "lin_err_int_m_completed": mean([x["lin_err_int_m"] for x in full]),
+                "yaw_err_int_rad_completed": mean([x["yaw_err_int_rad"] for x in full]),
+                "lin_err_int_m_early_partial": mean([x["lin_err_int_m"] for x in early]),
+                "yaw_err_max_p90_completed": float(np.percentile([x["yaw_err_max"] for x in full], 90)) if full else None,
+                "progress_5s_m_mean": mean(prog), "progress_5s_n": len(prog)}
     for u in ("22000", "24000"):
         r = compare(f"off{u}", f"on{u}", "flat", cell, "on", SEEDS)
         if r:
@@ -163,7 +177,7 @@ for fam in FAMILIES:
                 r = compare(f"off{u}", f"on{u}", fam, cell, noise, [1000])
                 if r:
                     r["regression_bound_crossed"] = bool(r["lo"] < -0.05)
-                    r["mae_over_10pct"] = bool(any(v > 0.10 for v in r["mae_change"].values()))
+                    r["mae_worse_than_line"] = bool(any(v["worse_than_line"] for v in r["mae"].values()))
                     row[f"on_minus_off_{u}"] = r
             if any(m in row for m in MODELS):
                 res["cells"].append(row)
@@ -195,12 +209,16 @@ for c in TARGETS:
              + f" | {dfmt(r.get('on_minus_off_22000'))} | {dfmt(r.get('on_minus_off_24000'))} |")
 L += ["", f"Holm (on−off, 목표 셋): {json.dumps(res['holm'], ensure_ascii=False)}",
       f"제안선 비교 (채택 아님): {json.dumps(res['proposal_lines'], ensure_ascii=False)}", "",
-      "## 시작 직후 (0~1 s) · 5 s", "", "| 칸 | 모델 | n | 1 s 안 몸통 접촉 | 5 s 생존 | 평면 오차 적분 m | yaw 오차 적분 rad | 5 s 진행 m |",
-      "|---|---|---|---|---|---|---|---|"]
+      "## 시작 직후 (0~1 s) · 5 s", "",
+      "평면 오차 적분은 vx · vy 절대오차 합 (L1) × 0.02 s. 1 초를 다 채운 판과 1 초 안에 끝난 판을 나눠 적는다.", "",
+      "| 칸 | 모델 | n | 1 s 채움 | 1 s 안 끝남 (평균 유효 s) | 1 s 안 몸통 접촉 | 5 s 생존 | 평면 오차 적분 m (채운 판) | yaw 오차 적분 rad (채운 판) | 5 s 진행 m (n) |",
+      "|---|---|---|---|---|---|---|---|---|---|"]
+f3 = lambda v, d=3: "" if v is None else f"{v:.{d}f}"  # noqa: E731
 for c, d in res["startup"].items():
     for m, s in d.items():
-        L.append(f"| {c} | {m} | {s['n']} | {s['contact_1s']} | {s['survive_5s']} | {s['lin_err_int_m_mean']:.3f} | "
-                 f"{s['yaw_err_int_rad_mean']:.3f} | {'' if s['progress_5s_m_mean'] is None else round(s['progress_5s_m_mean'], 2)} |")
+        L.append(f"| {c} | {m} | {s['n']} | {s['completed_1s']} | {s['early_fail_1s']} ({f3(s['early_valid_s_mean'], 2)}) | "
+                 f"{s['contact_1s']} | {s['survive_5s']} | {f3(s['lin_err_int_m_completed'])} | {f3(s['yaw_err_int_rad_completed'])} | "
+                 f"{f3(s['progress_5s_m_mean'], 2)} ({s['progress_5s_n']}) |")
 L += ["", "## 모든 칸 (시드 1000)", "", "| 지형 | 칸 | noise | 부모 | off 22000 | on 22000 | off 24000 | on 24000 | on−off 24000 |", "|---|---|---|---|---|---|---|---|---|"]
 for r in res["cells"]:
     L.append(f"| {r['family']} | {r['cell']} | {r['noise']} | " + " | ".join(pct(r[m]["rate"]) if m in r else "" for m in MODELS)

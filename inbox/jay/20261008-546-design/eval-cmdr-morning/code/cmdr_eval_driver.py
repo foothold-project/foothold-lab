@@ -20,6 +20,12 @@
 #               run pair_fail (kept on disk, excluded from tables).
 #   waits     : starts after the UNSEEN driver (a python process whose argv has unseen_driver.py) has exited.
 # Every run is under gpu_guard.py --gpu 1 --min_free_mib 4096. Deadline is checked before every run.
+# v3 (00:25, VERIFY-astra-8b): expected cell order follows the evaluator's own order (q_eval ALL_CELLS), episode IDs /
+# family / cell per CSV row, T from the cell durations, finite traj (hag may be NaN) and cmd_hist, non-empty fingerprint
+# dicts, both bundle hashes + contract + comparator version for the on arm, pins and deadline before every try and
+# again before stamping, positive-reaction diagnostics recorded as warnings (not invalid). Every run uses
+# --physx_small_buffers (GPU 1 headroom; same for all five models); test 2b checks it is bitwise equal to the default
+# buffers on the flat training terrain. q_eval.py is pinned only for the known-answer tests.
 # Usage: python cmdr_eval_driver.py [--until "2026-10-13 14:00"]
 import argparse
 import csv
@@ -53,7 +59,15 @@ TARGETS = ["stop03", "fwd01", "fwd02"]
 FAMILIES = ["flat", "obstacles", "rough_slope", "slope_up", "slope_down", "stairs_up", "stairs_down", "wave"]
 EXT_SEEDS = [1001, 1002, 1003, 1004]
 CKPT_BYTES = 26367183
-PIN_FILES = ["q_eval_cmdr.py", "q_eval.py", "q_metrics.py", "q_post.py", "gpu_guard.py"]
+PIN_FILES = ["q_eval_cmdr.py", "q_metrics.py", "q_post.py", "gpu_guard.py", "cmdr_bundle_compare.py"]
+# the evaluator keeps its own ALL_CELLS order whatever order --cells gives (q_eval_cmdr.py ALL_CELLS)
+EVAL_ORDER = ["stand", "stop03", "fwd01", "fwd02", "fwd03", "fwd05", "fwd10", "back03", "left03", "right03", "yawL05", "yawR05"]
+DUR_S = {"stand": 10.0, "stop03": 10.0}  # every other cell 20 s (q_eval_cmdr.py ALL_CELLS)
+P0, DEADLINE = None, None
+
+
+def in_eval_order(cells):
+    return [c for c in EVAL_ORDER if c in cells]
 ENV = dict(os.environ, CUDA_DEVICE_ORDER="PCI_BUS_ID", CUDA_VISIBLE_DEVICES="1", OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1")
 LOGF = os.path.join(OUT, "cmdr_eval_driver.json")
 LOG = {"started": time.strftime("%Y-%m-%d %H:%M:%S"), "pins": {}, "tests": {}, "runs": [], "skipped": [], "pair_fail": [],
@@ -118,8 +132,12 @@ def ready(m):
             return False
         r = json.load(open(rep, encoding="utf-8"))
         d = os.path.join(B, "cmdr_s1042_on_u4000")
-        if r.get("verdict") != "SAME" or r["bundle_sha256"]["on_json"] != sha(os.path.join(d, "bundle.json")) \
-                or r["bundle_sha256"]["on_npz"] != sha(os.path.join(d, "bundle.npz")):
+        do = os.path.join(B, "cmdr_s1042_off_u4000")
+        now = {"off_json": sha(os.path.join(do, "bundle.json")), "off_npz": sha(os.path.join(do, "bundle.npz")),
+               "on_json": sha(os.path.join(d, "bundle.json")), "on_npz": sha(os.path.join(d, "bundle.npz"))}
+        con = r.get("contract", {})
+        if r.get("verdict") != "SAME" or r.get("bundle_sha256") != now or con.get("envs") != 8192 or con.get("updates") != 4000 \
+                or con.get("gate") is not False or r.get("tool_sha256") != P0["cmdr_bundle_compare.py"]:
             LOG["ckpt"].setdefault(m, {})["blocked"] = "bundle comparison not SAME for the current on bundle"
             save()
             return False
@@ -132,6 +150,16 @@ def ready(m):
 def guarded(name, cmd, tries=4, wait_s=300):
     rc = None
     for k in range(1, tries + 1):
+        if time.time() > DEADLINE:
+            say(f"DEADLINE before {name}")
+            LOG["stopped"] = "deadline"
+            save()
+            sys.exit(2)
+        if pins() != P0:
+            LOG["stopped"] = f"pins changed before {name}"
+            save()
+            say("PINS CHANGED: stop")
+            sys.exit(4)
         t0 = time.time()
         rc = subprocess.run([PY, "gpu_guard.py", "--gpu", "1", "--min_free_mib", "4096", "--log", f"out/{name}.log",
                              "--summary", f"out/{name}.guard.json", "--"] + cmd, cwd=HERE, env=ENV).returncode
@@ -146,9 +174,11 @@ def guarded(name, cmd, tries=4, wait_s=300):
     return rc, tries
 
 
-def q(script, tag, model_path, fam, cells, episodes, noise, seed, train_yaml=None):
+def q(script, tag, model_path, fam, cells, episodes, noise, seed, train_yaml=None, small=True):
     cmd = [PY, script, "--headless", "--tag", tag, "--policy", "student", "--checkpoint", model_path,
            "--families", fam, "--cells", cells, "--episodes", str(episodes), "--eval_seed", str(seed)]
+    if small:
+        cmd.append("--physx_small_buffers")
     if noise:
         cmd.append("--obs_noise")
     if not model_path.startswith(E1):
@@ -165,7 +195,7 @@ PRE_POS = ["policy_history_perturbed_max_abs_action_change", "single_obs_perturb
            "teacher_height_permuted_max_abs_action_change"]
 
 
-def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_iter=True):
+def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_iter=True, small=True):
     """Return '' if the run folder is a complete, correct result for exactly this input, else the reason."""
     d = os.path.join(OUT, tag)
     try:
@@ -198,9 +228,6 @@ def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_
         for k in PRE_TRUE:
             if pre[k] is not True:
                 return f"checks_pre {k}"
-        for k in PRE_POS:
-            if not float(pre[k]) > 0:
-                return f"checks_pre {k} not positive"
         if run["obs_single_cmd_vs_target_max_abs"] > 1e-6 or run["obs_history_latest_cmd_vs_target_max_abs"] > 1e-6 \
                 or run["nonfinite_action_or_obs_count"] != 0:
             return f"checks_run {run}"
@@ -213,16 +240,37 @@ def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_
             return "cells.json n"
         if len(rows) != n:
             return f"episodes.csv rows {len(rows)}"
+        for cl in cells:
+            ids = sorted(int(r["episode"]) for r in rows if r["cell"] == cl and r["family"] == fam)
+            if ids != list(range(episodes)):
+                return f"episode ids for {cl}"
+        if any(r["family"] != fam or r["cell"] not in cells for r in rows):
+            return "episodes.csv family / cell"
         T = m["T_steps"]
-        if z["traj"].shape != (T + 1, n, 12) or z["term"].shape != (T + 1, n) or not np.isfinite(z["traj"][0]).all():
+        if T != int(round(max(DUR_S.get(c, 20.0) for c in cells) / 0.02)):
+            return f"T_steps {T}"
+        if z["traj"].shape != (T + 1, n, 12) or z["term"].shape != (T + 1, n):
             return f"traj shape {z['traj'].shape}"
+        if not np.isfinite(z["traj"][..., :11]).all():  # channel 11 (height above ground) may be NaN on a ray miss
+            return "traj non-finite"
+        if z["cmd_hist"].shape != (T + 1, n, 3) or not np.isfinite(z["cmd_hist"]).all():
+            return "cmd_hist"
+        if "physx buffers reduced" not in " ".join(m.get("eval_changes", [])) and small:
+            return "physx small buffers not applied"
         if isinstance(m.get("terrain_mesh"), str) or not m.get("terrain_mesh"):
             return "terrain mesh"
-        if not m.get("pairing_sha256") or not m.get("pairing_sha256_ext"):
-            return "pairing fingerprints empty"
+        for k in ("pairing_sha256", "pairing_sha256_ext"):
+            v = m.get(k)
+            if not isinstance(v, dict) or not v or not all(v.values()):
+                return f"{k} empty"
     except Exception as ex:  # noqa: BLE001
         return f"unreadable: {type(ex).__name__}: {ex}"
     return ""
+
+
+def diag_warns(tag):
+    m = json.load(open(os.path.join(OUT, tag, "meta.json"), encoding="utf-8"))
+    return [k for k in PRE_POS if not float(m["checks_pre"][k]) > 0]
 
 
 def fingerprint(tag):
@@ -252,14 +300,16 @@ def tests(P):
     psha = LOG["ckpt"]["p20000"]["sha256"]
     # 1. smoke: parent, flat, 11 cells x 10 = 110 envs, validated like a real run
     t = f"cq_test_{pin8}_smoke"
-    rc, _ = guarded(t, q("q_eval_cmdr.py", t, MODELS["p20000"][0], "flat", ",".join(CELLS), 10, True, 1000))
-    why = validate(t, psha, 20000, "flat", CELLS, 10, True, 1000, False) if rc == 0 else f"exit {rc}"
+    sc = in_eval_order(CELLS)
+    rc, _ = guarded(t, q("q_eval_cmdr.py", t, MODELS["p20000"][0], "flat", ",".join(sc), 10, True, 1000))
+    why = validate(t, psha, 20000, "flat", sc, 10, True, 1000, False) if rc == 0 else f"exit {rc}"
     LOG["tests"]["smoke"] = why or "ok"
     save()
     if why:
         return False
     # 2. known answer: q_eval.py vs q_eval_cmdr.py, same input; if different, q_eval.py vs q_eval.py tells
     #    non-determinism from a copy fault (ASTRA 8 2)
+    LOG["tests"]["q_eval_py_sha256"] = sha(os.path.join(HERE, "q_eval.py"))
     a, b = f"cq_test_{pin8}_ka_orig", f"cq_test_{pin8}_ka_copy"
     for tag, script in ((a, "q_eval.py"), (b, "q_eval_cmdr.py")):
         rc, _ = guarded(tag, q(script, tag, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000))
@@ -278,6 +328,14 @@ def tests(P):
         save()
         return False
     save()
+    # 2b. small PhysX buffers must not change the physics on the flat training terrain (copy, default buffers vs small)
+    c2 = f"cq_test_{pin8}_ka_copy_default_buffers"
+    rc, _ = guarded(c2, q("q_eval_cmdr.py", c2, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000, small=False))
+    ok2 = rc == 0 and same(b, c2)
+    LOG["tests"]["small_buffers_vs_default_same"] = ok2
+    save()
+    if not ok2:
+        return False
     # 3. branch path must refuse a wrong train_yaml: another run's env.yaml, and a sibling file of the right folder
     g = f"{B}/gate_c1/model_20002.pt"
     gsha = sha(g)
@@ -325,7 +383,7 @@ def tagof(m, fam, cell, noise, seed):
 ap = argparse.ArgumentParser()
 ap.add_argument("--until", default="2026-10-13 14:00")
 args = ap.parse_args()
-deadline = time.mktime(time.strptime(args.until, "%Y-%m-%d %H:%M"))
+deadline = DEADLINE = time.mktime(time.strptime(args.until, "%Y-%m-%d %H:%M"))
 P0 = pins()
 LOG["pins"] = P0
 save()
@@ -338,6 +396,8 @@ while unseen_running():
 say("unseen driver not running: GPU 1 is ours")
 LOG["gpu1_from"] = time.strftime("%Y-%m-%d %H:%M:%S")
 while not ready("p20000"):
+    if time.time() > deadline:
+        sys.exit(2)
     time.sleep(30)
 if not tests(P0):
     say(f"TESTS FAILED {LOG['tests']}")
@@ -372,8 +432,14 @@ while pending and time.time() < deadline:
         rc, k = guarded(tag, q("q_eval_cmdr.py", tag, path, fam, cell, 100, noise, seed))
         why = validate(tag, LOG["ckpt"][m]["sha256"], it, fam, [cell], 100, noise, seed, branch) if rc == 0 else f"exit {rc}"
         reused = False
+    if pins() != P0:
+        LOG["stopped"] = f"pins changed during {tag}"
+        save()
+        say("PINS CHANGED: stop")
+        sys.exit(4)
     rec = {"tag": tag, "valid": not why, "why": why, "reused": reused, "t": time.strftime("%H:%M:%S")}
     if not why:
+        rec["diag_warns"] = diag_warns(tag)
         fp = fingerprint(tag)
         gk = (fam, cell, noise, seed)
         if gk not in groups:

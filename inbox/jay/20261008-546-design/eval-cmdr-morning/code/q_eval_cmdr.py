@@ -38,6 +38,9 @@ parser.add_argument("--families", default="flat")
 parser.add_argument("--cells", default="all")
 parser.add_argument("--episodes", type=int, default=100)
 parser.add_argument("--difficulty", type=float, default=0.5)
+parser.add_argument("--physx_small_buffers", action="store_true",
+                    help="GPU 1 headroom: PhysX GPU buffers for small env counts (rigid patches 2^17, collision stack 64 MiB); "
+                         "use only after a bitwise check against the default buffers")
 parser.add_argument("--terrain_set", default="train", choices=["train", "unseen10"],
                     help="train: robot_lab TERRAIN_CFG families; unseen10: foothold-v2 unseen10 sub-terrains from the lab's "
                          "sim/eval/generalization_env_cfg.py (imported, not copied), size 8 x 8 as v2")
@@ -222,6 +225,12 @@ if ckpt:
 # evaluation changes (all recorded)
 changes = []
 env_cfg.scene.num_envs = N
+if args.physx_small_buffers or args.terrain_set == "unseen10":
+    # copied from q_eval.py (2026-10-13 00:14). CMD-R driver: every run uses the flag; its test 2b checks the flat
+    # training terrain is bitwise equal with the default buffers before any CMD-R run counts
+    env_cfg.sim.physx.gpu_max_rigid_patch_count = 2 ** 17
+    env_cfg.sim.physx.gpu_collision_stack_size = 64 * 1024 * 1024
+    changes.append("physx buffers reduced (rigid patches 2^17, collision stack 64 MiB) for GPU 1 headroom")
 env_cfg.seed = args.eval_seed
 env_cfg.sim.device = "cuda:0"
 if not args.obs_noise:
