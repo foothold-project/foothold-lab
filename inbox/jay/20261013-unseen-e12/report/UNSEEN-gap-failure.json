@@ -1,0 +1,1118 @@
+{
+ "un_e1_m20000_gap_fwd03": {
+  "cmd": 0.3,
+  "n": 100,
+  "survived": 37,
+  "falls": {
+   "base_contact": 50,
+   "tilt60": 13
+  },
+  "reach_before_edge (<0.75)": 40,
+  "reach_in_gap (0.75..1.025)": 60,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7530786991119385,
+  "reps": [
+   {
+    "file": "gap_fwd03_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "0.68",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": -0.496,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 33.1,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.16,
+      "min_z_above_top": -0.317
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.2,
+      "min_z_above_top": -0.261
+     }
+    }
+   },
+   {
+    "file": "gap_fwd03_ep042.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 4.6,
+    "base_x_rel_at_stall": 0.753,
+    "base_x_rel_max": 0.774,
+    "pitch_deg_at_stall": 23.4,
+    "pitch_deg_max_abs": 27.7,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.875,
+      "z_above_top_at_stall": -0.195,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 4.24,
+      "min_z_above_top": -0.3
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.894,
+      "z_above_top_at_stall": -0.267,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 3.52,
+      "min_z_above_top": -0.287
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.513,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.554,
+      "z_above_top_at_stall": 0.024,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e1_m20000_gap_fwd05": {
+  "cmd": 0.5,
+  "n": 100,
+  "survived": 45,
+  "falls": {
+   "base_contact": 51,
+   "tilt60": 4
+  },
+  "reach_before_edge (<0.75)": 55,
+  "reach_in_gap (0.75..1.025)": 41,
+  "reach_past_far_edge (>=1.025)": 4,
+  "reach_median_m": 0.7478189468383789,
+  "reps": [
+   {
+    "file": "gap_fwd05_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "0.66",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": -0.496,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 35.0,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.18,
+      "min_z_above_top": -0.315
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.18,
+      "min_z_above_top": -0.248
+     }
+    }
+   },
+   {
+    "file": "gap_fwd05_ep057.csv",
+    "labels": "first_success",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 2.38,
+    "base_x_rel_at_stall": 0.616,
+    "base_x_rel_max": 6.521,
+    "pitch_deg_at_stall": -9.0,
+    "pitch_deg_max_abs": 28.0,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.591,
+      "z_above_top_at_stall": 0.343,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.12,
+      "min_z_above_top": -0.134
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.729,
+      "z_above_top_at_stall": 0.08,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.04,
+      "min_z_above_top": -0.272
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.293,
+      "z_above_top_at_stall": 0.163,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 3.88,
+      "min_z_above_top": -0.292
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.447,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   },
+   {
+    "file": "gap_fwd05_ep086.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 1.48,
+    "base_x_rel_at_stall": 0.726,
+    "base_x_rel_max": 0.742,
+    "pitch_deg_at_stall": 32.3,
+    "pitch_deg_max_abs": 36.5,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.842,
+      "z_above_top_at_stall": -0.053,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.68,
+      "min_z_above_top": -0.111
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.807,
+      "z_above_top_at_stall": -0.349,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.56,
+      "min_z_above_top": -0.364
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.389,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.021
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.356,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.021
+     }
+    }
+   }
+  ]
+ },
+ "un_e1_m20499_gap_fwd03": {
+  "cmd": 0.3,
+  "n": 100,
+  "survived": 46,
+  "falls": {
+   "base_contact": 53,
+   "tilt60": 1
+  },
+  "reach_before_edge (<0.75)": 45,
+  "reach_in_gap (0.75..1.025)": 55,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7529416084289551,
+  "reps": [
+   {
+    "file": "gap_fwd03_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "5.9",
+    "stall_t": 5.36,
+    "base_x_rel_at_stall": 0.738,
+    "base_x_rel_max": 0.748,
+    "pitch_deg_at_stall": 40.5,
+    "pitch_deg_max_abs": 43.7,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.725,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": -0.046
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.835,
+      "z_above_top_at_stall": -0.418,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 4.3,
+      "min_z_above_top": -0.429
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.314,
+      "z_above_top_at_stall": 0.244,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.22,
+      "min_z_above_top": -0.079
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.534,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     }
+    }
+   },
+   {
+    "file": "gap_fwd03_ep017.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 3.54,
+    "base_x_rel_at_stall": 0.719,
+    "base_x_rel_max": 0.734,
+    "pitch_deg_at_stall": 28.5,
+    "pitch_deg_max_abs": 36.2,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.722,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 3.74,
+      "min_z_above_top": -0.392
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.837,
+      "z_above_top_at_stall": -0.342,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.9,
+      "min_z_above_top": -0.379
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.329,
+      "z_above_top_at_stall": 0.198,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.54,
+      "z_above_top_at_stall": 0.024,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e1_m20499_gap_fwd05": {
+  "cmd": 0.5,
+  "n": 100,
+  "survived": 46,
+  "falls": {
+   "base_contact": 53,
+   "tilt60": 1
+  },
+  "reach_before_edge (<0.75)": 42,
+  "reach_in_gap (0.75..1.025)": 58,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7522988319396973,
+  "reps": [
+   {
+    "file": "gap_fwd05_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "15.32",
+    "stall_t": 3.3,
+    "base_x_rel_at_stall": 0.756,
+    "base_x_rel_max": 0.76,
+    "pitch_deg_at_stall": 35.6,
+    "pitch_deg_max_abs": 36.8,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.902,
+      "z_above_top_at_stall": -0.262,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.5,
+      "min_z_above_top": -0.389
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.835,
+      "z_above_top_at_stall": -0.111,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 3.22,
+      "min_z_above_top": -0.154
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.51,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 0.2,
+      "min_z_above_top": -0.145
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.408,
+      "z_above_top_at_stall": 0.3,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   },
+   {
+    "file": "gap_fwd05_ep062.csv",
+    "labels": "median_mae",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "3.34",
+    "stall_t": 2.56,
+    "base_x_rel_at_stall": 0.722,
+    "base_x_rel_max": 0.743,
+    "pitch_deg_at_stall": 32.5,
+    "pitch_deg_max_abs": 42.3,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.969,
+      "z_above_top_at_stall": -0.219,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.94,
+      "min_z_above_top": -0.408
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.786,
+      "z_above_top_at_stall": -0.082,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.46,
+      "min_z_above_top": -0.103
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.462,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.37,
+      "z_above_top_at_stall": 0.17,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e1_m20499_gap_fwd10": {
+  "cmd": 1.0,
+  "n": 100,
+  "survived": 35,
+  "falls": {
+   "base_contact": 58,
+   "tilt60": 6,
+   "below_support": 1
+  },
+  "reach_before_edge (<0.75)": 22,
+  "reach_in_gap (0.75..1.025)": 48,
+  "reach_past_far_edge (>=1.025)": 30,
+  "reach_median_m": 0.7791894674301147,
+  "reps": [
+   {
+    "file": "gap_fwd10_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "2.7",
+    "stall_t": 1.96,
+    "base_x_rel_at_stall": 0.832,
+    "base_x_rel_max": 1.197,
+    "pitch_deg_at_stall": 17.9,
+    "pitch_deg_max_abs": 37.8,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.926,
+      "z_above_top_at_stall": -0.252,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.54,
+      "min_z_above_top": -0.254
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 1.004,
+      "z_above_top_at_stall": -0.091,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 1.38,
+      "min_z_above_top": -0.282
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.618,
+      "z_above_top_at_stall": 0.024,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 2.42,
+      "min_z_above_top": -0.336
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.569,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 2.62,
+      "min_z_above_top": -0.266
+     }
+    }
+   },
+   {
+    "file": "gap_fwd10_ep013.csv",
+    "labels": "first_success",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": 14.773,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 22.2,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.021
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.46,
+      "min_z_above_top": -0.215
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 1.16,
+      "min_z_above_top": -0.243
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.88,
+      "min_z_above_top": -0.275
+     }
+    }
+   },
+   {
+    "file": "gap_fwd10_ep037.csv",
+    "labels": "median_mae",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "6.44",
+    "stall_t": 1.48,
+    "base_x_rel_at_stall": 0.72,
+    "base_x_rel_max": 0.749,
+    "pitch_deg_at_stall": 28.1,
+    "pitch_deg_max_abs": 29.0,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.829,
+      "z_above_top_at_stall": -0.362,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.6,
+      "min_z_above_top": -0.381
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.984,
+      "z_above_top_at_stall": 0.032,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.72,
+      "min_z_above_top": -0.176
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.37,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.02
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.548,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e2_m20000_gap_fwd03": {
+  "cmd": 0.3,
+  "n": 100,
+  "survived": 32,
+  "falls": {
+   "base_contact": 68
+  },
+  "reach_before_edge (<0.75)": 77,
+  "reach_in_gap (0.75..1.025)": 23,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.734990119934082,
+  "reps": [
+   {
+    "file": "gap_fwd03_ep000.csv",
+    "labels": "first_failure",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 5.78,
+    "base_x_rel_at_stall": 0.709,
+    "base_x_rel_max": 0.731,
+    "pitch_deg_at_stall": 28.1,
+    "pitch_deg_max_abs": 30.9,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.836,
+      "z_above_top_at_stall": -0.374,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 5.06,
+      "min_z_above_top": -0.381
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.847,
+      "z_above_top_at_stall": -0.085,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 5.3,
+      "min_z_above_top": -0.092
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.442,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 0.2,
+      "min_z_above_top": -0.184
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.5,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   },
+   {
+    "file": "gap_fwd03_ep016.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 1.76,
+    "base_x_rel_at_stall": 0.707,
+    "base_x_rel_max": 0.722,
+    "pitch_deg_at_stall": 27.9,
+    "pitch_deg_max_abs": 34.1,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.848,
+      "z_above_top_at_stall": -0.382,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.1,
+      "min_z_above_top": -0.39
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.839,
+      "z_above_top_at_stall": -0.092,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.28,
+      "min_z_above_top": -0.101
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.458,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.453,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e2_m20000_gap_fwd05": {
+  "cmd": 0.5,
+  "n": 100,
+  "survived": 31,
+  "falls": {
+   "base_contact": 69
+  },
+  "reach_before_edge (<0.75)": 84,
+  "reach_in_gap (0.75..1.025)": 16,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7394914627075195,
+  "reps": [
+   {
+    "file": "gap_fwd05_ep000.csv",
+    "labels": "first_failure",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 3.46,
+    "base_x_rel_at_stall": 0.734,
+    "base_x_rel_max": 0.74,
+    "pitch_deg_at_stall": 25.4,
+    "pitch_deg_max_abs": 31.5,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.932,
+      "z_above_top_at_stall": -0.311,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.7,
+      "min_z_above_top": -0.362
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.842,
+      "z_above_top_at_stall": -0.106,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 3.16,
+      "min_z_above_top": -0.109
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.402,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 0.2,
+      "min_z_above_top": -0.206
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.498,
+      "z_above_top_at_stall": 0.104,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   },
+   {
+    "file": "gap_fwd05_ep035.csv",
+    "labels": "median_mae",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "2.2",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": 0.746,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 31.8,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 1.58,
+      "min_z_above_top": -0.121
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 1.72,
+      "min_z_above_top": -0.387
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e2_m20499_gap_fwd03": {
+  "cmd": 0.3,
+  "n": 100,
+  "survived": 14,
+  "falls": {
+   "base_contact": 85,
+   "below_support": 1
+  },
+  "reach_before_edge (<0.75)": 81,
+  "reach_in_gap (0.75..1.025)": 19,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7279410362243652,
+  "reps": [
+   {
+    "file": "gap_fwd03_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "5.54",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": 0.707,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 41.4,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.021
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 5.22,
+      "min_z_above_top": -0.407
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   },
+   {
+    "file": "gap_fwd03_ep033.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 1.48,
+    "base_x_rel_at_stall": 0.435,
+    "base_x_rel_max": 0.44,
+    "pitch_deg_at_stall": 2.6,
+    "pitch_deg_max_abs": 3.8,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.498,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.452,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.156,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.083,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e2_m20499_gap_fwd05": {
+  "cmd": 0.5,
+  "n": 100,
+  "survived": 25,
+  "falls": {
+   "base_contact": 72,
+   "below_support": 1,
+   "tilt60": 2
+  },
+  "reach_before_edge (<0.75)": 67,
+  "reach_in_gap (0.75..1.025)": 33,
+  "reach_past_far_edge (>=1.025)": 0,
+  "reach_median_m": 0.7420445680618286,
+  "reps": [
+   {
+    "file": "gap_fwd05_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "2.9",
+    "stall_t": null,
+    "base_x_rel_at_stall": null,
+    "base_x_rel_max": 0.713,
+    "pitch_deg_at_stall": null,
+    "pitch_deg_max_abs": 38.1,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "FR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 2.68,
+      "min_z_above_top": -0.391
+     },
+     "RL_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": 0.16,
+      "min_z_above_top": -0.203
+     },
+     "RR_foot": {
+      "x_rel_at_stall": null,
+      "z_above_top_at_stall": null,
+      "contact_at_stall": null,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.023
+     }
+    }
+   },
+   {
+    "file": "gap_fwd05_ep081.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 1.9,
+    "base_x_rel_at_stall": 0.727,
+    "base_x_rel_max": 0.763,
+    "pitch_deg_at_stall": 26.6,
+    "pitch_deg_max_abs": 37.9,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.847,
+      "z_above_top_at_stall": -0.335,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.34,
+      "min_z_above_top": -0.35
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.843,
+      "z_above_top_at_stall": -0.126,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.44,
+      "min_z_above_top": -0.15
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.5,
+      "z_above_top_at_stall": 0.024,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.386,
+      "z_above_top_at_stall": 0.091,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     }
+    }
+   }
+  ]
+ },
+ "un_e2_m20499_gap_fwd10": {
+  "cmd": 1.0,
+  "n": 100,
+  "survived": 35,
+  "falls": {
+   "base_contact": 60,
+   "tilt60": 5
+  },
+  "reach_before_edge (<0.75)": 21,
+  "reach_in_gap (0.75..1.025)": 52,
+  "reach_past_far_edge (>=1.025)": 27,
+  "reach_median_m": 0.8511085510253906,
+  "reps": [
+   {
+    "file": "gap_fwd10_ep000.csv",
+    "labels": "first_failure",
+    "survived": "False",
+    "fall_reason": "base_contact",
+    "fall_t": "6.5200000000000005",
+    "stall_t": 1.98,
+    "base_x_rel_at_stall": 0.724,
+    "base_x_rel_max": 0.751,
+    "pitch_deg_at_stall": 14.1,
+    "pitch_deg_max_abs": 23.5,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.911,
+      "z_above_top_at_stall": -0.215,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.48,
+      "min_z_above_top": -0.374
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 0.896,
+      "z_above_top_at_stall": -0.246,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.6,
+      "min_z_above_top": -0.355
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.382,
+      "z_above_top_at_stall": 0.031,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 0.18,
+      "min_z_above_top": -0.224
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.468,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.02
+     }
+    }
+   },
+   {
+    "file": "gap_fwd10_ep008.csv",
+    "labels": "median_mae",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 1.48,
+    "base_x_rel_at_stall": 0.834,
+    "base_x_rel_max": 0.888,
+    "pitch_deg_at_stall": 15.7,
+    "pitch_deg_max_abs": 31.3,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 0.859,
+      "z_above_top_at_stall": -0.231,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 1.14,
+      "min_z_above_top": -0.279
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 1.005,
+      "z_above_top_at_stall": -0.192,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 0.46,
+      "min_z_above_top": -0.278
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.412,
+      "z_above_top_at_stall": 0.022,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.021
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.557,
+      "z_above_top_at_stall": 0.023,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.02
+     }
+    }
+   },
+   {
+    "file": "gap_fwd10_ep042.csv",
+    "labels": "first_success",
+    "survived": "True",
+    "fall_reason": "",
+    "fall_t": "nan",
+    "stall_t": 2.02,
+    "base_x_rel_at_stall": 0.965,
+    "base_x_rel_max": 15.802,
+    "pitch_deg_at_stall": 16.3,
+    "pitch_deg_max_abs": 23.3,
+    "feet": {
+     "FL_foot": {
+      "x_rel_at_stall": 1.212,
+      "z_above_top_at_stall": 0.024,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "FR_foot": {
+      "x_rel_at_stall": 1.005,
+      "z_above_top_at_stall": -0.167,
+      "contact_at_stall": 1,
+      "first_below_-0.05_t": 1.2,
+      "min_z_above_top": -0.279
+     },
+     "RL_foot": {
+      "x_rel_at_stall": 0.747,
+      "z_above_top_at_stall": 0.209,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": null,
+      "min_z_above_top": 0.022
+     },
+     "RR_foot": {
+      "x_rel_at_stall": 0.799,
+      "z_above_top_at_stall": -0.03,
+      "contact_at_stall": 0,
+      "first_below_-0.05_t": 2.24,
+      "min_z_above_top": -0.258
+     }
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,42 @@
+runs 100 ref rows 100
+mismatch or traceback or N!=100: 12
+  ('un_e1_m20000_discrete_obstacles_fwd05', 100, 99, 96, 96.0, 96.0, False)
+  ('un_e1_m20000_gap_fwd03', 100, 39, 0, 37.0, 0.0, False)
+  ('un_e1_m20000_gap_fwd05', 100, 46, 4, 45.0, 4.0, False)
+  ('un_e1_m20000_stepping_stones_fwd03', 100, 41, 0, 39.0, 0.0, False)
+  ('un_e1_m20000_stepping_stones_fwd05', 100, 28, 0, 25.0, 0.0, False)
+  ('un_e1_m20499_discrete_obstacles_fwd03', 100, 99, 64, 98.0, 64.0, False)
+  ('un_e1_m20499_floating_ring_fwd10', 100, 66, 70, 64.0, 69.0, False)
+  ('un_e1_m20499_gap_fwd10', 100, 36, 30, 35.0, 30.0, False)
+  ('un_e1_m20499_stepping_stones_fwd03', 100, 31, 0, 28.999999999999996, 0.0, False)
+  ('un_e2_m20000_discrete_obstacles_fwd05', 100, 99, 92, 98.0, 92.0, False)
+  ('un_e2_m20499_gap_fwd05', 100, 26, 0, 25.0, 0.0, False)
+  ('un_e2_m20499_stepping_stones_fwd05', 100, 30, 0, 28.999999999999996, 0.0, False)
+--- falls by reason vs env term
+  un_e1_m20000_floating_ring_fwd05 termsurv 81 ref 81.0 nonterm falls 1 bc 18 surv_but_term 0 max|dt| 0.0
+  un_e1_m20000_gap_fwd03 termsurv 39 ref 37.0 nonterm falls 13 bc 50 surv_but_term 0 max|dt| 0.0
+  un_e1_m20000_gap_fwd05 termsurv 46 ref 45.0 nonterm falls 4 bc 51 surv_but_term 0 max|dt| 0.0
+  un_e1_m20000_rails_fwd05 termsurv 99 ref 99.0 nonterm falls 1 bc 0 surv_but_term 0 max|dt| None
+  un_e1_m20000_stepping_stones_fwd03 termsurv 41 ref 39.0 nonterm falls 10 bc 51 surv_but_term 0 max|dt| 0.0
+  un_e1_m20000_stepping_stones_fwd05 termsurv 28 ref 25.0 nonterm falls 5 bc 70 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_discrete_obstacles_fwd03 termsurv 99 ref 98.0 nonterm falls 2 bc 0 surv_but_term 0 max|dt| None
+  un_e1_m20499_discrete_obstacles_fwd10 termsurv 96 ref 96.0 nonterm falls 1 bc 3 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_floating_ring_fwd10 termsurv 66 ref 64.0 nonterm falls 4 bc 32 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_gap_fwd03 termsurv 46 ref 46.0 nonterm falls 1 bc 53 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_gap_fwd05 termsurv 46 ref 46.0 nonterm falls 1 bc 53 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_gap_fwd10 termsurv 36 ref 35.0 nonterm falls 7 bc 58 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_stepping_stones_fwd03 termsurv 31 ref 28.999999999999996 nonterm falls 7 bc 64 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_stepping_stones_fwd05 termsurv 22 ref 22.0 nonterm falls 2 bc 76 surv_but_term 0 max|dt| 0.0
+  un_e1_m20499_stepping_stones_fwd10 termsurv 9 ref 9.0 nonterm falls 4 bc 87 surv_but_term 0 max|dt| 0.0
+  un_e2_m20000_rails_fwd05 termsurv 98 ref 98.0 nonterm falls 1 bc 1 surv_but_term 0 max|dt| 0.0
+  un_e2_m20000_stepping_stones_fwd03 termsurv 50 ref 50.0 nonterm falls 3 bc 47 surv_but_term 0 max|dt| 0.0
+  un_e2_m20000_stepping_stones_fwd05 termsurv 25 ref 25.0 nonterm falls 3 bc 72 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_gap_fwd03 termsurv 14 ref 14.000000000000002 nonterm falls 1 bc 85 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_gap_fwd05 termsurv 26 ref 25.0 nonterm falls 3 bc 72 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_gap_fwd10 termsurv 35 ref 35.0 nonterm falls 5 bc 60 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_stepping_stones_fwd03 termsurv 34 ref 34.0 nonterm falls 1 bc 65 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_stepping_stones_fwd05 termsurv 30 ref 28.999999999999996 nonterm falls 6 bc 65 surv_but_term 0 max|dt| 0.0
+  un_e2_m20499_stepping_stones_fwd10 termsurv 12 ref 12.0 nonterm falls 3 bc 85 surv_but_term 0 max|dt| 0.0
+runs where termsurv - nonterm == ref survival and term falls == base_contact: 76 / 100
+--- 3
+ok 100 / 100 · q_post falls the env did not terminate, all runs: 20
