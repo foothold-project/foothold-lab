@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 운영 · Linux 이전 매니페스트
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20 (드라이버 칸 23:50 갱신)
 > 근거: 팀장 10/12 23:00 「리눅스 넘어가기 위한 매니페스트 정리 시작 · 아직 확정 아님」 · 이 기계 실측 (아래 「Windows 실측」 칸) · 시스템 런북 mai-os `os/linux-runbook.md` (super · 6c37e44 · vfxpedia/mai-os#34)
 > 요지: FOOTHOLD RL (트랙 A 시뮬) 을 Ubuntu 로 옮겨 같은 숫자를 다시 낼 수 있게, 코드 · 환경 · 체크포인트 · 데이터 · 실행 명령 · 다시 세울 기준선을 한곳에 적는다. 시스템 셋업은 super 런북이 맡고 여기는 RL 만 적는다
 > 상태: 초안 (확정 아님 · 팀장 · super · pipeline 검토 전) · 설치 시기는 팀장이 정함
@@ -36,9 +36,17 @@ C:/isaac 전체 161 GB (확인됨). 10/12 아침 lead 가 말한 「약 23 GB」
 | Isaac Lab | editable `@37ddf626` (v2.3.2) | 같은 커밋 |
 | robot_lab · rsl_rl | editable `go2_rl_robotlab@28b4516d` | 같은 커밋 |
 | 그 밖 | numpy 1.26.0 · tensorboard 2.21.0 · warp-lang 1.15.0 · 전체 240 줄 `pip-freeze-isaac311-moects.txt` (같은 폴더) | freeze 를 견줘 다른 줄만 기록 |
-| NVIDIA 드라이버 | 591.86 (Windows) | Linux 드라이버 판 (런북 3-5) |
+| NVIDIA 드라이버 | 591.86 (Windows) | **580-open 계열로 맞춤** (super 런북 3-5 결정 · mai-os 1f4ba17). `nvidia-smi` 판을 여기에 적는다 |
 
-**런북 3-5 CUDA 판에 대한 답 (lead 의견):** 학습은 pip wheel 안의 CUDA 12.8 런타임을 쓴다. 그래서 시스템 CUDA toolkit 은 학습에 꼭 필요하지 않고, **드라이버가 CUDA 12.8 과 Isaac Sim 5.1 Linux 요구를 함께 만족하면 된다.** 그 최소 드라이버 판은 문서에서 아직 확인하지 않았다 (미확인 · Isaac Sim 5.1 · CUDA 12.8 공식 표로 확인할 것). 시스템 nvcc 는 3DGS 같은 컴파일 도구에 필요하다 (`ws-3dgs-toolchain-limits`). RTX 5080 은 Blackwell (sm_120) 이라 드라이버가 그 세대를 지원해야 한다.
+**드라이버 판 (10/12 23:50 갱신):** 학습은 pip wheel 안의 CUDA 12.8 런타임을 쓴다. 그래서 시스템 CUDA toolkit 은 학습에 꼭 필요하지 않고, 드라이버가 아래 두 조건을 함께 만족하면 된다.
+
+| 조건 | 값 | 확인 |
+|---|---|---|
+| Isaac Sim 5.1 Linux 드라이버 | 580.65.06 (Windows 580.88) · 「이 판에서 시험했다」 | 확인됨 · Isaac Sim 5.1 문서 Requirements 쪽을 lead 가 읽음 |
+| CUDA 12.8 Linux x86_64 최소 드라이버 | 12.8 GA ≥ 570.26 · 12.8 Update 1 ≥ 570.124.06 | 확인됨 · CUDA Toolkit Release Notes 표를 lead 가 읽음 |
+| Linux 에 넣을 판 | `nvidia-driver-580-open` (580.178.04 · HWE 모듈 메타) | super 가 AI-LT01 에서 확인 · 595.71.05 의 RTX 렌더러 초기화 충돌 보고 (NVIDIA 포럼 2026-06-02) 도 super 전달 · lead 미확인 |
+
+580 계열은 위 두 최소 판을 모두 넘는다. 시스템 nvcc 는 3DGS 같은 컴파일 도구에 필요하다 (`ws-3dgs-toolchain-limits`). RTX 5080 은 Blackwell (sm_120) 이라 드라이버가 그 세대를 지원해야 하며, 설치 뒤 `nvidia-smi` 로 두 장이 보이는지와 `torch.cuda.get_device_capability()` 가 (12, 0) 인지 잰다 (Linux 에서 잴 것). 이 파일의 판단: 드라이버 판은 런북을 따른다. 바꿀 일이 생기면 런북과 이 칸을 같이 고친다.
 
 ## 3. 체크포인트 (확인됨 · sha256 앞 16 자리 · 크기 26,367,183 B)
 
@@ -61,6 +69,8 @@ C:/isaac 전체 161 GB (확인됨). 10/12 아침 lead 가 말한 「약 23 GB」
 | 두 GPU 학습 (Linux 만) | Isaac Lab 분산 학습 (`torch.distributed.run --nproc_per_node=2 … --distributed`) · 이 저장소 runner 의 분산 지원 여부 | **미확인** · Linux 에서 처음 시험 |
 
 ## 5. Linux 에서 다시 세울 기준선 (순서)
+
+기준선 조건: 드라이버 `nvidia-driver-580-open` 계열 (2 절) · conda `isaac311-moects` 의 판 (2 절) · 영문 경로. 이 조건이 바뀌면 아래 기준선을 다시 잰다.
 
 1. **E0 재현:** 10 iteration smoke 가 돈다. Isaac URDF 변환이 빈 USD 를 내지 않는다 (Windows 한글 경로 문제의 재발 확인).
 2. **같은 숫자 확인:** E1 `model_20000` 을 Linux 에서 Q 평가 (같은 평가 시드 · 같은 env 수) 해 Windows 표와 견준다. OS 가 바뀌어도 평가가 같은지 먼저 본다.
