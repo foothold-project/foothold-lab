@@ -1,0 +1,154 @@
+{
+  "scope": "Local readback and source-anchor verification only. No network or robot operation.",
+  "report": "REPORT-OFFICIAL-PROTOCOL.md",
+  "bytes": 15344,
+  "lines": 97,
+  "sha256": "4797fcd4be66a52ae193128ce6bb0ba4455c9ce50c532204c1e98630ee8513ad",
+  "metadata_5_lines": true,
+  "emdash_count": 0,
+  "source_files": {
+    "M": {
+      "path": "../runtime-web/assets/main-LIOZh9o1.js",
+      "bytes": 11785671,
+      "sha256": "cebfc3e7e2d7838cf8adf650d0a32edbf7fbd32df8ede486d7521f96afb6ab15",
+      "manifest_match": true
+    },
+    "S": {
+      "path": "../runtime-web/js/store/store.-Ml-K330.js",
+      "bytes": 1387923,
+      "sha256": "fcd48d6ea8fe411fe9ca6ea639b70b86f8dd5be515005d06aa655d466e529884",
+      "manifest_match": true
+    },
+    "Q": {
+      "path": "../runtime-web/js/slam/Slam.BsJuOfhQ.js",
+      "bytes": 250437,
+      "sha256": "7970f500718ef578421e5553e2696f2a30d4caaa9f3e56c2780f4cbb164b4148",
+      "manifest_match": true
+    }
+  },
+  "anchors": [
+    {
+      "alias": "M",
+      "start": 20058,
+      "end": 20063,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "M",
+      "start": 18373,
+      "end": 18381,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "M",
+      "start": 18878,
+      "end": 18895,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "M",
+      "start": 18950,
+      "end": 18964,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "M",
+      "start": 18986,
+      "end": 18993,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "M",
+      "start": 19408,
+      "end": 19428,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "M",
+      "start": 19437,
+      "end": 19442,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "M",
+      "start": 19537,
+      "end": 19569,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "M",
+      "start": 19130,
+      "end": 19158,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "S",
+      "start": 7183,
+      "end": 7194,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "S",
+      "start": 7310,
+      "end": 7346,
+      "check_count": 3,
+      "matched_count": 3
+    },
+    {
+      "alias": "Q",
+      "start": 4703,
+      "end": 4709,
+      "check_count": 2,
+      "matched_count": 2
+    },
+    {
+      "alias": "Q",
+      "start": 4713,
+      "end": 4739,
+      "check_count": 4,
+      "matched_count": 4
+    }
+  ],
+  "links": [
+    {
+      "target": "../evidence/runtime-web-manifest.json",
+      "exists": true
+    },
+    {
+      "target": "REPORT-public-protocol.md",
+      "exists": true
+    },
+    {
+      "target": "SUPPLEMENT-unitree-ui-reference.md",
+      "exists": true
+    },
+    {
+      "target": "../runtime-web/assets/main-LIOZh9o1.js",
+      "exists": true
+    },
+    {
+      "target": "../runtime-web/js/store/store.-Ml-K330.js",
+      "exists": true
+    },
+    {
+      "target": "../runtime-web/js/slam/Slam.BsJuOfhQ.js",
+      "exists": true
+    },
+    {
+      "target": "official-framing-fixtures.json",
+      "exists": true
+    }
+  ],
+  "framing_fixture_all_pass": true,
+  "all_pass": true
+}

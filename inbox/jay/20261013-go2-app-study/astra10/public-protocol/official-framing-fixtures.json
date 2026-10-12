@@ -1,0 +1,40 @@
+{
+  "scope": "Offline synthetic execution of only PD binary framing methods copied from official-origin plaintext. No connection, authentication, robot or app UI run.",
+  "source_file": "runtime-web/js/store/store.-Ml-K330.js",
+  "source_sha256": "fcd48d6ea8fe411fe9ca6ea639b70b86f8dd5be515005d06aa655d466e529884",
+  "source_lines": [
+    7183,
+    7194
+  ],
+  "tests": [
+    {
+      "frame": "normal",
+      "total_bytes": 129,
+      "json_offset": 4,
+      "json_bytes": 122,
+      "payload_offset": 126,
+      "decoded_topic": "rt/uslam/frontend/cloud_world_ds",
+      "decoded_payload": [
+        128,
+        1,
+        255
+      ],
+      "result": "PASS"
+    },
+    {
+      "frame": "special 2,0",
+      "total_bytes": 137,
+      "json_offset": 12,
+      "json_bytes": 122,
+      "payload_offset": 134,
+      "decoded_topic": "rt/uslam/frontend/cloud_world_ds",
+      "decoded_payload": [
+        128,
+        1,
+        255
+      ],
+      "result": "PASS"
+    }
+  ],
+  "native_typed_array_little_endian": true
+}

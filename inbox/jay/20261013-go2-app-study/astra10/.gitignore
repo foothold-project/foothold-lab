@@ -1,0 +1,14 @@
+# Local analysis inputs, proprietary assets, tool installations and raw tool dumps.
+# Evidence manifests, focused reports, fixtures and screenshots remain reviewable.
+/downloads/
+/extracted/
+/runtime-web/
+/rea-worker-input/
+/tools/
+/logs/
+/__pycache__/
+/evidence/libvoxel-*.wat
+/evidence/official-download-page.html
+/evidence/official-download-config.js
+/evidence/terms-*.js
+/evidence/unitree-terms-page.html

@@ -1,0 +1,21 @@
+{
+  "selected_sources": 65,
+  "manifest_hash_size_errors": [],
+  "reports": {
+    "REPORT-public-protocol.md": {
+      "bytes": 20515,
+      "lines": 101,
+      "em_dash_count": 0,
+      "local_source_link_issues": [],
+      "sha256": "d376feaf455b52137d385cd28f9f47051fb5d9bab197841dd82f6296486cd39a"
+    },
+    "SUPPLEMENT-unitree-ui-reference.md": {
+      "bytes": 9179,
+      "lines": 47,
+      "em_dash_count": 0,
+      "local_source_link_issues": [],
+      "sha256": "ed6f36a86f8f9f212eb9bded052de319071c5cf69f6e16e23a39d218771e97f0"
+    }
+  },
+  "scope": "Reports and downloaded public source integrity only. Runtime UI/ROS/robot not verified."
+}

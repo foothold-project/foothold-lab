@@ -1,0 +1,1422 @@
+{
+  "sha": "8beafb4200965b33c64718e2717f975eff06d54e",
+  "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/8beafb4200965b33c64718e2717f975eff06d54e",
+  "tree": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cef2b4bae8a77853b9b139da80056d4470e75b70",
+      "size": 77,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/cef2b4bae8a77853b9b139da80056d4470e75b70"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83e4356779ceaf4c4c9b38bc1de4aa3cebda2bf0",
+      "size": 1075,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/83e4356779ceaf4c4c9b38bc1de4aa3cebda2bf0"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388b6451e65b421e3c35cebb958c81c7acc15000",
+      "size": 9370,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/388b6451e65b421e3c35cebb958c81c7acc15000"
+    },
+    {
+      "path": "docs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ae5b0c95d784382e5ad9f5674e356b222bd8637c",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/ae5b0c95d784382e5ad9f5674e356b222bd8637c"
+    },
+    {
+      "path": "docs/bluetooth.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8a0df390a96f56bb572734565800d89a0515fc3",
+      "size": 14853,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f8a0df390a96f56bb572734565800d89a0515fc3"
+    },
+    {
+      "path": "docs/lidar.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91d0f3bfb3e53abc6d764eeee8684222f41b9e12",
+      "size": 11967,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/91d0f3bfb3e53abc6d764eeee8684222f41b9e12"
+    },
+    {
+      "path": "docs/slam.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f55c982111e1a49882c3f381362f945a688d2046",
+      "size": 19204,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f55c982111e1a49882c3f381362f945a688d2046"
+    },
+    {
+      "path": "images",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ea60bd5786d006cb3ca77c60a3ebc4fb053f7a67",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/ea60bd5786d006cb3ca77c60a3ebc4fb053f7a67"
+    },
+    {
+      "path": "images/account-manager.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6943f9165d75a7591f1a44e76a256319a3639015",
+      "size": 336984,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/6943f9165d75a7591f1a44e76a256319a3639015"
+    },
+    {
+      "path": "images/bluetooth-popover-1.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d77856f48f9d7e5f4d220db64a3ad3f159078456",
+      "size": 95978,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d77856f48f9d7e5f4d220db64a3ad3f159078456"
+    },
+    {
+      "path": "images/bluetooth-popover-2.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "36a5cb8a5c4158bb2734cff12a7eb6bb1e1d84e1",
+      "size": 127232,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/36a5cb8a5c4158bb2734cff12a7eb6bb1e1d84e1"
+    },
+    {
+      "path": "images/bt-relay-button.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a899decda2f407c371e11d64c2c092e22c89dd5",
+      "size": 56224,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/3a899decda2f407c371e11d64c2c092e22c89dd5"
+    },
+    {
+      "path": "images/connection.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e4fc1e79df22dbc490b6af9fa55b8e37f7d0138",
+      "size": 128641,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9e4fc1e79df22dbc490b6af9fa55b8e37f7d0138"
+    },
+    {
+      "path": "images/control-view-new.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "315d0caebc517c0df1e1d8c4737d2426ac1a0f55",
+      "size": 1292993,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/315d0caebc517c0df1e1d8c4737d2426ac1a0f55"
+    },
+    {
+      "path": "images/control-view.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4bc3fe69c166d28187defad1e4e60a1039964ad",
+      "size": 1570252,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/c4bc3fe69c166d28187defad1e4e60a1039964ad"
+    },
+    {
+      "path": "images/hub.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1bc14f2ebdbd8c152d2f9f8574413bf6673b7439",
+      "size": 135703,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/1bc14f2ebdbd8c152d2f9f8574413bf6673b7439"
+    },
+    {
+      "path": "images/services.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ef35165cea77b0129e96a710f7e42d0ee10ac7c",
+      "size": 336061,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8ef35165cea77b0129e96a710f7e42d0ee10ac7c"
+    },
+    {
+      "path": "images/slam-view.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e96c887154fd13d35d125bed4e9dd86608ae94b2",
+      "size": 1226936,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e96c887154fd13d35d125bed4e9dd86608ae94b2"
+    },
+    {
+      "path": "images/status.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8e3fe979f68113cd96b3b84c7bec70c31032696",
+      "size": 304067,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f8e3fe979f68113cd96b3b84c7bec70c31032696"
+    },
+    {
+      "path": "index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46f0736acbd62930c480c93e7de84a74e6d41fe0",
+      "size": 395,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/46f0736acbd62930c480c93e7de84a74e6d41fe0"
+    },
+    {
+      "path": "package-lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4661a05cb598bbd69814dbd2cce1b58ceb265f5",
+      "size": 39476,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/b4661a05cb598bbd69814dbd2cce1b58ceb265f5"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46dae1138e454e7c4b46358127958856da9d694d",
+      "size": 609,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/46dae1138e454e7c4b46358127958856da9d694d"
+    },
+    {
+      "path": "public",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5f14af38880c703eeb290849d210a4c4052aa3bf",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/5f14af38880c703eeb290849d210a4c4052aa3bf"
+    },
+    {
+      "path": "public/favicon.ico",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f4081060b444a3ed053908512e046093722a47cb",
+      "size": 216,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f4081060b444a3ed053908512e046093722a47cb"
+    },
+    {
+      "path": "public/favicon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e6e6899cdb2de3632060bc2a219a7ff69f532617",
+      "size": 194,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e6e6899cdb2de3632060bc2a219a7ff69f532617"
+    },
+    {
+      "path": "public/icons",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8a8f7e48cd966749492ef93d9a290bbf10c878af",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/8a8f7e48cd966749492ef93d9a290bbf10c878af"
+    },
+    {
+      "path": "public/icons/dance1.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b67e70d1caa39fd6fc2e4fc8aa53e18b5427005",
+      "size": 2234,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8b67e70d1caa39fd6fc2e4fc8aa53e18b5427005"
+    },
+    {
+      "path": "public/icons/dance2.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05412535da8abfac336ba06d898951f7d0ec3698",
+      "size": 2710,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/05412535da8abfac336ba06d898951f7d0ec3698"
+    },
+    {
+      "path": "public/icons/hand_stand.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a244ae972e6082587b30d3268ed83b0c2de0981",
+      "size": 832,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/2a244ae972e6082587b30d3268ed83b0c2de0981"
+    },
+    {
+      "path": "public/icons/happy.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85917e3e27a8d39dcd4ad41ef8879ee76d8c66c1",
+      "size": 642,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/85917e3e27a8d39dcd4ad41ef8879ee76d8c66c1"
+    },
+    {
+      "path": "public/icons/jumpForward.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "324af8d93ece37cb7f29d6c9736376d6944a161b",
+      "size": 969,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/324af8d93ece37cb7f29d6c9736376d6944a161b"
+    },
+    {
+      "path": "public/icons/lieDown.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8d8f8ff7a7c580b419378effa7ef5f910faf0a0a",
+      "size": 959,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8d8f8ff7a7c580b419378effa7ef5f910faf0a0a"
+    },
+    {
+      "path": "public/icons/mode_ai_avoid.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f56e28646cee7944e5b2e9ad8da7b995b74aec4c",
+      "size": 1733,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f56e28646cee7944e5b2e9ad8da7b995b74aec4c"
+    },
+    {
+      "path": "public/icons/mode_ai_bound.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed31d55a821b23c7d61e93d6d8ebea6119d82f4f",
+      "size": 1196,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/ed31d55a821b23c7d61e93d6d8ebea6119d82f4f"
+    },
+    {
+      "path": "public/icons/mode_ai_stand.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "089d72456994d4b9b92719bd38c2158188ffd908",
+      "size": 1821,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/089d72456994d4b9b92719bd38c2158188ffd908"
+    },
+    {
+      "path": "public/icons/mode_batteryLife.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76fcd1889507799560a138fc50d4c2291a1fb33b",
+      "size": 1427,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/76fcd1889507799560a138fc50d4c2291a1fb33b"
+    },
+    {
+      "path": "public/icons/mode_bound.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1106f8c8458cd9352b58e799f61be09b0a2feef8",
+      "size": 2164,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/1106f8c8458cd9352b58e799f61be09b0a2feef8"
+    },
+    {
+      "path": "public/icons/mode_classic.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39a76f482be1c86e44ce69788c796941510e4118",
+      "size": 603,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/39a76f482be1c86e44ce69788c796941510e4118"
+    },
+    {
+      "path": "public/icons/mode_climbing.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4be77e2d110c83aec0435047df73f24cba4e4edf",
+      "size": 2891,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/4be77e2d110c83aec0435047df73f24cba4e4edf"
+    },
+    {
+      "path": "public/icons/mode_climbingStairs.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab2ef320179f8ef61333d87733e064d51bacb64c",
+      "size": 930,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/ab2ef320179f8ef61333d87733e064d51bacb64c"
+    },
+    {
+      "path": "public/icons/mode_crossStep.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f5956fdf1760cea249cd22c60e97751ac1864832",
+      "size": 1482,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f5956fdf1760cea249cd22c60e97751ac1864832"
+    },
+    {
+      "path": "public/icons/mode_damping.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82009cf730c0eae7022499730030fee9dc767936",
+      "size": 1105,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/82009cf730c0eae7022499730030fee9dc767936"
+    },
+    {
+      "path": "public/icons/mode_down_stairs.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93ffecdd52e75d8e5d138e255aebc249571b2262",
+      "size": 1789,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/93ffecdd52e75d8e5d138e255aebc249571b2262"
+    },
+    {
+      "path": "public/icons/mode_freeWalk.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32cad476fff29d5ea58db1860899a507c887d0ed",
+      "size": 775,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/32cad476fff29d5ea58db1860899a507c887d0ed"
+    },
+    {
+      "path": "public/icons/mode_highSpeed.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1fb490c2a2af300e5ef20a0d5a5c2e7340e272f",
+      "size": 1590,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/a1fb490c2a2af300e5ef20a0d5a5c2e7340e272f"
+    },
+    {
+      "path": "public/icons/mode_keepMoving.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97e98e33b5ecb3594f38116a5238ea701965bd91",
+      "size": 1711,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/97e98e33b5ecb3594f38116a5238ea701965bd91"
+    },
+    {
+      "path": "public/icons/mode_keepRunning.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f50ac50b1fff539b3571aea93d21817764afa722",
+      "size": 1184,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f50ac50b1fff539b3571aea93d21817764afa722"
+    },
+    {
+      "path": "public/icons/mode_locking.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "30db6f3f4b2520adc17db9616e83f14842ae22e3",
+      "size": 638,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/30db6f3f4b2520adc17db9616e83f14842ae22e3"
+    },
+    {
+      "path": "public/icons/mode_monthStart.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "804fda2fd16586c2e571f2220b21f18f6c092bce",
+      "size": 686,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/804fda2fd16586c2e571f2220b21f18f6c092bce"
+    },
+    {
+      "path": "public/icons/mode_pose.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5026906170e8c50f476ffafd222fc6d12a6049e",
+      "size": 1456,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e5026906170e8c50f476ffafd222fc6d12a6049e"
+    },
+    {
+      "path": "public/icons/mode_run.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "01ddf2cdbd9f02cc1c4d75d9e892d0470ae7ce6a",
+      "size": 915,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/01ddf2cdbd9f02cc1c4d75d9e892d0470ae7ce6a"
+    },
+    {
+      "path": "public/icons/mode_runSideBySide.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "36eaf7fa40a939be4d6e4074a03001b97248d32d",
+      "size": 1086,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/36eaf7fa40a939be4d6e4074a03001b97248d32d"
+    },
+    {
+      "path": "public/icons/mode_runaway.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f528d71af2b08c6f45a6e6b6072c1e086c87a939",
+      "size": 2148,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f528d71af2b08c6f45a6e6b6072c1e086c87a939"
+    },
+    {
+      "path": "public/icons/mode_sideStep.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9729ff5953e72e47a7ba731a54675683e1c5ac81",
+      "size": 1394,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9729ff5953e72e47a7ba731a54675683e1c5ac81"
+    },
+    {
+      "path": "public/icons/mode_stand.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8109c319921d9bb78e668e0dd7750bdd7754058",
+      "size": 1606,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e8109c319921d9bb78e668e0dd7750bdd7754058"
+    },
+    {
+      "path": "public/icons/mode_traction.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b8ed45171be4b64abd4e91bc2ed89df7ae4cc426",
+      "size": 1085,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/b8ed45171be4b64abd4e91bc2ed89df7ae4cc426"
+    },
+    {
+      "path": "public/icons/mode_unlock.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd0911a30286539cc8cff3fe7509a5b2b2ed9413",
+      "size": 682,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/dd0911a30286539cc8cff3fe7509a5b2b2ed9413"
+    },
+    {
+      "path": "public/icons/mode_walk.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8924817610b7c6c8042dc7f93662df2c7bded91",
+      "size": 938,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e8924817610b7c6c8042dc7f93662df2c7bded91"
+    },
+    {
+      "path": "public/icons/newYear.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0bbd688dac161d63bddd5015c28f3c9226a80ec4",
+      "size": 2493,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/0bbd688dac161d63bddd5015c28f3c9226a80ec4"
+    },
+    {
+      "path": "public/icons/op_1.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c09153012dfbe0a1e807344aaadb8aeb8c9e306",
+      "size": 2463,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/5c09153012dfbe0a1e807344aaadb8aeb8c9e306"
+    },
+    {
+      "path": "public/icons/op_2.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14768423063bf5d5d9eee1d54157e489ef9e57d7",
+      "size": 1771,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/14768423063bf5d5d9eee1d54157e489ef9e57d7"
+    },
+    {
+      "path": "public/icons/op_3.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "16facead4298d9c9a3250bc63c4a416b6aa8f90b",
+      "size": 926,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/16facead4298d9c9a3250bc63c4a416b6aa8f90b"
+    },
+    {
+      "path": "public/icons/op_4.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b169b1d91b2f923920ea56c11a7a9b626bcc0522",
+      "size": 938,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/b169b1d91b2f923920ea56c11a7a9b626bcc0522"
+    },
+    {
+      "path": "public/icons/op_5.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17379e930fbe31a2244697e73cdc19655e2a1a1a",
+      "size": 913,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/17379e930fbe31a2244697e73cdc19655e2a1a1a"
+    },
+    {
+      "path": "public/icons/op_active_menu.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ab481aa33eb6eb3a61054119828307c5c2d3496",
+      "size": 1368,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9ab481aa33eb6eb3a61054119828307c5c2d3496"
+    },
+    {
+      "path": "public/icons/op_arrow.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cf320e9a00bd1d486129e87b5351d48bcd884745",
+      "size": 289,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/cf320e9a00bd1d486129e87b5351d48bcd884745"
+    },
+    {
+      "path": "public/icons/op_chat.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b531774e8cd5974486c295075eaf0c69e269e8d",
+      "size": 2526,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8b531774e8cd5974486c295075eaf0c69e269e8d"
+    },
+    {
+      "path": "public/icons/op_close_chat.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2f145269de6ac0adb05a9781c8290a9948df02b",
+      "size": 1814,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e2f145269de6ac0adb05a9781c8290a9948df02b"
+    },
+    {
+      "path": "public/icons/op_crosshair.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b199acbc0e1b0258ebb8624d5bc1d698b39a56f3",
+      "size": 516,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/b199acbc0e1b0258ebb8624d5bc1d698b39a56f3"
+    },
+    {
+      "path": "public/icons/op_model_menu.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f534e4cce87952adaad42b9db7a2dad43cc86f6d",
+      "size": 1218,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f534e4cce87952adaad42b9db7a2dad43cc86f6d"
+    },
+    {
+      "path": "public/icons/op_photo.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15e23feaaa8d1d6f406655792d8ecc4a68052186",
+      "size": 913,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/15e23feaaa8d1d6f406655792d8ecc4a68052186"
+    },
+    {
+      "path": "public/icons/op_radar.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9eeb992b1c16edd9a7b8bac1a8ad90477c5ff104",
+      "size": 1273,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9eeb992b1c16edd9a7b8bac1a8ad90477c5ff104"
+    },
+    {
+      "path": "public/icons/op_video.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "56c502aa51ee12645976e0c347c503788b4a6e83",
+      "size": 1178,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/56c502aa51ee12645976e0c347c503788b4a6e83"
+    },
+    {
+      "path": "public/icons/op_video_active.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76020ee3c11e02695fa871753ace2590f0a9add4",
+      "size": 1206,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/76020ee3c11e02695fa871753ace2590f0a9add4"
+    },
+    {
+      "path": "public/icons/pounceForward.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ced091a511c75efd2eb13aca05e7746d797ee37",
+      "size": 961,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/6ced091a511c75efd2eb13aca05e7746d797ee37"
+    },
+    {
+      "path": "public/icons/rollOver.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d95e4d9bcace79ed0688403c536f0db58d8085c",
+      "size": 1243,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9d95e4d9bcace79ed0688403c536f0db58d8085c"
+    },
+    {
+      "path": "public/icons/shakeHands.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "806224274b1ad714ec71c43d63975d818572f19d",
+      "size": 2101,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/806224274b1ad714ec71c43d63975d818572f19d"
+    },
+    {
+      "path": "public/icons/showHeart.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fa5b64a4f6ae46fb720f9d39baab3786c56ff84",
+      "size": 1573,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/4fa5b64a4f6ae46fb720f9d39baab3786c56ff84"
+    },
+    {
+      "path": "public/icons/sitDown.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f9e5c832c8845bec2ab458d0637138728ae66e96",
+      "size": 1471,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f9e5c832c8845bec2ab458d0637138728ae66e96"
+    },
+    {
+      "path": "public/icons/stretch.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20829b40db87a6a21c9b3ffbb880142957213775",
+      "size": 865,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/20829b40db87a6a21c9b3ffbb880142957213775"
+    },
+    {
+      "path": "public/icons/turnOver.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d6f0cffb4ccbce43230879ea668fe05cc1500ec",
+      "size": 1124,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/0d6f0cffb4ccbce43230879ea668fe05cc1500ec"
+    },
+    {
+      "path": "public/libslam.wasm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7694dcd11644d0c3ac3a3deaacb79f61816004a",
+      "size": 7410,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e7694dcd11644d0c3ac3a3deaacb79f61816004a"
+    },
+    {
+      "path": "public/libvoxel.wasm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+      "size": 9520,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+    },
+    {
+      "path": "public/models",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c75aa524d254ba9dc5eddad70122ea5519947a87",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/c75aa524d254ba9dc5eddad70122ea5519947a87"
+    },
+    {
+      "path": "public/models/Go2.glb",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e202737574344b950f9cd62ff9269b5ec18595e4",
+      "size": 6242676,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e202737574344b950f9cd62ff9269b5ec18595e4"
+    },
+    {
+      "path": "public/models/axisColor4.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a2517d059a3df2cd3ec0f00fdb4d13b296005f0e",
+      "size": 569,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/a2517d059a3df2cd3ec0f00fdb4d13b296005f0e"
+    },
+    {
+      "path": "public/models/charge.glb",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ab20ce087bf8af082687c09271f888c2283767a",
+      "size": 27776,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/2ab20ce087bf8af082687c09271f888c2283767a"
+    },
+    {
+      "path": "public/models/venice_sunset_1k.hdr",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "048bb13a8bb240ded4609f398fc10c7b4d049a73",
+      "size": 1397783,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/048bb13a8bb240ded4609f398fc10c7b4d049a73"
+    },
+    {
+      "path": "public/sprites",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "abd703b2ccbcf22569b9d4d1081fe98c459b4e25",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/abd703b2ccbcf22569b9d4d1081fe98c459b4e25"
+    },
+    {
+      "path": "public/sprites/bg.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e6ad0fdbecd9f6fe3cb6b142d342b460c0651fd",
+      "size": 123218,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/7e6ad0fdbecd9f6fe3cb6b142d342b460c0651fd"
+    },
+    {
+      "path": "public/sprites/icon_flip_forward.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "efe868a2bf01a3d9e15f3d178832615d9114787b",
+      "size": 6453,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/efe868a2bf01a3d9e15f3d178832615d9114787b"
+    },
+    {
+      "path": "public/sprites/icon_lamp.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0b8f1e4af489a4c14ffde76dfe4d4ef86e60b0b",
+      "size": 5097,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f0b8f1e4af489a4c14ffde76dfe4d4ef86e60b0b"
+    },
+    {
+      "path": "public/sprites/icon_lamp_on.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d645874b4e013a21497f473a472da9803613e4c",
+      "size": 6174,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/3d645874b4e013a21497f473a472da9803613e4c"
+    },
+    {
+      "path": "public/sprites/icon_mode_switch.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a4c5b5ca749d2188340a563d50669f12f4716b2",
+      "size": 11653,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/3a4c5b5ca749d2188340a563d50669f12f4716b2"
+    },
+    {
+      "path": "public/sprites/icon_net_4g.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5617a5c7ed1825f117a77ae97995d3a1be2aa8d0",
+      "size": 1191,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/5617a5c7ed1825f117a77ae97995d3a1be2aa8d0"
+    },
+    {
+      "path": "public/sprites/icon_net_ap.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8516ea9fd1541fe842360d6d474e52ed5a9cb232",
+      "size": 2861,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8516ea9fd1541fe842360d6d474e52ed5a9cb232"
+    },
+    {
+      "path": "public/sprites/icon_net_remote.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9e7464cd424608528e91ddc659316caf50ccd3f",
+      "size": 1362,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e9e7464cd424608528e91ddc659316caf50ccd3f"
+    },
+    {
+      "path": "public/sprites/icon_net_sta.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f62a50860662123748d6cc00a50320671b0f9a43",
+      "size": 2845,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f62a50860662123748d6cc00a50320671b0f9a43"
+    },
+    {
+      "path": "public/sprites/icon_radar.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86214ef468aba7094bbf9c079aec0b05ab54d4ce",
+      "size": 6204,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/86214ef468aba7094bbf9c079aec0b05ab54d4ce"
+    },
+    {
+      "path": "public/sprites/icon_radar_on.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a54da89d34187dc4c32faf22c723be641f79c86",
+      "size": 7580,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/2a54da89d34187dc4c32faf22c723be641f79c86"
+    },
+    {
+      "path": "public/sprites/icon_volume.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d3f242bcbb9856dcc261188d40355c6c269fc87",
+      "size": 5037,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9d3f242bcbb9856dcc261188d40355c6c269fc87"
+    },
+    {
+      "path": "public/sprites/icon_volume_on.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "78e265d485dca5db908c6c8917bc41326b562e08",
+      "size": 6184,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/78e265d485dca5db908c6c8917bc41326b562e08"
+    },
+    {
+      "path": "public/sprites/icon_wifi.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5a62f29457a841702efd413c62123413fdc2f5d",
+      "size": 4678,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d5a62f29457a841702efd413c62123413fdc2f5d"
+    },
+    {
+      "path": "public/sprites/joystick-active2.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4353e6de2e6926abf94946a435eec3f7c30f53ef",
+      "size": 11839,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/4353e6de2e6926abf94946a435eec3f7c30f53ef"
+    },
+    {
+      "path": "public/sprites/joystick_active.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d90102e7a4649dd04cacfa330abcf30071180f11",
+      "size": 64088,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d90102e7a4649dd04cacfa330abcf30071180f11"
+    },
+    {
+      "path": "public/sprites/joystick_bg.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "128575d257eb480327d236415e035bbebea634dc",
+      "size": 43547,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/128575d257eb480327d236415e035bbebea634dc"
+    },
+    {
+      "path": "public/sprites/joystick_body.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d26e81a9722f4c9746be2d01b474282f406a1fa5",
+      "size": 212562,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d26e81a9722f4c9746be2d01b474282f406a1fa5"
+    },
+    {
+      "path": "public/sprites/lightbulb.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "145ef9f0e30d41615ed0e4284f550f36ed4d3d05",
+      "size": 2218,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/145ef9f0e30d41615ed0e4284f550f36ed4d3d05"
+    },
+    {
+      "path": "public/sprites/mode_ap.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8516ea9fd1541fe842360d6d474e52ed5a9cb232",
+      "size": 2861,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8516ea9fd1541fe842360d6d474e52ed5a9cb232"
+    },
+    {
+      "path": "public/sprites/mode_ap_hero.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2c48786dfde80d462024532e8f923ea51f3fe28",
+      "size": 31505,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f2c48786dfde80d462024532e8f923ea51f3fe28"
+    },
+    {
+      "path": "public/sprites/mode_cloud.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d7a6bb2c9d687c9cf0f562a784ff116fbde81d4",
+      "size": 888,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/6d7a6bb2c9d687c9cf0f562a784ff116fbde81d4"
+    },
+    {
+      "path": "public/sprites/mode_sta.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f62a50860662123748d6cc00a50320671b0f9a43",
+      "size": 2845,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f62a50860662123748d6cc00a50320671b0f9a43"
+    },
+    {
+      "path": "public/sprites/mode_sta_hero.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3116ad63bbcddcfb69d2f25bea9b464b8c6ed5a5",
+      "size": 42170,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/3116ad63bbcddcfb69d2f25bea9b464b8c6ed5a5"
+    },
+    {
+      "path": "public/sprites/music.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9a586a06896c1659d9d8ae2c8c637c9c37e7244d",
+      "size": 1694,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9a586a06896c1659d9d8ae2c8c637c9c37e7244d"
+    },
+    {
+      "path": "public/sprites/nav-bar-left-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4eb4d65d40134ab1fd452dfe3805ba3ec6a58c1b",
+      "size": 4646,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/4eb4d65d40134ab1fd452dfe3805ba3ec6a58c1b"
+    },
+    {
+      "path": "public/sprites/photo.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "56d640424707545f836fcc531fb94c0ffb9623df",
+      "size": 1294,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/56d640424707545f836fcc531fb94c0ffb9623df"
+    },
+    {
+      "path": "public/sprites/remoteControl_bg.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e6ad0fdbecd9f6fe3cb6b142d342b460c0651fd",
+      "size": 123218,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/7e6ad0fdbecd9f6fe3cb6b142d342b460c0651fd"
+    },
+    {
+      "path": "public/sprites/video.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e013d11dd4a08add6fa7dfd707abf729884ae77a",
+      "size": 992,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e013d11dd4a08add6fa7dfd707abf729884ae77a"
+    },
+    {
+      "path": "public/sprites/volume-down.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d71b9269d137d3824894c3524a5122ed95d52b8a",
+      "size": 1448,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d71b9269d137d3824894c3524a5122ed95d52b8a"
+    },
+    {
+      "path": "public/sprites/volume-off.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9915e54800e494eea4bf2a4ceda8a0fc9c9c686f",
+      "size": 886,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/9915e54800e494eea4bf2a4ceda8a0fc9c9c686f"
+    },
+    {
+      "path": "public/sprites/volume-up.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17ea338304ca5bf747826eae3e8d9ba546d9fc37",
+      "size": 2289,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/17ea338304ca5bf747826eae3e8d9ba546d9fc37"
+    },
+    {
+      "path": "public/vite.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7b8dfb1b2a60bd50538bec9f876511b9cac21e3",
+      "size": 1497,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e7b8dfb1b2a60bd50538bec9f876511b9cac21e3"
+    },
+    {
+      "path": "server",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6b9ed8b260f05c2e5f22b8a14183204c751929be",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/6b9ed8b260f05c2e5f22b8a14183204c751929be"
+    },
+    {
+      "path": "server/ble_server.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "137bf2cc18198f9b12cba1e209c4f2dab6d52ff2",
+      "size": 30562,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/137bf2cc18198f9b12cba1e209c4f2dab6d52ff2"
+    },
+    {
+      "path": "server/requirements.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "918673ae36c91bab44c57859cd59e3cafe8030d9",
+      "size": 182,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/918673ae36c91bab44c57859cd59e3cafe8030d9"
+    },
+    {
+      "path": "server/scanner.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64ccf9c50e9d2c014c51ca69893701da234d46a5",
+      "size": 3901,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/64ccf9c50e9d2c014c51ca69893701da234d46a5"
+    },
+    {
+      "path": "src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ef27f495ce69ab867678675b5a198267b2190997",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/ef27f495ce69ab867678675b5a198267b2190997"
+    },
+    {
+      "path": "src/api",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bbfcba7bc3d7684f5860875ca862b732922fe268",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/bbfcba7bc3d7684f5860875ca862b732922fe268"
+    },
+    {
+      "path": "src/api/bt-backend.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80a3381c3607bcc1e8417d7ae453492666014e1b",
+      "size": 3169,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/80a3381c3607bcc1e8417d7ae453492666014e1b"
+    },
+    {
+      "path": "src/api/unitree-cloud.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12e38224d8e455441633262fe85ad423352aac58",
+      "size": 20177,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/12e38224d8e455441633262fe85ad423352aac58"
+    },
+    {
+      "path": "src/connection",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2b1b101a353e1439bd925d2208ed6b45701979b4",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/2b1b101a353e1439bd925d2208ed6b45701979b4"
+    },
+    {
+      "path": "src/connection/local-connector.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc0ea1e714f8504aef616848dff5d890032b7720",
+      "size": 6442,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/cc0ea1e714f8504aef616848dff5d890032b7720"
+    },
+    {
+      "path": "src/connection/modes.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6548c86b90fc8b2b8187a4945ed4c7563c937b08",
+      "size": 382,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/6548c86b90fc8b2b8187a4945ed4c7563c937b08"
+    },
+    {
+      "path": "src/connection/network-scan.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a926a648826f5ffad56f70ebd8d54416ec3e3d4",
+      "size": 1264,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8a926a648826f5ffad56f70ebd8d54416ec3e3d4"
+    },
+    {
+      "path": "src/connection/remote-connector.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dda703c9082d34998e89a4fb2714615d7f0e1e1d",
+      "size": 6210,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/dda703c9082d34998e89a4fb2714615d7f0e1e1d"
+    },
+    {
+      "path": "src/connection/webrtc.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "90712ed6104c1e68cbd2bc5c52154dc2bdd27705",
+      "size": 8697,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/90712ed6104c1e68cbd2bc5c52154dc2bdd27705"
+    },
+    {
+      "path": "src/crypto",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e863336546f455da7920b3bf9e4cee2a49ee7693",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/e863336546f455da7920b3bf9e4cee2a49ee7693"
+    },
+    {
+      "path": "src/crypto/aes.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "494b2eae80f84e0b8c0f12a9557da016a232441d",
+      "size": 2025,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/494b2eae80f84e0b8c0f12a9557da016a232441d"
+    },
+    {
+      "path": "src/crypto/rsa.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d61c0801f0a87a34bd3bd626c2fea19c015c4bd",
+      "size": 790,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/5d61c0801f0a87a34bd3bd626c2fea19c015c4bd"
+    },
+    {
+      "path": "src/main.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "120dec61d682803a52630fdb601824597e3f48aa",
+      "size": 135,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/120dec61d682803a52630fdb601824597e3f48aa"
+    },
+    {
+      "path": "src/protocol",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c009c603110d5fb032a8e7a6d43ae2038bbefa1c",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/c009c603110d5fb032a8e7a6d43ae2038bbefa1c"
+    },
+    {
+      "path": "src/protocol/data-channel.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8bfe86d57d152d09d8816dac228c8a9e232dd949",
+      "size": 9199,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8bfe86d57d152d09d8816dac228c8a9e232dd949"
+    },
+    {
+      "path": "src/protocol/heartbeat.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e51d8ac0327a34793e91262123f6aed100ba5b3",
+      "size": 946,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8e51d8ac0327a34793e91262123f6aed100ba5b3"
+    },
+    {
+      "path": "src/protocol/topics.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1bdfe8278a9860913dbe41be3b286cc19dec17d",
+      "size": 3205,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e1bdfe8278a9860913dbe41be3b286cc19dec17d"
+    },
+    {
+      "path": "src/protocol/validation.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca8c4e8577e559bbfc415c4ff90d740c74f7fe68",
+      "size": 1322,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/ca8c4e8577e559bbfc415c4ff90d740c74f7fe68"
+    },
+    {
+      "path": "src/proxy-plugin.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abff1fc14fa1ca691b1fd94a2f72ce9757b5fe11",
+      "size": 9231,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/abff1fc14fa1ca691b1fd94a2f72ce9757b5fe11"
+    },
+    {
+      "path": "src/storage",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9c8add93c6ede1870cdff3764cdc7f2464da4425",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/9c8add93c6ede1870cdff3764cdc7f2464da4425"
+    },
+    {
+      "path": "src/storage/map-pcd-store.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd95ef7d14aa70604d02dd0e9a64774a1806c85d",
+      "size": 6874,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/fd95ef7d14aa70604d02dd0e9a64774a1806c85d"
+    },
+    {
+      "path": "src/types.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4cf1a6dde57bea8c56ace1559948ec855d619c5f",
+      "size": 970,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/4cf1a6dde57bea8c56ace1559948ec855d619c5f"
+    },
+    {
+      "path": "src/ui",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "79ebc7d753ef98c0f7547a5eabedf6fe8767d5f6",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/79ebc7d753ef98c0f7547a5eabedf6fe8767d5f6"
+    },
+    {
+      "path": "src/ui/app.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ed5e272d1c6a342be9bb99a3cbdf1a6f66741ec",
+      "size": 51907,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/1ed5e272d1c6a342be9bb99a3cbdf1a6f66741ec"
+    },
+    {
+      "path": "src/ui/components",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bf8114a7c6adf0a8824a9d9bde78b09715f5b048",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/bf8114a7c6adf0a8824a9d9bde78b09715f5b048"
+    },
+    {
+      "path": "src/ui/components/account-page.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82289afaf2291507d7daa65a40c80a4b24726514",
+      "size": 45699,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/82289afaf2291507d7daa65a40c80a4b24726514"
+    },
+    {
+      "path": "src/ui/components/action-bar.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d704d2df34e4a042f1e695ac4b6be3fb567f6de1",
+      "size": 13472,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d704d2df34e4a042f1e695ac4b6be3fb567f6de1"
+    },
+    {
+      "path": "src/ui/components/bt-popover.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "68d9492612ae593353e90c58e9d720a3466b0930",
+      "size": 35251,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/68d9492612ae593353e90c58e9d720a3466b0930"
+    },
+    {
+      "path": "src/ui/components/bt-status-icon.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c2daad96657e24a38afbc3746eab9194e16af31",
+      "size": 5237,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/1c2daad96657e24a38afbc3746eab9194e16af31"
+    },
+    {
+      "path": "src/ui/components/joystick.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92218cb2eb9945ea1bf72159cc7a967ae45c5704",
+      "size": 4080,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/92218cb2eb9945ea1bf72159cc7a967ae45c5704"
+    },
+    {
+      "path": "src/ui/components/mapping-page.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d92dfbfe0783d388a1b2c6c3381802dc0a59960",
+      "size": 108023,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/1d92dfbfe0783d388a1b2c6c3381802dc0a59960"
+    },
+    {
+      "path": "src/ui/components/pip-camera.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f333f370e3278d37e0072758ccaca99a36e2058d",
+      "size": 6869,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/f333f370e3278d37e0072758ccaca99a36e2058d"
+    },
+    {
+      "path": "src/ui/components/services-page.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82194f1243ae7cb7d3a95093625f58d0721b5684",
+      "size": 8100,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/82194f1243ae7cb7d3a95093625f58d0721b5684"
+    },
+    {
+      "path": "src/ui/components/side-buttons.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b2ebf86e27df1a75049c0a3b6d705ab121bbddf",
+      "size": 10730,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/3b2ebf86e27df1a75049c0a3b6d705ab121bbddf"
+    },
+    {
+      "path": "src/ui/components/status-bar.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "398470b65787107607dcd0ad46881fb9cb63a9f9",
+      "size": 7162,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/398470b65787107607dcd0ad46881fb9cb63a9f9"
+    },
+    {
+      "path": "src/ui/components/status-page.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "51a7d82a5e3079aa7a57da7c97bab864670b9c2e",
+      "size": 12180,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/51a7d82a5e3079aa7a57da7c97bab864670b9c2e"
+    },
+    {
+      "path": "src/ui/components/theme-toggle.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "55e2935784a9ff6d9bb87647c36caeddad12b0e6",
+      "size": 2880,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/55e2935784a9ff6d9bb87647c36caeddad12b0e6"
+    },
+    {
+      "path": "src/ui/connection-panel.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d071e54adf7ff56192a2bf7ee3822af7056c1f22",
+      "size": 16634,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d071e54adf7ff56192a2bf7ee3822af7056c1f22"
+    },
+    {
+      "path": "src/ui/scene",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7c2af72a3fe9732cfbf68afdc11ce8d96972c593",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/7c2af72a3fe9732cfbf68afdc11ce8d96972c593"
+    },
+    {
+      "path": "src/ui/scene/robot-model.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7348144d2b145bdb85068ce0484a8831bbcbfd73",
+      "size": 6923,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/7348144d2b145bdb85068ce0484a8831bbcbfd73"
+    },
+    {
+      "path": "src/ui/scene/scene.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8397e19779f52b37ec4df134118cf65606f53fe1",
+      "size": 6300,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8397e19779f52b37ec4df134118cf65606f53fe1"
+    },
+    {
+      "path": "src/ui/scene/slam-scene.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c01b04fef2c128e9b7974b129611a01882c77319",
+      "size": 21938,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/c01b04fef2c128e9b7974b129611a01882c77319"
+    },
+    {
+      "path": "src/ui/scene/voxel-map.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4bccbb176cc4ed4adbdf3fd385d128818057a17",
+      "size": 4201,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d4bccbb176cc4ed4adbdf3fd385d128818057a17"
+    },
+    {
+      "path": "src/ui/styles.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c6d7822863aa17d2d1b5fb6b27ef5f1faaa2739b",
+      "size": 52434,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/c6d7822863aa17d2d1b5fb6b27ef5f1faaa2739b"
+    },
+    {
+      "path": "src/ui/theme.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "762074eba0909f1211667b9a4a567c3aae526c71",
+      "size": 1987,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/762074eba0909f1211667b9a4a567c3aae526c71"
+    },
+    {
+      "path": "src/workers",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "817a2c534e900fa3a23f4685dd64360766c365f9",
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/trees/817a2c534e900fa3a23f4685dd64360766c365f9"
+    },
+    {
+      "path": "src/workers/slam-worker.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c86a1f6010f74da74cdedc618fa4f384402cfb0",
+      "size": 5370,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/7c86a1f6010f74da74cdedc618fa4f384402cfb0"
+    },
+    {
+      "path": "src/workers/voxel-worker.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69353aeaf33bc39b364117f3c36fe60cd2517f87",
+      "size": 5627,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/69353aeaf33bc39b364117f3c36fe60cd2517f87"
+    },
+    {
+      "path": "start.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "d07c6c92b576b93441686214e9b6c75c18ce74bb",
+      "size": 737,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d07c6c92b576b93441686214e9b6c75c18ce74bb"
+    },
+    {
+      "path": "test-connection.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8d9ee9818a5e7609fa07e399a320fe789d6f65a6",
+      "size": 7043,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/8d9ee9818a5e7609fa07e399a320fe789d6f65a6"
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e4149fcb4c7500315d2159a5e8db78fd4e1bc38",
+      "size": 412,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/6e4149fcb4c7500315d2159a5e8db78fd4e1bc38"
+    },
+    {
+      "path": "vite.config.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "393e4160a271808eed0e86f9be625afb4f359858",
+      "size": 887,
+      "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/393e4160a271808eed0e86f9be625afb4f359858"
+    }
+  ],
+  "truncated": false
+}
