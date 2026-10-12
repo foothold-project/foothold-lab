@@ -194,11 +194,18 @@ if ckpt:
         with open(bj, "r", encoding="utf-8") as f:
             bm = json.load(f)["meta"]
         par = bm["args"]["parent"]
-        assert os.path.normcase(os.path.abspath(os.path.dirname(par))) == os.path.normcase(os.path.abspath(os.path.dirname(os.path.dirname(args.train_yaml)))), "train_yaml is not the parent run's"
+        # exact file: <parent run dir>/params/env.yaml (VERIFY-astra-8 1: a sibling yaml in the same folder must not pass)
+        _want = os.path.join(os.path.dirname(par), "params", "env.yaml")
+        assert os.path.normcase(os.path.abspath(args.train_yaml)) == os.path.normcase(os.path.abspath(_want)), "train_yaml is not the parent run's"
         assert sha256_file(par) == bm["parent_sha256"], "parent checkpoint sha256 differs from bundle"
+        with open(bj, "r", encoding="utf-8") as f:
+            _bstate = json.load(f)["state"]
         meta["train_yaml_source"] = {"kind": "branch: parent run env.yaml (base config only, branch overrides in bundle.json)",
                                      "train_yaml": args.train_yaml, "train_yaml_sha256": sha256_file(args.train_yaml),
-                                     "bundle": bj, "parent": par, "parent_sha256": bm["parent_sha256"],
+                                     "bundle": bj, "bundle_json_sha256": sha256_file(bj),
+                                     "bundle_npz_sha256": sha256_file(os.path.join(os.path.dirname(ckpt), "bundle.npz")),
+                                     "bundle_state_sha256": hashlib.sha256(json.dumps(_bstate, sort_keys=True).encode()).hexdigest(),
+                                     "parent": par, "parent_sha256": bm["parent_sha256"],
                                      "branch_args": bm["args"], "branch_code": bm["code"]}
         yml = args.train_yaml
     with open(yml, "r", encoding="utf-8") as f:
