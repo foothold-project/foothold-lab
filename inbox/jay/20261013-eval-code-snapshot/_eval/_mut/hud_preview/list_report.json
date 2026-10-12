@@ -1,0 +1,28 @@
+[
+ {
+  "key": "fr_m20499_stairs_up/stairs_up_stop03_ep001",
+  "hud": "out/video_hud/fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay_hud.mp4",
+  "hud_bytes": 2156544,
+  "frames": 501,
+  "trace_rows": 501,
+  "video_fps": 50.0,
+  "stills": [
+   "out/video_hud/fr_m20499_stairs_up\\stills\\stairs_up_stop03_ep001_kinreplay_hud_f0050.png",
+   "out/video_hud/fr_m20499_stairs_up\\stills\\stairs_up_stop03_ep001_kinreplay_hud_f0225.png",
+   "out/video_hud/fr_m20499_stairs_up\\stills\\stairs_up_stop03_ep001_kinreplay_hud_f0275.png",
+   "out/video_hud/fr_m20499_stairs_up\\stills\\stairs_up_stop03_ep001_kinreplay_hud_f0450.png"
+  ],
+  "web": "out/web/fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "web_bytes": 744951,
+  "web_crf": 28,
+  "web_height": 720,
+  "web_tried": [
+   {
+    "crf": 28,
+    "height": 720,
+    "bytes": 744951
+   }
+  ],
+  "wall_s": 23.9
+ }
+]

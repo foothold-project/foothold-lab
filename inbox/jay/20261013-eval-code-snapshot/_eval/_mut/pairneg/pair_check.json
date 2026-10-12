@@ -1,0 +1,16 @@
+{
+ "dir": "_mut/pairneg",
+ "conditions": [
+  "g0plus-perm2026",
+  "legacy-normal",
+  "student"
+ ],
+ "reference": "g0plus-perm2026",
+ "mismatches": [
+  [
+   "student",
+   "first_obs_policy"
+  ]
+ ],
+ "paired": false
+}

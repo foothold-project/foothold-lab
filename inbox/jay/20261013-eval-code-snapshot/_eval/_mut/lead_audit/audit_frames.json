@@ -1,0 +1,3322 @@
+[
+ {
+  "file": "e2_m20499_flat/flat_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.027,
+  "min_mean": 184.2
+ },
+ {
+  "file": "e2_m20499_flat/flat_back03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.9,
+  "max_blue": 0.03,
+  "min_mean": 184.4
+ },
+ {
+  "file": "e2_m20499_flat/flat_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.3,
+  "max_blue": 0.03,
+  "min_mean": 184.1
+ },
+ {
+  "file": "e2_m20499_flat/flat_fwd01_ep087_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.2,
+  "max_blue": 0.03,
+  "min_mean": 185.0
+ },
+ {
+  "file": "e2_m20499_flat/flat_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.029,
+  "min_mean": 184.4
+ },
+ {
+  "file": "e2_m20499_flat/flat_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.6,
+  "max_blue": 0.027,
+  "min_mean": 185.1
+ },
+ {
+  "file": "e2_m20499_flat/flat_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2_m20499_flat/flat_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.029,
+  "min_mean": 184.5
+ },
+ {
+  "file": "e2_m20499_flat/flat_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.031,
+  "min_mean": 184.5
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.1,
+  "max_blue": 0.029,
+  "min_mean": 174.5
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_back03_ep008_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.4,
+  "max_blue": 0.028,
+  "min_mean": 171.9
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.5,
+  "max_blue": 0.031,
+  "min_mean": 170.4
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.0,
+  "max_blue": 0.031,
+  "min_mean": 174.5
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_fwd05_ep010_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.5,
+  "max_blue": 0.028,
+  "min_mean": 163.5
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.027,
+  "min_mean": 175.1
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_right03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 24.6,
+  "max_blue": 0.026,
+  "min_mean": 167.8
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 24.0,
+  "max_blue": 0.033,
+  "min_mean": 178.6
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.2,
+  "max_blue": 0.029,
+  "min_mean": 179.7
+ },
+ {
+  "file": "e2_m20499_obstacles/obstacles_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.4,
+  "max_blue": 0.03,
+  "min_mean": 181.2
+ },
+ {
+  "file": "e2_m20499_offplat/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.03,
+  "min_mean": 180.2
+ },
+ {
+  "file": "e2_m20499_offplat/slope_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.032,
+  "min_mean": 179.7
+ },
+ {
+  "file": "e2_m20499_offplat/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.1,
+  "max_blue": 0.026,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2_m20499_offplat/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.029,
+  "min_mean": 188.2
+ },
+ {
+  "file": "e2_m20499_offplat/slope_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.6,
+  "max_blue": 0.028,
+  "min_mean": 188.1
+ },
+ {
+  "file": "e2_m20499_offplat/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.3,
+  "max_blue": 0.021,
+  "min_mean": 189.3
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.037,
+  "min_mean": 179.1
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.039,
+  "min_mean": 178.4
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.6,
+  "max_blue": 0.04,
+  "min_mean": 178.8
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.5,
+  "max_blue": 0.005,
+  "min_mean": 170.9
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_up_stop03_ep004_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.9,
+  "max_blue": 0.004,
+  "min_mean": 171.1
+ },
+ {
+  "file": "e2_m20499_offplat/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 27.3,
+  "max_blue": 0.005,
+  "min_mean": 170.5
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.0,
+  "max_blue": 0.033,
+  "min_mean": 173.4
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_back03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.029,
+  "min_mean": 178.0
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.6,
+  "max_blue": 0.028,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_fwd01_ep083_kinreplay_hud_web.mp4",
+  "n": 17,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.9,
+  "max_blue": 0.022,
+  "min_mean": 182.0
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.2,
+  "max_blue": 0.034,
+  "min_mean": 176.1
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.3,
+  "max_blue": 0.027,
+  "min_mean": 176.8
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_right03_ep066_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.6,
+  "max_blue": 0.026,
+  "min_mean": 174.2
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.029,
+  "min_mean": 181.7
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_stop03_ep004_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.028,
+  "min_mean": 179.6
+ },
+ {
+  "file": "e2_m20499_rough_slope/rough_slope_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.03,
+  "min_mean": 181.7
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.032,
+  "min_mean": 176.7
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_fwd01_ep087_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.032,
+  "min_mean": 177.8
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.03,
+  "min_mean": 179.4
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.3,
+  "max_blue": 0.026,
+  "min_mean": 180.4
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.1,
+  "max_blue": 0.029,
+  "min_mean": 182.8
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.029,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2_m20499_slope_down/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.2,
+  "max_blue": 0.029,
+  "min_mean": 184.9
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.028,
+  "min_mean": 183.0
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_back03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.029,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.1,
+  "max_blue": 0.027,
+  "min_mean": 184.6
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.029,
+  "min_mean": 175.2
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.4,
+  "max_blue": 0.026,
+  "min_mean": 177.6
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.028,
+  "min_mean": 183.9
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.028,
+  "min_mean": 185.9
+ },
+ {
+  "file": "e2_m20499_slope_up/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.1,
+  "max_blue": 0.029,
+  "min_mean": 183.9
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.8,
+  "max_blue": 0.044,
+  "min_mean": 174.4
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_back03_ep076_kinreplay_hud_web.mp4",
+  "n": 68,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.0,
+  "max_blue": 0.028,
+  "min_mean": 142.0
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.5,
+  "max_blue": 0.029,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.7,
+  "max_blue": 0.042,
+  "min_mean": 178.8
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.3,
+  "max_blue": 0.039,
+  "min_mean": 179.1
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_right03_ep006_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.7,
+  "max_blue": 0.026,
+  "min_mean": 165.0
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.2,
+  "max_blue": 0.027,
+  "min_mean": 184.5
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_stop03_ep004_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.1,
+  "max_blue": 0.026,
+  "min_mean": 183.5
+ },
+ {
+  "file": "e2_m20499_stairs_down/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.1,
+  "max_blue": 0.028,
+  "min_mean": 180.9
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 27.5,
+  "max_blue": 0.016,
+  "min_mean": 165.5
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_back03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 36.6,
+  "max_blue": 0.014,
+  "min_mean": 159.6
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 34.9,
+  "max_blue": 0.016,
+  "min_mean": 163.3
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_fwd01_ep087_kinreplay_hud_web.mp4",
+  "n": 35,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 29.2,
+  "max_blue": 0.019,
+  "min_mean": 166.5
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.5,
+  "max_blue": 0.028,
+  "min_mean": 154.4
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_fwd05_ep031_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 38.5,
+  "max_blue": 0.011,
+  "min_mean": 155.0
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.8,
+  "max_blue": 0.028,
+  "min_mean": 167.1
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_right03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 41.3,
+  "max_blue": 0.011,
+  "min_mean": 153.9
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 39.5,
+  "max_blue": 0.015,
+  "min_mean": 159.7
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 33.2,
+  "max_blue": 0.007,
+  "min_mean": 165.5
+ },
+ {
+  "file": "e2_m20499_stairs_up/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 34.0,
+  "max_blue": 0.016,
+  "min_mean": 168.9
+ },
+ {
+  "file": "e2_m20499_wave/wave_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.4,
+  "max_blue": 0.027,
+  "min_mean": 173.5
+ },
+ {
+  "file": "e2_m20499_wave/wave_back03_ep001_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.4,
+  "max_blue": 0.032,
+  "min_mean": 172.7
+ },
+ {
+  "file": "e2_m20499_wave/wave_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.9,
+  "max_blue": 0.014,
+  "min_mean": 175.6
+ },
+ {
+  "file": "e2_m20499_wave/wave_fwd01_ep095_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.2,
+  "max_blue": 0.02,
+  "min_mean": 175.5
+ },
+ {
+  "file": "e2_m20499_wave/wave_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.6,
+  "max_blue": 0.036,
+  "min_mean": 173.4
+ },
+ {
+  "file": "e2_m20499_wave/wave_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.9,
+  "max_blue": 0.022,
+  "min_mean": 177.3
+ },
+ {
+  "file": "e2_m20499_wave/wave_right03_ep026_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.5,
+  "max_blue": 0.015,
+  "min_mean": 175.6
+ },
+ {
+  "file": "e2_m20499_wave/wave_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.4,
+  "max_blue": 0.026,
+  "min_mean": 175.2
+ },
+ {
+  "file": "e2_m20499_wave/wave_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.2,
+  "max_blue": 0.014,
+  "min_mean": 177.5
+ },
+ {
+  "file": "e2_m20499_wave/wave_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.7,
+  "max_blue": 0.017,
+  "min_mean": 179.7
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.6,
+  "max_blue": 0.029,
+  "min_mean": 184.8
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.03,
+  "min_mean": 184.2
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.6,
+  "max_blue": 0.026,
+  "min_mean": 185.2
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_stop03_ep024_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.03,
+  "min_mean": 184.4
+ },
+ {
+  "file": "e2fr_m19500_flat/flat_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.03,
+  "min_mean": 184.6
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.8,
+  "max_blue": 0.029,
+  "min_mean": 175.4
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_back03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.0,
+  "max_blue": 0.028,
+  "min_mean": 174.3
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 24.2,
+  "max_blue": 0.032,
+  "min_mean": 177.4
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.031,
+  "min_mean": 172.9
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_fwd05_ep011_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.2,
+  "max_blue": 0.029,
+  "min_mean": 172.1
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.7,
+  "max_blue": 0.028,
+  "min_mean": 174.5
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_right03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 24.6,
+  "max_blue": 0.023,
+  "min_mean": 168.3
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.5,
+  "max_blue": 0.032,
+  "min_mean": 178.5
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_stop03_ep023_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.4,
+  "max_blue": 0.028,
+  "min_mean": 175.4
+ },
+ {
+  "file": "e2fr_m19500_obstacles/obstacles_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.9,
+  "max_blue": 0.031,
+  "min_mean": 181.0
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.8,
+  "max_blue": 0.03,
+  "min_mean": 179.3
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.032,
+  "min_mean": 179.2
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.03,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.027,
+  "min_mean": 188.1
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.028,
+  "min_mean": 185.9
+ },
+ {
+  "file": "e2fr_m19500_offplat/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.021,
+  "min_mean": 189.2
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.7,
+  "max_blue": 0.04,
+  "min_mean": 178.3
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_down_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.8,
+  "max_blue": 0.039,
+  "min_mean": 178.6
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.0,
+  "max_blue": 0.031,
+  "min_mean": 179.1
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_down_yawL05_ep017_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.8,
+  "max_blue": 0.027,
+  "min_mean": 180.1
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.1,
+  "max_blue": 0.005,
+  "min_mean": 171.0
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_up_stop03_ep009_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 25.3,
+  "max_blue": 0.005,
+  "min_mean": 170.1
+ },
+ {
+  "file": "e2fr_m19500_offplat/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 31.7,
+  "max_blue": 0.005,
+  "min_mean": 169.0
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.036,
+  "min_mean": 174.6
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.6,
+  "max_blue": 0.028,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.034,
+  "min_mean": 175.3
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.1,
+  "max_blue": 0.028,
+  "min_mean": 175.0
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.028,
+  "min_mean": 181.1
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_stop03_ep021_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.03,
+  "min_mean": 181.2
+ },
+ {
+  "file": "e2fr_m19500_rough_slope/rough_slope_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.7,
+  "max_blue": 0.029,
+  "min_mean": 181.8
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.032,
+  "min_mean": 177.4
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.028,
+  "min_mean": 183.5
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.036,
+  "min_mean": 177.2
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.029,
+  "min_mean": 179.6
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.029,
+  "min_mean": 182.9
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_stop03_ep018_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.03,
+  "min_mean": 182.8
+ },
+ {
+  "file": "e2fr_m19500_slope_down/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.2,
+  "max_blue": 0.03,
+  "min_mean": 184.9
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.027,
+  "min_mean": 184.0
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.2,
+  "max_blue": 0.029,
+  "min_mean": 184.5
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.7,
+  "max_blue": 0.029,
+  "min_mean": 178.5
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.025,
+  "min_mean": 178.7
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.3,
+  "max_blue": 0.028,
+  "min_mean": 183.8
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.027,
+  "min_mean": 185.8
+ },
+ {
+  "file": "e2fr_m19500_slope_up/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.2,
+  "max_blue": 0.03,
+  "min_mean": 183.9
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.4,
+  "max_blue": 0.036,
+  "min_mean": 176.7
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_back03_ep060_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.8,
+  "max_blue": 0.03,
+  "min_mean": 165.8
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.9,
+  "max_blue": 0.029,
+  "min_mean": 184.3
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.1,
+  "max_blue": 0.036,
+  "min_mean": 144.5
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_fwd05_ep011_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.7,
+  "max_blue": 0.039,
+  "min_mean": 178.0
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.4,
+  "max_blue": 0.039,
+  "min_mean": 167.0
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.6,
+  "max_blue": 0.028,
+  "min_mean": 184.4
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.5,
+  "max_blue": 0.026,
+  "min_mean": 183.1
+ },
+ {
+  "file": "e2fr_m19500_stairs_down/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.03,
+  "min_mean": 180.4
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.1,
+  "max_blue": 0.019,
+  "min_mean": 165.5
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_back03_ep021_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 34.3,
+  "max_blue": 0.009,
+  "min_mean": 155.8
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 38.0,
+  "max_blue": 0.016,
+  "min_mean": 157.4
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.2,
+  "max_blue": 0.02,
+  "min_mean": 167.9
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_fwd05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 33.1,
+  "max_blue": 0.011,
+  "min_mean": 168.1
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.026,
+  "min_mean": 167.2
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 39.6,
+  "max_blue": 0.014,
+  "min_mean": 160.2
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 34.1,
+  "max_blue": 0.007,
+  "min_mean": 165.5
+ },
+ {
+  "file": "e2fr_m19500_stairs_up/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 35.2,
+  "max_blue": 0.017,
+  "min_mean": 168.8
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.028,
+  "min_mean": 175.5
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_back03_ep077_kinreplay_hud_web.mp4",
+  "n": 11,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.8,
+  "max_blue": 0.011,
+  "min_mean": 181.8
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.5,
+  "max_blue": 0.016,
+  "min_mean": 178.4
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.026,
+  "min_mean": 177.7
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.2,
+  "max_blue": 0.025,
+  "min_mean": 178.8
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_right03_ep010_kinreplay_hud_web.mp4",
+  "n": 58,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.5,
+  "max_blue": 0.008,
+  "min_mean": 175.7
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.6,
+  "max_blue": 0.02,
+  "min_mean": 176.4
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.8,
+  "max_blue": 0.016,
+  "min_mean": 177.4
+ },
+ {
+  "file": "e2fr_m19500_wave/wave_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.8,
+  "max_blue": 0.016,
+  "min_mean": 177.5
+ },
+ {
+  "file": "fr_m19500_flat/flat_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.028,
+  "min_mean": 184.6
+ },
+ {
+  "file": "fr_m19500_flat/flat_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.4,
+  "max_blue": 0.03,
+  "min_mean": 184.6
+ },
+ {
+  "file": "fr_m19500_flat/flat_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.4,
+  "max_blue": 0.03,
+  "min_mean": 184.3
+ },
+ {
+  "file": "fr_m19500_flat/flat_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.027,
+  "min_mean": 184.5
+ },
+ {
+  "file": "fr_m19500_flat/flat_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.028,
+  "min_mean": 184.5
+ },
+ {
+  "file": "fr_m19500_flat/flat_stop03_ep021_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.03,
+  "min_mean": 185.2
+ },
+ {
+  "file": "fr_m19500_flat/flat_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.031,
+  "min_mean": 184.4
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.3,
+  "max_blue": 0.029,
+  "min_mean": 174.8
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_back03_ep010_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.1,
+  "max_blue": 0.025,
+  "min_mean": 159.9
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.0,
+  "max_blue": 0.033,
+  "min_mean": 177.4
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.5,
+  "max_blue": 0.032,
+  "min_mean": 174.1
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_fwd05_ep004_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 25.7,
+  "max_blue": 0.029,
+  "min_mean": 173.4
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.1,
+  "max_blue": 0.031,
+  "min_mean": 177.2
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_right03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 24.6,
+  "max_blue": 0.026,
+  "min_mean": 157.5
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.4,
+  "max_blue": 0.032,
+  "min_mean": 178.4
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_stop03_ep022_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 30.1,
+  "max_blue": 0.03,
+  "min_mean": 171.9
+ },
+ {
+  "file": "fr_m19500_obstacles/obstacles_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.0,
+  "max_blue": 0.03,
+  "min_mean": 180.7
+ },
+ {
+  "file": "fr_m19500_offplat/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.8,
+  "max_blue": 0.031,
+  "min_mean": 179.5
+ },
+ {
+  "file": "fr_m19500_offplat/slope_down_stop03_ep004_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.1,
+  "max_blue": 0.022,
+  "min_mean": 180.1
+ },
+ {
+  "file": "fr_m19500_offplat/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.027,
+  "min_mean": 181.3
+ },
+ {
+  "file": "fr_m19500_offplat/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.027,
+  "min_mean": 188.1
+ },
+ {
+  "file": "fr_m19500_offplat/slope_up_stop03_ep003_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.9,
+  "max_blue": 0.021,
+  "min_mean": 187.5
+ },
+ {
+  "file": "fr_m19500_offplat/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.021,
+  "min_mean": 189.2
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.041,
+  "min_mean": 179.0
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_down_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.035,
+  "min_mean": 178.7
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.1,
+  "max_blue": 0.038,
+  "min_mean": 179.1
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.005,
+  "min_mean": 170.9
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.1,
+  "max_blue": 0.006,
+  "min_mean": 171.0
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 30.5,
+  "max_blue": 0.004,
+  "min_mean": 170.6
+ },
+ {
+  "file": "fr_m19500_offplat/stairs_up_yawL05_ep007_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.5,
+  "max_blue": 0.006,
+  "min_mean": 176.8
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.035,
+  "min_mean": 174.3
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_back03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.034,
+  "min_mean": 179.9
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.6,
+  "max_blue": 0.027,
+  "min_mean": 180.3
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.043,
+  "min_mean": 174.5
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.1,
+  "max_blue": 0.038,
+  "min_mean": 175.0
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.029,
+  "min_mean": 181.0
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_stop03_ep006_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.03,
+  "min_mean": 180.7
+ },
+ {
+  "file": "fr_m19500_rough_slope/rough_slope_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.031,
+  "min_mean": 181.4
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.03,
+  "min_mean": 177.2
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.03,
+  "min_mean": 181.6
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.6,
+  "max_blue": 0.033,
+  "min_mean": 177.5
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.032,
+  "min_mean": 178.2
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.1,
+  "max_blue": 0.028,
+  "min_mean": 183.1
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_stop03_ep073_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.029,
+  "min_mean": 182.4
+ },
+ {
+  "file": "fr_m19500_slope_down/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.1,
+  "max_blue": 0.03,
+  "min_mean": 184.8
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.027,
+  "min_mean": 183.9
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.029,
+  "min_mean": 184.6
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.027,
+  "min_mean": 182.8
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.4,
+  "max_blue": 0.026,
+  "min_mean": 181.0
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.028,
+  "min_mean": 183.9
+ },
+ {
+  "file": "fr_m19500_slope_up/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.2,
+  "max_blue": 0.03,
+  "min_mean": 183.7
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.3,
+  "max_blue": 0.029,
+  "min_mean": 180.0
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_back03_ep001_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.2,
+  "max_blue": 0.038,
+  "min_mean": 174.2
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.5,
+  "max_blue": 0.029,
+  "min_mean": 184.3
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.6,
+  "max_blue": 0.038,
+  "min_mean": 130.3
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.2,
+  "max_blue": 0.038,
+  "min_mean": 173.8
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.5,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.0,
+  "max_blue": 0.026,
+  "min_mean": 183.2
+ },
+ {
+  "file": "fr_m19500_stairs_down/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.5,
+  "max_blue": 0.031,
+  "min_mean": 181.5
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.0,
+  "max_blue": 0.014,
+  "min_mean": 165.5
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_back03_ep051_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 40.5,
+  "max_blue": 0.017,
+  "min_mean": 156.2
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 28.6,
+  "max_blue": 0.015,
+  "min_mean": 163.3
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.023,
+  "min_mean": 168.0
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.4,
+  "max_blue": 0.026,
+  "min_mean": 167.2
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 39.0,
+  "max_blue": 0.016,
+  "min_mean": 162.4
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_stop03_ep006_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 33.4,
+  "max_blue": 0.003,
+  "min_mean": 167.9
+ },
+ {
+  "file": "fr_m19500_stairs_up/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 35.5,
+  "max_blue": 0.019,
+  "min_mean": 168.4
+ },
+ {
+  "file": "fr_m19500_wave/wave_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.031,
+  "min_mean": 173.6
+ },
+ {
+  "file": "fr_m19500_wave/wave_back03_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.7,
+  "max_blue": 0.027,
+  "min_mean": 173.4
+ },
+ {
+  "file": "fr_m19500_wave/wave_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.6,
+  "max_blue": 0.016,
+  "min_mean": 179.1
+ },
+ {
+  "file": "fr_m19500_wave/wave_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.8,
+  "max_blue": 0.032,
+  "min_mean": 172.0
+ },
+ {
+  "file": "fr_m19500_wave/wave_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.1,
+  "max_blue": 0.038,
+  "min_mean": 176.4
+ },
+ {
+  "file": "fr_m19500_wave/wave_right03_ep042_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.6,
+  "max_blue": 0.012,
+  "min_mean": 175.9
+ },
+ {
+  "file": "fr_m19500_wave/wave_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.0,
+  "max_blue": 0.017,
+  "min_mean": 177.5
+ },
+ {
+  "file": "fr_m19500_wave/wave_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.9,
+  "max_blue": 0.016,
+  "min_mean": 177.5
+ },
+ {
+  "file": "fr_m19500_wave/wave_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.3,
+  "max_blue": 0.016,
+  "min_mean": 181.9
+ },
+ {
+  "file": "fr_m20499_flat/flat_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.031,
+  "min_mean": 184.1
+ },
+ {
+  "file": "fr_m20499_flat/flat_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.03,
+  "min_mean": 184.6
+ },
+ {
+  "file": "fr_m20499_flat/flat_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.029,
+  "min_mean": 184.6
+ },
+ {
+  "file": "fr_m20499_flat/flat_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.8,
+  "max_blue": 0.026,
+  "min_mean": 185.3
+ },
+ {
+  "file": "fr_m20499_flat/flat_right03_ep030_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.7,
+  "max_blue": 0.026,
+  "min_mean": 185.5
+ },
+ {
+  "file": "fr_m20499_flat/flat_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "fr_m20499_flat/flat_stop03_ep006_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.9,
+  "max_blue": 0.029,
+  "min_mean": 185.1
+ },
+ {
+  "file": "fr_m20499_flat/flat_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.029,
+  "min_mean": 184.5
+ },
+ {
+  "file": "fr_m20499_flat/flat_yawL05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.4,
+  "max_blue": 0.031,
+  "min_mean": 184.9
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.8,
+  "max_blue": 0.03,
+  "min_mean": 175.2
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_back03_ep011_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 25.2,
+  "max_blue": 0.027,
+  "min_mean": 174.4
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.9,
+  "max_blue": 0.032,
+  "min_mean": 178.5
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.029,
+  "min_mean": 173.7
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_fwd05_ep010_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.5,
+  "max_blue": 0.027,
+  "min_mean": 170.2
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.8,
+  "max_blue": 0.034,
+  "min_mean": 177.7
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_right03_ep001_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.3,
+  "max_blue": 0.025,
+  "min_mean": 174.4
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.9,
+  "max_blue": 0.031,
+  "min_mean": 178.6
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_stop03_ep016_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.6,
+  "max_blue": 0.032,
+  "min_mean": 177.7
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.9,
+  "max_blue": 0.03,
+  "min_mean": 180.8
+ },
+ {
+  "file": "fr_m20499_obstacles/obstacles_yawL05_ep039_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 26.3,
+  "max_blue": 0.031,
+  "min_mean": 177.8
+ },
+ {
+  "file": "fr_m20499_offplat/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.03,
+  "min_mean": 180.1
+ },
+ {
+  "file": "fr_m20499_offplat/slope_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.6,
+  "max_blue": 0.032,
+  "min_mean": 178.7
+ },
+ {
+  "file": "fr_m20499_offplat/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.03,
+  "min_mean": 180.9
+ },
+ {
+  "file": "fr_m20499_offplat/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.027,
+  "min_mean": 188.2
+ },
+ {
+  "file": "fr_m20499_offplat/slope_up_stop03_ep017_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.2,
+  "max_blue": 0.024,
+  "min_mean": 189.1
+ },
+ {
+  "file": "fr_m20499_offplat/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.5,
+  "max_blue": 0.021,
+  "min_mean": 189.1
+ },
+ {
+  "file": "fr_m20499_offplat/slope_up_yawL05_ep077_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.028,
+  "min_mean": 187.7
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.2,
+  "max_blue": 0.038,
+  "min_mean": 178.8
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_down_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.0,
+  "max_blue": 0.042,
+  "min_mean": 178.4
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.0,
+  "max_blue": 0.041,
+  "min_mean": 179.1
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_down_yawL05_ep029_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.6,
+  "max_blue": 0.031,
+  "min_mean": 179.2
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 23.5,
+  "max_blue": 0.009,
+  "min_mean": 171.0
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_up_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.006,
+  "min_mean": 170.9
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 31.5,
+  "max_blue": 0.006,
+  "min_mean": 169.8
+ },
+ {
+  "file": "fr_m20499_offplat/stairs_up_yawL05_ep028_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 22.8,
+  "max_blue": 0.005,
+  "min_mean": 176.3
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.0,
+  "max_blue": 0.033,
+  "min_mean": 173.7
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.0,
+  "max_blue": 0.028,
+  "min_mean": 180.9
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.1,
+  "max_blue": 0.037,
+  "min_mean": 175.3
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.4,
+  "max_blue": 0.03,
+  "min_mean": 175.2
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_right03_ep052_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.029,
+  "min_mean": 176.8
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.0,
+  "max_blue": 0.031,
+  "min_mean": 180.6
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_stop03_ep004_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.5,
+  "max_blue": 0.033,
+  "min_mean": 179.0
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.2,
+  "max_blue": 0.03,
+  "min_mean": 181.7
+ },
+ {
+  "file": "fr_m20499_rough_slope/rough_slope_yawL05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.9,
+  "max_blue": 0.028,
+  "min_mean": 182.3
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.032,
+  "min_mean": 178.1
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.029,
+  "min_mean": 181.5
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.6,
+  "max_blue": 0.032,
+  "min_mean": 178.4
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.03,
+  "min_mean": 178.9
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.027,
+  "min_mean": 182.8
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_stop03_ep006_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.029,
+  "min_mean": 181.8
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.1,
+  "max_blue": 0.03,
+  "min_mean": 184.8
+ },
+ {
+  "file": "fr_m20499_slope_down/slope_down_yawL05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.029,
+  "min_mean": 184.7
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.3,
+  "max_blue": 0.029,
+  "min_mean": 184.1
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.3,
+  "max_blue": 0.03,
+  "min_mean": 184.5
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.4,
+  "max_blue": 0.028,
+  "min_mean": 177.5
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.4,
+  "max_blue": 0.024,
+  "min_mean": 178.3
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.4,
+  "max_blue": 0.028,
+  "min_mean": 183.7
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.8,
+  "max_blue": 0.028,
+  "min_mean": 185.8
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.028,
+  "min_mean": 183.6
+ },
+ {
+  "file": "fr_m20499_slope_up/slope_up_yawL05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 15.5,
+  "max_blue": 0.029,
+  "min_mean": 184.0
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.0,
+  "max_blue": 0.038,
+  "min_mean": 178.4
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_back03_ep004_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.9,
+  "max_blue": 0.038,
+  "min_mean": 179.7
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.6,
+  "max_blue": 0.029,
+  "min_mean": 183.7
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 14.3,
+  "max_blue": 0.036,
+  "min_mean": 126.8
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.7,
+  "max_blue": 0.04,
+  "min_mean": 179.2
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_right03_ep015_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.3,
+  "max_blue": 0.035,
+  "min_mean": 179.1
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 12.7,
+  "max_blue": 0.028,
+  "min_mean": 184.3
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 13.4,
+  "max_blue": 0.026,
+  "min_mean": 183.5
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.8,
+  "max_blue": 0.031,
+  "min_mean": 181.4
+ },
+ {
+  "file": "fr_m20499_stairs_down/stairs_down_yawL05_ep039_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.0,
+  "max_blue": 0.031,
+  "min_mean": 183.8
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 16.6,
+  "max_blue": 0.014,
+  "min_mean": 165.5
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_back03_ep001_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 17.6,
+  "max_blue": 0.003,
+  "min_mean": 171.2
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 32.8,
+  "max_blue": 0.016,
+  "min_mean": 163.3
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 19.5,
+  "max_blue": 0.026,
+  "min_mean": 167.9
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_fwd05_ep042_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 25.6,
+  "max_blue": 0.013,
+  "min_mean": 166.6
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.5,
+  "max_blue": 0.029,
+  "min_mean": 167.2
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_right03_ep002_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 18.9,
+  "max_blue": 0.012,
+  "min_mean": 172.3
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 37.1,
+  "max_blue": 0.013,
+  "min_mean": 162.7
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 31.4,
+  "max_blue": 0.007,
+  "min_mean": 168.5
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 35.7,
+  "max_blue": 0.017,
+  "min_mean": 168.5
+ },
+ {
+  "file": "fr_m20499_stairs_up/stairs_up_yawL05_ep025_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 36.1,
+  "max_blue": 0.018,
+  "min_mean": 165.3
+ },
+ {
+  "file": "fr_m20499_wave/wave_back03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.9,
+  "max_blue": 0.027,
+  "min_mean": 175.7
+ },
+ {
+  "file": "fr_m20499_wave/wave_back03_ep026_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.3,
+  "max_blue": 0.013,
+  "min_mean": 174.0
+ },
+ {
+  "file": "fr_m20499_wave/wave_fwd01_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.0,
+  "max_blue": 0.015,
+  "min_mean": 179.5
+ },
+ {
+  "file": "fr_m20499_wave/wave_fwd05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.6,
+  "max_blue": 0.052,
+  "min_mean": 173.0
+ },
+ {
+  "file": "fr_m20499_wave/wave_right03_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 20.2,
+  "max_blue": 0.025,
+  "min_mean": 178.7
+ },
+ {
+  "file": "fr_m20499_wave/wave_right03_ep030_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.8,
+  "max_blue": 0.028,
+  "min_mean": 176.3
+ },
+ {
+  "file": "fr_m20499_wave/wave_stop03_ep000_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.5,
+  "max_blue": 0.02,
+  "min_mean": 177.7
+ },
+ {
+  "file": "fr_m20499_wave/wave_stop03_ep002_kinreplay_hud_web.mp4",
+  "n": 40,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.6,
+  "max_blue": 0.01,
+  "min_mean": 176.6
+ },
+ {
+  "file": "fr_m20499_wave/wave_yawL05_ep000_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.8,
+  "max_blue": 0.016,
+  "min_mean": 180.4
+ },
+ {
+  "file": "fr_m20499_wave/wave_yawL05_ep011_kinreplay_hud_web.mp4",
+  "n": 80,
+  "bad": 0,
+  "frac": 0.0,
+  "spans": [],
+  "min_std": 21.9,
+  "max_blue": 0.012,
+  "min_mean": 177.0
+ }
+]

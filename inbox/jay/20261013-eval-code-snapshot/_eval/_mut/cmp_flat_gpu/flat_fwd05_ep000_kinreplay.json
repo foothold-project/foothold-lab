@@ -1,0 +1,31 @@
+{
+ "file": "flat_fwd05_ep000_kinreplay.mp4",
+ "source_csv": "flat_fwd05_ep000.csv",
+ "frames": 1001,
+ "fps": 50,
+ "seconds": 20.02,
+ "replay": "kinematic replay of the recorded states, physics not re-computed",
+ "terrain_mesh_equal_to_run": true,
+ "replayed_foot_vs_csv_max_abs_m": 1.4622802737562779e-05,
+ "contact_foot_height_above_terrain_m": {
+  "n": 2722,
+  "median": 0.023132510000000002,
+  "p01": 0.0224521874,
+  "p99": 0.0236281421,
+  "min": 0.02155972,
+  "max": 0.02370968,
+  "frac_within_0.018_0.028": 1.0,
+  "n_above_0.028": 0,
+  "n_below_0.018": 0,
+  "note": "vertical ray below the foot centre; on stairs a foot touching a riser or edge reads the lower tread"
+ },
+ "png_rows": [
+  0,
+  250,
+  500,
+  750,
+  1000
+ ],
+ "bytes": 21039091,
+ "wall_s": 23.8
+}

@@ -1,0 +1,54 @@
+{
+ "run_tag": "fr_m20499_stairs_up",
+ "full_tag": "fr_m20499_stairs_up",
+ "terrain_mesh_equal": true,
+ "sim_device": "cpu",
+ "videos": [
+  {
+   "file": "stairs_up_stop03_ep001_kinreplay.mp4",
+   "source_csv": "stairs_up_stop03_ep001.csv",
+   "frames": 501,
+   "fps": 50,
+   "seconds": 10.02,
+   "replay": "kinematic replay of the recorded states, physics not re-computed",
+   "terrain_mesh_equal_to_run": true,
+   "replayed_foot_vs_csv_max_abs_m": 1.636108398272995e-05,
+   "contact_foot_height_above_terrain_m": {
+    "n": 1504,
+    "median": 0.0232935238418579,
+    "p01": 0.021993203841858388,
+    "p99": 0.17348784384185792,
+    "min": 0.021685023841857998,
+    "max": 0.173565023841858,
+    "frac_within_0.018_0.028": 0.7965425531914894,
+    "n_above_0.028": 306,
+    "n_below_0.018": 0,
+    "note": "vertical ray below the foot centre; on stairs a foot touching a riser or edge reads the lower tread"
+   },
+   "png_rows": [
+    50,
+    225,
+    275,
+    450
+   ],
+   "sim_device": "cpu",
+   "overlay": "label",
+   "robot_joint_names": [
+    "FL_hip_joint",
+    "FR_hip_joint",
+    "RL_hip_joint",
+    "RR_hip_joint",
+    "FL_thigh_joint",
+    "FR_thigh_joint",
+    "RL_thigh_joint",
+    "RR_thigh_joint",
+    "FL_calf_joint",
+    "FR_calf_joint",
+    "RL_calf_joint",
+    "RR_calf_joint"
+   ],
+   "bytes": 9450089,
+   "wall_s": 14.6
+  }
+ ]
+}

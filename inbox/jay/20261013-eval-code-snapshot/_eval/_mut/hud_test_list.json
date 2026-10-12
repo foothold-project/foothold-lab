@@ -1,0 +1,10 @@
+[
+ {
+  "key": "flat_yawL05_ep000",
+  "video": "out/video/fr_m20499_flat/flat_yawL05_ep000_kinreplay.mp4",
+  "parquet": "_mut/fr_legacy_test/fr_m20499_flat/timeseries/flat_yawL05_ep000.parquet",
+  "hud": "_mut/hud_test/flat_yawL05_ep000_hud.mp4",
+  "web": "_mut/hud_test/web/flat_yawL05_ep000.mp4",
+  "title": "E1 m20499 flat yawL05 ep000"
+ }
+]

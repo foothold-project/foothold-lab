@@ -1,0 +1,86 @@
+
+# ================================================================================== stage halttest
+if "halttest" in STAGES:
+    s = {}
+    o, _ = u.reset(seed=SEED_VAL)
+    o = TensorDict(o, batch_size=[N])
+
+    def inject(j, st):  # synthetic flag on env 3 at sample 2 (tests the halt path, not the masks)
+        if j == 2:
+            st["harness_err"][3] = True
+
+    try:
+        rollout(o, 5, lambda o_: torch.zeros(N, 12, device=dev), halt=True, grab_hook=inject)
+        s["halted"] = False
+    except HarnessHalt as ex:
+        s["halted"] = True
+        s["message"] = str(ex)
+    REC = None
+    dump("halttest", s)
+
+# ================================================================================== stage main (D1-B main evaluation; NOT run in this task)
+if MAIN:
+    s = {"cond": args.cond, "T": args.main_T, "episodes": E, "layout": args.layout,
+         "note": "run only after the lead confirms the D1-B contract"}
+    st_ = json.load(open(os.path.join(OUT, "settle.json")))
+    for k in ("settled_sha256", "restore1_sha256", "restore1_first_obs_sha256", "restore1_first_critic_without_height_sha256", "settled"):
+        s[k] = st_.get(k)
+    T = args.main_T
+    act_fn = policy if args.cond == "student" else teacher_mean
+    try:
+        o, rec = rollout(o1, T, act_fn, halt=True)
+    except HarnessHalt as ex:
+        s["halted"] = str(ex)
+        dump("main_" + args.cond, s)
+        raise
+    fe = fall_eval(rec, range(N), 0.0)
+    w_np = torch.tensor([w for _, w in VAL_COLS], device=dev)[col_of].cpu().numpy()
+    ft = foot_eval(rec, range(N), w_np, col_of.cpu().numpy())
+    cmd_np = target.cpu().numpy()
+    rows = []
+    for e in range(N):
+        org = ORG[int(col_of[e])].cpu().numpy()
+        x = rec.f["pos"][:, e, 0] - org[0]
+        y = rec.f["pos"][:, e, 1] - org[1]
+        rs_ = np.flatnonzero(rec.b["reset"][:, e])
+        jf = fe[e]["j_fail"] if fe[e]["reason"] not in ("", "harness_error") else T + 1
+        if rs_.size and jf > rs_[0]:
+            jf = int(rs_[0])  # a reset without a detected fall still ends the valid samples
+        outer_first = []
+        for fn_ in FOOT_NAMES:
+            js = [ev["j"] for ev in ft[e] if ev["foot"] == fn_ and ev["cls"] == "outer"]
+            outer_first.append(min(js) if js else -1)
+        oc = L.gap_outcome(x, y, jf, outer_first, A, float(w_np[e]))
+        jend = min(oc["j"], T)
+        sl = slice(int(round(1.0 / DT)), jend + 1)
+        vb = rec.f["vel_b"][sl, e]
+        wz = rec.f["wz_b"][sl, e]
+        q1 = [float(np.abs(vb[:, 0] - cmd_np[e, 0]).mean()), float(np.abs(vb[:, 1] - cmd_np[e, 1]).mean()),
+              float(np.abs(wz - cmd_np[e, 2]).mean())] if len(vb) else [None, None, None]
+        sup = [ev for ev in ft[e] if ev["cls"] in ("inner", "outer") and ev["j"] <= jend]
+        rows.append({"env": e, "cell": int(cell_of[e]), "episode_id": IDS_VAL[int(ep_of[e])], "outcome": oc["outcome"], "j": oc["j"],
+                     "fall_reason": fe[e]["reason"], "harness_error": fe[e].get("harness_error", False), "outer_td_first": outer_first,
+                     "support_td": len(sup), "risky_td": sum(1 for ev in sup if ev["risky"]),
+                     "fell_without_support_td": oc["outcome"] == "fall" and len(sup) == 0,
+                     "feet_below_bank_1s_j": fe[e]["feet_below_bank_1s_j"], "max_abs_y_until_end": float(np.abs(y[:jend + 1]).max()),
+                     "q1_mae_vx_vy_wz": q1})
+    import q_metrics as Q  # noqa: E402
+    cells = []
+    for c, (ci, w, al) in enumerate(CELLS):
+        rr = [r for r in rows if r["cell"] == c]
+        k = sum(1 for r in rr if r["outcome"] == "success")
+        lo, hi = Q.wilson(k, len(rr))
+        cnt = {}
+        for r in rr:
+            cnt[r["outcome"]] = cnt.get(r["outcome"], 0) + 1
+        cells.append({"cell": c, "col": VAL_COLS[ci][0], "width": w, "alpha": al, "n": len(rr), "success": k, "wilson95": [lo, hi],
+                      "outcomes": cnt, "risky_td": sum(r["risky_td"] for r in rr), "support_td": sum(r["support_td"] for r in rr),
+                      "fell_without_support_td": sum(1 for r in rr if r["fell_without_support_td"]),
+                      "feet_below_bank_1s_envs": sum(1 for r in rr if r["feet_below_bank_1s_j"] >= 0),
+                      "harness_error_envs": sum(1 for r in rr if r["harness_error"])})
+    s["cells"] = cells
+    s["stale_row0"] = rec.stale_row0
+    json.dump(rows, open(os.path.join(OUT, f"main_rows_{args.cond}.json"), "w"), indent=0)
+    np.savez_compressed(os.path.join(OUT, f"main_rec_{args.cond}.npz"), **rec.f, **rec.b)
+    s["wall_s"] = time.time() - T0
+    dump("main_" + args.cond, s)
