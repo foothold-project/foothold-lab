@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미경험 지형 영상</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --paper:#f6f5f1; --paper-2:#eeece6; --card:#fff;
+  --ink:#161c26; --ink-2:#4a5566; --ink-3:#7c8798; --rule:#d9d6cd;
+  --brand:#0e7a6e; --brand-ink:#0b6459; --brand-soft:#dcefeb;
+  --note:#a86a08; --note-ink:#8a5600; --note-soft:#fbefd8;
+  --stop:#a3342a; --stop-ink:#8e2a21; --stop-soft:#f9e3e0;
+  --e1:#35598f; --e2:#9a4a86;
+  --grid:rgba(22,28,38,.07);
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#12161d; --paper-2:#1a1f28; --card:#181d26;
+    --ink:#e9e7e1; --ink-2:#adb5c1; --ink-3:#7d8693; --rule:#2b323d;
+    --brand:#3ec7b4; --brand-ink:#6fd8c8; --brand-soft:#123430;
+    --note:#dc9a30; --note-ink:#e8b25c; --note-soft:#35280f;
+    --stop:#e56d5e; --stop-ink:#f0897b; --stop-soft:#3a1d19;
+    --e1:#8fb1e6; --e2:#dc9bcd;
+    --grid:rgba(233,231,225,.07);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12161d; --paper-2:#1a1f28; --card:#181d26;
+  --ink:#e9e7e1; --ink-2:#adb5c1; --ink-3:#7d8693; --rule:#2b323d;
+  --brand:#3ec7b4; --brand-ink:#6fd8c8; --brand-soft:#123430;
+  --note:#dc9a30; --note-ink:#e8b25c; --note-soft:#35280f;
+  --stop:#e56d5e; --stop-ink:#f0897b; --stop-soft:#3a1d19;
+  --e1:#8fb1e6; --e2:#dc9bcd;
+  --grid:rgba(233,231,225,.07);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{margin:0 auto;padding:0 16px}
+@media (min-width:1100px){.wrap{width:80vw;padding:0}}
+.prose{max-width:none}
+a{color:var(--brand-ink)}
+code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-size:.88em;background:var(--paper-2);padding:.05em .35em;border-radius:3px}
+header.top{padding:40px 0 8px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;color:var(--brand-ink);text-transform:uppercase}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.15;margin:.25em 0 .35em;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+h1 .seed{font-family:var(--mono);font-weight:500;font-size:.5em;color:var(--ink-3);letter-spacing:0;white-space:nowrap}
+.lead{font-size:18px;color:var(--ink-2);margin:0 0 18px}
+h2{font-size:24px;line-height:1.3;margin:0 0 10px;text-wrap:balance}
+h3{font-size:17px;margin:0 0 6px}
+section{padding:36px 0 8px;border-top:1px solid var(--rule);margin-top:28px}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:2px 14px;font-size:13.5px;color:var(--ink-2);background:var(--paper-2);border-radius:6px;padding:12px 14px;margin:6px 0 4px}
+.meta dt{color:var(--ink-3);font-weight:600}
+.meta dd{margin:0}
+.keys{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--ink-2);margin:14px 0 0}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:0;margin-right:6px}
+
+.sub{color:var(--ink-3);font-size:13.5px}
+.sub2{color:var(--ink-3);font-size:13px;font-weight:400}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--card);margin:8px 0 6px}
+table.def{border-collapse:collapse;font-size:14px;width:100%;min-width:560px}
+.def th,.def td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+.def th{font-weight:500;color:var(--ink-3);font-family:var(--sans);font-size:12.5px}
+.na{color:var(--ink-3)}
+.urow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:12px 0 4px}
+@media (max-width:1100px){.urow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.urow{grid-template-columns:1fr}}
+.tile{background:var(--card);border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.tile .th{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+.tile video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#0d1117}
+.tile .cap{padding:9px 12px 12px;display:grid;gap:5px;font-size:13.5px}
+.tile .look{color:var(--ink-3);font-size:12.5px}
+.tag{flex:none;font-family:var(--mono);font-size:12px;font-weight:600;padding:1px 6px;border-radius:4px;color:#fff}
+.tag.e1{background:var(--e1)} .tag.e2{background:var(--e2)}
+:root[data-theme="dark"] .tag{color:#12161d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag{color:#12161d}}
+.vd{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:4px}
+.vd.ok{background:var(--brand-soft);color:var(--brand-ink)} .vd.ng{background:var(--note-soft);color:var(--note-ink)}
+.vd.fall{background:var(--stop-soft);color:var(--stop-ink)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:12px 0 0}
+nav.toc a{color:var(--brand-ink)}
+section{padding-top:30px}
+footer{padding:36px 0 56px;color:var(--ink-3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-13</div>
+  <h1>미경험 지형 영상 <span class="sub2">E1 · E2 student · 144 편</span></h1>
+  <p class="lead">E1 · E2 를 v2 의 「미경험 지형」 10 종 (난이도 0.5 · 그중 물결 · 흩어진 장애물은 비슷한 종류를 학습함) 에 올린 판 가운데, 칸마다 하위 작업이 미리 정한 규칙 (첫 Q 통과 판 · 첫 Q 미달 판) 으로 고른 영상입니다. 영상은 기록을 다시 그린 것이고 물리를 다시 계산하지 않았습니다. 해석과 표는 <a href="https://claude.ai/artifact/BYuAVDuVJuRWVkAs5mGJSN#unseen">본 페이지의 미경험 지형 절</a> 에 있습니다.</p>
+  <p class="sub">영상 아래 색 띠는 lead 가 원자료에서 다시 잰 그 판의 결과입니다 (기준선 도달 = 넘어지기 전 몸 중심이 장애물 너머 기준선을 한 번 넘음 · 네 발의 안정된 착지는 뜻하지 않음 · 괄호 안은 타일 가운데에서 앞으로 잰 m). 「Q 판정」 은 영상에 박힌 속도 추종 판정이라 기준선 도달과 다를 수 있습니다. 144 편 모두 어둠 · 단색 · 푸른 화면 기준으로 모든 프레임을 검사해 위반 0 입니다 (멈춘 화면 · 로봇 누락은 이 검사로 못 잡습니다).</p>
+  <nav class="toc"><a href="#discrete_obstacles">흩어진 장애물</a> <a href="#wave">물결</a> <a href="#pit">구덩이</a> <a href="#rails">레일</a> <a href="#star">별 모양 다리</a> <a href="#repeated_boxes">상자 반복</a> <a href="#repeated_cylinders">기둥 반복</a> <a href="#floating_ring">떠 있는 고리</a> <a href="#gap">틈 (gap)</a> <a href="#stepping_stones">징검다리</a></nav>
+</header>
+<section id="discrete_obstacles">
+  <h2>흩어진 장애물 <span class="sub2">같은 종류 학습 · 장애물 구간 끝 4.00 m · 영상 20 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>70</b> (70) · 100</td><td><b>71</b> (71) · 98</td><td><b>64</b> (63) · 98</td><td><b>61</b> (61) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>96</b> (94) · 96</td><td><b>92</b> (91) · 98</td><td><b>94</b> (93) · 99</td><td><b>95</b> (95) · 100</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>97</b> (95) · 96</td><td><b>96</b> (95) · 98</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.30 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.258 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.99 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 18</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep018_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep018_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.09 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.263 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.54 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.240 &gt; 0.15 · MAE wz 0.217 &gt; 0.20 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.60 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd03/discrete_obstacles_fwd03_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.36 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.240 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep002_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.02 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.459 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 14</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep014_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep014_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 13.5 s (5.41 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 13.50 s (60도 넘게 0.2 s 기울어짐) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 12</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep012_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep012_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.195 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep002_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd05/discrete_obstacles_fwd05_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.42 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.438 &gt; 0.15 · MAE wz 0.205 &gt; 0.20 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 19.8 s (17.08 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 19.76 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep001_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep002_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_discrete_obstacles_fwd10/discrete_obstacles_fwd10_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 2.2 s (1.06 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 2.20 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+  </div>
+</section>
+<section id="wave">
+  <h2>물결 <span class="sub2">같은 종류 학습 · 장애물 구간 끝 4.00 m · 영상 10 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>84</b> (84) · 100</td><td><b>79</b> (79) · 100</td><td><b>83</b> (83) · 100</td><td><b>70</b> (70) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>99</b> (99) · 100</td><td><b>97</b> (97) · 100</td><td><b>100</b> (100) · 100</td><td><b>98</b> (98) · 100</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>100</b> (100) · 100</td><td><b>100</b> (100) · 100</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_wave_fwd03/wave_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.55 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_wave_fwd05/wave_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_wave_fwd10/wave_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_wave_fwd10/wave_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_wave_fwd10/wave_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_wave_fwd10/wave_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="pit">
+  <h2>구덩이 <span class="sub2">처음 봄 · 장애물 구간 끝 4.00 m · 영상 13 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>80</b> (80) · 100</td><td><b>74</b> (74) · 100</td><td><b>58</b> (58) · 100</td><td><b>58</b> (58) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>99</b> (99) · 100</td><td><b>97</b> (97) · 100</td><td><b>100</b> (100) · 100</td><td><b>94</b> (94) · 100</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>95</b> (94) · 97</td><td><b>100</b> (100) · 100</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.97 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.04 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.229 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_pit_fwd03/pit_fwd03_ep002_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_pit_fwd03/pit_fwd03_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.56 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_pit_fwd03/pit_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 2.24 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 22</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_pit_fwd03/pit_fwd03_ep022_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_pit_fwd03/pit_fwd03_ep022_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 -0.07 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.299 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_pit_fwd05/pit_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_pit_fwd10/pit_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_pit_fwd10/pit_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 28</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_pit_fwd10/pit_fwd10_ep028_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_pit_fwd10/pit_fwd10_ep028_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 1.7 s (0.73 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 1.70 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_pit_fwd10/pit_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_pit_fwd10/pit_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="rails">
+  <h2>레일 <span class="sub2">처음 봄 · 장애물 구간 끝 2.88 m · 영상 19 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>67</b> (67) · 100</td><td><b>87</b> (87) · 100</td><td><b>76</b> (76) · 100</td><td><b>57</b> (57) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>92</b> (92) · 99</td><td><b>100</b> (98) · 98</td><td><b>97</b> (97) · 100</td><td><b>92</b> (91) · 99</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>94</b> (94) · 100</td><td><b>99</b> (98) · 99</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_rails_fwd03/rails_fwd03_ep003_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_rails_fwd03/rails_fwd03_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.11 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.198 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd03/rails_fwd03_ep002_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd03/rails_fwd03_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.11 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.200 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd03/rails_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd03/rails_fwd03_ep003_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd03/rails_fwd03_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.09 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.245 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.225 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 40</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_rails_fwd05/rails_fwd05_ep040_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_rails_fwd05/rails_fwd05_ep040_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 8.7 s (2.90 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 8.72 s (60도 넘게 0.2 s 기울어짐) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.207 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd05/rails_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd05/rails_fwd05_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.337 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd10/rails_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd10/rails_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 8</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_rails_fwd10/rails_fwd10_ep008_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_rails_fwd10/rails_fwd10_ep008_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.19 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.342 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd10/rails_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd10/rails_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 2</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_rails_fwd10/rails_fwd10_ep002_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_rails_fwd10/rails_fwd10_ep002_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.247 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+  </div>
+</section>
+<section id="star">
+  <h2>별 모양 다리 <span class="sub2">처음 봄 · 장애물 구간 끝 4.00 m · 영상 14 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>70</b> (70) · 100</td><td><b>72</b> (72) · 100</td><td><b>79</b> (79) · 100</td><td><b>68</b> (68) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>98</b> (97) · 99</td><td><b>97</b> (97) · 100</td><td><b>100</b> (100) · 100</td><td><b>97</b> (96) · 99</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>100</b> (100) · 100</td><td><b>100</b> (100) · 100</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.43 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_star_fwd03/star_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.49 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 22</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_star_fwd03/star_fwd03_ep022_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_star_fwd03/star_fwd03_ep022_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 -0.08 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.299 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 68</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_star_fwd05/star_fwd05_ep068_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_star_fwd05/star_fwd05_ep068_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 17.9 s (7.13 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 17.94 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_star_fwd05/star_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 97</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_star_fwd05/star_fwd05_ep097_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_star_fwd05/star_fwd05_ep097_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 17.5 s (7.14 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 17.54 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_star_fwd10/star_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_star_fwd10/star_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 81</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_star_fwd10/star_fwd10_ep081_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_star_fwd10/star_fwd10_ep081_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.667 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_star_fwd10/star_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_star_fwd10/star_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="repeated_boxes">
+  <h2>상자 반복 <span class="sub2">처음 봄 · 장애물 구간 끝 4.00 m · 영상 13 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>79</b> (79) · 100</td><td><b>74</b> (74) · 100</td><td><b>76</b> (76) · 100</td><td><b>65</b> (65) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>99</b> (99) · 100</td><td><b>97</b> (97) · 100</td><td><b>100</b> (100) · 100</td><td><b>96</b> (96) · 100</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>100</b> (100) · 100</td><td><b>100</b> (100) · 100</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.90 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 8</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep008_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep008_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.40 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.258 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.27 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 13</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep013_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_boxes_fwd03/repeated_boxes_fwd03_ep013_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.74 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.254 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 37</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep037_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep037_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.218 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_boxes_fwd05/repeated_boxes_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_boxes_fwd10/repeated_boxes_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_boxes_fwd10/repeated_boxes_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_boxes_fwd10/repeated_boxes_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_boxes_fwd10/repeated_boxes_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="repeated_cylinders">
+  <h2>기둥 반복 <span class="sub2">처음 봄 · 장애물 구간 끝 4.00 m · 영상 12 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>82</b> (82) · 100</td><td><b>73</b> (73) · 100</td><td><b>80</b> (80) · 100</td><td><b>64</b> (64) · 100</td></tr><tr><th scope="row">0.5 m/s</th><td><b>99</b> (99) · 100</td><td><b>97</b> (97) · 100</td><td><b>100</b> (100) · 100</td><td><b>95</b> (95) · 100</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>100</b> (100) · 100</td><td><b>100</b> (100) · 100</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.80 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.67 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 65</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep065_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep065_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.92 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.206 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 3.24 m)</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 22</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep022_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_cylinders_fwd03/repeated_cylinders_fwd03_ep022_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 -0.07 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.299 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_cylinders_fwd05/repeated_cylinders_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_repeated_cylinders_fwd10/repeated_cylinders_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_repeated_cylinders_fwd10/repeated_cylinders_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_repeated_cylinders_fwd10/repeated_cylinders_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_repeated_cylinders_fwd10/repeated_cylinders_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="floating_ring">
+  <h2>떠 있는 고리 <span class="sub2">처음 봄 · 장애물 구간 끝 1.18 m · 영상 20 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>59</b> (59) · 86</td><td><b>80</b> (80) · 95</td><td><b>55</b> (55) · 93</td><td><b>71</b> (71) · 93</td></tr><tr><th scope="row">0.5 m/s</th><td><b>70</b> (69) · 81</td><td><b>88</b> (88) · 95</td><td><b>70</b> (70) · 83</td><td><b>82</b> (80) · 89</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>69</b> (59) · 64</td><td><b>85</b> (79) · 83</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.81 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.208 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.61 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.291 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 4.4 s (0.62 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 4.36 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd03/floating_ring_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 8.7 s (0.71 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 8.74 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd03/floating_ring_fwd03_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 6.6 s (0.76 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 6.62 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_floating_ring_fwd05/floating_ring_fwd05_ep001_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_floating_ring_fwd05/floating_ring_fwd05_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 3</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep003_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_floating_ring_fwd05/floating_ring_fwd05_ep003_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 미달 · MAE vx 0.150 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 5</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd05/floating_ring_fwd05_ep005_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd05/floating_ring_fwd05_ep005_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 1.09 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.443 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 4.5 s (0.72 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 4.48 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep001_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd05/floating_ring_fwd05_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd10/floating_ring_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd10/floating_ring_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_floating_ring_fwd10/floating_ring_fwd10_ep001_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_floating_ring_fwd10/floating_ring_fwd10_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 1.1 s (0.75 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 1.10 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd10/floating_ring_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd10/floating_ring_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 1</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_floating_ring_fwd10/floating_ring_fwd10_ep001_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_floating_ring_fwd10/floating_ring_fwd10_ep001_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 1.0 s (0.69 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 1.00 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+  </div>
+</section>
+<section id="gap">
+  <h2>틈 (gap) <span class="sub2">정의만 (비율 0) · 장애물 구간 끝 1.02 m · 영상 13 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>0</b> (0) · 37</td><td><b>0</b> (0) · 32</td><td><b>0</b> (0) · 46</td><td><b>0</b> (0) · 14</td></tr><tr><th scope="row">0.5 m/s</th><td><b>4</b> (1) · 45</td><td><b>0</b> (0) · 31</td><td><b>0</b> (0) · 46</td><td><b>0</b> (0) · 25</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>30</b> (14) · 35</td><td><b>27</b> (14) · 35</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 0.7 s (-0.54 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 0.68 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.73 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.250 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 5.9 s (0.74 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 5.90 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd03/gap_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 5.5 s (0.71 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 5.54 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 0.7 s (-0.54 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 0.66 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 57</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_gap_fwd05/gap_fwd05_ep057_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.74 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.450 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 15.3 s (0.72 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 15.32 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd05/gap_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 2.9 s (0.71 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 2.90 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">닿은 뒤 넘어짐 2.7 s (1.20 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 2.70 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 13</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_gap_fwd10/gap_fwd10_ep013_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd10/gap_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 6.5 s (0.70 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 6.52 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 42</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_gap_fwd10/gap_fwd10_ep042_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_gap_fwd10/gap_fwd10_ep042_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ok">기준선 닿고 끝까지 생존</span></div><span class="look">Q 판정: 통과 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 통과 판</span></div></article>
+  </div>
+</section>
+<section id="stepping_stones">
+  <h2>징검다리 <span class="sub2">정의만 (비율 0) · 장애물 구간 끝 4.00 m · 영상 10 편</span></h2>
+  <div class="tbl"><table class="def"><thead><tr><th></th><th>E1 20,000</th><th>E2 20,000</th><th>E1 20,499</th><th>E2 20,499</th></tr></thead><tbody><tr><th scope="row">0.3 m/s</th><td><b>0</b> (0) · 39</td><td><b>0</b> (0) · 50</td><td><b>0</b> (0) · 29</td><td><b>0</b> (0) · 34</td></tr><tr><th scope="row">0.5 m/s</th><td><b>0</b> (0) · 25</td><td><b>0</b> (0) · 25</td><td><b>0</b> (0) · 22</td><td><b>0</b> (0) · 29</td></tr><tr><th scope="row">1.0 m/s</th><td class="na">-</td><td class="na">-</td><td><b>0</b> (0) · 9</td><td><b>0</b> (0) · 12</td></tr></tbody></table></div>
+  <p class="sub">칸: <b>기준선 도달</b> (그중 20 초 끝까지 생존) · 20 초 생존 (% · 100 판). 0.3 m/s 는 느리게 따라가거나 옆으로 새면 20 초 안에 기준선에 닿지 못해, 도달이 지형 난이도와 섞입니다.</p>
+  <div class="urow">
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.97 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.229 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 7.8 s (1.03 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 7.84 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd ng">못 닿음 · 생존 (가장 멀리 0.88 m)</span></div><span class="look">Q 판정: 미달 · MAE vx 0.242 &gt; 0.15 (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.3 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_stepping_stones_fwd03/stepping_stones_fwd03_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 6.6 s (0.80 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 6.58 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.9 s (1.07 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 3.94 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,000 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20000_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.9 s (1.09 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 3.88 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 4.9 s (1.02 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 4.90 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 0.5 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 6.3 s (1.11 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 6.30 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e1">E1</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e1_m20499_stepping_stones_fwd10/stepping_stones_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e1_m20499_stepping_stones_fwd10/stepping_stones_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.1 s (1.13 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 3.08 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+    <article class="tile"><div class="th"><span class="tag e2">E2</span><b>20,499 · 1.0 m/s · ep 0</b></div>
+      <video controls preload="none" playsinline muted poster="p/un_e2_m20499_stepping_stones_fwd10/stepping_stones_fwd10_ep000_kinreplay_hud_web.jpg"><source src="v/un_e2_m20499_stepping_stones_fwd10/stepping_stones_fwd10_ep000_kinreplay_hud_web.mp4" type="video/mp4"></video>
+      <div class="cap"><div><span class="vd fall">넘어짐 3.1 s (1.59 m)</span></div><span class="look">Q 판정: 미달 · 넘어짐 3.06 s (몸통 접촉) (Q-E1 임시 조건 · 현행 정의) · 고른 규칙: 그 칸의 첫 Q 미달 판</span></div></article>
+  </div>
+</section>
+<footer>원자료 C:/isaac/ext/go2_rl_robotlab/_eval/out/un_* · 생성 unseen_gallery.py (lead) · ASTRA 14 검증 (원표 재현 · 해석 고침)</footer>
+</div>
+</body>
+</html>
