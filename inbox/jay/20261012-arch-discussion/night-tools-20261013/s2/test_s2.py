@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
-"""S2 A/B 입력 경로의 알려진 답 시험 T1 ~ T10 (판 2 · CPU · Isaac 앱 없이 · GPU 를 가림).
+"""S2 A/B 입력 경로의 알려진 답 시험 T1 ~ T14 (판 3 · CPU · Isaac 앱 없이 · GPU 를 가림).
 
-분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 2 시험
-작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32
-근거: inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md 4 절 · 6 절 (다르면 6 절) · VERIFY-astra-17d.md 6.2 · 6.3 · 6.4
+분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 3 시험
+작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32 · 판 3 2026-10-14 00:50
+근거: inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md 4 절 · 6 절 (다르면 6 절) · VERIFY-astra-17d.md 6.2 · 6.3 · 6.4 ·
+      VERIFY-astra-17f2.md 2.1 · 3.1 · 3.2 · 4 · 5.3 (판 3: T9 고쳐 씀 · T11 ~ T14 새로)
       E1 params/env.yaml 446 ~ 490 · 865 ~ 1177 · agent.yaml · IsaacLab observations.py height_scan · patterns.py grid_pattern ·
       utils/math.py quat_apply_yaw · sensors/ray_caster/ray_caster.py 218 ~ 224 · 278 ~ 279 · utils/warp/ops.py 71 ·
-      actor_critic_moe_cts.py · algorithms/moe_cts.py 297 ~ 334 (PPO 손실)
+      actor_critic_moe_cts.py · algorithms/moe_cts.py 278 ~ 311 (adaptive lr · 모든 group 에 같은 lr) · 313 ~ 335 (PPO 손실) ·
+      365 ~ 366 (clip) · runners/on_policy_runner_cts.py 108 · 140 · 173 · 278 (runner 번호)
 요지: 기대값은 s2_map_obs · s2_policy 를 부르지 않고 손으로 적는다 (구현을 복제한 시험이 되지 않게). 부모 동치는 시험이
       스스로 지은 ActorCriticMoECTS (손으로 적은 구조 · 실제 E1 model_20000 strict 적재) 와 비트로 견준다. 광선 배치 · yaw 는
       IsaacLab 의 grid_pattern · quat_apply_yaw 를 파일에서 직접 불러 RayCaster 의 ray_starts (offset z 20 포함) 를 CPU 로 따라 만든다.
-상태: 시험 파일. 변이 (mutate_s2.py) 가 이 시험을 깨 본다. 실제 collision mesh 의 광선은 아니다 (높이장과 수직 광선의 교차)
+      판 3 의 학습 흉내 (s2_update) 는 부모 moe_cts.update 의 순서 (forward · adaptive lr · 모든 group 덮어쓰기 · backward · clip · step)
+      를 옮겨 적고 그 사이에 enforce_groups 를 끼운다. 부모 꼴 두 줄은 시험이 moe_cts.py 소스에서 찾아 같은지 본다.
+상태: 시험 파일. 변이 (mutate_s2.py) 가 이 시험을 깨 본다. 실제 collision mesh 의 광선이 아니고, 실제 학습 루프 연결도 아니다
 
 실행: CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I test_s2.py [T1 T4 ...]
 출력: 시험마다 「PASS Tn (k 칸) 설명」 또는 「FAIL Tn 설명: 사유」 한 줄. 끝에 SUMMARY. 하나라도 FAIL 이면 종료 코드 1.
@@ -59,6 +63,11 @@ FRONT = [k for k in range(187) if k % 17 >= 9]                    # 몸 앞쪽 x
 CRIT_H0 = 88   # critic obs 의 height_scan 시작 열: 3+3+3+3+12+12+12+12+12+16 (env.yaml 871 ~ 1144 항 순서 · contact_force 4 발 x 4)
 # PPO 손실 값 (E1 agent.yaml algorithm)
 CLIP, VALUE_COEF, ENTROPY_COEF, MAX_GRAD_NORM = 0.2, 1.0, 0.01, 1.0
+DESIRED_KL = 0.01                       # E1 agent.yaml algorithm.desired_kl (schedule adaptive)
+EPOCHS, MBS = 2, 2                      # 시험용 update 한 번의 epoch x minibatch (E1 은 5 x 4 = 20 step · 여기선 4 step 으로 줄임)
+N_ENC = 16                              # student encoder 매개변수 텐서 수 (T5 에서 셈)
+MOE_CTS = "C:/isaac/ext/go2_rl_robotlab/source/rsl_rl/rsl_rl/algorithms/moe_cts.py"
+RUNNER_CTS = "C:/isaac/ext/go2_rl_robotlab/source/rsl_rl/rsl_rl/runners/on_policy_runner_cts.py"
 NEW_KEYS = {"map_encoder.network.0.weight", "map_encoder.network.0.bias", "map_encoder.network.2.weight",
             "map_encoder.network.2.bias", "actor_in_map.weight"}
 STUDENT_PREFIX = "student_moe_encoder."
@@ -121,6 +130,34 @@ def raises(exc, fn):
     except Exception:  # noqa: BLE001
         return False
     return False
+
+
+def raises_exact(exc, fn):
+    """예외 형이 정확히 exc 인가 (하위 형은 아님 · S2IndexError 와 S2ControlError 를 가르려고)."""
+    try:
+        fn()
+    except Exception as e:  # noqa: BLE001
+        return type(e) is exc
+    return False
+
+
+def same_tensor(a, b):
+    if a.dtype == torch.float32:
+        return bits_equal(a, b)
+    return a.dtype == b.dtype and a.shape == b.shape and torch.equal(a, b)
+
+
+def tensors_sha(named):
+    """{이름: 텐서} 를 이름 순서로 이어 붙인 바이트의 sha256 (가중치 바이트가 그대로인지)."""
+    h = hashlib.sha256()
+    for k in sorted(named):
+        h.update(k.encode("utf-8"))
+        h.update(named[k].detach().contiguous().numpy().tobytes())
+    return h.hexdigest()
+
+
+def lr_of(opt, name):
+    return [g["lr"] for g in opt.param_groups if g.get("name") == name][0]
 
 
 # ------------------------------------------------------------------ IsaacLab RayCaster 를 CPU 로 따라 하기 (IsaacLab 함수를 파일에서 직접)
@@ -240,7 +277,7 @@ def terrain_block(bx, by):
     return lambda x, y: torch.where(((x - bx).abs() < 0.04) & ((y - by).abs() < 0.04), 0.1, 0.0)
 
 
-# ------------------------------------------------------------------ PPO 손실 모양 (algorithms/moe_cts.py 297 ~ 334 · agent.yaml 값)
+# ------------------------------------------------------------------ PPO 손실 모양 (algorithms/moe_cts.py 313 ~ 335 · agent.yaml 값)
 def rollout(pol, obs, seed):
     g = torch.Generator().manual_seed(seed)
     with torch.no_grad():
@@ -252,7 +289,7 @@ def rollout(pol, obs, seed):
         values = pol.evaluate(obs).clone()
     n = mu.shape[0]
     return {"actions": actions, "old_logp": old_logp, "values": values,
-            "adv": torch.randn(n, generator=g), "returns": values + torch.randn(n, 1, generator=g)}
+            "adv": torch.randn(n, generator=g), "returns": values + torch.randn(n, 1, generator=g), "mu": mu, "sigma": sigma}
 
 
 def ppo_like_loss(pol, obs, b):
@@ -276,9 +313,73 @@ def nz(t):
 
 
 def opt_no_freeze(pol, lr):
-    """encoder 고정 없이 (W 0 · r 1) 만든 optimizer. 시험용 값이며 등록 값이 아니다 (T5 · T7: 지도 · encoder gradient 경로를 본다)."""
-    opt, _ = P.make_optimizer(pol, lr, encoder_freeze_updates=0, encoder_lr_ratio=1.0)
-    return opt
+    """encoder 고정 없이 (schedule W 0 · r 1) 만든 optimizer 와 control. 시험용 값이며 등록 값이 아니다 (T5 · T7: 지도 · encoder gradient 경로)."""
+    return P.make_optimizer(pol, lr, encoder_mode="schedule", encoder_freeze_updates=0, encoder_lr_ratio=1.0)
+
+
+# ------------------------------------------------------------------ 부모 moe_cts.update 의 꼴 (옮겨 적음 · T13 이 소스와 대조)
+def parent_adaptive_lr(lr, kl_mean):
+    """moe_cts.py 298 ~ 301 의 규칙 (E1 desired_kl 0.01)."""
+    if kl_mean > DESIRED_KL * 2.0:
+        lr = max(1e-5, lr / 1.5)
+    elif kl_mean < DESIRED_KL / 2.0 and kl_mean > 0.0:
+        lr = min(1e-2, lr * 1.5)
+    return lr
+
+
+def parent_overwrite(optimizer, lr):
+    """moe_cts.py 310 ~ 311 의 꼴: 모든 param group 에 같은 lr 을 쓴다 (S2 의 encoder 묶음 비를 깨는 꼴)."""
+    for param_group in optimizer.param_groups:
+        param_group["lr"] = lr
+
+
+def kl_mean_now(pol, bb):
+    """moe_cts.py 280 ~ 287 의 KL (rollout 때 분포 대비 · 행동 차원 합 · 평균)."""
+    with torch.inference_mode():
+        mu, sigma = pol.action_mean, pol.action_std
+        kl = torch.sum(torch.log(sigma / bb["sigma"] + 1.0e-5)
+                       + (torch.square(bb["sigma"]) + torch.square(bb["mu"] - mu)) / (2.0 * torch.square(sigma)) - 0.5, dim=-1)
+        return float(torch.mean(kl))
+
+
+def s2_update(pol, opt, ctl, k, obs, b, lr, probe=None):
+    """S2 PPO update 한 번. 부모 moe_cts.update 의 순서 (forward · adaptive lr · 모든 group 덮어쓰기 · zero_grad · backward · clip · step)
+    에 enforce_groups 를 step 앞에 끼운다. clip 은 trainable_params. probe(pol, opt, ctl, k, j) 는 enforce 뒤 · step 전에 불린다.
+    돌려줌: (다음 update 로 넘길 lr, 이 update 가 고정이었나)."""
+    frozen = ctl.begin_update(k, lr)
+    chunks = torch.arange(obs.batch_size[0]).chunk(MBS)
+    j = 0
+    for _e in range(EPOCHS):
+        for idx in chunks:
+            o = obs[idx]
+            bb = {key: v[idx] for key, v in b.items()}
+            loss = ppo_like_loss(pol, o, bb)
+            lr = parent_adaptive_lr(lr, kl_mean_now(pol, bb))
+            parent_overwrite(opt, lr)
+            opt.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(P.trainable_params(pol), MAX_GRAD_NORM)
+            ctl.enforce_groups(opt, lr)
+            if probe is not None:
+                probe(pol, opt, ctl, k, j)
+            opt.step()
+            j += 1
+    ctl.end_update(k)
+    return lr, frozen
+
+
+def terrain_obs(n, seed):
+    pos, yaw = random_pose(n, seed)
+    return with_map(make_obs(n, seed + 1), M.map_obs("B", pos, isaac_like_hits(pos, yaw, terrain_rough)[0])[0])
+
+
+def grad_norm(params):
+    return math.sqrt(sum(float(p.grad.double().pow(2).sum()) for p in params if p.grad is not None))
+
+
+def non_encoder(pol):
+    eids = {id(p) for p in pol.student_moe_encoder.parameters()}
+    return [p for p in pol.parameters() if id(p) not in eids]
 
 
 # =========================================================================== T1
@@ -442,13 +543,14 @@ def t5(c):
     hits2 = isaac_like_hits(pos, yaw, terrain_flat)[0]
     for mode in ("B", "A"):
         pol = P.S2MapActorCritic(ref, mode).train()
-        opt = opt_no_freeze(pol, PARENT_LAST_LR)
+        opt, ctl = opt_no_freeze(pol, PARENT_LAST_LR)
         ids_opt = [id(p) for g in opt.param_groups for p in g["params"]]
         c.ok(len(ids_opt) == len(set(ids_opt)) and set(ids_opt) == {id(p) for p in pol.parameters()},
              f"{mode}: optimizer 가 모든 매개변수를 한 번씩 덮음 ({len(ids_opt)} vs {len(list(pol.parameters()))})")
         c.ok(all(g["lr"] == PARENT_LAST_LR for g in opt.param_groups), f"{mode}: lr 이 부모 마지막 값 (r 1)")
         obs = with_map(obs0, M.map_obs(mode, pos, hits)[0])
         b = rollout(pol, obs, seed=13)
+        ctl.begin_update(0, PARENT_LAST_LR)
         opt.zero_grad(set_to_none=True)
         ppo_like_loss(pol, obs, b).backward()
         g = grads(pol)
@@ -462,8 +564,10 @@ def t5(c):
              f"{mode} 갱신 전: student encoder gradient 가 매개변수마다 있음 (forward 에 no_grad 없음) {[(k, nz(g[k])) for k in stu if nz(g[k]) == 0][:3]}")
         c.ok(nz(g["std"]) > 0 and nz(g["actor_in.weight"]) > 0, f"{mode} 갱신 전: std · actor 첫 층 gradient 있음")
         c.ok(all(nz(v) > 0 for k, v in g.items() if k.startswith("critic.")), f"{mode} 갱신 전: critic gradient 있음")
-        torch.nn.utils.clip_grad_norm_(pol.parameters(), MAX_GRAD_NORM)
+        torch.nn.utils.clip_grad_norm_(P.trainable_params(pol), MAX_GRAD_NORM)
+        ctl.enforce_groups(opt, PARENT_LAST_LR)
         opt.step()
+        ctl.end_update(0)
         c.ok(nz(pol.actor_in_map.weight) > 0, f"{mode}: 한 번 갱신 뒤 새 열이 0 이 아님 ({nz(pol.actor_in_map.weight)} 원소)")
         opt.zero_grad(set_to_none=True)
         ppo_like_loss(pol, obs, b).backward()
@@ -530,11 +634,14 @@ def t7(c):
     ref = ref_parent()
     sd = file_state_dict()
     pol = P.S2MapActorCritic(ref, "B").train()
-    opt = opt_no_freeze(pol, 1e-2)
+    opt, ctl = opt_no_freeze(pol, 1e-2)
     obs = with_map(make_obs(64, 31), random_b_map(64, 32))
     before = {k: v.detach().clone() for k, v in pol.state_dict().items()}
+    ctl.begin_update(0, 1e-2)
     ppo_like_loss(pol, obs, rollout(pol, obs, 33)).backward()
+    ctl.enforce_groups(opt, 1e-2)
     opt.step()
+    ctl.end_update(0)
     moved = [k for k, v in pol.state_dict().items() if not torch.equal(v, before[k])]
     c.ok(any(k.startswith("actor_in.") for k in moved) and any(k.startswith("critic.") for k in moved)
          and any(k.startswith(STUDENT_PREFIX) for k in moved) and "std" in moved, f"S2 갱신이 실제로 일어남 (바뀐 열쇠 {len(moved)})")
@@ -657,32 +764,45 @@ def t8(c):
 
 
 # =========================================================================== T9
-@test("T9", "encoder 고정 구간: W · r 기본값 없음 · 처음 W update 동안 student encoder 매개변수 비트 불변 (gradient 없음) · actor 는 움직임 · 그 뒤 encoder lr = r x actor lr · 첫 encoder 걸음 크기 r x lr 이하")
+@test("T9", "schedule 모드 (판 2 의 고정 구간 · 판 3 API): W · r 은 schedule 에서 필수 (기본값은 「안 넘김」 표시뿐) · r 0 거부 · 처음 W update 동안 student encoder 비트 불변 (gradient 없음) · actor 는 움직임 · 그 뒤 encoder lr = r x actor lr · 첫 encoder 걸음 크기 r x lr 이하")
 def t9(c):
     ref = ref_parent()
     sig = inspect.signature(P.make_optimizer)
-    c.ok(sig.parameters["encoder_freeze_updates"].default is inspect.Parameter.empty
-         and sig.parameters["encoder_lr_ratio"].default is inspect.Parameter.empty, "make_optimizer 의 W · r 에 기본값 없음")
-    sig2 = inspect.signature(P.EncoderSchedule.__init__)
-    c.ok(all(sig2.parameters[k].default is inspect.Parameter.empty for k in ("freeze_updates", "encoder_lr_ratio")), "EncoderSchedule 의 W · r 에 기본값 없음")
+    c.ok(sig.parameters["encoder_freeze_updates"].default is P._UNSET and sig.parameters["encoder_lr_ratio"].default is P._UNSET,
+         "make_optimizer 의 W · r 기본값은 「안 넘김」 표시 (쓸 수 있는 값 없음)")
+    sig2 = inspect.signature(P.EncoderControl.__init__)
+    c.ok(all(sig2.parameters[k].default is P._UNSET for k in ("freeze_updates", "encoder_lr_ratio")), "EncoderControl 의 W · r 기본값도 「안 넘김」 표시")
     pol0 = P.S2MapActorCritic(ref, "B")
-    c.ok(raises(TypeError, lambda: P.make_optimizer(pol0, PARENT_LAST_LR)), "W · r 없이 부르면 TypeError")
-    c.ok(raises(TypeError, lambda: P.EncoderSchedule(None, 0.1)) and raises(TypeError, lambda: P.EncoderSchedule(3, None)), "None 은 TypeError")
-    c.ok(all(raises(ValueError, lambda a=a: P.EncoderSchedule(*a)) for a in ((-1, 0.1), (2.5, 0.1), (True, 0.1), (3, -0.1), (3, NAN), (3, INF))),
-         "W 음수 · 정수 아님 · r 음수 · NaN · inf 는 ValueError")
+
+    def S(**kw):
+        return P.make_optimizer(pol0, PARENT_LAST_LR, encoder_mode="schedule", **kw)
+
+    c.ok(raises(TypeError, lambda: S()) and raises(TypeError, lambda: S(encoder_freeze_updates=3))
+         and raises(TypeError, lambda: S(encoder_lr_ratio=0.1)), "schedule 에 W · r 을 안 넘기면 TypeError")
+    c.ok(raises(TypeError, lambda: S(encoder_freeze_updates=None, encoder_lr_ratio=0.1))
+         and raises(TypeError, lambda: S(encoder_freeze_updates=3, encoder_lr_ratio=None)), "None 은 TypeError")
+    c.ok(all(raises(ValueError, lambda a=a: S(encoder_freeze_updates=a[0], encoder_lr_ratio=a[1]))
+             for a in ((-1, 0.1), (2.5, 0.1), (True, 0.1), (3, -0.1), (3, NAN), (3, INF), (3, True))),
+         "W 음수 · 정수 아님 · bool · r 음수 · NaN · inf · bool 은 ValueError")
+    c.ok(raises(ValueError, lambda: S(encoder_freeze_updates=3, encoder_lr_ratio=0.0))
+         and raises(ValueError, lambda: S(encoder_freeze_updates=3, encoder_lr_ratio=0)),
+         "r 0 은 ValueError (17f-2 3.1: lr 0 은 실제 고정이 아님 · 끝까지 고정은 full_freeze)")
+    c.ok(all(p.requires_grad for p in pol0.parameters()), "인자 오류는 정책을 건드리기 전에 난다 (requires_grad 그대로)")
     W, r = 3, 0.25                       # 시험 값 (등록 값 아님)
     ENC_LR = 4.271484375000002e-05       # 0.25 x 0.00017085937500000009 (손 계산)
     pol = P.S2MapActorCritic(ref, "B").train()
-    opt, sched = P.make_optimizer(pol, PARENT_LAST_LR, encoder_freeze_updates=W, encoder_lr_ratio=r)
+    opt, ctl = P.make_optimizer(pol, PARENT_LAST_LR, encoder_mode="schedule", encoder_freeze_updates=W, encoder_lr_ratio=r)
     enc_params = list(pol.student_moe_encoder.parameters())
     c.ok(all(not p.requires_grad for p in enc_params), "만들자마자 update 0 규칙: encoder requires_grad 꺼짐")
+    c.ok([g["name"] for g in opt.param_groups] == ["student_encoder", "map_encoder", "actor", "critic", "std"],
+         f"schedule: encoder 묶음이 optimizer 에 있음 (고정 중 lr 0) {[g['name'] for g in opt.param_groups]}")
     pos, yaw = random_pose(128, 41)
     obs = with_map(make_obs(128, 42), M.map_obs("B", pos, isaac_like_hits(pos, yaw, terrain_rough)[0])[0])
     b = rollout(pol, obs, 43)
     enc0 = {k: v.detach().clone() for k, v in pol.student_moe_encoder.state_dict().items()}
     exp_frozen = [True, True, True, False, False]
     for u in range(5):
-        frozen = sched.apply(pol, opt, u, PARENT_LAST_LR)
+        frozen = ctl.begin_update(u, PARENT_LAST_LR)
         lrs = {g["name"]: g["lr"] for g in opt.param_groups}
         c.ok(frozen == exp_frozen[u], f"update {u}: 고정 {frozen} (기대 {exp_frozen[u]})")
         exp_enc = 0.0 if exp_frozen[u] else ENC_LR
@@ -694,8 +814,10 @@ def t9(c):
         ppo_like_loss(pol, obs, b).backward()
         if exp_frozen[u]:
             c.ok(all(p.grad is None for p in enc_params), f"update {u}: 고정 중 encoder gradient 없음")
-        torch.nn.utils.clip_grad_norm_(pol.parameters(), MAX_GRAD_NORM)
+        torch.nn.utils.clip_grad_norm_(P.trainable_params(pol), MAX_GRAD_NORM)
+        ctl.enforce_groups(opt, PARENT_LAST_LR)
         opt.step()
+        ctl.end_update(u)
         enc_now = pol.student_moe_encoder.state_dict()
         act_now = pol.actor_rest.state_dict()
         c.ok(any(not torch.equal(act_now[k], act_before[k]) for k in act_now), f"update {u}: actor 는 움직임")
@@ -763,6 +885,380 @@ def t10(c):
     c.ok(gate.valid, "고장 없는 critic 점검은 관문 유효")
     gate.add_critic(rep)
     c.ok(not gate.valid and gate.counts["critic_input_nonfinite"] == 1 and gate.counts["value_nonfinite"] == 1, f"NaN 뒤 관문 무효 {gate.counts}")
+
+
+# =========================================================================== T11
+@test("T11", "전 구간 고정 full_freeze (17f-2 3.1 · 4): encoder_mode 기본값 없음 · W · r 을 넘기면 오류 · encoder 가 optimizer 에 없고 requires_grad False · 어떤 번호에서도 안 풀림 · 여러 step 뒤 encoder 가중치 바이트 · 고정 입력 latent 불변 · step 마다 grad None · Adam 상태 없음 · 판 2 의 r 0 꼴은 delta 0 인데도 이 칸들에 걸림")
+def t11(c):
+    ref = ref_parent()
+    sd = file_state_dict()
+    c.ok(inspect.signature(P.make_optimizer).parameters["encoder_mode"].default is inspect.Parameter.empty
+         and inspect.signature(P.EncoderControl.__init__).parameters["encoder_mode"].default is inspect.Parameter.empty,
+         "make_optimizer · EncoderControl 의 encoder_mode 기본값 없음")
+    pol0 = P.S2MapActorCritic(ref, "B")
+    c.ok(raises(TypeError, lambda: P.make_optimizer(pol0, PARENT_LAST_LR)), "encoder_mode 없이 부르면 TypeError")
+    c.ok(raises(ValueError, lambda: P.make_optimizer(pol0, PARENT_LAST_LR, encoder_mode="freeze")), "모르는 encoder_mode 는 ValueError")
+    for kw in ({"encoder_freeze_updates": 50}, {"encoder_lr_ratio": 0.1}, {"encoder_freeze_updates": 50, "encoder_lr_ratio": 0.1},
+               {"encoder_freeze_updates": None}, {"encoder_lr_ratio": 0.0}):
+        c.ok(raises(TypeError, lambda kw=kw: P.make_optimizer(pol0, PARENT_LAST_LR, encoder_mode="full_freeze", **kw)),
+             f"full_freeze 에 {kw} 를 넘기면 TypeError")
+    c.ok(all(p.requires_grad for p in pol0.parameters()), "인자 오류는 정책을 건드리기 전에 난다")
+    pol = P.S2MapActorCritic(ref, "B").train()
+    opt, ctl = P.make_optimizer(pol, PARENT_LAST_LR, encoder_mode="full_freeze")
+    enc = list(pol.student_moe_encoder.parameters())
+    enc_ids = {id(p) for p in enc}
+    opt_ids = [id(p) for g in opt.param_groups for p in g["params"]]
+    c.ok(len(enc) == N_ENC, f"student encoder 매개변수 {len(enc)}")
+    c.ok([g["name"] for g in opt.param_groups] == ["map_encoder", "actor", "critic", "std"], f"group {[g['name'] for g in opt.param_groups]} (student_encoder 없음)")
+    c.ok(not (enc_ids & set(opt_ids)), "encoder 매개변수가 optimizer 에 하나도 없음")
+    c.ok(len(opt_ids) == len(set(opt_ids)) and set(opt_ids) == {id(p) for p in pol.parameters()} - enc_ids, "encoder 밖 매개변수는 모두 한 번씩 optimizer 에")
+    c.ok(all(not p.requires_grad for p in enc) and all(p.requires_grad for p in non_encoder(pol)), "encoder requires_grad False · 나머지 True")
+    idxs = (0, 1, 49, 50, 51, 1999, 2000, 20000, 10 ** 9)
+    c.ok(all(ctl.is_frozen(i) for i in idxs), f"번호 {idxs} 모두 고정")
+    obs_fix = make_obs(64, 61)
+    with torch.no_grad():
+        lat0 = pol.student_latent(obs_fix).clone()
+        lat_parent = ref.student_moe_encoder(obs_fix["policy"])[0]
+    c.ok(bits_equal(lat0, lat_parent), "시작 latent == 부모 student encoder latent (비트)")
+    sha0 = tensors_sha(pol.student_moe_encoder.state_dict())
+    c.ok(sha0 == tensors_sha({k[len(STUDENT_PREFIX):]: v for k, v in sd.items() if k.startswith(STUDENT_PREFIX)}),
+         "시작 encoder 가중치 바이트 == 파일의 student encoder")
+    other0 = {k: v.detach().clone() for k, v in pol.state_dict().items() if not k.startswith(STUDENT_PREFIX)}
+    obs = terrain_obs(128, 62)
+    log = []
+
+    def probe(pol_, opt_, ctl_, k, j):
+        log.append((all(p.grad is None for p in enc), all(not p.requires_grad for p in enc), not any(p in opt_.state for p in enc),
+                    "student_encoder" not in [g["name"] for g in opt_.param_groups]))
+
+    lr = PARENT_LAST_LR
+    n_upd = 3
+    n_steps = n_upd * EPOCHS * MBS
+    for k in range(n_upd):
+        lr, frozen = s2_update(pol, opt, ctl, k, obs, rollout(pol, obs, 64 + k), lr, probe)
+        c.ok(frozen, f"update {k} 고정")
+    c.ok(len(log) == n_steps and all(all(x) for x in log), f"step {len(log)} 번 모두 encoder grad None · requires_grad False · Adam 상태 없음 · 묶음 없음")
+    c.ok(ctl.completed_updates == n_upd and ctl.next_update_index == n_upd and ctl.steps_total == n_steps,
+         f"완료 {ctl.completed_updates} · 다음 {ctl.next_update_index} · step {ctl.steps_total}")
+    c.ok(lr != PARENT_LAST_LR, f"부모 꼴 adaptive lr 이 실제로 lr 을 바꿈 (덮어쓰기 길이 돌았음 · {lr})")
+    c.ok(tensors_sha(pol.student_moe_encoder.state_dict()) == sha0, "여러 step 뒤 encoder 가중치 바이트 그대로 (sha256)")
+    with torch.no_grad():
+        lat1 = pol.student_latent(obs_fix)
+    c.ok(bits_equal(lat1, lat0), "여러 step 뒤 고정 입력의 latent 비트 동일")
+    c.ok(not any(p in opt.state for p in enc) and len(opt.state) == len(opt_ids), f"optimizer state 에 encoder 항목 없음 · 항목 {len(opt.state)} == {len(opt_ids)}")
+    c.ok({float(s["step"]) for s in opt.state.values()} == {float(n_steps)}, f"encoder 밖 Adam step == {n_steps}")
+    moved = [k for k, v in pol.state_dict().items() if not k.startswith(STUDENT_PREFIX) and not torch.equal(v, other0[k])]
+    c.ok(any(k.startswith("actor_in.") for k in moved) and any(k.startswith(MAPENC_PREFIX) for k in moved)
+         and any(k.startswith("critic.") for k in moved) and "std" in moved, f"actor · map encoder · critic · std 는 움직임 ({len(moved)} 열쇠)")
+    # 반례: 판 2 의 「W 뒤 r 0」 꼴 (encoder 가 optimizer 에 lr 0 · requires_grad True · 전체 매개변수 clip). control 없이 같은 횟수.
+    polz = P.S2MapActorCritic(ref, "B").train()
+    optz = torch.optim.Adam([{"params": ps, "name": n} for n, ps in polz.param_groups().items()], lr=PARENT_LAST_LR)
+    encz = list(polz.student_moe_encoder.parameters())
+    shaz = tensors_sha(polz.student_moe_encoder.state_dict())
+    lrz = PARENT_LAST_LR
+    for k in range(n_upd):
+        bz = rollout(polz, obs, 64 + k)
+        for _e in range(EPOCHS):
+            for idx in torch.arange(obs.batch_size[0]).chunk(MBS):
+                bb = {key: v[idx] for key, v in bz.items()}
+                loss = ppo_like_loss(polz, obs[idx], bb)
+                lrz = parent_adaptive_lr(lrz, kl_mean_now(polz, bb))
+                for g in optz.param_groups:                       # 판 2 EncoderSchedule.apply (r 0 · 풀린 뒤)
+                    g["lr"] = 0.0 if g["name"] == "student_encoder" else lrz
+                optz.zero_grad(set_to_none=True)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(polz.parameters(), MAX_GRAD_NORM)
+                optz.step()
+    c.ok(tensors_sha(polz.student_moe_encoder.state_dict()) == shaz, "반례 (r 0): encoder delta 0 (가중치 바이트만 보면 통과한다)")
+    c.ok(all(p.grad is not None for p in encz) and sum(nz(p.grad) for p in encz) > 0, "반례 (r 0): encoder grad 가 계산됨 (위 grad None 칸에 걸림)")
+    c.ok(all(p in optz.state for p in encz) and {float(optz.state[p]["step"]) for p in encz} == {float(n_steps)},
+         "반례 (r 0): encoder Adam step · moment 가 진행됨 (위 Adam 상태 칸에 걸림)")
+
+
+# =========================================================================== T12
+@test("T12", "S2 갱신 번호 (17f-2 2.1): 0 부터 · 부모 20000 · runner 번호 · 건너뜀 · 되풀이 · bool 거부 · W50 이면 0 ~ 49 고정 50 해제 · 상태 변경은 그 update 의 첫 minibatch 전 · 저장 · 재개가 끊김 없는 학습과 비트 동일 (full_freeze · schedule W3 경계) · 다른 규칙 재개 거부")
+def t12(c):
+    ref = ref_parent()
+    LR = PARENT_LAST_LR
+    src_r = open(RUNNER_CTS, encoding="utf-8").read()
+    c.ok("start_it = self.current_learning_iteration" in src_r and "            self.current_learning_iteration = it\n" in src_r
+         and 'self.current_learning_iteration = loaded_dict["iter"]' in src_r and '"iter": self.current_learning_iteration' in src_r,
+         "runner 번호 규칙 (소스 대조): 시작 = current_learning_iteration · 끝난 it 를 적음 · 저장 iter · 재개 때 저장 iter 로")
+    parent_iter = int(torch.load(CKPT, map_location="cpu", weights_only=True)["iter"])
+    c.ok(parent_iter == 20000, f"부모 checkpoint iter {parent_iter}")
+    pol = P.S2MapActorCritic(ref, "B").train()
+    opt, ctl = P.make_optimizer(pol, LR, encoder_mode="full_freeze")
+    c.ok(ctl.next_update_index == 0 and ctl.in_update is None, "새 control 의 다음 번호 0")
+    c.ok(raises_exact(P.S2IndexError, lambda: ctl.begin_update(parent_iter, LR)), "부모 checkpoint iter 20000 -> S2IndexError")
+    runner_after_parent_load = parent_iter      # runner.load(model_20000) 뒤 current_learning_iteration (on_policy_runner_cts.py 278)
+    c.ok(raises_exact(P.S2IndexError, lambda: ctl.begin_update(runner_after_parent_load, LR)), "부모를 읽은 runner 의 current_learning_iteration -> S2IndexError")
+    c.ok(raises_exact(P.S2IndexError, lambda: ctl.begin_update(1, LR)), "첫 번호 1 (0 을 건너뜀) -> S2IndexError")
+    c.ok(raises(TypeError, lambda: ctl.begin_update(False, LR)) and raises(TypeError, lambda: ctl.begin_update(0.0, LR))
+         and raises(TypeError, lambda: ctl.begin_update(torch.tensor(0), LR)), "번호가 bool · float · tensor 면 TypeError (False == 0 이어도)")
+    c.ok(ctl.next_update_index == 0 and ctl.in_update is None and ctl.steps_total == 0, "거절된 호출은 상태를 바꾸지 않음")
+    obs = terrain_obs(64, 91)
+    b = rollout(pol, obs, 93)
+    ctl.begin_update(0, LR)
+    c.ok(raises_exact(P.S2IndexError, lambda: ctl.begin_update(0, LR)) and raises_exact(P.S2IndexError, lambda: ctl.begin_update(1, LR)),
+         "끝나지 않은 update 위에 다시 시작 -> S2IndexError")
+    c.ok(raises_exact(P.S2IndexError, ctl.state_dict), "update 도중 저장 -> S2IndexError")
+    c.ok(raises_exact(P.S2IndexError, lambda: ctl.end_update(1)), "다른 번호로 끝냄 -> S2IndexError")
+    c.ok(raises_exact(P.S2ControlError, lambda: ctl.end_update(0)), "optimizer step 없는 update 를 끝내면 S2ControlError (갱신 생략)")
+    opt.zero_grad(set_to_none=True)
+    ppo_like_loss(pol, obs, b).backward()
+    torch.nn.utils.clip_grad_norm_(P.trainable_params(pol), MAX_GRAD_NORM)
+    ctl.enforce_groups(opt, LR)
+    opt.step()
+    ctl.end_update(0)
+    c.ok(ctl.next_update_index == 1 and ctl.steps_total == 1, f"한 update 뒤 다음 번호 {ctl.next_update_index} · step {ctl.steps_total}")
+    ctl50 = P.EncoderControl(P.S2MapActorCritic(ref, "B"), "schedule", freeze_updates=50, encoder_lr_ratio=0.1)
+    c.ok([ctl50.is_frozen(i) for i in (0, 1, 48, 49, 50, 51, 1999)] == [True, True, True, True, False, False, False],
+         "W50: 번호 0 ~ 49 고정 · 50 부터 해제")
+    # 저장 · 재개: 끊김 없는 5 update vs 2 update 뒤 저장 (메모리에 둔 채 원래 학습을 이어 감) · 새 정책으로 재개해 3 update
+    obs = terrain_obs(96, 95)
+
+    def snap(pol_, opt_, ctl_, k, j, log):
+        e = list(pol_.student_moe_encoder.parameters())
+        log.append({"k": k, "j": j, "frozen": ctl_.frozen, "grad": [p.grad is not None for p in e], "rg": [p.requires_grad for p in e],
+                    "lrs": {g["name"]: g["lr"] for g in opt_.param_groups}, "base": ctl_.base_lr})
+
+    def run(pol_, opt_, ctl_, ks, lr, log):
+        for k in ks:
+            lr, _f = s2_update(pol_, opt_, ctl_, k, obs, rollout(pol_, obs, 300 + k), lr, probe=lambda *a: snap(*a, log))
+        return lr
+
+    for mode, kw, other in (("full_freeze", {}, ("schedule", {"encoder_freeze_updates": 3, "encoder_lr_ratio": 0.25})),
+                            ("schedule", {"encoder_freeze_updates": 3, "encoder_lr_ratio": 0.25},
+                             ("schedule", {"encoder_freeze_updates": 4, "encoder_lr_ratio": 0.25}))):
+        polU = P.S2MapActorCritic(ref, "B").train()
+        optU, ctlU = P.make_optimizer(polU, LR, encoder_mode=mode, **kw)
+        logU = []
+        lr_mid = run(polU, optU, ctlU, range(0, 2), LR, logU)
+        sd_ctl = ctlU.state_dict()
+        sd_pol = {k: v.detach().clone() for k, v in polU.state_dict().items()}
+        c.ok(sd_ctl["completed_updates"] == 2 and sd_ctl["next_update_index"] == 2 and sd_ctl["base_lr"] == lr_mid
+             and sd_ctl["encoder_mode"] == mode and sd_ctl["unit"] == "ppo_iteration",
+             f"{mode}: 저장에 완료 수 · 다음 번호 · lr · 규칙 · 단위 {[(k, sd_ctl[k]) for k in ('completed_updates', 'next_update_index', 'base_lr')]}")
+        if mode == "schedule":
+            c.ok(not any(i < N_ENC for i in sd_ctl["optimizer"]["state"]), "schedule 고정 중 저장: encoder (첫 group · 번호 0 ~ 15) 의 Adam 상태 없음")
+        lr_end = run(polU, optU, ctlU, range(2, 5), lr_mid, logU)
+        buf = io.BytesIO()
+        torch.save({"policy": sd_pol, "s2_control": sd_ctl}, buf)
+        buf.seek(0)
+        saved = torch.load(buf, map_location="cpu", weights_only=True)
+        polR = P.S2MapActorCritic(ref, "B").train()
+        polR.load_state_dict(saved["policy"])
+        optR, ctlR = P.make_optimizer(polR, LR, encoder_mode=mode, **kw)
+        ctlR.load_state_dict(saved["s2_control"])
+        c.ok(ctlR.next_update_index == 2 and ctlR.completed_updates == 2 and ctlR.base_lr == lr_mid,
+             f"{mode} 재개: 다음 번호 {ctlR.next_update_index} · lr {ctlR.base_lr} (저장 {lr_mid})")
+        runner_resume_it = 1   # S2 runner 가 0 · 1 을 끝내고 저장하면 iter 1 (runner 140 · 173) · 재개 loop 는 1 부터 (108)
+        c.ok(raises_exact(P.S2IndexError, lambda: ctlR.begin_update(runner_resume_it, ctlR.base_lr))
+             and raises_exact(P.S2IndexError, lambda: ctlR.begin_update(0, ctlR.base_lr))
+             and raises_exact(P.S2IndexError, lambda: ctlR.begin_update(3, ctlR.base_lr)),
+             f"{mode} 재개: runner 번호 1 · W 다시 시작 0 · 건너뜀 3 -> S2IndexError")
+        lrR = run(polR, optR, ctlR, range(2, 5), ctlR.base_lr, [])
+        sU, sR = polU.state_dict(), polR.state_dict()
+        c.ok(set(sU) == set(sR) and all(bits_equal(sU[k], sR[k]) for k in sU), f"{mode}: 재개 뒤 정책 매개변수가 끊김 없는 학습과 비트 동일")
+        oU, oR = optU.state_dict(), optR.state_dict()
+        c.ok(oU["state"].keys() == oR["state"].keys()
+             and all(oU["state"][i].keys() == oR["state"][i].keys() and all(same_tensor(oU["state"][i][q], oR["state"][i][q]) for q in oU["state"][i])
+                     for i in oU["state"]), f"{mode}: optimizer 상태 (step · exp_avg · exp_avg_sq) 비트 동일 ({len(oU['state'])} 항목)")
+        c.ok([(g["name"], g["lr"]) for g in oU["param_groups"]] == [(g["name"], g["lr"]) for g in oR["param_groups"]]
+             and lrR == lr_end and ctlR.base_lr == ctlU.base_lr, f"{mode}: group lr · base lr 같음 ({lr_end})")
+        c.ok(ctlR.completed_updates == ctlU.completed_updates == 5 and ctlR.steps_total == ctlU.steps_total == 5 * EPOCHS * MBS,
+             f"{mode}: 완료 {ctlU.completed_updates} · step {ctlU.steps_total}")
+        if mode == "schedule":
+            encU = list(polU.student_moe_encoder.parameters())
+            c.ok({float(optU.state[p]["step"]) for p in encU} == {float(2 * EPOCHS * MBS)}, "schedule W3: encoder Adam step = 해제 뒤 step 수 (update 3 · 4)")
+            k2 = [x for x in logU if x["k"] == 2]
+            c.ok(len(k2) == EPOCHS * MBS and all(x["frozen"] and not any(x["grad"]) and not any(x["rg"]) and x["lrs"]["student_encoder"] == 0.0 for x in k2),
+                 "W3: update 2 의 모든 minibatch 고정 (grad None · requires_grad False · encoder lr 0)")
+            f3 = [x for x in logU if x["k"] == 3][0]
+            c.ok(f3["j"] == 0 and not f3["frozen"] and all(f3["grad"]) and all(f3["rg"]) and f3["lrs"]["student_encoder"] == 0.25 * f3["base"]
+                 and all(v == f3["base"] for n, v in f3["lrs"].items() if n != "student_encoder"),
+                 "W3: update 3 의 첫 minibatch 부터 해제 (grad 있음 · requires_grad True · encoder lr = 0.25 x base)")
+            c.ok([x["frozen"] for x in logU if x["j"] == 0] == [True, True, True, False, False], "update 0 ~ 4 첫 minibatch 의 고정 [T T T F F]")
+        polX = P.S2MapActorCritic(ref, "B")
+        _ox, ctlX = P.make_optimizer(polX, LR, encoder_mode=other[0], **other[1])
+        c.ok(raises(ValueError, lambda: ctlX.load_state_dict(saved["s2_control"])), f"{mode} 저장을 다른 규칙 {other} 에 읽으면 ValueError")
+        bad = dict(saved["s2_control"])
+        bad["next_update_index"] = 3
+        polY = P.S2MapActorCritic(ref, "B")
+        _oy, ctlY = P.make_optimizer(polY, LR, encoder_mode=mode, **kw)
+        c.ok(raises(ValueError, lambda: ctlY.load_state_dict(bad)), f"{mode}: 다음 번호 != 완료 수 인 저장은 ValueError")
+
+
+# =========================================================================== T13
+@test("T13", "group lr 덮어쓰기 막기 (17f-2 3.2): 부모 moe_cts 꼴 (모든 group 에 같은 lr · 소스 대조) 뒤 enforce_groups 가 encoder 묶음을 0 · r x base 로 되돌림 · enforce 없는 step · enforce 뒤 바뀐 step · update 밖 step 은 hook 이 멈춤 · 고정 위반 다섯을 하나씩 (각 1 문제) 예외 · base_lr 오류")
+def t13(c):
+    ref = ref_parent()
+    src = open(MOE_CTS, encoding="utf-8").read()
+    c.ok(re.search(r"\n\s+for param_group in self\.optimizer\.param_groups:\n\s+param_group\[\"lr\"\] = self\.learning_rate\n", src) is not None,
+         "부모 moe_cts: adaptive lr 뒤 모든 param group 에 같은 lr (흉내 낸 꼴이 소스와 같음)")
+    c.ok(re.search(r"if kl_mean > self\.desired_kl \* 2\.0:\n\s+self\.learning_rate = max\(1e-5, self\.learning_rate / 1\.5\)\n"
+                   r"\s+elif kl_mean < self\.desired_kl / 2\.0 and kl_mean > 0\.0:\n\s+self\.learning_rate = min\(1e-2, self\.learning_rate \* 1\.5\)", src) is not None,
+         "부모 moe_cts: adaptive lr 규칙 (1.5 배 · 상하한) 이 시험의 parent_adaptive_lr 과 같음")
+    c.ok("params_to_clip = itertools.chain.from_iterable(g['params'] for g in self.optimizer.param_groups)" in src,
+         "부모 moe_cts: clip 은 PPO optimizer 묶음의 매개변수 (encoder 는 따로 · 365 ~ 366 · 411)")
+    LR = PARENT_LAST_LR
+    LR2 = 0.0002562890625000001          # 1.5 x 0.00017085937500000009 (손 계산 · KL 이 desired / 2 보다 작을 때)
+    ENC2 = 2.5628906250000014e-05        # r x base = 0.1 x 0.0002562890625000001 (손 계산 · 0.1 x 1.5 x LR 순서로 곱하면 ...017e-05 로 1 ulp 다름)
+    c.ok(parent_adaptive_lr(LR, DESIRED_KL / 4) == LR2, "adaptive lr 손 계산 1.5 배")
+    obs = terrain_obs(64, 71)
+    # (a) schedule W1 r0.1: update 0 고정 · update 1 해제
+    pol = P.S2MapActorCritic(ref, "B").train()
+    opt, ctl = P.make_optimizer(pol, LR, encoder_mode="schedule", encoder_freeze_updates=1, encoder_lr_ratio=0.1)
+    b = rollout(pol, obs, 73)
+
+    def backward_once(p_, o_, b_):
+        o_.zero_grad(set_to_none=True)
+        ppo_like_loss(p_, obs, b_).backward()
+        torch.nn.utils.clip_grad_norm_(P.trainable_params(p_), MAX_GRAD_NORM)
+
+    ctl.begin_update(0, LR)
+    parent_overwrite(opt, LR)
+    c.ok(lr_of(opt, "student_encoder") == LR, "부모 꼴 덮어쓰기는 고정 중 encoder 묶음 lr 을 0 에서 base 로 바꿈 (막지 않으면 깨짐)")
+    c.ok(len(ctl.audit(opt, LR)) == 1, f"audit 이 그 하나를 잡음: {ctl.audit(opt, LR)}")
+    backward_once(pol, opt, b)
+    fixed = ctl.enforce_groups(opt, LR)
+    c.ok(fixed == {"student_encoder": (LR, 0.0)} and lr_of(opt, "student_encoder") == 0.0, f"enforce_groups 가 고정 중 encoder lr 을 0 으로 되돌림 {fixed}")
+    opt.step()
+    ctl.end_update(0)
+    ctl.begin_update(1, LR)
+    parent_overwrite(opt, LR2)
+    backward_once(pol, opt, b)
+    fixed = ctl.enforce_groups(opt, LR2)
+    c.ok(fixed == {"student_encoder": (LR2, ENC2)} and lr_of(opt, "student_encoder") == ENC2
+         and all(g["lr"] == LR2 for g in opt.param_groups if g["name"] != "student_encoder"),
+         f"해제 뒤 adaptive lr 1.5 배 · 덮어쓰기 -> encoder 0.1 x base = {ENC2} · 나머지 {LR2} ({fixed})")
+    opt.step()
+    backward_once(pol, opt, b)
+    ctl.enforce_groups(opt, LR2)
+    parent_overwrite(opt, LR2)
+    c.ok(raises_exact(P.S2ControlError, opt.step), "enforce 뒤 부모 꼴 덮어쓰기 -> step 전 hook 이 S2ControlError")
+    ctl.enforce_groups(opt, LR2)
+    opt.step()
+    c.ok(raises_exact(P.S2ControlError, opt.step), "enforce 없이 이어서 step -> S2ControlError (step 마다 enforce)")
+    ctl.end_update(1)
+    c.ok(ctl.steps_total == 3 and ctl.completed_updates == 2, f"막힌 step 은 세지 않음 (step {ctl.steps_total})")
+    c.ok(raises_exact(P.S2ControlError, opt.step), "update 밖 step -> S2ControlError")
+    c.ok(raises_exact(P.S2ControlError, lambda: ctl.enforce_groups(opt, LR2)), "update 밖 enforce -> S2ControlError")
+    # (b) full_freeze: 부모 꼴 덮어쓰기가 encoder 에 닿지 않음 · 위반 주입
+    polf = P.S2MapActorCritic(ref, "B").train()
+    optf, ctlf = P.make_optimizer(polf, LR, encoder_mode="full_freeze")
+    bf = rollout(polf, obs, 74)
+    ctlf.begin_update(0, LR)
+    parent_overwrite(optf, LR2)
+    backward_once(polf, optf, bf)
+    fixed = ctlf.enforce_groups(optf, LR2)
+    c.ok(fixed == {} and all(g["lr"] == LR2 for g in optf.param_groups) and len(ctlf.audit(optf, LR2)) == 0,
+         f"full_freeze: 덮어쓰기가 encoder 에 닿지 않음 (optimizer 에 없음) · 고칠 것 없음 {fixed}")
+    enc = list(polf.student_moe_encoder.parameters())
+    actor_group = [g for g in optf.param_groups if g["name"] == "actor"][0]
+
+    def inject(name, do, undo):
+        do()
+        try:
+            n = len(ctlf.audit(optf, LR2))
+            hit = raises_exact(P.S2ControlError, lambda: ctlf.enforce_groups(optf, LR2))
+        finally:
+            undo()
+        c.ok(n == 1 and hit, f"{name}: audit 문제 {n} 개 (1 이어야 함) · enforce 예외 {hit}")
+
+    inject("encoder 매개변수를 actor 묶음에 끼움", lambda: actor_group["params"].append(enc[0]), lambda: actor_group["params"].pop())
+    inject("encoder requires_grad True", lambda: enc[0].requires_grad_(True), lambda: enc[0].requires_grad_(False))
+    inject("고정 encoder 에 남은 grad", lambda: setattr(enc[0], "grad", torch.zeros_like(enc[0])), lambda: setattr(enc[0], "grad", None))
+    inject("encoder 의 Adam 상태", lambda: optf.state[enc[0]].update({"step": torch.tensor(1.0)}), lambda: optf.state.pop(enc[0]))
+    inject("encoder 밖 매개변수 requires_grad False", lambda: polf.std.requires_grad_(False), lambda: polf.std.requires_grad_(True))
+    c.ok(all(raises(ValueError, lambda v=v: ctlf.enforce_groups(optf, v)) for v in (NAN, INF, 0.0, -1e-4))
+         and raises(TypeError, lambda: ctlf.enforce_groups(optf, True)) and raises(TypeError, lambda: ctlf.enforce_groups(optf, torch.tensor(LR))),
+         "base_lr NaN · inf · 0 · 음수 ValueError · bool · tensor TypeError")
+    c.ok(all(g["lr"] == LR2 for g in optf.param_groups), "거절된 base_lr 은 group lr 을 바꾸지 않음")
+    # 같은 묶음 · 같은 lr 로 만든 쌍둥이 optimizer: audit 은 통과하는 꼴이라 「묶인 optimizer 인가」 확인만이 잡는다 (판 3 변이 1 차에서 q28 을 놓친 뒤 고침)
+    twin = torch.optim.Adam([{"params": list(g["params"]), "name": g["name"]} for g in optf.param_groups], lr=LR2)
+    c.ok(len(ctlf.audit(twin, LR2)) == 0, "쌍둥이 optimizer 는 audit 을 통과하는 꼴")
+    c.ok(raises_exact(P.S2ControlError, lambda: ctlf.enforce_groups(twin, LR2)), "묶이지 않은 (쌍둥이) optimizer -> S2ControlError")
+    other_opt = torch.optim.Adam(polf.actor_rest.parameters(), lr=LR)
+    c.ok(raises_exact(P.S2ControlError, lambda: ctlf.enforce_groups(other_opt, LR2)), "묶음이 다른 optimizer -> S2ControlError")
+    c.ok(len(ctlf.audit(optf, LR2)) == 0 and ctlf.enforce_groups(optf, LR2) == {}, "되돌린 뒤 audit 빈 목록 · enforce 통과 (관문이 늘 예외인 것이 아님)")
+    optf.step()
+    ctlf.end_update(0)
+
+
+# =========================================================================== T14
+@test("T14", "clipping 범위 (17f-2 3.1): trainable_params 에 고정 encoder 없음 · 실제 역전파에서 encoder grad None · clip norm == encoder 밖 손 계산 norm · 반례 (actor 3 · encoder 4 · 한도 1) 에서 판 2 방식 actor 0.6 · 판 3 방식 1 · 실제 역전파의 r 0 꼴도 norm 이 커짐")
+def t14(c):
+    ref = ref_parent()
+    LR = PARENT_LAST_LR
+    obs = terrain_obs(128, 81)
+    polf = P.S2MapActorCritic(ref, "B").train()
+    optf, ctlf = P.make_optimizer(polf, LR, encoder_mode="full_freeze")
+    enc_ids = {id(p) for p in polf.student_moe_encoder.parameters()}
+    tp = P.trainable_params(polf)
+    c.ok(not ({id(p) for p in tp} & enc_ids) and len(tp) == len(list(polf.parameters())) - N_ENC,
+         f"trainable_params 에 encoder 없음 ({len(tp)} = 전체 {len(list(polf.parameters()))} - {N_ENC})")
+    c.ok({id(p) for p in tp} == {id(p) for g in optf.param_groups for p in g["params"]}, "full_freeze: trainable_params == optimizer 의 매개변수")
+    b = rollout(polf, obs, 83)
+    ctlf.begin_update(0, LR)
+    optf.zero_grad(set_to_none=True)
+    ppo_like_loss(polf, obs, b).backward()
+    c.ok(all(p.grad is None for p in polf.student_moe_encoder.parameters()), "실제 역전파: 고정 encoder grad None")
+    hand = grad_norm(non_encoder(polf))
+    tot = float(torch.nn.utils.clip_grad_norm_(P.trainable_params(polf), float("inf")))
+    c.ok(hand > 0 and abs(tot - hand) <= 1e-5 * hand, f"clip norm {tot:.6e} == encoder 밖 손 계산 norm {hand:.6e}")
+    ctlf.enforce_groups(optf, LR)
+    optf.step()
+    ctlf.end_update(0)
+
+    def set_grads(pol_, other_norm, enc_norm, seed):
+        g = torch.Generator().manual_seed(seed)
+        enc_ = list(pol_.student_moe_encoder.parameters())
+        for group, target in ((non_encoder(pol_), other_norm), (enc_, enc_norm)):
+            if target is None:
+                for p in group:
+                    p.grad = None
+                continue
+            raw = [torch.randn(p.shape, generator=g, dtype=torch.float64) for p in group]
+            s = target / math.sqrt(sum(float(x.pow(2).sum()) for x in raw))
+            for p, x in zip(group, raw):
+                p.grad = (x * s).to(torch.float32)
+
+    # 판 2 방식: W 뒤 r 0 (encoder requires_grad True · grad 있음) 에서 전체 매개변수로 clip (판 2 test_s2.py 465 · 697)
+    pol2 = P.S2MapActorCritic(ref, "B").train()
+    set_grads(pol2, 3.0, 4.0, 84)
+    pre_a, pre_e = grad_norm(non_encoder(pol2)), grad_norm(pol2.student_moe_encoder.parameters())
+    tot2 = float(torch.nn.utils.clip_grad_norm_(pol2.parameters(), 1.0))
+    a2 = grad_norm(non_encoder(pol2))
+    # 판 3 방식: full_freeze · trainable_params 로 clip. encoder 에 남은 grad (norm 4) 가 있어도 norm 에 안 들어감
+    pol3 = P.S2MapActorCritic(ref, "B").train()
+    P.make_optimizer(pol3, LR, encoder_mode="full_freeze")
+    set_grads(pol3, 3.0, 4.0, 84)
+    tot3 = float(torch.nn.utils.clip_grad_norm_(P.trainable_params(pol3), 1.0))
+    a3 = grad_norm(non_encoder(pol3))
+    e3 = grad_norm(pol3.student_moe_encoder.parameters())
+    set_grads(pol3, 3.0, None, 84)
+    tot3n = float(torch.nn.utils.clip_grad_norm_(P.trainable_params(pol3), 1.0))
+    a3n = grad_norm(non_encoder(pol3))
+    c.ok(abs(pre_a - 3.0) < 1e-4 and abs(pre_e - 4.0) < 1e-4, f"반례 준비: encoder 밖 norm {pre_a:.6f} · encoder norm {pre_e:.6f}")
+    c.ok(abs(tot2 - 5.0) < 1e-4 and abs(a2 - 0.6) < 1e-4, f"판 2 방식: 전체 norm {tot2:.6f} (5) · clip 뒤 encoder 밖 norm {a2:.6f} (약 0.6)")
+    c.ok(abs(tot3 - 3.0) < 1e-4 and abs(a3 - 1.0) < 1e-4 and abs(e3 - 4.0) < 1e-4,
+         f"판 3 방식: clip norm {tot3:.6f} (3 · encoder 안 들어감) · encoder 밖 {a3:.6f} (약 1) · 남은 encoder grad {e3:.6f} 안 건드림")
+    c.ok(abs(tot3n - 3.0) < 1e-4 and abs(a3n - 1.0) < 1e-4, f"판 3 방식 (encoder grad None): encoder 밖 {a3n:.6f}")
+    print(f"    T14 반례 (actor 3 · encoder 4 · 한도 1): 판 2 방식 encoder 밖 norm {a2:.6f} · 판 3 방식 {a3:.6f}", flush=True)
+    # 실제 역전파: 판 2 의 r 0 꼴 (encoder requires_grad True) 은 encoder grad 가 생겨 clip 전체 norm 이 커짐 · encoder 밖 grad 는 같음
+    polz = P.S2MapActorCritic(ref, "B").train()
+    polq = P.S2MapActorCritic(ref, "B").train()
+    P.make_optimizer(polq, LR, encoder_mode="full_freeze")
+    bz = rollout(polz, obs, 85)
+    ppo_like_loss(polz, obs, bz).backward()
+    ppo_like_loss(polq, obs, bz).backward()
+    ez, oz, oq = grad_norm(polz.student_moe_encoder.parameters()), grad_norm(non_encoder(polz)), grad_norm(non_encoder(polq))
+    tot_v2, tot_v3 = math.hypot(oz, ez), oq
+    c.ok(ez > 0 and abs(oz - oq) <= 1e-5 * oq and tot_v2 > tot_v3,
+         f"실제 역전파: r 0 꼴 encoder norm {ez:.4e} · encoder 밖 norm {oz:.4e} vs 판 3 {oq:.4e} · clip 전체 norm {tot_v2:.4e} > {tot_v3:.4e}")
+    print(f"    T14 실제 역전파 (한 minibatch): encoder 밖 norm {oq:.4e} · r 0 꼴 encoder norm {ez:.4e} · 한도 1 에서 encoder 밖 배율 "
+          f"판 2 {min(1.0, 1.0 / (tot_v2 + 1e-6)):.4f} · 판 3 {min(1.0, 1.0 / (tot_v3 + 1e-6)):.4f}", flush=True)
 
 
 def main():

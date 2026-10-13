@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
-"""S2 A/B 정책 (판 2): 부모 E1 20000 의 student 경로에 0 으로 시작하는 지도 열을 붙인 actor-critic (CPU 로 짓기 · 학습 없음).
+"""S2 A/B 정책 (판 3): 부모 E1 20000 의 student 경로에 0 으로 시작하는 지도 열을 붙인 actor-critic (CPU 로 짓기 · 학습 없음).
 
-분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 2 (CPU · 학습 없음)
-작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32
+분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 3 (CPU · 학습 없음)
+작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32 · 판 3 2026-10-14 00:50
 근거: inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md 3 절 · 4 절 · 6 절 (다르면 6 절) · VERIFY-astra-17d.md 6.1 ~ 6.3
+      VERIFY-astra-17f.md 5 절 · VERIFY-astra-17f2.md 2.1 · 3.1 · 3.2 · 4 · 5.3 (판 3 의 encoder 고정 · 갱신 번호 · group lr · clipping)
       source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py 17 ~ 40 (StudentMoEEncoder) · 86 ~ 247 (act · act_inference · evaluate)
-      source/rsl_rl/rsl_rl/networks/moe.py (MLP · MoE · L2Norm) · algorithms/moe_cts.py 93 ~ 101 (optimizer 묶음 · lr)
+      source/rsl_rl/rsl_rl/networks/moe.py (MLP · MoE · L2Norm) · algorithms/moe_cts.py 93 ~ 101 (optimizer 묶음 · lr) ·
+      278 ~ 311 (adaptive lr 이 모든 param group 에 같은 lr 을 씀 · 310 ~ 311) · 365 ~ 366 (clip 은 optimizer 묶음의 매개변수) ·
+      runners/on_policy_runner_cts.py 108 · 140 · 173 · 278 (runner 번호 · 저장 iter · 재개 번호)
       E1 run params/agent.yaml (구조 값) · params/env.yaml 865 ~ 1177 (critic 항 순서 · height_scan 이 마지막 187 열)
       model_20000.pt (optimizer_state_dict lr 0.00017085937500000009)
 요지: 지도 입력 m [N, 374] -> map encoder (374 -> 128 -> 64 · ELU) -> z_map 64. actor 첫 층은 [latent 32, single_obs 45] 77 열은
-      부모 값 그대로, z_map 64 열은 0 으로 시작. forward 에 no_grad 는 없고, student encoder 의 고정 · 학습률은 EncoderSchedule
-      (처음 W update 고정 · 그 뒤 actor 학습률의 r 배 · W · r 은 기본값 없이 인자로만) 이 정한다.
+      부모 값 그대로, z_map 64 열은 0 으로 시작. forward 에 no_grad 는 없고, student encoder 의 고정은 EncoderControl 이 정한다.
+      판 3: encoder_mode (기본값 없음) 를 둔다. 「full_freeze」 는 encoder 를 requires_grad False 로 두고 optimizer 에 넣지 않으며
+      어떤 번호에서도 풀지 않는다 (17f-2 4 절 첫 A/B 권고). 「schedule」 은 판 2 의 W · r 규칙이며 r 0 은 받지 않는다 (17f-2 3.1).
+      S2 갱신 번호는 control 이 0 부터 센다 (부모 20000 · runner 번호를 넘기면 S2IndexError · 17f-2 2.1). enforce_groups 가
+      adaptive lr 덮어쓰기 뒤 group lr 을 다시 맞추고 고정 상태를 확인하며, optimizer step 전 hook 이 그것이 불렸는지 본다 (17f-2 3.2).
+      clipping 은 trainable_params (requires_grad 켜진 것만) 로 한다 (17f-2 3.1).
       critic 은 부모 구조 · 가중치에서 시작 (latent.detach() + critic obs) 하고 값은 바꾸지 않는다. critic_check 가 critic 입력 ·
       value 의 유한성과 정상 miss 광선 칸의 critic 입력 값을 잰다. teacher encoder 는 가져오지 않는다.
       A · B 는 구조 · 초기값이 같고 actor 의 지도 입력만 다르다 (A 도 지형 정보가 든 critic 을 학습 신호로 쓴다).
-상태: CPU 시험 (test_s2.py) · 변이 (mutate_s2.py) 만 거침. 학습 · Isaac · GPU 실행 없음
+상태: CPU 시험 (test_s2.py) · 변이 (mutate_s2.py) 만 거침. 학습 루프 연결 · Isaac · GPU 실행 없음
 
 설계와 형태가 다른 곳 (값 · 수식은 같음)
   actor 첫 층을 Linear(141) 한 장이 아니라 Linear(77, 512) (부모 값) + Linear(64, 512, bias 없음, 0 시작) 두 장의 합으로 둔다.
@@ -28,6 +35,7 @@ import contextlib
 import copy
 import hashlib
 import io
+import math
 import os
 import sys
 
@@ -258,54 +266,338 @@ def build_s2(mode: str, parent: nn.Module | None = None, ckpt: str = E1_CKPT, **
     return S2MapActorCritic(parent, mode, **kw), parent, meta
 
 
-class EncoderSchedule:
-    """student encoder 고정 구간과 학습률 비 (설계 6 절 · ASTRA 17d 6.3). 두 군에 같은 규칙.
+# ====================================================================== 판 3: encoder 고정 · S2 갱신 번호 · group lr · clipping
+ENCODER_MODES = ("full_freeze", "schedule")
+ENCODER_GROUP = "student_encoder"
+GROUP_NAMES = ("student_encoder", "map_encoder", "actor", "critic", "std")    # S2MapActorCritic.param_groups() 의 순서
+# S2 갱신 번호 하나 = rollout 한 번 뒤의 PPO update 한 번 (그 안의 epoch x minibatch optimizer step 전부 · 17f-2 2.1)
+S2_UPDATE_UNIT = "ppo_iteration"
+CONTROL_STATE_FORMAT = "s2-encoder-control-v3"
 
-    freeze_updates (W): update_index < W 인 동안 student encoder 를 고정한다 (requires_grad 끔 · 그 묶음 lr 0).
-        고정 동안 gradient 가 생기지 않으므로 Adam moment 도 쌓이지 않고, 풀리는 첫 update 에서 encoder 의 Adam 상태가 새로 시작한다.
-    encoder_lr_ratio (r): 풀린 뒤 student encoder 묶음의 lr = r x (actor 와 나머지 묶음의 lr).
-    W · r 은 기본값이 없다 (A/B 결과를 보기 전에 등록할 값). update_index 의 단위 (PPO iteration 한 번 = alg.update() 한 번,
-    또는 optimizer step 한 번) 도 W 와 함께 등록한다. 이 코드는 넘겨받은 번호만 센다.
+
+class _Unset:
+    """W · r 을 「안 넘김」 표시 (None · 0 과 구별한다). 값으로 쓰지 않는다."""
+
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "<안 넘김>"
+
+
+_UNSET = _Unset()
+
+
+class S2ControlError(RuntimeError):
+    """encoder 고정 · group lr · optimizer 구성 규칙 위반. 학습을 멈추라는 뜻이다 (고쳐서 이어 가지 않는다)."""
+
+
+class S2IndexError(S2ControlError):
+    """S2 갱신 번호 위반 (부모 iteration · runner 번호 · 건너뜀 · 되풀이 · 끝나지 않은 갱신 · 갱신 도중 저장)."""
+
+
+def _check_index(i) -> int:
+    if isinstance(i, bool) or not isinstance(i, int):
+        raise TypeError(f"S2 갱신 번호는 int (bool · float · tensor 아님): {i!r}")
+    return i
+
+
+def _check_lr(lr) -> float:
+    if isinstance(lr, bool) or not isinstance(lr, (int, float)):
+        raise TypeError(f"base_lr 은 수 (bool · tensor 아님): {lr!r}")
+    lr = float(lr)
+    if not (lr > 0.0 and math.isfinite(lr)):
+        raise ValueError(f"base_lr 은 0 보다 큰 유한한 수: {lr!r}")
+    return lr
+
+
+class EncoderControl:
+    """student encoder 의 고정 규칙 · S2 갱신 번호 · optimizer group lr 을 한곳에서 지킨다 (17f-2 2.1 · 3.1 · 3.2). 두 군에 같은 규칙.
+
+    encoder_mode (기본값 없음):
+      "full_freeze": 전 구간 고정 (17f-2 4 절 첫 A/B 권고). student encoder 는 requires_grad False 이고 optimizer 에 아예 없으며
+                     어떤 S2 갱신 번호에서도 풀리지 않는다. W · r 을 넘기면 TypeError.
+      "schedule":    S2 갱신 번호 0 ~ W-1 고정 · W 부터 해제 · 풀린 뒤 encoder 묶음 lr = r x base_lr. W · r 필수 (기본값 없음).
+                     고정 동안은 optimizer 에 있어도 requires_grad False 라 grad · Adam 상태가 생기지 않는다.
+                     r 은 0 보다 커야 한다: r 0 은 gradient 가 계산되어 clip norm 에 섞이고 Adam 상태가 진행되므로 실제 고정이 아니다
+                     (17f-2 3.1). 끝까지 고정하려면 full_freeze 를 쓴다.
+    S2 갱신 번호: S2 첫 rollout 의 PPO update 가 0 이다. control 이 완료 수를 세고 begin_update 는 「다음 번호」 만 받는다. 부모 checkpoint
+      iter (20000) 나 runner current_learning_iteration (재개 때 마지막 완료 번호로 되돌아감) 을 넘기면 S2IndexError.
+    학습기의 PPO update 한 번 (상태 변경은 begin_update 에서만 · 그 update 의 첫 minibatch 전):
+        frozen = ctl.begin_update(k, base_lr)
+        for 각 epoch · minibatch:
+            forward · adaptive lr (base_lr 바뀜 · 부모 꼴이면 모든 group lr 을 같은 값으로 덮어씀)
+            optimizer.zero_grad() · loss.backward()
+            clip_grad_norm_(trainable_params(policy), max_grad_norm)
+            ctl.enforce_groups(optimizer, base_lr)   # group lr 을 규칙대로 다시 쓰고 고정 상태를 확인 · 어긋나면 S2ControlError
+            optimizer.step()                         # step 전 hook: enforce 없이 step 이거나 enforce 뒤 바뀌었으면 S2ControlError
+        ctl.end_update(k)
+    재개: 갱신 사이에서 ctl.state_dict() (완료 수 · 다음 번호 · optimizer 상태 · lr) 를 정책 state_dict 와 함께 저장하고, 새 정책에 읽은 뒤
+      make_optimizer (같은 mode · W · r) · ctl.load_state_dict(sd). 학습기는 lr 을 ctl.base_lr 에서 이어 받는다. 난수 상태는 여기 없다.
     """
 
-    def __init__(self, freeze_updates: int, encoder_lr_ratio: float):
-        if freeze_updates is None or encoder_lr_ratio is None:
-            raise TypeError("encoder 고정 구간 W 와 학습률 비 r 은 반드시 넘긴다 (기본값 없음)")
-        if isinstance(freeze_updates, bool) or not isinstance(freeze_updates, int) or freeze_updates < 0:
-            raise ValueError(f"W 는 0 이상의 정수: {freeze_updates!r}")
-        r = float(encoder_lr_ratio)
-        if not (r >= 0.0 and r < float("inf")):
-            raise ValueError(f"r 은 0 이상의 유한한 수: {encoder_lr_ratio!r}")
-        self.freeze_updates = freeze_updates
+    def __init__(self, policy: "S2MapActorCritic", encoder_mode, *, freeze_updates=_UNSET, encoder_lr_ratio=_UNSET):
+        if encoder_mode not in ENCODER_MODES:
+            raise ValueError(f"encoder_mode 는 {ENCODER_MODES} 중 하나: {encoder_mode!r}")
+        if encoder_mode == "full_freeze":
+            given = [n for n, v in (("freeze_updates", freeze_updates), ("encoder_lr_ratio", encoder_lr_ratio)) if v is not _UNSET]
+            if given:
+                raise TypeError(f"full_freeze 에는 W · r 을 넘기지 않는다 (넘김: {given})")
+            W, r = None, None
+        else:
+            if freeze_updates is _UNSET or encoder_lr_ratio is _UNSET or freeze_updates is None or encoder_lr_ratio is None:
+                raise TypeError("schedule 은 W (freeze_updates) 와 r (encoder_lr_ratio) 을 반드시 넘긴다 (기본값 없음)")
+            if isinstance(freeze_updates, bool) or not isinstance(freeze_updates, int) or freeze_updates < 0:
+                raise ValueError(f"W 는 0 이상의 정수: {freeze_updates!r}")
+            if isinstance(encoder_lr_ratio, bool) or not isinstance(encoder_lr_ratio, (int, float)):
+                raise ValueError(f"r 은 수: {encoder_lr_ratio!r}")
+            r = float(encoder_lr_ratio)
+            if not (r > 0.0 and r < float("inf")):
+                raise ValueError(f"r 은 0 보다 큰 유한한 수 (r 0 은 실제 고정이 아니다 · 끝까지 고정은 full_freeze): {encoder_lr_ratio!r}")
+            W = freeze_updates
+        self.policy = policy
+        self.encoder_mode = encoder_mode
+        self.freeze_updates = W
         self.encoder_lr_ratio = r
+        self.optimizer = None
+        self.base_lr = None
+        self.completed_updates = 0
+        self.steps_total = 0
+        self.steps_this_update = 0
+        self._in_update = None
+        self._enforced_lr = None
+        self._hook = None
+        self._frozen = self.is_frozen(0)
+        self._apply_freeze(self._frozen)      # 만들자마자 번호 0 의 규칙 (full_freeze 와 W > 0 은 고정으로 시작)
 
-    def is_frozen(self, update_index: int) -> bool:
+    # ------------------------------------------------------------------ 규칙
+    def is_frozen(self, s2_update_index) -> bool:
+        update_index = _check_index(s2_update_index)
+        if self.encoder_mode == "full_freeze":
+            return True                       # 어떤 번호에서도 풀리지 않는다
         return update_index < self.freeze_updates
 
-    def apply(self, policy: "S2MapActorCritic", optimizer: torch.optim.Optimizer, update_index: int, lr: float) -> bool:
-        """update_index 번째 update 직전에 부른다 (0 부터). PPO adaptive lr 이 바뀔 때마다 다시 불러 비를 지킨다.
-        돌려줌: 이번 update 에서 encoder 가 고정인가."""
-        frozen = self.is_frozen(update_index)
-        for p in policy.student_moe_encoder.parameters():
+    @property
+    def next_update_index(self) -> int:
+        return self.completed_updates
+
+    @property
+    def frozen(self) -> bool:
+        return self._frozen
+
+    @property
+    def in_update(self):
+        """진행 중인 S2 갱신 번호 (begin_update ~ end_update 사이) · 없으면 None."""
+        return self._in_update
+
+    def encoder_params(self) -> list:
+        return list(self.policy.student_moe_encoder.parameters())
+
+    def expected_group_names(self) -> tuple:
+        if self.encoder_mode == "full_freeze":
+            return tuple(n for n in GROUP_NAMES if n != ENCODER_GROUP)
+        return GROUP_NAMES
+
+    def expected_lr(self, name, base_lr: float) -> float:
+        if name == ENCODER_GROUP:
+            return 0.0 if self._frozen else self.encoder_lr_ratio * base_lr
+        return base_lr
+
+    def _apply_freeze(self, frozen: bool) -> None:
+        for p in self.policy.student_moe_encoder.parameters():
             p.requires_grad_(not frozen)
-        for g in optimizer.param_groups:
-            if g.get("name") == "student_encoder":
-                g["lr"] = 0.0 if frozen else self.encoder_lr_ratio * lr
-            else:
-                g["lr"] = lr
+
+    def _set_lrs(self, base_lr: float) -> dict:
+        fixed = {}
+        for g in self.optimizer.param_groups:
+            want = self.expected_lr(g.get("name"), base_lr)
+            if g["lr"] != want:
+                fixed[g.get("name")] = (g["lr"], want)
+                g["lr"] = want
+        return fixed
+
+    def audit(self, optimizer, base_lr: float) -> list:
+        """optimizer 와 encoder 의 지금 상태가 규칙과 맞는지 본다 (고치지 않는다). 어긋난 것을 한 줄씩 돌려준다 (빈 목록이면 맞음)."""
+        probs = []
+        groups = optimizer.param_groups
+        names = tuple(g.get("name") for g in groups)
+        if names != self.expected_group_names():
+            probs.append(f"group 이름 {names} != 규칙 {self.expected_group_names()}")
+        enc = self.encoder_params()
+        enc_ids = {id(p) for p in enc}
+        pol_ids = {id(p) for p in self.policy.parameters()}
+        opt_ids = [id(p) for g in groups for p in g["params"]]
+        if len(opt_ids) != len(set(opt_ids)) or not set(opt_ids) <= pol_ids:
+            probs.append("optimizer 매개변수가 겹치거나 정책 밖의 것이 있다")
+        enc_in_opt = enc_ids & set(opt_ids)
+        if self.encoder_mode == "full_freeze" and enc_in_opt:
+            probs.append(f"full_freeze 인데 student encoder 매개변수 {len(enc_in_opt)} 개가 optimizer 에 있다")
+        missing = (pol_ids - enc_ids if self.encoder_mode == "full_freeze" else pol_ids) - set(opt_ids)
+        if missing:
+            probs.append(f"학습 대상 매개변수 {len(missing)} 개가 optimizer 에 없다")
+        rg_bad = [p for p in enc if p.requires_grad != (not self._frozen)]
+        if rg_bad:
+            probs.append(f"student encoder requires_grad 가 {'고정' if self._frozen else '해제'} 규칙과 다른 매개변수 {len(rg_bad)} 개")
+        other_off = [n for n, p in self.policy.named_parameters() if id(p) not in enc_ids and not p.requires_grad]
+        if other_off:
+            probs.append(f"encoder 밖의 매개변수가 requires_grad False: {other_off[:3]}")
+        if self._frozen:
+            g_bad = [p for p in enc if p.grad is not None]
+            if g_bad:
+                probs.append(f"고정 중 student encoder grad 가 None 이 아닌 매개변수 {len(g_bad)} 개")
+            s_bad = [p for p in enc if p in optimizer.state and len(optimizer.state[p]) > 0]
+            if s_bad:
+                probs.append(f"고정 중 student encoder 의 optimizer 상태 {len(s_bad)} 개 (Adam moment · step 이 진행됨)")
+        for g in groups:
+            want = self.expected_lr(g.get("name"), base_lr)
+            if g["lr"] != want:
+                probs.append(f"group {g.get('name')} lr {g['lr']!r} != 규칙 {want!r}")
+        return probs
+
+    @staticmethod
+    def _raise_if(problems: list, where: str) -> None:
+        if problems:
+            raise S2ControlError(f"{where}: " + " | ".join(problems))
+
+    # ------------------------------------------------------------------ 학습기 연결
+    def bind(self, optimizer, lr) -> None:
+        """make_optimizer 가 부른다. group lr 을 번호 0 의 규칙으로 쓰고 step 전 hook 을 건 뒤 상태를 확인한다."""
+        if self.optimizer is not None:
+            raise S2ControlError("control 하나에 optimizer 하나")
+        self.optimizer = optimizer
+        self.base_lr = _check_lr(lr)
+        self._set_lrs(self.base_lr)
+        self._hook = optimizer.register_step_pre_hook(self._pre_step)
+        self._raise_if(self.audit(optimizer, self.base_lr), "optimizer 를 만들 때")
+
+    def begin_update(self, s2_update_index, base_lr) -> bool:
+        """S2 갱신 번호 s2_update_index 의 첫 minibatch 전에 부른다. 고정 상태를 바꾸는 유일한 자리. 돌려줌: 이번 update 에서 고정인가."""
+        idx = _check_index(s2_update_index)
+        if self.optimizer is None:
+            raise S2ControlError("make_optimizer (bind) 전에는 update 를 시작하지 않는다")
+        if self._in_update is not None:
+            raise S2IndexError(f"S2 갱신 {self._in_update} 이 끝나지 않았는데 {idx} 를 시작한다")
+        if idx != self.completed_updates:
+            raise S2IndexError(f"S2 갱신 번호 {idx} != 다음 번호 {self.completed_updates} (S2 첫 rollout 의 update 가 0 이다. 부모 checkpoint "
+                               "iter 20000 이나 runner current_learning_iteration 을 넘기지 않는다. 재개 때 W 를 다시 시작하거나 건너뛰지 않는다)")
+        base_lr = _check_lr(base_lr)
+        frozen = self.is_frozen(idx)
+        self._frozen = frozen
+        self._apply_freeze(frozen)            # 상태 변경 (이 update 의 첫 minibatch 전)
+        self._in_update = idx
+        self.steps_this_update = 0
+        self._enforced_lr = None
+        self.base_lr = base_lr
+        self._set_lrs(base_lr)
+        self._raise_if(self.audit(self.optimizer, base_lr), f"S2 갱신 {idx} 시작")
         return frozen
 
+    def enforce_groups(self, optimizer, base_lr) -> dict:
+        """adaptive lr 이 group lr 을 바꾼 뒤 · optimizer.step() 바로 전에 minibatch 마다 부른다 (backward · clip 뒤).
+        1) group lr 을 규칙대로 다시 쓴다 (encoder 묶음: 고정이면 0 · 풀렸으면 r x base_lr · 나머지: base_lr).
+        2) 고정 상태 (requires_grad · grad None · Adam 상태 없음 · optimizer 구성) 를 확인한다. 고치지 않는다 (forward · backward 가
+           이미 지나가서 여기서 고치면 늦다). 어긋나면 S2ControlError.
+        돌려줌: 다시 쓴 group 의 {이름: (전 lr, 새 lr)} (부모 꼴 덮어쓰기를 잡은 기록)."""
+        if optimizer is not self.optimizer:
+            raise S2ControlError("이 control 에 묶인 optimizer 가 아니다")
+        if self._in_update is None:
+            raise S2ControlError("enforce_groups 는 begin_update ~ end_update 사이에서 부른다")
+        base_lr = _check_lr(base_lr)
+        fixed = self._set_lrs(base_lr)
+        self._raise_if(self.audit(optimizer, base_lr), f"S2 갱신 {self._in_update} step 전")
+        self.base_lr = base_lr
+        self._enforced_lr = base_lr
+        return fixed
 
-def make_optimizer(policy: S2MapActorCritic, lr: float, *, encoder_freeze_updates, encoder_lr_ratio,
+    def _pre_step(self, optimizer, args, kwargs):
+        """optimizer.step() 전 hook. enforce_groups 가 이 step 앞에서 불렸고 그 뒤 아무것도 바뀌지 않았는지 다시 본다."""
+        if self._in_update is None:
+            raise S2ControlError("optimizer.step() 이 begin_update ~ end_update 밖에서 불렸다")
+        if self._enforced_lr is None:
+            raise S2ControlError("enforce_groups 없이 optimizer.step() (adaptive lr 의 group lr 덮어쓰기를 못 막는다 · 17f-2 3.2)")
+        self._raise_if(self.audit(optimizer, self._enforced_lr), f"S2 갱신 {self._in_update} step 직전 (enforce 뒤 바뀜)")
+        self._enforced_lr = None              # step 마다 enforce 를 새로 요구한다
+        self.steps_this_update += 1
+        self.steps_total += 1
+        return None
+
+    def end_update(self, s2_update_index) -> None:
+        idx = _check_index(s2_update_index)
+        if self._in_update is None or idx != self._in_update:
+            raise S2IndexError(f"끝내는 번호 {idx} != 진행 중인 번호 {self._in_update}")
+        if self.steps_this_update == 0:
+            raise S2ControlError(f"S2 갱신 {idx} 에 optimizer step 이 없다 (갱신 생략은 W 의 뜻을 바꾼다)")
+        self.completed_updates += 1
+        self._in_update = None
+        self._enforced_lr = None
+
+    # ------------------------------------------------------------------ 저장 · 재개
+    def state_dict(self) -> dict:
+        """갱신 사이에서만. 완료 갱신 수 · 다음 번호 · optimizer 상태 (깊은 복사) · base lr · group lr · 규칙을 담는다."""
+        if self._in_update is not None:
+            raise S2IndexError(f"S2 갱신 {self._in_update} 도중에는 저장하지 않는다 (end_update 뒤에)")
+        if self.optimizer is None:
+            raise S2ControlError("make_optimizer (bind) 전에는 저장할 optimizer 가 없다")
+        return {
+            "format": CONTROL_STATE_FORMAT,
+            "unit": S2_UPDATE_UNIT,
+            "encoder_mode": self.encoder_mode,
+            "freeze_updates": self.freeze_updates,
+            "encoder_lr_ratio": self.encoder_lr_ratio,
+            "completed_updates": self.completed_updates,
+            "next_update_index": self.completed_updates,
+            "steps_total": self.steps_total,
+            "base_lr": self.base_lr,
+            "group_lrs": [(g.get("name"), g["lr"]) for g in self.optimizer.param_groups],
+            "optimizer": copy.deepcopy(self.optimizer.state_dict()),
+        }
+
+    def load_state_dict(self, sd: dict) -> None:
+        """새로 만든 control (make_optimizer 직후 · 같은 mode · W · r) 에만 읽는다. 다음 begin_update 는 sd 의 next_update_index 다."""
+        if self.optimizer is None:
+            raise S2ControlError("make_optimizer (bind) 뒤에 읽는다")
+        if self._in_update is not None or self.completed_updates != 0 or self.steps_total != 0:
+            raise S2ControlError("새로 만든 control 에만 읽는다 (갱신한 control 에 덮어 읽지 않는다)")
+        if sd.get("format") != CONTROL_STATE_FORMAT or sd.get("unit") != S2_UPDATE_UNIT:
+            raise ValueError(f"저장 형식 {sd.get('format')!r} · 단위 {sd.get('unit')!r} 가 {CONTROL_STATE_FORMAT} · {S2_UPDATE_UNIT} 와 다르다")
+        for k in ("encoder_mode", "freeze_updates", "encoder_lr_ratio"):
+            if sd[k] != getattr(self, k):
+                raise ValueError(f"재개 규칙이 다르다 · {k}: 저장 {sd[k]!r} · 지금 {getattr(self, k)!r} (다른 실험)")
+        completed = _check_index(sd["completed_updates"])
+        if completed < 0 or sd["next_update_index"] != completed:
+            raise ValueError(f"완료 수 {completed!r} 와 다음 번호 {sd['next_update_index']!r} 가 맞지 않는다")
+        saved_lr = _check_lr(sd["base_lr"])
+        self.optimizer.load_state_dict(sd["optimizer"])
+        if [(g.get("name"), g["lr"]) for g in self.optimizer.param_groups] != [tuple(x) for x in sd["group_lrs"]]:
+            raise S2ControlError("optimizer 를 읽은 뒤 group 이름 · lr 이 저장과 다르다")
+        self.completed_updates = completed
+        self.steps_total = int(sd["steps_total"])
+        self.base_lr = saved_lr
+        self._frozen = self.is_frozen(completed)
+        self._apply_freeze(self._frozen)
+        self._set_lrs(saved_lr)
+        self._raise_if(self.audit(self.optimizer, saved_lr), "재개 직후")
+
+
+def trainable_params(policy: nn.Module) -> list:
+    """gradient clipping 에 넣을 학습 대상 (requires_grad 가 켜진 매개변수만). 고정된 student encoder 는 들어가지 않는다 (17f-2 3.1).
+    판 2 시험처럼 policy.parameters() 전체를 넣으면, encoder 에 grad 가 있을 때 (r 0 · stale grad) 그 norm 이 actor 의 clip 비율을 줄인다."""
+    return [p for p in policy.parameters() if p.requires_grad]
+
+
+def make_optimizer(policy: S2MapActorCritic, lr: float, *, encoder_mode, encoder_freeze_updates=_UNSET, encoder_lr_ratio=_UNSET,
                    betas=(0.9, 0.999), weight_decay: float = 0.0):
-    """새 Adam 과 EncoderSchedule. 새 Adam 은 「선택」 이다 (부모 매개변수의 moment 를 옮길 수는 있다 · 설계 6 절).
-    lr 은 부모 마지막 값을 넘긴다 (두 군 같게). 만들자마자 update 0 의 규칙 (W > 0 이면 encoder 고정) 을 건다.
-    돌려줌: (optimizer, schedule). 학습기는 update 마다 schedule.apply(policy, optimizer, update_index, lr) 를 부른다."""
-    schedule = EncoderSchedule(encoder_freeze_updates, encoder_lr_ratio)
-    groups = [{"params": ps, "name": name} for name, ps in policy.param_groups().items()]
+    """새 Adam 과 EncoderControl. 새 Adam 은 「선택」 이다 (부모 매개변수의 moment 를 옮길 수는 있다 · 설계 6 절).
+    encoder_mode 는 기본값이 없다 ("full_freeze" 또는 "schedule"). W · r 은 schedule 에서만 받는다 (기본값 없음 · full_freeze 에 넘기면 TypeError).
+    lr 은 부모 마지막 값을 넘긴다 (두 군 같게). 만들자마자 번호 0 의 규칙을 건다. 돌려줌: (optimizer, control)."""
+    control = EncoderControl(policy, encoder_mode, freeze_updates=encoder_freeze_updates, encoder_lr_ratio=encoder_lr_ratio)
+    groups = []
+    for name, ps in policy.param_groups().items():
+        if name == ENCODER_GROUP and encoder_mode == "full_freeze":
+            continue                          # 전 구간 고정: student encoder 를 optimizer 에 아예 넣지 않는다
+        groups.append({"params": ps, "name": name})
     optimizer = torch.optim.Adam(groups, lr=lr, betas=betas, weight_decay=weight_decay)
-    schedule.apply(policy, optimizer, 0, lr)
-    return optimizer, schedule
+    control.bind(optimizer, lr)
+    return optimizer, control
 
 
 def critic_check(policy: S2MapActorCritic, obs, sensor_pos_w: torch.Tensor | None = None,

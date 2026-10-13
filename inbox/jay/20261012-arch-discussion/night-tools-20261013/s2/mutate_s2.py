@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-"""S2 시험 (test_s2.py) 을 믿기 위한 변이 (판 2): 사본에서 관문을 하나씩 망가뜨려 시험이 그것을 잡는지 본다.
+"""S2 시험 (test_s2.py) 을 믿기 위한 변이 (판 3): 사본에서 관문을 하나씩 망가뜨려 시험이 그것을 잡는지 본다.
 
-분류: A/정책학습 · S2 A/B 입력 경로 1 단계 판 2 · 시험의 시험
-작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32
-근거: DESIGN-s2-ab-v1.md 4 절 · 6 절 · VERIFY-astra-17d.md 6.2 · 6.4 · test_s2.py T1 ~ T10 · s2_map_obs.py · s2_policy.py
+분류: A/정책학습 · S2 A/B 입력 경로 1 단계 판 3 · 시험의 시험
+작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32 · 판 3 2026-10-14 00:50
+근거: DESIGN-s2-ab-v1.md 4 절 · 6 절 · VERIFY-astra-17d.md 6.2 · 6.4 · VERIFY-astra-17f2.md 2.1 · 3.1 · 3.2 · test_s2.py T1 ~ T14 ·
+      s2_map_obs.py · s2_policy.py
 요지: 원본 세 파일을 임시 폴더에 복사하고, 변이마다 새 사본의 문자열 하나를 바꿔 (정확히 한 곳에 걸려야 함) 사본의 test_s2.py 를
       GPU 를 가린 채 돌린다. 기대한 시험이 FAIL 하면 CAUGHT. 바꾸기 전에 변이 없는 사본이 모두 PASS 인지 먼저 본다.
-      원본 파일은 읽기만 하고, 시작 · 끝의 sha256 을 대조한다. 부모 체크포인트는 시험이 읽기만 한다.
+      원본 파일은 읽기만 하고, 시작 · 끝의 sha256 을 대조한다 (복구 확인 한 줄). 부모 체크포인트는 시험이 읽기만 한다.
       판 2: 판 1 의 「1 m 보다 깊으면 mask 0」 「NaN 을 구멍으로」 를 정답으로 두던 변이를 새 의미에 맞게 바꾸고,
       고장 분리 · strict · 관문 · 20 m offset · encoder 고정 구간 · critic 점검 변이를 더했다.
+      판 3: p01 ~ p05 는 뜻을 그대로 두고 바꿀 문자열만 판 3 코드 (EncoderControl) 에 맞췄다. 전 구간 고정 · S2 갱신 번호 · 재개 ·
+      group lr 덮어쓰기 · step 전 hook · clipping 범위 관문마다 변이 q01 ~ q30 (q02 없음 · p03 과 같은 변이) 을 더했다.
+      임시 사본 폴더의 부모는 환경 변수 S2_MUT_TMPDIR (없으면 시스템 임시 폴더).
 상태: 변이 실행기
 
-실행: CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I mutate_s2.py
+실행: CUDA_VISIBLE_DEVICES=-1 S2_MUT_TMPDIR=<임시 폴더> C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I mutate_s2.py
 """
 import hashlib
 import os
@@ -28,7 +32,8 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 FILES = ("s2_map_obs.py", "s2_policy.py", "test_s2.py")
-N_TESTS = 10
+N_TESTS = 14
+TMP_ROOT = os.environ.get("S2_MUT_TMPDIR") or None
 MO, PO = "s2_map_obs.py", "s2_policy.py"
 A_RET = "    return map_obs_a(ray_hits_w.shape[0], ray_hits_w.shape[1], device=ray_hits_w.device, dtype=ray_hits_w.dtype), faults"
 A_CONST = "map_obs_a(ray_hits_w.shape[0], ray_hits_w.shape[1], device=ray_hits_w.device, dtype=ray_hits_w.dtype)"
@@ -111,17 +116,82 @@ MUTANTS = [
     ("m20", PO, "        self.std = nn.Parameter(parent.std.detach().clone())",
      "        parent.std.data.mul_(1.0001)\n        self.std = nn.Parameter(parent.std.detach().clone())",
      {"T7"}, "S2 를 지으며 부모 모듈 값을 바꿈 (메모리 안)"),
-    # ---- 정책 (판 2 의 encoder 고정 구간 · critic 점검)
+    # ---- 정책 (판 2 의 encoder 고정 구간 · 판 3 에서 바꿀 문자열만 EncoderControl 에 맞춤 · 뜻은 같음)
     ("p01", PO, "        return update_index < self.freeze_updates", "        return update_index <= self.freeze_updates",
      {"T9"}, "고정 구간 하나 더 김 (<=)"),
-    ("p02", PO, '                g["lr"] = 0.0 if frozen else self.encoder_lr_ratio * lr', '                g["lr"] = 0.0 if frozen else lr',
+    ("p02", PO, "            return 0.0 if self._frozen else self.encoder_lr_ratio * base_lr", "            return 0.0 if self._frozen else base_lr",
      {"T9"}, "풀린 뒤 encoder lr 에 r 을 안 곱함"),
     ("p03", PO, "            p.requires_grad_(not frozen)", "            p.requires_grad_(True)",
-     {"T9"}, "lr 0 으로만 고정 (gradient · Adam moment 가 고정 중에 쌓임)"),
-    ("p04", PO, "encoder_freeze_updates, encoder_lr_ratio,", "encoder_freeze_updates=50, encoder_lr_ratio=0.1,",
+     {"T9"}, "lr 0 으로만 고정 (gradient · Adam moment 가 고정 중에 쌓임 · full_freeze 도 같은 줄)"),
+    ("p04", PO, "encoder_freeze_updates=_UNSET, encoder_lr_ratio=_UNSET,", "encoder_freeze_updates=50, encoder_lr_ratio=0.1,",
      {"T9"}, "W · r 에 기본값을 둠"),
-    ("p05", PO, "    schedule.apply(policy, optimizer, 0, lr)\n", "",
+    ("p05", PO, "        self._apply_freeze(self._frozen)      # 만들자마자", "        pass  # (변이) 만들자마자",
      {"T9"}, "만들 때 update 0 규칙을 안 걺 (첫 update 전 encoder 가 풀려 있음)"),
+    # ---- 정책 (판 3: 전 구간 고정 · 17f-2 3.1 · 4)
+    ("q01", PO, '        if name == ENCODER_GROUP and encoder_mode == "full_freeze":', "        if False:",
+     {"T11"}, "full_freeze 인데 student encoder 를 optimizer 에 넣음"),
+    ("q03", PO, "            return True                       # 어떤 번호에서도 풀리지 않는다", "            return update_index < 50",
+     {"T11"}, "full_freeze 가 번호 50 에서 풀림"),
+    ("q04", PO, "            if given:", "            if False:",
+     {"T11"}, "full_freeze 가 W · r 을 말없이 받음"),
+    ("q05", PO, "*, encoder_mode, encoder_freeze_updates=_UNSET", '*, encoder_mode="full_freeze", encoder_freeze_updates=_UNSET',
+     {"T11"}, "encoder_mode 에 기본값을 둠"),
+    # ---- 정책 (판 3: S2 갱신 번호 · 재개 · 17f-2 2.1)
+    ("q06", PO, "        if idx != self.completed_updates:", "        if False:",
+     {"T12"}, "다음 번호 검사를 뺌 (부모 20000 · runner 번호 · 건너뜀을 받음)"),
+    ("q07", PO, "        frozen = self.is_frozen(idx)", "        frozen = self.is_frozen(max(idx - 1, 0))",
+     {"T12"}, "상태 변경이 한 update 늦음 (W 의 첫 minibatch 가 아니라 W+1 에서 해제)"),
+    ("q08", PO, "        self.completed_updates += 1", "        self.completed_updates += 0",
+     {"T12"}, "완료 수를 안 셈"),
+    ("q09", PO, '        self.optimizer.load_state_dict(sd["optimizer"])', "        pass",
+     {"T12"}, "재개 때 optimizer 상태를 안 읽음"),
+    ("q10", PO, "        self.base_lr = saved_lr", "        self.base_lr = self.base_lr",
+     {"T12"}, "재개 때 lr 을 안 되돌림"),
+    ("q11", PO, "            if sd[k] != getattr(self, k):", "            if False:",
+     {"T12"}, "재개 때 mode · W · r 이 달라도 받음 (다른 실험)"),
+    ("q12", PO, "        self.completed_updates = completed", "        self.completed_updates = 0",
+     {"T12"}, "재개 때 완료 수를 0 으로 (W 를 다시 시작)"),
+    ("q23", PO, "        if self.steps_this_update == 0:", "        if False:",
+     {"T12"}, "optimizer step 없는 update 를 완료로 셈 (갱신 생략)"),
+    ("q24", PO, '        if self._in_update is not None:\n            raise S2IndexError(f"S2 갱신 {self._in_update} 도중에는',
+     '        if False:\n            raise S2IndexError(f"S2 갱신 {self._in_update} 도중에는',
+     {"T12"}, "update 도중 저장을 받음"),
+    ("q25", PO, '        if self._in_update is not None:\n            raise S2IndexError(f"S2 갱신 {self._in_update} 이 끝나지 않았는데',
+     '        if False:\n            raise S2IndexError(f"S2 갱신 {self._in_update} 이 끝나지 않았는데',
+     {"T12"}, "끝나지 않은 update 위에 다시 시작을 받음"),
+    ("q26", PO, "    if isinstance(i, bool) or not isinstance(i, int):", "    if False:",
+     {"T12"}, "번호의 형 검사를 뺌 (False · 0.0 · tensor 를 0 으로 받음)"),
+    ("q30", PO, '            "optimizer": copy.deepcopy(self.optimizer.state_dict()),', '            "optimizer": self.optimizer.state_dict(),',
+     {"T12"}, "저장이 optimizer 상태를 깊은 복사하지 않음 (뒤 step 이 저장을 바꿈)"),
+    # ---- 정책 (판 3: group lr · 고정 상태 확인 · step 전 hook · 17f-2 3.2)
+    ("q13", PO, "        fixed = self._set_lrs(base_lr)", "        fixed = {}",
+     {"T13"}, "enforce_groups 가 group lr 을 다시 쓰지 않음 (확인만)"),
+    ("q14", PO, "            if g_bad:", "            if False:",
+     {"T13"}, "고정 encoder 의 grad None 확인을 뺌"),
+    ("q15", PO, '        if self.encoder_mode == "full_freeze" and enc_in_opt:', "        if False:",
+     {"T13"}, "full_freeze 에서 encoder 가 optimizer 에 끼어도 모름"),
+    ("q16", PO, "        if rg_bad:", "        if False:",
+     {"T13"}, "encoder requires_grad 확인을 뺌"),
+    ("q17", PO, "            if s_bad:", "            if False:",
+     {"T13"}, "고정 encoder 의 Adam 상태 확인을 뺌"),
+    ("q18", PO, '            if g["lr"] != want:\n                probs.append', '            if False:\n                probs.append',
+     {"T13"}, "audit 이 group lr 을 안 봄 (enforce 뒤 덮어쓰기를 hook 이 못 잡음)"),
+    ("q19", PO, "        self._hook = optimizer.register_step_pre_hook(self._pre_step)", "        self._hook = None",
+     {"T13"}, "step 전 hook 을 안 걺 (enforce 없이 step 해도 모름)"),
+    ("q22", PO, "    if not (lr > 0.0 and math.isfinite(lr)):", "    if False:",
+     {"T13"}, "base_lr 검사를 뺌 (NaN · 0 · 음수를 받음)"),
+    ("q27", PO, "        self._enforced_lr = None              # step 마다 enforce 를 새로 요구한다", "        pass  # (변이)",
+     {"T13"}, "enforce 한 번이 뒤 step 들을 모두 통과시킴"),
+    ("q28", PO, "        if optimizer is not self.optimizer:", "        if False:",
+     {"T13"}, "다른 optimizer 로 enforce 를 받음"),
+    ("q29", PO, "        if other_off:", "        if False:",
+     {"T13"}, "encoder 밖 매개변수가 꺼져도 모름"),
+    # ---- 정책 (판 3: clipping 범위 · schedule r 0 · 17f-2 3.1)
+    ("q20", PO, "    return [p for p in policy.parameters() if p.requires_grad]", "    return list(policy.parameters())",
+     {"T14"}, "trainable_params 가 고정 encoder 까지 돌려줌 (판 2 의 전체 clip)"),
+    ("q21", PO, '            if not (r > 0.0 and r < float("inf")):', '            if not (r >= 0.0 and r < float("inf")):',
+     {"T9"}, "schedule 이 r 0 을 받음 (실제 고정이 아닌 lr 0)"),
+    # ---- 정책 (판 2 의 critic 점검)
     ("p06", PO, "        obs_c = policy.get_critic_obs(obs)\n        value",
      '        obs["critic"].nan_to_num_(0.0)\n        obs_c = policy.get_critic_obs(obs)\n        value',
      {"T10"}, "critic 점검이 critic 입력을 고쳐 씀 (NaN -> 0)"),
@@ -142,7 +212,9 @@ def sha256(path):
 
 
 def make_copy(mut=None):
-    d = tempfile.mkdtemp(prefix="s2_mut_")
+    if TMP_ROOT:
+        os.makedirs(TMP_ROOT, exist_ok=True)
+    d = tempfile.mkdtemp(prefix="s2_mut_", dir=TMP_ROOT)
     for f in FILES:
         shutil.copy2(os.path.join(HERE, f), os.path.join(d, f))
     if mut is not None:
@@ -174,10 +246,13 @@ def run(d, extra_env=None):
 
 
 def first_reason(out, tid):
+    """FAIL 줄에서 실패한 칸 (「k/n 칸 실패: ...」) 이나 예외 (「XxxError: ...」) 부분을 꺼낸다.
+    판 3: 시험 제목에도 「: 」 가 들어 있어 판 2 처럼 첫 「: 」 뒤를 자르면 제목만 보였다."""
     for line in out.splitlines():
         if line.startswith(f"FAIL {tid} "):
-            k = line.find(": ")
-            return line[k + 2:k + 2 + 160] if k >= 0 else line[:160]
+            m = re.search(r"\d+/\d+ 칸 실패: .*$", line) or re.search(r"\b[A-Za-z_]\w*(?:Error|Exception|Fault): .*$", line)
+            s = m.group(0) if m else line[len(f"FAIL {tid} "):]
+            return s[:260]
     return ""
 
 
