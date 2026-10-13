@@ -1,0 +1,113 @@
+03:56:09 start
+PASS test_push_schedule_parse (0.0s)
+PASS test_to_world_rotation (0.0s)
+PASS test_range_checks (0.0s)
+PASS test_predict_fire_states_vs_event_manager_arithmetic (1.8s)
+PASS test_train_dr_matches_yaml (0.0s)
+PASS test_effective_friction (0.0s)
+PASS test_record_checks_csv_npz_and_meaning (0.3s)
+PASS test_fall_summary_known (0.0s)
+PASS test_push_response_censored_and_timestamp_span (0.0s)
+PASS test_compare_rows_nan_is_not_equal (0.0s)
+PASS test_frame_check_known (0.0s)
+PASS test_capture_with_gate_retry_loop (0.1s)
+PASS test_video_gate_breaks_on_known_defects (2.8s)
+PASS test_publish_accepts_clean_and_refuses_defects (4.6s)
+PASS test_faststart_detector (0.1s)
+PASS test_overlay_layout_and_gate_interaction (0.1s)
+ATTEMPT flowA.smoke_base.a1 rc=0 ok=True failed=[] warn=[] wall=0.6s 03:56:20
+ATTEMPT flowA.smoke_probe.a1 rc=0 ok=True failed=[] warn=[] wall=0.6s 03:56:21
+ATTEMPT flowA.smoke_skyfail.a1 rc=3 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'guard_record', 'log_no_traceback', 'log_no_fail_line', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:21
+SMOKE {"S1": {"ok": true, "rerenders": [[30, "dark", 1, true]], "black_frame_recovered_at_30": true, "push_interval_states_actual": [], "push_interval_states_predicted": [], "material_readback": {"robot_tensor": {"n_shapes": 17, "static_min": 1.0, "static_max": 1.0, "dynamic_min": 1.0, "dynamic_max": 1.0, "restitution_min": 0.0, "restitution_max": 0.0}, "ground_usd": {"static_friction": 1.0, "dynamic_friction": 1.0, "friction_combine_mode": "average"}, "effective": {"by_robot_mode": {"average": {"static": 1.0, "dynamic": 1.0, "mode": "average"}}}}}, "S2": {"ok": true, "max_abs_diff_vs_S1": 0.0, "probe_stats": {"window": [50, 51], "note": "too short"}}, "S3": {"failed_as_expected": true, "rc": 3, "videos_in_place": [], "rejected": ["smoke_skyfail_master.mp4.failed"]}}
+ATTEMPT flowA.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:22
+ATTEMPT flowA.push_lat.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:24
+ATTEMPT flowA.fric_low.a1 rc=0 ok=False failed=['log_no_traceback'] warn=[] wall=1.3s 03:56:26
+ATTEMPT flowA.fric_low.a2 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:27
+ATTEMPT flowA.fric_high.a1 rc=0 ok=False failed=['log_done_line_this_attempt'] warn=[] wall=1.3s 03:56:29
+ATTEMPT flowA.fric_high.a2 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:30
+CROSS {"same_start_fingerprints": {"complete": true, "equal": true, "problems": {}, "scenes": ["base", "fric_high", "fric_low", "push_lat", "smoke_base"]}, "same_terrain": {"valid": true, "equal": true, "problems": {}}, "base_vs_push_before_first_push": {"states": 201, "max_abs_diff": 0.0, "equal": true}, "base_vs_fric_low_first_differing_state": 0, "base_vs_fric_high_first_differing_state": 0, "smoke_base_vs_base_first_states": {"states": 51, "max_abs_diff": 0.0, "equal": true, "note": "the same reference scene in two processes (probe columns not compared)"}, "pairing": {"applicable": true, "valid": true, "reasons": [], "statement": "same start, only the disturbance differs (one predefined episode each)"}}
+DONE rc=0 accepted=['base', 'fric_high', 'fric_low', 'push_lat'] failed=[] pairing=True root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\flowA
+PASS test_driver_flow_retry_and_records (11.9s)
+ATTEMPT flowB.smoke_base.a1 rc=0 ok=True failed=[] warn=[] wall=0.7s 03:56:32
+ATTEMPT flowB.smoke_probe.a1 rc=0 ok=True failed=[] warn=[] wall=0.7s 03:56:32
+ATTEMPT flowB.smoke_skyfail.a1 rc=0 ok=True failed=[] warn=[] wall=0.6s 03:56:33
+SMOKE {"S1": {"ok": true, "rerenders": [[30, "dark", 1, true]], "black_frame_recovered_at_30": true, "push_interval_states_actual": [], "push_interval_states_predicted": [], "material_readback": {"robot_tensor": {"n_shapes": 17, "static_min": 1.0, "static_max": 1.0, "dynamic_min": 1.0, "dynamic_max": 1.0, "restitution_min": 0.0, "restitution_max": 0.0}, "ground_usd": {"static_friction": 1.0, "dynamic_friction": 1.0, "friction_combine_mode": "average"}, "effective": {"by_robot_mode": {"average": {"static": 1.0, "dynamic": 1.0, "mode": "average"}}}}}, "S2": {"ok": true, "max_abs_diff_vs_S1": 0.0, "probe_stats": {"window": [50, 51], "note": "too short"}}, "S3": {"failed_as_expected": false, "rc": 0, "videos_in_place": ["smoke_skyfail_master.mp4", "smoke_skyfail_web.mp4"], "rejected": [], "problem": "the forced sky frame did not stop the run: the loop gate does not refuse"}}
+STOP: smoke stage failed; no main scene was run
+PASS test_driver_stops_when_smoke_gate_does_not_refuse (2.8s)
+ATTEMPT flowC.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.2s 03:56:35
+ATTEMPT flowC.push_lat.a1 rc=99 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:35
+STOP: GPU guard: free memory under the floor (flowC.push_lat.a1, rc 99, slot 99); no retry, no next scene
+ATTEMPT flowC2.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:37
+ATTEMPT flowC2.push_lat.a1 rc=94 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:37
+STOP: GPU guard: free memory under the floor (flowC2.push_lat.a1, rc 94, slot 94); no retry, no next scene
+ATTEMPT flowG94.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:39
+ATTEMPT flowG94.push_lat.a1 rc=94 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:39
+STOP: USD folder outside the attempt root (flowG94.push_lat.a1, rc 94, slot 94); no retry, no next scene
+ATTEMPT flowG91.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:40
+ATTEMPT flowG91.push_lat.a1 rc=91 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:40
+STOP: USD folder not assigned by the isolation runner (flowG91.push_lat.a1, rc 91, slot 91); no retry, no next scene
+ATTEMPT flowG96.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:42
+ATTEMPT flowG96.push_lat.a1 rc=96 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:42
+STOP: USD folder shared with another run (flowG96.push_lat.a1, rc 96, slot 96); no retry, no next scene
+ATTEMPT flowG90.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:44
+ATTEMPT flowG90.push_lat.a1 rc=90 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:44
+STOP: execution gate could not decide (registry or gate error) (flowG90.push_lat.a1, rc 90, slot 90); no retry, no next scene
+ATTEMPT flowG97.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:46
+ATTEMPT flowG97.push_lat.a1 rc=97 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:46
+STOP: USD conversion time limit (flowG97.push_lat.a1, rc 97, slot 97); no retry, no next scene
+ATTEMPT flowG95.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:48
+ATTEMPT flowG95.push_lat.a1 rc=95 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:48
+STOP: USD folder count is not one (flowG95.push_lat.a1, rc 95, slot 95); no retry, no next scene
+ATTEMPT flowG89.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:50
+ATTEMPT flowG89.push_lat.a1 rc=89 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_not_killed', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:50
+STOP: conversion attempt beyond the expected one, or the isolation runner blocked something (flowG89.push_lat.a1, rc 89, slot 89); no retry, no next scene
+STOP: GPU 1 free 1000 MiB under the floor 4096 MiB before launching flowM.base.a1
+PASS test_driver_protective_stops_at_the_common_boundary (16.4s)
+STOP: stop file C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\STOP_test: flowD.base.a1 not launched
+STOP: deadline 1791917805.3987436: flowE.base.a1 not launched
+ATTEMPT flowF.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:52
+ATTEMPT flowF.push_lat.a1 rc=98 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'slot_scene_built', 'slot_expect_one_conversion', 'slot_expected_conversions', 'slot_usd_inside_root', 'slot_usd_assigned', 'slot_no_conflicts', 'slot_registry_ok', 'usd_isolate_patched', 'guard_record', 'log_exists', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:52
+STOP: not launched: stop file or deadline (flowF.push_lat.a1, rc 98, slot 98); no retry, no next scene
+PASS test_driver_stop_file_deadline_and_slot98 (2.1s)
+ATTEMPT cx1.smoke_base.a1 rc=0 ok=True failed=[] warn=[] wall=0.6s 03:56:53
+ATTEMPT cx1.smoke_probe.a1 rc=99 ok=False failed=['slot_rc_zero', 'slot_child_rc_zero', 'guard_record', 'log_done_line_this_attempt', 'result_json'] warn=[] wall=0.0s 03:56:53
+STOP: GPU guard: free memory under the floor (cx1.smoke_probe.a1, rc 99, slot 99); no retry, no next scene
+ATTEMPT cx2.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:55
+ATTEMPT cx2.push_lat.a1 rc=0 ok=False failed=['record_csv_equals_npz'] warn=[] wall=1.3s 03:56:56
+CROSS {"same_start_fingerprints": {"complete": true, "equal": true, "problems": {}, "scenes": ["base"]}, "same_terrain": {"valid": true, "equal": true, "problems": {}}, "pairing": {"applicable": false, "valid": false, "reasons": [], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=4 accepted=['base'] failed=['push_lat'] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx2
+ATTEMPT cx2b.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:56:58
+ATTEMPT cx2b.push_lat.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:57:00
+CROSS {"same_start_fingerprints": {"complete": true, "equal": true, "problems": {}, "scenes": ["base", "push_lat"]}, "same_terrain": {"valid": true, "equal": false, "problems": {}}, "base_vs_push_before_first_push": {"states": 201, "max_abs_diff": 0.0, "equal": true}, "pairing": {"applicable": true, "valid": false, "reasons": ["terrain entries invalid or different"], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=6 accepted=['base', 'push_lat'] failed=[] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx2b
+ATTEMPT cx2c.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:57:02
+ATTEMPT cx2c.push_lat.a1 rc=0 ok=True failed=[] warn=[] wall=1.4s 03:57:03
+CROSS {"same_start_fingerprints": {"complete": true, "equal": true, "problems": {}, "scenes": ["base", "push_lat"]}, "same_terrain": {"valid": true, "equal": true, "problems": {}}, "base_vs_push_before_first_push": {"states": 201, "max_abs_diff": 0.02, "equal": false}, "pairing": {"applicable": true, "valid": false, "reasons": ["base and push differ before the first push (max 0.02)"], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=6 accepted=['base', 'push_lat'] failed=[] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx2c
+ATTEMPT cx3.base.a1 rc=0 ok=False failed=['fingerprint_complete', 'terrain_complete'] warn=[] wall=1.3s 03:57:05
+ATTEMPT cx3.push_lat.a1 rc=0 ok=False failed=['fingerprint_complete', 'terrain_complete'] warn=[] wall=1.3s 03:57:07
+CROSS {"same_start_fingerprints": {"complete": true, "equal": false, "problems": {}, "scenes": []}, "same_terrain": {"valid": true, "equal": false, "problems": {}}, "pairing": {"applicable": false, "valid": false, "reasons": ["start fingerprints incomplete or different", "terrain entries invalid or different"], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=4 accepted=[] failed=['base', 'push_lat'] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx3
+ATTEMPT cx4.base.a1 rc=0 ok=False failed=['record_judge_finite_before_fall'] warn=[] wall=1.3s 03:57:09
+ATTEMPT cx4.push_lat.a1 rc=0 ok=False failed=['record_judge_finite_before_fall'] warn=[] wall=1.3s 03:57:10
+CROSS {"same_start_fingerprints": {"complete": true, "equal": false, "problems": {}, "scenes": []}, "same_terrain": {"valid": true, "equal": false, "problems": {}}, "pairing": {"applicable": false, "valid": false, "reasons": ["start fingerprints incomplete or different", "terrain entries invalid or different"], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=4 accepted=[] failed=['base', 'push_lat'] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx4
+ATTEMPT cx5.base.a1 rc=0 ok=True failed=[] warn=[] wall=1.3s 03:57:12
+ATTEMPT cx5.push_lat.a1 rc=0 ok=False failed=['push_direction', 'push_measured'] warn=[] wall=1.3s 03:57:14
+CROSS {"same_start_fingerprints": {"complete": true, "equal": true, "problems": {}, "scenes": ["base"]}, "same_terrain": {"valid": true, "equal": true, "problems": {}}, "pairing": {"applicable": false, "valid": false, "reasons": [], "statement": "single demonstrations only: no same-start or paired-comparison statement"}}
+DONE rc=4 accepted=['base'] failed=['push_lat'] pairing=False root=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB\out_cpu\_cpu_tests\20261014-035609-p92140\flow_out_rand\cx5
+PASS test_astra17d_counterexamples_not_rc0 (22.0s)
+PASS test_real_isaac_slot_v3_accepts_our_args (5.8s)
+PASS test_validate_attempt_mutations (35.6s)
+PLAN PROBLEMS: ["push schedule outside the training range: [{'item': 0, 'axis': 'x', 'worst_case_abs': 0.4242640687119285, 'range': [-0.4, 0.4]}, {'item': 0, 'axis': 'y', 'worst_case_abs': 0.4242640687119285, 'range': [-0.4, 0.4]}]"]
+PLAN PROBLEMS: ["friction 2.5 outside the training range 0.0..2.0"]
+PASS test_driver_dry_run_and_paths (0.4s)
+PASS test_cross_checks_refuse_empty_unequal_and_repeat_mismatch (0.2s)
+PASS test_contract_helpers_known (0.0s)
+PASS test_astra17g_registry_is_separate_and_legacy_read_is_required (0.1s)
+STOP: GPU 1 free memory unverified before launching gpu_unknown.base.a1
+ATTEMPT gpu_known.base.a1 rc=0 ok=True failed=[] warn=[] wall=0.7s 03:57:57
+PASS test_astra17g_gpu_unknown_and_main_deadline (1.2s)
+PASS test_no_forbidden_text (0.0s)
+{"passed": 29, "total": 29, "results": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexB\\out_cpu\\_cpu_tests\\20261014-035609-p92140\\results.json"}
+test exit 0
