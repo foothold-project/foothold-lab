@@ -1,0 +1,14 @@
+08:05:15 start
+CAUGHT C1-end: rc=1 failed=1 stderr=''
+CAUGHT C2-parser: rc=1 failed=1 stderr=''
+CAUGHT C2-stamp: rc=1 failed=1 stderr=''
+CAUGHT C3-dim: rc=1 failed=1 stderr=''
+CAUGHT C3-length: rc=1 failed=1 stderr=''
+CAUGHT C3-layout: rc=1 failed=1 stderr=''
+CAUGHT C4-hold: rc=1 failed=1 stderr=''
+CAUGHT C4-scope: rc=1 failed=1 stderr=''
+CAUGHT C4-free: rc=1 failed=1 stderr=''
+CAUGHT C5-base: rc=1 failed=1 stderr=''
+CAUGHT C5-compare: rc=1 failed=1 stderr=''
+SUMMARY 11/11 CAUGHT
+mutate_17i exit 0

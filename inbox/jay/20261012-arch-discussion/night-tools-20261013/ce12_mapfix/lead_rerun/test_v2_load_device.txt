@@ -1,0 +1,14 @@
+07:50:18 start
+CONTROL real OnPolicyRunner.load without map_location rejects CUDA:1 storage at restore_location
+Traceback (most recent call last):
+  File "C:\isaac\ext\go2_rl_robotlab\_eval\ce12\test_v2_load_device.py", line 73, in <module>
+    main()
+  File "C:\isaac\ext\go2_rl_robotlab\_eval\ce12\test_v2_load_device.py", line 61, in main
+    eval(compile(call, str(source), "eval"), {"runner": runner, "ckpt": ckpt, "dev": "cpu"})
+  File "C:\isaac\ext\go2_rl_robotlab\_eval\ce12\dump_native_v2.py", line 242, in <module>
+    runner.load(ckpt, map_location=dev)
+  File "C:\isaac\ext\go2_rl_robotlab\source\rsl_rl\rsl_rl\runners\on_policy_runner.py", line 157, in load
+    if self.alg_cfg["rnd_cfg"]:
+       ^^^^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'alg_cfg'
+test_v2_load_device exit 1

@@ -1,0 +1,50 @@
+﻿[
+    {
+        "file":  "adapters.py",
+        "sha256":  "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6"
+    },
+    {
+        "file":  "cells.py",
+        "sha256":  "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+    },
+    {
+        "file":  "compare_native.py",
+        "sha256":  "c71ad42c7b55f0dde68889ab20a0478722868632348b7352f2b2637bb319c007"
+    },
+    {
+        "file":  "dump_native_cts.py",
+        "sha256":  "a8ada54e2bc06eabc4abd2ca38a95035cfeb4b67268318b790b237781d92df71"
+    },
+    {
+        "file":  "dump_native_v2.py",
+        "sha256":  "53192fcb55c01b18af7ced6db8bfc79a4fe3021efac96f78e2575c68695b7157"
+    },
+    {
+        "file":  "mutate_adapters.py",
+        "sha256":  "5b5f39a9b2c7e2e50d611e112fa97b9ca94b78b5b1d6fb1bf7035acfe4d7f7cd"
+    },
+    {
+        "file":  "mutate_run_dump.py",
+        "sha256":  "c0a4a5725893be912bfcd76812e1e685cc1cdcbf576de5f3adfa3dbcd49feba4"
+    },
+    {
+        "file":  "run_dump.py",
+        "sha256":  "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda"
+    },
+    {
+        "file":  "test_adapters.py",
+        "sha256":  "61d7c531a55983758deacc64fd9d1925935f44b0cea06e671e777b96719ac866"
+    },
+    {
+        "file":  "test_run_dump.py",
+        "sha256":  "e5b7cc9f6aba7db3053f968749f345bcaf56633133f3992c00530256343d06c6"
+    },
+    {
+        "file":  "validate_dump.py",
+        "sha256":  "dae3d93d6827903549043a58fdf20ee0ee2e7ad31780ff6e05ef36382421240e"
+    },
+    {
+        "file":  "README-ce12-step1.md",
+        "sha256":  "a76c5cd05659b52f9698725abea8c6bc365c6d496342671a79c95d74925cc965"
+    }
+]
