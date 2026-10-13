@@ -21,10 +21,11 @@
 | 하위 작업 · S2 판 3 | 00:40 맡김 · 01:27 보고 · 끝 | job tmp `s2v3/lead/` | lead 재실행 01:35: 시험 14/14 · 변이 69/69 · 해시 그대로 · 저장소 사본 db7c3e7b | 학습 루프 연결 · smoke 등록이 남아 S2 학습은 여전히 보류 |
 | heartbeat 예약 | `eaa6843f` (매시 :27 · 세션 안에서만 · 7 일 만료) · 02:39 등록 · 옛 25e8a2a3 · 2b1bfe25 · b698612f 지움 · CronList 에 하나만 | 이 문구로 깨어난 기록 | 옛 문구 (25e8a2a3) 로 02:41 도착 · 새 문구 (eaa6843f) 로 03:54 도착 확인 | 매 도착 |
 | ASTRA 17i | 02:40 보냄 · **끝** (`VERIFY-astra-17i.md` · 03:54 이전에 도착) | 아래 「판정 조건」 17i | 제한 채택 · A9 P1 · v2 보류 | Codex Worker C 고침 뒤 17k |
-| Codex Worker A (미경험 v5 고침 · `term_602208c0`) | 02:38 접수 · **02:44 사고로 멈춤** (아래 「작업자 사고 기록」) · 03:57 격리 조건을 달아 재개 | job tmp `codexA/REPORT.md` (02:44 판 · 재개 뒤 갱신) | 일하는 중 (재개 직후) | 매시 :27 |
-| Codex Worker B (무작위화 판 4 · `term_223a8374`) | 02:38 접수 · 02:56 끝 · 컨텍스트 35 % | `codexB/REPORT.md` | **끝 · lead 재실행 03:56 통과** (시험 29/29 · 변이 9/9) · 저장소 사본 f0151ef3 | 17j |
-| Codex Worker C (CE12 고침 · `term_766933da`) | 03:58 접수 · 작업서 `TASK-codex-worker-17i-fix.md` (격리 단언 0.1 이 첫 일) | `codexC/REPORT.md` | 일하는 중 | 매시 :27 |
-| ASTRA 17j | 03:59 보냄 (무작위화 판 4 재확인 · smoke 허용 여부) · 터미널 term_fe1daede | `VERIFY-astra-17j.md` | 검사 중 | 파일 생김 |
+| Codex Worker A (미경험 v6 · `term_602208c0`) | 02:38 접수 · 02:44 사고로 멈춤 · 03:57 격리 조건으로 재개 · **04:56 끝 보고** (A1 ~ A5) · 컨텍스트 18 % | `codexA/REPORT.md` | **lead 재실행 통과 (04:58 ~ 05:16): 합성 72/72 · 변이 44/44 (want 일치) · 실제 `out_uncr` v3 재검 valid 23 · manifest 91d35be9 (75 실행 · 등록 일치)** · 재개 뒤 `out_uncr_v5` 변화 없음 · 저장소 사본 5dfd8e7c | 17l |
+| Codex Worker B (무작위화 판 4 · `term_223a8374`) | 02:38 접수 · 02:56 끝 · 04:59 smoke 실패 수정 추가 작업 (환경 2 개 이상 · 보관 `rand_scenes/v4_smokefail/`) | `codexB/REPORT.md` · `codexB2/REPORT.md` | 일하는 중 (추가 작업) · 컨텍스트 35 % 에서 시작 | 끝나면 lead 재실행 → 17m |
+| Codex Worker C (CE12 고침 · `term_766933da`) | 03:58 접수 · **04:36 끝 보고** (C1 ~ C6 · C8 은 안 함) · 컨텍스트 10 % | `codexC/REPORT.md` | **lead 재실행 통과 (05:00 ~ 05:16): adapters 23/23 · run_dump 139/139 · 변이 24 · 65 · 11 (want 일치)** · 격리 사본과 `_eval/ce12` 12/12 같음 · 저장소 사본 `ce12_fix17i/` | 17k |
+| ASTRA 17j | 03:59 보냄 · **끝 04:17** (`VERIFY-astra-17j.md`): RAND v4 smoke 만 조건부 허용 · lead 변이 오집계 정정 | 위 「RAND smoke 기동 기록」 | smoke 는 04:57 에 실행되어 S1 실패 | 17m |
+| ASTRA 17k · 17l | 05:19 보냄 (한 메시지 · 17k 먼저) · 터미널 term_fe1daede · ASTRA 컨텍스트 19 % 남음 (재시작은 팀장 승인 대기 · 못 하면 압축에 맡김) | `VERIFY-astra-17k.md` · `VERIFY-astra-17l.md` · (승인 시) `uncr_v6/approval-astra-17l.json` | 검사 중 | 판정 전문 → v2 기록 · v6 full |
 | ASTRA 17g (끝) | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
 
 부팅 기준: **09/17 21:16 KST** (`Win32_OperatingSystem.LastBootUpTime`). 다르면 위 PID · 실행을 그대로 믿지 않고 새 기동을 보류한 채 다시 확인하고 #550 · 채팅에 보고한다. 적법한 재부팅이 확인되면 이 기준값을 고친다.
