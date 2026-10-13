@@ -1,0 +1,167 @@
+[
+ {
+  "mutation": "M02 no re-render loop",
+  "file": "rand_gate.py",
+  "tests": [
+   "test_capture_with_gate_retry_loop"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_capture_with_gate_retry_loop: FrameGateError: FRAME_GATE frame 30 fails (dark) after 0 re-renders"
+  ],
+  "expected_failure_site": [
+   "FAIL test_capture_with_gate_retry_loop: FrameGateError: FRAME_GATE frame 30 fails (dark) after 0 re-renders"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M15 handover path allowed",
+  "file": "rand_lib.py",
+  "tests": [
+   "test_driver_dry_run_and_paths"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_driver_dry_run_and_paths: AssertionError: accepted C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexB2\\mutation_outputs\\20261014-065242_15\\handover_1"
+  ],
+  "expected_failure_site": [
+   "FAIL test_driver_dry_run_and_paths: AssertionError: accepted C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexB2\\mutation_outputs\\20261014-065242_15\\handover_1"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M62 gate v2 script",
+  "file": "rand_lib.py",
+  "tests": [
+   "test_driver_dry_run_and_paths"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_driver_dry_run_and_paths: AssertionError: "
+  ],
+  "expected_failure_site": [
+   "FAIL test_driver_dry_run_and_paths: AssertionError: "
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M77 unknown GPU free launches",
+  "file": "rand_driver.py",
+  "tests": [
+   "test_astra17g_gpu_unknown_and_main_deadline"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_astra17g_gpu_unknown_and_main_deadline: TypeError: '<' not supported between instances of 'NoneType' and 'int'"
+  ],
+  "expected_failure_site": [
+   "FAIL test_astra17g_gpu_unknown_and_main_deadline: TypeError: '<' not supported between instances of 'NoneType' and 'int'"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M79 one env again",
+  "file": "q_rand.py",
+  "tests": [
+   "test_two_env_student_layout_source"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing env_cfg.scene.num_envs = 2"
+  ],
+  "expected_failure_site": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing env_cfg.scene.num_envs = 2"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M80 teacher push",
+  "file": "q_rand.py",
+  "tests": [
+   "test_push_fixed_ignores_teacher_actual_callback"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_push_fixed_ignores_teacher_actual_callback: AssertionError: push_teacher_only: teacher advanced schedule"
+  ],
+  "expected_failure_site": [
+   "FAIL test_push_fixed_ignores_teacher_actual_callback: AssertionError: push_teacher_only: teacher advanced schedule"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M81 command batch one",
+  "file": "q_rand.py",
+  "tests": [
+   "test_two_env_student_layout_source"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing .repeat(u.num_envs, 1)"
+  ],
+  "expected_failure_site": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing .repeat(u.num_envs, 1)"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M82 joint fingerprint includes teacher",
+  "file": "q_rand.py",
+  "tests": [
+   "test_two_env_student_layout_source"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing robot.data.joint_pos[0:1]"
+  ],
+  "expected_failure_site": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing robot.data.joint_pos[0:1]"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M83 command check includes teacher",
+  "file": "q_rand.py",
+  "tests": [
+   "test_two_env_student_layout_source"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing obs[\"single_obs\"][0:1, 6:9] - target[0:1]"
+  ],
+  "expected_failure_site": [
+   "FAIL test_two_env_student_layout_source: AssertionError: student_layout_source: missing obs[\"single_obs\"][0:1, 6:9] - target[0:1]"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M84 layout gate accepts one",
+  "file": "rand_lib.py",
+  "tests": [
+   "test_two_env_student_layout_source"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_two_env_student_layout_source: AssertionError: layout_validator_one: one environment accepted"
+  ],
+  "expected_failure_site": [
+   "FAIL test_two_env_student_layout_source: AssertionError: layout_validator_one: one environment accepted"
+  ],
+  "stderr_tail": ""
+ },
+ {
+  "mutation": "M85 manifest omits layout",
+  "file": "rand_driver.py",
+  "tests": [
+   "test_driver_flow_retry_and_records"
+  ],
+  "result": "CAUGHT",
+  "failing": [
+   "FAIL test_driver_flow_retry_and_records: AssertionError: manifest_env_layout: successful attempts must record 2/0/1"
+  ],
+  "expected_failure_site": [
+   "FAIL test_driver_flow_retry_and_records: AssertionError: manifest_env_layout: successful attempts must record 2/0/1"
+  ],
+  "stderr_tail": ""
+ }
+]
