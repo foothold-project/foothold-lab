@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 19:12
 > 근거: VERIFY-astra-11.md §2.1 · §2.2 · §2.4 · VERIFY-astra-17.md §1.2 · §3.1 · §3.2 · §3.3 · §4 · DESIGN-topdown-20261013.md §7 · s2-terrain-probe/PROBE-sparse-terrain.md · `source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py` 86 ~ 247 행 · E1 `params/agent.yaml` · `params/env.yaml` (height_scanner · height_scan)
 > 요지: A · B 는 같은 부모 (E1 20000) 의 student 경로에 작은 지도 encoder 를 0 으로 시작하는 열로 붙이고, PPO 만으로 학습한다 (모방 없음). A 는 높이와 유효성 mask 를 모두 상수로, B 는 시뮬의 이상적 높이와 mask 를 준다. 오늘 밤에는 학습하지 않고, 입력 의미 · 0 초기화 동치 · 첫 갱신 뒤 gradient 경로를 CPU 로 시험하는 코드까지만 만든다
-> 상태: 초안 · ASTRA 17d 검증 전 · 학습 · Isaac 실행 없음
+> 상태: 초안 · ASTRA 17d 반영 (6 절 · 학습 기동 보류) · 학습 · Isaac 실행 없음
 
 # S2 「이상적 지도 입력 비교」 A/B · 설계 초안 v1
 
@@ -67,3 +67,19 @@ actor 입력 = [latent 32, single_obs 45, z_map 64]   (새 64 열의 actor 첫 �
 2. B 의 height · mask 의미 (특히 「안 맞음」 과 「깊음」 을 같은 mask 0 으로 두는 것) 가 희소 지형 물음에 맞나.
 3. encoder 의 `no_grad` 를 풀면 부모 latent 분포가 처음 몇 갱신에 무너질 위험이 있나. 막는다면 무엇으로 (encoder 학습률을 낮춤 · 몇 갱신 고정 등) 하고, 그것을 A · B 에 같게 두면 되나.
 4. 4 절 시험이 입력 경로 검증으로 충분한가. 빠진 것.
+
+## 6. ASTRA 17d 반영 (2026-10-13 20:05 · VERIFY-astra-17d.md §6 · S2 판정 「설계를 고쳐 진행 · 학습 기동 보류」)
+
+위 1 ~ 5 절은 검증 전 판으로 남긴다. 아래가 고친 내용이며, 위와 다르면 아래가 이긴다.
+
+| 위 판 | 고친 판 | 근거 |
+|---|---|---|
+| 3 절 mask = 「맞았고 몸 아래 1 m 안」 · 안 맞음과 깊음을 같은 mask 0 | **mask = 지형 충돌 여부 (hit_valid).** 유한한 hit 이면 mask 1 이고 높이는 clip [−1, 1] (깊은 바닥은 +1 로 잘리지만 mask 는 1). 무한 hit (정상 miss) 만 mask 0 · height 상수 1. 1 m 깊이 분류는 뺀다 (이상적 높이 지도의 정보 효과라는 물음에 경험적 분류를 섞지 않음) | §6.2 · 같은 값이 「유한 · 1 m 안」 을 뜻해 위쪽 장애물 · 경계에서 뜻이 흔들림 |
+| 3 절 센서 · hit 의 NaN 도 mask 0 · height 1 | **NaN 은 수치 고장으로 따로 센다.** 센서 위치 NaN · hit NaN (inf 가 아닌 것) 은 「구멍」 으로 바꾸지 않고 고장 횟수로 기록하며, 0 이 아니면 그 rollout 을 무효로 하는 관문을 A · B 에 같게 둔다 | §6.2 「기동 전 필수」 |
+| 3 절 「부모 critic 을 그대로」 · 함의 「부모 value 함수 그대로」 | critic 구조와 가중치는 부모에서 시작하고 A · B 같게 둔다. 다만 부모 critic 은 안 맞은 광선을 −1 × 2.5 (벽 쪽) 로 읽어 B actor 와 의미가 반대다. 「부모 value 함수가 gap 에서 맞다」 는 주장은 하지 않는다. critic 입력 · value · return · advantage 유한성과 초기 gap value 편향을 기록한다. critic 인코딩을 바꾸게 되면 두 군에 같게 바꾸고 이 절을 다시 쓴다 | §6.2 마지막 문단 · S2 README §6 |
+| 3 절 「encoder 의 no_grad 를 푼다」 (조건 없음) | 두 군 모두 **처음 W update 동안 student encoder 고정**, 그 뒤 encoder 학습률을 actor 의 r 배로. 후보 W 50 · r 0.1 (근거 없음 · 추정). smoke 에서 고정 관측 묶음의 부모 대비 action 차 · KL · latent cosine · expert 선택 비율 · entropy · gradient norm · value 오차 · 평지 명령 성능을 재고, **A/B 결과를 보기 전에** W · r 과 중단 기준을 등록한다 | §6.3 |
+| 3 절 「부모 Adam 상태는 차원이 달라 못 씀」 | 철회. 대응하는 moment 를 옮길 수는 있다. 이번에는 A · B 모두 새 Adam 으로 시작하는 것을 「선택」 으로 적는다 | §6.1 |
+| 1 절 「A 는 지도를 안 본다」 | actor 의 온라인 입력에 한정. A 도 지형 정보가 든 critic 을 학습 신호로 쓴다 | §6.1 |
+| 4 절 시험 T1 ~ T7 로 입력 경로 검증 | T2 의 정답이 위 옛 의미를 고정하고 있으므로 고친다. 더할 것: 정상 miss · 유한한 깊은 바닥 · 높은 장애물 · 센서 NaN · ray packet 손상 분리 · 평행 이동과 yaw 90 도에서 발밑 · 앞 칸이 옮겨지는지 · 20 m ray 시작 offset 을 다시 더하지 않음. Isaac 접속 (실제 collision mesh 의 평지 · 단차 · 빈 공간에서 pos_w · hit · 순서 · 갱신 시각) · reset / 시점 · 학습 연결 (map 이 rollout 저장소 · 모든 minibatch 에 보존 · teacher 경로 제거 · optimizer 중복 · 누락) · 정보 차단 · 공정성 등록은 학습 기동 전 단계 | §6.4 |
+
+**지금 상태:** S2 학습 기동은 보류. 오늘 밤은 위 입력 의미를 고친 CPU 코드 · 시험까지만. Isaac 접속 시험과 학습기 연결은 Linux 이전 일정 (S1) 과 함께 다시 짠다.
