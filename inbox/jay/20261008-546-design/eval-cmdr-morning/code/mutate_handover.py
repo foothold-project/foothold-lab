@@ -13,8 +13,11 @@ M = [
     ("K5 stop requests moved even when the freeze failed", "    if not problems:  # 16h 4.2", "    if True:  # 16h 4.2", ["H2"]),
     ("K6 every .stop treated as the drivers' own", 'TARGET_STOPS = [f"{n}.stop" for n in LOGS]', 'TARGET_STOPS = sorted(f for f in os.listdir(OUT) if f.endswith(".stop"))', ["H1b"]),
     ("K7 a stop that changed during the freeze is moved too", "            if sha_or_none(p) != h0:", "            if False:", ["H1d"]),
-    ("K8 (16j 9.5) the end scan is not kept", "    scans.append(scan_record(s1, a1))", "    pass", ["H9"]),
-    ("K9 argv values kept in the saved scan", 'for x in p["cmdline"] if x.startswith("-") or x.lower().endswith((".py", ".exe"))]', 'for x in p["cmdline"]]', ["H9"]),
+    ("K8 (16j 9.5) the end scan is not kept", "    scans.append(scan_record(s1, old, t1))", "    scans.append(dict(scans[0]))", ["H9"]),
+    ("K9 argv values kept in the saved scan", '        d["argv_readable"] = c is not None', '        d["argv"] = c\n        d["argv_readable"] = c is not None', ["H9"]),
+    ("K10 (16k 6) --headless=false taken as --headless", 'd["headless_exact"] = bool(c) and "--headless" in c', 'd["headless_exact"] = bool(c) and any(x.startswith("--headless") for x in c)', ["H10"]),
+    ("K11 (16k 6) non-python processes dropped from the record", "    rows = [facts(p) for p in snap]", '    rows = [facts(p) for p in snap if (p.get("name") or "").lower().startswith(("python", "kit"))]', ["H10"]),
+    ("K12 (16k 7.2) the hold list is not part of the bundle", '    if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")):  # 16k 7.2', "    if False:  # 16k 7.2", ["H11", "H11b"]),
 ]
 res = []
 for k, (name, a, b, want) in enumerate(M):

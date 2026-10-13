@@ -1,0 +1,65 @@
+{
+ "tag": "cq_on24000_flat_stand_on_s1000",
+ "held_stamp": "7fda7daf0d62836e13ffcb678033b18375d0b285a2d80a12f7d36cf5e4ff106d",
+ "old": [
+  "attempts\\cq_on24000_flat_stand_on_s1000.dir.1013113904.162660"
+ ],
+ "new": "cq_on24000_flat_stand_on_s1000",
+ "old_equals_handover": true,
+ "outputs": {
+  "cells.json": true,
+  "traj.npz arrays": {
+   "act_abs_mean": "equal",
+   "cel": "equal",
+   "cmd_a": "equal",
+   "cmd_b": "equal",
+   "cmd_hist": "equal",
+   "epi": "equal",
+   "fam": "equal",
+   "sw": "equal",
+   "term": "equal",
+   "traj": "equal"
+  },
+  "episodes.csv": true,
+  "bytes (cells, traj, episodes)": [
+   true,
+   true,
+   true
+  ]
+ },
+ "output_content_equal": true,
+ "inputs": {
+  "args": true,
+  "checks_pre": true,
+  "checks_run": true,
+  "N": true,
+  "T_steps": true,
+  "checkpoint_sha256": true,
+  "loaded_iter": true,
+  "pairing_sha256": true,
+  "pairing_sha256_ext": true,
+  "terrain_mesh": true,
+  "env_origins.npy bytes": true
+ },
+ "inputs_equal": true,
+ "new_run": {
+  "completion line": true,
+  "four output hashes = stamp = record": true,
+  "owner matrix valid, no pair failure": true,
+  "stamp pins and checkpoint = the log's": true,
+  "no Traceback": true,
+  "no root reference failure": true,
+  "stamp v3.7 with a real job id": true,
+  "base record valid, measured (not reused), same attempt and hashes": true
+ },
+ "new_run_valid": true,
+ "new_attempt": "g1-162660-1013140618-j1",
+ "new_out_sha256": {
+  "meta.json": "ee56fbcdf9bfc2727b67d0abfda479eda272365e0fc78c30752abeea4c76d504",
+  "cells.json": "ae41c74e8ab50ce13f7da43807297069fc07465236e82136316c22139c540368",
+  "episodes.csv": "58e5356efc1027eb126623cec05d98d8e79cd2596f4ccd99b5c3d469759a9ee0",
+  "traj.npz": "671763d18f3790ba47c531480a5835c76bdc8ae6d5c0319b5be6b2fd9ce4b375"
+ },
+ "comparison_ready": true,
+ "result": "no difference found in the recorded outputs compared (not proof that the robot asset was intact)"
+}

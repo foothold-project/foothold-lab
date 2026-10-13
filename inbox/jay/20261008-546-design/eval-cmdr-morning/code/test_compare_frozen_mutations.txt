@@ -1,0 +1,8 @@
+# test_compare_frozen.py 변이 시험 · 사본 (_mut_compare_frozen_<k>.py) 에서만 바꿔 돌림
+CAUGHT F1 every key treated as bookkeeping: exit 1 failed ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11', 'C12', 'C13'] want ['C1', 'C7', 'C10', 'C12']
+CAUGHT F2 held runs pass without a filtered reference: exit 1 failed ['C20'] want ['C20']
+CAUGHT F3 the filtered reference count is not checked: exit 1 failed ['C22'] want ['C22']
+CAUGHT F4 a held run still used is not caught: exit 1 failed ['C23'] want ['C23']
+CAUGHT F5 a released run not used is not caught: exit 1 failed ['C24'] want ['C24']
+CAUGHT F6 only the first level compared by key presence: exit 1 failed ['C1', 'C2', 'C4', 'C5', 'C7', 'C8', 'C9', 'C11'] want ['C1', 'C7', 'C8']
+ALL CAUGHT

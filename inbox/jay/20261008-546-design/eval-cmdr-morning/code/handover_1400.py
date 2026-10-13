@@ -8,6 +8,10 @@ Exit 0 and manifest status "complete" only when ALL of these hold:
   - after the manifest is built, the ORIGINAL logs, every hashed run file, the checkpoints and the pins are hashed again
     and are unchanged (16h 4.1: the copies alone do not show the originals stayed put);
   - the log copies and stamp copies re-hash equal; pins and checkpoints agree across the two logs and the files now.
+  - the hold list (out/cmdr_post_hold.json, with its release records) is copied, hashed and re-checked like the logs (16k 7.2);
+  - both process scans are saved (scans.json): every process's pid, ppid, create_time and name, and for python the facts the
+    rule uses (argv readable / non-empty, the exact --headless token, known script names), never argv values. The rule
+    judges only these facts, so the saved record gives the same verdict (16k 6).
 On success the two drivers' own stop requests (cmdr_eval_driver.stop · cmdr_eval_driver_g0.stop), if their bytes are those seen
 at the start, are moved to <dir>/stop_requests/ (the new instance would otherwise stop at once, 16h 4.2). Any other .stop
 (e.g. hud_follow.stop) and a stop that appeared or changed during the freeze stay where they are and are listed (16i 4).
@@ -82,8 +86,23 @@ def snapshot():
     return snap
 
 
-def alive_in(snap, old):
-    by = {p["pid"]: p for p in snap}
+def facts(p):
+    """16k 6: the parts of one process row the rule uses, with no argv values (names of known scripts only)."""
+    n = (p.get("name") or "").lower()
+    d = {"pid": p.get("pid"), "ppid": p.get("ppid"), "create_time": p.get("create_time"), "name": p.get("name")}
+    if n.startswith("python"):
+        c = p.get("cmdline")
+        d["argv_readable"] = c is not None
+        d["argv_nonempty"] = bool(c)
+        d["headless_exact"] = bool(c) and "--headless" in c  # the exact token; --headless=false is not it
+        d["matched_scripts"] = sorted({os.path.basename(x).lower() for x in (c or [])
+                                       if os.path.basename(x).lower() in ISAAC or os.path.basename(x).lower().startswith("cmdr_eval_driver")})
+    return d
+
+
+def judge(rows, old, me):
+    """the freeze rule, applied to facts() rows: used on the live snapshot and again on the saved record (16k 6)."""
+    by = {p["pid"]: p for p in rows}
 
     def descends_from_old(p):
         cur, seen = p, set()
@@ -98,51 +117,51 @@ def alive_in(snap, old):
         return False
 
     alive = []
-    for info in snap:
-        if info["pid"] == os.getpid():
+    for info in rows:
+        if info["pid"] == me:
             continue
         if info["pid"] in old:
-            alive.append(["old driver", info["pid"]])
+            alive.append({"reason": "old driver", "pid": info["pid"]})
             continue
         if descends_from_old(info):
-            alive.append(["descendant of an old driver", info["pid"]])
+            alive.append({"reason": "descendant of an old driver", "pid": info["pid"]})
             continue
         n = (info.get("name") or "").lower()
-        c = info.get("cmdline")
         if n.startswith("python"):
-            if not c:
-                alive.append(["python with unreadable or empty argv", info["pid"]])
-            elif "--headless" in c or any(os.path.basename(x).lower() in ISAAC or os.path.basename(x).lower().startswith("cmdr_eval_driver") for x in c):
-                alive.append(["isaac-like python", info["pid"], " ".join(os.path.basename(x) for x in c[:3])])
+            if not info.get("argv_nonempty"):
+                alive.append({"reason": "python with unreadable or empty argv", "pid": info["pid"]})
+            elif info.get("headless_exact") or info.get("matched_scripts"):
+                alive.append({"reason": "isaac-like python", "pid": info["pid"], "headless": info.get("headless_exact"),
+                              "scripts": info.get("matched_scripts")})
         elif n.startswith("kit"):
-            alive.append(["kit", info["pid"]])
+            alive.append({"reason": "kit", "pid": info["pid"]})
     return alive
+
+
+def alive_in(snap, old):
+    return judge([facts(p) for p in snap], old, os.getpid())
+
+
+def scan_record(snap, old, t0):
+    """16j 9.5 / 16k 6: every process (pid, ppid, create_time, name); python rows add the rule's facts, no argv values.
+    The record is judged again from itself; rejudge_equal says whether that gives the live verdict."""
+    rows = [facts(p) for p in snap]
+    live = judge(rows, old, os.getpid())
+    return {"t_start": t0, "t_end": time.strftime("%Y-%m-%d %H:%M:%S"), "scanner_pid": os.getpid(), "old_pids": old,
+            "rule_sha256": sha(os.path.abspath(__file__)), "n_processes": len(rows), "processes": rows, "alive": live,
+            "rejudge_equal": judge(json.loads(json.dumps(rows)), old, os.getpid()) == live}
 
 
 TARGET_STOPS = [f"{n}.stop" for n in LOGS]
 
 
-def scan_record(snap, verdict):
-    """16j 9.5: what a scan saw, kept so the "no writer" claim can be re-checked later. python/kit rows keep pid, ppid,
-    create_time and an argv with values dropped (script basenames and flag names only: enough to re-apply the Isaac-like
-    rule, no paths or values that may hold secrets); other processes are only counted."""
-    rows = []
-    for p in snap:
-        n = (p.get("name") or "").lower()
-        if not n.startswith(("python", "kit")):
-            continue
-        argv = None if p.get("cmdline") is None else [os.path.basename(x) if not x.startswith("-") else x.split("=", 1)[0]
-                                                      for x in p["cmdline"] if x.startswith("-") or x.lower().endswith((".py", ".exe"))]
-        rows.append({"pid": p.get("pid"), "ppid": p.get("ppid"), "create_time": p.get("create_time"), "name": p.get("name"), "argv": argv})
-    return {"t": time.strftime("%Y-%m-%d %H:%M:%S"), "n_processes": len(snap), "python_kit": rows, "alive": verdict}
-
-
 def main(old):
     problems = []
     stops0 = {f: sha(os.path.join(OUT, f)) for f in TARGET_STOPS if os.path.exists(os.path.join(OUT, f))}
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     s0 = snapshot()
-    a0 = alive_in(s0, old)
-    scans = [scan_record(s0, a0)]
+    scans = [scan_record(s0, old, t0)]
+    a0 = scans[0]["alive"]
     if a0:
         problems.append({"alive at start": a0})
     stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -155,6 +174,9 @@ def main(old):
             if os.path.exists(src):
                 shutil.copy2(src, os.path.join(H, name + ext))
                 copies[name + ext] = sha(src)
+    if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")):  # 16k 7.2: the hold list and its releases are part of the bundle
+        shutil.copy2(os.path.join(OUT, "cmdr_post_hold.json"), os.path.join(H, "cmdr_post_hold.json"))
+        copies["cmdr_post_hold.json"] = sha(os.path.join(OUT, "cmdr_post_hold.json"))
     logs = {name: json.load(open(os.path.join(H, name + ".json"), encoding="utf-8")) for name in LOGS}
     valid = {t for d in logs.values() for t, v in d.get("matrix", {}).items() if v == "valid"}
     man = {"started": time.strftime("%Y-%m-%d %H:%M:%S"), "old_pids": old, "script_sha256": sha(os.path.abspath(__file__)),
@@ -210,9 +232,12 @@ def main(old):
         changed.append("pins")
     if changed:
         problems.append({"changed during the freeze": changed[:20], "n": len(changed)})
+    t1 = time.strftime("%Y-%m-%d %H:%M:%S")
     s1 = snapshot()
-    a1 = alive_in(s1, old)
-    scans.append(scan_record(s1, a1))
+    scans.append(scan_record(s1, old, t1))
+    a1 = scans[1]["alive"]
+    if not all(x["rejudge_equal"] for x in scans):
+        problems.append({"saved scan does not reproduce the verdict": [x["t_start"] for x in scans if not x["rejudge_equal"]]})
     if a1:
         problems.append({"alive at the end": a1})
     json.dump(scans, open(os.path.join(H, "scans.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)

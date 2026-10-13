@@ -1,8 +1,20 @@
-PASS C0 the real frozen pair passes got 0 want 0
-PASS C1 (16j 6) the OFF arm's stand contract cell changed: fails (only the on run was held) got 1 want 1
-PASS C2 (16j 6) completion of an arm/family unrelated to the hold changed: fails got 1 want 1
-PASS C3 (16j 6) a general cells entry changed: fails got 1 want 1
+PASS C0 same tables, only bookkeeping differs: pass got 0 want 0
+PASS C1 (16j) off stand contract cell changed: fails got 1 want 1
+PASS C2 (16j) an unrelated completion changed: fails got 1 want 1
+PASS C3 (16j) a general cells entry changed: fails got 1 want 1
 PASS C4 the target mean changed: fails got 1 want 1
-PASS C5 coverage lower by more than the held rows: fails got 1 want 1
+PASS C5 coverage changed: fails got 1 want 1
 PASS C6 another top-level key differs: fails got 1 want 1
+PASS C7 (16k 3) off contract n_cells changed: fails got 1 want 1
+PASS C8 (16k 3) off contract pass_below emptied: fails got 1 want 1
+PASS C9 (16k 3) a cell dropped from on unmeasured: fails got 1 want 1
+PASS C10 (16k 3) a whole cells row deleted: fails got 1 want 1
+PASS C11 (16k 3) a completion count changed by one: fails got 1 want 1
+PASS C12 (16k 3) a regression row added: fails got 1 want 1
+PASS C13 a top-level key with a slash in its name: fails got 1 want 1
+PASS C20 the real 14:05 pair (one held run) without a filtered v7: not comparable (exit 2) got 2 want 2
+PASS C21 a held run and a filtered v7 equal to it with the right count: pass got 0 want 0
+PASS C22 the plain v7 count is not the filtered count plus the held runs (filtered = newer): fails got 1 want 1
+PASS C23 a held run that is still used: fails got 1 want 1
+PASS C24 a released run that is not used: fails got 1 want 1
 FAILS []

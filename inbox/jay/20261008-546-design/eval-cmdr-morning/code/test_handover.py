@@ -136,15 +136,49 @@ try:
 
     ev, out = tree("h9")
     secret = [{"pid": 7000, "ppid": 1, "name": "python.exe", "cmdline": ["C:/x/python.exe", "C:/tools/server.py", "--token=SECRETVALUE", "--key", "SECRET2"], "create_time": 1.0},
-              {"pid": 7001, "ppid": 1, "name": "chrome.exe", "cmdline": ["chrome.exe", "--x"], "create_time": 1.0}]
-    late9 = secret + [{"pid": 9001, "ppid": 1, "name": "python.exe", "cmdline": ["python.exe", "q_eval_cmdr.py", "--headless"], "create_time": 5.0}]
+              {"pid": 7001, "ppid": 1, "name": "chrome.exe", "cmdline": ["chrome.exe", "--x"], "create_time": None}]
+    late9 = secret + [{"pid": 9001, "ppid": 1, "name": "python.exe", "cmdline": ["python.exe", "q_eval_cmdr.py", "SECRETARG", "--headless"], "create_time": 5.0}]
     rc, res, man = run(ev, procs=[secret, late9])
     sc = json.load(open(os.path.join(res["dir"], "scans.json"), encoding="utf-8")) if "dir" in res else []
     raw = json.dumps(sc)
-    check("H9 (16j 9.5) both scans are kept: start and end, python rows with flag names only, no values, end names the late Isaac",
-          (rc, len(sc), [r["argv"] for r in sc[0]["python_kit"]] if sc else None, "SECRET" in raw, sc[1]["alive"][0][:2] if len(sc) > 1 and sc[1]["alive"] else None,
+    check("H9 (16j 9.5 / 16k 6) both scans kept, every process listed, no argv value anywhere (also not in alive), end names the late Isaac",
+          (rc, len(sc), [p_["pid"] for p_ in sc[0]["processes"]] if sc else None, "SECRET" in raw,
+           [(a_["reason"], a_["pid"]) for a_ in sc[1]["alive"]] if len(sc) > 1 else None,
            man.get("scans_sha256") == sha(os.path.join(res["dir"], "scans.json")) if "dir" in res else None),
-          (1, 2, [["python.exe", "server.py", "--token", "--key"]], False, ["isaac-like python", 9001], True))
+          (1, 2, [7000, 7001], False, [("isaac-like python", 9001)], True))
+
+    # 16k 6: the saved record must give the verdict the rule gives; known answers written by hand
+    ev, out = tree("h10")
+    procs10 = [{"pid": 111, "ppid": 1, "name": "python.exe", "cmdline": None, "create_time": 1.0},  # old driver pid (argv unreadable)
+               {"pid": 6000, "ppid": 111, "name": "cmd.exe", "cmdline": ["cmd.exe"], "create_time": None},  # non-python in between
+               {"pid": 6001, "ppid": 6000, "name": "python.exe", "cmdline": ["python.exe", "safe.py"], "create_time": 3.0},
+               {"pid": 6100, "ppid": 1, "name": "python.exe", "cmdline": ["python.exe", "cmdr_eval_driver_v37"], "create_time": 3.0},
+               {"pid": 6200, "ppid": 1, "name": "python.exe", "cmdline": ["python"], "create_time": 3.0},
+               {"pid": 6300, "ppid": 1, "name": "python.exe", "cmdline": ["python.exe", "safe.py", "--headless=false"], "create_time": 3.0},
+               {"pid": 6400, "ppid": 1, "name": "python.exe", "cmdline": [], "create_time": 3.0},
+               {"pid": 6500, "ppid": 1, "name": "kit.exe", "cmdline": ["kit.exe"], "create_time": 3.0}]
+    rc, res, man = run(ev, procs=[procs10])
+    sc = json.load(open(os.path.join(res["dir"], "scans.json"), encoding="utf-8")) if "dir" in res else []
+    want = [("old driver", 111), ("descendant of an old driver", 6000), ("descendant of an old driver", 6001), ("isaac-like python", 6100), ("python with unreadable or empty argv", 6400), ("kit", 6500)]
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ho", SCRIPT)
+    ho = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ho)
+    again = ho.judge(sc[0]["processes"], sc[0]["old_pids"], sc[0]["scanner_pid"]) if sc else None
+    check("H10 (16k 6) known answers: no-extension driver name caught, ['python'] and --headless=false not, lineage through a non-python parent kept; the saved record judges the same",
+          ([(a_["reason"], a_["pid"]) for a_ in sc[0]["alive"]] if sc else None, [(a_["reason"], a_["pid"]) for a_ in again] if again is not None else None,
+           sc[0]["rejudge_equal"] if sc else None),
+          (want, want, True))
+
+    ev, out = tree("h11")
+    json.dump({"tX": {"stamp_sha256": "s", "why": "w"}}, open(os.path.join(out, "cmdr_post_hold.json"), "w"))
+    rc, res, man = run(ev)
+    hp = os.path.join(res.get("dir", ""), "cmdr_post_hold.json")
+    check("H11 (16k 7.2) the hold list is copied into the bundle with its hash", (rc, os.path.exists(hp), man.get("copies_sha256", {}).get("cmdr_post_hold.json") == (sha(hp) if os.path.exists(hp) else None)), (0, True, True))
+    ev, out = tree("h11b")
+    json.dump({"tX": {"stamp_sha256": "s", "why": "w"}}, open(os.path.join(out, "cmdr_post_hold.json"), "w"))
+    rc, res, man = run(ev, touch=os.path.join(out, "cmdr_post_hold.json"))
+    check("H11b the hold list changes during the freeze: exit 1, named", (rc, "cmdr_post_hold.json" in json.dumps(man.get("problems"))), (1, True))
 
     ev, out = tree("h8")
     open(os.path.join(ev, "q_metrics.py"), "a").write("# changed\n")

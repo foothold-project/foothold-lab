@@ -120,6 +120,8 @@ nv = {"completion line": f"[Q-EVAL] done {TAG} N 100 " in lo,
       and rec.get("attempt") == st.get("attempt") and rec.get("out_sha256") == st.get("out_sha256")}
 res["new_run"] = nv
 res["new_run_valid"] = all(nv.values())
+res["new_attempt"] = st.get("attempt")  # 16k 4: what a release record must name (aggregator v9 checks both)
+res["new_out_sha256"] = now4
 res["comparison_ready"] = res["inputs_equal"] and res["new_run_valid"] and res["old_equals_handover"]
 if os.environ.get("COMPARE_TEST_TOUCH"):
     with open(os.environ["COMPARE_TEST_TOUCH"], "ab") as fh:

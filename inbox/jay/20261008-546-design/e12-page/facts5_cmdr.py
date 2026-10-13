@@ -1,5 +1,5 @@
 """5판 CMD-R 절의 %%토큰%% 을 원자료에서 만든다 (lead · 10/13).
-원자료: _eval/out/cmdr_post.json (cmdr_post_v8.py · schema "cmdr_post v8") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
+원자료: _eval/out/cmdr_post.json (cmdr_post_v9.py · schema "cmdr_post v9") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
 _eval/out/branch/cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json (두 갈래 시작 상태 대조).
 판정선 (팀장 확정 2(c) · VERIFY-astra-7 60 줄 · ASTRA 15 6.1): 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 같은 무게 평균 +10 %p 이상이면 「개선」.
 칸마다의 구간은 서술이고 판정이 아니다. (v16 의 「칸마다 판정 · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)」 는 규칙을 잘못 옮긴 것이라 철회 · 10/13 10:02)
@@ -12,7 +12,7 @@ import os
 import time
 
 EV = "C:/isaac/ext/go2_rl_robotlab/_eval/out"
-SCHEMA = "cmdr_post v8"
+SCHEMA = "cmdr_post v9"
 ORIGIN_KO = {"hashed-at-collection": "수집 때 해시", "hashed (stamp has no origin field)": "출력 해시 있음 · 최초 생성 시점 미확인", "origin unknown": "출처 미확인",
              "legacy-origin revalidated": "구형 출처 · 재검사 때 해시", "v3.2 legacy stamp": "구형 stamp (출력 해시 없음)"}
 MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
