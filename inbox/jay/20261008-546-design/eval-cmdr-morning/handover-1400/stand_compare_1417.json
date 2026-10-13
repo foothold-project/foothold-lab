@@ -1,0 +1,54 @@
+{
+ "tag": "cq_on24000_flat_stand_on_s1000",
+ "held_stamp": "7fda7daf0d62836e13ffcb678033b18375d0b285a2d80a12f7d36cf5e4ff106d",
+ "old": [
+  "attempts\\cq_on24000_flat_stand_on_s1000.dir.1013113904.162660"
+ ],
+ "new": "cq_on24000_flat_stand_on_s1000",
+ "outputs": {
+  "cells.json": true,
+  "traj.npz arrays": {
+   "act_abs_mean": "equal",
+   "cel": "equal",
+   "cmd_a": "equal",
+   "cmd_b": "equal",
+   "cmd_hist": "equal",
+   "epi": "equal",
+   "fam": "equal",
+   "sw": "equal",
+   "term": "equal",
+   "traj": "equal"
+  },
+  "episodes.csv": true,
+  "bytes (cells, traj, episodes)": [
+   true,
+   true,
+   true
+  ]
+ },
+ "output_content_equal": true,
+ "inputs": {
+  "args": true,
+  "checks_pre": true,
+  "checks_run": true,
+  "N": true,
+  "T_steps": true,
+  "checkpoint_sha256": true,
+  "loaded_iter": true,
+  "pairing_sha256": true,
+  "pairing_sha256_ext": true,
+  "terrain_mesh": true,
+  "env_origins.npy bytes": true
+ },
+ "inputs_equal": true,
+ "new_run": {
+  "completion line": true,
+  "no Traceback": true,
+  "no root reference failure": true,
+  "stamp v3.7 with a real job id": true,
+  "base record valid, measured (not reused), same attempt and hashes": true
+ },
+ "new_run_valid": true,
+ "comparison_ready": true,
+ "result": "no difference found in the recorded outputs compared (not proof that the robot asset was intact)"
+}
