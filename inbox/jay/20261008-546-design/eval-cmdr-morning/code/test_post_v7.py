@@ -312,9 +312,13 @@ try:
     same_snapshot = False
     for _ in range(4):
         before = snap()
-        for dest, script in ((r5, "cmdr_post_v6.py"), (r6, POST)):
-            subprocess.run([PY, script], cwd=EV, env=dict(os.environ, CMDR_POST_DEST=dest, KMP_DUPLICATE_LIB_OK="TRUE", CUDA_VISIBLE_DEVICES=""),
-                           capture_output=True, text=True, check=True)
+        rcs = []
+        for dest, script in ((r5, "cmdr_post_v6.py"), (r6, POST)):  # v7 exits 3 when a live log changes mid-aggregate: try again
+            rcs.append(subprocess.run([PY, script], cwd=EV, env=dict(os.environ, CMDR_POST_DEST=dest, KMP_DUPLICATE_LIB_OK="TRUE", CUDA_VISIBLE_DEVICES=""),
+                                      capture_output=True, text=True).returncode)
+        assert all(rc in (0, 3) for rc in rcs), rcs
+        if 3 in rcs:
+            continue
         if before == snap():
             same_snapshot = True
             break

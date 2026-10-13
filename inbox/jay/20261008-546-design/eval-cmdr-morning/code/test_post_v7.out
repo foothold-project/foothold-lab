@@ -1,4 +1,4 @@
-# test_post_v7.py · 2026-10-13 12:06 · cmdr_post_v7.py sha256 98ebe33ecba7c660 · facts5_cmdr.py sha256 1fcfab47c05d0776
+# test_post_v7.py · 2026-10-13 12:08 · cmdr_post_v7.py sha256 98ebe33ecba7c660 · facts5_cmdr.py sha256 1fcfab47c05d0776 · F1 retries when a live log changes (exit 3)
 PASS A0 runs got 0 want 0
 PASS A1 complete, 500 pairs each got (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500}) want (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500})
 PASS A2 +5 +10 +15 -> 개선 got (True, 10.0, '개선') want (True, 10.0, '개선')
@@ -37,4 +37,17 @@ PASS E2 a pinned file missing -> stop got (True, True) want (True, True)
 PASS E3 other experiment -> stop got (True, True) want (True, True)
 PASS R1 CSV changed right after its read: the aggregate uses the bytes it hashed (-10 pp, not +40) got (0, -0.1) want (0, -0.1)
 PASS R2 a log changed during the aggregate: exit 3, nothing written got (3, False) want (3, False)
-exit 1
+PASS F1 real data, one snapshot: v7 = v6 on 22,000 targets, same runs, no auth failures got (True, True, True, []) want (True, True, True, [])
+PASS G1 100-pair targets: 보류, values labelled (100 쌍, none labelled (500 쌍 got (True, True, False) want (True, True, False)
+PASS G2 their regression rows carry n and 수집 중 got (True, True) want (True, True)
+PASS G3 an older aggregate is refused, not read as 'no comparison' got (True, False) want (True, False)
+PASS G4 off-arm sentence reads n from the aggregate got (True, False) want (True, False)
+PASS G5 contract detail: one table per arm, one row per measured cell got [66, 16] want [66, 16]
+PASS G7 summary separates 'has a comparison' from 'samples complete' got (False, True) want (False, True)
+PASS G8 no valid comparison: says so without guessing why got (False, True) want (False, True)
+PASS G9 absolute MAE line in words on the regression row got True want True
+PASS G10 fragment: no old label, training status from a token got (False, True, False) want (False, True, False)
+PASS G11 seed ids in the per-seed list got True want True
+PASS G6 rows with partial MAE are shown, not hidden got True want True
+FAILS []
+exit 0
