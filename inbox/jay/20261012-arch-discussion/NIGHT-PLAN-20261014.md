@@ -10,7 +10,7 @@
 | 2 | ASTRA 17f 판정 (v3 관문 · 같은 시험지 고침 · S2 판 2) | 의뢰함 23:53 | `VERIFY-astra-17f.md` 첫 줄 | 끝 00:17 · 고쳐서 기동 (b77106d2) |
 | 2b | ASTRA 17f-2 보내기 (S2 encoder W · r 제안 검토 · `TASK-astra-17f2-s2-encoder.md`) → 판정을 팀장께 채팅 · #550 으로 | 17f 판정 파일이 나온 뒤 (ASTRA 는 한 번에 하나) | `VERIFY-astra-17f2.md` 첫 줄 | 00:21 보냄 · 검사 중 |
 | 2c | ASTRA 17h 보내기: lead 의 읽기 · 컨텍스트 관리 규칙 검토 (`TASK-astra-17h-reading.md`) | 17f-2 판정 뒤 | `VERIFY-astra-17h.md` 첫 줄 | |
-| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 (`ce12/run_dump.py --which cts` · v3 관문 · 별도 registry `isaac_usd_registry_v3.json`) | 17f 가 허용 | 수집 COLLECTED · `compare_native --recompute_action` · 승인 APPROVED 또는 PENDING 까닭 | 00:25 띄움 (registry v3 전용 · 시험 117/117 · 해시 고정 job tmp ce12_cts_launch_sha.txt) · APPROVED 채택 전 17f 4.2 ~ 4.4 고침 필요 |
+| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 (`ce12/run_dump.py --which cts` · v3 관문 · 별도 registry `isaac_usd_registry_v3.json`) | 17f 가 허용 | 수집 COLLECTED · `compare_native --recompute_action` · 승인 APPROVED 또는 PENDING 까닭 | 00:25 띄움 (registry v3 전용 · 시험 117/117 · 해시 고정 job tmp ce12_cts_launch_sha.txt) · 00:25 끝 · slot 0 · guard 0 · COLLECTED (22 PASS) · 실제 npz 대조에서 compare_native 188 행 dims 문자열 오류 → 하위 작업이 고침 + 17f 4.2 ~ 4.4 (00:29 맡김) · GPU 재기록 불필요 |
 | 4 | GPU 1: 같은 시험지 v2 기록 (예상 변환 0) | 3 승인 | 같음 | |
 | 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 무작위화 27/27 lead 확인 · 미경험 v5 보고 옴 (51/51 · 38/38 · 출력 out_uncr_v5 · --approval 파일 요구) lead 재실행 전 |
 | 6 | ASTRA 17g (미경험 v5 · 무작위화) | 5 끝 | 판정 파일 | |
