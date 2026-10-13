@@ -81,6 +81,13 @@ try:
     root, d = make("v5c")
     shutil.copy2(os.path.join(SRC, TAG0, "model_22000.pt"), os.path.join(d, "model_24000.pt"))
     check("V5c (17b 2.3) model_24000.pt holds the 22000 checkpoint: invalid", run(root)[0], 1)
+    root, d = make("v5d")
+    import torch
+    ck = torch.load(os.path.join(d, "model_24000.pt"), map_location="cpu", weights_only=False)
+    ck["iter"] = 22000
+    torch.save(ck, os.path.join(d, "model_24000.pt"))
+    rc, out = run(root)
+    check("V5d model_24000.pt has the right tensors but iter 22000 inside: invalid by the iter check", (rc, "iter 22000 want 24000" in out), (1, True))
     root, d = make("v6")
     edit_json(os.path.join(root, TAG0 + ".guard.json"), lambda o: o.update(exit_code=1))
     check("V6 guard exit 1: invalid", run(root)[0], 1)
@@ -97,6 +104,11 @@ try:
     check("V7d (17b 2.1) the slot record is another attempt's: invalid", run(root, attempt="A2")[0], 1)
     root, d = make("v7e")
     check("V7e (17b 2.1) results older than this attempt (since after t_start): invalid", run(root, since=T_START + 3600)[0], 1)
+    root, d = make("v7f")
+    edit_json(os.path.join(root, TAG0 + ".slot.json"), lambda o: o.update(t_request_epoch=T_START + 3700))
+    rc, out = run(root, since=T_START + 3600)
+    check("V7f a fresh slot record but result.json older than this attempt: invalid by the result time check",
+          (rc, "result is older than this attempt" in out), (1, True))
     root, d = make("v8")
     a0 = run(root, "--reuse_check")[0]
     a1 = run(root, "--stamp")[0]
@@ -116,9 +128,11 @@ try:
     check("V11 (17b 2.3) the last save record names another file: invalid", run(root)[0], 1)
     root, d = make("v12")
     os.remove(os.path.join(d, "bundle.npz"))
-    check("V12 bundle.npz missing: invalid", run(root)[0], 1)
+    rc, out = run(root)
+    check("V12 bundle.npz missing: invalid by the bundle check", (rc, "missing bundle.npz" in out), (1, True))
     root, d = make("v13")
-    check("V13 no --attempt: invalid", run(root, attempt=None)[0], 1)
+    rc, out = run(root, attempt=None)
+    check("V13 no --attempt: invalid by the attempt-required check", (rc, "--attempt is required" in out), (1, True))
 finally:
     shutil.rmtree(TMP, ignore_errors=True)
 print("FAILS", fails)

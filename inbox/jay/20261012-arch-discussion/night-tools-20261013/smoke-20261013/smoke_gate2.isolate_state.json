@@ -1,0 +1,21 @@
+{
+ "t": "2026-10-13 18:55:37",
+ "pid": 74628,
+ "patched_by": "loader",
+ "meta_path": [
+  "builtins.type",
+  "__main__._Finder",
+  "_distutils_hack.DistutilsMetaFinder",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type"
+ ]
+}

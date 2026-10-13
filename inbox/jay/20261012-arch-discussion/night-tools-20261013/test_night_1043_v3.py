@@ -16,13 +16,13 @@ fails = []
 SLOT = r'''
 import json, os, sys
 log = os.environ.get("CALLS")
-open(log, "a").write(json.dumps({"who": "slot", "argv": sys.argv[1:]}) + "\n")
+open(log, "a").write(json.dumps({"who": "slot", "argv": sys.argv[1:], "branch_out": os.environ.get("BRANCH_OUT")}) + "\n")
 sys.exit(int(os.environ.get("SLOT_RC", "0")))
 '''
 VAL = r'''
 import json, os, sys
 log = os.environ.get("CALLS")
-open(log, "a").write(json.dumps({"who": "val", "argv": sys.argv[1:]}) + "\n")
+open(log, "a").write(json.dumps({"who": "val", "argv": sys.argv[1:], "branch_out": os.environ.get("BRANCH_OUT")}) + "\n")
 if "--reuse_check" in sys.argv:
     sys.exit(int(os.environ.get("REUSE_RC", "1")))
 sys.exit(int(os.environ.get("VAL_RC", "0")))
@@ -41,7 +41,7 @@ def run(case, env_extra=None, pre=None, mv_fail=False):
     try:
         ev = os.path.join(tmp, "_eval")
         br = os.path.join(ev, "branch")
-        os.makedirs(os.path.join(ev, "out", "branch"))
+        os.makedirs(os.path.join(ev, "out_branch"))
         os.makedirs(br)
         s = open(SCRIPT, encoding="utf-8").read().replace("PY=C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
                                                           "PY=" + sys.executable.replace("\\", "/"))
@@ -57,7 +57,7 @@ def run(case, env_extra=None, pre=None, mv_fail=False):
             env["PATH"] = sb.replace("\\", "/") + os.pathsep + env["PATH"]
         env.update(env_extra or {})
         if pre:
-            pre(os.path.join(ev, "out", "branch"))
+            pre(os.path.join(ev, "out_branch"))
         r = subprocess.run([BASH, os.path.join(br, "night.sh").replace("\\", "/"), "decision text"], capture_output=True, text=True,
                            env=env, encoding="utf-8", errors="replace", timeout=120)
         cl = [json.loads(x) for x in open(calls)] if os.path.exists(calls) else []
@@ -92,5 +92,9 @@ rc, out, cl = run("iso")
 slots = [c["argv"] for c in cl if c["who"] == "slot"]
 check("N7 every launch goes through usd_isolate_run.py with its own --usd_root and --attempt",
       all(any(x.endswith("usd_isolate_run.py") for x in a) and "--usd_root" in a and "--attempt" in a for a in slots) and len(slots) == 2, True)
+rc, out, cl = run("root")
+check("N8 every slot and validator call gets BRANCH_OUT=../out_branch and no argument points into _eval/out",
+      (len(cl) > 0, all(c.get("branch_out") == "../out_branch" for c in cl),
+       any("/out/" in x.replace("\\", "/") or x.replace("\\", "/").startswith("../out/") for c in cl for x in c["argv"])), (True, True, False))
 print("FAILS", fails)
 sys.exit(1 if fails else 0)

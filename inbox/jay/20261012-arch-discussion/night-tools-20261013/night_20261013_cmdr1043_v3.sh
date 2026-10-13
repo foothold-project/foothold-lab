@@ -9,7 +9,8 @@
 #     - Isaac 스크립트는 usd_isolate_run.py 로 띄워 USD 변환 폴더를 이 시도 전용으로 둔다
 #     - 자식 (slot) 종료 코드가 0 이 아니면 검증기로 가지 않고 멈춘다
 #     - 재사용은 validate_branch --reuse_check (원래 attempt 를 그대로 보고) 만
-#   멈춤: ../out/branch/STOP_1043 파일이 생기면 다음 갈래를 띄우지 않는다 (slot 대기 중에도 98)
+#   출력: ../out_branch (기존 ../out/branch 의 1042 결과는 건드리지 않음)
+#   멈춤: ../out_branch/STOP_1043 파일이 생기면 다음 갈래를 띄우지 않는다 (slot 대기 중에도 98)
 #   범위: 학습만. 목표 세 칸 · 등록 회귀 칸 평가는 따로 (10/14).
 #   첫 인자: 팀장 결정 문구 (기술적 스위치 · 승인 진위를 검증하지 않음).
 set -u
@@ -17,7 +18,8 @@ if [ -z "${1:-}" ]; then echo "STOP: 팀장 결정 문구가 없다 (첫 인자)
 cd "$(dirname "$0")" || { echo "STOP: cd 실패"; exit 3; }
 PY=C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe
 E1=C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192
-BRO=../out/branch
+BRO=../out_branch
+export BRANCH_OUT="$BRO"   # branch_run · validate_branch 가 같은 루트를 쓴다 (기존 _eval/out 에 쓰지 않음 · ASTRA 17 §4)
 STOPF="$BRO/STOP_1043"
 DEADLINE="${DEADLINE_EPOCH:-0}"
 export CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 OMNI_KIT_ACCEPT_EULA=YES PYTHONUNBUFFERED=1

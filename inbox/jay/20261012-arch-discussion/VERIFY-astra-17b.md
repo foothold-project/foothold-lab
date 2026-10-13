@@ -29,7 +29,7 @@
 | q_eval_cmdr.py | `24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc` |
 | gpu_guard.py | `7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4` |
 
-시험은 `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -B`와 Git Bash를 썼다. `C:/Users/AI-WS01/AppData/Local/Temp/astra17b_sfam3ikf/`에 사본·가짜 입력을 만들었다. 실제 학습·평가 프로세스를 띄우거나 종료하지 않았다. 기존 1042의 JSON·로그와 부모 체크포인트는 읽기만 했다. 시험 폴더는 검토 후 삭제한다. 코드·원자료·동결 폴더·기존 보고서는 수정하지 않는다.
+시험은 `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -B`와 Git Bash를 썼다. `C:/Users/AI-WS01/AppData/Local/Temp/astra17b_sfam3ikf/`에 사본·가짜 입력을 만들었다. 실제 학습·평가 프로세스를 띄우거나 종료하지 않았다. 기존 1042의 JSON·로그와 부모 체크포인트는 읽기만 했다. 시험 폴더는 삭제하고 부재를 확인했다. 코드·원자료·동결 폴더·기존 보고서는 수정하지 않았다.
 
 **확인됨:** 제공된 `test_isaac_slot.py`의 10개 검사와 `test_validate_branch.py`의 11개 검사를 임시 사본에서 직접 실행해 모두 통과했다. 밤 shell의 `bash -n`도 통과했다. **미확인:** lead가 보고한 변이 시험 6개·9개는 소스를 읽었지만 이번에 다시 실행하지 않았다. 위 CPU 시험은 실제 USD·물리·GPU 병행의 성공 증거가 아니다.
 
@@ -215,4 +215,4 @@ CPU 시험 결과:
 - slot: 알려진 경로를 검증 후 해제, 늦은/추가/공유 경로 및 잘못된 참조는 거부, 대기 중 중단 이행.
 - unseen: 정상 3군은 비교, 지문 불일치는 짝 보류, nonfinite/기록 손상은 실행 무효, partial post는 미완료, post-only 범위와 attempt 증거 보존.
 
-이 파일 외의 영구 산출물, 커밋·push, GPU·Isaac 실행은 만들지 않는다.
+이 파일 외의 영구 산출물은 없으며 커밋·push·GPU·Isaac 실행도 하지 않았다.

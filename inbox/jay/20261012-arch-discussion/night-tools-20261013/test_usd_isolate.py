@@ -35,6 +35,22 @@ class Cfg:
 c = AssetConverterBase(Cfg())
 print(json.dumps({"usd": c._usd_dir, "after": random.random(), "argv": sys.argv[1:]}))
 '''
+ODD_SRC = '''import importlib.util, importlib.machinery, sys
+class OddLoader:
+    def __init__(self, path):
+        self.path = path
+    def create_module(self, spec):
+        return None
+    def exec_module(self, module):
+        exec(compile(open(self.path).read(), self.path, "exec"), module.__dict__)
+class Front:
+    def find_spec(self, name, path, target=None):
+        s = importlib.machinery.PathFinder.find_spec(name, path, target)
+        if s is not None and name.endswith("asset_converter_base"):
+            return importlib.util.spec_from_loader(name, OddLoader(s.origin), origin=s.origin)
+        return s
+sys.meta_path.insert(0, Front())
+'''
 
 
 def check(name, got, want):
@@ -81,6 +97,39 @@ try:
     check("U5 no FOOTHOLD_USD_ROOT: refuse to run (exit 2)", rc3, 2)
     check("U6 the fake /tmp IsaacLab folder is not used by isolated runs", os.path.exists(os.path.join(TMP, "faketmp")) and
           len(os.listdir(os.path.join(TMP, "faketmp", "IsaacLab"))) == 1, True)  # only the plain run made one
+    # U7 (10/13 18:51 real gate run): Kit puts its own finder in front, so the launcher's finder is never asked.
+    # The user script below does the same before importing; the audit hook must still patch before the first conversion.
+    kit = os.path.join(TMP, "user_kit.py")
+    open(kit, "w").write("import importlib.machinery, sys\n"
+                         "class Front:\n"
+                         "    def find_spec(self, name, path, target=None):\n"
+                         "        return importlib.machinery.PathFinder.find_spec(name, path, target)\n"
+                         "sys.meta_path.insert(0, Front())\n" + USER)
+    rootK = os.path.join(TMP, "attemptK").replace("\\", "/")
+    envK = dict(os.environ, PYTHONPATH=os.path.join(TMP, "pkg"), FAKE_TMP=os.path.join(TMP, "faketmpK"), PYTHONIOENCODING="utf-8",
+                FOOTHOLD_USD_ROOT=rootK)
+    rK = subprocess.run([sys.executable, SCRIPT, kit, "7", "extra"], capture_output=True, text=True, env=envK, encoding="utf-8", errors="replace")
+    lineK = [x for x in rK.stdout.splitlines() if x.startswith("{")]
+    isoK = json.loads(lineK[-1]) if lineK else {}
+    pK = os.path.join(rootK, "isolate_state.json")
+    stK = json.load(open(pK, encoding="utf-8")) if os.path.exists(pK) else {}
+    check("U7 a finder placed in front (as Kit does): still under the attempt root, patched at load by the loader wrap, random unchanged, no fake /tmp folder",
+          (rK.returncode, isoK.get("usd", "").startswith(rootK + "/IsaacLab/usd_"), stK.get("patched_by") == "loader",
+           isoK.get("after") == plain.get("after"), os.path.exists(os.path.join(TMP, "faketmpK"))), (0, True, True, True, False))
+    check("U8 the log says how it patched", "[USD-ISOLATE] patched via loader" in rK.stdout, True)
+    # U9: a non-standard loader (neither the loader wrap nor the finder sees it); one later event (the first import of a module not yet loaded; a cached import raises no event) before the
+    # conversion lets the audit hook patch in time.
+    odd = os.path.join(TMP, "user_odd.py")
+    open(odd, "w").write(ODD_SRC + USER.replace("class Cfg:", "import colorsys as _c2\nclass Cfg:"))
+    rootO = os.path.join(TMP, "attemptO").replace("\\", "/")
+    envO = dict(envK, FOOTHOLD_USD_ROOT=rootO, FAKE_TMP=os.path.join(TMP, "faketmpO"))
+    rO = subprocess.run([sys.executable, SCRIPT, odd, "7", "extra"], capture_output=True, text=True, env=envO, encoding="utf-8", errors="replace")
+    lineO = [x for x in rO.stdout.splitlines() if x.startswith("{")]
+    isoO = json.loads(lineO[-1]) if lineO else {}
+    pO = os.path.join(rootO, "isolate_state.json")
+    stO = json.load(open(pO, encoding="utf-8")) if os.path.exists(pO) else {}
+    check("U9 a non-standard loader: the audit hook patches on the next event, still under the attempt root",
+          (rO.returncode, isoO.get("usd", "").startswith(rootO + "/IsaacLab/usd_"), stO.get("patched_by", "").startswith("audit:")), (0, True, True))
 finally:
     shutil.rmtree(TMP, ignore_errors=True)
 print("FAILS", fails)
