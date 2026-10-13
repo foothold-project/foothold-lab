@@ -14,7 +14,7 @@
 
 | 실행 | 식별 | 로그 · 진행 확인 방법 | 마지막 관측 | 예상 끝 · 다음 확인 |
 |---|---|---|---|---|
-| GPU 0 · CMD-R 1043 on 갈래 | attempt `g0-cmdr_s1043_on_u4000-1014001820-895773` · PID 154852 (시작 00:18:20) · 셸 btwz5bu9g | `_eval/out_branch/cmdr_s1043_on_u4000.log` 의 마지막 `Learning iteration N/24001` · `Traceback` 수 · 로그 크기 · 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` | 01:08 iteration 20618/24001 (00:54 뒤 +169 · 약 5.1 s/it) · PID 살아 있음 · Traceback 0 · 로그 12.45 MB (시작 때 USD Head_lo/up 경고는 이미 알던 것) | 05:40 무렵 · 다음 heartbeat 에서 iteration 이 늘었는지 |
+| GPU 0 · CMD-R 1043 쌍 | **끝 05:46:03 (`PAIR 1043 DONE`)**: off 00:18:17 끝 (19280 초) · on 05:45:59 끝 (19659 초) · 둘 다 `VALID` · 학습 회차 24000/24001 · Traceback 0 · night exit 0 | 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` · `_eval/out_branch/cmdr_s1043_*` | **GPU 0 은 05:46 부터 빔** (15 MiB). 이유: 1043 후속 평가는 ASTRA 17 이 「사전 등록한 평가 (목표 세 칸 + 회귀 칸)」 가 필요하다고 했고 등록안과 검증된 평가 계획이 없음. S2 smoke 는 학습 루프 연결 전이라 보류. 판단이 필요한 일이라 Sonnet lead 가 혼자 만들어 띄우지 않음 | 팀장 · Opus 에서 평가 등록안 → ASTRA → 기동 (놀았던 시간은 아침 보고에 적음) |
 | GPU 1 | 01:16:26 CTS r2 기록이 끝난 뒤 **빔** (이유: 띄울 수 있는 일이 모두 검증 · 고침 대기 · 17g 와 17i 가 요구한 고침이 끝나기 전에는 허용된 기동이 없음) | job tmp `ce12fix/r2_*.txt` | r2 COLLECTED · 대조 ALL PASS · A9 PASS (그 시점 승인기) · 재확인 유효. ASTRA 17i: r2 수치만 제한 채택, 승인기 일반 채택 보류 | 17j 가 RAND smoke 를 허용하면 smoke · 아니면 계속 빔. 놀았던 시간은 아침 보고에 적는다 (01:16 부터) |
 | 감시 스크립트 (사용 한도 대비) | 셸 bd8y4zrp0 · job tmp `arm_v5_full.sh` | `arm_v5.log` | **끝 01:33:48 · 승인 json 이 없어 아무것도 띄우지 않음** (17g 판정 파일이 10 분 지나도 승인 없음 · 설계대로) | 더는 필요 없음 · v5 full 은 v6 로 대체 |
 | 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 · 끝 | job tmp `ce12fix/` | lead 재실행 01:15: 시험 23/23 · 132/132 · 변이 24/24 · 65/65 · 해시 그대로 · 저장소 사본 22b97fe3 | ASTRA 17i 로 검증됨 → 남은 고침은 Codex Worker C |
@@ -107,6 +107,12 @@
 - **영향 (lead 가 기준선 대조로 확인):** `out_uncr_v5` 만 2 개 → 5 개 파일. `driver_v5.json` 은 lead 의 00:43 manifest 단계 기록이 가짜 시험 기록으로 덮였다 (단계 기록일 뿐 · `manifest_v5.json` 은 00:43:32 그대로). 새 파일 `HALT_v5.json` · `uncr_par_gap_fwd05.slot.json` · `uncr_par_gap_fwd05.guard.json`. 그 밖의 보호 묶음 (out_uncr · out_uncr_reval · slot · branch · out_ce12 · handover · ce12 · s2 · out_smoke · 나머지 out_branch · 검증된 코드 · isaac311-moects 환경) 은 변화 없음. GPU 1 에 python 프로세스 0 (Isaac 은 뜨지 않음).
 - **처리:** 지우지 않고 둔다 (증거 보존 · 변수 경로 삭제 금지). v5 는 17g 가 승인하지 않았고 새 루트 `out_uncr_v6` 의 v6 로 대체되므로 `HALT_v5.json` 이 v5 full 을 막는 것은 무해. 새 기준선 `codexw/protect_baseline2.txt`. A 는 03:57 에 격리 조건 (기본 루트 · 환경변수 · HALT 이름 변경 · 시험 시작부 단언) 으로 재개. **같은 사고가 한 번 더 나면 A 결과를 채택하지 않는다.**
 - **교훈:** 복사해 만든 새 도구는 첫 실행 전에 출력 루트가 작업 폴더 안인지 단언한다 (C 작업서 0.1 에 반영). YOLO 와 기준선 대조의 조합에서 첫 사고는 기준선 대조로 잡혔다.
+
+## GPU 0 이 놀기 시작한 때 (05:47)
+
+- 05:46 1043 쌍 학습이 끝나 GPU 0 이 비었다. 허용된 다음 일이 없다: (1) 1043 후속 평가 · 등록안과 검증 없음 (2) S2 smoke · 학습 루프 연결 전 (3) RAND smoke · 17j 허용은 GPU 1 · 고정 바이트 (4) v2 기록 · 17k 대기 (5) v6 full · 17l 대기 · 승인 json 대기.
+- 놀았던 자원과 시작 시각 (아침 보고용): GPU 1 은 01:16:26 ~ 04:57 (3 시간 41 분) 그리고 04:58 부터 계속 · GPU 0 은 05:46 부터. 이유는 위와 같음 (검증 대기 · 판단 필요).
+- 풀리는 순서: ASTRA 17k 가 v2 기록 허용 → GPU 1 v2 짧은 진단 · 17l 이 v6 full 승인 (승인 json) → GPU 1 full 75 · 작업자 B 수정 → lead 재실행 → 17m → RAND smoke. 1043 평가는 팀장이 깨신 뒤 등록안 (CMD-R 규약 교정 결정과 묶임).
 
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
