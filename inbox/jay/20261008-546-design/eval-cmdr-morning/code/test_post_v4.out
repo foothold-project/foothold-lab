@@ -1,8 +1,8 @@
-# test_post_v4.py · 2026-10-13 09:58 · cmdr_post_v4.py sha256 f266f91c4681c1a4
+# test_post_v4.py · 2026-10-13 10:03 · cmdr_post_v4.py sha256 9f4eb3c028c885af
 PASS 0 v4 runs got 0 want 0
-PASS 1 target stop03 +20 got '개선' want '개선'
-PASS 2 target fwd01 +5 got '구간 하한 0 위 · +10 %p 못 미침' want '구간 하한 0 위 · +10 %p 못 미침'
-PASS 3 target fwd02 -10 got '구간 전체가 0 아래' want '구간 전체가 0 아래'
+PASS 1 cell readings (+20, +5, -10) got {'stop03': '구간 하한 0 위', 'fwd01': '구간 하한 0 위', 'fwd02': '구간 전체가 0 아래'} want {'stop03': '구간 하한 0 위', 'fwd01': '구간 하한 0 위', 'fwd02': '구간 전체가 0 아래'}
+PASS 2 joint: one cell below 0 -> not 개선 (mean +5) got (False, 5.0, '개선 아님') want (False, 5.0, '개선 아님')
+PASS 3 per-seed differences kept got [('1000', 0.2), ('1001', 0.2), ('1002', 0.2), ('1003', 0.2), ('1004', 0.2)] want [('1000', 0.2), ('1001', 0.2), ('1002', 0.2), ('1003', 0.2), ('1004', 0.2)]
 PASS 3b fwd02 diff got -0.1 want -0.1
 PASS 4 fwd02 regression (n500 target) got ('n500 (target)', '퇴행') want ('n500 (target)', '퇴행')
 PASS 5 wave -10 then 0,0,0,0 got ('n500', '비퇴행', -0.02) want ('n500', '비퇴행', -0.02)
@@ -18,9 +18,11 @@ PASS 14 contract off24000 survival all ok got [] want []
 PASS 15 logs read got ['cmdr_eval_driver', 'cmdr_eval_driver_g0'] want ['cmdr_eval_driver', 'cmdr_eval_driver_g0']
 PASS 16 md has the regression table and no proposal wording got (True, False) want (True, False)
 PASS 17 duplicate tag refused got (True, True) want (True, True)
+PASS 19a +20 +5 +5: mean exactly +10 -> 개선 got (True, True, '개선') want (True, True, '개선')
+PASS 19b +20 +5 +4: mean 9.67 -> 개선 아님 got (True, False, '개선 아님') want (True, False, '개선 아님')
 PASS 18a v3 and v4 on real out got (0, 0) want (0, 0)
 PASS 18b targets 22000 identical to v3 got True want True
 PASS 18c cells identical to v3 got True want True
-PASS 18d n_valid equal got 258 want 258
-PASS 18e 22000 per-cell verdicts got {'stop03': '구간 하한 0 위 · +10 %p 못 미침', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'} want {'stop03': '구간 하한 0 위 · +10 %p 못 미침', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'}
+PASS 18d n_valid equal got 262 want 262
+PASS 18e 22000 joint (stop03 +6.8 · fwd01 -24.8 · fwd02 -7.8) got ({'stop03': '구간 하한 0 위', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'}, False, -8.6, '개선 아님') want ({'stop03': '구간 하한 0 위', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'}, False, -8.6, '개선 아님')
 FAILS []

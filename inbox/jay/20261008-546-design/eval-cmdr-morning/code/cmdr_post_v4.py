@@ -17,8 +17,10 @@
 # MAE regression: relative +10 % when the control MAE > 0, otherwise absolute 10 % of the Q tolerance
 # (vx, vy 0.15 m/s -> 0.015; wz 0.20 rad/s -> 0.02), as VERIFY-astra-7 2(c).
 # v4 (10/13 09:58): the 2(c) lines are no longer a proposal. Team lead 01:10 「제안 · 권고대로 진행」 (HANDOFF-night-20261013
-# line 34): targets are judged per cell at n=500 (「개선」 = 95 % interval low end > 0 and mean >= +10 pp; no three-cell
-# average, VERIFY-astra-15 6.1); regression = n=100 screen at 24000, cells with a point estimate <= -5 pp are measured
+# line 34): 500 episodes per target cell; 「개선」 = every one of the three cells has a 95 % interval low end > 0 AND the
+# equal-weight mean of the three on - off differences is >= +10 pp (VERIFY-astra-7 2(c) line 60 · VERIFY-astra-15 6.1).
+# Per-cell interval readings are description, not the judgment; Holm over the three is shown beside it. (An earlier
+# lead note said 「per cell, no three-cell average」: that misquoted the rule and is withdrawn, 10/13 10:02.) Regression = n=100 screen at 24000, cells with a point estimate <= -5 pp are measured
 # again at n=500 (seeds 1001-1004, cmdr_eval_driver_v33 --plan remeasure) and judged on the interval against -5 pp
 # (crossing = 「비퇴행 미확인」); MAE +10 % flagged; the basic contract (survival >= 95 %, command pass >= 90 %) is judged
 # separately per arm and cell. Reads the valid runs of both driver logs (base + GPU 0 remeasure). Nothing here writes
@@ -149,11 +151,20 @@ res = {"targets": {}, "startup": {}, "cells": [], "holm": {}, "completion": {}, 
        "contract_24000": {}}
 
 
-def target_tag(p):
-    """per-cell target reading (2(c) as confirmed): 개선 needs low end > 0 and mean >= +10 pp."""
+def cell_reading(p):
+    """description of one target cell's interval (not the judgment)."""
     if p["lo"] > 0:
-        return "개선" if p["diff"] >= 0.10 else "구간 하한 0 위 · +10 %p 못 미침"
+        return "구간 하한 0 위"
     return "구간 전체가 0 아래" if p["hi"] < 0 else "구간이 0 을 걸침"
+
+
+def joint_verdict(ps):
+    """2(c) as confirmed: 개선 = all three low ends > 0 and the equal-weight mean difference >= +10 pp (exact fractions)."""
+    from fractions import Fraction
+    mean = sum(Fraction(p["b_y_only"] - p["c_x_only"], p["n"]) for p in ps) / len(ps)
+    low = all(p["lo"] > 0 for p in ps)
+    return {"all_low_above_0": low, "mean_pp": float(100 * mean), "mean_ge_10": mean >= Fraction(1, 10),
+            "verdict": "개선" if low and mean >= Fraction(1, 10) else "개선 아님"}
 
 
 def regression_tag(p):
@@ -200,7 +211,13 @@ for u in ("22000", "24000"):
     seeds = [tuple(res["targets"][c].get(f"on_minus_off_{u}", {}).get("seeds", [])) for c in TARGETS]
     if all(p is not None for p in ps):
         res["holm"][u] = {"rejected": dict(zip(TARGETS, Q.holm_reject(ps))), "seeds": [list(s) for s in seeds]}
-        res["target_verdict"][u] = {c: target_tag(res["targets"][c][f"on_minus_off_{u}"]) for c in TARGETS}
+        pp = [res["targets"][c][f"on_minus_off_{u}"] for c in TARGETS]
+        per_seed = {}
+        for c in TARGETS:  # seed-by-seed on - off (ASTRA 15 6.1: the five seeds share terrain and layout variation)
+            ro, rn = res["targets"][c].get(f"off{u}", {}), res["targets"][c].get(f"on{u}", {})
+            per_seed[c] = {s: rn["per_seed"][s] - ro["per_seed"][s] for s in ro.get("per_seed", {}) if s in rn.get("per_seed", {})}
+        res["target_verdict"][u] = {"cells": {c: cell_reading(p) for c, p in zip(TARGETS, pp)}, **joint_verdict(pp),
+                                    "per_seed_diff": per_seed, "holm_rejected": res["holm"][u]["rejected"]}
 for fam in FAMILIES:
     for cell in CELLS:
         for noise in ("on", "off"):
@@ -282,7 +299,7 @@ def dfmt(p):
 
 L = ["# CMD-R 표 (자동 생성 · cmdr_post_v4.py)", "",
      "주 통과 = span 정의 (stop03 span_q2 · fwd01/02 span_q1a · 그 밖 span_q1). 차이는 같은 시드 · 같은 episode 끼리 짝지은 %p 와 95 % 구간.",
-     "판정선은 팀장 확정 2(c) (10/13 01:10): 목표 칸마다 500 판 · 「개선」 = 95 % 구간 하한 > 0 이고 +10 %p 이상 · 퇴행은 100 판 훑기에서 점추정 −5 %p 이하 칸만 500 판으로 다시 재서 구간으로 판정 (−5 %p 를 걸치면 「비퇴행 미확인」) · MAE +10 % · 기본 계약 (생존 95 % · 통과 90 %) 은 따로. 이 표는 채택 · 기각을 쓰지 않는다.", "",
+     "판정선은 팀장 확정 2(c) (10/13 01:10): 목표 칸마다 500 판 · 「개선」 = 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 평균 +10 %p 이상 · 퇴행은 100 판 훑기에서 점추정 −5 %p 이하 칸만 500 판으로 다시 재서 구간으로 판정 (−5 %p 를 걸치면 「비퇴행 미확인」) · MAE +10 % · 기본 계약 (생존 95 % · 통과 90 %) 은 따로. 이 표는 채택 · 기각을 쓰지 않는다.", "",
      "## 목표 세 칸 (평지 · noise 켬 · 시드 묶음)", "",
      "| 칸 | 부모 20000 | off 22000 | on 22000 | off 24000 | on 24000 | on−off 22000 | on−off 24000 |", "|---|---|---|---|---|---|---|---|"]
 for c in TARGETS:
@@ -290,7 +307,7 @@ for c in TARGETS:
     L.append(f"| {c} | " + " | ".join(f"{pct(r[m]['rate'])} (n {r[m]['n']})" if m in r else "" for m in MODELS)
              + f" | {dfmt(r.get('on_minus_off_22000'))} | {dfmt(r.get('on_minus_off_24000'))} |")
 L += ["", f"Holm (on−off, 목표 셋): {json.dumps(res['holm'], ensure_ascii=False)}",
-      f"칸마다 목표 판정: {json.dumps(res['target_verdict'], ensure_ascii=False)}", "",
+      f"목표 판정 (세 칸 결합 · 칸별은 서술): {json.dumps(res['target_verdict'], ensure_ascii=False)}", "",
       "## 시작 직후 (0~1 s) · 5 s", "",
       "평면 오차 적분은 vx · vy 절대오차 합 (L1) × 0.02 s. 1 초를 다 채운 판과 1 초 안에 끝난 판을 나눠 적는다.", "",
       "| 칸 | 모델 | n | 1 s 채움 | 1 s 안 끝남 (평균 유효 s) | 1 s 안 몸통 접촉 | 5 s 생존 | 평면 오차 적분 m (채운 판) | yaw 오차 적분 rad (채운 판) | 5 s 진행 m (n) |",
