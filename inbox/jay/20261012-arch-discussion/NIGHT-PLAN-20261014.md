@@ -12,8 +12,8 @@
 | 2c | ASTRA 17h 보내기: lead 의 읽기 · 컨텍스트 관리 규칙 검토 (`TASK-astra-17h-reading.md`) | 17f-2 판정 뒤 | `VERIFY-astra-17h.md` 첫 줄 | 00:39 보냄 (하트비트 문구 · 해석기 사례 더함 9917d92f) |
 | 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 (`ce12/run_dump.py --which cts` · v3 관문 · 별도 registry `isaac_usd_registry_v3.json`) | 17f 가 허용 | 수집 COLLECTED · `compare_native --recompute_action` · 승인 APPROVED 또는 PENDING 까닭 | 00:25 띄움 (registry v3 전용 · 시험 117/117 · 해시 고정 job tmp ce12_cts_launch_sha.txt) · 00:25 끝 · slot 0 · guard 0 · COLLECTED (22 PASS) · 실제 npz 대조에서 compare_native 188 행 dims 문자열 오류 → 하위 작업이 고침 + 17f 4.2 ~ 4.4 (00:29 맡김) · GPU 재기록 불필요 |
 | 4 | GPU 1: 같은 시험지 v2 기록 (예상 변환 0) | 3 승인 | 같음 | |
-| 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 무작위화 27/27 lead 확인 · 미경험 v5 lead 재실행: isaac311-moects python 51/51 (실제 7 칸 모두 valid) · base python 3.13 은 X01 FAIL (q_post 재계산 바이트가 해석기에 따라 다름 · hold 로 막힘) · 변이 38 재실행 중 |
-| 6 | ASTRA 17g (미경험 v5 · 무작위화) | 5 끝 | 판정 파일 | |
+| 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 끝 00:43 · 무작위화 27/27 lead 확인 · 미경험 v5 lead 재실행: isaac311-moects python 51/51 (실제 7 칸 모두 valid) · base python 3.13 은 X01 FAIL (q_post 재계산 바이트가 해석기에 따라 다름 · hold 로 막힘) · 변이 38/38 |
+| 6 | ASTRA 17g (미경험 v5 · 무작위화) | 5 끝 | 판정 파일 | 의뢰문 00:44 (`TASK-astra-17g-uncr-v5-rand.md` · v5 사본 uncr_v5/ · lead 재검사 00:43 23 valid · 묶음 e5597517 · manifest 75) · 17h 끝나면 보냄 |
 | 7 | GPU 1: 미경험 full (73 또는 75 실행) · 무작위화 smoke (`--stop_after_smoke`) → 장면 하나씩 | 17g 허용 · 3 · 4 와 겹치지 않게 | 재검사 valid · 영상 전 프레임 검사 | |
 | 7b | S2 판 3 (CPU · 하위 작업): 전 구간 고정 모드 · S2 자체 갱신 번호 · group LR 검사 · 학습 대상만 clipping · 시험 · 변이 (17f-2 2.1 · 3 · 5.3) | 17f-2 끝 | 보고 → lead 재실행 → ASTRA | 00:40 맡김 |
 | 8 | 아침 7판: diag 7 칸 확정 문장 · 밤 결과 · 결정 목록 · Top-down · 팀원 PR (조각은 job tmp `e12page/`) → 빌드 → 1920 · 1366 · 390 · 라이트 · 다크 렌더 확인 → 게시 → #550 · #546 · 채팅 | 아침 | 렌더 확인 기록 | |

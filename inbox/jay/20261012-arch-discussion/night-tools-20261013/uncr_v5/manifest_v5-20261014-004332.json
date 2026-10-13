@@ -1,0 +1,88 @@
+{
+ "t": "2026-10-14 00:43:32",
+ "attempt": "g1-183452-1014004332",
+ "code_sha256": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "isaac_slot_v3.py": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "usd_isolate_run_v3.py": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb",
+  "uncr_revalidate_v2.py": "089574adfa102ee8d83e7d7414ae5f028c8c66b2be19e7820772524d30553e93",
+  "unseen_driver_cmdr_v5.py": "df0cf1e0a1dfd3e2917cf5ba6df3cce14a792ecdc2348bf7a2e6a3d0240a7762"
+ },
+ "inputs_sha256": {
+  "ckpt:par": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "ckpt:off": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1",
+  "ckpt:on": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25",
+  "train_yaml": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c",
+  "bundle.json:off": "0a50be9fc46bef3a736a07da78e856f7080bf5a747f876d3b01c0804307447a6",
+  "bundle.npz:off": "d45e6324bf5e9a2eab00c5175eb19669c98ea7aac2dbc3be381017849a1ecd58",
+  "bundle.json:on": "631b6d6e544ede73244d56a964fd960aaf726bea13dfc5bd60290ea4d2cca2a1",
+  "bundle.npz:on": "d45e6324bf5e9a2eab00c5175eb19669c98ea7aac2dbc3be381017849a1ecd58",
+  "lab:generalization_env_cfg.py": "0009e1e11850191bb875e316038a08ae85308226e27d6a748fe474aa1301eed4",
+  "lab:terrains.py": "3e0d47185f110a5fb6aa3550ba61ea7edd0fa1e89bd6a275f9377fae283a72ae"
+ },
+ "code_manifest_sha256": "ac09c26492f5fb553bf212a8f3b7aaff75b161649cb6c5b6875b413377377376",
+ "registered_ok": true,
+ "registered_diff": [],
+ "registered_code": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "isaac_slot_v3.py": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "usd_isolate_run_v3.py": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
+ },
+ "registered_inputs": {
+  "ckpt:par": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "ckpt:off": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1",
+  "ckpt:on": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25",
+  "train_yaml": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c",
+  "lab:generalization_env_cfg.py": "0009e1e11850191bb875e316038a08ae85308226e27d6a748fe474aa1301eed4",
+  "lab:terrains.py": "3e0d47185f110a5fb6aa3550ba61ea7edd0fa1e89bd6a275f9377fae283a72ae"
+ },
+ "wrapper_registration": {
+  "slot": [
+   [
+    "isaac_slot.py",
+    "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47"
+   ],
+   [
+    "isaac_slot_v3.py",
+    "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a"
+   ]
+  ],
+  "isolate": [
+   [
+    "usd_isolate_run.py",
+    "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   ],
+   [
+    "usd_isolate_run_v3.py",
+    "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
+   ]
+  ]
+ },
+ "old_approved": {
+  "report": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\out_uncr_reval\\20261013-201422\\revalidate.json",
+  "report_sha256": "5d2421fe1283a82f416ed863abc0e85753896c1840dfc2fba34243329a4e526f",
+  "bundle_sha256": "e55975172405901a0178a8e2bd3541ce7e13b118d0a9ab723fb6028d69ef2b58",
+  "review": "VERIFY-astra-17e.md §4 (23 runs, diag 7 cells valid, descriptive statistics only)"
+ },
+ "reuse_partial": "no",
+ "new_runs": 75,
+ "new_runs_if_reuse_no": 75,
+ "new_runs_if_reuse_yes": 73,
+ "approval_template": {
+  "kind": "uncr_v5_full_approval",
+  "decision": "pending",
+  "by": "",
+  "t": "",
+  "reval_sha256": "<sha256 of the uncr_revalidate_v2 report of the old root you read>",
+  "old_bundle_sha256": "e55975172405901a0178a8e2bd3541ce7e13b118d0a9ab723fb6028d69ef2b58",
+  "code_manifest_sha256": "ac09c26492f5fb553bf212a8f3b7aaff75b161649cb6c5b6875b413377377376",
+  "reuse_partial": "no",
+  "new_runs": 75
+ }
+}
