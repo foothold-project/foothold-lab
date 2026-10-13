@@ -1,0 +1,8 @@
+PASS S1 normal re-collection: ready, outputs equal, exit 0 got (0, True, True) want (0, True, True)
+PASS S2 (16j) record and stamp both claim another traj hash: not valid, on hold (exit 2) got (2, False) want (2, False)
+PASS S3 (16j) hashes missing on both sides (None == None): not valid got (2, False) want (2, False)
+PASS S4 (16j) the new run failed pairing: not valid got (2, False) want (2, False)
+PASS S5 (16j) the preserved original no longer equals the hand-over bytes: on hold got (2, False) want (2, False)
+PASS S6 (16j) the new run is still incomplete: not ready, nothing compared got (2, 'not ready') want (2, 'not ready')
+PASS S7 a reused record is not a new measurement: not valid got (2, False) want (2, False)
+FAILS []

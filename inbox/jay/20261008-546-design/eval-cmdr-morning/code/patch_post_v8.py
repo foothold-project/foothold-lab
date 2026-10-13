@@ -125,13 +125,26 @@ for tag in valid:
     if tag in HOLD:
         cur = hashlib.sha256(blobs["driver_stamp.json"]).hexdigest() if blobs["driver_stamp.json"] is not None else None
         rel = HOLD[tag].get("released")
-        if not rel:  # 16i 3: held until an explicit release; a changed stamp is not a new measurement by itself
-            held.append({"tag": tag, "why": HOLD[tag].get("why"), "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur})
+        ok_rel = False  # 16j 5.3: a release names the new measurement; it frees the run only if that IS the run on disk
+        if isinstance(rel, dict) and all(rel.get(k) for k in ("by", "why", "new_attempt")):
+            try:
+                stp0 = json.loads(blobs["driver_stamp.json"].decode("utf-8")) if blobs["driver_stamp.json"] is not None else {}
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                stp0 = {}
+            rec0 = drv.get("rec", {}).get((drv["owner"][tag], tag)) or {}
+            ok_rel = isinstance(stp0, dict) and stp0.get("attempt") == rec0.get("attempt") == rel["new_attempt"]
+        if not ok_rel:  # 16i 3: held until a valid explicit release; a changed stamp is not a new measurement by itself
+            held.append({"tag": tag, "why": HOLD[tag].get("why"), "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur,
+                         "release_rejected": bool(rel)})
             if cur != HOLD[tag].get("stamp_sha256"):
                 hold_candidates.append({"tag": tag, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur})
             continue
-        hold_released.append({"tag": tag, "released": rel, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur})
-    why, form = auth(tag, m, blobs)''')
+        pending_release = {"tag": tag, "released": rel, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur}
+    else:
+        pending_release = None
+    why, form = auth(tag, m, blobs)
+    if pending_release and not why:  # written only once the released run passed authentication (16j 5.3)
+        hold_released.append(pending_release)''')
 rep('''    manifest[tag] = {"form": form, **{f: hashlib.sha256(blobs[f]).hexdigest() for f in OUT4}}''',
     '''    stp_ = json.loads(blobs["driver_stamp.json"].decode("utf-8"))
     rec_ = drv.get("rec", {}).get((drv["owner"][tag], tag)) or {}

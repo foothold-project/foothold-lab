@@ -51,13 +51,15 @@ PASS L3c attempt file names another attempt than the log: held got 5 want 5
 PASS L4 origin per run and counted; record and stamp attempts and the stamp hash kept got ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_driver') want ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_dri
 PASS L5 held run: out of the tables, listed with its reason, not an auth failure got (0, ['cq_on24000_wave_fwd03_on_s1000'], False, []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], False, [])
 PASS L5b (16i 3) only re-validation metadata changed: still held, listed as a release candidate, not used got (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False) want (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False)
-PASS L5c an explicit release frees it: used again, the release record kept got (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True) want (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True)
+PASS L5d (16j 5.3) 'released: true' with no record of the new run: still held, release rejected got (0, [('cq_on24000_wave_fwd03_on_s1000', True)], []) want (0, [('cq_on24000_wave_fwd03_on_s1000', True)], [])
+PASS L5e (16j 5.3) a release naming another attempt than the run on disk: still held got (0, ['cq_on24000_wave_fwd03_on_s1000'], []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], [])
+PASS L5c a release naming the authenticated new measurement: used again, the release record kept got (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True) want (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True)
 PASS L6 owner log's last record invalid, a valid one only in the other log: excluded got (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")]) want (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")])
 PASS L7 a v3.3+ owner with an unreadable attempt file: held (exit 5), nothing written got (5, False) want (5, False)
 PASS L7b the attempt file turns to revalidating during the aggregate: exit 3, nothing written got (3, False) want (3, False)
 PASS L7c the hold list changes during the aggregate: exit 3, nothing written got (3, False) want (3, False)
 PASS F1 frozen bundle: v8 = v7 on the 22,000 and 24,000 targets and verdicts, one held run, no auth failures, every used file = hand-over manifest got ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True) want ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True)
-PASS F2 live tree while the base re-validates: held, exit 5, nothing written got (5, False) want (5, False)
+PASS F2 live tree (base attempt running): runs or stops for a changing log got True want True
 PASS G1 100-pair targets: 보류, values labelled (100 쌍, none labelled (500 쌍 got (True, True, False) want (True, True, False)
 PASS G2 their regression rows carry n and 수집 중 got (True, True) want (True, True)
 PASS G3 an older aggregate is refused, not read as 'no comparison' got (True, False) want (True, False)

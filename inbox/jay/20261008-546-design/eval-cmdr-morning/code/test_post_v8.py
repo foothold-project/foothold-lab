@@ -401,11 +401,35 @@ try:
     check("L5b (16i 3) only re-validation metadata changed: still held, listed as a release candidate, not used",
           (LD.rc, [h["tag"] for h in LD.res["held"]], [c["tag"] for c in LD.res["hold_candidates"]], LD.res["hold_released"],
            "wave/fwd03/on" in LD.res["regression_24000"]), (0, [t_on], [t_on], [], False))
-    hj = json.load(open(os.path.join(LD.out, "cmdr_post_hold.json")))
-    hj[t_on]["released"] = {"by": "lead", "why": "새 측정 attempt 확인", "new_attempt": "NEW-j9"}
-    json.dump(hj, open(os.path.join(LD.out, "cmdr_post_hold.json"), "w"))
+    hp_ = os.path.join(LD.out, "cmdr_post_hold.json")
+    hj = json.load(open(hp_))
+    hj[t_on]["released"] = True
+    json.dump(hj, open(hp_, "w"))
     LD.go()
-    check("L5c an explicit release frees it: used again, the release record kept",
+    check("L5d (16j 5.3) 'released: true' with no record of the new run: still held, release rejected",
+          (LD.rc, [(h["tag"], h["release_rejected"]) for h in LD.res["held"]], LD.res["hold_released"]), (0, [(t_on, True)], []))
+    hj[t_on]["released"] = {"by": "lead", "why": "새 측정 확인", "new_attempt": "NOT-THE-ACTUAL-ATTEMPT"}
+    json.dump(hj, open(hp_, "w"))
+    LD.go()
+    check("L5e (16j 5.3) a release naming another attempt than the run on disk: still held",
+          (LD.rc, [h["tag"] for h in LD.res["held"]], LD.res["hold_released"]), (0, [t_on], []))
+    # a real new measurement: new outputs, a stamp and a published record with the new attempt
+    d_n = os.path.join(LD.out, t_on)
+    open(os.path.join(d_n, "episodes.csv"), "a", newline="").write("")
+    rows_n = list(csv.DictReader(open(os.path.join(d_n, "episodes.csv"), encoding="utf-8")))
+    rows_n[0]["mae_vx"] = "0.0123"
+    with open(os.path.join(d_n, "episodes.csv"), "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, list(rows_n[0].keys()))
+        w.writeheader()
+        w.writerows(rows_n)
+    hn = {f_: hashlib.sha256(open(os.path.join(d_n, f_), "rb").read()).hexdigest() for f_ in OUT4}
+    json.dump({"pins": PINS, "ckpt_sha256": CKPT["on24000"], "stamp_version": "3.7", "out_sha256": hn, "attempt": "NEW-j9"},
+              open(os.path.join(d_n, "driver_stamp.json"), "w"))
+    LD.recs["cmdr_eval_driver"].append({"tag": t_on, "valid": True, "reused": False, "attempt": "NEW-j9", "out_sha256": hn})
+    hj[t_on]["released"] = {"by": "lead", "why": "새 측정 확인", "new_attempt": "NEW-j9"}
+    json.dump(hj, open(hp_, "w"))
+    LD.go()
+    check("L5c a release naming the authenticated new measurement: used again, the release record kept",
           (LD.rc, LD.res["held"], [(r["tag"], r["released"]["new_attempt"]) for r in LD.res["hold_released"]], "wave/fwd03/on" in LD.res["regression_24000"]),
           (0, [], [(t_on, "NEW-j9")], True))
 

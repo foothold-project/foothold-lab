@@ -1,0 +1,8 @@
+PASS C0 the real frozen pair passes got 0 want 0
+PASS C1 (16j 6) the OFF arm's stand contract cell changed: fails (only the on run was held) got 1 want 1
+PASS C2 (16j 6) completion of an arm/family unrelated to the hold changed: fails got 1 want 1
+PASS C3 (16j 6) a general cells entry changed: fails got 1 want 1
+PASS C4 the target mean changed: fails got 1 want 1
+PASS C5 coverage lower by more than the held rows: fails got 1 want 1
+PASS C6 another top-level key differs: fails got 1 want 1
+FAILS []

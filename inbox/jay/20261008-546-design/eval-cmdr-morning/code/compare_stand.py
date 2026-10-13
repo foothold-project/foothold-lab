@@ -35,12 +35,19 @@ hold = json.load(open(os.path.join(OUT, "cmdr_post_hold.json"), encoding="utf-8"
 held_stamp = hold.get("stamp_sha256")
 old = [d for d in sorted(glob.glob(os.path.join(OUT, "attempts", f"{TAG}.dir.*"))) if sha(os.path.join(d, "driver_stamp.json")) == held_stamp]
 new = os.path.join(OUT, TAG)
+OUT4 = ("meta.json", "cells.json", "episodes.csv", "traj.npz")
+FIVE = OUT4 + ("env_origins.npy",)
 res = {"tag": TAG, "held_stamp": held_stamp, "old": [os.path.relpath(d, OUT) for d in old], "new": os.path.relpath(new, OUT)}
-if len(old) != 1 or not os.path.exists(os.path.join(new, "traj.npz")):
-    res["result"] = "not ready: " + ("the held run is not found among preserved folders" if len(old) != 1 else "no new run yet")
+missing_new = [f for f in FIVE + ("driver_stamp.json",) if not os.path.exists(os.path.join(new, f))]
+if len(old) != 1 or missing_new:  # 16j 5.2: a run still being written is "not ready", not read half-way
+    res["result"] = "not ready: " + ("the held run is not found among preserved folders" if len(old) != 1 else f"new run incomplete {missing_new}")
     print(json.dumps(res, ensure_ascii=False, indent=1))
     sys.exit(2)
 o = old[0]
+# 16j 5.2: the preserved original must be the very bytes the hand-over froze (not only the stamp)
+HAND = hold.get("handover")
+man_run = json.load(open(os.path.join(OUT, HAND, "manifest.json"), encoding="utf-8"))["runs"].get(TAG, {}) if HAND else {}
+res["old_equals_handover"] = bool(man_run) and all(sha(os.path.join(o, f)) == man_run.get(f) for f in FIVE)
 
 # outputs
 eq = {"cells.json": json.load(open(os.path.join(o, "cells.json"))) == json.load(open(os.path.join(new, "cells.json")))}
@@ -79,7 +86,15 @@ lo = open(os.path.join(OUT, f"{TAG}.log"), encoding="utf-8", errors="replace").r
 st = json.load(open(os.path.join(new, "driver_stamp.json"), encoding="utf-8")) if os.path.exists(os.path.join(new, "driver_stamp.json")) else {}
 base = json.load(open(os.path.join(OUT, "cmdr_eval_driver.json"), encoding="utf-8"))
 rec = next((r for r in reversed(base.get("runs", [])) if isinstance(r, dict) and r.get("tag") == TAG), {})
+now4 = {f: sha(os.path.join(new, f)) for f in OUT4}
+m_ = TAG.split("_")[1]
 nv = {"completion line": f"[Q-EVAL] done {TAG} N 100 " in lo,
+      # 16j 5.2: the bytes on disk are the bytes the stamp and the record vouch for, all four keys present
+      "four output hashes = stamp = record": isinstance(st.get("out_sha256"), dict) and sorted(st["out_sha256"]) == sorted(OUT4)
+      and st["out_sha256"] == now4 and rec.get("out_sha256") == now4,
+      "owner matrix valid, no pair failure": base.get("matrix", {}).get(TAG) == "valid" and "pair_fail" not in rec and TAG not in base.get("pair_fail", []),
+      "stamp pins and checkpoint = the log's": st.get("pins") == base.get("pins")
+      and st.get("ckpt_sha256") == (base.get("ckpt", {}).get(m_, {}) or {}).get("sha256"),
       "no Traceback": "Traceback (most recent call last)" not in lo,
       "no root reference failure": "</World/envs/env_0/Robot>: Unresolved reference" not in lo,
       "stamp v3.7 with a real job id": st.get("stamp_version") == "3.7" and bool(re.fullmatch(r"g[01]-\d+-\d{10}-j\d+", str(st.get("attempt", "")))),
@@ -87,7 +102,7 @@ nv = {"completion line": f"[Q-EVAL] done {TAG} N 100 " in lo,
       and rec.get("attempt") == st.get("attempt") and rec.get("out_sha256") == st.get("out_sha256")}
 res["new_run"] = nv
 res["new_run_valid"] = all(nv.values())
-res["comparison_ready"] = res["inputs_equal"] and res["new_run_valid"]
+res["comparison_ready"] = res["inputs_equal"] and res["new_run_valid"] and res["old_equals_handover"]
 if not res["comparison_ready"]:
     res["result"] = "same-condition comparison on hold (inputs differ or the new run is not shown valid)"
     code = 2
