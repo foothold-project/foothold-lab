@@ -135,6 +135,14 @@
 - **작업자 B 의 v2 기록기 수정 (`dump_native_v2.py:242` `runner.load(ckpt, map_location=dev)`):** 07:27 보고. lead 확인: 새 시험 `test_v2_load_device.py` 는 **v2 기록기의 해석기 `isaac311` python 에서는 통과** (CONTROL 로 수정 전 CUDA:1 실패 재현 · PASS) 하고 `isaac311-moects` 에서는 다른 `rsl_rl` (저장소 source) 이 불려 `AttributeError: alg_cfg` 로 실패. 작업자 보고서는 해석기를 `isaac311-moects` 라고 적어 어긋남 (시험은 실제 기록기의 해석기로 돌려야 함). CE12 회귀 (23 · 139 · 24 · 65 · 11) lead 재실행 진행 중. 끝나면 17n.
 - **v2 다시 시도:** 17n 허용 + v6 가 끝나 GPU 1 이 비고 + 기동 직전 확인 (17k 5 절) 이 있어야. 그 전에는 안 함.
 
+## ASTRA 17m 판정과 다음 GPU 1 순서 (08:10)
+
+- **17m (08:07 · RAND v4.1): smoke 한 번만 조건부 허용 · 본 실행 미승인.** 수정이 S1 실패 원인 (환경 1 개에서 teacher 목록이 빔) 을 고쳤다고 확인 (실제 `MoECTS` 클래스로 n=1 실패 · n=2 통과 · 단 n=3, 4, 5 는 teacher 목록이 달라 「2 개 이상이면 항상 [1]」 은 틀림 · 이번 설정은 정확히 2 개). **조건:** (1) v6 의 GPU 1 사용이 끝나고 자식 Isaac 도 종료된 것을 실제 프로세스와 GPU 로 확인 (2) 새 8 개 코드 · slot · isolate · guard · frame_audit · q_metrics · 체크포인트 · train YAML · 실제 자식 python 환경의 해시와 절대 경로 (3) GPU 1 NVML UUID · 총량 · 여유를 새로 읽음 (최소 4096 MiB · 과거 4417 · 4442 MiB 재사용 금지) (4) 상대 실행의 실제 로그가 scan 에 포함되고 읽히고 USD 경로가 풀림 (수동 읽기 필수) · v3 registry · 변환 lock · 새 run_id. 명령: `rand_driver.py --run_id <astra17m-smoke-...> --stop_after_smoke --probe auto --smoke_s 5 --min_free_mib 4096 --deadline <지금 + 20 분>` (`--skip_smoke` · `--probe on` · 무기한 deadline 금지 · S1 은 `tries=2` 로 최대 두 시도 · invocation 하나가 최대 네 native 시도). S1 이 같은 오류로 두 번 실패하면 종료 5 로 멈추고 재시작하지 않음.
+- **설명 정정 (17m 2 절):** env 1 은 「teacher 정책을 돌린다」 가 아니라 runner 초기화에 필요한 **보조 환경**이고 두 로봇 모두 student 추론을 쓰며 **평가는 env 0 하나**. 결과 문구는 17m 6 절 문장 그대로. 새 변이 5 개 (M79 ~ M84) 가 한 시험에 몰린다는 lead 설명은 정정됨: M84 는 실제 `eval_env_problems` 를 부르고 나머지 4 개 (M79 · M81 · M82 · M83) 만 문자열 정적 검사. 내가 17m 의뢰문에서 보조 환경을 「teacher」 로 쓴 것이 그 점을 흐렸다.
+- **smoke 후 볼 것:** S1 (2 환경 · judged 0 · 보조 1 · state 30 black 주입 뒤 재렌더 회복 · env 0 연속 궤적 · 영상 전체에서 보조 로봇 · 그림자 · 반사 · 카메라 대상 변경 없음 · 1 환경 영상과 이어 붙이지 않음) · S2 (probe 지원 여부와 S1 과 같은 251 상태를 나눠서) · S3 (`FRAME_GATE frame 20` 의도한 재렌더 실패 · 다른 예외를 성공으로 안 셈) · 보조 환경 실제 좌표 · 메모리 최고와 최저 · 시도 시간. smoke 의 세 장면은 교란 없는 base 라 실제 밀기와 마찰 반응은 검증하지 않음.
+- **순서:** v6 full 이 끝남 (59/75 · 08:09 · 약 08:30 추정) → v6 자식 종료 확인 → RAND smoke (위 조건) → ASTRA 17n 이 v2 재시도를 허용하면 v2 단회 (17k 5 절 조건 · 새 tag) → 한 번에 하나의 Isaac 으로. 둘은 서로 겹치지 않게.
+- **ASTRA 컨텍스트 9 % 남음 (08:09):** 17n 을 보냄 (08:10 · 범위를 좁힘). 재시작은 팀장 승인 (super2) 대기.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
