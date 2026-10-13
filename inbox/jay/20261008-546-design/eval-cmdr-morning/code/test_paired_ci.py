@@ -63,7 +63,7 @@ for n, pb, pc in grid:
     print(f"   n{n} pb {pb} pc {pc}: Tango coverage {100 * cv:.3f} % (prob summed {tot:.12f})")
     check(f"4 n{n} ({pb},{pc}) probability summed to 1", abs(tot - 1) < 1e-9)
 check("4b Tango coverage >= 93 % on every grid point", min(lows) >= 0.93, f"min {100 * min(lows):.3f} %")
-check("4c ASTRA models: Tango 100 % vs Newcombe 63.6 / 39.6 %", lows[0] > 0.95 and lows[1] > 0.95, f"{100 * lows[0]:.3f} {100 * lows[1]:.3f}")
+check("4c ASTRA models: Tango 99.66 / 99.98 % vs Newcombe 63.6 / 39.6 % (exact coverage at these two models only; coverage() sums a 12-sd neighbourhood, not every table; ASTRA 16c found 92.06 % at n100 (0.99, 0.0001): nominal 95 % approximate interval, not a guarantee)", lows[0] > 0.995 and lows[1] > 0.995, f"{100 * lows[0]:.3f} {100 * lows[1]:.3f}")
 
 # 5 the published 22,000 cells (n 500): Tango vs pinned Newcombe side by side (not a pass/fail on their values)
 for name, b, c in (("stop03", 44, 10), ("fwd01", 66, 190), ("fwd02", 4, 43)):

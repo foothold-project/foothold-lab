@@ -1,4 +1,4 @@
-# test_paired_ci.py · 2026-10-13 10:41 · paired_ci.py sha256 3056f6b364d8f449
+# test_paired_ci.py · 2026-10-13 11:24
 PASS 1a Newcombe n100 (.49,.01,0,.50) coverage 63.5964 % 63.5964 % sum 0.999999999999985
 PASS 1b Newcombe n500 (.499,.001,0,.50) coverage 39.5645 % 39.5645 % sum 0.999999999999969
 PASS 2 T(0) = (b - c) / sqrt(b + c) 
@@ -36,7 +36,7 @@ PASS 4 n100 (0,0) probability summed to 1
    n500 pb 0 pc 0: Tango coverage 100.000 % (prob summed 1.000000000000)
 PASS 4 n500 (0,0) probability summed to 1 
 PASS 4b Tango coverage >= 93 % on every grid point min 94.694 %
-PASS 4c ASTRA models: Tango 100 % vs Newcombe 63.6 / 39.6 % 99.657 99.983
+PASS 4c ASTRA models: Tango 99.66 / 99.98 % vs Newcombe 63.6 / 39.6 % (exact coverage at these two models only; coverage() sums a 12-sd neighbourhood, not every table; ASTRA 16c found 92.06 % at n100 (0.99, 0.0001): nominal 95 % approximate interval, not a guarantee) 99.657 99.983
    22000 stop03: Tango +6.8 [+4.1, +9.8]
    22000 fwd01: Tango -24.8 [-30.6, -18.8]
    22000 fwd02: Tango -7.8 [-10.7, -5.4]
