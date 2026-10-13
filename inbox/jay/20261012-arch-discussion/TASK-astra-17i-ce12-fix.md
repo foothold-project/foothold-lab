@@ -10,6 +10,10 @@
 
 비판적이면서도 냉정하고, 현실적이면서도 아주 전문성이 높은, 이 분야를 평생 탐구한 전문가로서 답해 주십시오. 하위 작업과 lead 의 보고를 맞다고 가정하지 마십시오. 17h 의 기준 (시험은 예정 대비 실행 · skip · hold · 환경 · 기대값의 근거까지) 을 이 판정에도 적용해 주십시오.
 
+## 0. lead 모델 변경 (팀장 10/14 02:2x)
+
+오늘 새벽부터 lead 는 Opus 5.5 에서 **Sonnet 5.5** 로 내려가 일합니다 (사용 한도 때문). lead 의 보고 · 재실행 결과 · 판단 문구를 평소보다 더 신중하고 꼼꼼하게 독립 대조해 주십시오. 특히 (1) lead 가 「재실행했다」 고 적은 숫자를 원자료로 다시 세어 볼 것 (2) lead 가 조건을 표로 옮긴 것이 판정문과 어긋나지 않는지 (3) lead 가 「허용」 이라고 읽은 곳이 실제로 허용인지 (보류 · 조건부를 허용으로 읽는 오류).
+
 ## 1. 대상
 
 - 코드: `night-tools-20261013/ce12/` (SHA256SUMS.txt 를 lead 가 01:15 에 다시 만듦 · 실행본 `C:/isaac/ext/go2_rl_robotlab/_eval/ce12/` 와 바이트가 같음 · r2 승인용 묶음 `CODE_BUNDLE_r2.txt` 는 ce12 일곱 파일과 slot v3 · isolate v3 · gpu_guard). 바뀐 파일: compare_native.py · validate_dump.py · run_dump.py · cells.py · dump_native_cts.py · dump_native_v2.py · test_adapters.py · test_run_dump.py · mutate_adapters.py · mutate_run_dump.py · README.
