@@ -1,0 +1,6 @@
+CAUGHT K1 a valid run's missing files are not a problem: exit 1 failed ['H2', 'H3'] want ['H2', 'H3']
+CAUGHT K2 no final re-hash of the originals: exit 1 failed ['H5', 'H5b'] want ['H5', 'H5b']
+CAUGHT K3 no end process scan: exit 1 failed ['H6'] want ['H6']
+CAUGHT K4 env_origins.npy not frozen: exit 1 failed ['H1'] want ['H1']
+CAUGHT K5 stop requests moved even when the freeze failed: exit 1 failed ['H2'] want ['H2']
+ALL CAUGHT

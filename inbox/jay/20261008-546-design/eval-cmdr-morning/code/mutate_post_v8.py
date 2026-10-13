@@ -13,6 +13,8 @@ M = [
     ("P4 no stat check around a read", '        if s1 != s2:', '        if False:', ["R1"]),
     ("P5 no hold while the owner re-validates", 'if isinstance(af, dict) and (af.get("state") == "revalidating" or af.get("attempt") != d.get("attempt")):', 'if False:', ["L3", "L3c"]),
     ("P6 origin field ignored", 'stp_.get("origin") or (', '(', ["L4", "G13"]),
+    ("P7 hold list ignored", '        if cur == HOLD[tag].get("stamp_sha256"):', '        if False:', ["L5"]),
+    ("P8 hold kept after a new stamp", '        if cur == HOLD[tag].get("stamp_sha256"):', '        if True:', ["L5b"]),
 ]
 
 

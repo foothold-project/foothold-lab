@@ -48,6 +48,13 @@ rep('''# Usage: python cmdr_eval_driver_v36.py --gpu 1 --plan base --order 24fir
 #       "hashed-at-collection" (measured by v3.3+ with hashes) or "legacy-origin revalidated" (a v3.2 run whose hashes
 #       are first taken at this re-validation; they fix the bytes from now on, not before). A reused stamp also keeps
 #       prev_stamp_sha256, revalidated_by (this attempt) and revalidated_at; the origin is never upgraded later.
+#       A v3.3-v3.6 stamp with attempt "v3.2 or earlier" (a v3.2 run those versions re-validated) is legacy-origin
+#       revalidated, a stamp with a real job id is hashed-at-collection, anything else "origin unknown" (16h 3.2).
+#   (v2) VERIFY-astra-16h 3.1: a lock participant is a process (or a descendant of one) running THIS file, compared by
+#       real path (a relative script path resolved against the process's cwd); a same-named copy in another folder has
+#       its own out/isaac_convert.lock and is foreign. A python process with an empty argv is unknown (foreign).
+#       Limit: a scan cannot stop a non-participant that starts right after it, and an Isaac app with an unknown
+#       script name and no --headless is not recognised; while two v3.7 drivers collect, no other session starts Isaac.
 # Usage: python cmdr_eval_driver_v37.py --gpu 1 --plan base --order 24first --until "2026-10-13 20:00"
 #        python cmdr_eval_driver_v37.py --gpu 0 --plan remeasure --log cmdr_eval_driver_g0 --until "2026-10-13 20:00"''')
 
@@ -63,6 +70,9 @@ i = s.index("SPACING_S = 30\n")
 j = s.index("def q(script, tag, model_path,")
 assert s.count("SPACING_S = 30\n") == 1 and s.count("def q(script, tag, model_path,") == 1
 NEW = r'''PARTICIPANT = "cmdr_eval_driver_v37.py"
+# 16h 3.1: a participant is this very file (same real path, so the same HERE/out/isaac_convert.lock), not any copy with
+# the same name in another folder, which would hold a different lock.
+SELF_PATH = os.path.normcase(os.path.realpath(os.path.abspath(__file__)))
 CONVERT_LOCK = "isaac_convert.lock"
 CONVERT_DONE = "[INFO]: Time taken for scene creation"
 ROOT_REF = "</World/envs/env_0/Robot>: Unresolved reference"
@@ -84,16 +94,30 @@ def _procs_tree():
         except psutil.NoSuchProcess:
             continue
         n = (d.get("name") or "").lower()
-        d["ppid"], d["create_time"] = (pm.get(d["pid"]) if pm is not None else None), None
+        d["ppid"], d["create_time"], d["cwd"] = (pm.get(d["pid"]) if pm is not None else None), None, None
         if n.startswith("python") or n.startswith("kit"):
             try:
                 d["create_time"] = pr.create_time()
                 if pm is None:
                     d["ppid"] = pr.ppid()
+                if any(os.path.basename(x).lower() == PARTICIPANT for x in (d.get("cmdline") or [])):
+                    d["cwd"] = pr.cwd()  # to resolve a relative script path (16h 3.1)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
         out.append(d)
     return out
+
+
+def _is_participant(p):
+    """True only when the process runs this same driver file (real path equal to SELF_PATH). A relative script path
+    is resolved against the process's cwd; when that cannot be read the process is not trusted."""
+    for x in (p.get("cmdline") or []):
+        if os.path.basename(x).lower() != PARTICIPANT:
+            continue
+        if not os.path.isabs(x) and not p.get("cwd"):
+            return False
+        return os.path.normcase(os.path.realpath(os.path.join(p.get("cwd") or "", x))) == SELF_PATH
+    return False
 
 
 def _isaac_like(c):
@@ -118,7 +142,7 @@ def foreign_isaac(procs=None):
         if not name.startswith("python"):
             continue
         c = p.get("cmdline")
-        if c is None:
+        if not c:  # None (cannot read) or [] (16h 3.1: an empty argv is not proof of an unrelated python)
             out.append(f"unknown:{p['pid']}")
             continue
         if not _isaac_like(c):
@@ -126,7 +150,7 @@ def foreign_isaac(procs=None):
         cur, seen, part = p, set(), False
         while cur is not None and cur["pid"] not in seen:
             seen.add(cur["pid"])
-            if any(os.path.basename(x).lower() == PARTICIPANT for x in (cur.get("cmdline") or [])):
+            if _is_participant(cur):
                 part = True
                 break
             par = by.get(cur.get("ppid"))
@@ -291,6 +315,22 @@ def _free(p):
     return q_
 
 
+def _origin_of(prev, reused):
+    """(o2) where a run's output hashes come from. A new run: hashed-at-collection. A reused run keeps an explicit origin;
+    without one, a stamp with no stamp_version is v3.2; a v3.3-v3.6 stamp that carries attempt "v3.2 or earlier" is a
+    v3.2 run those versions re-validated (16h 3.2); a stamp whose attempt is a real job id (g<gpu>-<pid>-<start>-j<n>)
+    was hashed when it was measured; anything else is "origin unknown"."""
+    if not reused:
+        return "hashed-at-collection"
+    if prev.get("origin"):
+        return prev["origin"]
+    if "stamp_version" not in prev or prev.get("attempt") == "v3.2 or earlier":
+        return "legacy-origin revalidated"
+    if re.fullmatch(r"g[01]-\d+-\d{10}-j\d+", str(prev.get("attempt", ""))):
+        return "hashed-at-collection"
+    return "origin unknown"
+
+
 def preserve_result(tag):
     """(z) the earlier result folder of a run measured again goes to out/attempts/ (stamp included)."""
     d = os.path.join(OUT, tag)
@@ -381,8 +421,8 @@ rep('''           "gpu": GPU, "tries": [] if reused else list(TRIES.get(tag, [])
     '''           "gpu": GPU, "tries": [] if reused else list(TRIES.get(tag, [])), "usd_dir": usd_dirs_of(tag)}
     # (o2) where the output hashes come from (VERIFY-astra-16g 4): measured by this driver family with hashes from the
     # start, or a v3.2 run whose hashes are first taken now when it is re-validated. Never upgraded on a later reuse.
-    origin = {"origin": "hashed-at-collection"} if not reused else {
-        "origin": prev.get("origin") or ("legacy-origin revalidated" if "stamp_version" not in prev else "hashed-at-collection"),
+    origin = {"origin": _origin_of(prev, reused)} if not reused else {
+        "origin": _origin_of(prev, reused),
         "prev_stamp_sha256": prev_sha, "revalidated_by": ATTEMPT, "revalidated_at": time.strftime("%Y-%m-%d %H:%M:%S")}
     rec["origin"] = origin["origin"]
     if moved:

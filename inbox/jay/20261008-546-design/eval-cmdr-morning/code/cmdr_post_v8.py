@@ -81,6 +81,9 @@
 #   - inputs_manifest keeps per run: form, origin (the stamp's origin field; "v3.2 legacy stamp" for a legacy stamp),
 #     owner log, the record's and the stamp's attempt and the stamp's sha256 besides the four output hashes (16g 3.3 /
 #     4). origin_counts sums them; legacy_stamps still counts stamps that are legacy now, not runs of legacy origin.
+#   - out/cmdr_post_hold.json {tag: {stamp_sha256, why}} keeps named runs out of every table while their stamp is the
+#     held one (res["held"] with the reason); a run measured again has a new stamp and is used again (res["hold_released"])
+#     (16h 4.3: the 11:38 stand run that shared its USD folder must not stand in the frozen tables as checked).
 #   - schema = "cmdr_post v8".
 # Usage: python cmdr_post_v8.py    (CMDR_POST_OUT=<folder> for tests)
 import csv
@@ -287,9 +290,19 @@ def auth(tag, m, blobs):
 
 R = {}
 auth_fail, legacy, manifest = [], [], {}
+HOLD = {}  # 16h 4.3: out/cmdr_post_hold.json {tag: {"stamp_sha256", "why"}}: a run kept out of the tables on purpose
+if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")):
+    HOLD = json.load(open(os.path.join(OUT, "cmdr_post_hold.json"), encoding="utf-8"))
+held, hold_released = [], []
 for tag in valid:
     _, m, rest = tag.split("_", 2)
     blobs = read_run(tag)
+    if tag in HOLD:
+        cur = hashlib.sha256(blobs["driver_stamp.json"]).hexdigest() if blobs["driver_stamp.json"] is not None else None
+        if cur == HOLD[tag].get("stamp_sha256"):  # the very run that was held: out of the tables, reason kept
+            held.append({"tag": tag, "why": HOLD[tag].get("why"), "stamp_sha256": cur})
+            continue
+        hold_released.append({"tag": tag, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur})  # measured again
     why, form = auth(tag, m, blobs)
     if why:
         auth_fail.append({"tag": tag, "why": why})
@@ -538,6 +551,8 @@ res["schema"] = "cmdr_post v8"
 res["auth_fail"] = auth_fail
 res["legacy_stamps"] = len(legacy)
 res["legacy_tags"] = legacy
+res["held"] = held
+res["hold_released"] = hold_released
 res["origin_counts"] = {}
 for v_ in manifest.values():
     res["origin_counts"][v_["origin"]] = res["origin_counts"].get(v_["origin"], 0) + 1

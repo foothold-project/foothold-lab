@@ -5,4 +5,6 @@ CAUGHT P3 no end check of the files read: exit 1 failed ['L2'] want ['L2']
 CAUGHT P4 no stat check around a read: exit 1 failed ['R1'] want ['R1']
 CAUGHT P5 no hold while the owner re-validates: exit 1 failed ['L3', 'L3c'] want ['L3', 'L3c']
 CAUGHT P6 origin field ignored: exit 1 failed ['L4', 'G13'] want ['L4', 'G13']
+CAUGHT P7 hold list ignored: exit 1 failed ['L5', 'G14'] want ['L5']
+CAUGHT P8 hold kept after a new stamp: exit 1 failed ['L5b'] want ['L5b']
 ALL CAUGHT

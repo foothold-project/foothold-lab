@@ -550,12 +550,20 @@ time.sleep(6)
     n = ns_for(["--gpu", "0", "--plan", "remeasure", "--log", "g0t"])
     me = os.getpid()
 
-    def PR(pid, ppid, ct, *argv, name="python.exe"):
-        return {"pid": pid, "ppid": ppid, "create_time": ct, "name": name, "cmdline": list(argv) if argv else None}
+    def PR(pid, ppid, ct, *argv, name="python.exe", cwd=None, empty=False):
+        return {"pid": pid, "ppid": ppid, "create_time": ct, "name": name, "cwd": cwd,
+                "cmdline": [] if empty else (list(argv) if argv else None)}
     plist = [PR(me, 1, 50, "python.exe", "cmdr_eval_driver_v37.py", "--gpu", "0"),
              PR(1001, 1, 60, "python.exe", "cmdr_eval_driver.py", "--until", "2026-10-13 14:00"),
              PR(1002, 1, 61, "python.exe", "cmdr_eval_driver_v36.py", "--gpu", "0"),
-             PR(1030, 1, 100, "python.exe", "C:/x/_eval/cmdr_eval_driver_v37.py", "--gpu", "1"),
+             PR(1030, 1, 100, "python.exe", SRCF.replace("/", "\\"), "--gpu", "1"),
+             PR(1050, 1, 100, "python.exe", "D:/other/_eval/cmdr_eval_driver_v37.py", "--gpu", "1"),
+             PR(1051, 1050, 110, "python.exe", "gpu_guard.py", "--", "python.exe", "q_eval_cmdr.py", "--headless"),
+             PR(1060, 1, 100, "python.exe", "cmdr_eval_driver_v37.py", "--gpu", "0", cwd=os.path.dirname(SRCF)),
+             PR(1061, 1060, 110, "python.exe", "gpu_guard.py", "--", "python.exe", "q_eval_cmdr.py", "--headless"),
+             PR(1062, 1, 100, "python.exe", "cmdr_eval_driver_v37.py", "--gpu", "0"),
+             PR(1063, 1062, 110, "python.exe", "gpu_guard.py", "--", "python.exe", "q_eval_cmdr.py", "--headless"),
+             PR(1070, 1, 70, empty=True),
              PR(1031, 1030, 110, "python.exe", "gpu_guard.py", "--gpu", "1", "--", "python.exe", "q_eval_cmdr.py", "--headless"),
              PR(1032, 1031, 111, "python.exe", "q_eval_cmdr.py", "--headless", "--tag", "t"),
              PR(1033, 1030, 90, "python.exe", "q_eval_cmdr.py", "--headless", "--tag", "u"),
@@ -566,9 +574,11 @@ time.sleep(6)
              PR(1044, 1, 74, "python.exe", "branch_run.py", "--tag", "x"),
              PR(1045, 1, 75, "python.exe", "something.py", "--headless"),
              PR(1046, 1001, 80, "python.exe", "gpu_guard.py", "--", "python.exe", "q_eval_cmdr.py", "--headless")]
-    check("21 foreign: older drivers, their children, unseen / training launchers, kit, unreadable argv, a reused parent pid; "
-          "not: a v3.7 driver, its children, unrelated python",
-          sorted(map(str, n["foreign_isaac"](plist))), sorted(map(str, [1001, 1002, 1033, "unknown:1040", 1042, 1043, 1044, 1045, 1046])))
+    check("21 foreign: older drivers, their children, unseen / training launchers, kit, unreadable or empty argv, a reused parent pid, "
+          "a same-named v3.7 in another folder and its child, a relative path whose cwd is unknown and its child; "
+          "not: this file (absolute or relative to its cwd), its children, unrelated python",
+          sorted(map(str, n["foreign_isaac"](plist))),
+          sorted(map(str, [1001, 1002, 1033, "unknown:1040", 1042, 1043, 1044, 1045, 1046, 1050, 1051, 1062, 1063, "unknown:1070"])))
 
     # 26 (v) the real process list on this machine: fast, our own parent and create time right, live old drivers foreign
     n = ns_for(["--gpu", "0", "--plan", "remeasure", "--log", "g0t"])
@@ -605,16 +615,27 @@ time.sleep(6)
            got_st.get("revalidated_by") == n["ATTEMPT"], got_st.get("attempt")),
           (True, "legacy-origin revalidated", "legacy-origin revalidated", True, True, "v3.2 or earlier"))
     open(os.path.join(TMP, tg, "driver_stamp.json"), "w").write(json.dumps({"pins": {"x": 1}, "stamp_version": "3.7",
-                                                                            "origin": "legacy-origin revalidated", "attempt": "v3.2 or earlier"}))
+                                                                            "origin": "origin unknown", "attempt": "g1-1-1013140000-j1"}))
     got_st.clear()
     n["process"](job)
-    check("27b a later re-validation does not upgrade the origin", got_st.get("origin"), "legacy-origin revalidated")
+    check("27b a later re-validation keeps an explicit origin (origin unknown + a real job id is not upgraded to hashed-at-collection)",
+          got_st.get("origin"), "origin unknown")
     n["stamp_ok"] = lambda t, P: False
     n["guarded"] = lambda name, cmd, tries=4, wait_s=300, ck=None: (0, 1)
     got_st.clear()
     n["process"](job)
     check("27c a new run: hashed-at-collection, no previous stamp fields", (n["LOG"]["runs"][-1]["origin"], got_st.get("origin"), "prev_stamp_sha256" in got_st),
           ("hashed-at-collection", "hashed-at-collection", False))
+    n["stamp_ok"] = lambda t, P: True
+    got_o = []
+    for att in ("v3.2 or earlier", "g0-85080-1013114359-j1", "weird"):
+        os.makedirs(os.path.join(TMP, tg), exist_ok=True)
+        open(os.path.join(TMP, tg, "driver_stamp.json"), "w").write(json.dumps({"pins": {"x": 1}, "stamp_version": "3.6", "attempt": att}))
+        got_st.clear()
+        n["process"](job)
+        got_o.append(got_st.get("origin"))
+    check("27d (16h 3.2) a v3.6 stamp without origin: re-validated v3.2 run / real job id / anything else",
+          got_o, ["legacy-origin revalidated", "hashed-at-collection", "origin unknown"])
 
     # 22 (y) usd_check on copies of real logs (out/ is only read)
     n = ns_for(["--gpu", "1"])

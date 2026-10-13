@@ -114,6 +114,26 @@ s = s[:i] + r'''    # L1 (16g 3.1) the log still publishes the older run; a newe
           (LO.res["origin_counts"], me["record_attempt"] == me["stamp_attempt"] == t_on + "-A1", len(me["stamp_sha256"]), me["owner"]),
           ({"hashed (stamp has no origin field)": 1, "legacy-origin revalidated": 1}, True, 64, "cmdr_eval_driver"))
 
+    # L5 (16h 4.3) a held run stays out of every table with its reason; measured again (new stamp) it is used again
+    LD = Fake("L5")
+    LD.run(t_off, 60)
+    LD.run(t_on, 50)
+    hs = hashlib.sha256(open(os.path.join(LD.out, t_on, "driver_stamp.json"), "rb").read()).hexdigest()
+    json.dump({t_on: {"stamp_sha256": hs, "why": "USD 임시 폴더 공유 의심 (11:38) · 다시 재는 중"}}, open(os.path.join(LD.out, "cmdr_post_hold.json"), "w"))
+    LD.go()
+    check("L5 held run: out of the tables, listed with its reason, not an auth failure",
+          (LD.rc, [h["tag"] for h in LD.res["held"]], "wave/fwd03/on" in LD.res["regression_24000"], LD.res["auth_fail"]), (0, [t_on], False, []))
+    held_post = os.path.join(LD.out, "cmdr_post.json")
+    import shutil as _sh
+    _sh.copy(held_post, os.path.join(LD.out, "cmdr_post_held.json"))
+    sp_ = os.path.join(LD.out, t_on, "driver_stamp.json")
+    st_ = json.load(open(sp_))
+    st_["revalidated_at"] = "later"
+    json.dump(st_, open(sp_, "w"))
+    LD.go()
+    check("L5b the stamp is no longer the held one: used again, release recorded",
+          (LD.rc, LD.res["held"], [r["tag"] for r in LD.res["hold_released"]], "wave/fwd03/on" in LD.res["regression_24000"]), (0, [], [t_on], True))
+
 ''' + s[i:]
 
 rep('''    check("G11 seed ids in the per-seed list", "1000 +" in g3["cmdr_status"] or "1000 -" in g3["cmdr_status"], True)''',
@@ -124,6 +144,9 @@ rep('''    check("G11 seed ids in the per-seed list", "1000 +" in g3["cmdr_statu
     FC.EV = ev_real
     check("G12 (16g 5.1) no result file: says only what is seen", ("현재 상태 미확인" in g12["cmdr_train_status"], "학습 중" in g12["cmdr_train_status"]), (True, False))
     g13 = FC.build(post_path=os.path.join(LO.out, "cmdr_post.json"), summary_path=summ)
+    g14 = FC.build(post_path=os.path.join(LD.out, "cmdr_post_held.json"), summary_path=summ)
+    check("G14 (16h 4.3) the status line names the held run and its reason", ("공개 보류 1 개" in g14["cmdr_status"] or "공개 보류 1 개" in " ".join(str(v) for v in g14.values()),
+          "USD 임시 폴더 공유 의심" in " ".join(str(v) for v in g14.values())), (True, True))
     check("G13 (16g 4) the status line shows the origins", ("구형 출처 · 재검사 때 해시 1" in g13["cmdr_status"] or "구형 출처 · 재검사 때 해시 1" in " ".join(str(v) for v in g13.values())), True)''')
 open("C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/test_post_v8.py", "w", encoding="utf-8").write(s)
 print("ok")

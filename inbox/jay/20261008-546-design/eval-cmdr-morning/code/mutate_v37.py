@@ -18,8 +18,10 @@ M = [
  ("M12 validate without usd_check", '        why = usd_check(tag)  # (y)\n        if why:\n            return why\n', '', ["11g"]),
  ("M13 attempts names may be replaced", '    while os.path.exists(q_):', '    while False:', ["19b"]),
  ("M14 ppid asked per process", '    for pr in psutil.process_iter(["pid", "name", "cmdline"]):\n        try:\n            d = dict(pr.info)', '    for pr in psutil.process_iter(["pid", "name", "cmdline", "ppid"]):\n        try:\n            d = dict(pr.info)', ["26"]),
- ("M15 legacy origin not named", '"legacy-origin revalidated" if "stamp_version" not in prev else "hashed-at-collection"', '"hashed-at-collection"', ["27a"]),
- ("M16 origin upgraded on a later reuse", 'prev.get("origin") or (', '(', ["27b"]),
+ ("M15 v3.6 re-validated v3.2 run not named", '    if "stamp_version" not in prev or prev.get("attempt") == "v3.2 or earlier":', '    if "stamp_version" not in prev:', ["27d"]),
+ ("M16 origin upgraded on a later reuse", '    if prev.get("origin"):\n        return prev["origin"]\n', '', ["27b"]),
+ ("M17 participant by file name only", '            if _is_participant(cur):', '            if any(os.path.basename(x).lower() == PARTICIPANT for x in (cur.get("cmdline") or [])):', ["21"]),
+ ("M18 empty argv trusted", '        if not c:  # None', '        if c is None:  # None', ["21"]),
 ]
 def one(m):
     name, a, b, want = m

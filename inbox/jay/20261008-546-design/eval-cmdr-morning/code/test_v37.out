@@ -1,22 +1,22 @@
-12:59:26 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
-12:59:26 END complete=False flagged=1 unmeasured=94 missing=0
+13:36:23 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
+13:36:23 END complete=False flagged=1 unmeasured=94 missing=0
 PASS 1a last pair in the final snapshot is remeasured got ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on240 want ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_f
-12:59:26 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:23 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 2a older-version end record (zero targets) ignored: ends on the 4th read got 4 want 4
-12:59:26 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:23 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 2b writer alive on reads 1-3: a read with a writer is not a stable read -> ends on read 5 got (5, []) want (5, [])
-12:59:26 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:23 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 2c base lock held on reads 1-2 counts as a writer: ends on read 4 got 4 want 4
-12:59:26 END complete=False flagged=0 unmeasured=96 missing=0
+13:36:23 END complete=False flagged=0 unmeasured=96 missing=0
 PASS 3a permanent read failure: stopped at the deadline got ('deadline', True, False, 'JSONDecodeError') want ('deadline', True, False, 'JSONDecodeError')
 PASS 3b ended within a few retries got True want True
-12:59:26 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
-12:59:26 END complete=False flagged=1 unmeasured=94 missing=0
+13:36:23 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
+13:36:23 END complete=False flagged=1 unmeasured=94 missing=0
 PASS 3c temporary failure then final: remeasured and ended got (['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on24 want (['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_
-12:59:26 END complete=False flagged=0 unmeasured=1 missing=0
+13:36:23 END complete=False flagged=0 unmeasured=1 missing=0
 PASS 4a cell gone from the final snapshot: withdrawn and unmeasured got (True, ['wave/stand/on'], False) want (True, ['wave/stand/on'], False)
-12:59:27 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
-12:59:27 END complete=False flagged=0 unmeasured=1 missing=0
+13:36:23 SCREEN wave/fwd03/on -10 pp -> seeds [1001, 1002, 1003, 1004]
+13:36:23 END complete=False flagged=0 unmeasured=1 missing=0
 PASS 4b flagged then withdrawn before running: 8 jobs dequeued, none run got (8, [], []) want (8, [], [])
 PASS 5a g0 writers in every spelling got [11, 12, 13, 14, 15] want [11, 12, 13, 14, 15]
 PASS 5b base writers: only the v3.2 default got [16] want [16]
@@ -24,9 +24,9 @@ PASS 6a lock held by another process: take_lock refused, lock_held true got (Fal
 PASS 6b after it exits: free got (False, True) want (False, True)
 PASS 7a owner exits during re-validation: old table kept, stop record beside it, attempt stopped got ({'matrix': {'old': 'valid'}}, 4, 'exit 4', 'error', 'stopped') want ({'matrix': {'old': 'valid'}}, 4, 'exit 4', 'error', 'stopped')
 PASS 7b exception: exit record in the log with not_run, end_kind error got (1, 'ValueError: x', ['cq_on24000_wave_fwd03_on_s1001'], 'error') want (1, 'ValueError: x', ['cq_on24000_wave_fwd03_on_s1001'], 'error')
-12:59:33 RUN gtag try 1 EXIT 99 0s · slot exit 0.0s · usd []
-12:59:33 GUARD STOP gtag: free < 4096 MiB on GPU 1, waiting 1s
-12:59:33 RUN gtag try 2 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:29 RUN gtag try 1 EXIT 99 0s · slot exit 0.0s · usd []
+13:36:29 GUARD STOP gtag: free < 4096 MiB on GPU 1, waiting 1s
+13:36:29 RUN gtag try 2 EXIT 0 0s · slot exit 0.0s · usd []
 PASS 8a rc99 then 0: two tries recorded, first try's files moved aside got (0, 2, [99, 0], 2, 2) want (0, 2, [99, 0], 2, 2)
 PASS 8b moved log is the first try's got 'try rc 99\n' want 'try rc 99\n'
 PASS 9 two sharing violations then written got (3, True) want (3, True)
@@ -38,86 +38,87 @@ PASS 10e NIGHT DONE only before the on arm's exit got "night log has no NIGHT DO
 PASS 10f all signs got '' want ''
 PASS 10g 3000 MiB refused (< 3000 needed) got 'GPU 0 memory used 3000 MiB' want 'GPU 0 memory used 3000 MiB'
 PASS 10h 2999 MiB ok got '' want ''
-12:59:33 another driver writes out/own.json (pids [999]): not starting
+13:36:29 another driver writes out/own.json (pids [999]): not starting
 PASS 12 refused start (writer): exit 6, log bytes kept, one refused record, no shared side files got (6, True, 1, []) want (6, True, 1, [])
-12:59:33 out/own.lock is held by another process: not starting
+13:36:29 out/own.lock is held by another process: not starting
 PASS 12 refused start (lock): exit 6, log bytes kept, one refused record, no shared side files got (6, True, 1, []) want (6, True, 1, [])
-12:59:33 --log must differ from --base_log for --plan remeasure
+13:36:29 --log must differ from --base_log for --plan remeasure
 PASS 12 refused start (same): exit 6, log bytes kept, one refused record, no shared side files got (6, True, 1, []) want (6, True, 1, [])
-12:59:33 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:29 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 13a new attempt stopped, log still the old finished one: no final, ends only at the deadline got ('deadline', False, False) want ('deadline', False, False)
-12:59:33 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:29 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 13b new attempt re-validating: no final got False want False
-12:59:33 END complete=False flagged=0 unmeasured=94 missing=0
+13:36:29 END complete=False flagged=0 unmeasured=94 missing=0
 PASS 13c matching attempt ended: a failed read resets the stable count -> ends on read 4 got 4 want 4
-12:59:33 re-validation pass: 0 reused · 1 pending
+13:36:29 re-validation pass: 0 reused · 1 pending
 PASS 14 stamp failure mid-job: active tag and its tries in the exit record, error, not complete got ('cq_on24000_wave_fwd03_on_s1001', 1, 'error', False) want ('cq_on24000_wave_fwd03_on_s1001', 1, 'error', False)
-12:59:33 re-validation pass: 0 reused · 0 pending
-12:59:33 END complete=True runs=0 not_run=0 not_valid=0
+13:36:29 re-validation pass: 0 reused · 0 pending
+13:36:29 END complete=True runs=0 not_run=0 not_valid=0
 PASS 15a all valid: end_kind complete, exit_code 0 got ('complete', 0, True) want ('complete', 0, True)
-12:59:33 re-validation pass: 0 reused · 2 pending
-12:59:33 END complete=False runs=0 not_run=2 not_valid=0
+13:36:29 re-validation pass: 0 reused · 2 pending
+13:36:29 END complete=False runs=0 not_run=2 not_valid=0
 PASS 15b deadline with jobs left: incomplete, stopped deadline, not_run listed got ('incomplete', 'deadline', 2) want ('incomplete', 'deadline', 2)
 PASS 16 python with unreadable argv -> unknown writer got ['unknown:5'] want ['unknown:5']
-12:59:33 END complete=False flagged=0 unmeasured=96 missing=0
+13:36:30 END complete=False flagged=0 unmeasured=96 missing=0
 PASS 17 stop file: stopped, incomplete, no job run got ('stop file', 'incomplete', []) want ('stop file', 'incomplete', [])
-12:59:33 SLOT WAIT dl try 1: foreign Isaac processes [4242]
-12:59:33 DEADLINE before dl try 1
+13:36:30 SLOT WAIT dl try 1: foreign Isaac processes [4242]
+13:36:30 DEADLINE before dl try 1
 PASS 18a slot busy past the deadline: exit 2 during the wait, before any launch got (('exit', 2), [], 'deadline before dl try 1', True) want (('exit', 2), [], 'deadline before dl try 1', True)
-12:59:33 SLOT WAIT st try 1: foreign Isaac processes [4242]
-12:59:33 STOP FILE before st try 1
+13:36:30 SLOT WAIT st try 1: foreign Isaac processes [4242]
+13:36:30 STOP FILE before st try 1
 PASS 18b stop file while waiting: exit 7 during the wait, no launch got (('exit', 7), [], 'stop file before st try 1', True) want (('exit', 7), [], 'stop file before st try 1', True)
-12:59:33 SLOT WAIT pn try 1: foreign Isaac processes [4242]
-12:59:33 PINS CHANGED: stop
+13:36:30 SLOT WAIT pn try 1: foreign Isaac processes [4242]
+13:36:30 PINS CHANGED: stop
 PASS 18c pins change while waiting: exit 4 during the wait, no launch got (('exit', 4), [], True) want (('exit', 4), [], True)
-12:59:33 SLOT WAIT ckp try 1: foreign Isaac processes [4242]
-12:59:33 CHECKPOINT CHANGED on24000: stop
+13:36:30 SLOT WAIT ckp try 1: foreign Isaac processes [4242]
+13:36:30 CHECKPOINT CHANGED on24000: stop
 PASS 18d the job's checkpoint changes while waiting: exit 5 during the wait, no launch got (('exit', 5), [], True) want (('exit', 5), [], True)
-12:59:33 STOP FILE before sh try 1 launch
+13:36:30 STOP FILE before sh try 1 launch
 PASS 18e stop file appears as the slot is taken: the check with the slot held stops it, no launch got (('exit', 7), [], 'stop file before sh try 1 launch') want (('exit', 7), [], 'stop file before sh try 1 launch')
-12:59:33 SLOT WAIT ok try 1: foreign Isaac processes [4242]
-12:59:33 RUN ok try 1 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 SLOT WAIT ok try 1: foreign Isaac processes [4242]
+13:36:30 RUN ok try 1 EXIT 0 0s · slot exit 0.0s · usd []
 PASS 18f control: slot free at 1020, nothing fired: one launch after the wait, (0, 1) got ((0, 1), 1, True) want ((0, 1), 1, True)
-12:59:33 RUN rtag_a try 1 EXIT 0 0s · slot exit 0.0s · usd []
-12:59:33 ROBOT ROOT REFERENCE UNRESOLVED rtag_a (USD temp folder collision suspected, not proven): retry
-12:59:33 RUN rtag_a try 2 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 RUN rtag_a try 1 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 ROBOT ROOT REFERENCE UNRESOLVED rtag_a (USD temp folder collision suspected, not proven): retry
+13:36:30 RUN rtag_a try 2 EXIT 0 0s · slot exit 0.0s · usd []
 PASS 19a root reference failure with exit 0 and no Traceback: retried, then clean (0, 2) got (0, 2, True, None) want (0, 2, True, None)
-12:59:33 RUN rtag_b try 1 EXIT 0 0s · slot exit 0.0s · usd []
-12:59:33 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
-12:59:33 RUN rtag_b try 2 EXIT 0 0s · slot exit 0.0s · usd []
-12:59:33 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
-12:59:33 RUN rtag_b try 3 EXIT 0 0s · slot exit 0.0s · usd []
-12:59:33 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
-12:59:33 RUN rtag_b try 4 EXIT 0 0s · slot exit 0.0s · usd []
-12:59:33 ROBOT ROOT REFERENCE UNRESOLVED rtag_b: tries used up, infrastructure failure
+13:36:30 RUN rtag_b try 1 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
+13:36:30 RUN rtag_b try 2 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
+13:36:30 RUN rtag_b try 3 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 ROBOT ROOT REFERENCE UNRESOLVED rtag_b (USD temp folder collision suspected, not proven): retry
+13:36:30 RUN rtag_b try 4 EXIT 0 0s · slot exit 0.0s · usd []
+13:36:30 ROBOT ROOT REFERENCE UNRESOLVED rtag_b: tries used up, infrastructure failure
 PASS 19b four root reference failures: (1, 4), infrastructure failure on the last try, earlier tries' six files kept got (1, 4, True, ['rtag_b'], 6) want (1, 4, True, ['rtag_b'], 6)
-12:59:35 RUN htag try 1 EXIT 0 1s · slot marker 1.2s · usd ['20261013_120000_7028']
+13:36:31 RUN htag try 1 EXIT 0 1s · slot marker 1.2s · usd ['20261013_120000_7028']
 PASS 20a slot held while the child converts, released at the scene-creation line got (['held', 'held'], 'free', 'marker', ['20261013_120000_7028'], (0, 1)) want (['held', 'held'], 'free', 'marker', ['20261013_120000_7028'], (0, 1))
 PASS 20b a child that exits before the line releases the slot too got 'exit' want 'exit'
 PASS 20c convert_slot holds the OS lock until release_slot got ('held', 'free') want ('held', 'free')
-PASS 21 foreign: older drivers, their children, unseen / training launchers, kit, unreadable argv, a reused parent pid; not: a v3.7 driver, its children, unrelated python got ['1001', '1002', '1033', '1042', '1043', '1044', '1045', '1046', 'unknown:1040'] want ['1001', '1002', '1033', '1042', '1043', '1044', '1045', '1046', 'unknown:1040']
-PASS 26 real process list in 0.24 s and foreign check in 0.19 s (< 5 s each); own ppid and create time; live older drivers foreign [85080, 89700] got (True, True, True, True, True) want (True, True, True, True, True)
+PASS 21 foreign: older drivers, their children, unseen / training launchers, kit, unreadable or empty argv, a reused parent pid, a same-named v3.7 in another folder and its child, a relative path whose cwd is unknown and its child; not: this file (absolute or relative to its cwd), its children, unrelated python got ['1001', '1002', '1033', '1042', '1043', '1044', '1045', '1046', '1050', '1051', '1062', '1063', 'unknown:1040', 'unknown:1070'] want ['1001', '1002', '1033', '1042', '1043', '1044', '1045', '1046', '1050', '1051', '1062', '
+PASS 26 real process list in 0.33 s and foreign check in 0.16 s (< 5 s each); own ppid and create time; live older drivers foreign [85080, 89700] got (True, True, True, True, True) want (True, True, True, True, True)
 PASS 27a re-validated v3.2 run: origin legacy-origin revalidated, the old stamp's hash and this attempt kept got (True, 'legacy-origin revalidated', 'legacy-origin revalidated', True, True, 'v3.2 or earlier') want (True, 'legacy-origin revalidated', 'legacy-origin revalidated', True, True, 'v3.2 or earl
-PASS 27b a later re-validation does not upgrade the origin got 'legacy-origin revalidated' want 'legacy-origin revalidated'
+PASS 27b a later re-validation keeps an explicit origin (origin unknown + a real job id is not upgraded to hashed-at-collection) got 'origin unknown' want 'origin unknown'
 PASS 27c a new run: hashed-at-collection, no previous stamp fields got ('hashed-at-collection', 'hashed-at-collection', False) want ('hashed-at-collection', 'hashed-at-collection', False)
+PASS 27d (16h 3.2) a v3.6 stamp without origin: re-validated v3.2 run / real job id / anything else got ['legacy-origin revalidated', 'hashed-at-collection', 'origin unknown'] want ['legacy-origin revalidated', 'hashed-at-collection', 'origin unknown']
 PASS 22a the 11:38 stand run's log alone: passes got '' want ''
 PASS 22b with the 11:38 start test log beside it: shared folder got "USD temp folder usd_20261013_113828_7028 shared with ['cq_test_8d384fcb_g0t113506p59116_ka_copy_default_buffers.log']" want "USD temp folder usd_20261013_113828_7028 shared with ['cq_test_8d384fcb_g0t113506p59116_k
 PASS 22c the failed start test's own log: root reference failure got True want True
 PASS 22d a copy under attempts/ also counts got True want True
 PASS 22e no scene-creation line / importer line after it / two USD folders got ('no scene-creation line', 'USD conversion output after the scene-creation line', 'USD folders named in the log: 2') want ('no scene-creation line', 'USD conversion output after the scene-creation line', 'USD fol
-PASS 23 real data: of 407 valid runs only the stand run fails, for the shared folder got (['cq_on24000_flat_stand_on_s1000'], True) want (['cq_on24000_flat_stand_on_s1000'], True)
+PASS 23 real data: of 443 valid runs only the stand run fails, for the shared folder got (['cq_on24000_flat_stand_on_s1000'], True) want (['cq_on24000_flat_stand_on_s1000'], True)
 PASS 24a folder moved under attempts/, second call finds none got (True, 'old', None) want (True, 'old', None)
 PASS 24b process(): the run record names the moved folder; old bytes there, new bytes in place got (True, 'old', 'new') want (True, 'old', 'new')
-13:00:18 STOP FILE before t1 try 1
+13:37:11 STOP FILE before t1 try 1
 PASS 25a stop file before a launch got (7, 7, 'incomplete', 'stop file before t1 try 1', 't1', 'stopped') want (7, 7, 'incomplete', 'stop file before t1 try 1', 't1', 'stopped')
-13:00:18 DEADLINE before t1 try 1
+13:37:11 DEADLINE before t1 try 1
 PASS 25b deadline before a launch got (2, 2, 'incomplete', 'deadline before t1 try 1', 't1', 'stopped') want (2, 2, 'incomplete', 'deadline before t1 try 1', 't1', 'stopped')
 PASS 11a real run validates on GPU 1 got '' want ''
 PASS 11g the same real run with the robot root reference failure added: invalid (16f 3.3) got True want True
 PASS 11b under --gpu 0 -> gpu uuid got 'gpu uuid' want 'gpu uuid'
 PASS 11c negative max_abs rejected got True want True
 PASS 11d cut stamp -> not reusable got False want False
-13:00:18 --log must differ from --base_log for --plan remeasure
+13:37:11 --log must differ from --base_log for --plan remeasure
 PASS 11e --log == --base_log refused got 6 want 6
 PASS 11f universe 96, flag boundary got (96, True, False) want (96, True, False)
 FAILS []

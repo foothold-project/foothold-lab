@@ -65,6 +65,16 @@ def _cellname(k):
     return f"{FAM_KO[fam]} · {CELL_KO.get(cell, cell)}{'' if noise == 'on' else ' · noise 끔'}"
 
 
+def _cellname_tag(tag):
+    """cq_<model>_<family>_<cell>_<noise>_s<seed> -> the cell name, the arm and the seed."""
+    _, m, rest = tag.split("_", 2)
+    rest, seed = rest.rsplit("_s", 1)
+    rest, noise = rest.rsplit("_", 1)
+    fam, cell = rest.rsplit("_", 1)
+    arm = "고친 갈래" if m.startswith("on") else ("안 고친 갈래" if m.startswith("off") else m)
+    return f"{_cellname(f'{fam}/{cell}/{noise}')} · {arm} {m[-5:]} · 시드 {seed}"
+
+
 def build(post_path=None, summary_path=None, bundle_path=None):
     pp = post_path or os.path.join(EV, "cmdr_post.json")
     post = json.load(open(pp, encoding="utf-8"))
@@ -131,6 +141,9 @@ def build(post_path=None, summary_path=None, bundle_path=None):
           f"검사에서 떨어진 것 {len(post['driver_invalid'])} · 인증이 안 맞아 뺀 것 {len(post.get('auth_fail', []))} · "
           f"그중 구형 (v3.2) 인증 {post.get('legacy_stamps', 0)} 개 (출력 해시 없이 pins · checkpoint 로 묶임 · 이번 집계 때 읽은 바이트의 해시는 기록) · "
           f"출처: {' · '.join(f'{ORIGIN_KO.get(k, k)} {v}' for k, v in sorted(post.get('origin_counts', {}).items()))}.</li>"]
+    if post.get("held"):  # 16h 4.3: kept out of every table on purpose, with the reason
+        st.append(f"<li>공개 보류 {len(post['held'])} 개 (표에서 뺌): "
+                  + " · ".join(f"{_cellname_tag(h['tag'])} ({h.get('why') or '이유 미기재'})" for h in post["held"]) + "</li>")
     for u in ("22000", "24000"):
         tv = post["target_verdict"][u]
         cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in TARGETS]

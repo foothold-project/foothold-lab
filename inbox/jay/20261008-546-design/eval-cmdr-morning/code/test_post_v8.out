@@ -47,18 +47,21 @@ PASS L3 owner re-validating: exit 5, nothing written got (5, False) want (5, Fal
 PASS L3b attempt file running, same attempt as the log: read got 0 want 0
 PASS L3c attempt file names another attempt than the log: held got 5 want 5
 PASS L4 origin per run and counted; record and stamp attempts and the stamp hash kept got ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_driver') want ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_dri
+PASS L5 held run: out of the tables, listed with its reason, not an auth failure got (0, ['cq_on24000_wave_fwd03_on_s1000'], False, []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], False, [])
+PASS L5b the stamp is no longer the held one: used again, release recorded got (0, [], ['cq_on24000_wave_fwd03_on_s1000'], True) want (0, [], ['cq_on24000_wave_fwd03_on_s1000'], True)
 PASS F1 real data, one snapshot: v8 = v7 on 22,000 targets, same runs, no auth failures got (True, True, True, []) want (True, True, True, [])
 PASS G1 100-pair targets: 보류, values labelled (100 쌍, none labelled (500 쌍 got (True, True, False) want (True, True, False)
 PASS G2 their regression rows carry n and 수집 중 got (True, True) want (True, True)
 PASS G3 an older aggregate is refused, not read as 'no comparison' got (True, False) want (True, False)
 PASS G4 off-arm sentence reads n from the aggregate got (True, False) want (True, False)
-PASS G5 contract detail: one table per arm, one row per measured cell got [66, 63] want [66, 63]
+PASS G5 contract detail: one table per arm, one row per measured cell got [77, 66] want [77, 66]
 PASS G7 summary separates 'has a comparison' from 'samples complete' got (False, True) want (False, True)
 PASS G8 no valid comparison: says so without guessing why got (False, True) want (False, True)
 PASS G9 absolute MAE line in words on the regression row got True want True
 PASS G10 fragment: no old label, training status from a token got (False, True, False) want (False, True, False)
 PASS G11 seed ids in the per-seed list got True want True
 PASS G12 (16g 5.1) no result file: says only what is seen got (True, False) want (True, False)
+PASS G14 (16h 4.3) the status line names the held run and its reason got (True, True) want (True, True)
 PASS G13 (16g 4) the status line shows the origins got True want True
 PASS G6 rows with partial MAE are shown, not hidden got True want True
 FAILS []
