@@ -1,0 +1,221 @@
+{
+ "t": "2026-10-14 05:17:05",
+ "attempt": "g1-155088-1014051705",
+ "code_sha256": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "isaac_slot_v3.py": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "usd_isolate_run_v3.py": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb",
+  "uncr_revalidate_v3.py": "3bd8ae4dc64535277bb9ce1d522575b09fe2f32c191304ab733406aebad93701",
+  "unseen_driver_cmdr_v6.py": "c0114134210475a88c12f61299790681db8d6cc750bbfbe4eddf79ea7bdd8b85",
+  "test_uncr_v6.py": "a87d84a4e195266e0e88390bdef5bca356a1bf473b9a2bb6a8742447c1a18433",
+  "mutate_uncr_v6.py": "e9cf763965f470299e328a61d22d0bc8df40e42d7b468ddc272fa726c53e6cf5",
+  "frozen_exec.py": "df111075449485c388bbe51087f6a3ff1614a9398a7b91912ba288067ea9403a"
+ },
+ "inputs_sha256": {
+  "ckpt:par": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "ckpt:off": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1",
+  "ckpt:on": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25",
+  "train_yaml": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c",
+  "bundle.json:off": "0a50be9fc46bef3a736a07da78e856f7080bf5a747f876d3b01c0804307447a6",
+  "bundle.npz:off": "d45e6324bf5e9a2eab00c5175eb19669c98ea7aac2dbc3be381017849a1ecd58",
+  "bundle.json:on": "631b6d6e544ede73244d56a964fd960aaf726bea13dfc5bd60290ea4d2cca2a1",
+  "bundle.npz:on": "d45e6324bf5e9a2eab00c5175eb19669c98ea7aac2dbc3be381017849a1ecd58",
+  "lab:generalization_env_cfg.py": "0009e1e11850191bb875e316038a08ae85308226e27d6a748fe474aa1301eed4",
+  "lab:terrains.py": "3e0d47185f110a5fb6aa3550ba61ea7edd0fa1e89bd6a275f9377fae283a72ae"
+ },
+ "code_paths": {
+  "q_eval_cmdr.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\q_eval_cmdr.py",
+  "q_metrics.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\q_metrics.py",
+  "gpu_guard.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\gpu_guard.py",
+  "q_post.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\q_post.py",
+  "isaac_slot_v3.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\isaac_slot_v3.py",
+  "usd_isolate_run_v3.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py",
+  "uncr_revalidate_v3.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\uncr_revalidate_v3.py",
+  "unseen_driver_cmdr_v6.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\unseen_driver_cmdr_v6.py",
+  "test_uncr_v6.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\test_uncr_v6.py",
+  "mutate_uncr_v6.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\mutate_uncr_v6.py",
+  "frozen_exec.py": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\frozen_exec.py"
+ },
+ "input_paths": {
+  "ckpt:par": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/model_20000.pt",
+  "ckpt:off": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_off_u4000/model_24000.pt",
+  "ckpt:on": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_on_u4000/model_24000.pt",
+  "train_yaml": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/params/env.yaml",
+  "bundle.json:off": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch\\cmdr_s1042_off_u4000\\bundle.json",
+  "bundle.npz:off": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch\\cmdr_s1042_off_u4000\\bundle.npz",
+  "bundle.json:on": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch\\cmdr_s1042_on_u4000\\bundle.json",
+  "bundle.npz:on": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch\\cmdr_s1042_on_u4000\\bundle.npz",
+  "lab:generalization_env_cfg.py": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/sim/eval/generalization_env_cfg.py",
+  "lab:terrains.py": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/sim/eval/terrains.py"
+ },
+ "environment": {
+  "executable": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+  "python_version": "3.11.15 | packaged by Anaconda, Inc. | (main, Jun 11 2026, 15:12:53) [MSC v.1942 64 bit (AMD64)]",
+  "numpy_version": "1.26.0",
+  "numpy_file": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\numpy\\__init__.py",
+  "blas_name": "openblas64",
+  "blas_version": "0.3.23.dev",
+  "blas_config": {
+   "Compilers": {
+    "c": {
+     "name": "msvc",
+     "linker": "link",
+     "version": "19.29.30152",
+     "commands": "cl"
+    },
+    "cython": {
+     "name": "cython",
+     "linker": "cython",
+     "version": "3.0.2",
+     "commands": "cython"
+    },
+    "c++": {
+     "name": "msvc",
+     "linker": "link",
+     "version": "19.29.30152",
+     "commands": "cl"
+    }
+   },
+   "Machine Information": {
+    "host": {
+     "cpu": "x86_64",
+     "family": "x86_64",
+     "endian": "little",
+     "system": "windows"
+    },
+    "build": {
+     "cpu": "x86_64",
+     "family": "x86_64",
+     "endian": "little",
+     "system": "windows"
+    }
+   },
+   "Build Dependencies": {
+    "blas": {
+     "name": "openblas64",
+     "found": true,
+     "version": "0.3.23.dev",
+     "detection method": "pkgconfig",
+     "include directory": "/c/opt/64/include",
+     "lib directory": "/c/opt/64/lib",
+     "openblas configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SKYLAKEX MAX_THREADS=2",
+     "pc file directory": "C:/opt/64/lib/pkgconfig"
+    },
+    "lapack": {
+     "name": "openblas64",
+     "found": true,
+     "version": "0.3.23.dev",
+     "detection method": "pkgconfig",
+     "include directory": "/c/opt/64/include",
+     "lib directory": "/c/opt/64/lib",
+     "openblas configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SKYLAKEX MAX_THREADS=2",
+     "pc file directory": "C:/opt/64/lib/pkgconfig"
+    }
+   },
+   "Python Information": {
+    "path": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cibw-run-1xawrzqm\\cp311-win_amd64\\build\\venv\\Scripts\\python.exe",
+    "version": "3.11"
+   },
+   "SIMD Extensions": {
+    "baseline": [
+     "SSE",
+     "SSE2",
+     "SSE3"
+    ],
+    "found": [
+     "SSSE3",
+     "SSE41",
+     "POPCNT",
+     "SSE42",
+     "AVX",
+     "F16C",
+     "FMA3",
+     "AVX2",
+     "AVX512F",
+     "AVX512CD",
+     "AVX512_SKX",
+     "AVX512_CLX",
+     "AVX512_CNL",
+     "AVX512_ICL"
+    ]
+   }
+  },
+  "openblas_kernel": "Cooperlake",
+  "cpu_name": "AMD64 Family 25 Model 24 Stepping 1, AuthenticAMD",
+  "OPENBLAS_CORETYPE": null,
+  "MKL_CBWR": null,
+  "MKL_ENABLE_INSTRUCTIONS": null,
+  "q_post_sha256": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "q_metrics_sha256": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794"
+ },
+ "code_manifest_sha256": "91d35be9c6a7f65bba573d414b76aa359f58567924bb4bbf501e7c04c83c8e52",
+ "registered_ok": true,
+ "registered_diff": [],
+ "registered_code": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "isaac_slot_v3.py": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "usd_isolate_run_v3.py": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb",
+  "unseen_driver_cmdr_v6.py": "c0114134210475a88c12f61299790681db8d6cc750bbfbe4eddf79ea7bdd8b85",
+  "uncr_revalidate_v3.py": "3bd8ae4dc64535277bb9ce1d522575b09fe2f32c191304ab733406aebad93701",
+  "test_uncr_v6.py": "a87d84a4e195266e0e88390bdef5bca356a1bf473b9a2bb6a8742447c1a18433",
+  "mutate_uncr_v6.py": "e9cf763965f470299e328a61d22d0bc8df40e42d7b468ddc272fa726c53e6cf5",
+  "frozen_exec.py": "df111075449485c388bbe51087f6a3ff1614a9398a7b91912ba288067ea9403a"
+ },
+ "registered_inputs": {
+  "ckpt:par": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "ckpt:off": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1",
+  "ckpt:on": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25",
+  "train_yaml": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c",
+  "lab:generalization_env_cfg.py": "0009e1e11850191bb875e316038a08ae85308226e27d6a748fe474aa1301eed4",
+  "lab:terrains.py": "3e0d47185f110a5fb6aa3550ba61ea7edd0fa1e89bd6a275f9377fae283a72ae"
+ },
+ "wrapper_registration": {
+  "slot": [
+   [
+    "isaac_slot.py",
+    "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47"
+   ],
+   [
+    "isaac_slot_v3.py",
+    "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a"
+   ]
+  ],
+  "isolate": [
+   [
+    "usd_isolate_run.py",
+    "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   ],
+   [
+    "usd_isolate_run_v3.py",
+    "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
+   ]
+  ]
+ },
+ "old_approved": {
+  "report": "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\out_uncr_reval\\20261013-201422\\revalidate.json",
+  "report_sha256": "5d2421fe1283a82f416ed863abc0e85753896c1840dfc2fba34243329a4e526f",
+  "bundle_sha256": "e55975172405901a0178a8e2bd3541ce7e13b118d0a9ab723fb6028d69ef2b58",
+  "review": "VERIFY-astra-17e.md §4 (23 runs, diag 7 cells valid, descriptive statistics only)"
+ },
+ "reuse_partial": "no",
+ "new_runs": 75,
+ "new_runs_if_reuse_no": 75,
+ "new_runs_if_reuse_yes": 73,
+ "approval_template": {
+  "kind": "uncr_v6_full_approval",
+  "decision": "pending",
+  "by": "",
+  "t": "",
+  "reval_sha256": "<sha256 of the uncr_revalidate_v3 report of the old root you read>",
+  "old_bundle_sha256": "e55975172405901a0178a8e2bd3541ce7e13b118d0a9ab723fb6028d69ef2b58",
+  "code_manifest_sha256": "91d35be9c6a7f65bba573d414b76aa359f58567924bb4bbf501e7c04c83c8e52",
+  "reuse_partial": "no",
+  "new_runs": 75
+ }
+}

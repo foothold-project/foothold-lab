@@ -1,0 +1,154 @@
+04:58:10 start
+PREFLIGHT ROOT C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexA\preflight\root SLOT C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexA\preflight\slot OLD_ROOT C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexA\preflight\old REVAL_BASE C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexA\preflight\reval
+PASS C00 baseline cell (fwd05 commands as the contract, on env 50 channel 11 NaN after its fall): valid, counts by hand 99 / 99 got ({'par': 'valid', 'off': 'valid', 'on': 'valid'}, 'valid', 99, 99, 193) want ({'par': 'valid', 'off': 'valid', 'on': 'valid'}, 'valid', 99, 99, 193)
+PASS C01 (17e) cmd_a, cmd_b and cmd_hist all 0 in the three runs while meta says fwd05: all three invalid with [cmd-array], cell invalid (checks_run 0 does not stand in) got ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True) want ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True)
+PASS C02 (17e) cmd_hist[10, 0, 0] NaN in the three runs: all three invalid with [cmd-array], cell invalid (checks_run 0 does not stand in) got ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True) want ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True)
+PASS C03 (17e) meta cell cmd [99, 99, 99] in the three runs, arrays as the contract: all three invalid with [cmd-contract], cell invalid (checks_run 0 does not stand in) got ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True) want ({'par': 'invalid', 'off': 'invalid', 'on': 'invalid'}, 'invalid', True)
+PASS C05 args spawn_offset 'stand=2.5' (must be off here): on invalid with [eval-args], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C05b meta heading_hold K 0.5 on 100 envs (must be off here): on invalid with [eval-args], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C06 cmd_hist at state 0 is 0 (the time rule says cmd_a): on invalid with [cmd-time], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C07 act_abs_mean 0 for every env: on invalid with [action], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C08 unseen10 generator source hash is not the reviewed one: on invalid with [terrain-src], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C09 traj.npz without cmd_hist: on invalid with [traj-shape], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS C10 sw 250 in a lin cell (no switch in the contract): on invalid with [cmd-array], cell invalid got ('invalid', True, 'invalid') want ('invalid', True, 'invalid')
+PASS F01 (17e 3.4) q_post gains a comment line while the check runs: frozen_ok False, code:q_post.py listed, cell invalid got (False, True, 'invalid') want (False, True, 'invalid')
+PASS F02 (17e 3.4) q_post changed between two checks: the cached module is loaded again, the report names the bytes now on disk got (True, True, True) want (True, True, True)
+PASS F03 (17e 3.4) the revalidator file itself changes while it checks: frozen_ok False, code:uncr_revalidate_v3.py listed got (False, True) want (False, True)
+PASS W01 (17e 5.3) par / off collected with v2 wrappers, on with v3 (q_post in its stamp): cell valid, the wrapper replacement and the unknown q_post provenance of par / off noted got ({'par': 'valid', 'off': 'valid', 'on': 'valid'}, 'valid', True, True) want ({'par': 'valid', 'off': 'valid', 'on': 'valid'}, 'valid', True, True)
+PASS W02 (17e 5.3) the on run's evaluator hash differs (wrapper change is the only exemption): cell hold, collection code eval named got ('hold', True) want ('hold', True)
+PASS W03 (17e 5.3) an isaac_slot_v3.py hash that is not the registered one: cell hold, unregistered slot wrapper named got ('hold', True) want ('hold', True)
+PASS W04 (17e 5.4) a v3 slot record that used the v2 registry file: on invalid with [slot] got ('invalid', True) want ('invalid', True)
+PASS W05 a v3 slot record whose child ran the v2 runner usd_isolate_run.py: on invalid with [slot] got ('invalid', True) want ('invalid', True)
+PASS W06 a v3 slot record with a stamp that names the v2 wrappers: on invalid with [stamp-code] got ('invalid', True) want ('invalid', True)
+04:58:25 RUN uncr_par_gap_fwd05 try 1 EXIT 94 0s
+04:58:25 FAIL protection: uncr_par_gap_fwd05: slot 94: USD folder outside the run root or unresolvable (rc 94); HALT_v6.json written, no retry, no further launch
+04:58:25 FAIL full: not launching the rest: HALT_v6.json (a protection failure is recorded)
+PASS D01 (17e 3.2) slot 94 once: one launch, no retry, off / on not launched, HALT_v6.json written; a second pass launches nothing got ((['94'], True, ['protection'], False), 0) want ((['94'], True, ['protection'], False), 0)
+04:58:25 RUN uncr_par_gap_fwd05 try 1 EXIT 1 0s
+04:58:25 FAIL full: uncr_par_gap_fwd05: child: child exit 1 (rc 1, launches 1); stage stopped
+PASS D02 a plain child exit 1: no retry, stage stopped, no HALT (not a protection failure) got (['1'], False, 'child', False) want (['1'], False, 'child', False)
+04:58:25 RUN uncr_par_gap_fwd05 try 1 EXIT 99 0s
+04:58:26 RUN uncr_par_gap_fwd05 try 2 EXIT 0 0s
+04:58:27 RUN uncr_off_gap_fwd05 try 1 EXIT 0 0s
+04:58:28 RUN uncr_on_gap_fwd05 try 1 EXIT 0 0s
+PASS D03 gpu_guard stop (99) then a clean run: retried once under the GPU precondition, stamped as cmdr-6 with the v3 wrappers, all three valid got (['99', 'ok'], 'ok', 2, 'cmdr-6', True, ['valid', 'valid', 'valid'], True) want (['99', 'ok'], 'ok', 2, 'cmdr-6', True, ['valid', 'valid', 'valid'], True)
+04:58:28 RUN uncr_par_gap_fwd05 try 1 EXIT 99 0s
+04:58:29 RUN uncr_par_gap_fwd05 try 2 EXIT 99 0s
+04:58:29 RUN uncr_par_gap_fwd05 try 3 EXIT 99 0s
+04:58:29 FAIL full: uncr_par_gap_fwd05: gpu: gpu_guard stopped the run: GPU 1 free memory under the floor (rc 99, launches 3); stage stopped
+PASS D04 gpu_guard stops every time: GPU_RETRIES 2 means 3 launches, then the stage stops without HALT got (['99', '99', '99'], 'gpu', False, False) want (['99', '99', '99'], 'gpu', False, False)
+04:58:29 RUN uncr_par_gap_fwd05 try 1 EXIT 99 0s
+04:58:29 FAIL full: uncr_par_gap_fwd05: frozen: code or inputs changed while launch 1 ran: ['q_post.py'] (rc 99, launches 1); stage stopped
+PASS D05 (17e 3.3) q_post hash changes after the first launch, before its retry: the retry is not launched got (['99'], 'frozen', False) want (['99'], 'frozen', False)
+PASS D05_PRE frozen before GPU wait does not query GPU or launch got ('frozen', 0) want ('frozen', 0)
+04:58:30 RUN uncr_par_gap_fwd05 try 1 EXIT 0 0s
+04:58:30 FAIL full: uncr_par_gap_fwd05: frozen: code or inputs changed while launch 1 ran: ['q_post.py'] (rc 0, launches 1); stage stopped
+PASS D05b (17e 3.3) q_post hash changes while the first launch runs (exit 0): classified frozen, not stamped, nothing more launched got (['ok'], 'frozen', False, False) want (['ok'], 'frozen', False, False)
+04:58:30 RUN uncr_par_gap_fwd05 try 1 EXIT 0 0s
+PASS D11_CONTROL unchanged code after GPU wait got (1, 'ok') want (1, 'ok')
+PASS D11_CHANGED GPU wait changes q_post before the child got (0, 'frozen') want (0, 'frozen')
+PASS A2_CONTROL frozen_exec starts the child and propagates exit 7 got (7, True) want (7, True)
+[frozen-exec] input changed: fixture
+PASS A2_CHANGED frozen_exec rejects input change before child got (92, 'ran') want (92, 'ran')
+04:58:31 RUN uncr_par_gap_fwd05 try 1 EXIT 92 0s
+04:58:31 FAIL protection: uncr_par_gap_fwd05: slot 92: frozen_exec found changed code, input, or manifest (rc 92); HALT_v6.json written, no retry, no further launch
+PASS A2_92 slot return 92 causes protection HALT without retry got (['92'], True, False) want (['92'], True, False)
+PASS A2_ARG frozen_exec is the first slot child and gets the manifest got ['C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe', 'frozen_exec.py', '--manifest', 'C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\\uncr_v6_a2_92_rka7pciq\\new\\manifest_v6.json'] want ['C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe', 'frozen_exec.py', '--manifest', 'C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fix
+PASS A3_CONTROL supported environment has no differing fields got [] want []
+PASS A3_FIELD_executable one changed fingerprint field is rejected got ['executable'] want ['executable']
+PASS A3_FIELD_python_version one changed fingerprint field is rejected got ['python_version'] want ['python_version']
+PASS A3_FIELD_numpy_version one changed fingerprint field is rejected got ['numpy_version'] want ['numpy_version']
+PASS A3_FIELD_numpy_file one changed fingerprint field is rejected got ['numpy_file'] want ['numpy_file']
+PASS A3_FIELD_blas_name one changed fingerprint field is rejected got ['blas_name'] want ['blas_name']
+PASS A3_FIELD_blas_version one changed fingerprint field is rejected got ['blas_version'] want ['blas_version']
+PASS A3_FIELD_openblas_kernel one changed fingerprint field is rejected got ['openblas_kernel'] want ['openblas_kernel']
+PASS A3_FIELD_OPENBLAS_CORETYPE one changed fingerprint field is rejected got ['OPENBLAS_CORETYPE'] want ['OPENBLAS_CORETYPE']
+PASS A3_FIELD_MKL_CBWR one changed fingerprint field is rejected got ['MKL_CBWR'] want ['MKL_CBWR']
+PASS A3_FIELD_MKL_ENABLE_INSTRUCTIONS one changed fingerprint field is rejected got ['MKL_ENABLE_INSTRUCTIONS'] want ['MKL_ENABLE_INSTRUCTIONS']
+PASS A3_FIELD_cpu_name one changed fingerprint field is rejected got ['cpu_name'] want ['cpu_name']
+PASS A3_FIELD_q_post_sha256 one changed fingerprint field is rejected got ['q_post_sha256'] want ['q_post_sha256']
+PASS A3_FIELD_q_metrics_sha256 one changed fingerprint field is rejected got ['q_metrics_sha256'] want ['q_metrics_sha256']
+PASS A3_GATE unsupported environment stops before data reading got True want True
+04:58:31 RUN uncr_par_gap_fwd05 try 1 EXIT 99 0s
+04:58:32 FAIL full: uncr_par_gap_fwd05: stop: while waiting to retry: stop file C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_d06_sy62wveg\new\STOP (rc 99, launches 1); stage stopped
+PASS D06 (17e 3.3) STOP appears during the wait before a retry: the wait ends at the next step (1 sleep, not 120), no second launch got (['99'], 1, 'stop', False) want (['99'], 1, 'stop', False)
+04:58:32 RUN uncr_par_gap_fwd05 try 1 EXIT 0 0s
+04:58:32 FAIL protection: uncr_par_gap_fwd05: robot root physics reference failure in the log (rc 0); HALT_v6.json written, no retry, no further launch
+PASS D07 (17e 3.2) exit 0 but the log has the robot root reference failure: protection, HALT, nothing more launched got (['rootfail'], True, 'protection') want (['rootfail'], True, 'protection')
+04:58:32 RUN uncr_par_gap_fwd05 try 1 EXIT 99 0s
+04:58:32 FAIL full: uncr_par_gap_fwd05: gpu_precondition: GPU 1 free memory 100 MiB stayed below 6144 MiB for 600 s (rc None, launches 1); stage stopped
+PASS D08 GPU 1 free memory stays low before the retry: no second launch, stopped as gpu_precondition, no HALT got (['99'], 'gpu_precondition', False) want (['99'], 'gpu_precondition', False)
+04:58:33 RUN uncr_par_gap_fwd05 try 1 EXIT 0 0s
+04:58:33 FAIL protection: uncr_par_gap_fwd05: revalidation of the new run: [usd-path] assigned line assigned c:/users/x/appdata/local/temp/isaaclab/usd_20261013_190023_7028 'loader' is not an assignment inside the run's root; [usd-path] USD folders differ: log ['c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_d09_e3sr9w54/new/usd/uncr_par_gap_fwd05-g1-108712-1014045833-uncr_par_gap_fwd05-try1/isaaclab/usd_20261013_190023_7028'] slot ['c:/users/ai- (rc 0); HALT_v6.json written, no retry, no further launch
+PASS D09 exit 0 but the new run's assigned USD folder is outside its root: protection from the revalidation, HALT, no stamp got (['outside'], True, False) want (['outside'], True, False)
+PASS L01 (17e 5.3 · 5.4) v5 calls isaac_slot_v3.py --expect_conversions 1 with usd_isolate_run_v3.py, the separate v3 registry, and scans out_branch, the old and new roots and the folder of a log named in the v2 registry; the v2 registry file is only read got ('isaac_slot_v3.py', '1', True, True, True, True, True, True, True) want ('isaac_slot_v3.py', '1', True, True, True, True, True, True, True)
+PASS L02 (17e 5.4) v2's unlocked final write after a v3 update: with separate files the v3 record stays (and v2's file holds only v2's entry); with one shared file the v3 record is lost (the hazard the separation removes) got ({'c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l02_jpeaabbd/b_root/isaaclab/usd_20261014_000000_1': 'c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l02_jpeaabbd/b.log'}, {'20261014_000001_2': 'c:/users/ai-ws want ({'c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l02_jpeaabbd/b_root/isaaclab/usd_20261014_000000_1': 'c:/users/ai-ws01/.claude/jobs/0
+PASS L03 (17e 5.4) a GPU 0 v2 log in out_branch naming the same absolute USD folder is found by the v3 slot's log scan over v5's scan dirs got {'c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l03_4a7voko7/new/usd/uncr_par_pit_fwd03-a-try1/isaaclab/usd_20261014_000002_3': ['c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l03_4a7voko7/out_branch/cmdr_s10 want {'c:/users/ai-ws01/.claude/jobs/09bbf294/tmp/codexa/test-fixtures/uncr_v6_l03_4a7voko7/new/usd/uncr_par_pit_fwd03-a-try1/isaaclab/usd_20261014_000002_3': ['c:/u
+PASS M01 (17e 6) new runs to launch: 75 by default (reuse no), 73 when the old par / off of discrete_obstacles/fwd05 are reused got (75, 73, False, True) want (75, 73, False, True)
+04:58:33 START attempt g1-108712-1014045833 stages ['manifest'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_m01_l43zua7k\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_m01_l43zua7k\old reuse_partial no registered True
+04:58:33 MANIFEST 91d35be9c6a7f65bba573d414b76aa359f58567924bb4bbf501e7c04c83c8e52 registered True new runs 75 -> C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_m01_l43zua7k\new\manifest_v6.json
+04:58:34 END finished
+PASS M03 --stages manifest without --reuse_partial: registered manifest ok, new runs 75, an approval template that is pending got (0, True, 75, 'pending') want (0, True, 75, 'pending')
+04:58:39 START attempt g1-108712-1014045839 stages ['post'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_p03_vsanxl6x\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:58:42 POST rows 32 valid 7 requested not valid 0 old bundle ok True
+04:58:42 END finished
+PASS P03 post (manifest diag) with the approved old bundle: exit 0, 7 valid, old bundle ok, and nothing written into the old root got (0, 7, True, True, 'revalidate_v6_old.json', 'revalidate_v6_new.json') want (0, 7, True, True, 'revalidate_v6_old.json', 'revalidate_v6_new.json')
+04:58:42 START attempt g1-108712-1014045842 stages ['post'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_p02no_arroqoo_\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:58:45 FAIL post: requested cells not valid: missing ['discrete_obstacles/fwd05', 'pit/fwd05', 'star/fwd05', 'repeated_boxes/fwd05', 'repeated_cylinders/fwd05', 'discrete_obstacles/fwd03']
+04:58:45 POST rows 32 valid 7 requested not valid 25 old bundle ok True
+04:58:45 END incomplete 1
+04:58:45 START attempt g1-108712-1014045845 stages ['post'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_p02yes_njpmmaay\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial yes registered True
+04:58:48 FAIL post: requested cells not valid: missing ['pit/fwd05', 'star/fwd05', 'repeated_boxes/fwd05', 'repeated_cylinders/fwd05', 'discrete_obstacles/fwd03', 'wave/fwd03']; incomplete ['discrete_obstacles/fwd05']
+04:58:48 POST rows 32 valid 7 requested not valid 25 old bundle ok True
+04:58:48 END incomplete 1
+PASS P02 (17e 6) post --manifest full: discrete_obstacles/fwd05 is missing without reuse and incomplete with reuse, never with numbers (also not in the revalidator's cell); gap/fwd05 valid with its numbers (par surv 99); exit 1 both got (1, 1, 'missing', 'incomplete', '', '', 'valid', '99', 'incomplete', {}) want (1, 1, 'missing', 'incomplete', '', '', 'valid', '99', 'incomplete', {})
+04:58:48 START attempt g1-108712-1014045848 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g01_46to1oad\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:58:51 END finished
+PASS G01 approved old bundle, its v2 revalidation, an approval bound to it: full starts with 75 new runs, gate written for this attempt got (0, [75], True, 'tester', 75) want (0, [75], True, 'tester', 75)
+04:58:51 START attempt g1-108712-1014045851 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g01y_d6yt41gb\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial yes registered True
+04:58:54 END finished
+PASS G01b the same with --reuse_partial yes and an approval for 73: full starts with 73 got (0, [73]) want (0, [73])
+04:58:54 START attempt g1-108712-1014045854 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g02_4gf9umxf\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:58:56 FAIL full: gate not passed: --approval does not approve this: ['decision']; full not started
+04:58:56 END incomplete 1
+PASS G02 (17e 5.6) approval file still pending: full not started got (1, []) want (1, [])
+04:58:57 START attempt g1-108712-1014045856 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g03_iiyhtc49\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial yes registered True
+04:58:59 FAIL full: gate not passed: --approval does not approve this: ['reuse_partial', 'new_runs']; full not started
+04:58:59 END incomplete 1
+PASS G03 approval for reuse no / 75 runs, launched with --reuse_partial yes: full not started got (1, []) want (1, [])
+04:58:59 START attempt g1-108712-1014045859 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g06_rxhiowgh\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:58:59 FAIL full: gate not passed: --reval was made by other judgement code (revalidator / q_post / q_metrics); full not started
+04:58:59 END incomplete 1
+PASS G06 (17e 3.4) a revalidation recorded as made with other q_post bytes: full not started got (1, []) want (1, [])
+04:59:00 START attempt g1-108712-1014045859 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_d10_bro4eyau\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:59:00 FAIL full: gate not passed: HALT_v6.json exists (protection failure not cleared); full not started
+04:59:00 END incomplete 1
+PASS D10 (17e 3.2) HALT_v6.json from an earlier protection failure: full not started got (1, []) want (1, [])
+04:59:00 START attempt g1-108712-1014045900 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_m02_i46snxb1\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered False
+04:59:00 FAIL full: gate not passed: new execution manifest differs from the registered values: ['q_eval_cmdr.py'] (not exempted); full not started
+04:59:00 END incomplete 1
+PASS M02 (17e 5.3) the evaluator differs from the registered (old approved) value: full not started (no exemption beyond the wrappers) got (1, [], True) want (1, [], True)
+04:59:03 START attempt g1-108712-1014045903 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g05_1_gui3xg\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g05_ab875jhg\out_uncr reuse_partial no registered True
+04:59:04 FAIL full: gate not passed: diag cell gap/fwd05 is not valid (reviewed invalid, now invalid); full not started
+04:59:04 END incomplete 1
+PASS G05 (17e 3.1 fourth counterexample) every diag run's stored commands 0, a fresh revalidation and an approval of it: diag invalid, full not started got (7, 1, []) want (7, 1, [])
+04:59:10 START attempt g1-108712-1014045910 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g05b_njesi3d3\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g05b_dthr0hp9\out_uncr reuse_partial no registered True
+04:59:13 FAIL full: gate not passed: diag cell gap/fwd05 is not valid (reviewed hold, now hold); full not started
+04:59:13 END incomplete 1
+PASS G05b all 23 runs valid but gap/fwd05 is not a recorded pair (DR fingerprint): full not started got (23, 'hold', 1, []) want (23, 'hold', 1, [])
+04:59:18 START attempt g1-108712-1014045918 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g07_iasla8tw\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g07_2t2o6m_e\out_uncr reuse_partial yes registered True
+04:59:21 FAIL full: gate not passed: old run uncr_par_discrete_obstacles_fwd05 is invalid; full not started
+04:59:21 END incomplete 1
+PASS G07 --reuse_partial yes while the old discrete_obstacles/fwd05 par is invalid (diag cells all valid): full not started got (7, 1, []) want (7, 1, [])
+04:59:24 START attempt g1-108712-1014045924 stages ['full'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_g04_a3666itq\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:59:26 FAIL full: gate not passed: old root bundle b464dc761012 is not the approved d5ec4c5ab94f; full not started
+04:59:26 END incomplete 1
+PASS G04 (17e 5.3) the old root changed after the review (one run re-recorded, still valid), with a fresh revalidation and approval of the changed root: not the approved bundle, full not started got ('valid', True, 1, []) want ('valid', True, 1, [])
+04:59:26 START attempt g1-108712-1014045926 stages ['post'] root C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_p04_wg2e0zbp\new old C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexA/test-fixtures\uncr_v6_old_0l1d1ing\out_uncr reuse_partial no registered True
+04:59:29 FAIL post: requested cells not valid: invalid ['gap/fwd05', 'stepping_stones/fwd05', 'floating_ring/fwd05', 'rails/fwd05', 'wave/fwd05', 'gap/back03']
+04:59:29 POST rows 32 valid 0 requested not valid 7 old bundle ok False
+04:59:29 END incomplete 1
+PASS P04 (17e 5.3) post on an old root that is no longer the approved bundle: the diag cells are not used (invalid, reason named), exit 1 got (1, 'invalid', True, '') want (1, 'invalid', True, '')
+PASS E01 (17c P1 kept) public CLI --stages post on empty old and new roots: exit 1, the 7 diag cells missing got (1, ['gap/fwd05', 'stepping_stones/fwd05', 'floating_ring/fwd05', 'rails/fwd05', 'wave/fwd05', 'gap/back03', 'discrete_obstacles/back03']) want (1, ['gap/fwd05', 'stepping_stones/fwd05', 'floating_ring/fwd05', 'rails/fwd05', 'wave/fwd05', 'gap/back03', 'discrete_obstacles/back03'])
+FAILS []
+test exit 0

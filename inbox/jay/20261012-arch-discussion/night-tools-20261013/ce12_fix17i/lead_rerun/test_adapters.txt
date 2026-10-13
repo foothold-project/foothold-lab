@@ -1,0 +1,27 @@
+04:57:45 start
+ISOLATION_PATHS temp=C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/codexC real_fixture=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexC\eval\out_ce12\native\cts_e1_m20000
+PASS T01 CTS 원본 설정 읽기: 관절 순서 · 항 순서 · scale · clip · 이력 10/1 · 행동 0.25 · clip [-100,100] (target) · 기본 자세
+PASS T02 v2 env.yaml 읽기: 235 = 3+3+3+3+12+12+12+187 · scale 모두 None · clip 은 height 만 [-1,1] · offset 0.5 · miss 1.0 · 행동 0.25 · clip 없음 · `.*` preserve_order False
+PASS T03 CTS 이력 3 step 손 표본: term-major · oldest->newest · 첫 표본 10 칸 반복 · 최신 명령 87:90 · single 명령 6:9
+PASS T04 CTS reset(ids): 그 env 만 다음 표본을 10 칸에 반복 · 다른 env 는 이어감 · 기억한 raw action 은 0
+PASS T05 디버그 읽기 (update_history=False) 는 이력을 전진시키지 않는다 · 버퍼가 없을 때의 읽기는 저장하지 않는다
+PASS T06 CTS scale · clip 경계: clip 다음 scale (ang 400->25 · dq 150->5 · q_rel 150->100 · action 120->100 · 경계 100 유지)
+PASS T07 v2 는 scale 이 없다 (CMD-R 의 0.25 · 0.05 를 복사하지 않는다) · 항 배치 0:3 lin · 3:6 ang · 9:12 cmd · 12:24 q · 24:36 dq · 36:48 act · 48:235 height
+PASS T08 CTS 관절 이름 순서를 섞은 입력이 같은 관측을 낸다 (두 step · 이력 포함 · 비트 동일)
+PASS T09 v2 관절 이름 순서를 섞은 입력이 같은 관측을 낸다 · q_rel 은 adapter 에 준 순서 (V2_FIXTURE_ORDER)
+PASS T10 v2 height 알려진 답: sensor z 0.4 · hit 0 -> -0.1 (offset 20 안 더함) · inf/-inf/NaN -> +1 · 경계 clip [-1,1]
+PASS T11 v2 height 식이 저장소 sim/eval/gap_observations.py height_scan_with_gap 과 비트 동일 (무작위 · inf · NaN 섞음) · 그 뒤 clip
+PASS T12 187 광선 순서: grid xy 순서 (x 가 가장 빨리) · 0=(-0.8,-0.5) · 16=(0.8,-0.5) · 17=(-0.8,-0.4) · 93=(0,0) · 186=(0.8,0.5) · adapter 가 순서를 안 바꿈
+PASS T13 행동 해석: 관절마다 다른 target 을 모델별 역변환 raw 로 만들면 두 adapter 모두 이름으로 같은 target 을 복원 · 같은 raw 벡터는 모델마다 다른 target
+PASS T14 행동 clip 은 target 에 (CTS [-100,100] · v2 없음) · offset 인자를 그대로 쓴다
+PASS T15 decode_action 의 raw 가 다음 관측의 last_action (CTS single 33:45 · v2 36:48) · 이름 순서는 정책 자기 순서
+PASS T16 v2 adapter 는 관절 이름 목록 없이 만들 수 없다 · 이름 대응은 빠진 · 겹친 이름을 거절
+PASS T17 act_inference: 작은 무작위 ActorCriticMoECTS 에서 critic 입력을 바꿔도 action 비트 동일 · policy/single 은 바뀜 · adapter.infer 는 critic 없이
+PASS T18 실제 E1 체크포인트 (model_20000) 를 CPU 로 strict 적재 · 같은 invariance · adapter 관측으로 유한한 action
+PASS T19 v2 체크포인트를 CPU 로 strict 적재 · adapter 235 관측으로 유한한 action (12)
+PASS T20 서명 JSON: CTS 450/45 · 최신 명령 [87,90] · single [6,9] · clip 은 target · v2 235 · 이름 목록 · sha256
+PASS T21 compare_native: 일치하는 가짜 기록은 통과 · 한 칸을 바꾸면 그 step · env · term · 이력 칸 · 관절 이름을 첫 불일치로 보고
+PASS T22 compare_native --recompute_action 경로: 실제 체크포인트 (E1 · v2) 닫힌 고리로 만든 가짜 기록에서 CPU 재계산 action 차 0 · 통과
+PASS T23 실제 native 기록 (10/14 00:25 · GPU 1 · E1 model_20000) 의 사본으로 compare --recompute_action: 문자열 dims 를 읽고 통과 · 관측 · target · last action 오차 1e-6 이하 · action 1e-4 이하 · reset · 전환 · miss 수
+SUMMARY 23/23 PASS · adapters=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexC\eval\ce12\adapters.py
+test_adapters exit 0
