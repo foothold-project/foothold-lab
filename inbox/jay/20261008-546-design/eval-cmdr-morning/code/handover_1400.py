@@ -175,6 +175,12 @@ def main(old):
             if os.path.exists(src):
                 shutil.copy2(src, os.path.join(H, name + ext))
                 copies[name + ext] = sha(src)
+    # 16m 5: the drivers' stdout under the names the runs really wrote (cmdr_eval_driver_v37.out, ..._g0_v37.out), not only
+    # <LOGS name>.out. Same place and key as the other copies, so the copy and end re-hash checks below cover them too.
+    for f in sorted(os.listdir(OUT)):
+        if f.startswith("cmdr_eval_driver") and f.endswith(".out") and f not in copies:
+            shutil.copy2(os.path.join(OUT, f), os.path.join(H, f))
+            copies[f] = sha(os.path.join(OUT, f))
     if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")):  # 16k 7.2: the hold list and its releases are part of the bundle
         shutil.copy2(os.path.join(OUT, "cmdr_post_hold.json"), os.path.join(H, "cmdr_post_hold.json"))
         copies["cmdr_post_hold.json"] = sha(os.path.join(OUT, "cmdr_post_hold.json"))

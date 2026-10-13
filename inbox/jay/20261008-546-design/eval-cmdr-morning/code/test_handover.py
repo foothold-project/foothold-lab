@@ -214,6 +214,22 @@ try:
     rc, res, man = run(ev)
     check("H13d a stamp copy that is there but not the held bytes: exit 1, named as not found by its hash", (rc, "held original stamp not found by its hash" in json.dumps(man.get("problems"))), (1, True))
 
+    ev, out = tree("h14")
+    open(os.path.join(out, "cmdr_eval_driver.out"), "w").write("old driver stdout\n")
+    open(os.path.join(out, "cmdr_eval_driver_v37.out"), "w").write("END complete=True runs=555\n")
+    open(os.path.join(out, "cmdr_eval_driver_g0_v37.out"), "w").write("END complete=True flagged=2\n")
+    open(os.path.join(out, "other_job.out"), "w").write("not ours\n")
+    rc, res, man = run(ev)
+    cp = man.get("copies_sha256", {})
+    got = sorted(k for k in cp if k.endswith(".out"))
+    same = all(os.path.exists(os.path.join(res.get("dir", ""), k)) and sha(os.path.join(res.get("dir", ""), k)) == cp[k] for k in got)
+    check("H14 (16m 5) every driver stdout by its real name (_v37 too) is copied and hashed; another job's .out is not",
+          (rc, got, same), (0, ["cmdr_eval_driver.out", "cmdr_eval_driver_g0_v37.out", "cmdr_eval_driver_v37.out"], True))
+    ev, out = tree("h14b")
+    open(os.path.join(out, "cmdr_eval_driver_v37.out"), "w").write("END\n")
+    rc, res, man = run(ev, touch=os.path.join(out, "cmdr_eval_driver_v37.out"))
+    check("H14b a driver stdout that changes during the freeze: exit 1, named", (rc, "cmdr_eval_driver_v37.out" in json.dumps(man.get("problems"))), (1, True))
+
     ev, out = tree("h8")
     open(os.path.join(ev, "q_metrics.py"), "a").write("# changed\n")
     rc, res, man = run(ev)

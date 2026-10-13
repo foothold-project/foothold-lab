@@ -23,6 +23,8 @@ M = [
     ("K15 (16l 5.3) evidence bytes not checked against the release", '            if sha_or_none(rel["evidence"]) != rel.get("evidence_sha256"):', "            if False:", ["H13b"]),
     ("K16 (16l 5.3) release dependencies not re-checked at the end", "    changed += [f\"release dependency {d['from']}\" for d in deps.values() if sha_or_none(d[\"from\"]) != d[\"sha256\"]]", "    pass", ["H13c"]),
     ("K17 (16l 5.3) the held original stamp is not found by its hash", '        if sha_or_none(src) != e.get("stamp_sha256"):', "        if not os.path.exists(src):", ["H13d"]),
+    ("K18 (16m 5) only <LOGS name>.out copied, the real _v37 stdout missed", '        if f.startswith("cmdr_eval_driver") and f.endswith(".out") and f not in copies:', "        if False:", ["H14", "H14b"]),
+    ("K19 (16m 5) every .out copied, another job's too", '        if f.startswith("cmdr_eval_driver") and f.endswith(".out") and f not in copies:', '        if f.endswith(".out") and f not in copies:', ["H14"]),
 ]
 res = []
 for k, (name, a, b, want) in enumerate(M):
