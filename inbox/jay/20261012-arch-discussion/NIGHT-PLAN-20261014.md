@@ -42,7 +42,18 @@
 
 **17h (00:49 · 고쳐서 채택)**: 아래 「읽기 · 재개 규칙」 과 하트비트 문구로 반영 (00:57). 수용 기준 (17h 7 절) 은 실제로 지키는지 아침까지 관측한다.
 
-**17g (대기)**: 무작위화 smoke · 미경험 v5 full 의 기동 조건. 판정 전 GPU 1 기동 없음.
+**17g (01:26 · 고쳐서 기동 · 승인 json 없음)**
+
+| 대상 | 조건 | 지금 |
+|---|---|---|
+| A v5 §2.1 P1 | GPU 대기 (최대 600 초) 뒤 자식 호출 직전에 STOP · 마감 · 코드 · 입력 재검사 (대기 중 변경이면 자식 0 회) · slot 잠금 대기 뒤 실행 바이트 보장 · 새 manifest (옛 ac09 재사용 금지) | 미반영 |
+| A v5 §4 | 재검 보고 · 기동 기록에 sys.executable · python 전체 버전 · numpy 판과 경로 · 판정 코드 해시 · 검증 환경과 다르면 보류 | 미반영 · 원인은 lead 쪽에서 BLAS FMA 로 분리됨 (7c · 17g 는 미분석으로 둠) → BLAS 이름 · 커널도 기록 대상 |
+| A v5 §5 | 결과 표 곁에 해석 범위 문장 (seed 1042 한 짝 · 조건부 회귀) · 통과 · 생존 · 건넘 분리 | 아침 7판에 반영 |
+| B RAND §3.1 P1 | v3 를 부르면서 구형 registry (`isaac_usd_registry.json`) 를 씀 (RL:863~875) → `_v3.json` · 구형은 읽기만 · `out/branch` 등 실제 로그 위치를 scan 에 · 구형 읽기 실패는 기동 전 실패 · 공유 시 유실 · 분리 시 보존 CPU 시험 | 미반영 · **smoke 도 보류** |
+| B RAND §3.2 P1 | 밀기 사건 heading 을 궤적 heading 과 잇기 (±π) · 요청 성분 누락 · NaN 거절 · ASTRA 반례 둘이 `validate_attempt` 에서 거절돼야 | 미반영 |
+| 공통 §5 | 순서: 고침 · CPU 반례 → RAND smoke 만 → 장치 UUID · 기록 · 영상 · 자원 실측 → 네 장면 한 실행 → v5 full. smoke 실패 뒤 자동 시작 예약 금지 · RAND 에 `--deadline` 명시 · 여유 조회 None 은 미확인 | |
+
+그래서 GPU 1 은 고침과 재확인 (17g 6 절 1 ~ 4) 까지 빈다. 감시 스크립트는 승인 json 이 없어 10 분 뒤 띄우지 않고 끝남 (설계대로).
 
 ## 일 표 (우선순위 순 · 의존과 자원을 보고 고른다)
 
@@ -57,7 +68,8 @@
 | 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 | |
 | 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
 | 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
-| 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 00:54 보냄 | 판정 전문 읽고 조건 표에 적기 |
+| 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 끝 01:26 · 고쳐서 기동 (A v5 full 미승인 · B RAND smoke 보류) · 조건은 위 표 | 6b |
+| 6b | 17g 고침 (A: 대기 뒤 재검사 · 환경 지문 · 새 manifest / B: v3 registry · 밀기 heading · 요청 누락) → lead 재실행 → ASTRA 재확인 (17g 6 절 1 ~ 3) | 사용 한도 (super2: 새 하위 작업 금지) → 04:20 뒤 하위 작업으로 | 대기 | 04:20 뒤 첫 일 |
 | 7 | GPU 1: 무작위화 smoke → 스틸 · 영상 전 프레임 확인 → 네 판 한 실행 → 미경험 v5 full 75 | 17g 허용 · GPU 1 에 Isaac 하나 · 여유 6,144 MiB 이상 | 대기 | |
 | 7b | S2 판 3 (CPU) | 17f-2 | 01:27 보고 (시험 14/14 · 292 칸 · 변이 69/69 · 첫 실행 T13 기대 상수 1 ulp FAIL · 변이 1 차 68/69 (q28) 를 고쳐 다시 돎 · 학습 루프 연결 · smoke 등록 5.3 의 2 ~ 6 · 난수 상태 · 센서 관문은 안 됨) · lead 재실행 백그라운드 bjwaki7me (job tmp `s2v3/lead/`) | 재실행 결과 → 저장소 사본 → ASTRA (17i 뒤) |
 | 7c | 미경험 X01 환경 차이 분석 (CPU) | 독립 · 임시 폴더에서만 | 끝 01:06 (하위 작업 · 산출물 job tmp `x01env/`): 원인은 python · numpy 가 아니라 **BLAS gemv · ddot 의 FMA 여부** (q_metrics.py:224 `xy @ e` · :249 norm). MKL · OpenBLAS Nehalem 은 두 번 반올림, OpenBLAS 기본 (Cooperlake) 은 FMA · 원본 23 실행 바이트는 FMA 쪽. 차이는 progress_m 150 · disp_m 12 값 · 1 ULP · 서식 차 0 · 판정 열은 이 자료에서 같음 (일반 보장은 미확인 · 4.0 m 경계에서 뒤집힐 수 있음). lead 확인 01:10: 같은 isaac311-moects 에 `OPENBLAS_CORETYPE=Nehalem` 만 주니 X01 valid 8 · hold 15 (job tmp uncr_v5_lead_test_nehalem.txt). 「통과 환경」 도 CPU 커널에 기댐 · Linux 이전 때 다시 잼 | 17g 판정에 보탬 · 관문 고침 (환경 지문 · `[post-env]`) 은 ASTRA 검토 뒤 |
