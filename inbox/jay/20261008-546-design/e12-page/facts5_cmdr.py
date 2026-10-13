@@ -1,5 +1,5 @@
 """5판 CMD-R 절의 %%토큰%% 을 원자료에서 만든다 (lead · 10/13).
-원자료: _eval/out/cmdr_post.json (cmdr_post_v7.py · schema "cmdr_post v7") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
+원자료: _eval/out/cmdr_post.json (cmdr_post_v8.py · schema "cmdr_post v8") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
 _eval/out/branch/cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json (두 갈래 시작 상태 대조).
 판정선 (팀장 확정 2(c) · VERIFY-astra-7 60 줄 · ASTRA 15 6.1): 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 같은 무게 평균 +10 %p 이상이면 「개선」.
 칸마다의 구간은 서술이고 판정이 아니다. (v16 의 「칸마다 판정 · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)」 는 규칙을 잘못 옮긴 것이라 철회 · 10/13 10:02)
@@ -12,7 +12,9 @@ import os
 import time
 
 EV = "C:/isaac/ext/go2_rl_robotlab/_eval/out"
-SCHEMA = "cmdr_post v7"
+SCHEMA = "cmdr_post v8"
+ORIGIN_KO = {"hashed-at-collection": "수집 때 해시", "hashed (stamp has no origin field)": "수집 때 해시 (출처 칸 없음)",
+             "legacy-origin revalidated": "구형 출처 · 재검사 때 해시", "v3.2 legacy stamp": "구형 stamp (출력 해시 없음)"}
 MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
 TARGETS = ["stop03", "fwd01", "fwd02"]
 CELL_KO = {"stop03": "걷다 멈춤 (0.3 m/s → 0)", "fwd01": "앞 0.1 m/s", "fwd02": "앞 0.2 m/s", "stand": "서 있기", "fwd03": "앞 0.3 m/s",
@@ -127,7 +129,8 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     t["cmdr_startup_rows"] = "".join(srows) or "<tr><td colspan=\"5\" class=\"sub\">아직 없음</td></tr>"
     st = [f"<li>{asof} 집계 ({SCHEMA}) · 유효한 평가 실행 <b>{post['n_valid_runs']}</b> 개 · 시작 상태가 짝이 안 맞아 뺀 것 {len(post['driver_pair_fail'])} · "
           f"검사에서 떨어진 것 {len(post['driver_invalid'])} · 인증이 안 맞아 뺀 것 {len(post.get('auth_fail', []))} · "
-          f"그중 구형 (v3.2) 인증 {post.get('legacy_stamps', 0)} 개 (출력 해시 없이 pins · checkpoint 로 묶임 · 이번 집계 때 읽은 바이트의 해시는 기록).</li>"]
+          f"그중 구형 (v3.2) 인증 {post.get('legacy_stamps', 0)} 개 (출력 해시 없이 pins · checkpoint 로 묶임 · 이번 집계 때 읽은 바이트의 해시는 기록) · "
+          f"출처: {' · '.join(f'{ORIGIN_KO.get(k, k)} {v}' for k, v in sorted(post.get('origin_counts', {}).items()))}.</li>"]
     for u in ("22000", "24000"):
         tv = post["target_verdict"][u]
         cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in TARGETS]
