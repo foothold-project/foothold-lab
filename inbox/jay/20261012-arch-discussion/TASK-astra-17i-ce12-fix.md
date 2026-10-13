@@ -36,10 +36,11 @@
 | mutate_run_dump.py | 65/65 CAUGHT · exit 0 |
 | 시험 전후 | ce12 12 파일 해시 그대로 · 변이 사본 남지 않음 |
 
-## 3. lead 가 하려는 것
+## 3. lead 가 이미 한 것 (01:15 ~ 01:19 · 채택은 이 17i 판정 뒤)
 
-- 위 판으로 해시를 고정하고 GPU 1 에서 CTS 짧은 기록을 새 tag `cts_e1_m20000_r2` 로 다시 받는다 (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03 · dry-run 먼저). 기동 안전에 걸린 부분 (v3 registry · 같은 변환 잠금 · slot v3 · isolate v3) 은 17f 가 본 판 그대로라서 17f §4.5 의 「짧은 진단 기록」 범위로 본다. **r2 결과의 APPROVED 채택은 이 17i 판정 뒤에만 한다.**
-- 17i 가 허용하면: r2 승인 → v2 같은 규격 기록 (expect 0) → 양쪽 native 정합성 뒤 공통 세계 비교 (17f §4.5 의 5).
+- 코드 해시를 고정하고 (`night-tools-20261013/ce12/CODE_BUNDLE_r2.txt` · ce12 일곱 파일 + slot v3 + isolate v3 + gpu_guard · 시작 전 해시는 job tmp `C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/ce12fix/r2_launch_sha.txt`) dry-run 뒤 GPU 1 에서 CTS 짧은 기록을 새 tag `cts_e1_m20000_r2` 로 다시 받았다 (attempt `cts_e1_m20000_r2-20261014-011602-135088` · 01:16:02 ~ 01:16:26 · slot rc 0 · guard rc 0 min_free 5382 MiB max_used 10920 MiB). 명령: README 「lead 가 돌릴 명령」 그대로 (reset 1,6 @30 · 전환 env 0 @40 fwd03 · cells stand,fwd03,yawL05 · 칸당 4 환경 · 60 step).
+- `validate_dump --stamp` → COLLECTED · `compare_native --recompute_action` → ALL PASS (CPU 재계산 action 최대 2.15e-6 · 보고서 `_eval/out_ce12/native/cts_e1_m20000_r2/compare_report_20261014-011724.json`) · `validate_dump --approve --code_bundle CODE_BUNDLE_r2.txt` → APPROVED · coverage reset 2 · post_reset_action_steps 60 · 전환 1 · post_switch_action_steps 20 · ray_miss_count null (미측정으로 표시) · `--check_approval` → APPROVAL STILL VALID. 출력 원자료: `_eval/out_ce12/native/cts_e1_m20000_r2/` 와 `_eval/out_ce12/native/_attempts/cts_e1_m20000_r2-20261014-011602-135088/`.
+- 아직 하지 않은 것: **v2 기록 (expect 0)** · 이 r2 를 다음 단계의 근거로 쓰는 일. 17i 가 허용할 때까지 하지 않는다. (00:25 첫 기록 `cts_e1_m20000` 은 A9 로 REJECTED 이고 그대로 둠.)
 
 ## 4. 물음
 
