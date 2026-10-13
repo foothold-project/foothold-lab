@@ -68,9 +68,23 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     asof = time.strftime("%H:%M", time.localtime(os.path.getmtime(post_path or os.path.join(EV, "cmdr_post.json"))))
     st.append(f"<li>{asof} 집계 · 유효한 평가 실행 <b>{post['n_valid_runs']}</b> 개 · 시작 상태가 짝이 안 맞아 뺀 것 {len(post['driver_pair_fail'])} · 검사에서 떨어진 것 {len(post['driver_invalid'])}.</li>")
     for u in ("22000", "24000"):
-        pl = post["proposal_lines"].get(u)
-        if pl:
-            st.append(f"<li>{u}: 목표 세 칸의 on − off 평균 <b>{pl['target_mean_diff_pp']:+.1f} %p</b> (제안선 +10 %p {'넘음' if pl['meets_plus10'] else '못 넘음'} · 채택 판정 아님).</li>")
+        # 판정선은 칸마다 (95 % 구간 아래 끝 > 0 이고 평균 +10 %p 이상) · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)
+        cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in ("stop03", "fwd01", "fwd02")]
+        if all(p for _, p in cells):
+            parts = []
+            for c, p in cells:
+                d, lo, hi = 100 * p["diff"], 100 * p["lo"], 100 * p["hi"]
+                if lo > 0:
+                    tag = "구간 하한 0 위 · +10 %p 넘음" if d >= 10 else "구간 하한 0 위 · +10 %p 못 미침"
+                elif hi < 0:
+                    tag = "구간 전체가 0 아래"
+                else:
+                    tag = "구간이 0 을 걸침"
+                worse = [k for k, v in p.get("mae", {}).items() if v.get("worse_than_line")]
+                mae = f" · 속도 오차 {', '.join(worse)} 10 % 넘게 커짐" if worse else ""
+                parts.append(f"{CELL_KO[c]} <b>{d:+.1f} %p</b> [{lo:+.1f}, {hi:+.1f}] ({tag}{mae})")
+            when = "중간 관찰" if u == "22000" else "최종 비교"
+            st.append(f"<li>{u} ({when} · on − off · 칸마다 500 판 짝): " + " · ".join(parts) + ". 이 표만으로 채택 · 기각을 쓰지 않습니다 (기본 계약 · 다른 칸 퇴행 확인 전).</li>")
         else:
             st.append(f"<li>{u}: 두 갈래가 다 재지지 않아 아직 비교 없음.</li>")
     t["cmdr_status"] = "".join(st)
