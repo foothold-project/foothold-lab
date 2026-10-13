@@ -1,0 +1,35 @@
+# test_v35.py · 2026-10-13 10:54 · cmdr_eval_driver_v35.py sha256 c7d19e00db16b291
+PASS 1a last pair in the final snapshot is remeasured got ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on240 want ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_f
+PASS 2a older-version end record (zero targets) ignored: ends on the 4th read got 4 want 4
+PASS 2b writer alive on reads 1-3: ends on read 4 (writer gone, same bytes as read 3) got (4, []) want (4, [])
+PASS 2c base lock held on reads 1-2 counts as a writer: ends on read 3 got 3 want 3
+PASS 3a permanent read failure: stopped at the deadline got ('deadline', True, False, 'JSONDecodeError') want ('deadline', True, False, 'JSONDecodeError')
+PASS 3b ended within a few retries got True want True
+PASS 3c temporary failure then final: remeasured and ended got (['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on24 want (['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_
+PASS 4a cell gone from the final snapshot: withdrawn and unmeasured got (True, ['wave/stand/on'], False) want (True, ['wave/stand/on'], False)
+PASS 4b flagged then withdrawn before running: 8 jobs dequeued, none run got (8, [], []) want (8, [], [])
+PASS 5a g0 writers in every spelling got [11, 12, 13, 14, 15] want [11, 12, 13, 14, 15]
+PASS 5b base writers: only the v3.2 default got [16] want [16]
+PASS 6a lock held by another process: take_lock refused, lock_held true got (False, True) want (False, True)
+PASS 6b after it exits: free got (False, True) want (False, True)
+PASS 7a exit during re-validation: old table kept, stop record beside it got ({'matrix': {'old': 'valid'}}, 4, 'exit 4') want ({'matrix': {'old': 'valid'}}, 4, 'exit 4')
+PASS 7b exception: exit record in the log with not_run got (1, 'ValueError: x', ['cq_on24000_wave_fwd03_on_s1001']) want (1, 'ValueError: x', ['cq_on24000_wave_fwd03_on_s1001'])
+PASS 8a rc99 then 0: two tries recorded, first try's files moved aside got (0, 2, [99, 0], 2, 2) want (0, 2, [99, 0], 2, 2)
+PASS 8b moved log is the first try's got 'try rc 99\n' want 'try rc 99\n'
+PASS 9 two sharing violations then written got (3, True) want (3, True)
+PASS 10a no result.json got 'on arm has no result.json' want 'on arm has no result.json'
+PASS 10b the off arm's result is refused got True want True
+PASS 10c unfinished result refused got True want True
+PASS 10d wrong checkpoint size got 'model_24000.pt size 1' want 'model_24000.pt size 1'
+PASS 10e NIGHT DONE only before the on arm's exit got "night log has no NIGHT DONE after the on arm's EXIT 0" want "night log has no NIGHT DONE after the on arm's EXIT 0"
+PASS 10f all signs got '' want ''
+PASS 10g 3000 MiB refused (< 3000 needed) got 'GPU 0 memory used 3000 MiB' want 'GPU 0 memory used 3000 MiB'
+PASS 10h 2999 MiB ok got '' want ''
+PASS 11a real run validates on GPU 1 got '' want ''
+PASS 11b under --gpu 0 -> gpu uuid got 'gpu uuid' want 'gpu uuid'
+PASS 11c negative max_abs rejected got True want True
+PASS 11d cut stamp -> not reusable got False want False
+PASS 11e --log == --base_log refused got 6 want 6
+PASS 11f universe 96, flag boundary got (96, True, False) want (96, True, False)
+FAILS []
+exit 0
