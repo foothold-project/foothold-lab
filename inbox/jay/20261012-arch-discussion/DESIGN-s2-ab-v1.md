@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · S2 설계 초안 · 「이상적 지도 입력 비교」 A/B 의 정책 구조 · 입력 경로 · CPU 시험
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 19:14
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 19:12
 > 근거: VERIFY-astra-11.md §2.1 · §2.2 · §2.4 · VERIFY-astra-17.md §1.2 · §3.1 · §3.2 · §3.3 · §4 · DESIGN-topdown-20261013.md §7 · s2-terrain-probe/PROBE-sparse-terrain.md · `source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py` 86 ~ 247 행 · E1 `params/agent.yaml` · `params/env.yaml` (height_scanner · height_scan)
 > 요지: A · B 는 같은 부모 (E1 20000) 의 student 경로에 작은 지도 encoder 를 0 으로 시작하는 열로 붙이고, PPO 만으로 학습한다 (모방 없음). A 는 높이와 유효성 mask 를 모두 상수로, B 는 시뮬의 이상적 높이와 mask 를 준다. 오늘 밤에는 학습하지 않고, 입력 의미 · 0 초기화 동치 · 첫 갱신 뒤 gradient 경로를 CPU 로 시험하는 코드까지만 만든다
 > 상태: 초안 · ASTRA 17d 검증 전 · 학습 · Isaac 실행 없음
