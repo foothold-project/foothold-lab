@@ -69,7 +69,8 @@
 | 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
 | 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
 | 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 끝 01:26 · 고쳐서 기동 (A v5 full 미승인 · B RAND smoke 보류) · 조건은 위 표 | 6b |
-| 6b | 17g 고침 (A: 대기 뒤 재검사 · 환경 지문 · 새 manifest / B: v3 registry · 밀기 heading · 요청 누락) → lead 재실행 → ASTRA 재확인 (17g 6 절 1 ~ 3) | 사용 한도 (super2: 새 하위 작업 금지) → 04:20 뒤 하위 작업으로 | 대기 | 04:20 뒤 첫 일 |
+| 6b | 17g 고침 (A: 대기 뒤 재검사 · 환경 지문 · 새 manifest / B: v3 registry · 밀기 heading · 요청 누락) → lead 재실행 → ASTRA 재확인 (17g 6 절 1 ~ 3) | **Codex Worker (gpt-6-sol · 팀장 02:3x 승인 · YOLO)** 에 맡김: 02:38 접수 · A `term_602208c0` · B `term_223a8374` (Orca 창 이름 「Codex Worker · sol 17g-A / B」) · 작업서 `TASK-codex-worker-17g-fix.md` · 보고서 job tmp `codexA/REPORT.md` · `codexB/REPORT.md` | 진행 중 | 보고서 전문 → 「Codex Worker 점검」 절 순서 |
+| 6c | ASTRA 17j: 고친 v6 · 무작위화 판 4 재확인 (17g 6 절 1 ~ 4) · 17i 다음 | 6b 끝 · lead 재실행 통과 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 (머리에 「lead 는 Sonnet」 줄) | |
 | 7 | GPU 1: 무작위화 smoke → 스틸 · 영상 전 프레임 확인 → 네 판 한 실행 → 미경험 v5 full 75 | 17g 허용 · GPU 1 에 Isaac 하나 · 여유 6,144 MiB 이상 | 대기 | |
 | 7b | S2 판 3 (CPU) | 17f-2 | 01:27 보고 (시험 14/14 · 292 칸 · 변이 69/69 · 첫 실행 T13 기대 상수 1 ulp FAIL · 변이 1 차 68/69 (q28) 를 고쳐 다시 돎 · 학습 루프 연결 · smoke 등록 5.3 의 2 ~ 6 · 난수 상태 · 센서 관문은 안 됨) · lead 재실행 백그라운드 bjwaki7me (job tmp `s2v3/lead/`) | lead 재실행 01:35: 시험 14/14 · 변이 69/69 (BASELINE 14/14 · 원본 해시 시작 == 끝) · 네 파일 해시 그대로 · 저장소 사본 night-tools s2/ (판 3) | ASTRA (17i 뒤) |
 | 7c | 미경험 X01 환경 차이 분석 (CPU) | 독립 · 임시 폴더에서만 | 끝 01:06 (하위 작업 · 산출물 job tmp `x01env/`): 원인은 python · numpy 가 아니라 **BLAS gemv · ddot 의 FMA 여부** (q_metrics.py:224 `xy @ e` · :249 norm). MKL · OpenBLAS Nehalem 은 두 번 반올림, OpenBLAS 기본 (Cooperlake) 은 FMA · 원본 23 실행 바이트는 FMA 쪽. 차이는 progress_m 150 · disp_m 12 값 · 1 ULP · 서식 차 0 · 판정 열은 이 자료에서 같음 (일반 보장은 미확인 · 4.0 m 경계에서 뒤집힐 수 있음). lead 확인 01:10: 같은 isaac311-moects 에 `OPENBLAS_CORETYPE=Nehalem` 만 주니 X01 valid 8 · hold 15 (job tmp uncr_v5_lead_test_nehalem.txt). 「통과 환경」 도 CPU 커널에 기댐 · Linux 이전 때 다시 잼 | 17g 판정에 보탬 · 관문 고침 (환경 지문 · `[post-env]`) 은 ASTRA 검토 뒤 |
@@ -88,6 +89,15 @@
 - **점검 예약:** `25e8a2a3` 한 시간에 한 번 (`27 * * * *` · 옛 2b1bfe25 지움 · CronList 에 하나만) (02:2x · 한도 절약). 04:27 이 5 시간 한도 해제 뒤 첫 점검.
 - **omniroute + GLM-5.3 (팀장 제안 · 02:2x):** 설치하지 않음. 조사 결과는 #550 02:3x 댓글. 요지: 별도 프로세스를 새로 띄우는 방식이라 이 세션을 못 바꿈 · NVIDIA 쪽은 평가용 trial 약관 · 속도 제한 · 데이터 취급 미확인 · 도구 호출 번역 한계 문서 없음. 조건을 갖춘 별도 보조 세션 (기계적인 일만) 으로만 검토.
 - **이 세션은 끝내지 않는다.** 점검 예약 · 하위 작업 · 1043 학습 (상위 프로세스 21100 은 이미 없는데 학습은 계속 돔 · Claude 종료 때 셸을 트리째 죽이는지는 미확인) 이 여기에 걸려 있음.
+
+## Codex Worker 점검 (02:38 · 팀장 「YOLO 모드로 해 문제 없어」)
+
+- **세션:** Orca 창 「Codex Worker · sol 17g-A」 `term_602208c0-0d32-4891-9337-5506b6564c46` · 「Codex Worker · sol 17g-B」 `term_223a8374-3136-4d07-9564-29af942d4079` (둘 다 gpt-6-sol · 추론 high · YOLO · Codex 주간 67 % 남음). 「Codex Worker · luna (정해진 명령)」 `term_2d3193e9-4acc-42e6-bd5a-9905e0f2ab94` 는 시험 끝 (CE12 시험 재실행 답이 정확히 맞음 · 놀고 있음).
+- **검증 세션 (ASTRA `term_fe1daede`) 과 섞지 않는다.** 작업자는 고치는 쪽, ASTRA 는 검증하는 쪽.
+- **보호 기준선:** job tmp `codexw/protect_baseline.txt` (02:35 · `bash codexw/protect.sh` 로 다시 만들어 diff). 작업자가 끝나면 1043 학습 로그 (out_branch/cmdr_s1043_on_u4000*) 말고 아래가 **모두 같아야** 한다: out_uncr · out_uncr_reval · out_uncr_v5 · slot · branch · out_ce12 · handover · ce12 · s2 · out_smoke · 나머지 out_branch · frozen_py · isaac311-moects conda-meta. `out_rand` 는 판 4 시험이 읽기만 해야 하므로 같아야 한다. 다르면 **작업자 결과를 채택하지 않고** 무엇이 바뀌었는지 먼저 본다 (작업자는 YOLO 이므로 가장 큰 위험).
+- **heartbeat 마다:** (1) 두 창의 마지막 상태를 읽는다 (`orca terminal read --terminal <h>`): 일하는 중 · 기다리는 중 · 오류 · 끝. 승인 창에서 멈춰 있으면 (YOLO 라 드묾) 어떤 승인인지 본다 (2) 새 보고서가 있으면 전문을 읽는다 (3) 같은 일을 다시 보내기 전에 창의 상태와 산출물을 확인한다. 끝났다고 한 말은 lead 가 재실행하기 전에는 사실이 아니다.
+- **끝난 뒤 순서:** 보호 기준선 대조 → 보고서 전문 → 시험 · 변이 lead 재실행 (isaac311-moects · `CUDA_VISIBLE_DEVICES=-1` · 숫자 분모 구분) → 새 파일 저장소 사본 + SHA256SUMS → 17i (CE12) 가 먼저 가고 17j (v6 · 판 4) 가 그 다음. GPU 1 기동은 ASTRA 판정과 승인 json 이 있을 때만.
+- **Codex 한도:** 주간 67 % 남음 (ASTRA 와 작업자가 같이 씀). 작업자는 한 번에 둘까지만. 같은 일을 다시 맡기지 않는다.
 
 ## 팀장 결정 대기
 
