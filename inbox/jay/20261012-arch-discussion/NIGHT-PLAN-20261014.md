@@ -19,7 +19,7 @@
 | 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 | 완료 알림 · 보고 전문 · lead 재실행 | 진행 중 (00:50 compare_native · validate_dump 수정 흔적) | 알림 |
 | 하위 작업 · S2 판 3 | 00:40 맡김 | 같음 | 진행 중 | 알림 |
 | heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 등록만 확인 · 실제 도착 미확인 | 01:07 첫 도착 확인 |
-| ASTRA 17g | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 | 파일 생김 |
+| ASTRA 17g | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
 
 부팅 기준: **09/17 21:16 KST** (`Win32_OperatingSystem.LastBootUpTime`). 다르면 위 PID · 실행을 그대로 믿지 않고 새 기동을 보류한 채 다시 확인하고 #550 · 채팅에 보고한다. 적법한 재부팅이 확인되면 이 기준값을 고친다.
 
