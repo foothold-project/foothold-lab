@@ -1,0 +1,136 @@
+[
+ {
+  "w": 1920,
+  "scheme": "light",
+  "sw": 1905,
+  "iw": 1920,
+  "bg": "rgb(246, 245, 241)",
+  "wrap": 1536,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_1920_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_1920_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_1920_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_1920_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_1920_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_after_click_1920.png"
+  ],
+  "player": {
+   "head": "징검다리 · 0.5 m/s · model_20499 · 100 판 건넘 E1 0 % · E2 0 % · 장애물 구간 끝 4 m",
+   "n": 2,
+   "rates": [
+    0.25,
+    0.25
+   ],
+   "t": [
+    0.62,
+    0.62
+   ],
+   "paused": [
+    false,
+    false
+   ],
+   "chip": [
+    "징검다리10",
+    "0.5 m/s",
+    "model_20499"
+   ],
+   "srcs": [
+    "v/un_e1_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4",
+    "v/un_e2_m20499_stepping_stones_fwd05/stepping_stones_fwd05_ep000_kinreplay_hud_web.mp4"
+   ]
+  }
+ },
+ {
+  "w": 1920,
+  "scheme": "dark",
+  "sw": 1905,
+  "iw": 1920,
+  "bg": "rgb(18, 22, 29)",
+  "wrap": 1536,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_1920_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_1920_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_1920_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_1920_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_1920_dark.png"
+  ]
+ },
+ {
+  "w": 1366,
+  "scheme": "light",
+  "sw": 1351,
+  "iw": 1366,
+  "bg": "rgb(246, 245, 241)",
+  "wrap": 1093,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_1366_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_1366_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_1366_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_1366_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_1366_light.png"
+  ]
+ },
+ {
+  "w": 1366,
+  "scheme": "dark",
+  "sw": 1351,
+  "iw": 1366,
+  "bg": "rgb(18, 22, 29)",
+  "wrap": 1093,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_1366_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_1366_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_1366_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_1366_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_1366_dark.png"
+  ]
+ },
+ {
+  "w": 390,
+  "scheme": "light",
+  "sw": 390,
+  "iw": 390,
+  "bg": "rgb(246, 245, 241)",
+  "wrap": 390,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_390_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_390_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_390_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_390_light.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_390_light.png"
+  ]
+ },
+ {
+  "w": 390,
+  "scheme": "dark",
+  "sw": 390,
+  "iw": 390,
+  "bg": "rgb(18, 22, 29)",
+  "wrap": 390,
+  "quad": 4,
+  "rows": 144,
+  "mx": 10,
+  "shots": [
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_read_390_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_why_390_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_table_390_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_play_390_dark.png",
+   "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page/shots_un2\\un2_list_390_dark.png"
+  ]
+ }
+]
