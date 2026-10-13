@@ -2,11 +2,16 @@
 """CE12-v1 이식 진단 1 · native 기록과 adapter 출력을 칸마다 대조한다 (CPU · Isaac 없이 · GPU 를 가린다).
 
 분류: A/평가 · CE12-v1 이식 진단 1 대조기
-작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 18:19
-근거: DESIGN-astra-12-common-eval.md 2.2 · 5.1 (순서 7) · 5.2 · adapters.py · dump_native_cts.py · dump_native_v2.py
+작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 18:19 · 10/14 00:49 (실제 기록 · ASTRA 17f)
+근거: DESIGN-astra-12-common-eval.md 2.2 · 5.1 (순서 7) · 5.2 · VERIFY-astra-17f.md 4.4 · 4.5 · adapters.py · dump_native_cts.py · dump_native_v2.py
 요지: 같은 원시 상태 · 같은 raw action 순서를 adapter 에 다시 넣어 native 관측 · joint target 과 비교하고 첫 불일치를
       step · env · term · 이력 칸 · 관절 이름 (또는 광선 번호) 으로 보고한다. 판정 · 점수는 내지 않는다.
-상태: 가짜 기록 (test_adapters.py T21) 으로만 시험. 실제 native 기록에는 아직 안 돌렸다 (기록이 없다)
+상태: 가짜 기록 (T21 · T22) 과 실제 기록 사본 (T23 · 10/14 00:25 · GPU 1 · E1 model_20000) 으로 시험.
+      10/14 00:29 실제 기록에서 meta obs_layout 의 dims 가 문자열 ("30") 이라 int(np.prod) 에서 죽었다 (기록기가 numpy 정수를
+      json default=str 로 적음). 지금은 숫자 문자열도 읽고 (_dim), 기록기는 int 로 적는다.
+보고서 (10/14 추가 · ASTRA 17f 4.4 · 4.5): 검사마다 최대 차의 위치 (max_at), 읽은 입력 해시 (inputs), 지나간 경로 수 (coverage:
+      reset · reset 뒤 action step · 명령 전환 · 전환 뒤 action step · height miss 는 미측정 None 과 0 회를 구분), reset 뒤 이력 ·
+      last action 과 전환 뒤 관측 · target · action 의 따로 잰 최대 차 (focus).
 
 사용 (CPU):
   PY=C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe
@@ -60,15 +65,46 @@ def _sha(path):
     return h.hexdigest()
 
 
+def _dim(x):
+    """meta obs_layout 의 한 항 차원. 기록기 1 판 (10/14 00:25 실제 기록) 은 numpy 정수를 json default=str 로 적어 "30" 같은
+    문자열이 됐다. 숫자 문자열과 정수만 받고, 그 밖은 None (배치 확인 실패로 보고 · 죽지 않는다)."""
+    try:
+        vals = [v if isinstance(v, (int, np.integer)) else int(str(v)) if str(v).isdigit() else None for v in x]
+    except TypeError:
+        return None
+    if any(v is None for v in vals):
+        return None
+    return int(np.prod(vals)) if vals else None
+
+
 def coverage_of(d):
-    """ASTRA 17d §4: 이 기록이 실제로 지나간 경로의 수. 0 인 경로는 native 로는 미확인이다."""
-    rs = int(np.asarray(d["reset_after_step"]).sum())
+    """ASTRA 17d §4 · 17f §4.4: 이 기록이 실제로 지나간 경로의 수. 0 인 경로는 native 로는 미확인이다.
+    reset 뒤 · 명령 전환 뒤에 action (과 target · 다음 상태) 이 몇 step 있었는지도 센다 (마지막 관측의 전환은 action 0 개)."""
+    rs_arr = np.asarray(d["reset_after_step"])
+    T = rs_arr.shape[0]
+    rs_pairs = np.argwhere(rs_arr)  # (step k, env): 관측 k+1 이 reset 뒤 첫 관측 · action k+1..T-1 이 reset 뒤
     cmd = np.asarray(d["command"])
-    sw = int(np.any(cmd[1:] != cmd[:-1], axis=-1).sum()) if cmd.shape[0] > 1 else 0
+    sw_pairs = (np.argwhere(np.any(cmd[1:] != cmd[:-1], axis=-1)) + [1, 0]) if cmd.shape[0] > 1 else np.zeros((0, 2), int)
+    post_reset = int(sum(max(0, T - 1 - int(k)) for k, _e in rs_pairs))
+    post_switch = int(sum(max(0, T - int(k)) for k, _e in sw_pairs))
     miss = int((~np.isfinite(np.asarray(d["ray_hits_w"])[..., 2])).sum()) if "ray_hits_w" in d else None
-    cov = {"reset_events": rs, "command_switch_events": sw, "ray_miss_count": miss}
-    cov["unverified_paths"] = [k for k, v in (("reset 뒤 이력 · last action", rs), ("명령 전환", sw), ("height miss (+1)", miss))
-                               if v == 0]
+    cov = {"reset_events": int(len(rs_pairs)), "post_reset_action_steps": post_reset, "command_switch_events": int(len(sw_pairs)),
+           "post_switch_action_steps": post_switch, "ray_miss_count": miss,
+           "reset_pairs_step_env": rs_pairs.tolist()[:50], "switch_pairs_obs_env": sw_pairs.tolist()[:50]}
+    unv = []
+    if not len(rs_pairs):
+        unv.append("reset 뒤 이력 · last action (reset 0 회)")
+    elif post_reset == 0:
+        unv.append("reset 뒤 action (reset 은 있으나 그 뒤 action 0 개)")
+    if not len(sw_pairs):
+        unv.append("명령 전환 (0 회)")
+    elif post_switch == 0:
+        unv.append("명령 전환 뒤 action (전환이 마지막 관측에만 있어 action 0 개)")
+    if miss is None:
+        unv.append("height miss (+1) 미측정 (이 기록에는 광선 원자료가 없다)")
+    elif miss == 0:
+        unv.append("height miss (+1) 0 회")
+    cov["unverified_paths"] = unv
     return cov
 
 
@@ -99,6 +135,7 @@ class _Check:
         self.name, self.atol = name, atol
         self.max_abs, self.n_bad, self.n = 0.0, 0, 0
         self.first = None
+        self.max_at = None
         self.extra = {}
 
     def add(self, step, got, want, locate=None):
@@ -113,8 +150,13 @@ class _Check:
         d = np.where(both_nan, 0.0, np.abs(got - want))
         d = np.where(np.isnan(d), np.inf, d)
         self.n += d.size
-        if d.size:
-            self.max_abs = max(self.max_abs, float(d.max()))
+        if d.size and float(d.max()) > self.max_abs:
+            self.max_abs = float(d.max())
+            pos = np.unravel_index(int(np.argmax(d)), d.shape)
+            idx = int(pos[1]) if len(pos) > 1 else None
+            self.max_at = {"step": int(step), "env": int(pos[0]), "index": idx}
+            if locate is not None and idx is not None:
+                self.max_at["where"] = locate(idx)
         bad = d > self.atol
         nb = int(bad.sum())
         self.n_bad += nb
@@ -135,7 +177,7 @@ class _Check:
         self.extra["detail"] = detail
 
     def result(self):
-        return dict({"name": self.name, "atol": self.atol, "ok": self.n_bad == 0, "max_abs": self.max_abs,
+        return dict({"name": self.name, "atol": self.atol, "ok": self.n_bad == 0, "max_abs": self.max_abs, "max_at": self.max_at,
                      "n_bad": self.n_bad, "n_compared": self.n, "first": self.first}, **self.extra)
 
 
@@ -185,8 +227,9 @@ def compare(npz_path, meta_path=None, A=None, recompute_action=False, checkpoint
         c = _Check(f"layout.{g}", 0)
         want = [(n, b - a) for n, a, b, H, dd in ad.layout(g)]
         if lay and g in lay:
-            got = [(n, int(np.prod(x))) for n, x in zip(lay[g]["names"], lay[g]["dims"])]
+            got = [(n, _dim(x)) for n, x in zip(lay[g]["names"], lay[g]["dims"])]
             c.flag(got == want, {"native": got, "adapter": want})
+            c.extra["dims_written_as_text"] = any(isinstance(v, str) for x in lay[g]["dims"] for v in x)
         else:
             c.flag(False, "meta.json 에 obs_layout 이 없다 (배치를 확인하지 못함)")
         c2 = _Check(f"shape.obs_{g}", 0)
@@ -216,20 +259,27 @@ def compare(npz_path, meta_path=None, A=None, recompute_action=False, checkpoint
     c_off = _Check("info.offset_minus_default (motor offset DR 크기 · 판정 아님)", float("inf"))
     off_max = 0.0
     obs_seq = []
+    adp_obs = {g: np.zeros(d["obs_" + g].shape, np.float32) for g in groups}
+    adp_tgt = np.zeros(d["joint_target"].shape, np.float32)
+    adp_last = np.zeros(d["last_action"].shape, np.float32)
     for k in range(T + 1):
         st = A.state_from_dump(d, k)
         c_last.add(k, ad._last_raw.numpy(), d["last_action"][k],
                    locate=lambda i: {"joint": ad.action_joint_names[i]})
+        adp_last[k] = ad._last_raw.numpy()
         o = ad.observe(st)
         p = ad.observe(st, update_history=False)
         for g in groups:
             c_peek.add(k, p[g].numpy(), o[g].numpy())
             c_obs[g].add(k, o[g].numpy(), d["obs_" + g][k], locate=loc(g))
         obs_seq.append({g: o[g].clone() for g in groups})
+        for g in groups:
+            adp_obs[g][k] = o[g].numpy()
         if k < T:
             raw = torch.as_tensor(d["raw_action"][k])
             tgt = ad.decode_action(raw, offset=torch.as_tensor(d["action_offset"][k]))
             c_tgt.add(k, tgt.numpy(), d["joint_target"][k], locate=lambda i: {"joint": ad.action_joint_names[i]})
+            adp_tgt[k] = tgt.numpy()
             t_def = ad.decode_action(raw, remember=False)
             off_max = max(off_max, float((tgt - t_def).abs().max()))
             ids = np.nonzero(d["reset_after_step"][k])[0]
@@ -245,15 +295,16 @@ def compare(npz_path, meta_path=None, A=None, recompute_action=False, checkpoint
             c.add(k, d["obs_policy"][k][:, a:b], d["command"][k])
         c.extra["slice"] = [a, b]
         checks.append(c)
-    pinfo = None
+    pinfo, acts = None, None
     if recompute_action:
-        rc_checks, pinfo, ck_used = _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml)
+        rc_checks, pinfo, ck_used, acts = _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml)
         checks += rc_checks
         rep["checkpoint"] = ck_used.replace("\\", "/") if ck_used else None
         rep["checkpoint_sha256"] = (pinfo or {}).get("checkpoint_sha256")
     rep["recompute_action"] = bool(recompute_action)
     rep["inputs"] = inputs_fingerprint(npz_path, meta_path, meta, model, A, pinfo)
     rep["coverage"] = coverage_of(d)
+    rep["focus"] = focus_of(d, ad, groups, adp_obs, adp_tgt, adp_last, acts)
     res = [x.result() for x in checks]
     fails = [r for r in res if not r["ok"]]
     first = None
@@ -277,7 +328,7 @@ def _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml):
     c_nat = _Check("action.recompute_from_native_obs", ACTION_ATOL)
     if not ck or not os.path.exists(ck):
         c_ad.flag(False, f"체크포인트가 없다: {ck}")
-        return [c_ad], None, ck
+        return [c_ad], None, ck, None
     with contextlib.redirect_stdout(io.StringIO()):
         if model == "cts_student":
             m, info = A.load_cts_policy_cpu(ck, agent_yaml or meta.get("agent_yaml"))
@@ -285,13 +336,62 @@ def _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml):
             m, info = A.load_v2_policy_cpu(ck, agent_yaml or A.V2_AGENT_YAML)
     c_ad.extra["policy"] = info
     T = d["raw_action"].shape[0]
+    acts = {"adapter": np.zeros(d["raw_action"].shape, np.float32), "native": np.zeros(d["raw_action"].shape, np.float32)}
     for k in range(T):
         a1 = ad.infer(m, obs_seq[k])
-        c_ad.add(k, a1.numpy(), d["raw_action"][k])
+        c_ad.add(k, a1.numpy(), d["raw_action"][k], locate=lambda i: {"joint": ad.action_joint_names[i]})
         nat = {g: torch.as_tensor(d["obs_" + g][k]) for g in groups}
         a2 = ad.infer(m, nat)
-        c_nat.add(k, a2.numpy(), d["raw_action"][k])
-    return [c_ad, c_nat], info, ck
+        c_nat.add(k, a2.numpy(), d["raw_action"][k], locate=lambda i: {"joint": ad.action_joint_names[i]})
+        acts["adapter"][k], acts["native"][k] = a1.numpy(), a2.numpy()
+    return [c_ad, c_nat], info, ck, acts
+
+
+def focus_of(d, ad, groups, adp_obs, adp_tgt, adp_last, acts, window=10):
+    """ASTRA 17f §4.5 4: reset 뒤 이력 · last action, 명령 전환 뒤 관측 · target · action 을 따로 잰다 (최대 차 · 위치 · 비교 칸 수)."""
+    T = d["raw_action"].shape[0]
+
+    def mx(a, b, s0, g=None, act=False):
+        a = np.asarray(a, np.float64)
+        b = np.asarray(b, np.float64)
+        if a.size == 0:
+            return {"max_abs": None, "n": 0}
+        diff = np.where(np.isnan(a) & np.isnan(b), 0.0, np.abs(a - b))
+        i = np.unravel_index(int(np.nanargmax(diff)), diff.shape)
+        out = {"max_abs": float(diff[i]), "n": int(diff.size), "step": int(s0 + i[0])}
+        if g is not None:
+            out["where"] = ad.locate(g, int(i[1]))
+        elif act:
+            out["joint"] = ad.action_joint_names[int(i[1])]
+        return out
+
+    res = {"post_reset": [], "post_switch": [], "window": window}
+    for k, e in np.argwhere(np.asarray(d["reset_after_step"])):
+        k, e = int(k), int(e)
+        s0, s1 = k + 1, min(k + 1 + window, T + 1)
+        it = {"reset_in_step": k, "env": e, "first_obs": s0, "obs_window": [s0, s1 - 1],
+              "native_last_action_at_first_obs_max_abs": float(np.abs(np.asarray(d["last_action"])[s0, e]).max())}
+        for g in groups:
+            it[f"obs.{g}"] = mx(adp_obs[g][s0:s1, e], d["obs_" + g][s0:s1, e], s0, g=g)
+        it["last_action"] = mx(adp_last[s0:, e], d["last_action"][s0:, e], s0, act=True)
+        it["joint_target"] = mx(adp_tgt[s0:T, e], d["joint_target"][s0:T, e], s0, act=True)
+        if acts is not None:
+            it["action_from_adapter_obs"] = mx(acts["adapter"][s0:T, e], d["raw_action"][s0:T, e], s0, act=True)
+            it["action_from_native_obs"] = mx(acts["native"][s0:T, e], d["raw_action"][s0:T, e], s0, act=True)
+        res["post_reset"].append(it)
+    cmd = np.asarray(d["command"])
+    for k, e in (np.argwhere(np.any(cmd[1:] != cmd[:-1], axis=-1)) + [1, 0]):
+        k, e = int(k), int(e)
+        it = {"switch_obs": k, "env": e, "action_steps_after_switch": max(0, T - k),
+              "command_before": cmd[k - 1, e].tolist(), "command_after": cmd[k, e].tolist()}
+        for g in groups:
+            it[f"obs.{g}"] = mx(adp_obs[g][k:, e], d["obs_" + g][k:, e], k, g=g)
+        it["joint_target"] = mx(adp_tgt[k:T, e], d["joint_target"][k:T, e], k, act=True)
+        if acts is not None:
+            it["action_from_adapter_obs"] = mx(acts["adapter"][k:T, e], d["raw_action"][k:T, e], k, act=True)
+            it["action_from_native_obs"] = mx(acts["native"][k:T, e], d["raw_action"][k:T, e], k, act=True)
+        res["post_switch"].append(it)
+    return res
 
 
 def _print(rep):

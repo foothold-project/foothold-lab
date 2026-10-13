@@ -10,6 +10,7 @@
 시각 약속 (기록기와 같다): 지표 k 의 관측은 action[k] 직전. step k 안에서 일어난 reset 은 reset_after_step[k] 에 남고 관측 k+1 이 reset 뒤 첫 관측.
   강제 reset (--reset_envs i,j --reset_step K): 그 env 들이 env.step(K-1) 안에서 time-out 으로 reset 된다. 관측 K 가 reset 뒤 첫 관측.
   명령 전환 (--switch_env E --switch_step K --switch_cell C): env E 의 관측 K 부터 끝까지 명령이 C 의 명령이다 (그 전은 자기 칸 명령).
+  K 는 1..T-1 (17f 4.4 · K=T 면 바뀐 명령으로 계산한 action 이 없다).
 """
 CE12_CELLS = {
     "stand": ("stand", (0.0, 0.0, 0.0)), "fwd01": ("lin", (0.1, 0.0, 0.0)), "fwd03": ("lin", (0.3, 0.0, 0.0)),
@@ -54,8 +55,8 @@ def fixture_problem(T, N, reset_envs, reset_step, switch_env, switch_step, switc
             return "--switch_env · --switch_step · --switch_cell 은 같이 준다"
         if not 0 <= switch_env < N:
             return f"--switch_env {switch_env} 는 0..{N - 1}"
-        if not 1 <= switch_step <= T:
-            return f"--switch_step {switch_step} 는 1..{T}"
+        if not 1 <= switch_step <= T - 1:  # ASTRA 17f 4.4: 마지막 관측 T 의 전환은 그 명령으로 계산한 action 이 0 개
+            return f"--switch_step {switch_step} 는 1..{T - 1} (전환 뒤 action 이 하나 이상 있어야 한다)"
         if switch_cell not in CE12_CELLS:
             return f"--switch_cell {switch_cell!r} 모름"
     return ""

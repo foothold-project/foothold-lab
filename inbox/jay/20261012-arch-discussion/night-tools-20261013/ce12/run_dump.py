@@ -25,7 +25,9 @@ v1 (19:03) 에서 바꾼 것 (ASTRA 17d)
 출력 배치 (기본 _eval/out_ce12/native · 이미 있는 것이 하나라도 있으면 거절 · 종료 2)
   <native>/<tag>/ 기록기 결과 · <native>/<tag>.log · .slot.json · .guard.json · <native>/_attempts/<attempt>/run.json · usd/
 종료 코드: 0 · 2 (거절 · 인자 · 관문 기능 없음) · 98 (멈춤 파일 · 마감) · slot v3 의 코드 (89 변환 예상 위반 · 90 · 91 · 94~97 · 자식 코드 · 99 guard) ·
-  88 (자식은 0 인데 출력 위치 · 내용이 실행기가 정한 것과 다름). slot v3 의 89 는 변환 예상 위반.
+  88 (자식은 0 인데 출력 위치 · 내용이 실행기가 정한 것과 다름) · 87 (실행 중 코드가 바뀜 · 17f 4.3). slot v3 의 89 는 변환 예상 위반.
+출처 (17f 4.3): run.json provenance 에 실행 시작 때 기록기 · adapter · cells · 실행기 · slot · isolate · guard 의 경로와 sha256, provenance_end 에
+  끝날 때 다시 잰 값을 남긴다. validate_dump.py 승인 A9 가 이것을 승인 대상 코드와 잇는다.
 사용 (lead):
   PY=C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe
   "$PY" ce12/run_dump.py --which cts --checkpoint <E1>/model_20000.pt --tag cts_e1_m20000 [--gpu 1] [--dry_run]
@@ -60,7 +62,7 @@ DUMP_DIR = OV.get("CE12_DUMP_DIR", HERE).replace("\\", "/")
 NATIVE = f"{BASE}/out_ce12/native"
 SCAN = ",".join(f"{BASE}/{d}" for d in ("out_ce12/native", "out_branch", "out_uncr", "out_rand"))
 LOCK = f"{BASE}/slot/isaac_convert.lock"
-REGISTRY = f"{BASE}/slot/isaac_usd_registry.json"
+REGISTRY = f"{BASE}/slot/isaac_usd_registry_v3.json"  # ASTRA 17f 3 절: v3 참가자는 v2 registry 를 고치지 않는다 (변환 잠금은 같은 파일)
 TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")
 EXPECT = {"cts": 1, "v2": 0}
 EXPECT_ENV = "FOOTHOLD_EXPECT_CONVERSIONS"
@@ -207,6 +209,14 @@ def build(a, attempt, dump_args, cap):
     return slot + ["--"] + guard + dump
 
 
+def provenance(a):
+    """ASTRA 17f 4.3: 실행 당시 코드의 sha256 (기록기 · adapter · cells · 실행기 · slot · isolate · guard). 시작 때와 끝날 때 잰다."""
+    files = {"run_dump.py": os.path.abspath(__file__), "cells.py": f"{HERE}/cells.py", "isaac_slot_v3.py": SLOT,
+             "usd_isolate_run_v3.py": ISOLATE, "gpu_guard.py": GUARD, f"dump_native_{a.which}.py": f"{DUMP_DIR}/dump_native_{a.which}.py",
+             "adapters.py": f"{DUMP_DIR}/adapters.py" if os.path.isfile(f"{DUMP_DIR}/adapters.py") else f"{HERE}/adapters.py"}
+    return {k: {"path": v.replace("\\", "/"), "sha256": sha(v) if os.path.isfile(v) else None} for k, v in files.items()}
+
+
 def output_problem(a):
     """자식 종료 뒤 실행기가 직접 본다 (validate 에만 맡기지 않는다)."""
     d = f"{NATIVE}/{a.tag}"
@@ -283,6 +293,7 @@ def main(argv=None):
            "request": req, "expect_conversions": EXPECT[a.which], "capabilities": cap,
            "env_set": {k: env[k] for k in ("CUDA_DEVICE_ORDER", "CUDA_VISIBLE_DEVICES", "OMNI_KIT_ACCEPT_EULA", "PYTHONUNBUFFERED", EXPECT_ENV)},
            "overrides": OV, "run_dump_sha256": sha(os.path.abspath(__file__)), "cells_sha256": sha(f"{HERE}/cells.py"),
+           "provenance": provenance(a),
            "t_request": time.strftime("%Y-%m-%d %H:%M:%S"), "t_request_epoch": time.time()}
     if a.dry_run:
         print("[CE12-RUN] dry_run attempt", attempt)
@@ -305,8 +316,12 @@ def main(argv=None):
         json.dump(dict(rec, state="launched"), f, ensure_ascii=False, indent=1)
     print(f"[CE12-RUN] start {a.which} tag {a.tag} attempt {attempt}", flush=True)
     rc = subprocess.run(cmd, cwd=EVAL, env=env).returncode
+    rec["provenance_end"] = provenance(a)
     if rc != 0:
         return finish(rc, child_rc=rc, state="exited")
+    changed = sorted(k for k in rec["provenance"] if rec["provenance"][k] != rec["provenance_end"][k])
+    if changed:  # 17f 4.3: 실행 중 코드가 바뀌면 이 기록의 출처를 말할 수 없다
+        return finish(87, child_rc=rc, state="exited", output_problem=f"실행 중 바뀐 코드 {changed}")
     prob = output_problem(a)
     if prob:
         return finish(88, child_rc=rc, state="exited", output_problem=prob)

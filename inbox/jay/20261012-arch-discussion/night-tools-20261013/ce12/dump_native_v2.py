@@ -251,7 +251,7 @@ _ti = list(om._group_obs_term_names["policy"]).index("joint_pos")
 _ac = om._group_obs_term_cfgs["policy"][_ti].params.get("asset_cfg")
 obs_joint_names = art_names if (_ac is None or isinstance(_ac.joint_ids, slice)) else [art_names[i] for i in _ac.joint_ids]
 action_joint_names = list(jt._joint_names)
-meta["obs_layout"] = {"policy": {"names": list(om.active_terms["policy"]), "dims": [list(x) for x in om.group_obs_term_dim["policy"]]}}
+meta["obs_layout"] = {"policy": {"names": list(om.active_terms["policy"]), "dims": [[int(v) for v in x] for x in om.group_obs_term_dim["policy"]]}}  # numpy 정수를 int 로
 meta["action_term"] = {"class": type(jt).__name__, "joint_names": action_joint_names,
                        "joint_ids": "all" if isinstance(jt._joint_ids, slice) else list(jt._joint_ids),
                        "scale": jt._scale if isinstance(jt._scale, float) else jt._scale[0].tolist(),

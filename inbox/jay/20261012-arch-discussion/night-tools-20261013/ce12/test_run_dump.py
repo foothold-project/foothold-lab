@@ -124,7 +124,10 @@ m["args"]["outdir"] = os.path.abspath(a.outdir)
 m["checkpoint"] = os.path.abspath(a.checkpoint)
 m["checkpoint_sha256"] = hashlib.sha256(open(a.checkpoint, "rb").read()).hexdigest()
 m["t_start"] = time.strftime("%Y-%m-%d %H:%M:%S")
+m["script_sha256"] = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
 json.dump(m, open(os.path.join(out, "meta.json"), "w", encoding="utf-8"))
+if mode == "touchcode":
+    open(os.environ["FAKE_TOUCH"], "a").write("# touched during the run" + chr(10))
 print("[CE12-DUMP] done " + a.tag + " N 3 T 6 out " + out, flush=True)
 '''
 def test(tid, group):
@@ -317,6 +320,7 @@ class _A:
     def __init__(self, which, tag, attempt, allow=True, report=""):
         self.which, self.tag, self.attempt, self.checkpoint, self.allow_overrides = which, tag, attempt, CK[which], allow
         self.compare_report = report
+        self.code_bundle = ""
         self.stamp = self.approve = self.check_approval = False
 
 
@@ -325,9 +329,10 @@ def collect_failed(which, tag, attempt, allow=True):
     return sorted(n for n, s, _d in R if s != "PASS"), [n for n, _s, _d in R]
 
 
-def approve_status(which, tag, attempt, report=""):
+def approve_status(which, tag, attempt, report="", bundle=""):
     v = V()
     a = _A(which, tag, attempt, True, report)
+    a.code_bundle = bundle
     RA, cov = v.approve(a, v.files_of(which, tag, attempt))
     return {n: s for n, s, _d in RA}, {n: d for n, _s, d in RA}
 
@@ -359,7 +364,7 @@ def rt1():
     kv = {c[i]: c[i + 1] for i in range(2, c.index("--")) if c[i].startswith("--")}
     assert kv["--attempt"] == att and kv["--usd_root"] == f"{NATIVE}/_attempts/{att}/usd", kv
     assert kv["--watch_log"] == f"{NATIVE}/c1.log" and kv["--record"] == f"{NATIVE}/c1.slot.json", kv
-    assert kv["--lock"] == f"{ROOT}/slot/isaac_convert.lock" and kv["--registry"] == f"{ROOT}/slot/isaac_usd_registry.json", kv
+    assert kv["--lock"] == f"{ROOT}/slot/isaac_convert.lock" and kv["--registry"] == f"{ROOT}/slot/isaac_usd_registry_v3.json", kv
     assert kv["--scan_dirs"].split(",") == [f"{ROOT}/out_ce12/native", f"{ROOT}/out_branch", f"{ROOT}/out_uncr", f"{ROOT}/out_rand"], kv
     assert kv["--stop_file"] == f"{ROOT}/out_ce12/STOP" and float(kv["--deadline"]) == 0.0, kv
     assert j["capabilities"]["slot"] == REAL_SLOT and j["capabilities"]["isolate"] == REAL_ISO
@@ -439,7 +444,8 @@ def rt6():
            ["--", "--allow_cfg_diff"], ["--", "--allow_cfg_diff=1"], ["--", "--device", "cuda:1"], ["--", "--steps", "5", "--steps", "6"],
            ["--", "--steps=5", "--steps", "6"], ["--", "--cells", "stand,bogus"], ["--", "--steps", "-3"], ["--", "--steps", "--outdir"],
            ["--", "--env_yaml", "x.yaml"], ["--", "stray"], ["--", "--seed"], ["--", "--switch_env", "0"], ["--", "--reset_envs", "0,1,2", "--reset_step", "2",
-           "--cells", "stand", "--envs_per_cell", "3"], ["--", "--steps", "0"], ["--", "--headless"], ["--", "--dr_profile", "x"]]
+           "--cells", "stand", "--envs_per_cell", "3"], ["--", "--steps", "0"], ["--", "--headless"], ["--", "--dr_profile", "x"],
+           ["--", "--steps", "60", "--switch_env", "0", "--switch_step", "60", "--switch_cell", "fwd03"]]
     for extra in bad:
         rc, out, _ = run_dump(["--which", "v2", "--checkpoint", CK["v2"], "--tag", "esc"] + extra, slot="copy")
         assert rc == 2 and "STOP" in out, (extra, rc, out[-200:])
@@ -464,7 +470,7 @@ def rt7():
             s["usd_unassigned"], s["conflicts"]) == ("v3", att, 0, 0, "scene_built", 1, [], [], {}), s
     assert s["isolate_state"]["patched_by"] == "loader" and s["isolate_state"]["version"] == "v3" and not s["isolate_state"]["blocked"], s["isolate_state"]
     assert (s["expect_conversions"], s["conversion_attempts"], s["expect_violation"], s["isolate_state"]["expect_conversions"]) == ("1", 1, False, "1"), s
-    assert os.path.exists(f"{ROOT}/slot/isaac_usd_registry.json") and not os.path.exists(f"{TMP}/faketmp"), "registry 는 임시 · 공용 폴더 없음"
+    assert os.path.exists(f"{ROOT}/slot/isaac_usd_registry_v3.json") and not os.path.exists(f"{ROOT}/slot/isaac_usd_registry.json") and not os.path.exists(f"{TMP}/faketmp"), "registry 는 v3 전용 임시 파일만 · v2 파일은 안 만듦 · 공용 폴더 없음"
     g = json.load(open(f"{NATIVE}/c7.guard.json"))
     assert g["expect_env"] == "1", g
     rcv, o = validate_cli("cts", "c7", att, ["--allow_overrides", "--stamp"])
@@ -523,6 +529,24 @@ def rt11():
     assert rcv == 1 and "FAIL S3" in o and "FAIL L1" in o, o[-600:]
 
 
+@test("RT13", "RT")
+def rt13():
+    """17f 4.3: 실행 중에 출처 대상 코드 (여기서는 가짜 guard) 가 바뀌면 rc 0 이어도 87 · 승인 A9 실패."""
+    g = f"{TMP}/fake/gpu_guard.py"
+    keep = open(g).read()
+    e = env_run("touchcode")
+    e["FAKE_TOUCH"] = g
+    try:
+        r = subprocess.run([sys.executable, "-B", RUN, "--which", "cts", "--checkpoint", CK["cts"], "--tag", "c13", "--"] + REQ_ARGS,
+                           capture_output=True, text=True, env=e, encoding="utf-8", errors="replace", timeout=300)
+    finally:
+        open(g, "w").write(keep)
+    assert r.returncode == 87, (r.returncode, r.stdout[-800:])
+    att = re.search(r"attempt (\S+) rc", r.stdout).group(1)
+    rj = json.load(open(f"{NATIVE}/_attempts/{att}/run.json", encoding="utf-8"))
+    assert "gpu_guard.py" in rj["output_problem"] and rj["provenance"]["gpu_guard.py"] != rj["provenance_end"]["gpu_guard.py"], rj["output_problem"]
+
+
 @test("RT12", "RT")
 def rt12():
     """끝까지: 실제 slot v3 · isolate v3 로 수집 -> compare_native --recompute_action -> 승인 APPROVED -> 입력이 바뀌면 승인 무효."""
@@ -557,6 +581,12 @@ def make_valid(which, tag, req=REQ):
     run = {"attempt": att, "which": which, "tag": tag, "checkpoint": CK[which], "overrides": {}, "rc": 0, "child_rc": 0, "output_problem": "",
            "cmd": cmd, "paths": {"usd": usd}, "t_request_epoch": time.time() - 5, "expect_conversions": exp,
            "env_set": {"FOOTHOLD_EXPECT_CONVERSIONS": str(exp)}, "request": dict(req)}
+    ref = {"run_dump.py": f"{HERE}/run_dump.py", "cells.py": f"{HERE}/cells.py", "isaac_slot_v3.py": COPY_SLOT, "usd_isolate_run_v3.py": COPY_ISO,
+           "gpu_guard.py": f"{EVAL}/gpu_guard.py", f"dump_native_{which}.py": dump, "adapters.py": f"{HERE}/adapters.py"}
+    run["provenance"] = {n: {"path": v.replace("\\", "/"), "sha256": sha(v)} for n, v in ref.items()}
+    run["provenance_end"] = json.loads(json.dumps(run["provenance"]))
+    run.update(run_dump_sha256=sha(ref["run_dump.py"]), cells_sha256=sha(ref["cells.py"]),
+               capabilities={"slot": COPY_SLOT, "isolate": COPY_ISO, "slot_sha256": sha(COPY_SLOT), "isolate_sha256": sha(COPY_ISO)})
     json.dump(run, open(f"{ad}/run.json", "w"))
     folder = [f"{usd.lower()}/isaaclab/usd_20261013_201001_7"] if exp else []
     json.dump({"slot_version": "v3", "attempt": att, "slot_rc": 0, "child_rc": 0, "state_at_release": "scene_built" if exp else "exited",
@@ -573,6 +603,7 @@ def make_valid(which, tag, req=REQ):
     m = json.load(open(f"{src}/meta.json", encoding="utf-8"))
     m["args"]["tag"] = tag
     m["t_start"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    m["script_sha256"], m["adapters_sha256"] = sha(dump), sha(f"{HERE}/adapters.py")
     json.dump(m, open(f"{NATIVE}/{tag}/meta.json", "w", encoding="utf-8"))
     return att, ad, usd
 
@@ -681,7 +712,7 @@ def vt_stamp():
 
 
 # ================================================================== VA · 승인 검사
-A_ALL = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8"]
+A_ALL = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9"]
 
 
 @test("VA0", "VA")
@@ -770,13 +801,148 @@ for _w in ("cts", "v2"):
         test(f"VA-{_w}-{_c}", "VA")(_va(_w, _c, _want, _f, _r))
 
 
+def _prov_edit(name, sha_value=None, drop=False, end=False):
+    def f(w, t, ad, u, p):
+        r = json.load(open(f"{ad}/run.json", encoding="utf-8"))
+        n = name.replace("{w}", w)
+        key = "provenance_end" if end else "provenance"
+        if drop:
+            r[key].pop(n)
+        else:
+            r[key][n]["sha256"] = sha_value
+        json.dump(r, open(f"{ad}/run.json", "w", encoding="utf-8"))
+    return f
+
+
+def _legacy_zero(w, t, ad, u, p):
+    """ASTRA 17f 4.3 반례: run.json 의 run_dump_sha256 · cells_sha256 · capabilities 의 slot · isolate 해시를 0 으로."""
+    r = json.load(open(f"{ad}/run.json", encoding="utf-8"))
+    r["run_dump_sha256"] = r["cells_sha256"] = "0" * 64
+    r["capabilities"]["slot_sha256"] = r["capabilities"]["isolate_sha256"] = "0" * 64
+    json.dump(r, open(f"{ad}/run.json", "w", encoding="utf-8"))
+
+
+for _w in ("cts", "v2"):
+    for _c, _f in (("A9", _prov_edit("cells.py", "0" * 64)), ("A9b", _prov_edit("gpu_guard.py", drop=True)),
+                   ("A9c", _prov_edit("dump_native_{w}.py", "1" * 64, end=True)), ("A9d", _legacy_zero)):
+        test(f"VA-{_w}-{_c}", "VA")(_va(_w, _c, "A9", _f, False))
+
+
+@test("VA-bundle", "VA")
+def va_bundle():
+    """--code_bundle: 실행 당시 해시가 묶음과 같으면 A9 통과 · 다르면 실패 · 묶음에 없으면 실패."""
+    att, ad, _ = make_valid("cts", "bund")
+    r = json.load(open(f"{ad}/run.json", encoding="utf-8"))
+    good = f"{TMP}/bundle_good.txt"
+    open(good, "w").write("".join(f"{v['sha256']} *ce12/{n}\n" for n, v in r["provenance"].items()))
+    st, why = approve_status("cts", "bund", att, bundle=good)
+    assert st["A9"] == "PASS", why
+    bad = f"{TMP}/bundle_bad.txt"
+    open(bad, "w").write(open(good).read().replace(r["provenance"]["cells.py"]["sha256"], "2" * 64))
+    st, why = approve_status("cts", "bund", att, bundle=bad)
+    assert st["A9"] == "FAIL" and "cells.py" in why["A9"], why
+    short = f"{TMP}/bundle_short.txt"
+    open(short, "w").write("".join(x + "\n" for x in open(good).read().splitlines() if "gpu_guard" not in x))
+    st, why = approve_status("cts", "bund", att, bundle=short)
+    assert st["A9"] == "FAIL" and "gpu_guard.py" in why["A9"], why
+
+
+@test("VA-ck-target", "VA")
+def va_ck_target():
+    """ASTRA 17f 4.2 반례: 승인된 v2 묶음에 cts · E1 체크포인트로 --check_approval 을 물으면 실패해야 한다 (attempt · tag · 경로도)."""
+    att, _, _ = make_valid("v2", "ckt")
+    p, _ = compare_report("v2", "ckt")
+    rc, o = validate_cli("v2", "ckt", att, ["--approve", "--compare_report", p])
+    assert rc == 0 and "APPROVED ckt" in o, o[-600:]
+    rc, o = validate_cli("v2", "ckt", att, ["--check_approval"])
+    assert rc == 0 and "STILL VALID" in o, o[-300:]
+    r = subprocess.run([sys.executable, "-B", VAL, "--which", "cts", "--tag", "ckt", "--checkpoint", CK["cts"], "--attempt", att, "--check_approval"],
+                       capture_output=True, text=True, env=dict(os.environ, CE12_EVAL_ROOT=ROOT, PYTHONIOENCODING="utf-8"), encoding="utf-8",
+                       errors="replace")
+    assert r.returncode == 1 and "APPROVAL INVALID" in r.stdout and "which" in r.stdout and "checkpoint" in r.stdout, r.stdout[-400:]
+    rc, o = validate_cli("v2", "ckt", att.replace("-1", "-2"), ["--check_approval"])
+    assert rc == 1 and "attempt" in o, o[-300:]
+    other = f"{TMP}/other_v2.pt"
+    shutil.copy(CK["v2"], other)
+    r = subprocess.run([sys.executable, "-B", VAL, "--which", "v2", "--tag", "ckt", "--checkpoint", other, "--attempt", att, "--check_approval"],
+                       capture_output=True, text=True, env=dict(os.environ, CE12_EVAL_ROOT=ROOT, PYTHONIOENCODING="utf-8"), encoding="utf-8",
+                       errors="replace")
+    assert r.returncode == 1 and "checkpoint" in r.stdout, ("같은 내용이어도 다른 경로의 체크포인트 요청은 다른 대상", r.stdout[-300:])
+
+
+@test("VA-terminal", "VA")
+def va_terminal():
+    """ASTRA 17f 4.4 반례: T=6 · 전환을 마지막 관측 6 에 두면 전환 뒤 action 0 개. 요청 규칙 위반 (A2) 이고 전환 경로는 보류 (A8)."""
+    req = dict(REQ, switch_step=6)
+    att, _, _ = make_valid("cts", "term", req)
+    st, why = approve_status("cts", "term", att)
+    assert st["A2"] == "FAIL" and st["A8"] == "PENDING" and "action 0" in why["A8"], (st, why)
+    assert {k for k, v in st.items() if v == "FAIL"} == {"A2"}, st
+
+
+@test("VA-terminal-reset", "VA")
+def va_terminal_reset():
+    """reset 이 마지막 step 안 (관측 T 가 reset 뒤 첫 관측) 이면 reset 뒤 action 0 개: A2 실패 (범위 규칙) · A7 보류."""
+    req = dict(REQ, reset_step=6)
+    att, _, _ = make_valid("cts", "termr", req)
+    st, why = approve_status("cts", "termr", att)
+    assert st["A2"] == "FAIL" and st["A7"] == "PENDING" and "action 이 없다" in why["A7"], (st, why)
+    assert {k for k, v in st.items() if v == "FAIL"} == {"A2"}, st
+
+
+@test("VA-cov", "VA")
+def va_cov():
+    """17f 4.4: height miss 는 「미측정 (광선 원자료 없음)」 과 「0 회」 를 구분해 미확인 목록에 넣는다 · 전환 · reset 뒤 action 수를 센다."""
+    C = CMP()
+    dc = dict(np.load(f"{BUNDLE['cts']}/native.npz"))
+    dv = dict(np.load(f"{BUNDLE['v2']}/native.npz"))
+    cc, cv = C.coverage_of(dc), C.coverage_of(dv)
+    assert cc["ray_miss_count"] is None and any("미측정" in x for x in cc["unverified_paths"]), cc
+    assert cv["ray_miss_count"] == 0 and any("0 회" in x and "height" in x for x in cv["unverified_paths"]), cv
+    assert (cc["reset_events"], cc["post_reset_action_steps"], cc["command_switch_events"], cc["post_switch_action_steps"]) == (1, 3, 1, 2), cc
+
+
+REAL = {"native": f"{EVAL}/out_ce12/native".replace("\\", "/"), "tag": "cts_e1_m20000", "attempt": "cts_e1_m20000-20261014-002459-122864",
+        "npz_sha256": "c9b9e88d49de9e39ff52d255162e02538fa640eea1c96d3fd58b55bdad84d5d6"}
+
+
+@test("VA-real", "VA")
+def va_real():
+    """실제 기록 (10/14 00:25 · GPU 1 · E1 model_20000) 을 읽기만 한다: 수집 22 통과 · 승인은 A6 보류 (보고서 없이) · A9 실패
+    (실행 당시 gpu_guard 해시가 없다 · 그 뒤 고친 코드) · 나머지 통과. 이 파일들이 없거나 바뀌었으면 실패로 알린다."""
+    npz = f"{REAL['native']}/{REAL['tag']}/native.npz"
+    assert os.path.isfile(npz), f"실제 기록이 없다 {npz}"
+    assert sha(npz) == REAL["npz_sha256"], "실제 기록 npz 가 10/14 00:25 판과 다르다"
+    env_root = os.environ.pop("CE12_EVAL_ROOT")
+    try:
+        sp = importlib.util.spec_from_file_location("ce12_validate_real", VAL)
+        vr = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(vr)
+    finally:
+        os.environ["CE12_EVAL_ROOT"] = env_root
+    assert vr.NATIVE.lower() == REAL["native"].lower(), vr.NATIVE
+    a = _A("cts", REAL["tag"], REAL["attempt"], False, "")
+    R = vr.collect(a)
+    assert [n for n, s_, _d in R if s_ != "PASS"] == [], [(n, d) for n, s_, d in R if s_ != "PASS"]
+    with quiet():
+        RA, cov = vr.approve(a, vr.files_of("cts", REAL["tag"], REAL["attempt"]))
+    st = {n: s_ for n, s_, _d in RA}
+    why = {n: d for n, _s, d in RA}
+    assert st == dict({k: "PASS" for k in A_ALL}, A6="PENDING", A9="FAIL"), (st, why)
+    assert "gpu_guard.py" in why["A9"], why["A9"]
+    assert (cov["reset_events"], cov["post_reset_action_steps"], cov["command_switch_events"], cov["post_switch_action_steps"],
+            cov["ray_miss_count"]) == (2, 60, 1, 20, None), cov
+
+
 @test("VA-pending", "VA")
 def va_pending():
     """reset · 명령 전환이 없는 기본형 기록은 A7 · A8 보류 (그 경로 미확인) · 보고서 없음은 A6 보류 · 종료 3 · stamp 없음."""
     req = dict(REQ, reset_envs="", reset_step=0, switch_env=-1, switch_step=0, switch_cell="")
     att, _, _ = make_valid("cts", "pend", req)
-    st, _ = approve_status("cts", "pend", att)
+    st, why = approve_status("cts", "pend", att)
     assert st == dict({k: "PASS" for k in A_ALL}, A6="PENDING", A7="PENDING", A8="PENDING"), st
+    # 보류 사유는 「경로가 아예 없음」 과 「있으나 뒤의 action 0 개」 를 구분해 적는다 (미확인 보고에 쓰인다)
+    assert "한 번도 없다" in why["A7"] and "전환이 없다" in why["A8"], why
     rc, o = validate_cli("cts", "pend", att, ["--approve"])
     assert rc == 3 and "PENDING pend" in o and "미확인 경로" in o and not os.path.exists(f"{NATIVE}/pend/approval_stamp.json"), o[-600:]
 

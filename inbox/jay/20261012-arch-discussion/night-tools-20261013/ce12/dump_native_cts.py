@@ -319,7 +319,7 @@ _ti = list(om._group_obs_term_names["policy"]).index("joint_pos")
 _ac = om._group_obs_term_cfgs["policy"][_ti].params["asset_cfg"]
 obs_joint_names = art_names if isinstance(_ac.joint_ids, slice) else [art_names[i] for i in _ac.joint_ids]
 action_joint_names = list(jt._joint_names)
-meta["obs_layout"] = {g: {"names": list(om.active_terms[g]), "dims": [list(x) for x in om.group_obs_term_dim[g]]}
+meta["obs_layout"] = {g: {"names": list(om.active_terms[g]), "dims": [[int(v) for v in x] for x in om.group_obs_term_dim[g]]}  # numpy 정수를 int 로 (10/14 실제 기록은 default=str 로 "30" 이 됐다)
                       for g in ("policy", "single_obs", "critic")}
 meta["obs_shapes"] = {k: list(v.shape) for k, v in obs.items()}
 meta["obs_group_cfg"] = {g: {"enable_corruption": getattr(env_cfg.observations, g).enable_corruption,

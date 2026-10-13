@@ -15,7 +15,8 @@
 | 실행 | 식별 | 로그 · 진행 확인 방법 | 마지막 관측 | 예상 끝 · 다음 확인 |
 |---|---|---|---|---|
 | GPU 0 · CMD-R 1043 on 갈래 | attempt `g0-cmdr_s1043_on_u4000-1014001820-895773` · PID 154852 (시작 00:18:20) · 셸 btwz5bu9g | `_eval/out_branch/cmdr_s1043_on_u4000.log` 의 마지막 `Learning iteration N/24001` · `Traceback` 수 · 로그 크기 · 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` | 01:08 iteration 20618/24001 (00:54 뒤 +169 · 약 5.1 s/it) · PID 살아 있음 · Traceback 0 · 로그 12.45 MB (시작 때 USD Head_lo/up 경고는 이미 알던 것) | 05:40 무렵 · 다음 heartbeat 에서 iteration 이 늘었는지 |
-| GPU 1 | 없음 (00:25 부터 빔) | | | 17g 판정 뒤 |
+| GPU 1 | 01:16 CTS r2 기록 끝 (01:16:26 · slot 0 · guard 0) · 그 뒤 빔 | job tmp `ce12fix/r2_*.txt` | r2 COLLECTED · 대조 ALL PASS (action 2.15e-6) · APPROVED (`--code_bundle CODE_BUNDLE_r2.txt`) · 재확인 유효. **채택은 17i 뒤** | 17g |
+| 감시 스크립트 (사용 한도 대비) | 셸 bd8y4zrp0 · job tmp `arm_v5_full.sh` · 로그 `arm_v5.log` | ASTRA 가 `uncr_v5/approval-astra-17g.json` 을 쓰고 값 (decision approve · by 17g · reval 98322ffb · manifest ac09c264 · 75 · no · 묶음 e5597517) 이 맞을 때만, GPU 1 에 python 이 없을 때 v5 full,post 를 띄움 (deadline 09:00 · 콘솔 job tmp `v5_full_console.txt`). 승인 파일 없이 17g 가 10 분 지나거나 04:40 이 되면 띄우지 않고 끝. 멈추려면 `_eval/out_uncr_v5/STOP` | 01:2x 걸어 둠 (판정 확인 함수는 답을 아는 json 둘로 시험: OK · BAD decision) | lead 가 깨면 17g 전문을 읽고, 조건이 v5 full 과 어긋나면 STOP |
 | 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 | lead 재실행 job tmp `ce12fix/` (시험 둘 · 변이 둘 · 해시 sha_before.txt) | 보고: 실제 기록 대조 ALL PASS (관측 · target · last action 차 0 · CPU action 2.15e-6) · 새 출처 검사 A9 로 이 기록은 REJECTED (guard 해시 미기록 · 기록 뒤 세 파일 수정) · 시험 132/132 · 23/23 · 변이 65/65 · 24/24 (보고값) | lead 재실행 결과 → r2 재기록 |
 | 하위 작업 · S2 판 3 | 00:40 맡김 | 같음 | 진행 중 | 알림 |
 | heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 01:08 첫 도착 확인 (이 문구로 깨어남) | 매 도착 |
@@ -52,7 +53,7 @@
 | 2b | ASTRA 17f-2 → 팀장 채팅 · #550 | | 끝 00:33 · 채팅 · #550 6149317273 (df9e89f9) | 팀장 확정 대기 |
 | 2c | ASTRA 17h | | 끝 00:49 (7d24517a) · 반영 00:57 | 관측 |
 | 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 충족 | 기록 끝 00:25 · COLLECTED · 대조 ALL PASS · A9 REJECTED (출처) | 3b |
-| 3b | GPU 1: CTS 재기록 tag `cts_e1_m20000_r2` (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03) · 코드 해시 고정 뒤 · dry-run 먼저 | 기동 안전 조건 (17f §3: v3 registry · 같은 변환 잠금 · slot v3 · isolate v3 는 17f 가 본 판 그대로) · lead 재실행 통과 · GPU 1 에 다른 Isaac 없음 · 고친 기록기는 ASTRA 미검토라 결과의 승인 채택은 17i 뒤 | 대기 (lead 재실행 중) | |
+| 3b | GPU 1: CTS 재기록 tag `cts_e1_m20000_r2` (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03) · 코드 해시 고정 뒤 · dry-run 먼저 | 기동 안전 조건 (17f §3: v3 registry · 같은 변환 잠금 · slot v3 · isolate v3 는 17f 가 본 판 그대로) · lead 재실행 통과 · GPU 1 에 다른 Isaac 없음 · 고친 기록기는 ASTRA 미검토라 결과의 승인 채택은 17i 뒤 | lead 재실행 끝 01:15 (시험 23/23 · 132/132 · 변이 24/24 · 65/65 · PASS 아닌 줄 없음 · 해시 그대로 · 변이 사본 없음) · 코드 묶음 `night-tools-20261013/ce12/CODE_BUNDLE_r2.txt` (slot · isolate · guard 포함) · 01:16 dry-run → 기록 띄움 | 수집 · 대조 · 승인 판정 (채택은 17i 뒤) |
 | 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 | |
 | 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
 | 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
@@ -62,6 +63,10 @@
 | 7c | 미경험 X01 환경 차이 분석 (CPU) | 독립 · 임시 폴더에서만 | 끝 01:06 (하위 작업 · 산출물 job tmp `x01env/`): 원인은 python · numpy 가 아니라 **BLAS gemv · ddot 의 FMA 여부** (q_metrics.py:224 `xy @ e` · :249 norm). MKL · OpenBLAS Nehalem 은 두 번 반올림, OpenBLAS 기본 (Cooperlake) 은 FMA · 원본 23 실행 바이트는 FMA 쪽. 차이는 progress_m 150 · disp_m 12 값 · 1 ULP · 서식 차 0 · 판정 열은 이 자료에서 같음 (일반 보장은 미확인 · 4.0 m 경계에서 뒤집힐 수 있음). lead 확인 01:10: 같은 isaac311-moects 에 `OPENBLAS_CORETYPE=Nehalem` 만 주니 X01 valid 8 · hold 15 (job tmp uncr_v5_lead_test_nehalem.txt). 「통과 환경」 도 CPU 커널에 기댐 · Linux 이전 때 다시 잼 | 17g 판정에 보탬 · 관문 고침 (환경 지문 · `[post-env]`) 은 ASTRA 검토 뒤 |
 | 8 | 아침 7판 (조각 job tmp `e12page/`) → 렌더 1920 · 1366 · 390 · 라이트 · 다크 → 게시 → #550 · #546 · 채팅 | 아침 · 밤 결과 | 대기 | |
 | 9 | super2 에 「GPU 1 out_* 실행 끝」 | 7 끝 | 대기 (Windows 업데이트 알림은 00:45 보냄) | |
+
+## 사용 한도 (super2 01:13 전달)
+
+5 시간 한도 88 % (01:30 무렵 100 % · 해제 04:20) · 주간 81 %. 한도에 걸리면 lead 는 04:20 까지 멈춘다. 그동안: GPU 0 1043 on 은 스크립트가 끝까지 (05:40 무렵) · GPU 1 은 위 감시 스크립트만. 새 하위 작업은 띄우지 않는다 (super2 요청). 돌고 있는 하위 작업: S2 판 3. 깨면 (04:20 뒤 첫 heartbeat) 17g 전문 → 감시 스크립트 로그 → 17i 보내기 (ASTRA 컨텍스트 처리 먼저) → 무작위화 smoke → 아침 7판.
 
 ## 팀장 결정 대기
 

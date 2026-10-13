@@ -677,6 +677,47 @@ def t22():
         shutil.rmtree(d, ignore_errors=True)
 
 
+REAL_DIR = os.path.join(os.path.dirname(HERE), "out_ce12", "native", "cts_e1_m20000")
+REAL_NPZ_SHA = "c9b9e88d49de9e39ff52d255162e02538fa640eea1c96d3fd58b55bdad84d5d6"
+
+
+@test("T23", "실제 native 기록 (10/14 00:25 · GPU 1 · E1 model_20000) 의 사본으로 compare --recompute_action: 문자열 dims 를 읽고 통과 · 관측 · target · last action 오차 1e-6 이하 · action 1e-4 이하 · reset · 전환 · miss 수")
+def t23():
+    """원본은 읽기만 한다 (임시 폴더에 사본). 원본이 없거나 바뀌었으면 실패로 알린다 (건너뛰지 않는다)."""
+    import contextlib
+    import io
+    import hashlib
+    src = os.path.join(REAL_DIR, "native.npz")
+    assert os.path.isfile(src), f"실제 기록이 없다: {src}"
+    assert hashlib.sha256(open(src, "rb").read()).hexdigest() == REAL_NPZ_SHA, "실제 기록 npz 가 10/14 00:25 판과 다르다"
+    C = _import_compare()
+    d = tempfile.mkdtemp(prefix="ce12_real_")
+    try:
+        for f in ("native.npz", "meta.json", "signature.json"):
+            shutil.copy(os.path.join(REAL_DIR, f), os.path.join(d, f))
+        with contextlib.redirect_stdout(io.StringIO()):
+            r = C.compare(os.path.join(d, "native.npz"), A=A, recompute_action=True, checkpoint=os.path.join(A.CTS_E1_RUN, "model_20000.pt"))
+        rc = {c["name"]: c for c in r.get("checks", [])}
+        assert r["status"] == "pass", (r.get("reason"), r.get("first_failure"))
+        assert rc["layout.policy"]["ok"] and rc["layout.single_obs"]["ok"] and rc["layout.policy"]["dims_written_as_text"] is True, rc["layout.policy"]
+        for n in ("obs.policy", "obs.single_obs", "joint_target", "state.last_action_memory"):
+            assert rc[n]["max_abs"] <= 1e-6 and rc[n]["n_compared"] > 0, (n, rc[n]["max_abs"])
+        for n in ("action.recompute_from_adapter_obs", "action.recompute_from_native_obs"):
+            assert rc[n]["max_abs"] <= 1e-4 and rc[n]["n_compared"] == 60 * 12 * 12, (n, rc[n]["max_abs"])
+        cov = r["coverage"]
+        assert (cov["reset_events"], cov["post_reset_action_steps"], cov["command_switch_events"], cov["post_switch_action_steps"],
+                cov["ray_miss_count"]) == (2, 60, 1, 20, None), cov
+        assert any("미측정" in x for x in cov["unverified_paths"]), cov["unverified_paths"]
+        fo = r["focus"]
+        assert [(x["reset_in_step"], x["env"]) for x in fo["post_reset"]] == [(29, 1), (29, 6)], fo["post_reset"]
+        assert all(x["native_last_action_at_first_obs_max_abs"] == 0.0 and x["obs.policy"]["max_abs"] <= 1e-6 for x in fo["post_reset"])
+        sw = fo["post_switch"]
+        assert len(sw) == 1 and (sw[0]["switch_obs"], sw[0]["env"], sw[0]["action_steps_after_switch"]) == (40, 0, 20), sw
+        assert sw[0]["action_from_adapter_obs"]["max_abs"] <= 1e-4 and sw[0]["action_from_adapter_obs"]["n"] == 20 * 12, sw[0]
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     only = set(sys.argv[1:])
     fails = 0

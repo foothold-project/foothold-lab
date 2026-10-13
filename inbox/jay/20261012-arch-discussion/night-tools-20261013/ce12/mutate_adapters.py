@@ -109,6 +109,18 @@ M = [
      "        a1 = ad.infer(m, obs_seq[k])",
      "        a1 = ad.infer(m, obs_seq[k + 1])",
      ["T22"]),
+    ("compare", "C04 배치 dims 를 숫자로만 읽음 (10/14 실제 기록의 문자열 dims 에서 죽은 판)",
+     '            got = [(n, _dim(x)) for n, x in zip(lay[g]["names"], lay[g]["dims"])]',
+     '            got = [(n, int(np.prod(x))) for n, x in zip(lay[g]["names"], lay[g]["dims"])]',
+     ["T23"]),
+    ("compare", "C05 height miss 「미측정 (None)」 을 미확인 목록에서 뺌 (17f 4.4)",
+     '    if miss is None:\n        unv.append("height miss (+1) 미측정 (이 기록에는 광선 원자료가 없다)")\n    elif miss == 0:',
+     '    if miss == 0:',
+     ["T23"]),
+    ("compare", "C06 전환 뒤 action 수 대신 전환 횟수를 셈 (17f 4.4)",
+     "    post_switch = int(sum(max(0, T - int(k)) for k, _e in sw_pairs))",
+     "    post_switch = int(len(sw_pairs))",
+     ["T23"]),
 ]
 
 

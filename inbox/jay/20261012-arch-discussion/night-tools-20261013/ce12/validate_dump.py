@@ -2,7 +2,7 @@
 """CE12 1 단계 native 기록의 「수집 성공」 과 「자료 승인」 을 나눠 판정한다 v2 (CPU).
 
 분류: A/평가 · CE12-v1 이식 진단 1 · 기록 검증기
-작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 19:03 · v2 20:10 (ASTRA 17d §2.7 · §4 · lead 지시 20:06)
+작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 19:03 · v2 20:10 (ASTRA 17d §2.7 · §4) · 10/14 00:49 (ASTRA 17f 4.2 · 4.3 · 4.4)
 근거: VERIFY-astra-17d.md §2.6 · §2.7 · §4 · §7 · run_dump.py v2 · compare_native.py · cells.py · adapters.py · _eval/isaac_slot_v3.py 기록 칸 (읽기만)
 요지: 수집 성공 (COLLECTED) 은 「이번 attempt 가 관문을 지나 기록을 제자리에 남겼다」 까지다. S0 1 단계 동치 승인 (APPROVED) 은
       수집 성공에 더해 서명 내용 · 요청 (cell · T · N · 명령 시간열) · 금지 override 와 설정 차이 · student 경로 · CPU 재계산 비교 보고서
@@ -32,11 +32,18 @@ v1 (19:03) 의 결함 (ASTRA 17d §2.7 재현): 형식만 보고 meta 의 allow_
      바꾸면 변함) · v2 는 ActorCritic 이고 CPU 재계산이 유한
   A6 compare_native --recompute_action 보고서: 없으면 보류 · 상태 pass · 재계산 켬 · 해시 (npz · meta · signature · checkpoint · 설정 · 코드) =
      지금 파일 · T · N 같음
-  A7 reset 경로 (reset_events > 0 · 0 이면 보류 · 그 경로 미확인)   A8 명령 전환 경로 (> 0 · 0 이면 보류)
+  A7 reset 경로 (reset 이 있고 그 뒤 action 이 1 step 이상 · 아니면 보류)   A8 명령 전환 경로 (전환이 있고 그 뒤 action 이 1 step 이상 ·
+     마지막 관측의 전환은 바뀐 명령으로 계산한 action 이 0 개라 보류 · 17f 4.4)
+  A9 실행 출처 (17f 4.3): 실행 당시 기록기 · adapter · cells · 실행기 · slot · isolate · guard 의 sha256 (run.json provenance · 옛 칸 ·
+     meta) 이 모두 있고 서로 모순이 없고 실행 중 안 바뀌었고, 승인 대상 코드 (--code_bundle 의 SHA256SUMS 또는 지금 파일) 와 같다.
+     비교 단계 코드 (compare_native · adapters · cells) 는 A6 에서 따로 본다.
   v2 height miss 수는 보고만 (0 이면 「miss 경로 미확인」 으로 표시 · 평면에서는 늘 0)
 stamp: --stamp 는 수집 통과 때 validate_stamp.json (파일이 하나라도 없으면 쓰지 않고 실패). --approve 가 APPROVED 면 approval_stamp.json
-  (입력 · 보고서 · 설정 · 코드 sha256). --check_approval 은 그 stamp 를 지금 파일과 다시 대조 (바뀌었으면 승인 무효).
-사용: python validate_dump.py --which cts|v2 --tag T --checkpoint P --attempt A [--stamp] [--approve --compare_report R] [--check_approval]
+  (승인 대상 target: which · tag · attempt · 체크포인트 경로와 sha256 · 실행 출처 · 비교 출처 · 입력 · 보고서 · 설정 · 코드 sha256).
+  --check_approval 은 요청의 which · tag · attempt · 체크포인트 (정규화 경로와 sha256) 가 승인 대상과 같고 (17f 4.2 · 다른 모델이면 실패)
+  stamp 의 파일이 지금과 같을 때만 STILL VALID.
+사용: python validate_dump.py --which cts|v2 --tag T --checkpoint P --attempt A [--stamp] [--approve --compare_report R [--code_bundle S]]
+      [--check_approval]
 종료 코드: 0 COLLECTED (와 --approve 면 APPROVED) · 1 INVALID 또는 REJECTED 또는 stamp 무효 · 3 PENDING (보류) · 2 인자
 """
 import os
@@ -305,7 +312,7 @@ def approve(a, F):
         meta = load_json(F["meta"]) or {}
         run = load_json(F["run"]) or {}
     except Exception as ex:  # noqa: BLE001
-        return [(x, FAIL, f"입력을 못 읽음 {type(ex).__name__}: {ex}") for x in ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8")]
+        return [(x, FAIL, f"입력을 못 읽음 {type(ex).__name__}: {ex}") for x in A_IDS], {}
     T, N = d["raw_action"].shape[:2]
 
     def step(name, fn):
@@ -342,6 +349,10 @@ def approve(a, F):
             return FAIL, "cell_index 가 env // envs_per_cell 이 아니다"
         if not np.array_equal(np.asarray(d["cell_cmd"], np.float32), np.asarray([CL.CE12_CELLS[c][1] for c in cells], np.float32)):
             return FAIL, "cell_cmd 가 cells.py 표와 다름"
+        why = CL.fixture_problem(T, N, CL.parse_env_list(req.get("reset_envs", "")), int(req.get("reset_step", 0)),
+                                 int(req.get("switch_env", -1)), int(req.get("switch_step", 0)), req.get("switch_cell", ""))
+        if why:
+            return FAIL, f"요청한 reset · 전환이 기록 범위 규칙에 맞지 않다 ({why})"
         envs = CL.parse_env_list(req.get("reset_envs", ""))
         if envs:
             k = int(req["reset_step"]) - 1
@@ -420,14 +431,105 @@ def approve(a, F):
     cov = C.coverage_of(d)
 
     def a7():
-        return (PASS, "") if cov["reset_events"] > 0 else (PEND, "reset 이 한 번도 없다 · reset 뒤 이력 경로 미확인 (--reset_envs · --reset_step)")
+        if cov["reset_events"] == 0:
+            return PEND, "reset 이 한 번도 없다 · reset 뒤 이력 경로 미확인 (--reset_envs · --reset_step)"
+        if cov["post_reset_action_steps"] == 0:
+            return PEND, "reset 뒤에 action 이 없다 · reset 뒤 행동 경로 미확인"
+        return PASS, ""
 
     def a8():
-        return (PASS, "") if cov["command_switch_events"] > 0 else (PEND, "명령 전환이 없다 · 그 경로 미확인 (--switch_env · --switch_step · --switch_cell)")
+        if cov["command_switch_events"] == 0:
+            return PEND, "명령 전환이 없다 · 그 경로 미확인 (--switch_env · --switch_step · --switch_cell)"
+        if cov["post_switch_action_steps"] == 0:
+            return PEND, "전환이 마지막 관측에만 있다 · 바뀐 명령으로 계산한 action 0 개 (17f 4.4)"
+        return PASS, ""
 
-    for name, fn in (("A1", a1), ("A2", a2), ("A3", a3), ("A4", a4), ("A5", a5), ("A6", a6), ("A7", a7), ("A8", a8)):
+    def a9():
+        why = provenance_problem(a, run, meta)
+        return (FAIL, why) if why else (PASS, "")
+
+    for name, fn in (("A1", a1), ("A2", a2), ("A3", a3), ("A4", a4), ("A5", a5), ("A6", a6), ("A7", a7), ("A8", a8), ("A9", a9)):
         step(name, fn)
     return R, cov
+
+
+A_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9")
+
+
+def _prov_names(which):
+    return ("run_dump.py", "cells.py", "isaac_slot_v3.py", "usd_isolate_run_v3.py", "gpu_guard.py", DUMP_SCRIPT[which], "adapters.py")
+
+
+def run_provenance(run, meta, which):
+    """ASTRA 17f 4.3: 실행 당시 코드 해시. ({이름: sha 또는 None}, provenance 와 옛 칸이 서로 다른 이름, 실행 중 바뀐 이름)."""
+    prov = {k: (v or {}).get("sha256") for k, v in (run.get("provenance") or {}).items()}
+    cap = run.get("capabilities") or {}
+    legacy = {"run_dump.py": run.get("run_dump_sha256"), "cells.py": run.get("cells_sha256"), "isaac_slot_v3.py": cap.get("slot_sha256"),
+              "usd_isolate_run_v3.py": cap.get("isolate_sha256"), DUMP_SCRIPT[which]: meta.get("script_sha256"),
+              "adapters.py": meta.get("adapters_sha256")}
+    end = {k: (v or {}).get("sha256") for k, v in (run.get("provenance_end") or {}).items()}
+    out, clash, moved = {}, [], []
+    for n in _prov_names(which):
+        x, y = prov.get(n), legacy.get(n)
+        if x and y and x != y:
+            clash.append(n)
+        out[n] = x or y
+        if x and end and end.get(n) != x:
+            moved.append(n)
+    return out, clash, moved
+
+
+def _ref_paths(run, which):
+    """승인 대상 코드의 경로 (--code_bundle 이 없을 때 지금 파일을 읽는 곳). run.json provenance 의 경로가 있으면 그것."""
+    prov = run.get("provenance") or {}
+    cap = run.get("capabilities") or {}
+    cmd = [str(x).replace("\\", "/") for x in (run.get("cmd") or [])]
+    pick = lambda name: next((x for x in cmd if x.rsplit("/", 1)[-1] == name), None)  # noqa: E731
+    ref = {"run_dump.py": os.path.join(HERE, "run_dump.py"), "cells.py": os.path.join(HERE, "cells.py"), "adapters.py": os.path.join(HERE, "adapters.py"),
+           "isaac_slot_v3.py": cap.get("slot") or pick("isaac_slot_v3.py"), "usd_isolate_run_v3.py": cap.get("isolate") or pick("usd_isolate_run_v3.py"),
+           "gpu_guard.py": pick("gpu_guard.py"), DUMP_SCRIPT[which]: pick(DUMP_SCRIPT[which])}
+    for n, v in prov.items():
+        if isinstance(v, dict) and v.get("path"):
+            ref[n] = v["path"]
+    return ref
+
+
+def read_bundle(path):
+    """SHA256SUMS 꼴 (<sha256> [*]<경로>) 을 {파일 이름: sha256} 로."""
+    out = {}
+    for ln in open(path, encoding="utf-8").read().splitlines():
+        parts = ln.strip().split(None, 1)
+        if len(parts) == 2 and len(parts[0]) == 64:
+            out[parts[1].lstrip("*").replace("\\", "/").rsplit("/", 1)[-1]] = parts[0].lower()
+    return out
+
+
+def provenance_problem(a, run, meta):
+    """A9: 실행 당시 해시가 모두 기록돼 있고, 서로 모순이 없고, 실행 중에 안 바뀌었고, 승인 대상 코드 (--code_bundle 의 해시 또는
+    지금 파일) 와 같아야 한다. 승인 시점 파일을 해시하는 것만으로 과거 실행의 출처가 입증되지는 않는다 (17f 4.3)."""
+    got, clash, moved = run_provenance(run, meta, a.which)
+    missing = [n for n, h in got.items() if not h]
+    if missing:
+        return f"실행 당시 해시 기록 없음 {missing} (출처를 이을 수 없다)"
+    if clash:
+        return f"run.json provenance 와 옛 해시 칸 (run.json · capabilities · meta) 이 서로 다름 {clash}"
+    if moved:
+        return f"실행 중 코드가 바뀜 {moved}"
+    if getattr(a, "code_bundle", ""):
+        ref = read_bundle(a.code_bundle)
+        absent = [n for n in got if n not in ref]
+        if absent:
+            return f"승인 대상 묶음 {a.code_bundle} 에 없는 파일 {absent}"
+        diff = [n for n, h in got.items() if ref[n] != h]
+    else:
+        paths = _ref_paths(run, a.which)
+        absent = [n for n in got if not paths.get(n) or not os.path.isfile(paths[n])]
+        if absent:
+            return f"승인 대상 코드 파일이 없다 {absent}"
+        diff = [n for n, h in got.items() if sha(paths[n]) != h]
+    if diff:
+        return f"실행 당시 코드와 승인 대상 코드가 다름 {diff} (기록을 만든 코드가 아니다)"
+    return ""
 
 
 def stamp_files(a, F, approval=False):
@@ -453,13 +555,23 @@ def main(argv=None):
     ap.add_argument("--approve", action="store_true")
     ap.add_argument("--compare_report", default="")
     ap.add_argument("--check_approval", action="store_true")
+    ap.add_argument("--code_bundle", default="", help="승인 대상 코드 묶음 (SHA256SUMS 꼴). 없으면 지금 파일과 대조")
     ap.add_argument("--allow_overrides", action="store_true", help="시험 전용")
     a = ap.parse_args(argv)
     F = files_of(a.which, a.tag, a.attempt)
     if a.check_approval:
         st = load_json(f"{NATIVE}/{a.tag}/approval_stamp.json")
-        if st is None or st.get("attempt") != a.attempt:
-            print(f"APPROVAL INVALID {a.tag}: approval_stamp.json 없음 또는 attempt 다름")
+        if st is None or st.get("kind") != "approval":
+            print(f"APPROVAL INVALID {a.tag}: approval_stamp.json 없음")
+            return 1
+        tg = st.get("target") or {}
+        want = {"which": a.which, "tag": a.tag, "attempt": a.attempt}
+        bad = [k for k, v in want.items() if tg.get(k) != v]
+        if not os.path.isfile(a.checkpoint) or not same_path(tg.get("checkpoint", ""), a.checkpoint) \
+                or tg.get("checkpoint_sha256") != sha(a.checkpoint):
+            bad.append("checkpoint")
+        if bad:  # 17f 4.2: 다른 모델 · 체크포인트 · tag · attempt 를 물으면 그 승인으로 답하지 않는다
+            print(f"APPROVAL INVALID {a.tag}: 승인 당시 대상과 요청이 다름 {bad} (승인 대상 {tg})")
             return 1
         changed = [k for k, (p, h) in st["files"].items() if not os.path.isfile(p) or sha(p) != h]
         if changed:
@@ -486,7 +598,8 @@ def main(argv=None):
     RA, cov = approve(a, F)
     for name, stt, detail in RA:
         print(f"{stt} {name}{'' if stt == PASS else ' ' + detail[:300]}")
-    print("coverage " + json.dumps({k: cov[k] for k in ("reset_events", "command_switch_events", "ray_miss_count")}, ensure_ascii=False)
+    print("coverage " + json.dumps({k: cov.get(k) for k in ("reset_events", "post_reset_action_steps", "command_switch_events",
+                                                           "post_switch_action_steps", "ray_miss_count")}, ensure_ascii=False)
           + (" · 미확인 경로 " + ", ".join(cov["unverified_paths"]) if cov["unverified_paths"] else ""))
     if not collected or any(x[1] == FAIL for x in RA):
         print(f"REJECTED {a.tag} attempt {a.attempt}{' (수집 실패)' if not collected else ''}")
@@ -499,7 +612,16 @@ def main(argv=None):
     if miss:
         print(f"REJECTED {a.tag}: 승인 stamp 에 넣을 파일이 없다 {miss}")
         return 1
-    json.dump({"kind": "approval", "attempt": a.attempt, "which": a.which, "tag": a.tag, "checks": [x[0] for x in R + RA],
+    run = load_json(F["run"]) or {}
+    meta = load_json(F["meta"]) or {}
+    rep = load_json(a.compare_report) or {}
+    json.dump({"kind": "approval", "attempt": a.attempt, "which": a.which, "tag": a.tag,
+               "target": {"which": a.which, "tag": a.tag, "attempt": a.attempt, "checkpoint": os.path.abspath(a.checkpoint).replace("\\", "/"),
+                          "checkpoint_sha256": sha(a.checkpoint), "model": MODEL[a.which]},
+               "run_provenance": run_provenance(run, meta, a.which)[0],
+               "compare_provenance": (rep.get("inputs") or {}).get("code_sha256"),
+               "code_bundle": {"path": a.code_bundle, "sha256": sha(a.code_bundle)} if a.code_bundle else None,
+               "checks": [x[0] for x in R + RA],
                "coverage": cov, "files": {k: [p, sha(p)] for k, p in files.items()}, "t": time.strftime("%Y-%m-%d %H:%M:%S")},
               open(f"{NATIVE}/{a.tag}/approval_stamp.json", "w", encoding="utf-8"), indent=1)
     print(f"APPROVED {a.tag} attempt {a.attempt}")
