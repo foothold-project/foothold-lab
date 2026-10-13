@@ -1,0 +1,26 @@
+# test_post_v4.py · 2026-10-13 09:58 · cmdr_post_v4.py sha256 f266f91c4681c1a4
+PASS 0 v4 runs got 0 want 0
+PASS 1 target stop03 +20 got '개선' want '개선'
+PASS 2 target fwd01 +5 got '구간 하한 0 위 · +10 %p 못 미침' want '구간 하한 0 위 · +10 %p 못 미침'
+PASS 3 target fwd02 -10 got '구간 전체가 0 아래' want '구간 전체가 0 아래'
+PASS 3b fwd02 diff got -0.1 want -0.1
+PASS 4 fwd02 regression (n500 target) got ('n500 (target)', '퇴행') want ('n500 (target)', '퇴행')
+PASS 5 wave -10 then 0,0,0,0 got ('n500', '비퇴행', -0.02) want ('n500', '비퇴행', -0.02)
+PASS 6 stairs_up -20 x5 got ('퇴행', -0.2) want ('퇴행', -0.2)
+PASS 7 slope_down -10 then -4 x4 got ('비퇴행 미확인', -0.052) want ('비퇴행 미확인', -0.052)
+PASS 8 obstacles -4 screen got ('screen', '훑기 통과') want ('screen', '훑기 통과')
+PASS 9 rough_slope 3 of 5 seeds got ('screen flagged', '다시 재는 중', [1000, 1001, 1002]) want ('screen flagged', '다시 재는 중', [1000, 1001, 1002])
+PASS 10 flat noise-off -5 exactly is flagged got '다시 재는 중' want '다시 재는 중'
+PASS 11 no regression row for cells never measured got False want False
+PASS 12 contract surv below got ['stairs_up/fwd03/on'] want ['stairs_up/fwd03/on']
+PASS 13 contract pass below covers every on24000 seed-1000 cell got 9 want 9
+PASS 14 contract off24000 survival all ok got [] want []
+PASS 15 logs read got ['cmdr_eval_driver', 'cmdr_eval_driver_g0'] want ['cmdr_eval_driver', 'cmdr_eval_driver_g0']
+PASS 16 md has the regression table and no proposal wording got (True, False) want (True, False)
+PASS 17 duplicate tag refused got (True, True) want (True, True)
+PASS 18a v3 and v4 on real out got (0, 0) want (0, 0)
+PASS 18b targets 22000 identical to v3 got True want True
+PASS 18c cells identical to v3 got True want True
+PASS 18d n_valid equal got 258 want 258
+PASS 18e 22000 per-cell verdicts got {'stop03': '구간 하한 0 위 · +10 %p 못 미침', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'} want {'stop03': '구간 하한 0 위 · +10 %p 못 미침', 'fwd01': '구간 전체가 0 아래', 'fwd02': '구간 전체가 0 아래'}
+FAILS []
