@@ -16,8 +16,8 @@
 # Output (all under --outdir, which must be inside _eval/out_rand): meta.json · record.csv · traj.npz · pushes.json ·
 # <scene>_master.mp4 (50 fps) · <scene>_web.mp4 (30 fps, 720p, h264, faststart) · stills/ · result.json · fail.json
 # The run ends with "[RAND] done scene=<scene> attempt=<id>" on success; on any error "[RAND] FAIL ..." and exit 3.
-# Usage (through rand_driver.py: isaac_slot.py v2 -> gpu_guard.py on GPU 1 -> usd_isolate_run.py -> this script):
-#   FOOTHOLD_USD_ROOT=<attempt>/usd python usd_isolate_run.py q_rand.py --scene base --kind none --attempt_id X --outdir <attempt>
+# Usage (through rand_driver.py: isaac_slot_v3.py -> gpu_guard.py on GPU 1 -> usd_isolate_run_v3.py -> this script):
+#   FOOTHOLD_USD_ROOT=<attempt>/usd python usd_isolate_run_v3.py q_rand.py --scene base --kind none --attempt_id X --outdir <attempt>
 import argparse
 import hashlib
 import json
@@ -179,7 +179,8 @@ def main():
             "smi_start": smi(), "t_start": time.strftime("%Y-%m-%d %H:%M:%S"),
             "code_sha256": {os.path.basename(p): RL.sha256_file(p) for p in
                             [os.path.join(HERE, f) for f in ("q_rand.py", "rand_lib.py", "rand_gate.py", "rand_overlay.py")] +
-                            [os.path.join(EVAL, f) for f in ("frame_audit.py", "q_metrics.py", "usd_isolate_run.py", "isaac_slot.py")]},
+                            [os.path.join(EVAL, f) for f in ("frame_audit.py", "q_metrics.py")] +
+                            [p for p in (RL.SLOT_SCRIPT, RL.ISOLATE_SCRIPT) if os.path.exists(p)]},
             "checkpoint": args.checkpoint, "checkpoint_sha256": RL.sha256_file(args.checkpoint),
             "train_yaml": args.train_yaml, "train_yaml_sha256": RL.sha256_file(args.train_yaml)}
 
@@ -298,6 +299,17 @@ def main():
     env_cfg.viewer.resolution = (1280, 720)
     meta["eval_changes"] = changes
     meta["base_contact_rule"] = {"threshold_N": BASE_THRESH, "sensor": BASE_SENSOR.name, "body_names": BASE_SENSOR.body_names}
+    # training contract (ASTRA 17d 2.4): the evaluation config AS BUILT against the training env.yaml, full lists. The driver
+    # accepts only the differences this tool makes on purpose (rand_lib.allowed_train_diff_paths).
+    try:
+        eval_view = class_to_dict(env_cfg)
+        tc = {g: dict_diff(train_yaml.get(g), eval_view.get(g), g) for g in ("observations", "actions", "decimation", "sim")}
+        tc["scene/robot"] = dict_diff(train_yaml["scene"]["robot"], eval_view["scene"]["robot"], "scene/robot")
+        meta["train_contract"] = {"diffs": tc, "compared": "evaluation config as built vs the training env.yaml",
+                                  "obs_noise": bool(args.obs_noise), "physx_small_buffers": bool(args.physx_small_buffers),
+                                  "sim_device": args.sim_device}
+    except Exception as ex:  # noqa: BLE001  recorded; the driver refuses an attempt without a contract
+        meta["train_contract"] = {"error": f"{type(ex).__name__}: {ex}"}
 
     env = gym.make("RobotLab-Go2-v0", cfg=env_cfg, render_mode=None if args.no_video else "rgb_array")
     env = RslRlVecEnvWrapper(env, clip_actions=None)
@@ -316,6 +328,16 @@ def main():
     meta["policy_class"] = type(pnn).__name__
     meta["inference_fn"] = f"{type(pnn).__name__}.{policy.__name__}"
     meta["devices"] = {"env_device": str(dev), "sim_device": str(u.sim.device), "runner_device": str(runner.device)}
+    _jt = u.action_manager.get_term("joint_pos")
+    _sc = _jt._scale
+    if hasattr(_sc, "cpu"):
+        _sc = _sc.detach().cpu().numpy()
+        _sc = (_sc[0] if _sc.ndim == 2 else _sc).tolist()
+    else:
+        _sc = [float(_sc)] * len(_jt._joint_names)
+    meta["eval_env"] = {"physics_dt": float(u.physics_dt), "step_dt": float(u.step_dt), "decimation": int(u.cfg.decimation),
+                        "action_joint_names": [str(x) for x in _jt._joint_names], "action_scale": [float(x) for x in _sc],
+                        "source": "the env as built (ManagerBasedRLEnv physics_dt, step_dt, action term joints and scale)"}
     if torch.cuda.is_available():
         meta["devices"]["torch_cuda0_name"] = torch.cuda.get_device_properties(0).name
         meta["devices"]["torch_cuda0_uuid"] = str(getattr(torch.cuda.get_device_properties(0), "uuid", ""))
@@ -433,14 +455,20 @@ def main():
     meta["material_readback"] = mrb
     meta["fingerprint"] = fp
 
-    # terrain mesh hash (as q_eval)
+    # terrain meshes (ASTRA 17d 2.2): local geometry hash (as q_eval) AND the world transform and a hash of the world-space
+    # points, so a moved collision mesh with the same local points does not count as the same terrain
     hs = []
     for prim in stage.Traverse():
         if str(prim.GetPath()).startswith("/World/ground") and prim.IsA(UsdGeom.Mesh):
             mesh = UsdGeom.Mesh(prim)
             pts = np.array(mesh.GetPointsAttr().Get(), dtype=np.float32)
             idx = np.array(mesh.GetFaceVertexIndicesAttr().Get(), dtype=np.int64)
-            hs.append((str(prim.GetPath()), int(pts.shape[0]), sha_arr(np.round(pts, 5), idx)))
+            cnt = np.array(mesh.GetFaceVertexCountsAttr().Get(), dtype=np.int64)
+            xf = np.array(UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(Usd.TimeCode.Default()), dtype=np.float64)
+            wpts = (np.c_[pts.astype(np.float64), np.ones(len(pts))] @ xf)[:, :3]  # USD row-vector convention (as q_video.py)
+            hs.append({"path": str(prim.GetPath()), "points": int(pts.shape[0]), "faces": int(cnt.shape[0]),
+                       "geom_sha256": sha_arr(np.round(pts, 5), idx), "xform_world": np.round(xf, 6).flatten().tolist(),
+                       "world_sha256": sha_arr(np.round(wpts, 4), idx, cnt)})
     meta["terrain_mesh"] = hs
 
     # --- student path checks (q_eval_cmdr.py) ---------------------------------------------------------------------------------
@@ -548,21 +576,28 @@ def main():
                           "follow": "fixed offset from the base position every state (q_video.py)"}
         writer = imageio.get_writer(master, fps=50, codec="libx264", quality=8, macro_block_size=8)
         HANDLES["writer"] = writer
-    run_line = (f"E1 student · model_{meta['loaded_iter']} · 평지 · 시드 {args.eval_seed} · 같은 출발 · 사전 정한 1판 "
-                f"(결과로 고르지 않음)")
+    # Burned-in text (ASTRA 17d 2.2 · 5): no pairing claim ("같은 출발 · 교란만 다름") in the frames, because the cross-scene
+    # checks run only after every scene; the page may add it when summary.json says the pairing is valid. The material is the
+    # robot's EVERY shape (not only the feet) and the contact value is a calculation under the average assumption.
+    run_line = (f"E1 student · model_{meta['loaded_iter']} · 평지 · 시드 {args.eval_seed} · 사전 정한 1판 (결과로 고르지 않음) · "
+                f"관측 잡음 {'켬' if args.obs_noise else '끔'}")
+
+    def _num(v):
+        return float(v) if v is not None else float("nan")
+
+    gs, gd = _num(g.get("static_friction")), _num(g.get("dynamic_friction"))
     if args.kind == "none":
         scene_line, scene_color = "기준 · 교란 없음", RO.WHITE
     elif args.kind == "push":
         scene_line = "밀기 · 학습 범위 안 고정값 · " + RO.push_series_ko(SCHED, args.push_frame)
         scene_color = RO.ORANGE
     else:
-        scene_line = (f"{'낮은' if FS < 1.0 else '높은'} 마찰 · 로봇 발 재질 {FS:.2f} / {FD:.2f} "
-                      f"(학습 범위 {lo_s:g}~{hi_s:g})")
+        scene_line = (f"{'낮은' if FS < 1.0 else '높은'} 마찰 · 로봇 모든 shape 재질 {FS:.2f} / {FD:.2f} "
+                      f"(로봇 쪽 학습 범위 {lo_s:g}~{hi_s:g})")
         scene_color = RO.CYAN
     e0 = next(iter(eff.values()), None)
-    fric_line = (f"마찰: 로봇 {FS:.2f} / {FD:.2f} · 바닥 {float(g.get('static_friction') or float('nan')):.2f} / "
-                 f"{float(g.get('dynamic_friction') or float('nan')):.2f} · 결합 {g_mode} · 접촉 "
-                 + (f"{e0['static']:.2f} / {e0['dynamic']:.2f} (PhysX 규칙 계산)" if e0 else "미확인"))
+    fric_line = (f"재질: 로봇 모든 shape {FS:.2f} / {FD:.2f} · 바닥 {gs:.2f} / {gd:.2f} · 접촉 "
+                 + (f"{e0['static']:.2f} / {e0['dynamic']:.2f} ({g_mode} 가정 · 런타임 결합 미확인)" if e0 else "미확인"))
     stills_at = {0: "t00", T // 2: "mid", T: "end"}
     for k, jf in enumerate(fires_pred):
         if k < len(SCHED) and not SCHED[k]["none"] and jf + 10 <= T:
@@ -599,13 +634,13 @@ def main():
             bottom, bcol = fric_line, RO.CYAN
         elif args.kind == "push":
             bottom, bcol = (f"밀기 예정 {' · '.join(f'{t:.2f}' for t in sched_t)} s (학습 간격 설정 "
-                            f"{DR['push_interval_s'][0]:g} s 의 실제 step) · 마찰 로봇 {FS:.2f} (기준과 같음)"), RO.WHITE
+                            f"{DR['push_interval_s'][0]:g} s 의 실제 step) · 재질 로봇 모든 shape {FS:.2f} · 바닥 {gs:.2f}"), RO.WHITE
         else:
-            bottom, bcol = (f"교란 없음 · 마찰 로봇 {FS:.2f} · 바닥 {float(g.get('static_friction') or float('nan')):.2f} "
-                            f"(밀기 · 마찰 장면과 같은 출발)"), RO.WHITE
+            bottom, bcol = f"교란 없음 · 재질 로봇 모든 shape {FS:.2f} · 바닥 {gs:.2f}", RO.WHITE
         r = rows[j]
         if state["fall_j"] is not None:
-            status, scol = f"넘어짐 감지 {state['fall_j'] * RL.DT:.2f} s ({REASON_KO[state['fall_reason']]}) · 이후는 참고 화면", RO.RED
+            status, scol = (f"넘어짐 감지 {state['fall_j'] * RL.DT:.2f} s ({REASON_KO[state['fall_reason']]}) · "
+                            f"이후는 참고 화면 (판정 밖)"), RO.RED
         else:
             status, scol = "넘어짐 없음", RO.WHITE
         info = {"run_line": run_line, "scene_line": scene_line, "scene_color": scene_color, "t_s": j * RL.DT,
@@ -680,6 +715,7 @@ def main():
               "friction_probe": bool(args.friction_probe),
               "friction_requested": {"static": FS, "dynamic": FD, "restitution": args.restitution},
               "material_readback": mrb, "fingerprint": fp, "terrain_mesh": hs,
+              "eval_env": meta.get("eval_env"), "train_contract": meta.get("train_contract"),
               "push": {"schedule": SCHED, "frame": args.push_frame, "interval_s": DR["push_interval_s"],
                        "velocity_range": DR["push_velocity_range"], "events": PUSH_LOG, "predicted_fire_states": fires_pred},
               "fall": fall, "stats": stats, "checks_pre": checks, "checks_run": checks_run, "video": vinfo,
