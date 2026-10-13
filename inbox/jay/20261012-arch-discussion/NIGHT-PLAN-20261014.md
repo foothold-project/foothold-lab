@@ -128,6 +128,13 @@
 - **미경험 v6 full 75 (17l 승인 · 06:51:59 시작):** 기동 직전 확인을 한 번 더 06:51:47 에 반복 (같은 결과 · v2 실행 뒤에도 STOP · HALT 없음 · GPU 1 에 다른 계산 프로세스 없음) · `full_gate_v6.json` 통과 · 첫 실행 `uncr_par_discrete_obstacles_fwd05` 시작. 콘솔 job tmp `codexw/v6_full_console.txt` · 출력 `_eval/out_uncr_v6/` · 마감은 새 시도 기동 마감 09:00 KST. 감시: 보호 오류 (HALT) · FAIL 줄 · 드라이버 종료가 생기면 알림.
 - **GPU 0:** 05:46 부터 계속 빔 (허용된 일이 없음 · 위 「GPU 0 이 놀기 시작한 때」). **GPU 1:** 01:16:26 ~ 04:57 · 04:58 ~ 06:50 비었고 06:51:59 부터 v6 full.
 
+## 진행 기록 (07:53)
+
+- **v6 full:** 47 번째 실행까지 전부 종료 코드 0 · 한 실행 약 72 ~ 77 초 · guard 최소 여유 6643 MiB · HALT · STOP 없음. 남은 약 28 개 · 실측 간격으로 추정하면 08:27 무렵 끝 (보장 아님 · 마감 09:00 은 새 시도 기동 마감).
+- **ASTRA 17m (무작위화 v4.1) 07:52 보냄.** lead 재실행: 시험 31/31 · 변이 11/11 (각 항목이 의도한 시험의 AssertionError · import 오류 없음 · 새 변이 5 개가 정적 소스 검사 한 시험에 몰린다는 점을 의뢰문에 알림). 사본 `rand_scenes_v41/` (17ee58ed).
+- **작업자 B 의 v2 기록기 수정 (`dump_native_v2.py:242` `runner.load(ckpt, map_location=dev)`):** 07:27 보고. lead 확인: 새 시험 `test_v2_load_device.py` 는 **v2 기록기의 해석기 `isaac311` python 에서는 통과** (CONTROL 로 수정 전 CUDA:1 실패 재현 · PASS) 하고 `isaac311-moects` 에서는 다른 `rsl_rl` (저장소 source) 이 불려 `AttributeError: alg_cfg` 로 실패. 작업자 보고서는 해석기를 `isaac311-moects` 라고 적어 어긋남 (시험은 실제 기록기의 해석기로 돌려야 함). CE12 회귀 (23 · 139 · 24 · 65 · 11) lead 재실행 진행 중. 끝나면 17n.
+- **v2 다시 시도:** 17n 허용 + v6 가 끝나 GPU 1 이 비고 + 기동 직전 확인 (17k 5 절) 이 있어야. 그 전에는 안 함.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
