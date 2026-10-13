@@ -1,0 +1,8 @@
+# test_v36.py 변이 시험 · 2026-10-13 11:43 · 소스 사본을 메모리에서 바꿔 돌림 (V36_MUTATE) · 실행본은 안 건드림
+R1 거부된 기동이 공용 파일에 씀           -> 12 (writer · lock) FAIL
+R2 base attempt 합의 없음                 -> 13a 13b FAIL
+R3 읽기 실패가 안정 횟수를 안 끊음         -> 13c FAIL
+R4 기록 전에 시도 이력을 꺼냄             -> 14 FAIL
+R5 읽지 못한 argv 를 건너뜀               -> 16 FAIL
+R6 Isaac 시작 간격 없음                   -> 18a 18b FAIL
+R7 USD 임시 폴더 충돌 재시도 없음          -> 19 FAIL
