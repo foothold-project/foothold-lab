@@ -1,0 +1,6 @@
+# test_post_v7.py 변이 시험 · 2026-10-13 12:06 · 사본 (_mut_post_v7.py) 에서만 바꿔 돌림
+S2 새 형식 흔적 + 버전 없음을 받음        -> D version key removed FAIL
+S3 구형 stamp 를 어느 로그에서나 받음     -> D legacy stamp in a v3.5 log FAIL
+S4 끝에서 로그 재확인 안 함              -> R2 FAIL
+S5 해시한 바이트 대신 다시 읽어 파싱      -> R1 FAIL (+40 %p 로 바뀜)
+(S1 옛 v6 를 그대로 돌림: R 전에 다른 시험에서 죽어 R 감도의 증거로 쓰지 않음)

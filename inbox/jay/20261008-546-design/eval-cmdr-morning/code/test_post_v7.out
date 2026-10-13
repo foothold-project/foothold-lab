@@ -1,0 +1,40 @@
+# test_post_v7.py · 2026-10-13 12:06 · cmdr_post_v7.py sha256 98ebe33ecba7c660 · facts5_cmdr.py sha256 1fcfab47c05d0776
+PASS A0 runs got 0 want 0
+PASS A1 complete, 500 pairs each got (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500}) want (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500})
+PASS A2 +5 +10 +15 -> 개선 got (True, 10.0, '개선') want (True, 10.0, '개선')
+PASS A3 stop03 read from span_q2 got 0.05 want 0.05
+PASS A4 schema, no auth failures, manifest of every used run got ('cmdr_post v7', [], 30) want ('cmdr_post v7', [], 30)
+PASS B1 100 pairs: 보류 got (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004], False) want (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004], False)
+PASS B2 400 pairs: 보류 got '수집 중 · 결합 판정 보류' want '수집 중 · 결합 판정 보류'
+PASS C0 runs got 0 want 0
+PASS C1 MAE-only worsening got ('비퇴행', ['vx'], '퇴행 방지 조건 미충족') want ('비퇴행', ['vx'], '퇴행 방지 조건 미충족')
+PASS C2 all-NaN MAE: 결측, 미확인 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C3 -4 pp not flagged: 비퇴행 미확인 got ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인') want ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인')
+PASS C4 flagged -> 500: -2 pp 비퇴행, new 400 alone 0 got ('선별 → 500 판', -0.02, '비퇴행', 0.0) want ('선별 → 500 판', -0.02, '비퇴행', 0.0)
+PASS C5 2 of 4 new seeds: 다시 재는 중 got ('다시 재는 중', [1000, 1001, 1002]) want ('다시 재는 중', [1000, 1001, 1002])
+PASS C6 identical arrays: Tango width, 충족 label got (True, '퇴행 방지 조건 충족 (통과율 · MAE)') want (True, '퇴행 방지 조건 충족 (통과율 · MAE)')
+PASS C9 1 of 100 finite: 결측 + short list, 미확인 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C10 99 of 100 finite: still 결측 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C11 exactly +10 %: allowed got ([], '퇴행 방지 조건 충족 (통과율 · MAE)') want ([], '퇴행 방지 조건 충족 (통과율 · MAE)')
+PASS C12 +10.03 %: over got ['vx'] want ['vx']
+PASS C14 500-row shortfall kept: arm, seed, finite n got ('선별 → 500 판', [{'arm': 'on24000', 'seed': 1003, 'finite': 1}], '미확인') want ('선별 → 500 판', [{'arm': 'on24000', 'seed': 1003, 'finite': 1}], '미확인')
+PASS C15 absolute MAE line (control 0) got (['vx'], 'abs', 0.015) want (['vx'], 'abs', 0.015)
+PASS C16 coverage: done counts rows needing no more samples got (12, 11) want (12, 11)
+PASS C13 no target measured: three targets listed with 0 pairs, 보류 got ({'stop03': 0, 'fwd01': 0, 'fwd02': 0}, '수집 중 · 결합 판정 보류') want ({'stop03': 0, 'fwd01': 0, 'fwd02': 0}, '수집 중 · 결합 판정 보류')
+PASS C7 coverage: planned 99, measured 12 got (99, 12) want (99, 12)
+PASS C8 contract k/n and Wilson (independent calc 0.915481) got (97, 100, True, 0.9155) want (97, 100, True, 0.9155)
+PASS D changed cells.json got (['outputs changed after validation'], False) want (['outputs changed after validation'], False)
+PASS D no stamp got (['no stamp'], False) want (['no stamp'], False)
+PASS D cut stamp got (['stamp unreadable'], False) want (['stamp unreadable'], False)
+PASS D empty hashes got (['new stamp without the four output hashes'], False) want (['new stamp without the four output hashes'], False)
+PASS D checkpoint differs got (['stamp checkpoint differs from its log'], False) want (['stamp checkpoint differs from its log'], False)
+PASS D pins differ got (['stamp pins differ from its log'], False) want (['stamp pins differ from its log'], False)
+PASS D legacy stamps in a v3.2 log: accepted and listed got ([], 2, 2) want ([], 2, 2)
+PASS D legacy stamp in a v3.5 log: rejected got ['legacy stamp in a v3.3+ log', 'legacy stamp in a v3.3+ log'] want ['legacy stamp in a v3.3+ log', 'legacy stamp in a v3.3+ log']
+PASS D version key removed, old hashes kept got (['ambiguous stamp (new-format fields without stamp_version)'], False) want (['ambiguous stamp (new-format fields without stamp_version)'], False)
+PASS E1 pins differ between logs -> stop got (True, True) want (True, True)
+PASS E2 a pinned file missing -> stop got (True, True) want (True, True)
+PASS E3 other experiment -> stop got (True, True) want (True, True)
+PASS R1 CSV changed right after its read: the aggregate uses the bytes it hashed (-10 pp, not +40) got (0, -0.1) want (0, -0.1)
+PASS R2 a log changed during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+exit 1

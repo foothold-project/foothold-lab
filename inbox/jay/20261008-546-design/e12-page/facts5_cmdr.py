@@ -3,6 +3,8 @@
 _eval/out/branch/cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json (두 갈래 시작 상태 대조).
 판정선 (팀장 확정 2(c) · VERIFY-astra-7 60 줄 · ASTRA 15 6.1): 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 같은 무게 평균 +10 %p 이상이면 「개선」.
 칸마다의 구간은 서술이고 판정이 아니다. (v16 의 「칸마다 판정 · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)」 는 규칙을 잘못 옮긴 것이라 철회 · 10/13 10:02)
+v7 (ASTRA 16e 4): 「다 재진」 은 필요한 판 수를 다 채운 칸만 · 비교 없음의 원인을 짐작하지 않음 · 속도 오차는 상대 (+10 %) / 절대 (허용 오차의 10 %) 를
+구분 · 시드별 값에 시드 번호 · 구형 인증 실행 수를 보임 · 학습 상태는 result.json 에서 읽음.
 v6 (ASTRA 16c): 다른 판 집계는 읽지 않는다 · 판 수 · 시드는 집계에서 읽는다 (적어 넣지 않음) · 다시 잰 칸은 n 과 시드를 붙인다 ·
 「퇴행 방지 조건 충족 (통과율 · MAE)」 은 그 둘만 뜻한다 · 기본 계약은 모든 측정 칸을 펼쳐 보인다."""
 import json
@@ -10,7 +12,7 @@ import os
 import time
 
 EV = "C:/isaac/ext/go2_rl_robotlab/_eval/out"
-SCHEMA = "cmdr_post v6"
+SCHEMA = "cmdr_post v7"
 MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
 TARGETS = ["stop03", "fwd01", "fwd02"]
 CELL_KO = {"stop03": "걷다 멈춤 (0.3 m/s → 0)", "fwd01": "앞 0.1 m/s", "fwd02": "앞 0.2 m/s", "stand": "서 있기", "fwd03": "앞 0.3 m/s",
@@ -33,6 +35,26 @@ def _d(p):
 
 def _seeds(r):
     return sorted(int(x) for x in r.get("per_seed", {}))
+
+
+AXIS_KO = {"vx": "앞 속도", "vy": "옆 속도", "wz": "회전 속도"}
+
+
+def _mae_txt(k, v):
+    """the MAE line in words: relative (+10 % of the control) or absolute (10 % of the axis tolerance when the control is 0)."""
+    if v.get("line") == "abs":
+        return f"{AXIS_KO.get(k, k)} 오차가 절대 한도 {v['limit']:.3f} 를 넘음 (대조 오차 0)"
+    return f"{AXIS_KO.get(k, k)} 오차 10 % 넘게 커짐"
+
+
+def _mae_row(ms):
+    """regression-row MAE wording: each over axis with its line kind, each missing axis with its shortfall (arm, seed, finite n)."""
+    parts = [_mae_txt(k, v) for k, v in ms.get("lines", {}).items()]
+    for k in ms.get("missing", []):
+        short = ms.get("short", {}).get(k, [])
+        where = ", ".join(f"{x['arm']} 시드 {x['seed']} 유한 {x['finite']}/100" for x in short)
+        parts.append(f"{AXIS_KO.get(k, k)} 오차 결측 ({where or '판정 보류'})")
+    return " · ".join(parts) or "계약선 안"
 
 
 def _cellname(k):
@@ -60,6 +82,15 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     else:
         t["cmdr_bundle_verdict"] = "on 갈래 시작 전이라 아직 대조 안 함"
     asof = post.get("as_of", "")[11:16] or time.strftime("%H:%M", time.localtime(os.path.getmtime(pp)))
+    tr = []
+    for arm, lab in (("off", "안 고친 갈래"), ("on", "고친 갈래")):
+        try:
+            r = json.load(open(os.path.join(EV, "branch", f"cmdr_s1042_{arm}_u4000", "result.json"), encoding="utf-8"))
+            ok = r["final_state"]["where"] == "end" and r["final_state"]["label_next"] == 24000
+            tr.append(f"{lab} {r['meta']['t_end'][11:16]} 끝 (24,000)" if ok else f"{lab} 결과 파일이 끝 상태가 아님")
+        except FileNotFoundError:
+            tr.append(f"{lab} 아직 학습 중 ({time.strftime('%H:%M')} 확인)")
+    t["cmdr_train_status"] = " · ".join(tr)
     if post.get("schema") != SCHEMA:  # 16c 5: an older aggregate is not read as if it were this one
         msg = f"집계 판 불일치 (읽은 판: {post.get('schema', '이전 판')}) · 새 판 ({SCHEMA}) 집계를 기다림"
         for k in ("cmdr_target_rows", "cmdr_diff_rows", "cmdr_startup_rows", "cmdr_reg_rows"):
@@ -94,7 +125,8 @@ def build(post_path=None, summary_path=None, bundle_path=None):
                          f"<td class=\"num\">{s['early_fail_1s']}</td><td class=\"num\">{li}</td><td class=\"num\">{s['survive_5s']}/{s['n']}</td></tr>")
     t["cmdr_startup_rows"] = "".join(srows) or "<tr><td colspan=\"5\" class=\"sub\">아직 없음</td></tr>"
     st = [f"<li>{asof} 집계 ({SCHEMA}) · 유효한 평가 실행 <b>{post['n_valid_runs']}</b> 개 · 시작 상태가 짝이 안 맞아 뺀 것 {len(post['driver_pair_fail'])} · "
-          f"검사에서 떨어진 것 {len(post['driver_invalid'])} · 인증이 안 맞아 뺀 것 {len(post.get('auth_fail', []))}.</li>"]
+          f"검사에서 떨어진 것 {len(post['driver_invalid'])} · 인증이 안 맞아 뺀 것 {len(post.get('auth_fail', []))} · "
+          f"그중 구형 (v3.2) 인증 {post.get('legacy_stamps', 0)} 개 (출력 해시 없이 pins · checkpoint 로 묶임 · 이번 집계 때 읽은 바이트의 해시는 기록).</li>"]
     for u in ("22000", "24000"):
         tv = post["target_verdict"][u]
         cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in TARGETS]
@@ -105,9 +137,8 @@ def build(post_path=None, summary_path=None, bundle_path=None):
                 parts.append(f"{CELL_KO[c]} 아직 비교 없음 (0 쌍)")
                 continue
             d, lo, hi = 100 * p["diff"], 100 * p["lo"], 100 * p["hi"]
-            worse = [k for k, v in p.get("mae", {}).items() if v.get("worse_than_line")]
-            mae = " · 앞 속도 오차 10 % 넘게 커짐" if worse == ["vx"] else (f" · 속도 오차 {', '.join(worse)} 10 % 넘게 커짐" if worse else "")
-            ps = " · ".join(f"{100 * v:+.0f}" for _, v in sorted(p.get("per_seed", {}).items(), key=lambda kv: int(kv[0])))
+            mae = "".join(f" · {_mae_txt(k, v)}" for k, v in p.get("mae", {}).items() if v.get("worse_than_line"))
+            ps = " · ".join(f"{k} {100 * v:+.0f}" for k, v in sorted(p.get("per_seed", {}).items(), key=lambda kv: int(kv[0])))
             parts.append(f"{CELL_KO[c]} <b>{d:+.1f} %p</b> [{lo:+.1f}, {hi:+.1f}] ({p['n']} 쌍 · {tv['cells'][c]}{mae} · 시드별 {ps})")
         head = f"<li>{u} ({when} · on − off · 같은 판끼리 짝): "
         if not tv.get("complete"):
@@ -132,7 +163,7 @@ def build(post_path=None, summary_path=None, bundle_path=None):
         by = {}
         for r in reg.values():
             by[r["overall"]] = by.get(r["overall"], 0) + 1
-        t["cmdr_reg_summary"] = (f"계획 {covr['planned']} 칸 가운데 두 갈래 24,000 이 다 재진 칸 {covr['measured']} · "
+        t["cmdr_reg_summary"] = (f"계획 {covr['planned']} 칸 가운데 on · off 24,000 비교가 있는 칸 {covr['measured']} (그중 필요한 판 수를 다 채운 칸 {covr.get('done', 0)}) · "
                                  + " · ".join(f"{k} {by[k]}" for k in (BAD_LABEL, "미확인", OK_LABEL) if by.get(k)))
         order = {BAD_LABEL: 0, "미확인": 1, OK_LABEL: 2}
         rows, hidden = [], 0
@@ -152,13 +183,14 @@ def build(post_path=None, summary_path=None, bundle_path=None):
             nw = r.get("new400") or {}
             n4 = "" if not nw else f"{100 * nw['diff']:+.1f} [{100 * nw['lo']:+.1f}, {100 * nw['hi']:+.1f}] <span class=\"sub\">({nw['n']} 판)</span>"
             rows.append(f"<tr><td>{_cellname(k)}</td><td class=\"num\">{sc}</td><td class=\"num\">{n5}</td><td class=\"num\">{n4}</td>"
-                        f"<td>{r['pass_status']}</td><td>{r['mae']['text']}</td><td>{r['overall']}</td></tr>")
+                        f"<td>{r['pass_status']}</td><td>{_mae_row(r['mae'])}</td><td>{r['overall']}</td></tr>")
         if hidden:
             rows.append(f"<tr><td colspan=\"7\" class=\"sub\">「{OK_LABEL}」 인 {hidden} 칸은 줄였습니다 (통과율 구간 아래 끝이 −5 %p 이상이고 속도 오차가 계약선 안). "
                         f"기본 계약과 학습 시드 반복은 이 조건에 들어 있지 않습니다.</td></tr>")
         t["cmdr_reg_rows"] = "".join(rows)
     else:
-        t["cmdr_reg_summary"] = "on 갈래 24,000 평가 전이라 아직 없음"
+        t["cmdr_reg_summary"] = (f"현재 유효한 on · off 24,000 비교 없음 (인증이 안 맞아 뺀 실행 {len(post.get('auth_fail', []))} · "
+                                 f"계획 {covr['planned']} 칸)")
         t["cmdr_reg_rows"] = "<tr><td colspan=\"7\" class=\"sub\">아직 없음</td></tr>"
     con = post.get("contract_24000", {})
     cl, det = [], []
