@@ -107,6 +107,14 @@
 - **처리:** 지우지 않고 둔다 (증거 보존 · 변수 경로 삭제 금지). v5 는 17g 가 승인하지 않았고 새 루트 `out_uncr_v6` 의 v6 로 대체되므로 `HALT_v5.json` 이 v5 full 을 막는 것은 무해. 새 기준선 `codexw/protect_baseline2.txt`. A 는 03:57 에 격리 조건 (기본 루트 · 환경변수 · HALT 이름 변경 · 시험 시작부 단언) 으로 재개. **같은 사고가 한 번 더 나면 A 결과를 채택하지 않는다.**
 - **교훈:** 복사해 만든 새 도구는 첫 실행 전에 출력 루트가 작업 폴더 안인지 단언한다 (C 작업서 0.1 에 반영). YOLO 와 기준선 대조의 조합에서 첫 사고는 기준선 대조로 잡혔다.
 
+## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
+
+- **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
+- **기동 전 확인 (6 절 1 ~ 4 · 기록 job tmp `codexw/rand_smoke_preflight.json`):** (1) v4 8 개 · slot · isolate · guard 해시가 ASTRA 표와 같음 · python 3.11.15 · numpy 1.26.0 · 체크포인트와 env.yaml 해시 기록 (2) 상대 참가자: GPU 0 의 CMD-R 1043 on (PID 154852) 로그가 scan 범위 (`out_branch`) 에 있고 USD `usd_20261014_001833_9514` 가 읽힘 · GPU 1 의 다른 python 계산 프로세스 0 · dry-run 으로 v3 registry · 같은 변환 잠금 · attempt 별 USD 루트 · 변환 예상 1 · 검색 경로 확인 (3) GPU 1 NVML 새 조회: UUID `GPU-315d098f-...` 총 16303 MiB 사용 5783 MiB (여유 약 10.5 GB ≥ 하한 4096) (4) 명령: `--stop_after_smoke --probe auto --smoke_s 5 --min_free_mib 4096 --deadline <지금 + 20 분 epoch>`.
+- **중단 · 보류:** 보호 종료 89 ~ 99 · USD 루트 밖 · 공유 · 미할당 · 추가 변환 · registry 오류 · 상대 로그 미해결 · 장치 UUID 불일치 · 코드 변경이면 다음으로 안 넘어감. S3 는 일부러 실패시키는 음성 대조 (`FRAME_GATE frame 20` 이어야 함).
+- **끝난 뒤 읽을 것 (17j 6 절):** 각 시도의 명령 · slot · guard · 로그 · 스틸 · manifest · UUID 를 NVML · 논리 CUDA 0 · Kit 렌더 장치의 물리 장치로 연결 · USD 한 개 · 자기 루트 · 충돌 없음 · S1 검정 프레임 회복 · S2 상태 일치 · S3 의도한 실패 · 최고 사용량 · 최소 여유 · 시간. rc 만으로 probe 성공이라 하지 않음.
+- **정정 (17j 2 절 P1):** 내가 「변이 9/9 CAUGHT (lead 재실행)」 이라 적은 것 중 **5 건 (M22 · M42 · M75 · M76 · M78) 은 시험 대상과 무관한 `ModuleNotFoundError: frame_audit` 실패를 CAUGHT 로 센 오집계**였다 (변이 실행기가 FAIL 줄이 하나라도 있으면 CAUGHT 로 셈 · 정상 소스를 같은 방식으로 돌려도 실패). ASTRA 가 경로를 보정해 정상 대조군 4/4 통과 뒤 같은 9 개를 다시 돌려 **실제 9/9 검출**을 확인함. 내 보고의 「변이 9/9」 는 ASTRA 의 재검 결과로만 인용한다. 나머지 변이 68 개는 아무도 안 돌림.
+
 ## 모델 · 한도 (팀장 10/14 02:2x)
 
 - **lead 는 02:2x 부터 Sonnet 5.5.** 팀장이 `/model` 로 내림. 주간 한도 82 % (해제 10/17 20:00 · 이 계정을 여러 세션이 나눠 씀) · 5 시간 한도 해제 04:20. 한도를 재는 것은 super2 (Mods 기록) 이고 lead 는 직접 못 잼.
