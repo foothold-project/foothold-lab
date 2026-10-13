@@ -1,0 +1,38 @@
+# test_v34.py · 2026-10-13 10:31 · cmdr_eval_driver_v34.py sha256 6f0b86b0c531d3a7
+PASS 1a last pair in the final snapshot is flagged and remeasured got ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on240 want ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_f
+PASS 1b flagged list got ['wave/fwd03/on'] want ['wave/fwd03/on']
+PASS 1c not complete: most planned screen cells never measured got (False, 94) want (False, 94)
+PASS 2a waited for the writer to go before ending got True want True
+PASS 2b remeasure still done got ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_fwd03_on_s1003', 'cq_off24000_wave_fwd03_on_s1004', 'cq_on240 want ['cq_off24000_wave_fwd03_on_s1001', 'cq_off24000_wave_fwd03_on_s1002', 'cq_off24000_wave_f
+PASS 2a2 nothing flagged: ended only after the writer was gone got (4, []) want (4, [])
+PASS 2c v3.3 end record ignored (needed a second read) got True want True
+PASS 3 stopped base -> not complete got (False, True) want (False, True)
+PASS 3b invalid remeasure run listed as missing got ['cq_on24000_wave_fwd03_on_s1003'] want ['cq_on24000_wave_fwd03_on_s1003']
+PASS 4a --log == --base_log refused got 6 want 6
+PASS 4b second writer of the same log refused got 6 want 6
+PASS 4c different logs, no writer, GPU handed over -> start returns got ('no exit', True) want ('no exit', True)
+PASS 4d GPU 0 needs two clean looks in a row (ok, not ok, ok, ok -> 4 looks) got 4 want 4
+PASS 5a v3.2 stamp (pins only) accepted got True want True
+PASS 5b cut stamp -> not reusable, no crash got ({}, False) want ({}, False)
+PASS 5c new stamp without hashes refused got False want False
+PASS 5d written stamp ok, no tmp left got (True, []) want (True, [])
+PASS 6a real run validates on GPU 1 got '' want ''
+PASS 6b same run under --gpu 0 -> gpu uuid got 'gpu uuid' want 'gpu uuid'
+PASS 6c negative max_abs rejected got True want True
+PASS 6d NaN max_abs rejected got True want True
+PASS 7a no result.json got 'on arm has no result.json' want 'on arm has no result.json'
+PASS 7b no checkpoint got 'no model_24000.pt' want 'no model_24000.pt'
+PASS 7c no night log got 'no night log' want 'no night log'
+PASS 7d night log without NIGHT DONE got 'night log has no NIGHT DONE' want 'night log has no NIGHT DONE'
+PASS 7e all signs -> handed over got '' want ''
+PASS 7f branch_run alive got 'branch_run.py still running' want 'branch_run.py still running'
+PASS 7g GPU memory still held got 'GPU 0 memory used 13954 MiB' want 'GPU 0 memory used 13954 MiB'
+PASS 8a no base log written during the re-validation pass got [False, False, False, False, False] want [False, False, False, False, False]
+PASS 8b whole re-validated table written before the start tests got 3 want 3
+PASS 8c end record: one invalid -> not complete and listed got (False, ['cq_p20000_flat_fwd03_on_s1000'], []) want (False, ['cq_p20000_flat_fwd03_on_s1000'], [])
+PASS 9 two runs, two attempt ids got (2, True, True) want (2, True, True)
+PASS 10a keys (flat noise-on target skipped) got [('wave', 'back03', True), ('wave', 'fwd03', True)] want [('wave', 'back03', True), ('wave', 'fwd03', True)]
+PASS 10b flags got [True, False] want [True, False]
+PASS 10c universe size (8 families x 11 + flat noise off 11, minus 3 targets) got 96 want 96
+FAILS []
+exit 0

@@ -1,0 +1,10 @@
+# test_v34.py 변이 시험 · 2026-10-13 10:31 · 사본 소스를 메모리에서 바꿔 돌림 (V34_MUTATE) · 실행본은 안 건드림
+M1 끝을 두 번째 읽기로 판단 (ASTRA 16 경쟁 재현)      -> 1a 1b 1c FAIL
+M2 base 작성자 생존 무시                              -> 2a2 FAIL (처음 판에는 못 잡음 · 시험 강화 뒤 잡힘)
+M3 --log == --base_log 허용                           -> 4a FAIL (처음 판은 살아 있는 v3.2 때문에 우연 통과 · 프로세스 조회를 막은 뒤 잡힘)
+M4 끊긴 stamp 에서 예외                               -> JSONDecodeError 로 시험 중단 (걸림)
+M5 base 가 재검사 전에 기록을 씀                       -> 8a FAIL
+M6 NIGHT DONE 없이 GPU 0 인계                         -> 7c 7d FAIL
+M7 드라이버당 시도 ID 하나                             -> 9 FAIL
+M8 같은 기록의 두 번째 작성자 허용                     -> 4b FAIL
+M9 GPU 0 인계를 한 번 보고 결정                        -> 4d FAIL (시험 추가 뒤)
