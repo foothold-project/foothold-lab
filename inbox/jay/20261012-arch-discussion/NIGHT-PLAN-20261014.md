@@ -9,6 +9,7 @@
 | 1 | GPU 0: 1043 off 끝 → 스크립트가 검증 → on 갈래 | 스크립트가 알아서 | 콘솔 `cmdr_s1043_off_u4000 VALID` · on START | 진행 중 |
 | 2 | ASTRA 17f 판정 (v3 관문 · 같은 시험지 고침 · S2 판 2) | 의뢰함 23:53 | `VERIFY-astra-17f.md` 첫 줄 | 대기 |
 | 2b | ASTRA 17f-2 보내기 (S2 encoder W · r 제안 검토 · `TASK-astra-17f2-s2-encoder.md`) → 판정을 팀장께 채팅 · #550 으로 | 17f 판정 파일이 나온 뒤 (ASTRA 는 한 번에 하나) | `VERIFY-astra-17f2.md` 첫 줄 | |
+| 2c | ASTRA 17h 보내기: lead 의 읽기 · 컨텍스트 관리 규칙 검토 (`TASK-astra-17h-reading.md`) | 17f-2 판정 뒤 | `VERIFY-astra-17h.md` 첫 줄 | |
 | 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 (`ce12/run_dump.py --which cts` · v3 관문 · 별도 registry `isaac_usd_registry_v3.json`) | 17f 가 허용 | 수집 COLLECTED · `compare_native --recompute_action` · 승인 APPROVED 또는 PENDING 까닭 | |
 | 4 | GPU 1: 같은 시험지 v2 기록 (예상 변환 0) | 3 승인 | 같음 | |
 | 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 진행 중 |
@@ -19,4 +20,4 @@
 
 **팀장 결정 대기 (밤에 진행하지 않음):** S2 encoder 고정 구간 W 의 단위 (PPO iteration 또는 optimizer step) 와 W · r 값.
 
-**컨텍스트 아끼기 (팀장 10/14 00:05 지적):** 하위 작업 보고는 15 줄 안으로 요구한다. 검증 파일은 첫 줄 판정과 「수정 조건 · 기동 순서」 절만 읽고, 고칠 일은 파일 경로를 주어 하위 작업이 직접 읽게 한다. 시험 출력은 요약 줄만 본다. 그림은 마지막 렌더 확인에서만 연다.
+**읽기와 컨텍스트 (팀장 10/14 00:05 · 00:20 지적 · 00:22 고침):** 판단의 근거가 되는 글 (ASTRA 검증 · 하위 작업 보고 · 설계 문서) 은 **끝까지 읽는다.** 00:16 에 17f 를 절만 골라 읽었다가 1 · 2 절의 사실 (야간 셸 시험이 Windows 의 다른 bash 를 집음) 을 놓칠 뻔했다. 줄이는 것은 반복뿐이다: 끝난 작업 목록의 재주입 (지움) · 같은 파일을 두 번 읽기 · 통과한 시험의 줄 하나하나 (요약과 모든 FAIL 줄은 본다) · 렌더 확인이 아닌 그림. 이 규칙도 ASTRA 17h 로 검토받는다.
