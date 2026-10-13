@@ -1,0 +1,44 @@
+# test_paired_ci.py · 2026-10-13 10:41 · paired_ci.py sha256 3056f6b364d8f449
+PASS 1a Newcombe n100 (.49,.01,0,.50) coverage 63.5964 % 63.5964 % sum 0.999999999999985
+PASS 1b Newcombe n500 (.499,.001,0,.50) coverage 39.5645 % 39.5645 % sum 0.999999999999969
+PASS 2 T(0) = (b - c) / sqrt(b + c) 
+PASS 2b 0 in interval <=> |McNemar z| <= 1.96 
+PASS 3 b=c=0 n100: [-0.03699, +0.03699] -0.036993 0.036993
+PASS 3 b=c=0 n500: [-0.00762, +0.00762] -0.007624 0.007624
+   n100 pb 0.01 pc 0: Tango coverage 99.657 % (prob summed 1.000000000000)
+PASS 4 n100 (0.01,0) probability summed to 1 
+   n500 pb 0.001 pc 0: Tango coverage 99.983 % (prob summed 0.999999999993)
+PASS 4 n500 (0.001,0) probability summed to 1 
+   n100 pb 0.05 pc 0.05: Tango coverage 95.679 % (prob summed 1.000000000000)
+PASS 4 n100 (0.05,0.05) probability summed to 1 
+   n100 pb 0.1 pc 0.02: Tango coverage 94.694 % (prob summed 1.000000000000)
+PASS 4 n100 (0.1,0.02) probability summed to 1 
+   n100 pb 0.02 pc 0.1: Tango coverage 94.694 % (prob summed 1.000000000000)
+PASS 4 n100 (0.02,0.1) probability summed to 1 
+   n100 pb 0.2 pc 0.1: Tango coverage 95.126 % (prob summed 1.000000000000)
+PASS 4 n100 (0.2,0.1) probability summed to 1 
+   n100 pb 0.3 pc 0.05: Tango coverage 95.086 % (prob summed 1.000000000000)
+PASS 4 n100 (0.3,0.05) probability summed to 1 
+   n500 pb 0.05 pc 0.05: Tango coverage 95.066 % (prob summed 1.000000000000)
+PASS 4 n500 (0.05,0.05) probability summed to 1 
+   n500 pb 0.1 pc 0.02: Tango coverage 95.025 % (prob summed 1.000000000000)
+PASS 4 n500 (0.1,0.02) probability summed to 1 
+   n500 pb 0.02 pc 0.01: Tango coverage 94.980 % (prob summed 1.000000000000)
+PASS 4 n500 (0.02,0.01) probability summed to 1 
+   n500 pb 0.2 pc 0.15: Tango coverage 95.016 % (prob summed 1.000000000000)
+PASS 4 n500 (0.2,0.15) probability summed to 1 
+   n500 pb 0.088 pc 0.02: Tango coverage 95.039 % (prob summed 1.000000000000)
+PASS 4 n500 (0.088,0.02) probability summed to 1 
+   n500 pb 0.02 pc 0.38: Tango coverage 95.021 % (prob summed 1.000000000000)
+PASS 4 n500 (0.02,0.38) probability summed to 1 
+   n100 pb 0 pc 0: Tango coverage 100.000 % (prob summed 1.000000000000)
+PASS 4 n100 (0,0) probability summed to 1 
+   n500 pb 0 pc 0: Tango coverage 100.000 % (prob summed 1.000000000000)
+PASS 4 n500 (0,0) probability summed to 1 
+PASS 4b Tango coverage >= 93 % on every grid point min 94.694 %
+PASS 4c ASTRA models: Tango 100 % vs Newcombe 63.6 / 39.6 % 99.657 99.983
+   22000 stop03: Tango +6.8 [+4.1, +9.8]
+   22000 fwd01: Tango -24.8 [-30.6, -18.8]
+   22000 fwd02: Tango -7.8 [-10.7, -5.4]
+FAILS []
+exit 0

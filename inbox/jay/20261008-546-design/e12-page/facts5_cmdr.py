@@ -72,59 +72,71 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     for u in ("22000", "24000"):
         # 판정선 (팀장 확정 2(c) · VERIFY-astra-7 60 줄 · ASTRA 15 6.1): 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 같은 무게 평균 +10 %p 이상이면 「개선」.
         # 칸마다의 구간은 서술이고 판정이 아니다. (v16 의 「칸마다 판정 · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)」 는 규칙을 잘못 옮긴 것이라 철회 · 10/13 10:02)
+        # v5 (ASTRA 16 1): 세 칸 모두 다섯 시드 500 쌍이 모이기 전에는 결합 판정을 쓰지 않는다. 쌍 수는 집계에서 읽는다 (적어 넣지 않음).
         cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in ("stop03", "fwd01", "fwd02")]
         tv = post.get("target_verdict", {}).get(u)
-        if all(p for _, p in cells) and tv and "verdict" in tv:
+        if all(p for _, p in cells) and tv:
             parts = []
             for c, p in cells:
                 d, lo, hi = 100 * p["diff"], 100 * p["lo"], 100 * p["hi"]
                 worse = [k for k, v in p.get("mae", {}).items() if v.get("worse_than_line")]
-                mae = f" · 속도 오차 {', '.join(worse)} 10 % 넘게 커짐" if worse else ""
-                parts.append(f"{CELL_KO[c]} <b>{d:+.1f} %p</b> [{lo:+.1f}, {hi:+.1f}] ({tv['cells'][c]}{mae})")
-            low = "예" if tv["all_low_above_0"] else "아니오"
-            ge = "넘음" if tv["mean_ge_10"] else "못 미침"
-            if u == "22000":
-                head = f"<li>22000 (중간 관찰 · on − off · 칸마다 500 판 짝): "
-                tail = (f". 판정선에 대 보면 세 칸 모두 구간 하한 0 위: {low} · 세 칸 평균 <b>{tv['mean_pp']:+.1f} %p</b> (+10 %p {ge}). "
-                        f"중간 관찰이라 판정으로 쓰지 않습니다.</li>")
+                mae = " · 앞 속도 오차 10 % 넘게 커짐" if worse == ["vx"] else (f" · 속도 오차 {', '.join(worse)} 10 % 넘게 커짐" if worse else "")
+                parts.append(f"{CELL_KO[c]} <b>{d:+.1f} %p</b> [{lo:+.1f}, {hi:+.1f}] ({p['n']} 쌍 · {tv['cells'][c]}{mae})")
+            when = "중간 관찰" if u == "22000" else "최종 비교"
+            head = f"<li>{u} ({when} · on − off · 같은 판끼리 짝 · 95 % 구간은 Tango 점수 구간): "
+            if not tv.get("complete"):
+                tail = (f". 세 칸이 다섯 시드 500 쌍을 다 채우기 전이라 <b>결합 판정 보류</b> "
+                        f"(빠진 시드: {', '.join(f'{CELL_KO[c]} {v}' for c, v in tv['seeds_missing'].items() if v) or '없음'}).</li>")
             else:
-                head = f"<li>24000 (최종 비교 · on − off · 칸마다 500 판 짝): "
-                tail = (f". 세 칸 모두 구간 하한 0 위: {low} · 세 칸 평균 <b>{tv['mean_pp']:+.1f} %p</b> (+10 %p {ge}) → 판정선 기준 <b>「{tv['verdict']}」</b>. "
-                        f"채택 · 기각은 다른 칸 퇴행과 기본 계약을 다 본 뒤에 씁니다.</li>")
+                low = "예" if tv["all_low_above_0"] else "아니오"
+                ge = "이상 충족" if tv["mean_ge_10"] else "못 미침"
+                if u == "22000":
+                    tail = (f". 판정선에 대 보면 세 칸 모두 구간 하한 0 위: {low} · 세 칸 평균 <b>{tv['mean_pp']:+.1f} %p</b> (+10 %p {ge}). "
+                            f"중간 관찰이라 판정으로 쓰지 않습니다.</li>")
+                else:
+                    tail = (f". 세 칸 모두 구간 하한 0 위: {low} · 세 칸 평균 <b>{tv['mean_pp']:+.1f} %p</b> (+10 %p {ge}) → 이번 1042 비교에서 사전 개선선 "
+                            f"<b>{'충족' if tv['verdict'] == '개선' else '미충족'}</b>. 미충족은 「효과 없음」 의 증명이 아니고, 채택 · 기각은 다른 칸 퇴행 · 속도 오차 · 기본 계약을 다 본 뒤에 씁니다.</li>")
             st.append(head + " · ".join(parts) + tail)
         else:
             st.append(f"<li>{u}: 두 갈래가 다 재지지 않아 아직 비교 없음.</li>")
-    # 24,000 다른 칸 퇴행 (2(c): 100 판 훑기 → 점추정 −5 %p 이하 칸만 500 판으로 다시 재서 구간으로 판정) · 기본 계약
+    # 24,000 다른 칸 퇴행 (v5: 통과율 · 속도 오차 · 전체를 따로 · 선별 비해당도 미확인이면 보인다)
     reg = post.get("regression_24000", {})
+    covr = post.get("regression_coverage", {"planned": 99, "measured": len(reg)})
     FAM_KO = {"flat": "평지", "obstacles": "장애물", "rough_slope": "거친 경사", "slope_up": "오르막", "slope_down": "내리막",
               "stairs_up": "계단 오름", "stairs_down": "계단 내림", "wave": "물결"}
-    order = {"퇴행": 0, "비퇴행 미확인": 1, "다시 재는 중": 2, "비퇴행": 3, "훑기 통과": 4}
-    planned = 8 * 11 + 11  # 여덟 family 의 11 칸 (noise 켬) + 평지 11 칸 (noise 끔)
-    cnt = {k: sum(1 for r in reg.values() if r["verdict"] == k) for k in order}
     if reg:
-        t["cmdr_reg_summary"] = (f"계획 {planned} 칸 가운데 두 갈래 24,000 이 다 재진 칸 {len(reg)} · "
-                                 + " · ".join(f"{k} {v}" for k, v in cnt.items() if v))
-        rows = []
-        for k, r in sorted(reg.items(), key=lambda kv: (order[kv[1]["verdict"]], kv[0])):
-            if r["verdict"] == "훑기 통과":
+        by = {}
+        for r in reg.values():
+            by[r.get("overall", "미확인")] = by.get(r.get("overall", "미확인"), 0) + 1
+        t["cmdr_reg_summary"] = (f"계획 {covr['planned']} 칸 가운데 두 갈래 24,000 이 다 재진 칸 {covr['measured']} · "
+                                 + " · ".join(f"{k} {by[k]}" for k in ("전체 조건 미충족", "미확인", "전체 조건 충족") if by.get(k)))
+        order = {"전체 조건 미충족": 0, "미확인": 1, "전체 조건 충족": 2}
+        rows, hidden = [], 0
+        for k, r in sorted(reg.items(), key=lambda kv: (order.get(kv[1].get("overall"), 1), kv[0])):
+            if r.get("overall") == "전체 조건 충족":
+                hidden += 1
                 continue
             fam, cell, noise = k.split("/")
-            sc = "" if "screen_diff" not in r else f"{100 * r['screen_diff']:+.0f}"
+            sc = "" if "screen_diff" not in r else f"{100 * r['screen_diff']:+.0f} [{100 * r['screen_lo']:+.1f}, {100 * r['screen_hi']:+.1f}]"
             n5 = "" if "lo" not in r else f"{100 * r['diff']:+.1f} [{100 * r['lo']:+.1f}, {100 * r['hi']:+.1f}]"
-            mw = ", ".join(r.get("mae_worse", r.get("screen_mae_worse", [])))
+            nw = r.get("new400") or {}
+            n4 = "" if not nw else f"{100 * nw['diff']:+.1f} [{100 * nw['lo']:+.1f}, {100 * nw['hi']:+.1f}]"
             rows.append(f"<tr><td>{FAM_KO[fam]} · {CELL_KO.get(cell, cell)}{'' if noise == 'on' else ' · noise 끔'}</td>"
-                        f"<td class=\"num\">{sc}</td><td class=\"num\">{n5}</td><td>{r['verdict']}</td><td>{mw}</td></tr>")
-        t["cmdr_reg_rows"] = "".join(rows) or "<tr><td colspan=\"5\" class=\"sub\">훑기에서 걸린 칸 없음</td></tr>"
+                        f"<td class=\"num\">{sc}</td><td class=\"num\">{n5}</td><td class=\"num\">{n4}</td>"
+                        f"<td>{r['pass_status']}</td><td>{r['mae']['text']}</td><td>{r['overall']}</td></tr>")
+        if hidden:
+            rows.append(f"<tr><td colspan=\"7\" class=\"sub\">전체 조건을 충족한 {hidden} 칸은 줄였습니다 (통과율 구간 아래 끝이 −5 %p 이상이고 속도 오차가 계약선 안).</td></tr>")
+        t["cmdr_reg_rows"] = "".join(rows)
     else:
         t["cmdr_reg_summary"] = "on 갈래 24,000 평가 전이라 아직 없음"
-        t["cmdr_reg_rows"] = "<tr><td colspan=\"5\" class=\"sub\">아직 없음</td></tr>"
+        t["cmdr_reg_rows"] = "<tr><td colspan=\"7\" class=\"sub\">아직 없음</td></tr>"
     con = post.get("contract_24000", {})
     cl = []
     for m, lab in (("off24000", "안 고친 갈래"), ("on24000", "고친 갈래")):
         c = con.get(m)
         if c and c["n_cells"]:
-            cl.append(f"{lab} {c['n_cells']} 칸 중 생존 95 % 아래 {len(c['surv_below'])} 칸 · 명령 통과 90 % 아래 {len(c['pass_below'])} 칸")
-    t["cmdr_contract"] = (" · ".join(cl) + " (시드 1000 · 칸마다 100 판 · 점추정)") if cl else "아직 없음"
+            cl.append(f"{lab}: 계획 {c.get('planned', 99)} 칸 중 {c['n_cells']} 칸 잼 · 생존 95 % 아래 {len(c['surv_below'])} 칸 · 명령 통과 90 % 아래 {len(c['pass_below'])} 칸")
+    t["cmdr_contract"] = (" · ".join(cl) + " (시드 1000 · 칸마다 100 판 · 점추정, 구간은 집계 표에)") if cl else "아직 없음"
     t["cmdr_status"] = "".join(st)
     # 안 고친 갈래 (E1 20,000 에서 넓힌 범위 그대로 이어 학습) 의 목표 칸 · 관찰만 (원인 주장 없음)
     tg = post["targets"]

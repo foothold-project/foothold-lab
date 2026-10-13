@@ -1,0 +1,24 @@
+# test_post_v5.py · 2026-10-13 10:41 · cmdr_post_v5.py sha256 3961db0513f2c012
+PASS A0 runs got 0 want 0
+PASS A1 complete, 500 pairs each got (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500}) want (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500})
+PASS A2 +5 +10 +15: mean exactly +10 and all low ends > 0 -> 개선 got (True, 10.0, '개선') want (True, 10.0, '개선')
+PASS A3 stop03 read from span_q2 (+5 pp; the q1a column says -5) got 0.05 want 0.05
+PASS A4 interval method is Tango, Newcombe kept got ('tango', 2) want ('tango', 2)
+PASS B1 100 pairs: 수집 중 · 결합 판정 보류 got (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004]) want (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004])
+PASS B2 no joint fields before completion got False want False
+PASS B3 400 pairs: 보류 got '수집 중 · 결합 판정 보류' want '수집 중 · 결합 판정 보류'
+PASS C0 runs got 0 want 0
+PASS C1 MAE-only: pass 비퇴행, vx over, overall 미충족 got ('비퇴행', ['vx'], '전체 조건 미충족') want ('비퇴행', ['vx'], '전체 조건 미충족')
+PASS C2 NaN MAE: 결측, overall 미확인 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C3 -4 pp not flagged: 비퇴행 미확인 (interval crosses -5) got ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인', True) want ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인', True)
+PASS C4 flagged -> 500: -2 pp, 비퇴행; new 400 alone 0 with interval got ('선별 → 500 판', -0.02, '비퇴행', 0.0, True) want ('선별 → 500 판', -0.02, '비퇴행', 0.0, True)
+PASS C4b per-seed differences got [('1000', -0.1), ('1001', 0.0), ('1002', 0.0), ('1003', 0.0), ('1004', 0.0)] want [('1000', -0.1), ('1001', 0.0), ('1002', 0.0), ('1003', 0.0), ('1004', 0.0)]
+PASS C5 flagged, 2 of 4 new seeds: 다시 재는 중 got ('다시 재는 중', [1000, 1001, 1002]) want ('다시 재는 중', [1000, 1001, 1002])
+PASS C6 identical arrays: interval has width (Tango) got (True, '비퇴행') want (True, '비퇴행')
+PASS C7 coverage: planned 99, measured 6 got (99, 6, 93) want (99, 6, 93)
+PASS C8 contract k/n and Wilson got (97, 100, True, 0.9155) want (97, 100, True, 0.9155)
+PASS D1 changed after validation: excluded and listed got (['cq_on24000_wave_fwd03_on_s1000'], False) want (['cq_on24000_wave_fwd03_on_s1000'], False)
+PASS E1 pins differ between logs -> stop got (True, True) want (True, True)
+PASS F1 real data: v5 Newcombe column = v4 interval, same differences got (True, True) want (True, True)
+FAILS []
+exit 0
