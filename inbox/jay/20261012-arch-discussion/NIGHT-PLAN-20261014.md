@@ -15,13 +15,16 @@
 | 실행 | 식별 | 로그 · 진행 확인 방법 | 마지막 관측 | 예상 끝 · 다음 확인 |
 |---|---|---|---|---|
 | GPU 0 · CMD-R 1043 on 갈래 | attempt `g0-cmdr_s1043_on_u4000-1014001820-895773` · PID 154852 (시작 00:18:20) · 셸 btwz5bu9g | `_eval/out_branch/cmdr_s1043_on_u4000.log` 의 마지막 `Learning iteration N/24001` · `Traceback` 수 · 로그 크기 · 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` | 01:08 iteration 20618/24001 (00:54 뒤 +169 · 약 5.1 s/it) · PID 살아 있음 · Traceback 0 · 로그 12.45 MB (시작 때 USD Head_lo/up 경고는 이미 알던 것) | 05:40 무렵 · 다음 heartbeat 에서 iteration 이 늘었는지 |
-| GPU 1 | 01:16 CTS r2 기록 끝 (01:16:26 · slot 0 · guard 0) · 그 뒤 빔 | job tmp `ce12fix/r2_*.txt` | r2 COLLECTED · 대조 ALL PASS (action 2.15e-6) · APPROVED (`--code_bundle CODE_BUNDLE_r2.txt`) · 재확인 유효. **채택은 17i 뒤** | 17g |
-| 감시 스크립트 (사용 한도 대비) | 셸 bd8y4zrp0 · job tmp `arm_v5_full.sh` · 로그 `arm_v5.log` | ASTRA 가 `uncr_v5/approval-astra-17g.json` 을 쓰고 값 (decision approve · by 17g · reval 98322ffb · manifest ac09c264 · 75 · no · 묶음 e5597517) 이 맞을 때만, GPU 1 에 python 이 없을 때 v5 full,post 를 띄움 (deadline 09:00 · 콘솔 job tmp `v5_full_console.txt`). 승인 파일 없이 17g 가 10 분 지나거나 04:40 이 되면 띄우지 않고 끝. 멈추려면 `_eval/out_uncr_v5/STOP` | 01:18 걸어 둠 (판정 확인 함수는 답을 아는 json 둘로 시험: OK · BAD decision) | lead 가 깨면 17g 전문을 읽고, 조건이 v5 full 과 어긋나면 STOP |
-| 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 | lead 재실행 job tmp `ce12fix/` (시험 둘 · 변이 둘 · 해시 sha_before.txt) | 보고: 실제 기록 대조 ALL PASS (관측 · target · last action 차 0 · CPU action 2.15e-6) · 새 출처 검사 A9 로 이 기록은 REJECTED (guard 해시 미기록 · 기록 뒤 세 파일 수정) · 시험 132/132 · 23/23 · 변이 65/65 · 24/24 (보고값) | lead 재실행 결과 → r2 재기록 |
-| 하위 작업 · S2 판 3 | 00:40 맡김 | 같음 | 진행 중 | 알림 |
-| heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 01:08 첫 도착 확인 (이 문구로 깨어남) | 매 도착 |
-| ASTRA 17i | 02:40 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17i.md` | 검사 중 | 파일 생김 |
-| Codex Worker A · B | 02:38 접수 · 02:40 둘 다 코드 읽는 중 (A: 92 번 종료 코드 겹침 · OpenBLAS 확인 / B: rand_driver · slot 읽기) · 컨텍스트 63 % · 62 % 남음 | job tmp `codexA/REPORT.md` · `codexB/REPORT.md` | 일하는 중 | 매시 :27 |
+| GPU 1 | 01:16:26 CTS r2 기록이 끝난 뒤 **빔** (이유: 띄울 수 있는 일이 모두 검증 · 고침 대기 · 17g 와 17i 가 요구한 고침이 끝나기 전에는 허용된 기동이 없음) | job tmp `ce12fix/r2_*.txt` | r2 COLLECTED · 대조 ALL PASS · A9 PASS (그 시점 승인기) · 재확인 유효. ASTRA 17i: r2 수치만 제한 채택, 승인기 일반 채택 보류 | 17j 가 RAND smoke 를 허용하면 smoke · 아니면 계속 빔. 놀았던 시간은 아침 보고에 적는다 (01:16 부터) |
+| 감시 스크립트 (사용 한도 대비) | 셸 bd8y4zrp0 · job tmp `arm_v5_full.sh` | `arm_v5.log` | **끝 01:33:48 · 승인 json 이 없어 아무것도 띄우지 않음** (17g 판정 파일이 10 분 지나도 승인 없음 · 설계대로) | 더는 필요 없음 · v5 full 은 v6 로 대체 |
+| 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 · 끝 | job tmp `ce12fix/` | lead 재실행 01:15: 시험 23/23 · 132/132 · 변이 24/24 · 65/65 · 해시 그대로 · 저장소 사본 22b97fe3 | ASTRA 17i 로 검증됨 → 남은 고침은 Codex Worker C |
+| 하위 작업 · S2 판 3 | 00:40 맡김 · 01:27 보고 · 끝 | job tmp `s2v3/lead/` | lead 재실행 01:35: 시험 14/14 · 변이 69/69 · 해시 그대로 · 저장소 사본 db7c3e7b | 학습 루프 연결 · smoke 등록이 남아 S2 학습은 여전히 보류 |
+| heartbeat 예약 | `eaa6843f` (매시 :27 · 세션 안에서만 · 7 일 만료) · 02:39 등록 · 옛 25e8a2a3 · 2b1bfe25 · b698612f 지움 · CronList 에 하나만 | 이 문구로 깨어난 기록 | 옛 문구 (25e8a2a3) 로 02:41 도착 · 새 문구 (eaa6843f) 로 03:54 도착 확인 | 매 도착 |
+| ASTRA 17i | 02:40 보냄 · **끝** (`VERIFY-astra-17i.md` · 03:54 이전에 도착) | 아래 「판정 조건」 17i | 제한 채택 · A9 P1 · v2 보류 | Codex Worker C 고침 뒤 17k |
+| Codex Worker A (미경험 v5 고침 · `term_602208c0`) | 02:38 접수 · **02:44 사고로 멈춤** (아래 「작업자 사고 기록」) · 03:57 격리 조건을 달아 재개 | job tmp `codexA/REPORT.md` (02:44 판 · 재개 뒤 갱신) | 일하는 중 (재개 직후) | 매시 :27 |
+| Codex Worker B (무작위화 판 4 · `term_223a8374`) | 02:38 접수 · 02:56 끝 · 컨텍스트 35 % | `codexB/REPORT.md` | **끝 · lead 재실행 03:56 통과** (시험 29/29 · 변이 9/9) · 저장소 사본 f0151ef3 | 17j |
+| Codex Worker C (CE12 고침 · `term_766933da`) | 03:58 접수 · 작업서 `TASK-codex-worker-17i-fix.md` (격리 단언 0.1 이 첫 일) | `codexC/REPORT.md` | 일하는 중 | 매시 :27 |
+| ASTRA 17j | 03:59 보냄 (무작위화 판 4 재확인 · smoke 허용 여부) · 터미널 term_fe1daede | `VERIFY-astra-17j.md` | 검사 중 | 파일 생김 |
 | ASTRA 17g (끝) | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
 
 부팅 기준: **09/17 21:16 KST** (`Win32_OperatingSystem.LastBootUpTime`). 다르면 위 PID · 실행을 그대로 믿지 않고 새 기동을 보류한 채 다시 확인하고 #550 · 채팅에 보고한다. 적법한 재부팅이 확인되면 이 기준값을 고친다.
@@ -33,9 +36,9 @@
 | 절 | 조건 | 지금 |
 |---|---|---|
 | §1 | 야간 셸 시험 호출은 Git Bash 실제 경로와 PATH 를 고정 (기본 PATH 는 `system32/bash.exe` 를 집어 rc 127) | 미반영. 운영 1043 은 Git Bash 안에서 돌고 있어 해당 없음 (추정). 시험 `test_night_1043_v3b.py` 를 다시 돌릴 때 PATH 고정 |
-| §3 | CE12 는 v3 전용 registry · v2 registry 무수정 · 같은 변환 잠금 · attempt 마다 USD 루트 · dry-run 확인 | 충족: `run_dump.py:63` v3 registry (시험 117/117 기대값 고침) · 실행 USD `out_ce12/native/_attempts/<attempt>/usd/` |
+| §3 | CE12 는 v3 전용 registry · v2 registry 무수정 · 같은 변환 잠금 · attempt 마다 USD 루트 · dry-run 확인 · **실제 상대 로그가 scan 범위에 들어가는지 · 구형 registry 가 가리키는 범위 밖 로그의 읽기 전용 대조 · 읽기 실패를 충돌 없음으로 보지 않기** | **일부만 충족** (ASTRA 17i 가 짚음: 내가 적은 「충족」 은 원문보다 좁았음). 충족: v3 registry (`run_dump.py:63`) · 같은 lock · attempt USD 루트 · dry-run. **빠진 것:** 상대 로그 포함 확인 · 구형 registry 읽기 전용 대조 · 읽기 실패 보류 → Codex Worker C (C4). 기동 전 여유는 guard 가 보지 않음 (guard 숫자는 실행 중 요약) → C4 |
 | §4.2 | 승인 재확인이 which · checkpoint · tag · attempt 를 대조 (다른 모델이면 실패) | 하위 작업 고침 (01:02 · stamp 에 대상 · VA-ck-target) · lead 재실행 중 · ASTRA 17i 검증 전에는 채택 안 함 |
-| §4.3 | 실행 당시 코드 해시를 승인 묶음과 연결 | 하위 작업 고침 (provenance 시작 · 끝 · 실행 중 변경 87 · 승인 A9). 00:25 기록은 실행 중 변경은 없었으나 guard 해시 미기록 · 기록 뒤 수정으로 A9 REJECTED → 새 tag r2 재기록 필요 · ASTRA 17i 전에는 채택 안 함 |
+| §4.3 | 실행 당시 코드 해시를 승인 묶음과 연결 | 하위 작업 고침 (provenance 시작 · 끝 · 실행 중 변경 87 · A9). 00:25 첫 기록은 guard 해시 미기록 · 기록 뒤 수정으로 A9 REJECTED. **「실행 중 변경 없음」 은 종료 해시 근거가 없어 미확인.** r2 는 시작 · 종료 해시 7 개 모두 있음. A9 에 P1 결함 (종료 기록 누락이 승인됨) → C1 |
 | §4.4 | `switch_step <= T-1` · 전환 뒤 action 비교 횟수 · miss 미측정과 0 구분 | 하위 작업 고침 (1..T-1 · reset 뒤 60 · 전환 뒤 20 action step 셈 · miss None 은 미측정) · ASTRA 17i 전에는 채택 안 함 |
 | §4.5 | 1 고정 · 2 짧은 기록 · 3 COLLECTED 와 출처 확인 · 4 `compare_native --recompute_action` (1e-6 · 1e-4 사후 완화 금지) · 5 CTS 승인 뒤 v2 expect 0 | 1 · 2 끝 · 3 COLLECTED 22 PASS · 4 고친 대조기로 ALL PASS (보고서 `out_ce12/native/cts_e1_m20000/compare_report_20261014-005010.json`) · 5 대기 (CTS 승인 뒤) |
 | §5 | S2 학습 기동 보류 (센서 · rollout 저장소 · 학습기 연결 · 사전 등록 전) | 보류 유지 |
@@ -43,6 +46,20 @@
 **17f-2 (00:33 · 다른 안)**: 첫 S2 A/B 는 encoder 전 구간 실제 고정 (팀장 확정 대기) · r=0 은 실제 고정이 아님 (판 3 이 고침) · smoke 기준 (cosine 0.9 · 평지 −10%p) 자동 전환 금지 · 사전 등록 5.3 의 1 ~ 6 미충족 · S2 자체 갱신 번호 · adaptive LR 이 group LR 덮어쓰기 검사. S2 학습 기동 없음.
 
 **17h (00:49 · 고쳐서 채택)**: 아래 「읽기 · 재개 규칙」 과 하트비트 문구로 반영 (00:57). 수용 기준 (17h 7 절) 은 실제로 지키는지 아침까지 관측한다.
+
+**17i (CTS r2 수치는 제한 채택 · 일반 승인 관문과 v2 기동은 보류)**
+
+| 대상 | 판정 | 지금 |
+|---|---|---|
+| r2 수치 | 제한 채택: E1 model_20000 한 체크포인트 · 평지 3 명령 x 4 환경 · 60 step · 강제 reset 2 · 전환 1 · 관측 · target · last action 차 0 · CPU action 2.15e-6 | 결과 문구는 17i 6 절 끝의 권장 문구. 자연 종료 reset 0 · 경계 clip · height miss · v2 는 미검증 |
+| 승인기 A9 | P1: `provenance_end` 가 없거나 `{}` 이면 APPROVED (ASTRA 가 전체 CLI 로 재현) | Codex Worker C (C1) |
+| 묶음 파서 · bundle 해시 | `read_bundle` 느슨 · `--check_approval` 이 bundle 파일을 다시 해시하지 않음 | C2 |
+| dims 형식 | 합성 형식 시험과 실제 기록 통합 시험을 분리 · skip 은 드러내기 | C3 |
+| 기동 전 대조 · 장치 · 여유 | 상대 로그 · 구형 registry 읽기 전용 대조 · 기동 전 장치와 여유 확인 (guard 숫자는 실행 중 요약이지 기동 전 확인이 아님 · 조회 실패는 보류) | C4 |
+| 경로 의존 · README | 작업 디렉터리에 따라 A6 이 달라짐 · reset 표 열 구분 | C5 · C6 |
+| **v2 기록 (expect 0)** | **보류.** C 고침 · lead 재실행 · ASTRA 17k · 기동 전 확인 뒤 짧은 진단 1 회로 제한 | 대기 |
+| r2 | 원본 유지 · 수정된 검증기로 재검한 결과를 따로 | C8 |
+| 내 기록 정정 | 17f §3 행은 원문보다 좁았음 · 첫 기록의 「실행 중 변경 없음」 은 미확인 · guard 숫자는 기동 전 확인이 아님 | 위 17f 표에 고침 |
 
 **17g (01:26 · 고쳐서 기동 · 승인 json 없음)**
 
@@ -65,14 +82,14 @@
 | 2 | ASTRA 17f | | 끝 00:17 (b77106d2) | 조건은 위 표 |
 | 2b | ASTRA 17f-2 → 팀장 채팅 · #550 | | 끝 00:33 · 채팅 · #550 6149317273 (df9e89f9) | 팀장 확정 대기 |
 | 2c | ASTRA 17h | | 끝 00:49 (7d24517a) · 반영 00:57 | 관측 |
-| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 충족 | 기록 끝 00:25 · COLLECTED · 대조 ALL PASS · A9 REJECTED (출처) | 3b |
-| 3b | GPU 1: CTS 재기록 tag `cts_e1_m20000_r2` (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03) · 코드 해시 고정 뒤 · dry-run 먼저 | 기동 안전 조건 (17f §3: v3 registry · 같은 변환 잠금 · slot v3 · isolate v3 는 17f 가 본 판 그대로) · lead 재실행 통과 · GPU 1 에 다른 Isaac 없음 · 고친 기록기는 ASTRA 미검토라 결과의 승인 채택은 17i 뒤 | lead 재실행 끝 01:15 (시험 23/23 · 132/132 · 변이 24/24 · 65/65 · PASS 아닌 줄 없음 · 해시 그대로 · 변이 사본 없음) · 코드 묶음 `night-tools-20261013/ce12/CODE_BUNDLE_r2.txt` (slot · isolate · guard 포함) · 01:16 dry-run → 기록 띄움 | 수집 · 대조 · 승인 판정 (채택은 17i 뒤) |
-| 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 55 % 남음 (재시작 안 함) | **02:40 보냄** (214056ae · 터미널 term_fe1daede · 「lead 는 Sonnet」 줄 확인함) · 판정 `VERIFY-astra-17i.md` | 파일 생김 → 전문 → r2 채택 여부 · v2 기록 (expect 0) 허용 여부 |
-| 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
+| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 일부 충족 | 00:25 첫 기록: COLLECTED · 대조 ALL PASS · A9 REJECTED (출처). 01:16 r2: 수치 제한 채택 (17i) | 3b |
+| 3b | GPU 1: CTS 재기록 r2 | 17f §4.5 의 짧은 진단 범위 | **끝 01:16:26** · lead 재실행 통과 · 수치 제한 채택 (17i) | 수정 검증기로 r2 재검 (C8) |
+| 3c | ASTRA 17i | | **끝** · 제한 채택 · A9 P1 · v2 보류 | 17k (C 끝난 뒤) |
+| 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | **17i 가 보류**: C1 · C4 고침 · lead 재실행 · ASTRA 17k · 기동 전 확인 뒤 짧은 진단 1 회 | 대기 | |
 | 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
 | 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 끝 01:26 · 고쳐서 기동 (A v5 full 미승인 · B RAND smoke 보류) · 조건은 위 표 | 6b |
-| 6b | 17g 고침 (A: 대기 뒤 재검사 · 환경 지문 · 새 manifest / B: v3 registry · 밀기 heading · 요청 누락) → lead 재실행 → ASTRA 재확인 (17g 6 절 1 ~ 3) | **Codex Worker (gpt-6-sol · 팀장 02:3x 승인 · YOLO)** 에 맡김: 02:38 접수 · A `term_602208c0` · B `term_223a8374` (Orca 창 이름 「Codex Worker · sol 17g-A / B」) · 작업서 `TASK-codex-worker-17g-fix.md` · 보고서 job tmp `codexA/REPORT.md` · `codexB/REPORT.md` | 진행 중 | 보고서 전문 → 「Codex Worker 점검」 절 순서 |
-| 6c | ASTRA 17j: 고친 v6 · 무작위화 판 4 재확인 (17g 6 절 1 ~ 4) · 17i 다음 | 6b 끝 · lead 재실행 통과 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 (머리에 「lead 는 Sonnet」 줄) | |
+| 6b | 17g 고침: A 미경험 v6 (Codex Worker A) · B 무작위화 판 4 (Codex Worker B) | 작업서 `TASK-codex-worker-17g-fix.md` | A: 사고 후 재개 중 · B: 끝 (lead 재실행 통과) | A 보고 → 17j 와 별도로 17l (v6) |
+| 6c | ASTRA 17j: 무작위화 판 4 재확인 (B1 · B2 · B3 · smoke 허용 여부) | B 끝 · lead 재실행 통과 | **03:59 보냄** | `VERIFY-astra-17j.md` 전문 → smoke 조건 |
 | 7 | GPU 1: 무작위화 smoke → 스틸 · 영상 전 프레임 확인 → 네 판 한 실행 → 미경험 v5 full 75 | 17g 허용 · GPU 1 에 Isaac 하나 · 여유 6,144 MiB 이상 | 대기 | |
 | 7b | S2 판 3 (CPU) | 17f-2 | 01:27 보고 (시험 14/14 · 292 칸 · 변이 69/69 · 첫 실행 T13 기대 상수 1 ulp FAIL · 변이 1 차 68/69 (q28) 를 고쳐 다시 돎 · 학습 루프 연결 · smoke 등록 5.3 의 2 ~ 6 · 난수 상태 · 센서 관문은 안 됨) · lead 재실행 백그라운드 bjwaki7me (job tmp `s2v3/lead/`) | lead 재실행 01:35: 시험 14/14 · 변이 69/69 (BASELINE 14/14 · 원본 해시 시작 == 끝) · 네 파일 해시 그대로 · 저장소 사본 night-tools s2/ (판 3) | ASTRA (17i 뒤) |
 | 7c | 미경험 X01 환경 차이 분석 (CPU) | 독립 · 임시 폴더에서만 | 끝 01:06 (하위 작업 · 산출물 job tmp `x01env/`): 원인은 python · numpy 가 아니라 **BLAS gemv · ddot 의 FMA 여부** (q_metrics.py:224 `xy @ e` · :249 norm). MKL · OpenBLAS Nehalem 은 두 번 반올림, OpenBLAS 기본 (Cooperlake) 은 FMA · 원본 23 실행 바이트는 FMA 쪽. 차이는 progress_m 150 · disp_m 12 값 · 1 ULP · 서식 차 0 · 판정 열은 이 자료에서 같음 (일반 보장은 미확인 · 4.0 m 경계에서 뒤집힐 수 있음). lead 확인 01:10: 같은 isaac311-moects 에 `OPENBLAS_CORETYPE=Nehalem` 만 주니 X01 valid 8 · hold 15 (job tmp uncr_v5_lead_test_nehalem.txt). 「통과 환경」 도 CPU 커널에 기댐 · Linux 이전 때 다시 잼 | 17g 판정에 보탬 · 관문 고침 (환경 지문 · `[post-env]`) 은 ASTRA 검토 뒤 |
@@ -82,6 +99,13 @@
 ## 사용 한도 (super2 01:13 전달)
 
 5 시간 한도 88 % (01:30 무렵 100 % · 해제 04:20) · 주간 81 %. 한도에 걸리면 lead 는 04:20 까지 멈춘다. 그동안: GPU 0 1043 on 은 스크립트가 끝까지 (05:40 무렵) · GPU 1 은 위 감시 스크립트만. 새 하위 작업은 띄우지 않는다 (super2 요청). 돌고 있는 하위 작업: S2 판 3. 깨면 (04:20 뒤 첫 heartbeat) 17g 전문 → 감시 스크립트 로그 → 17i 보내기 (ASTRA 컨텍스트 처리 먼저) → 무작위화 smoke → 아침 7판.
+
+## 작업자 사고 기록 (04:00 확인)
+
+- **무엇이:** Codex Worker A (미경험 v5 고침) 가 02:42:26 에 합성 시험을 돌렸는데, v5 를 복사한 `unseen_driver_cmdr_v6.py` 의 출력 루트가 아직 실제 `_eval/out_uncr_v5` 를 가리켜 가짜 자식 시험이 거기에 썼다. 작업자는 즉시 멈추고 정직하게 보고했다 (A1 ~ A5 모두 미완료).
+- **영향 (lead 가 기준선 대조로 확인):** `out_uncr_v5` 만 2 개 → 5 개 파일. `driver_v5.json` 은 lead 의 00:43 manifest 단계 기록이 가짜 시험 기록으로 덮였다 (단계 기록일 뿐 · `manifest_v5.json` 은 00:43:32 그대로). 새 파일 `HALT_v5.json` · `uncr_par_gap_fwd05.slot.json` · `uncr_par_gap_fwd05.guard.json`. 그 밖의 보호 묶음 (out_uncr · out_uncr_reval · slot · branch · out_ce12 · handover · ce12 · s2 · out_smoke · 나머지 out_branch · 검증된 코드 · isaac311-moects 환경) 은 변화 없음. GPU 1 에 python 프로세스 0 (Isaac 은 뜨지 않음).
+- **처리:** 지우지 않고 둔다 (증거 보존 · 변수 경로 삭제 금지). v5 는 17g 가 승인하지 않았고 새 루트 `out_uncr_v6` 의 v6 로 대체되므로 `HALT_v5.json` 이 v5 full 을 막는 것은 무해. 새 기준선 `codexw/protect_baseline2.txt`. A 는 03:57 에 격리 조건 (기본 루트 · 환경변수 · HALT 이름 변경 · 시험 시작부 단언) 으로 재개. **같은 사고가 한 번 더 나면 A 결과를 채택하지 않는다.**
+- **교훈:** 복사해 만든 새 도구는 첫 실행 전에 출력 루트가 작업 폴더 안인지 단언한다 (C 작업서 0.1 에 반영). YOLO 와 기준선 대조의 조합에서 첫 사고는 기준선 대조로 잡혔다.
 
 ## 모델 · 한도 (팀장 10/14 02:2x)
 

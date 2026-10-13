@@ -1,5 +1,5 @@
 > 분류: A/평가 · ASTRA 의뢰 17j · 무작위화 장면 판 4 재확인 (17g B 의 고침)
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-14 04:0x
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-14 03:59
 > 근거: VERIFY-astra-17g.md 3 · 5 · 6 절 · night-tools-20261013/rand_scenes_v4/ (사본과 SHA256SUMS · 작업자 보고 lead_rerun/REPORT.md) · lead 재실행 job tmp codexw/leadB_*.txt
 > 요지: 17g 가 지적한 무작위화의 결함 둘 (구형 registry 공유 · 밀기 방향과 요청값) 과 GPU 조회 None · 마감 항목을 고친 판 4 가 그 반례를 실제로 막는지, 그리고 smoke 를 띄워도 되는지 판정해 달라
 > 상태: 의뢰 (17i 다음 · 범위는 17g 6 절의 B 항목)
