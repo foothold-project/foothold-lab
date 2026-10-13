@@ -20,7 +20,9 @@
 | 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 | lead 재실행 job tmp `ce12fix/` (시험 둘 · 변이 둘 · 해시 sha_before.txt) | 보고: 실제 기록 대조 ALL PASS (관측 · target · last action 차 0 · CPU action 2.15e-6) · 새 출처 검사 A9 로 이 기록은 REJECTED (guard 해시 미기록 · 기록 뒤 세 파일 수정) · 시험 132/132 · 23/23 · 변이 65/65 · 24/24 (보고값) | lead 재실행 결과 → r2 재기록 |
 | 하위 작업 · S2 판 3 | 00:40 맡김 | 같음 | 진행 중 | 알림 |
 | heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 01:08 첫 도착 확인 (이 문구로 깨어남) | 매 도착 |
-| ASTRA 17g | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
+| ASTRA 17i | 02:40 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17i.md` | 검사 중 | 파일 생김 |
+| Codex Worker A · B | 02:38 접수 · 02:40 둘 다 코드 읽는 중 (A: 92 번 종료 코드 겹침 · OpenBLAS 확인 / B: rand_driver · slot 읽기) · 컨텍스트 63 % · 62 % 남음 | job tmp `codexA/REPORT.md` · `codexB/REPORT.md` | 일하는 중 | 매시 :27 |
+| ASTRA 17g (끝) | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
 
 부팅 기준: **09/17 21:16 KST** (`Win32_OperatingSystem.LastBootUpTime`). 다르면 위 PID · 실행을 그대로 믿지 않고 새 기동을 보류한 채 다시 확인하고 #550 · 채팅에 보고한다. 적법한 재부팅이 확인되면 이 기준값을 고친다.
 
@@ -65,7 +67,7 @@
 | 2c | ASTRA 17h | | 끝 00:49 (7d24517a) · 반영 00:57 | 관측 |
 | 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 충족 | 기록 끝 00:25 · COLLECTED · 대조 ALL PASS · A9 REJECTED (출처) | 3b |
 | 3b | GPU 1: CTS 재기록 tag `cts_e1_m20000_r2` (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03) · 코드 해시 고정 뒤 · dry-run 먼저 | 기동 안전 조건 (17f §3: v3 registry · 같은 변환 잠금 · slot v3 · isolate v3 는 17f 가 본 판 그대로) · lead 재실행 통과 · GPU 1 에 다른 Isaac 없음 · 고친 기록기는 ASTRA 미검토라 결과의 승인 채택은 17i 뒤 | lead 재실행 끝 01:15 (시험 23/23 · 132/132 · 변이 24/24 · 65/65 · PASS 아닌 줄 없음 · 해시 그대로 · 변이 사본 없음) · 코드 묶음 `night-tools-20261013/ce12/CODE_BUNDLE_r2.txt` (slot · isolate · guard 포함) · 01:16 dry-run → 기록 띄움 | 수집 · 대조 · 승인 판정 (채택은 17i 뒤) |
-| 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 | |
+| 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 55 % 남음 (재시작 안 함) | **02:40 보냄** (214056ae · 터미널 term_fe1daede · 「lead 는 Sonnet」 줄 확인함) · 판정 `VERIFY-astra-17i.md` | 파일 생김 → 전문 → r2 채택 여부 · v2 기록 (expect 0) 허용 여부 |
 | 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
 | 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
 | 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 끝 01:26 · 고쳐서 기동 (A v5 full 미승인 · B RAND smoke 보류) · 조건은 위 표 | 6b |
