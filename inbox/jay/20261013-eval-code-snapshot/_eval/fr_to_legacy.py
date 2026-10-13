@@ -204,7 +204,9 @@ def main():
         assert len(back_rows) == len(rows)
         # 17-column trace for the HUD (only the trace columns; render.py takes the parquet rows through trace_obj
         # for the flat mode, as _out/loop/axis2_hud.py does)
-        run = ("E2" if a.tag.startswith("e2_") else "E1") + " m" + os.path.basename(s["checkpoint"]).split("_")[1].split(".")[0]
+        # E2 tags: e2_* · e2fr_* · un_e2_* (VERIFY-astra-14 7.3: startswith("e2_") titled every un_e2 / e2fr trace E1)
+        run = ("E2" if a.tag.split("_", 1)[0].startswith("e2") or a.tag.startswith("un_e2_") else "E1") \
+            + " m" + os.path.basename(s["checkpoint"]).split("_")[1].split(".")[0]
         title = "{} {} {} ep{:03d}".format(run, s["family"], s["cell"], int(s["episode"]))
         tmeta = {"fps": 1.0 / DT, "dt_s": DT, "slowmo": 1, "command_vx_mps": abs(rows[0]["cmd_vx_mps"]), "env_id": env,
                  "episode": int(s["episode"]), "terrain": s["family"], "title": title[:34], "fell_at_s": fell,

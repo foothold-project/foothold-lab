@@ -26,6 +26,12 @@
 # again before stamping, positive-reaction diagnostics recorded as warnings (not invalid). Every run uses
 # --physx_small_buffers (GPU 1 headroom; same for all five models); test 2b checks it is bitwise equal to the default
 # buffers on the flat training terrain. q_eval.py is pinned only for the known-answer tests.
+# v3.1 (04:30): Isaac Kit exited 0 after the AssertionError in test 3 (wrong train_yaml refused, exit 0). A Python
+# traceback in the run log now counts as error 1 in guarded() and as invalid in validate(); test 3 also requires that
+# no cells.json / traj.npz was written.
+# v3.2 (05:00, VERIFY-astra-14 9.2): validate() also needs the run log with the evaluator's own completion line
+# ("[Q-EVAL] done <tag> N <n> ") and finite run-time command errors (a NaN passed v3.1). On restart every reused run is
+# validated again with these rules.
 # Usage: python cmdr_eval_driver.py [--until "2026-10-13 14:00"]
 import argparse
 import csv
@@ -147,6 +153,32 @@ def ready(m):
     return True
 
 
+def py_traceback(name):
+    """True if out/<name>.log holds a Python traceback. Isaac Kit can exit 0 after an uncaught exception (04:21 test 3:
+    AssertionError in the log, exit 0), so the exit code alone does not tell a refused or crashed run from a good one.
+    Checked on the 586 logs in out/ at 04:30: the 5 with a traceback are all failed runs, none of the others has one."""
+    try:
+        with open(os.path.join(OUT, f"{name}.log"), encoding="utf-8", errors="replace") as f:
+            return "Traceback (most recent call last)" in f.read()
+    except FileNotFoundError:
+        return False
+
+
+def log_done(tag, n):
+    """'' if out/<tag>.log exists and holds the evaluator's own completion line for this tag and N, else the reason.
+    v3.1 passed a missing or empty log (VERIFY-astra-14 9.2): py_traceback() is False when there is no log."""
+    p = os.path.join(OUT, f"{tag}.log")
+    if not os.path.exists(p):
+        return "log missing"
+    with open(p, encoding="utf-8", errors="replace") as f:
+        s = f.read()
+    if not s.strip():
+        return "log empty"
+    if f"[Q-EVAL] done {tag} N {n} " not in s:
+        return "log has no completion line for this tag and N"
+    return ""
+
+
 def guarded(name, cmd, tries=4, wait_s=300):
     rc = None
     for k in range(1, tries + 1):
@@ -164,6 +196,9 @@ def guarded(name, cmd, tries=4, wait_s=300):
         rc = subprocess.run([PY, "gpu_guard.py", "--gpu", "1", "--min_free_mib", "4096", "--log", f"out/{name}.log",
                              "--summary", f"out/{name}.guard.json", "--"] + cmd, cwd=HERE, env=ENV).returncode
         say(f"RUN {name} try {k} EXIT {rc} {time.time() - t0:.0f}s")
+        if rc == 0 and py_traceback(name):
+            say(f"  {name}: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)")
+            rc = 1
         if rc == 0:
             return 0, k
         if rc == 99:
@@ -202,6 +237,11 @@ def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_
         g = json.load(open(os.path.join(OUT, f"{tag}.guard.json"), encoding="utf-8"))
         if g.get("exit_code") != 0 or g.get("stopped_by_guard"):
             return f"guard exit {g.get('exit_code')} stopped {g.get('stopped_by_guard')}"
+        if py_traceback(tag):
+            return "Python Traceback in log"
+        why = log_done(tag, len(cells) * episodes)
+        if why:
+            return why
         m = json.load(open(os.path.join(d, "meta.json"), encoding="utf-8"))
         c = json.load(open(os.path.join(d, "cells.json"), encoding="utf-8"))
         rows = list(csv.DictReader(open(os.path.join(d, "episodes.csv"), encoding="utf-8")))
@@ -228,7 +268,9 @@ def validate(tag, ckpt_sha, it, fam, cells, episodes, noise, seed, branch, need_
         for k in PRE_TRUE:
             if pre[k] is not True:
                 return f"checks_pre {k}"
-        if run["obs_single_cmd_vs_target_max_abs"] > 1e-6 or run["obs_history_latest_cmd_vs_target_max_abs"] > 1e-6 \
+        # finite first: NaN > 1e-6 is False, so v3.1 passed a NaN command error (VERIFY-astra-14 9.2)
+        cmd_err = [run["obs_single_cmd_vs_target_max_abs"], run["obs_history_latest_cmd_vs_target_max_abs"]]
+        if not all(isinstance(v, (int, float)) and math.isfinite(v) and v <= 1e-6 for v in cmd_err) \
                 or run["nonfinite_action_or_obs_count"] != 0:
             return f"checks_run {run}"
         if branch:
@@ -343,8 +385,9 @@ def tests(P):
         t = f"cq_test_{pin8}_wrong_yaml_{name}"
         rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000, train_yaml=bad), tries=1)
         log = open(os.path.join(OUT, f"{t}.log"), encoding="utf-8", errors="replace").read()
-        refused = rc != 0 and "train_yaml is not the parent run's" in log
-        LOG["tests"][f"wrong_yaml_{name}"] = {"exit": rc, "refused": refused}
+        wrote = os.path.exists(os.path.join(OUT, t, "cells.json")) or os.path.exists(os.path.join(OUT, t, "traj.npz"))
+        refused = rc != 0 and "AssertionError: train_yaml is not the parent run's" in log and not wrote
+        LOG["tests"][f"wrong_yaml_{name}"] = {"exit": rc, "refused": refused, "wrote_result": wrote}
         save()
         if not refused:
             return False

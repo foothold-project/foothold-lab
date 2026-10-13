@@ -26,6 +26,7 @@ ap.add_argument("--files", default="all", help="comma separated CSV names inside
 ap.add_argument("--frames_png", default="0,0.25,0.5,0.75,1.0", help="fractions of the episode saved as PNG for checking")
 ap.add_argument("--warmup_frames", type=int, default=20)
 ap.add_argument("--test_inject", default="", help="gate test only: sky_once:J | black_once:J | sky_always:J (frame J)")
+ap.add_argument("--camera_clamp", action="store_true", help="keep the camera eye >= 0.6 m above the terrain under it (default off)")
 ap.add_argument("--max_rerender", type=int, default=12, help="re-render a frame that fails the frame check at most this many times, then stop")
 ap.add_argument("--overlay", default="full", choices=["full", "label"], help="full: text box top left; label: strip at the bottom (for the HUD)")
 ap.add_argument("--out_root", default="video", help="output folder under out/")
@@ -74,6 +75,11 @@ if meta["args"].get("terrain_set", "train") == "unseen10":
     import generalization_env_cfg as _gen  # noqa: E402
     tg = copy.deepcopy(_gen.GO2_UNSEEN_TERRAINS_CFG)
     tg.sub_terrains = {k: copy.deepcopy(_gen.GO2_UNSEEN_TERRAINS_CFG.sub_terrains[k]) for k in FAMS}
+    # same as q_eval: robot_lab's command term needs a range entry per terrain name (read only by its _resample)
+    _rng = cfg.commands.base_velocity.terrain_max_command_ranges
+    for _k in FAMS:
+        if _k not in _rng:
+            _rng[_k] = dict(_rng["obstacles"])
 else:
     tg = copy.deepcopy(TERRAIN_CFG)
     tg.sub_terrains = {k: copy.deepcopy(TERRAIN_CFG.sub_terrains[k]) for k in FAMS}
@@ -227,7 +233,7 @@ for fn in files:
     out_mp4 = os.path.join(VD, f"{key}_kinreplay.mp4")
     w = imageio.get_writer(out_mp4, fps=50, codec="libx264", quality=8, macro_block_size=8)
     qtext = q_line(fn) if args.overlay == "label" else ""
-    fk_err, gap, rerenders, proj_uv = 0.0, [], [], []
+    fk_err, gap, rerenders, proj_uv, clamped = 0.0, [], [], [], []
     png_rows = sorted({min(n - 1, int(round(f * (n - 1)))) for f in fracs})
     for j in range(n):
         r = D[j]
@@ -248,8 +254,15 @@ for fn in files:
                 if len(loc):
                     gap.append(float(rec[i, 2] - loc[0, 2]))
         p = pose[0, :3].cpu().numpy()
-        u.sim.set_camera_view(eye=(p[0] - 1.3, p[1] - 1.7, p[2] + 0.75), target=(p[0] + 0.15, p[1], p[2] - 0.1))
         eye, tgt = (p[0] - 1.3, p[1] - 1.7, p[2] + 0.75), (p[0] + 0.15, p[1], p[2] - 0.1)
+        if args.camera_clamp:
+            # keep the eye at least 0.6 m above the terrain under it (a robot falling into a hole or gap pulls the
+            # following camera below the surface, and the frame shows only sky); unchanged while the eye is higher
+            loc, _, _ = mesh_tm.ray.intersects_location([[eye[0], eye[1], eye[2] + 20.0]], [[0, 0, -1.0]], multiple_hits=False)
+            if len(loc) and eye[2] < loc[0, 2] + 0.6:
+                eye = (eye[0], eye[1], float(loc[0, 2]) + 0.6)
+                clamped.append(j)
+        u.sim.set_camera_view(eye=eye, target=tgt)
         inj = args.test_inject.split(":") if args.test_inject else ["", "-1"]
         inject_here = int(inj[1]) == j
         if inject_here and inj[0] in ("sky_once", "sky_always"):
@@ -316,7 +329,8 @@ for fn in files:
                            "reasons": sorted({x[1] for x in rerenders}), "max_rerender": args.max_rerender,
                            "projected_base_px_min": [round(min(x[0] for x in proj_uv), 1), round(min(x[1] for x in proj_uv), 1)],
                            "projected_base_px_max": [round(max(x[0] for x in proj_uv), 1), round(max(x[1] for x in proj_uv), 1)],
-                           "camera_hfov_deg": None if HFOV is None else round(float(np.degrees(HFOV)), 2)}, "robot_joint_names": jnames_robot, "bytes": os.path.getsize(out_mp4), "wall_s": round(time.time() - t0, 1)}
+                           "camera_hfov_deg": None if HFOV is None else round(float(np.degrees(HFOV)), 2),
+                           "camera_clamp": bool(args.camera_clamp), "camera_clamped_frames": len(clamped)}, "robot_joint_names": jnames_robot, "bytes": os.path.getsize(out_mp4), "wall_s": round(time.time() - t0, 1)}
     report.append(rep)
     json.dump(rep, open(os.path.join(VD, f"{key}_kinreplay.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("[VIDEO]", json.dumps(rep, ensure_ascii=False), flush=True)
