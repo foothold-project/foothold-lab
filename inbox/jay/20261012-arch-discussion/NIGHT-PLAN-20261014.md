@@ -14,11 +14,11 @@
 
 | 실행 | 식별 | 로그 · 진행 확인 방법 | 마지막 관측 | 예상 끝 · 다음 확인 |
 |---|---|---|---|---|
-| GPU 0 · CMD-R 1043 on 갈래 | attempt `g0-cmdr_s1043_on_u4000-1014001820-895773` · PID 154852 (시작 00:18:20) · 셸 btwz5bu9g | `_eval/out_branch/cmdr_s1043_on_u4000.log` 의 마지막 `Learning iteration N/24001` · `Traceback` 수 · 로그 크기 · 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` | 00:54 iteration 20449/24001 · 4.78 s/it · Traceback 0 · 로그 12.1 MB (시작 때 USD Head_lo/up 경고는 이미 알던 것) | 05:40 무렵 · 다음 heartbeat 에서 iteration 이 늘었는지 |
+| GPU 0 · CMD-R 1043 on 갈래 | attempt `g0-cmdr_s1043_on_u4000-1014001820-895773` · PID 154852 (시작 00:18:20) · 셸 btwz5bu9g | `_eval/out_branch/cmdr_s1043_on_u4000.log` 의 마지막 `Learning iteration N/24001` · `Traceback` 수 · 로그 크기 · 콘솔 `_eval/out_smoke/night_1043_v3.console.txt` | 01:08 iteration 20618/24001 (00:54 뒤 +169 · 약 5.1 s/it) · PID 살아 있음 · Traceback 0 · 로그 12.45 MB (시작 때 USD Head_lo/up 경고는 이미 알던 것) | 05:40 무렵 · 다음 heartbeat 에서 iteration 이 늘었는지 |
 | GPU 1 | 없음 (00:25 부터 빔) | | | 17g 판정 뒤 |
-| 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 | 완료 알림 · 보고 전문 · lead 재실행 | 진행 중 (00:50 compare_native · validate_dump 수정 흔적) | 알림 |
+| 하위 작업 · CE12 대조기 고침 + 17f 4.2 ~ 4.4 | 00:29 맡김 · 01:02 보고 | lead 재실행 job tmp `ce12fix/` (시험 둘 · 변이 둘 · 해시 sha_before.txt) | 보고: 실제 기록 대조 ALL PASS (관측 · target · last action 차 0 · CPU action 2.15e-6) · 새 출처 검사 A9 로 이 기록은 REJECTED (guard 해시 미기록 · 기록 뒤 세 파일 수정) · 시험 132/132 · 23/23 · 변이 65/65 · 24/24 (보고값) | lead 재실행 결과 → r2 재기록 |
 | 하위 작업 · S2 판 3 | 00:40 맡김 | 같음 | 진행 중 | 알림 |
-| heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 등록만 확인 · 실제 도착 미확인 | 01:07 첫 도착 확인 |
+| heartbeat 예약 | `2b1bfe25` (7 · 27 · 47 분 · 세션 안에서만 · 7 일 만료) · 00:57 등록 · 옛 `b698612f` 지움 · CronList 에 하나만 있음 확인 | 이 문구로 깨어난 기록 | 01:08 첫 도착 확인 (이 문구로 깨어남) | 매 도착 |
 | ASTRA 17g | 00:54 보냄 · 터미널 term_fe1daede | `VERIFY-astra-17g.md` · (승인 시) `night-tools-20261013/uncr_v5/approval-astra-17g.json` | 검사 중 · 00:59 터미널 제목에 「Context 11% left」 (17g 도중 자동 압축 또는 중단 위험 · super2 상태판에 「팀장: ASTRA 재시작 승인」 대기가 있음 · 17g 끝나기 전 재시작은 17g 를 잃음) | 파일 생김 · 다음 의뢰 전에 ASTRA 컨텍스트 처리 (새 세션 또는 압축) 를 팀장 · super2 와 맞춤 |
 
 부팅 기준: **09/17 21:16 KST** (`Win32_OperatingSystem.LastBootUpTime`). 다르면 위 PID · 실행을 그대로 믿지 않고 새 기동을 보류한 채 다시 확인하고 #550 · 채팅에 보고한다. 적법한 재부팅이 확인되면 이 기준값을 고친다.
@@ -31,10 +31,10 @@
 |---|---|---|
 | §1 | 야간 셸 시험 호출은 Git Bash 실제 경로와 PATH 를 고정 (기본 PATH 는 `system32/bash.exe` 를 집어 rc 127) | 미반영. 운영 1043 은 Git Bash 안에서 돌고 있어 해당 없음 (추정). 시험 `test_night_1043_v3b.py` 를 다시 돌릴 때 PATH 고정 |
 | §3 | CE12 는 v3 전용 registry · v2 registry 무수정 · 같은 변환 잠금 · attempt 마다 USD 루트 · dry-run 확인 | 충족: `run_dump.py:63` v3 registry (시험 117/117 기대값 고침) · 실행 USD `out_ce12/native/_attempts/<attempt>/usd/` |
-| §4.2 | 승인 재확인이 which · checkpoint · tag · attempt 를 대조 (다른 모델이면 실패) | 하위 작업이 고치는 중 · APPROVED 채택 전 필수 |
-| §4.3 | 실행 당시 코드 해시를 승인 묶음과 연결 | 하위 작업이 고치는 중. 이번 기록은 실행 중 코드 변경 없음 확인 (시작 해시 job tmp `ce12_cts_launch_sha.txt` · 바뀐 다섯 파일은 모두 00:29 뒤 수정, 실행 끝 00:25:25) |
-| §4.4 | `switch_step <= T-1` · 전환 뒤 action 비교 횟수 · miss 미측정과 0 구분 | 하위 작업이 고치는 중 |
-| §4.5 | 1 고정 · 2 짧은 기록 · 3 COLLECTED 와 출처 확인 · 4 `compare_native --recompute_action` (1e-6 · 1e-4 사후 완화 금지) · 5 CTS 승인 뒤 v2 expect 0 | 1 · 2 끝 · 3 COLLECTED 22 PASS · 4 대조기가 실제 npz 의 문자열 dims 에서 멈춤 (고치는 중) · 5 대기 |
+| §4.2 | 승인 재확인이 which · checkpoint · tag · attempt 를 대조 (다른 모델이면 실패) | 하위 작업 고침 (01:02 · stamp 에 대상 · VA-ck-target) · lead 재실행 중 · ASTRA 17i 검증 전에는 채택 안 함 |
+| §4.3 | 실행 당시 코드 해시를 승인 묶음과 연결 | 하위 작업 고침 (provenance 시작 · 끝 · 실행 중 변경 87 · 승인 A9). 00:25 기록은 실행 중 변경은 없었으나 guard 해시 미기록 · 기록 뒤 수정으로 A9 REJECTED → 새 tag r2 재기록 필요 · ASTRA 17i 전에는 채택 안 함 |
+| §4.4 | `switch_step <= T-1` · 전환 뒤 action 비교 횟수 · miss 미측정과 0 구분 | 하위 작업 고침 (1..T-1 · reset 뒤 60 · 전환 뒤 20 action step 셈 · miss None 은 미측정) · ASTRA 17i 전에는 채택 안 함 |
+| §4.5 | 1 고정 · 2 짧은 기록 · 3 COLLECTED 와 출처 확인 · 4 `compare_native --recompute_action` (1e-6 · 1e-4 사후 완화 금지) · 5 CTS 승인 뒤 v2 expect 0 | 1 · 2 끝 · 3 COLLECTED 22 PASS · 4 고친 대조기로 ALL PASS (보고서 `out_ce12/native/cts_e1_m20000/compare_report_20261014-005010.json`) · 5 대기 (CTS 승인 뒤) |
 | §5 | S2 학습 기동 보류 (센서 · rollout 저장소 · 학습기 연결 · 사전 등록 전) | 보류 유지 |
 
 **17f-2 (00:33 · 다른 안)**: 첫 S2 A/B 는 encoder 전 구간 실제 고정 (팀장 확정 대기) · r=0 은 실제 고정이 아님 (판 3 이 고침) · smoke 기준 (cosine 0.9 · 평지 −10%p) 자동 전환 금지 · 사전 등록 5.3 의 1 ~ 6 미충족 · S2 자체 갱신 번호 · adaptive LR 이 group LR 덮어쓰기 검사. S2 학습 기동 없음.
@@ -51,13 +51,15 @@
 | 2 | ASTRA 17f | | 끝 00:17 (b77106d2) | 조건은 위 표 |
 | 2b | ASTRA 17f-2 → 팀장 채팅 · #550 | | 끝 00:33 · 채팅 · #550 6149317273 (df9e89f9) | 팀장 확정 대기 |
 | 2c | ASTRA 17h | | 끝 00:49 (7d24517a) · 반영 00:57 | 관측 |
-| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 충족 | 기록 끝 00:25 · slot 0 · guard 0 · COLLECTED · 대조 멈춤 | 하위 작업 보고 → lead 재실행 → 대조 → 승인 |
+| 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 | 17f §3 충족 | 기록 끝 00:25 · COLLECTED · 대조 ALL PASS · A9 REJECTED (출처) | 3b |
+| 3b | GPU 1: CTS 재기록 tag `cts_e1_m20000_r2` (README 「lead 가 돌릴 명령」 · reset 1,6@30 · 전환 0@40 fwd03) · 코드 해시 고정 뒤 · dry-run 먼저 | 기동 안전 조건 (17f §3: v3 registry · 같은 변환 잠금 · slot v3 · isolate v3 는 17f 가 본 판 그대로) · lead 재실행 통과 · GPU 1 에 다른 Isaac 없음 · 고친 기록기는 ASTRA 미검토라 결과의 승인 채택은 17i 뒤 | 대기 (lead 재실행 중) | |
+| 3c | ASTRA 17i: CE12 고침 (4.2 ~ 4.4 · A9 · dims) 검증 | 17g 끝 · ASTRA 컨텍스트 처리 | 의뢰문 쓸 것 | |
 | 4 | GPU 1: 같은 시험지 v2 기록 (expect 0) | 3 승인 · GPU 1 이 비어 있을 때 | 대기 | |
-| 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (환경 의존 재생성 차이 · python 과 numpy 둘 다 다름 · 원인 미확정) · 무작위화 27/27 | |
+| 5 | 미경험 v5 · 무작위화 lead 재실행 | | 끝 00:43 · v5 isaac311-moects 51/51 · 변이 38/38 · 옛 루트 재검사 23 valid · 묶음 e5597517 · manifest 75 · base python 3.13 은 X01 hold (원인은 BLAS FMA 여부 · 7c) · 무작위화 27/27 | |
 | 6 | ASTRA 17g | 5 끝 · ASTRA 한 번에 하나 | 00:54 보냄 | 판정 전문 읽고 조건 표에 적기 |
 | 7 | GPU 1: 무작위화 smoke → 스틸 · 영상 전 프레임 확인 → 네 판 한 실행 → 미경험 v5 full 75 | 17g 허용 · GPU 1 에 Isaac 하나 · 여유 6,144 MiB 이상 | 대기 | |
 | 7b | S2 판 3 (CPU) | 17f-2 | 00:40 맡김 | 보고 전문 → lead 재실행 → ASTRA |
-| 7c | 미경험 X01 환경 차이 분석 (CPU): base 와 isaac311-moects 의 재생성 `episodes.csv` 가 줄바꿈 · float 문자열만 다른지, 값 · 판정이 다른지 | 독립 · 임시 폴더에서만 | 할 일 | 17g 판정과 겹치면 17g 를 따른다 |
+| 7c | 미경험 X01 환경 차이 분석 (CPU) | 독립 · 임시 폴더에서만 | 끝 01:06 (하위 작업 · 산출물 job tmp `x01env/`): 원인은 python · numpy 가 아니라 **BLAS gemv · ddot 의 FMA 여부** (q_metrics.py:224 `xy @ e` · :249 norm). MKL · OpenBLAS Nehalem 은 두 번 반올림, OpenBLAS 기본 (Cooperlake) 은 FMA · 원본 23 실행 바이트는 FMA 쪽. 차이는 progress_m 150 · disp_m 12 값 · 1 ULP · 서식 차 0 · 판정 열은 이 자료에서 같음 (일반 보장은 미확인 · 4.0 m 경계에서 뒤집힐 수 있음). lead 확인 01:10: 같은 isaac311-moects 에 `OPENBLAS_CORETYPE=Nehalem` 만 주니 X01 valid 8 · hold 15 (job tmp uncr_v5_lead_test_nehalem.txt). 「통과 환경」 도 CPU 커널에 기댐 · Linux 이전 때 다시 잼 | 17g 판정에 보탬 · 관문 고침 (환경 지문 · `[post-env]`) 은 ASTRA 검토 뒤 |
 | 8 | 아침 7판 (조각 job tmp `e12page/`) → 렌더 1920 · 1366 · 390 · 라이트 · 다크 → 게시 → #550 · #546 · 채팅 | 아침 · 밤 결과 | 대기 | |
 | 9 | super2 에 「GPU 1 out_* 실행 끝」 | 7 끝 | 대기 (Windows 업데이트 알림은 00:45 보냄) | |
 
