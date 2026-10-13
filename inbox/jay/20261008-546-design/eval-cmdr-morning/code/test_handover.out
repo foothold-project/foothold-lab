@@ -11,7 +11,12 @@ PASS H6 an Isaac process appears after the first scan: exit 1 at the end scan go
 PASS H7 the old driver and its child are alive: exit 1, both named got (1, True, True) want (1, True, True)
 PASS H9 (16j 9.5 / 16k 6) both scans kept, every process listed, no argv value anywhere (also not in alive), end names the late Isaac got (1, 2, [7000, 7001], False, [('isaac-like python', 9001)], True) want (1, 2, [7000, 7001], False, [('isaac-like python', 9001)], True)
 PASS H10 (16k 6) known answers: no-extension driver name caught, ['python'] and --headless=false not, lineage through a non-python parent kept; the saved record judges the same got ([('old driver', 111), ('descendant of an old driver', 6000), ('descendant of an old driver', 6001), ('isaac-like python', 6100), ('python with unreadable or em want ([('old driver', 111), ('descendant of an old driver', 6000), ('descendant of an old driver', 6001),
-PASS H11 (16k 7.2) the hold list is copied into the bundle with its hash got (0, True, True) want (0, True, True)
+PASS H11 (16k 7.2 / 16l 5.3) the hold list and the held original's stamp are copied into the bundle with their hashes got (0, True, True, ['held_stamps/tX.json']) want (0, True, True, ['held_stamps/tX.json'])
 PASS H11b the hold list changes during the freeze: exit 1, named got (1, True) want (1, True)
+PASS H12 (16l 5.2) a hold list that appears during the freeze: exit 1, named got (1, True) want (1, True)
+PASS H13 (16l 5.3) a release's evidence is copied into the bundle, byte for byte got (0, ['evidence/tX.json', 'held_stamps/tX.json'], True) want (0, ['evidence/tX.json', 'held_stamps/tX.json'], True)
+PASS H13b evidence that is not the recorded bytes: exit 1 got (1, True) want (1, True)
+PASS H13c evidence that changes during the freeze: exit 1 got (1, True) want (1, True)
+PASS H13d a stamp copy that is there but not the held bytes: exit 1, named as not found by its hash got (1, True) want (1, True)
 PASS H8 pins differ from the logs: exit 1 got (1, True) want (1, True)
 FAILS []

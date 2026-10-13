@@ -5,7 +5,7 @@ row that came back pass. So this compares EXACTLY:
     computed on that input with exactly those runs removed (third argument); without it the result is "not comparable"
     (exit 2), never a pass. Its valid-run count must be the plain v7 count minus the held runs.
   - every key except the bookkeeping ones (schema, as_of, inputs, inputs_manifest, origin_counts, held, hold_released,
-    hold_candidates, legacy_tags, legacy_stamps, release_auth_fail) must be equal to the reference, value for value;
+    hold_candidates, legacy_tags, legacy_stamps, release_auth_fail, release_deps_sha256, hold_list) must be equal to the reference, value for value;
     driver_logs are compared without the "attempt" field the newer aggregate adds.
   - no held run may appear in the newer output's inputs_manifest; every released run must.
 Exit 0 pass · 1 a difference (listed) · 2 not comparable (held runs and no filtered reference).
@@ -17,7 +17,7 @@ a = json.load(open(sys.argv[1], encoding="utf-8"))
 b = json.load(open(sys.argv[2], encoding="utf-8"))
 ref = json.load(open(sys.argv[3], encoding="utf-8")) if len(sys.argv) > 3 else None
 BOOK = {"schema", "as_of", "inputs", "inputs_manifest", "origin_counts", "held", "hold_released", "hold_candidates",
-        "legacy_tags", "legacy_stamps", "release_auth_fail"}
+        "legacy_tags", "legacy_stamps", "release_auth_fail", "release_deps_sha256", "hold_list"}
 held = [h["tag"] for h in b.get("held", [])]
 out = {"held": held, "released": [r["tag"] for r in b.get("hold_released", [])], "differences": []}
 if held and ref is None:

@@ -170,15 +170,49 @@ try:
            sc[0]["rejudge_equal"] if sc else None),
           (want, want, True))
 
-    ev, out = tree("h11")
-    json.dump({"tX": {"stamp_sha256": "s", "why": "w"}}, open(os.path.join(out, "cmdr_post_hold.json"), "w"))
+    def hold_tree(name, released=False):
+        ev_, out_ = tree(name)
+        os.makedirs(os.path.join(out_, "H0", "stamps"))
+        open(os.path.join(out_, "H0", "stamps", "tX.json"), "w").write('{"attempt": "OLD-j1"}')
+        e = {"stamp_sha256": sha(os.path.join(out_, "H0", "stamps", "tX.json")), "why": "w", "handover": "H0"}
+        if released:
+            evp = os.path.join(out_, "evidence_tX.json")
+            open(evp, "w").write('{"comparison_ready": true}')
+            e["released"] = {"by": "lead", "evidence": evp, "evidence_sha256": sha(evp)}
+        json.dump({"tX": e}, open(os.path.join(out_, "cmdr_post_hold.json"), "w"))
+        return ev_, out_
+
+    ev, out = hold_tree("h11")
     rc, res, man = run(ev)
     hp = os.path.join(res.get("dir", ""), "cmdr_post_hold.json")
-    check("H11 (16k 7.2) the hold list is copied into the bundle with its hash", (rc, os.path.exists(hp), man.get("copies_sha256", {}).get("cmdr_post_hold.json") == (sha(hp) if os.path.exists(hp) else None)), (0, True, True))
-    ev, out = tree("h11b")
-    json.dump({"tX": {"stamp_sha256": "s", "why": "w"}}, open(os.path.join(out, "cmdr_post_hold.json"), "w"))
+    check("H11 (16k 7.2 / 16l 5.3) the hold list and the held original's stamp are copied into the bundle with their hashes",
+          (rc, os.path.exists(hp), man.get("copies_sha256", {}).get("cmdr_post_hold.json") == (sha(hp) if os.path.exists(hp) else None),
+           sorted(man.get("release_deps", {}))), (0, True, True, ["held_stamps/tX.json"]))
+    ev, out = hold_tree("h11b")
     rc, res, man = run(ev, touch=os.path.join(out, "cmdr_post_hold.json"))
     check("H11b the hold list changes during the freeze: exit 1, named", (rc, "cmdr_post_hold.json" in json.dumps(man.get("problems"))), (1, True))
+    ev, out = tree("h12")
+    rc, res, man = run(ev, touch=os.path.join(out, "cmdr_post_hold.json"))
+    check("H12 (16l 5.2) a hold list that appears during the freeze: exit 1, named", (rc, "appeared" in json.dumps(man.get("problems"))), (1, True))
+    ev, out = hold_tree("h13", released=True)
+    rc, res, man = run(ev)
+    evc = os.path.join(res.get("dir", ""), "evidence", "tX.json")
+    check("H13 (16l 5.3) a release's evidence is copied into the bundle, byte for byte",
+          (rc, sorted(man.get("release_deps", {})), os.path.exists(evc) and sha(evc) == sha(os.path.join(out, "evidence_tX.json"))),
+          (0, ["evidence/tX.json", "held_stamps/tX.json"], True))
+    ev, out = hold_tree("h13b", released=True)
+    open(os.path.join(out, "evidence_tX.json"), "a").write(" ")
+    rc, res, man = run(ev)
+    check("H13b evidence that is not the recorded bytes: exit 1", (rc, "release evidence" in json.dumps(man.get("problems"))), (1, True))
+    ev, out = hold_tree("h13c", released=True)
+    rc, res, man = run(ev, touch=os.path.join(out, "evidence_tX.json"))
+    check("H13c evidence that changes during the freeze: exit 1", (rc, "release dependency" in json.dumps(man.get("problems"))), (1, True))
+    ev, out = tree("h13d")
+    os.makedirs(os.path.join(out, "H0", "stamps"))
+    open(os.path.join(out, "H0", "stamps", "tX.json"), "w").write('{"attempt": "OTHER"}')  # present, but not the held bytes
+    json.dump({"tX": {"stamp_sha256": "0" * 64, "why": "w", "handover": "H0"}}, open(os.path.join(out, "cmdr_post_hold.json"), "w"))
+    rc, res, man = run(ev)
+    check("H13d a stamp copy that is there but not the held bytes: exit 1, named as not found by its hash", (rc, "held original stamp not found by its hash" in json.dumps(man.get("problems"))), (1, True))
 
     ev, out = tree("h8")
     open(os.path.join(ev, "q_metrics.py"), "a").write("# changed\n")

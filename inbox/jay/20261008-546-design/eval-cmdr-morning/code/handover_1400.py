@@ -158,6 +158,7 @@ TARGET_STOPS = [f"{n}.stop" for n in LOGS]
 def main(old):
     problems = []
     stops0 = {f: sha(os.path.join(OUT, f)) for f in TARGET_STOPS if os.path.exists(os.path.join(OUT, f))}
+    hold0 = sha_or_none(os.path.join(OUT, "cmdr_post_hold.json"))  # 16l 5.2: absent at the start is recorded too
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     s0 = snapshot()
     scans = [scan_record(s0, old, t0)]
@@ -177,6 +178,36 @@ def main(old):
     if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")):  # 16k 7.2: the hold list and its releases are part of the bundle
         shutil.copy2(os.path.join(OUT, "cmdr_post_hold.json"), os.path.join(H, "cmdr_post_hold.json"))
         copies["cmdr_post_hold.json"] = sha(os.path.join(OUT, "cmdr_post_hold.json"))
+    # 16l 5.3: what a release depends on travels with the bundle: the held original's stamp and the release evidence
+    deps = {}
+    hold_copy = os.path.join(H, "cmdr_post_hold.json")
+    try:
+        hold_obj = json.loads(open(hold_copy, "rb").read().decode("utf-8")) if os.path.exists(hold_copy) else {}
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        hold_obj = None
+        problems.append({"hold list unreadable": "cmdr_post_hold.json"})
+    for t, e in (hold_obj or {}).items():
+        if not isinstance(e, dict):
+            problems.append({"hold entry not a record": t})
+            continue
+        src = os.path.join(OUT, e.get("handover") or "_no_handover_", "stamps", t + ".json")
+        if sha_or_none(src) != e.get("stamp_sha256"):
+            problems.append({"held original stamp not found by its hash": t})
+        else:
+            os.makedirs(os.path.join(H, "held_stamps"), exist_ok=True)
+            shutil.copy2(src, os.path.join(H, "held_stamps", t + ".json"))
+            deps[f"held_stamps/{t}.json"] = {"from": src, "sha256": e["stamp_sha256"]}
+        rel = e.get("released")
+        if isinstance(rel, dict) and rel.get("evidence"):
+            if sha_or_none(rel["evidence"]) != rel.get("evidence_sha256"):
+                problems.append({"release evidence missing or not the recorded bytes": t})
+            else:
+                os.makedirs(os.path.join(H, "evidence"), exist_ok=True)
+                shutil.copy2(rel["evidence"], os.path.join(H, "evidence", t + ".json"))
+                deps[f"evidence/{t}.json"] = {"from": rel["evidence"], "sha256": rel["evidence_sha256"]}
+    for rel_p, d in deps.items():
+        if sha_or_none(os.path.join(H, rel_p)) != d["sha256"]:
+            problems.append({"dependency copy differs": rel_p})
     logs = {name: json.load(open(os.path.join(H, name + ".json"), encoding="utf-8")) for name in LOGS}
     valid = {t for d in logs.values() for t, v in d.get("matrix", {}).items() if v == "valid"}
     man = {"started": time.strftime("%Y-%m-%d %H:%M:%S"), "old_pids": old, "script_sha256": sha(os.path.abspath(__file__)),
@@ -218,6 +249,9 @@ def main(old):
             fh.write(b" ")
     # 16h 4.1: the originals and the process list once more, after everything was hashed
     changed = [f for f, h in copies.items() if sha_or_none(os.path.join(OUT, f)) != h]
+    if sha_or_none(os.path.join(OUT, "cmdr_post_hold.json")) != hold0 and "cmdr_post_hold.json" not in changed:
+        changed.append("cmdr_post_hold.json (appeared, changed or disappeared)")
+    changed += [f"release dependency {d['from']}" for d in deps.values() if sha_or_none(d["from"]) != d["sha256"]]
     for t, e in man["runs"].items():
         for f in RUN_FILES:
             if e[f] is not None and sha_or_none(os.path.join(OUT, t, f)) != e[f]:
@@ -243,6 +277,7 @@ def main(old):
     json.dump(scans, open(os.path.join(H, "scans.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     man["scans_sha256"] = sha(os.path.join(H, "scans.json"))
     man["copies_sha256"] = copies
+    man["release_deps"] = deps
     man["problems"] = problems
     man["status"] = "complete" if not problems else "failed"
     man["finished"] = time.strftime("%Y-%m-%d %H:%M:%S")

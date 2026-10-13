@@ -1,5 +1,5 @@
 CAUGHT K1 a valid run's missing files are not a problem: exit 1 failed ['H2', 'H3'] want ['H2', 'H3']
-CAUGHT K2 no final re-hash of the originals: exit 1 failed ['H5', 'H5b', 'H11b'] want ['H5', 'H5b']
+CAUGHT K2 no final re-hash of the originals: exit 1 failed ['H5', 'H5b', 'H11b', 'H12', 'H13c'] want ['H5', 'H5b']
 CAUGHT K3 no end process scan: exit 1 failed ['H6', 'H9'] want ['H6']
 CAUGHT K4 env_origins.npy not frozen: exit 1 failed ['H1'] want ['H1']
 CAUGHT K5 stop requests moved even when the freeze failed: exit 1 failed ['H2'] want ['H2']
@@ -9,5 +9,10 @@ CAUGHT K8 (16j 9.5) the end scan is not kept: exit 1 failed ['H6', 'H9'] want ['
 CAUGHT K9 argv values kept in the saved scan: exit 1 failed ['H9'] want ['H9']
 CAUGHT K10 (16k 6) --headless=false taken as --headless: exit 1 failed ['H10'] want ['H10']
 CAUGHT K11 (16k 6) non-python processes dropped from the record: exit 1 failed ['H9', 'H10'] want ['H10']
-CAUGHT K12 (16k 7.2) the hold list is not part of the bundle: exit 1 failed ['H11', 'H11b'] want ['H11', 'H11b']
+CAUGHT K12 (16k 7.2) the hold list is not part of the bundle: exit 1 failed ['H11', 'H13', 'H13b', 'H13c', 'H13d'] want ['H11']
+CAUGHT K13 (16l 5.2) a hold list that appears is not checked: exit 1 failed ['H12'] want ['H12']
+CAUGHT K14 (16l 5.3) evidence not copied into the bundle: exit 1 failed ['H13'] want ['H13']
+CAUGHT K15 (16l 5.3) evidence bytes not checked against the release: exit 1 failed ['H13b'] want ['H13b']
+CAUGHT K16 (16l 5.3) release dependencies not re-checked at the end: exit 1 failed ['H13c'] want ['H13c']
+CAUGHT K17 (16l 5.3) the held original stamp is not found by its hash: exit 1 failed ['H13d'] want ['H13d']
 ALL CAUGHT
