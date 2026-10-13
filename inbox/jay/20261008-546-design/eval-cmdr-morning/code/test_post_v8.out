@@ -1,6 +1,8 @@
 INPUT CHANGED during the aggregate: cq_on24000_wave_fwd03_on_s1000/episodes.csv while it was read; nothing written
 INPUT CHANGED during the aggregate: cmdr_eval_driver; nothing written
 INPUT CHANGED during the aggregate: cq_on24000_wave_fwd03_on_s1000/meta.json; nothing written
+INPUT CHANGED during the aggregate: cmdr_eval_driver.attempt.json; nothing written
+INPUT CHANGED during the aggregate: cmdr_post_hold.json; nothing written
 PASS A0 runs got 0 want 0
 PASS A1 complete, 500 pairs each got (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500}) want (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500})
 PASS A2 +5 +10 +15 -> 개선 got (True, 10.0, '개선') want (True, 10.0, '개선')
@@ -48,13 +50,19 @@ PASS L3b attempt file running, same attempt as the log: read got 0 want 0
 PASS L3c attempt file names another attempt than the log: held got 5 want 5
 PASS L4 origin per run and counted; record and stamp attempts and the stamp hash kept got ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_driver') want ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_dri
 PASS L5 held run: out of the tables, listed with its reason, not an auth failure got (0, ['cq_on24000_wave_fwd03_on_s1000'], False, []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], False, [])
-PASS L5b the stamp is no longer the held one: used again, release recorded got (0, [], ['cq_on24000_wave_fwd03_on_s1000'], True) want (0, [], ['cq_on24000_wave_fwd03_on_s1000'], True)
-PASS F1 real data, one snapshot: v8 = v7 on 22,000 targets, same runs, no auth failures got (True, True, True, []) want (True, True, True, [])
+PASS L5b (16i 3) only re-validation metadata changed: still held, listed as a release candidate, not used got (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False) want (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False)
+PASS L5c an explicit release frees it: used again, the release record kept got (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True) want (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True)
+PASS L6 owner log's last record invalid, a valid one only in the other log: excluded got (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")]) want (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")])
+PASS L7 a v3.3+ owner with an unreadable attempt file: held (exit 5), nothing written got (5, False) want (5, False)
+PASS L7b the attempt file turns to revalidating during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+PASS L7c the hold list changes during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+PASS F1 frozen bundle: v8 = v7 on the 22,000 and 24,000 targets and verdicts, one held run, no auth failures, every used file = hand-over manifest got ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True) want ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True)
+PASS F2 live tree while the base re-validates: held, exit 5, nothing written got (5, False) want (5, False)
 PASS G1 100-pair targets: 보류, values labelled (100 쌍, none labelled (500 쌍 got (True, True, False) want (True, True, False)
 PASS G2 their regression rows carry n and 수집 중 got (True, True) want (True, True)
 PASS G3 an older aggregate is refused, not read as 'no comparison' got (True, False) want (True, False)
 PASS G4 off-arm sentence reads n from the aggregate got (True, False) want (True, False)
-PASS G5 contract detail: one table per arm, one row per measured cell got [77, 66] want [77, 66]
+PASS G5 contract detail: one table per arm, one row per measured cell got [77, 76] want [77, 76]
 PASS G7 summary separates 'has a comparison' from 'samples complete' got (False, True) want (False, True)
 PASS G8 no valid comparison: says so without guessing why got (False, True) want (False, True)
 PASS G9 absolute MAE line in words on the regression row got True want True
@@ -62,6 +70,7 @@ PASS G10 fragment: no old label, training status from a token got (False, True, 
 PASS G11 seed ids in the per-seed list got True want True
 PASS G12 (16g 5.1) no result file: says only what is seen got (True, False) want (True, False)
 PASS G14 (16h 4.3) the status line names the held run and its reason got (True, True) want (True, True)
+PASS G13b (16i 6) a new stamp without an origin field: 'hashes present, first creation time unknown', never 'hashed at collection' got (True, False) want (True, False)
 PASS G13 (16g 4) the status line shows the origins got True want True
 PASS G6 rows with partial MAE are shown, not hidden got True want True
 FAILS []

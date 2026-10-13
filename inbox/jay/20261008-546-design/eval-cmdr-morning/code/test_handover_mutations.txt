@@ -3,4 +3,6 @@ CAUGHT K2 no final re-hash of the originals: exit 1 failed ['H5', 'H5b'] want ['
 CAUGHT K3 no end process scan: exit 1 failed ['H6'] want ['H6']
 CAUGHT K4 env_origins.npy not frozen: exit 1 failed ['H1'] want ['H1']
 CAUGHT K5 stop requests moved even when the freeze failed: exit 1 failed ['H2'] want ['H2']
+CAUGHT K6 every .stop treated as the drivers' own: exit 1 failed ['H1b', 'H1c'] want ['H1b']
+CAUGHT K7 a stop that changed during the freeze is moved too: exit 1 failed ['H1d'] want ['H1d']
 ALL CAUGHT

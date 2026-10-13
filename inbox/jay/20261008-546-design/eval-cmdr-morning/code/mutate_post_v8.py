@@ -13,8 +13,13 @@ M = [
     ("P4 no stat check around a read", '        if s1 != s2:', '        if False:', ["R1"]),
     ("P5 no hold while the owner re-validates", 'if isinstance(af, dict) and (af.get("state") == "revalidating" or af.get("attempt") != d.get("attempt")):', 'if False:', ["L3", "L3c"]),
     ("P6 origin field ignored", 'stp_.get("origin") or (', '(', ["L4", "G13"]),
-    ("P7 hold list ignored", '        if cur == HOLD[tag].get("stamp_sha256"):', '        if False:', ["L5"]),
-    ("P8 hold kept after a new stamp", '        if cur == HOLD[tag].get("stamp_sha256"):', '        if True:', ["L5b"]),
+    ("P7 hold list ignored", '        if not rel:  # 16i 3', '        if False:  # 16i 3', ["L5"]),
+    ("P8 a changed stamp releases the hold", '        if not rel:  # 16i 3', '        if not rel and cur == HOLD[tag].get("stamp_sha256"):  # 16i 3', ["L5b"]),
+    ("P9 records looked up across both logs", 'rec = drv.get("rec", {}).get((owner, tag))',
+     'rec = next((v for (o_, t_), v in reversed(list(drv.get("rec", {}).items())) if t_ == tag), None)', ["L6"]),
+    ("P10 unreadable attempt file of a v3.3+ owner ignored", 'if ver != "3.2" and not isinstance(af, dict):', 'if False:', ["L7"]),
+    ("P11 attempt files not compared at the end", '    if (open(p_, "rb").read() if os.path.exists(p_) else None) != raw0:', '    if False:', ["L7b"]),
+    ("P12 hold list not compared at the end", 'if (open(HOLD_P, "rb").read() if os.path.exists(HOLD_P) else None) != HOLD_RAW:', 'if False:', ["L7c"]),
 ]
 
 

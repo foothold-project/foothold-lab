@@ -90,6 +90,9 @@ class Fake:
                     "pins": dict(PINS), "ckpt": {k: {"sha256": v} for k, v in CKPT.items()}}
             body.update((extra_logs or {}).get(name, {}))
             json.dump(body, open(os.path.join(self.out, f"{name}.json"), "w"))
+            afp_ = os.path.join(self.out, f"{name}.attempt.json")
+            if body.get("version") != "3.2" and not os.path.exists(afp_):  # v3.3+ owners keep an attempt file (16i 5.2)
+                json.dump({"attempt": body.get("attempt"), "state": "running"}, open(afp_, "w"))
         env = dict(os.environ, CMDR_POST_OUT=self.out, CMDR_POST_DEST=self.out, KMP_DUPLICATE_LIB_OK="TRUE", CUDA_VISIBLE_DEVICES="")
         r = subprocess.run([PY, POST], cwd=EV, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
         self.rc, self.err = r.returncode, r.stderr
@@ -395,34 +398,74 @@ try:
     st_["revalidated_at"] = "later"
     json.dump(st_, open(sp_, "w"))
     LD.go()
-    check("L5b the stamp is no longer the held one: used again, release recorded",
-          (LD.rc, LD.res["held"], [r["tag"] for r in LD.res["hold_released"]], "wave/fwd03/on" in LD.res["regression_24000"]), (0, [], [t_on], True))
+    check("L5b (16i 3) only re-validation metadata changed: still held, listed as a release candidate, not used",
+          (LD.rc, [h["tag"] for h in LD.res["held"]], [c["tag"] for c in LD.res["hold_candidates"]], LD.res["hold_released"],
+           "wave/fwd03/on" in LD.res["regression_24000"]), (0, [t_on], [t_on], [], False))
+    hj = json.load(open(os.path.join(LD.out, "cmdr_post_hold.json")))
+    hj[t_on]["released"] = {"by": "lead", "why": "새 측정 attempt 확인", "new_attempt": "NEW-j9"}
+    json.dump(hj, open(os.path.join(LD.out, "cmdr_post_hold.json"), "w"))
+    LD.go()
+    check("L5c an explicit release frees it: used again, the release record kept",
+          (LD.rc, LD.res["held"], [(r["tag"], r["released"]["new_attempt"]) for r in LD.res["hold_released"]], "wave/fwd03/on" in LD.res["regression_24000"]),
+          (0, [], [(t_on, "NEW-j9")], True))
 
-    # F: real out/, read only, one snapshot of both logs: v6 equals v5 on the 22,000 targets
-    r5, r6 = (tempfile.mkdtemp(prefix=f"real{v}_", dir=ROOT) for v in (7, 8))
+    # L6 (16i 5.1) records are looked up in the owner log only
+    LW = Fake("L6")
+    LW.run(t_off, 60)
+    LW.run(t_on, 50)
+    good = [r for r in LW.recs["cmdr_eval_driver"] if r["tag"] == t_on][0]
+    LW.recs["cmdr_eval_driver"].append({"tag": t_on, "valid": False, "attempt": good["attempt"], "out_sha256": good["out_sha256"]})
+    LW.recs["cmdr_eval_driver_g0"].append(dict(good))  # a valid record of the same tag in the OTHER log (not its owner)
+    LW.go()
+    check("L6 owner log's last record invalid, a valid one only in the other log: excluded",
+          (LW.rc, [(a["tag"], a["why"]) for a in LW.res["auth_fail"]]), (0, [(t_on, "its log's run record is not valid")]))
 
-    def snap():
-        return tuple(hashlib.sha256(open(os.path.join(SRC, f), "rb").read()).hexdigest() if os.path.exists(os.path.join(SRC, f)) else ""
-                     for f in ("cmdr_eval_driver.json", "cmdr_eval_driver_g0.json"))
-    same_snapshot = False
-    for _ in range(4):
-        before = snap()
-        rcs = []
-        for dest, script in ((r5, "cmdr_post_v7.py"), (r6, POST)):  # v7 exits 3 when a live log changes mid-aggregate: try again
-            rcs.append(subprocess.run([PY, script], cwd=EV, env=dict(os.environ, CMDR_POST_DEST=dest, KMP_DUPLICATE_LIB_OK="TRUE", CUDA_VISIBLE_DEVICES=""),
-                                      capture_output=True, text=True).returncode)
-        assert all(rc in (0, 3) for rc in rcs), rcs
-        if 3 in rcs:
-            continue
-        if before == snap():
-            same_snapshot = True
-            break
+    # L7 (16i 5.2) attempt files and the hold list are inputs
+    LB = Fake("L7")
+    LB.run(t_off, 60)
+    LB.run(t_on, 50)
+    open(os.path.join(LB.out, "cmdr_eval_driver.attempt.json"), "w").write("{")
+    LB.go()
+    check("L7 a v3.3+ owner with an unreadable attempt file: held (exit 5), nothing written",
+          (LB.rc, os.path.exists(os.path.join(LB.out, "cmdr_post.json"))), (5, False))
+    LS2 = Fake("L7b")
+    LS2.run(t_off, 60)
+    LS2.run(t_on, 50)
+    LS2.go()
+    os.remove(os.path.join(LS2.out, "cmdr_post.json"))
+    afp = os.path.join(LS2.out, "cmdr_eval_driver.attempt.json")
+    code = run_hooked(LS2.out, os.path.join(LS2.out, t_on, "episodes.csv"),
+                      lambda: open(afp, "w").write(json.dumps({"attempt": "NEW", "state": "revalidating"})))
+    check("L7b the attempt file turns to revalidating during the aggregate: exit 3, nothing written",
+          (code, os.path.exists(os.path.join(LS2.out, "cmdr_post.json"))), (3, False))
+    json.dump({"attempt": None, "state": "running"}, open(afp, "w"))
+    hp = os.path.join(LS2.out, "cmdr_post_hold.json")
+    json.dump({}, open(hp, "w"))
+    code = run_hooked(LS2.out, os.path.join(LS2.out, t_on, "episodes.csv"), lambda: json.dump({t_on: {"stamp_sha256": "x", "why": "y"}}, open(hp, "w")))
+    check("L7c the hold list changes during the aggregate: exit 3, nothing written",
+          (code, os.path.exists(os.path.join(LS2.out, "cmdr_post.json"))), (3, False))
+
+    # F1: the frozen hand-over bundle (no writer alive, 14:04:49): v7 and v8 outputs kept in the hand-over folder
+    FROZEN = os.environ.get("FROZEN", os.path.join(SRC, "handover_20261013_140449"))
+    r5, r6 = os.path.join(FROZEN, "v7"), os.path.join(FROZEN, "v8")
     v5 = json.load(open(os.path.join(r5, "cmdr_post.json"), encoding="utf-8"))
     v6 = json.load(open(os.path.join(r6, "cmdr_post.json"), encoding="utf-8"))
-    same = all(v6["targets"][c]["on_minus_off_22000"][k] == v5["targets"][c]["on_minus_off_22000"][k] for c in ("stop03", "fwd01", "fwd02")
-               for k in ("diff", "lo", "hi", "n", "newcombe"))
-    check("F1 real data, one snapshot: v8 = v7 on 22,000 targets, same runs, no auth failures",
-          (same_snapshot, same, v5["n_valid_runs"] == v6["n_valid_runs"], v6["auth_fail"]), (True, True, True, []))
+    man_f = json.load(open(os.path.join(FROZEN, "manifest.json"), encoding="utf-8"))
+    same_t = all(v6["targets"][c][f"on_minus_off_{u}"] == v5["targets"][c][f"on_minus_off_{u}"] for c in ("stop03", "fwd01", "fwd02") for u in ("22000", "24000"))
+    same_used = all(e[f] == man_f["runs"][t][f] for t, e in v6["inputs_manifest"].items() for f in ("meta.json", "cells.json", "episodes.csv", "traj.npz"))
+    check("F1 frozen bundle: v8 = v7 on the 22,000 and 24,000 targets and verdicts, one held run, no auth failures, every used file = hand-over manifest",
+          (man_f["status"], same_t, v6["target_verdict"] == v5["target_verdict"], v5["n_valid_runs"] - v6["n_valid_runs"], [h["tag"] for h in v6["held"]],
+           v6["auth_fail"], same_used),
+          ("complete", True, True, 1, ["cq_on24000_flat_stand_on_s1000"], [], True))
+    # F2: the live tree, read only: while the base owner re-validates, v8 holds (exit 5) and writes nothing
+    live = tempfile.mkdtemp(prefix="live8_", dir=ROOT)
+    att = json.load(open(os.path.join(SRC, "cmdr_eval_driver.attempt.json"), encoding="utf-8")) if os.path.exists(os.path.join(SRC, "cmdr_eval_driver.attempt.json")) else {}
+    rl = subprocess.run([PY, POST], cwd=EV, env=dict(os.environ, CMDR_POST_DEST=live, KMP_DUPLICATE_LIB_OK="TRUE", CUDA_VISIBLE_DEVICES=""),
+                        capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if att.get("state") == "revalidating":
+        check("F2 live tree while the base re-validates: held, exit 5, nothing written", (rl.returncode, os.path.exists(os.path.join(live, "cmdr_post.json"))), (5, False))
+    else:
+        check(f"F2 live tree (base attempt {att.get('state')}): runs or stops for a changing log", rl.returncode in (0, 3, 5), True)
 
     # G: the page layer
     sys.path.insert(0, "C:/Users/AI-WS01/.claude/jobs/09bbf294/tmp/e12page")
@@ -460,6 +503,10 @@ try:
     g14 = FC.build(post_path=os.path.join(LD.out, "cmdr_post_held.json"), summary_path=summ)
     check("G14 (16h 4.3) the status line names the held run and its reason", ("공개 보류 1 개" in g14["cmdr_status"] or "공개 보류 1 개" in " ".join(str(v) for v in g14.values()),
           "USD 임시 폴더 공유 의심" in " ".join(str(v) for v in g14.values())), (True, True))
+    gb = FC.build(post_path=os.path.join(A.out, "cmdr_post.json"), summary_path=summ)
+    allv = " ".join(str(v) for v in gb.values())
+    check("G13b (16i 6) a new stamp without an origin field: 'hashes present, first creation time unknown', never 'hashed at collection'",
+          ("출력 해시 있음 · 최초 생성 시점 미확인" in allv, "수집 때 해시" in allv), (True, False))
     check("G13 (16g 4) the status line shows the origins", ("구형 출처 · 재검사 때 해시 1" in g13["cmdr_status"] or "구형 출처 · 재검사 때 해시 1" in " ".join(str(v) for v in g13.values())), True)
     check("G6 rows with partial MAE are shown, not hidden", ("물결 · 서 있기" in g4["cmdr_reg_rows"] and "내리막 · 서 있기" in g4["cmdr_reg_rows"]), True)
 finally:

@@ -13,7 +13,7 @@ import time
 
 EV = "C:/isaac/ext/go2_rl_robotlab/_eval/out"
 SCHEMA = "cmdr_post v8"
-ORIGIN_KO = {"hashed-at-collection": "수집 때 해시", "hashed (stamp has no origin field)": "수집 때 해시 (출처 칸 없음)",
+ORIGIN_KO = {"hashed-at-collection": "수집 때 해시", "hashed (stamp has no origin field)": "출력 해시 있음 · 최초 생성 시점 미확인", "origin unknown": "출처 미확인",
              "legacy-origin revalidated": "구형 출처 · 재검사 때 해시", "v3.2 legacy stamp": "구형 stamp (출력 해시 없음)"}
 MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
 TARGETS = ["stop03", "fwd01", "fwd02"]

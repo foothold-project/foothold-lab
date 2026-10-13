@@ -8,7 +8,9 @@ Exit 0 and manifest status "complete" only when ALL of these hold:
   - after the manifest is built, the ORIGINAL logs, every hashed run file, the checkpoints and the pins are hashed again
     and are unchanged (16h 4.1: the copies alone do not show the originals stayed put);
   - the log copies and stamp copies re-hash equal; pins and checkpoints agree across the two logs and the files now.
-On success the stop requests are moved to <dir>/stop_requests/ (the new instance would otherwise stop at once, 16h 4.2).
+On success the two drivers' own stop requests (cmdr_eval_driver.stop · cmdr_eval_driver_g0.stop), if their bytes are those seen
+at the start, are moved to <dir>/stop_requests/ (the new instance would otherwise stop at once, 16h 4.2). Any other .stop
+(e.g. hud_follow.stop) and a stop that appeared or changed during the freeze stay where they are and are listed (16i 4).
 Usage: python handover_1400.py <pid of v3.2 base> <pid of v3.6 g0>
 Test settings (env): HANDOVER_EV (eval folder), HANDOVER_ROOT (where the folder is made), HANDOVER_FAKE_PROCS (a JSON file:
 a list of process snapshots, one per scan), HANDOVER_TEST_TOUCH (a file appended to just before the final check)."""
@@ -117,8 +119,12 @@ def alive_in(snap, old):
     return alive
 
 
+TARGET_STOPS = [f"{n}.stop" for n in LOGS]
+
+
 def main(old):
     problems = []
+    stops0 = {f: sha(os.path.join(OUT, f)) for f in TARGET_STOPS if os.path.exists(os.path.join(OUT, f))}
     a0 = alive_in(snapshot(), old)
     if a0:
         problems.append({"alive at start": a0})
@@ -194,18 +200,24 @@ def main(old):
     man["problems"] = problems
     man["status"] = "complete" if not problems else "failed"
     man["finished"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    # 16i 4: only the two drivers' own stop requests, only the bytes seen at the start; any other .stop is listed, kept
+    man["stop_requests_other_kept"] = sorted(f for f in os.listdir(OUT) if f.endswith(".stop") and f not in TARGET_STOPS)
+    man["stop_requests_new_kept"] = sorted(f for f in TARGET_STOPS if os.path.exists(os.path.join(OUT, f)) and f not in stops0)
     if not problems:  # 16h 4.2: the old stop requests are fulfilled; keep them here so the new instances can start
         moved = []
-        for f in sorted(os.listdir(OUT)):
-            if f.endswith(".stop"):
-                os.makedirs(os.path.join(H, "stop_requests"), exist_ok=True)
-                shutil.move(os.path.join(OUT, f), os.path.join(H, "stop_requests", f))
-                moved.append(f)
+        for f, h0 in sorted(stops0.items()):
+            p = os.path.join(OUT, f)
+            if sha_or_none(p) != h0:
+                man.setdefault("stop_requests_changed_kept", []).append(f)
+                continue
+            os.makedirs(os.path.join(H, "stop_requests"), exist_ok=True)
+            shutil.move(p, os.path.join(H, "stop_requests", f))
+            moved.append(f)
         man["stop_requests_moved"] = moved
     json.dump(man, open(os.path.join(H, "manifest.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(json.dumps({"dir": H, "status": man["status"], "runs": len(tags), "valid": len(valid),
                       "not_valid_with_missing": sum(1 for e in man["runs"].values() if e.get("_missing") and not e["_valid_in_log"]),
-                      "ckpt": len(man["ckpt"]), "stop_requests_moved": man.get("stop_requests_moved"),
+                      "ckpt": len(man["ckpt"]), "stop_requests_moved": man.get("stop_requests_moved"), "stop_requests_other_kept": man.get("stop_requests_other_kept"),
                       "manifest_sha256": sha(os.path.join(H, "manifest.json")), "problems": problems}, ensure_ascii=False, indent=1))
     return 0 if not problems else 1
 

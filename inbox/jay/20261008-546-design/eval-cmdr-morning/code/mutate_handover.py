@@ -11,6 +11,8 @@ M = [
     ("K3 no end process scan", "    if a1:\n", "    if False:\n", ["H6"]),
     ("K4 env_origins.npy not frozen", '"traj.npz", "env_origins.npy", "driver_stamp.json"', '"traj.npz", "driver_stamp.json"', ["H1"]),
     ("K5 stop requests moved even when the freeze failed", "    if not problems:  # 16h 4.2", "    if True:  # 16h 4.2", ["H2"]),
+    ("K6 every .stop treated as the drivers' own", 'TARGET_STOPS = [f"{n}.stop" for n in LOGS]', 'TARGET_STOPS = sorted(f for f in os.listdir(OUT) if f.endswith(".stop"))', ["H1b"]),
+    ("K7 a stop that changed during the freeze is moved too", "            if sha_or_none(p) != h0:", "            if False:", ["H1d"]),
 ]
 res = []
 for k, (name, a, b, want) in enumerate(M):

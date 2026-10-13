@@ -1,4 +1,7 @@
 PASS H1 clean tree: exit 0, complete, env_origins hashed, stop request moved, invalid run kept got (0, 'complete', True, ['cmdr_eval_driver_g0.stop'], False, False) want (0, 'complete', True, ['cmdr_eval_driver_g0.stop'], False, False)
+PASS H1b (16i 4) another job's stop file stays and is listed; only the driver's own stop moves got (0, True, ['hud_follow.stop'], ['cmdr_eval_driver_g0.stop']) want (0, True, ['hud_follow.stop'], ['cmdr_eval_driver_g0.stop'])
+PASS H1c a driver stop that appears during the freeze is a new request: kept, not moved got (0, True, ['cmdr_eval_driver_g0.stop'], []) want (0, True, ['cmdr_eval_driver_g0.stop'], [])
+PASS H1d a driver stop whose bytes changed during the freeze: kept, listed as changed got (0, True, ['cmdr_eval_driver_g0.stop'], []) want (0, True, ['cmdr_eval_driver_g0.stop'], [])
 PASS H2 a valid run without episodes.csv: exit 1, failed, the stop request stays got (1, 'failed', True) want (1, 'failed', True)
 PASS H3 a valid run without its .log: exit 1 got (1, 'failed') want (1, 'failed')
 PASS H4 a run that is not valid may miss files: exit 0, the missing ones recorded got (0, ['.log', 'traj.npz']) want (0, ['.log', 'traj.npz'])

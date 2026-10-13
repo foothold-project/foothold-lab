@@ -75,6 +75,26 @@ try:
            os.path.exists(os.path.join(out, "cmdr_eval_driver_g0.stop")), man["runs"]["tB"]["_valid_in_log"]),
           (0, "complete", True, ["cmdr_eval_driver_g0.stop"], False, False))
 
+    ev, out = tree("h1b")
+    open(os.path.join(out, "hud_follow.stop"), "w").write("")
+    rc, res, man = run(ev)
+    check("H1b (16i 4) another job's stop file stays and is listed; only the driver's own stop moves",
+          (rc, os.path.exists(os.path.join(out, "hud_follow.stop")), man.get("stop_requests_other_kept"), man.get("stop_requests_moved")),
+          (0, True, ["hud_follow.stop"], ["cmdr_eval_driver_g0.stop"]))
+
+    ev, out = tree("h1c")
+    os.remove(os.path.join(out, "cmdr_eval_driver_g0.stop"))
+    rc, res, man = run(ev, touch=os.path.join(out, "cmdr_eval_driver_g0.stop"))
+    check("H1c a driver stop that appears during the freeze is a new request: kept, not moved",
+          (rc, os.path.exists(os.path.join(out, "cmdr_eval_driver_g0.stop")), man.get("stop_requests_new_kept"), man.get("stop_requests_moved")),
+          (0, True, ["cmdr_eval_driver_g0.stop"], []))
+
+    ev, out = tree("h1d")
+    rc, res, man = run(ev, touch=os.path.join(out, "cmdr_eval_driver_g0.stop"))
+    check("H1d a driver stop whose bytes changed during the freeze: kept, listed as changed",
+          (rc, os.path.exists(os.path.join(out, "cmdr_eval_driver_g0.stop")), man.get("stop_requests_changed_kept"), man.get("stop_requests_moved")),
+          (0, True, ["cmdr_eval_driver_g0.stop"], []))
+
     ev, out = tree("h2")
     os.remove(os.path.join(out, "tA", "episodes.csv"))
     rc, res, man = run(ev)
