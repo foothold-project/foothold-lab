@@ -114,6 +114,14 @@
 - 놀았던 자원과 시작 시각 (아침 보고용): GPU 1 은 01:16:26 ~ 04:57 (3 시간 41 분) 그리고 04:58 부터 계속 · GPU 0 은 05:46 부터. 이유는 위와 같음 (검증 대기 · 판단 필요).
 - 풀리는 순서: ASTRA 17k 가 v2 기록 허용 → GPU 1 v2 짧은 진단 · 17l 이 v6 full 승인 (승인 json) → GPU 1 full 75 · 작업자 B 수정 → lead 재실행 → 17m → RAND smoke. 1043 평가는 팀장이 깨신 뒤 등록안 (CMD-R 규약 교정 결정과 묶임).
 
+## GPU 1 기동 기록 (06:50 · ASTRA 17k v2 조건부 허용 · 17l v6 full 승인)
+
+- **근거:** `VERIFY-astra-17k.md` 5 절 (v2 expect 0 짧은 진단 **한 번**) · `VERIFY-astra-17l.md` 5 절 + 승인 json (`night-tools-20261013/uncr_v6/approval-astra-17l.json` · by ASTRA 17l · 05:56). 둘 다 「기동 직전 수동 확인」 이 조건. 한 번에 하나의 Isaac 만 (GPU 1) · 순서는 v2 먼저 (약 1 분) 그다음 v6 full · RAND smoke 재시도는 17m 대상이라 이번 기동에 포함하지 않음.
+- **기동 전 확인 기록 (job tmp `codexw/prelaunch_check_0650.json` · 06:49:35):** 환경 변수 덮어쓰기 0 · GPU 0 UUID `GPU-c08e23b0-...` 여유 16288 MiB (비어 있음) · GPU 1 UUID `GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f` 총 16303 · 사용 5739 · 여유 10564 MiB (시작 기준 6144 이상) · python · Kit 계산 프로세스 0 (눈에 띄는 것은 `tail -F unseen_driver.log` 10 개 · 계산 아님) · 구형 registry 27/27 로그 존재 · 읽힘 · v3 registry 4/4 · v6 코드 5 개가 17l 사본과 같음 · CE12 12 개가 17k 사본과 같음 · 승인 json 값 · 재검 보고 해시 `ec69b809...` · manifest `91d35be9...` · 새 실행 75 · reuse_partial no 가 현재 파일과 모두 일치 · `out_uncr_v6` 에 STOP · HALT 없음 · v2 체크포인트 `models/foothold-v2.pt` sha256 `e5c21321...`.
+- **v2 (17k):** 새 tag · 고정 코드 해시 · dry-run 으로 명령 · expect 0 · 장치 · scan 범위 · 체크포인트 경로와 해시 확인 뒤 같은 인자에서 `--dry_run` 만 빼 한 번 실행 · 성공이면 COLLECTED → CPU `--recompute_action` → A1 ~ A9 승인 → 재확인 · 어디서든 비정상이면 거기서 끝 (자동 재시도 · 다른 모델 · full 로 안 넘어감).
+- **v6 full (17l):** `unseen_driver_cmdr_v6.py --stages full,post --manifest all --reuse_partial no --deadline <2026-10-14 09:00 KST epoch> --reval out_uncr_v6/reval/20261014-051704/revalidate.json --approval approval-astra-17l.json`. 마감은 새 시도 기동 마감이지 완료 시각이 아님. 92 · 기타 보호 종료 · 루트 참조 · 공유 오류 · 등록 코드 · 입력 변경 · STOP · 마감 · 자료 invalid 면 추가 기동 없음. 시작 뒤 실제 실행 시간과 여유를 재서 수용량을 추정. GPU guard 99 의 추가 재시도만 코드가 제한한 2 회.
+- **하지 않는 것:** 기존 STOP · HALT 를 지우기 · 다른 작업 종료로 조건 만들기 · RAND 와 CE12 · v6 를 동시에 띄우기 · 승인 범위 확대.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
