@@ -1,0 +1,523 @@
+{
+ "selftest": {
+  "known_2black.mp4": {
+   "frames": 60,
+   "dark": 2,
+   "flat": 2,
+   "frozen": 1,
+   "dark_idx": [
+    20,
+    21
+   ],
+   "min_mean": 0.0,
+   "min_std": 0.0
+  },
+  "known_clean.mp4": {
+   "frames": 60,
+   "dark": 0,
+   "flat": 0,
+   "frozen": 0,
+   "dark_idx": [],
+   "min_mean": 125.5,
+   "min_std": 81.6
+  }
+ },
+ "selftest_ok": true,
+ "clips": {
+  "e1_model_20000__flat_maxvel_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__flat_maxvel_F0.6_s0.mp4",
+   "src": {
+    "frames": 1385,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 71.4,
+    "min_std": 12.4
+   },
+   "web_audit": {
+    "frames": 1385,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 71.6,
+    "min_std": 12.5
+   },
+   "src_MB": 7.93,
+   "web_MB": 3.15,
+   "web_sha256": "08026e68f27a5a7390681c0361fc2265d93aef3c699cc409ecedec8b81c9c0cc",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__obstacle_L10_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__obstacle_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 661,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 58.8,
+    "min_std": 10.4
+   },
+   "web_audit": {
+    "frames": 661,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 58.9,
+    "min_std": 10.4
+   },
+   "src_MB": 3.01,
+   "web_MB": 1.21,
+   "web_sha256": "0bab2a8bfd99a6eb468c0f5e39ec868165ba4751687e665348147e0ef988063c",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__slope_bd_L7_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__slope_bd_L7_F0.6_s0.mp4",
+   "src": {
+    "frames": 431,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.6,
+    "min_std": 12.2
+   },
+   "web_audit": {
+    "frames": 431,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 64.0,
+    "min_std": 12.4
+   },
+   "src_MB": 1.73,
+   "web_MB": 0.56,
+   "web_sha256": "b5c823f1d84619065508a96d97e0e6aec02886178a44cf5e09ad7ccbdc031aa6",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__slope_bd_L9_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__slope_bd_L9_F0.6_s0.mp4",
+   "src": {
+    "frames": 652,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.7,
+    "min_std": 12.2
+   },
+   "web_audit": {
+    "frames": 652,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 64.1,
+    "min_std": 12.4
+   },
+   "src_MB": 3.22,
+   "web_MB": 1.02,
+   "web_sha256": "bc20fffdda0f59976b8e3783ef0857924a33fca5ff32ef7bd600c111696cbae1",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__slope_fd_L5_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__slope_fd_L5_F0.6_s0.mp4",
+   "src": {
+    "frames": 350,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.5,
+    "min_std": 12.1
+   },
+   "web_audit": {
+    "frames": 350,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.9,
+    "min_std": 12.4
+   },
+   "src_MB": 1.41,
+   "web_MB": 0.46,
+   "web_sha256": "cd7412bd2f3d3e467ec34a6c03c260db8a0242002292923a35d0b02740c8ddfd",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__slope_fd_L8_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__slope_fd_L8_F0.6_s0.mp4",
+   "src": {
+    "frames": 652,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.7,
+    "min_std": 12.1
+   },
+   "web_audit": {
+    "frames": 652,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 64.0,
+    "min_std": 12.3
+   },
+   "src_MB": 3.52,
+   "web_MB": 1.08,
+   "web_sha256": "74a309d2be2cfac10344ff4fe3f3bad4d77f6ae62e1226069998755197eaf0e3",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__stairs_bd_L10_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__stairs_bd_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 589,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 60.8,
+    "min_std": 10.9
+   },
+   "web_audit": {
+    "frames": 589,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 60.8,
+    "min_std": 10.9
+   },
+   "src_MB": 2.87,
+   "web_MB": 1.13,
+   "web_sha256": "3ac6d7078afc92769ebe97ee9d2f65a26f119f14dcd7c9a3f2620d313cd4205d",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__stairs_bd_L7_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__stairs_bd_L7_F0.6_s0.mp4",
+   "src": {
+    "frames": 478,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.1,
+    "min_std": 10.7
+   },
+   "web_audit": {
+    "frames": 478,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.1,
+    "min_std": 10.7
+   },
+   "src_MB": 2.39,
+   "web_MB": 0.97,
+   "web_sha256": "6667cf2293f9aa2432eb882a3ea1e6f0c0bee30f3c57729bb40aa2fbbe13ee87",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__stairs_fd_L10_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__stairs_fd_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 174,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.0,
+    "min_std": 10.7
+   },
+   "web_audit": {
+    "frames": 174,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.1,
+    "min_std": 10.7
+   },
+   "src_MB": 0.88,
+   "web_MB": 0.36,
+   "web_sha256": "432fba67bb610aafaf3a5c0dfd30a001631db09beeef570531cff82fe9106094",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__stairs_fd_L9_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__stairs_fd_L9_F0.6_s0.mp4",
+   "src": {
+    "frames": 796,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 60.9,
+    "min_std": 10.7
+   },
+   "web_audit": {
+    "frames": 796,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.0,
+    "min_std": 10.7
+   },
+   "src_MB": 3.57,
+   "web_MB": 1.46,
+   "web_sha256": "71e710501c1cefb4036a078320e7ba82a4f6b318a8ae84b3c37beab9c65ec80d",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__wave_L6_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__wave_L6_F0.6_s0.mp4",
+   "src": {
+    "frames": 397,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.4,
+    "min_std": 13.6
+   },
+   "web_audit": {
+    "frames": 397,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.5,
+    "min_std": 13.6
+   },
+   "src_MB": 1.88,
+   "web_MB": 0.63,
+   "web_sha256": "640837fe9e367aad9caa373a1741fcd32a0e580c316204a58075ee3f43e33388",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "e1_model_20000__wave_L8_F0.6_s0.mp4": {
+   "web": "rg_e1_20000__wave_L8_F0.6_s0.mp4",
+   "src": {
+    "frames": 674,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.7,
+    "min_std": 14.2
+   },
+   "web_audit": {
+    "frames": 674,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.7,
+    "min_std": 14.2
+   },
+   "src_MB": 2.94,
+   "web_MB": 1.0,
+   "web_sha256": "c1715ca4cfbb6320629b6bb591382c70180982d591b1f135cc3aa3de722f94b0",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__flat_maxvel_F0.6_s0.mp4": {
+   "web": "rg_ref__flat_maxvel_F0.6_s0.mp4",
+   "src": {
+    "frames": 1395,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 71.4,
+    "min_std": 12.4
+   },
+   "web_audit": {
+    "frames": 1395,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 71.6,
+    "min_std": 12.4
+   },
+   "src_MB": 8.19,
+   "web_MB": 3.27,
+   "web_sha256": "6ffc9cc654f3bb6170d8a653b76cfdfd0f45898b16c07f1bf9e0b994c0f29ec9",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__obstacle_L10_F0.6_s0.mp4": {
+   "web": "rg_ref__obstacle_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 585,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 58.8,
+    "min_std": 10.4
+   },
+   "web_audit": {
+    "frames": 585,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 58.9,
+    "min_std": 10.4
+   },
+   "src_MB": 2.7,
+   "web_MB": 1.09,
+   "web_sha256": "61ba1412579729ea49c5e0a5aeefaf75bc6603c03d172ed5054300a875a00005",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__slope_bd_L9_F0.6_s0.mp4": {
+   "web": "rg_ref__slope_bd_L9_F0.6_s0.mp4",
+   "src": {
+    "frames": 406,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.7,
+    "min_std": 12.3
+   },
+   "web_audit": {
+    "frames": 406,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 64.1,
+    "min_std": 12.5
+   },
+   "src_MB": 1.59,
+   "web_MB": 0.51,
+   "web_sha256": "193baf77990eb0f7b889b49e7f59e851ba61e5634904d85b964bf7852e84e500",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__slope_fd_L8_F0.6_s0.mp4": {
+   "web": "rg_ref__slope_fd_L8_F0.6_s0.mp4",
+   "src": {
+    "frames": 554,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 63.7,
+    "min_std": 12.3
+   },
+   "web_audit": {
+    "frames": 554,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 64.0,
+    "min_std": 12.5
+   },
+   "src_MB": 2.05,
+   "web_MB": 0.7,
+   "web_sha256": "9045a4c05e3db4414bf155389a74f84b742404172d9beb6b0f98bc7f5e6c0d0f",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__stairs_bd_L10_F0.6_s0.mp4": {
+   "web": "rg_ref__stairs_bd_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 367,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 60.8,
+    "min_std": 10.9
+   },
+   "web_audit": {
+    "frames": 367,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 60.8,
+    "min_std": 10.9
+   },
+   "src_MB": 1.98,
+   "web_MB": 0.82,
+   "web_sha256": "89a35df86f8f5ab838ede554f2350b453c6503eb221055547f5f5f826ad42302",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__stairs_fd_L10_F0.6_s0.mp4": {
+   "web": "rg_ref__stairs_fd_L10_F0.6_s0.mp4",
+   "src": {
+    "frames": 438,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.0,
+    "min_std": 10.6
+   },
+   "web_audit": {
+    "frames": 438,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 61.1,
+    "min_std": 10.6
+   },
+   "src_MB": 2.13,
+   "web_MB": 0.88,
+   "web_sha256": "50cc591c6d09c607ea813b2cd5bad89ade4ce18fa5c74a0f53bd378a3106f0d9",
+   "same_frame_count": true,
+   "bad": 0
+  },
+  "ref_sym_v5.1__wave_L8_F0.6_s0.mp4": {
+   "web": "rg_ref__wave_L8_F0.6_s0.mp4",
+   "src": {
+    "frames": 349,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.7,
+    "min_std": 14.2
+   },
+   "web_audit": {
+    "frames": 349,
+    "dark": 0,
+    "flat": 0,
+    "frozen": 0,
+    "dark_idx": [],
+    "min_mean": 66.8,
+    "min_std": 14.2
+   },
+   "src_MB": 1.87,
+   "web_MB": 0.65,
+   "web_sha256": "483c9f4b76505eb2456bf47af3f930027dc357a5682a4ff9707ecd79d72ae7a2",
+   "same_frame_count": true,
+   "bad": 0
+  }
+ },
+ "all_ok": true
+}

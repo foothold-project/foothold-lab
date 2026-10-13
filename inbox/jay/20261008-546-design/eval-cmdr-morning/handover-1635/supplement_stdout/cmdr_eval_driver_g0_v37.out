@@ -1,0 +1,22 @@
+14:06:25 pins 11 files · q_eval_cmdr 24aeaf6358ef7909 · attempt g0-134176-1013140624
+14:08:25 GPU 0 is ours
+GUARD rc=0 stopped=False min_free=12967 MiB max_used=3335 MiB samples=406 wall=81.4s
+14:11:47 RUN cq_test_8d384fcb_g0t141025p134176_smoke try 1 EXIT 0 82s · slot marker 18.1s · usd ['20261013_141042_7028']
+GUARD rc=0 stopped=False min_free=12972 MiB max_used=3330 MiB samples=247 wall=49.5s
+14:12:51 RUN cq_test_8d384fcb_g0t141025p134176_ka_orig try 1 EXIT 0 50s · slot marker 18.1s · usd ['20261013_141217_7028']
+GUARD rc=0 stopped=False min_free=12917 MiB max_used=3385 MiB samples=254 wall=50.9s
+14:13:44 RUN cq_test_8d384fcb_g0t141025p134176_ka_copy try 1 EXIT 0 51s · slot marker 18.1s · usd ['20261013_141310_7028']
+GUARD rc=0 stopped=False min_free=11069 MiB max_used=5233 MiB samples=252 wall=50.5s
+14:14:59 RUN cq_test_8d384fcb_g0t141025p134176_ka_copy_default_buffers try 1 EXIT 0 51s · slot marker 18.1s · usd ['20261013_141425_7028']
+GUARD rc=0 stopped=False min_free=15580 MiB max_used=722 MiB samples=63 wall=12.6s
+14:15:13 RUN cq_test_8d384fcb_g0t141025p134176_wrong_yaml_other_run try 1 EXIT 0 13s · slot exit 13.0s · usd []
+14:15:13   cq_test_8d384fcb_g0t141025p134176_wrong_yaml_other_run: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)
+GUARD rc=0 stopped=False min_free=15580 MiB max_used=722 MiB samples=61 wall=12.2s
+14:15:26 RUN cq_test_8d384fcb_g0t141025p134176_wrong_yaml_sibling try 1 EXIT 0 13s · slot exit 13.0s · usd []
+14:15:26   cq_test_8d384fcb_g0t141025p134176_wrong_yaml_sibling: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)
+GUARD rc=0 stopped=False min_free=13003 MiB max_used=3299 MiB samples=235 wall=47.1s
+14:16:14 RUN cq_test_8d384fcb_g0t141025p134176_branch_20002 try 1 EXIT 0 47s · slot marker 16.1s · usd ['20261013_141540_7028']
+14:16:14 tests passed {'smoke': 'ok', 'q_eval_py_sha256': '0dc6a37605d57ca63788aff9b2cbbd4131536a2ff0312fe315d0fce2714c5fcb', 'known_answer': {'orig_vs_copy_same': True}, 'small_buffers_vs_default_same': True, 'wrong_yaml_other_run': {'exit': 1, 'refused': True, 'wrote_result': False}, 'wrong_yaml_sibling': {'exit': 1, 'refused': True, 'wrote_result': False}, 'branch_pass': 'ok'}
+14:16:14 SCREEN obstacles/back03/on -7 pp -> seeds [1001, 1002, 1003, 1004]
+14:16:14 SCREEN stairs_up/right03/on -5 pp -> seeds [1001, 1002, 1003, 1004]
+16:35:09 END complete=True flagged=2 unmeasured=0 missing=0

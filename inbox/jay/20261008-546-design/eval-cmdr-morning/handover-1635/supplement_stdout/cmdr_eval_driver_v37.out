@@ -1,0 +1,241 @@
+14:06:18 pins 11 files · q_eval_cmdr 24aeaf6358ef7909 · attempt g1-162660-1013140618
+14:06:19 GPU 1 is ours
+14:09:30 re-validation pass: 445 reused · 110 pending
+GUARD rc=0 stopped=False min_free=6959 MiB max_used=9343 MiB samples=399 wall=80.0s
+14:10:51 RUN cq_test_8d384fcb_g1t140930p162660_smoke try 1 EXIT 0 80s · slot marker 18.1s · usd ['20261013_140946_7028']
+GUARD rc=0 stopped=False min_free=6960 MiB max_used=9342 MiB samples=263 wall=52.7s
+14:11:44 RUN cq_test_8d384fcb_g1t140930p162660_ka_orig try 1 EXIT 0 53s · slot marker 19.1s · usd ['20261013_141108_7028']
+GUARD rc=0 stopped=False min_free=6955 MiB max_used=9347 MiB samples=246 wall=49.3s
+14:12:34 RUN cq_test_8d384fcb_g1t140930p162660_ka_copy try 1 EXIT 0 50s · slot marker 16.1s · usd ['20261013_141158_7028']
+GUARD rc=0 stopped=False min_free=4459 MiB max_used=11843 MiB samples=256 wall=51.3s
+14:13:26 RUN cq_test_8d384fcb_g1t140930p162660_ka_copy_default_buffers try 1 EXIT 0 52s · slot marker 18.1s · usd ['20261013_141250_7028']
+GUARD rc=0 stopped=False min_free=9486 MiB max_used=6816 MiB samples=63 wall=12.6s
+14:13:39 RUN cq_test_8d384fcb_g1t140930p162660_wrong_yaml_other_run try 1 EXIT 0 13s · slot exit 13.0s · usd []
+14:13:39   cq_test_8d384fcb_g1t140930p162660_wrong_yaml_other_run: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)
+GUARD rc=0 stopped=False min_free=9515 MiB max_used=6787 MiB samples=58 wall=11.6s
+14:13:51 RUN cq_test_8d384fcb_g1t140930p162660_wrong_yaml_sibling try 1 EXIT 0 12s · slot exit 12.0s · usd []
+14:13:51   cq_test_8d384fcb_g1t140930p162660_wrong_yaml_sibling: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)
+GUARD rc=0 stopped=False min_free=6808 MiB max_used=9494 MiB samples=240 wall=48.1s
+14:14:40 RUN cq_test_8d384fcb_g1t140930p162660_branch_20002 try 1 EXIT 0 48s · slot marker 16.1s · usd ['20261013_141406_7028']
+14:14:40 tests passed {'smoke': 'ok', 'q_eval_py_sha256': '0dc6a37605d57ca63788aff9b2cbbd4131536a2ff0312fe315d0fce2714c5fcb', 'known_answer': {'orig_vs_copy_same': True}, 'small_buffers_vs_default_same': True, 'wrong_yaml_other_run': {'exit': 1, 'refused': True, 'wrote_result': False}, 'wrong_yaml_sibling': {'exit': 1, 'refused': True, 'wrote_result': False}, 'branch_pass': 'ok'}
+GUARD rc=0 stopped=False min_free=6956 MiB max_used=9346 MiB samples=253 wall=50.7s
+14:15:31 RUN cq_on24000_flat_stand_on_s1000 try 1 EXIT 0 51s · slot marker 18.1s · usd ['20261013_141457_7028']
+GUARD rc=0 stopped=False min_free=6956 MiB max_used=9346 MiB samples=261 wall=52.3s
+14:16:37 RUN cq_off24000_wave_stop03_on_s1000 try 1 EXIT 0 53s · slot marker 18.1s · usd ['20261013_141600_7028']
+GUARD rc=0 stopped=False min_free=6951 MiB max_used=9351 MiB samples=398 wall=79.8s
+14:17:57 RUN cq_off24000_wave_fwd01_on_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_141651_7028']
+GUARD rc=0 stopped=False min_free=6873 MiB max_used=9429 MiB samples=404 wall=81.0s
+14:19:19 RUN cq_off24000_wave_fwd02_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_141811_7028']
+GUARD rc=0 stopped=False min_free=6949 MiB max_used=9353 MiB samples=254 wall=50.9s
+14:20:10 RUN cq_off24000_wave_stand_on_s1000 try 1 EXIT 0 51s · slot marker 16.1s · usd ['20261013_141934_7028']
+GUARD rc=0 stopped=False min_free=6955 MiB max_used=9347 MiB samples=411 wall=82.4s
+14:21:34 RUN cq_off24000_wave_fwd03_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_142025_7028']
+GUARD rc=0 stopped=False min_free=6369 MiB max_used=9933 MiB samples=405 wall=81.2s
+14:22:55 RUN cq_off24000_wave_fwd05_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_142148_7028']
+GUARD rc=0 stopped=False min_free=6950 MiB max_used=9352 MiB samples=408 wall=81.8s
+14:24:18 RUN cq_off24000_wave_back03_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_142310_7028']
+GUARD rc=0 stopped=False min_free=6862 MiB max_used=9440 MiB samples=425 wall=85.2s
+14:25:44 RUN cq_off24000_wave_left03_on_s1000 try 1 EXIT 0 85s · slot marker 16.1s · usd ['20261013_142433_7028']
+GUARD rc=0 stopped=False min_free=6883 MiB max_used=9419 MiB samples=412 wall=82.6s
+14:27:07 RUN cq_off24000_wave_right03_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_142558_7028']
+GUARD rc=0 stopped=False min_free=6798 MiB max_used=9504 MiB samples=409 wall=82.0s
+14:28:30 RUN cq_off24000_wave_yawL05_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_142721_7028']
+GUARD rc=0 stopped=False min_free=6787 MiB max_used=9515 MiB samples=408 wall=81.8s
+14:29:52 RUN cq_off24000_wave_yawR05_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_142845_7028']
+GUARD rc=0 stopped=False min_free=6871 MiB max_used=9431 MiB samples=256 wall=51.3s
+14:30:44 RUN cq_on24000_wave_stop03_on_s1000 try 1 EXIT 0 52s · slot marker 16.1s · usd ['20261013_143007_7028']
+GUARD rc=0 stopped=False min_free=6391 MiB max_used=9911 MiB samples=411 wall=82.4s
+14:32:08 RUN cq_on24000_wave_fwd01_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_143059_7028']
+GUARD rc=0 stopped=False min_free=6972 MiB max_used=9330 MiB samples=407 wall=81.6s
+14:33:30 RUN cq_on24000_wave_fwd02_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_143222_7028']
+GUARD rc=0 stopped=False min_free=6972 MiB max_used=9330 MiB samples=251 wall=50.3s
+14:34:21 RUN cq_on24000_wave_stand_on_s1000 try 1 EXIT 0 51s · slot marker 15.1s · usd ['20261013_143344_7028']
+GUARD rc=0 stopped=False min_free=6385 MiB max_used=9917 MiB samples=411 wall=82.4s
+14:35:44 RUN cq_on24000_wave_fwd03_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_143435_7028']
+GUARD rc=0 stopped=False min_free=6793 MiB max_used=9509 MiB samples=421 wall=84.4s
+14:37:09 RUN cq_on24000_wave_fwd05_on_s1000 try 1 EXIT 0 85s · slot marker 17.1s · usd ['20261013_143600_7028']
+GUARD rc=0 stopped=False min_free=6814 MiB max_used=9488 MiB samples=416 wall=83.4s
+14:38:33 RUN cq_on24000_wave_back03_on_s1000 try 1 EXIT 0 84s · slot marker 17.1s · usd ['20261013_143724_7028']
+GUARD rc=0 stopped=False min_free=6780 MiB max_used=9522 MiB samples=416 wall=83.4s
+14:39:57 RUN cq_on24000_wave_left03_on_s1000 try 1 EXIT 0 84s · slot marker 16.1s · usd ['20261013_143848_7028']
+GUARD rc=0 stopped=False min_free=6250 MiB max_used=10052 MiB samples=419 wall=84.0s
+14:41:22 RUN cq_on24000_wave_right03_on_s1000 try 1 EXIT 0 84s · slot marker 16.1s · usd ['20261013_144012_7028']
+GUARD rc=0 stopped=False min_free=6810 MiB max_used=9492 MiB samples=415 wall=83.2s
+14:42:46 RUN cq_on24000_wave_yawL05_on_s1000 try 1 EXIT 0 83s · slot marker 17.1s · usd ['20261013_144137_7028']
+GUARD rc=0 stopped=False min_free=6349 MiB max_used=9953 MiB samples=414 wall=83.0s
+14:44:10 RUN cq_on24000_wave_yawR05_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_144300_7028']
+GUARD rc=0 stopped=False min_free=7408 MiB max_used=8894 MiB samples=255 wall=51.1s
+14:45:01 RUN cq_off24000_flat_stop03_off_s1000 try 1 EXIT 0 51s · slot marker 17.1s · usd ['20261013_144425_7028']
+GUARD rc=0 stopped=False min_free=7420 MiB max_used=8882 MiB samples=398 wall=79.8s
+14:46:22 RUN cq_off24000_flat_fwd01_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_144516_7028']
+GUARD rc=0 stopped=False min_free=7242 MiB max_used=9060 MiB samples=405 wall=81.2s
+14:47:44 RUN cq_off24000_flat_fwd02_off_s1000 try 1 EXIT 0 81s · slot marker 17.1s · usd ['20261013_144638_7028']
+GUARD rc=0 stopped=False min_free=7218 MiB max_used=9084 MiB samples=251 wall=50.3s
+14:48:35 RUN cq_off24000_flat_stand_off_s1000 try 1 EXIT 0 51s · slot marker 17.1s · usd ['20261013_144759_7028']
+GUARD rc=0 stopped=False min_free=7284 MiB max_used=9018 MiB samples=393 wall=78.8s
+14:49:54 RUN cq_off24000_flat_fwd03_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_144850_7028']
+GUARD rc=0 stopped=False min_free=7539 MiB max_used=8763 MiB samples=396 wall=79.4s
+14:51:14 RUN cq_off24000_flat_fwd05_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_145009_7028']
+GUARD rc=0 stopped=False min_free=7876 MiB max_used=8426 MiB samples=399 wall=80.0s
+14:52:35 RUN cq_off24000_flat_back03_off_s1000 try 1 EXIT 0 80s · slot marker 17.1s · usd ['20261013_145130_7028']
+GUARD rc=0 stopped=False min_free=7336 MiB max_used=8966 MiB samples=395 wall=79.2s
+14:53:55 RUN cq_off24000_flat_left03_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_145250_7028']
+GUARD rc=0 stopped=False min_free=7916 MiB max_used=8386 MiB samples=398 wall=79.8s
+14:55:15 RUN cq_off24000_flat_right03_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_145409_7028']
+GUARD rc=0 stopped=False min_free=7882 MiB max_used=8420 MiB samples=402 wall=80.6s
+14:56:37 RUN cq_off24000_flat_yawL05_off_s1000 try 1 EXIT 0 81s · slot marker 17.1s · usd ['20261013_145531_7028']
+GUARD rc=0 stopped=False min_free=7811 MiB max_used=8491 MiB samples=400 wall=80.2s
+14:57:58 RUN cq_off24000_flat_yawR05_off_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_145652_7028']
+GUARD rc=0 stopped=False min_free=7848 MiB max_used=8454 MiB samples=252 wall=50.5s
+14:58:49 RUN cq_on24000_flat_stop03_off_s1000 try 1 EXIT 0 51s · slot marker 17.1s · usd ['20261013_145813_7028']
+GUARD rc=0 stopped=False min_free=7804 MiB max_used=8498 MiB samples=397 wall=79.6s
+15:00:09 RUN cq_on24000_flat_fwd01_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_145904_7028']
+GUARD rc=0 stopped=False min_free=7840 MiB max_used=8462 MiB samples=401 wall=80.4s
+15:01:30 RUN cq_on24000_flat_fwd02_off_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_150024_7028']
+GUARD rc=0 stopped=False min_free=7763 MiB max_used=8539 MiB samples=244 wall=48.9s
+15:02:20 RUN cq_on24000_flat_stand_off_s1000 try 1 EXIT 0 49s · slot marker 16.1s · usd ['20261013_150145_7028']
+GUARD rc=0 stopped=False min_free=7902 MiB max_used=8400 MiB samples=399 wall=80.0s
+15:03:41 RUN cq_on24000_flat_fwd03_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_150235_7028']
+GUARD rc=0 stopped=False min_free=7318 MiB max_used=8984 MiB samples=396 wall=79.4s
+15:05:01 RUN cq_on24000_flat_fwd05_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_150356_7028']
+GUARD rc=0 stopped=False min_free=7346 MiB max_used=8956 MiB samples=395 wall=79.2s
+15:06:21 RUN cq_on24000_flat_back03_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_150516_7028']
+GUARD rc=0 stopped=False min_free=7343 MiB max_used=8959 MiB samples=397 wall=79.6s
+15:07:41 RUN cq_on24000_flat_left03_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_150636_7028']
+GUARD rc=0 stopped=False min_free=7309 MiB max_used=8993 MiB samples=402 wall=80.6s
+15:09:02 RUN cq_on24000_flat_right03_off_s1000 try 1 EXIT 0 81s · slot marker 17.1s · usd ['20261013_150757_7028']
+GUARD rc=0 stopped=False min_free=7351 MiB max_used=8951 MiB samples=396 wall=79.4s
+15:10:22 RUN cq_on24000_flat_yawL05_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_150917_7028']
+GUARD rc=0 stopped=False min_free=7347 MiB max_used=8955 MiB samples=396 wall=79.4s
+15:11:43 RUN cq_on24000_flat_yawR05_off_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_151037_7028']
+GUARD rc=0 stopped=False min_free=7316 MiB max_used=8986 MiB samples=413 wall=82.8s
+15:13:06 RUN cq_p20000_wave_fwd01_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_151157_7028']
+GUARD rc=0 stopped=False min_free=7932 MiB max_used=8370 MiB samples=415 wall=83.2s
+15:14:30 RUN cq_p20000_wave_fwd02_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_151321_7028']
+GUARD rc=0 stopped=False min_free=7946 MiB max_used=8356 MiB samples=257 wall=51.5s
+15:15:22 RUN cq_p20000_wave_stand_on_s1000 try 1 EXIT 0 52s · slot marker 16.1s · usd ['20261013_151445_7028']
+GUARD rc=0 stopped=False min_free=7940 MiB max_used=8362 MiB samples=410 wall=82.2s
+15:16:45 RUN cq_p20000_wave_fwd03_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_151537_7028']
+GUARD rc=0 stopped=False min_free=7935 MiB max_used=8367 MiB samples=413 wall=82.8s
+15:18:09 RUN cq_p20000_wave_fwd05_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_151659_7028']
+GUARD rc=0 stopped=False min_free=7928 MiB max_used=8374 MiB samples=418 wall=83.8s
+15:19:33 RUN cq_p20000_wave_back03_on_s1000 try 1 EXIT 0 84s · slot marker 16.1s · usd ['20261013_151823_7028']
+GUARD rc=0 stopped=False min_free=7917 MiB max_used=8385 MiB samples=422 wall=84.6s
+15:20:58 RUN cq_p20000_wave_left03_on_s1000 try 1 EXIT 0 85s · slot marker 16.1s · usd ['20261013_151948_7028']
+GUARD rc=0 stopped=False min_free=7913 MiB max_used=8389 MiB samples=411 wall=82.4s
+15:22:21 RUN cq_p20000_wave_right03_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_152113_7028']
+GUARD rc=0 stopped=False min_free=7364 MiB max_used=8938 MiB samples=404 wall=81.0s
+15:23:43 RUN cq_p20000_wave_yawL05_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_152236_7028']
+GUARD rc=0 stopped=False min_free=7733 MiB max_used=8569 MiB samples=410 wall=82.2s
+15:25:06 RUN cq_p20000_wave_yawR05_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_152357_7028']
+GUARD rc=0 stopped=False min_free=7216 MiB max_used=9086 MiB samples=263 wall=52.7s
+15:25:59 RUN cq_off22000_wave_stop03_on_s1000 try 1 EXIT 0 53s · slot marker 17.1s · usd ['20261013_152522_7028']
+GUARD rc=0 stopped=False min_free=7731 MiB max_used=8571 MiB samples=402 wall=80.6s
+15:27:21 RUN cq_off22000_wave_fwd01_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_152614_7028']
+GUARD rc=0 stopped=False min_free=7713 MiB max_used=8589 MiB samples=406 wall=81.4s
+15:28:43 RUN cq_off22000_wave_fwd02_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_152735_7028']
+GUARD rc=0 stopped=False min_free=7746 MiB max_used=8556 MiB samples=251 wall=50.4s
+15:29:34 RUN cq_off22000_wave_stand_on_s1000 try 1 EXIT 0 51s · slot marker 16.1s · usd ['20261013_152857_7028']
+GUARD rc=0 stopped=False min_free=7854 MiB max_used=8448 MiB samples=404 wall=81.0s
+15:30:56 RUN cq_off22000_wave_fwd03_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_152948_7028']
+GUARD rc=0 stopped=False min_free=7823 MiB max_used=8479 MiB samples=396 wall=79.4s
+15:32:16 RUN cq_off22000_wave_fwd05_on_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_153110_7028']
+GUARD rc=0 stopped=False min_free=7291 MiB max_used=9011 MiB samples=403 wall=80.8s
+15:33:37 RUN cq_off22000_wave_back03_on_s1000 try 1 EXIT 0 81s · slot marker 16.1s · usd ['20261013_153230_7028']
+GUARD rc=0 stopped=False min_free=7233 MiB max_used=9069 MiB samples=418 wall=83.8s
+15:35:01 RUN cq_off22000_wave_left03_on_s1000 try 1 EXIT 0 84s · slot marker 17.1s · usd ['20261013_153353_7028']
+GUARD rc=0 stopped=False min_free=7213 MiB max_used=9089 MiB samples=408 wall=81.8s
+15:36:24 RUN cq_off22000_wave_right03_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_153516_7028']
+GUARD rc=0 stopped=False min_free=7648 MiB max_used=8654 MiB samples=412 wall=82.6s
+15:37:47 RUN cq_off22000_wave_yawL05_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_153639_7028']
+GUARD rc=0 stopped=False min_free=7762 MiB max_used=8540 MiB samples=411 wall=82.4s
+15:39:10 RUN cq_off22000_wave_yawR05_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_153801_7028']
+GUARD rc=0 stopped=False min_free=7760 MiB max_used=8542 MiB samples=254 wall=50.9s
+15:40:02 RUN cq_on22000_wave_stop03_on_s1000 try 1 EXIT 0 51s · slot marker 16.1s · usd ['20261013_153925_7028']
+GUARD rc=0 stopped=False min_free=7726 MiB max_used=8576 MiB samples=407 wall=81.6s
+15:41:24 RUN cq_on22000_wave_fwd01_on_s1000 try 1 EXIT 0 82s · slot marker 15.1s · usd ['20261013_154016_7028']
+GUARD rc=0 stopped=False min_free=7545 MiB max_used=8757 MiB samples=406 wall=81.4s
+15:42:46 RUN cq_on22000_wave_fwd02_on_s1000 try 1 EXIT 0 82s · slot marker 15.1s · usd ['20261013_154138_7028']
+GUARD rc=0 stopped=False min_free=7691 MiB max_used=8611 MiB samples=254 wall=50.9s
+15:43:38 RUN cq_on22000_wave_stand_on_s1000 try 1 EXIT 0 51s · slot marker 16.1s · usd ['20261013_154300_7028']
+GUARD rc=0 stopped=False min_free=7513 MiB max_used=8789 MiB samples=412 wall=82.6s
+15:45:01 RUN cq_on22000_wave_fwd03_on_s1000 try 1 EXIT 0 83s · slot marker 15.1s · usd ['20261013_154352_7028']
+GUARD rc=0 stopped=False min_free=6950 MiB max_used=9352 MiB samples=411 wall=82.4s
+15:46:24 RUN cq_on22000_wave_fwd05_on_s1000 try 1 EXIT 0 83s · slot marker 16.1s · usd ['20261013_154515_7028']
+GUARD rc=0 stopped=False min_free=7554 MiB max_used=8748 MiB samples=408 wall=81.8s
+15:47:47 RUN cq_on22000_wave_back03_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_154638_7028']
+GUARD rc=0 stopped=False min_free=7054 MiB max_used=9248 MiB samples=416 wall=83.4s
+15:49:11 RUN cq_on22000_wave_left03_on_s1000 try 1 EXIT 0 84s · slot marker 16.1s · usd ['20261013_154801_7028']
+GUARD rc=0 stopped=False min_free=7717 MiB max_used=8585 MiB samples=410 wall=82.2s
+15:50:34 RUN cq_on22000_wave_right03_on_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_154925_7028']
+GUARD rc=0 stopped=False min_free=7641 MiB max_used=8661 MiB samples=402 wall=80.6s
+15:51:55 RUN cq_on22000_wave_yawL05_on_s1000 try 1 EXIT 0 81s · slot marker 15.1s · usd ['20261013_155047_7028']
+GUARD rc=0 stopped=False min_free=7818 MiB max_used=8484 MiB samples=400 wall=80.2s
+15:53:16 RUN cq_on22000_wave_yawR05_on_s1000 try 1 EXIT 0 80s · slot marker 16.1s · usd ['20261013_155209_7028']
+GUARD rc=0 stopped=False min_free=7842 MiB max_used=8460 MiB samples=241 wall=48.3s
+15:54:05 RUN cq_p20000_flat_stop03_off_s1000 try 1 EXIT 0 49s · slot marker 16.1s · usd ['20261013_155330_7028']
+GUARD rc=0 stopped=False min_free=7793 MiB max_used=8509 MiB samples=375 wall=75.2s
+15:55:21 RUN cq_p20000_flat_fwd01_off_s1000 try 1 EXIT 0 75s · slot marker 15.1s · usd ['20261013_155419_7028']
+GUARD rc=0 stopped=False min_free=7757 MiB max_used=8545 MiB samples=380 wall=76.2s
+15:56:37 RUN cq_p20000_flat_fwd02_off_s1000 try 1 EXIT 0 76s · slot marker 15.1s · usd ['20261013_155535_7028']
+GUARD rc=0 stopped=False min_free=7186 MiB max_used=9116 MiB samples=246 wall=49.3s
+15:57:27 RUN cq_p20000_flat_stand_off_s1000 try 1 EXIT 0 50s · slot marker 15.1s · usd ['20261013_155652_7028']
+GUARD rc=0 stopped=False min_free=7820 MiB max_used=8482 MiB samples=391 wall=78.4s
+15:58:47 RUN cq_p20000_flat_fwd03_off_s1000 try 1 EXIT 0 79s · slot marker 15.1s · usd ['20261013_155741_7028']
+GUARD rc=0 stopped=False min_free=7740 MiB max_used=8562 MiB samples=386 wall=77.4s
+16:00:05 RUN cq_p20000_flat_fwd05_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_155900_7028']
+GUARD rc=0 stopped=False min_free=7811 MiB max_used=8491 MiB samples=386 wall=77.4s
+16:01:23 RUN cq_p20000_flat_back03_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_160019_7028']
+GUARD rc=0 stopped=False min_free=7249 MiB max_used=9053 MiB samples=387 wall=77.6s
+16:02:41 RUN cq_p20000_flat_left03_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_160136_7028']
+GUARD rc=0 stopped=False min_free=7787 MiB max_used=8515 MiB samples=406 wall=81.4s
+16:04:03 RUN cq_p20000_flat_right03_off_s1000 try 1 EXIT 0 82s · slot marker 16.1s · usd ['20261013_160256_7028']
+GUARD rc=0 stopped=False min_free=7708 MiB max_used=8594 MiB samples=413 wall=82.8s
+16:05:26 RUN cq_p20000_flat_yawL05_off_s1000 try 1 EXIT 0 83s · slot marker 17.1s · usd ['20261013_160419_7028']
+GUARD rc=0 stopped=False min_free=7452 MiB max_used=8850 MiB samples=428 wall=85.8s
+16:06:53 RUN cq_p20000_flat_yawR05_off_s1000 try 1 EXIT 0 86s · slot marker 17.1s · usd ['20261013_160542_7028']
+GUARD rc=0 stopped=False min_free=7626 MiB max_used=8676 MiB samples=258 wall=51.7s
+16:07:46 RUN cq_off22000_flat_stop03_off_s1000 try 1 EXIT 0 52s · slot marker 17.1s · usd ['20261013_160709_7028']
+GUARD rc=0 stopped=False min_free=7623 MiB max_used=8679 MiB samples=391 wall=78.4s
+16:09:05 RUN cq_off22000_flat_fwd01_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_160800_7028']
+GUARD rc=0 stopped=False min_free=7146 MiB max_used=9156 MiB samples=393 wall=78.8s
+16:10:24 RUN cq_off22000_flat_fwd02_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_160919_7028']
+GUARD rc=0 stopped=False min_free=7500 MiB max_used=8802 MiB samples=241 wall=48.3s
+16:11:13 RUN cq_off22000_flat_stand_off_s1000 try 1 EXIT 0 49s · slot marker 16.1s · usd ['20261013_161038_7028']
+GUARD rc=0 stopped=False min_free=7666 MiB max_used=8636 MiB samples=389 wall=78.0s
+16:12:32 RUN cq_off22000_flat_fwd03_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_161127_7028']
+GUARD rc=0 stopped=False min_free=7517 MiB max_used=8785 MiB samples=393 wall=78.8s
+16:13:51 RUN cq_off22000_flat_fwd05_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_161246_7028']
+GUARD rc=0 stopped=False min_free=7660 MiB max_used=8642 MiB samples=401 wall=80.4s
+16:15:12 RUN cq_off22000_flat_back03_off_s1000 try 1 EXIT 0 81s · slot marker 17.1s · usd ['20261013_161407_7028']
+GUARD rc=0 stopped=False min_free=7708 MiB max_used=8594 MiB samples=391 wall=78.4s
+16:16:31 RUN cq_off22000_flat_left03_off_s1000 try 1 EXIT 0 79s · slot marker 16.1s · usd ['20261013_161527_7028']
+GUARD rc=0 stopped=False min_free=7708 MiB max_used=8594 MiB samples=389 wall=78.0s
+16:17:50 RUN cq_off22000_flat_right03_off_s1000 try 1 EXIT 0 78s · slot marker 16.1s · usd ['20261013_161646_7028']
+GUARD rc=0 stopped=False min_free=7603 MiB max_used=8699 MiB samples=390 wall=78.2s
+16:19:09 RUN cq_off22000_flat_yawL05_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_161804_7028']
+GUARD rc=0 stopped=False min_free=7689 MiB max_used=8613 MiB samples=387 wall=77.6s
+16:20:27 RUN cq_off22000_flat_yawR05_off_s1000 try 1 EXIT 0 78s · slot marker 15.1s · usd ['20261013_161923_7028']
+GUARD rc=0 stopped=False min_free=7190 MiB max_used=9112 MiB samples=240 wall=48.1s
+16:21:16 RUN cq_on22000_flat_stop03_off_s1000 try 1 EXIT 0 48s · slot marker 15.1s · usd ['20261013_162041_7028']
+GUARD rc=0 stopped=False min_free=7186 MiB max_used=9116 MiB samples=384 wall=77.0s
+16:22:34 RUN cq_on22000_flat_fwd01_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_162130_7028']
+GUARD rc=0 stopped=False min_free=7185 MiB max_used=9117 MiB samples=384 wall=77.0s
+16:23:51 RUN cq_on22000_flat_fwd02_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_162248_7028']
+GUARD rc=0 stopped=False min_free=7105 MiB max_used=9197 MiB samples=241 wall=48.3s
+16:24:40 RUN cq_on22000_flat_stand_off_s1000 try 1 EXIT 0 49s · slot marker 15.1s · usd ['20261013_162405_7028']
+GUARD rc=0 stopped=False min_free=7756 MiB max_used=8546 MiB samples=381 wall=76.4s
+16:25:57 RUN cq_on22000_flat_fwd03_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_162454_7028']
+GUARD rc=0 stopped=False min_free=7756 MiB max_used=8546 MiB samples=380 wall=76.2s
+16:27:14 RUN cq_on22000_flat_fwd05_off_s1000 try 1 EXIT 0 76s · slot marker 15.1s · usd ['20261013_162611_7028']
+GUARD rc=0 stopped=False min_free=7751 MiB max_used=8551 MiB samples=379 wall=76.0s
+16:28:31 RUN cq_on22000_flat_back03_off_s1000 try 1 EXIT 0 76s · slot marker 15.1s · usd ['20261013_162728_7028']
+GUARD rc=0 stopped=False min_free=7661 MiB max_used=8641 MiB samples=384 wall=77.0s
+16:29:49 RUN cq_on22000_flat_left03_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_162844_7028']
+GUARD rc=0 stopped=False min_free=7756 MiB max_used=8546 MiB samples=379 wall=76.0s
+16:31:05 RUN cq_on22000_flat_right03_off_s1000 try 1 EXIT 0 76s · slot marker 15.1s · usd ['20261013_163002_7028']
+GUARD rc=0 stopped=False min_free=7746 MiB max_used=8556 MiB samples=382 wall=76.6s
+16:32:22 RUN cq_on22000_flat_yawL05_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_163119_7028']
+GUARD rc=0 stopped=False min_free=7670 MiB max_used=8632 MiB samples=383 wall=76.8s
+16:33:40 RUN cq_on22000_flat_yawR05_off_s1000 try 1 EXIT 0 77s · slot marker 15.1s · usd ['20261013_163236_7028']
+16:33:40 END complete=True runs=555 not_run=0 not_valid=0

@@ -27,6 +27,11 @@ rep('.quad{grid-template-columns:repeat(4,minmax(0,1fr))!important}',
 .vmode #night,.vmode #unseen,.vmode #rg,.vmode #cmdr,.vmode #next,.vmode #app{display:none}
 .urow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:10px 0 14px}
 @media (max-width:1100px){.urow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.urow.rg{display:flex;flex-wrap:wrap;justify-content:center}
+.tag.ref{background:var(--ink-3)}
+.urow.rg>.tile{flex:0 0 calc((100% - 48px)/4)}
+@media (max-width:1100px){.urow.rg>.tile{flex-basis:calc((100% - 16px)/2)}}
+@media (max-width:600px){.urow.rg>.tile{flex-basis:100%}}
 @media (max-width:600px){.urow{grid-template-columns:1fr}}
 .sub2{color:var(--ink-3);font-size:12px;font-weight:400}
 table.def.unseen td{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -43,19 +48,19 @@ table.def.night{min-width:900px}
 .superseded{margin:6px 0 10px;padding:8px 12px;background:var(--note-soft);color:var(--note-ink);border-radius:6px;font-size:13.5px}''')
 
 # ---------- 2. 머리 ----------
-rep('<div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-12</div>', '<div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-13 아침</div>')
+rep('<div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-12</div>', '<div class="kicker">FOOTHOLD · 시뮬 RL · 2026-10-13 오후</div>')
 rep('결론이 아니라 <b>중간 정리</b> 입니다.</p>',
-    '결론이 아니라 <b>중간 정리</b> 입니다. 5판은 밤사이 결과 (v2 의 미경험 지형 10 종 · 다른 물리 엔진 시험 · CMD-R 진행) 와 다음 실험 계획을 위에 더했습니다.</p>')
+    '결론이 아니라 <b>중간 정리</b> 입니다. 6판은 밤사이 결과 (v2 의 미경험 지형 10 종 · 다른 물리 엔진 시험) 에 CMD-R 최종 집계 (16:35 마감 동결) 와 MuJoCo 장면 영상을 더했습니다. 다음 실험 계획도 위에 있습니다.</p>')
 rep('<span class="num">model_20000</span> = 명령 상한 0.5 m/s 로 학습한 끝 · <span class="num">model_20499</span> = 상한을 1.0 m/s 로 넓힌 뒤 500 iteration',
     '<span class="num">model_20000</span> = 대부분 명령 상한 0.5 m/s 로 학습 · 상한을 1.0 m/s 로 넓힌 첫 학습 한 번 포함 · <span class="num">model_20499</span> = 그 뒤 499 iteration')
 rep('<dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12</dd>',
-    '<dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12 · 5판 2026-10-13</dd>')
+    '<dt>작성</dt><dd>오흥재 (lead 세션 · Claude 실행) · 2026-10-12 · 5판 2026-10-13 아침 · 6판 2026-10-13 16:36</dd>')
 rep('v2 모델 카드 <code>models/foothold-v2.json</code>. 이 페이지의 숫자는 생성 스크립트가 원자료에서 읽어 넣었습니다</dd>',
     'v2 모델 카드 <code>models/foothold-v2.json</code> · 미경험 지형 <code>un_*</code> 100 실행 · RoboGauge 원출력 7 개 · CMD-R 학습 · 평가 로그 · ASTRA 검증 7 ~ 14. 이 페이지의 숫자는 생성 스크립트가 원자료에서 읽어 넣었습니다</dd>')
 rep('<dt>요지</dt><dd>걷기 통과 · 멈추기 약점 · 20499 하락은 명령 범위를 넓힌 직후 · 지형을 보지 않아 gap · 징검다리는 아직 못 배움</dd>',
     '<dt>요지</dt><dd>걷기 통과 · 멈추기 약점 · 20499 는 명령 범위를 넓힌 직후 하락 (원인 미확인) · v2 미경험 지형에서 gap · 징검다리는 기준선에 거의 · 전혀 못 닿음 (원인 미확인) · 다른 엔진 시험은 20499 가 높아 두 시험이 다른 능력을 잼 · 다음은 같은 시험지부터</dd>')
 rep('<dt>상태</dt><dd>4판 (10/12 밤) · 중간 정리 · v2 와 비교 · 쉬운 설명 추가 · 판정 기준 (Q) 은 lead 임시 조건이며 팀장 확정 전 · 학습은 Linux 이전까지 멈춤</dd>',
-    '<dt>상태</dt><dd>5판 (10/13 아침) · 밤사이 결과 · CMD-R 은 진행 중 (최종 24,000 비교는 낮에 갱신) · 판정 기준 (Q) 은 lead 임시 조건 · ASTRA 14 로 미경험 지형 해석 고침</dd>')
+    '<dt>상태</dt><dd>6판 (10/13 16:36 마감 집계) · CMD-R 평가 끝 (퇴행 99 칸 · 유효 실행 571 · 마감 동결 16:35) · 판정 기준 (Q) 은 lead 임시 조건 · ASTRA 14 로 미경험 지형 해석 고침</dd>')
 
 # ---------- 3. 중간 정리 ----------
 rep('<li><b>20,499 가 20,000 보다 나쁜 것은 명령 범위를 두 배로 넓힌 직후이기 때문으로 보입니다</b> (추정 · <a href="#drop">아래</a>).</li>',

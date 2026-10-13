@@ -144,6 +144,12 @@ def build(post_path=None, summary_path=None, bundle_path=None):
     if post.get("held"):  # 16h 4.3: kept out of every table on purpose, with the reason
         st.append(f"<li>공개 보류 {len(post['held'])} 개 (표에서 뺌): "
                   + " · ".join(f"{_cellname_tag(h['tag'])} ({h.get('why') or '이유 미기재'})" for h in post["held"]) + "</li>")
+    if post.get("hold_released"):  # 16k 4 / 16l 3: a held run that was measured again and released by a bound record
+        st.append(f"<li>보류했다가 다시 재서 표에 넣은 판 {len(post['hold_released'])} 개: "
+                  + " · ".join(f"{_cellname_tag(r['tag'])} (새 측정 {r['released'].get('new_attempt')} · 옛 판과 결과 파일 (cells · episodes · traj) 을 비교해 차이를 찾지 못함 · meta 는 다름 · 로봇 자산이 온전했다는 증명은 아님)"
+                               for r in post["hold_released"]) + "</li>")
+    if post.get("release_auth_fail"):
+        st.append(f"<li>해제 뒤 인증에 실패해 표에서 뺀 판 {len(post['release_auth_fail'])} 개</li>")
     for u in ("22000", "24000"):
         tv = post["target_verdict"][u]
         cells = [(c, post["targets"].get(c, {}).get(f"on_minus_off_{u}")) for c in TARGETS]
