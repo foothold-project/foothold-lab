@@ -1,0 +1,24 @@
+{
+ "cq_on24000_flat_stand_on_s1000": {
+  "stamp_sha256": "7fda7daf0d62836e13ffcb678033b18375d0b285a2d80a12f7d36cf5e4ff106d",
+  "why": "USD 임시 폴더 공유 의심 (11:38 · v3.5 시작 시험 2b 와 같은 폴더 usd_20261013_113828_7028) · v3.7 로 다시 재는 중",
+  "held_at": "2026-10-13 14:05",
+  "by": "lead",
+  "handover": "handover_20261013_140449",
+  "released": {
+   "by": "lead",
+   "at": "2026-10-13 14:17",
+   "new_attempt": "g1-162660-1013140618-j1",
+   "why": "v3.7 로 다시 잼 (변환 잠금 · 새 USD 폴더 usd_20261013_141457_7028) · compare_stand: 입력 11 항목 같음 · 새 판 정상 · 출력 내용 · 바이트 같음 (비교한 기록 출력에서 차이 발견 못 함 · 자산 온전의 증명은 아님)",
+   "out_sha256": {
+    "meta.json": "ee56fbcdf9bfc2727b67d0abfda479eda272365e0fc78c30752abeea4c76d504",
+    "cells.json": "ae41c74e8ab50ce13f7da43807297069fc07465236e82136316c22139c540368",
+    "episodes.csv": "58e5356efc1027eb126623cec05d98d8e79cd2596f4ccd99b5c3d469759a9ee0",
+    "traj.npz": "671763d18f3790ba47c531480a5835c76bdc8ae6d5c0319b5be6b2fd9ce4b375"
+   },
+   "evidence": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/inbox/jay/20261008-546-design/eval-cmdr-morning/handover-1400/stand_compare_1535_v9evidence.json",
+   "evidence_sha256": "d77c68b2978bee914b991563df89dadb0bc8706f23bafbab911b77f66fe43b27",
+   "v9_fields_added_at": "2026-10-13 15:35 (VERIFY-astra-16k 4: release bound to the collection's output hashes and saved evidence)"
+  }
+ }
+}

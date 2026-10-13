@@ -1,0 +1,14 @@
+{
+ "dir": "C:/isaac/ext/go2_rl_robotlab/_eval\\out\\handover_20261013_163534",
+ "status": "complete",
+ "runs": 571,
+ "valid": 571,
+ "not_valid_with_missing": 0,
+ "ckpt": 5,
+ "stop_requests_moved": [],
+ "stop_requests_other_kept": [
+  "hud_follow.stop"
+ ],
+ "manifest_sha256": "971be24b842714e4c2ea013496f31b0071e11e81898a3ce65d3478e5a717d58a",
+ "problems": []
+}
