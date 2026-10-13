@@ -8,17 +8,18 @@
 |---|---|---|---|---|
 | 1 | GPU 0: 1043 off 끝 → 스크립트가 검증 → on 갈래 | 스크립트가 알아서 | 콘솔 `cmdr_s1043_off_u4000 VALID` · on START | off VALID · on 00:18:20 시작 (끝 05:40 무렵 추정) |
 | 2 | ASTRA 17f 판정 (v3 관문 · 같은 시험지 고침 · S2 판 2) | 의뢰함 23:53 | `VERIFY-astra-17f.md` 첫 줄 | 끝 00:17 · 고쳐서 기동 (b77106d2) |
-| 2b | ASTRA 17f-2 보내기 (S2 encoder W · r 제안 검토 · `TASK-astra-17f2-s2-encoder.md`) → 판정을 팀장께 채팅 · #550 으로 | 17f 판정 파일이 나온 뒤 (ASTRA 는 한 번에 하나) | `VERIFY-astra-17f2.md` 첫 줄 | 00:21 보냄 · 검사 중 |
-| 2c | ASTRA 17h 보내기: lead 의 읽기 · 컨텍스트 관리 규칙 검토 (`TASK-astra-17h-reading.md`) | 17f-2 판정 뒤 | `VERIFY-astra-17h.md` 첫 줄 | |
+| 2b | ASTRA 17f-2 보내기 (S2 encoder W · r 제안 검토 · `TASK-astra-17f2-s2-encoder.md`) → 판정을 팀장께 채팅 · #550 으로 | 17f 판정 파일이 나온 뒤 (ASTRA 는 한 번에 하나) | `VERIFY-astra-17f2.md` 첫 줄 | 끝 00:33 · 「다른 안」: 첫 A/B 는 encoder 전 구간 고정 · W50 · r0.1 은 별도 pilot · r=0 코드 결함 · 팀장께 채팅 · #550 6149317273 |
+| 2c | ASTRA 17h 보내기: lead 의 읽기 · 컨텍스트 관리 규칙 검토 (`TASK-astra-17h-reading.md`) | 17f-2 판정 뒤 | `VERIFY-astra-17h.md` 첫 줄 | 00:39 보냄 (하트비트 문구 · 해석기 사례 더함 9917d92f) |
 | 3 | GPU 1: 같은 시험지 CTS E1 20000 짧은 기록 (`ce12/run_dump.py --which cts` · v3 관문 · 별도 registry `isaac_usd_registry_v3.json`) | 17f 가 허용 | 수집 COLLECTED · `compare_native --recompute_action` · 승인 APPROVED 또는 PENDING 까닭 | 00:25 띄움 (registry v3 전용 · 시험 117/117 · 해시 고정 job tmp ce12_cts_launch_sha.txt) · 00:25 끝 · slot 0 · guard 0 · COLLECTED (22 PASS) · 실제 npz 대조에서 compare_native 188 행 dims 문자열 오류 → 하위 작업이 고침 + 17f 4.2 ~ 4.4 (00:29 맡김) · GPU 재기록 불필요 |
 | 4 | GPU 1: 같은 시험지 v2 기록 (예상 변환 0) | 3 승인 | 같음 | |
-| 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 무작위화 27/27 lead 확인 · 미경험 v5 보고 옴 (51/51 · 38/38 · 출력 out_uncr_v5 · --approval 파일 요구) lead 재실행 전 |
+| 5 | 하위 작업 결과 lead 재실행: 미경험 v5 (17e 고침) · 무작위화 (17d 고침) | 보고 옴 | 시험 · 변이 숫자를 lead 가 다시 셈 | 무작위화 27/27 lead 확인 · 미경험 v5 lead 재실행: isaac311-moects python 51/51 (실제 7 칸 모두 valid) · base python 3.13 은 X01 FAIL (q_post 재계산 바이트가 해석기에 따라 다름 · hold 로 막힘) · 변이 38 재실행 중 |
 | 6 | ASTRA 17g (미경험 v5 · 무작위화) | 5 끝 | 판정 파일 | |
 | 7 | GPU 1: 미경험 full (73 또는 75 실행) · 무작위화 smoke (`--stop_after_smoke`) → 장면 하나씩 | 17g 허용 · 3 · 4 와 겹치지 않게 | 재검사 valid · 영상 전 프레임 검사 | |
+| 7b | S2 판 3 (CPU · 하위 작업): 전 구간 고정 모드 · S2 자체 갱신 번호 · group LR 검사 · 학습 대상만 clipping · 시험 · 변이 (17f-2 2.1 · 3 · 5.3) | 17f-2 끝 | 보고 → lead 재실행 → ASTRA | 00:40 맡김 |
 | 8 | 아침 7판: diag 7 칸 확정 문장 · 밤 결과 · 결정 목록 · Top-down · 팀원 PR (조각은 job tmp `e12page/`) → 빌드 → 1920 · 1366 · 390 · 라이트 · 다크 렌더 확인 → 게시 → #550 · #546 · 채팅 | 아침 | 렌더 확인 기록 | |
 | 9 | super2 에 「GPU 1 out_* 실행 끝」 한 줄 (RL 백업 나머지 채우기용) | 7 끝 | 보냄 | |
 
-**팀장 결정 대기:** S2 encoder 고정 구간 W 의 단위 (PPO iteration 또는 optimizer step) 와 W · r 값.
+**팀장 결정 대기:** 첫 S2 A/B 를 encoder 전 구간 고정으로 확정할지 (ASTRA 17f-2 권고 · lead 동의 · W50 · r0.1 은 뒤의 별도 물음).
 
 **Windows 업데이트 (00:32 확인):** 팀장이 00:27 에 일시 중지 (레지스트리 기준 10/21 00:27 까지 · 품질 · 기능 둘 다). 00:25 에 Windows 가 대기 중이던 NVIDIA 표시 드라이버 32.0.16.1088 (지금 쓰는 것은 591.86) · Logitech 드라이버를 되돌렸고 KB5129195 되돌리기를 시작함 (완료 기록 아직 없음). 재부팅 대기 표시 둘 (RebootRequired · RebootPending) 은 아직 켜짐. 일시 중지 중에 스스로 재부팅할 수 있는지는 미확인 (마지막 부팅 9/17 뒤 4 주 동안 스스로 재부팅한 적 없음). heartbeat 때 부팅 시각을 본다.
 
