@@ -1,0 +1,2346 @@
+{
+ "kind": "uncr_revalidate",
+ "version": "uncr-reval-1",
+ "t": "2026-10-13 20:14:19",
+ "t_end": "2026-10-13 20:14:22",
+ "root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr",
+ "revalidator": {
+  "path": "C:/isaac/ext/go2_rl_robotlab/_eval/uncr_revalidate.py",
+  "sha256": "37614e330a801e0d89b63dace68dc034442b1129ca0060895687433bc74194a5"
+ },
+ "code_now": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+  "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+  "unseen_driver_cmdr_v4.py": "f2c95603160f183e17d47a5751132ab775f3d94d401fac2f6e348601c4a8dab6",
+  "uncr_revalidate.py": "37614e330a801e0d89b63dace68dc034442b1129ca0060895687433bc74194a5"
+ },
+ "channels": {
+  "0": "root_pos_w x",
+  "1": "root_pos_w y",
+  "2": "root_pos_w z",
+  "3": "heading_w",
+  "4": "root_lin_vel_b x",
+  "5": "root_lin_vel_b y",
+  "6": "root_lin_vel_b z",
+  "7": "root_ang_vel_b x",
+  "8": "root_ang_vel_b y",
+  "9": "root_ang_vel_b z",
+  "10": "projected_gravity_b z",
+  "11": "base z minus nanmean of height_scanner_small ray hit z (NaN when no ray hits)"
+ },
+ "required_channels": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10
+ ],
+ "ground_channel": 11,
+ "judgement_window": "per episode: states 0..J (J = round(duration_s / DT) = 1000) when it survived, else 0..j_fall-1 where j_fall is the later of fall_t and span_fall_t (episodes.csv) divided by DT; j_fall must not come after the first term flag and equals it for base_contact",
+ "classes": {
+  "invalid": "record defect or invalid measurement",
+  "hold": "measured, needs a person (see reasons)",
+  "valid": "all checks passed; channel 11 NaN after the window is allowed and counted",
+  "incomplete": "cell lacks one of par / off / on",
+  "missing": "no run of the cell"
+ },
+ "models": {
+  "par": {
+   "ckpt": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/model_20000.pt",
+   "sha256_now": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8"
+  },
+  "off": {
+   "ckpt": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_off_u4000/model_24000.pt",
+   "sha256_now": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1"
+  },
+  "on": {
+   "ckpt": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_on_u4000/model_24000.pt",
+   "sha256_now": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25"
+  }
+ },
+ "train_yaml": {
+  "path": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/params/env.yaml",
+  "sha256_now": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c"
+ },
+ "runs": {
+  "uncr_off_discrete_obstacles_back03": {
+   "tag": "uncr_off_discrete_obstacles_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "discrete_obstacles",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1",
+   "stamp_t": "2026-10-13 19:24:43",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1/isaaclab/usd_20261013_192343_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 99,
+    "cross": 64,
+    "alive_cross": 64,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_off_discrete_obstacles_back03.guard.json": "695ac3150648d3b33617881fc180f15732fa40af4883db5dee3936db07d97385",
+    "uncr_off_discrete_obstacles_back03.log": "2d38a6c4bff23a5915d53e95dfbe312b58040c440bfc885e583ea7e5b7165f32",
+    "uncr_off_discrete_obstacles_back03.slot.json": "bad24d0882607f931209d347d7e62ffbb362dc385b8b0c8ce8a43016a5683f37",
+    "uncr_off_discrete_obstacles_back03/cells.json": "09c6adc5054e315f72dfa5c8132b33cd2e17a855540f157ecb13e313ba224571",
+    "uncr_off_discrete_obstacles_back03/driver_stamp.json": "dd9e4362c75937727c6d2103099686c761d3a824621491b5cce93b1352a0e4d4",
+    "uncr_off_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+    "uncr_off_discrete_obstacles_back03/episodes.csv": "be7a050015016357cf33c1eb341a7d4a8b8fe0fec1fccaa20cad988abb257f1b",
+    "uncr_off_discrete_obstacles_back03/meta.json": "3bf704229b8afab56f73ec2beb0c102abac236a0bff2d8fb3886463076611428",
+    "uncr_off_discrete_obstacles_back03/traj.npz": "55024268f4e14e1e91caff0d00fed5230e9fa721697ed142f9a68d8e00820a47",
+    "usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1/assigned.jsonl": "05092aae0d52eb9fa25c464bc928d7fabc1abf34cda2cbfcc6b547e92eb2b0a6",
+    "usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1/isolate_state.json": "11e3b94e194668a62fc861297c73fc701f325f0c782485f7d781a16df2996283"
+   }
+  },
+  "uncr_off_discrete_obstacles_fwd05": {
+   "tag": "uncr_off_discrete_obstacles_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "discrete_obstacles",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1",
+   "stamp_t": "2026-10-13 19:28:46",
+   "slot_attempt": "g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1/isaaclab/usd_20261013_192745_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 97,
+    "cross": 93,
+    "alive_cross": 90,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_off_discrete_obstacles_fwd05.guard.json": "57daf87c2f4895c633e450a84014d54aeaf949671160e6685ffe1c234bc70eca",
+    "uncr_off_discrete_obstacles_fwd05.log": "ea7cc26b9a4241151326966b6ba53b544763f7da1e026f05c835da34a4e3d6d1",
+    "uncr_off_discrete_obstacles_fwd05.slot.json": "fad0bb81ef162348019f9af08784bbb0cff1bb1548caa09c5aab58f21b837079",
+    "uncr_off_discrete_obstacles_fwd05/cells.json": "c134973a86c15966e3c9c489cbdbf5bf3e239e0e0b3b8832fb55dd605a99e099",
+    "uncr_off_discrete_obstacles_fwd05/driver_stamp.json": "b3235c630c3602621c1f6eee573053d2b6d5c6824f55826e0ca266b557c9557b",
+    "uncr_off_discrete_obstacles_fwd05/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+    "uncr_off_discrete_obstacles_fwd05/episodes.csv": "348854bd0f19a1285ed056e16cab887eacac70a4cb9431000a739fc90b1ea33f",
+    "uncr_off_discrete_obstacles_fwd05/meta.json": "c44fe42f0dd95876a74c3acf0506678e358a15be511841d01937d9b9d3d4cbf6",
+    "uncr_off_discrete_obstacles_fwd05/traj.npz": "4c56c8209db8bc903c8788d4cf5f8c93ae310e98692134020c5eeba7409c6869",
+    "usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1/assigned.jsonl": "4247dce399b1f38ea24e2966395cb1215eed5a8b9de4063c37e9f48ee4ea5b8b",
+    "usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1/isolate_state.json": "25cd5ebad1e994400515479cfb4974b0ce18ed41da86712e84e75c597ecf6baf"
+   }
+  },
+  "uncr_off_floating_ring_fwd05": {
+   "tag": "uncr_off_floating_ring_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "floating_ring",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1",
+   "stamp_t": "2026-10-13 19:09:11",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1/isaaclab/usd_20261013_190801_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 79,
+    "cross": 46,
+    "alive_cross": 45,
+    "zone_end": 1.175
+   },
+   "inputs": {
+    "uncr_off_floating_ring_fwd05.guard.json": "ccdd002432f3aa81e7816cf696e64992c677504bbbe95316c945f38e703a799b",
+    "uncr_off_floating_ring_fwd05.log": "4fc46d3daf9173260cb869e210e60b32217a197dc6b850337712b11375b05963",
+    "uncr_off_floating_ring_fwd05.slot.json": "266e73db4f68501d129c68bae8ed6af78c0f4355d06533344c0593df5bac9668",
+    "uncr_off_floating_ring_fwd05/cells.json": "78489002a3216e6347acdeaa2a56231951d571cc13f8dd9e738c59924b082eb9",
+    "uncr_off_floating_ring_fwd05/driver_stamp.json": "4551f732883b594bda9fc052eddd58c045497d876cc5529bd0da265c4b2d7f9b",
+    "uncr_off_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_off_floating_ring_fwd05/episodes.csv": "99e512aab5debadde546dc742d956a511f3c337af5ffa07971e345c78ead549c",
+    "uncr_off_floating_ring_fwd05/meta.json": "4b588bc5cfc3400090c62b1cc8a76f76e97b82e7a4df7fc3573c6f70d0a356ec",
+    "uncr_off_floating_ring_fwd05/traj.npz": "13a2ab50bf178aa89600aedee66bbdb0d70bf8fa2867356eec05b5e5ff51cda2",
+    "usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1/assigned.jsonl": "029d73f371db03089209049b9d6bd64e753512704d808d94fcb9355ae02d744c",
+    "usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1/isolate_state.json": "2cc410b0ffd1c34876e5837fe41eedc706d7d3c6e35ca774f81fcbeb2bf23753"
+   }
+  },
+  "uncr_off_gap_back03": {
+   "tag": "uncr_off_gap_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "gap",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_gap_back03-try1",
+   "stamp_t": "2026-10-13 19:20:59",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_gap_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1/isaaclab/usd_20261013_191951_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 1,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_off_gap_back03.guard.json": "54278cb3275a721d55385bbd87a51a9d2dd9097b17b25bca50a5895311e750aa",
+    "uncr_off_gap_back03.log": "6af86e62dc1221d625db71cd834f84b530acb60bc8121bda0a41b2d37af44fc5",
+    "uncr_off_gap_back03.slot.json": "c8d069eeb07d967c97b9694e1efa30587a69a41b0cb16c84a137c376bc24c289",
+    "uncr_off_gap_back03/cells.json": "aae2c5a838667adab22838bc475c4407d268493249d4383e9c20028dacdec7ad",
+    "uncr_off_gap_back03/driver_stamp.json": "f44f6af2521b37851e4edacb77f53f2c823560cd4331b77b125e2f0e08ff7d89",
+    "uncr_off_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_off_gap_back03/episodes.csv": "2fb0d4df7f88204db624d8a384816d8ccf580461506ff6744c596b8aae4975b0",
+    "uncr_off_gap_back03/meta.json": "336b4a8d3ecc8a69b3b29ebae4421321f66cf615c3b5b5cd8c8bd68cb546af54",
+    "uncr_off_gap_back03/traj.npz": "b7f386ba5f92aac8b606e366b4c236631cfbd05bafcfb2c64b72e771e122cf49",
+    "usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1/assigned.jsonl": "5087eb92cb34524be262556209aad85934796babd4022f45139a1b9d23ce595a",
+    "usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1/isolate_state.json": "7cc28543fca62bce2657fb92311beb6e7144bf4f542ac4dbe786922598f09b5c"
+   }
+  },
+  "uncr_off_gap_fwd05": {
+   "tag": "uncr_off_gap_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "gap",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_gap_fwd05-try1",
+   "stamp_t": "2026-10-13 19:00:11",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_gap_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1/isaaclab/usd_20261013_185904_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 31,
+    "cross": 3,
+    "alive_cross": 1,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_off_gap_fwd05.guard.json": "ea91fffdb519eac7d0035ec05d50bc58ae6ee599f1706bd2ce98a54e2a3b43ad",
+    "uncr_off_gap_fwd05.log": "4568a7188fc052c77c45490d435b5b1750bb0d2c6ed7e4edf8928f972ad75fb2",
+    "uncr_off_gap_fwd05.slot.json": "1d10b79c1571de5f84123357546eea780b3be9ca8e999f51b03c1fb740d97366",
+    "uncr_off_gap_fwd05/cells.json": "4b27051fdb652801ab8ee9c898002f5f3ccd640829619d9484eb4da5fdcf8448",
+    "uncr_off_gap_fwd05/driver_stamp.json": "a6dc4c9f5eabb629b7ffdf252329c50407203fb31e4954e710c2ea54d379ce4b",
+    "uncr_off_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_off_gap_fwd05/episodes.csv": "488776dd83c571d44f1f7b45f1bdffe8dec8d6b3ddab2d82bcdee9f1077e101c",
+    "uncr_off_gap_fwd05/meta.json": "1558cdf3e2558fdf640b4cb50043634c8e1d84d6b8a2b68fb34aa899b23bb973",
+    "uncr_off_gap_fwd05/traj.npz": "69585d14e8dccb5449047c10d01b76b044a29263b71b3894ea0de029d9fb28d2",
+    "usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1/assigned.jsonl": "138eab1d3e5f8dd2ab1b6598aa29c68a5013b4d3be8a1d6c3d943d1c24c401d3",
+    "usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1/isolate_state.json": "d466dace45351387fe2967ea733a04dba4e900b9e65b8651993560121629ca55"
+   }
+  },
+  "uncr_off_rails_fwd05": {
+   "tag": "uncr_off_rails_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "rails",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_rails_fwd05-try1",
+   "stamp_t": "2026-10-13 19:13:14",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_rails_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1/isaaclab/usd_20261013_191207_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 97,
+    "cross": 67,
+    "alive_cross": 65,
+    "zone_end": 2.88
+   },
+   "inputs": {
+    "uncr_off_rails_fwd05.guard.json": "d569d0b4395be3c469401f7bf0cfa71601540ecb81261b8546cdc23667db9929",
+    "uncr_off_rails_fwd05.log": "55b5bce0546855da6d4653cc515a60fed40c2626558729291238f8190eb5ae6b",
+    "uncr_off_rails_fwd05.slot.json": "7ab02ba8d81f298f54e582ba530d31b8c4bfe8ed1ee44c909e9464ba0680c715",
+    "uncr_off_rails_fwd05/cells.json": "0abff27a0f80a51224b73f14d64d4be091b402be80a028dca4a7b930858358dc",
+    "uncr_off_rails_fwd05/driver_stamp.json": "f37978721ed772c89dd360d962b153c54ade0b3ea9de1ad1a64b76cb099672b8",
+    "uncr_off_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_off_rails_fwd05/episodes.csv": "148f3fb4dcb82ef61ca8179aa13001beb6579bd34ac38a14473deb6e984c37bb",
+    "uncr_off_rails_fwd05/meta.json": "1353e76f51aaa47e225ab308ef778b647f4637d361ac891c92618dddd1af0489",
+    "uncr_off_rails_fwd05/traj.npz": "ef3e5f5f82a2f2f8ceac415de4fd0cb411f8be39a07612979ecf9b52fd5d4c61",
+    "usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1/assigned.jsonl": "3a39c3cf592b8134de81bed4fca37005d535b28d413bdce626adac632b274e7b",
+    "usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1/isolate_state.json": "2e7f192310bfa24954db3233ebb8434ce54b503a9896b33a9d0a052592e782da"
+   }
+  },
+  "uncr_off_stepping_stones_fwd05": {
+   "tag": "uncr_off_stepping_stones_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "stepping_stones",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1",
+   "stamp_t": "2026-10-13 19:04:45",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1/isaaclab/usd_20261013_190322_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 14,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_off_stepping_stones_fwd05.guard.json": "6d8cd9aa6b61eaeb83c52ad32aec95b339a8fc6f1923430cc3765e236587b852",
+    "uncr_off_stepping_stones_fwd05.log": "e706933aad644c82d222f1381585662a5687b01f899cd7bd389aa0764ee1152d",
+    "uncr_off_stepping_stones_fwd05.slot.json": "d5035d8b42bb94f0ff81f4439cb2c824d0e221c06111560c31835f0021184536",
+    "uncr_off_stepping_stones_fwd05/cells.json": "b83fd323efd232e4a5e9fa54897f4bb057a12172c09a3bd4fb4897c9739ab5d7",
+    "uncr_off_stepping_stones_fwd05/driver_stamp.json": "2e523f3840a81427a879ce9f30848b798846c5c5199d71ec7f0f53f53c3a974c",
+    "uncr_off_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+    "uncr_off_stepping_stones_fwd05/episodes.csv": "0e7847a6dda6dc6cd87060935341816705893116b2a8e4f86ddd57c3e2f38515",
+    "uncr_off_stepping_stones_fwd05/meta.json": "2657a502b2e94251a768e8647b11f2d1b4aa4fd9228084a96910699f83be9487",
+    "uncr_off_stepping_stones_fwd05/traj.npz": "c01a69e611b09e4ffe23f41b13088dbd7c62994695db0992b833b2a3182e8c36",
+    "usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1/assigned.jsonl": "6643c41e53c23a600de8eeec251882d8b00c99c79436dbec70db30b904354d38",
+    "usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1/isolate_state.json": "6138199d6fc41fb101383280770d928231de39cade17ef02da25ba3f826e705c"
+   }
+  },
+  "uncr_off_wave_fwd05": {
+   "tag": "uncr_off_wave_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "off",
+   "family": "wave",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_off_wave_fwd05-try1",
+   "stamp_t": "2026-10-13 19:17:03",
+   "slot_attempt": "g1-83128-1013185735-uncr_off_wave_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1/isaaclab/usd_20261013_191603_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 100,
+    "cross": 99,
+    "alive_cross": 99,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_off_wave_fwd05.guard.json": "0c330b2891f1cf15d097d292d7f29f3401a5803f7812f9e110912d4f0e353e8b",
+    "uncr_off_wave_fwd05.log": "9a4165485383f446cb71bef0367be9eb4d1589d4d875f8e7c551fa50f010b2b9",
+    "uncr_off_wave_fwd05.slot.json": "825daf6f5548d9156ab28083a6486c676bc54d1bc729f6a47f5dca5398cb8895",
+    "uncr_off_wave_fwd05/cells.json": "67d91082ff0778bda4803aa91991b8df9e3b8846d07e3d34c3d9c63bb6e43413",
+    "uncr_off_wave_fwd05/driver_stamp.json": "8defb185574b6576396f6d22f3b5a66b7f2d0c875a3a05b8d64d1970860b1184",
+    "uncr_off_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+    "uncr_off_wave_fwd05/episodes.csv": "dcb2be280b7e2bd463877028636eb0ce045c0043561a23cf6fdac18a7269806d",
+    "uncr_off_wave_fwd05/meta.json": "cb645f7d20c214c3d733cdf265912eaf3c0df1e49ecf711a8160a39df1824e1e",
+    "uncr_off_wave_fwd05/traj.npz": "f1e06c64efd9c91b3a907009a8ade6fff86fdde4f321dc38c7557e8c61153f6c",
+    "usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1/assigned.jsonl": "9d8dd30491ff6e693424b0fdc5b48c506a1fba7ebf35238df87f7d49f6ae5d7a",
+    "usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1/isolate_state.json": "796f5255ff28aeae26cbe082d20c55ea12d3817accc95d2b17623780687489e6"
+   }
+  },
+  "uncr_on_discrete_obstacles_back03": {
+   "tag": "uncr_on_discrete_obstacles_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "discrete_obstacles",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1",
+   "stamp_t": "2026-10-13 19:25:55",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1/isaaclab/usd_20261013_192455_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 100,
+    "cross": 57,
+    "alive_cross": 57,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_on_discrete_obstacles_back03.guard.json": "b9dc1a2c4cd478e30678f82ed4d82b16539709b2527bd90b2d8be9da32f3cf85",
+    "uncr_on_discrete_obstacles_back03.log": "bc4cd882ab9f5dc973abfbff9282df7221d255d7be076fefb61c2d9d9663a29a",
+    "uncr_on_discrete_obstacles_back03.slot.json": "908d39eedd7c6dff4f870d89792868dfb215c3731ba31e1bd75bee8aada98864",
+    "uncr_on_discrete_obstacles_back03/cells.json": "82dbbf03cf3da8776ebf5907634da9a2c1464494f776abbbfb92ef47bf583d05",
+    "uncr_on_discrete_obstacles_back03/driver_stamp.json": "3780b22086ba9a59c18a49e9ad1b7020e6346f45489716982af3915d76f8a878",
+    "uncr_on_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+    "uncr_on_discrete_obstacles_back03/episodes.csv": "197b17799c9099a716664bc087adc2cd7d4daaf18688085d8dd0cb77ae9b2d65",
+    "uncr_on_discrete_obstacles_back03/meta.json": "31ca200d4cdfa6b41c20bc621f6dbe72cd9b42faf39abc44b0c4856fefc84574",
+    "uncr_on_discrete_obstacles_back03/traj.npz": "5455d366a58309cc2e31c809949747e1de85cb66641707242634916f94fe6d16",
+    "usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1/assigned.jsonl": "ab1f427b5da5ce55abb9779697f6fae921a2617b8debb5819d1ca52be97108cb",
+    "usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1/isolate_state.json": "4f69912d8c0129890766dec618cd6843a7db7012d6ed9a711c9b0ee359ccf65b"
+   }
+  },
+  "uncr_on_floating_ring_fwd05": {
+   "tag": "uncr_on_floating_ring_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "floating_ring",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1",
+   "stamp_t": "2026-10-13 19:10:33",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1/isaaclab/usd_20261013_190925_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 93,
+    "cross": 92,
+    "alive_cross": 91,
+    "zone_end": 1.175
+   },
+   "inputs": {
+    "uncr_on_floating_ring_fwd05.guard.json": "357184666bf886d4c5160876a5b38f87f19d4d680170e4db2e27ee3fe5068775",
+    "uncr_on_floating_ring_fwd05.log": "24ec1d8918fa5d1535790b0f44f8af10c64354ff413cb7505e28e0d88988bac2",
+    "uncr_on_floating_ring_fwd05.slot.json": "bfae451d1d69d8c86e9b56e77c76071a2f229afd01f4cddc98952824513a4970",
+    "uncr_on_floating_ring_fwd05/cells.json": "53ac10b794c5def5536caa747127e72359952fd8b0ef642592bd989cf97281f2",
+    "uncr_on_floating_ring_fwd05/driver_stamp.json": "1c9d7ebe35fda79e8da47bf3529bf451e186c79f4d3a014c9726c531d4507604",
+    "uncr_on_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_on_floating_ring_fwd05/episodes.csv": "8674e12af13c57ff34a4aeb6e3df7d6e7ece89d88ce0d75a0a5d496da0dc9538",
+    "uncr_on_floating_ring_fwd05/meta.json": "0ba55119f1030984609c48c6eead04069db91cccb7080070c5cc095e8da73756",
+    "uncr_on_floating_ring_fwd05/traj.npz": "50f578f7522a2ddf6f472bda7734c036381d5708721f0ebd9a043d657340f42e",
+    "usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1/assigned.jsonl": "77e04598fdc289245fda14ea2c39f98551c686c3d22fa72c08a6203b8961718e",
+    "usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1/isolate_state.json": "5a33e86cc3e657f903f39d1adb86264d1c783f7039e0af378af6b4081fc5395f"
+   }
+  },
+  "uncr_on_gap_back03": {
+   "tag": "uncr_on_gap_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "gap",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_gap_back03-try1",
+   "stamp_t": "2026-10-13 19:22:19",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_gap_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1/isaaclab/usd_20261013_192111_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 0,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_on_gap_back03.guard.json": "839c50d5823512581a9440349ba919a8983914afafee33a0fe765155bd3505a6",
+    "uncr_on_gap_back03.log": "540f32f94a7ab5c67634e9b81ce3ba08d4ab0677d108ee540ca0685b27662152",
+    "uncr_on_gap_back03.slot.json": "b15cd81c2219f2fcb216b9e4aa87eeef156349c90ba85eec371e34c55b3b99c3",
+    "uncr_on_gap_back03/cells.json": "98210d13c6409d7df9f1343b5f76754660ec6a6269b47e7a088c321e8e2bdad4",
+    "uncr_on_gap_back03/driver_stamp.json": "7b26b3bf650d81bbbffdb5f89d18f7845273a31a8f387c62721c0492e429337d",
+    "uncr_on_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_on_gap_back03/episodes.csv": "8d40fb304b9089c185adc06818e8eff9de97ce84508165939b2799522ae9dcad",
+    "uncr_on_gap_back03/meta.json": "09906d02a329c25cbcc2cf00bb31a2a97ae949488c4adc2b3d69f5567b7efbd5",
+    "uncr_on_gap_back03/traj.npz": "482bf3b3647523decade823cf90355e15b66d858fa67763816ca592c79fba7a0",
+    "usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1/assigned.jsonl": "0aecada1ffce9e0e1800264a242d76bfccb83a52edb21aaee736734092267f25",
+    "usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1/isolate_state.json": "546213ca0fe434cc1cdf5a7db1455dddbd20ecb1b9f5d577f51f5880b1da586d"
+   }
+  },
+  "uncr_on_gap_fwd05": {
+   "tag": "uncr_on_gap_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "gap",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_gap_fwd05-try1",
+   "stamp_t": "2026-10-13 19:01:32",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_gap_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1/isaaclab/usd_20261013_190023_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 193,
+    "ground_ch11_after_window_envs": [
+     50
+    ],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 14,
+    "cross": 1,
+    "alive_cross": 0,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_on_gap_fwd05.guard.json": "89d269ca57f781a7ccf328d4b356c1d5bd1918823218df03c000b450a484e0fa",
+    "uncr_on_gap_fwd05.log": "684c39bc5d1fda45c1d8e48a941f767e4312a3b7c7790f5154458c8d6fde4f18",
+    "uncr_on_gap_fwd05.slot.json": "eca8d6b9ee7d6c47f4a8c096cd819463ca6292f38ecc061adf3d7f7e391639f5",
+    "uncr_on_gap_fwd05/cells.json": "c6bf7fb076cd54fe4efda180a389025837b1216dcc52ffdd4aabe4da4aae3ad7",
+    "uncr_on_gap_fwd05/driver_stamp.json": "53c3c70dc76cdb97280a784ab6c686790e2816357f124ab4a55613ebbf8d2d10",
+    "uncr_on_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_on_gap_fwd05/episodes.csv": "5ce47691220c65292d51b73d1690199b03a87571afbf3a2ba5b046efef80d59a",
+    "uncr_on_gap_fwd05/meta.json": "b65c3043232f464f5522a8e37530f931bf841fab15b7096a735f489788dd50f4",
+    "uncr_on_gap_fwd05/traj.npz": "4e729ebd3fa18200fbe43fcaa849761811c354d3d7e5ff6c0f55aa35dc03ea0a",
+    "usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1/assigned.jsonl": "99b9884c15dc5b0358db1753a09c04ac1c9c4755caf6370ffa832c5d3830d919",
+    "usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1/isolate_state.json": "a9cd96787c31046255f10a6c5700a2e8b6244e751391979414033dff636e70cf"
+   }
+  },
+  "uncr_on_rails_fwd05": {
+   "tag": "uncr_on_rails_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "rails",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_rails_fwd05-try1",
+   "stamp_t": "2026-10-13 19:14:36",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_rails_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1/isaaclab/usd_20261013_191327_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 99,
+    "cross": 98,
+    "alive_cross": 98,
+    "zone_end": 2.88
+   },
+   "inputs": {
+    "uncr_on_rails_fwd05.guard.json": "1f4bf04caafc9187972271df1ba49c59ce10963789446d33abffb68077cd3a62",
+    "uncr_on_rails_fwd05.log": "1b75cfad4a987498d89c27c9ebf9c409f5c73139605da4a03f86be4a695af1c4",
+    "uncr_on_rails_fwd05.slot.json": "b9e2087232cb2742cdf3b6c19e8047416ac58f86c060298bf6ab64d118f68c89",
+    "uncr_on_rails_fwd05/cells.json": "204e3d2db6e328cec039e117ae31cdb0f9c3dd654ce15f571ab92d6a161bb2d8",
+    "uncr_on_rails_fwd05/driver_stamp.json": "44df43be75c1394130f68df8e9709877bafb5e4d1f5ddffff630195013efdbaf",
+    "uncr_on_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_on_rails_fwd05/episodes.csv": "978759b02c1dafd8085a138f22cb3061cf298ed3c78686e059e099b4fcc36210",
+    "uncr_on_rails_fwd05/meta.json": "95f9bee867028c07d1f4d73f57b23652c71e9440667e8ad4b81b6a14a35ae81e",
+    "uncr_on_rails_fwd05/traj.npz": "fb1c286f15315d502e2b768b0029fb13a3a4f985852703359805cac60a577906",
+    "usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1/assigned.jsonl": "7b401a8daec6a9fdd37f21ec72c0efde9affc815d73398b510222effc9d78561",
+    "usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1/isolate_state.json": "8f1d8416b2532b948ad156afcb912d8f4dddc9a069239d9a126cb45ea9ab5d90"
+   }
+  },
+  "uncr_on_stepping_stones_fwd05": {
+   "tag": "uncr_on_stepping_stones_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "stepping_stones",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1",
+   "stamp_t": "2026-10-13 19:06:23",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1/isaaclab/usd_20261013_190458_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 14,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_on_stepping_stones_fwd05.guard.json": "fabc13d472fe442b4bb7a20963e2c0ea442e843ff6a1cc6cb8c264cc65eb9549",
+    "uncr_on_stepping_stones_fwd05.log": "c368fc887499517c6506ff69cb680b55e6cd9bff2473f02d83dc5db0049cfdc2",
+    "uncr_on_stepping_stones_fwd05.slot.json": "2f659a120cbd0ccf66420ac155cefb790f92c210e1ca07abdd393ad366ec2639",
+    "uncr_on_stepping_stones_fwd05/cells.json": "81f68295daeffa01395c9f03c735ee5bedcf44a5d633176a2bdf81dc93b41083",
+    "uncr_on_stepping_stones_fwd05/driver_stamp.json": "995cc21a8844b5d529f9aa3a2960f6f9e43c5cd4e9273d2237a54744f09bbad0",
+    "uncr_on_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+    "uncr_on_stepping_stones_fwd05/episodes.csv": "323b227cd77abeeb9329167cc58ab9de53ab7539a9d601dd9b4971e574da10c0",
+    "uncr_on_stepping_stones_fwd05/meta.json": "4e7e9537136e1b1eb2a04a79bf743110cf3d1b3900d7d594319928dfba201123",
+    "uncr_on_stepping_stones_fwd05/traj.npz": "5d851a6f99538c80454fd15b7b38eff1c0dd25fc2d4cb4fb1018ec0aba3b8b6a",
+    "usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1/assigned.jsonl": "b053042e0394ce395f418de1daf9f4327e8da857d51abcc1e59fdb479dbd3ae9",
+    "usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1/isolate_state.json": "25bab86d99ce274e64b16ea0539025526cf1aabb6affa57640ceab75ce1391c2"
+   }
+  },
+  "uncr_on_wave_fwd05": {
+   "tag": "uncr_on_wave_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "on",
+   "family": "wave",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_on_wave_fwd05-try1",
+   "stamp_t": "2026-10-13 19:18:16",
+   "slot_attempt": "g1-83128-1013185735-uncr_on_wave_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1/isaaclab/usd_20261013_191716_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 100,
+    "cross": 95,
+    "alive_cross": 95,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_on_wave_fwd05.guard.json": "27991d0c15a1f979d8bf0d56addb4a0edfcc817e072139786ff9c6ee972e7a11",
+    "uncr_on_wave_fwd05.log": "f68211a81f55b167bf542ac0d7b86525d31c8c2ebe2a8e5605f8fca6e1b63d6d",
+    "uncr_on_wave_fwd05.slot.json": "5b2a96525bbb27c8cbec9973582e34c8538f3a5cd8e0977092411f18b01b5ec9",
+    "uncr_on_wave_fwd05/cells.json": "55993104450445c7f648646f7a11c11deb41fae5c514018dcb5d2d6ca4efef39",
+    "uncr_on_wave_fwd05/driver_stamp.json": "7d3c0c3f27e62fbbd380292303f0f2db1dc24e7c90a5273b691fc0dba45838b3",
+    "uncr_on_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+    "uncr_on_wave_fwd05/episodes.csv": "e96a554033ce852d3f2cf76061f83d529d59c399c20ea390d7cc5cc4bdb1ef1a",
+    "uncr_on_wave_fwd05/meta.json": "4a3a2cbe3aca7058776d3cf8656c60c3d3674868d5edea54dc32f8f0de2d4f38",
+    "uncr_on_wave_fwd05/traj.npz": "bdb6d8fef1645ebf318faadfea5fd764bb2f4b76826282f5aef42f93e9cbf269",
+    "usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1/assigned.jsonl": "987e2bf5ec3ba6105472e99515de2a70bc9884831c391a587342f198b67e9ae0",
+    "usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1/isolate_state.json": "a57205cb3cf86c0b15bdaf7e127689c84d0d5be4494af4212be2fee8b3061053"
+   }
+  },
+  "uncr_par_discrete_obstacles_back03": {
+   "tag": "uncr_par_discrete_obstacles_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "discrete_obstacles",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1",
+   "stamp_t": "2026-10-13 19:23:30",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1/isaaclab/usd_20261013_192232_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 99,
+    "cross": 58,
+    "alive_cross": 58,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_par_discrete_obstacles_back03.guard.json": "1c0b5ba5ee66026cfff598898bdbdf323cf108e9ef7aab0867b988def14efb9b",
+    "uncr_par_discrete_obstacles_back03.log": "785e2e8ad2501c7ff44cd16c63e89bd0a05e198f42d33bef73f162dc1f8089e2",
+    "uncr_par_discrete_obstacles_back03.slot.json": "2d55faed86de244832215f9d08ac11980e2adec47b217640aeff6fe5491b93ea",
+    "uncr_par_discrete_obstacles_back03/cells.json": "833e38eda3a5e2ecb667cd1eacbf134a798053ae459d08f280c57fa6c60e18be",
+    "uncr_par_discrete_obstacles_back03/driver_stamp.json": "58f07ae8afd9a4336d19b492fd2b6afa311a0ef516a947dbd6201f045b34887e",
+    "uncr_par_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+    "uncr_par_discrete_obstacles_back03/episodes.csv": "35c4f4322efe536c2ac5972be6b62a81fb21642442bb622c08e6227041b4ac0b",
+    "uncr_par_discrete_obstacles_back03/meta.json": "6198c4db56799ffa63b9a6b7fd30844da6b48ea5509b9e70dedfe12d11b6f54c",
+    "uncr_par_discrete_obstacles_back03/traj.npz": "53519274bc21ed353785e509a836f6783e42f7e457fc58b99616578af04bd80b",
+    "usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1/assigned.jsonl": "114481ffabd99b9003d99c51c3da1f79a2d40409cff736a1009b3104ff12ca3b",
+    "usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1/isolate_state.json": "c7a5c93e450b70cc33da3cbcfb117ac48b2d13ef952009953c902960a8678238"
+   }
+  },
+  "uncr_par_discrete_obstacles_fwd05": {
+   "tag": "uncr_par_discrete_obstacles_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "discrete_obstacles",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1",
+   "stamp_t": "2026-10-13 19:27:33",
+   "slot_attempt": "g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1/isaaclab/usd_20261013_192632_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 96,
+    "cross": 96,
+    "alive_cross": 94,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_par_discrete_obstacles_fwd05.guard.json": "c4e96ecf876ec75de578e026fe6fa05b917a83c029076d2d6773bd237e25187c",
+    "uncr_par_discrete_obstacles_fwd05.log": "87b11d0e11f87073abda09755e01af25d7a6e741cccb2abfa873cd4b87aec9cd",
+    "uncr_par_discrete_obstacles_fwd05.slot.json": "d4c54c1e8059530587e7f49d8d87a4253b747a1c1f8bb734f07e51501fb5e64f",
+    "uncr_par_discrete_obstacles_fwd05/cells.json": "c405fbd5e49876759e3a542d63efbe377a8e12d032fdc783133e5298b94d3921",
+    "uncr_par_discrete_obstacles_fwd05/driver_stamp.json": "7881b3bfc01e9f9d7274f8f3be13ffcb11c30728e7b6cbfd9b87db4a2385aaa1",
+    "uncr_par_discrete_obstacles_fwd05/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+    "uncr_par_discrete_obstacles_fwd05/episodes.csv": "94a5cd57f1b8a5911bc2c8d6332fef231be8d1270e7c39804873a8711fd919ab",
+    "uncr_par_discrete_obstacles_fwd05/meta.json": "9a3f4b6cca41e599265da2156e052a545df6fbd7525d13af5c583bac96ae1e20",
+    "uncr_par_discrete_obstacles_fwd05/traj.npz": "09bca88ecee0fec559e7ffa016f9bae5682256f84fdff6646af8e82576883a4a",
+    "usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1/assigned.jsonl": "0babde6fb11fd46161e885306b643f9c1b2a801f7c0650c9af337201bddf8ebf",
+    "usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1/isolate_state.json": "65ecd5dafca8937a573dc2a613fed889d9639140fd3b9ba17a5a0c5006019754"
+   }
+  },
+  "uncr_par_floating_ring_fwd05": {
+   "tag": "uncr_par_floating_ring_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "floating_ring",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1",
+   "stamp_t": "2026-10-13 19:07:46",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1/isaaclab/usd_20261013_190637_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 81,
+    "cross": 70,
+    "alive_cross": 69,
+    "zone_end": 1.175
+   },
+   "inputs": {
+    "uncr_par_floating_ring_fwd05.guard.json": "e020cb01a5767a62154778b58decf3a1e62d396e627484afeeac878250103499",
+    "uncr_par_floating_ring_fwd05.log": "8897831d96d57dca3f7ff21bdfedc14c72ad0d0878114e6b33a790edb229e16b",
+    "uncr_par_floating_ring_fwd05.slot.json": "72121ca66e243e382ccbe1b20c4f3bd7d38bedf877fe2cca9e2df78686418adb",
+    "uncr_par_floating_ring_fwd05/cells.json": "c6e4b30829a9fb6b1003cd36ce9a001fa83c9a10c95322a9a4a09fa2178ab2f0",
+    "uncr_par_floating_ring_fwd05/driver_stamp.json": "387999a54f1d972ad9217d0ef080529b9c9759212efcfa10fe1959f1d5429c10",
+    "uncr_par_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_par_floating_ring_fwd05/episodes.csv": "cfd99fecd23acc1bb267b0266efbf5d066e7180261ac6509ed91d39734ce3d7e",
+    "uncr_par_floating_ring_fwd05/meta.json": "bcde5df9a26bb46cf703aeba75a28b3f9ea2b7c0b48beb271feb182a196059ab",
+    "uncr_par_floating_ring_fwd05/traj.npz": "876b3cb53a2b5a37c8c3a1310e13ef8c309ebb6af3b2780b61c64b3138867ab9",
+    "usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1/assigned.jsonl": "8cd5030eaf856d519771c8453361082af0dd1892cb14dd96b83e672c145af2b4",
+    "usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1/isolate_state.json": "7fa979dcae466dddfe677b86506348ec1fb057ac67543218e6be572c6eef7d7b"
+   }
+  },
+  "uncr_par_gap_back03": {
+   "tag": "uncr_par_gap_back03",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "gap",
+   "cell": "back03",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_gap_back03-try1",
+   "stamp_t": "2026-10-13 19:19:38",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_gap_back03-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1/isaaclab/usd_20261013_191829_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 1,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_par_gap_back03.guard.json": "dd8a89c9a6342cf8a552dd017d370d7be68077a6db709ae500150358d5f53385",
+    "uncr_par_gap_back03.log": "b33025a91b06e2bbc99577faad762d3664d9340487dbc00da8dd2609ed141ed7",
+    "uncr_par_gap_back03.slot.json": "a8e4cb8faec8ee856c5812c7ae5e11609ab6dd6fffc3a21da71bf6d8359a8eb6",
+    "uncr_par_gap_back03/cells.json": "3617e3854f2e6dc597a6653ef0594766c6365853f85c5ff27e27cf1dd211da50",
+    "uncr_par_gap_back03/driver_stamp.json": "72032cadaa1021461ebd1fd059bbb1587b9b9e99433acb36fa01703ce2bd25df",
+    "uncr_par_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_par_gap_back03/episodes.csv": "66d8f8dfea2e98f1fef635c7d10902516677fd4ac7ab658bd32332ac272f742e",
+    "uncr_par_gap_back03/meta.json": "f75cc5ce2309cc82ace49b3c97c56bf3b74ecdd562b11b1321fd6ebfd6ed0d36",
+    "uncr_par_gap_back03/traj.npz": "d93cc28eef999e8060865d3a17545333f8d2344feec527faddbc37328ff973b1",
+    "usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1/assigned.jsonl": "586d4985be1eff20d06e282b38d7cbd85d658c94216a1e00f19a326ba11fc735",
+    "usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1/isolate_state.json": "bb0e10dbebb97c9aaa8d24f733d147c5d4a58f7d1be544272356e2bbe0b010d0"
+   }
+  },
+  "uncr_par_gap_fwd05": {
+   "tag": "uncr_par_gap_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "gap",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_gap_fwd05-try1",
+   "stamp_t": "2026-10-13 18:58:51",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_gap_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1/isaaclab/usd_20261013_185748_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 45,
+    "cross": 4,
+    "alive_cross": 1,
+    "zone_end": 1.025
+   },
+   "inputs": {
+    "uncr_par_gap_fwd05.guard.json": "3e22b615816af43be68844632468386fc0af511d0e2431ea4cc1470f605268d4",
+    "uncr_par_gap_fwd05.log": "c53d70b6d91e3f40db277d24fbd573045435e03abf9cb1566b2d794499cea494",
+    "uncr_par_gap_fwd05.slot.json": "ec8f5ebbc063d1fb67ba145570168b3f772bf0624292ec207ba9e3da86fb12e7",
+    "uncr_par_gap_fwd05/cells.json": "9d28fe44834a20a8482c79848657bb193cc82f3ad37e83812a44b76603c3657a",
+    "uncr_par_gap_fwd05/driver_stamp.json": "963d464016eec2efca2306da5a36a0c2bd1f47af6bb635aeea468af242e22483",
+    "uncr_par_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_par_gap_fwd05/episodes.csv": "6ff58ed41642519923033444d9f3fe7abbb4873d7aa4ddd4db717f2675fb404d",
+    "uncr_par_gap_fwd05/meta.json": "26fc4d8592c7924692e0c6a55023c27ac6a4b6043cf29601f4103cfd0efc7546",
+    "uncr_par_gap_fwd05/traj.npz": "24076ab178ae9021eb7d8c93994cfd9b3ffda21093dbe99317c0e3e21a1350a1",
+    "usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1/assigned.jsonl": "6aa4494b4e1d494a0a7ebec2c43d21b899fc592d2f3690b3c8ae857f42716e6e",
+    "usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1/isolate_state.json": "de9ad9bf63de76b6473c2d55d42bea583eddabe3b197765ffe1c1fc156f5daec"
+   }
+  },
+  "uncr_par_rails_fwd05": {
+   "tag": "uncr_par_rails_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "rails",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_rails_fwd05-try1",
+   "stamp_t": "2026-10-13 19:11:54",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_rails_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1/isaaclab/usd_20261013_191048_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 99,
+    "cross": 92,
+    "alive_cross": 92,
+    "zone_end": 2.88
+   },
+   "inputs": {
+    "uncr_par_rails_fwd05.guard.json": "443ef9b8a956227559c45e568f82224d0f33116c9d1b050c7f068468803b23f1",
+    "uncr_par_rails_fwd05.log": "e6f8eec08b11b7a290854848f3dec6dfdceed839af9df2a7676c133e7a16c016",
+    "uncr_par_rails_fwd05.slot.json": "ab70c404a985f9621e1c4ce460882cd49cc54581f7ff433934c42c94d2dfab52",
+    "uncr_par_rails_fwd05/cells.json": "d03e2652f888b228e55e4726b8ff1f024c9d0c964f56f219c4481a780587757c",
+    "uncr_par_rails_fwd05/driver_stamp.json": "fd8ef0b2e45eefa505dc33926485dcf09e5b6caea8f69914b9d659484746731a",
+    "uncr_par_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+    "uncr_par_rails_fwd05/episodes.csv": "24c4fedd05dad86d83a0f8840a9b28a803ed24611cf931031b4f42e2bbb53539",
+    "uncr_par_rails_fwd05/meta.json": "f8529a20ee69fc8d01166814f80c091772b3960dbd7db2fcfd7eaae92116da76",
+    "uncr_par_rails_fwd05/traj.npz": "9a1069c0a943986ba8b003bd9454c5c46c0fb01ed7920b68533e956642a8b204",
+    "usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1/assigned.jsonl": "94bc69667571751d3f2eaaf92d2456b6c27d0b85cd426512cd8b4374e3fa2317",
+    "usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1/isolate_state.json": "0c63492d590b9db58b45918d010170fbb659ba0f6736bb30bfebba829f362eb3"
+   }
+  },
+  "uncr_par_stepping_stones_fwd05": {
+   "tag": "uncr_par_stepping_stones_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "stepping_stones",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1",
+   "stamp_t": "2026-10-13 19:03:09",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1/isaaclab/usd_20261013_190145_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 25,
+    "cross": 0,
+    "alive_cross": 0,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_par_stepping_stones_fwd05.guard.json": "99ae69da2e9542c0db87ee1d9d4e245a6326f82eb04a4b85df0c143aaa63cdd5",
+    "uncr_par_stepping_stones_fwd05.log": "5f888dc04d7692a540fa6a10cf82116b1c0abd763627f3d5c7facfa1b4670421",
+    "uncr_par_stepping_stones_fwd05.slot.json": "57e365a38ea74ea923b45e329e83fc8603b87b6d570747ccdf7a08a6563d0cc2",
+    "uncr_par_stepping_stones_fwd05/cells.json": "998a33c609083f373243e9c3c99f6333453e0d7e4365a339fef0afb62bfd72a8",
+    "uncr_par_stepping_stones_fwd05/driver_stamp.json": "7c11fca7eb0b1e56df9652ca53988e7b13e021fcf649df1be4b14c365bf8ae6d",
+    "uncr_par_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+    "uncr_par_stepping_stones_fwd05/episodes.csv": "9cf6c7693452d5044357961c3a8f7880226c0b764b21f3c8892408afe52fcd05",
+    "uncr_par_stepping_stones_fwd05/meta.json": "804173e1dff3384fbbbf71c60cc984f952c137bd0de5281427c76620ece27130",
+    "uncr_par_stepping_stones_fwd05/traj.npz": "22008888d373e2c91b966e79ba2115a05da53648c922c4981600456dbb50cf6d",
+    "usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1/assigned.jsonl": "1cfcef2d99d2fb0727295087247675e5c966fd3ce900293c7cef217508c0d608",
+    "usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1/isolate_state.json": "2d39a82b9378da4527ca80eddc2a5a1f397b0a6d2adf39209e2d459a7ea77e03"
+   }
+  },
+  "uncr_par_wave_fwd05": {
+   "tag": "uncr_par_wave_fwd05",
+   "verdict": "valid",
+   "invalid": [],
+   "hold": [],
+   "notes": [
+    "248 unresolved reference lines in the log (not the robot root; visual assets not approved by this check)"
+   ],
+   "model": "par",
+   "family": "wave",
+   "cell": "fwd05",
+   "code_at_collection": {
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f",
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b"
+   },
+   "code_now": {
+    "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+    "isaac_slot.py": "90ae613b0e7e791fa24bf82866eb0a0285eafe5cd10f0e201ba2f5af9fa19c47",
+    "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+    "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+    "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "unseen_driver_cmdr.py": "f794cec1f439a91b9df039a5e0b7e8e1548d01e315de1103198b5b4f9f1fa14b",
+    "usd_isolate_run.py": "366a3c13aac3499e711ea717441ae7e3da67871302b5c6e432b1cbc20ea0a87f"
+   },
+   "q_post": {
+    "in_stamp": false,
+    "provenance": "출처 미확인: 수집 stamp 에 q_post.py 해시가 없음 (지금 q_post 로 다시 만든 결과와의 바이트 대조만 아래에 적음)",
+    "sha256_now": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+    "recompute_equal": {
+     "episodes.csv": true,
+     "cells.json": true
+    },
+    "sha256_used": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd"
+   },
+   "attempt": "g1-83128-1013185735-uncr_par_wave_fwd05-try1",
+   "stamp_t": "2026-10-13 19:15:50",
+   "slot_attempt": "g1-83128-1013185735-uncr_par_wave_fwd05-try1",
+   "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1",
+   "usd_assigned": [
+    "c:/isaac/ext/go2_rl_robotlab/_eval/out_uncr/usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1/isaaclab/usd_20261013_191449_7028"
+   ],
+   "isolate_patched_by": "loader",
+   "nan": {
+    "ground_ch11_after_window": 0,
+    "ground_ch11_after_window_envs": [],
+    "ground_ch11_in_window": 0,
+    "required_after_window": 0
+   },
+   "stats": {
+    "n": 100,
+    "surv": 100,
+    "cross": 99,
+    "alive_cross": 99,
+    "zone_end": 4.0
+   },
+   "inputs": {
+    "uncr_par_wave_fwd05.guard.json": "573ecc6b881eb5eccca7a623fb50b88504a7cfa1350f3696466a39cdee6a38ec",
+    "uncr_par_wave_fwd05.log": "be6819487a12f734414972af89d02d72f925dc84d22923329e8bd6f7ec5a4cea",
+    "uncr_par_wave_fwd05.slot.json": "12824d74bac414edf2d1daa795cba080e5b245ccff3e49af4b2f03eee3147955",
+    "uncr_par_wave_fwd05/cells.json": "e02268de891e6324310e807d32e565f31cbb5a5ede0f236ada9d2856cf37b155",
+    "uncr_par_wave_fwd05/driver_stamp.json": "67c745d36a101a68186d651e9dce0dfc61c4d6efabbe3ce0fb092452371d648d",
+    "uncr_par_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+    "uncr_par_wave_fwd05/episodes.csv": "6e7465c3be2a7c6d84201d7cb800031b8981a75322f3025683514cf46d5a9198",
+    "uncr_par_wave_fwd05/meta.json": "372c453dd1a1edbd13aaebe3bee848b2f60d61a067e4980026e1256849cdc100",
+    "uncr_par_wave_fwd05/traj.npz": "fe429b9438c338223540ec8f381515601d8aeb2251e7f93b73b4e8853d1eea93",
+    "usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1/assigned.jsonl": "0a8b88488b87c9458a2800daad3ab4bd64cd733ac33e41e56d014fa291679785",
+    "usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1/isolate_state.json": "3c77f8796d722367df10d245d3da3cb48103d2cd2e6ce90312072cfa355b4f5e"
+   }
+  }
+ },
+ "cells": {
+  "discrete_obstacles/back03": {
+   "cell": "discrete_obstacles/back03",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 99,
+     "cross": 58,
+     "alive_cross": 58,
+     "zone_end": 4.0
+    },
+    "off": {
+     "n": 100,
+     "surv": 99,
+     "cross": 64,
+     "alive_cross": 64,
+     "zone_end": 4.0
+    },
+    "on": {
+     "n": 100,
+     "surv": 100,
+     "cross": 57,
+     "alive_cross": 57,
+     "zone_end": 4.0
+    }
+   }
+  },
+  "discrete_obstacles/fwd05": {
+   "cell": "discrete_obstacles/fwd05",
+   "verdict": "incomplete",
+   "reasons": [
+    "[missing] runs not collected: ['on']"
+   ],
+   "pair_ok": null,
+   "pair_diff": [],
+   "in_diag": false,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "missing"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 96,
+     "cross": 96,
+     "alive_cross": 94,
+     "zone_end": 4.0
+    },
+    "off": {
+     "n": 100,
+     "surv": 97,
+     "cross": 93,
+     "alive_cross": 90,
+     "zone_end": 4.0
+    }
+   }
+  },
+  "floating_ring/fwd05": {
+   "cell": "floating_ring/fwd05",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 81,
+     "cross": 70,
+     "alive_cross": 69,
+     "zone_end": 1.175
+    },
+    "off": {
+     "n": 100,
+     "surv": 79,
+     "cross": 46,
+     "alive_cross": 45,
+     "zone_end": 1.175
+    },
+    "on": {
+     "n": 100,
+     "surv": 93,
+     "cross": 92,
+     "alive_cross": 91,
+     "zone_end": 1.175
+    }
+   }
+  },
+  "gap/back03": {
+   "cell": "gap/back03",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 1,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 1.025
+    },
+    "off": {
+     "n": 100,
+     "surv": 1,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 1.025
+    },
+    "on": {
+     "n": 100,
+     "surv": 0,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 1.025
+    }
+   }
+  },
+  "gap/fwd05": {
+   "cell": "gap/fwd05",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 45,
+     "cross": 4,
+     "alive_cross": 1,
+     "zone_end": 1.025
+    },
+    "off": {
+     "n": 100,
+     "surv": 31,
+     "cross": 3,
+     "alive_cross": 1,
+     "zone_end": 1.025
+    },
+    "on": {
+     "n": 100,
+     "surv": 14,
+     "cross": 1,
+     "alive_cross": 0,
+     "zone_end": 1.025
+    }
+   }
+  },
+  "rails/fwd05": {
+   "cell": "rails/fwd05",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 99,
+     "cross": 92,
+     "alive_cross": 92,
+     "zone_end": 2.88
+    },
+    "off": {
+     "n": 100,
+     "surv": 97,
+     "cross": 67,
+     "alive_cross": 65,
+     "zone_end": 2.88
+    },
+    "on": {
+     "n": 100,
+     "surv": 99,
+     "cross": 98,
+     "alive_cross": 98,
+     "zone_end": 2.88
+    }
+   }
+  },
+  "stepping_stones/fwd05": {
+   "cell": "stepping_stones/fwd05",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 25,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 4.0
+    },
+    "off": {
+     "n": 100,
+     "surv": 14,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 4.0
+    },
+    "on": {
+     "n": 100,
+     "surv": 14,
+     "cross": 0,
+     "alive_cross": 0,
+     "zone_end": 4.0
+    }
+   }
+  },
+  "wave/fwd05": {
+   "cell": "wave/fwd05",
+   "verdict": "valid",
+   "reasons": [],
+   "pair_ok": true,
+   "pair_diff": [],
+   "in_diag": true,
+   "runs": {
+    "par": "valid",
+    "off": "valid",
+    "on": "valid"
+   },
+   "stats": {
+    "par": {
+     "n": 100,
+     "surv": 100,
+     "cross": 99,
+     "alive_cross": 99,
+     "zone_end": 4.0
+    },
+    "off": {
+     "n": 100,
+     "surv": 100,
+     "cross": 99,
+     "alive_cross": 99,
+     "zone_end": 4.0
+    },
+    "on": {
+     "n": 100,
+     "surv": 100,
+     "cross": 95,
+     "alive_cross": 95,
+     "zone_end": 4.0
+    }
+   }
+  }
+ },
+ "diag_cells_missing": [],
+ "counts": {
+  "runs": {
+   "valid": 23,
+   "hold": 0,
+   "invalid": 0
+  },
+  "diag_runs": {
+   "valid": 21,
+   "hold": 0,
+   "invalid": 0
+  },
+  "cells": {
+   "valid": 7,
+   "hold": 0,
+   "invalid": 0,
+   "incomplete": 1
+  },
+  "diag_cells": {
+   "valid": 7,
+   "hold": 0,
+   "invalid": 0,
+   "incomplete": 0,
+   "missing": 0
+  }
+ },
+ "inputs_sha256": {
+  "uncr_off_discrete_obstacles_back03.guard.json": "695ac3150648d3b33617881fc180f15732fa40af4883db5dee3936db07d97385",
+  "uncr_off_discrete_obstacles_back03.log": "2d38a6c4bff23a5915d53e95dfbe312b58040c440bfc885e583ea7e5b7165f32",
+  "uncr_off_discrete_obstacles_back03.slot.json": "bad24d0882607f931209d347d7e62ffbb362dc385b8b0c8ce8a43016a5683f37",
+  "uncr_off_discrete_obstacles_back03/cells.json": "09c6adc5054e315f72dfa5c8132b33cd2e17a855540f157ecb13e313ba224571",
+  "uncr_off_discrete_obstacles_back03/driver_stamp.json": "dd9e4362c75937727c6d2103099686c761d3a824621491b5cce93b1352a0e4d4",
+  "uncr_off_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+  "uncr_off_discrete_obstacles_back03/episodes.csv": "be7a050015016357cf33c1eb341a7d4a8b8fe0fec1fccaa20cad988abb257f1b",
+  "uncr_off_discrete_obstacles_back03/meta.json": "3bf704229b8afab56f73ec2beb0c102abac236a0bff2d8fb3886463076611428",
+  "uncr_off_discrete_obstacles_back03/traj.npz": "55024268f4e14e1e91caff0d00fed5230e9fa721697ed142f9a68d8e00820a47",
+  "uncr_off_discrete_obstacles_fwd05.guard.json": "57daf87c2f4895c633e450a84014d54aeaf949671160e6685ffe1c234bc70eca",
+  "uncr_off_discrete_obstacles_fwd05.log": "ea7cc26b9a4241151326966b6ba53b544763f7da1e026f05c835da34a4e3d6d1",
+  "uncr_off_discrete_obstacles_fwd05.slot.json": "fad0bb81ef162348019f9af08784bbb0cff1bb1548caa09c5aab58f21b837079",
+  "uncr_off_discrete_obstacles_fwd05/cells.json": "c134973a86c15966e3c9c489cbdbf5bf3e239e0e0b3b8832fb55dd605a99e099",
+  "uncr_off_discrete_obstacles_fwd05/driver_stamp.json": "b3235c630c3602621c1f6eee573053d2b6d5c6824f55826e0ca266b557c9557b",
+  "uncr_off_discrete_obstacles_fwd05/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+  "uncr_off_discrete_obstacles_fwd05/episodes.csv": "348854bd0f19a1285ed056e16cab887eacac70a4cb9431000a739fc90b1ea33f",
+  "uncr_off_discrete_obstacles_fwd05/meta.json": "c44fe42f0dd95876a74c3acf0506678e358a15be511841d01937d9b9d3d4cbf6",
+  "uncr_off_discrete_obstacles_fwd05/traj.npz": "4c56c8209db8bc903c8788d4cf5f8c93ae310e98692134020c5eeba7409c6869",
+  "uncr_off_floating_ring_fwd05.guard.json": "ccdd002432f3aa81e7816cf696e64992c677504bbbe95316c945f38e703a799b",
+  "uncr_off_floating_ring_fwd05.log": "4fc46d3daf9173260cb869e210e60b32217a197dc6b850337712b11375b05963",
+  "uncr_off_floating_ring_fwd05.slot.json": "266e73db4f68501d129c68bae8ed6af78c0f4355d06533344c0593df5bac9668",
+  "uncr_off_floating_ring_fwd05/cells.json": "78489002a3216e6347acdeaa2a56231951d571cc13f8dd9e738c59924b082eb9",
+  "uncr_off_floating_ring_fwd05/driver_stamp.json": "4551f732883b594bda9fc052eddd58c045497d876cc5529bd0da265c4b2d7f9b",
+  "uncr_off_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_off_floating_ring_fwd05/episodes.csv": "99e512aab5debadde546dc742d956a511f3c337af5ffa07971e345c78ead549c",
+  "uncr_off_floating_ring_fwd05/meta.json": "4b588bc5cfc3400090c62b1cc8a76f76e97b82e7a4df7fc3573c6f70d0a356ec",
+  "uncr_off_floating_ring_fwd05/traj.npz": "13a2ab50bf178aa89600aedee66bbdb0d70bf8fa2867356eec05b5e5ff51cda2",
+  "uncr_off_gap_back03.guard.json": "54278cb3275a721d55385bbd87a51a9d2dd9097b17b25bca50a5895311e750aa",
+  "uncr_off_gap_back03.log": "6af86e62dc1221d625db71cd834f84b530acb60bc8121bda0a41b2d37af44fc5",
+  "uncr_off_gap_back03.slot.json": "c8d069eeb07d967c97b9694e1efa30587a69a41b0cb16c84a137c376bc24c289",
+  "uncr_off_gap_back03/cells.json": "aae2c5a838667adab22838bc475c4407d268493249d4383e9c20028dacdec7ad",
+  "uncr_off_gap_back03/driver_stamp.json": "f44f6af2521b37851e4edacb77f53f2c823560cd4331b77b125e2f0e08ff7d89",
+  "uncr_off_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_off_gap_back03/episodes.csv": "2fb0d4df7f88204db624d8a384816d8ccf580461506ff6744c596b8aae4975b0",
+  "uncr_off_gap_back03/meta.json": "336b4a8d3ecc8a69b3b29ebae4421321f66cf615c3b5b5cd8c8bd68cb546af54",
+  "uncr_off_gap_back03/traj.npz": "b7f386ba5f92aac8b606e366b4c236631cfbd05bafcfb2c64b72e771e122cf49",
+  "uncr_off_gap_fwd05.guard.json": "ea91fffdb519eac7d0035ec05d50bc58ae6ee599f1706bd2ce98a54e2a3b43ad",
+  "uncr_off_gap_fwd05.log": "4568a7188fc052c77c45490d435b5b1750bb0d2c6ed7e4edf8928f972ad75fb2",
+  "uncr_off_gap_fwd05.slot.json": "1d10b79c1571de5f84123357546eea780b3be9ca8e999f51b03c1fb740d97366",
+  "uncr_off_gap_fwd05/cells.json": "4b27051fdb652801ab8ee9c898002f5f3ccd640829619d9484eb4da5fdcf8448",
+  "uncr_off_gap_fwd05/driver_stamp.json": "a6dc4c9f5eabb629b7ffdf252329c50407203fb31e4954e710c2ea54d379ce4b",
+  "uncr_off_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_off_gap_fwd05/episodes.csv": "488776dd83c571d44f1f7b45f1bdffe8dec8d6b3ddab2d82bcdee9f1077e101c",
+  "uncr_off_gap_fwd05/meta.json": "1558cdf3e2558fdf640b4cb50043634c8e1d84d6b8a2b68fb34aa899b23bb973",
+  "uncr_off_gap_fwd05/traj.npz": "69585d14e8dccb5449047c10d01b76b044a29263b71b3894ea0de029d9fb28d2",
+  "uncr_off_rails_fwd05.guard.json": "d569d0b4395be3c469401f7bf0cfa71601540ecb81261b8546cdc23667db9929",
+  "uncr_off_rails_fwd05.log": "55b5bce0546855da6d4653cc515a60fed40c2626558729291238f8190eb5ae6b",
+  "uncr_off_rails_fwd05.slot.json": "7ab02ba8d81f298f54e582ba530d31b8c4bfe8ed1ee44c909e9464ba0680c715",
+  "uncr_off_rails_fwd05/cells.json": "0abff27a0f80a51224b73f14d64d4be091b402be80a028dca4a7b930858358dc",
+  "uncr_off_rails_fwd05/driver_stamp.json": "f37978721ed772c89dd360d962b153c54ade0b3ea9de1ad1a64b76cb099672b8",
+  "uncr_off_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_off_rails_fwd05/episodes.csv": "148f3fb4dcb82ef61ca8179aa13001beb6579bd34ac38a14473deb6e984c37bb",
+  "uncr_off_rails_fwd05/meta.json": "1353e76f51aaa47e225ab308ef778b647f4637d361ac891c92618dddd1af0489",
+  "uncr_off_rails_fwd05/traj.npz": "ef3e5f5f82a2f2f8ceac415de4fd0cb411f8be39a07612979ecf9b52fd5d4c61",
+  "uncr_off_stepping_stones_fwd05.guard.json": "6d8cd9aa6b61eaeb83c52ad32aec95b339a8fc6f1923430cc3765e236587b852",
+  "uncr_off_stepping_stones_fwd05.log": "e706933aad644c82d222f1381585662a5687b01f899cd7bd389aa0764ee1152d",
+  "uncr_off_stepping_stones_fwd05.slot.json": "d5035d8b42bb94f0ff81f4439cb2c824d0e221c06111560c31835f0021184536",
+  "uncr_off_stepping_stones_fwd05/cells.json": "b83fd323efd232e4a5e9fa54897f4bb057a12172c09a3bd4fb4897c9739ab5d7",
+  "uncr_off_stepping_stones_fwd05/driver_stamp.json": "2e523f3840a81427a879ce9f30848b798846c5c5199d71ec7f0f53f53c3a974c",
+  "uncr_off_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+  "uncr_off_stepping_stones_fwd05/episodes.csv": "0e7847a6dda6dc6cd87060935341816705893116b2a8e4f86ddd57c3e2f38515",
+  "uncr_off_stepping_stones_fwd05/meta.json": "2657a502b2e94251a768e8647b11f2d1b4aa4fd9228084a96910699f83be9487",
+  "uncr_off_stepping_stones_fwd05/traj.npz": "c01a69e611b09e4ffe23f41b13088dbd7c62994695db0992b833b2a3182e8c36",
+  "uncr_off_wave_fwd05.guard.json": "0c330b2891f1cf15d097d292d7f29f3401a5803f7812f9e110912d4f0e353e8b",
+  "uncr_off_wave_fwd05.log": "9a4165485383f446cb71bef0367be9eb4d1589d4d875f8e7c551fa50f010b2b9",
+  "uncr_off_wave_fwd05.slot.json": "825daf6f5548d9156ab28083a6486c676bc54d1bc729f6a47f5dca5398cb8895",
+  "uncr_off_wave_fwd05/cells.json": "67d91082ff0778bda4803aa91991b8df9e3b8846d07e3d34c3d9c63bb6e43413",
+  "uncr_off_wave_fwd05/driver_stamp.json": "8defb185574b6576396f6d22f3b5a66b7f2d0c875a3a05b8d64d1970860b1184",
+  "uncr_off_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+  "uncr_off_wave_fwd05/episodes.csv": "dcb2be280b7e2bd463877028636eb0ce045c0043561a23cf6fdac18a7269806d",
+  "uncr_off_wave_fwd05/meta.json": "cb645f7d20c214c3d733cdf265912eaf3c0df1e49ecf711a8160a39df1824e1e",
+  "uncr_off_wave_fwd05/traj.npz": "f1e06c64efd9c91b3a907009a8ade6fff86fdde4f321dc38c7557e8c61153f6c",
+  "uncr_on_discrete_obstacles_back03.guard.json": "b9dc1a2c4cd478e30678f82ed4d82b16539709b2527bd90b2d8be9da32f3cf85",
+  "uncr_on_discrete_obstacles_back03.log": "bc4cd882ab9f5dc973abfbff9282df7221d255d7be076fefb61c2d9d9663a29a",
+  "uncr_on_discrete_obstacles_back03.slot.json": "908d39eedd7c6dff4f870d89792868dfb215c3731ba31e1bd75bee8aada98864",
+  "uncr_on_discrete_obstacles_back03/cells.json": "82dbbf03cf3da8776ebf5907634da9a2c1464494f776abbbfb92ef47bf583d05",
+  "uncr_on_discrete_obstacles_back03/driver_stamp.json": "3780b22086ba9a59c18a49e9ad1b7020e6346f45489716982af3915d76f8a878",
+  "uncr_on_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+  "uncr_on_discrete_obstacles_back03/episodes.csv": "197b17799c9099a716664bc087adc2cd7d4daaf18688085d8dd0cb77ae9b2d65",
+  "uncr_on_discrete_obstacles_back03/meta.json": "31ca200d4cdfa6b41c20bc621f6dbe72cd9b42faf39abc44b0c4856fefc84574",
+  "uncr_on_discrete_obstacles_back03/traj.npz": "5455d366a58309cc2e31c809949747e1de85cb66641707242634916f94fe6d16",
+  "uncr_on_floating_ring_fwd05.guard.json": "357184666bf886d4c5160876a5b38f87f19d4d680170e4db2e27ee3fe5068775",
+  "uncr_on_floating_ring_fwd05.log": "24ec1d8918fa5d1535790b0f44f8af10c64354ff413cb7505e28e0d88988bac2",
+  "uncr_on_floating_ring_fwd05.slot.json": "bfae451d1d69d8c86e9b56e77c76071a2f229afd01f4cddc98952824513a4970",
+  "uncr_on_floating_ring_fwd05/cells.json": "53ac10b794c5def5536caa747127e72359952fd8b0ef642592bd989cf97281f2",
+  "uncr_on_floating_ring_fwd05/driver_stamp.json": "1c9d7ebe35fda79e8da47bf3529bf451e186c79f4d3a014c9726c531d4507604",
+  "uncr_on_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_on_floating_ring_fwd05/episodes.csv": "8674e12af13c57ff34a4aeb6e3df7d6e7ece89d88ce0d75a0a5d496da0dc9538",
+  "uncr_on_floating_ring_fwd05/meta.json": "0ba55119f1030984609c48c6eead04069db91cccb7080070c5cc095e8da73756",
+  "uncr_on_floating_ring_fwd05/traj.npz": "50f578f7522a2ddf6f472bda7734c036381d5708721f0ebd9a043d657340f42e",
+  "uncr_on_gap_back03.guard.json": "839c50d5823512581a9440349ba919a8983914afafee33a0fe765155bd3505a6",
+  "uncr_on_gap_back03.log": "540f32f94a7ab5c67634e9b81ce3ba08d4ab0677d108ee540ca0685b27662152",
+  "uncr_on_gap_back03.slot.json": "b15cd81c2219f2fcb216b9e4aa87eeef156349c90ba85eec371e34c55b3b99c3",
+  "uncr_on_gap_back03/cells.json": "98210d13c6409d7df9f1343b5f76754660ec6a6269b47e7a088c321e8e2bdad4",
+  "uncr_on_gap_back03/driver_stamp.json": "7b26b3bf650d81bbbffdb5f89d18f7845273a31a8f387c62721c0492e429337d",
+  "uncr_on_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_on_gap_back03/episodes.csv": "8d40fb304b9089c185adc06818e8eff9de97ce84508165939b2799522ae9dcad",
+  "uncr_on_gap_back03/meta.json": "09906d02a329c25cbcc2cf00bb31a2a97ae949488c4adc2b3d69f5567b7efbd5",
+  "uncr_on_gap_back03/traj.npz": "482bf3b3647523decade823cf90355e15b66d858fa67763816ca592c79fba7a0",
+  "uncr_on_gap_fwd05.guard.json": "89d269ca57f781a7ccf328d4b356c1d5bd1918823218df03c000b450a484e0fa",
+  "uncr_on_gap_fwd05.log": "684c39bc5d1fda45c1d8e48a941f767e4312a3b7c7790f5154458c8d6fde4f18",
+  "uncr_on_gap_fwd05.slot.json": "eca8d6b9ee7d6c47f4a8c096cd819463ca6292f38ecc061adf3d7f7e391639f5",
+  "uncr_on_gap_fwd05/cells.json": "c6bf7fb076cd54fe4efda180a389025837b1216dcc52ffdd4aabe4da4aae3ad7",
+  "uncr_on_gap_fwd05/driver_stamp.json": "53c3c70dc76cdb97280a784ab6c686790e2816357f124ab4a55613ebbf8d2d10",
+  "uncr_on_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_on_gap_fwd05/episodes.csv": "5ce47691220c65292d51b73d1690199b03a87571afbf3a2ba5b046efef80d59a",
+  "uncr_on_gap_fwd05/meta.json": "b65c3043232f464f5522a8e37530f931bf841fab15b7096a735f489788dd50f4",
+  "uncr_on_gap_fwd05/traj.npz": "4e729ebd3fa18200fbe43fcaa849761811c354d3d7e5ff6c0f55aa35dc03ea0a",
+  "uncr_on_rails_fwd05.guard.json": "1f4bf04caafc9187972271df1ba49c59ce10963789446d33abffb68077cd3a62",
+  "uncr_on_rails_fwd05.log": "1b75cfad4a987498d89c27c9ebf9c409f5c73139605da4a03f86be4a695af1c4",
+  "uncr_on_rails_fwd05.slot.json": "b9e2087232cb2742cdf3b6c19e8047416ac58f86c060298bf6ab64d118f68c89",
+  "uncr_on_rails_fwd05/cells.json": "204e3d2db6e328cec039e117ae31cdb0f9c3dd654ce15f571ab92d6a161bb2d8",
+  "uncr_on_rails_fwd05/driver_stamp.json": "44df43be75c1394130f68df8e9709877bafb5e4d1f5ddffff630195013efdbaf",
+  "uncr_on_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_on_rails_fwd05/episodes.csv": "978759b02c1dafd8085a138f22cb3061cf298ed3c78686e059e099b4fcc36210",
+  "uncr_on_rails_fwd05/meta.json": "95f9bee867028c07d1f4d73f57b23652c71e9440667e8ad4b81b6a14a35ae81e",
+  "uncr_on_rails_fwd05/traj.npz": "fb1c286f15315d502e2b768b0029fb13a3a4f985852703359805cac60a577906",
+  "uncr_on_stepping_stones_fwd05.guard.json": "fabc13d472fe442b4bb7a20963e2c0ea442e843ff6a1cc6cb8c264cc65eb9549",
+  "uncr_on_stepping_stones_fwd05.log": "c368fc887499517c6506ff69cb680b55e6cd9bff2473f02d83dc5db0049cfdc2",
+  "uncr_on_stepping_stones_fwd05.slot.json": "2f659a120cbd0ccf66420ac155cefb790f92c210e1ca07abdd393ad366ec2639",
+  "uncr_on_stepping_stones_fwd05/cells.json": "81f68295daeffa01395c9f03c735ee5bedcf44a5d633176a2bdf81dc93b41083",
+  "uncr_on_stepping_stones_fwd05/driver_stamp.json": "995cc21a8844b5d529f9aa3a2960f6f9e43c5cd4e9273d2237a54744f09bbad0",
+  "uncr_on_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+  "uncr_on_stepping_stones_fwd05/episodes.csv": "323b227cd77abeeb9329167cc58ab9de53ab7539a9d601dd9b4971e574da10c0",
+  "uncr_on_stepping_stones_fwd05/meta.json": "4e7e9537136e1b1eb2a04a79bf743110cf3d1b3900d7d594319928dfba201123",
+  "uncr_on_stepping_stones_fwd05/traj.npz": "5d851a6f99538c80454fd15b7b38eff1c0dd25fc2d4cb4fb1018ec0aba3b8b6a",
+  "uncr_on_wave_fwd05.guard.json": "27991d0c15a1f979d8bf0d56addb4a0edfcc817e072139786ff9c6ee972e7a11",
+  "uncr_on_wave_fwd05.log": "f68211a81f55b167bf542ac0d7b86525d31c8c2ebe2a8e5605f8fca6e1b63d6d",
+  "uncr_on_wave_fwd05.slot.json": "5b2a96525bbb27c8cbec9973582e34c8538f3a5cd8e0977092411f18b01b5ec9",
+  "uncr_on_wave_fwd05/cells.json": "55993104450445c7f648646f7a11c11deb41fae5c514018dcb5d2d6ca4efef39",
+  "uncr_on_wave_fwd05/driver_stamp.json": "7d3c0c3f27e62fbbd380292303f0f2db1dc24e7c90a5273b691fc0dba45838b3",
+  "uncr_on_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+  "uncr_on_wave_fwd05/episodes.csv": "e96a554033ce852d3f2cf76061f83d529d59c399c20ea390d7cc5cc4bdb1ef1a",
+  "uncr_on_wave_fwd05/meta.json": "4a3a2cbe3aca7058776d3cf8656c60c3d3674868d5edea54dc32f8f0de2d4f38",
+  "uncr_on_wave_fwd05/traj.npz": "bdb6d8fef1645ebf318faadfea5fd764bb2f4b76826282f5aef42f93e9cbf269",
+  "uncr_par_discrete_obstacles_back03.guard.json": "1c0b5ba5ee66026cfff598898bdbdf323cf108e9ef7aab0867b988def14efb9b",
+  "uncr_par_discrete_obstacles_back03.log": "785e2e8ad2501c7ff44cd16c63e89bd0a05e198f42d33bef73f162dc1f8089e2",
+  "uncr_par_discrete_obstacles_back03.slot.json": "2d55faed86de244832215f9d08ac11980e2adec47b217640aeff6fe5491b93ea",
+  "uncr_par_discrete_obstacles_back03/cells.json": "833e38eda3a5e2ecb667cd1eacbf134a798053ae459d08f280c57fa6c60e18be",
+  "uncr_par_discrete_obstacles_back03/driver_stamp.json": "58f07ae8afd9a4336d19b492fd2b6afa311a0ef516a947dbd6201f045b34887e",
+  "uncr_par_discrete_obstacles_back03/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+  "uncr_par_discrete_obstacles_back03/episodes.csv": "35c4f4322efe536c2ac5972be6b62a81fb21642442bb622c08e6227041b4ac0b",
+  "uncr_par_discrete_obstacles_back03/meta.json": "6198c4db56799ffa63b9a6b7fd30844da6b48ea5509b9e70dedfe12d11b6f54c",
+  "uncr_par_discrete_obstacles_back03/traj.npz": "53519274bc21ed353785e509a836f6783e42f7e457fc58b99616578af04bd80b",
+  "uncr_par_discrete_obstacles_fwd05.guard.json": "c4e96ecf876ec75de578e026fe6fa05b917a83c029076d2d6773bd237e25187c",
+  "uncr_par_discrete_obstacles_fwd05.log": "87b11d0e11f87073abda09755e01af25d7a6e741cccb2abfa873cd4b87aec9cd",
+  "uncr_par_discrete_obstacles_fwd05.slot.json": "d4c54c1e8059530587e7f49d8d87a4253b747a1c1f8bb734f07e51501fb5e64f",
+  "uncr_par_discrete_obstacles_fwd05/cells.json": "c405fbd5e49876759e3a542d63efbe377a8e12d032fdc783133e5298b94d3921",
+  "uncr_par_discrete_obstacles_fwd05/driver_stamp.json": "7881b3bfc01e9f9d7274f8f3be13ffcb11c30728e7b6cbfd9b87db4a2385aaa1",
+  "uncr_par_discrete_obstacles_fwd05/env_origins.npy": "4aa2e17650a931d27a77d3af8171c9aef191889f8a8c4a5017295e25b7ff80e3",
+  "uncr_par_discrete_obstacles_fwd05/episodes.csv": "94a5cd57f1b8a5911bc2c8d6332fef231be8d1270e7c39804873a8711fd919ab",
+  "uncr_par_discrete_obstacles_fwd05/meta.json": "9a3f4b6cca41e599265da2156e052a545df6fbd7525d13af5c583bac96ae1e20",
+  "uncr_par_discrete_obstacles_fwd05/traj.npz": "09bca88ecee0fec559e7ffa016f9bae5682256f84fdff6646af8e82576883a4a",
+  "uncr_par_floating_ring_fwd05.guard.json": "e020cb01a5767a62154778b58decf3a1e62d396e627484afeeac878250103499",
+  "uncr_par_floating_ring_fwd05.log": "8897831d96d57dca3f7ff21bdfedc14c72ad0d0878114e6b33a790edb229e16b",
+  "uncr_par_floating_ring_fwd05.slot.json": "72121ca66e243e382ccbe1b20c4f3bd7d38bedf877fe2cca9e2df78686418adb",
+  "uncr_par_floating_ring_fwd05/cells.json": "c6e4b30829a9fb6b1003cd36ce9a001fa83c9a10c95322a9a4a09fa2178ab2f0",
+  "uncr_par_floating_ring_fwd05/driver_stamp.json": "387999a54f1d972ad9217d0ef080529b9c9759212efcfa10fe1959f1d5429c10",
+  "uncr_par_floating_ring_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_par_floating_ring_fwd05/episodes.csv": "cfd99fecd23acc1bb267b0266efbf5d066e7180261ac6509ed91d39734ce3d7e",
+  "uncr_par_floating_ring_fwd05/meta.json": "bcde5df9a26bb46cf703aeba75a28b3f9ea2b7c0b48beb271feb182a196059ab",
+  "uncr_par_floating_ring_fwd05/traj.npz": "876b3cb53a2b5a37c8c3a1310e13ef8c309ebb6af3b2780b61c64b3138867ab9",
+  "uncr_par_gap_back03.guard.json": "dd8a89c9a6342cf8a552dd017d370d7be68077a6db709ae500150358d5f53385",
+  "uncr_par_gap_back03.log": "b33025a91b06e2bbc99577faad762d3664d9340487dbc00da8dd2609ed141ed7",
+  "uncr_par_gap_back03.slot.json": "a8e4cb8faec8ee856c5812c7ae5e11609ab6dd6fffc3a21da71bf6d8359a8eb6",
+  "uncr_par_gap_back03/cells.json": "3617e3854f2e6dc597a6653ef0594766c6365853f85c5ff27e27cf1dd211da50",
+  "uncr_par_gap_back03/driver_stamp.json": "72032cadaa1021461ebd1fd059bbb1587b9b9e99433acb36fa01703ce2bd25df",
+  "uncr_par_gap_back03/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_par_gap_back03/episodes.csv": "66d8f8dfea2e98f1fef635c7d10902516677fd4ac7ab658bd32332ac272f742e",
+  "uncr_par_gap_back03/meta.json": "f75cc5ce2309cc82ace49b3c97c56bf3b74ecdd562b11b1321fd6ebfd6ed0d36",
+  "uncr_par_gap_back03/traj.npz": "d93cc28eef999e8060865d3a17545333f8d2344feec527faddbc37328ff973b1",
+  "uncr_par_gap_fwd05.guard.json": "3e22b615816af43be68844632468386fc0af511d0e2431ea4cc1470f605268d4",
+  "uncr_par_gap_fwd05.log": "c53d70b6d91e3f40db277d24fbd573045435e03abf9cb1566b2d794499cea494",
+  "uncr_par_gap_fwd05.slot.json": "ec8f5ebbc063d1fb67ba145570168b3f772bf0624292ec207ba9e3da86fb12e7",
+  "uncr_par_gap_fwd05/cells.json": "9d28fe44834a20a8482c79848657bb193cc82f3ad37e83812a44b76603c3657a",
+  "uncr_par_gap_fwd05/driver_stamp.json": "963d464016eec2efca2306da5a36a0c2bd1f47af6bb635aeea468af242e22483",
+  "uncr_par_gap_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_par_gap_fwd05/episodes.csv": "6ff58ed41642519923033444d9f3fe7abbb4873d7aa4ddd4db717f2675fb404d",
+  "uncr_par_gap_fwd05/meta.json": "26fc4d8592c7924692e0c6a55023c27ac6a4b6043cf29601f4103cfd0efc7546",
+  "uncr_par_gap_fwd05/traj.npz": "24076ab178ae9021eb7d8c93994cfd9b3ffda21093dbe99317c0e3e21a1350a1",
+  "uncr_par_rails_fwd05.guard.json": "443ef9b8a956227559c45e568f82224d0f33116c9d1b050c7f068468803b23f1",
+  "uncr_par_rails_fwd05.log": "e6f8eec08b11b7a290854848f3dec6dfdceed839af9df2a7676c133e7a16c016",
+  "uncr_par_rails_fwd05.slot.json": "ab70c404a985f9621e1c4ce460882cd49cc54581f7ff433934c42c94d2dfab52",
+  "uncr_par_rails_fwd05/cells.json": "d03e2652f888b228e55e4726b8ff1f024c9d0c964f56f219c4481a780587757c",
+  "uncr_par_rails_fwd05/driver_stamp.json": "fd8ef0b2e45eefa505dc33926485dcf09e5b6caea8f69914b9d659484746731a",
+  "uncr_par_rails_fwd05/env_origins.npy": "f7a77958390050ffd3e1597182dc0699bf9e44b75b1393359d33946db29e48c4",
+  "uncr_par_rails_fwd05/episodes.csv": "24c4fedd05dad86d83a0f8840a9b28a803ed24611cf931031b4f42e2bbb53539",
+  "uncr_par_rails_fwd05/meta.json": "f8529a20ee69fc8d01166814f80c091772b3960dbd7db2fcfd7eaae92116da76",
+  "uncr_par_rails_fwd05/traj.npz": "9a1069c0a943986ba8b003bd9454c5c46c0fb01ed7920b68533e956642a8b204",
+  "uncr_par_stepping_stones_fwd05.guard.json": "99ae69da2e9542c0db87ee1d9d4e245a6326f82eb04a4b85df0c143aaa63cdd5",
+  "uncr_par_stepping_stones_fwd05.log": "5f888dc04d7692a540fa6a10cf82116b1c0abd763627f3d5c7facfa1b4670421",
+  "uncr_par_stepping_stones_fwd05.slot.json": "57e365a38ea74ea923b45e329e83fc8603b87b6d570747ccdf7a08a6563d0cc2",
+  "uncr_par_stepping_stones_fwd05/cells.json": "998a33c609083f373243e9c3c99f6333453e0d7e4365a339fef0afb62bfd72a8",
+  "uncr_par_stepping_stones_fwd05/driver_stamp.json": "7c11fca7eb0b1e56df9652ca53988e7b13e021fcf649df1be4b14c365bf8ae6d",
+  "uncr_par_stepping_stones_fwd05/env_origins.npy": "21ae957899697f46088b203d9738ad5fe741d62753dad4d2edc781fcb45ed8c7",
+  "uncr_par_stepping_stones_fwd05/episodes.csv": "9cf6c7693452d5044357961c3a8f7880226c0b764b21f3c8892408afe52fcd05",
+  "uncr_par_stepping_stones_fwd05/meta.json": "804173e1dff3384fbbbf71c60cc984f952c137bd0de5281427c76620ece27130",
+  "uncr_par_stepping_stones_fwd05/traj.npz": "22008888d373e2c91b966e79ba2115a05da53648c922c4981600456dbb50cf6d",
+  "uncr_par_wave_fwd05.guard.json": "573ecc6b881eb5eccca7a623fb50b88504a7cfa1350f3696466a39cdee6a38ec",
+  "uncr_par_wave_fwd05.log": "be6819487a12f734414972af89d02d72f925dc84d22923329e8bd6f7ec5a4cea",
+  "uncr_par_wave_fwd05.slot.json": "12824d74bac414edf2d1daa795cba080e5b245ccff3e49af4b2f03eee3147955",
+  "uncr_par_wave_fwd05/cells.json": "e02268de891e6324310e807d32e565f31cbb5a5ede0f236ada9d2856cf37b155",
+  "uncr_par_wave_fwd05/driver_stamp.json": "67c745d36a101a68186d651e9dce0dfc61c4d6efabbe3ce0fb092452371d648d",
+  "uncr_par_wave_fwd05/env_origins.npy": "d44200ee3432c10d7981f8d7418b09ce68aa46d5aecbe8d88118ce131c54e6e8",
+  "uncr_par_wave_fwd05/episodes.csv": "6e7465c3be2a7c6d84201d7cb800031b8981a75322f3025683514cf46d5a9198",
+  "uncr_par_wave_fwd05/meta.json": "372c453dd1a1edbd13aaebe3bee848b2f60d61a067e4980026e1256849cdc100",
+  "uncr_par_wave_fwd05/traj.npz": "fe429b9438c338223540ec8f381515601d8aeb2251e7f93b73b4e8853d1eea93",
+  "usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1/assigned.jsonl": "05092aae0d52eb9fa25c464bc928d7fabc1abf34cda2cbfcc6b547e92eb2b0a6",
+  "usd/uncr_off_discrete_obstacles_back03-g1-83128-1013185735-uncr_off_discrete_obstacles_back03-try1/isolate_state.json": "11e3b94e194668a62fc861297c73fc701f325f0c782485f7d781a16df2996283",
+  "usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1/assigned.jsonl": "4247dce399b1f38ea24e2966395cb1215eed5a8b9de4063c37e9f48ee4ea5b8b",
+  "usd/uncr_off_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_off_discrete_obstacles_fwd05-try1/isolate_state.json": "25cd5ebad1e994400515479cfb4974b0ce18ed41da86712e84e75c597ecf6baf",
+  "usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1/assigned.jsonl": "029d73f371db03089209049b9d6bd64e753512704d808d94fcb9355ae02d744c",
+  "usd/uncr_off_floating_ring_fwd05-g1-83128-1013185735-uncr_off_floating_ring_fwd05-try1/isolate_state.json": "2cc410b0ffd1c34876e5837fe41eedc706d7d3c6e35ca774f81fcbeb2bf23753",
+  "usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1/assigned.jsonl": "5087eb92cb34524be262556209aad85934796babd4022f45139a1b9d23ce595a",
+  "usd/uncr_off_gap_back03-g1-83128-1013185735-uncr_off_gap_back03-try1/isolate_state.json": "7cc28543fca62bce2657fb92311beb6e7144bf4f542ac4dbe786922598f09b5c",
+  "usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1/assigned.jsonl": "138eab1d3e5f8dd2ab1b6598aa29c68a5013b4d3be8a1d6c3d943d1c24c401d3",
+  "usd/uncr_off_gap_fwd05-g1-83128-1013185735-uncr_off_gap_fwd05-try1/isolate_state.json": "d466dace45351387fe2967ea733a04dba4e900b9e65b8651993560121629ca55",
+  "usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1/assigned.jsonl": "3a39c3cf592b8134de81bed4fca37005d535b28d413bdce626adac632b274e7b",
+  "usd/uncr_off_rails_fwd05-g1-83128-1013185735-uncr_off_rails_fwd05-try1/isolate_state.json": "2e7f192310bfa24954db3233ebb8434ce54b503a9896b33a9d0a052592e782da",
+  "usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1/assigned.jsonl": "6643c41e53c23a600de8eeec251882d8b00c99c79436dbec70db30b904354d38",
+  "usd/uncr_off_stepping_stones_fwd05-g1-83128-1013185735-uncr_off_stepping_stones_fwd05-try1/isolate_state.json": "6138199d6fc41fb101383280770d928231de39cade17ef02da25ba3f826e705c",
+  "usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1/assigned.jsonl": "9d8dd30491ff6e693424b0fdc5b48c506a1fba7ebf35238df87f7d49f6ae5d7a",
+  "usd/uncr_off_wave_fwd05-g1-83128-1013185735-uncr_off_wave_fwd05-try1/isolate_state.json": "796f5255ff28aeae26cbe082d20c55ea12d3817accc95d2b17623780687489e6",
+  "usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1/assigned.jsonl": "ab1f427b5da5ce55abb9779697f6fae921a2617b8debb5819d1ca52be97108cb",
+  "usd/uncr_on_discrete_obstacles_back03-g1-83128-1013185735-uncr_on_discrete_obstacles_back03-try1/isolate_state.json": "4f69912d8c0129890766dec618cd6843a7db7012d6ed9a711c9b0ee359ccf65b",
+  "usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1/assigned.jsonl": "77e04598fdc289245fda14ea2c39f98551c686c3d22fa72c08a6203b8961718e",
+  "usd/uncr_on_floating_ring_fwd05-g1-83128-1013185735-uncr_on_floating_ring_fwd05-try1/isolate_state.json": "5a33e86cc3e657f903f39d1adb86264d1c783f7039e0af378af6b4081fc5395f",
+  "usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1/assigned.jsonl": "0aecada1ffce9e0e1800264a242d76bfccb83a52edb21aaee736734092267f25",
+  "usd/uncr_on_gap_back03-g1-83128-1013185735-uncr_on_gap_back03-try1/isolate_state.json": "546213ca0fe434cc1cdf5a7db1455dddbd20ecb1b9f5d577f51f5880b1da586d",
+  "usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1/assigned.jsonl": "99b9884c15dc5b0358db1753a09c04ac1c9c4755caf6370ffa832c5d3830d919",
+  "usd/uncr_on_gap_fwd05-g1-83128-1013185735-uncr_on_gap_fwd05-try1/isolate_state.json": "a9cd96787c31046255f10a6c5700a2e8b6244e751391979414033dff636e70cf",
+  "usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1/assigned.jsonl": "7b401a8daec6a9fdd37f21ec72c0efde9affc815d73398b510222effc9d78561",
+  "usd/uncr_on_rails_fwd05-g1-83128-1013185735-uncr_on_rails_fwd05-try1/isolate_state.json": "8f1d8416b2532b948ad156afcb912d8f4dddc9a069239d9a126cb45ea9ab5d90",
+  "usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1/assigned.jsonl": "b053042e0394ce395f418de1daf9f4327e8da857d51abcc1e59fdb479dbd3ae9",
+  "usd/uncr_on_stepping_stones_fwd05-g1-83128-1013185735-uncr_on_stepping_stones_fwd05-try1/isolate_state.json": "25bab86d99ce274e64b16ea0539025526cf1aabb6affa57640ceab75ce1391c2",
+  "usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1/assigned.jsonl": "987e2bf5ec3ba6105472e99515de2a70bc9884831c391a587342f198b67e9ae0",
+  "usd/uncr_on_wave_fwd05-g1-83128-1013185735-uncr_on_wave_fwd05-try1/isolate_state.json": "a57205cb3cf86c0b15bdaf7e127689c84d0d5be4494af4212be2fee8b3061053",
+  "usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1/assigned.jsonl": "114481ffabd99b9003d99c51c3da1f79a2d40409cff736a1009b3104ff12ca3b",
+  "usd/uncr_par_discrete_obstacles_back03-g1-83128-1013185735-uncr_par_discrete_obstacles_back03-try1/isolate_state.json": "c7a5c93e450b70cc33da3cbcfb117ac48b2d13ef952009953c902960a8678238",
+  "usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1/assigned.jsonl": "0babde6fb11fd46161e885306b643f9c1b2a801f7c0650c9af337201bddf8ebf",
+  "usd/uncr_par_discrete_obstacles_fwd05-g1-86504-1013192620-uncr_par_discrete_obstacles_fwd05-try1/isolate_state.json": "65ecd5dafca8937a573dc2a613fed889d9639140fd3b9ba17a5a0c5006019754",
+  "usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1/assigned.jsonl": "8cd5030eaf856d519771c8453361082af0dd1892cb14dd96b83e672c145af2b4",
+  "usd/uncr_par_floating_ring_fwd05-g1-83128-1013185735-uncr_par_floating_ring_fwd05-try1/isolate_state.json": "7fa979dcae466dddfe677b86506348ec1fb057ac67543218e6be572c6eef7d7b",
+  "usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1/assigned.jsonl": "586d4985be1eff20d06e282b38d7cbd85d658c94216a1e00f19a326ba11fc735",
+  "usd/uncr_par_gap_back03-g1-83128-1013185735-uncr_par_gap_back03-try1/isolate_state.json": "bb0e10dbebb97c9aaa8d24f733d147c5d4a58f7d1be544272356e2bbe0b010d0",
+  "usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1/assigned.jsonl": "6aa4494b4e1d494a0a7ebec2c43d21b899fc592d2f3690b3c8ae857f42716e6e",
+  "usd/uncr_par_gap_fwd05-g1-83128-1013185735-uncr_par_gap_fwd05-try1/isolate_state.json": "de9ad9bf63de76b6473c2d55d42bea583eddabe3b197765ffe1c1fc156f5daec",
+  "usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1/assigned.jsonl": "94bc69667571751d3f2eaaf92d2456b6c27d0b85cd426512cd8b4374e3fa2317",
+  "usd/uncr_par_rails_fwd05-g1-83128-1013185735-uncr_par_rails_fwd05-try1/isolate_state.json": "0c63492d590b9db58b45918d010170fbb659ba0f6736bb30bfebba829f362eb3",
+  "usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1/assigned.jsonl": "1cfcef2d99d2fb0727295087247675e5c966fd3ce900293c7cef217508c0d608",
+  "usd/uncr_par_stepping_stones_fwd05-g1-83128-1013185735-uncr_par_stepping_stones_fwd05-try1/isolate_state.json": "2d39a82b9378da4527ca80eddc2a5a1f397b0a6d2adf39209e2d459a7ea77e03",
+  "usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1/assigned.jsonl": "0a8b88488b87c9458a2800daad3ab4bd64cd733ac33e41e56d014fa291679785",
+  "usd/uncr_par_wave_fwd05-g1-83128-1013185735-uncr_par_wave_fwd05-try1/isolate_state.json": "3c77f8796d722367df10d245d3da3cb48103d2cd2e6ce90312072cfa355b4f5e"
+ },
+ "external_sha256": {
+  "ckpt:off": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_off_u4000/model_24000.pt",
+   "sha256": "77c2fb648348dab5704d35fb94a6128ae2789b6ebb5470042b76e2548a6e86c1"
+  },
+  "ckpt:on": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/out/branch/cmdr_s1042_on_u4000/model_24000.pt",
+   "sha256": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25"
+  },
+  "ckpt:par": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/model_20000.pt",
+   "sha256": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8"
+  },
+  "train_yaml": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/params/env.yaml",
+   "sha256": "2ee0009fd7564decacd75db4b292cfe9c6e6256d4db244ecaa68f3f122aeb75c"
+  }
+ },
+ "bundle_sha256": "e55975172405901a0178a8e2bd3541ce7e13b118d0a9ab723fb6028d69ef2b58",
+ "frozen_ok": true,
+ "changed_during_check": []
+}
