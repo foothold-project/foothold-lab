@@ -5,4 +5,7 @@ PASS S4 (16j) the new run failed pairing: not valid got (2, False) want (2, Fals
 PASS S5 (16j) the preserved original no longer equals the hand-over bytes: on hold got (2, False) want (2, False)
 PASS S6 (16j) the new run is still incomplete: not ready, nothing compared got (2, 'not ready') want (2, 'not ready')
 PASS S7 a reused record is not a new measurement: not valid got (2, False) want (2, False)
+PASS S8 (16j 5.2) the new traj changes while comparing: exit 3, named, nothing concluded got (3, ['cq_on24000_flat_stand_on_s1000\\traj.npz'], True) want (3, ['cq_on24000_flat_stand_on_s1000\\traj.npz'], True)
+PASS S9 the hold list changes while comparing: exit 3 got (3, ['cmdr_post_hold.json']) want (3, ['cmdr_post_hold.json'])
+PASS S10 the base log is rewritten but this tag's record is the same (the driver saves after every run): no false alarm, exit 0 got (0, None) want (0, None)
 FAILS []

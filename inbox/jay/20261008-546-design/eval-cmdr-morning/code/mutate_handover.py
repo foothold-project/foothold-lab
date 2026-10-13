@@ -13,6 +13,8 @@ M = [
     ("K5 stop requests moved even when the freeze failed", "    if not problems:  # 16h 4.2", "    if True:  # 16h 4.2", ["H2"]),
     ("K6 every .stop treated as the drivers' own", 'TARGET_STOPS = [f"{n}.stop" for n in LOGS]', 'TARGET_STOPS = sorted(f for f in os.listdir(OUT) if f.endswith(".stop"))', ["H1b"]),
     ("K7 a stop that changed during the freeze is moved too", "            if sha_or_none(p) != h0:", "            if False:", ["H1d"]),
+    ("K8 (16j 9.5) the end scan is not kept", "    scans.append(scan_record(s1, a1))", "    pass", ["H9"]),
+    ("K9 argv values kept in the saved scan", 'for x in p["cmdline"] if x.startswith("-") or x.lower().endswith((".py", ".exe"))]', 'for x in p["cmdline"]]', ["H9"]),
 ]
 res = []
 for k, (name, a, b, want) in enumerate(M):

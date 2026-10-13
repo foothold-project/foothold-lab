@@ -11,6 +11,7 @@ not simply the first folder by name. Results:
   not ready                       -> "same-condition comparison on hold" (exit 2)
   ready, outputs equal            -> "no difference found in the recorded outputs compared" (exit 0); not proof the asset was intact
   ready, outputs differ           -> "recorded outputs differ, cause unknown" (exit 1); not proof of collision damage
+  a file read changed meanwhile   -> "inputs changed while comparing" (exit 3); nothing concluded (16j 5.2)
 Neither result releases the hold; that needs an explicit release record in the hold list (16i 3 / 7)."""
 import csv
 import glob
@@ -31,7 +32,9 @@ def sha(p):
     return hashlib.sha256(open(p, "rb").read()).hexdigest() if os.path.exists(p) else None
 
 
-hold = json.load(open(os.path.join(OUT, "cmdr_post_hold.json"), encoding="utf-8")).get(TAG, {}) if os.path.exists(os.path.join(OUT, "cmdr_post_hold.json")) else {}
+HOLDP = os.path.join(OUT, "cmdr_post_hold.json")
+HOLD_RAW = open(HOLDP, "rb").read() if os.path.exists(HOLDP) else None  # parsed from these bytes; compared again at the end
+hold = json.loads(HOLD_RAW.decode("utf-8")).get(TAG, {}) if HOLD_RAW is not None else {}
 held_stamp = hold.get("stamp_sha256")
 old = [d for d in sorted(glob.glob(os.path.join(OUT, "attempts", f"{TAG}.dir.*"))) if sha(os.path.join(d, "driver_stamp.json")) == held_stamp]
 new = os.path.join(OUT, TAG)
@@ -44,8 +47,23 @@ if len(old) != 1 or missing_new:  # 16j 5.2: a run still being written is "not r
     print(json.dumps(res, ensure_ascii=False, indent=1))
     sys.exit(2)
 o = old[0]
-# 16j 5.2: the preserved original must be the very bytes the hand-over froze (not only the stamp)
 HAND = hold.get("handover")
+# 16j 5.2: every file read below is hashed first and again at the end; a change in between gives exit 3 (run again).
+# A before/after check, not an atomic snapshot: a change that is undone before the end is not seen.
+LOGP, BASEP = os.path.join(OUT, f"{TAG}.log"), os.path.join(OUT, "cmdr_eval_driver.json")
+READ = [os.path.join(d, f) for d in (o, new) for f in FIVE + ("driver_stamp.json",)] + [LOGP] + ([os.path.join(OUT, HAND, "manifest.json")] if HAND else [])
+FP0 = {p_: sha(p_) for p_ in READ}
+m_ = TAG.split("_")[1]
+
+
+def base_view(b):
+    """the part of the live base log this comparison relies on (the file itself is rewritten after every run)"""
+    return {"rec": next((r for r in reversed(b.get("runs", [])) if isinstance(r, dict) and r.get("tag") == TAG), {}),
+            "matrix": b.get("matrix", {}).get(TAG), "pair_fail": TAG in b.get("pair_fail", []), "pins": b.get("pins"),
+            "ckpt": b.get("ckpt", {}).get(m_)}
+
+
+# 16j 5.2: the preserved original must be the very bytes the hand-over froze (not only the stamp)
 man_run = json.load(open(os.path.join(OUT, HAND, "manifest.json"), encoding="utf-8"))["runs"].get(TAG, {}) if HAND else {}
 res["old_equals_handover"] = bool(man_run) and all(sha(os.path.join(o, f)) == man_run.get(f) for f in FIVE)
 
@@ -87,7 +105,7 @@ st = json.load(open(os.path.join(new, "driver_stamp.json"), encoding="utf-8")) i
 base = json.load(open(os.path.join(OUT, "cmdr_eval_driver.json"), encoding="utf-8"))
 rec = next((r for r in reversed(base.get("runs", [])) if isinstance(r, dict) and r.get("tag") == TAG), {})
 now4 = {f: sha(os.path.join(new, f)) for f in OUT4}
-m_ = TAG.split("_")[1]
+BV0 = base_view(base)
 nv = {"completion line": f"[Q-EVAL] done {TAG} N 100 " in lo,
       # 16j 5.2: the bytes on disk are the bytes the stamp and the record vouch for, all four keys present
       "four output hashes = stamp = record": isinstance(st.get("out_sha256"), dict) and sorted(st["out_sha256"]) == sorted(OUT4)
@@ -103,6 +121,21 @@ nv = {"completion line": f"[Q-EVAL] done {TAG} N 100 " in lo,
 res["new_run"] = nv
 res["new_run_valid"] = all(nv.values())
 res["comparison_ready"] = res["inputs_equal"] and res["new_run_valid"] and res["old_equals_handover"]
+if os.environ.get("COMPARE_TEST_TOUCH"):
+    with open(os.environ["COMPARE_TEST_TOUCH"], "ab") as fh:
+        fh.write(b" ")
+changed = [os.path.relpath(p_, OUT) for p_ in READ if sha(p_) != FP0[p_]]
+if FP0[os.path.join(o, "driver_stamp.json")] != held_stamp:
+    changed.append("the preserved stamp is no longer the held one")
+if (open(HOLDP, "rb").read() if os.path.exists(HOLDP) else None) != HOLD_RAW:
+    changed.append("cmdr_post_hold.json")
+if base_view(json.load(open(BASEP, encoding="utf-8"))) != BV0:
+    changed.append("cmdr_eval_driver.json (this tag's record, matrix, pins or checkpoint)")
+if changed:
+    res["changed_while_reading"] = changed
+    res["result"] = "inputs changed while comparing: nothing concluded, run again"
+    print(json.dumps(res, ensure_ascii=False, indent=1))
+    sys.exit(3)
 if not res["comparison_ready"]:
     res["result"] = "same-condition comparison on hold (inputs differ or the new run is not shown valid)"
     code = 2

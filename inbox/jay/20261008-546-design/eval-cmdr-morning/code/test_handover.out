@@ -9,5 +9,6 @@ PASS H5 a run file changes after it was hashed: exit 1, named got (1, True) want
 PASS H5b the original log changes after it was copied: exit 1 got (1, True) want (1, True)
 PASS H6 an Isaac process appears after the first scan: exit 1 at the end scan got (1, True) want (1, True)
 PASS H7 the old driver and its child are alive: exit 1, both named got (1, True, True) want (1, True, True)
+PASS H9 (16j 9.5) both scans are kept: start and end, python rows with flag names only, no values, end names the late Isaac got (1, 2, [['python.exe', 'server.py', '--token', '--key']], False, ['isaac-like python', 9001], True) want (1, 2, [['python.exe', 'server.py', '--token', '--key']], False, ['isaac-like python', 9001], True)
 PASS H8 pins differ from the logs: exit 1 got (1, True) want (1, True)
 FAILS []

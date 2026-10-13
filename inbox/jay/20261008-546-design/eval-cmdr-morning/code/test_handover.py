@@ -134,6 +134,18 @@ try:
     a = json.dumps(man.get("problems"))
     check("H7 the old driver and its child are alive: exit 1, both named", (rc, "old driver" in a, "5000" in a), (1, True, True))
 
+    ev, out = tree("h9")
+    secret = [{"pid": 7000, "ppid": 1, "name": "python.exe", "cmdline": ["C:/x/python.exe", "C:/tools/server.py", "--token=SECRETVALUE", "--key", "SECRET2"], "create_time": 1.0},
+              {"pid": 7001, "ppid": 1, "name": "chrome.exe", "cmdline": ["chrome.exe", "--x"], "create_time": 1.0}]
+    late9 = secret + [{"pid": 9001, "ppid": 1, "name": "python.exe", "cmdline": ["python.exe", "q_eval_cmdr.py", "--headless"], "create_time": 5.0}]
+    rc, res, man = run(ev, procs=[secret, late9])
+    sc = json.load(open(os.path.join(res["dir"], "scans.json"), encoding="utf-8")) if "dir" in res else []
+    raw = json.dumps(sc)
+    check("H9 (16j 9.5) both scans are kept: start and end, python rows with flag names only, no values, end names the late Isaac",
+          (rc, len(sc), [r["argv"] for r in sc[0]["python_kit"]] if sc else None, "SECRET" in raw, sc[1]["alive"][0][:2] if len(sc) > 1 and sc[1]["alive"] else None,
+           man.get("scans_sha256") == sha(os.path.join(res["dir"], "scans.json")) if "dir" in res else None),
+          (1, 2, [["python.exe", "server.py", "--token", "--key"]], False, ["isaac-like python", 9001], True))
+
     ev, out = tree("h8")
     open(os.path.join(ev, "q_metrics.py"), "a").write("# changed\n")
     rc, res, man = run(ev)

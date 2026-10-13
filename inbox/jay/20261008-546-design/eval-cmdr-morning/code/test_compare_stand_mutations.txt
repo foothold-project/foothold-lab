@@ -1,0 +1,8 @@
+# test_compare_stand.py 변이 시험 · 사본 (_mut_compare_stand_<k>.py) 에서만 바꿔 돌림
+CAUGHT C1 disk bytes not compared with the stamp: exit 1 failed ['S2'] want ['S2']
+CAUGHT C2 owner matrix and pair failure not checked: exit 1 failed ['S4'] want ['S4']
+CAUGHT C3 preserved original not tied to the hand-over: exit 1 failed ['S5'] want ['S5']
+CAUGHT C4 an incomplete new run is read anyway: exit 1 failed ['S6'] want ['S6']
+CAUGHT C5 a reused record counts as a new measurement: exit 1 failed ['S7'] want ['S7']
+CAUGHT C6 no re-check after reading: exit 1 failed ['S8', 'S9'] want ['S8', 'S9']
+ALL CAUGHT

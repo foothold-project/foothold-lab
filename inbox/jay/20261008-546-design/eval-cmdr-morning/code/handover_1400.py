@@ -122,10 +122,27 @@ def alive_in(snap, old):
 TARGET_STOPS = [f"{n}.stop" for n in LOGS]
 
 
+def scan_record(snap, verdict):
+    """16j 9.5: what a scan saw, kept so the "no writer" claim can be re-checked later. python/kit rows keep pid, ppid,
+    create_time and an argv with values dropped (script basenames and flag names only: enough to re-apply the Isaac-like
+    rule, no paths or values that may hold secrets); other processes are only counted."""
+    rows = []
+    for p in snap:
+        n = (p.get("name") or "").lower()
+        if not n.startswith(("python", "kit")):
+            continue
+        argv = None if p.get("cmdline") is None else [os.path.basename(x) if not x.startswith("-") else x.split("=", 1)[0]
+                                                      for x in p["cmdline"] if x.startswith("-") or x.lower().endswith((".py", ".exe"))]
+        rows.append({"pid": p.get("pid"), "ppid": p.get("ppid"), "create_time": p.get("create_time"), "name": p.get("name"), "argv": argv})
+    return {"t": time.strftime("%Y-%m-%d %H:%M:%S"), "n_processes": len(snap), "python_kit": rows, "alive": verdict}
+
+
 def main(old):
     problems = []
     stops0 = {f: sha(os.path.join(OUT, f)) for f in TARGET_STOPS if os.path.exists(os.path.join(OUT, f))}
-    a0 = alive_in(snapshot(), old)
+    s0 = snapshot()
+    a0 = alive_in(s0, old)
+    scans = [scan_record(s0, a0)]
     if a0:
         problems.append({"alive at start": a0})
     stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -193,9 +210,13 @@ def main(old):
         changed.append("pins")
     if changed:
         problems.append({"changed during the freeze": changed[:20], "n": len(changed)})
-    a1 = alive_in(snapshot(), old)
+    s1 = snapshot()
+    a1 = alive_in(s1, old)
+    scans.append(scan_record(s1, a1))
     if a1:
         problems.append({"alive at the end": a1})
+    json.dump(scans, open(os.path.join(H, "scans.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    man["scans_sha256"] = sha(os.path.join(H, "scans.json"))
     man["copies_sha256"] = copies
     man["problems"] = problems
     man["status"] = "complete" if not problems else "failed"

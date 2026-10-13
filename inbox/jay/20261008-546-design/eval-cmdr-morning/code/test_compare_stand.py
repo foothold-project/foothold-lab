@@ -38,7 +38,7 @@ def run_folder(d):
     np.save(os.path.join(d, "env_origins.npy"), np.zeros((2, 3), np.float32))
 
 
-def tree(name, mutate=None):
+def tree(name, mutate=None, touch=None):
     out = os.path.join(ROOT, name)
     os.makedirs(out)
     old = os.path.join(out, "attempts", f"{TAG}.dir.1013113904.1")
@@ -60,7 +60,10 @@ def tree(name, mutate=None):
         mutate(out, new, stamp, rec, base)
     json.dump(stamp, open(os.path.join(new, "driver_stamp.json"), "w"))
     json.dump(base, open(os.path.join(out, "cmdr_eval_driver.json"), "w"))
-    r = subprocess.run([sys.executable, SCRIPT, TAG], capture_output=True, text=True, env=dict(os.environ, COMPARE_OUT=out), encoding="utf-8", errors="replace")
+    env = dict(os.environ, COMPARE_OUT=out)
+    if touch:
+        env["COMPARE_TEST_TOUCH"] = os.path.join(out, touch)
+    r = subprocess.run([sys.executable, SCRIPT, TAG], capture_output=True, text=True, env=env, encoding="utf-8", errors="replace")
     try:
         res = json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -104,6 +107,14 @@ try:
         rec["reused"] = True
     rc, res = tree("reused", reused)
     check("S7 a reused record is not a new measurement: not valid", (rc, res.get("new_run_valid")), (2, False))
+    rc, res = tree("t8", touch=os.path.join(TAG, "traj.npz"))
+    check("S8 (16j 5.2) the new traj changes while comparing: exit 3, named, nothing concluded",
+          (rc, res.get("changed_while_reading"), "output_content_equal" in res and res["result"].startswith("inputs changed")), (3, [os.path.join(TAG, "traj.npz")], True))
+    rc, res = tree("t9", touch="cmdr_post_hold.json")
+    check("S9 the hold list changes while comparing: exit 3", (rc, res.get("changed_while_reading")), (3, ["cmdr_post_hold.json"]))
+    rc, res = tree("t10", touch="cmdr_eval_driver.json")
+    check("S10 the base log is rewritten but this tag's record is the same (the driver saves after every run): no false alarm, exit 0",
+          (rc, res.get("changed_while_reading")), (0, None))
 finally:
     shutil.rmtree(ROOT, ignore_errors=True)
 print("FAILS", fails)
