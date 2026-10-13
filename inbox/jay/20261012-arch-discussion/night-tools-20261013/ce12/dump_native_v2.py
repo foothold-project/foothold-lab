@@ -51,20 +51,24 @@ LAB_EVAL = os.path.join(LAB, "sim", "eval")
 BASE_TASK = "Isaac-Velocity-Rough-Unitree-Go2-v0"
 NEVER_RESAMPLE_S = 1.0e9
 
-CELLS_ALL = {
-    "stand": (0.0, 0.0, 0.0), "fwd01": (0.1, 0.0, 0.0), "fwd03": (0.3, 0.0, 0.0), "fwd05": (0.5, 0.0, 0.0),
-    "back03": (-0.3, 0.0, 0.0), "left03": (0.0, 0.3, 0.0), "right03": (0.0, -0.3, 0.0),
-    "yawL05": (0.0, 0.0, 0.5), "yawR05": (0.0, 0.0, -0.5),
-}
+sys.path.insert(0, HERE)
+import cells as CL  # noqa: E402  (순수 Python 칸 표 · 강제 reset · 명령 전환 규칙)
+
+CELLS_ALL = {k: v[1] for k, v in CL.CE12_CELLS.items()}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--checkpoint", default=os.path.join(LAB, "models", "foothold-v2.pt"))
 parser.add_argument("--env_yaml", default=os.path.join(LAB, "models", "foothold-v2.env.yaml"))
 parser.add_argument("--tag", required=True)
 parser.add_argument("--outdir", default=os.path.join(EVAL, "out_ce12", "native"))
-parser.add_argument("--cells", default="stand,fwd03,yawL05")
-parser.add_argument("--envs_per_cell", type=int, default=4)
-parser.add_argument("--steps", type=int, default=60)
+parser.add_argument("--cells", default=CL.DEFAULT_CELLS)
+parser.add_argument("--envs_per_cell", type=int, default=CL.DEFAULT_ENVS_PER_CELL)
+parser.add_argument("--steps", type=int, default=CL.DEFAULT_STEPS)
+parser.add_argument("--reset_envs", default="", help="ASTRA 17d §4: 이 env 들만 --reset_step 관측 직전 step 안에서 time-out reset (cells.py)")
+parser.add_argument("--reset_step", type=int, default=0)
+parser.add_argument("--switch_env", type=int, default=-1, help="ASTRA 17d §4: 이 env 의 명령을 관측 --switch_step 부터 --switch_cell 로")
+parser.add_argument("--switch_step", type=int, default=0)
+parser.add_argument("--switch_cell", default="")
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--env_spacing", type=float, default=8.0)
 parser.add_argument("--dr_profile", choices=["generalization", "command_response"], default="generalization")
@@ -94,11 +98,17 @@ if any(_inside(OUT, f) for f in FORBIDDEN):
 if os.path.exists(OUT):
     print(f"STOP: 출력 {OUT} 이 이미 있다 (덮어쓰지 않는다)", flush=True)
     sys.exit(2)
-CELL_NAMES = args.cells.split(",")
-for c in CELL_NAMES:
-    if c not in CELLS_ALL:
-        print(f"STOP: 모르는 칸 {c}", flush=True)
-        sys.exit(2)
+try:
+    CELL_NAMES = CL.parse_cells(args.cells)
+    RESET_ENVS = CL.parse_env_list(args.reset_envs)
+except ValueError as _ex:
+    print(f"STOP: {_ex}", flush=True)
+    sys.exit(2)
+_fx = CL.fixture_problem(int(args.steps), len(CELL_NAMES) * args.envs_per_cell, RESET_ENVS, args.reset_step, args.switch_env,
+                         args.switch_step, args.switch_cell)
+if _fx or not 1 <= args.steps <= CL.MAX_STEPS or args.envs_per_cell < 1:
+    print(f"STOP: 기록 범위 인자 {_fx or 'steps · envs_per_cell'}", flush=True)
+    sys.exit(2)
 for _p in (args.checkpoint, args.env_yaml):
     if not os.path.isfile(_p):
         print(f"STOP: 파일이 없다 {_p}", flush=True)
@@ -116,7 +126,6 @@ from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 import isaaclab_tasks  # noqa: F401,E402
 from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 
-sys.path.insert(0, HERE)
 if LAB_EVAL not in sys.path:
     sys.path.insert(1, LAB_EVAL)
 import adapters as A  # noqa: E402
@@ -296,6 +305,8 @@ t0 = time.time()
 raw_env.reset()
 with torch.inference_mode():
     for k in range(T + 1):
+        if args.switch_env >= 0 and k == args.switch_step:  # 관측 switch_step 부터 새 명령 (cells.py)
+            cmd_env[args.switch_env] = torch.tensor(CELLS_ALL[args.switch_cell], device=dev, dtype=torch.float)
         obs = observe_now()
         rec(k, obs)
         if k == T:
@@ -303,6 +314,8 @@ with torch.inference_mode():
         act = policy(obs)
         R["raw_action"][k] = cpu(act)
         R["action_offset"][k] = cpu(jt._offset if torch.is_tensor(jt._offset) else torch.full((N, 12), float(jt._offset)))
+        if RESET_ENVS and k == args.reset_step - 1:  # 이 step 안에서 time-out 으로 reset (native 종료 경로 그대로)
+            raw_env.episode_length_buf[RESET_ENVS] = raw_env.max_episode_length - 1
         env.step(act)
         R["joint_target"][k] = cpu(jt.processed_actions)
         R["reset_after_step"][k] = cpu(raw_env.reset_buf).astype(bool)
@@ -317,12 +330,25 @@ lay = {n: (a, b) for n, a, b, H, dd in ad.layout("policy")}
 checks = {}
 a, b = lay["velocity_commands"]
 checks["obs_cmd_vs_command_max_abs"] = float(np.nanmax(np.abs(R["obs_policy"][:, :, a:b] - R["command"])))
-checks["command_vs_cell_max_abs"] = float(np.nanmax(np.abs(R["command"] - cmd_env.cpu().numpy()[None])))
+_exp = np.asarray(CL.expected_commands(CELL_NAMES, E, T, (args.switch_env, args.switch_step, args.switch_cell)
+                                       if args.switch_env >= 0 else None), dtype=np.float32)
+checks["command_vs_schedule_max_abs"] = float(np.nanmax(np.abs(R["command"] - _exp)))
 checks["nonfinite_count_except_rays"] = int(sum((~np.isfinite(v)).sum() for k, v in R.items() if v.dtype != bool and k != "ray_hits_w"))
 checks["ray_miss_count"] = int((~np.isfinite(R["ray_hits_w"][..., 2])).sum())
 checks["reset_events"] = int(R["reset_after_step"].sum())
 checks["obs_equals_art_order"] = obs_joint_names == art_names
 checks["action_equals_obs_order"] = action_joint_names == obs_joint_names
+_rp = np.argwhere(R["reset_after_step"])
+_sw = np.argwhere(np.any(R["command"][1:] != R["command"][:-1], axis=-1))
+meta["schedule"] = {"cells": CELL_NAMES, "envs_per_cell": E, "steps": T,
+                    "switch": None if args.switch_env < 0 else {"env": args.switch_env, "step": args.switch_step, "cell": args.switch_cell},
+                    "forced_reset": None if not RESET_ENVS else {"envs": RESET_ENVS, "step": args.reset_step}}
+meta["coverage"] = {"reset_events": int(R["reset_after_step"].sum()), "reset_pairs_step_env": _rp.tolist()[:200],
+                    "forced_reset_ok": (None if not RESET_ENVS else
+                                        bool(R["reset_after_step"][args.reset_step - 1, RESET_ENVS].all()
+                                             and R["time_out"][args.reset_step - 1, RESET_ENVS].all())),
+                    "command_switch_events": int(len(_sw)), "command_switch_pairs_obs_env": (_sw + [1, 0]).tolist()[:200],
+                    "ray_miss_count": checks["ray_miss_count"]}
 meta["checks"] = checks
 meta["t_end"] = time.strftime("%Y-%m-%d %H:%M:%S")
 

@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-"""S2 A/B 정책: 부모 E1 20000 의 student 경로에 0 으로 시작하는 지도 열을 붙인 actor-critic (CPU 로 짓기 · 학습 없음).
+"""S2 A/B 정책 (판 2): 부모 E1 20000 의 student 경로에 0 으로 시작하는 지도 열을 붙인 actor-critic (CPU 로 짓기 · 학습 없음).
 
-분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 (CPU · 학습 없음)
-작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 2026-10-13 19:21
-근거: inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md 3 절 · 4 절
+분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 2 (CPU · 학습 없음)
+작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:21 · 판 2 2026-10-13 23:32
+근거: inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md 3 절 · 4 절 · 6 절 (다르면 6 절) · VERIFY-astra-17d.md 6.1 ~ 6.3
       source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py 17 ~ 40 (StudentMoEEncoder) · 86 ~ 247 (act · act_inference · evaluate)
       source/rsl_rl/rsl_rl/networks/moe.py (MLP · MoE · L2Norm) · algorithms/moe_cts.py 93 ~ 101 (optimizer 묶음 · lr)
-      E1 run params/agent.yaml (구조 값) · model_20000.pt (optimizer_state_dict lr 0.00017085937500000009)
+      E1 run params/agent.yaml (구조 값) · params/env.yaml 865 ~ 1177 (critic 항 순서 · height_scan 이 마지막 187 열)
+      model_20000.pt (optimizer_state_dict lr 0.00017085937500000009)
 요지: 지도 입력 m [N, 374] -> map encoder (374 -> 128 -> 64 · ELU) -> z_map 64. actor 첫 층은 [latent 32, single_obs 45] 77 열은
-      부모 값 그대로, z_map 64 열은 0 으로 시작. encoder 의 no_grad 를 풀어 PPO gradient 가 student encoder 까지 간다.
-      critic 은 부모 그대로 (latent.detach() + critic obs). teacher encoder 는 가져오지 않는다. A · B 는 구조 · 초기값이 같고 입력만 다르다.
+      부모 값 그대로, z_map 64 열은 0 으로 시작. forward 에 no_grad 는 없고, student encoder 의 고정 · 학습률은 EncoderSchedule
+      (처음 W update 고정 · 그 뒤 actor 학습률의 r 배 · W · r 은 기본값 없이 인자로만) 이 정한다.
+      critic 은 부모 구조 · 가중치에서 시작 (latent.detach() + critic obs) 하고 값은 바꾸지 않는다. critic_check 가 critic 입력 ·
+      value 의 유한성과 정상 miss 광선 칸의 critic 입력 값을 잰다. teacher encoder 는 가져오지 않는다.
+      A · B 는 구조 · 초기값이 같고 actor 의 지도 입력만 다르다 (A 도 지형 정보가 든 critic 을 학습 신호로 쓴다).
 상태: CPU 시험 (test_s2.py) · 변이 (mutate_s2.py) 만 거침. 학습 · Isaac · GPU 실행 없음
 
 설계와 형태가 다른 곳 (값 · 수식은 같음)
@@ -42,6 +46,10 @@ MAP_HIDDEN_DIMS = (128,)
 MAP_LATENT_DIM = 64
 MAP_INIT_SEED = 0             # A · B 가 같은 시드로 map encoder 를 지어 출발점이 같다
 PARENT_OBS_GROUPS = {"policy": ["policy"], "critic": ["critic"]}
+# critic obs 항 순서 (env.yaml 865 ~ 1177 · history 없음 · 항끼리 이음): base_lin_vel 3 · base_ang_vel 3 · projected_gravity 3 ·
+# velocity_commands 3 · joint_pos 12 · joint_vel 12 · actions 12 · joint_acc 12 · joint_torque 12 · contact_force 16 (발 4 x (이력 3 + 1))
+# = 88 다음에 height_scan 187 (열 88 ~ 274 · 체크포인트 critic 첫 층 307 - latent 32 = 275 와 맞음)
+CRITIC_HEIGHT_START = 88
 
 
 def sha256_file(path: str) -> str:
@@ -250,7 +258,81 @@ def build_s2(mode: str, parent: nn.Module | None = None, ckpt: str = E1_CKPT, **
     return S2MapActorCritic(parent, mode, **kw), parent, meta
 
 
-def make_optimizer(policy: S2MapActorCritic, lr: float, betas=(0.9, 0.999), weight_decay: float = 0.0) -> torch.optim.Adam:
-    """새 Adam (부모 Adam 상태는 차원이 달라 쓰지 않음). 모든 묶음이 같은 lr (설계 3 절: 부모 마지막 값 · 두 군 같게)."""
+class EncoderSchedule:
+    """student encoder 고정 구간과 학습률 비 (설계 6 절 · ASTRA 17d 6.3). 두 군에 같은 규칙.
+
+    freeze_updates (W): update_index < W 인 동안 student encoder 를 고정한다 (requires_grad 끔 · 그 묶음 lr 0).
+        고정 동안 gradient 가 생기지 않으므로 Adam moment 도 쌓이지 않고, 풀리는 첫 update 에서 encoder 의 Adam 상태가 새로 시작한다.
+    encoder_lr_ratio (r): 풀린 뒤 student encoder 묶음의 lr = r x (actor 와 나머지 묶음의 lr).
+    W · r 은 기본값이 없다 (A/B 결과를 보기 전에 등록할 값). update_index 의 단위 (PPO iteration 한 번 = alg.update() 한 번,
+    또는 optimizer step 한 번) 도 W 와 함께 등록한다. 이 코드는 넘겨받은 번호만 센다.
+    """
+
+    def __init__(self, freeze_updates: int, encoder_lr_ratio: float):
+        if freeze_updates is None or encoder_lr_ratio is None:
+            raise TypeError("encoder 고정 구간 W 와 학습률 비 r 은 반드시 넘긴다 (기본값 없음)")
+        if isinstance(freeze_updates, bool) or not isinstance(freeze_updates, int) or freeze_updates < 0:
+            raise ValueError(f"W 는 0 이상의 정수: {freeze_updates!r}")
+        r = float(encoder_lr_ratio)
+        if not (r >= 0.0 and r < float("inf")):
+            raise ValueError(f"r 은 0 이상의 유한한 수: {encoder_lr_ratio!r}")
+        self.freeze_updates = freeze_updates
+        self.encoder_lr_ratio = r
+
+    def is_frozen(self, update_index: int) -> bool:
+        return update_index < self.freeze_updates
+
+    def apply(self, policy: "S2MapActorCritic", optimizer: torch.optim.Optimizer, update_index: int, lr: float) -> bool:
+        """update_index 번째 update 직전에 부른다 (0 부터). PPO adaptive lr 이 바뀔 때마다 다시 불러 비를 지킨다.
+        돌려줌: 이번 update 에서 encoder 가 고정인가."""
+        frozen = self.is_frozen(update_index)
+        for p in policy.student_moe_encoder.parameters():
+            p.requires_grad_(not frozen)
+        for g in optimizer.param_groups:
+            if g.get("name") == "student_encoder":
+                g["lr"] = 0.0 if frozen else self.encoder_lr_ratio * lr
+            else:
+                g["lr"] = lr
+        return frozen
+
+
+def make_optimizer(policy: S2MapActorCritic, lr: float, *, encoder_freeze_updates, encoder_lr_ratio,
+                   betas=(0.9, 0.999), weight_decay: float = 0.0):
+    """새 Adam 과 EncoderSchedule. 새 Adam 은 「선택」 이다 (부모 매개변수의 moment 를 옮길 수는 있다 · 설계 6 절).
+    lr 은 부모 마지막 값을 넘긴다 (두 군 같게). 만들자마자 update 0 의 규칙 (W > 0 이면 encoder 고정) 을 건다.
+    돌려줌: (optimizer, schedule). 학습기는 update 마다 schedule.apply(policy, optimizer, update_index, lr) 를 부른다."""
+    schedule = EncoderSchedule(encoder_freeze_updates, encoder_lr_ratio)
     groups = [{"params": ps, "name": name} for name, ps in policy.param_groups().items()]
-    return torch.optim.Adam(groups, lr=lr, betas=betas, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(groups, lr=lr, betas=betas, weight_decay=weight_decay)
+    schedule.apply(policy, optimizer, 0, lr)
+    return optimizer, schedule
+
+
+def critic_check(policy: S2MapActorCritic, obs, sensor_pos_w: torch.Tensor | None = None,
+                 ray_hits_w: torch.Tensor | None = None) -> dict:
+    """critic 입력 · value 의 유한성과 정상 miss 광선 칸의 critic 입력 값을 잰다 (값 · 입력은 바꾸지 않는다).
+
+    부모 critic 의 height 항 (IsaacLab height_scan · clip [-1, 1] · x 2.5) 은 critic obs 의 열 CRITIC_HEIGHT_START ~ +186 이다.
+    정상 miss 광선 (센서 정상 · hit xyz 모두 +inf) 칸의 그 값을 모아 돌려준다 (부모 식으로는 -inf -> clip -1 -> -2.5 · B actor 의 지도는 같은 광선을
+    height 1 · mask 0 으로 읽는다. 설계 6 절: 「부모 value 함수가 gap 에서 맞다」 는 주장은 하지 않는다).
+    """
+    with torch.no_grad():
+        obs_c = policy.get_critic_obs(obs)
+        value = policy.evaluate(obs)
+    rep = {
+        "n_env": int(obs_c.shape[0]),
+        "critic_input_nonfinite": int((~torch.isfinite(obs_c)).sum()),
+        "critic_input_nonfinite_envs": int((~torch.isfinite(obs_c)).any(dim=-1).sum()),
+        "value_nonfinite": int((~torch.isfinite(value)).sum()),
+    }
+    if ray_hits_w is not None:
+        if sensor_pos_w is None:
+            raise ValueError("정상 miss 판정에는 sensor_pos_w 도 넘긴다")
+        _hit_valid, normal_miss, _faults = M.classify_rays(sensor_pos_w, ray_hits_w)
+        hcols = obs_c[:, CRITIC_HEIGHT_START:CRITIC_HEIGHT_START + ray_hits_w.shape[1]]
+        vals = hcols[normal_miss]
+        rep["miss_rays"] = int(normal_miss.sum())
+        rep["critic_at_miss_values"] = sorted({float(v) for v in vals.tolist()})[:8]
+        rep["critic_at_miss_min"] = float(vals.min()) if vals.numel() else None
+        rep["critic_at_miss_max"] = float(vals.max()) if vals.numel() else None
+    return rep

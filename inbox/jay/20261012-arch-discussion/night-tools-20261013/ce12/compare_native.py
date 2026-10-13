@@ -60,6 +60,38 @@ def _sha(path):
     return h.hexdigest()
 
 
+def coverage_of(d):
+    """ASTRA 17d §4: 이 기록이 실제로 지나간 경로의 수. 0 인 경로는 native 로는 미확인이다."""
+    rs = int(np.asarray(d["reset_after_step"]).sum())
+    cmd = np.asarray(d["command"])
+    sw = int(np.any(cmd[1:] != cmd[:-1], axis=-1).sum()) if cmd.shape[0] > 1 else 0
+    miss = int((~np.isfinite(np.asarray(d["ray_hits_w"])[..., 2])).sum()) if "ray_hits_w" in d else None
+    cov = {"reset_events": rs, "command_switch_events": sw, "ray_miss_count": miss}
+    cov["unverified_paths"] = [k for k, v in (("reset 뒤 이력 · last action", rs), ("명령 전환", sw), ("height miss (+1)", miss))
+                               if v == 0]
+    return cov
+
+
+def inputs_fingerprint(npz_path, meta_path, meta, model, A, policy_info=None):
+    """비교가 읽은 입력의 해시. validate_dump.py 승인은 이것이 지금 파일과 같을 때만 통과 (ASTRA 17d §2.7)."""
+    sig = os.path.join(os.path.dirname(npz_path), "signature.json")
+    cfg = {}
+    for key in ("train_yaml", "agent_yaml", "env_yaml"):
+        v = meta.get(key)
+        if isinstance(v, dict):
+            v = v.get("path")
+        if v and os.path.isfile(v):
+            cfg[os.path.abspath(v).replace("\\", "/")] = _sha(v)
+    if policy_info and policy_info.get("agent_yaml") and os.path.isfile(policy_info["agent_yaml"]):
+        cfg[os.path.abspath(policy_info["agent_yaml"]).replace("\\", "/")] = _sha(policy_info["agent_yaml"])
+    code = {"adapters.py": _sha(A.__file__), "compare_native.py": _sha(os.path.abspath(__file__))}
+    cl = os.path.join(HERE, "cells.py")
+    if os.path.isfile(cl):
+        code["cells.py"] = _sha(cl)
+    return {"npz_sha256": _sha(npz_path), "meta_sha256": _sha(meta_path) if os.path.exists(meta_path) else None,
+            "signature_sha256": _sha(sig) if os.path.exists(sig) else None, "config_sha256": cfg, "code_sha256": code}
+
+
 class _Check:
     """한 비교 항목의 누적: 최대 절대차 · 넘은 칸 수 · 첫 위치 (step 오름차순)."""
 
@@ -213,8 +245,15 @@ def compare(npz_path, meta_path=None, A=None, recompute_action=False, checkpoint
             c.add(k, d["obs_policy"][k][:, a:b], d["command"][k])
         c.extra["slice"] = [a, b]
         checks.append(c)
+    pinfo = None
     if recompute_action:
-        checks += _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml)
+        rc_checks, pinfo, ck_used = _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml)
+        checks += rc_checks
+        rep["checkpoint"] = ck_used.replace("\\", "/") if ck_used else None
+        rep["checkpoint_sha256"] = (pinfo or {}).get("checkpoint_sha256")
+    rep["recompute_action"] = bool(recompute_action)
+    rep["inputs"] = inputs_fingerprint(npz_path, meta_path, meta, model, A, pinfo)
+    rep["coverage"] = coverage_of(d)
     res = [x.result() for x in checks]
     fails = [r for r in res if not r["ok"]]
     first = None
@@ -234,12 +273,11 @@ def _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml):
     import contextlib
     import io
     ck = checkpoint or meta.get("checkpoint")
-    out = []
     c_ad = _Check("action.recompute_from_adapter_obs", ACTION_ATOL)
     c_nat = _Check("action.recompute_from_native_obs", ACTION_ATOL)
     if not ck or not os.path.exists(ck):
         c_ad.flag(False, f"체크포인트가 없다: {ck}")
-        return [c_ad]
+        return [c_ad], None, ck
     with contextlib.redirect_stdout(io.StringIO()):
         if model == "cts_student":
             m, info = A.load_cts_policy_cpu(ck, agent_yaml or meta.get("agent_yaml"))
@@ -253,7 +291,7 @@ def _recompute(A, ad, d, meta, model, obs_seq, groups, checkpoint, agent_yaml):
         nat = {g: torch.as_tensor(d["obs_" + g][k]) for g in groups}
         a2 = ad.infer(m, nat)
         c_nat.add(k, a2.numpy(), d["raw_action"][k])
-    return [c_ad, c_nat]
+    return [c_ad, c_nat], info, ck
 
 
 def _print(rep):

@@ -1,125 +1,122 @@
-> 분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 · 코드와 CPU 시험 (학습 · Isaac · GPU 실행 없음)
-> 작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 2026-10-13 19:35
-> 근거: foothold-lab `inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md` 3 절 · 4 절 · `source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py` · `networks/moe.py` · `algorithms/moe_cts.py` · E1 `params/agent.yaml` · `params/env.yaml` 446 ~ 490 · 1145 ~ 1177 · IsaacLab `envs/mdp/observations.py` 292 ~ 300 · `sensors/ray_caster/ray_caster.py` 218 ~ 248 · `patterns/patterns.py` grid_pattern · `utils/warp/ops.py` raycast_mesh
-> 요지: 설계 3 절 구조 (지도 encoder 374 → 128 → 64 · actor 첫 층의 지도 64 열 0 시작 · no_grad 풀림 · 부모 critic · 새 Adam) 와 B 의 height · mask 의미를 코드로 만들었다. 시험 T1 ~ T7 은 7/7 PASS (115 칸) · 변이 21 개 ALL CAUGHT 21/21. 부모 체크포인트 sha256 은 시험 전후 같다
-> 상태: CPU 시험 · 변이까지. Isaac 안의 실제 RayCaster 자료 · GPU · 학습기 (runner · algorithm) 연결은 하지 않았다 (7 절 미확인)
+> 분류: A/정책학습 · S2 「이상적 지도 입력 비교」 A/B 입력 경로 1 단계 판 2 · 코드와 CPU 시험 (학습 · Isaac · GPU 실행 없음)
+> 작성: 오흥재 (lead 세션 · Claude 하위 작업 작성) · 판 1 2026-10-13 19:35 · 판 2 2026-10-13 23:47
+> 근거: foothold-lab `inbox/jay/20261012-arch-discussion/DESIGN-s2-ab-v1.md` 6 절 (위 1 ~ 5 절과 다르면 6 절) · `VERIFY-astra-17d.md` 6.1 ~ 6.4 · `source/rsl_rl/rsl_rl/modules/actor_critic_moe_cts.py` · `networks/moe.py` · `algorithms/moe_cts.py` · E1 `params/agent.yaml` · `params/env.yaml` 446 ~ 490 · 865 ~ 1177 · IsaacLab `envs/mdp/observations.py` 292 ~ 300 · `sensors/ray_caster/ray_caster.py` 218 ~ 248 · 278 ~ 279 · `patterns/patterns.py` grid_pattern · `utils/math.py` quat_apply_yaw · `utils/warp/ops.py` 71
+> 요지: ASTRA 17d 반영. mask 를 지형 충돌 여부로 바꾸고 (유한 hit 은 mask 1 · 정상 miss 만 mask 0 · 1 m 깊이 분류 삭제), 센서 · hit 의 NaN 은 구멍이 아닌 고장으로 따로 센다 (A · B 같은 관문). critic 점검 함수와 encoder 고정 구간 (W · r 기본값 없음) 을 더했다. 시험 T1 ~ T10 은 10/10 PASS (187 칸) · 변이 39 개 + 관문 자체 1 개 ALL CAUGHT 40/40. 부모 체크포인트 sha256 은 시험 전후 같다
+> 상태: CPU 시험 · 변이까지. S2 학습 기동은 보류 (설계 6 절). Isaac 접속 · reset 시점 · 학습기 연결 · 공정성 등록은 하지 않았다 (7 절)
 
-# S2 A/B 입력 경로 1 단계
+# S2 A/B 입력 경로 1 단계 · 판 2
 
 표기: **확인됨** = 이 폴더의 시험을 돌려 잼 · **소스 확인** = 코드를 열어 읽음 (실행은 안 함) · **미확인** = 재지 않음.
 
-## 1. 만든 것
+## 1. 판 1 에서 바뀐 것
+
+| 판 1 (2026-10-13 19:35 · ASTRA 17d 가 검증한 판) | 판 2 | 근거 |
+|---|---|---|
+| mask 1 = 「유한하고 base 아래 1 m 안」. 1 m 보다 깊은 유한 바닥 · NaN · 안 맞음을 모두 (height 1, mask 0) | **mask = 지형 충돌 여부.** 유한 hit 은 mask 1 · height clip [−1, 1] (깊은 바닥도 mask 1). 정상 miss (xyz 모두 +inf) 만 (1, 0) | 설계 6 절 · 17d 6.2 |
+| 센서 NaN · hit NaN 도 구멍 (1, 0) | 센서 위치 비유한 · ray packet 손상 (NaN · −inf · 일부 좌표만 inf) 은 **고장**. 자리표시 (0, 0) 로 두고 `MapFaults` 로 돌려줌 · `strict=True` 면 `MapObsFault`. 판정은 A · B 가 같은 함수로 같게. `RunValidityGate` 가 rollout 단위로 세고 하나라도 있으면 무효 | 설계 6 절 · 17d 6.2 「기동 전 필수」 |
+| critic 은 「부모 그대로」 | 구조 · 가중치는 부모에서 시작 · 값은 그대로. `critic_check` 가 critic 입력 · value 유한성과 정상 miss 광선 칸의 critic 입력 값을 기록 (부모 식으로 −2.5) | 설계 6 절 · 17d 6.2 마지막 문단 |
+| encoder no_grad 를 조건 없이 풂 | `EncoderSchedule`: 처음 W update 동안 student encoder 고정 (requires_grad 끔 · 그 묶음 lr 0), 그 뒤 encoder lr = r × actor lr. **W · r 은 기본값 없이 인자로만** | 설계 6 절 · 17d 6.3 |
+| 「부모 Adam 은 차원이 달라 못 씀」 | 철회. 새 Adam 은 「선택」 으로 적음 | 설계 6 절 · 17d 6.1 |
+| 시험용 RayCaster 흉내가 `s2_map_obs.py` 안 (yaw 를 손으로 회전) | `test_s2.py` 로 옮기고 IsaacLab 의 `grid_pattern` · `quat_apply_yaw` 를 파일에서 직접 불러 ray_starts (offset z 20 포함) 를 만든다 | 17d 6.4 |
+
+판 1 의 파일 일곱 개 (코드 · 시험 · 변이 · README · 기록) 는 `v1/` 에 그대로 두었다. 17d 8 절이 적은 판 1 해시 (`s2_map_obs.py` 451cfed9… · `s2_policy.py` 8897ed64… · `test_s2.py` 0f82662d… · README bed6803c…) 와 `v1/` 사본의 sha256 이 같다.
+
+## 2. 파일
 
 | 파일 | 행 | 하는 일 |
 |---|---|---|
-| `s2_map_obs.py` | 117 | RayCaster 자료 (`pos_w` · `ray_hits_w`) → B 의 height 187 · mask 187 · A 의 상수 (모두 0) · 광선 몸체 좌표 · 시험용 RayCaster 흉내 (`ray_hits_from_terrain`) |
-| `s2_policy.py` | 256 | E1 20000 을 CPU 로 strict 적재 (`load_parent_cpu`) · `S2MapActorCritic` (A/B) · `make_optimizer` (새 Adam · 부모 마지막 lr) |
-| `test_s2.py` | 559 | T1 ~ T7. 기대값은 손으로 적음. 부모는 시험이 손으로 적은 구조로 스스로 짓고 strict 적재 |
-| `mutate_s2.py` | 191 | 사본에서 관문을 하나씩 망가뜨려 시험이 잡는지 확인 (원본 sha256 시작 · 끝 대조) |
-| `test_s2.log` · `mutate_s2.log` | | 마지막 실행 기록 (2026-10-13 19:3x) |
-
-실행 (GPU 를 가림 · 그 환경에 설치한 것 없음):
+| `s2_map_obs.py` | 192 | `classify_rays` (유효 hit · 정상 miss · 고장) · `height_and_mask` · `map_obs` (A/B · 같은 고장 판정) · `MapFaults` · `MapObsFault` · `RunValidityGate` |
+| `s2_policy.py` | 338 | E1 20000 CPU strict 적재 · `S2MapActorCritic` · `EncoderSchedule` · `make_optimizer` (W · r 필수) · `critic_check` |
+| `test_s2.py` | 793 | T1 ~ T10. 기대값은 손으로. 부모는 시험이 손으로 적은 구조로 스스로 짓고 strict 적재. T7 은 맨 마지막에 돈다 |
+| `mutate_s2.py` | 241 | 변이 39 개 + 관문 자체 1 개. 바꿀 문자열이 원본에 정확히 한 번 있는지 먼저 본다 |
+| `test_s2.log` · `mutate_s2.log` | | 마지막 실행 기록 |
+| `v1/` | | 판 1 사본 (고치지 않음 · import 하지 않음) |
 
 ```
 cd C:/isaac/ext/go2_rl_robotlab/_eval/s2
-CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I test_s2.py      # 약 5 초
-CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I mutate_s2.py    # 약 2 분 (사본 22 번)
+CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I test_s2.py      # 약 6 초
+CUDA_VISIBLE_DEVICES=-1 C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I mutate_s2.py    # 약 4 분 (사본 41 번)
 ```
 
-`test_s2.py` 는 torch 를 부르기 전에 `CUDA_VISIBLE_DEVICES=-1` 을 스스로 건다. `sys.dont_write_bytecode` 로 rsl_rl · IsaacLab 폴더에 pyc 를 쓰지 않는다 (실행 뒤 두 폴더에 새 파일 없음을 `find -newer` 로 확인함). 변이 사본은 `%TEMP%/s2_mut_*` 에 만들고 끝나면 지운다.
+## 3. 지도 입력의 의미 (판 2 · 확인됨)
 
-## 2. 구조 (설계 3 절 · 확인됨)
-
-```
-지도 입력 m = [height 187, mask 187]     열 0 ~ 186 height · 187 ~ 373 mask · 광선 순서는 센서 순서 (grid xy)
-z_map = map_encoder(m)                   rsl_rl MLP: Linear(374, 128) · ELU · Linear(128, 64)  (출력은 선형)
-pre   = actor_in([latent 32, single_obs 45]) + actor_in_map(z_map)
-action mean = actor_rest(pre)            actor_in · actor_rest 는 부모 actor 값 그대로 · actor_in_map 은 [512, 64] 0 시작
-value = critic([latent.detach(), critic obs 275])   부모 evaluate(is_teacher=False) 와 같은 식
-```
-
-- 부모에서 복사: student encoder (16 매개변수) · actor 8 · critic 8 · std = 33 열쇠. teacher encoder 6 열쇠는 가져오지 않는다. 새 열쇠 5 개 (`map_encoder.network.{0,2}.{weight,bias}` · `actor_in_map.weight`). 모두 깊은 복사라 부모와 저장소를 나누지 않는다 (T7).
-- `act()` 에 `no_grad` 가 없다. PPO gradient 가 student encoder 까지 간다 (T5).
-- A · B 는 같은 시드 (`MAP_INIT_SEED = 0`) 로 map encoder 를 지어 state_dict 가 열쇠 · 값 모두 같다 (T4). 다른 것은 입력뿐이다.
-- A 정책은 상수가 아닌 지도 입력이 들어오면 `ValueError` 를 낸다 (`guard_a_constant`, 기본 켬). 파이프라인 실수로 A 가 지형을 보는 길을 막는 이중 관문이다.
-- `make_optimizer`: 새 Adam 하나에 student_encoder · map_encoder · actor · critic · std 다섯 묶음, 모두 같은 lr. 부모 마지막 lr 은 체크포인트 `optimizer_state_dict` 네 묶음 모두 `0.00017085937500000009` (확인됨 · `load_parent_cpu` meta `last_lr`).
-
-### B 의 height · mask (설계 3 절 · 확인됨)
-
-| 경우 | height | mask |
-|---|---|---|
-| 맞음 · 센서 (base) 아래 깊이 ≤ 1.0 m | clip(센서 z − 맞은 점 z − 0.5, −1, 1) | 1 |
-| 안 맞음 (inf · −inf · nan) | 1 (「깊음」 쪽) | 0 |
-| 맞음 · 깊이 > 1.0 m | 1 | 0 |
-| 맞음 · 센서보다 위 (벽) | clip 으로 −1 | 1 |
-
-「센서 z」 는 RayCaster `data.pos_w` 의 z 이고, 이것은 base 위치다. env.yaml 의 `offset (0, 0, 20)` 은 `ray_starts` 에만 더해지고 `pos_w` 에는 안 들어간다 (`ray_caster.py` 218 ~ 224 · 238 ~ 248 · **소스 확인**). 그래서 설계 T1 의 「센서 0.4 m」 는 base 높이 0.4 m 다.
-
-## 3. 시험 T1 ~ T7 (확인됨 · 7/7 PASS · 115 칸)
-
-| 시험 | 칸 | 손으로 적은 기대값 · 대조 대상 |
-|---|---|---|
-| T1 평지 | 10 | 센서 0.4 · 맞은 점 0 → −0.1 · mask 1 (187 칸). 세계 높이 10 m 에 선 env · 맞은 점 xy 무작위도 같은 값. 배치 [height, mask]. A 는 374 칸 모두 0. IsaacLab `height_scan` 의 offset 기본 0.5 와 식을 소스 문자열로 대조 |
-| T2 단차 · 구멍 | 12 | 앞쪽 88 광선 (`k % 17 >= 9`) 만 −0.2. inf · nan · −inf · 깊이 2 m 구멍 바닥 (센서 아래 2.4 m) · 센서 아래 1.1 m → mask 0 · height 1. 센서 아래 0.9 m → mask 1 · 0.4. 벽 → −1. mask 0 칸 수 정확히 5. yaw 0 · ±90° · 180° 에서 몸 앞쪽 광선이 세계의 맞는 쪽을 봄 |
-| T3 광선 순서 | 27 | 광선 0 · 1 · 16 · 17 · 93 · 186 의 몸체 좌표를 손으로 적고, IsaacLab `patterns.py` 를 파일에서 직접 불러 (Isaac 앱 없이 CPU) `grid_pattern` 과 187 광선 비트 동일. env.yaml height_scanner 설정 8 줄 대조. 광선 k 의 z = 0.001 k 로 순서 보존 |
-| T4 0 초기화 동치 | 18 | 실제 E1 model_20000 을 CPU strict 적재한 부모의 `act_inference` 와 B (무작위 지도 둘 · 거친 지형 지도 · ×100 큰 값) · A 의 action 이 int32 로 본 비트까지 같음 (N 256). `act()` 의 평균 · std, `evaluate` 도 비트 동일. 대조군: 새 열에 0.01 × 정규난수 → 지도 1 vs 2 action 최대 차 1.304e-01 · 부모 대비 1.582e-01 |
-| T5 gradient 경로 | 27 | PPO 손실 모양 (clip 0.2 surrogate · clipped value loss · entropy 0.01 · grad norm 1.0 · `moe_cts.py` 297 ~ 334 와 agent.yaml 값). 갱신 전 (A · B): 새 열 gradient 있음 · map encoder 4 매개변수 gradient 정확히 0 (None 아님) · student encoder 16 매개변수 모두 gradient 있음. 한 번 Adam 갱신 (lr 1.7086e-4) 뒤: B 의 map encoder 4 매개변수 모두 0 아님 · A 는 첫 층 weight 정확히 0 · bias 와 둘째 층은 0 아님. B 는 지도를 바꾸면 action 최대 차 1.726e-02. value 손실만으로는 student encoder gradient 0 (detach) · 지도 경로 gradient 없음. optimizer 가 모든 매개변수를 한 번씩 덮음 |
-| T6 A 의 정보 차단 | 9 | 평지 · 거친 지형 (단 · inf 구멍 · −2 m 구덩이) · 직접 넣은 구멍 셋에서 A 지도 입력 = 0 (374 칸) · A action 비트 동일 (새 열을 0.01 로 채운 상태에서도). B action 은 지형 · 구멍에 따라 바뀜. A 정책에 B 지도를 넣으면 `ValueError` |
-| T7 부모 보존 | 12 | 체크포인트 sha256 `c8951b79…f47e8` (sha256sum 으로 잰 값을 손으로 적음) 이 시험 전 · 후 같음. T4 ~ T6 과 T7 안의 lr 1e-2 갱신 뒤에도 부모 모듈 39 열쇠가 파일 값과 같음. 복사 대상 33 열쇠 값이 부모와 같음 (손으로 적은 열쇠 대응). 새 열쇠 5 개. teacher 없음. S2 매개변수와 부모의 저장소 공유 없음 |
-
-시험 뒤 `sha256sum` 으로 따로 잰 체크포인트 해시도 `c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8` 다.
-
-## 4. 변이 (확인됨 · ALL CAUGHT 21/21)
-
-변이 없는 사본이 먼저 7/7 PASS 인지 보고 (BASELINE), 변이마다 새 사본에서 문자열 한 곳만 바꾼다 (정확히 한 번 걸리지 않으면 실행기가 멈춘다). 기대한 시험이 FAIL 해야 CAUGHT.
-
-| id | 망가뜨린 것 | 기대 | 실제 FAIL |
+| 광선 | height | mask | 고장 |
 |---|---|---|---|
-| m01 | A 에 mask 실제 값 | T6 | T1 · T5 · T6 |
-| m02 | A 에 height 실제 값 | T6 | T1 · T5 · T6 |
-| m03 | 새 64 열을 0 이 아닌 값 (std 1e-3) 으로 시작 | T4 | T4 · T5 |
-| m04 | height 부호 반대 | T1 | T1 · T2 · T3 |
-| m05 | inf (안 맞음) 를 mask 1 로 | T2 | T2 · T3 · T6 |
-| m06 | 광선 순서 ij | T3 | T2 · T3 |
-| m07 | student encoder 의 no_grad 를 그대로 둠 | T5 | T5 · T7 |
-| m08 | map encoder 출력 detach | T5 | T5 |
-| m09 | optimizer 에서 map encoder 빠짐 | T5 | T5 |
-| m10 | critic 의 latent.detach 뺌 | T5 | T5 |
-| m11 | 1 m 보다 깊은 곳도 mask 1 | T2 | T2 |
-| m12 | mask 0 칸 height 0 | T2 | T2 · T3 |
-| m13 | height clip 뺌 | T2 | T2 |
-| m14 | 지도 배치 [mask, height] | T1 | T1 · T2 · T3 · T6 |
-| m15 | actor 뒤쪽을 부모와 공유 (깊은 복사 안 함) | T7 | T7 |
-| m16 | std 를 1 로 | T4 | T4 · T7 |
-| m17 | A · B 의 map encoder 시드가 다름 | T4 | T4 |
-| m18 | A 상수 관문 끔 | T6 | T6 |
-| m19 | actor 입력 순서 [single_obs, latent] | T4 | T4 |
-| m20 | S2 를 지으며 부모 모듈 값을 바꿈 (메모리 안) | T7 | T4 · T7 |
-| g01 | (관문 자체) T7 의 sha256 기대값만 틀린 값으로 | T7 | T7 |
+| 센서 정상 · hit xyz 유한 | clip(센서 z − hit z − 0.5, −1, 1) | 1 | 아님 |
+| 센서 정상 · hit xyz 모두 +inf (raycast_mesh 의 안 맞음) | 1 | 0 | 아님 (정상 miss) |
+| 센서 정상 · hit 에 NaN · −inf · 일부 좌표만 inf | 0 (자리표시) | 0 | ray packet 고장 |
+| 센서 위치에 NaN · inf | 0 (그 env 의 187 칸 모두) | 0 | 센서 고장 (env 하나로 셈 · packet 쪽에 두 번 세지 않음) |
 
-원본 세 파일의 sha256 은 변이 실행 시작 · 끝이 같다. g01 은 구현이 아니라 해시 대조가 헛돌지 않는지를 본다 (체크포인트 파일은 건드리지 않는다. 파일 자체를 바꾸는 변이는 위험해서 만들지 않았다).
+- 「센서 z」 는 RayCaster `data.pos_w` 의 z, 곧 base 위치다. offset (0, 0, 20) 은 `ray_starts` 에만 더해진다 (`ray_caster.py` 218 ~ 224 · 278 ~ 279 **소스 확인**). T8 은 IsaacLab 식으로 만든 ray 시작 z 가 20.4 일 때 지면 0.3 의 height 가 −0.4 임을 본다 (20 m 를 다시 더하면 clip 1).
+- 자리표시 (0, 0) 는 정상 hit (mask 1) 와도 정상 miss (1, 0) 와도 겹치지 않는다. 고장 칸의 값은 뜻이 없고, 그 rollout 은 관문에서 무효가 된다.
+- A 는 지도 값으로 언제나 0 (374 칸) 을 받지만 고장 판정 · strict 예외는 B 와 같은 함수를 지난다.
 
-## 5. 설계와 다르게 한 곳 · 까닭
+## 4. 시험 T1 ~ T10 (확인됨 · 10/10 PASS · 187 칸)
 
-1. **actor 첫 층을 두 장으로.** 설계는 「actor 첫 층 입력 77 → 141」. 코드는 `Linear(77, 512)` (부모 값 그대로) + `Linear(64, 512, bias 없음, 0 시작)` 의 합이다. `[W_parent | W_map] @ [x; z] + b` 와 수식이 같고, Adam 은 원소별 · grad clip 은 전체 norm 이라 학습도 같다. 까닭: 0 초기화 동치를 「부모와 같은 모양의 matmul + 정확한 0」 으로 만들어 BLAS 가 K (77 vs 141) 에 따라 합 순서를 바꿔도 비트 동일이 깨지지 않게 한다. 한 번 재 본 바로는 CPU (MKL · 32 스레드 · N 256) 에서 141 열 한 장도 비트 동일이었다. GPU 는 미확인. 141 열 행렬이 필요하면 `actor_first_layer_weight()` 가 [512, 141] 로 이어 준다.
-2. **A 상수 관문 추가.** 설계에는 없다. A 정책이 상수가 아닌 지도를 받으면 예외. 학습 때 GPU 동기화 한 번이 붙는다 (비용 미확인 · `guard_a_constant=False` 로 끌 수 있으나 T6 의 관문 칸이 FAIL 한다).
-3. **「몸 아래 1 m 안」 의 기준.** 설계 문구에 기준점이 없어 RayCaster `pos_w` (base 원점) 의 z 에서 잰 깊이 ≤ 1.0 m (경계 포함) 로 두었다. 발 · 지면 기준이 의도였다면 바꿔야 한다 (`MASK_MAX_DEPTH`).
-4. **T2 의 「깊이 2 m」.** 구멍 바닥 z = −2 m (센서 아래 2.4 m) 로 두었고, 1 m 경계 양쪽 (0.9 m · 1.1 m) 칸을 더했다.
-5. **T5 의 손실.** 예시였던 「행동 평균 제곱 오차」 대신 부모 알고리즘과 같은 꼴의 PPO 손실 (clip surrogate · clipped value · entropy · grad clip 1.0) 을 썼다. 갱신 뒤 gradient 를 다시 잴 때 같은 rollout 을 쓴다.
-6. **시험을 더한 곳.** T3 에 광선 1 번 · env.yaml 설정 대조 · 순서 보존, T4 에 `act()` · `evaluate` · A/B 같은 출발점 · `load_parent_cpu` 대조, T5 에 optimizer 덮음 · value 손실 경로, T7 에 갱신 뒤 부모 보존 · 저장소 공유.
+| 시험 | 칸 | 손으로 적은 기대값 |
+|---|---|---|
+| T1 평지 | 11 | 센서 0.4 · hit 0 → (−0.1, 1) 187 칸 · 고장 0 · 세계 높이 10 m · hit xy 무작위에도 같음 · 배치 [height, mask] · A 는 0 |
+| T2 단차 · 정상 miss · 깊은 바닥 | 9 | 앞쪽 88 광선만 −0.2. 정상 miss (1, 0). 구멍 바닥 −2 m · −10 m → (1, 1). 센서 아래 0.9 m → (0.4, 1) · 1.1 m → (0.6, 1) (1 m 분류 없음). 센서보다 1.1 m 위 → (−1, 1) · 0.05 m 위 → (−0.55, 1). mask 0 은 정상 miss 한 칸뿐 · 고장 0 |
+| T3 광선 순서 | 27 | 광선 0 · 1 · 16 · 17 · 93 · 186 의 몸체 좌표 · IsaacLab `grid_pattern` 과 187 광선 비트 동일 · env.yaml height_scanner 8 줄 · 순서 보존 |
+| T4 0 초기화 동치 | 18 | B (지도 4 종) · A 의 action 이 부모 `act_inference` 와 int32 비트 동일. `act()` 평균 · std · `evaluate` 비트 동일. 대조군 (새 열 0.01): 지도 1 vs 2 최대 차 1.304e-01 · 부모 대비 1.582e-01 |
+| T5 gradient 경로 | 27 | 시험 값 W 0 · r 1 (고정 없음). 갱신 전 map encoder gradient 정확히 0 · 새 열 · student encoder 16 매개변수 gradient 있음. 한 번 갱신 뒤 B map encoder 4 매개변수 0 아님 · A 첫 층 weight 0 (bias 아님). B 지도 바꿈 action 최대 차 1.143e-02. value 손실만으로는 student encoder gradient 0 |
+| T6 A 의 정보 차단 | 9 | 평지 · 거친 지형 · 정상 miss 셋에서 A 지도 입력 0 · A action 비트 동일 (새 열 0.01). B 는 바뀜. A 에 B 지도 → ValueError |
+| T8 입력 의미 (17d 6.4) | 31 | 아래 |
+| T9 encoder 고정 구간 | 31 | 아래 |
+| T10 critic 점검 | 12 | 아래 |
+| T7 부모 보존 (맨 마지막) | 12 | 체크포인트 sha256 `c8951b79…f47e8` 시험 전 · 후 같음 · 모든 시험 뒤 부모 모듈 39 열쇠 == 파일 · 복사 33 열쇠 · 새 5 열쇠 · 저장소 공유 없음 |
 
-설계 문구 중 코드와 대조해 맞은 것: 2 절 표의 차원 (student 450 · 은닉 512 · 256 · 256 · expert 8 · latent 32 · actor 77 → 512 · 256 · 128 → 12 · scalar std · 정규화 끔) · `act(is_teacher=False)` 의 `no_grad` (210 ~ 224) · height_scanner 446 ~ 480 행. critic obs 는 체크포인트에서 275 (critic 첫 층 307 − 32) 다.
+**T8:** 센서 (NaN, 0, 0.4) · (0, 0, inf) 인 env 두 개만 센서 고장 · packet 고장 0 · 그 env 지도는 (0, 0) 이고 정상 miss 꼴 (1, 0) 이 없음 · 정상 env 는 그대로. packet: z NaN · z −inf · x NaN · z 만 +inf · (inf, inf, −inf) 다섯이 고장 (광선 10 · 11 · 12 · 13 · 15) 이고 xyz +inf (광선 14) 는 정상 miss. strict: 정상 miss 만이면 예외 없음 · 센서 · packet 고장은 `MapObsFault` (A 도). A · B 고장 판정 텐서가 같음. 관문: 정상 miss 만이면 유효 · packet 고장 뒤 counts 가 손으로 적은 dict 와 같고 무효 · `require_valid` 예외 · advantage NaN 도 무효. 20 m: 위 3 절. 평행 이동 · yaw (IsaacLab `quat_apply_yaw`): 0.1 m 블록이 걸리는 광선이 yaw 0 앞 0.3 m → 96 · 0.3 m 앞으로 옮기면 93 (발밑) · yaw +90 에서 세계 +y 0.3 m → 96 (몸 앞) · 그쪽으로 옮기면 93 · yaw +90 에서 세계 +x → 42 (몸 오른쪽) · yaw −90 에서 세계 +x → 144 (몸 왼쪽).
 
-## 6. 설계 5 절 물음에 닿는 사실 (판단은 하지 않음)
+**T9:** `make_optimizer` · `EncoderSchedule` 의 W · r 에 기본값 없음 (signature) · 없이 부르면 TypeError · None TypeError · 음수 · 정수 아님 · bool · NaN · inf ValueError. 시험 값 W 3 · r 0.25 (등록 값 아님): 만들자마자 encoder requires_grad 꺼짐 · update 0 ~ 2 는 고정 (encoder gradient None · 매개변수가 처음과 비트 동일 · actor 는 움직임) · encoder lr 0 · 나머지 lr 부모 마지막 값. update 3 부터 encoder lr = 4.271484375000002e-05 (0.25 × 0.00017085937500000009 손 계산 · 정확히 같음). 풀린 첫 update 에서 encoder 원소 걸음이 모두 r × lr (+ float32 ulp) 이하 · 최대 4.2714e-05 · encoder Adam step 1 (고정 중 moment 안 쌓임) · actor step 4.
 
-- 부모는 student encoder 를 따로 Adam (lr 0.001 · `optimizer_stu_enc_state_dict`) 으로, 재구성 손실 + load balance 손실 (`load_balance_coef` 0.01) 로 학습했다. S2 에서는 encoder 가 PPO gradient 만 받고 lr 은 PPO 묶음과 같은 1.7086e-4 다. MoE gating 의 load balance 손실이 빠진다.
-- 부모 critic 의 height 항 (IsaacLab `height_scan`) 은 안 맞은 광선을 −inf → clip −1 (「높음」 쪽) · × 2.5 로 본다 (**소스 확인** · `observations.py` 300 의 식과 env.yaml 1173 ~ 1176 clip · scale. 실행은 안 함). B 의 actor 지도는 같은 광선을 height 1 (「깊음」 쪽) · mask 0 으로 본다. 같은 광선을 critic 과 actor 가 반대쪽으로 읽는다. 실제 S2 지형에서 안 맞는 광선이 얼마나 나오는지는 미확인.
-- B 의 height 는 clip [−1, 1] 만 하고 × 2.5 는 하지 않는다 (설계 그대로). critic 의 높이 항은 [−2.5, 2.5] 다.
+**T10:** `CRITIC_HEIGHT_START` 88 = 3+3+3+3+12+12+12+12+12+16 (env.yaml critic 항 순서를 시험이 파일에서 읽어 대조 · 체크포인트 critic 첫 층 307 = 32 + 88 + 187). critic height 를 IsaacLab 식 (clip 뒤 × 2.5) 으로 손으로 만들고: 정상 miss 7 광선 칸의 critic 입력 값이 모두 −2.5 · critic 입력 NaN 1 칸 1 env · value NaN 1. 점검 앞뒤로 critic 입력 (NaN 포함 비트) · value 비트 동일. A · B 점검 결과 같음. 관문: 고장 없는 env 는 유효 · NaN 뒤 무효.
 
-## 7. 미확인
+## 5. 변이 (확인됨 · ALL CAUGHT 40/40)
 
-- Isaac 안의 실제 RayCaster 자료 (`pos_w` · `ray_hits_w`) 로 `s2_map_obs` 를 돌린 적 없다. `pos_w` 가 base 위치라는 것은 소스 읽기로만 확인했다.
-- 0 초기화 동치는 CPU 에서만 쟀다. GPU · 다른 배치 크기 · 다른 스레드 수에서의 비트 동일은 미확인.
-- 학습기 연결 없음: env 에 `map` 관측 그룹을 넣는 법, `RolloutStorageCTS` 가 `map` 을 저장 · 미니배치로 나누는지, `MoECTS` 대신 PPO 만 쓰는 알고리즘. 이번 범위 밖이다.
-- no_grad 를 푼 뒤 첫 몇 갱신에서 부모 latent 분포가 무너지는지 (설계 5.3) 는 재지 않았다.
-- A 상수 관문의 GPU 학습 중 비용.
+변이 없는 사본이 먼저 10/10 PASS 인지 보고 (BASELINE), 원본 세 파일 sha256 을 시작 · 끝에 대조했다 (같음). 실제 FAIL 은 `mutate_s2.log`.
+
+| 묶음 | id | 망가뜨린 것 | 기대 시험 |
+|---|---|---|---|
+| 지도 (판 1 부터 · 새 의미로) | m01 · m02 | A 에 mask · height 실제 값 | T6 |
+| | m04 | height 부호 반대 | T1 |
+| | m05 | 정상 miss (+inf) 를 hit (mask 1) 로 | T2 |
+| | m06 | 광선 순서 ij | T3 |
+| | m11 | 판 1 의 1 m 깊이 분류를 되살림 | T2 |
+| | m12 · m13 | 정상 miss height 0 · clip 뺌 | T2 |
+| | m14 · m14b | 배치 [mask, height] (map_obs_b · map_obs) | T1 |
+| 지도 (판 2 고장 분리) | n01 | 센서 NaN · inf 를 못 알아봄 | T8 |
+| | n02 | 판 1 처럼 비유한 hit 를 모두 정상 miss 로 | T8 |
+| | n03 · n04 | z 만 +inf 인 packet 을 miss 로 · x NaN 을 hit 로 | T8 |
+| | n05 | 20 m offset 을 센서 높이에 다시 더함 | T8 |
+| | n06 | A 만 고장 판정 · strict 건너뜀 | T8 |
+| | n07 · n08 | 고장 자리표시를 (1, 0) 으로 · strict 끔 | T8 |
+| | n09 · n10 | 관문이 packet 고장 · value NaN 무시 | T8 · T10 |
+| 정책 (판 1 부터) | m03 · m16 · m17 · m19 | 새 열 0 아닌 시작 · std 1 · A/B 시드 다름 · 입력 순서 | T4 |
+| | m07 · m08 · m09 · m10 | forward 에 no_grad · map encoder detach · optimizer 누락 · critic detach 뺌 | T5 |
+| | m15 · m20 | 부모와 저장소 공유 · 부모 값 바꿈 | T7 |
+| | m18 | A 상수 관문 끔 | T6 |
+| 정책 (판 2) | p01 · p02 · p03 · p04 · p05 | 고정 구간 하나 더 김 · r 안 곱함 · lr 0 으로만 고정 · W · r 기본값 · 만들 때 규칙 안 걺 | T9 |
+| | p06 · p07 · p08 | critic 점검이 입력을 고쳐 씀 · 열 한 칸 어긋남 · value NaN 안 셈 | T10 |
+| 관문 자체 | g01 | T7 sha256 기대값만 틀리게 (파일은 안 건드림) | T7 |
+
+판 1 의 변이 m11 (「1 m 보다 깊은 곳도 mask 1」 을 잘못으로 잡던 것) 은 새 의미에서 정답이 되었으므로 뒤집어 「1 m 분류를 되살림」 으로 바꿨다. 17d 6.4 의 지적대로 변이가 다 잡혀도 그 정답이 과학적으로 옳다는 보증은 아니다. 정답은 설계 6 절의 정의를 따른 것이다.
+
+## 6. 설계와 다르게 한 곳 · 해석한 곳
+
+1. **actor 첫 층을 두 장으로** (판 1 과 같음). `Linear(77, 512)` 부모 값 + `Linear(64, 512, bias 없음, 0 시작)`. 17d 6.1 이 「타당」 으로 확인했다. GPU 동치는 미확인.
+2. **A 상수 관문** (판 1 과 같음 · 설계에 없음). A 정책에 상수가 아닌 지도가 들어오면 ValueError.
+3. **정상 miss 의 표현을 「xyz 모두 +inf」 로 좁혔다.** raycast_mesh 가 버퍼를 +inf 로 채우고 맞은 광선만 덮어쓰기 때문이다 (`ops.py` 71 · `kernels.py` 70 ~ 73 소스 확인). 그 밖의 비유한 꼴은 모두 고장이다.
+4. **고장 칸 자리표시 (0, 0).** 설계는 「고장 횟수로 기록 · rollout 무효」 만 정했다. 정책에 NaN 이 들어가 시뮬로 퍼지지 않게 유한한 자리표시를 두고, 무효 판정은 `MapFaults` · `RunValidityGate` · `strict` 로 한다.
+5. **encoder 고정은 requires_grad 를 끄는 방식.** lr 0 만 쓰면 고정 중에도 gradient 를 계산하고 Adam moment 가 쌓여 풀린 첫 걸음이 달라진다 (변이 p03 으로 구분됨). W 의 단위 (PPO iteration = `alg.update()` 한 번인지 optimizer step 한 번인지) 는 정하지 않았다. 넘겨받은 update 번호만 센다. **W · r 과 함께 단위도 등록해야 한다.**
+6. **T5 · T7 은 시험 값 W 0 · r 1 을 쓴다** (gradient 경로 · 부모 보존을 보는 시험이라 고정 없이). 등록 값이 아니다.
+7. **RunValidityGate 는 critic 입력 · value 외에 `add_nonfinite(name, t)` 로 return · advantage 등도 받는다.** 학습기와 아직 연결하지 않았다.
+
+## 7. 미확인 · 하지 않은 것
+
+- Isaac 접속 시험 (실제 collision mesh 의 평지 · 단차 · 빈 공간에서 `pos_w` · hit · 순서 · 갱신 시각 · 촘촘하지 않은 발판에 광선이 닿는 비율). T8 의 hit 은 IsaacLab 의 ray 시작 식을 쓰지만 교차는 높이장과 수직 광선이다.
+- reset · 시점 (부분 reset 의 history · map · previous action · terminal · timeout bootstrap).
+- 학습기 연결 (map 이 rollout 저장소 · 모든 minibatch 에 보존 · teacher 경로 제거 · 전체 update 뒤 저장 · 복원). `RunValidityGate` 를 rollout 에 거는 자리도 아직 없다.
+- 0 초기화 동치의 GPU 확인.
+- 실제 S2 지형에서 정상 miss · 고장이 얼마나 나오는지, 초기 gap value 편향.
+- W · r · 단위 · 중단 기준 (A/B 결과 전 등록 대상) 과 smoke 지표 (부모 대비 action 차 · KL · latent cosine · expert 비율 · gradient norm · value 오차).
