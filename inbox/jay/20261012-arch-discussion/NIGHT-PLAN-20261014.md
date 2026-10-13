@@ -122,6 +122,12 @@
 - **v6 full (17l):** `unseen_driver_cmdr_v6.py --stages full,post --manifest all --reuse_partial no --deadline <2026-10-14 09:00 KST epoch> --reval out_uncr_v6/reval/20261014-051704/revalidate.json --approval approval-astra-17l.json`. 마감은 새 시도 기동 마감이지 완료 시각이 아님. 92 · 기타 보호 종료 · 루트 참조 · 공유 오류 · 등록 코드 · 입력 변경 · STOP · 마감 · 자료 invalid 면 추가 기동 없음. 시작 뒤 실제 실행 시간과 여유를 재서 수용량을 추정. GPU guard 99 의 추가 재시도만 코드가 제한한 2 회.
 - **하지 않는 것:** 기존 STOP · HALT 를 지우기 · 다른 작업 종료로 조건 만들기 · RAND 와 CE12 · v6 를 동시에 띄우기 · 승인 범위 확대.
 
+## GPU 1 기동 결과 (06:52)
+
+- **v2 expect 0 짧은 진단 (17k 허용 · 06:50:26 ~ 06:50:49): 실행기가 종료 코드 88 로 거절.** tag `v2_native_17k_0650` · attempt `v2_native_17k_0650-20261014-065026-35316` · slot rc 0 · guard rc 0 (min_free 7723 · max_used 8579 MiB) · `usd=[]` (변환 0 = 예상 0 과 일치) · 충돌 없음 · 자식 rc 0 인데 `native.npz` · `meta.json` · `signature.json` 이 없음 (`output_problem`). **원인:** `ce12/dump_native_v2.py:242` `runner.load(ckpt)` 가 `map_location` 없이 읽어 `models/foothold-v2.pt` 의 CUDA 1 번 텐서를 장치 1 개만 보이는 실행에서 복원하지 못함 (`RuntimeError: Attempting to deserialize object on CUDA device 1 but torch.cuda.device_count() is 1`). CPU 시험은 CPU 로 읽어 못 본 결함. 17k 규칙대로 **여기서 끝** (자동 재시도 · 다른 모델 · full 로 안 넘어감 · 원자료 보존). 고치면 `dump_native_v2.py` 바이트가 바뀌므로 17k 허용 밖 → 작업자 B 가 최소 수정 (06:52 · 보관 `ce12/v_17k/` · `codexB3/REPORT.md`) → lead 재실행 → ASTRA 17n → 다시.
+- **미경험 v6 full 75 (17l 승인 · 06:51:59 시작):** 기동 직전 확인을 한 번 더 06:51:47 에 반복 (같은 결과 · v2 실행 뒤에도 STOP · HALT 없음 · GPU 1 에 다른 계산 프로세스 없음) · `full_gate_v6.json` 통과 · 첫 실행 `uncr_par_discrete_obstacles_fwd05` 시작. 콘솔 job tmp `codexw/v6_full_console.txt` · 출력 `_eval/out_uncr_v6/` · 마감은 새 시도 기동 마감 09:00 KST. 감시: 보호 오류 (HALT) · FAIL 줄 · 드라이버 종료가 생기면 알림.
+- **GPU 0:** 05:46 부터 계속 빔 (허용된 일이 없음 · 위 「GPU 0 이 놀기 시작한 때」). **GPU 1:** 01:16:26 ~ 04:57 · 04:58 ~ 06:50 비었고 06:51:59 부터 v6 full.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
