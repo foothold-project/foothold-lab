@@ -1,5 +1,5 @@
 """5판 CMD-R 절의 %%토큰%% 을 원자료에서 만든다 (lead · 10/13).
-원자료: _eval/out/cmdr_post.json (cmdr_post_v6.py · schema "cmdr_post v6") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
+원자료: _eval/out/cmdr_post.json (cmdr_post_v7.py · schema "cmdr_post v7") · _eval/out/branch/cmdr_summary.json (관문 사건표 집계) ·
 _eval/out/branch/cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json (두 갈래 시작 상태 대조).
 판정선 (팀장 확정 2(c) · VERIFY-astra-7 60 줄 · ASTRA 15 6.1): 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 같은 무게 평균 +10 %p 이상이면 「개선」.
 칸마다의 구간은 서술이고 판정이 아니다. (v16 의 「칸마다 판정 · 세 칸 평균으로 쓰지 않는다 (ASTRA 15 6.1)」 는 규칙을 잘못 옮긴 것이라 철회 · 10/13 10:02)
@@ -38,12 +38,13 @@ def _seeds(r):
 
 
 AXIS_KO = {"vx": "앞 속도", "vy": "옆 속도", "wz": "회전 속도"}
+AXIS_UNIT = {"vx": "m/s", "vy": "m/s", "wz": "rad/s"}
 
 
 def _mae_txt(k, v):
     """the MAE line in words: relative (+10 % of the control) or absolute (10 % of the axis tolerance when the control is 0)."""
     if v.get("line") == "abs":
-        return f"{AXIS_KO.get(k, k)} 오차가 절대 한도 {v['limit']:.3f} 를 넘음 (대조 오차 0)"
+        return f"{AXIS_KO.get(k, k)} 오차가 절대 한도 {v['limit']:.3f} {AXIS_UNIT.get(k, '')} 를 넘음 (대조 오차 0)"
     return f"{AXIS_KO.get(k, k)} 오차 10 % 넘게 커짐"
 
 
@@ -89,7 +90,7 @@ def build(post_path=None, summary_path=None, bundle_path=None):
             ok = r["final_state"]["where"] == "end" and r["final_state"]["label_next"] == 24000
             tr.append(f"{lab} {r['meta']['t_end'][11:16]} 끝 (24,000)" if ok else f"{lab} 결과 파일이 끝 상태가 아님")
         except FileNotFoundError:
-            tr.append(f"{lab} 아직 학습 중 ({time.strftime('%H:%M')} 확인)")
+            tr.append(f"{lab} 학습 완료 결과 파일 없음 · 현재 상태 미확인 ({time.strftime('%H:%M')} 확인)")  # 16g 5.1: no file is not proof of training
     t["cmdr_train_status"] = " · ".join(tr)
     if post.get("schema") != SCHEMA:  # 16c 5: an older aggregate is not read as if it were this one
         msg = f"집계 판 불일치 (읽은 판: {post.get('schema', '이전 판')}) · 새 판 ({SCHEMA}) 집계를 기다림"
