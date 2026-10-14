@@ -1,0 +1,12 @@
+PASS original meta copy SHA256
+PASS original lacks loaded_iter
+original validation reason 'loaded_iter None'
+FAIL original q meta accepted
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_original.py", line 96, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_original.py", line 83, in main
+    check("original q meta accepted", first == "")
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_original.py", line 24, in check
+    raise AssertionError(label)
+AssertionError: original q meta accepted

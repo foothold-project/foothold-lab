@@ -1,0 +1,19 @@
+PASS diagnostic orig
+PASS diagnostic small
+PASS diagnostic default
+PASS diagnostic orig_repeat
+PASS diagnostic repeat prebudget
+PASS diagnostic refuses A tag
+23:09:29 DIAGNOSTIC completed · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17r_d\run_20261014_230929_42448\reports\diagnostic_cpu-diagnostic-probe.json
+PASS three distinct q runs
+PASS diagnostic completed before A
+PASS semantic and byte comparisons
+23:09:29 DIAGNOSTIC held_mismatch · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17r_d\run_20261014_230929_42448\reports\diagnostic_cpu-diagnostic-mismatch.json
+PASS diagnostic mismatch held
+PASS repeat uses approved budget
+PASS mismatch never auto A
+sys.executable C:\Users\AI-WS01\anaconda3\envs\isaac311-moects\python.exe
+candidate.__file__ C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\cmdr_eval_driver_s1043.py
+candidate.sha256 236e79b26f883454feb08496a3d841b8ed76c71fdf7078a2a81b359ff0b1a303
+ISOLATION {'data': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\data', 'reports': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\reports', 'work': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\work', 'attempts': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\attempts', 'registry': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\registry\\isaac_usd_registry_v3.json', 'convert_lock': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\locks\\isaac_convert.lock', 'run_lease': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\locks\\isaac_run.lock', 'slot_records': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\slot_records', 'stop': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\STOP', 'logs': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\logs', 'compare_report': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\fixture_17r_b\\run_20261014_230929_42448\\0\\comparison.json'}
+PASS main dispatch diagnostic only

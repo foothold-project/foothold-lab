@@ -1,0 +1,18 @@
+NORMAL original_field rc 0 seconds 0.31 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\original_field.normal.log
+failed [original q meta accepted] want [original q meta accepted]
+CAUGHT original_field rc 1 seconds 0.3 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\original_field.mutant.log
+NORMAL wall_enforcement rc 0 seconds 8.31 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\wall_enforcement.normal.log
+failed [guarded wall returns nonzero held result] want [guarded wall returns nonzero held result]
+CAUGHT wall_enforcement rc 1 seconds 4.84 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\wall_enforcement.mutant.log
+NORMAL approval_ledger rc 0 seconds 8.33 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\approval_ledger.normal.log
+failed [second start refused] want [second start refused]
+CAUGHT approval_ledger rc 1 seconds 2.89 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\approval_ledger.mutant.log
+NORMAL retry_zero rc 0 seconds 8.3 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\retry_zero.normal.log
+failed [retry zero approved] want [retry zero approved]
+CAUGHT retry_zero rc 1 seconds 0.23 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\retry_zero.mutant.log
+NORMAL byte_only_reason rc 0 seconds 0.42 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\byte_only_reason.normal.log
+failed [byte-only JSON reason] want [byte-only JSON reason]
+CAUGHT byte_only_reason rc 1 seconds 0.31 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\byte_only_reason.mutant.log
+NORMAL common_allowlist rc 0 seconds 0.36 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\common_allowlist.normal.log
+failed [_eval slot without allowlist rejected] want [_eval slot without allowlist rejected]
+CAUGHT common_allowlist rc 1 seconds 0.33 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_230924_117964\code_mutants\common_allowlist.mutant.log

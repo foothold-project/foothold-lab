@@ -1,0 +1,8 @@
+PASS original meta copy SHA256
+PASS original lacks loaded_iter
+original validation reason ''
+PASS original q meta accepted
+PASS original with explicit 20000 accepted
+PASS original wrong explicit iteration rejected
+PASS checkpoint SHA mutation rejected
+PASS cmdr missing iteration rejected

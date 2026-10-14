@@ -1,0 +1,21 @@
+PASS gpu0 valid []
+PASS gpu0 string True
+PASS hashes scalar True
+PASS confirmation scalar True
+PASS risk approval binding True
+PASS code hash and approval True
+PASS external digest True
+PASS execution CUDA mismatch True
+PASS lock alias True
+PASS normal command []
+PASS duplicate outdir True
+PASS gpu1 valid []
+PASS gpu1 string True
+PASS hashes scalar True
+PASS confirmation scalar True
+PASS risk approval binding True
+PASS code hash and approval True
+PASS external digest True
+PASS execution CUDA mismatch True
+PASS lock alias True
+PASS orphan descendant exit True
