@@ -1,0 +1,62 @@
+{
+  "run_id": "run_20261015_0500_a1",
+  "cuda_visible_devices": "-1",
+  "results": [
+    {
+      "name": "test_s2_17v_core.py",
+      "exit_code": 0,
+      "seconds": 2.281,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_17v_core.py.log",
+      "passes": 16
+    },
+    {
+      "name": "test_s2_sensor_tracker_17v.py",
+      "exit_code": 0,
+      "seconds": 2.266,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_sensor_tracker_17v.py.log",
+      "passes": 4
+    },
+    {
+      "name": "test_s2_connect_17v.py",
+      "exit_code": 0,
+      "seconds": 0.516,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_connect_17v.py.log",
+      "passes": 8
+    },
+    {
+      "name": "test_s2_job_owner.py",
+      "exit_code": 0,
+      "seconds": 0.093,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_job_owner.py.log",
+      "passes": 5
+    },
+    {
+      "name": "test_s2_job_object_os.py",
+      "exit_code": 0,
+      "seconds": 0.188,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_job_object_os.py.log",
+      "passes": 1
+    },
+    {
+      "name": "test_s2_resource_lease.py",
+      "exit_code": 0,
+      "seconds": 0.109,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_resource_lease.py.log",
+      "passes": 4
+    },
+    {
+      "name": "test_s2_zero_supervisor.py",
+      "exit_code": 0,
+      "seconds": 0.735,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\test_s2_zero_supervisor.py.log",
+      "passes": 6
+    },
+    {
+      "name": "a_code_mutants",
+      "exit_code": 0,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\s2_step4\\evidence_s2_step4a\\run_20261015_0500_a1\\mutants.log",
+      "caught": 5
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "yaw_finite",
+      "source": "s2_env_adapter_17v.py",
+      "old": "or not bool(torch.isfinite(yaw_w).all()):",
+      "new": ":",
+      "want": "nonfinite_yaw_rejected",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL nonfinite_yaw_rejected",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "independent_sensor_receipt",
+      "source": "s2_runner_17v.py",
+      "old": "if source != packet.source_receipt:",
+      "new": "if False:",
+      "want": "old_raw_new_numbers_rejected",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL old_raw_new_numbers_rejected",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "ray_geometry",
+      "source": "s2_connect_check_17v.py",
+      "old": "hold(\"grid_or_yaw\", err > criteria.xy_tolerance_m)",
+      "new": "hold(\"grid_or_yaw\", False)",
+      "want": "ray_order_rejected",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL ray_order_rejected",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "claim_exclusive",
+      "source": "s2_chain_runner.py",
+      "old": "claim.mkdir(exist_ok=False)",
+      "new": "claim.mkdir(exist_ok=True)",
+      "want": "approval_claim_once",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL approval_claim_once",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "job_assign_before_resume",
+      "source": "s2_job_owner.py",
+      "old": "self.kernel.assign(self.job,process)",
+      "new": "pass  # mutant omits Job assignment",
+      "want": "assign_before_resume",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL assign_before_resume",
+      "result": "CAUGHT"
+    }
+  ],
+  "caught": 5,
+  "total": 5
+}
