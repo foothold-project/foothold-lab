@@ -264,6 +264,17 @@
 - **의뢰:** `TASK-astra-17s-1043-eval-fixed.md` 로 ASTRA 17s (고침 검증 · 진단 단계 승인 조건 · UNDECIDED 구분 · 견적). **GPU 기동 없음.** 판정 뒤에도 manifest 의 팀장 결정값 (GPU 배정 · 독점 실행 범위 · 마감 · 위험 한도 · 진단 반복 예산) 이 비어 있으면 승인 json 을 발급하지 않는다.
 - **놀고 있는 GPU (21:50 기준):** GPU 0 05:46 부터 (이유: 1043 학습이 끝났고 허용된 다음 기동 없음 · 1043 평가는 17s 대기 · S2 학습 루프 미연결) · GPU 1 09:40:37 부터 (이유: v2 기록 뒤 허용된 다음 기동 없음 · 무작위화 smoke 는 GPU 전체 여유 부족으로 팀장 결정 대기). 둘 다 python / Kit 계산 프로세스 0.
 
+## ASTRA 17s 판정과 작업자 E 의 17s 고침 라운드 (22:49)
+
+- **17s (22:11 작성 · 전문 읽음): 고칠 것 · 현 후보의 GPU 진단 기동 보류 · 승인 json 발급 안 함.** 고정 파일 25개와 등록 입력 38개 해시 일치. 17r 의 주요 반례(GPU 0 정수 · bool/float/문자열 거절 · 9개 시작 시험 argv · 중복 옵션 · 대소문자 별칭 lock · 손자 자식 대기 · 물리 GPU 1 논리 CUDA 0 45 valid · MAE 한 건 NaN 거절 · 평평한 배치 · 진단 뒤 A 미호출)는 닫힘. ASTRA 격리 재실행 여섯 시험 모두 종료 0 (3.94 · 1.27 · 0.45 · 26.06 · 3.47 · 0.30 초).
+- **새 결함 (고칠 것):** (P1) `D:995, 1478` 진단이 원본 q 결과에도 `need_iter=True` 를 적용하는데 고정 `q_eval.py` 는 `loaded_iter` 를 기록하지 않아 첫 진단이 held_incomplete 로 끝날 것으로 예상 (실제 원본 meta 에도 필드 없음) · (P1) `D:620, 664, 845` `max_wall_s` 는 실행 중 상한이 아님 (한도 2 초 / 4 초 자식이 5.8 초 뒤 rc=0) · (P1) 승인 예산 결박 미완성: 같은 승인 · digest 에서 `execution.attempt` 만 바꿔도 오류 0, launch 수는 프로세스마다 0 으로 시작 → 승인 ID · attempt · 누적 예산을 묶어야 하고 승인 B 스키마 변경 후 새 스키마 그대로 재검 · (P2) `M:239` 재시도 0 회 표현 불가.
+- **시험 신뢰 범위:** 가짜 slot 연결 시험(`test_17r_e`)은 ready · GPU 탐지 · validate · fingerprint 를 성공 함수로 교체했고 `--cpu_fixture` 로 실제 GPU probe · 전체 launch 재검을 생략한다 (guard · isolate · q · Isaac 미실행). 변이 12 개는 「이름이 다른 입력 변조 12 종」이지 코드 검사를 하나씩 끈 변이가 아니다 (17r 의 코드 변이 6 종과 합쳐 18 종이라 세지 말 것). 진단의 byte-only 차이(JSON 공백 · 키 순서)도 held_mismatch/3 이 되므로 물리 비결정성으로 쓰면 안 됨.
+- **UNDECIDED 구분 (17s 4 절):** lead 측정 = 물리 UUID/index · 여유 · 판/경로 · 고정 코드 · 38개 입력 해시 · 양 군 종료 · SAME · canonical lock/lease/registry와 참가 실행기의 사용 증거. 팀장 결정 = GPU 배정 · 독점 시간창과 참여 범위 · 시작/종료 마감의 의미 · 최대 launch · retry · 벽시계와 중단 방식 · 원본 반복 예산 · 한 승인으로 허용할 재기동 범위. ASTRA = 수정된 정확한 바이트에 대한 제한된 진단 기술 승인(지금 보류). 현 M 이 검사하는 승인 B 키: experiment · train_seed(1043) · contract_sha256 · stage · candidate_hashes(M · 비교기 · D · P · F 5개 파이썬) · comparison_report_sha256 · gpu_index · gpu_uuid · CUDA_VISIBLE_DEVICES · diagnostic_repeat_original · deadline_epoch · risk_limit(max_child_launches · max_retries_per_run · max_wall_s) · convert_lock · run_lease · registry · python. 승인 JSON 바이트 SHA256 을 `execution.approval_sha256` 과 `--approved_digest` 양쪽에 대조. 승인 스키마는 위 결함 3 때문에 바뀔 예정이므로 현 양식으로 발급하지 않음.
+- **배치안(결정 아님):** `candidate_dir=_eval/cmdr1043_eval_17s_fixed/` (M · 비교기 · D · P · F · manifest 한 층) · `source_eval=_eval` · `write_root=_audit_cmdr1043/` 아래에 data/reports/work/attempts/logs/STOP. 현 M 은 모든 `WRITE_KEYS` 가 source_eval 밖이어야 해서 `_eval/slot` 같은 기존 공통 경로는 그대로 넣으면 거절됨. 비교기는 번들을 write_root 아래로 바이트 그대로 복사한 뒤 실행해야 함(ASTRA: SAME/0 → seed1042 변조 DIFFERENT/1 → 복구 SAME/0 확인).
+- **A 예산(17s 5절 5):** A 기동 시 기본 시작 시험 8회 + 조건부 원본 반복 1회 + A 45회가 launch 예산에 들어가야 한다. A 45 만 세면 부족.
+- **견적(추정, 보장 아님):** 수정 1 ~ 3 h + 독립 재검 0.5 ~ 1 h + 배치 · 측정 0.25 ~ 0.5 h = GPU 진단 시작까지 약 1.75 ~ 4.5 h + 팀장 결정 대기. 진단 한 묶음(Isaac 세 번)은 승인 뒤 10 ~ 20 분 작업창으로 잡되 실패 · 반복은 별도 예산.
+- **조치 (22:49):** `TASK-codex-worker-1043-eval-fix2.md` 로 작업자 E (`term_40bccb75`, Codex 컨텍스트 18 % · 주간 29 %) 에게 17s 고침 라운드를 맡김. CPU 전용 · `_eval` 읽기만 · 팀장 결정값은 UNDECIDED 로 유지. 이 일은 1043 평가 곁가지이며 S2 우선 여부는 팀장 답 전까지 바뀌지 않음. GPU 기동 0.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
