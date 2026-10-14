@@ -390,6 +390,18 @@
 - **두 GPU 운영안(lead 계획, 권한 위임에 따름):** 0 단계는 GPU 0 에 단독 한 번. 이후 사슬(묶음 B)은 A / B 를 별도 1-GPU 프로세스로 GPU 0 · GPU 1 에 한 arm 씩, 같은 비교 경계에서만 짝 판정(ASTRA 17v 4 절). 위험: GPU 1 은 데스크톱 앱이 약 5.9 GB 를 써서 VRAM 여유가 작다. smoke 에서 양쪽 N=1,024 가 들어가는지 재고, 안 들어가면 양쪽 N 을 함께 줄인 새 계획(결과 뒤 한 군만 줄이지 않음).
 - **놀고 있는 GPU(05:15 기준):** GPU 0 05:46 부터 약 23.5 시간 · GPU 1 09:40:37 부터 약 19.5 시간. 계산 프로세스 0.
 
+## ASTRA 17w 판정과 sol A2 작업 (10/15 05:3x · 팀장 취침 직전)
+
+- **17w(05:2x · 전문 읽음): 고칠 것. 현재 묶음 그대로의 GPU 기동은 보류하되, 누락 의존 파일 · 잘못된 환경 연결 · 장치 / 자원 보호 · 실패 자료 보존을 고친 뒤 lead 권한으로 GPU 0 단회 정보 수집(최대 900 초)을 진행할 수 있다. 그 HOLD 를 0 단계 합격이나 학습 허용으로 읽지 않는다.** 지난 위임(팀장 「GPU 사용은 lead 권한」)을 인정해 팀장 재승인은 요구하지 않음.
+- **결함:** (1) lead 가 해시 목록대로만 복사해 고정 A 사본에 `s2_terrain_overlay_17v.py` · `s2_runner_17v.py` · `s2_ppo_17v.py` 가 빠졌다(`import` 가 `ModuleNotFoundError`). lead 의 복사 실수이며 작업자가 보고한 코드의 결함이 아니다. (2) 환경 연결 오류: `Isaac-Velocity-Rough-Unitree-Go2-v0` 의 지형 여섯 키에 `gap` · `stepping_stones` · `flat` · `obstacles` 가 없어 `TerrainOverlayError`. (3) 검사기 거짓 PASS 반례 다섯(height NaN · 고정 구간 1 개 · root X +100 m · 장애물 제거 · 평지 world Z 정답 계산). 로봇 이동에 맞춰 바닥을 올리는 합성 fixture 도 문제. (4) 센서 tracker 가 갱신 순간의 raw digest 를 고정하지 않아 버퍼를 직전 자료로 돌려놓아도 재봉인됨. (5) 첫 수집 자료 보존 부족: 256 행을 메모리에 모은 뒤에만 저장, 시작 시각 오기록, 자식 stdout / stderr 미연결. (6) 직접 기동의 대가: 호스트 USD 변환 lock 정의만 있고 호출 안 됨, UUID → index → PCI → 실제 장치 결박 없음(UUID 를 바꿔도 PASS), 디스크 상한은 양수 여부만, 승인이 묶는 파일이 네 개뿐.
+- **정정:** lead 가 「각 한 줄」 이라고 쓴 변이 설명 중 `yaw_finite` 는 유한성 검사 **두 곳**을 제거하고 `claim_exclusive` 는 0 단계 감독기가 아니라 학습 사슬의 `s2_chain_runner.py` 를 바꾼다(0 단계 claim 은 정상 반복 호출 거절 시험만 있음).
+- **단회 수용 범위(17w 3 절):** 감독기 세션 분리 · hang · 다른 실행기 lease 불참은 15 분 단회에 한해 「참석자가 터미널을 유지하는 단회 관찰」 + 예약 구간 배제로 수용 가능. 무인 사슬 전에는 세션 종료 뒤 생존 · 독립 watchdog · 공통 lease 시험이 필수. LLM 이 잠깐 깨어 있는 것은 참석자가 아니므로 무인 단회로 돌릴 계획이면 독립 마감 장치를 먼저 넣어야 함.
+- **첫 GPU 일 권고값(출발점, 승인값 아님):** `stage0_information_only`, GPU 0 (UUID `GPU-c08e23b0-…`), 8 환경 · 256 step · 16 warmup · 개입 64 / 128 / 192, optimizer 0, 1 회 · retry 0 · 하류 없음, `max_wall_s=900`, 기동 전 여유 ≥ 8 GiB · 실행 중 여유 < 2 GiB 이면 보류, 출력 ≤ 1 GiB · 기동 전 디스크 여유 ≥ 2 GiB, criteria .002 / .002 / .005. 이 실행의 claim `stage0-capture-<attempt>` 은 이후 사슬과 분리. 결과 보고 문구: 「정보 수집 N/256 step, optimizer 0, 결과 HOLD, 사유, GPU / 소요 / 최소 여유, 다음 학습 미실행」.
+- **GPU 1:** 지금 안전하게 올릴 승인 · 완결된 별도 작업이 확인되지 않음. 실패한 바이트로 예약 재시도를 돌려 GPU 가동률을 채우는 것은 진척이 아님.
+- **견적(추정):** 수정 30~90 분 + 기동 직전 확인 5~10 분 + 수집 최대 15 분. 측정된 ETA 아님.
+- **조치(05:31):** sol 에 `TASK-codex-worker-s2-17w-fix.md` (A2) 를 B 보다 앞세워 보냄. 완결된 묶음을 `s2_step4a2_frozen` 에 복사하고 clean-import 시험을 넣게 함. 끝나면 lead 재실행 → ASTRA 에 수정분만 좁혀 확인(17x) → lead 가 승인값을 동결하고 기동 직전 확인 스크립트를 돌린 뒤 GPU 0 한 번. 사람이 자는 동안 15 분 단회를 무인으로 돌릴지는 독립 마감 장치 유무로 정한다.
+- **GPU 감시 도구 제안:** 팀장 질문에 대한 의견을 `PROPOSAL-gpu-monitor.md` 에 정리(커밋 55274624).
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
