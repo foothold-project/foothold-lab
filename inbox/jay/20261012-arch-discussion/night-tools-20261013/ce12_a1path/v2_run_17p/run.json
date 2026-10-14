@@ -1,0 +1,217 @@
+{
+ "tool": "ce12/run_dump.py",
+ "version": "v2",
+ "which": "v2",
+ "tag": "v2_native_a1path_20261014_093859",
+ "attempt": "v2_native_a1path_20261014_093859-20261014-094020-150232",
+ "checkpoint": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.pt",
+ "gpu": 1,
+ "min_free_mib": 4096,
+ "stop_file": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/STOP",
+ "deadline": 1791945539.0,
+ "paths": {
+  "out": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859",
+  "log": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.log",
+  "slot": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.slot.json",
+  "guard": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.guard.json",
+  "attempt_dir": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232",
+  "run": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232/run.json",
+  "usd": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232/usd"
+ },
+ "cmd": [
+  "C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/isaac_slot_v3.py",
+  "--watch_log",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.log",
+  "--record",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.slot.json",
+  "--usd_root",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232/usd",
+  "--attempt",
+  "v2_native_a1path_20261014_093859-20261014-094020-150232",
+  "--lock",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/slot/isaac_convert.lock",
+  "--registry",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/slot/isaac_usd_registry_v3.json",
+  "--scan_dirs",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native,C:/isaac/ext/go2_rl_robotlab/_eval/out_branch,C:/isaac/ext/go2_rl_robotlab/_eval/out_uncr,C:/isaac/ext/go2_rl_robotlab/_eval/out_rand,c:/isaac/ext/go2_rl_robotlab/_eval/out_smoke/branch",
+  "--stop_file",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/STOP",
+  "--deadline",
+  "1791945539.0",
+  "--expect_conversions",
+  "0",
+  "--",
+  "C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/gpu_guard.py",
+  "--gpu",
+  "1",
+  "--min_free_mib",
+  "4096",
+  "--log",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.log",
+  "--summary",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.guard.json",
+  "--",
+  "C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/dump_native_v2.py",
+  "--headless",
+  "--checkpoint",
+  "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.pt",
+  "--tag",
+  "v2_native_a1path_20261014_093859",
+  "--outdir",
+  "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native",
+  "--cells",
+  "stand,fwd03,yawL05",
+  "--envs_per_cell",
+  "4",
+  "--steps",
+  "60",
+  "--reset_envs",
+  "1,6",
+  "--reset_step",
+  "30",
+  "--switch_env",
+  "0",
+  "--switch_step",
+  "40",
+  "--switch_cell",
+  "fwd03"
+ ],
+ "request": {
+  "cells": "stand,fwd03,yawL05",
+  "envs_per_cell": 4,
+  "steps": 60,
+  "reset_envs": "1,6",
+  "reset_step": 30,
+  "switch_env": 0,
+  "switch_step": 40,
+  "switch_cell": "fwd03",
+  "other": {
+   "--reset_envs": "1,6",
+   "--reset_step": "30",
+   "--switch_env": "0",
+   "--switch_step": "40",
+   "--switch_cell": "fwd03"
+  }
+ },
+ "expect_conversions": 0,
+ "capabilities": {
+  "slot": "C:/isaac/ext/go2_rl_robotlab/_eval/isaac_slot_v3.py",
+  "isolate": "C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py",
+  "slot_exists": true,
+  "isolate_exists": true,
+  "slot_sha256": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "isolate_sha256": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb",
+  "slot_expect_flag": true,
+  "slot_expect_env": true,
+  "isolate_expect_env": true
+ },
+ "preflight": {
+  "t": "2026-10-14 09:40:20",
+  "legacy_registry": "C:/isaac/ext/go2_rl_robotlab/_eval/slot/isaac_usd_registry.json",
+  "scan_dirs_initial": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_branch",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_uncr",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_rand"
+  ],
+  "scan_dirs_added": [
+   "c:/isaac/ext/go2_rl_robotlab/_eval/out_smoke/branch"
+  ],
+  "legacy_logs_missing": [],
+  "gpu": {
+   "index": 1,
+   "uuid": "GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+   "total_mib": 16303,
+   "free_mib": 10248,
+   "min_free_mib": 4096
+  },
+  "scan_dirs": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_branch",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_uncr",
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_rand",
+   "c:/isaac/ext/go2_rl_robotlab/_eval/out_smoke/branch"
+  ]
+ },
+ "env_set": {
+  "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+  "CUDA_VISIBLE_DEVICES": "1",
+  "OMNI_KIT_ACCEPT_EULA": "YES",
+  "PYTHONUNBUFFERED": "1",
+  "FOOTHOLD_EXPECT_CONVERSIONS": "0"
+ },
+ "overrides": {},
+ "run_dump_sha256": "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda",
+ "cells_sha256": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4",
+ "provenance": {
+  "run_dump.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/run_dump.py",
+   "sha256": "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda"
+  },
+  "cells.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/cells.py",
+   "sha256": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+  },
+  "isaac_slot_v3.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/isaac_slot_v3.py",
+   "sha256": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a"
+  },
+  "usd_isolate_run_v3.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py",
+   "sha256": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
+  },
+  "gpu_guard.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/gpu_guard.py",
+   "sha256": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4"
+  },
+  "dump_native_v2.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/dump_native_v2.py",
+   "sha256": "a3da62b8185f4a28aa8623997094c245f603f8cdec7820efaa57ba194ff97c16"
+  },
+  "adapters.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/adapters.py",
+   "sha256": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6"
+  }
+ },
+ "t_request": "2026-10-14 09:40:20",
+ "t_request_epoch": 1791938420.1966016,
+ "provenance_end": {
+  "run_dump.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/run_dump.py",
+   "sha256": "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda"
+  },
+  "cells.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/cells.py",
+   "sha256": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+  },
+  "isaac_slot_v3.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/isaac_slot_v3.py",
+   "sha256": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a"
+  },
+  "usd_isolate_run_v3.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py",
+   "sha256": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
+  },
+  "gpu_guard.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/gpu_guard.py",
+   "sha256": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4"
+  },
+  "dump_native_v2.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/dump_native_v2.py",
+   "sha256": "a3da62b8185f4a28aa8623997094c245f603f8cdec7820efaa57ba194ff97c16"
+  },
+  "adapters.py": {
+   "path": "C:/isaac/ext/go2_rl_robotlab/_eval/ce12/adapters.py",
+   "sha256": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6"
+  }
+ },
+ "child_rc": 0,
+ "state": "exited",
+ "output_problem": "",
+ "rc": 0,
+ "t_end": "2026-10-14 09:40:37"
+}

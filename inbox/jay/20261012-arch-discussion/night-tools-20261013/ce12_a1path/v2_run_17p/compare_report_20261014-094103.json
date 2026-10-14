@@ -1,0 +1,586 @@
+{
+ "tool": "compare_native.py",
+ "contract": "CE12-v1",
+ "npz": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/native.npz",
+ "npz_sha256": "c9a87ea527d4f26dcbb46c487ead2924de11f3237a2533fd791bd52b2fb9087f",
+ "meta": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/meta.json",
+ "model": "v2",
+ "tolerances": {
+  "obs": 1e-06,
+  "target": 1e-06,
+  "state": 1e-06,
+  "action": 0.0001
+ },
+ "adapters_sha256": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6",
+ "t": "2026-10-14 09:41:01",
+ "checkpoint": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.pt",
+ "checkpoint_sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+ "recompute_action": true,
+ "inputs": {
+  "npz_sha256": "c9a87ea527d4f26dcbb46c487ead2924de11f3237a2533fd791bd52b2fb9087f",
+  "meta_sha256": "72ca7417615e755286983cff98d8969c4c450ebb258898d0ab52e2deb7009c57",
+  "signature_sha256": "9039b7d2b8462f8c8d76f31c4f12a9f29da37e9912e3d259192d184d60c666b4",
+  "config_sha256": {
+   "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.env.yaml": "a5ef31d626f8cabe850de37bae0aa26782e14e9db3ba61d678dd1210105323e7",
+   "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.agent.yaml": "a8d9071bdc1dd3eb313b0442a760e22fea7704cb097067a637b1ddcbd30f12f0"
+  },
+  "code_sha256": {
+   "adapters.py": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6",
+   "compare_native.py": "c71ad42c7b55f0dde68889ab20a0478722868632348b7352f2b2637bb319c007",
+   "cells.py": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+  }
+ },
+ "coverage": {
+  "reset_events": 2,
+  "post_reset_action_steps": 60,
+  "command_switch_events": 1,
+  "post_switch_action_steps": 20,
+  "ray_miss_count": 0,
+  "reset_pairs_step_env": [
+   [
+    29,
+    1
+   ],
+   [
+    29,
+    6
+   ]
+  ],
+  "switch_pairs_obs_env": [
+   [
+    40,
+    0
+   ]
+  ],
+  "unverified_paths": [
+   "height miss (+1) 0 회"
+  ]
+ },
+ "focus": {
+  "post_reset": [
+   {
+    "reset_in_step": 29,
+    "env": 1,
+    "first_obs": 30,
+    "obs_window": [
+     30,
+     39
+    ],
+    "native_last_action_at_first_obs_max_abs": 0.0,
+    "obs.policy": {
+     "max_abs": 0.0,
+     "n": 2350,
+     "step": 30,
+     "where": {
+      "group": "policy",
+      "index": 0,
+      "term": "base_lin_vel",
+      "history_slot": 0,
+      "element": 0
+     }
+    },
+    "last_action": {
+     "max_abs": 0.0,
+     "n": 372,
+     "step": 30,
+     "joint": "FL_hip_joint"
+    },
+    "joint_target": {
+     "max_abs": 0.0,
+     "n": 360,
+     "step": 30,
+     "joint": "FL_hip_joint"
+    },
+    "action_from_adapter_obs": {
+     "max_abs": 1.9073486328125e-06,
+     "n": 360,
+     "step": 32,
+     "joint": "FL_calf_joint"
+    },
+    "action_from_native_obs": {
+     "max_abs": 1.9073486328125e-06,
+     "n": 360,
+     "step": 32,
+     "joint": "FL_calf_joint"
+    }
+   },
+   {
+    "reset_in_step": 29,
+    "env": 6,
+    "first_obs": 30,
+    "obs_window": [
+     30,
+     39
+    ],
+    "native_last_action_at_first_obs_max_abs": 0.0,
+    "obs.policy": {
+     "max_abs": 0.0,
+     "n": 2350,
+     "step": 30,
+     "where": {
+      "group": "policy",
+      "index": 0,
+      "term": "base_lin_vel",
+      "history_slot": 0,
+      "element": 0
+     }
+    },
+    "last_action": {
+     "max_abs": 0.0,
+     "n": 372,
+     "step": 30,
+     "joint": "FL_hip_joint"
+    },
+    "joint_target": {
+     "max_abs": 0.0,
+     "n": 360,
+     "step": 30,
+     "joint": "FL_hip_joint"
+    },
+    "action_from_adapter_obs": {
+     "max_abs": 1.9073486328125e-06,
+     "n": 360,
+     "step": 33,
+     "joint": "FL_calf_joint"
+    },
+    "action_from_native_obs": {
+     "max_abs": 1.9073486328125e-06,
+     "n": 360,
+     "step": 33,
+     "joint": "FL_calf_joint"
+    }
+   }
+  ],
+  "post_switch": [
+   {
+    "switch_obs": 40,
+    "env": 0,
+    "action_steps_after_switch": 20,
+    "command_before": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "command_after": [
+     0.30000001192092896,
+     0.0,
+     0.0
+    ],
+    "obs.policy": {
+     "max_abs": 0.0,
+     "n": 4935,
+     "step": 40,
+     "where": {
+      "group": "policy",
+      "index": 0,
+      "term": "base_lin_vel",
+      "history_slot": 0,
+      "element": 0
+     }
+    },
+    "joint_target": {
+     "max_abs": 0.0,
+     "n": 240,
+     "step": 40,
+     "joint": "FL_hip_joint"
+    },
+    "action_from_adapter_obs": {
+     "max_abs": 1.430511474609375e-06,
+     "n": 240,
+     "step": 50,
+     "joint": "FR_calf_joint"
+    },
+    "action_from_native_obs": {
+     "max_abs": 1.430511474609375e-06,
+     "n": 240,
+     "step": 50,
+     "joint": "FR_calf_joint"
+    }
+   }
+  ],
+  "window": 10
+ },
+ "status": "pass",
+ "checks": [
+  {
+   "name": "names.obs_vs_action_joint_names",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "obs": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ],
+    "action": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ]
+   }
+  },
+  {
+   "name": "names.adapter_obs_joint_names",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "adapter": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ],
+    "native": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ]
+   }
+  },
+  {
+   "name": "names.adapter_action_joint_names",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "adapter": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ],
+    "native": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ]
+   }
+  },
+  {
+   "name": "names.articulation_has_all",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "articulation": [
+     "FL_hip_joint",
+     "FR_hip_joint",
+     "RL_hip_joint",
+     "RR_hip_joint",
+     "FL_thigh_joint",
+     "FR_thigh_joint",
+     "RL_thigh_joint",
+     "RR_thigh_joint",
+     "FL_calf_joint",
+     "FR_calf_joint",
+     "RL_calf_joint",
+     "RR_calf_joint"
+    ]
+   }
+  },
+  {
+   "name": "layout.policy",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "native": [
+     [
+      "base_lin_vel",
+      3
+     ],
+     [
+      "base_ang_vel",
+      3
+     ],
+     [
+      "projected_gravity",
+      3
+     ],
+     [
+      "velocity_commands",
+      3
+     ],
+     [
+      "joint_pos",
+      12
+     ],
+     [
+      "joint_vel",
+      12
+     ],
+     [
+      "actions",
+      12
+     ],
+     [
+      "height_scan",
+      187
+     ]
+    ],
+    "adapter": [
+     [
+      "base_lin_vel",
+      3
+     ],
+     [
+      "base_ang_vel",
+      3
+     ],
+     [
+      "projected_gravity",
+      3
+     ],
+     [
+      "velocity_commands",
+      3
+     ],
+     [
+      "joint_pos",
+      12
+     ],
+     [
+      "joint_vel",
+      12
+     ],
+     [
+      "actions",
+      12
+     ],
+     [
+      "height_scan",
+      187
+     ]
+    ]
+   },
+   "dims_written_as_text": false
+  },
+  {
+   "name": "shape.obs_policy",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "detail": {
+    "native_dim": 235
+   }
+  },
+  {
+   "name": "default_joint_pos",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 144,
+   "first": null
+  },
+  {
+   "name": "default_joint_vel",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 144,
+   "first": null
+  },
+  {
+   "name": "rays.local_xy_vs_grid",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 1.4901161193847656e-08,
+   "max_at": {
+    "step": 0,
+    "env": 0,
+    "index": 6
+   },
+   "n_bad": 0,
+   "n_compared": 374,
+   "first": null,
+   "ray_start_z_offset": [
+    20.0
+   ]
+  },
+  {
+   "name": "obs.policy",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 172020,
+   "first": null
+  },
+  {
+   "name": "self.debug_read_does_not_advance",
+   "atol": 0,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 172020,
+   "first": null
+  },
+  {
+   "name": "state.last_action_memory",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 8784,
+   "first": null
+  },
+  {
+   "name": "joint_target",
+   "atol": 1e-06,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 8640,
+   "first": null
+  },
+  {
+   "name": "info.offset_minus_default (motor offset DR 크기 · 판정 아님)",
+   "atol": Infinity,
+   "ok": true,
+   "max_abs": 0.0,
+   "max_at": null,
+   "n_bad": 0,
+   "n_compared": 0,
+   "first": null,
+   "max_abs_target_change_m": 0.0
+  },
+  {
+   "name": "action.recompute_from_adapter_obs",
+   "atol": 0.0001,
+   "ok": true,
+   "max_abs": 2.86102294921875e-06,
+   "max_at": {
+    "step": 2,
+    "env": 0,
+    "index": 11,
+    "where": {
+     "joint": "RR_calf_joint"
+    }
+   },
+   "n_bad": 0,
+   "n_compared": 8640,
+   "first": null,
+   "policy": {
+    "agent_yaml": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.agent.yaml",
+    "agent_yaml_sha256": "a8d9071bdc1dd3eb313b0442a760e22fea7704cb097067a637b1ddcbd30f12f0",
+    "checkpoint_sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+    "dims": {
+     "policy": 235,
+     "actions": 12
+    }
+   }
+  },
+  {
+   "name": "action.recompute_from_native_obs",
+   "atol": 0.0001,
+   "ok": true,
+   "max_abs": 2.86102294921875e-06,
+   "max_at": {
+    "step": 2,
+    "env": 0,
+    "index": 11,
+    "where": {
+     "joint": "RR_calf_joint"
+    }
+   },
+   "n_bad": 0,
+   "n_compared": 8640,
+   "first": null
+  }
+ ],
+ "first_failure": null,
+ "T": 60,
+ "N": 12,
+ "reset_events": 2,
+ "cells": [
+  "stand",
+  "fwd03",
+  "yawL05"
+ ]
+}
