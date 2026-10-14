@@ -1,0 +1,14 @@
+PASS ray index x-fast and no 20m re-add
+PASS yaw 90 ray geometry
+PASS ray order mismatch rejected
+PASS A terrain information blocked
+PASS B terrain information changes
+FAIL rollout map snapshot and bootstrap time
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\map_snapshot\test_s2_step2.py", line 287, in <module>
+    tests()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\map_snapshot\test_s2_step2.py", line 173, in tests
+    check("rollout map snapshot and bootstrap time", batch is not None and audit["rollout_maps"].shape == (6, 374)
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\map_snapshot\test_s2_step2.py", line 32, in check
+    raise AssertionError(label)
+AssertionError: rollout map snapshot and bootstrap time

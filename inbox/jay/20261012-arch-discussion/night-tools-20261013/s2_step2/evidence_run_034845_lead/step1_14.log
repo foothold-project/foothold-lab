@@ -1,0 +1,21 @@
+PASS T1 (11 칸) 평지: 센서 0.4 m · 맞은 점 0 -> height -0.1 · mask 1 (187 칸 모두) · 고장 0 · 배치 [height, mask] · 센서 기준 (세계 높이 · xy 무관) · A 는 0
+PASS T2 (9 칸) 단차 · 정상 miss · 깊은 바닥 (판 2 의미): 앞쪽 +0.1 m -> 그 칸만 -0.2 · xyz +inf -> mask 0 · height 1 · 유한한 깊은 바닥 -> mask 1 · height clip 1 · 1 m 분류 없음 · 높은 장애물 -1
+PASS T3 (27 칸) 광선 순서: grid xy (x 가 가장 빨리) · 0 · 1 · 16 · 17 · 93 · 186 번의 몸체 좌표가 손 계산 · IsaacLab grid_pattern (CPU) 과 같음 · env.yaml 설정 · 순서 보존
+    T4 대조군 action 최대 차: 지도 1 vs 2 = 1.304e-01 · 부모 대비 = 1.582e-01
+PASS T4 (18 칸) 0 초기화 동치: 실제 E1 model_20000 CPU strict · 무작위 이력 · 무작위 지도에서 B · A 의 action 이 부모 act_inference 와 비트 동일 · 대조군 (새 열 0.01) 은 지도에 따라 바뀜
+    T5 B 갱신 뒤 지도 바꿈 action 최대 차 1.143e-02
+PASS T5 (27 칸) gradient 경로 (PPO 손실 모양 · 한 번 갱신 · 고정 구간 없음 W 0): 갱신 전 새 열 gradient 있음 · map encoder 0 · student encoder 있음 · 갱신 뒤 B map encoder 0 아님 · A 첫 층 weight 0 (bias 아님)
+PASS T6 (9 칸) A 의 정보 차단: A 에서 실제 지형 (평지 vs 단 · 정상 miss · 구덩이) 을 바꿔도 policy 입력 · action 이 안 바뀜 (새 열 0 아님에서도) · B 는 바뀜 · A 에 실제 지도를 넣으면 거부
+PASS T8 (31 칸) 입력 의미 (ASTRA 17d 6.4): 센서 NaN · inf 와 ray packet 손상은 구멍이 아니라 고장으로 따로 셈 · strict 예외 · A · B 같은 고장 판정 · 관문 · 20 m offset 을 다시 더하지 않음 · 평행 이동과 yaw 90 도에서 발밑 · 앞 칸이 옮겨짐
+    T9 풀린 첫 update encoder 최대 걸음 4.2714e-05 (r x lr 4.2715e-05)
+PASS T9 (34 칸) schedule 모드 (판 2 의 고정 구간 · 판 3 API): W · r 은 schedule 에서 필수 (기본값은 「안 넘김」 표시뿐) · r 0 거부 · 처음 W update 동안 student encoder 비트 불변 (gradient 없음) · actor 는 움직임 · 그 뒤 encoder lr = r x actor lr · 첫 encoder 걸음 크기 r x lr 이하
+PASS T10 (12 칸) critic 점검: critic 입력 · value 유한성 · 정상 miss 광선 칸의 critic 입력 값 (부모 식 -inf -> clip -1 -> x 2.5 = -2.5) 을 기록 · 값과 입력은 안 바뀜 · A · B 같음 · 관문 연결
+PASS T11 (31 칸) 전 구간 고정 full_freeze (17f-2 3.1 · 4): encoder_mode 기본값 없음 · W · r 을 넘기면 오류 · encoder 가 optimizer 에 없고 requires_grad False · 어떤 번호에서도 안 풀림 · 여러 step 뒤 encoder 가중치 바이트 · 고정 입력 latent 불변 · step 마다 grad None · Adam 상태 없음 · 판 2 의 r 0 꼴은 delta 0 인데도 이 칸들에 걸림
+PASS T12 (37 칸) S2 갱신 번호 (17f-2 2.1): 0 부터 · 부모 20000 · runner 번호 · 건너뜀 · 되풀이 · bool 거부 · W50 이면 0 ~ 49 고정 50 해제 · 상태 변경은 그 update 의 첫 minibatch 전 · 저장 · 재개가 끊김 없는 학습과 비트 동일 (full_freeze · schedule W3 경계) · 다른 규칙 재개 거부
+PASS T13 (25 칸) group lr 덮어쓰기 막기 (17f-2 3.2): 부모 moe_cts 꼴 (모든 group 에 같은 lr · 소스 대조) 뒤 enforce_groups 가 encoder 묶음을 0 · r x base 로 되돌림 · enforce 없는 step · enforce 뒤 바뀐 step · update 밖 step 은 hook 이 멈춤 · 고정 위반 다섯을 하나씩 (각 1 문제) 예외 · base_lr 오류
+    T14 반례 (actor 3 · encoder 4 · 한도 1): 판 2 방식 encoder 밖 norm 0.600001 · 판 3 방식 1.000000
+    T14 실제 역전파 (한 minibatch): encoder 밖 norm 2.0232e+02 · r 0 꼴 encoder norm 6.0032e+01 · 한도 1 에서 encoder 밖 배율 판 2 0.0047 · 판 3 0.0049
+PASS T14 (9 칸) clipping 범위 (17f-2 3.1): trainable_params 에 고정 encoder 없음 · 실제 역전파에서 encoder grad None · clip norm == encoder 밖 손 계산 norm · 반례 (actor 3 · encoder 4 · 한도 1) 에서 판 2 방식 actor 0.6 · 판 3 방식 1 · 실제 역전파의 r 0 꼴도 norm 이 커짐
+    T7 sha256 전 c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8 · 뒤 c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8
+PASS T7 (12 칸) 부모 보존: 체크포인트 sha256 이 시험 전후 같음 (손으로 적은 값) · 부모 state_dict 키 · 값이 복사본과 같음 · S2 갱신 뒤에도 부모 그대로 · 저장소 공유 없음
+SUMMARY 14/14 PASS · 통과한 시험의 칸 292 · map_obs=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step2\base_step1\s2_map_obs.py · policy=C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step2\base_step1\s2_policy.py

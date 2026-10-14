@@ -1,0 +1,9 @@
+RUN step1_14
+RESULT {'test': 'step1_14', 'exit_code': 0, 'wall_s': 6.53, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step1_14.log'}
+RUN step1_69_mutants
+RESULT {'test': 'step1_69_mutants', 'exit_code': 0, 'wall_s': 417.52, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step1_69_mutants.log'}
+RUN step2_known_answers
+RESULT {'test': 'step2_known_answers', 'exit_code': 0, 'wall_s': 4.05, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step2_known_answers.log'}
+RUN step2_code_mutants
+RESULT {'test': 'step2_code_mutants', 'exit_code': 0, 'wall_s': 48.61, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step2_code_mutants.log'}
+EVIDENCE C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772
