@@ -412,6 +412,17 @@
 - **ASTRA 17x(06:51 의뢰, 좁은 범위):** A2 의 17w 지적 항목 닫힘 여부 · 새 위험 · 무인 단회 가능성(watchdog 포함) · 기동 직전 값 · 견적. watchdog 은 07:01 에 추가분으로 전달. 판정이 오면: 값을 동결하고 `s2_stage0_prelaunch.py` 로 GO 확인 후 `s2_launch_stage0.py` 로 GPU 0 에 한 번(정보 수집 전용 · 최대 900 초). 판정이 「참석 단회만」 이면 팀장이 일어난 뒤로 미룬다.
 - **놀고 있는 GPU(07:01 기준):** GPU 0 05:46 부터 약 25.2 시간 · GPU 1 09:40:37 부터 약 21.3 시간. 계산 프로세스 0. 이유: 첫 GPU 일(학습 없는 센서 접속 확인)의 검증이 끝나지 않았다.
 
+## ASTRA 17x 판정과 lead 의 A3 수정 (10/15 07:48 확인 · 07:5x ~ 08:03 작업)
+
+- **17x(07:07 작성, lead 는 07:48 하트비트에서 읽음 · 전문 읽음): 고칠 것.** 현행 A2 는 실제 PyTorch 장치 조회에서 수집 전에 막혀 기동 보류. 최소 수정 뒤 **참석 단회**는 가능, 독립 watchdog 을 붙인 현행 조합도 **무인** 요건은 미충족. 닫힘: 17w 의 거짓 PASS 반례 다섯, 센서 digest 동결, W 정상 시험 13 PASS, 실제 Job 연결(CPU 감독기를 W 가 종료하면 자식 · 손자 소멸).
+- **17x 가 찾은 것:** (P1) `torch.cuda.cudart().cudaDeviceGetPCIBusId` 가 설치 torch 2.7.0+cu128 에 없어 `DeviceHold: cudart_bus_unavailable` 로 `IsaacProvider` 생성 전에 멈춤(가짜 객체 시험은 존재하지 않는 API 를 구현해 통과) / `step_zero` 등 개입 · step 단계 예외에서 raw 와 emergency raw 를 못 남김, `final_cfg.json` 은 gym 생성 성공 뒤에야 기록 / `capture` 의 `ray_index` (256,187) 대 검사기 (187,) 불일치로 정상 provider 도 `shape_or_steps` HOLD / 장면 값 `step_height_m=.3` 이 prelaunch GO / `usd_root` 가 자식에 연결 안 됨 / `competing_isaac_processes()` 가 `kit.exe` · `isaac-sim` 이름만 봄 / 출력 용량 중복 합산. (무인) watchdog 에 READY 핸드셰이크 없음 · 승인 결박 없음 · 단조 마감 없음 · NaN 마감 · heartbeat 거절 안 함 · 로그 실패가 kill 을 막음 · AccessDenied 를 정상 종료로 보고 · watcher 생존 확인 없음.
+- **정정:** 전달 목록 `S2-STEP4A2-DELIVERY-SHA256.txt` 는 39 행이 아니라 6 개 기록물 목록(코드 39 개 일치와 구분). README 의 「모든 import 전에 launch 저장」 은 범위 과함(Python 초기 import 실패는 감독기 `attempt_start.json` 과 자식 로그가 근거). W 변이 4/4 는 제공 summary 와 라벨 일치까지만 확인(독립 4/4 실측 아님).
+- **Codex 한도 5 % (sol · ASTRA 모두):** sol 에게 새 수정 라운드를 맡기면 한도가 바닥나 멈추므로 lead 가 최소 수정을 직접 했다. reset 권은 팀장 직접 승인이 필요(ASTRA 규칙).
+- **lead A3 수정(`night-tools-20261013/s2_step4a3/` · 47 파일 · 커밋 45b0ea7f):** 장치 UUID(`get_device_properties(0).uuid` 정규화 비교, 원 값 선저장) · `capture` 전 단계 실패 보존(`stage_failure.json` + emergency raw) · `final_cfg.json` 선언을 `gym.make` 앞으로 · `ray_index` (187,) 로 접음 · 계약이 장면 값(step 높이 · 폭 · 비율 .25)을 답과 대조 · 감독기가 승인된 `usd_isolate_run_v3.py` 래퍼로 진단을 띄우고 `FOOTHOLD_USD_ROOT` · `FOOTHOLD_EXPECT_CONVERSIONS` 전달, 영수증에 isolate 상태 해시 · 중첩 출력 루트를 한 번만 계산하고 로그 폴더를 실행 전용으로 요구 · python 로 돌아가는 Isaac 도구 서명 탐지. **무인 요건 일곱 항목(watcher READY 핸드셰이크 · 승인 결박 · 단조 마감 · NaN 입력 거절 · 로그 실패가 kill 을 막지 않기 · AccessDenied 구분 · watcher 생존 확인)은 구현하지 않음.**
+- **lead 재실행(07:56:34 ~ 08:01:25, 고정 폴더 복사본):** `run_all_s2_step4a3.py` 종료 0 · 정상 15 개 PASS 라벨 128 · A 변이 5/5 · A2 변이 6/6(옛 `torch_bus` 변이는 지워진 cudart 검사를 가리켜 폐기, A3 `device_uuid_compare_removed` 로 대체) · A3 변이 7/7 · 감시기 변이 4/4 · 깨끗한 폴더 import 22 모듈 · 해시 47/47. 정직한 기록: A3 변이 첫 실행 6/7 (`stage_failure_not_recorded` 가 `FAIL` 라벨 없이 예외로 끝나 시험에 존재 확인 라벨을 더함), 감시기 변이 첫 실행 3/4 (want 라벨을 lead 가 잘못 지정해 정정), A3 첫 전체 실행 1회는 오래된 변이 앵커와 해시 목록 파싱 차이로 실패해 고친 뒤 재실행.
+- **ASTRA 17y(08:02 의뢰, 매우 좁은 범위):** 참석 단회 GO 조건과 기동 순서, 무인에 필요한 남은 목록과 우선순위, 첫 수집 뒤 CPU 로 미리 준비할 accessor. 한도 때문에 판정이 막히면 팀장 일어난 뒤 reset 권 승인이 먼저다.
+- **놀고 있는 GPU(08:03 기준):** GPU 0 05:46 부터 약 26.3 시간, GPU 1 09:40:37 부터 약 22.4 시간. 계산 프로세스 0. 이유: 첫 GPU 일의 검증이 끝나지 않았다(ASTRA 17y 대기).
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
