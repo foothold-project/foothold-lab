@@ -238,6 +238,12 @@
 - **결정 권한 (17q 6 절):** CMD-R reset 의미 · 채택 / 부모 승격 · 범위 축소 · 위험 허용선 변경 · GPU 배정 · 마감 · UNCR 이분 판정은 팀장 결정. 기존 규약을 보존하는 **별도 CPU 구현 · 시험 준비는 진행 가능** (운영 코드 교체 · GPU · 유료 · 한도 확대 권한은 생기지 않음).
 - **작업자 E 접수 (`term_40bccb75` · 10:15 · 신규 sol 세션):** `TASK-codex-worker-1043-eval-build.md` · 작업 폴더 `codexE/` · `_eval` 은 읽기만 · CPU 전용 · 1 단계 (manifest + 새 비교기) 가 끝나면 `STAGE1-DONE.md` · 끝나면 `REPORT.md` 와 #550 요약 · 모자라면 `HANDOFF.md`. 작업자 D 는 컨텍스트 약 36 % 라 이 일에 쓰지 않음 (새 세션이 더 안전). **GPU 는 둘 다 비어 있음 · 이 작업 끝 → lead 재실행 → ASTRA 새 판 검증 → 새 승인 → 팀장 GPU 배정 확인 전에는 기동 없음.**
 
+## 작업자 E 의 1043 평가 새 판 후보와 ASTRA 17r 의뢰 (11:50)
+
+- **작업자 E (`term_40bccb75` · 10:15 접수):** 1 단계 (manifest + 새 비교기) 에서 10:26 에 스스로 멈춰 (HANDOFF · 컨텍스트 43 % 남음 · 「모자라면 중단」 을 너무 일찍 적용) lead 가 10:28 에 계속하라고 다시 지시 → **10:55 에 CPU 후보 완성 (약 40 분 · 17q 견적 8.5 ~ 16 시간 중 작성 · 시험 부분)**: `manifest_s1043.json` (계약 해시 `1cbfb526b745…`) · `s1043_manifest.py` · `cmdr_bundle_compare_s1043.py` · `cmdr_eval_driver_s1043.py` (v37 `c351fde3…` 기준) · `frozen_exec_s1043.py` · `cmdr_post_s1043.py` (post v10 `dea9ca7b…` 기준) · 시험 · 변이 · `CHANGES-driver.md` · `CHANGES-post.md` · `GPU-PLAN.md`. A 45 회만 허용 · B / remeasure 는 rc 8 · 미정 값은 `UNDECIDED` 로 기동 거절 (rc 4). 작업자 시험: 통합 33/33 · 복사본 전체 입력 9/9 · 비교기 5/5 · 드라이버 5/5. **`_eval` 에 만든 · 고친 파일 0 개** (작업자 보고). #550 댓글 6158817384 · 6159198847.
+- **lead 재실행 (11:02 · run-id `lead1` · CPU · isaac311-moects):** `test_manifest` PASS (555/45/510/96/768 · 기동 거절 이유 15 개) · `test_stage1` 5/5 · `test_driver_cpu` 5/5 · `test_full_inputs_copy` 9/9 · `test_integration_s1043` 33/33 (변이 6 개 각각 got CAUGHT want CAUGHT) · 모두 종료 0. **하지 않은 것:** 후보 코드 줄 단위 검토 · 변이가 의도한 검사만 끈 것인지 코드 대조 · 실제 slot v3 · guard · isolate 연쇄 (GPU). 사본 `night-tools-20261013/cmdr1043_eval_cand/` (SHA256SUMS · lead_rerun).
+- **ASTRA 17r 보냄 (11:49 · `TASK-astra-17r-1043-eval-candidate.md`):** 17q 필수 수정 4 건 (비교기 seed · A/B 소유권 · reset 명세 · Isaac 직렬) 이 코드에서 닫혔는지 · 숨은 1042 결박 · 평가기 인자 의미 · 시험 신뢰 범위 (실제 CLI 경로 · v10 대조 · 변이 6 개 vs 요구 반례) · `UNDECIDED` 중 lead 가 측정해 채울 것 / 팀장 결정 / ASTRA 승인 · 운영 반영 순서와 GPU 0 알려진 답 첫 걸음 허용 여부 · 남은 시간 견적. **GPU 는 둘 다 비어 있음 (GPU 1 09:40:37 부터 · GPU 0 05:46 부터).**
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
