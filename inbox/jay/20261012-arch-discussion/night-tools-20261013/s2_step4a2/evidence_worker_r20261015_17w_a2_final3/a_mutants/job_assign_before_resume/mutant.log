@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+    k=K();JobOwner(k).launch(['fake'],'.');ok=k.e==['create','assign','resume'];print(('PASS' if ok else 'FAIL')+' assign_before_resume');assert ok
+                                                                                                                                                 ^^
+AssertionError
+FAIL assign_before_resume

@@ -1,0 +1,116 @@
+{
+  "run_id": "lead_a2_0600",
+  "cuda_visible_devices": "-1",
+  "fixture_openmp_workaround": true,
+  "results": [
+    {
+      "name": "test_s2_scene_a2.py",
+      "exit_code": 0,
+      "seconds": 0.25,
+      "passes": 4,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_scene_a2.py.log"
+    },
+    {
+      "name": "test_s2_connect_a2.py",
+      "exit_code": 0,
+      "seconds": 1.032,
+      "passes": 10,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_connect_a2.py.log"
+    },
+    {
+      "name": "test_s2_connect_17v.py",
+      "exit_code": 0,
+      "seconds": 1.0,
+      "passes": 10,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_connect_17v.py.log"
+    },
+    {
+      "name": "test_s2_17v_core.py",
+      "exit_code": 0,
+      "seconds": 2.484,
+      "passes": 17,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_17v_core.py.log"
+    },
+    {
+      "name": "test_s2_sensor_tracker_17v.py",
+      "exit_code": 0,
+      "seconds": 2.438,
+      "passes": 7,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_sensor_tracker_17v.py.log"
+    },
+    {
+      "name": "test_s2_capture_journal_a2.py",
+      "exit_code": 0,
+      "seconds": 0.562,
+      "passes": 4,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_capture_journal_a2.py.log"
+    },
+    {
+      "name": "test_s2_device_binding_a2.py",
+      "exit_code": 0,
+      "seconds": 0.109,
+      "passes": 4,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_device_binding_a2.py.log"
+    },
+    {
+      "name": "test_s2_stage0_contract_a2.py",
+      "exit_code": 0,
+      "seconds": 0.36,
+      "passes": 11,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_stage0_contract_a2.py.log"
+    },
+    {
+      "name": "test_s2_job_owner.py",
+      "exit_code": 0,
+      "seconds": 0.094,
+      "passes": 5,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_job_owner.py.log"
+    },
+    {
+      "name": "test_s2_job_object_os.py",
+      "exit_code": 0,
+      "seconds": 0.218,
+      "passes": 2,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_job_object_os.py.log"
+    },
+    {
+      "name": "test_s2_resource_lease.py",
+      "exit_code": 0,
+      "seconds": 0.11,
+      "passes": 4,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_resource_lease.py.log"
+    },
+    {
+      "name": "test_s2_zero_supervisor.py",
+      "exit_code": 0,
+      "seconds": 1.312,
+      "passes": 6,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\test_s2_zero_supervisor.py.log"
+    },
+    {
+      "name": "a_mutants",
+      "exit_code": 0,
+      "seconds": 12.25,
+      "caught": 5,
+      "total": 5,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\a_mutants.log"
+    },
+    {
+      "name": "a2_mutants",
+      "exit_code": 0,
+      "seconds": 8.141,
+      "caught": 7,
+      "total": 7,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\a2_mutants.log"
+    },
+    {
+      "name": "frozen_clean_import",
+      "exit_code": 0,
+      "hashes_match": true,
+      "copied_to": "C:\\Users\\AI-WS01\\AppData\\Local\\Temp\\s2_a2_run_clean_b4emv4lz",
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexw\\leadA2\\frozen_copy\\evidence_s2_step4a2\\lead_a2_0600\\frozen_clean_import.log",
+      "imported": 22
+    }
+  ],
+  "complete": true
+}

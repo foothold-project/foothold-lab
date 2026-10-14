@@ -1,0 +1,13 @@
+PASS physical_bus_and_kit_zero
+FAIL torch_bus_mismatch_rejected
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from test_s2_device_binding_a2 import main;main()
+                                               ~~~~^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a2\test_s2_device_binding_a2.py", line 36, in main
+    else:check("torch_bus_mismatch_rejected",False)
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a2\test_s2_device_binding_a2.py", line 25, in check
+    assert good,name
+           ^^^^
+AssertionError: torch_bus_mismatch_rejected
