@@ -423,6 +423,26 @@
 - **ASTRA 17y(08:02 의뢰, 매우 좁은 범위):** 참석 단회 GO 조건과 기동 순서, 무인에 필요한 남은 목록과 우선순위, 첫 수집 뒤 CPU 로 미리 준비할 accessor. 한도 때문에 판정이 막히면 팀장 일어난 뒤 reset 권 승인이 먼저다.
 - **놀고 있는 GPU(08:03 기준):** GPU 0 05:46 부터 약 26.3 시간, GPU 1 09:40:37 부터 약 22.4 시간. 계산 프로세스 0. 이유: 첫 GPU 일의 검증이 끝나지 않았다(ASTRA 17y 대기).
 
+## ASTRA 17y 판정과 참석 단회 준비 (10/15 08:48 확인 · 전문 읽음 · 판정 파일 작성 08:10)
+
+- **17y 첫 줄:** 조건부 허용. A3 고정 바이트로, 아래 입력을 동결하고 **실제 사람이 계속 참석하는** GPU 0 정보 수집 **한 번**은 진행할 수 있다. **무인 기동과 후속 학습은 허용하지 않는다.** 승인 JSON 은 아직 발급 안 됨(lead 가 동결해 만든다).
+- **확인됨(ASTRA):** 47/47 해시, 수정 관련 정상 시험 5 개 스크립트 50 PASS 라벨, A3 변이 7/7 독립 재현(정상 소스 종료 0 · 변이 종료 1 · 첫 FAIL = want), 설치 USD 래퍼를 CPU 표적으로 실제 실행해 argv · cwd · sys.path[0] · 환경 전달 확인(sibling import 가 깨진다는 반례 없음), `on_cfg → gym.make` 순서(시험 대역 주입으로 확인). 17x 의 장치 · 실패 보존 · ray_index · 장면 값 · 래퍼 연결 지적은 닫힘.
+- **남은 결함과 이번 허용 입력으로 배제하는 방법(필수):**
+  1. `expect_conversions` 는 **`"0"` 으로 고정**(`"any"` 는 상한이 아님). 변환기가 불리면 첫 호출부터 HOLD 로 멈추고 조사. 실패했다고 `any` 로 풀지 않는다.
+  2. `validate_a2:117` 이 **같은 경로값**을 못 잡는다(`usd_root=out_root` 반례가 계약 통과 · 가짜 GO). out · USD · log 부모를 **서로 다른 세 형제 폴더**로 동결. status · claim · prelaunch 보고서는 그 폴더를 미리 만들지 않는 별도 위치.
+  3. `code_hashes` 는 `REQUIRED_BUNDLE` **정확히 23 개**(47 개로 늘리면 계약이 거절). 전체 47 목록은 별도 보존. Python · diag · criteria · parent · hook · 래퍼 경로와 해시를 승인 입력과 대조.
+  4. 장치 UUID 형식은 **미확인**. 형식 때문에 멈추면 「장치 결박 실패 · 수집 0행」 으로 보고하고 claim 을 보존(같은 claim 지우기 · 이름만 바꾼 자동 재시도 금지).
+  5. 감독기 `control_steps` 는 `partial_rows`(실패 행 포함)에서 오므로 보고에 **정상 완료 step · raw 행 수 · emergency 여부를 따로** 쓴다. HOLD 자료의 수집량이지 학습 · 평가 완료 수가 아니다.
+  6. `competing_isaac_processes()` 는 알려진 서명 목록이라 완전 탐지기가 아니고 GPU 1 의 Isaac 도 보류시킬 수 있다. 빈 목록을 「GPU 와 예약이 모두 비었다」 로 번역하지 않고 예약 현황을 따로 본다.
+- **입력 동결(출발값 · 충분성은 실측 아님):** GPU 0 실제 UUID · bus, 8 환경 · 256 step · 16 warmup · 개입 64/128/192 · optimizer 0 · retry 0 · `max_wall_s=900`, 초기 free VRAM ≥ 8 GiB, 실행 중 2 GiB 미만 중단, 초기 free disk ≥ 2 GiB, 출력 ≤ 1 GiB, 구체 마감 · 승인 만료, 실제 참석자, chain/attempt · 승인 ID/by · manifest digest.
+- **기동 순서(참석자가 보는 터미널에서만):** `s2_stage0_prelaunch.py --manifest M --approval A` → 종료 0 이 아니면 NO_GO → GO 본문 · 동일 digest · **60 초 이내**를 확인 → `s2_zero_supervisor.py --manifest M --approval A`. **분리 launcher/watchdog 을 덧붙이지 않는다.** 기존 prelaunch 파일은 재사용 거절이라 새 보고서 경로를 동결.
+- **중단 · 보고:** STOP · 마감 · 자원 하한/상한 · 장치/자산 불일치 · 예상 밖 변환기 · 예외는 HOLD. 멈춤이나 상태 갱신 중단 시 참석자가 **확인된 해당 감독기와 소유 가족만** 정리(광범위한 프로세스 종료 · 자동 retry 없음). 보고는 「시작 실패 / 부분 수집 / 256 행 수집 후 검증 보류」 로 나누고 **「참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음」** 이라고 쓴다. 256 행이나 종료 코드만으로 S2 통과 · 0 단계 PASS 라고 쓰지 않는다. **참석자가 자리를 비우면 이 허용도 끝난다. LLM 세션이 응답 중인 것은 참석이 아니다.**
+- **무인 최단 목록(ASTRA):** 시작 전(watcher READY · 실행 identity · manifest/마감 결박 · 준비 실패 시 소유 감독기 정리 · 참석/무인 계약 분리) · 실행 중(absolute 와 monotonic 마감 동시 · NaN/Inf/미래 heartbeat 거절 · 로그 쓰기 실패와 AccessDenied 가 종료를 막거나 정상 종료로 오인되지 않게 · 감독기의 watcher 생존 확인) · 종료 후(가족 종료 receipt · 빈 가족 확인 전 후속 기동/lease 재취득 금지). 추정 30~60 분 이상(실측 ETA 아님). **ASTRA 의견: 참석자가 준비되는 시점에 이 단회를 먼저 한다.**
+- **HOLD 이후:** 첫 수집 전부터 CPU 에서 accessor 계약 · 기대값 · 실패 자료 규약(Warp mesh 정점 · 면 · 월드 변환, USD 충돌체와 숨은 plane, ray 시작 · 방향 · hit 결박, root-sensor pose · sensor timestamp · reset 경계, 고정 자세 유지, Kit/driver 판)을 정한다. CPU 대역은 실제 메시가 그 값을 준다는 증거가 아니다. 두 번째 0 단계는 별도 동결 실행.
+- **ASTRA 의 한도:** 17y 라운드(10 분 24 초)로 주간 5 % → 4 %. 이후 라운드는 몇 개 안 남음. **팀장이 일어나면 reset 권 직접 승인이 첫 일.**
+- **lead 가 확인한 것(08:48~08:52):** 부팅 09/17 21:16:07 그대로. GPU 0 15 MiB · GPU 1 5,926 MiB(데스크톱 앱) · 어느 쪽에도 python · Kit 계산 프로세스 없음 · 기동 0 건. 이슈 #550 마지막 댓글은 ASTRA 17y(23:11Z), 팀장 새 댓글 없음. Isaac 해석기 `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe`. 이 진단의 로봇 자산은 기본 Isaac Lab 작업의 `UNITREE_GO2_CFG` 의 `ISAACLAB_NUCLEUS_DIR/Robots/Unitree/Go2/go2.usd`(원격 USD 직접 읽기 · 변환기 안 불림 · 실제 문자열은 Kit 가 만든 값이라 첫 수집에서 확인).
+- **놀고 있는 GPU(08:52 기준):** GPU 0 05:46 부터 약 27 시간, GPU 1 09:40:37 부터 약 23.2 시간. 이유: 첫 GPU 일이 **참석 단회**로만 허용됐고 팀장이 취침 중. 무인 요건(위 목록)을 채워 ASTRA 확인을 받기 전에는 띄울 수 없다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
