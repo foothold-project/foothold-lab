@@ -1,0 +1,12 @@
+START 11:02:12
+BEGIN test_manifest 11:02:12
+END test_manifest rc=0 11:02:13
+BEGIN test_stage1 11:02:13
+END test_stage1 rc=0 11:02:15
+BEGIN test_driver_cpu 11:02:15
+END test_driver_cpu rc=0 11:02:16
+BEGIN test_full_inputs_copy 11:02:16
+END test_full_inputs_copy rc=0 11:02:20
+BEGIN test_integration_s1043 11:02:20
+END test_integration_s1043 rc=0 11:02:56
+ALLDONE

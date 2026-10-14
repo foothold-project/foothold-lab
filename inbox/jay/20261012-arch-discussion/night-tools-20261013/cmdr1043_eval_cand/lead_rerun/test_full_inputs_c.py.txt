@@ -1,0 +1,1 @@
+C:\Users\AI-WS01\anaconda3\envs\isaac311-moects\python.exe: can't open file 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\test_full_inputs_copy.py --run-id lead1': [Errno 2] No such file or directory

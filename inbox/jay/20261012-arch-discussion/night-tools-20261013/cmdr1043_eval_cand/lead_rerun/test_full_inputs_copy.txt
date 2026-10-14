@@ -1,0 +1,10 @@
+normal_full_copy PASS []
+off_bundle_changed PASS ['input hash off_bundle_json', 'branch off stamp mismatch cmdr_s1043_off_u4000/bundle.json']
+off_bundle_changed_restored PASS []
+on_stamp_changed PASS ['input hash on_stamp', 'branch on stamp unreadable']
+on_stamp_changed_restored PASS []
+off_result_changed PASS ['input hash off_result', 'branch off result unreadable', 'branch off stamp mismatch cmdr_s1043_off_u4000/result.json']
+off_result_changed_restored PASS []
+approval_1042_rejected PASS
+synthetic_1043_approval_still_blocks_launch PASS
+RESULTS 9 / 9
