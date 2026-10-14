@@ -283,6 +283,16 @@
 - **사본 · 의뢰:** `night-tools-20261013/cmdr1043_eval_cand_17s/` (cand 와 `cmp` 불일치 0 · `SHA256SUMS.txt` 31 줄 · 커밋 d1b2a0c1) · `TASK-astra-17t-1043-eval-fix2.md` 로 ASTRA 17t 의뢰(23:51). **GPU 기동 없음.** 팀장 결정값은 전부 UNDECIDED.
 - **놀고 있는 GPU (23:52 기준):** GPU 0 05:46 부터 약 18 시간 · GPU 1 09:40:37 부터 약 14 시간. 이유는 앞 절과 같고 허용된 다음 기동이 없다. 둘 다 python / Kit 계산 프로세스 0.
 
+## ASTRA 17t 판정과 작업자 E 의 17t 고침 라운드 (10/15 00:50)
+
+- **17t (00:12 작성 · 전문 읽음): 고칠 것 · 진단 기동 보류 · 승인 json 발급 없음.** 고정 31개 파일 · 입력 38개 해시 일치, ASTRA 격리 재실행 열 시험 모두 종료 0 (79.70 초). 17s 의 네 결함은 지정 범위에서 닫힘: 원본 q 필드(검사를 통째로 끈 해결 아님) · 2 초 / 4 초 벽시계(rc 124) · 승인 장부 별도 프로세스 동시 시작 경쟁(1 건 claimed, 1 건 already used) · retry 0. 단회 claim 은 한 프로세스의 세 q 실행 · 승인된 재시도 · 조건부 반복이 누적 예산을 함께 쓰는 설계로 「진단 한 묶음」에 맞음(실패해도 이미 쓴 승인, 재개는 새 승인 ID).
+- **기동 차단 결함 셋:** (1) `D:711~720, 753~766` PID 재사용: 관찰했던 중간 자식 110 이 종료된 뒤 다른 프로세스가 PID 110 을 재사용해 새 자식 300 을 낳으면 후보가 **무관한 300 을 known 에 넣고 kill 을 호출**(결정적 반례, 실제 프로세스를 죽인 실험은 아님). 부모의 PID + 생성 시각을 확인하지 못하면 소유했다고 판단하면 안 됨 (2) `M:232~340, D:1590~1591` `comparison_pass_rule` 값 검사 없음: 엄격 규칙 · `UNDECIDED` · `ignore_all_differences` · `false` · `null` 모두 관문 통과, `approval_id` · `log_name` 의 `UNDECIDED` 도 통과(현 미결정 manifest 전체가 기동 가능한 것은 아님, 다른 UNDECIDED 가 막음) (3) `D:1522~1557` 지문 계산 예외를 삼켜 `status=valid, fingerprint=null` 유지(실제 원본 사본에서 `env_origins.npy` 만 옮겨 재현), 최종 완료 조건도 못 봄.
+- **정정 (ASTRA):** 코드 변이 6 종은 모두 「안전검사 비활성화」가 아니다(원본 필드 회귀 · 벽시계 비활성화 · claim 무력화 · retry 0 회귀 · byte-only 표기 오류 · allowlist 조건 제거). `test_17s_original` 은 slot 경계만이 아니라 `log_done` · `usd_check` · `py_traceback` 도 성공 함수로 바꿨다(50~52 줄). 이전 보고의 「slot 경계만 대체」는 틀린 설명이었음(작업자 보고를 그대로 전한 문장).
+- **ASTRA 의 팀장 결정 권고 (추정, 승인값 아님):** 첫 묶음 launch 3 · retry 0 · 원본 반복 false (불일치 원인용 반복을 원하면 launch 4 · repeat true 를 사전에 선택) · `max_wall_s` 1200~1800 초(준비 · 안정성 관찰 · 대기 포함) · `deadline_epoch` 는 20~30 분 작업창의 새 자식 시작 마감 · `restart_scope=single_start_no_reuse` · `terminate_grace_s` 5~10 초 · 부분 결과 `held` · 통과선 `semantic_and_json_bytes_and_traj_bytes` 하나뿐 · GPU 0 또는 1 중 팀장이 비어 있는 것을 배정. 공통 잠금은 기존 검증 경로를 정확한 allowlist 로 재사용 권고(새 경로에 우리 lease 만 두면 서로 못 막음). A 는 시작 시험 8 + 45 = 53 launch(조건부 원본 재시험 포함 54) 별도 승인.
+- **견적(추정):** GPU 진단 시작까지 1.5 ~ 3.5 h + 팀장 결정 대기(수정 중 병행 가능).
+- **조치 (00:49):** `TASK-codex-worker-1043-eval-fix3.md` 로 작업자 E(컨텍스트 46 % · 주간 26 %) 에게 17t 고침 라운드를 맡김. CPU 전용 · GPU 기동 0.
+- **놀고 있는 GPU (00:49 기준):** GPU 0 05:46 부터 약 19 시간 · GPU 1 09:40:37 부터 약 15 시간. 둘 다 python / Kit 계산 프로세스 0.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
