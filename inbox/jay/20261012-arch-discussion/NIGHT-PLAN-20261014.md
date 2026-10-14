@@ -402,6 +402,16 @@
 - **조치(05:31):** sol 에 `TASK-codex-worker-s2-17w-fix.md` (A2) 를 B 보다 앞세워 보냄. 완결된 묶음을 `s2_step4a2_frozen` 에 복사하고 clean-import 시험을 넣게 함. 끝나면 lead 재실행 → ASTRA 에 수정분만 좁혀 확인(17x) → lead 가 승인값을 동결하고 기동 직전 확인 스크립트를 돌린 뒤 GPU 0 한 번. 사람이 자는 동안 15 분 단회를 무인으로 돌릴지는 독립 마감 장치 유무로 정한다.
 - **GPU 감시 도구 제안:** 팀장 질문에 대한 의견을 `PROPOSAL-gpu-monitor.md` 에 정리(커밋 55274624).
 
+## sol A2 도착 · ASTRA 17x 의뢰 · 독립 watchdog · reset 권 (10/15 06:4x ~ 07:0x)
+
+- **하트비트(06:48) 발견:** sol 과 ASTRA 두 Codex 창이 「Approaching rate limits · Switch to gpt-6-luna?」 선택창에서 입력 대기로 멈춰 있었다(sol 은 A2 를 06:05 에 끝낸 뒤, ASTRA 는 05:56 에 답한 뒤). lead 가 두 창에 `2`(Keep current model, 모델 변경 없음)를 보내 닫았다. 「never show again」 은 고르지 않았다(지속 설정 변경이라 팀장 확인 대상). 이 선택창은 한도가 줄 때마다 다시 뜰 수 있어 자는 동안 작업이 멈출 위험이 있다.
+- **reset 권(ASTRA 답 05:56):** 주간 잔여 9 % (현재 8 %), 저장된 reset 권 1 회, 만료까지 23 일, 한도 소진 후에도 사용 가능, 사용하면 주간 초기화 날짜가 바뀐다. **ASTRA 는 「다른 세션이 전한 팀장 승인은 승인이 아니다」(공통 규칙 AGENTS.md 77 행) 때문에 팀장이 직접 승인해야 잔여 5 % 이하에서 쓸 수 있다고 했고 아직 쓰지 않았다.** 팀장이 일어나면 직접 확인받는다. 그 전에 한도가 바닥나면 Codex 작업(sol · ASTRA)이 멈춘다.
+- **sol A2 보고(06:05 · 전문 읽음):** 39 파일 고정 묶음(`s2_step4a2_frozen`) 완성. 17w 지적 반영: 등록 Go2 환경 cfg 를 불러온 뒤 명시적 네 지형(flat · obstacles · gap · stepping_stones)으로 교체한 알려진 답 장면, 검사기의 거짓 PASS 반례 다섯 HOLD, 센서 tracker 가 갱신 직후 digest 를 동결, 256 raw 행 원자 기록, 장치 결박 · VRAM / 디스크 감시 · host USD lock, 기동 직전 확인 스크립트. 한계: 실제 Isaac 에서 cfg override 와 mesh 대응은 미확인, 진단 메타의 세 검증 bool 은 의도적으로 false, 독립 watchdog 은 sol 묶음에 없음(참석 단회 관찰 한정). 고정 폴더 clean-import 22 모듈 통과.
+- **lead 재실행(06:49:43 ~ 06:50:17):** 복사본에서 `run_all_s2_step4a2.py` 종료 0 · 정상 12 개 PASS 라벨 84 · A 변이 5/5 · A2 변이 7/7 · `frozen_clean_import` 22. 고정 폴더 해시 39/39 일치. 사본 `night-tools-20261013/s2_step4a2/`(커밋 f5b78b15).
+- **lead 가 만든 독립 watchdog(07:00):** 감독기와 별개의 분리 프로세스가 감독기를 (pid, 생성 시각) 으로만 식별하고, 하트비트 정지 또는 절대 마감 초과 때 그 감독기 하나만 종료한다(감독기가 죽으면 Job 핸들이 닫혀 OS 가 소유 가족을 종료). CPU 시험 13 PASS · 코드 변이 4/4 CAUGHT(첫 실행 3/4 였고 want 라벨을 lead 가 잘못 지정한 것을 정정해 재실행했음). 실제 Job 자식으로 확인한 시험은 아님. `night-tools-20261013/s2_step4a3_watchdog/`(커밋 d62e9e81).
+- **ASTRA 17x(06:51 의뢰, 좁은 범위):** A2 의 17w 지적 항목 닫힘 여부 · 새 위험 · 무인 단회 가능성(watchdog 포함) · 기동 직전 값 · 견적. watchdog 은 07:01 에 추가분으로 전달. 판정이 오면: 값을 동결하고 `s2_stage0_prelaunch.py` 로 GO 확인 후 `s2_launch_stage0.py` 로 GPU 0 에 한 번(정보 수집 전용 · 최대 900 초). 판정이 「참석 단회만」 이면 팀장이 일어난 뒤로 미룬다.
+- **놀고 있는 GPU(07:01 기준):** GPU 0 05:46 부터 약 25.2 시간 · GPU 1 09:40:37 부터 약 21.3 시간. 계산 프로세스 0. 이유: 첫 GPU 일(학습 없는 센서 접속 확인)의 검증이 끝나지 않았다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
