@@ -293,6 +293,14 @@
 - **조치 (00:49):** `TASK-codex-worker-1043-eval-fix3.md` 로 작업자 E(컨텍스트 46 % · 주간 26 %) 에게 17t 고침 라운드를 맡김. CPU 전용 · GPU 기동 0.
 - **놀고 있는 GPU (00:49 기준):** GPU 0 05:46 부터 약 19 시간 · GPU 1 09:40:37 부터 약 15 시간. 둘 다 python / Kit 계산 프로세스 0.
 
+## 작업자 E 17t 고침 결과와 ASTRA 17u 의뢰 (10/15 01:52)
+
+- **작업자 E 보고 (01:14 · `REPORT-17t.md` · 전문 읽음):** 17t 의 기동 차단 결함 셋과 보강 셋을 CPU 로 고쳤다고 보고. 부모 `(pid, create_time)` 확인 뒤에만 새 자식 등록 · 불명 자식은 신호 없이 `unowned_unknown` 으로 lease 유지 · `comparison_pass_rule` 등 승인 필드 값 검사(허용 집합 하나) · 필수 지문 누락은 `held` + why · 공통 지문 대조 · 비용 필드 · allowlist 정확 경로. 작업자 한계: 관찰 전 재부모화는 못 찾을 수 있음 · Job Object 는 구현하지 않음(검토 의견만) · `test_17s_original` / `test_17t_fingerprint` 가 `log_done` · `usd_check` · `py_traceback` · slot 을 가상화 · `test_17r_e` 의 validate / fingerprint 성공 함수 교체.
+- **lead 재실행 (01:48:30 ~ 01:50:19):** `run_all_17t.py` 새 run-id `run_20261015_014830_16564` 열다섯 시험 모두 종료 0. 17s 코드 변이 6 종 + 17t 신규 3 종 모두 정상 종료 0 · 변이 종료 1 · `failed` = `want`, 신규 3 건은 변이 로그 끝의 `AssertionError` 라벨이 시험 소스 `check(...)` 줄과 일치. 후보 165 파일 해시 실행 전후 일치. 줄 단위 코드 검토 · PID 반례 직접 재현 · 변이가 의도한 검사만 바꿨는지는 하지 않음(ASTRA 몫).
+- **사본 · 의뢰:** `night-tools-20261013/cmdr1043_eval_cand_17t/` (cand 와 `cmp` 불일치 0 · `SHA256SUMS.txt` 37 줄) · 커밋 30d625b5 · `TASK-astra-17u-1043-eval-fix3.md` 로 ASTRA 17u 의뢰(01:51). 핵심 물음: 17t 결함 셋 닫힘 여부 · 이 바이트가 「제한된 진단 기술 승인」 대상으로 충분한가 · 팀장이 17t 권고값을 그대로 쓸 수 있는가 · lead 측정 순서 · 공통 경로 canonical 후보 · 병행 가능한 단계. **GPU 기동 없음.**
+- **한도:** Codex 주간 25 % (작업자 E · ASTRA 둘 다) · Claude 주간은 미확인. 이 곁가지가 한 라운드 돌 때마다 한도를 쓴다.
+- **놀고 있는 GPU (01:52 기준):** GPU 0 05:46 부터 약 20 시간 · GPU 1 09:40:37 부터 약 16 시간. 둘 다 python / Kit 계산 프로세스 0. 팀장 질문 5 건 (#546 6160996409) · 00:49 채팅 질문에 대한 답은 아직 없음.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
