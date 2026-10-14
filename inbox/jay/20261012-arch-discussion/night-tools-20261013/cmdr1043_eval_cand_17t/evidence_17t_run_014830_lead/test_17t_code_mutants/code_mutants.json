@@ -1,0 +1,46 @@
+{
+  "input_tamper_17r": 12,
+  "code_mutants_17s": 6,
+  "code_mutants_17t": 3,
+  "records": [
+    {
+      "name": "parent_identity",
+      "normal_exit": 0,
+      "normal_s": 0.3,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\parent_identity.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.3,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\parent_identity.mutant.log",
+      "failed": "PID reuse child never signalled",
+      "want": "PID reuse child never signalled",
+      "caught": true,
+      "mutant_sha256": "386aab880047ac3c68bd74cecb75f522f462c5f19dcab0e288263e9ce7e25df0"
+    },
+    {
+      "name": "comparison_rule_gate",
+      "normal_exit": 0,
+      "normal_s": 12.69,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\comparison_rule_gate.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.89,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\comparison_rule_gate.mutant.log",
+      "failed": "comparison_pass_rule 0 rejected",
+      "want": "comparison_pass_rule 0 rejected",
+      "caught": true,
+      "mutant_sha256": "fbc2582175cb2d019bbc057c29d2daeec3af27e1f442dd01a67fe41fdacfe478"
+    },
+    {
+      "name": "fingerprint_hold",
+      "normal_exit": 0,
+      "normal_s": 0.39,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\fingerprint_hold.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.36,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_014830_16564\\test_17t_code_mutants\\fingerprint_hold.mutant.log",
+      "failed": "missing fingerprint held",
+      "want": "missing fingerprint held",
+      "caught": true,
+      "mutant_sha256": "ab77d38adc9ad125e5b8029ea207833e0d2fa6acc37c65e9c57d2e621b9cc02f"
+    }
+  ]
+}

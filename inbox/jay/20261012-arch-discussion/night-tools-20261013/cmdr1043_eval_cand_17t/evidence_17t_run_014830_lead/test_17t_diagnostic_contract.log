@@ -1,0 +1,17 @@
+PASS intended source and buffer differences excluded
+PASS common fingerprint mismatch names key
+01:50:03 DIAGNOSTIC completed · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17t_diagnostic\run_20261015_015003_38164\normal\reports\diagnostic_normal.json
+PASS normal complete and no repeat needed
+PASS total wall includes startup and all try costs
+01:50:03 DIAGNOSTIC held_common_fingerprint · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17t_diagnostic\run_20261015_015003_38164\mismatch\reports\diagnostic_mismatch.json
+PASS mismatch expected hold rc
+PASS common mismatch held with item
+01:50:03 DIAGNOSTIC held_common_fingerprint · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17t_diagnostic\run_20261015_015003_38164\repeated\reports\diagnostic_repeated.json
+PASS repeated expected hold rc
+PASS approved repeat ran but common mismatch held
+01:50:03 DIAGNOSTIC held_incomplete · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17t_diagnostic\run_20261015_015003_38164\incomplete\reports\diagnostic_incomplete.json
+PASS incomplete expected hold rc
+PASS missing fingerprint blocks final completion
+01:50:03 DIAGNOSTIC held_incomplete · A not started · report C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\fixture_17t_diagnostic\run_20261015_015003_38164\failure\reports\diagnostic_failure.json
+PASS failure expected hold rc
+PASS failed run distinct from held and not-run

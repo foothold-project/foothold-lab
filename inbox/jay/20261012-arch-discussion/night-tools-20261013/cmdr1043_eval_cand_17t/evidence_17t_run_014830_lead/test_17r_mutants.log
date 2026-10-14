@@ -1,0 +1,14 @@
+NORMAL PASS launch and complete argv
+CAUGHT GPU index string want execution gpu_index invalid got ['execution gpu_index invalid', 'device gpu_index undecided or inconsistent', 'approval contract mismatch']
+CAUGHT candidate hashes scalar want execution candidate_hashes invalid got ['execution candidate_hashes invalid', 'approval contract mismatch']
+CAUGHT confirmation scalar want execution run_lease_participants_confirmed not confirmed got ['execution run_lease_participants_confirmed not confirmed']
+CAUGHT approval risk binding want approval contract mismatch got ['approval contract mismatch']
+CAUGHT candidate code digest want candidate hash frozen_exec_s1043.py got ['candidate hash frozen_exec_s1043.py', 'approval contract mismatch']
+CAUGHT execution CUDA selection want device CUDA_VISIBLE_DEVICES undecided or inconsistent got ['device CUDA_VISIBLE_DEVICES undecided or inconsistent', 'approval contract mismatch']
+CAUGHT conversion and run same file want conversion lock or run lease contract got ['conversion lock or run lease contract']
+CAUGHT reset XY nine metres want reset contract differs from pinned q got ['reset contract differs from pinned q']
+CAUGHT candidate layout want deployment layout or source root got ['deployment layout or source root']
+CAUGHT duplicate outdir want complete child argv differs got ['complete child argv differs from registration']
+CAUGHT startup tag not registered want tag outside registered startup tests got ['tag outside registered startup tests']
+CAUGHT diagnostic forbids A want A job outside A stage got ['A job outside A stage']
+MUTANTS 12 independent named inputs

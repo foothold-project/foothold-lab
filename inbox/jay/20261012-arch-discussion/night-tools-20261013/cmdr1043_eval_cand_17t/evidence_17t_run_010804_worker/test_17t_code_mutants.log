@@ -1,0 +1,9 @@
+NORMAL parent_identity rc 0 seconds 0.3 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\parent_identity.normal.log
+failed [PID reuse child never signalled] want [PID reuse child never signalled]
+CAUGHT parent_identity rc 1 seconds 0.31 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\parent_identity.mutant.log
+NORMAL comparison_rule_gate rc 0 seconds 12.7 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\comparison_rule_gate.normal.log
+failed [comparison_pass_rule 0 rejected] want [comparison_pass_rule 0 rejected]
+CAUGHT comparison_rule_gate rc 1 seconds 0.89 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\comparison_rule_gate.mutant.log
+NORMAL fingerprint_hold rc 0 seconds 0.41 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\fingerprint_hold.normal.log
+failed [missing fingerprint held] want [missing fingerprint held]
+CAUGHT fingerprint_hold rc 1 seconds 0.39 log C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17t\run_20261015_010804_121484\test_17t_code_mutants\fingerprint_hold.mutant.log

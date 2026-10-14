@@ -1,0 +1,13 @@
+PASS original meta copy SHA256
+PASS copied original validate
+PASS original fingerprint valid
+PASS validate unaffected by missing fingerprint file
+FAIL missing fingerprint held
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_fingerprint.py", line 102, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_fingerprint.py", line 91, in main
+    check("missing fingerprint held", missing["status"] == "held" and
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_fingerprint.py", line 26, in check
+    raise AssertionError(label)
+AssertionError: missing fingerprint held

@@ -1,0 +1,37 @@
+PASS approved strict rule accepted with full file checks
+PASS comparison_pass_rule 0 rejected
+PASS comparison_pass_rule 1 rejected
+PASS comparison_pass_rule 2 rejected
+PASS comparison_pass_rule 3 rejected
+PASS comparison_pass_rule 4 rejected
+PASS approval_id 5 rejected
+PASS approval_id 6 rejected
+PASS approval_id 7 rejected
+PASS approval_id 8 rejected
+PASS approval_id 9 rejected
+PASS attempt 10 rejected
+PASS attempt 11 rejected
+PASS attempt 12 rejected
+PASS attempt 13 rejected
+PASS log_name 14 rejected
+PASS log_name 15 rejected
+PASS log_name 16 rejected
+PASS log_name 17 rejected
+PASS log_name 18 rejected
+PASS restart_scope 19 rejected
+PASS restart_scope 20 rejected
+PASS restart_scope 21 rejected
+PASS restart_scope 22 rejected
+PASS termination_policy 23 rejected
+PASS termination_policy 24 rejected
+PASS termination_policy 25 rejected
+PASS termination_policy 26 rejected
+PASS termination_policy 27 rejected
+PASS termination_policy 28 rejected
+PASS termination_policy 29 rejected
+PASS positive grace shape accepted
+PASS positive grace shape accepted
+PASS approved rule applied to equal fields
+PASS approved rule applies strict byte hold
+PASS unsupported rule cannot be applied
+PASS UNDECIDED manifest still blocked
