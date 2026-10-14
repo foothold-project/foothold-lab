@@ -275,6 +275,14 @@
 - **견적(추정, 보장 아님):** 수정 1 ~ 3 h + 독립 재검 0.5 ~ 1 h + 배치 · 측정 0.25 ~ 0.5 h = GPU 진단 시작까지 약 1.75 ~ 4.5 h + 팀장 결정 대기. 진단 한 묶음(Isaac 세 번)은 승인 뒤 10 ~ 20 분 작업창으로 잡되 실패 · 반복은 별도 예산.
 - **조치 (22:49):** `TASK-codex-worker-1043-eval-fix2.md` 로 작업자 E (`term_40bccb75`, Codex 컨텍스트 18 % · 주간 29 %) 에게 17s 고침 라운드를 맡김. CPU 전용 · `_eval` 읽기만 · 팀장 결정값은 UNDECIDED 로 유지. 이 일은 1043 평가 곁가지이며 S2 우선 여부는 팀장 답 전까지 바뀌지 않음. GPU 기동 0.
 
+## 작업자 E 17s 고침 결과와 ASTRA 17t 의뢰 (23:52)
+
+- **작업자 E 보고 (23:15 · `REPORT-17s.md` · 전문 읽음):** 17s 7 항목을 CPU 로 고쳤다고 보고. 원본 q 의 누락된 `loaded_iter` 만 허용(원본 진단 · 반복 원본에만 `need_iter=False`) · `deadline_epoch` 시작 금지와 `max_wall_s` 소유 자식 트리 상한 분리(rc 124/125, `held`, 종료 확인 전 lease 유지) · 승인 B 22 키(`approval_id` · `attempt` · `log_name` · `restart_scope` · `termination_policy` · `comparison_pass_rule` 추가) 와 `write_root/approval_ledger/<id>/claim.json` 디렉터리 원자 생성 **단회 예약** · retry 0 허용 · byte-only 원인 코드와 비교 3 값 분리 · 보고 항목 동등 · `common_write_allowlist`. 작업자 한계: GPU · slot v3 · guard · isolate · Kit 연쇄 · 공통 lease 를 다른 모든 실행기가 쓰는지 · 운영 경로 적용 미확인, 관찰 전에 사라진 자식과 PID 재사용 보증 아님.
+- **lead 재실행 (23:48:48 ~ 23:50:07):** `run_all_17s.py` 새 run-id `run_20261014_234848_102912` 열 시험 모두 종료 0. 코드 검사 끈 변이 6 종 모두 정상 종료 0 · 변이 종료 1 · `failed` = `want`, 변이 로그 3 건 끝의 `AssertionError` 라벨이 시험 소스 `check(...)` 줄과 일치. 입력 변조 12 종과 합치지 않고 따로 셈. 후보 159/159 해시 실행 전후 일치. 변이가 의도한 검사만 껐는지 · 줄 단위 코드 검토 · 17s 반례 직접 재현은 하지 않음(ASTRA 몫).
+- **관찰할 점 (lead 메모):** 단회 claim 은 충돌 · 중단 뒤에도 같은 승인을 재사용 못 하므로 진단이 중간에 실패하면 승인 재발급이 필요하다. 「진단 한 묶음(세 번 + 조건부 원본 반복)」 이 한 claim 안에서 처리되는지가 17t 물음 1(c).
+- **사본 · 의뢰:** `night-tools-20261013/cmdr1043_eval_cand_17s/` (cand 와 `cmp` 불일치 0 · `SHA256SUMS.txt` 31 줄 · 커밋 d1b2a0c1) · `TASK-astra-17t-1043-eval-fix2.md` 로 ASTRA 17t 의뢰(23:51). **GPU 기동 없음.** 팀장 결정값은 전부 UNDECIDED.
+- **놀고 있는 GPU (23:52 기준):** GPU 0 05:46 부터 약 18 시간 · GPU 1 09:40:37 부터 약 14 시간. 이유는 앞 절과 같고 허용된 다음 기동이 없다. 둘 다 python / Kit 계산 프로세스 0.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
