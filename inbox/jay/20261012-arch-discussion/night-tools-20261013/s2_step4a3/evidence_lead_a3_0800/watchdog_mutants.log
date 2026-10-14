@@ -1,0 +1,6 @@
+BASELINE rc=0 fails=[]
+CAUGHT identity_check_disabled want=[wrong creation time: refuses and signals nothing] first_fail=[wrong creation time: refuses and signals nothing] rc=1
+CAUGHT heartbeat_stale_disabled want=[hung supervisor killed by heartbeat stale] first_fail=[hung supervisor killed by heartbeat stale] rc=1
+CAUGHT hard_deadline_disabled want=[hard deadline kills even with fresh heartbeat] first_fail=[hard deadline kills even with fresh heartbeat] rc=1
+CAUGHT kill_call_removed want=[hung supervisor killed by heartbeat stale] first_fail=[hung supervisor killed by heartbeat stale] rc=1
+SUMMARY 4/4 CAUGHT
