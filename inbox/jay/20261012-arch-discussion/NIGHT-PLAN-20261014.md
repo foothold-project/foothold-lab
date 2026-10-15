@@ -454,6 +454,25 @@
 - **gpuwatch:** super2 가 맡기로 함(mai-os `tools/gpuwatch/`, 댓글 6181717191, 제 답 6181783709). lead 몫은 RL 쪽 상태 칸과 무인 사슬 어댑터.
 - **놀고 있는 GPU(10:12 기준):** GPU 0 은 10/14 05:46 부터 약 28.4 시간, GPU 1 은 10/14 09:40:37 부터 약 24.5 시간. 계산 프로세스 0. 이유: 첫 GPU 일이 참석 단회로만 허용됐고 팀장이 취침 중이며 무인 허용 판정(17z)이 아직 없다.
 
+## ASTRA 17z 판정 (무인 보류) 와 A4 r2 수정 (10/15 10:2x 판정 확인 · 10:3x ~ 작업 · 전문 읽음)
+
+- **17z 첫 줄:** A4 무인 GPU 0 단회는 **보류**. PID 신원 미확인 종료 · 거짓 가족 종료 영수증 · 감시 및 승인 결박의 결함을 고치기 전에는 17y 의 **실제 사람 참석 단회** 조건만 유지. 판정 대상은 커밋이 아니라 동결 바이트(목록 SHA256 `ecb9a716…`). 정상 시험 79 PASS 는 ASTRA 가 독립 재현.
+- **ASTRA 가 찾은 결함(전부 사실로 받아들임):**
+  1. **P1 신원 미확인 종료:** watchdog 이 후손의 생성 시각을 못 읽으면 `(pid, None)` 으로 남겨 `ct is None or ...` 로 통과시켜 **같은 pid 의 나중 프로세스를 kill** (대역 반례). launcher `kill_if_same` 도 생성 시각이 None 이면 비교 없이 종료. 후손 신원 접근 불능은 생존자 목록에서 빠져 **거짓 `family_empty=true`**.
+  2. **감시 입력:** gate 모니터가 watchdog 하트비트의 `seq != last_seq` 만 봐서 `seq=NaN`, 다른 chain, 잘못된 pid 가 신선도를 갱신(`NaN != NaN`).
+  3. **승인 결박:** CLI `--watch-dir` 이 승인된 `unattended.watch_dir` 과 같은지 안 봄(직접 gate 호출 시 prelaunch · run 모두 호출). watchdog 명령줄은 경로 문자열 포함 여부만 봄. **live 도구가 「존재하는 파일」이면 불허 문서도 승인 근거로 받음**(`UNATTENDED DENIED` 파일도 통과) · live 가 import 하는 `s2_attended_launch_a3.py` 는 목록 밖.
+  4. **마감:** `deadline <= 토요일 정오` 만 검사해 `deadline + 60 s + 종료 대기` 가 정오를 넘을 수 있음. watchdog 1020 s 는 시작점이 감독기 900 s 와 다름.
+  5. **launcher:** READY 파일만 보고 0 을 반환(READY 직후 gate 가 거절해도 성공처럼 보임).
+  6. **동기 I/O:** 로그 쓰기 예외는 막지만 반환하지 않는 `fsync` · 파일 접근은 시한을 못 지킴(미측정).
+  7. **한계 정정:** `startup_grace_s=180` 은 Kit 준비 제한이 아니라 「첫 유효 감독기 heartbeat」 대기 시간. 자식 Kit 가 멈춰도 부모가 heartbeat 를 쓰면 stale 30 초가 안 걸리고 남는 제한은 `max_wall_s=900` 과 외부 mono. child-progress 감시는 아직 없음.
+  - `derive_inner` 자체는 해시 사슬을 끊지 않음(어댑터로는 가능) · 단 attended 로 바꾼 값은 사람 참석의 증거가 아님 · 최종 기록에 실제 모드(unattended)와 바깥/안쪽 해시를 함께 남길 것.
+- **ASTRA 권고(그대로 따름):** 우선 17y 의 **실제 참석 단회**로 launcher → 자식 PID → Kit 준비 → 첫 수집 → 종료 · 가족 비움의 시간을 실측. 무인은 수정과 실제 기계 관측이 갖춰진 뒤 다시 판단. 지금 무인 승인을 내릴 근거는 없음.
+- **lead 결정:** 무인 기동 안 함(보류). 참석 단회는 팀장이 일어나면. A4 는 **r2 로 고쳐 두고** ASTRA 재검은 참석 단회 실측 뒤(한도 4 % 이하라 낭비하지 않음). r2 수정: watchdog 신원 불명은 UNKNOWN(신호 금지 · 가족 `unverified` · 종료 코드 2) · 후손 강제 종료는 스냅샷 신원 일치 + 신호 직전 재확인만 · launcher 정리는 보유한 Popen 핸들로만 · 파일 I/O 는 별도 작업 스레드(결정 스레드는 디스크를 안 기다림 · 작업 스레드가 멈추면 `io_stalled` 로 kill) · kill 을 로그보다 먼저 · gate: watch 폴더 · watchdog 명령줄 전체 정확 일치 · 모니터는 chain · pid · 생성 시각 · 정수 단조 seq 만 진행으로 인정 · 승인에 scope + 결정 근거(verdict 파일 해시와 기계 줄) · 마감 여유를 앞에서 뺌 · launcher 는 감독기 status 를 본 뒤에만 성공 · live 도구는 verdict 파일에 `UNATTENDED_GO scope=… a4_list=… a3_list=…` 줄(현재 바이트 해시와 일치)이 있어야만 진행(불허 문서는 통과 못 함). mono 예산 1080 s.
+- **r2 측정(11:56, lead):** 정상 시험 **115 PASS**(감시자 32 · gate 63 · 프로세스 20, 실제 프로세스와 실제 Job Object) + 승인 도구 9 PASS + 세션 독립 5 PASS · 변이 **58/58 CAUGHT**(감시자 23 · gate 30 · launcher 5, 정상 소스 먼저 통과 + 첫 FAIL 라벨 = want) · 실제 기계 예행(Isaac 안 띄움, 10:40) 정상: launcher → 실제 watchdog READY(정확한 명령줄 일치) → 실제 A3 prelaunch GO → gate DONE, 1.2 초, 남은 프로세스 0. 17z 때의 `gate_monitor_not_started`(첫 FAIL 이 G4)는 r2 에서 변이 목록에서 뺐고 대신 `gate_monitor_check_disabled` 로 같은 관문을 깨끗이 끈다. 정직한 기록: 패치 스크립트를 셸 heredoc 로 넘기다 셸 구문 오류가 두 번 나서 파일로 써서 실행했다(코드 결함 아님). r2 시험은 다시 쓴 뒤 그룹별 첫 실행에서 모두 통과(감시자 31 · gate 63 · 프로세스 19)했고, 그 뒤 후손 신원 경쟁(W25) · 하트비트 쓰기 스레드 · P11 시험과 monitor 입력 검증 시험을 더해 115 가 됐다. 증거 `rehearsal_evidence_r2/`, 고정 목록 `SHA256SUMS.txt`(13 파일).
+- **ASTRA 재검(17z2)은 참석 단회 실측 뒤에 한 번만** 요청(주간 한도 4 % 아낌). 무인은 그 전까지 보류.
+- **놀고 있는 GPU(11:57 기준):** GPU 0 약 30.2 시간(어제 05:46~) · GPU 1 약 26.3 시간(어제 09:40:37~). 계산 프로세스 0. 이유: 참석 단회는 참석자(팀장 취침 중) 필요, 무인은 17z 보류.
+
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.

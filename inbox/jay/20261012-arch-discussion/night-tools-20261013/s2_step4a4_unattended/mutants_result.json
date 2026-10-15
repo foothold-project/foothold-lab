@@ -5,7 +5,7 @@
     "mutant_rc": 1,
     "first_fail": "W4 monotonic budget kills when the wall clock never advances",
     "want": "W4 monotonic budget kills when the wall clock never advances",
-    "seconds": 37.7
+    "seconds": 52.9
   },
   "watchdog_wall_deadline_removed": {
     "status": "CAUGHT",
@@ -13,7 +13,7 @@
     "mutant_rc": 1,
     "first_fail": "W3b a forward wall-clock jump past the absolute deadline triggers hard_deadline",
     "want": "W3b a forward wall-clock jump past the absolute deadline triggers hard_deadline",
-    "seconds": 84.5
+    "seconds": 99.8
   },
   "watchdog_future_heartbeat_accepted": {
     "status": "CAUGHT",
@@ -21,7 +21,7 @@
     "mutant_rc": 1,
     "first_fail": "W5 future-dated heartbeat is rejected and the victim is killed after the startup grace",
     "want": "W5 future-dated heartbeat is rejected and the victim is killed after the startup grace",
-    "seconds": 34.4
+    "seconds": 49.8
   },
   "watchdog_nan_heartbeat_accepted": {
     "status": "CAUGHT",
@@ -29,7 +29,7 @@
     "mutant_rc": 1,
     "first_fail": "W6 NaN heartbeat is rejected and the victim is killed after the startup grace",
     "want": "W6 NaN heartbeat is rejected and the victim is killed after the startup grace",
-    "seconds": 62.6
+    "seconds": 78.8
   },
   "watchdog_chain_not_checked": {
     "status": "CAUGHT",
@@ -37,7 +37,7 @@
     "mutant_rc": 1,
     "first_fail": "W7 other chain heartbeat is rejected and the victim is killed after the startup grace",
     "want": "W7 other chain heartbeat is rejected and the victim is killed after the startup grace",
-    "seconds": 59.3
+    "seconds": 74.6
   },
   "watchdog_bool_heartbeat_accepted": {
     "status": "CAUGHT",
@@ -45,15 +45,7 @@
     "mutant_rc": 1,
     "first_fail": "W8b bool heartbeat is rejected and the victim is killed after the startup grace",
     "want": "W8b bool heartbeat is rejected and the victim is killed after the startup grace",
-    "seconds": 34.5
-  },
-  "watchdog_log_failure_blocks_kill": {
-    "status": "CAUGHT",
-    "group": "watchdog",
-    "mutant_rc": 1,
-    "first_fail": "W9 unwritable log does not block the kill",
-    "want": "W9 unwritable log does not block the kill",
-    "seconds": 29.7
+    "seconds": 49.6
   },
   "watchdog_access_denied_midrun_is_ended": {
     "status": "CAUGHT",
@@ -61,7 +53,7 @@
     "mutant_rc": 1,
     "first_fail": "W11 AccessDenied after start becomes blind exit 6 (never reported as ended by itself)",
     "want": "W11 AccessDenied after start becomes blind exit 6 (never reported as ended by itself)",
-    "seconds": 29.7
+    "seconds": 45.2
   },
   "watchdog_access_denied_start_not_blind": {
     "status": "CAUGHT",
@@ -69,15 +61,7 @@
     "mutant_rc": 1,
     "first_fail": "W10 AccessDenied at start is BLIND exit 6",
     "want": "W10 AccessDenied at start is BLIND exit 6",
-    "seconds": 30.5
-  },
-  "watchdog_receipt_not_written": {
-    "status": "CAUGHT",
-    "group": "watchdog",
-    "mutant_rc": 1,
-    "first_fail": "W2 hung victim killed by stale heartbeat",
-    "want": "W2 hung victim killed by stale heartbeat",
-    "seconds": 32.7
+    "seconds": 45.8
   },
   "watchdog_stale_rule_removed": {
     "status": "CAUGHT",
@@ -85,7 +69,7 @@
     "mutant_rc": 1,
     "first_fail": "W2 hung victim killed by stale heartbeat",
     "want": "W2 hung victim killed by stale heartbeat",
-    "seconds": 87.8
+    "seconds": 102.8
   },
   "watchdog_survivors_not_force_killed": {
     "status": "CAUGHT",
@@ -93,7 +77,7 @@
     "mutant_rc": 1,
     "first_fail": "W15 descendant seen before the kill is reported and force-killed when it survives",
     "want": "W15 descendant seen before the kill is reported and force-killed when it survives",
-    "seconds": 32.2
+    "seconds": 49.9
   },
   "watchdog_identity_not_checked_at_start": {
     "status": "CAUGHT",
@@ -101,7 +85,7 @@
     "mutant_rc": 1,
     "first_fail": "W13 wrong creation time signals nothing",
     "want": "W13 wrong creation time signals nothing",
-    "seconds": 30.1
+    "seconds": 45.7
   },
   "watchdog_nan_args_accepted": {
     "status": "CAUGHT",
@@ -109,15 +93,7 @@
     "mutant_rc": 1,
     "first_fail": "W14a NaN stale is a bad argument and signals nothing",
     "want": "W14a NaN stale is a bad argument and signals nothing",
-    "seconds": 30.4
-  },
-  "watchdog_ready_not_published": {
-    "status": "CAUGHT",
-    "group": "watchdog",
-    "mutant_rc": 1,
-    "first_fail": "W1 READY file carries chain, watchdog hash and gate identity",
-    "want": "W1 READY file carries chain, watchdog hash and gate identity",
-    "seconds": 33.0
+    "seconds": 45.7
   },
   "gate_observer_mode_unchecked": {
     "status": "CAUGHT",
@@ -125,7 +101,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'observer attended' -> HOLD_CONTRACT observer_mode_not_unattended, no work",
     "want": "G2 contract row 'observer attended' -> HOLD_CONTRACT observer_mode_not_unattended, no work",
-    "seconds": 30.8
+    "seconds": 68.7
   },
   "gate_contract_version_unchecked": {
     "status": "CAUGHT",
@@ -133,7 +109,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'contract version' -> HOLD_CONTRACT contract_version, no work",
     "want": "G2 contract row 'contract version' -> HOLD_CONTRACT contract_version, no work",
-    "seconds": 30.7
+    "seconds": 68.5
   },
   "gate_approval_digest_unchecked": {
     "status": "CAUGHT",
@@ -141,7 +117,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'approval digest' -> HOLD_CONTRACT approval_digest, no work",
     "want": "G2 contract row 'approval digest' -> HOLD_CONTRACT approval_digest, no work",
-    "seconds": 30.7
+    "seconds": 68.5
   },
   "gate_expiry_unchecked": {
     "status": "CAUGHT",
@@ -149,7 +125,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'approval expired' -> HOLD_CONTRACT approval_expired, no work",
     "want": "G2 contract row 'approval expired' -> HOLD_CONTRACT approval_expired, no work",
-    "seconds": 30.8
+    "seconds": 68.7
   },
   "gate_gate_hash_unchecked": {
     "status": "CAUGHT",
@@ -157,7 +133,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'gate hash' -> HOLD_CONTRACT gate_file_hash, no work",
     "want": "G2 contract row 'gate hash' -> HOLD_CONTRACT gate_file_hash, no work",
-    "seconds": 30.7
+    "seconds": 68.3
   },
   "gate_watchdog_hash_unchecked": {
     "status": "CAUGHT",
@@ -165,7 +141,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'watchdog hash' -> HOLD_CONTRACT watchdog_file_hash, no work",
     "want": "G2 contract row 'watchdog hash' -> HOLD_CONTRACT watchdog_file_hash, no work",
-    "seconds": 30.7
+    "seconds": 68.6
   },
   "gate_bundle_list_unchecked": {
     "status": "CAUGHT",
@@ -173,7 +149,7 @@
     "mutant_rc": 1,
     "first_fail": "G2 contract row 'bundle list hash' -> HOLD_CONTRACT bundle_list_hash, no work",
     "want": "G2 contract row 'bundle list hash' -> HOLD_CONTRACT bundle_list_hash, no work",
-    "seconds": 31.7
+    "seconds": 69.5
   },
   "gate_ready_gate_pid_unchecked": {
     "status": "CAUGHT",
@@ -181,7 +157,7 @@
     "mutant_rc": 1,
     "first_fail": "G3 READY with wrong gate pid is refused (ready_gate_identity), no work",
     "want": "G3 READY with wrong gate pid is refused (ready_gate_identity), no work",
-    "seconds": 28.7
+    "seconds": 66.5
   },
   "gate_ready_watchdog_hash_unchecked": {
     "status": "CAUGHT",
@@ -189,7 +165,7 @@
     "mutant_rc": 1,
     "first_fail": "G3 READY with wrong watchdog hash is refused (ready_watchdog_hash), no work",
     "want": "G3 READY with wrong watchdog hash is refused (ready_watchdog_hash), no work",
-    "seconds": 28.9
+    "seconds": 66.0
   },
   "gate_ready_params_unchecked": {
     "status": "CAUGHT",
@@ -197,7 +173,7 @@
     "mutant_rc": 1,
     "first_fail": "G3 READY with wrong hard deadline is refused (ready_param_hard_deadline_epoch), no work",
     "want": "G3 READY with wrong hard deadline is refused (ready_param_hard_deadline_epoch), no work",
-    "seconds": 26.7
+    "seconds": 64.5
   },
   "gate_ready_freshness_unchecked": {
     "status": "CAUGHT",
@@ -205,7 +181,7 @@
     "mutant_rc": 1,
     "first_fail": "G3 READY with wrong old file is refused (ready_not_fresh), no work",
     "want": "G3 READY with wrong old file is refused (ready_not_fresh), no work",
-    "seconds": 28.7
+    "seconds": 66.4
   },
   "gate_ready_watchdog_identity_unchecked": {
     "status": "CAUGHT",
@@ -213,15 +189,7 @@
     "mutant_rc": 1,
     "first_fail": "G3 READY with wrong watchdog ct wrong is refused (ready_watchdog_not_alive), no work",
     "want": "G3 READY with wrong watchdog ct wrong is refused (ready_watchdog_not_alive), no work",
-    "seconds": 28.7
-  },
-  "gate_ready_program_unchecked": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G3 READY from a process that is not running the watchdog program is refused",
-    "want": "G3 READY from a process that is not running the watchdog program is refused",
-    "seconds": 28.7
+    "seconds": 66.9
   },
   "gate_does_not_wait_for_ready": {
     "status": "CAUGHT",
@@ -229,95 +197,7 @@
     "mutant_rc": 1,
     "first_fail": "G1 no READY file: gate exits 6 NOT_READY quickly",
     "want": "G1 no READY file: gate exits 6 NOT_READY quickly",
-    "seconds": 29.7
-  },
-  "gate_monitor_not_started": {
-    "status": "NOT_CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G4 valid READY: prelaunch then run, DONE rc 0",
-    "want": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
-    "seconds": 116.8
-  },
-  "gate_monitor_does_not_write_stop": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
-    "want": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
-    "seconds": 115.4
-  },
-  "gate_monitor_no_hard_exit": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G6 supervisor ignoring STOP -> hard exit hook called with 70 after the grace",
-    "want": "G6 supervisor ignoring STOP -> hard exit hook called with 70 after the grace",
-    "seconds": 29.7
-  },
-  "gate_monitor_stale_unchecked": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G7 watcher alive but heartbeat frozen -> STOP, rc 71 with watcher_heartbeat_stale",
-    "want": "G7 watcher alive but heartbeat frozen -> STOP, rc 71 with watcher_heartbeat_stale",
-    "seconds": 56.5
-  },
-  "gate_monitor_bad_state_ignored": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G8 watcher reporting BLIND -> STOP, rc 71 with watcher_state_BLIND",
-    "want": "G8 watcher reporting BLIND -> STOP, rc 71 with watcher_state_BLIND",
-    "seconds": 32.8
-  },
-  "gate_inner_stays_unattended": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G4 inner manifest is attended-shaped and bound to the outer digest",
-    "want": "G4 inner manifest is attended-shaped and bound to the outer digest",
-    "seconds": 29.7
-  },
-  "gate_inner_not_bound_to_outer": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G4 inner manifest is attended-shaped and bound to the outer digest",
-    "want": "G4 inner manifest is attended-shaped and bound to the outer digest",
-    "seconds": 29.7
-  },
-  "gate_runs_after_no_go": {
-    "status": "CAUGHT",
-    "group": "gate",
-    "mutant_rc": 1,
-    "first_fail": "G5 prelaunch NO_GO stops before run, rc 42",
-    "want": "G5 prelaunch NO_GO stops before run, rc 42",
-    "seconds": 29.7
-  },
-  "launcher_watchdog_hash_unchecked": {
-    "status": "CAUGHT",
-    "group": "process",
-    "mutant_rc": 1,
-    "first_fail": "P6 hash mismatch against the manifest: exit 4, nothing started, no watch dir",
-    "want": "P6 hash mismatch against the manifest: exit 4, nothing started, no watch dir",
-    "seconds": 25.2
-  },
-  "launcher_existing_watch_dir_accepted": {
-    "status": "CAUGHT",
-    "group": "process",
-    "mutant_rc": 1,
-    "first_fail": "P7 existing watch dir: exit 4, nothing started",
-    "want": "P7 existing watch dir: exit 4, nothing started",
-    "seconds": 25.1
-  },
-  "launcher_no_cleanup_on_abort": {
-    "status": "CAUGHT",
-    "group": "process",
-    "mutant_rc": 1,
-    "first_fail": "P5 the gate it created is gone and no GPU-side marker exists",
-    "want": "P5 the gate it created is gone and no GPU-side marker exists",
-    "seconds": 35.1
+    "seconds": 66.7
   },
   "gate_monitor_check_disabled": {
     "status": "CAUGHT",
@@ -325,6 +205,262 @@
     "mutant_rc": 1,
     "first_fail": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
     "want": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
-    "seconds": 115.4
+    "seconds": 340.9
+  },
+  "gate_monitor_does_not_write_stop": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
+    "want": "G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
+    "seconds": 340.9
+  },
+  "gate_monitor_no_hard_exit": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G6 supervisor ignoring STOP -> hard exit hook called with 70 after the grace",
+    "want": "G6 supervisor ignoring STOP -> hard exit hook called with 70 after the grace",
+    "seconds": 67.5
+  },
+  "gate_monitor_stale_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G7 watcher alive but heartbeat frozen -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G7 watcher alive but heartbeat frozen -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 281.9
+  },
+  "gate_inner_stays_unattended": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G4 inner manifest is attended-shaped and bound to the outer digest",
+    "want": "G4 inner manifest is attended-shaped and bound to the outer digest",
+    "seconds": 67.3
+  },
+  "gate_inner_not_bound_to_outer": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G4 inner manifest is attended-shaped and bound to the outer digest",
+    "want": "G4 inner manifest is attended-shaped and bound to the outer digest",
+    "seconds": 66.9
+  },
+  "gate_runs_after_no_go": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G5 prelaunch NO_GO stops before run, rc 42",
+    "want": "G5 prelaunch NO_GO stops before run, rc 42",
+    "seconds": 67.3
+  },
+  "watchdog_receipt_not_written": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W2 hung victim killed by stale heartbeat",
+    "want": "W2 hung victim killed by stale heartbeat",
+    "seconds": 49.4
+  },
+  "watchdog_ready_not_published": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W1 READY file carries chain, watchdog hash and gate identity",
+    "want": "W1 READY file carries chain, watchdog hash and gate identity",
+    "seconds": 49.9
+  },
+  "watchdog_status_read_in_decision_thread": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W23 hung status read: victim still killed within seconds (io_stalled or startup grace)",
+    "want": "W23 hung status read: victim still killed within seconds (io_stalled or startup grace)",
+    "seconds": 132.1
+  },
+  "watchdog_heartbeat_write_in_decision_thread": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W24 hung heartbeat write: victim still killed (io_stalled), receipt written",
+    "want": "W24 hung heartbeat write: victim still killed (io_stalled), receipt written",
+    "seconds": 78.5
+  },
+  "watchdog_io_stall_rule_removed": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W24 hung heartbeat write: victim still killed (io_stalled), receipt written",
+    "want": "W24 hung heartbeat write: victim still killed (io_stalled), receipt written",
+    "seconds": 46.4
+  },
+  "watchdog_unverified_family_reported_empty": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "want": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "seconds": 45.8
+  },
+  "watchdog_identity_denied_ignored": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W19 identity AccessDenied after the snapshot: no signal, never 'family_empty', exit 2",
+    "want": "W19 identity AccessDenied after the snapshot: no signal, never 'family_empty', exit 2",
+    "seconds": 45.8
+  },
+  "watchdog_forced_kill_without_reverify": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W25 pid taken over between classification and signal: identity re-verified, nothing signalled",
+    "want": "W25 pid taken over between classification and signal: identity re-verified, nothing signalled",
+    "seconds": 45.6
+  },
+  "watchdog_unreadable_snapshot_is_empty": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W20 unreadable descendant listing is UNVERIFIED (not empty), exit 2",
+    "want": "W20 unreadable descendant listing is UNVERIFIED (not empty), exit 2",
+    "seconds": 45.7
+  },
+  "watchdog_unknown_creation_time_descendant_signalled": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "want": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "seconds": 47.8
+  },
+  "watchdog_snapshot_incomplete_not_flagged": {
+    "status": "CAUGHT",
+    "group": "watchdog",
+    "mutant_rc": 1,
+    "first_fail": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "want": "W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+    "seconds": 45.6
+  },
+  "gate_watch_dir_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G2 CLI watch dir differs from the approved watch dir -> HOLD_CONTRACT, no work",
+    "want": "G2 CLI watch dir differs from the approved watch dir -> HOLD_CONTRACT, no work",
+    "seconds": 68.5
+  },
+  "gate_final_bound_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G2 contract row 'final deadline margin' -> HOLD_CONTRACT final_deadline_margin, no work",
+    "want": "G2 contract row 'final deadline margin' -> HOLD_CONTRACT final_deadline_margin, no work",
+    "seconds": 68.2
+  },
+  "gate_approval_scope_basis_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G2 contract row 'approval wrong scope' -> HOLD_CONTRACT approval_scope_or_basis, no work",
+    "want": "G2 contract row 'approval wrong scope' -> HOLD_CONTRACT approval_scope_or_basis, no work",
+    "seconds": 70.8
+  },
+  "gate_argv_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G3 watchdog command line with a different program is refused (ready_watchdog_argv_mismatch), no work",
+    "want": "G3 watchdog command line with a different program is refused (ready_watchdog_argv_mismatch), no work",
+    "seconds": 54.2
+  },
+  "gate_monitor_chain_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G10 heartbeat of another chain is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G10 heartbeat of another chain is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 93.8
+  },
+  "gate_monitor_pids_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G11 heartbeat from another watcher pid is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G11 heartbeat from another watcher pid is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 120.9
+  },
+  "gate_monitor_creation_time_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G15 foreign watcher creation time is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G15 foreign watcher creation time is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 94.3
+  },
+  "gate_monitor_seq_type_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G14 non-integer seq is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G14 non-integer seq is never progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 94.0
+  },
+  "gate_monitor_seq_monotonic_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G13 non-monotonic seq (2,3,2,3,...) stops being progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "want": "G13 non-monotonic seq (2,3,2,3,...) stops being progress -> STOP, rc 71 with watcher_heartbeat_stale",
+    "seconds": 93.6
+  },
+  "gate_monitor_state_unchecked": {
+    "status": "CAUGHT",
+    "group": "gate",
+    "mutant_rc": 1,
+    "first_fail": "G8 watcher reporting BLIND -> STOP, rc 71 with watcher_state_BLIND",
+    "want": "G8 watcher reporting BLIND -> STOP, rc 71 with watcher_state_BLIND",
+    "seconds": 70.8
+  },
+  "launcher_accepts_ready_file_as_success": {
+    "status": "CAUGHT",
+    "group": "process",
+    "mutant_rc": 1,
+    "first_fail": "P11 gate refuses after READY (NO_GO): launcher waits for it, exit 5, LAUNCH_ABORTED",
+    "want": "P11 gate refuses after READY (NO_GO): launcher waits for it, exit 5, LAUNCH_ABORTED",
+    "seconds": 26.7
+  },
+  "launcher_kills_by_pid_lookup": {
+    "status": "CAUGHT",
+    "group": "process",
+    "mutant_rc": 1,
+    "first_fail": "P10 cleanup kills through the held handle only, never by pid lookup; decoy with that pid untouched",
+    "want": "P10 cleanup kills through the held handle only, never by pid lookup; decoy with that pid untouched",
+    "seconds": 28.5
+  },
+  "launcher_watchdog_hash_unchecked": {
+    "status": "CAUGHT",
+    "group": "process",
+    "mutant_rc": 1,
+    "first_fail": "P6 hash mismatch against the manifest: exit 4, nothing started, no watch dir",
+    "want": "P6 hash mismatch against the manifest: exit 4, nothing started, no watch dir",
+    "seconds": 28.7
+  },
+  "launcher_existing_watch_dir_accepted": {
+    "status": "CAUGHT",
+    "group": "process",
+    "mutant_rc": 1,
+    "first_fail": "P7 existing watch dir: exit 4, nothing started",
+    "want": "P7 existing watch dir: exit 4, nothing started",
+    "seconds": 28.4
+  },
+  "launcher_no_cleanup_on_abort": {
+    "status": "CAUGHT",
+    "group": "process",
+    "mutant_rc": 1,
+    "first_fail": "P5 the gate it created is gone and no GPU-side marker exists",
+    "want": "P5 the gate it created is gone and no GPU-side marker exists",
+    "seconds": 39.4
   }
 }

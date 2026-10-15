@@ -1,0 +1,1 @@
+{"chain_id": "s2-stage0-a3-urehearse-20261015-104017", "ended_epoch": 1792028418.0240662, "exit_code": 42, "gate_pid": 124152, "ready_seen_epoch": 1792028417.3142111, "started_epoch": 1792028417.2997813, "state": "DONE", "verdict": {"reasons": ["rehearsal_no_isaac_started"], "verdict": "HOLD"}}

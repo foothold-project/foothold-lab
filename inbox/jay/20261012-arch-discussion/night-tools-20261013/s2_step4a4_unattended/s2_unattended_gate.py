@@ -25,7 +25,8 @@ from pathlib import Path
 import psutil
 
 FINAL_DEADLINE_EPOCH = 1792206000
-BAD_WATCHER_STATES = {"BLIND", "BAD_ARGS", "KILL_DENIED", "TRIGGERED"}
+APPROVAL_SCOPE = "unattended_stage0_information_only"
+FINAL_MARGIN_S = 30.0
 REQUIRED_BLOCK = ("gate_path", "gate_sha256", "watchdog_path", "watchdog_sha256", "launcher_path",
                   "launcher_sha256", "bundle_dir", "bundle_list_sha256", "watch_dir", "ready_timeout_s",
                   "stale_after_s", "startup_grace_s", "poll_s", "mono_budget_s", "hard_deadline_extra_s",
@@ -87,7 +88,7 @@ def verify_bundle_list(bundle_dir: Path, expected_list_sha256: str):
         raise GateHold("bundle_list_empty")
 
 
-def check_contract(outer, approval, now: float, *, gate_file: Path, watchdog_file: Path):
+def check_contract(outer, approval, now: float, *, gate_file: Path, watchdog_file: Path, watch_dir: Path):
     if not isinstance(outer, dict) or not isinstance(approval, dict):
         raise GateHold("not_objects")
     if outer.get("contract_version") != "a4u":
@@ -101,6 +102,11 @@ def check_contract(outer, approval, now: float, *, gate_file: Path, watchdog_fil
         raise GateHold("approval_missing")
     if approval.get("manifest_sha256") != sha_of(outer):
         raise GateHold("approval_digest")
+    basis = approval.get("decision_basis")
+    if approval.get("scope") != APPROVAL_SCOPE or not isinstance(basis, dict) or not basis.get("verdict_file") \
+            or not isinstance(basis.get("verdict_sha256"), str) or len(basis["verdict_sha256"]) != 64 \
+            or not basis.get("verdict_line"):
+        raise GateHold("approval_scope_or_basis")
     exp = approval.get("expires_epoch")
     deadline = outer.get("deadline_epoch")
     if not finite_number(exp) or not finite_number(deadline) or exp <= now or deadline > exp:
@@ -124,8 +130,33 @@ def check_contract(outer, approval, now: float, *, gate_file: Path, watchdog_fil
     launcher = Path(block["launcher_path"])
     if not launcher.is_file() or file_sha256(launcher) != block["launcher_sha256"]:
         raise GateHold("launcher_file_hash")
+    if Path(watch_dir).resolve() != Path(block["watch_dir"]).resolve():
+        raise GateHold("watch_dir_differs_from_approved")
+    if not final_bound_ok(outer, block):
+        raise GateHold("final_deadline_margin")
     verify_bundle_list(Path(block["bundle_dir"]), block["bundle_list_sha256"])
     return block
+
+
+def expected_watchdog_argv(outer, block, *, gate_pid, gate_create_time):
+    """The exact command line the launcher gives the watchdog. The launcher builds it from this
+    function and the gate compares the running watchdog's real command line against it."""
+    hard = float(outer["deadline_epoch"]) + float(block["hard_deadline_extra_s"])
+    watch = str(block["watch_dir"])
+    return [str(outer["python_path"]), "-B", str(block["watchdog_path"]), "--pid", str(gate_pid),
+            "--create-time", repr(float(gate_create_time)), "--chain-id", str(outer["chain_id"]),
+            "--status-path", str(outer["status_path"]), "--watch-dir", watch,
+            "--hard-deadline-epoch", repr(hard), "--mono-budget-s", repr(float(block["mono_budget_s"])),
+            "--stale-after-s", repr(float(block["stale_after_s"])),
+            "--startup-grace-s", repr(float(block["startup_grace_s"])),
+            "--poll-s", repr(float(block["poll_s"])), "--log", str(Path(watch) / "watchdog.log")]
+
+
+def final_bound_ok(outer, block) -> bool:
+    """The latest moment anything of this run can still be alive (hard deadline + stop grace + margin)
+    must itself be before the final deadline; the margin is taken off the front, not extended."""
+    return (outer["deadline_epoch"] + block["hard_deadline_extra_s"] + block["stop_grace_s"]
+            + FINAL_MARGIN_S <= FINAL_DEADLINE_EPOCH)
 
 
 def derive_inner(outer, approval):
@@ -153,7 +184,7 @@ def _norm(path) -> str:
     return str(path).replace("\\", "/").lower()
 
 
-def check_ready(ready, outer, block, *, own_pid, own_create_time, now, process_factory, watchdog_file):
+def check_ready(ready, outer, block, *, own_pid, own_create_time, now, process_factory):
     if not isinstance(ready, dict):
         return "ready_not_object"
     expected_hard = outer["deadline_epoch"] + block["hard_deadline_extra_s"]
@@ -177,17 +208,18 @@ def check_ready(ready, outer, block, *, own_pid, own_create_time, now, process_f
         wproc = process_factory(wpid)
         if identity_state(wproc, wct) != "match":
             return "ready_watchdog_not_alive"
-        cmdline = " ".join(wproc.cmdline())
+        argv = wproc.cmdline()
     except psutil.NoSuchProcess:
         return "ready_watchdog_not_alive"
     except psutil.AccessDenied:
         return "ready_watchdog_unreadable"
-    if _norm(watchdog_file) not in _norm(cmdline):
-        return "ready_watchdog_wrong_program"
+    expected = expected_watchdog_argv(outer, block, gate_pid=own_pid, gate_create_time=ready["gate_create_time"])
+    if len(argv) != len(expected) or any(_norm(a) != _norm(b) for a, b in zip(argv, expected)):
+        return "ready_watchdog_argv_mismatch"
     return None
 
 
-def wait_ready(outer, block, *, watch_dir: Path, watchdog_file: Path, own_pid: int, now, mono, sleep, process_factory):
+def wait_ready(outer, block, *, watch_dir: Path, own_pid: int, now, mono, sleep, process_factory):
     own_ct = process_factory(own_pid).create_time()
     stop_at = mono() + block["ready_timeout_s"]
     last = "no_ready_file"
@@ -195,7 +227,7 @@ def wait_ready(outer, block, *, watch_dir: Path, watchdog_file: Path, own_pid: i
         try:
             ready = json.loads((watch_dir / "ready.json").read_text(encoding="utf-8"))
             problem = check_ready(ready, outer, block, own_pid=own_pid, own_create_time=own_ct, now=now(),
-                                  process_factory=process_factory, watchdog_file=watchdog_file)
+                                  process_factory=process_factory)
             if problem is None:
                 return ready
             last = problem
@@ -217,7 +249,16 @@ class WatcherMonitor(threading.Thread):
         self.mono, self.die, self.poll_s = mono, die, poll_s
         self.halt = threading.Event()
         self.problem = None
-        self.last_seq, self.last_change = None, mono()
+        self.last_seq, self.last_change = ready.get("seq", 0), mono()
+
+    def valid_heartbeat(self, hb) -> bool:
+        """Only a heartbeat of THIS chain from THIS watcher, with an integer seq, counts as input."""
+        r = self.ready
+        return (isinstance(hb, dict) and hb.get("chain_id") == r["chain_id"]
+                and hb.get("watchdog_pid") == r["watchdog_pid"] and hb.get("gate_pid") == r["gate_pid"]
+                and finite_number(hb.get("watchdog_create_time"))
+                and abs(hb["watchdog_create_time"] - r["watchdog_create_time"]) <= 0.05
+                and type(hb.get("seq")) is int and hb["seq"] > 0 and isinstance(hb.get("state"), str))
 
     def check(self):
         try:
@@ -233,11 +274,11 @@ class WatcherMonitor(threading.Thread):
             hb = json.loads((self.watch_dir / "watchdog_hb.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             hb = None
-        if isinstance(hb, dict):
-            if hb.get("state") in BAD_WATCHER_STATES:
-                return "watcher_state_" + str(hb.get("state"))
-            if hb.get("seq") != self.last_seq:
-                self.last_seq, self.last_change = hb.get("seq"), self.mono()
+        if self.valid_heartbeat(hb):
+            if hb["state"] != "WATCHING":
+                return "watcher_state_" + str(hb["state"])
+            if hb["seq"] > self.last_seq:
+                self.last_seq, self.last_change = hb["seq"], self.mono()
         if self.mono() - self.last_change > self.stale_s:
             return "watcher_heartbeat_stale"
         return None
@@ -274,13 +315,14 @@ def run_gate(outer, approval, *, watch_dir, gate_file, watchdog_file, prelaunch_
         return code
 
     try:
-        block = check_contract(outer, approval, now(), gate_file=Path(gate_file), watchdog_file=Path(watchdog_file))
+        block = check_contract(outer, approval, now(), gate_file=Path(gate_file), watchdog_file=Path(watchdog_file),
+                               watch_dir=watch_dir)
     except GateHold as ex:
         return finish("HOLD_CONTRACT", 5, reason=str(ex))
     except Exception as ex:
         return finish("HOLD_CONTRACT", 5, reason="exception:" + repr(ex))
     try:
-        ready = wait_ready(outer, block, watch_dir=watch_dir, watchdog_file=Path(watchdog_file), own_pid=own_pid,
+        ready = wait_ready(outer, block, watch_dir=watch_dir, own_pid=own_pid,
                            now=now, mono=mono, sleep=sleep, process_factory=process_factory)
     except GateHold as ex:
         return finish("NOT_READY", 6, reason=str(ex))

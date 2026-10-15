@@ -53,7 +53,7 @@ def main():
     while time.time() < end and not marker.exists():
         time.sleep(0.2)
     rec = T.wait_file(base / "watch" / "launch_record.json", 5)
-    check("S1 launcher finished and wrote LAUNCHED", marker.exists() and bool(rec) and rec["state"] == "LAUNCHED")
+    check("S1 launcher finished and wrote LAUNCHED", marker.exists() and bool(rec) and rec["state"] in ("RUNNING", "FINISHED_OK"))
     subprocess.run(["taskkill", "/F", "/T", "/PID", str(g.pid)], capture_output=True)
     time.sleep(1.0)
     check("S2 the grandparent (session shell stand-in) is gone after the tree kill", g.poll() is not None)

@@ -1,20 +1,25 @@
-"""Independent hard-deadline watchdog v2 for the unattended gate (separate process).
+"""Independent hard-deadline watchdog v2 (revision r2, after ASTRA 17z) for the unattended gate.
 
-Written by lead 2026-10-15 for ASTRA review against the VERIFY-astra-17x section 3 list:
-  1 READY handshake: ready.json is written only after args, identity and the watch dir are
-    proven; the gate does no GPU work before it sees a matching READY.
-  2 identity: the watched process is (pid, create_time) from the launcher; heartbeat must carry
-    the same chain_id; every poll rewrites watchdog_hb.json so the gate can check this watcher.
+Separate process from the gate it watches. Requirements (VERIFY-astra-17x section 3) and the 17z fixes:
+  1 READY handshake: ready.json is written only after args, identity and the watch dir are proven.
+  2 identity: the watched process is (pid, create_time) from the launcher; the status heartbeat must
+    carry the same chain_id; every poll rewrites watchdog_hb.json so the gate can check this watcher.
   3 deadlines: absolute wall clock AND a monotonic budget measured from watcher start.
-  4 heartbeat input: NaN / Inf / non-number / future-dated / wrong chain are rejected and never
-    count as progress. Staleness is "no new valid heartbeat value for stale_after_s monotonic".
-  5 logging never blocks the kill (every write is best effort).
-  6 AccessDenied is "blind", never "ended by itself". Blind too long exits 6 and says so.
-  7 a kill leaves kill_receipt.json (reason, descendants seen before the kill, survivors) and
-    exits 2 if any identified family member survives.
-Exit codes: 0 watched process ended by itself or was ended here with an empty family;
-2 kill failed or family survivors; 3 identity mismatch at start; 4 bad arguments;
-6 blind (cannot read the watched process) ; 7 cannot publish READY.
+  4 heartbeat input: NaN / Inf / non-number / future-dated / wrong chain are never progress.
+    Staleness = no new valid heartbeat value for stale_after_s (monotonic).
+  5 file I/O (status read, heartbeat write, log) runs in a worker thread. The deciding thread never
+    waits on a disk call, so a hung or failing disk can delay a log but not a kill; if the worker
+    stops finishing cycles for stale_after_s the watchdog treats the run as unobservable and kills.
+  6 AccessDenied is "blind", never "ended by itself". Blind too long exits 6.
+  7 identity is never guessed (17z P1): a process whose creation time was not read, or cannot be read
+    now, is UNVERIFIED. It is never signalled and it makes family_empty false. Only the gate
+    process (verified before the signal) and descendants whose (pid, create_time) matched at the
+    snapshot and still match right before the signal are ever killed here.
+  8 kill_receipt.json records reason, descendants seen before the kill, survivors, unverified ones and
+    family_status = empty | survivors | unverified. Exit 2 unless the family is proven empty.
+Exit codes: 0 watched process ended by itself, or was ended here and its family proven empty;
+2 kill failed / family survivors / family unverified; 3 identity mismatch at start; 4 bad arguments;
+6 blind (cannot read the watched process); 7 cannot publish READY.
 """
 from __future__ import annotations
 
@@ -24,6 +29,7 @@ import json
 import math
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -38,13 +44,11 @@ def finite_number(x) -> bool:
 
 
 def safe_log(path, **event) -> bool:
-    """Append one JSON line. Never raises: a broken log must not stop a kill."""
+    """Append one JSON line. Never raises."""
     try:
         event["epoch"] = time.time()
         with Path(path).open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
-            stream.flush()
-            os.fsync(stream.fileno())
         return True
     except Exception:
         return False
@@ -56,7 +60,7 @@ def atomic_write(path, value) -> bool:
         target = Path(path)
         tmp = target.with_name(target.name + ".tmp")
         tmp.write_text(json.dumps(value, sort_keys=True, allow_nan=False), encoding="utf-8")
-        for attempt in range(50):
+        for _ in range(50):
             try:
                 os.replace(tmp, target)
                 return True
@@ -65,6 +69,22 @@ def atomic_write(path, value) -> bool:
         return False
     except Exception:
         return False
+
+
+def bounded_call(fn, timeout: float = 10.0) -> bool:
+    """Run a disk call in a daemon thread; give up after `timeout`. True when it finished."""
+    box = {}
+
+    def runner():
+        try:
+            box["ok"] = fn()
+        except Exception:
+            box["ok"] = False
+
+    th = threading.Thread(target=runner, daemon=True)
+    th.start()
+    th.join(timeout)
+    return not th.is_alive() and bool(box.get("ok", True))
 
 
 def file_sha256(path) -> str:
@@ -103,32 +123,43 @@ def read_status(path, chain_id, now):
 
 
 def descendants_snapshot(proc):
-    """[(pid, create_time)] of every descendant seen right now, or None when it cannot be read."""
+    """([(pid, create_time_or_None)], complete). complete is False when the listing or any creation
+    time could not be read: those descendants are UNVERIFIED and must never be signalled."""
     try:
         children = proc.children(recursive=True)
     except (psutil.NoSuchProcess, psutil.AccessDenied):
-        return None
-    rows = []
+        return None, False
+    rows, complete = [], True
     for child in children:
         try:
             rows.append((child.pid, child.create_time()))
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            rows.append((child.pid, None))
-    return rows
-
-
-def survivors(rows, process_factory):
-    alive = []
-    for pid, ct in rows or []:
-        try:
-            p = process_factory(pid)
-            if ct is None or identity_state(p, ct) == "match":
-                alive.append((pid, ct))
         except psutil.NoSuchProcess:
             continue
         except psutil.AccessDenied:
+            rows.append((child.pid, None))
+            complete = False
+    return rows, complete
+
+
+def classify(rows, process_factory):
+    """-> (verified_alive, unverified_pids). A pid whose creation time was never read, or cannot be
+    read now, is unverified; a reused pid (different creation time) counts as gone."""
+    alive, unverified = [], []
+    for pid, ct in rows or []:
+        if ct is None:
+            unverified.append(pid)
+            continue
+        try:
+            state = identity_state(process_factory(pid), ct)
+        except psutil.NoSuchProcess:
+            state = "gone"
+        except psutil.AccessDenied:
+            state = "denied"
+        if state == "match":
             alive.append((pid, ct))
-    return alive
+        elif state == "denied":
+            unverified.append(pid)
+    return alive, unverified
 
 
 def check_args(*, stale_after_s, startup_grace_s, poll_s, kill_grace_s, mono_budget_s,
@@ -141,6 +172,50 @@ def check_args(*, stale_after_s, startup_grace_s, poll_s, kill_grace_s, mono_bud
     if not finite_number(hard_deadline_epoch) or hard_deadline_epoch <= clock():
         return "hard_deadline_epoch"
     return None
+
+
+class IoWorker(threading.Thread):
+    """All routine file I/O. The deciding thread only reads `snapshot` and `cycle_mono` under the lock."""
+
+    def __init__(self, *, status_path, chain_id, hb_path, log_path, poll_s, clock, mono):
+        super().__init__(daemon=True)
+        self.status_path, self.chain_id, self.hb_path, self.log_path = status_path, chain_id, hb_path, log_path
+        self.poll_s, self.clock, self.mono = poll_s, clock, mono
+        self.lock = threading.Lock()
+        self.snapshot = (None, None, "not_read_yet", mono())
+        self.cycle_mono = mono()
+        self.pending_beat, self.pending_logs = None, []
+        self.halt = threading.Event()
+
+    def post_beat(self, payload):
+        with self.lock:
+            self.pending_beat = payload
+
+    def post_log(self, **event):
+        with self.lock:
+            self.pending_logs.append(event)
+
+    def read(self):
+        with self.lock:
+            return self.snapshot, self.cycle_mono
+
+    def run(self):
+        while not self.halt.is_set():
+            try:
+                hb, state, why = read_status(self.status_path, self.chain_id, self.clock())
+            except Exception:
+                hb, state, why = None, None, "read_exception"
+            with self.lock:
+                self.snapshot = (hb, state, why, self.mono())
+                beat, logs = self.pending_beat, self.pending_logs
+                self.pending_beat, self.pending_logs = None, []
+            if beat is not None:
+                atomic_write(self.hb_path, beat)
+            for event in logs:
+                safe_log(self.log_path, **event)
+            with self.lock:
+                self.cycle_mono = self.mono()
+            self.halt.wait(self.poll_s)
 
 
 def watch(*, pid: int, create_time: float, chain_id: str, status_path: Path, watch_dir: Path,
@@ -161,32 +236,44 @@ def watch(*, pid: int, create_time: float, chain_id: str, status_path: Path, wat
     except Exception:
         me["watchdog_create_time"] = None
     seq = 0
+    worker = None
 
     def beat(state, **extra):
         nonlocal seq
         seq += 1
-        atomic_write(hb_path, {**me, **extra, "state": state, "seq": seq, "epoch": clock()})
+        payload = {**me, **extra, "state": state, "seq": seq, "epoch": clock()}
+        if worker is not None:
+            worker.post_beat(payload)
+        else:
+            bounded_call(lambda: atomic_write(hb_path, payload), 5.0)
+
+    def log(**event):
+        if worker is not None:
+            worker.post_log(**event)
+        else:
+            bounded_call(lambda: safe_log(log_path, **event), 5.0)
 
     if bad:
-        safe_log(log_path, event="bad_args", field=bad)
+        bounded_call(lambda: safe_log(log_path, event="bad_args", field=bad), 5.0)
         beat("BAD_ARGS", field=bad)
         return EXIT_BAD_ARGS
     try:
         proc = process_factory(pid)
     except psutil.NoSuchProcess:
-        safe_log(log_path, event="watched_not_found_at_start", pid=pid)
+        bounded_call(lambda: safe_log(log_path, event="watched_not_found_at_start", pid=pid), 5.0)
         return EXIT_IDENTITY
     except psutil.AccessDenied:
-        safe_log(log_path, event="watched_blind_at_start", pid=pid)
+        bounded_call(lambda: safe_log(log_path, event="watched_blind_at_start", pid=pid), 5.0)
         beat("BLIND", why="access_denied_at_start")
         return EXIT_BLIND
     start_state = identity_state(proc, create_time)
     if start_state == "denied":
-        safe_log(log_path, event="watched_blind_at_start", pid=pid)
+        bounded_call(lambda: safe_log(log_path, event="watched_blind_at_start", pid=pid), 5.0)
         beat("BLIND", why="access_denied_at_start")
         return EXIT_BLIND
     if start_state != "match":
-        safe_log(log_path, event="identity_mismatch_at_start", pid=pid, expected=create_time, state=start_state)
+        bounded_call(lambda: safe_log(log_path, event="identity_mismatch_at_start", pid=pid,
+                                      expected=create_time, state=start_state), 5.0)
         return EXIT_IDENTITY
     t0_wall, t0_mono = clock(), mono()
     deadline_mono = t0_mono + min(mono_budget_s, hard_deadline_epoch - t0_wall)
@@ -194,31 +281,43 @@ def watch(*, pid: int, create_time: float, chain_id: str, status_path: Path, wat
     ready = {**me, "state": "READY", "seq": seq, "epoch": clock(), "watchdog_sha256": own_sha256,
              "hard_deadline_epoch": hard_deadline_epoch, "mono_budget_s": mono_budget_s,
              "stale_after_s": stale_after_s, "startup_grace_s": startup_grace_s}
-    if not atomic_write(ready_path, ready):
-        safe_log(log_path, event="cannot_publish_ready")
+    if not bounded_call(lambda: atomic_write(ready_path, ready), 10.0):
+        bounded_call(lambda: safe_log(log_path, event="cannot_publish_ready"), 5.0)
         return EXIT_NO_READY
-    safe_log(log_path, event="watchdog_started", pid=pid, create_time=create_time, chain_id=chain_id,
-             hard_deadline_epoch=hard_deadline_epoch, mono_budget_s=mono_budget_s, stale_after_s=stale_after_s)
+    worker = IoWorker(status_path=status_path, chain_id=chain_id, hb_path=hb_path, log_path=log_path,
+                      poll_s=poll_s, clock=clock, mono=mono)
+    worker.start()
+    log(event="watchdog_started", pid=pid, create_time=create_time, chain_id=chain_id,
+        hard_deadline_epoch=hard_deadline_epoch, mono_budget_s=mono_budget_s, stale_after_s=stale_after_s)
     last_hb, last_progress_mono, ever_valid = None, t0_mono, False
     blind_since = None
     reason = None
+
+    def finish(code):
+        worker.halt.set()
+        worker.join(2.0)
+        return code
+
     while reason is None:
         now, m = clock(), mono()
         state = identity_state(proc, create_time)
         if state == "gone":
-            safe_log(log_path, event="watched_ended_by_itself")
+            log(event="watched_ended_by_itself")
             beat("ENDED")
-            return EXIT_OK
+            sleep(poll_s * 2)
+            return finish(EXIT_OK)
         if state == "mismatch":
-            safe_log(log_path, event="watched_identity_changed_no_signal")
+            log(event="watched_identity_changed_no_signal")
             beat("ENDED", why="identity_changed")
-            return EXIT_OK
+            sleep(poll_s * 2)
+            return finish(EXIT_OK)
         if state == "denied":
             blind_since = m if blind_since is None else blind_since
             beat("BLIND", why="access_denied", blind_s=m - blind_since)
             if m - blind_since > blind_limit_s:
-                safe_log(log_path, event="blind_too_long")
-                return EXIT_BLIND
+                log(event="blind_too_long")
+                sleep(poll_s * 2)
+                return finish(EXIT_BLIND)
         else:
             blind_since = None
             try:
@@ -228,16 +327,19 @@ def watch(*, pid: int, create_time: float, chain_id: str, status_path: Path, wat
             except psutil.AccessDenied:
                 running = True
             if not running:
-                safe_log(log_path, event="watched_ended_by_itself")
+                log(event="watched_ended_by_itself")
                 beat("ENDED")
-                return EXIT_OK
-        hb, _hb_state, why = read_status(status_path, chain_id, now)
+                sleep(poll_s * 2)
+                return finish(EXIT_OK)
+        (hb, _hb_state, why, obs_mono), cycle_mono = worker.read()
         if hb is not None and hb != last_hb:
-            last_hb, last_progress_mono, ever_valid = hb, m, True
+            last_hb, last_progress_mono, ever_valid = hb, obs_mono, True
         if now >= hard_deadline_epoch:
             reason = "hard_deadline"
         elif m >= deadline_mono:
             reason = "mono_deadline"
+        elif m - cycle_mono > stale_after_s:
+            reason = "io_stalled"
         elif not ever_valid and m - t0_mono > startup_grace_s:
             reason = "no_valid_status_after_startup_grace"
         elif ever_valid and m - last_progress_mono > stale_after_s:
@@ -246,64 +348,71 @@ def watch(*, pid: int, create_time: float, chain_id: str, status_path: Path, wat
             if state != "denied":
                 beat("WATCHING", hb_valid=hb is not None, hb_invalid_reason=why)
             sleep(poll_s)
-    safe_log(log_path, event="trigger", reason=reason)
-    beat("TRIGGERED", reason=reason)
-    family = descendants_snapshot(proc)
+    # ---- trigger: decide and kill first, write afterwards (no disk call precedes the kill) ----
+    family, complete = descendants_snapshot(proc)
     receipt = {"chain_id": chain_id, "reason": reason, "gate_pid": pid, "gate_create_time": create_time,
-               "trigger_epoch": clock(), "descendants_before_kill": family, "gate_killed": False}
-    if identity_state(proc, create_time) == "mismatch":
-        safe_log(log_path, event="identity_mismatch_before_kill_no_signal")
+               "trigger_epoch": clock(), "descendants_before_kill": family,
+               "descendant_snapshot_complete": complete, "gate_killed": False}
+    pre = identity_state(proc, create_time)
+    if pre == "mismatch":
         receipt["note"] = "identity_mismatch_before_kill_no_signal"
-        atomic_write(receipt_path, receipt)
-        return EXIT_IDENTITY
+        bounded_call(lambda: atomic_write(receipt_path, receipt), 10.0)
+        log(event="identity_mismatch_before_kill_no_signal")
+        return finish(EXIT_IDENTITY)
     try:
         proc.kill()
     except psutil.NoSuchProcess:
-        safe_log(log_path, event="watched_already_gone")
+        receipt["note"] = "gate_already_gone_before_kill"
     except psutil.AccessDenied:
-        safe_log(log_path, event="kill_access_denied")
-        beat("KILL_DENIED", reason=reason)
         receipt["note"] = "kill_access_denied"
-        atomic_write(receipt_path, receipt)
-        return EXIT_KILL_FAILED
+        bounded_call(lambda: atomic_write(receipt_path, receipt), 10.0)
+        log(event="kill_access_denied", reason=reason)
+        beat("KILL_DENIED", reason=reason)
+        sleep(poll_s * 2)
+        return finish(EXIT_KILL_FAILED)
     try:
         proc.wait(timeout=kill_grace_s)
     except psutil.TimeoutExpired:
-        safe_log(log_path, event="watched_still_running_after_kill")
         receipt["note"] = "watched_still_running_after_kill"
-        atomic_write(receipt_path, receipt)
-        return EXIT_KILL_FAILED
+        bounded_call(lambda: atomic_write(receipt_path, receipt), 10.0)
+        log(event="watched_still_running_after_kill", reason=reason)
+        return finish(EXIT_KILL_FAILED)
     except (psutil.NoSuchProcess, psutil.AccessDenied):
         pass
-    receipt["gate_killed"] = True
+    receipt["gate_killed"] = receipt.get("note") != "gate_already_gone_before_kill"
     end = mono() + family_wait_s
-    left = survivors(family, process_factory)
-    while left and mono() < end:
+    alive, unverified = classify(family, process_factory)
+    while alive and mono() < end:
         sleep(0.1)
-        left = survivors(family, process_factory)
+        alive, unverified = classify(family, process_factory)
     forced = []
-    for cpid, cct in left:
+    for cpid, cct in alive:
         try:
             cp = process_factory(cpid)
-            if cct is None or identity_state(cp, cct) == "match":
+            if identity_state(cp, cct) == "match":  # re-verified immediately before the signal
                 cp.kill()
                 forced.append(cpid)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
-    remaining = left
-    if forced:
-        end2 = mono() + family_wait_s
-        remaining = survivors(left, process_factory)
-        while remaining and mono() < end2:
-            sleep(0.1)
-            remaining = survivors(left, process_factory)
-    receipt.update(descendants_left_after_wait=left, descendants_force_killed=forced,
-                   descendants_remaining=remaining, receipt_epoch=clock(),
-                   family_empty=not remaining and family is not None)
-    atomic_write(receipt_path, receipt)
-    safe_log(log_path, event="gate_killed", reason=reason, family_empty=receipt["family_empty"])
-    beat("KILLED", reason=reason, family_empty=receipt["family_empty"])
-    return EXIT_OK if receipt["family_empty"] else EXIT_KILL_FAILED
+    end2 = mono() + family_wait_s
+    remaining_alive, remaining_unverified = classify(family, process_factory)
+    while remaining_alive and forced and mono() < end2:
+        sleep(0.1)
+        remaining_alive, remaining_unverified = classify(family, process_factory)
+    if remaining_alive:
+        status = "survivors"
+    elif remaining_unverified or not complete or family is None:
+        status = "unverified"
+    else:
+        status = "empty"
+    receipt.update(descendants_force_killed=forced, descendants_alive_after=remaining_alive,
+                   descendants_unverified=remaining_unverified, family_status=status,
+                   family_empty=status == "empty", receipt_epoch=clock())
+    bounded_call(lambda: atomic_write(receipt_path, receipt), 10.0)
+    log(event="gate_killed", reason=reason, family_status=status)
+    beat("KILLED", reason=reason, family_status=status)
+    sleep(poll_s * 2)
+    return finish(EXIT_OK if status == "empty" else EXIT_KILL_FAILED)
 
 
 def main(argv=None) -> int:

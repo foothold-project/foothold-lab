@@ -30,6 +30,7 @@ PY = sys.executable
 GATE = HERE / "gate_harness.py"
 WATCHDOG = HERE / "s2_watchdog_v2.py"
 LAUNCHER = HERE / "s2_unattended_launch.py"
+G3 = "G3 READY with wrong %s is refused (%s), no work"
 FAILS = []
 SPAWNED = []
 
@@ -100,7 +101,7 @@ class Beater(threading.Thread):
 
 
 def run_watch(tmp, victim_pid, victim_ct, *, chain="c1", hard_in=30.0, mono_budget=30.0, stale=0.8, grace=1.0,
-              poll=0.05, log=None, factory=psutil.Process, blind_limit=0.5, clock=time.time, kill_grace=5.0):
+              poll=0.05, log=None, factory=psutil.Process, blind_limit=0.5, clock=time.time, kill_grace=5.0, family_wait=2.0):
     watch_dir = tmp / "w"
     watch_dir.mkdir(exist_ok=True)
     try:
@@ -108,7 +109,7 @@ def run_watch(tmp, victim_pid, victim_ct, *, chain="c1", hard_in=30.0, mono_budg
                       watch_dir=watch_dir, hard_deadline_epoch=time.time() + hard_in, mono_budget_s=mono_budget,
                       stale_after_s=stale, startup_grace_s=grace, poll_s=poll,
                       log_path=log or (tmp / "wd.log"), own_sha256="x" * 64, kill_grace_s=kill_grace,
-                      blind_limit_s=blind_limit, family_wait_s=2.0, process_factory=factory, clock=clock)
+                      blind_limit_s=blind_limit, family_wait_s=family_wait, process_factory=factory, clock=clock)
     except Exception as ex:
         print("   watch() raised", repr(ex), flush=True)
         rc = -999
@@ -311,6 +312,169 @@ def unit_watchdog():
     check("W15 decoy untouched at the end", decoy.poll() is None)
 
 
+class FakeProc:
+    """A stand-in process for identity / family tests. Records kills; becomes NoSuchProcess once killed."""
+
+    def __init__(self, pid, ct, *, children=None, ct_exc=None, children_exc=None, kill_log=None, killable=True):
+        self.pid, self._ct, self._children = pid, ct, children or []
+        self._ct_exc, self._children_exc, self.kill_log, self.killable = ct_exc, children_exc, kill_log, killable
+        self.dead = False
+
+    def create_time(self):
+        if self.dead:
+            raise psutil.NoSuchProcess(self.pid)
+        if self._ct_exc is not None:
+            raise self._ct_exc(pid=self.pid)
+        return self._ct
+
+    def is_running(self):
+        return not self.dead
+
+    def status(self):
+        return psutil.STATUS_RUNNING
+
+    def children(self, recursive=True):
+        if self._children_exc is not None:
+            raise self._children_exc(pid=self.pid)
+        return list(self._children)
+
+    def kill(self):
+        if self.kill_log is not None:
+            self.kill_log.append(self.pid)
+        if self.killable:
+            self.dead = True
+
+    def wait(self, timeout=None):
+        return 0
+
+
+def unit_watchdog_family():
+    """17z P1: identity is never guessed; unverified family members are never signalled and never 'empty'."""
+    def run_fake(gate, factory, hard_in=0.6):
+        tmp = Path(tempfile.mkdtemp(prefix="s2u_f_"))
+        rc, receipt, hb, ready, ev = run_watch(tmp, gate.pid, gate._ct, factory=factory, hard_in=hard_in,
+                                               stale=5.0, grace=30.0, poll=0.05, kill_grace=1.0)
+        return rc, receipt
+
+    # W18 descendant creation time unreadable at the snapshot; the same pid later answers with another process
+    log = []
+    child = FakeProc(777, 2.0, ct_exc=psutil.AccessDenied)
+    gate = FakeProc(100, 1.0, children=[child], kill_log=log)
+    later = FakeProc(777, 999.0, kill_log=log)
+    rc, receipt = run_fake(gate, lambda pid: gate if pid == 100 else later)
+    check("W18 descendant with unreadable creation time is never signalled, family is UNVERIFIED, exit 2",
+          rc == 2 and 777 not in log and bool(receipt) and receipt["family_status"] == "unverified"
+          and receipt["family_empty"] is False and receipt["descendant_snapshot_complete"] is False)
+    # W19 snapshot read the creation time, but the identity check afterwards is AccessDenied
+    log = []
+    child = FakeProc(777, 2.0)
+    gate = FakeProc(100, 1.0, children=[child], kill_log=log)
+    denied = FakeProc(777, 2.0, ct_exc=psutil.AccessDenied, kill_log=log)
+    rc, receipt = run_fake(gate, lambda pid: gate if pid == 100 else denied)
+    check("W19 identity AccessDenied after the snapshot: no signal, never 'family_empty', exit 2",
+          rc == 2 and 777 not in log and bool(receipt) and receipt["family_status"] == "unverified"
+          and receipt["family_empty"] is False)
+    # W20 the descendant listing itself is AccessDenied
+    log = []
+    gate = FakeProc(100, 1.0, children_exc=psutil.AccessDenied, kill_log=log)
+    rc, receipt = run_fake(gate, lambda pid: gate)
+    check("W20 unreadable descendant listing is UNVERIFIED (not empty), exit 2",
+          rc == 2 and bool(receipt) and receipt["family_status"] == "unverified" and receipt["family_empty"] is False)
+    # W21 positive control: a verified descendant that survives is killed after re-verification and the family is empty
+    log = []
+    child = FakeProc(777, 2.0, kill_log=log)
+    gate = FakeProc(100, 1.0, children=[child], kill_log=log)
+    rc, receipt = run_fake(gate, lambda pid: gate if pid == 100 else child)
+    check("W21 verified surviving descendant is killed and the family is proven empty, exit 0",
+          rc == 0 and 777 in log and bool(receipt) and receipt["family_status"] == "empty"
+          and receipt["descendants_force_killed"] == [777])
+    # W22 reused pid (different creation time) is another process: not signalled, family empty
+    log = []
+    child = FakeProc(777, 2.0)
+    gate = FakeProc(100, 1.0, children=[child], kill_log=log)
+    reused = FakeProc(777, 999.0, kill_log=log)
+    rc, receipt = run_fake(gate, lambda pid: gate if pid == 100 else reused)
+    check("W22 reused pid is not signalled and counts as gone",
+          rc == 0 and 777 not in log and bool(receipt) and receipt["family_status"] == "empty")
+    # W25 race: matched at the snapshot and the first classification, but another process owns the pid by the
+    # time the signal would be sent (identity must be re-verified immediately before the signal)
+    log = []
+    counter = {"n": 0}
+    child = FakeProc(777, 2.0)
+    gate = FakeProc(100, 1.0, children=[child], kill_log=log)
+
+    def race_factory(pid):
+        if pid == 100:
+            return gate
+        counter["n"] += 1
+        return FakeProc(777, 2.0 if counter["n"] == 1 else 999.0, kill_log=log)
+
+    tmp = Path(tempfile.mkdtemp(prefix="s2u_f_"))
+    rc, receipt, hb, ready, ev = run_watch(tmp, 100, 1.0, factory=race_factory, hard_in=0.6, stale=5.0, grace=30.0,
+                                           poll=0.05, kill_grace=1.0, family_wait=0.0)
+    check("W25 pid taken over between classification and signal: identity re-verified, nothing signalled",
+          rc == 0 and 777 not in log and bool(receipt) and receipt["family_status"] == "empty")
+    # W23 a hung status read cannot delay the kill: the worker thread blocks, the deciding thread still kills
+    tmp = Path(tempfile.mkdtemp(prefix="s2u_f_"))
+    victim, ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+    original = wd.read_status
+
+    def hanging_read(*a, **k):
+        time.sleep(60)
+
+    wd.read_status = hanging_read
+    try:
+        t0 = time.time()
+        rc, receipt, hb, ready, ev = run_watch(tmp, victim.pid, ct, stale=0.8, grace=1.5)
+    finally:
+        wd.read_status = original
+    check("W23 hung status read: victim still killed within seconds (io_stalled or startup grace)",
+          rc == 0 and bool(receipt) and receipt["reason"] in ("io_stalled", "no_valid_status_after_startup_grace")
+          and victim.poll() is not None and time.time() - t0 < 8.0)
+    # W24 a hung heartbeat write cannot delay the kill either
+    tmp = Path(tempfile.mkdtemp(prefix="s2u_f_"))
+    victim, ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+    original_write = wd.atomic_write
+    b = Beater(tmp / "status.json", "c1")
+    b.start()
+
+    def hanging_write(path, value):
+        if "watchdog_hb" in str(path):
+            time.sleep(60)
+        return original_write(path, value)
+
+    wd.atomic_write = hanging_write
+    try:
+        t0 = time.time()
+        rc, receipt, hb, ready, ev = run_watch(tmp, victim.pid, ct, stale=0.8, hard_in=30.0)
+    finally:
+        wd.atomic_write = original_write
+        b.halt.set()
+    check("W24 hung heartbeat write: victim still killed (io_stalled), receipt written",
+          rc == 0 and bool(receipt) and receipt["reason"] == "io_stalled" and victim.poll() is not None
+          and time.time() - t0 < 8.0)
+
+
+class ArgvProxy:
+    """Delegates to a real psutil.Process but reports the watchdog command line the gate expects."""
+
+    def __init__(self, real, argv):
+        self._real, self._argv = real, argv
+
+    def cmdline(self):
+        return self._argv
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+def proxy_factory(helper_pid, argv):
+    def factory(pid):
+        real = psutil.Process(pid)
+        return ArgvProxy(real, argv) if pid == helper_pid else real
+    return factory
+
+
 def make_env(root: Path, name: str, *, mode="healthy", life=2.0, job_child=False, prelaunch="GO", ready_timeout=3,
              stale=3, grace=10, poll=0.3, monitor_stale=3, stop_grace=5, extra=10, max_wall=60, deadline_in=200,
              gate_path=GATE, watchdog_path=WATCHDOG, launcher_path=LAUNCHER):
@@ -338,14 +502,18 @@ def make_env(root: Path, name: str, *, mode="healthy", life=2.0, job_child=False
                             "stale_after_s": stale, "startup_grace_s": grace, "poll_s": poll,
                             "mono_budget_s": max_wall + 60, "hard_deadline_extra_s": extra,
                             "monitor_stale_s": monitor_stale, "stop_grace_s": stop_grace}}
-    approval = {"status": "APPROVED", "chain_id": outer["chain_id"], "by": "test-fixture",
-                "manifest_sha256": g.sha_of(outer), "expires_epoch": outer["deadline_epoch"] + 300}
-    return base, outer, approval
+    return base, outer, good_approval(outer)
+
+
+def good_approval(outer):
+    return {"status": "APPROVED", "chain_id": outer["chain_id"], "by": "test-fixture", "scope": g.APPROVAL_SCOPE,
+            "decision_basis": {"verdict_file": "TEST-VERDICT.md", "verdict_sha256": "a" * 64,
+                               "verdict_line": "UNATTENDED_GO test fixture"},
+            "manifest_sha256": g.sha_of(outer), "expires_epoch": outer["deadline_epoch"] + 300}
 
 
 def write_pair(base, outer, approval=None):
-    approval = approval or {"status": "APPROVED", "chain_id": outer["chain_id"], "by": "test-fixture",
-                            "manifest_sha256": g.sha_of(outer), "expires_epoch": outer["deadline_epoch"] + 300}
+    approval = approval or good_approval(outer)
     m, a = base / "manifest.json", base / "approval.json"
     m.write_text(json.dumps(outer), encoding="utf-8")
     a.write_text(json.dumps(approval), encoding="utf-8")
@@ -377,32 +545,51 @@ def gate_inproc(base, outer, approval, **kw):
     (base / "watch").mkdir(exist_ok=True)
     extra = {k: v for k, v in kw.items() if k in ("die", "process_factory")}
     extra.setdefault("die", lambda code: calls.setdefault("hard_exit_codes", []).append(code))
+    watch_dir = kw.get("watch_dir", base / "watch")
     try:
-        rc = g.run_gate(outer, approval, watch_dir=base / "watch", gate_file=GATE, watchdog_file=WATCHDOG,
+        rc = g.run_gate(outer, approval, watch_dir=watch_dir, gate_file=GATE, watchdog_file=WATCHDOG,
                         prelaunch_fn=prelaunch, run_fn=run, monitor_poll_s=0.2, **extra)
     except Exception as ex:
         print("   run_gate raised", repr(ex), flush=True)
         rc = -999
-    result = wait_file(base / "watch" / "gate_result.json", 0.1) or {}
+    result = wait_file(Path(watch_dir) / "gate_result.json", 0.1) or {}
     return rc, result, calls
 
 
+def ready_for(b, o, helper, hct, **over):
+    """Write a hand-made ready.json for a helper process; return a process factory that reports the exact
+    watchdog command line the gate expects for it."""
+    block = o["unattended"]
+    me = psutil.Process().create_time()
+    ready = {"chain_id": o["chain_id"], "state": "READY", "epoch": time.time(), "seq": 1,
+             "gate_pid": os.getpid(), "gate_create_time": me, "watchdog_pid": helper.pid,
+             "watchdog_create_time": hct, "watchdog_sha256": block["watchdog_sha256"],
+             "hard_deadline_epoch": o["deadline_epoch"] + block["hard_deadline_extra_s"],
+             "mono_budget_s": block["mono_budget_s"], "stale_after_s": block["stale_after_s"],
+             "startup_grace_s": block["startup_grace_s"]}
+    ready.update(over)
+    (b / "watch").mkdir(exist_ok=True)
+    (b / "watch" / "ready.json").write_text(json.dumps(ready), encoding="utf-8")
+    argv = g.expected_watchdog_argv(o, block, gate_pid=os.getpid(), gate_create_time=me)
+    return proxy_factory(helper.pid, argv), argv
+
+
+def write_hb(b, o, helper, hct, **over):
+    hb = {"chain_id": o["chain_id"], "watchdog_pid": helper.pid, "watchdog_create_time": hct,
+          "gate_pid": os.getpid(), "state": "WATCHING", "seq": 2, "epoch": time.time()}
+    hb.update(over)
+    (b / "watch" / "watchdog_hb.json").write_text(json.dumps(hb), encoding="utf-8")
+
+
 def unit_gate_contract(root):
-    base, outer, appr = make_env(root, "ok")
-    (base / "watch").mkdir()
-    helper, hct = spawn([PY, "-B", "-c", "import time; time.sleep(120)", str(WATCHDOG)])
+    helper, hct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
     # no READY file: not ready, and no GPU work function is ever called
     base_nr, outer_nr, appr_nr = make_env(root, "notready", ready_timeout=1)
     t0 = time.time()
     rc, result, calls = gate_inproc(base_nr, outer_nr, appr_nr)
     check("G1 no READY file: gate exits 6 NOT_READY quickly", rc == 6 and (result or {}).get("state") == "NOT_READY" and time.time() - t0 < 6)
     check("G1 no GPU work function called before READY", calls["prelaunch"] == 0 and calls["run"] == 0)
-    # contract tamper table: every row must stop before READY and before any call
-    def mutate_block(key, value):
-        def f(o, a):
-            o["unattended"][key] = value
-        return f
-
+    final = g.FINAL_DEADLINE_EPOCH
     rows = [
         ("observer attended", lambda o, a: o.__setitem__("observer_mode", "attended"), "observer_mode_not_unattended"),
         ("contract version", lambda o, a: o.__setitem__("contract_version", "a2"), "contract_version"),
@@ -410,7 +597,11 @@ def unit_gate_contract(root):
         ("approval expired", lambda o, a: a.__setitem__("expires_epoch", time.time() - 5), "approval_expired"),
         ("approval missing by", lambda o, a: a.__setitem__("by", ""), "approval_missing"),
         ("approval wrong chain", lambda o, a: a.__setitem__("chain_id", "other"), "approval_missing"),
+        ("approval wrong scope", lambda o, a: a.__setitem__("scope", "attended_anything"), "approval_scope_or_basis"),
+        ("approval basis missing", lambda o, a: a.pop("decision_basis"), "approval_scope_or_basis"),
+        ("approval basis short hash", lambda o, a: a["decision_basis"].__setitem__("verdict_sha256", "abc"), "approval_scope_or_basis"),
         ("deadline too near", lambda o, a: o.__setitem__("deadline_epoch", time.time() + 40), "deadline_or_wall_budget"),
+        ("final deadline margin", lambda o, a: (o.__setitem__("deadline_epoch", final - 20), a.__setitem__("expires_epoch", final + 300)), "final_deadline_margin"),
         ("ready_timeout out of range", lambda o, a: o["unattended"].__setitem__("ready_timeout_s", 0), "block_value_ready_timeout_s"),
         ("mono budget too small", lambda o, a: o["unattended"].__setitem__("mono_budget_s", 10), "block_value_mono_budget_s"),
         ("string stale", lambda o, a: o["unattended"].__setitem__("stale_after_s", "3"), "block_value_stale_after_s"),
@@ -424,30 +615,24 @@ def unit_gate_contract(root):
     for i, (label, change, want) in enumerate(rows):
         b, o, a = make_env(root, "row%d" % i, ready_timeout=1)
         change(o, a)
-        if label not in ("approval digest",) and not label.startswith("approval") and "NaN" not in label:
+        if not label.startswith("approval") and "NaN" not in label:
             a["manifest_sha256"] = g.sha_of(o)
         rc, result, calls = gate_inproc(b, o, a)
         check("G2 contract row '%s' -> HOLD_CONTRACT %s, no work" % (label, want),
               rc == 5 and (result or {}).get("state") == "HOLD_CONTRACT" and want in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
+    # a CLI --watch-dir that differs from the approved one (17z): refused before anything runs
+    b, o, a = make_env(root, "watchdiff", ready_timeout=1)
+    other = b / "unsigned_watch"
+    other.mkdir()
+    rc, result, calls = gate_inproc(b, o, a, watch_dir=other)
+    check("G2 CLI watch dir differs from the approved watch dir -> HOLD_CONTRACT, no work",
+          rc == 5 and "watch_dir_differs_from_approved" in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
     # bundle file modified after the list was frozen
     b, o, a = make_env(root, "bundlefile", ready_timeout=1)
     (Path(o["unattended"]["bundle_dir"]) / "one.py").write_text("print('tampered')\n", encoding="utf-8")
     rc, result, calls = gate_inproc(b, o, a)
     check("G2 bundle file changed after freeze -> HOLD_CONTRACT", rc == 5 and "bundle_file_hash_one.py" in (result or {}).get("reason", ""))
-    # READY validation rows: hand-made ready.json using a helper process as the 'watchdog'
-    def ready_for(b, o, **over):
-        block = o["unattended"]
-        me = psutil.Process().create_time()
-        ready = {"chain_id": o["chain_id"], "state": "READY", "epoch": time.time(), "seq": 1,
-                 "gate_pid": os.getpid(), "gate_create_time": me, "watchdog_pid": helper.pid,
-                 "watchdog_create_time": hct, "watchdog_sha256": block["watchdog_sha256"],
-                 "hard_deadline_epoch": o["deadline_epoch"] + block["hard_deadline_extra_s"],
-                 "mono_budget_s": block["mono_budget_s"], "stale_after_s": block["stale_after_s"],
-                 "startup_grace_s": block["startup_grace_s"]}
-        ready.update(over)
-        (b / "watch").mkdir(exist_ok=True)
-        (b / "watch" / "ready.json").write_text(json.dumps(ready), encoding="utf-8")
-
+    # READY validation rows (the 'watchdog' is a helper process whose command line the proxy factory reports)
     rows = [("gate pid", dict(gate_pid=1), "ready_gate_identity"),
             ("gate creation time", dict(gate_create_time=1.0), "ready_gate_identity"),
             ("watchdog hash", dict(watchdog_sha256="0" * 64), "ready_watchdog_hash"),
@@ -461,26 +646,31 @@ def unit_gate_contract(root):
             ("watchdog ct wrong", dict(watchdog_create_time=hct + 50), "ready_watchdog_not_alive")]
     for label, over, want in rows:
         b, o, a = make_env(root, "rdy_" + label.replace(" ", "_"), ready_timeout=1)
-        ready_for(b, o, **over)
-        prelaunch, run, calls = fakes(b)
-        rc = g.run_gate(o, a, watch_dir=b / "watch", gate_file=GATE, watchdog_file=WATCHDOG, prelaunch_fn=prelaunch,
-                        run_fn=run, monitor_poll_s=0.2)
-        result = wait_file(b / "watch" / "gate_result.json", 0.1)
-        check("G3 READY with wrong %s is refused (%s), no work" % (label, want),
-              rc == 6 and want in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
-    wrong, wct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
-    b, o, a = make_env(root, "rdy_prog", ready_timeout=1)
-    ready_for(b, o, watchdog_pid=wrong.pid, watchdog_create_time=wct)
-    prelaunch, run, calls = fakes(b)
-    rc = g.run_gate(o, a, watch_dir=b / "watch", gate_file=GATE, watchdog_file=WATCHDOG, prelaunch_fn=prelaunch,
-                    run_fn=run, monitor_poll_s=0.2)
-    result = wait_file(b / "watch" / "gate_result.json", 0.1)
-    check("G3 READY from a process that is not running the watchdog program is refused",
-          rc == 6 and "ready_watchdog_wrong_program" in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
+        factory, _argv = ready_for(b, o, helper, hct, **over)
+        rc, result, calls = gate_inproc(b, o, a, process_factory=factory)
+        check(G3 % (label, want), rc == 6 and want in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
+    # exact watchdog command line: any single differing argument is refused
+    flags = ("--pid", "--create-time", "--chain-id", "--status-path", "--watch-dir", "--hard-deadline-epoch",
+             "--mono-budget-s", "--stale-after-s", "--startup-grace-s", "--poll-s", "--log")
+    b0, o0, a0 = make_env(root, "argvbase", ready_timeout=1)
+    _f, expected = ready_for(b0, o0, helper, hct)
+    variants = [("program", 2)] + [(f, expected.index(f) + 1) for f in flags]
+    for name, idx in variants:
+        b, o, a = make_env(root, "argv_" + name.strip("-").replace("-", "_"), ready_timeout=1)
+        factory, argv = ready_for(b, o, helper, hct)
+        tampered = list(argv)
+        tampered[idx] = "tampered-value"
+        rc, result, calls = gate_inproc(b, o, a, process_factory=proxy_factory(helper.pid, tampered))
+        check("G3 watchdog command line with a different %s is refused (ready_watchdog_argv_mismatch), no work" % name,
+              rc == 6 and "ready_watchdog_argv_mismatch" in (result or {}).get("reason", "") and calls["prelaunch"] == 0)
+    b, o, a = make_env(root, "argv_extra", ready_timeout=1)
+    factory, argv = ready_for(b, o, helper, hct)
+    rc, result, calls = gate_inproc(b, o, a, process_factory=proxy_factory(helper.pid, argv + ["--extra", "1"]))
+    check("G3 watchdog command line with an extra argument is refused", rc == 6 and "ready_watchdog_argv_mismatch" in (result or {}).get("reason", ""))
     # valid READY: derived inner pair, prelaunch then run, exit code from the verdict
     b, o, a = make_env(root, "good")
-    ready_for(b, o)
-    rc, result, calls = gate_inproc(b, o, a)
+    factory, _ = ready_for(b, o, helper, hct)
+    rc, result, calls = gate_inproc(b, o, a, process_factory=factory)
     inner, inner_a = calls.get("inner_manifest", {}), calls.get("inner_approval", {})
     check("G4 valid READY: prelaunch then run, DONE rc 0", rc == 0 and (result or {}).get("state") == "DONE" and calls["prelaunch"] == 1 and calls["run"] == 1)
     check("G4 inner manifest is attended-shaped and bound to the outer digest",
@@ -488,50 +678,87 @@ def unit_gate_contract(root):
           and inner_a.get("manifest_sha256") == g.sha_of(inner) and inner_a.get("origin_approval_sha256") == g.sha_of(a)
           and inner_a["expires_epoch"] == a["expires_epoch"])
     b, o, a = make_env(root, "nogo")
-    ready_for(b, o)
-    rc, result, calls = gate_inproc(b, o, a, prelaunch_status="NO_GO")
+    factory, _ = ready_for(b, o, helper, hct)
+    rc, result, calls = gate_inproc(b, o, a, prelaunch_status="NO_GO", process_factory=factory)
     check("G5 prelaunch NO_GO stops before run, rc 42", rc == 42 and (result or {}).get("state") == "NO_GO" and calls["run"] == 0)
     b, o, a = make_env(root, "notpass")
-    ready_for(b, o)
-    rc, result, calls = gate_inproc(b, o, a, verdict="HOLD")
+    factory, _ = ready_for(b, o, helper, hct)
+    rc, result, calls = gate_inproc(b, o, a, verdict="HOLD", process_factory=factory)
     check("G5 non-PASS verdict is rc 42", rc == 42 and (result or {}).get("state") == "DONE")
-    # watcher lost while the supervisor runs: STOP written, supervisor stops, rc 71
+
+
+class HbWriter(threading.Thread):
+    """Keeps rewriting watchdog_hb.json with a changing seq, like a live watcher would."""
+
+    def __init__(self, b, o, helper, hct, *, start_seq=2, step=1, cycle=None, period=0.2, **over):
+        super().__init__(daemon=True)
+        self.args = (b, o, helper, hct)
+        self.start_seq, self.step, self.cycle, self.period, self.over = start_seq, step, cycle, period, over
+        self.halt = threading.Event()
+
+    def run(self):
+        i = 0
+        while not self.halt.is_set():
+            seq = self.cycle[i % len(self.cycle)] if self.cycle else self.start_seq + self.step * i
+            write_hb(*self.args, seq=seq, **self.over)
+            i += 1
+            time.sleep(self.period)
+
+
+def unit_gate_monitor(root):
+    # watcher process dies while the supervisor runs: STOP file, supervisor stops, rc 71
     b, o, a = make_env(root, "lost", monitor_stale=3)
-    helper2, h2ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)", str(WATCHDOG)])
-    block = o["unattended"]
-    ready_for(b, o, watchdog_pid=helper2.pid, watchdog_create_time=h2ct)
+    helper2, h2ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+    factory, _ = ready_for(b, o, helper2, h2ct)
+    write_hb(b, o, helper2, h2ct, seq=2)
     threading.Timer(1.0, helper2.kill).start()
-    rc, result, calls = gate_inproc(b, o, a, life=30)
+    rc, result, calls = gate_inproc(b, o, a, life=30, process_factory=factory)
     check("G6 watcher death during the run -> STOP file, supervisor stopped, rc 71 WATCHER_LOST",
           rc == 71 and result.get("state") == "WATCHER_LOST" and result.get("watcher_problem") in ("watcher_gone", "watcher_mismatch")
           and Path(o["stop_path"]).exists())
-    # watcher alive but its heartbeat file never changes -> stale -> STOP
-    b, o, a = make_env(root, "frozen", monitor_stale=3)
-    helper4, h4ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)", str(WATCHDOG)])
-    ready_for(b, o, watchdog_pid=helper4.pid, watchdog_create_time=h4ct)
-    (b / "watch" / "watchdog_hb.json").write_text(json.dumps({"state": "WATCHING", "seq": 1}), encoding="utf-8")
-    rc, result, calls = gate_inproc(b, o, a, life=30)
-    check("G7 watcher alive but heartbeat frozen -> STOP, rc 71 with watcher_heartbeat_stale",
-          rc == 71 and result.get("watcher_problem") == "watcher_heartbeat_stale" and Path(o["stop_path"]).exists())
-    # watcher reports BLIND -> STOP
-    b, o, a = make_env(root, "blind", monitor_stale=3)
-    helper5, h5ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)", str(WATCHDOG)])
-    ready_for(b, o, watchdog_pid=helper5.pid, watchdog_create_time=h5ct)
-    (b / "watch" / "watchdog_hb.json").write_text(json.dumps({"state": "BLIND", "seq": 1}), encoding="utf-8")
-    rc, result, calls = gate_inproc(b, o, a, life=30)
-    check("G8 watcher reporting BLIND -> STOP, rc 71 with watcher_state_BLIND",
-          rc == 71 and result.get("watcher_problem") == "watcher_state_BLIND" and Path(o["stop_path"]).exists())
-    # watcher gone and the supervisor ignores STOP -> hard exit hook
+    # a healthy-looking but frozen heartbeat (same valid seq forever) -> stale -> STOP
+    # (label, writer kwargs or None for one static file, static kwargs, wanted problem). Invalid inputs are written
+    # with a CHANGING value on purpose: they must still never count as progress.
+    cases = [
+        ("G7 watcher alive but heartbeat frozen", None, dict(seq=2), "watcher_heartbeat_stale"),
+        ("G8 watcher reporting BLIND", None, dict(state="BLIND", seq=2), "watcher_state_BLIND"),
+        ("G9 heartbeat with a NaN seq is never progress", dict(cycle=[float("nan")]), {}, "watcher_heartbeat_stale"),
+        ("G10 heartbeat of another chain is never progress", dict(start_seq=5, chain_id="other-chain"), {}, "watcher_heartbeat_stale"),
+        ("G11 heartbeat from another watcher pid is never progress", dict(start_seq=5, watchdog_pid=1), {}, "watcher_heartbeat_stale"),
+        ("G12 heartbeat for another gate pid is never progress", dict(start_seq=5, gate_pid=1), {}, "watcher_heartbeat_stale"),
+        ("G13 non-monotonic seq (2,3,2,3,...) stops being progress", dict(cycle=[2, 3]), {}, "watcher_heartbeat_stale"),
+        ("G14 non-integer seq is never progress", dict(start_seq=2.5), {}, "watcher_heartbeat_stale"),
+        ("G15 foreign watcher creation time is never progress", dict(start_seq=5, watchdog_create_time=1.0), {}, "watcher_heartbeat_stale"),
+    ]
+    for i, (label, writer_kw, static, want) in enumerate(cases):
+        b, o, a = make_env(root, "hbcase%d" % i, monitor_stale=3)
+        helper3, h3ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+        factory, _ = ready_for(b, o, helper3, h3ct)
+        writer = None
+        if writer_kw is None:
+            write_hb(b, o, helper3, h3ct, **static)
+        else:
+            writer = HbWriter(b, o, helper3, h3ct, **writer_kw)
+            writer.start()
+        try:
+            rc, result, calls = gate_inproc(b, o, a, life=30, process_factory=factory)
+        finally:
+            if writer is not None:
+                writer.halt.set()
+        check("%s -> STOP, rc 71 with %s" % (label, want),
+              rc == 71 and result.get("watcher_problem") == want and Path(o["stop_path"]).exists())
+    # supervisor ignoring STOP -> hard exit hook after the grace
     b, o, a = make_env(root, "lost2", monitor_stale=3, stop_grace=5)
-    helper3, h3ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)", str(WATCHDOG)])
-    ready_for(b, o, watchdog_pid=helper3.pid, watchdog_create_time=h3ct)
-    threading.Timer(0.5, helper3.kill).start()
+    helper4, h4ct = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+    factory, _ = ready_for(b, o, helper4, h4ct)
+    write_hb(b, o, helper4, h4ct, seq=2)
+    threading.Timer(0.5, helper4.kill).start()
     died = []
     t0 = time.time()
     done = threading.Event()
 
     def runner():
-        gate_inproc(b, o, a, life=9, stop_aware=False, die=lambda code: died.append(code))
+        gate_inproc(b, o, a, life=9, stop_aware=False, die=lambda code: died.append(code), process_factory=factory)
         done.set()
 
     th = threading.Thread(target=runner, daemon=True)
@@ -541,24 +768,25 @@ def unit_gate_contract(root):
 
 
 def process_level(root):
+    ok_states = ("RUNNING", "FINISHED_OK")
     # P1 healthy chain through the real launcher, gate harness and watchdog
     base, outer, appr = make_env(root, "p1", mode="healthy", life=3.0)
     m, a = write_pair(base, outer, appr)
     res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)],
-                         capture_output=True, text=True, timeout=60)
+                         capture_output=True, text=True, timeout=90)
     rec = wait_file(base / "watch" / "launch_record.json", 5)
-    check("P1 launcher exit 0 and READY seen", res.returncode == 0 and bool(rec) and rec["state"] == "LAUNCHED")
+    check("P1 launcher exit 0 only after the supervisor status was seen", res.returncode == 0 and bool(rec) and rec["state"] in ok_states)
     result = wait_file(base / "watch" / "gate_result.json", 40)
-    check("P1 healthy chain finishes DONE rc 0 with fake PASS", bool(result) and (result or {}).get("state") == "DONE" and (result or {}).get("exit_code") == 0)
+    check("P1 healthy chain finishes DONE rc 0 with fake PASS", bool(result) and result["state"] == "DONE" and result["exit_code"] == 0)
     check("P1 prelaunch and run each called once", (base / "marker" / "prelaunch_called").exists() and (base / "marker" / "run_called").exists())
-    time.sleep(2.0)
+    time.sleep(2.5)
     log = [json.loads(x)["event"] for x in (base / "watch" / "watchdog.log").read_text(encoding="utf-8").splitlines()]
     check("P1 watchdog saw the gate end by itself and killed nothing", "watched_ended_by_itself" in log and not (base / "watch" / "kill_receipt.json").exists())
     # P2 hung supervisor with a Job Object child: watchdog kills the gate, the Job closes, the child dies
     base, outer, appr = make_env(root, "p2", mode="hang", job_child=True, stale=3, life=60)
     m, a = write_pair(base, outer, appr)
     res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)],
-                         capture_output=True, text=True, timeout=60)
+                         capture_output=True, text=True, timeout=90)
     rec = wait_file(base / "watch" / "launch_record.json", 5)
     check("P2 launcher exits before the hang is detected (watchdog outlives its launcher)", res.returncode == 0 and bool(rec))
     receipt = wait_file(base / "watch" / "kill_receipt.json", 40)
@@ -570,7 +798,7 @@ def process_level(root):
     # P3 watcher killed while the gate runs: monitor writes STOP, the supervisor stops, rc 71
     base, outer, appr = make_env(root, "p3", mode="respect_stop", life=120, monitor_stale=3)
     m, a = write_pair(base, outer, appr)
-    subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=60)
+    subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
     rec = wait_file(base / "watch" / "launch_record.json", 5)
     time.sleep(2.5)
     psutil.Process(rec["watchdog_pid"]).kill()
@@ -579,7 +807,7 @@ def process_level(root):
     # P4 watcher killed and supervisor ignores STOP, with a Job child: hard exit takes the child too
     base, outer, appr = make_env(root, "p4", mode="ignore_stop", job_child=True, life=300, monitor_stale=3, stop_grace=5)
     m, a = write_pair(base, outer, appr)
-    subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=60)
+    subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
     rec = wait_file(base / "watch" / "launch_record.json", 5)
     time.sleep(2.5)
     child = int((base / "marker" / "child_pid").read_text())
@@ -591,7 +819,7 @@ def process_level(root):
     dead.write_text("import sys\nsys.exit(1)\n", encoding="utf-8")
     base, outer, appr = make_env(root, "p5", watchdog_path=dead, ready_timeout=60)
     m, a = write_pair(base, outer, appr)
-    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=60)
+    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
     rec = wait_file(base / "watch" / "launch_record.json", 5)
     check("P5 launcher aborts with exit 5 when the watchdog is not ready", res.returncode == 5 and bool(rec) and rec["state"] == "LAUNCH_ABORTED")
     check("P5 the gate it created is gone and no GPU-side marker exists", gone(rec["gate_pid"], rec["gate_create_time"], 10)
@@ -603,24 +831,68 @@ def process_level(root):
     victim.write_text(WATCHDOG.read_text(encoding="utf-8") + "\n# changed\n", encoding="utf-8")
     outer["unattended"]["watchdog_path"] = str(victim)
     m.write_text(json.dumps(outer), encoding="utf-8")
-    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=60)
+    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
     check("P6 hash mismatch against the manifest: exit 4, nothing started, no watch dir",
           res.returncode == 4 and not (base / "watch").exists())
     # P7 existing watch dir is refused (a previous run must never be reused)
     base, outer, appr = make_env(root, "p7")
     (base / "watch").mkdir()
     m, a = write_pair(base, outer, appr)
-    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=60)
+    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
     check("P7 existing watch dir: exit 4, nothing started", res.returncode == 4 and not (base / "marker" / "prelaunch_called").exists())
     # P8 the gate alone, no watchdog ever: NOT_READY, no work (the launcher died between the two starts)
     base, outer, appr = make_env(root, "p8", ready_timeout=2)
     m, a = write_pair(base, outer, appr)
     (base / "watch").mkdir()
     res = subprocess.run([PY, "-B", str(GATE), "--manifest", str(m), "--approval", str(a), "--watch-dir", str(base / "watch")],
-                         capture_output=True, text=True, timeout=60)
+                         capture_output=True, text=True, timeout=90)
     result = wait_file(base / "watch" / "gate_result.json", 3)
     check("P8 gate without any watchdog: exit 6 NOT_READY and no work", res.returncode == 6 and (result or {}).get("state") == "NOT_READY"
           and not (base / "marker" / "prelaunch_called").exists())
+    # P9 the watchdog is READY but the gate refuses the approval: READY alone is not success, launcher aborts (rc 5)
+    base, outer, appr = make_env(root, "p9", ready_timeout=5)
+    appr["manifest_sha256"] = "0" * 64
+    m, a = write_pair(base, outer, appr)
+    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
+    rec = wait_file(base / "watch" / "launch_record.json", 5)
+    check("P9 READY file but the gate refused the approval: launcher exit 5, LAUNCH_ABORTED, no work",
+          res.returncode == 5 and bool(rec) and rec["state"] == "LAUNCH_ABORTED" and "HOLD_CONTRACT" in rec["reason"]
+          and not (base / "marker" / "prelaunch_called").exists())
+    check("P9 watchdog it started is gone after the abort", gone(rec["watchdog_pid"], rec["watchdog_create_time"], 15))
+    # P11 the gate refuses AFTER the READY file exists (prelaunch NO_GO after a delay): READY alone is not success
+    base, outer, appr = make_env(root, "p11", ready_timeout=10, prelaunch="NO_GO")
+    outer["fake"]["prelaunch_delay_s"] = 1.5
+    m, a = write_pair(base, outer, good_approval(outer))
+    res = subprocess.run([PY, "-B", str(LAUNCHER), "--manifest", str(m), "--approval", str(a)], capture_output=True, text=True, timeout=90)
+    rec = wait_file(base / "watch" / "launch_record.json", 5)
+    check("P11 gate refuses after READY (NO_GO): launcher waits for it, exit 5, LAUNCH_ABORTED",
+          res.returncode == 5 and bool(rec) and rec["state"] == "LAUNCH_ABORTED" and "NO_GO" in rec["reason"]
+          and not (base / "marker" / "run_called").exists())
+    # P10 launcher cleanup signals only through held handles: a decoy with the 'same pid' is untouched
+    import s2_unattended_launch as L
+    decoy, _ = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
+
+    class HeldHandle:
+        pid = decoy.pid  # a stale/reused pid number must be irrelevant
+        killed = False
+
+        def poll(self):
+            return None
+
+        def kill(self):
+            HeldHandle.killed = True
+
+        def wait(self, timeout=None):
+            return 0
+
+    real_process = L.psutil.Process
+    L.psutil.Process = lambda *a, **k: (_ for _ in ()).throw(AssertionError("launcher must not look processes up by pid"))
+    try:
+        outcome = L.kill_created(HeldHandle())
+    finally:
+        L.psutil.Process = real_process
+    check("P10 cleanup kills through the held handle only, never by pid lookup; decoy with that pid untouched",
+          outcome == "killed" and HeldHandle.killed and decoy.poll() is None)
 
 
 def main():
@@ -629,8 +901,10 @@ def main():
     try:
         if group in ("all", "watchdog"):
             unit_watchdog()
+            unit_watchdog_family()
         if group in ("all", "gate"):
             unit_gate_contract(root)
+            unit_gate_monitor(root)
         if group in ("all", "process"):
             process_level(root)
     finally:

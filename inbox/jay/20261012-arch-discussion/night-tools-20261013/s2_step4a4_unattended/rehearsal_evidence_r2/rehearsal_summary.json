@@ -1,0 +1,14 @@
+{
+  "launch_rc": 0,
+  "gate_state": "DONE",
+  "inner_outcome_reasons": [
+    "rehearsal_no_isaac_started"
+  ],
+  "prelaunch_report": null,
+  "watchdog_events": [
+    "watchdog_started",
+    "watched_ended_by_itself"
+  ],
+  "processes_left": [],
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\urehearse-20261015-104017"
+}

@@ -21,6 +21,8 @@ HERE = Path(__file__).resolve().parent
 WORK = HERE.parent
 sys.path.insert(0, str(WORK / "s2_step4a3_launch"))
 import s2_attended_launch_a3 as att  # noqa: E402
+sys.path.insert(0, str(HERE))
+from s2_unattended_gate import APPROVAL_SCOPE  # noqa: E402
 
 PY = att.PY
 
@@ -41,9 +43,12 @@ def main():
         "watchdog_sha256": sha(watchdog), "launcher_path": str(launcher), "launcher_sha256": sha(launcher),
         "bundle_dir": str(att.BUNDLE), "bundle_list_sha256": sha(att.BUNDLE / "SHA256SUMS.txt"),
         "watch_dir": str(run / "watch"), "ready_timeout_s": 30, "stale_after_s": 30, "startup_grace_s": 180,
-        "poll_s": 1.0, "mono_budget_s": 1020, "hard_deadline_extra_s": 60, "monitor_stale_s": 15,
+        "poll_s": 1.0, "mono_budget_s": 1080, "hard_deadline_extra_s": 60, "monitor_stale_s": 15,
         "stop_grace_s": 30}
     approval = {"status": "APPROVED", "chain_id": outer["chain_id"], "by": "lead rehearsal (no Isaac)",
+                "scope": APPROVAL_SCOPE,
+                "decision_basis": {"verdict_file": "REHEARSAL_NO_VERDICT", "verdict_sha256": "0" * 64,
+                                   "verdict_line": "rehearsal only, Isaac is never started"},
                 "manifest_sha256": hashlib.sha256(att.canonical(outer)).hexdigest(),
                 "expires_epoch": outer["deadline_epoch"] + 300}
     mu, au = run / "in" / "manifest_u.json", run / "in" / "approval_u.json"

@@ -32,6 +32,7 @@ def main(argv=None) -> int:
 
     def prelaunch(manifest, appr):
         (marker / "prelaunch_called").write_text("1", encoding="utf-8")
+        time.sleep(float(fake.get("prelaunch_delay_s", 0)))
         return {"status": "GO"} if fake.get("prelaunch", "GO") == "GO" else {"status": "NO_GO", "reason": "fake"}
 
     def run(manifest, appr):
