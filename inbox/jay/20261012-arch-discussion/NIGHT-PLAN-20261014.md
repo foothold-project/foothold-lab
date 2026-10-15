@@ -538,6 +538,8 @@
 
 - **19:48 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.8 GB(앱) · Isaac/Kit 없음. **GPU 0 은 15:07:13 부터 4시간 41분 비어 있다. 이유: 4차 수집에 팀장의 새 동의가 없다.** 그 사이: ASTRA 17ad(B 실제 기동 보류) → sol step7 → lead 재실행(31/31 파일, 정상 273 라벨 = 271 + 변이 선행 2, 변이 54/54) → ASTRA 17ae(첫 GPU 0 plumbing 은 현 바이트로 보류, 결함 둘: CUDA 재적재의 optimizer 비교 장치 불일치, 합성 입력 정답 probe 불일치; 고치고 CPU 증거를 모으면 lead 기록 + 팀장 단회 동의로 진행) → sol step8 19:35 지시(진행 중, 컨텍스트 50 %) → 독립 가족 정리 관찰자 `s2_family_observer.py` 시험 10 PASS · 기동 도구에 연결(`55c7d150`). 정정: 「6개 모듈 바이트 동일」 은 5/6, 「271 틀림」 은 내가 틀렸다(271 과 273 은 의미가 다름).
 
+- **20:48 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.8 GB(앱) · Isaac/Kit 없음. **GPU 0 은 15:07:13 부터 5시간 41분 비어 있다. 이유: 팀장의 새 동의가 없다(4차 0단계 수집과 B 첫 배관 단회 둘 다 동의 대기).** 20:04 이후 새 판정 · 댓글 없음. 준비 상태: 4차 도구(해시 49 · 예행 GO), B 배관 도구(`s2_step8` 해시 104 · 예행 GO, lead 기록 `RECORD-lead-b-plumbing-first.md`), 독립 관찰자. 마지막 팀장 메시지는 17:48(중간 보고 요청)이며 그 뒤 동의 응답 없음.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
