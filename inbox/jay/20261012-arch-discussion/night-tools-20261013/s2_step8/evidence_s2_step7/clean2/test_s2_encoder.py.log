@@ -1,0 +1,19 @@
+PASS mlp_same_374_128_64
+PASS mlp_A_B_same_seed
+PASS parent_initial_action_A_mlp
+PASS encoder_shape_A_mlp
+PASS parent_initial_action_B_mlp
+PASS encoder_shape_B_mlp
+PASS parent_initial_action_A_attn
+PASS encoder_shape_A_attn
+PASS parent_initial_action_B_attn
+PASS encoder_shape_B_attn
+PASS A_information_block_mlp
+PASS A_information_block_attn
+PASS unknown_encoder_rejected
+PASS student_frozen_map_trainable
+PASS encoder_control_compatible
+PASS actor_map_columns_zero
+PASS encoder_budget_measured
+PASS checkpoint_encoder_name_guard
+BUDGET {'encoder_parameters': 56256, 'affine_attention_macs_lower_bound_per_observation': 56064, 'scope': 'linear projections and QK/AV; excludes nonlinear, pooling, layer implementation overhead'} {'encoder_parameters': 11680, 'affine_attention_macs_lower_bound_per_observation': 809024, 'scope': 'linear projections and QK/AV; excludes nonlinear, pooling, layer implementation overhead'}

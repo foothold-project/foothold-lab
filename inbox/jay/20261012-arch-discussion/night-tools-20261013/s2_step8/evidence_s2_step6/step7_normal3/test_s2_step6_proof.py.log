@@ -1,0 +1,10 @@
+PASS plumbing_result_known_answer
+PASS reject_weights_unchanged
+PASS reject_parameter_hash_equal
+PASS reject_nan_count
+PASS reject_nan_loss
+PASS reject_zero_gradient
+PASS reject_roundtrip_false
+PASS reject_environment_steps_mixed
+PASS reject_rollout_steps_missing
+PASS reject_wrong_freeze

@@ -1,0 +1,3 @@
+CAUGHT optimizer_device_normalization first_FAIL=optimizer_device_normalization want=optimizer_device_normalization
+CAUGHT optimizer_cpu_load first_FAIL=optimizer_cpu_load want=optimizer_cpu_load
+CAUGHT capture_answer_bypass first_FAIL=capture_answer_bypass want=capture_answer_bypass

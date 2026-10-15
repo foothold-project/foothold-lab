@@ -1,0 +1,42 @@
+PASS diagnostic capture two instants five cases
+PASS same S2 overlay builder and parent untouched
+PASS connection known flat step gap stones yaw
+PASS connection counterexample origin_missing
+PASS connection counterexample reset_stale
+PASS connection counterexample sensor_nonfinite
+PASS connection counterexample ray_packet_bad
+PASS connection counterexample grid_order_or_yaw
+PASS connection counterexample yaw_probe_missing
+PASS connection counterexample height_or_offset
+PASS connection counterexample flat_not_flat
+PASS connection counterexample step_not_seen
+PASS connection counterexample gap_not_seen
+PASS connection counterexample stones_not_seen
+PASS connection counterexample stones_spacing
+PASS connection counterexample provenance_missing
+PASS connection counterexample terrain_assignment_missing
+PASS connect gate pass and next args
+PASS smoke A B pass and next args
+PASS short A B final pass
+PASS stage counterexample approval_unbound
+PASS stage counterexample manifest_unfrozen
+PASS stage counterexample previous_hash
+PASS stage counterexample attempt_reused
+PASS stage counterexample budget
+PASS stage counterexample exit_code
+PASS stage counterexample traceback
+PASS stage counterexample artifact_missing
+PASS stage counterexample artifact_hash
+PASS stage counterexample fingerprint
+PASS stage counterexample deadline
+PASS stage counterexample previous_missing
+PASS stage counterexample stop_file
+PASS stage counterexample connect_hold
+PASS stage result counterexample train_hold
+PASS stage result counterexample fault_count
+PASS stage result counterexample nonfinite
+PASS stage result counterexample map_time
+PASS stage result counterexample step_count
+PASS stage result counterexample encounter_missing
+PASS stage result counterexample device_metrics
+PASS single claim rejects reuse

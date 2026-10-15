@@ -1,0 +1,14 @@
+PASS known_tensor_axes_mask_finite
+PASS training_cfg_gravity_contact_on
+PASS reject_diagnostic_gravity
+PASS reject_diagnostic_contact
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step7\test_s2_step6_contract.py", line 198, in <module>
+    if __name__=="__main__":test()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step7\test_s2_step6_contract.py", line 104, in test
+    assert validate(m,a)
+           ^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step7\s2_train_contract.py", line 152, in validate
+    raise TrainHold("usd_isolation_contract")
+s2_train_contract.TrainHold: usd_isolation_contract

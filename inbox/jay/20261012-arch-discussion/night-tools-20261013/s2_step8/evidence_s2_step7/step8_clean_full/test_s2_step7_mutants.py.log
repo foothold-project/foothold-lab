@@ -1,0 +1,4 @@
+CAUGHT uuid_mismatch first_FAIL=uuid_mismatch want=uuid_mismatch
+CAUGHT kit_setting_missing first_FAIL=kit_setting_missing want=kit_setting_missing
+CAUGHT mount_nonzero first_FAIL=mount_nonzero want=mount_nonzero
+CAUGHT usd_reference first_FAIL=usd_reference want=usd_reference

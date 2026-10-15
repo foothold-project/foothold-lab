@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step7\test_s2_step5_live.py", line 172, in <module>
+    if __name__=="__main__":test()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step7\test_s2_step5_live.py", line 94, in test
+    assert len(checks)==17 and all(checks.values()),checks
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'baseline_1043_env': True, 'baseline_1043_preload': True, 'baseline_1043_slot_cwd': True, 'baseline_a4_stdin': True, 'candidate_preload_h5py': True, 'candidate_preload_torch': True, 'candidate_preload_tensordict': True, 'candidate_app_launcher': True, 'candidate_eula': True, 'candidate_unbuffered': True, 'candidate_cuda_order': True, 'candidate_visible_zero': True, 'candidate_cwd': False, 'candidate_stdin_nul': True, 'candidate_argv': False, 'candidate_headless_cuda0': True, 'candidate_owned_family': True}
