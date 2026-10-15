@@ -536,6 +536,8 @@
 
 - **18:48 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.8 GB(앱) · Isaac/Kit 없음. **GPU 0 은 15:07:13 부터 3시간 41분 비어 있다. 이유: 4차 수집에 팀장의 새 동의가 없다.** 그 사이 한 일: ASTRA 17ad 판정 읽음(B 실제 기동 보류 · 장치 결박 API · USD 격리 · plumbing 보강 7곳 · 4차 후 같은 GPU 0 에서 작은 plumbing 한 arm 권고), sol step6(plumbing) lead 재실행 기존 53 + 새 42 PASS · 변이 7/7 + 11/11 → 저장소 사본 `s2_step6/`, sol step7(17ad 결함 수정) 18:14 지시 중, A4 r2 재검증 변이 58/58 · 해시 재생성(`eba07a4f`).
 
+- **19:48 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.8 GB(앱) · Isaac/Kit 없음. **GPU 0 은 15:07:13 부터 4시간 41분 비어 있다. 이유: 4차 수집에 팀장의 새 동의가 없다.** 그 사이: ASTRA 17ad(B 실제 기동 보류) → sol step7 → lead 재실행(31/31 파일, 정상 273 라벨 = 271 + 변이 선행 2, 변이 54/54) → ASTRA 17ae(첫 GPU 0 plumbing 은 현 바이트로 보류, 결함 둘: CUDA 재적재의 optimizer 비교 장치 불일치, 합성 입력 정답 probe 불일치; 고치고 CPU 증거를 모으면 lead 기록 + 팀장 단회 동의로 진행) → sol step8 19:35 지시(진행 중, 컨텍스트 50 %) → 독립 가족 정리 관찰자 `s2_family_observer.py` 시험 10 PASS · 기동 도구에 연결(`55c7d150`). 정정: 「6개 모듈 바이트 동일」 은 5/6, 「271 틀림」 은 내가 틀렸다(271 과 273 은 의미가 다름).
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
