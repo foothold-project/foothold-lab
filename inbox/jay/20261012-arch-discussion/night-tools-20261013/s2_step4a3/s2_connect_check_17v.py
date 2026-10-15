@@ -40,6 +40,30 @@ def _sha(path: Path) -> str:
     return h.hexdigest()
 
 
+def scene_expectation(a: dict, boundary_exclusion_m: float):
+    """Yaw, expected world XY of every ray (float64 from pos_w and yaw), the known-scene oracle at those XY and the
+    expected boundary mask. One formula for the checker and for the diagnostic's own edge_excluded (A3.2: the
+    1-sample stones_0 mismatch in attempt 3 came from the diagnostic using float32 ray_starts_w instead)."""
+    q = np.asarray(a["root_quat_w"])
+    yaw = np.arctan2(2*(q[...,0]*q[...,3]+q[...,1]*q[...,2]),
+                     1-2*(q[...,2]**2+q[...,3]**2))
+    xy = GRID[None,None,:,:]
+    c,s = np.cos(yaw)[...,None], np.sin(yaw)[...,None]
+    pos = np.asarray(a["pos_w"])
+    expected = np.stack((pos[...,0,None]+c*xy[...,0]-s*xy[...,1],
+                         pos[...,1,None]+s*xy[...,0]+c*xy[...,1]),axis=-1)
+    shape = expected.shape[:-1]
+    oracle_z=np.zeros(shape);oracle_finite=np.ones(shape,dtype=bool)
+    oracle_edge=np.full(shape,np.inf)
+    origin=np.asarray(a["env_origin_w"])
+    for env in range(8):
+        kind=("flat","obstacles","gap","stepping_stones")[env//2]
+        local=expected[:,env]-origin[:,env,None,:2]
+        z,valid,edge=oracle(kind,local)
+        oracle_z[:,env]=z;oracle_finite[:,env]=valid;oracle_edge[:,env]=edge
+    return yaw, expected, oracle_z, oracle_finite, oracle_edge, oracle_edge<=boundary_exclusion_m
+
+
 def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
     reasons = []
     def hold(reason, bad):
@@ -123,12 +147,16 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
         return {"verdict": "HOLD", "reasons": reasons}
     hold("height_range",np.any((a["height"] < -1) | (a["height"] > 1)) or
          np.any((a["mask"]!=0)&(a["mask"]!=1)))
-    hold("sensor_timestamp",np.any(np.diff(a["sensor_timestamp"],axis=0)<0))
+    # A3.2: the sensor clock restarts on a reset (the intended step-128 reset, or any other), so a negative
+    # difference is legal only where this env's episode id increased, and there it must actually rewind.
+    ts_diff=np.diff(a["sensor_timestamp"],axis=0)
+    reset_at=np.diff(a["episode_ids"],axis=0)>0
+    hold("sensor_timestamp",np.any((ts_diff<0)&~reset_at) or np.any((ts_diff>=0)&reset_at))
     hold("ray_index",not np.array_equal(a["ray_index"],np.arange(187)))
     q = a["root_quat_w"]
     hold("quaternion_bad", np.max(np.abs(np.linalg.norm(q,axis=-1)-1)) > .001)
-    yaw = np.arctan2(2*(q[...,0]*q[...,3]+q[...,1]*q[...,2]),
-                     1-2*(q[...,2]**2+q[...,3]**2))
+    yaw, expected, oracle_z, oracle_finite, oracle_edge, expected_edge = scene_expectation(
+        a, criteria.boundary_exclusion_m)
     mount=np.asarray(meta.get("root_sensor_offset_b",[]),dtype=float)
     if mount.shape!=(3,) or not np.isfinite(mount).all():
         hold("root_sensor_transform",True)
@@ -145,10 +173,6 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
     finite = np.isfinite(hits).all(axis=-1)
     miss = np.isposinf(hits).all(axis=-1)
     hold("bad_ray", np.any(~(finite|miss)))
-    xy = GRID[None,None,:,:]
-    c,s = np.cos(yaw)[...,None], np.sin(yaw)[...,None]
-    expected = np.stack((a["pos_w"][...,0,None]+c*xy[...,0]-s*xy[...,1],
-                         a["pos_w"][...,1,None]+s*xy[...,0]+c*xy[...,1]),axis=-1)
     err = np.max(np.abs(hits[...,:2][finite]-expected[finite]),initial=0)
     hold("grid_or_yaw", err > criteria.xy_tolerance_m)
     calc_h = np.clip(a["pos_w"][...,2,None]-.5-hits[...,2],-1,1)
@@ -157,14 +181,6 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
          not np.array_equal(finite.astype(a["mask"].dtype),a["mask"]))
     # The scene oracle is indexed by world XY relative to each static terrain origin.
     # It is intentionally independent of the measured height and sensor Z.
-    oracle_z=np.zeros(finite.shape);oracle_finite=np.ones(finite.shape,dtype=bool)
-    oracle_edge=np.full(finite.shape,np.inf)
-    for env in range(8):
-        kind=("flat","obstacles","gap","stepping_stones")[env//2]
-        local=expected[:,env]-a["env_origin_w"][:,env,None,:2]
-        z,valid,edge=oracle(kind,local)
-        oracle_z[:,env]=z;oracle_finite[:,env]=valid;oracle_edge[:,env]=edge
-    expected_edge=oracle_edge<=criteria.boundary_exclusion_m
     hold("boundary_mask",not np.array_equal(a["edge_excluded"].astype(bool),expected_edge))
     hold("boundary_unreported",meta.get("boundary_count")!=int(expected_edge.sum()) or
          meta.get("boundary_exclusion_sha256")!=hashlib.sha256(expected_edge.tobytes()).hexdigest())

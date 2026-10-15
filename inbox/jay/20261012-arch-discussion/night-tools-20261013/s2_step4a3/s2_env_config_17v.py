@@ -86,6 +86,18 @@ def configure_env(base_cfg, spec: EnvironmentSpec, *, diagnostic_kind: str | Non
         cmd.ranges.ang_vel_z=(0.0,0.0)
         if getattr(cmd.ranges,"heading",None) is not None:cmd.ranges.heading=None
         cfg.episode_length_s=max(20.0,256*cfg.decimation*cfg.sim.dt+5.0)
+        # A3.2 (attempt 3, 10/15): with gravity and the base_contact termination the robot sagged from z 0.4 to 0.17
+        # in 16 steps, was auto-reset five times (envs 4, 5, 6) and the gap_90 robot fell through the hole to
+        # z -66 m, which put the ray starts (robot z + 20 m) below the ground. This diagnostic only checks the
+        # sensor-to-map chain, so the robot is held in place: no gravity, no contact termination. This applies to
+        # the eight_case diagnostic branch only.
+        rigid=getattr(getattr(cfg.scene.robot,"spawn",None),"rigid_props",None)
+        if rigid is None or not hasattr(rigid,"disable_gravity"):
+            raise ValueError("robot rigid_props.disable_gravity missing")
+        rigid.disable_gravity=True
+        if not hasattr(cfg.terminations,"base_contact"):
+            raise ValueError("base_contact termination missing")
+        cfg.terminations.base_contact=None
     cfg.scene.terrain.terrain_generator = terrain
     cfg.scene.terrain.terrain_generator.border_width=0.0
     cfg.scene.terrain.terrain_generator.use_cache=False

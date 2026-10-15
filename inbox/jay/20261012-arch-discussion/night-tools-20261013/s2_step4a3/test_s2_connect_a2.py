@@ -41,7 +41,7 @@ def fixture():
           "sim_step":np.arange(t,dtype=np.int64),
           "sensor_step":np.broadcast_to(np.arange(t)[:,None],(t,n)).copy(),
           "sensor_generation":np.broadcast_to(np.arange(1,t+1)[:,None],(t,n)).copy(),
-          "sensor_timestamp":np.broadcast_to((np.arange(t)*.02)[:,None],(t,n)).copy(),
+          "sensor_timestamp":np.broadcast_to((np.where(np.arange(t)>=128,np.arange(t)-128,np.arange(t))*.02)[:,None],(t,n)).copy(),
           "packet_id":np.asarray([f"p{i}" for i in range(t)]),
           "intervention_code":np.asarray([1 if i==64 else 2 if i==128 else 3 if i==192 else 0 for i in range(t)]),
           "mode":np.asarray([0 if i<16 else 1 for i in range(t)]),

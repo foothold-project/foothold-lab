@@ -13,7 +13,7 @@ import traceback
 
 import numpy as np
 
-from s2_connect_check_17v import CASES, Criteria, check_path, HOLD_CODE
+from s2_connect_check_17v import CASES, Criteria, check_path, HOLD_CODE, scene_expectation
 from s2_env_config_17v import BASE_TASK, EnvironmentSpec, configure_env
 from s2_capture_journal_a2 import CaptureJournal,atomic_json
 from s2_known_scene_a2 import answer_sha256
@@ -25,6 +25,76 @@ def sha256_file(path):
         for block in iter(lambda:f.read(1<<20),b""):
             h.update(block)
     return h.hexdigest()
+
+
+def versions_snapshot():
+    """A3.2: tool versions the checker requires. An empty string stays empty on purpose (the checker HOLDs)."""
+    out={"isaac_version":"","kit_version":"","torch_version":"","driver_version":""}
+    try:
+        import importlib.metadata as md
+        parts=[]
+        for name in ("isaaclab","isaacsim"):
+            try:parts.append(name+"="+md.version(name))
+            except Exception:pass
+        out["isaac_version"]=";".join(parts)
+    except Exception:pass
+    try:
+        import omni.kit.app
+        out["kit_version"]=str(omni.kit.app.get_app().get_kit_version())
+    except Exception:pass
+    try:
+        import torch
+        out["torch_version"]=str(torch.__version__)
+    except Exception:pass
+    try:
+        import pynvml
+        pynvml.nvmlInit()
+        v=pynvml.nvmlSystemGetDriverVersion()
+        out["driver_version"]=v.decode() if isinstance(v,bytes) else str(v)
+    except Exception:pass
+    return out
+
+
+def fixed_pose_ok(arrays,tolerance=.002):
+    return bool(np.max(np.abs(arrays["root_pos_w"][:16]-arrays["root_pos_w"][0]),initial=0)<=tolerance and
+                np.max(np.abs(arrays["root_quat_w"][:16]-arrays["root_quat_w"][0]),initial=0)<=tolerance and
+                np.max(np.abs(arrays["pos_w"][:16]-arrays["pos_w"][0]),initial=0)<=tolerance)
+
+
+def terrain_assignment_ok(arrays):
+    t=arrays["terrain_type"]
+    return bool(np.array_equal(t[0],[0,0,1,1,2,2,3,3]) and np.all(t==t[0]) and
+                not np.any(arrays["terrain_level"]!=0) and np.isfinite(arrays["env_origin_w"]).all())
+
+
+def finalize_provenance(root,arrays,edge,observed,versions,asset_sha256,mount):
+    """Write the boundary and mesh evidence files and return the meta fields the checker reads.
+    `observed` is the result of observe_collision_kit (or a stand-in): {'evidence': dict|None, 'errors': [...], 'usd': {...}}."""
+    root=Path(root)
+    edge=np.asarray(edge,dtype=bool)
+    boundary=root/"boundary_evidence.bin"
+    boundary.write_bytes(edge.tobytes())
+    meta={**versions,"asset_sha256":asset_sha256 or "",
+          "boundary_count":int(edge.sum()),
+          "boundary_exclusion_sha256":hashlib.sha256(edge.tobytes()).hexdigest(),
+          "boundary_evidence_path":str(boundary),
+          "boundary_evidence_sha256":sha256_file(boundary),
+          "root_sensor_offset_b":mount,
+          "terrain_assignment_verified":terrain_assignment_ok(arrays),
+          "fixed_pose_verified":fixed_pose_ok(arrays),
+          "mesh_collision_verified":False}
+    atomic_json(root/"a32_probe_report.json",{"errors":observed.get("errors",[]),"usd":observed.get("usd"),
+                                              "evidence_kind":(observed.get("evidence") or {}).get("kind")})
+    evidence=observed.get("evidence")
+    if evidence:
+        mesh=root/"mesh_evidence.json"
+        mesh.write_text(json.dumps(evidence,sort_keys=True,indent=2,default=str),encoding="utf-8")
+        meta.update(mesh_evidence_path=str(mesh),mesh_evidence_sha256=sha256_file(mesh),
+                    mesh_prim_path=evidence["prim_path"],mesh_vertices_sha256=evidence["vertices_sha256"],
+                    mesh_faces_sha256=evidence["faces_sha256"],mesh_transform_sha256=evidence["world_transform_sha256"],
+                    collision_mesh_sha256=evidence["collision_sha256"],
+                    mesh_collision_verified=evidence["kind"]=="observed_collision_mesh")
+    return meta
 
 
 def capture(provider, *, steps: int, journal=None):
@@ -149,6 +219,18 @@ class IsaacProvider:
             torch.zeros_like(self.raw.action_manager.action))
         self.episodes+=self.last_dones.detach().cpu().numpy().astype(np.int64)
         self._step+=1
+
+    def mount_offset(self):
+        """Offset of the sensor frame from the tracked body (RayCaster._offset), None unless every env agrees and the
+        rotation is identity. cfg.offset.pos (+20 m) moves the RAY STARTS, not pos_w, so it is not this value."""
+        try:
+            pos,quat=self.scanner._offset
+            pos=pos.detach().cpu().numpy();quat=quat.detach().cpu().numpy()
+            if not (np.all(pos==pos[0]) and np.all(quat==quat[0]) and np.allclose(quat[0],[1,0,0,0],atol=1e-6)):
+                return None
+            return [float(x) for x in pos[0]]
+        except Exception:
+            return None
 
     def emergency_raw(self,step):
         def cpu(x):return x.detach().cpu().numpy()
@@ -299,19 +381,29 @@ def _main_capture(argv,journal):
         from s2_mesh_probe_a2 import probe as mesh_probe
         atomic_json(root/"mesh_probe.json",mesh_probe(provider.scanner))
         arrays=capture(provider,steps=256,journal=journal)
+        # A3.2: the boundary mask uses the checker's own float64 formula (attempt 3 had a 1-sample float32 mismatch).
+        edge=scene_expectation(arrays,criteria.boundary_exclusion_m)[5]
+        recorded_edge_mismatch=int((arrays["edge_excluded"].astype(bool)!=edge).sum())
+        arrays["edge_excluded"]=edge
         np.savez_compressed(root/"capture.npz",**arrays)
-        # Mesh/collision hashes and fixed-pose evidence need a verified live accessor.
-        # Missing provenance is a deliberate HOLD in the independent checker.
+        # A3.2: collision / mesh probes after the capture, errors swallowed into the report (never stop the capture).
+        try:
+            from s2_mesh_probe_a2 import observe_collision_kit
+            observed=observe_collision_kit(provider.scanner,arrays,edge)
+        except BaseException as ex:
+            observed={"evidence":None,"errors":["observe_collision:"+repr(ex)],"usd":None}
+        asset=Path(a.asset_path)
+        provenance=finalize_provenance(root,arrays,edge,observed,versions_snapshot(),
+                                       sha256_file(asset) if asset.is_file() else "",provider.mount_offset())
         meta={"cases":list(CASES),"parent_sha256":sha256_file(a.parent),
               "code_sha256":sha256_file(__file__),"env_config_sha256":spec.sha256("eight_case"),
               "capture_sha256":sha256_file(root/"capture.npz"),
               "optimizer_steps":0,"control_steps":256,
-              "terrain_assignment_verified":False,"mesh_collision_verified":False,
-              "fixed_pose_verified":False,
+              "recorded_edge_mismatch_before_recompute":recorded_edge_mismatch,
               "started_epoch":journal.started_epoch,"attempt":a.attempt,
               "device_uuid":a.gpu_uuid,"final_cfg_sha256":provider.final_cfg_sha256,
               "device_binding":device_info,
-              "scene_answer_sha256":answer_sha256(),"purpose":"stage0_information_only"}
+              "scene_answer_sha256":answer_sha256(),"purpose":"stage0_information_only",**provenance}
         (root/"meta.json").write_text(json.dumps(meta,sort_keys=True,indent=2),encoding="utf-8")
         result=check_path(root,criteria)
         (root/"check.json").write_text(json.dumps(result,sort_keys=True,indent=2),encoding="utf-8")

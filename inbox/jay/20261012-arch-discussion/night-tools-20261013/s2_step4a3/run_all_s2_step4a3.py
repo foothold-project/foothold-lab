@@ -12,6 +12,7 @@ NORMAL = (
     "test_s2_stage0_contract_a2.py", "test_s2_job_owner.py", "test_s2_job_object_os.py",
     "test_s2_resource_lease.py", "test_s2_zero_supervisor.py",
     "test_s2_capture_to_check_a3.py", "test_s2_prelaunch_competing_a3.py", "test_s2_hard_watchdog.py",
+    "test_s2_a32.py",
 )
 MUTANT_SETS = (  # (label, argv after python -B script, expected caught)
     ("a_mutants", "test_s2_step4_mutants.py", 5),
@@ -62,9 +63,10 @@ def main():
                 ok = False
                 break
     if ok:
-        for label, script in (("a3_mutants", "test_s2_a3_mutants.py"), ("watchdog_mutants", "test_s2_hard_watchdog_mutants.py")):
+        for label, script in (("a3_mutants", "test_s2_a3_mutants.py"), ("watchdog_mutants", "test_s2_hard_watchdog_mutants.py"),
+                              ("a32_mutants", "test_s2_a32_mutants.py")):
             t = time.monotonic()
-            menv = dict(env, S2_A3_MUT_OUT=str(root / (label + ".json")))
+            menv = dict(env, S2_A3_MUT_OUT=str(root / (label + ".json")), S2_A32_MUT_OUT=str(root / (label + ".json")))
             proc = subprocess.run([sys.executable, "-B", str(HERE / script)], cwd=HERE, env=menv, text=True,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900)
             (root / (label + ".log")).write_text(proc.stdout, encoding="utf-8")
