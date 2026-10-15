@@ -219,6 +219,14 @@ def main():
     run, ctl, manifest, mpath, apath = build(mode, attendee, consent)
     print("[3] frozen:", mpath, "\n    approval:", apath, "\n    deadline_epoch=%.0f max_wall_s=%d" % (
         manifest["deadline_epoch"], manifest["max_wall_s"]), flush=True)
+    OBSERVER = Path(__file__).resolve().parent / "s2_family_observer.py"
+    if a.live:
+        # ASTRA 17ae section 5: an observer OUTSIDE the supervisor's Job records a baseline now and verifies after the exit
+        base = subprocess.run([str(PY), "-B", str(OBSERVER), "record", "--run", str(run), "--gpu-uuid", GPU0_UUID],
+                              capture_output=True, text=True, timeout=180, encoding="utf-8", errors="replace")
+        print("[3b] observer baseline rc=%s %s" % (base.returncode, (base.stdout or base.stderr).strip()[-160:]), flush=True)
+        if base.returncode != 0:
+            raise SystemExit("NO_GO: independent observer baseline failed; nothing started")
     rc, report, took, err = run_prelaunch(mpath, apath)
     print("[4] prelaunch rc=%s took=%.1fs status=%s reason=%s" % (rc, took, (report or {}).get("status"),
                                                                  (report or {}).get("reason")), flush=True)
@@ -248,6 +256,14 @@ def main():
     proc = subprocess.Popen([str(PY), "-B", str(BUNDLE / "s2_zero_supervisor.py"),
                              "--manifest", str(mpath), "--approval", str(apath)], cwd=str(BUNDLE), env=env)
     print("    supervisor pid=%d" % proc.pid, flush=True)
+    known = {}
+    def note_pid(pid):
+        try:
+            import psutil
+            known.setdefault(int(pid), psutil.Process(int(pid)).create_time())
+        except Exception:
+            pass
+    note_pid(proc.pid)
     stop_sent = None
     min_free = None
     try:
@@ -255,6 +271,10 @@ def main():
             for _ in range(10):
                 time.sleep(1)
                 value = free_vram_bytes(manifest["status_path"])
+                try:
+                    note_pid(json.loads(Path(manifest["status_path"]).read_text(encoding="utf-8")).get("pid"))
+                except Exception:
+                    pass
                 if isinstance(value, int) and (min_free is None or value < min_free):
                     min_free = value
                 if proc.poll() is not None:
@@ -280,6 +300,16 @@ def main():
     (run / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
     print("[6] supervisor rc=%s elapsed=%.0fs\n    %s\n    summary: %s" % (
         rc2, summary["elapsed_s"], summary["final_status"], run / "summary.json"), flush=True)
+    if a.live and rc2 is not None:
+        time.sleep(2)
+        known_arg = ",".join("%d:%f" % (k, v) for k, v in known.items())
+        ver = subprocess.run([str(PY), "-B", str(OBSERVER), "verify", "--run", str(run), "--gpu-uuid", GPU0_UUID,
+                              "--known-pids", known_arg], capture_output=True, text=True, timeout=300,
+                             encoding="utf-8", errors="replace")
+        print("[7] independent family observation rc=%s\n    %s" % (ver.returncode, (ver.stdout or ver.stderr).strip()[-400:]),
+              flush=True)
+        summary["family_observation_rc"] = ver.returncode
+        (run / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
     return 0
 
 

@@ -61,3 +61,15 @@
 - **질의 속도**: 69 step x 1,496광선. 150초 예산을 넘으면 남은 step을 건너뛰고 증거가 그렇게 말한다(캡처는 계속).
 - **native 오류**는 Python try/except로 못 잡을 수 있다(ASTRA 17ac). 기존 hard deadline과 가족 정리가 적용된다.
 - 자산 다이제스트는 URL의 주 레이어 한 파일뿐이다(참조 레이어 미포함).
+
+## 6. 추가 (19:45): 독립 가족 정리 관찰자 (ASTRA 17ae 5절 최소 요건)
+
+- 새 도구 `night-tools-20261013/s2_step4a3_launch/s2_family_observer.py`(+ `test_s2_family_observer.py`, 10 PASS, 실제 OS 프로세스와 실제 파일 잠금 사용, GPU 작업 없음). 기동 도구가 live 일 때 **감독기를 띄우기 전에 기준선 `record`, 감독기가 끝난 뒤 `verify`** 를 Job 밖의 별도 프로세스로 호출하고 `run/family_baseline.json` `run/family_observation.json` 에 남긴다.
+- verify 가 하는 일: 감독기와 자식의 PID **및 생성 시각**을 상태 파일에서 모아 두고, 종료 뒤 4초 간격으로 두 번 관찰해 (1) 기준선에 없던 Isaac/Kit/우리 도구/실행 폴더가 argv 에 든 프로세스가 있는지, (2) 알려진 attempt PID 가 같은 생성 시각으로 살아 있는지(PID 재사용은 다른 생성 시각이라 사망 증거를 혼동하지 않음), (3) 지정 **물리 UUID** 의 NVML compute 와 `nvidia-smi` 두 시각, (4) 같은 GPU lease(실행별 `ctl/lease`)와 공통 USD 잠금을 비차단으로 잠깐 잡았다 즉시 푸는지, (5) 영수증들의 SHA 와 `family_active_count`. 읽지 못한 프로세스 목록 · NVML 미지원은 **UNKNOWN(HOLD)** 이고 PASS 가 아니다. WDDM 에서 NVML 빈 목록은 「없음」 이 아니라 「보고되지 않음」 일 수 있다고 출력에 적는다. 도구는 프로세스를 죽이지 않고 다른 소유자의 잠금을 건드리지 않으며 한 attempt 에 한 번만 쓴다.
+- 한계: 다른 세션의 CPU 시험이 같은 도구 이름으로 프로세스를 띄우면 `os_residual` 로 잡힌다(사람이 읽고 판단). 기동 도구의 live 배선(기준선 → 감독기 → verify)은 실제 4차에서 처음 실행된다(예행은 감독기를 띄우지 않으므로 이 경로를 지나지 않는다). 기준선 단계가 실패하면 NO_GO 로 아무것도 시작하지 않는다.
+
+## 7. 정정 (ASTRA 17ae 로 바로잡은 lead 의 서술)
+
+- 「sol 보고의 271 이 틀렸다」 는 내가 틀렸다. 271 은 정상 단계, 273 은 변이 단계의 정상 선행 2개를 더한 값이다. 두 수 모두 맞고 의미가 다르다.
+- 「지도 계산 모듈 6개가 A3 와 바이트 동일」 은 **5/6**: `s2_ppo_17v.py` 는 loss · 그룹별 pre-clip grad · norm 기록과 비유한 grad 거절이 추가돼 다르다.
+- 「sol final2 와 lead 결과가 같다」 는 저장소 사본에 `evidence_s2_step7/final2/summary.json` 이 없어서 이 사본으로는 확인되지 않는다(lead 의 `lead_rerun_1908` 과 ASTRA 독립 실행은 따로 유효).
