@@ -13,10 +13,10 @@ test_s2_zero_supervisor.py 0 6
 test_s2_capture_to_check_a3.py 0 4
 test_s2_prelaunch_competing_a3.py 0 7
 test_s2_hard_watchdog.py 0 13
-test_s2_a32.py 0 52
+test_s2_a32.py 0 75
 a_mutants 0 5 / 5
 a2_mutants 0 6 / 6
 a3_mutants 0 SUMMARY 7/7 CAUGHT
 watchdog_mutants 0 SUMMARY 4/4 CAUGHT
-a32_mutants 0 SUMMARY 15/15 CAUGHT
+a32_mutants 0 SUMMARY 28/28 CAUGHT
 frozen_clean_import 0 22 hashes True lines 49

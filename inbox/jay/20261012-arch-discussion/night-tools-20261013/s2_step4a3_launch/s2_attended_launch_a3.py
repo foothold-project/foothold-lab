@@ -42,12 +42,13 @@ PARENT_SHA = "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8"
 HOOK = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/sensors/ray_caster/ray_caster.py")
 ISOLATE = Path("C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py")
 ISOLATE_SHA = "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
-LIST_SHA = "089f6f16a52f40f5b351a3e14eb38567b3320a8ea0a00da8f76aabfca6527df2"
+LIST_SHA = "98bd193683ba48d8ad2ff4787309db0c8d572e4f0768044e866cda62758ff7f1"
 ASSET = ("https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/"
          "IsaacLab/Robots/Unitree/Go2/go2.usd")
-VERDICT_DOC = WORK.parent / "VERIFY-astra-17ab.md"
+VERDICT_DOC = WORK.parent / "VERIFY-astra-17ac.md"
 PREVIOUS_CHAINS = ({"chain_id": "s2-stage0-a3-live-20261015-140314", "result": "START_FAILURE_EULA_PROMPT"},
-                   {"chain_id": "s2-stage0-a3-live-20261015-142719", "result": "START_FAILURE_TENSORDICT_ACCESS_VIOLATION_AFTER_KIT_AND_DEVICE_BINDING_OK"})
+                   {"chain_id": "s2-stage0-a3-live-20261015-142719", "result": "START_FAILURE_TENSORDICT_ACCESS_VIOLATION_AFTER_KIT_AND_DEVICE_BINDING_OK"},
+                   {"chain_id": "s2-stage0-a3-live-20261015-150639", "result": "COLLECTED_256_ROWS_CHECKER_HOLD_13_REASONS"})
 MAX_WALL_S = 900
 DEADLINE_SLACK_S = 1500
 GIB = 1024 ** 3
@@ -69,7 +70,7 @@ def verify_frozen_bundle():
         path = BUNDLE / name
         if not path.is_file() or sha(path) != digest:
             bad.append(name)
-    if count != 47 or bad:
+    if count != 49 or bad:
         raise SystemExit("NO_GO: bundle hash check %d files, bad=%s" % (count, bad))
     return count
 
@@ -102,8 +103,8 @@ def build(mode: str, attendee: str, consent: dict | None = None):
         "observer_mode": "attended", "reservation_confirmed": True,
         "attendee": attendee, "permission_doc": str(VERDICT_DOC.name),
         "permission_doc_sha256": sha(VERDICT_DOC),
-        "attempt_ordinal": 3, "previous_chains": list(PREVIOUS_CHAINS),
-        "bundle": "A3.1 (one diag file changed: h5py/torch/tensordict preloaded before isaaclab.app)",
+        "attempt_ordinal": 4, "previous_chains": list(PREVIOUS_CHAINS),
+        "bundle": "A3.2 (A3.1 + robot held in place: gravity and base_contact termination off in the eight_case diagnostic; reset-aware sensor clock in the checker; one boundary formula; observed Warp/PhysX mesh evidence; provenance fields filled)",
         "env_added_for_child": {"OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUNBUFFERED": "1"},
         "launch_tool_sha256": sha(__file__), "eula_and_attendance_consent": consent,
         "python_path": str(PY), "python_sha256": sha(PY),
@@ -131,7 +132,7 @@ def build(mode: str, attendee: str, consent: dict | None = None):
     }
     manifest["diag_args"] = required_args(manifest)
     approval = {"status": "APPROVED", "chain_id": manifest["chain_id"],
-                "by": "lead freeze under ASTRA 17ab conditional permission (third attempt, A3.1); attendee=" + attendee,
+                "by": "lead freeze under ASTRA 17ac permission (fourth attempt, A3.2); attendee=" + attendee,
                 "manifest_sha256": hashlib.sha256(canonical(manifest)).hexdigest(),
                 "expires_epoch": deadline + 300}
     mpath, apath = in_dir / "manifest.json", in_dir / "approval.json"

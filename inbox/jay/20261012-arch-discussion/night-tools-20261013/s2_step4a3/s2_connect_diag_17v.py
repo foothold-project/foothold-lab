@@ -27,6 +27,26 @@ def sha256_file(path):
     return h.hexdigest()
 
 
+def asset_sha256_of(asset):
+    """A3.2: the approved asset reference is the Isaac Sim S3 URL of go2.usd (attempt 3 argv), not a local file.
+    Hash a local file directly, otherwise read the main layer through omni.client. Empty string when neither works
+    (the checker then HOLDs provenance_missing); the layers it references are not hashed."""
+    try:
+        p=Path(asset)
+        if p.is_file():
+            return sha256_file(p)
+    except (OSError,ValueError):
+        pass
+    try:
+        import omni.client
+        result,_,content=omni.client.read_file(str(asset))
+        if result==omni.client.Result.OK:
+            return hashlib.sha256(bytes(memoryview(content))).hexdigest()
+    except Exception:
+        pass
+    return ""
+
+
 def versions_snapshot():
     """A3.2: tool versions the checker requires. An empty string stays empty on purpose (the checker HOLDs)."""
     out={"isaac_version":"","kit_version":"","torch_version":"","driver_version":""}
@@ -84,8 +104,15 @@ def finalize_provenance(root,arrays,edge,observed,versions,asset_sha256,mount):
           "fixed_pose_verified":fixed_pose_ok(arrays),
           "mesh_collision_verified":False}
     atomic_json(root/"a32_probe_report.json",{"errors":observed.get("errors",[]),"usd":observed.get("usd"),
-                                              "evidence_kind":(observed.get("evidence") or {}).get("kind")})
+                                              "evidence_kind":(observed.get("evidence") or {}).get("kind"),
+                                              "sensor_frame":observed.get("sensor_frame"),
+                                              "recorded_edge_differences":observed.get("recorded_edge_differences")})
     evidence=observed.get("evidence")
+    raw=observed.get("raw")
+    if evidence and raw is not None:
+        raw_file=root/"physx_queries.npz"
+        np.savez_compressed(raw_file,**raw)
+        evidence=dict(evidence,raw_query_file=str(raw_file),raw_query_file_sha256=sha256_file(raw_file))
     if evidence:
         mesh=root/"mesh_evidence.json"
         mesh.write_text(json.dumps(evidence,sort_keys=True,indent=2,default=str),encoding="utf-8")
@@ -118,6 +145,9 @@ def capture(provider, *, steps: int, journal=None):
                 if journal is not None:journal.raw(step,raw)
                 stage="derive_map"
                 row=provider.derive_map(raw)
+                if hasattr(provider,"observe_physx"):
+                    stage="physx_sample"
+                    provider.observe_physx(step,row)
             else:
                 stage="sample"
                 row=provider.sample(step)
@@ -179,6 +209,7 @@ class IsaacProvider:
         self.num_envs=8
         self.geometry_tolerance_m=spec.geometry_tolerance_m
         self.episodes=np.zeros(8,dtype=np.int64)
+        self.physx=None;self.physx_error=None
         self._step=-1
         self._interventions=[]
         self.last_obs=None;self.last_dones=None;self.last_extras={}
@@ -220,6 +251,36 @@ class IsaacProvider:
         self.episodes+=self.last_dones.detach().cpu().numpy().astype(np.int64)
         self._step+=1
 
+    def observe_physx(self,step,row):
+        """A3.2: fire this step's RayCaster rays through PhysX while the scene is exactly as the sensor saw it.
+        Python exceptions are recorded, never raised (a native fault is not catchable here)."""
+        try:
+            if self.physx is None:
+                from s2_mesh_probe_a2 import PhysxSampler
+                self.physx=PhysxSampler(str(self.scanner.cfg.mesh_prim_paths[0]))
+            self.physx.observe(step,row["ray_starts_w"],row["ray_directions_w"])
+        except Exception as ex:
+            self.physx_error=repr(ex)
+
+    def sensor_frame_info(self):
+        """Facts about the sensor frame that the checker's root_sensor_transform and ray checks rely on."""
+        info={}
+        try:
+            cfg=self.scanner.cfg
+            info["cfg_prim_path"]=str(cfg.prim_path)
+            info["ray_alignment"]=str(getattr(cfg,"ray_alignment",None))
+            info["cfg_offset_pos_ray_starts"]=[float(x) for x in cfg.offset.pos]
+            info["cfg_offset_rot"]=[float(x) for x in cfg.offset.rot]
+            pos,quat=self.scanner._offset
+            info["view_offset_pos_envs_equal"]=bool(np.all(pos.detach().cpu().numpy()==pos[0].detach().cpu().numpy()))
+            info["view_offset_quat"]=[float(x) for x in quat[0].detach().cpu().numpy()]
+            info["drift_max_abs"]=float(self.scanner.drift.abs().max().item())
+            info["ray_cast_drift_max_abs"]=float(self.scanner.ray_cast_drift.abs().max().item())
+            info["tracked_body_names"]=[str(x) for x in getattr(self.robot,"body_names",[])][:3]
+        except Exception as ex:
+            info["error"]=repr(ex)
+        return info
+
     def mount_offset(self):
         """Offset of the sensor frame from the tracked body (RayCaster._offset), None unless every env agrees and the
         rotation is identity. cfg.offset.pos (+20 m) moves the RAY STARTS, not pos_w, so it is not this value."""
@@ -227,6 +288,8 @@ class IsaacProvider:
             pos,quat=self.scanner._offset
             pos=pos.detach().cpu().numpy();quat=quat.detach().cpu().numpy()
             if not (np.all(pos==pos[0]) and np.all(quat==quat[0]) and np.allclose(quat[0],[1,0,0,0],atol=1e-6)):
+                return None
+            if float(self.scanner.drift.abs().max().item())!=0.0 or float(self.scanner.ray_cast_drift.abs().max().item())!=0.0:
                 return None
             return [float(x) for x in pos[0]]
         except Exception:
@@ -382,24 +445,33 @@ def _main_capture(argv,journal):
         atomic_json(root/"mesh_probe.json",mesh_probe(provider.scanner))
         arrays=capture(provider,steps=256,journal=journal)
         # A3.2: the boundary mask uses the checker's own float64 formula (attempt 3 had a 1-sample float32 mismatch).
-        edge=scene_expectation(arrays,criteria.boundary_exclusion_m)[5]
-        recorded_edge_mismatch=int((arrays["edge_excluded"].astype(bool)!=edge).sum())
+        scene=scene_expectation(arrays,criteria.boundary_exclusion_m)
+        edge=scene[5]
+        # ASTRA 17ac: keep the mask as recorded from the rays and the differences; the recomputed mask only replaces
+        # edge_excluded, it never hides the original.
+        arrays["edge_excluded_recorded"]=np.asarray(arrays["edge_excluded"]).astype(bool).copy()
+        differing=np.argwhere(arrays["edge_excluded_recorded"]!=edge)
+        recorded_edge_mismatch=int(len(differing))
         arrays["edge_excluded"]=edge
         np.savez_compressed(root/"capture.npz",**arrays)
-        # A3.2: collision / mesh probes after the capture, errors swallowed into the report (never stop the capture).
+        # A3.2: collision / mesh probes (PhysX samples were taken inside the capture loop), errors swallowed.
         try:
             from s2_mesh_probe_a2 import observe_collision_kit
-            observed=observe_collision_kit(provider.scanner,arrays,edge)
+            observed=observe_collision_kit(provider.scanner,arrays,edge,scene,provider.physx)
         except BaseException as ex:
-            observed={"evidence":None,"errors":["observe_collision:"+repr(ex)],"usd":None}
-        asset=Path(a.asset_path)
+            observed={"evidence":None,"errors":["observe_collision:"+repr(ex)],"usd":None,"raw":None}
+        observed.setdefault("errors",[])
+        if provider.physx_error:observed["errors"].append("observe_physx:"+provider.physx_error)
+        observed["sensor_frame"]=provider.sensor_frame_info()
+        observed["recorded_edge_differences"]=[[int(x) for x in row] for row in differing[:20]]
         provenance=finalize_provenance(root,arrays,edge,observed,versions_snapshot(),
-                                       sha256_file(asset) if asset.is_file() else "",provider.mount_offset())
+                                       asset_sha256_of(a.asset_path),provider.mount_offset())
         meta={"cases":list(CASES),"parent_sha256":sha256_file(a.parent),
               "code_sha256":sha256_file(__file__),"env_config_sha256":spec.sha256("eight_case"),
               "capture_sha256":sha256_file(root/"capture.npz"),
               "optimizer_steps":0,"control_steps":256,
               "recorded_edge_mismatch_before_recompute":recorded_edge_mismatch,
+              "recorded_edge_differences_first20":observed["recorded_edge_differences"],
               "started_epoch":journal.started_epoch,"attempt":a.attempt,
               "device_uuid":a.gpu_uuid,"final_cfg_sha256":provider.final_cfg_sha256,
               "device_binding":device_info,

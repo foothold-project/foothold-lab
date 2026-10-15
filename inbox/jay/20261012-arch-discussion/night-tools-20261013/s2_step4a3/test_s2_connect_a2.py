@@ -23,6 +23,7 @@ def fixture():
     hits=np.empty((t,n,r,3),dtype=np.float64)
     hits[...,0]=pos[...,0,None]+c*GRID[None,None,:,0]-s*GRID[None,None,:,1]
     hits[...,1]=pos[...,1,None]+s*GRID[None,None,:,0]+c*GRID[None,None,:,1]
+    start_xy=hits[...,:2].copy()  # the rays' own XY, also where the hit is a miss
     edge=np.zeros((t,n,r),dtype=bool)
     for env in range(n):
         kind=("flat","obstacles","gap","stepping_stones")[env//2]
@@ -32,7 +33,7 @@ def fixture():
         edge[:,env]=distance<=.005
     finite=np.isfinite(hits).all(-1)
     height=np.clip(pos[...,2,None]-.5-hits[...,2],-1,1);height[~finite]=1
-    starts=np.empty_like(hits);starts[...,:2]=np.where(finite[...,None],hits[...,:2],0.)
+    starts=np.empty_like(hits);starts[...,:2]=start_xy
     starts[...,2]=pos[...,2,None]+20
     dirs=np.zeros_like(hits);dirs[...,2]=-1
     data={"pos_w":pos,"ray_hits_w":hits,"root_pos_w":pos.copy(),"root_quat_w":quat,
@@ -41,17 +42,20 @@ def fixture():
           "sim_step":np.arange(t,dtype=np.int64),
           "sensor_step":np.broadcast_to(np.arange(t)[:,None],(t,n)).copy(),
           "sensor_generation":np.broadcast_to(np.arange(1,t+1)[:,None],(t,n)).copy(),
-          "sensor_timestamp":np.broadcast_to((np.where(np.arange(t)>=128,np.arange(t)-128,np.arange(t))*.02)[:,None],(t,n)).copy(),
+          "sensor_timestamp":np.broadcast_to((np.where(np.arange(t)>=128,np.arange(t)-127,np.arange(t))*.02)[:,None],(t,n)).copy(),
           "packet_id":np.asarray([f"p{i}" for i in range(t)]),
           "intervention_code":np.asarray([1 if i==64 else 2 if i==128 else 3 if i==192 else 0 for i in range(t)]),
           "mode":np.asarray([0 if i<16 else 1 for i in range(t)]),
           "edge_excluded":edge,"terrain_type":np.broadcast_to(np.asarray([0,0,1,1,2,2,3,3]),(t,n)).copy(),
           "terrain_level":np.zeros((t,n),dtype=np.int64),
-          "ray_starts_w":starts,"ray_directions_w":dirs,"ray_index":np.arange(r)}
+          "ray_starts_w":starts,"ray_directions_w":dirs,"ray_index":np.arange(r),
+          "termination":np.zeros((t,n),dtype=np.int64),"timeout":np.zeros((t,n),dtype=bool),
+          "reset_mask":np.broadcast_to((np.arange(t)==128)[:,None],(t,n)).copy()}
     root=Path(tempfile.mkdtemp(prefix="s2_a2_fixture_"))
     boundary=root/"boundary.bin";boundary.write_bytes(edge.tobytes())
     mesh=root/"mesh.json"
-    mesh.write_text(json.dumps({"kind":"observed_collision_mesh","prim_path":"/World/ground",
+    mesh.write_text(json.dumps({"kind":"observed_collision_mesh","scope":"sampled_collision_response","branches_ok":True,
+                                "prim_path":"/World/ground",
                                 "vertices_sha256":"v"*64,"faces_sha256":"f"*64,
                                 "collision_sha256":"c"*64}),encoding="utf-8")
     meta={k:"fixture" for k in ("parent_sha256","code_sha256","capture_sha256","env_config_sha256",

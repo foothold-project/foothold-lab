@@ -12,6 +12,11 @@ import numpy as np
 from s2_known_scene_a2 import answer_sha256, oracle
 
 HOLD_CODE = 42
+# A3.2 / ASTRA 17ac: the RayCaster clock advances one control step (decimation 4 x sim dt 0.005 s) per row and the
+# sensor restarts it on a reset (installed sensor_base.py:169-187), so the intended step-128 reset reads ~one dt.
+CONTROL_DT_S = 0.02
+CLOCK_TOL_S = 0.001
+RESET_STEP = 128
 CASES = ("flat_0", "flat_90", "step_0", "step_90", "gap_0", "gap_90", "stones_0", "stones_90")
 GRID = np.asarray([(-.8 + .1 * (i % 17), -.5 + .1 * (i // 17)) for i in range(187)])
 
@@ -86,6 +91,7 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
         try:
             mesh=json.loads(mesh_path.read_text(encoding="utf-8"))
             hold("mesh_evidence_content",mesh.get("kind")!="observed_collision_mesh" or
+                 mesh.get("scope")!="sampled_collision_response" or mesh.get("branches_ok") is not True or
                  any(mesh.get(key)!=meta.get(meta_key) for key,meta_key in
                      (("prim_path","mesh_prim_path"),("vertices_sha256","mesh_vertices_sha256"),
                       ("faces_sha256","mesh_faces_sha256"),("collision_sha256","collision_mesh_sha256"))))
@@ -99,7 +105,8 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
                 "height", "mask", "episode_ids", "sim_step", "sensor_step",
                 "sensor_generation", "packet_id", "intervention_code", "mode",
                 "edge_excluded", "terrain_type", "terrain_level", "sensor_timestamp",
-                "ray_starts_w", "ray_directions_w", "ray_index")
+                "ray_starts_w", "ray_directions_w", "ray_index",
+                "termination", "timeout", "reset_mask")
     if any(k not in data for k in required):
         return {"verdict": "HOLD", "reasons": sorted(set(reasons + ["artifact_missing"]))}
     a = {k: np.asarray(data[k]) for k in required}
@@ -114,7 +121,7 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
               "edge_excluded": shape + (187,), "terrain_type": shape,
               "terrain_level": shape,"sensor_timestamp":shape,
               "ray_starts_w":shape+(187,3),"ray_directions_w":shape+(187,3),
-              "ray_index":(187,)}
+              "ray_index":(187,),"termination":shape,"timeout":shape,"reset_mask":shape}
     if any(a[k].shape != v for k, v in wanted.items()):
         return {"verdict": "HOLD", "reasons": sorted(set(reasons + ["shape_or_steps"]))}
     hold("intervention_missing", not np.array_equal(a["intervention_code"][[64,128,192]], [1,2,3]) or
@@ -131,9 +138,12 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
          not np.all(a["sensor_step"] == a["sim_step"][:,None]) or
          not np.all(np.diff(a["sensor_generation"], axis=0) > 0) or
          len(set(map(str, a["packet_id"]))) != criteria.steps or
-         not np.all(a["episode_ids"][128] > a["episode_ids"][127]) or
+         not np.all(a["episode_ids"][RESET_STEP]-a["episode_ids"][RESET_STEP-1] == 1) or
          not np.all(a["episode_ids"][:128] == a["episode_ids"][0]) or
          not np.all(a["episode_ids"][129:] == a["episode_ids"][128]))
+    hold("unscheduled_termination", np.any(np.asarray(a["termination"]) != 0) or np.any(np.asarray(a["timeout"]) != 0))
+    hold("reset_marker", not np.array_equal(np.asarray(a["reset_mask"]).astype(bool),
+                                            np.broadcast_to((np.arange(criteria.steps) == RESET_STEP)[:, None], shape)))
     hold("reset_not_changed", np.allclose(a["root_pos_w"][128], a["root_pos_w"][127]) or
          np.allclose(a["pos_w"][128], a["pos_w"][127]))
     hold("translation_not_seen", np.allclose(a["root_pos_w"][64], a["root_pos_w"][63]))
@@ -147,11 +157,12 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
         return {"verdict": "HOLD", "reasons": reasons}
     hold("height_range",np.any((a["height"] < -1) | (a["height"] > 1)) or
          np.any((a["mask"]!=0)&(a["mask"]!=1)))
-    # A3.2: the sensor clock restarts on a reset (the intended step-128 reset, or any other), so a negative
-    # difference is legal only where this env's episode id increased, and there it must actually rewind.
-    ts_diff=np.diff(a["sensor_timestamp"],axis=0)
-    reset_at=np.diff(a["episode_ids"],axis=0)>0
-    hold("sensor_timestamp",np.any((ts_diff<0)&~reset_at) or np.any((ts_diff>=0)&reset_at))
+    # A3.2: only the scheduled step-128 reset may rewind the sensor clock; every other row advances one control step.
+    clock=np.asarray(a["sensor_timestamp"],dtype=np.float64)
+    ts_diff=np.diff(clock,axis=0)
+    scheduled=np.zeros(ts_diff.shape,dtype=bool);scheduled[RESET_STEP-1,:]=True
+    hold("sensor_timestamp",np.any(np.abs(ts_diff[~scheduled]-CONTROL_DT_S)>CLOCK_TOL_S) or
+         np.any(ts_diff[scheduled]>=0) or np.any(np.abs(clock[RESET_STEP]-CONTROL_DT_S)>CLOCK_TOL_S))
     hold("ray_index",not np.array_equal(a["ray_index"],np.arange(187)))
     q = a["root_quat_w"]
     hold("quaternion_bad", np.max(np.abs(np.linalg.norm(q,axis=-1)-1)) > .001)
@@ -175,6 +186,12 @@ def check_arrays(meta: dict, data: dict, criteria: Criteria) -> dict:
     hold("bad_ray", np.any(~(finite|miss)))
     err = np.max(np.abs(hits[...,:2][finite]-expected[finite]),initial=0)
     hold("grid_or_yaw", err > criteria.xy_tolerance_m)
+    # A3.2 / ASTRA 17ac: the rays themselves must be valid, not only the hits (a robot that fell below the
+    # terrain started its rays under the ground and every ray read as a miss).
+    hold("ray_start_xy", np.max(np.abs(np.asarray(a["ray_starts_w"])[...,:2]-expected),initial=0) > criteria.xy_tolerance_m)
+    hold("ray_direction", np.max(np.abs(np.asarray(a["ray_directions_w"])-np.asarray([0.,0.,-1.])),initial=0) > 1e-4)
+    surface = np.where(oracle_finite, oracle_z, 0.0)
+    hold("ray_start_height", np.any(np.asarray(a["ray_starts_w"])[...,2]-surface < 1.0))
     calc_h = np.clip(a["pos_w"][...,2,None]-.5-hits[...,2],-1,1)
     calc_h[miss] = 1
     hold("height_or_offset", np.max(np.abs(calc_h-a["height"]),initial=0)>criteria.z_tolerance_m or
