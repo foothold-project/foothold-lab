@@ -166,6 +166,13 @@ def status_line(path):
         None if s.get("output_bytes") is None else round(s["output_bytes"] / 1048576, 1))
 
 
+def free_vram_bytes(path):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8")).get("device", {}).get("free_vram_bytes")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def main():
     ap = argparse.ArgumentParser()
     g = ap.add_mutually_exclusive_group(required=True)
@@ -222,10 +229,19 @@ def main():
                              "--manifest", str(mpath), "--approval", str(apath)], cwd=str(BUNDLE))
     print("    supervisor pid=%d" % proc.pid, flush=True)
     stop_sent = None
+    min_free = None
     try:
         while proc.poll() is None:
-            time.sleep(10)
-            print("    t+%ds %s" % (time.time() - t_start, status_line(manifest["status_path"])), flush=True)
+            for _ in range(10):
+                time.sleep(1)
+                value = free_vram_bytes(manifest["status_path"])
+                if isinstance(value, int) and (min_free is None or value < min_free):
+                    min_free = value
+                if proc.poll() is not None:
+                    break
+            print("    t+%ds %s min_free_vram_gib_so_far=%s" % (
+                time.time() - t_start, status_line(manifest["status_path"]),
+                None if min_free is None else round(min_free / GIB, 2)), flush=True)
     except KeyboardInterrupt:
         Path(manifest["stop_path"]).write_text("stop requested by attendee\n", encoding="utf-8")
         stop_sent = time.time()
@@ -237,6 +253,7 @@ def main():
                   flush=True)
     rc2 = proc.poll()
     summary.update(supervisor_rc=rc2, elapsed_s=time.time() - t_start, stop_sent=stop_sent is not None,
+                   min_free_vram_bytes_seen_every_second=min_free,
                    final_status=status_line(manifest["status_path"]))
     out = Path(manifest["out_root"])
     summary["out_files"] = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file())[:200] if out.exists() else []

@@ -61,6 +61,7 @@ ASTRA 가 이 한 번을 **실제 사람이 계속 옆에 있을 때만** 허용
 - 구분해서 쓸 것: **정상 완료 걸음 수 · 보존된 행 수 · 비상 저장 행 여부 · 장치 UUID 원 값 · 변환 기록 · 정리 결과 · 걸린 시간 · 최소 여유 VRAM**
 - 문구: 「참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음」. 256 행이나 종료 코드 0 만으로 「통과」 라고 쓰지 않습니다.
 - 그다음 가장 이른 실패 한 곳부터 고쳐서 두 번째 점검으로 갑니다.
+- 정리 도구 (읽기 전용): `python -B C:/Users/AI-WS01/s2_lab/night-tools-20261013/s2_step4a4_unattended/s2_summarize_run_a4.py <run 폴더>` 가 세 가지 결과(시작 실패 · 부분 수집 · 256 행 검증 보류)를 나누고 정상 완료 걸음 · 원시 행 · 비상 행을 따로 적는다. `s2_collect_run_a4.py <run 폴더> <저장소 안 목적지>` 가 증거를 해시와 함께 저장소로 복사한다. 최소 여유 VRAM 은 기동 도구가 1 초마다 재서 `summary.json` 의 `min_free_vram_bytes_seen_every_second` 에 남긴다.
 
 # 예행에서 확인한 것 (실제 GPU 0 읽기 · 감독기는 안 띄움)
 
