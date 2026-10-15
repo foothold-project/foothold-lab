@@ -1,0 +1,11 @@
+{
+  "captured_steps": 256,
+  "cleanup": {
+    "app_close": "pending",
+    "provider_close": "pending"
+  },
+  "ended_epoch": 1792044430.749692,
+  "last_valid_step": 255,
+  "partial_rows": 256,
+  "verdict": "HOLD_INFORMATION_ONLY"
+}

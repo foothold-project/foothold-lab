@@ -1,0 +1,32 @@
+{
+  "counts": {
+    "boundary": 2494,
+    "deep_finite": 3596,
+    "fixed_steps": 16,
+    "live_steps": 240,
+    "miss": 19308
+  },
+  "criteria": {
+    "boundary_exclusion_m": 0.005,
+    "steps": 256,
+    "warmup_steps": 16,
+    "xy_tolerance_m": 0.002,
+    "z_tolerance_m": 0.002
+  },
+  "reasons": [
+    "boundary_evidence_content",
+    "boundary_evidence_hash",
+    "boundary_mask",
+    "boundary_unreported",
+    "case_assignment",
+    "fixed_pose_evidence",
+    "mesh_evidence_hash",
+    "provenance_missing",
+    "root_sensor_transform",
+    "scene_hit_mask",
+    "sensor_timestamp",
+    "stale_packet",
+    "world_height_answer"
+  ],
+  "verdict": "HOLD"
+}

@@ -515,6 +515,15 @@
 - **조건 유지:** 무인 아님 · 자동 재시도 없음 · optimizer 0 · 변환 0 · 900 초 · GPU 0 UUID `GPU-c08e23b0-…` · 환경 변수 `OMNI_KIT_ACCEPT_EULA=YES` `PYTHONUNBUFFERED=1`. 실패하면 새 예외 · 예상 밖 변환 · 자원 초과 · 장치 불일치 · 상태 정지 모두 HOLD, 가족 종료 확인.
 - **기동 직전 GPU:** GPU 0 15 MiB · Isaac/Kit 없음(15:05). 같은 시각 A4 변이 시험(CPU, 내 프로세스)이 돌고 있어 경쟁 프로세스 검사에 걸리면 도구가 NO_GO 를 낸다.
 
+## S2 첫 GPU 수집 세 번째 시도 결과 (10/15 15:08)
+
+- **결과(chain `s2-stage0-a3-live-20261015-150639`, 15:06:39 ~ 15:07:13 · 감독기 32 초): 256 행 수집 후 검증 보류.** 감독기 pid 114632 · 종료 코드 42(HOLD_INFORMATION_ONLY 정상 코드), 자식 pid 115856 은 29.3 초 뒤 종료 코드 0. **정상 완료 걸음 256 · 보존된 원시 행 256 · 비상 저장 행 없음 · Traceback 0 · 가족 활성 0 · 변환 0.** 영수증 문구는 `HOLD_INFORMATION_ONLY`, optimizer 0, 자동 재시도 없음, 후속 학습 없음.
+- **고쳐졌다고 확인된 것:** A3.1 선적재(h5py · torch · tensordict)로 2차의 `tensordict._C` 접근 위반이 없어졌다(실행 기록으로 확인, 원인 가설이 맞았다는 통제 비교는 아님). 환경 변수 두 개로 EULA 입력 막힘도 없다. GPU 0 장치 결박: `torch_uuid` 일치 · Kit `/physics/cudaDevice=0` · `/renderer/activeGpu=0` verified(렌더러 · PhysX 의 물리 UUID 를 각각 잰 것은 아님).
+- **VRAM:** 최소 여유 11.77 GiB(약 3.8 GiB 사용 최고) · 종료 뒤 GPU 0 15 MiB. 완료 기록 `cleanup`: `app_close` · `provider_close` 가 `pending` 으로 남음(가족 0 은 감독기 확인).
+- **검사기 `check.json`: 판정 HOLD, 사유 13 개** `boundary_evidence_content` `boundary_evidence_hash` `boundary_mask` `boundary_unreported` `case_assignment` `fixed_pose_evidence` `mesh_evidence_hash` `provenance_missing` `root_sensor_transform` `scene_hit_mask` `sensor_timestamp` `stale_packet` `world_height_answer`. 계수: live_steps 240 · fixed_steps 16 · miss 19,308 · boundary 2,494 · deep_finite 3,596. `meta.json`: `fixed_pose_verified` · `mesh_collision_verified` · `terrain_assignment_verified` 모두 false. **0 단계 PASS 아님.** 이 13 개 중 진단이 아직 기록하지 않아서 생기는 것과 실제 불일치인 것을 나누는 일이 다음(2 단계).
+- **증거:** `night-tools-20261013/s2_stage0_first_collection/attempt3_20261015_1506/`(6.0 MB · 파일 21 · 원시 행 256). 원 폴더 `s2_lab/.../s2_runs/live-20261015-150639`.
+- **놀고 있는 GPU(15:08 기준):** GPU 0 은 수집 종료(15:07:13)부터 다시 비었다. 이유: 다음 GPU 일은 (1) 0 단계 HOLD 사유를 진단에 반영한 재수집 또는 (2) B 번들 smoke 인데, 둘 다 ASTRA 허용 전이다. GPU 1 은 허용된 기동이 없다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.

@@ -1,0 +1,38 @@
+{
+  "attempt": "one",
+  "capture_sha256": "ce3ece986e149629e808ecbb978c308d991cd5bbedb972cedd81cfb565a93f22",
+  "cases": [
+    "flat_0",
+    "flat_90",
+    "step_0",
+    "step_90",
+    "gap_0",
+    "gap_90",
+    "stones_0",
+    "stones_90"
+  ],
+  "code_sha256": "2f4352a6deeab5f8a87716a56a103fa6e9610739bde6d969aa25881b9c595573",
+  "control_steps": 256,
+  "device_binding": {
+    "kit_observation_status": "verified",
+    "kit_observed": {
+      "/physics/cudaDevice": 0,
+      "/renderer/activeGpu": 0
+    },
+    "kit_requested_device": 0,
+    "torch_logical_device": 0,
+    "torch_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+    "torch_uuid_normalized": "c08e23b062b6a4f28eb211151c6a8c7b"
+  },
+  "device_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "env_config_sha256": "9a9c7a8b0fc0e14f58ac912ff818e6d8527e1d2109368b6039ca247493023a67",
+  "final_cfg_sha256": "76a20c3ac00ed998030c996ee94202f57a2ef0da50439bc570d5363ac2cb2a3d",
+  "fixed_pose_verified": false,
+  "mesh_collision_verified": false,
+  "optimizer_steps": 0,
+  "parent_sha256": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "purpose": "stage0_information_only",
+  "scene_answer_sha256": "b3a9c5be54e4e16856249c2426d39640f450b18778e24e979fc1a1f1d18a4296",
+  "started_epoch": 1792044401.4926918,
+  "terrain_assignment_verified": false
+}
