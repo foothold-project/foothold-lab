@@ -473,6 +473,16 @@
 - **놀고 있는 GPU(11:57 기준):** GPU 0 약 30.2 시간(어제 05:46~) · GPU 1 약 26.3 시간(어제 09:40:37~). 계산 프로세스 0. 이유: 참석 단회는 참석자(팀장 취침 중) 필요, 무인은 17z 보류.
 
 
+## S2 첫 GPU 수집 기동 기록 (참석 단회 · ASTRA 17y 조건부 허용) (10/15 14:02)
+
+- **계기:** 팀장이 14:0x 채팅에 직접 들어와 「어제부터 GPU 가 하나도 안 돌았냐」 라고 물음. 팀장이 지금 화면 앞에 있으므로 17y 의 「실제 사람 참석」 조건을 채운 것으로 보고 띄운다. **팀장이 자리를 비우면 Ctrl+C 로 중단**한다고 알린다.
+- **기동 전 확인(14:02:34):** 부팅 09/17 21:16:07 그대로 · GPU 0 15 MiB · 두 장 모두 python · Kit 계산 프로세스 0 · A3 고정 묶음 47/47(`C:/Users/AI-WS01/s2_lab/night-tools-20261013/s2_step4a3/`) · 기동 도구는 11:58 예행에서 prelaunch GO(여유 VRAM 15.59 GiB). 도구가 기동 순간에 다시 해시 47/47 · GPU 0 UUID `GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b` / bus 41:00.0 · 경쟁 프로세스 · 여유 VRAM 8 GiB 이상을 확인하고 하나라도 어긋나면 NO_GO 로 아무것도 안 띄운다.
+- **띄우는 것:** GPU 0 · 8 환경 · 256 step · 개입 64/128/192 · optimizer 0 · retry 0 · `max_wall_s=900` · 변환 0 · 결과/USD/로그가 서로 다른 새 폴더(`s2_runs/live-<시각>/{out,usd,logs}`) · 분리 launcher/watchdog 없음. 명령(Orca 터미널 「S2 첫 수집 (참석)」):
+  `& 'C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe' -B C:/Users/AI-WS01/s2_lab/night-tools-20261013/s2_step4a3_launch/s2_attended_launch_a3.py --live --attendee team-lead --confirm LAUNCH-ATTENDED`
+- **중단:** Ctrl+C(STOP 파일 → 감독기가 자기 가족 정리, 90 초). 안 멈추면 도구가 알려주는 감독기 pid 한 개만 `taskkill /T`. 자동 재시도 없음. 같은 claim 을 지우고 다시 띄우지 않음.
+- **보고(고정 문구):** 「참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음」. 시작 실패 / 부분 수집 / 256 행 수집 후 검증 보류로 나누고 정상 완료 걸음 · 원시 행 · 비상 행을 따로 적는다. 256 행이나 종료 코드 0 만으로 통과라 쓰지 않는다.
+- **결과 기록:** 아래에 이어서 적는다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
