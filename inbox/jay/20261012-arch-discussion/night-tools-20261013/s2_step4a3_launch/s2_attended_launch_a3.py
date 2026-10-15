@@ -45,7 +45,8 @@ ISOLATE_SHA = "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
 LIST_SHA = "dc6cc314918320020b6eadc580bbce12072e021493b7bf2292506165329ae9f2"
 ASSET = ("https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/"
          "IsaacLab/Robots/Unitree/Go2/go2.usd")
-VERDICT_DOC = WORK.parent / "VERIFY-astra-17y.md"
+VERDICT_DOC = WORK.parent / "VERIFY-astra-17aa.md"
+PREVIOUS_CHAIN_ID = "s2-stage0-a3-live-20261015-140314"
 MAX_WALL_S = 900
 DEADLINE_SLACK_S = 1500
 GIB = 1024 ** 3
@@ -83,7 +84,7 @@ def gpu_compute_apps():
     return rows
 
 
-def build(mode: str, attendee: str):
+def build(mode: str, attendee: str, consent: dict | None = None):
     now = time.time()
     tag = "%s-%s" % (mode, time.strftime("%Y%m%d-%H%M%S", time.localtime(now)))
     run = WORK / "s2_runs" / tag
@@ -100,6 +101,9 @@ def build(mode: str, attendee: str):
         "observer_mode": "attended", "reservation_confirmed": True,
         "attendee": attendee, "permission_doc": str(VERDICT_DOC.name),
         "permission_doc_sha256": sha(VERDICT_DOC),
+        "attempt_ordinal": 2, "previous_chain_id": PREVIOUS_CHAIN_ID, "previous_result": "START_FAILURE_EULA_PROMPT",
+        "env_added_for_child": {"OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUNBUFFERED": "1"},
+        "launch_tool_sha256": sha(__file__), "eula_and_attendance_consent": consent,
         "python_path": str(PY), "python_sha256": sha(PY),
         "diag_path": str(BUNDLE / "s2_connect_diag_17v.py"), "diag_sha256": sha(BUNDLE / "s2_connect_diag_17v.py"),
         "criteria_path": str(criteria), "criteria_sha256": sha(criteria),
@@ -125,7 +129,7 @@ def build(mode: str, attendee: str):
     }
     manifest["diag_args"] = required_args(manifest)
     approval = {"status": "APPROVED", "chain_id": manifest["chain_id"],
-                "by": "lead freeze under ASTRA 17y conditional permission; attendee=" + attendee,
+                "by": "lead freeze under ASTRA 17aa conditional permission (second attempt); attendee=" + attendee,
                 "manifest_sha256": hashlib.sha256(canonical(manifest)).hexdigest(),
                 "expires_epoch": deadline + 300}
     mpath, apath = in_dir / "manifest.json", in_dir / "approval.json"
@@ -181,9 +185,18 @@ def main():
     g.add_argument("--live", action="store_true")
     ap.add_argument("--attendee", default="")
     ap.add_argument("--confirm", default="")
+    ap.add_argument("--consent-file", type=Path, default=None)
     a = ap.parse_args()
     if a.live and (not a.attendee.strip() or a.confirm != "LAUNCH-ATTENDED"):
         raise SystemExit("NO_GO: --live needs --attendee NAME and --confirm LAUNCH-ATTENDED")
+    consent = None
+    if a.live:
+        if a.consent_file is None or not a.consent_file.is_file():
+            raise SystemExit("NO_GO: --live needs --consent-file (the attendee's EULA acceptance, attendance and go, quoted)")
+        consent = json.loads(a.consent_file.read_text(encoding="utf-8"))
+        if not all(isinstance(consent.get(k), str) and consent[k].strip() for k in ("by", "eula_accepted", "attending_until_end", "go_for_this_one_run", "quote")) \
+                or consent.get("eula_accepted") != "yes" or consent.get("attending_until_end") != "yes" or consent.get("go_for_this_one_run") != "yes":
+            raise SystemExit("NO_GO: consent file must say eula_accepted, attending_until_end and go_for_this_one_run = yes, with the quote")
     mode = "live" if a.live else "rehearse"
     attendee = a.attendee.strip() if a.live else "none (rehearsal, supervisor is never started)"
     print("[1] frozen bundle:", verify_frozen_bundle(), "files match, list sha ok", flush=True)
@@ -200,7 +213,7 @@ def main():
     if apps or other:
         raise SystemExit("NO_GO: competing compute/Isaac process: %s %s" % (apps, other))
     print("[2] GPU 0 identity ok, free_vram_gib=%.2f, no competing process" % (first["free_vram_bytes"] / GIB), flush=True)
-    run, ctl, manifest, mpath, apath = build(mode, attendee)
+    run, ctl, manifest, mpath, apath = build(mode, attendee, consent)
     print("[3] frozen:", mpath, "\n    approval:", apath, "\n    deadline_epoch=%.0f max_wall_s=%d" % (
         manifest["deadline_epoch"], manifest["max_wall_s"]), flush=True)
     rc, report, took, err = run_prelaunch(mpath, apath)
