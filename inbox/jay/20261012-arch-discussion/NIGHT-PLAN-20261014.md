@@ -524,6 +524,14 @@
 - **증거:** `night-tools-20261013/s2_stage0_first_collection/attempt3_20261015_1506/`(6.0 MB · 파일 21 · 원시 행 256). 원 폴더 `s2_lab/.../s2_runs/live-20261015-150639`.
 - **놀고 있는 GPU(15:08 기준):** GPU 0 은 수집 종료(15:07:13)부터 다시 비었다. 이유: 다음 GPU 일은 (1) 0 단계 HOLD 사유를 진단에 반영한 재수집 또는 (2) B 번들 smoke 인데, 둘 다 ASTRA 허용 전이다. GPU 1 은 허용된 기동이 없다.
 
+## S2 0단계 A3.2와 4차 준비 (10/15 15:52 ~ 16:50 · ASTRA 17ac 전문 읽음)
+
+- **ASTRA 17ac(15:52 의뢰, 판정 파일 `VERIFY-astra-17ac.md`) 조건:** 3차는 수집 완료 · 0단계 HOLD. **내 「10개는 기록 누락, 3개는 데이터 문제」 요약은 폐기**(실제는 기록 · 출처 관문 7 + 수치 · 실험 계약 관문 6, 섞여 있음). gap_90 추락은 173행부터(191행 아님). 무중력 · 종료 해제는 진단 전용으로 가능하나 「고정됨」의 증명이 아니라 첫 16행을 실측해야 함. PhysX 비교는 환경 x 표면 갈래별 충족 · 원시 응답 보존 · 구멍을 하나도 안 본 입력은 불합격(ASTRA 반례). 시계는 예정된 128행만 되감김. 이 조건을 갖춘 A3.2는 ASTRA 재왕복 없이 lead 검증 기록 + 팀장 새 동의로 4차 참석 단회 가능. **PhysX API 첫 확인 중 HOLD는 허용되나 PASS 선승인 아님. 17z 무인 보류 유지.** 0단계 전 배관 smoke는 기술적으로 가능하나 코드 없는 200 update · 두 arm은 보류(PPO 1~2회 `plumbing_only` 단회로 줄여 별도 계약 · 새 동의).
+- **A3.2 구현(커밋 71aeaf8a 후 57932407):** 환경(무중력 · base_contact 끔) · 검사기(예정 리셋 시계 · 에피소드 +1 · 종료 별도 · 광선 틀 3종 · scope 요구) · 진단(버전 · 자산 다이제스트 · 센서 view 오프셋 · 원본 경계 마스크 보존 · PhysX 캡처 도중 질의 · 원시 응답 파일) · 프로브(Warp/USD · 16갈래 branch_report). 시험 203 PASS(16 파일, 종료 0), 변이 5/5 6/6 7/7 4/4 **28/28**, 깨끗한 폴더 import 22, 해시 49, 목록 SHA `98bd1936…`. lead 검증 기록 `RECORD-lead-a32-pre-attempt4.md`. 예행 `--rehearse` prelaunch GO.
+- **B 번들(sol)**: `REPORT-s2-step5.md` 도착. lead 재실행(run `lead_rerun_1602`): 정상 PASS 53 · 변이 7/7 · 종료 0 · GPU 0회. 지도 계산 모듈 6개(`s2_env_adapter_17v` `s2_map_obs` `s2_sensor_tracker_17v` `s2_policy` `s2_ppo_17v` `s2_terrain_overlay_17v`)는 0단계 번들과 바이트가 같다(env_config · check · diag · packet은 다름: 학습은 RobotLab-Go2-v0 + 희소 지형 overlay). 저장소 사본 + ASTRA 의뢰는 아직.
+- **Chrome 탭 메모:** 바탕화면 `Chrome-열린-탭-20261015.txt`(탭 236개, URL 227개 일치). GPU 1 VRAM 10.5 GB 중 Chrome GPU 프로세스 약 8.5 GB(WDDM 카운터, 합계가 장치 값보다 커서 근사). 정리는 팀장 결정.
+- **놀고 있는 GPU(16:50 기준):** GPU 0은 15:07:13부터 다시 비었다. 이유: 4차 수집은 A3.2 + lead 검증 기록이 준비됐지만 **팀장의 새 동의(EULA · 화면 앞 끝까지 · 이번 한 번 실행)가 아직 없다.** 그 사이 약 1시간 40분을 A3.2 수정 · 시험 · 판정 읽기에 썼고 GPU 줄은 비어 있었다. GPU 1은 10/14 09:40:37부터 허용된 기동 없음.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
