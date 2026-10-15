@@ -481,7 +481,8 @@
   `& 'C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe' -B C:/Users/AI-WS01/s2_lab/night-tools-20261013/s2_step4a3_launch/s2_attended_launch_a3.py --live --attendee team-lead --confirm LAUNCH-ATTENDED`
 - **중단:** Ctrl+C(STOP 파일 → 감독기가 자기 가족 정리, 90 초). 안 멈추면 도구가 알려주는 감독기 pid 한 개만 `taskkill /T`. 자동 재시도 없음. 같은 claim 을 지우고 다시 띄우지 않음.
 - **보고(고정 문구):** 「참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음」. 시작 실패 / 부분 수집 / 256 행 수집 후 검증 보류로 나누고 정상 완료 걸음 · 원시 행 · 비상 행을 따로 적는다. 256 행이나 종료 코드 0 만으로 통과라 쓰지 않는다.
-- **결과 기록:** 아래에 이어서 적는다.
+- **결과(첫 시도, 14:03:14 ~ 14:03:16 · 14:06 기록): 시작 실패 · 원시 행 0 · 정상 완료 걸음 0.** 기동 도구 → prelaunch GO(0.7 초) → 감독기 pid 169356 → 자식 종료 코드 42 → 영수증 `HOLD_INFORMATION_ONLY`(사유 artifact_missing · exit_code · step_count), `family_active_count=0`, 총 2 초, GPU 0 메모리는 15 MiB 에서 안 움직임. **원인:** Kit `check_eula()` 가 `input()` 으로 EULA 를 묻는데 자식에 stdin 이 없어 `input(): lost sys.stdin` → `Unable to bootstrap inner kit kernel`. 우리 감독기가 `OMNI_KIT_ACCEPT_EULA` 를 안 줬다. 이 저장소의 동작하던 Isaac 기동기(`unseen_driver_cmdr_v6.py:105`, `run_e2.sh:18`)는 모두 `OMNI_KIT_ACCEPT_EULA=YES` 와 `PYTHONUNBUFFERED=1` 을 준다. **lead 가 기존 기동기의 환경과 새 감독기의 환경을 한 줄씩 대조하지 않았고 ASTRA 도 못 봤다.** 이 변수는 CPU 시험으로는 안 잡히는 부류라 첫 실기동이 있어야 드러난다. 증거 `night-tools-20261013/s2_stage0_first_collection/attempt1_20261015_1403/`.
+- **수정과 다음:** 기동 도구(`s2_attended_launch_a3.py`)와 A4 launcher 가 감독기/gate 를 띄울 때 두 변수를 준다(A3 47 파일 바이트는 그대로). 17y 는 retry 0 이었으므로 **ASTRA 17aa 에 두 번째 시도 허용 여부를 매우 좁게 의뢰**(14:05, ASTRA 주간 한도 2 %). 허용이 오면 같은 도구로 새 attempt 를 띄운다. 이 시도의 claim 은 지우지 않았다.
 
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
