@@ -1,0 +1,10 @@
+{
+  "by": "오흥재 (팀장, 채팅에서 직접 입력)",
+  "recorded_at": "2026-10-15 15:06 KST",
+  "eula_accepted": "yes",
+  "attending_until_end": "yes",
+  "go_for_this_one_run": "yes",
+  "quote": "3차도 같은 조건(EULA 동의 / 화면 앞에서 끝까지 본다 / 이번 한 번 실행)으로 해라",
+  "asked_by_lead_at": "2026-10-15, in the chat status reply after ASTRA 17ab conditional permission (14:39); the previous conditions quoted by the team lead were: NVIDIA Omniverse EULA accepted / present at the screen until the end / run GPU 0 collection this one time",
+  "scope": "third attended single GPU 0 information-only collection, ASTRA 17ab conditions (A3.1), no automatic retry, no unattended"
+}
