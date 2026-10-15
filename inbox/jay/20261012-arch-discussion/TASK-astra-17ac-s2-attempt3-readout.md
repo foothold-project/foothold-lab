@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · ASTRA 의뢰 17ac · S2 첫 수집 세 번째 시도 판독, A3.2 범위, smoke 허용 범위
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-15 16:10
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-15 15:52
 > 근거: 3차 증거 `night-tools-20261013/s2_stage0_first_collection/attempt3_20261015_1506/` · 판독 스크립트와 출력 `attempt3_analysis.py` `attempt3_analysis_output.txt` · 검사기 `s2_step4a3/s2_connect_check_17v.py` · 진단 `s2_connect_diag_17v.py` · 환경 설정 `s2_env_config_17v.py`
 > 요지: 3차는 256행을 끝까지 수집했고(검증 보류), 검사기 HOLD 13개를 원자료로 풀었다. 10개는 진단이 기록을 안 채운 것이고 3개는 실제 데이터 문제(로봇 낙하와 자동 리셋)다. 센서에서 지도로 바꾸는 식은 걸리지 않았다. 이 판독이 맞는지, A3.2 범위가 적절한지, 0단계 PASS 전에 학습 배관 smoke를 허용할지를 묻는다
 > 상태: 의뢰 (GPU 둘 다 계산 0 · 승인 json 없음 · 팀장은 채팅에 있고 시도마다 새 동의를 받음)
