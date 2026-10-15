@@ -1,0 +1,80 @@
+{
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314",
+  "copied": [
+    {
+      "path": "in/approval.json",
+      "bytes": 293,
+      "sha256_of_original": "7e902967573d504b51206638449b8d86d15010ca35fc32cc1e20bfa12d49fd1a",
+      "tail_only": false
+    },
+    {
+      "path": "in/criteria.json",
+      "bytes": 114,
+      "sha256_of_original": "409ed3001dc39f116694d54d0ae477ca92b7c18c133761710475eff144f46b9d",
+      "tail_only": false
+    },
+    {
+      "path": "in/manifest.json",
+      "bytes": 7091,
+      "sha256_of_original": "ed05986c3c997a70991143e753228eec9de21f97c9a7c598a78c0ea21ae9746a",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claims/s2-stage0-a3-live-20261015-140314-one.claim/approval.json",
+      "bytes": 77,
+      "sha256_of_original": "e0b446bab8b9fca03d57e968a5ff83dc8cec427d94a79187b1207d60853827ac",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claims/s2-stage0-a3-live-20261015-140314-one.claim/attempt_start.json",
+      "bytes": 2211,
+      "sha256_of_original": "b913773083e8176b0e10821f6da97db67be5bfcdaf34df6fa1741267ba8255cb",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claims/s2-stage0-a3-live-20261015-140314-one.claim/stage0.receipt.json",
+      "bytes": 1250,
+      "sha256_of_original": "fdb2abe1213c120dea47962c2cf7322df42a1fe179e5e691a60f3a05025e9c14",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/lease/9e94ec272b096fc0f3afe54f42401465e28b847e3f20d917c180fd91df52e611.lock",
+      "bytes": 1,
+      "sha256_of_original": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/prelaunch.json",
+      "bytes": 721,
+      "sha256_of_original": "bed72e509ab78df1a6c709d8a62b4b9f223f4f01bd0488b280a619f56938fe64",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/status.json",
+      "bytes": 661,
+      "sha256_of_original": "015eb6122be1e3cf5e1bef929e4a314599b8b788b9eefc15a3647b6c333caf52",
+      "tail_only": false
+    },
+    {
+      "path": "logs/child.log",
+      "bytes": 3563,
+      "sha256_of_original": "206304c5388e158b894b3b89c70da2da4f4378f352a5080a498b9d293fb40393",
+      "tail_only": false
+    },
+    {
+      "path": "out/failure.json",
+      "bytes": 3630,
+      "sha256_of_original": "7e207c1e2fe1ecff64fa872a840391d2f08fb4b8c9da78c08e1983bcc1de02a7",
+      "tail_only": false
+    },
+    {
+      "path": "out/launch.json",
+      "bytes": 2483,
+      "sha256_of_original": "3561af9a64c13e85dbf8292f27a305483a7120281aef9882309c47f49479b5a9",
+      "tail_only": false
+    }
+  ],
+  "listed_not_copied": [],
+  "raw_rows_count": 0,
+  "raw_rows_bytes": 0
+}

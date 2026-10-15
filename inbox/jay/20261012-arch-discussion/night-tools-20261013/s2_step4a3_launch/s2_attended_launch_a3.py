@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -225,8 +226,11 @@ def main():
         return 44
     print("[5] STARTING SUPERVISOR (attendee=%s). STOP file: %s" % (attendee, manifest["stop_path"]), flush=True)
     t_start = time.time()
+    # 14:03 attempt one died in 2 s: Kit asks for the EULA on stdin ("input(): lost sys.stdin"). Every working
+    # Isaac launcher in this repo sets these two variables; the A3 supervisor passes its own environment on.
+    env = {**os.environ, "OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUNBUFFERED": "1"}
     proc = subprocess.Popen([str(PY), "-B", str(BUNDLE / "s2_zero_supervisor.py"),
-                             "--manifest", str(mpath), "--approval", str(apath)], cwd=str(BUNDLE))
+                             "--manifest", str(mpath), "--approval", str(apath)], cwd=str(BUNDLE), env=env)
     print("    supervisor pid=%d" % proc.pid, flush=True)
     stop_sent = None
     min_free = None

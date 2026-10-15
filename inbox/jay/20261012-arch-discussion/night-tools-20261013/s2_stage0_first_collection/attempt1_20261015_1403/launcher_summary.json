@@ -1,0 +1,36 @@
+{
+  "mode": "live",
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314",
+  "prelaunch_rc": 0,
+  "prelaunch_report": {
+    "checked_epoch": 1792040594.7972395,
+    "device": {
+      "bus": "41:00.0",
+      "driver_version": "591.86",
+      "free_vram_bytes": 16740401152,
+      "index": 0,
+      "total_vram_bytes": 17094934528,
+      "uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    "free_disk_bytes": 642110226432,
+    "logs": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314\\logs\\child.log",
+    "manifest_sha256": "5a92c8a0622a7492ce8bb70ee4c9c23fbad1f652acf63bc78915ea76905ff0e0",
+    "observer_mode": "attended",
+    "output": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314\\out",
+    "retry_count": 0,
+    "status": "GO",
+    "termination": "Job Object owner only",
+    "usd_root": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314\\usd"
+  },
+  "prelaunch_seconds": 0.9528586864471436,
+  "manifest_sha256": "5a92c8a0622a7492ce8bb70ee4c9c23fbad1f652acf63bc78915ea76905ff0e0",
+  "supervisor_rc": 42,
+  "elapsed_s": 2.028627872467041,
+  "stop_sent": false,
+  "min_free_vram_bytes_seen_every_second": 16740401152,
+  "final_status": "status: state=HOLD_INFORMATION_ONLY update=0 remaining_s=899 free_vram_gib=15.59 output_mib=0.0",
+  "out_files": [
+    "failure.json",
+    "launch.json"
+  ]
+}

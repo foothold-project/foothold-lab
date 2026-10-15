@@ -1,0 +1,135 @@
+{
+  "classification": "START_FAILURE",
+  "label": "attended or unattended single information collection, HOLD_INFORMATION_ONLY, optimizer 0, no follow-up training",
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-140314",
+  "normal_completed_steps": 0,
+  "raw_rows": 0,
+  "emergency_row": null,
+  "stage_failure": null,
+  "first_error": "SystemExit('Unable to bootstrap inner kit kernel: input(): lost sys.stdin')",
+  "traceback_tail": [
+    "    import isaacsim  # noqa: F401",
+    "    ^^^^^^^^^^^^^^^",
+    "  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load",
+    "  File \"<frozen importlib._bootstrap>\", line 1147, in _find_and_load_unlocked",
+    "  File \"<frozen importlib._bootstrap>\", line 690, in _load_unlocked",
+    "  File \"C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py\", line 277, in exec_module",
+    "    orig(self, module)",
+    "  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\isaacsim\\__init__.py\", line 220, in <module>",
+    "    bootstrap_kernel()",
+    "  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\isaacsim\\__init__.py\", line 93, in bootstrap_kernel",
+    "    sys.exit(f\"Unable to bootstrap inner kit kernel: {e}\")",
+    "SystemExit: Unable to bootstrap inner kit kernel: input(): lost sys.stdin"
+  ],
+  "cleanup": {},
+  "device_binding": null,
+  "child_started_epoch": 1792040596.148374,
+  "child_ended_epoch": 1792040596.307644,
+  "child_seconds": 0.1592698097229004,
+  "mesh_probe_present": false,
+  "final_cfg_present": false,
+  "asset_path_in_cfg": null,
+  "checker_verdict": null,
+  "meta_flags": {
+    "terrain_assignment_verified": null,
+    "mesh_collision_verified": null,
+    "fixed_pose_verified": null,
+    "control_steps": null
+  },
+  "usd_isolate_state": null,
+  "usd_assigned_lines": null,
+  "supervisor_receipt": {
+    "verdict": {
+      "reasons": [
+        "artifact_missing",
+        "exit_code",
+        "information_only_no_downstream",
+        "step_count"
+      ],
+      "record_sha256": "614c6ccd33ab59b907a5998d0392a294a45e906c819c75d9afaca06bdc62c490",
+      "stage": "connect",
+      "verdict": "HOLD_INFORMATION_ONLY"
+    },
+    "exit_code": 42,
+    "family_active_count": 0,
+    "control_steps_reported_by_supervisor": 0
+  },
+  "supervisor_final_status": {
+    "chain_id": "s2-stage0-a3-live-20261015-140314",
+    "device": {
+      "bus": "41:00.0",
+      "driver_version": "591.86",
+      "free_vram_bytes": 16740401152,
+      "index": 0,
+      "total_vram_bytes": 17094934528,
+      "uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    "family_active_count": 0,
+    "free_disk_bytes": 642100768768,
+    "heartbeat_epoch": 1792040596.890631,
+    "last_artifact_epoch": 1792040596.890631,
+    "last_packet_epoch": null,
+    "last_verdict": "HOLD_INFORMATION_ONLY",
+    "next_boundary": "stage0_verdict",
+    "output_bytes": 0,
+    "pid": 71644,
+    "reasons": [
+      "artifact_missing",
+      "exit_code",
+      "information_only_no_downstream",
+      "step_count"
+    ],
+    "remaining_s": 898.9219999997877,
+    "stage": "connect",
+    "state": "HOLD_INFORMATION_ONLY",
+    "update": 0
+  },
+  "attempt_start_argv_head": [
+    "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+    "-B",
+    "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py",
+    "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_step4a3\\s2_connect_diag_17v.py"
+  ],
+  "gate_result": null,
+  "kill_receipt": null,
+  "launch_record": null,
+  "child_log_tail": [
+    "    from .app_launcher import AppLauncher  # noqa: F401, F403",
+    "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load",
+    "  File \"<frozen importlib._bootstrap>\", line 1147, in _find_and_load_unlocked",
+    "  File \"<frozen importlib._bootstrap>\", line 690, in _load_unlocked",
+    "  File \"C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py\", line 277, in exec_module",
+    "    orig(self, module)",
+    "  File \"C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\app\\app_launcher.py\", line 25, in <module>",
+    "    import isaacsim  # noqa: F401",
+    "    ^^^^^^^^^^^^^^^",
+    "  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load",
+    "  File \"<frozen importlib._bootstrap>\", line 1147, in _find_and_load_unlocked",
+    "  File \"<frozen importlib._bootstrap>\", line 690, in _load_unlocked",
+    "  File \"C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py\", line 277, in exec_module",
+    "    orig(self, module)",
+    "  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\isaacsim\\__init__.py\", line 220, in <module>",
+    "    bootstrap_kernel()",
+    "  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\isaacsim\\__init__.py\", line 93, in bootstrap_kernel",
+    "    sys.exit(f\"Unable to bootstrap inner kit kernel: {e}\")",
+    "SystemExit: Unable to bootstrap inner kit kernel: input(): lost sys.stdin",
+    "",
+    "",
+    "By installing or using Omniverse Kit, I agree to the terms of NVIDIA OMNIVERSE LICENSE AGREEMENT (EULA)",
+    "in https://docs.omniverse.nvidia.com/platform/latest/common/NVIDIA_Omniverse_License_Agreement.html",
+    ""
+  ],
+  "note": "control_steps in the supervisor receipt counts raw rows (partial_rows), not completed control steps"
+}
+
+----
+결과: 시작 실패 (수집 0 행)
+정상 완료 걸음 0 · 보존된 원시 행 0 · 비상 저장 행 None
+첫 오류: SystemExit('Unable to bootstrap inner kit kernel: input(): lost sys.stdin')
+자식 실행 시간(초): 0.2
+장치 UUID 원 값 기록: None
+변환 기록: isolate_state=None · assigned 줄=None
+감독기 영수증: {'verdict': {'reasons': ['artifact_missing', 'exit_code', 'information_only_no_downstream', 'step_count'], 'record_sha256': '614c6ccd33ab59b907a5998d0392a294a45e906c819c75d9afaca06bdc62c490', 'stage': 'connect', 'verdict': 'HOLD_INFORMATION_ONLY'}, 'exit_code': 42, 'family_active_count': 0, 'control_steps_reported_by_supervisor': 0}
+정리: {}
+문구: 참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음. 256 행이나 종료 코드만으로 S2 통과 또는 0 단계 PASS 라고 쓰지 않는다.
