@@ -560,6 +560,8 @@
 
 - **10/16 06:48 heartbeat:** 부팅 기준 일치. GPU 0 11 MiB · GPU 1 13.4 GB(앱) · Isaac/Kit 없음. **GPU 0 은 10/15 15:07:13 부터 15시간 41분 비어 있다. 이유: 팀장의 새 동의가 없다.** 05:48 이후 새 판정 · 보고 · 댓글 없음.
 
+- **10/16 07:48 heartbeat:** 부팅 기준 일치. GPU 0 11 MiB · GPU 1 13.5 GB(앱) · Isaac/Kit 없음. **GPU 0 은 10/15 15:07:13 부터 16시간 41분 비어 있다. 이유: 팀장의 새 동의가 없다.** 06:48 이후 새 판정 · 보고 · 댓글 없음.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
