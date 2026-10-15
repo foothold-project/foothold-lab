@@ -1,0 +1,80 @@
+{
+  "cpu_only": true,
+  "cuda_visible_devices": "-1",
+  "mutants_caught": 0,
+  "normal_first": true,
+  "normal_ok": false,
+  "normal_pass_labels": 33,
+  "passed": false,
+  "records": [
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS launch_parity_17",
+        "PASS child_env_exact",
+        "PASS manifest_seal_known_answer",
+        "PASS approved_manifest",
+        "PASS reject_missing_approval",
+        "PASS reject_eula_unaccepted",
+        "PASS reject_wrong_env_count",
+        "PASS reject_wrong_terrain",
+        "PASS reject_wrong_arm",
+        "PASS reject_wrong_device",
+        "PASS reject_wrong_argv",
+        "PASS reject_wrong_code",
+        "PASS fake_prelaunch_GO",
+        "PASS fake_run_receipt",
+        "PASS single_claim_reuse_rejected"
+      ],
+      "test": "test_s2_step5_live.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS arm_A_parent_action_bit_equal_16",
+        "PASS deterministic_live_boundary_200_finite_and_checkpoints",
+        "PASS deterministic_short_2000_plus_500_same_runner"
+      ],
+      "test": "test_s2_step5_smoke.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS real_E1_cpu_dry_one_update",
+        "PASS checkpoint_nonzero",
+        "PASS environment_resume_fail_closed",
+        "PASS timeout_channel_exposed",
+        "PASS real_E1_same_runner_two_segments"
+      ],
+      "test": "test_s2_17v_entry.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS short_common_boundary",
+        "PASS same_learner_objects_increment",
+        "PASS grant_consumed_once",
+        "PASS grant_reuse_rejected",
+        "PASS no_unapproved_extra_update",
+        "PASS wrong_arm_grant_rejected",
+        "PASS partial_pair_not_executed",
+        "PASS STOP_at_barrier"
+      ],
+      "test": "test_s2_increment_barrier.py"
+    },
+    {
+      "exit_code": 1,
+      "first_failure": "Traceback (most recent call last):",
+      "labels": [
+        "PASS timeout_parent_2_98_terminal_1_nonterminal_2_98",
+        "PASS timeout_not_done_rejected"
+      ],
+      "test": "test_s2_17v_core.py"
+    }
+  ],
+  "run_id": "r20261015_step5_final1"
+}

@@ -1,0 +1,25 @@
+PASS launch_parity_17
+PASS child_env_exact
+PASS manifest_seal_known_answer
+PASS approved_manifest
+PASS short_barrier_approval_bound
+PASS reject_short_barrier_wrong_approval
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\test_s2_step5_live.py", line 149, in test
+    try:validate(cm,ca)
+        ^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\s2_train_contract.py", line 56, in validate
+    if undecided(m) or undecided(approval):raise TrainHold("undecided_value")
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+s2_train_contract.TrainHold: undecided_value
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\test_s2_step5_live.py", line 172, in <module>
+    if __name__=="__main__":test()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\test_s2_step5_live.py", line 150, in test
+    except TrainHold as ex:assert str(ex)==want,(label,str(ex),want)
+                                  ^^^^^^^^^^^^^
+AssertionError: ('missing_approval', 'undecided_value', 'approval_missing_or_eula')

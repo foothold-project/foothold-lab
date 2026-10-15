@@ -1,0 +1,25 @@
+{
+  "cpu_only": true,
+  "cuda_visible_devices": "-1",
+  "mutants_caught": 0,
+  "normal_first": true,
+  "normal_ok": false,
+  "normal_pass_labels": 6,
+  "passed": false,
+  "records": [
+    {
+      "exit_code": 1,
+      "first_failure": "Traceback (most recent call last):",
+      "labels": [
+        "PASS launch_parity_17",
+        "PASS child_env_exact",
+        "PASS manifest_seal_known_answer",
+        "PASS approved_manifest",
+        "PASS short_barrier_approval_bound",
+        "PASS reject_short_barrier_wrong_approval"
+      ],
+      "test": "test_s2_step5_live.py"
+    }
+  ],
+  "run_id": "r20261015_step5_final4"
+}
