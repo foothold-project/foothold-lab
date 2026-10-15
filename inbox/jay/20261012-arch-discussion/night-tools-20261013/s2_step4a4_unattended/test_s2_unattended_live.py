@@ -56,13 +56,13 @@ def main():
     runs_before = len(list((HERE.parent / "s2_runs").glob("*"))) if (HERE.parent / "s2_runs").exists() else 0
     res = subprocess.run([PY, "-B", str(HERE / "s2_unattended_live_a4.py"), "--astra-verdict",
                           str(HERE.parent.parent / "VERIFY-astra-17z.md"), "--confirm", "UNATTENDED-GO", "--by", "x"],
-                         capture_output=True, text=True, timeout=120)
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     runs_after = len(list((HERE.parent / "s2_runs").glob("*"))) if (HERE.parent / "s2_runs").exists() else 0
     check("L8 CLI with the held verdict: NO_GO about the missing UNATTENDED_GO line, no run folder, no GPU opened",
-          res.returncode != 0 and "UNATTENDED_GO line" in (res.stdout + res.stderr) and runs_after == runs_before)
+          res.returncode != 0 and "UNATTENDED_GO line" in ((res.stdout or '') + (res.stderr or '')) and runs_after == runs_before)
     res2 = subprocess.run([PY, "-B", str(HERE / "s2_unattended_live_a4.py"), "--astra-verdict", str(tmp / "ok.md"),
-                           "--confirm", "WRONG", "--by", "x"], capture_output=True, text=True, timeout=120)
-    check("L9 wrong confirm token is refused before anything else", res2.returncode != 0 and "NO_GO" in (res2.stdout + res2.stderr))
+                           "--confirm", "WRONG", "--by", "x"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    check("L9 wrong confirm token is refused before anything else", res2.returncode != 0 and "NO_GO" in ((res2.stdout or '') + (res2.stderr or '')))
     print("SUMMARY", "ALL PASS" if not FAILS else "FAIL %s" % FAILS)
     return 1 if FAILS else 0
 

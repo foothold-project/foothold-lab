@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -33,6 +34,8 @@ DETACHED_PROCESS = 0x00000008
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 CREATE_NO_WINDOW = 0x08000000
 FLAGS = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+# Kit asks for the EULA on stdin otherwise ("input(): lost sys.stdin", first live attempt 10/15 14:03).
+ISAAC_ENV = {"OMNI_KIT_ACCEPT_EULA": "YES", "PYTHONUNBUFFERED": "1"}
 
 
 def file_sha256(path) -> str:
@@ -44,7 +47,8 @@ def start_detached(argv, *, cwd: Path, log_path: Path):
     flags = FLAGS if sys.platform == "win32" else 0
     try:
         return subprocess.Popen([str(x) for x in argv], cwd=str(cwd), stdout=stream, stderr=subprocess.STDOUT,
-                                stdin=subprocess.DEVNULL, creationflags=flags, close_fds=True)
+                                stdin=subprocess.DEVNULL, creationflags=flags, close_fds=True,
+                                env={**os.environ, **ISAAC_ENV})
     finally:
         stream.close()
 

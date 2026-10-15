@@ -868,6 +868,14 @@ def process_level(root):
     check("P11 gate refuses after READY (NO_GO): launcher waits for it, exit 5, LAUNCH_ABORTED",
           res.returncode == 5 and bool(rec) and rec["state"] == "LAUNCH_ABORTED" and "NO_GO" in rec["reason"]
           and not (base / "marker" / "run_called").exists())
+    # P12 the detached children carry the Kit EULA variable (first live attempt died on it)
+    import s2_unattended_launch as L2
+    out_file = root / "env_probe.txt"
+    probe = L2.start_detached([PY, "-B", "-c", "import os; open(%r,'w').write(os.environ.get('OMNI_KIT_ACCEPT_EULA','MISSING')+'|'+os.environ.get('PYTHONUNBUFFERED','MISSING'))" % str(out_file)],
+                              cwd=root, log_path=root / "env_probe.log")
+    probe.wait(30)
+    check("P12 detached start passes OMNI_KIT_ACCEPT_EULA=YES and PYTHONUNBUFFERED=1 to the child",
+          out_file.exists() and out_file.read_text() == "YES|1")
     # P10 launcher cleanup signals only through held handles: a decoy with the 'same pid' is untouched
     import s2_unattended_launch as L
     decoy, _ = spawn([PY, "-B", "-c", "import time; time.sleep(120)"])
