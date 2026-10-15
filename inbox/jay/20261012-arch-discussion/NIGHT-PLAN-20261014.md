@@ -443,6 +443,17 @@
 - **lead 가 확인한 것(08:48~08:52):** 부팅 09/17 21:16:07 그대로. GPU 0 15 MiB · GPU 1 5,926 MiB(데스크톱 앱) · 어느 쪽에도 python · Kit 계산 프로세스 없음 · 기동 0 건. 이슈 #550 마지막 댓글은 ASTRA 17y(23:11Z), 팀장 새 댓글 없음. Isaac 해석기 `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe`. 이 진단의 로봇 자산은 기본 Isaac Lab 작업의 `UNITREE_GO2_CFG` 의 `ISAACLAB_NUCLEUS_DIR/Robots/Unitree/Go2/go2.usd`(원격 USD 직접 읽기 · 변환기 안 불림 · 실제 문자열은 Kit 가 만든 값이라 첫 수집에서 확인).
 - **놀고 있는 GPU(08:52 기준):** GPU 0 05:46 부터 약 27 시간, GPU 1 09:40:37 부터 약 23.2 시간. 이유: 첫 GPU 일이 **참석 단회**로만 허용됐고 팀장이 취침 중. 무인 요건(위 목록)을 채워 ASTRA 확인을 받기 전에는 띄울 수 없다.
 
+## 무인 사슬 A4 구현과 ASTRA 17z 의뢰 (10/15 09:00 ~ 10:11 · 팀장 취침 중)
+
+- **참석 단회 준비(09:0x):** `night-tools-20261013/s2_step4a3_launch/s2_attended_launch_a3.py` + `RUN-CARD-s2-stage0-a3-attended.md`(커밋 018e6b8a). 해시 47/47 · GPU 0 UUID/위치/여유 · 다른 Isaac 없음 확인 → 서류 생성 → prelaunch → (live 에서만) 감독기. 예행 2 회(감독기 안 띄움)에서 prelaunch GO 0.9 초 · 여유 15.59 GiB. 실행 위치는 한글 없는 `C:/Users/AI-WS01/s2_lab/`(고정 묶음 바이트 복사, 47/47 재확인). **참석자(팀장)가 없어 아직 안 띄움.**
+- **무인 요건 7 개를 lead 가 새 파일로 구현(A3 한 바이트도 안 바꿈):** `night-tools-20261013/s2_step4a4_unattended/` 의 `s2_watchdog_v2.py`(READY 핸드셰이크 · chain_id 와 유한 heartbeat 만 진행으로 인정 · 절대 + monotonic 마감 · 로그 실패가 kill 을 안 막음 · AccessDenied 는 BLIND · kill 영수증과 후손 정리) · `s2_unattended_gate.py`(무인 계약 `a4u` 검증 → READY 확인 → 감시자 생존 스레드 → 안쪽 pair 유도 → A3 prelaunch/run_zero) · `s2_unattended_launch.py`(gate 먼저, 감시자에 신원 전달, READY 보고 종료, 실패 시 자기가 만든 두 프로세스만 정리).
+- **측정(lead):** 정상 시험 **79 PASS**(감시자 24 · gate 39 · 프로세스 16, 실제 프로세스와 실제 Job Object) + 세션 독립 5 PASS · 변이 **40/41 CAUGHT**(NOT_CAUGHT 1 건 `gate_monitor_not_started` 는 정직하게 남김: 스레드 미시작 `join` 예외로 첫 FAIL 이 G4 라 의도한 G6 가 아님, 깨끗한 대체 변이 `gate_monitor_check_disabled` 는 CAUGHT) · 실제 기계 예행(Isaac 안 띄움: 운영 launcher → gate → 실제 watchdog READY → 실제 A3 prelaunch GO → 종료, 4 초, 남은 프로세스 0).
+- **정직한 기록:** 시험 첫 실행 시험 쪽 오류로 중단, 둘째 실행에서 시험 기대값 1 + 코드 분류 1 수정, 후손 정리 경쟁 1 수정, 변이 첫 실행 38/40 에서 두 건이 FAIL 라벨 없이 끝나 시험을 고치고 **변이 전체를 처음부터 재실행**(39/40 → 위 40/41).
+- **직접 잰 사실:** 이 세션 Bash 아래 프로세스는 Job 밖. 떼어낸 자식은 부모가 살아 있는 동안 `taskkill /T` 에 같이 죽고, launcher 가 먼저 끝난 뒤에는 산다(그래서 launcher 는 READY 뒤 곧바로 끝남). 메모리 `detached-child-survives-tree-kill-only-after-launcher-exits`.
+- **ASTRA 17z 의뢰(10:10, 커밋 039b8c19, 작업서 `TASK-astra-17z-s2-unattended-a4.md`):** 일곱 요건이 닫혔는가 · `derive_inner` 안전성 · **무인 GPU 0 정보 수집 한 번** 허용 조건과 사후 절차 · 실제 기계 위험. ASTRA 는 10:11 에 작업 시작 확인(한도 4 %). 허용 판정이 오기 전에는 무인 기동 없음. 팀장이 먼저 일어나면 참석 단회가 우선.
+- **gpuwatch:** super2 가 맡기로 함(mai-os `tools/gpuwatch/`, 댓글 6181717191, 제 답 6181783709). lead 몫은 RL 쪽 상태 칸과 무인 사슬 어댑터.
+- **놀고 있는 GPU(10:12 기준):** GPU 0 은 10/14 05:46 부터 약 28.4 시간, GPU 1 은 10/14 09:40:37 부터 약 24.5 시간. 계산 프로세스 0. 이유: 첫 GPU 일이 참석 단회로만 허용됐고 팀장이 취침 중이며 무인 허용 판정(17z)이 아직 없다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
