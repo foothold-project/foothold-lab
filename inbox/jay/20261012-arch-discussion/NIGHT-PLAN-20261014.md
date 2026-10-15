@@ -484,6 +484,14 @@
 - **결과(첫 시도, 14:03:14 ~ 14:03:16 · 14:06 기록): 시작 실패 · 원시 행 0 · 정상 완료 걸음 0.** 기동 도구 → prelaunch GO(0.7 초) → 감독기 pid 169356 → 자식 종료 코드 42 → 영수증 `HOLD_INFORMATION_ONLY`(사유 artifact_missing · exit_code · step_count), `family_active_count=0`, 총 2 초, GPU 0 메모리는 15 MiB 에서 안 움직임. **원인:** Kit `check_eula()` 가 `input()` 으로 EULA 를 묻는데 자식에 stdin 이 없어 `input(): lost sys.stdin` → `Unable to bootstrap inner kit kernel`. 우리 감독기가 `OMNI_KIT_ACCEPT_EULA` 를 안 줬다. 이 저장소의 동작하던 Isaac 기동기(`unseen_driver_cmdr_v6.py:105`, `run_e2.sh:18`)는 모두 `OMNI_KIT_ACCEPT_EULA=YES` 와 `PYTHONUNBUFFERED=1` 을 준다. **lead 가 기존 기동기의 환경과 새 감독기의 환경을 한 줄씩 대조하지 않았고 ASTRA 도 못 봤다.** 이 변수는 CPU 시험으로는 안 잡히는 부류라 첫 실기동이 있어야 드러난다. 증거 `night-tools-20261013/s2_stage0_first_collection/attempt1_20261015_1403/`.
 - **수정과 다음:** 기동 도구(`s2_attended_launch_a3.py`)와 A4 launcher 가 감독기/gate 를 띄울 때 두 변수를 준다(A3 47 파일 바이트는 그대로). 17y 는 retry 0 이었으므로 **ASTRA 17aa 에 두 번째 시도 허용 여부를 매우 좁게 의뢰**(14:05, ASTRA 주간 한도 2 %). 허용이 오면 같은 도구로 새 attempt 를 띄운다. 이 시도의 claim 은 지우지 않았다.
 
+## S2 첫 GPU 수집 두 번째 시도 기동 기록 (ASTRA 17aa 조건부 허용) (10/15 14:27)
+
+- **허용 근거:** `VERIFY-astra-17aa.md` (14:09). 환경 변수 `OMNI_KIT_ACCEPT_EULA=YES` · `PYTHONUNBUFFERED=1` 두 개만 더한 두 번째 참석 단회. 재시도 자동화 · 무인 불허. A4 는 안 씀.
+- **EULA 동의 · 참석 · 한 번 실행 확인(팀장, 채팅 직접, 14:2x):** 「NVIDIA Omniverse EULA에 동의한다 / 이번 15분 동안 화면 앞에서 끝까지 본다 / GPU 0 수집을 이번 한 번 실행해라」. 원문은 `s2_stage0_first_collection/consent_attempt2.json` 에 인용해 두었고 기동 도구가 이 파일 없이는 시작하지 않는다.
+- **기동 전 확인(14:26:46):** 부팅 09/17 21:16:07 그대로 · GPU 0 15 MiB · python/Kit 계산 프로세스 0 · A3 47/47 · 도구 해시는 manifest 에 기록(`launch_tool_sha256`). 도구가 기동 순간에 해시 47/47 · GPU 0 UUID/위치 · 경쟁 프로세스 · 여유 VRAM 8 GiB 이상을 다시 확인하고 prelaunch GO 가 60 초 안일 때만 감독기를 띄운다.
+- **입력 그대로:** GPU 0 · 8 환경 · 256 step · 개입 64/128/192 · optimizer 0 · retry 0 · `max_wall_s=900` · 변환 0 · 새 out/USD/log 폴더. 새 chain 은 시각으로 만들어지고 첫 시도(chain `s2-stage0-a3-live-20261015-140314`)의 claim 은 보존. 보고에서 이것은 **전체 두 번째 시도**임을 명시한다.
+- **중단:** Ctrl+C(STOP). **보고 문구:** 「두 번째 참석 단회 정보 수집, 시작 실패 / 부분 수집 / 256 행 후 검증 보류, HOLD_INFORMATION_ONLY, optimizer 0, 자동 재시도 및 후속 학습 없음」.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
