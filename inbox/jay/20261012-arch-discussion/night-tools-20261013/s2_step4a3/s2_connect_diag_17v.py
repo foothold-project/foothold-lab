@@ -258,6 +258,12 @@ def _main_capture(argv,journal):
     for key in ("gap_proportion","stones_proportion","step_height_m","step_width_m",
                 "geometry_tolerance_m"):
         ap.add_argument("--"+key,required=True,type=float)
+    # A3.1 (10/15 attempt two crashed with an access violation importing tensordict AFTER Kit started).
+    # Same Windows DLL preload, in the same place, as _eval/q_eval.py:24-25, scripts/rsl_rl/play.py and
+    # ce12/dump_native_v2.py:32-33: load these before `isaaclab.app` boots the Kit kernel.
+    import h5py  # noqa: F401
+    import torch  # noqa: F401
+    import tensordict  # noqa: F401
     from isaaclab.app import AppLauncher
     AppLauncher.add_app_launcher_args(ap)
     a=ap.parse_args(argv)

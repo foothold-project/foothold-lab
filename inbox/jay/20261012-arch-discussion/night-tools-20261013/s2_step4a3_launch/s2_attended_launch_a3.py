@@ -42,7 +42,7 @@ PARENT_SHA = "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8"
 HOOK = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab/sensors/ray_caster/ray_caster.py")
 ISOLATE = Path("C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py")
 ISOLATE_SHA = "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb"
-LIST_SHA = "dc6cc314918320020b6eadc580bbce12072e021493b7bf2292506165329ae9f2"
+LIST_SHA = "089f6f16a52f40f5b351a3e14eb38567b3320a8ea0a00da8f76aabfca6527df2"
 ASSET = ("https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/"
          "IsaacLab/Robots/Unitree/Go2/go2.usd")
 VERDICT_DOC = WORK.parent / "VERIFY-astra-17aa.md"
