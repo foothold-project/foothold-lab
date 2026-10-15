@@ -1,0 +1,39 @@
+meta keys present: ['attempt', 'capture_sha256', 'cases', 'code_sha256', 'control_steps', 'device_binding', 'device_uuid', 'env_config_sha256', 'final_cfg_sha256', 'fixed_pose_verified', 'mesh_collision_verified', 'optimizer_steps', 'parent_sha256', 'purpose', 'scene_answer_sha256', 'started_epoch', 'terrain_assignment_verified']
+
+== stale_packet sub-conditions
+sim_step diff all 1: True range 1 256
+sensor_step == sim_step for all env: True n_bad 0
+sensor_step sample row0/row1: [1, 1, 1, 1, 1, 1, 1, 1] [2, 2, 2, 2, 2, 2, 2, 2] sim [1, 2, 3]
+generation strictly increasing: True min diff 1 n nonpositive 0
+packet ids unique: 256 of 256
+episode 128>127: True first128 const: False after const: False
+episode ids row0/127/128/129: [0, 0, 0, 0, 0, 0, 0, 0] [0, 0, 0, 0, 1, 1, 0, 0] [1, 1, 1, 1, 2, 2, 1, 1] [1, 1, 1, 1, 2, 2, 1, 1]
+
+== sensor_timestamp
+ts min/max 0.0 2.560011148452759 diff min -2.5400111488997936 n neg 13 n zero 0
+first neg idx (step, env): [[35, 4], [57, 5], [127, 0], [127, 1], [127, 2], [127, 3]]
+
+== fixed_pose (first 16 steps)
+root_pos_w max dev in first 16: 0.22573184967041016
+root_quat_w max dev in first 16: 0.22739259898662567
+pos_w max dev in first 16: 0.22573184967041016
+root_pos_w[0] per env: [[-0.0, -12.0, 0.39750000834465027], [-0.0, -12.0, 0.39750000834465027], [-0.0, -4.0, 0.39750000834465027], [-0.0, -4.0, 0.39750000834465027], [-0.0, 4.0, 0.39750000834465027], [-0.0, 4.0, 0.39750000834465027], [9.999999747378752e-05, 12.0, 0.397599995136261], [-0.0, 12.0, 0.39750000834465027]]
+root_pos_w[15] per env: [[-0.030799999833106995, -12.0, 0.24639999866485596], [0.0, -12.030799865722656, 0.24639999866485596], [-0.030799999833106995, -4.0, 0.24639999866485596], [0.0, -4.030799865722656, 0.24639999866485596], [0.06469999998807907, 4.0, 0.17419999837875366], [0.054499998688697815, 4.0, 0.18129999935626984], [0.025800000876188278, 12.027000427246094, 0.29510000348091125], [0.0, 11.969200134277344, 0.24639999866485596]]
+
+== geometry vs oracle
+edge expected count 2494 got count 2493 mismatch 1
+meta boundary_count: None
+  env 0 flat_0 edge mismatch 0 expected_edge 0 got 0
+  env 1 flat_90 edge mismatch 0 expected_edge 0 got 0
+  env 2 step_0 edge mismatch 0 expected_edge 914 got 914
+  env 3 step_90 edge mismatch 0 expected_edge 148 got 148
+  env 4 gap_0 edge mismatch 0 expected_edge 223 got 223
+  env 5 gap_90 edge mismatch 0 expected_edge 211 got 211
+  env 6 stones_0 edge mismatch 1 expected_edge 335 got 334
+  env 7 stones_90 edge mismatch 0 expected_edge 663 got 663
+scene_hit_mask mismatches (interior): 15521
+  env 5 gap_90 n 15521 finite_but_oracle_miss 0 oracle_finite_but_miss 15521
+world_height_answer max dev (interior): 2.0  n > 2mm: 15521
+  env 5 gap_90 n>2mm 15521 max 2.0
+miss count total 19308 per env [0, 0, 0, 0, 2527, 16781, 0, 0]
+oracle non-finite per env [0, 0, 0, 0, 2527, 1260, 0, 0]
