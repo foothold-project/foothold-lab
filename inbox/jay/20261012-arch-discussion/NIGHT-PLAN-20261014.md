@@ -532,6 +532,8 @@
 - **Chrome 탭 메모:** 바탕화면 `Chrome-열린-탭-20261015.txt`(탭 236개, URL 227개 일치). GPU 1 VRAM 10.5 GB 중 Chrome GPU 프로세스 약 8.5 GB(WDDM 카운터, 합계가 장치 값보다 커서 근사). 정리는 팀장 결정.
 - **놀고 있는 GPU(16:50 기준):** GPU 0은 15:07:13부터 다시 비었다. 이유: 4차 수집은 A3.2 + lead 검증 기록이 준비됐지만 **팀장의 새 동의(EULA · 화면 앞 끝까지 · 이번 한 번 실행)가 아직 없다.** 그 사이 약 1시간 40분을 A3.2 수정 · 시험 · 판정 읽기에 썼고 GPU 줄은 비어 있었다. GPU 1은 10/14 09:40:37부터 허용된 기동 없음.
 
+- **17:50 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.6 GB(앱). Isaac/Kit 없음. 팀장 응답은 중간 보고 요청(17:48)뿐이고 4차 동의 한 줄은 아직 없다 → **GPU 0 이 15:07:13 부터 2시간 43분 비어 있다. 이유: 팀장 새 동의 대기.** 병렬로: sol 에게 `TASK-codex-worker-s2-B-plumbing.md`(배관 smoke 단계, CPU) 17:49 지시, ASTRA 에게 `TASK-astra-17ad-s2-B-plumbing.md` 17:50 의뢰. 4차 수집 도구는 49개 해시 · 예행 GO 로 준비 끝.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
