@@ -1,0 +1,122 @@
+{
+  "caught_labels": 0,
+  "clean_copy": true,
+  "cuda_visible_devices": "-1",
+  "normal_before_mutants": true,
+  "pass_labels": 92,
+  "passed": false,
+  "python_isolated": true,
+  "records": [
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 16,
+      "phase": "normal",
+      "test": "test_s2_17v_core.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 5,
+      "phase": "normal",
+      "test": "test_s2_17v_entry.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 13,
+      "phase": "normal",
+      "test": "test_s2_chain.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 12,
+      "phase": "normal",
+      "test": "test_s2_compare.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "test_s2_connect_17v.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 18,
+      "phase": "normal",
+      "test": "test_s2_encoder.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "test_s2_increment_barrier.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 1,
+      "phase": "normal",
+      "test": "test_s2_job_object_os.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 5,
+      "phase": "normal",
+      "test": "test_s2_job_owner.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 2,
+      "phase": "normal",
+      "test": "test_s2_ppo_diff.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 4,
+      "phase": "normal",
+      "test": "test_s2_resource_lease.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 1,
+      "first_failure": "Traceback (most recent call last):",
+      "pass_labels": 0,
+      "phase": "normal",
+      "test": "test_s2_sensor_tracker_17v.py"
+    }
+  ],
+  "run_id": "clean1",
+  "tests_executed": 12,
+  "tests_total": 30
+}

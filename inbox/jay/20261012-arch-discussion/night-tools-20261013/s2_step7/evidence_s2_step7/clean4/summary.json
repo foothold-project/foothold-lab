@@ -1,0 +1,284 @@
+{
+  "caught_labels": 50,
+  "clean_copy": true,
+  "cuda_visible_devices": "-1",
+  "normal_before_mutants": true,
+  "pass_labels": 259,
+  "passed": true,
+  "python_isolated": true,
+  "records": [
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 16,
+      "phase": "normal",
+      "test": "test_s2_17v_core.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 5,
+      "phase": "normal",
+      "test": "test_s2_17v_entry.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 13,
+      "phase": "normal",
+      "test": "test_s2_chain.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 12,
+      "phase": "normal",
+      "test": "test_s2_compare.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "test_s2_connect_17v.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 18,
+      "phase": "normal",
+      "test": "test_s2_encoder.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "test_s2_increment_barrier.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 1,
+      "phase": "normal",
+      "test": "test_s2_job_object_os.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 5,
+      "phase": "normal",
+      "test": "test_s2_job_owner.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 2,
+      "phase": "normal",
+      "test": "test_s2_ppo_diff.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 4,
+      "phase": "normal",
+      "test": "test_s2_resource_lease.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 4,
+      "phase": "normal",
+      "test": "test_s2_sensor_tracker_17v.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "test_s2_step3_entry.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 1,
+      "phase": "normal",
+      "test": "test_s2_step5_clean_import.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 18,
+      "phase": "normal",
+      "test": "test_s2_step5_live.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 3,
+      "phase": "normal",
+      "test": "test_s2_step5_smoke.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 24,
+      "phase": "normal",
+      "test": "test_s2_step6_contract.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 2,
+      "phase": "normal",
+      "test": "test_s2_step6_execution.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 10,
+      "phase": "normal",
+      "test": "test_s2_step6_proof.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 13,
+      "phase": "normal",
+      "test": "test_s2_step7.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 6,
+      "phase": "normal",
+      "test": "test_s2_zero_supervisor.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 26,
+      "phase": "normal",
+      "test": "s2_step2/test_s2_step2.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 42,
+      "phase": "normal",
+      "test": "s2_step3/test_s2_step3_contract.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 8,
+      "phase": "normal",
+      "test": "s2_step3/test_s2_step3_entry.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 5,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 0,
+      "phase": "mutants",
+      "test": "test_s2_step4_mutants.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 12,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 0,
+      "phase": "mutants",
+      "test": "test_s2_step4b_mutants.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 7,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 1,
+      "phase": "mutants",
+      "test": "test_s2_step5_mutants.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 11,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 1,
+      "phase": "mutants",
+      "test": "test_s2_step6_mutants.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 6,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 0,
+      "phase": "mutants",
+      "test": "s2_step2/test_s2_step2_mutants.py"
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 9,
+      "exit_code": 0,
+      "first_failure": null,
+      "pass_labels": 0,
+      "phase": "mutants",
+      "test": "s2_step3/test_s2_step3_mutants.py"
+    }
+  ],
+  "run_id": "clean4",
+  "tests_executed": 30,
+  "tests_total": 30
+}

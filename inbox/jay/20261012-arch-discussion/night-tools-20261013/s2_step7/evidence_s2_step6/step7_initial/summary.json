@@ -1,0 +1,20 @@
+{
+  "cpu_only": true,
+  "cuda_visible_devices": "-1",
+  "legacy_mutants_caught": 0,
+  "legacy_normal_pass_labels": 0,
+  "new_mutants_caught": 0,
+  "new_normal_pass_labels": 0,
+  "normal_first": true,
+  "normal_ok": false,
+  "passed": false,
+  "records": [
+    {
+      "exit_code": 1,
+      "first_failure": "Traceback (most recent call last):",
+      "labels": [],
+      "test": "test_s2_step5_live.py"
+    }
+  ],
+  "run_id": "step7_initial"
+}
