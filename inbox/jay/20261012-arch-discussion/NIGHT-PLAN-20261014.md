@@ -534,6 +534,8 @@
 
 - **17:50 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.6 GB(앱). Isaac/Kit 없음. 팀장 응답은 중간 보고 요청(17:48)뿐이고 4차 동의 한 줄은 아직 없다 → **GPU 0 이 15:07:13 부터 2시간 43분 비어 있다. 이유: 팀장 새 동의 대기.** 병렬로: sol 에게 `TASK-codex-worker-s2-B-plumbing.md`(배관 smoke 단계, CPU) 17:49 지시, ASTRA 에게 `TASK-astra-17ad-s2-B-plumbing.md` 17:50 의뢰. 4차 수집 도구는 49개 해시 · 예행 GO 로 준비 끝.
 
+- **18:48 heartbeat:** 부팅 기준 일치. GPU 0 0 MiB · GPU 1 10.8 GB(앱) · Isaac/Kit 없음. **GPU 0 은 15:07:13 부터 3시간 41분 비어 있다. 이유: 4차 수집에 팀장의 새 동의가 없다.** 그 사이 한 일: ASTRA 17ad 판정 읽음(B 실제 기동 보류 · 장치 결박 API · USD 격리 · plumbing 보강 7곳 · 4차 후 같은 GPU 0 에서 작은 plumbing 한 arm 권고), sol step6(plumbing) lead 재실행 기존 53 + 새 42 PASS · 변이 7/7 + 11/11 → 저장소 사본 `s2_step6/`, sol step7(17ad 결함 수정) 18:14 지시 중, A4 r2 재검증 변이 58/58 · 해시 재생성(`eba07a4f`).
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
