@@ -492,6 +492,15 @@
 - **입력 그대로:** GPU 0 · 8 환경 · 256 step · 개입 64/128/192 · optimizer 0 · retry 0 · `max_wall_s=900` · 변환 0 · 새 out/USD/log 폴더. 새 chain 은 시각으로 만들어지고 첫 시도(chain `s2-stage0-a3-live-20261015-140314`)의 claim 은 보존. 보고에서 이것은 **전체 두 번째 시도**임을 명시한다.
 - **중단:** Ctrl+C(STOP). **보고 문구:** 「두 번째 참석 단회 정보 수집, 시작 실패 / 부분 수집 / 256 행 후 검증 보류, HOLD_INFORMATION_ONLY, optimizer 0, 자동 재시도 및 후속 학습 없음」.
 
+## S2 첫 GPU 수집 두 번째 시도 결과와 A3.1 (10/15 14:36)
+
+- **결과(chain `s2-stage0-a3-live-20261015-142719`, 14:27:19 ~ 14:27:35 · 16 초): 시작 실패 · 원시 행 0 · 정상 완료 걸음 0.** 감독기 pid 131648, 자식 종료 코드 `3221225477`(0xC0000005 접근 위반), 영수증 `HOLD_INFORMATION_ONLY`(artifact_missing · exit_code · step_count), 가족 0.
+- **첫 시도보다 멀리 감:** EULA 통과 → Kit 7.7 초 기동 → **GPU 0 장치 결박 통과**(`out/device_binding.json`: `str(props.uuid)` = 기대 UUID `c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b`, `repr` 은 `<torch._C._CUuuid object>` 객체, Kit `/physics/cudaDevice=0` · `/renderer/activeGpu=0` `verified`) → 그 뒤 `IsaacProvider` 가 `tensordict` 를 Kit 시작 **뒤에** 불러오다 `tensordict/utils.py:44 from tensordict._C import` 에서 접근 위반. 17y 4 번 「UUID 실제 형식 미확인」 이 이 실측으로 닫힘.
+- **원인:** 이 저장소의 동작하는 드라이버(`_eval/q_eval.py:24-25`, `ce12/dump_native_v2.py:32-33`, `branch/branch_run.py:45-46`)는 `h5py` · `torch` · `tensordict` 를 Kit 보다 먼저 불러온다(Windows DLL 선적재). S2 진단만 빠졌다. 첫 시도와 같은 부류: **동작하던 기동기와 한 줄씩 대조하지 않음.**
+- **수정(A3.1):** `s2_connect_diag_17v.py` 의 `_main_capture` 안 `from isaaclab.app import AppLauncher` 앞에 세 줄(diff `s2_stage0_first_collection/A31_diag_preload.diff`). A3 나머지 46 파일 바이트 그대로, 새 목록 SHA256 `089f6f16…`. **A3.1 CPU 전체 시험 정상 15 개 종료 0 (128 PASS) · 변이 5/5 · 6/6 · 7/7 · 감시자 4/4 · 깨끗한 폴더 import 22 모듈 · 해시 47 줄.** 증거 `attempt2_20261015_1427/`, `A31_suite_summary.json`.
+- **다음:** ASTRA 17ab(14:32 의뢰)에 세 번째 시도 허용 + 다른 선적재 누락 확인. 팀장에게 시도마다 새 동의를 받는다(EULA · 화면 앞 · 한 번 실행). sol 에게 B 번들 실기동 경로 작업서(`TASK-codex-worker-s2-B-live.md`: 기동기 동등성 표를 시험으로 먼저)를 14:34 에 병렬 지시(sol 한도 100 % 복구).
+- **놀고 있는 GPU(14:3x 기준):** GPU 0 10/14 05:46 부터 약 32.9 시간 · GPU 1 10/14 09:40:37 부터 약 29 시간 동안 계산 작업 0 이었고, 14:03 과 14:27 의 두 시도가 첫 기동이었다. E1 속도(8,192 환경, 20,000 update 에 23.3 시간)로 환산하면 GPU 0 하나만으로 약 28,000 update 분량이다.
+
 ## RAND smoke 기동 기록 (04:56 · ASTRA 17j 조건부 허용)
 
 - **근거:** `VERIFY-astra-17j.md` 6 절. 허용은 **고정 판 v4 의 smoke invocation 하나** 뿐 (`--stop_after_smoke`). 네 장면 본 실행 · 다른 모델 · unseen · CE12 로 확장 안 함. `--skip_smoke` 금지.
