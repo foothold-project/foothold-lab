@@ -626,3 +626,9 @@
 - **GPU 0 은 10/15 15:07:13 부터 비어 있었다** (이유: 직접 동의 없음. 이 날 질문은 11:07 에 보냈고 답은 14:14 직전에 왔다).
 - **예행 14:15:08:** 번들 49개 일치 · GPU 0 여유 15.59 GiB · 경쟁 프로세스 없음 · prelaunch GO.
 - 이 기동은 정보 수집 전용이며 결과는 HOLD_INFORMATION_ONLY 외에 PASS 로 쓰지 않는다.
+
+## 4차 결과와 첫 배관 기동 기록 (10/16 14:17 · lead)
+
+- **4차 수집 (A3.2, 14:15:29 기동, 36초):** 감독기 rc=42, HOLD_INFORMATION_ONLY. 정상 256 step · raw 256행 전부(FULL_ROWS_HOLD) · 장치 결박 verified (Kit 장치 0, torch UUID 일치). check.json HOLD 이유 3개: case_assignment · fixed_pose_evidence · mesh_evidence_content. 독립 관찰자 PASS (남은 프로세스 0 · 미분류 0 · GPU lease와 USD 잠금 획득 후 해제). 실행 폴더 `s2_runs/live-20261016-141535`.
+- **동의 조건 충족:** 동의 범위 「관찰자의 가족 정리 검사가 PASS 이면 이어서 배관 arm A」 → 배관 기동. 관찰자 PASS는 정리 PASS이며 0단계 과학적 PASS가 아니다 (ASTRA 17af 5절).
+- 배관 입력은 synthetic_known_answer, N=32, 1 iteration, 최대 600초. 성공 문구는 plumbing_checks=PASS · stage0_passed=false · performance_verified=false.
