@@ -1,0 +1,9 @@
+CAUGHT grid_order_or_yaw first grid order gate want grid order gate
+CAUGHT height_or_offset first height offset gate want height offset gate
+CAUGHT capture_time first diagnostic capture two instants want diagnostic capture two instants
+CAUGHT approval_unbound first approval binding gate want approval binding gate
+CAUGHT artifact_hash first artifact hash gate want artifact hash gate
+CAUGHT step_count first optimizer step count gate want optimizer step count gate
+CAUGHT connect_hold first connection verdict gate want connection verdict gate
+CAUGHT stop_file first STOP before update holds want STOP before update holds
+CAUGHT inert_shell first draft inert exit99 want draft inert exit99

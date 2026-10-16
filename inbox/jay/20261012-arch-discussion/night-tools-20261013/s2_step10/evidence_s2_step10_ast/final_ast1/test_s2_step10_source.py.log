@@ -1,0 +1,7 @@
+ACCESS s2_train_entry_17v.py scene['height_scanner'],scene['robot'],tuplecfg.events.reset_base,tuplecfg.scene.robot.init_state,tuplecfg.scene.robot.spawn.rigid_props,tuplecfg.terminations.illegal_contact
+ACCESS s2_plumbing.py cfg.scene.robot,cfg.scene.robot.spawn,cfg.scene.robot.spawn.fix_base,cfg.scene.robot.spawn.rigid_props,cfg.scene.robot.spawn.rigid_props.disable_gravity,cfg.terminations.illegal_contact,dictcfg.scene,dictcfg.scene.robot,dictcfg.scene.robot.spawn,dictcfg.scene.robot.spawn.fix_base,dictcfg.scene.robot.spawn.rigid_props,dictcfg.scene.robot.spawn.rigid_props.disable_gravity,dictcfg.terminations,dictcfg.terminations.illegal_contact
+ACCESS s2_env_config_17v.py cfg.curriculum.terrain_levels,cfg.events.reset_base,cfg.events.reset_base.params,cfg.scene.num_envs,cfg.scene.terrain,cfg.scene.terrain.max_init_terrain_level,cfg.scene.terrain.terrain_generator
+ACCESS s2_env_adapter_17v.py scanner.offset,scanner.offset.pos,scanner.pattern_cfg,scanner.pattern_cfg.direction,scanner.pattern_cfg.ordering,scanner.pattern_cfg.resolution,scanner.pattern_cfg.size,scanner.ray_alignment
+ACCESS s2_runner_17v.py none
+ACCESS s2_sensor_tracker_17v.py none
+PASS RobotLab source AST cfg and scene names

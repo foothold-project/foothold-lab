@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\AI-WS01\AppData\Local\Temp\s2_step9_clean_b4cib8l5\bundle\test_s2_step5_clean_import.py", line 26, in <module>
+    if __name__=="__main__":test()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\AppData\Local\Temp\s2_step9_clean_b4cib8l5\bundle\test_s2_step5_clean_import.py", line 22, in test
+    assert run.returncode==0 and "CLEAN_IMPORT_OK" in run.stdout,(run.returncode,run.stdout,run.stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (1, '', 'Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "C:\\Users\\AI-WS01\\AppData\\Local\\Temp\\s2_step5_closure_4q2xfg7_\\s2_train_entry_17v.py", line 28, in <module>\n    from s2_task_contract import contact_termination_for\nModuleNotFoundError: No module named \'s2_task_contract\'\n')

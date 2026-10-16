@@ -1,0 +1,9 @@
+FAIL raw_row_before_map_error
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a33\test_s2_capture_journal_a2.py", line 41, in main
+    check("raw_row_before_map_error",(root/"raw_rows/row_064.npz").is_file() and
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a33\test_s2_capture_journal_a2.py", line 29, in check
+    assert good,name
+           ^^^^
+AssertionError: raw_row_before_map_error

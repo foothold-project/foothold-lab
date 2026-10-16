@@ -1,0 +1,3 @@
+PASS A33 task, URDF asset, contact, command and event paths
+PASS A33 map, adapter, runner, oracle bytes match A32
+PASS A33 one-conversion USD receipt gate and counterexamples
