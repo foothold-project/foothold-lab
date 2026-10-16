@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · Codex Worker 작업서 (sol) · S2-2 발 디딤 자리 보상 CPU 구현 (step10)
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 11:15
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 11:05
 > 근거: `S2-2-DESIGN.md` · `ROADMAP-20261016.md` (팀장 승인 10/16 11:00) · `night-tools-20261013/s2_step8/` 와 sol 의 step9 · ASTRA 17ag 가 식을 닫기 전까지 식의 값은 `UNDECIDED`
 > 요지: step9 가 끝나면 보낸다. 발 디딤 보상의 틀(순수 텐서 함수, 선택 가능한 RewTerm, 기본값에서 step9 와 같은 동작)과 정답을 아는 시험을 CPU 에서 만든다. 식의 값은 ASTRA 판정 후에 채운다
 > 상태: 작업 지시 (step9 보고 뒤 발송 · GPU · Isaac 기동 금지 · 승인 json 은 만들지 않는다)

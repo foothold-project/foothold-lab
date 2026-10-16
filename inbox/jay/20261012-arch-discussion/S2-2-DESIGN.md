@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 설계 메모 · S2-2 (발 디딤 자리 보상) 와 S2-1 과의 비교 틀
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 11:08
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 11:05
 > 근거: `ROADMAP-20261016.md` (팀장 승인 10/16 11:00) · `PAPERS-architecture.md` 8절 (MARG feet center · START feet edge, 논문 원문은 lead 가 다시 재지 않음) · Go2 환경 코드 `C:/isaac/ext/go2_rl_robotlab/source/robot_lab/robot_lab/tasks/go2/` (env_cfg.py · mdp/rewards.py) · `night-tools-20261013/s2_step8/s2_terrain_overlay_17v.py`
 > 요지: 지금 환경의 보상에는 발 디딤 자리 항도 stumble 벌점도 연결돼 있지 않다. S2-1(지도만)과 S2-2(지도 + 발 디딤 보상)를 2×2 로 짜서 「보게 하기」와 「발 놓을 곳 배우기」의 몫을 따로 본다. 학습 지형의 징검다리가 쉬운 쪽이라는 위험이 코드에서 나왔다
 > 상태: 설계 (ASTRA 17ag 의뢰 전 · 코드 없음 · GPU 0)
