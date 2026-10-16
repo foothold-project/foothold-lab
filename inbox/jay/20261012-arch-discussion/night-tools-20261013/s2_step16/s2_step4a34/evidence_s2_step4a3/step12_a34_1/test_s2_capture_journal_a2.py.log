@@ -1,0 +1,9 @@
+PASS raw_row_before_map_error
+PASS boundary_rows_kept
+PASS partial_not_complete
+PASS start_before_failure
+PASS step_failure_note_exists
+PASS step_stage_failure_keeps_rows_and_stage
+PASS emergency_failure_recorded
+PASS ray_index_collapsed_to_checker_shape
+PASS ray_index_drift_rejected

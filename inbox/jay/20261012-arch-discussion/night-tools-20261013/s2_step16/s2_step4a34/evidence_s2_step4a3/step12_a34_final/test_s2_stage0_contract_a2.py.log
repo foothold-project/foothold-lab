@@ -1,0 +1,34 @@
+PASS exact_bundle_and_all_diag_args
+PASS cuda1_rejected
+PASS disk1_rejected
+PASS seed_missing_rejected
+PASS dependency_missing_rejected
+PASS step_height_manifest_differs_from_answer_rejected
+PASS step_width_manifest_differs_from_answer_rejected
+PASS gap_proportion_not_quarter_rejected
+PASS isolate_wrapper_hash_rejected
+PASS expect_conversions_value_rejected
+PASS expect_any_rejected_rejected
+PASS default_go2_asset_rejected_rejected
+PASS usd_inside_output_rejected
+PASS preexisting_log_dir_rejected
+PASS non_overlapping_counts_nested_once
+PASS non_overlapping_dedups_same_path
+PASS uuid_swap_rejected
+PASS vram_running_floor
+PASS output_budget_watch
+FAIL fake_prelaunch_go
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_stage0_contract_a2.py", line 149, in <module>
+    if __name__=="__main__":main()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_stage0_contract_a2.py", line 136, in main
+    check("fake_prelaunch_go",report["status"]=="GO")
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_stage0_contract_a2.py", line 89, in check
+    assert good,label
+           ^^^^
+AssertionError: fake_prelaunch_go

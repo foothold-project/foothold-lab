@@ -1,0 +1,305 @@
+{
+  "checkpoint_only": true,
+  "format": "s2-17v-checkpoint-only",
+  "live_short_checkpoint_unverified": true,
+  "parent_agent_yaml_sha256": "9b8149ddc6101f92966d2ffdef326f44fa0fb46553678d8f092bcf624dc3173b",
+  "parent_checkpoint_sha256": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "parent_dims": {
+    "actions": 12,
+    "critic": 275,
+    "latent": 32,
+    "policy": 450,
+    "single_obs": 45
+  },
+  "policy_shapes_dtypes": {
+    "actor_in.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        512
+      ]
+    },
+    "actor_in.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        512,
+        77
+      ]
+    },
+    "actor_in_map.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        512,
+        64
+      ]
+    },
+    "actor_rest.2.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "actor_rest.2.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        512
+      ]
+    },
+    "actor_rest.4.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        128
+      ]
+    },
+    "actor_rest.4.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        128,
+        256
+      ]
+    },
+    "actor_rest.6.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        12
+      ]
+    },
+    "actor_rest.6.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        12,
+        128
+      ]
+    },
+    "critic.network.0.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        512
+      ]
+    },
+    "critic.network.0.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        512,
+        307
+      ]
+    },
+    "critic.network.2.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "critic.network.2.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        512
+      ]
+    },
+    "critic.network.4.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        128
+      ]
+    },
+    "critic.network.4.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        128,
+        256
+      ]
+    },
+    "critic.network.6.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        1
+      ]
+    },
+    "critic.network.6.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        1,
+        128
+      ]
+    },
+    "map_encoder.network.0.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        128
+      ]
+    },
+    "map_encoder.network.0.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        128,
+        374
+      ]
+    },
+    "map_encoder.network.2.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        64
+      ]
+    },
+    "map_encoder.network.2.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        64,
+        128
+      ]
+    },
+    "std": {
+      "dtype": "torch.float32",
+      "shape": [
+        12
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.0.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        512
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.0.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        512,
+        450
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.2.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.2.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        512
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.4.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        2048
+      ]
+    },
+    "student_moe_encoder.moe.experts.backbone.network.4.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        2048,
+        256
+      ]
+    },
+    "student_moe_encoder.moe.experts.experts.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "student_moe_encoder.moe.experts.experts.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        256,
+        1
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.0.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        512
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.0.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        512,
+        450
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.2.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.2.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        512
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.4.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        256
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.4.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        256,
+        256
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.6.bias": {
+      "dtype": "torch.float32",
+      "shape": [
+        8
+      ]
+    },
+    "student_moe_encoder.moe.gating_network.0.network.6.weight": {
+      "dtype": "torch.float32",
+      "shape": [
+        8,
+        256
+      ]
+    }
+  },
+  "policy_tensor_count": 38,
+  "source": "S2Runner.save CPU fixture from E1 model_20000.pt",
+  "source_contract": {
+    "cuda_rng": "None_in_CPU_fixture",
+    "optimizer_tensor_shapes": "dynamic_after_updates_unverified",
+    "rng_keys": [
+      "torch_cpu",
+      "torch_cuda",
+      "numpy",
+      "python"
+    ],
+    "s2_control_format": "s2-encoder-control-v3",
+    "s2_control_keys": [
+      "format",
+      "unit",
+      "encoder_mode",
+      "freeze_updates",
+      "encoder_lr_ratio",
+      "completed_updates",
+      "next_update_index",
+      "steps_total",
+      "base_lr",
+      "group_lrs",
+      "optimizer"
+    ],
+    "s2_control_unit": "ppo_iteration"
+  },
+  "top_level_types": {
+    "discarded_transitions": "int",
+    "encounter_states": "dict",
+    "env_config_sha256": "str",
+    "format": "str",
+    "mode": "str",
+    "optimizer": "dict",
+    "plan": "dict",
+    "plan_sha256": "str",
+    "policy": "OrderedDict",
+    "resume_supported": "bool",
+    "rng": "dict",
+    "s2_control": "dict"
+  }
+}
