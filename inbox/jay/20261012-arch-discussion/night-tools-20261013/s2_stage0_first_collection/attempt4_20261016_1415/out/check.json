@@ -1,0 +1,22 @@
+{
+  "counts": {
+    "boundary": 4154,
+    "deep_finite": 5120,
+    "fixed_steps": 16,
+    "live_steps": 240,
+    "miss": 5120
+  },
+  "criteria": {
+    "boundary_exclusion_m": 0.005,
+    "steps": 256,
+    "warmup_steps": 16,
+    "xy_tolerance_m": 0.002,
+    "z_tolerance_m": 0.002
+  },
+  "reasons": [
+    "case_assignment",
+    "fixed_pose_evidence",
+    "mesh_evidence_content"
+  ],
+  "verdict": "HOLD"
+}

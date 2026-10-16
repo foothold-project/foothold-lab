@@ -1,0 +1,31 @@
+{
+ "t": "2026-10-16 14:15:55",
+ "pid": 172092,
+ "version": "v3",
+ "root": "c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261016-141535/usd",
+ "expect_conversions": "0",
+ "conversions": 0,
+ "patched_by": "loader",
+ "patched": [
+  "loader"
+ ],
+ "terrain_patched_by": "",
+ "blocked": [],
+ "warnings": [],
+ "meta_path": [
+  "builtins.type",
+  "__main__._Finder",
+  "_distutils_hack.DistutilsMetaFinder",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type",
+  "builtins.type"
+ ]
+}

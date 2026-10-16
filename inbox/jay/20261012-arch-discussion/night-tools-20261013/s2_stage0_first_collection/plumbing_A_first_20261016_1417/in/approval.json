@@ -1,0 +1,21 @@
+{
+  "approval_id": "plumbA-live-20261016-141747",
+  "by": "lead freeze under ASTRA 17ae conditions (first B plumbing, A3.2 sequel); attendee=team-lead",
+  "chain_id": "s2-plumbing-A-first-live-20261016-141747",
+  "consent": {
+    "asked_by_lead_at": "2026-10-16 11:07 KST 질문(답은 14:14 직전에 받음): 「GPU 0이 어제 15:07부터 비어 있습니다. 아래 범위로 NVIDIA EULA 동의와 참석 실행에 동의하십니까? 4차 수집은 최대 15분, 배관은 최대 10분이며 화면 앞에서 끝까지 보셔야 합니다.」 선택지 「둘 다 동의」의 설명 원문: 「4차 0단계 수집(A3.2)을 한 번 실행하고, 독립 관찰자의 가족 정리 검사가 PASS이면 이어서 GPU 0 배관 arm A(합성 N=32, 1 iteration)를 한 번 실행합니다. 이 범위의 EULA 동의와 화면 앞 참석 실행에 동의합니다. 재시도, 무인 실행, GPU 1, 짧은 학습(short)은 포함하지 않습니다.」 ASTRA 17af 5절이 이 형식을 각 실행의 직접 동의로 인정했다. 이 파일은 같은 메시지를 배관 실행에 대응시킨 사본이다",
+    "attending_until_end": "yes",
+    "by": "오흥재 (팀장, Claude Code 채팅의 선택지에서 직접 선택)",
+    "eula_accepted": "yes",
+    "go_for_this_one_run": "yes",
+    "quote": "둘 다 동의",
+    "recorded_at": "2026-10-16 14:15 KST",
+    "scope": "s2_plumbing_attended_one_shot_arm_A"
+  },
+  "eula_accepted": true,
+  "expires_epoch": 1792129667.181112,
+  "manifest_sha256": "0f28228dfc3df8411ccc78428a31fbc495d7f1c3ec0afbddcc8859a05da7bb41",
+  "permission_docs": {},
+  "scope": "s2_plumbing_attended_one_shot",
+  "status": "APPROVED"
+}
