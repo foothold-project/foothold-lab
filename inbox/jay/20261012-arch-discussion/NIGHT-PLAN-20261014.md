@@ -633,3 +633,4 @@
 - **동의 조건 충족:** 동의 범위 「관찰자의 가족 정리 검사가 PASS 이면 이어서 배관 arm A」 → 배관 기동. 관찰자 PASS는 정리 PASS이며 0단계 과학적 PASS가 아니다 (ASTRA 17af 5절).
 - 배관 입력은 synthetic_known_answer, N=32, 1 iteration, 최대 600초. 성공 문구는 plumbing_checks=PASS · stage0_passed=false · performance_verified=false.
 - **10/16 14:25 heartbeat:** 부팅 09/17 21:16:07 일치. GPU 0 비어 있음 (14:18:46 부터 · 이유: 직접 동의로 실행한 4차와 첫 배관이 끝났고, 다음 기동은 sol step10 후 새 직접 동의가 필요). GPU 1 앱 13.7 GB. 새 판정 없음, #550 새 댓글 없음. sol step10 접수 (14:23), 산출물 아직 없음.
+- **10/16 14:48 heartbeat:** 부팅 일치. GPU 0 비어 있음 (14:18:46 부터 · 이유: 다음 기동은 sol step10 확정과 새 직접 동의 대기). sol step10 중간 보고 도착 (14:48, 시험 최종 결과 진행 중이라 재실행 보류). lead 가 바이트로 확인한 것: A3.3 사본은 A3.2 와 41개 파일 동일, 달라진 파일은 보고서가 적은 9개와 같음(지도 · 어댑터 · runner · tracker · 점검 코드 · 메시 프로브 동일). 보고서 주장: PhysX 질의 103,224개 전부 miss(RayCaster 유한 hit 101,844개), env 6 자세 편차는 x 성분 step 7 부터 허용 초과. GPU 판별 단회 제안 있음(8 env x 16 step, 학습 0).
