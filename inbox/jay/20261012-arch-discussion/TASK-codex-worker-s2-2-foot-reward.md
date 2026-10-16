@@ -1,29 +1,34 @@
-> 분류: A/정책학습 · Codex Worker 작업서 (sol) · S2-2 발 디딤 자리 보상 CPU 구현 (step10)
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 11:05
-> 근거: `S2-2-DESIGN.md` · `ROADMAP-20261016.md` (팀장 승인 10/16 11:00) · `night-tools-20261013/s2_step8/` 와 sol 의 step9 · ASTRA 17ag 가 식을 닫기 전까지 식의 값은 `UNDECIDED`
-> 요지: step9 가 끝나면 보낸다. 발 디딤 보상의 틀(순수 텐서 함수, 선택 가능한 RewTerm, 기본값에서 step9 와 같은 동작)과 정답을 아는 시험을 CPU 에서 만든다. 식의 값은 ASTRA 판정 후에 채운다
-> 상태: 작업 지시 (step9 보고 뒤 발송 · GPU · Isaac 기동 금지 · 승인 json 은 만들지 않는다)
+> 분류: A/정책학습 · Codex Worker 작업서 (sol) · S2-2 발 디딤 자리 보상 `feet_center_any9_v1` CPU 구현 (step15, ASTRA 17ag 사양 반영 판)
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 19:49
+> 근거: `VERIFY-astra-17ag.md` 1~2절(사양 · 높이 출처 · 필요한 CPU 증거) · 3절(2×2 비교 틀과 혼입) · 6절(가중치 · 판독) · `S2-2-DESIGN.md` · 팀장 승인 10/16 11:00 (발 디딤 보상 사용). 이전 판(10/16 11:15)은 이 문서로 대체한다
+> 요지: MARG 의 feet center 를 참고한 우리 사양을 순수 텐서 함수와 선택 가능한 연결로 만든다. 이름은 `feet_center_any9_v1`(MARG 원본 복제 아님). 학습 지형 · stumble · 돌 크기는 같이 바꾸지 않는다(열이 「발 디딤 보상」이 아니게 되므로). Kit 에서 발 광선이 실제로 맞는지는 별도 학습 0 단회로 확인한다(이번 작업은 그 단회의 계약까지)
+> 상태: 작업 지시 (CPU 만 · GPU · Isaac 기동 금지 · 승인 json 은 만들지 않는다)
 
-# sol 작업서: S2-2 발 디딤 보상 (step10)
+# sol 작업서: S2-2 `feet_center_any9_v1` (step15)
 
 ## 0. 지킬 것
 
-step9 와 같다. GPU · Isaac · `_eval` 슬롯 · 기존 코드 · 원자료를 건드리지 않는다. `CUDA_VISIBLE_DEVICES=-1`, `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -B`. 새 사본 `codexE/s2_step10/` (step9 를 복사해 시작하되 `s2_step9/` 와 저장소는 고치지 않는다). 정상 먼저, 변이는 지정 첫 FAIL. em dash 금지. 첫 실패도 보고서에. 바꿔야 하는 이유가 step9 의 실행 의미 · 입력 검사 · Job/잠금/격리에 닿으면 막힌 줄만 적고 멈춘다.
+step14 와 같다. 새 사본 `codexE/s2_step15/` (step14 의 B 묶음을 복사해 시작; step14 · 저장소 · `_eval` 은 읽기만). `CUDA_VISIBLE_DEVICES=-1`, `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I -B`. 정상 먼저, 변이는 지정 첫 FAIL. 정상 PASS 와 변이 단계 선행 PASS 를 합쳐 쓰지 않는다. 해시 목록 CR 없이. em dash 금지. 바꿀 수 있는 것은 새 파일과 `reward_variant` 연결부뿐이며 기본값 `none` 에서 step14 와 환경 구성이 **바이트 단위로 같은 dict** 여야 한다.
 
-## 1. 먼저 읽고 보고할 것 (코드 변경 없음)
+## 1. 사양 (ASTRA 17ag 1.2절을 옮긴 것, 다르게 읽히면 17ag 원문이 이긴다)
 
-1. E1 부모 실행 폴더의 `params/env.yaml` 의 보상 항(이름 · 가중치 · params)이 `C:/isaac/ext/go2_rl_robotlab/source/robot_lab/robot_lab/tasks/go2/env_cfg.py:347~435` 의 `RewardsCfg` 14항과 같은지. 다르면 항별 차이표.
-2. 지도 센서(`env_cfg.py:65~79`)와 `s2_env_config_17v.py` 가 발 몸체(FL/FR/RL/RR_foot)에 센서를 붙일 수 있는 자리가 어디인지(`FOOT_LINK_NAME` · prim 경로). 센서를 더하는 가장 작은 변경 지점.
-3. `mdp/rewards.py` 의 `feet_stumble` (305행) 과 `feet_regulation` 의 입력이 어디서 오는지.
+- 입력: 같은 시점의 발 충돌구 중심 위치 `p_f [N,4,3]` (m), 지형 mesh 하향 광선의 hit 높이 `H [N,4,9]` (m), query 상태, 발 접촉력 `F [N,4,3]` (N). 출력: 환경마다 스칼라 비용 `C [N]`. actor 의 187칸 지도나 복원 지도는 보상 입력으로 쓰지 않는다.
+- 발별 수평 3×3 표본 `{-0.05, 0, +0.05} m × {-0.05, 0, +0.05} m`, 첫 판은 **world XY 격자** 고정(발 roll/pitch 에 따라 광선이 기울지 않는다).
+- 기준 `z_ref = p_f,z - 0.022 m` (설치된 Go2 URDF 발 충돌구 반지름 0.022 m; 발 링크 원점과 충돌구 중심을 혼동하지 않는다: FL 충돌구는 링크 좌표 `(-0.002, 0, 0)`; 다른 발도 collision transform 에서 읽는다).
+- `b_fj = 1[H_fj < z_ref - 0.20 m]` (월드 높이 -0.2 와 직접 비교하지 않는다: 평행 이동 불변). 정상 질의의 no-hit 는 깊은 공백으로, NaN · 잘못된 mesh · 오래된 버퍼를 공백으로 처리하지 않는다.
+- `u_f = any(b_fj, j ∈ Type2 상하좌우 네 점)`, `v_f = any(b_fj, j ∈ Type3 대각 네 점)`, `c_f = 1[F_f,z > 1 N]` (제안값; 매 제어 시점의 지지 접촉이지 first-contact 이벤트가 아님).
+- `C_f = c_f × (u_f + 2 v_f)`. 중앙점도 공백인 채 접촉했다면 `C_f = 3 c_f` 로 두고 중앙 불일치를 별도 카운터로 남긴다. `C = Σ_f C_f`, 범위 `[0,12]`. RewardManager 에는 **양의 비용 함수와 음의 가중치 -0.01** 을 넘긴다(함수 안에서 음수를 곱하지 않는다, dt 도 넣지 않는다: 매니저가 곱한다).
+- 한계(보고서에 그대로): 20 cm 보다 얕은 낙차 · 얇은 균열 · 작은 구멍은 탐지하지 못하고 9점 사이 공백도 놓친다. gap · stones 두 지형에 한정해 시작한다.
 
 ## 2. 만들 것
 
-1. **순수 텐서 함수** `s2_foot_reward.py`: 입력 `foot_ray_z[N, 4, K]` (발마다 K점의 지면 높이, 월드 z), `foot_z[N, 4]`, `in_contact[N, 4]` (발 접촉 여부), 출력 `penalty[N]`. 식의 모양(가장자리 점 수 n 에 대한 단조 함수, 접촉 발만 계산, 점 높이가 `foot_z - edge_drop` 보다 낮으면 가장자리)은 **ASTRA 17ag 가 닫기 전까지 인자로 열어 둔다**. 값은 `UNDECIDED`, 호출하면 거절.
-2. **선택 가능한 연결:** 요청 JSON 의 필드 `reward_variant` ∈ {`none`, `feet_center`}. 기본값 `none` 이고 이때 환경 구성이 step9 와 **바이트 단위로 같은 dict** 가 나와야 한다(시험으로 증명). `feet_center` 일 때만 RewTerm 과 발 센서가 구성에 더해지고, 가중치 · 점 간격은 요청에서 읽는다. 기본값이 없다.
-3. **정답을 아는 시험(CPU):** 평평한 발 아래 = 0 · 9점 중 일부가 가장자리 = 가장자리 점 수에 맞게 단조 증가 · 공중 발은 0 · 네 발 중 한 발만 가장자리일 때 그 발만 반영 · 환경별 독립(한 env 의 값이 다른 env 로 새지 않음) · NaN 입력은 거절 · `reward_variant=none` 일 때 step9 와 구성 동일.
-4. **변이:** 가장자리 판정 부등호 뒤집기, 접촉 마스크 제거, 발 축 합 대신 최대, env 축 섞기, 기본값을 `feet_center` 로 바꾸기. 각각 지정 첫 FAIL 로 잡히는지.
-5. 깨끗한 복사본 `-I` 로 전체 회귀(step9 시험 파일 전부 + 새 것). 정상 PASS 수와 변이 CAUGHT/전체를 구분.
+1. 순수 텐서 함수 `s2_foot_reward.py` 와 ASTRA 17ag 2절이 요구한 CPU 증거: 평면 비용 0 · cardinal 만 위험인 지지발 1 · diagonal 만 2 · 둘 다 3 · swing 0 · 네 발 최댓값 12 · 동일 좌표 전체를 z 로 평행 이동해도 비용 같음 · 20 cm 경계 양쪽 · 1 N 접촉 경계 · 정상 no-hit 와 NaN / 부분 inf / 범위 초과 분리 · 네 발 permutation · 비동기 env reset · stale frame 거부. **같은 함수로 정답을 만들고 그 함수가 맞다고 시험하지 않는다**: 작은 알려진 삼각형 mesh 와 3×3 hit 의 손계산 결과를 정답표로 쓴다.
+2. 발 광선 질의 연결 `s2_foot_query.py`: RayCaster 네 센서(논리) 또는 36점 묶음 질의(구현 선택), `cfg.offset.pos` 의 +20 m 가 광선 시작점에 이미 들어가고 `data.pos_w` 는 view 와 `_offset` 에서 나온다는 사실(`ray_caster.py:220,242` 부근)을 반영: 발 높이나 접지 높이에 +20 m 를 더하지 않고, 시작점 · hit 를 각각 저장, 반복 갱신으로 시작점이 누적 이동하지 않는지 검사, query 범위는 해당 타일 표면과 -1 m 구멍 바닥 포함(`max_distance` 부족 · 타일 밖 · mesh 로드 실패는 공백이 아님), pose · force · hit 를 같은 제어 단계에서 캡처, reset 에서 env 별 episode ID 와 frame ID 갱신. 센서가 시작점이 reset 에서 시계 0 으로 돌아가는 것을 과거 episode 의 정상 진행으로 착각하지 않는다.
+3. 선택 연결: 요청의 `reward_variant` ∈ {`none`, `feet_center_any9_v1`}. 기본 `none`. 켜져 있을 때만 RewTerm 과 발 센서가 환경 구성에 더해지고 가중치 -0.01 · 점 간격은 요청에서 읽는다(기본값 없음). critic 관측은 **그대로 둔다**(보상 있는 열에서만 critic 에 추가하면 또 다른 요인). 시험: `none` 일 때 구성 동일, 켠 구성에서 actor / student 입력 shape 와 critic 관측 불변, 보상 항 목록에 이 항만 추가.
+4. 실제 구성된 reward manager 의 항 이름 · 가중치 목록을 신규 실행의 영수증에 저장하는 필드(상속 · override 뒤의 최종값; 17ag 6.1절). 현재 RewardsCfg 와 E1 `params/env.yaml` 이 15항으로 일치한다는 사실과 대조.
+5. **Kit 단회 계약** `S2-FOOT-KIT-CHECK.md` (실행하지 않는다): N ≤ 8, 최대 300 control step(50 Hz 라면 물리 6 초 상한), 학습 · optimizer 0, 알려진 평면 · 직선 절벽 · 대각 절벽 · 유한 깊이 구멍 · 동일 장면의 다른 높이 / 위치 · 지지 · swing · reset 포함. 실제 hit XY/Z · 접촉력 · body ID · mesh 경로 · frame / episode ID · raw C 와 weighted reward 를 남김. 기하 오차 허용치는 meter 기준으로 먼저 고정하고 경계선의 수치 불안정 점은 별도 분류. A3.4 감독기 계약 방식을 재사용할 수 있는지 판단해 적는다.
+6. 5~10 update 판독 기준 문서화(17ag 6.2절): 즉시 결함 · 과대 기여 의심(`Σ|r_center| / Σ r_tracking`, 분모 0 구간 별도 보고) · 동결 보행 의심(reward-off 대조 대비 진행 20 % 이상 감소 + touchdown 감소 + 2초 이상 저속 정체 증가) · 가짜 개선 방지. 진단 제안 기준이지 자동 연장 · 재시도 규칙이 아님.
 
 ## 3. 끝나면
 
-`REPORT-s2-step10.md` (1절 답 · 바뀐 파일 · 시험 수 · 첫 실패 · 미확인), `S2-STEP10-SHA256SUMS.txt`, #550 댓글 초안(미게시). lead 가 재실행한다. 막히면 추측하지 말고 막힌 줄과 필요한 값을 적는다.
+`REPORT-s2-step15.md` (코드 위치 · 시험 수 · 변이 CAUGHT/전체 · 첫 실패 · 미확인: 실제 Kit 발 광선 응답, 실제 USD collision 발 형상), `S2-STEP15-SHA256SUMS.txt`, #550 댓글 초안(미게시). lead 가 재실행한다. 막히면 추측하지 말고 막힌 줄과 필요한 값을 적는다.
