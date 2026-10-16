@@ -1,0 +1,14 @@
+PASS healthy supervisor ending by itself is left alone
+PASS decoy untouched after healthy run
+PASS hung supervisor killed by heartbeat stale
+PASS kill happened within stale window plus margin
+PASS decoy untouched after hang kill
+PASS hard deadline kills even with fresh heartbeat
+PASS wrong creation time: refuses and signals nothing
+PASS no status after startup grace: killed
+PASS past deadline is a bad argument and signals nothing
+PASS launcher started both and exited
+PASS watchdog alive after launcher exit
+PASS detached watchdog killed the hung supervisor after launcher was gone
+PASS decoy untouched at the end
+SUMMARY ALL PASS

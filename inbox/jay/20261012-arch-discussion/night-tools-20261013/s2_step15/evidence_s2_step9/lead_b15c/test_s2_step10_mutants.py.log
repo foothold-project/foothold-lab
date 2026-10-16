@@ -1,0 +1,2 @@
+CAUGHT entry_old_contact first_FAIL=legacy_base_contact:s2_train_entry_17v.py want=legacy_base_contact:s2_train_entry_17v.py
+CAUGHT gate_old_contact first_FAIL=legacy_base_contact:s2_plumbing.py want=legacy_base_contact:s2_plumbing.py

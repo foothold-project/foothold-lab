@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_a32.py", line 332, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_a32.py", line 88, in main
+    cfg = configure_env(base, spec, diagnostic_kind="eight_case", reset_yaw_rad=0.0)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\s2_env_config_17v.py", line 56, in configure_env
+    raise ValueError("scene_query_support_setting_missing")
+ValueError: scene_query_support_setting_missing

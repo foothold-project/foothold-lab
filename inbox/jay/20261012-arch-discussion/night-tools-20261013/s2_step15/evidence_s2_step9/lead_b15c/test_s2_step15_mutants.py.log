@@ -1,0 +1,11 @@
+CAUGHT drop_boundary first_FAIL=20cm_strict want=20cm_strict detail=20cm_strict: expected [0.0], got [1.0]
+CAUGHT force_boundary first_FAIL=1N_strict want=1N_strict detail=1N_strict: expected [0.0], got [1.0]
+CAUGHT cardinal_weight first_FAIL=cardinal_one want=cardinal_one detail=cardinal_one: expected [1.0], got [2.0]
+CAUGHT diagonal_weight first_FAIL=diagonal_two want=diagonal_two detail=diagonal_two: expected [2.0], got [1.0]
+CAUGHT central_override first_FAIL=center_three want=center_three detail=center_three: expected [3.0], got [0.0]
+CAUGHT no_hit_void first_FAIL=valid_no_hit_cost want=valid_no_hit_cost detail=valid_no_hit_cost: expected [1.0], got [0.0]
+CAUGHT world_zero_threshold first_FAIL=translated_height want=translated_height detail=translated_height: expected [1.0], got [0.0]
+CAUGHT double_ray_offset first_FAIL=ray_start_20m want=ray_start_20m detail=ray_start_20m: expected 20.022, got 40.022
+CAUGHT stale_frame first_FAIL=stale_frame_rejected want=stale_frame_rejected detail=stale_frame_rejected: expected foot_frame_stale
+CAUGHT partial_inf first_FAIL=partial_inf_rejected want=partial_inf_rejected detail=partial_inf_rejected: expected foot_hit_invalid
+MUTANTS 10/10 CAUGHT

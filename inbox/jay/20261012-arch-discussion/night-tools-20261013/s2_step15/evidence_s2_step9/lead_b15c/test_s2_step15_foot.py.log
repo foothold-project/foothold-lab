@@ -1,0 +1,22 @@
+PASS s2_step15_foot 16/16
+test_async_reset_and_stale (__main__.TestFoot.test_async_reset_and_stale) ... ok
+test_cardinal_diagonal_both_swing_and_all_feet (__main__.TestFoot.test_cardinal_diagonal_both_swing_and_all_feet) ... ok
+test_central_override_and_counter (__main__.TestFoot.test_central_override_and_counter) ... ok
+test_flat (__main__.TestFoot.test_flat) ... ok
+test_foot_permutation (__main__.TestFoot.test_foot_permutation) ... ok
+test_grid_world_xy_and_no_accumulation (__main__.TestFoot.test_grid_world_xy_and_no_accumulation) ... ok
+test_installed_urdf_four_collision_spheres (__main__.TestFoot.test_installed_urdf_four_collision_spheres) ... ok
+test_known_triangle_mesh_cardinal_diagonal (__main__.TestFoot.test_known_triangle_mesh_cardinal_diagonal) ... ok
+test_manager_receipt_and_e1_15_term_table (__main__.TestFoot.test_manager_receipt_and_e1_15_term_table) ... ok
+test_no_hit_and_bad_values (__main__.TestFoot.test_no_hit_and_bad_values) ... ok
+test_none_is_byte_identical_and_opt_in_only_reward (__main__.TestFoot.test_none_is_byte_identical_and_opt_in_only_reward) ... ok
+test_query_no_hit_and_invalids (__main__.TestFoot.test_query_no_hit_and_invalids) ... ok
+test_request_selector_is_explicit_and_sealed_argv (__main__.TestFoot.test_request_selector_is_explicit_and_sealed_argv) ... ok
+test_step14_and_none_config_dict_identical (__main__.TestFoot.test_step14_and_none_config_dict_identical) ... ok
+test_strict_boundaries (__main__.TestFoot.test_strict_boundaries) ... ok
+test_z_translation_invariance (__main__.TestFoot.test_z_translation_invariance) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.048s
+
+OK

@@ -1,0 +1,4 @@
+PASS a33_map_bytes
+PASS a33_provider_reuse
+PASS no_kit_import_or_launch
+PASS supervisor_contract_block_identified

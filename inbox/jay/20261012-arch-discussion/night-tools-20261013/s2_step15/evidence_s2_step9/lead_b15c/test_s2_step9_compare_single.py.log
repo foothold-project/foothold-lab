@@ -1,0 +1,3 @@
+PASS no_map_contract_suppresses_effect_claim
+PASS verified_map_still_exploratory_without_stage0_pass
+PASS reject_extended_receipt
