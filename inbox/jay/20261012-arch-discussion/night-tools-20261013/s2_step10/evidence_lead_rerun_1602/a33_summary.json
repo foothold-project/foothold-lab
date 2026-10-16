@@ -1,0 +1,10 @@
+{
+  "clean_copy": true,
+  "cuda_visible_devices": "-1",
+  "exit_code": 0,
+  "passed": true,
+  "python_isolated": true,
+  "run_id": "lead_rerun_a33",
+  "suite_complete": true,
+  "suite_results": 23
+}
