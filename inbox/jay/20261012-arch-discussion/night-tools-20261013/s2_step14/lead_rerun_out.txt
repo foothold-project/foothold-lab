@@ -1,0 +1,1 @@
+{"adapter_cpu_import": true, "gpu_run": false, "kit_run": false, "mutants_CAUGHT": 8, "normal_PASS": 14, "schema": "s2-step14-cpu-evidence-v1", "step13_regression_CAUGHT": 14, "step13_regression_PASS": 16}
