@@ -1,0 +1,1 @@
+{"xy_tolerance_m": 0.002, "z_tolerance_m": 0.002, "boundary_exclusion_m": 0.005, "steps": 256, "warmup_steps": 16}
