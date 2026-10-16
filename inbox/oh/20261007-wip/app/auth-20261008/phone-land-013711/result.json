@@ -1,0 +1,893 @@
+{
+ "case": "phone",
+ "checks": [
+  {
+   "name": "N0 DDS 이 PC 안으로만: 스택 ROS 프로세스 소켓이 127.0.0.1(·lo 멀티캐스트)뿐 · 공유 메모리 전송 없음",
+   "ok": true,
+   "ros_procs": 14,
+   "sockets": 77,
+   "non_local": [],
+   "shm_procs": [],
+   "gz_discovery_not_dds": [
+    "0.0.0.0:10317",
+    "0.0.0.0:10318"
+   ],
+   "gz_discovery_ss_raw": [
+    "UNCONN 0      0                       0.0.0.0:10317         0.0.0.0:*   users:((\"parameter_bridg\",pid=3481190,fd=43))",
+    "UNCONN 0      0                       0.0.0.0:10317         0.0.0.0:*   users:((\"ruby\",pid=3480349,fd=16))",
+    "UNCONN 0      0                       0.0.0.0:10317         0.0.0.0:*   users:((\"parameter_bridg\",pid=3480346,fd=55))",
+    "UNCONN 0      0                       0.0.0.0:10318         0.0.0.0:*   users:((\"parameter_bridg\",pid=3481190,fd=44))",
+    "UNCONN 0      0                       0.0.0.0:10318         0.0.0.0:*   users:((\"ruby\",pid=3480349,fd=17))",
+    "UNCONN 0      0                       0.0.0.0:10318         0.0.0.0:*   users:((\"parameter_bridg\",pid=3480346,fd=56))"
+   ],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.066,
+    "mux_age": 0.018
+   }
+  },
+  {
+   "name": "P0 HTTPS 관문: 로그인 화면으로 넘어감 → opA 로그인 → 앱(서버 sid·계정·기기)",
+   "ok": true,
+   "at": "/login.html",
+   "acct": "opA 로그인 · 기기 7d35d5",
+   "url": "https://127.0.0.1:8543/",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.06,
+    "mux_age": 0.011
+   }
+  },
+  {
+   "name": "P1 390×844: 영상 조종 모드·겹침 0·화면 밖 0·STOP 불투명·영상 보임",
+   "ok": true,
+   "overlap": [],
+   "off": [],
+   "missing": [],
+   "stopBg": "rgb(200, 30, 26)",
+   "stop": [
+    10,
+    778,
+    380,
+    836
+   ],
+   "vw": 390,
+   "vh": 844,
+   "img": {
+    "decoded": true,
+    "w": 390,
+    "h": 844,
+    "inView": true,
+    "onTop": true,
+    "visible": true
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.084,
+    "mux_age": 0.034
+   }
+  },
+  {
+   "name": "P1r 390×844: 가로 우선 안내 - 세로만 보임·누름 통과·조작(띠·영상바·미니맵·패드·STOP)과 안 겹침",
+   "ok": true,
+   "shown": true,
+   "pe": "none",
+   "hit": [],
+   "in": true,
+   "box": [
+    14,
+    565,
+    376,
+    596
+   ],
+   "text": "휴대폰을 가로로 돌리면 영상이 넓게 보입니다",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.085,
+    "mux_age": 0.035
+   }
+  },
+  {
+   "name": "P1 844×390: 영상 조종 모드·겹침 0·화면 밖 0·STOP 불투명·영상 보임",
+   "ok": true,
+   "overlap": [],
+   "off": [],
+   "missing": [],
+   "stopBg": "rgb(200, 30, 26)",
+   "stop": [
+    718,
+    300,
+    830,
+    376
+   ],
+   "vw": 844,
+   "vh": 390,
+   "img": {
+    "decoded": true,
+    "w": 844,
+    "h": 390,
+    "inView": true,
+    "onTop": true,
+    "visible": true
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.013,
+    "mux_age": 0.014
+   }
+  },
+  {
+   "name": "P1r 844×390: 가로 우선 안내 - 세로만 보임·누름 통과·조작(띠·영상바·미니맵·패드·STOP)과 안 겹침",
+   "ok": true,
+   "shown": false,
+   "fresh": {
+    "ok": true,
+    "state_age": 0.014,
+    "mux_age": 0.014
+   }
+  },
+  {
+   "name": "P1 360×640: 영상 조종 모드·겹침 0·화면 밖 0·STOP 불투명·영상 보임",
+   "ok": true,
+   "overlap": [],
+   "off": [],
+   "missing": [],
+   "stopBg": "rgb(200, 30, 26)",
+   "stop": [
+    10,
+    574,
+    350,
+    632
+   ],
+   "vw": 360,
+   "vh": 640,
+   "img": {
+    "decoded": true,
+    "w": 360,
+    "h": 640,
+    "inView": true,
+    "onTop": true,
+    "visible": true
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.072,
+    "mux_age": 0.023
+   }
+  },
+  {
+   "name": "P1r 360×640: 가로 우선 안내 - 세로만 보임·누름 통과·조작(띠·영상바·미니맵·패드·STOP)과 안 겹침",
+   "ok": true,
+   "shown": true,
+   "pe": "none",
+   "hit": [],
+   "in": true,
+   "box": [
+    14,
+    361,
+    346,
+    392
+   ],
+   "text": "휴대폰을 가로로 돌리면 영상이 넓게 보입니다",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.073,
+    "mux_age": 0.023
+   }
+  },
+  {
+   "name": "P2 세로 노치(위 47·아래 34): 띠는 노치 아래로 밀림·STOP·패드는 아래 34 안쪽·겹침 0",
+   "ok": true,
+   "stripPadTop": 47,
+   "stopBottom": 802,
+   "padBottom": 718,
+   "vh": 844,
+   "overlap": [],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.006,
+    "mux_age": 0.006
+   }
+  },
+  {
+   "name": "P2 가로 노치(좌우 47): 조작들이 노치 안쪽·띠 여백 ≥ 47·겹침 0",
+   "ok": true,
+   "box": {
+    "strip": [
+     0,
+     844
+    ],
+    "pad": [
+     47,
+     267
+    ],
+    "stop": [
+     685,
+     797
+    ],
+    "mapbox": [
+     577,
+     797
+    ],
+    "vbar": [
+     47,
+     301
+    ]
+   },
+   "padL": 47,
+   "padR": 47,
+   "vw": 844,
+   "overlap": [],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.095,
+    "mux_age": 0.044
+   }
+  },
+  {
+   "name": "P1f 전체화면 누름(real): 가로 고정 요청 1회·결과 처리됨·처리 안 된 오류 0·STOP 맨 위·겹침 0",
+   "ok": true,
+   "fs": true,
+   "enabled": true,
+   "lock": {
+    "t": "landscape",
+    "mode": "real",
+    "res": "NotSupportedError"
+   },
+   "rej": [],
+   "stopOnTop": true,
+   "vmode": true,
+   "overlap": [],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.028,
+    "mux_age": 0.029
+   }
+  },
+  {
+   "name": "P1f 전체화면 누름(reject): 가로 고정 요청 1회·결과 처리됨·처리 안 된 오류 0·STOP 맨 위·겹침 0",
+   "ok": true,
+   "fs": true,
+   "enabled": true,
+   "lock": {
+    "t": "landscape",
+    "mode": "reject",
+    "res": "NotSupportedError"
+   },
+   "rej": [],
+   "stopOnTop": true,
+   "vmode": true,
+   "overlap": [],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.003,
+    "mux_age": 0.005
+   }
+  },
+  {
+   "name": "준비: 제어권 받기 → 정지 해제",
+   "ok": true,
+   "mode": "IDLE",
+   "owner": "ebda4cbe-1",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.071,
+    "mux_age": 0.021
+   }
+  },
+  {
+   "name": "P3 누름 → 이동, 뗌 → 0.3 s 안 0·이후 0 수신",
+   "ok": true,
+   "moving": 0.5,
+   "zero_s": 0.076,
+   "held": {
+    "ok": true,
+    "n": 6,
+    "max_gap": 0.051,
+    "max": 0.0
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.077,
+    "mux_age": 0.027
+   }
+  },
+  {
+   "name": "P4 (이동 중) 두 번째 손가락 → 0, 첫 손가락 계속 눌러도 0 수신",
+   "ok": true,
+   "pre_moving": 0.5,
+   "zero_s": 0.019,
+   "held": {
+    "ok": true,
+    "n": 14,
+    "max_gap": 0.051,
+    "max": 0.0
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.095,
+    "mux_age": 0.045
+   }
+  },
+  {
+   "name": "P5 새 누름은 이동 · 누른 채 회전 → 0 유지 수신",
+   "ok": true,
+   "new_press": 0.5,
+   "zero_s": 0.042,
+   "held": {
+    "ok": true,
+    "n": 24,
+    "max_gap": 0.051,
+    "max": 0.0
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.019,
+    "mux_age": 0.02
+   }
+  },
+  {
+   "name": "P6 (이동 중) 숨김 → 0·이후 0 수신",
+   "ok": true,
+   "pre_moving": 0.5,
+   "zero_s": 0.01,
+   "held": {
+    "ok": true,
+    "n": 10,
+    "max_gap": 0.05,
+    "max": 0.0
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.06,
+    "mux_age": 0.01
+   }
+  },
+  {
+   "name": "P7 큰 지도 화면의 작은 영상: 보임 + 서버 렌더 확인 ok",
+   "ok": true,
+   "img": {
+    "decoded": true,
+    "w": 129,
+    "h": 95,
+    "inView": true,
+    "onTop": true,
+    "visible": true
+   },
+   "video": {
+    "ok": true,
+    "why": "",
+    "shot_age": 0.07,
+    "render_age": 0.07
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.088,
+    "mux_age": 0.038
+   }
+  },
+  {
+   "name": "P8 이동 중 두 번째 손가락 STOP → 정지 래치(stop) · 출력 0 수신 · 손 떼도 유지",
+   "ok": true,
+   "moving": 0.5,
+   "pre_moving": 0.5,
+   "latch_s": 0.142,
+   "mode": "STOPPED",
+   "stop": "stop",
+   "out_zero_s": 0.073,
+   "held": {
+    "ok": true,
+    "n": 28,
+    "max_gap": 0.05,
+    "max": 0.0
+   },
+   "gazebo_odom_vel_after": [
+    0.0,
+    0.0
+   ],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.057,
+    "mux_age": 0.007
+   }
+  },
+  {
+   "name": "준비: 다시 제어권",
+   "ok": true,
+   "mode": "IDLE",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.068,
+    "mux_age": 0.019
+   }
+  },
+  {
+   "name": "P9 이동 중 네트워크 끊김(CDP 오프라인+관문 막기) → 0·정지 래치·다시 연결 뒤 자동 재개 없음 (새 sid 면 주인 아님 / 같은 소켓이면 link 래치)",
+   "ok": true,
+   "moving": 0.5,
+   "zero_s": 0.328,
+   "after": 0,
+   "mode": "STOPPED",
+   "stop": "link",
+   "new_sid": false,
+   "owner_is_new": true,
+   "pconn": "연결됨",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.07,
+    "mux_age": 0.02
+   }
+  },
+  {
+   "name": "준비: P9b 제어권",
+   "ok": true,
+   "mode": "IDLE",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.0,
+    "mux_age": 0.001
+   }
+  },
+  {
+   "name": "P9b 이동 중 탭 새로고침(실제 새 웹소켓) → 0·정지 · 새 sid · 주인 아님 · 새 화면에서 패드 눌러도 0 · 제어권 다시 잡기 가능",
+   "ok": true,
+   "moving": 0.5,
+   "zero_s": 0.043,
+   "held": {
+    "ok": true,
+    "n": 44,
+    "max_gap": 0.054,
+    "max": 0.0
+   },
+   "new_sid": true,
+   "owner_is_new": false,
+   "state": {
+    "mode": "STOPPED",
+    "stop": "session"
+   },
+   "pad_press_s": 2.82,
+   "regain": true,
+   "fresh": {
+    "ok": true,
+    "state_age": 0.051,
+    "mux_age": 0.002
+   }
+  },
+  {
+   "name": "D0 데스크톱 1280×800: 지도 화면·상태 그래프 기본 접힘(그리지 않음)·작은 영상 보임",
+   "ok": true,
+   "graph": {
+    "has": true,
+    "open": false,
+    "vis": false,
+    "px": 0
+   },
+   "img": {
+    "decoded": true,
+    "w": 256,
+    "h": 191,
+    "inView": true,
+    "onTop": true,
+    "visible": true
+   },
+   "fresh": {
+    "ok": true,
+    "state_age": 0.087,
+    "mux_age": 0.038
+   }
+  },
+  {
+   "name": "D1 펼치면 그래프가 그려짐",
+   "ok": true,
+   "dark_px": 1704,
+   "fresh": {
+    "ok": true,
+    "state_age": 0.091,
+    "mux_age": 0.042
+   }
+  },
+  {
+   "name": "준비: 데스크톱 제어권",
+   "ok": true,
+   "mode": "IDLE",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.063,
+    "mux_age": 0.014
+   }
+  },
+  {
+   "name": "D2 실제 명령으로 임무 12개 시작·중단",
+   "ok": true,
+   "n": 12,
+   "fresh": {
+    "ok": true,
+    "state_age": 0.073,
+    "mux_age": 0.024
+   }
+  },
+  {
+   "name": "D3 지난 임무 전체: 12개 이상(10개 밖)·끝까지 봄",
+   "ok": true,
+   "n": 12,
+   "info": "12 / 끝난 임무 12개 - 끝까지 봄",
+   "recent_items": 4,
+   "fresh": {
+    "ok": true,
+    "state_age": 0.077,
+    "mux_age": 0.027
+   }
+  },
+  {
+   "name": "D4 10개 밖(가장 오래된) 임무 상세: 사건·주체 opA 표시·영상 파일 없음 문구",
+   "ok": true,
+   "h": "지점 확인 다녀오기 - 중단",
+   "ev": 5,
+   "who": [
+    " - opA · 기기 7d35d5",
+    " - opA · 기기 7d35d5"
+   ],
+   "hint": "01:38:45 시작 · 01:38:46 끝 · 맡긴 화면 ebda4cbe-3 · 영상 근거는 그때 서버 영상 상태 기록뿐이고 영상 파일은 저장하지 않습니다",
+   "fresh": {
+    "ok": true,
+    "state_age": 0.082,
+    "mux_age": 0.032
+   }
+  },
+  {
+   "name": "D5 전체 기록: 40건 넘게·끝까지 봄·계정 표시",
+   "ok": true,
+   "n": 72,
+   "info": "72 / 전체 72건 - 끝까지 봄",
+   "who": 36,
+   "sample": [
+    " - opA · 기기 7d35d5",
+    " - opA · 기기 7d35d5"
+   ],
+   "fresh": {
+    "ok": true,
+    "state_age": 0.033,
+    "mux_age": 0.033
+   }
+  }
+ ],
+ "notes": [
+  "N0 전 첫 구독 신선도 대기 0.20 s",
+  "N0 범위 밖: Gazebo transport 발견 포트 ['0.0.0.0:10317', '0.0.0.0:10318'] 는 모든 주소(0.0.0.0)에서 받는다 - DDS 가 아니고 GZ_IP=127.0.0.1·GZ_PARTITION 으로 데이터·이름만 좁힌다(시뮬 전용, phone-180437)",
+  "진단 P5 회전 직후(누른 채): {\"hidden\": false, \"vh\": false, \"ih\": false, \"rect\": [0, 0, 844, 390], \"iw\": 844, \"ihh\": 390, \"top\": \"IMG#vimg.\", \"inVideo\": true, \"fs\": false, \"vset\": false, \"body\": \"vmode\", \"portrait\": false, \"jit\": null}",
+  "진단 P6 시작: {\"hidden\": false, \"vh\": false, \"ih\": false, \"rect\": [0, 0, 844, 390], \"iw\": 844, \"ihh\": 390, \"top\": \"IMG#vimg.\", \"inVideo\": true, \"fs\": false, \"vset\": false, \"body\": \"vmode\", \"portrait\": false, \"jit\": null}",
+  "진단 P7: {\"hidden\": false, \"vh\": false, \"ih\": false, \"rect\": [18, 132, 129, 95], \"iw\": 390, \"ihh\": 844, \"top\": \"IMG#vimg.\", \"inVideo\": true, \"fs\": false, \"vset\": false, \"body\": \"vmode bigmap\", \"portrait\": true, \"jit\": null}",
+  "P8 직전 상태 STOPPED/video: 영상 문제로 정지 - 조종 화면이 이 영상을 그렸다는 확인 없음. 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」",
+  "P8 소프트웨어 출력 0 과 Gazebo odom 속도([0.0, 0.0])는 따로 - 몸(실기) 정지는 미검증",
+  "P9 화면에 «끊김» 표시: False",
+  "진단 D2 끝(임무 12개 동안): {\"hidden\": false, \"vh\": false, \"ih\": false, \"rect\": [12, 68, 256, 191], \"iw\": 1280, \"ihh\": 800, \"top\": \"IMG#vimg.\", \"inVideo\": true, \"fs\": false, \"vset\": false, \"body\": \"\", \"portrait\": false, \"jit\": null}"
+ ],
+ "chrome": {
+  "pid": "<masked>",
+  "profile": "/tmp/claude-1000/phone-chrome-qve6fkd_",
+  "note": "자체 서명 인증서라 --ignore-certificate-errors(로컬 시험 한정)"
+ },
+ "skip_p1f": false,
+ "trail": [
+  [
+   145750.044,
+   "IDLE",
+   "",
+   ""
+  ],
+  [
+   145769.814,
+   "STOPPED",
+   "take",
+   "조종권을 받았습니다 - 「정지 해제」를 누르면 시작합니다"
+  ],
+  [
+   145770.214,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145771.114,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145772.115,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145772.314,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145773.114,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145774.314,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145775.114,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145776.814,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145777.314,
+   "STOPPED",
+   "video",
+   "영상 문제로 정지 - 조종 화면이 이 영상을 그렸다는 확인 없음. 영상이 돌아와도 자동으로 움직이지 않습니다 - 확인 후 「정지 해제」"
+  ],
+  [
+   145781.714,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145782.614,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145783.215,
+   "STOPPED",
+   "stop",
+   "정지 버튼으로 멈춤 - 「정지 해제」를 눌러야 다시 움직입니다"
+  ],
+  [
+   145784.914,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145785.814,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145786.614,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145787.314,
+   "STOPPED",
+   "link",
+   "이 화면과의 연결이 1초 넘게 끊겨 정지 - 「정지 해제」를 눌러야 다시 움직입니다"
+  ],
+  [
+   145796.114,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145797.014,
+   "MANUAL",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145797.514,
+   "STOPPED",
+   "session",
+   "조종하던 화면이 로그아웃(세션 끝)되어 정지 - 다시 로그인해 「조종권 받기」"
+  ],
+  [
+   145801.014,
+   "STOPPED",
+   "take",
+   "조종권을 받았습니다 - 「정지 해제」를 누르면 시작합니다"
+  ],
+  [
+   145801.414,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145803.114,
+   "STOPPED",
+   "session",
+   "조종하던 화면이 로그아웃(세션 끝)되어 정지 - 다시 로그인해 「조종권 받기」"
+  ],
+  [
+   145810.614,
+   "STOPPED",
+   "take",
+   "조종권을 받았습니다 - 「정지 해제」를 누르면 시작합니다"
+  ],
+  [
+   145811.014,
+   "IDLE",
+   "",
+   "해제됨 - 조종하거나 목표를 찍으세요"
+  ],
+  [
+   145813.814,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145814.615,
+   "CANCELING",
+   "",
+   "목표를 취소하는 중"
+  ],
+  [
+   145814.714,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145815.814,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145816.614,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145817.714,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145818.514,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145819.614,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145820.414,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145821.514,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145822.315,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145823.414,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145824.215,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145825.314,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145826.114,
+   "CANCELING",
+   "",
+   "목표를 취소하는 중"
+  ],
+  [
+   145826.214,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145827.314,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145828.115,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145829.214,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145830.014,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145831.114,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145831.914,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145833.014,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145833.814,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145835.015,
+   "NAV",
+   "",
+   "목표로 가는 중"
+  ],
+  [
+   145835.714,
+   "IDLE",
+   "",
+   "목표를 취소했습니다 - 방향키로 조종하거나 새 목표를 찍으세요 (CANCELED 0)"
+  ],
+  [
+   145839.514,
+   "STOPPED",
+   "session",
+   "조종하던 화면이 로그아웃(세션 끝)되어 정지 - 다시 로그인해 「조종권 받기」"
+  ]
+ ],
+ "ok": true,
+ "n": "30/30"
+}
