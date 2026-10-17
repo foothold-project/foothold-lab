@@ -751,3 +751,11 @@
 - **확인:** 실행 위치 `s2_lab/s2_step21_run` 해시 2562/2562 일치(목록 SHA `1e93405b…`). lead 재실행(깨끗한 복사본, CPU): step21 합성 시험 정상 8 PASS · 반례 2 CAUGHT, step8 계열 PASS, step8 변이 CAUGHT, 노드 2 기동기 정상 8 PASS · 변이 7 CAUGHT, 봉인 prelaunch PASS, live 배선 4/4. sol 전체 회귀 54/54 파일(정상 367 PASS, 변이 84 CAUGHT).
 - **동의 · 명령:** 같은 팀장 원문과 참석 문장, 참석자 team-lead. `s2_step21_run/launch/s2_attended_launch_b12.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n2_plumbing.json --end-by '2026-10-17 23:59 KST'`. 실행 중 긴 폴링 bash 금지.
 - **GPU 0:** 13:52:30 부터 비어 있었다(재기동까지 약 33 분, 이유: 원인 값 기록이 없어 sol 진단 추가를 기다림).
+
+## 노드 2 두 번째 결과 (10/17 14:31:37 · 14:26:18 기동 · 감독기 종료 코드 42 · 관찰자 PASS · lead)
+
+- **자식(학습 진입)은 성공했다:** `result.json status RUN_COMPLETE_UNVERIFIED`, `plumbing_checks PASS`, 완료 iteration 1 · 실제 optimizer step 1 · 환경 걸음 64 · 파라미터 변화 true · gradient norm 27.55 · 비유한 0 · `synthetic_mismatch_detail null`(13:51 의 지도 정답 대조가 통과). 합성 N=32 A 쪽, 실제 Isaac 에서 학습 한 번이 처음으로 돌았다. 체크포인트 000000 · 000001 저장.
+- **감독기 쪽 증명이 보류:** `ctl/status.json` HOLD `plumbing_proof:synthetic_capture_answer_mismatch`. `s2_plumbing.py:515` 감독기 검사가 자식이 기록한 `b_reference_sha256`(실제 z 로 float32 반올림해 만든 B 기대값의 해시)를 명목 -0.25 로 만든 `expected_synthetic_map_sha(rows,"B")` 와 비교한다. step21 이 자식 쪽 기대값을 실제 z 반올림으로 바꿨는데 감독기 쪽 기대값은 명목 그대로여서 지형 타일 원점이 큰 음수일 때 어긋난다. 학습 자체의 결함이 아니라 영수증 검증 쪽이다.
+- **조치:** sol 에게 이어서 지시(14:3x): (1) 자식이 반올림에 쓴 root_z 를 기록하고 감독기가 그 값으로 독립 재계산(검사를 약하게 만들지 않음) (2) **A/B 짧은 학습의 참석 기동기**(현재 없음: 기동기는 노드 1~4 뿐). GPU 지정 인자 포함.
+- **GPU 0:** 14:27:2x 에 끝난 뒤 비어 있다. 이유: 짧은 학습 기동기가 없고 감독기 증명 수정이 필요하다.
+- 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node2_plumbing2_20261017_1426/`.
