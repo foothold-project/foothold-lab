@@ -793,3 +793,10 @@
 - **원인 가설(미확정):** 추적기는 RayCaster 가 update 를 부른 env 만 `last_steps` 를 갱신한다. Isaac Lab 센서는 float32 `_timestamp` 를 0.02 씩 누적하고 `timestamp - last + 1e-6 >= update_period` 로 갱신 여부를 정한다. 시뮬 시간 약 16 s 부터 float32 간격(1.9e-6)이 허용 1e-6 을 넘어 일부 env 가 한 step 을 건너뛸 수 있다. 33 x 24 x 0.02 = 15.84 s 에서 터진 것과 맞지만 sol 의 CPU 재현 전까지 가설이다. E1 은 이 건너뜀을 조용히 무시했을 것이다(E1 코드는 이 검사가 없다).
 - **조치:** sol step25(16:12, 진행 중이던 step24 평가기는 보류): CPU 재현 → 학습 cfg 의 height_scanner `update_period` 를 0 으로(A · B 동일, 추적기 검사 약화 금지). 끝나면 A 를 처음부터 다시 띄운다(앞 33 update 는 버린다; B 의 부모나 연장 출발점이 아니다).
 - **GPU 0:** 15:52 부터 비어 있다. 이유: 이 센서 갱신 검사 수정을 기다린다. 이 동안 평가기 후보가 나오면 GPU 0 에서 시험할 수 있다(그래서 크롬 정리는 지금 필요 없다).
+
+## A 짧은 학습 세 번째 기동 기록 (step25 센서 갱신 수정) (10/17 16:37:54 · lead)
+
+- **근거:** sol step25(16:34): 설치된 `SensorBase.update` 본문을 CPU 에서 그대로 돌려 첫 누락을 제어 step 801(센서 시각 16.020315170 s, 마지막 갱신과 차이 0.019996643 s)에서 재현했다. A 중단(update 34 = 792 걸음 뒤)과 맞는다. 수정: 짧은 학습 A/B 의 `height_scanner` · `height_scanner_small` `update_period` 를 0.0 으로(매 물리 substep 갱신, 마지막 substep 값이 관측), A · B 동일, 계획 서명 · env 해시에 묶음. 추적기의 전 env 갱신 요구는 그대로(건너뜀 허용 · stale 재사용 없음). 이 CPU 재현은 원인 가설을 뒷받침하며 실제 Kit 내부 동일 조건은 이번 기동이 확인한다.
+- **확인:** 실행 위치 `s2_lab/s2_step25_run` 해시 212/212 일치(목록 SHA `42fc8db4…`). lead 재실행(CPU): 주기 시험(0.02 는 801 에서 지정 첫 FAIL, 0.0 은 1,200 step 과 중간 reset 에서 전 env 갱신 PASS), cfg 시험(0.02 · 누락 · 비영 거절, A/B 같은 계획 해시 PASS), 고정 사본 시험(190 파일 폐쇄, 변경 시 지정 FAIL). sol 전체 회귀 57/57(PASS 라벨 373 · CAUGHT 105). 예행 GO.
+- **동의 · 명령:** 같은 팀장 원문과 참석 문장, `consent_short_A.json`. `s2_step25_run/frozen_final/launch/s2_attended_launch_short.py --live --arm A ...`. 앞 두 번(15:13 중단 측정용, 15:49 33 update 중단)의 체크포인트에서 이어 가지 않는다.
+- **GPU 0:** 15:52 부터 이 기동까지 비어 있었다(약 45 분, 이유: 센서 갱신 검사 수정 대기).
