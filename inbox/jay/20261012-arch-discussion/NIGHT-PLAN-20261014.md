@@ -691,3 +691,11 @@
 
 - **11:38:36 노드 1 6차:** 팀장이 채팅에 「내가 화면 앞에서 지켜본다.」 를 쓴 뒤(11:3x) 동의 파일을 팀장 참석으로 다시 기록하고 기동했다. 기동기 prelaunch `NO_GO reason=deadline` (deadline_epoch=1792206216 이 정오 상한 1792206000 보다 216 초 늦음). ASTRA 17aj 가 예고한 대로 11:35 이후라 거절됐다. 상한을 늘려 우회하지 않았다. GPU 는 켜지지 않았다.
 - **노드 3 선행(ASTRA 17aj 4절 허용 범위):** 평가기 update 0 · gap 2 + stones 2 · 4짝 8 case-arm · `comparison_ready=false`. 이 경로는 `now + max_wall_s` 라 정오 자체의 상한이 없다. `--max-wall-s 900` 이면 deadline 은 약 11:56 으로 정오 안이다. 조건: 실행 위치 `s2_lab/s2_step18_run` 해시 1775/1775 일치 · 동의 파일 n3 에 팀장 원문과 참석 문장 · 참석자 team-lead · 기동기 prelaunch.
+
+## 노드 3 평가기 update 0 결과 (10/17 11:50:18 · 11:39:33 기동 · 감독기 11:39:51 ~ 11:40:06 · lead)
+
+- **결론:** 운영 보류(HOLD, 감독기 종료 코드 42). **Kit 는 시작하지 않았다**(`child_pid null`, `kit_launch_epoch null`, `logs/` 비어 있음, `out/` 없음). 그래서 평가 결과 · 짝 일치 · 자연 종료는 전부 미확인이다. 관찰자 PASS(`family_observation.json` 이유 없음), 워치독 `supervisor_ended_by_itself`, lease · USD lock 해제.
+- **원인(CPU 로 재현):** `s2_eval_supervisor.py:254` preflight 가 `disk_free(Path(m["episodes_path"]).parent)` 를 부르는데 그 폴더 `out/` 이 `new_run()` 이 만들지 않아 없다. `ResourceHold("disk_probe_failed")` 가 났다(재현: `out` 은 예외, `logs` 는 636 GB 반환). step17 의 `disk_probe_failed` 수정은 prelaunch 의 `logs` 만 고쳤고 리허설도 거기까지만 쳤다. 노드 4 `s2_foot_kit_supervisor.py:140` 도 `disk_free(Path(m["result_path"]).parent)` 로 같은 패턴이라 지금 띄우면 같은 이유로 멈춘다.
+- **한 일:** 노드 4 는 띄우지 않았다. sol 에게 step19 안에 추가(11:50): 반례 먼저 → 고침 → 감독기 전 단계를 실제 디스크로 훑는 시험 → 같은 유형 전수 표.
+- **GPU 0:** 11:40:06 부터 비어 있다. 이유: 노드 3 이 감독기 preflight 에서 멈췄고 노드 4 는 같은 결함이 있으며 노드 1 은 정오 상한(sol step19)으로 막혀 있다.
+- 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node3_eval0_20261017_1139/` (체크포인트 `.pt` 둘은 SHA 목록으로 대체).
