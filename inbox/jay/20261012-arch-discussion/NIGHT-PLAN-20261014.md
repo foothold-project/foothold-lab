@@ -854,3 +854,9 @@
 - **sol step29b(21:19 도착):** 해시 `S2-STEP29-SHA256SUMS.txt` 1159/1159 일치. lead 깨끗한 복사본(`lead_rerun_step29b`, `-I -B`, CUDA 숨김)에서 `test_s2_step29b_replay.py` 전부 통과(실제 캡처 복사본 첫 조각 + USD 증거 PASS, UUID · Kit · 이름 변이 5건 CAUGHT, 8 조각 부모 재생 INFORMATION_ONLY reasons [], 재검증 영수증 출처 PASS) 와 `test_s2_step29b_pins.py`(기동기 핀 3 PASS, 파일 변이 3 CAUGHT). 평가기는 `s2_lab/s2_step29b_run/eval29b_frozen_delivery` 에 보관. 한계: 8 조각 재생은 실제 캡처 한 건을 복제한 CPU 재생이고, 실제 Kit 8건은 B 종료 뒤 smoke 에서 처음 본다.
 - **평가 일정:** B 종료(23:40) → smoke 8건(약 5분, 예약 9110c2ce 가 23:43 에 걸려 있음) → update 2000 평가(A, B 합쳐 120 case-arm, 건당 25 s 가정 약 50분, 미측정). 최종 평가는 `consent_evalfull.json` 이 필요한데 아직 없다(범위가 smoke 와 다르다). 팀장의 채팅 한 줄을 기다린다.
 - **GPU 0:** B 학습 중(6.3 GB). 놀지 않는다.
+
+## 영상 도구 step30 확인 · 실행 관문 정리 요청 (10/17 23:11:32 · lead)
+
+- **sol step30 (23:04 도착, A/B 영상 도구):** 해시 300/300 일치. lead 깨끗한 복사본(`lead_rerun_step30`, CUDA 숨김)에서 `test_s2_step30.py` 정상 PASS 5 · 지정 거절 CAUGHT 6 (결과 신뢰 · 입력 SHA · A/B 체크포인트 SHA · A 지도 비영 · B 유효 마스크 없음). 합성 포스터를 열어 E1/E2 와 같은 HUD 배치 확인. 평가 driver 의 `load_policies` · `run_case` 를 그대로 쓰고 바뀐 평가 파일은 어댑터 하나(렌더 인자). 187 측정점 표시: B 높이 색 · A 회색 + 「지도 입력: 꺼짐 (정책에는 0)」. 실제 Kit 영상 · 한 편 시간은 미측정(추정 2~5 분). 보관: `s2_lab/s2_step30_run`.
+- **팀장 23:0x:** 「S2 후속 실험의 GPU 실행은 설계대로 무인으로 진행해」. 이 문장을 상시 동의 파일로 옮기려 했으나 Claude Code 자동 안전 검사가 막았다(우회하지 않음). 실행을 막는 관문(실행마다 동의 · 참석 · 단회 · 실행 전 ASTRA 승인)을 없애는 것은 팀장 확정 한 줄을 기다린다. sol step31(상시 동의 · 무인 · 대기열 · canary) 걸어 둠.
+- **GPU 0:** B 학습 중(종료 23:34 전후). 다음: 23:43 예행 평가 → 23:55 최종 평가 → 영상 → 페이지 8판.
