@@ -1,0 +1,37 @@
+{
+  "schema": "s2-ab-evaluation-criteria-v1",
+  "registered_before_results": true,
+  "registered_at_kst": "2026-10-17 15:15",
+  "registered_by": "lead session, from the team lead's 10/15 04:1x approval of the proposed criteria and S2-RESULT-PLAN.md",
+  "arms": {"A": "constant (zero) actor map input", "B": "ideal simulated height map, 187 rays, validity mask, 374 columns"},
+  "shared": {
+    "parent_checkpoint_sha256": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "training_seed": 11,
+    "map_init_seed": 7,
+    "encoder_mode": "full_freeze",
+    "num_envs": 1024,
+    "updates": 2000,
+    "checkpoints_evaluated": [0, 2000]
+  },
+  "evaluation": {
+    "inference": "act_inference (deterministic)",
+    "primary_command": "fwd10 (1.0 m/s)",
+    "secondary_command": "fwd03 (only if time allows)",
+    "layers_and_pairs": {"gap": 20, "stepping_stones": 20, "flat": 10, "stairs_up": 10},
+    "eval_seeds": [3101, 3109, 3119, 3121],
+    "terrain": "1043 unseen10 d0.5 rules, default friction",
+    "pairing": "same terrain, same seed, same command, A versus B"
+  },
+  "decision_rules": {
+    "map_is_good": "for each target layer (gap, stepping_stones): lower bound of the 95% Tango paired confidence interval of (B - A) success > 0 AND mean difference >= 10 percentage points",
+    "unclear": "interval includes 0 or mean difference < 10 percentage points; reported as unclear, not as no effect",
+    "regression_watch": "flat and stairs_up: B must not be worse than A beyond the interval",
+    "no_selective_repetition": "a low or negative result is a valid negative result; no repeated runs until a good result appears",
+    "criteria_not_widened_after_results": true
+  },
+  "claim_limits": [
+    "training encounter log is empty in the current entry; map effect is read only from checkpoint evaluation",
+    "performance_verified stays false until the evaluator is verified in real Kit",
+    "N, updates and seeds are fixed for both arms"
+  ]
+}

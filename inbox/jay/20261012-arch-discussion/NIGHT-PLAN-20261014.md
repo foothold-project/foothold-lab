@@ -761,3 +761,11 @@
 - 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node2_plumbing2_20261017_1426/`.
 
 - **14:48:22 heartbeat:** 부팅 2026-09-17 21:16:07 일치. GPU 0 11 MiB · GPU 1 13.7 GB(앱, 계산 프로세스 아님) · Isaac/Kit 없음. **GPU 0 은 14:27 부터 14:48:22 까지 약 21 분 비어 있다. 이유: A/B 짧은 학습 기동기와 감독기 증명 수정(sol step22)을 기다린다.** sol 은 step22 와 함께 step23 평가기 초안 폴더(`s2_step23_eval_draft`)도 시작했다. 새 ASTRA 판정 없음. #550 109 개.
+
+## A/B 짧은 학습 A 기동 기록 (step22 · 팀장 동의 · ASTRA 17ak · 17al) (10/17 15:13:11 · lead)
+
+- **근거:** sol step22(15:03): 감독기 지도 증명을 자식이 기록한 z 로 독립 재계산(큰 음수 z 의 float32 반올림) · 짧은 학습 참석 기동기 `s2_attended_launch_short.py` · 열 번째 update 뒤 시간 · VRAM · 예상 총 시간 자동 계산과 한도 초과 시 부분 중단. 실행 위치 `s2_lab/s2_step22_run` 해시 208/208 일치(목록 SHA `ce1bd9a5…`, 코드 폐쇄 189 + 기동 의존 5). sol 전체 회귀 56/56 파일(정상 PASS 370 · 반례 CAUGHT 16, 변이 PASS 2 · CAUGHT 84). 예행(`--rehearse --arm A`) GO: 번들 189 파일 일치, GPU 0 UUID `GPU-c08e23b0…`, 여유 16.7 GB.
+- **판정 기준:** `evaluation_criteria_s2_ab.json`(결과 전 고정, S2-RESULT-PLAN.md 와 같음) 을 한 파일로 확정해 A · B 가 같은 해시를 쓴다.
+- **동의 · 참석:** 팀장 원문 + 「내가 화면 앞에서 지켜본다.」(11:3x). 15:1x 팀장은 「이상한 감시기 같은걸로 작업 막지 말고」, 앞서 「무인 실행과 학습 허용하게 바꿔」라고 썼다. 참석자 team-lead. 학습 길이는 첫 10 update 에서 안다. 팀장이 자리를 비우면 참석 기록은 그 시점까지로 읽는다. lead 가 20 분마다 점검한다.
+- **명령:** `frozen/launch/s2_attended_launch_short.py --live --arm A --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_short_A.json --end-by '2026-10-17 23:59 KST' --max-wall-s 21600 --gpu-index 0 --evaluation-criteria s2_lab/evaluation_criteria_s2_ab.json --map-contract-verified --min-free-vram-bytes 8589934592 --running-floor-vram-bytes 2147483648 --min-free-disk-bytes 2147483648 --max-disk-bytes 5368709120`. 한 번의 2,000 update, 연장 없음, 예상이 한도를 넘으면 열 번째 update 뒤 정상 중단.
+- **GPU 0:** 14:27 부터 이 기동까지 비어 있었다(약 45 분, 이유: 짧은 학습 기동기와 감독기 증명 수정을 기다림).
