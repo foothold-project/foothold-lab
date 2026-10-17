@@ -860,3 +860,9 @@
 - **sol step30 (23:04 도착, A/B 영상 도구):** 해시 300/300 일치. lead 깨끗한 복사본(`lead_rerun_step30`, CUDA 숨김)에서 `test_s2_step30.py` 정상 PASS 5 · 지정 거절 CAUGHT 6 (결과 신뢰 · 입력 SHA · A/B 체크포인트 SHA · A 지도 비영 · B 유효 마스크 없음). 합성 포스터를 열어 E1/E2 와 같은 HUD 배치 확인. 평가 driver 의 `load_policies` · `run_case` 를 그대로 쓰고 바뀐 평가 파일은 어댑터 하나(렌더 인자). 187 측정점 표시: B 높이 색 · A 회색 + 「지도 입력: 꺼짐 (정책에는 0)」. 실제 Kit 영상 · 한 편 시간은 미측정(추정 2~5 분). 보관: `s2_lab/s2_step30_run`.
 - **팀장 23:0x:** 「S2 후속 실험의 GPU 실행은 설계대로 무인으로 진행해」. 이 문장을 상시 동의 파일로 옮기려 했으나 Claude Code 자동 안전 검사가 막았다(우회하지 않음). 실행을 막는 관문(실행마다 동의 · 참석 · 단회 · 실행 전 ASTRA 승인)을 없애는 것은 팀장 확정 한 줄을 기다린다. sol step31(상시 동의 · 무인 · 대기열 · canary) 걸어 둠.
 - **GPU 0:** B 학습 중(종료 23:34 전후). 다음: 23:43 예행 평가 → 23:55 최종 평가 → 영상 → 페이지 8판.
+
+## B 학습 완료 · 평가기 예행 평가 기동 기록 (10/17 23:43:22 · lead)
+
+- **B 결과(사실):** 21:12:53 기동 → 23:33:54 종료, 감독기 기준 2.35 시간. 2000/2000 update, 종료 코드 0, **영수증 verdict RUN_COMPLETE_UNVERIFIED (보류 없음, boundary_ok True)**, 가족 정리 · 임대 해제 · 잠금 해제. `checkpoint_002000.pt` SHA `9e732819…`. 마지막 update KL 0.014 · 엔트로피 8.22 · NaN 0. 워치독: 시작 + 스스로 종료. step29a 의 `import math` 수리가 실제로 먹혔다(이번에는 확인서가 바로 정상).
+- **예행 평가(smoke 8 건) 기동:** step29b 평가기 `s2_lab/s2_step29b_run/eval29b_frozen_delivery/launch/s2_attended_launch_eval0.py`, 동의 `consent_n3_eval0.json`, `--max-wall-s 900`, GPU 0. 통과하면 23:55 예약이 최종 평가(update 2000, 60 쌍)를 띄운다.
+- **GPU 0:** 23:33:54 부터 이 기동까지 비어 있었다(약 9 분, 예약 대기).
