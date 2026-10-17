@@ -1,0 +1,197 @@
+{
+  "active_terminations": {
+    "illegal_contact": {
+      "function": "isaaclab.envs.mdp.terminations.illegal_contact",
+      "source": "c:/isaac/isaaclab/source/isaaclab/isaaclab/envs/mdp/terminations.py"
+    },
+    "time_out": {
+      "function": "isaaclab.envs.mdp.terminations.time_out",
+      "source": "c:/isaac/isaaclab/source/isaaclab/isaaclab/envs/mdp/terminations.py"
+    }
+  },
+  "allowed_cfg_diff": [
+    "/seed",
+    "/scene/num_envs",
+    "/scene/terrain/terrain_generator/*"
+  ],
+  "contact_function": "isaaclab.envs.mdp.terminations.illegal_contact",
+  "contact_function_source": "c:/isaac/isaaclab/source/isaaclab/isaaclab/envs/mdp/terminations.py",
+  "contact_term": "illegal_contact",
+  "disable_gravity": false,
+  "final_cfg_sha256": "2c9b50d58ce55058ec8d2453f228cac6222accfb7b8c416a1acfc2a9856b9504",
+  "fix_base": false,
+  "observation_shapes": {
+    "critic": [
+      32,
+      275
+    ],
+    "policy": [
+      32,
+      450
+    ],
+    "single_obs": [
+      32,
+      45
+    ]
+  },
+  "parent_cfg_diff": {
+    "/scene/num_envs": {
+      "after": 32,
+      "before": 16384
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/flat/proportion": {
+      "after": 0.105,
+      "before": 0.15
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/gap/gap_width_range": {
+      "after": [
+        0.1,
+        0.25
+      ],
+      "before": [
+        0.0,
+        0.9
+      ]
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/gap/platform_width": {
+      "after": 1.5,
+      "before": 3.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/gap/proportion": {
+      "after": 0.15,
+      "before": 0.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/gap/size": {
+      "after": [
+        8.0,
+        8.0
+      ],
+      "before": [
+        10.0,
+        10.0
+      ]
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/obstacles/proportion": {
+      "after": 0.13999999999999999,
+      "before": 0.2
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/rough_slope/proportion": {
+      "after": 0.034999999999999996,
+      "before": 0.05
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/slope_down/proportion": {
+      "after": 0.06999999999999999,
+      "before": 0.1
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/slope_up/proportion": {
+      "after": 0.06999999999999999,
+      "before": 0.1
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stairs_down/proportion": {
+      "after": 0.06999999999999999,
+      "before": 0.1
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stairs_up/proportion": {
+      "after": 0.175,
+      "before": 0.25
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/border_width": {
+      "after": 0.25,
+      "before": 0.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/holes_depth": {
+      "after": -1.0,
+      "before": -10.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/platform_width": {
+      "after": 1.5,
+      "before": 4.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/proportion": {
+      "after": 0.15,
+      "before": 0.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/size": {
+      "after": [
+        8.0,
+        8.0
+      ],
+      "before": [
+        10.0,
+        10.0
+      ]
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/stone_distance_range": {
+      "after": [
+        0.1,
+        0.1
+      ],
+      "before": [
+        0.05,
+        0.1
+      ]
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/stone_height_max": {
+      "after": 0.06,
+      "before": 0.0
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/stepping_stones/stone_width_range": {
+      "after": [
+        0.5,
+        0.7
+      ],
+      "before": [
+        0.075,
+        1.575
+      ]
+    },
+    "/scene/terrain/terrain_generator/sub_terrains/wave/proportion": {
+      "after": 0.034999999999999996,
+      "before": 0.05
+    },
+    "/seed": {
+      "after": 11,
+      "before": null
+    }
+  },
+  "runtime_imports": {
+    "gymnasium": {
+      "path": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\gymnasium\\__init__.py",
+      "version": "1.2.1"
+    },
+    "isaaclab": {
+      "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\__init__.py",
+      "version": "0.54.2"
+    },
+    "robot_lab": {
+      "path": "C:\\isaac\\ext\\go2_rl_robotlab\\source\\robot_lab\\robot_lab\\__init__.py",
+      "version": "None"
+    },
+    "rsl_rl": {
+      "path": "C:\\isaac\\ext\\go2_rl_robotlab\\source\\rsl_rl\\rsl_rl\\__init__.py",
+      "version": "None"
+    },
+    "s2_env_config_17v": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\s2_step20_run\\bundle\\s2_env_config_17v.py",
+      "version": "None"
+    },
+    "s2_plumbing": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\s2_step20_run\\bundle\\s2_plumbing.py",
+      "version": "None"
+    },
+    "s2_train_entry_17v": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\s2_step20_run\\bundle\\s2_train_entry_17v.py",
+      "version": "None"
+    },
+    "torch": {
+      "path": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\Lib\\site-packages\\torch\\__init__.py",
+      "version": "2.7.0+cu128"
+    }
+  },
+  "stage": "before_optimizer",
+  "task": "RobotLab-Go2-v0",
+  "termination_keys": [
+    "illegal_contact",
+    "time_out"
+  ]
+}

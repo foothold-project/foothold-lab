@@ -736,3 +736,11 @@
 - **동의:** 팀장 원문 「진행해. NVIDIA 약관에 동의한다. 이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행해.」 + 「내가 화면 앞에서 지켜본다.」 참석자 team-lead. ASTRA 17al 3절: 참석 운영에서는 무인 canary 와 새 동의 문구를 기다리지 않는다.
 - **명령:** step20 `s2_attended_launch_b12.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n2_plumbing.json --end-by '2026-10-17 23:59 KST'`. GPU 0 · A 쪽 합성 N=32 · 1 iteration · retry 0. 실행 중 긴 폴링 bash 금지.
 - **GPU 0:** 12:49:09 부터 비어 있었다(노드 2 기동까지 약 1 시간, 이유: sol step20 수정과 lead 재실행 대기).
+
+## 노드 2 합성 배관 결과 (10/17 13:55:20 · 13:51:23 기동 · 감독기 종료 코드 42 · 관찰자 PASS · lead)
+
+- **결론:** 보류(HOLD). **처음으로 실제 학습 env 를 끝까지 만들었다**: task `RobotLab-Go2-v0`, 32 env, 보상 15항, 정책 관측 450 · critic 275 · single 45(모두 cuda:0, 비유한 0), 종료 항 `illegal_contact` · `time_out`(10/16 첫 배관을 막은 이름 불일치 해결), 장치 결박 verified, 부모 `model_20000.pt` SHA 전후 같음, 지도 입력 함수 단독 시험(`function_only_probe` 187 ray · 186 valid · 1 miss). 그러나 **optimizer 전에** `PlumbingHold synthetic_capture_map_answer_mismatch` 로 멈췄다(`executed_updates 0`, `optimizer_steps_actual 0`, `environment_steps 0`). 정리: 가족 0 확인, 관찰자 PASS, lease · USD lock 해제.
+- **원인(미확인):** `s2_plumbing.verify_synthetic_capture_packet` 의 `faults.total`, B 지도 대조, arm 지도 대조 중 어느 것인지 값이 기록되지 않았다. CPU(2 · 32 env, z 0.2~1.0, 임의 yaw, 위치 ±60 m)와 CUDA 순수 torch(32 env)로 재현을 시도했으나 모두 ok 였다. 실제 env 의 첫 packet 에서만 다른 것으로 보인다.
+- **조치:** sol 에 최소 작업 지시(13:55): 검사 의미는 두고 실패 시 `synthetic_mismatch_detail`(어느 검사 · 최대 차 · 처음 불일치 칸 · pos/yaw 범위 · dtype/device)을 result.json 에 남기고, 실제 env 조건 후보를 CPU 로 재현. 수정 해시 뒤 lead 재실행 → 노드 2 재기동(약 1 분).
+- **GPU 0:** 13:52:30 에 노드 2 가 끝난 뒤 비어 있다. 이유: 실패 원인 값이 없어 sol 진단 추가를 기다린다.
+- 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node2_plumbing_20261017_1351/` (변환 USD 와 체크포인트 `.pt` 제외).
