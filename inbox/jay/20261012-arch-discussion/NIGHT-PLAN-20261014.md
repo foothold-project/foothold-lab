@@ -812,3 +812,10 @@
 - **사실:** A 학습(16:39:17 기동, step25 수정본)이 17:48:19 update 923 에서 사라졌다. 원인은 팀장의 중단도 학습 코드의 오류도 아니고 **워치독이 감독기를 죽인 것**이다. `ctl/watchdog.jsonl`: `trigger reason no_status_after_startup_grace` → `supervisor_killed`. `bundle/s2_step4a34/s2_hard_watchdog.py` 74~92행 루프는 `read_heartbeat(status_path)` 가 한 번만 None 을 돌려줘도(감독기가 `status.json` 을 `os.replace` 로 덮는 순간 읽기 실패) 스타트업 유예가 지난 뒤에는 즉시 감독기를 죽인다. 70 분(상태 쓰기 약 4,000 번)에 한 번 걸렸다. 지표는 마지막까지 정상이었다(KL 0.02, 엔트로피 8.41 평평, 지도 이상 0). 계약상 단회 학습이라 체크포인트 800 에서 이어 가지 않는다. **70 분을 잃었다.**
 - **조치:** sol step27(17:52): 실제 두 프로세스 반례(초당 수백 번 덮어쓰기 중 워치독 읽기)로 재현 → 읽기 재시도 + `stale_after_s` 이상 연속 부재일 때만 사형(보호는 약화하지 않음) → 같은 유형 전수 → 번들 목록 갱신. 끝나면 A 를 처음부터 다시 띄운다(2.5 시간).
 - **GPU 0:** 17:48:19 부터 비어 있다. 이유: 워치독 수정 대기. 이 틈에 평가기 smoke(step24 수리 Kit 확인)를 돌린다.
+
+## A 짧은 학습 네 번째 기동 기록 (step27 워치독 수정) (10/17 18:12:06 · lead)
+
+- **근거:** sol step27(18:10): 워치독이 상태 파일 읽기 실패 한 번에 감독기를 죽이던 것을 고쳤다. 읽기 5회 x 30 ms 재시도 + 마지막 정상 heartbeat 이후 `stale_after_s`(20 s) 연속 부재일 때만 `no_status_after_startup_grace`. `heartbeat_stale`(값이 오래됨) · 감독기 PID/생성 시각 확인 · hard deadline · 소유 가족만 종료는 그대로. 실파일 두 프로세스 반례: 이전 워치독은 786 회 교체 중 첫 FAIL `no_status_after_startup_grace`, 수정본은 730~733 회 교체 뒤 trigger 없이 정상 종료.
+- **확인:** 실행 위치 `s2_lab/s2_step27_run` 해시 330/330 일치(목록 SHA `308c6947…`), 번들 286/286 일치. lead 재실행(깨끗한 복사본, CPU): 워치독 경합 시험 PASS(교체 730회, trigger 없음), 20 s 시험 PASS(정확히 20 s 에서 종료, 그 전엔 안 죽임), 세 기동기 핀 3 PASS + 워치독 바이트 변이 3 CAUGHT. sol 전체 회귀 58/58(정상 PASS 377 · CAUGHT 25, 변이 PASS 2 · CAUGHT 84). 예행 GO(286 파일).
+- **동의 · 명령:** 같은 팀장 원문과 참석 문장, `consent_short_A.json`. `s2_step27_run/launch/s2_attended_launch_short.py --live --arm A ...`, `--end-by '2026-10-18 06:00 KST'`(이전 23:59 는 임시 기본값이었다. B 가 끝날 때까지 예상 시간 초과로 자동 중단되지 않도록 넓힌다. 팀장이 일정을 말하면 바꾼다), `--max-wall-s 21600`. 앞 기동(15:49~, 16:39~)의 체크포인트에서 이어 가지 않는다.
+- **GPU 0:** 17:48:19 부터 이 기동까지 비어 있었다(약 25 분, 이유: 워치독 수정 대기. 그 사이 평가기 smoke 15 분 사용).
