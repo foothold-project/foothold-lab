@@ -744,3 +744,10 @@
 - **조치:** sol 에 최소 작업 지시(13:55): 검사 의미는 두고 실패 시 `synthetic_mismatch_detail`(어느 검사 · 최대 차 · 처음 불일치 칸 · pos/yaw 범위 · dtype/device)을 result.json 에 남기고, 실제 env 조건 후보를 CPU 로 재현. 수정 해시 뒤 lead 재실행 → 노드 2 재기동(약 1 분).
 - **GPU 0:** 13:52:30 에 노드 2 가 끝난 뒤 비어 있다. 이유: 실패 원인 값이 없어 sol 진단 추가를 기다린다.
 - 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node2_plumbing_20261017_1351/` (변환 USD 와 체크포인트 `.pt` 제외).
+
+## 노드 2 재기동 기록 (step21) (10/17 14:26:09 · lead)
+
+- **근거:** sol step21(14:15): 합성 지도 정답 대조 실패의 원인 후보를 CPU 에서 재현했다. 실제 env 의 첫 packet 에서 `root_z` 가 큰 음수(예 -7.9997, -31.9989; 지형 타일 원점)일 때 float32 `z - (z - 0.25) - 0.5` 가 정확한 -0.25 와 달라 `torch.equal` 이 실패한다. 내 CPU 재현은 z 0.2~1.0 만 써서 놓쳤다. 고침: 기대값을 같은 float32 계산으로 만들고 검사 의미(완전 일치 · 첫 miss ray · 기하 검증)는 그대로. 실패 시 `synthetic_mismatch_detail`(어느 검사 · 칸 · 값 · z/yaw 범위) 기록 추가. 이것은 재현된 후보이지 13:51 현장 원인의 확인은 아니다(그 packet 값은 기록이 없다).
+- **확인:** 실행 위치 `s2_lab/s2_step21_run` 해시 2562/2562 일치(목록 SHA `1e93405b…`). lead 재실행(깨끗한 복사본, CPU): step21 합성 시험 정상 8 PASS · 반례 2 CAUGHT, step8 계열 PASS, step8 변이 CAUGHT, 노드 2 기동기 정상 8 PASS · 변이 7 CAUGHT, 봉인 prelaunch PASS, live 배선 4/4. sol 전체 회귀 54/54 파일(정상 367 PASS, 변이 84 CAUGHT).
+- **동의 · 명령:** 같은 팀장 원문과 참석 문장, 참석자 team-lead. `s2_step21_run/launch/s2_attended_launch_b12.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n2_plumbing.json --end-by '2026-10-17 23:59 KST'`. 실행 중 긴 폴링 bash 금지.
+- **GPU 0:** 13:52:30 부터 비어 있었다(재기동까지 약 33 분, 이유: 원인 값 기록이 없어 sol 진단 추가를 기다림).
