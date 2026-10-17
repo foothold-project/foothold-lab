@@ -149,7 +149,7 @@ def judge(layers):
     return verdict, out, neg
 
 
-def build_section(a, b, result, videos, asof, comp=None, miss=None):
+def build_section(a, b, result, videos, asof, comp=None, miss=None, learn=None):
     layers = result["trained_ab"]["layers"] if result else None
     ready = bool(result and result.get("comparison_ready"))
     J = judge(layers) if layers else None
@@ -207,14 +207,32 @@ def build_section(a, b, result, videos, asof, comp=None, miss=None):
         table, head = "", '<p class="s2v w"><b>평가 진행 중입니다.</b> 결과가 나오면 이 자리에 숫자와 판정이 들어갑니다.</p>'
     res = (head + f'<figure class="s2r">{result_svg(layers)}<figcaption>막대는 각 지형에서 성공한 판의 비율, 오른쪽 점은 같은 지형 · 같은 시드 쌍에서 잰 B − A 차이와 95% 구간(Tango). '
            '세로 점선은 목표 지형의 기준 +10%p 입니다. gap · 징검다리의 「성공」 은 기준선에 닿고 끝까지 넘어지지 않은 판, 평지 · 계단의 「성공」 은 속도 추종 판정입니다.</figcaption></figure>' + table)
+    unknown1 = ('<li><b>학습 전(update 0)과의 비교.</b> 2,000 update 로 나아졌는지는 update 0 평가가 있어야 압니다.</li>')
+    if learn:
+        lrows = []
+        for arm in ("A", "B"):
+            for key, name, _ in LAYERS:
+                L = learn[arm][key]; n = L["valid_pairs"]; ci = L.get("paired_tango_95")
+                lrows.append(f'<tr><td>{arm} · {"지도 없음" if arm == "A" else "지도 있음"}</td><td>{E(name)}</td><td class="num">{n}/{L["planned_pairs"]}</td>'
+                             f'<td class="num">{L["update0_success"]}</td><td class="num">{L["update2000_success"]}</td>'
+                             + (f'<td class="num">{L["mean_difference"]*100:+.1f}%p</td><td class="num">[{ci[1]*100:+.1f}, {ci[2]*100:+.1f}]</td>' if ci else '<td colspan="2">결측</td>')
+                             + f'<td>{"나빠짐" if ci and ci[2] < 0 else ("좋아짐" if ci and ci[1] > 0 else "차이 불명")}</td></tr>')
+        res += ('<h3 class="h3gap">학습 효과: 2,000 update 동안 각자 나아졌나 (update 0 → 2000)</h3>'
+                '<p>update 0 은 학습 직전 같은 출발점입니다. 그때는 A 와 B 가 모든 지형에서 같았습니다(지도 길이 0 에서 시작). '
+                '같은 판끼리 학습 전과 후를 짝지어 비교했습니다. <b>A 는 거의 그대로였고, B 만 gap 과 평지에서 학습하면서 나빠졌습니다.</b> '
+                '같은 학습률 · 같은 길이에서 지도 길을 학습시킨 쪽만 무너졌다는 뜻입니다.</p>'
+                '<div class="tbl"><table class="def s2t"><thead><tr><th>arm</th><th>지형</th><th>유효 쌍</th><th>학습 전 성공</th><th>학습 후 성공</th><th>변화</th><th>95% 구간</th><th>판단</th></tr></thead><tbody>'
+                + "".join(lrows) + '</tbody></table></div>'
+                '<p class="sub">학습률은 설계(부모 마지막 값 0.00017)와 달리 0.001(자동 조절)로 돌았습니다(lead 실수). A 와 B 에 똑같이 적용됐고, A 가 그대로인 것으로 보아 이 이탈만으로 정책이 무너지지는 않았습니다. 결측 쌍은 등록 규칙대로 뺐습니다.</p>')
+        unknown1 = ('<li><b>B 가 왜 학습 중 무너졌나.</b> 첫 갱신의 큰 흔들림(KL B 40.1 · A 22.6), 지도 길 학습 방식, 짧은 학습량 중 무엇이 원인인지는 가르지 않았습니다.</li>')
     # 영상
     vids = video_block(videos)
-    return SECTION.format(asof=E(asof), result=res, curves=curves, design=design_svg(), videos=vids,
-                          a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers, comp),
+    return SECTION.format(asof=E(asof), result=res, curves=curves, design=design_svg(), videos=vids, unknown1=unknown1,
+                          a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers, comp, learn),
                           nextexp=next_block(J))
 
 
-def know_block(J, layers, comp=None):
+def know_block(J, layers, comp=None, learn=None):
     if not J:
         return ('<li><b>A · B 둘 다 2,000 update 를 끝까지 학습했습니다.</b> 학습 값이 깨진 적(NaN) 없이 안정적이었고, 학습 곡선은 거의 겹칩니다.</li>'
                 '<li><b>성능은 아직 모릅니다.</b> 학습 중에는 성공률을 기록하지 않아서, 평가가 끝나야 첫 숫자가 나옵니다.</li>')
@@ -227,7 +245,8 @@ def know_block(J, layers, comp=None):
             '구간이 0 을 걸쳐 등록 규칙상 「퇴행」 은 아닙니다.</li>'
             f'<li><b>계단 오르기에서는 B 가 더 멀리 갔습니다</b>(중앙값 A {pm("stairs_up","A"):.1f} m · B {pm("stairs_up","B"):.1f} m, 둘 다 기준선 성공 0). '
             f'징검다리에서는 B 가 더 오래 버텼습니다(넘어지기까지 평균 A {(comp or {}).get(("stepping_stones","A"),{}).get("secs",0):.1f} 초 · B {(comp or {}).get(("stepping_stones","B"),{}).get("secs",0):.1f} 초). '
-            '즉 지도가 걸음을 「바꾼」 것은 분명하지만, 2,000 update 로는 건너는 쪽으로 좋아지지 않았습니다.</li>')
+            '즉 지도가 걸음을 「바꾼」 것은 분명하지만, 2,000 update 로는 건너는 쪽으로 좋아지지 않았습니다.</li>'
+            + (f'<li><b>B 는 학습하면서 나빠졌고, A 는 거의 그대로였습니다.</b> 학습 전(update 0)에는 A · B 가 같았습니다(gap 둘 다 {learn["A"]["gap"]["update0_success"]}). 학습 뒤 gap 은 A {learn["A"]["gap"]["update2000_success"]} · B {learn["B"]["gap"]["update2000_success"]}. 지도 길을 짧게 붙여 학습한 방식이 정책을 흔든 것으로 보입니다.</li>' if learn else ''))
 
 
 def next_block(J):
@@ -239,7 +258,10 @@ def next_block(J):
     body = "".join(f'<tr{" class=cur" if k in cur else ""}><td>{E(c)}</td><td>{E(n)}</td></tr>' for k, c, n in rows)
     return ('<div class="tbl"><table class="def s2n"><thead><tr><th>평가 결과</th><th>다음 실험 (결과 전에 적어 둔 갈래 · S2-RESULT-PLAN 4 절)</th></tr></thead><tbody>'
             + body + '</tbody></table></div>'
-            + ('<p class="sub">색칠한 줄이 이번 결과에 해당하는 갈래입니다.</p>' if cur else '<p class="sub">평가가 끝나면 해당 줄에 색이 칠해집니다.</p>'))
+            + ('<p class="sub">색칠한 줄이 이번 결과에 해당하는 갈래입니다.</p>' if cur else '<p class="sub">평가가 끝나면 해당 줄에 색이 칠해집니다.</p>')
+            + ('<p>표는 결과 전에 적어 둔 갈래입니다. 결과를 본 뒤 팀장이 「지도를 주고 안 주고로는 목표에 닿기 어렵다 · height scan 신경망과 몸 상태 신경망으로 발 디딜 곳을 정하는 구조로 가야 한다」 고 판단했고, 그 방향의 논문 조사와 설계안(N 판)을 '
+               '<code>inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md</code> 에 정리했습니다. 핵심: S2 B 도 지도 encoder 를 갖고 있었고 학습도 됐지만, 지도를 보지 않던 정책에 나중에 붙여 짧게 미세조정한 방식이 문제로 보입니다. '
+               '다음 판은 지도 encoder 와 몸 상태 encoder 를 처음부터 함께 학습하고, 발 디딤 보상과 4 족 보행 위상 장치를 넣는 안입니다(결정은 팀장).</p>' if cur else ''))
 
 
 def video_block(videos):
@@ -366,7 +388,7 @@ SECTION = """
     <div>
       <h3>아직 모르는 것</h3>
       <ul class="plain">
-        <li><b>학습 전(update 0)과의 비교.</b> 2,000 update 로 나아졌는지는 update 0 평가가 있어야 압니다(아래 「팀장이 정할 것」).</li>
+        {unknown1}
         <li><b>학습 시드 하나.</b> 시드를 바꿔도 같은 차이가 나는지는 재지 않았습니다.</li>
         <li><b>로봇이 지도를 「써서」 걷는지.</b> 지도가 제대로 들어간 것은 확인했지만, 지도를 지웠을 때 B 의 행동이 바뀌는지는 아직 재지 않았습니다.</li>
       </ul>
@@ -419,10 +441,8 @@ SECTION = """
 
   <h3 class="h3gap">팀장이 정할 것</h3>
   <ul class="plain">
-    <li><b>다음 갈래.</b> lead 권고: 「B 가 퇴행」 갈래부터. 지도 입력이 평가 때 학습 때와 같은 모양으로 들어갔는지 점검, 지도를 지웠을 때 B 의 행동이 바뀌는지 재는 탐침, 지도 쪽 encoder 가 학습됐는지(<code>full_freeze</code> 의 실제 범위) 확인. 그다음 학습 길이를 늘린 재현.</li>
-    <li><b>결측 7 건을 다시 돌려 채울지.</b> 결과가 없는(비정상 종료) 판만 같은 시드로 다시 재는 것이라 「좋은 결과가 나올 때까지 다시 돌리기」 와는 다릅니다. lead 권고: 채운다(약 10 분). 다만 결과 전 등록 규칙에 없던 절차이므로 팀장 확인 뒤.</li>
-    <li><b>update 0 평가(약 1 시간 40 분).</b> 등록한 비교의 나머지 절반(학습 전 대비 학습 효과)입니다. lead 권고: 영상 뒤 이어서 돌린다(밤 허용 범위 안).</li>
-    <li><b>다음 실험 갈래.</b> 위 표에서 결과에 해당하는 줄이 권고입니다.</li>
+    <li><b>다음 방향.</b> (가) S2 를 학습률을 설계값(0.00017)으로 고쳐 다시 돌려 「지도를 붙여 미세조정」 방식을 한 번 더 확인할지, (나) 구조 조사 문서의 N 판(지도 encoder 와 몸 상태 encoder 를 처음부터 함께 학습, 발 디딤 보상, 보행 위상 장치)으로 넘어갈지. lead 권고: (나). 조사 문서 <code>inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md</code> 에서 논문 36 편 중 지도를 나중에 붙인 사례가 없었고, 이번에 B 만 학습 중 무너졌습니다.</li>
+    <li><b>결측을 다시 돌려 채울지.</b> update 2000 은 7 건, update 0 은 8 건이 Isaac 비정상 종료로 비었습니다. 결과가 없는 판만 같은 시드로 다시 재는 것이라 「좋은 결과가 나올 때까지 다시 돌리기」 와는 다르지만 등록 규칙에 없던 절차라 팀장 확인 뒤. 결론(B 가 gap 에서 나빠짐)은 결측을 채워도 뒤집히기 어렵습니다(구간이 0 아래로 넉넉함).</li>
     <li><b>실행 절차 줄이기.</b> 실행마다 동의 파일을 만드는 절차를 상시 동의 하나로 바꾸는 것(ASTRA 17ak 가 수용, 구현은 아직).</li>
   </ul>
 </section>
@@ -458,6 +478,7 @@ def main():
     p.add_argument("--episodes")
     p.add_argument("--receipt")
     p.add_argument("--progress")
+    p.add_argument("--full-result")
     a = p.parse_args()
     A, B = read_updates(a.a), read_updates(a.b)
     assert [r["update"] for r in A] == list(range(1, len(A) + 1)) and len(A) == 2000, "A 기록 2000 줄 아님"
@@ -497,7 +518,8 @@ def main():
         miss = {"pairs": v["missing_pairs"], "crash": sum(c == 3221225477 for c in codes),
                 "ctrlc": sum(c == 3221225786 for c in codes)}
         assert len(ops) == len(codes) == v["missing_case_arms"], (len(ops), len(codes), v["missing_case_arms"])
-    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss)
+    learn = json.load(open(a.full_result, encoding="utf-8"))["learning_effect"] if a.full_result else None
+    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss, learn=learn)
     pub = open(a.pub, encoding="utf-8").read()
     out = splice(pub, sec, kicker=f"FOOTHOLD · 시뮬 RL · {a.asof}", version_line=f"8판 {a.asof}")
     (site / "index.html").write_text(out, encoding="utf-8")
