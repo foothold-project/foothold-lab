@@ -222,33 +222,46 @@ def next_block(J):
 def video_block(videos):
     if not videos:
         return '<p class="s2v w"><b>영상 준비 중입니다.</b> 최종 평가가 끝난 뒤 같은 시드 · 같은 지형으로 A 와 B 를 나란히 찍습니다.</p>'
-    pairs = {}
+    cases = {}
     for v in videos:
-        pairs.setdefault(v["case_id"], {})[v["arm"]] = v
-    cells = []
-    for cid, d in pairs.items():
-        info = d.get("A") or d.get("B")
-        sel = "결과 전 고정" if info.get("selection") == "fixed" else E(info.get("selection_label", "차이 예시"))
-        tiles = []
-        for arm in ("A", "B"):
-            v = d.get(arm)
-            if not v:
-                continue
-            ok = v.get("success")
-            tiles.append(f'<div class="vc"><video src="{E(v["web"])}" poster="{E(v["poster_web"])}" muted playsinline preload="metadata" controls></video>'
-                         f'<div class="cap"><div class="t1"><span class="tag s2{arm.lower()}">{arm}</span><b>{"지도 없음" if arm == "A" else "지도 있음"}</b></div>'
-                         f'<div class="q {"ok" if ok else "ng"}">{"성공" if ok else "실패"} · 기준선 {"도달" if v.get("reached") else "미도달"} · {"끝까지 생존" if v.get("survived") else "넘어짐"}</div></div></div>')
-        cells.append(f'<div class="s2pair"><div class="s2ph"><b>{E(info.get("layer_name", info.get("layer", "")))}</b> · 시드 <span class="num">{info.get("seed")}</span> · <span class="sub">{sel}</span></div><div class="s2pv">{"".join(tiles)}</div></div>')
-    return ('<div class="ctl"><div class="seg" id="s2ctl"><button type="button" data-a="play">함께 재생</button><button type="button" data-a="pause">멈춤</button><button type="button" data-a="zero">처음으로</button></div>'
-            '<div class="seg" id="s2spd"><button type="button" data-r="0.25">0.25×</button><button type="button" data-r="0.5">0.5×</button><button type="button" data-r="1" aria-pressed="true">1×</button><button type="button" data-r="2">2×</button></div></div>'
-            + '<div class="s2pairs">' + "".join(cells) + '</div>' + VIDEO_JS)
+        c = cases.setdefault(v["case_id"], {"case_id": v["case_id"], "layer": v.get("layer_name", v.get("layer", "")),
+                                            "seed": v.get("seed"), "sel": "결과 전 고정" if v.get("selection") == "fixed" else v.get("selection_label", "차이 예시"),
+                                            "arms": {}})
+        c["arms"][v["arm"]] = {"v": v["web"], "p": v["poster_web"], "reached": bool(v.get("reached")), "survived": bool(v.get("survived"))}
+    data = json.dumps(list(cases.values()), ensure_ascii=False).replace("</", "<\\/")
+    gp =(Path(__file__).with_name("gp_player.js")).read_text(encoding="utf-8")
+    return ('<div class="s2crit"><b>영상 아래 표시</b>: 「기준선 도달」 은 몸 중심이 장애물 구간 끝(기준선)을 한 번이라도 넘은 것, 「끝까지 생존」 은 20 초 동안 넘어지지 않은 것, 「둘 다」 가 평가의 성공입니다. 색은 원자료로 다시 잰 값입니다.</div>'
+            '<div class="frow" id="s2pick"><span class="lab">사례</span></div><div id="s2trans"></div><div class="s2quad" id="s2quad"></div>'
+            '<script type="application/json" id="s2vdata">' + data + '</script>'
+            '<script>(()=>{' + gp + VIDEO_JS + '})();</script>')
 
 
-VIDEO_JS = """<script>(()=>{const vs=()=>[...document.querySelectorAll('#s2 video')];
-document.getElementById('s2ctl').addEventListener('click',e=>{const a=e.target.dataset.a;if(!a)return;
-vs().forEach(v=>{if(a==='play'){v.play().catch(()=>{})}else if(a==='pause'){v.pause()}else{v.pause();v.currentTime=0}})});
-document.getElementById('s2spd').addEventListener('click',e=>{const r=e.target.dataset.r;if(!r)return;
-[...e.currentTarget.children].forEach(b=>b.setAttribute('aria-pressed',b===e.target));vs().forEach(v=>v.playbackRate=+r)});})();</script>"""
+VIDEO_JS = """
+const D = JSON.parse(document.getElementById('s2vdata').textContent);
+const group = GP.syncGroup({ onClock: t => { ui.clock.textContent = t; }, onButton: b => { ui.button.textContent = b; }, onNote: n => { ui.note.textContent = n; } });
+const ui = GP.transport(group);
+document.getElementById('s2trans').appendChild(ui.row);
+const pick = document.getElementById('s2pick'), quad = document.getElementById('s2quad');
+const badge = (ok, yes, no) => `<span class="vd ${ok ? 'ok' : 'fall'}">${ok ? yes : no}</span>`;
+const G = [];
+D.forEach(c => { const k = c.layer + ' · ' + c.sel; let g = G.find(x => x.k === k); if (!g) { g = { k, cases: [] }; G.push(g); } g.cases.push(c); });
+function show(i) {
+  group.clear(); quad.textContent = '';
+  pick.querySelectorAll('.chip').forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+  G[i].cases.forEach(c => ['A', 'B'].forEach(arm => {
+    const a = c.arms[arm]; if (!a) return;
+    const tile = GP.el('article', { class: 'tile' });
+    tile.appendChild(GP.el('div', { class: 'th', html: `<span class="tag s2${arm.toLowerCase()}">${arm}</span><b>${arm === 'A' ? '지도 없음' : '지도 있음'}</b><span class="sub">${c.layer} · 시드 ${c.seed}</span>` }));
+    const vid = GP.video({ poster: a.p, controls: true, 'aria-label': `${arm} ${c.layer} 시드 ${c.seed}` });
+    GP.attach(vid, a.v); vid.playbackRate = ui.rate(); tile.appendChild(vid); group.add(c.case_id + arm, vid);
+    const both = a.reached && a.survived;
+    tile.appendChild(GP.el('div', { class: 'cap', html: badge(a.reached, '기준선 도달', '기준선 미도달') + ' ' + badge(a.survived, '끝까지 생존', '넘어짐') + ' ' + badge(both, '성공 (둘 다)', '실패') }));
+    quad.appendChild(tile);
+  }));
+}
+G.forEach((g, i) => { const b = GP.el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', text: g.k + ' · 시드 ' + g.cases.map(c => c.seed).join(' · ') }); b.addEventListener('click', () => show(i)); pick.appendChild(b); });
+if (G.length) show(0);
+"""
 
 
 S2CSS = """<style id="s2css">
@@ -294,6 +307,22 @@ S2CSS = """<style id="s2css">
 #s2 .s2ph{font-size:14px;margin:0 0 6px}
 @media (max-width:900px){#s2 .s2pairs{grid-template-columns:1fr}}
 @media (max-width:720px){#s2 ol.flow li{grid-template-columns:1fr}}
+#s2 .s2crit{font-size:14px;color:var(--ink-2);background:var(--paper-2);border-radius:6px;padding:10px 14px;margin:8px 0}
+#s2 .frow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+#s2 .frow .lab{font-size:12.5px;color:var(--ink-3);width:48px;flex:none}
+#s2 .trow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 12px}
+#s2 .trow .clock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px;min-width:9.5em;color:var(--ink)}
+#s2 .trow .flabel{font-size:12.5px;color:var(--ink-3);margin-left:6px}
+#s2 .trow .tnote{font-size:12.5px;color:var(--stop-ink)}
+#s2 .s2quad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){#s2 .s2quad{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){#s2 .s2quad{grid-template-columns:1fr}}
+#s2 .tile{background:var(--paper);border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+#s2 .tile .th{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:7px 10px;border-bottom:1px solid var(--rule);font-size:13.5px}
+#s2 .tile video{display:block;width:100%;aspect-ratio:16/9;background:#0d1117;object-fit:contain}
+#s2 .tile .cap{padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px}
+#s2 .vd{font-size:12.5px;padding:1px 7px;border-radius:4px;background:var(--paper-2)}
+#s2 .vd.ok{color:var(--brand-ink);background:var(--brand-soft)} #s2 .vd.fall{color:var(--stop-ink);background:var(--stop-soft)}
 </style>"""
 
 
