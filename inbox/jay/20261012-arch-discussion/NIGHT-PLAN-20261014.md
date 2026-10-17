@@ -847,3 +847,10 @@
 - **B 학습이 A 와 같은 조건인지:** `short_conditions_sha256` 는 A 와 동일(`d4cead87…`, 번들 SHA 는 이 값에 들어가지 않는다). 같은 부모 `model_20000.pt`, 같은 평가 기준 파일 `evaluation_criteria_s2_ab.json`. A 와 B 사이 학습 코드 차이는 위 `import math` 한 줄(증명 함수)뿐이다.
 - **동의 · 명령:** 같은 팀장 원문과 참석 문장, `consent_short_B.json`. `s2_step29a_run/frozen_delivery/launch/s2_attended_launch_short.py --live --arm B --previous-receipt s2_step29a_run/reverified_A/chain.receipt.reverified.json ...`, 자원 한계와 `--end-by '2026-10-18 06:00 KST'` 는 A 와 같다.
 - **GPU 0:** 20:47 부터 이 기동까지 비어 있었다(약 26분, 이유: A 영수증 HOLD 수리와 재검증). 평가기 29b 는 B 학습 중에 이어서 한다.
+
+## B 학습 진행 + 평가기 step29b 확인 (10/17 21:33:18 · lead)
+
+- **B 학습:** 21:12:53 기동, 21:33:18 기준 update 274/2000, 정상(update당 약 4.3 s, NaN 0, 워치독 이벤트 시작 한 줄). 종료 예상 23:40 전후. A 와 초반 곡선이 거의 같다(엔트로피 update 100: A 3.93 · B 3.85, update 241: A 6.25 · B 6.01). 첫 update KL 은 A 22.6, B 40.1(지도 입력이 있는 쪽이 첫 큰 step 이 더 크다. 이후 둘 다 0.01~0.02).
+- **sol step29b(21:19 도착):** 해시 `S2-STEP29-SHA256SUMS.txt` 1159/1159 일치. lead 깨끗한 복사본(`lead_rerun_step29b`, `-I -B`, CUDA 숨김)에서 `test_s2_step29b_replay.py` 전부 통과(실제 캡처 복사본 첫 조각 + USD 증거 PASS, UUID · Kit · 이름 변이 5건 CAUGHT, 8 조각 부모 재생 INFORMATION_ONLY reasons [], 재검증 영수증 출처 PASS) 와 `test_s2_step29b_pins.py`(기동기 핀 3 PASS, 파일 변이 3 CAUGHT). 평가기는 `s2_lab/s2_step29b_run/eval29b_frozen_delivery` 에 보관. 한계: 8 조각 재생은 실제 캡처 한 건을 복제한 CPU 재생이고, 실제 Kit 8건은 B 종료 뒤 smoke 에서 처음 본다.
+- **평가 일정:** B 종료(23:40) → smoke 8건(약 5분, 예약 9110c2ce 가 23:43 에 걸려 있음) → update 2000 평가(A, B 합쳐 120 case-arm, 건당 25 s 가정 약 50분, 미측정). 최종 평가는 `consent_evalfull.json` 이 필요한데 아직 없다(범위가 smoke 와 다르다). 팀장의 채팅 한 줄을 기다린다.
+- **GPU 0:** B 학습 중(6.3 GB). 놀지 않는다.
