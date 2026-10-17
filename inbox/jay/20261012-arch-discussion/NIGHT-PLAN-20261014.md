@@ -921,3 +921,10 @@
 - 조사 지시: MARG · START · AME-2 · JEPLO · HiPAN 과 같은 계열 논문을 더 찾는다. 팀원이 쓴 AME-2 저장소(휴머노이드 기반 추정)도 찾는다.
 - 팀원 AME-2 관찰: 험지는 넘지만 앞 두 발 · 뒤 두 발이 묶여 껑충거리는 보행이 나왔다. 평지 약 6,000 만 step 재학습 뒤 보통 4 족 보행으로 돌아왔다. 팀장 가설은 2 족 원본 · 빠른 보행 설정의 이식이다.
 - lead 조치: 조사 · 설계안을 백그라운드 조사로 맡겼다. 산출물은 `inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md` 이고, S2 B 의 지도가 실제로 어디로 들어갔는지 · `full_freeze` 가 무엇을 얼렸는지 코드 확인을 포함한다. 평가 · 영상 · 페이지는 계획대로 진행한다.
+
+## 영상 도구 step33 확인 (10/18 03:11:34 · lead)
+
+- **sol step33 (03:08 도착):** 해시 640/640 일치. lead 깨끗한 복사본(`lead_rerun_step33`, CUDA 숨김)에서 `test_s2_step33` · `_launcher_fixture` · `_window` 전부 PASS(같은 운영 실패 5 회 뒤 중단, 단계 기록, 숨은 부모 · 감시자, 자식 · 손자 보이는 창 0 개, 기동기 종료 뒤 가족 생존).
+- **원인 판단(sol):** 첫 영상 자식이 episode 없이 끝난 것은 영상 부모가 `CUDA_VISIBLE_DEVICES` 를 넣어 Kit 과 CUDA 의 GPU 번호를 섞은 실행 틀 결함으로 보인다(Kit 로그 「CUDA being in bad state」). 직접 원인인지는 GPU 재기동 전까지 미확인.
+- **바뀐 것:** 결측 7 쌍을 이유와 함께 빼고 차이 예시 선택(gap-004-s4004 A 성공 · B 실패 한 쌍) → 고정 8 + 차이 2 = 10 편. `--only-slot` 한 편 실행, 실패 편 기록 후 계속, 창 안 띄우기(step34 job_owner 반영).
+- **실행 계획:** update 0 평가가 끝나 GPU 0 이 비면(04:30 전후) 한 편(slot 00) → 직접 확인 → 전체 10 편. 보관 `s2_lab/s2_step33_run`.
