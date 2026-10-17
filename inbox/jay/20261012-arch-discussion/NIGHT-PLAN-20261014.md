@@ -928,3 +928,8 @@
 - **원인 판단(sol):** 첫 영상 자식이 episode 없이 끝난 것은 영상 부모가 `CUDA_VISIBLE_DEVICES` 를 넣어 Kit 과 CUDA 의 GPU 번호를 섞은 실행 틀 결함으로 보인다(Kit 로그 「CUDA being in bad state」). 직접 원인인지는 GPU 재기동 전까지 미확인.
 - **바뀐 것:** 결측 7 쌍을 이유와 함께 빼고 차이 예시 선택(gap-004-s4004 A 성공 · B 실패 한 쌍) → 고정 8 + 차이 2 = 10 편. `--only-slot` 한 편 실행, 실패 편 기록 후 계속, 창 안 띄우기(step34 job_owner 반영).
 - **실행 계획:** update 0 평가가 끝나 GPU 0 이 비면(04:30 전후) 한 편(slot 00) → 직접 확인 → 전체 10 편. 보관 `s2_lab/s2_step33_run`.
+
+## 구조 조사 도착 · S2 학습률 이탈 확인 (10/18 03:40:26 · lead)
+
+- **조사 문서** `inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md` (초안, 팀장 확인 전). S2 B 는 구조상 이미 「지도 encoder(374→128→64, 학습됨) + 몸 상태 encoder(MoE student, `full_freeze` 로 얼림) → 관절 행동」 이었다. 논문 36 편 중 눈 먼 정책에 지도를 나중에 붙인 사례 없음. AME-2 껑충 보행 원인 후보는 gait 보상 없음 · 고저차 조건부 체공 벌점(코드 근거).
+- **lead 가 원문으로 확인한 이탈:** 설계(`DESIGN-s2-ab-v1.md:40` 「학습률은 부모 마지막 값」, ASTRA 17v:185 「0.000170859375」) 와 달리 실제 실행은 `--lr 0.001 --schedule adaptive`(manifest `plan.lr 0.001`). A 기록상 첫 update 학습률 0.0015 → 첫 갱신 KL A 22.6 · B 40.1. A · B 똑같이 적용돼 A 대 B 비교는 같은 조건이지만, 두 쪽 모두 부모(E1)를 첫 갱신에서 크게 흔들었을 수 있다. update 0 평가 결과로 학습 전 대비 확인 예정.
