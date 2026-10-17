@@ -144,10 +144,12 @@ def judge(layers):
         verdict = "징검다리만 좋다 (gap 불명)"
     else:
         verdict = "불명"
-    return verdict, out
+    neg = [k for k, _, role in LAYERS if role == "목표" and layers[k].get("paired_tango_95")
+           and layers[k]["paired_tango_95"][2] < 0]
+    return verdict, out, neg
 
 
-def build_section(a, b, result, videos, asof):
+def build_section(a, b, result, videos, asof, comp=None, miss=None):
     layers = result["trained_ab"]["layers"] if result else None
     ready = bool(result and result.get("comparison_ready"))
     J = judge(layers) if layers else None
@@ -182,29 +184,50 @@ def build_section(a, b, result, videos, asof):
         table = ('<div class="tbl"><table class="def s2t"><thead><tr><th>지형</th><th>역할</th><th>유효 쌍</th><th>A 성공</th><th>B 성공</th>'
                  '<th>한쪽만 성공 (A만 · B만)</th><th>B − A</th><th>95% 구간</th><th>규칙 적용</th></tr></thead><tbody>'
                  + "".join(rows) + '</tbody></table></div>')
-        head = (f'<p class="s2v {"g" if J[0] == "지도가 좋다" else ("b" if "퇴행" in J[0] else "w")}">'
-                f'<b>판정 (결과 전 등록 규칙): {E(J[0])}</b>' + ("" if ready else " · 평가 증거 확인 미완") + '</p>')
+        negtxt = " · ".join(dict((k, n) for k, n, _ in LAYERS)[k] for k in J[2])
+        cls = "g" if J[0] == "지도가 좋다" else ("b" if ("퇴행" in J[0] or J[2]) else "w")
+        head = (f'<p class="s2v {cls}"><b>판정 (결과 전 등록 규칙): 「{E(J[0])}」.</b> '
+                + (f'<b>{E(negtxt)} 에서는 지도를 준 B 가 A 보다 확실히 나빴습니다</b>(95% 구간 전체가 0 아래). ' if J[2] else '')
+                + ('' if ready else '등록 규칙의 「120 건 모두 유효」 를 채우지 못해 공식 표시는 「부분 평가」 입니다.') + '</p>')
+        if comp:
+            crow = []
+            for key, name, _ in LAYERS:
+                ca, cb = comp.get((key, "A"), {}), comp.get((key, "B"), {})
+                cell = lambda c: (f'<td class="num">{c.get("crossed", 0)}/{c.get("n", 0)}</td><td class="num">{c.get("fall", 0)}/{c.get("n", 0)}</td>'
+                                  f'<td class="num">{c.get("prog", 0):.1f} m</td>')
+                crow.append(f'<tr><td>{E(name)}</td>{cell(ca)}{cell(cb)}</tr>')
+            table += ('<h3 class="h3gap">성분으로 펴 보기: 건넜나 · 넘어졌나 · 얼마나 갔나</h3>'
+                      '<div class="tbl"><table class="def s2t"><thead><tr><th>지형</th><th>A 기준선 넘음</th><th>A 넘어짐</th><th>A 전진 거리 중앙값</th>'
+                      '<th>B 기준선 넘음</th><th>B 넘어짐</th><th>B 전진 거리 중앙값</th></tr></thead><tbody>' + "".join(crow) + '</tbody></table></div>'
+                      '<p class="sub">유효한 판만 셌습니다(쌍이 깨진 판도 그 arm 의 판으로는 포함). 평지의 「성공」 은 기준선이 아니라 속도 추종 판정(Q)이고, 1.0 m/s 로 20 초면 약 20 m 입니다.</p>')
+        if miss:
+            table += (f'<p class="sub">결측 {miss["pairs"]} 쌍: Isaac 이 평가 도중 비정상 종료(접근 위반) {miss["crash"]} 건 · 중단 신호로 끝난 것 {miss["ctrlc"]} 건. '
+                      '등록 규칙대로 그 쌍 전체를 비교에서 뺐고 채워 넣지 않았습니다. 계단 오르기는 10 쌍 중 5 쌍만 남았습니다.</p>')
     else:
         table, head = "", '<p class="s2v w"><b>평가 진행 중입니다.</b> 결과가 나오면 이 자리에 숫자와 판정이 들어갑니다.</p>'
     res = (head + f'<figure class="s2r">{result_svg(layers)}<figcaption>막대는 각 지형에서 성공한 판의 비율, 오른쪽 점은 같은 지형 · 같은 시드 쌍에서 잰 B − A 차이와 95% 구간(Tango). '
-           '세로 점선은 목표 지형의 기준 +10%p 입니다. 「성공」은 기준선에 닿고 끝까지 넘어지지 않은 판입니다.</figcaption></figure>' + table)
+           '세로 점선은 목표 지형의 기준 +10%p 입니다. gap · 징검다리의 「성공」 은 기준선에 닿고 끝까지 넘어지지 않은 판, 평지 · 계단의 「성공」 은 속도 추종 판정입니다.</figcaption></figure>' + table)
     # 영상
     vids = video_block(videos)
     return SECTION.format(asof=E(asof), result=res, curves=curves, design=design_svg(), videos=vids,
-                          a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers),
+                          a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers, comp),
                           nextexp=next_block(J))
 
 
-def know_block(J, layers):
+def know_block(J, layers, comp=None):
     if not J:
         return ('<li><b>A · B 둘 다 2,000 update 를 끝까지 학습했습니다.</b> 학습 값이 깨진 적(NaN) 없이 안정적이었고, 학습 곡선은 거의 겹칩니다.</li>'
                 '<li><b>성능은 아직 모릅니다.</b> 학습 중에는 성공률을 기록하지 않아서, 평가가 끝나야 첫 숫자가 나옵니다.</li>')
-    g, s = layers["gap"], layers["stepping_stones"]
+    g, s, f = layers["gap"], layers["stepping_stones"], layers["flat"]
     pct = lambda lay, k: f'{lay[k]}/{lay["valid_pairs"]}'
-    return (f'<li><b>gap: A {pct(g,"A_success")} · B {pct(g,"B_success")} 성공.</b> 규칙 적용: {E(J[1]["gap"])}.</li>'
-            f'<li><b>징검다리: A {pct(s,"A_success")} · B {pct(s,"B_success")} 성공.</b> 규칙 적용: {E(J[1]["stepping_stones"])}.</li>'
-            f'<li><b>평지 · 계단 오르기 (퇴행 감시):</b> {E(J[1]["flat"])} · {E(J[1]["stairs_up"])}.</li>'
-            '<li><b>A · B 둘 다 2,000 update 를 끝까지 학습했고 곡선은 거의 겹칩니다.</b> 차이는 지도 입력 하나입니다.</li>')
+    pm = lambda fam, arm: (comp or {}).get((fam, arm), {}).get("prog", 0.0)
+    return (f'<li><b>지도를 준 B 가 더 잘 건너지 않았습니다.</b> gap 성공 A {pct(g,"A_success")} · B {pct(g,"B_success")}, 징검다리 A {pct(s,"A_success")} · B {pct(s,"B_success")}. '
+            f'gap 에서 B 는 거의 앞으로 가지 않았습니다(전진 거리 중앙값 A {pm("gap","A"):.1f} m · B {pm("gap","B"):.1f} m).</li>'
+            f'<li><b>평지에서도 B 가 느렸습니다.</b> 속도 추종 성공 A {pct(f,"A_success")} · B {pct(f,"B_success")}, 20 초 전진 중앙값 A {pm("flat","A"):.1f} m · B {pm("flat","B"):.1f} m. '
+            '구간이 0 을 걸쳐 등록 규칙상 「퇴행」 은 아닙니다.</li>'
+            f'<li><b>계단 오르기에서는 B 가 더 멀리 갔습니다</b>(중앙값 A {pm("stairs_up","A"):.1f} m · B {pm("stairs_up","B"):.1f} m, 둘 다 기준선 성공 0). '
+            f'징검다리에서는 B 가 더 오래 버텼습니다(넘어지기까지 평균 A {(comp or {}).get(("stepping_stones","A"),{}).get("secs",0):.1f} 초 · B {(comp or {}).get(("stepping_stones","B"),{}).get("secs",0):.1f} 초). '
+            '즉 지도가 걸음을 「바꾼」 것은 분명하지만, 2,000 update 로는 건너는 쪽으로 좋아지지 않았습니다.</li>')
 
 
 def next_block(J):
@@ -212,8 +235,8 @@ def next_block(J):
             ("gap 만 좋다 (징검다리 불명)", "gap 만 좋고 징검다리는 불명", "발 디딤 자리 보상을 먼저. v2 가 징검다리에서 0 ~ 24 % 였던 원인 후보가 「발 놓을 자리를 모름」 (MARG Fig 8b)"),
             ("불명", "둘 다 불명 · 약함", "지도가 정말 쓰이는지부터: 지도를 지웠을 때 B 의 행동이 바뀌는지 재는 탐침 · 학습 길이 늘리기 · encoder 동결 영향. 그다음 지도 표현 (attention encoder)"),
             ("퇴행 감시 위반", "B 가 퇴행", "지도 입력 이상 점검 (좌표 · 이력 · reset 연결), 같은 부모 · 시드로 재현")]
-    cur = J[0] if J else None
-    body = "".join(f'<tr{" class=cur" if cur == k else ""}><td>{E(c)}</td><td>{E(n)}</td></tr>' for k, c, n in rows)
+    cur = {J[0]} | ({"퇴행 감시 위반"} if J[2] else set()) if J else set()
+    body = "".join(f'<tr{" class=cur" if k in cur else ""}><td>{E(c)}</td><td>{E(n)}</td></tr>' for k, c, n in rows)
     return ('<div class="tbl"><table class="def s2n"><thead><tr><th>평가 결과</th><th>다음 실험 (결과 전에 적어 둔 갈래 · S2-RESULT-PLAN 4 절)</th></tr></thead><tbody>'
             + body + '</tbody></table></div>'
             + ('<p class="sub">색칠한 줄이 이번 결과에 해당하는 갈래입니다.</p>' if cur else '<p class="sub">평가가 끝나면 해당 줄에 색이 칠해집니다.</p>'))
@@ -375,8 +398,9 @@ SECTION = """
     <li class="b"><span class="tm">15:13 ~ 18:12</span><span>A 학습을 네 번 띄움. ① 한 update 23.5 초(센서 점검이 로봇마다 따로 돌아 느림 → 묶어서 3.7 초) ② 33 update 에서 중단(16 초 뒤 센서 시각이 float32 로 반올림돼 갱신을 건너뜀 → 매 step 갱신) ③ 923 update 에서 감독기가 상태 파일을 한 번 못 읽자 학습을 죽임(→ 연속으로 못 읽을 때만)</span></li>
     <li class="g"><span class="tm">18:12 ~ 20:38</span><span>A 학습 2,000 update 완료</span></li>
     <li class="w"><span class="tm">20:38 ~ 21:12</span><span>끝난 뒤 「정상 완료」 확인서를 쓰는 코드에 <code>import math</code> 한 줄이 빠져 확인서가 보류로 찍힘. 학습은 멀쩡해서 다시 학습하지 않고, 고친 코드로 같은 확인을 다시 돌려 새 확인서를 만듦(원본은 그대로 둠)</span></li>
-    <li class="g"><span class="tm">21:12 ~ 23:36</span><span>B 학습 2,000 update. 같은 시간에 평가기의 GPU 확인 코드 결함(실제 값 모양을 잘못 가정)을 고침</span></li>
-    <li class="g"><span class="tm">23:43 ~</span><span>예행 평가 8 건 → 최종 평가 120 건 → 영상</span></li>
+    <li class="g"><span class="tm">21:12 ~ 23:33</span><span>B 학습 2,000 update. 같은 시간에 평가기의 GPU 확인 코드 결함(실제 값 모양을 잘못 가정)을 고침</span></li>
+    <li class="b"><span class="tm">23:43 ~ 00:17</span><span>예행 평가가 3 번째 건의 지면 대조 검사(벽 · 모서리 접점을 바닥으로 잘못 대조) 한 건에 걸려 전체가 멈춤 → 「한 건 결측은 기록하고 계속」 과 3D 대조로 고침</span></li>
+    <li class="g"><span class="tm">00:17 ~ 02:2x</span><span>예행 평가 8/8 통과 → 최종 평가 120 건(결측 7: Isaac 비정상 종료). 다음은 영상 · update 0 평가</span></li>
   </ol>
 
   <h3 class="h3gap">다음 실험</h3>
@@ -395,7 +419,9 @@ SECTION = """
 
   <h3 class="h3gap">팀장이 정할 것</h3>
   <ul class="plain">
-    <li><b>update 0 평가(약 1 시간)를 이어서 돌릴지.</b> lead 권고: 돌린다. 등록한 비교의 나머지 절반(학습 효과)이고, 밤에 GPU 가 비어 있습니다.</li>
+    <li><b>다음 갈래.</b> lead 권고: 「B 가 퇴행」 갈래부터. 지도 입력이 평가 때 학습 때와 같은 모양으로 들어갔는지 점검, 지도를 지웠을 때 B 의 행동이 바뀌는지 재는 탐침, 지도 쪽 encoder 가 학습됐는지(<code>full_freeze</code> 의 실제 범위) 확인. 그다음 학습 길이를 늘린 재현.</li>
+    <li><b>결측 7 건을 다시 돌려 채울지.</b> 결과가 없는(비정상 종료) 판만 같은 시드로 다시 재는 것이라 「좋은 결과가 나올 때까지 다시 돌리기」 와는 다릅니다. lead 권고: 채운다(약 10 분). 다만 결과 전 등록 규칙에 없던 절차이므로 팀장 확인 뒤.</li>
+    <li><b>update 0 평가(약 1 시간 40 분).</b> 등록한 비교의 나머지 절반(학습 전 대비 학습 효과)입니다. lead 권고: 영상 뒤 이어서 돌린다(밤 허용 범위 안).</li>
     <li><b>다음 실험 갈래.</b> 위 표에서 결과에 해당하는 줄이 권고입니다.</li>
     <li><b>실행 절차 줄이기.</b> 실행마다 동의 파일을 만드는 절차를 상시 동의 하나로 바꾸는 것(ASTRA 17ak 가 수용, 구현은 아직).</li>
   </ul>
@@ -429,6 +455,9 @@ def main():
     p.add_argument("--videos")
     p.add_argument("--site", required=True)
     p.add_argument("--asof", required=True)
+    p.add_argument("--episodes")
+    p.add_argument("--receipt")
+    p.add_argument("--progress")
     a = p.parse_args()
     A, B = read_updates(a.a), read_updates(a.b)
     assert [r["update"] for r in A] == list(range(1, len(A) + 1)) and len(A) == 2000, "A 기록 2000 줄 아님"
@@ -445,7 +474,30 @@ def main():
                 if not dst.exists() or sha(dst) != sha(src):
                     shutil.copy2(src, dst)
                 v["web" if k == "mp4" else "poster_web"] = f"{sub}/s2/{src.name}"
-    sec = build_section(A, B, result, videos, a.asof)
+    comp, miss = None, None
+    if a.episodes:
+        recs = json.load(open(a.episodes, encoding="utf-8"))["records"]
+        comp = {}
+        for r in recs:
+            if not r.get("executed") or r.get("missing_reason"):
+                continue
+            c = comp.setdefault((r["family"], r["arm"]), {"n": 0, "crossed": 0, "fall": 0, "progs": [], "steps": []})
+            sc = r["score"]
+            c["n"] += 1; c["crossed"] += bool(sc.get("crossed")); c["fall"] += bool(sc.get("fall"))
+            c["progs"].append(float(sc.get("progress_m") or 0.0)); c["steps"].append(int(r["steps"]))
+        for c in comp.values():
+            ps = sorted(c.pop("progs")); st = c.pop("steps")
+            c["prog"] = (ps[len(ps)//2] if len(ps) % 2 else (ps[len(ps)//2-1] + ps[len(ps)//2]) / 2) if ps else 0.0
+            c["secs"] = (sum(st) / len(st)) * 0.02 if st else 0.0
+    if a.receipt:
+        v = json.load(open(a.receipt, encoding="utf-8"))["verdict"]
+        ops = v["hold_classes"]["operational"]
+        codes = [r.get("exit_code") for r in (json.loads(l) for l in open(a.progress, encoding="utf-8"))
+                 if r.get("event") == "end" and "slot" in r and r.get("exit_code") not in (0, None)]
+        miss = {"pairs": v["missing_pairs"], "crash": sum(c == 3221225477 for c in codes),
+                "ctrlc": sum(c == 3221225786 for c in codes)}
+        assert len(ops) == len(codes) == v["missing_case_arms"], (len(ops), len(codes), v["missing_case_arms"])
+    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss)
     pub = open(a.pub, encoding="utf-8").read()
     out = splice(pub, sec, kicker=f"FOOTHOLD · 시뮬 RL · {a.asof}", version_line=f"8판 {a.asof}")
     (site / "index.html").write_text(out, encoding="utf-8")
