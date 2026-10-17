@@ -912,3 +912,4 @@
 - **수리:** 새 사본 `s2_lab/s2_step34_run` 에서 `DETACHED_PROCESS` 를 빼고 `CREATE_NO_WINDOW`(0x08000000) + 새 그룹만 쓰게 바꿈(파일 6 개, 계산 · 판정 코드는 그대로). 평가 묶음 목록 291/291 다시 봉인, 두 평가 기동기 핀 갱신.
 - **확인:** 알려진 답 시험 `test_no_console_window.py` (job 소유 자식이 콘솔 손자를 띄움) 새 창 0 개 PASS (bundle · s2_step4a34 두 사본). `test_s2_step32_continue` · `test_s2_step32_pin_record` · `test_s2_job_owner` 통과.
 - **지금 도는 update 0 평가(02:33 기동, 옛 코드)는 계속 창을 띄운다.** lead 가 멈추려 했으나 자동 안전 검사가 「작업 방해」 로 막음 → 팀장이 멈추거나 끝날 때까지(04:15 전후) 둔다. 다음 기동부터 `s2_step34_run` 을 쓴다.
+- **(02:51:43 추가) 팀장이 옛 update 0 평가를 직접 멈춤**(`taskkill /PID 26472 /T /F`, 20/120 건에서). 수리 사본 `s2_lab/s2_step34_run/launch/s2_attended_launch_evalfull.py --update 0` 으로 다시 띄운다(숨김 창, 같은 동의 · 자원 인자, `--end-by '2026-10-18 09:00 KST'`). GPU 0 은 02:50 부터 이 기동까지 비어 있음(팀장 중단).
