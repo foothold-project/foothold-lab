@@ -149,7 +149,7 @@ def judge(layers):
     return verdict, out, neg
 
 
-def build_section(a, b, result, videos, asof, comp=None, miss=None, learn=None):
+def build_section(a, b, result, videos, asof, comp=None, miss=None, learn=None, vrun=None):
     layers = result["trained_ab"]["layers"] if result else None
     ready = bool(result and result.get("comparison_ready"))
     J = judge(layers) if layers else None
@@ -229,7 +229,19 @@ def build_section(a, b, result, videos, asof, comp=None, miss=None, learn=None):
     vids = video_block(videos)
     return SECTION.format(asof=E(asof), result=res, curves=curves, design=design_svg(), videos=vids, unknown1=unknown1,
                           a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers, comp, learn),
-                          nextexp=next_block(J))
+                          nextexp=next_block(J), **video_flow(vrun))
+
+
+def video_flow(vrun):
+    """vrun: make_video_manifest 요약(planned · completed · failed) + span 문자열."""
+    if not vrun:
+        return {"vidspan": "04:52 ~", "vidnote": "세 번째 시도 진행 중"}
+    note = ("세 번째 시도는 환경까지 만들고 사례 이름 규칙에 걸림(영상이 「video-gap-s4000」 처럼 새 이름을 붙여 평가가 쓴 지형 칸을 못 찾음) "
+            "→ 평가에 등록된 사례를 그대로 쓰게 고침. 04:56 첫 편 통과 → "
+            f"{vrun['planned']} 편 중 {vrun['completed']} 편 완료")
+    if vrun["failed"]:
+        note += f", 실패 {len(vrun['failed'])} 편(" + " · ".join(f"{x['case_id']} {x['arm']}" for x in vrun["failed"]) + ")"
+    return {"vidspan": vrun["span"], "vidnote": E(note)}
 
 
 def know_block(J, layers, comp=None, learn=None):
@@ -274,9 +286,18 @@ def video_block(videos):
                                             "arms": {}})
         c["arms"][v["arm"]] = {"v": v["web"], "p": v["poster_web"], "reached": bool(v.get("reached")), "survived": bool(v.get("survived"))}
     data = json.dumps(list(cases.values()), ensure_ascii=False).replace("</", "<\\/")
+    same = [v for v in videos if v.get("same_as_eval") is True]
+    diff = [v for v in videos if v.get("same_as_eval") is False]
+    noeval = [v for v in videos if v.get("same_as_eval") is None]
+    check = (f'<p class="sub">영상마다 따로 다시 돌린 결과(기준선 도달 · 끝까지 생존)를 같은 판의 평가 기록과 맞춰 보았습니다. '
+             f'평가 기록이 있는 {len(same) + len(diff)} 편 중 {len(same)} 편이 같았습니다.'
+             + (f' 다른 판: {E(" · ".join(v["case_id"] + " " + v["arm"] for v in diff))}.' if diff else '')
+             + (f' {E(" · ".join(v["layer_name"] + " 시드 " + str(v["seed"]) + " " + v["arm"] for v in noeval))} 는 평가에서 Isaac 비정상 종료로 비었던 판이라 이 영상이 처음 보여 주는 결과입니다.' if noeval else '')
+             + ' 멈춰 선 장면은 로봇이 실제로 멈춘 것입니다(위 속도 그래프가 0, 시계는 계속 흐름).</p>')
     gp =(Path(__file__).with_name("gp_player.js")).read_text(encoding="utf-8")
     return ('<div class="s2crit"><b>영상 아래 표시</b>: 「기준선 도달」 은 몸 중심이 장애물 구간 끝(기준선)을 한 번이라도 넘은 것, 「끝까지 생존」 은 20 초 동안 넘어지지 않은 것, 「둘 다」 가 평가의 성공입니다. 색은 원자료로 다시 잰 값입니다.</div>'
             '<div class="frow" id="s2pick"><span class="lab">사례</span></div><div id="s2trans"></div><div class="s2quad" id="s2quad"></div>'
+            + check +
             '<script type="application/json" id="s2vdata">' + data + '</script>'
             '<script>(()=>{' + gp + VIDEO_JS + '})();</script>')
 
@@ -423,6 +444,10 @@ SECTION = """
     <li class="g"><span class="tm">21:12 ~ 23:33</span><span>B 학습 2,000 update. 같은 시간에 평가기의 GPU 확인 코드 결함(실제 값 모양을 잘못 가정)을 고침</span></li>
     <li class="b"><span class="tm">23:43 ~ 00:17</span><span>예행 평가가 3 번째 건의 지면 대조 검사(벽 · 모서리 접점을 바닥으로 잘못 대조) 한 건에 걸려 전체가 멈춤 → 「한 건 결측은 기록하고 계속」 과 3D 대조로 고침</span></li>
     <li class="g"><span class="tm">00:17 ~ 02:2x</span><span>예행 평가 8/8 통과 → 최종 평가 120 건(결측 7: Isaac 비정상 종료). 다음은 영상 · update 0 평가</span></li>
+    <li class="b"><span class="tm">02:31</span><span>영상 첫 실행 멈춤. 평가에 결측 쌍이 있다는 이유로 차이 예시 선택을 통째로 거절했고, 고정 8 편으로 줄여 띄운 첫 편은 Isaac 이 영상 기록 없이 끝남 → 결측 쌍은 빼고 고르기 · 한 편이 실패해도 다음 편으로 가게 고침</span></li>
+    <li class="w"><span class="tm">02:33 ~ 04:34</span><span>update 0(학습 전) 평가. 옛 실행 틀이 평가 건마다 빈 콘솔 창을 팀장 화면에 띄움 → 창 없이 띄우게 고침. 팀장이 옛 실행을 멈춘 뒤 고친 틀로 02:52 다시 띄워 04:34 완료(결측 8)</span></li>
+    <li class="b"><span class="tm">04:35 ~ 04:52</span><span>영상 두 번째 시도도 기록 없이 끝남. 영상용 렌더 설정을 평가 어댑터가 받지 않았고, Isaac 이 끝나면서 오류를 지움. GPU 0 은 04:36 부터 수리를 기다리며 놀았음 → 렌더 설정 연결 · 오류를 파일에 먼저 남기기 · 평가와 같은 GPU 지정</span></li>
+    <li class="g"><span class="tm">{vidspan}</span><span>{vidnote}</span></li>
   </ol>
 
   <h3 class="h3gap">다음 실험</h3>
@@ -479,6 +504,9 @@ def main():
     p.add_argument("--receipt")
     p.add_argument("--progress")
     p.add_argument("--full-result")
+    p.add_argument("--video-summary", help="make_video_manifest 의 .summary.json")
+    p.add_argument("--video-span", help="영상 세 번째 시도 시각 범위, 예: 04:52 ~ 05:10")
+    p.add_argument("--video-assets", help="s2_video_assets.json (아티팩트 자산 주소)")
     a = p.parse_args()
     A, B = read_updates(a.a), read_updates(a.b)
     assert [r["update"] for r in A] == list(range(1, len(A) + 1)) and len(A) == 2000, "A 기록 2000 줄 아님"
@@ -487,7 +515,15 @@ def main():
     result = json.load(open(a.result, encoding="utf-8")) if a.result else None
     videos = json.load(open(a.videos, encoding="utf-8")) if a.videos else None
     site = Path(a.site); site.mkdir(parents=True, exist_ok=True)
-    if videos:
+    assets = json.load(open(a.video_assets, encoding="utf-8"))["assets"] if a.video_assets else None
+    if videos and assets:
+        # 아티팩트 버전 용량 때문에 자산 저장소 주소를 쓴다. 바이트 수로 같은 파일인지 확인.
+        for v in videos:
+            for k in ("mp4", "poster"):
+                src = Path(v[k]); url, size = assets[src.name]
+                assert src.stat().st_size == size, (src.name, src.stat().st_size, size)
+                v["web" if k == "mp4" else "poster_web"] = url
+    elif videos:
         for v in videos:
             for k, sub in (("mp4", "v"), ("poster", "p")):
                 src = Path(v[k]); dst = site / sub / "s2" / src.name
@@ -519,7 +555,12 @@ def main():
                 "ctrlc": sum(c == 3221225786 for c in codes)}
         assert len(ops) == len(codes) == v["missing_case_arms"], (len(ops), len(codes), v["missing_case_arms"])
     learn = json.load(open(a.full_result, encoding="utf-8"))["learning_effect"] if a.full_result else None
-    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss, learn=learn)
+    vrun = None
+    if a.video_summary:
+        assert a.video_span, "--video-span"
+        vrun = {**json.load(open(a.video_summary, encoding="utf-8")), "span": E(a.video_span)}
+        assert vrun["completed"] == len(videos or []), (vrun["completed"], len(videos or []))
+    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss, learn=learn, vrun=vrun)
     pub = open(a.pub, encoding="utf-8").read()
     out = splice(pub, sec, kicker=f"FOOTHOLD · 시뮬 RL · {a.asof}", version_line=f"8판 {a.asof}")
     (site / "index.html").write_text(out, encoding="utf-8")

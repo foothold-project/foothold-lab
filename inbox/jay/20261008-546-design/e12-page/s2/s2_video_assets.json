@@ -1,0 +1,27 @@
+{
+ "artifact": "https://claude.ai/artifact/BYuAVDuVJuRWVkAs5mGJSN",
+ "uploaded_kst": "2026-10-18 05:2x",
+ "note": "S2 영상은 버전 용량(256 MiB) 때문에 아티팩트 자산 저장소에 둔다. 키는 make_video_manifest 가 붙인 파일 이름, 값은 업로드가 돌려준 주소와 바이트 수.",
+ "assets": {
+  "s2-gap-000-s4000-A.mp4": ["/_blob/07a2ae6d5acacba90cc54ef0713b1acb", 311838],
+  "s2-gap-000-s4000-B.mp4": ["/_blob/67c9127a7652de6648df98a9ea19b733", 381907],
+  "s2-gap-001-s4001-A.mp4": ["/_blob/435d72c77002936bd313867eb803037c", 114304],
+  "s2-gap-001-s4001-B.mp4": ["/_blob/6adb86dcea326000a3b18b872b5d0990", 444637],
+  "s2-gap-004-s4004-A.mp4": ["/_blob/c1af1181e59b711c5c73099124db3e8f", 1817576],
+  "s2-gap-004-s4004-B.mp4": ["/_blob/bd09c337d060dab327efcb6df1428b2f", 342740],
+  "s2-stepping_stones-000-s4020-A.mp4": ["/_blob/6f389fc02adfbe2b77af4a985cfa9615", 343273],
+  "s2-stepping_stones-000-s4020-B.mp4": ["/_blob/4111ce7877addb24929ca811a5dd7cba", 1642669],
+  "s2-stepping_stones-001-s4021-A.mp4": ["/_blob/12061c096666967dc1b142ec8b14d9c5", 481143],
+  "s2-stepping_stones-001-s4021-B.mp4": ["/_blob/21bc6b2e281cceecd2ffa4c1f8ce4cf5", 837427],
+  "s2-gap-000-s4000-A.jpg": ["/_blob/1b356cf9bc2ab290d62b301da71a1eaa", 108596],
+  "s2-gap-000-s4000-B.jpg": ["/_blob/a8cda5d4c15e6e44952dc111ff2044bb", 111823],
+  "s2-gap-001-s4001-A.jpg": ["/_blob/ad21fbc78b89604ea54da2768e427864", 107301],
+  "s2-gap-001-s4001-B.jpg": ["/_blob/03b96961056fd43fe803a44734a908bc", 114152],
+  "s2-gap-004-s4004-A.jpg": ["/_blob/692da54b6adff4063640de9785da8cbc", 105366],
+  "s2-gap-004-s4004-B.jpg": ["/_blob/bce103519e3f3db08c5ae749bfe7cd57", 113055],
+  "s2-stepping_stones-000-s4020-A.jpg": ["/_blob/adaf9f07155a3db14e76fd7eb63fe5ea", 136982],
+  "s2-stepping_stones-000-s4020-B.jpg": ["/_blob/dd3950183df90dc692f83e296d81c504", 143578],
+  "s2-stepping_stones-001-s4021-A.jpg": ["/_blob/64d58260923f5de8b27543f01d67ff64", 134087],
+  "s2-stepping_stones-001-s4021-B.jpg": ["/_blob/ccd7dc767bb89fd5ffe5d57880386a26", 140211]
+ }
+}
