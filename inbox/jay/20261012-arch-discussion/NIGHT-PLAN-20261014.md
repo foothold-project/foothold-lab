@@ -668,3 +668,13 @@
 - **근거:** ASTRA 17ai 3절(네 노드 한 번의 직접 동의, 노드마다 manifest · 해시 · claim · 출력, 노드 사이 lead 원자료 확인, 운영 실패면 뒤 노드 중단). 10:35 예행 GO(GPU 0 여유 15.6 GiB, 번들 57 파일 일치).
 - **명령:** `s2_attended_launch_a34.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n1_a34.json` (GPU 0, 최대 900 초, 재시도 0).
 - **GPU 0:** 10/16 14:18:46 부터 비어 있었다(약 20 시간 30 분). 이유: 동의 기록 한 줄 대기.
+
+## 노드 1 지도 점검 결과 (10/17 10:52:51 · 10:49:34 기동 · 44.4 초 · 팀장 직접 동의 후 첫 실제 실행)
+
+- **결론:** 보류(HOLD_INFORMATION_ONLY, 감독기 종료 코드 42). 256 걸음 기록은 모두 남았고(partial_rows 256, last_valid_step 255) 물리 광선 검사는 처음으로 켜졌다. 마지막 단계인 지형 변환(USD) 증거 확인에서 `ProvenanceHold('usd_isolation_state')` 로 멈췄다. 사슬 규칙(17ai)상 USD 운영 실패이므로 노드 2~4 는 시작하지 않았다.
+- **재 본 것(원자료):** 최소 여유 VRAM 11.77 GiB · 자식 종료 · GPU 0 은 실행 뒤 11 MiB. PhysX 첫 16 걸음 검사(`physx_first16_check.json`): 평평한 곳 맞음 32/32, 높은 곳 맞음 32/32, 움푹한 곳 빗나감 32/32, 양성 대조 32 → 4차 때 모두 빗나가던 문제(scene query 꺼짐)가 켜진 상태에서는 기대대로다(16 걸음 검사 한정 · 상태 INFORMATION_ONLY).
+- **보류 원인(코드 확인):** `out/../usd/isolate_state.json` 은 10:49:54 에 쓰였고 `conversions: 0`, 변환은 10:50:02 에 일어나 `assigned.jsonl` 에 1줄이 있다. 증거 읽기(`s2_a34_provenance.py:61`)는 `conversions == 1` 을 요구한다. 설치된 래퍼(`C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py`, SHA `30dc2ea9…`)는 변환 횟수를 올린 뒤 상태 파일을 다시 쓰지 않는다(상태 저장은 패치 · 차단 · 경고 때만). step16 번들 래퍼(`97da75f5…`)에는 변환 처리 안에 `_save_state()` 가 있다(182 행). 가짜 CPU 시험은 이 저장 시점을 재현하지 못했다.
+- **정리 관찰자: HOLD.** 이유는 `bash.exe` 둘(PID 159512 · 185832)이 기동 뒤에 생겼다는 것이다. 둘은 실행 중 제가 돌린 폴링 명령의 셸이다(생성 10:49:58). Isaac · Kit · python 계산 프로세스 잔존은 없고 GPU lease · USD lock 은 획득 후 해제됐다. 이 판정을 PASS 로 바꾸지 않는다. 앞으로 감독기 실행 중에는 긴 셸 명령을 돌리지 않는다.
+- **하지 않은 것:** 재시도 · 래퍼 설치본 교체 · 노드 2~4 기동. 증거 사본: `night-tools-20261013/s2_stage0_first_collection/attempt5_20261017_1049/` (raw_rows · 변환 USD 는 SHA 목록으로 대체, 원본은 `s2_lab/.../s2_runs/live-20261017-104934`).
+- **다음:** sol 에게 래퍼 상태 저장 불일치 수정(CPU) → lead 재실행 → ASTRA 확인 → 같은 설계로 노드 1 다시 (팀장 「매번 묻지 말고」 에 따라 동의는 다시 묻지 않는다).
+- **GPU 0:** 10:50:26 부터 비어 있다. 이유: 노드 1 이 USD 증거 보류로 끝났고 수정본이 아직 없다.

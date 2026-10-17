@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "kit_observed": {
+      "/physics/cudaDevice": 0,
+      "/renderer/activeGpu": 0
+    },
+    "torch_device_name": "NVIDIA GeForce RTX 5080",
+    "torch_uuid_raw": "<torch._C._CUuuid object at 0x0000023BC0BE77B0>"
+  },
+  "expected_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "kit_observation_status": "verified",
+  "kit_observed": {
+    "/physics/cudaDevice": 0,
+    "/renderer/activeGpu": 0
+  },
+  "kit_requested_device": 0,
+  "torch_logical_device": 0,
+  "torch_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "torch_uuid_normalized": "c08e23b062b6a4f28eb211151c6a8c7b"
+}

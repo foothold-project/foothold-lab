@@ -1,0 +1,35 @@
+{
+  "denominators": {
+    "flat": {
+      "boundary_excluded": 0,
+      "error": 0,
+      "executed": 32,
+      "hit": 32,
+      "miss": 0,
+      "occluded": 0,
+      "planned": 32
+    },
+    "gap_void": {
+      "boundary_excluded": 0,
+      "error": 0,
+      "executed": 32,
+      "hit": 0,
+      "miss": 32,
+      "occluded": 0,
+      "planned": 32
+    },
+    "raised": {
+      "boundary_excluded": 0,
+      "error": 0,
+      "executed": 32,
+      "hit": 32,
+      "miss": 0,
+      "occluded": 0,
+      "planned": 32
+    }
+  },
+  "gap_misses": 16,
+  "gap_unoccluded": 32,
+  "positive_controls": 32,
+  "status": "INFORMATION_ONLY"
+}

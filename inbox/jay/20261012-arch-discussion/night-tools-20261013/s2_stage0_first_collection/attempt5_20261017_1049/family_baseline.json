@@ -1,0 +1,32 @@
+{
+  "gpu_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "mode": "record",
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261017-104934",
+  "snapshot": {
+    "epoch": 1792201784.284,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": null,
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_step4a3_launch/s2_family_observer.py record --run c:/users/ai-ws01/s2_lab/night-tools-2026",
+        "create_time": 1792201774.788,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 81024
+      }
+    ],
+    "time": "2026-10-17 10:49:44"
+  }
+}
