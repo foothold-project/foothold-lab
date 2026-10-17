@@ -699,3 +699,10 @@
 - **한 일:** 노드 4 는 띄우지 않았다. sol 에게 step19 안에 추가(11:50): 반례 먼저 → 고침 → 감독기 전 단계를 실제 디스크로 훑는 시험 → 같은 유형 전수 표.
 - **GPU 0:** 11:40:06 부터 비어 있다. 이유: 노드 3 이 감독기 preflight 에서 멈췄고 노드 4 는 같은 결함이 있으며 노드 1 은 정오 상한(sol step19)으로 막혀 있다.
 - 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node3_eval0_20261017_1139/` (체크포인트 `.pt` 둘은 SHA 목록으로 대체).
+
+## 노드 1 7차 기동 기록 (step19 · 팀장 동의와 ASTRA 17aj · 17ak) (10/17 12:12:14 · lead)
+
+- **근거:** ASTRA 17aj(11:30) 조건부 허용 · 17ak(11:53) 상시 위임 수용(매번 동의 · 참석 · 정오 절차는 위임 한 건으로 대체, 단 구현 전까지 현 코드는 참석 모드). sol step19(12:03): 정오 상한을 `--end-by` 로 바꾸고 노드 3 · 4 감독기 `out/` 폴더 결함 수정. 실행 위치 `s2_lab/s2_step19_run` 해시 1851/1851 일치(목록 SHA `7acb38e0…`). lead 재실행(깨끗한 복사본, CPU): step19 정상 PASS 13 · CAUGHT 10, 변이 3/3, 감독기 자식 시작 전 사슬 2 PASS, 기동 경로 5 PASS · 1 CAUGHT.
+- **동의:** 팀장 원문 「진행해. NVIDIA 약관에 동의한다. 이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행해.」 + 「내가 화면 앞에서 지켜본다.」 참석자 team-lead.
+- **종료 시각:** `--end-by '2026-10-17 23:59 KST'` 는 팀장이 정한 값이 아니라 lead 의 임시 기본값(11:5x 채팅에서 팀장에게 알림, 반대 없음). 다르게 정해지면 바꾼다.
+- **명령:** step19 `s2_attended_launch_a34.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n1_a34.json --end-by '2026-10-17 23:59 KST'`. GPU 0 · 최대 900 초 · retry 0. 실행 중에는 긴 폴링 bash 를 돌리지 않는다(17aj).
