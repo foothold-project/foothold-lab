@@ -945,3 +945,12 @@
 - **등록 규칙 판정:** 「불명」 (comparison_ready false · 결측 때문). 사실은 gap · 평지에서 B 가 학습 뒤 나빠졌다는 것.
 - **영상:** 04:35 한 편(gap 4000 A) 기동 → 자식이 Kit 시작 단계 진입 확인(`app_launcher_start`, cuda:0), 감시자 동작.
 - **(04:39:41 추가)** 영상 한 편(04:35) 실패: 자식이 `env_create_start` 뒤 오류 기록 없이 끝남(종료 코드 0, episode 없음) → sol step35. 페이지 버전 23 게시(학습 효과 표 · 다음 방향 · 조사 문서 연결), #550 댓글 6239756823, 텔레그램 도착 확인. **GPU 0 은 04:36 부터 비어 있다**(이유: 영상 도구 수리 대기. 다른 무인 범위 GPU 일은 준비된 도구가 없음: 지도 지우기 탐침 도구 미작성).
+
+## 2026-10-18 04:51:52 영상 도구 step35 확인 · 한 편 기동 (GPU 0)
+
+- sol step35 보고 04:48 도착. 해시 목록(S2-STEP35-SHA256SUMS.txt)은 아직 없음. lead 가 사본 `C:/Users/AI-WS01/s2_lab/s2_step35_run/` 을 만들고 자체 해시 `LEAD-COPY-SHA256SUMS.txt` (300 개, 원본과 같음) 를 남김.
+- 바뀐 곳 직접 diff: `bundle/s2_eval_kit_adapter.py` (render_mode 선택 인자 · 평가 None 분기 그대로) · `s2_video_child.py` (예외 기록 · 장치 결박 기록) · `s2_render_ab_videos.py` (평가와 같은 CUDA_DEVICE_ORDER=PCI_BUS_ID · CUDA_VISIBLE_DEVICES=0 · Kit 활성 GPU UUID 대조). 실패는 편 단위로 기록하고 다음 편으로 가는 구조 유지.
+- 깨끗한 사본 CPU 재실행 (CUDA 숨김): step35 PASS 7 · CAUGHT 1, step33 PASS 8 · CAUGHT 3, step30 PASS 6 · CAUGHT 6, 모두 종료 0.
+- Isaac 종료 경로 확인: SimulationApp.close 는 Python os._exit 를 부르지 않고 Kit 네이티브 종료. step33 의 TypeError 가 기록 없이 종료 0 이 된 까닭으로 추정(미확인). step35 는 except 에서 먼저 child_exception.json 을 쓰므로 이 경로에서도 원인이 남는다.
+- 기동: GPU 0 (c08e23b0) 계산 프로세스 없음, 다른 Isaac 없음. 한 편(--only-slot 00, gap 4000 A) 을 창 숨김으로 띄운다. 밤 허용 범위(S2 영상) 안 · 설계 단위 1 회.
+- GPU 0 은 04:36 부터 이 시각까지 비어 있었음 (영상 도구 수리 대기).
