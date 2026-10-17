@@ -954,3 +954,12 @@
 - Isaac 종료 경로 확인: SimulationApp.close 는 Python os._exit 를 부르지 않고 Kit 네이티브 종료. step33 의 TypeError 가 기록 없이 종료 0 이 된 까닭으로 추정(미확인). step35 는 except 에서 먼저 child_exception.json 을 쓰므로 이 경로에서도 원인이 남는다.
 - 기동: GPU 0 (c08e23b0) 계산 프로세스 없음, 다른 Isaac 없음. 한 편(--only-slot 00, gap 4000 A) 을 창 숨김으로 띄운다. 밤 허용 범위(S2 영상) 안 · 설계 단위 1 회.
 - GPU 0 은 04:36 부터 이 시각까지 비어 있었음 (영상 도구 수리 대기).
+
+## 2026-10-18 04:55:35 영상 한 편 1 차 결과와 lead 수리 · 재기동
+
+- 04:52 한 편: 환경 생성 통과 (Kit 활성 GPU c08e23b0 · torch UUID 일치 · device_binding_done). 이어서 `FingerprintHold: case_id_seed` 로 끝남. step35 의 예외 기록이 원인을 남겼다 (child_exception.json). 종료 코드는 여전히 0 (Kit 네이티브 종료) · 부모는 case_episode_missing 으로 기록하고 계속하는 구조 그대로.
+- 원인: 영상 계획이 고정 사례 4 건을 템플릿 하나에서 복사하고 case_id 를 `video-gap-s4000` 으로 새로 붙였다. 평가 어댑터는 `<층>-<NNN>-s<시드>` 에서 지형 행(NNN % 8) 을 읽는다. 등록 사례 `gap-000-s4000` 등이 그대로 있었다.
+- lead 수리 (s2_lab/s2_step35_run 사본만): `s2_video_plan.py` 가 고정 시드를 등록 사례 그대로 쓴다 (없으면 멈춤). 차이 예시가 고정 사례와 겹치면 슬롯을 늘리지 않고 이유만 덧붙인다. `test_s2_step30.py` 가짜 사례 시드를 실제 배치(4000 부터) 로 바꾸고 「모든 슬롯이 등록 사례이고 case_row 통과」 검사와 반례(video-gap-s4000 → case_id_seed) 를 더함. diff: `LEAD-FIX-s2_video_plan.diff`.
+- 실제 입력 계획 확인: 10 편 = 고정 gap-000-s4000 · gap-001-s4001 · stepping_stones-000-s4020 · stepping_stones-001-s4021 × A/B + 차이 예시 gap-004-s4004 (A 성공 · B 실패) × A/B. 다른 세 방향은 해당 쌍 없음. 결측 7 쌍 제외.
+- CPU 재실행: step35 PASS 7 · CAUGHT 1 / step33 PASS 8 · CAUGHT 3 / step30 PASS 6 · CAUGHT 7, 모두 종료 0.
+- 같은 한 편을 새 폴더 `videos_u2000_slot00_step35b` 로 다시 띄운다 (설계 단위의 캐너리 재시도 1 회).
