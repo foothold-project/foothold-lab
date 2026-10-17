@@ -866,3 +866,10 @@
 - **B 결과(사실):** 21:12:53 기동 → 23:33:54 종료, 감독기 기준 2.35 시간. 2000/2000 update, 종료 코드 0, **영수증 verdict RUN_COMPLETE_UNVERIFIED (보류 없음, boundary_ok True)**, 가족 정리 · 임대 해제 · 잠금 해제. `checkpoint_002000.pt` SHA `9e732819…`. 마지막 update KL 0.014 · 엔트로피 8.22 · NaN 0. 워치독: 시작 + 스스로 종료. step29a 의 `import math` 수리가 실제로 먹혔다(이번에는 확인서가 바로 정상).
 - **예행 평가(smoke 8 건) 기동:** step29b 평가기 `s2_lab/s2_step29b_run/eval29b_frozen_delivery/launch/s2_attended_launch_eval0.py`, 동의 `consent_n3_eval0.json`, `--max-wall-s 900`, GPU 0. 통과하면 23:55 예약이 최종 평가(update 2000, 60 쌍)를 띄운다.
 - **GPU 0:** 23:33:54 부터 이 기동까지 비어 있었다(약 9 분, 예약 대기).
+
+## 예행 평가 결과: 2 건 통과 후 한 건 결측으로 전체 정지 (10/17 23:50:09 · lead)
+
+- **사실:** 23:43:33 기동 `eval0-live-20261017-234333-de88c3db`. 자식 0 · 1 (gap-000-s3101 A · B) 실제 Kit 에서 끝까지 실행 · 부모 검증 통과(건당 약 30 s, step29b 의 UUID · USD 경로 수리가 실제로 먹힘). 자식 2 (gap-001-s3109 A) 가 7.9 s 에 `FingerprintHold:ray_current_usd_mismatch` (높이 광선 접점 z 와 USD 지면 삼각형 z 최소 오차 2 mm 초과, `s2_eval_case_fingerprint.py:89`) → 부모 `_verify_fragment` 가 전체 중단. 판정 HOLD, 기동기 종료 코드 42. 8 건 중 3 건 실행.
+- **판단:** 한 건의 결측으로 평가 전체가 서는 설계가 문제다(등록 규칙은 결측 쌍을 빼고 개수를 보고하라고 했다). 광선 대조 어긋남이 진짜 지형 불일치인지 검사 쪽 가정(gap 벽 · 모서리 접점) 문제인지는 미확인.
+- **조치:** sol step32(긴급, step31 앞): 결측 건 기록 후 계속 · 실제 캡처로 원인 진단(허용 오차를 넓히지 않고 원인 수리) · 시험 · 핀. 23:55 최종 평가 예약은 예행 실패로 띄우지 않는다.
+- **GPU 0:** 23:48 부터 비어 있다. 이유: 평가기 step32 대기. 이 틈에 돌릴 다른 GPU 일 없음(영상 도구는 최종 평가 결과가 입력).
