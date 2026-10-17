@@ -786,3 +786,10 @@
 - **확인:** 실행 위치 `s2_lab/s2_step23_run` 해시 243/243 일치(목록 SHA `04e16c05…`). lead 재실행(CPU): tracker 시험 4 PASS, 벡터 시험 정상 1 PASS + 지정 첫 FAIL 5 CAUGHT(env 하나의 ray · 타임스탬프 · pose 변경, 소스 mtime · 최종 sha), sol 전체 회귀 57/57(정상 PASS 371 · CAUGHT 21, 변이 PASS 2 · CAUGHT 84). 예행 `--rehearse --arm A` GO(번들 190 파일).
 - **동의 · 명령:** 같은 팀장 원문과 참석 문장, 참석자 team-lead, `consent_short_A.json`. `s2_step23_run/frozen/launch/s2_attended_launch_short.py --live --arm A ...` (인자는 15:13 기록과 같다). 한도 `--end-by 2026-10-17 23:59 KST` · `--max-wall-s 21600`: 예상이 넘으면 열 번째 update 뒤 자동 중단.
 - **GPU 0:** 15:18 부터 비어 있었다(약 31 분, 이유: 속도 수정 대기).
+
+## A 짧은 학습 재실행 결과: 33 update 뒤 센서 갱신 검사로 중단 (10/17 16:13:05 · 15:49:09 기동 · 15:52 중단 · lead)
+
+- **결론:** 속도 수정은 효과가 있었다(update 당 3.5~3.7 s, 첫 10 update 평균 3.67 s, 예상 2,000 update 7,373 s = 2.05 h, 한도 안). **33 update(792 걸음, 환경 걸음 811,008) 뒤 update 34 에서 `ValueError update_held: not every RayCaster env updated for this control step`** 로 감독기가 중단했다(`short_proof:short_single_accounting`, 가족 0, 정리 확인, 비유한 0). KL 0.012~0.017 · 엔트로피 1.94~1.99 · 값 손실 0.06 으로 학습 자체는 건강했다.
+- **원인 가설(미확정):** 추적기는 RayCaster 가 update 를 부른 env 만 `last_steps` 를 갱신한다. Isaac Lab 센서는 float32 `_timestamp` 를 0.02 씩 누적하고 `timestamp - last + 1e-6 >= update_period` 로 갱신 여부를 정한다. 시뮬 시간 약 16 s 부터 float32 간격(1.9e-6)이 허용 1e-6 을 넘어 일부 env 가 한 step 을 건너뛸 수 있다. 33 x 24 x 0.02 = 15.84 s 에서 터진 것과 맞지만 sol 의 CPU 재현 전까지 가설이다. E1 은 이 건너뜀을 조용히 무시했을 것이다(E1 코드는 이 검사가 없다).
+- **조치:** sol step25(16:12, 진행 중이던 step24 평가기는 보류): CPU 재현 → 학습 cfg 의 height_scanner `update_period` 를 0 으로(A · B 동일, 추적기 검사 약화 금지). 끝나면 A 를 처음부터 다시 띄운다(앞 33 update 는 버린다; B 의 부모나 연장 출발점이 아니다).
+- **GPU 0:** 15:52 부터 비어 있다. 이유: 이 센서 갱신 검사 수정을 기다린다. 이 동안 평가기 후보가 나오면 GPU 0 에서 시험할 수 있다(그래서 크롬 정리는 지금 필요 없다).
