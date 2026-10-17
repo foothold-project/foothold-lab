@@ -729,3 +729,10 @@
 - **조치:** sol step20 에 합쳐 지시(12:51): 실제 두 프로세스로 반례 → 모든 활성 `atomic_json` 에 공통 재시도 → 같은 유형 전수 표. 노드 4 와 노드 3 재실행은 그 수정 뒤.
 - **GPU 0:** 노드 4 가 12:49:09 에 끝난 뒤 비어 있다. 이유: 학습 선행 항목(노드 2 기동기 · 부분 reset 연결 확인 · status 쓰기 재시도)이 sol step20 에 들어 있고 수정 전 코드는 띄우지 않는다.
 - 증거 사본: `night-tools-20261013/s2_stage0_first_collection/node4_foot_20261017_1249/`.
+
+## 노드 2 합성 배관 기동 기록 (step20 · 팀장 동의 · ASTRA 17al) (10/17 13:51:14 · lead)
+
+- **근거:** sol step20(13:47): 노드 2 기동기를 step20 번들에 맞춤, 상태 파일 쓰기 경쟁 재시도 통일, 실제 B 부분 reset 연결 확인(short optimizer 0 이전), 네 노드 실제 틀 리허설. 실행 위치 `s2_lab/s2_step20_run` 해시 2424/2424 일치(목록 SHA `16ac9b82…`). lead 재실행(깨끗한 복사본, CPU, 13:48~13:51): 노드 2 기동기 정상 8 PASS · 변이 7 CAUGHT, 봉인 prelaunch 1 PASS, 상태 파일 경쟁 4 PASS + 예외 전파 PASS, 네 노드 live 배선 4/4, USD 상태 시점 PASS, 부분 reset CPU 정답표 정상 3 + 반례 7 CAUGHT, 실제 틀 리허설 4/4 PASS(감독기 · 워치독 · 관찰자 별도 프로세스, 상태 파일 반복 읽기) + 지정 첫 FAIL 5.
+- **동의:** 팀장 원문 「진행해. NVIDIA 약관에 동의한다. 이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행해.」 + 「내가 화면 앞에서 지켜본다.」 참석자 team-lead. ASTRA 17al 3절: 참석 운영에서는 무인 canary 와 새 동의 문구를 기다리지 않는다.
+- **명령:** step20 `s2_attended_launch_b12.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n2_plumbing.json --end-by '2026-10-17 23:59 KST'`. GPU 0 · A 쪽 합성 N=32 · 1 iteration · retry 0. 실행 중 긴 폴링 bash 금지.
+- **GPU 0:** 12:49:09 부터 비어 있었다(노드 2 기동까지 약 1 시간, 이유: sol step20 수정과 lead 재실행 대기).
