@@ -714,3 +714,10 @@
 - **의미:** 지도 값 자체(경계 · 높이 · hit/miss)는 정답표와 어긋남이 없다. 사전 등록한 「첫 16 걸음 고정 자세」 조건만 실패다. B 입력 증거가 학습 허용에 충분한지는 ASTRA 판정에 묻는다(17ak 2절: 입력 결함은 제외할 수 없다).
 - **노드 3 재기동:** ASTRA 17aj 4절 허용 범위. step19 에서 `out/` 폴더 결함을 고쳤다. 같은 동의 · 참석자 team-lead · `--max-wall-s 900` · `--end-by '2026-10-17 23:59 KST'`. 실행 중에는 긴 폴링 bash 를 돌리지 않는다.
 - **GPU 0:** 노드 1 이 12:13:09 에 끝났고 이후 비어 있었다(노드 3 기동까지 약 18 분, 이유: 결과 읽기와 sol 수정 확인).
+
+## 노드 3 재실행 결과와 노드 4 기동 기록 (10/17 12:49:01 · lead)
+
+- **노드 3(12:32:03 기동, Kit 29 초, 자식 종료 코드 0, 관찰자 PASS):** Kit 가 처음으로 시작했다. 8 case-arm 중 1개(gap-000-s3101 A)만 실행하고 close 에서 `KitAdapterHold raycaster_cache_not_released` 로 멈춰 나머지 7개는 공통 실패 뒤 미실행이다. 유효 case-arm 0 · `comparison_ready false` · `natural_termination_tested true`. 데이터 HOLD `paired_physical_fingerprint_diff`(짝이 안 이뤄짐), 운영 HOLD `episode_missing_rows`. 평가 결과는 없다. 원인 후보는 env.close() 만으로 Warp mesh cache 가 안 풀리는 것(step16 에서 예측한 유형). sol 백로그로 넘겼다(step20 뒤).
+- **ASTRA 17al(12:46) 판정:** 7차 B 지도 입력 증거 「부분」. 187 ray 순서 · 374열 · offset · 이동 · 충돌 대비 hit/miss 는 닫힘(독립 재계산). 고정 자세 실패는 학습 차단 사유가 아니고 허용치를 넓히지 않는다. 남은 것은 실제 B 경로의 부분 reset 연결 확인(노드 2 또는 시작 검사에 포함), 노드 2 합성 배관, N=1,024 첫 10 update 판독이다. 노드 3 · 4 는 reward-off 탐색 학습의 필수 선행이 아니라는 lead 판단이 맞다. 참석 운영에서는 무인 canary 를 기다리지 않고 진행하고 매번 새 동의 문구도 요구하지 않는다.
+- **조치:** sol step20 에 부분 reset 연결 확인을 추가했다(12:48). GPU 가 sol 수정 동안 놀므로 학습 선행이 아닌 노드 4(발 광선, 학습 0)를 지금 돌린다: 분석적 8장면 · N=2 · 30 걸음/장면 · `--max-wall-s 600` · `--end-by '2026-10-17 23:59 KST'`. 같은 동의 · 참석자 team-lead. 실행 중 긴 폴링 bash 금지.
+- **GPU 0:** 노드 3 이 12:32:33 에 끝난 뒤 비어 있었다(노드 4 기동까지 약 16 분: 결과 읽기, ASTRA 판정 읽기).
