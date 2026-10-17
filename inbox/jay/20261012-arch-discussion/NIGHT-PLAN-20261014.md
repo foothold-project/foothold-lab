@@ -706,3 +706,11 @@
 - **동의:** 팀장 원문 「진행해. NVIDIA 약관에 동의한다. 이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행해.」 + 「내가 화면 앞에서 지켜본다.」 참석자 team-lead.
 - **종료 시각:** `--end-by '2026-10-17 23:59 KST'` 는 팀장이 정한 값이 아니라 lead 의 임시 기본값(11:5x 채팅에서 팀장에게 알림, 반대 없음). 다르게 정해지면 바꾼다.
 - **명령:** step19 `s2_attended_launch_a34.py --live --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_n1_a34.json --end-by '2026-10-17 23:59 KST'`. GPU 0 · 최대 900 초 · retry 0. 실행 중에는 긴 폴링 bash 를 돌리지 않는다(17aj).
+
+## 노드 1 7차 결과와 노드 3 재기동 기록 (10/17 12:31:55 · lead)
+
+- **노드 1 7차(12:12:23 ~ 12:13:09, 46.4 초, 감독기 종료 코드 42 HOLD_INFORMATION_ONLY, 정리 관찰자 PASS 이유 없음):** USD 증거 통과(`usd_evidence.json` 작성, 변환 1회, 성공 계수 의미 표기), `mesh_collision_verified true`, 장치 결박 verified, PhysX 첫 16 걸음 32 hit(평면) · 32 hit(높은 면) · 32 miss(빈 공간) · 양성 대조 32. CPU 분석(`attempt7_analysis_output.txt`): 경계 지점 2173 = 2173 (불일치 0), 면 hit 마스크 불일치 0, 세계 높이 정답 최대 차 4.6e-06 m (2 mm 초과 0). 지형 배정 조건은 통과(HOLD 이유에 없음).
+- **남은 HOLD 이유 둘:** `fixed_pose_evidence` (첫 16 걸음 root 위치 최대 변화 0.0080 m, quaternion 성분 0.0616, 허용치 0.002) 와 `case_assignment` (코드상 `fixed_pose_verified` 가 true 가 아니면 같이 걸림). 허용치는 결과를 본 뒤 넓히지 않는다(17aj 3절).
+- **의미:** 지도 값 자체(경계 · 높이 · hit/miss)는 정답표와 어긋남이 없다. 사전 등록한 「첫 16 걸음 고정 자세」 조건만 실패다. B 입력 증거가 학습 허용에 충분한지는 ASTRA 판정에 묻는다(17ak 2절: 입력 결함은 제외할 수 없다).
+- **노드 3 재기동:** ASTRA 17aj 4절 허용 범위. step19 에서 `out/` 폴더 결함을 고쳤다. 같은 동의 · 참석자 team-lead · `--max-wall-s 900` · `--end-by '2026-10-17 23:59 KST'`. 실행 중에는 긴 폴링 bash 를 돌리지 않는다.
+- **GPU 0:** 노드 1 이 12:13:09 에 끝났고 이후 비어 있었다(노드 3 기동까지 약 18 분, 이유: 결과 읽기와 sol 수정 확인).

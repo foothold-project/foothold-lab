@@ -1,0 +1,37 @@
+meta keys present: ['asset_sha256', 'attempt', 'boundary_count', 'boundary_evidence_path', 'boundary_evidence_sha256', 'boundary_exclusion_sha256', 'capture_sha256', 'cases', 'code_sha256', 'collision_mesh_sha256', 'control_steps', 'device_binding', 'device_uuid', 'driver_version', 'env_config_sha256', 'final_cfg_sha256', 'fixed_pose_verified', 'isaac_version', 'kit_version', 'mesh_collision_verified', 'mesh_evidence_path', 'mesh_evidence_sha256', 'mesh_faces_sha256', 'mesh_prim_path', 'mesh_transform_sha256', 'mesh_vertices_sha256', 'optimizer_steps', 'parent_sha256', 'purpose', 'recorded_edge_differences_first20', 'recorded_edge_mismatch_before_recompute', 'root_sensor_offset_b', 'scene_answer_sha256', 'started_epoch', 'terrain_assignment_verified', 'torch_version']
+
+== stale_packet sub-conditions
+sim_step diff all 1: True range 1 256
+sensor_step == sim_step for all env: True n_bad 0
+sensor_step sample row0/row1: [1, 1, 1, 1, 1, 1, 1, 1] [2, 2, 2, 2, 2, 2, 2, 2] sim [1, 2, 3]
+generation strictly increasing: True min diff 1 n nonpositive 0
+packet ids unique: 256 of 256
+episode 128>127: True first128 const: True after const: True
+episode ids row0/127/128/129: [0, 0, 0, 0, 0, 0, 0, 0] [0, 0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1, 1] [1, 1, 1, 1, 1, 1, 1, 1]
+
+== sensor_timestamp
+ts min/max 0.019999999552965164 2.560011148452759 diff min -2.5400111488997936 n neg 8 n zero 0
+first neg idx (step, env): [[127, 0], [127, 1], [127, 2], [127, 3], [127, 4], [127, 5]]
+
+== fixed_pose (first 16 steps)
+root_pos_w max dev in first 16: 0.008006078191101551
+root_quat_w max dev in first 16: 0.06158841401338577
+pos_w max dev in first 16: 0.008006078191101551
+root_pos_w[0] per env: [[-0.002300000051036477, -12.000100135803223, 0.4681999981403351], [9.999999747378752e-05, -12.002300262451172, 0.4124999940395355], [-0.0007999999797903001, -3.9999001026153564, 0.5065000057220459], [0.0, -4.002600193023682, 0.5539000034332275], [-0.0012000000569969416, 3.9997000694274902, 0.4066999852657318], [-0.00019999999494757503, 3.9981000423431396, 0.5710999965667725], [-0.001500000013038516, 12.0, 0.5637999773025513], [-0.00019999999494757503, 11.997200012207031, 0.45820000767707825]]
+root_pos_w[15] per env: [[-0.0019000000320374966, -12.000499725341797, 0.46700000762939453], [-9.999999747378752e-05, -11.999199867248535, 0.40939998626708984], [0.0007999999797903001, -3.9992001056671143, 0.5054000020027161], [0.0003000000142492354, -3.999799966812134, 0.5526000261306763], [-0.002300000051036477, 3.9995999336242676, 0.4074000120162964], [-0.000699999975040555, 3.9993999004364014, 0.5712000131607056], [-0.005499999970197678, 12.000200271606445, 0.566100001335144], [-0.008200000040233135, 11.999500274658203, 0.4652999937534332]]
+
+== geometry vs oracle
+edge expected count 2173 got count 2173 mismatch 0
+meta boundary_count: 2173
+  env 0 flat_0 edge mismatch 0 expected_edge 0 got 0
+  env 1 flat_90 edge mismatch 0 expected_edge 0 got 0
+  env 2 step_0 edge mismatch 0 expected_edge 254 got 254
+  env 3 step_90 edge mismatch 0 expected_edge 1184 got 1184
+  env 4 gap_0 edge mismatch 0 expected_edge 0 got 0
+  env 5 gap_90 edge mismatch 0 expected_edge 0 got 0
+  env 6 stones_0 edge mismatch 0 expected_edge 334 got 334
+  env 7 stones_90 edge mismatch 0 expected_edge 401 got 401
+scene_hit_mask mismatches (interior): 0
+world_height_answer max dev (interior): 4.577636718738898e-06  n > 2mm: 0
+miss count total 5120 per env [0, 0, 0, 0, 2560, 2560, 0, 0]
+oracle non-finite per env [0, 0, 0, 0, 2560, 2560, 0, 0]
