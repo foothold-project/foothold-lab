@@ -905,3 +905,10 @@
 - **등록 규칙 판정:** 「지도가 좋다」 아님 → 목표 지형 규칙상 「불명」. 단 gap 은 구간 전체가 0 아래라 **B 가 A 보다 확실히 나쁨**. 평지 · 계단은 구간이 0 을 걸쳐 「퇴행」 아님. S2-RESULT-PLAN 4 절 갈래: 「B 가 퇴행」(입력 이상 점검 · 재현) + 「불명」(지도 지우기 탐침 · encoder 동결 범위 · 학습 길이).
 - **영상:** step30 도구 첫 실제 실행 실패. 차이 예시 선택은 평가 결측 때문에 거절(`episodes_identity_or_completeness`, 결과 json 도 `result_identity_or_verification`) → 결과 전 고정 8 편으로 축소해 02:31 기동 → 첫 자식(gap 4000 A) Kit 이 episode 없이 끝나 `case_episode_missing:00` 로 중단. 원인 미확인 → sol 수리.
 - **GPU 0:** 02:22 부터 비어 있다(영상 도구 실패). 다음: update 0 평가(학습 전 대비) 를 바로 띄운다(밤 허용 범위 안).
+
+## 콘솔 창 뜨는 문제 원인 · 수리 (10/18 02:44:47 · lead)
+
+- **원인(코드로 확인):** 감독기를 띄우는 `s2_job_owner.WinKernel.create_suspended` 가 `DETACHED_PROCESS(0x8)` 로 띄워 감독기에 콘솔이 없고, 감독기가 건마다 띄우는 Isaac python 자식(콘솔 프로그램)이 새 콘솔을 받아 Windows Terminal 창으로 뜬다(평가 120 건이면 120 번). 같은 플래그가 `s2_step4a34/` · `a33/` 사본과 `s2_launch_stage0.py`, `s2_chain_runner.py` 에도 있다. super2 재현(mai-os 49af062)과 일치.
+- **수리:** 새 사본 `s2_lab/s2_step34_run` 에서 `DETACHED_PROCESS` 를 빼고 `CREATE_NO_WINDOW`(0x08000000) + 새 그룹만 쓰게 바꿈(파일 6 개, 계산 · 판정 코드는 그대로). 평가 묶음 목록 291/291 다시 봉인, 두 평가 기동기 핀 갱신.
+- **확인:** 알려진 답 시험 `test_no_console_window.py` (job 소유 자식이 콘솔 손자를 띄움) 새 창 0 개 PASS (bundle · s2_step4a34 두 사본). `test_s2_step32_continue` · `test_s2_step32_pin_record` · `test_s2_job_owner` 통과.
+- **지금 도는 update 0 평가(02:33 기동, 옛 코드)는 계속 창을 띄운다.** lead 가 멈추려 했으나 자동 안전 검사가 「작업 방해」 로 막음 → 팀장이 멈추거나 끝날 때까지(04:15 전후) 둔다. 다음 기동부터 `s2_step34_run` 을 쓴다.
