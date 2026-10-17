@@ -779,3 +779,10 @@
 - **조치:** sol step23(15:32): 검사 의미는 두고 벡터화, 반례 시간 측정 · 변이 CAUGHT, 다른 병목 정적 점검. 평가기 수리는 step24 로 미룸. 고치면 A 를 2,000 update 로 다시 띄운다(예상 시간이 한도 안이면 자동 계속).
 - **GPU 0:** 15:18:09 ~ 현재 비어 있다. 이유: 속도 수정을 기다린다.
 - 증거 사본: `night-tools-20261013/s2_stage0_first_collection/shortA_first10_20261017_1513/` (체크포인트 `.pt` 제외, SHA 목록 있음).
+
+## A 짧은 학습 재기동 기록 (step23 속도 수정) (10/17 15:49:01 · lead)
+
+- **근거:** sol step23(15:45): 센서 영수증 경로의 환경별 GPU→CPU 동기화 · 해시 루프를 배열별 한 번의 전송으로 바꿈. 영수증 필드와 stale 판정은 그대로. 순수 torch CUDA(1024 x 187 x 3, GPU 0, 3회 중앙값): update 완료 훅 0.288 → 0.0077 s(37.6 배), snapshot 0.261 → 0.0091 s(28.7 배), 같은 입력의 전체 raw_sha 가 두 판 동일. 호출 경로 추정은 update 당 19.45 → 0.62 s이며 **실제 Kit 시간이 아니다**. 소스 확인은 시작 sha + 걸음마다 mtime · 크기 + 종료 sha.
+- **확인:** 실행 위치 `s2_lab/s2_step23_run` 해시 243/243 일치(목록 SHA `04e16c05…`). lead 재실행(CPU): tracker 시험 4 PASS, 벡터 시험 정상 1 PASS + 지정 첫 FAIL 5 CAUGHT(env 하나의 ray · 타임스탬프 · pose 변경, 소스 mtime · 최종 sha), sol 전체 회귀 57/57(정상 PASS 371 · CAUGHT 21, 변이 PASS 2 · CAUGHT 84). 예행 `--rehearse --arm A` GO(번들 190 파일).
+- **동의 · 명령:** 같은 팀장 원문과 참석 문장, 참석자 team-lead, `consent_short_A.json`. `s2_step23_run/frozen/launch/s2_attended_launch_short.py --live --arm A ...` (인자는 15:13 기록과 같다). 한도 `--end-by 2026-10-17 23:59 KST` · `--max-wall-s 21600`: 예상이 넘으면 열 번째 update 뒤 자동 중단.
+- **GPU 0:** 15:18 부터 비어 있었다(약 31 분, 이유: 속도 수정 대기).
