@@ -1,0 +1,99 @@
+{
+  "baseline_sha256": "a5969397dc2c3edbc8e8bee275b3441c0440ee86a6fc08271e0a5ac31ba75ed9",
+  "first": {
+    "epoch": 1792217889.279,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/s2_step22_run/frozen/launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/s2_step22_run/frozen/runs/s",
+        "create_time": 1792217880.087,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 15192
+      }
+    ],
+    "time": "2026-10-17 15:18:09"
+  },
+  "gap_s": 4.0,
+  "gpu_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "known_pids": {
+    "165272": 1792217612.872694
+  },
+  "limits": [
+    "PASS means no residual OS process, no listed GPU compute pid of this attempt and both locks acquirable; it does not prove NVML compute 0 on WDDM",
+    "a process list the observer could not read is UNKNOWN, not none"
+  ],
+  "mode": "verify",
+  "reasons": [],
+  "receipts": {
+    "ctl/prelaunch.json": {
+      "sha256": "c7cf68a81f4270b172d30866a023d9cefcf104a2486407f2f5bb0dfd0272fd8e",
+      "size": 2359
+    },
+    "in/approval.json": {
+      "sha256": "8fc2408c28dcab6283e67b09ede976cc5b4079f86e88f735a3d16f87dc76ffc7",
+      "size": 1752
+    },
+    "in/manifest.json": {
+      "sha256": "297364c152dfc220ffed81a0a74e8d103a71a64b0732edd02ccc93cae4fec625",
+      "size": 8301
+    },
+    "in/request.json": {
+      "sha256": "39758787b070e60d3d7825bf47537188e639f2178925953b3d42bdaefa769b88",
+      "size": 3837
+    },
+    "summary.json": {
+      "sha256": "625489dabcd3040f0e4b30478f031fd96f802cd41625f3b326162203f8f9a856",
+      "size": 2795
+    }
+  },
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\s2_step22_run\\frozen\\runs\\shortA-20261017-151318-4e02ebe5",
+  "second": {
+    "epoch": 1792217893.57,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/s2_step22_run/frozen/launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/s2_step22_run/frozen/runs/s",
+        "create_time": 1792217880.087,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 15192
+      }
+    ],
+    "time": "2026-10-17 15:18:13"
+  },
+  "unknown": [],
+  "verdict": "PASS"
+}

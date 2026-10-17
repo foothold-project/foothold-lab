@@ -769,3 +769,13 @@
 - **동의 · 참석:** 팀장 원문 + 「내가 화면 앞에서 지켜본다.」(11:3x). 15:1x 팀장은 「이상한 감시기 같은걸로 작업 막지 말고」, 앞서 「무인 실행과 학습 허용하게 바꿔」라고 썼다. 참석자 team-lead. 학습 길이는 첫 10 update 에서 안다. 팀장이 자리를 비우면 참석 기록은 그 시점까지로 읽는다. lead 가 20 분마다 점검한다.
 - **명령:** `frozen/launch/s2_attended_launch_short.py --live --arm A --attendee team-lead --confirm LAUNCH-ATTENDED --consent-file s2_lab/consent_short_A.json --end-by '2026-10-17 23:59 KST' --max-wall-s 21600 --gpu-index 0 --evaluation-criteria s2_lab/evaluation_criteria_s2_ab.json --map-contract-verified --min-free-vram-bytes 8589934592 --running-floor-vram-bytes 2147483648 --min-free-disk-bytes 2147483648 --max-disk-bytes 5368709120`. 한 번의 2,000 update, 연장 없음, 예상이 한도를 넘으면 열 번째 update 뒤 정상 중단.
 - **GPU 0:** 14:27 부터 이 기동까지 비어 있었다(약 45 분, 이유: 짧은 학습 기동기와 감독기 증명 수정을 기다림).
+
+## A 짧은 학습 첫 10 update 결과 (10/17 15:32:51 · 15:13:18 기동 · lead)
+
+- **결론:** 처음으로 실제 학습 10 update 가 돌았다(A, N=1,024, 24 step/update, 환경 걸음 245,760, 장치 0, 관찰자 PASS, 비유한 0). 예상 총 시간이 한도를 넘어 열 번째 update 뒤 **정상 중단**(`BUDGET_STOP_PARTIAL`, `projected_budget_exceeded`). 부분 체크포인트 `checkpoint_000010.pt` 는 B 의 부모나 연장 출발점이 아니다.
+- **측정:** update 당 평균 **23.49 s**(23.0~24.3), 예상 2,000 update = 47,025 s = **13.06 시간/arm**. VRAM 사용 6.83~6.91 GB(여유 10.2 GB). E1 비교: N=8192 로 20,000 iter 를 23 h 14 m(10/10 12:48 ~ 10/11 12:02), iteration 4.25 s. 즉 S2 가 env-step 당 약 45 배(1,046 대 약 47,000 env-step/s) 느리다.
+- **학습 역학(10 update):** KL 첫 update 22.55(lr 1.5e-3 첫 걸음, 그 뒤 adaptive 로 1e-5~7.6e-5) 이후 0.0087~0.0185, 엔트로피 1.62 → 1.87, 값 손실 0.32 → 0.08, 기울기 최대 860(첫) → 10~29. 부분 reset 트레이스 PASS(reset 1 · 생존 1,023 · 374열 raw 재계산 대조). encounter 기록은 0(비어 있음, 알려진 한계). 이 10 update 가 학습이 건강하다는 증거는 아니다(첫 update 의 KL 22 는 설명이 필요한 점으로 둔다).
+- **병목 후보(코드 확인):** `s2_sensor_tracker_17v.py` 가 update 완료 훅과 `snapshot()` 에서 env 1,024 개를 파이썬으로 돌며 env 마다 `.cpu()` + sha256(8 env 진단에서 온 반 stale 증거). 소스 파일 sha 도 매 snapshot 마다 읽는다. 추정이지 측정이 아니다.
+- **조치:** sol step23(15:32): 검사 의미는 두고 벡터화, 반례 시간 측정 · 변이 CAUGHT, 다른 병목 정적 점검. 평가기 수리는 step24 로 미룸. 고치면 A 를 2,000 update 로 다시 띄운다(예상 시간이 한도 안이면 자동 계속).
+- **GPU 0:** 15:18:09 ~ 현재 비어 있다. 이유: 속도 수정을 기다린다.
+- 증거 사본: `night-tools-20261013/s2_stage0_first_collection/shortA_first10_20261017_1513/` (체크포인트 `.pt` 제외, SHA 목록 있음).
