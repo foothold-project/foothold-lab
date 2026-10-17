@@ -891,3 +891,8 @@
 - **sol step32 (00:1x 도착):** 해시 324/324, 평가 묶음 목록 291/291 일치. lead 깨끗한 복사본(`lead_rerun_step32`, CUDA 숨김)에서 `test_s2_step32_continue.py` 5 OK · `test_s2_step32_pin_record.py` 2 OK. 바뀐 것: 한 건 결측(`missing_reason`)은 기록하고 다음 건으로 계속, 운영 결함 5 건 연속일 때만 중단, 결측 쌍은 등록 규칙대로 비교에서 제외하고 개수 보고. 광선-지면 대조를 XY 내부 대신 3D 최단 거리로(같은 2 mm 상한, 벽 · 모서리 접점 오판 제거). 실패하면 접점 좌표 · 삼각형 · 오차를 기록. 관찰자 보류 · 묶음 해시 불일치는 경고 기록. 실제 gap-001 A 의 어긋남 원인은 미확인(이전 캡처에 접점 자료 없음).
 - **예행 평가 재기동:** `s2_lab/s2_step32_run/launch/s2_attended_launch_eval0.py`, 같은 동의 · 자원 인자, GPU 0. 근거: 팀장 직접 입력 밤 허용 범위(10/18 00:1x).
 - **GPU 0:** 23:48 부터 이 기동까지 비어 있었다(약 28 분, 이유: 평가기 step32 수리).
+
+## 예행 평가 통과 · 최종 평가 기동 기록 (10/18 00:24:23 · lead)
+
+- **예행 평가 (step32, 00:17:01 기동):** **8/8 건 실행, 결측 0, 부모 판정 INFORMATION_ONLY · reasons [] (예행의 통과 상태).** 지난번 멈춘 gap-001-s3109 도 A · B 모두 정상(3D 표면 대조 수리가 맞았다). 건당 자식 시간 29 ~ 84 s (gap-001 이 가장 김, 평균 약 48 s). 120 건이면 약 95 분 추정.
+- **최종 평가 기동:** `s2_lab/s2_step32_run/launch/s2_attended_launch_evalfull.py --live --update 2000`, A 영수증 `s2_step29a_run/reverified_A/chain.receipt.reverified.json`, B 영수증 `C:/Users/AI-WS01/s2_lab/s2_step29a_run/frozen_delivery/runs/shortB-20261017-211253-3bfaf5cd/ctl/claim/s2-short-ab-20261017-181213-890c5c24-B.claim/chain.receipt.json`, 동의 `consent_evalfull.json`(팀장 22:18 직접 입력), `--max-wall-s 21600`, GPU 0, `--end-by '2026-10-18 06:00 KST'`. 근거: 팀장 직접 입력 밤 허용 범위(10/18 00:1x).
