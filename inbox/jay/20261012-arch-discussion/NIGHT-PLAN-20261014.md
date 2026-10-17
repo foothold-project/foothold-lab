@@ -826,3 +826,9 @@
 - **평가기 step28(sol, 18:54 도착):** 해시 655/655 · 번들 287/287 일치. lead 깨끗한 복사본 CPU 재실행 전부 PASS(핀 3 · 번들 변조 거절, 건당 자식 120개 독립, 두 번째 환경 멈춤 시 첫 건 부분 결과 보존, update 2000만 A 대 B 결과, 감독기 Job 중첩 자식 소유). **실제 Kit 확인은 아직 없다**(건당 시간 · 닫기 · 120건 연속은 미확인).
 - **다음:** A 종료(20:39) 직후 평가기 smoke 8건(약 10분, GPU 0, consent_n3_eval0.json)으로 건당 새 Kit 자식 경로를 확인 → B 학습(약 2.5 h, 종료 23:20 전후) → update 2000 평가 120건.
 - **GPU 0:** A 학습 중(6.3 GB). GPU 1: 앱 약 13.6 GB.
+
+## A 학습 2000 update 완료, 마지막 증명 단계에서 HOLD, 평가기 smoke 기동 기록 (10/17 20:43 · lead)
+
+- **A 결과(사실):** 네 번째 기동(18:12:06)이 2000/2000 update 를 끝냈다(20:38:28 `checkpoint_002000.pt`, 종료 코드 0, `optimizer_steps_actual` 40000, `environment_steps` 49,152,000, 체크포인트 11개 모두 SHA 기록, 부모 SHA 변화 없음, 워치독은 시작 한 줄 + `supervisor_ended_by_itself`). 소요 약 2시간 28분. **KL 0.0143, 엔트로피 8.53, NaN 0.** 성능은 아직 미확인(평가 전).
+- **이상(사실):** 영수증 `chain.receipt.json` 의 `verdict` 가 **HOLD**, `reason` = `short_proof:name 'math' is not defined`, `boundary_ok` False. 학습이 아니라 마지막 증명 단계(`s2_train_launch.py` 쪽 short_proof)의 `math` 임포트 누락으로 보인다(원인 확인 중). B 기동은 A 영수증이 완료 상태여야 하므로, 이 HOLD 를 정직하게 풀어야 B 가 간다. 영수증을 손으로 고치지 않는다.
+- **GPU 0:** 20:38:28 부터 비어 있다(이유: A 영수증 HOLD 원인 확인). 이 틈에 평가기 smoke 8건(step28 건당 새 Kit 자식 경로의 첫 실제 시험)을 바로 띄운다. 동의 `consent_n3_eval0.json`, `--end-by '2026-10-18 06:00 KST'`, `--max-wall-s 3600`, GPU 0.
