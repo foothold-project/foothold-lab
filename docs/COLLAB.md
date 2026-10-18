@@ -76,10 +76,10 @@
 
 | 공간 | 성격 | 무엇이 사나 |
 |---|---|---|
-| **foothold-lab** `docs/` | 비공개 · 팀 | **정본만.** 리서치 정제본 · 회의록 · 결정 로그 · 기획 |
-| **foothold-lab** `deliverables/` | 비공개 · 팀 | 운영진에 낼 산출물 |
-| **foothold-lab** `inbox/` | 비공개 · 팀 | **팀원 제출함.** 다듬지 않은 것을 자기 폴더에 그냥 올린다 |
-| **foothold-lab** `sim/` `nav/` `common/` | 비공개 · 팀 | 개발 공간. go2 와 같은 트리 |
+| **foothold-lab** `docs/` | 공개 · 팀 | **정본만.** 리서치 정제본 · 회의록 · 결정 로그 · 기획 |
+| **foothold-lab** `deliverables/` | 공개 · 팀 | 운영진에 낼 산출물 |
+| **foothold-lab** `inbox/` | 공개 · 팀 | **팀원 제출함.** 다듬지 않은 것을 자기 폴더에 그냥 올린다 |
+| **foothold-lab** `sim/` `nav/` `common/` | 공개 · 팀 | 개발 공간. go2 와 같은 트리 |
 | **foothold-go2** | 공개 · 개발 | 코드 · 재현 절차. `sim/` `nav/` `common/` `guide/` `report/` |
 | **foothold-site** | 공개 · 산출물 | 빌드된 웹: **직접 수정 금지(미러)** |
 | **foothold-brand** | 공개 · 디자인 | 토큰 원본 · 로고 정본 · 브랜드 규칙 |
