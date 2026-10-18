@@ -1010,3 +1010,8 @@
 - **(2026-10-18 15:46:06 추가)** smoke canary 2 차 (15:41:52 M1 · 15:42:22 M2): 장면 생성 중 `ValueError: The asset path does not exist: <사본>/resources/go2/urdf/go2.urdf` (robot_lab/assets 가 패키지 기준 ../../../../resources). 사본에 resources 없음 → 원본 `resources/go2` 복사(내용 동일 확인). 사본의 robot_lab 이 실제로 불린 증거이기도 함. smoke 단위 정상 · canary 모두 소진. 그 전 15:40 시도는 mai-approve 가 `Desktop/jay/mai-tools/tools/mai-approve` 로 옮겨져 승인 호출 전에 끝남(횟수 소모 없음) → 실행 사본 경로 수정.
 - **팀장 직접 revoke + grant (lead 창 `!`):** step1 단위당 3 회 · canary 1 · 같은 기간 · 경로 · GPU, note 에 「10/18 15:4x 실전 결함 대응으로 단위당 3회」. approval sha256 4b512bf7… · audit 12 줄 체인 정상. check: smoke 두 단위 정상 시도 가능(counts normal 1 · canary 1).
 - smoke 3 차 (정상 시도) 기동: `s2_lab/step1_run_b2` (b2 + MAI 경로 + resources), M1 GPU 0 → 30 초 뒤 M2 GPU 1, 8192 env · 10 it.
+
+### 2026-10-18 16:14:43 재부팅 뒤 점검 (lead)
+- 15:49 블루스크린(0x50) 뒤 이 세션 · 30 분 점검 예약(08ba80bc) 은 살아 있음. mai-watch 수집기는 15:49:46 에 멈춰 있어 16:14 에 숨김으로 다시 띄움(PID 63712, 첫 주기 확인).
+- GPU 0 0 MiB · GPU 1 2838 MiB(화면). 두 장 모두 15:19 부터 빔. 까닭: smoke 결함 수정 · ASTRA 18c 반영 대기, 15:49 재부팅.
+- 승인 step1 유효(sha 4b512bf7…, 10/24 14:59Z). sol 은 step1_moects_marg 에서 b3 시험 중(test_step1_18b_b3.log 16:12 갱신), 아직 고정본 없음.
