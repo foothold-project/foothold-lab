@@ -1026,3 +1026,9 @@
 - pipeline 보고 C:/Users/AI-WS01/Documents/Codex/2026-09-01/new-chat/BSOD-20261018.md: 15:49 0x50 (인수2=2 쓰기, 인수4=0 해제된 PTE), WER 1019 의심 드라이버 nvlddmkm.sys 591.86. 16:44:33 nvlddmkm 153 은 별개 사건. 덤프 Access denied · 디버거 없음 → 호출 스택 미확인. 원인 미확정 (VRAM 부족으로 확정 금지).
 - lead 정정: 앞서 쓴 「블루스크린 직전 GPU 1 15.9 GB」 는 smoke 3 도중 관측값이고 15:49:52 순간 값은 독립 미확인.
 - 계획 반영: M1 (GPU 0) 계속, 10000 update 에서 멈춤 (stop_at_10000.py PID 28744). M2 재기동은 sol b4 메모리 수정 + 시각 붙은 메모리 기록 + 팀장 판단 뒤. 덤프 분석(관리자 · 로컬) 과 드라이버 판단은 팀장 확인 사항.
+
+### 2026-10-18 17:46:07 ASTRA 18d · 18e · M2 계획 · 논문 분석 (lead)
+- 18d: 「비교 유효」 b3 M1 대 b4 M2 공통 누적 비교 유지. 무인 큐 2.1(Job 예외가 arm 경계를 넘음) · 2.2(정상 마감을 failed 로 보고) 미해결 → 지금은 launcher 단독 실행. 파일 번호 model_20500 = 추가 501 회.
+- 18e: M2 구조 유지, 구현 비용 제거(rollout 전체 flatten 반복 복사 약 1.67 TiB/update, 조각별 CPU 동기화) 뒤 chunk 2048. 비교 checkpoint 동결 화 10/20 09:00 KST, 그때 두 arm 공통 최대 500 배수. 두 판 10000 은 계속.
+- sol b5 의뢰(위 최적화 + 2048). 도착 · 확인 뒤 M2 를 E1 에서 새로 시작(P1 시도 2/3). 그때까지 b4 M2(chunk 512) 계속.
+- 팀장 승인으로 arXiv PDF 세 편 내려받음(s2_lab/_papers). MARG · START 는 arXiv 와 원문에 코드 링크 없음. mai-code 분석 단위 ame2-vs-step1-m2 (이슈 #554) analyze 실행 중.
