@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · Codex Worker 작업서 (sol) · 1 단계 코드
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-18 13:4x
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-18 13:20
 > 근거: `DESIGN-step1-moects-plus-marg.md` (이 폴더, ASTRA 검증 중) · E1 코드 `C:/isaac/ext/go2_rl_robotlab` @28b4516 · `C:/isaac/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/go2/gap_training/gap_observations.py` · S2 교훈(`RESEARCH-heightscan-architectures.md` 1 절)
 > 요지: 1 단계(E1 MoE-CTS 이어 학습 · 구멍 +1 · 바닥 없는 gap · MARG 발 보상 · 지형 갈래)에 필요한 코드를 CPU 로 만든다. ASTRA 답에 따라 갈릴 부분은 설정값으로 둔다
 > 상태: 작업 지시 (CPU 만 · GPU 실행은 lead)

@@ -1,5 +1,5 @@
 > 분류: A/정책학습 · 설계 초안 (ASTRA 검증 요청용)
-> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-18 13:3x
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-18 13:18
 > 근거: 팀장 lead 창 직접 입력 (10/18 12:33 ~ 13:2x) · `RESEARCH-heightscan-architectures.md` · `REPORT-seokheon-ame2.md` · `inbox/jay/20261012-arch-discussion/PAPERS-architecture.md` · E1 코드 `C:/isaac/ext/go2_rl_robotlab` @28b4516 · S2 결과(`s2_lab/s2_step32_run/results_u2000/S2-AB-UPDATE2000.json`, `s2_lab/s2_step34_run/results_full/S2-AB-RESULT.json`)
 > 요지: 출발선은 E1(MoE-CTS, 고유수용감각으로 teacher 의 지형 latent 를 짐작하는 보행 기본기). 여기에 MARG → AME-2 → START 를 쉬운 것부터 하나씩 붙인다. 오늘(00:00 까지) 은 1 단계: 구멍 표현을 바로잡고 MARG 식 지형 갈래를 붙여 gap 부터 푼다
 > 상태: 초안 · 팀장 방향 확인됨 · ASTRA 검증 전 · GPU 실행 전
