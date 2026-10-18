@@ -981,3 +981,10 @@
 - **페이지:** 8판 버전 25 (S2 영상 10편 · 평가 대조 · 밤 흐름). 판 용량 256 MiB 때문에 S2 영상은 아티팩트 자산 저장소(/_blob/). 받은 자산 sha256 원본과 일치. 로컬 사본 CDP 세 폭 · 두 테마 넘침 0, 영상 4 개 readyState 4. 로그인 세션 실제 주소 화면은 미확인(Chrome 확장이 새 창을 띄워서 쓰지 않음). 저장소 85656548 · #550 6240456482 · 텔레그램 도착 603자.
 - **sol step36 (05:24 도착):** 해시 872/872 일치. lead 사본 `C:/Users/AI-WS01/s2_lab/s2_step36_run` (CUDA 숨김) 에서 `test_s2_step36.py` 종료 0, PASS 11 · CAUGHT 7 (sol 기록과 같음). 핵심 코드 직접 읽음: B0 = B 정책 모드 + `training_map(mode="A")` (매 step 지도 최대 절댓값 0 기록), Bc = `actor_in_map` forward hook 으로 출력 0 (실제 `S2MapActorCritic.actor_mean` 이 모듈 호출이라 hook 이 걸림). 증거 길이 ≠ step 수이면 결측. 보통 A/B 평가 핵심 여덟 파일 SHA 동일(sol 기록).
 - **실행 대기:** 기동기는 참석 동의(`s2_mapprobe_once`) 또는 M1 상시 승인(`s2-mapprobe-u2000`)을 읽기만 한다. 팀장 grant 또는 직접 지시 전에는 띄우지 않는다. GPU 0 은 05:12:47 부터 계속 비어 있다(같은 이유).
+
+## 팀장 직접 입력 (lead 창) · 1 단계 실행 범위 원문 기록 (2026-10-18 14:33:59 · lead)
+
+- **원문 (그대로):** 「1단계 M1/M2 P1 · P2 학습과 평가를 GPU 0 · 1에서 월요일까지 무인으로 진행해」
+- **같은 메시지의 앞 문장 (그대로):** 「mai tools에서 apporove 활용해서 그럼 작업에 문제 안되게 허용 범위 정해서 진행해. 그럼 문제 없지?」
+- 범위 해석(lead): 설계 `inbox/jay/20261018-next-arch/DESIGN-v2-moects-terrain-modules.md` 의 1 단계 M1 · M2 의 P1 · P2 학습과 그 평가, GPU 0 (c08e23b0) · GPU 1 (315d098f), 마감 2026-10-19 (월) 23:59 KST. 판정 규칙 `evaluation_criteria_step1_p1.json` (결과 전 등록). M0 · 다른 시드 · START 식은 이 범위 밖이라 따로 묻는다. 유료 · 외부 자원 · 데이터 삭제 · 남의 프로세스 종료 · 시스템 설정 · 외부 발송은 여전히 그때마다 확인.
+- mai-approve: 설계상 `grant` 는 소유자가 직접 실행한다(`method: owner-run mai-approve`). lead 는 grant 를 대신 만들지 않고 팀장이 붙여 넣을 명령을 드린다. 실행기는 띄우기 직전 `receipt`, 끝나면 `finish` 를 부른다.
