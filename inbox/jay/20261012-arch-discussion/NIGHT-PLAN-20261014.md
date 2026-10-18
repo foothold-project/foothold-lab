@@ -1048,3 +1048,6 @@
 - 19:07:56 STOP 두 판, 19:08:20 둘 다 경계 저장 종료: M1 b3 model_22069.pt (추가 2070 회), M2 b6 model_20086.pt (추가 87 회). GPU 0 · 1 19:08 부터 빔 (재설계 대기).
 - 의뢰: Fable 독립 검토(VERIFY-fable-19a.md), ASTRA 18h (같은 물음), sol b7 보류. mai-code START · HiPAN 깊은 분석 실행 중.
 - 승인: M2 P1 정상 시도 3/3 소진. 재개에는 팀장이 mai-approve revoke · grant 를 직접 실행해야 함(문구 전달).
+
+### 2026-10-18 19:14:00 팀장 재승인 확인 (lead)
+- 팀장이 lead 창에서 직접 실행: revoke(사본 step1.revoked.20261018T101352Z.json) → grant scope step1, 2026-10-24T14:59:00Z 까지, 단위당 6 · canary 1, 경로 · GPU 두 장 그대로, sha256 56d4fef2…. note 는 팀장 원문.
