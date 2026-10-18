@@ -990,3 +990,11 @@
 - mai-approve: 설계상 `grant` 는 소유자가 직접 실행한다(`method: owner-run mai-approve`). lead 는 grant 를 대신 만들지 않고 팀장이 붙여 넣을 명령을 드린다. 실행기는 띄우기 직전 `receipt`, 끝나면 `finish` 를 부른다.
 - **(2026-10-18 14:38:01 추가) 팀장이 직접 grant 실행 (lead 창 `!` 입력):** scope `step1` · granted 2026-10-18T05:37:48Z · valid_until 2026-10-19T14:59:00Z · method owner-run · unattended · 경로 `C:/Users/AI-WS01/s2_lab` · `C:/isaac/ext/go2_rl_robotlab/_eval` · GPU 두 장 UUID · 단위당 1 회 + canary 1 · approval sha256 15f54e48c315ee99… · audit 1 줄 head bd00d826…. lead 가 show · check --inquiry · audit-verify 로 되읽음(ok).
 - **(2026-10-18 14:38:53 추가) 팀장이 직접 extend 실행:** step1 valid_until 2026-10-24T14:59:00Z (토 23:59 KST, 일주일 단위 상시 승인 결정에 맞춤) · 새 approval sha256 8dd687d01bbf1672… · 단위별 횟수는 extend 로 초기화되지 않음. 작업 범위는 그대로 「1 단계 M1/M2 P1 · P2 학습과 평가」. Linux 이전 시작 때 revoke.
+
+## 2026-10-18 15:18:19 1 단계 코드 확인 · 짧은 실제 확인 기동 (lead)
+
+- sol 묶음: [가] `s2_lab/step1_18b_a_frozen` (14:44, smoke 전용) · **[나] b1 `s2_lab/step1_18b_b1_frozen`** (15:11, 재개 · 상태 기록, 긴 P1 은 이것부터). 평가기 · P2 지형은 미납.
+- lead 확인: b1 해시 116/116 · 깨끗한 사본 `lead_rerun_step1_b1` (CUDA 숨김) unittest 21/21 OK · **정적 검사** 80 개 .py 전부 pyflakes 정의 안 된 이름 0 · ruff F821/F822/F823/F811 0 (검사기는 import math 빠진 파일로 먼저 시험 · 잡음 확인). 바뀐 파일: actor_critic_moe_cts · moe_cts · runner · env_cfg 등 + 새 파일 9.
+- 주의(실측으로 확인할 것): Isaac 환경에는 원본 robot_lab · rsl_rl 이 설치되어 있다. 실행기가 PYTHONPATH 앞에 사본을 둔다. 실제 어느 쪽이 불렸는지는 smoke 완료 검사(actor 93 열 · 지도 key) 로 본다.
+- ASTRA 18c (코드 검토) 의뢰 15:1x, 진행 중.
+- **기동:** 실행 사본 `s2_lab/step1_run_b1` (해시 116/116) 에서 smoke M1 (GPU 0) · M2 (GPU 1), 8,192 env · 10 iteration 동시, 창 숨김. 승인 단위 step1-m1-smoke · step1-m2-smoke (팀장 grant step1). 목적: 메모리 최고치 · 처리량 · 끝 처리(체크포인트 · 확인서 · finish) 실측.
