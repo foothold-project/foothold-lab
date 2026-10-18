@@ -1015,3 +1015,9 @@
 - 15:49 블루스크린(0x50) 뒤 이 세션 · 30 분 점검 예약(08ba80bc) 은 살아 있음. mai-watch 수집기는 15:49:46 에 멈춰 있어 16:14 에 숨김으로 다시 띄움(PID 63712, 첫 주기 확인).
 - GPU 0 0 MiB · GPU 1 2838 MiB(화면). 두 장 모두 15:19 부터 빔. 까닭: smoke 결함 수정 · ASTRA 18c 반영 대기, 15:49 재부팅.
 - 승인 step1 유효(sha 4b512bf7…, 10/24 14:59Z). sol 은 step1_moects_marg 에서 b3 시험 중(test_step1_18b_b3.log 16:12 갱신), 아직 고정본 없음.
+
+### 2026-10-18 16:58:09 b3 확인 · 짧은 확인 · M1 P1 시작 (lead)
+- b3 확인: 해시 157/157, 깨끗한 사본 unittest 29/29 (내 복사가 fixtures 의 *.log 를 빼서 1 건 오류 났다가 다시 넣고 OK), 86 개 .py undefined 0, 실제 launcher 환경으로 root 형제 import 됨, 실전 수정 3 개 포함.
+- 짧은 확인 4 차 (step1_run_b3, 4096 env): 첫 기동이 --end-by 누락으로 승인 전 종료(시도 안 씀, runs 없음). 재기동 M1 16:38 10 update RUN_COMPLETE_VERIFIED (학습 0.42 s · 수집 3.1 s, KL 0.012). M2 첫 update 학습 289.8 s, GPU 1 최고 15.9 GB, 블루스크린 직전과 같은 상태라 16:44 lead 가 중단(HOLD, M2 smoke 정상 시도 0 남음).
+- M1 P1: launch_step1 단독, GPU 0, 4096 env, 13000 update, 마감 2026-10-19T08:00+09:00, 500 마다 저장, 16:46:05 시작. 16:57 update 20178, 3.6 s/update, KL 0.017, NaN 0. 텔레그램 도착 436 자.
+- GPU 1: 16:44 부터 빔. 까닭 M2 갱신 메모리. sol 에 b4 (env · rollout · minibatch 그대로, gradient accumulation) 의뢰, ASTRA 18d 검토 중.
