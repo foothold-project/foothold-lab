@@ -1042,3 +1042,9 @@
 - 팀장 지시(18:2x 「지금 구조 바꿔 다시」). sol b6: 해시 181/181, 깨끗한 사본 51/51, undefined 0, actor 폭 +160 (actor_critic_moe_cts.py:151,318). ASTRA 18f: 설계 타당 · 공식 정책 재현 아님 · 큰 M2 는 2048 보다 낮게 시작.
 - b5 M2 18:33:58 STOP → 18:34:04 경계 저장(model_20089.pt). b6 M2 18:34:14 시작, P1 시도 3/3, chunk 1024 (LEAD-FIX-chunk1024.diff), 10000 update, 종료 2026-10-21T12:00+09:00. 첫 세 update: 수집 3.9 s · 학습 18.6~19.2 s, GPU 1 최고 11.79 GB (72%).
 - mai-code MARG · START 분석(marg-start-vs-step1-m1) 끝: M1 은 MARG elevation 폭 [128,64,16] 을 따르나 명시 추정기(속도 · 접촉 7 차원, [258,128,7]) · ReLU · 동시 학습이 없음. MARG 원문 V-C: 몸 속도나 지형 지도가 없으면 불연속 지형 성공률 거의 0.
+
+### 2026-10-18 19:09:36 팀장 지시: 전부 멈추고 논문 충실 재설계 (lead)
+- 팀장 원문: 「멈추고 M1도 다시 설계한 걸로 가자. 왜냐하면 추정기, ReLU 이런게 재현, 구현이 안되면 완전 의미 없거든.」 · 「fable 세션 + astra 세션 검증한 결과로 lead가 종합 검토해서 sol에 작업지시 -> lead, astra 코드 검증 -> m1, m2 실험 재개 순으로 모두 승인하니 진행하도록해.」
+- 19:07:56 STOP 두 판, 19:08:20 둘 다 경계 저장 종료: M1 b3 model_22069.pt (추가 2070 회), M2 b6 model_20086.pt (추가 87 회). GPU 0 · 1 19:08 부터 빔 (재설계 대기).
+- 의뢰: Fable 독립 검토(VERIFY-fable-19a.md), ASTRA 18h (같은 물음), sol b7 보류. mai-code START · HiPAN 깊은 분석 실행 중.
+- 승인: M2 P1 정상 시도 3/3 소진. 재개에는 팀장이 mai-approve revoke · grant 를 직접 실행해야 함(문구 전달).
