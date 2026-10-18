@@ -1021,3 +1021,8 @@
 - 짧은 확인 4 차 (step1_run_b3, 4096 env): 첫 기동이 --end-by 누락으로 승인 전 종료(시도 안 씀, runs 없음). 재기동 M1 16:38 10 update RUN_COMPLETE_VERIFIED (학습 0.42 s · 수집 3.1 s, KL 0.012). M2 첫 update 학습 289.8 s, GPU 1 최고 15.9 GB, 블루스크린 직전과 같은 상태라 16:44 lead 가 중단(HOLD, M2 smoke 정상 시도 0 남음).
 - M1 P1: launch_step1 단독, GPU 0, 4096 env, 13000 update, 마감 2026-10-19T08:00+09:00, 500 마다 저장, 16:46:05 시작. 16:57 update 20178, 3.6 s/update, KL 0.017, NaN 0. 텔레그램 도착 436 자.
 - GPU 1: 16:44 부터 빔. 까닭 M2 갱신 메모리. sol 에 b4 (env · rollout · minibatch 그대로, gradient accumulation) 의뢰, ASTRA 18d 검토 중.
+
+### 2026-10-18 17:12:47 pipeline 블루스크린 진단 반영 (lead)
+- pipeline 보고 C:/Users/AI-WS01/Documents/Codex/2026-09-01/new-chat/BSOD-20261018.md: 15:49 0x50 (인수2=2 쓰기, 인수4=0 해제된 PTE), WER 1019 의심 드라이버 nvlddmkm.sys 591.86. 16:44:33 nvlddmkm 153 은 별개 사건. 덤프 Access denied · 디버거 없음 → 호출 스택 미확인. 원인 미확정 (VRAM 부족으로 확정 금지).
+- lead 정정: 앞서 쓴 「블루스크린 직전 GPU 1 15.9 GB」 는 smoke 3 도중 관측값이고 15:49:52 순간 값은 독립 미확인.
+- 계획 반영: M1 (GPU 0) 계속, 10000 update 에서 멈춤 (stop_at_10000.py PID 28744). M2 재기동은 sol b4 메모리 수정 + 시각 붙은 메모리 기록 + 팀장 판단 뒤. 덤프 분석(관리자 · 로컬) 과 드라이버 판단은 팀장 확인 사항.
