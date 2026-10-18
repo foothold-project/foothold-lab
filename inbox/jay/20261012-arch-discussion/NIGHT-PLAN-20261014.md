@@ -1032,3 +1032,8 @@
 - 18e: M2 구조 유지, 구현 비용 제거(rollout 전체 flatten 반복 복사 약 1.67 TiB/update, 조각별 CPU 동기화) 뒤 chunk 2048. 비교 checkpoint 동결 화 10/20 09:00 KST, 그때 두 arm 공통 최대 500 배수. 두 판 10000 은 계속.
 - sol b5 의뢰(위 최적화 + 2048). 도착 · 확인 뒤 M2 를 E1 에서 새로 시작(P1 시도 2/3). 그때까지 b4 M2(chunk 512) 계속.
 - 팀장 승인으로 arXiv PDF 세 편 내려받음(s2_lab/_papers). MARG · START 는 arXiv 와 원문에 코드 링크 없음. mai-code 분석 단위 ame2-vs-step1-m2 (이슈 #554) analyze 실행 중.
+
+### 2026-10-18 18:11:54 M2 b5 로 다시 시작 (lead)
+- b5 확인: 해시 173/173, 깨끗한 사본 46/46, undefined 0, 표본 함수 diff 직접 확인(field[i % T, i // T]).
+- b4 M2 는 18:08:58 STOP → 18:09:17 경계 저장 종료(model_20073.pt, HOLD 표시). GPU 1 빈 시간 약 10 초.
+- M2 b5 18:09:27 시작, P1 시도 2/3, 4096 env, chunk 2048, 10000 update, 종료 2026-10-21T12:00+09:00(팀장 「M2 도 10,000」 · 「권고대로」). 첫 네 update: 수집 3.9 s · 학습 11.2 s, GPU 1 최고 11.35 GB.
