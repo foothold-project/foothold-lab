@@ -1001,3 +1001,9 @@
 - **(2026-10-18 15:20:58 추가) smoke 1 차 결과:** M1 (15:18:25) · M2 둘 다 Isaac 시작 6 초 뒤 `train_step1.py:125` → `step1_resume.py:13 from step1_setup import ...` 에서 `ModuleNotFoundError: No module named 'step1_setup'`. 실행기 종료 코드 2 · exit.json HOLD · approval finish failed. 학습 0 iteration. CPU 시험은 시험 코드가 그 폴더를 sys.path 에 넣어 숨겼다. pyflakes · ruff 는 import 가 풀리는지는 안 본다.
 - lead 조치: 실행 사본에서 `from robot_lab.tasks.go2.step1_setup import ...` 로 한 줄 수정(`LEAD-FIX-step1_resume-import.diff`, 새 sha256 79a335e3a48ea41b…). AST import 검사기(`tmp/import_audit.py`, 이번 결함을 잡음으로 시험 · 나머지 두 표시는 TYPE_CHECKING 과 원본 try/except 라 무해) 로 바뀐 62 개 파일 재검사, 문제 0. sol 에 같은 수정 · 패키지 경로 import 시험 · AST import 시험 · b2 고정 요청.
 - 승인 단위: step1-m1-smoke · step1-m2-smoke 정상 1 회 사용, canary 1 회 남음. ASTRA 18c (코드 검토) 를 받고 「띄우기 전 고칠 것」 을 반영한 뒤 canary smoke 를 띄운다. GPU 0 · 1 은 15:19 부터 빔(이유: 이 수정 · 검토 대기).
+
+## 2026-10-18 15:40:06 ASTRA 18c · b2 확인 · smoke canary 기동 (lead)
+
+- ASTRA 18c: b1 그대로 기동 권고 안 함. 띄우기 전: 2.1 import(b2 에서 고침) · 2.2 큐 예외가 두 학습을 같이 죽이고 finish 누락 · 2.3 metrics 가 먼저 오면 체크포인트 추적 누락 · 2.4 STOP · 마감 저장 · 감독기 정체 · GPU UUID 실제 대조 · run 별 USD 경로 없음 · 2.5 발 invalid 종료 한 step 늦음. 2.2 ~ 2.5 는 큐(긴 P1) 쪽 → sol b3 (목표 17:30).
+- b2 `s2_lab/step1_18b_b2_frozen`: 해시 120/120, b1 대비 step1_resume import 수정 · runner 에서 쓰지 않는 RoboGauge 선택 연결 제거 · 시험(import 감사 포함) 추가. lead AST import 감사 73 개 무해 1 (TYPE_CHECKING), pyflakes 「정의 안 된 이름」 은 원본 robot_lab import * 안내 1 건뿐.
+- **smoke canary 기동:** 실행 사본 `s2_lab/step1_run_b2` (120/120), launch_step1.py 단일 실행 경로, M1 GPU 0 → 30 초 뒤 M2 GPU 1 (USD 임시 폴더 초 단위 충돌 회피), 8,192 env · 10 it · attempt canary_retry (smoke 단위 마지막 1 회).
