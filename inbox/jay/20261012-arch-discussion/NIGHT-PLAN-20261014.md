@@ -998,3 +998,6 @@
 - 주의(실측으로 확인할 것): Isaac 환경에는 원본 robot_lab · rsl_rl 이 설치되어 있다. 실행기가 PYTHONPATH 앞에 사본을 둔다. 실제 어느 쪽이 불렸는지는 smoke 완료 검사(actor 93 열 · 지도 key) 로 본다.
 - ASTRA 18c (코드 검토) 의뢰 15:1x, 진행 중.
 - **기동:** 실행 사본 `s2_lab/step1_run_b1` (해시 116/116) 에서 smoke M1 (GPU 0) · M2 (GPU 1), 8,192 env · 10 iteration 동시, 창 숨김. 승인 단위 step1-m1-smoke · step1-m2-smoke (팀장 grant step1). 목적: 메모리 최고치 · 처리량 · 끝 처리(체크포인트 · 확인서 · finish) 실측.
+- **(2026-10-18 15:20:58 추가) smoke 1 차 결과:** M1 (15:18:25) · M2 둘 다 Isaac 시작 6 초 뒤 `train_step1.py:125` → `step1_resume.py:13 from step1_setup import ...` 에서 `ModuleNotFoundError: No module named 'step1_setup'`. 실행기 종료 코드 2 · exit.json HOLD · approval finish failed. 학습 0 iteration. CPU 시험은 시험 코드가 그 폴더를 sys.path 에 넣어 숨겼다. pyflakes · ruff 는 import 가 풀리는지는 안 본다.
+- lead 조치: 실행 사본에서 `from robot_lab.tasks.go2.step1_setup import ...` 로 한 줄 수정(`LEAD-FIX-step1_resume-import.diff`, 새 sha256 79a335e3a48ea41b…). AST import 검사기(`tmp/import_audit.py`, 이번 결함을 잡음으로 시험 · 나머지 두 표시는 TYPE_CHECKING 과 원본 try/except 라 무해) 로 바뀐 62 개 파일 재검사, 문제 0. sol 에 같은 수정 · 패키지 경로 import 시험 · AST import 시험 · b2 고정 요청.
+- 승인 단위: step1-m1-smoke · step1-m2-smoke 정상 1 회 사용, canary 1 회 남음. ASTRA 18c (코드 검토) 를 받고 「띄우기 전 고칠 것」 을 반영한 뒤 canary smoke 를 띄운다. GPU 0 · 1 은 15:19 부터 빔(이유: 이 수정 · 검토 대기).
