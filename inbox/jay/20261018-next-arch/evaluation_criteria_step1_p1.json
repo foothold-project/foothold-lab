@@ -1,0 +1,35 @@
+{
+  "schema": "foothold-step1-p1-criteria-v1",
+  "registered_before_results": true,
+  "registered_at_kst": "2026-10-18 14:26",
+  "registered_by": "lead session. Team lead direction typed in the lead window on 2026-10-18 (12:33 to 14:0x): MoE-CTS E1 base, attach paper terrain modules side by side, select our experiment by Tuesday (at the latest Wednesday). Revised with VERIFY-astra-18b sections 1, 3, 4, 5.",
+  "design": "DESIGN-v2-moects-terrain-modules.md (same folder) as amended by VERIFY-astra-18a.md and VERIFY-astra-18b.md",
+  "arms": {
+    "E1": "go2_rl_robotlab logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/model_20000.pt, sha256 c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8, no further training",
+    "M1": "E1 + MARG-inspired terrain branch: processed height 187 -> MLP 128,64,16 -> actor input 93",
+    "M2": "E1 + AME-2-inspired terrain module for velocity tracking: local CNN + point features, global max-pool, query from latent+single_obs+global, MHA d64 head4, output 16 -> actor input 93"
+  },
+  "comparison_checkpoint": "the checkpoint at the largest additional update count that both M1 and M2 reached at the end of P1 (same env count and rollout length). No selection of a best checkpoint by evaluation. Faster arm's extra updates are reported separately.",
+  "evaluation": {
+    "policy_path": "CTS student act_inference only (never teacher)",
+    "primary_command": "forward 0.5 m/s (inside the training range)",
+    "secondary_command": "forward 1.0 m/s, reported separately, never merged into the 0.5 table",
+    "cases_gap": "the 20 registered gap cases of evaluation_seeds_s2_ab.json, re-evaluated for E1, M1 and M2 with the 0.5 m/s command",
+    "cases_flat": "the 10 registered flat cases, same re-evaluation",
+    "gap_width_bins": "new scenes with gap widths 0.10, 0.20, 0.30, 0.40, 0.50, 0.60 m, N = 10 each, fixed seeds, same for all arms. Diagnostic.",
+    "success": "reached the baseline AND survived (both components reported separately as well)",
+    "ablation": "M1 and M2 with the terrain latent contribution set to zero, reported as map dependence of the trained arm (not as a return to E1)"
+  },
+  "decision_rules": {
+    "e1_ceiling_check": "E1 is evaluated first. If E1 gap success on the 20 cases is 0.80 or higher, the primary gap metric becomes the equal-weight mean of the 0.30, 0.40, 0.50 and 0.60 m bins (N = 10 each), fixed now before any arm result is seen.",
+    "primary_gap_metric": "paired combined success difference on the 20 registered gap cases (or the ceiling fallback above). Always report the four-cell paired table (both succeed, only new, only E1, both fail), valid denominator, held and errored cases, and the Tango 95% interval.",
+    "meaningful_gap": "for an arm M: (M - E1) mean difference >= +20 percentage points AND Tango 95% lower bound > 0 on the primary gap metric. With n = 20 this needs about 4 more successes than losses with no reverse pairs (ASTRA 18b table). If the interval includes 0, write 'improvement not shown in this sample'.",
+    "hard_widths_summary": "equal-weight mean of the 0.30 to 0.60 m bins with all raw counts. Diagnostic and tie-breaker only, not a separate statistical proof.",
+    "flat_preservation": "three labels, never 'gait failure' from the flat sample alone: (a) observed regression = extra failures, stalls or repeated leaping versus E1 on paired flat cases; (b) maintained, preservation unproven = no degradation seen but the interval is wide (10 cases give about +/-27.8 pp even when identical); (c) non-inferiority within 5 pp = only with a confirmation sample of at least 73 paired cases, assigned later to the chosen candidate.",
+    "gait_flags": "caution flags only: diagonal share of two-foot support < E1 - 15 pp, or four-foot flight > E1 + 10 pp, measured per episode then summarized per case, with denominators and stall share shown. Not a training stop and not a failure label by itself.",
+    "m1_vs_m2": "paired difference on the primary gap metric at the comparison checkpoint. If the interval includes 0: 'difference not shown'. Operational choice then uses the hard widths summary and the P2 common-budget result; if still tied, M1 (simpler).",
+    "p2_rule": "both M1 and M2 continue from their P1 comparison checkpoints with the same P2 budget and terrain mix (existing 8 types 0.40, bottomless gap 0.30, bottomless stepping stones 0.20, bottomless beams 0.10). If only one arm goes to P2 for operational reasons, it is reported as 'adaptation of the P1 candidate', and the M1 vs M2 P2 comparison is marked unverified.",
+    "fix_and_scale": "an arm that meets meaningful_gap without an observed flat regression at the Tuesday decision point becomes the candidate 'our experiment' and is scaled on Linux. If none by Wednesday, report causes and the next design.",
+    "no_selective_repetition": "no reruns to pick a better result, no widening of these rules after results, one training seed so results are trends; M0 (same bundle without terrain branch) is a later control needed before claiming the pure effect of the terrain branch."
+  }
+}
