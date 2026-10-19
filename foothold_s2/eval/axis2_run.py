@@ -115,9 +115,10 @@ def run(args, adapters, runtime, device, simulation_app):
             pin.want[:] = nxt
             term.commands[:, :3] = nxt
 
-            with torch.inference_mode():
-                obs, _r, dones, _e = env.step(action)
-                policy_nn.reset(dones)
+            # step 은 inference_mode 밖에서 부른다. 안에서 부르면 다음 시나리오의 raw.reset() 이
+            # 「inference tensor 를 밖에서 고친다」 로 죽는다 (옛 축 2 하네스와 같은 구조).
+            obs, _r, dones, _e = env.step(action)
+            policy_nn.reset(dones)
 
             newly = alive & raw.termination_manager.terminated
 

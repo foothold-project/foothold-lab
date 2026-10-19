@@ -12,8 +12,10 @@
 - L1 축 1: `C:/Users/AI-WS01/s2_lab/eval_new/l1_axis1_smoke1` (rough6 · 0.5 m/s · pyramid_stairs · 8 판). 판 8 개의 전진 거리 · 통과선 이탈 · 속도 오차 · overall 이 옛 `eval_e1_v2axes/axis1/rough6/d0.5/v0.5` 같은 (env, 판) 줄과 전부 같음(옛 값 반올림 자리까지). 종료 코드 0, Traceback 0, CSV 8 줄.
 - 돌고 있는 것(건드리지 말 것): `eval_new/chain_l1.sh` 가 l1_axis3_left, l1_axis3_spin, l1_axis2 를 차례로 돌린다. 끝나면 `eval_new/chain_l1.done`. 각 폴더 rc.txt 와 run.log 의 Traceback 수로 판정.
 
-## 멈춘 곳
-- 축 3 · 축 2 예행 결과를 아직 안 읽음(미확인). 축 2 는 E1 9/9 와 요 추종 0.84~0.98 이 나오는지 evidence/E1-vs-v2-axis2.csv 와 맞대야 함.
+## 멈춘 곳 (00:55 갱신)
+- chain_l1 끝남. 축 3 좌(0,0.5,0, pyramid_stairs · wave 각 8 판): rc 0, Traceback 0, R/S/J 전부 1.0, 명령 방향 진행 1.00, 방향 이탈(요 30도 초과) 비율 0.375 · 0.25. 표본 8 판이라 구간이 넓음. degenerate 표시(전부 1)는 이 표본 크기 탓일 수 있음(미확인).
+- 축 3 제자리 회전 1.2 (gap · stepping_stones 각 8 판): rc 0, S 1.0, 요 추종비 0.984 · 1.004.
+- 축 2: 첫 실행이 시나리오 둘째 reset 에서 RuntimeError (inference tensor). 원인은 env.step 을 inference_mode 안에서 부른 것. axis2_run.py 에서 step 을 밖으로 빼서 고침(재실행 안 함, 미확인). 재실행: `bash foothold_s2/eval/run_kit.sh <out> axis2 --policy e1 --checkpoint C:/Users/AI-WS01/s2_lab/step1_run_b2/fixtures/model_20000.pt`, 약 5 분, 그 뒤 axis2_cells.csv 를 evidence/E1-vs-v2-axis2.csv 와 대조(E1 9/9, 요 추종 0.84~0.98 기대).
 
 ## 다음 한 걸음
 1. chain_l1.done 확인 후 세 폴더를 `manifest.check_run_dir` 로 점검(종료 코드를 믿지 말 것), axis2_cells.csv 를 evidence 와 대조.
