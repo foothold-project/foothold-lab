@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (10 보행층 · 지형과 커리큘럼)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: START 2512.13153v1 259~277 · 283~285 · 295 · 307~325 · 339~341 행 · 선행 2409.15692v2 280 · 284 행(부록 A · B) · Isaac Lab 2.3.2 `terrains/config/rough.py` 12~51 · `config/go2/rough_env_cfg.py` 25~27 · `velocity/mdp/curriculums.py` 47~51 · v2 보고서 6-4~6-8 · 7 절(883 행) · 14 문서 · REPORT-seokheon-ame2.md 4 절(125 행) · evidence/deep-research-start-* · VERIFY-fable-20f P17 · P24 · P34 · VERIFY-lead-final 13 · **APPROVED L(팀장 승인 10/20 00:4x · S2 20,000 회)** · Isaac Lab 2.3.2 `terrains/terrain_generator.py` 244~246 행(열 고정 배치) · **VERIFY-lead-final2 7 · 8(20j)**
+> 근거: START 2512.13153v1 259~277 · 283~285 · 295 · 307~325 · 339~341 행 · 선행 2409.15692v2 280 · 284 행(부록 A · B) · Isaac Lab 2.3.2 `terrains/config/rough.py` 12~51 · `config/go2/rough_env_cfg.py` 25~27 · `velocity/mdp/curriculums.py` 47~51 · v2 보고서 6-4~6-8 · 7 절(883 행) · 14 문서 · REPORT-seokheon-ame2.md 4 절(125 행) · evidence/deep-research-start-* · VERIFY-fable-20f P17 · P24 · P34 · VERIFY-lead-final 13 · **APPROVED L(팀장 승인 10/20 00:4x · S2 20,000 회)** · Isaac Lab 2.3.2 `terrains/terrain_generator.py` 244~246 행(열 고정 배치) · **VERIFY-lead-final2 7 · 8(20j)** · **VERIFY-astra-final 4(20k)** · `terrain_generator.py` 335 · 373~388 행 · `terrain_importer.py` 319~329 행 · `manager_based_rl_env.py` 355~380 행
 > 요지: 학습 지형을 「이어진」 · 「듬성한」 두 지형군으로 나누고, 칸은 8 × 8 m 정사각, 듬성한 지형은 START 치수와 10 레벨을 그대로, 이어진 지형은 Isaac Lab Go2 값을 쓴다. 지형 전환 커리큘럼 p_advance 의 값은 가정이고 T 는 반복 수다(S2 20,000 회에 맞춰 1,000 · 8,000, L). 이어진 지형을 더한 만큼 줄어든 듬성한 지형 노출은 반복 수 2 배로 START 이상으로 맞춘다(L). 평가에 쓰는 미경험 지형은 학습에서 빼서 「미경험」 주장을 지킨다
-> 상태: v1.2 · 팀장 검토 전 · L · 최종 점검 2(20j: 열 수 50 우리 변경 · p_advance L0) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1.3 · 팀장 검토 전 · L · 20j · 20k(메타데이터 · 캐시 · reset 재배정 계약) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
 
 # 15 · 지형과 커리큘럼
 
@@ -83,7 +83,7 @@ Go2 와 Lite3 몸 크기 차이로 치수를 바꾸지 않는다(타협 원칙 �
 
 **열 배정(50 열 · Isaac 고정 배치)**: 계단 오름 5 · 내림 5 · 박스 4 · rough 4 · 경사 오름 2 · 내림 2 · 무대 계단 1 · 징검돌 저 7 · 고 5 · 평균대 5 · 디딤 빔 5 · 틈 3 · 보조 평지 2 = 50(fable 계산 10/20, `terrain_generator.py` 244~246 식 그대로). 20 열이면 경사 오름 0 · 보조 평지 0 · 경사 내림 1 · 무대 1 이 되어 비율이 깨진다(9 절 negative control).
 
-**p_advance 는 Isaac Lab 에 없는 것이라 직접 구현한다**(`terrains/progression.py`, 18 §6 · **우리 구현**, 논문은 식만): 재추출(에피소드 리셋) 때 듬성한 env 의 원점을 저무작위 징검돌 · 보조 평지 열에서 확률 p_advance 로 고무작위 징검돌 · 평균대 · 디딤 빔 열로 옮기는 env 원점 재배정 term 이다. 틈 열은 전환에서 빠진다(아래).
+**p_advance 는 Isaac Lab 에 없는 것이라 직접 구현한다**(`terrains/progression.py`, 18 §6 · **우리 구현**, 논문은 식만): 재추출(에피소드 리셋) 때 듬성한 env 의 원점을 저무작위 징검돌 · 보조 평지 열에서 확률 p_advance 로 고무작위 징검돌 · 평균대 · 디딤 빔 열로 옮기는 env 원점 재배정 term 이다. 틈 열은 전환에서 빠진다(아래). **매 reset 마다 전환 대상 집단 전체를 다시 뽑는다**: 전환 대상(듬성한 env 가운데 틈 열이 아닌 것)은 어느 열에 있었든 reset 때 확률 p_advance(T) 로 어려운 열(고무작위 · 평균대 · 빔), 1 − p_advance(T) 로 쉬운 열(저무작위 징검돌 · 보조 평지)에 배정된다. 쉬운 열의 env 에만 누적 적용하면 어려운 열이 흡수 상태가 되어 T 가 커진 뒤에도 쉬운 열 노출이 0 으로 떨어지므로 그렇게 하지 않는다(**가정** · START 원문은 명시 없음 · VERIFY-astra-final 4). 전환 대상 · 틈 제외 · 이어진 집단의 구분은 env 마다 보관한 집단 태그로 하고 현재 열 이름에서 역산하지 않는다.
 
 START 지형 전환(**논문** 307~325 행, 인쇄 오류 정정):
 
@@ -121,6 +121,18 @@ v2 축 1 은 학습 6 종 + 미경험 10 종이다(evidence/E1-vs-v2-axis1.csv `
 - 가장자리 마스크: 높이장 → 메시 변환 때 「낙하 높이 ≥ 0.2 m 인 세로 모서리」 를 찾아 2.5 · 5 cm 띠로 팽창(**선행** 280 행의 방법 + 문턱은 **가정**). 이렇게 두면 이어진 지형의 계단 모서리(단 높이 ≤ 0.23 m 이지만 계단 아래는 바닥이 있어 「낙하」 가 아님)는 마스크에 들어가지 않아 보상식을 지형군별로 끄지 않아도 된다(VERIFY 20f P34).
 - 이 생성기는 S0 START 시험지(41 · 51) · S1-b(52) · S2(53) · 주행층 환경(22) 에 공유된다. 그래서 **S0 에서 가장 먼저 만든다**(70 일정).
 
+### 8.1 메시 · 깃발 · 마스크의 좌표 · 캐시 계약과 reset 재배정 순서 (20k · VERIFY-astra-final 4)
+
+설치 Isaac Lab 2.3.2 의 생성기 호출은 **정확히 `(meshes, origin)` 두 값**만 받는다(`terrain_generator.py` 381 행 `meshes, origin = cfg.function(difficulty, cfg)`). 깃발을 세 번째 반환값으로 더하면 즉시 실패하고, 캐시도 `mesh.obj` · `origin.csv` 만 복원한다(373~378 행). 원점만 옮기고 깃발 · 마스크를 옛 칸에 두면 다른 지형의 목표를 추종한다. 계약:
+
+| 항목 | 계약 | 근거 |
+|---|---|---|
+| 반환 규약 | `sparse_terrains.py` 의 생성기 함수는 Isaac 규약대로 `(meshes, origin)` 만 돌려준다. 깃발 열 `flags (K, 2)` · 가장자리 마스크 `mask (H, W)` · 집단 태그 `kind` 는 **side table** `TerrainMeta[(row, col)]` 에 둔다(생성기 함수가 호출 때 모듈 전역 레지스트리에 (difficulty, cfg 해시) 키로 적고, 어댑터가 (row, col) 로 옮겨 담음) | **코드** 381 행 |
+| 좌표 변환 | Isaac 은 패치 메시를 중심으로 −size/2 만큼 옮긴 뒤(383~388 행) `(row + 0.5) · size[0], (col + 0.5) · size[1]` 만큼 세계 좌표로 옮긴다(335 행). flags · mask 좌표에도 **같은 두 변환을 같은 순서로** 적용한다. mask 는 전역 격자(500 칸 × 8 m / 0.05 m)에 세계 좌표로 심는다 | **코드** 335 · 383~388 행 |
+| 캐시 | Isaac 캐시 디렉터리(패치 cfg 해시)와 **같은 키**로 `flags.npy` · `mask.npy` · `meta.yaml` 을 함께 저장 · 복원한다. 캐시 적중 때 Isaac 이 mesh · origin 을 복원하는 그 순간 side table 도 복원한다. 키에 생성기 코드 버전 해시를 넣어 코드가 바뀌면 캐시가 무효 | **가정**(구현) |
+| reset 재배정 순서 | 설치 `_reset_idx`(`manager_based_rl_env.py` 355~380 행) 순서 그대로: ① `curriculum_manager.compute` 에서 지난 에피소드 승급 · 강등(14 §5) 과 **p_advance 재표집**(5 절)을 먼저 계산해 `terrain_levels` · `terrain_types`(열 인덱스)를 갱신하고 `env_origins = terrain_origins[level, type]`(`terrain_importer.py` 319~329 행 `update_env_origins` 는 level 만 바꾸므로 type 까지 바꾸는 우리 term 으로 대체) ② `scene.reset` ③ event reset(root pose 는 새 origin) ④ observation · action · reward · curriculum reset ⑤ **command reset: 새 (level, type) 의 flags 를 side table 에서 읽어 깃발 목록 `(N, K, 2)` 를 바꾸고 「지난 깃발」 을 비움**(14 §8) ⑥ event reset 마무리. 보상의 가장자리 마스크는 env 별 복사가 아니라 전역 격자를 발 세계 좌표로 조회하므로 원점이 바뀌어도 자동으로 새 칸을 본다 | **코드** 355~380 행 · **가정**(term 구현) |
+| 시험(§9) | 캐시 없음 · 캐시 재사용 두 번 모두 flags 의 세계 좌표가 같고(1e-6), env 를 다른 열로 옮긴 뒤 깃발이 **새 칸의 발판 위**(마스크 밖 · 높이 격자에서 바닥 있음)에 놓이며, 틈 열 env 는 전환되지 않고, 이어진 집단 태그가 유지된다 | |
+
 ## 9. 검증 사다리
 
 | 단 | 무엇 | 통과 |
@@ -129,7 +141,9 @@ v2 축 1 은 학습 6 종 + 미경험 10 종이다(evidence/E1-vs-v2-axis1.csv `
 | L0 CPU | 마스크: 0.3 m 틈 양쪽 2.5 cm 띠가 1, 계단(낙하 0.23 m) 모서리는 0 | 기대 격자 |
 | L0 CPU | p_advance(0) = 0 · (1,000) = 0 · (2,250) = 0.161 · (4,500) = 0.45 · (8,000) = 0.9 · (9,000) = 0.9 (T_start 1,000 · T_end 8,000 · p_max 0.9, L. 옛 500 · 4,000 기준값은 지움, VERIFY-lead-final2 8) | 식 · 1e-3 |
 | L0 CPU | 열 배정: `terrain_generator.py` 244~246 식으로 50 열이면 각 지형 열 수 = 비율 × 50(계단 5 · 5 · 박스 4 · rough 4 · 경사 2 · 2 · 무대 1 · 징검돌 7 · 5 · 평균대 5 · 빔 5 · 틈 3 · 평지 2, 합 50). negative control: 20 열이면 경사 오름 0 · 보조 평지 0 이 나와야 함 | 정수 일치 |
-| L0 CPU | p_advance 재배정: 듬성한 env 1,000 개를 T = 8,000 에서 재추출하면 고무작위 · 평균대 · 빔 열로 옮겨진 비율 0.9 ± 0.03, T = 1,000 에서는 0. 틈 열 env 는 옮겨지지 않음 | 통계 |
+| L0 CPU | p_advance 재배정: 듬성한 env 1,000 개를 T = 8,000 에서 재추출하면 고무작위 · 평균대 · 빔 열로 옮겨진 비율 0.9 ± 0.03, T = 1,000 에서는 0. 틈 열 env 는 옮겨지지 않음. **어려운 열에 있던 env 도 매 reset 때 다시 뽑혀** 쉬운 열로 돌아오는 비율이 1 − p_advance ± 0.03 | 통계 |
+| L0 CPU | 메타데이터 좌표(8.1): 같은 cfg 로 캐시 없음 · 캐시 재사용 두 번 생성한 flags 세계 좌표가 1e-6 안에서 같고, (row 3, col 7) 의 깃발이 그 칸 경계 안이며 마스크 밖 · 높이 격자 바닥 위. negative control: side table 을 비우고 reset 하면 command reset 이 오류 | 기대값 |
+| L0 CPU | reset 재배정 순서(8.1): env 하나를 (level 2, 저무작위 열) → (level 2, 평균대 열) 로 옮기는 reset 뒤 env_origin · 깃발 목록 · 지난 깃발 · 집단 태그가 모두 새 칸 기준이고, 옛 칸 깃발이 남아 있지 않음 | 검사 |
 | L1 Kit | 500 칸 메시가 뜨고 env 원점 · 깃발 목록 모양 `(N, K, 2)` 가 맞음, 첫 10 update Traceback 0 | 로그 |
 | L2 | 첫 500 회 레벨 분포 · 전환 배정 비율이 로그에 찍힘 | 로그 |
 

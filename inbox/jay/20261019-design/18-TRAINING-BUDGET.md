@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (10 보행층 · 학습 설정 · GPU 예산 · 구현 주체)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: START 2512.13153v1 221 행 · HiPAN 2604.26504 534~535 · 632~635 행 · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` 13~32 · `config/anymal_d/agents/rsl_rl_ppo_cfg.py` 31~34 · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · `distillation_cfg.py` 21~106 · `docs/research/training-benchmarks.md` 19 행 · evidence/seokheon-sept-iteration-timing.txt · REPORT-seokheon-ame2.md 128 행 · Isaac Lab multi-GPU 문서(이 세션 10/19 열람) · fable 20e Q6(118~140 행) · DECISIONS S 행 · fable 20a S-1 · S-2 · APPROVED F-D3 · H(팀장 승인 10/19) · vfxpedia/mai-os#34 · VERIFY-fable-20f P10~P14 · P21 · P23 · APPROVED K-H · K-I · **L(S2 20,000 회, 팀장 승인 10/20 00:4x)**
+> 근거: START 2512.13153v1 221 행 · HiPAN 2604.26504 534~535 · 632~635 행 · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` 13~32 · `config/anymal_d/agents/rsl_rl_ppo_cfg.py` 31~34 · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · `distillation_cfg.py` 21~106 · `docs/research/training-benchmarks.md` 19 행 · evidence/seokheon-sept-iteration-timing.txt · REPORT-seokheon-ame2.md 128 행 · Isaac Lab multi-GPU 문서(이 세션 10/19 열람) · fable 20e Q6(118~140 행) · DECISIONS S 행 · fable 20a S-1 · S-2 · APPROVED F-D3 · H(팀장 승인 10/19) · vfxpedia/mai-os#34 · VERIFY-fable-20f P10~P14 · P21 · P23 · APPROVED K-H · K-I · **L(S2 20,000 회, 팀장 승인 10/20 00:4x)** · **VERIFY-astra-final 2 · 5 · 6(20k)** · rsl_rl 3.1.2 `ppo.py` 73~86 행 · `on_policy_runner.py` 291~303 행 · `rollout_storage.py` 49 행 · Isaac Lab `setup.py` 49 행
 > 요지: PPO 값은 논문에 없어 Isaac Lab Go2 공식 cfg 값을 가정으로 쓴다(legged_gym · Deep Robotics 와 같은 값). S1 은 Isaac Lab 기본 4096 env, S2 는 START 3072 · 24 를 지키고 16 GB 가 모자라면 1 순위 Linux 다중 GPU(1536 × 2), 2 순위 env 축소 + steps 증가(팀장 승인). S2 는 반복 20,000 회(L, 논문의 2 배)라 GPU 시간은 전체의 10~15 %(재학습 포함 12~17 %)이고, 그래도 병목은 코드다. 구현 주체와 코드 자리를 여기에 둔다
-> 상태: v1.1 · 팀장 검토 전 · K-H · K-I · L 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1.2 · 팀장 검토 전 · K-H · K-I · L · 20k(분산 동기화 · 메모리 단계별 · microbatch 계약) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
 
 # 18 · 학습 설정 · GPU 예산 · 구현 주체
 
@@ -35,7 +35,7 @@ Deep Robotics 파일은 Lite3(START 실기 로봇) 제조사 공식 설정이지
 | S3 teacher · student | 1024 · 128 | 논문 미기재 | | 벽시계 18 h · 6 h 의 n % | **논문** HiPAN 535 행 |
 | S4 (S2 이어 학습) | 3072 | 24 | 73,728 | 5,000 | **가정** |
 
-S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중 GPU(프로세스당 1536 env × 2, 합계 3072, 6 절), 2 순위 env 를 줄이고 steps 를 늘려 반복당 표본 73,728 을 유지(예: 2048 × 36). 2 순위로 내려가면 기록한다(원칙 ③).
+S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중 GPU(프로세스당 1536 env × 2, 합계 3072, 6 절), 2 순위 env 를 줄이고 steps 를 늘려 반복당 표본 73,728 을 유지(예: 2048 × 36). 2 순위로 내려가면 기록한다(원칙 ③). 단 2 순위(env 축소 · steps 증가)는 **수집 peak**(동시 env 의 시뮬 · 센서)만 줄이고 **학습 peak**(총 표본 73,728 의 저장 · minibatch 평균 18,432 표본 · 지각 backward)는 그대로다(VERIFY-astra-final 6: 3072 × 24 와 2048 × 36 의 depth 저장량이 둘 다 1.978 GiB 로 같음). 학습 peak 대책은 5 절의 microbatch 다.
 
 ## 3. 우리 처리량 실측 (지금까지 잰 것만)
 
@@ -77,6 +77,30 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 - 대가: 두 장을 한 판에 묶으면 S2 와 S3 를 나란히 못 돌린다. 그 경우 70 의 배치에서 S3 는 S2 가 끝난 뒤로 민다(기록).
 - 검증 절차(super2 런북 7 절 · vfxpedia/mai-os#34 에 숫자로): 두 장 인식 · NCCL all-reduce · Go2 10 회 두 장 / 한 장 대조 · depth 카메라 두 장 렌더 · 문제 시 `NCCL_SHM_DISABLE=1` · 화면용 GPU 가 렌더에 필요한 점(`isaac-render-needs-display-gpu`).
 
+### 5.1 분산 동기화 계약 (지각 optimizer 포함 · 20k · VERIFY-astra-final 2)
+
+설치 rsl_rl 3.1.2 는 범용 DDP wrapper 가 아니라 **PPO 가 직접 gradient 를 모으는 구조**다(`ppo.py` 60~67 행 `broadcast_parameters` 는 rank 0 의 정책 파라미터만 뿌리고, 73~86 행 `reduce_parameters` 는 PPO backward 때 gradient 를 all_reduce SUM 뒤 world_size 로 나눈다). OnPolicyRunner 를 상속해 별도 지각 optimizer.step 을 더해도 그 갱신은 **자동으로 동기화되지 않는다**. 두 rank 의 지각 가중치가 갈리면 「합계 3072 env 가 하나의 START 정책을 학습한다」 는 전제가 깨진다. 계약:
+
+| 항목 | 계약 | 근거 |
+|---|---|---|
+| 초기 broadcast | rank 0 → 전 rank: 정책 · **지각 모듈(TR-Net · I-E · 디코더)** · 관측 정규화 통계 · AdaSmpl 상태 · 커리큘럼 T | `ppo.py` 60~67 행을 지각까지 확장(사용자 runner) |
+| 매 update | PPO gradient 는 설치 `reduce_parameters` 그대로(all_reduce 평균). **지각 gradient 도 같은 방식**으로 all_reduce 평균한 뒤 지각 optimizer.step. 두 optimizer 의 step 순서는 12 §6.1(② PPO → ③ 지각) | **가정**(구현) |
+| AdaSmpl 통계 | 에피소드 보상 통계 count · sum · sumsq 를 매 iteration all_reduce SUM 으로 합쳐 CV · p_smpl 을 전 rank 같은 값으로. 각 env 의 표집(플래그 뽑기)은 rank 별 독립 | **가정** · ASTRA 권고 |
+| 커리큘럼 · 명령 | terrain_levels · types 는 rank 별 env 라 독립. p_advance 의 T 는 iteration 공통. heading · 깃발 표집은 독립 | **가정** |
+| 저장 · 복원 | rank 0 만 저장(12 §6.1 상태 목록 전부: 정책 · PPO optimizer · 지각 · 지각 optimizer · AdaSmpl · 정규화 · 커리큘럼 · RNG). 복원 뒤 초기 broadcast 를 다시 한다 | 설치 `save()` 는 정책 · PPO optimizer · RND 만(`on_policy_runner.py` 291~303 행) |
+| 시험(Linux 이전 직후 · #34) | **2-rank 가중치 일치 시험**: 1536 × 2 로 10 update 뒤 두 rank 의 정책 · 지각 state_dict sha256 동일 · AdaSmpl p 동일 · 지각 optimizer 상태 동일. negative control: 지각 all_reduce 를 끄면 sha256 이 갈라져야 함 | **가정** |
+| 버전 · 진입점 | Linux 에서도 **rsl-rl-lib 3.1.2**(Isaac Lab `source/isaaclab_rl/setup.py` 49 행 핀 `rsl-rl-lib==3.1.2`, Windows isaac311 설치 METADATA 3.1.2 확인). isaac311-moects 에는 3.3.0 이 있어 **환경 이름 없이 버전을 추정하지 않고** manifest 에 환경 이름 · 버전 · 커밋을 적는다. 진입점은 `foothold_s2/scripts/train_start.py`(설치 `train.py` 198~203 행은 사용자 runner 를 거부 · per-process `--num_envs` 119 행 · rank 별 device · seed 137~143 행 이식). 실행 예(실행하지 않음): `python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 foothold_s2/scripts/train_start.py --task=FootholdS2-Go2-S2-v0 --num_envs=1536 --headless --distributed` | **코드** |
+
+### 5.2 메모리: 수집 peak 와 학습 peak 를 구분한 사전 대책 (20k · VERIFY-astra-final 6)
+
+16 GB 를 넘는다고 실측하지 않았으므로 OOM 을 사실로 쓰지 않는다. 다만 「env × steps 유지」 로는 학습 peak 가 줄지 않으므로 대책을 **미리** 둔다.
+
+| peak | 무엇이 차지하나 | 사전 대책(순서) | 등급 |
+|---|---|---|---|
+| 수집 peak | 동시 env 의 시뮬 · 지형 BVH(GPU 마다 전체) · 센서 렌더(3072 × 60 × 60 = 11,059,200 광선/갱신) · rollout 저장(depth 2 프레임 float32 3072 × 24 → **1.978 GiB**, `rollout_storage.py` 49 · 84 행이 매 스텝 float32 저장) | ① depth 는 PPO rollout 버퍼에 넣지 않고 지각 재생 버퍼에 **float16** 으로(0.989 GiB) ② 1 순위 1536 × 2(장당 0.989 → 0.49 GiB) ③ 2 순위 env 축소 | **가정** · ASTRA 산술 |
+| 학습 peak | 지각 backward 의 activation(순환 24 스텝 × minibatch 768 env × CNN · GRU · attention) · 첫 optimizer 상태 생성(Adam 2 배) · padding | **microbatch 256 env × 24 스텝 + gradient accumulation 3** 으로 minibatch 768 을 유지(12 §6.1). 그래도 넘으면 microbatch 128 · accumulation 6(표본 수 불변). BPTT 길이 24 고정 | **가정** |
+| 측정(판마다 첫 10 회 · L1) | `torch.cuda.max_memory_allocated` 를 다섯 지점에서: ① 센서 생성 뒤 ② rollout 끝 ③ PPO update 끝(첫 optimizer 상태 포함) ④ **지각 update 끝(backward · 지각 optimizer 상태 포함)** ⑤ 1,000 회 뒤(후반 reset · padding 이 많은 구간). 60 B 의 14.5 GB 문턱은 max(②~④) 로 판정하고 ⑤ 는 L2 에서 다시 본다. 초기 쉬운 지형 값만으로 후반 peak 를 보장하지 않는다 | **가정** |
+
 ## 6. 구현 주체와 코드 자리 (팀장 승인 10/20 00:0x · APPROVED I 「역할」 · 70 과 같이)
 
 **구현은 rl 세션 + lead** 가 맡는다. lead: 명령 생성기 · 지형과 승급 · 새 평가 도구 · 학습 실행. rl: 눈 있는 보행 신경망(TR-Net · I-E · AdaSmpl) · 학습 runner. 모듈 코딩은 두 담당이 띄우는 **Sonnet 세션**이 하고, 학습 감시(heartbeat · 로그 · GPU 상태 · 첫 update 확인)는 **Haiku 하위 작업**이 한다. **검증은 fable**(단계 관문마다 · 답을 아는 입력 시험 · 실제 첫 실행 확인). **ASTRA 는 한 회**: 설치된 Isaac Lab 2.3.2 코드로 설계가 실제 API 로 구현 가능한지(RayCasterCamera · 다중 GPU DDP · DCMotor 종아리 분리 · 지형 생성기 · 순환 신경망 runner) + 큰 위험 셋(눈 있는 보행 코드 · 16 GB · 11/10 관문) 반대 의견, 새 창 · 결과 파일 하나. **sol(codex) 은 실행 스크립트만**(한도 약 82 %). O5 는 이것으로 닫힘(90 D41).
@@ -101,7 +125,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 
 ## 7. 구현 방법 · 검증 사다리
 
-- `RslRlOnPolicyRunnerCfg` 에 1 절 값. 순환 신경망(GRU)이 있으므로 `RslRlPpoActorCriticRecurrentCfg`(`rl_cfg.py` 54) 계열 또는 우리 actor-critic 클래스(13 문서)를 쓰고, 순환 상태 리셋 · minibatch 분할 규칙을 13 · 12 문서에 고정한다(ASTRA 19g 3 절 「순환 상태 재사용이 층 크기보다 위험」). S3 증류는 `RslRlDistillationRunnerCfg`(`distillation_cfg.py` 106) 를 바탕으로.
+- `RslRlOnPolicyRunnerCfg` 에 1 절 값. GRU 는 지각 모듈 안에 있으므로 설치 `ActorCriticRecurrent`(1 차원 관측 제약 · actor · critic 에 GRU, rsl_rl 3.1.2 `actor_critic_recurrent.py` 57 · 67 행)가 아니라 **우리 actor-critic 클래스(13 §6) + 사용자 runner + 진입점 `train_start.py`** 를 쓰고, 순환 상태 리셋 · terminal 마스크 · 재생 버퍼 · minibatch 분할을 12 §6.1 에 고정한다(ASTRA 19g 3 절 · VERIFY-astra-final 5). 10/27 통합 관문(70 §1)이 이 배선의 첫 실측이다. S3 증류는 `RslRlDistillationRunnerCfg`(`distillation_cfg.py` 106) 를 바탕으로.
 - 판마다 첫 10 회에서 `Perf/collection time` · `Perf/learning_time` · `Perf/total_fps` · 장당 최대 메모리를 기록해 q 를 구하고 4 절 표를 실측으로 바꾼다(evidence/tfevents_perf.py 재사용).
 - 사다리: L0 cfg AST 대조(실제 Kit 등록 이름) → L1 첫 10 update(Traceback 0 · 메모리 · steps/s · 체크포인트 파일) → L2 첫 update 로그 확인 → L3 본 학습(무인 사슬 · heartbeat · GPU 두 장 상태 한 줄 보고) → L4 평가.
 - 학습 승인: 2 단계 학습은 설계 동결 뒤 Linux 이전을 마치고 학습을 시작할 때 팀장이 새로 한다(APPROVED H). 다른 세션의 승인은 승인이 아니다.
@@ -118,6 +142,6 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 
 ## 9. 열린 항목
 
-- q(처리량 비) 실측 · depth 메모리 실측 · S3 student 단계의 하위 depth 추가 비용.
+- q(처리량 비) 실측 · depth 메모리 실측(5.2 의 다섯 지점) · S3 student 단계의 하위 depth 추가 비용 · 지각 microbatch 256 · float16 저장이 재구성 정확도에 주는 영향.
 - 「한 장 둘」 대 「두 장 하나」 배정의 실제 전환 시점(70 과 함께).
 - 주행층 · ROS 노드의 lead / rl 배정(가정) 확인.

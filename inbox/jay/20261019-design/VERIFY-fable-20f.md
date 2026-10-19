@@ -391,3 +391,46 @@ J 의 G · H · I 는 20g 때 팀장 결정 대기라 손대지 않았고, 20h(�
 | 5 듬성한 지형 회전 상한 | 제자리 ±1.2 · 이동 중 ±1.0 | 23 §1 그림 CLEAN 노드 · 31 머리 요지 · 31 §5 표 · 00 §2 그림 · 14 §3.1 노출 문단 · 90 D39 주석 |
 | 6 주행층 · ROS 담당 | 18 §6 가정대로 | 18 §6 표 · 97 행 「가정」 삭제 · 70 §3 rl 행 「(가정)」 삭제 · §6 · 90 Q1 닫힘 · 51 §5 |
 | 7 축 2 hold 시드 3 | 시드 3 개로 재고 셋 중 둘 이상 문턱 안이면 통과 | 41 §3 hold 행 · 하네스 문장(`--seed` 3 개) · §9 S1 공통 축 2 행 · 51 §3 · 52 §2 관문 S1-a 축 2 · gates-v1.json 「시드 3 중 2」 규칙 · S0 결과 CSV 열 |
+
+### 14.5 추가 (20k · 팀장 결정 8)
+
+| 결정 | lead 권고(ASTRA 7) | 승인되면 고칠 자리 |
+|---|---|---|
+| 8 F26 「진짜 하락」 식 | 기준 100/100 칸에서 새 판 99/100 의 Wilson 상한이 0.99823 이라 「새 판 상한 < 기준값」 식으로는 탈락(fable 재계산: 99/100 구간 [0.94551, 0.99823], 100/100 하한 0.96301, 16 칸 모두 0.99 확률이면 전부 통과 확률 0.99^1600 = 1.0 × 10⁻⁷). 기준판 불확실성도 넣은 **생존율 차이의 비열등 판정(허용폭 5 %p)** 하나로 등록 | **`real_drop`(「진짜 하락」 = 새 판 Wilson 상한 < 기준 판 값)을 쓰는 모든 관문**: 41 §8 정의 행(96 행) · 41 §9 S1-scan(칸별 Wilson 하한 ≥ v2 − 0.05 · 진짜 하락 0) · S1-b(S1a-blind-v1 대비 하락 0) · S2-a G1(S2-G0 대비 진짜 하락 0) · F26 사전 (1)(이어진 16 칸 · 진짜 하락 0) · S4(앞 칸 S2 대비 하락 0 · 대조판 하락 0) / 52 §2 관문 S1-a(scan 진짜 하락 0) · 관문 S1-b(S1-a 대비 진짜 하락 0) · 52 §3 축 1 행(「Wilson 상한 < v2 값인 칸 ≥ 1」) / 53 §2 S2-a 행 · §7 사전 (1) / 55 §1 그림 GC「앞 칸 S2 대비 하락 0」 · §4 / 50 §2 S1-a · S2 · S4 행 / 60 C 신호(「Wilson 상한 < v2 값인 칸 ≥ 1」) · 60 §1 그림 / 21 §4 F26 (1) / 평가 도구 `foothold_s2/eval/compare.py`(70f70b47) 의 비교 함수와 L0 시험 · `gates-v1.json` 의 비교 규칙 필드 |
+
+### 15. 20k 반영 (10/20 05:1x · VERIFY-astra-final 「동결 전에 반드시 고칠 것」 여섯 줄 · ASTRA 7 은 결정 8)
+
+#### 15.1 ASTRA 근거 원문 대조 (이 세션이 직접 열었다)
+
+| ASTRA 근거 | 확인 |
+|---|---|
+| rsl-rl-lib 버전 | **일치**: isaac311 `rsl_rl_lib-3.1.2.dist-info` Version 3.1.2 · isaac311-moects 3.3.0 · Isaac Lab `source/isaaclab_rl/setup.py` 49 행 핀 `rsl-rl-lib==3.1.2` |
+| `ActorCriticRecurrent` 1 차원 관측 제약 | **일치**: `actor_critic_recurrent.py` 57 · 62 행 assert `len(obs.shape) == 2`, memory_a · memory_c 를 actor · critic 각각에 |
+| 수집이 `inference_mode` | **일치**: `on_policy_runner.py` 101 행 |
+| `save()` 저장 범위 | **일치**: 291~303 행 정책 · PPO optimizer · iter · RND 만 |
+| PPO 분산 | **일치**: `ppo.py` 60~67 행 `broadcast_parameters`(rank 0 정책만) · 73~86 행 `reduce_parameters`(gradient all_reduce SUM / world_size) |
+| `train.py` 사용자 runner 거부 · rank 처리 | **일치**: 198~203 행 ValueError · 119 행 per-process num_envs · 137~143 행 rank 별 device · seed |
+| 저장량 float32 매 스텝 | **일치**: `rollout_storage.py` 49 행 zeros(num_transitions, *obs.shape) · 84 행 copy_. 3072 × 24 × 2 × 60 × 60 × 4 B = 1.978 GiB(재계산 일치) |
+| 생성기 `(meshes, origin)` · 캐시 mesh · origin 만 | **일치**: `terrain_generator.py` 381 행 · 373~378 행 · 좌표 변환 383~388 · 335 행 |
+| `update_env_origins` 는 level 만 | **일치**: `terrain_importer.py` 319~329 행 |
+| reset 순서 | **일치**: `manager_based_rl_env.py` 355~380 행(curriculum.compute → scene.reset → event reset → obs · action · reward · curriculum · command · event reset) |
+| RayCaster 단일 경로 · Plane 우선 · 첫 Mesh | **일치**: `ray_caster.py` 164~166 · 177 · 183 행 · `multi_mesh_ray_caster_camera.py` 25 행 존재 |
+| DCMotor 비대칭 | **일치**: `actuator_pd.py` 295~308 행 `_clip_effort`(top = sat × (1 − v/vl) → min effort_limit, bottom = sat × (−1 − v/vl) → max −effort_limit). ASTRA 표(0 · 7.85 · 15.70 · 20 → +45.43 · +22.715 · 0 · −12.443, 제동 전부 −45.43) 수계산 일치. `velocity_limit_sim` 분리는 `actuator_base.py` 182~210 행 |
+| Wilson 반례 | **일치**: 99/100 [0.94551, 0.99823] · 100/100 하한 0.96301 · 0.99^1600 = 1.04 × 10⁻⁷ · 0.999^1600 = 0.202 |
+| 11/10 산술 | **일치**: 168 h − 8 h = 160 h / 40,000 회 = 14.4 s/회 · B 갈래 상한 116 h |
+
+#### 15.2 고친 자리
+
+| 여섯 줄 | 자리 |
+|---|---|
+| (1) 12 · 13 · 70 | 12 §6 순환 학습 행 · **§6.1 신설**(두 GRU 시간축 · terminal 마스크 · PPO 입력 고정 · 재생 버퍼 목록 · optimizer 수치 · 손실 순서 · checkpoint 상태 · 10/27 관문) · §8 두 행 · §9 L0 셋 + L1 통합 관문 · §11 / 13 §6 두 행 · §7 두 행 / 70 Gantt · 10/27 행 · §3 rl · §4 · §6 |
+| (2) 18 · 12 | 18 **§5.1 신설**(초기 broadcast · gradient 평균 · AdaSmpl 합산 · 2-rank 일치 시험 · rsl_rl 3.1.2 · 진입점 `train_start.py`) · §7 / 12 §6.1 분산 행 · §8 진입점 행 |
+| (3) 15 · 14 | 15 §5 매 reset 전체 집단 재표집 · **§8.1 신설**(반환 규약 · 좌표 변환 · 캐시 · reset 재배정 순서 · 시험) · §9 L0 셋 / 14 §8 |
+| (4) 18 | §2 38 행(2 순위는 수집 peak 만) · **§5.2 신설**(수집 · 학습 peak 구분 · microbatch · 다섯 지점 측정) · §9 |
+| (5) 70 | §1.2 실측 재계산 시점(11/2 24:00 · 14.4 s/회 조건 · B 갈래 116 h) |
+| (6) 11 · 17 | 11 §6 단일 결합 Mesh · MultiMesh 분기 · §7 L0 AST · L1 갱신 시간 / 17 §1 calf 행 · 비대칭 토크식 · `velocity_limit_sim` 동결값 · §9 L0 |
+| ASTRA 7 | 손대지 않음 → 결정 8(§14.5 추가 표). 41 §11 에 Wilson 경계 tolerance L0 만(구현 시험) |
+
+#### 15.3 가정으로 둔 수치 (팀장 · lead 가 볼 것)
+
+지각 optimizer Adam · lr 5e-4 · epoch 5 · minibatch 4(768 env) · microbatch 256 × 24 + accumulation 3 · BPTT 24 · grad clip 1.0 / 재생 버퍼 depth float16(0.989 GiB) / 10/27 통합 관문 env 64 · 한 장 / 2-rank 일치 시험 10 update · sha256 / 메모리 측정 다섯 지점 · 14.5 GB 는 max(②~④) / p_advance 매 reset 전체 집단 재표집 / 이어진 깃발 20 % env 고정 배정 / 종아리 `velocity_limit_sim` 미적용 / 11/2 24:00 재계산 · 14.4 s/회.

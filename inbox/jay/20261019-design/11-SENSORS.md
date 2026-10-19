@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 127 · 221 · 379 · 580 행 · PIE 2408.13740v3 표 II(START 가 DR 을 위임한 [31], ASTRA 19g 4 절) · SPEC-start-go2.md 2.2~2.4 절(187~214 행) · 155 · 157 행 · Go2 URDF `go2.urdf` 748~749 행 · L1 공식 bag 실측(`s2_lab/_external/l1_analyze.py` · `l1_go2_floor_v2.py`, fable 20f 재실행) · JEPLO 2609.15770v1 29 · 239~241 · 254 행 · @460e227 `spherical_depth_generator.py` · cfg 249~251 · env 593~596 (evidence/maicode-jeplo-deep) · REPORT-astra-10.md 63~77 · 130~133 행 · Isaac Lab 2.3.2 `ray_caster_camera_cfg.py` 19 · `patterns_cfg.py` 73 · APPROVED H(Orin NX) · VERIFY-fable-20f P8 · P18 · P19
 > 요지: 1 차는 D435i 하나를 START 식(머리 · 60×60 · 10 Hz · 2 프레임)으로 쓰고 학습 때 가림막 증강을 넣는다(우리 추가). 2 차에 L1 을 발 주변 채널로 더한다. L1 의 뒷발 가시성은 메시지 5 개(0.5 s) 누적에서 100 % 인 상한만 쟀고 몸 가림은 실기에서 잰다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
 
 # 11 · 센서 (D435i · L1)
 
@@ -93,7 +93,7 @@ START 는 깊이 잡음을 적지 않았고(**논문 미기재**, 221 행은 DR 
 
 | 부품 | 클래스 · 파일 | 텐서 모양 |
 |---|---|---|
-| D435i 시뮬 | `foothold_s2/sensors/depth_cam_cfg.py`: `RayCasterCameraCfg` (`ray_caster_camera_cfg.py` 19), `pattern_cfg=PinholeCameraPatternCfg.from_intrinsic_matrix([55.9,0,30,0,54.1,30,0,0,1], 60, 60)` (`patterns_cfg.py` 73), `data_types=["distance_to_image_plane"]`, `mesh_prim_paths=["/World/ground"]`, `update_period=0.1`, offset (0.25, 0, 0.12) · quat (0.9537, 0, 0.3007, 0) convention world(pitch +35° = +y 축 회전, 부호는 L0 시험으로 확정) | 출력 `(N, 60, 60, 1)` → 정규화 · 증강 → 2 프레임 링버퍼 `(N, 2, 60, 60)` |
+| D435i 시뮬 | `foothold_s2/sensors/depth_cam_cfg.py`: `RayCasterCameraCfg` (`ray_caster_camera_cfg.py` 19), `pattern_cfg=PinholeCameraPatternCfg.from_intrinsic_matrix([55.9,0,30,0,54.1,30,0,0,1], 60, 60)` (`patterns_cfg.py` 73), `data_types=["distance_to_image_plane"]`, `mesh_prim_paths=["/World/ground"]`(**단일 결합 Mesh 하나만**: 설치 `RayCaster` 는 mesh_prim_path 를 하나만 받고(`ray_caster.py` 164~166 행), 그 아래에 Plane 이 있으면 Plane 을 먼저 읽고(177 행) 아니면 **첫 Mesh 자식만** 읽는다(183 행). 지형 생성기는 500 패치를 하나의 메시로 합치므로(`terrain_generator.py` 166 행 concatenate) S2 는 이 하나를 정확히 가리키고 `/World/ground` 아래 ground plane · 별도 Mesh 를 두지 않는다. 주행층(22)처럼 방 장애물 메시가 따로 있으면 설치 `MultiMeshRayCasterCameraCfg`(`multi_mesh_ray_caster_camera.py` 25 행)로 분기, VERIFY-astra-final 1), `update_period=0.1`, offset (0.25, 0, 0.12) · quat (0.9537, 0, 0.3007, 0) convention world(pitch +35° = +y 축 회전, 부호는 L0 시험으로 확정) | 출력 `(N, 60, 60, 1)` → 정규화 · 증강 → 2 프레임 링버퍼 `(N, 2, 60, 60)` |
 | 증강 | `foothold_s2/sensors/depth_aug.py` (JEPLO 식을 우리 코드로 재작성, 복사 금지: GPLv3) | 입력 · 출력 `(N, 2, 60, 60)` |
 | 카메라 DR | `isaaclab.envs.mdp.events` 의 자세 무작위 + `set_intrinsic_matrices` 로 FOV (SPEC 142~143 행) | |
 | L1 시뮬 (2 차) | `foothold_s2/sensors/l1_raycaster.py`: `RayCasterCfg` + 사용자 패턴(실측 방향 표본 약 2,100 개) · `mesh_prim_paths` 지면, offset 은 URDF 값 | 원점 `(N, 2100, 3)` → 누적 · 격자화 `(N, 3, Hf, Wf)` (높이 · valid · age) |
@@ -105,6 +105,8 @@ START 는 깊이 잡음을 적지 않았고(**논문 미기재**, 221 행은 DR 
 | 단 | 무엇 | 통과 |
 |---|---|---|
 | L0 CPU | 내부 파라미터: 60×60 · fx 55.9 에서 가장자리 화소 광선 각이 ±28.25° | 계산 |
+| L0 AST | `mesh_prim_paths` 가 길이 1 이고 그 prim 아래에 Plane · 둘째 Mesh 가 없음(지형 import cfg 에 ground plane 생성 없음). negative control: 경로 둘을 넣으면 설치 코드가 NotImplementedError(`ray_caster.py` 164 행) | 검사 |
+| L1 Kit | **3072 env 전체 갱신 시간**: 60×60 × 3072 = 11,059,200 광선/갱신 · 10 Hz 갱신의 벽시계 시간과 장당 메모리를 첫 10 update 에서 잰다(ASTRA: 처리량 계산일 뿐 FPS 실측이 아님 · START 의 Warp 는 Isaac Gym · A6000 조건) | 로그 |
 | L0 CPU | 증강: 가림 0 개 설정이면 입력 = 출력, 2 개면 가린 화소 = 1.0 이고 나머지 동일. Perlin 0.4 에서 구멍 비율 0.2~0.5 | 기대값 |
 | L0 CPU | 쿼터니언 부호: 카메라 광축(+z)이 바닥에 base 앞 **0.89 m** 에 맞음(h 0.45 · pitch 35° · x 0.25: 0.45 / tan 35° + 0.25 = 0.893). 아래 끝 광선(pitch + 29°)은 0.47 m, 위 끝 광선(pitch − 29°)은 4.53 m(VERIFY-lead-final2 22). negative control: 부호를 뒤집으면 광축이 바닥에 안 닿음 | 기하 · 1 cm |
 | L1 Kit | 4096(또는 3072) env 60×60 광선 카메라 첫 10 update: 메모리 · steps/s · 깊이 영상 한 장 저장(눈으로 확인) | 로그 · 그림 |

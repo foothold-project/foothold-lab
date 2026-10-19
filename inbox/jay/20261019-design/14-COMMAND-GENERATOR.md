@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: JEPLO 2609.15770v1 239 · 317 · 321~ 행(표 III) · ASIG-X/JEPLO@460e227 `go2_loco_env.py` 55~60 · 154~156 · 427~462 · 687~692 · 868~887 · 997~1028 · 1042~1103 · `command_curriculum.py` 17~46 (evidence/maicode-jeplo-deep `mode_mapping`) · Margolis 2205.02824 III-D2(인용 · 미열람) · HiPAN 2604.26504 164~165 · 754 행 · START 2512.13153v1 225~233 · 259~261 · 275 행 · v2 보고서 6-1~6-9 · 7 절 · 9-2 · Isaac Lab 2.3.2 `velocity/mdp/curriculums.py` 47~51 · VERIFY-fable-20f P15 · P16 · VERIFY-lead-final 9 · 11 · 12 · 15 · APPROVED J-B · J-F(팀장 승인 10/20) · **APPROVED K-G(팀장 승인 10/20 00:1x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 · `velocity_command.py` 150~162 행 · v2 보고서 556 · 569 · 574 · 577~578 행 · evidence/E1-vs-v2-axis1.csv(fable 재계산 10/20)
 > 요지: 정책 입력은 속도 세 칸 그대로 두고, 학습 때 세 칸을 채우는 방식을 지형군마다 나눈다(자유 속도 · 깃발 · 정지 회전 · 물러나기). JEPLO 의 지형 배정과 START 의 듬성한 지형 명령을 우리가 어떻게 바꿨는지 「우리 변경」 표로 적는다. 저속 0~0.5 도 학습하고(J-F), 듬성한 지형의 제자리 회전은 START 방식(J-B)으로 1 차에 넣는다. 이어진 지형 env 의 20 % 에도 깃발을 섞어 깃발 추종기(23)가 학습 분포 안에 들게 한다. 이어진 지형 자유 속도 env 의 30 % 는 heading 모드(목표 방향을 바라보도록 wz 를 자동 계산, K-G · 우리 변경)이고, 정지 · 제자리 회전 · 깃발 · heading 을 합친 env 비율 표(3.2 절)가 100 % 로 맞는지 계산해 두었다
-> 상태: v1.2 · 팀장 검토 전 · K-G heading 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정 · 인용)
+> 상태: v1.2 · 팀장 검토 전 · K-G heading 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정 · 인용) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
 
 # 14 · 명령 생성기와 지형 승급
 
@@ -142,7 +142,7 @@ v2 가 남긴 두 원리: **(1) 안 만난 것은 못 배운다(노출).** **(2)
 
 ## 8. 구현 방법 (Isaac Lab 2.3.2)
 
-- 자리: `foothold_s2/commands/mixed_command.py` (`CommandTerm` 상속, env 마다 방식 플래그 · 깃발 목록 · 커리큘럼 상태를 텐서로). 지형 생성기(15)가 env 원점과 함께 깃발 목록 `(N, K, 2)` 를 돌려준다.
+- 자리: `foothold_s2/commands/mixed_command.py` (`CommandTerm` 상속, env 마다 방식 플래그 · 깃발 목록 · 커리큘럼 상태를 텐서로). 깃발 목록은 Isaac 생성기 반환값이 **아니다**(설치 `terrain_generator.py` 381 행은 `(meshes, origin)` 둘만 받음, VERIFY-astra-final 4). 15 §8.1 의 side table `TerrainMeta[(row, col)]` 에서 **reset 때** 그 env 의 새 (level, type) 으로 읽는다. 순서(15 §8.1): curriculum 이 level · type · origin 을 옮긴 뒤 `command_manager.reset` 에서 깃발 목록 `(N, K, 2)` 를 새 칸 것으로 바꾸고 「지난 깃발」 을 비우며 방식 플래그(자유 속도 · 깃발 · heading)를 칸의 집단 태그로 다시 정한다. 이어진 깃발 20 % 는 이어진 집단 env 가운데 고정 20 % 를 env 번호로 정해 reset 마다 바뀌지 않게 한다(**가정**).
 - 승급: `foothold_s2/curriculum/terrain_levels_mixed.py` (Isaac Lab `terrain_levels_vel` 를 복제해 방식별 분기 · 명령 벡터 합 누적).
 - heading: 플래그 · 목표 방향 텐서를 `mixed_command.py` 에 두고 `_update_command` 에서 매 스텝 `wz` 를 갱신(Isaac Lab `UniformVelocityCommand` `velocity_command.py` 150~158 행과 같은 식 · 정지 덮어쓰기 160~162 행도 같은 순서). 강등 판정의 명령 벡터 합은 vx · vy 만 쓰므로 heading 이 바꾸는 것은 없다.
 - JEPLO 는 GPLv3(파일 머리 상업 연락 조항 포함). 코드를 복사하지 않고 위 식과 값을 우리 코드로 다시 쓰고 출처를 단다(evidence/maicode-jeplo-deep `license`). MGDP 는 LICENSE 파일이 없다 → 복사 금지.

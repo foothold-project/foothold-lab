@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 42 · 116 · 126~127 · 134 · 136~139 · 169 · 185~217 · 193 · 347 · 360 행 · 선행 2409.15692v2 35 · 95 · 305 · 311 · 323 · 331 · 339 · 347 · 353 행(Table V) · Fig. 8 · evidence/maicode-trcr-deep `diff_vs_start` · maicode-start-deep · RESEARCH-astra-19g-start-reimpl.md 3 · 8 절 · evidence/deep-research-start-*.json · fable 20e F16 · R1 · R2 · Isaac Lab 2.3.2 `rl_cfg.py` 54 · APPROVED B(JEPLO 잠재 예측은 2 차 갈래) · VERIFY-fable-20f P3
 > 요지: START 의 지각을 그대로 짓는다. 층 크기는 같은 저자 선행 논문 부록 수치를 「선행(START 미기재)」 로 쓰고, 원문 불일치(CNN 표)와 인쇄 오류(커리큘럼 식)는 우리 선택 · 정정으로 표시한다. 지도는 중력 정렬 yaw 틀, 기억은 에피소드마다 0, PPO gradient 는 지각으로 흘리지 않는다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
 
 # 12 · 지각 (TR-Net · I-E Estimator · AdaSmpl)
 
@@ -95,8 +95,24 @@ flowchart TB
 | TR-Net ↔ I-E | I-E 는 TR-Net 지도를 detach 해서 받는다. z_prop 은 TR-Net 에 detach 해서 준다 | **가정** (ASTRA 19f Q3 「gradient 소유권을 그림과 코드로 고정」) |
 | 리셋 | 두 GRU(Prop · 지형 기억) 상태는 env 리셋 때 0 | **가정** |
 | 기억 진행 | 지형 기억 GRU 는 새 depth 프레임(10 Hz)이 올 때만 한 칸 진행, Prop GRU 는 50 Hz | **가정** SPEC-start-go2 55 행 |
-| 순환 학습 | rsl_rl 의 순환 정책 경로(hidden state 를 rollout 버퍼에 저장, minibatch 는 env 단위로 자름) | **코드** Isaac Lab `RslRlPpoActorCriticRecurrentCfg` (`rl_cfg.py` 54 행) |
+| 순환 학습 | 설치 rsl_rl 3.1.2 의 `ActorCriticRecurrent`(`actor_critic_recurrent.py` 57 · 67 행)는 **1 차원 관측만 받고 actor · critic 각각에 GRU 를 붙이므로 쓰지 않는다**(ASTRA 가 (2, 2, 60, 60) 입력으로 AssertionError 확인). 우리 정책 클래스는 `ActorCritic`(MLP) 인터페이스를 지키고 두 GRU 는 지각 모듈 안에 둔다. hidden state · 시퀀스 시작 상태는 PPO rollout 버퍼가 아니라 §6.1 의 **지각 재생 버퍼**에 보관한다 | **코드** rsl_rl 3.1.2 · VERIFY-astra-final 5 |
 | 최적화 | 지각 손실과 PPO 손실은 optimizer 를 따로 둔다 | **가정** (공유 encoder gradient 경쟁 방지, ASTRA 19f Q3) |
+
+### 6.1 START 전용 학습 계약 (동결 명세 · 20k · VERIFY-astra-final 5 · 2 · 6)
+
+stock GRU 를 쓸 수 있다는 것과 START 가 rsl_rl 에 연결된다는 것은 다르다. 아래를 하나의 계약으로 둔다. 수치 가운데 START · 선행 원문에 없는 것은 전부 **가정** 등급이고, 10/27 통합 관문(70 §1 · 13 §7)을 지나기 전에는 바꿀 수 있으나 그 뒤에는 2 단계 동결 대상이다.
+
+| 항목 | 계약 | 등급 · 근거 |
+|---|---|---|
+| 두 GRU 의 시간축 | Prop GRU 는 50 Hz 매 제어 스텝 한 칸 진행. 지형 기억 GRU 는 10 Hz depth 갱신 틱(5 스텝마다, 11 §4)에만 한 칸 진행하고 그 사이 스텝은 **step mask 0**(상태 유지). 두 GRU 의 시퀀스 시작 상태는 rollout 시작 시점 값을 각각 따로 저장한다 | **가정** SPEC-start-go2 55 행 · 11 §4 |
+| 리셋 · terminal 마스크 | env 리셋 때 두 GRU 상태 0. 재생에서 done 인 전이는 **terminal 마스크**로 끊어 새 에피소드 첫 관측을 이전 에피소드의 ô_{t+1} 정답으로 쓰지 않는다. 시퀀스는 done 에서 자르고 hidden 을 0 으로 다시 시작 | **가정** · 설치 `rollout_storage.py` 223~225 행의 `split_and_pad_trajectories` 와 같은 꼴 |
+| PPO 입력 고정 | PPO 는 **수집 때 실제로 쓴 96 차원 actor 입력**(13 §2: o_t 45 + z 16 + v̂ 3 + ẑ^f 16 + ẑ^b 16)과 그때의 log probability 를 rollout 버퍼에 그대로 보관하고 재평가(epoch 5 × minibatch 4)에서 그 입력으로만 ratio 를 계산한다. 재평가 때 VAE latent z 를 다시 추출하거나 지각을 먼저 갱신해 다른 입력으로 ratio 를 내는 경로를 막는다(epoch 0 첫 minibatch 의 ratio = 1 이 L0 시험) | **가정**(ASTRA 권고) · rsl_rl 3.1.2 는 관측을 float32 로 매 스텝 저장(`rollout_storage.py` 49 · 84 행) |
+| 지각 재생 버퍼(별도) | 보관 목록: 원시 depth 2 프레임(float16, 11 §2 정규화 뒤) · 몸 관측 o_t · 정답 지도 H^b · H^f · 속도 v · 다음 관측 o_{t+1} · done · depth 갱신 마스크(10 Hz 틱) · 두 GRU 시작 상태 · AdaSmpl 선택 플래그. 길이 = PPO rollout 과 같은 24 스텝 × env. 기본 수집은 `torch.inference_mode()` 안이라(`on_policy_runner.py` 101 행) **수집 때 만든 손실을 들고 와 backward 할 수 없다** → 지각 손실은 gradient 를 켠 별도 순환 재생으로 다시 계산한다 | **코드** rsl_rl 3.1.2 · **가정**(float16 저장: 3072 × 24 × 2 × 60 × 60 이 float32 1.978 GiB → 0.989 GiB, ASTRA 산술) |
+| 지각 optimizer 수치 | Adam · lr 5e-4 · weight decay 0 · epoch 5 · minibatch 4(env 단위 768 env) · **microbatch 256 env × 24 스텝 + gradient accumulation 3**(minibatch 당 1 step) · BPTT 길이 24 스텝(한 rollout, 시작 hidden 은 버퍼 값, done 에서 절단) · gradient clip 1.0 | 전부 **가정**(START · 선행 · 중국어 자료에 지각 optimizer 수치 없음, evidence/deep-research-*). 18 §1 의 PPO 5 epoch · 4 minibatch 를 지각에 「자동 적용」 하는 명세는 없으므로 여기 따로 적는다(ASTRA) |
+| 손실 순서(한 iteration) | ① rollout 수집(inference_mode) → ② PPO update(고정 입력 · log prob) → ③ 지각 재생 · L_TR + L_IE 를 한 번의 backward(계수 1 · 1, §6 그림의 stop-gradient 유지) → ④ AdaSmpl 통계 갱신 → ⑤ 커리큘럼 · 저장. ②③ 순서를 바꾸면 ratio 입력이 수집 때와 달라지므로 금지 | **가정** |
+| checkpoint 에 넣을 상태 | 정책 state_dict · PPO optimizer · 지각 모듈(TR-Net · I-E · 디코더) state_dict · **지각 optimizer** · AdaSmpl 통계(count · sum · sumsq · p_smpl) · 관측 정규화 통계 · 커리큘럼 상태(terrain_levels · terrain_types · p_advance 의 T) · 명령 생성기 상태(방식 플래그 · 깃발 인덱스) · iteration · RNG 상태(torch · numpy · env seed). 설치 `save()` 는 정책 · PPO optimizer · RND 만 저장한다(`on_policy_runner.py` 291~303 행) → 사용자 runner 가 덧붙인다. 저장/복원 왕복 뒤 같은 입력에 같은 출력(1e-6)이 L0 시험 | **코드** rsl_rl 3.1.2 · **가정** |
+| 분산(1536 × 2) | 18 §5 계약: 초기 broadcast 에 지각 · AdaSmpl 상태 포함, 지각 gradient 도 all_reduce 평균, AdaSmpl count · sum · sumsq 는 전 rank 합산 | VERIFY-astra-final 2 |
+| 통합 관문 10/27 | 작은 env(64 env · GPU 한 장)에서 **수집 → PPO · 지각 두 손실 갱신 → reset(terminal 마스크) → 저장 → 복원 → 같은 입력 같은 출력** 한 사이클을 rl 책임으로 통과. 센서 · 두 GRU · 두 손실 · edge 보상 · checkpoint 왕복이 그때 연결되지 않으면 S2 의 11/3 본 학습 준비를 「미완료」 로 표시하고 11/10 하위는 S1a-blind-v1 경로를 일정 기준으로 삼는다(70 §1 · 60 G). 11/1 에 shape 시험만 통과한 상태는 준비 완료가 아니다 | **가정**(날짜) · VERIFY-astra-final 5 |
 
 ## 7. 장면 예
 
@@ -117,6 +133,8 @@ flowchart TB
 | TR-Net · I-E | `foothold_s2/models/start_perception.py` (PyTorch 기본 Conv2d · GRU · MultiheadAttention 으로 새로 구현). 공개 코드 복사 없음(START 코드 없음, MGDP 라이선스 없음) | 위 표 |
 | 정책 묶기 | 13 문서 `start_policy.py` · `start_runner.py` | actor 입력 96 |
 | AdaSmpl | runner 의 rollout 수집 전 단계에서 env 마다 플래그 | `(N,)` bool |
+| 지각 재생 버퍼 | `foothold_s2/runners/perception_replay.py`(§6.1 보관 목록 · terminal 마스크 · 두 GRU 시작 상태) | depth `(24, N, 2, 60, 60)` float16 · 나머지 §6.1 |
+| 진입점 | `foothold_s2/scripts/train_start.py`: 설치 `train.py` 는 198~203 행에서 사용자 runner 이름을 거부하므로 rank 처리(119 · 137~143 행: per-process `--num_envs` · rank 별 device · seed)를 이식한 START 전용 진입점 | rsl_rl 3.1.2(Isaac Lab `setup.py` 49 행 핀) |
 
 ## 9. 검증 사다리
 
@@ -126,7 +144,11 @@ flowchart TB
 | L0 CPU | 손실: H_rough = H^b 면 L_TR = 0, 한 칸 0.1 m 차이면 MSE 0.01/512 + L1 0.1/512 | 기대값 |
 | L0 CPU | AdaSmpl: R = [1, 1, 1] → CV 0 → p 0, R = [0, 2] → CV 1 → p 0.76 | 기대값 |
 | L0 CPU | gradient 경계: actor 손실을 역전파했을 때 TR-Net · I-E 파라미터의 grad 가 None | 검사 |
-| L1 Kit | 첫 10 update 에서 재구성 MAE · p_smpl · 정답 사용 비율 로그 · 메모리 | 로그 |
+| L0 CPU | PPO 입력 고정: 수집 때 저장한 96 차원 입력 · log prob 로 epoch 0 첫 minibatch 의 ratio 가 1(1e-6). negative control: 지각을 먼저 한 step 갱신하고 재평가하면 ratio ≠ 1 이 나와야 함 | 기대값 |
+| L0 CPU | 재생 버퍼 · terminal 마스크: 길이 24 시퀀스에 done 을 12 에 두면 ô_{t+1} 손실이 12 → 13 전이를 제외하고, 10 Hz 마스크로 지형 GRU 가 24 스텝에 5 칸(또는 4 칸)만 진행 | 기대값 |
+| L0 CPU | checkpoint 왕복: §6.1 상태 목록 전부 저장 → 새 프로세스에서 복원 → 같은 입력에 정책 · 지각 출력 · AdaSmpl p · optimizer 상태 동일(1e-6). negative control: 지각 optimizer 를 빼면 복원 뒤 첫 update 가 달라짐 | 검사 |
+| **L1 통합 관문 10/27** | 64 env 한 장에서 수집 → PPO update → 지각 update(두 손실) → reset → 저장/복원 한 사이클 Traceback 0 · 위 L0 셋 통과(rl 책임, 70 §1) | 로그 · 검사 |
+| L1 Kit | 첫 10 update 에서 재구성 MAE · p_smpl · 정답 사용 비율 로그 · 단계별 메모리(18 §5) | 로그 |
 | L2 | 첫 500 회 재구성 MAE 가 감소 | 곡선 |
 
 ## 10. 검증할 가설
@@ -142,6 +164,7 @@ flowchart TB
 ## 11. 열린 항목
 
 - Self-attention 층 수 · FF 크기의 근거(현재 가정).
+- 지각 optimizer 수치(§6.1: lr 5e-4 · epoch 5 · minibatch 4 · microbatch 256 · BPTT 24)의 근거 실험(10/27 통합 관문 뒤 짧은 판).
 - 발 지도 모양 · 해상도(현재 5×5 · 5 cm 가정).
 - 저자 문의 여부(90 O8): 받을 질문은 두 CNN 정의 · latent 세부 · AdaSmpl 창 (ASTRA 19g 8 절).
 - **2 차 갈래(APPROVED B)**: JEPLO 식 depth 잠재 예측(PE-JEPA) 을 TR-Net 대신 또는 옆에 두는 안. 1 차에는 START 재구성만. 코드는 lejepa 라이선스(CC BY-NC 추정, 미확인) 때문에 재구현이어야 한다(evidence/maicode-jeplo-deep `license`).
