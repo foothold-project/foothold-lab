@@ -46,3 +46,8 @@
 - (c) v2 · NVIDIA 어댑터 예행 8 판 통과, 경로 · sha256 은 보고와 manifest 에 있음.
 - (d) S0 연쇄: `python -m foothold_s2.eval.s0_chain --root C:/Users/AI-WS01/s2_lab/eval_new/s0 --policies e1,v2,nvidia --gpus 0,1 --e1_axis1_dir C:/Users/AI-WS01/s2_lab/eval_new/axis1_e1` 03:48:58 시작. 로그 s0/s0_chain.log, 상태 s0/s0_status.jsonl. 이어 돌리기 가능(같은 명령 다시). 하트비트 Cron c70eb341 이 21 분마다 확인.
 - 남은 일: 연쇄 끝나면 (1) 41 형식 표 (축 1 세 판 x 48칸, 축 2 시드 셋 표 compare.axis2_seed_table, 축 3 21칸 표) (2) 판 비교 CSV (3) NVIDIA · v2 축 1 을 옛 sweep_long.csv 와 칸 단위 대조(compare.axis1_report 는 옛 summary 형식이라 sweep_long 용 변환 필요) (4) lead 보고. START 시험지 Kit 실행은 미연결.
+
+## SC-2 끝 (10/20 09:00)
+- S0 96 일 전부 통과 + v2 · NVIDIA 축 2 재측정(어댑터 수정 d8437c05). 표 inbox/jay/20261019-design/evidence/baselines/ (README 에 읽는 법). 원자료 C:/Users/AI-WS01/s2_lab/eval_new/s0/. stale 축 2 는 eval_new/s0_stale_axis2/.
+- 반복성: v2 stepping_stones · random_rough 0.5 m/s 각 2회 + 연쇄 결과 모두 100판 비트 일치(GPU 0 · 1). 수정 전 후: 축 1 0.5 m/s 4묶음 3200판 · 축 3 대표 8일 4200판 비트 일치.
+- 남은 일: START 시험지 Kit 실행 미연결, 0.5 m/s 옛 sweep 어긋남의 옛 실행 조건 미확인, 41 의 R 정의 공백(lead 목록).

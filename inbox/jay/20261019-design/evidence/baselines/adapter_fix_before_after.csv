@@ -1,0 +1,21 @@
+axis,policy,cell,before_fix,before_pass,after_fix,after_pass,same
+axis2 seed42,v2,stop/fell_ratio,0.015625,True,0.0,True,False
+axis2 seed42,v2,hold/fell_ratio,0.0,True,0.0,True,True
+axis2 seed42,v2,hold/residual_speed_mps,0.000517826921909662,True,0.0004943147904356212,True,False
+axis2 seed42,v2,hold/joint_target_delta_tail,0.0002476032869890333,True,0.0002566416934132576,True,False
+axis2 seed42,v2,turn/fell_ratio,0.078125,True,0.109375,False,False
+axis2 seed42,v2,turn/yaw_follow/-1.00,0.7640524222569851,True,0.7603568540187555,True,False
+axis2 seed42,v2,turn/yaw_follow/-0.50,0.4492938048615541,True,0.40182125460843976,True,False
+axis2 seed42,v2,turn/yaw_follow/+0.50,0.4774884732437446,True,0.46739501935103556,True,False
+axis2 seed42,v2,turn/yaw_follow/+1.00,0.4775907497458214,True,0.43161722079469367,True,False
+axis2 seed42,nvidia,stop/fell_ratio,0.0,True,0.0,True,True
+axis2 seed42,nvidia,hold/fell_ratio,0.0,True,0.0,True,True
+axis2 seed42,nvidia,hold/residual_speed_mps,0.0010842841103668622,True,0.0010842841103668622,True,True
+axis2 seed42,nvidia,hold/joint_target_delta_tail,0.0015477940044365827,True,0.0015477940044365827,True,True
+axis2 seed42,nvidia,turn/fell_ratio,0.0625,True,0.0625,True,True
+axis2 seed42,nvidia,turn/yaw_follow/-1.00,0.8167018724457981,True,0.8167018724457981,True,True
+axis2 seed42,nvidia,turn/yaw_follow/-0.50,0.6146995381395876,True,0.6146995381395876,True,True
+axis2 seed42,nvidia,turn/yaw_follow/+0.50,0.5203968104039095,True,0.5203968104039095,True,True
+axis2 seed42,nvidia,turn/yaw_follow/+1.00,0.5349337287583885,True,0.5349337287583885,True,True
+axis1 0.5 m/s 4묶음 3200판,"v2,nvidia",전 칸,,,,,판 단위 비트 일치
+axis3 대표 8일 4200판,"v2,nvidia","continuous_front,sparse_back,continuous_spin(-1),continuous_left",,,,,판 단위 비트 일치
