@@ -162,6 +162,14 @@ class E1Adapter:
         return {"gym_env": gym_env, "raw": gym_env.unwrapped, "env_cfg": env_cfg,
                 "agent_cfg": agent_cfg}
 
+    def wrap(self, built):
+        """RslRlVecEnvWrapper 를 지어 `built["env"]` 에 둔다 (짓는 순간 env.reset() 이 한 번 돈다)."""
+        from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
+
+        built["env"] = RslRlVecEnvWrapper(built["gym_env"], clip_actions=None)
+
+        return built["env"]
+
     def pin_command(self, raw, pin):
         """명령 항의 재표집을 «원래 명령 쓰기» 로 바꾼다. 리셋 때 원래 명령으로 돌아온다."""
         term = raw.command_manager.get_term("base_velocity")
@@ -179,9 +187,8 @@ class E1Adapter:
 
     def load_policy(self, built, checkpoint):
         from rsl_rl.runners import OnPolicyRunnerCTS
-        from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 
-        env = RslRlVecEnvWrapper(built["gym_env"], clip_actions=None)
+        env = built.get("env") or self.wrap(built)
         raw = built["raw"]
         agent_cfg = built["agent_cfg"]
         runner = OnPolicyRunnerCTS(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
@@ -213,13 +220,17 @@ class E1Adapter:
 
 
 class IsaacLabAdapter:
-    """NVIDIA 기본 · v2 체크포인트용 (**Kit 미시험**)."""
+    """NVIDIA 기본 · v2 체크포인트용. 옛 v2 하네스의 길을 따른다.
 
-    name = "isaaclab"
+    지형이 있는 축(1 · 3)은 환경 설정 클래스(`env_cfg_class`)로 짓고 `ManagerBasedRLEnv` 를 직접 만든다.
+    평지 축(2)은 레지스트리 기본 설정을 평면으로 바꿔 `gym.make` 한다 (옛 `eval_command_response.py`).
+    """
 
-    def __init__(self, env_cfg_class=None, apply_gap_aware=None):
+    def __init__(self, name="isaaclab", env_cfg_class=None, apply_gap_aware=None, std_form=None):
+        self.name = name
         self.env_cfg_class = env_cfg_class
         self.apply_gap_aware = apply_gap_aware
+        self.std_form = std_form
         self.changes = []
         self.checks = {}
 
@@ -228,35 +239,40 @@ class IsaacLabAdapter:
                  plane=False, env_spacing=None, events_off=None):
         import importlib
 
-        import gymnasium as gym
+        from isaaclab.envs import ManagerBasedRLEnv
         from isaaclab_tasks.utils import load_cfg_from_registry
 
         importlib.import_module("isaaclab_tasks")
-
-        env_cfg = self.env_cfg_class()
         agent_cfg = load_cfg_from_registry(NVIDIA_TASK, "rsl_rl_cfg_entry_point")
-        env_cfg.seed = seed
         agent_cfg.seed = seed
-        env_cfg.scene.num_envs = num_envs
-        env_cfg.episode_length_s = duration_s
 
         if plane:
+            env_cfg = load_cfg_from_registry(NVIDIA_TASK, "env_cfg_entry_point")
             env_cfg.scene.terrain.terrain_type = "plane"
             env_cfg.scene.terrain.terrain_generator = None
             env_cfg.scene.terrain.max_init_terrain_level = None
             env_cfg.scene.env_spacing = env_spacing or 8.0
+
+            if hasattr(env_cfg.curriculum, "terrain_levels"):
+                env_cfg.curriculum.terrain_levels = None
+
+            self.changes.append("terrain plane, env_spacing %.1f (레지스트리 기본 설정)" % (env_spacing or 8.0))
         else:
+            env_cfg = self.env_cfg_class()
             apply_terrain_settings(env_cfg, generator, seed, difficulty, self.changes)
             apply_reset_ranges(env_cfg, spawn_xy_range, yaw_range_deg, joint_pos_scale, self.changes)
 
-        if hasattr(env_cfg.curriculum, "terrain_levels"):
-            env_cfg.curriculum.terrain_levels = None
-
+        env_cfg.seed = seed
+        env_cfg.scene.num_envs = num_envs
+        env_cfg.episode_length_s = duration_s
         env_cfg.observations.policy.enable_corruption = False
 
-        for name in ("push_robot", "base_external_force_torque", "add_base_mass", "base_com"):
+        for name in ("push_robot", "base_external_force_torque", "add_base_mass", "base_com")                 if not plane else ("push_robot", "base_external_force_torque"):
             if hasattr(env_cfg.events, name):
                 setattr(env_cfg.events, name, None)
+
+        self.changes.append("관측 잡음 끔 · events off: push_robot, base_external_force_torque"
+                            + ("" if plane else ", add_base_mass, base_com"))
 
         cmd = env_cfg.commands.base_velocity
         vx, vy, wz = (float(x) for x in base_cmd[0])
@@ -268,15 +284,31 @@ class IsaacLabAdapter:
         cmd.rel_standing_envs = 0.0
         cmd.resampling_time_range = (1.0e9, 1.0e9)
 
+        if getattr(cmd.ranges, "heading", None) is not None:
+            cmd.ranges.heading = None
+
         if not plane and self.apply_gap_aware is not None:
-            self.changes.append("gap-aware height scan: %r" % (self.apply_gap_aware(env_cfg),))
+            self.changes.append("gap-aware height scan 규격 2, 빗나간 광선 값: %r" % (self.apply_gap_aware(env_cfg),))
 
         env_cfg.sim.device = device
         agent_cfg.device = device
-        gym_env = gym.make(NVIDIA_TASK, cfg=env_cfg)
 
-        return {"gym_env": gym_env, "raw": gym_env.unwrapped, "env_cfg": env_cfg,
-                "agent_cfg": agent_cfg}
+        if plane:
+            import gymnasium as gym
+
+            gym_env = gym.make(NVIDIA_TASK, cfg=env_cfg)
+            raw = gym_env.unwrapped
+        else:
+            gym_env = raw = ManagerBasedRLEnv(cfg=env_cfg)
+
+        return {"gym_env": gym_env, "raw": raw, "env_cfg": env_cfg, "agent_cfg": agent_cfg}
+
+    def wrap(self, built):
+        from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
+
+        built["env"] = RslRlVecEnvWrapper(built["gym_env"], clip_actions=built["agent_cfg"].clip_actions)
+
+        return built["env"]
 
     def pin_command(self, raw, pin):
         term = raw.command_manager.get_term("base_velocity")
@@ -287,14 +319,19 @@ class IsaacLabAdapter:
 
     def load_policy(self, built, checkpoint):
         from rsl_rl.runners import OnPolicyRunner
-        from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 
-        env = RslRlVecEnvWrapper(built["gym_env"])
         agent_cfg = built["agent_cfg"]
+        env = built.get("env") or self.wrap(built)
+
+        if self.std_form is not None:
+            self.checks["std_form"] = self.std_form(agent_cfg, checkpoint)
+
         runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
         runner.load(checkpoint)
         policy = runner.get_inference_policy(device=built["raw"].device)
         obs = env.get_observations()
+        self.checks["policy_class"] = type(runner.alg.policy).__name__
+        self.checks["obs_shape"] = list(obs["policy"].shape) if hasattr(obs, "keys") else list(obs.shape)
 
         return env, policy, runner.alg.policy, obs
 

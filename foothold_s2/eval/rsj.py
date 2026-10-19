@@ -13,7 +13,7 @@ class RSJError(ValueError):
 
 def check_row(row):
     """한 행의 R/S/J 일관성. `R` 이 None 이면(정지 · 제자리 회전) J 도 None 이어야 한다."""
-    r, s, j = row.get("R"), row.get("S"), row.get("J")
+    r, s, j = row.get("R_body"), row.get("S"), row.get("J_body")
 
     if r is None:
         if j is not None:
@@ -53,10 +53,10 @@ def summarize_rsj(rows):
     for row in rows:
         check_row(row)
 
-    out = {key: _rate(rows, key) for key in ("R", "S", "J")}
+    out = {key: _rate(rows, key) for key in ("R_body", "S", "J_body")}
 
-    if out["J"]["n"]:
-        if out["J"]["k"] > min(out["R"]["k"], out["S"]["k"] if out["S"]["n"] else 0):
+    if out["J_body"]["n"]:
+        if out["J_body"]["k"] > min(out["R_body"]["k"], out["S"]["k"] if out["S"]["n"] else 0):
             raise RSJError("집계에서 J > min(R, S): %r" % (out,))
 
     return out
@@ -124,7 +124,7 @@ def degenerate_flag(summary):
 
     비율이 정의된 것(n > 0)만 본다. 정의된 것이 없으면 False.
     """
-    rates = [summary[k + "_rate"] for k in ("R", "S", "J") if summary.get(k + "_n")]
+    rates = [summary[k + "_rate"] for k in ("R_body", "S", "J_body") if summary.get(k + "_n")]
 
     if not rates:
         return False

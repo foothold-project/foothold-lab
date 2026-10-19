@@ -29,7 +29,7 @@ from foothold_s2.eval import cells, manifest, rsj
 
 parser = argparse.ArgumentParser(description="FOOTHOLD 평가 (41 설계).")
 parser.add_argument("axis", choices=["axis1", "axis2", "axis3", "start"])
-parser.add_argument("--policy", choices=["e1", "isaaclab"], default="e1")
+parser.add_argument("--policy", choices=["e1", "nvidia", "v2"], default="e1")
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--label", default=None)
 parser.add_argument("--out", required=True)
@@ -49,6 +49,8 @@ parser.add_argument("--num_envs", type=int, default=64)
 # 축 3
 parser.add_argument("--group", choices=list(cells.TERRAIN_GROUPS), default="continuous")
 parser.add_argument("--cmd", default="0.5,0,0")
+parser.add_argument("--direction", default="")
+parser.add_argument("--cmd_basis", default="")
 # START
 parser.add_argument("--kinds", default="all")
 parser.add_argument("--levels", default="all")
@@ -67,11 +69,12 @@ simulation_app = app_launcher.app
 from foothold_s2.eval import adapters, axis2_run, runtime, terrain_sets  # noqa: E402
 
 
-def make_adapter():
+def make_adapter(set_name=None):
     if args.policy == "e1":
         return adapters.E1Adapter()
 
-    raise SystemExit("isaaclab 어댑터는 이 진입점에서 아직 연결하지 않았습니다 (미시험)")
+    # axis3 의 병합 생성기는 unseen10 쪽 환경 설정 클래스를 바탕으로 한다 (merged_generator 와 같은 선택).
+    return terrain_sets.isaaclab_adapter(args.policy, set_name or "unseen10")
 
 
 def device_of():
@@ -134,7 +137,7 @@ def policy_record(adapter):
 
 def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, judge_kwargs,
                      recorded, tag):
-    adapter = make_adapter()
+    adapter = make_adapter(args.terrain_set if args.axis == "axis1" else None)
     n_env = args.envs_per_terrain * len(names)
     built, raw, pin = build_and_load(adapter, generator, n_env, duration_s, [base_cmd] * n_env)
     verify_mapping(raw, names, args.envs_per_terrain)
@@ -155,7 +158,7 @@ def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, 
 
         if n % 25 == 0 or n == total:
             print("[%s] %d/%d  last=%s J=%s S=%s" % (tag, n, total, row["terrain"],
-                                                      row.get("J"), row.get("S")), flush=True)
+                                                      row.get("J_body"), row.get("S")), flush=True)
 
     stats = runner.run(recorded, on_episode, wall_limit_s=args.wall_limit_s, obs=obs)
     env.close()
@@ -201,13 +204,16 @@ def do_axis3():
 
     for row in rows:
         row["group"] = args.group
+        row["direction"] = args.direction
         row["cmd"] = args.cmd
+        row["cmd_basis"] = args.cmd_basis
 
     save_episode_outputs("axis3", rows, recorded, rsj.summarize_axis3_cell, adapter,
                          {"group": args.group, "cmd": list(cmd), "duration_s": duration,
                           "reference_m": cells.REFERENCE_DISTANCE_M, "step_dt_s": dt,
                           "params": cells.AXIS3_PARAMS, "stats": stats},
-                         {"group": args.group, "cmd": args.cmd})
+                         {"group": args.group, "direction": args.direction, "cmd": args.cmd,
+                          "cmd_basis": args.cmd_basis})
 
 
 def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, summary_extra):
@@ -229,7 +235,7 @@ def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, sum
 
 
 def do_axis2():
-    result = axis2_run.run(args, adapters, runtime, device_of(), simulation_app)
+    result = axis2_run.run(args, make_adapter(), runtime, device_of())
     manifest.write_csv(os.path.join(args.out, "axis2_cells.csv"), result["cells"])
     finish(args.out, dict(result["record"]))
     print("[DONE] axis2 아홉 칸: " + json.dumps(

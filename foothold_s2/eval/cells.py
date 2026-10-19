@@ -80,7 +80,8 @@ STAGE_STAIRS = "stage_stairs"
 START_SHEETS = ("stepping_stones_start", "balance_beams", "stepping_beams", "gaps_start")
 
 TERRAIN_GROUPS = {
-    "continuous": ROUGH6 + ("wave", "discrete_obstacles"),
+    "continuous": tuple(n for n in ROUGH6 if n not in ("pyramid_stairs", "pyramid_stairs_inv"))
+    + ("wave", "discrete_obstacles"),
     "stairs": ("pyramid_stairs", "pyramid_stairs_inv", STAGE_STAIRS),
     "sparse": ("gap", "stepping_stones", "floating_ring") + START_SHEETS,
 }
@@ -110,6 +111,14 @@ SPARSE_ROW = {
     "front_turn": "measure",
     "spin": [(0.0, 0.0, 1.2), (0.0, 0.0, -1.2)],
 }
+
+# 옛 모델 셋(S0)의 듬성한 행 좌 · 우: vy_obs 는 S1-b 뒤에 생기므로 임시로 0.2 m/s (lead 결정).
+VY_ASSUMED = 0.2
+VY_ASSUMED_LABEL = "가정값 0.2 (31 임시)"
+
+# START 시험지 네 종은 8 x 4 m 칸이라 옆 명령은 칸 크기로 측정할 수 없다 (lead 결정).
+START_DIRECTIONS = ("front", "back", "spin")
+START_UNMEASURABLE = "칸 크기로 측정 불가"
 
 REFERENCE_DISTANCE_M = 3.0
 TIME_FACTOR = 2.0
@@ -142,14 +151,11 @@ def axis3_table(vy_obs=None):
                 rows.append(dict(group=group, direction=direction,
                                  status="out_of_range", commands=[]))
             elif rule == "vy_obs":
-                if vy_obs is None:
-                    rows.append(dict(group=group, direction=direction,
-                                     status="needs_vy_obs", commands=[]))
-                else:
-                    sign = 1.0 if direction == "left" else -1.0
-                    rows.append(dict(group=group, direction=direction,
-                                     status="measure",
-                                     commands=[(0.0, sign * float(vy_obs), 0.0)]))
+                sign = 1.0 if direction == "left" else -1.0
+                value = VY_ASSUMED if vy_obs is None else float(vy_obs)
+                rows.append(dict(group=group, direction=direction, status="measure",
+                                 commands=[(0.0, sign * value, 0.0)],
+                                 basis=VY_ASSUMED_LABEL if vy_obs is None else "vy_obs"))
             elif rule == "measure":
                 rows.append(dict(group=group, direction=direction, status="measure",
                                  commands=list(DEFAULT_COMMANDS[direction])))

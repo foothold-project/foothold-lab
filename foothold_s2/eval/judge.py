@@ -104,9 +104,9 @@ def judge_axis1(pos_xy, vel_err, fwd_dir, timed_out, terminated, dt,
         "progress_success": progress_ok,
         "tracking_success": tracking_ok,
         "direction_success": direction_ok,
-        "R": reached,
+        "R_body": reached,
         "S": survival,
-        "J": bool(reached and survival),
+        "J_body": bool(reached and survival),
         "forward_progress_m": forward_end,
         "max_forward_m": float(np.max(progress)),
         "gate_lateral_drift_m": gate_lat,
@@ -261,9 +261,9 @@ def judge_command(pos_xy, yaw, vel_b_xy, wz_b, cmd, active, timed_out, terminate
 
     return {
         "survival_success": survival,
-        "R": reached if has_lin else None,
+        "R_body": reached if has_lin else None,
         "S": survival,
-        "J": bool(reached and survival) if has_lin else None,
+        "J_body": bool(reached and survival) if has_lin else None,
         "cmd_progress_m": total_progress,
         "cmd_progress_ratio": total_progress / reference_m if has_lin else None,
         "cmd_progress_ratio_capped": (min(max(total_progress / reference_m, 0.0), 1.0)

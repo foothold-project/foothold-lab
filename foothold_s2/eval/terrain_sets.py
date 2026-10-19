@@ -175,3 +175,38 @@ def assign_tiles(raw, levels, types):
     terrain.terrain_levels[:] = lv
     terrain.terrain_types[:] = ty
     terrain.env_origins[:] = terrain.terrain_origins[lv, ty]
+
+
+def load_lab_file(filename):
+    """`sim/eval` 의 보조 모듈 하나(예: std_form.py)를 경로로 불러온다."""
+    mod_name = "_foothold_lab_" + os.path.splitext(filename)[0]
+
+    if mod_name in sys.modules:
+        return sys.modules[mod_name]
+
+    path = os.path.join(LAB_EVAL_DIR, filename)
+    spec = importlib.util.spec_from_file_location(mod_name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[mod_name] = module
+    sys.path.insert(0, LAB_EVAL_DIR)
+
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.path.remove(LAB_EVAL_DIR)
+
+    return module
+
+
+def isaaclab_adapter(kind, set_name):
+    """NVIDIA · v2 용 어댑터. 환경 설정 클래스와 gap-aware 규격 함수는 지형 집합 모듈에서 온다."""
+    from foothold_s2.eval import adapters
+
+    module = load_lab_module(set_name)
+    env_cls = getattr(module, SET_SOURCES[set_name][1])
+    gap_module = load_lab_module("unseen10")
+    std = load_lab_file("std_form.py")
+
+    return adapters.IsaacLabAdapter(name=kind, env_cfg_class=env_cls,
+                                    apply_gap_aware=gap_module.apply_gap_aware_scan,
+                                    std_form=std.apply_std_form)

@@ -48,15 +48,28 @@ def test_axis2_has_nine_cells():
 def test_axis3_table_marks_out_of_range_and_vy_obs():
     table = {(r["group"], r["direction"]): r for r in cells.axis3_table()}
     assert table[("sparse", "diag")]["status"] == "out_of_range"
-    assert table[("sparse", "left")]["status"] == "needs_vy_obs"
+    assert table[("sparse", "left")]["commands"] == [(0.0, 0.2, 0.0)]
+    assert table[("sparse", "right")]["commands"] == [(0.0, -0.2, 0.0)]
+    assert table[("sparse", "left")]["basis"] == cells.VY_ASSUMED_LABEL
     assert table[("sparse", "back")]["commands"] == [(-0.3, 0.0, 0.0)]
     assert table[("sparse", "spin")]["commands"] == [(0.0, 0.0, 1.2), (0.0, 0.0, -1.2)]
     assert table[("continuous", "diag")]["commands"] == [(0.4, 0.4, 0.0)]
     with_vy = {(r["group"], r["direction"]): r for r in cells.axis3_table(vy_obs=0.3)}
     assert with_vy[("sparse", "left")]["commands"] == [(0.0, 0.3, 0.0)]
+    assert with_vy[("sparse", "left")]["basis"] == "vy_obs"
     assert with_vy[("sparse", "right")]["commands"] == [(0.0, -0.3, 0.0)]
     assert sum(1 for r in table.values() if r["status"] == "out_of_range") == 1
     assert len(table) == 21
+
+
+def test_axis3_groups_are_disjoint_after_lead_decision():
+    seen = {}
+    for group, names in cells.TERRAIN_GROUPS.items():
+        for n in names:
+            assert n not in seen, (n, group, seen[n])
+            seen[n] = group
+    assert "pyramid_stairs" not in cells.TERRAIN_GROUPS["continuous"]
+    assert len(cells.TERRAIN_GROUPS["continuous"]) == 6
 
 
 def test_axis3_duration_rule():
@@ -84,7 +97,7 @@ def _axis1(pos, vel_err=None, timed_out=True, terminated=False, fwd=(1.0, 0.0)):
 def test_axis1_straight_walk_is_all_pass():
     pos = _straight(600, 0.5)
     row = _axis1(pos)
-    assert row["overall_success"] and row["R"] and row["S"] and row["J"]
+    assert row["overall_success"] and row["R_body"] and row["S"] and row["J_body"]
     assert row["forward_progress_m"] == pytest.approx(0.5 * 599 * DT)
     assert row["gate_lateral_drift_m"] == pytest.approx(0.0, abs=1e-9)
 
@@ -95,7 +108,7 @@ def test_axis1_sideways_drift_beyond_075_fails_direction():
     row = _axis1(pos)
     assert row["gate_lateral_drift_m"] > 0.75
     assert not row["direction_success"] and not row["overall_success"]
-    assert row["R"] and row["S"] and row["J"]
+    assert row["R_body"] and row["S"] and row["J_body"]
 
 
 def test_axis1_lateral_just_inside_passes_and_078_fails():
@@ -109,14 +122,14 @@ def test_axis1_fall_trajectory_fails_survival_and_J():
     pos = _straight(400, 0.5)
     row = _axis1(pos, timed_out=False, terminated=True)
     assert not row["S"] and not row["survival_success"]
-    assert row["R"] and not row["J"]
+    assert row["R_body"] and not row["J_body"]
     assert row["termination_reason"] == "base_contact"
 
 
 def test_axis1_short_walk_never_reaches():
     pos = _straight(100, 0.5)
     row = _axis1(pos)
-    assert not row["R"] and not row["J"] and row["S"]
+    assert not row["R_body"] and not row["J_body"] and row["S"]
     assert row["gate_lateral_drift_m"] is None and not row["direction_success"]
 
 
@@ -124,7 +137,7 @@ def test_axis1_tracking_failure_only_breaks_overall():
     pos = _straight(600, 0.5)
     row = _axis1(pos, vel_err=np.full(600, 0.4))
     assert not row["tracking_success"] and not row["overall_success"]
-    assert row["J"]
+    assert row["J_body"]
 
 
 def test_axis1_rotated_start_heading_uses_given_forward():
@@ -167,7 +180,7 @@ def _cmd_episode(cmd, n, vel_b=None, wz=None, yaw=None, pos=None, active=None,
 
 def test_command_straight_front_zero_deviation():
     row = _cmd_episode((0.5, 0.0, 0.0), 600)
-    assert row["R"] and row["S"] and row["J"]
+    assert row["R_body"] and row["S"] and row["J_body"]
     assert row["yaw_dev_deg"] == pytest.approx(0.0, abs=1e-6)
     assert row["yaw_dev_flag"] is False
     assert row["heading_err_deg"] == pytest.approx(0.0, abs=1e-6)
@@ -189,12 +202,12 @@ def test_command_sideways_replaced_by_turning_is_a_deviation_failure():
     row = _cmd_episode((0.0, 0.5, 0.0), n, vel_b=vel_b, wz=wz, yaw=yaw, pos=pos)
     assert row["yaw_dev_flag"] is True and row["yaw_dev_deg"] > 80
     assert row["cmd_progress_ratio"] < 0.05
-    assert not row["R"] and not row["J"]
+    assert not row["R_body"] and not row["J_body"]
 
 
 def test_command_proper_left_strafe_passes():
     row = _cmd_episode((0.0, 0.5, 0.0), 600)
-    assert row["R"] and row["J"] and row["yaw_dev_flag"] is False
+    assert row["R_body"] and row["J_body"] and row["yaw_dev_flag"] is False
     assert row["net_disp_y_m"] > 5.0
 
 
@@ -210,12 +223,12 @@ def test_command_lateral_push_is_recorded_not_hidden():
 
 def test_command_fall_fails_S_and_J_but_keeps_R():
     row = _cmd_episode((0.5, 0.0, 0.0), 400, timed_out=False, terminated=True)
-    assert row["R"] and not row["S"] and not row["J"]
+    assert row["R_body"] and not row["S"] and not row["J_body"]
 
 
 def test_command_pure_spin_has_no_R_and_tracks_yaw():
     row = _cmd_episode((0.0, 0.0, 1.0), 600)
-    assert row["R"] is None and row["J"] is None
+    assert row["R_body"] is None and row["J_body"] is None
     assert row["S"] is True
     assert row["yaw_follow_ratio"] == pytest.approx(1.0)
     assert row["yaw_dev_flag"] is None
@@ -224,7 +237,7 @@ def test_command_pure_spin_has_no_R_and_tracks_yaw():
 def test_command_front_turn_arc_has_zero_yaw_deviation():
     row = _cmd_episode((0.5, 0.0, 0.5), 600)
     assert row["yaw_dev_deg"] == pytest.approx(0.0, abs=1e-6)
-    assert row["R"] and row["heading_err_deg"] == pytest.approx(0.0, abs=2.0)
+    assert row["R_body"] and row["heading_err_deg"] == pytest.approx(0.0, abs=2.0)
 
 
 def test_command_stop_after_reach_does_not_drag_progress_down():
@@ -237,7 +250,7 @@ def test_command_stop_after_reach_does_not_drag_progress_down():
     pos = np.stack([np.cumsum(vel_b[:, 0]) * DT, np.zeros(n)], axis=1)
     row = judge.judge_command(pos, np.zeros(n), vel_b, np.zeros(n), cmd, act, True, False,
                               DT, reference_m=3.0)
-    assert row["R"] and row["S"] and row["J"]
+    assert row["R_body"] and row["S"] and row["J_body"]
     assert row["cmd_progress_ratio"] == pytest.approx(1.0, abs=0.01)
 
 
@@ -250,17 +263,17 @@ def test_expected_displacement_arc_closes_a_circle():
 
 
 def test_rsj_invariants_and_negative_control():
-    good = [{"R": True, "S": True, "J": True}, {"R": True, "S": False, "J": False},
-            {"R": False, "S": True, "J": False}]
+    good = [{"R_body": True, "S": True, "J_body": True}, {"R_body": True, "S": False, "J_body": False},
+            {"R_body": False, "S": True, "J_body": False}]
     out = rsj.summarize_rsj(good)
-    assert out["J"]["k"] == 1 and out["R"]["k"] == 2 and out["S"]["k"] == 2
+    assert out["J_body"]["k"] == 1 and out["R_body"]["k"] == 2 and out["S"]["k"] == 2
 
     with pytest.raises(rsj.RSJError):
-        rsj.summarize_rsj([{"R": False, "S": True, "J": True}])
+        rsj.summarize_rsj([{"R_body": False, "S": True, "J_body": True}])
     with pytest.raises(rsj.RSJError):
-        rsj.summarize_rsj([{"R": True, "S": False, "J": True}])
+        rsj.summarize_rsj([{"R_body": True, "S": False, "J_body": True}])
     with pytest.raises(rsj.RSJError):
-        rsj.summarize_rsj([{"R": None, "S": True, "J": True}])
+        rsj.summarize_rsj([{"R_body": None, "S": True, "J_body": True}])
 
 
 def test_rsj_from_real_judge_rows_never_violate():
@@ -274,15 +287,15 @@ def test_rsj_from_real_judge_rows_never_violate():
         pos[:, 1] = np.cumsum(rng.normal(0, 0.01, n))
         rows.append(_axis1(pos, timed_out=timed_out, terminated=not timed_out))
     out = rsj.summarize_rsj(rows)
-    assert out["J"]["k"] <= min(out["R"]["k"], out["S"]["k"])
+    assert out["J_body"]["k"] <= min(out["R_body"]["k"], out["S"]["k"])
 
 
 def test_degenerate_cell_flag():
-    rows = [{"R": False, "S": False, "J": False}] * 5
+    rows = [{"R_body": False, "S": False, "J_body": False}] * 5
     assert rsj.summarize_axis3_cell(rows)["degenerate"] is True
-    rows = [{"R": True, "S": True, "J": True}] * 5
+    rows = [{"R_body": True, "S": True, "J_body": True}] * 5
     assert rsj.summarize_axis3_cell(rows)["degenerate"] is True
-    rows = [{"R": True, "S": True, "J": True}, {"R": False, "S": True, "J": False}]
+    rows = [{"R_body": True, "S": True, "J_body": True}, {"R_body": False, "S": True, "J_body": False}]
     assert rsj.summarize_axis3_cell(rows)["degenerate"] is False
 
 

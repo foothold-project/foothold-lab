@@ -53,7 +53,12 @@ SCENARIOS = {
 EVENTS_OFF = ("randomize_push_robot",)
 
 
-def run(args, adapters, runtime, device, simulation_app):
+def _cmd(term):
+    """명령 버퍼. robot_lab 항은 `commands`, Isaac Lab 항은 `vel_command_b`."""
+    return term.commands if hasattr(term, "commands") else term.vel_command_b
+
+
+def run(args, adapter, runtime, device):
     names = list(cells.AXIS2_PARAMS["scenarios"]) if args.scenario == "all" \
         else [n.strip() for n in args.scenario.split(",")]
     unknown = [n for n in names if n not in SCENARIOS]
@@ -63,14 +68,19 @@ def run(args, adapters, runtime, device, simulation_app):
 
     n_env = args.num_envs
     longest = max(SCENARIOS[n][1] for n in names)
-    adapter = adapters.E1Adapter()
     built = adapter.make_env(generator=None, num_envs=n_env, duration_s=longest + 1.0, seed=args.seed,
                              difficulty=args.difficulty, base_cmd=[(0.0, 0.0, 0.0)] * n_env,
                              device=device, plane=True, env_spacing=8.0, events_off=EVENTS_OFF)
     raw = built["raw"]
     pin = runtime.CommandPin(n_env, raw.device, [(0.0, 0.0, 0.0)] * n_env)
-    term = adapter.pin_command(raw, pin)
+
+    # 순서가 값을 바꾼다 (10/20 hold 조사). 래퍼를 먼저 지어 reset 을 한 번 소비하고, 그 뒤 reset 을 하고,
+    # 그 뒤에 명령 항을 고친다. 옛 축 2 하네스와 같은 순서이고, 이 순서에서만 hold 단독 실행이 옛 하네스
+    # 단독 실행과 같은 값(잔류 속도 0.00083, 관절 목표 변화 0.00185)이 나온다. 다른 순서는 reset 무작위
+    # 뽑기가 달라져 hold 값이 0.0017~0.0034 · 0.0073~0.0112 로 흔들린다 (정의는 같다).
+    adapter.wrap(built)
     raw.reset()
+    term = adapter.pin_command(raw, pin)
     env, policy, policy_nn, _obs = adapter.load_policy(built, args.checkpoint)
 
     robot = raw.scene["robot"]
@@ -100,7 +110,7 @@ def run(args, adapters, runtime, device, simulation_app):
         for step in range(n_steps):
             t = step * dt
             sample = torch.cat([robot.data.root_lin_vel_b[:, :2], robot.data.root_ang_vel_b[:, 2:3],
-                                term.commands[:, :3], robot.data.joint_pos_target], dim=1)
+                                _cmd(term)[:, :3], robot.data.joint_pos_target], dim=1)
             room = env_index[alive]
 
             if room.numel():
@@ -113,11 +123,12 @@ def run(args, adapters, runtime, device, simulation_app):
             nxt = torch.tensor(profile(t + dt), device=raw.device, dtype=torch.float32)
             pin.base[:] = nxt
             pin.want[:] = nxt
-            term.commands[:, :3] = nxt
+            _cmd(term)[:, :3] = nxt
 
             # step 은 inference_mode 밖에서 부른다. 안에서 부르면 다음 시나리오의 raw.reset() 이
             # 「inference tensor 를 밖에서 고친다」 로 죽는다 (옛 축 2 하네스와 같은 구조).
             obs, _r, dones, _e = env.step(action)
+
             policy_nn.reset(dones)
 
             newly = alive & raw.termination_manager.terminated

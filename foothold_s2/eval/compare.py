@@ -92,3 +92,45 @@ def episode_level_match(new_raw_path, old_raw_path):
 
     return {"joined": len(keys), "same_overall": same, "differ": diffs[:20],
             "only_new": len(set(new) - set(old)), "only_old": len(set(old) - set(new))}
+
+
+def axis1_report(new_root, old_root, out_csv=None):
+    """축 1 48 칸 대조. 새 도구 `axis1_summary.csv` 와 옛 `generalization_summary.csv` 를 칸 단위로 맞댄다.
+
+    돌려주는 것: 칸 표, 요약(칸 수 · 허용 밖 칸 수 · 최대 차이), 새 · 옛 평균(48 · 범위 안 32 · 속도별),
+    판 단위 일치(같은 (지형, env, 판) 의 overall 이 같은 비율).
+    """
+    new = load_axis1_cells(new_root, "axis1_summary.csv", "overall_success")
+    old = load_axis1_cells(old_root, "generalization_summary.csv", "overall_success_rate")
+    rows, summary = diff_table(new, old)
+
+    per_speed = {}
+
+    for speed in cells.AXIS1_SPEEDS:
+        a = [v for (_s, _t, sp), v in new.items() if sp == speed]
+        b = [v for (_s, _t, sp), v in old.items() if sp == speed]
+        per_speed[speed] = {"new": sum(a) / len(a) if a else None, "old": sum(b) / len(b) if b else None,
+                            "n_new": len(a), "n_old": len(b)}
+
+    episodes = {}
+
+    for dirpath, _dirs, files in os.walk(new_root):
+        if "axis1_raw.csv" not in files:
+            continue
+
+        leaf = os.path.relpath(dirpath, new_root).replace("\\", "/")
+        old_dir = None
+
+        for od, _d, of in os.walk(old_root):
+            if "generalization_raw.csv" in of and os.path.relpath(od, old_root).replace("\\", "/").replace("/d0.5", "") == leaf:
+                old_dir = od
+
+        if old_dir:
+            episodes[leaf] = episode_level_match(os.path.join(dirpath, "axis1_raw.csv"),
+                                                 os.path.join(old_dir, "generalization_raw.csv"))
+
+    if out_csv:
+        manifest.write_csv(out_csv, rows)
+
+    return {"rows": rows, "summary": summary, "means_new": cell_means(new), "means_old": cell_means(old),
+            "per_speed": per_speed, "episodes": episodes}
