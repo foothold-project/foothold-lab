@@ -22,7 +22,7 @@ def test_axis3_jobs_skip_out_of_range_and_label_assumed_vy():
     assert not any("sparse_diag" in n for n in names)
     left = [j for j in jobs if "sparse_left" in j["name"]]
     assert len(left) == 1 and cells.VY_ASSUMED_LABEL in left[0]["args"]
-    assert "0,0.2,0" in left[0]["args"]
+    assert "--cmd=0,0.2,0" in left[0]["args"]
     cont_left = [j for j in jobs if "continuous_left" in j["name"]][0]
     assert "--cmd_basis" not in cont_left["args"]
 
@@ -50,3 +50,24 @@ def test_axis2_seed_jobs_have_distinct_seeds_and_dirs():
     seeds = [j["args"][j["args"].index("--seed") + 1] for j in jobs]
     assert seeds == ["42", "43", "44"]
     assert [os.path.basename(j["out"]) for j in jobs] == ["axis2", "axis2_s43", "axis2_s44"]
+
+
+def test_find_bash_returns_an_existing_absolute_path_not_bare_bash():
+    path = s0_chain.find_bash()
+    assert os.path.isabs(path) and os.path.isfile(path) and os.path.basename(path).lower() == "bash.exe"
+    assert "system32" not in path.lower()
+
+
+def test_negative_commands_are_attached_to_the_flag_and_parse():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cmd", default="0.5,0,0")
+    jobs = [j for j in s0_chain.expand_jobs("e1", "R", ("axis3",))]
+    negative = [j for j in jobs if any(a.startswith("--cmd=-") or a.startswith("--cmd=0,-") or a.startswith("--cmd=0,0,-")
+                                       for a in j["args"])]
+    assert len(negative) >= 4
+    for job in jobs:
+        flags = [a for a in job["args"] if a == "--cmd" or a.startswith("--cmd=")]
+        assert len(flags) == 1 and flags[0].startswith("--cmd=")
+        got = parser.parse_known_args([flags[0]])[0].cmd
+        assert len(got.split(",")) == 3

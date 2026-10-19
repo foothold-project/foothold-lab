@@ -25,6 +25,19 @@ from foothold_s2.eval import cells, manifest
 
 START_GAP_S = 60
 
+# `bash` 만 쓰면 파이썬 자식 프로세스의 PATH 에서 WSL 의 System32 bash 가 먼저 잡혀 rc=127 로 죽는다
+# (10/20 03:49 첫 연쇄 실패). Git 의 bash 를 절대 경로로 부른다.
+BASH_CANDIDATES = (os.environ.get("FOOTHOLD_BASH", ""), "C:/Program Files/Git/bin/bash.exe",
+                   "C:/Program Files/Git/usr/bin/bash.exe")
+
+
+def find_bash():
+    for path in BASH_CANDIDATES:
+        if path and os.path.isfile(path):
+            return path
+
+    raise FileNotFoundError("Git bash 를 못 찾았습니다. FOOTHOLD_BASH 에 경로를 주세요: %r" % (BASH_CANDIDATES,))
+
 # 판 이름 -> (run_eval --policy 값, 체크포인트). E1 은 sha256 c8951b79 ... 2df47e8.
 CHECKPOINTS = {
     "e1": ("e1", "C:/Users/AI-WS01/s2_lab/step1_run_b2/fixtures/model_20000.pt"),
@@ -72,7 +85,8 @@ def expand_jobs(policy, root, include_axes=("axis1", "axis2", "axis3"), vy_obs=N
 
             for cmd in row["commands"]:
                 tag = "%s_%s_%s" % (row["group"], row["direction"], _cmd_text(cmd).replace(",", "_"))
-                args = ["axis3"] + base + ["--group", row["group"], "--cmd", _cmd_text(cmd),
+                # 음수 명령은 `--cmd=-0.5,0,0` 처럼 붙여 써야 한다 (떼어 쓰면 argparse 가 옵션으로 읽어 rc=2)
+                args = ["axis3"] + base + ["--group", row["group"], "--cmd=" + _cmd_text(cmd),
                                            "--direction", row["direction"]]
 
                 if row.get("basis") == cells.VY_ASSUMED_LABEL:
@@ -140,7 +154,7 @@ class Scheduler:
             self.wait_gap()
             self.log("start %s gpu%d try%d" % (job["name"], gpu, attempt))
             env = dict(os.environ, DEVICE="cuda:%d" % gpu)
-            code = subprocess.call(["bash", self.run_kit, job["out"]] + job["args"], env=env,
+            code = subprocess.call([find_bash(), self.run_kit, job["out"]] + job["args"], env=env,
                                    creationflags=0x08000000 if os.name == "nt" else 0)
             os.makedirs(job["out"], exist_ok=True)
 
