@@ -78,7 +78,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  S1[S1-blind 하위 · 실기 가능] --> DBG[11/3~11/10 S3 코드 디버그 · 짧은 실행 · S2-G1 중간 체크포인트로 하위 내장 1 회]
+  S1[S1-blind 하위 · 실기 가능] --> DBG[11/5~11/9 S3 코드 디버그 · 짧은 실행 · S2-G1 중간 체크포인트로 하위 내장 1 회]
   DBG --> SEL{11/10 날짜 관문 · D34<br/>S2 가 F26 사전 통과?}
   SEL -->|예| T2[teacher · S2 하위 내장 · 하위 지각은 정답 지도 J-E]
   SEL -->|아니오 · J-D| T1[teacher · S1-blind 하위 내장]
@@ -92,8 +92,8 @@ flowchart LR
 
 - **왜 하위가 중요한가.** teacher 는 하위를 전이에 넣고 「지나갈 수 있는 곳」 을 겪으며 배운다(**논문** 288~291 행). S1 하위는 징검다리를 못 건너므로(E1 0 %) 그 위에서 배운 teacher 는 듬성한 패치를 **우회**하는 정책이 된다. 하위를 S2 로 바꾼 뒤 student 만 재증류하면 teacher 의 경로 선택은 그대로다. 논문도 미리 고정된 다른 하위(RPL)를 붙였을 때 분포 이동으로 충돌이 늘었다고 적었다(**논문** 876~880 행). 그래서 「논문대로 한 벌」 과 「듬성한 지형 목표」 는 하위 선택이 다르다(D34, VERIFY 20f P30).
 - **11/10 「아니오」 의 하위는 S1-blind** 다(**팀장 승인 J-D**, VERIFY-lead-final 4). S1-scan 은 시뮬 전용 관측이라 그 위의 teacher · student 는 실기에 못 올린다. S1-blind 위 S3 는 듬성한 패치를 우회하지만 실기 앱 목표(평지 · 장애물 · 계단)에는 쓸 수 있다.
-- **S2 하위 내장 방식**(**팀장 승인 J-E**): teacher 단계에서는 S2 하위의 TR-Net 지도 입력을 정답 높이 지도로 대신한다(우리 변경). student 단계에서 실제 depth + TR-Net 으로 바꾸고, teacher 때와 student 때의 하위 추종 오차 차이를 기록한다. 이 경로는 본 학습 전에 반드시 한 번 돈다: 11/3~11/10 디버그 창에서 S2-G1 중간 체크포인트(예: 3,000 회)를 넣어 첫 10 update · 예행 8 판 · 메모리를 잰다(VERIFY-lead-final 5).
-- **교체 관문 F26**(fable 20e 7 절, 사전 · 사후로 나눔): 사전 (1) S2 하위가 공통 시험지 분포 안 칸에서 끝까지 생존 ≥ **S1-blind**, (2) START 시험지 R 평균 ≥ **S2-G0 + 10 %p** → 재증류(또는 재학습) 실행. 사후 (3) **재증류판**: Corridor · Room SR 하락 ≤ 2 %p(재증류 전 student 대비) → 채택. 사후 (3′) **teacher 재학습판**: 관문 S3 전체(Corridor ≥ 90 · Room ≥ 85 · 우리 지형 방 ≥ 70 · 진입각 ≤ 15° · 충돌 ≤ 5 %)를 다시 통과 → 채택(VERIFY-lead-final 6). 수치는 **가정**(41 §9).
+- **S2 하위 내장 방식**(**팀장 승인 J-E**): teacher 단계에서는 S2 하위의 TR-Net 지도 입력을 정답 높이 지도로 대신한다(우리 변경). student 단계에서 실제 depth + TR-Net 으로 바꾸고, teacher 때와 student 때의 하위 추종 오차 차이를 기록한다. 이 경로는 본 학습 전에 반드시 한 번 돈다: 11/5~11/9 디버그 창에서 S2-G1 중간 체크포인트(예: 3,000 회)를 넣어 첫 10 update · 예행 8 판 · 메모리를 잰다(VERIFY-lead-final 5).
+- **교체 관문 F26**(fable 20e 7 절, 사전 · 사후로 나눔): 사전 (1) 축 1 이어진 지형 16 칸 S 생존이 칸별 Wilson 규칙으로 **S1a-blind-v1** 이상(41 §9 F26 사전 행 · 칸 목록 · 규칙 하나, VERIFY-lead-final2 15), (2) START 시험지 R 평균 ≥ **S2-G0 + 10 %p** → 재증류(또는 재학습) 실행. 사후 (3) **재증류판**: Corridor · Room SR 하락 ≤ 2 %p(재증류 전 student 대비) → 채택. 사후 (3′) **teacher 재학습판**: 관문 S3 전체(Corridor ≥ 88.6 · Room ≥ 85.1 · 우리 지형 방 ≥ 70 · 진입각 ≤ 15° · 충돌 ≤ 5 %)를 다시 통과 → 채택(VERIFY-lead-final 6). 수치는 **가정**(41 §9).
 - 재증류는 student 만(teacher 재학습 없음)으로 시작한다. teacher 의 특권 지도는 하위와 무관하지만, 전이에 하위가 들어 있으므로 student 데이터는 새 하위로 다시 모은다 → **가정**.
 
 ## 5. 장면 예
@@ -111,7 +111,7 @@ flowchart LR
 1. **환경**: Isaac Lab 2.3.2 direct 또는 manager-based 환경 하나에 22 문서의 방을 만든다(`foothold_s2/tasks/nav_env_cfg.py` · `nav/room_generator.py`). 정책 주기 10 Hz = 하위 50 Hz 의 5 스텝마다 상위 한 번.
 2. **하위 내장**: 우리 하위 student 를 TorchScript 로 고정해 환경 step 안에서 호출한다. 하위 관측(o_p 이력 등)은 환경이 만든다. 하위 gradient 는 막는다. 상위 출력은 하위 학습 범위(vx ±1.5 · vy ±1.0 · wz ±2.0, 듬성한 지형에서는 14 §3 의 범위)로 clip 하고 r9 로 벌점. **하위가 S2 일 때**: teacher 환경은 하위의 지도 입력에 정답 높이 지도(RayCaster 32×16 격자, 12 §8)를 넣고 depth 렌더 · TR-Net · GRU 를 돌리지 않는다(J-E). student 환경은 하위용 60×60 RayCasterCamera(35°) + TR-Net 을 실제로 돌리고, `mesh_prim_paths` 에 방의 벽 · 탁자 · 상자 메시를 포함한다(바닥만 보면 장애물이 지도에 안 나온다, VERIFY-lead-final 5). 메모리 · 시간은 18 §4 표의 미측정 칸.
 3. **teacher 지도**: 지형 메시에서 로봇 주변 3D 점유(14×11×11 @0.1 m)와 2.5D 고도(31×21 @0.1 m)를 레이캐스트로 만든다. 지도 중심 · yaw 정렬은 **논문 미기재** → 몸 yaw 정렬 · 중심 기준(DECISIONS H2 「중심 기준」)으로 **가정**.
-4. **student depth**: TiledCamera 또는 RayCasterCamera 180×320, 128 env(`nav/hl_student.py`), 자세는 11 §2 의 35°(J-C). 메모리 미측정 → 11/3~11/10 디버그 창에서 잰다.
+4. **student depth**: TiledCamera 또는 RayCasterCamera 180×320, 128 env(`nav/hl_student.py`), 자세는 11 §2 의 35°(J-C). 메모리 미측정 → 11/5~11/9 디버그 창에서 잰다.
 5. **PGCL · A***: 22 문서(`nav/gvd_astar.py` · `nav/pgcl.py`).
 6. **DAgger**: Isaac Lab `RslRlDistillationRunnerCfg`(`distillation_cfg.py` 106) 바탕. 상위 student 를 rollout 하며 teacher 가 (c, z_s) 를 라벨로 붙이고 집합을 키운다. 데이터셋 크기 · 혼합 일정 **논문 미기재** → **가정**(runner 기본값 기록).
 7. **기록**: 상위 명령 히스토그램(방향별), 추종 오차, 충돌 수, PGCL 레벨, SR · SPL(0.2 m 문턱, **논문** 728 행).
@@ -129,13 +129,13 @@ flowchart LR
 ## 8. 평가 (41 로 넘김)
 
 - 논문 지표: SR(0.2 m 안 도착) · SPL (**논문** 728 행). 벤치마크 Corridor · Room · Complex-1 · Complex-2 를 우리 환경 생성기로 재현하고, 보행 지형이 들어간 방을 추가 시험지로 둔다.
-- 비교군: 자세 없는 HiPAN 논문 값(Table IV)은 Go1 · Isaac Gym 값이라 직접 비교가 아니라 「참고 축」 이다. 관문 후보는 41 §9(Corridor ≥ 90 · Room ≥ 85 · 우리 지형 방 ≥ 70 · 진입각 ≤ 15° · 충돌 ≤ 5 %).
+- 비교군: 자세 없는 HiPAN 논문 값(Table IV)은 Go1 · Isaac Gym 값이라 직접 비교가 아니라 「참고 축」 이다. 관문 후보는 41 §9(Corridor ≥ 88.6 · Room ≥ 85.1 · 우리 지형 방 ≥ 70 · 진입각 ≤ 15° · 충돌 ≤ 5 %).
 
 ## 9. 검증할 가설
 
 | # | 가설 | 어떻게 보나 |
 |---|---|---|
-| H21-1 | 3 칸 출력 HiPAN 이 Go2 + 우리 하위에서 논문 「자세 없는 판」 수준(Corridor ≥ 90 %)에 닿는다 | Corridor · Room SR |
+| H21-1 | 3 칸 출력 HiPAN 이 Go2 + 우리 하위에서 논문 「자세 없는 판」 수준(Corridor ≥ 88.6 %, 41 §9)에 닿는다 | Corridor · Room SR |
 | H21-2 | 하위를 내장해 학습한 상위가 듬성한 지형이 있는 방에서 접근 방향을 맞춘다 | 22 문서 방, 외나무 진입 각 오차 |
 | H21-3 | 하위 교체 뒤 student 재증류만으로 SR 하락 ≤ 2 %p | F26 사후 |
 | H21-4 | S1 하위 위 teacher 는 듬성한 패치를 우회한다(위험 9 의 확인) | 패치 우회율 · 우리 지형 방 도달률 |

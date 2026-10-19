@@ -48,7 +48,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 
 ## 4. 단계별 GPU 시간 (이 표가 정본 · 52~55 · 70 은 여기를 가리킨다)
 
-환산식(ASTRA 19f Q6 · fable 20e Q6): 우리 시간 T = 논문 시간 H × 학습량 배율 r / 처리량 비 q + 추가 작업. q 는 「같은 env 수 · 같은 렌더에서 수집과 갱신 전체 처리량의 비」 이고 아직 재지 않았다(q 0.5~1.0 가정, r = 1).
+환산식(ASTRA 19f Q6 · fable 20e Q6): 우리 시간 T = 논문 시간 H × 학습량 배율 r / 처리량 비 q + 추가 작업. q 는 「같은 env 수 · 같은 렌더에서 수집과 갱신 전체 처리량의 비」 이고 아직 재지 않았다(q 0.5~1.0 가정, r = 1 · S2 세 판은 반복 2 배라 r = 2(L)).
 
 | 판 | 근거 | 우리 추정 | 등급 |
 |---|---|---|---|
@@ -59,11 +59,11 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | S2 G1 (지도만 · 20,000 회) | START 16.6 h(10,000 회), q 0.5~1.0 → 18~30 h, 반복 2 배(r = 2, L) | **36~60 h** | **논문** + **가정** q (20e Q6) · **L** |
 | S2 G3 (지도 + 가장자리 · 20,000 회) | 같음 | **36~60 h** | 같음 |
 | S3 teacher (하위 지각은 정답 지도로 대체 · J-E) | HiPAN 18 h · 4090, GPU 비 1.25~1.4. 하위가 S2 여도 teacher 단계에는 depth 렌더가 없다(21 §6) | 22~25 h | **논문** 535 행 + **가정** (20e Q6) |
-| S3 student (상위 depth 180×320 × 128 env + 하위가 S2 면 60×60 depth × 128 env · TR-Net · GRU) | HiPAN 6 h. 하위 depth · TR-Net 추가 비용은 **미측정**(11/3~11/10 디버그 창에서 S2-G1 중간 체크포인트로 한 번 실행해 잰다, VERIFY-lead-final 5) | 7.5~8.5 h (+ 하위 depth 미측정) | **가정** |
+| S3 student (상위 depth 180×320 × 128 env + 하위가 S2 면 60×60 depth × 128 env · TR-Net · GRU) | HiPAN 6 h. 하위 depth · TR-Net 추가 비용은 **미측정**(11/5~11/9 디버그 창에서 S2-G1 중간 체크포인트로 한 번 실행해 잰다, VERIFY-lead-final 5 · final2 10) | 7.5~8.5 h (+ 하위 depth 미측정) | **가정** |
 | S3 student 재증류(하위 교체 뒤) | student 만 | 8 h | **가정** |
 | S3 teacher 재학습(D34: S1 위에서 배웠고 S2 가 뒤늦게 F26 사전을 넘은 때만) | teacher + student | 30~34 h | **가정** |
 | S4 (S2 이어 학습 5,000 회 + L1 광선 2,100 개) | 5,000 회(S2 20,000 의 1/4 · L 전 10,000 기준의 절반, 반복 수는 L 로 바뀌지 않음) + 광선 비용 | 9~15 h | **가정** |
-| S1-x 시뮬 간 확인 (K-I) | MuJoCo · Gazebo 는 CPU 위주 · 칸당 50 판 × 16 칸 × 2 시뮬. Isaac 쪽 비교값은 S1-a 평가에서 이미 나옴 | GPU ≈ 0 (합에 더하지 않음) | **가정** |
+| S1-x 시뮬 간 확인 (K-I) | MuJoCo · Gazebo 는 CPU 위주 · 칸당 50 판 × 16 칸 × 2 시뮬. Isaac 쪽 기준값은 같은 16 칸 · 50 판을 S1-x 직전 Isaac 에서 따로 잰다(축 3 본 평가에는 평지 칸이 없음, VERIFY-lead-final2 11) | GPU ≈ 0.5 h (합에 더하지 않음) | **가정** |
 | (참고) HiPAN 저수준 | 12 h + 2 h · 4090 | 사용 안 함(우리 보행으로 대체) | **논문** 632~634 행 |
 | **합** | 행을 그대로 더함: 7 + 7 + 3.5~5 + 18~28 + 36~60 + 36~60 + 22~25 + 7.5~8.5 + 8 + 9~15 | **154~224 GPU·h** (teacher 재학습 30~34 h 포함 184~258) | L 로 S2 세 판이 2 배(L 전 120~175 · 150~210) · S1-x 는 GPU ≈ 0 |
 
@@ -84,7 +84,8 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | 모듈 | 파일 (Isaac Lab 확장 `foothold_s2/` 가칭) | 담당(코딩 세션) | 검증 | 쓰는 단계 |
 |---|---|---|---|---|
 | 명령 생성기 · 승급 | `commands/mixed_command.py` · `curriculum/terrain_levels_mixed.py` | lead (Sonnet) | fable L0~L2 | S1~S4 |
-| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py` · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py` | lead (Sonnet) | fable · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
+| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py`(열 수 50 · 우리 변경, 15 §2) · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py`(**p_advance env 원점 재배정 term · Isaac Lab 에 없어 직접 구현**, 15 §5) | lead (Sonnet) | fable(15 §9 열 배정 · 재배정 L0) · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
+| 11/7 시연 | `sim/isaac_teleop.py`(조이스틱 → 세 칸 → 정책 50 Hz · Isaac Sim 창 · 녹화 · 정지 · 회전 · 저속) | lead (Sonnet) | fable(11/6 리허설 확인) | 11/7 · 52 §5 · 70 |
 | 보상 | `rewards/start_rewards.py` | lead (Sonnet) | fable | S1~S4 |
 | 로봇 · DR | `robots/go2_cfg.py` | lead (Sonnet) | fable · ASTRA 1 회(DCMotor 분리) | 전부 |
 | 센서 · 증강 | `sensors/depth_cam_cfg.py` · `sensors/depth_aug.py` · `sensors/l1_raycaster.py`(S4) | rl (Sonnet) | fable · ASTRA 1 회(RayCasterCamera) | S2 · S4 |
