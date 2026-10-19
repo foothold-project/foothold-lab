@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (40 평가 · 시뮬 평가 축과 판정 규칙)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · VERIFY-fable-20f P4 · P25 · P26 · P27
-> 요지: v2 의 두 자(험지 · 평지 명령)를 그대로 두고, 「명령이 험지에서도 열렸나」 를 재는 축 3 과 START 시험지 · 무대 계단 칸을 더한다. 기준은 학습 전에 등록하고 해시를 남긴다. 단계별 관문 후보 수치를 S1~S4 모두 여기에 모은다
-> 상태: v1 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님)
+> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27
+> 요지: v2 의 두 자(험지 · 평지 명령)를 그대로 두고, 「명령이 험지에서도 열렸나」 를 재는 축 3 과 START 시험지 · 무대 계단 칸을 더한다. 기준은 학습 전에 등록하고 해시를 남긴다. 단계별 관문 후보 수치를 S1~S4 모두 여기에 모은다. K-G heading 판정(방향 이탈 > 0.1 → 0.75 새 판)과 K-I 시뮬 간 확인 S1-x(MuJoCo · Gazebo, Isaac 값 대비 차) 관문을 가정으로 등록한다
+> 상태: v1.1 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I 반영
 
 # 41 · 시뮬 평가 축
 
@@ -17,6 +17,7 @@ flowchart LR
   N[NVIDIA Go2 rough<br/>축 1 · 축 2 기존 값] --> V2[foothold-v2<br/>축 1 0.9419 · 축 2 8/9]
   V2 --> E1[E1 MoE-CTS model_20000<br/>10/19 실측 · 축 1 0.4479 · 축 2 9/9]
   E1 --> S1[S1 열린 명령 보행 · scan / blind]
+  S1 --> S1x[S1-x 시뮬 간 확인 · MuJoCo · Gazebo · 같은 명령 열]
   S1 --> S3[S3 주행층 결합]
   S1 --> S2[S2 START 지각 G1 · G3]
   S2 --> S4[S4 L1 결합]
@@ -35,7 +36,7 @@ E1 비교의 단서(evidence 하위 작업 보고): E1 쪽은 학습 무작위�
 - 지형 16 종: 학습 계열 `rough6` (pyramid_stairs · pyramid_stairs_inv · boxes · random_rough · hf_pyramid_slope · hf_pyramid_slope_inv) + 미경험 `unseen10` (discrete_obstacles · wave · stepping_stones · gap · pit · rails · star · floating_ring · repeated_boxes · repeated_cylinders). 15 문서 7 절대로 S2 부터는 gap · stepping_stones · floating_ring 을 「학습 지형군 시험」 으로 옮겨 적는다(칸은 그대로 잰다).
 - 속도 0.5 · 1.0 · 1.5 m/s, 평가 시간 12 · 6 · 4 s, 칸당 100 판, 난이도 0.5, 시드 42, `--envs_per_terrain 10 --min_progress_m 3.0 --max_lateral_drift 0.75` (**실측** E1 `run_axis1.sh` 와 같은 인자. 하네스 기본값은 10.0 · 0.05 라 반드시 명시).
 - 하네스: **이 문서 설계대로 새로 만든다**(`foothold_s2/eval/`, 축 1 · 2 · 3 · START 시험지 · R/S/J 를 한 틀에). v2 `sim/eval/eval_generalization.py` 와 E1 판(`s2_lab/eval_e1_v2axes/harness/`)은 **참고 · 비교 대조용**으로만 쓴다: 새 하네스가 v2 · E1 체크포인트에서 옛 값(0.9419 · 0.4479 · 9/9)을 ±0.02 안에서 다시 내는지가 새 하네스의 첫 시험이다(**팀장 정정 10/19 22:5x**, APPROVED G-5 · H).
-- 성공 = 생존 AND 전진 AND 속도 추종 AND 방향(v2 정의). 성분 넷을 모두 열로 남긴다(실패 원인이 속도마다 다르다는 E1 결과: 0.5 m/s 는 방향, 1.5 m/s 는 추종).
+- 성공 = 생존 AND 전진 AND 속도 추종 AND 방향(v2 정의). 성분 넷을 모두 열로 남긴다(실패 원인이 속도마다 다르다는 E1 결과: 0.5 m/s 는 방향, 1.5 m/s 는 추종). **성분 넷 가운데 「방향」 이 최저인 칸 수**가 heading 판정(K-G · 14 §3.2)의 두 번째 신호다: E1 0.5 m/s 16 칸 중 15 칸이 방향 최저(평균 생존 0.906 · 방향 0.679, **실측** evidence/E1-vs-v2-axis1.csv · fable 재계산 10/20).
 - **주의**: 1.5 m/s 는 학습 범위가 ±1.0 인 정책에는 「범위 밖」 이다. 종합 점수와 따로 「범위 안 32 칸」 평균을 같이 적는다(v2 0.9447 · E1 0.6719).
 
 ## 3. 축 2 · 평지 명령 응답 (v2 9 절 그대로)
@@ -105,6 +106,8 @@ v2 는 험지에서 옆 · 뒤 · 회전을 한 번도 재지 않았다(v2 보�
 | S1-scan | 축 1 범위 안 32 칸 | v2 이상: 칸별 Wilson 하한 ≥ v2 칸 값 − 0.05, 진짜 하락 0 칸. **결합 효과**(종아리 한계 · PIE DR · 지형 비율 · 보상 세트 · 처음부터 학습이 함께 바뀜, VERIFY-lead-final 3)로 읽는다 | v2 0.9369 · 0.9525 (같은 관측) |
 | S1-blind | 축 1 범위 안 32 칸 | 평균 ≥ 0.67 · 생존 ≥ 0.95(결합 효과) | E1 0.6719 (눈 없음 기준) |
 | S1 공통 | 축 3 이어진 지형 · 계단 | 방향별 명령 방향 진행 ≥ 0.8 · 생존 ≥ 0.95 · 방향 이탈 ≤ 0.1 | **가정** |
+| S1 공통 (K-G 판정) | 축 3 이어진 지형 · 계단 방향 이탈, 축 1 실패 성분 | 방향 이탈 ≤ 0.1(위 행). **초과 → 60 C 처방 하나: heading 비율 0.30 → 0.75**(v2 E 판 값, **실측** v2 보고 556 행) **새 판 S1a-v1.1**. 대조 판(heading 0 %)은 없으므로 「heading 효과」 단독 결론 금지 | **가정**(30 %) · **실측** v2 569 · 574 행(heading 끔이 가장 낮음) · 577~578 행(단일 원인 미확인) |
+| **S1-x 시뮬 간 확인 (K-I)** | S1-a blind 정책(ONNX)을 MuJoCo(`unitree_mujoco`) · Gazebo 에서 **같은 명령 열**(축 2 9 칸 + 축 3 평지 · 무대 계단 칸 방향 7 칸, 칸당 50 판 · 시드 42)로 | Isaac 값 대비 속도 추종비 차 ≤ 0.10 · 생존 차 ≤ 0.05 · 방향 이탈 차 ≤ 0.05 · 축 2 9 칸 판정 동일. 어긋나면 「시뮬 차이」 로 기록하고 앱 시뮬 연결(23 §5)은 Isaac 으로 | **가정** (JEPLO 가 IsaacLab 학습 뒤 별도 MuJoCo 평가 환경을 둠, **논문** 2609.15770v1 246 · 249 행) |
 | S1 공통 | 무대 계단 칸 시나리오(앞 0.5 · 정지 · 회전) | J ≥ 0.9 | **가정** |
 | S1-b | 깃발 지형군 레벨 | 3,000 회에 틈 · 징검돌 레벨 중앙값 ≥ 5 | **가정** (H14-1) |
 | S1-b · S2-b | 축 3 듬성한 지형 뒤 0.3 칸(물러나기, D39) · 제자리 회전 ±1.2 칸(J-B) | 뒤 0.3: 명령 방향 진행 ≥ 0.6 · 생존 ≥ 0.9. 제자리 회전: 징검돌 · 틈 생존 ≥ 0.9(평균대 · 빔은 기록만, 몸 폭 때문에 낙하가 결과로 드러나게 둠). 옆 vy_obs 칸은 기록만. **vy_obs 규칙**: S1-b(S2 는 S2) 마지막 1,000 회 깃발 지형군 \|vy\| 명령 95 분위(14 §6) | **가정** (H14-5 · H14-6) |
@@ -121,12 +124,15 @@ v2 는 험지에서 옆 · 뒤 · 회전을 한 번도 재지 않았다(v2 보�
 
 - 칸별 CSV(성분 넷 · R/S/J · Wilson) + 판 비교 CSV(E1 선례 `summarize.py`).
 - 명령 원문 · 실행 시각 · PID · 체크포인트 sha256 · 하네스 커밋을 `command.txt` 와 manifest 에(E1 `run_axis1.sh` 의 방식).
-- 등록 파일: `evidence/baselines/gates-v1.json`(9 절 값 + vy_obs 규칙 + 비교 대상 판 이름 + 범위 안 32 칸 목록) 의 sha256 을 50 §4 의 2 단계 동결(각 학습 직전) manifest 에.
+- 등록 파일: `evidence/baselines/gates-v1.json`(9 절 값 + vy_obs 규칙 + 비교 대상 판 이름 + 범위 안 32 칸 목록 + heading 처방 0.75 + S1-x 차 문턱) 의 sha256 을 50 §4 의 2 단계 동결(각 학습 직전) manifest 에.
+- 지표 계산(R/S/J · 성분 넷 · 방향 이탈)은 시뮬에서 분리된 모듈(`foothold_s2/eval/metrics.py`)로 두고 명령 열 재생기(`eval/replay_commands.py`)도 시뮬 무관으로 두어, S1-x 에서 궤적 로그만 바꿔 같은 CSV 틀을 낸다(**가정** · K-I).
 
 ## 11. 검증 사다리 · 가설 · 열린 항목
 
 - L0 CPU: R/S/J 집계가 J ≤ min(R, S) 를 지키는지, Wilson 구간 수계산(100 판 · 0.9 → 0.826~0.945)과 일치. negative control: J > R 인 가짜 행을 넣으면 오류.
 - L1 Kit: 새 하네스 예행 8 판(이어진 지형 1 종 · 방향 2) 이 끝까지 돌고 CSV 가 남음. START 시험지 생성기 10 레벨이 뜸.
 - L1 대조: 새 하네스로 v2 · E1 체크포인트의 축 1 · 축 2 를 다시 재서 옛 값과 ±0.02 안(축 2 는 9 칸 판정 동일). 어긋나면 새 하네스를 고친다(옛 값을 고치지 않는다).
+- L1 S1-x: 명령 열 재생기가 MuJoCo 에서 축 2 `stop` 한 칸을 끝까지 돌고 Isaac 과 같은 CSV 틀을 남김(10/31).
 - H41-1: 축 3 「명령 방향 진행」 이 옆 명령에서 yaw 회전 대체를 걸러낸다(수동 라벨 20 판 대조).
-- 열린 항목: 무대 계단 치수(선택) · 축 3 평가 시간 규칙 · S3 기준값의 팀장 확정(O7).
+- H41-2: S1-x 의 Isaac 대 MuJoCo · Gazebo 차가 문턱 안이면 앱 시뮬 연결을 그 시뮬에서 해도 보행층 동작이 같다(K-I).
+- 열린 항목: 무대 계단 치수(선택) · 축 3 평가 시간 규칙 · S3 기준값의 팀장 확정(O7) · S1-x 차 문턱(±0.10 · ±0.05)과 지형(평지 + 무대 계단 칸)의 근거.

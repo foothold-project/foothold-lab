@@ -63,6 +63,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | S3 student 재증류(하위 교체 뒤) | student 만 | 8 h | **가정** |
 | S3 teacher 재학습(D34: S1 위에서 배웠고 S2 가 뒤늦게 F26 사전을 넘은 때만) | teacher + student | 30~34 h | **가정** |
 | S4 (S2 이어 학습 5,000 회 + L1 광선 2,100 개) | S2 의 절반 + 광선 비용 | 9~15 h | **가정** |
+| S1-x 시뮬 간 확인 (K-I) | MuJoCo · Gazebo 는 CPU 위주 · 칸당 50 판 × 16 칸 × 2 시뮬. Isaac 쪽 비교값은 S1-a 평가에서 이미 나옴 | GPU ≈ 0 (합에 더하지 않음) | **가정** |
 | (참고) HiPAN 저수준 | 12 h + 2 h · 4090 | 사용 안 함(우리 보행으로 대체) | **논문** 632~634 행 |
 | **합** | | **120~175 GPU·h** (teacher 재학습 포함 150~210) | S2-G0 9~14 h 를 더한 값 |
 
@@ -90,7 +91,8 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | 지각 · 정책 · runner | `models/start_perception.py` · `models/start_policy.py` · `runners/start_runner.py` | rl (Sonnet) | fable · ASTRA 1 회 | S2 · S4 |
 | 환경 task | `tasks/s1_env_cfg.py` · `tasks/s2_env_cfg.py` · `tasks/nav_env_cfg.py` | lead (Sonnet) · nav 는 rl 과 같이 | fable | S1 · S2 · S3 |
 | 주행층 | `nav/room_generator.py` · `nav/gvd_astar.py` · `nav/pgcl.py`(lead) · `nav/hl_teacher.py` · `nav/hl_student.py` · 하위 내장 어댑터(rl) | lead + rl (Sonnet) | fable · ASTRA 1 회 | S3 |
-| 평가 | `eval/axis1.py` · `axis2.py` · `axis3.py` · `rsj.py` · `start_sheet.py`(새 하네스, D30) | lead (Sonnet) | fable(옛 값 대조) | S0 부터 |
+| 평가 | `eval/axis1.py` · `axis2.py` · `axis3.py` · `rsj.py` · `start_sheet.py` · `metrics.py` · `replay_commands.py`(새 하네스, D30 · 지표 · 명령 열 재생은 시뮬 무관, 41 §10) | lead (Sonnet) · **Windows 에서 10/20~10/22**(K-H) | fable(옛 값 대조 · Linux 재현 확인 10/23) | S0 부터 |
+| 시뮬 간 확인 S1-x (K-I) | `sim_x/mujoco_go2.py`(`unitree_mujoco` 위) · `sim_x/gazebo_bridge.py`(ROS 2 Go2 패키지 후보 위) · 정책 ONNX 내보내기 | lead (Sonnet) | fable(Isaac 값 대조 · 41 §9 S1-x 행) | S1-x 10/31~11/2 · 앱 시뮬 연결 |
 | ROS 노드 | `ros/flag_follower.py` · `ros/cmd_cleaner.py` · `ros/judge_shadow.py` · `ros/policy_node.py` | lead (Sonnet) · 현민 협의 | fable · 현민 | 23 · 31 · 42 |
 | Kit 실행 · 무인 사슬 · GPU 배치 · 학습 감시 | 실행 스크립트(sol) · heartbeat · 로그 감시(Haiku 하위 작업) | lead · sol(스크립트만) | fable 첫 실행 확인 | 전부 |
 
