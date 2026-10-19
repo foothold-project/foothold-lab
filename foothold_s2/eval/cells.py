@@ -57,6 +57,10 @@ def axis1_in_range_cells():
 
 AXIS2_PARAMS = {"num_envs": 64, "seed": 42, "scenarios": ("stop", "ramp", "turn", "hold")}
 
+# 축 2 는 reset 난수만 바꿔도 hold 칸이 문턱을 넘나든다 (10/20 hold 조사). S0 는 시드 셋으로 돌린다 (lead 결정).
+# 판정 열은 기본 시드(42) 값이고, 옆에 「시드 셋 중 문턱 못 넘은 수」 를 둔다.
+AXIS2_SEEDS = (42, 43, 44)
+
 # (칸 이름, 비교, 문턱). v2 9 절. E1 선례 evidence/E1-vs-v2-axis2.csv 의 아홉 칸과 같다.
 AXIS2_CELLS = (
     ("stop/fell_ratio", "<=", 0.03),

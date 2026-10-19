@@ -56,8 +56,12 @@ def expand_jobs(policy, root, include_axes=("axis1", "axis2", "axis3"), vy_obs=N
                                  raw="axis1_raw.csv", rows=cells.AXIS1_PARAMS["episodes"] * len(names)))
 
     if "axis2" in include_axes:
-        jobs.append(dict(name="%s/axis2" % policy, out=os.path.join(root, policy, "axis2"),
-                         args=["axis2"] + base, raw="axis2_cells.csv", rows=len(cells.AXIS2_CELLS)))
+        for seed in cells.AXIS2_SEEDS:
+            suffix = "" if seed == cells.AXIS2_PARAMS["seed"] else "_s%d" % seed
+            jobs.append(dict(name="%s/axis2%s" % (policy, suffix),
+                             out=os.path.join(root, policy, "axis2" + suffix),
+                             args=["axis2"] + base + ["--seed", str(seed)],
+                             raw="axis2_cells.csv", rows=len(cells.AXIS2_CELLS)))
 
     if "axis3" in include_axes:
         for row in cells.axis3_table(vy_obs=vy_obs):

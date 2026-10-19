@@ -74,3 +74,29 @@ def test_episode_level_match_detects_a_flipped_episode(tmp_path):
     manifest.write_csv(str(tmp_path / "o.csv"), base)
     out = compare.episode_level_match(str(tmp_path / "n.csv"), str(tmp_path / "o.csv"))
     assert out["joined"] == 3 and out["same_overall"] == 2 and out["differ"] == [("t", "1", "1")]
+
+
+def test_axis2_seed_table_counts_failed_seeds(tmp_path):
+    def write(sub, vals):
+        d = tmp_path / sub
+        d.mkdir()
+        manifest.write_csv(str(d / "axis2_cells.csv"), [
+            {"cell": "hold/joint_target_delta_tail", "threshold": "<= 0.01", "value": v, "passed": v <= 0.01}
+            for v in vals])
+    write("axis2", [0.002])
+    write("axis2_s43", [0.011])
+    write("axis2_s44", [0.004])
+    rows = compare.axis2_seed_table(str(tmp_path))
+    assert rows[0]["passed"] == "True" and rows[0]["value"] == "0.002"
+    assert rows[0]["seeds_measured"] == 3 and rows[0]["seeds_failed"] == 1
+    assert rows[0]["value_s43"] == "0.011"
+
+
+def test_axis2_seed_table_missing_seeds_are_not_counted(tmp_path):
+    d = tmp_path / "axis2"
+    d.mkdir()
+    manifest.write_csv(str(d / "axis2_cells.csv"),
+                       [{"cell": "c", "threshold": "<= 1", "value": 2.0, "passed": False}])
+    rows = compare.axis2_seed_table(str(tmp_path))
+    assert rows[0]["seeds_measured"] == 1 and rows[0]["seeds_failed"] == 1
+    assert rows[0]["value_s43"] == ""

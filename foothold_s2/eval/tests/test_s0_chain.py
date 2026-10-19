@@ -9,10 +9,10 @@ def test_jobs_per_policy_count_and_rows():
     jobs = s0_chain.expand_jobs("e1", "R")
     kinds = {}
     for j in jobs:
-        kinds.setdefault(j["name"].split("/")[1], []).append(j)
-    assert len(kinds["axis1"]) == 6 and len(kinds["axis2"]) == 1 and len(kinds["axis3"]) == 23
+        kinds.setdefault(j["name"].split("/")[1].split("_")[0], []).append(j)
+    assert len(kinds["axis1"]) == 6 and len(kinds["axis2"]) == 3 and len(kinds["axis3"]) == 23
     assert sorted(j["rows"] for j in kinds["axis1"]) == [600, 600, 600, 1000, 1000, 1000]
-    assert kinds["axis2"][0]["rows"] == 9
+    assert all(j["rows"] == 9 for j in kinds["axis2"])
     assert sorted({j["rows"] for j in kinds["axis3"]}) == [300, 600]
 
 
@@ -31,8 +31,8 @@ def test_job_names_and_out_dirs_are_unique():
     jobs = []
     for p in ("e1", "v2", "nvidia"):
         jobs += s0_chain.expand_jobs(p, "R")
-    assert len({j["name"] for j in jobs}) == len(jobs) == 90
-    assert len({os.path.normpath(j["out"]) for j in jobs}) == 90
+    assert len({j["name"] for j in jobs}) == len(jobs) == 96
+    assert len({os.path.normpath(j["out"]) for j in jobs}) == 96
 
 
 def test_e1_axis1_override_dir_is_used():
@@ -43,3 +43,10 @@ def test_e1_axis1_override_dir_is_used():
 def test_job_done_false_without_outputs(tmp_path):
     job = dict(out=str(tmp_path / "nothing"), raw="axis1_raw.csv", rows=3)
     assert s0_chain.job_done(job) is False
+
+
+def test_axis2_seed_jobs_have_distinct_seeds_and_dirs():
+    jobs = [j for j in s0_chain.expand_jobs("v2", "R", ("axis2",))]
+    seeds = [j["args"][j["args"].index("--seed") + 1] for j in jobs]
+    assert seeds == ["42", "43", "44"]
+    assert [os.path.basename(j["out"]) for j in jobs] == ["axis2", "axis2_s43", "axis2_s44"]

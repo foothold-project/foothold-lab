@@ -134,3 +134,48 @@ def axis1_report(new_root, old_root, out_csv=None):
 
     return {"rows": rows, "summary": summary, "means_new": cell_means(new), "means_old": cell_means(old),
             "per_speed": per_speed, "episodes": episodes}
+
+
+def axis2_seed_table(policy_dir, out_csv=None):
+    """축 2 시드 셋 표. 판정 열(`value` · `passed`)은 기본 시드(42) 값이고, 옆에 셋의 값과 못 넘은 수를 둔다.
+
+    `policy_dir/axis2` (시드 42), `axis2_s43`, `axis2_s44` 의 `axis2_cells.csv` 를 읽는다.
+    없는 시드는 빈 칸으로 두고 「못 넘은 수」 의 분모(`seeds_measured`)에 안 센다.
+    """
+    suffix = {42: "", 43: "_s43", 44: "_s44"}
+    per_seed = {}
+
+    for seed, suf in suffix.items():
+        path = os.path.join(policy_dir, "axis2" + suf, "axis2_cells.csv")
+
+        if os.path.isfile(path):
+            per_seed[seed] = {r["cell"]: r for r in manifest.read_csv(path)}
+
+    base = per_seed.get(42)
+
+    if base is None:
+        raise FileNotFoundError("기본 시드 axis2_cells.csv 가 없습니다: %s" % policy_dir)
+
+    rows = []
+
+    for cell, r in base.items():
+        row = {"cell": cell, "threshold": r["threshold"], "value": r["value"], "passed": r["passed"]}
+        failed = 0
+        measured = 0
+
+        for seed in (42, 43, 44):
+            other = per_seed.get(seed, {}).get(cell)
+            row["value_s%d" % seed] = other["value"] if other else ""
+
+            if other is not None and other["value"] != "":
+                measured += 1
+                failed += 0 if other["passed"] == "True" else 1
+
+        row["seeds_measured"] = measured
+        row["seeds_failed"] = failed
+        rows.append(row)
+
+    if out_csv:
+        manifest.write_csv(out_csv, rows)
+
+    return rows
