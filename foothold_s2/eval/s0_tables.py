@@ -175,8 +175,10 @@ def compare_policies(axis1_rows, axis3_rows):
             by_cell.setdefault(key, {})[r["policy"]] = None
             continue
 
-        key = ("axis3", r["group"], r["direction"], "J_body|S")
-        by_cell.setdefault(key, {})[r["policy"]] = "%s|%s" % (r.get("J_body_rate"), r.get("S_rate"))
+        by_cell.setdefault(("axis3", r["group"], r["direction"], "J_body|S"), {})[r["policy"]] =             "%s|%s" % (r.get("J_body_rate"), r.get("S_rate"))
+        # 방향 이탈 비율과 명령 방향 진행도 꼭 나란히 둔다 (41 §9 「방향 이탈 <= 0.1」 이 달성 가능한 기준인지 보는 근거).
+        by_cell.setdefault(("axis3", r["group"], r["direction"], "yaw_dev_rate"), {})[r["policy"]] =             r.get("yaw_dev_rate")
+        by_cell.setdefault(("axis3", r["group"], r["direction"], "progress_capped"), {})[r["policy"]] =             r.get("mean_cmd_progress_ratio_capped")
 
     policies = sorted({r["policy"] for r in axis1_rows} | {r["policy"] for r in axis3_rows})
 

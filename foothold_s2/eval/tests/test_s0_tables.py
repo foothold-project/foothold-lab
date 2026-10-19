@@ -51,3 +51,15 @@ def test_read_rows_converts_booleans_and_numbers(tmp_path):
     row = s0_tables.read_rows(str(tmp_path / "r.csv"))[0]
     assert row["R_body"] is True and row["S"] is False and row["yaw_dev_deg"] == 12.5
     assert row["yaw_dev_flag"] is None
+
+
+def test_compare_policies_carries_yaw_deviation_rate_for_every_policy():
+    axis3 = [
+        {"policy": "e1", "group": "continuous", "direction": "front", "status": "measure",
+         "J_body_rate": 1.0, "S_rate": 1.0, "yaw_dev_rate": 0.27, "mean_cmd_progress_ratio_capped": 1.0},
+        {"policy": "v2", "group": "continuous", "direction": "front", "status": "measure",
+         "J_body_rate": 0.9, "S_rate": 1.0, "yaw_dev_rate": 0.05, "mean_cmd_progress_ratio_capped": 0.97},
+    ]
+    rows = s0_tables.compare_policies([], axis3)
+    dev = [r for r in rows if r["extra"] == "yaw_dev_rate"]
+    assert len(dev) == 1 and dev[0]["e1"] == 0.27 and dev[0]["v2"] == 0.05
