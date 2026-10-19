@@ -101,13 +101,13 @@ START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 �
 
 - 자리: `foothold_s2/robots/go2_cfg.py`. `UNITREE_GO2_CFG` 를 복제해 `actuators` 를 `hip_thigh`(`.*_hip_joint`, `.*_thigh_joint`) · `calf`(`.*_calf_joint`) 두 `DCMotorCfg` 로 나눈다. DR 은 `EventCfg` 의 `randomize_rigid_body_material`(마찰) · `randomize_rigid_body_mass`(짐) · `randomize_actuator_gains`(Kp · Kd) · 무게중심 이동 · 카메라 자세(센서 오프셋) term.
 - L0 CPU: DCMotor 식을 수계산과 대조(q̇ = 0 · 7.85 · 15.70 에서 45.43 · 22.7 · 0). AST 로 cfg 의 joint 정규식이 URDF 관절 이름 12 개를 정확히 둘로 나누는지(가짜 cfg 금지, 실제 USD 관절 이름으로).
-- L1 Kit: 첫 10 update 에서 종아리 q̇ 최대가 15.70 을 넘지 않음(히스토그램 로그).
+- L1 Kit: 첫 10 update 에서 종아리 q̇ 히스토그램 로그. DCMotor 는 토크를 줄일 뿐 속도를 막지 않으므로(`actuator_pd.py` 299~302 행) 15.70 을 넘는 스텝이 정상 판에서도 나올 수 있다. 기준은 「15.70 초과 비율 ≤ 1 %」(**가정**, VERIFY-lead-final 23).
 
 ## 10. 검증할 가설 · 열린 항목
 
 | # | 가설 | 어떻게 보나 |
 |---|---|---|
 | H17-1 | 종아리 속도 15.70 rad/s 제한이 계단 · 틈 학습을 막지 않는다 | 제한 판과 기본 판의 짧은 학습 대조(2,000 회) |
-| H17-2 | 시뮬 종아리 최고 속도 분포가 실측 한계 안에 있다 | 학습된 정책의 q̇ 히스토그램 · 42 T2 |
+| H17-2 | 시뮬 종아리 속도가 15.70 rad/s 를 넘는 스텝 비율이 1 % 이하다(DCMotor 는 속도를 자르지 않으므로 0 이 아니라 비율로) | 학습된 정책의 q̇ 히스토그램 · 42 T2 |
 
 열린 항목: PIE 「초기 관절 0.5 ~ 1.5」 의 단위 · 종료 조건 숫자(가정 유지) · 지속 토크 23.5 변형의 실측 뒤 재검토 · 센서 질량.

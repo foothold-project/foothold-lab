@@ -52,20 +52,21 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 
 | 판 | 근거 | 우리 추정 | 등급 |
 |---|---|---|---|
-| S1-a scan (높이 스캔) | 4.17 s/회 × 6,000 회 | 7.0 h | **실측** 처리량 + 계산 |
+| S1-a scan (높이 스캔) | 4.17 s/회 × 6,000 회. 4.17 s 는 Windows · NVIDIA 식 env · 눈 없음 조건의 실측이라 우리 조건(Linux · 14 생성기 · 정사각 메시 · 종아리 DCMotor)과 다르다 | 7.0 h | **다른 조건 실측 + 가정**(VERIFY-lead-final 22) |
 | S1-a blind (눈 없음) | 같음 | 7.0 h | 같음 |
-| S1-b (깃발 지형군 추가 · 이어 학습 3,000 회) | 메시 지형 포함, 처리량 미측정 | 3.5~5 h | **가정** |
+| S1-b (깃발 지형군 추가 · blind 이어 학습 3,000 회) | 메시 지형 포함, 처리량 미측정 | 3.5~5 h | **가정** |
+| **S2-G0 (눈만 끈 판 · 3072 · 10,000 · depth 렌더 없음)** | S2 틀에서 depth 렌더 · TR-Net 이 빠지므로 G1 보다 빠름. 23,000 steps/s 기준 73,728 × 10,000 ÷ 23,000 ≈ 8.9 h, 메시 지형 · 생성기 비용으로 1.5 배 | 9~14 h | **가정**(J-A · VERIFY-lead-final 1 · 2) |
 | S2 G1 (지도만) | START 16.6 h, q 0.5~1.0 | 18~30 h | **논문** + **가정** q (20e Q6) |
 | S2 G3 (지도 + 가장자리) | 같음 | 18~30 h | 같음 |
-| S3 teacher | HiPAN 18 h · 4090, GPU 비 1.25~1.4 | 22~25 h | **논문** 535 행 + **가정** (20e Q6) |
-| S3 student | HiPAN 6 h | 7.5~8.5 h | 같음 |
+| S3 teacher (하위 지각은 정답 지도로 대체 · J-E) | HiPAN 18 h · 4090, GPU 비 1.25~1.4. 하위가 S2 여도 teacher 단계에는 depth 렌더가 없다(21 §6) | 22~25 h | **논문** 535 행 + **가정** (20e Q6) |
+| S3 student (상위 depth 180×320 × 128 env + 하위가 S2 면 60×60 depth × 128 env · TR-Net · GRU) | HiPAN 6 h. 하위 depth · TR-Net 추가 비용은 **미측정**(11/3~11/10 디버그 창에서 S2-G1 중간 체크포인트로 한 번 실행해 잰다, VERIFY-lead-final 5) | 7.5~8.5 h (+ 하위 depth 미측정) | **가정** |
 | S3 student 재증류(하위 교체 뒤) | student 만 | 8 h | **가정** |
 | S3 teacher 재학습(D34: S1 위에서 배웠고 S2 가 뒤늦게 F26 사전을 넘은 때만) | teacher + student | 30~34 h | **가정** |
 | S4 (S2 이어 학습 5,000 회 + L1 광선 2,100 개) | S2 의 절반 + 광선 비용 | 9~15 h | **가정** |
 | (참고) HiPAN 저수준 | 12 h + 2 h · 4090 | 사용 안 함(우리 보행으로 대체) | **논문** 632~634 행 |
-| **합** | | **110~160 GPU·h** (teacher 재학습 포함 140~195) | |
+| **합** | | **120~175 GPU·h** (teacher 재학습 포함 150~210) | S2-G0 9~14 h 를 더한 값 |
 
-날짜 예산(Linux 학습 시작 10/24 00:00 가정 · 70 문서와 같음): ~11/7 14 일 두 장 672 GPU·h, ~11/25 32 일 1,536 GPU·h. 합은 7~12 %(재학습 포함 13 %)다. 디버그로 판마다 2~3 번 돌려도 40 % 안이다. fable 20e 의 「GPU 시간은 병목이 아니고 코드가 병목」 과 같은 결론. 반복 수를 다 못 채운 판은 「목표 n 회 중 m %」 로 적는다(타협 원칙 ③).
+날짜 예산(Linux 학습 시작 10/24 00:00 가정 · 70 문서와 같음): ~11/7 14 일 두 장 672 GPU·h, ~11/25 32 일 1,536 GPU·h. 합은 8~11 %(재학습 포함 14 %)다. 디버그로 판마다 2~3 번 돌려도 40 % 안이다. fable 20e 의 「GPU 시간은 병목이 아니고 코드가 병목」 과 같은 결론. 반복 수를 다 못 채운 판은 「목표 n 회 중 m %」 로 적는다(타협 원칙 ③).
 
 ## 5. 16 GB 대책
 
@@ -75,23 +76,25 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 - 대가: 두 장을 한 판에 묶으면 S2 와 S3 를 나란히 못 돌린다. 그 경우 70 의 배치에서 S3 는 S2 가 끝난 뒤로 민다(기록).
 - 검증 절차(super2 런북 7 절 · vfxpedia/mai-os#34 에 숫자로): 두 장 인식 · NCCL all-reduce · Go2 10 회 두 장 / 한 장 대조 · depth 카메라 두 장 렌더 · 문제 시 `NCCL_SHM_DISABLE=1` · 화면용 GPU 가 렌더에 필요한 점(`isaac-render-needs-display-gpu`).
 
-## 6. 구현 주체와 코드 자리 (APPROVED G · 70 과 같이)
+## 6. 구현 주체와 코드 자리 (팀장 승인 10/20 00:0x · APPROVED I 「역할」 · 70 과 같이)
 
-codex 주간 한도가 약 82 % 라 sol(codex) 이 크게 못 움직인다(70 §4). 그래서 코드는 mai-code(Claude 엔진) 와 Claude 하위 작업이 만들고, lead 가 검증하고, ASTRA 는 동결 직전 한 번 코드를 본다(90 열린 결정 O5 와 묶임 · 팀장 결정 필요).
+**구현은 rl 세션 + lead** 가 맡는다. lead: 명령 생성기 · 지형과 승급 · 새 평가 도구 · 학습 실행. rl: 눈 있는 보행 신경망(TR-Net · I-E · AdaSmpl) · 학습 runner. 모듈 코딩은 두 담당이 띄우는 **Sonnet 세션**이 하고, 학습 감시(heartbeat · 로그 · GPU 상태 · 첫 update 확인)는 **Haiku 하위 작업**이 한다. **검증은 fable**(단계 관문마다 · 답을 아는 입력 시험 · 실제 첫 실행 확인). **ASTRA 는 한 회**: 설치된 Isaac Lab 2.3.2 코드로 설계가 실제 API 로 구현 가능한지(RayCasterCamera · 다중 GPU DDP · DCMotor 종아리 분리 · 지형 생성기 · 순환 신경망 runner) + 큰 위험 셋(눈 있는 보행 코드 · 16 GB · 11/10 관문) 반대 의견, 새 창 · 결과 파일 하나. **sol(codex) 은 실행 스크립트만**(한도 약 82 %). O5 는 이것으로 닫힘(90 D41).
 
-| 모듈 | 파일 (Isaac Lab 확장 `foothold_s2/` 가칭) | 만드는 이 | 검증 | 쓰는 단계 |
+| 모듈 | 파일 (Isaac Lab 확장 `foothold_s2/` 가칭) | 담당(코딩 세션) | 검증 | 쓰는 단계 |
 |---|---|---|---|---|
-| 명령 생성기 · 승급 | `commands/mixed_command.py` · `curriculum/terrain_levels_mixed.py` | mai-code | lead L0~L2 | S1~S4 |
-| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py` · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py` | mai-code | lead · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
-| 보상 | `rewards/start_rewards.py` | mai-code | lead | S1~S4 |
-| 로봇 · DR | `robots/go2_cfg.py` | mai-code | lead | 전부 |
-| 센서 · 증강 | `sensors/depth_cam_cfg.py` · `sensors/depth_aug.py` · `sensors/l1_raycaster.py`(S4) | mai-code | lead | S2 · S4 |
-| 지각 · 정책 · runner | `models/start_perception.py` · `models/start_policy.py` · `runners/start_runner.py` | mai-code | lead · ASTRA 1 회 | S2 · S4 |
-| 환경 task | `tasks/s1_env_cfg.py` · `tasks/s2_env_cfg.py` · `tasks/nav_env_cfg.py` | mai-code | lead | S1 · S2 · S3 |
-| 주행층 | `nav/room_generator.py` · `nav/gvd_astar.py` · `nav/pgcl.py` · `nav/hl_teacher.py` · `nav/hl_student.py` | mai-code | lead · ASTRA 1 회 | S3 |
-| 평가 | `eval/axis3.py`(`eval_generalization.py` 확장) · `eval/rsj.py` · `eval/start_sheet.py` | mai-code | lead | S0 부터 |
-| ROS 노드 | `ros/flag_follower.py` · `ros/cmd_cleaner.py` · `ros/judge_shadow.py` · `ros/policy_node.py` | mai-code | lead · 현민 | 23 · 31 · 42 |
-| Kit 실행 · 무인 사슬 · GPU 배치 | 실행 스크립트 · heartbeat | lead (sol 은 한도 안에서) | lead | 전부 |
+| 명령 생성기 · 승급 | `commands/mixed_command.py` · `curriculum/terrain_levels_mixed.py` | lead (Sonnet) | fable L0~L2 | S1~S4 |
+| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py` · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py` | lead (Sonnet) | fable · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
+| 보상 | `rewards/start_rewards.py` | lead (Sonnet) | fable | S1~S4 |
+| 로봇 · DR | `robots/go2_cfg.py` | lead (Sonnet) | fable · ASTRA 1 회(DCMotor 분리) | 전부 |
+| 센서 · 증강 | `sensors/depth_cam_cfg.py` · `sensors/depth_aug.py` · `sensors/l1_raycaster.py`(S4) | rl (Sonnet) | fable · ASTRA 1 회(RayCasterCamera) | S2 · S4 |
+| 지각 · 정책 · runner | `models/start_perception.py` · `models/start_policy.py` · `runners/start_runner.py` | rl (Sonnet) | fable · ASTRA 1 회 | S2 · S4 |
+| 환경 task | `tasks/s1_env_cfg.py` · `tasks/s2_env_cfg.py` · `tasks/nav_env_cfg.py` | lead (Sonnet) · nav 는 rl 과 같이 | fable | S1 · S2 · S3 |
+| 주행층 | `nav/room_generator.py` · `nav/gvd_astar.py` · `nav/pgcl.py`(lead) · `nav/hl_teacher.py` · `nav/hl_student.py` · 하위 내장 어댑터(rl) | lead + rl (Sonnet) | fable · ASTRA 1 회 | S3 |
+| 평가 | `eval/axis1.py` · `axis2.py` · `axis3.py` · `rsj.py` · `start_sheet.py`(새 하네스, D30) | lead (Sonnet) | fable(옛 값 대조) | S0 부터 |
+| ROS 노드 | `ros/flag_follower.py` · `ros/cmd_cleaner.py` · `ros/judge_shadow.py` · `ros/policy_node.py` | lead (Sonnet) · 현민 협의 | fable · 현민 | 23 · 31 · 42 |
+| Kit 실행 · 무인 사슬 · GPU 배치 · 학습 감시 | 실행 스크립트(sol) · heartbeat · 로그 감시(Haiku 하위 작업) | lead · sol(스크립트만) | fable 첫 실행 확인 | 전부 |
+
+주행층 · ROS 노드의 lead / rl 배정은 승인문(APPROVED I 역할)에 없어 이 표가 **가정**이다(90 남은 질문).
 
 ## 7. 구현 방법 · 검증 사다리
 
@@ -99,6 +102,7 @@ codex 주간 한도가 약 82 % 라 sol(codex) 이 크게 못 움직인다(70 §
 - 판마다 첫 10 회에서 `Perf/collection time` · `Perf/learning_time` · `Perf/total_fps` · 장당 최대 메모리를 기록해 q 를 구하고 4 절 표를 실측으로 바꾼다(evidence/tfevents_perf.py 재사용).
 - 사다리: L0 cfg AST 대조(실제 Kit 등록 이름) → L1 첫 10 update(Traceback 0 · 메모리 · steps/s · 체크포인트 파일) → L2 첫 update 로그 확인 → L3 본 학습(무인 사슬 · heartbeat · GPU 두 장 상태 한 줄 보고) → L4 평가.
 - 학습 승인: 2 단계 학습은 설계 동결 뒤 Linux 이전을 마치고 학습을 시작할 때 팀장이 새로 한다(APPROVED H). 다른 세션의 승인은 승인이 아니다.
+- 동결은 두 단계다(50 §4): 설계 문서 10/22, 단계별 cfg · 하네스 · 관문 해시는 각 학습 직전.
 
 ## 8. 검증할 가설
 
@@ -111,6 +115,6 @@ codex 주간 한도가 약 82 % 라 sol(codex) 이 크게 못 움직인다(70 §
 
 ## 9. 열린 항목
 
-- q(처리량 비) 실측 · depth 메모리 실측.
+- q(처리량 비) 실측 · depth 메모리 실측 · S3 student 단계의 하위 depth 추가 비용.
 - 「한 장 둘」 대 「두 장 하나」 배정의 실제 전환 시점(70 과 함께).
-- 구현 주체 O5 의 팀장 결정.
+- 주행층 · ROS 노드의 lead / rl 배정(가정) 확인.
