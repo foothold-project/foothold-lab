@@ -226,6 +226,8 @@ class IsaacLabAdapter:
     평지 축(2)은 레지스트리 기본 설정을 평면으로 바꿔 `gym.make` 한다 (옛 `eval_command_response.py`).
     """
 
+    rebuilds_obs = True  # 평지 축 2 에서 명령을 쓴 뒤 관측을 다시 짓는다 (옛 v2 프로브와 같은 순서)
+
     def __init__(self, name="isaaclab", env_cfg_class=None, apply_gap_aware=None, std_form=None):
         self.name = name
         self.env_cfg_class = env_cfg_class

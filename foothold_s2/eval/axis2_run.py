@@ -85,6 +85,7 @@ def run(args, adapter, runtime, device):
 
     robot = raw.scene["robot"]
     dt = raw.step_dt
+    rebuild = getattr(adapter, "rebuilds_obs", False)
     summary = {}
     per_scenario_env = {}
 
@@ -109,6 +110,16 @@ def run(args, adapter, runtime, device):
 
         for step in range(n_steps):
             t = step * dt
+
+            if rebuild:
+                # Isaac Lab 계열(관측 이력 없음): 옛 v2 프로브처럼 시각 t 의 명령을 쓰고 관측을 다시 짓는다.
+                # 안 하면 reset 직후 첫 행동이 reset 때 뽑힌 0 명령을 본다 (stop 의 첫 스텝이 1.0 이어야 한다).
+                cur = torch.tensor(profile(t), device=raw.device, dtype=torch.float32)
+                pin.base[:] = cur
+                pin.want[:] = cur
+                _cmd(term)[:, :3] = cur
+                obs = env.get_observations()
+
             sample = torch.cat([robot.data.root_lin_vel_b[:, :2], robot.data.root_ang_vel_b[:, 2:3],
                                 _cmd(term)[:, :3], robot.data.joint_pos_target], dim=1)
             room = env_index[alive]
@@ -120,16 +131,18 @@ def run(args, adapter, runtime, device):
             with torch.inference_mode():
                 action = policy(obs)
 
-            nxt = torch.tensor(profile(t + dt), device=raw.device, dtype=torch.float32)
-            pin.base[:] = nxt
-            pin.want[:] = nxt
-            _cmd(term)[:, :3] = nxt
+            if not rebuild:
+                nxt = torch.tensor(profile(t + dt), device=raw.device, dtype=torch.float32)
+                pin.base[:] = nxt
+                pin.want[:] = nxt
+                _cmd(term)[:, :3] = nxt
 
             # step 은 inference_mode 밖에서 부른다. 안에서 부르면 다음 시나리오의 raw.reset() 이
             # 「inference tensor 를 밖에서 고친다」 로 죽는다 (옛 축 2 하네스와 같은 구조).
             obs, _r, dones, _e = env.step(action)
 
-            policy_nn.reset(dones)
+            if not rebuild:
+                policy_nn.reset(dones)
 
             newly = alive & raw.termination_manager.terminated
 
