@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (40 평가 · 시뮬 평가 축과 판정 규칙)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27
+> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x) · L(S2 20,000 회 · 11/10 대비책, 00:4x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27
 > 요지: v2 의 두 자(험지 · 평지 명령)를 그대로 두고, 「명령이 험지에서도 열렸나」 를 재는 축 3 과 START 시험지 · 무대 계단 칸을 더한다. 기준은 학습 전에 등록하고 해시를 남긴다. 단계별 관문 후보 수치를 S1~S4 모두 여기에 모은다. K-G heading 판정(방향 이탈 > 0.1 → 0.75 새 판)과 K-I 시뮬 간 확인 S1-x(MuJoCo · Gazebo, Isaac 값 대비 차) 관문을 가정으로 등록한다
-> 상태: v1.1 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I 반영
+> 상태: v1.2 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I · L 반영
 
 # 41 · 시뮬 평가 축
 
@@ -111,10 +111,10 @@ v2 는 험지에서 옆 · 뒤 · 회전을 한 번도 재지 않았다(v2 보�
 | S1 공통 | 무대 계단 칸 시나리오(앞 0.5 · 정지 · 회전) | J ≥ 0.9 | **가정** |
 | S1-b | 깃발 지형군 레벨 | 3,000 회에 틈 · 징검돌 레벨 중앙값 ≥ 5 | **가정** (H14-1) |
 | S1-b · S2-b | 축 3 듬성한 지형 뒤 0.3 칸(물러나기, D39) · 제자리 회전 ±1.2 칸(J-B) | 뒤 0.3: 명령 방향 진행 ≥ 0.6 · 생존 ≥ 0.9. 제자리 회전: 징검돌 · 틈 생존 ≥ 0.9(평균대 · 빔은 기록만, 몸 폭 때문에 낙하가 결과로 드러나게 둠). 옆 vy_obs 칸은 기록만. **vy_obs 규칙**: S1-b(S2 는 S2) 마지막 1,000 회 깃발 지형군 \|vy\| 명령 95 분위(14 §6) | **가정** (H14-5 · H14-6) |
-| **S2-G0** (눈만 끈 판, J-A) | S2 틀의 기준선 | 관문 없음(기준선). 축 1 범위 안 32 칸 · START 시험지 · 축 3 를 기록해 G1 · F26 의 비교 대상이 된다 | **팀장 승인 J-A** |
+| **S2-G0** (눈만 끈 판, J-A · 3072 · **20,000 회**, L) | S2 틀의 기준선 | 관문 없음(기준선). 축 1 범위 안 32 칸 · START 시험지 · 축 3 를 기록해 G1 · F26 의 비교 대상이 된다. G1 · G3 도 같은 20,000 회(18 §2) | **팀장 승인 J-A** · 반복 수 **L** |
 | S2-a (G1) | 재구성 · 축 1 · START 시험지 | 재구성 MAE 기록(보고 항목) · 축 1 범위 안 32 칸 **S2-G0 대비** 진짜 하락 0 · START 시험지 4 종 R 평균 ≥ **S2-G0 + 10 %p**(눈의 효과, 한 변수) | **가정** |
 | S2-b (G3) | 틈 · 징검다리 · START 시험지 | gap ≥ 0.99 · floating_ring ≥ 0.99 · stepping_stones 1.0 m/s ≥ 0.24 (v2 이상) · START 시험지 R 평균 ≥ G1 + 5 %p · MEV < G1 | v2 축 1 값 · **가정** |
-| F26 사전 | S2 하위 대 **S1-blind**(실기 하위) · **S2-G0** | (1) 축 1 이어진 칸 S 생존 ≥ S1-blind (2) START 시험지 R 평균 ≥ S2-G0 + 10 %p. 비교 대상 판은 이 둘로 고정(VERIFY-lead-final 19) | fable 20e F26 · **가정** |
+| F26 사전 | S2 하위 대 **S1-blind**(실기 하위) · **S2-G0** | (1) 축 1 이어진 칸 S 생존 ≥ S1-blind (2) START 시험지 R 평균 ≥ S2-G0 + 10 %p. 비교 대상 판은 이 둘로 고정(VERIFY-lead-final 19). **11/10 대비책(L · 학습 전 등록)**: G3 평가가 11/10 00:00 까지 안 끝나면 (1)(2) 는 **G1 결과로 판정**하고 G3 는 11/14 까지 계속. G3 가 뒤에 G1 을 넘으면 11/19~11/24 여유 창에 student 재증류 1 회(8 h)를 더한다(70 §1.2) | fable 20e F26 · **가정** · **L** |
 | F26 사후 (3) | student 재증류판 | Corridor · Room SR 하락 ≤ 2 %p(재증류 전 student 대비) | **가정** |
 | F26 사후 (3′) | teacher 재학습판(D34) | 관문 S3 전체를 다시 통과(아래 S3 행) | **가정** (VERIFY-lead-final 6) |
 | S3 | HiPAN 방 · 우리 방 | Corridor SR ≥ 90 % · Room ≥ 85 %(논문 「자세 없는 판」 98.4 · 94.5 의 0.9 배, 2604.26504 645~700 행) · 보행 지형 방(계단 · 틈) 도달 ≥ 70 % · 외나무 진입각 오차 ≤ 15° · 충돌 에피소드 ≤ 5 % | **가정** (VERIFY 20f P26) |
