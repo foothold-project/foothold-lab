@@ -59,3 +59,9 @@
 ## 10/20 저녁 S1-a 본 학습 실행 준비 (승인 뒤에만 띄움)
 - 실행: `bash foothold_s2/run_s1.sh scan cuda:0` · `bash foothold_s2/run_s1.sh blind cuda:1` (6,000 회 · 4096 env · isaac311-moects python · 로그 `logs/s1a_<variant>_<시각>/run.log`, git_head.txt · git_status.txt 가 같이 남음). 띄운 뒤 1~2 분 안에 PID(`Get-Process python`) · 첫 `Learning iteration` 줄 · Traceback 0 을 직접 확인한다. 한 장이 도는 중에는 다른 장에 걸어도 됨(L1 에서 4096 env 가 장당 문제없이 돌았음).
 - 예행(64 env 10 update, 깃발 열 +0.5~+3.5 · flag_vmax · penalty_on 로그) 통과: `s1_l1/flags`(깃발 오프셋 x 0.5~3.5, y 0), `s1_l1/blind3`(Curriculum/command_range/{vmax_x,flag_vmax}, Curriculum/penalty_on/{collision,stumble,foot_edge}, Metrics/base_velocity/flag_vmax 모두 찍힘).
+
+## 10/20 저녁 S1 실행 환경 · 재개 상태 (lead 요청)
+- S1 도 isaac311(rsl-rl-lib 3.1.2)로 통일: `run_s1.sh` · `train_s1.py` 모두 isaac311. `train_s1.py` 는 설치 train.py 를 읽어 고치던 방식을 버리고 rl 의 train_start.py 와 같은 흐름(판 확인 assert · 상태 파일 · 끝나면 os._exit)으로 다시 썼다.
+- `foothold_s2/s1_runner.py` (S1Runner): 설치 OnPolicyRunner + env 상태(common_step_counter · 지형 레벨 · 칸 · range_curriculum 의 vmax_x · vmax_y · flag_vmax · history) · adaptive 학습률 · 난수 저장 · 복원(rl StartRunner 의 같은 함수 사용), latest.pt 100 회마다(임시 파일 + os.replace), 상태 파일 train_start_status.json(starting · running · done · failed), 재개 때 저장된 회차 «다음부터» · max_iterations 는 전체 목표로 읽어 남은 회차만. 설치 runner 의 model_N.pt 는 env 상태가 없어 load 가 거부한다.
+- 이어 학습: `bash foothold_s2/run_s1.sh blind cuda:1 --resume --load_run <폴더> --checkpoint latest.pt`. 시험 `tests/test_s1_runner.py` 9(가짜 env).
+- Kit 확인: isoA(64 env 6 회, rc 0) → isoB 이어(전체 10, 남은 4): 회차 6 부터, common_step_counter 144 → 240 으로 이어짐, 학습률 저장 · 복원, 상태 파일 done iter 9.
