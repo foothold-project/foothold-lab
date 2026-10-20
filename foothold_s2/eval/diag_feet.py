@@ -24,6 +24,7 @@ parser.add_argument("--policy", required=True)
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--terrain", default="random_rough")
 parser.add_argument("--cmd", default="0.5,0,0")
+parser.add_argument("--plan_cmd", default=None, help="시작점 계획에 쓰는 명령(기본: --cmd). 서 있기 대조에서 계획은 뒤 명령 그대로, 실제 명령은 0")
 parser.add_argument("--start_cmd", action="store_true", help="축 3 듬성한 뒤/옆 시작점 규칙(sparse_starts)으로 지형을 짓는다")
 parser.add_argument("--noise", default=None, help="random_rough 의 noise_range 를 (lo,hi) 로 바꾼다")
 parser.add_argument("--sample", action="store_true")
@@ -49,7 +50,7 @@ from foothold_s2.eval import adapters, runtime, terrain_sets  # noqa: E402
 cmd = tuple(float(x) for x in args.cmd.split(","))
 adapter = adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
 root_h = adapters.sparse_start_root_height(adapter) if args.start_cmd else 0.4
-generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42, start_cmd=cmd if args.start_cmd else None, root_height_m=root_h)
+generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42, start_cmd=tuple(float(x) for x in (args.plan_cmd or args.cmd).split(',')) if args.start_cmd else None, root_height_m=root_h)
 if args.noise:
     lo_, hi_ = (float(x) for x in args.noise.split(","))
     generator.sub_terrains[args.terrain].noise_range = (lo_, hi_)
