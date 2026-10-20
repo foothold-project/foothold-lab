@@ -54,6 +54,8 @@ parser.add_argument("--cmd_basis", default="")
 # START
 parser.add_argument("--kinds", default="all")
 parser.add_argument("--levels", default="all")
+parser.add_argument("--tile_envs", type=int, default=5)
+parser.add_argument("--tile_episodes", type=int, default=50)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 
@@ -66,7 +68,7 @@ simulation_app = app_launcher.app
 
 # ---------------------------------------------------------------- Kit 기동 후
 
-from foothold_s2.eval import adapters, axis2_run, runtime, terrain_sets  # noqa: E402
+from foothold_s2.eval import adapters, axis2_run, runtime, start_sheet, terrain_sets  # noqa: E402
 
 
 def make_adapter(set_name=None):
@@ -243,7 +245,84 @@ def do_axis2():
 
 
 def do_start():
-    raise SystemExit("START 시험지 실행은 아직 연결하지 않았습니다 (생성기 L0 만 있음)")
+    """START 시험지: 종류(열) x 레벨(행) 칸마다 env 를 못 박고 전진 0.5 m/s 로 6.5 m(스폰에서 도착 단까지)를 건너게 한다.
+
+    도달(R_body) 뒤에는 명령 0 으로 시간 T(= 2 x 기준 거리 / 속도 = 26 s)까지 서 있게 해 생존(S)을 잰다.
+    MEV(가장자리 디딤 비율)는 발 디딤 위치를 안 쌓으므로 이 실행에서는 재지 않는다(미측정).
+    """
+    kinds = list(start_sheet.KINDS) if args.kinds == "all" else [k for k in args.kinds.split(",") if k]
+    levels = list(range(start_sheet.LEVELS)) if args.levels == "all" else [int(v) for v in args.levels.split(",")]
+    speed = 0.5
+    duration = 2.0 * start_sheet.REFERENCE_M / speed
+    k = args.tile_envs
+    tiles = [(lv, col) for lv in levels for col in range(len(kinds))]
+    n_env = len(tiles) * k
+    generator = terrain_sets.start_generator(kinds=tuple(kinds), seed=args.seed)
+
+    adapter = make_adapter(None)
+    built = adapter.make_env(generator=generator, num_envs=n_env, duration_s=duration, seed=args.seed,
+                             difficulty=None, base_cmd=[(speed, 0.0, 0.0)] * n_env, device=device_of())
+    raw = built["raw"]
+    env_levels = [lv for (lv, _c) in tiles for _ in range(k)]
+    env_types = [c for (_lv, c) in tiles for _ in range(k)]
+    terrain_sets.assign_tiles(raw, env_levels, env_types)
+
+    got_t = raw.scene.terrain.terrain_types.detach().cpu().tolist()
+    got_l = raw.scene.terrain.terrain_levels.detach().cpu().tolist()
+
+    if got_t != env_types or got_l != env_levels:
+        raise RuntimeError("START 칸 배정이 안 먹었습니다")
+
+    print("[PASS] START 칸 배정 %d env = %d 칸 x %d" % (n_env, len(tiles), k), flush=True)
+    pin = runtime.CommandPin(n_env, raw.device, [(speed, 0.0, 0.0)] * n_env)
+    adapter.pin_command(raw, pin)
+    raw.reset()
+    env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
+
+    import torch
+
+    base, extra = divmod(args.tile_episodes, k)
+    targets = torch.tensor([base + (1 if (i % k) < extra else 0) for i in range(n_env)], dtype=torch.long)
+    tags = [{"kind": kinds[env_types[i]], "level": env_levels[i]} for i in range(n_env)]
+    runner = runtime.EpisodeRunner(
+        {"env": env, "raw": raw}, policy, policy_nn, pin, terrain_names=kinds, envs_per_terrain=1,
+        episodes=args.tile_episodes, duration_s=duration, mode="command",
+        judge_kwargs=dict(yaw_deviation_deg=cells.AXIS3_PARAMS["yaw_deviation_deg"]),
+        reference_m=start_sheet.REFERENCE_M)
+    rows = []
+    total = int(targets.sum().item())
+
+    def on_episode(row):
+        row["crossing_ratio"] = start_sheet.crossing_ratio(row["cmd_progress_m"])
+        rows.append(row)
+
+        if len(rows) % 100 == 0 or len(rows) == total:
+            print("[start] %d/%d" % (len(rows), total), flush=True)
+
+    stats = runner.run(kinds, on_episode, wall_limit_s=args.wall_limit_s, obs=obs, targets=targets,
+                       env_tags=tags)
+    env.close()
+
+    manifest.write_csv(os.path.join(args.out, "start_raw.csv"), rows)
+    summary = []
+
+    for kind in kinds:
+        for level in levels + ["ALL"]:
+            picked = [r for r in rows if r["kind"] == kind and (level == "ALL" or r["level"] == level)]
+            cell = rsj.summarize_axis3_cell(picked)
+            cell["mean_crossing_ratio"] = (sum(r["crossing_ratio"] for r in picked) / len(picked)) if picked else None
+            summary.append(dict(kind=kind, level=level, **cell))
+
+    manifest.write_csv(os.path.join(args.out, "start_summary.csv"), summary)
+    record = policy_record(adapter)
+    record.update({"kinds": kinds, "levels": levels, "tile_envs": k, "tile_episodes": args.tile_episodes,
+                   "episodes_recorded": len(rows), "duration_s": duration, "speed": speed,
+                   "reference_m": start_sheet.REFERENCE_M, "stats": stats,
+                   "mev": "미측정 (발 디딤 위치를 쌓지 않음)",
+                   "sheet": {"size": list(start_sheet.SIZE), "spawn": list(start_sheet.SPAWN_XY),
+                             "zone_x": list(start_sheet.ZONE_X), "goal_x": start_sheet.GOAL_X}})
+    finish(args.out, record)
+    print("[DONE] start: 줄 수 %d" % len(rows), flush=True)
 
 
 try:

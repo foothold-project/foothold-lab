@@ -74,7 +74,7 @@ class EpisodeRunner:
 
         return out
 
-    def run(self, recorded, on_episode, wall_limit_s=None, obs=None):
+    def run(self, recorded, on_episode, wall_limit_s=None, obs=None, targets=None, env_tags=None):
         raw, env, pin = self.raw, self.env, self.pin
         device = raw.device
         dt = raw.step_dt
@@ -83,7 +83,8 @@ class EpisodeRunner:
         command_term = raw.command_manager.get_term("base_velocity")
 
         max_steps = int(round(self.duration_s / dt)) + 2
-        targets = self.targets(recorded)
+        # `targets` 를 직접 주면(START 시험지: env 마다 (종류, 레벨) 가 정해져 있다) 그대로 쓴다.
+        targets = self.targets(recorded) if targets is None else targets.to(device)
         total = int(targets.sum().item())
         counts = torch.zeros(n_env, dtype=torch.long, device=device)
 
@@ -188,6 +189,10 @@ class EpisodeRunner:
                                       bool(terminated[env_id]), dt)
                 row["terrain"] = self.terrain_names[int(terrain_types[env_id])]
                 row["env_id"] = env_id
+
+                if env_tags is not None:
+                    row.update(env_tags[env_id])
+
                 row["episode"] = int(counts[env_id].item()) + 1
                 counts[env_id] += 1
                 on_episode(row)

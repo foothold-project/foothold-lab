@@ -53,15 +53,19 @@ def apply_terrain_settings(env_cfg, generator, seed, difficulty, changes):
     """지형 생성기 설정. 난이도를 (d, d) 로 못 박아 타일 전부가 같은 난이도가 되게 한다."""
     generator.seed = seed
     generator.curriculum = True
-    generator.difficulty_range = (difficulty, difficulty)
+
+    if difficulty is not None:
+        generator.difficulty_range = (difficulty, difficulty)
+
     env_cfg.scene.terrain.terrain_generator = generator
     env_cfg.scene.terrain.max_init_terrain_level = 0
 
     if hasattr(env_cfg.curriculum, "terrain_levels"):
         env_cfg.curriculum.terrain_levels = None
 
-    changes.append("terrain: seed %d, curriculum=True, difficulty (%.2f, %.2f), max_init_terrain_level 0"
-                   % (seed, difficulty, difficulty))
+    changes.append("terrain: seed %d, curriculum=True, difficulty %s, max_init_terrain_level 0"
+                   % (seed, "(%.2f, %.2f)" % (difficulty, difficulty) if difficulty is not None
+                      else "생성기 값 %r (난이도 행 그대로)" % (generator.difficulty_range,)))
 
 
 class E1Adapter:
