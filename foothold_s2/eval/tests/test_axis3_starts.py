@@ -12,10 +12,14 @@ from foothold_s2.terrains import sparse_terrains
 def test_start_is_supported_and_full_motion_stays_in_sparse_zone(kind, cmd):
     tile = sparse_terrains.build_tile(kind, .5)
     result = sparse_starts.select_start(tile.boxes[3:], cmd)
+    if kind == 'balance_beams':
+        assert result['status'] == 'no_start' and result['previous_origin'] is not None
+        assert result['reason'] == 'no_four_foot_support'
+        return
     assert result["status"] == "ready"
     start = np.array(result["origin"])
-    assert sparse_starts.valid_start(start, tile.boxes[3:], cmd)
-    end = start[:2] + np.array(cmd[:2]) * 2.
+    assert sparse_starts.valid_start(start, tile.boxes[3:], cmd, yaw=result["yaw_rad"])
+    end = start[:2] + sparse_starts.rotate_xy(np.array(cmd[:2]) * 2., result["yaw_rad"])
     assert 1. <= end[0] <= 7. and 2. <= end[1] <= 6.
     assert 0. <= end[0] <= 8. and 0. <= end[1] <= 8.
     assert result["reference_m"] == pytest.approx(np.linalg.norm(cmd[:2]) * 2)
@@ -30,13 +34,16 @@ def test_nearest_valid_patch_and_height_are_selected():
     boxes = np.array([[2., 3., 3., 5., -1., .04],
                       [3.8, 4.2, 3.8, 4.2, -1., -.03]])
     chosen = sparse_starts.select_start(boxes, (0., .2, 0.))
-    assert chosen["origin"] == pytest.approx([4., 4., -.03])
+    assert chosen['previous_origin'] == pytest.approx([4., 4., -.03])
+    assert chosen['origin'][2] == pytest.approx(-.03)
+    assert 2. < chosen['origin'][0] < 3.
+    assert sparse_starts.valid_start(chosen['origin'], boxes, (0., .2, 0.), yaw=chosen['yaw_rad'])
 
 
 def test_no_patch_and_over_max_distance_are_explicit_exclusions():
     for boxes, cmd, reason in [
-        ([], (0., .2, 0.), "no_supported_patch"),
-        ([[1., 1.4, 3., 5., -1., 0.]], (-.3, 0., 0.), "no_supported_patch"),
+        ([], (0., .2, 0.), "no_four_foot_support"),
+        ([[1., 1.1, 3., 3.1, -1., 0.]], (-.3, 0., 0.), "no_four_foot_support"),
         ([[3., 5., 3., 5., -1., 0.]], (-.31, 0., 0.), "reference_over_0.6"),
     ]:
         result = sparse_starts.select_start(boxes, cmd)
@@ -56,7 +63,7 @@ def test_observed_side_above_point_three_keeps_actual_distance():
     result = sparse_starts.select_start(tile.boxes[3:], (0., .35, 0.))
     assert result["status"] == "ready"
     assert result["reference_m"] == pytest.approx(.7)
-    assert sparse_starts.valid_start(result["origin"], tile.boxes[3:], (0., .35, 0.))
+    assert sparse_starts.valid_start(result["origin"], tile.boxes[3:], (0., .35, 0.), yaw=result["yaw_rad"])
 
 
 def test_no_start_is_reported_and_not_pooled_as_a_result(tmp_path):
@@ -84,28 +91,47 @@ def test_no_start_is_reported_and_not_pooled_as_a_result(tmp_path):
 def test_reset_fix_applies_only_to_start_tiles_and_every_reset():
     import types
     import torch
+    from foothold_s2.robots import go2_kinematics as fk
 
-    calls = []
+    calls, joint_calls, writes = [], [], []
     def original(env, ids, **params):
         calls.append((ids.tolist(), params))
-    cfg = types.SimpleNamespace(func=original, params={"pose_range": {
-        "x": (-.1, .1), "y": (-.1, .1), "yaw": (-.08, .08)}, "velocity_range": {}})
+    def joints(env, ids, **params):
+        joint_calls.append(ids.tolist())
+    cfg = types.SimpleNamespace(func=original, params={'pose_range': {
+        'x': (-.1, .1), 'y': (-.1, .1), 'yaw': (-.08, .08)}, 'velocity_range': {}})
+    joint_cfg = types.SimpleNamespace(func=joints, params={})
+    terms = {'reset_base': cfg, 'reset_robot_joints': joint_cfg}
     class Manager:
         def get_term_cfg(self, name):
-            assert name == "reset_base"
-            return cfg
+            return terms[name]
         def set_term_cfg(self, name, value):
-            assert value is cfg
-    raw = types.SimpleNamespace(event_manager=Manager(), num_envs=3, device="cpu",
-                                scene=types.SimpleNamespace(terrain=types.SimpleNamespace(
-                                    terrain_types=torch.tensor([0, 1, 1]))))
-    sparse_starts.install_fixed_reset(raw, ["boxes", "gaps_start"])
-    for ids in (torch.tensor([0, 1, 2]), torch.tensor([2])):
+            terms[name] = value
+    robot = types.SimpleNamespace(joint_names=fk.JOINT_NAMES, data=types.SimpleNamespace(
+        default_joint_pos=torch.tensor(fk.DEFAULT_JOINT_POS).reshape(1, 12).repeat(3, 1),
+        default_root_state=torch.tensor([[0., 0., .4]]).repeat(3, 1)),
+        write_joint_state_to_sim=lambda pos, vel, env_ids: writes.append((pos, vel, env_ids.tolist())))
+    class Scene:
+        terrain = types.SimpleNamespace(terrain_types=torch.tensor([0, 1, 2]))
+        def __getitem__(self, name):
+            assert name == 'robot'
+            return robot
+    raw = types.SimpleNamespace(event_manager=Manager(), num_envs=3, device='cpu', scene=Scene())
+    plan = {n: dict(status='ready', yaw_rad=y, root_height_m=.4)
+            for n, y in [('gaps_start', np.pi/2), ('gap', np.pi)]}
+    sparse_starts.install_fixed_reset(raw, ['boxes', 'gaps_start', 'gap'], plan)
+    for ids in (None, torch.tensor([2])):
         cfg.func(raw, ids, **cfg.params)
-    assert calls[0][0] == [0] and calls[0][1]["pose_range"]["x"] == (-.1, .1)
-    assert calls[1][0] == [1, 2] and calls[2][0] == [2]
-    for _, params in calls[1:]:
-        assert all(params["pose_range"][a] == (0., 0.) for a in ("x", "y", "yaw"))
+        joint_cfg.func(raw, ids, **joint_cfg.params)
+    assert calls[0][0] == [0] and calls[0][1]['pose_range']['x'] == (-.1, .1)
+    assert calls[1][0] == [1] and calls[1][1]['pose_range']['yaw'] == (np.pi/2, np.pi/2)
+    assert calls[2][0] == [2] and calls[3][0] == [2]
+    assert calls[3][1]['pose_range']['yaw'] == (np.pi, np.pi)
+    assert joint_calls == [[0]]
+    assert [w[2] for w in writes] == [[1, 2], [2]]
+    for pos, vel, ids in writes:
+        assert torch.equal(pos, robot.data.default_joint_pos[ids])
+        assert torch.count_nonzero(vel) == 0
 
 
 @pytest.fixture
@@ -167,10 +193,10 @@ def test_installed_legacy_generators_have_supported_start_and_bounded_endpoint(i
     zone, floor = sparse_starts.legacy_region(name, cfg, .5)
     boxes = sparse_starts.support_boxes(meshes, floor)
     start = np.array(result["origin"])
-    assert any(b[0] - 1e-7 <= start[0] <= b[1] + 1e-7 and
-               b[2] - 1e-7 <= start[1] <= b[3] + 1e-7 and abs(b[5] - start[2]) < 1e-7 for b in boxes)
+    assert sparse_starts.valid_start(start, boxes, cmd, zone, yaw=result['yaw_rad'])
     velocity = np.array(cmd[:2])
-    end = start[:2] + velocity * 2 + velocity / np.linalg.norm(velocity) * .3
+    end = start[:2] + sparse_starts.rotate_xy(
+        velocity * 2 + velocity / np.linalg.norm(velocity) * .3, result['yaw_rad'])
     assert np.all(end >= np.array(zone)[:, 0] - 1e-7)
     assert np.all(end <= np.array(zone)[:, 1] + 1e-7)
 
@@ -203,7 +229,7 @@ def test_legacy_assembly_uses_checked_mesh_and_never_falls_back(installed_legacy
         again, _ = sub.function(.5, sub)
         assert again[0].vertices == pytest.approx(first)
     monkeypatch.setattr(sparse_starts, "legacy_start",
-                        lambda *args: dict(status="no_start", origin=None, eligible=False))
+                        lambda *args, **kwargs: dict(status="no_start", origin=None, eligible=False))
     cfg = terrain_sets.merged_generator(list(subs), .5, 42, start_cmd=(-.3, 0., 0.))
     assert cfg.num_cols == 0 and not cfg.sub_terrains
 
@@ -226,6 +252,8 @@ def test_all_excluded_entry_writes_status_without_running_policy_and_requires_ev
     ns = dict(cells=cells, manifest=manifest, rsj=rsj, os=os, run_episode_axis=no_policy,
               policy_record=no_policy, terrain_sets=types.SimpleNamespace(
                   merged_generator=lambda *a, **kw: types.SimpleNamespace(axis3_starts=plan, sub_terrains={})))
+    ns['adapters'] = types.SimpleNamespace(sparse_start_root_height=lambda _: .4)
+    ns['make_adapter'] = lambda: None
     ns["args"] = types.SimpleNamespace(cmd="0,0.2,0", group="sparse", terrains="all", direction="left",
                                       difficulty=.5, seed=42, cmd_basis="fixed", out=str(out), episodes=100)
     ns["finish"] = lambda path, data: manifest.write_json(str(Path(path) / "run_manifest.json"), data)

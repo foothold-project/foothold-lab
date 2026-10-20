@@ -392,3 +392,14 @@ class S1Adapter(IsaacLabAdapter):
 
 def deep_copy_generator(generator):
     return copy.deepcopy(generator)
+
+
+def sparse_start_root_height(adapter):
+    """환경을 만들기 전에 같은 로봇 cfg의 기본 자세를 검사한다. Kit 기동은 하지 않는다."""
+    from foothold_s2.robots.go2_kinematics import root_height_from_cfg
+    if isinstance(adapter, E1Adapter):
+        from robot_lab.tasks.go2.env_cfg import Go2EnvCfg
+        cfg = Go2EnvCfg()
+    else:
+        cfg = adapter.env_cfg_class()
+    return root_height_from_cfg(cfg.scene.robot)

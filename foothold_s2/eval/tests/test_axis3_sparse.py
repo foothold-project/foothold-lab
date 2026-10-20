@@ -50,11 +50,11 @@ def test_axis3_entry_keeps_all_seven_terrains_and_short_rule(tmp_path):
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "do_axis3")
     ns = {"cells": cells, "manifest": manifest, "os": os}
     calls = []
-    def generator(names, difficulty, seed, start_cmd=None):
+    def generator(names, difficulty, seed, start_cmd=None, root_height_m=.4):
         plan = {name: {"status": "ready"} for name in names}
-        if start_cmd:
-            plan.update(sparse_starts.start_plan(difficulty, start_cmd))
         return types.SimpleNamespace(axis3_starts=plan, sub_terrains=dict.fromkeys(names))
+    ns['adapters'] = types.SimpleNamespace(sparse_start_root_height=lambda _: .4)
+    ns['make_adapter'] = lambda: None
     ns["terrain_sets"] = types.SimpleNamespace(merged_generator=generator, sparse_starts=sparse_starts)
     ns["rsj"] = types.SimpleNamespace(summarize_axis3_cell=None)
     ns["save_episode_outputs"] = lambda *args: None
@@ -115,6 +115,10 @@ def test_merged_generator_uses_real_8x8_mesh_functions_without_kit(monkeypatch):
     cfg = terrain_sets.merged_generator(cells.START_SHEETS, .5, 42, start_cmd=(-.3, 0., 0.))
     assert cfg.use_cache is False
     for name, start in plan.items():
+        if start['status'] == 'no_start':
+            assert name not in cfg.sub_terrains
+            assert cfg.axis3_starts[name]['previous_origin'] is not None
+            continue
         sub = cfg.sub_terrains[name]
         _, origin = sub.function(.5, sub)
         assert origin == pytest.approx(start["origin"])

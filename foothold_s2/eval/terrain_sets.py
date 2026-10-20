@@ -102,7 +102,7 @@ def _fixed_mesh_function(meshes, origin):
     return selected_tile
 
 
-def merged_generator(names, difficulty, seed, start_cmd=None):
+def merged_generator(names, difficulty, seed, start_cmd=None, root_height_m=.4):
     """이름 목록으로 한 생성기를 짓는다 (축 3). 열 하나에 지형 하나, 비율은 전부 같게.
 
     하위 지형 설정은 원본 그대로 복사하고 `proportion` 만 바꾼다. 비율은 «어느 열에 어느
@@ -153,10 +153,12 @@ def merged_generator(names, difficulty, seed, start_cmd=None):
                         setattr(sub, attr, getattr(base, attr))
                 meshes, _old_origin = sub.function(difficulty, sub)
                 if name in START_AXIS3_KINDS:
-                    result = dict(sparse_starts.start_plan(difficulty, tuple(start_cmd))[name])
+                    result = dict(sparse_starts.start_plan(difficulty, tuple(start_cmd), root_height_m)[name])
                     result["zone"] = [list(axis) for axis in sparse_starts.ZONE]
                 else:
-                    result = sparse_starts.legacy_start(name, sub, difficulty, meshes, start_cmd)
+                    result = sparse_starts.legacy_start(name, sub, difficulty, meshes, start_cmd,
+                                                        terrain_origin_z=float(_old_origin[2]),
+                                                        root_height_m=root_height_m)
                 plan[name] = result
                 if result["status"] == "ready":
                     sub.function = _fixed_mesh_function(meshes, result["origin"])

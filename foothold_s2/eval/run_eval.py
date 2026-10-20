@@ -159,8 +159,8 @@ def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, 
     built, raw, pin = build_and_load(adapter, generator, n_env, duration_s, [base_cmd] * n_env)
     verify_mapping(raw, names, args.envs_per_terrain)
     if fixed_start:
-        terrain_sets.sparse_starts.install_fixed_reset(raw, names)
-        adapter.changes.append("축 3 뒤·옆: 검증된 지지 패치 원점, x/y/yaw reset 흔들기 0")
+        terrain_sets.sparse_starts.install_fixed_reset(raw, names, generator.axis3_starts)
+        adapter.changes.append("축 3 뒤·옆: 네 발 XY 지지 시작점, 선택 yaw, default_joint_pos 고정, 높이 보존")
     raw.reset()
     env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
 
@@ -218,8 +218,10 @@ def do_axis3():
     duration, reference_m = rule["duration_s"], rule["reference_m"]
     starts = None
     excluded = []
+    root_height_m = adapters.sparse_start_root_height(make_adapter()) if rule['rule'] == 'sparse_short' else .4
     generator = terrain_sets.merged_generator(
-        names, args.difficulty, args.seed, start_cmd=cmd if rule["rule"] == "sparse_short" else None)
+        names, args.difficulty, args.seed, start_cmd=cmd if rule["rule"] == "sparse_short" else None,
+        root_height_m=root_height_m)
     if rule["rule"] == "sparse_short":
         starts = generator.axis3_starts
         excluded = [n for n in recorded if starts[n]["status"] != "ready"]
@@ -249,7 +251,9 @@ def do_axis3():
                           "start_plan": starts, "excluded_start_terrains": excluded,
                           "episodes_per_terrain": args.episodes},
                          {"group": args.group, "direction": args.direction, "cmd": args.cmd,
-                          "cmd_basis": args.cmd_basis, "axis3_rule": rule["rule"]})
+                          "cmd_basis": args.cmd_basis, "axis3_rule": rule["rule"],
+                          "reset_condition": "N1c default joints, selected yaw, no jitter" if starts is not None
+                          else "existing reset"})
 
 
 def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, summary_extra):
