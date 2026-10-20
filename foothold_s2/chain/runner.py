@@ -274,11 +274,16 @@ class Chain:
 
     def _env(self, job, gpu):
         env = dict(os.environ)
-        env.update({"CUDA_DEVICE_ORDER": "PCI_BUS_ID", "DEVICE": "cuda:%s" % gpu, "PYTHONUNBUFFERED": "1"})
+        env.update({"CUDA_DEVICE_ORDER": "PCI_BUS_ID", "PYTHONUNBUFFERED": "1"})
+
+        if gpu is not None:
+            env["DEVICE"] = "cuda:%s" % gpu
+
         env.update({k: resolve_text(str(v), gpu) for k, v in (self.cfg.get("env") or {}).items()})
         env.update({k: resolve_text(str(v), gpu) for k, v in (job.get("env") or {}).items()})
         pp = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = self.repo_root + (os.pathsep + pp if pp else "")
+        root = resolve_text(str(job.get("repo") or self.repo_root), gpu)
+        env["PYTHONPATH"] = root + (os.pathsep + pp if pp else "")
 
         return env
 
@@ -286,11 +291,14 @@ class Chain:
         job = self.jobs[name]
         argv, rc_file, log = self._argv(job, cmd, gpu, name, attempt)
         os.makedirs(os.path.dirname(os.path.abspath(log)), exist_ok=True)
-        pid = self.launcher(argv, job.get("cwd") or self.repo_root, self._env(job, gpu), log)
+        pid = self.launcher(argv, resolve_text(str(job.get("cwd") or job.get("repo") or self.repo_root), gpu),
+                            self._env(job, gpu), log)
         st = self.state[name]
         st.update(state="running", pid=pid, gpu=gpu, attempt=attempt, rc_file=rc_file, log=log, started=self.clock(),
                   evidence=False, adopted=False)
-        self.last_launch = self.clock()
+        if gpu is not None:
+            self.last_launch = self.clock()
+
         self.event(name, "launched" if attempt == 1 else "relaunched", "pid %s gpu %s attempt %d" % (pid, gpu, attempt),
                    pid=pid, gpu=gpu, attempt=attempt)
 
@@ -344,7 +352,9 @@ class Chain:
         if rc_file and os.path.isfile(rc_file):
             text = open(rc_file, encoding="utf-8").read().strip()
 
-            if text != "rc=0":
+            allowed = ["rc=%s" % c for c in (job.get("accept_rc") or [0])]      # 결과가 «아니오» 여도 일은 정상으로 끝나는 도구(compare_curves 는 판정 실패에 1)
+
+            if text not in allowed:
                 problems.append("종료 코드 %s" % text)
         elif rc_file and not st.get("adopted"):
             problems.append("rc 파일 없음(래퍼가 죽었다)")
@@ -380,27 +390,30 @@ class Chain:
     def _deps(self, name):
         return [self.state[d]["state"] for d in self.jobs[name].get("depends_on", [])]
 
+    def _ready(self, name):
+        """띄울 수 있는 상태인가: 앞 작업 done · after 끝남 · require_file 있음. (GPU · 간격은 따로 본다)"""
+        job = self.jobs[name]
+
+        if not all(d == "done" for d in self._deps(name)):
+            return False
+
+        if not all(self.state[a]["state"] in TERMINAL for a in job.get("after", [])):
+            return False
+
+        req = job.get("require_file") or []
+        req = [req] if isinstance(req, str) else req
+
+        return all(os.path.exists(resolve_text(r, 0)) for r in req)
+
     def step(self):
         for name, job in self.jobs.items():
             st = self.state[name]
 
             if st["state"] == "pending":
-                deps = self._deps(name)
-
-                if any(d in ("failed", "blocked") for d in deps):
+                if any(d in ("failed", "blocked") for d in self._deps(name)):
                     st["state"] = "blocked"
                     bad = [d for d in job.get("depends_on", []) if self.state[d]["state"] in ("failed", "blocked")]
                     self.event(name, "blocked", "앞 작업 실패: %s" % ",".join(bad), notify=True)
-                elif all(d == "done" for d in deps) and all(
-                        self.state[a]["state"] in TERMINAL for a in job.get("after", [])):
-                    gpu = self._pick_gpu(job)
-
-                    if gpu is not None and self.clock() - self.last_launch >= self.gap_s:
-                        try:
-                            self._launch(name, job["cmd"], gpu, 1)
-                        except Exception as exc:                      # noqa: BLE001
-                            st["state"] = "failed"
-                            self.event(name, "failed", "띄우지 못함: %r" % (exc,), notify=True)
 
             elif st["state"] == "running":
                 if not st.get("evidence") and self._first_evidence(name):
@@ -412,7 +425,38 @@ class Chain:
                 if rc_done or not self.alive(st.get("pid")):
                     self._finish(name)
 
+        self._launch_ready()
         self._save()
+
+    def _launch_ready(self):
+        """준비된 작업을 priority(작을수록 먼저, 같으면 yaml 순서)로 훑어 빈 GPU 에 띄운다.
+
+        높은 작업이 «지금 띄울 수 있는 상태가 아닐 때만»(GPU 가 차 있거나 아직 준비 전) 낮은 작업이 빈 GPU 를 쓴다.
+        단, 높은 작업이 GPU 는 비었는데 «시작 간격» 때문에 미뤄지는 라운드에는 낮은 작업도 기다린다. 선점은 하지 않는다
+        (이미 도는 낮은 작업을 내쫓지 않는다).
+        """
+        order = sorted((n for n, st in self.state.items() if st["state"] == "pending" and self._ready(n)),
+                       key=lambda n: (int(self.jobs[n].get("priority", 5)), list(self.jobs).index(n)))
+
+        for name in order:
+            job, st = self.jobs[name], self.state[name]
+            wants_gpu = "gpu" in job
+            gpu = self._pick_gpu(job) if wants_gpu else None
+
+            if wants_gpu and gpu is None:
+                continue                                              # 이 작업이 쓸 GPU 가 차 있음: 다음(낮은) 작업을 본다
+
+            if wants_gpu and self.clock() - self.last_launch < self.gap_s:
+                break                                                 # GPU 는 있는데 간격 때문에 미룸: 낮은 작업이 새치기하지 않는다
+
+            try:
+                if not job.get("cmd"):
+                    raise ValueError("cmd 가 비어 있다")
+
+                self._launch(name, job["cmd"], gpu, 1)
+            except Exception as exc:                                  # noqa: BLE001
+                st["state"] = "failed"
+                self.event(name, "failed", "띄우지 못함: %r" % (exc,), notify=True)
 
     def _finish(self, name):
         job, st = self.jobs[name], self.state[name]
@@ -491,8 +535,28 @@ class Chain:
 
 
 def load_config(path):
+    """yaml 을 읽는다. 맨 위 `vars:` 의 ${이름} 을 본문 전체에서 바꾼다(같은 yaml 을 Windows · Linux 에서 쓰도록 경로를 한 곳에 모은다).
+    환경 변수 CHAIN_<이름> 이 있으면 그것이 이긴다. 못 푼 ${...} 가 남으면 오류."""
     with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        text = f.read()
+
+    head = text.split("jobs:", 1)[0]                     # vars 는 jobs 앞에 둔다(jobs 안의 ${..} 는 풀기 전이라 yaml 로 못 읽는다)
+    variables = (yaml.safe_load(head) or {}).get("vars", {}) or {}
+    values = {}
+
+    for key, value in variables.items():
+        values[key] = os.environ.get("CHAIN_" + key, str(value))
+
+    for _ in range(3):                                    # 변수 값이 다른 변수를 가리켜도 된다 (세 번까지)
+        values = {k: re.sub(r"\$\{(\w+)\}", lambda m: values.get(m.group(1), m.group(0)), v) for k, v in values.items()}
+
+    text = re.sub(r"\$\{(\w+)\}", lambda m: values.get(m.group(1), m.group(0)), text)
+    left = re.findall(r"\$\{\w+\}", text.split("jobs:", 1)[-1])
+
+    if left:
+        raise ValueError("풀지 못한 변수: %s" % sorted(set(left)))
+
+    return yaml.safe_load(text)
 
 
 def main(argv=None):

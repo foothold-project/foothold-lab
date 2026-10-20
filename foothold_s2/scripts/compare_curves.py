@@ -88,9 +88,31 @@ def main() -> int:
     ap.add_argument("--b", required=True)
     ap.add_argument("--a2", default=None)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--require_stamps", action="store_true", help="각 판 폴더의 code_stamp.json(chain.stamp)이 같을 때만 판정")
     args = ap.parse_args()
     rule, sha = load_rule()
     tags = rule["metrics"]
+    runs = {"A": args.a, "B": args.b, "A2": args.a2}
+    runs = {k: v for k, v in runs.items() if v}
+
+    if args.require_stamps:                                       # 세 판이 «같은 코드» 로 돌았는지 (lead 10/20): 아니면 판정하지 않는다
+        from foothold_s2.chain.stamp import compare_stamps
+
+        chk = compare_stamps(runs)
+
+        if not chk["comparable"]:
+            res = {"verdict": "판정 불가 · " + chk["reason"].split(":")[0] if "코드 다름" in chk["reason"] else "판정 불가 · " + chk["reason"],
+                   "reason": chk["reason"], "stamps": chk["stamps"], "rule_file": os.path.basename(RULE_PATH),
+                   "rule_sha256": sha, "runs": {"A": args.a, "B": args.b, "A2": args.a2}}
+            os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+
+            with open(args.out, "w", encoding="utf-8") as f:
+                json.dump(res, f, ensure_ascii=False, indent=1)
+
+            print("VERDICT", res["verdict"], "(", chk["reason"], ")")
+
+            return 0
+
     res = verdict(read_scalars(args.a, tags), read_scalars(args.b, tags), read_scalars(args.a2, tags) if args.a2 else None, rule)
     res["rule_file"] = os.path.basename(RULE_PATH)
     res["rule_sha256"] = sha

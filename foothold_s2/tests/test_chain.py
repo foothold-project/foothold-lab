@@ -308,8 +308,221 @@ def test_real_yaml_has_the_agreed_graph():
     names = [j["name"] for j in cfg["jobs"]]
     assert jobs["scan_eval"]["after"] == ["repro_s0"] and "repro_s0" not in jobs["scan_eval"]["depends_on"]
     assert "repro_s0" not in jobs["blind_eval"].get("depends_on", []) and "repro_s0" not in jobs["blind_eval"].get("after", [])
-    assert not [n for n in names if n.startswith("bf16")]                                  # bf16 네 작업은 이번 밤 사슬에서 뺐다
-    assert names == ["scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval"]
+    prio = {n: jobs[n].get("priority", 5) for n in names}
+    assert all(prio[n] == 9 for n in names if n.startswith("bf16") or n == "agenda_J4")                  # bf16 은 빈 틈만
+    assert all(prio[n] == 1 for n in ("scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval", "agenda_J1"))
+    assert prio["s1b_train"] == 2 and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
+    assert jobs["s1b_train"]["cmd"] == []                                                              # S1-b task 미구현: 비워 둠
+    assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
+    assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200", "snapshot_bf16"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0
+    assert jobs["bf16_A2_fp32_mb128_seed43"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_A2_fp32_mb128_seed43"]["gpu"] == "any"
+    assert jobs["bf16_stamp"]["depends_on"] == ["bf16_A_fp32_mb128", "bf16_B_bf16kl_mb256", "bf16_A2_fp32_mb128_seed43"]
+    assert jobs["bf16_compare"]["depends_on"] == ["bf16_stamp"] and "--require_stamps" in jobs["bf16_compare"]["cmd"]
+    assert jobs["bf16_compare"]["accept_rc"] == [0, 1] and "gpu" not in jobs["bf16_stamp"] and "gpu" not in jobs["snapshot_bf16"]
+    assert all(jobs[n]["repo"].endswith("snap_bf16") for n in ("bf16_A_fp32_mb128", "bf16_B_bf16kl_mb256", "bf16_A2_fp32_mb128_seed43"))
+    assert jobs["snapshot_bf16"]["priority"] == 0 and "snap_bf16/logs/rsl_rl/foothold_s2" in jobs["bf16_A_fp32_mb128"]["done"]["status_glob"]
+    assert "gpu" not in jobs["agenda_J1"] and "gpu" not in jobs["agenda_J4"] and "gpu" not in jobs["bf16_compare"]
+    assert jobs["agenda_J1"]["depends_on"] == ["scan_eval", "blind_eval"] and jobs["agenda_J4"]["depends_on"] == ["bf16_compare"]
     assert jobs["v2_base_gate200"]["depends_on"] == ["scan_eval"] and jobs["blind_eval"]["gpu"] == 1
+    assert not [t for t in str(cfg).split("${")[1:]]                                                    # 풀리지 않은 변수 없음
     assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict"]
     assert jobs["scan_train"]["adopt"]["pid"] == 95784 and jobs["blind_train"]["adopt"]["pid"] == 89020
+
+
+def launched_order(tmp_path):
+    return [e["job"] for e in events(tmp_path) if e["event"] == "launched"]
+
+
+def test_priority_a_ready_high_priority_job_goes_before_a_low_one_listed_first(tmp_path):
+    jobs = [{"name": "LOW", "gpu": "any", "priority": 9, "cmd": py("import time;time.sleep(0.2)")},
+            {"name": "HIGH", "gpu": "any", "priority": 1, "cmd": py("import time;time.sleep(0.2)")}]
+    chain, _ = make(tmp_path, jobs, gpus=[0])
+    chain.run()
+    assert launched_order(tmp_path) == ["HIGH", "LOW"]                       # 한 장뿐: priority 가 작은 것이 먼저
+
+
+def test_priority_a_low_job_uses_a_free_gpu_only_while_the_high_job_cannot_launch(tmp_path):
+    marks = tmp_path / "high_started.txt"
+    jobs = [{"name": "GATE", "gpu": 0, "priority": 1, "cmd": py("import time;time.sleep(0.5)")},
+            {"name": "HIGH", "gpu": 0, "priority": 1, "depends_on": ["GATE"], "cmd": touch_cmd(marks, 0.0)},
+            {"name": "LOW", "gpu": "any", "priority": 9, "cmd": py("import time;time.sleep(0.2)")}]
+    chain, _ = make(tmp_path, jobs, gpus=[0, 1])
+    chain.run()
+    st = chain.state
+    assert st["LOW"]["gpu"] == 1                                              # HIGH 는 앞 작업을 기다리고 GPU 0 은 GATE 가 쥠: LOW 는 빈 GPU 1 을 썼다
+    assert launched_order(tmp_path) == ["GATE", "LOW", "HIGH"] or launched_order(tmp_path)[0] == "GATE"
+    assert st["HIGH"]["state"] == "done" and st["LOW"]["state"] == "done"
+
+
+def test_priority_low_job_never_waits_in_front_of_a_ready_high_job_for_the_same_gpu(tmp_path):
+    jobs = [{"name": "LOW", "gpu": 0, "priority": 9, "cmd": py("pass")},
+            {"name": "HIGH", "gpu": 0, "priority": 1, "cmd": py("pass")}]
+    chain, _ = make(tmp_path, jobs, gpus=[0])
+    chain.run()
+    assert launched_order(tmp_path) == ["HIGH", "LOW"]
+
+
+def test_require_file_holds_the_job_until_the_file_exists(tmp_path):
+    flag = tmp_path / "verdict.json"
+    out = tmp_path / "out.txt"
+    jobs = [{"name": "S1B", "gpu": 0, "require_file": str(flag), "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}}]
+    chain, _ = make(tmp_path, jobs)
+
+    for _ in range(5):
+        chain.step()
+        time.sleep(0.03)
+
+    assert chain.state["S1B"]["state"] == "pending" and not out.exists()       # 파일이 없으면 띄우지 않는다
+    assert not chain.finished()
+    flag.write_text("{}", encoding="utf-8")
+    assert chain.run() == 0 and chain.state["S1B"]["state"] == "done"
+
+
+def test_job_without_gpu_runs_while_all_gpus_are_busy_and_holds_none(tmp_path):
+    out = tmp_path / "agenda.txt"
+    jobs = [{"name": "TRAIN", "gpu": 0, "cmd": py("import time;time.sleep(0.6)")},
+            {"name": "TRAIN2", "gpu": 1, "cmd": py("import time;time.sleep(0.6)")},
+            {"name": "AGENDA", "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}},
+            {"name": "NEXT", "gpu": 0, "depends_on": ["AGENDA"], "cmd": py("pass")}]
+    chain, _ = make(tmp_path, jobs)
+    chain.run()
+    ev = [(e["job"], e["event"]) for e in events(tmp_path)]
+    assert ev.index(("AGENDA", "launched")) < ev.index(("TRAIN", "done"))        # 두 장이 다 차 있어도 바로 돈다
+    assert chain.state["AGENDA"].get("gpu") is None and chain.state["AGENDA"]["state"] == "done"
+    assert chain.state["NEXT"]["state"] == "done"
+
+
+def test_empty_cmd_fails_loudly_instead_of_running_nothing(tmp_path):
+    chain, notes = make(tmp_path, [{"name": "S1B", "gpu": 0, "cmd": []}])
+    assert chain.run() == 1 and chain.state["S1B"]["state"] == "failed"
+    assert any("cmd 가 비어" in n for n in notes.lines)
+
+
+def test_vars_are_substituted_everywhere_with_env_override_and_unresolved_is_an_error(tmp_path, monkeypatch):
+    path = tmp_path / "c.yaml"
+    path.write_text("vars:\n  ROOT: /data/foothold\n  OUT: ${ROOT}/out\njobs:\n  - name: A\n    gpu: 0\n    cmd: [echo, ${OUT}/x]\n",
+                    encoding="utf-8")
+    cfg = runner.load_config(str(path))
+    assert cfg["jobs"][0]["cmd"] == ["echo", "/data/foothold/out/x"]
+    monkeypatch.setenv("CHAIN_ROOT", "D:/other")
+    assert runner.load_config(str(path))["jobs"][0]["cmd"] == ["echo", "D:/other/out/x"]
+    path.write_text("vars:\n  ROOT: /r\njobs:\n  - name: A\n    gpu: 0\n    cmd: [echo, ${NOPE}]\n", encoding="utf-8")
+    with pytest.raises(ValueError):
+        runner.load_config(str(path))
+
+
+def _git(repo, *args):
+    return subprocess.check_output(["git", "-C", str(repo)] + list(args)).decode().strip()
+
+
+def _mini_repo(tmp_path):
+    repo = tmp_path / "orig"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t")
+    _git(repo, "config", "user.name", "t")
+    (repo / "foothold_s2").mkdir()
+    (repo / "foothold_s2" / "m.py").write_text("X = 1\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "c1")
+
+    return repo
+
+
+def test_snapshot_pins_the_commit_and_ignores_later_edits(tmp_path):
+    from foothold_s2.chain import snapshot
+
+    repo = _mini_repo(tmp_path)
+    sha = snapshot.make_snapshot(str(repo), str(tmp_path / "snap"))
+    assert (tmp_path / "snap" / "SNAPSHOT_HEAD.txt").read_text(encoding="utf-8").strip() == sha
+    (repo / "foothold_s2" / "m.py").write_text("X = 2\n", encoding="utf-8")                 # 원본이 바뀌어도
+    _git(repo, "commit", "-aqm", "c2")
+    assert (tmp_path / "snap" / "foothold_s2" / "m.py").read_text(encoding="utf-8").strip() == "X = 1"   # 사본은 그대로
+    assert snapshot.make_snapshot(str(repo), str(tmp_path / "snap"), rev=sha) == sha                    # 다시 불러도 같은 사본
+    with pytest.raises(RuntimeError):
+        snapshot.make_snapshot(str(repo), str(tmp_path / "snap"), rev="HEAD")                           # 다른 rev 를 요구하면 오류
+
+
+def _run_dir(tmp_path, name, env_extra="", agent_extra="", seed=1):
+    d = tmp_path / name
+    (d / "params").mkdir(parents=True)
+    (d / "params" / "env.yaml").write_text("scene:\n  num_envs: 3072\nseed: %d\nlog_dir: /x/%s\n%s" % (seed, name, env_extra), encoding="utf-8")
+    (d / "params" / "agent.yaml").write_text("algorithm:\n  lr: 0.001\nseed: %d\nrun_name: %s\nperception:\n  microbatch_envs: %d\n  kl_fp32: true\n%s"
+                                             % (seed, name, 128 if "A" in name else 256, agent_extra), encoding="utf-8")
+
+    return str(d)
+
+
+def test_snapshot_with_paths_checks_out_only_those_folders(tmp_path):
+    from foothold_s2.chain import snapshot
+
+    repo = _mini_repo(tmp_path)
+    (repo / "big").mkdir()
+    (repo / "big" / "video.bin").write_text("x" * 100, encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "big")
+    snapshot.make_snapshot(str(repo), str(tmp_path / "snap_sparse"), paths=["foothold_s2"])
+    assert (tmp_path / "snap_sparse" / "foothold_s2" / "m.py").exists() and not (tmp_path / "snap_sparse" / "big").exists()
+
+
+def test_stamps_ignore_per_run_values_but_catch_real_code_or_cfg_differences(tmp_path):
+    from foothold_s2.chain import stamp
+
+    repo = _mini_repo(tmp_path)
+    a, b, a2 = (_run_dir(tmp_path, "runA", seed=42), _run_dir(tmp_path, "runB", seed=42), _run_dir(tmp_path, "runA2", seed=43))
+
+    for d in (a, b, a2):
+        stamp.write_stamp(d, str(repo))
+
+    chk = stamp.compare_stamps({"A": a, "B": b, "A2": a2})
+    assert chk["comparable"], chk["reason"]                                                    # seed · 로그 폴더 · perception 덮어쓰기는 달라도 된다
+    # env cfg 가 다르다 -> 코드 다름
+    c = _run_dir(tmp_path, "runC", env_extra="extra_term: 1\n")
+    stamp.write_stamp(c, str(repo))
+    chk2 = stamp.compare_stamps({"A": a, "B": b, "C": c})
+    assert not chk2["comparable"] and "env_sha" in chk2["reason"]
+    # git HEAD 가 다르다
+    (repo / "foothold_s2" / "m.py").write_text("X = 9\n", encoding="utf-8")
+    _git(repo, "commit", "-aqm", "c2")
+    d_ = _run_dir(tmp_path, "runD", seed=42)
+    stamp.write_stamp(d_, str(repo))
+    chk3 = stamp.compare_stamps({"A": a, "D": d_})
+    assert not chk3["comparable"] and "git_head" in chk3["reason"]
+    # 스탬프 없음
+    e = _run_dir(tmp_path, "runE")
+    assert "스탬프 없음" in stamp.compare_stamps({"A": a, "E": e})["reason"]
+
+
+def test_compare_curves_refuses_to_judge_when_the_code_differs(tmp_path, monkeypatch):
+    import json as _json
+    from foothold_s2.chain import stamp
+    from foothold_s2.scripts import compare_curves
+
+    repo = _mini_repo(tmp_path)
+    a, b = _run_dir(tmp_path, "runA", seed=42), _run_dir(tmp_path, "runB", seed=42)
+    stamp.write_stamp(a, str(repo))
+    (repo / "foothold_s2" / "m.py").write_text("X = 3\n", encoding="utf-8")
+    _git(repo, "commit", "-aqm", "c2")
+    stamp.write_stamp(b, str(repo))
+    out = tmp_path / "res.json"
+    monkeypatch.setattr(sys, "argv", ["compare_curves", "--a", a, "--b", b, "--out", str(out), "--require_stamps"])
+    assert compare_curves.main() == 0                                                        # 판정하지 않고 정상 종료
+    res = _json.load(open(out, encoding="utf-8"))
+    assert res["verdict"] == "판정 불가 · 코드 다름" and "git_head" in res["reason"] and "metrics" not in res
+
+
+def test_accept_rc_lets_a_tool_exit_one_as_a_legitimate_result_and_job_repo_sets_cwd_and_pythonpath(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", REPO)                       # 사본에는 foothold_s2 가 없으니 래퍼는 원래 경로로 뜬다(실제 사본은 전체 저장소)
+    out = tmp_path / "res.txt"
+    snap = tmp_path / "snap"
+    snap.mkdir()
+    body = "import os,sys;open(r'%s','w').write(os.getcwd()+'|'+os.environ['PYTHONPATH'].split(os.pathsep)[0]);sys.exit(1)" % out
+    jobs = [{"name": "CMP", "repo": str(snap), "retries": 0, "accept_rc": [0, 1], "cmd": py(body), "done": {"outputs": [str(out)]}},
+            {"name": "AFTER", "depends_on": ["CMP"], "cmd": py("pass")}]
+    chain, _ = make(tmp_path, jobs)
+    assert chain.run() == 0 and chain.state["AFTER"]["state"] == "done"                      # 종료 코드 1 이어도 막히지 않았다
+    cwd, pp = out.read_text(encoding="utf-8").split("|")
+    assert os.path.samefile(cwd, snap) and os.path.samefile(pp, snap)
+    chain2, _ = make(tmp_path / "t2", [{"name": "X", "retries": 0, "cmd": py("import sys;sys.exit(1)")}])
+    chain2.run()
+    assert chain2.state["X"]["state"] == "failed"                                            # accept_rc 가 없으면 1 은 실패
