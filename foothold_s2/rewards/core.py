@@ -113,3 +113,23 @@ def foot_edge_penalty(feet_xy, contact, inner_mask, outer_mask, origin_xy, resol
     outer = outer_mask[ix, iy].float() * ok.float()
 
     return torch.sum(contact.float() * (EDGE_OMEGA[0] * inner + EDGE_OMEGA[1] * outer), dim=-1)
+
+
+def foot_edge_penalty_tiles(feet_xy, contact, inner_all, outer_all, level, col, size=(8.0, 8.0), resolution=0.025):
+    """칸별 마스크로 조회하는 발 가장자리 항 (S2). 마스크는 칸 좌표 격자라 발의 월드 좌표에서 칸 모서리를 빼 색인한다.
+
+    `inner_all` · `outer_all` (rows, cols, H, W) bool. `level` · `col` (n,) env 별 현재 칸. 칸 밖의 발은 0.
+    칸 모서리의 월드 좌표 = (줄 x size_x, 열 x size_y) (sparse_terrains.tile_to_world 와 같은 변환).
+    """
+    corner = torch.stack([level.to(feet_xy.dtype) * size[0], col.to(feet_xy.dtype) * size[1]], dim=-1)[:, None, :]
+    idx = torch.floor((feet_xy - corner) / resolution).long()
+    h, w = inner_all.shape[-2:]
+    ok = (idx[..., 0] >= 0) & (idx[..., 0] < h) & (idx[..., 1] >= 0) & (idx[..., 1] < w)
+    ix = idx[..., 0].clamp(0, h - 1)
+    iy = idx[..., 1].clamp(0, w - 1)
+    lv = level[:, None].expand_as(ix)
+    cl = col[:, None].expand_as(ix)
+    inner = inner_all[lv, cl, ix, iy].float() * ok.float()
+    outer = outer_all[lv, cl, ix, iy].float() * ok.float()
+
+    return torch.sum(contact.float() * (EDGE_OMEGA[0] * inner + EDGE_OMEGA[1] * outer), dim=-1)

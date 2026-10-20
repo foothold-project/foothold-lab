@@ -16,8 +16,15 @@ class S2Tables:
         self.flags = torch.full((num_rows, layout.num_cols, flag_count, 2), float("nan"), device=device)
         self.group_col = layout.group_by_col
 
+        sample = next(iter(side_table.by_cell.values()))
+        h, w = sample["inner"].shape
+        self.inner = torch.zeros(num_rows, layout.num_cols, h, w, dtype=torch.bool, device=device)
+        self.outer = torch.zeros_like(self.inner)
+
         for (r, c), v in side_table.by_cell.items():
             self.flags[r, c] = torch.as_tensor(v["flags_world"], dtype=torch.float32, device=device)
+            self.inner[r, c] = torch.as_tensor(v["inner"], device=device)
+            self.outer[r, c] = torch.as_tensor(v["outer"], device=device)
 
     def flag_provider(self, terrain, env_ids, count):
         lvl = terrain.terrain_levels[env_ids]

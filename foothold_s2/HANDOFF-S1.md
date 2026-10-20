@@ -41,3 +41,11 @@
 - 새로 넣음(미실행): `eval/adapters.py` 의 `S1Adapter` + `run_eval.py --policy s1blind|s1scan` + 명령 term `fixed_cmd` · `flag_stride 0`. pytest 134 통과, 아직 Kit 에서 안 돌림.
 - 다음 한 걸음: blind 체크포인트(`logs/rsl_rl/foothold_s1a/2026-10-20_11-35-41/model_9.pt`)로 예행 평가 8 판(축 1 한 칸 · 축 3 한 칸, GPU 1)을 돌려 CSV 가 나오는지 확인 → S1 L1 완료 보고 → `s2_env_cfg` (관측 묶음 policy 45 · depth 60x60 · gt_map 512 · gt_feet 100 · base_vel 3 · contacts 4, rl 사본 start_runner.py 머리말).
 - 미커밋 파일: 이 커밋 직전까지 모두 커밋 대상(adapters.py · run_eval.py · mixed_command.py · tasks/probe_s1.py · 이 문서).
+
+## 10/20 오후 S2 L0 (커밋 649ce407 · 19db2018 · 이어서)
+- rl 지각 모듈(feature/s2-perception-rl 2aef7f91) 로컬 병합. 병합 뒤 pytest 178 통과(Kit python 으로는 rl 의 test_start_runner 가 `store_code_state` import 오류: 이 환경의 rsl_rl 이 ext 쪽 사본으로 잡힘, rl 쪽 환경 문제).
+- (1) `terrains/sparse_terrains.py`: START 시험지 치수를 8x8 칸 가운데 띠에 놓음(가정), 칸 좌표 side table, 월드 변환 `tile + (row*8, col*8)`, 모서리 마스크(낙하 0.2 m, 2.5 · 5 cm 띠, 해상도 2.5 cm = 칸당 320x320), 깃발 4개를 발판 위로 옮김. 칸은 (종류, 난이도) 만으로 결정. 시험 `test_sparse_terrains.py` 15.
+- (2) `terrains/s2_layout.py` · `s2_runtime.py` · `curriculum/terrain_levels_mixed.terrain_levels_s2` · `attach_s2_tables`: 생성기 호출 순서(열 우선, 줄 순서)로 side table 을 (줄, 열)에 묶고, 가정이 깨지면 오류. 시험 `test_s2_runtime.py` 9.
+- (3) `rewards/core.foot_edge_penalty_tiles` + `start_rewards.foot_edge_term`(표 없으면 0). 시험 `test_rewards.py` 에 1 추가.
+- **Kit 에서 처음 도는 것(미확인)**: 생성기 호출 순서 가정(`bind_all` 이 검사함), 대량 칸에서 trimesh 박스 수, `attach_s2_tables` 를 부르는 실행기(`train_s2.py` 는 아직 없음), apply_start_perception 병합 후 env 생성.
+- 다음: lead 에 L0 완료 알림 → Kit 예행(G0 64 env 정도) 허가 받아 생성 · reset · 첫 update 확인.

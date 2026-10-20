@@ -91,3 +91,25 @@ def test_weights_are_the_table_values_and_s1_foot_edge_is_zero():
     assert len(w) == 14
     s1 = {**w, **rc.S1_WEIGHT_OVERRIDES}
     assert s1["foot_edge"] == 0.0 and all(s1[k] == w[k] for k in w if k != "foot_edge")
+
+
+def test_foot_edge_tiles_hand_values_and_cell_selection():
+    h = w = 8
+    inner = torch.zeros(2, 3, h, w, dtype=torch.bool)
+    outer = torch.zeros_like(inner)
+    inner[1, 2, 1, 1] = True            # 칸 (줄 1, 열 2) 의 안쪽 띠 한 칸
+    outer[1, 2, 2, 2] = True
+    inner[0, 0, 1, 1] = True            # 다른 칸의 같은 자리 (섞여 들어오면 안 됨)
+    res = 0.1
+    corner = torch.tensor([8.0, 16.0])  # 줄 1, 열 2 의 월드 모서리
+    feet = (corner + torch.tensor([[0.15, 0.15], [0.25, 0.25], [0.45, 0.45], [-1.0, -1.0]]))[None]   # 안 · 바깥 · 밖 · 칸 밖
+    contact = torch.tensor([[True, True, True, True]])
+    val = rc.foot_edge_penalty_tiles(feet, contact, inner, outer, torch.tensor([1]), torch.tensor([2]),
+                                     size=(8.0, 8.0), resolution=res)
+    assert float(val[0]) == pytest.approx(1.0 + 0.5)
+    other = rc.foot_edge_penalty_tiles(feet - corner + torch.tensor([0.0, 0.0]), contact, inner, outer,
+                                       torch.tensor([0]), torch.tensor([0]), size=(8.0, 8.0), resolution=res)
+    assert float(other[0]) == pytest.approx(1.0)               # (0,0) 칸은 안쪽 띠 하나만
+    air = rc.foot_edge_penalty_tiles(feet, ~contact, inner, outer, torch.tensor([1]), torch.tensor([2]),
+                                     size=(8.0, 8.0), resolution=res)
+    assert float(air[0]) == 0.0

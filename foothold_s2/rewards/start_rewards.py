@@ -1,7 +1,7 @@
 """START Table I 14 항을 Isaac Lab 보상 설정으로 (16 §7). Kit 안에서만 불린다. 식은 `core.py` 와 같다.
 
 기존 Isaac Lab 항을 재사용하고(`track_lin_vel_xy_exp` 가 B 식과 같다), 없는 항 넷(부드러움 · 관절 일률 · 관절 오차 L2 ·
-걸려 넘어짐)과 자리표시 하나(발 가장자리, S1 은 가중치 0)를 새로 쓴다.
+걸려 넘어짐)과 자리표시 하나(발 가장자리, S1 은 가중치 0 이고 표가 없으면 0)를 새로 쓴다.
 """
 
 import torch
@@ -63,9 +63,20 @@ def stumble_term(env, sensor_cfg):
     return core.stumble(sensor.data.net_forces_w[:, sensor_cfg.body_ids])
 
 
-def foot_edge_placeholder(env):
-    """발 가장자리 항 자리표시. S1 은 마스크가 없고 가중치가 0 이다 (16 §5). S2 가 마스크 조회로 바꾼다."""
-    return torch.zeros(env.num_envs, device=env.device)
+def foot_edge_term(env, sensor_cfg, asset_cfg):
+    """발 가장자리 항 (16 §2). `env.s2_tables` 의 칸별 마스크를 발 월드 좌표로 조회한다. 표가 없으면(S1) 0."""
+    tables = getattr(env, "s2_tables", None)
+
+    if tables is None:
+        return torch.zeros(env.num_envs, device=env.device)
+
+    feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
+    force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
+    contact = torch.linalg.norm(force, dim=-1) > 1.0
+    terrain = env.scene.terrain
+
+    return core.foot_edge_penalty_tiles(feet, contact, tables.inner, tables.outer,
+                                        terrain.terrain_levels, terrain.terrain_types)
 
 
 @configclass
@@ -90,4 +101,6 @@ class StartRewardsCfg:
                                 "threshold": core.COLLISION_N})
     stumble = RewTerm(func=stumble_term, weight=core.WEIGHTS["stumble"],
                       params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=FOOT_BODIES)})
-    foot_edge = RewTerm(func=foot_edge_placeholder, weight=core.S1_WEIGHT_OVERRIDES["foot_edge"])
+    foot_edge = RewTerm(func=foot_edge_term, weight=core.S1_WEIGHT_OVERRIDES["foot_edge"],
+                        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=FOOT_BODIES),
+                                "asset_cfg": SceneEntityCfg("robot", body_names=FOOT_BODIES)})
