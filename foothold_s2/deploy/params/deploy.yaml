@@ -1,0 +1,119 @@
+joint_names_isaac:
+- FL_hip_joint
+- FR_hip_joint
+- RL_hip_joint
+- RR_hip_joint
+- FL_thigh_joint
+- FR_thigh_joint
+- RL_thigh_joint
+- RR_thigh_joint
+- FL_calf_joint
+- FR_calf_joint
+- RL_calf_joint
+- RR_calf_joint
+joint_names_sdk:
+- FR_hip_joint
+- FR_thigh_joint
+- FR_calf_joint
+- FL_hip_joint
+- FL_thigh_joint
+- FL_calf_joint
+- RR_hip_joint
+- RR_thigh_joint
+- RR_calf_joint
+- RL_hip_joint
+- RL_thigh_joint
+- RL_calf_joint
+joint_ids_map:
+- 1
+- 5
+- 9
+- 0
+- 4
+- 8
+- 3
+- 7
+- 11
+- 2
+- 6
+- 10
+step_dt: 0.02
+stiffness:
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+- 25.0
+damping:
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+default_joint_pos:
+- 0.10000000149011612
+- -0.10000000149011612
+- 0.10000000149011612
+- -0.10000000149011612
+- 0.800000011920929
+- 0.800000011920929
+- 1.0
+- 1.0
+- -1.5
+- -1.5
+- -1.5
+- -1.5
+actions:
+  JointPositionAction:
+    scale: 0.25
+    offset:
+    - 0.10000000149011612
+    - -0.10000000149011612
+    - 0.10000000149011612
+    - -0.10000000149011612
+    - 0.800000011920929
+    - 0.800000011920929
+    - 1.0
+    - 1.0
+    - -1.5
+    - -1.5
+    - -1.5
+    - -1.5
+observations:
+  policy:
+    history_length: 11
+    terms:
+    - base_ang_vel
+    - projected_gravity
+    - velocity_commands
+    - joint_pos_rel
+    - joint_vel_rel
+    - last_action
+    flatten: per_term
+    history_order: oldest_first
+commands:
+  base_velocity:
+    ranges:
+      lin_vel_x:
+      - -1.5
+      - 1.5
+      lin_vel_y:
+      - -1.0
+      - 1.0
+      ang_vel_z:
+      - -2.0
+      - 2.0
