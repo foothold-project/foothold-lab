@@ -27,6 +27,7 @@ from foothold_s2.rewards.start_rewards import StartRewardsCfg
 from foothold_s2.robots import go2_params as gp
 from foothold_s2.robots.go2_cfg import GO2_S1_CFG
 from foothold_s2.tasks import mdp_extra
+from foothold_s2.tasks.delayed_action import DelayedJointPositionActionCfg
 from foothold_s2.terrains.rough_go2_cfg import s1a_generator
 
 FEET = ".*_foot"
@@ -72,7 +73,7 @@ class CommandsCfg:
 
 @configclass
 class ActionsCfg:
-    joint_pos = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.25,
+    joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.25,
                                            use_default_offset=True)
 
 
@@ -115,7 +116,7 @@ class ObservationsCfg:
 
 @configclass
 class EventCfg:
-    """PIE 도메인 무작위화 (17 §5). push 없음. 지연 · 모터 세기 배율은 구현 안 함 (열린 항목)."""
+    """PIE 도메인 무작위화 (17 §5). push 없음. 행동 지연 0~15 ms 는 DelayedJointPositionAction, 모터 세기 0.9~1.1 은 randomize_motor_strength."""
 
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material, mode="startup",
@@ -135,6 +136,9 @@ class EventCfg:
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*"), "operation": "scale",
                 "stiffness_distribution_params": gp.PIE["gain_scale"],
                 "damping_distribution_params": gp.PIE["gain_scale"], "distribution": "uniform"})
+    motor_strength = EventTerm(
+        func=mdp_extra.randomize_motor_strength, mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot"), "scale_range": gp.PIE["gain_scale"]})
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform, mode="reset",
         params={"pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5), "yaw": (-3.14, 3.14)},

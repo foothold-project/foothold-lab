@@ -27,3 +27,25 @@ def foot_below_ground(env, sensor_cfg, scanner_cfg, asset_cfg, margin: float = 0
     inside = dmin < 0.15
 
     return ((feet[..., 2] < ground_z - margin) & inside).any(dim=1)
+
+
+def randomize_motor_strength(env, env_ids, asset_cfg, scale_range=(0.9, 1.1)):
+    """모터 세기 배율 (17 §5): DCMotor 의 연속 토크 한계와 정지 토크를 env 마다 같은 배율로 키우고 줄인다.
+
+    시작 때 한 번. 속도 한계 곡선의 기울기 `saturation / velocity_limit` 이 배율만큼 같이 변한다.
+    """
+    asset = env.scene[asset_cfg.name]
+    n = env.scene.num_envs
+    scale = torch.empty(n, device=asset.device).uniform_(*scale_range)
+
+    for actuator in asset.actuators.values():
+        limit = actuator.effort_limit
+
+        if not hasattr(actuator, "_saturation_effort"):
+            continue
+
+        base = actuator._saturation_effort
+        base = base if torch.is_tensor(base) else torch.full_like(limit, float(base))
+        actuator.effort_limit = limit * scale[:, None]
+        actuator._saturation_effort = base * scale[:, None]
+        actuator._vel_at_effort_lim = actuator.velocity_limit * (1 + actuator.effort_limit / actuator._saturation_effort)

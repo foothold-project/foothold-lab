@@ -107,7 +107,15 @@ class MixedVelocityCommand(CommandTerm):
         ids = torch.arange(self.num_envs, device=self.device) if env_ids is None             else torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
         self._reset_episode_state(ids)
 
-        return super().reset(env_ids)
+        extras = super().reset(env_ids)
+        counts = torch.bincount(self.mode_ids, minlength=len(mc.MODES)).float() / self.num_envs
+
+        for name, frac in zip(mc.MODES, counts.tolist()):
+            extras[f"mode_fraction_{name}"] = frac
+
+        extras["vmax_x"] = self.range_curriculum.vmax_x
+
+        return extras
 
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
