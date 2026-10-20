@@ -93,3 +93,23 @@ def test_flag_rule():
 def test_combined_judge_uses_flag_rule_for_flag_envs():
     out = rules.judge([True, False], [0.0, 4.5], [[0, 0], [0.8, 0]], [4, 0], [4, 4])
     assert out.tolist() == [1, 1]
+
+
+def test_flag_rule_excludes_in_place_spin_time_from_the_goal_count():
+    goals, num = [1, 1, 2, 0, 4], [4, 4, 4, 4, 4]
+    # 걷는 시간 비율 1.0: 예전 식과 같다 (1 개는 절반 미만이 아니고, 4 개는 승급)
+    assert rules.judge_flag(goals, num, [1.0] * 5).tolist() == rules.judge_flag(goals, num).tolist()
+    # 절반을 제자리 회전으로 썼다: 필요 2 개 -> 2 개 지난 env 가 승급, 1 개는 강등이 아니다(1 x 2 < 2 가 아님)
+    out = rules.judge_flag([2, 1, 0], [4, 4, 4], [0.5, 0.5, 0.5]).tolist()
+    assert out == [1, 0, -1]
+    # 걷는 시간이 25 % 미만이면 판정에서 뺀다 (회전만 한 env 가 «깃발 0 개 요구» 로 승급하지 않게)
+    assert rules.judge_flag([0, 4], [4, 4], [0.2, 0.2]).tolist() == [0, 0]
+    # 같은 깃발 수여도 걷는 시간이 짧으면 예전 식보다 후하게 본다
+    assert rules.judge_flag([2], [4]).tolist() == [0]
+    assert rules.judge_flag([2], [4], [0.5]).tolist() == [1]
+
+
+def test_combined_judge_passes_walk_fraction_only_to_flag_envs():
+    out = rules.judge(is_flag=[True, False], max_dist_m=[0.0, 5.0], cmd_sum_xy=[[0.0, 0.0], [1.0, 0.0]],
+                      goals_covered=[2, 0], num_goals=[4, 4], walk_frac=[0.5, 0.5])
+    assert out.tolist() == [1, 1]            # 깃발 env 는 승급(필요 2), 자유 속도 env 는 거리 5 m > 4 m

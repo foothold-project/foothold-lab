@@ -11,6 +11,7 @@ from isaaclab.utils import configclass
 from isaaclab_tasks.manager_based.locomotion.velocity import mdp
 
 from foothold_s2.rewards import core
+from foothold_s2.rewards.penalty_log import record
 
 # 충돌 판정 링크 (16 §1 가정: base · 허벅지 · 머리, 17 문서와 맞춤)
 COLLISION_BODIES = ["base", ".*_thigh", "Head_.*"]
@@ -60,7 +61,7 @@ def stumble_term(env, sensor_cfg):
     """걸려 넘어짐: 발 접촉력이 수직력의 4 배 넘게 수평 (16 §1 13 항)."""
     sensor = env.scene.sensors[sensor_cfg.name]
 
-    return core.stumble(sensor.data.net_forces_w[:, sensor_cfg.body_ids])
+    return record(env, "stumble", core.stumble(sensor.data.net_forces_w[:, sensor_cfg.body_ids]))
 
 
 def foot_edge_term(env, sensor_cfg, asset_cfg):
@@ -68,15 +69,28 @@ def foot_edge_term(env, sensor_cfg, asset_cfg):
     tables = getattr(env, "s2_tables", None)
 
     if tables is None:
-        return torch.zeros(env.num_envs, device=env.device)
+        return record(env, "foot_edge", torch.zeros(env.num_envs, device=env.device))
 
     feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
     force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
     contact = torch.linalg.norm(force, dim=-1) > 1.0
     terrain = env.scene.terrain
 
-    return core.foot_edge_penalty_tiles(feet, contact, tables.inner, tables.outer,
-                                        terrain.terrain_levels, terrain.terrain_types)
+    return record(env, "foot_edge", core.foot_edge_penalty_tiles(feet, contact, tables.inner, tables.outer,
+                                                                 terrain.terrain_levels, terrain.terrain_types))
+
+
+def collision_term(env, sensor_cfg, threshold):
+    """충돌 (16 §1 12 항): 설치 `undesired_contacts` 값에 켜짐 비율 기록만 더한다."""
+    return record(env, "collision", mdp.undesired_contacts(env, threshold=threshold, sensor_cfg=sensor_cfg))
+
+
+def track_lin_vel_min_form(env, command_name, std, asset_cfg=SceneEntityCfg("robot")):
+    """선속도 추종 A 식(START 원문, 16 §3): exp(-||min(v, cmd) - cmd||^2 / std^2). `track_lin_form = "A"` 일 때만 쓴다."""
+    asset = env.scene[asset_cfg.name]
+    cmd = env.command_manager.get_command(command_name)[:, :2]
+
+    return torch.exp(-torch.sum((torch.minimum(asset.data.root_lin_vel_b[:, :2], cmd) - cmd) ** 2, dim=-1) / std ** 2)
 
 
 @configclass
@@ -96,7 +110,7 @@ class StartRewardsCfg:
     joint_power = RewTerm(func=joint_power_abs, weight=core.WEIGHTS["joint_power"])
     joint_acc = RewTerm(func=mdp.joint_acc_l2, weight=core.WEIGHTS["joint_acc"])
     joint_deviation = RewTerm(func=joint_deviation_sq, weight=core.WEIGHTS["joint_deviation"])
-    collision = RewTerm(func=mdp.undesired_contacts, weight=core.WEIGHTS["collision"],
+    collision = RewTerm(func=collision_term, weight=core.WEIGHTS["collision"],
                         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=COLLISION_BODIES),
                                 "threshold": core.COLLISION_N})
     stumble = RewTerm(func=stumble_term, weight=core.WEIGHTS["stumble"],

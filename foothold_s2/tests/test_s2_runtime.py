@@ -123,7 +123,8 @@ def test_continuous_cells_fall_back_to_the_straight_flag_line():
     terrain = fake_terrain(layout, 10, level=1, col_kind="continuous")
     flags = tables.flag_provider(terrain, torch.arange(10), 4)
     assert not torch.isnan(flags).any()
-    assert torch.allclose(flags[:, 0, 0] - terrain.env_origins[:10, 0], torch.ones(10))
+    assert torch.allclose(flags[:, 0, 0] - terrain.env_origins[:10, 0], -1.5 * torch.ones(10))
+    assert float((flags[:, :, 0] - terrain.env_origins[:10, :1]).abs().max()) <= 1.5 + 1e-6   # 칸 경계 안쪽
 
 
 def test_force_flag_marks_sparse_and_gap_cells_but_not_continuous():

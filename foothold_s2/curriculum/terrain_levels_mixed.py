@@ -23,56 +23,79 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
     num_goals = torch.full((len(env_ids),), term.cfg.flag_count, device=env.device)
 
     move = rules.judge(term.is_flag_env[env_ids], term.max_dist[env_ids], cmd_sum, term.goals[env_ids],
-                       num_goals, size_x=size_x)
+                       num_goals, size_x=size_x, walk_frac=term.walk_frac[env_ids])
     terrain.update_env_origins(env_ids, move > 0, move < 0)
 
     return torch.mean(terrain.terrain_levels.float())
 
 
 class _Acc:
-    """한 반복 동안 자유 속도 env 의 추종 보상 비율을 모은다."""
+    """한 반복 동안 env 에피소드의 추종 보상 비율을 모은다 (자유 속도용 · 깃발용 하나씩)."""
 
     def __init__(self):
         self.lin = 0.0
         self.ang = 0.0
         self.n = 0
-        self.last_iter = -1
+
+    def add(self, lin_sum, ang_sum, n):
+        self.lin += lin_sum
+        self.ang += ang_sum
+        self.n += n
+
+    def take(self):
+        out = (self.lin / self.n, self.ang / self.n) if self.n > 0 else None
+        self.lin = self.ang = 0.0
+        self.n = 0
+
+        return out
+
+
+def apply_range_update(rc, free_acc, flag_acc, iteration, flag_median_level):
+    """반복이 바뀌는 순간 두 상한을 따로 올린다. 순수 계산(시험 가능). 돌려주는 값: (자유 올림, 깃발 올림)."""
+    free = free_acc.take()
+    flag = flag_acc.take()
+    up_free = rc.update(free[0], free[1], iteration=iteration) if free is not None else False
+    up_flag = rc.update_flag(flag[0], flag[1], flag_median_level, iteration=iteration) if flag is not None else False
+
+    return up_free, up_flag
 
 
 def command_range_curriculum(env, env_ids, command_name: str = "base_velocity",
                              lin_term: str = "track_lin_vel", ang_term: str = "track_ang_vel"):
-    """추종 보상 에피소드 합 / (가중치 x 에피소드 길이) 의 평균이 둘 다 gamma 이상이면 vmax 를 0.25 올린다 (반복당 한 번).
+    """추종 보상 에피소드 합 / (가중치 x 에피소드 길이) 의 평균이 둘 다 gamma 이상이면 상한을 0.25 올린다 (반복당 한 번).
 
-    평균은 한 반복 동안 끝난 자유 속도 env 에피소드로 낸다. 돌려주는 값은 현재 vx 상한.
+    자유 속도 env 는 vmax_x · vmax_y 를, 깃발 env 는 깃발 속도 상한 flag_vmax 를 올린다(깃발은 그 env 들의 지형 레벨 중앙값 >= 5
+    조건이 더 붙는다, 14 §4). 평균은 한 반복 동안 끝난 에피소드로 낸다. 돌려주는 값은 현재 상한들(로그).
     """
     term = env.command_manager.get_term(command_name)
     rm = env.reward_manager
     env_ids = torch.as_tensor(env_ids, device=env.device, dtype=torch.long)
 
     if not hasattr(term, "_range_acc"):
-        term._range_acc = _Acc()
+        term._range_acc = (_Acc(), _Acc())
+        term._range_last_iter = -1
 
-    acc = term._range_acc
-    free = env_ids[~term.is_flag_env[env_ids]]
+    free_acc, flag_acc = term._range_acc
+    horizon = env.max_episode_length_s
+    w_lin = rm.get_term_cfg(lin_term).weight
+    w_ang = rm.get_term_cfg(ang_term).weight
+    is_flag = term.is_flag_env[env_ids]
 
-    if len(free) > 0:
-        horizon = env.max_episode_length_s
-        w_lin = rm.get_term_cfg(lin_term).weight
-        w_ang = rm.get_term_cfg(ang_term).weight
-        acc.lin += float((rm._episode_sums[lin_term][free] / (w_lin * horizon)).sum())
-        acc.ang += float((rm._episode_sums[ang_term][free] / (w_ang * horizon)).sum())
-        acc.n += len(free)
+    for acc, ids in ((free_acc, env_ids[~is_flag]), (flag_acc, env_ids[is_flag])):
+        if len(ids) > 0:
+            acc.add(float((rm._episode_sums[lin_term][ids] / (w_lin * horizon)).sum()),
+                    float((rm._episode_sums[ang_term][ids] / (w_ang * horizon)).sum()), len(ids))
 
     it = term.iteration
 
-    if it != acc.last_iter and acc.n > 0:
-        term.range_curriculum.update(acc.lin / acc.n, acc.ang / acc.n, iteration=it)
-        acc.lin = acc.ang = 0.0
-        acc.n = 0
+    if it != term._range_last_iter:
+        flag_levels = env.scene.terrain.terrain_levels[term.is_flag_env].float()
+        median = float(flag_levels.median()) if len(flag_levels) > 0 else 0.0
+        apply_range_update(term.range_curriculum, free_acc, flag_acc, it, median)
 
-    acc.last_iter = it
+    term._range_last_iter = it
 
-    return torch.tensor(term.range_curriculum.vmax_x)
+    return {"vmax_x": term.range_curriculum.vmax_x, "flag_vmax": term.range_curriculum.flag_vmax}
 
 
 def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, seed: int = 0):

@@ -26,21 +26,35 @@ def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, e
     return out
 
 
-def judge_flag(goals_covered, num_goals):
-    """깃발 env 들의 판정."""
+def judge_flag(goals_covered, num_goals, walk_frac=None, min_walk=0.25):
+    """깃발 env 들의 판정.
+
+    `walk_frac` (n,) = 에피소드 중 «걷는 시간» 비율. 제자리 회전(v < 0.3) · 물러나기 구간은 깃발 수 판정에서 시간만큼 뺀다
+    (14 §5 116 행): 필요한 깃발 수를 `num_goals x walk_frac` 로 줄인다. 걷는 시간이 `min_walk` 미만이면 판정에서 뺀다(0, 가정).
+    `walk_frac` 이 None 이면 예전 식(전부 통과 승급, 절반 미만 강등).
+    """
     goals_covered = torch.as_tensor(goals_covered)
     num_goals = torch.as_tensor(num_goals)
     out = torch.zeros(len(goals_covered), dtype=torch.long, device=goals_covered.device)
-    up = goals_covered >= num_goals
-    down = (goals_covered * 2 < num_goals) & ~up
+
+    if walk_frac is None:
+        required = num_goals.float()
+        valid = torch.ones_like(out, dtype=torch.bool)
+    else:
+        walk_frac = torch.as_tensor(walk_frac, dtype=torch.float32, device=goals_covered.device)
+        required = num_goals.float() * walk_frac
+        valid = walk_frac >= min_walk
+
+    up = valid & (goals_covered.float() >= required - 1.0e-6)
+    down = valid & (goals_covered.float() * 2.0 < required) & ~up
     out[up] = 1
     out[down] = -1
 
     return out
 
 
-def judge(is_flag, max_dist_m, cmd_sum_xy, goals_covered, num_goals, size_x=8.0):
+def judge(is_flag, max_dist_m, cmd_sum_xy, goals_covered, num_goals, size_x=8.0, walk_frac=None):
     """두 방식을 한 번에. 깃발 env 는 깃발 규칙, 나머지는 자유 속도 규칙."""
     is_flag = torch.as_tensor(is_flag, dtype=torch.bool)
 
-    return torch.where(is_flag, judge_flag(goals_covered, num_goals), judge_free(max_dist_m, cmd_sum_xy, size_x))
+    return torch.where(is_flag, judge_flag(goals_covered, num_goals, walk_frac), judge_free(max_dist_m, cmd_sum_xy, size_x))

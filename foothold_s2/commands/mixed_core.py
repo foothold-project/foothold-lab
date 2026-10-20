@@ -256,9 +256,13 @@ def flag_step(state, pos_xy, yaw, dt, params):
     return cmd
 
 
-def straight_flag_line(origin_xy, count=4, spacing=1.0, heading=0.0):
-    """이어진 지형 칸의 직선 깃발 열 (14 §3 · 15 §4: 칸 가운데를 지나는 직선, 1 m 간격 · 4 m, 가정). (count, 2)."""
-    steps = (torch.arange(count, dtype=torch.float32) + 1.0) * spacing
+def straight_flag_line(origin_xy, count=4, spacing=1.0, heading=0.0, first=-1.5):
+    """이어진 지형 칸의 직선 깃발 열 (15 §4 71 행: 칸 가운데를 지나는 직선, 1 m 간격). (count, 2).
+
+    칸 가운데 기준 first ... first + (count-1) x spacing = -1.5 ~ +1.5 m: 8 m 칸의 경계(+-4 m)에서 2.5 m 안쪽이다
+    (예전 1~4 m 는 네 번째 깃발이 칸 경계에 놓였다). 첫 깃발은 출발 위치 뒤쪽 1.5 m 이고, 처음에 몸을 돌려 향한다.
+    """
+    steps = first + torch.arange(count, dtype=torch.float32) * spacing
     origin = torch.as_tensor(origin_xy, dtype=torch.float32)
 
     return origin[None, :] + torch.stack([steps * math.cos(heading), steps * math.sin(heading)], dim=1)
@@ -278,6 +282,23 @@ class RangeCurriculum:
     cap_y: float = 1.0
     gamma: float = 0.8
     history: list = field(default_factory=list)
+    # 깃발 방식 속도 상한 (14 §4 표: 같은 조건 + 깃발 env 의 지형 레벨 중앙값 >= 5 에서 0.25 씩, 1.5 까지). 재개 때 같이 저장된다.
+    flag_vmax: float = 1.0
+    flag_cap: float = 1.5
+    flag_median_level: float = 5.0
+
+    def update_flag(self, mean_lin_ratio, mean_ang_ratio, median_level, iteration=None):
+        """깃발 env 의 두 추종 보상 평균 >= gamma 이고 그 env 들의 레벨 중앙값 >= 5 이면 깃발 속도 상한을 올린다."""
+        if mean_lin_ratio >= self.gamma and mean_ang_ratio >= self.gamma and median_level >= self.flag_median_level:
+            before = self.flag_vmax
+            self.flag_vmax = min(self.flag_vmax + self.step, self.flag_cap)
+
+            if self.flag_vmax != before:
+                self.history.append({"iteration": iteration, "flag_vmax": self.flag_vmax})
+
+                return True
+
+        return False
 
     def update(self, mean_lin_ratio, mean_ang_ratio, iteration=None):
         """두 추종 보상 에피소드 평균이 최대값의 gamma 이상이면 상한을 올린다. 올렸으면 True."""

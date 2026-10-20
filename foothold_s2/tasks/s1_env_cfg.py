@@ -23,6 +23,8 @@ from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 from foothold_s2.commands.mixed_command import MixedVelocityCommandCfg
 from foothold_s2.curriculum import terrain_levels_mixed as tlm
+from foothold_s2.rewards import penalty_log
+from foothold_s2.rewards import start_rewards
 from foothold_s2.rewards.start_rewards import StartRewardsCfg
 from foothold_s2.robots import go2_params as gp
 from foothold_s2.robots.go2_cfg import GO2_S1_CFG
@@ -167,6 +169,7 @@ class TerminationsCfg:
 class CurriculumCfg:
     terrain_levels = CurrTerm(func=tlm.terrain_levels_mixed)
     command_range = CurrTerm(func=tlm.command_range_curriculum)
+    penalty_on = CurrTerm(func=penalty_log.penalty_activation)
 
 
 @configclass
@@ -179,6 +182,8 @@ class FootholdS1aScanEnvCfg(ManagerBasedRLEnvCfg):
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
+    track_lin_form: str = "B"
+    """선속도 추종식. "B"(정확 추종, 기본, 팀장 승인) 또는 "A"(START 원문 min 식, 16 §3 대조용)."""
 
     def __post_init__(self):
         self.decimation = 4
@@ -191,6 +196,11 @@ class FootholdS1aScanEnvCfg(ManagerBasedRLEnvCfg):
         self.scene.height_scanner.update_period = self.decimation * self.sim.dt
         self.scene.contact_forces.update_period = self.sim.dt
         self.scene.terrain.terrain_generator.curriculum = True
+
+        if self.track_lin_form == "A":
+            self.rewards.track_lin_vel.func = start_rewards.track_lin_vel_min_form
+        elif self.track_lin_form != "B":
+            raise ValueError("track_lin_form 은 A 또는 B: %r" % (self.track_lin_form,))
 
 
 @configclass

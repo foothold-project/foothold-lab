@@ -267,10 +267,33 @@ def test_flag_state_reset_clears_progress_and_swaps_flags():
     assert st.flags[0, 0].tolist() == [9.0, 9.0]
 
 
-def test_straight_flag_line_is_four_flags_one_meter_apart():
+def test_straight_flag_line_is_four_flags_one_meter_apart_and_inside_the_tile():
     f = mc.straight_flag_line(torch.tensor([10.0, -3.0]))
     assert f.shape == (4, 2)
-    assert f.flatten().tolist() == approx([11, -3, 12, -3, 13, -3, 14, -3], abs=1e-6)
+    assert f.flatten().tolist() == approx([8.5, -3, 9.5, -3, 10.5, -3, 11.5, -3], abs=1e-6)
+    assert float((f[:, 0] - 10.0).abs().max()) <= 1.5 + 1e-6            # 8 m 칸 경계(+-4 m) 에서 2.5 m 안쪽
+    old = mc.straight_flag_line(torch.tensor([0.0, 0.0]), first=1.0)     # 예전 배치는 네 번째가 경계 위
+    assert float(old[:, 0].max()) == approx(4.0)
+
+
+def test_flag_speed_range_curriculum_needs_tracking_and_median_level_and_caps_at_1_5():
+    c = mc.RangeCurriculum()
+    assert not c.update_flag(0.9, 0.9, 4.9)                  # 레벨 중앙값 미달
+    assert not c.update_flag(0.79, 0.9, 7.0)                 # 추종 미달
+    assert c.update_flag(0.8, 0.8, 5.0) and c.flag_vmax == approx(1.25)
+    assert c.update_flag(0.9, 0.9, 6.0) and c.flag_vmax == approx(1.5)
+    assert not c.update_flag(0.9, 0.9, 9.0) and c.flag_vmax == approx(1.5)    # 상한
+    assert c.vmax_x == approx(1.0)                           # 자유 속도 상한은 따로
+
+
+def test_flag_vmax_is_in_the_saved_state_and_survives_a_resume():
+    c = mc.RangeCurriculum()
+    c.update_flag(0.9, 0.9, 6.0)
+    saved = dict(vars(c))                                    # start_runner._env_state 가 하는 것과 같다
+    d = mc.RangeCurriculum()
+    for k, v in saved.items():
+        setattr(d, k, v)
+    assert d.flag_vmax == approx(1.25)
 
 
 # ---------------------------------------------------------------- 범위 커리큘럼 · 노출 로그

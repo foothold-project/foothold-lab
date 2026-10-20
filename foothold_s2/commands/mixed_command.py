@@ -59,6 +59,8 @@ class MixedVelocityCommand(CommandTerm):
         self.max_dist = torch.zeros(n, device=dev)
         self.cmd_sum_xy = torch.zeros(n, 2, device=dev)
         self.goals = torch.zeros(n, dtype=torch.long, device=dev)
+        self.excluded_steps = torch.zeros(n, device=dev)     # 깃발 env 가 제자리 회전 · 물러나기로 쓴 스텝 (14 §5 판정에서 뺀다)
+        self.ep_steps = torch.zeros(n, device=dev)
 
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
@@ -77,6 +79,11 @@ class MixedVelocityCommand(CommandTerm):
     @property
     def iteration(self) -> int:
         return int(self._env.common_step_counter // self.cfg.steps_per_iter)
+
+    @property
+    def walk_frac(self) -> torch.Tensor:
+        """에피소드 중 «걷는 시간» 비율 (제자리 회전 · 물러나기 제외). 깃발 env 의 승급 판정에 쓴다."""
+        return 1.0 - self.excluded_steps / torch.clamp(self.ep_steps, min=1.0)
 
     @property
     def mode_ids(self) -> torch.Tensor:
@@ -99,6 +106,8 @@ class MixedVelocityCommand(CommandTerm):
         self.max_dist[env_ids] = 0.0
         self.cmd_sum_xy[env_ids] = 0.0
         self.goals[env_ids] = 0
+        self.excluded_steps[env_ids] = 0.0
+        self.ep_steps[env_ids] = 0.0
 
         if self.cfg.dynamic_flags and self.cfg.force_flag_provider is not None:
             forced = self.cfg.force_flag_provider(self._env.scene.terrain, env_ids)
@@ -130,6 +139,7 @@ class MixedVelocityCommand(CommandTerm):
             extras[f"mode_fraction_{name}"] = frac
 
         extras["vmax_x"] = self.range_curriculum.vmax_x
+        extras["flag_vmax"] = self.range_curriculum.flag_vmax
         fl = self.is_flag_env[self.flag_ids]
 
         if fl.any():
@@ -163,6 +173,7 @@ class MixedVelocityCommand(CommandTerm):
         flag = env_ids[self.is_flag_env[env_ids]]
 
         if len(flag) > 0:
+            self.params.flag_vmax = self.range_curriculum.flag_vmax        # 깃발 속도 커리큘럼 (14 §4)
             mc.flag_resample(self.flag_state, self._flag_row[flag], self.gen, self.params)
             self.stand[flag] = False
             self.spin[flag] = False
@@ -182,6 +193,11 @@ class MixedVelocityCommand(CommandTerm):
             sel = self.is_flag_env[self.flag_ids]
             self.vel_command_b[self.flag_ids[sel]] = cmd[sel]
             self.goals[self.flag_ids[sel]] = self.flag_state.passed[sel]
+            st = self.flag_state
+            spin_or_back = (st.v < self.params.flag_spin_threshold) | (st.backoff_left > 0)
+            self.excluded_steps[self.flag_ids[sel]] += spin_or_back[sel].float()
+
+        self.ep_steps += 1.0
 
         self.max_dist = torch.maximum(self.max_dist, torch.linalg.norm(pos - self.start_xy, dim=1))
         self.cmd_sum_xy += self.vel_command_b[:, :2]
