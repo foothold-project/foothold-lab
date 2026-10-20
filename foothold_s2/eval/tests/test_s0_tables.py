@@ -31,7 +31,7 @@ def test_spin_pools_both_signs_and_out_of_range_has_no_values(tmp_path):
     assert spin["R_body_n"] == 0
     diag = [r for r in pooled if r["group"] == "sparse" and r["direction"] == "diag"][0]
     assert diag["status"] == "out_of_range" and diag.get("S_rate") is None
-    assert len(pooled) == 21
+    assert len(pooled) == 23
 
 
 def test_not_run_cells_are_marked_not_zero(tmp_path):

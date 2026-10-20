@@ -14,6 +14,7 @@
 
 import argparse
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -52,6 +53,26 @@ def _cmd_text(cmd):
     return ",".join(("%g" % c) for c in cmd)
 
 
+def axis3_job_tag(row, cmd):
+    """고정값과 관측값이 같아도 별도 실행·CSV로 남긴다."""
+    tag = "%s_%s_%s" % (row["group"], row["direction"], _cmd_text(cmd).replace(",", "_"))
+    return tag + ("__vy_obs" if row.get("variant") == "observed" else "")
+
+
+def parse_vy_obs(specs, policies):
+    """정책별 실측값만 받는다. 생략한 정책에 다른 정책의 값을 대신 쓰지 않는다."""
+    values = {}
+    for spec in specs:
+        name, text = spec.split("=", 1)
+        if name not in policies or name in values:
+            raise ValueError("vy_obs 정책 이름이 없거나 중복됨: %s" % name)
+        value = float(text)
+        if not math.isfinite(value) or value < 0:
+            raise ValueError("vy_obs는 유한한 비음수 관측값이어야 한다")
+        values[name] = value
+    return values
+
+
 def expand_jobs(policy, root, include_axes=("axis1", "axis2", "axis3"), vy_obs=None,
                 axis1_dir_override=None, speeds=None, gate=False):
     """한 판의 모든 일. 각 일: name, out(폴더), args(run_eval 인자), raw(원자료 이름), rows(기대 줄 수)."""
@@ -84,16 +105,16 @@ def expand_jobs(policy, root, include_axes=("axis1", "axis2", "axis3"), vy_obs=N
             if row["status"] != "measure":
                 continue
 
-            names = [n for n in cells.TERRAIN_GROUPS[row["group"]] if n not in cells.START_SHEETS]
+            names = cells.TERRAIN_GROUPS[row["group"]]
 
             for cmd in row["commands"]:
-                tag = "%s_%s_%s" % (row["group"], row["direction"], _cmd_text(cmd).replace(",", "_"))
+                tag = axis3_job_tag(row, cmd)
                 # 음수 명령은 `--cmd=-0.5,0,0` 처럼 붙여 써야 한다 (떼어 쓰면 argparse 가 옵션으로 읽어 rc=2)
                 args = ["axis3"] + base + ["--group", row["group"], "--cmd=" + _cmd_text(cmd),
                                            "--direction", row["direction"]]
 
-                if row.get("basis") == cells.VY_ASSUMED_LABEL:
-                    args += ["--cmd_basis", cells.VY_ASSUMED_LABEL]
+                if row.get("basis"):
+                    args += ["--cmd_basis", row["basis"]]
 
                 jobs.append(dict(name="%s/axis3/%s" % (policy, tag),
                                  out=os.path.join(root, policy, "axis3", tag), args=args,
@@ -195,6 +216,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True)
     parser.add_argument("--policies", default="e1,v2,nvidia")
+    parser.add_argument("--vy_obs", action="append", default=[],
+                        help="POLICY=MPS, 반복 가능. 해당 판 마지막 1000회 깃발 지형 |vy 명령| 95분위")
     parser.add_argument("--axes", default="axis1,axis2,axis3")
     parser.add_argument("--gpus", default="0,1")
     parser.add_argument("--policy_spec", action="append", default=[],
@@ -204,6 +227,10 @@ def main(argv=None):
     parser.add_argument("--e1_axis1_dir", default=None,
                         help="E1 축 1 을 이미 돌려 둔 폴더 (<set>/v<speed>). 있으면 거기를 쓴다")
     args = parser.parse_args(argv)
+    try:
+        observed = parse_vy_obs(args.vy_obs, args.policies.split(","))
+    except ValueError as exc:
+        parser.error(str(exc))
 
     os.makedirs(args.root, exist_ok=True)
 
@@ -218,7 +245,8 @@ def main(argv=None):
     for policy in args.policies.split(","):
         override = args.e1_axis1_dir if policy == "e1" else None
         jobs += expand_jobs(policy, args.root, tuple(args.axes.split(",")),
-                            axis1_dir_override=override, speeds=speeds, gate=args.gate)
+                            vy_obs=observed.get(policy), axis1_dir_override=override,
+                            speeds=speeds, gate=args.gate)
 
     gpus = [int(g) for g in args.gpus.split(",")]
     sched = Scheduler(jobs, gpus, args.root, run_kit)

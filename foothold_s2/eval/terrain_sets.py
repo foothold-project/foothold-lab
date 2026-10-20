@@ -15,7 +15,7 @@ import sys
 
 import numpy as np
 
-from foothold_s2.eval import cells, start_sheet
+from foothold_s2.eval import cells, start_sheet, sparse_starts
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LAB_EVAL_DIR = os.path.join(REPO_ROOT, "sim", "eval")
@@ -24,6 +24,9 @@ SET_SOURCES = {
     "rough6": ("rough6_env_cfg.py", "UnitreeGo2Rough6EnvCfg"),
     "unseen10": ("generalization_env_cfg.py", "UnitreeGo2GeneralizationEnvCfg"),
 }
+
+# 평가 별칭 -> 8x8 학습 생성기. lead 결정 10/20: 징검돌 high만.
+START_AXIS3_KINDS = sparse_starts.KINDS
 
 # 무대 계단 대표 칸 (41 §7 가정): 단 높이 0.15 m 고정, 디딤 0.3 m.
 STAGE_STEP_HEIGHT = 0.15
@@ -92,7 +95,14 @@ def stage_stairs_cfg(proportion):
     )
 
 
-def merged_generator(names, difficulty, seed):
+def _fixed_mesh_function(meshes, origin):
+    # 생성 때 검사한 바로 그 형상을 쓴다. TerrainGenerator의 평행이동이 원본을 바꾸지 않게 복사한다.
+    def selected_tile(difficulty, cfg):
+        return [mesh.copy() for mesh in meshes], np.array(origin, dtype=float)
+    return selected_tile
+
+
+def merged_generator(names, difficulty, seed, start_cmd=None):
     """이름 목록으로 한 생성기를 짓는다 (축 3). 열 하나에 지형 하나, 비율은 전부 같게.
 
     하위 지형 설정은 원본 그대로 복사하고 `proportion` 만 바꾼다. 비율은 «어느 열에 어느
@@ -105,6 +115,14 @@ def merged_generator(names, difficulty, seed):
         gen, _ = v2_generator(set_name)
         sources.update(gen.sub_terrains)
 
+    if any(name in START_AXIS3_KINDS for name in names):
+        from foothold_s2.terrains import sparse_terrains
+
+        sparse = sparse_terrains.sparse_subterrains(
+            {kind: 1.0 / len(names) for kind in START_AXIS3_KINDS.values()})
+        sources.update({alias: sparse[kind] for alias, kind in START_AXIS3_KINDS.items()})
+        base.size = sparse_terrains.TILE
+
     subs = {}
 
     for name in names:
@@ -115,7 +133,7 @@ def merged_generator(names, difficulty, seed):
             sub.proportion = 1.0 / len(names)
             subs[name] = sub
         else:
-            raise KeyError("모르는 지형 %r (v2 두 집합과 무대 계단만 이 경로로 짓는다)" % name)
+            raise KeyError("모르는 평가 지형 %r" % name)
 
     base.sub_terrains = subs
     base.num_cols = len(names)
@@ -123,6 +141,34 @@ def merged_generator(names, difficulty, seed):
     base.seed = seed
     base.curriculum = True
     base.difficulty_range = (difficulty, difficulty)
+    if start_cmd is not None:
+        plan, selected = {}, {}
+        random_state = np.random.get_state()
+        try:
+            np.random.seed(seed)
+            for name, sub in subs.items():
+                sub.size = base.size
+                for attr in ("horizontal_scale", "vertical_scale", "slope_threshold"):
+                    if hasattr(sub, attr):
+                        setattr(sub, attr, getattr(base, attr))
+                meshes, _old_origin = sub.function(difficulty, sub)
+                if name in START_AXIS3_KINDS:
+                    result = dict(sparse_starts.start_plan(difficulty, tuple(start_cmd))[name])
+                    result["zone"] = [list(axis) for axis in sparse_starts.ZONE]
+                else:
+                    result = sparse_starts.legacy_start(name, sub, difficulty, meshes, start_cmd)
+                plan[name] = result
+                if result["status"] == "ready":
+                    sub.function = _fixed_mesh_function(meshes, result["origin"])
+                    selected[name] = sub
+        finally:
+            np.random.set_state(random_state)
+        for sub in selected.values():
+            sub.proportion = 1. / len(selected)
+        base.sub_terrains = selected
+        base.num_cols = len(selected)
+        base.use_cache = False
+        base.axis3_starts = plan
 
     return base
 

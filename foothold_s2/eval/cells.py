@@ -5,6 +5,8 @@
 축 3: 지형군 x 방향 표 (41 §4). 「1 차 범위 밖」 칸은 측정하지 않고 표에 그렇게 적는다.
 """
 
+import math
+
 # ---------------------------------------------------------------- 축 1
 
 ROUGH6 = (
@@ -77,8 +79,7 @@ AXIS2_CELLS = (
 # ---------------------------------------------------------------- 축 3
 
 # 지형군 -> 지형 이름 (집합은 이름으로 정해진다). 41 §4.
-# 「이어진 지형」 은 글자대로 rough6 전부 + wave + discrete_obstacles 다. 그래서
-# 계단 둘이 이어진 지형과 계단 두 행에 모두 들어간다 (겹침은 집계 때 그대로 둔다).
+# 이어진 지형과 계단 행은 서로소다 (41 §4).
 STAGE_STAIRS = "stage_stairs"
 
 START_SHEETS = ("stepping_stones_start", "balance_beams", "stepping_beams", "gaps_start")
@@ -120,7 +121,7 @@ SPARSE_ROW = {
 VY_ASSUMED = 0.2
 VY_ASSUMED_LABEL = "가정값 0.2 (31 임시)"
 
-# START 시험지 네 종은 8 x 4 m 칸이라 옆 명령은 칸 크기로 측정할 수 없다 (lead 결정).
+# 아래 두 상수는 옛 8x4 시험지 기록용이다. 축 3은 같은 이름의 8x8 학습 생성기를 쓴다.
 START_DIRECTIONS = ("front", "back", "spin")
 START_UNMEASURABLE = "칸 크기로 측정 불가"
 
@@ -164,9 +165,14 @@ def axis3_rule(group, direction, cmd):
 def axis3_table(vy_obs=None):
     """축 3 의 모든 `(군, 방향)` 칸을 풀어 쓴다.
 
-    각 항목: `{group, direction, status, commands}`.
-    status 는 `measure` / `out_of_range` / `needs_vy_obs`.
+    옆 칸은 variant=fixed(등록 0.2) / observed(학습 관측값)로 나눈다.
+    vy_obs는 해당 판 마지막 1,000 update 깃발 지형군 |vy 명령|의 95분위다.
+    없으면 needs_vy_obs, 0이면 거리 분모가 없으므로 zero_vy_obs로 남긴다.
     """
+    if vy_obs is not None:
+        vy_obs = float(vy_obs)
+        if not math.isfinite(vy_obs) or vy_obs < 0:
+            raise ValueError("vy_obs는 유한한 비음수 관측값이어야 한다")
     rows = []
 
     for group in TERRAIN_GROUPS:
@@ -178,10 +184,14 @@ def axis3_table(vy_obs=None):
                                  status="out_of_range", commands=[]))
             elif rule == "vy_obs":
                 sign = 1.0 if direction == "left" else -1.0
-                value = VY_ASSUMED if vy_obs is None else float(vy_obs)
                 rows.append(dict(group=group, direction=direction, status="measure",
-                                 commands=[(0.0, sign * value, 0.0)],
-                                 basis=VY_ASSUMED_LABEL if vy_obs is None else "vy_obs"))
+                                 commands=[(0.0, sign * VY_ASSUMED, 0.0)],
+                                 variant="fixed", basis=VY_ASSUMED_LABEL, gate_eligible=True))
+                status = "needs_vy_obs" if vy_obs is None else "zero_vy_obs" if vy_obs == 0 else "measure"
+                rows.append(dict(group=group, direction=direction, status=status,
+                                 commands=[(0.0, sign * vy_obs, 0.0)] if status == "measure" else [],
+                                 variant="observed", basis="vy_obs", gate_eligible=False,
+                                 label="기록 전용 · 판정 제외" if status == "measure" else "미측정 · 판정 제외"))
             elif rule == "measure":
                 rows.append(dict(group=group, direction=direction, status="measure",
                                  commands=list(DEFAULT_COMMANDS[direction])))

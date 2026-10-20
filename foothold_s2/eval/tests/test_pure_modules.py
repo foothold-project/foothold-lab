@@ -46,7 +46,8 @@ def test_axis2_has_nine_cells():
 
 
 def test_axis3_table_marks_out_of_range_and_vy_obs():
-    table = {(r["group"], r["direction"]): r for r in cells.axis3_table()}
+    table = {(r["group"], r["direction"]): r for r in cells.axis3_table()
+             if r.get("variant") != "observed"}
     assert table[("sparse", "diag")]["status"] == "out_of_range"
     assert table[("sparse", "left")]["commands"] == [(0.0, 0.2, 0.0)]
     assert table[("sparse", "right")]["commands"] == [(0.0, -0.2, 0.0)]
@@ -60,6 +61,7 @@ def test_axis3_table_marks_out_of_range_and_vy_obs():
     assert with_vy[("sparse", "right")]["commands"] == [(0.0, -0.3, 0.0)]
     assert sum(1 for r in table.values() if r["status"] == "out_of_range") == 1
     assert len(table) == 21
+    assert len(cells.axis3_table()) == 23
 
 
 def test_axis3_groups_are_disjoint_after_lead_decision():

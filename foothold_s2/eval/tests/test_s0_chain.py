@@ -13,7 +13,7 @@ def test_jobs_per_policy_count_and_rows():
     assert len(kinds["axis1"]) == 6 and len(kinds["axis2"]) == 3 and len(kinds["axis3"]) == 23
     assert sorted(j["rows"] for j in kinds["axis1"]) == [600, 600, 600, 1000, 1000, 1000]
     assert all(j["rows"] == 9 for j in kinds["axis2"])
-    assert sorted({j["rows"] for j in kinds["axis3"]}) == [300, 600]
+    assert sorted({j["rows"] for j in kinds["axis3"]}) == [300, 600, 700]
 
 
 def test_axis3_jobs_skip_out_of_range_and_label_assumed_vy():

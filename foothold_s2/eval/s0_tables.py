@@ -5,13 +5,14 @@
 만드는 것
   axis1_cells.csv      판 x 48칸: overall 과 성분 넷, R_body/S/J_body 와 Wilson, 평균(48 · 범위 안 32 · 속도별)
   axis2_cells.csv      판 x 아홉 칸: 기본 시드 판정 + 시드 셋 값 + 시드 셋 중 문턱 못 넘은 수
-  axis3_cells.csv      판 x 지형군 x 방향(21칸): 풀링한 R/S/J, 명령 방향 진행, 방향 이탈 비율, 열 `basis`
+  axis3_cells.csv      판 x 지형군 x 방향(23칸): 풀링한 R/S/J, 명령 방향 진행, 방향 이탈 비율, 열 `basis`
   axis3_by_terrain.csv 판 x 지형군 x 방향 x 지형 (평균대 · 빔처럼 따로 볼 때)
   compare_policies.csv 칸마다 세 판을 나란히 (판 비교 CSV)
 「범위 밖」 칸은 측정하지 않았으므로 `status=out_of_range` 행으로만 남긴다 (값 칸은 빈 칸).
 """
 
 import argparse
+import json
 import os
 
 from foothold_s2.eval import cells, compare, manifest, rsj, s0_chain
@@ -112,26 +113,43 @@ def axis3_tables(root, policies, vy_obs=None):
     terrain_rows = []
 
     for policy in policies:
-        for spec in cells.axis3_table(vy_obs=vy_obs):
+        value = vy_obs.get(policy) if isinstance(vy_obs, dict) else vy_obs
+        for spec in cells.axis3_table(vy_obs=value):
             base = dict(policy=policy, group=spec["group"], direction=spec["direction"],
-                        status=spec["status"], basis=spec.get("basis", ""))
+                        status=spec["status"], basis=spec.get("basis", ""),
+                        variant=spec.get("variant", ""), gate_eligible=spec.get("gate_eligible"),
+                        label=spec.get("label", ""))
 
             if spec["status"] != "measure":
                 pooled_rows.append(base)
                 continue
 
             raw = []
+            exclusions = set()
 
             for cmd in spec["commands"]:
-                tag = "%s_%s_%s" % (spec["group"], spec["direction"],
-                                    s0_chain._cmd_text(cmd).replace(",", "_"))
+                tag = s0_chain.axis3_job_tag(spec, cmd)
                 path = os.path.join(root, policy, "axis3", tag, "axis3_raw.csv")
+                starts_path = os.path.join(os.path.dirname(path), "axis3_starts.json")
+                if os.path.isfile(starts_path):
+                    with open(starts_path, encoding="utf-8") as handle:
+                        plan = json.load(handle)
+                    exclusions.update(n for n, start in plan.items() if start["status"] == "no_start")
 
                 if os.path.isfile(path):
                     raw += read_rows(path)
 
+            raw = [r for r in raw if r["terrain"] not in exclusions]
+            base["excluded_start_terrains"] = ";".join(sorted(exclusions))
+            if exclusions:
+                base["gate_eligible"] = False
+                base["label"] = "일부 지형 시작점 없음 · 합산 판정 제외"
+            for terrain in sorted(exclusions):
+                terrain_rows.append(dict(base, terrain=terrain, status="no_start",
+                                         label="시작점 없음 · 판정 제외", gate_eligible=False))
             if not raw:
-                pooled_rows.append(dict(base, status="not_run"))
+                pooled_rows.append(dict(base, status="no_start" if exclusions else "not_run",
+                                        gate_eligible=False))
                 continue
 
             pooled_rows.append(dict(base, commands=";".join(s0_chain._cmd_text(c) for c in spec["commands"]),
@@ -139,7 +157,8 @@ def axis3_tables(root, policies, vy_obs=None):
 
             for terrain in sorted({r["terrain"] for r in raw}):
                 picked = [r for r in raw if r["terrain"] == terrain]
-                terrain_rows.append(dict(base, terrain=terrain, **rsj.summarize_axis3_cell(picked)))
+                terrain_rows.append(dict(base, terrain=terrain, gate_eligible=spec.get("gate_eligible"),
+                                         label=spec.get("label", ""), **rsj.summarize_axis3_cell(picked)))
 
     return _uniform(pooled_rows), _uniform(terrain_rows)
 
@@ -170,15 +189,16 @@ def compare_policies(axis1_rows, axis3_rows):
         by_cell.setdefault(key, {})[r["policy"]] = r.get("overall_success")
 
     for r in axis3_rows:
+        direction = r["direction"] + ("/" + r["variant"] if r.get("variant") else "")
         if r.get("status") != "measure":
-            key = ("axis3", r["group"], r["direction"], r.get("status"))
+            key = ("axis3", r["group"], direction, r.get("status"))
             by_cell.setdefault(key, {})[r["policy"]] = None
             continue
 
-        by_cell.setdefault(("axis3", r["group"], r["direction"], "J_body|S"), {})[r["policy"]] =             "%s|%s" % (r.get("J_body_rate"), r.get("S_rate"))
+        by_cell.setdefault(("axis3", r["group"], direction, "J_body|S"), {})[r["policy"]] =             "%s|%s" % (r.get("J_body_rate"), r.get("S_rate"))
         # 방향 이탈 비율과 명령 방향 진행도 꼭 나란히 둔다 (41 §9 「방향 이탈 <= 0.1」 이 달성 가능한 기준인지 보는 근거).
-        by_cell.setdefault(("axis3", r["group"], r["direction"], "yaw_dev_rate"), {})[r["policy"]] =             r.get("yaw_dev_rate")
-        by_cell.setdefault(("axis3", r["group"], r["direction"], "progress_capped"), {})[r["policy"]] =             r.get("mean_cmd_progress_ratio_capped")
+        by_cell.setdefault(("axis3", r["group"], direction, "yaw_dev_rate"), {})[r["policy"]] =             r.get("yaw_dev_rate")
+        by_cell.setdefault(("axis3", r["group"], direction, "progress_capped"), {})[r["policy"]] =             r.get("mean_cmd_progress_ratio_capped")
 
     policies = sorted({r["policy"] for r in axis1_rows} | {r["policy"] for r in axis3_rows})
 
@@ -195,14 +215,20 @@ def main(argv=None):
     parser.add_argument("--root", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--policies", default="e1,v2,nvidia")
+    parser.add_argument("--vy_obs", action="append", default=[],
+                        help="실행 때와 같은 POLICY=MPS 관측값, 반복 가능")
     args = parser.parse_args(argv)
 
     policies = args.policies.split(",")
+    try:
+        observed = s0_chain.parse_vy_obs(args.vy_obs, policies)
+    except ValueError as exc:
+        parser.error(str(exc))
     os.makedirs(args.out, exist_ok=True)
 
     a1 = axis1_table(args.root, policies)
     a2 = axis2_table(args.root, policies)
-    a3, a3t = axis3_tables(args.root, policies)
+    a3, a3t = axis3_tables(args.root, policies, vy_obs=observed)
 
     for name, rows in (("axis1_cells.csv", a1), ("axis2_cells.csv", a2), ("axis3_cells.csv", a3),
                        ("axis3_by_terrain.csv", a3t), ("compare_policies.csv", compare_policies(a1, a3))):
