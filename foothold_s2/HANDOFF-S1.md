@@ -49,3 +49,9 @@
 - (3) `rewards/core.foot_edge_penalty_tiles` + `start_rewards.foot_edge_term`(표 없으면 0). 시험 `test_rewards.py` 에 1 추가.
 - **Kit 에서 처음 도는 것(미확인)**: 생성기 호출 순서 가정(`bind_all` 이 검사함), 대량 칸에서 trimesh 박스 수, `attach_s2_tables` 를 부르는 실행기(`train_s2.py` 는 아직 없음), apply_start_perception 병합 후 env 생성.
 - 다음: lead 에 L0 완료 알림 → Kit 예행(G0 64 env 정도) 허가 받아 생성 · reset · 첫 update 확인.
+
+## 10/20 오후 SC-6 정책 노드 (커밋 7b5cf869 · e9460aac)
+- `foothold_s2/deploy/`: `obs.py`(S1-blind 관측 조립, Isaac 기록과 0.0 오차) · `sdk_joints.py`(SDK FR FL RR RL ↔ Isaac hip 넷 · thigh 넷 · calf 넷 순열) · `command_filter.py`(31 §5) · `safety.py`(PASSIVE → FIXSTAND → POLICY → HOLD(STOP 래치, 자동 재개 없음) → SPORT/DAMP, deadman 0.3 s · heartbeat 1.0 s) · `export.py`(체크포인트 → ONNX) · `record_isaac.py`(Kit 기록기) · `params/deploy.yaml` · `testdata/s1blind_record.npz` · `exported/policy.onnx`(10 update 체크포인트, 형식 확인용). 설계 `DESIGN-policy-node.md`. 시험 `tests/test_deploy.py` 20(ONNX 1개는 `C:/Users/AI-WS01/s2_lab/pylib` 에 onnx 1.18 + onnxruntime 이 있어야 돌고 없으면 skip).
+- 메모(lead): 정리기의 전진 상한 1.0 은 고정값이 아니라 «학습 로그의 최종 커리큘럼 상한(vmax_x)» 을 deploy.yaml 에 내보내 읽게 바꾼다(지금은 가정값 1.0).
+- 이전(Linux, 10/22) 뒤 첫 일: unitree_mujoco 파이썬 경로(`simulate_python`, DOMAIN_ID 1, INTERFACE lo)로 FIXSTAND → S1-blind 서기 · 걷기. 먼저 확인할 것: IMU quat 정의(w x y z, 몸 → 세계)가 Isaac `root_quat_w` 와 같은지, gyro 부호, 우리 기본 자세로 서는지. 정책은 정식 S1 체크포인트가 나온 뒤(10 update 체크포인트는 걷지 못함). WSL 에 cyclonedds 등을 까는 것은 하지 않기로 함(lead 결정).
+- S2: 학습은 rl 의 `foothold_s2/scripts/train_start.py` + `FootholdS2-Go2-S2-{G0,G1,G3}-v0`(isaac311 python, 판 확인 assert 는 train_start 에 있음). 도움이 되는 probe: `tasks/probe_s2.py`(물러나기) · `probe_s2_edge.py`(발 가장자리) · `probe_s2_recon.py`(재구성 지도 그림). 대기 중인 판단: lead 의 S2 첫 update 확인 항목(foot_edge 평균 음수 여부).
