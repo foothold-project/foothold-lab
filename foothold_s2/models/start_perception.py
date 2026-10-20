@@ -98,7 +98,7 @@ class UNetRefine(nn.Module):
         self.d2 = block(64, 32)
         self.u1 = nn.ConvTranspose2d(32, 16, 2, 2)
         self.d1 = block(32, 16)
-        self.out = nn.Conv2d(16, 1, 1)  # 1x1 은 가정(rl)
+        self.out = nn.Conv2d(16, 1, 3, 1, 1)  # 3x3 · 활성화 없음: fable 20s 가 START 원문과 대조해 채택 (12 §3 · §12, 37ed3ada)
 
     def forward(self, h: torch.Tensor) -> torch.Tensor:
         x = h.unsqueeze(1)
