@@ -45,7 +45,7 @@ class EpisodeRunner:
     """
 
     def __init__(self, adapter_env, policy, policy_nn, pin, *, terrain_names, envs_per_terrain,
-                 episodes, duration_s, mode, judge_kwargs, reference_m=None, log=print):
+                 episodes, duration_s, mode, judge_kwargs, reference_m=None, command_s=None, log=print):
         self.env = adapter_env["env"]
         self.raw = adapter_env["raw"]
         self.policy = policy
@@ -58,6 +58,7 @@ class EpisodeRunner:
         self.mode = mode
         self.judge_kwargs = judge_kwargs
         self.reference_m = reference_m
+        self.command_s = command_s
         self.log = log
 
     def targets(self, recorded):
@@ -170,6 +171,14 @@ class EpisodeRunner:
                     reached |= hit
                     on = on & ~hit
                     pin.want[hit] = 0.0
+
+            if self.mode == "command" and self.command_s is not None:
+                # 명령 유지 시간이 정해진 칸 (41 §4 결정 2): 그 시간이 지나면 기준 거리에 못 닿아도 명령을 0 으로.
+                expire = active & on & (length >= int(round(self.command_s / dt)))
+
+                if expire.any():
+                    on = on & ~expire
+                    pin.want[expire] = 0.0
 
             self._write_command(command_term, pin.want)
 

@@ -418,3 +418,52 @@ def test_start_mev_counts_edge_steps():
     assert start_sheet.mev(g, [(3.0, 0.2)]) is None
     assert start_sheet.crossing_ratio(3.25) == pytest.approx(0.5)
     assert start_sheet.crossing_ratio(99.0) == 1.0
+
+
+# ---------------------------------------------------------------- 듬성한 행 뒤 · 옆 칸 규칙 (41 §4 결정 2)
+
+
+def test_sparse_short_rule_known_answers():
+    side = cells.axis3_rule("sparse", "left", (0.0, 0.2, 0.0))
+    assert side["reference_m"] == pytest.approx(0.4)
+    assert side["duration_s"] == 4.0 and side["command_s"] == 2.0
+
+    back = cells.axis3_rule("sparse", "back", (-0.3, 0.0, 0.0))
+    assert back["reference_m"] == pytest.approx(0.6) and back["duration_s"] == 4.0
+
+    right = cells.axis3_rule("sparse", "right", (0.0, -0.25, 0.0))
+    assert right["reference_m"] == pytest.approx(0.5)
+
+
+def test_other_cells_keep_the_3m_rule():
+    for group, direction, cmd in (("sparse", "front", (0.5, 0.0, 0.0)), ("sparse", "spin", (0.0, 0.0, 1.2)),
+                                  ("sparse", "front_turn", (0.5, 0.0, 0.5)),
+                                  ("continuous", "back", (-0.5, 0.0, 0.0)), ("stairs", "left", (0.0, 0.5, 0.0))):
+        rule = cells.axis3_rule(group, direction, cmd)
+        assert rule["reference_m"] == 3.0 and rule["command_s"] is None
+        assert rule["duration_s"] == pytest.approx(cells.axis3_duration_s(cmd))
+
+
+def test_sparse_short_cell_judges_with_the_new_distance():
+    """명령 2 s (100 스텝) 뒤 정지, 총 4 s. 0.2 m/s 로 정확히 걸으면 기준 0.4 m 에 닿는다."""
+    n = 200
+    pos = np.zeros((n, 2))
+    pos[:, 1] = np.minimum(np.arange(n), 100) * 0.2 * DT
+    yaw = np.zeros(n)
+    vel = np.zeros((n, 2))
+    vel[:100, 1] = 0.2
+    cmd = np.zeros((n, 3))
+    cmd[:100, 1] = 0.2
+    act = np.zeros(n, dtype=bool)
+    act[:100] = True
+    rule = cells.axis3_rule("sparse", "left", (0.0, 0.2, 0.0))
+    row = judge.judge_command(pos, yaw, vel, np.zeros(n), cmd, act, True, False, DT,
+                              reference_m=rule["reference_m"])
+    assert row["R_body"] and row["S"] and row["J_body"]
+    assert row["cmd_progress_ratio"] == pytest.approx(1.0)
+    assert row["active_s"] == pytest.approx(2.0, abs=DT)
+    assert row["duration_s"] == pytest.approx(4.0, abs=DT)
+
+    # 같은 걸음을 옛 규칙(3 m)으로 보면 도달하지 못한다: 규칙이 실제로 판정을 바꾼다.
+    old = judge.judge_command(pos, yaw, vel, np.zeros(n), cmd, act, True, False, DT, reference_m=3.0)
+    assert not old["R_body"]

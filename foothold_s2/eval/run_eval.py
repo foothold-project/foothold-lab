@@ -153,7 +153,7 @@ def policy_record(adapter):
 
 
 def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, judge_kwargs,
-                     recorded, tag):
+                     recorded, tag, command_s=None):
     adapter = make_adapter(args.terrain_set if args.axis == "axis1" else None)
     n_env = args.envs_per_terrain * len(names)
     built, raw, pin = build_and_load(adapter, generator, n_env, duration_s, [base_cmd] * n_env)
@@ -164,7 +164,7 @@ def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, 
     runner = runtime.EpisodeRunner(
         {"env": env, "raw": raw}, policy, policy_nn, pin, terrain_names=names,
         envs_per_terrain=args.envs_per_terrain, episodes=args.episodes, duration_s=duration_s,
-        mode=mode, judge_kwargs=judge_kwargs, reference_m=reference_m)
+        mode=mode, judge_kwargs=judge_kwargs, reference_m=reference_m, command_s=command_s)
 
     rows = []
     total = len(recorded) * args.episodes
@@ -212,12 +212,13 @@ def do_axis3():
     # 아직 이어 붙이지 않았으므로 축 3 지형군에서 뺀다 (보고서에 「미측정」 으로 적는다).
     names = [n for n in cells.TERRAIN_GROUPS[args.group] if n not in cells.START_SHEETS]
     recorded = names if args.terrains == "all" else [t for t in args.terrains.split(",") if t]
-    duration = cells.axis3_duration_s(cmd)
+    rule = cells.axis3_rule(args.group, args.direction, cmd)
+    duration, reference_m = rule["duration_s"], rule["reference_m"]
     generator = terrain_sets.merged_generator(names, args.difficulty, args.seed)
     judge_kwargs = dict(yaw_deviation_deg=cells.AXIS3_PARAMS["yaw_deviation_deg"])
     rows, stats, adapter, dt = run_episode_axis(
-        "command", names, generator, cmd, duration, cells.REFERENCE_DISTANCE_M, judge_kwargs,
-        recorded, "axis3 %s %s" % (args.group, args.cmd))
+        "command", names, generator, cmd, duration, reference_m, judge_kwargs,
+        recorded, "axis3 %s %s" % (args.group, args.cmd), command_s=rule["command_s"])
 
     for row in rows:
         row["group"] = args.group
@@ -227,10 +228,11 @@ def do_axis3():
 
     save_episode_outputs("axis3", rows, recorded, rsj.summarize_axis3_cell, adapter,
                          {"group": args.group, "cmd": list(cmd), "duration_s": duration,
-                          "reference_m": cells.REFERENCE_DISTANCE_M, "step_dt_s": dt,
+                          "reference_m": reference_m, "command_s": rule["command_s"],
+                          "axis3_rule": rule["rule"], "step_dt_s": dt,
                           "params": cells.AXIS3_PARAMS, "stats": stats},
                          {"group": args.group, "direction": args.direction, "cmd": args.cmd,
-                          "cmd_basis": args.cmd_basis})
+                          "cmd_basis": args.cmd_basis, "axis3_rule": rule["rule"]})
 
 
 def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, summary_extra):

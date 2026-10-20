@@ -139,6 +139,28 @@ def axis3_duration_s(cmd):
     return REFERENCE_DISTANCE_M / speed * TIME_FACTOR
 
 
+# 듬성한 행 뒤 · 옆 칸 (41 §4 결정 2): 명령 2 s, 기준 거리 = 속도 x 2 s, 관찰 총 4 s (명령 0 으로 2 s 더).
+SPARSE_COMMAND_S = 2.0
+SPARSE_OBSERVE_S = 4.0
+SPARSE_SHORT_DIRECTIONS = ("back", "left", "right")
+
+
+def axis3_rule(group, direction, cmd):
+    """칸의 기준 거리 · 평가 시간 · 명령 유지 시간.
+
+    듬성한 행의 뒤 · 좌 · 우 칸은 결정 2 규칙 (명령 2 s · 기준 거리 = 속도 x 2 s · T 4 s),
+    나머지는 3 m 규칙 (`axis3_duration_s`). `command_s` 가 None 이면 기준 거리에 닿을 때까지 명령을 켠다.
+    """
+    speed = (cmd[0] ** 2 + cmd[1] ** 2) ** 0.5
+
+    if group == "sparse" and direction in SPARSE_SHORT_DIRECTIONS and speed > 1.0e-9:
+        return dict(reference_m=speed * SPARSE_COMMAND_S, duration_s=SPARSE_OBSERVE_S,
+                    command_s=SPARSE_COMMAND_S, rule="sparse_short")
+
+    return dict(reference_m=REFERENCE_DISTANCE_M, duration_s=axis3_duration_s(cmd), command_s=None,
+                rule="reference_3m")
+
+
 def axis3_table(vy_obs=None):
     """축 3 의 모든 `(군, 방향)` 칸을 풀어 쓴다.
 
