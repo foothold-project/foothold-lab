@@ -29,6 +29,12 @@
 
 ### SOL-20w 수신 · 10/21 00:30 직접 대조
 
+**후속 SOL-20x 수신 · 10/21 01:04 직접 대조**: `ca62785e` 및 `bcfaa7fd`의 F5 계약·JSON 반영본을 확인했다. gates 작업 사본과 커밋 원바이트가 같고 원바이트·LF SHA256은 `7521796f1a4b085866ed3b357290df08946e252d98962eca7ad3fdc35de84d5d`다. `caaf04f6` 대비 비교 기준·칸 목록·대조판 필드·축 2·3 및 비F5 관문 전체(다른 S3 항목 포함)가 같다. 마지막 유효 묶음 기준 age와 안전 A, 2 %p 판정·참고 오차 분리가 JSON에 반영됐다. sol 작업 사본은 대조 시 clean이었다.
+
+- 아래 SOL-20w의 null 목록은 당시 이력이다. **현재 null 7개**는 `vy_obs` 둘, S1a-blind·S1b-blind·S2-G0 SHA 셋, F5 공칭 높이와 reset 직후 유효 높이가 없을 때의 처리 둘이다. stale 속도·roll fallback도 문구상 미정이다.
+- CPU 출처 279개 누락 0·구조 반례 4·age 경계·실제 manifest SHA 검사는 **sol 보고**이며 lead_tmp 재실행 결과가 아니다. 실제 어댑터·L0/L1·Kit는 미완료, S3 본 학습 보류는 유지한다.
+- lead의 blind SHA 추가·v1.1 봉인에는 이 **F5 후속본 `bcfaa7fd`**을 포함하고 최종 파일 해시를 다시 계산해야 한다. 소비 평가 사본을 lead_tmp가 교체하지 않았다. N1 병합 커밋 이후 F3에 두 F5 커밋과 남은 미정 항목을 함께 포함한다.
+
 - **확인됨**: `feature/sol-20u-jay`의 `caaf04f674d8a9e0f0803e951721cd367dd4600c`는 19파일 변경이며 sol 작업 사본은 대조 시 clean이었다. `gates-v1.json`의 작업 사본과 커밋 원바이트가 같고, 원바이트·LF SHA256은 모두 `69b094786e1439e6b5c7c30971082f4901314f8fad54a3e8a71d0e01dc5c8276`이다. `cells.s1_scan_judged_26`는 26칸이며 S1-b 후보 A가 등록돼 있다.
 - **규칙 선행판**: v1.1 최종 봉인 전이다. JSON의 null은 7개다. `vy_obs` 둘, S1a-blind·S1b-blind·S2-G0 체크포인트 SHA 셋, `xhat_m`의 `error_threshold`·`invalid_output_rule` 둘이다. 각 생산·결정 시점을 구분하며, 미정 값을 임의로 채우지 않는다.
 - **F5 후속 · rl 문서 판정 수신**: `961e74ce`의 `evidence/contracts/RL-F5-xhatm-verdict.md`를 직접 읽었다. lead는 권고를 채택했으며, 값은 모두 가정이다. sol 반영 의뢰는 [TASK-sol-20x-f5-contract.md](TASK-sol-20x-f5-contract.md)다. 접지 발 평균 높이, 해석식 roll, S2도 같은 높이 어댑터, 무효·age·reset 규칙을 계약과 JSON에 반영할 차례다. 판정은 같은 장면·시드에서 HL teacher의 정답 대 추정 입력 성공률 하락 ≤ 2 %p, MAE·p95는 참고다. **00:52 수신한 lead 선택 A**: 마지막 유효 묶음 기준 age >20 ms 즉시 stale, >100 ms 즉시 HOLD 래치·추가 대기와 자동 재개 없음·사람이 해제. deadman·heartbeat는 별개 유지. 19·21·99·101 ms 경계 시험과 실기 T 단계 HOLD 횟수·원인 보고를 포함한다. 구현·실측 미확인 상태이며 문서 채택을 F5 전체 통과로 쓰지 않는다.
