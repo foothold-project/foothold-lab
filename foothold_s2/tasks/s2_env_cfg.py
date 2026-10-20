@@ -40,6 +40,8 @@ class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
         self.observations.policy.height_scan = None
         self.rewards.foot_edge.weight = 0.0
         self.commands.base_velocity.dynamic_flags = True
+        # 물러나기 (14 §3, D39): 깃발 env 가 한 깃발 이상 지난 뒤 확률 0.15 로 -0.1~-0.3 m/s 를 2 s (최대 0.6 m)
+        self.commands.base_velocity.params = {"backoff_prob": 0.15, "backoff_vmin": 0.1, "backoff_vmax": 0.3, "backoff_s": 2.0}
         self.use_full_terrain()
         from foothold_s2.sensors.start_obs import apply_start_perception   # runner 계약상 G0 도 묶음은 있어야 한다 (map_input none 이 입력만 끈다)
 
