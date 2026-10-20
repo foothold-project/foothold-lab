@@ -29,6 +29,24 @@ def file_sha256(path):
     return digest.hexdigest()
 
 
+GATES_RELPATH = "inbox/jay/20261019-design/evidence/baselines/gates-v1.json"
+
+
+def gates_record(path=None):
+    """어느 판정 규칙 파일로 판정하나 (ASTRA-F F2): 경로와 sha256. 줄끝을 LF 로 맞춰 해시해 Windows(CRLF)와 Linux 가 같은 값이다."""
+    import hashlib
+
+    path = path or os.path.join(REPO_ROOT, GATES_RELPATH)
+
+    try:
+        raw = open(path, "rb").read().replace(b"\r\n", b"\n")
+
+        return {"path": GATES_RELPATH if path.endswith(GATES_RELPATH) else path, "sha256_lf": hashlib.sha256(raw).hexdigest(),
+                "bytes": len(raw)}
+    except OSError as error:
+        return {"path": path, "sha256_lf": None, "error": str(error)}
+
+
 def harness_record():
     """이 하네스가 어느 판인가: 커밋 + 소스 파일 해시 (커밋 전 변경도 해시에는 잡힌다)."""
     files = {}

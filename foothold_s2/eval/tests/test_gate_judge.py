@@ -1,5 +1,7 @@
 """「진짜 하락」 판정 (41 §8 · 결정 8 · fable 20s): Newcombe 구간 · (A) 합산 하한 · (B) 칸별 상한 · 칸당 n 200."""
 
+import os
+
 import pytest
 
 from foothold_s2.eval import cells, stats
@@ -65,3 +67,24 @@ def test_registered_values():
 
 def test_the_old_real_drop_function_is_gone():
     assert not hasattr(stats, "real_drop")
+
+
+def test_manifest_records_the_gates_file_path_and_a_line_ending_independent_sha256(tmp_path):
+    import hashlib
+
+    from foothold_s2.eval import manifest
+
+    rec = manifest.gates_record()
+    assert rec["path"] == manifest.GATES_RELPATH and rec["sha256_lf"] and len(rec["sha256_lf"]) == 64
+    raw = open(os.path.join(manifest.REPO_ROOT, manifest.GATES_RELPATH), "rb").read().replace(b"\r\n", b"\n")
+    assert rec["sha256_lf"] == hashlib.sha256(raw).hexdigest()
+    lf, crlf = tmp_path / "a.json", tmp_path / "b.json"
+    lf.write_bytes(b'{"a": 1}\n')
+    crlf.write_bytes(b'{"a": 1}\r\n')
+    assert manifest.gates_record(str(lf))["sha256_lf"] == manifest.gates_record(str(crlf))["sha256_lf"]
+    assert manifest.gates_record(str(tmp_path / "none.json"))["sha256_lf"] is None             # 없으면 오류 기록, 멈추지 않음
+
+
+def test_run_eval_writes_the_gates_record_into_every_run_manifest():
+    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "run_eval.py"), encoding="utf-8").read()
+    assert '"gates": manifest.gates_record()' in src

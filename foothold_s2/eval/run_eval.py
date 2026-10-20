@@ -132,6 +132,7 @@ def finish(out_dir, record):
         "started_at": started_at,
         "finished_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "harness": manifest.harness_record(),
+        "gates": manifest.gates_record(),            # 판정 규칙 파일(gates-v1.json)의 경로 · sha256
         "environment": manifest.environment_record(),
         "terrain_sources": terrain_sets.source_record(),
         "label": args.label,

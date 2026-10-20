@@ -71,7 +71,7 @@ def test_same_gpu_jobs_never_overlap_and_any_gpu_picks_a_free_one(tmp_path):
     jobs = [{"name": "X", "gpu": 0, "cmd": py(body)}, {"name": "Y", "gpu": 0, "cmd": py(body)}]
     chain, _ = make(tmp_path, jobs)
     chain.run()
-    assert marks.read_text().split() == ["S1", "E", "S1", "E"]                           # 겹치지 않았다
+    assert marks.read_text(encoding="utf-8").split() == ["S1", "E", "S1", "E"]                           # 겹치지 않았다
     # gpu 를 목록 · any 로 주면 비어 있는 장을 고른다
     chain2, _ = make(tmp_path / "t2", [{"name": "P", "gpu": 0, "cmd": py("import time;time.sleep(0.4)")},
                                        {"name": "Q", "gpu": "any", "cmd": py("pass")}])
@@ -196,13 +196,37 @@ def test_glob_placeholder_resolves_to_the_newest_match_at_launch_time(tmp_path):
         runner.resolve_text("{glob:%s}" % (str(tmp_path) + "/none*.pt"), 0)
 
 
-def test_default_notifier_runs_the_command_with_the_text_and_survives_failures(tmp_path):
-    sink = tmp_path / "sink.txt"
-    cfg = {"cmd": [PY, "-c", "import sys;open(r'%s','a').write(sys.argv[1]+'\\n')" % sink, "{text}"]}
-    assert "rc=0" in runner.default_notifier(cfg, "[chain] A done")
-    assert sink.read_text().strip() == "[chain] A done"
-    assert "error" in runner.default_notifier({"cmd": ["no-such-binary-xyz", "{text}"]}, "x")
+def _wait_for(path, n=1, timeout=10.0):
+    t0 = time.time()
+
+    while time.time() - t0 < timeout:
+        if os.path.exists(path) and len(open(path, encoding="utf-8").read().splitlines()) >= n:
+            return True
+
+        time.sleep(0.05)
+
+    return False
+
+
+def test_default_notifier_runs_the_command_in_a_thread_and_logs_the_result(tmp_path):
+    sink, nlog = tmp_path / "sink.txt", tmp_path / "notify.log"
+    cfg = {"cmd": [PY, "-c", "import sys;open(r'%s','a').write(sys.argv[1]+chr(10))" % sink, "{text}"], "log": str(nlog)}
+    assert runner.default_notifier(cfg, "[chain] A done") == "notify started"        # 기다리지 않고 돌려준다
+    assert _wait_for(nlog) and _wait_for(sink)
+    assert sink.read_text(encoding="utf-8").strip() == "[chain] A done" and "attempt 1 rc=0" in nlog.read_text(encoding="utf-8")
     assert runner.default_notifier(None, "x") == "no notifier"
+
+
+def test_notifier_retries_when_the_prompt_is_busy_then_gives_up_and_never_raises(tmp_path):
+    nlog = tmp_path / "notify.log"
+    cfg = {"cmd": [PY, "-c", "import sys;sys.exit(4)"], "log": str(nlog), "retries": 2, "retry_gap_s": 0.05}
+    runner.default_notifier(cfg, "[chain] busy")
+    assert _wait_for(nlog, n=2)
+    text = nlog.read_text(encoding="utf-8")
+    assert "attempt 1 rc=4" in text and "attempt 2 rc=4" in text and "attempt 3" not in text
+    cfg2 = {"cmd": ["no-such-binary-xyz", "{text}"], "log": str(tmp_path / "n2.log"), "retries": 1}
+    runner.default_notifier(cfg2, "x")
+    assert _wait_for(tmp_path / "n2.log") and "error" in (tmp_path / "n2.log").read_text(encoding="utf-8")
 
 
 def test_stop_file_ends_the_runner_but_leaves_children_alone(tmp_path):
@@ -284,9 +308,8 @@ def test_real_yaml_has_the_agreed_graph():
     names = [j["name"] for j in cfg["jobs"]]
     assert jobs["scan_eval"]["after"] == ["repro_s0"] and "repro_s0" not in jobs["scan_eval"]["depends_on"]
     assert "repro_s0" not in jobs["blind_eval"].get("depends_on", []) and "repro_s0" not in jobs["blind_eval"].get("after", [])
-    assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
-    assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0
-    assert jobs["bf16_A2_fp32_mb128_seed43"]["depends_on"] == ["blind_eval"] and jobs["bf16_A2_fp32_mb128_seed43"]["gpu"] == "any"
-    assert names.index("bf16_B_bf16kl_mb256") < names.index("bf16_A_fp32_mb128") < names.index("bf16_A2_fp32_mb128_seed43")
+    assert not [n for n in names if n.startswith("bf16")]                                  # bf16 네 작업은 이번 밤 사슬에서 뺐다
+    assert names == ["scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval"]
+    assert jobs["v2_base_gate200"]["depends_on"] == ["scan_eval"] and jobs["blind_eval"]["gpu"] == 1
     assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict"]
     assert jobs["scan_train"]["adopt"]["pid"] == 95784 and jobs["blind_train"]["adopt"]["pid"] == 89020

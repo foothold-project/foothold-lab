@@ -115,23 +115,47 @@ def default_launcher(argv, cwd, env, log):
 
 
 def default_notifier(notify_cfg, text):
-    """lead 창에 한 줄. 실패해도 사슬은 멈추지 않는다(기록만)."""
+    """lead 창에 한 줄. 사슬은 기다리지 않는다: 별도 스레드가 입력 확인 도구(mai_resume send)를 불러 «조용한 입력창» 을 기다린다
+    (도구가 --wait 초까지 기다리고, 그동안 사람이 치고 있으면 보내지 않고 코드 4 로 끝난다). 결과는 notify_cfg["log"] 에 줄로 남는다.
+    실패하면 notify_cfg["retries"](기본 3)번까지 retry_gap_s(기본 120 s) 간격으로 다시 보낸다."""
+    import threading
+
     if not notify_cfg or not notify_cfg.get("cmd"):
         return "no notifier"
 
     cmd = [str(c).replace("{text}", text) for c in notify_cfg["cmd"]]
-    kwargs = {"cwd": notify_cfg.get("cwd") or None, "capture_output": True, "text": True, "timeout": 60,
-              "stdin": subprocess.DEVNULL}
+    log = notify_cfg.get("log")
+    tries = int(notify_cfg.get("retries", 3))
+    gap = float(notify_cfg.get("retry_gap_s", 120))
+    kwargs = {"cwd": notify_cfg.get("cwd") or None, "capture_output": True, "text": True,
+              "timeout": float(notify_cfg.get("timeout_s", 1500)), "stdin": subprocess.DEVNULL}
 
     if IS_WIN:
         kwargs["creationflags"] = CREATE_NO_WINDOW
 
-    try:
-        out = subprocess.run(cmd, **kwargs)
+    def write(line):
+        if log:
+            with open(log, "a", encoding="utf-8") as f:
+                f.write("%s %s\n" % (time.strftime("%Y-%m-%dT%H:%M:%S"), line))
 
-        return "rc=%s %s" % (out.returncode, (out.stdout or out.stderr or "").strip()[:200])
-    except Exception as exc:                                         # noqa: BLE001
-        return "notify error: %r" % (exc,)
+    def work():
+        for attempt in range(1, tries + 1):
+            try:
+                out = subprocess.run(cmd, **kwargs)
+                note = "rc=%s %s" % (out.returncode, (out.stdout or out.stderr or "").strip()[:160])
+            except Exception as exc:                                  # noqa: BLE001
+                out, note = None, "notify error: %r" % (exc,)
+
+            write("attempt %d %s :: %s" % (attempt, note, text[:100]))
+
+            if out is not None and out.returncode == 0:
+                return
+
+            time.sleep(gap)
+
+    threading.Thread(target=work, daemon=False).start()
+
+    return "notify started"
 
 
 class Chain:
@@ -195,7 +219,9 @@ class Chain:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
         if notify:
-            res = self.notifier(self.cfg.get("notify"), "[chain] %s %s %s" % (name, kind, detail))
+            ncfg = dict(self.cfg.get("notify") or {})
+            ncfg.setdefault("log", os.path.join(self.state_dir, "notify.log"))
+            res = self.notifier(ncfg, "[chain] %s %s %s" % (name, kind, detail))
             rec2 = {"time": rec["time"], "job": name, "event": "notified", "detail": str(res)[:200]}
 
             with open(self.status_path, "a", encoding="utf-8") as f:
