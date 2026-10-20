@@ -81,6 +81,7 @@ ALIVE = np.zeros((steps, n), dtype=bool)
 VEL = np.zeros((steps, n))
 WZ = np.zeros((steps, n))
 alive = torch.ones(n, dtype=torch.bool, device=raw.device)
+TERM = {}
 
 for k in range(steps):
     with torch.inference_mode():
@@ -97,6 +98,9 @@ for k in range(steps):
     H[k] = robot.data.root_pos_w[:, 2].cpu().numpy()
     VEL[k] = robot.data.root_lin_vel_b[:, 0].cpu().numpy()
     WZ[k] = robot.data.root_ang_vel_b[:, 2].cpu().numpy()
+    for nm_ in raw.termination_manager.active_terms:
+        hit_ = raw.termination_manager.get_term(nm_) & alive
+        TERM[nm_] = TERM.get(nm_, 0) + int(hit_.sum())
     alive &= ~dones.bool()
 
 air, clear, drag_num, drag_den, contact, total = [], [], 0, 0, 0, 0
@@ -167,6 +171,7 @@ if abs(cmd[2]) > 1e-9:                              # 제자리 회전 명령: �
     print("TURN", json.dumps(res["turn"]), flush=True)
 
 res["start_plan"] = ({k_: v_ for k_, v_ in generator.axis3_starts[args.terrain].items() if k_ in ("status", "reason", "origin", "yaw_rad", "support_height_spread_m", "foot_air_gaps_m", "sole_air_gaps_m", "support_heights_m", "previous_origin")} if args.start_cmd else None)
+res["terminations_first_episode"] = TERM
 res["init"] = {"feet_in_contact_by_step": {str(k_): float(C[k_, :, :].sum(axis=1)[ALIVE[k_]].mean()) for k_ in (0, 5, 15, 30, 60) if k_ < steps},
                "base_height_by_step": {str(k_): float(H[k_][ALIVE[k_]].mean() - raw.scene.terrain.env_origins[:, 2].cpu().numpy()[ALIVE[k_]].mean()) for k_ in (0, 5, 30, 60) if k_ < steps},
                "alive_at_end": int(ALIVE[-1].sum()), "alive_at_1s": int(ALIVE[min(int(1.0 / dt), steps - 1)].sum())}
