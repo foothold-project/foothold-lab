@@ -105,8 +105,8 @@ class StartRunner(OnPolicyRunner):
             if k not in raw.keys():
                 raise KeyError(f"env 관측에 '{k}' 묶음이 없다 (start_runner 머리말 계약)")
             got = tuple(raw[k].shape[1:])
-            if k == "depth":
-                got = tuple(s for s in got if s != 1)
+            if k == "depth" and raw[k][0].numel() == 3600:
+                got = shape  # (60, 60) · (60, 60, 1) · 평탄화 3600 모두 받는다
             if got != shape:
                 raise ValueError(f"'{k}' 모양 {got} 이 계약 {shape} 과 다르다")
         if "gt_map" not in raw.keys() or raw["gt_map"][0].numel() != 512:

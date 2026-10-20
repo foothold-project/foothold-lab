@@ -152,3 +152,28 @@ def test_replay_depth_float16_bytes():
     assert rb.data["depth2"].dtype == torch.float16
     assert rb.data["depth2"].numel() * 2 == 3072 * 24 * 2 * 60 * 60 * 2  # 0.989 GiB (12 §6.1)
     assert math.isclose(rb.data["depth2"].numel() * 2 / 2**30, 0.989, abs_tol=1e-3)
+
+
+def test_each_detach_layer_alone():
+    """detach 는 두 겹(_advance 의 refined.detach · estimate 의 hmap.detach)이다. 하나만 빠져도 잡히게 겹마다 따로 본다."""
+    torch.manual_seed(4)
+    p = StartPerception()
+    # 겹 1: estimate 는 gradient 가 붙은 지도를 받아도 지도 쪽으로 흘리지 않는다
+    hmap = torch.randn(3, 32, 16, requires_grad=True)
+    out = p.ie.estimate(torch.randn(3, 128), hmap)
+    sum(v.sum() for v in out.values()).backward()
+    assert hmap.grad is None, "estimate 가 지도로 gradient 를 흘렸다"
+    # 겹 2: _advance 가 I-E 에 넘기는 지도는 이미 gradient 가 끊겨 있다
+    seen = {}
+    orig = p.ie.estimate
+
+    def spy(z_prop, m):
+        seen["requires_grad"] = m.requires_grad
+        return orig(z_prop, m)
+
+    p.ie.estimate = spy
+    n = 4
+    p._advance(torch.zeros(n, 128), torch.zeros(n, 128), torch.randn(n, 10, 45), torch.rand(n, 2, 60, 60),
+               torch.ones(n, dtype=torch.bool), torch.ones(n, dtype=torch.bool), torch.zeros(n, dtype=torch.bool),
+               torch.randn(n, 32, 16))
+    assert seen["requires_grad"] is False, "_advance 가 gradient 붙은 재구성 지도를 I-E 에 넘겼다"
