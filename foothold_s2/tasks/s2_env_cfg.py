@@ -32,13 +32,18 @@ def _sparse_subterrains():
 
 @configclass
 class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
-    """G0: 눈만 끈 기준선. 정답 높이 스캔도 지도도 actor 에 없다."""
+    """G0: 눈만 끈 기준선 (`--map_input none`). 정답 높이 스캔도 지도도 actor 에 없다. 센서와 관측 묶음은 runner 계약이라 있다."""
 
     def __post_init__(self):
         super().__post_init__()
         self.scene.num_envs = NUM_ENVS_S2
         self.observations.policy.height_scan = None
         self.rewards.foot_edge.weight = 0.0
+        self.commands.base_velocity.dynamic_flags = True
+        self.use_full_terrain()
+        from foothold_s2.sensors.start_obs import apply_start_perception   # runner 계약상 G0 도 묶음은 있어야 한다 (map_input none 이 입력만 끈다)
+
+        apply_start_perception(self)
 
     def use_full_terrain(self):
         """이어진 7 종 + 듬성한 지형으로 50 열 생성기를 만든다 (듬성한 지형 생성기가 생기면)."""
@@ -51,13 +56,7 @@ class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
 
 @configclass
 class FootholdS2G1EnvCfg(FootholdS2G0EnvCfg):
-    """G1: G0 + 지각 센서 · runner 관측 묶음 (지도 입력). 발 가장자리 벌점 없음."""
-
-    def __post_init__(self):
-        super().__post_init__()
-        from foothold_s2.sensors.start_obs import apply_start_perception   # rl 사본 (feature/s2-perception-rl)
-
-        apply_start_perception(self)
+    """G1: G0 와 같은 env, 지도 입력은 학습 실행기의 `--map_input reconstruction` 이 켠다. 발 가장자리 벌점 없음."""
 
 
 @configclass

@@ -99,4 +99,6 @@ def attach_s2_tables(env, side_table, layout, flag_count: int = 4):
     gen = terrain.cfg.terrain_generator
     side_table.bind_all(layout.names, gen.num_rows)
     env.s2_tables = s2_runtime.S2Tables(side_table, layout, gen.num_rows, env.device, flag_count)
-    env.command_manager.get_term("base_velocity").cfg.flag_provider = env.s2_tables.flag_provider
+    cmd_cfg = env.command_manager.get_term("base_velocity").cfg
+    cmd_cfg.flag_provider = env.s2_tables.flag_provider
+    cmd_cfg.force_flag_provider = env.s2_tables.force_flag

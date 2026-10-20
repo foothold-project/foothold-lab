@@ -40,9 +40,15 @@ class MixedVelocityCommand(CommandTerm):
             self.is_flag_env = (torch.arange(n, device=dev) % cfg.flag_stride) == 0
         else:
             self.is_flag_env = torch.zeros(n, dtype=torch.bool, device=dev)
-        self.flag_ids = self.is_flag_env.nonzero(as_tuple=False).flatten()
-        self._flag_row = torch.full((n,), -1, dtype=torch.long, device=dev)
-        self._flag_row[self.flag_ids] = torch.arange(len(self.flag_ids), device=dev)
+        self._base_flag = self.is_flag_env.clone()
+        if cfg.dynamic_flags:
+            # 깃발 방식 여부가 reset 마다 칸 집단에 따라 바뀐다 (S2: 듬성한 칸 전부 + 이어진 칸의 20 %). 상태는 모든 env 몫.
+            self.flag_ids = torch.arange(n, device=dev)
+            self._flag_row = torch.arange(n, device=dev)
+        else:
+            self.flag_ids = self.is_flag_env.nonzero(as_tuple=False).flatten()
+            self._flag_row = torch.full((n,), -1, dtype=torch.long, device=dev)
+            self._flag_row[self.flag_ids] = torch.arange(len(self.flag_ids), device=dev)
 
         self.stand = torch.zeros(n, dtype=torch.bool, device=dev)
         self.spin = torch.zeros_like(self.stand)
@@ -94,6 +100,10 @@ class MixedVelocityCommand(CommandTerm):
         self.cmd_sum_xy[env_ids] = 0.0
         self.goals[env_ids] = 0
 
+        if self.cfg.dynamic_flags and self.cfg.force_flag_provider is not None:
+            forced = self.cfg.force_flag_provider(self._env.scene.terrain, env_ids)
+            self.is_flag_env[env_ids] = self._base_flag[env_ids] | forced
+
         flag_ids = env_ids[self.is_flag_env[env_ids]]
 
         if len(flag_ids) > 0:
@@ -120,6 +130,13 @@ class MixedVelocityCommand(CommandTerm):
             extras[f"mode_fraction_{name}"] = frac
 
         extras["vmax_x"] = self.range_curriculum.vmax_x
+        fl = self.is_flag_env[self.flag_ids]
+
+        if fl.any():
+            st = self.flag_state
+            extras["flag_envs_fraction"] = float(fl.float().mean())
+            extras["flag_spin_fraction"] = float((st.v[fl] < self.params.flag_spin_threshold).float().mean())
+            extras["flag_backoff_fraction"] = float((st.backoff_left[fl] > 0).float().mean())
 
         return extras
 
@@ -162,8 +179,9 @@ class MixedVelocityCommand(CommandTerm):
 
         if len(self.flag_ids) > 0:
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params)
-            self.vel_command_b[self.flag_ids] = cmd
-            self.goals[self.flag_ids] = self.flag_state.passed
+            sel = self.is_flag_env[self.flag_ids]
+            self.vel_command_b[self.flag_ids[sel]] = cmd[sel]
+            self.goals[self.flag_ids[sel]] = self.flag_state.passed[sel]
 
         self.max_dist = torch.maximum(self.max_dist, torch.linalg.norm(pos - self.start_xy, dim=1))
         self.cmd_sum_xy += self.vel_command_b[:, :2]
@@ -188,6 +206,9 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     steps_per_iter: int = 24
     flag_provider: object = None
     """`(terrain, env_ids (m,), count) -> (m, count, 2)` 월드 좌표. None 이면 칸 가운데 직선. S2 가 갈아 끼운다."""
+    dynamic_flags: bool = False
+    force_flag_provider: object = None
+    """`(terrain, env_ids) -> bool (m,)` 이 칸에서는 반드시 깃발 방식. dynamic_flags 일 때만 쓴다."""
     fixed_cmd: tuple = None
     """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
     params: dict = {}

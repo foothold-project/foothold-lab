@@ -26,6 +26,12 @@ class S2Tables:
             self.inner[r, c] = torch.as_tensor(v["inner"], device=device)
             self.outer[r, c] = torch.as_tensor(v["outer"], device=device)
 
+    def force_flag(self, terrain, env_ids):
+        """듬성한 칸 (틈 포함) 의 env 는 깃발 방식 (15 §1: 듬성한 발판 지형군의 명령은 깃발)."""
+        grp = self.group_col[terrain.terrain_types[env_ids].cpu().numpy()]
+
+        return torch.as_tensor(grp != "continuous", device=env_ids.device)
+
     def flag_provider(self, terrain, env_ids, count):
         lvl = terrain.terrain_levels[env_ids]
         typ = terrain.terrain_types[env_ids]

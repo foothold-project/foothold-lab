@@ -14,3 +14,21 @@ for _name, _cls in (("scan", "FootholdS1aScanEnvCfg"), ("blind", "FootholdS1aBli
             "rsl_rl_cfg_entry_point": _AGENT,
         },
     )
+
+_S2_AGENT = "foothold_s2.tasks.agents.s2_ppo_cfg:S2PPORunnerCfg"
+
+for _name, _cls in (("G0", "FootholdS2G0EnvCfg"), ("G1", "FootholdS2G1EnvCfg"), ("G3", "FootholdS2G3EnvCfg")):
+    gym.register(
+        id=f"FootholdS2-Go2-S2-{_name}-v0",
+        entry_point="foothold_s2.tasks.s2_env:FootholdS2Env",
+        disable_env_checker=True,
+        kwargs={"env_cfg_entry_point": f"foothold_s2.tasks.s2_env_cfg:{_cls}", "rsl_rl_cfg_entry_point": _S2_AGENT},
+    )
+
+# rl 의 train_start.py 기본 이름 = G1 (지도 입력). G0 는 위 이름과 --map_input none.
+gym.register(
+    id="FootholdS2-Go2-S2-v0",
+    entry_point="foothold_s2.tasks.s2_env:FootholdS2Env",
+    disable_env_checker=True,
+    kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2G1EnvCfg", "rsl_rl_cfg_entry_point": _S2_AGENT},
+)

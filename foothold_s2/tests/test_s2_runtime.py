@@ -124,3 +124,12 @@ def test_continuous_cells_fall_back_to_the_straight_flag_line():
     flags = tables.flag_provider(terrain, torch.arange(10), 4)
     assert not torch.isnan(flags).any()
     assert torch.allclose(flags[:, 0, 0] - terrain.env_origins[:10, 0], torch.ones(10))
+
+
+def test_force_flag_marks_sparse_and_gap_cells_but_not_continuous():
+    layout, _, tables = make_world()
+
+    for kind, want in (("sparse", True), ("gap", True), ("continuous", False)):
+        terrain = fake_terrain(layout, 20, level=2, col_kind=kind)
+        got = tables.force_flag(terrain, torch.arange(20))
+        assert bool(got.all()) == want and bool(got.any()) == want
