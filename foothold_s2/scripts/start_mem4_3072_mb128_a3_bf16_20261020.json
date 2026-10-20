@@ -1,0 +1,195 @@
+{
+ "started": "2026-10-20T13:44:38",
+ "num_envs": 3072,
+ "iterations": 3,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   3072,
+   45
+  ],
+  "depth": [
+   3072,
+   3600
+  ],
+  "gt_map": [
+   3072,
+   512
+  ],
+  "gt_feet": [
+   3072,
+   100
+  ],
+  "base_vel": [
+   3072,
+   3
+  ],
+  "contacts": [
+   3072,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 1.0082526206970215,
+  "2_rollout": 6.06289005279541,
+  "3_ppo_update": 2.960651397705078,
+  "4_perception_update": 5.422288417816162
+ },
+ "perception_cfg": {
+  "measure_phases": true,
+  "microbatch_envs": 128,
+  "replay_impl": "a3",
+  "replay_autocast": "bf16"
+ },
+ "learn_seconds": 48.14206004142761,
+ "resets": 224,
+ "perception_losses": {
+  "l_tr": 0.044164759851992134,
+  "l_ie": 0.38612547069787984,
+  "kl": 0.0026360566456181287,
+  "o_next": 0.3616930392881235,
+  "v": 0.019617261365056038,
+  "hf": 0.0009489058065810239,
+  "hb": 0.0012302079422321795
+ },
+ "adasmpl_p": 0.370558576924846,
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 6509978624,
+   "phase_peak": 6509978624,
+   "allocated": 2509391872
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 2947835392,
+   "phase_peak": 2947835392,
+   "allocated": 2528259072
+  },
+  {
+   "it": 0,
+   "phase": "4_perception_update",
+   "cum_peak": 5609508352,
+   "phase_peak": 5609508352,
+   "allocated": 2547717120
+  },
+  {
+   "it": 1,
+   "phase": "2_rollout",
+   "cum_peak": 4179110912,
+   "phase_peak": 4179110912,
+   "allocated": 2756590592
+  },
+  {
+   "it": 1,
+   "phase": "3_ppo_update",
+   "cum_peak": 3176904192,
+   "phase_peak": 3176904192,
+   "allocated": 2757327872
+  },
+  {
+   "it": 1,
+   "phase": "4_perception_update",
+   "cum_peak": 5820792320,
+   "phase_peak": 5820792320,
+   "allocated": 2757327872
+  },
+  {
+   "it": 2,
+   "phase": "2_rollout",
+   "cum_peak": 4175924736,
+   "phase_peak": 4175924736,
+   "allocated": 2757678592
+  },
+  {
+   "it": 2,
+   "phase": "3_ppo_update",
+   "cum_peak": 3178975232,
+   "phase_peak": 3178975232,
+   "allocated": 2758415872
+  },
+  {
+   "it": 2,
+   "phase": "4_perception_update",
+   "cum_peak": 5822137856,
+   "phase_peak": 5822137856,
+   "allocated": 2758415872
+  }
+ ],
+ "iter_log": [
+  {
+   "it": 0,
+   "collection_s": 6.84229588508606,
+   "learn_s": 11.151250123977661,
+   "steps_per_s": 4097.469168270762
+  },
+  {
+   "it": 1,
+   "collection_s": 4.674749374389648,
+   "learn_s": 10.073338985443115,
+   "steps_per_s": 4999.156378856686
+  },
+  {
+   "it": 2,
+   "collection_s": 4.7189106941223145,
+   "learn_s": 10.11795711517334,
+   "steps_per_s": 4969.242898680248
+  }
+ ],
+ "replay_bytes": 1402601472,
+ "precision_check": {
+  "l_tr": {
+   "loop_fp32": 0.03680233657360077,
+   "impl_fp32": 0.03680233284831047,
+   "impl_tf32": 0.036802347749471664,
+   "impl_bf16": 0.03685449808835983
+  },
+  "l_ie": {
+   "loop_fp32": 0.36797285079956055,
+   "impl_fp32": 0.36797285079956055,
+   "impl_tf32": 0.36797234416007996,
+   "impl_bf16": 0.3684825897216797
+  },
+  "kl": {
+   "loop_fp32": 0.002532433718442917,
+   "impl_fp32": 0.002532430924475193,
+   "impl_tf32": 0.0025316306855529547,
+   "impl_bf16": 0.0030376906506717205
+  },
+  "o_next": {
+   "loop_fp32": 0.3475923538208008,
+   "impl_fp32": 0.3475923538208008,
+   "impl_tf32": 0.3475922644138336,
+   "impl_bf16": 0.3475952446460724
+  },
+  "v": {
+   "loop_fp32": 0.015819426625967026,
+   "impl_fp32": 0.015819424763321877,
+   "impl_tf32": 0.01581983081996441,
+   "impl_bf16": 0.01582140102982521
+  },
+  "hf": {
+   "loop_fp32": 0.00090830959379673,
+   "impl_fp32": 0.0009083097684197128,
+   "impl_tf32": 0.0009082985925488174,
+   "impl_bf16": 0.0009093260741792619
+  },
+  "hb": {
+   "loop_fp32": 0.0011203233152627945,
+   "impl_fp32": 0.0011203234316781163,
+   "impl_tf32": 0.0011203538160771132,
+   "impl_bf16": 0.0011189193464815617
+  },
+  "max_abs_impl_vs_loop": 3.725290298461914e-09,
+  "max_abs_bf16_vs_loop": 0.0005097389221191406,
+  "impl": "a3"
+ },
+ "checks": {
+  "traceback": false,
+  "measured": true
+ }
+}

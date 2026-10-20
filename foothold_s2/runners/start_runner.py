@@ -51,6 +51,8 @@ PERCEPTION_DEFAULTS = {
     "microbatch_envs": 256,
     "max_grad_norm": 1.0,
     "depth_dtype": "float16",
+    "replay_impl": "loop",
+    "replay_autocast": None,  # None · "bf16" (RL-3 B · 정확도 차이는 손실 값으로 따로 기록)  # loop · a1 · a3 (models/replay_fast.py · 계산 순서만 다르고 학습 내용은 같음, RL-3)
 }
 
 
@@ -273,7 +275,8 @@ class StartRunner(OnPolicyRunner):
             self.perception_optimizer.zero_grad(set_to_none=True)
             chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
             for c in chunks:
-                res = self.perception.sequence_loss(self.replay.gather(c))
+                with self._autocast():
+                    res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
                 (res["loss"] * (len(c) / len(idx))).backward()
                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
@@ -284,6 +287,13 @@ class StartRunner(OnPolicyRunner):
             n_updates += 1
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         return self.last_perception_losses
+
+    def _autocast(self):
+        if self.pcfg.get("replay_autocast") == "bf16" and self._cuda():
+            return torch.autocast("cuda", dtype=torch.bfloat16)
+        import contextlib
+
+        return contextlib.nullcontext()
 
     def update_adasmpl(self) -> float:
         if self.is_distributed:

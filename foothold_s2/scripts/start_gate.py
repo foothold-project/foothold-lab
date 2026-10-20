@@ -33,6 +33,8 @@ parser.add_argument("--iterations", type=int, default=2)
 parser.add_argument("--out", type=str, required=True)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--microbatch", type=int, default=None, help="지각 microbatch env 수 (기본 256 · 12 §6.1)")
+parser.add_argument("--replay_impl", type=str, default=None, help="지각 재생 구현 loop · a1 · a2 · a3 (RL-3)")
+parser.add_argument("--autocast", type=str, default=None, help="지각 재생 autocast: bf16 (RL-3 B)")
 parser.add_argument("--measure", action="store_true", default=False,
                     help="18 §5.2 메모리 측정: 단계별 peak · iteration 시간. 같은 프로세스 복원 대조는 건너뛴다")
 parser.add_argument("--restore_from", type=str, default=None,
@@ -158,6 +160,30 @@ def restore_main() -> dict:
 holder: dict = {}
 
 
+def precision_check(runner, dev: str) -> dict:
+    """마지막 재생 버퍼의 env 64 개로 같은 잡음 · 같은 가중치에서 loop fp32 대 (지금 구현 · fp32) 대 (지금 구현 · bf16) 손실."""
+    b = runner.replay.gather(torch.arange(min(64, runner.env.num_envs), device=dev))
+    eps = torch.randn(b["obs"].shape[0], b["obs"].shape[1], 16, device=dev, generator=torch.Generator(dev).manual_seed(0))
+    impl = runner.pcfg["replay_impl"]
+    out = {}
+    keys = ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb")
+    tf32 = torch.backends.cudnn.allow_tf32
+    with torch.no_grad():
+        torch.backends.cudnn.allow_tf32 = False
+        ref = runner.perception.sequence_loss(b, eps=eps, impl="loop")
+        fast = runner.perception.sequence_loss(b, eps=eps, impl=impl) if impl != "loop" else ref
+        torch.backends.cudnn.allow_tf32 = tf32
+        fast_tf32 = runner.perception.sequence_loss(b, eps=eps, impl=impl)
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            bf = runner.perception.sequence_loss(b, eps=eps, impl=impl)
+    for k in keys:
+        out[k] = {"loop_fp32": float(ref[k]), "impl_fp32": float(fast[k]), "impl_tf32": float(fast_tf32[k]), "impl_bf16": float(bf[k])}
+    out["max_abs_impl_vs_loop"] = max(abs(v["impl_fp32"] - v["loop_fp32"]) for v in out.values() if isinstance(v, dict))
+    out["max_abs_bf16_vs_loop"] = max(abs(v["impl_bf16"] - v["loop_fp32"]) for v in out.values() if isinstance(v, dict))
+    out["impl"] = impl
+    return out
+
+
 def main() -> dict:
     from foothold_s2.runners.start_runner import StartRunner
 
@@ -190,6 +216,10 @@ def main() -> dict:
     pc = {"measure_phases": bool(args.measure)}
     if args.microbatch:
         pc["microbatch_envs"] = args.microbatch
+    if args.replay_impl:
+        pc["replay_impl"] = args.replay_impl
+    if args.autocast:
+        pc["replay_autocast"] = args.autocast
     res["perception_cfg"] = pc
     holder["runner"] = runner = StartRunner(env, agent_cfg(perception=pc), log_dir=args.out, device=dev)
     t0 = time.time()
@@ -203,6 +233,7 @@ def main() -> dict:
     res["iter_log"] = runner.iter_log
     res["replay_bytes"] = runner.replay.nbytes()
     if args.measure:
+        res["precision_check"] = precision_check(runner, dev)
         res["checks"] = {"traceback": False, "measured": True}
         return res
     ck = os.path.join(args.out, "gate_ckpt.pt")
