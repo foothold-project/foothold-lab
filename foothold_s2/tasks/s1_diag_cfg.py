@@ -30,3 +30,12 @@ class FootholdS1aDiagD2EnvCfg(FootholdS1aScanEnvCfg):
         super().__post_init__()
         self.rewards.track_lin_vel.params = {**self.rewards.track_lin_vel.params, "std": 0.25}     # 새 dict (클래스 기본값 공유 방지)
         self.rewards.track_ang_vel.params = {**self.rewards.track_ang_vel.params, "std": 0.25}
+
+
+@configclass
+class FootholdS1aDiagD3EnvCfg(FootholdS1aScanEnvCfg):
+    """D3 (lead 사전 등록 10/21): 선속도 커널만 std 0.25, 각속도 커널은 원래 0.5."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.track_lin_vel.params = {**self.rewards.track_lin_vel.params, "std": 0.25}
