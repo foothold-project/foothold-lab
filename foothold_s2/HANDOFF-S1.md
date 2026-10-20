@@ -19,13 +19,13 @@
 - `foothold_s2/robots/go2_params.py`: 종아리 DCMotor(45.43 · 15.70) · PIE 범위 · `dc_motor_clip`. 시험 `tests/test_go2_model.py`: 설치 Isaac Lab `_clip_effort` 소스를 AST 로 꺼내 CPU 에서 실행해 ASTRA 표(+100: 45.43 · 22.715 · 0 · −12.443, −100: 전부 −45.43)와 대조, URDF 관절 12 개가 8 + 4 로 갈리는지, URDF 종아리 값 일치.
 - `foothold_s2/rewards/core.py` (14 항 식 + 가중치 표, B 식, S1 발 가장자리 0) 시험 `tests/test_rewards.py` 11. `rewards/start_rewards.py`(Isaac 보상 cfg, **Kit 에서 import 시험 안 함**).
 
-## SC-4 남은 것 (Kit 쪽, L1 전에 필요)
-1. `commands/mixed_command.py`: `CommandTerm` 상속(설치 `commands/velocity_command.py` 구조 참고). core 를 부르고, 깃발 env 는 env 번호 5 로 나눈 나머지 0(20 %), reset 때 `env.scene.terrain.env_origins` 로 직선 깃발 갱신, `max_dist` · `cmd_sum_xy` · 깃발 통과 수 보관, 반복 수 = `common_step_counter // 24`. (core 의 `resample_free_modes` CPU zeros 버그는 고침).
-2. `curriculum/terrain_levels_mixed.py`(rules 호출 + `terrain.update_env_origins`) 와 명령 범위 커리큘럼 term(추종 보상 에피소드 합 / (가중치 x 에피소드 길이) 로 비율).
-3. `robots/go2_cfg.py`(UNITREE_GO2_CFG.replace actuators 둘), 이벤트(PIE: 질량 −1~2 kg · 마찰 0.2~1.2 · CoM ±0.05 · Kp Kd 0.9~1.1, push 없음), 종료(bad_orientation 1.5 rad + 발 지면 아래 0.2 m 는 높이 스캐너로 직접 구현, 몸통 접촉 종료 없음).
-4. `terrains/rough_go2_cfg.py`(S1-a 는 이어진 지형만 **23 열**), `tasks/s1_env_cfg.py`(scan: o_t 45 + 높이 스캔 187, blind: 11 스텝 이력 = 495, critic 그룹), agent cfg(24 · 5 · 4 · 1e-3 adaptive · 6,000 회, `obs_groups`), gym 등록 `FootholdS2-Go2-S1a-scan-v0` · `-blind-v0`, 학습 스크립트(설치 `train.py` 모양, `import foothold_s2.tasks`).
-5. AST 이름 대조 시험(보상 · 이벤트 · 센서 · 관측 함수 이름이 설치 Isaac Lab 에 실재하는지) + pyflakes + sibling import.
-6. L0 통과 보고 → lead 검수 → L1(GPU 0 scan · GPU 1 blind, 첫 10 update).
+## SC-4 Kit 쪽 모듈 (10/20 오후 작성, L0: pytest 133 통과 · AST 이름 대조 11 · pyflakes 미사용 import 외 0)
+- `commands/mixed_command.py` (MixedVelocityCommand): env 번호 % 5 == 0 이 깃발 env, reset 때 기록 · 깃발 갱신, `max_dist` `cmd_sum_xy` `goals` `iteration`. S2 는 `flag_provider` 로 깃발 목록을 갈아 끼움.
+- `curriculum/terrain_levels_mixed.py`: `terrain_levels_mixed`(rules.judge 호출, cmd 합을 재추출 단위로 환산), `command_range_curriculum`(반복당 한 번 vmax 올림).
+- `robots/go2_cfg.py`, `terrains/rough_go2_cfg.py`(23 열, `build_generator` 는 S1-b/S2 가 비율만 바꿔 씀), `tasks/mdp_extra.py`(발 접촉 관측 · 발 지면 아래 종료), `tasks/s1_env_cfg.py`(Scan/Blind, S2 는 상속), `tasks/agents/s1_ppo_cfg.py`, `tasks/__init__.py`(등록 `FootholdS2-Go2-S1a-scan-v0` · `-blind-v0`), `train_s1.py`(설치 train.py 를 읽어 우리 task 등록 줄만 끼워 실행).
+- `tests/test_kit_names.py`: 설치 Isaac Lab 소스와 `mdp.X` · import · `params` 키 대조(없는 이름을 넣으면 걸림을 확인).
+- **Kit 에서 처음 도는 것(미확인, L1 에서 드러날 것)**: 충돌 링크 이름 `Head_.*`, 정확한 `history_length` 관측 크기(495), `sky_light=None`, 발 지면 아래 종료의 스캔 점 조회, 명령 term reset 순서.
+- 다음: lead L0 검수 → L1(GPU 0 scan · GPU 1 blind 첫 10 update, Traceback 0, steps/s, 메모리, env별 명령 방식 로그).
 
 ## 해석 · 문서와 다르게 한 곳 (lead 확인 필요)
 - **S1-a 열 수 23**: 이어진 지형만 학습하면 Isaac 이 비율을 합 1 로 정규화해, 15 §2 의 50 열이면 비율이 정수 열로 안 떨어짐(50 열에 이어진 7 종만 배정 시 10.87 열 등). 23 열은 정수(5 5 4 4 2 2 1). 50 열 전체 혼합(S1-b · S2)은 `columns.FULL` 로 시험함.
