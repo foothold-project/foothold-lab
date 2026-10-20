@@ -41,3 +41,11 @@ class S1bPPORunnerCfg(S1aPPORunnerCfg):
 
     max_iterations = 9000
     experiment_name = "foothold_s1b"
+
+
+@configclass
+class S1aDiagPPORunnerCfg(S1aPPORunnerCfg):
+    """진단 학습(D1 등): S1-a 와 같은 PPO 값 · 시드(기본 42), 실험 폴더만 따로. 1501 회로 model_1500.pt 까지 만든다."""
+
+    max_iterations = 1501
+    experiment_name = "foothold_s1a_diag"

@@ -1,0 +1,157 @@
+"""걸음새 진단 (lead 10/21 H-gait): 발마다 공중 시간 · 스윙 최고 발 높이 · 접촉 비율 · 끌기, 몸 높이(발 기준) 시간축.
+
+    python -m foothold_s2.eval.diag_feet --policy s1scan|s1blind|v2|nvidia --checkpoint <pt> --terrain random_rough --cmd 0.5,0,0 --out <폴더> --headless --device cuda:0
+
+평가 길(adapter.make_env + 명령 고정)에서 64 env 를 `--seconds` 돌린다. 각 env 의 «첫 에피소드» 만 쓴다 (끝난 env 는 이후 제외).
+발 높이는 «같은 발의 이륙 · 착지 시 발 z 평균» 을 지면으로 본다 (거친 지형에서도 지면 기준에 가깝다).
+끌기 = 접촉 중인데 발의 수평 속도(세계)가 0.15 m/s 넘는 스텝 비율.
+"""
+
+import argparse
+import json
+import os
+import sys
+
+import h5py  # noqa: F401
+import tensordict  # noqa: F401
+import torch
+import rsl_rl.runners  # noqa: F401
+
+from isaaclab.app import AppLauncher
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--policy", required=True)
+parser.add_argument("--checkpoint", required=True)
+parser.add_argument("--terrain", default="random_rough")
+parser.add_argument("--cmd", default="0.5,0,0")
+parser.add_argument("--noise", default=None, help="random_rough 의 noise_range 를 (lo,hi) 로 바꾼다")
+parser.add_argument("--sample", action="store_true")
+parser.add_argument("--difficulty", type=float, default=0.5)
+parser.add_argument("--envs", type=int, default=64)
+parser.add_argument("--seconds", type=float, default=6.0)
+parser.add_argument("--out", required=True)
+AppLauncher.add_app_launcher_args(parser)
+args = parser.parse_args()
+app = AppLauncher(args).app
+
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if REPO not in sys.path:
+    sys.path.insert(0, REPO)
+
+import numpy as np  # noqa: E402
+
+import isaaclab_tasks  # noqa: E402,F401
+
+import foothold_s2.tasks  # noqa: E402,F401
+from foothold_s2.eval import adapters, runtime, terrain_sets  # noqa: E402
+
+cmd = tuple(float(x) for x in args.cmd.split(","))
+adapter = adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
+generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42)
+if args.noise:
+    lo_, hi_ = (float(x) for x in args.noise.split(","))
+    generator.sub_terrains[args.terrain].noise_range = (lo_, hi_)
+
+built = adapter.make_env(generator=generator, num_envs=args.envs, duration_s=args.seconds, seed=42, difficulty=args.difficulty,
+                         base_cmd=[cmd] * args.envs, device=args.device)
+raw = built["raw"]
+pin = runtime.CommandPin(args.envs, raw.device, [cmd] * args.envs)
+term = adapter.pin_command(raw, pin)
+env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
+raw.reset()
+runtime.EpisodeRunner._write_command(term, pin.want)
+obs = env.get_observations()
+robot = raw.scene["robot"]
+sensor = raw.scene["contact_forces"]
+foot_r, _ = robot.find_bodies(".*_foot")
+foot_s, _ = sensor.find_bodies(".*_foot")
+n, dt = raw.num_envs, raw.step_dt
+steps = int(round(args.seconds / dt))
+Z = np.zeros((steps, n, 4))
+C = np.zeros((steps, n, 4), dtype=bool)
+V = np.zeros((steps, n, 4))
+H = np.zeros((steps, n))
+ALIVE = np.zeros((steps, n), dtype=bool)
+VEL = np.zeros((steps, n))
+alive = torch.ones(n, dtype=torch.bool, device=raw.device)
+
+for k in range(steps):
+    with torch.inference_mode():
+        actions = policy_nn.act(obs) if args.sample else policy(obs)
+        obs, _r, dones, _x = env.step(actions)
+        policy_nn.reset(dones)
+
+    runtime.EpisodeRunner._write_command(term, pin.want)
+    ALIVE[k] = alive.cpu().numpy()
+    fz = robot.data.body_pos_w[:, foot_r, 2]
+    fv = robot.data.body_lin_vel_w[:, foot_r, :2].norm(dim=-1)
+    force = sensor.data.net_forces_w[:, foot_s, :].norm(dim=-1)
+    Z[k], C[k], V[k] = fz.cpu().numpy(), (force > 1.0).cpu().numpy(), fv.cpu().numpy()
+    H[k] = robot.data.root_pos_w[:, 2].cpu().numpy()
+    VEL[k] = robot.data.root_lin_vel_b[:, 0].cpu().numpy()
+    alive &= ~dones.bool()
+
+air, clear, drag_num, drag_den, contact, total = [], [], 0, 0, 0, 0
+sag = []
+
+for e in range(n):
+    live = ALIVE[:, e]
+    kk = int(live.sum())
+
+    if kk < 20:
+        continue
+
+    for f in range(4):
+        c, z, v = C[:kk, e, f], Z[:kk, e, f], V[:kk, e, f]
+        contact += int(c.sum())
+        total += kk
+        drag_num += int((c & (v > 0.15)).sum())
+        drag_den += int(c.sum())
+        i = 0
+
+        while i < kk:
+            if not c[i]:
+                j = i
+
+                while j < kk and not c[j]:
+                    j += 1
+
+                if i > 0 and j < kk:                       # 양끝이 접촉으로 닫힌 공중 구간만
+                    ground = 0.5 * (z[i - 1] + z[j])
+                    air.append((j - i) * dt)
+                    clear.append(float(z[i:j].max() - ground))
+
+                i = j
+            else:
+                i += 1
+
+    stance_z = np.where(C[:kk, e, :], Z[:kk, e, :], np.nan)
+    ground = np.nanmean(stance_z, axis=1)
+    sag.append(H[:kk, e] - ground)
+
+air, clear = np.array(air), np.array(clear)
+pct = lambda a, q: float(np.percentile(a, q)) if len(a) else None  # noqa: E731
+maxlen = max(len(s) for s in sag) if sag else 0
+sag_t = []
+
+for lo in np.arange(0, args.seconds, 1.0):
+    vals = [s[int(lo / dt):int((lo + 1.0) / dt)] for s in sag if len(s) > int(lo / dt) + 5]
+    vals = np.concatenate(vals) if vals else np.array([])
+    vals = vals[~np.isnan(vals)] if len(vals) else vals
+    sag_t.append({"t": float(lo), "base_above_stance_feet_m": float(vals.mean()) if len(vals) else None, "n": int(len(vals))})
+
+res = {"policy": args.policy, "terrain": args.terrain, "cmd": cmd, "envs_used": len(sag), "contact_ratio": contact / max(total, 1),
+       "drag_ratio_of_contact": drag_num / max(drag_den, 1), "air_phases": int(len(air)),
+       "air_time_s": {"p10": pct(air, 10), "p50": pct(air, 50), "p90": pct(air, 90)},
+       "swing_clearance_m": {"p10": pct(clear, 10), "p50": pct(clear, 50), "p90": pct(clear, 90)},
+       "base_above_feet_by_second": sag_t,
+       "mean_forward_vel_by_second": [float(VEL[int(lo / dt):int((lo + 1) / dt)][ALIVE[int(lo / dt):int((lo + 1) / dt)]].mean())
+                                      for lo in np.arange(0, args.seconds, 1.0)]}
+os.makedirs(args.out, exist_ok=True)
+
+with open(os.path.join(args.out, "feet.json"), "w", encoding="utf-8") as f:
+    json.dump(res, f, ensure_ascii=False, indent=1)
+
+print("FEET", json.dumps(res, ensure_ascii=False)[:1800], flush=True)
+sys.stdout.flush()
+os._exit(0)

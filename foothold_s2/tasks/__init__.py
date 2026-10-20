@@ -43,3 +43,14 @@ gym.register(
         "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1bPPORunnerCfg",
     },
 )
+
+# S1-a 진단 학습 (lead 사전 등록 D1: feet_air_time +0.1 하나만 더함). 정본 S1-a cfg 는 그대로.
+gym.register(
+    id="FootholdS2-Go2-S1a-diag-D1-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": "foothold_s2.tasks.s1_diag_cfg:FootholdS1aDiagD1EnvCfg",
+        "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
+    },
+)
