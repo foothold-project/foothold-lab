@@ -45,43 +45,13 @@ if REPO not in sys.path:
 from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402
 from isaaclab.managers import ObservationGroupCfg as ObsGroup  # noqa: E402
 from isaaclab.managers import ObservationTermCfg as ObsTerm  # noqa: E402
-from isaaclab.managers import SceneEntityCfg  # noqa: E402
-from isaaclab.sensors import RayCasterCfg, patterns  # noqa: E402
 from isaaclab.utils import configclass  # noqa: E402
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 
 import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp  # noqa: E402
 from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import UnitreeGo2RoughEnvCfg  # noqa: E402
 
-from foothold_s2.sensors.depth_aug import DepthAugCfg, augment  # noqa: E402
-from foothold_s2.sensors.depth_cam_cfg import make_depth_camera_cfg  # noqa: E402
-
-FEET = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
-AUG = DepthAugCfg()
-
-
-# ---------------------------------------------------------------- 관측 함수 (12 §3 · 13 §2)
-def depth_obs(env, sensor_cfg: SceneEntityCfg):
-    d = env.scene.sensors[sensor_cfg.name].data.output["distance_to_image_plane"]  # (N, 60, 60, 1) m
-    return augment(d[..., 0], AUG).flatten(1)
-
-
-def height_rel_base(env, sensor_cfg: SceneEntityCfg):
-    """h = z_hit - z_base, clip ±1 m (12 §3 가정). 못 맞힌 광선은 -1."""
-    s = env.scene.sensors[sensor_cfg.name]
-    z = s.data.ray_hits_w[..., 2]
-    base_z = env.scene["robot"].data.root_pos_w[:, 2:3]
-    h = torch.nan_to_num(z - base_z, nan=-1.0, posinf=-1.0, neginf=-1.0)
-    return h.clamp(-1.0, 1.0)
-
-
-def feet_height(env):
-    return torch.cat([height_rel_base(env, SceneEntityCfg(f"foot_scan_{i}")) for i in range(4)], -1)
-
-
-def feet_contact(env, sensor_cfg: SceneEntityCfg):
-    f = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
-    return (f.norm(dim=-1) > 1.0).float()
+from foothold_s2.sensors.start_obs import apply_start_perception  # noqa: E402
 
 
 @configclass
@@ -99,32 +69,7 @@ class GateObsCfg:
             self.enable_corruption = False
             self.concatenate_terms = True
 
-    @configclass
-    class Depth(ObsGroup):
-        depth = ObsTerm(func=depth_obs, params={"sensor_cfg": SceneEntityCfg("depth_cam")})
-
-    @configclass
-    class GtMap(ObsGroup):
-        gt_map = ObsTerm(func=height_rel_base, params={"sensor_cfg": SceneEntityCfg("gt_map_scan")})
-
-    @configclass
-    class GtFeet(ObsGroup):
-        gt_feet = ObsTerm(func=feet_height)
-
-    @configclass
-    class BaseVel(ObsGroup):
-        base_vel = ObsTerm(func=mdp.base_lin_vel)
-
-    @configclass
-    class Contacts(ObsGroup):
-        contacts = ObsTerm(func=feet_contact, params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=list(FEET))})
-
     policy: Policy = Policy()
-    depth: Depth = Depth()
-    gt_map: GtMap = GtMap()
-    gt_feet: GtFeet = GtFeet()
-    base_vel: BaseVel = BaseVel()
-    contacts: Contacts = Contacts()
 
 
 @configclass
@@ -132,24 +77,8 @@ class StartGateEnvCfg(UnitreeGo2RoughEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         self.scene.height_scanner = None
-        self.scene.depth_cam = make_depth_camera_cfg()
-        # 정답 H^b: 32 x 16 칸 중심 x -0.475..1.075 · y -0.375..0.375 (12 §3 가정) -> 크기 1.55 x 0.75 · 가운데 x 0.3
-        self.scene.gt_map_scan = RayCasterCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base",
-            offset=RayCasterCfg.OffsetCfg(pos=(0.3, 0.0, 20.0)),
-            ray_alignment="yaw",
-            pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[1.55, 0.75], ordering="yx"),
-            mesh_prim_paths=["/World/ground"],
-        )
-        for i, foot in enumerate(FEET):
-            setattr(self.scene, f"foot_scan_{i}", RayCasterCfg(
-                prim_path=f"{{ENV_REGEX_NS}}/Robot/{foot}",
-                offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-                ray_alignment="yaw",
-                pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.2, 0.2], ordering="yx"),
-                mesh_prim_paths=["/World/ground"],
-            ))
         self.observations = GateObsCfg()
+        apply_start_perception(self)  # s2_env_cfg 와 같은 함수로 센서 · 관측 묶음을 붙인다
         self.curriculum.terrain_levels = None
         if self.scene.terrain.terrain_generator is not None:
             self.scene.terrain.terrain_generator.num_rows = 4
