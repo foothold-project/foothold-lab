@@ -48,7 +48,8 @@ from foothold_s2.eval import adapters, runtime, terrain_sets  # noqa: E402
 
 cmd = tuple(float(x) for x in args.cmd.split(","))
 adapter = adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
-generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42, start_cmd=cmd if args.start_cmd else None)
+root_h = adapters.sparse_start_root_height(adapter) if args.start_cmd else 0.4
+generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42, start_cmd=cmd if args.start_cmd else None, root_height_m=root_h)
 if args.noise:
     lo_, hi_ = (float(x) for x in args.noise.split(","))
     generator.sub_terrains[args.terrain].noise_range = (lo_, hi_)
@@ -62,7 +63,7 @@ env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
 if args.start_cmd:
     plan = generator.axis3_starts[args.terrain]
     print("START_PLAN", json.dumps(plan, default=str)[:600], flush=True)
-    terrain_sets.sparse_starts.install_fixed_reset(raw, list(generator.sub_terrains))
+    terrain_sets.sparse_starts.install_fixed_reset(raw, list(generator.sub_terrains), generator.axis3_starts)
 raw.reset()
 runtime.EpisodeRunner._write_command(term, pin.want)
 obs = env.get_observations()
@@ -165,6 +166,7 @@ if abs(cmd[2]) > 1e-9:                              # 제자리 회전 명령: �
     res["turn"] = {"yaw_follow_median": float(np.median(follow)), "yaw_follow_mean": float(follow.mean()), "cmd_wz": cmd[2]}
     print("TURN", json.dumps(res["turn"]), flush=True)
 
+res["start_plan"] = ({k_: v_ for k_, v_ in generator.axis3_starts[args.terrain].items() if k_ in ("status", "reason", "origin", "yaw_rad", "support_height_spread_m", "foot_air_gaps_m", "sole_air_gaps_m", "support_heights_m", "previous_origin")} if args.start_cmd else None)
 res["init"] = {"feet_in_contact_by_step": {str(k_): float(C[k_, :, :].sum(axis=1)[ALIVE[k_]].mean()) for k_ in (0, 5, 15, 30, 60) if k_ < steps},
                "base_height_by_step": {str(k_): float(H[k_][ALIVE[k_]].mean() - raw.scene.terrain.env_origins[:, 2].cpu().numpy()[ALIVE[k_]].mean()) for k_ in (0, 5, 30, 60) if k_ < steps},
                "alive_at_end": int(ALIVE[-1].sum()), "alive_at_1s": int(ALIVE[min(int(1.0 / dt), steps - 1)].sum())}
