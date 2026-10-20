@@ -208,9 +208,8 @@ def do_axis1():
 
 def do_axis3():
     cmd = tuple(float(x) for x in args.cmd.split(","))
-    # START 시험지 넷은 8 x 4 m 칸이라 옆 · 뒤 명령의 3 m 기준 거리가 칸을 벗어난다. 이 진입점은
-    # 아직 이어 붙이지 않았으므로 축 3 지형군에서 뺀다 (보고서에 「미측정」 으로 적는다).
-    names = [n for n in cells.TERRAIN_GROUPS[args.group] if n not in cells.START_SHEETS]
+    # START 네 별칭은 merged_generator에서 8x8 학습 칸으로 연결한다. 8x4 시험지와 별개다.
+    names = list(cells.TERRAIN_GROUPS[args.group])
     recorded = names if args.terrains == "all" else [t for t in args.terrains.split(",") if t]
     rule = cells.axis3_rule(args.group, args.direction, cmd)
     duration, reference_m = rule["duration_s"], rule["reference_m"]

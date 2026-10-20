@@ -25,6 +25,14 @@ SET_SOURCES = {
     "unseen10": ("generalization_env_cfg.py", "UnitreeGo2GeneralizationEnvCfg"),
 }
 
+# 평가 별칭 -> 8x8 학습 생성기. 징검돌 high 선택은 가정 · lead 확인.
+START_AXIS3_KINDS = {
+    "stepping_stones_start": "stepping_stones_high",
+    "balance_beams": "balance_beams",
+    "stepping_beams": "stepping_beams",
+    "gaps_start": "gaps",
+}
+
 # 무대 계단 대표 칸 (41 §7 가정): 단 높이 0.15 m 고정, 디딤 0.3 m.
 STAGE_STEP_HEIGHT = 0.15
 STAGE_STEP_WIDTH = 0.3
@@ -105,6 +113,14 @@ def merged_generator(names, difficulty, seed):
         gen, _ = v2_generator(set_name)
         sources.update(gen.sub_terrains)
 
+    if any(name in START_AXIS3_KINDS for name in names):
+        from foothold_s2.terrains import sparse_terrains
+
+        sparse = sparse_terrains.sparse_subterrains(
+            {kind: 1.0 / len(names) for kind in START_AXIS3_KINDS.values()})
+        sources.update({alias: sparse[kind] for alias, kind in START_AXIS3_KINDS.items()})
+        base.size = sparse_terrains.TILE
+
     subs = {}
 
     for name in names:
@@ -115,7 +131,7 @@ def merged_generator(names, difficulty, seed):
             sub.proportion = 1.0 / len(names)
             subs[name] = sub
         else:
-            raise KeyError("모르는 지형 %r (v2 두 집합과 무대 계단만 이 경로로 짓는다)" % name)
+            raise KeyError("모르는 평가 지형 %r" % name)
 
     base.sub_terrains = subs
     base.num_cols = len(names)
