@@ -1,0 +1,1106 @@
+{
+  "_status": "v1.1 봉인 · 2026-10-21 02:08 +0900 (date 실측) · lead · 기준 bcfaa7fd(sha 7521796f) + comparators.s1a_blind_sha256 = S1a-blind-v1 model_5999.pt 실측 · 판정 기준 값은 v1(752362ef)과 같음 · 소비 사본 교체는 오늘 밤 평가 셋이 끝난 뒤",
+  "_source": "41-EVAL-AXES.md:119-149 · SOL-20v · sonnet-code 초안 sha256 9a29aa2e4ac2ea5baa829c31e2d325491b66b96adea981ccb4c3c3c4beaf843d · SOL-20w ASTRA-F2 follow-up and lead choice A 2026-10-21 00:14 KST · RL-F5-xhatm-verdict.md@961e74ce lead adopted assumptions · TASK-sol-20x-f5-contract.md@1cfb423d lead safety A 2026-10-21 00:52 KST",
+  "comparison": {
+    "mean_noninf": {
+      "method": "newcombe",
+      "pooled": true,
+      "margin": 0.03,
+      "z": 1.96,
+      "pass_if": "lower_bound >= -margin"
+    },
+    "cell_big_drop": {
+      "method": "newcombe",
+      "per_cell": true,
+      "margin": 0.1,
+      "z": 1.96,
+      "real_drop_if": "upper_bound < -margin"
+    },
+    "verdict": "no_drop only if mean_noninf passes and no cell has cell_big_drop",
+    "n_per_cell": 200,
+    "baseline_remeasure_n": 200,
+    "s0_100_episode_tables": "기록 · 대조용으로만 남긴다",
+    "old_real_drop_field": "removed (replaced by mean_noninf + cell_big_drop)",
+    "pooled_denominator": "sum of actual trials in judged cells"
+  },
+  "cells": {
+    "axis1_in_range_32": [
+      [
+        "rough6",
+        "pyramid_stairs",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "boxes",
+        0.5
+      ],
+      [
+        "rough6",
+        "random_rough",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs",
+        1.0
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        1.0
+      ],
+      [
+        "rough6",
+        "boxes",
+        1.0
+      ],
+      [
+        "rough6",
+        "random_rough",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        1.0
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        0.5
+      ],
+      [
+        "unseen10",
+        "wave",
+        0.5
+      ],
+      [
+        "unseen10",
+        "stepping_stones",
+        0.5
+      ],
+      [
+        "unseen10",
+        "gap",
+        0.5
+      ],
+      [
+        "unseen10",
+        "pit",
+        0.5
+      ],
+      [
+        "unseen10",
+        "rails",
+        0.5
+      ],
+      [
+        "unseen10",
+        "star",
+        0.5
+      ],
+      [
+        "unseen10",
+        "floating_ring",
+        0.5
+      ],
+      [
+        "unseen10",
+        "repeated_boxes",
+        0.5
+      ],
+      [
+        "unseen10",
+        "repeated_cylinders",
+        0.5
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        1.0
+      ],
+      [
+        "unseen10",
+        "wave",
+        1.0
+      ],
+      [
+        "unseen10",
+        "stepping_stones",
+        1.0
+      ],
+      [
+        "unseen10",
+        "gap",
+        1.0
+      ],
+      [
+        "unseen10",
+        "pit",
+        1.0
+      ],
+      [
+        "unseen10",
+        "rails",
+        1.0
+      ],
+      [
+        "unseen10",
+        "star",
+        1.0
+      ],
+      [
+        "unseen10",
+        "floating_ring",
+        1.0
+      ],
+      [
+        "unseen10",
+        "repeated_boxes",
+        1.0
+      ],
+      [
+        "unseen10",
+        "repeated_cylinders",
+        1.0
+      ]
+    ],
+    "s1_scan_judged_26": [
+      [
+        "rough6",
+        "pyramid_stairs",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "boxes",
+        0.5
+      ],
+      [
+        "rough6",
+        "random_rough",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs",
+        1.0
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        1.0
+      ],
+      [
+        "rough6",
+        "boxes",
+        1.0
+      ],
+      [
+        "rough6",
+        "random_rough",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        1.0
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        0.5
+      ],
+      [
+        "unseen10",
+        "wave",
+        0.5
+      ],
+      [
+        "unseen10",
+        "stepping_stones",
+        0.5
+      ],
+      [
+        "unseen10",
+        "pit",
+        0.5
+      ],
+      [
+        "unseen10",
+        "star",
+        0.5
+      ],
+      [
+        "unseen10",
+        "repeated_boxes",
+        0.5
+      ],
+      [
+        "unseen10",
+        "repeated_cylinders",
+        0.5
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        1.0
+      ],
+      [
+        "unseen10",
+        "wave",
+        1.0
+      ],
+      [
+        "unseen10",
+        "stepping_stones",
+        1.0
+      ],
+      [
+        "unseen10",
+        "pit",
+        1.0
+      ],
+      [
+        "unseen10",
+        "star",
+        1.0
+      ],
+      [
+        "unseen10",
+        "repeated_boxes",
+        1.0
+      ],
+      [
+        "unseen10",
+        "repeated_cylinders",
+        1.0
+      ]
+    ],
+    "s1_scan_record_only_6": [
+      [
+        "unseen10",
+        "gap",
+        0.5
+      ],
+      [
+        "unseen10",
+        "rails",
+        0.5
+      ],
+      [
+        "unseen10",
+        "floating_ring",
+        0.5
+      ],
+      [
+        "unseen10",
+        "gap",
+        1.0
+      ],
+      [
+        "unseen10",
+        "rails",
+        1.0
+      ],
+      [
+        "unseen10",
+        "floating_ring",
+        1.0
+      ]
+    ],
+    "f26_continuous_16": [
+      [
+        "rough6",
+        "pyramid_stairs",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "boxes",
+        0.5
+      ],
+      [
+        "rough6",
+        "random_rough",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        0.5
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        0.5
+      ],
+      [
+        "rough6",
+        "pyramid_stairs",
+        1.0
+      ],
+      [
+        "rough6",
+        "pyramid_stairs_inv",
+        1.0
+      ],
+      [
+        "rough6",
+        "boxes",
+        1.0
+      ],
+      [
+        "rough6",
+        "random_rough",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope",
+        1.0
+      ],
+      [
+        "rough6",
+        "hf_pyramid_slope_inv",
+        1.0
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        0.5
+      ],
+      [
+        "unseen10",
+        "wave",
+        0.5
+      ],
+      [
+        "unseen10",
+        "discrete_obstacles",
+        1.0
+      ],
+      [
+        "unseen10",
+        "wave",
+        1.0
+      ]
+    ],
+    "axis2_nine": [
+      "stop/fell_ratio",
+      "hold/fell_ratio",
+      "hold/residual_speed_mps",
+      "hold/joint_target_delta_tail",
+      "turn/fell_ratio",
+      "turn/yaw_follow/-1.00",
+      "turn/yaw_follow/-0.50",
+      "turn/yaw_follow/+0.50",
+      "turn/yaw_follow/+1.00"
+    ],
+    "axis1_tuple_order": [
+      "terrain_set",
+      "terrain",
+      "speed_mps"
+    ],
+    "source_cells_py_sha256": "e6a701199e50840ebd906b78cf06f35f4bc58e994b33a2c0a5f3500bee3d8366",
+    "source_terrain_sets_py_sha256": "2d4760a1f3cbada44539c2ed60ae5f9f253784108938da58c3087e97cc6b5496"
+  },
+  "axis2": {
+    "hold_seeds": [
+      42,
+      43,
+      44
+    ],
+    "hold_min_passing_seeds": 2,
+    "hold_cells": [
+      "hold/fell_ratio",
+      "hold/residual_speed_mps",
+      "hold/joint_target_delta_tail"
+    ],
+    "overall_passed_cells": 9,
+    "yaw_follow_min": 0.8
+  },
+  "vy_obs": {
+    "rule": "last 1000 training updates, flag-terrain envs, 95th percentile of absolute commanded vy; S1-b and S2 separately",
+    "s1b_mps": null,
+    "s2_mps": null,
+    "fixed_assumed_side_cell_mps": 0.2,
+    "derived_side_cell_record_only": true
+  },
+  "axis3": {
+    "sparse_back_command_mps": -0.3,
+    "sparse_back_command_s": 2.0,
+    "sparse_back_reference_m": 0.6,
+    "sparse_side_command_s": 2.0,
+    "sparse_side_reference_rule": "abs(command_vy_mps) * 2 s",
+    "sparse_post_command_observation_s": 2.0,
+    "sparse_total_observation_s": 4.0,
+    "sparse_back_progress_min": 0.6,
+    "sparse_back_survival_min": 0.9,
+    "sparse_spin_abs_radps": 1.2,
+    "sparse_spin_survival_min": 0.9,
+    "sparse_beam_spin_record_only": true,
+    "yaw_deviation_deg": 30.0,
+    "continuous_progress_min": 0.8,
+    "continuous_survival_min": 0.95,
+    "continuous_yaw_deviation_rate_max": 0.1,
+    "continuous_spin_yaw_follow_min": 0.8,
+    "continuous_spin_survival_min": 0.95
+  },
+  "heading": {
+    "free_velocity_env_fraction": 0.3,
+    "flag_after_update_1000": 0.417,
+    "flag_before_update_1000": 0.333,
+    "prescription_free_velocity_fraction": 0.5,
+    "prescription_flag_after_update_1000": 0.694,
+    "prescription_flag_before_update_1000": 0.556,
+    "prescription_trigger_yaw_deviation_rate_gt": 0.1,
+    "prescription_arm": "S1a-v1.1"
+  },
+  "s1_x": {
+    "model": "S1a-blind-v1",
+    "simulators": [
+      "MuJoCo",
+      "Gazebo"
+    ],
+    "cells_per_sim": 16,
+    "trials_per_cell": 50,
+    "seed": 42,
+    "isaac_reference_remeasure": true,
+    "speed_tracking_abs_diff_max": 0.1,
+    "survival_abs_diff_max": 0.05,
+    "yaw_deviation_abs_diff_max": 0.05,
+    "axis2_same_verdict_required": true
+  },
+  "comparators": {
+    "s1_scan": "v2",
+    "s1_b": "S1a-blind-v1",
+    "s2_g1_axis1": "S2-G0",
+    "s2_g1_start": "S2-G0",
+    "s2_g3_start": "G1",
+    "f26_continuous_survival": "S1a-blind-v1",
+    "f26_start": "S2-G0",
+    "s1a_blind_sha256": "e81e1d94748e45c7778359ea959e56108ccb4390ba4d9ed80a51ea3b54ffeb33",
+    "s2_g0_sha256": null,
+    "s1b_blind_sha256": null
+  },
+  "gates": {
+    "s0": {
+      "axis1_v2_expected": 0.9419,
+      "axis1_e1_expected": 0.4479,
+      "axis1_abs_tolerance": 0.02,
+      "axis2_v2_expected_passed": 8,
+      "axis2_e1_expected_passed": 9,
+      "axis2_same_verdict": true,
+      "linux_repro_abs_mean_tolerance": 0.02,
+      "linux_repro_wilson_overlap": true
+    },
+    "s1_scan": {
+      "mean_noninf_and_no_big_drop": true
+    },
+    "s1_blind": {
+      "axis1_mean_min": 0.67,
+      "axis1_survival_min": 0.95
+    },
+    "s1_common": {
+      "stage_stairs_j_min": 0.9
+    },
+    "s1_b": {
+      "training_updates": 3000,
+      "gap_and_stones_median_level_min": 5,
+      "axis1_no_drop": true,
+      "sparse_back_progress_min": 0.6,
+      "sparse_back_survival_min": 0.9,
+      "sparse_gap_stones_spin_survival_min": 0.9
+    },
+    "s2_g0": {
+      "gate": "없음 · 비교 기준선"
+    },
+    "s2_g1": {
+      "axis1_no_drop_vs_g0": true,
+      "reconstruction_mae_record_only": true,
+      "start_r_gain_vs_g0_min": 0.1
+    },
+    "s2_g3": {
+      "gap_min": 0.99,
+      "floating_ring_min": 0.99,
+      "stepping_stones_1mps_min": 0.24,
+      "start_r_gain_vs_g1_min": 0.05,
+      "mev_less_than_g1": true,
+      "sparse_back_progress_min": 0.6,
+      "sparse_back_survival_min": 0.9,
+      "adopt_only_if_all": true
+    },
+    "f26": {
+      "candidate": "G3 if all adoption conditions pass, else G1",
+      "continuous_survival_no_drop_vs_s1a_blind": true,
+      "start_r_gain_vs_g0_min": 0.1,
+      "if_g3_unfinished_at": "2026-11-10 00:00 Asia/Seoul",
+      "if_g3_unfinished_use": "G1",
+      "g3_continue_until": "2026-11-14",
+      "student_redistill_corridor_room_sr_drop_max": 0.02,
+      "teacher_retrain_full_s3_regate": true
+    },
+    "s3": {
+      "s2_lower": {
+        "corridor_sr_min": 0.886,
+        "room_sr_min": 0.851,
+        "terrain_room_reach_min": 0.7,
+        "beam_entry_angle_error_deg_max": 15,
+        "collision_episode_rate_max": 0.05
+      },
+      "s1_blind_lower": {
+        "corridor_sr_min": 0.886,
+        "room_sr_min": 0.851,
+        "stairs_room_reach_min": 0.7,
+        "collision_episode_rate_max": 0.05,
+        "sparse_rooms_excluded": [
+          "틈 방",
+          "징검다리 방",
+          "외나무 방"
+        ]
+      },
+      "s1_fallback_arm": "S1a-blind-v1",
+      "s1b_upgrade_rule": {
+        "priority": "S2 final candidate with F26 pre (1)(2) pass takes priority; otherwise consider S1b-blind-v1; otherwise retain S1a-blind-v1",
+        "candidate": "S1b-blind-v1 final 3000-update checkpoint; sha256 pending measured output",
+        "baseline": "S1a-blind-v1; model_5999.pt sha256 pending lead readback",
+        "prerequisite": "S1-a verdict passes before S1-b training; failed S1-a follows 52 §3 prescription",
+        "axis1_cells": "cells.axis1_in_range_32",
+        "axis1_trials_per_cell": 200,
+        "axis1_no_real_drop_vs_s1a_blind": true,
+        "gap_stones_median_level_min": 5,
+        "sparse_back_command_mps": -0.3,
+        "sparse_back_command_s": 2,
+        "sparse_back_progress_min": 0.6,
+        "sparse_back_survival_min": 0.9,
+        "gap_stones_spin_radps_abs": 1.2,
+        "gap_stones_spin_survival_min": 0.9,
+        "require_all": true,
+        "vy_obs": "record measured last-1000-update p95; not an additional pass threshold",
+        "missing_or_failed": "retain S1a-blind-v1; record all missing and failed fields",
+        "s3_gate": "gates.s3.s1_blind_lower; sparse rooms remain excluded",
+        "s3_adapter": "xhat_m 5-field deployable adapter and reset/accuracy checks required before S3 training",
+        "selected_by": "lead via lead_tmp 2026-10-21 00:14 KST; choice A in PROPOSAL-sol-20w-s1b-s3-upgrade.md",
+        "start_sheet_plus_0p10": "candidate B not adopted; preserve proposal history"
+      },
+      "xhat_m_contract_draft": {
+        "status": "lead adopted rl F5 assumptions · adapter and L0/L1 unverified · F5 implementation open",
+        "fields": [
+          "body_velocity_x_mps",
+          "body_velocity_y_mps",
+          "body_velocity_z_mps",
+          "body_height_above_support_m",
+          "body_roll_rad"
+        ],
+        "s1_producer": "separate 10x45 proprio-history estimator -> body velocity 3, support height 1, valid logit 1; contact inferred from history; offline supervised after lower policy freeze; retrain if lower changes; no deployable foot-force sensor assumed",
+        "s2_producer": "I-E StartPerception.step 51-vector [16:19] body velocity, including G0; supervised by root_lin_vel_b per rl; support height uses same separate history adapter as S1 without map tokens",
+        "roll": "atan2(-projected_gravity_b.y, -projected_gravity_b.z); analytic, not learned; body axes and inverted-pose behavior need L0 confirmation",
+        "ground_reference": "h=-mean(contacting foot z in gravity-aligned body-origin frame); simulation contact iff same-step net force >=1 N; deployment FK+IMU with inferred contact; mixed stair heights remain ambiguous even for paired truth",
+        "paired_truth": "same episode/generation/control step; teacher truth x_m only, student train/eval adapter xhat_m; compare flat, stairs, gaps separately; report invalid spans and all outcomes",
+        "error_threshold": {
+          "decision": {
+            "method": "HL teacher paired same scene and seed with truth x_m versus estimated xhat_m; do not pass incomplete pairs",
+            "success_rate_drop_max_pp": 2.0
+          },
+          "reference_only": {
+            "velocity_per_axis_mae_mps_max": 0.1,
+            "velocity_per_axis_abs_error_p95_mps_max": 0.25,
+            "height_mae_m_max": 0.03,
+            "height_abs_error_p95_m_max": 0.06,
+            "roll_mae_rad_max": 0.02,
+            "roll_abs_error_p95_rad_max": 0.05,
+            "terrain_groups": ["flat", "stairs", "gaps"],
+            "additional_pass_condition": false
+          }
+        },
+        "invalid_output_rule": {
+          "zero_contact_height_invalid": true,
+          "last_valid_height_hold_lower_steps_max": 10,
+          "last_valid_height_hold_s_max": 0.2,
+          "then_nominal_standing_height_m": null,
+          "truth_uses_same_hold_rule": true,
+          "invalid_supervision_loss_mask": true,
+          "report_invalid_fraction_and_span_by_terrain": true,
+          "no_valid_height_after_reset": null
+        },
+        "age": {
+          "basis": "now minus timestamp of last valid xhat_m packet; record packet production time, validity, and last-valid time separately; invalid arrival does not refresh last-valid time",
+          "fresh_when_read_ms_max": 20,
+          "stale_above_ms": 20,
+          "stale_handling": "immediate stale; do not use stale packet as fresh; hold last valid height up to 10 lower steps/0.2s then nominal; record cause and span; velocity/roll local fallback unconfirmed",
+          "upper_safety_above_ms": 100,
+          "upper_safety_action": "immediate observation anomaly -> policy node HOLD with STOP latch; no additional wait, no automatic restart, human release; terrain posture 1 stand-zero, 2 sport, 3 Damp on flat only",
+          "boundary_cases_ms": {
+            "19": "fresh",
+            "21": "stale",
+            "99": "stale",
+            "101": "HOLD"
+          },
+          "report_hold_count_and_cause_in_real_T_stage": true,
+          "separate_from_deadman_300ms_and_heartbeat_1000ms": true
+        },
+        "reset": "only reset env clears 10x45 estimator history, S2 I-E/Prop GRU, height validity/hold cache and upper history; increments generation; fill estimator history with first current observation, hold counter zero, upper first call same packet; first 10 lower steps warmup bucket retained in results",
+        "s3_training_requires_rl_confirmation": true
+      }
+    },
+    "s4": {
+      "side_back_progress_min": 0.6,
+      "side_back_survival_min": 0.9,
+      "front_no_drop_vs_s2": true,
+      "l1_control_front_no_drop": true
+    },
+    "s3_s4": {
+      "corridor_room_sr_drop_max": 0.02,
+      "terrain_room_reach_min": 0.7,
+      "collision_episode_rate_max": 0.05,
+      "sparse_side_back_tracking_p95_multiplier_max": 1.2,
+      "s2_lower_full_s3_required": true,
+      "corridor_sr_min": 0.886,
+      "room_sr_min": 0.851,
+      "beam_entry_angle_error_deg_max": 15,
+      "compare_sr_to": "approved S3+S2 student",
+      "all_absolute_relative_tracking_required": true
+    },
+    "s4_ctrl": {
+      "axis1_front_no_drop_vs_s2": true,
+      "axis3_front_no_drop_vs_s2": true,
+      "start_sheet_front_no_drop_vs_s2": true,
+      "comparison_rule": "41 §8 mean_noninf AND no cell_big_drop; use stage-specific registered counts (axis1 200, START sheet 500; axis3 front count/keys require rl and lead confirmation)"
+    }
+  },
+  "branches": {
+    "s1": {
+      "first_nan_updates": 500,
+      "nan_count_trigger": 1,
+      "episode_length_compare_updates": [
+        100,
+        500
+      ],
+      "kl_mean_range": [
+        0.005,
+        0.02
+      ],
+      "level_ge": 7,
+      "forward_fraction_excess_pp": 0.1,
+      "axis2_turn_fall_gt": 0.1,
+      "standing_env_fraction_expected": 0.1,
+      "turn_probability_expected": 0.2,
+      "blind_mean_lt": 0.67,
+      "side_progress_lt": 0.8,
+      "continuous_yaw_deviation_rate_gt": 0.1,
+      "low_speed_range_mps": [
+        0.1,
+        0.4
+      ],
+      "low_speed_follow_lt": 0.5
+    },
+    "s2": {
+      "first_updates_memory_window": 10,
+      "max_memory_gb_gt": 14.5,
+      "mae_check_update": 1000,
+      "mae_easy_stones_levels": [
+        0,
+        1,
+        2
+      ],
+      "mae_cm_gt": 5.0,
+      "p_smpl_check_update": 2000,
+      "p_smpl_gt": 0.7,
+      "median_level_check_update": 6000,
+      "gap_stones_median_level_lt": 3,
+      "g0_vs_s1a_start_r_abs_diff_gt": 0.1,
+      "g3_eval_deadline": "2026-11-10 00:00 Asia/Seoul"
+    },
+    "s3": {
+      "debug_envs": 128,
+      "debug_depth_shape": [
+        180,
+        320
+      ],
+      "debug_lower_depth_shape": [
+        60,
+        60
+      ],
+      "debug_memory_gb_gt": 14.5,
+      "fallback_envs": 64,
+      "tracking_error_p95_vs_s1_gt_multiplier": 2.0,
+      "teacher_corridor_check_update": 2000,
+      "teacher_corridor_subgoal_lt": 0.5,
+      "teacher_final_pgcl_signal": "d does not exceed path length",
+      "student_corridor_drop_vs_teacher_gt": 0.1,
+      "student_room_drop_vs_teacher_gt": 0.05,
+      "deadline": "2026-11-18 24:00 Asia/Seoul",
+      "terrain_room_reach_lt": 0.7,
+      "corridor_sr_ge": 0.886
+    },
+    "60_scenarios": {
+      "a": "branches/s2 mae, p_smpl, median_level, start_r",
+      "b": "first 10 updates memory > 14.5 GB or OOM",
+      "c": "S1-scan 26-cell comparison fails or blind mean < 0.67 or level >= 7 forward excess > 0.10 or continuous yaw deviation > 0.1",
+      "d_deadline": "2026-11-18 24:00 Asia/Seoul",
+      "e_t6_falls_ge": 2,
+      "e_t6_trials": 10,
+      "e_shin_velocity_excess_fraction_gt": 0.05,
+      "e_shin_velocity_limit_radps": 15.7,
+      "e_contact_diff_gt": 0.2,
+      "f_bracket_deadline_after_arrival_days": 3,
+      "f_latest_assumed_go2_arrival": "2026-11-07",
+      "f_policy_node_deadline": "2026-11-14",
+      "f_policy_node_worst_deadline": "2026-11-20",
+      "f_slam_contract_deadline": "2026-11-20",
+      "g_s2_integration_deadline": "2026-10-22",
+      "g_s3_code_deadline": "2026-11-03"
+    },
+    "51_s0": {
+      "axis3_ready_by": "2026-10-21 S1 evaluation",
+      "start_sheet_ready_before_s1b_and_s2": true,
+      "linux_failure_remeasure_hours": [
+        6,
+        8
+      ],
+      "linux_failure_s0_gate_by": "2026-10-24 12:00 Asia/Seoul",
+      "linux_failure_s2_g0_g1_start": "only after actual Linux S0-L pass; 2026-10-24 12:00 simultaneous start is an arithmetic example, not approval",
+      "superseded_invalid_start": "2026-10-24 04:00 Asia/Seoul",
+      "windows_s0_w_for_s1a_verdict": "Windows S0-W evidence and gates hash before 2026-10-21 S1-a verdict; Linux S0-L is not a prerequisite",
+      "linux_s0_l_for_s2_start": "Linux reproduction pass or completed Linux full remeasurement, plus direct training approval"
+    },
+    "ddp_deadlines": {
+      "f26_base": "2026-11-10 00:00 Asia/Seoul",
+      "f26_ddp_latest": "2026-11-12 00:00 Asia/Seoul",
+      "d_base": "2026-11-18 24:00 Asia/Seoul",
+      "d_ddp_latest": "2026-11-20 24:00 Asia/Seoul",
+      "g3_late_fallback": "if G3 unfinished at F26, judge G1 then continue G3 until 2026-11-14",
+      "overlap_rule": "for each affected gate choose the later applicable deadline, record DDP delay; training end remains 2026-11-25"
+    }
+  },
+  "_sources": {
+    "/_status": "41-EVAL-AXES.md:145-149 · TASK-sol-20w-f2-followup.md 10/21 추가 · TASK-sol-20x-f5-contract.md@1cfb423d lead 선택 00:52 (F5 규칙 초안, 최종 봉인 전)",
+    "/_source": "41-EVAL-AXES.md:119-149 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 · RL-F5-xhatm-verdict.md@961e74ce · TASK-sol-20x-f5-contract.md@1cfb423d lead 선택 00:52 (출처 등급 분리)",
+    "/comparison/mean_noninf/method": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/mean_noninf/pooled": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/mean_noninf/margin": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/mean_noninf/z": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/mean_noninf/pass_if": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/cell_big_drop/method": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/cell_big_drop/per_cell": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/cell_big_drop/margin": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/cell_big_drop/z": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/cell_big_drop/real_drop_if": "41-EVAL-AXES.md:99 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/verdict": "41-EVAL-AXES.md:99-112 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/n_per_cell": "41-EVAL-AXES.md:99-112 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/baseline_remeasure_n": "41-EVAL-AXES.md:99-112 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/s0_100_episode_tables": "41-EVAL-AXES.md:99-112 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/old_real_drop_field": "41-EVAL-AXES.md:99-112 (팀장 결정 · 20s CPU 몬테카를로)",
+    "/comparison/pooled_denominator": "41-EVAL-AXES.md:99 (코드 sonnet foothold_s2/eval/stats.py:51-78)",
+    "/cells/axis1_in_range_32": "41-EVAL-AXES.md:65 · sonnet foothold_s2/eval/cells.py:14-61 (코드 이름)",
+    "/cells/s1_scan_judged_26": "41-EVAL-AXES.md:125 · sonnet foothold_s2/eval/cells.py:14-61 (코드 이름)",
+    "/cells/s1_scan_record_only_6": "41-EVAL-AXES.md:125 · sonnet foothold_s2/eval/cells.py:14-61 (코드 이름)",
+    "/cells/f26_continuous_16": "41-EVAL-AXES.md:137 · sonnet foothold_s2/eval/cells.py:14-61 (코드 이름)",
+    "/cells/axis2_nine": "41-EVAL-AXES.md:44-49 · sonnet foothold_s2/eval/cells.py:66-83 (코드 이름)",
+    "/cells/axis1_tuple_order": "sonnet foothold_s2/eval/cells.py:47-61 (코드)",
+    "/cells/source_cells_py_sha256": "sonnet foothold_s2/eval/cells.py (코드 · SHA 실측)",
+    "/cells/source_terrain_sets_py_sha256": "sonnet foothold_s2/eval/terrain_sets.py (코드 · SHA 실측)",
+    "/axis2/hold_seeds": "41-EVAL-AXES.md:46-47 (팀장 결정 7)",
+    "/axis2/hold_min_passing_seeds": "41-EVAL-AXES.md:47 (팀장 결정 7)",
+    "/axis2/hold_cells": "41-EVAL-AXES.md:47 · sonnet foothold_s2/eval/cells.py:72-83 (코드 이름)",
+    "/axis2/overall_passed_cells": "41-EVAL-AXES.md:124 (가정 관문)",
+    "/axis2/yaw_follow_min": "41-EVAL-AXES.md:124 (가정 관문)",
+    "/vy_obs/rule": "14-COMMAND-GENERATOR.md:127 · 41-EVAL-AXES.md:133 (가정)",
+    "/vy_obs/s1b_mps": "14-COMMAND-GENERATOR.md:127 (미정 · lead, S1-b 학습 뒤 실측)",
+    "/vy_obs/s2_mps": "14-COMMAND-GENERATOR.md:127 (미정 · lead, S2 학습 뒤 실측)",
+    "/vy_obs/fixed_assumed_side_cell_mps": "41-EVAL-AXES.md:61 · 14-COMMAND-GENERATOR.md:127 (가정)",
+    "/vy_obs/derived_side_cell_record_only": "41-EVAL-AXES.md:133 (가정)",
+    "/axis3/sparse_back_command_mps": "41-EVAL-AXES.md:61-64 (팀장 결정 2)",
+    "/axis3/sparse_back_command_s": "41-EVAL-AXES.md:64 (팀장 결정 2)",
+    "/axis3/sparse_back_reference_m": "41-EVAL-AXES.md:64 (팀장 결정 2)",
+    "/axis3/sparse_side_command_s": "41-EVAL-AXES.md:64 (팀장 결정 2)",
+    "/axis3/sparse_side_reference_rule": "41-EVAL-AXES.md:64 (팀장 결정 2)",
+    "/axis3/sparse_post_command_observation_s": "41-EVAL-AXES.md:64 (가정)",
+    "/axis3/sparse_total_observation_s": "41-EVAL-AXES.md:64 (가정)",
+    "/axis3/sparse_back_progress_min": "41-EVAL-AXES.md:133 (가정)",
+    "/axis3/sparse_back_survival_min": "41-EVAL-AXES.md:133 (가정)",
+    "/axis3/sparse_spin_abs_radps": "41-EVAL-AXES.md:61 · 133 (가정)",
+    "/axis3/sparse_spin_survival_min": "41-EVAL-AXES.md:133 (가정)",
+    "/axis3/sparse_beam_spin_record_only": "41-EVAL-AXES.md:133 (가정)",
+    "/axis3/yaw_deviation_deg": "41-EVAL-AXES.md:66 (가정)",
+    "/axis3/continuous_progress_min": "41-EVAL-AXES.md:127 (가정)",
+    "/axis3/continuous_survival_min": "41-EVAL-AXES.md:127 (가정)",
+    "/axis3/continuous_yaw_deviation_rate_max": "41-EVAL-AXES.md:127-128 (가정)",
+    "/axis3/continuous_spin_yaw_follow_min": "41-EVAL-AXES.md:127 (가정)",
+    "/axis3/continuous_spin_survival_min": "41-EVAL-AXES.md:127 (가정)",
+    "/heading/free_velocity_env_fraction": "14-COMMAND-GENERATOR.md:40 · 41-EVAL-AXES.md:128 (가정 · 팀장 결정 4)",
+    "/heading/flag_after_update_1000": "14-COMMAND-GENERATOR.md:40 (가정 · 팀장 결정 4)",
+    "/heading/flag_before_update_1000": "14-COMMAND-GENERATOR.md:40 (가정 · 팀장 결정 4)",
+    "/heading/prescription_free_velocity_fraction": "41-EVAL-AXES.md:128 · 14-COMMAND-GENERATOR.md:11 (팀장 결정 N-7)",
+    "/heading/prescription_flag_after_update_1000": "14-COMMAND-GENERATOR.md:88 (가정 · 팀장 결정 N-7)",
+    "/heading/prescription_flag_before_update_1000": "14-COMMAND-GENERATOR.md:88 (가정 · 팀장 결정 N-7)",
+    "/heading/prescription_trigger_yaw_deviation_rate_gt": "41-EVAL-AXES.md:128 (가정)",
+    "/heading/prescription_arm": "41-EVAL-AXES.md:128 (팀장 결정 N-7)",
+    "/s1_x/model": "41-EVAL-AXES.md:129 (팀장 결정 K-I)",
+    "/s1_x/simulators": "41-EVAL-AXES.md:129 (팀장 결정 K-I)",
+    "/s1_x/cells_per_sim": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/trials_per_cell": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/seed": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/isaac_reference_remeasure": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/speed_tracking_abs_diff_max": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/survival_abs_diff_max": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/yaw_deviation_abs_diff_max": "41-EVAL-AXES.md:129 (가정)",
+    "/s1_x/axis2_same_verdict_required": "41-EVAL-AXES.md:129 (가정)",
+    "/comparators/s1_scan": "41-EVAL-AXES.md:125 (선행 기준)",
+    "/comparators/s1_b": "41-EVAL-AXES.md:132 (팀장 결정)",
+    "/comparators/s2_g1_axis1": "41-EVAL-AXES.md:135 (팀장 결정 J-A)",
+    "/comparators/s2_g1_start": "41-EVAL-AXES.md:135 (팀장 결정 J-A)",
+    "/comparators/s2_g3_start": "41-EVAL-AXES.md:136 (가정)",
+    "/comparators/f26_continuous_survival": "41-EVAL-AXES.md:137 (팀장 결정)",
+    "/comparators/f26_start": "41-EVAL-AXES.md:137 (팀장 결정 J-A)",
+    "/comparators/s1a_blind_sha256": "41-EVAL-AXES.md:137 · lead 10/21 02:08 sha256 실측 logs/rsl_rl/foothold_s1a/2026-10-20_17-00-34_s1a_blind/model_5999.pt",
+    "/comparators/s2_g0_sha256": "41-EVAL-AXES.md:134-137 (미정 · lead, 체크포인트 완성 뒤 SHA 실측)",
+    "/gates/s0/axis1_v2_expected": "41-EVAL-AXES.md:123 · 51-S0-BASELINES.md:47 (실측)",
+    "/gates/s0/axis1_e1_expected": "41-EVAL-AXES.md:123 · 51-S0-BASELINES.md:47 (실측)",
+    "/gates/s0/axis1_abs_tolerance": "41-EVAL-AXES.md:123 · 51-S0-BASELINES.md:47 (가정)",
+    "/gates/s0/axis2_v2_expected_passed": "51-S0-BASELINES.md:47 (실측 · 선행 판정)",
+    "/gates/s0/axis2_e1_expected_passed": "51-S0-BASELINES.md:47 (실측 · 선행 판정)",
+    "/gates/s0/axis2_same_verdict": "41-EVAL-AXES.md:123 · 51-S0-BASELINES.md:47 (가정)",
+    "/gates/s0/linux_repro_abs_mean_tolerance": "51-S0-BASELINES.md:50 (가정)",
+    "/gates/s0/linux_repro_wilson_overlap": "51-S0-BASELINES.md:50 (가정)",
+    "/gates/s1_scan/mean_noninf_and_no_big_drop": "41-EVAL-AXES.md:125 (팀장 결정 8 · 가정)",
+    "/gates/s1_blind/axis1_mean_min": "41-EVAL-AXES.md:126 (가정 · E1 실측 참고)",
+    "/gates/s1_blind/axis1_survival_min": "41-EVAL-AXES.md:126 (가정)",
+    "/gates/s1_common/stage_stairs_j_min": "41-EVAL-AXES.md:130 (가정)",
+    "/gates/s1_b/training_updates": "41-EVAL-AXES.md:131 · 52-S1-OPEN-COMMAND.md:48 (가정)",
+    "/gates/s1_b/gap_and_stones_median_level_min": "41-EVAL-AXES.md:131 (가정)",
+    "/gates/s1_b/axis1_no_drop": "41-EVAL-AXES.md:132 (가정)",
+    "/gates/s1_b/sparse_back_progress_min": "41-EVAL-AXES.md:133 (가정)",
+    "/gates/s1_b/sparse_back_survival_min": "41-EVAL-AXES.md:133 (가정)",
+    "/gates/s1_b/sparse_gap_stones_spin_survival_min": "41-EVAL-AXES.md:133 (가정)",
+    "/gates/s2_g0/gate": "41-EVAL-AXES.md:134 (팀장 결정 J-A)",
+    "/gates/s2_g1/axis1_no_drop_vs_g0": "41-EVAL-AXES.md:135 (가정)",
+    "/gates/s2_g1/reconstruction_mae_record_only": "41-EVAL-AXES.md:135 (보고 항목)",
+    "/gates/s2_g1/start_r_gain_vs_g0_min": "41-EVAL-AXES.md:135 (가정)",
+    "/gates/s2_g3/gap_min": "41-EVAL-AXES.md:136 (가정 · v2 실측 참고)",
+    "/gates/s2_g3/floating_ring_min": "41-EVAL-AXES.md:136 (가정 · v2 실측 참고)",
+    "/gates/s2_g3/stepping_stones_1mps_min": "41-EVAL-AXES.md:136 (가정 · v2 실측 참고)",
+    "/gates/s2_g3/start_r_gain_vs_g1_min": "41-EVAL-AXES.md:136 (가정)",
+    "/gates/s2_g3/mev_less_than_g1": "41-EVAL-AXES.md:136 (가정)",
+    "/gates/s2_g3/sparse_back_progress_min": "41-EVAL-AXES.md:136 (가정)",
+    "/gates/s2_g3/sparse_back_survival_min": "41-EVAL-AXES.md:136 (가정)",
+    "/gates/s2_g3/adopt_only_if_all": "53-S2-PERCEPTION.md:92-100 (가정)",
+    "/gates/f26/candidate": "41-EVAL-AXES.md:136-137 · 53-S2-PERCEPTION.md:92-102 (팀장 결정)",
+    "/gates/f26/continuous_survival_no_drop_vs_s1a_blind": "41-EVAL-AXES.md:137 (가정)",
+    "/gates/f26/start_r_gain_vs_g0_min": "41-EVAL-AXES.md:137 (가정)",
+    "/gates/f26/if_g3_unfinished_at": "41-EVAL-AXES.md:137 (팀장 결정 L)",
+    "/gates/f26/if_g3_unfinished_use": "41-EVAL-AXES.md:137 (팀장 결정 L)",
+    "/gates/f26/g3_continue_until": "41-EVAL-AXES.md:137 (팀장 결정 L)",
+    "/gates/f26/student_redistill_corridor_room_sr_drop_max": "41-EVAL-AXES.md:138 (가정)",
+    "/gates/f26/teacher_retrain_full_s3_regate": "41-EVAL-AXES.md:139 (가정)",
+    "/gates/s3/s2_lower/corridor_sr_min": "41-EVAL-AXES.md:140 (가정 · 논문 2604.26504:661 유도)",
+    "/gates/s3/s2_lower/room_sr_min": "41-EVAL-AXES.md:140 (가정 · 논문 2604.26504:661 유도)",
+    "/gates/s3/s2_lower/terrain_room_reach_min": "41-EVAL-AXES.md:140 (가정)",
+    "/gates/s3/s2_lower/beam_entry_angle_error_deg_max": "41-EVAL-AXES.md:140 (가정)",
+    "/gates/s3/s2_lower/collision_episode_rate_max": "41-EVAL-AXES.md:140 (가정)",
+    "/gates/s3/s1_blind_lower/corridor_sr_min": "41-EVAL-AXES.md:141 (가정)",
+    "/gates/s3/s1_blind_lower/room_sr_min": "41-EVAL-AXES.md:141 (가정)",
+    "/gates/s3/s1_blind_lower/stairs_room_reach_min": "41-EVAL-AXES.md:141 (가정)",
+    "/gates/s3/s1_blind_lower/collision_episode_rate_max": "41-EVAL-AXES.md:141 (가정)",
+    "/gates/s3/s1_blind_lower/sparse_rooms_excluded": "41-EVAL-AXES.md:141 (가정 · 방 이름은 설계 표기)",
+    "/gates/s3/s1_fallback_arm": "54-S3-NAV.md:43 · 70-RESOURCES-SCHEDULE.md:76 (팀장 결정 D34)",
+    "/gates/s3/s1b_upgrade_rule": "54-S3-NAV.md:43 (미정 · lead, S1-b 결과를 S3 하위에 사용할 조건)",
+    "/gates/s4/side_back_progress_min": "41-EVAL-AXES.md:142 (가정)",
+    "/gates/s4/side_back_survival_min": "41-EVAL-AXES.md:142 (가정)",
+    "/gates/s4/front_no_drop_vs_s2": "41-EVAL-AXES.md:142 (가정)",
+    "/gates/s3_s4/corridor_room_sr_drop_max": "41-EVAL-AXES.md:143 (가정)",
+    "/gates/s3_s4/terrain_room_reach_min": "41-EVAL-AXES.md:143 (가정)",
+    "/gates/s3_s4/collision_episode_rate_max": "41-EVAL-AXES.md:143 (가정)",
+    "/gates/s3_s4/sparse_side_back_tracking_p95_multiplier_max": "41-EVAL-AXES.md:143 (가정)",
+    "/branches/s1/first_nan_updates": "52-S1-OPEN-COMMAND.md:59 (가정)",
+    "/branches/s1/nan_count_trigger": "52-S1-OPEN-COMMAND.md:59 (가정)",
+    "/branches/s1/episode_length_compare_updates": "52-S1-OPEN-COMMAND.md:59 (가정)",
+    "/branches/s1/kl_mean_range": "52-S1-OPEN-COMMAND.md:59 (가정)",
+    "/branches/s1/level_ge": "52-S1-OPEN-COMMAND.md:60 (가정)",
+    "/branches/s1/forward_fraction_excess_pp": "52-S1-OPEN-COMMAND.md:60 (가정)",
+    "/branches/s1/axis2_turn_fall_gt": "52-S1-OPEN-COMMAND.md:61 (가정)",
+    "/branches/s1/standing_env_fraction_expected": "52-S1-OPEN-COMMAND.md:61 (가정)",
+    "/branches/s1/turn_probability_expected": "52-S1-OPEN-COMMAND.md:61 (가정)",
+    "/branches/s1/blind_mean_lt": "52-S1-OPEN-COMMAND.md:63 (가정)",
+    "/branches/s1/side_progress_lt": "52-S1-OPEN-COMMAND.md:64 (가정)",
+    "/branches/s1/continuous_yaw_deviation_rate_gt": "52-S1-OPEN-COMMAND.md:65 (가정)",
+    "/branches/s1/low_speed_range_mps": "52-S1-OPEN-COMMAND.md:66 (가정)",
+    "/branches/s1/low_speed_follow_lt": "52-S1-OPEN-COMMAND.md:66 (가정)",
+    "/branches/s2/first_updates_memory_window": "53-S2-PERCEPTION.md:84 (가정)",
+    "/branches/s2/max_memory_gb_gt": "53-S2-PERCEPTION.md:84 (가정)",
+    "/branches/s2/mae_check_update": "53-S2-PERCEPTION.md:85 (가정)",
+    "/branches/s2/mae_easy_stones_levels": "53-S2-PERCEPTION.md:85 (가정)",
+    "/branches/s2/mae_cm_gt": "53-S2-PERCEPTION.md:85 (가정)",
+    "/branches/s2/p_smpl_check_update": "53-S2-PERCEPTION.md:86 (가정)",
+    "/branches/s2/p_smpl_gt": "53-S2-PERCEPTION.md:86 (가정)",
+    "/branches/s2/median_level_check_update": "53-S2-PERCEPTION.md:87 (가정)",
+    "/branches/s2/gap_stones_median_level_lt": "53-S2-PERCEPTION.md:87 (가정)",
+    "/branches/s2/g0_vs_s1a_start_r_abs_diff_gt": "53-S2-PERCEPTION.md:88 (가정 · 기록만)",
+    "/branches/s2/g3_eval_deadline": "53-S2-PERCEPTION.md:114 (팀장 결정 L)",
+    "/branches/s3/debug_envs": "54-S3-NAV.md:56 (가정)",
+    "/branches/s3/debug_depth_shape": "54-S3-NAV.md:56 (가정)",
+    "/branches/s3/debug_lower_depth_shape": "54-S3-NAV.md:56 (가정)",
+    "/branches/s3/debug_memory_gb_gt": "54-S3-NAV.md:56 (가정)",
+    "/branches/s3/fallback_envs": "54-S3-NAV.md:56 (가정)",
+    "/branches/s3/tracking_error_p95_vs_s1_gt_multiplier": "54-S3-NAV.md:57 (가정)",
+    "/branches/s3/teacher_corridor_check_update": "54-S3-NAV.md:58 (가정)",
+    "/branches/s3/teacher_corridor_subgoal_lt": "54-S3-NAV.md:58 (가정)",
+    "/branches/s3/teacher_final_pgcl_signal": "54-S3-NAV.md:59 (가정 · 수치 문턱 없음)",
+    "/branches/s3/student_corridor_drop_vs_teacher_gt": "54-S3-NAV.md:60 (가정)",
+    "/branches/s3/student_room_drop_vs_teacher_gt": "54-S3-NAV.md:61 (가정)",
+    "/branches/s3/deadline": "54-S3-NAV.md:62 (가정)",
+    "/branches/s3/terrain_room_reach_lt": "54-S3-NAV.md:63 (가정)",
+    "/branches/s3/corridor_sr_ge": "54-S3-NAV.md:63 (가정)",
+    "/branches/60_scenarios/a": "60-SCENARIOS.md:30 (가정)",
+    "/branches/60_scenarios/b": "60-SCENARIOS.md:31 (가정)",
+    "/branches/60_scenarios/c": "60-SCENARIOS.md:32 (가정)",
+    "/branches/60_scenarios/d_deadline": "60-SCENARIOS.md:33 (가정)",
+    "/branches/60_scenarios/e_t6_falls_ge": "60-SCENARIOS.md:34 (가정)",
+    "/branches/60_scenarios/e_t6_trials": "60-SCENARIOS.md:34 (가정)",
+    "/branches/60_scenarios/e_shin_velocity_excess_fraction_gt": "60-SCENARIOS.md:34 (가정)",
+    "/branches/60_scenarios/e_shin_velocity_limit_radps": "60-SCENARIOS.md:34 (코드 · URDF)",
+    "/branches/60_scenarios/e_contact_diff_gt": "60-SCENARIOS.md:34 (가정)",
+    "/branches/60_scenarios/f_bracket_deadline_after_arrival_days": "60-SCENARIOS.md:35 (가정)",
+    "/branches/60_scenarios/f_latest_assumed_go2_arrival": "60-SCENARIOS.md:35 (가정)",
+    "/branches/60_scenarios/f_policy_node_deadline": "60-SCENARIOS.md:35 (가정)",
+    "/branches/60_scenarios/f_policy_node_worst_deadline": "60-SCENARIOS.md:35 (가정)",
+    "/branches/60_scenarios/f_slam_contract_deadline": "60-SCENARIOS.md:35 (가정)",
+    "/branches/60_scenarios/g_s2_integration_deadline": "60-SCENARIOS.md:36 (팀장 결정 Q)",
+    "/branches/60_scenarios/g_s3_code_deadline": "60-SCENARIOS.md:36 (가정)",
+    "/branches/51_s0/axis3_ready_by": "51-S0-BASELINES.md:39 (가정)",
+    "/branches/51_s0/start_sheet_ready_before_s1b_and_s2": "51-S0-BASELINES.md:39 (가정)",
+    "/branches/51_s0/linux_failure_remeasure_hours": "51-S0-BASELINES.md:50 (가정)",
+    "/branches/51_s0/linux_failure_s0_gate_by": "51-S0-BASELINES.md:50 (가정)",
+    "/branches/51_s0/linux_failure_s2_g0_g1_start": "51-S0-BASELINES.md:38-50 · 70-RESOURCES-SCHEDULE.md:112 (관문 선행 · 시각 미정)",
+    "/gates/s4/l1_control_front_no_drop": "41-EVAL-AXES.md:142 (가정 · 대조판 L1 앞 칸)",
+    "/gates/s4_ctrl/axis1_front_no_drop_vs_s2": "55-S4-L1.md:51 · 41-EVAL-AXES.md:142 (가정)",
+    "/gates/s4_ctrl/axis3_front_no_drop_vs_s2": "55-S4-L1.md:51 · 41-EVAL-AXES.md:142 (가정)",
+    "/gates/s4_ctrl/start_sheet_front_no_drop_vs_s2": "55-S4-L1.md:51 (가정)",
+    "/gates/s4_ctrl/comparison_rule": "41-EVAL-AXES.md:99,142 · 51-S0-BASELINES.md:46 · 55-S4-L1.md:51-57 (가정 · 축3 판 수 미확인)",
+    "/gates/s3_s4/s2_lower_full_s3_required": "41-EVAL-AXES.md:140,143 · 55-S4-L1.md:69 (가정)",
+    "/gates/s3_s4/corridor_sr_min": "41-EVAL-AXES.md:140,143 (가정)",
+    "/gates/s3_s4/room_sr_min": "41-EVAL-AXES.md:140,143 (가정)",
+    "/gates/s3_s4/beam_entry_angle_error_deg_max": "41-EVAL-AXES.md:140,143 (가정)",
+    "/gates/s3_s4/compare_sr_to": "41-EVAL-AXES.md:143 · 55-S4-L1.md:69 (가정)",
+    "/gates/s3_s4/all_absolute_relative_tracking_required": "41-EVAL-AXES.md:143 · 55-S4-L1.md:69 (가정)",
+    "/branches/ddp_deadlines/f26_base": "60-SCENARIOS.md:51-52 (가정 · 팀장 L 대비책)",
+    "/branches/ddp_deadlines/f26_ddp_latest": "60-SCENARIOS.md:51 (가정)",
+    "/branches/ddp_deadlines/d_base": "60-SCENARIOS.md:51 (가정)",
+    "/branches/ddp_deadlines/d_ddp_latest": "60-SCENARIOS.md:51 (가정)",
+    "/branches/ddp_deadlines/g3_late_fallback": "60-SCENARIOS.md:52 · 70-RESOURCES-SCHEDULE.md:116 (팀장 L)",
+    "/branches/ddp_deadlines/overlap_rule": "60-SCENARIOS.md:51-52 · 70-RESOURCES-SCHEDULE.md:117 (가정)",
+    "/branches/51_s0/superseded_invalid_start": "51-S0-BASELINES.md:50 · 70-RESOURCES-SCHEDULE.md:112 (과거 역전 기록 · 실행 금지)",
+    "/branches/51_s0/windows_s0_w_for_s1a_verdict": "51-S0-BASELINES.md:24-39 (코드·일정 선후 정합성)",
+    "/branches/51_s0/linux_s0_l_for_s2_start": "51-S0-BASELINES.md:38-50 (관문 선행 · 별도 팀장 승인)",
+    "/gates/s3/xhat_m_contract_draft/status": "CONTRACT-sol-20w-xhatm.md:5,9,42 (lead 채택 가정 · 구현/실측 미완료)",
+    "/gates/s3/xhat_m_contract_draft/fields": "CONTRACT-sol-20w-xhatm.md:13 · 21-HIPAN-HIGH.md:95 · HiPAN 2604.26504:260-272 (논문 필드, 생산자 가정)",
+    "/gates/s3/xhat_m_contract_draft/s1_producer": "CONTRACT-sol-20w-xhatm.md:17 · RL-F5-xhatm-verdict.md@961e74ce:생산자 (lead 채택 가정)",
+    "/gates/s3/xhat_m_contract_draft/s2_producer": "CONTRACT-sol-20w-xhatm.md:18 · start_perception.py:319-328 (코드 출력 순서) · RL-F5-xhatm-verdict.md@961e74ce:생산자 (감독 타깃은 rl 보고)",
+    "/gates/s3/xhat_m_contract_draft/roll": "CONTRACT-sol-20w-xhatm.md:20 · RL-F5-xhatm-verdict.md@961e74ce:고칠 곳4 (lead 채택 가정, 실기 미확인)",
+    "/gates/s3/xhat_m_contract_draft/ground_reference": "CONTRACT-sol-20w-xhatm.md:24 · RL-F5-xhatm-verdict.md@961e74ce:결정 값1 (lead 채택 가정)",
+    "/gates/s3/xhat_m_contract_draft/paired_truth": "CONTRACT-sol-20w-xhatm.md:13,24,30,32 (lead 채택 가정, 자료 미측정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/decision/method": "CONTRACT-sol-20w-xhatm.md:30 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (lead 채택 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/decision/success_rate_drop_max_pp": "CONTRACT-sol-20w-xhatm.md:30 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (가정 · 2 %p, 상대 2 % 아님)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/velocity_per_axis_mae_mps_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/velocity_per_axis_abs_error_p95_mps_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/height_mae_m_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/height_abs_error_p95_m_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/roll_mae_rad_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/roll_abs_error_p95_rad_max": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (참고 가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/terrain_groups": "CONTRACT-sol-20w-xhatm.md:32 · RL-F5-xhatm-verdict.md@961e74ce:결정 값3 (가정)",
+    "/gates/s3/xhat_m_contract_draft/error_threshold/reference_only/additional_pass_condition": "CONTRACT-sol-20w-xhatm.md:32 (참고 수치는 판정 AND 아님)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/zero_contact_height_invalid": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/last_valid_height_hold_lower_steps_max": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/last_valid_height_hold_s_max": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/then_nominal_standing_height_m": "CONTRACT-sol-20w-xhatm.md:26 (미확인 · Go2 기본 자세에서 계산 전)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/truth_uses_same_hold_rule": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/invalid_supervision_loss_mask": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/report_invalid_fraction_and_span_by_terrain": "CONTRACT-sol-20w-xhatm.md:26 · RL-F5-xhatm-verdict.md@961e74ce:결정 값2 (가정)",
+    "/gates/s3/xhat_m_contract_draft/invalid_output_rule/no_valid_height_after_reset": "CONTRACT-sol-20w-xhatm.md:26 (미정 · lead/rl)",
+    "/gates/s3/xhat_m_contract_draft/age/basis": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (마지막 유효 묶음 기준)",
+    "/gates/s3/xhat_m_contract_draft/age/fresh_when_read_ms_max": "CONTRACT-sol-20w-xhatm.md:36 · RL-F5-xhatm-verdict.md@961e74ce:결정 값4 (가정)",
+    "/gates/s3/xhat_m_contract_draft/age/stale_above_ms": "CONTRACT-sol-20w-xhatm.md:36 · RL-F5-xhatm-verdict.md@961e74ce:결정 값4 (가정)",
+    "/gates/s3/xhat_m_contract_draft/age/stale_handling": "CONTRACT-sol-20w-xhatm.md:26,36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (가정 · 속도/roll 보유 세부 미정)",
+    "/gates/s3/xhat_m_contract_draft/age/upper_safety_above_ms": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (가정 안전 문턱)",
+    "/gates/s3/xhat_m_contract_draft/age/upper_safety_action": "CONTRACT-sol-20w-xhatm.md:36 · 23-NAV2-FALLBACK.md:54-69 · 42-REAL-ROBOT.md:60-66 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (문서 규칙 · 구현 미검증)",
+    "/gates/s3/xhat_m_contract_draft/age/boundary_cases_ms/19": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (CPU 경계 예)",
+    "/gates/s3/xhat_m_contract_draft/age/boundary_cases_ms/21": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (CPU 경계 예)",
+    "/gates/s3/xhat_m_contract_draft/age/boundary_cases_ms/99": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (CPU 경계 예)",
+    "/gates/s3/xhat_m_contract_draft/age/boundary_cases_ms/101": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (CPU 경계 예)",
+    "/gates/s3/xhat_m_contract_draft/age/report_hold_count_and_cause_in_real_T_stage": "CONTRACT-sol-20w-xhatm.md:36 · TASK-sol-20x-f5-contract.md:lead 선택 00:52 (실기 기록 예정)",
+    "/gates/s3/xhat_m_contract_draft/age/separate_from_deadman_300ms_and_heartbeat_1000ms": "CONTRACT-sol-20w-xhatm.md:36 · 23-NAV2-FALLBACK.md:58-59 (가정 문턱별 다른 사건)",
+    "/gates/s3/xhat_m_contract_draft/reset": "CONTRACT-sol-20w-xhatm.md:38 · RL-F5-xhatm-verdict.md@961e74ce:결정 값5 (가정)",
+    "/gates/s3/xhat_m_contract_draft/s3_training_requires_rl_confirmation": "CONTRACT-sol-20w-xhatm.md:42 · 21-HIPAN-HIGH.md:95 · 54-S3-NAV.md:48 (기존 보류 조건 · 구현 검증 미완료)",
+    "/gates/s3/s1b_upgrade_rule/priority": "54-S3-NAV.md:43 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (결정)",
+    "/gates/s3/s1b_upgrade_rule/candidate": "52-S1-OPEN-COMMAND.md:48 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (결정 · SHA 미정)",
+    "/gates/s3/s1b_upgrade_rule/baseline": "54-S3-NAV.md:43 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (결정 · SHA 미정)",
+    "/gates/s3/s1b_upgrade_rule/prerequisite": "52-S1-OPEN-COMMAND.md:49 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (기존 관문)",
+    "/gates/s3/s1b_upgrade_rule/axis1_cells": "41-EVAL-AXES.md:131-133 · 52-S1-OPEN-COMMAND.md:50 (기존 등록)",
+    "/gates/s3/s1b_upgrade_rule/axis1_trials_per_cell": "41-EVAL-AXES.md:99,132 · 52-S1-OPEN-COMMAND.md:50 (기존 등록)",
+    "/gates/s3/s1b_upgrade_rule/axis1_no_real_drop_vs_s1a_blind": "41-EVAL-AXES.md:99,132 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/gap_stones_median_level_min": "41-EVAL-AXES.md:131 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/sparse_back_command_mps": "41-EVAL-AXES.md:61-64 · 52-S1-OPEN-COMMAND.md:50 (기존 결정 2)",
+    "/gates/s3/s1b_upgrade_rule/sparse_back_command_s": "41-EVAL-AXES.md:64 · 52-S1-OPEN-COMMAND.md:50 (기존 결정 2)",
+    "/gates/s3/s1b_upgrade_rule/sparse_back_progress_min": "41-EVAL-AXES.md:133 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/sparse_back_survival_min": "41-EVAL-AXES.md:133 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/gap_stones_spin_radps_abs": "41-EVAL-AXES.md:133 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/gap_stones_spin_survival_min": "41-EVAL-AXES.md:133 · 52-S1-OPEN-COMMAND.md:50 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/require_all": "TASK-sol-20w-f2-followup.md 10/21 lead 선택 A (결정)",
+    "/gates/s3/s1b_upgrade_rule/vy_obs": "14-COMMAND-GENERATOR.md:127 · 52-S1-OPEN-COMMAND.md:50 (규칙 등록 · 값 미정)",
+    "/gates/s3/s1b_upgrade_rule/missing_or_failed": "TASK-sol-20w-f2-followup.md 10/21 lead 선택 A (결정 · 정보 보존)",
+    "/gates/s3/s1b_upgrade_rule/s3_gate": "41-EVAL-AXES.md:141 · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (기존 가정 관문)",
+    "/gates/s3/s1b_upgrade_rule/s3_adapter": "21-HIPAN-HIGH.md:95 · 54-S3-NAV.md:45 (rl 확인 필요)",
+    "/gates/s3/s1b_upgrade_rule/selected_by": "TASK-sol-20w-f2-followup.md 10/21 lead 선택 00:14 (결정)",
+    "/gates/s3/s1b_upgrade_rule/start_sheet_plus_0p10": "PROPOSAL-sol-20w-s1b-s3-upgrade.md candidate B · TASK-sol-20w-f2-followup.md 10/21 lead 선택 (미채택 이력)",
+    "/registration_revision": "TASK-sol-20w-f2-followup.md 10/21 등록 순서 · TASK-sol-20x-f5-contract.md@1cfb423d lead 선택 00:52 (F5 가정·안전 A 추가 · 체크포인트 SHA 후속)",
+    "/comparators/s1b_blind_sha256": "TASK-sol-20w-f2-followup.md 10/21 lead 선택 · PROPOSAL-sol-20w-s1b-s3-upgrade.md (미정 · 산출 뒤 실측)"
+  },
+  "registration_revision": "v1.1 rule-first plus F5 adopted assumptions and lead safety choice A; checkpoint hashes and consumer copy pending lead confirmation"
+}
