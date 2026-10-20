@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 221 행 · HiPAN 2604.26504 534~535 · 632~635 행 · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` 13~32 · `config/anymal_d/agents/rsl_rl_ppo_cfg.py` 31~34 · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · `distillation_cfg.py` 21~106 · `docs/research/training-benchmarks.md` 19 행 · evidence/seokheon-sept-iteration-timing.txt · REPORT-seokheon-ame2.md 128 행 · Isaac Lab multi-GPU 문서(이 세션 10/19 열람) · fable 20e Q6(118~140 행) · DECISIONS S 행 · fable 20a S-1 · S-2 · APPROVED F-D3 · H(팀장 승인 10/19) · vfxpedia/mai-os#34 · VERIFY-fable-20f P10~P14 · P21 · P23 · APPROVED K-H · K-I · **L(S2 20,000 회, 팀장 승인 10/20 00:4x)** · **VERIFY-astra-final 2 · 5 · 6(20k)** · rsl_rl 3.1.2 `ppo.py` 73~86 행 · `on_policy_runner.py` 291~303 행 · `rollout_storage.py` 49 행 · Isaac Lab `setup.py` 49 행
 > 요지: PPO 값은 논문에 없어 Isaac Lab Go2 공식 cfg 값을 가정으로 쓴다(legged_gym · Deep Robotics 와 같은 값). S1 은 Isaac Lab 기본 4096 env, S2 는 START 3072 · 24 를 지키고 16 GB 가 모자라면 1 순위 Linux 다중 GPU(1536 × 2), 2 순위 env 축소 + steps 증가(팀장 승인). S2 는 반복 20,000 회(L, 논문의 2 배)라 GPU 시간은 전체의 10~15 %(재학습 포함 12~17 %)이고, 그래도 병목은 코드다. 구현 주체와 코드 자리를 여기에 둔다
-> 상태: v1.2 · 팀장 검토 전 · K-H · K-I · L · 20k(분산 동기화 · 메모리 단계별 · microbatch 계약) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1.3 · 팀장 검토 전 · K-H · K-I · L · 20k(분산 동기화 · 메모리 단계별 · microbatch 계약) · 결정 6(담당 확정 · fable 20l) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
 
 # 18 · 학습 설정 · GPU 예산 · 구현 주체
 
@@ -121,7 +121,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | ROS 노드 | `ros/flag_follower.py` · `ros/cmd_cleaner.py` · `ros/judge_shadow.py` · `ros/policy_node.py` | lead (Sonnet) · 현민 협의 | fable · 현민 | 23 · 31 · 42 |
 | Kit 실행 · 무인 사슬 · GPU 배치 · 학습 감시 | 실행 스크립트(sol) · heartbeat · 로그 감시(Haiku 하위 작업) | lead · sol(스크립트만) | fable 첫 실행 확인 | 전부 |
 
-주행층 · ROS 노드의 lead / rl 배정은 승인문(APPROVED I 역할)에 없어 이 표가 **가정**이다(90 남은 질문).
+주행층 · ROS 노드의 lead / rl 배정은 **팀장 결정 6**(10/20 09:4x · APPROVED M)으로 확정: ROS · 환경 · A* · `policy_node` = lead, teacher · student · 하위 내장 어댑터 = rl(위 표 그대로 · 90 Q1 닫힘 → D52).
 
 ## 7. 구현 방법 · 검증 사다리
 
@@ -144,4 +144,4 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 
 - q(처리량 비) 실측 · depth 메모리 실측(5.2 의 다섯 지점) · S3 student 단계의 하위 depth 추가 비용 · 지각 microbatch 256 · float16 저장이 재구성 정확도에 주는 영향.
 - 「한 장 둘」 대 「두 장 하나」 배정의 실제 전환 시점(70 과 함께).
-- 주행층 · ROS 노드의 lead / rl 배정(가정) 확인.
+- (닫힘 · 팀장 결정 6) 주행층 · ROS 노드의 lead / rl 배정.
