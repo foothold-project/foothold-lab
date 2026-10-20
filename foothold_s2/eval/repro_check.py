@@ -4,7 +4,8 @@
   - v2 · NVIDIA 축 1 rough6 0.5 m/s 6 칸: 판 단위로 모든 열이 S0 와 문자열까지 같다 (비트 일치)
   - v2 축 2 시드 42 아홉 칸: 값 · 문턱 · 통과가 S0 와 같다
   (E1 은 isaac311 로 못 돈다: robot_lab · rsl_rl 포크가 moects 에만 있음 → v2 · NVIDIA 로 재현)
-같으면 종료 코드 0, 다르면 1 (사슬이 멈추고 lead 알림). 결과는 `<out>/repro_result.json`.
+결과는 `<out>/repro_result.json` 의 verdict ("match" · "mismatch" · "error"). 불일치여도 종료 코드는 0 이다: v2 기준 판을 같은 환경에서 다시 재므로 S1 대 v2 비교는
+재현 결과와 상관없이 성립해서, 사슬을 막지 않고 알림 문장에 verdict 만 싣는다 (lead 10/20 21:xx).
 
     python -m foothold_s2.eval.repro_check --out <폴더>        (GPU 는 환경 변수 DEVICE=cuda:N, run_kit.sh 와 같다)
 """
@@ -88,13 +89,15 @@ def main(argv=None):
         result["checks"][name] = compare_rows(manifest.read_csv(new_path), manifest.read_csv(old_path), keys)
 
     result["ok"] = all(c["ok"] for c in result["checks"].values()) and len(result["checks"]) == len(runs)
+    missing = [n for n, c in result["checks"].items() if "problem" in c]
+    result["verdict"] = "error" if missing else ("match" if result["ok"] else "mismatch")
 
     with open(os.path.join(args.out, "repro_result.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=1)
 
-    print("REPRO", "OK" if result["ok"] else "MISMATCH", json.dumps(result["checks"], ensure_ascii=False)[:800], flush=True)
+    print("REPRO", result["verdict"], json.dumps(result["checks"], ensure_ascii=False)[:800], flush=True)
 
-    return 0 if result["ok"] else 1
+    return 0                                                          # 판정은 verdict 로, 사슬은 막지 않는다
 
 
 if __name__ == "__main__":

@@ -44,6 +44,7 @@ jobs:
       cmd: [bash, foothold_s2/run_s1.sh, blind, "cuda:{gpu}", --resume, --load_run, "{globname:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s1a/*s1a_blind}", --checkpoint, latest.pt]
 
   # ---------------------------------------------------------------- isaac311 로 S0 표본 재현 (S1 평가 직전 · 불일치면 막고 lead 알림)
+  # 불일치여도 종료 코드 0(verdict 만 남김): 평가를 막지 않는다. scan_eval 은 `after` 로 순서만 건다(성공 여부 무관).
   - name: repro_s0   # <== lead 요청: S0(isaac311-moects) 값이 isaac311 에서 비트 일치하는지
     gpu: 0
     depends_on: [scan_train]
@@ -53,11 +54,13 @@ jobs:
     done:
       outputs: [C:/Users/AI-WS01/s2_lab/eval_new/repro_isaac311/repro_result.json]
       no_traceback: [C:/Users/AI-WS01/s2_lab/eval_new/repro_isaac311/chain.log]
+      report: {file: C:/Users/AI-WS01/s2_lab/eval_new/repro_isaac311/repro_result.json, keys: [verdict]}   # 알림 문장에 verdict 를 싣는다
 
   # ---------------------------------------------------------------- S1 평가 (범위 안 32 칸 --gate 200 · 축 2 시드 3 · 축 3)
   - name: scan_eval
     gpu: 0
-    depends_on: [scan_train, repro_s0]
+    depends_on: [scan_train]
+    after: [repro_s0]
     cmd: [python, -m, foothold_s2.eval.s0_chain, --root, C:/Users/AI-WS01/s2_lab/eval_new/s1a_scan, --policies, s1scan,
           --policy_spec, "s1scan=s1scan={glob:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s1a/*s1a_scan/model_5999.pt}",
           --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "0"]
@@ -85,7 +88,7 @@ jobs:
 
   - name: blind_eval
     gpu: 1
-    depends_on: [blind_train, repro_s0]
+    depends_on: [blind_train]            # GPU 1 이 GPU 0 의 일(repro_s0)을 기다리지 않는다
     cmd: [python, -m, foothold_s2.eval.s0_chain, --root, C:/Users/AI-WS01/s2_lab/eval_new/s1a_blind, --policies, s1blind,
           --policy_spec, "s1blind=s1blind={glob:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s1a/*s1a_blind/model_5999.pt}",
           --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "1"]
@@ -100,28 +103,11 @@ jobs:
       no_traceback: ["C:/Users/AI-WS01/s2_lab/eval_new/s1a_blind/s1blind/**/run.log"]
 
   # ---------------------------------------------------------------- bf16 비교 (rl 의 train_start.py, 각 300 회 · 3072 env · G1)
-  - name: bf16_A_fp32_mb128
-    gpu: 0
-    depends_on: [v2_base_gate200, blind_eval]
-    cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
-          --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
-          agent.perception.microbatch_envs=128]
-    log: C:/Users/AI-WS01/s2_lab/chain/bf16_A.log
-    first_evidence: [{status_state: running, status_glob: C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/train_start_status.json}]
-    done:
-      status_glob: C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/train_start_status.json
-      status_state: done
-      min_iter: 299
-      outputs: [C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/latest.pt]
-    retry:
-      cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
-            --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
-            --resume, --load_run, "{globname:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A}",
-            --checkpoint, latest.pt, agent.perception.microbatch_envs=128]
-
+  # bf16 판은 평가 결과에 기대지 않는다: B 는 GPU 1(blind_eval 뒤), A 는 GPU 0(v2 기준 판 뒤), A2 는 먼저 빈 장.
+  # yaml 순서가 우선순위다(B 가 먼저라 blind_eval 이 끝나면 B 가 GPU 1 을 먼저 잡는다).
   - name: bf16_B_bf16kl_mb256
     gpu: 1
-    depends_on: [v2_base_gate200, blind_eval]
+    depends_on: [blind_eval]
     cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
           --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16B, --map_input, reconstruction,
           agent.perception.microbatch_envs=256, agent.perception.replay_autocast=bf16, agent.perception.kl_fp32=true]
@@ -138,9 +124,28 @@ jobs:
             --resume, --load_run, "{globname:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16B}",
             --checkpoint, latest.pt, agent.perception.microbatch_envs=256, agent.perception.replay_autocast=bf16, agent.perception.kl_fp32=true]
 
+  - name: bf16_A_fp32_mb128
+    gpu: 0
+    depends_on: [v2_base_gate200]
+    cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+          --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
+          agent.perception.microbatch_envs=128]
+    log: C:/Users/AI-WS01/s2_lab/chain/bf16_A.log
+    first_evidence: [{status_state: running, status_glob: C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/train_start_status.json}]
+    done:
+      status_glob: C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/train_start_status.json
+      status_state: done
+      min_iter: 299
+      outputs: [C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A/latest.pt]
+    retry:
+      cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+            --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
+            --resume, --load_run, "{globname:C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/logs/rsl_rl/foothold_s2/*_bf16A}",
+            --checkpoint, latest.pt, agent.perception.microbatch_envs=128]
+
   - name: bf16_A2_fp32_mb128_seed43
     gpu: any
-    depends_on: [v2_base_gate200, blind_eval]
+    depends_on: [blind_eval]
     cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
           --num_envs, "3072", --max_iterations, "300", --seed, "43", --run_name, bf16A2, --map_input, reconstruction,
           agent.perception.microbatch_envs=128]

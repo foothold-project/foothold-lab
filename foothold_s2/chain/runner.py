@@ -149,7 +149,7 @@ class Chain:
             raise ValueError("작업 이름이 겹친다")
 
         for j in self.jobs.values():
-            for d in j.get("depends_on", []):
+            for d in list(j.get("depends_on", [])) + list(j.get("after", [])):
                 if d not in self.jobs:
                     raise ValueError("%s 가 모르는 작업 %s 에 기댄다" % (j["name"], d))
 
@@ -365,7 +365,8 @@ class Chain:
                     st["state"] = "blocked"
                     bad = [d for d in job.get("depends_on", []) if self.state[d]["state"] in ("failed", "blocked")]
                     self.event(name, "blocked", "앞 작업 실패: %s" % ",".join(bad), notify=True)
-                elif all(d == "done" for d in deps):
+                elif all(d == "done" for d in deps) and all(
+                        self.state[a]["state"] in TERMINAL for a in job.get("after", [])):
                     gpu = self._pick_gpu(job)
 
                     if gpu is not None and self.clock() - self.last_launch >= self.gap_s:
@@ -395,7 +396,7 @@ class Chain:
 
         if ok:
             st.update(state="done", finished=self.clock())
-            self.event(name, "done", "gpu %s %s" % (st.get("gpu"), dur), notify=True, problems=[])
+            self.event(name, "done", ("gpu %s %s" % (st.get("gpu"), dur)) + self._report(name), notify=True, problems=[])
 
             return
 
@@ -415,6 +416,21 @@ class Chain:
 
         st.update(state="failed", finished=self.clock())
         self.event(name, "failed", "; ".join(problems), notify=True, problems=problems)
+
+    def _report(self, name):
+        """done.report: {file, keys}: 결과 json 의 키 값을 알림 문장에 붙인다 (예: repro verdict)."""
+        rep = (self.jobs[name].get("done") or {}).get("report")
+
+        if not rep:
+            return ""
+
+        try:
+            with open(resolve_text(rep["file"], self.state[name].get("gpu", 0)), encoding="utf-8") as f:
+                data = json.load(f)
+
+            return " " + " ".join("%s=%s" % (k, data.get(k)) for k in rep.get("keys", []))
+        except (OSError, ValueError, KeyError):
+            return " (결과 파일을 못 읽음)"
 
     def finished(self):
         return all(st["state"] in TERMINAL for st in self.state.values())

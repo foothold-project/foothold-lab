@@ -230,3 +230,63 @@ def test_recursive_glob_finds_nested_logs_for_the_traceback_check(tmp_path):
                                       "done": {"no_traceback": [str(tmp_path / "root") + "/**/run.log"]}}])
     chain.run()
     assert chain.state["J"]["state"] == "failed"
+
+
+def test_after_waits_for_the_job_to_finish_but_not_for_its_success(tmp_path):
+    out = tmp_path / "later.txt"
+    jobs = [{"name": "R", "gpu": 0, "retries": 0, "cmd": touch_cmd(tmp_path / "r.txt", 0.2, code=4)},
+            {"name": "L", "gpu": 1, "after": ["R"], "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}}]
+    chain, _ = make(tmp_path, jobs)
+    assert chain.run() == 1                                                         # R 는 failed 이므로 종료 코드 1
+    assert chain.state["R"]["state"] == "failed" and chain.state["L"]["state"] == "done"      # L 은 막히지 않고 R 뒤에 돌았다
+    order = [(e["job"], e["event"]) for e in events(tmp_path) if e["event"] in ("launched", "failed", "done")]
+    assert order.index(("R", "failed")) < order.index(("L", "launched"))
+    # depends_on 이면 막힌다 (대조)
+    chain2, _ = make(tmp_path / "t2", [{"name": "R", "gpu": 0, "retries": 0, "cmd": touch_cmd(tmp_path / "r2.txt", 0, code=4)},
+                                       {"name": "L", "gpu": 1, "depends_on": ["R"], "cmd": py("pass")}])
+    chain2.run()
+    assert chain2.state["L"]["state"] == "blocked"
+
+
+def test_after_is_validated_like_depends_on(tmp_path):
+    with pytest.raises(ValueError):
+        make(tmp_path, [{"name": "A", "gpu": 0, "cmd": py("pass"), "after": ["nope"]}])
+
+
+def test_yaml_order_is_priority_when_two_ready_jobs_want_the_same_free_gpu(tmp_path):
+    jobs = [{"name": "B", "gpu": 1, "cmd": py("import time;time.sleep(0.3)")},
+            {"name": "A2", "gpu": "any", "cmd": py("pass")}]
+    # 두 작업이 동시에 준비됨: B(gpu 1 고정)가 먼저 GPU 1 을 잡고, any 는 남은 GPU 0 을 받는다
+    chain, _ = make(tmp_path, jobs, gpus=[1, 0])
+    chain.run()
+    assert chain.state["B"]["gpu"] == 1 and chain.state["A2"]["gpu"] == 0
+    # 순서를 바꾸면 any 가 먼저 [1, 0] 목록의 첫 장(GPU 1)을 잡아 B 는 기다린다: 순서가 우선순위
+    chain2, _ = make(tmp_path / "t2", [jobs[1], jobs[0]], gpus=[1, 0])
+    chain2.run()
+    assert chain2.state["A2"]["gpu"] == 1 and chain2.state["B"]["gpu"] == 1
+    order = [e["job"] for e in events(tmp_path / "t2") if e["event"] == "launched"]
+    assert order == ["A2", "B"]
+
+
+def test_done_report_puts_result_keys_into_the_notification(tmp_path):
+    result = tmp_path / "res.json"
+    jobs = [{"name": "R", "gpu": 0, "retries": 0,
+             "cmd": py("import json;json.dump({'verdict':'mismatch','ok':False},open(r'%s','w'))" % result),
+             "done": {"outputs": [str(result)], "report": {"file": str(result), "keys": ["verdict"]}}}]
+    chain, notes = make(tmp_path, jobs)
+    assert chain.run() == 0
+    assert any("R done" in n and "verdict=mismatch" in n for n in notes.lines)
+
+
+def test_real_yaml_has_the_agreed_graph():
+    cfg = runner.load_config(os.path.join(REPO, "foothold_s2", "chain", "chain_s1a_night.yaml"))
+    jobs = {j["name"]: j for j in cfg["jobs"]}
+    names = [j["name"] for j in cfg["jobs"]]
+    assert jobs["scan_eval"]["after"] == ["repro_s0"] and "repro_s0" not in jobs["scan_eval"]["depends_on"]
+    assert "repro_s0" not in jobs["blind_eval"].get("depends_on", []) and "repro_s0" not in jobs["blind_eval"].get("after", [])
+    assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
+    assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0
+    assert jobs["bf16_A2_fp32_mb128_seed43"]["depends_on"] == ["blind_eval"] and jobs["bf16_A2_fp32_mb128_seed43"]["gpu"] == "any"
+    assert names.index("bf16_B_bf16kl_mb256") < names.index("bf16_A_fp32_mb128") < names.index("bf16_A2_fp32_mb128_seed43")
+    assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict"]
+    assert jobs["scan_train"]["adopt"]["pid"] == 95784 and jobs["blind_train"]["adopt"]["pid"] == 89020
