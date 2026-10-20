@@ -96,6 +96,8 @@ class StartRunner(OnPolicyRunner):
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
         self.memory_marks: dict[str, int] = {}
+        self.memory_log: list[dict] = []  # iteration 마다 단계별 peak (18 §5.2 측정)
+        self.iter_log: list[dict] = []
 
     # ------------------------------------------------------------------ 관측
     REQUIRED = {"policy": (45,), "depth": (60, 60), "gt_feet": (100,), "base_vel": (3,), "contacts": (4,)}
@@ -146,9 +148,28 @@ class StartRunner(OnPolicyRunner):
         return alg
 
     # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
-    def _mark(self, name: str) -> None:
-        if torch.cuda.is_available() and str(self.device).startswith("cuda"):
-            self.memory_marks[name] = int(torch.cuda.max_memory_allocated(self.device))
+    def _cuda(self) -> bool:
+        return torch.cuda.is_available() and str(self.device).startswith("cuda")
+
+    def _mark(self, name: str, it: int | None = None) -> None:
+        """누적 peak(프로세스 시작부터) 와 단계 peak(직전 _phase_start 부터) 를 함께 남긴다."""
+        if self._cuda():
+            torch.cuda.synchronize(self.device)
+            cum = int(torch.cuda.max_memory_allocated(self.device))
+            self.memory_marks[name] = max(self.memory_marks.get(name, 0), cum)
+            self.memory_log.append({"it": it, "phase": name, "cum_peak": cum,
+                                    "phase_peak": int(torch.cuda.max_memory_allocated(self.device)) if self._phase_reset else cum,
+                                    "allocated": int(torch.cuda.memory_allocated(self.device))})
+
+    _phase_reset = False
+
+    def _phase_start(self) -> None:
+        """단계 peak 를 재려면 measure_phases=True. 누적 peak 는 memory_log 의 cum_peak 를 최댓값으로 다시 모은다."""
+        if self._cuda() and self.pcfg.get("measure_phases", False):
+            self._phase_reset = True
+            prev = int(torch.cuda.max_memory_allocated(self.device))
+            self._cum_before = max(getattr(self, "_cum_before", 0), prev)
+            torch.cuda.reset_peak_memory_stats(self.device)
 
     # ------------------------------------------------------------------ 학습
     def learn(self, num_learning_iterations: int, init_at_random_ep_len: bool = False) -> None:
@@ -176,6 +197,7 @@ class StartRunner(OnPolicyRunner):
         tot_iter = start_iter + num_learning_iterations
         for it in range(start_iter, tot_iter):
             start = time.time()
+            self._phase_start()
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             # ① 수집
@@ -207,16 +229,18 @@ class StartRunner(OnPolicyRunner):
                         cur_reward_sum[done_ids] = 0
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device))
-                self._mark("2_rollout")
+                self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
             # ② PPO
+            self._phase_start()
             loss_dict = self.alg.update()
-            self._mark("3_ppo_update")
+            self._mark("3_ppo_update", it)
             # ③ 지각
+            self._phase_start()
             ploss = self.update_perception()
-            self._mark("4_perception_update")
+            self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
             # ④ AdaSmpl
             p = self.update_adasmpl()
@@ -224,6 +248,9 @@ class StartRunner(OnPolicyRunner):
             loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
             learn_time = time.time() - start
             self.current_learning_iteration = it
+            steps = self.num_steps_per_env * n * self.gpu_world_size
+            self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
+                                  "steps_per_s": steps / (collection_time + learn_time)})
             # ⑤ 로그 · 저장
             if self.log_dir is not None and not self.disable_logs:
                 self.log(locals())

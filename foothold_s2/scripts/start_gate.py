@@ -32,6 +32,9 @@ parser.add_argument("--num_envs", type=int, default=64)
 parser.add_argument("--iterations", type=int, default=2)
 parser.add_argument("--out", type=str, required=True)
 parser.add_argument("--seed", type=int, default=42)
+parser.add_argument("--microbatch", type=int, default=None, help="지각 microbatch env 수 (기본 256 · 12 §6.1)")
+parser.add_argument("--measure", action="store_true", default=False,
+                    help="18 §5.2 메모리 측정: 단계별 peak · iteration 시간. 같은 프로세스 복원 대조는 건너뛴다")
 parser.add_argument("--restore_from", type=str, default=None,
                     help="앞 실행의 out 폴더. 주면 학습하지 않고 새 프로세스에서 체크포인트를 복원해 같은 입력 같은 출력만 본다")
 AppLauncher.add_app_launcher_args(parser)
@@ -80,13 +83,14 @@ class StartGateEnvCfg(UnitreeGo2RoughEnvCfg):
         self.observations = GateObsCfg()
         apply_start_perception(self)  # s2_env_cfg 와 같은 함수로 센서 · 관측 묶음을 붙인다
         self.curriculum.terrain_levels = None
-        if self.scene.terrain.terrain_generator is not None:
+        # 측정 판은 Isaac Lab 기본 rough 지형 크기(10 x 20 칸)를 그대로 둔다. 관문 판만 줄인다
+        if self.scene.terrain.terrain_generator is not None and not args.measure:
             self.scene.terrain.terrain_generator.num_rows = 4
             self.scene.terrain.terrain_generator.num_cols = 4
             self.scene.terrain.terrain_generator.curriculum = False
 
 
-def agent_cfg(num_steps: int = 24) -> dict:
+def agent_cfg(num_steps: int = 24, perception: dict | None = None) -> dict:
     """18 §1 PPO 값(Isaac Lab Go2 cfg · 가정) · 12 §6.1 지각 optimizer 값(가정)."""
     return {
         "num_steps_per_env": num_steps,
@@ -97,7 +101,7 @@ def agent_cfg(num_steps: int = 24) -> dict:
         "algorithm": {"class_name": "PPO", "num_learning_epochs": 5, "num_mini_batches": 4, "clip_param": 0.2,
                       "gamma": 0.99, "lam": 0.95, "value_loss_coef": 1.0, "entropy_coef": 0.01, "learning_rate": 1e-3,
                       "max_grad_norm": 1.0, "schedule": "adaptive", "desired_kl": 0.01},
-        "perception": {},
+        "perception": dict(perception or {}),
     }
 
 
@@ -151,12 +155,16 @@ def restore_main() -> dict:
     return res
 
 
+holder: dict = {}
+
+
 def main() -> dict:
     from foothold_s2.runners.start_runner import StartRunner
 
     os.makedirs(args.out, exist_ok=True)
     res: dict = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "num_envs": args.num_envs, "iterations": args.iterations,
                  "device": args.device, "seed": args.seed}
+    holder["res"] = res
     dev = args.device or "cuda:0"
     torch.manual_seed(args.seed)
     base, env = make_env(dev)
@@ -179,7 +187,11 @@ def main() -> dict:
         return o, r, d, e
 
     env.step = counting_step
-    runner = StartRunner(env, agent_cfg(), log_dir=args.out, device=dev)
+    pc = {"measure_phases": bool(args.measure)}
+    if args.microbatch:
+        pc["microbatch_envs"] = args.microbatch
+    res["perception_cfg"] = pc
+    holder["runner"] = runner = StartRunner(env, agent_cfg(perception=pc), log_dir=args.out, device=dev)
     t0 = time.time()
     runner.learn(args.iterations, init_at_random_ep_len=True)
     res["learn_seconds"] = time.time() - t0
@@ -187,6 +199,12 @@ def main() -> dict:
     res["perception_losses"] = runner.last_perception_losses
     res["adasmpl_p"] = runner.adasmpl.p
     res["memory_GiB"].update({k: v / 2**30 for k, v in runner.memory_marks.items()})
+    res["memory_log"] = runner.memory_log
+    res["iter_log"] = runner.iter_log
+    res["replay_bytes"] = runner.replay.nbytes()
+    if args.measure:
+        res["checks"] = {"traceback": False, "measured": True}
+        return res
     ck = os.path.join(args.out, "gate_ckpt.pt")
     runner.save(ck)
     res["ckpt_keys"] = sorted(torch.load(ck, weights_only=False).keys())
@@ -218,7 +236,14 @@ if __name__ == "__main__":
     try:
         out = restore_main() if args.restore_from else main()
     except Exception:
+        out = dict(holder.get("res", {}))
         out["traceback"] = traceback.format_exc()
+        r = holder.get("runner")
+        if r is not None:  # OOM 이면 어느 단계까지 갔는지 남긴다
+            out["memory_log"] = r.memory_log
+            out["iter_log"] = r.iter_log
+        if torch.cuda.is_available():
+            out["max_allocated_at_fail_GiB"] = torch.cuda.max_memory_allocated() / 2**30
         out.setdefault("checks", {})["traceback"] = True
         print(out["traceback"], flush=True)
     os.makedirs(args.out, exist_ok=True)
