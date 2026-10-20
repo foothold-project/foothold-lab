@@ -34,3 +34,10 @@
 - 시스템 지연 0~15 ms · 모터 세기 배율은 DCMotor 로는 구현 안 함(DelayedPD 가 필요) → 열린 항목. 초기 관절 0.5~1.5 단위 열린 채 Isaac 기본 유지.
 - critic 관측(S1)은 문서에 없음: o_t + 몸 선속도 3 + 발 접촉 4 (가정).
 - START 4 종은 8 x 4 m 칸이라 축 3 옆 · 뒤 명령을 못 잼(앞서 보고).
+
+## 10/20 12:0x 중단 시점 (사용 한도 97 %)
+- L1 결과: blind 2회 · scan 1회 모두 rc 0, Traceback 0. blind 19.3k steps/s (policy 495), scan 20.9k steps/s (policy 232), critic 52. 방식 비율이 14 §3.2 와 맞음(깃발 0.200 · 정지 0.083 · heading 0.235 · 자유 wz 0.483). 로그 `C:/Users/AI-WS01/s2_lab/s1_l1/{blind,blind2,scan}/run.log`.
+- 확인 셋(probe_s1, `s1_l1/probe/run.log`): 행동 지연 불일치 0 (지연 0~3 모두 나옴), 모터 세기 배율 0.909~1.097 · env 64 개 모두 다름 · saturation = limit, 발 지면 아래 종료 오탐 0 · 참 양성 64/64. PASS.
+- 새로 넣음(미실행): `eval/adapters.py` 의 `S1Adapter` + `run_eval.py --policy s1blind|s1scan` + 명령 term `fixed_cmd` · `flag_stride 0`. pytest 134 통과, 아직 Kit 에서 안 돌림.
+- 다음 한 걸음: blind 체크포인트(`logs/rsl_rl/foothold_s1a/2026-10-20_11-35-41/model_9.pt`)로 예행 평가 8 판(축 1 한 칸 · 축 3 한 칸, GPU 1)을 돌려 CSV 가 나오는지 확인 → S1 L1 완료 보고 → `s2_env_cfg` (관측 묶음 policy 45 · depth 60x60 · gt_map 512 · gt_feet 100 · base_vel 3 · contacts 4, rl 사본 start_runner.py 머리말).
+- 미커밋 파일: 이 커밋 직전까지 모두 커밋 대상(adapters.py · run_eval.py · mixed_command.py · tasks/probe_s1.py · 이 문서).

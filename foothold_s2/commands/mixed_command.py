@@ -36,7 +36,10 @@ class MixedVelocityCommand(CommandTerm):
         self.range_curriculum = mc.RangeCurriculum(vmax_x=self.params.vmax_x, vmax_y=self.params.vmax_y)
 
         self.vel_command_b = torch.zeros(n, 3, device=dev)
-        self.is_flag_env = (torch.arange(n, device=dev) % cfg.flag_stride) == 0
+        if cfg.flag_stride > 0:
+            self.is_flag_env = (torch.arange(n, device=dev) % cfg.flag_stride) == 0
+        else:
+            self.is_flag_env = torch.zeros(n, dtype=torch.bool, device=dev)
         self.flag_ids = self.is_flag_env.nonzero(as_tuple=False).flatten()
         self._flag_row = torch.full((n,), -1, dtype=torch.long, device=dev)
         self._flag_row[self.flag_ids] = torch.arange(len(self.flag_ids), device=dev)
@@ -131,6 +134,12 @@ class MixedVelocityCommand(CommandTerm):
             self.heading[free] = out["heading"].to(self.device)
             self.psi_star[free] = out["psi_star"].to(self.device)
 
+            if self.cfg.fixed_cmd is not None:
+                self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
+                self.stand[free] = False
+                self.spin[free] = False
+                self.heading[free] = False
+
         flag = env_ids[self.is_flag_env[env_ids]]
 
         if len(flag) > 0:
@@ -176,5 +185,7 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     steps_per_iter: int = 24
     flag_provider: object = None
     """`(origins_xy (m,2), count) -> (m, count, 2)`. None 이면 칸 가운데 직선. S2 가 갈아 끼운다."""
+    fixed_cmd: tuple = None
+    """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
     params: dict = {}
     """`mixed_core.CommandParams` 필드 덮어쓰기."""

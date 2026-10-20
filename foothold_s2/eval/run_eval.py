@@ -29,7 +29,7 @@ from foothold_s2.eval import cells, manifest, rsj
 
 parser = argparse.ArgumentParser(description="FOOTHOLD 평가 (41 설계).")
 parser.add_argument("axis", choices=["axis1", "axis2", "axis3", "start"])
-parser.add_argument("--policy", choices=["e1", "nvidia", "v2"], default="e1")
+parser.add_argument("--policy", choices=["e1", "nvidia", "v2", "s1blind", "s1scan"], default="e1")
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--label", default=None)
 parser.add_argument("--out", required=True)
@@ -75,6 +75,9 @@ from foothold_s2.eval import adapters, axis2_run, runtime, start_sheet, terrain_
 def make_adapter(set_name=None):
     if args.policy == "e1":
         return adapters.E1Adapter()
+
+    if args.policy.startswith("s1"):
+        return adapters.S1Adapter(args.policy[2:])
 
     # axis3 의 병합 생성기는 unseen10 쪽 환경 설정 클래스를 바탕으로 한다 (merged_generator 와 같은 선택).
     return terrain_sets.isaaclab_adapter(args.policy, set_name or "unseen10")

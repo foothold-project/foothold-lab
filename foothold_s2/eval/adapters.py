@@ -249,7 +249,8 @@ class IsaacLabAdapter:
         from isaaclab_tasks.utils import load_cfg_from_registry
 
         importlib.import_module("isaaclab_tasks")
-        agent_cfg = load_cfg_from_registry(NVIDIA_TASK, "rsl_rl_cfg_entry_point")
+        self._import_task()
+        agent_cfg = load_cfg_from_registry(self.task_id, "rsl_rl_cfg_entry_point")
         agent_cfg.seed = seed
 
         if plane:
@@ -280,18 +281,7 @@ class IsaacLabAdapter:
         self.changes.append("관측 잡음 끔 · events off: push_robot, base_external_force_torque"
                             + ("" if plane else ", add_base_mass, base_com"))
 
-        cmd = env_cfg.commands.base_velocity
-        vx, vy, wz = (float(x) for x in base_cmd[0])
-        cmd.ranges.lin_vel_x = (vx, vx)
-        cmd.ranges.lin_vel_y = (vy, vy)
-        cmd.ranges.ang_vel_z = (wz, wz)
-        cmd.heading_command = False
-        cmd.rel_heading_envs = 0.0
-        cmd.rel_standing_envs = 0.0
-        cmd.resampling_time_range = (1.0e9, 1.0e9)
-
-        if getattr(cmd.ranges, "heading", None) is not None:
-            cmd.ranges.heading = None
+        self._configure_command(env_cfg, base_cmd)
 
         if not plane and self.apply_gap_aware is not None:
             self.changes.append("gap-aware height scan 규격 2, 빗나간 광선 값: %r" % (self.apply_gap_aware(env_cfg),))
@@ -308,6 +298,25 @@ class IsaacLabAdapter:
             gym_env = raw = ManagerBasedRLEnv(cfg=env_cfg)
 
         return {"gym_env": gym_env, "raw": raw, "env_cfg": env_cfg, "agent_cfg": agent_cfg}
+
+    task_id = NVIDIA_TASK
+
+    def _import_task(self):
+        pass
+
+    def _configure_command(self, env_cfg, base_cmd):
+        cmd = env_cfg.commands.base_velocity
+        vx, vy, wz = (float(x) for x in base_cmd[0])
+        cmd.ranges.lin_vel_x = (vx, vx)
+        cmd.ranges.lin_vel_y = (vy, vy)
+        cmd.ranges.ang_vel_z = (wz, wz)
+        cmd.heading_command = False
+        cmd.rel_heading_envs = 0.0
+        cmd.rel_standing_envs = 0.0
+        cmd.resampling_time_range = (1.0e9, 1.0e9)
+
+        if getattr(cmd.ranges, "heading", None) is not None:
+            cmd.ranges.heading = None
 
     def wrap(self, built):
         from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
@@ -340,6 +349,34 @@ class IsaacLabAdapter:
         self.checks["obs_shape"] = list(obs["policy"].shape) if hasattr(obs, "keys") else list(obs.shape)
 
         return env, policy, runner.alg.policy, obs
+
+
+class S1Adapter(IsaacLabAdapter):
+    """S1-a 학습 판(우리 env). 명령은 `fixed_cmd` 로 못 박고 깃발 env 를 끈다. 평가에서는 지연 · 세기 · 마찰 무작위를 끈다."""
+
+    def __init__(self, variant="blind"):
+        from foothold_s2.tasks.s1_env_cfg import FootholdS1aBlindEnvCfg, FootholdS1aScanEnvCfg
+
+        cls = {"blind": FootholdS1aBlindEnvCfg, "scan": FootholdS1aScanEnvCfg}[variant]
+        super().__init__(name="s1" + variant, env_cfg_class=cls)
+        self.task_id = "FootholdS2-Go2-S1a-%s-v0" % variant
+
+    def _import_task(self):
+        import importlib
+
+        importlib.import_module("foothold_s2.tasks")
+
+    def _configure_command(self, env_cfg, base_cmd):
+        cmd = env_cfg.commands.base_velocity
+        cmd.fixed_cmd = tuple(float(x) for x in base_cmd[0])
+        cmd.flag_stride = 0
+        cmd.resampling_time_range = (1.0e9, 1.0e9)
+
+        for name in ("actuator_gains", "motor_strength", "physics_material"):
+            setattr(env_cfg.events, name, None)
+
+        env_cfg.actions.joint_pos.max_delay_s = 0.0
+        self.changes.append("S1 명령 고정 %r, 깃발 env 없음, 지연 · 세기 · 게인 · 마찰 무작위 끔" % (cmd.fixed_cmd,))
 
 
 def deep_copy_generator(generator):
