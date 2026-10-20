@@ -403,9 +403,69 @@ class Chain:
         req = job.get("require_file") or []
         req = [req] if isinstance(req, str) else req
 
-        return all(os.path.exists(resolve_text(r, 0)) for r in req)
+        if not all(os.path.exists(resolve_text(r, 0)) for r in req):
+            return False
+
+        any_req = job.get("require_any_file") or []                  # 이 중 하나라도 있으면 됨 (예: 판정 통과 또는 실패 파일)
+
+        return (not any_req) or any(os.path.exists(resolve_text(r, 0)) for r in any_req)
+
+    def reload_if_changed(self):
+        """yaml 이 바뀌었으면 «아직 안 띄운(pending) 작업» 의 정의를 새 것으로 바꾸고 새 작업을 더한다(실행기를 멈추지 않는다).
+        돌고 있거나 끝난 작업의 정의는 그대로 둔다. 읽다 틀리면 옛 설정을 쓰고 reload_failed 를 적는다."""
+        path = getattr(self, "config_path", None)
+
+        if not path:
+            return
+
+        try:
+            mtime = os.path.getmtime(path)
+        except OSError:
+            return
+
+        if mtime == getattr(self, "_cfg_mtime", None):
+            return
+
+        self._cfg_mtime = mtime
+
+        try:
+            new = load_config(path)
+            names = [j["name"] for j in new["jobs"]]
+
+            if len(set(names)) != len(names):
+                raise ValueError("작업 이름이 겹친다")
+
+            for j in new["jobs"]:
+                for d in list(j.get("depends_on", [])) + list(j.get("after", [])):
+                    if d not in names:
+                        raise ValueError("%s 가 모르는 작업 %s 에 기댄다" % (j["name"], d))
+        except Exception as exc:                                     # noqa: BLE001
+            self.event("chain", "reload_failed", repr(exc)[:300], notify=True)
+
+            return
+
+        changed = []
+
+        for j in new["jobs"]:
+            name = j["name"]
+
+            if name not in self.jobs:
+                self.jobs[name] = j
+                self.state[name] = {"state": "pending", "attempt": 0}
+                changed.append(name + "(new)")
+            elif self.state[name]["state"] == "pending" and j != self.jobs[name]:
+                self.jobs[name] = j
+                changed.append(name)
+
+        self.poll_s = float(new.get("poll_s", self.poll_s))
+        self.gap_s = float(new.get("start_gap_s", self.gap_s))
+
+        if changed:
+            self.event("chain", "reloaded", ",".join(changed))
 
     def step(self):
+        self.reload_if_changed()
+
         for name, job in self.jobs.items():
             st = self.state[name]
 
@@ -579,6 +639,8 @@ def main(argv=None):
     cfg = load_config(args.config)
     state_dir = args.state_dir or cfg.get("state_dir") or os.path.join(os.path.dirname(os.path.abspath(args.config)), "state")
     chain = Chain(cfg, state_dir, repo_root=args.repo)
+    chain.config_path = os.path.abspath(args.config)
+    chain._cfg_mtime = os.path.getmtime(chain.config_path)
     pid_path = os.path.join(state_dir, "chain.pid")
 
     if os.path.exists(pid_path):

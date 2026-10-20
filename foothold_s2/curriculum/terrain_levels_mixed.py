@@ -98,8 +98,16 @@ def command_range_curriculum(env, env_ids, command_name: str = "base_velocity",
     return {"vmax_x": term.range_curriculum.vmax_x, "flag_vmax": term.range_curriculum.flag_vmax}
 
 
-def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, seed: int = 0):
-    """S2: 승급 · 강등(`terrain_levels_mixed`) 뒤 듬성한 env 의 열을 p_advance 로 다시 뽑는다 (15 §5 · §8.1 ①).
+def stage_T(iteration, offset):
+    """이 단계의 반복 수 T (p_advance 의 입력). 이어 시작한 회차(offset)를 빼서 0 부터 센다."""
+    return max(0, int(iteration) - int(offset))
+
+
+def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, seed: int = 0,
+                      t_start: int = 1000, t_end: int = 8000, p_max: float = 0.9):
+    """S2 · S1-b: 승급 · 강등(`terrain_levels_mixed`) 뒤 듬성한 env 의 열을 p_advance 로 다시 뽑는다 (15 §5 · §8.1 ①).
+
+    S2 는 T_start 1000 · T_end 8000, S1-b 는 자체 반복 수 기준 0 · 1500 (15 §5 · VERIFY-lead-final 7).
 
     `env.s2_tables` (`s2_runtime.S2Tables`) 가 있어야 한다. env 생성 직후 한 번 붙인다 (`attach_s2_tables`).
     """
@@ -111,7 +119,9 @@ def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resampl
     if not hasattr(env, "_s2_rng"):
         env._s2_rng = np.random.default_rng(seed)
 
-    s2_runtime.reassign(env.scene.terrain, env.s2_tables, env_ids, term.iteration, env._s2_rng)
+    # T = 이 단계의 반복 수. S1-b 는 S1-a 체크포인트에서 이어 시작하므로 env.stage_iteration_offset(이어 시작한 회차) 를 빼서 0 부터 센다
+    T = stage_T(term.iteration, getattr(env, "stage_iteration_offset", 0))
+    s2_runtime.reassign(env.scene.terrain, env.s2_tables, env_ids, T, env._s2_rng, T_start=t_start, T_end=t_end, p_max=p_max)
 
     return value
 

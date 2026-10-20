@@ -312,7 +312,8 @@ def test_real_yaml_has_the_agreed_graph():
     assert all(prio[n] == 9 for n in names if n.startswith("bf16") or n == "agenda_J4")                  # bf16 은 빈 틈만
     assert all(prio[n] == 1 for n in ("scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval", "agenda_J1"))
     assert prio["s1b_train"] == 2 and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
-    assert jobs["s1b_train"]["cmd"] == []                                                              # S1-b task 미구현: 비워 둠
+    assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b.sh"] and jobs["s1b_train"]["gpu"] == 0
+    assert jobs["s1b_train"]["done"]["min_iter"] == 8999 and "run_s1b.sh" in " ".join(jobs["s1b_train"]["retry"]["cmd"])
     assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
     assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200", "snapshot_bf16"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0
     assert jobs["bf16_A2_fp32_mb128_seed43"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_A2_fp32_mb128_seed43"]["gpu"] == "any"
@@ -324,6 +325,10 @@ def test_real_yaml_has_the_agreed_graph():
     assert "gpu" not in jobs["agenda_J1"] and "gpu" not in jobs["agenda_J4"] and "gpu" not in jobs["bf16_compare"]
     assert jobs["agenda_J1"]["depends_on"] == ["scan_eval", "blind_eval"] and jobs["agenda_J4"]["depends_on"] == ["bf16_compare"]
     assert jobs["v2_base_gate200"]["depends_on"] == ["scan_eval"] and jobs["blind_eval"]["gpu"] == 1
+    for n in ("bf16_B_bf16kl_mb256", "bf16_A_fp32_mb128", "bf16_A2_fp32_mb128_seed43", "bf16_compare"):
+        assert len(jobs[n]["require_any_file"]) == 2 and all("s1a_verdict_" in r for r in jobs[n]["require_any_file"])
+        assert jobs[n]["require_any_file"][0].endswith("s1a_verdict_pass.json") and jobs[n]["require_any_file"][1].endswith("s1a_verdict_fail.json")
+    assert "require_any_file" not in jobs["s1b_train"] and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
     assert not [t for t in str(cfg).split("${")[1:]]                                                    # 풀리지 않은 변수 없음
     assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict", "ok"]
     assert jobs["scan_train"]["adopt"]["pid"] == 95784 and jobs["blind_train"]["adopt"]["pid"] == 89020
@@ -543,3 +548,63 @@ def test_skip_if_done_does_not_rerun_a_job_whose_result_already_exists(tmp_path)
                                         "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}}])
     chain2.run()
     assert chain2.state["R"]["state"] == "done" and not chain2.state["R"].get("skipped")
+
+
+def test_require_any_file_needs_just_one_of_the_files(tmp_path):
+    f1, f2, out = tmp_path / "pass.json", tmp_path / "fail.json", tmp_path / "out.txt"
+    jobs = [{"name": "BF", "gpu": 0, "require_any_file": [str(f1), str(f2)], "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}}]
+    chain, _ = make(tmp_path, jobs)
+
+    for _ in range(4):
+        chain.step()
+        time.sleep(0.03)
+
+    assert chain.state["BF"]["state"] == "pending"                                    # 둘 다 없으면 대기
+    f2.write_text("{}", encoding="utf-8")                                             # 실패 파일만 있어도 풀린다
+    assert chain.run() == 0 and chain.state["BF"]["state"] == "done"
+    chain2, _ = make(tmp_path / "t2", [{"name": "BF", "gpu": 0, "require_any_file": [str(f1), str(tmp_path / "none.json")],
+                                        "cmd": touch_cmd(tmp_path / "o2.txt")}])
+    chain2.step()
+    assert chain2.state["BF"]["state"] == "pending"
+
+
+def _write_yaml(path, jobs_yaml):
+    path.write_text("poll_s: 0.02\nstart_gap_s: 0\ngpus: [0, 1]\njobs:\n" + jobs_yaml, encoding="utf-8")
+
+
+def test_yaml_edit_is_picked_up_by_a_running_chain_for_pending_jobs_only(tmp_path):
+    cfgp = tmp_path / "c.yaml"
+    out_b, out_c = tmp_path / "b.txt", tmp_path / "c.txt"
+    sleep_cmd = '[%r, "-c", "import time;time.sleep(0.6)"]' % PY
+    _write_yaml(cfgp, "  - name: A\n    gpu: 0\n    cmd: %s\n  - name: B\n    gpu: 0\n    depends_on: [A]\n    cmd: [%r, \"-c\", \"pass\"]\n    require_file: %s\n"
+                % (sleep_cmd, PY, (tmp_path / "go.flag").as_posix()))
+    cfg = runner.load_config(str(cfgp))
+    chain = runner.Chain(cfg, str(tmp_path / "state"), notifier=Notes(), repo_root=REPO)
+    chain.config_path = str(cfgp)
+    chain._cfg_mtime = os.path.getmtime(cfgp)
+    chain.step()
+    assert chain.state["A"]["state"] == "running"
+    time.sleep(0.05)
+    # 편집: B 의 명령을 바꾸고(B 는 아직 pending), 새 작업 C 를 더하고, 돌고 있는 A 의 정의도 건드려 본다
+    _write_yaml(cfgp, "  - name: A\n    gpu: 0\n    cmd: [%r, \"-c\", \"print('changed')\"]\n  - name: B\n    gpu: 0\n    depends_on: [A]\n    cmd: %s\n"
+                      "  - name: C\n    gpu: 1\n    depends_on: [B]\n    cmd: [%r, \"-c\", \"pass\"]\n" % (PY, '[%r, "-c", "open(r\'%s\',\'w\').write(\'b\')"]' % (PY, out_b.as_posix()), PY))
+    os.utime(cfgp, (time.time() + 5, time.time() + 5))
+    chain.step()
+    assert "reloaded" in [e["event"] for e in events(tmp_path)]
+    assert chain.jobs["B"]["cmd"][-1].startswith("open(") and "require_file" not in chain.jobs["B"]           # pending 인 B 는 새 정의
+    assert "C" in chain.jobs and chain.state["C"]["state"] == "pending"                                       # 새 작업이 더해졌다
+    assert chain.jobs["A"]["cmd"][-1] != "print('changed')"                                                   # 돌고 있는 A 는 그대로
+    assert chain.run() == 0 and out_b.exists()                                                               # 바뀐 B 가 돌고 C 가 이어졌다
+    assert chain.state["C"]["state"] == "done"
+
+
+def test_a_broken_yaml_edit_keeps_the_old_config_and_reports(tmp_path):
+    cfgp = tmp_path / "c.yaml"
+    _write_yaml(cfgp, "  - name: A\n    gpu: 0\n    cmd: [%r, \"-c\", \"pass\"]\n" % PY)
+    chain = runner.Chain(runner.load_config(str(cfgp)), str(tmp_path / "state"), notifier=Notes(), repo_root=REPO)
+    chain.config_path = str(cfgp)
+    chain._cfg_mtime = os.path.getmtime(cfgp)
+    _write_yaml(cfgp, "  - name: A\n    gpu: 0\n    depends_on: [ZZZ]\n    cmd: [x]\n")                         # 모르는 앞 작업
+    os.utime(cfgp, (time.time() + 5, time.time() + 5))
+    chain.reload_if_changed()
+    assert "reload_failed" in [e["event"] for e in events(tmp_path)] and "depends_on" not in chain.jobs["A"]

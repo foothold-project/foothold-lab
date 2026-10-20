@@ -30,6 +30,20 @@ def _sparse_subterrains():
     return sparse_terrains.sparse_subterrains()
 
 
+BACKOFF_PARAMS = {"backoff_prob": 0.15, "backoff_vmin": 0.1, "backoff_vmax": 0.3, "backoff_s": 2.0}
+
+
+def apply_full_terrain_and_flags(cfg, t_start=1000, t_end=8000):
+    """50 열 생성기(이어진 7 종 + 듬성한 지형) · 동적 깃발(듬성한 칸은 항상 깃발) · 물러나기 · p_advance 재배정 term. S2 와 S1-b 가 같이 쓴다."""
+    from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
+
+    cfg.commands.base_velocity.dynamic_flags = True
+    cfg.commands.base_velocity.params = dict(BACKOFF_PARAMS)   # 물러나기 (14 §3, D39): 한 깃발 이상 지난 뒤 확률 0.15 로 -0.1~-0.3 m/s 를 2 s (최대 0.6 m)
+    subs = {**continuous_subterrains(), **_sparse_subterrains()}
+    cfg.scene.terrain.terrain_generator = build_generator(subs, columns.FULL_COLS)
+    cfg.curriculum.terrain_levels = CurrTerm(func=tlm.terrain_levels_s2, params={"t_start": t_start, "t_end": t_end})
+
+
 @configclass
 class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
     """G0: 눈만 끈 기준선 (`--map_input none`). 정답 높이 스캔도 지도도 actor 에 없다. 센서와 관측 묶음은 runner 계약이라 있다."""
@@ -39,9 +53,6 @@ class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
         self.scene.num_envs = NUM_ENVS_S2
         self.observations.policy.height_scan = None
         self.rewards.foot_edge.weight = 0.0
-        self.commands.base_velocity.dynamic_flags = True
-        # 물러나기 (14 §3, D39): 깃발 env 가 한 깃발 이상 지난 뒤 확률 0.15 로 -0.1~-0.3 m/s 를 2 s (최대 0.6 m)
-        self.commands.base_velocity.params = {"backoff_prob": 0.15, "backoff_vmin": 0.1, "backoff_vmax": 0.3, "backoff_s": 2.0}
         self.use_full_terrain()
         from foothold_s2.sensors.start_obs import apply_start_perception   # runner 계약상 G0 도 묶음은 있어야 한다 (map_input none 이 입력만 끈다)
 
@@ -49,11 +60,7 @@ class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
 
     def use_full_terrain(self):
         """이어진 7 종 + 듬성한 지형으로 50 열 생성기를 만든다 (듬성한 지형 생성기가 생기면)."""
-        from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
-
-        subs = {**continuous_subterrains(), **_sparse_subterrains()}
-        self.scene.terrain.terrain_generator = build_generator(subs, columns.FULL_COLS)
-        self.curriculum.terrain_levels = CurrTerm(func=tlm.terrain_levels_s2)
+        apply_full_terrain_and_flags(self)
 
 
 @configclass

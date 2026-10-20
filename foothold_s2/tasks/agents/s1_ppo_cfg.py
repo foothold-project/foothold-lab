@@ -33,3 +33,11 @@ class S1aPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
+
+
+@configclass
+class S1bPPORunnerCfg(S1aPPORunnerCfg):
+    """S1-b: S1-a blind 와 같은 PPO 값. iteration 은 S1-a 에서 이어 6000 -> 9000 (전체 목표 9,000 = 3,000 회 더)."""
+
+    max_iterations = 9000
+    experiment_name = "foothold_s1b"

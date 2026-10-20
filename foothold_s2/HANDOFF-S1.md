@@ -65,3 +65,7 @@
 - `foothold_s2/s1_runner.py` (S1Runner): 설치 OnPolicyRunner + env 상태(common_step_counter · 지형 레벨 · 칸 · range_curriculum 의 vmax_x · vmax_y · flag_vmax · history) · adaptive 학습률 · 난수 저장 · 복원(rl StartRunner 의 같은 함수 사용), latest.pt 100 회마다(임시 파일 + os.replace), 상태 파일 train_start_status.json(starting · running · done · failed), 재개 때 저장된 회차 «다음부터» · max_iterations 는 전체 목표로 읽어 남은 회차만. 설치 runner 의 model_N.pt 는 env 상태가 없어 load 가 거부한다.
 - 이어 학습: `bash foothold_s2/run_s1.sh blind cuda:1 --resume --load_run <폴더> --checkpoint latest.pt`. 시험 `tests/test_s1_runner.py` 9(가짜 env).
 - Kit 확인: isoA(64 env 6 회, rc 0) → isoB 이어(전체 10, 남은 4): 회차 6 부터, common_step_counter 144 → 240 으로 이어짐, 학습률 저장 · 복원, 상태 파일 done iter 9.
+
+## 10/20 밤 S1-b · 사슬 (SC-9 이후)
+- S1-b: `bash foothold_s2/run_s1b.sh cuda:N` (S1-a blind 가장 최근 폴더의 model_5999.pt 에서 단계 전이: 가중치 · optimizer · iteration · common_step_counter · range_curriculum 만 옮기고 지형 칸은 새로; 전체 목표 9000 = 3000 회 더). task `FootholdS2-Go2-S1b-blind-v0`(`tasks/s1b_env_cfg.py` · `s1b_env.py`), p_advance 는 자체 반복 수 T_start 0 · T_end 1500(`env.stage_iteration_offset` 을 체크포인트에 저장 · 복원). 이어: `... --resume --load_run <폴더> --checkpoint latest.pt --load_experiment foothold_s1b`. 돌고 있는 S1-a 의 run_s1.sh 는 고치지 않았다(bash 가 스크립트를 조금씩 읽어서).
+- 사슬: `python -m foothold_s2.chain.start foothold_s2/chain/chain_s1a_night.yaml` (상태 폴더 C:/Users/AI-WS01/s2_lab/chain). 실행기는 yaml 이 바뀌면 «아직 안 띄운» 작업 정의를 다시 읽는다(reload). 15 작업, priority · require_file · require_any_file · skip_if_done · accept_rc · vars.

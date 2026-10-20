@@ -32,3 +32,14 @@ gym.register(
     disable_env_checker=True,
     kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2G1EnvCfg", "rsl_rl_cfg_entry_point": _S2_AGENT},
 )
+
+# S1-b: S1-a blind 체크포인트에서 이어 듬성한 지형 · 깃발 · 물러나기를 더한 학습 (52 §3)
+gym.register(
+    id="FootholdS2-Go2-S1b-blind-v0",
+    entry_point="foothold_s2.tasks.s1b_env:FootholdS1bEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": "foothold_s2.tasks.s1b_env_cfg:FootholdS1bBlindEnvCfg",
+        "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1bPPORunnerCfg",
+    },
+)

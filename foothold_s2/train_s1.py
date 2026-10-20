@@ -28,6 +28,9 @@ parser.add_argument("--task", type=str, required=True)
 parser.add_argument("--agent", type=str, default="rsl_rl_cfg_entry_point")
 parser.add_argument("--seed", type=int, default=None)
 parser.add_argument("--max_iterations", type=int, default=None)
+parser.add_argument("--stage_transfer", action="store_true",
+                    help="S1-a -> S1-b: 가중치 · optimizer · iteration · 명령 상한만 옮기고 지형 칸은 새로(열 배치가 다르다). 이 단계의 반복 수는 이어 시작한 회차부터 0")
+parser.add_argument("--load_experiment", type=str, default=None, help="이어 받을 체크포인트의 실험 폴더(기본: 이 실행의 experiment_name)")
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -51,7 +54,7 @@ if REPO not in sys.path:
     sys.path.insert(0, REPO)
 import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.runners.status import write_status  # noqa: E402
-from foothold_s2.s1_runner import S1Runner  # noqa: E402
+from foothold_s2.s1_runner import STAGE_TRANSFER_KEYS, S1Runner  # noqa: E402
 from foothold_s2.tasks.robot_mass import log_robot_mass  # noqa: E402
 
 RSL_RL_PIN = "3.1.2"
@@ -81,7 +84,8 @@ def main(env_cfg, agent_cfg):
     os.environ["TRAIN_START_STATUS_DIR"] = log_dir
     write_status(log_dir, {"state": "starting", "log_dir": log_dir, "task": args_cli.task})
 
-    resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
+    load_root = os.path.abspath(os.path.join("logs", "rsl_rl", args_cli.load_experiment)) if args_cli.load_experiment else log_root
+    resume_path = get_checkpoint_path(load_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
     env = gym.make(args_cli.task, cfg=env_cfg)
     log_robot_mass(env, "S1 train " + args_cli.task)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
@@ -91,7 +95,11 @@ def main(env_cfg, agent_cfg):
 
     if resume_path:
         print(f"[INFO] S1 체크포인트에서 이어 감: {resume_path}", flush=True)
-        runner.load(resume_path)
+        runner.load(resume_path, env_keys=STAGE_TRANSFER_KEYS if args_cli.stage_transfer else None)
+
+        if args_cli.stage_transfer:                      # p_advance 의 T 를 이 단계의 반복 수(0 부터)로 센다
+            env.unwrapped.stage_iteration_offset = runner.current_learning_iteration + 1
+            print("[INFO] 단계 전이: stage_iteration_offset =", env.unwrapped.stage_iteration_offset, flush=True)
 
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)

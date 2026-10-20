@@ -21,6 +21,8 @@ from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.runners.status import write_status
 
 CKPT_FORMAT = "foothold-s1/1"
+# 단계 전이(S1-a -> S1-b)에서 옮기는 env 상태: 지형 칸(terrain_levels · terrain_types)은 열 배치가 달라(23 열 -> 50 열) 옮기지 않는다.
+STAGE_TRANSFER_KEYS = ("common_step_counter", "range_curriculum")
 DEFAULTS = {"latest_interval": 100, "status_interval": 10}
 
 
@@ -66,7 +68,7 @@ class S1Runner(OnPolicyRunner):
 
         return path
 
-    def load(self, path, load_optimizer=True, map_location=None):
+    def load(self, path, load_optimizer=True, map_location=None, env_keys=None):
         sd = torch.load(path, weights_only=False, map_location=map_location)
 
         if sd.get("format") != CKPT_FORMAT:
@@ -78,7 +80,12 @@ class S1Runner(OnPolicyRunner):
             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
             self.alg.learning_rate = sd["ppo_learning_rate"]
 
-        self._load_env_state(sd["env_state"])
+        env_state = sd["env_state"]
+
+        if env_keys is not None:                           # 단계 전이: 일부 상태만 옮긴다
+            env_state = {k: v for k, v in env_state.items() if k in env_keys}
+
+        self._load_env_state(env_state)
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
         self._resumed = True

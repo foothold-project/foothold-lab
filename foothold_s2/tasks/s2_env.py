@@ -13,8 +13,10 @@ from foothold_s2.terrains.s2_layout import Layout
 
 
 class FootholdS2Env(ManagerBasedRLEnv):
+    mass_log_tag = "S2 env"
+
     def __init__(self, cfg, render_mode=None, **kwargs):
         sparse_terrains.SIDE_TABLE.__init__()          # 프로세스 안에서 env 를 다시 만들 때 옛 호출 기록을 비운다
         super().__init__(cfg, render_mode=render_mode, **kwargs)
         attach_s2_tables(self, sparse_terrains.SIDE_TABLE, Layout())
-        log_robot_mass(self, "S2 env")
+        log_robot_mass(self, self.mass_log_tag)
