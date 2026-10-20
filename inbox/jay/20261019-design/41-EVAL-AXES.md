@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (40 평가 · 시뮬 평가 축과 판정 규칙)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x) · L(S2 20,000 회 · 11/10 대비책, 00:4x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27 · **VERIFY-lead-final2 2 · 5 · 11 · 14 · 15 · 16 · 17(20j)** · 평가 도구 `foothold_s2/eval/judge.py` · `cells.py`(sonnet-code 커밋 70f70b47) · HiPAN 661 행 · **APPROVED M(팀장 결정 1~8 · 10/20 09:4x)** · evidence/baselines/README.md · axis1_cells.csv · axis2_cells.csv · axis3_cells.csv · S0 원자료 run_manifest.json(`C:/Users/AI-WS01/s2_lab/eval_new/s0/`, 체크포인트 sha256) · Newcombe 1998 Stat Med 17:873 방법 10(**인용 · 미열람**, 식은 수계산)
+> 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x) · L(S2 20,000 회 · 11/10 대비책, 00:4x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27 · **VERIFY-lead-final2 2 · 5 · 11 · 14 · 15 · 16 · 17(20j)** · 평가 도구 `foothold_s2/eval/judge.py` · `cells.py`(sonnet-code 커밋 70f70b47) · HiPAN 661 행 · **APPROVED M(팀장 결정 1~8 · 10/20 09:4x)** · evidence/baselines/README.md · axis1_cells.csv · axis2_cells.csv · axis3_cells.csv · S0 원자료 run_manifest.json(`C:/Users/AI-WS01/s2_lab/eval_new/s0/`, 체크포인트 sha256) · Newcombe 1998 Stat Med 17:873 방법 10(**인용 · 미열람**, 식은 수계산) · VERIFY-astra-r1 §3~§6(20t · fable 재측: 공식 USD sha256 · usd-core 질량 합 · FK · 카메라 기하)
 > 요지: v2 의 두 자(험지 · 평지 명령)를 그대로 두고, 「명령이 험지에서도 열렸나」 를 재는 축 3 과 START 시험지 · 무대 계단 칸을 더한다. 기준은 학습 전에 등록하고 해시를 남긴다. 단계별 관문 후보 수치를 S1~S4 모두 여기에 모은다. K-G heading 판정(방향 이탈 > 0.1 → 0.75 새 판)과 K-I 시뮬 간 확인 S1-x(MuJoCo · Gazebo, Isaac 값 대비 차) 관문을 가정으로 등록한다
-> 상태: v1.4 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I · L · 최종 점검 2(20j) · **팀장 결정 1~8(APPROVED M · 10/20 09:4x · fable 20l) 반영** · §8 판정식의 성질(n 100 · 허용폭 0.05 는 우월 판정이 됨)은 열린 항목 · **20q N 절 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
+> 상태: v1.4 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I · L · 최종 점검 2(20j) · **팀장 결정 1~8(APPROVED M · 10/20 09:4x · fable 20l) 반영** · §8 판정식의 성질(n 100 · 허용폭 0.05 는 우월 판정이 됨)은 열린 항목 · **20q N 절 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)**
 
 # 41 · 시뮬 평가 축
 
@@ -74,18 +74,19 @@ v2 는 험지에서 옆 · 뒤 · 회전을 한 번도 재지 않았다(v2 보�
 - 성공 즉시 끝내면 S 를 못 잰다 → 도달 뒤 정지 명령을 주고 T 까지 관측한다.
 - 정지 · 제자리 회전 칸에는 R 을 쓰지 않는다.
 
-## 6. START 시험지 (논문 시뮬 치수)
+## 6. START 시험지 (논문 시뮬 치수 · START 절대 치수 재현 시험)
 
 | 지형 | 최고 난이도 치수 | 출처 |
 |---|---|---|
 | stepping stones | 희소도 76.3 % · 돌 0.2 m · 틈 0.25 × 0.175 m · 무작위 돌 0.5× · 열 0.45× | **논문** 267~269 · 339~341 행 |
 | balance beams | 폭 0.175 m | **논문** 269 행 |
 | stepping beams | 희소도 64.7 % · 빔 0.15 m · 틈 0.275 m | **논문** 271~273 행 |
-| gaps | 폭 0.7 m (로봇 길이 2 배) | **논문** 273~275 행 |
+| gaps | 폭 0.7 m(START 절대 치수. 「로봇 길이 2 배」 해석은 지움 · 20t) | **논문** 273~275 행 |
 
 - 레벨 10 단, 8 × 4 m 칸(시험지는 START 칸 그대로, 학습 칸 8 × 8 과 다름), 깊이 0.2~0.7 m(**논문** 275 행). 평가는 START 방식 「6 m 통과 · 500 판 · 무작위 지형 10」 을 따른다(**논문** 354 행) → 축 1 과 별도 표. 지표는 성공률(= R) · 주파율(쓰러지기 전 간 거리 / 전체) · MEV(가장자리 디딤 비율, 최고 난이도).
 - 시험지(8 × 4 m)는 전진 R · 주파율 · MEV 만 잰다. 옆 · 뒤 · 회전은 축 3 듬성한 행(8 × 8 m 학습 칸)에서 잰다(VERIFY-lead-final2 17).
 - START 실기 표(**논문** 389 행: 평균대 0.2 m · 디딤 빔 58.8 %)는 실기 시험(42) 참고값이고 시뮬 시험지에는 쓰지 않는다. 선행 논문의 0.48× · 깊이 0.3~0.7 도 쓰지 않는다(VERIFY 20f P4).
+- **비교의 뜻(ASTRA R1-2 · 20t)**: 이 시험지는 START 절대 치수 재현이다. Go2 와 Lite3 에 같은 상대 난이도라고 읽지 않는다(판단 보류). 결과 해석 기준은 15 §4 의 축별 비율표(hip 간격 1.108 · 다리 1.065 · thigh 축 간격 0.885 · 발 지름 0.55)이고, 원 치수와 성공률을 그대로 보고하며 「더 넓은 발판처럼 느낀다」 는 기하 추정과 실제 통과 성능을 분리한다. 성능을 보고 치수를 조정하는 기준으로 쓰지 않는다.
 
 ## 7. 무대 계단 칸
 

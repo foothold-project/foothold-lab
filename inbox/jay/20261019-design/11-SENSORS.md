@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (10 보행층 · 센서)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: START 2512.13153v1 127 · 221 · 379 · 580 행 · PIE 2408.13740v3 표 II(START 가 DR 을 위임한 [31], ASTRA 19g 4 절) · SPEC-start-go2.md 2.2~2.4 절(187~214 행) · 155 · 157 행 · Go2 URDF `go2.urdf` 748~749 행 · L1 공식 bag 실측(`s2_lab/_external/l1_analyze.py` · `l1_go2_floor_v2.py`, fable 20f 재실행) · JEPLO 2609.15770v1 29 · 239~241 · 254 행 · @460e227 `spherical_depth_generator.py` · cfg 249~251 · env 593~596 (evidence/maicode-jeplo-deep) · REPORT-astra-10.md 63~77 · 130~133 행 · Isaac Lab 2.3.2 `ray_caster_camera_cfg.py` 19 · `patterns_cfg.py` 73 · APPROVED H(Orin NX) · VERIFY-fable-20f P8 · P18 · P19
+> 근거: START 2512.13153v1 127 · 221 · 379 · 580 행 · PIE 2408.13740v3 표 II(START 가 DR 을 위임한 [31], ASTRA 19g 4 절) · SPEC-start-go2.md 2.2~2.4 절(187~214 행) · 155 · 157 행 · Go2 URDF `go2.urdf` 748~749 행 · L1 공식 bag 실측(`s2_lab/_external/l1_analyze.py` · `l1_go2_floor_v2.py`, fable 20f 재실행) · JEPLO 2609.15770v1 29 · 239~241 · 254 행 · @460e227 `spherical_depth_generator.py` · cfg 249~251 · env 593~596 (evidence/maicode-jeplo-deep) · REPORT-astra-10.md 63~77 · 130~133 행 · Isaac Lab 2.3.2 `ray_caster_camera_cfg.py` 19 · `patterns_cfg.py` 73 · APPROVED H(Orin NX) · VERIFY-fable-20f P8 · P18 · P19 · VERIFY-astra-r1 §3~§6(20t · fable 재측: 공식 USD sha256 · usd-core 질량 합 · FK · 카메라 기하)
 > 요지: 1 차는 D435i 하나를 START 식(머리 · 60×60 · 10 Hz · 2 프레임)으로 쓰고 학습 때 가림막 증강을 넣는다(우리 추가). 2 차에 L1 을 발 주변 채널로 더한다. L1 의 뒷발 가시성은 메시지 5 개(0.5 s) 누적에서 100 % 인 상한만 쟀고 몸 가림은 실기에서 잰다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20t ASTRA-R1 셋 반영(fable 10/20)**
 
 # 11 · 센서 (D435i · L1)
 
@@ -36,7 +36,7 @@ flowchart LR
 | 60×60 만드는 법 | 848×480 → decimation 8 → 106×60 → 가운데 60 열 crop → 60×60. FOV 약 56.5° × 58° | **가정** SPEC 2.2 절. 참고: Extreme Parkour 는 106×60 → 87×58 |
 | 내부 파라미터 | fx ≈ 55.9 · fy ≈ 54.1 · cx = cy = 30 | **가정** (Intel 사양 H 87° · V 58° 에서 유도, SPEC 2.2 절. 20f 재계산 일치). 실기 `rs-enumerate-devices -c` 로 대조 |
 | 장착 위치 (base 기준) | (0.25, 0.0, 0.12) m | **가정** SPEC 2.4 절: RPL Go2 (0.24, −0.0175, 0.12) · HiPAN Go1 (0.25, 0, 0.12)(**논문** 2604.26504 630 행) 합의값. 브래킷 단 뒤 실측으로 교체 |
-| pitch | 아래로 35° · **D435i 는 한 대, 자세는 이것 하나**. S2 보행 지각과 S3 상위 student 가 같은 자세로 학습한다(HiPAN 은 tilt 0°, 630 행 → **우리 변경**, 팀장 승인 10/20 J-C). 높은 장애물(매달린 상자 · 탁자 상판)이 덜 보이는 손실은 21 H21-5 가설로 등록 | **가정** SPEC 2.4 절(지면 가시 0.47 ~ 4.5 m · 광축 0.89 m, base 기준 계산 · 11 §7 L0). RPL 21~25° · HiPAN 0°. 실기 브래킷은 하나(42) |
+| pitch | 아래로 35° · **D435i 는 한 대, 자세는 이것 하나**. S2 보행 지각과 S3 상위 student 가 같은 자세로 학습한다(HiPAN 은 tilt 0°, 630 행 → **우리 변경**, 팀장 승인 10/20 J-C). 높은 장애물(매달린 상자 · 탁자 상판)이 덜 보이는 손실은 21 H21-5 가설로 등록 | **가정** SPEC 2.4 절. 35° 와 (0.25, 0, 0.12) 는 START 가 준 값이 아니다(START 가 준 것은 머리 D435i · 60×60 · 지도 범위뿐, 379 행 · ASTRA R1-3). 기하(7 절 L0 의 시험 상태 h 0.45 · x 0.25 · roll · pitch 0): 지면 교점 아래 끝 0.47 · 광축 0.89 m, far 3.0 절단 뒤 유효 지면 한계 3.60 m(위 끝 광선의 무한 평면 교점 4.53 m 는 절단 전 값). RPL 21~25° · HiPAN 0° · MGDP 활성 Warp 경로는 (0.34, 0, 0.07) · 30°(ASTRA R1 §6 · 채택 안 함 · 기록). 실기 브래킷은 하나(42) |
 | 깊이 범위 · 정규화 | near 0.2 · far 3.0 m, (d − 0.2)/2.8 → [0,1], 미검출 = 1.0 | **가정** SPEC 155 행. ASTRA 19g: 「0.2~3.0 m 는 START 본문에 없음」. 참고: Extreme Parkour clip 0~2 m, HiPAN 4 m clip(630 행) |
 | 카메라 무작위화 | 위치 ±10 mm · pitch ±1° · 수평 FOV 86~88° · 시스템 지연 0~15 ms | **논문(위임)** PIE 표 II. START 221 행 「domain randomization following [31]」, [31] = PIE (START 580 행) |
 | 탑재 계산기 | Orin NX (START 379 행의 Lite3 도 Orin NX) | **팀장 확인**(APPROVED H). 우리 지각망 50 Hz 추론 시간은 **미측정** → 42 T7 |
@@ -108,7 +108,7 @@ START 는 깊이 잡음을 적지 않았고(**논문 미기재**, 221 행은 DR 
 | L0 AST | `mesh_prim_paths` 가 길이 1 이고 그 prim 아래에 Plane · 둘째 Mesh 가 없음(지형 import cfg 에 ground plane 생성 없음). negative control: 경로 둘을 넣으면 설치 코드가 NotImplementedError(`ray_caster.py` 164 행) | 검사 |
 | L1 Kit | **3072 env 전체 갱신 시간**: 60×60 × 3072 = 11,059,200 광선/갱신 · 10 Hz 갱신의 벽시계 시간과 장당 메모리를 첫 10 update 에서 잰다(ASTRA: 처리량 계산일 뿐 FPS 실측이 아님 · START 의 Warp 는 Isaac Gym · A6000 조건) | 로그 |
 | L0 CPU | 증강: 가림 0 개 설정이면 입력 = 출력, 2 개면 가린 화소 = 1.0 이고 나머지 동일. Perlin 0.4 에서 구멍 비율 0.2~0.5 | 기대값 |
-| L0 CPU | 쿼터니언 부호: 카메라 광축(+z)이 바닥에 base 앞 **0.89 m** 에 맞음(h 0.45 · pitch 35° · x 0.25: 0.45 / tan 35° + 0.25 = 0.893). 아래 끝 광선(pitch + 29°)은 0.47 m, 위 끝 광선(pitch − 29°)은 4.53 m(VERIFY-lead-final2 22). negative control: 부호를 뒤집으면 광축이 바닥에 안 닿음 | 기하 · 1 cm |
+| L0 CPU | **기하 시험 상태(한 계약 · ASTRA R1-3 · 20t)**: base 를 z = **0.33** 에 roll · pitch 0 으로 고정(카메라 오프셋 z 0.12 → 지상 카메라 높이 h = 0.45. 17 §3 스폰 z 0.4 나 기본 자세 접촉 높이 0.31~0.32 m 에서 저절로 얻어지는 상태가 아니다 · 17 §2) · 광학축 +z 가 아래로 35°(+y 회전) · `distance_to_image_plane` · far 3.0 · x 0.25. 쿼터니언 부호 기대값: 광축이 바닥에 base 앞 **0.89 m**(0.45 / tan 35° + 0.25 = 0.893) · 아래 끝 광선(64°) 0.47 m · 위 끝 광선(6°)의 무한 평면 교점 4.53 m(VERIFY-lead-final2 22) · far 3.0 절단 뒤 중앙 단면 유효 지면 한계 **3.60 m**(0.25 + (3 − 0.45 sin 35°) / cos 35° = 3.597. 「4.53 m 까지 유효 깊이」 라 쓰면 틀림) · 지도 앞끝 x 1.1 의 하향각 27.9°(세로 시야 [6°, 64°] 안). base 높이를 다르게 놓은 시험은 기대 교점을 그 높이로 다시 계산한다. negative control: 부호를 뒤집으면 광축이 바닥에 안 닿음 | 기하 · 1 cm |
 | L1 Kit | 4096(또는 3072) env 60×60 광선 카메라 첫 10 update: 메모리 · steps/s · 깊이 영상 한 장 저장(눈으로 확인) | 로그 · 그림 |
 | L2 | 깊이 영상 시간열에서 10 Hz 갱신 · 0.1 s 지연이 맞음 | 프레임 번호 |
 

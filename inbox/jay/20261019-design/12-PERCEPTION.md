@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (10 보행층 · 지각: TR-Net · I-E Estimator · AdaSmpl)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: START 2512.13153v1 42 · 116 · 126~127 · 134 · 136~139 · 169 · 185~217 · 193 · 347 · 360 행 · 선행 2409.15692v2 35 · 95 · 305 · 311 · 323 · 331 · 339 · 347 · 353 행(Table V) · Fig. 8 · evidence/maicode-trcr-deep `diff_vs_start` · maicode-start-deep · RESEARCH-astra-19g-start-reimpl.md 3 · 8 절 · evidence/deep-research-start-*.json · fable 20e F16 · R1 · R2 · Isaac Lab 2.3.2 `rl_cfg.py` 54 · APPROVED B(JEPLO 잠재 예측은 2 차 갈래) · VERIFY-fable-20f P3
+> 근거: START 2512.13153v1 42 · 116 · 126~127 · 134 · 136~139 · 169 · 185~217 · 193 · 347 · 360 행 · 선행 2409.15692v2 35 · 95 · 305 · 311 · 323 · 331 · 339 · 347 · 353 행(Table V) · Fig. 8 · evidence/maicode-trcr-deep `diff_vs_start` · maicode-start-deep · RESEARCH-astra-19g-start-reimpl.md 3 · 8 절 · evidence/deep-research-start-*.json · fable 20e F16 · R1 · R2 · Isaac Lab 2.3.2 `rl_cfg.py` 54 · APPROVED B(JEPLO 잠재 예측은 2 차 갈래) · VERIFY-fable-20f P3 · VERIFY-astra-r1 §3~§6(20t · fable 재측: 공식 USD sha256 · usd-core 질량 합 · FK · 카메라 기하)
 > 요지: START 의 지각을 그대로 짓는다. 층 크기는 같은 저자 선행 논문 부록 수치를 「선행(START 미기재)」 로 쓰고, 원문 불일치(CNN 표)와 인쇄 오류(커리큘럼 식)는 우리 선택 · 정정으로 표시한다. 지도는 중력 정렬 yaw 틀, 기억은 에피소드마다 0, PPO gradient 는 지각으로 흘리지 않는다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20n rl 가정 13 대조 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20n rl 가정 13 대조 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)**
 
 # 12 · 지각 (TR-Net · I-E Estimator · AdaSmpl)
 
@@ -42,10 +42,10 @@ flowchart LR
 | Rough decoder | MLP [128, 256] ELU → 32×16 | **선행** 311 행 · 출력 크기는 아래 지도 규격 |
 | Refine decoder | U-Net: 16,16 / 32,32 / 64,64 / concat 64→32,32 / concat 32→16,16 → 1. conv 3×3 s1 p1 + ReLU, max pool 2, transpose conv 2 | **선행** Fig. 8 (ASTRA 19g 3 절이 원본 그림으로 확인). 마지막 활성화 없음 → **가정**. **채택(lead 20s)**: 마지막 층도 3×3 s1 p1(그림대로) · 활성화 없음(가정). rl 코드 `models/start_perception.py` 101 행의 1×1 은 3×3 으로 수정 대기(rl · 20n ②) |
 | 손실 | L_TR = MSE(H_rough, H^b) + L1(H_refined, H^b), 계수 1 | **논문** START 169 행(식 4) |
-| 지도 규격 | 뒤 0.5 ~ 앞 1.1 m, 폭 0.8 m, 5 cm | **논문** START 127 행 |
+| 지도 규격 | 뒤 0.5 ~ 앞 1.1 m, 폭 0.8 m, 5 cm. **지도 범위는 관측 범위가 아니다(ASTRA R1-3 · 20t)**: 11 §7 기하 시험 상태(h 0.45 · 35°)에서 지면이 처음 보이는 곳은 x ≈ 0.47 m 부터라 기본 자세 앞발(x ≈ 0.18)도 즉시 보이지 않고, 앞끝 x 1.1 은 시야 안(하향각 27.9°)이며, 뒤 0.5 m 와 발밑은 GRU 시간 기억이다. 앞끝 가시성과 14 §3 의 처음 보는 뒤 · 옆 지형 관측은 별개다 | **논문** START 127 행 · ASTRA R1 §6 |
 | ↳ 셀 | 32 × 16, 셀 중심 x −0.475…1.075, y −0.375…0.375. 높이 h = z_hit − z_base, clip ±1 m | **가정** SPEC-start-go2 53 행 (ASTRA 19g: 「32×16 은 합리적이나 논문에 shape 가 직접 적힌 것은 아님」) |
 | 지도 틀 | **중력 정렬 yaw 틀**(몸 yaw 만 따라 돌고 roll · pitch 는 무시) | **가정** fable 20e F16 · R2 (START 는 「robot's local frame」 만 적음, 127 행) |
-| 기억의 한계 | GRU 는 「지금 가려진 발밑과 뒤」 를 기억으로 복원한다. 본 적 없는 땅(옆으로 걸을 때 들어오는 띠)은 못 메운다 | **논문** 136~138 행 · 360 행(w/o GRU 는 현재 시야만) |
+| 기억의 한계 | GRU 는 「지금 가려진 발밑과 뒤」 를 기억으로 복원한다. 본 적 없는 땅(옆으로 걸을 때 들어오는 띠)은 못 메운다. 후방 지도 MAE 나 발 위치가 지도 안에 든다는 것을 새 땅 가시성의 증거로 쓰지 않는다(20t) | **논문** 136~138 행 · 360 행(w/o GRU 는 현재 시야만) · ASTRA R1 §6 |
 
 ## 4. I-E Estimator
 
