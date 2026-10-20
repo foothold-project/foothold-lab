@@ -34,6 +34,8 @@ parser.add_argument("--max_iterations", type=int, default=None)
 parser.add_argument("--distributed", action="store_true", default=False)
 parser.add_argument("--map_input", type=str, default=None, help="reconstruction(G1 · G3) · none(G0)")
 parser.add_argument("--force_gt", action="store_true", default=False, help="G0-gt")
+parser.add_argument("--resume_from", type=str, default=None,
+                    help="이어 갈 START 체크포인트 경로(보통 <run>/latest.pt). 같은 폴더에 이어 쓰고 남은 회차만 돈다")
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -42,7 +44,6 @@ app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
 import importlib.metadata as metadata  # noqa: E402
-import json  # noqa: E402
 import traceback  # noqa: E402
 from datetime import datetime  # noqa: E402
 
@@ -59,6 +60,9 @@ if REPO not in sys.path:
     sys.path.insert(0, REPO)
 import foothold_s2.tasks  # noqa: E402,F401  (lead 의 gym 등록)
 from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
+from foothold_s2.runners.status import write_status  # noqa: E402
+
+STATE = {"log_dir": None}  # 예외 때 상태 파일을 어디에 쓸지(main 이 정한다)
 
 RSL_RL_PIN = "3.1.2"  # Isaac Lab setup.py 49 행 · 18 §5.1: 환경 이름 없이 버전을 추정하지 않는다
 
@@ -81,14 +85,23 @@ def main(env_cfg, agent_cfg):
         agent_cfg.seed = seed
 
     log_root = os.path.abspath(os.path.join("logs", "rsl_rl", agent_cfg.experiment_name))
-    log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    if agent_cfg.run_name:
-        log_dir += f"_{agent_cfg.run_name}"
-    log_dir = os.path.join(log_root, log_dir)
+    if args_cli.resume_from:
+        # 이어 가기: 체크포인트가 있는 폴더에 그대로 이어 쓴다(새 폴더를 만들면 곡선이 둘로 갈린다)
+        resume_path = os.path.abspath(args_cli.resume_from)
+        log_dir = os.path.dirname(resume_path)
+    else:
+        resume_path = None
+        log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        if agent_cfg.run_name:
+            log_dir += f"_{agent_cfg.run_name}"
+        log_dir = os.path.join(log_root, log_dir)
     env_cfg.log_dir = log_dir
+    STATE["log_dir"] = log_dir
+    write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path, "seed": agent_cfg.seed})
 
     env = gym.make(args_cli.task, cfg=env_cfg)
-    resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
+    if resume_path is None and agent_cfg.resume:
+        resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
 
     train_cfg = agent_cfg.to_dict()
@@ -105,18 +118,15 @@ def main(env_cfg, agent_cfg):
         runner.load(resume_path)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
-    runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
-    write_status(log_dir, {"done": True, "iter": runner.current_learning_iteration, "log_dir": log_dir})
-
-
-def write_status(log_dir: str | None, payload: dict) -> None:
-    """끝남 · 실패를 파일로 남긴다. 실행 규칙: 판정은 이 파일과 로그로 하고 종료 코드만 믿지 않는다."""
-    path = os.path.join(log_dir or ".", "train_start_status.json")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    payload["time"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=1)
-    print("TRAIN_START_STATUS", json.dumps(payload, ensure_ascii=False), flush=True)
+    # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
+    done = runner.current_learning_iteration + 1 if resume_path else 0
+    remaining = agent_cfg.max_iterations - done
+    if remaining <= 0:
+        write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
+        return
+    runner.learn(num_learning_iterations=remaining, init_at_random_ep_len=True)
+    write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "log_dir": log_dir})
+    print("TRAIN_START_STATUS done", flush=True)
 
 
 if __name__ == "__main__":
@@ -130,7 +140,7 @@ if __name__ == "__main__":
     except SystemExit as e:  # hydra 가 정상 끝에 SystemExit(0) 을 낼 수 있다
         code = 0 if e.code in (None, 0) else 1
     except BaseException:
-        write_status(os.environ.get("TRAIN_START_STATUS_DIR"), {"done": False, "traceback": traceback.format_exc()})
+        write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})
         code = 1
     sys.stdout.flush()
     os._exit(code)
