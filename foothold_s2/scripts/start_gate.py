@@ -32,6 +32,8 @@ parser.add_argument("--num_envs", type=int, default=64)
 parser.add_argument("--iterations", type=int, default=2)
 parser.add_argument("--out", type=str, required=True)
 parser.add_argument("--seed", type=int, default=42)
+parser.add_argument("--restore_from", type=str, default=None,
+                    help="앞 실행의 out 폴더. 주면 학습하지 않고 새 프로세스에서 체크포인트를 복원해 같은 입력 같은 출력만 본다")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 app = AppLauncher(args).app
@@ -170,6 +172,56 @@ def agent_cfg(num_steps: int = 24) -> dict:
     }
 
 
+def policy_outputs(r, b) -> torch.Tensor:
+    """재생 버퍼 한 묶음을 지각 -> actor 평균 행동까지 통과시킨 (T, B, 12)."""
+    r.eval_mode()
+    hp, ht = b["h_prop0"], b["h_terr0"]
+    outs = []
+    with torch.no_grad():
+        for t in range(r.num_steps_per_env):
+            hp, ht, o = r.perception._advance(hp, ht, b["hist"][t], b["depth2"][t].float(), b["tick"][t], b["first"][t],
+                                              b["use_gt"][t], b["gt_map"][t])
+            est = torch.cat([o["mu"], o["v"], o["zf"], o["zb"]], -1)
+            outs.append(r.alg.policy.act_inference({"actor_in": torch.cat([b["obs"][t], est], -1)}))
+    return torch.stack(outs)
+
+
+def make_env(dev: str):
+    cfg = StartGateEnvCfg()
+    cfg.scene.num_envs = args.num_envs
+    cfg.seed = args.seed
+    cfg.sim.device = dev
+    base = ManagerBasedRLEnv(cfg)
+    return base, RslRlVecEnvWrapper(base)
+
+
+def restore_main() -> dict:
+    """새 프로세스 복원 시험: 앞 실행의 gate_ckpt.pt 와 ref_io.pt 로 같은 입력 같은 출력(1e-6) 을 본다."""
+    from foothold_s2.runners.start_runner import StartRunner
+
+    dev = args.device or "cuda:0"
+    res: dict = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "mode": "restore", "restore_from": args.restore_from,
+                 "pid": os.getpid()}
+    torch.manual_seed(args.seed + 2000)  # 앞 실행과 다른 초기 가중치에서 시작해 복원만으로 같아지는지 본다
+    _, env = make_env(dev)
+    r = StartRunner(env, agent_cfg(), log_dir=None, device=dev)
+    ref = torch.load(os.path.join(args.restore_from, "ref_io.pt"), weights_only=False)
+    b = {k: v.to(dev) for k, v in ref["batch"].items()}
+    before = float((policy_outputs(r, b).cpu() - ref["out"]).abs().max())
+    ck = torch.load(os.path.join(args.restore_from, "gate_ckpt.pt"), weights_only=False)
+    r.load(os.path.join(args.restore_from, "gate_ckpt.pt"))
+    after = float((policy_outputs(r, b).cpu() - ref["out"]).abs().max())
+    po = r.perception_optimizer.state_dict()["state"]
+    opt_same = all(torch.equal(torch.as_tensor(v).cpu(), torch.as_tensor(ck["perception_optimizer_state_dict"]["state"][i][k]).cpu())
+                   for i, s in po.items() for k, v in s.items())
+    res.update({"max_abs_diff_before_load": before, "max_abs_diff_after_load": after,
+                "adasmpl_same": r.adasmpl.state_dict() == ref["adasmpl"], "perception_optimizer_same": opt_same,
+                "iter": r.current_learning_iteration})
+    res["checks"] = {"traceback": False, "differs_before_load": before > 1e-3, "same_after_load": after <= 1e-6,
+                     "adasmpl_same": res["adasmpl_same"], "perception_optimizer_same": opt_same}
+    return res
+
+
 def main() -> dict:
     from foothold_s2.runners.start_runner import StartRunner
 
@@ -178,13 +230,8 @@ def main() -> dict:
                  "device": args.device, "seed": args.seed}
     dev = args.device or "cuda:0"
     torch.manual_seed(args.seed)
-    cfg = StartGateEnvCfg()
-    cfg.scene.num_envs = args.num_envs
-    cfg.seed = args.seed
-    cfg.sim.device = dev
-    base = ManagerBasedRLEnv(cfg)
+    base, env = make_env(dev)
     res["gt_map_rays"] = int(base.scene["gt_map_scan"].num_rays) if hasattr(base.scene["gt_map_scan"], "num_rays") else None
-    env = RslRlVecEnvWrapper(base)
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats(dev)
     obs0 = env.get_observations()
@@ -215,23 +262,14 @@ def main() -> dict:
     runner.save(ck)
     res["ckpt_keys"] = sorted(torch.load(ck, weights_only=False).keys())
 
-    # 새 runner 로 복원 -> 같은 입력 같은 출력 (1e-6)
+    # 새 runner 로 복원 -> 같은 입력 같은 출력 (1e-6). 새 프로세스 판은 --restore_from 으로 따로 돈다
     torch.manual_seed(args.seed + 1000)
     runner2 = StartRunner(env, agent_cfg(), log_dir=None, device=dev)
     runner2.load(ck)
     b = runner.replay.gather(torch.arange(min(8, args.num_envs), device=dev))
-    diffs = {}
-    with torch.no_grad():
-        for name, r in (("a", runner), ("b", runner2)):
-            r.eval_mode()
-            hp, ht = b["h_prop0"], b["h_terr0"]
-            outs = []
-            for t in range(runner.num_steps_per_env):
-                hp, ht, o = r.perception._advance(hp, ht, b["hist"][t], b["depth2"][t].float(), b["tick"][t], b["first"][t],
-                                                  b["use_gt"][t], b["gt_map"][t])
-                est = torch.cat([o["mu"], o["v"], o["zf"], o["zb"]], -1)
-                outs.append(r.alg.policy.act_inference({"actor_in": torch.cat([b["obs"][t], est], -1)}))
-            diffs[name] = torch.stack(outs)
+    diffs = {"a": policy_outputs(runner, b), "b": policy_outputs(runner2, b)}
+    torch.save({"batch": {k: v.cpu() for k, v in b.items()}, "out": diffs["a"].cpu(), "adasmpl": runner.adasmpl.state_dict()},
+               os.path.join(args.out, "ref_io.pt"))
     res["restore_max_abs_diff"] = float((diffs["a"] - diffs["b"]).abs().max())
     res["restore_same"] = res["restore_max_abs_diff"] <= 1e-6
     res["adasmpl_same"] = runner.adasmpl.state_dict() == runner2.adasmpl.state_dict()
@@ -247,15 +285,19 @@ def main() -> dict:
 
 if __name__ == "__main__":
     out: dict = {}
+    name = "gate_restore_result.json" if args.restore_from else "gate_result.json"
     try:
-        out = main()
+        out = restore_main() if args.restore_from else main()
     except Exception:
         out["traceback"] = traceback.format_exc()
         out.setdefault("checks", {})["traceback"] = True
         print(out["traceback"], flush=True)
-    finally:
-        os.makedirs(args.out, exist_ok=True)
-        with open(os.path.join(args.out, "gate_result.json"), "w", encoding="utf-8") as f:
-            json.dump(out, f, ensure_ascii=False, indent=1, default=str)
-        print("GATE_RESULT", json.dumps(out.get("checks", {}), ensure_ascii=False), flush=True)
-        app.close()
+    os.makedirs(args.out, exist_ok=True)
+    with open(os.path.join(args.out, name), "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=1, default=str)
+    ok = all(v is True or isinstance(v, str) for k, v in out.get("checks", {}).items() if k != "traceback") and not out.get("checks", {}).get("traceback", True)
+    print("GATE_RESULT", json.dumps(out.get("checks", {}), ensure_ascii=False), flush=True)
+    # app.close() 가 이 기기에서 결과 기록 뒤 멈춘다(10/20 11:29 실행). 결과를 쓴 뒤 강제 종료하고, 종료 코드로 판정을 낸다
+    # (Isaac 은 예외 뒤에도 0 을 낼 수 있어 코드 0 만으로 믿지 않는다 · 판정은 위 json)
+    sys.stdout.flush()
+    os._exit(0 if ok else 1)

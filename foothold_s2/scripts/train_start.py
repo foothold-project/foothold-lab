@@ -42,6 +42,8 @@ app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
 import importlib.metadata as metadata  # noqa: E402
+import json  # noqa: E402
+import traceback  # noqa: E402
 from datetime import datetime  # noqa: E402
 
 import gymnasium as gym  # noqa: E402
@@ -104,10 +106,31 @@ def main(env_cfg, agent_cfg):
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
     runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
-    env.close()
+    write_status(log_dir, {"done": True, "iter": runner.current_learning_iteration, "log_dir": log_dir})
+
+
+def write_status(log_dir: str | None, payload: dict) -> None:
+    """끝남 · 실패를 파일로 남긴다. 실행 규칙: 판정은 이 파일과 로그로 하고 종료 코드만 믿지 않는다."""
+    path = os.path.join(log_dir or ".", "train_start_status.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    payload["time"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+    print("TRAIN_START_STATUS", json.dumps(payload, ensure_ascii=False), flush=True)
 
 
 if __name__ == "__main__":
+    # 실행 규칙 (10/20 start_gate 실측: app.close() 가 결과 기록 뒤 멈춘다):
+    # 체크포인트 · 상태 파일을 쓴 뒤 env.close() · app.close() 를 부르지 않고 os._exit 로 끝낸다.
+    # 예외면 traceback 을 상태 파일에 쓰고 코드 1 로 끝낸다(Isaac 은 예외 뒤에도 0 을 낼 수 있다).
     torch.backends.cudnn.deterministic = False
-    main()
-    simulation_app.close()
+    code = 0
+    try:
+        main()
+    except SystemExit as e:  # hydra 가 정상 끝에 SystemExit(0) 을 낼 수 있다
+        code = 0 if e.code in (None, 0) else 1
+    except BaseException:
+        write_status(os.environ.get("TRAIN_START_STATUS_DIR"), {"done": False, "traceback": traceback.format_exc()})
+        code = 1
+    sys.stdout.flush()
+    os._exit(code)
