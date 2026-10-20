@@ -64,12 +64,13 @@ jobs:
     priority: 1
     depends_on: [scan_train]
     retries: 0
+    skip_if_done: true                   # 사전 실행(GPU 1, 10/20 22:0x)이 이미 repro_isaac311 에 verdict match 를 남겼다: 있으면 다시 돌리지 않는다
     cmd: [python, -m, foothold_s2.eval.repro_check, --out, "${EVAL_ROOT}/repro_isaac311"]
     log: ${EVAL_ROOT}/repro_isaac311/chain.log
     done:
       outputs: [${EVAL_ROOT}/repro_isaac311/repro_result.json]
       no_traceback: [${EVAL_ROOT}/repro_isaac311/chain.log]
-      report: {file: "${EVAL_ROOT}/repro_isaac311/repro_result.json", keys: [verdict]}
+      report: {file: "${EVAL_ROOT}/repro_isaac311/repro_result.json", keys: [verdict, ok]}
 
   # ---------------------------------------------------------------- S1 평가 (범위 안 32 칸 --gate 200 · 축 2 시드 3 · 축 3)
   - name: scan_eval

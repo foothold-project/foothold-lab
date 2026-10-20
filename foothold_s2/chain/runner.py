@@ -440,6 +440,15 @@ class Chain:
 
         for name in order:
             job, st = self.jobs[name], self.state[name]
+
+            if job.get("skip_if_done") and job.get("done"):
+                ok, _ = self.evaluate(name)                          # 결과가 이미 있으면 돌리지 않는다 (재시작 · Linux 사슬에서 같은 작업을 다시 걸 때)
+
+                if ok:
+                    st.update(state="done", finished=self.clock(), skipped=True)
+                    self.event(name, "skipped", "done 조건이 이미 충족돼 돌리지 않음" + self._report(name))
+                    continue
+
             wants_gpu = "gpu" in job
             gpu = self._pick_gpu(job) if wants_gpu else None
 

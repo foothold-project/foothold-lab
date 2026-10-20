@@ -325,7 +325,7 @@ def test_real_yaml_has_the_agreed_graph():
     assert jobs["agenda_J1"]["depends_on"] == ["scan_eval", "blind_eval"] and jobs["agenda_J4"]["depends_on"] == ["bf16_compare"]
     assert jobs["v2_base_gate200"]["depends_on"] == ["scan_eval"] and jobs["blind_eval"]["gpu"] == 1
     assert not [t for t in str(cfg).split("${")[1:]]                                                    # 풀리지 않은 변수 없음
-    assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict"]
+    assert jobs["repro_s0"]["retries"] == 0 and jobs["repro_s0"]["done"]["report"]["keys"] == ["verdict", "ok"]
     assert jobs["scan_train"]["adopt"]["pid"] == 95784 and jobs["blind_train"]["adopt"]["pid"] == 89020
 
 
@@ -526,3 +526,20 @@ def test_accept_rc_lets_a_tool_exit_one_as_a_legitimate_result_and_job_repo_sets
     chain2, _ = make(tmp_path / "t2", [{"name": "X", "retries": 0, "cmd": py("import sys;sys.exit(1)")}])
     chain2.run()
     assert chain2.state["X"]["state"] == "failed"                                            # accept_rc 가 없으면 1 은 실패
+
+
+def test_skip_if_done_does_not_rerun_a_job_whose_result_already_exists(tmp_path):
+    out = tmp_path / "result.json"
+    out.write_text("{}", encoding="utf-8")
+    marker = tmp_path / "ran.txt"
+    jobs = [{"name": "R", "gpu": 0, "skip_if_done": True, "cmd": touch_cmd(marker), "done": {"outputs": [str(out)]}},
+            {"name": "N", "depends_on": ["R"], "cmd": py("pass")}]
+    chain, _ = make(tmp_path, jobs)
+    assert chain.run() == 0 and not marker.exists()                           # R 은 돌지 않았고
+    assert chain.state["R"]["skipped"] and chain.state["N"]["state"] == "done"    # 뒤 작업은 이어졌다
+    assert "skipped" in kinds(tmp_path, "R") and "launched" not in kinds(tmp_path, "R")
+    out.unlink()                                                              # 결과가 없으면 돈다
+    chain2, _ = make(tmp_path / "t2", [{"name": "R", "gpu": 0, "skip_if_done": True, "retries": 0,
+                                        "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}}])
+    chain2.run()
+    assert chain2.state["R"]["state"] == "done" and not chain2.state["R"].get("skipped")
