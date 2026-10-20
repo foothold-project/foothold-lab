@@ -54,3 +54,13 @@ gym.register(
         "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
     },
 )
+
+gym.register(
+    id="FootholdS2-Go2-S1a-diag-D2-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": "foothold_s2.tasks.s1_diag_cfg:FootholdS1aDiagD2EnvCfg",
+        "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
+    },
+)

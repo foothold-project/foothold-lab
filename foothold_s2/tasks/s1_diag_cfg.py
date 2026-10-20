@@ -20,3 +20,13 @@ class FootholdS1aDiagD1EnvCfg(FootholdS1aScanEnvCfg):
             func=mdp.feet_air_time, weight=0.1,
             params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"),
                     "command_name": "base_velocity", "threshold": 0.5})
+
+
+@configclass
+class FootholdS1aDiagD2EnvCfg(FootholdS1aScanEnvCfg):
+    """D2 (lead 사전 등록): 추종 커널 폭 std 0.5 -> 0.25 (선속도 · 각속도 둘 다), 가중치 그대로."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.track_lin_vel.params = {**self.rewards.track_lin_vel.params, "std": 0.25}     # 새 dict (클래스 기본값 공유 방지)
+        self.rewards.track_ang_vel.params = {**self.rewards.track_ang_vel.params, "std": 0.25}
