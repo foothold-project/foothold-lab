@@ -8,7 +8,7 @@ FEET = np.array([[-.3, -.2, -.3], [-.3, .2, -.3], [.3, -.2, -.3], [.3, .2, -.3]]
 
 
 def patches(heights, center=(4., 4.)):
-    return [[center[0]+x-.07, center[0]+x+.07, center[1]+y-.07, center[1]+y+.07, -1., h]
+    return [[center[0]+x-.09, center[0]+x+.09, center[1]+y-.09, center[1]+y+.09, -1., h]
             for (x, y, _), h in zip(FEET, heights)]
 
 

@@ -19,6 +19,7 @@ def test_start_is_supported_and_full_motion_stays_in_sparse_zone(kind, cmd):
     assert result["status"] == "ready"
     assert result['support_height_spread_m'] <= .03 + 1e-8
     assert min(result['sole_air_gaps_m']) == pytest.approx(.01)
+    assert min(result['foot_edge_clearances_m']) >= .05 - 1e-8
     start = np.array(result["origin"])
     assert sparse_starts.valid_start(start, tile.boxes[3:], cmd, yaw=result["yaw_rad"])
     end = start[:2] + sparse_starts.rotate_xy(np.array(cmd[:2]) * 2., result["yaw_rad"])
@@ -193,9 +194,15 @@ def test_installed_legacy_generators_have_supported_start_and_bounded_endpoint(i
     finally:
         np.random.set_state(state)
     result = sparse_starts.legacy_start(name, cfg, .5, meshes, cmd)
+    if name == 'floating_ring':
+        assert result['status'] == 'no_start' and result['origin'] is None
+        assert result['previous_origin'] is not None
+        assert result['reason'] == 'no_four_foot_support'
+        return
     assert result["status"] == "ready"
     assert result['support_height_spread_m'] <= .03 + 1e-8
     assert min(result['sole_air_gaps_m']) == pytest.approx(.01)
+    assert min(result['foot_edge_clearances_m']) >= .05 - 1e-8
     zone, floor = sparse_starts.legacy_region(name, cfg, .5)
     boxes = sparse_starts.support_boxes(meshes, floor)
     start = np.array(result["origin"])
@@ -226,7 +233,9 @@ def test_legacy_assembly_uses_checked_mesh_and_never_falls_back(installed_legacy
                                  slope_threshold=.75, sub_terrains=subs)
     monkeypatch.setattr(terrain_sets, "v2_generator", lambda _: (copy.deepcopy(base), None))
     cfg = terrain_sets.merged_generator(list(subs), .5, 42, start_cmd=(-.3, 0., 0.))
-    assert cfg.num_cols == 3 and cfg.use_cache is False
+    assert cfg.num_cols == 2 and cfg.use_cache is False
+    assert cfg.axis3_starts['floating_ring']['status'] == 'no_start'
+    assert 'floating_ring' not in cfg.sub_terrains
     for name, sub in cfg.sub_terrains.items():
         meshes, origin = sub.function(.5, sub)
         assert origin == pytest.approx(cfg.axis3_starts[name]["origin"])

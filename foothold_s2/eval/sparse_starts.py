@@ -6,7 +6,7 @@ import numpy as np
 
 from foothold_s2.robots import go2_kinematics as fk
 
-FOOT_EDGE_MARGIN_M = .02  # lead 가정 10/21
+FOOT_EDGE_MARGIN_M = .05  # lead 가정 10/21 N1e: 발 구 가장자리에서 5 cm
 YAW_STEP_DEG = 15
 MAX_SUPPORT_HEIGHT_SPREAD_M = .03  # lead 가정 10/21 N1d
 MIN_SOLE_CLEARANCE_M = .01        # lead 결정 10/21 N1d 선택 2
@@ -136,6 +136,22 @@ def root_height_for_supports(heights, foot_center_z):
     return float(np.max(heights - foot_center_z + fk.FOOT_RADIUS_M) + MIN_SOLE_CLEARANCE_M)
 
 
+def _foot_edge_distances(foot_xy, heights, patches, lows, highs):
+    """선택된 높이의 지지 사각형 경계까지 중심 거리. 겹치면 가장 넓은 여유를 쓴다.
+
+    coplanar 전체 변은 이미 합쳤다. 비직사각형 합집합은 확장하지 않으므로 보수적인 거리다.
+    """
+    distances = []
+    for point, height in zip(foot_xy, heights):
+        ok = (np.all((point >= lows-EPS) & (point <= highs+EPS), axis=1)
+              & (np.abs(patches[:, 5]-height) <= EPS))
+        supports = patches[ok]
+        to_edges = np.column_stack((point[0]-supports[:, 0], supports[:, 1]-point[0],
+                                    point[1]-supports[:, 2], supports[:, 3]-point[1]))
+        distances.append(float(to_edges.min(axis=1).max()))
+    return np.asarray(distances)
+
+
 def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_height_m=fk.DEFAULT_ROOT_HEIGHT_M):
     """24개 yaw마다 네 발의 허용 root 사각형을 정확히 교차한다. 위치 격자는 쓰지 않는다.
 
@@ -151,11 +167,12 @@ def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_
                 eligible=False, previous_origin=previous['origin'], previous_status=previous['status'],
                 previous_reason=previous['reason'], yaw_rad=None, feet_body=feet.tolist(),
                 foot_radius_m=fk.FOOT_RADIUS_M, foot_edge_margin_m=FOOT_EDGE_MARGIN_M,
+                foot_order=list(fk.LEGS),
                 yaw_step_deg=YAW_STEP_DEG, height_rule='max(support_z - FK_foot_z + radius) + 0.01',
                 max_support_height_spread_m=MAX_SUPPORT_HEIGHT_SPREAD_M,
                 min_sole_clearance_m=MIN_SOLE_CLEARANCE_M,
                 reset_joint_jitter=False, reset_pose_jitter=False,
-                comparison_note='N1d 뒤·옆: 기본 관절 고정, 높이차 3 cm 이하, 발 구 바닥 최소 여유 1 cm',
+                comparison_note='N1e 뒤·옆: 기본 관절 고정, 높이차 3 cm 이하, 발 구 바닥 최소 여유 1 cm, 발 구 가장자리 여유 5 cm',
                 root_height_m=root_height_m, terrain_origin_z=None, previous_terrain_origin_z=root_z,
                 xy_only_candidate=None,
                 default_joint_pos=[list(v) for v in fk.DEFAULT_JOINT_POS])
@@ -199,14 +216,17 @@ def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_
     def pose_record(candidate, spawn_z):
         _, xy, yaw, offsets, heights = candidate
         world = np.column_stack((xy+offsets, feet[:, 2]+spawn_z))
+        edge_distances = _foot_edge_distances(world[:, :2], heights, patches, lows, highs)
         return dict(origin=[float(xy[0]), float(xy[1]), float(root_z)], yaw_rad=yaw,
                     feet_world=world.tolist(), support_heights_m=heights.tolist(),
+                    foot_center_edge_distances_m=edge_distances.tolist(),
+                    foot_edge_clearances_m=(edge_distances-fk.FOOT_RADIUS_M).tolist(),
                     support_height_spread_m=float(np.ptp(heights)),
                     foot_air_gaps_m=(world[:, 2]-heights).tolist(),
                     sole_air_gaps_m=(world[:, 2]-heights-fk.FOOT_RADIUS_M).tolist())
 
     if best_xy is not None:
-        # N1c 수치를 기록으로 보존한다. 실행·판정용 fallback이 아니다.
+        # 현재 XY 여유의 최근접 후보에 옛 root 높이를 적용한 비교 기록. 실행용 fallback이 아니다.
         base['xy_only_candidate'] = dict(pose_record(best_xy, root_z+root_height_m), eligible=False, status='record_only')
         base['minimum_candidate_height_spread_m'] = min_spread
     if best is None:

@@ -160,7 +160,7 @@ def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, 
     verify_mapping(raw, names, args.envs_per_terrain)
     if fixed_start:
         terrain_sets.sparse_starts.install_fixed_reset(raw, names, generator.axis3_starts)
-        adapter.changes.append("축 3 뒤·옆: 네 발 XY 지지·높이차 3 cm 이하, 선택 yaw, 기본 관절, 발 바닥 최소 1 cm")
+        adapter.changes.append("축 3 뒤·옆: 네 발 XY 지지·높이차 3 cm 이하, 선택 yaw, 기본 관절, 발 바닥 최소 1 cm, 발 구 가장자리 여유 5 cm")
     raw.reset()
     env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
 
@@ -252,7 +252,7 @@ def do_axis3():
                           "episodes_per_terrain": args.episodes},
                          {"group": args.group, "direction": args.direction, "cmd": args.cmd,
                           "cmd_basis": args.cmd_basis, "axis3_rule": rule["rule"],
-                          "reset_condition": "N1d default joints, selected yaw, no jitter, height spread <= 0.03, min sole gap 0.01" if starts is not None
+                          "reset_condition": "N1e default joints, selected yaw, no jitter, height spread <= 0.03, min sole gap 0.01, min foot edge clearance 0.05" if starts is not None
                           else "existing reset"})
 
 
