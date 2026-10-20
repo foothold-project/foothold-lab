@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 42 · 52~54 · 60~72 · 76~86 · 185~217 · 221 · 347 행 · 선행 2409.15692v2 35 · 353 행 · HiPAN 2604.26504 134~168 행 · ASTRA 19f Q3 · fable 20e R1 · R4 · DECISIONS-step2-lead.md S 행 · evidence/E1-vs-v2-axis1.csv · axis2.csv · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · APPROVED F-D4(팀장 승인) · VERIFY-fable-20f P23 · P29
 > 요지: START 의 비대칭 actor-critic 단일 단계 학습을 그대로 쓰고, 명령 세 칸은 관측 안에 둔다. 「무엇이 효과였나」 를 가르려고 지도 입력과 가장자리 보상만 바꿔 끼우는 갈래 G0 · G1 · G3 를 같은 코드에서 설정으로 고른다. S1 은 높이 스캔 판과 눈 없음 판 둘 다 돌린다(팀장 승인 D35). 추종 보상은 정확 추종(팀장 승인 D21)
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20n rl 가정 13 대조 반영(fable 10/20)**
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20n rl 가정 13 대조 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
 
 # 13 · 정책 (actor · critic · 학습 방식 · 비교 갈래)
 
@@ -26,7 +26,7 @@ flowchart LR
 | 항목 | 차원 | 등급 · 위치 |
 |---|---|---|
 | o_t | 45 = 몸 각속도 3 · 로봇 틀 중력 3 · **속도 명령 3 (vx, vy, wz)** · 관절각 12 · 관절각속도 12 · 이전 행동 12 | **논문** START 식 1 (64 행, 60~72 행) |
-| 관측 스케일 | ang_vel 0.25 · dof_pos 1.0 · dof_vel 0.05 · cmd 2.0 / 0.25 | **가정** legged_gym 관행(SPEC-start-go2 28 행). **코드** JEPLO `go2_loco_env.py` 614~615 도 같은 배율 |
+| 관측 스케일 | **배율 없음**(Isaac Lab 기본 · 잡음만) · `actor_obs_normalization=False` | **코드** sonnet `tasks/s1_env_cfg.py` 83~90 · `agents/s1_ppo_cfg.py` 16 행(20m #4 · lead 20s 「코드대로」). 옛 가정 legged_gym 배율(ang_vel 0.25 · dof_vel 0.05 · cmd 2.0 / 0.25 · JEPLO `go2_loco_env.py` 614~615)은 쓰지 않는다. S1-scan 이 v2 · NVIDIA 와 같은 조건(§4) |
 | actor 입력 (S2 이후) | o_t 45 + z 16 + v̂ 3 + ẑ^f 16 + ẑ^b 16 = **96** | **선행(START 미기재)** 2409.15692v2 Table V 353 행 · 35 행(ẑ^f · ẑ^b ∈ R16) · z_t 16 은 v1 본문(deep-research (7)) |
 | actor 입력 (S1-scan) | o_t 45 + 정답 높이 스캔 187 (v2 와 같은 격자) = 232 | **실측** v2 보고 7 절(「지금 정책이 보는 것」) · 시뮬 전용 |
 | actor 입력 (S1-blind) | o_t 45 + 고유수용 이력 10 × 45 = 495 (GRU 없이 이력 연결, HiPAN student 식 op50 의 축소판) | **가정** · HiPAN 268~272 행 참고 |
@@ -96,11 +96,11 @@ E1 은 눈 없는 MoE-CTS 정책이고, 명령은 vx · vy ±1 · wz ±1.5 로 �
 
 | 무엇 | 어디에 | 비고 |
 |---|---|---|
-| 환경 | `foothold_s2/tasks/s1_env_cfg.py` · `s2_env_cfg.py` (Isaac Lab manager-based velocity env 바탕, task 이름 `FootholdS2-Go2-S1-v0` · `-S2-v0`). 관측 그룹 `policy` (o_t 45 + 이력 또는 깊이 2×60×60) · `critic` (o_t + s_t) | 관측 그룹 이름은 rsl_rl 비대칭 입력 규약(`policy` · `critic`) |
+| 환경 | `foothold_s2/tasks/s1_env_cfg.py` · `s2_env_cfg.py` (Isaac Lab manager-based velocity env 바탕, task 이름 `FootholdS2-Go2-S1a-scan-v0` · `-S1a-blind-v0` · `-S2-G0-v0` · `-S2-G1-v0` · `-S2-G3-v0`(별칭 `-S2-v0` = G1 cfg), **코드** sonnet `tasks/__init__.py` 9 · 22 · 30 행 · 20m #8). 관측 그룹 `policy` (o_t 45 + 이력 또는 깊이 2×60×60) · `critic` (o_t + s_t) | 관측 그룹 이름은 rsl_rl 비대칭 입력 규약(`policy` · `critic`) |
 | 정책 모듈 | `foothold_s2/models/start_policy.py`: rsl_rl `ActorCritic`(MLP) 인터페이스를 지키는 우리 클래스로 12 문서 지각과 actor · critic 을 묶음. 설치 `ActorCriticRecurrent` 는 1 차원 관측만 받고 actor · critic 에 GRU 를 붙이므로 **쓰지 않는다**(rsl_rl 3.1.2 `actor_critic_recurrent.py` 57 · 67 행, VERIFY-astra-final 5). 두 GRU 는 지각 안(12 §6.1) | 지각 출력은 detach 해서 actor 로. PPO 재평가는 수집 때 저장한 96 차원 입력 · log prob 로만(12 §6.1) |
 | runner · 진입점 | `foothold_s2/runners/start_runner.py`: OnPolicyRunner 를 상속, 순서 ① 수집 ② PPO update ③ 지각 재생 · L_TR + L_IE ④ AdaSmpl ⑤ 저장(12 §6.1). 진입점은 `foothold_s2/scripts/train_start.py`(설치 `train.py` 198~203 행이 사용자 runner 를 거부하므로 rank 처리 119 · 137~143 행 이식) | 지각 optimizer 별도(수치 12 §6.1) · checkpoint 상태 목록 12 §6.1 · 분산 계약 18 §5 |
 | 갈래 설정 | 위 4 절 표의 설정 키를 Hydra cfg 로. 실행마다 `params/` 에 저장 | 같은 커밋 · 같은 시드에서 키만 다름 |
-| 수출 | actor + 지각을 ONNX 로 → Orin NX TensorRT(START 379 행과 같은 급, APPROVED H). 50 Hz 추론 시간은 42 T7 | |
+| 수출 | actor + 지각을 ONNX 로 → Orin NX TensorRT(START 379 행과 같은 급, APPROVED H). 50 Hz 추론 시간은 42 T7. **배포 파일 한 벌(lead 20s)**: `exported/policy.onnx`(sonnet `deploy/export.py` · obs 495 · opset 17 · 원본 .pt 와 같은 입력에서 1e-5) + `params/deploy.yaml`(공식 unitree_rl_lab `utils/export_deploy_cfg.py` 와 같은 칸 이름: joint_names_isaac · joint_names_sdk · joint_ids_map · step_dt · stiffness · damping · default_joint_pos · actions(JointPositionAction scale 0.25 · offset) · observations(policy: history_length 11 · terms base_ang_vel · projected_gravity · velocity_commands · joint_pos_rel · joint_vel_rel · last_action · flatten per_term · history_order oldest_first) · commands.base_velocity.ranges, **코드** sonnet `deploy/record_isaac.py` 69~88 행 · e9460aac) | 42 §1.2 · 23 §8 |
 
 ## 7. 검증 사다리
 

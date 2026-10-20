@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: Go2 URDF `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf` 6 · 63 · 84 · 89 · 101 · 122 · 139 · 160 · 205 · 251 · 289 · 327 · 418 · 456 · 494 행 · Isaac Lab 2.3.2 `isaaclab_assets/robots/unitree.py` 140~180 · `actuators/actuator_pd.py` 295~307 · `config/go2/rough_env_cfg.py` 30~35 · `sensors/contact_sensor/contact_sensor_cfg.py` 45 · PIE 2408.13740v3 Table II (ASTRA 19g 4 절, root.tex 182~203) · START 2512.13153v1 221 · 580 행 · JEPLO `go2_loco_env.py` 835~847 (evidence/maicode-jeplo-deep) · MARG 2509.20036v2 647 행 · DECISIONS-step2-lead.md A3 · A4 · APPROVED F-D1 · F-D2 · H(팀장 승인 10/19) · fable 20e 2 절 · VERIFY-fable-20f P9 · P22
 > 요지: 시뮬 Go2 가 실기보다 「빠르거나 세지」 않게 종아리 관절만 URDF 값(속도 15.70 rad/s · 토크 45.43 N·m)으로 떼어 DCMotor 로 두고, 나머지는 Isaac Lab Go2 설정을 그대로 쓴다(팀장 승인). 무작위화는 START 가 위임한 PIE 표를 쓴다(짐 무게 −1~2 kg, 팀장 승인). 실측이 오면 실측이 이긴다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)**
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
 
 # 17 · Go2 로봇 모델
 
@@ -87,7 +87,7 @@ START 는 「DR 은 [31] 을 따른다」 고만 쓴다(**논문** 221 행). [31
 
 ## 7. 종료 조건 (논문 미기재 · 가정)
 
-START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 지면 아래 문턱 밑」 만 적는다(**논문** 221 행, 숫자 없음 · deep-research). 1 차 **가정**: roll 또는 pitch > 1.5 rad(**코드** JEPLO `go2_loco_env.py` 835~847) 또는 발 높이 < 지면 −0.2 m(**논문** MARG 2509.20036v2 647 행의 −0.2 m 를 참고). 몸통 접촉 종료는 두지 않는다(fable 20a S-10, Rudin 기본과 다름 · 기록).
+START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 지면 아래 문턱 밑」 만 적는다(**논문** 221 행, 숫자 없음 · deep-research). 1 차 **가정**: 투영 중력과 z 축 사이 각 > 1.5 rad(Isaac Lab `bad_orientation(limit_angle=1.5)`, **코드** sonnet `tasks/s1_env_cfg.py` 152~153 · 설치 `terminations.py` 51~57 행 · 20m #5 · lead 20s 「코드대로」. JEPLO `go2_loco_env.py` 835~847 의 roll · pitch 각각 1.5 와는 기하가 다름: roll 1.2 · pitch 1.2 는 JEPLO 식으로 생존, 우리 식으로 종료) 또는 발 높이 < 지면 −0.2 m(**논문** MARG 2509.20036v2 647 행의 −0.2 m 를 참고). 몸통 접촉 종료는 두지 않는다(fable 20a S-10, Rudin 기본과 다름 · 기록).
 
 ## 8. 장면 예
 
@@ -100,7 +100,7 @@ START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 �
 ## 9. 구현 방법 · 검증 사다리
 
 - 자리: `foothold_s2/robots/go2_cfg.py`. `UNITREE_GO2_CFG` 를 복제해 `actuators` 를 `hip_thigh`(`.*_hip_joint`, `.*_thigh_joint`) · `calf`(`.*_calf_joint`) 두 `DCMotorCfg` 로 나눈다. DR 은 `EventCfg` 의 `randomize_rigid_body_material`(마찰) · `randomize_rigid_body_mass`(짐) · `randomize_actuator_gains`(Kp · Kd) · 무게중심 이동 · 카메라 자세(센서 오프셋) term. 시스템 지연은 행동 지연 버퍼 term(`tasks/delayed_action.py`), 모터 세기 배율은 이득 무작위화와 같은 startup event(둘 다 구현 예정 · 20m).
-- L0 CPU: 설치 `DCMotor._clip_effort` 를 CPU 더미 상태로 그대로 실행해 ASTRA 표와 대조: +100 요청 → q̇ 0 · 7.85 · 15.70 · 20.00 에서 +45.430 · +22.715 · 0 · −12.443, −100 요청 → 네 속도 모두 −45.430. negative control: `velocity_limit` 을 30 으로 두면 15.70 에서 +21.67 이 나와야 함. AST 로 cfg 의 joint 정규식이 URDF 관절 이름 12 개를 정확히 둘로 나누는지(가짜 cfg 금지, 실제 USD 관절 이름으로).
+- L0 CPU: 설치 `DCMotor._clip_effort` 를 CPU 더미 상태로 그대로 실행해 ASTRA 표와 대조: +100 요청 → q̇ 0 · 7.85 · 15.70 · 20.00 에서 +45.430 · +22.715 · 0 · −12.443, −100 요청 → 네 속도 모두 −45.430. negative control: `velocity_limit` 을 30 으로 두면 15.70 에서 +21.66(= 45.43 × (1 − 15.70 / 30) = 21.655 · 20m #6 정정)이 나와야 함. AST 로 cfg 의 joint 정규식이 URDF 관절 이름 12 개를 정확히 둘로 나누는지(가짜 cfg 금지, 실제 USD 관절 이름으로).
 - L1 Kit: 첫 10 update 에서 종아리 q̇ 히스토그램 로그. DCMotor 는 토크를 줄일 뿐 속도를 막지 않으므로(`actuator_pd.py` 299~302 행) 15.70 을 넘는 스텝이 정상 판에서도 나올 수 있다. 기준은 「15.70 초과 비율 ≤ 1 %」(**가정**, VERIFY-lead-final 23).
 
 ## 10. 검증할 가설 · 열린 항목

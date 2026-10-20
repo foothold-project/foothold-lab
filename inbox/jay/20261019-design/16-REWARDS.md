@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 145~153 행(Table I) · 239~257 행(식 6) · 선행 2409.15692v2 280 행(부록 A) · HiPAN 2604.26504 587~627 행(Table III) · fable 20e R4 · REPORT-seokheon-ame2.md 11 · 13 · 52~78 · 90~104 행 · v2 보고서 6-10 · 7 절 · APPROVED F-D4(팀장 승인 10/19) · Isaac Lab 2.3.2 `velocity_env_cfg.py` 235~263 · `envs/mdp/rewards.py` 180 · VERIFY-fable-20f P34
 > 요지: START Table I 의 14 항과 가중치를 그대로 쓰되, 선속도 추종만 「정확 추종」 으로 바꾼다(팀장 승인 · 우리 변경). 발 가장자리 마스크는 「낙하 높이 0.2 m 이상인 모서리」 만 잡아 계단에서는 비게 두어 보상식을 지형군별로 끄지 않는다. 걸음새 문제는 보상을 늘리기 전에 측정부터 넣는다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · **20o sonnet 가정 다섯 반영(fable 10/20)**
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · **20o sonnet 가정 다섯 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
 
 # 16 · 보상
 
@@ -82,8 +82,8 @@
 
 - 자리: `foothold_s2/rewards/start_rewards.py`. Isaac Lab `RewardsCfg` 에 14 항을 `RewardTermCfg` 로 등록. 기존 항 재사용: `track_lin_vel_xy_exp`(B 식) · `track_ang_vel_z_exp` · `lin_vel_z_l2` · `ang_vel_xy_l2` · `flat_orientation_l2` · `joint_torques_l2` · `action_rate_l2` · `joint_acc_l2` · `undesired_contacts`(`velocity_env_cfg.py` 235~263). `joint_deviation_l1` 은 L1 뿐이라(`envs/mdp/rewards.py` 180) 11 항은 L2 로 새로 쓴다.
 - 새로 쓰는 항: 부드러움(2 차 차분, 행동 이력 2 개), 관절 일률, 걸려 넘어짐(접촉 센서 xy · z 비), 발 가장자리(15 문서 생성기가 만든 마스크를 `torch` 텐서로 들고, 발 위치를 격자 좌표로 바꿔 조회).
-- 켜짐 비율 로그: 각 벌점 항의 `(term != 0).float().mean()` 을 update 마다 기록.
-- 방식 A/B 는 cfg 한 줄로 바꿀 수 있게 둔다(기본 B).
+- 켜짐 비율 로그: 각 벌점 항의 `(term != 0).float().mean()` 을 update 마다 기록(**코드** sonnet 7c072ced `rewards/penalty_log.py` · 20m #7 반영).
+- 방식 A/B 는 cfg 한 줄로 바꿀 수 있게 둔다(기본 B. **코드** sonnet 7c072ced `tasks/s1_env_cfg.py` A/B 키 · 20m #7).
 
 ## 8. 검증 사다리
 

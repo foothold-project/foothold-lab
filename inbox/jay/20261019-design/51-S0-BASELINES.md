@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: evidence/E1-vs-v2-axis1.csv · E1-vs-v2-axis2.csv · `s2_lab/eval_e1_v2axes/`(10/19 실행 · `run_axis1.sh` · `run_axis2.sh` · `harness/` · `summarize.py`) · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · 41-EVAL-AXES · 15 문서 8 절 · APPROVED G-5 · H(평가 도구 재사용) · **K-H(이사 전 Windows, 팀장 승인 10/20 00:1x)** · VERIFY-fable-20f 4 절 · P32
 > 요지: 새 학습 전에 비교 대상 셋(NVIDIA · v2 · E1)을 같은 자로 잰 표를 완성한다. 평가 도구는 41 설계대로 새로 만들고(축 1 · 2 · 3 · START 시험지 · R/S/J 한 틀), v2 · E1 하네스는 옛 값 재현 대조용으로만 쓴다(팀장 정정 10/19). 이 단계가 임계 경로다(S1 관문을 재려면 10/23 까지 서야 한다). K-H: 이사 전 Windows 에서 10/20~10/22 에 끝내고, 이사일(10/23)은 Linux 재현 확인(같은 체크포인트 · 같은 시드 몇 판이 같은 숫자)만
-> 상태: v1.2 · 팀장 검토 전 · E1 축 1 · 2 는 10/19 실측 완료 · K-H 반영 · S0 세 판 표(evidence/baselines/, 10/20 SC-1 · SC-2) · 결정 2 · 7 반영(fable 20l)
+> 상태: v1.2 · 팀장 검토 전 · E1 축 1 · 2 는 10/19 실측 완료 · K-H 반영 · S0 세 판 표(evidence/baselines/, 10/20 SC-1 · SC-2) · 결정 2 · 7 반영(fable 20l) · **20s lead 답 8 항 반영(fable 10/20)**
 
 # 51 · S0 기준선
 
@@ -34,7 +34,7 @@ flowchart TB
 | 목적 | 「무엇보다 나아졌나」 의 자를 먼저 만든다 |
 | 입력 | NVIDIA `C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/nvidia_pretrained_source/nvidia_pretrained.pt`(sha256 `1891ab2b…def96f3`, S0 run_manifest.json 32 개 동일 · fable 20l 확인, 전체 값은 41 §1 표) · v2 `…/2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000/model_3000.pt`(sha256 `e5c21321…5ab2fee`, 41 §1 표) · E1 `C:/Users/AI-WS01/s2_lab/step1_run_b2/fixtures/model_20000.pt` (sha256 `c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8`) |
 | 바꾸는 것 | 없음. 평가 자만 넓힌다 |
-| GPU · 시간 | 축 1 한 판 약 27 분 · 축 2 약 5 분 (E1 **실측**, GPU 0). 축 3 · START 시험지는 세 판 × 약 1~2 시간 **가정**. **전부 Windows 에서 10/20~10/22**(K-H · D49). 이사일 10/23 은 Linux 재현 확인(축 2 9 칸 + 축 1 8 칸 × 2 판 ≈ 1 시간, **가정**)만 |
+| GPU · 시간 | 축 1 한 판 약 27 분 · 축 2 약 5 분 (E1 **실측**, GPU 0). 관문 판정 칸은 칸당 200 판(41 §8 · 20s)이라 범위 안 32 칸 한 판 약 44 분, 기준 판 200 판 재측 1 회를 더해 관문당 약 1.5 h(27 분 실측의 에피소드 길이 비례 **가정**). 축 3 · START 시험지는 세 판 × 약 1~2 시간 **가정**. **전부 Windows 에서 10/20~10/22**(K-H · D49). 이사일 10/23 은 Linux 재현 확인(축 2 9 칸 + 축 1 8 칸 × 2 판 ≈ 1 시간, **가정**)만 |
 | 관문 S0 | 세 판 모두 축 1 · 2 · 3 · START 시험지 숫자를 가짐(Windows) + Linux 재현 확인 통과(10/23). 41 §9 기준을 팀장이 확정해 **후보**로 1 단계 동결(10/22)에 넣고, 해시 등록은 각 학습 직전 2 단계 동결 때(50 §4) |
 | 결과별 갈래 | 축 3 하네스가 10/23 까지 안 서면 → S1-a 학습은 10/24 에 시작하고 축 3 은 S1 평가(10/30) 전까지 완성. START 시험지 생성기가 안 서면 → S1-b(11/14, D36) 와 S2(11/3) 의 선행 작업이 밀리므로 60 G 로 기록하고 D41 역할 안에서 Sonnet 코딩 세션을 더 띄운다(O5 는 닫힘) |
 | 산출물 | `evidence/baselines/` 표(판 × 축 × 칸 CSV) · 하네스 판 커밋 · `gates-v1.json` · `manifest-v1.json`(50 §4) |
