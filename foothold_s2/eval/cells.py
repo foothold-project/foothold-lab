@@ -186,11 +186,12 @@ def axis3_table(vy_obs=None):
                 sign = 1.0 if direction == "left" else -1.0
                 rows.append(dict(group=group, direction=direction, status="measure",
                                  commands=[(0.0, sign * VY_ASSUMED, 0.0)],
-                                 variant="fixed", basis=VY_ASSUMED_LABEL))
+                                 variant="fixed", basis=VY_ASSUMED_LABEL, gate_eligible=True))
                 status = "needs_vy_obs" if vy_obs is None else "zero_vy_obs" if vy_obs == 0 else "measure"
                 rows.append(dict(group=group, direction=direction, status=status,
                                  commands=[(0.0, sign * vy_obs, 0.0)] if status == "measure" else [],
-                                 variant="observed", basis="vy_obs"))
+                                 variant="observed", basis="vy_obs", gate_eligible=False,
+                                 label="기록 전용 · 판정 제외" if status == "measure" else "미측정 · 판정 제외"))
             elif rule == "measure":
                 rows.append(dict(group=group, direction=direction, status="measure",
                                  commands=list(DEFAULT_COMMANDS[direction])))

@@ -153,11 +153,14 @@ def policy_record(adapter):
 
 
 def run_episode_axis(mode, names, generator, base_cmd, duration_s, reference_m, judge_kwargs,
-                     recorded, tag, command_s=None):
+                     recorded, tag, command_s=None, fixed_start=False):
     adapter = make_adapter(args.terrain_set if args.axis == "axis1" else None)
     n_env = args.envs_per_terrain * len(names)
     built, raw, pin = build_and_load(adapter, generator, n_env, duration_s, [base_cmd] * n_env)
     verify_mapping(raw, names, args.envs_per_terrain)
+    if fixed_start:
+        terrain_sets.sparse_starts.install_fixed_reset(raw, names)
+        adapter.changes.append("축 3 뒤·옆: 검증된 지지 패치 원점, x/y/yaw reset 흔들기 0")
     raw.reset()
     env, policy, policy_nn, obs = adapter.load_policy(built, args.checkpoint)
 
@@ -213,11 +216,24 @@ def do_axis3():
     recorded = names if args.terrains == "all" else [t for t in args.terrains.split(",") if t]
     rule = cells.axis3_rule(args.group, args.direction, cmd)
     duration, reference_m = rule["duration_s"], rule["reference_m"]
-    generator = terrain_sets.merged_generator(names, args.difficulty, args.seed)
+    starts = None
+    excluded = []
+    generator = terrain_sets.merged_generator(
+        names, args.difficulty, args.seed, start_cmd=cmd if rule["rule"] == "sparse_short" else None)
+    if rule["rule"] == "sparse_short":
+        starts = generator.axis3_starts
+        excluded = [n for n in recorded if starts[n]["status"] != "ready"]
+        names = list(generator.sub_terrains)
+        recorded = [n for n in recorded if n not in excluded]
+        manifest.write_json(os.path.join(args.out, "axis3_starts.json"), starts)
     judge_kwargs = dict(yaw_deviation_deg=cells.AXIS3_PARAMS["yaw_deviation_deg"])
-    rows, stats, adapter, dt = run_episode_axis(
-        "command", names, generator, cmd, duration, reference_m, judge_kwargs,
-        recorded, "axis3 %s %s" % (args.group, args.cmd), command_s=rule["command_s"])
+    if recorded:
+        rows, stats, adapter, dt = run_episode_axis(
+            "command", names, generator, cmd, duration, reference_m, judge_kwargs,
+            recorded, "axis3 %s %s" % (args.group, args.cmd), command_s=rule["command_s"],
+            fixed_start=starts is not None)
+    else:
+        rows, stats, adapter, dt = [], {"episodes": 0}, None, None
 
     for row in rows:
         row["group"] = args.group
@@ -229,13 +245,16 @@ def do_axis3():
                          {"group": args.group, "cmd": list(cmd), "duration_s": duration,
                           "reference_m": reference_m, "command_s": rule["command_s"],
                           "axis3_rule": rule["rule"], "step_dt_s": dt,
-                          "params": cells.AXIS3_PARAMS, "stats": stats},
+                          "params": cells.AXIS3_PARAMS, "stats": stats,
+                          "start_plan": starts, "excluded_start_terrains": excluded,
+                          "episodes_per_terrain": args.episodes},
                          {"group": args.group, "direction": args.direction, "cmd": args.cmd,
                           "cmd_basis": args.cmd_basis, "axis3_rule": rule["rule"]})
 
 
 def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, summary_extra):
-    raw_path = manifest.write_csv(os.path.join(args.out, prefix + "_raw.csv"), rows)
+    raw_path = manifest.write_csv(os.path.join(args.out, prefix + "_raw.csv"), rows,
+                                  fieldnames=None if rows else ["terrain"])
     summary_rows = []
 
     for terrain in recorded:
@@ -244,8 +263,15 @@ def save_episode_outputs(prefix, rows, recorded, summarizer, adapter, extra, sum
         summary = dict(terrain=terrain, **summary_extra, **summary)
         summary_rows.append(summary)
 
-    manifest.write_csv(os.path.join(args.out, prefix + "_summary.csv"), summary_rows)
-    record = policy_record(adapter)
+    # 판이 없는 지형을 실패 0점으로 꾸미지 않는다. 별도 상태 행과 manifest에 남긴다.
+    for terrain in extra.get("excluded_start_terrains", []):
+        summary_rows.append(dict(terrain=terrain, **summary_extra, status="no_start",
+                                 label="시작점 없음 · 판정 제외", eligible=False))
+    fields = list(dict.fromkeys(key for row in summary_rows for key in row))
+    summary_rows = [{key: row.get(key) for key in fields} for row in summary_rows]
+    manifest.write_csv(os.path.join(args.out, prefix + "_summary.csv"), summary_rows,
+                       fieldnames=fields or ["terrain"])
+    record = policy_record(adapter) if adapter is not None else {"policy_loaded": False}
     record.update(extra)
     record["episodes_recorded"] = len(rows)
     finish(args.out, record)

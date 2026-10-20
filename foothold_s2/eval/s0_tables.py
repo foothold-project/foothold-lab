@@ -12,6 +12,7 @@
 """
 
 import argparse
+import json
 import os
 
 from foothold_s2.eval import cells, compare, manifest, rsj, s0_chain
@@ -116,23 +117,39 @@ def axis3_tables(root, policies, vy_obs=None):
         for spec in cells.axis3_table(vy_obs=value):
             base = dict(policy=policy, group=spec["group"], direction=spec["direction"],
                         status=spec["status"], basis=spec.get("basis", ""),
-                        variant=spec.get("variant", ""))
+                        variant=spec.get("variant", ""), gate_eligible=spec.get("gate_eligible"),
+                        label=spec.get("label", ""))
 
             if spec["status"] != "measure":
                 pooled_rows.append(base)
                 continue
 
             raw = []
+            exclusions = set()
 
             for cmd in spec["commands"]:
                 tag = s0_chain.axis3_job_tag(spec, cmd)
                 path = os.path.join(root, policy, "axis3", tag, "axis3_raw.csv")
+                starts_path = os.path.join(os.path.dirname(path), "axis3_starts.json")
+                if os.path.isfile(starts_path):
+                    with open(starts_path, encoding="utf-8") as handle:
+                        plan = json.load(handle)
+                    exclusions.update(n for n, start in plan.items() if start["status"] == "no_start")
 
                 if os.path.isfile(path):
                     raw += read_rows(path)
 
+            raw = [r for r in raw if r["terrain"] not in exclusions]
+            base["excluded_start_terrains"] = ";".join(sorted(exclusions))
+            if exclusions:
+                base["gate_eligible"] = False
+                base["label"] = "일부 지형 시작점 없음 · 합산 판정 제외"
+            for terrain in sorted(exclusions):
+                terrain_rows.append(dict(base, terrain=terrain, status="no_start",
+                                         label="시작점 없음 · 판정 제외", gate_eligible=False))
             if not raw:
-                pooled_rows.append(dict(base, status="not_run"))
+                pooled_rows.append(dict(base, status="no_start" if exclusions else "not_run",
+                                        gate_eligible=False))
                 continue
 
             pooled_rows.append(dict(base, commands=";".join(s0_chain._cmd_text(c) for c in spec["commands"]),
@@ -140,7 +157,8 @@ def axis3_tables(root, policies, vy_obs=None):
 
             for terrain in sorted({r["terrain"] for r in raw}):
                 picked = [r for r in raw if r["terrain"] == terrain]
-                terrain_rows.append(dict(base, terrain=terrain, **rsj.summarize_axis3_cell(picked)))
+                terrain_rows.append(dict(base, terrain=terrain, gate_eligible=spec.get("gate_eligible"),
+                                         label=spec.get("label", ""), **rsj.summarize_axis3_cell(picked)))
 
     return _uniform(pooled_rows), _uniform(terrain_rows)
 

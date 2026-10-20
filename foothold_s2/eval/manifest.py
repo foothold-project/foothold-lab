@@ -122,7 +122,7 @@ def write_csv(path, rows, fieldnames=None):
 
     None 은 빈 칸이다 («못 쟀다» 와 0 을 구별).
     """
-    if not rows:
+    if not rows and not fieldnames:
         raise ValueError("행이 없는 CSV 는 쓰지 않습니다: %s" % path)
 
     names = list(fieldnames or rows[0].keys())
@@ -154,11 +154,38 @@ def check_run_dir(out_dir, expected_rows, raw_name, log_name="run.log"):
     """
     problems = []
     raw_path = os.path.join(out_dir, raw_name)
+    excluded = set()
+    if raw_name == "axis3_raw.csv":
+        record_path = os.path.join(out_dir, "run_manifest.json")
+        if os.path.isfile(record_path):
+            with open(record_path, encoding="utf-8") as handle:
+                record = json.load(handle)
+            if record.get("excluded_start_terrains"):
+                from foothold_s2.eval import cells
+                try:
+                    excluded = set(record["excluded_start_terrains"])
+                    plan = record["start_plan"]
+                    count = record["episodes_per_terrain"]
+                    with open(os.path.join(out_dir, "axis3_starts.json"), encoding="utf-8") as handle:
+                        persisted = json.load(handle)
+                    valid = (record["group"] == "sparse" and record["axis3_rule"] == "sparse_short"
+                             and set(plan) == set(cells.TERRAIN_GROUPS["sparse"]) and persisted == plan
+                             and excluded == {n for n, r in plan.items() if r["status"] == "no_start"}
+                             and all(plan[n]["origin"] is None and plan[n]["eligible"] is False for n in excluded)
+                             and isinstance(count, int) and count > 0 and expected_rows == len(plan) * count)
+                    if not valid:
+                        raise ValueError("제외 근거 불일치")
+                    expected_rows -= len(excluded) * count
+                except (KeyError, TypeError, OSError, ValueError):
+                    problems.append("시작점 제외 기록 불일치")
 
     if not os.path.isfile(raw_path):
         problems.append("원자료 %s 없음" % raw_name)
     else:
-        n = len(read_csv(raw_path))
+        rows = read_csv(raw_path)
+        n = len(rows)
+        if any(row.get("terrain") in excluded for row in rows):
+            problems.append("시작점 없는 지형의 판정 원자료가 있음")
 
         if n != expected_rows:
             problems.append("원자료 줄 수 %d, 기대 %d" % (n, expected_rows))

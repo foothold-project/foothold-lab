@@ -2,6 +2,7 @@
 
 import ast
 import copy
+import os
 from pathlib import Path
 import sys
 import types
@@ -9,7 +10,7 @@ import types
 import numpy as np
 import pytest
 
-from foothold_s2.eval import cells, manifest, s0_chain, s0_tables, terrain_sets
+from foothold_s2.eval import cells, manifest, s0_chain, s0_tables, terrain_sets, sparse_starts
 
 
 def test_two_side_cells_keep_fixed_and_observed_even_at_same_speed():
@@ -43,13 +44,18 @@ def test_invalid_observed_speed_is_rejected(value):
         cells.axis3_table(value)
 
 
-def test_axis3_entry_keeps_all_seven_terrains_and_short_rule():
+def test_axis3_entry_keeps_all_seven_terrains_and_short_rule(tmp_path):
     # Execute only the real function body: importing this entry point would start Kit.
     tree = ast.parse((Path(terrain_sets.__file__).parent / "run_eval.py").read_text(encoding="utf-8"))
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "do_axis3")
-    ns = {"cells": cells}
+    ns = {"cells": cells, "manifest": manifest, "os": os}
     calls = []
-    ns["terrain_sets"] = types.SimpleNamespace(merged_generator=lambda names, *_: list(names))
+    def generator(names, difficulty, seed, start_cmd=None):
+        plan = {name: {"status": "ready"} for name in names}
+        if start_cmd:
+            plan.update(sparse_starts.start_plan(difficulty, start_cmd))
+        return types.SimpleNamespace(axis3_starts=plan, sub_terrains=dict.fromkeys(names))
+    ns["terrain_sets"] = types.SimpleNamespace(merged_generator=generator, sparse_starts=sparse_starts)
     ns["rsj"] = types.SimpleNamespace(summarize_axis3_cell=None)
     ns["save_episode_outputs"] = lambda *args: None
     def run(*args, **kwargs):
@@ -61,13 +67,15 @@ def test_axis3_entry_keeps_all_seven_terrains_and_short_rule():
                                      ("left", "0,0.2,0", 0.4),
                                      ("right", "0,-0.35,0", 0.7)]:
         ns["args"] = types.SimpleNamespace(cmd=cmd, group="sparse", terrains="all",
-                                          direction=direction, difficulty=.5, seed=42, cmd_basis="")
+                                          direction=direction, difficulty=.5, seed=42, cmd_basis="",
+                                          out=str(tmp_path), episodes=100)
         ns["do_axis3"]()
         args, kw = calls[-1]
         assert args[1] == ["gap", "stepping_stones", "floating_ring", "stepping_stones_start",
                            "balance_beams", "stepping_beams", "gaps_start"]
         assert args[4] == 4.0 and args[5] == pytest.approx(distance)
         assert kw["command_s"] == 2.0
+        assert kw["fixed_start"] is True
 
 
 def test_merged_generator_uses_real_8x8_mesh_functions_without_kit(monkeypatch):
@@ -75,6 +83,8 @@ def test_merged_generator_uses_real_8x8_mesh_functions_without_kit(monkeypatch):
     class Cfg:
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
+            if hasattr(type(self), "function"):
+                self.function = type(self).function
     fake = types.ModuleType("isaaclab.terrains")
     fake.SubTerrainBaseCfg = Cfg
     utils = types.ModuleType("isaaclab.utils")
@@ -101,6 +111,14 @@ def test_merged_generator_uses_real_8x8_mesh_functions_without_kit(monkeypatch):
         assert np.min(bounds[:, 0, 1]) == pytest.approx(0.)
         assert np.max(bounds[:, 1, 1]) == pytest.approx(8.)
         assert origin == pytest.approx([.5, 4., 0.])
+    plan = sparse_starts.start_plan(.5, (-.3, 0., 0.))
+    cfg = terrain_sets.merged_generator(cells.START_SHEETS, .5, 42, start_cmd=(-.3, 0., 0.))
+    assert cfg.use_cache is False
+    for name, start in plan.items():
+        sub = cfg.sub_terrains[name]
+        _, origin = sub.function(.5, sub)
+        assert origin == pytest.approx(start["origin"])
+        assert origin[0] != .5
 
 
 def test_same_speed_side_results_are_not_overwritten_or_pooled(tmp_path):
