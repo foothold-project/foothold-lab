@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 221 행 · HiPAN 2604.26504 534~535 · 632~635 행 · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` 13~32 · `config/anymal_d/agents/rsl_rl_ppo_cfg.py` 31~34 · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · `distillation_cfg.py` 21~106 · `docs/research/training-benchmarks.md` 19 행 · evidence/seokheon-sept-iteration-timing.txt · REPORT-seokheon-ame2.md 128 행 · Isaac Lab multi-GPU 문서(이 세션 10/19 열람) · fable 20e Q6(118~140 행) · DECISIONS S 행 · fable 20a S-1 · S-2 · APPROVED F-D3 · H(팀장 승인 10/19) · vfxpedia/mai-os#34 · VERIFY-fable-20f P10~P14 · P21 · P23 · APPROVED K-H · K-I · **L(S2 20,000 회, 팀장 승인 10/20 00:4x)** · **VERIFY-astra-final 2 · 5 · 6(20k)** · rsl_rl 3.1.2 `ppo.py` 73~86 행 · `on_policy_runner.py` 291~303 행 · `rollout_storage.py` 49 행 · Isaac Lab `setup.py` 49 행
 > 요지: PPO 값은 논문에 없어 Isaac Lab Go2 공식 cfg 값을 가정으로 쓴다(legged_gym · Deep Robotics 와 같은 값). S1 은 Isaac Lab 기본 4096 env, S2 는 START 3072 · 24 를 지키고 16 GB 가 모자라면 1 순위 Linux 다중 GPU(1536 × 2), 2 순위 env 축소 + steps 증가(팀장 승인). S2 는 반복 20,000 회(L, 논문의 2 배)라 GPU 시간은 전체의 10~15 %(재학습 포함 12~17 %)이고, 그래도 병목은 코드다. 구현 주체와 코드 자리를 여기에 둔다
-> 상태: v1.3 · 팀장 검토 전 · K-H · K-I · L · 20k(분산 동기화 · 메모리 단계별 · microbatch 계약) · 결정 6(담당 확정 · fable 20l) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1.3 · 팀장 검토 전 · K-H · K-I · L · 20k(분산 동기화 · 메모리 단계별 · microbatch 계약) · 결정 6(담당 확정 · fable 20l) 반영 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · **20o sonnet 가정 다섯 반영(fable 10/20)**
 
 # 18 · 학습 설정 · GPU 예산 · 구현 주체
 
@@ -89,7 +89,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | 커리큘럼 · 명령 | terrain_levels · types 는 rank 별 env 라 독립. p_advance 의 T 는 iteration 공통. heading · 깃발 표집은 독립 | **가정** |
 | 저장 · 복원 | rank 0 만 저장(12 §6.1 상태 목록 전부: 정책 · PPO optimizer · 지각 · 지각 optimizer · AdaSmpl · 정규화 · 커리큘럼 · RNG). 복원 뒤 초기 broadcast 를 다시 한다 | 설치 `save()` 는 정책 · PPO optimizer · RND 만(`on_policy_runner.py` 291~303 행) |
 | 시험(Linux 이전 직후 · #34) | **2-rank 가중치 일치 시험**: 1536 × 2 로 10 update 뒤 두 rank 의 정책 · 지각 state_dict sha256 동일 · AdaSmpl p 동일 · 지각 optimizer 상태 동일. negative control: 지각 all_reduce 를 끄면 sha256 이 갈라져야 함 | **가정** |
-| 버전 · 진입점 | Linux 에서도 **rsl-rl-lib 3.1.2**(Isaac Lab `source/isaaclab_rl/setup.py` 49 행 핀 `rsl-rl-lib==3.1.2`, Windows isaac311 설치 METADATA 3.1.2 확인). isaac311-moects 에는 3.3.0 이 있어 **환경 이름 없이 버전을 추정하지 않고** manifest 에 환경 이름 · 버전 · 커밋을 적는다. 진입점은 `foothold_s2/scripts/train_start.py`(설치 `train.py` 198~203 행은 사용자 runner 를 거부 · per-process `--num_envs` 119 행 · rank 별 device · seed 137~143 행 이식). 실행 예(실행하지 않음): `python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 foothold_s2/scripts/train_start.py --task=FootholdS2-Go2-S2-v0 --num_envs=1536 --headless --distributed` | **코드** |
+| 버전 · 진입점 | Linux 에서도 **rsl-rl-lib 3.1.2**(Isaac Lab `source/isaaclab_rl/setup.py` 49 행 핀 `rsl-rl-lib==3.1.2`, Windows isaac311 설치 METADATA 3.1.2 확인). isaac311-moects 에는 3.3.0 이 있어 **환경 이름 없이 버전을 추정하지 않고** manifest 에 환경 이름 · 버전 · 커밋을 적는다. 진입점은 `foothold_s2/scripts/train_start.py`(설치 `train.py` 198~203 행은 사용자 runner 를 거부 · per-process `--num_envs` 119 행 · rank 별 device · seed 137~143 행 이식). 실행 예(실행하지 않음): `python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 foothold_s2/scripts/train_start.py --task=FootholdS2-Go2-S2-v0 --num_envs=1536 --headless --distributed`. **실행 환경(lead 20o)**: S2 학습 · 시험은 Windows 에서도 **isaac311 환경(rsl-rl-lib 3.1.2, METADATA 확인)** 으로 통일한다. 기본 Kit python 이 잡는 rsl_rl 은 `C:/isaac/ext/go2_rl_robotlab/source/rsl_rl` 의 다른 판(pyproject 3.3.0, fable 이 경로의 판만 확인 · Kit 은 띄우지 않음)이라 쓰지 않는다(sonnet HANDOFF-S1 46 행 「ext 쪽 사본으로 잡힘」 · rl 시험의 `store_code_state` import 오류가 그 증상) | **코드** · lead 20o |
 
 ### 5.2 메모리: 수집 peak 와 학습 peak 를 구분한 사전 대책 (20k · VERIFY-astra-final 6)
 
@@ -108,7 +108,7 @@ S2 에서 16 GB 가 모자랄 때(**팀장 승인** F-D3): 1 순위 Linux 다중
 | 모듈 | 파일 (Isaac Lab 확장 `foothold_s2/` 가칭) | 담당(코딩 세션) | 검증 | 쓰는 단계 |
 |---|---|---|---|---|
 | 명령 생성기 · 승급 | `commands/mixed_command.py` · `curriculum/terrain_levels_mixed.py` | lead (Sonnet) | fable L0~L2 | S1~S4 |
-| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py`(열 수 50 · 우리 변경, 15 §2) · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py`(**p_advance env 원점 재배정 term · Isaac Lab 에 없어 직접 구현**, 15 §5) | lead (Sonnet) | fable(15 §9 열 배정 · 재배정 L0) · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
+| 지형 · 마스크 · 전환 | `terrains/rough_go2_cfg.py`(열 수 50 · S1-a 는 23 · 우리 변경, 15 §2) · `terrains/sparse_terrains.py` · `terrains/edge_mask.py` · `terrains/progression.py`(**p_advance env 원점 재배정 term · Isaac Lab 에 없어 직접 구현**, 15 §5) | lead (Sonnet) | fable(15 §9 열 배정 · 재배정 L0) · ASTRA 1 회 | S0 START 시험지 · S1-b · S2 · 22 |
 | 11/7 시연 | `sim/isaac_teleop.py`(조이스틱 → 세 칸 → 정책 50 Hz · Isaac Sim 창 · 녹화 · 정지 · 회전 · 저속) | lead (Sonnet) | fable(11/6 리허설 확인) | 11/7 · 52 §5 · 70 |
 | 보상 | `rewards/start_rewards.py` | lead (Sonnet) | fable | S1~S4 |
 | 로봇 · DR | `robots/go2_cfg.py` | lead (Sonnet) | fable · ASTRA 1 회(DCMotor 분리) | 전부 |

@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: `inbox/jay/20261018-next-arch/ANALYSIS-app-prd-553.md` 31 · 36 · 39 · 41 · 47 · 54 · 55 · 68 · 72 · 80 · 88 행 · `inbox/jay/20261013-go2-app-study/REPORT-astra-10.md` 63~77 · 130~133 · 234 행 · 00 개요 · 14 §3 · JEPLO @460e227 `go2_loco_env.py` 427~459 (evidence/maicode-jeplo-deep) · 팀장 일정(11/30 SLAM · Nav2 트랙 종료) · APPROVED G-1 · H(앱은 시뮬 연결 먼저 · STOP = 모든 것 멈춤 · 자세 유지 설계) · **K-I(11/7 Isaac Sim · 앱 시뮬 연결은 S1-x 위, 팀장 승인 10/20 00:1x)** · VERIFY-fable-20f P15
 > 요지: HiPAN 상위가 늦거나 실패해도 시연이 끊기지 않게, Nav2 경로를 「깃발 추종기」 가 보행층 명령 세 칸으로 바꾸는 대체 경로를 둔다. 같은 속도 인터페이스라 보행층은 바꿀 것이 없다. 현민 앱은 먼저 시뮬에 연결하고, 앱 관문(vy 0 · 후진 금지 · SportClient 가정)과 우리 LowCmd 정책의 어긋남을 현민과 맞출 항목으로 올린다. STOP 은 모든 것을 멈추고 자동 재개 없음
-> 상태: v1.1 · 팀장 검토 전 · 동결 아님 · 결정 2 · 5 반영(fable 20l)
+> 상태: v1.1 · 팀장 검토 전 · 동결 아님 · 결정 2 · 5 반영(fable 20l) · **20q N 절 반영(fable 10/20)** · **20r sonnet 정책 노드 조사 반영(fable 10/20)**
 
 # 23 · Nav2 대체 경로와 앱 연결
 
@@ -29,7 +29,7 @@ flowchart LR
 ```
 
 - 앱이 보내는 것은 몸 기준 속도(vx, wz)와 Nav2 목표 둘뿐이다. 자세 · 옆걸음 · 자연어는 없다(ANALYSIS-app-prd-553 31 행). 손 조종은 지금 앞 0.6 · 회전 ±0.5 만 열려 있고 후진 · 옆걸음은 서버가 0 으로 막는다(39 행). gateway 한계는 max_vx 0.5 · max_wz 1.0 · 후진 금지(37 행).
-- 앱의 Go2 어댑터는 순정 보행 `SportClient.Move/StopMove` 를 가정한다(41 · 47 행). 우리 정책은 50 Hz `LowCmd` 라 둘을 같이 못 쓴다. 꽂는 자리는 `/cmd_vel` 뒤 어댑터 백엔드(54 행) = 「정책 노드 모드」.
+- 앱의 Go2 어댑터는 순정 보행 `SportClient.Move/StopMove` 를 가정한다(41 · 47 행). 우리 정책은 50 Hz `LowCmd` 라 둘을 같이 못 쓴다. 꽂는 자리는 `/cmd_vel` 뒤 어댑터 백엔드(54 행) = 「정책 노드 모드」. **본 경로 · 대체 경로(APPROVED N-1 · 10/20 13:3x)**: 실기 본 경로는 우리 정책(정책 노드 모드 · LowCmd · vx · vy · wz)이고, 우리 보행에 문제가 생기면 대체 경로 = **순정 보행(`SportClient.Move`) + 우리 앱의 SDK 연결로 조이스틱 조종과 임무(목표 선정 · 도달)** 다. 앱의 지금 어댑터(순정 가정)가 그대로 대체 경로가 되므로 두 백엔드를 모두 남긴다. 앱 정본 = foothold-app(N-2). 공식 unitree_rl_lab 배포 관측에는 base_lin_vel · 높이 스캔이 없으므로 실기에는 **우리 정책 노드**(S1-blind 이력 495 · S2 depth)를 올리고, 공식 `go2_ctrl` 은 `deploy.yaml` · `policy.onnx` · 관절 순서 FR FL RR RL 의 형식만 참고한다. sim2sim(`unitree_mujoco`) · sim2real(`ctrl --network eth0`)은 `unitree_sdk2` 가 Ubuntu 전제라 Linux 이전 뒤(sonnet DESIGN-policy-node 7b5cf869 · 42 §1.2 · lead 20r).
 
 ## 2. 깃발 추종기 (보행층 학습과 같은 식)
 
@@ -55,19 +55,20 @@ Nav2 전역 경로를 일정 간격 깃발 열로 바꾸고, 14 §3 깃발 방�
 
 | 규칙 | 값 | 출처 |
 |---|---|---|
-| deadman | 0.3 s 명령 끊김 → 0 | ANALYSIS-app-prd-553 36 행 |
-| heartbeat | 1.0 s 끊김 → 정지 래치 | 36 행 |
+| deadman | 0.3 s 명령 끊김 → 0 | ANALYSIS-app-prd-553 36 행 · **가정**(lead 20r · 실측 · 현민 확인 전, 42 §1.1 C3) |
+| heartbeat | 1.0 s 끊김 → 정지 래치 | 36 행 · **가정**(lead 20r) |
 | **STOP** | **위험 시 모든 것을 멈춘다. 명령 0 + 잠금 + Nav2 취소 + HiPAN 목표 취소 + 판단층 조언 무시. 자동 재개 없음**, 사람이 해제 | 30 · 43 행 · **팀장 결정 D33** |
 | 정지 세 겹 | 앱 STOP · 로봇 끊김 감시 · 제조사 정지 | 43 행 |
 | **멈춘 뒤 자세 유지(설계 필요, D33)** | 후보 ① 정책에 세 칸 0 을 계속 주어 「서기」 유지(정지 env 에서 학습, 14 §3) ② 정책을 끊고 sport mode 복귀(StandUp) ③ Damp(힘 빼고 주저앉기). 1 차 안(42 §2 와 같은 순서 하나): **① 제자리 유지 → ② 정책을 끊고 sport mode(StandUp) → ③ Damp**. ③ 은 **평지에서만**(APPROVED H 「계단 위에서 바로 힘을 빼면 넘어짐」 → 계단 · 듬성한 지형 위 ③ 금지, 듬성한 지형은 발이 빠짐). 평지: ① 이 1 s 안에 안정(몸 각속도 < 0.3 rad/s) 못 하면 ②, ② 도 안 되면 ③. 계단 · 듬성한 지형: ① → ②, 그래도 안 되면 ③ 으로 넘어가지 않고 서기 명령(또는 sport mode)을 유지한 채 안전 줄 · 사람이 개입하며 사례를 기록한다(VERIFY-lead-final 18 · final2 12) → **가정**, 42 §2 에서 실기로 확인. 듬성한 지형 위 ① 이 성립하려면 세 칸 0 이 그 지형에서 학습돼야 한다 → 14 §3 깃발(듬성한) 행의 마지막 깃발 정지 2 s 유지 · H23-3 징검돌 칸 | 55 · 88 행 · D33 |
 | **실기 전 시험(T0, 42 §1)** | policy_node · STOP 래치 · deadman · 리모컨 우선권을 시뮬 어댑터와 「순정 모드로 서 있는 실기」 에서 먼저 확인한 뒤에야 우리 정책(T6)을 올린다 | VERIFY-lead-final 18 |
 | 정책 프로세스 죽음 | 어댑터가 0.3 s 안에 감지 → ③ Damp 가 아니라 제조사 정지(모터 유지) 우선 → **가정**, 현민과 협의 | 55 행 |
 | 리모컨 우선권 | LowCmd 모드에서 리모컨 입력이 들어오면 정책을 끊고 리모컨 → **미확인**(SDK 동작), 42 첫 주 확인 | APPROVED G-1 |
+| **정책 노드 상태기계** | PASSIVE → FIXSTAND(**우리 `default_joint_pos`** · 공식 FixStand 0.0/0.8/−1.5 아님) → POLICY → HOLD(STOP 래치 · 위 후보 ①) → SPORT(후보 ② · 실기만) → DAMP(후보 ③ · 평지만). 자세 이상(bad_orientation 1.0 rad) → HOLD. 42 §2 | sonnet DESIGN-policy-node 7b5cf869 §5 · lead 20r |
 
 ## 5. 앱 연결 순서 (APPROVED H)
 
-1. **시뮬 먼저**: 11/7 시연 자체는 Isaac Sim 이다(K-I · D50). 앱 연결은 **S1-x**(50 · 52 §2: S1-a 정책을 MuJoCo `unitree_mujoco` · Gazebo 에서 같은 명령 열로 돌려 Isaac 값과 비교)에서 숫자가 맞은 시뮬 위에서 손 조종 · 목표 · STOP 을 보여 준다. S1-x 가 어긋나면 Isaac 으로 한다. 어댑터의 「정책 노드 모드」 를 그 시뮬 어댑터로 먼저 만든다(11/7 시작, 70 §4). Gazebo 쪽은 ROS 2 Go2 패키지(70 §4 후보)가 앱 어댑터(ROS 2)와 바로 붙는다는 점에서 유리하고, MuJoCo 쪽은 Unitree 공식 저장소라 모델이 확실하다 → 선택은 열린 항목.
-2. **실기 SDK 연결은 그 뒤**: 42 첫 주 시험 뒤, 현민과 아래 7 절 항목을 맞춘 다음.
+1. **시뮬 먼저**: 11/7 시연 자체는 Isaac Sim 이다(K-I · D50). 앱 연결은 **S1-x**(50 · 52 §2: S1-a 정책을 MuJoCo `unitree_mujoco` · Gazebo 에서 같은 명령 열로 돌려 Isaac 값과 비교)에서 숫자가 맞은 시뮬 위에서 손 조종 · 목표 · STOP 을 보여 준다. S1-x 가 어긋나면 Isaac 으로 한다. 어댑터의 「정책 노드 모드」 를 그 시뮬 어댑터로 먼저 만든다(11/7 시작, 70 §4). Gazebo 쪽은 ROS 2 Go2 패키지(70 §4 후보)가 앱 어댑터(ROS 2)와 바로 붙는다는 점에서 유리하고, MuJoCo 쪽은 Unitree 공식 저장소라 모델이 확실하다 → 선택은 열린 항목. MuJoCo 경로(`unitree_mujoco` + `unitree_sdk2`)는 Ubuntu 전제라 **Linux 이전 뒤**(42 §1.2 · 50 S1-x · sonnet 7b5cf869).
+2. **실기 SDK 연결은 그 뒤**: 42 첫 주 시험 뒤, 현민과 아래 7 절 항목을 맞춘 다음. 본 경로는 정책 노드 모드(우리 정책), 대체 경로는 순정 보행 + 앱 SDK 조이스틱 · 임무(APPROVED N-1 · 42 §3).
 3. 앱이 우리 설계에서 필요로 하는 것은 #555 에 기록한다.
 
 ## 6. 장면 예
@@ -93,7 +94,7 @@ Nav2 전역 경로를 일정 간격 깃발 열로 바꾸고, 14 §3 깃발 방�
 
 ## 8. 구현 방법 · 검증 사다리
 
-1. `foothold_s2/ros/policy_node.py`: 50 Hz 루프, 세 칸 입력 → ONNX/TensorRT actor → LowCmd. STOP 래치 · deadman 내장.
+1. `foothold_s2/ros/policy_node.py`: 50 Hz 루프, 세 칸 입력 → ONNX/TensorRT actor → LowCmd. STOP 래치 · deadman 내장. 초안(sonnet DESIGN-policy-node 7b5cf869 §3): 파이썬 · 50 Hz 정책 스레드 + 500 Hz LowCmd 스레드 · DDS 어댑터 한 겹 교체(MuJoCo domain 1 `lo` · 실기 domain 0 `eth0`) · 관측 조립은 Isaac 순서 · 스케일 그대로(deploy.yaml) · 관절 순서 SDK ↔ Isaac 변환은 어댑터.
 2. `ros/goal_provider.py`: 앱 목표(지도 틀 x, y, yaw + map_ver)를 HiPAN 이 살아 있으면 HiPAN 에, 아니면 Nav2 에(68 행). 선택은 설정값.
 3. `ros/flag_follower.py`: Nav2 `/plan` 구독 → 깃발 열 → 20~50 Hz 로 Twist 발행. 2 절 식.
 4. 시뮬 검증: Isaac 에서 Nav2 를 붙이기 전, 미리 만든 경로를 깃발 추종기에 넣어 보행층이 따라가는지 먼저 본다(**11/10 전에**, 60 D 의 선행 조건).
@@ -112,4 +113,6 @@ Nav2 전역 경로를 일정 간격 깃발 열로 바꾸고, 14 §3 깃발 방�
 - 7 절 항목(현민 · 팀장).
 - SLAM 트랙의 지도 형식 · 주기 · 좌표 틀 계약.
 - 앱 시뮬 연결에 쓸 시뮬(MuJoCo 대 Gazebo) 선택(S1-x 결과 · 현민 어댑터 ROS 2 여부).
-- 행사장 Wi-Fi 지연과 1 s 정지 래치 위험(ANALYSIS-app-prd-553 80 행, 미측정).
+- 행사장 Wi-Fi 지연과 1 s 정지 래치 위험(ANALYSIS-app-prd-553 80 행, 미측정). 통신 · 관제 체크리스트는 42 §1.1(N-5 · lead 가 채움).
+- 앱의 고정 명령 제한을 정책 · 지형별 표로 바꾸는 연동 기준 문서(lead 초안 → 팀장 논의 → 설계 → 현민 「반드시 지킬 것」, APPROVED N-3 · 20q 는 자리만).
+- 공식 C++ ctrl 이 우리 495 이력 입력을 읽는지 · WSL2 에서 `unitree_mujoco` 파이썬 시뮬이 도는지(둘 다 미확인 · sonnet 7b5cf869 §8). 본선은 Linux 이전 뒤.

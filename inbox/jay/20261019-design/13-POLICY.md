@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 42 · 52~54 · 60~72 · 76~86 · 185~217 · 221 · 347 행 · 선행 2409.15692v2 35 · 353 행 · HiPAN 2604.26504 134~168 행 · ASTRA 19f Q3 · fable 20e R1 · R4 · DECISIONS-step2-lead.md S 행 · evidence/E1-vs-v2-axis1.csv · axis2.csv · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · APPROVED F-D4(팀장 승인) · VERIFY-fable-20f P23 · P29
 > 요지: START 의 비대칭 actor-critic 단일 단계 학습을 그대로 쓰고, 명령 세 칸은 관측 안에 둔다. 「무엇이 효과였나」 를 가르려고 지도 입력과 가장자리 보상만 바꿔 끼우는 갈래 G0 · G1 · G3 를 같은 코드에서 설정으로 고른다. S1 은 높이 스캔 판과 눈 없음 판 둘 다 돌린다(팀장 승인 D35). 추종 보상은 정확 추종(팀장 승인 D21)
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20n rl 가정 13 대조 반영(fable 10/20)**
 
 # 13 · 정책 (actor · critic · 학습 방식 · 비교 갈래)
 
@@ -31,6 +31,7 @@ flowchart LR
 | actor 입력 (S1-scan) | o_t 45 + 정답 높이 스캔 187 (v2 와 같은 격자) = 232 | **실측** v2 보고 7 절(「지금 정책이 보는 것」) · 시뮬 전용 |
 | actor 입력 (S1-blind) | o_t 45 + 고유수용 이력 10 × 45 = 495 (GRU 없이 이력 연결, HiPAN student 식 op50 의 축소판) | **가정** · HiPAN 268~272 행 참고 |
 | critic 입력 | o_t 45 + s_t = v 3 + 발 접촉 4 + H^b 32×16 = 512 + H^f 4×5×5 = 100 → **664** | **논문** START 식 2 (80 행, 76~86 행). H^b · H^f 크기는 12 문서 가정 |
+| critic 입력 (S1 두 판 공통) | o_t 45(잡음 없음) + v 3 + 발 접촉 4 = **52**(지도 항 H^b · H^f 없음) | **가정** · lead 승인 10/20(20m): S1 에는 지도가 없으므로 START 식 2 에서 지도 항만 뺀 것. 코드 `tasks/s1_env_cfg.py` CriticCfg(71d6eac2) |
 | actor · critic | MLP [512, 256, 128] ELU | **선행(START 미기재)** Table V 353 행 · **코드** Isaac Lab Go2 cfg 21 행 |
 | 행동 | 12 관절 위치 목표, PD 추종 (0.25 배율 · Kp 25 · Kd 0.5) | **논문** START 60~62 행 · **코드** 17 문서 |
 
@@ -126,3 +127,12 @@ E1 은 눈 없는 MoE-CTS 정책이고, 명령은 vx · vy ±1 · wz ±1.5 로 �
 
 - G0-gt · G2 를 돌릴지는 18 문서 예산에서(90 O6).
 - 이력 관측 길이(H1 = 10)를 actor 에 직접 넣을지, I-E 를 통해서만 줄지(현재: S2 는 I-E 를 통해서만, START 식 1 · Table V. S1-blind 는 직접).
+
+## 10. 구현이 정한 가정 (rl 코드 · 등급 「가정(rl)」 · 20n)
+
+12 §12 와 같은 대조(VERIFY-fable-20n). 정책 입력 · PPO 쪽 둘.
+
+| # | 가정(rl) | 코드(ff03e2d5) | 원문 대조 | 판정 · 등급 |
+|---|---|---|---|---|
+| ⑦ | 수집(rollout) 때 z 를 표집(reparameterization), 배포(act_inference · deterministic) 는 평균 μ | `models/start_perception.py` 65 · 318~322 행 | 표집: START 118~120 행 「VAE 구조」 · 선행 Table V 341 행 z_t = Reparam(L(z_tf)). 배포 때 평균: 원문 없음(START 215~217 행은 지도에 대해서만 「배포는 재구성만」) | 표집 **원문에 있음(118 행 · 341 행)** · 배포 평균 **가정(rl)** |
+| ⑪ | 관측 정규화 통계를 이번 스텝의 actor 입력(96)으로 갱신(설치는 다음 관측) | `runners/start_runner.py` 194~195 행 | 원문에 관측 정규화 없음. 설치 rsl_rl `algorithms/ppo.py` 156~160 행은 `process_env_step` 에서 다음 관측으로 `update_normalization`. 한 스텝 어긋난 같은 흐름(rl 주석대로) | 원문에 없음 · **가정(rl)**. 주의: 관문 cfg 는 두 정규화 **꺼짐**(rl `scripts/start_gate.py` 165 행 · Isaac Lab Go2 `rsl_rl_ppo_cfg.py` 19~20 행 False)이라 지금은 효과 없다. 켜면 설치 rsl_rl 자체가 수집 때 통계(`modules/actor_critic.py` 150 행 forward · 178~183 행 update 분리 · `networks/normalization.py` 43~60 행)와 update 때 통계가 달라 12 §6.1 「epoch 0 ratio = 1」 시험이 깨진다 → 켜려면 그 시험 조건을 「정규화 끔」 으로 적어야 한다 |
