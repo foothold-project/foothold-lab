@@ -30,7 +30,7 @@ def test_regular_grid_finds_feasible_four_foot_pose():
 
 
 def test_regular_grid_proves_impossible_stance():
-    # 0.225 spacing cannot share a 0.116 m safe interior or bridge 0.334 m between interiors.
+    # 0.225 spacing cannot share a 0.056 m safe interior or bridge 0.394 m between interiors.
     feet = np.array([[0., 0., -.3], [.225, 0., -.3],
                      [0., .225, -.3], [.225, .225, -.3]])
     result = ss.select_start(grid(), (0., .2, 0.), feet=feet)
@@ -39,13 +39,19 @@ def test_regular_grid_proves_impossible_stance():
     assert result['reason'] == 'no_four_foot_support'
 
 
-def test_go2_default_pose_on_point_two_stones_point_two_five_gaps():
+def test_go2_default_pose_on_point_two_stones_point_two_five_gaps(monkeypatch):
     result = ss.select_start(grid(), (-.3, 0., 0.))
-    assert result['status'] == 'ready'
-    # Independently check every foot against original stones and the 4.2 cm inset.
-    for x, y, _ in result['feet_world']:
-        assert any(b[0]+.042-1e-8 <= x <= b[1]-.042+1e-8 and
-                   b[2]+.042-1e-8 <= y <= b[3]-.042+1e-8 for b in grid())
+    assert result['status'] == 'no_start' and result['previous_origin'] is not None
+    # Independent necessary condition: no sampled yaw fits all pair displacements
+    # into the periodic safe squares (width .056, pitch .45), even on an infinite grid.
+    for angle in range(0, 360, 15):
+        xy = ss.rotate_xy(fk.foot_centers()[:, :2], np.deg2rad(angle))
+        delta = xy[:, None, :] - xy[None, :, :]
+        residual = np.abs(delta - .45*np.round(delta/.45))
+        assert np.any(residual > .056 + 1e-8)
+    # The old 2 cm rule did admit this geometry. Preserve that contrast explicitly.
+    monkeypatch.setattr(ss, 'FOOT_EDGE_MARGIN_M', .02)
+    assert ss.select_start(grid(), (-.3, 0., 0.))['status'] == 'ready'
 
 
 def test_yaw_search_and_continuous_translation():
@@ -95,7 +101,7 @@ def test_changed_default_joints_stop_instead_of_using_old_fk():
         fk.validate_default_pose(fk.JOINT_NAMES, np.array(fk.DEFAULT_JOINT_POS).reshape(12)*1.05)
 
 
-def test_actual_cfg_height_is_preserved_including_e1_point_42():
+def test_actual_cfg_height_is_read_but_spawn_height_is_support_based():
     from types import SimpleNamespace as NS
     cfg = NS(init_state=NS(pos=(0., 0., .42), rot=(1., 0., 0., 0.), joint_pos={
         '.*L_hip_joint': .1, '.*R_hip_joint': -.1, 'F.*_thigh_joint': .8,
@@ -104,7 +110,8 @@ def test_actual_cfg_height_is_preserved_including_e1_point_42():
     a = ss.select_start([[2., 6., 2., 6., -1., 0.]], (-.3, 0., 0.))
     b = ss.select_start([[2., 6., 2., 6., -1., 0.]], (-.3, 0., 0.), root_height_m=height)
     assert height == .42
-    assert np.array(b['foot_air_gaps_m']) - a['foot_air_gaps_m'] == pytest.approx(np.full(4, .02))
+    assert np.array(b['foot_air_gaps_m']) == pytest.approx(a['foot_air_gaps_m'])
+    assert b['root_z_offset_m'] - a['root_z_offset_m'] == pytest.approx(-.02)
 
 
 @pytest.mark.parametrize('path', [

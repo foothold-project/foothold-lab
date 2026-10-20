@@ -6,8 +6,10 @@ import numpy as np
 
 from foothold_s2.robots import go2_kinematics as fk
 
-FOOT_EDGE_MARGIN_M = .02  # lead 가정 10/21
+FOOT_EDGE_MARGIN_M = .05  # lead 가정 10/21 N1e: 발 구 가장자리에서 5 cm
 YAW_STEP_DEG = 15
+MAX_SUPPORT_HEIGHT_SPREAD_M = .03  # lead 가정 10/21 N1d
+MIN_SOLE_CLEARANCE_M = .01        # lead 결정 10/21 N1d 선택 2
 
 KINDS = {
     "stepping_stones_start": "stepping_stones_high",  # lead 결정 10/20: high만
@@ -109,16 +111,52 @@ def valid_start(origin, boxes, cmd, zone=ZONE, *, feet=None, yaw=0.):
     xy = np.asarray(origin[:2])
     if not np.all((xy >= window[0]-EPS) & (xy <= window[1]+EPS)):
         return False
-    _, low, high = _safe_rects(boxes)
+    patches, low, high = _safe_rects(boxes)
     foot_xy = rotate_xy((fk.foot_centers() if feet is None else np.asarray(feet))[:, :2], yaw) + xy
-    return all(np.any(np.all((point >= low-EPS) & (point <= high+EPS), axis=1)) for point in foot_xy)
+    heights = _support_heights(foot_xy, patches, low, high)
+    return heights is not None and np.ptp(heights) <= MAX_SUPPORT_HEIGHT_SPREAD_M + EPS
+
+
+def _support_heights(foot_xy, patches, lows, highs):
+    heights = []
+    for point in foot_xy:
+        ok = np.all((point >= lows-EPS) & (point <= highs+EPS), axis=1)
+        if not ok.any():
+            return None
+        heights.append(float(patches[ok, 5].max()))
+    return np.asarray(heights)
+
+
+def root_height_for_supports(heights, foot_center_z):
+    """네 발 모두 구 바닥 간격 >= 1 cm. 가장 작은 간격은 정확히 1 cm다."""
+    heights, foot_center_z = np.asarray(heights), np.asarray(foot_center_z)
+    if heights.shape != (4,) or foot_center_z.shape != (4,) or not (
+            np.isfinite(heights).all() and np.isfinite(foot_center_z).all()):
+        raise ValueError('높이 계산에는 네 지지면과 네 발 중심의 유한한 z가 필요합니다')
+    return float(np.max(heights - foot_center_z + fk.FOOT_RADIUS_M) + MIN_SOLE_CLEARANCE_M)
+
+
+def _foot_edge_distances(foot_xy, heights, patches, lows, highs):
+    """선택된 높이의 지지 사각형 경계까지 중심 거리. 겹치면 가장 넓은 여유를 쓴다.
+
+    coplanar 전체 변은 이미 합쳤다. 비직사각형 합집합은 확장하지 않으므로 보수적인 거리다.
+    """
+    distances = []
+    for point, height in zip(foot_xy, heights):
+        ok = (np.all((point >= lows-EPS) & (point <= highs+EPS), axis=1)
+              & (np.abs(patches[:, 5]-height) <= EPS))
+        supports = patches[ok]
+        to_edges = np.column_stack((point[0]-supports[:, 0], supports[:, 1]-point[0],
+                                    point[1]-supports[:, 2], supports[:, 3]-point[1]))
+        distances.append(float(to_edges.min(axis=1).max()))
+    return np.asarray(distances)
 
 
 def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_height_m=fk.DEFAULT_ROOT_HEIGHT_M):
     """24개 yaw마다 네 발의 허용 root 사각형을 정확히 교차한다. 위치 격자는 쓰지 않는다.
 
-    몸 원점이 발판 위일 필요는 없다. 기존 N1b 원점은 기록용으로 보존하며 z만 이어 쓴다.
-    XY 조건만 판정한다. 네 발의 높이 차와 공중 간격은 별도 기록하며 접촉 보장은 아니다.
+    몸 원점이 발판 위일 필요는 없다. 지지면 높이 차 <= 3 cm인 후보만 선택한다.
+    root 높이는 네 발 구 바닥의 최소 간격이 1 cm가 되게 정한다. 실제 접촉 보장은 아니다.
     """
     previous = _previous_start(boxes, cmd, zone)
     feet = fk.foot_centers() if feet is None else np.asarray(feet, dtype=float)
@@ -129,15 +167,20 @@ def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_
                 eligible=False, previous_origin=previous['origin'], previous_status=previous['status'],
                 previous_reason=previous['reason'], yaw_rad=None, feet_body=feet.tolist(),
                 foot_radius_m=fk.FOOT_RADIUS_M, foot_edge_margin_m=FOOT_EDGE_MARGIN_M,
-                yaw_step_deg=YAW_STEP_DEG, height_rule='XY only; existing root height preserved',
+                foot_order=list(fk.LEGS),
+                yaw_step_deg=YAW_STEP_DEG, height_rule='max(support_z - FK_foot_z + radius) + 0.01',
+                max_support_height_spread_m=MAX_SUPPORT_HEIGHT_SPREAD_M,
+                min_sole_clearance_m=MIN_SOLE_CLEARANCE_M,
                 reset_joint_jitter=False, reset_pose_jitter=False,
-                comparison_note='N1c 뒤·옆 칸: 기본 관절 자세 고정. 기존 흔들기 평가와 조건 다름',
-                root_height_m=root_height_m, terrain_origin_z=root_z,
+                comparison_note='N1e 뒤·옆: 기본 관절 고정, 높이차 3 cm 이하, 발 구 바닥 최소 여유 1 cm, 발 구 가장자리 여유 5 cm',
+                root_height_m=root_height_m, terrain_origin_z=None, previous_terrain_origin_z=root_z,
+                xy_only_candidate=None,
                 default_joint_pos=[list(v) for v in fk.DEFAULT_JOINT_POS])
     if previous['reason'] in ('reference_over_0.6', 'zero_reference'):
         return base
     patches, lows, highs = _safe_rects(boxes)
-    best = None
+    best = best_xy = None
+    min_spread = float('inf')
     for angle in range(0, 360, YAW_STEP_DEG):
         yaw = float(np.deg2rad(angle))
         window, _ = _window(cmd, zone, yaw)
@@ -156,23 +199,45 @@ def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_
                 break
         for low, high in regions:
             xy = np.clip([4., 4.], low, high)
+            heights = _support_heights(xy+offsets, patches, lows, highs)
+            if heights is None:
+                continue
+            spread = float(np.ptp(heights))
+            min_spread = min(min_spread, spread)
             key = (round(float(np.sum((xy-4.)**2)), 12), angle, float(xy[0]), float(xy[1]))
+            candidate = (key, xy, yaw, offsets, heights)
+            if best_xy is None or key < best_xy[0]:
+                best_xy = candidate
+            if spread > MAX_SUPPORT_HEIGHT_SPREAD_M + EPS:
+                continue
             if best is None or key < best[0]:
-                best = (key, xy, yaw, offsets)
+                best = candidate
+
+    def pose_record(candidate, spawn_z):
+        _, xy, yaw, offsets, heights = candidate
+        world = np.column_stack((xy+offsets, feet[:, 2]+spawn_z))
+        edge_distances = _foot_edge_distances(world[:, :2], heights, patches, lows, highs)
+        return dict(origin=[float(xy[0]), float(xy[1]), float(root_z)], yaw_rad=yaw,
+                    feet_world=world.tolist(), support_heights_m=heights.tolist(),
+                    foot_center_edge_distances_m=edge_distances.tolist(),
+                    foot_edge_clearances_m=(edge_distances-fk.FOOT_RADIUS_M).tolist(),
+                    support_height_spread_m=float(np.ptp(heights)),
+                    foot_air_gaps_m=(world[:, 2]-heights).tolist(),
+                    sole_air_gaps_m=(world[:, 2]-heights-fk.FOOT_RADIUS_M).tolist())
+
+    if best_xy is not None:
+        # 현재 XY 여유의 최근접 후보에 옛 root 높이를 적용한 비교 기록. 실행용 fallback이 아니다.
+        base['xy_only_candidate'] = dict(pose_record(best_xy, root_z+root_height_m), eligible=False, status='record_only')
+        base['minimum_candidate_height_spread_m'] = min_spread
     if best is None:
-        return dict(base, reason='no_four_foot_support')
-    _, xy, yaw, offsets = best
-    heights = []
-    for point in xy+offsets:
-        ok = np.all((point >= lows-EPS) & (point <= highs+EPS), axis=1)
-        heights.append(float(patches[ok, 5].max()))
-    world = np.column_stack((xy+offsets, feet[:, 2]+root_z+root_height_m))
-    return dict(base, status='ready', label='네 발 XY 지지 확인 · 접촉 미확인',
-                origin=[float(xy[0]), float(xy[1]), root_z], yaw_rad=yaw, eligible=True, reason='',
-                feet_world=world.tolist(), support_heights_m=heights,
-                support_height_spread_m=float(np.ptp(heights)),
-                foot_air_gaps_m=(world[:, 2]-heights).tolist(),
-                sole_air_gaps_m=(world[:, 2]-heights-fk.FOOT_RADIUS_M).tolist())
+        return dict(base, reason='support_height_spread_exceeded' if best_xy is not None else 'no_four_foot_support')
+    spawn_z = root_height_for_supports(best[4], feet[:, 2])
+    # 지형 원점 z는 보존한다. 로봇 reset의 z 오프셋만 조절해 지형 기준을 바꾸지 않는다.
+    offset_z = spawn_z - root_z - root_height_m
+    base.update(pose_record(best, spawn_z))
+    return dict(base, status='ready', label='네 발 XY·높이차 확인 · 접촉 미확인',
+                terrain_origin_z=root_z, root_z_offset_m=offset_z,
+                spawn_root_z_m=spawn_z, eligible=True, reason='')
 
 
 @lru_cache(maxsize=128)
@@ -267,8 +332,9 @@ def install_fixed_reset(raw, names, plan):
                 continue
             fixed = dict(params)
             yaw = plan[names[kind]]['yaw_rad']
+            offset_z = plan[names[kind]]['root_z_offset_m']
             fixed["pose_range"] = dict(params.get("pose_range", {}), x=(0., 0.), y=(0., 0.),
-                                       roll=(0., 0.), pitch=(0., 0.), yaw=(yaw, yaw))
+                                       z=(offset_z, offset_z), roll=(0., 0.), pitch=(0., 0.), yaw=(yaw, yaw))
             original(env, ids[match], **fixed)
 
     term.func = reset
