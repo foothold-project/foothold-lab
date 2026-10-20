@@ -10,6 +10,10 @@ class S1aPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     max_iterations = 6000
     save_interval = 100
     experiment_name = "foothold_s1a"
+    # env 에 넣는 action 상한 (lead 10/21 사전 등록: 정상 걷는 구간 원소별 |action| p99.9 = 10.80(S1-a scan 5999) · 6.52(D2 1500) > 3 이므로
+    # clip = ceil(max p99.9 x 1.5) = 17). 되먹임으로 action 이 수천까지 폭주해 action_rate 항이 -6426 이 된 발산을 막는다 (D2-s43 iter 1111).
+    # 학습(train_s1) 과 평가(S1Adapter.wrap) 모두 이 값을 읽는다. S1-b · 진단 판이 상속한다.
+    clip_actions = 17.0
     obs_groups = {"policy": ["policy"], "critic": ["critic"]}
     policy = RslRlPpoActorCriticCfg(
         init_noise_std=1.0,

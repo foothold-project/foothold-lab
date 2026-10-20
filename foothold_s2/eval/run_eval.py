@@ -126,6 +126,12 @@ def verify_mapping(raw, names, envs_per_terrain):
     print("[PASS] env -> 지형 배정 %d 칸 확인" % len(types), flush=True)
 
 
+def _s1_clip_actions():
+    from foothold_s2.tasks.agents.s1_ppo_cfg import S1aPPORunnerCfg
+
+    return S1aPPORunnerCfg.clip_actions
+
+
 def finish(out_dir, record):
     base = {
         "axis": args.axis,
@@ -138,7 +144,8 @@ def finish(out_dir, record):
         "terrain_sources": terrain_sets.source_record(),
         "label": args.label,
         "note": args.note,
-        "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"] if args.policy.startswith("s1") else None,   # foot_below_ground 종료 문턱 (S1 계열 env 만)
+        "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"] if args.policy.startswith("s1") else None,
+        "clip_actions": _s1_clip_actions() if args.policy.startswith("s1") else None,   # foot_below_ground 종료 문턱 (S1 계열 env 만)
     }
     base.update(record)
     manifest.write_json(os.path.join(out_dir, "run_manifest.json"), base)

@@ -89,6 +89,7 @@ def main(env_cfg, agent_cfg):
     resume_path = get_checkpoint_path(load_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
     env = gym.make(args_cli.task, cfg=env_cfg)
     log_robot_mass(env, "S1 train " + args_cli.task)
+    print("[action 클립] clip_actions %s" % agent_cfg.clip_actions, flush=True)
     print("[종료 조건] fbg_margin %s m (foot_below_ground)" % gp.TERMINATION["foot_below_ground_m"], flush=True)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     train_cfg = agent_cfg.to_dict()
