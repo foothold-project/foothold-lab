@@ -127,8 +127,13 @@ def merged_generator(names, difficulty, seed):
     return base
 
 
-def start_generator(kinds=start_sheet.KINDS, seed=42):
-    """START 시험지 생성기: 8 x 4 m 칸, 행 10(레벨) x 열(종류). 레벨 = floor(난이도 x 10)."""
+def start_generator(kinds=start_sheet.KINDS, seed=42, instances=1):
+    """START 시험지 생성기: 8 x 4 m 칸, 행 10(레벨) x 열(종류 x 인스턴스). 레벨 = floor(난이도 x 10).
+
+    `instances` > 1 이면 종류마다 독립으로 생성한 칸(돌 배치 · 높이 · 구덩이 깊이가 다름)을 그만큼 둔다.
+    한 칸 안의 판들은 같은 지형을 공유하므로 인스턴스가 하나면 «칸 하나의 운» 이 판 수로 부풀려진다.
+    열 번호 = 종류 번호 x instances + 인스턴스 번호.
+    """
     import isaaclab.terrains as terrain_gen
     from isaaclab.utils import configclass
 
@@ -154,12 +159,17 @@ def start_generator(kinds=start_sheet.KINDS, seed=42):
         function = sheet_terrain
         kind: str = "gaps"
 
-    subs = {kind: StartSheetCfg(proportion=1.0 / len(kinds), size=start_sheet.SIZE, kind=kind)
-            for kind in kinds}
+    n_cols = len(kinds) * instances
+    subs = {}
+
+    for k, kind in enumerate(kinds):
+        for i in range(instances):
+            name = kind if instances == 1 else "%s__%d" % (kind, i)
+            subs[name] = StartSheetCfg(proportion=1.0 / n_cols, size=start_sheet.SIZE, kind=kind)
 
     return terrain_gen.TerrainGeneratorCfg(
         seed=seed, size=start_sheet.SIZE, border_width=20.0, num_rows=start_sheet.LEVELS,
-        num_cols=len(kinds), horizontal_scale=0.1, vertical_scale=0.005, slope_threshold=0.75,
+        num_cols=n_cols, horizontal_scale=0.1, vertical_scale=0.005, slope_threshold=0.75,
         curriculum=True, difficulty_range=(0.0, 1.0), color_scheme="height", use_cache=False,
         sub_terrains=subs)
 

@@ -54,7 +54,8 @@ parser.add_argument("--cmd_basis", default="")
 # START
 parser.add_argument("--kinds", default="all")
 parser.add_argument("--levels", default="all")
-parser.add_argument("--tile_envs", type=int, default=5)
+parser.add_argument("--tile_envs", type=int, default=1)
+parser.add_argument("--instances", type=int, default=10)
 parser.add_argument("--tile_episodes", type=int, default=50)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -255,9 +256,10 @@ def do_start():
     speed = 0.5
     duration = 2.0 * start_sheet.REFERENCE_M / speed
     k = args.tile_envs
-    tiles = [(lv, col) for lv in levels for col in range(len(kinds))]
+    inst = args.instances
+    tiles = [(lv, ki * inst + i) for lv in levels for ki in range(len(kinds)) for i in range(inst)]
     n_env = len(tiles) * k
-    generator = terrain_sets.start_generator(kinds=tuple(kinds), seed=args.seed)
+    generator = terrain_sets.start_generator(kinds=tuple(kinds), seed=args.seed, instances=inst)
 
     adapter = make_adapter(None)
     built = adapter.make_env(generator=generator, num_envs=n_env, duration_s=duration, seed=args.seed,
@@ -283,9 +285,10 @@ def do_start():
 
     base, extra = divmod(args.tile_episodes, k)
     targets = torch.tensor([base + (1 if (i % k) < extra else 0) for i in range(n_env)], dtype=torch.long)
-    tags = [{"kind": kinds[env_types[i]], "level": env_levels[i]} for i in range(n_env)]
+    tags = [{"kind": kinds[env_types[i] // inst], "level": env_levels[i], "instance": env_types[i] % inst}
+            for i in range(n_env)]
     runner = runtime.EpisodeRunner(
-        {"env": env, "raw": raw}, policy, policy_nn, pin, terrain_names=kinds, envs_per_terrain=1,
+        {"env": env, "raw": raw}, policy, policy_nn, pin, terrain_names=[kinds[c // inst] for c in range(len(kinds) * inst)], envs_per_terrain=1,
         episodes=args.tile_episodes, duration_s=duration, mode="command",
         judge_kwargs=dict(yaw_deviation_deg=cells.AXIS3_PARAMS["yaw_deviation_deg"]),
         reference_m=start_sheet.REFERENCE_M)
@@ -299,8 +302,8 @@ def do_start():
         if len(rows) % 100 == 0 or len(rows) == total:
             print("[start] %d/%d" % (len(rows), total), flush=True)
 
-    stats = runner.run(kinds, on_episode, wall_limit_s=args.wall_limit_s, obs=obs, targets=targets,
-                       env_tags=tags)
+    stats = runner.run(sorted(set(runner.terrain_names)), on_episode, wall_limit_s=args.wall_limit_s, obs=obs,
+                       targets=targets, env_tags=tags)
     env.close()
 
     manifest.write_csv(os.path.join(args.out, "start_raw.csv"), rows)
@@ -316,6 +319,7 @@ def do_start():
     manifest.write_csv(os.path.join(args.out, "start_summary.csv"), summary)
     record = policy_record(adapter)
     record.update({"kinds": kinds, "levels": levels, "tile_envs": k, "tile_episodes": args.tile_episodes,
+                   "instances_per_kind_level": inst,
                    "episodes_recorded": len(rows), "duration_s": duration, "speed": speed,
                    "reference_m": start_sheet.REFERENCE_M, "stats": stats,
                    "mev": "미측정 (발 디딤 위치를 쌓지 않음)",

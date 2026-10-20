@@ -1,0 +1,243 @@
+{
+  "stepping_stones/L0": {
+    "sparsity_pit_fraction": 0.4375,
+    "floor_z_m": -0.25626123979555127,
+    "top_z_m": 0.04747714510986634,
+    "solid_x_median_m": null,
+    "gap_x_median_m": 6.0,
+    "solid_y_median_m": 0.5,
+    "meshes": 57,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_stones/L3": {
+    "sparsity_pit_fraction": 0.5333333333333333,
+    "floor_z_m": -0.5061451045810985,
+    "top_z_m": 0.04958282130766989,
+    "solid_x_median_m": 0.4,
+    "gap_x_median_m": 0.17500000000000002,
+    "solid_y_median_m": null,
+    "meshes": 73,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_stones/L6": {
+    "sparsity_pit_fraction": 0.62875,
+    "floor_z_m": -0.5055707837852346,
+    "top_z_m": 0.04905630864357102,
+    "solid_x_median_m": 0.30000000000000004,
+    "gap_x_median_m": 0.2375,
+    "solid_y_median_m": 0.30000000000000004,
+    "meshes": 102,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_stones/L9": {
+    "sparsity_pit_fraction": 0.7621875,
+    "floor_z_m": -0.4484534118526598,
+    "top_z_m": 0.04835128837584968,
+    "solid_x_median_m": 0.2,
+    "gap_x_median_m": 0.2,
+    "solid_y_median_m": 0.2,
+    "meshes": 146,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "balance_beams/L0": {
+    "sparsity_pit_fraction": 0.85,
+    "floor_z_m": -0.25626123979555127,
+    "top_z_m": 0.044287149117597374,
+    "solid_x_median_m": 6.0,
+    "gap_x_median_m": null,
+    "solid_y_median_m": 0.6000000000000001,
+    "meshes": 4,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "balance_beams/L3": {
+    "sparsity_pit_fraction": 0.8875,
+    "floor_z_m": -0.5061451045810985,
+    "top_z_m": -0.001918468163966569,
+    "solid_x_median_m": 6.0,
+    "gap_x_median_m": null,
+    "solid_y_median_m": 0.45,
+    "meshes": 4,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "balance_beams/L6": {
+    "sparsity_pit_fraction": 0.925,
+    "floor_z_m": -0.5055707837852346,
+    "top_z_m": -0.03658735312919925,
+    "solid_x_median_m": 6.0,
+    "gap_x_median_m": null,
+    "solid_y_median_m": 0.30000000000000004,
+    "meshes": 4,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "balance_beams/L9": {
+    "sparsity_pit_fraction": 0.95625,
+    "floor_z_m": -0.4484534118526598,
+    "top_z_m": -0.023203794043761716,
+    "solid_x_median_m": 6.0,
+    "gap_x_median_m": null,
+    "solid_y_median_m": 0.17500000000000002,
+    "meshes": 4,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_beams/L0": {
+    "sparsity_pit_fraction": 0.16666666666666666,
+    "floor_z_m": -0.25626123979555127,
+    "top_z_m": 0.044287149117597374,
+    "solid_x_median_m": 0.5,
+    "gap_x_median_m": 0.1,
+    "solid_y_median_m": null,
+    "meshes": 13,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_beams/L3": {
+    "sparsity_pit_fraction": 0.3,
+    "floor_z_m": -0.5061451045810985,
+    "top_z_m": 0.044307617060092785,
+    "solid_x_median_m": 0.375,
+    "gap_x_median_m": 0.15000000000000002,
+    "solid_y_median_m": 4.0,
+    "meshes": 14,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_beams/L6": {
+    "sparsity_pit_fraction": 0.4666666666666667,
+    "floor_z_m": -0.5055707837852346,
+    "top_z_m": 0.02098978198377921,
+    "solid_x_median_m": 0.275,
+    "gap_x_median_m": 0.225,
+    "solid_y_median_m": null,
+    "meshes": 15,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "stepping_beams/L9": {
+    "sparsity_pit_fraction": 0.6416666666666667,
+    "floor_z_m": -0.4484534118526598,
+    "top_z_m": 0.02094216570851315,
+    "solid_x_median_m": 0.15000000000000002,
+    "gap_x_median_m": 0.275,
+    "solid_y_median_m": null,
+    "meshes": 17,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "gaps/L0": {
+    "sparsity_pit_fraction": 0.05,
+    "floor_z_m": -0.25626123979555127,
+    "top_z_m": 0.0,
+    "solid_x_median_m": 1.425,
+    "gap_x_median_m": 0.1,
+    "solid_y_median_m": null,
+    "meshes": 7,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "gaps/L3": {
+    "sparsity_pit_fraction": 0.15,
+    "floor_z_m": -0.5061451045810985,
+    "top_z_m": 0.0,
+    "solid_x_median_m": 1.2750000000000001,
+    "gap_x_median_m": 0.30000000000000004,
+    "solid_y_median_m": null,
+    "meshes": 7,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "gaps/L6": {
+    "sparsity_pit_fraction": 0.25,
+    "floor_z_m": -0.5055707837852346,
+    "top_z_m": 0.0,
+    "solid_x_median_m": 1.125,
+    "gap_x_median_m": 0.5,
+    "solid_y_median_m": null,
+    "meshes": 7,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "gaps/L9": {
+    "sparsity_pit_fraction": 0.35,
+    "floor_z_m": -0.4484534118526598,
+    "top_z_m": 0.0,
+    "solid_x_median_m": 0.9750000000000001,
+    "gap_x_median_m": 0.7000000000000001,
+    "solid_y_median_m": null,
+    "meshes": 7,
+    "spawn": [
+      0.5,
+      2.0,
+      0.0
+    ]
+  },
+  "_generator": {
+    "origins_shape": [
+      10,
+      4,
+      3
+    ],
+    "origin_L0_col0": [
+      -39.5,
+      -6.0,
+      0.0
+    ],
+    "origin_L9_col3": [
+      32.5,
+      6.0,
+      0.0
+    ]
+  }
+}
