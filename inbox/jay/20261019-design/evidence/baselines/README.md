@@ -2,7 +2,7 @@
 > 작성: sonnet-code 세션 (10/20 SC-1 · SC-2)
 > 근거: foothold_s2/eval/ (하네스 커밋 d8437c05 이후), 원자료 C:/Users/AI-WS01/s2_lab/eval_new/s0/ (판마다 run_manifest.json · command.txt · 체크포인트 sha256), 41-EVAL-AXES · 51-S0-BASELINES
 > 요지: NVIDIA · v2 · E1 세 판을 새 평가 도구로 축 1 (48칸) · 축 2 (아홉 칸 x 시드 42 · 43 · 44) · 축 3 (21칸 중 범위 밖 1칸 제외 20칸) 잰 표. 숫자는 원자료에서 `s0_tables.py` 가 센 것이고 손으로 쓴 숫자 없음
-> 상태: 초안 · lead 검수 전 · START 시험지는 Kit 실행 미연결이라 이 표에 없음
+> 상태: 초안 · lead 검수 전 · START 시험지 표는 `start/` (종류 x 레벨당 독립 칸 10개 재측정)
 
 # S0 기준선 표
 
@@ -36,3 +36,16 @@
 2. S0 연쇄 첫 실패: 파이썬 자식의 `bash` 가 WSL bash 로 잡힘(rc 127) → Git bash 절대 경로.
 3. 음수 명령 `--cmd -0.5` 를 argparse 가 옵션으로 읽음(rc 2) → `--cmd=-0.5,0,0`.
 4. v2 축 2 가 evidence 와 달랐음: Isaac Lab 경로는 명령을 쓴 뒤 관측을 다시 지어야 함 → 고치고 v2 · NVIDIA 축 2 를 다시 쟀다.
+
+## START 시험지 (`start/`)
+
+| 파일 | 내용 |
+|---|---|
+| `start/start_pooled.csv` | 판 x 4 종 (징검돌 · 평균대 · 디딤 빔 · 틈) 1,000 판: R_body · S · J_body + Wilson 95 %, 평균 `crossing_ratio`, 4 종 R_body 평균 |
+| `start/start_cells.csv` | 판 x 종류 x 레벨(0~9) x 100 판 |
+| `start/start_top_level.csv` | 레벨 9 요약 |
+
+- 명령 앞 0.5 m/s, 칸 8 x 4 m, 시작 x 0.5, 목표 x 7(기준선 6.5 m). 칸마다 독립 인스턴스 10개, 인스턴스당 10 판 = (종류, 레벨)당 100 판, 종류당 1,000 판. 판 3개 모두 rc 0, Traceback 0, 4,000 행.
+- R_body 4 종 평균: v2 0.332 · E1 0.090 · NVIDIA 0.036. J_body 와 S 는 위 표.
+- 1 차 측정(칸 인스턴스 1개)은 같은 (종류, 레벨) 판들이 한 칸의 운을 공유해 레벨별 값이 끌려서 이 표로 대체했다. 1 차 값은 `eval_new/start/` 에만 남아 있다.
+- MEV(발 디딤 위치)는 이 실행에서 수집하지 않았다(미측정). 주파율은 `crossing_ratio` 로 대신한다. 정책이 시험지 깊이 U[0.2,0.7] 의 같은 분포에서 평가됨.
