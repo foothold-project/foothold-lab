@@ -88,7 +88,7 @@ def _frame(depth):
     return out
 
 
-def generate(kind, level, rng):
+def generate(kind, level, rng, randomness=None):
     """한 칸을 만든다. 레벨은 0~9 정수, 10 이상은 오류 (negative control)."""
     if kind not in KINDS:
         raise ValueError("모르는 종류 %r. 있는 것: %r" % (kind, KINDS))
@@ -114,8 +114,9 @@ def generate(kind, level, rng):
         gx = _lerp(STONE_GAP_X, level)
         gy = _lerp(STONE_GAP_Y, level)
         f = level / (LEVELS - 1)
-        jit = STONE_JITTER * f
-        col_jit = STONE_COLUMN_JITTER * f
+        r = f if randomness is None else float(randomness)   # 학습용 저 · 고무작위 징검돌은 레벨과 따로 정함
+        jit = STONE_JITTER * r
+        col_jit = STONE_COLUMN_JITTER * r
         px, py = s + gx, s + gy
         params.update(stone=s, gap_x=gx, gap_y=gy, jitter=jit, column_jitter=col_jit)
 
