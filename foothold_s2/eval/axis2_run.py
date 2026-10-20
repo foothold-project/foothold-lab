@@ -72,6 +72,9 @@ def run(args, adapter, runtime, device):
                              difficulty=args.difficulty, base_cmd=[(0.0, 0.0, 0.0)] * n_env,
                              device=device, plane=True, env_spacing=8.0, events_off=EVENTS_OFF)
     raw = built["raw"]
+    from foothold_s2.tasks.robot_mass import log_robot_mass
+
+    log_robot_mass(raw, "eval axis2 " + args.policy)                          # 평가 시작에 로드 뒤 로봇 총질량 한 줄 (난수를 쓰지 않는다)
     pin = runtime.CommandPin(n_env, raw.device, [(0.0, 0.0, 0.0)] * n_env)
 
     # 순서가 값을 바꾼다 (10/20 hold 조사). 래퍼를 먼저 지어 reset 을 한 번 소비하고, 그 뒤 reset 을 하고,

@@ -52,6 +52,7 @@ if REPO not in sys.path:
 import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.runners.status import write_status  # noqa: E402
 from foothold_s2.s1_runner import S1Runner  # noqa: E402
+from foothold_s2.tasks.robot_mass import log_robot_mass  # noqa: E402
 
 RSL_RL_PIN = "3.1.2"
 
@@ -82,6 +83,7 @@ def main(env_cfg, agent_cfg):
 
     resume_path = get_checkpoint_path(log_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
     env = gym.make(args_cli.task, cfg=env_cfg)
+    log_robot_mass(env, "S1 train " + args_cli.task)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     train_cfg = agent_cfg.to_dict()
     runner = S1Runner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)

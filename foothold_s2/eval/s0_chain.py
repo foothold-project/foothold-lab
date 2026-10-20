@@ -53,20 +53,23 @@ def _cmd_text(cmd):
 
 
 def expand_jobs(policy, root, include_axes=("axis1", "axis2", "axis3"), vy_obs=None,
-                axis1_dir_override=None):
+                axis1_dir_override=None, speeds=None, gate=False):
     """한 판의 모든 일. 각 일: name, out(폴더), args(run_eval 인자), raw(원자료 이름), rows(기대 줄 수)."""
     kind, ckpt = CHECKPOINTS[policy]
     base = ["--policy", kind, "--checkpoint", ckpt, "--label", policy]
     jobs = []
 
     if "axis1" in include_axes:
+        episodes = cells.GATE_EPISODES if gate else cells.AXIS1_PARAMS["episodes"]
+
         for set_name, names in cells.AXIS1_SETS.items():
-            for speed in cells.AXIS1_SPEEDS:
+            for speed in (speeds or cells.AXIS1_SPEEDS):
                 out = os.path.join(axis1_dir_override or os.path.join(root, policy, "axis1"),
                                    set_name, "v%s" % speed)
                 jobs.append(dict(name="%s/axis1/%s/v%s" % (policy, set_name, speed), out=out,
-                                 args=["axis1"] + base + ["--set", set_name, "--speed", str(speed)],
-                                 raw="axis1_raw.csv", rows=cells.AXIS1_PARAMS["episodes"] * len(names)))
+                                 args=["axis1"] + base + ["--set", set_name, "--speed", str(speed)]
+                                 + (["--gate"] if gate else []),
+                                 raw="axis1_raw.csv", rows=episodes * len(names)))
 
     if "axis2" in include_axes:
         for seed in cells.AXIS2_SEEDS:
@@ -194,18 +197,28 @@ def main(argv=None):
     parser.add_argument("--policies", default="e1,v2,nvidia")
     parser.add_argument("--axes", default="axis1,axis2,axis3")
     parser.add_argument("--gpus", default="0,1")
+    parser.add_argument("--policy_spec", action="append", default=[],
+                        help="NAME=KIND=CKPT 판 등록 (예: s1scan=s1scan=<model.pt>). {glob:패턴} 은 쓰지 않고 호출 쪽이 풀어서 준다")
+    parser.add_argument("--speeds", default=None, help="축 1 속도 목록 (예: 0.5,1.0 = 범위 안). 기본은 전부")
+    parser.add_argument("--gate", action="store_true", help="축 1 을 관문 칸당 판 수(200)로 (41 §8). 축 2 · 3 은 그대로")
     parser.add_argument("--e1_axis1_dir", default=None,
                         help="E1 축 1 을 이미 돌려 둔 폴더 (<set>/v<speed>). 있으면 거기를 쓴다")
     args = parser.parse_args(argv)
 
     os.makedirs(args.root, exist_ok=True)
+
+    for spec in args.policy_spec:
+        name, kind, ckpt = spec.split("=", 2)
+        CHECKPOINTS[name] = (kind, ckpt)
+
+    speeds = tuple(float(v) for v in args.speeds.split(",")) if args.speeds else None
     run_kit = os.path.join(manifest.EVAL_DIR, "run_kit.sh").replace("\\", "/")
     jobs = []
 
     for policy in args.policies.split(","):
         override = args.e1_axis1_dir if policy == "e1" else None
         jobs += expand_jobs(policy, args.root, tuple(args.axes.split(",")),
-                            axis1_dir_override=override)
+                            axis1_dir_override=override, speeds=speeds, gate=args.gate)
 
     gpus = [int(g) for g in args.gpus.split(",")]
     sched = Scheduler(jobs, gpus, args.root, run_kit)

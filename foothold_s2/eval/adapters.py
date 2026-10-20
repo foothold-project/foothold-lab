@@ -254,7 +254,7 @@ class IsaacLabAdapter:
         agent_cfg.seed = seed
 
         if plane:
-            env_cfg = load_cfg_from_registry(NVIDIA_TASK, "env_cfg_entry_point")
+            env_cfg = self._plane_env_cfg(load_cfg_from_registry)
             env_cfg.scene.terrain.terrain_type = "plane"
             env_cfg.scene.terrain.terrain_generator = None
             env_cfg.scene.terrain.max_init_terrain_level = None
@@ -292,7 +292,7 @@ class IsaacLabAdapter:
         if plane:
             import gymnasium as gym
 
-            gym_env = gym.make(NVIDIA_TASK, cfg=env_cfg)
+            gym_env = gym.make(self.task_id, cfg=env_cfg)
             raw = gym_env.unwrapped
         else:
             gym_env = raw = ManagerBasedRLEnv(cfg=env_cfg)
@@ -303,6 +303,10 @@ class IsaacLabAdapter:
 
     def _import_task(self):
         pass
+
+    def _plane_env_cfg(self, load_cfg_from_registry):
+        """평지 축(2)의 env 설정. 기본은 레지스트리의 NVIDIA 설정."""
+        return load_cfg_from_registry(NVIDIA_TASK, "env_cfg_entry_point")
 
     def _configure_command(self, env_cfg, base_cmd):
         cmd = env_cfg.commands.base_velocity
@@ -366,17 +370,24 @@ class S1Adapter(IsaacLabAdapter):
 
         importlib.import_module("foothold_s2.tasks")
 
+    def _plane_env_cfg(self, load_cfg_from_registry):
+        return self.env_cfg_class()                  # 우리 정책은 우리 관측(495 · 232)이라 NVIDIA 설정을 쓰면 안 된다
+
     def _configure_command(self, env_cfg, base_cmd):
         cmd = env_cfg.commands.base_velocity
         cmd.fixed_cmd = tuple(float(x) for x in base_cmd[0])
         cmd.flag_stride = 0
         cmd.resampling_time_range = (1.0e9, 1.0e9)
 
-        for name in ("actuator_gains", "motor_strength", "physics_material"):
+        for name in ("actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com"):
             setattr(env_cfg.events, name, None)
 
         env_cfg.actions.joint_pos.max_delay_s = 0.0
-        self.changes.append("S1 명령 고정 %r, 깃발 env 없음, 지연 · 세기 · 게인 · 마찰 무작위 끔" % (cmd.fixed_cmd,))
+
+        for name in ("terrain_levels", "command_range", "penalty_on"):        # 평가에서는 커리큘럼을 돌리지 않는다
+            if hasattr(env_cfg.curriculum, name):
+                setattr(env_cfg.curriculum, name, None)
+        self.changes.append("S1 명령 고정 %r, 깃발 env 없음, 지연 · 세기 · 게인 · 마찰 · 질량 · 무게중심 무작위 끔" % (cmd.fixed_cmd,))
 
 
 def deep_copy_generator(generator):

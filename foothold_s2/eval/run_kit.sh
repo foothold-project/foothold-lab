@@ -3,7 +3,7 @@
 # 로그는 <out_dir>/run.log. GPU 는 --device cuda:0 (PCI 순서), CUDA_VISIBLE_DEVICES 로 가리지 않는다.
 set -u
 OUT="$1"; shift 1
-ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311-moects
+ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311
 export PATH="$ENV:$ENV/Library/mingw-w64/bin:$ENV/Library/usr/bin:$ENV/Library/bin:$ENV/Scripts:$ENV/bin:$PATH"
 export CONDA_PREFIX="$ENV"
 export OMNI_KIT_ACCEPT_EULA=YES

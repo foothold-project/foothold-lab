@@ -1,0 +1,19 @@
+# Linux 에서 사슬 실행기를 systemd --user 로 둘 때 (Windows 는 python -m foothold_s2.chain.start).
+# 설치:  mkdir -p ~/.config/systemd/user && cp foothold_s2/chain/chain.service ~/.config/systemd/user/foothold-chain.service
+#        (아래 두 경로를 고친 뒤)  systemctl --user daemon-reload && systemctl --user enable --now foothold-chain
+#        로그아웃 뒤에도 돌게:  loginctl enable-linger $USER
+# 상태: systemctl --user status foothold-chain · 사슬 기록은 상태 폴더의 chain_status.jsonl
+[Unit]
+Description=FOOTHOLD S2 unattended chain runner
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/foothold-lab
+Environment=PYTHONPATH=/path/to/foothold-lab
+ExecStart=/path/to/python -m foothold_s2.chain.runner /path/to/foothold-lab/foothold_s2/chain/chain_s1a_night.yaml
+SuccessExitStatus=1 2 4
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

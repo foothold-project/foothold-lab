@@ -97,6 +97,12 @@ def build_and_load(adapter, generator, num_envs, duration_s, base_cmd, **extra):
                              seed=args.seed, difficulty=args.difficulty, base_cmd=base_cmd,
                              device=device_of(), **extra)
     raw = built["raw"]
+    from foothold_s2.tasks.robot_mass import log_robot_mass
+
+    if not getattr(args, "_mass_logged", False):                        # 평가 시작에 로드 뒤 로봇 총질량 한 줄
+        log_robot_mass(raw, "eval " + args.policy)
+        args._mass_logged = True
+
     pin = runtime.CommandPin(num_envs, raw.device, base_cmd)
     adapter.pin_command(raw, pin)
 
