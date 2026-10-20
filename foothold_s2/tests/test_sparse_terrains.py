@@ -117,3 +117,22 @@ def test_start_sheet_defaults_unchanged_by_randomness_hook():
     g1 = ss.generate("stepping_stones", 5, rng1)
     g2 = ss.generate("stepping_stones", 5, rng2, randomness=5 / 9)
     assert np.array_equal(g1.boxes, g2.boxes)
+
+
+def test_high_randomness_stones_scale_with_level_and_low_is_always_zero():
+    assert st.KINDS["stepping_stones_low"][1] == 0.0
+    assert st.KINDS["stepping_stones_high"][1] is None                       # 레벨 비례 L/9
+
+    for L in (0, 3, 6, 9):                       # 시험지 쪽 식: r = L / 9 -> 돌 ±0.5 x r, 열 ±0.45 x r (레벨 9 = START 최대값)
+        g = ss.generate("stepping_stones", L, np.random.default_rng(1))
+        assert g.params["jitter"] == pytest.approx(0.5 * L / 9.0)
+        assert g.params["column_jitter"] == pytest.approx(0.45 * L / 9.0)
+
+    for kind, randomness in (("stepping_stones_high", None), ("stepping_stones_low", 0.0)):
+        for L in (0, 4, 9):
+            d = (L + 0.5) / 10.0
+            rng = np.random.default_rng(st.seed_of(kind, d))
+            geom = ss.generate("stepping_stones", L, rng) if randomness is None                 else ss.generate("stepping_stones", L, rng, randomness=randomness)
+            ref = np.array([(x0, x1, y0 + st.STRIP[0], y1 + st.STRIP[0], z0, z1)
+                            for x0, x1, y0, y1, z0, z1 in geom.boxes[3:]])
+            assert np.allclose(st.build_tile(kind, d).boxes[3:], ref), (kind, L)

@@ -177,3 +177,7 @@ AXIS3_PARAMS = {
     "seed": 42,
     "yaw_deviation_deg": 30.0,
 }
+
+
+# 관문 평가의 칸당 판 수 (41 §8 · fable 20s). S0 표(AXIS1_PARAMS)는 기록용 100 판 그대로다.
+GATE_EPISODES = 200

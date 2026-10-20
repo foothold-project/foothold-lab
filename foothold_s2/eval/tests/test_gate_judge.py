@@ -1,0 +1,67 @@
+"""「진짜 하락」 판정 (41 §8 · 결정 8 · fable 20s): Newcombe 구간 · (A) 합산 하한 · (B) 칸별 상한 · 칸당 n 200."""
+
+import pytest
+
+from foothold_s2.eval import cells, stats
+from foothold_s2.eval.compare import judge_real_drop
+
+
+def test_newcombe_hand_values_from_the_design_note():
+    d, lo, hi = stats.newcombe_bounds(100, 100, 99, 100)
+    assert d == pytest.approx(-0.01) and lo == pytest.approx(-0.0545, abs=2e-4)          # 41 §8 수계산
+    _, lo200, _ = stats.newcombe_bounds(200, 200, 199, 200)
+    assert lo200 == pytest.approx(-0.0278, abs=2e-4)
+    # 기준 200/200 에서 새 판 170/200 이면 U < -0.10 (B 가 걸리는 최대 값, §8 「30/200 = 15 %p」), 171 은 안 걸린다
+    assert stats.newcombe_bounds(200, 200, 170, 200)[2] < -0.10 <= stats.newcombe_bounds(200, 200, 171, 200)[2]
+
+
+def test_newcombe_is_symmetric_in_the_sense_that_equal_rates_straddle_zero():
+    d, lo, hi = stats.newcombe_bounds(120, 200, 120, 200)
+    assert d == 0.0 and lo < 0.0 < hi and lo == pytest.approx(-hi)
+
+
+def cells_of(k, n, count=32):
+    return {"c%02d" % i: (k, n) for i in range(count)}
+
+
+def test_identical_measurements_pass_both_conditions():
+    out = judge_real_drop(cells_of(150, 200), cells_of(150, 200))
+    assert out["verdict"] == "no_drop" and out["A"]["passed"] and out["B"]["passed"]
+    assert out["A"]["d"] == 0.0 and out["B"]["big_drop_cells"] == []
+
+
+def test_one_cell_with_a_big_drop_fails_B_even_if_A_passes():
+    base, new = cells_of(200, 200), cells_of(200, 200)
+    new["c05"] = (170, 200)                                  # 15 %p 하락 한 칸
+    out = judge_real_drop(base, new)
+    assert out["A"]["passed"] and not out["B"]["passed"]
+    assert out["B"]["big_drop_cells"] == ["c05"] and out["B"]["worst_cell"] == "c05"
+    assert out["verdict"] == "real_drop"
+
+
+def test_small_uniform_drop_fails_A_but_not_B():
+    out = judge_real_drop(cells_of(180, 200), cells_of(172, 200))        # 모든 칸 -4 %p
+    assert out["B"]["passed"] and not out["A"]["passed"] and out["verdict"] == "real_drop"
+    assert out["A"]["L"] < -0.03
+
+
+def test_an_improvement_passes():
+    out = judge_real_drop(cells_of(150, 200), cells_of(170, 200))
+    assert out["verdict"] == "no_drop" and out["A"]["d"] == pytest.approx(0.10)
+
+
+def test_cell_lists_must_match_and_not_be_empty():
+    with pytest.raises(ValueError):
+        judge_real_drop({"a": (1, 2)}, {"b": (1, 2)})
+    with pytest.raises(ValueError):
+        judge_real_drop({}, {})
+
+
+def test_registered_values():
+    assert stats.MEAN_MARGIN == 0.03 and stats.CELL_MARGIN == 0.10 and stats.GATE_N == 200
+    assert cells.GATE_EPISODES == stats.GATE_N
+    assert cells.AXIS1_PARAMS["episodes"] == 100                 # S0 기록은 100 판 그대로
+
+
+def test_the_old_real_drop_function_is_gone():
+    assert not hasattr(stats, "real_drop")

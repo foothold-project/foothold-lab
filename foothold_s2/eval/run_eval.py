@@ -36,6 +36,7 @@ parser.add_argument("--out", required=True)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--difficulty", type=float, default=0.5)
 parser.add_argument("--episodes", type=int, default=100)
+parser.add_argument("--gate", action="store_true", help="관문 평가: 칸당 판 수 200 (41 §8 · fable 20s). S0 기록은 100 판 그대로")
 parser.add_argument("--envs_per_terrain", type=int, default=10)
 parser.add_argument("--terrains", default="all")
 parser.add_argument("--wall_limit_s", type=float, default=None)
@@ -59,6 +60,9 @@ parser.add_argument("--instances", type=int, default=10)
 parser.add_argument("--tile_episodes", type=int, default=50)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+
+if args.gate:
+    args.episodes = 200      # 관문 칸당 판 수 (stats.GATE_N)
 
 started_at = time.strftime("%Y-%m-%d %H:%M:%S")
 os.makedirs(args.out, exist_ok=True)

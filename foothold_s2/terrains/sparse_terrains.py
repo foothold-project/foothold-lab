@@ -8,7 +8,7 @@ START 시험지(`eval/start_sheet.py`, 8 x 4 m)의 치수를 학습 칸 8 x 8 m 
   - 모든 좌표는 «칸 좌표»(0..8) 로 저장하고, 월드 좌표는 Isaac 과 같은 변환 `tile_xy + (row * size_x, col * size_y)` 로 옮긴다
     (Isaac: 칸 중심으로 -size/2 옮긴 뒤 (row+0.5, col+0.5) * size 만큼 이동 = 합치면 위 식).
   - 칸은 (종류, 난이도) 만으로 결정된다 (시드를 둘의 해시에서 뽑는다). 캐시가 mesh · origin 만 복원해도 side table 을 같은 값으로 다시 만들 수 있다.
-난이도 → 레벨 `floor(10 x 난이도)` 와 저 · 고무작위 징검돌의 무작위 정도(0 · 1)는 **가정**.
+난이도 → 레벨 `floor(10 x 난이도)` 는 **가정**. 징검돌 무작위 정도 r: 저무작위 열 0 고정, 고무작위 열 L / 9(레벨 9 = START 최대 돌 ±0.5 · 열 ±0.45 x 틈, 선행 0.0 → 0.48 꼴, 20s lead 채택 · 가정).
 """
 
 import hashlib
@@ -25,9 +25,9 @@ FLAG_COUNT = 4
 FLAG_X = tuple(SPAWN_XY[0] + (ss.GOAL_X - SPAWN_XY[0]) * (k + 1) / FLAG_COUNT for k in range(FLAG_COUNT))
 MASK_RES = 0.025                   # 2.5 cm 띠를 한 칸으로 (16 §2). 칸 하나가 320 x 320
 EDGE_DROP_M = 0.2                  # 모서리 문턱 (16 §2 가정)
-KINDS = {                          # 학습 이름 -> (START 종류, 징검돌 무작위 정도, 집단 태그)
+KINDS = {                          # 학습 이름 -> (START 종류, 징검돌 무작위 정도 r(None = 레벨 비례 L/9), 집단 태그)
     "stepping_stones_low": ("stepping_stones", 0.0, "sparse"),
-    "stepping_stones_high": ("stepping_stones", 1.0, "sparse"),
+    "stepping_stones_high": ("stepping_stones", None, "sparse"),   # r = L / 9 (레벨 9 가 START 최대값, fable 20s · lead)
     "balance_beams": ("balance_beams", None, "sparse"),
     "stepping_beams": ("stepping_beams", None, "sparse"),
     "gaps": ("gaps", None, "gap"),

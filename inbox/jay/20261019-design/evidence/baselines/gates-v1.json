@@ -1,0 +1,13 @@
+{
+  "_status": "초안(sonnet-code 10/20 SC-8): 비교 규칙 필드만. 나머지 필드(관문 값 · vy_obs 규칙 · 비교 대상 판 이름 · sha256 · 범위 안 32 칸 · 판정 26 칸 · 이어진 16 칸 · 플래그 비율 · 갈래 신호 숫자)는 lead 가 채운다(41 §10).",
+  "_source": "41-EVAL-AXES.md 8 절 (팀장 결정 8 · APPROVED N-6) · fable 20s 몬테카를로(칸당 200 판) · 구현 foothold_s2/eval/stats.py judge_drop",
+  "comparison": {
+    "mean_noninf": {"method": "newcombe", "pooled": true, "margin": 0.03, "z": 1.96, "pass_if": "lower_bound >= -margin"},
+    "cell_big_drop": {"method": "newcombe", "per_cell": true, "margin": 0.10, "z": 1.96, "real_drop_if": "upper_bound < -margin"},
+    "verdict": "no_drop only if mean_noninf passes and no cell has cell_big_drop",
+    "n_per_cell": 200,
+    "baseline_remeasure_n": 200,
+    "s0_100_episode_tables": "기록 · 대조용으로만 남긴다",
+    "old_real_drop_field": "removed (replaced by mean_noninf + cell_big_drop)"
+  }
+}

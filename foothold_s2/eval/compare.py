@@ -179,3 +179,10 @@ def axis2_seed_table(policy_dir, out_csv=None):
         manifest.write_csv(out_csv, rows)
 
     return rows
+
+
+def judge_real_drop(base_cells, new_cells):
+    """41 §8 「진짜 하락」: (A) 합산 하한 >= -0.03 · (B) 칸별 상한 < -0.10 인 칸 없음. 구현은 `stats.judge_drop`."""
+    from foothold_s2.eval import stats
+
+    return stats.judge_drop(base_cells, new_cells)
