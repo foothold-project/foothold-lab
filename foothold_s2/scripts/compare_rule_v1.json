@@ -1,0 +1,17 @@
+{
+  "name": "compare_rule_v1",
+  "purpose": "bf16(KL 만 fp32) mb256 이 fp32 mb128 과 같은 학습을 하는지: 같은 iteration 에서 두 곡선의 차가 시드 잡음 안인지",
+  "registered": "결과(곡선)를 보기 전에 이 파일을 커밋한다. 결과 json 에 이 파일의 sha256 이 같이 남는다. 결과를 본 뒤 이 값을 바꾸지 않는다",
+  "runs": {"A": "fp32 mb128 (기준)", "B": "bf16 + KL fp32 mb256 (후보)", "A2": "fp32 mb128, 다른 시드 (시드 잡음 기준 · 없으면 약한 판정)"},
+  "iterations": 300,
+  "block": 30,
+  "metrics": ["Train/mean_reward", "Loss/perception/l_tr", "Loss/perception/l_ie"],
+  "statistic": "D(X,Y) = mean_b |mean_blk(X) - mean_blk(Y)| / scale, scale = mean_b |mean_blk(A)| (지표마다). 블록 = 연속 30 iteration",
+  "pass": "D(B,A) <= max(noise_factor * D(A2,A), floor)  (모든 지표에서)",
+  "noise_factor": 1.5,
+  "floor": 0.02,
+  "weak_pass_without_A2": "A2 가 없으면 D(B,A) <= floor_weak 일 때만 weak_pass (시드 잡음을 못 쟀다는 뜻으로 «통과» 와 구분)",
+  "floor_weak": 0.05,
+  "grades": "noise_factor · floor · floor_weak · block 은 모두 가정(rl). START · 선행에 없다",
+  "limits": "시드 둘(A, A2)로 잡음을 재므로 잡음 추정 자체가 거칠다. 통과는 «차이를 못 찾았다» 이지 «같다» 의 증명이 아니다. 보상 곡선은 최근 100 에피소드 평균(Train/mean_reward)을 쓴다"
+}

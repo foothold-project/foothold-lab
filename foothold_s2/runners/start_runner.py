@@ -39,6 +39,7 @@ import rsl_rl
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners.perception_replay import PerceptionReplay
+from foothold_s2.runners.status import write_status
 
 CKPT_FORMAT = "foothold-start/1"
 
@@ -51,6 +52,11 @@ PERCEPTION_DEFAULTS = {
     "microbatch_envs": 256,
     "max_grad_norm": 1.0,
     "depth_dtype": "float16",
+    "replay_impl": "a3",  # loop · a1 · a2 · a3 (models/replay_fast.py · 계산 순서만 다르고 학습 내용은 같음 · lead 결정 10/20 RL-3)
+    "replay_autocast": None,  # None · "bf16" (RL-3 B · 정확도 차이는 손실 값으로 따로 기록)
+    "kl_fp32": False,  # bf16 일 때 I-E heads · KL 만 fp32 (RL-3 B 후보)
+    "latest_interval": 100,  # latest.pt 를 이 간격으로 덮어쓴다(무인 재개용 · 번호 붙은 model_N.pt 는 save_interval 마다 그대로)
+    "status_interval": 10,  # train_start_status.json 을 이 간격으로 갱신한다(첫 iteration 은 항상)
 }
 
 
@@ -58,6 +64,9 @@ class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
         # 같은 일을 그 입력 모양으로 한다(설치 54~78 행과 같은 속성을 채운다).
+        # TF32 를 끈 채로 고정한다: cuDNN GRU 가 TF32 면 GRUCell 과 hidden 이 3e-4 까지 달라진다(lead 결정 10/20 RL-3)
+        torch.backends.cudnn.allow_tf32 = False
+        torch.backends.cuda.matmul.allow_tf32 = False
         self.cfg = train_cfg
         self.alg_cfg = train_cfg["algorithm"]
         self.policy_cfg = train_cfg["policy"]
@@ -73,6 +82,7 @@ class StartRunner(OnPolicyRunner):
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)))
         ).to(device)
+        self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
         self.perception_optimizer = torch.optim.Adam(
             self.perception.parameters(), lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
         )
@@ -95,7 +105,10 @@ class StartRunner(OnPolicyRunner):
         self.current_learning_iteration = 0
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
+        self._resumed = False
         self.memory_marks: dict[str, int] = {}
+        self.memory_log: list[dict] = []  # iteration 마다 단계별 peak (18 §5.2 측정)
+        self.iter_log: list[dict] = []
 
     # ------------------------------------------------------------------ 관측
     REQUIRED = {"policy": (45,), "depth": (60, 60), "gt_feet": (100,), "base_vel": (3,), "contacts": (4,)}
@@ -146,9 +159,28 @@ class StartRunner(OnPolicyRunner):
         return alg
 
     # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
-    def _mark(self, name: str) -> None:
-        if torch.cuda.is_available() and str(self.device).startswith("cuda"):
-            self.memory_marks[name] = int(torch.cuda.max_memory_allocated(self.device))
+    def _cuda(self) -> bool:
+        return torch.cuda.is_available() and str(self.device).startswith("cuda")
+
+    def _mark(self, name: str, it: int | None = None) -> None:
+        """누적 peak(프로세스 시작부터) 와 단계 peak(직전 _phase_start 부터) 를 함께 남긴다."""
+        if self._cuda():
+            torch.cuda.synchronize(self.device)
+            cum = int(torch.cuda.max_memory_allocated(self.device))
+            self.memory_marks[name] = max(self.memory_marks.get(name, 0), cum)
+            self.memory_log.append({"it": it, "phase": name, "cum_peak": cum,
+                                    "phase_peak": int(torch.cuda.max_memory_allocated(self.device)) if self._phase_reset else cum,
+                                    "allocated": int(torch.cuda.memory_allocated(self.device))})
+
+    _phase_reset = False
+
+    def _phase_start(self) -> None:
+        """단계 peak 를 재려면 measure_phases=True. 누적 peak 는 memory_log 의 cum_peak 를 최댓값으로 다시 모은다."""
+        if self._cuda() and self.pcfg.get("measure_phases", False):
+            self._phase_reset = True
+            prev = int(torch.cuda.max_memory_allocated(self.device))
+            self._cum_before = max(getattr(self, "_cum_before", 0), prev)
+            torch.cuda.reset_peak_memory_stats(self.device)
 
     # ------------------------------------------------------------------ 학습
     def learn(self, num_learning_iterations: int, init_at_random_ep_len: bool = False) -> None:
@@ -172,10 +204,13 @@ class StartRunner(OnPolicyRunner):
         if self.is_distributed:
             self.broadcast_all()
 
-        start_iter = self.current_learning_iteration
+        # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
+        start_iter = self.current_learning_iteration + (1 if self._resumed else 0)
+        self.current_learning_iteration = start_iter
         tot_iter = start_iter + num_learning_iterations
         for it in range(start_iter, tot_iter):
             start = time.time()
+            self._phase_start()
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             # ① 수집
@@ -207,16 +242,18 @@ class StartRunner(OnPolicyRunner):
                         cur_reward_sum[done_ids] = 0
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device))
-                self._mark("2_rollout")
+                self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
             # ② PPO
+            self._phase_start()
             loss_dict = self.alg.update()
-            self._mark("3_ppo_update")
+            self._mark("3_ppo_update", it)
             # ③ 지각
+            self._phase_start()
             ploss = self.update_perception()
-            self._mark("4_perception_update")
+            self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
             # ④ AdaSmpl
             p = self.update_adasmpl()
@@ -224,16 +261,25 @@ class StartRunner(OnPolicyRunner):
             loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
             learn_time = time.time() - start
             self.current_learning_iteration = it
+            steps = self.num_steps_per_env * n * self.gpu_world_size
+            self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
+                                  "steps_per_s": steps / (collection_time + learn_time)})
             # ⑤ 로그 · 저장
             if self.log_dir is not None and not self.disable_logs:
                 self.log(locals())
                 if it % self.save_interval == 0:
                     self.save(os.path.join(self.log_dir, f"model_{it}.pt"))
+                if it % self.pcfg["latest_interval"] == 0:
+                    self.save_latest()
+                if it == start_iter or it % self.pcfg["status_interval"] == 0:
+                    self._write_running_status(it, tot_iter, rewbuffer, lenbuffer, collection_time + learn_time, steps)
             ep_infos.clear()
             if it == start_iter and not self.disable_logs and self.log_dir is not None:
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
             self.save(os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt"))
+            self.save_latest()
+        self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
 
     def update_perception(self) -> dict[str, float]:
         if not self.replay.full():
@@ -246,7 +292,8 @@ class StartRunner(OnPolicyRunner):
             self.perception_optimizer.zero_grad(set_to_none=True)
             chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
             for c in chunks:
-                res = self.perception.sequence_loss(self.replay.gather(c))
+                with self._autocast():
+                    res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
                 (res["loss"] * (len(c) / len(idx))).backward()
                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
@@ -257,6 +304,13 @@ class StartRunner(OnPolicyRunner):
             n_updates += 1
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         return self.last_perception_losses
+
+    def _autocast(self):
+        if self.pcfg.get("replay_autocast") == "bf16" and self._cuda():
+            return torch.autocast("cuda", dtype=torch.bfloat16)
+        import contextlib
+
+        return contextlib.nullcontext()
 
     def update_adasmpl(self) -> float:
         if self.is_distributed:
@@ -286,28 +340,53 @@ class StartRunner(OnPolicyRunner):
         self.adasmpl.load_state_dict(objs[2])
 
     # ------------------------------------------------------------------ 저장 · 복원 (12 §6.1 상태 목록)
+    # env 가 학습 회차에 걸쳐 들고 가는 상태. 저장하지 않고 재개하면 «오류 없이» 처음 값으로 돌아간다:
+    #   common_step_counter  명령 모드 비율의 1,000 회 전후 전환 · p_advance 의 T 가 이 값에서 나온다(반복 수 = 이 값 // 24)
+    #   terrain_levels / terrain_types  env 마다 서 있는 지형 칸
+    #   명령 term 의 range_curriculum  자유 속도 상한 vmax (1.0 에서 시작해 올라간다)
+    # env 가 `foothold_state_dict` / `foothold_load_state_dict` 를 내면 그것을 «더해서» 쓴다(위 셋은 항상 저장).
+    def _command_term(self):
+        u = getattr(self.env, "unwrapped", self.env)
+        cm = getattr(u, "command_manager", None)
+        try:
+            return cm.get_term("base_velocity") if cm is not None else None
+        except Exception:
+            return None
+
     def _env_state(self) -> dict:
         u = getattr(self.env, "unwrapped", self.env)
-        hook = getattr(u, "foothold_state_dict", None)
-        if callable(hook):
-            return hook()  # 커리큘럼 · 명령 생성기 상태는 env 쪽(lead) 이 이 이름으로 낸다
-        out = {}
+        out: dict = {}
+        if getattr(u, "common_step_counter", None) is not None:
+            out["common_step_counter"] = int(u.common_step_counter)
         terrain = getattr(getattr(u, "scene", None), "terrain", None)
         for k in ("terrain_levels", "terrain_types"):
             if terrain is not None and getattr(terrain, k, None) is not None:
                 out[k] = getattr(terrain, k).clone()
+        rc = getattr(self._command_term(), "range_curriculum", None)
+        if rc is not None:
+            out["range_curriculum"] = {k: (list(v) if isinstance(v, list) else v) for k, v in vars(rc).items()}
+        hook = getattr(u, "foothold_state_dict", None)
+        if callable(hook):
+            out["env_hook"] = hook()
         return out
 
     def _load_env_state(self, sd: dict) -> None:
         u = getattr(self.env, "unwrapped", self.env)
-        hook = getattr(u, "foothold_load_state_dict", None)
-        if callable(hook):
-            hook(sd)
-            return
+        if "common_step_counter" in sd:
+            u.common_step_counter = int(sd["common_step_counter"])
         terrain = getattr(getattr(u, "scene", None), "terrain", None)
-        for k, v in sd.items():
-            if terrain is not None and getattr(terrain, k, None) is not None:
-                getattr(terrain, k).copy_(v)
+        for k in ("terrain_levels", "terrain_types"):
+            if k in sd and terrain is not None and getattr(terrain, k, None) is not None:
+                getattr(terrain, k).copy_(sd[k])
+        rc = getattr(self._command_term(), "range_curriculum", None)
+        if rc is not None and "range_curriculum" in sd:
+            for k, v in sd["range_curriculum"].items():
+                setattr(rc, k, v)
+        if "env_hook" in sd:
+            hook = getattr(u, "foothold_load_state_dict", None)
+            if not callable(hook):
+                raise RuntimeError("체크포인트에 env_hook 상태가 있는데 이 env 에는 foothold_load_state_dict 가 없다")
+            hook(sd["env_hook"])
 
     @staticmethod
     def rng_state() -> dict:
@@ -344,6 +423,25 @@ class StartRunner(OnPolicyRunner):
     def save(self, path: str, infos: dict | None = None) -> None:
         torch.save(self.state_dict(infos), path)
 
+    def save_latest(self) -> str:
+        """latest.pt 를 임시 파일에 쓴 뒤 바꿔치기한다. 쓰다 죽어도 이전 latest.pt 가 온전히 남는다."""
+        path = os.path.join(self.log_dir, "latest.pt")
+        tmp = f"{path}.tmp"
+        torch.save(self.state_dict(), tmp)
+        os.replace(tmp, path)
+        return path
+
+    def _write_running_status(self, it, tot_iter, rewbuffer, lenbuffer, iter_s, steps) -> None:
+        write_status(self.log_dir, {
+            "state": "running", "iter": it, "tot_iter": tot_iter, "iter_s": iter_s, "steps_per_s": steps / iter_s,
+            "mean_reward": (sum(rewbuffer) / len(rewbuffer)) if rewbuffer else None,
+            "mean_episode_length": (sum(lenbuffer) / len(lenbuffer)) if lenbuffer else None,
+            "p_smpl": self.adasmpl.p,
+            "gpu_max_allocated_GiB": (torch.cuda.max_memory_allocated(self.device) / 2**30) if self._cuda() else None,
+            "perception": {k: round(v, 5) for k, v in self.last_perception_losses.items()},
+            "log_dir": self.log_dir,
+        })
+
     def load(self, path: str, load_optimizer: bool = True, map_location: str | None = None) -> dict:
         sd = torch.load(path, weights_only=False, map_location=map_location)
         if sd.get("format") != CKPT_FORMAT:
@@ -358,6 +456,7 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        self._resumed = True
         return sd["infos"]
 
     def train_mode(self) -> None:

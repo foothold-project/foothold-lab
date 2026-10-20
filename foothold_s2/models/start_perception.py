@@ -161,12 +161,18 @@ class IEEstimator(nn.Module):
         seq = torch.cat(tokens, 1)
         self.last_num_map_tokens = seq.shape[1] - 1  # 시험용: G0 이면 0
         out = self.attn(seq)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
-        mu, logvar, v, zb, zf = torch.split(self.heads(out), [Z_DIM, Z_DIM, V_DIM, ZB_DIM, ZF_DIM], -1)
+        if getattr(self, "heads_fp32", False) and torch.is_autocast_enabled(out.device.type):
+            with torch.autocast(out.device.type, enabled=False):  # bf16 에서 logvar · KL 정밀도를 지킨다(RL-3 B)
+                h = self.heads(out.float())
+        else:
+            h = self.heads(out)
+        mu, logvar, v, zb, zf = torch.split(h, [Z_DIM, Z_DIM, V_DIM, ZB_DIM, ZF_DIM], -1)
         return {"mu": mu, "logvar": logvar, "v": v, "zb": zb, "zf": zf}
 
 
 def kl_standard_normal(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
     """KL(N(mu, var) || N(0, 1)), 차원 합 · 배치 평균 (가정(rl): 합 · 평균의 축)."""
+    mu, logvar = mu.float(), logvar.float()
     return (-0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(-1)).mean()
 
 
@@ -322,12 +328,22 @@ class StartPerception(nn.Module):
         return torch.cat([z, out["v"], out["zf"], out["zb"]], -1)
 
     # ---------------- 재생 손실 (gradient 켬) ----------------
-    def sequence_loss(self, batch: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    def sequence_loss(self, batch: dict[str, torch.Tensor], eps: torch.Tensor | None = None,
+                      impl: str = "loop") -> dict[str, torch.Tensor]:
         """batch 는 (T, B, ...) 순서. 시작 hidden 은 버퍼 값, first 에서 0 으로 다시 시작(BPTT 는 한 rollout).
 
         ô_{t+1} 항은 done_t = 1 인 전이를 뺀다(terminal 마스크, 12 §6.1). 나머지 항은 모든 스텝.
+        eps 는 VAE 표집 잡음 (T, B, 16). 구현(loop · a1 · a2 · a3)끼리 같은 잡음을 쓰게 밖에서 줄 수 있다.
+        impl: loop = 스텝마다 전부(기준) · a1 = 순환 없는 모듈을 T x B 로 한 번에 · a2 = GRU 를 cuDNN 한 번 · a3 = 둘 다
+        (models/replay_fast.py, RL-3). 학습 내용은 같고 계산 순서만 다르다.
         """
         T = batch["obs"].shape[0]
+        if eps is None:
+            eps = torch.randn(T, batch["obs"].shape[1], Z_DIM, device=batch["obs"].device)
+        if impl != "loop":
+            from foothold_s2.models.replay_fast import sequence_loss_fast
+
+            return sequence_loss_fast(self, batch, eps, impl)
         h_prop, h_terr = batch["h_prop0"], batch["h_terr0"]
         sums = {k: 0.0 for k in ("tr", "kl", "o_next", "v", "hf", "hb")}
         o_valid_total = 0.0
@@ -338,7 +354,7 @@ class StartPerception(nn.Module):
             )
             if self.trnet is not None:
                 sums["tr"] = sums["tr"] + loss_tr(out["rough"], out["refined"], batch["gt_map"][t])
-            z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])
+            z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
             sums["kl"] = sums["kl"] + kl_standard_normal(out["mu"], out["logvar"])
             sums["v"] = sums["v"] + F.mse_loss(out["v"], batch["base_vel"][t])
             sums["hb"] = sums["hb"] + F.mse_loss(self.ie.dec_b(out["zb"]), batch["gt_map"][t].flatten(1))
