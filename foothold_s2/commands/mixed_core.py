@@ -256,11 +256,11 @@ def flag_step(state, pos_xy, yaw, dt, params):
     return cmd
 
 
-def straight_flag_line(origin_xy, count=4, spacing=1.0, heading=0.0, first=-1.5):
+def straight_flag_line(origin_xy, count=4, spacing=1.0, heading=0.0, first=0.5):
     """이어진 지형 칸의 직선 깃발 열 (15 §4 71 행: 칸 가운데를 지나는 직선, 1 m 간격). (count, 2).
 
-    칸 가운데 기준 first ... first + (count-1) x spacing = -1.5 ~ +1.5 m: 8 m 칸의 경계(+-4 m)에서 2.5 m 안쪽이다
-    (예전 1~4 m 는 네 번째 깃발이 칸 경계에 놓였다). 첫 깃발은 출발 위치 뒤쪽 1.5 m 이고, 처음에 몸을 돌려 향한다.
+    칸 가운데 기준 +0.5, +1.5, +2.5, +3.5 m (lead 확정 10/20): 8 m 칸 경계(+4 m)에서 0.5 m 안쪽이고 처음부터 앞을 향한다
+    (예전 1~4 m 는 네 번째 깃발이 경계 위에 놓였다).
     """
     steps = first + torch.arange(count, dtype=torch.float32) * spacing
     origin = torch.as_tensor(origin_xy, dtype=torch.float32)

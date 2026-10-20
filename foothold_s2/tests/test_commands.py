@@ -270,8 +270,8 @@ def test_flag_state_reset_clears_progress_and_swaps_flags():
 def test_straight_flag_line_is_four_flags_one_meter_apart_and_inside_the_tile():
     f = mc.straight_flag_line(torch.tensor([10.0, -3.0]))
     assert f.shape == (4, 2)
-    assert f.flatten().tolist() == approx([8.5, -3, 9.5, -3, 10.5, -3, 11.5, -3], abs=1e-6)
-    assert float((f[:, 0] - 10.0).abs().max()) <= 1.5 + 1e-6            # 8 m 칸 경계(+-4 m) 에서 2.5 m 안쪽
+    assert f.flatten().tolist() == approx([10.5, -3, 11.5, -3, 12.5, -3, 13.5, -3], abs=1e-6)
+    assert float((f[:, 0] - 10.0).max()) == approx(3.5) and float((f[:, 0] - 10.0).min()) > 0   # 경계(+4 m)에서 0.5 m 안쪽, 앞쪽만
     old = mc.straight_flag_line(torch.tensor([0.0, 0.0]), first=1.0)     # 예전 배치는 네 번째가 경계 위
     assert float(old[:, 0].max()) == approx(4.0)
 

@@ -55,3 +55,7 @@
 - 메모(lead): 정리기의 전진 상한 1.0 은 고정값이 아니라 «학습 로그의 최종 커리큘럼 상한(vmax_x)» 을 deploy.yaml 에 내보내 읽게 바꾼다(지금은 가정값 1.0).
 - 이전(Linux, 10/22) 뒤 첫 일: unitree_mujoco 파이썬 경로(`simulate_python`, DOMAIN_ID 1, INTERFACE lo)로 FIXSTAND → S1-blind 서기 · 걷기. 먼저 확인할 것: IMU quat 정의(w x y z, 몸 → 세계)가 Isaac `root_quat_w` 와 같은지, gyro 부호, 우리 기본 자세로 서는지. 정책은 정식 S1 체크포인트가 나온 뒤(10 update 체크포인트는 걷지 못함). WSL 에 cyclonedds 등을 까는 것은 하지 않기로 함(lead 결정).
 - S2: 학습은 rl 의 `foothold_s2/scripts/train_start.py` + `FootholdS2-Go2-S2-{G0,G1,G3}-v0`(isaac311 python, 판 확인 assert 는 train_start 에 있음). 도움이 되는 probe: `tasks/probe_s2.py`(물러나기) · `probe_s2_edge.py`(발 가장자리) · `probe_s2_recon.py`(재구성 지도 그림). 대기 중인 판단: lead 의 S2 첫 update 확인 항목(foot_edge 평균 음수 여부).
+
+## 10/20 저녁 S1-a 본 학습 실행 준비 (승인 뒤에만 띄움)
+- 실행: `bash foothold_s2/run_s1.sh scan cuda:0` · `bash foothold_s2/run_s1.sh blind cuda:1` (6,000 회 · 4096 env · isaac311-moects python · 로그 `logs/s1a_<variant>_<시각>/run.log`, git_head.txt · git_status.txt 가 같이 남음). 띄운 뒤 1~2 분 안에 PID(`Get-Process python`) · 첫 `Learning iteration` 줄 · Traceback 0 을 직접 확인한다. 한 장이 도는 중에는 다른 장에 걸어도 됨(L1 에서 4096 env 가 장당 문제없이 돌았음).
+- 예행(64 env 10 update, 깃발 열 +0.5~+3.5 · flag_vmax · penalty_on 로그) 통과: `s1_l1/flags`(깃발 오프셋 x 0.5~3.5, y 0), `s1_l1/blind3`(Curriculum/command_range/{vmax_x,flag_vmax}, Curriculum/penalty_on/{collision,stumble,foot_edge}, Metrics/base_velocity/flag_vmax 모두 찍힘).
