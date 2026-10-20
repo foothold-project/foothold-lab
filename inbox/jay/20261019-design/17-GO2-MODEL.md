@@ -39,7 +39,7 @@ DCMotor 의 뜻(**코드** `actuator_pd.py` `_clip_effort` 295~308 행, ASTRA �
 | 경로 | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Robots/Unitree/Go2/go2.usd`(+ 상대 참조 `Props/instanceable_meshes.usd`) | robotlab `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf`(JEPLO `training/resources/go2/urdf/go2.urdf` 와 **바이트 동일**) · MGDP `all_dog/go2/urdf/go2.urdf` | **코드** `unitree.py` 142 · `apps/isaaclab.python.kit` 306(asset_root cloud = Assets/Isaac/5.1) · **실행 기록** env.yaml 286 행 |
 | sha256 | go2.usd 8,142 B `ba171c97…11c6d` · instanceable_meshes.usd 18,802,187 B `2902646d…93fb5` | robotlab = JEPLO `f130b1d2…a5810` · MGDP `2b64012c…7559` | ASTRA R1 §8 · **fable 재측 10/20**(내려받아 sha256 · 전부 일치) |
 | 총질량 | **15.019 kg**(`physics:mass` 19 prim 합 15.018999692: base 6.921 · 다리마다 hip 0.678 + thigh 1.152 + calf 0.154 + foot 0.040 = 2.024 · Head_upper · Head_lower 0.001 씩) | robotlab = JEPLO **16.087**(33 링크 · 회전자 12 × 0.089 = 1.068 포함 · 카메라 없음) · MGDP **16.142**(+ D435 0.055) | USD 는 usd-core 26.8 로 fable 재측(ASTRA R1 §4 와 같음) · URDF 는 XML 합산 fable 재측. **차이 1.068 kg 은 URDF 의 회전자 링크가 USD 에 없기 때문**이고 USD 에 더하지 않는다(ASTRA R1-1). 공식 사양 약 15 kg(fable 20e [5]) |
-| 로드 뒤 질량 | **미확인**(Kit 로그에 질량 출력 없음). cfg 의 `mass_props` 는 null(env.yaml 252 행)이라 USD 값이 그대로 PhysX 에 들어간다고 본다(**가정**). 학습 중 base 에 짐 −1~2 kg 이 더해진다(5 절) | | 실행 기록 · 가정 |
+| 로드 뒤 질량 | **미확인**(Kit 로그에 질량 출력 없음 · 평가 시작 · S2 첫 실행 로그에 `root_physx_view` 질량 합 출력 예정 · D55). cfg 의 `mass_props` 는 null(env.yaml 252 행)이라 USD 값이 그대로 PhysX 에 들어간다고 본다(**가정**). 학습 중 base 에 짐 −1~2 kg 이 더해진다(5 절) | | 실행 기록 · 가정 |
 | 실기 질량 | **미확인** → 저울(6 절). START 자산(MGDP Lite3)과의 동일성도 미확인(ASTRA R1 §1) | | |
 | 허벅지 · 종아리 길이 | 0.213 · 0.213 m(`FL_thigh/FL_calf_joint` · `FL_calf/FL_foot_joint` localPos0 z) | 같음 | USD · URDF 일치(ASTRA R1 §4 · fable 재측) |
 | 앞뒤 hip 축 간격 | 0.3868 m(`base/FL_hip_joint` localPos0 x 0.1934 × 2) | 같음. Lite3 0.349 | USD · URDF · Lite3 는 MGDP `lite3.urdf` 95 · 203 행 |
@@ -118,4 +118,4 @@ START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 �
 | H17-1 | 종아리 속도 15.70 rad/s 제한이 계단 · 틈 학습을 막지 않는다 | 제한 판과 기본 판의 짧은 학습 대조(2,000 회) |
 | H17-2 | 시뮬 종아리 속도가 15.70 rad/s 를 넘는 스텝 비율이 1 % 이하다(DCMotor 는 속도를 자르지 않으므로 0 이 아니라 비율로) | 학습된 정책의 q̇ 히스토그램 · 42 T2 |
 
-열린 항목: PIE 「초기 관절 0.5 ~ 1.5」 의 단위 · 종료 조건 숫자(가정 유지) · 지속 토크 23.5 변형의 실측 뒤 재검토 · 센서 질량 · Kit 로드 뒤 질량 값(로그 출력은 rl · sonnet 몫 · 20t) · 실기 질량과 START 자산 동일성(미확인).
+열린 항목: PIE 「초기 관절 0.5 ~ 1.5」 의 단위 · 종료 조건 숫자(가정 유지) · 지속 토크 23.5 변형의 실측 뒤 재검토 · 센서 질량 · Kit 로드 뒤 질량 값(lead 20t 답 · D55: sonnet 사슬의 평가 시작 · S2 첫 실행 로그에 env robot `root_physx_view` 질량 합 한 줄 출력, lead 가 sonnet 에 지시) · 실기 질량과 START 자산 동일성(미확인).
