@@ -99,7 +99,7 @@ def _gates_file(tmp_path, names, n=200, with_list=True):
     body = {"comparison": {"n_per_cell": n}}
 
     if with_list:
-        body["axis1_judge_cells"] = names
+        body["cells"] = {"s1_scan_judged_26": names}
 
     path = tmp_path / "gates.json"
     path.write_text(json.dumps(body), encoding="utf-8")
@@ -134,3 +134,21 @@ def test_gated_judge_refuses_mismatched_inputs(tmp_path, case):
 
     with pytest.raises(GateInputError):
         judge_real_drop_gated(base, new, path)
+
+
+def test_registered_gates_file_gives_the_26_judged_cells():
+    """실제 등록 파일(sol 5355f4f5)에서 26 칸을 (set, terrain, speed) 로 읽고, 그 칸으로 만든 입력은 판정된다."""
+    import json
+
+    from foothold_s2.eval import manifest
+    from foothold_s2.eval.compare import GateInputError, judge_real_drop_gated
+
+    path = os.path.join(manifest.REPO_ROOT, manifest.GATES_RELPATH)
+    listed = json.load(open(path, encoding="utf-8"))["cells"]["s1_scan_judged_26"]
+    assert len(listed) == 26
+    keys = [(c[0], c[1], float(c[2])) for c in listed]
+    out = judge_real_drop_gated({k: (150, 200) for k in keys}, {k: (150, 200) for k in keys})
+    assert out["verdict"] == "no_drop" and out["gates"]["n_cells"] == 26 and out["gates"]["sha256_lf"]
+
+    with pytest.raises(GateInputError):                                  # 경로가 없으면 오류
+        judge_real_drop_gated({k: (150, 200) for k in keys}, {k: (150, 200) for k in keys}, cells_key="cells.nope")

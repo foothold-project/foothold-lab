@@ -192,7 +192,7 @@ class GateInputError(ValueError):
     """판정 입력이 등록된 관문과 어긋난다: 판정하지 않고 멈춘다."""
 
 
-GATES_CELLS_KEY = "axis1_judge_cells"     # gates-v1.json 의 축 1 판정 칸 목록 (41 §9: S1-scan 26 칸). lead 가 채운다.
+GATES_CELLS_KEY = "cells.s1_scan_judged_26"     # gates-v1.json 안의 축 1 판정 칸 목록 경로 (점으로 이은 키, 26 칸). 항목은 [terrain_set, terrain, speed_mps]
 
 
 def judge_real_drop_gated(base_cells, new_cells, gates_path=None, cells_key=GATES_CELLS_KEY):
@@ -212,7 +212,14 @@ def judge_real_drop_gated(base_cells, new_cells, gates_path=None, cells_key=GATE
     with open(gates_path or os.path.join(manifest.REPO_ROOT, manifest.GATES_RELPATH), encoding="utf-8") as handle:
         gates = json.load(handle)
 
-    registered = gates.get(cells_key)
+    registered = gates
+
+    for part in cells_key.split("."):
+        registered = registered.get(part) if isinstance(registered, dict) else None
+
+    if registered:
+        registered = [tuple(c) if isinstance(c, list) else c for c in registered]
+        registered = [(c[0], c[1], float(c[2])) if isinstance(c, tuple) and len(c) == 3 else c for c in registered]
 
     if not registered:
         raise GateInputError("gates 파일에 판정 칸 목록 %r 이 없습니다" % cells_key)
