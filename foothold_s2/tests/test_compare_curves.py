@@ -26,7 +26,19 @@ def run(seed, **kw):
 
 
 def test_rule_file_is_pinned():
-    assert SHA == hashlib.sha256(open(RULE_PATH, "rb").read()).hexdigest()
+    raw = open(RULE_PATH, "rb").read().replace(b"\r\n", b"\n")
+    assert SHA == hashlib.sha256(raw).hexdigest()
+    # 줄끝이 CRLF 인 사본(윈도우 체크아웃)도 같은 해시여야 한다
+    import os
+    import tempfile
+
+    import foothold_s2.scripts.compare_curves as cc
+
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, "r.json")
+        with open(p, "wb") as f:
+            f.write(raw.replace(b"\n", b"\r\n"))
+        assert cc.load_rule(p)[1] == SHA
     assert (RULE["iterations"], RULE["block"], RULE["noise_factor"], RULE["floor"], RULE["floor_weak"]) == (300, 30, 1.5, 0.02, 0.05)
 
 

@@ -21,7 +21,7 @@ RULE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "compare_ru
 
 
 def load_rule(path: str = RULE_PATH) -> tuple[dict, str]:
-    raw = open(path, "rb").read()
+    raw = open(path, "rb").read().replace(b"\r\n", b"\n")  # 줄끝을 LF 로 맞춰 해시한다: 윈도우(CRLF 체크아웃)와 Linux 가 같은 값
     return json.loads(raw.decode("utf-8")), hashlib.sha256(raw).hexdigest()
 
 
