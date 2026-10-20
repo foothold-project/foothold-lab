@@ -31,7 +31,7 @@
 
 - **확인됨**: `feature/sol-20u-jay`의 `caaf04f674d8a9e0f0803e951721cd367dd4600c`는 19파일 변경이며 sol 작업 사본은 대조 시 clean이었다. `gates-v1.json`의 작업 사본과 커밋 원바이트가 같고, 원바이트·LF SHA256은 모두 `69b094786e1439e6b5c7c30971082f4901314f8fad54a3e8a71d0e01dc5c8276`이다. `cells.s1_scan_judged_26`는 26칸이며 S1-b 후보 A가 등록돼 있다.
 - **규칙 선행판**: v1.1 최종 봉인 전이다. JSON의 null은 7개다. `vy_obs` 둘, S1a-blind·S1b-blind·S2-G0 체크포인트 SHA 셋, `xhat_m`의 `error_threshold`·`invalid_output_rule` 둘이다. 각 생산·결정 시점을 구분하며, 미정 값을 임의로 채우지 않는다.
-- **F5 후속 · rl 문서 판정 수신**: `961e74ce`의 `evidence/contracts/RL-F5-xhatm-verdict.md`를 직접 읽었다. lead는 권고를 채택했으며, 값은 모두 가정이다. sol 반영 의뢰는 [TASK-sol-20x-f5-contract.md](TASK-sol-20x-f5-contract.md)다. 접지 발 평균 높이, 해석식 roll, S2도 같은 높이 어댑터, 무효·age·reset 규칙을 계약과 JSON에 반영할 차례다. 판정은 같은 장면·시드에서 HL teacher의 정답 대 추정 입력 성공률 하락 ≤ 2 %p, MAE·p95는 참고다. 100 ms 안전 규칙은 23·42와 대조한다. 구현·실측 미확인 상태이며 문서 채택을 F5 전체 통과로 쓰지 않는다.
+- **F5 후속 · rl 문서 판정 수신**: `961e74ce`의 `evidence/contracts/RL-F5-xhatm-verdict.md`를 직접 읽었다. lead는 권고를 채택했으며, 값은 모두 가정이다. sol 반영 의뢰는 [TASK-sol-20x-f5-contract.md](TASK-sol-20x-f5-contract.md)다. 접지 발 평균 높이, 해석식 roll, S2도 같은 높이 어댑터, 무효·age·reset 규칙을 계약과 JSON에 반영할 차례다. 판정은 같은 장면·시드에서 HL teacher의 정답 대 추정 입력 성공률 하락 ≤ 2 %p, MAE·p95는 참고다. **00:52 수신한 lead 선택 A**: 마지막 유효 묶음 기준 age >20 ms 즉시 stale, >100 ms 즉시 HOLD 래치·추가 대기와 자동 재개 없음·사람이 해제. deadman·heartbeat는 별개 유지. 19·21·99·101 ms 경계 시험과 실기 T 단계 HOLD 횟수·원인 보고를 포함한다. 구현·실측 미확인 상태이며 문서 채택을 F5 전체 통과로 쓰지 않는다.
 - **sol 보고**: CPU 판정기 정상 26×200 PASS, 키·칸·100판 반례 거절, JSON 출처 251개 누락 0, 문서 검사 통과. lead_tmp가 이 시험을 재실행한 것은 아니다.
 - **다음 순서**: lead가 blind 학습 완료 뒤 SHA를 추가하여 v1.1을 봉인하고 소비 사본 반영을 확인한다. lead는 완료를 약 03시로 예상하며 아직 실측 완료가 아니다. F5 확인은 lead가 rl에 의뢰했다고 보고했다. F3는 **N1의 sonnet 병합 커밋이 나온 뒤** N2와 SOL-20w를 묶어 지적분 중심으로 의뢰한다. 새 학습·실행 승인이 아니다.
 
