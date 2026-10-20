@@ -25,6 +25,7 @@ import traceback
 
 from isaaclab.app import AppLauncher
 
+from foothold_s2.robots import go2_params as gp
 from foothold_s2.eval import cells, manifest, rsj
 
 parser = argparse.ArgumentParser(description="FOOTHOLD 평가 (41 설계).")
@@ -137,6 +138,7 @@ def finish(out_dir, record):
         "terrain_sources": terrain_sets.source_record(),
         "label": args.label,
         "note": args.note,
+        "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"] if args.policy.startswith("s1") else None,   # foot_below_ground 종료 문턱 (S1 계열 env 만)
     }
     base.update(record)
     manifest.write_json(os.path.join(out_dir, "run_manifest.json"), base)

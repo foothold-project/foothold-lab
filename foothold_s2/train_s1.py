@@ -53,6 +53,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
 import foothold_s2.tasks  # noqa: E402,F401
+from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners.status import write_status  # noqa: E402
 from foothold_s2.s1_runner import STAGE_TRANSFER_KEYS, S1Runner  # noqa: E402
 from foothold_s2.tasks.robot_mass import log_robot_mass  # noqa: E402
@@ -88,6 +89,7 @@ def main(env_cfg, agent_cfg):
     resume_path = get_checkpoint_path(load_root, agent_cfg.load_run, agent_cfg.load_checkpoint) if agent_cfg.resume else None
     env = gym.make(args_cli.task, cfg=env_cfg)
     log_robot_mass(env, "S1 train " + args_cli.task)
+    print("[종료 조건] fbg_margin %s m (foot_below_ground)" % gp.TERMINATION["foot_below_ground_m"], flush=True)
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     train_cfg = agent_cfg.to_dict()
     runner = S1Runner(env, train_cfg, log_dir=log_dir, device=agent_cfg.device)

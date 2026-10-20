@@ -29,7 +29,7 @@ PIE = {
 
 # 시스템 지연 0~15 ms 는 DCMotor 를 DelayedPD 로 바꿔야 해서 S1 1 차에 넣지 않았다 (열린 항목, 보고에 적음).
 
-TERMINATION = {"max_tilt_rad": 1.5, "foot_below_ground_m": 0.2}   # 17 §7 (가정)
+TERMINATION = {"max_tilt_rad": 1.5, "foot_below_ground_m": 0.25}   # 17 §7 (가정) 문턱 0.2 -> 0.25: 계단 단 최대 0.23 + 0.02 (lead 10/21, fbg2 측정에서 계단 레벨 9 오판 56 건)
 
 
 def dc_motor_clip(effort, joint_vel, effort_limit, saturation_effort, velocity_limit):
