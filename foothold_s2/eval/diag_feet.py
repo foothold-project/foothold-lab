@@ -170,7 +170,7 @@ if abs(cmd[2]) > 1e-9:                              # 제자리 회전 명령: �
     res["turn"] = {"yaw_follow_median": float(np.median(follow)), "yaw_follow_mean": float(follow.mean()), "cmd_wz": cmd[2]}
     print("TURN", json.dumps(res["turn"]), flush=True)
 
-res["start_plan"] = ({k_: v_ for k_, v_ in generator.axis3_starts[args.terrain].items() if k_ in ("status", "reason", "origin", "yaw_rad", "support_height_spread_m", "foot_air_gaps_m", "sole_air_gaps_m", "support_heights_m", "previous_origin")} if args.start_cmd else None)
+res["start_plan"] = ({k_: v_ for k_, v_ in generator.axis3_starts[args.terrain].items() if k_ in ("status", "reason", "origin", "yaw_rad", "support_height_spread_m", "foot_air_gaps_m", "sole_air_gaps_m", "support_heights_m", "previous_origin", "foot_edge_clearances_m", "root_z_offset_m", "spawn_root_z_m")} if args.start_cmd else None)
 res["terminations_first_episode"] = TERM
 res["init"] = {"feet_in_contact_by_step": {str(k_): float(C[k_, :, :].sum(axis=1)[ALIVE[k_]].mean()) for k_ in (0, 5, 15, 30, 60) if k_ < steps},
                "base_height_by_step": {str(k_): float(H[k_][ALIVE[k_]].mean() - raw.scene.terrain.env_origins[:, 2].cpu().numpy()[ALIVE[k_]].mean()) for k_ in (0, 5, 30, 60) if k_ < steps},

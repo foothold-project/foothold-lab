@@ -231,9 +231,9 @@ def select_start(boxes, cmd, zone=ZONE, *, feet=None, terrain_origin_z=0., root_
         base['minimum_candidate_height_spread_m'] = min_spread
     if best is None:
         return dict(base, reason='support_height_spread_exceeded' if best_xy is not None else 'no_four_foot_support')
-    spawn_z = root_height_for_supports(best[4], feet[:, 2])
+    spawn_z = float(root_height_for_supports(best[4], feet[:, 2]))
     # 지형 원점 z는 보존한다. 로봇 reset의 z 오프셋만 조절해 지형 기준을 바꾸지 않는다.
-    offset_z = spawn_z - root_z - root_height_m
+    offset_z = float(spawn_z - float(root_z) - float(root_height_m))   # numpy float64 가 pose_range 에 섞이면 torch 가 double 로 만들어 reset 이 죽는다 (Kit 예행에서 확인)
     base.update(pose_record(best, spawn_z))
     return dict(base, status='ready', label='네 발 XY·높이차 확인 · 접촉 미확인',
                 terrain_origin_z=root_z, root_z_offset_m=offset_z,
@@ -331,8 +331,8 @@ def install_fixed_reset(raw, names, plan):
             if not match.any():
                 continue
             fixed = dict(params)
-            yaw = plan[names[kind]]['yaw_rad']
-            offset_z = plan[names[kind]]['root_z_offset_m']
+            yaw = float(plan[names[kind]]['yaw_rad'])
+            offset_z = float(plan[names[kind]]['root_z_offset_m'])
             fixed["pose_range"] = dict(params.get("pose_range", {}), x=(0., 0.), y=(0., 0.),
                                        z=(offset_z, offset_z), roll=(0., 0.), pitch=(0., 0.), yaw=(yaw, yaw))
             original(env, ids[match], **fixed)
