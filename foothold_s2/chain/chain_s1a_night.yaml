@@ -138,6 +138,7 @@ jobs:
   - name: s1b_train
     gpu: 0
     priority: 2
+    note: S1-a 판정 통과 파일이 생기면 S1-b 가 먼저 GPU 0 을 잡는다(bf16 은 판정 파일 뒤에만 뜸)
     depends_on: [blind_train]
     require_file: ${CHAIN_DIR}/s1a_verdict_pass.json
     cmd: [bash, foothold_s2/run_s1b.sh, "cuda:{gpu}"]

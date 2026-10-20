@@ -100,6 +100,9 @@ def main(env_cfg, agent_cfg):
         if args_cli.stage_transfer:                      # p_advance 의 T 를 이 단계의 반복 수(0 부터)로 센다
             env.unwrapped.stage_iteration_offset = runner.current_learning_iteration + 1
             print("[INFO] 단계 전이: stage_iteration_offset =", env.unwrapped.stage_iteration_offset, flush=True)
+            rc = runner._command_term().range_curriculum                 # 평가 기록 카드용: 이어 받은 명령 상한 값 (lead 요청)
+            print("[S1b 시작 명령 상한] vmax_x=%s vmax_y=%s flag_vmax=%s 이어 받은 회차=%s" % (rc.vmax_x, rc.vmax_y, rc.flag_vmax,
+                                                                                runner.current_learning_iteration), flush=True)
 
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
