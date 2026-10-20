@@ -161,12 +161,18 @@ class IEEstimator(nn.Module):
         seq = torch.cat(tokens, 1)
         self.last_num_map_tokens = seq.shape[1] - 1  # 시험용: G0 이면 0
         out = self.attn(seq)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
-        mu, logvar, v, zb, zf = torch.split(self.heads(out), [Z_DIM, Z_DIM, V_DIM, ZB_DIM, ZF_DIM], -1)
+        if getattr(self, "heads_fp32", False) and torch.is_autocast_enabled(out.device.type):
+            with torch.autocast(out.device.type, enabled=False):  # bf16 에서 logvar · KL 정밀도를 지킨다(RL-3 B)
+                h = self.heads(out.float())
+        else:
+            h = self.heads(out)
+        mu, logvar, v, zb, zf = torch.split(h, [Z_DIM, Z_DIM, V_DIM, ZB_DIM, ZF_DIM], -1)
         return {"mu": mu, "logvar": logvar, "v": v, "zb": zb, "zf": zf}
 
 
 def kl_standard_normal(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
     """KL(N(mu, var) || N(0, 1)), 차원 합 · 배치 평균 (가정(rl): 합 · 평균의 축)."""
+    mu, logvar = mu.float(), logvar.float()
     return (-0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(-1)).mean()
 
 

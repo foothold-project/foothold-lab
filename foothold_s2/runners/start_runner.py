@@ -51,8 +51,9 @@ PERCEPTION_DEFAULTS = {
     "microbatch_envs": 256,
     "max_grad_norm": 1.0,
     "depth_dtype": "float16",
-    "replay_impl": "loop",
-    "replay_autocast": None,  # None · "bf16" (RL-3 B · 정확도 차이는 손실 값으로 따로 기록)  # loop · a1 · a3 (models/replay_fast.py · 계산 순서만 다르고 학습 내용은 같음, RL-3)
+    "replay_impl": "a3",  # loop · a1 · a2 · a3 (models/replay_fast.py · 계산 순서만 다르고 학습 내용은 같음 · lead 결정 10/20 RL-3)
+    "replay_autocast": None,  # None · "bf16" (RL-3 B · 정확도 차이는 손실 값으로 따로 기록)
+    "kl_fp32": False,  # bf16 일 때 I-E heads · KL 만 fp32 (RL-3 B 후보)
 }
 
 
@@ -60,6 +61,9 @@ class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
         # 같은 일을 그 입력 모양으로 한다(설치 54~78 행과 같은 속성을 채운다).
+        # TF32 를 끈 채로 고정한다: cuDNN GRU 가 TF32 면 GRUCell 과 hidden 이 3e-4 까지 달라진다(lead 결정 10/20 RL-3)
+        torch.backends.cudnn.allow_tf32 = False
+        torch.backends.cuda.matmul.allow_tf32 = False
         self.cfg = train_cfg
         self.alg_cfg = train_cfg["algorithm"]
         self.policy_cfg = train_cfg["policy"]
@@ -75,6 +79,7 @@ class StartRunner(OnPolicyRunner):
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)))
         ).to(device)
+        self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
         self.perception_optimizer = torch.optim.Adam(
             self.perception.parameters(), lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
         )
