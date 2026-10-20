@@ -186,3 +186,59 @@ def judge_real_drop(base_cells, new_cells):
     from foothold_s2.eval import stats
 
     return stats.judge_drop(base_cells, new_cells)
+
+
+class GateInputError(ValueError):
+    """판정 입력이 등록된 관문과 어긋난다: 판정하지 않고 멈춘다."""
+
+
+GATES_CELLS_KEY = "axis1_judge_cells"     # gates-v1.json 의 축 1 판정 칸 목록 (41 §9: S1-scan 26 칸). lead 가 채운다.
+
+
+def judge_real_drop_gated(base_cells, new_cells, gates_path=None, cells_key=GATES_CELLS_KEY):
+    """등록된 관문에 맞는 입력일 때만 「진짜 하락」 을 판정한다 (ASTRA-F2 N2).
+
+    확인: (1) gates 파일이 있고 sha256 이 읽힌다 (2) 파일에 판정 칸 목록 `cells_key` 가 있고 기준 · 새 판의 칸 집합과
+    같다 (3) 모든 칸이 두 판 모두 n = gates 의 `n_per_cell` (기본 200). 하나라도 어긋나면 `GateInputError`.
+    돌려줌: `stats.judge_drop` 결과 + `gates` (경로 · sha256 · 칸 수).
+    """
+    import json
+
+    record = manifest.gates_record(gates_path)
+
+    if record.get("sha256_lf") is None:
+        raise GateInputError("gates 파일을 못 읽었습니다: %s" % record.get("error"))
+
+    with open(gates_path or os.path.join(manifest.REPO_ROOT, manifest.GATES_RELPATH), encoding="utf-8") as handle:
+        gates = json.load(handle)
+
+    registered = gates.get(cells_key)
+
+    if not registered:
+        raise GateInputError("gates 파일에 판정 칸 목록 %r 이 없습니다" % cells_key)
+
+    want = set(registered)
+
+    for label, got in (("기준 판", set(base_cells)), ("새 판", set(new_cells))):
+        if got != want:
+            raise GateInputError("%s 의 칸 집합이 gates 와 다릅니다: 빠진 칸 %s, 넘치는 칸 %s"
+                                 % (label, sorted(want - got)[:5], sorted(got - want)[:5]))
+
+    n_want = int(gates.get("comparison", {}).get("n_per_cell", 0))
+
+    if n_want <= 0:
+        raise GateInputError("gates 에 comparison.n_per_cell 이 없습니다")
+
+    for label, cells_ in (("기준 판", base_cells), ("새 판", new_cells)):
+        bad = {c: v[1] for c, v in cells_.items() if int(v[1]) != n_want}
+
+        if bad:
+            raise GateInputError("%s 의 칸당 판 수가 %d 이 아닙니다: %s" % (label, n_want, dict(list(bad.items())[:5])))
+
+    # 순서는 gates 목록 순서로 맞춘다 (judge_drop 은 두 딕셔너리 순서가 같아야 한다)
+    ordered_base = {c: tuple(base_cells[c]) for c in registered}
+    ordered_new = {c: tuple(new_cells[c]) for c in registered}
+    out = judge_real_drop(ordered_base, ordered_new)
+    out["gates"] = dict(record, n_cells=len(registered), n_per_cell=n_want)
+
+    return out

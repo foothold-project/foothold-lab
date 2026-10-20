@@ -88,3 +88,49 @@ def test_manifest_records_the_gates_file_path_and_a_line_ending_independent_sha2
 def test_run_eval_writes_the_gates_record_into_every_run_manifest():
     src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "run_eval.py"), encoding="utf-8").read()
     assert '"gates": manifest.gates_record()' in src
+
+
+# ---------------------------------------------------------------- 등록 관문 대조 (ASTRA-F2 N2)
+
+
+def _gates_file(tmp_path, names, n=200, with_list=True):
+    import json
+
+    body = {"comparison": {"n_per_cell": n}}
+
+    if with_list:
+        body["axis1_judge_cells"] = names
+
+    path = tmp_path / "gates.json"
+    path.write_text(json.dumps(body), encoding="utf-8")
+
+    return str(path)
+
+
+def test_gated_judge_passes_a_matching_input_and_records_the_hash(tmp_path):
+    from foothold_s2.eval.compare import judge_real_drop_gated
+
+    names = ["c%02d" % i for i in range(26)]
+    out = judge_real_drop_gated(cells_of(150, 200, 26), cells_of(150, 200, 26), _gates_file(tmp_path, names))
+    assert out["verdict"] == "no_drop" and out["gates"]["sha256_lf"] and out["gates"]["n_cells"] == 26
+
+
+@pytest.mark.parametrize("case", ["no_file", "no_list", "missing_cell", "extra_cell", "n100"])
+def test_gated_judge_refuses_mismatched_inputs(tmp_path, case):
+    from foothold_s2.eval.compare import GateInputError, judge_real_drop_gated
+
+    names = ["c%02d" % i for i in range(26)]
+    base, new = cells_of(200, 200, 26), cells_of(200, 200, 26)
+    path = _gates_file(tmp_path, names, with_list=case != "no_list")
+
+    if case == "no_file":
+        path = str(tmp_path / "nope.json")
+    elif case == "missing_cell":
+        del new["c03"]
+    elif case == "extra_cell":
+        base["zz"], new["zz"] = (200, 200), (200, 200)
+    elif case == "n100":
+        base, new = cells_of(100, 100, 26), cells_of(100, 100, 26)
+
+    with pytest.raises(GateInputError):
+        judge_real_drop_gated(base, new, path)
