@@ -22,7 +22,8 @@
 
 | 세션 | 종류 · 모델 | 맡는 일 | 연락 |
 |---|---|---|---|
-| lead | Claude Opus · 이 창 | 실험 판단 · 지시 · 팀장 보고. 팀장은 이 창에서만 말한다 | 다른 세션이 SendMessage 또는 mai_resume send 로 보고 |
+| lead_tmp | Codex GPT-6-astra · 옛 ASTRA 창 이름 변경 | **10/20 23시대 ~ 10/24 20:00 팀장 대화 창.** 질문 답 · 보고 요약 · Codex 세션 지시 · 일정 · 안건 갱신 · #555 기록 | mai_resume send `term_d0d6549f-2da1-433c-9d05-58ce534224d7` |
+| lead | Claude Opus | 한도 기간에는 두 가지만: 실험 판정(S1-a 판정 파일 등) · Claude 세션 지시와 중재. 짧게 보고 | SendMessage 또는 mai_resume send `term_2580fc05-e7ff-4a63-8e24-714802e8f2c5` |
 | sonnet-code | Claude Sonnet · 워크스페이스 2 | GPU 에서 도는 코드(foothold_s2: 명령 · 지형 · 보상 · 평가 · 사슬 실행기 · S1-b) | SendMessage `sonnet-code-c6` |
 | rl | Claude Sonnet | S2 지각 신경망 · runner(models · runners · sensors · train_start). Linux 대기 | SendMessage `rl` |
 | fable | Claude | 설계 문서 · 계산. 한도 때문에 지금 쉼 | SendMessage `fable` |
