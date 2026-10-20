@@ -160,7 +160,7 @@ VERIFY-lead-final2.md 「팀장 결정」 1~8 을 lead 권고 그대로 승인: 
 8. 일정 · 업무 표는 실측 계산으로 계속 갱신.
 9. RunPod: 팀 충전 예정(석헌 학습). 우리 장비 우선, 필요 시 팀장 건별 승인으로 사용.
 
-## P. S1-a 본 학습 Windows 승인 (팀장 10/20 17:2x 채팅 원문)
+## P. S1-a 본 학습 Windows 승인 (팀장 10/20 16:5x 채팅 원문)
 
 - 「첫 반복이 실제로 돌았는지 확인하고 오늘 밤 Window에서 돌리면 되지 않나?」 → S1-a scan · blind 각 6,000 회를 Windows 에서 오늘 밤 실행(sonnet-code 커밋 0fb4c111 이후, isaac311, 2 단계 동결 기록 = 실행 폴더의 git_head · git_status). 판 번호 S1a-scan-v1 · S1a-blind-v1.
 - 지각 epoch: START 와 선행 2409.15692 v1 · v2 · PIE 원문에 PPO · 지각 학습 수치가 없음(evidence/deep-research-start-missing-values.json). legged_gym · MGDP 코드 · Deep Robotics 공식 Lite3 설정이 epoch 5, JEPLO 가 10. lead 권고 5 유지(10 은 학습 단계 시간이 약 2 배). 팀장 확인 대기.
