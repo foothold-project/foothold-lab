@@ -176,6 +176,7 @@ class SideTable:
     def __init__(self):
         self.by_key = {}
         self.by_cell = {}
+        self.calls = []        # 생성기 함수가 불린 순서대로 (종류, 난이도)
 
     @staticmethod
     def key(kind, difficulty):
@@ -183,6 +184,38 @@ class SideTable:
 
     def record(self, kind, difficulty, tile):
         self.by_key[self.key(kind, difficulty)] = tile
+        self.calls.append((kind, float(difficulty)))
+
+    def bind_all(self, names_by_col, num_rows, size=TILE):
+        """Isaac 커리큘럼 생성은 열 우선 · 줄 순서로 칸을 만든다 (`terrain_generator.py` 258~262 행). 불린 순서대로 (줄, 열) 에 묶는다.
+
+        불린 횟수가 듬성한 열 수 x 줄 수와 다르거나, 난이도의 레벨이 줄 번호와 다르면 오류 (순서 가정이 깨진 것).
+        """
+        queue = {}
+
+        for kind, d in self.calls:
+            queue.setdefault(kind, []).append(d)
+
+        taken = {k: 0 for k in queue}
+
+        for col, kind in enumerate(names_by_col):
+            if kind not in KINDS:
+                continue
+
+            for row in range(num_rows):
+                i = taken.get(kind, 0)
+                seq = queue.get(kind, [])
+
+                if i >= len(seq):
+                    raise RuntimeError("%s 가 %d 번만 불렸는데 (줄 %d, 열 %d) 칸이 더 있다" % (kind, len(seq), row, col))
+
+                d = seq[i]
+                taken[kind] = i + 1
+
+                if level_of(d) != row:
+                    raise RuntimeError("호출 순서 가정이 깨졌다: %s 난이도 %.3f 는 레벨 %d, 칸 줄 %d" % (kind, d, level_of(d), row))
+
+                self.bind(row, col, kind, d, size)
 
     def bind(self, row, col, kind, difficulty, size=TILE):
         tile = self.by_key.get(self.key(kind, difficulty)) or build_tile(kind, difficulty)

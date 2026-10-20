@@ -99,8 +99,11 @@ class MixedVelocityCommand(CommandTerm):
         if len(flag_ids) > 0:
             rows = self._flag_row[flag_ids]
             origins = self._env.scene.terrain.env_origins[flag_ids, :2]
-            flags = self.cfg.flag_provider(origins, self.cfg.flag_count) if self.cfg.flag_provider is not None \
-                else torch.stack([mc.straight_flag_line(o, self.cfg.flag_count) for o in origins.cpu()]).to(self.device)
+            if self.cfg.flag_provider is not None:
+                flags = self.cfg.flag_provider(self._env.scene.terrain, flag_ids, self.cfg.flag_count)
+            else:
+                flags = torch.stack([mc.straight_flag_line(o, self.cfg.flag_count)
+                                     for o in origins.cpu()]).to(self.device)
             self.flag_state.reset(rows, flags=flags)
 
     # ------------------------------------------------------------ CommandTerm
@@ -184,7 +187,7 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     flag_count: int = 4
     steps_per_iter: int = 24
     flag_provider: object = None
-    """`(origins_xy (m,2), count) -> (m, count, 2)`. None 이면 칸 가운데 직선. S2 가 갈아 끼운다."""
+    """`(terrain, env_ids (m,), count) -> (m, count, 2)` 월드 좌표. None 이면 칸 가운데 직선. S2 가 갈아 끼운다."""
     fixed_cmd: tuple = None
     """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
     params: dict = {}

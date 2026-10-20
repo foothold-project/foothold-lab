@@ -5,12 +5,15 @@
 - 명령 term 은 S1 의 MixedVelocityCommand 를 그대로 쓰고 깃발은 `flag_provider` 로 갈아 끼운다.
 
 아직 없는 것 (이 파일이 «구멍» 으로 드러낸다, 자리만 있음):
-  1. 듬성한 지형 생성기 `terrains/sparse_terrains.py` (Isaac 규약 `(meshes, origin)` + side table, 15 §8)
-  2. p_advance 재배정 term (순수 계산은 `terrains/progression.py`), 칸 집단 태그
+  1. (만듦) 듬성한 지형 생성기 `terrains/sparse_terrains.py`
+  2. (만듦) p_advance 재배정 term `tlm.terrain_levels_s2`. env 생성 뒤 reset 전에 `tlm.attach_s2_tables(env, sparse_terrains.SIDE_TABLE, s2_layout.Layout())` 를 한 번 불러야 한다 (학습 실행기 몫)
   3. 발 가장자리 보상의 마스크 조회 (G3 만, 16 §5). G0 · G1 은 가중치 0 이라 지금 뼈대로 가능
 """
 
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.utils import configclass
+
+from foothold_s2.curriculum import terrain_levels_mixed as tlm
 
 from foothold_s2.tasks.s1_env_cfg import FootholdS1aScanEnvCfg
 from foothold_s2.terrains import columns
@@ -43,6 +46,7 @@ class FootholdS2G0EnvCfg(FootholdS1aScanEnvCfg):
 
         subs = {**continuous_subterrains(), **_sparse_subterrains()}
         self.scene.terrain.terrain_generator = build_generator(subs, columns.FULL_COLS)
+        self.curriculum.terrain_levels = CurrTerm(func=tlm.terrain_levels_s2)
 
 
 @configclass

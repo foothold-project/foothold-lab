@@ -8,6 +8,7 @@ from __future__ import annotations
 import torch
 
 from foothold_s2.curriculum import rules
+from foothold_s2.terrains import s2_runtime
 
 
 def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0):
@@ -72,3 +73,30 @@ def command_range_curriculum(env, env_ids, command_name: str = "base_velocity",
     acc.last_iter = it
 
     return torch.tensor(term.range_curriculum.vmax_x)
+
+
+def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, seed: int = 0):
+    """S2: 승급 · 강등(`terrain_levels_mixed`) 뒤 듬성한 env 의 열을 p_advance 로 다시 뽑는다 (15 §5 · §8.1 ①).
+
+    `env.s2_tables` (`s2_runtime.S2Tables`) 가 있어야 한다. env 생성 직후 한 번 붙인다 (`attach_s2_tables`).
+    """
+    import numpy as np
+
+    value = terrain_levels_mixed(env, env_ids, command_name, resample_s)
+    term = env.command_manager.get_term(command_name)
+
+    if not hasattr(env, "_s2_rng"):
+        env._s2_rng = np.random.default_rng(seed)
+
+    s2_runtime.reassign(env.scene.terrain, env.s2_tables, env_ids, term.iteration, env._s2_rng)
+
+    return value
+
+
+def attach_s2_tables(env, side_table, layout, flag_count: int = 4):
+    """생성기가 끝난 뒤 side table 을 (줄, 열) 에 묶고 텐서를 env 에 붙인다. 명령 term 의 깃발 공급자도 이어 준다."""
+    terrain = env.scene.terrain
+    gen = terrain.cfg.terrain_generator
+    side_table.bind_all(layout.names, gen.num_rows)
+    env.s2_tables = s2_runtime.S2Tables(side_table, layout, gen.num_rows, env.device, flag_count)
+    env.command_manager.get_term("base_velocity").cfg.flag_provider = env.s2_tables.flag_provider

@@ -14,7 +14,7 @@ import pytest
 ROOT = pathlib.Path(os.environ.get("ISAACLAB_DIR", "C:/isaac/IsaacLab")) / "source"
 PKG = pathlib.Path(__file__).resolve().parents[1]
 KIT_FILES = [
-    "tasks/s1_env_cfg.py", "tasks/delayed_action.py", "tasks/mdp_extra.py", "tasks/agents/s1_ppo_cfg.py", "rewards/start_rewards.py",
+    "tasks/s1_env_cfg.py", "tasks/s2_env_cfg.py", "tasks/delayed_action.py", "tasks/mdp_extra.py", "tasks/agents/s1_ppo_cfg.py", "rewards/start_rewards.py",
     "commands/mixed_command.py", "curriculum/terrain_levels_mixed.py", "robots/go2_cfg.py",
     "terrains/rough_go2_cfg.py",
 ]
