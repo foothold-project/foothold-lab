@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: Go2 URDF `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf` 6 · 63 · 84 · 89 · 101 · 122 · 139 · 160 · 205 · 251 · 289 · 327 · 418 · 456 · 494 행 · Isaac Lab 2.3.2 `isaaclab_assets/robots/unitree.py` 140~180 · `actuators/actuator_pd.py` 295~307 · `config/go2/rough_env_cfg.py` 30~35 · `sensors/contact_sensor/contact_sensor_cfg.py` 45 · PIE 2408.13740v3 Table II (ASTRA 19g 4 절, root.tex 182~203) · START 2512.13153v1 221 · 580 행 · JEPLO `go2_loco_env.py` 835~847 (evidence/maicode-jeplo-deep) · MARG 2509.20036v2 647 행 · DECISIONS-step2-lead.md A3 · A4 · APPROVED F-D1 · F-D2 · H(팀장 승인 10/19) · fable 20e 2 절 · VERIFY-fable-20f P9 · P22
 > 요지: 시뮬 Go2 가 실기보다 「빠르거나 세지」 않게 종아리 관절만 URDF 값(속도 15.70 rad/s · 토크 45.43 N·m)으로 떼어 DCMotor 로 두고, 나머지는 Isaac Lab Go2 설정을 그대로 쓴다(팀장 승인). 무작위화는 START 가 위임한 PIE 표를 쓴다(짐 무게 −1~2 kg, 팀장 승인). 실측이 오면 실측이 이긴다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정)
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
 
 # 17 · Go2 로봇 모델
 
@@ -26,9 +26,9 @@
 | 묶음 | 토크 (effort · saturation) | 속도 한계 | Kp · Kd | 등급 |
 |---|---|---|---|---|
 | hip · thigh | 23.5 · 23.5 | 30.0 | 25 · 0.5 | **코드** Isaac Lab 그대로 |
-| calf | **45.43 · 45.43** | **15.70** | 25 · 0.5 (관절 공간 PD 는 그대로) | **URDF** 160 행 · 팀장 승인 |
+| calf | **45.43 · 45.43** | **15.70**(모터 곡선 인자 `velocity_limit`. PhysX 상한 `velocity_limit_sim` 은 **적용하지 않음**, 아래 동결값) | 25 · 0.5 (관절 공간 PD 는 그대로) | **URDF** 160 행 · 팀장 승인 · 동결값은 **가정**(20k) |
 
-DCMotor 의 뜻(**코드** `actuator_pd.py` 299~302): 쓸 수 있는 토크 = min(effort_limit, saturation_effort × (1 − \|q̇\| / velocity_limit)). 그래서 종아리는 0 속도에서 45.43, 7.85 rad/s 에서 22.7, 15.70 에서 0 이 된다. 이것이 실제 모터의 토크 · 속도 선에 가장 가깝다. 실측(6 절 T2)이 오면 실측이 이긴다(APPROVED C). 지속 토크를 23.5 로 따로 자르는 변형(effort_limit 23.5)은 실측 뒤 재검토 항목이다(10 절).
+DCMotor 의 뜻(**코드** `actuator_pd.py` `_clip_effort` 295~308 행, ASTRA 가 CPU 에서 그대로 실행해 확인 · VERIFY-astra-final 3): 토크는 절댓값 대칭이 아니라 **추진 · 제동 비대칭**이다. 상한 = min(effort_limit, saturation × (1 − q̇ / velocity_limit)), 하한 = max(−effort_limit, saturation × (−1 − q̇ / velocity_limit)). 종아리(45.43 · 45.43 · 15.70)에서 +100 N·m 를 요청하면 q̇ = 0 → +45.43, 7.85 → +22.72, 15.70 → 0, 20.00 → **−12.44**(강제 제동) 이고, −100 N·m 를 요청하면 같은 속도들에서 전부 **−45.43**(제동은 속도와 무관하게 끝까지 가능). 즉 「15.70 에서 토크 0」 은 추진 방향만의 이야기다. 이것이 실제 모터의 토크 · 속도 선에 가장 가깝다. `velocity_limit` 은 이 곡선의 인자이고 PhysX 관절 최대 속도 `velocity_limit_sim` 과는 별개다(`actuator_base.py` 182~210 행: `velocity_limit_sim` 은 USD 값과 대조해 PhysX 에 쓰고, `velocity_limit` 은 따로 파싱). **동결값(가정)**: 종아리 `velocity_limit = 15.70`, `velocity_limit_sim` 은 USD 값 그대로(적용 안 함). 이유: 곡선이 15.70 을 넘는 속도에서 추진 토크를 음수로 만들어 물리적으로 제동하므로 solver 상한을 따로 두지 않고, 넘는 비율은 H17-2(≤ 1 %)로 본다. 실측(6 절 T2)이 오면 재검토. 실측(6 절 T2)이 오면 실측이 이긴다(APPROVED C). 지속 토크를 23.5 로 따로 자르는 변형(effort_limit 23.5)은 실측 뒤 재검토 항목이다(10 절).
 
 ## 2. 질량과 크기
 
@@ -100,7 +100,7 @@ START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 �
 ## 9. 구현 방법 · 검증 사다리
 
 - 자리: `foothold_s2/robots/go2_cfg.py`. `UNITREE_GO2_CFG` 를 복제해 `actuators` 를 `hip_thigh`(`.*_hip_joint`, `.*_thigh_joint`) · `calf`(`.*_calf_joint`) 두 `DCMotorCfg` 로 나눈다. DR 은 `EventCfg` 의 `randomize_rigid_body_material`(마찰) · `randomize_rigid_body_mass`(짐) · `randomize_actuator_gains`(Kp · Kd) · 무게중심 이동 · 카메라 자세(센서 오프셋) term.
-- L0 CPU: DCMotor 식을 수계산과 대조(q̇ = 0 · 7.85 · 15.70 에서 45.43 · 22.7 · 0). AST 로 cfg 의 joint 정규식이 URDF 관절 이름 12 개를 정확히 둘로 나누는지(가짜 cfg 금지, 실제 USD 관절 이름으로).
+- L0 CPU: 설치 `DCMotor._clip_effort` 를 CPU 더미 상태로 그대로 실행해 ASTRA 표와 대조: +100 요청 → q̇ 0 · 7.85 · 15.70 · 20.00 에서 +45.430 · +22.715 · 0 · −12.443, −100 요청 → 네 속도 모두 −45.430. negative control: `velocity_limit` 을 30 으로 두면 15.70 에서 +21.67 이 나와야 함. AST 로 cfg 의 joint 정규식이 URDF 관절 이름 12 개를 정확히 둘로 나누는지(가짜 cfg 금지, 실제 USD 관절 이름으로).
 - L1 Kit: 첫 10 update 에서 종아리 q̇ 히스토그램 로그. DCMotor 는 토크를 줄일 뿐 속도를 막지 않으므로(`actuator_pd.py` 299~302 행) 15.70 을 넘는 스텝이 정상 판에서도 나올 수 있다. 기준은 「15.70 초과 비율 ≤ 1 %」(**가정**, VERIFY-lead-final 23).
 
 ## 10. 검증할 가설 · 열린 항목

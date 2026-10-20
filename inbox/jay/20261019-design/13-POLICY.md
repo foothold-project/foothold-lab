@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 42 · 52~54 · 60~72 · 76~86 · 185~217 · 221 · 347 행 · 선행 2409.15692v2 35 · 353 행 · HiPAN 2604.26504 134~168 행 · ASTRA 19f Q3 · fable 20e R1 · R4 · DECISIONS-step2-lead.md S 행 · evidence/E1-vs-v2-axis1.csv · axis2.csv · Isaac Lab 2.3.2 `config/go2/agents/rsl_rl_ppo_cfg.py` · `isaaclab_rl/rsl_rl/rl_cfg.py` 54 · APPROVED F-D4(팀장 승인) · VERIFY-fable-20f P23 · P29
 > 요지: START 의 비대칭 actor-critic 단일 단계 학습을 그대로 쓰고, 명령 세 칸은 관측 안에 둔다. 「무엇이 효과였나」 를 가르려고 지도 입력과 가장자리 보상만 바꿔 끼우는 갈래 G0 · G1 · G3 를 같은 코드에서 설정으로 고른다. S1 은 높이 스캔 판과 눈 없음 판 둘 다 돌린다(팀장 승인 D35). 추종 보상은 정확 추종(팀장 승인 D21)
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정)
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영
 
 # 13 · 정책 (actor · critic · 학습 방식 · 비교 갈래)
 
@@ -47,7 +47,7 @@ flowchart LR
 
 ### 3.1 PPO 설정
 
-18 문서 1 절의 값(Isaac Lab Go2 cfg: 24 · 5 · 4 · 1e-3 adaptive · 0.99 · 0.95 · 0.2 · 0.01 · 1.0, **가정**). env · 반복 수는 18 문서 2 절(S1 4096 · 6,000, S2 3072 · 10,000 **팀장 승인**).
+18 문서 1 절의 값(Isaac Lab Go2 cfg: 24 · 5 · 4 · 1e-3 adaptive · 0.99 · 0.95 · 0.2 · 0.01 · 1.0, **가정**). env · 반복 수는 18 문서 2 절(S1 4096 · 6,000, S2 3072 · 20,000 **팀장 승인**(env 는 F-D3 · 반복 2 배는 L)).
 
 ## 4. 비교 갈래 (같은 코드, 설정만 다름)
 
@@ -57,7 +57,7 @@ ASTRA 19f Q3 의 갈래를 정책 쪽에서 이렇게 끼운다. 명령 생성�
 |---|---|---|---|---|---|
 | **S1-scan** | 정답 높이 스캔 187 점 (시뮬 전용) | 없음 | `perception.map_input = height_scan` | 「눈이 완벽할 때 명령 개방」 의 상한. v2 와 같은 관측이라 v2 기준 관문을 그대로 쓸 수 있다. S3 시뮬 하위 · 11/7 시뮬 시연 | S1 |
 | **S1-blind** | 없음 (고유수용 이력만) | 없음 | `perception.map_input = none` | 눈 없는 열린 명령 **실기 하위**. 실기에 올릴 수 있는 유일한 S1 판(42 T6 · 11/10 「아니오」 갈래의 S3 하위, J-D) | S1 |
-| **S2-G0 = G0** | 없음 (I-E 는 prop 토큰만 · map 토큰 0) | 없음 | `perception.map_input = none` · S2 틀(3072 · 10,000 · START 14 항 B · 같은 지형군 둘 · 14 생성기) | **눈만 끈 기준선**. G1 과 env · 반복 · 보상 · 지형 · 신경망이 같고 지도 입력만 다르다 → 「눈의 효과」 를 한 변수로 가른다(**팀장 승인 10/20 J-A**, VERIFY-lead-final 1 · 2). S1 대 v2 는 「결합 효과」 로 적는다 | S2(GPU 0 11/3~) |
+| **S2-G0 = G0** | 없음 (I-E 는 prop 토큰만 · map 토큰 0) | 없음 | `perception.map_input = none` · S2 틀(3072 · 20,000 · START 14 항 B · 같은 지형군 둘 · 14 생성기) | **눈만 끈 기준선**. G1 과 env · 반복 · 보상 · 지형 · 신경망이 같고 지도 입력만 다르다 → 「눈의 효과」 를 한 변수로 가른다(**팀장 승인 10/20 J-A**, VERIFY-lead-final 1 · 2). S1 대 v2 는 「결합 효과」 로 적는다 | S2(GPU 0 11/3~) |
 | G0-gt (선택) | 정답 지도 항상 (p_smpl = 1) | 없음 | `adasmpl.force_gt = true` | 지각이 완벽할 때 상한 (START 「HMap GT」, **논문** 347 행) | S2 예산 남으면 |
 | **G1** | 재구성 지도 (AdaSmpl) | 없음 | `rewards.feet_edge.weight = 0` | 같은 보상에서 지각 추가 효과 | S2-a |
 | **G3** | 재구성 지도 (AdaSmpl) | 있음 (−1.0, dist 2.5 · 5 cm, ω 1 · 0.5) | 기본값 | 결합 효과 · 최종 후보 | S2-b |
@@ -96,8 +96,8 @@ E1 은 눈 없는 MoE-CTS 정책이고, 명령은 vx · vy ±1 · wz ±1.5 로 �
 | 무엇 | 어디에 | 비고 |
 |---|---|---|
 | 환경 | `foothold_s2/tasks/s1_env_cfg.py` · `s2_env_cfg.py` (Isaac Lab manager-based velocity env 바탕, task 이름 `FootholdS2-Go2-S1-v0` · `-S2-v0`). 관측 그룹 `policy` (o_t 45 + 이력 또는 깊이 2×60×60) · `critic` (o_t + s_t) | 관측 그룹 이름은 rsl_rl 비대칭 입력 규약(`policy` · `critic`) |
-| 정책 모듈 | `foothold_s2/models/start_policy.py`: rsl_rl `ActorCriticRecurrent`(`rl_cfg.py` 54) 를 상속해 12 문서 지각과 actor · critic 을 묶음 | 지각 출력은 detach 해서 actor 로 |
-| runner | `foothold_s2/runners/start_runner.py`: OnPolicyRunner 를 상속, rollout 뒤 지각 손실(L_TR + L_IE) 단계와 AdaSmpl 플래그 갱신 | 지각 optimizer 별도 |
+| 정책 모듈 | `foothold_s2/models/start_policy.py`: rsl_rl `ActorCritic`(MLP) 인터페이스를 지키는 우리 클래스로 12 문서 지각과 actor · critic 을 묶음. 설치 `ActorCriticRecurrent` 는 1 차원 관측만 받고 actor · critic 에 GRU 를 붙이므로 **쓰지 않는다**(rsl_rl 3.1.2 `actor_critic_recurrent.py` 57 · 67 행, VERIFY-astra-final 5). 두 GRU 는 지각 안(12 §6.1) | 지각 출력은 detach 해서 actor 로. PPO 재평가는 수집 때 저장한 96 차원 입력 · log prob 로만(12 §6.1) |
+| runner · 진입점 | `foothold_s2/runners/start_runner.py`: OnPolicyRunner 를 상속, 순서 ① 수집 ② PPO update ③ 지각 재생 · L_TR + L_IE ④ AdaSmpl ⑤ 저장(12 §6.1). 진입점은 `foothold_s2/scripts/train_start.py`(설치 `train.py` 198~203 행이 사용자 runner 를 거부하므로 rank 처리 119 · 137~143 행 이식) | 지각 optimizer 별도(수치 12 §6.1) · checkpoint 상태 목록 12 §6.1 · 분산 계약 18 §5 |
 | 갈래 설정 | 위 4 절 표의 설정 키를 Hydra cfg 로. 실행마다 `params/` 에 저장 | 같은 커밋 · 같은 시드에서 키만 다름 |
 | 수출 | actor + 지각을 ONNX 로 → Orin NX TensorRT(START 379 행과 같은 급, APPROVED H). 50 Hz 추론 시간은 42 T7 | |
 
@@ -107,6 +107,8 @@ E1 은 눈 없는 MoE-CTS 정책이고, 명령은 vx · vy ±1 · wz ±1.5 로 �
 |---|---|---|
 | L0 CPU | 관측 조립: 고정 입력으로 o_t 45 칸 순서 · 스케일이 식 1 과 같음. negative control: cmd 칸을 바꾸면 그 칸만 바뀜 | 기대값 |
 | L0 CPU | 갈래 키: `map_input = none` 이면 I-E 의 map 토큰이 0 개, G1 이면 `feet_edge.weight` 0 | AST · cfg 덤프 |
+| L0 CPU | PPO 입력 고정(12 §9): 저장한 96 차원 · log prob 로 epoch 0 ratio = 1 | 기대값 |
+| **L1 통합 관문 10/27 (rl 책임)** | S2 틀 64 env 한 장: 수집 → PPO update → 지각 update → reset → 저장/복원 한 사이클(12 §6.1 · 70 §1). 못 넘으면 S2 11/3 준비 「미완료」 · 11/10 하위는 S1a-blind-v1 경로가 일정 기준 | 로그 · 검사 |
 | L1 Kit | S1 env 첫 10 update: Traceback 0 · 메모리 · steps/s · 체크포인트 파일 | 로그 |
 | L2 | 첫 500 회: 보상 · 에피소드 길이 상승, KL 0.005~0.02, NaN 0, 방향별 노출(14 §6) | 로그 |
 
@@ -118,7 +120,7 @@ E1 은 눈 없는 MoE-CTS 정책이고, 명령은 vx · vy ±1 · wz ±1.5 로 �
 | H13-2 | G3 가 G0(S2-G0, 눈만 끈 판) 보다 듬성한 지형에서 높다 | 축 1 · 축 3 듬성한 지형 칸 · START 시험지, 같은 시드 · 같은 평가 env |
 | H13-3 | G3 가 이어진 지형 · 축 2 에서 G0 보다 떨어지지 않는다 | 축 1 이어진 칸 · 축 2 |
 | H13-4 | E1 축 2 수준(9/9)이 새 정책에서도 나온다 | 축 2 |
-| H13-5 | S1-scan 과 S1-blind 의 축 1 차이가 「눈의 값」 을 준다 | 범위 안 32 칸 차이 |
+| H13-5 | S1-scan 과 S1-blind 의 축 1 차이는 「눈의 값」 의 **결합 효과**다(관측만 다르지만 학습 동역학 · 커리큘럼 진행이 같이 달라져 한 변수 비교가 아님. 한 변수 비교는 S2-G0 대 G1, VERIFY-lead-final2 25) | 범위 안 32 칸 차이 · 결합 효과로 적음 |
 
 ## 9. 열린 항목
 
