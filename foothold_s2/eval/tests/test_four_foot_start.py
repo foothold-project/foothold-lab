@@ -95,7 +95,7 @@ def test_changed_default_joints_stop_instead_of_using_old_fk():
         fk.validate_default_pose(fk.JOINT_NAMES, np.array(fk.DEFAULT_JOINT_POS).reshape(12)*1.05)
 
 
-def test_actual_cfg_height_is_preserved_including_e1_point_42():
+def test_actual_cfg_height_is_read_but_spawn_height_is_support_based():
     from types import SimpleNamespace as NS
     cfg = NS(init_state=NS(pos=(0., 0., .42), rot=(1., 0., 0., 0.), joint_pos={
         '.*L_hip_joint': .1, '.*R_hip_joint': -.1, 'F.*_thigh_joint': .8,
@@ -104,7 +104,8 @@ def test_actual_cfg_height_is_preserved_including_e1_point_42():
     a = ss.select_start([[2., 6., 2., 6., -1., 0.]], (-.3, 0., 0.))
     b = ss.select_start([[2., 6., 2., 6., -1., 0.]], (-.3, 0., 0.), root_height_m=height)
     assert height == .42
-    assert np.array(b['foot_air_gaps_m']) - a['foot_air_gaps_m'] == pytest.approx(np.full(4, .02))
+    assert np.array(b['foot_air_gaps_m']) == pytest.approx(a['foot_air_gaps_m'])
+    assert b['root_z_offset_m'] - a['root_z_offset_m'] == pytest.approx(-.02)
 
 
 @pytest.mark.parametrize('path', [

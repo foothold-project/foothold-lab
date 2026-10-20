@@ -17,6 +17,8 @@ def test_start_is_supported_and_full_motion_stays_in_sparse_zone(kind, cmd):
         assert result['reason'] == 'no_four_foot_support'
         return
     assert result["status"] == "ready"
+    assert result['support_height_spread_m'] <= .03 + 1e-8
+    assert min(result['sole_air_gaps_m']) == pytest.approx(.01)
     start = np.array(result["origin"])
     assert sparse_starts.valid_start(start, tile.boxes[3:], cmd, yaw=result["yaw_rad"])
     end = start[:2] + sparse_starts.rotate_xy(np.array(cmd[:2]) * 2., result["yaw_rad"])
@@ -117,7 +119,7 @@ def test_reset_fix_applies_only_to_start_tiles_and_every_reset():
             assert name == 'robot'
             return robot
     raw = types.SimpleNamespace(event_manager=Manager(), num_envs=3, device='cpu', scene=Scene())
-    plan = {n: dict(status='ready', yaw_rad=y, root_height_m=.4)
+    plan = {n: dict(status='ready', yaw_rad=y, root_height_m=.4, root_z_offset_m=y/10)
             for n, y in [('gaps_start', np.pi/2), ('gap', np.pi)]}
     sparse_starts.install_fixed_reset(raw, ['boxes', 'gaps_start', 'gap'], plan)
     for ids in (None, torch.tensor([2])):
@@ -127,6 +129,8 @@ def test_reset_fix_applies_only_to_start_tiles_and_every_reset():
     assert calls[1][0] == [1] and calls[1][1]['pose_range']['yaw'] == (np.pi/2, np.pi/2)
     assert calls[2][0] == [2] and calls[3][0] == [2]
     assert calls[3][1]['pose_range']['yaw'] == (np.pi, np.pi)
+    assert calls[1][1]['pose_range']['z'] == (np.pi/20, np.pi/20)
+    assert calls[2][1]['pose_range']['z'] == calls[3][1]['pose_range']['z'] == (np.pi/10, np.pi/10)
     assert joint_calls == [[0]]
     assert [w[2] for w in writes] == [[1, 2], [2]]
     for pos, vel, ids in writes:
@@ -190,6 +194,8 @@ def test_installed_legacy_generators_have_supported_start_and_bounded_endpoint(i
         np.random.set_state(state)
     result = sparse_starts.legacy_start(name, cfg, .5, meshes, cmd)
     assert result["status"] == "ready"
+    assert result['support_height_spread_m'] <= .03 + 1e-8
+    assert min(result['sole_air_gaps_m']) == pytest.approx(.01)
     zone, floor = sparse_starts.legacy_region(name, cfg, .5)
     boxes = sparse_starts.support_boxes(meshes, floor)
     start = np.array(result["origin"])
