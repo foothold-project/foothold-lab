@@ -246,10 +246,14 @@ def _selftest():
 
 
 def main(vault):
+    """반환은 `(ok, reason)`. reason 은 실패일 때만 채워지고, 원인이 «글자» 인지
+    «선 굵기» 인지를 가른다 (2026-09-28. build.py 가 원인과 무관하게 늘 「글자가
+    겹칩니다」로 찍어, 선 굵기만 걸렸을 때도 없는 글자 결함을 찾느라 헤맸다.
+    lead 2026-09-28 지적)."""
     ok, why = _selftest()
     if not ok:
         print('  [!] 자기시험 실패: %s' % why)
-        return False
+        return False, '자기시험 실패: %s' % why
     print('  자기시험 통과 (%s)' % why)
 
     roots = [os.path.join(vault, 'assets')]
@@ -276,7 +280,7 @@ def main(vault):
 
     if not seen:
         print('  [!] 검사한 그림이 0개입니다. 통과로 안 읽습니다')
-        return False
+        return False, '검사한 그림이 0개'
 
     # ★ 2026-09-14 신설. 선 굵기가 «한 벌» 밖으로 새지 않았나.
     #   팀장이 「border 다름」이라 한 것이 이것이다. 그림 19장에 굵기가
@@ -299,8 +303,14 @@ def main(vault):
         for b in bad[:12]:
             print('     ' + b)
         print('      정확한 값은 tools/svg_measure.html 로 잽니다 (getBBox)')
-        return False
-    return True
+        if ink and stray:
+            reason = '글자가 겹치거나 틀 밖으로 나갔고, 선 굵기도 한 벌 밖입니다'
+        elif ink:
+            reason = '그림 안에서 글자가 겹치거나 틀 밖으로 나갑니다'
+        else:
+            reason = '선 굵기가 한 벌 밖입니다 (글자 결함은 0곳)'
+        return False, reason
+    return True, ''
 
 
 if __name__ == '__main__':

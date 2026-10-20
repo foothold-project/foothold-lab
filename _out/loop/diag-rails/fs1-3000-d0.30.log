@@ -1,0 +1,303 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: C:\isaac\IsaacLab\apps\isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.agents.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg
+
+================================================================================
+TERRAIN DIFFICULTY
+================================================================================
+difficulty_range : (0.3, 0.3)  (덮어씀: True)
+rail_thickness   : (0.08, 0.18)  (덮어씀: False)
+
+[36m=====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\AI-WS01\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-09-28_09-21-49.log[0m
+[36m=====================================================================================================================[0m
+
+[33m09:21:49 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+[INFO] Generating terrains based on curriculum took : 0.199727 seconds
+[INFO]: Time taken for scene creation : 1.623461 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 100
+	Environment spacing   : 2.5
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.514931 seconds
+[33m09:21:52 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:245: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'policy' key. As an observation group with the name 'policy' was found, this is assumed to be the observation set. Consider adding the 'policy' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:291: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'critic' key. As the configuration for 'critic' is missing, the observations from the 'policy' set are used. Consider adding the 'critic' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++------------------------------------------------+
+|              Active Command Terms              |
++-------+---------------+------------------------+
+| Index | Name          |          Type          |
++-------+---------------+------------------------+
+|   0   | base_velocity | UniformVelocityCommand |
++-------+---------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 2 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++----------+---------------------------+
+|  Index   | Name                      |
++----------+---------------------------+
+|    0     | physics_material          |
++----------+---------------------------+
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++---------+---------------------------+
+|  Index  | Name                      |
++---------+---------------------------+
+|    0    | reset_base                |
+|    1    | reset_robot_joints        |
++---------+---------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (235,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_lin_vel                   |     (3,)    |
+|     1     | base_ang_vel                   |     (3,)    |
+|     2     | projected_gravity              |     (3,)    |
+|     3     | velocity_commands              |     (3,)    |
+|     4     | joint_pos                      |    (12,)    |
+|     5     | joint_vel                      |    (12,)    |
+|     6     | actions                        |    (12,)    |
+|     7     | height_scan                    |    (187,)   |
++-----------+--------------------------------+-------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 2 active terms.
++---------------------------------+
+|     Active Termination Terms    |
++-------+--------------+----------+
+| Index | Name         | Time Out |
++-------+--------------+----------+
+|   0   | time_out     |   True   |
+|   1   | base_contact |  False   |
++-------+--------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++-----------------------------------------+
+|           Active Reward Terms           |
++-------+----------------------+----------+
+| Index | Name                 |   Weight |
++-------+----------------------+----------+
+|   0   | track_lin_vel_xy_exp |      1.5 |
+|   1   | track_ang_vel_z_exp  |     0.75 |
+|   2   | lin_vel_z_l2         |     -2.0 |
+|   3   | ang_vel_xy_l2        |    -0.05 |
+|   4   | dof_torques_l2       |  -0.0002 |
+|   5   | dof_acc_l2           | -2.5e-07 |
+|   6   | action_rate_l2       |    -0.01 |
+|   7   | feet_air_time        |     0.01 |
+|   8   | flat_orientation_l2  |      0.0 |
+|   9   | dof_pos_limits       |      0.0 |
++-------+----------------------+----------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+
+================================================================================
+ENV -> TERRAIN MAPPING
+================================================================================
+env 000 | terrain_type= 0 | level=0 | terrain=discrete_obstacles     | origin=(   0.00,  -36.00,   0.08)
+env 010 | terrain_type= 1 | level=0 | terrain=wave                   | origin=(   0.00,  -28.00,   0.05)
+env 020 | terrain_type= 2 | level=0 | terrain=stepping_stones        | origin=(   0.00,  -20.00,   0.12)
+env 030 | terrain_type= 3 | level=0 | terrain=gap                    | origin=(   0.00,  -12.00,   0.00)
+env 040 | terrain_type= 4 | level=0 | terrain=pit                    | origin=(   0.00,   -4.00,  -0.16)
+env 050 | terrain_type= 5 | level=0 | terrain=rails                  | origin=(   0.00,    4.00,   0.00)
+env 060 | terrain_type= 6 | level=0 | terrain=star                   | origin=(   0.00,   12.00,   0.00)
+env 070 | terrain_type= 7 | level=0 | terrain=floating_ring          | origin=(   0.00,   20.00,   0.00)
+env 080 | terrain_type= 8 | level=0 | terrain=repeated_boxes         | origin=(   0.00,   28.00,   0.05)
+env 090 | terrain_type= 9 | level=0 | terrain=repeated_cylinders     | origin=(   0.00,   36.00,   0.05)
+
+[PASS] env-to-terrain mapping is deterministic and correct.
+
+================================================================================
+HEAD CONTACT SENSOR (관측 전용 · 판정에 안 들어감)
+================================================================================
+센서 강체 수 : 19
+머리 링크    : ['Head_upper', 'Head_lower']  -> 번호 [9, 10]
+힘 문턱      : 1.000 N
+
+[PASS] 머리 링크를 접촉 센서에서 찾았습니다.
+
+================================================================================
+COMMAND VERIFICATION
+================================================================================
+env 000 | vx= 1.000 | vy= 0.000 | wz= 0.000
+max deviation from (1.0, 0, 0) = 0.000e+00
+
+[PASS] all robots receive the same velocity command.
+
+[INFO] Loading checkpoint:
+C:\isaac\IsaacLab\logs\rsl_rl\unitree_go2_gap_nvidia\2026-09-28_01-04-22_20260928_fs1-scratch-f001\model_3000.pt
+[표준편차 형식] «scalar» · 설정과 같다
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+
+================================================================================
+COMMAND VERIFICATION
+================================================================================
+env 000 | vx= 1.000 | vy= 0.000 | wz= 0.000
+max deviation from (1.0, 0, 0) = 0.000e+00
+
+[PASS] all robots receive the same velocity command.
+[PASS] 접촉 부위 · foot 4개 · thigh 4개 · calf 4개 · base 3개
+[PASS] 중심 광선 93 / 187
+
+================================================================================
+OBSTACLE ZONE (speed_drop_ratio 를 재는 구간 · 설정에서 계산)
+================================================================================
+difficulty (대표값) : 0.300    타일 8.00 m
+terrain                    시작 m      끝 m   근거
+rails                     0.750    2.880   rail_2_outer_edge
+
+[PASS] 지형 1종의 장애물 구간을 설정에서 계산했습니다.
+[PASS] 발 강체: 관절체 [15, 16, 17, 18] · 접촉 센서 [4, 8, 14, 18]  (FL · FR · RL · RR 순서)
+
+================================================================================
+GENERALIZATION EVALUATION
+================================================================================
+recorded terrains      : ['rails']
+envs / terrain         : 10
+total envs (simulated) : 100
+episodes / terrain     : 30
+total target episodes  : 30
+evaluation duration    : 6.00 s
+step_dt                : 0.0200 s  (300 steps / episode)
+command vx             : 1.00 m/s
+ideal distance         : 6.00 m
+minimum progress       : 3.00 m  (ratio 0.500)
+max velocity MAE       : 0.25 m/s
+max lateral drift      : 0.750 m  (at the 3.00 m gate)
+terrain border width   : 20.00 m  -> forward extent 24.00 m
+seed                   : 42
+================================================================================
+[rails             ]   1/30 | env 050 ep 01 | ok=1 | surv=1 | fwd=  4.90m | gate=0.005m | end=0.020m | peak=0.023m | vMAE=0.21 | trav=1 | gateV= 1.00 | drop=-0.24 | head= 39스텝/ 3162.3N
+[rails             ]   2/30 | env 051 ep 01 | ok=1 | surv=1 | fwd=  4.87m | gate=0.003m | end=0.110m | peak=0.110m | vMAE=0.22 | trav=1 | gateV= 0.88 | drop=-0.04 | head= 69스텝/ 3273.2N
+[rails             ]   3/30 | env 052 ep 01 | ok=1 | surv=1 | fwd=  4.96m | gate=0.034m | end=0.011m | peak=0.042m | vMAE=0.20 | trav=1 | gateV= 0.99 | drop=-0.05 | head= 65스텝/ 1923.2N
+[rails             ]   4/30 | env 053 ep 01 | ok=1 | surv=1 | fwd=  4.66m | gate=0.116m | end=0.302m | peak=0.302m | vMAE=0.24 | trav=1 | gateV= 0.93 | drop=-0.03 | head= 45스텝/  524.0N
+[rails             ]   5/30 | env 054 ep 01 | ok=0 | surv=1 | fwd=  4.55m | gate=0.216m | end=0.367m | peak=0.367m | vMAE=0.26 | trav=1 | gateV= 0.96 | drop=-0.02 | head= 59스텝/ 2840.4N
+[rails             ]   6/30 | env 055 ep 01 | ok=1 | surv=1 | fwd=  4.76m | gate=0.108m | end=0.164m | peak=0.164m | vMAE=0.23 | trav=1 | gateV= 0.83 | drop=-0.17 | head= 65스텝/  507.6N
+[rails             ]   7/30 | env 056 ep 01 | ok=0 | surv=1 | fwd=  4.58m | gate=0.279m | end=0.473m | peak=0.473m | vMAE=0.26 | trav=1 | gateV= 1.02 | drop=-0.03 | head= 78스텝/ 3008.0N
+[rails             ]   8/30 | env 057 ep 01 | ok=1 | surv=1 | fwd=  4.93m | gate=0.020m | end=0.083m | peak=0.083m | vMAE=0.21 | trav=1 | gateV= 1.01 | drop=-0.13 | head= 64스텝/ 3253.9N
+[rails             ]   9/30 | env 058 ep 01 | ok=0 | surv=1 | fwd=  4.47m | gate=0.345m | end=0.630m | peak=0.630m | vMAE=0.27 | trav=1 | gateV= 0.91 | drop=-0.03 | head= 66스텝/ 2988.3N
+[rails             ]  10/30 | env 059 ep 01 | ok=1 | surv=1 | fwd=  5.05m | gate=0.021m | end=0.069m | peak=0.069m | vMAE=0.19 | trav=1 | gateV= 0.89 | drop=-0.17 | head= 67스텝/ 3072.0N
+[rails             ]  11/30 | env 050 ep 02 | ok=1 | surv=1 | fwd=  4.66m | gate=0.103m | end=0.180m | peak=0.180m | vMAE=0.25 | trav=1 | gateV= 0.98 | drop=-0.10 | head= 79스텝/ 3088.1N
+[rails             ]  12/30 | env 051 ep 02 | ok=1 | surv=1 | fwd=  4.90m | gate=0.027m | end=0.044m | peak=0.044m | vMAE=0.21 | trav=1 | gateV= 0.83 | drop=-0.25 | head= 63스텝/ 3236.7N
+[rails             ]  13/30 | env 052 ep 02 | ok=1 | surv=1 | fwd=  4.92m | gate=0.017m | end=0.038m | peak=0.038m | vMAE=0.20 | trav=1 | gateV= 0.93 | drop=-0.04 | head= 64스텝/ 3693.3N
+[rails             ]  14/30 | env 053 ep 02 | ok=1 | surv=1 | fwd=  4.87m | gate=0.019m | end=0.085m | peak=0.085m | vMAE=0.22 | trav=1 | gateV= 0.96 | drop=-0.09 | head= 68스텝/ 3058.5N
+[rails             ]  15/30 | env 054 ep 02 | ok=1 | surv=1 | fwd=  4.88m | gate=0.039m | end=0.048m | peak=0.059m | vMAE=0.22 | trav=1 | gateV= 0.71 | drop=-0.12 | head= 33스텝/ 3265.9N
+[rails             ]  16/30 | env 055 ep 02 | ok=1 | surv=1 | fwd=  4.84m | gate=0.011m | end=0.079m | peak=0.079m | vMAE=0.22 | trav=1 | gateV= 0.95 | drop=-0.03 | head= 38스텝/ 3342.3N
+[rails             ]  17/30 | env 056 ep 02 | ok=0 | surv=1 | fwd=  4.60m | gate=0.147m | end=0.212m | peak=0.212m | vMAE=0.26 | trav=1 | gateV= 0.96 | drop=-0.03 | head= 76스텝/ 2896.9N
+[rails             ]  18/30 | env 057 ep 02 | ok=1 | surv=1 | fwd=  4.71m | gate=0.065m | end=0.131m | peak=0.131m | vMAE=0.25 | trav=1 | gateV= 0.92 | drop= 0.00 | head= 72스텝/ 2738.4N
+[rails             ]  19/30 | env 058 ep 02 | ok=0 | surv=1 | fwd=  4.08m | gate=0.233m | end=0.362m | peak=0.362m | vMAE=0.33 | trav=1 | gateV= 0.95 | drop=-0.01 | head= 83스텝/  594.0N
+[rails             ]  20/30 | env 059 ep 02 | ok=0 | surv=1 | fwd=  4.64m | gate=0.172m | end=0.268m | peak=0.268m | vMAE=0.25 | trav=1 | gateV= 0.96 | drop=-0.04 | head= 81스텝/ 2421.3N
+[rails             ]  21/30 | env 050 ep 03 | ok=1 | surv=1 | fwd=  4.76m | gate=0.179m | end=0.345m | peak=0.345m | vMAE=0.24 | trav=1 | gateV= 0.96 | drop=-0.09 | head= 72스텝/ 2348.7N
+[rails             ]  22/30 | env 051 ep 03 | ok=1 | surv=1 | fwd=  4.91m | gate=0.148m | end=0.354m | peak=0.354m | vMAE=0.22 | trav=1 | gateV= 0.92 | drop=-0.02 | head= 72스텝/ 3554.7N
+[rails             ]  23/30 | env 052 ep 03 | ok=1 | surv=1 | fwd=  4.94m | gate=0.164m | end=0.387m | peak=0.387m | vMAE=0.21 | trav=1 | gateV= 0.96 | drop=-0.07 | head= 80스텝/ 3393.0N
+[rails             ]  24/30 | env 053 ep 03 | ok=1 | surv=1 | fwd=  4.81m | gate=0.045m | end=0.133m | peak=0.133m | vMAE=0.22 | trav=1 | gateV= 0.92 | drop=-0.03 | head= 39스텝/  467.1N
+[rails             ]  25/30 | env 054 ep 03 | ok=1 | surv=1 | fwd=  4.91m | gate=0.006m | end=0.108m | peak=0.108m | vMAE=0.21 | trav=1 | gateV= 1.02 | drop=-0.06 | head= 41스텝/ 3552.1N
+[rails             ]  26/30 | env 055 ep 03 | ok=1 | surv=1 | fwd=  4.93m | gate=0.019m | end=0.037m | peak=0.045m | vMAE=0.21 | trav=1 | gateV= 0.92 | drop=-0.06 | head= 67스텝/ 3270.8N
+[rails             ]  27/30 | env 056 ep 03 | ok=1 | surv=1 | fwd=  4.98m | gate=0.006m | end=0.092m | peak=0.092m | vMAE=0.20 | trav=1 | gateV= 0.96 | drop=-0.05 | head= 69스텝/ 3460.8N
+[rails             ]  28/30 | env 057 ep 03 | ok=1 | surv=1 | fwd=  4.95m | gate=0.027m | end=0.015m | peak=0.043m | vMAE=0.20 | trav=1 | gateV= 0.99 | drop=-0.03 | head= 60스텝/ 2399.0N
+[rails             ]  29/30 | env 058 ep 03 | ok=1 | surv=1 | fwd=  4.81m | gate=0.036m | end=0.123m | peak=0.123m | vMAE=0.22 | trav=1 | gateV= 0.94 | drop=-0.19 | head= 37스텝/ 3178.5N
+[rails             ]  30/30 | env 059 ep 03 | ok=1 | surv=1 | fwd=  4.93m | gate=0.034m | end=0.145m | peak=0.145m | vMAE=0.21 | trav=1 | gateV= 0.88 | drop=-0.03 | head= 59스텝/ 1765.2N
+
+================================================================================
+RESULT FILES
+================================================================================
+_out/loop/diag-rails/fs1-3000-d0.30\generalization_raw.csv
+_out/loop/diag-rails/fs1-3000-d0.30\generalization_summary.csv
+_out/loop/diag-rails/fs1-3000-d0.30\run_manifest.json
+
+================================================================================
+SUMMARY
+================================================================================
+Loading user config located at: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260928_092143.log
+2026-09-28T00:21:44Z [339ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-09-28T00:21:44Z [1,094ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-09-28T00:21:44Z [1,115ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 15979   MB | 10de      | 5fce0100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 1 |     | 15979   MB | 10de      | 5de30100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.9444
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 199126
+| Total Page/Swap (MB): 278025 | Free Page/Swap: 195789
+|---------------------------------------------------------------------------------------------|
+2026-09-28T00:21:49Z [5,181ms] [Warning] [omni.kvdb.plugin] Disabling key-value database because another kit process is locking it
+2026-09-28T00:21:52Z [8,850ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-09-28T00:21:52Z [8,851ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.

@@ -1,0 +1,24 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "8f17dd15-56ec-4378-a72f-d582309f11c8"
+    },
+    {
+      "role": "image",
+      "value": "8422d5f9-0b76-4610-ab2f-22b40a566d11"
+    },
+    {
+      "role": "image",
+      "value": "73da25e0-b572-4a71-b46e-daac3274f7ee"
+    }
+  ],
+  "prompt": "LOCAL BACKGROUND EDIT ONLY of reference 1. Reference 1 is the original standing Go2 frame and MUST remain the base. Reference 2 is the user's markup showing the exact permitted editing region: the small oval behind the robot, roughly x=37%-64%, y=32%-53% of the actual picture. The purple line is an editing instruction, NEVER output it. Reference 3 supplies only the irregular broken path character, not its viewpoint or robot.\n\nPreserve EVERYTHING outside that small background region: exact Go2 position, apparent size, anatomy, standing pose, feet and silhouette; foreground landing and puddles; climbed rear edge immediately behind the robot; columns and pipes; camera framing, perspective, illumination, color and exposure. Do NOT move the robot, do NOT zoom, do NOT create a new island, do NOT change the foreground, do NOT reconstruct the whole hall. Exclude the robot silhouette from the edit even where it overlaps the marked oval.\n\nONLY within the marked background, replace the repetitive full-width concrete stair bands with a receding narrower, uneven-width broken causeway. Asymmetric missing corners, nonuniform slab lengths and short irregular gaps, dark water visible beside the path. This is the already-traveled route seen backward, not the forward view. Blend the replacement naturally into the unchanged near landing and unchanged farther hall. Keep the original rear landing edge that the Go2 just climbed. Do not add a destination beacon behind it.\nThe local replacement must match the original natural subdued concrete, damp patches and dull rust, without fresh sharp HDR or shiny plastic. Do not globally recolor or relight the original. No HUD, text, purple annotation or collage. Output a single image preserving the original composition."
+}

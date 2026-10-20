@@ -39,8 +39,10 @@ GATES = [
     ('기획발표',        datetime.date(2026, 9, 4),   'deliverables/plan/wbs.md'),
     ('A-정책',          datetime.date(2026, 9, 12),  'deliverables/midterm/policy-metrics.md'),
     ('MVP · 중간발표',   datetime.date(2026, 9, 30),  'deliverables/midterm/generalization-report.md'),
-    ('NAV · 실기 항법',  datetime.date(2026, 11, 7),  'deliverables/final/nav-report.md'),
-    ('FINAL · 최종발표', datetime.date(2026, 12, 11), 'deliverables/final/final-report.md'),
+    # ★ 2026-10-12 팀장 확정 일정. SIM 은 산출물 문서가 아직 없다.
+    ('SIM · 시뮬 · 트윈 · 앱', datetime.date(2026, 11, 7), ''),
+    ('NAV · 실기 항법',  datetime.date(2026, 11, 30), 'deliverables/final/nav-report.md'),
+    ('FINAL · 최종발표', datetime.date(2026, 12, 7),  'deliverables/final/final-report.md'),
 ]
 GATE_DUE = {g: d for g, d, _ in GATES}
 GATE_DOC = {g: p for g, _, p in GATES}

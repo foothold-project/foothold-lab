@@ -1,0 +1,49 @@
+[
+  {
+    "index": 14,
+    "file": "opening-o1b-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "1735a407-2574-41b4-bf69-39addd069e03"
+        },
+        {
+          "role": "end_image",
+          "value": "adae6dc1-97bc-4815-8970-4b00abe9bdd3"
+        }
+      ],
+      "prompt": "CONNECT THESE EXACT START AND END FRAMES WITH ONE PHYSICAL CAMERA TILT. A 5-second insert connecting a wide dark flooded industrial hall to its close gravel-covered floor. Start with image 1. From 0.3 seconds, steadily PITCH THE CAMERA DOWN by approximately 60 degrees, remaining at the SAME low robot-height position; the distant hall exits through the top while the nearby gritty floor rises into view. By second 4, match image 2: close downward-looking rubble in a localized off-camera light pool, dark surrounding corners. Hold that exact end view through second 5. This is a real downward gaze rotation, not a digital zoom, forward dolly, crossfade, morphed ground or stationary wide view. The near concrete floor already exists directly below camera. One off-camera light pool follows the gaze onto that surface. Keep the hall dark and ambient exposure locked. No overhead light activating, daylight, overall brightening, new structures or physical flashlight. No robot, person, hand, HUD or floating scan. Preserve muted rough materials, uneven wet/dry patches, subtle water sounds. Only quiet sensor-pivot sound and continuing spacious room tone; no music or dialogue."
+    }
+  },
+  {
+    "index": 15,
+    "file": "ending-e5pre-kling30-v1",
+    "params": {
+      "model": "kling3_0",
+      "mode": "std",
+      "duration": 5,
+      "aspect_ratio": "16:9",
+      "sound": "on",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "6af8dc4d-6188-488d-b067-39adddcaadb4"
+        }
+      ],
+      "prompt": "One continuous body-mounted Unitree Go2 front-camera POV, beginning EXACTLY at the supplied approved start image, at roughly 40 cm above the ground looking toward the same cabinet and low threshold. After a preceding separate gap crossing, walk forward along THIS supported approach. Gentle clearly visible up/down and tiny side-to-side step rhythm at a cautious natural pace, no human-head-height camera, floor camera, visible robot body or floating drone motion. Travel gradually closer to the FINAL LOW STEP without crossing or climbing it. During the latter half, subdued green LiDAR-like sample points sweep over near floor and onto the riser and upper landing, revealing the height discontinuity. The scan is dynamically WORLD-ANCHORED to physical rough concrete, with correct perspective, occlusion and newly revealed points as camera moves; never float as a flat image or fill open water. Keep the image naturally colored, do not tint the entire room green; no peripheral HUD or mission/transfer panels. Ease to rest immediately before the step, looking slightly down enough to read riser/top. End BEFORE any ascent, matching the next separate rear view E5 which climbs this exact threshold. Same cabinet, beacon, pipes and geometry, no new obstacle. Small physically corresponding servo and footfall sounds under body-mounted camera, faint scan ticks introduced with scan, sparse drips and low-room resonance. Pulsing physical red beacon. Illustrative scan, not actual sensor log.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  }
+]

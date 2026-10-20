@@ -1,0 +1,19 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "1a4b1094-644f-4af5-a249-d5363a207a80"
+    }
+  ],
+  "prompt": "One continuous five-second robot sensor POV shot starting EXACTLY from the supplied approved muted-tone image, including its integrated HUD. Keep the same broken concrete supports, open gap, water, target beacon and hall. Do not invent a bridge or fly over the gap. No visible robot.\nThis is O5, after the black mission reception and before a separate close scan-only O6. Slowly inspect the terrain with slight natural body-mounted sway and a very small downward tilt toward nearby support, no dramatic forward travel, cuts, zoom or orbit. Show a brief approach settling safely BEFORE the broken edge. Never enter the void.\nHUD must be an active sensor interface, not a still sticker over moving terrain. The outer interface and text remain locked to the display. The attitude horizon counter-rotates subtly with body pitch/roll and settles when camera settles. Preserve English headings and clear monospaced typography. Command and response have different meanings: begin with the exact supplied table; as approach settles, CMD VX eases to 0.00, STATE VX follows toward 0.00 with a short lag. Lateral and yaw remain near zero, not random changing commands. ROLL and PITCH vary only by small plausible amounts then settle. Do not scramble labels or invent new units. These are illustrative cinematic readings, not a real robot log.\nGreen sampling dots regenerate progressively on actual uneven concrete surfaces from near to farther support. They stay world-anchored under camera sway, occlude behind surface edges and NEVER fill the open gap or water with a plane. No laser emitted visibly from a robot head, no floating terrain hologram, no thick luminous mesh. Preserve the restrained scan brightness and soft photographic contrast of the supplied image. Do not add HDR, sharp wet glitter, bloom, crushed black material shadows or exposure pumping. The tiny red target beacon blinks gently in the distance.\nNative synchronized audio: low electronic scan pulses, faint short telemetry ticks, restrained actuator/foot settling sounds and sparse water drips with large-room ambience. No music, voice, lyrics, alarm or trailer impact. Leave a natural ambient tail for the next close scan cut and later unified sound mix.\nDeliver only this observation shot. No mission title, black transition, giant panel, new scene or ending card inside it."
+}

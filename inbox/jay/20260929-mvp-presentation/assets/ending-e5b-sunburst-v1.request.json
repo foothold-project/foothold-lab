@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "b0a9735d-2c3a-4017-b015-ea6ed539d3a3"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    },
+    {
+      "role": "image",
+      "value": "46c33950-5496-44cc-a112-8e5602f1ade1"
+    }
+  ],
+  "prompt": "Use this ENTIRE standalone image as composition. Slightly elevated, square-on frontal WIDE view of a small centered Go2 seated on the upper landing. Preserve the route behind it, original camera height, distance, framing and robot center. Replace inaccurate anatomy with approved Go2. Both forelegs remain planted and extended supporting raised chest; hind legs fold and rear pelvis lowers. Do not turn into a prone lying pose, human sitting or enlarged close-up. Target cabinet and red beacon are BEHIND THE CAMERA, so do not add them behind the robot. Existing red floor reflection may remain subdued. This follows rear-view climb with a cut BEFORE the sitting motion, and leads to its gaze toward equipment beyond camera. No head turn or orbit.\n\nReference 1 is the ONLY composition and terrain master. Output ONE standalone 16:9 shot, not a contact sheet. Preserve exact camera orientation, lens perspective, slab silhouettes, gaps, rubble distribution, water locations, pipes, columns and destination position. No rebuilding, widening, straightening, smoothing or simplifying the route. Do not import background or camera geometry from any other reference. No additional props, hands, flashlight objects, people, text or HUD.\n\nOther references define ONLY faithful gray Unitree Go2 identity: compact horizontal torso, slim articulated gray links, round gray upper motor housings, small matte black rubber foot tips, black sensing housing below the front. Correct rear, no rear face, thick boots, extra limbs, add-on modules, neck or tail. Ignore studio backgrounds and labels.\n\nMATERIAL AND TONAL CORRECTION IS ESSENTIAL, not a subtle optional finish. The scene reference is approved ONLY for geometry and composition, NOT its current glossy HDR rendering. Replace that rendering throughout the ENTIRE ENVIRONMENT, not just the robot.\nPhotographic low-key exposure with restrained contrast and soft highlight roll-off. Reduce hard white sparkles across foreground concrete, pipework and water. Preserve surrounding water and a few subdued, broken reflections; do not dry the flooded space. Concrete is predominantly rough, porous and diffuse, with irregular dusty dry patches, damp dark patches and isolated small puddles, not an evenly lacquered glossy surface. Rust is dull and coarse, not polished copper. Rubber feet absorb light; painted gray robot shell has broad soft satin reflections, never chrome or plastic glare.\nRemove crunchy local contrast, clarity enhancement, edge halos, excessive sharpening, saturated orange rust and blue/orange grading. Shadows remain dark yet contain modest natural texture. Do not merely darken the whole picture, gray-wash it, blur detail or add haze to hide the problem. Keep original light direction and practical beacon position, but soften reflected highlights and tonal transitions visibly. Natural imperfect surface variation, muted neutral color, no showroom polish."
+}

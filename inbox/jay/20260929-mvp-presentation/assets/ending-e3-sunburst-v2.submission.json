@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "id": "a7107af5-1d1b-479f-b235-ae949bc35b4e",
+      "type": "image",
+      "status": "pending",
+      "model": "gpt_image_2_5",
+      "params": {
+        "prompt": "SELECT ONLY SECOND ROW, LEFT PANEL of reference image 1 (panel 3 of 8, counting left to right, top to bottom). It is the small Go2 viewed from BEHIND, on a broken narrow causeway surrounded by black WATER, looking toward a tiny red destination beacon. Output only this view, not the frontal robot panel. Preserve the original small robot scale, foreground pipes, irregular walkway widths and flooded side pits. This shot follows the frontal E2 reveal with a direct cut to a rear-follow camera; robot continues toward the same destination and does not turn back. The next E4 is a side view of a crossing, so do not change the route to accommodate it.\n\nThis is an EDIT of reference image 1's selected panel. Reference image 1 is the ORIGINAL approved eight-panel ending storyboard and is the sole scene/composition master. Images 2 and 3 define ONLY the Unitree Go2 identity and small foot/link details. Image 4 defines ONLY the robot's actual rear anatomy. Ignore every robot reference background, white studio, labels, grass, people and graphics. The rejected newer E3/E4 scenes are not supplied and must not be reconstructed.\n\nLOCK THE ORIGINAL SCENE: Preserve the chosen original panel's camera angle, height, perspective, robot position and apparent size, foot support locations, path silhouette, every major slab contour and relative height, irregular narrow widths, jagged missing-concrete edges, surrounding flooded pits and visible dark water, old pipework, columns, haze, local illumination and depth. Do not straighten or parallelize broken edges; do not level or resize landing slabs; do not widen the route, fill holes or add regular rectangular platforms. Do not impose a new numerical gap width. Keep exactly the original visual danger and constricted route. Do not simplify this into a safer traversable test course. No new obstacle, new wall, new room or relocated destination.\n\nONLY REQUESTED EDIT: replace the panel's approximate robot with the faithful real Unitree Go2 in images 2/3/4, maintaining original placement, pose and support locations. Compact low horizontal gray torso; front camera integrated into the front end, black housing under the front; four slim gray articulated legs with gray round upper motor housings and small rounded matte-black foot tips. Correct rear from image 4 with NO face on its rear. No thick boots, added head, neck, tail, modules, armor or extra legs. Natural occlusion. Small existing scuffs, no artificially heavy damage.\n\nMATERIAL ADJUSTMENT ONLY: retain the water and wet reflections that establish the ORIGINAL space. Gently reduce excessive HDR and plastic-like sheen, keep localized water reflections and damp concrete shine, natural dry/damp/wet irregularity. Satin gray shell, matte rubber, dull rust. Do not make the scene uniformly dry or brighten the room. Keep low-key cinematic exposure and the original dark palette. Do not beautify or clean the ruin. No HUD, scan, captions, borders, insets, reference panels or storyboard layout in the output. Output ONE 16:9 standalone image from the selected panel.",
+        "aspect_ratio": "16:9",
+        "reference_images": [
+          "e12b4c08-4a87-4117-bffb-c30511b0a085",
+          "35542b56-3446-4bf4-8538-c738c3376e5b",
+          "f6c09dcc-cab0-4e71-b272-231f317ce90c",
+          "46c33950-5496-44cc-a112-8e5602f1ade1"
+        ],
+        "variant": "sunburst",
+        "quality": "high",
+        "resolution": "2k"
+      }
+    }
+  ],
+  "adjustments": {
+    "medias[0].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[1].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[2].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    },
+    "medias[3].role": {
+      "requested": "image",
+      "used": "image_references",
+      "reason": "GPT Image 2.5 backend expects schema-key media roles"
+    }
+  }
+}

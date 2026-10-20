@@ -1064,11 +1064,19 @@ def _release_block():
 
     원장이 없거나 수치가 없으면 **그 칸을 안 그린다.** 빈 칸이나 「미정」을
     그리면 그것이 사실처럼 읽힌다.
+
+    ★ 2026-09-28. `rels[-1]`(«마지막») 이 최신인 줄 알았는데, `read_releases()`
+    가 `versions.json` 차례를 그대로 옮긴다. 그 파일은 `gallery_versions.py`
+    가 «최신이 위로»(`latest` = `versions[0]`) 로 뒤집어 쓴다. 그래서 실제로는
+    `rels[0]` 이 최신이고 `rels[-1]` 은 «가장 오래된» 판이다. v2 를 올렸더니
+    이 카드가 v1 로 한 판 늦게 그려졌다 (lead 가 찾음, `gallery/compare/index.html`
+    의 #479 와 같은 뿌리다. 한 파일이 두 곳에서 다르게 읽혔다. `read_releases()`
+    가 `versions.json` 을 그대로 베끼므로 `rels[0]` 이 옳다.
     """
     rels = (catalog().get('releases') or [])
     if not rels:
         return ''
-    r = rels[-1]
+    r = rels[0]
     s = r.get('summary') or {}
     un, kn = s.get('unseen'), s.get('known')
     if not un:
@@ -1086,9 +1094,82 @@ def _release_block():
         lead += (' 기존 험지 %d종은 <b>%d종 전부</b> 기준선 이상입니다.'
                  % (kn['terrains'], kn['at_or_above']))
 
-    cells = [('미경험 %d종 · 종합' % un['terrains'],
-              '%.0f <i>→</i> %.0f<i>%%</i>' % (un['baseline_pct'], un['main_pct']),
-              cond)]
+    # ★ 2026-09-28. 「미경험 N종」 숫자에 그 판이 «학습에 넣은» 지형이 섞여
+    #   있으면 숫자는 맞아도 말이 틀린다 (외부 인원이 첫 화면에서 보는 자리라
+    #   우리 성과를 부풀린 것으로 읽힌다). `measure_release()` 출력에는 어느
+    #   지형이 걸렸는지가 없어(개수만 있다) 여기서 판별할 수 없다. 그래서
+    #   `env.yaml sub_terrains` 실측(lead 2026-09-28. gallery/compare/index.html
+    #   의 TRAINED_TERRAIN 과 같은 사실, 같은 방식)으로 판마다 손으로 적는다.
+    #
+    # ★★ 2026-09-28 (2 차). 주의 문구만 다는 것으로는 모자랐다. **머리기사가
+    #   여전히 정정 «전» 숫자였다.** 종합보고서 1 절이 통째로 「v2 에게
+    #   10 종은 틀린 말이다」를 밝히는데, 허브에 처음 닿는 사람은 그 정정을
+    #   읽기 전에 10 종 수치를 먼저 본다.
+    #
+    #   원장이 이제 지형별 값을 싣는다 (`measure_release` 의 `by_terrain`).
+    #   그것으로 «빼고» 계산해 **정직한 묶음을 머리기사로** 쓴다. 10 종 값은
+    #   버리지 않고 아래 칸에 같이 남긴다.
+    #
+    #   실측 (난이도 0.5 · 1.0 m/s)
+    #
+    #       10 종  50.5 -> 92.4   +41.9 %p     rails · gap 이 들어 있다
+    #        8 종  62.0 -> 90.5   +28.5 %p     둘을 뺀 것
+    #
+    #   `rails` 는 v2 가 학습에 넣은 바로 그 지형이고 (`params/env.yaml`
+    #   `sub_terrains` 실측), `gap` 은 평가가 `MeshGapTerrainCfg` 인데 v2 학습은
+    #   `omni_gap_terrain(mode=ring)` 이라 **함수가 다르다.** 그래서 「친척을
+    #   봤다」로 따로 센다. 종합보고서 1 절과 같은 가름이다.
+    TRAINED_UNSEEN = {
+        'v2': {'trained': ['rails'], 'kin': ['gap']},
+    }
+    mark = TRAINED_UNSEEN.get(r.get('id')) or {}
+    drop = list(mark.get('trained') or []) + list(mark.get('kin') or [])
+    by_t = un.get('by_terrain') or {}
+    honest = dict((t, v) for t, v in by_t.items() if t not in drop)
+
+    caveat = ''
+    if drop and honest and len(honest) < len(by_t):
+        hb = sum(v[0] for v in honest.values()) / len(honest)
+        hm = sum(v[1] for v in honest.values()) / len(honest)
+        lead = ('어느 판도 학습하지 않은 <b>%d종</b>에서 기준선보다 '
+                '<b>%.1f %%p</b> 높습니다.' % (len(honest), hm - hb))
+        if kn:
+            lead += (' 기존 험지 %d종은 <b>%d종 전부</b> 기준선 이상입니다.'
+                     % (kn['terrains'], kn['at_or_above']))
+        who = r.get('main_model') or r.get('id')
+        # **역따옴표를 쓰지 않는다.** 이 문구는 `esc()` 를 거쳐 글자 그대로
+        # 나오므로 역따옴표가 화면에 찍힌다.
+        bits = []
+        if mark.get('trained'):
+            bits.append('%s 는 %s 가 학습에 넣은 지형이고'
+                        % (' · '.join(mark['trained']), who))
+        if mark.get('kin'):
+            bits.append('%s 은 친척 지형(omni_gap)만 본 것이라'
+                        % ' · '.join(mark['kin']))
+        caveat = ('%s 이 %d종에서 뺐습니다. 둘을 넣은 %d종 값은 아래 칸에 '
+                  '있습니다.' % (' '.join(bits), len(honest), len(by_t)))
+        cells_extra = [('둘을 넣은 %d종' % len(by_t),
+                        '%.0f <i>→</i> %.0f<i>%%</i>'
+                        % (un['baseline_pct'], un['main_pct']),
+                        '%s 이 들어 있다' % ' 와 '.join(drop))]
+    elif drop:
+        caveat = ('%s 가 이 숫자에 포함됩니다. 학습 없이 넘은 지형만 보려면 '
+                  '종합보고서를 확인하십시오.' % ' · '.join(drop))
+        cells_extra = []
+    else:
+        cells_extra = []
+
+    if cells_extra:
+        cells = [('어느 판도 학습 안 한 %d종' % len(honest),
+                  '%.0f <i>→</i> %.0f<i>%%</i>'
+                  % (sum(v[0] for v in honest.values()) / len(honest),
+                     sum(v[1] for v in honest.values()) / len(honest)),
+                  cond)] + cells_extra
+    else:
+        cells = [('미경험 %d종 · 종합' % un['terrains'],
+                  '%.0f <i>→</i> %.0f<i>%%</i>'
+                  % (un['baseline_pct'], un['main_pct']),
+                  cond)]
     if kn:
         cells.append(('기존 %d종 · 종합' % kn['terrains'],
                       '%.0f <i>→</i> %.0f<i>%%</i>' % (kn['baseline_pct'], kn['main_pct']),
@@ -1120,11 +1201,14 @@ def _release_block():
     return ('<section class="rel3"><div class="rk3">지금 어디까지 왔나'
             '<span class="rkm3">%s%s</span></div>'
             '<p class="rl3">%s</p>'
+            '%s'
             '<div class="rvs">%s</div>'
             '<div class="rgs3">%s</div></section>'
             % (esc(r.get('main_model') or ''),
                (' · 평가 %s · 판 %s' % (when, r.get('id'))) if when else '',
-               lead, grid, links))
+               lead,
+               ('<p class="rn3">%s</p>' % esc(caveat)) if caveat else '',
+               grid, links))
 
 
 def research_html(site):
@@ -1215,97 +1299,69 @@ def research_html(site):
     #
     #   옛 `purpose` 는 안 지운다. `docs_pages._front_picks()` 등이 읽는다.
     #   화면에서 «묶는 기준» 으로만 안 쓴다.
+    # ★ 2026-10-08 팀장 확정: 목록을 «하나로» 합친다 (9/13 「한 기준으로 묶는다」의 끝).
+    #
+    #   9/13 에 두 목록의 묶는 기준은 여섯 입구로 맞췄지만 목록 자체는 둘로
+    #   남았다. 위는 «근거: 실측», 아래는 그 밖(공식·코드·본인)이다. 사이에
+    #   제목이 없어 화면에는 「결과 보고」 「진단·분석」 이 두 번씩, 열 칸으로
+    #   보였다 (팀장 10/7 「섹션이 이상하지 않아?」).
+    #
+    #   그래서 입구마다 한 번만 낸다. 묶음 안은 **날짜 최신순 하나** 다(9/14 팀장
+    #   「최신 글이 맨 위로」). 출처는 카드 왼쪽 표식(수치 · `실측`·`조사`·`코드`)으로
+    #   이미 보인다. 카드 모양은 두 종류 그대로다(실측 카드는 수치와 영역, 그 밖은 출처 표식).
+    #
+    #   ★ 10/8 첫 판은 «실측을 앞에, 그 밖을 뒤에» 세웠다. 두 통을 각자 날짜순으로
+    #   깔고 이어 붙인 것이라, 근거가 실측이 아닌 최신 글(AME-2 보고서 10/7)이
+    #   결과 보고 맨 아래로 갔다(팀장 10/8 「날짜 기준 정렬이 왜 틀어졌지」).
+    #   통을 나눈 채 정렬하면 합친 뒤에는 날짜순이 아니다. 합친 다음 한 번만 센다.
     cat = catalog()
     PO = [(g['key'], g['name']) for g in (cat.get('groups') or [])]
     rest = list(scored[1:]) if hero else list(scored)
-    bag = {}
-    for it in rest:
-        bag.setdefault(_fn_of(it[2]) or '', []).append(it)
-    for key, label in PO + [(k, k or '입구가 안 정해진 것')
-                            for k in sorted(bag) if k not in dict(PO)]:
-        rows = []
-        for _n2, _c2, rel, m, page, _m2 in sorted(
-                bag.get(key, []), key=lambda x: _newest_first(x[3]),
-                reverse=True):
-            g = graph().get(rel) or {}
-            n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
-            ar = ' '.join('<u class="ar-%s">%s</u>'
-                          % (AREA_HUE.get(a, 'x'), esc(a))
-                          for a in (g.get('areas') or [])[:2])
-            who, when = _who_when(m)
-            rows.append(
-                '<a class="ev3" data-fn="%s" href="%s"><span class="ex3">%02d</span>'
-                '<span class="en3">%s</span>'
-                '<span class="eb3"><b>%s</b><span>%s</span>'
-                '<span class="em3">%s %s</span></span>%s</a>'
-                % (esc(_fn_of(rel)), page, len(rows) + 1, esc(n) or '·',
-                   esc(m.get('제목', '')),
-                   esc(_gist(m, 70)),
-                   esc('%s · %s' % (who, when) if who else when), ar,
-                   _thumb(page)))
+    cards = {}                  # 입구 -> [(날짜 열쇠, 카드 틀 · 번호 자리는 \x00N\x00)]
+    for _n2, _c2, rel, m, page, _m2 in rest:
+        g = graph().get(rel) or {}
+        n = num_in((m.get('결론') or '') + ' ' + m.get('요지', ''))
+        ar = ' '.join('<u class="ar-%s">%s</u>'
+                      % (AREA_HUE.get(a, 'x'), esc(a))
+                      for a in (g.get('areas') or [])[:2])
+        who, when = _who_when(m)
+        cards.setdefault(_fn_of(rel) or '', []).append((_newest_first(m),
+            ('<a class="ev3" data-fn="%s" href="%s"><span class="ex3">\x00N\x00</span>'
+             '<span class="en3">%s</span>'
+             '<span class="eb3"><b>%s</b><span>%s</span>'
+             '<span class="em3">%s %s</span></span>%s</a>')
+            % (esc(_fn_of(rel)), page, esc(n) or '·',
+               esc(m.get('제목', '')),
+               esc(_gist(m, 70)),
+               esc('%s · %s' % (who, when) if who else when), ar,
+               _thumb(page))))
+    # ★ 카드를 내는 자리가 «둘» 이었다 (9/13 · 조사 문서 16장이 입구 표식을
+    #   못 받았다). 이제 두 종류가 같은 묶음 통에 들어간다. 표식은 그대로 단다.
+    for _rel, m, page, _g in read:
+        who, when = _who_when(m)
+        cards.setdefault(_fn_of(_rel) or '', []).append((_newest_first(m),
+            ('<a class="ev3" data-fn="%s" href="%s">'
+             '<span class="ex3">\x00N\x00</span>'
+             '<span class="en3 src s-%s">%s</span>'
+             '<span class="eb3"><b>%s</b><span>%s</span>'
+             '<span class="em3">%s</span></span>%s</a>')
+            % (esc(_fn_of(_rel)), page, ev_short(m.get('근거')),
+               esc(ev_short(m.get('근거'))),
+               esc(m.get('제목', '')), esc(_gist(m, 78)),
+               esc('%s · %s' % (who, when) if who else when),
+               _thumb(page))))
+    known = dict(PO)
+    for key, label in PO + [(k, '입구가 안 정해진 것')
+                            for k in sorted(cards) if k not in known]:
+        ordered = sorted(cards.get(key, []), key=lambda kc: kc[0], reverse=True)
+        rows = [c.replace('\x00N\x00', '%02d' % (i + 1))
+                for i, (_k, c) in enumerate(ordered)]
         if rows:
             # `data-label` 은 거르개가 건수를 다시 쓸 때 쓴다. 글자에서
             # 숫자를 떼어내려 하면 묶음 이름에 숫자가 들어간 날 깨진다.
             parts.append('<div class="eg3" data-label="%s">%s <span>%d</span></div>'
                          '<div class="evs3">%s</div>'
                          % (esc(label), label, len(rows), ''.join(rows)))
-
-    # ★ 팀장 지적 (8/31): 「누가 언제 조사했는지」가 안 보이고 제목도 잘렸다.
-    #   실측 카드와 같은 줄 구조로 통일한다. 근거 · 제목 · 요지 · 작성자 · 날짜.
-    # ★ 2026-09-09 팀장 지적: 「외부 자료 조사가 아닌데 거기 들어간 문서가 많다.
-    #   Track A MVP 를 위해 우리가 올린 보고서들 아니냐」. 맞다.
-    #   이 통은 «실측이 아닌 것 전부» 였다 (read = ev != '실측'). 그래서
-    #   우리 코드를 뜯어본 것(근거: 코드)과 우리 계획 노트(근거: 본인)까지
-    #   외부 자료로 묶였다. 실측 9 · 공식 12 · 코드 1 · 본인 2 · 표기미비 1.
-    #   「무엇이 아니다」로 묶지 않고 «근거 종류» 로 가른다.
-    #   표기가 어긋난 것은 숨기지 말고 그 이름으로 드러낸다. 그래야 고쳐진다.
-    # ★ 2026-09-13 팀장 확정: 목록을 «한 기준» 으로 묶는다.
-    #
-    #   전에는 위쪽(실측)이 여섯 입구로, 아래쪽(조사)이 «출처»(공식·코드·본인)로
-    #   묶였다. 그래서 「도구·운영」을 눌렀는데 묶음 제목이 「외부 자료 조사」로
-    #   나왔다. 클릭한 이름과 제목이 달라 읽는 사람이 멈춘다.
-    #
-    #   출처는 **카드 왼쪽 표식**(`실측`·`조사`·`코드`)에 이미 있다. 목록을
-    #   묶는 축까지 그것으로 쓸 이유가 없다. 찾는 사람이 쓰는 말은 «무슨 글인가»
-    #   이지 «어디서 났나» 가 아니다.
-    #
-    #   설계 문서의 「출처와 확실성은 다른 축」은 그대로다. 축이 다른 것과
-    #   «목록을 묶는 기준» 은 다른 문제다. 거르개는 두 축을 다 둔다.
-    cat2 = catalog()
-    READ_GROUPS = [(g['key'], g['name']) for g in (cat2.get('groups') or [])]
-    known = dict(READ_GROUPS)
-    bins = {}
-    for d in read:
-        bins.setdefault(_fn_of(d[0]) or '', []).append(d)
-    order = [(k, known[k]) for k, _ in READ_GROUPS if k in bins] + \
-            [(k, '입구가 안 정해진 것') for k in sorted(bins) if k not in known]
-    for key, label in order:
-        reads, _i = '', 0
-        for _rel, m, page, _g in sorted(
-                bins[key], key=lambda x: _newest_first(x[1]), reverse=True):
-            who, when = _who_when(m)
-            _i += 1
-            # ★ 카드를 내는 자리가 «둘» 이다. 위(실측)와 여기(조사).
-            #   처음에 위만 고쳐서 조사 문서 16장이 입구 표식을 못 받았고,
-            #   거르개를 눌렀을 때 그 16장이 통째로 사라졌다. 규칙을 만들면
-            #   그 규칙이 사는 «다른 자리» 를 먼저 센다 (철칙 4).
-            reads += ('<a class="ev3" data-fn="%s" href="%s">'
-                      '<span class="ex3">%02d</span>'
-                      '<span class="en3 src s-%s">%s</span>'
-                      '<span class="eb3"><b>%s</b><span>%s</span>'
-                      '<span class="em3">%s</span></span>%s</a>'
-                      % (esc(_fn_of(_rel)), page, _i, ev_short(m.get('근거')),
-                         esc(ev_short(m.get('근거'))),
-                         esc(m.get('제목', '')), esc(_gist(m, 78)),
-                         esc('%s · %s' % (who, when) if who else when),
-                         _thumb(page)))
-        # ★ 조사 절 제목은 `.eh3` 라 거르개가 «못 봤다». 걸렀더니 카드 5장이
-        #   제목 없이 떠 있었다 (실측 `?fn=tooling`). 클래스가 다르다고 규칙을
-        #   따로 만들면 또 어긋난다. **같은 표식** 을 달아 한 규칙으로 다룬다.
-        parts.append(
-            '<div class="eh3" data-label="%s">%s %d</div>'
-            '<div class="evs3">%s</div>'
-            % (esc(label), label, len(bins[key]), reads))
     return ''.join(parts)
 
 
@@ -1829,6 +1885,8 @@ CSS = '''<style id="hub3-css">
 .rl3{margin:.45rem 0 .8rem;font-size:.92rem;font-weight:650;line-height:1.55;
  color:var(--ink);word-break:keep-all}
 .rl3 b{font-weight:850;color:var(--dim)}
+.rn3{margin:-.35rem 0 .8rem;font-size:.76rem;line-height:1.5;
+ color:var(--ink-3);word-break:keep-all}
 .rvs{display:grid;gap:.5rem;grid-template-columns:repeat(4,1fr)}
 @media(max-width:760px){.rvs{grid-template-columns:repeat(2,1fr)}}
 .rv3{border-top:2px solid var(--rule);padding-top:.4rem;min-width:0}

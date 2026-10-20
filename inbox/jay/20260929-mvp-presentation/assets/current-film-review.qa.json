@@ -1,0 +1,49 @@
+{
+  "images": {
+    "O4": "url(\"../assets/hud-mission-sunburst-v2.png\")",
+    "O5": "url(\"../assets/hud-observe-sunburst-v2.png\")",
+    "O6": "url(\"../assets/hud-scan-sunburst-v2.png\")",
+    "E5pre": "url(\"../assets/ending-e5pre-pov-start-v1.png\")",
+    "E5b": "url(\"../assets/ending-e5b-seated-region-v1.png\")",
+    "E6": "url(\"../assets/hud-record-sunburst-v2.png\")",
+    "E7": "url(\"../assets/hud-transfer-sunburst-v2.png\")"
+  },
+  "buttons": [
+    "connectionOld",
+    "connection",
+    "e2",
+    "cinema",
+    "o5",
+    "foot",
+    "connection",
+    "connectionOld",
+    "foot",
+    "connection",
+    "connectionOld",
+    "e2",
+    "cinema",
+    "connection",
+    "connectionOld",
+    "e2",
+    "cinema",
+    "connection",
+    "connectionOld",
+    "e5b"
+  ],
+  "complete": "url(\"../assets/hud-complete-sunburst-v2.png\")",
+  "videos": {
+    "o5": {
+      "duration": 5.041667,
+      "width": 854,
+      "height": 480,
+      "audioDecodedBytes": 6828
+    },
+    "e5b": {
+      "duration": 5.05,
+      "width": 854,
+      "height": 480,
+      "audioDecodedBytes": 9020
+    }
+  },
+  "errors": []
+}

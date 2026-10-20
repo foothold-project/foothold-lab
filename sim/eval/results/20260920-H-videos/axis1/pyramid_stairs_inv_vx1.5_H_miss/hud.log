@@ -1,0 +1,14 @@
+  100 / 200 장
+  200 / 200 장
+
+======================================================================
+OVERLAY
+======================================================================
+  out        : sim/eval/results/20260920-H-videos/axis1/pyramid_stairs_inv_vx1.5_H_miss/pyramid_stairs_inv_vx1.5_H_miss_hud.mp4
+  frames     : 200 (trace 200줄)
+  fps        : 영상 50.000 · trace 50.000
+  duration   : 영상 4.000 s · trace 4.000 s
+  size       : 0.84 MB
+  주춤       : 2 구간
+     0.00 s ~  0.26 s   최저 0.00 m/s
+     1.28 s ~  2.14 s   최저 0.04 m/s

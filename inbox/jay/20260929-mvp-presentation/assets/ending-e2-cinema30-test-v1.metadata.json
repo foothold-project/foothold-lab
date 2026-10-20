@@ -1,0 +1,22 @@
+{
+  "file": "ending-e2-cinema30-test-v1.mp4",
+  "duration_seconds": 5.056,
+  "video": {
+    "width": 864,
+    "height": 496,
+    "fps": 24.0,
+    "codec": "h264"
+  },
+  "audio": [
+    {
+      "codec": "aac",
+      "rate": 32000,
+      "channels": 2
+    }
+  ],
+  "audio_signal": {
+    "peak": 0.20835399627685547,
+    "rms": 0.00990300425177268,
+    "listening_review": "not_performed"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "d9d9ac3e-19b3-43ad-b767-8239c4dbeee2"
+    }
+  ],
+  "prompt": "Make ONE precisely matched START KEYFRAME for this supplied seated Go2 shot. Change ONLY the robot's posture from seated to a natural relaxed FOUR-LEGGED STAND just before sitting. Same real gray Unitree Go2, same projected body center and facing direction, same front foot ground positions, same physical scale. Raise hind pelvis and torso by naturally extending the hind legs; all four feet support the body on the same upper landing. Front limbs remain anatomically correct with small black rubber foot tips. No enlarged robot, no added limbs, no head change. LOCK all other pixels as closely as possible: slightly elevated frontal wide camera, lens, frame boundaries, concrete, rubble, puddles, pipes, far hall, lighting, exposure, color and material texture. Do not relight or rerender the whole environment. The cabinet stays behind camera and must not be added to background. This start frame will connect to the supplied seated end frame by folding the hind legs while forelegs support the chest. No movement blur, labels, HUD or montage. 16:9."
+}

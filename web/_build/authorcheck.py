@@ -38,7 +38,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 # 사람이 아닌 작성자. 기계가 만든 문서는 사람 이름이 없는 것이 옳다.
-NOT_PERSON = {'자동 수집', '자동수집', '봇', 'github-actions'}
+# ★ 2026-09-30. `_out/loop/verdict.py` 가 «스크립트 경로» 를 작성자로 적어
+#   관문에 걸렸다 (판정 문서 20장). 경로는 사람 이름이 아니므로 관문이 옳다.
+#   문서는 「자동 생성」으로 바꾸고 스크립트는 «생성기:» 줄로 옮겼다.
+#   사람 명부(docs/ROLES.md)를 늘린 것이 아니다. 기계 토큰을 늘렸다.
+NOT_PERSON = {'자동 수집', '자동수집', '자동 생성', '자동생성',
+              '봇', 'github-actions'}
 
 WROTE = re.compile(r'^>\s*작성:\s*([^·\n]+?)\s*(?:·|$)', re.M)
 FENCE = re.compile(r'^```', re.M)

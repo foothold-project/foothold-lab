@@ -244,6 +244,11 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
    격자 보기는 「보기」 단추로 남겨 둔다. */
 
 .viewsw{display:flex;align-items:center;gap:.4rem;margin:0 0 20px}
+/* 축 탭은 머리글 «아래» 에 놓인다. 위 여백이 없으면 설명문에 붙는다
+   (팀장 지적 2026-09-29: 「축1, 축2 버튼이 너무 위에 글과 붙어있는데?」).
+    는 필터 안에서도 쓰이므로 축 탭에만 준다. */
+.viewsw.axistab{margin:18px 0 4px;padding-top:14px;
+  border-top:1px solid var(--rule)}
 .viewsw .lab{font-size:.7rem;font-weight:800;letter-spacing:.1em;
   color:var(--ink-3);margin-right:.3rem}
 
@@ -300,3 +305,135 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--rule);
 .chead .open{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--brand)}
 .chead .none{margin-left:auto;font-size:.68rem;color:var(--ink-3)}
 .cvid video{width:100%;display:block;border-radius:6px;background:#0d0f12}
+
+/* ★ 2026-09-29. `el.hidden` 이 제작자 CSS 에 지지 않게 한다.
+   갤러리 페이지가 새로 생겨도 자동으로 얻는다. */
+[hidden]{display:none!important}
+
+/* ── 축 2 · 명령 응답 ────────────────────────────────────────
+ *
+ * 팀장 지시 2026-09-29: 「레이아웃을 잘 잡아주고 이 페이지를 통해서 얻을 수
+ * 있는 정보가 무엇이고 파악할 수 있는 것이 무엇인지를 인지할 수 있게 해야한다.
+ * 그리고 한눈에 정보를 전달하는 것이 핵심이다.」
+ *
+ * 그래서 칸마다 **숫자 하나 + 자가 그려진 막대 하나** 로 줄인다. 숫자만
+ * 두면 0.20 이 큰지 작은지 읽는 사람이 모른다.
+ */
+
+/* 「이 화면을 어떻게 읽나」 접힌 상자. 안내문 넷을 여기 하나로 모은다. */
+.a2intro{border:1px solid var(--rule);border-radius:8px;background:var(--paper-2);
+  margin:0 0 18px}
+.a2intro>summary{cursor:pointer;padding:.7rem .9rem;font-weight:800;
+  font-size:.86rem;list-style:none}
+.a2intro>summary::-webkit-details-marker{display:none}
+.a2intro>summary::before{content:"▸ ";color:var(--ink-3)}
+.a2intro[open]>summary::before{content:"▾ "}
+.a2intro .in{padding:0 .9rem .9rem;font-size:.82rem;line-height:1.65;
+  color:var(--ink-2)}
+.a2intro .in p{margin:.5rem 0}
+.a2intro .in b{color:var(--ink)}
+
+/* 보기 전환 · 축 1 의 자리와 같은 모양 */
+.a2modes{display:flex;align-items:center;gap:.4rem;margin:16px 0 14px}
+.a2modes .lab{font-size:.7rem;font-weight:800;letter-spacing:.1em;
+  color:var(--ink-3);margin-right:.3rem}
+
+/* 머리 숫자. **축 1 성공률과 같은 무게로 둔다** (팀장 지시). */
+.a2big{font-size:1.9rem;font-weight:850;line-height:1.05;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.a2big .u{font-size:.8rem;font-weight:700;color:var(--ink-3);margin-left:.2rem}
+.a2unit{font-size:.72rem;font-weight:800;letter-spacing:.06em;color:var(--ink-3);
+  text-transform:none}
+.a2sub{font-size:.74rem;color:var(--ink-3);line-height:1.5}
+
+/* 자가 그려진 막대. 색으로 좋고 나쁨을 말하지 않는다 (문턱을 안 정한 칸이
+   있다). 자는 «선» 으로만 긋고 값은 채워진 길이로 읽는다. */
+.a2bar{position:relative;height:10px;border-radius:5px;background:var(--rule);
+  margin:.45rem 0 .3rem;overflow:visible}
+.a2bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;
+  background:var(--ink-3)}
+.a2bar .gate{position:absolute;top:-3px;bottom:-3px;width:2px;
+  background:var(--ink);border-radius:1px}
+.a2bar .mid{position:absolute;top:-3px;bottom:-3px;width:2px;
+  background:var(--ink);opacity:.55;border-radius:1px}
+.a2bar.center .fill{border-radius:2px}
+.a2scale{display:flex;justify-content:space-between;font-size:.66rem;
+  color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* 격자 모드 · 9행 x 3열 */
+.a2grid{width:100%;border-collapse:collapse;font-size:.82rem}
+.a2grid th,.a2grid td{border-bottom:1px solid var(--rule);padding:.6rem .55rem;
+  vertical-align:top;text-align:left}
+.a2grid thead th{font-size:.72rem;letter-spacing:.04em;color:var(--ink-3);
+  border-bottom:1px solid var(--dim)}
+.a2grid tbody th{width:9.5rem;font-weight:800}
+.a2grid tbody th .q{display:block;font-weight:500;font-size:.7rem;
+  color:var(--ink-3);margin-top:.15rem;line-height:1.45}
+.a2grid td{width:auto}
+.a2grid .cellbtn{display:block;width:100%;text-align:left;background:none;
+  border:0;padding:0;cursor:pointer;font:inherit;color:inherit}
+.a2grid .cellbtn:hover .a2big{text-decoration:underline}
+.a2grid tr.gsep td,.a2grid tr.gsep th{border-bottom:1px solid var(--dim)}
+
+/* 목록 모드 · 시나리오마다 한 덩이 */
+.a2sec{margin:0 0 30px;padding:0 0 22px;border-bottom:1px solid var(--rule)}
+.a2sec:last-child{border-bottom:0}
+.a2head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+  margin:0 0 .35rem}
+.a2head h3{margin:0;font-size:1.06rem;letter-spacing:.01em}
+.a2head .mono{font-size:.72rem;color:var(--ink-3)}
+.a2watch{font-size:.84rem;color:var(--ink-2);margin:0 0 .3rem;line-height:1.6}
+.a2watch b{color:var(--ink)}
+.a2gate{font-size:.72rem;color:var(--ink-3);margin:0 0 .8rem}
+.a2gate .mono{color:var(--ink-2)}
+.a2cols{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+.a2col{border:1px solid var(--rule);border-radius:8px;padding:.7rem .75rem;
+  background:var(--card)}
+.a2col .who{font-weight:800;font-size:.84rem;margin-bottom:.35rem}
+.a2col video{width:100%;display:block;border-radius:6px;background:#000;
+  margin-top:.5rem}
+@media (max-width:900px){.a2cols{grid-template-columns:1fr}
+  .a2grid tbody th{width:auto}}
+
+/* 축 2 목록의 표지 단추. `.poster` 는 축 1 격자 크기에 맞춰져 있어서 그대로
+   쓰면 칸을 넘친다 (실측: 로봇이 화면 폭을 다 먹었다). 여기서 못 박는다. */
+.a2col .poster{margin-top:.55rem;aspect-ratio:16/9;width:100%;height:auto;
+  min-height:0;background-size:cover;background-position:center;
+  border-radius:6px;position:relative}
+.a2col .poster .play{font-size:1.1rem}
+/* 격자의 막대는 칸을 다 먹지 않게. 숫자가 주인공이고 막대는 자다. */
+.a2grid .a2bar,.a2grid .a2scale{max-width:15rem}
+.a2grid td{width:26%}
+
+/* ── 목록에서 «그 자리에서» 재생 ──────────────────────────────
+ *
+ * 팀장 지적 2026-09-29: 「재생 버튼 누르면 페이지 넘어가는 것도 좀 이상하고
+ * 각 목록 세션을 '함께 재생'해서 볼 수 있게 버튼 배치한 것도 아니고」.
+ *
+ * 맞다. 단추에 「함께 재생」이라 써 놓고 누르면 화면이 바뀌었다. 이제
+ * 섹션마다 조종간을 두고 그 자리에서 셋을 같이 돌린다.
+ */
+.a2vid{position:relative;margin-top:.55rem;border-radius:6px;overflow:hidden;
+  background:#000;aspect-ratio:16/9}
+.a2vid video{width:100%;height:100%;display:block;object-fit:cover;margin:0}
+.a2play{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;border:0;cursor:pointer;
+  background:rgba(6,9,14,.34);color:#fff;font:inherit;font-size:.74rem;
+  font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.9);
+  transition:opacity .15s}
+.a2play .ico{width:38px;height:38px;border-radius:50%;border:2px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.a2play:hover{background:rgba(6,9,14,.18)}
+/* ★ 2026-09-29 실측. 여기 `pointer-events:none` 이 있었다. 그래서 재생이
+   브라우저 쪽에서 끊겨 딱지만 남으면 **▶ 가 보이는데 안 눌렸다**
+   (`opacity 1` · `pointer-events none`). 보이는 단추는 늘 눌려야 한다.
+   돌 때는 흐려만 두고, 손을 올리면 다시 뚜렷해진다. */
+.a2vid.playing .a2play{opacity:0}
+.a2vid.playing .a2play:hover,
+.a2vid.playing .a2play:focus-visible{opacity:1}
+.a2vid .ended{position:absolute;right:.4rem;bottom:.4rem}
+/* 섹션 조종간. 그 섹션의 셋만 묶는다. */
+.a2sec .transport{margin:.2rem 0 .7rem}
+/* 무리를 «왜 갈랐나» 한 줄. 칩 줄 바로 아래에 붙는다. */
+.a2why{font-size:.72rem;color:var(--ink-3);line-height:1.55;
+  margin:.1rem 0 .7rem 0;padding-left:.2rem}

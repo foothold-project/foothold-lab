@@ -1,0 +1,159 @@
+{
+  "schema": "foothold-envyaml-diff/1",
+  "what": "각 판이 «실제로 저장한» params/env.yaml 을 통째로 평탄화해 견준 것이다. 설정을 다시 지어 견준 것이 아니라 그 학습이 쓴 값이다",
+  "built_by": "이 표는 저장된 env.yaml 세 개에서 직접 냈다",
+  "sources": {
+    "D": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-18_11-19-19_20260918_gapwidecmd_seed42_iter1500/params/env.yaml",
+    "F": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-20_09-45-06_20260920_gapF_seed42_iter1500/params/env.yaml",
+    "H": "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-20_16-00-26_20260920_gapH_seed42_iter1500/params/env.yaml"
+  },
+  "observation_keys_per_policy": {
+    "D": 92,
+    "F": 92,
+    "H": 92
+  },
+  "H_vs_F": {
+    "count": 2,
+    "keys": [
+      "commands.base_velocity.ranges.lin_vel_x",
+      "log_dir"
+    ],
+    "rows": [
+      {
+        "key": "commands.base_velocity.ranges.lin_vel_x",
+        "H": "[\"0.0\", \"1.5\"]",
+        "F": "[\"0.4\", \"1.5\"]"
+      },
+      {
+        "key": "log_dir",
+        "H": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-20_16-00-26_20260920_gapH_seed42_iter1500",
+        "F": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-20_09-45-06_20260920_gapF_seed42_iter1500"
+      }
+    ]
+  },
+  "H_vs_D": {
+    "count": 22,
+    "keys_by_group": {
+      "forward_gap": 9,
+      "omni_gap": 12,
+      "log_dir": 1,
+      "그 밖": 0
+    },
+    "rows": [
+      {
+        "key": "log_dir",
+        "H": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-20_16-00-26_20260920_gapH_seed42_iter1500",
+        "D": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-18_11-19-19_20260918_gapwidecmd_seed42_iter1500"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.approach_distance",
+        "H": null,
+        "D": "1.5"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.flat_patch_sampling",
+        "H": null,
+        "D": "null"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.function",
+        "H": null,
+        "D": "isaaclab_tasks.manager_based.locomotion.velocity.config.go2.gap_training.gap_terrain:forward_gap_terrain"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.gap_center_ratio",
+        "H": null,
+        "D": "0.5"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.gap_width_range",
+        "H": null,
+        "D": "[\"0.15\", \"0.4\"]"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.minimum_spawn_x",
+        "H": null,
+        "D": "0.75"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.proportion",
+        "H": null,
+        "D": "0.1"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.size",
+        "H": null,
+        "D": "[\"8.0\", \"8.0\"]"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.forward_gap.slab_thickness",
+        "H": null,
+        "D": "1.0"
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.approach_distance",
+        "H": "1.5",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.flat_patch_sampling",
+        "H": "null",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.function",
+        "H": "isaaclab_tasks.manager_based.locomotion.velocity.config.go2.gap_training.omni_gap_terrain:omni_gap_terrain",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.gap_center_ratio",
+        "H": "0.5",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.gap_width_range",
+        "H": "[\"0.15\", \"0.4\"]",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.minimum_spawn_x",
+        "H": "0.75",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.mode",
+        "H": "ring",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.num_sides",
+        "H": "64",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.proportion",
+        "H": "0.1",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.ring_radius",
+        "H": "2.5",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.size",
+        "H": "[\"8.0\", \"8.0\"]",
+        "D": null
+      },
+      {
+        "key": "scene.terrain.terrain_generator.sub_terrains.omni_gap.slab_thickness",
+        "H": "1.0",
+        "D": null
+      }
+    ]
+  },
+  "observations_differing": {
+    "H_vs_F": 0,
+    "H_vs_D": 0
+  }
+}

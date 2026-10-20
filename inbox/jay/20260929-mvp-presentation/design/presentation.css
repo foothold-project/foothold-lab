@@ -1,0 +1,25 @@
+/* Presentation extension of foothold-brand 582bad0. See PRESENTATION-DESIGN-SYSTEM.md. */
+:root{
+ --p-width:1600px;--p-height:900px;--p-safe:64px;--p-grid:32px;
+ --p-font:Pretendard,'Malgun Gothic','Segoe UI',sans-serif;
+ --p-cover:70px;--p-chapter:40px;--p-title:26px;--p-subtitle:22px;
+ --p-body:20px;--p-label:18px;--p-caption:16px;--p-source:16px;
+ --p-motion-reveal:240ms;--p-motion-link:480ms;--p-motion-section:700ms;--p-motion-cover:1400ms;
+ --p-bg:#f6f5f1;--p-bg-secondary:#eeece6;--p-ink:#161c26;--p-muted:#4a5566;
+ --p-brand:#0e7a6e;--p-brand-text:#0b6459;--p-note-text:#8a5600;--p-note:#a86a08;--p-danger:#a3342a;--p-rule:#d9d6cd;
+ --p-dark-bg:#12161d;--p-dark-ink:#e9e7e1;--p-dark-muted:#adb5c1;--p-dark-brand:#3ec7b4;
+}
+.p-dark{--p-bg:#12161d;--p-bg-secondary:#191e27;--p-ink:#e9e7e1;--p-muted:#adb5c1;--p-brand:#3ec7b4;--p-brand-text:#3ec7b4;--p-note-text:#dc9a30;--p-note:#dc9a30;--p-danger:#e56d5e;--p-rule:#2b323d}
+.p-slide{position:relative;width:var(--p-width);height:var(--p-height);background:var(--p-bg);color:var(--p-ink);font-family:var(--p-font);overflow:hidden}
+.p-chapter{font-size:var(--p-chapter);font-weight:700;line-height:1.16;letter-spacing:-.04em}
+.p-title{font-size:var(--p-title);font-weight:700;line-height:1.2;letter-spacing:-.035em}
+.p-subtitle{font-size:var(--p-subtitle);font-weight:650;line-height:1.3}
+.p-body{font-size:var(--p-body);font-weight:450;line-height:1.5}
+.p-label{font-size:var(--p-label);font-weight:550;line-height:1.35}
+.p-caption{font-size:var(--p-caption);line-height:1.4;color:var(--p-muted)}
+.p-source{font-size:var(--p-source);line-height:1.4;color:var(--p-muted)}
+.p-emphasis{font-weight:700;color:var(--p-brand-text)}
+.p-number{font-size:56px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.p-source-region{position:absolute;left:var(--p-safe);right:var(--p-safe);bottom:var(--p-safe)}
+.p-route-region{position:absolute;left:1088px;top:48px;width:448px;height:96px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

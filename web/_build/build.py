@@ -177,6 +177,9 @@ OTHER_MADE = set(OTHER_MADE_SOURCE)
 GALLERY_VIEWER = [
     'gallery.js', 'gallery.css', 'index.html',
     'view/index.html', 'compare/index.html',
+    # 2026-09-29. 축 2 (명령 응답) 화면. 팀장 지시로 «평가 대상이 아니라
+    # 기록» 이지만 뷰어인 것은 같으므로 정본은 lab 이다.
+    'axis2/index.html',
     'test/terrain-rows.test.js',
 ]
 
@@ -776,6 +779,22 @@ if __name__ == '__main__':
                   % (os.path.basename(REAL_SITE), SITE))
         print('  %d개 반영' % deploy())
 
+        # ★ 2026-10-08 #511. 영상은 NAS 에서 나간다. 배포본에서 영상을 빼고
+        #   NAS 에 같은 sha256 이 있는지 본다. 페이지 주소는 그대로이고
+        #   vercel.json 돌림 규칙이 NAS 로 보낸다. NAS 에 못 닿으면 막는다.
+        print('\n[3.05] 영상은 NAS 로 (배포본에서 빼고 sha256 대조)')
+        import media_offload
+        if not media_offload.main(SITE, write=not REPRO):
+            print('\n  [!] 영상 넘기기 실패. 배포를 중단합니다.')
+            sys.exit(1)
+
+        # ★ 2026-10-08 #511 경량화 ①. 큰 PNG 를 배포본에서만 WebP 로 (보이는 모습 그대로).
+        print('\n[3.06] 큰 PNG 를 WebP 로 (투명은 무손실 · 사진형은 품질 90)')
+        import image_slim
+        if not image_slim.main(SITE):
+            print('\n  [!] 그림 줄이기 실패. 배포를 중단합니다.')
+            sys.exit(1)
+
     # ★ 복사한 뒤에 검사한다. 볼트가 아니라 **실제로 공개될 파일**을 봐야 한다.
     #   foothold-site 는 PUBLIC 이고, 한 번 push 하면 되돌려도 히스토리에 남는다.
     #   (2026-08-05 워크스테이션 LAN 주소가 이 문 없이 공개 저장소로 나갔다.)
@@ -1167,10 +1186,11 @@ if __name__ == '__main__':
         print('  [!] 영상 규격이 어긋납니다. 배포를 중단합니다.')
         sys.exit(1)
 
-    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖)')
+    print('\n[3.48] 그림 글자 검사 (겹침 · 틀 밖 · 선 굵기)')
     import svgtext
-    if not svgtext.main(VAULT):
-        print('\n  [!] 그림 안에서 글자가 겹칩니다. 배포를 중단합니다.')
+    _ok, _why = svgtext.main(VAULT)
+    if not _ok:
+        print('\n  [!] %s. 배포를 중단합니다.' % _why)
         sys.exit(1)
     print('[3.476] 렌더 검사 (마크다운 문법이 글자로 보이는가)')
     import rendercheck

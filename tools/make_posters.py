@@ -19,6 +19,7 @@
 
     python tools/make_posters.py <영상폴더...>          보여주기만
     python tools/make_posters.py --write <영상폴더...>   실제로 굽는다
+    python tools/make_posters.py --write --force <폴더>  이미 있어도 다시 굽는다
     python tools/make_posters.py --selftest
 
 포스터는 영상 옆 `posters/<같은이름>.jpg` 에 놓는다.
@@ -85,6 +86,9 @@ def selftest():
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     write = '--write' in sys.argv
+    # **영상이 바뀌면 포스터도 바뀌어야 한다.** 이미 있으면 건너뛰던 것이
+    # 2026-09-29 에 옛 대군 컷 포스터를 남겼다. 그때는 손으로 지웠다.
+    force = '--force' in sys.argv
     if '--selftest' in sys.argv:
         return 0 if selftest() else 1
     if not args:
@@ -101,7 +105,7 @@ def main():
                 src = os.path.join(dirpath, f)
                 out = os.path.join(dirpath, 'posters',
                                    os.path.splitext(f)[0] + '.jpg')
-                if os.path.isfile(out):
+                if os.path.isfile(out) and not force:
                     skipped += 1
                     continue
                 try:

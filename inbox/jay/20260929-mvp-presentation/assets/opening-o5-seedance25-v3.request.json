@@ -1,0 +1,19 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "1a4b1094-644f-4af5-a249-d5363a207a80"
+    }
+  ],
+  "prompt": "O5: uninterrupted onboard forward-facing SENSOR CAMERA FEED. The entire view contains ONLY the supplied empty industrial terrain and its existing green sensor interface. The camera is the viewpoint itself, mounted at the front of an unseen quadruped robot; this is NOT an external shot showing a robot. No person, human limb, hand, boot, shoe, foot, leg, robot limb, robot body, camera housing or silhouette may enter ANY edge of the frame at ANY time. Keep the near foreground unobstructed, exactly as in the reference.\n\nCamera translates forward only a few centimeters on the current support, with very slight body-mounted pitch/roll (under 1 degree), then settles by second 4. No step over the gap. No substantial downward tilt exposing the observer. Preserve the reference geometry, jagged gaps, water and distant red beacon. No terrain morph or new support.\n\nThe green HUD panels stay locked to the screen and preserve exact English labels, monospaced type and geometry. Only the existing numeric readouts and attitude indicator animate. VX CMD/STATE at start 0.30/0.28, at 1.5 seconds 0.15/0.20, at 3 seconds 0.00/0.06, and by 4 seconds 0.00/0.00. Keep VY and WZ near their reference values. Horizon/ROLL/PITCH follow the slight camera sway and settle; no decorative random number cascades. These are illustrative readings, not measured logs. Green terrain sampling dots refresh in rows near-to-far and stay attached to actual concrete surfaces as the camera shifts. Empty gaps and water stay empty; never bridge the void with a luminous plane. Red beacon pulses gently.\n\nPreserve the approved image's restrained tonal range and soft highlights: diffuse porous concrete, uneven dry/damp patches, dull rust, dark water with localized faint reflections. No HDR look, crunchy microcontrast, sharpened edges, glitter or plastic gloss. Keep exposure constant, no ceiling lights switching on, no global brightening. Audio: quiet matching industrial room tone, drips, faint sensor scan ticks and offscreen restrained servo settling. No voices, music, loud impacts or new alarm. Five seconds, one continuous shot, no cuts. Previous separate shot is black mission reception; next separate shot is close terrain scan. Do not insert either into this shot."
+}

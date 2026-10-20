@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    },
+    {
+      "role": "image",
+      "value": "46c33950-5496-44cc-a112-8e5602f1ade1"
+    }
+  ],
+  "prompt": "Create ONE photographic 16:9 cinematic keyframe, E3, the rear-follow view after the approved frontal Go2 reveal. This is the SAME industrial hall and same real Unitree Go2, seen from the opposite camera direction as the robot proceeds toward its mission. Reference 1 defines architectural scale, gray/cool palette, restrained lighting and realistic materials ONLY, not its frontal camera angle. Reference 2 defines the exact robot identity and proportions; reference 3 defines its feet, leg links and finishes. Reference 4 is the authoritative real Go2 REAR silhouette and rear hardware. Ignore reference 4's grass, person and graphics. Do not copy reference-sheet labels or white studio backgrounds.\n\nCAMERA / FRAME: central REAR view from slightly above the robot, looking forward along the hall's centerline. We see the back of the robot, never its face on its rear. A medium-wide following-camera starting frame: one Go2 in the lower middle, body plus legs about 22 percent of picture height, surrounding vast architecture dominates. All of the body and naturally visible legs fit comfortably in frame. The route ahead and foot support are legible, not blurred away. Camera will later follow, but this deliverable is a single crisp still, no motion blur. No oblique hero angle, overhead drone angle or lens flare.\n\nCONTINUOUS ROUTE: aged concrete columns and corroded service pipes line both sides. A narrow broken concrete maintenance walkway continues straight along the central axis, with dark drop-offs on both sides. The robot is on a broad enough SOUND departure slab. Immediately ahead is a clearly readable short transverse gap, approximately 25 cm relative to Go2's proportions, to a matching landing slab at nearly the same height, low enough and close enough for a deliberate step rather than a superhuman jump. Beyond it, several worn platforms lead toward ONE distant dark service cabinet with a small red warning beacon, centered deep in the frame. No red beacon behind the robot, no alternative side route. A distinctive dull rust pipe runs BELOW the near gap, never acting as a foot bridge. Keep concrete lips irregular, localized loose grains near their edges, a few exposed short rebars below the lip. Do not add giant unjumpable chasms across the route, stairs, ramps or a new room. The voids BESIDE the route can be deep to convey scale.\n\nROBOT / POSE: Go2 faces AWAY, aligned with the path, approaching the gap but not crossing it yet. All feet remain supported on the departure slab in a natural poised walking stance, with space ahead for the next step. Faithful low elongated gray torso, exact rear casing from the real photo, gray round hip motors, slim curved solid gray leg links, small rounded matte-black rubber foot tips. No front camera panel on the rear, neck, separate head, thick boots, extra limbs, tail, cargo module or invented rear machinery. Four legs total with natural occlusion. Small existing scuffs only; no added heavy damage.\n\nLIGHT / MATERIAL: same low-key photographic response as reference 1. Soft cool fixed overhead light and subtle bounce reveal the robot's back, with deep dark unlit sides. Thin localized haze at distant pipes and below the walkway, not a fog wall. Natural tiny irregularities in concrete and paint. Mostly dry dusty or patchily damp concrete, only a few localized wet glints; dull rust, satin gray shell, matte rubber. No HDR, plastic gloss, chrome joints, pervasive wet mirror surfaces, crunchy sharpening or bright global fill. Keep the beacon small and distant. No HUD, scan, green tint, text, caption, panels, people or additional robots. Preserve a believable photographed set, not a glossy game render."
+}

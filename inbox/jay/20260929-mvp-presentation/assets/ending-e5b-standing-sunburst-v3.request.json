@@ -1,0 +1,32 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "a640f5ad-a26b-4023-9be9-86df0d58799c"
+    },
+    {
+      "role": "image",
+      "value": "73da25e0-b572-4a71-b46e-daac3274f7ee"
+    },
+    {
+      "role": "image",
+      "value": "afde734c-fce5-4e92-8dec-2c71973157d1"
+    },
+    {
+      "role": "image",
+      "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    }
+  ],
+  "prompt": "Edit reference 1 into ONE corrected 16:9 film keyframe, not a collage.\nREFERENCE ROLES: 1 is the actual reverse-view shot to edit. 2 shows the SAME path from its opposite, forward direction: use its irregular causeway widths and black water for spatial continuity, do not copy its camera. 3 identifies the destination's one low step and landing. 4 and 5 define the real Unitree Go2 identity only.\n\nPRIMARY CORRECTION: Keep reference 1's camera position, lens, horizon, tall columns, framing, and frontal viewing direction unchanged. Move the entire Go2 AWAY from the camera, BACK to the far end of the local destination landing. It has climbed the one low step and taken ONLY one or two short steps before stopping to sit. Its hind feet must be on the upper landing just beyond the climbed rear lip, with only about one small step of supported ground between hind feet and that lip. All four feet are securely supported. Reduce its apparent size to approximately 70 percent of its size in reference 1 by this physical relocation, NOT by scaling anatomy or zooming the camera. Robot centered, full body approximately 24 percent of image height, feet near 74 percent image height. Restore empty foreground where the large robot previously stood. Show a little landing ground behind the rear feet and a clearly lower approach beyond its edge. Do not place the robot back on the lower causeway, do not invent a backwards-facing visible riser from this upper-side camera.\n\nPATH CORRECTION: Behind the robot, this is the route it ALREADY traveled, seen looking backward from the destination. Match reference 2's asymmetric broken concrete slabs, changing widths, off-center missing corners and uneven short gaps, wide dark water on both sides. Replace reference 1's repetitive same-width stepping-block rhythm with believable irregular remnants of the same causeway. Keep the route traversable for this robot, not randomly floating rocks. No regular staircase, straight saw-cut cracks, uniform piers, full-width hall floor, new bridge or distant second destination beacon. The actual destination cabinet and beacon remain BEHIND THE CAMERA.\n\nPOSE: still a natural four-foot STAND immediately before sitting. Preserve real compact gray Go2, accurate front camera and under-head black sensor, slim curved leg links, small rounded matte black foot caps and natural leg overlap. No extra modules, thick shins, oversized boots, duplicate legs, or sitting yet.\n\nMATERIAL CONTINUITY: restrained photographic exposure with soft highlights, matte dusty broken concrete interspersed with darker damp areas, only isolated puddles and soft reflections. Dull uneven rust, satin gray shell, matte rubber, natural small imperfections. Reduce glitter-like wet highlights and sharpened microcontrast; no HDR crunch, plastic varnish, chrome robot, global orange tint or artificial luminous outlines. Preserve dark industrial atmosphere and sparse mist; do not brighten the hall. No HUD, text, arrows or diagrams."
+}

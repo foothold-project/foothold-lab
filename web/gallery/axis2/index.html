@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FOOTHOLD · 축 2 명령 응답</title>
+<meta name="description" content="평지에서 명령에만 반응시킨 프로브 스물일곱 칸. 문턱을 안 정했으므로 기록으로만 남긴다">
+<link rel="stylesheet" href="/gallery/gallery.css">
+<style>.top .sp{flex:1}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.side,aside,.toc,.sidebar,.sticky,.stick{z-index:60}
+
+.band{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:1rem 1.2rem;margin:0 0 14px;transition:border-color .12s,background .12s}
+/* ★ 호버 한 벌 (팀장 정정 8/31): 슬롭은 «위·왼쪽 악센트 바» 였지 테두리가 아니었다.
+   「최근 올라온 것」처럼 **호버에 테두리 색이 들어가** 눈에 띄게 한다.
+   표지 아홉 · 바로가기 · 최근 목록이 같은 방식으로 반응한다. */
+.band:hover,.bands3 .band:hover,.hubs a:hover,.quick a:hover{
+  border-color:var(--dim)}
+.hubs a.hot:hover,.bands3 .b-deliv:hover{border-color:var(--note)}
+.band .t{font-size:1.06rem;font-weight:850;letter-spacing:.02em}
+.band .d{font-size:.8rem;color:var(--ink-3);margin-top:.22rem}
+.band .w{float:right;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;
+  color:var(--ink-3);font-weight:700}
+
+/* ★ 표지 3열 (팀장 8/31): 디자인 시스템 안에서 배경톤 베리에이션.
+   토큰의 soft 짝을 써서 셋을 구분한다. 새 색을 만들지 않는다. */
+.bands3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 14px}
+/* ★ 팀장 재지적: 「면과 위쪽 한 줄」도 AI 슬롭이다. 악센트 바를 전부 뺀다.
+   구분은 배경 면 · 여백 · 글자 위계로만. 색은 뜻이 있을 때만 (급한 것). */
+.bands3 .band{margin:0;padding:.9rem 1.1rem;min-height:5.2rem;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid var(--rule)}
+.bands3 .band .t{font-size:.98rem}
+/* ★ 배경톤 베리에이션 (팀장 8/31). 새 색을 만들지 않는다.
+   토큰의 soft 짝을 쓰되 «뜻» 에 맞춰 고른다:
+     팀 공지 = 우리 안에서 도는 것 -> dim-soft
+     다이제스트 = 지난 것을 갈무리 -> paper-2 (중립)
+     산출물 = 급한 것 -> note-soft */
+.bands3 .b-notice{background:var(--dim-soft)}
+.bands3 .b-digest{background:var(--paper-2)}
+.bands3 .b-deliv{background:var(--note-soft)}
+.bands3 .b-deliv .d{color:var(--note-ink,var(--note));font-weight:700}
+@media (max-width:820px){.bands3{grid-template-columns:1fr}}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));
+  gap:.6rem;margin:0 0 16px}
+.quick a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);
+  padding:.72rem .85rem;transition:border-color .12s}
+.quick .k{font-size:.92rem;font-weight:800}
+.quick .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.quick .d{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin-top:.3rem}
+
+/* ★ v3: PC 3열×2행 (팀장 지시 2026-08-30). 좁으면 흘러내린다. */
+.hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:0 0 28px}
+@media (max-width:720px){.hubs{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}}
+.hubs a.hot .d{color:var(--note-ink,var(--note));font-weight:700}
+/* ★ 높이 통일 (팀장 8/31): 설명 길이가 달라 행마다 높이가 달랐다.
+   같은 격자 안에서 늘려 맞추고, 설명은 두 줄로 잘라 통일한다. */
+/* ★ AI 슬롭 제거 (팀장 8/31): 카드마다 두른 외곽선을 없앤다.
+   구분은 «면(배경)» 과 위쪽 3px 한 줄로만. 선을 겹쳐 두르지 않는다. */
+/* 허브 여섯: 흰 카드 다섯의 반복이 단조로웠다. «무엇을 보러 가는가» 로 톤을 나눈다.
+     밖에 보이는 것(기획·회의) = card 흰 면
+     우리가 만든 것(연구·기술) = paper-2
+     굴리는 것(파이프라인)     = paper-2 · 옅은 글자
+     급한 것(일정)             = note-soft
+   전부 기존 토큰이다. 새 색 없음. */
+.hubs a{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--p-radius,8px);padding:.9rem 1rem;min-height:6.4rem;
+  transition:border-color .12s,background .12s}
+.hubs a:nth-child(4),.hubs a:nth-child(5),.hubs a:nth-child(6){background:var(--paper-2)}
+.hubs a.hot{background:var(--note-soft)}
+.hubs .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:auto}
+
+.hubs .k{font-size:1rem;font-weight:850}
+.hubs .e{font-family:ui-monospace,Consolas,monospace;font-size:.6rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-top:.08rem}
+.hubs .d{font-size:.73rem;color:var(--ink-3);line-height:1.5;margin-top:.34rem}
+.hubs .n{font-size:.7rem;color:var(--ink-3);font-weight:700;margin-top:.3rem}
+
+.hlede{font-size:.74rem;color:var(--ink-3);margin:-2px 0 9px;line-height:1.5}
+.hv{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-weight:700;
+  font-size:.92em;margin-left:.4rem;color:var(--ink-3)}
+.hgroup{margin:26px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:.35rem}
+.hlist{display:grid;gap:.5rem}
+.hlist a{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--p-radius,8px);padding:.65rem .85rem}
+.hlist a:hover{border-color:var(--dim)}
+.hlist a{position:relative;padding-left:3.1rem}
+.hlist .hn{position:absolute;left:.85rem;top:.68rem;font-family:ui-monospace,Consolas,monospace;
+  font-size:.72rem;font-weight:800;color:var(--ink-3);letter-spacing:.02em}
+.hlist .t{font-size:.92rem;font-weight:750}
+.hlist .d{font-size:.75rem;color:var(--ink-3);line-height:1.55;margin-top:.2rem}
+.hlist .m{font-size:.7rem;color:var(--ink-3);margin-top:.35rem;
+  font-variant-numeric:tabular-nums;opacity:.85}
+
+/* 「먼저 볼 것」. 이 허브에 처음 왔으면 여기서 시작한다 (#73). */
+.hhero{display:block;text-decoration:none;color:inherit;margin:0 0 1.5rem;
+  border:1px solid var(--dim);border-radius:8px;background:var(--card);
+  padding:1rem 1.15rem 1.05rem;position:relative}
+.hhero:hover{border-color:var(--ink-3)}
+.hhero .hk{font-size:.6rem;font-weight:800;letter-spacing:.16em;color:var(--dim);
+  margin-bottom:.4rem}
+.hhero .t{font-size:1.28rem;font-weight:820;line-height:1.3;letter-spacing:-.01em}
+.hhero .d{font-size:.88rem;color:var(--ink-2,var(--ink-3));line-height:1.6;
+  margin-top:.4rem}
+.hhero .m{font-size:.72rem;color:var(--ink-3);margin-top:.55rem;
+  font-variant-numeric:tabular-nums}
+.hhero .hv{font-size:.62rem;margin-left:.5rem;vertical-align:.3em}
+@media (max-width:560px){.hhero .t{font-size:1.08rem}}
+
+/* 표지 「최근 올라온 것」. ia-css 는 모든 페이지에 실리므로 여기 한 자리면 된다. */
+.recent{display:grid;gap:.45rem;margin:0 0 10px}
+.recent a{display:flex;gap:.75rem;align-items:baseline;flex-wrap:wrap;
+  text-decoration:none;color:inherit;border:1px solid var(--rule);
+  background:var(--card);border-radius:var(--p-radius,8px);padding:.5rem .85rem}
+.recent a:hover{border-color:var(--dim)}
+.recent .rd{flex:none;font-size:.72rem;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;min-width:3.2em}
+.recent .rk{flex:none;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  color:var(--dim);min-width:4.6em}
+.recent .rt{font-size:.86rem;font-weight:750;line-height:1.45}
+.recent .rn{flex:none;font-size:.58rem;font-weight:800;background:var(--dim);
+  color:var(--paper);border-radius:3px;padding:1px 5px;letter-spacing:.06em}
+@media (max-width:560px){
+  .recent a{gap:.4rem}
+  .recent .rt{flex-basis:100%}
+}
+
+
+/* ★ 2026-09-29. **`el.hidden` 은 제작자 CSS 한 줄에 진다.**
+   브라우저 기본 시트의 `[hidden]{display:none}` 이라 우리 `.ended{display:...}`
+   같은 규칙이 이기면 숨긴 것이 보인다. 빌드의 hidden 안전망 검사가 잡았다
+   (갤러리를 공개 페이지 목록에 넣자 바로 걸렸다). */
+[hidden]{display:none!important}
+
+/* 컷 길이. 세 열이 다른 것이 정상이라 그 까닭을 옆에 적는다. */
+.colscore .len{font-variant-numeric:tabular-nums}
+.colscore .len b{font-weight:700;color:var(--ink)}
+.cmpnote{font-size:.78rem;color:var(--ink-3);line-height:1.6;margin:10px 0 0;
+  padding:9px 12px;background:var(--card);border:1px solid var(--rule);
+  border-radius:8px}
+</style>
+<link rel="stylesheet" href="/assets/gnav.css">
+<script id="fh-theme-boot">try{var _t=localStorage.getItem("foothold-theme")||localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t;else document.documentElement.dataset.theme="light"}catch(e){}</script>
+<!--newbadge:v8--><style>
+span.fh-new{display:inline-block!important;margin-left:.45rem;vertical-align:.14em;
+  background:var(--note)!important;color:#fff!important;font-size:.55rem!important;
+  font-weight:800!important;letter-spacing:.1em!important;line-height:1.5!important;
+  padding:.13rem .4rem!important;border-radius:3px!important;white-space:nowrap;
+  text-transform:none!important;font-family:inherit}
+</style>
+<script>
+(function(){
+  var W=7*86400000,KEY='fh_seen';
+  var TITLE='.t,.rt,.bt,.tlt3,.ex3,.pk3,.k,.hb3,b,strong,h2,h3';
+  function norm(s){
+    /* 2026-09-12. split('/').pop() 이 끝의 빈 조각을 집어
+       /gallery/ · /index.html · /team-meang/index.html 이 전부 'index' 로
+       뭉개졌다. 표지를 여는 순간 갤러리가 「봤음」이 돼 NEW 가 안 떴다. */
+    s=(s||'').split('#')[0].split('?')[0].replace(/\.html$/,'').replace(/\/+$/,'');
+    var p=s.split('/').filter(Boolean);
+    var last=p.pop()||'index';
+    if(last==='index'&&p.length)last=p.pop()+'/index';
+    return last;
+  }
+  function host(a){
+    var h=a.querySelector(TITLE);
+    if(h)return h;
+    for(var i=0;i<a.children.length;i++)
+      if(a.children[i].textContent.trim())return a.children[i];
+    return a;
+  }
+  function mark(a,on){
+    var b=a.querySelector('.fh-new');
+    if(!on){if(b)b.parentNode.removeChild(b);return}
+    if(b)return;
+    b=document.createElement('span');b.className='fh-new';b.textContent='NEW';
+    host(a).appendChild(b);
+  }
+  function apply(){
+    var seen={},raw={};
+    try{raw=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+    for(var k in raw)seen[norm(k)]=raw[k];
+    seen[norm(location.pathname)]=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}
+    document.querySelectorAll('a[data-added]').forEach(function(a){
+      var t=Date.parse(a.getAttribute('data-added')+'T00:00:00');
+      var tgt=norm(a.getAttribute('href'));
+      var on=!isNaN(t)&&Date.now()-t>=0&&Date.now()-t<=W&&!seen[tgt];
+      a.classList.toggle('is-new',on);
+      mark(a,on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+  window.addEventListener('pageshow',function(e){if(e.persisted)apply()});
+})();
+</script>
+<!--brand:v1--><link rel="icon" type="image/svg+xml" href="../../assets/brand/foothold-favicon.svg?v=08e237b2"><link rel="mask-icon" href="../../assets/brand/foothold-symbol-brand.svg?v=1712f418" color="#0e7a6e">
+<!--search:v8--><style>
+@media (max-width:640px){
+  .top .row{flex-wrap:nowrap}
+  .top .row .doc{flex:0 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .top .row a.home,.top .row .pdfbtn,.top .row .fh-sbtn{white-space:nowrap;flex:none}
+  .topbar .stage-chip{display:none}
+  .topbar .row{gap:.3rem}
+  .topbar .tbtn{padding:.32rem .5rem}
+  .topbar .counter{font-size:.62rem}
+  .fh-sbtn{display:inline-flex!important}
+  /* ★ 2026-08-28. 여기에 table{display:block} 이 있었다. 표를 블록으로 만들면
+     안쪽 표 상자가 «내용 너비» 로 줄어든다. 내용이 넓은 표는 우연히 꽉 차 보이고
+     좁은 표만 왼쪽으로 쏠린다. 팀장이 여러 번 지적한 «표가 틀어진다» 가 이것이다.
+     실측(같은 페이지 · 같은 표 · 크롬): 컨테이너 700px 에서 display:block 은 51%,
+     display:table 은 100%. 가로 스크롤은 표를 감싼 .tw 가 이미 맡고 있다.
+
+     ★ 2026-09-14. **그때 `min-width:0` 이 여기 남아 있었다.** 그 한 줄이 위
+     주석이 기대는 바로 그 장치를 깬다. 기본 CSS 가 `table{min-width:420px}` 라
+     좁은 화면에서 표가 420 px 를 지키고 `.tw` 가 «스크롤» 하게 되어 있는데,
+     `min-width:0` 이 그 바닥을 없애 표가 감싸개 폭까지 «짜부라진다».
+
+     팀장이 폰에서 잡았다. 390 px 실측:
+
+       11열 표   셀폭 30 px · 머리줄 76 px   「난이도」가 난/이/도 로 쪼개짐
+                                             「100」이 1/0/0 으로 세로로 쌓임
+        8열 표   셀폭 36 px
+
+     반쪽만 고친 것을 마저 고쳤다. 이 줄을 지운다. */
+  header.top{padding-top:28px}
+}
+.fh-sbtn-fix{position:fixed;top:7px;right:14px;z-index:70;background:var(--paper);
+  border:1px solid var(--rule);color:var(--ink-2);padding:4px 9px;font-family:inherit;
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  display:inline-flex;align-items:center;gap:5px}
+.fh-so{position:fixed;inset:0;background:rgba(10,14,16,.45);z-index:300;display:none}
+.fh-so.on{display:flex;align-items:flex-start;justify-content:center;padding:9vh 14px 0}
+.fh-sp{width:min(560px,100%);background:var(--paper);border:1px solid var(--rule);
+  border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.fh-sp input{width:100%;padding:.75rem .95rem;font-size:16px;border:0;
+  border-bottom:1px solid var(--rule);background:var(--paper);color:var(--ink);
+  font-family:inherit;outline:none}
+.fh-sr{max-height:56vh;overflow-y:auto}
+.fh-sr a{display:block;padding:.55rem .95rem;text-decoration:none;color:inherit;
+  border-bottom:1px solid var(--rule)}
+.fh-sr a:last-child{border-bottom:none}
+.fh-sr a:hover,.fh-sr a.sel{background:var(--dim-soft)}
+.fh-sr .sp1{font-size:.66rem;color:var(--dim);font-weight:800;letter-spacing:.03em}
+.fh-sr .sp2{font-size:.8rem;font-weight:700;margin:.1rem 0}
+.fh-sr .sp3{font-size:.7rem;color:var(--ink-3);line-height:1.45}
+.fh-sr .none{padding:.7rem .95rem;font-size:.76rem;color:var(--ink-3)}
+/* ★ 2026-09-08 감사 F-06. 검색 버튼 실측 58x30. 손가락 목표 44x44 에 못 미친다.
+   그렇다고 버튼을 키우면 팀장이 맞춰 둔 상단바 높이(1.85rem)가 통째로 틀어진다.
+   보이는 크기는 그대로 두고 «닿는 영역» 만 넓힌다. 가상 요소라 레이아웃을
+   건드리지 않는다. 손가락으로 쓰는 화면에서만 건다. */
+@media (hover:none),(pointer:coarse){
+  .fh-sbtn{position:relative}
+  .fh-sbtn::after{content:"";position:absolute;left:50%;top:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%)}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  /* «← …로» 버튼은 라벨이 가리키는 곳으로만 간다.
+     예전의 «스마트 뒤로가기»(history.back)는 제거했다. 라벨은 «표지로»인데
+     실제로는 직전 페이지로 돌아가 사용자를 속였다. (2026-08-24) */
+  /* 검색 버튼: PDF 저장 버튼 왼쪽, 같은 스타일 (레이아웃을 새로 만들지 않는다) */
+  var pb=document.getElementById('pdfBtn')||document.querySelector('.pdfbtn');
+  var sb=document.createElement('button');sb.type='button';
+  /* ★ 9/1 팀장 실측: 「돋보기 아이콘 크기가 달라지면서 위치가 변한다」.
+     여기가 그 원인이다. 검색 버튼이 «그 페이지의 PDF 버튼 클래스를 복사» 해서
+     페이지마다 패딩·글자·자간이 달랐고, 그만큼 오른쪽 묶음이 밀렸다.
+     전역바가 바를 소유한 지금은 복사할 이유가 없다. 자기 클래스만 쓴다. */
+  sb.className=(pb&&!pb.closest('.gnav')?'fh-sbtn-fix ':'')+'fh-sbtn';
+  sb.setAttribute('aria-label','사이트 검색');
+  sb.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" fill="none" '
+    +'stroke="currentColor" stroke-width="1.6" aria-hidden="true">'
+    +'<circle cx="7" cy="7" r="4.2"/><path d="M10.4 10.4L14 14"/></svg>검색';
+  /* ★ 2026-08-28. 전에는 PDF 버튼 옆에 붙이려다, PDF 가 숨겨진 화면(모바일)에서
+     position:fixed 로 튕겨나가 top:7px/right:14px 에 앉았다. 그 자리가 바로
+     sticky 상단바 위였고 z-index 가 둘 다 70 이라 나중에 그려지는 검색이 이겨서
+     「파이프라인」 글자를 덮었다 (팀장 모바일 실측).
+     상단바에 자리(.navctl)를 마련했으니 **거기 앉는다.** 떠다니지 않는다. */
+  var slot=document.querySelector('.gnav .navctl');
+  if(slot){ slot.insertBefore(sb, slot.firstChild); }
+  else if(pb){ pb.parentNode.insertBefore(sb,pb); }
+  else { document.body.appendChild(sb); }
+  function offset(){
+    if(slot){ sb.style.position='';sb.style.top='';sb.style.right='';sb.style.zIndex='';return; }
+    if(!pb)return;var cs=getComputedStyle(pb);
+    var r=pb.getBoundingClientRect();
+    if(cs.display==='none'||r.width===0){
+      sb.style.position='fixed';sb.style.top='7px';sb.style.right='14px';sb.style.zIndex='71';
+    }else if(cs.position==='fixed'){
+      sb.style.position='fixed';sb.style.top=r.top+'px';
+      sb.style.right=(window.innerWidth-r.left+8)+'px';sb.style.zIndex=cs.zIndex;
+    }else{sb.style.position='';sb.style.top='';sb.style.right='';}}
+  offset();window.addEventListener('resize',offset);
+  /* 오버레이
+     ★ 2026-09-08 감사 F-06. 화면에는 대화상자로 보이는데 «기계에게는» 그냥 div 였다.
+       role·aria-modal 이 없어 보조 기술이 대화상자로 읽지 못하고, 결과가 바뀌어도
+       aria-live 가 없어 알리지 않았다. 탭이 뒤 페이지로 새어 나갔고, 닫은 뒤에는
+       포커스가 숨은 입력에 남아 키보드 사용자가 어디에 있는지 잃었다.
+       보이는 것과 읽히는 것이 다르면 그것은 만들다 만 것이다. */
+  var ov=document.createElement('div');ov.className='fh-so';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','사이트 검색');
+  ov.innerHTML='<div class="fh-sp"><input type="search" placeholder="검색 (제목 · 절 · 본문)" '
+    +'aria-label="사이트 검색"><div class="fh-sr" role="listbox" aria-live="polite" '
+    +'aria-label="검색 결과"></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('input'),res=ov.querySelector('.fh-sr'),IDX=null,sel=-1;
+  sb.setAttribute('aria-haspopup','dialog');
+  sb.setAttribute('aria-expanded','false');
+  function open(){
+    ov.classList.add('on');
+    sb.setAttribute('aria-expanded','true');
+    inp.focus();inp.select();
+  }
+  function close(){
+    ov.classList.remove('on');
+    sb.setAttribute('aria-expanded','false');
+    /* 닫으면 «열었던 그 버튼» 으로 돌아간다. 안 그러면 키보드 사용자는
+       숨은 입력에 포커스가 남아 화면 어디에 있는지 알 수 없다. */
+    try{ sb.focus(); }catch(e){}
+  }
+  sb.addEventListener('click',open);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  /* 포커스 가두기. 열려 있는 동안 탭이 뒤 페이지로 새지 않게 한다.
+     가둘 것은 입력과 결과 링크뿐이라 목록을 그때그때 다시 센다. */
+  ov.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var f=[inp].concat([].slice.call(res.querySelectorAll('a')));
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1],cur=document.activeElement;
+    if(e.shiftKey&&(cur===first||!ov.contains(cur))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}
+    /* ★ 2026-09-08 감사 F-06. Ctrl/Cmd+K 는 브라우저가 주소창 검색으로 먼저
+       가져갈 수 있다. 감사도 「실제 키로는 안 열렸다」고 적었고, 내 환경에서는
+       키 자체가 페이지에 도달하지 않아 어느 쪽인지 «확인하지 못했다».
+       확인 못 한 것을 고쳤다고 할 수 없으므로 Ctrl+K 는 그대로 두고,
+       브라우저가 안 가져가는 «/» 를 함께 연다. 위키·깃허브가 쓰는 그 키다.
+       글자를 치는 중일 때는 열지 않는다. 그러면 검색어에 / 를 못 넣는다. */
+    else if(e.key==='/'&&!ov.classList.contains('on')){
+      var a=document.activeElement, tag=(a&&a.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select'||(a&&a.isContentEditable))return;
+      e.preventDefault();open();
+    }
+    else if(e.key==='Escape'&&ov.classList.contains('on'))close();
+  });
+  /* ★ 2026-09-08 감사 F-06. 셋을 한 덩어리로 삼켜 «결과 없음» 하나로 보여줬다.
+     색인을 못 받은 것 · 받았는데 모양이 틀린 것 · 정말로 없는 것은 서로 다르다.
+     앞의 둘은 우리 잘못이고 사용자는 다시 시그림야 한다는 것을 알아야 한다.
+     경로도 루트 절대경로로 바꾼다. team-meang/ 처럼 한 단계 아래 페이지에서
+     상대경로면 team-meang/assets/... 를 찾아 항상 실패한다. */
+  var IDXERR=null;
+  function load(cb){if(IDX)return cb();
+    fetch('/assets/search-index.json?v=06dceed7').then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();})
+      .then(function(j){
+        if(!Array.isArray(j)||(j.length&&typeof j[0].x!=='string'))
+          throw new Error('schema');
+        IDX=j;IDXERR=null;cb();})
+      .catch(function(err){
+        IDX=[];IDXERR=(err&&err.message==='schema')?'schema':'fetch';cb();});}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  /* fh-rank:시작 · 순위 규칙은 여기 하나뿐이다. 빌드 관문 [1.8993] 이 이 함수를
+     «그대로» 떼어 node 로 돌려 알려진 답과 맞춰 본다. 규칙을 두 번 적지 않는다. */
+  function fhRank(IDX,q,cap,lim){
+    var hits=[],i;
+    for(i=0;i<IDX.length;i++){
+      var e=IDX[i],H=e.h.toLowerCase(),X=e.x.toLowerCase(),T=e.t.toLowerCase(),
+          hi=H.indexOf(q),ti=X.indexOf(q),pi=T.indexOf(q);
+      if(hi<0&&ti<0&&pi<0)continue;
+      var score=(hi>=0?3:0)+(pi>=0?2:0)+(ti>=0?1:0);
+      /* ★ 2026-09-09 실측. 점수가 «어느 칸에 있나» 만 보니 본문에 한 번 스친 글과
+         본문이 온통 그 얘기인 글이 동점이었고, 동점은 색인 순서로 풀려 결국
+         파일이름 순이 됐다. 라이브에서 «rails» 를 치면 12칸이 전부 a~d 로
+         시작하는 페이지로 찼고 정작 rails 진단 문서 셋은 하나도 없었다.
+         그 낱말을 «몇 번» 쓴 글인가를 칸 다음 순위로 넣는다. 20에서 끊는다.
+         (긴 글이 짧은 글을 무조건 이기면 그것대로 또 틀린 순위다.) */
+      var n=0,at=-1;
+      while(n<20&&(at=X.indexOf(q,at+1))>=0)n++;
+      var bt=-1;
+      while(n<20&&(bt=H.indexOf(q,bt+1))>=0)n++;
+      var snip='';
+      if(ti>=0){var s=Math.max(0,ti-34);snip=(s>0?'…':'')+e.x.substr(s,95)+'…';}
+      hits.push({e:e,s:score,n:n,i:i,snip:snip});
+    }
+    /* 동점이면 색인 순서로 고정한다. 정렬이 흔들리면 같은 검색어가 매번 다른
+       차례를 준다 (재현 빌드에서 A1 과 A2 가 갈리던 것과 같은 부류다). */
+    hits.sort(function(a,b){return b.s-a.s||b.n-a.n||a.i-b.i});
+    /* ★ 한 문서가 칸을 다 먹지 않게 한다. «pit» 을 치면 pit 진단 한 장의 절
+       여섯이 화면을 채워 다른 문서를 전부 밀어냈다. 페이지당 cap 장까지만
+       남기면 12칸이 적어도 네 문서를 담는다. */
+    var seen={},keep=[];
+    for(i=0;i<hits.length&&keep.length<lim;i++){
+      var pg=hits[i].e.p,c=seen[pg]||0;
+      if(c>=cap)continue;
+      seen[pg]=c+1;keep.push(hits[i]);
+    }
+    return {hits:keep,total:hits.length};
+  }
+  /* fh-rank:끝 */
+  function go(){
+    var q=inp.value.trim().toLowerCase();sel=-1;
+    if(q.length<2){res.innerHTML='';return;}
+    load(function(){
+      /* ★ 2026-09-08 감사 F-02. 전에는 hits.length<40 인 동안만 훑고 그 40개를
+         정렬했다. 색인은 페이지 이름 순이라, 뒤쪽 페이지의 «제목 일치»(3점)가
+         앞쪽 페이지의 «본문 일치»(1점)보다 높아도 후보에 못 들었다.
+         실측: 프로젝트·보행·평가·문서·정책 다섯 낱말에서 화면 상위 12가
+         전역 상위 12와 달랐다. 전부 점수 매기고 정렬한 «뒤에» 자른다. */
+      var hits=fhRank(IDX,q,3,12).hits;
+      if(!hits.length){
+        var msg=IDXERR==='fetch'?'검색 색인을 불러오지 못했습니다. 새로고침해 주세요'
+               :IDXERR==='schema'?'검색 색인 형식이 올바르지 않습니다. 관리자에게 알려 주세요'
+               :'결과 없음: '+esc(q);
+        res.innerHTML='<div class="none">'+msg+'</div>';}
+      else{res.innerHTML=hits.map(function(h){
+        return '<a href="'+h.e.p+(h.e.a?'#'+h.e.a:'')+'"><div class="sp1">'+esc(h.e.t)
+          /* ★ 2026-09-13. 페이지 단위 레코드는 t(페이지 제목)와 h(절 제목)이
+             같다. 그대로 찍으면 결과마다 같은 제목이 «두 번» 보인다.
+             라이브에서 검색해 보고 알았다. 갤러리만의 일이 아니라 모든
+             페이지 단위 결과가 그랬다. 같으면 둘째 줄을 비운다. */
+          +(h.e.h&&h.e.h!==h.e.t?'</div><div class="sp2">'+esc(h.e.h)+'</div>':'</div>')
+          +(h.snip?'<div class="sp3">'+esc(h.snip)+'</div>':'')+'</a>';}).join('');}
+    });
+  }
+  inp.addEventListener('input',go);
+  inp.addEventListener('keydown',function(e){
+    e.stopPropagation(); /* 커리큘럼 등 자체 키보드 내비게이션 페이지로 새지 않게 */
+    if(e.key==='Escape'){close();return;}
+    var as=res.querySelectorAll('a');if(!as.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,as.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();as[sel].click();return;}
+    else return;
+    as.forEach(function(a,i){a.classList.toggle('sel',i===sel)});
+    if(as[sel])as[sel].scrollIntoView({block:'nearest'});
+  });
+});
+</script>
+</head>
+<body class="wide">
+<!--gnav:v1--><div class="gnav"><div class="in"><a class="home" href="/index.html"><img class="lgi" src="/assets/brand/foothold-wordmark-ink.svg?v=2f73499c" alt="FOOTHOLD" height="15"><img class="lgr" src="/assets/brand/foothold-wordmark-reverse.svg?v=4113d295" alt="" height="15"></a><a class="" href="/hub-proposal.html">기획</a><a class="" href="/hub-schedule.html">일정</a><a class="" href="/hub-meeting.html">회의</a><a class="" href="/hub-research.html">연구</a><a class="on" href="/gallery/">갤러리</a><a class="" href="/hub-tech.html">기술</a><a class="" href="/hub-pipeline.html">파이프라인</a><span class="sp"></span><a class="q" href="/chosun-materials.html">팀 자료실</a><a class="q" href="/encyclopedia.html">도메인 백과</a><a class="q" href="/curriculum.html">학습 커리큘럼</a><a class="q" href="/budget.html">예산안</a><span class="navctl"><button id="themeBtn" type="button" aria-label="테마 전환" onclick="var h=document.documentElement,t=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('foothold-theme',t)}catch(e){}" style="cursor:pointer;background:var(--card);color:var(--ink-3);border:1px solid var(--rule);border-radius:99px">테마</button></span></div></div><!--/gnav:v1-->
+<div class="wrap">
+
+<header>
+  <div class="crumb"><a href="/">FOOTHOLD</a> · <a href="/gallery/">갤러리</a> · 축 2</div>
+  <div class="eyebrow">Command Response</div>
+  <h1>평지에서 명령에만 반응시킨다</h1>
+  <p class="lede" id="lede"></p>
+  <div id="axistab"></div>
+</header>
+
+<div id="body"></div>
+
+<footer>
+  <div id="foot"></div>
+  <div>색인 <span class="mono">vN/axis2.json</span></div>
+</footer>
+
+</div>
+<script src="/gallery/gallery.js"></script>
+<script>
+(async function () {
+  'use strict';
+  const body = document.getElementById('body');
+
+  /* ── 색인 ──────────────────────────────────────────────── */
+  let index, data, picked;
+
+  try {
+    index = G.checkSchema(await G.loadJSON(G.at('versions.json')),
+                          'foothold-gallery-index/');
+  } catch (err) {
+    body.appendChild(G.warn('판 목록을 읽지 못했습니다. ' + err.message, true));
+    return;
+  }
+
+  /* **축 2 색인이 있는 판만.** 없는 판을 고르게 두면 빈 화면이 된다. */
+  const vers = (index.versions || []).filter(G.hasAxis2);
+
+  if (!vers.length) {
+    body.appendChild(G.warn(
+      '축 2 색인을 가진 판이 아직 없습니다. `gallery_axis2.py` 를 돌린 뒤 ' +
+      '`gallery_versions.py` 로 판 목록을 다시 만드십시오.', true));
+    return;
+  }
+
+  /* ★ 2026-09-29 2 차. **「비교」 모드를 없앴다.**
+   *
+   * 팀장 지적: 「목록에서 왜 영상 클릭하면 3개만 비교로 들어가냐? ... 재생
+   * 버튼 누르면 페이지 넘어가는 것도 좀 이상하고」. 맞다. 단추에 「함께
+   * 재생」이라 써 놓고 누르면 화면이 바뀌었다.
+   *
+   * 이제 **목록이 그 자리에서** 섹션마다 셋을 같이 돌린다. 그러면 「한
+   * 시나리오만」은 시나리오 거르개가 이미 하는 일이라 모드가 따로 필요
+   * 없다. 옛 링크(`mode=compare`)는 목록으로 받는다. */
+  const MODES = [
+    { id: 'list', label: '목록', hint: '시나리오마다 판 셋을 나란히 · 그 자리에서 함께 재생' },
+    { id: 'grid', label: '격자', hint: '스물일곱 칸을 한 표에 · 숫자로 훑기' }
+  ];
+  const MODE_ALIAS = { compare: 'list' };
+
+  const pre = G.readParams({ v: vers.map(v => v.version) });
+  const version = pre.value.v || vers[0].version;
+  picked = vers.find(v => v.version === version);
+
+  try {
+    data = G.checkSchema(await G.loadJSON(G.at(picked.axis2.index)),
+                         'foothold-gallery-axis2/');
+  } catch (err) {
+    body.appendChild(G.warn('축 2 색인을 읽지 못했습니다. ' + err.message, true));
+    return;
+  }
+
+  const allowed = {
+    v: vers.map(v => v.version),
+    mode: MODES.map(m => m.id).concat(Object.keys(MODE_ALIAS)),
+    scenario: data.facets.scenario,
+    group: data.facets.group,
+    model: data.facets.model
+  };
+  const read = G.readParams(allowed);
+  const rejected = pre.rejected.concat(read.rejected)
+    .filter((x, i, a) => a.indexOf(x) === i);
+
+  const state = {
+    mode: MODE_ALIAS[read.value.mode] || read.value.mode || 'list',
+    scenario: read.value.scenario || null,
+    group: read.value.group || null,
+    model: read.value.model || null
+  };
+
+  const models = G.lineage(Object.keys(data.models || {}));
+  const cellOf = {};
+  (data.cells || []).forEach(c => { cellOf[c.scenario + '|' + c.model] = c; });
+  const scOf = {};
+  (data.scenarios || []).forEach(s => { scOf[s.id] = s; });
+
+  document.getElementById('lede').textContent =
+    '지형을 섞으면 정지 실패가 명령 탓인지 지형 탓인지 안 갈린다. 그래서 ' +
+    '평평한 바닥에 세워 놓고 명령만 준다. 시나리오 ' + data.counts.scenarios +
+    ' 종 x 판 ' + data.counts.models + ' = ' + data.counts.cells +
+    ' 칸이고, 칸마다 그 실행에서 찍은 컷이 하나씩 붙어 있다.';
+
+  {
+    const tabs = G.axisTabs({ version: version, current: 'command', has2: true });
+    if (tabs) document.getElementById('axistab').appendChild(tabs);
+  }
+
+  /* ── 재생 묶기 · **섹션마다 한 벌** ──────────────────────────
+   *
+   * 섹션이 아홉이고 각 섹션이 판 셋을 같은 시계로 돌린다. 한 벌로 묶으면
+   * 아래 섹션의 컷이 위 섹션의 시계에 끌려간다. `G.syncGroup` 은 만들어
+   * 쓰는 것이라 섹션마다 하나씩 만든다.
+   *
+   * 다시 그릴 때 **전부 멈춘다.** 안 그러면 사라진 칸이 계속 돈다. */
+  const groups = [];
+
+  function newSectionGroup() {
+    const tags = {};
+    const box = { ui: null, tags: tags };
+    box.group = G.syncGroup({
+      onClock: t => { if (box.ui) box.ui.clock.textContent = t; },
+      onButton: t => {
+        if (box.ui) box.ui.button.textContent = t;
+        /* 재생 중에는 칸 위의 ▶ 를 숨긴다. */
+        Object.values(tags).forEach(o => {
+          if (o.wrap) o.wrap.classList.toggle('playing', t === '멈춤');
+        });
+      },
+      onNote: t => { if (box.ui) box.ui.note.textContent = t; },
+      onEnded: (k, done) => { if (tags[k] && tags[k].ended) tags[k].ended.hidden = !done; }
+    });
+    groups.push(box);
+    return box;
+  }
+
+  /* ── 숫자를 글자로 ─────────────────────────────────────── */
+  function num(v) {
+    if (v === null || v === undefined || !isFinite(v)) return '--';
+    const a = Math.abs(v);
+    if (a === 0) return '0';
+    if (a < 0.01) return v.toFixed(4);
+    if (a < 1) return v.toFixed(2);
+    if (a < 10) return v.toFixed(2);
+    return v.toFixed(1);
+  }
+
+  /* 값이 무엇을 뜻하나. **한 줄로.** 색으로 좋고 나쁨을 말하지 않는다
+   * (문턱을 안 정한 칸이 있어서 어디부터 나쁜지 우리가 모른다). */
+  function meaning(cell, sc) {
+    const h = cell.headline;
+    if (h.value === null || h.value === undefined) return '측정값 없음';
+
+    if (h.good === 'one') {
+      const d = h.value - 1;
+      if (Math.abs(d) < 0.005) return '명령과 거의 같다';
+      return d > 0 ? '명령보다 ' + num(d) + ' 넘어섰다'
+                   : '명령보다 ' + num(-d) + ' 못 미쳤다';
+    }
+    const n = cell.envs || 0;
+    const k = Math.round(h.value * n);
+    return n ? k + ' / ' + n + ' env 가 넘어졌다' : '';
+  }
+
+  /* **자가 그려진 막대.** 자는 선으로만 긋는다. 통과·미달은 안 찍는다
+   * (이 표본은 배포 판정의 표본이 아니다 · 아래 「어떻게 읽나」). */
+  function bar(cell, sc) {
+    const spec = sc.bar;
+    const v = cell.headline.value;
+    if (!spec || v === null || v === undefined) return null;
+
+    const lo = spec.min, hi = spec.max;
+    const pct = x => Math.max(0, Math.min(100, (x - lo) / (hi - lo) * 100));
+
+    const box = G.el('div', { class: 'a2bar' + (spec.kind === 'around1' ? ' center' : '') });
+    const fill = G.el('div', { class: 'fill' });
+
+    if (spec.kind === 'around1') {
+      /* 1.00 에서 값까지를 채운다. 어느 쪽으로 얼마나 빗나갔는지가 길이다. */
+      const a = Math.min(pct(spec.mid), pct(v));
+      const b = Math.max(pct(spec.mid), pct(v));
+      fill.style.left = a + '%';
+      fill.style.width = Math.max(1, b - a) + '%';
+    } else {
+      fill.style.width = Math.max(1, pct(v)) + '%';
+    }
+    box.appendChild(fill);
+
+    if (spec.kind === 'around1') {
+      const mid = G.el('div', { class: 'mid' });
+      mid.style.left = pct(spec.mid) + '%';
+      box.appendChild(mid);
+    }
+
+    const gate = sc.headline_threshold;
+    if (gate) {
+      const tick = G.el('div', { class: 'gate' });
+      tick.style.left = pct(gate.limit) + '%';
+      box.appendChild(tick);
+    }
+
+    const wrap = G.el('div', {}, [box]);
+    wrap.appendChild(G.el('div', { class: 'a2scale' }, [
+      G.el('span', { text: String(lo) }),
+      G.el('span', { text: gate ? ('관문 자 ' + gate.op + ' ' + gate.limit)
+                                : (spec.kind === 'around1' ? '가운데 선 = 명령' : '') }),
+      G.el('span', { text: String(hi) })
+    ]));
+    return wrap;
+  }
+
+  function bigNumber(cell) {
+    const mt = (data.metrics || {})[cell.headline.metric] || {};
+    return G.el('div', {}, [
+      G.el('div', { class: 'a2unit', text: mt.label || cell.headline.metric }),
+      G.el('div', { class: 'a2big', text: num(cell.headline.value) })
+    ]);
+  }
+
+  /* ── 주소 ──────────────────────────────────────────────── */
+  function push(replace) {
+    G.writeParams({
+      v: vers.length > 1 ? version : null,
+      mode: state.mode === 'list' ? null : state.mode,
+      group: state.group,
+      scenario: state.scenario,
+      model: state.model
+    }, replace);
+  }
+
+  function go(patch) {
+    Object.assign(state, patch);
+    push(); draw();
+  }
+
+  /* ── 무엇을 볼 수 있는 화면인가 (접힌 상자 하나) ────────── */
+  function intro() {
+    const d = G.el('details', { class: 'a2intro' });
+    d.appendChild(G.el('summary', { text: '이 화면에서 무엇을 알 수 있나' }));
+    const inn = G.el('div', { class: 'in' });
+
+    const p = (nodes) => inn.appendChild(G.el('p', {}, nodes));
+
+    p([G.el('b', { text: '알 수 있는 것. ' }),
+       G.el('span', { text: '평평한 바닥에서 «명령을 얼마나 따르는가» 를 ' +
+         '판 셋이 같은 자로 견준 값이다. 지형이 섞이지 않으므로 실패가 ' +
+         '명령 탓이라고 말할 수 있다.' })]);
+
+    p([G.el('b', { text: '알 수 없는 것. ' }),
+       G.el('span', { text: '험지에서도 같은지는 여기서 모른다. 그것은 ' }),
+       G.el('a', { href: '/gallery/view?v=' + encodeURIComponent(version),
+                   text: '축 1' }),
+       G.el('span', { text: ' 이다. 그리고 이 값은 ' }),
+       G.el('b', { text: 'env ' + data.protocol.num_envs + ' 칸 한 번의 실행' }),
+       G.el('span', { text: ' 이다.' })]);
+
+    p([G.el('b', { text: '판정 도장을 왜 안 찍나. ' }),
+       G.el('span', { text: data.why_not_judged }),
+       G.el('span', { text: ' ' + data.not_the_verdict })]);
+
+    (data.groups || []).forEach(g => {
+      p([G.el('b', { text: g.label + ' · ' }), G.el('span', { text: g.note })]);
+    });
+
+    p([G.el('b', { text: '막대 읽는 법. ' }),
+       G.el('span', { text: '채워진 길이가 값이다. 굵은 세로 선이 ' +
+         '아홉 관문의 자이고, 추종비 막대의 가운데 선은 명령(1.00)이다. ' +
+         '색으로 좋고 나쁨을 칠하지 않는다 · 문턱을 안 정한 칸이 있어서 ' +
+         '어디부터 나쁜지 우리가 모른다.' })]);
+
+    d.appendChild(inn);
+    return d;
+  }
+
+  /* ── 거르개 ────────────────────────────────────────────── */
+  function visibleScenarios() {
+    return (data.scenarios || [])
+      .filter(s => !state.group || s.group === state.group)
+      .map(s => s.id);
+  }
+
+  function visibleModels() {
+    return state.model ? [state.model] : models;
+  }
+
+  function filters() {
+    const wrap = G.el('div', { class: 'filters' });
+
+    (data.groups || []).forEach(g => {
+      const list = (data.scenarios || []).filter(s => s.group === g.id);
+      if (!list.length) return;
+
+      /* 이름이 이미 수를 말한다 (「자가 있는 셋」). 뒤에 「3종」을 또 붙이면
+       * 같은 것을 두 번 말한다 `확인됨` (팀장이 화면에서 봤다). */
+      const row = G.el('div', { class: 'frow tset' }, [
+        G.el('span', { class: 'flabel', text: g.label })
+      ]);
+
+      const whole = state.group === g.id && !state.scenario;
+      const chip0 = G.el('button', {
+        class: 'chip whole', type: 'button',
+        'aria-pressed': whole ? 'true' : 'false'
+      }, [G.el('span', { text: '무리 전체' }),
+          G.el('span', { class: 'n', text: String(list.length * visibleModels().length) })]);
+      chip0.addEventListener('click', () => go(whole
+        ? { group: null }
+        : { group: g.id, scenario: null }));
+      row.appendChild(chip0);
+
+      list.forEach(s => {
+        const on = state.scenario === s.id;
+        const chip = G.el('button', {
+          class: 'chip', type: 'button', 'aria-pressed': on ? 'true' : 'false'
+        }, [G.el('span', { text: s.label }),
+            G.el('span', { class: 'n', text: String(visibleModels().length) })]);
+        chip.addEventListener('click', () => go(on
+          ? { scenario: null }
+          : { scenario: s.id, group: null }));
+        row.appendChild(chip);
+      });
+
+      wrap.appendChild(row);
+      /* **왜 갈랐는지를 그 줄 옆에 적는다.** 접힌 상자에만 있으면 안 읽는다
+       * (팀장 물음: 「아홉 관문 3종, 확장 문턱 미정 6종은 왜 나눈거야?」). */
+      wrap.appendChild(G.el('div', { class: 'a2why' },
+                            [G.el('span', { text: g.note.replace(/\*\*/g, '') })]));
+    });
+
+    const mrow = G.el('div', { class: 'frow' }, [
+      G.el('span', { class: 'flabel', text: '판' })
+    ]);
+    const all = !state.model;
+    const c0 = G.el('button', { class: 'chip', type: 'button',
+                                'aria-pressed': all ? 'true' : 'false' },
+                    [G.el('span', { text: '전부' }),
+                     G.el('span', { class: 'n', text: String(data.counts.cells) })]);
+    c0.addEventListener('click', () => go({ model: null }));
+    mrow.appendChild(c0);
+
+    models.forEach(m => {
+      const on = state.model === m;
+      const n = (data.cells || []).filter(c => c.model === m).length;
+      const chip = G.el('button', { class: 'chip', type: 'button',
+                                    'aria-pressed': on ? 'true' : 'false' },
+                        [G.el('span', { text: m }),
+                         G.el('span', { class: 'n', text: String(n) })]);
+      chip.addEventListener('click', () => go({ model: on ? null : m }));
+      mrow.appendChild(chip);
+    });
+    wrap.appendChild(mrow);
+
+    return wrap;
+  }
+
+  function modeRow() {
+    const row = G.el('div', { class: 'a2modes' }, [
+      G.el('span', { class: 'lab', text: '보기' })
+    ]);
+    MODES.forEach(m => {
+      const on = state.mode === m.id;
+      const b = G.el('button', { class: 'rb' + (on ? ' on' : ''), type: 'button',
+                                 title: m.hint, text: m.label });
+      if (on) b.setAttribute('aria-current', 'true');
+      b.addEventListener('click', () => { if (!on) go({ mode: m.id }); });
+      row.appendChild(b);
+    });
+    row.appendChild(G.el('span', { class: 'a2sub',
+      text: (MODES.find(m => m.id === state.mode) || {}).hint }));
+    return row;
+  }
+
+  /* ── 격자 모드 ─────────────────────────────────────────── */
+  function gridView(ids) {
+    const t = G.el('table', { class: 'a2grid' });
+    const head = G.el('thead');
+    const hr = G.el('tr', {}, [G.el('th', { text: '시나리오' })]);
+    visibleModels().forEach(m => hr.appendChild(G.el('th', { text: m })));
+    head.appendChild(hr);
+    t.appendChild(head);
+
+    const tb = G.el('tbody');
+    let prevGroup = null;
+
+    ids.forEach(id => {
+      const sc = scOf[id];
+      const tr = G.el('tr', prevGroup && prevGroup !== sc.group ? { class: 'gsep' } : {});
+      prevGroup = sc.group;
+
+      const th = G.el('th', {}, [
+        G.el('span', { text: sc.label }),
+        G.el('span', { class: 'q', text: sc.what || '' })
+      ]);
+      tr.appendChild(th);
+
+      visibleModels().forEach(m => {
+        const cell = cellOf[id + '|' + m];
+        const td = G.el('td');
+
+        if (!cell) {
+          td.appendChild(G.el('span', { class: 'tag stop', text: '미측정' }));
+          tr.appendChild(td);
+          return;
+        }
+
+        const btn = G.el('button', { class: 'cellbtn', type: 'button',
+                                     title: '이 시나리오를 함께 재생' });
+        btn.appendChild(bigNumber(cell));
+        const b = bar(cell, sc);
+        if (b) btn.appendChild(b);
+        btn.appendChild(G.el('div', { class: 'a2sub', text: meaning(cell, sc) }));
+        /* 칸을 누르면 그 시나리오만 목록으로 펼친다. 거기서 그 자리에서
+         * 함께 재생한다. **화면을 다른 데로 안 보낸다.** */
+        btn.addEventListener('click',
+          () => go({ mode: 'list', scenario: id, model: null }));
+        td.appendChild(btn);
+        tr.appendChild(td);
+      });
+
+      tb.appendChild(tr);
+    });
+
+    t.appendChild(tb);
+    return t;
+  }
+
+  /* ── 목록 모드 ─────────────────────────────────────────── */
+  function scenarioBlock(id) {
+    const sc = scOf[id];
+    const sec = G.el('div', { class: 'a2sec' });
+    const box = newSectionGroup();
+
+    const h = G.el('div', { class: 'a2head' }, [
+      G.el('h3', { text: sc.label }),
+      G.el('span', { class: 'mono', text: id }),
+      sc.duration_s ? G.el('span', { class: 'mono', text: sc.duration_s + '초' }) : null,
+      G.el('span', { class: 'tag warn', text: data.badge })
+    ]);
+    sec.appendChild(h);
+
+    if (sc.what) {
+      sec.appendChild(G.el('div', { class: 'a2sub', text: sc.what }));
+    }
+
+    /* **무엇을 볼 것인가.** 머리 숫자가 재는 것과 같은 것을 가리킨다. */
+    if (sc.watch) {
+      const w = G.el('p', { class: 'a2watch' });
+      sc.watch.split('**').forEach((part, i) => {
+        w.appendChild(G.el(i % 2 ? 'b' : 'span', { text: part }));
+      });
+      sec.appendChild(w);
+    }
+
+    if (sc.skip_s) {
+      sec.appendChild(G.el('div', { class: 'a2gate' }, [
+        G.el('span', { text: '앞 ' + sc.skip_s + '초는 재기에서 빠진다 (가속 구간). ' +
+          '컷에도 그 구간에 띠가 깔려 있다.' })
+      ]));
+    }
+
+    if ((sc.thresholds || []).length) {
+      sec.appendChild(G.el('div', { class: 'a2gate' }, [
+        G.el('span', { text: '넘어야 하는 값 · ' }),
+        G.el('span', { class: 'mono', text: sc.thresholds.map(t =>
+          t.metric + ' ' + t.op + ' ' + t.limit +
+          (t.per_step ? ' (요 명령 네 크기 각각)' : '')).join('  ·  ') })
+      ]));
+    }
+
+    /* **이 섹션의 조종간.** 페이지를 안 넘기고 여기서 셋을 같이 돌린다. */
+    box.ui = G.transport(box.group);
+    sec.appendChild(box.ui.row);
+
+    const cols = G.el('div', { class: 'a2cols' });
+
+    visibleModels().forEach(m => {
+      const cell = cellOf[id + '|' + m];
+      const col = G.el('div', { class: 'a2col' });
+      col.appendChild(G.el('div', { class: 'who', text: m }));
+
+      if (!cell) {
+        col.appendChild(G.el('span', { class: 'tag stop', text: '미측정' }));
+        cols.appendChild(col);
+        return;
+      }
+
+      col.appendChild(bigNumber(cell));
+      const b = bar(cell, sc);
+      if (b) col.appendChild(b);
+      col.appendChild(G.el('div', { class: 'a2sub', text: meaning(cell, sc) }));
+      col.appendChild(G.el('div', { class: 'a2sub',
+        text: 'env ' + cell.envs + ' 칸 · 컷 ' +
+              (cell.clip.seconds || 0).toFixed(1) + '초' }));
+
+      Object.entries(cell.extra || {}).forEach(([k, v]) => {
+        const mt = (data.metrics || {})[k] || {};
+        col.appendChild(G.el('div', { class: 'a2sub',
+          text: (mt.label || k) + ' ' + num(v) + (mt.unit ? ' ' + mt.unit : '') }));
+      });
+
+      /* **`preload: none` 이다.** 스물일곱 칸에 src 를 걸어도 누르기 전에는
+       * 아무것도 안 받아 온다. 표지가 첫 장면을 보여 준다. */
+      const wrap = G.el('div', { class: 'a2vid' });
+      const video = G.video({ preload: 'none' });
+      if (cell.clip.poster) {
+        video.poster = G.at(picked.folder + '/' + cell.clip.poster);
+      }
+      video.src = G.at(picked.folder + '/' + cell.clip.file);
+      wrap.appendChild(video);
+
+      const play = G.el('button', { class: 'a2play', type: 'button',
+                                    'aria-label': '이 시나리오 세 판을 함께 재생' }, [
+        G.el('span', { class: 'ico', text: '▶' }),
+        G.el('span', { text: '함께 재생' })
+      ]);
+      play.addEventListener('click', () => box.group.toggle());
+      wrap.appendChild(play);
+
+      const ended = G.el('span', { class: 'ended', text: '영상 종료', hidden: true });
+      wrap.appendChild(ended);
+
+      box.tags[m] = { wrap: wrap, ended: ended };
+      box.group.add(m, video, cell.clip.seconds);
+      video.addEventListener('click', () => box.group.toggle());
+
+      col.appendChild(wrap);
+      cols.appendChild(col);
+    });
+
+    sec.appendChild(cols);
+    box.group.clock();
+    return sec;
+  }
+
+  /* ── 그리기 ────────────────────────────────────────────── */
+  function draw() {
+    groups.forEach(b => b.group.clear());
+    groups.length = 0;
+    body.textContent = '';
+
+    if (rejected.length) {
+      body.appendChild(G.warn('링크의 ' + rejected.join(' · ') +
+        ' 은 지금 색인에 없는 값입니다. 다른 값으로 몰래 바꾸지 않았습니다.', true));
+    }
+
+    body.appendChild(intro());
+
+    if (vers.length > 1) {
+      const row = G.el('div', { class: 'frow' }, [
+        G.el('span', { class: 'flabel', text: '판' })
+      ]);
+      vers.forEach(v => {
+        const on = v.version === version;
+        const chip = G.el('button', { class: 'chip', type: 'button',
+                                      'aria-pressed': on ? 'true' : 'false' },
+                          [G.el('span', { text: 'gallery-' + v.version })]);
+        chip.addEventListener('click', () => {
+          if (!on) location.search = '?v=' + encodeURIComponent(v.version);
+        });
+        row.appendChild(chip);
+      });
+      body.appendChild(row);
+    }
+
+    body.appendChild(filters());
+    body.appendChild(modeRow());
+
+    let ids = visibleScenarios();
+    if (state.scenario) ids = [state.scenario];
+
+    const tally = G.el('div', { class: 'tally' }, [
+      G.el('b', { text: String(ids.length * visibleModels().length) }),
+      G.el('span', { text: ' 칸' }),
+      G.el('span', { class: 'a2sub',
+        text: '  (시나리오 ' + ids.length + ' x 판 ' + visibleModels().length + ')' })
+    ]);
+    body.appendChild(tally);
+
+    if (!ids.length) {
+      body.appendChild(G.emptyBox('고른 조건에 칸이 없습니다', '조건을 풀어 보십시오',
+                                  () => go({ group: null, scenario: null, model: null })));
+      return;
+    }
+
+    if (state.mode === 'grid') {
+      body.appendChild(gridView(ids));
+      body.appendChild(G.el('div', { class: 'note' }, [
+        G.el('span', { text: '칸을 누르면 그 시나리오만 목록으로 펼칩니다. ' +
+          '재생은 그 자리에서 합니다.' })
+      ]));
+      foot();
+      return;
+    }
+
+    ids.forEach(id => body.appendChild(scenarioBlock(id)));
+
+    body.appendChild(G.el('p', { class: 'cmpnote' }, [
+      G.el('b', { text: '컷과 숫자는 같은 실행에서 나왔습니다. ' }),
+      G.el('span', { text: '위 숫자는 그 실행의 env ' + data.protocol.num_envs +
+        ' 칸 집계이고, 컷은 그중 한 칸입니다. 한 칸이 ' +
+        data.protocol.num_envs + ' 칸을 대표한다고 읽지 마십시오.' })
+    ]));
+    foot();
+  }
+
+  function foot() {
+    document.getElementById('foot').textContent =
+      '하네스 ' + data.protocol.harness + ' · env ' + data.protocol.num_envs +
+      ' · 시드 ' + data.protocol.seed + ' · ' + data.protocol.terrain +
+      ' · 평가 ' + (data.evaluated_at ? data.evaluated_at.slice(0, 10) : '미기록');
+  }
+
+  window.addEventListener('popstate', () => location.reload());
+  if (!rejected.length) push(true);
+  draw();
+})();
+</script>
+</body>
+</html>

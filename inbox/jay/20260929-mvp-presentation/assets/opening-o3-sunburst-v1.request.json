@@ -1,0 +1,16 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "af7e453c-7739-4c54-a746-655ca7401827"
+    }
+  ],
+  "prompt": "Use ONLY TOP RIGHT panel of reference 1. Close body-height downward view of the original chipped concrete lip and the black missing-floor void beyond it. Keep its diagonal edge, exposed short rusty rebar, camera pitch and crop EXACTLY. No distant hallway or robot. Direction is from texture inspection to discovering missing support. Preserve darkness beyond edge. Do NOT turn this into a broad floor crack or a clean saw-cut slot.\n\nReference 1 is the ONLY composition and terrain master. Output ONE standalone 16:9 shot, not a contact sheet. Preserve exact camera orientation, lens perspective, slab silhouettes, gaps, rubble distribution, water locations, pipes, columns and destination position. No rebuilding, widening, straightening, smoothing or simplifying the route. Do not import background or camera geometry from any other reference. No additional props, hands, flashlight objects, people, text or HUD.\n\nMATERIAL AND TONAL CORRECTION IS ESSENTIAL, not a subtle optional finish. The scene reference is approved ONLY for geometry and composition, NOT its current glossy HDR rendering. Replace that rendering throughout the ENTIRE ENVIRONMENT, not just the robot.\nPhotographic low-key exposure with restrained contrast and soft highlight roll-off. Reduce hard white sparkles across foreground concrete, pipework and water. Preserve surrounding water and a few subdued, broken reflections; do not dry the flooded space. Concrete is predominantly rough, porous and diffuse, with irregular dusty dry patches, damp dark patches and isolated small puddles, not an evenly lacquered glossy surface. Rust is dull and coarse, not polished copper. Rubber feet absorb light; painted gray robot shell has broad soft satin reflections, never chrome or plastic glare.\nRemove crunchy local contrast, clarity enhancement, edge halos, excessive sharpening, saturated orange rust and blue/orange grading. Shadows remain dark yet contain modest natural texture. Do not merely darken the whole picture, gray-wash it, blur detail or add haze to hide the problem. Keep original light direction and practical beacon position, but soften reflected highlights and tonal transitions visibly. Natural imperfect surface variation, muted neutral color, no showroom polish."
+}

@@ -1,0 +1,116 @@
+[
+  {
+    "index": 0,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "3a6979b8-25fe-414d-a910-447ad4a10379"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the MISSION ON BLACK frame. Keep the background black, no hall. Reduce the harsh white title and intense line glow to readable pale green with understated bloom; preserve exact mission objectives and contour design. Do not make black gray. No photographic environment is to be added."
+    }
+  },
+  {
+    "index": 1,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "820eaf2f-457f-4fc5-ae22-4971580b0526"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the WIDE TERRAIN OBSERVATION frame. Preserve all command/state values and attitude readout. Specifically tone down the wet white speckles on the middle support, sharpened concrete faces and glittering foreground. Keep scan point locations and terrain alignment, but make points delicate rather than bright beads. The gap remains open. The tiny physical beacon stays red."
+    }
+  },
+  {
+    "index": 2,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "8217f4be-62cf-42ad-b058-688887cc1a6f"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the CLOSE SCAN-ONLY frame. Preserve no-HUD/no-text composition. Green scan points and mesh must read as fine moderate-intensity data on a subdued photographic surface, not glowing beads over glossy varnish. Preserve actual surface attachment and empty gap. Reduce the harsh mesh/rock contrast without smearing the scan or filling the void."
+    }
+  },
+  {
+    "index": 3,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "b07fe5ef-0ef1-48ad-acd2-85fdc4f1b4e0"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the TARGET RECORDING frame. Preserve fitted cabinet and beacon boxes, exact REC and timer, all wording and geometry. Dull the shiny cabinet, rounded pipes and foreground wet sparkle. Green night vision remains readable and dimly textured, with controlled beacon highlight rather than a blown-out white dome. Preserve target location."
+    }
+  },
+  {
+    "index": 4,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "d8f8bd97-0e03-49fd-b25a-ac85338914ec"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the TRANSFER 68% frame. Preserve every word and exact 68% progress with its existing geometry. Reduce hot white ring, letters and bar to controlled pale green. The same cabinet behind the UI must look matte and subdued, not high-contrast hammered chrome. Preserve shapes and camera."
+    }
+  },
+  {
+    "index": 5,
+    "params": {
+      "model": "gpt_image_2_5",
+      "variant": "sunburst",
+      "quality": "high",
+      "resolution": "2k",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "3aaba890-16d3-491f-b566-b8dd8edf9fb3"
+        }
+      ],
+      "prompt": "TONAL AND MATERIAL CORRECTION ONLY. Edit the supplied approved composition into ONE full-frame 16:9 image. Preserve EXACT framing, geometry, typography, all wording, numeric values, positions and sizes of every HUD element. Do not redesign or add detail.\nThe previous result looks excessively HDR-processed: harsh local contrast, razor-sharp surface detail, sparkling wet highlights and crushed black shadows. Correct these qualities visibly. Use subdued photographic microcontrast, gentler transitions through the midtones, smooth restrained highlight roll-off, soft natural reflected light, imperfect matte material response. Reduce clarity/texture sharpening especially concrete, metal edges and wet patches. Do not replace this with global darkness, gray fog, a milky lifted-black wash, blurry lettering or defocus. Keep spatial depth and danger readable.\nFor any photographic background: MOST concrete is dull gray-green rough matte with varied dry/damp patches; reflections remain only in actual small puddles and water, broad and subdued rather than tiny white glitter. Rust is dark and diffuse, not polished metal. Suppress specular halos and hot white outlines. Reveal modest shadow detail in solid surfaces while voids remain dark. No cinematic HDR crunch, plastic varnish, chrome, exaggerated wetness, orange teal grading or contrast boost.\nHUD: keep crisp legible coding monospace text and precise thin geometric strokes, but reduce white-hot brightness and phosphor bloom. Muted luminous green on observation/mission/transfer; restrained red on completion. Graphics stay clean, not blurred. Preserve the hierarchy between dim secondary lines and primary information. No new labels, data, glyphs or layout.\n\nThis is the RED MISSION COMPLETE 100% frame. Preserve exact \"MISSION COMPLETE\", \"100%\", \"SITE DATA RECEIVED\", \"RECEIPT CONFIRMED\", bar and ring layout. Red UI remains the clear completion state. Reduce intense red reflection on foreground water, red beacon bloom and high-contrast cabinet edge highlights. Background stays restrained dark photographic material; only the interface and small beacon need red emission. Do not flood the room with red light."
+    }
+  }
+]

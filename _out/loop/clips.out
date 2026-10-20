@@ -1,0 +1,15 @@
+찍는 중 stepping_stones track_side (절대 최저 칸 · 0 %. 무엇이 안 되는지 눈으로 본다)
+찍는 중 stepping_stones track_high (절대 최저 칸 · 0 %. 무엇이 안 되는지 눈으로 본다)
+찍는 중 rails-fast track_side (배포본 21 % 를 91 % 로 올린 칸)
+찍는 중 rails-fast track_high (배포본 21 % 를 91 % 로 올린 칸)
+찍는 중 gap-slow track_side (iter1500 에서 떨어졌던 칸 (2500 은 98 %))
+찍는 중 gap-slow track_high (iter1500 에서 떨어졌던 칸 (2500 은 98 %))
+찍는 중 floating_ring-easy track_side (난이도 0.1 인데 1 % · «단조롭지 않다»)
+찍는 중 floating_ring-easy track_high (난이도 0.1 인데 1 % · «단조롭지 않다»)
+찍는 중 backward track_side (후진 명령 · 생존은 하는데 안 물러난다)
+찍는 중 backward track_high (후진 명령 · 생존은 하는데 안 물러난다)
+끝. 깨짐 검사로 넘어간다
+  File "<stdin>", line 18
+    print("  «막힘» %s
+          ^
+SyntaxError: unterminated string literal (detected at line 18)

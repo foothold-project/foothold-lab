@@ -1,0 +1,134 @@
+{
+  "argv": [
+    "sim/eval/record_terrain_demo.py",
+    "--checkpoint",
+    "C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000/model_3000.pt",
+    "--output_dir",
+    "sim/eval/results/20260929-traingap/forward_gap",
+    "--terrain",
+    "forward_gap",
+    "--terrain_set",
+    "train_fwdgap",
+    "--difficulty",
+    "0.5",
+    "--terrain_rows",
+    "3",
+    "--terrain_cols",
+    "3",
+    "--cut",
+    "A",
+    "--view",
+    "topdown",
+    "--title",
+    "forward_gap · v1 trained",
+    "--num_envs",
+    "9",
+    "--columns",
+    "3",
+    "--rows",
+    "3",
+    "--spacing",
+    "2.5",
+    "--width",
+    "1920",
+    "--height",
+    "1080",
+    "--eval_duration",
+    "3.0",
+    "--command_vx",
+    "1.0",
+    "--gate",
+    "off",
+    "--preset",
+    "slow",
+    "--crf",
+    "20",
+    "--device",
+    "cuda:0"
+  ],
+  "cut": "A",
+  "terrain": "forward_gap",
+  "difficulty_range": [
+    0.5,
+    0.5
+  ],
+  "eval_spec_version": 2,
+  "trace_csv": null,
+  "gap_aware_scan": true,
+  "height_scan_miss_value": 1.0,
+  "video": "flat_army_A_9_topdown.mp4",
+  "bytes": 526736,
+  "num_envs": 9,
+  "formation": {
+    "columns": 3,
+    "rows": 3
+  },
+  "formation_extent_m": {
+    "width": 5.0,
+    "depth": 5.0
+  },
+  "spacing_m": 2.5,
+  "camera": {
+    "view": "topdown",
+    "eye_m": [
+      -2.6374998092651367,
+      0.0,
+      17.6
+    ],
+    "target_m": [
+      -1.6374998092651367,
+      0.0,
+      0.0
+    ],
+    "horizontal_fov_deg": 60.000000665109205,
+    "horizontal_aperture": 20.954999923706055,
+    "focal_length": 18.14756202697754,
+    "final_horizontal_fov_deg": 60.000000665109205,
+    "final_horizontal_aperture": 20.954999923706055,
+    "final_focal_length": 18.14756202697754
+  },
+  "gate_line": {
+    "progress_m": 10.0,
+    "visible": false
+  },
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 50,
+  "frames": 150,
+  "video_duration_s": 3.0,
+  "seed": 42,
+  "command_vx_mps": 1.0,
+  "eval_duration_s": 3.0,
+  "spawn_xy_range_m": 0.1,
+  "yaw_range_deg": 5.0,
+  "joint_pos_scale": 0.05,
+  "policy_checkpoint": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_gap_nvidia\\2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000\\model_3000.pt",
+  "policy_sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+  "env_origins_max_error_m": 0.0,
+  "encoding": {
+    "codec": "libx264",
+    "crf": 20,
+    "preset": "slow"
+  },
+  "timing_s": {
+    "app_and_imports": 11.284789200057276,
+    "environment_creation_and_reset": 5.745950900018215,
+    "policy_load": 0.3334347999189049,
+    "render_warmup": 0.3155739000067115,
+    "recording_total": 14.756987300002947,
+    "render_per_frame_mean": 0.03076926866468663,
+    "render_per_frame_median": 0.030355799943208694,
+    "simulation_step_mean": 0.05011734899583479,
+    "process_total": 32.44228860002477
+  },
+  "frame_inspection": {
+    "status": "pending external av inspection",
+    "preview_frames": {
+      "0": "A_topdown_frame0000.png",
+      "74": "A_topdown_frame0074.png",
+      "149": "A_topdown_frame0149.png"
+    }
+  }
+}

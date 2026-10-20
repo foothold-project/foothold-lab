@@ -1,0 +1,16 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "b25dfa46-7b42-4686-97b6-cba55d223dfa"
+    }
+  ],
+  "prompt": "Edit ONLY the TOP LEFT panel of the supplied six-panel reference into ONE standalone 16:9 cinematic image. Keep that centered FRONTAL WIDE view of the enormous ruined hall, original tall columns, narrow jagged broken causeway, flooded side pits, central vanishing point and tiny distant red beacon. No robot. Do not output a contact sheet.\n\nREPLACE THE LIGHTING. This frame must unmistakably show an active off-camera inspection beam discovering the terrain in darkness, NOT an evenly underexposed room with a slightly bright floor. The unseen source is immediately behind and slightly left of this LOW POV camera, aimed forward and slightly right. It is NOT a ceiling light. Its broad, oblique, soft-edged cone cuts through a very small amount of existing thin mist. Show a faint but readable widening shaft in the air, never a sharp laser tube or opaque white triangle. The source, lamp, flashlight, hand and operator stay entirely outside the image.\n\nThe beam strikes a jagged middle-foreground slab edge: within that lit footprint, rough concrete aggregate and a short rusty pipe are clearly exposed in neutral-cool white light. The footprint crosses the edge and breaks with surface geometry, with plausible shadows behind raised fragments and only faint reflected light on adjacent water. Light dies rapidly outside its footprint; most of the hall stays deeply dark. Preserve just enough far-column silhouettes and the tiny red beacon to read depth and scale. NO residual overhead skylight or blue ambient illumination exposing the whole hall. This is a frozen instant DURING a searching sweep, not the completely black first frame.\n\nStrong spatial separation of illuminated surfaces from unseen darkness is intentional. This is DIFFERENT from exaggerated HDR material rendering: inside the illuminated area keep soft photographic highlight roll-off, natural detail, no white glitter, no edge sharpening halos. Rough porous concrete has irregular dry and damp patches; only actual puddles reflect. Dull rust, muted neutral palette, no orange spotlight, no amber wash, no glossy lacquer on every surface. Do not solve this by dimming the entire picture, a circular vignette, adding fog everywhere, or a postproduction spotlight sticker. The light must visibly interact with actual edges, surface orientation and occlusion. No HUD, labels, text, border or new props."
+}

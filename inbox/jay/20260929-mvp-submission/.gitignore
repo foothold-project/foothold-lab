@@ -1,0 +1,6 @@
+/source/media/*.mp4
+/source/media/*.url
+/qa/
+/tmp/
+__pycache__/
+/output/*.zip

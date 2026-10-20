@@ -1,0 +1,20 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "79552373-d67e-40f4-a5a0-ce195aa1c4a2"
+    },
+    {
+      "role": "image",
+      "value": "d9d9ac3e-19b3-43ad-b767-8239c4dbeee2"
+    }
+  ],
+  "prompt": "Create the matching SEATED END FRAME of reference 1, which is the APPROVED standing shot. Reference 1 is the absolute master for the entire environment, camera, framing, robot location, scale, identity, exposure and material texture. Reference 2 is ONLY a rough pose guide for hindquarters lowered and front legs supporting; do NOT copy its background or inaccurate thick limb details.\n\nChange ONLY the Go2 pose from standing to sitting IN PLACE. Keep both front foot contact positions fixed on the original ground. Front legs support the raised front torso naturally; hind knees fold and hindquarters lower into a compact mechanically plausible quadruped sit, with rear feet supported nearby. Its front camera faces the same equipment just behind the viewer. Preserve slender actual Unitree Go2 links and small rounded black foot caps. No human pelvis, no dog paws, no extra limbs, no prone or lying posture, no swollen elbow joints.\nDo not translate the robot, enlarge it, turn it, move the camera or alter the field of view. Its head may lower slightly as the body settles; retain the original horizontal center and location.\n\nEverything except the robot's articulated pose and the physically corresponding small reflection/contact shadow MUST remain unchanged: the newly corrected irregular causeway immediately behind it, open water beside the path, the climbed rear edge, the foreground landing, debris, pillars, pipework, far mist, dim light and puddles. No new gap or island in front, no return to full-width stair bands, no new beacon in the distance. Match the approved frame's restrained photographic material and tone, without increasing sharpness, contrast, HDR, gloss or glow. No text, HUD, annotations or panels. One single full 16:9 film frame."
+}

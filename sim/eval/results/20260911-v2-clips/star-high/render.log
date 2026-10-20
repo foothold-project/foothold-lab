@@ -1,0 +1,251 @@
+﻿Loading user config located at: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260915_204609.log
+2026-09-15T11:46:09Z [21ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\8a02daf3-e210-432e-af2a-f0d2466364d7.dmp'
+2026-09-15T11:46:09Z [23ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\9ffac3ff-976d-4b0d-8864-09044fcfcfc4.dmp'
+2026-09-15T11:46:09Z [24ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\37620b13-ea45-460a-8697-dcf1e554e6dc.dmp'
+2026-09-15T11:46:09Z [26ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\8eb9e91c-ab5a-4b7e-bf00-45d7763ae2fe.dmp'
+2026-09-15T11:46:12Z [2,689ms] [Warning] [carb.cudainterop.plugin] CUDA_VISIBLE_DEVICES environment variable is set.
+2026-09-15T11:46:12Z [2,690ms] [Warning] [carb.cudainterop.plugin] Note CUDA device enumeration and Omniverse device enumeration are different.
+2026-09-15T11:46:12Z [2,690ms] [Warning] [carb.cudainterop.plugin] Setting CUDA_VISIBLE_DEVICES can lead to undesired behavior or crashes.
+2026-09-15T11:46:12Z [2,775ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-09-15T11:46:12Z [2,775ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+2026-09-15T11:46:12Z [2,776ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-09-15T11:46:12Z [2,776ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          |        |     | 15979   MB | 10de      | ebd10100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 15979   MB | 10de      | e5e60100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.8875
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 179323
+| Total Page/S[INFO][AppLauncher]: The argument 'width' will be used to configure the SimulationApp.
+[INFO][AppLauncher]: The argument 'height' will be used to configure the SimulationApp.
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: C:\isaac\IsaacLab\apps\isaaclab.python.rendering.kit
+[PASS] 지형 집합 unseen10 · UnitreeGo2GeneralizationEnvCfg · 10종
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go2.agents.rsl_rl_ppo_cfg:UnitreeGo2RoughPPORunnerCfg
+[PASS] 슬로우모션 4x · decimation 4 -> 1 · 초당 200장 찍는다
+
+[36m=====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\AI-WS01\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-09-15_20-46-29.log[0m
+[36m=====================================================================================================================[0m
+
+[33m20:46:29 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+wap (MB): 278025 | Free Page/Swap: 159571
+|---------------------------------------------------------------------------------------------|
+2026-09-15T11:46:17Z [7,647ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-09-15T11:46:17Z [7,669ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+2026-09-15T11:46:18Z [8,747ms] [Warning] [pxr.Semantics] pxr.Semantics is deprecated - please use Semantics instead
+2026-09-15T11:46:19Z [10,121ms] [Warning] [omni.graph.core.plugin] Found duplicate of category 'Replicator' - was 'Annotators', adding 'Fabric Reader'
+2026-09-15T11:46:19Z [10,121ms] [Warning] [omni.graph.core.plugin] Category 'Replicator' not accepted on node type 'omni.replicator.core.FabricReader' in extension 'omni.replicator.core'
+2026-09-15T11:46:19Z [10,122ms] [Warning] [omni.replicator.core.scripts.extension] No material configuration file, adding configuration to material settings directly.
+2026-09-15T11:46:24Z [14,941ms] [Warning] [omni.kvdb.plugin] Disabling key-value database because another kit process is locking it
+2026-09-15T11:46:24Z [14,981ms] [Warning] [omni.fabric.plugin] Warning: attribute overrideClipRange not found for bucket id 9
+
+2026-09-15T11:46:35Z [25,245ms] [Warning] [omni.hydra] Mesh '/__Prototype_9305111187776833488/mesh_0' has corrupted data in primvar 'st': buffer size 6270 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,245ms] [Warning] [omni.hydra] Mesh '/__Prototype_14802337009601107151/mesh_0' has corrupted data in primvar 'st': buffer size 6270 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,245ms] [Warning] [omni.hydra] Mesh '/__Prototype_16843574750858737774/mesh_0' has corrupted data in primvar 'st': buffer size 6270 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_40291690847753013/mesh_0' has corrupted data in primvar 'st': buffer size 56922 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_16957123715460454689/mesh_0' has corrupted data in primvar 'st': buffer size 56922 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_15076971337443443075/mesh_0' has corrupted data in primvar 'st': buffer size 6270 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_16843574750858737774/mesh_0' has corrupted data in primvar 'st_1': buffer size 19536 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_9733778754454287890/mesh_0' has corrupted data in primvar 'st': buffer size 35124 doesn't match expected size 90402 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_40291690847753013/mesh_0' has corrupted data in primvar 'st_1': buffer size 54198 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_3985647859702375598/mesh_0' has corrupted data in primvar 'st': buffer size 56922 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_9733778754454287890/mesh_0' has corrupted data in primvar 'st_1': buffer size 55278 doesn't match expected size 90402 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_15272775671167379599/mesh_0' has corrupted data in primvar 'st': buffer size 35124 doesn't match expected size 90378 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] [INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.005
+	Environment step-size : 0.005
+[INFO] Generating terrains randomly took : 0.554442 seconds
+[INFO]: Time taken for scene creation : 2.636242 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 1
+	Environment spacing   : 2.5
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 4.919453 seconds
+[33m20:46:36 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++------------------------------------------------+
+|              Active Command Terms              |
++-------+---------------+------------------------+
+| Index | Name          |          Type          |
++-------+---------------+------------------------+
+|   0   | base_velocity | UniformVelocityCommand |
++-------+---------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 2 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++----------+---------------------------+
+|  Index   | Name                      |
++----------+---------------------------+
+|    0     | physics_material          |
++----------+---------------------------+
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++---------+---------------------------+
+|  Index  | Name                      |
++---------+---------------------------+
+|    0    | reset_base                |
+|    1    | reset_robot_joints        |
++---------+---------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (235,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_lin_vel                   |     (3,)    |
+|     1     | base_ang_vel                   |     (3,)    |
+|     2     | projected_gravity              |     (3,)    |
+|     3     | velocity_commands              |     (3,)    |
+|     4     | joint_pos                      |    (12,)    |
+|     5     | joint_vel                      |    (12,)    |
+|     6     | actions                        |    (12,)    |
+|     7     | height_scan                    |    (187,)   |
++-----------+--------------------------------+-------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 2 active terms.
++---------------------------------+
+|     Active Termination Terms    |
++-------+--------------+----------+
+| Index | Name         | Time Out |
++-------+--------------+----------+
+|   0   | time_out     |   True   |
+|   1   | base_contact |  False   |
++-------+--------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++-----------------------------------------+
+|           Active Reward Terms           |
++-------+----------------------+----------+
+| Index | Name                 |   Weight |
++-------+----------------------+----------+
+|   0   | track_lin_vel_xy_exp |      1.5 |
+|   1   | track_ang_vel_z_exp  |     0.75 |
+|   2   | lin_vel_z_l2         |     -2.0 |
+|   3   | ang_vel_xy_l2        |    -0.05 |
+|   4   | dof_torques_l2       |  -0.0002 |
+|   5   | dof_acc_l2           | -2.5e-07 |
+|   6   | action_rate_l2       |    -0.01 |
+|   7   | feet_air_time        |     0.01 |
+|   8   | flat_orientation_l2  |      0.0 |
+|   9   | dof_pos_limits       |      0.0 |
++-------+----------------------+----------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+Creating window for environment.
+[INFO]: Completed setting up the environment...
+[지형] star · x -28.0~-28.0 y -28.0~-28.0 z 0.00
+python.exe : 
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:245: 
+UserWarning: The observation configuration dictionary 'obs_groups' must contain the 
+'policy' key. As an observation group with the name 'policy' was found, this is 
+assumed to be the observation set. Consider adding the 'policy' key to the 
+'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+At C:\Users\AI-WS01\AppData\Local\Temp\claude\C--Users-AI-WS01-Desktop-jay-Claude\b14aa
+b75-8cb9-492d-9e14-80dc06bf7290\scratchpad\render_masters.ps1:82 char:5
++     & "$PY\python.exe" sim/eval/record_terrain_demo.py `
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\AI-WS0...future version.:String) 
+    [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  warnings.warn(
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\utils\utils.py:291: 
+UserWarning: The observation configuration dictionary 'obs_groups' must contain the 
+'critic' key. As the configuration for 'critic' is missing, the observations from the 
+'policy' set are used. Consider adding the 'critic' key to the 'obs_groups' dictionary 
+for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+Mesh '/__Prototype_16957123715460454689/mesh_0' has corrupted data in primvar 'st_1': buffer size 54198 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_10313189286077574570/mesh_0' has corrupted data in primvar 'st': buffer size 35124 doesn't match expected size 90378 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_15076971337443443075/mesh_0' has corrupted data in primvar 'st_1': buffer size 19536 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_9305111187776833488/mesh_0' has corrupted data in primvar 'st_1': buffer size 19536 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_15272775671167379599/mesh_0' has corrupted data in primvar 'st_1': buffer size 55254 doesn't match expected size 90378 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_10313189286077574570/mesh_0' has corrupted data in primvar 'st_1': buffer size 55254 doesn't match expected size 90378 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_3985647859702375598/mesh_0' has corrupted data in primvar 'st_1': buffer size 54198 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_14802337009601107151/mesh_0' has corrupted data in primvar 'st_1': buffer size 19536 doesn't match expected size 25806 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_1024437656791431002/mesh_0' has corrupted data in primvar 'st': buffer size 56922 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_14320411162920759682/mesh_0' has corrupted data in primvar 'st': buffer size 178533 doesn't match expected size 233784 in faceVarying primvars
+2026-09-15T11:46:35Z [25,246ms] [Warning] [omni.hydra] Mesh '/__Prototype_15426002910648438987/mesh_0' has corrupted data in primvar 'st': buffer size 35124 doesn't match expected size 90402 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_1024437656791431002/mesh_0' has corrupted data in primvar 'st_1': buffer size 54198 doesn't match expected size 111120 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_14320411162920759682/mesh_0' has corrupted data in primvar 'st_3': buffer size 11886 doesn't match expected size 233784 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_15426002910648438987/mesh_0' has corrupted data in primvar 'st_1': buffer size 55278 doesn't match expected size 90402 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_14320411162920759682/mesh_0' has corrupted data in primvar 'st_2': buffer size 6015 doesn't match expected size 233784 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_14320411162920759682/mesh_0' has corrupted data in primvar 'st_1': buffer size 6960 doesn't match expected size 233784 in faceVarying primvars
+2026-09-15T11:46:35Z [25,247ms] [Warning] [omni.hydra] Mesh '/__Prototype_14320411162920759682/mesh_0' has corrupted data in primvar 'st_4': buffer size 30390 doesn't match expected size 233784 in faceVarying primvars
+2026-09-15T11:46:38Z [28,800ms] [Warning] [omni.fabric.plugin] USD->Fabric: Unhandled array type string[]
+2026-09-15T11:46:38Z [28,809ms] [Warning] [usdrt.population.plugin] [UsdNoticeHandler] Unhandled attribute type VtArray<std::string> (prim attribute: omni:rtx:material:db:flattener:ior_constant)
+2026-09-15T11:46:38Z [28,809ms] [Warning] [usdrt.population.plugin] [UsdNoticeHandler] Unhandled attribute type VtArray<std::string> (prim attribute: omni:rtx:materi--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=235, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+[PASS] 초당 200장 찍어 50 fps 로 담는다 · 프레임 1200장
+[PASS] 발 body ['FL_foot', 'FR_foot', 'RL_foot', 'RR_foot'] -> FL/FR/RL/RR 자리 [15, 16, 17, 18]
+[PASS] 카메라 축 고정 · 출발 yaw +2.14도 · 이후 안 돈다

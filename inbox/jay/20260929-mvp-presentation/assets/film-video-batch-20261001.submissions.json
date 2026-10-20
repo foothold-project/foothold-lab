@@ -1,0 +1,94 @@
+{
+  "a": {
+    "jobs": [
+      {
+        "index": 0,
+        "job_id": "3bbb7046-2e17-43d7-a467-abaf1a66bd73",
+        "status": "pending",
+        "adjustments": {
+          "medias[0].role": {
+            "requested": "image",
+            "used": "image_references",
+            "reason": "Seedance 2.5 backend expects schema-key media roles"
+          },
+          "medias[1].role": {
+            "requested": "image",
+            "used": "image_references",
+            "reason": "Seedance 2.5 backend expects schema-key media roles"
+          }
+        }
+      },
+      {
+        "index": 1,
+        "job_id": "1d8ff642-092d-4958-afc2-827e828cfb62",
+        "status": "pending"
+      },
+      {
+        "index": 2,
+        "job_id": "5832dc5f-d566-4220-b74f-f0fd56987541",
+        "status": "pending"
+      },
+      {
+        "index": 3,
+        "job_id": "8811eb72-765f-45e1-b344-a0b06b107fb6",
+        "status": "pending"
+      },
+      {
+        "index": 4,
+        "job_id": "c2394f0c-6570-41a2-ad5e-42bea464a597",
+        "status": "pending",
+        "adjustments": {
+          "medias[0].role": {
+            "requested": "image",
+            "used": "image_references",
+            "reason": "Seedance 2.5 backend expects schema-key media roles"
+          }
+        }
+      },
+      {
+        "index": 5,
+        "job_id": "9099bc74-bb12-404c-bb78-39d18c2d0dcb",
+        "status": "pending"
+      }
+    ],
+    "submitted_count": 6,
+    "failed_count": 0
+  },
+  "b": {
+    "jobs": [
+      {
+        "index": 6,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      },
+      {
+        "index": 7,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      },
+      {
+        "index": 8,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      },
+      {
+        "index": 9,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      },
+      {
+        "index": 10,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      },
+      {
+        "index": 11,
+        "status": "submission_failed",
+        "error": "seedance_2_5 backend request failed (429): rate_limit_reached"
+      }
+    ],
+    "submitted_count": 0,
+    "failed_count": 6,
+    "error_code": "INVALID_ARGUMENT"
+  }
+}

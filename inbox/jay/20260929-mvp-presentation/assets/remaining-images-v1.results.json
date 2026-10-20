@@ -1,0 +1,68 @@
+{
+  "jobs": [
+    {
+      "index": 0,
+      "job_id": "948f0b41-4495-487e-9a09-88798bc4545d",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171415_948f0b41-4495-487e-9a09-88798bc4545d.png"
+    },
+    {
+      "index": 1,
+      "job_id": "adae6dc1-97bc-4815-8970-4b00abe9bdd3",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171420_adae6dc1-97bc-4815-8970-4b00abe9bdd3.png"
+    },
+    {
+      "index": 2,
+      "job_id": "c471636b-c897-43b5-995c-e33b19078132",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171423_c471636b-c897-43b5-995c-e33b19078132.png"
+    },
+    {
+      "index": 3,
+      "job_id": "8674cfc0-352b-49f2-a32f-c85041a045c5",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171428_8674cfc0-352b-49f2-a32f-c85041a045c5.png"
+    },
+    {
+      "index": 4,
+      "job_id": "4c80351d-e15e-469e-a601-d8cf0e24e5d4",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171432_4c80351d-e15e-469e-a601-d8cf0e24e5d4.png"
+    },
+    {
+      "index": 5,
+      "job_id": "afde734c-fce5-4e92-8dec-2c71973157d1",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171436_afde734c-fce5-4e92-8dec-2c71973157d1.png"
+    },
+    {
+      "index": 6,
+      "job_id": "d9d9ac3e-19b3-43ad-b767-8239c4dbeee2",
+      "status": "completed",
+      "type": "image",
+      "model": "gpt_image_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_171441_d9d9ac3e-19b3-43ad-b767-8239c4dbeee2.png"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "completed": 7,
+    "failed": 0,
+    "active": 0,
+    "errors": 0
+  },
+  "all_terminal": true
+}

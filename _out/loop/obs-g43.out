@@ -1,0 +1,27 @@
+걸 것 25 건 (스윕 24 · 후진 1)
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.1/v0.5   4.4 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.1/v1.0   2.3 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.1/v1.5   1.6 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.1/v0.5   4.3 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.1/v1.0   2.3 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.1/v1.5   1.6 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.3/v0.5   4.5 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.3/v1.0   2.3 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.3/v1.5   1.6 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.3/v0.5   4.8 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.3/v1.0   2.6 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.3/v1.5   1.8 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.7/v0.5   4.7 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.7/v1.0   2.5 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.7/v1.5   1.7 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.7/v0.5   5.0 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.7/v1.0   2.7 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.7/v1.5   1.9 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.9/v0.5   4.9 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.9/v1.0   2.5 분 exit=0 
+  e/sweep/v2g3-feetair01-s43-iter3000/rough6/d0.9/v1.5   1.8 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.9/v0.5   5.1 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.9/v1.0   2.7 분 exit=0 
+  sweep/v2g3-feetair01-s43-iter3000/unseen10/d0.9/v1.5   1.9 분 exit=0 
+  /v2g3-feetair01-s43-iter3000/unseen10/d0.5/vminus1.0   2.6 분 exit=0 
+끝 · 실패 0

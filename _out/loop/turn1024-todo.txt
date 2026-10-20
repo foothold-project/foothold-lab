@@ -1,0 +1,6 @@
+v2b-r|2500
+v2g2-feetair01|3000
+v2n-noise02|2500
+v2g3-feetair01-s43|1500
+v2g4-feetair01-s44|3000
+v2s-stones10|3000

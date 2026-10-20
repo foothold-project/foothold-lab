@@ -492,6 +492,115 @@ class FontTest(unittest.TestCase):
                                             "".join(missing)),
             )
 
+    def test_validate_title_accepts_the_boundary_and_rejects_one_over(self):
+        """**실제 `hud.validate_title()` 을 부른다.** 경계는 34 자다.
+
+        앞선 판은 이 시험이 자르기 로직을 **시험 안에 베껴 두었다.** 그러면
+        검사 함수가 틀려도 시험은 통과한다. 그래서 진짜 함수를 부른다.
+        """
+        ok = "H" * hud_mod.TITLE_MAX
+
+        self.assertEqual(hud_mod.validate_title(ok), ok)
+
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.validate_title("H" * (hud_mod.TITLE_MAX + 1))
+
+        self.assertIn(str(hud_mod.TITLE_MAX + 1), str(caught.exception))
+
+    def test_validate_title_rejects_chars_outside_the_baked_font(self):
+        """굽힌 서체에 없는 글자는 **두부로 찍히기 전에** 걸러야 한다."""
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.validate_title("H · 계단 · 1.5 m/s")
+
+        # **어느 글자가 문제인지 «따로» 알려 줘야 고칠 수 있다.**
+        #
+        # 여기서 `assertIn("계", ...)` 로 쓰면 안 된다. 메시지가 제목을 통째로
+        # 되풀이하므로 **빠진 글자 목록이 비어도 통과한다** `확인됨`
+        # (돌연변이 시험에서 그 구멍을 찾았다). 목록 자리를 찍어서 본다.
+        message = str(caught.exception)
+
+        self.assertIn("'계단'", message,
+                      "빠진 글자 목록을 따로 찍어야 한다: " + message)
+
+        with self.assertRaises(ValueError) as caught2:
+            hud_mod.validate_title("H · 역방향 · 1.5 m/s")
+
+        # 「방향」은 이미 LABEL_TEXTS 에 있어 «역» 만 빠진다. 부분집합 글꼴이라
+        # 낱말 단위가 아니라 «글자» 단위로 걸린다는 것을 같이 못 박는다.
+        self.assertIn("'역'", str(caught2.exception))
+
+    def test_the_cut_would_make_two_real_cuts_identical(self):
+        """**왜 `--title` 이 필요한가.** 기본 형식은 정책이 맨 뒤라 잘리면
+        나란히 놓는 두 컷의 제목이 «글자 하나까지» 같아진다.
+
+        자르기는 `Layout` 안에 있으므로 여기서는 **길이만** 본다. 두 기본
+        제목이 둘 다 상한을 넘고, 넘는 지점이 정책 이름 «앞» 이라는 것.
+        """
+        fmt = "%s · d%.1f · %.1f m/s · %s"
+        a = fmt % ("pyramid_stairs_inv", 0.5, 1.5, "model_1500")
+        b = fmt % ("pyramid_stairs_inv", 0.5, 1.5, "foothold-v1")
+
+        self.assertNotEqual(a, b)
+        self.assertGreater(len(a), hud_mod.TITLE_MAX)
+        self.assertGreater(len(b), hud_mod.TITLE_MAX)
+
+        # 상한까지 잘라 보면 둘이 같아진다 = 정책이 잘려 나간다.
+        self.assertEqual(a[:hud_mod.TITLE_MAX - 1], b[:hud_mod.TITLE_MAX - 1])
+
+        # 검사 함수도 둘 다 거부한다.
+        for title in (a, b):
+            with self.assertRaises(ValueError):
+                hud_mod.validate_title(title)
+
+    def test_the_eight_titles_we_plan_to_use_all_pass(self):
+        """쓸 제목 여덟을 **실제 함수로** 통과시켜 본다."""
+        for title in (
+                "H  · gap · 0.5 m/s",
+                "v1 · gap · 0.5 m/s",
+                "H  · floating_ring · 1.0 m/s",
+                "F  · floating_ring · 1.0 m/s",
+                "H  · rails · 1.5 m/s",
+                "D  · rails · 1.5 m/s",
+                "H  · pyr_stairs_inv · 1.5 m/s",
+                "v1 · pyr_stairs_inv · 1.5 m/s",
+        ):
+            self.assertEqual(hud_mod.validate_title(title), title)
+
+    def test_auto_title_is_checked_too_when_the_hud_will_render_it(self):
+        """**가장 위험한 경로가 자동 제목이다.**
+
+        앞선 판은 `--title` 을 «준 경우만» 검사했다. 그런데 자동 제목은
+        `pyramid_stairs_inv` 에서 48 자라 상한을 넘는다. 검사를 붙여 놓고
+        가장 위험한 자리를 그대로 두었다 `확인됨`.
+        """
+        auto = "pyramid_stairs_inv · d0.5 · 1.5 m/s · model_1500"
+
+        self.assertGreater(len(auto), hud_mod.TITLE_MAX)
+
+        # HUD 를 씌우면 화면에 나온다 -> 죽어야 한다.
+        with self.assertRaises(ValueError) as caught:
+            hud_mod.resolve_title("", auto, True)
+
+        self.assertIn(str(len(auto)), str(caught.exception))
+        self.assertIn("--title", str(caught.exception))
+
+        # HUD 를 안 씌우면 화면에 안 나온다 -> 막을 이유가 없다.
+        self.assertEqual(hud_mod.resolve_title("", auto, False), auto)
+
+    def test_given_title_is_checked_even_without_the_hud(self):
+        """손으로 준 제목은 **틀린 줄 알면서 두지 않는다.**"""
+        with self.assertRaises(ValueError):
+            hud_mod.resolve_title("H" * 35, "짧은 자동", False)
+
+        ok = "H  · gap · 0.5 m/s"
+
+        self.assertEqual(hud_mod.resolve_title(ok, "아무거나", False), ok)
+        self.assertEqual(hud_mod.resolve_title("  " + ok + "  ", "x", True), ok)
+
+    def test_cut_marker_itself_is_in_the_font(self):
+        """자를 때 붙이는 «…» 도 글꼴에 있어야 한다. 없으면 자를 때마다 두부다."""
+        self.assertIn("…", set(hud_mod.charset()))
+
     def test_reserved_font_name_is_gone(self):
         """OFL 1.1 §3. **이름 자리**에 예약된 이름이 남으면 라이선스 위반이다.
 

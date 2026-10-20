@@ -861,7 +861,7 @@
   {
    "id": "board-legacy-20260903",
    "csv": "sim/eval/results/20260903-rough10-1.0mps/summary-thr1.5.csv",
-   "note": "지형 보드가 지금 읽는 자료. 기준 정책(NVIDIA 공식 사전학습본) · 1.0 m/s · 지형마다 100판. 난이도 인자가 없고 빗나간 광선 처리도 manifest 에 없다. 방향 임계 1.5 m 로 «재채점한» 표라 현재 규격(통과선에서 0.75 m)과 같은 자로 잰 것이 아니다."
+   "note": "지형 보드가 지금 읽는 자료. 기준 정책(NVIDIA 공식 사전학습본) · 1.0 m/s · 지형마다 100 에피소드. 난이도 인자가 없고 빗나간 광선 처리도 manifest 에 없다. 방향 임계 1.5 m 로 «재채점한» 표라 현재 규격(통과선에서 0.75 m)과 같은 자로 잰 것이 아니다."
   }
  ],
  "groups": [
@@ -909,6 +909,10 @@
   "20260909-eval-harness-diagram": "protocol",
   "20260909-head-contact-observation": "diagnosis",
   "20260911-eval-protocol-v2": "protocol",
+  "20260918-postshot-3dgs-tech-analysis": "survey",
+  "20260928-rl-lineage": "diagnosis",
+  "20260928-scratch-vs-resume": "survey",
+  "20260928-v2-mvp-report": "survey",
   "NVIDIA공식체크포인트_속도단차교차평가분석": "result",
   "architecture-decision": "plan",
   "benchmark-repro-protocol": "protocol",
@@ -941,6 +945,107 @@
  },
  "releases": [
   {
+   "id": "v2",
+   "folder": "v2",
+   "main_model": "foothold-v2",
+   "difficulty": 0.5,
+   "clips": 48,
+   "evaluations": 144,
+   "terrains": 16,
+   "evaluated_at": "2026-09-25T14:30:47+00:00",
+   "summary": {
+    "speed_mps": 1.0,
+    "difficulty": 0.5,
+    "episodes_per_cell": 100,
+    "unseen": {
+     "terrains": 10,
+     "baseline_pct": 50.5,
+     "main_pct": 92.4,
+     "delta_pp": 41.9,
+     "at_or_above": 10,
+     "by_terrain": {
+      "discrete_obstacles": [
+       94.0,
+       100.0
+      ],
+      "floating_ring": [
+       0.0,
+       100.0
+      ],
+      "gap": [
+       1.0,
+       100.0
+      ],
+      "pit": [
+       2.0,
+       100.0
+      ],
+      "rails": [
+       8.0,
+       100.0
+      ],
+      "repeated_boxes": [
+       100.0,
+       100.0
+      ],
+      "repeated_cylinders": [
+       100.0,
+       100.0
+      ],
+      "star": [
+       100.0,
+       100.0
+      ],
+      "stepping_stones": [
+       0.0,
+       24.0
+      ],
+      "wave": [
+       100.0,
+       100.0
+      ]
+     }
+    },
+    "known": {
+     "terrains": 6,
+     "baseline_pct": 69.0,
+     "main_pct": 100.0,
+     "delta_pp": 31.0,
+     "at_or_above": 6,
+     "by_terrain": {
+      "boxes": [
+       34.0,
+       100.0
+      ],
+      "hf_pyramid_slope": [
+       100.0,
+       100.0
+      ],
+      "hf_pyramid_slope_inv": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs_inv": [
+       0.0,
+       100.0
+      ],
+      "random_rough": [
+       80.0,
+       100.0
+      ]
+     }
+    },
+    "scorecard_episodes": 14400
+   },
+   "headline": "학습에 없던 지형 8종에서 NVIDIA 43.9 % -> v2 88.5 %. 못 넘는 것은 stepping_stones 하나뿐이고 (8.0 %) 나머지 7종은 99.7 % 이상이다 (지형·속도마다 100판)",
+   "report": "/report-v2.html",
+   "note": "컷 48 편은 v2 것이다. 기준선 NVIDIA 와 foothold-v1 은 숫자만 싣고 영상은 v1 판에 있는 것을 쓴다 (같은 체크포인트 · sha 대조함). 평가 16종 중 rails 는 v2 가 «학습에 넣은» 지형이므로 미경험이 아니다. 성적표는 난이도 0.5 · 지형마다 100판. 영상은 그 자리의 시연 1회다."
+  },
+  {
    "id": "v1",
    "folder": "v1",
    "main_model": "foothold-v1",
@@ -958,14 +1063,82 @@
      "baseline_pct": 50.5,
      "main_pct": 84.7,
      "delta_pp": 34.2,
-     "at_or_above": 10
+     "at_or_above": 10,
+     "by_terrain": {
+      "discrete_obstacles": [
+       94.0,
+       100.0
+      ],
+      "floating_ring": [
+       0.0,
+       99.0
+      ],
+      "gap": [
+       1.0,
+       100.0
+      ],
+      "pit": [
+       2.0,
+       100.0
+      ],
+      "rails": [
+       8.0,
+       48.0
+      ],
+      "repeated_boxes": [
+       100.0,
+       100.0
+      ],
+      "repeated_cylinders": [
+       100.0,
+       100.0
+      ],
+      "star": [
+       100.0,
+       100.0
+      ],
+      "stepping_stones": [
+       0.0,
+       0.0
+      ],
+      "wave": [
+       100.0,
+       100.0
+      ]
+     }
     },
     "known": {
      "terrains": 6,
      "baseline_pct": 69.0,
      "main_pct": 100.0,
      "delta_pp": 31.0,
-     "at_or_above": 6
+     "at_or_above": 6,
+     "by_terrain": {
+      "boxes": [
+       34.0,
+       100.0
+      ],
+      "hf_pyramid_slope": [
+       100.0,
+       100.0
+      ],
+      "hf_pyramid_slope_inv": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs": [
+       100.0,
+       100.0
+      ],
+      "pyramid_stairs_inv": [
+       0.0,
+       100.0
+      ],
+      "random_rough": [
+       80.0,
+       100.0
+      ]
+     }
     },
     "scorecard_episodes": 14400
    },

@@ -25,7 +25,7 @@ GATES = [
     # 2026-09-04 정정: 여기가 기획서 «요약본» 과 초안 WBS 를 걸고 있었다. 낸 것은
     # proposal.md 와 wbs-official.md 인데 웹 페이지 자체가 없어서 걸 수도 없었다.
     # ★ 2026-09-05 팀장 지정 순서. 「관련성 순」이 아니라는 지적을 받고 바로잡았다.
-    #   기획서 -> 요약 -> 브레인스토밍 -> WBS -> 역할과 책임 -> 발표 자료.
+    #   기획서 -> 요약 -> 브레인스토밍 -> WBS -> 역할과 책임 -> 기획 발표 자료.
     #   제출 3종을 앞에 몰던 이전 순서는 팀장 지정과 달랐다. 지정이 이긴다.
     ('기획발표', datetime.date(2026, 9, 4), '운영진 제출 3종. 기획서 · 브레인스토밍 · WBS', [
         ('deliverables/plan/proposal.md', '프로젝트 기획서'),
@@ -33,19 +33,30 @@ GATES = [
         ('deliverables/plan/brainstorming.md', '브레인스토밍'),
         ('deliverables/plan/wbs-official.md', 'WBS'),
         ('deliverables/plan/roles-responsibilities.md', '역할과 책임'),
-        ('deliverables/plan/proposal-deck.md', '발표 자료'),
+        ('deliverables/plan/proposal-deck.md', '기획 발표 자료'),
     ]),
     ('A-정책', datetime.date(2026, 9, 12), '우리 지형으로 학습한 정책과 지표 세트', [
         ('deliverables/midterm/policy-metrics.md', '기준 정책 · 지표 세트'),
     ]),
+    # ★ 2026-09-29 팀장 지시. 제출본(PDF · HTML)을 이 표에서 바로 열 수 있게 한다.
+    #   요약 2장짜리는 뺐다 (「큰 의미 없는 파일」).
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
+        ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),
-    ('NAV · 실기 항법', datetime.date(2026, 11, 7), '조선대 단계 종료', [
+    # ★ 2026-10-12 팀장 확정 일정. 11/7 은 시뮬 쪽 완성 관문으로 바뀌었고,
+    #   실기 항법(SLAM · Nav2)은 11/30 으로 갔다. FINAL 은 «완성 마감» 12/7 이다.
+    #   실제 발표는 12/9 또는 12/10 (학교 · 이스트소프트 공유 대기) · 12/11 수료식.
+    #   SIM 관문은 아직 산출물 문서가 없어 목록이 비어 있다. 문서가 생기면
+    #   deliverables_docs.DOCS 와 여기 둘 다에 넣는다 (_gates_vs_docs 가 대조).
+    ('SIM · 시뮬 · 트윈 · 앱', datetime.date(2026, 11, 7),
+     '시뮬 RL · 디지털 트윈 · dashboard · app 완성', []),
+    ('NAV · 실기 항법', datetime.date(2026, 11, 30), '순정 보행 + 자율주행 SLAM · Nav2 완성', [
         ('deliverables/final/nav-report.md', '실기 항법 검증 리포트'),
     ]),
-    ('FINAL · 최종발표', datetime.date(2026, 12, 11), '지정 코스 자율주행 시연', [
+    ('FINAL · 최종발표', datetime.date(2026, 12, 7),
+     '완성 마감. 실제 발표는 12/9 또는 12/10 (학교 공유 대기) · 12/11 수료식', [
         ('deliverables/final/final-report.md', '최종 실증결과 보고서'),
     ]),
 ]

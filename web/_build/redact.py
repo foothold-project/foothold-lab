@@ -49,8 +49,8 @@ def _money_rx():
 def _kat():
     """★ 답을 아는 입력으로 먼저 시험한다."""
     rx = _money_rx()
-    for s, want in (('옵션1(월20, 조선대 내)', True),
-                    ('월 100만원', True),
+    for s, want in (('옵션1(월35, 아무대 내)', True),
+                    ('월 250만원', True),
                     ('2026년 8월 13일 방문', False),
                     ('월 2회 공유 세션', False)):
         got = bool(rx.search(s))
@@ -121,7 +121,7 @@ def apply(md, where=''):
         return MASK
 
     out = rx.sub(_mask, md)
-    # 「월 100만원」은 앞 대안이 「월 100만」까지만 먹어 「원」이 남는다. 꼬리를 턴다.
+    # 「월 250만원」은 앞 대안이 「월 100만」까지만 먹어 「원」이 남는다. 꼬리를 턴다.
     out = re.sub(re.escape(MASK) + r'\s*원', MASK, out)
     note = ('> **이 페이지에서 가린 것**: 계약·대여 **금액 %d곳**. 팀 내부에서는 저장소의\n'
             '> 원본(`%s`)에 그대로 남아 있습니다. 금액은 상대가 있는 정보라 공개하지 않습니다.'

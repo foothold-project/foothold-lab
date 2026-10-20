@@ -1,0 +1,17 @@
+{
+  "file": "opening-o7-seedance25-v1.mp4",
+  "duration_seconds": 5.05,
+  "video": {
+    "width": 854,
+    "height": 480,
+    "fps": 24.0,
+    "codec": "h264"
+  },
+  "audio": [
+    {
+      "codec": "aac",
+      "rate": 32000,
+      "channels": 2
+    }
+  ]
+}

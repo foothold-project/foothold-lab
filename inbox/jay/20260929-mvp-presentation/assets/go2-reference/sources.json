@@ -1,0 +1,101 @@
+[
+  {
+    "file": "front-render.jpg",
+    "title": "정면 · 카메라와 하부 LiDAR",
+    "kind": "공식 제품 렌더",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://www.unitree.com/images/b5fffd3e4fc04e6f9fcafedb9516b341_3840x2146.jpg",
+    "capture_seconds": null,
+    "accessed": "2026-09-30",
+    "sha256": "38d5b57b9e7ea08114b52f40674e4de069eaf2f8e9dc59bfdcb27f1b30baaa97",
+    "bytes": 199343
+  },
+  {
+    "file": "side-walk.png",
+    "title": "측면 · 몸통 비율과 가느다란 다리",
+    "kind": "공식 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/b666bad5b37742cb940f210eb097ac37.mp4",
+    "capture_seconds": 6.51,
+    "accessed": "2026-09-30",
+    "sha256": "74f8d6b850fa33cdc82495af8d7ecb4af5b5ea0a230dae7d0ec417f48d425de4",
+    "bytes": 453815
+  },
+  {
+    "file": "rear-walk.png",
+    "title": "후면 · 보행 중 뒷몸통과 관절",
+    "kind": "공식 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/1cededa1817a478381e62863e0a4bb3a.mp4",
+    "capture_seconds": 4.57,
+    "accessed": "2026-09-30",
+    "sha256": "825b569013595897574dd6464669032fdb1974bbc252b0c155bfe94a4db53fc5",
+    "bytes": 648402
+  },
+  {
+    "file": "rear-walk-wide.png",
+    "title": "후면 보조 · 조금 더 먼 거리",
+    "kind": "공식 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/1cededa1817a478381e62863e0a4bb3a.mp4",
+    "capture_seconds": 3.68,
+    "accessed": "2026-09-30",
+    "sha256": "32b71fe60989f89efd3bf01017eafaf7a802ade5e697825a3dc408520fd43045",
+    "bytes": 761203
+  },
+  {
+    "file": "head-detail.jpg",
+    "title": "머리 · 전면 세로 패널과 하부 하우징",
+    "kind": "공식 제품 렌더",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://www.unitree.com/images/c2555e3813074ba6a1f2e124ee7e90cf_3840x2160.jpg",
+    "capture_seconds": null,
+    "accessed": "2026-09-30",
+    "sha256": "e75a53c3462b5e4827e6b7da3c663690ab5ab52cd64552b397739d43370b5122",
+    "bytes": 217398
+  },
+  {
+    "file": "component-map.jpg",
+    "title": "전체 구성 · 관절과 센서 위치",
+    "kind": "공식 제품 도해",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://www.unitree.com/images/e41651fe455e463bb25f1ef33ece3809_1920x1370.jpg",
+    "capture_seconds": null,
+    "accessed": "2026-09-30",
+    "sha256": "46bc9169f7ac884b6853a361f145931268ee263a047c8d6b68748181201b518c",
+    "bytes": 165819
+  },
+  {
+    "file": "body-three-quarter.png",
+    "title": "기본 외형 · 상부 추가 모듈 없음",
+    "kind": "공식 제품 소개 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/b427f04cbbfd4b428b4e8dfe2a54436e.mp4",
+    "capture_seconds": 0.1,
+    "accessed": "2026-09-30",
+    "sha256": "a2870db8459c8c7200a430719ffe1be76c5644417349edb106a79d6c72917a86",
+    "bytes": 213982
+  },
+  {
+    "file": "module-d435i.png",
+    "title": "추가 모듈 · D435i 소개",
+    "kind": "공식 제품 소개 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/b427f04cbbfd4b428b4e8dfe2a54436e.mp4",
+    "capture_seconds": 1.59,
+    "accessed": "2026-09-30",
+    "sha256": "469f28d2957f7905a25e6edfdfc254a934763ada5105c791c8b662e416ffbfbc",
+    "bytes": 283629
+  },
+  {
+    "file": "module-hesai.png",
+    "title": "추가 모듈 · HESAI 소개",
+    "kind": "공식 제품 소개 영상 프레임",
+    "source_page": "https://www.unitree.com/go2/",
+    "source_url": "https://oss-global-cdn.unitree.com/static/b427f04cbbfd4b428b4e8dfe2a54436e.mp4",
+    "capture_seconds": 3.83,
+    "accessed": "2026-09-30",
+    "sha256": "6d855a1d5cbeb3d34522defad6aee8edf2b28138cf8d0689010b6f9c1a404259",
+    "bytes": 285788
+  }
+]

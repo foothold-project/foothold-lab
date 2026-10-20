@@ -1,0 +1,33 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "images": [
+    {
+      "shot": "E3",
+      "job_id": "c685c1cf-8a04-484f-90b1-c455996c5f63",
+      "file": "ending-e3-sunburst-v1.png",
+      "quote_credits": 2.75,
+      "user_approval": "pending"
+    },
+    {
+      "shot": "E4",
+      "job_id": "24fc859f-eb43-4277-9633-46067aeeb6c6",
+      "file": "ending-e4-sunburst-v1.png",
+      "quote_credits": 2.75,
+      "user_approval": "pending"
+    }
+  ],
+  "balance_before": 4925.75,
+  "balance_after": 4920.25,
+  "balance_difference": 5.5,
+  "e4_scene_reference": "E3 output",
+  "review": {
+    "observed": "E3 rear view toward red-beacon goal; E4 side view with front feet on landing slab and hind feet on departure slab; shared gray slim-legged robot and restrained scene materials",
+    "unverified": "Exact 3D slab dimensions and layout identity across views; physical gait feasibility; small fastener identity",
+    "user_feedback": "E3 lost water, narrow irregular walkway character compared with original; not adopted as scene master"
+  },
+  "video_generation_submitted": false
+}

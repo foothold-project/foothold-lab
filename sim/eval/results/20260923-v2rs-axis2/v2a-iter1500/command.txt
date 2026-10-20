@@ -1,0 +1,3 @@
+C:\Users\AI-WS01\anaconda3\envs\isaac311\python.exe sim/eval/eval_command_response.py --checkpoint C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-21_11-03-23_20260921_v2a_seed42_iter3000/model_1500.pt --label v2a-iter1500 --scenario all --num_envs 64 --seed 42 --output_dir sim/eval/results/20260923-v2rs-axis2/v2a-iter1500
+# 걸린 때 2026-09-26T02:55:20
+# 건 것 _out/loop/eval_runner.py

@@ -71,7 +71,21 @@ def build(lab):
             #   Vercel 은 대소문자를 구분하므로 404 가 났다. 실측 1건.
             #   찾을 때 쓰는 _MAP «키» 는 그대로 소문자로 둔다 (대소문자 무시 조회).
             #   바꾸는 것은 «값», 즉 실제 파일 이름뿐이다.
-            _put('docs/%s/%s' % (sub, fn), prefix + fn[:-3] + '.html')
+            # ★ 2026-09-29. **파일 이름은 `docs_pages` 가 정한다.**
+            #
+            #   여기서 `prefix + 이름` 으로 다시 조립하면 저쪽이 짧은 주소를
+            #   쓸 때 갈라진다. 실제로 갈라졌다 · 종합보고서를
+            #   `/report-v2` 로 옮기자 허브 카드와 표지 «최근» 목록이
+            #   옛 이름을 가리켜 죽은 링크가 됐다 (링크 검사가 잡음).
+            #   위 2026-09-09 주석의 대소문자 사고와 **같은 부류** 다.
+            page_name = prefix + fn[:-3] + '.html'
+            if sub == 'research':
+                try:
+                    import docs_pages as _dp
+                    page_name = _dp.page_of(fn[:-3])
+                except Exception:
+                    pass
+            _put('docs/%s/%s' % (sub, fn), page_name)
 
     # 2) docs 바로 밑의 낱개 문서
     for fn in sorted(os.listdir(docs)) if os.path.isdir(docs) else []:

@@ -74,6 +74,27 @@ def restrict(root):
 
 PUBLISH_DIR = 'research'          # 게시 대상 폴더 (docs/ 기준)
 PREFIX = 'research-'              # 생성 파일 이름 앞머리
+
+# ★ 2026-09-29. **짧은 주소를 쓰는 문서.**
+#
+#   기본은 `research-<md 이름>.html` 이다. 연구 기록은 그 규칙이 맞다.
+#   그런데 «종합보고서» 는 밖으로 내보내는 것이라 짧고 외우기 쉬운 주소가
+#   필요하다. 1 차가 `/report-v1` 이었고 2 차만 긴 주소였다
+#   (팀장 지적 2026-09-29: 「이전 종합보고서는 url 이 report-v1 인데 지금은
+#   report-v2 가 아니냐」 · 「hub-research 나 다른데서 들어가면 기존 url 로
+#   들어가지는데?」).
+#
+#   **여기 한 곳에서만 정한다.** 파일 이름과 문서 간 링크가 같은 표를 본다.
+#   옛 주소는 `web/vercel.json` 이 새 주소로 돌린다 (링크가 안 깨진다).
+SHORT_NAME = {
+    '20260928-v2-mvp-report': 'report-v2.html',
+}
+
+
+def page_of(slug):
+    """그 문서가 나갈 파일 이름. 짧은 주소 표가 먼저다."""
+    return SHORT_NAME.get(slug, PREFIX + slug + '.html')
+
 INDEX = 'research.html'           # 목록 페이지
 
 # 증거 표기 → 칩 등급
@@ -262,15 +283,31 @@ def _report_eyebrows(html):
 
 
 def find_lab():
-    """문서와 자산을 가져올 «정본 한 트리». collect_docs 도 이것을 쓴다 (#408)."""
-    best, n = None, -1
+    """문서와 자산을 가져올 «정본 한 트리». collect_docs 도 이것을 쓴다 (#408).
+
+    ★ 2026-09-28 실측 사고. #408 은 «전부 훑어 합치던» 것을 «한 트리만
+      읽는다」로 고쳤는데, 그 «한 트리를 고르는 규칙» 이 여전히 옛 방식
+      (docs/research 안 .md 파일이 «가장 많은» 후보)이었다. `FOOTHOLD_LAB`
+      로 `_lab-main` 을 명시해 불러도, 다른 세션이 작업 중인 `foothold-lab`
+      (미커밋 변경 265개 · 연구문서가 더 많음)이 «더 많다» 는 이유로
+      뽑혔다. 명시가 있어도 무시됐다 — 있으나 마나였다.
+
+      즉 #408 은 «여러 트리를 섞어 읽는 것» 은 막았지만, «어느 트리를
+      고를지» 는 여전히 «지금 파일이 더 많은 쪽」이라는 암묵 규칙에
+      맡겨져 있었다. 다른 세션이 무엇을 커밋하는지에 따라 이 함수의
+      답이 «오늘은 A, 내일은 B」로 조용히 바뀔 수 있었다.
+
+    지금은 «순서가 곧 우선순위» 다. `LAB_CANDIDATES` 의 앞에서부터 훑어
+    «유효한 첫 후보» 를 쓴다 (docs/research 폴더가 있으면 유효). 파일
+    개수는 더는 순위에 안 끼어든다. `FOOTHOLD_LAB` 를 주면 그 값이
+    `LAB_CANDIDATES` 맨 앞에 서므로(roots.lab_candidates 참고) 이제
+    «명시하면 반드시 그것을 쓴다» 가 실제로 성립한다.
+    """
     for p in LAB_CANDIDATES:
         d = os.path.join(p, 'docs', PUBLISH_DIR)
         if os.path.isdir(d):
-            c = len([f for f in os.listdir(d) if f.endswith('.md')])
-            if c > n:
-                best, n = p, c
-    return best
+            return p
+    return None
 
 
 def collect_docs():
@@ -484,7 +521,7 @@ def build():
         #   (2026-08-13 실측: omniverse-stack 등 3편에서 링크가 텍스트로 나가고 있었다).
         #   대상 md 가 실제로 있을 때만 바꾼다: 죽은 링크를 새로 만들지 않는다.
         def _weblink(m):
-            return ('](research-%s.html)' % m.group(1)
+            return ('](%s)' % page_of(m.group(1))
                     if (m.group(1) + '.md') in docs
                     else m.group(0))
         md = re.sub(r'\]\(([a-z0-9-]+)\.md\)', _weblink, md)
@@ -524,7 +561,7 @@ def build():
             writer = dm.group(1) if dm else ''
         wdate = dm.group(1) if dm else '9999-99-99'
 
-        out = PREFIX + slug + '.html'
+        out = page_of(slug)
         io.open(os.path.join(VAULT, out), 'w', encoding='utf-8', newline='\n').write(
             shell(title, 'Research · 근거 기록', lede, body,
                   ([('판', ver_of(md))] if ver_of(md) else []) +

@@ -1,0 +1,14 @@
+{
+  "job_id": "b98e1f91-4815-4827-8d6c-3613b5544ad1",
+  "status": "completed",
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "resolution": "2k",
+  "quality": "high",
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_144810_b98e1f91-4815-4827-8d6c-3613b5544ad1.png",
+  "balance_before": 4984.25,
+  "balance_after": 4981.5,
+  "observed_balance_delta": 2.75,
+  "user_image_approval": "rejected",
+  "review": "사용자 지적: 공간 분위기는 그대로이고 Go2만 명도를 낮춘 것처럼 보임. 프롬프트에서 배경 노출을 승인 E2와 같게 고정한 것이 의도와 충돌. 재생성 전 연출 수정 필요."
+}

@@ -1,0 +1,186 @@
+[
+  {
+    "section": "s3",
+    "source_id": "s3-b020",
+    "before": "볼 것: 디딤돌 사이로 발이 빠지는가. 세 판 다 0 % 인데 v2 만 1.0 m/s 에서 24 % 다. 0.5 와 1.5 에서는 v2 도 0 % 다.",
+    "after": "볼 것: 디딤돌 사이에서 발을 지지하는가. 1.0 m/s에서 NVIDIA와 foothold-v1의 종합 성공률은 0%, foothold-v2는 24%다. 0.5와 1.5 m/s에서는 세 모델 모두 0%다. 한 영상의 통과 여부와 100회 평가의 성공률은 구분한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s4",
+    "before": "이것을 안 펴면 「NVIDIA 는 험지에서 자빠진다」고 잘못 읽는다.",
+    "after": "이것을 안 펴면 「NVIDIA 는 험지에서 넘어진다」고 잘못 읽는다."
+  },
+  {
+    "section": "s5",
+    "before": "NVIDIA 는 1.5 m/s 에서 무너진다.",
+    "after": "NVIDIA는 1.5 m/s에서 종합 성공률이 크게 낮아진다. 낙상 여부는 생존 지표와 구분해 해석한다."
+  },
+  {
+    "section": "s7",
+    "before": "팀장이 여러 번 「터지는 게 뭔가 이상하다」고 말했다. 나는 그것을 「어느 설정이 터뜨리나」 로 옮겨 읽었다. 실험하는 사람이 보는 자리다. 변하지 않는 변수는 그 방법으로 안 보인다.",
+    "after": "반복적인 학습 중단을 검토하면서 원인 탐색이 「어느 설정이 중단을 유발하는가」에 한정돼 있었음을 확인했다. 변한 설정만 비교하는 방법으로는 모든 실험에서 변하지 않은 변수의 영향을 찾기 어렵다.",
+    "reason": "외부 독자용으로 주체를 정리하고 통제되지 않은 실험의 한계를 보존"
+  },
+  {
+    "section": "s7",
+    "before": " 임석헌이 만든 gap 레시피를 재현한 것이 A 이고, 학습 틈 폭을 평가 기준과 같게 넓힌 것이 B 다. ",
+    "after": " 선행 실험에서 개발한 gap 레시피를 재현한 것이 A 이고, 학습 틈 폭을 평가 기준과 같게 넓힌 것이 B 다. "
+  },
+  {
+    "section": "s7",
+    "before": " 0.02 · 64 판 중 59 판이 옆으로 자빠진다",
+    "after": " 0.02 · 64 판 중 59 판이 옆으로 넘어진다"
+  },
+  {
+    "section": "s7",
+    "before": "6-12. 학습이 터진 기록 · ",
+    "after": "6-12. 학습 중단 기록 · "
+  },
+  {
+    "section": "s7",
+    "before": " 팀장 지적으로 펼친다.",
+    "after": " 검토를 거쳐 본문에 공개했다."
+  },
+  {
+    "section": "s7",
+    "before": "그리고 팀장이 잡은 것.",
+    "after": "추가 검토에서 확인한 한계는 다음과 같다."
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b020",
+    "before": "foothold-v1 의 0.92 는 살아남은 칸만의 값이다 확인됨 . slow010 에서\n64 칸 중 23 칸이 넘어져 추종비가 48 칸에서만 나온다. 넘어진 칸을 빼고\n잰 값이라 유리하게 읽힌다. 낙상률을 같이 봐야 한다 (아래 표).",
+    "after": "foothold-v1의 slow010 추종비 0.92는 추종비가 산출된 48개 환경의 집계다. 전체 64개 환경 중 낙상은 23개였다. 추종비의 유효 표본 수와 낙상 환경 수는 같은 분모를 뜻하지 않으므로 두 지표를 함께 해석해야 한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b028",
+    "before": "앞 판까지 이 절에는 숫자만 있었다. 11 절에 「평가 지표로는 안 쓰고 자료와 영상 으로 남긴다」고 적어 놓고 영상이 0 편이었다 확인됨 . 2026-09-29 에 찍었다.",
+    "after": "확장 평가의 저속 명령 네 가지와 회전 두 가지를 세 모델의 영상 18편으로 비교한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b040",
+    "before": "여기가 lin_vel_x 하한 0.4 다. 세 판이 다 비슷해진다. 명령이 학습 구간에 들어오면 차이가 없어진다는 뜻이다.",
+    "after": "0.40 m/s는 배포본 학습 명령의 전진 속도 하한이다. 이 평가에서 세 모델의 평균 추종비는 0.87~0.94였다. 더 낮은 명령보다 모델 간 차이가 작았지만, 학습 구간 진입만으로 차이가 사라진다고 단정할 수는 없다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b013",
+    "before": "저속 명령 · 실제 전진 속도 (m/s · 64 env 평균 · 명령에 가까울수록 좋다)",
+    "after": "저속 명령 · 실제 전진 속도 (m/s · 최대 64개 환경 중 유효 표본 평균 · 명령에 가까울수록 좋다)",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b019",
+    "before": "두 판이 반대 방향으로 틀린다. NVIDIA 는 아주 느리게 가라고 하면 안 간다 (0.10 을 줘도 0.006). v2g2 는 느리게 못 가서 넘어선다 (0.10 을 줘도 0.167). 우리가 lin_vel_x 하한을 0.4 로 좁혀 0.4 아래를 명령으로 배울 기회가 거의 없던 대가는 이 넘어섬 으로 나타난다. 앞 판이 적었던 「그 대가」의 방향이 틀렸다.",
+    "after": "두 모델의 오차 방향이 다르다. 0.10 m/s 명령에서 NVIDIA의 평균 전진 속도는 0.006 m/s로 미달하고, v2g2는 0.167 m/s로 초과한다. v2g2의 학습 명령 하한 0.4 m/s가 저속 추종에 영향을 줬을 가능성은 있지만, 이 비교만으로 원인을 분리해 확인한 것은 아니다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b029",
+    "before": "모두 env 51 한 칸이다. 저속 넷 · 판 셋 · 열두 칸에서 추종비가 중앙값에 가장 가까운 칸이다 (대표성 64 칸 중 1 위 ) 확인됨 . 유리한 칸을 고르면 컷이 표를 설명하지 못한다. 자막에 그 칸의 값과 64 칸 집계를 나란히 적는다.",
+    "after": "세 모델의 영상은 모두 env 51의 사례다. 캡션에서 해당 환경의 값과 전체 평가의 집계값을 구분한다. 사례 영상 하나가 64개 환경 전체를 대표하는 것은 아니다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b048",
+    "before": "양의 요레이트가 세 판 모두 약하다. +0.50 추종비가 NVIDIA 0.43 · foothold-v1 -0.00 · v2g2 0.01 이다 (64 칸 평균). 왼쪽으로 도는 것이\n오른쪽보다 훨씬 나쁘고 그것은 세 판에 공통이다. 우리 레시피가 만든\n하락이 아니다.",
+    "after": "turn_rev에서 +0.50 rad/s 명령의 평균 추종비는 NVIDIA 0.43, foothold-v1 약 0.00, v2g2 0.01이었다. 이 평가에서 양의 요레이트 추종이 약한 경향은 세 모델에 공통으로 나타났다. 다만 공통 경향만으로 학습 레시피의 영향을 배제할 수는 없다. 원인은 통제 실험으로 추가 확인해야 한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b049",
+    "before": "push_robot 은 안 넣었다. 견줄 판이 하나도 없어서 혼자 재면 읽을 수가 없다.",
+    "after": "외란 조건의 비교 평가 결과는 아직 제시하지 않는다. 외란 이벤트를 유지하는 옵션과, 외란의 크기·시점·판정 기준을 통제하는 독립 평가 시나리오는 구분해야 한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b051",
+    "before": "지금 아홉 칸은 「평지에서 명령을 따르나」만 묻는다. 미경험 험지 일반화를 근거로 내세우려면 축 2 도 험지와 방향 으로 넓혀야 한다. 넷은 아직 하네스가 없다. 없는 것을 없다고 적고, 무엇이 있어야 만들 수 있는지 적는다.",
+    "after": "현재 판정 아홉 항목은 평지에서의 명령 수행을 평가한다. 횡이동·험지 회전·장거리는 평가 하네스의 확장이 필요하다. 외란 이벤트 유지 옵션은 있지만, push_robot이라는 독립 평가 시나리오는 등록돼 있지 않다. 아래 표에서 구현과 측정의 부족을 구분한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b054",
+    "before": "쌓는 순서는 「견줄 판이 있는 것」부터다. push_robot 은 하네스가 이미 있어서 기준선 셋만 돌리면 읽을 수 있다. 횡이동은 프로필 한 줄이지만 문턱을 새로 정해야 한다. 험지 회전과 장거리는 하네스를 고쳐야 한다.",
+    "after": "외란 평가는 이벤트의 크기·방향·시점과 회복 지표를 먼저 정하고, 실제 외란이 발생하는지 확인한 뒤 기준선 세 모델을 같은 조건으로 비교한다. 횡이동은 명령 프로필과 판정 기준을, 험지 회전과 장거리는 하네스의 지형·시간 설정을 확장해야 한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b011",
+    "before": "시나리오 무엇을 묻나 하네스 돌린 판 slow010 ~ slow040 아주 느린 명령(0.10 ~ 0.40 m/s)을 따라가나 있음 19 turn_rest 멈춘 채로 도는가 있음 4 turn_rev 반대로 도는가 있음 4 push_robot 외란을 견디나 있음 0 험지 회전 · 횡보 · 장거리 없음 0",
+    "after": "시나리오 무엇을 묻나 하네스 돌린 판 slow010 ~ slow040 아주 느린 명령(0.10 ~ 0.40 m/s)을 따라가나 있음 19 turn_rest 멈춘 채로 도는가 있음 4 turn_rev 반대로 도는가 있음 4 push_robot 외란을 견디나 외란 유지 옵션 있음 · 독립 시나리오 없음 0 험지 회전 · 횡보 · 장거리 없음 0",
+    "reason": "독립 검증 지적과 사용자 요청에 따라 구현 상태를 정정하고 제작 이력·개별 참고 실험명을 정리"
+  },
+  {
+    "section": "s10",
+    "source_id": "s10-b052",
+    "before": "넓힐 축 무엇을 묻나 왜 아직 없나 (근거) 만들려면 횡이동 ( vy ) 옆으로 가라는 명령을 따르나 시나리오 열 개가 모두 vy 를 0.0 으로 고정 한다 확인됨 ( sim/eval/eval_command_response.py 157 ~ 262 행의 프로필 열 개를 0.1 초 간격으로 돌려 보니 가운데 값이 전부 0.0) 프로필에 vy 를 열고, 문턱을 결과를 보기 전에 정한다 험지 회전 평지가 아니라 험지에서 제자리 회전이 되나 축 2 는 지형이 plane (무한 평면) 에 고정 이다 확인됨 (축 2 probe_manifest.json 99 개 전수 가 terrain 을 plane (무한 평면) 으로 적는다) 축 2 하네스가 --terrain 을 받게 하고 축 1 의 지형 등록( sim/eval/terrains.py ) 을 재사용한다 장거리 20 초가 아니라 분 단위로 가도 안 무너지나 가장 긴 시나리오가 25 초 다 ( turn_rest ) episode_length_s 를 늘리고 드리프트 누적 을 잰다 (지금은 끝 1 초만 본다) push_robot 외란을 견디나 하네스에 있다. 견줄 판이 하나도 없다 기준선 셋(NVIDIA · foothold-v1 · 배포본) 을 같은 조건으로 한 번에 돈다",
+    "after": "넓힐 축 무엇을 묻나 왜 아직 없나 (근거) 만들려면 횡이동 ( vy ) 옆으로 가라는 명령을 따르나 시나리오 열 개가 모두 vy 를 0.0 으로 고정 한다 확인됨 ( sim/eval/eval_command_response.py 157 ~ 262 행의 프로필 열 개를 0.1 초 간격으로 돌려 보니 가운데 값이 전부 0.0) 프로필에 vy 를 열고, 문턱을 결과를 보기 전에 정한다 험지 회전 평지가 아니라 험지에서 제자리 회전이 되나 축 2 프로브는 평면 지형을 사용한다. sim/eval/eval_command_response.py의 환경 구성에서 terrain_type을 plane으로 지정한다. 축 2 하네스가 --terrain 을 받게 하고 축 1 의 지형 등록( sim/eval/terrains.py ) 을 재사용한다 장거리 20 초가 아니라 분 단위로 가도 안 무너지나 가장 긴 시나리오가 25 초 다 ( turn_rest ) episode_length_s 를 늘리고 드리프트 누적 을 잰다 (지금은 끝 1 초만 본다) push_robot 외란을 견디나 --keep_pushes는 기존 외란 이벤트를 유지하는 옵션이다. SCENARIOS에는 push_robot이 등록돼 있지 않으며, 비교 평가 결과도 없다. 외란의 크기·방향·시점과 회복 지표를 명세하고, 이벤트 발생을 검증한 뒤 NVIDIA·foothold-v1·배포본을 같은 조건으로 평가한다.",
+    "reason": "독립 검증 지적과 사용자 요청에 따라 구현 상태를 정정하고 제작 이력·개별 참고 실험명을 정리"
+  },
+  {
+    "section": "s12",
+    "source_id": "s12-b015",
+    "before": "무엇 왜 가 관측을 어떻게 다룰 것인가 지형 통로가 height_scan 하나다. 격자 그대로 넣을까 · 요약해 넣을까 · 기억을 둘까 · 가려진 곳의 값을 무엇으로 둘까 나 축 2 확장 축을 v2 부터 쌓는다 저속 넷 · turn_rest · turn_rev 는 배포본까지 쟀다 (9-2). 남은 것은 험지 회전 · 횡보 · 장거리 · push_robot 이고 하네스가 없다. turn_rev 가 0.1562 로 나빠진 것부터 본다. 평가 지표로는 안 쓰고 자료와 영상으로 남긴다 (영상은 9-2 에 열여덟 편 · 2026-09-29 에 찍었다 · 앞 판까지 0 편이었다). 넓힐 넷은 9-3 에 무엇이 있어야 만들 수 있는지 적었다. 축 2 컷 HUD 는 이 판에서 붙였다 (13 절). 하네스를 고칠 필요가 없었고, 이미 굽던 시계열 parquet 을 읽으면 됐다 다 축 2 의 자를 고친다 값과 Wilson 구간을 같이 적는다 (비용 0). 표본을 1024 로 올린다 라 resume 실험을 재개한다 터진 판 열여섯에 공통으로 있던 것이 resume 이다. fs1 · fs2 를 v2 정리 뒤에 다시 본다 마 난이도 구멍을 메운다 0.8 이 아무 판에도 없었다. 이번에 v1 · v2 열두 칸을 새로 쟀다 바 최종 배포본 확정 뒤 학습 전체 영상 정속 20 초 두 번으로 「이렇게 학습된다」를 보이고, 빨리감기로 학습이 되어 가는 과정을 40 ~ 50 초에 담는다 사 지형별 성공률이 «지형 판 하나» 의 값인지 확인한다 평가 설정이 num_rows=1 · num_cols=10 이라 지형마다 8 x 8 m 한 칸 이고 env 열 개가 그 한 판을 나눠 쓴다. 곧 100 판이 한 레이아웃에 스폰 흔들림 100 번 이다. stepping_stones 1.0 m/s 에서 그 칸의 전진 성공률이 45 % 인데, 지형을 새로 만들어 찍은 열다섯 판이 0/15 였다 (확률 0.0001 · 13 절). 다른 설정은 전부 같은 것을 확인했고 「모서리 칸이 어렵다」 가설은 기각했다. num_rows 를 올려 여러 판에서 재 보면 갈린다. 갈리면 축 1 의 지형별 숫자에 판 편차를 같이 적어야 한다",
+    "after": "무엇 왜 가 관측을 어떻게 다룰 것인가 지형 통로가 height_scan 하나다. 격자 그대로 넣을까 · 요약해 넣을까 · 기억을 둘까 · 가려진 곳의 값을 무엇으로 둘까 나 축 2 확장 축을 v2 부터 쌓는다 저속 명령과 turn_rest·turn_rev는 배포본까지 평가했다. 횡이동·험지 회전·장거리 하네스는 확장이 필요하다. 외란은 이벤트 유지 옵션만으로 독립 평가가 완성되지 않으므로 조건과 회복 지표를 먼저 정의한다. turn_rev의 낙상 0.1562를 포함한 확장 평가 결과와 사례 영상은 9절에서 제시한다. 다 축 2 의 자를 고친다 값과 Wilson 구간을 같이 적는다 (비용 0). 표본을 1024 로 올린다 라 resume 실험을 재개한다 중단된 실험에 공통으로 있던 resume의 영향을 분리해야 한다. 초기 가중치, optimizer 상태, 명령·지형 조건을 통제해 비교한다. 아직 원인이 확인된 것은 아니다. 마 난이도 구멍을 메운다 0.8 이 아무 판에도 없었다. 이번에 v1 · v2 열두 칸을 새로 쟀다 바 지형별 성공률이 «지형 판 하나» 의 값인지 확인한다 평가 설정이 num_rows=1 · num_cols=10 이라 지형마다 8 x 8 m 한 칸 이고 env 열 개가 그 한 판을 나눠 쓴다. 곧 100 판이 한 레이아웃에 스폰 흔들림 100 번 이다. stepping_stones 1.0 m/s 에서 그 칸의 전진 성공률이 45 % 인데, 지형을 새로 만들어 찍은 열다섯 판이 0/15 였다 (확률 0.0001 · 13 절). 다른 설정은 전부 같은 것을 확인했고 「모서리 칸이 어렵다」 가설은 기각했다. num_rows 를 올려 여러 판에서 재 보면 갈린다. 갈리면 축 1 의 지형별 숫자에 판 편차를 같이 적어야 한다",
+    "reason": "독립 검증 지적과 사용자 요청에 따라 구현 상태를 정정하고 제작 이력·개별 참고 실험명을 정리"
+  },
+  {
+    "section": "s14",
+    "source_id": "s14-b002",
+    "before": "영상마다 «무엇을 보여 주려고 찍었는지» 를 적는다. 실험 하나를 그냥 랜더한 것이 아니다.",
+    "after": "각 영상은 지형 통과, 명령 응답, 남은 실패를 확인하기 위한 사례다. 개별 장면의 결과와 전체 평가에서 집계한 비율을 구분해 제시한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s14",
+    "source_id": "s14-b022",
+    "before": "세 컷의 길이가 다른 것이 결과 그 자체다. stop 10 초 · hold 20 초 · turn 18 초가 규격인데 foothold-v1 의 turn 만 4.9 초에서 멈춘다.",
+    "after": "정지 전환 영상은 10초, 정지 유지 영상은 20초다. 회전 영상은 NVIDIA와 foothold-v2가 18초, foothold-v1이 6.48초다. 영상 길이와 환경의 낙상 판정 시각은 구분한다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s14",
+    "source_id": "s14-b037",
+    "before": "팀장 물음: 「원래 이렇게 4096 마리가 각 iter 에서 겹쳐서 걷는 걸 학습하고 그래?」 재 보고 답한다. 겹쳐 보이는 것은 학습에서도 맞다. Isaac Lab 은 env 여러 개를 «같은 지형 칸» 에 놓는다. env 끼리는 물리적으로 격리돼 서로 부딪지 않고, 리셋 자세 흔들림만큼만 벌어져 있다. 다른 것은 밀도였다 확인됨 . env 격자 칸 칸당 학습 4,096 10 x 20 200 약 20 마리 앞 판 컷 1,024 5 x 6 30 34 마리 4,096 으로 올려 본 컷 4,096 5 x 6 30 136 마리 · 흰 덩이가 된다 이 컷 600 5 x 6 30 약 20 마리 근거는 params/env.yaml 86 · 189 행( num_envs: 4096 ) 과 200 · 201 행 ( num_rows: 10 · num_cols: 20 ) 이다. 학습 격자 200 칸으로는 못 찍는다. 지형이 80 x 160 m 가 되어 로봇 0.7 m 가 8 px 이다. 앞서 7 px · 8 px 컷을 「안 보인다」고 버린 것과 같은 자리다. 그래서 칸은 보이는 30 칸으로 두고 마리 수를 600 으로 낮춰 칸당 밀도를 학습과 같게 맞췄다. 화면에 보이는 한 칸이 학습의 한 칸과 같다. 화면 전체가 학습 전체는 아니다 (학습은 이런 칸이 200 개다).",
+    "after": "학습에서는 4,096개 환경을 200개 지형 칸에 배치해 칸당 약 20개 환경을 사용한다. 이 영상은 30개 칸에 600개 환경을 배치해 비슷한 밀도로 재생했다. 환경 간 물리 상호작용은 격리돼 있다. 영상은 저장된 정책을 재생한 시각 자료이며 학습 전체를 실시간 촬영한 것은 아니다.",
+    "reason": "영상 제작 이력 대신 결과 해석에 필요한 조건을 서술"
+  },
+  {
+    "section": "s14",
+    "source_id": "s14-b012",
+    "before": "세 컷은 같은 판(env 8)이다 확인됨 . 앞 회차는 env 0 이었고 거기서는 foothold-v1 이 안 넘어져서 숫자와 장면이 안 맞았다. per_env.json 을 읽어 v1 이 stop · hold · turn 셋 다 넘어지는 번호 를 골랐다. 세 판에 같은 번호를 주므로 초기 자세가 같다. env 8 NVIDIA foothold-v1 foothold-v2 stop 안 넘어짐 넘어짐 안 넘어짐 hold 안 넘어짐 넘어짐 안 넘어짐 turn 안 넘어짐 넘어짐 안 넘어짐 카메라가 로봇을 따라 도느라 하늘을 보는 구간이 있다 확인됨 (전 프레임 실측 · 연속 덩이라 렌더 결함이 아니다). stop NVIDIA 는 출발 뒤 51 장 (0.16 ~ 1.2 초), turn 은 회전 중에 v1 50 장 · v2 80 장 · NVIDIA 4 장이다. hold 는 세 판 다 0 장이다.",
+    "after": "세 모델의 영상은 모두 env 8의 사례다. foothold-v1이 stop·hold·turn에서 넘어지는 사례를 골라 같은 환경 번호로 비교했다. 이 장면은 대표 사례이며, 전체 64개 환경의 낙상 비율은 별도 표로 제시한다. env 8 NVIDIA foothold-v1 foothold-v2 stop 안 넘어짐 넘어짐 안 넘어짐 hold 안 넘어짐 넘어짐 안 넘어짐 turn 안 넘어짐 넘어짐 안 넘어짐",
+    "reason": "촬영 이력을 덜고 사례 선정 방식과 전체 평가의 구분을 보존"
+  },
+  {
+    "section": "s14",
+    "before": " (전부) · 6.5 초에서 넘어져 끝난다",
+    "after": " (전부) · 대표 장면 3.5초에서 넘어지는 모습이 보인다. 낙상 판정은 3.70초이며, 전체 영상 길이는 6.48초다. 이후 환경이 초기화된다"
+  },
+  {
+    "section": "s14",
+    "before": " 팀장 요청은 「v2 넘는 거」였다.\n1.0 m/s 에서 건너는 판을 찍으려고 ",
+    "after": " 영상의 목적은 v2의 통과 사례를 보여 주는 것이었다.\n1.0 m/s 에서 건너는 판을 찍으려고 "
+  },
+  {
+    "section": "s15",
+    "source_id": "s15-b002",
+    "before": "무엇 어디 스윕 원자료 1,182 줄 sim/eval/results/20260928-v2-sweep/sweep_long.csv 난이도 x 속도 요약 같은 폴더 sweep_matrix.md 지형 x 난이도 (속도별) 같은 폴더 sweep_terrain_v*.md 빠진 칸 같은 폴더 MISSING.md · 0 건 갤러리 v2 /gallery/ 에서 v2 를 고른다 계보 실측 inbox/jay/20260928-v2-mvp/LINEAGE-FACTS.md 멈출 기준 정본 inbox/jay/20260928-v2-mvp/STOPPING-RULE.md · 규칙과 수는 8 절에 본문으로 다 적었다 평가 규격 평가 프로토콜 정본 계보 전체 우리는 왜 여덟 번 방향을 틀었나 지형 카탈로그 스틸 16 장 sim/eval/results/20260928-terrain-shots/stills/ · 펴기 전후 값은 같은 폴더 index.json 학습 진행 41.3 초 (대군 · 칸당 20 · 배속 곡선) sim/eval/results/20260929-train-army-ramp/train-army.mp4 · 웹 사본 docs/assets/video/v2/train-army.mp4 · 찍은 것 _out/loop/train_army_ramp.sh · 이은 것 _out/loop/train_army_ramp_join.py · 앞 판(가운데가 1.6 초)은 20260929-train-army-d20/ · 버린 4,096 판은 20260929-train-army-4096/ 학습 지형 비교 컷 둘 (6-6) sim/eval/results/20260929-traingap/{forward_gap,omni_gap}/flat_army_A_9_topdown.mp4 · 웹 사본 docs/assets/video/v2/train-gap-{forward,omni}.mp4 그 컷을 찍은 것 _out/loop/shoot_traingap.sh · 지형 등록은 sim/eval/terrains.py 의 train_fwdgap · train_omnigap 평지 HUD 를 얹은 것 _out/loop/axis2_hud.py · 원본은 sim/eval/results/20260929-axis2-fall/ 와 20260928-turnfall-clips/ 의 시계열 parquet · 결과는 20260929-axis2-hud/ HUD 유무를 센 것 tools/count_hud.py · 걸린 49 편 전수 · 있음 46 · 없음 3 (없는 셋은 train-army 와 학습 지형 비교 둘로, 위에서 본 다마리 컷이라 한 마리 기록이 없다) 실패 판을 찾아 찍은 것 _out/loop/shoot_failcuts.sh · 결과는 sim/eval/results/20260929-failcuts/ · 채택한 시드는 그 폴더의 chosen.txt 자리 가설을 기각한 진단 _out/loop/probe_ss_origin.sh · 결과는 sim/eval/results/20260929-ss-origin/ 판마다의 전진 거리 (100 판) sim/eval/results/20260928-devicecheck/v2g2-iter3000-unseen10-d0.5-v1.0-cuda0/generalization_raw.csv 확장 축 2 (v2g2) sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json 목적성 세 화면의 컷 아홉 편 갤러리에서 가져왔다 · NVIDIA 는 gallery/v1/clips/<지형>-v<속도>-baseline.mp4 · v1 은 같은 폴더의 -baseline 없는 것 · v2 는 gallery/v2/clips/ · 체크포인트 sha 는 gallery/versions.json 이 적어 둔 것과 대조했다 · 가져온 도구는 _out/loop 밖 임시 스크립트가 아니라 이 표에 경로로 남긴다 지형 열여섯 표의 숫자 gallery/v2/manifest.json 의 evaluations 144 칸 (16 지형 x 3 속도 x 3 판) · 손으로 안 적고 읽어서 생성했다 확장 축 컷 열여덟 편을 찍은 것 _out/loop/shoot_axis2_ext.sh · 판 셋 x 시나리오 여섯 · env 64 · 시드 42 · 영상 env 51 · 원본은 sim/eval/results/20260929-axis2-ext-clips/ 그 컷에 HUD 를 얹은 것 _out/loop/axis2_ext_hud.py · axis2_hud.py 의 build_trace 를 그대로 가져다 쓴다 · 결과는 20260929-axis2-ext-hud/ · 울타리마다 속도 축을 같게 맞춘다 NVIDIA · foothold-v1 의 회전 두 칸 (새로 잼) sim/eval/results/20260929-axis2-ext-clips/{nvidia,v1}/{turn_rest,turn_rev}/per_env.json",
+    "after": "무엇 어디 스윕 원자료 1,182 줄 sim/eval/results/20260928-v2-sweep/sweep_long.csv 난이도 x 속도 요약 같은 폴더 sweep_matrix.md 지형 x 난이도 (속도별) 같은 폴더 sweep_terrain_v*.md 빠진 칸 같은 폴더 MISSING.md · 0 건 갤러리 v2 /gallery/ 에서 v2 를 고른다 계보 실측 inbox/jay/20260928-v2-mvp/LINEAGE-FACTS.md 멈출 기준 정본 inbox/jay/20260928-v2-mvp/STOPPING-RULE.md · 규칙과 수는 8 절에 본문으로 다 적었다 평가 규격 평가 프로토콜 정본 계보 전체 우리는 왜 여덟 번 방향을 틀었나 지형 카탈로그 스틸 16 장 sim/eval/results/20260928-terrain-shots/stills/ · 펴기 전후 값은 같은 폴더 index.json 학습 진행 41.3 초 (대군 · 칸당 20 · 배속 곡선) sim/eval/results/20260929-train-army-ramp/train-army.mp4 · 웹 사본 docs/assets/video/v2/train-army.mp4 · 생성 _out/loop/train_army_ramp.sh · 연결 _out/loop/train_army_ramp_join.py 학습 지형 비교 컷 둘 (6-6) sim/eval/results/20260929-traingap/{forward_gap,omni_gap}/flat_army_A_9_topdown.mp4 · 웹 사본 docs/assets/video/v2/train-gap-{forward,omni}.mp4 그 컷을 찍은 것 _out/loop/shoot_traingap.sh · 지형 등록은 sim/eval/terrains.py 의 train_fwdgap · train_omnigap 평지 HUD 를 얹은 것 _out/loop/axis2_hud.py · 원본은 sim/eval/results/20260929-axis2-fall/ 와 20260928-turnfall-clips/ 의 시계열 parquet · 결과는 20260929-axis2-hud/ 실패 판을 찾아 찍은 것 _out/loop/shoot_failcuts.sh · 결과는 sim/eval/results/20260929-failcuts/ · 채택한 시드는 그 폴더의 chosen.txt 자리 가설을 기각한 진단 _out/loop/probe_ss_origin.sh · 결과는 sim/eval/results/20260929-ss-origin/ 판마다의 전진 거리 (100 판) sim/eval/results/20260928-devicecheck/v2g2-iter3000-unseen10-d0.5-v1.0-cuda0/generalization_raw.csv 확장 축 2 (v2g2) sim/eval/results/20260928-v2g2-axis2-ext/v2g2-feetair01-iter3000/probe_manifest.json 목적성 세 화면의 컷 아홉 편 갤러리에서 가져왔다 · NVIDIA 는 gallery/v1/clips/<지형>-v<속도>-baseline.mp4 · v1 은 같은 폴더의 -baseline 없는 것 · v2 는 gallery/v2/clips/ · 체크포인트 sha 는 gallery/versions.json 이 적어 둔 것과 대조했다 · 가져온 도구는 _out/loop 밖 임시 스크립트가 아니라 이 표에 경로로 남긴다 지형 열여섯 표의 숫자 gallery/v2/manifest.json 의 evaluations 144 칸 (16 지형 x 3 속도 x 3 판) · 손으로 안 적고 읽어서 생성했다 확장 축 컷 열여덟 편을 찍은 것 _out/loop/shoot_axis2_ext.sh · 판 셋 x 시나리오 여섯 · env 64 · 시드 42 · 영상 env 51 · 원본은 sim/eval/results/20260929-axis2-ext-clips/ 그 컷에 HUD 를 얹은 것 _out/loop/axis2_ext_hud.py · axis2_hud.py 의 build_trace 를 그대로 가져다 쓴다 · 결과는 20260929-axis2-ext-hud/ · 울타리마다 속도 축을 같게 맞춘다 NVIDIA · foothold-v1 의 회전 두 칸 (새로 잼) sim/eval/results/20260929-axis2-ext-clips/{nvidia,v1}/{turn_rest,turn_rev}/per_env.json",
+    "reason": "독립 검증 지적과 사용자 요청에 따라 구현 상태를 정정하고 제작 이력·개별 참고 실험명을 정리"
+  }
+]

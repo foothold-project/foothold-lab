@@ -70,6 +70,11 @@ p.add_argument("--slowmo", type=int, default=1, choices=(1, 2, 4),
 p.add_argument("--horizon_dist", type=float, default=180.0)
 p.add_argument("--decel_start", type=float, default=-1.0, help="이 초부터 감속을 시작한다")
 p.add_argument("--decel_secs", type=float, default=2.0, help="감속에 걸리는 시간")
+p.add_argument("--max_init_level", type=int, default=None,
+               help="지형 «행» 을 얼마나 퍼뜨릴까. 평가 설정은 0 이라 모든 로봇이 "
+                    "0 행 한 줄에 몰린다 (rough6_env_cfg.py:139 · "
+                    "generalization_env_cfg.py:174). 대군 촬영처럼 여러 행에 "
+                    "걸치게 하려면 num_rows-1 을 준다. 안 주면 설정 그대로다")
 p.add_argument("--terrain_rows", type=int, default=8)
 p.add_argument("--terrain_cols", type=int, default=8)
 p.add_argument("--cut", required=True, choices=("A", "B", "F"))
@@ -86,10 +91,39 @@ p.add_argument("--yaw_range_deg", type=float, default=5.0); p.add_argument("--jo
 p.add_argument("--hfov", dest="camera_hfov", type=float, default=60.0)
 p.add_argument("--gate", dest="gate_mode", choices=("on", "off"), default="on")
 p.add_argument("--origins_csv", default="")
+p.add_argument("--title", default="",
+               help="HUD 제목을 «직접» 준다. 안 주면 지형·난이도·속도·체크포인트로 "
+                    "만드는데 그 형식은 정책 이름이 맨 뒤라 34 자에서 잘릴 때 "
+                    "정책이 먼저 사라진다. 나란히 놓는 컷은 이것을 주어라. "
+                    "34 자를 넘거나 굽힌 서체에 없는 글자가 있으면 «거부한다».")
 AppLauncher.add_app_launcher_args(p)
 args, _ = p.parse_known_args(); args.enable_cameras = True
 if args.num_envs != args.columns * args.rows: p.error("num_envs must equal columns * rows")
+
+def _hud_title(args):
+    """HUD 에 넘길 제목. 고르고 검사하는 규칙은 `overlay/hud.py` 가 갖는다.
+
+    길이 상한도 글꼴 부분집합도 HUD 의 사정이다. 여기서 규칙을 베껴 두면
+    둘이 갈라진다. 이 함수는 **기본 형식을 만들어 넘길 뿐이다.**
+    """
+    from overlay import hud as hud_mod
+
+    auto = "%s · d%.1f · %.1f m/s · %s" % (
+        args.terrain,
+        args.difficulty if args.difficulty is not None else -1.0,
+        args.command_vx,
+        os.path.splitext(os.path.basename(args.checkpoint))[0])
+
+    try:
+        return hud_mod.resolve_title(args.title, auto, bool(args.trace_csv))
+    except ValueError as error:
+        raise RuntimeError("제목을 못 쓴다: %s" % error) from error
+
+
+HUD_TITLE = _hud_title(args)
 VIEW = args.view; CAMERA_HFOV = args.camera_hfov; GATE_MODE = args.gate_mode; ORIGINS_CSV = args.origins_csv
+
+
 del args.view, args.camera_hfov, args.gate_mode, args.origins_csv
 launcher_argv = [sys.argv[0]]
 skip_next = False
@@ -115,6 +149,15 @@ import terrains
 from isaaclab_tasks.utils import load_cfg_from_registry
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path: sys.path.insert(0, HERE)
+# ★ 2026-09-29. 학습 지형 집합(`train_fwdgap` · `train_omnigap`)의 env cfg 는
+#   `sim/policy` 에 있고 **상대 import 를 쓴다** (`from .gap_wide_env_cfg`).
+#   그래서 그 폴더를 경로에 넣는 것으로는 안 되고 (`attempted relative import
+#   with no known parent package` `확인됨`) **패키지로** 가져와야 한다.
+#   저장소 뿌리를 넣으면 `sim.policy.<모듈>` 이 namespace package 로 잡힌다.
+#   평가 집합 둘은 `sim/eval` 에 그대로 있다.
+_ROOT = os.path.dirname(os.path.dirname(HERE))
+if os.path.isdir(os.path.join(_ROOT, "sim")) and _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 # **지형 집합에 맞는 설정을 고른다.** 예전에는 `unseen10` 설정 하나만
 # 가져와서, `rough6` 지형을 주면 하위 지형 목록에 없어 죽었다 `확인됨`
 # (2026-09-11 · `pyramid_stairs` 를 찍으려다 걸렸다).
@@ -153,6 +196,12 @@ def configure(cfg, agent):
             for v in keep.values(): v.proportion = 1.0
             tg.sub_terrains = keep
         tg.num_rows = args.terrain_rows; tg.num_cols = args.terrain_cols
+        # 평가 설정은 `max_init_terrain_level = 0` 이다. 난이도를 행이 아니라
+        # `--difficulty` 로 주기 때문이고 평가에서는 그것이 옳다. 그런데 대군을
+        # 찍을 때는 **로봇 전부가 0 행 한 줄에 몰린다.** 실측으로 확인했다
+        # (`[지형] ... x -76.0~-76.0` · 4096 마리가 8 m 폭 한 줄에 섰다).
+        if args.max_init_level is not None:
+            cfg.scene.terrain.max_init_terrain_level = args.max_init_level
         tg.curriculum = False
         # curriculum 이 꺼져 있으면 IsaacLab 은 difficulty_range 에서 타일마다
         # uniform 으로 뽑는다 (terrain_generator.py:229 실측). 범위를 (d, d) 로
@@ -708,6 +757,33 @@ def main():
             "파일에 프레임이 %d 장 들어갔는데 %d 장을 찍으려 했다. "
             "녹화가 중간에 끊겼거나 인코더가 흘렸다." % (encoded, count))
 
+    # **프레임이 다 들어갔어도 «검을» 수 있다** `확인됨` (2026-09-20 ·
+    # `gap_vx0.5_H` 600 장이 전부 검정인데 종료 코드가 0 이었다).
+    #
+    # 렌더러(`omni.hydra.rtx`)가 안 떠도 물리는 돌고 trace 도 남고 mp4 도
+    # 만들어진다. 그림만 없다. 33 KB · 55 바이트/프레임이었는데 아무도
+    # 그 숫자를 안 짚었고, 로그에 원인이 그대로 있었는데 아무도 안 읽었다.
+    #
+    # **그래서 여기서 파일을 다시 열어 본다.** 밝기 · 바이트/프레임 ·
+    # 프레임 수 · 렌더러 로그 넷이다.
+    from video_check import verify_render
+
+    _render_report = verify_render(video, expected_frames=encoded)
+    _bpf = ("못 쟀음" if _render_report["bytes_per_frame"] is None
+            else "%.0f" % _render_report["bytes_per_frame"])
+
+    # **밝기를 못 쟀으면 `[PASS]` 를 안 찍는다.** 검사가 «없었던» 것이지
+    # 통과한 것이 아니다. imageio 가 없으면 이 길로 온다.
+    if not _render_report.get("luma_measured"):
+        print("[확인 못 함] 밝기를 못 쟀다 (imageio · numpy 없음) · "
+              "%s 바이트/프레임 · 프레임 수와 로그만 봤다" % _bpf, flush=True)
+    else:
+        print("[PASS] 화면이 그려졌다 · 평균 밝기 %.1f · 어두운 표본 %.0f %% · "
+              "%s 바이트/프레임" % (
+                  _render_report["mean_luma"],
+                  (_render_report["dark_sample_ratio"] or 0.0) * 100,
+                  _bpf), flush=True)
+
     if trace_rows is not None:
         from overlay import trace as trace_mod
         # **읽는 쪽이 요구하는 메타를 다 채운다.** fps 와 command_vx_mps 가 없으면
@@ -732,11 +808,7 @@ def main():
                          # **제목을 직접 적는다.** 안 적으면 HUD 가 env_id·episode 로
                          # 만들려다 «?» 로 떨어지고, 그 글자가 굽힌 서체에 없어
                          # 두부가 찍힌다 `확인됨` (2026-09-11 · gap-side 첫 컷).
-                         "title": "%s · d%.1f · %.1f m/s · %s" % (
-                             args.terrain,
-                             args.difficulty if args.difficulty is not None else -1.0,
-                             args.command_vx,
-                             os.path.splitext(os.path.basename(args.checkpoint))[0])},
+                         "title": HUD_TITLE},
                         trace_rows)
         print("[PASS] trace %d 줄 -> %s" % (len(trace_rows), args.trace_csv), flush=True)
     rec_end = time.perf_counter(); final_hfov, final_ha, final_fl = read_hfov()

@@ -81,9 +81,37 @@ def copy_clips(manifest_path, gallery_dir, target_dir):
     moved = 0
     same = 0
 
+    # **가져다 쓰는 컷은 옮기지 않는다.** 이전 판 폴더에 이미 있다.
+    #
+    # 옮기려 하면 `<갤러리>/web/` 에서 찾다가 죽는다. 그냥 건너뛰기만 하면
+    # 색인이 없는 파일을 가리켜 404 가 조용히 난다. 그래서 **대상에 실제로
+    # 있는지 센다.**
+    reused = [c for c in data["clips"] if c.get("reused")]
+    own = [c for c in data["clips"] if not c.get("reused")]
+
+    dangling = []
+    for clip in reused:
+        for rel in (clip.get("file"), clip.get("poster")):
+            if not rel:
+                continue
+            # `file` 은 색인 기준 상대 경로다. 색인은 `<target_dir>/manifest.json`.
+            p = os.path.normpath(os.path.join(target_dir, rel))
+            if not os.path.isfile(p):
+                dangling.append(rel)
+
+    if dangling:
+        for rel in dangling[:8]:
+            print("  [X] 가져다 쓰는 컷이 대상에 없다: %s" % rel)
+        raise SystemExit("가져다 쓰는 컷 %d 개가 대상에 없다. 이전 판을 먼저 "
+                         "올렸는지 확인하라" % len(dangling))
+
+    if reused:
+        print("  가져다 쓰는 컷 %d 개 · 대상에 다 있다 (옮기지 않는다)"
+              % len(reused))
+
     # 포스터도 같이 옮긴다. 안 옮기면 색인만 가리키고 404 가 된다.
-    wanted = [(clip["file"], "web") for clip in data["clips"]]
-    wanted += [(clip["poster"], "posters") for clip in data["clips"] if clip.get("poster")]
+    wanted = [(clip["file"], "web") for clip in own]
+    wanted += [(clip["poster"], "posters") for clip in own if clip.get("poster")]
 
     for name, where in wanted:
         src = os.path.join(gallery_dir, where, os.path.basename(name))
@@ -196,6 +224,11 @@ def main():
     p.add_argument("--main_model", required=True)
     p.add_argument("--site", required=True, help="foothold-site 저장소 뿌리")
     p.add_argument("--difficulty", type=float, default=0.5)
+    p.add_argument("--reuse_from", default=None,
+                   help="이전 판 색인(manifest.json). 이번 판에 없는 컷을 "
+                        "«가리켜서» 쓴다. 파일은 복사하지 않고 대상에 있는지 센다")
+    p.add_argument("--reuse_prefix", default="../v1/",
+                   help="가져온 컷 경로 앞에 붙일 것. 색인 기준 상대 경로다")
     p.add_argument("--python", default=sys.executable)
     args = p.parse_args()
 
@@ -208,7 +241,9 @@ def main():
     run([args.python, os.path.join(HERE, "gallery_manifest.py"),
          "--gallery", args.gallery, "--raw_csv", args.raw_csv,
          "--version", args.version, "--main_model", args.main_model,
-         "--difficulty", str(args.difficulty), "--out", manifest_path])
+         "--difficulty", str(args.difficulty), "--out", manifest_path]
+        + (["--reuse_from", args.reuse_from,
+            "--reuse_prefix", args.reuse_prefix] if args.reuse_from else []))
 
     print("[2/4] 영상")
     data, moved, same = copy_clips(manifest_path, args.gallery, target)

@@ -1,0 +1,4 @@
+Tool: built-in image_gen
+Edit target: ending-e2-wide-v2.png
+
+Edit this single cinematic frame only. Preserve exactly its elevated wider frontal camera, silver Unitree Go2, walking pose, lighting, dark damaged corridor, and all concrete ground geometry. Remove the small red beacon AND the box-shaped electrical target cabinet at the distant upper center. Replace that tiny background region with the same dark damaged industrial corridor fading into black haze, no destination visible. This is the reverse camera angle looking back along the route, so the destination cannot be behind the robot. Do not change robot, framing or brightness. No text, no HUD.

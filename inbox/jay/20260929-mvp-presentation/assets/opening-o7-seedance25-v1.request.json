@@ -1,0 +1,21 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "generate_audio": true,
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "dd3a7431-881b-47d3-95aa-6a80848c59d5"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    }
+  ],
+  "prompt": "One continuous five-second locked-camera close-up beginning EXACTLY with image 1. The single Unitree Go2 moves SCREEN LEFT TO SCREEN RIGHT across this narrow concrete gap. The near front foot is already planted on the right landing lip in the first frame. Continue the step naturally: the other front foot clears and lands, then the hind feet follow and clear the gap while the robot advances to screen right. Do not replay the first landing. Show successive legs entering and leaving this close crop, not four feet cramped into the image. Image 2 is anatomy reference only, never its background, full-body framing, studio light or labels. Keep the slim gray links and small rounded matte black foot caps from image 1. No body reveal or face. Camera completely fixed, no pan, zoom, tracking or shake.\n\nEach foot swings then plants with a visible weight-bearing pause and lifts again; no sliding, stretched limbs, duplicate legs, airborne levitation or synchronized jump. Feet clear the void and land on solid concrete. As hind feet push away from the left edge, a few small loose chips and grains detach and trickle down into the gap. The ledges remain intact: no collapse, explosive debris or foot penetration. Let the final hind foot pass out to screen right, leaving a short clean tail with falling grit for the edit. Do not generate a wipe or black frame: these will be added after the final foot clears.\n\nPreserve the approved still's exact photographic material response throughout: satin gray worn paint, fine irregular roughness, matte rubber, patchy dry dusty and damp concrete, only localized subdued wet reflections, dull rust. Fixed local low-key light, dark industrial background. No HDR, plastic or chrome sheen, glossy rubber, universally wet mirror surface, oversharpened grit or changes in exposure. Maintain depth of field and scale.\n\nSynchronized diegetic sound only: rubber contacts on concrete with restrained mechanical joint sound, fine gritty scraping, small chips falling into a deep space, sparse distant dripping and cavernous room reverberation. No voice, lyrics, musical score, transition whoosh or huge impact. Preserve natural sound decay at the end for a left-to-right wipe to black and the following distant Go2 reveal."
+}

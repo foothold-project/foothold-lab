@@ -1,0 +1,16 @@
+{
+  "passed": [
+    "left-right panel",
+    "popup open",
+    "main notes hidden",
+    "font controls",
+    "reuse",
+    "content sync",
+    "reopen",
+    "blocked popup feedback",
+    "type sizes",
+    "no overflow",
+    "no JS errors"
+  ],
+  "physical_dual_monitor_drag": "not tested"
+}

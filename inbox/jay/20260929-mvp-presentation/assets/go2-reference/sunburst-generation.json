@@ -1,0 +1,34 @@
+{
+  "requested": {
+    "model": "gpt_image_2_5",
+    "variant": "sunburst",
+    "quality": "high",
+    "resolution": "2k",
+    "aspect_ratio": "3:2",
+    "count": 1,
+    "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "medias": [
+      {
+        "role": "image",
+        "value": "6ad9596c-1bcc-4225-ab00-7dbea4ceadf1"
+      },
+      {
+        "role": "image",
+        "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+      },
+      {
+        "role": "image",
+        "value": "46c33950-5496-44cc-a112-8e5602f1ade1"
+      }
+    ],
+    "prompt": "Create a faithful photographic product turnaround sheet of the EXACT real Unitree Go2 shown in the three official references. This is identity reconstruction of an existing manufactured robot, NOT designing a quadruped or adding features.\n\nREFERENCE PRIORITY:\nReference 1 is the complete real Go2 SIDE VIEW and is the master for the entire silhouette, body-to-leg proportions, components and materials.\nReference 2 is the official FRONT product render, showing the front end of that SAME horizontal torso. It is a close-up, not a separate head or accessory.\nReference 3 is a real REAR walking view, used only to determine rear shell, hip housings and visible central rear details. Ignore the person, grass and colored sensor graphics.\n\nCRITICAL REAL GO2 ANATOMY:\nOne low elongated horizontal gray torso, with the front camera/lamp panel integrated into its downward-curving FRONT END. There is NO head perched above the body, NO neck, NO additional upper sensor box, NO duplicate face.\nThe black rounded LiDAR housing is directly UNDER the front end of the torso, exactly as reference 1.\nFour slim curved solid leg links with large round upper motor housings, small knee joints and small rounded black rubber foot tips. Match the real solid leg surfaces: no invented open trusses, no elongated exposed rods, no thick boots, no hooves. Preserve actual stance height and torso length; do not stretch it taller or make it toy-like.\nNo added modules, tail, backpack, arm or armor. Do not invent rear grille assemblies or dangling rear mechanisms. Refer to the actual rear photograph.\n\nDELIVERABLE:\nOne landscape 3:2 reference sheet containing four clearly separated full-body views in a simple 2x2 layout: FRONT, LEFT SIDE (robot facing right as reference 1), REAR, FRONT THREE-QUARTER. The SAME robot in a neutral relaxed four-foot standing stance across all views, consistent physical scale and proportions, camera near torso height, long lens with minimal perspective distortion for front/side/rear, every foot visible. Render naturally occluded legs correctly, never add limbs to force all legs visible.\nPlain warm light-gray seamless background, soft neutral studio illumination, subtle contact shadows. Real matte gray polymer/metal surface with restrained microtexture and realistic small fasteners, no chrome, HDR gloss or weathering.\nOnly four small English view labels. No detail insets, no specification text, no decorative interface, no arrows or dimension lines. Faithful real-product anatomy takes absolute priority over prettiness or invented detail."
+  },
+  "job_id": "35542b56-3446-4bf4-8538-c738c3376e5b",
+  "estimated_credits": 2.75,
+  "status": "completed",
+  "completed_model": "gpt_image_2_5",
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_131907_35542b56-3446-4bf4-8538-c738c3376e5b.png",
+  "review_status": "candidate_pending_user_review",
+  "review": "Four full-body views present; no raised head or duplicate front sensors. Foot wear and rear grille details remain generated interpretations.",
+  "max_generations_authorized": 1
+}

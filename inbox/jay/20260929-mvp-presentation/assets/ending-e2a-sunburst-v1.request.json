@@ -1,0 +1,28 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9"
+    },
+    {
+      "role": "image",
+      "value": "1ceb82f2-93ee-4a91-b94a-3e956eb5d998"
+    },
+    {
+      "role": "image",
+      "value": "35542b56-3446-4bf4-8538-c738c3376e5b"
+    },
+    {
+      "role": "image",
+      "value": "f6c09dcc-cab0-4e71-b272-231f317ce90c"
+    }
+  ],
+  "prompt": "Make ONE full-bleed 16:9 cinema still: E2a, the earlier START FRAME of exactly the scene in image 1. Image 1 is the approved END FRAME, not a loose inspiration. Keep the SAME locked camera, perspective, focal length, crop, vast industrial hall, pillars, pipes, foreground broken platforms and gaps, atmospheric scale, realistic matte/damp materials, and fixed overhead/backlight shaft in their same positions. Do not rebuild or redesign the environment. The final video must be able to connect these two frames with the robot walking a short distance forward, while the camera and light source stay fixed.\n\nTHE ONLY NARRATIVE CHANGE: the single Unitree Go2 is now located farther BACK along the SAME central platform / continuous supporting concrete path, about one body length behind its approved image-1 position, just outside the lit pool in the deeper shadow. It faces directly toward the camera, ready to walk toward the image-1 position. It appears a little smaller through actual perspective, around 10-12% of image height rather than 15%. Do not merely darken the robot at the same location. Do not place it across a new gap, in water, suspended over a void, on a different island or in the extreme far background. Its route to the image-1 position must remain a plausible few walking steps on the same support surface. Do not add a bridge or fill the approved foreground gaps. Exactly one robot, no bright robot left behind at the old position, no afterimage or duplicate.\n\nDARKNESS: Go2 begins almost hidden in deep shadow, with only a very faint soft rim and partial silhouette giving a hint of its real body. Its front is mostly dark; no self-illuminated silver body or bright product-lighting. The overhead/backlight shaft remains alive and FIXED, the existing light pool and subtle puddle reflections remain in place. Keep the same environmental exposure and direction of light as image 1. The sense of darkness comes from the robot being outside the lit pool, not from switching off the whole scene or a later global exposure ramp. No flashlight, sweeping searchlight, person or hand. A little thin haze may soften the silhouette but must not turn into a fog wall or obscure all ground support. Do not make a completely empty frame or a black square.\n\nIDENTITY: Images 2-4 are the SAME actual Go2's official frontal image, approved multiview sheet and details. Use these only to preserve robot anatomy, not their studio backgrounds or labels. Faithful stock gray Unitree Go2 body, compact curved torso, vertical dark front camera/lamp panel, separate black lower LiDAR housing, circular GRAY upper joint housings, slim curved leg links, four legs and small rounded BLACK rubber foot caps. Same proportions, materials, mild wear and module configuration as image 1. No extra parts, giant black shoulder balls, chunky legs, hoofs, white foot markings or floating feet. Shadows may hide detail naturally; do not redesign the hidden robot.\n\nReal live-action photographic material response, deep shadows, restrained contrast, soft highlights, irregular dry/damp/puddled concrete, matte rubber and satin gray shell, sparse dull pipe rust. No HDR, plastic gloss, uniform wet mirror finish, oversharpening, synthetic noise filter or videogame aesthetic. No text, HUD, scan, frames, montage or split-screen. Deliver only this precisely matched earlier frame."
+}

@@ -1,0 +1,77 @@
+<svg viewBox="-20 -20 704 500" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block" role="img" aria-label="A 에서 v2g2 까지 · 한 칸씩 바꾼 자취" width="664" height="460">
+<!--selfcontained:v1-->
+<style>
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</style>
+
+<text x="0.0" y="14.0" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">한 칸씩 바꿔서 여기까지 왔다</text>
+<text x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">가로 막대는 난이도 0.5 의 48 칸 평균 % · 오른쪽은 그 판에서 «무엇을 바꿨나»</text>
+<text x="0.0" y="52.0" font-size="10" fill="var(--warn)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">E · F · G 는 D 에서 «두 칸» 씩 바뀌었다 (lin_vel_x 하한 0.4 가 공통)</text>
+<rect x="-6.0" y="70.0" width="676.0" height="32.0" rx="4" fill="var(--paper-2)" stroke="none"/>
+<rect x="0.0" y="77.0" width="3.0" height="13.0" rx="1.5" fill="var(--ink-3)" stroke="none"/>
+<text x="10.0" y="88.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">NVIDIA</text>
+<rect x="96.0" y="78.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="78.0" width="123.5" height="11.0" rx="3" fill="var(--ink-3)" stroke="none"/>
+<text x="438.0" y="88.0" font-size="11.5" fill="var(--ink-3)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">41.17</text>
+<text x="450.0" y="88.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">출발점 · 학습 6종</text>
+<rect x="5.0" y="111.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="15.0" y="122.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">A · B</text>
+<rect x="96.0" y="112.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="112.0" width="266.6" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="122.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">88.88</text>
+<text x="450.0" y="122.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">학습에 틈을 넣는다</text>
+<rect x="-6.0" y="138.0" width="676.0" height="32.0" rx="4" fill="var(--paper-2)" stroke="none"/>
+<rect x="10.0" y="145.0" width="3.0" height="13.0" rx="1.5" fill="var(--warn)" stroke="none"/>
+<text x="20.0" y="156.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">D</text>
+<rect x="96.0" y="146.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="146.0" width="261.6" height="11.0" rx="3" fill="var(--warn)" stroke="none"/>
+<text x="438.0" y="156.0" font-size="11.5" fill="var(--warn)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">87.19</text>
+<text x="450.0" y="156.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">명령 다섯을 되돌린다</text>
+<rect x="15.0" y="179.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="25.0" y="190.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">E</text>
+<rect x="96.0" y="180.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="180.0" width="264.7" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="190.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">88.23</text>
+<text x="450.0" y="190.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">바라보는 비율 0.75</text>
+<rect x="-6.0" y="206.0" width="676.0" height="32.0" rx="4" fill="var(--paper-2)" stroke="none"/>
+<rect x="15.0" y="213.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="25.0" y="224.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">F</text>
+<rect x="96.0" y="214.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="214.0" width="269.1" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="224.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">89.71</text>
+<text x="450.0" y="224.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">노출을 지형으로 (omni_gap)</text>
+<rect x="15.0" y="247.0" width="3.0" height="13.0" rx="1.5" fill="var(--bad)" stroke="none"/>
+<text x="25.0" y="258.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">G</text>
+<rect x="96.0" y="248.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="248.0" width="248.5" height="11.0" rx="3" fill="var(--bad)" stroke="none"/>
+<text x="438.0" y="258.0" font-size="11.5" fill="var(--bad)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">82.83</text>
+<text x="450.0" y="258.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">heading 을 끈다</text>
+<rect x="-6.0" y="274.0" width="676.0" height="32.0" rx="4" fill="var(--paper-2)" stroke="none"/>
+<rect x="20.0" y="281.0" width="3.0" height="13.0" rx="1.5" fill="var(--ink-2)" stroke="none"/>
+<text x="30.0" y="292.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">H</text>
+<rect x="96.0" y="282.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="282.0" width="259.0" height="11.0" rx="3" fill="var(--ink-2)" stroke="none"/>
+<text x="438.0" y="292.0" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">86.33</text>
+<text x="450.0" y="292.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">F 의 지형 + D 의 명령</text>
+<rect x="25.0" y="315.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="35.0" y="326.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">v2a</text>
+<rect x="96.0" y="316.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="316.0" width="279.0" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="326.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">93.00</text>
+<text x="450.0" y="326.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">rails 0.10 추가</text>
+<rect x="-6.0" y="342.0" width="676.0" height="32.0" rx="4" fill="var(--paper-2)" stroke="none"/>
+<rect x="30.0" y="349.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="40.0" y="360.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">v2b</text>
+<rect x="96.0" y="350.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="350.0" width="280.3" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="360.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">93.44</text>
+<text x="450.0" y="360.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">rel_standing_envs 0.1</text>
+<rect x="35.0" y="383.0" width="3.0" height="13.0" rx="1.5" fill="var(--accent)" stroke="none"/>
+<text x="45.0" y="394.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Mono, monospace">v2g2</text>
+<rect x="96.0" y="384.0" width="300.0" height="11.0" rx="3" fill="var(--card)" stroke="var(--rule-2)"/>
+<rect x="96.0" y="384.0" width="282.6" height="11.0" rx="3" fill="var(--accent)" stroke="none"/>
+<text x="438.0" y="394.0" font-size="11.5" fill="var(--accent)" text-anchor="end" font-weight="700" font-family="IBM Plex Mono, monospace">94.19</text>
+<text x="450.0" y="394.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">feet_air_time 0.1</text>
+<text x="0.0" y="452.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">G 가 가장 낮다 (82.83). heading 을 아예 끄면 무너진다 · F 가 가장 높다 (89.71). 노출을 지형으로 옮긴 쪽이 이겼다</text>
+</svg>

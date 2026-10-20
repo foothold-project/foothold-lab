@@ -1,0 +1,8 @@
+﻿narrative,internal_experiment,date_kst,result,source_on_volume
+서사 v1,experiment C (progress),9/24~9/28,험지 0.5 m 도달 · 500회 44/400 → 1000회 75/400,reports/teacher_500_vs_1000_same_env_20260928/comparison_report_ko.md
+서사 v2,ame2_flat_goal_v7_fresh_3322,9/29,move 0/320 · pose 0/320 · turn 0/280 · stand 0/80 (보정 판정 20/80) · sequence 0/40,reports/flat_fresh_3322_20260929/
+서사 v3,ame2_flat_goal_v8_reward_control,9/29~9/30,stand 80/80 · 나머지 0,reports/flat_reward_control_v8_20260929/
+서사 v4,ame2_flat_goal_v11_move_focus,9/30,364/1040 (8초 판정) · 20초 재채점 365,reports/flat_move_focus_v11_20260930/
+서사 v5,ame2_flat_precise_arrival_v13_20261006,10/6,810/1040,reports/flat_precise_arrival_v13_20261006/
+서사 v6 (v5 설정 유지),ame2_flat_recovery_v14_control_20261006,10/6~10/7,1500회 813 · 2000회 850/1040,reports/flat_recovery_v14_20261006/
+서사 v6 (수정군),ame2_flat_recovery_v14_candidate_20261006,10/6~10/7,1500회 813 · 2000회 885/1040,reports/flat_recovery_v14_20261006/

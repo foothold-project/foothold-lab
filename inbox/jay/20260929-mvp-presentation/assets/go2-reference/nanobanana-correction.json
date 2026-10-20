@@ -1,0 +1,22 @@
+{
+  "requested": {
+    "model": "nano_banana_pro",
+    "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+    "resolution": "4k",
+    "aspect_ratio": "16:9",
+    "count": 1,
+    "medias": [
+      {
+        "role": "image",
+        "value": "6ad9596c-1bcc-4225-ab00-7dbea4ceadf1"
+      }
+    ],
+    "prompt": "EDIT THIS SINGLE PHOTOGRAPH, do NOT invent or redesign the robot. Preserve the exact Unitree Go2 in the provided image pixel-faithfully: exact same side-view orientation facing RIGHT, exact existing walking pose, same silhouette and proportions, same four solid slim curved legs, same gray shell, same round joints, same small black rubber feet, same black spherical sensor under the front of the body. The robot has NO separate head above its torso and NO neck. Its front face is the downward curved FRONT END OF THE TORSO. Keep its existing Go2 wordmark exactly. Replace ONLY the outdoor grass, sky, stone wall and wooden floor with an unobtrusive seamless neutral light-gray studio background and ground. Preserve robot structure completely; do not rotate, stand it up, change stance, add holes into solid leg links, add equipment, add a second head, alter sensors or add labels. Keep subtle realistic material texture and a small soft contact shadow, realistic product reference photography. ONE robot, ONE view, full existing robot visible including all feet with margin. No sheet layout, no insets, no text or diagrams."
+  },
+  "job_id": "921c0c3a-be6a-4535-8815-c979c1480efa",
+  "completed_model": "nano_banana_2",
+  "review_status": "unapproved_candidate",
+  "note": "Single side view preserves broad Go2 silhouette more closely; not pixel identical and not approved as character source. Further paid generation stopped.",
+  "credits_before_two_jobs": 5000.5,
+  "credits_after_two_jobs": 4992.5
+}

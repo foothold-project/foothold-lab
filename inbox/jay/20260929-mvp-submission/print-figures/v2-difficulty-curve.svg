@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1040" width="800" height="1040" font-family="Malgun Gothic, sans-serif"><text x="12.0" y="25" font-size="18" fill="#161c26" font-weight="700"><tspan x="12.0" dy="0">어느 지형을 «미경험» 이라 부르냐에 따라 이야기가 뒤집힌다</tspan></text><text x="12.0" y="53" font-size="14" fill="#161c26" font-weight="400"><tspan x="12.0" dy="0">세로는 성공률 % · 가로는 지형 난이도 · 두 묶음의 다른 점은 rails 와 gap 둘뿐이다</tspan></text><rect x="12" y="69" width="12" height="12" fill="#626f82" stroke="none"/><text x="31" y="80" font-size="14" fill="#161c26" font-weight="400"><tspan x="31" dy="0">NVIDIA</tspan></text><rect x="150" y="69" width="12" height="12" fill="#4a5566" stroke="none"/><text x="169" y="80" font-size="14" fill="#161c26" font-weight="400"><tspan x="169" dy="0">foothold-v1</tspan></text><rect x="330" y="69" width="12" height="12" fill="#0e7a6e" stroke="none"/><text x="349" y="80" font-size="14" fill="#161c26" font-weight="400"><tspan x="349" dy="0">v2 (v2g2 @3000)</tspan></text><svg x="70" y="98" width="660" height="416" viewBox="20 70 450 340" overflow="hidden"><ns0:style xmlns:ns0="http://www.w3.org/2000/svg">
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#626f82;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</ns0:style>
+
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="14.0" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어느 지형을 «미경험» 이라 부르냐에 따라 이야기가 뒤집힌다</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">세로는 성공률 % · 가로는 지형 난이도 · 두 묶음의 다른 점은 rails 와 gap 둘뿐이다</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--ink-3)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="16.0" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">NVIDIA</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="59.6" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--ink-2)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="75.6" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="152.2" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--accent)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="168.2" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 (v2g2 @3000)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="80.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어느 판도 학습 안 한 8종</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="96.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">rails 와 gap 을 뺀 것</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="318.0" x2="440.0" y2="318.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="322.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">0</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="266.5" x2="440.0" y2="266.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="270.5" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">25</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="215.0" x2="440.0" y2="215.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="219.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="163.5" x2="440.0" y2="163.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="167.5" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">75</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="112.0" x2="440.0" y2="112.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="116.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.1</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="96.9" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.2</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="139.8" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.3</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="182.7" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.4</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="225.6" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.5</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="268.4" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.6</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="311.3" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.7</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="354.2" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.8</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="397.1" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.9</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="440.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">1.0</ns0:text>
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,207.4 96.9,218.6 139.8,222.5 182.7,227.6 225.6,227.6 268.4,232.5 311.3,235.8 354.2,242.6 397.1,247.1 440.0,252.3" fill="none" stroke="var(--ink-3)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="207.4" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="218.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="222.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="227.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="227.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="232.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="235.8" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="242.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="247.1" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="440.0" cy="252.3" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,139.3 96.9,160.5 139.8,154.1 182.7,145.6 225.6,139.4 268.4,138.1 311.3,138.7 354.2,142.0 397.1,145.7" fill="none" stroke="var(--ink-2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="139.3" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="160.5" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="154.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="145.6" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="139.4" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="138.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="138.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="142.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="145.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,125.4 96.9,143.0 139.8,138.7 182.7,135.7 225.6,135.8 268.4,137.8 311.3,137.8 354.2,137.9 397.1,138.3" fill="none" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="125.4" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="143.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="138.7" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="135.7" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="135.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="137.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="137.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="137.9" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="138.3" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="350.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1 · v2 는 0.9 까지 쟀다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="106.0" x2="54.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="318.0" x2="440.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="352.0" width="386.0" height="46.0" rx="6" fill="var(--paper-2)" stroke="var(--rule-2)" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="66.0" y="371.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 - v1 은 +6.8 에서 시작해 +3.6 로 끝난다  (좁아진다)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="66.0" y="387.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">여덟 점의 폭 +0.2 ~ +8.5 %p</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="80.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">미경험 10종 (rails · gap 포함)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="96.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">그 둘은 v2 가 학습한 지형이다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="318.0" x2="900.0" y2="318.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="266.5" x2="900.0" y2="266.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="215.0" x2="900.0" y2="215.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="163.5" x2="900.0" y2="163.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="112.0" x2="900.0" y2="112.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.1</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="556.9" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.2</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="599.8" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.3</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="642.7" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.4</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="685.6" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.5</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="728.4" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.6</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="771.3" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.7</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="814.2" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.8</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="857.1" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.9</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="900.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">1.0</ns0:text>
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,216.6 556.9,229.7 599.8,237.7 642.7,244.6 685.6,245.1 728.4,249.5 771.3,252.2 814.2,257.7 857.1,261.3 900.0,265.5" fill="none" stroke="var(--ink-3)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="216.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="229.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="237.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="244.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="245.1" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="249.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="252.2" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="257.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="261.3" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="900.0" cy="265.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,142.2 556.9,155.1 599.8,149.0 642.7,145.8 685.6,147.8 728.4,154.1 771.3,157.0 814.2,159.7 857.1,162.7" fill="none" stroke="var(--ink-2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="142.2" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="155.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="149.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="145.8" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="147.8" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="154.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="157.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="159.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="162.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,123.0 556.9,137.3 599.8,134.5 642.7,131.1 685.6,131.2 728.4,133.6 771.3,135.1 814.2,136.0 857.1,138.6" fill="none" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="123.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="137.3" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="134.5" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="131.1" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="131.2" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="133.6" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="135.1" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="136.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="138.6" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="350.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1 · v2 는 0.9 까지 쟀다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="106.0" x2="514.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="318.0" x2="900.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="352.0" width="386.0" height="46.0" rx="6" fill="var(--paper-2)" stroke="var(--rule-2)" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="526.0" y="371.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 - v1 은 +9.3 에서 시작해 +11.7 로 끝난다  (벌어진다)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="526.0" y="387.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">여덟 점의 폭 +7.1 ~ +11.7 %p</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="442.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">시드만 바꿔도 1.25 %p 가 흔들린다 (멈출 기준 문서). 왼쪽 판의 중간 난이도 차이는 그 폭 안이라 구별되지 않는다</ns0:text>
+</svg><svg x="70" y="524" width="660" height="416" viewBox="480 70 450 340" overflow="hidden"><ns0:style xmlns:ns0="http://www.w3.org/2000/svg">
+:root{--accent:#0e7a6e;--accent-soft:#e0f0ed;--bad:#a3342a;--bad-soft:#fbe9e7;--card:#ffffff;--deep:#112222;--dim:#0e7a6e;--dim-ink:#0b6459;--ink:#161c26;--ink-2:#4a5566;--ink-3:#626f82;--ink-soft:#adb5c1;--ok:#0e7a6e;--ok-soft:#e0f0ed;--paper:#f6f5f1;--paper-2:#eeece6;--rule:#d9d6cd;--rule-2:#efede6;--warn:#a86a08;--warn-soft:#fbf0dc;}
+
+</ns0:style>
+
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="14.0" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어느 지형을 «미경험» 이라 부르냐에 따라 이야기가 뒤집힌다</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="33.0" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">세로는 성공률 % · 가로는 지형 난이도 · 두 묶음의 다른 점은 rails 와 gap 둘뿐이다</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--ink-3)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="16.0" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">NVIDIA</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="59.6" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--ink-2)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="75.6" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1</ns0:text>
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="152.2" y="49.0" width="11.0" height="9.0" rx="2" fill="var(--accent)" stroke="none" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="168.2" y="56.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 (v2g2 @3000)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="80.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">어느 판도 학습 안 한 8종</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="96.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">rails 와 gap 을 뺀 것</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="318.0" x2="440.0" y2="318.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="322.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">0</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="266.5" x2="440.0" y2="266.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="270.5" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">25</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="215.0" x2="440.0" y2="215.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="219.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">50</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="163.5" x2="440.0" y2="163.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="167.5" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">75</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="112.0" x2="440.0" y2="112.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="44.0" y="116.0" font-size="9.5" fill="var(--ink-3)" text-anchor="end" font-weight="400" font-family="IBM Plex Mono, monospace">100</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.1</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="96.9" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.2</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="139.8" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.3</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="182.7" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.4</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="225.6" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.5</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="268.4" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.6</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="311.3" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.7</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="354.2" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.8</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="397.1" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.9</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="440.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">1.0</ns0:text>
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,207.4 96.9,218.6 139.8,222.5 182.7,227.6 225.6,227.6 268.4,232.5 311.3,235.8 354.2,242.6 397.1,247.1 440.0,252.3" fill="none" stroke="var(--ink-3)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="207.4" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="218.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="222.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="227.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="227.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="232.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="235.8" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="242.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="247.1" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="440.0" cy="252.3" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,139.3 96.9,160.5 139.8,154.1 182.7,145.6 225.6,139.4 268.4,138.1 311.3,138.7 354.2,142.0 397.1,145.7" fill="none" stroke="var(--ink-2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="139.3" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="160.5" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="154.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="145.6" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="139.4" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="138.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="138.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="142.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="145.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="54.0,125.4 96.9,143.0 139.8,138.7 182.7,135.7 225.6,135.8 268.4,137.8 311.3,137.8 354.2,137.9 397.1,138.3" fill="none" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="54.0" cy="125.4" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="96.9" cy="143.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="139.8" cy="138.7" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="182.7" cy="135.7" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="225.6" cy="135.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="268.4" cy="137.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="311.3" cy="137.8" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="354.2" cy="137.9" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="397.1" cy="138.3" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="350.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1 · v2 는 0.9 까지 쟀다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="106.0" x2="54.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="54.0" y1="318.0" x2="440.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="54.0" y="352.0" width="386.0" height="46.0" rx="6" fill="var(--paper-2)" stroke="var(--rule-2)" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="66.0" y="371.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 - v1 은 +6.8 에서 시작해 +3.6 로 끝난다  (좁아진다)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="66.0" y="387.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">여덟 점의 폭 +0.2 ~ +8.5 %p</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="80.0" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">미경험 10종 (rails · gap 포함)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="96.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">그 둘은 v2 가 학습한 지형이다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="318.0" x2="900.0" y2="318.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="266.5" x2="900.0" y2="266.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="215.0" x2="900.0" y2="215.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="163.5" x2="900.0" y2="163.5" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="112.0" x2="900.0" y2="112.0" stroke="var(--rule-2)" stroke-width="1" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.1</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="556.9" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.2</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="599.8" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.3</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="642.7" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.4</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="685.6" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.5</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="728.4" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.6</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="771.3" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.7</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="814.2" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.8</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="857.1" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">0.9</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="900.0" y="336.0" font-size="9.5" fill="var(--ink-3)" text-anchor="middle" font-weight="400" font-family="IBM Plex Mono, monospace">1.0</ns0:text>
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,216.6 556.9,229.7 599.8,237.7 642.7,244.6 685.6,245.1 728.4,249.5 771.3,252.2 814.2,257.7 857.1,261.3 900.0,265.5" fill="none" stroke="var(--ink-3)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="216.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="229.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="237.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="244.6" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="245.1" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="249.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="252.2" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="257.7" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="261.3" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="900.0" cy="265.5" r="3.4" fill="var(--ink-3)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,142.2 556.9,155.1 599.8,149.0 642.7,145.8 685.6,147.8 728.4,154.1 771.3,157.0 814.2,159.7 857.1,162.7" fill="none" stroke="var(--ink-2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="142.2" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="155.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="149.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="145.8" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="147.8" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="154.1" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="157.0" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="159.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="162.7" r="3.4" fill="var(--ink-2)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:polyline xmlns:ns0="http://www.w3.org/2000/svg" points="514.0,123.0 556.9,137.3 599.8,134.5 642.7,131.1 685.6,131.2 728.4,133.6 771.3,135.1 814.2,136.0 857.1,138.6" fill="none" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="514.0" cy="123.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="556.9" cy="137.3" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="599.8" cy="134.5" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="642.7" cy="131.1" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="685.6" cy="131.2" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="728.4" cy="133.6" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="771.3" cy="135.1" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="814.2" cy="136.0" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="857.1" cy="138.6" r="3.4" fill="var(--accent)" stroke="var(--card)" stroke-width="1.6" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="350.0" font-size="9.5" fill="var(--ink-3)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">foothold-v1 · v2 는 0.9 까지 쟀다</ns0:text>
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="106.0" x2="514.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:line xmlns:ns0="http://www.w3.org/2000/svg" x1="514.0" y1="318.0" x2="900.0" y2="318.0" stroke="var(--rule)" stroke-width="1" />
+<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg" x="514.0" y="352.0" width="386.0" height="46.0" rx="6" fill="var(--paper-2)" stroke="var(--rule-2)" />
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="526.0" y="371.0" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="700" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">v2 - v1 은 +9.3 에서 시작해 +11.7 로 끝난다  (벌어진다)</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="526.0" y="387.0" font-size="10" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Mono, monospace">여덟 점의 폭 +7.1 ~ +11.7 %p</ns0:text>
+<ns0:text xmlns:ns0="http://www.w3.org/2000/svg" x="0.0" y="442.0" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="400" font-family="IBM Plex Sans KR, Malgun Gothic, sans-serif">시드만 바꿔도 1.25 %p 가 흔들린다 (멈출 기준 문서). 왼쪽 판의 중간 난이도 차이는 그 폭 안이라 구별되지 않는다</ns0:text>
+</svg><text x="12" y="975" font-size="14" fill="#4a5566" font-weight="400"><tspan x="12" dy="0">시드만 바꿔도 1.25 %p 가 흔들린다 (멈출 기준 문서). 왼쪽 판의 중간 난이도 차이는 그 폭 안이라 구별되지 않는</tspan><tspan x="12" dy="21.0">다</tspan></text></svg>

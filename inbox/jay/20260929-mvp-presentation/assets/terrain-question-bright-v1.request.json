@@ -1,0 +1,16 @@
+{
+  "model": "gpt_image_2_5",
+  "variant": "sunburst",
+  "quality": "high",
+  "resolution": "2k",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "b25dfa46-7b42-4686-97b6-cba55d223dfa"
+    }
+  ],
+  "prompt": "Extract and faithfully refine ONLY the TOP LEFT panel of this reference into one full 16:9 photograph. This is a separate well-exposed presentation slide about dangerous terrain, not the dark opening video. Preserve the frontal monumental ruined industrial hall, broken uneven concrete supports leading toward the small red distant destination beacon, deep gaps and dark water on both sides, columns and rusty pipes. Keep exactly this environment and composition, not a new hall. Make the floor topology readable in soft diffuse ambient light while retaining ominous depth. Natural soft highlight rolloff, low-to-moderate local contrast, matte rough concrete, irregular dust and damp patches, restrained isolated water reflections, dull corroded metal. No glossy HDR, no glitter, no plastic wet coating. No flashlight or torch, no spotlight cone, no robot, no HUD or labels, no collage grid. Cinematic photographic imperfections and plausible scale. This is the brighter companion used after the opening to ask which robot can traverse this terrain."
+}

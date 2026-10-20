@@ -1,0 +1,298 @@
+[
+  {
+    "index": 0,
+    "shot": "O1",
+    "file": "opening-o1-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "1735a407-2574-41b4-bf69-39addd069e03"
+        },
+        {
+          "role": "image",
+          "value": "f9215028-d71e-4f17-8fd8-921e7f38c2b8"
+        }
+      ],
+      "prompt": "OPENING FIRST SHOT. References are environment and illumination guides, NOT the first frame. Begin in genuinely BLACK darkness: only a pin-sized distant red beacon centered deep in the hall flashes twice gently during the first 1.2 seconds. Everything else remains invisible. Then an unseen moving directional light sweeps slowly over a column, across the broken near slabs and water, letting ONLY its localized pool reveal the dangerous flooded route. Dark regions remain black. No hand, human, actual flashlight prop or visible robot. No ceiling lighting switching on, daylight appearing or whole-room fade-up. Camera begins centered wide and low at robot-height with restrained exploratory head-like pan; during the final second gently tilt DOWN toward the near broken floor so the next separate close floor shot is motivated. Light continues its slow sweep rather than snapping on. Keep distant beacon location fixed and tiny. Audio: deep empty industrial room, intermittent drips, faint mechanical head/sensor pivot, distant subdued electrical hum; no thunder or monster effects.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 1,
+    "shot": "O2",
+    "file": "opening-o2-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "adae6dc1-97bc-4815-8970-4b00abe9bdd3"
+        }
+      ],
+      "prompt": "ROBOT POV CLOSE FLOOR, following the wide exploratory light shot. Start at this approved downward-looking rubble texture, with a small moving pool of off-camera light. Slowly inspect dry pebbles, damp porous concrete and uneven small stones, then ease the gaze toward the slab edge at the upper part of the frame. Body-height camera, near-vertical downward view, modest natural exploratory tilt, no forward jump or large zoom. The surface and shadows move only as illumination/view changes; rock geometry stays fixed. No robot visible, no HUD, no scan, no flashlight object, no ceiling floodlight. Next separate shot discovers the broken edge. Audio: same room, quiet camera actuator and droplets, no walking yet.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 2,
+    "shot": "O3",
+    "file": "opening-o3-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "c471636b-c897-43b5-995c-e33b19078132"
+        }
+      ],
+      "prompt": "EDGE DISCOVERY, continuing the close floor inspection. Preserve the exact close broken rim and exposed rusted rods. Slowly tilt a little forward/down toward the edge as unseen moving light reveals jagged porous concrete, then falls into the darkness beyond. Camera remains safely on this side, no crossing, no falling, no new bridge. The gap remains irregular and genuinely open. End with attention on the void to motivate the next separate more oblique deep-gap view. No visible robot, HUD or scan. Audio subtle damp gritty texture, distant drips and room resonance. Rocks do not spontaneously collapse.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 3,
+    "shot": "O3b",
+    "file": "opening-o3b-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "8674cfc0-352b-49f2-a32f-c85041a045c5"
+        }
+      ],
+      "prompt": "OBLIQUE DOWNWARD LOOK INTO DEEP GAP. Preserve this distinct angled view into water between irregular broken slabs and exposed rods. A very restrained sideways lean/parallax lets the depth read; move unseen light from near ragged lip briefly down the wall, revealing a small water ripple below, then settle. Do not straighten the gap or widen landing areas. No jump across it, robot, UI, scan or camera flying down. End on a steady dangerous void; the NEXT EDIT goes to full black mission reception. Do not put that mission UI into this clip. Audio one localized water droplet with deep echo and steady low room tone.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 4,
+    "shot": "O4",
+    "file": "opening-o4-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "image",
+          "value": "2eede449-6bd6-4336-9501-c67ee9c433e1"
+        }
+      ],
+      "prompt": "BLACK-SCREEN MISSION RECEPTION using the supplied approved green interface design. Begin full black for 0.25 seconds with a brief restrained electronic incoming-signal chirp. Fine scanlines and one short horizontal interference pass precede the geometric contour/navigation interface drawing on. Monospaced English mission text becomes legible and stable, preserving EXACT reference spelling and layout; do not invent or scramble letters. By 1.4 seconds the entire approved mission panel is readable. Hold it clearly while a subtle contour cursor, tiny status ticks and signal bars animate. No scenery behind it, no robot, no global green light filling the screen. Final 0.5 seconds gently dim peripheral UI preparing an EDIT to green terrain POV; do not invent next background here. Sound restrained receiver handshake, short soft activation pulses, quiet electronic bed over the same distant room ambience.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 5,
+    "shot": "O6",
+    "file": "opening-o6-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "223e1eb6-8f1b-4c73-a340-3a0c207d5513"
+        }
+      ],
+      "prompt": "CLOSE SENSOR POV: near-ground height sampling only, following a wider body-state HUD shot. NO peripheral panels, numbers, mission text or decorative interface. Begin with the supplied green sampling points on jagged nearby concrete. A soft scan sweep refreshes sampling rows from nearest rough surface to the farther support. Points remain anchored to physical surface locations during subtle body-mounted sway and a small downward/forward gaze adjustment. Points reveal surface height discontinuity and occlude behind the rim. The open void and water remain unsampled darkness, never a flat holographic bridge or connected luminous plane. Clearly animate the sweep and point refresh without boiling concrete, floating dots or moving entire terrain. Finish settled on the near supporting surface to motivate a separate foot-contact closeup. No visible robot, leap, flight across the gap. Sound fine scan ticks, muted sensor pulse and a brief servo settling sound.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 6,
+    "shot": "E3",
+    "file": "ending-e3-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "73da25e0-b572-4a71-b46e-daac3274f7ee"
+        }
+      ],
+      "prompt": "REAR FOLLOW of the same silver Unitree Go2, following its earlier frontal reveal. Maintain true rear anatomy: no face on its rear. Robot stays relatively small in this expansive hall, moves AWAY toward the same red beacon along the existing narrow irregular causeway. Camera gently follows at matching cautious pace with mild natural lag, never overtakes or orbits. Show two or three short deliberate walking steps with coherent four legs, grounded foot contacts, believable weight shifts. Preserve slim articulated leg links, rounded motor housings and small black rubber feet. Do not widen path, regularize slab edges or drain water. As a gap approaches slow slightly, preparing a separate side-view crossing next. No sitting or target arrival. Red beacon pulses slowly, sparse low mist and drips. Audio restrained servos, distinct light rubber taps and a tiny dislodged pebble, no stomping.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 7,
+    "shot": "E4",
+    "file": "ending-e4-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "f9433453-bd3a-4042-b384-8a3eb53309ff"
+        }
+      ],
+      "prompt": "SIDE VIEW of Go2 completing the irregular gap crossing already posed in the reference. LOCK CAMERA. Preserve robot orientation and travel direction exactly. Grounded front foot supports its weight; remaining front leg reaches the far support, then rear legs lift and place sequentially so all four legs finish safely on the far slab. Controlled deliberate weight transfer, no simultaneous ballistic leap, no limb morph, foot sliding, penetration or extra legs. Keep the slim Go2 limb links and small rubber foot shape. Gap widths and jagged rim stay exactly as in reference; no bridge, safety widening or smooth straight trench. Each loaded rim contact loosens only a FEW tiny chips that trickle down the wall with a little damp grit; hold 0.4 seconds of debris tail after rear feet clear. The next EDIT is robot walking POV approaching the final step, do not switch perspective here. Sound four believable light rubber contacts, servo articulation, grit dropping into the gap and faint splashes below.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 8,
+    "shot": "E5",
+    "file": "ending-e5-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "afde734c-fce5-4e92-8dec-2c71973157d1"
+        }
+      ],
+      "prompt": "STRAIGHT REAR VIEW, same Go2 completing ascent of the low threshold toward the cabinet. Previous separate POV discovered this exact step. Start exactly in the supplied ascent pose, continue front support on the upper landing as hind joints extend and hind feet lift over the riser one after the other. ALL FOUR FEET finish on the upper platform. Then take ONE OR TWO short steps toward the cabinet and slow to a stop. END STILL STANDING, just before sitting, for the next separate frontal sitting shot. Do not sit here, change viewing side, orbit, turn robot around, jump or climb a second obstacle. Preserve correct rear anatomy, four slim links, compact torso and small matte feet. Camera stays centered behind with minimal gentle follow only after ascent. Same cabinet and pulsing red beacon remain ahead. Modest dust/grit under loaded feet; no exploding rubble. Sound exact contact/servo rhythm and small water/grit sounds.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 9,
+    "shot": "E6",
+    "file": "ending-e6-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "710d330b-2c11-40dd-a991-11343d200ba2"
+        }
+      ],
+      "prompt": "STABLE SEATED ROBOT CAMERA POV at target equipment after the frontal sitting shot. Preserve the approved muted image and integrated English CV interface. The cabinet detection box stays FITTED to the physical cabinet; separate small beacon box tracks its blinking lamp. Only minuscule residual camera settling at start, no orbit or zoom. Animate the vision inspection: sparse feature points acquire on actual corners, a thin scan line passes across the cabinet once, detection corners lock with a quiet acknowledgement. Red REC indicator blinks and recording time ADVANCES once each second from 00:03 to 00:08; preserve all other readable reference labels without gibberish. No new target, invented damage claim or numeric confidence percentage. Red physical beacon pulses separately from REC. Background drips/mist stay subtle. End stable target framing, motivating the following transfer screen. Sound a short record-start tone, faint processing ticks and unchanged room ambience; no speech.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 10,
+    "shot": "E7",
+    "file": "ending-e7-seedance25-v1",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "67fcfd6c-2baa-424f-9c5a-59a3720bb33c"
+        },
+        {
+          "role": "end_image",
+          "value": "31ebb14a-344e-4afe-a88c-95a2d9545278"
+        }
+      ],
+      "prompt": "TRANSMISSION then RECEIPT CONFIRMATION. Same stationary cabinet POV throughout, no camera move. Start exactly from the supplied green transfer image at 68%. Animate progress bar steadily and numerical percentage visibly 68 -> 78 -> 89 -> 96 -> 100 by second 3. At 100 briefly show receipt confirmation, then green interface clears and switches to the supplied RED completion design with exact readable English MISSION COMPLETE and 100%. Use red primarily in graphics, maintaining natural subdued background material response. Finish holding the exact completion end-frame for about 1 second. Do NOT fade to black inside this generation because end-image must remain legible; a separate short interference-to-black OUT will be added at edit end. No random string substitutions, duplicated text, reversed progress or camera teleport. Sound electronic transfer ticks increasing gently, then one restrained lower-pitched confirmation chime with clean ambience tail; no alarm, explosion or music.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  },
+  {
+    "index": 11,
+    "shot": "O5",
+    "file": "opening-o5-seedance25-v2",
+    "params": {
+      "model": "seedance_2_5",
+      "mode": "omni_reference",
+      "duration": 5,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "count": 1,
+      "generate_audio": true,
+      "bitrate_mode": "standard",
+      "draft": false,
+      "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "1a4b1094-644f-4af5-a249-d5363a207a80"
+        }
+      ],
+      "prompt": "ACTIVE ROBOT SENSOR POV, NOT a still illustration. Priority animation: the existing VX readouts visibly update as the robot settles. At 0s CMD 0.30 / STATE 0.28; at 1.5s CMD 0.15 / STATE 0.20; at 3s CMD 0.00 / STATE 0.06; at 4s both 0.00. Keep CMD/STATE and VX/VY/WZ labels, original monospaced font, original panel layout. Body roll/pitch readouts and horizon change subtly with a small clearly visible robot-mounted sway, then settle. No other arbitrary changing commands. Camera inches forward on the current safe support while tilting slightly downward, stopping before the gap without crossing. Outer HUD remains fixed to screen; green terrain samples refresh near-to-far on concrete and remain WORLD-ANCHORED, never fill empty gap or water. Retain all physical geometry; subtle moving surface scan, no frozen decorative overlay. Distant beacon slowly blinks. This follows separate black mission UI and precedes separate close scan shot; don't insert either. Sound quiet scan ticks, small servo/foot settling sounds and room drips. Illustrative sensor readings, not actual logs.\n\nOne continuous cinematic shot, 5 seconds, 16:9. Preserve the supplied approved scene geometry, camera axis, dangerous irregular broken slabs, surrounding water, pipes and target location. Photographic low-key material response, restrained local contrast, soft highlight roll-off; rough diffuse concrete with uneven dry/damp patches and small puddles, dull rust, soft satin gray paint, matte black foot rubber. NO exaggerated HDR, crunchy sharpening, glittering surfaces, universal mirror wetness, plastic gloss, exposure pumping or new ceiling lights. Sparse drips make localized ripples; thin low mist never hides foot contacts. Maintain the same hall ambience. Generate synchronized native diegetic audio with water drips, room tone and only action-appropriate sounds; no dialogue, lyrics, vocals, standalone music, cinematic trailer hits or unrelated alarms. No extra scenes or cuts within this shot. References supply this shot only; preceding/following shots described below are editing context, not requests to insert them."
+    }
+  }
+]

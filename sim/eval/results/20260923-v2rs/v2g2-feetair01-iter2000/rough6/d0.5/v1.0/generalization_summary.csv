@@ -1,0 +1,7 @@
+terrain,episodes,overall_success_rate,survival_rate,progress_success_rate,tracking_success_rate,direction_success_rate,mean_forward_progress_m,mean_lateral_drift_m,mean_velocity_mae_mps,mean_episode_duration_s,mean_fall_time_s,mean_reward_per_step
+pyramid_stairs,100,1.0,1.0,1.0,1.0,1.0,5.468073,0.17967,0.092978,6.0,,0.03995982
+pyramid_stairs_inv,100,1.0,1.0,1.0,1.0,1.0,5.577404999999998,0.146763,0.09469999999999999,6.0,,0.03843853
+boxes,100,1.0,1.0,1.0,1.0,1.0,5.6000869999999985,0.169658,0.101005,6.0,,0.03904263000000001
+random_rough,100,1.0,1.0,1.0,1.0,1.0,5.544715999999999,0.20570300000000002,0.10435099999999999,6.0,,0.03868936
+hf_pyramid_slope,100,1.0,1.0,1.0,1.0,1.0,5.710347999999999,0.082267,0.07099600000000002,6.0,,0.04151669
+hf_pyramid_slope_inv,100,1.0,1.0,1.0,1.0,1.0,5.621301,0.06911900000000001,0.07931099999999999,6.0,,0.04096170000000001

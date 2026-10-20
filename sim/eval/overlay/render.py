@@ -78,8 +78,21 @@ def probe(path):
     return {"width": width, "height": height, "fps": fps, "frames": counted}
 
 
-def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
-    """영상과 trace 가 같은 판인지 본다. 아니면 `AlignmentError`."""
+def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False,
+                   allow_short_trace=False):
+    """영상과 trace 가 같은 판인지 본다. 아니면 `AlignmentError`.
+
+    ## `allow_short_trace`
+
+    축 2(평지 프로브)에서는 **자료가 영상보다 짧은 것이 정상**입니다. 하네스는
+    넘어진 env 의 기록을 그 자리에서 멈추는데(`eval_command_response.py` 858행)
+    영상은 64 판 전체가 끝날 때까지 돕니다. v1 `turn` env 8 은 자료 3.70 초 ·
+    영상 6.48 초입니다 `확인됨`.
+
+    **검사를 끄는 것이 아닙니다.** 켜면 「짧은 것」만 봐 주고, 자료가 영상보다
+    **긴 것은 여전히 오류**로 둡니다. 그쪽은 정말로 다른 판을 붙인 것이기
+    때문입니다.
+    """
     problems = []
 
     video_fps = info["fps"]
@@ -103,6 +116,10 @@ def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
     video_duration = (info["frames"] / (video_fps * slowmo)) if video_fps > 0.0 else 0.0
     drift = abs(video_duration - trace.duration_s)
 
+    if allow_short_trace and trace.duration_s <= video_duration + max_drift_s:
+        # 자료가 짧다. 넘어진 자리에서 기록이 멈춘 것이라 정상이다.
+        drift = 0.0
+
     if drift > max_drift_s:
         problems.append(
             "길이가 다릅니다. 영상 {:.3f} s ({}장) · trace {:.3f} s ({}줄). "
@@ -120,7 +137,18 @@ def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
     # 스텝에서 프레임을 안 찍기 때문이다 (§ trace.py 머리말).
     surplus = len(trace) - info["frames"]
 
-    if surplus not in (0, 1):
+    if allow_short_trace:
+        # 평지 프로브에서는 **trace 가 짧은 것이 정상**입니다. 넘어진 env 의
+        # 기록이 그 자리에서 멈추고 영상은 계속 돕니다.
+        #
+        # **여전히 검사입니다.** trace 가 영상보다 «두 줄 이상 긴» 것은 그대로
+        # 오류로 둡니다. 그쪽은 정말로 다른 판을 붙인 것입니다.
+        bad = surplus >= 2
+    else:
+        # 정상은 딱 둘이다. 같거나, trace 가 한 줄 더 길거나.
+        bad = surplus not in (0, 1)
+
+    if bad:
         problems.append(
             "장수가 다릅니다. 영상 {}장 · trace {}줄 (차이 {:+d}). 판이 끝나는 "
             "스텝에서 한 장을 안 찍으므로 trace 가 «한 줄» 더 긴 것까지만 "
@@ -148,21 +176,55 @@ def check_alignment(info, trace, max_drift_s=0.10, allow_fps_mismatch=False):
 def render(video_path, trace_path, out_path, crf=20, preset="slow",
            max_drift_s=0.10, allow_fps_mismatch=False, limit_frames=0,
            title=None, slowdown_ratio=0.6, slowdown_min_s=0.15,
-           stills_dir="", progress_every=100):
-    """겹쳐 그린 mp4 를 만든다. 돌려주는 것은 요약 딕셔너리."""
+           stills_dir="", progress_every=100, mode="terrain", trace_obj=None,
+           y_top=None, skip_s=None):
+    """겹쳐 그린 mp4 를 만든다. 돌려주는 것은 요약 딕셔너리.
+
+    ## `trace_obj` 와 `mode`
+
+    평지 프로브(축 2)의 자료는 `sim/eval/timeseries` 의 parquet 에 있고 거기에
+    **trace CSV 에 없는 칸**(`cmd_wz_rps` · `base_yaw_deg`)이 들어 있습니다.
+    그 칸이 없으면 「어떤 명령이 언제 들어갔는지」를 못 그립니다.
+
+    **trace 규격을 늘리지 않습니다.** `timeseries.columns_for()` 가 93열을
+    `trace.TRACE_COLUMNS` 에서 지으므로, 규격에 칸을 더하면 93열이 96열이 되어
+    **이미 구운 parquet 이 전부 깨집니다** `확인됨`. 그래서 늘리는 대신
+    **이미 읽은 trace 객체를 받는 길**을 냅니다. parquet 줄은 trace 16열을
+    그대로 담고 있어 그대로 들어갑니다.
+    """
     import av
 
-    trace = trace_mod.read(trace_path)
+    trace = trace_obj if trace_obj is not None else trace_mod.read(trace_path)
     info = probe(video_path)
 
     aligned = check_alignment(info, trace, max_drift_s=max_drift_s,
-                              allow_fps_mismatch=allow_fps_mismatch)
+                              allow_fps_mismatch=allow_fps_mismatch,
+                              allow_short_trace=(mode == "flat"))
 
     size = (info["width"], info["height"])
 
+    span_s = None
+    fell_at_s = None
+
+    if mode == "flat":
+        # 가로축은 **영상** 길이다. 자료가 먼저 끝나도 시계는 영상을 따른다.
+        span_s = (info["frames"] / info["fps"]) if info["fps"] > 0.0 else None
+
+        # 넘어진 시각은 하네스가 메타에 적어 둔 것을 그대로 쓴다. 여기서
+        # 다시 판정하지 않는다.
+        raw = trace.meta.get("fell_at_s")
+
+        try:
+            value = float(raw)
+            fell_at_s = value if value == value else None    # NaN 걸러내기
+        except (TypeError, ValueError):
+            fell_at_s = None
+
     painter = hud_mod.Hud(size, trace, title=title,
                           slowdown_ratio=slowdown_ratio,
-                          slowdown_min_s=slowdown_min_s)
+                          slowdown_min_s=slowdown_min_s, mode=mode,
+                          span_s=span_s, fell_at_s=fell_at_s,
+                          y_top=y_top, skip_s=skip_s)
 
     out_dir = os.path.dirname(os.path.abspath(out_path))
 
@@ -201,7 +263,9 @@ def render(video_path, trace_path, out_path, crf=20, preset="slow",
                 row_index = int(round((index / fps) / trace.dt_s))
             row_index = min(max(row_index, 0), len(trace) - 1)
 
-            painted = painter.draw(frame.to_image(), row_index)
+            # **영상 프레임 번호를 따로 넘긴다.** `row_index` 는 위에서 잘렸다.
+            painted = painter.draw(frame.to_image(), row_index,
+                                   video_index=index)
 
             if stills_dir and index % max(progress_every, 1) == 0:
                 painted.save(os.path.join(stills_dir,

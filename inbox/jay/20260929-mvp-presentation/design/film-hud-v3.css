@@ -1,0 +1,47 @@
+@font-face{font-family:Pretendard;src:url('../assets/PretendardVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+.hud-vector .stroke{fill:none;stroke:#62d6a9;stroke-width:1.35}.hud-vector .lit{stroke:#bdffe2;opacity:1}.hud-vector .soft{opacity:.82}.hud-vector .faint{opacity:.38}.hud-vector .frame-line{stroke:#4dad8a;opacity:.8}.hud-vector .tick{stroke:#8febc5;stroke-width:1.3;opacity:.8}.hud-vector .bar-fill{fill:#65d8ab;opacity:.6}.hud-vector .title{fill:#dcfff0;letter-spacing:.045em}.hud-vector .accent{fill:#8cdebb}.hud-vector text{fill:#cbf5e5;stroke:#00170f;stroke-width:2.2px}.hud-vector{filter:drop-shadow(0 0 2px #7dffd544)}
+.qa-slide{background:#12161d;gap:0}.qa-word{font-family:Pretendard,sans-serif;font-size:9cqw;font-weight:750;letter-spacing:-.05em;font-synthesis:none;line-height:1}
+.stage[data-phase="torch"] .photo{animation:beam-camera-drift 5s ease-in-out both;filter:brightness(.9)}.stage[data-phase="torch"] .stage-shade{opacity:1;background:radial-gradient(ellipse 29% 43% at 23% 62%,#0000 0%,#0002 32%,#000d 70%,#000 100%);animation:torch-sweep 5s ease-in-out both}.stage[data-phase="torch"] .stage-shade::after{content:'';position:absolute;inset:0;background:linear-gradient(116deg,transparent 37%,#cce9ff08 42%,transparent 51%);mix-blend-mode:screen}
+@keyframes torch-sweep{0%{background:radial-gradient(ellipse 17% 25% at -15% 85%,#0000 0%,#0004 33%,#000e 67%,#000 100%)}18%{background:radial-gradient(ellipse 26% 39% at 19% 63%,#0000 0%,#0003 33%,#000e 72%,#000 100%)}42%{background:radial-gradient(ellipse 30% 45% at 48% 43%,#0000 0%,#0003 33%,#000e 75%,#000 100%)}70%{background:radial-gradient(ellipse 27% 42% at 77% 52%,#0000 0%,#0003 33%,#000e 74%,#000 100%)}100%{background:radial-gradient(ellipse 32% 45% at 52% 72%,#0000 0%,#0003 33%,#000e 78%,#000 100%)}}
+@keyframes beam-camera-drift{0%{transform:scale(1.06) translateX(1%)}45%{transform:scale(1.06) translateX(-.8%) rotate(.2deg)}100%{transform:scale(1.06) translateX(0)}}
+@media(prefers-reduced-motion:reduce){.stage[data-phase="torch"] .photo,.stage[data-phase="torch"] .stage-shade{animation:none}}
+
+@property --beam-x { syntax: '<percentage>'; inherits: false; initial-value: 23%; }
+@property --beam-y { syntax: '<percentage>'; inherits: false; initial-value: 62%; }
+.stage[data-phase="torch"] .stage-shade{background:radial-gradient(ellipse 27% 43% at var(--beam-x) var(--beam-y),#0000 0%,#0003 33%,#000e 73%,#000 100%);animation:torch-travel 5s ease-in-out both}
+@keyframes torch-travel{0%{--beam-x:-15%;--beam-y:85%}18%{--beam-x:19%;--beam-y:63%}42%{--beam-x:48%;--beam-y:43%}70%{--beam-x:77%;--beam-y:52%}100%{--beam-x:52%;--beam-y:72%}}
+
+.stage .cv-scan{animation:cv-sweep 4s ease-in-out infinite}.stage .cv-feature{animation:cv-track 2s ease-in-out infinite alternate}
+@keyframes cv-sweep{0%,100%{transform:translateY(0);opacity:.2}15%,85%{opacity:.8}50%{transform:translateY(375px);opacity:.6}}
+@keyframes cv-track{from{opacity:.45}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.stage .cv-scan,.stage .cv-feature{animation:none}}
+
+.frame[data-shot="O1"]{background:#000}.frame[data-shot="O1"] .photo{mask-image:radial-gradient(ellipse 18% 26% at 48% 66%,#000 0%,#000e 28%,#0007 52%,#0001 78%,transparent 100%)}
+.stage[data-phase="torch"] .frame[data-shot="O1"] .photo{mask-image:none}
+.stage[data-phase="torch"] .stage-shade{background:radial-gradient(ellipse 18% 27% at var(--beam-x) var(--beam-y),#0000 0%,#0002 25%,#0009 50%,#000f 80%,#000 100%)}
+
+/* E2: local light reveals the robot without lighting the entire hall. */
+.frame[data-shot="E2a"] .photo{filter:brightness(.025)}
+.stage[data-phase="reveal-dark"] .stage-shade{opacity:1;background:#000;transition:none}
+.stage[data-phase="reveal"] .stage-shade{opacity:1;transition:none;background:radial-gradient(ellipse 23% 38% at var(--beam-x) var(--beam-y),#0000 0%,#0004 45%,#000d 85%,#000f 100%);animation:go2-light-reveal 4s ease-in-out both}
+@keyframes go2-light-reveal{0%{--beam-x:5%;--beam-y:100%;opacity:1}35%{--beam-x:42%;--beam-y:79%;opacity:1}70%,100%{--beam-x:50%;--beam-y:70%;opacity:.94}}
+@media(prefers-reduced-motion:reduce){.stage[data-phase="reveal"] .stage-shade{animation:none;--beam-x:50%;--beam-y:70%}}
+
+/* Completed mission: calm red acknowledgement, no alarm flashing. */
+.mission-complete .hud-vector{filter:drop-shadow(0 0 4px #ff503b55)}
+.mission-complete .hud-vector .stroke,.mission-complete .hud-vector .tick{stroke:#ee6758}
+.mission-complete .hud-vector .lit{stroke:#ff8070}
+.mission-complete .hud-vector text{fill:#ff8d7d;stroke:#240704;stroke-width:2px}
+.mission-complete .hud-vector .title{fill:#ff7969}
+.mission-complete .hud-vector .done-center{text-anchor:middle}
+.mission-complete::before{box-shadow:inset 0 0 90px #1b0208aa}
+.stage[data-phase="reveal"] .stage-shade{background:radial-gradient(ellipse 23% 35% at var(--beam-x) var(--beam-y),#0000 0%,#0004 45%,#000d 85%,#000f 100%)}
+@keyframes go2-light-reveal{0%{--beam-x:5%;--beam-y:92%;opacity:1}35%{--beam-x:42%;--beam-y:62%;opacity:1}70%,100%{--beam-x:50%;--beam-y:53%;opacity:.94}}
+@media(prefers-reduced-motion:reduce){.stage[data-phase="reveal"] .stage-shade{--beam-x:50%;--beam-y:53%}}
+
+/* E2 is a fixed-light atmospheric reveal. O1 alone retains the moving beam. */
+.frame[data-shot="E2a"] .photo{filter:none}
+.stage[data-phase^="mood-"] .stage-shade{opacity:0;animation:none;transition:none;background:none}
+.stage[data-phase^="mood-"] .frame[data-shot="E2"] .photo::after{content:'';position:absolute;inset:0;background:url('../assets/ending-e2-mood-start-v6.png') center/cover;opacity:1;transition:opacity 3s ease-in-out}
+.stage[data-phase="mood-reveal"] .frame[data-shot="E2"] .photo::after{opacity:0}
+@media(prefers-reduced-motion:reduce){.stage[data-phase^="mood-"] .frame[data-shot="E2"] .photo::after{transition:none}}

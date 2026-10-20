@@ -129,6 +129,50 @@ VIEW_BY_TERRAIN = {
 
 SPEEDS = (0.5, 1.0, 1.5)
 
+# HUD 제목의 글자 상한. 규칙은 `overlay/hud.py` 가 갖는다. 여기서는 «맞춰
+# 주기» 위해서만 쓴다.
+from overlay import hud as _hud                                  # noqa: E402
+
+TITLE_MAX = _hud.TITLE_MAX
+
+
+def hud_title(label, terrain, speed):
+    """HUD 에 쓸 제목. `label` 이 비면 빈 문자열(= 자동 제목)을 돌려준다.
+
+    **정책 이름을 맨 앞에 둔다.** 녹화기의 자동 형식은 정책이 맨 뒤라
+    상한에서 잘릴 때 정책이 먼저 사라지고, 그러면 나란히 놓는 두 컷의
+    제목이 같아진다. 녹화기가 그 까닭을 오류 문구로 적어 두었다.
+
+    자동 형식은 긴 지형에서 상한을 넘는다 `확인됨` (2026-09-28).
+
+        boxes · d0.5 · 0.5 m/s · model_3000            35 자 · 거부
+        pyramid_stairs_inv · d0.5 · 0.5 m/s · ...      48 자 · 거부
+
+    v1 갤러리는 자동 제목 검사가 붙기 «전» 에 돌아서 이 자리를 안 만났다
+    (`overlay/hud.py:resolve_title` 머리말). 지금은 막힌다. 그래서 준다.
+
+    속도를 떼는 것으로 상한을 맞춘다. 속도는 파일 이름에 있고 HUD 그래프가
+    「명령 1.00」으로 이미 보여 주므로 제목에서 빠져도 잃는 것이 없다.
+    """
+    label = (label or "").strip()
+
+    if not label:
+        return ""
+
+    full = "%s · %s · %g" % (label, terrain, speed)
+
+    if len(full) <= TITLE_MAX:
+        return full
+
+    short = "%s · %s" % (label, terrain)
+
+    if len(short) <= TITLE_MAX:
+        return short
+
+    raise SystemExit(
+        "** HUD 제목이 상한을 넘는다 (%d 자 > %d): %r · --hud_label 을 줄여라 **"
+        % (len(short), TITLE_MAX, short))
+
 
 def set_of(terrain):
     """이 지형이 어느 집합 것인가. 집합마다 환경 설정 클래스가 다르다."""
@@ -264,6 +308,7 @@ def one_cut(args, terrain, speed, root):
     view = VIEW_BY_TERRAIN.get(terrain, "track_side")
     duration = round(DISTANCE_BUDGET_M / speed, 4)
     trace = os.path.join(out_dir, name + ".trace.csv")
+    title = hud_title(args.hud_label, terrain, speed)
 
     # 1. 촬영
     say("촬영  %-34s %s / %.1f m/s / %.1fs" % (name, view, speed, duration))
@@ -272,6 +317,9 @@ def one_cut(args, terrain, speed, root):
          "--terrain", terrain, "--terrain_set", set_of(terrain),
          "--difficulty", str(args.difficulty),
          "--cut", "A", "--view", view,
+         ]
+        + (["--title", title] if title else [])
+        + [
          "--num_envs", "1", "--columns", "1", "--rows", "1", "--spacing", "3.0",
          "--width", str(args.master_width), "--height", str(args.master_height),
          "--eval_duration", str(duration), "--command_vx", str(speed),
@@ -390,6 +438,10 @@ def main():
     p.add_argument("--web_width", type=int, default=WEB_WIDTH)
     p.add_argument("--web_height", type=int, default=WEB_HEIGHT)
     p.add_argument("--title", default="", help="갤러리 제목")
+    p.add_argument("--hud_label", default="",
+                   help="HUD 제목 맨 «앞» 에 둘 정책 이름 (예: v2). 주면 제목을 "
+                        "'<이름> · <지형> · <속도>' 로 만들어 녹화기에 넘긴다. "
+                        "안 주면 녹화기의 자동 제목을 쓴다 (긴 지형에서 거부될 수 있다)")
     p.add_argument("--raw_csv", default="",
                    help="성공률·참여도를 얹을 generalization_raw.csv 가 있는 폴더")
     args = p.parse_args()

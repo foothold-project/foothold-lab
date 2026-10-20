@@ -1,0 +1,14 @@
+{
+  "index": 0,
+  "job_id": "e50cdb44-11b5-4ef8-b2cb-894930dab0c9",
+  "status": "completed",
+  "type": "image",
+  "model": "gpt_image_2_5",
+  "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_141337_e50cdb44-11b5-4ef8-b2cb-894930dab0c9.png",
+  "estimated_credits": 2.75,
+  "reference_media_id": "e26874a1-d536-407e-a299-7ba1dd94d0ff",
+  "status_note": "사용자 확인 전 이미지 시안. 실제 동작·보행 검증 아님.",
+  "balance_before": 4987,
+  "balance_after": 4984.25,
+  "balance_difference": 2.75
+}

@@ -27,7 +27,6 @@ rendercheck.py
 secure_docs.py
 selfclaim.py
 stalecheck.py
-svgtext.py
 tablefix.py
 timecheck.py
 tokencheck.py
