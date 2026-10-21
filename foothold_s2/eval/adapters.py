@@ -421,6 +421,7 @@ class S2Policy:
             est = r.perception.step(self.pstate, inp, gmap, deterministic=True)
 
             ppo_obs = r._ppo_obs(raw, est)
+            self.last_est = est                               # 명령 반응 시험(diag_cmd_response)이 같은 est 를 다시 쓴다
 
             if os.environ.get("S2_SAMPLE") == "1":            # 점검용: 학습과 같은 표집 행동
                 return r.alg.policy.act(ppo_obs)
@@ -428,7 +429,10 @@ class S2Policy:
             return r.alg.policy.act_inference(ppo_obs)
 
     def reset(self, dones):
-        self.runner.perception.reset_envs(self.pstate, dones > 0, self.no_gt)
+        import torch
+
+        with torch.inference_mode():                       # 상태 텐서가 inference 모드에서 만들어져 밖에서는 제자리 쓰기가 막힌다
+            self.runner.perception.reset_envs(self.pstate, dones > 0, self.no_gt)
 
     def act(self, obs):
         return self(obs)

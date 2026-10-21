@@ -136,6 +136,7 @@ jobs:
   # ---------------------------------------------------------------- S1a 원인 시험 (lead 10/21 14:4x): S1a-v1.1(Rx1)은 팀장 「멈춰」 로 종료(사슬에서 뺌, 상태 보존 archive_v11_stopped_1021).
   # C1-scan(토크 벌점 -2e-4) · C2-blind(정책 관측에 몸 선속도), 부모 = S1-a 정본 + fbg 0.25 + clip 17, 시드 42 · 4096 env · 1501 회. 이미 돌고 있어 adopt 로 붙기만 한다.
   - name: c1_scan_train
+    cancelled: true          # 팀장 지시 15:00 (EX-07 · EX-08 중단)
     gpu: 0
     priority: 1
     adopt: {pid: 84336}
@@ -150,6 +151,7 @@ jobs:
       cmd: [bash, foothold_s2/run_s1_diag.sh, C1-scan, "cuda:{gpu}", --run_name, S1a-diag-C1-torque-scan-resume, --resume, --load_run, "{globname:${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C1-torque-scan}", --checkpoint, latest.pt, --load_experiment, foothold_s1a_diag]
 
   - name: c2_blind_train
+    cancelled: true          # 팀장 지시 15:00 (EX-07 · EX-08 중단)
     gpu: 1
     priority: 1
     adopt: {pid: 49412}
