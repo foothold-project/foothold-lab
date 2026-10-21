@@ -469,8 +469,56 @@ class Chain:
         if changed:
             self.event("chain", "reloaded", ",".join(changed))
 
+    def _apply_resets(self):
+        """상태 폴더의 `chain.reset` 파일(작업 이름을 공백 · 쉼표 · 줄바꿈으로 나열)을 읽어, 그 작업(과 그 작업 때문에 막힌 뒤 작업들)을
+        failed · blocked · done 에서 pending 으로 되돌린다. 실행기를 재시작하지 않고 다음 라운드에 읽는다. 돌고 있는(running) 작업은
+        건드리지 않는다(두 번 띄우지 않으려고). adopt 작업은 되돌려지는 즉시 다시 붙는다. 읽은 파일은 지운다."""
+        path = os.path.join(self.state_dir, "chain.reset")
+
+        if not os.path.isfile(path):
+            return
+
+        try:
+            with open(path, encoding="utf-8") as handle:
+                wanted = [w for w in re.split(r"[\s,]+", handle.read()) if w]
+            os.remove(path)
+        except OSError:
+            return
+
+        todo, unknown = [], [w for w in wanted if w not in self.jobs]
+
+        for name in wanted:
+            if name in self.jobs and name not in todo:
+                todo.append(name)
+
+        grew = True
+
+        while grew:                                                      # 되돌릴 작업에 기대다 막힌 뒤 작업들도 함께
+            grew = False
+
+            for name, job in self.jobs.items():
+                if name not in todo and self.state[name]["state"] == "blocked" and any(
+                        d in todo for d in list(job.get("depends_on", [])) + list(job.get("after", []))):
+                    todo.append(name)
+                    grew = True
+
+        done, skipped = [], []
+
+        for name in todo:
+            if self.state[name]["state"] == "running":
+                skipped.append(name)
+                continue
+
+            self.state[name] = {"state": "pending", "attempt": 0}
+            self._adopt_if_declared(self.jobs[name], self.state[name])
+            done.append(name)
+
+        self.event("chain", "reset", "되돌림 %s%s%s" % (",".join(done) or "-", " · 돌고 있어 건너뜀 " + ",".join(skipped) if skipped else "",
+                                                       " · 모르는 이름 " + ",".join(unknown) if unknown else ""), notify=bool(unknown or skipped))
+
     def step(self):
         self.reload_if_changed()
+        self._apply_resets()
 
         for name, job in self.jobs.items():
             st = self.state[name]

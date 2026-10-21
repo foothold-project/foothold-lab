@@ -639,3 +639,38 @@ def test_adopt_job_added_by_yaml_reload_attaches_instead_of_being_launched_by_cm
     assert "failed" not in kinds(tmp_path, "T")
     assert chain.run() == 0
     assert chain.state["T"]["state"] == "done" and chain.state["E"]["state"] == "done" and child.wait() == 0
+
+
+def test_reset_file_puts_a_failed_job_and_its_blocked_followers_back_to_pending_without_a_restart(tmp_path):
+    flag = tmp_path / "ok.txt"
+    ok = py("import sys,os;sys.exit(0 if os.path.exists(r'%s') else 1)" % str(flag).replace("\\", "/"))
+    jobs = [{"name": "A", "gpu": 0, "cmd": ok, "retries": 0},
+            {"name": "B", "gpu": 0, "depends_on": ["A"], "cmd": touch_cmd(tmp_path / "b.txt"), "done": {"outputs": [str(tmp_path / "b.txt")]}},
+            {"name": "C", "gpu": 1, "cmd": py("import time;time.sleep(5)"), "retries": 0}]
+    chain, _ = make(tmp_path, jobs)
+
+    for _ in range(40):
+        chain.step()
+        time.sleep(0.03)
+
+        if chain.state["A"]["state"] == "failed":
+            break
+
+    chain.step()
+    assert chain.state["A"]["state"] == "failed" and chain.state["B"]["state"] == "blocked"
+    flag.write_text("x", encoding="utf-8")                                              # 이제 A 는 성공할 수 있다
+    (tmp_path / "state" / "chain.reset").write_text("A, nope" + chr(10) + "C" + chr(10), encoding="utf-8")
+    chain.step()
+    assert not (tmp_path / "state" / "chain.reset").exists()                                # 읽은 파일은 지운다
+    assert chain.state["A"]["state"] in ("pending", "running", "done") and chain.state["B"]["state"] in ("pending", "running", "done")
+    detail = [e["detail"] for e in events(tmp_path) if e["event"] == "reset"][-1]
+    assert "모르는 이름 nope" in detail and "A" in detail and "B" in detail
+    assert chain.state["C"]["state"] == "running" and "C" in detail.split("돌고 있어 건너뜀")[-1]     # 돌고 있는 작업은 건드리지 않는다
+    for _ in range(200):
+        chain.step()
+        time.sleep(0.03)
+
+        if chain.state["B"]["state"] == "done":
+            break
+
+    assert chain.state["A"]["state"] == "done" and chain.state["B"]["state"] == "done"
