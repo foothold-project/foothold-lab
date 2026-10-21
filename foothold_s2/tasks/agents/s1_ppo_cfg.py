@@ -53,3 +53,10 @@ class S1aDiagPPORunnerCfg(S1aPPORunnerCfg):
 
     max_iterations = 1501
     experiment_name = "foothold_s1a_diag"
+
+
+@configclass
+class S1aV11PPORunnerCfg(S1aPPORunnerCfg):
+    """S1a-v1.1: S1-a 와 같은 PPO 값 · 6000 회 · 시드 42 · clip_actions 17(상속). 실험 폴더만 따로."""
+
+    experiment_name = "foothold_s1a_v11"
