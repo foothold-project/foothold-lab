@@ -81,6 +81,9 @@ container = av.open(args.mp4, mode="w")
 stream = container.add_stream("libx264", rate=int(round(fps)))
 stream.width, stream.height, stream.pix_fmt = args.width, args.height, "yuv420p"
 stream.options = {"crf": "20", "preset": "medium"}
+foot_r_ids, _ = robot.find_bodies(".*_foot")
+base_s, _ = sensor.find_bodies("base")
+step_stats = {"height": [], "base_contact": [], "yaw": []}
 steps = int(round(args.seconds / dt))
 _p0 = robot.data.root_pos_w[0].cpu().numpy()
 raw.sim.set_camera_view(eye=(_p0[0] - 0.4, _p0[1] - 1.9, _p0[2] + 0.55), target=(_p0[0] + 0.1, _p0[1], _p0[2] + 0.12))
@@ -122,6 +125,18 @@ for k in range(steps):
         policy_nn.reset(dones)
 
     runtime.EpisodeRunner._write_command(term, pin.want)
+
+    # 매 스텝 통계(영상 프레임과 무관): 몸 원점 높이(지면 = 접촉한 발 구 바닥의 평균 높이) · 몸통(base) 접촉 · 요
+    feet_z = robot.data.body_pos_w[0, foot_r_ids, 2]
+    in_contact = sensor.data.net_forces_w[0, foot_s, :].norm(dim=-1) > 1.0
+
+    if bool(in_contact.any()):
+        ground_z = float(feet_z[in_contact].mean()) - 0.022
+        step_stats["height"].append(float(robot.data.root_pos_w[0, 2]) - ground_z)
+
+    step_stats["base_contact"].append(bool(sensor.data.net_forces_w[0, base_s, :].norm(dim=-1).max() > 1.0))
+    _q = robot.data.root_quat_w[0].cpu().numpy()
+    step_stats["yaw"].append(float(np.degrees(np.arctan2(2 * (_q[0] * _q[3] + _q[1] * _q[2]), 1 - 2 * (_q[2] ** 2 + _q[3] ** 2)))))
 
     if k % every:
         continue
@@ -173,6 +188,11 @@ summary = {k: v for k, v in log.items() if k not in ("means", "vx", "t", "contac
 summary["min_mean_brightness"] = float(min(log["means"]))
 summary["max_identical_consecutive_frames"] = int(max_same)
 summary["fps"] = fps
+summary["body_height_over_ground_median_m"] = float(np.median(step_stats["height"]))
+summary["body_height_over_ground_p10_m"] = float(np.percentile(step_stats["height"], 10))
+summary["base_contact_fraction_of_steps(>1N)"] = float(np.mean(step_stats["base_contact"]))
+summary["yaw_abs_max_deg"] = float(np.max(np.abs(step_stats["yaw"])))
+summary["yaw_final_deg"] = float(step_stats["yaw"][-1])
 summary["render_retries_max"] = int(max(log["retries"]))
 summary["frames_that_needed_retry"] = int(sum(1 for r in log["retries"] if r))
 summary["vx_by_second"] = [float(np.mean([v for v, t in zip(log["vx"], log["t"]) if int(t) == s])) for s in range(int(args.seconds))]

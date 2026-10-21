@@ -96,3 +96,15 @@ gym.register(
         "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
     },
 )
+
+# S1-a 원인 시험 (lead 10/21): C1-scan = 토크 벌점 -2e-4, C2-blind = 정책 관측에 몸 선속도 (공통: fbg 0.25 · clip 17)
+for _name, _cls in (("C1-scan", "FootholdS1aDiagC1ScanEnvCfg"), ("C2-blind", "FootholdS1aDiagC2BlindEnvCfg")):
+    gym.register(
+        id=f"FootholdS2-Go2-S1a-diag-{_name}-v0",
+        entry_point="isaaclab.envs:ManagerBasedRLEnv",
+        disable_env_checker=True,
+        kwargs={
+            "env_cfg_entry_point": f"foothold_s2.tasks.s1_diag_cfg:{_cls}",
+            "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
+        },
+    )

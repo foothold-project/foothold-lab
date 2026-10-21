@@ -26,7 +26,7 @@ import yaml
 IS_WIN = os.name == "nt"
 CREATE_NO_WINDOW = 0x08000000
 CREATE_NEW_PROCESS_GROUP = 0x00000200
-TERMINAL = ("done", "failed", "blocked")
+TERMINAL = ("done", "failed", "blocked", "cancelled")
 
 BASH_CANDIDATES = (os.environ.get("FOOTHOLD_BASH", ""), "C:/Program Files/Git/bin/bash.exe",
                    "C:/Program Files/Git/usr/bin/bash.exe")
@@ -469,6 +469,11 @@ class Chain:
         if changed:
             self.event("chain", "reloaded", ",".join(changed))
 
+    def _is_cancelled(self, name):
+        """사람이 멈춘 작업: yaml 의 `cancelled: true` 또는 상태 폴더의 `cancel/<작업 이름>` 파일. 이런 작업은 다시 띄우지도 재시도하지도 않는다
+        (Rx1 을 멈추자 사슬이 «재시도» 로 되살린 사고, 10/21 14:38)."""
+        return bool(self.jobs[name].get("cancelled")) or os.path.exists(os.path.join(self.state_dir, "cancel", name))
+
     def _apply_resets(self):
         """상태 폴더의 `chain.reset` 파일(작업 이름을 공백 · 쉼표 · 줄바꿈으로 나열)을 읽어, 그 작업(과 그 작업 때문에 막힌 뒤 작업들)을
         failed · blocked · done 에서 pending 으로 되돌린다. 실행기를 재시작하지 않고 다음 라운드에 읽는다. 돌고 있는(running) 작업은
@@ -523,10 +528,15 @@ class Chain:
         for name, job in self.jobs.items():
             st = self.state[name]
 
+            if st["state"] == "pending" and self._is_cancelled(name):
+                st.update(state="cancelled", finished=self.clock())
+                self.event(name, "cancelled", "취소 표시: 띄우지 않음", notify=True)
+                continue
+
             if st["state"] == "pending":
-                if any(d in ("failed", "blocked") for d in self._deps(name)):
+                if any(d in ("failed", "blocked", "cancelled") for d in self._deps(name)):
                     st["state"] = "blocked"
-                    bad = [d for d in job.get("depends_on", []) if self.state[d]["state"] in ("failed", "blocked")]
+                    bad = [d for d in job.get("depends_on", []) if self.state[d]["state"] in ("failed", "blocked", "cancelled")]
                     self.event(name, "blocked", "앞 작업 실패: %s" % ",".join(bad), notify=True)
 
             elif st["state"] == "running":
@@ -583,6 +593,13 @@ class Chain:
 
     def _finish(self, name):
         job, st = self.jobs[name], self.state[name]
+
+        if self._is_cancelled(name):                                   # 사람이 멈춘 작업: 끝난 것으로 치지도, 재시도하지도 않는다
+            st.update(state="cancelled", finished=self.clock())
+            self.event(name, "cancelled", "취소 표시된 작업이 끝남: 재시도 안 함", notify=True)
+
+            return
+
         ok, problems = self.evaluate(name)
         took = self.clock() - st.get("started", self.clock())
         dur = "%dh%02dm" % (took // 3600, (took % 3600) // 60)

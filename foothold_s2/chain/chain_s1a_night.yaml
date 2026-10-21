@@ -215,9 +215,9 @@ jobs:
     gpu: 0
     priority: 2
     note: S1-a 판정 통과 파일이 생기면 S1-b 가 먼저 GPU 0 을 잡는다(bf16 은 판정 파일 뒤에만 뜸)
-    depends_on: [blind_v11_train]        # lead 10/21: S1a-v1.1 blind 의 model_5999 를 이어 받는다 (옛 blind_train 에서 바꿈)
+    depends_on: [blind_train]            # lead 10/21 14:3x: S1a-v1.1 종료(팀장 「멈춰」)로 옛 blind_train 으로 되돌림. 판정 파일(require_file)이 없으면 계속 대기
     require_file: ${CHAIN_DIR}/s1a_verdict_pass.json
-    cmd: [bash, foothold_s2/run_s1b_from_v11.sh, "cuda:{gpu}"]
+    cmd: [bash, foothold_s2/run_s1b.sh, "cuda:{gpu}"]
     log: ${CHAIN_DIR}/s1b_train.log
     done:
       status_glob: ${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind/train_start_status.json

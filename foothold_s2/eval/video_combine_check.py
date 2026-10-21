@@ -15,6 +15,10 @@ import numpy as np
 from PIL import Image
 
 
+SUFFIXES = os.environ.get("CLIP_SUFFIXES", "s1a_scan5999,v2,d2_1500").split(",")        # 합본 순서(왼쪽부터)
+TILE_WIDTH = int(os.environ.get("TILE_WIDTH", "640"))
+
+
 def read_frames(path):
     container = av.open(path)
     frames = [f.to_ndarray(format="rgb24") for f in container.decode(video=0)]
@@ -56,7 +60,7 @@ def combine(paths, out):
     streams = [read_frames(p) for p in paths]
     n = min(len(s[0]) for s in streams)
     fps = streams[0][1]
-    w = 640
+    w = TILE_WIDTH
     container = av.open(out, mode="w")
     stream = container.add_stream("libx264", rate=int(round(fps)))
     sample = Image.fromarray(streams[0][0][0])
@@ -83,14 +87,15 @@ def main():
     report = {}
 
     for scene in sys.argv[2:]:
-        names = [n for n in ("%s_s1a_scan5999", "%s_v2", "%s_d2_1500")]
+        names = ["%s_" + suffix for suffix in SUFFIXES]
         paths = [os.path.join(folder, (n % scene) + ".mp4") for n in names]
 
         for p in paths:
             frames, fps = read_frames(p)
             report[os.path.basename(p)] = dict(check(frames), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
 
-        report[scene + "_3up.mp4"] = {"frames": combine(paths, os.path.join(folder, scene + "_3up.mp4"))}
+        tag = "%dup" % len(paths)
+        report["%s_%s.mp4" % (scene, tag)] = {"frames": combine(paths, os.path.join(folder, "%s_%s.mp4" % (scene, tag)))}
 
     with open(os.path.join(folder, "frame_check.json"), "w", encoding="utf-8") as handle:
         json.dump(report, handle, ensure_ascii=False, indent=1)

@@ -9,7 +9,10 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
-from foothold_s2.tasks.s1_env_cfg import FootholdS1aScanEnvCfg
+from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+
+from foothold_s2.tasks.s1_env_cfg import FootholdS1aBlindEnvCfg, FootholdS1aScanEnvCfg
 
 
 @configclass
@@ -48,3 +51,21 @@ class FootholdS1aDiagD4EnvCfg(FootholdS1aScanEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         self.rewards.track_ang_vel.params = {**self.rewards.track_ang_vel.params, "std": 0.25}
+
+
+@configclass
+class FootholdS1aDiagC1ScanEnvCfg(FootholdS1aScanEnvCfg):
+    """C1-scan (lead 10/21 원인 시험): S1-a 정본 + 공통 수정 둘(fbg 0.25 · clip 17, 이미 공통 코드) + 관절 토크 벌점 -1e-5 -> -2e-4 하나. 커널은 원래 0.5."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.joint_torques.weight = -2.0e-4
+
+
+@configclass
+class FootholdS1aDiagC2BlindEnvCfg(FootholdS1aBlindEnvCfg):
+    """C2-blind (lead 10/21 원인 시험): S1-a blind + 공통 수정 둘 + 정책 관측에 몸 선속도 3 열(NVIDIA 와 같은 스케일 1.0 · 잡음 ±0.1) 추가. 이력 11 스텝이라 495 -> 528."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.observations.policy.base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))

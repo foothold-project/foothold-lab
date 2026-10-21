@@ -312,8 +312,8 @@ def test_real_yaml_has_the_agreed_graph():
     assert all(prio[n] == 9 for n in names if n.startswith("bf16") or n == "agenda_J4")                  # bf16 은 빈 틈만
     assert all(prio[n] == 1 for n in ("scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval", "agenda_J1"))
     assert prio["s1b_train"] == 2 and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
-    assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b_from_v11.sh"] and jobs["s1b_train"]["gpu"] == 0   # lead 10/21: S1a-v1.1 blind 에서 이어 받는다
-    assert jobs["s1b_train"]["depends_on"] == ["blind_v11_train"]
+    assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b.sh"] and jobs["s1b_train"]["gpu"] == 0   # lead 10/21 14:3x: S1a-v1.1 종료로 S1-a blind 로 되돌림
+    assert jobs["s1b_train"]["depends_on"] == ["blind_train"]
     assert jobs["scan_v11_train"]["adopt"]["pid"] > 0 and jobs["blind_v11_train"]["adopt"]["pid"] > 0
     assert jobs["scan_v11_train"]["gpu"] == 0 and jobs["blind_v11_train"]["gpu"] == 1
     assert jobs["scan_eval_v11"]["depends_on"] == ["scan_v11_train"] and jobs["blind_eval_v11"]["depends_on"] == ["blind_v11_train"]
@@ -674,3 +674,21 @@ def test_reset_file_puts_a_failed_job_and_its_blocked_followers_back_to_pending_
             break
 
     assert chain.state["A"]["state"] == "done" and chain.state["B"]["state"] == "done"
+
+
+def test_cancelled_jobs_are_never_relaunched_or_retried_and_block_their_followers(tmp_path):
+    """사람이 멈춘 판을 사슬이 «재시도» 로 되살린 사고(10/21 14:38)를 막는다: cancel 표시 파일 · yaml cancelled 둘 다."""
+    child = subprocess.Popen(py("import time;time.sleep(0.4)"))
+    relaunch = tmp_path / "relaunched.txt"
+    jobs = [{"name": "T", "gpu": 0, "adopt": {"pid": child.pid}, "retry": {"cmd": touch_cmd(relaunch)}, "done": {"outputs": [str(tmp_path / "never.pt")]}},
+            {"name": "E", "gpu": 0, "depends_on": ["T"], "cmd": touch_cmd(tmp_path / "e.txt")},
+            {"name": "Y", "gpu": 1, "cmd": touch_cmd(tmp_path / "y.txt"), "cancelled": True},
+            {"name": "Z", "gpu": 1, "depends_on": ["Y"], "cmd": touch_cmd(tmp_path / "z.txt")}]
+    chain, _ = make(tmp_path, jobs)
+    (tmp_path / "state" / "cancel").mkdir(parents=True)
+    (tmp_path / "state" / "cancel" / "T").write_text("x", encoding="utf-8")                     # 파일 방식
+    assert chain.run() == 1                                                                      # 취소 · 막힘만 있고 done 아닌 것이 있어 1
+    assert chain.state["T"]["state"] == "cancelled" and chain.state["Y"]["state"] == "cancelled"  # 돌고 있던 T 는 끝나자 취소로, yaml 방식 Y 는 안 띄움
+    assert chain.state["E"]["state"] == "blocked" and chain.state["Z"]["state"] == "blocked"
+    assert not relaunch.exists() and not (tmp_path / "y.txt").exists() and not (tmp_path / "e.txt").exists()
+    assert "relaunched" not in kinds(tmp_path, "T") and "launched" not in kinds(tmp_path, "Y")
