@@ -322,3 +322,23 @@ def test_direction_bins_and_exposure_log():
     assert sum(snap["mode_ratio"].values()) == approx(1.0)
     assert snap["direction_ratio"]["spin"] == approx(1 / 7)
     assert snap["mode_ratio"]["free_wz"] == approx(3 / 7)
+
+
+def test_start_mode_command_distribution_is_the_start_paper_one():
+    """G0-start (lead 10/21): vx U[0,1.5] · vy 0 · vx < 0.3 이면 vx = 0 · wz U[-1.2,1.2], 그 밖은 wz 0. 0.3 미만 가지 비율 약 20 %."""
+    import torch
+    from foothold_s2.commands import mixed_core as mc
+
+    gen = mc.make_generator(0)
+    params = mc.CommandParams(start_mode=True)
+    out = mc.resample_free_modes(gen, 200000, params, iteration=0)
+    cmd, spin = out["cmd"], out["spin"]
+    assert float(cmd[:, 1].abs().max()) == 0.0                                                 # vy 는 항상 0
+    assert abs(float(spin.float().mean()) - 0.3 / 1.5) < 0.01                                  # 제자리 회전 가지 ≈ 20 %
+    assert float(cmd[spin][:, 0].abs().max()) == 0.0 and float(cmd[spin][:, 2].abs().max()) <= 1.2 + 1e-6
+    assert float(cmd[spin][:, 2].abs().mean()) > 0.55 and float(cmd[spin][:, 2].abs().mean()) < 0.65     # U[-1.2,1.2] 의 |wz| 평균 0.6
+    assert float(cmd[~spin][:, 2].abs().max()) == 0.0                                          # 전진 중 yaw 없음 (원문에 없음)
+    assert float(cmd[~spin][:, 0].min()) >= 0.3 and float(cmd[~spin][:, 0].max()) <= 1.5
+    assert not bool(out["stand"].any()) and not bool(out["heading"].any())
+    default = mc.resample_free_modes(mc.make_generator(0), 1000, mc.CommandParams(), iteration=0)
+    assert float(default["cmd"][:, 1].abs().max()) > 0.0                                       # 기본(열린) 생성기는 그대로: vy 가 있다

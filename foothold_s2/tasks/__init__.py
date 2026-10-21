@@ -108,3 +108,13 @@ for _name, _cls in (("C1-scan", "FootholdS1aDiagC1ScanEnvCfg"), ("C2-blind", "Fo
             "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
         },
     )
+
+# S2-G0 진단 판 (lead 10/21): G0-open = S2-G0 그대로(우리 생성기), G0-start = 명령만 START 원문. clip 17 · fbg 0.25 포함.
+for _name, _cls in (("G0-open", "FootholdS2G0EnvCfg"), ("G0-start", "FootholdS2DiagG0StartEnvCfg")):
+    gym.register(
+        id=f"FootholdS2-Go2-S2-diag-{_name}-v0",
+        entry_point="foothold_s2.tasks.s2_env:FootholdS2Env",
+        disable_env_checker=True,
+        kwargs={"env_cfg_entry_point": f"foothold_s2.tasks.s2_env_cfg:{_cls}",
+                "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2DiagPPORunnerCfg"},
+    )

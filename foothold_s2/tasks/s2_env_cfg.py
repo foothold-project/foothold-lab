@@ -77,3 +77,15 @@ class FootholdS2G3EnvCfg(FootholdS2G1EnvCfg):
         from foothold_s2.rewards import core
 
         self.rewards.foot_edge.weight = core.WEIGHTS["foot_edge"]
+
+
+@configclass
+class FootholdS2DiagG0StartEnvCfg(FootholdS2G0EnvCfg):
+    """G0-start (lead 10/21 진단): S2-G0 와 같고 명령만 START 원문(`start_mode`). 깃발 없음 · 정지 없음 · heading 없음, 재표집 4 s 그대로."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        cmd = self.commands.base_velocity
+        cmd.dynamic_flags = False
+        cmd.flag_stride = 0
+        cmd.params = {"start_mode": True}

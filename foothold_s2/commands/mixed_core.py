@@ -47,6 +47,11 @@ class CommandParams:
     backoff_vmin: float = 0.1
     backoff_vmax: float = 0.3
     backoff_s: float = 2.0
+    # START 원문 명령 (lead 10/21 G0-start): vx U[0, 1.5] · vy 0 · vx < 0.3 이면 vx = 0 이고 wz U[-1.2, 1.2] (제자리 회전), 그 밖에는 wz 0. 정지 · heading · 깃발 없음.
+    start_mode: bool = False
+    start_vmax: float = 1.5
+    start_spin_threshold: float = 0.3
+    start_spin_wz: float = 1.2
 
 
 def make_generator(seed, device="cpu"):
@@ -113,6 +118,9 @@ def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None):
     순서(14 §3.2): 정지(p_stand) > 제자리 회전(1,000 회 이후 p_spin) > heading(플래그 확률) > 자유 wz.
     wz 는 heading env 에서 «매 스텝» `apply_heading` 이 덮어쓰므로 여기서는 자유 wz 를 담아 둔다.
     """
+    if params.start_mode:
+        return resample_start(gen, n, params)
+
     cmd = sample_free(gen, n, params, vmax_x, vmax_y)
     stand = _u(gen, (n,)) < params.p_stand
     spin_p = params.p_spin if iteration >= params.spin_after_iter else 0.0
@@ -128,6 +136,18 @@ def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None):
     cmd = torch.where(stand[:, None], torch.zeros_like(cmd), cmd)
 
     return {"cmd": cmd, "stand": stand, "spin": spin, "heading": heading, "psi_star": psi_star}
+
+
+def resample_start(gen, n, params):
+    """START 원문 명령: vx ~ U[0, start_vmax], vy = 0, vx < threshold 이면 vx = 0 · wz ~ U[-spin_wz, spin_wz] (제자리 회전 가지), 아니면 wz = 0.
+    원문에 «전진 중 yaw 분포» 가 없어서 wz 0 으로 둔다 (지어내지 않음)."""
+    vx = _u(gen, (n,), 0.0, params.start_vmax)
+    spin = vx < params.start_spin_threshold
+    wz = torch.where(spin, _u(gen, (n,), -params.start_spin_wz, params.start_spin_wz), torch.zeros_like(vx))
+    cmd = torch.stack([torch.where(spin, torch.zeros_like(vx), vx), torch.zeros_like(vx), wz], dim=1)
+    false = torch.zeros(n, dtype=torch.bool, device=cmd.device)
+
+    return {"cmd": cmd, "stand": false, "spin": spin, "heading": false, "psi_star": torch.zeros(n, device=cmd.device)}
 
 
 def apply_heading(cmd, heading, stand, psi_star, yaw, params):
