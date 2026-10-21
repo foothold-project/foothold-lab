@@ -39,3 +39,12 @@ class FootholdS1aDiagD3EnvCfg(FootholdS1aScanEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         self.rewards.track_lin_vel.params = {**self.rewards.track_lin_vel.params, "std": 0.25}
+
+
+@configclass
+class FootholdS1aDiagD4EnvCfg(FootholdS1aScanEnvCfg):
+    """D4 (준비만, 미등록 판정): 각속도 커널만 std 0.25, 선속도 커널은 원래 0.5. 회전 저하가 각속도 커널 탓인지 분리한다."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.track_ang_vel.params = {**self.rewards.track_ang_vel.params, "std": 0.25}

@@ -86,3 +86,13 @@ for _name, _cls in (("scan", "FootholdS1aV11ScanEnvCfg"), ("blind", "FootholdS1a
             "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aV11PPORunnerCfg",
         },
     )
+
+gym.register(
+    id="FootholdS2-Go2-S1a-diag-D4-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": "foothold_s2.tasks.s1_diag_cfg:FootholdS1aDiagD4EnvCfg",
+        "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s1_ppo_cfg:S1aDiagPPORunnerCfg",
+    },
+)
