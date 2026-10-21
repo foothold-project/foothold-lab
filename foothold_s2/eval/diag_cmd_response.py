@@ -72,15 +72,7 @@ dev = raw.device
 robot = raw.scene["robot"]
 
 if IS_S2:
-    from foothold_s2.runners.start_runner import StartRunner
-
-    train_cfg = agent_cfg.to_dict()
-    train_cfg["perception"] = dict(train_cfg.get("perception", {}) or {}, map_input="none")
-    runner = StartRunner(env, train_cfg, log_dir=None, device=args.device)
-    sd = torch.load(args.checkpoint, weights_only=False, map_location=args.device)
-    runner.alg.policy.load_state_dict(sd["model_state_dict"])
-    runner.perception.load_state_dict(sd["perception_state_dict"])
-    runner.perception.eval()
+    runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
     policy = adapters.S2Policy(runner, env.num_envs)
     KEY = "actor_in"
 else:

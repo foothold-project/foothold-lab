@@ -22,11 +22,23 @@ WATCH_PREFIXES = ("foothold_s2", "rsl_rl", "isaaclab_rl")        # 실제 import
 
 # 두 판 diff 에서 달라도 되는 칸 (점으로 이은 경로의 접두). 이것 말고 다르면 실패.
 ALLOWED_DIFF_PREFIXES = (
-    "run.name", "run.log_dir", "run.started_at", "run.pid", "run.cli_args.run_name", "run.cli_args.log_dir", "run.cli_args.hydra_args",
+    "run.name", "run.log_dir", "run.started_at", "run.pid", "run.cli_args.run_name", "run.cli_args.log_dir",
+    "run.hydra_overrides.agent.perception.est_mode",             # hydra 인자는 key 단위: est_mode 만 허용
     "modes.est_mode",                                              # 처치(est mask)
     "yaml.agent.run_name", "yaml.agent.perception.est_mode", "yaml.env.log_dir",
-    "files.manifest_file", "progress", "checkpoints",
+    "files.manifest_file", "progress", "checkpoints", "files.added_after_start",
 )
+
+# 장치 배치(어느 GPU 에서 돌렸나)는 처치가 아니라 배치다: 따로 «허용 · 장치 배치» 로 표시한다
+PLACEMENT_SUFFIXES = (".device", ".active_gpu", ".physics_gpu", "sim.device", ".local_rank", ".rank")
+
+# 기록 범위 계약 (ASTRA-X13 M1 · M3): 이 manifest 가 «보증하지 않는 것» 을 숨기지 않고 적는다
+RECORD_CONTRACT = {
+    "consumed_code": "foothold_s2 · rsl_rl · isaaclab_rl 의 import 된 .py 파일 SHA. Isaac Lab 본체 · isaaclab_tasks · USD/MDL 자산 SHA 는 시간이 커서 범위 밖(버전 · 경로만)",
+    "kl_probe": "같은 저장 history · 재생 버퍼의 같은 시작 hidden · 고정 epsilon 으로 est 를 다시 계산한 조건부 가우시안 KL. 옛 live hidden 을 이어 쓴 경우와의 구분 측정은 없음. 부분집합은 앞쪽 최대 kl_probe_envs(256) env 이며 전체 3072 env 의 KL 이 아님",
+    "action_probe": "PD target 한계 초과율 · 토크 절단율만 기록하고 실제 관절 target · 관절각 값은 기록하지 않음",
+    "reward_split": "보상 직후(reset 전) 값으로 env-step 단위 분류, 속도는 지수평균(시간 상수 약 10 스텝, 명령 변경 · reset 에서 다시 시작)",
+}
 
 
 def sha256_bytes(b: bytes) -> str:
@@ -153,8 +165,16 @@ def build_manifest(*, repo, log_dir, run_name, cli_args, modes, runner=None, env
     gs = git_state(repo)
     diff_text = gs.pop("_dirty_diff_text")
     clean_args = {k: v for k, v in dict(cli_args).items() if not SECRET.search(str(k))}
+    hydra_list = clean_args.pop("hydra_args", None) or []
+    hydra_overrides = {}
+
+    for item in hydra_list:                                   # "agent.perception.est_mode=zero" -> {"agent.perception.est_mode": "zero"}
+        k, _, v = str(item).partition("=")
+        hydra_overrides[k.strip()] = v.strip()
     m = {"schema": "foothold-manifest/1",
-         "run": {"name": run_name, "log_dir": log_dir, "started_at": time.strftime("%Y-%m-%d %H:%M:%S"), "pid": os.getpid(), "cli_args": clean_args},
+         "run": {"name": run_name, "log_dir": log_dir, "started_at": time.strftime("%Y-%m-%d %H:%M:%S"), "pid": os.getpid(), "cli_args": clean_args,
+             "hydra_overrides": hydra_overrides},
+         "record_contract": RECORD_CONTRACT,
          "git": gs, "packages": package_versions(), "python": sys.version.split()[0], "modes": dict(modes),
          "files": {"imported_sha256": imported_files()},
          "yaml": {"env": yaml_flat(env_yaml) if env_yaml else {}, "agent": yaml_flat(agent_yaml) if agent_yaml else {}},
@@ -194,6 +214,18 @@ def update_progress(log_dir: str, manifest: dict, completed_updates: int, total_
     write_manifest(log_dir, manifest)
 
 
+def file_changes(manifest: dict) -> dict:
+    """시작 때 기록한 소비 파일과 지금을 견준다: changed(SHA 다름) · missing(사라짐 또는 더는 import 안 됨 · 디스크에서 사라진 파일) · added(시작 뒤 새로 import 된 소비 파일 -> SHA)."""
+    now = imported_files()
+    old = manifest["files"]["imported_sha256"]
+    seen_added = manifest["files"].get("added_after_start", {})
+    changed = sorted(n for n, sha in old.items() if n in now and now[n] != sha)
+    missing = sorted(n for n in old if n not in now)
+    added = {n: sha for n, sha in now.items() if n not in old and seen_added.get(n) != sha}
+
+    return {"changed": changed, "missing": missing, "added": added}
+
+
 def changed_files(manifest: dict) -> list[str]:
     """시작 때 기록한 소비 파일 중 지금 SHA 가 달라진 모듈 이름 (실행 중 코드 변경 감지)."""
     now = imported_files()
@@ -221,7 +253,7 @@ def diff_manifests(a: dict, b: dict, allowed=ALLOWED_DIFF_PREFIXES) -> dict:
     """두 manifest 의 다른 칸을 허용(allowed)과 그 밖으로 가른다. `ok` 는 허용 밖 차이가 0 일 때만 True."""
     fa, fb = flatten(a), flatten(b)
     keys = sorted(set(fa) | set(fb))
-    allowed_diffs, bad = {}, {}
+    allowed_diffs, bad, placement = {}, {}, {}
 
     for k in keys:
         if fa.get(k, "<없음>") == fb.get(k, "<없음>"):
@@ -231,10 +263,12 @@ def diff_manifests(a: dict, b: dict, allowed=ALLOWED_DIFF_PREFIXES) -> dict:
 
         if any(k == p or k.startswith(p + ".") or k.startswith(p + "[") for p in allowed):
             allowed_diffs[k] = entry
+        elif (k.startswith("run.cli_args.") or k.startswith("yaml.")) and any(k.endswith(suf) for suf in PLACEMENT_SUFFIXES):
+            placement[k] = entry
         else:
             bad[k] = entry
 
-    return {"ok": not bad, "allowed_differences": allowed_diffs, "unexpected_differences": bad, "keys_compared": len(keys)}
+    return {"ok": not bad, "allowed_differences": allowed_diffs, "device_placement_differences": placement, "unexpected_differences": bad, "keys_compared": len(keys)}
 
 
 def main(argv=None):
@@ -249,7 +283,7 @@ def main(argv=None):
     a, b = (json.load(open(p, encoding="utf-8")) for p in argv)
     res = diff_manifests(a, b)
     print(json.dumps({"ok": res["ok"], "keys_compared": res["keys_compared"], "allowed": sorted(res["allowed_differences"]),
-                      "unexpected": res["unexpected_differences"]}, ensure_ascii=False, indent=1))
+                      "device_placement": sorted(res["device_placement_differences"]), "unexpected": res["unexpected_differences"]}, ensure_ascii=False, indent=1))
 
     return 0 if res["ok"] else 1
 

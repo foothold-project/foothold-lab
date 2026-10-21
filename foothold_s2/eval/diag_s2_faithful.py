@@ -38,7 +38,6 @@ import isaaclab_tasks  # noqa: E402,F401
 
 import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters  # noqa: E402
-from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -47,14 +46,7 @@ env_cfg.sim.device = args.device
 agent_cfg.device = args.device
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
-train_cfg = agent_cfg.to_dict()
-train_cfg["perception"] = dict(train_cfg.get("perception", {}) or {}, map_input="none")
-runner = StartRunner(env, train_cfg, log_dir=None, device=args.device)
-sd = torch.load(args.checkpoint, weights_only=False, map_location=args.device)
-runner.alg.policy.load_state_dict(sd["model_state_dict"])
-runner.perception.load_state_dict(sd["perception_state_dict"])
-runner.alg.policy.eval()
-runner.perception.eval()
+runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
 policy = adapters.S2Policy(runner, env.num_envs)
 obs = env.get_observations()
 robot = raw.scene["robot"]

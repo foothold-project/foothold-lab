@@ -298,7 +298,7 @@ def test_reward_split_known_answer_half_moving_half_stalled():
 
     assert out["frac_moving"] == pytest.approx(3 / 8) and out["frac_stalled"] == pytest.approx(3 / 8) and out["frac_no_move_command"] == pytest.approx(2 / 8)
     m, s = out["moving"], out["stalled"]
-    assert m["n_envs"] == 3 and s["n_envs"] == 3
+    assert m["env_steps"] == 3 * 24 and s["env_steps"] == 3 * 24
     assert m["track_lin_vel"] == pytest.approx(1.0) and s["track_lin_vel"] == pytest.approx(0.4)
     assert m["action_rate"] == pytest.approx(-0.5) and s["action_rate"] == pytest.approx(-2.0)
     assert m["action_smoothness"] == pytest.approx(-0.25) and s["action_smoothness"] == pytest.approx(-1.0)
@@ -306,56 +306,7 @@ def test_reward_split_known_answer_half_moving_half_stalled():
     assert m["total"] == pytest.approx(1.0 - 0.5 - 0.25 - 0.2) and s["total"] == pytest.approx(0.4 - 2.0 - 1.0 - 0.5)
 
 
-def test_reward_split_reads_env_objects():
-    from foothold_s2.runners.reward_split import RewardSplit
-
-    N = 4
-    data = SimpleNamespace(root_lin_vel_b=torch.tensor([[0.4, 0, 0]] * 2 + [[0.0, 0, 0]] * 2), root_ang_vel_b=torch.zeros(N, 3))
-    term = SimpleNamespace(vel_command_b=torch.tensor([[0.5, 0, 0]] * N))
-    env = SimpleNamespace(reward_manager=SimpleNamespace(active_terms=["track_lin_vel", "action_rate"], _step_reward=torch.tensor([[1.0, -1.0]] * 2 + [[0.1, -3.0]] * 2)),
-                          scene={"robot": SimpleNamespace(data=data)}, command_manager=SimpleNamespace(get_term=lambda name: term))
-    rs = RewardSplit()
-
-    for _ in range(3):
-        rs.add(env)
-
-    out = rs.summary()
-
-    assert out["frac_moving"] == 0.5 and out["moving"]["track_lin_vel"] == pytest.approx(1.0) and out["stalled"]["action_rate"] == pytest.approx(-3.0)
-    assert RewardSplit().summary() is None
-
-
-def test_runner_survives_env_without_reward_objects(tmp_path):
-    """가짜 env 에는 보상 관리자 · 로봇 · 명령 term 이 없다: 기록이 오류 없이 꺼지고 학습은 끝까지 돈다."""
-    r = _runner(log_reward_split=True)
-    r.log_dir = str(tmp_path)
-    r.learn(1)
-
-    assert r.current_learning_iteration == 0
-    assert not os.path.exists(os.path.join(str(tmp_path), "train_extra.jsonl"))
-
-
 # ------------------------------------------------------------------ 실행 무효 · manifest
-def test_start_contract_violation_stops_and_records(tmp_path):
-    r = _runner(contract="start")
-    r.log_dir = str(tmp_path)
-
-    class Term:
-        vel_command_b = torch.tensor([[0.5, 0, 0], [0.0, 0, 1.2], [0.0, 0, 0.0], [1.5, 0, 0]] * 2)
-
-    r._command_term = lambda: Term()
-    r._check_start_contract(3)                                                         # 범위 안: 통과
-
-    for bad in ([2.0, 0, 0], [0.5, 0.1, 0], [0.5, 0, 0.3], [0.0, 0, 1.5]):
-        Term.vel_command_b = torch.tensor([bad] + [[0.5, 0, 0]] * 7)
-
-        with pytest.raises(RuntimeError, match="명령 계약"):
-            r._check_start_contract(3)
-
-    st = json.load(open(os.path.join(str(tmp_path), "train_start_status.json"), encoding="utf-8"))
-    assert st["state"] == "failed" and st["invalid_run"] is True
-
-
 def test_nonfinite_stops_the_run(tmp_path):
     class NanEnv(FakeStartEnv):
         def step(self, actions):

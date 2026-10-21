@@ -40,12 +40,14 @@ import rsl_rl
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
+from foothold_s2.runners.contracts import start_contract_bad
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 
 CKPT_FORMAT = "foothold-start/1"
+MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크포인트(G0 · G1 · EX-09 · EX-10)에는 이 칸이 없다: 그때의 동작이 이 값이다
 
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
 PERCEPTION_DEFAULTS = {
@@ -228,6 +230,8 @@ class StartRunner(OnPolicyRunner):
         gt_steps = torch.zeros((), device=self.device)
         act_stats = None
         rs_rec = RewardSplit() if self.pcfg["log_reward_split"] else None
+        if rs_rec is not None:
+            rs_rec.attach(getattr(self.env, "unwrapped", self.env))
         if self.pcfg["log_action_stats"]:
             act_stats = ActionStats(float(self.cfg.get("clip_actions") or 1e9), n, self.env.num_actions, device=self.device)
 
@@ -243,6 +247,8 @@ class StartRunner(OnPolicyRunner):
             self._phase_start()
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
+            contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if self.pcfg["contract"] == "start" else None
+            contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
             with torch.inference_mode():
                 for step_k in range(self.num_steps_per_env):
@@ -253,10 +259,15 @@ class StartRunner(OnPolicyRunner):
                     self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt)
                     gt_steps += self.pstate.use_gt.float().mean()
                     actions = self.alg.act(ppo_obs)
+                    if contract_bad is not None:
+                        consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
+                        bad_now = start_contract_bad(consumed)
+                        contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
+                        contract_bad |= bad_now
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
                     if rs_rec is not None:
-                        rs_rec.add(getattr(self.env, "unwrapped", self.env))
+                        rs_rec.add()
                     if act_stats is not None:
                         act_stats.add(actions, dones, phys_probe(getattr(self.env, "unwrapped", self.env)) if (step_k % 8 == 0) else None)
                     if self.pcfg["stop_on_nonfinite"]:
@@ -282,8 +293,8 @@ class StartRunner(OnPolicyRunner):
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
-            if self.pcfg["contract"] == "start":
-                self._check_start_contract(it)
+            if contract_bad is not None and bool(contract_bad.any()):
+                self._invalid(it, f"START 명령 계약 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
             # ② PPO update
             self._phase_start()
             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
@@ -298,6 +309,9 @@ class StartRunner(OnPolicyRunner):
             self._phase_start()
             klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
             ploss = self.update_perception()
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
+                self._check_params_finite(it)
             if klf is not None:
                 kl_info["phi"] = self._kl_phi_after(klf)
             self._mark("4_perception_update", it)
@@ -305,7 +319,7 @@ class StartRunner(OnPolicyRunner):
             for name, res in kl_info.items():
                 loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
             split = rs_rec.summary() if rs_rec is not None else None
-            if split is not None:
+            if split is not None and "unavailable" not in split:
                 loss_dict["reward_split/frac_moving"] = split["frac_moving"]
                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
@@ -314,6 +328,8 @@ class StartRunner(OnPolicyRunner):
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
             p = self.update_adasmpl()
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, adasmpl_p=torch.as_tensor(p, dtype=torch.float32))
             loss_dict["adasmpl/p_smpl"] = p
             loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
             learn_time = time.time() - start
@@ -328,6 +344,7 @@ class StartRunner(OnPolicyRunner):
                     self.save(os.path.join(self.log_dir, f"model_{it}.pt"))
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
                 if it % self.pcfg["latest_interval"] == 0:
+                    self._check_code(it)
                     self.save_latest()
                 if it == start_iter or it % self.pcfg["status_interval"] == 0:
                     self._write_running_status(it, tot_iter, rewbuffer, lenbuffer, collection_time + learn_time, steps)
@@ -355,23 +372,34 @@ class StartRunner(OnPolicyRunner):
             if not bool(torch.isfinite(v).all()):
                 self._invalid(it, f"NaN/Inf: {k}")
 
-    def _check_start_contract(self, it: int) -> None:
-        """START 원문 명령 계약: vx in [0, 1.5], vy = 0, vx > 0 이면 wz = 0 · vx = 0 이면 |wz| <= 1.2 (표집 vx < 0.3 은 vx = 0 가지)."""
+    def _consumed_command(self, it: int) -> torch.Tensor:
+        """이번 step 에 행동이 따른 명령 (N, 3). 명령 term 이 없으면 계약을 확인할 수 없으므로 실행 무효."""
         term = self._command_term()
         if term is None:
+            self._invalid(it, "START 명령 계약을 검사해야 하는데 command_manager 의 base_velocity term 이 없다")
+        return term.vel_command_b[:, :3].detach().clone()
+
+    def _check_params_finite(self, it: int) -> None:
+        """갱신 뒤 정책 · 지각 파라미터가 모두 유한한지."""
+        for owner, module in (("policy", self.alg.policy), ("perception", self.perception)):
+            for name, prm in module.named_parameters():
+                if not bool(torch.isfinite(prm).all()):
+                    self._invalid(it, f"NaN/Inf 파라미터: {owner}.{name}")
+
+    def _check_code(self, it: int) -> None:
+        """시작 때 기록한 소비 파일이 바뀌었거나 사라졌으면 실행 무효. 새로 import 된 소비 파일은 manifest 에 덧붙이고 알린다(무효 아님)."""
+        if self.manifest is None:
             return
-        c = term.vel_command_b[:, :3]
-        tol = 1e-5
-        bad = (c[:, 0] < -tol) | (c[:, 0] > 1.5 + tol) | (c[:, 1].abs() > tol) | ((c[:, 0] > tol) & (c[:, 2].abs() > tol)) | ((c[:, 0].abs() <= tol) & (c[:, 2].abs() > 1.2 + tol))
-        if bool(bad.any()):
-            self._invalid(it, f"명령 계약 위반 {int(bad.sum())} env, 예 {c[bad][0].tolist()}")
+        ch = run_manifest.file_changes(self.manifest)
+        if ch["changed"] or ch["missing"]:
+            self._invalid(it, "실행 중 소비 코드가 바뀜: 변경 " + ",".join(ch["changed"][:8]) + " 소실 " + ",".join(ch["missing"][:8]))
+        if ch["added"]:
+            self.manifest["files"].setdefault("added_after_start", {}).update(ch["added"])
 
     def _manifest_checkpoint(self, it: int, name: str, num_envs: int) -> None:
         if self.manifest is None:
             return
-        changed = run_manifest.changed_files(self.manifest)
-        if changed:
-            self._invalid(it, "실행 중 소비 코드가 바뀜: " + ",".join(changed[:8]))
+        self._check_code(it)
         done = it + 1
         run_manifest.update_progress(self.manifest_dir, self.manifest, done, done * self.num_steps_per_env * num_envs * self.gpu_world_size,
                                      (name, os.path.join(self.log_dir, name)))
@@ -582,6 +610,10 @@ class StartRunner(OnPolicyRunner):
         sd = torch.load(path, weights_only=False, map_location=map_location)
         if sd.get("format") != CKPT_FORMAT:
             raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
+        saved = sd.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
         self.alg.policy.load_state_dict(sd["model_state_dict"])
         self.perception.load_state_dict(sd["perception_state_dict"])
         self.adasmpl.load_state_dict(sd["adasmpl"])

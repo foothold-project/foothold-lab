@@ -43,7 +43,6 @@ import isaaclab_tasks  # noqa: E402,F401
 
 import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters  # noqa: E402
-from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -70,18 +69,12 @@ dev = raw.device
 robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")
 dt = raw.step_dt
-train_cfg = agent_cfg.to_dict()
-train_cfg["perception"] = dict(train_cfg.get("perception", {}) or {}, map_input="none")
-runner = StartRunner(env, train_cfg, log_dir=None, device=args.device)
-sd = torch.load(args.checkpoint, weights_only=False, map_location=args.device)
-runner.alg.policy.load_state_dict(sd["model_state_dict"])
-runner.perception.load_state_dict(sd["perception_state_dict"])
-runner.alg.policy.eval()
-runner.perception.eval()
+runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)
 clip = float(agent_cfg.clip_actions)
 CMDS = {"free": None} if args.free_cmd else {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
 res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_iter": int(sd.get("iter", -1)), "envs": args.envs, "steps": args.steps,
-       "dr_off": dr_off, "clip_actions": clip, "combos": {}}
+       "dr_off": dr_off, "clip_actions": clip, "restored_modes": {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input")},
+       "checkpoint_sha256": __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint), "combos": {}}
 S = args.steps
 
 for z in (("mean",) if args.free_cmd else ("mean", "sample")):

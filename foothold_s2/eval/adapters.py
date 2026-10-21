@@ -448,6 +448,38 @@ class S2Policy:
         return self(obs)
 
 
+def load_s2_runner(env, train_cfg, checkpoint, device, expect=None):
+    """평가 경계: 체크포인트에 저장된 est_mode · critic_mode · map_input 을 복원해 StartRunner 를 만들고 정책 · 지각 가중치를 읽는다.
+    `expect` ({"est_mode": ..., "critic_mode": ...})가 저장값과 다르면 거부한다(훈련 CLI override 를 사람이 기억하는 방식에 기대지 않는다).
+    옛 체크포인트에 칸이 없으면 그때의 동작(learned · legacy · none)으로 본다. 돌려주는 값: (runner, 체크포인트 dict)."""
+    import torch
+
+    from foothold_s2.runners.start_runner import MODE_DEFAULTS, StartRunner
+
+    sd = torch.load(checkpoint, weights_only=False, map_location=device)
+    saved = sd.get("perception_cfg") or {}
+    pc = dict(train_cfg.get("perception", {}) or {})
+    pc["map_input"] = saved.get("map_input", "none")
+
+    for key, default in MODE_DEFAULTS.items():
+        value = saved.get(key, default)
+
+        if expect and expect.get(key) not in (None, value):
+            raise ValueError("체크포인트의 %s=%r 와 요청 %r 가 다르다" % (key, value, expect[key]))
+
+        pc[key] = value
+
+    cfg = dict(train_cfg)
+    cfg["perception"] = pc
+    runner = StartRunner(env, cfg, log_dir=None, device=device)
+    runner.alg.policy.load_state_dict(sd["model_state_dict"])
+    runner.perception.load_state_dict(sd["perception_state_dict"])
+    runner.alg.policy.eval()
+    runner.perception.eval()
+
+    return runner, sd
+
+
 class S2Adapter(S1Adapter):
     """S2-G0 진단 판(EX-09 · EX-10). 관측은 45 + 지각 묶음, 정책은 StartRunner 의 actor + 지각(지도 입력 none).
 
@@ -471,24 +503,14 @@ class S2Adapter(S1Adapter):
     def load_policy(self, built, checkpoint):
         import torch
 
-        from foothold_s2.runners.start_runner import StartRunner
-
         agent_cfg = built["agent_cfg"]
         env = built.get("env") or self.wrap(built)
-        train_cfg = agent_cfg.to_dict()
-        pc = dict(train_cfg.get("perception", {}) or {})
-        pc["map_input"] = "none"
-        train_cfg["perception"] = pc
-        runner = StartRunner(env, train_cfg, log_dir=None, device=agent_cfg.device)
-        sd = torch.load(checkpoint, weights_only=False, map_location=agent_cfg.device)
-        runner.alg.policy.load_state_dict(sd["model_state_dict"])
-        runner.perception.load_state_dict(sd["perception_state_dict"])
-        runner.alg.policy.eval()
-        runner.perception.eval()
+        runner, sd = load_s2_runner(env, agent_cfg.to_dict(), checkpoint, agent_cfg.device, expect=getattr(self, "expect_modes", None))
         policy = S2Policy(runner, env.num_envs)
         obs = env.get_observations()
         self.checks["policy_class"] = type(runner.alg.policy).__name__
         self.checks["checkpoint_iter"] = int(sd.get("iter", -1))
+        self.checks["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input")}
         self.checks["obs_keys"] = sorted(obs.keys())
 
         return env, policy, policy, obs
