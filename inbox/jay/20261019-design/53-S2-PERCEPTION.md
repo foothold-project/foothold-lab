@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: START 2512.13153v1 (TR-Net 126~139 · 169 · AdaSmpl 185~217 · 발 가장자리 239~257 · 예산 221 · 실기 379 행) · 선행 2409.15692v2 95 행 · Table V(305~353 행) · Fig. 8 (evidence/maicode-trcr-deep) · RESEARCH-astra-19g · evidence/deep-research-start-*.json · ASTRA 19f Q3 · fable 20e R1~R7 · F15 · F26 · 11 · 12 · 13 · 18 §4 · 41 §9 · VERIFY-fable-20f P1 · P2 · P11 · P14 · P27 · P28 · **APPROVED L(S2 20,000 회 · 11/10 대비책, 팀장 승인 10/20 00:4x)** · 70 §1.2 · #555 결정 6310259601 · 14 §0 · EXP-G0-open/start 카드 · SCHEDULE-NOW S0-L 전제
 > 요지: 14 생성기 · 15 지형군 둘 · 16 보상 위에 START 의 depth 높이 지도 재구성과 발 가장자리 보상을 단계적으로 얹는다(S2-G0 눈만 끈 판 → G1 → G3). G0 는 GPU 0, G1 · G3 는 GPU 1 에서 S3 와 병렬. F26 사전 관문을 넘을 때만 하위 보행을 바꾼다. 실측값은 S2 cfg 에 넣지 않는다. 반복 수는 논문의 2 배인 20,000(L: 이어진 지형을 더한 만큼 듬성한 지형 노출을 START 이상으로). G3 가 11/10 을 넘기면 11/10 관문은 G1 결과로 판정하고 G3 는 11/14 까지 10/21 G0의 1500회 명령 두 판은 자세 진단이고 20,000회 G0 기준선은 별도 본선이다.
-> 상태: v1.3 · 팀장 검토 전 · 미기재 값은 가정 · S2-G0 는 팀장 승인 J-A · 반복 20,000 은 팀장 승인 L · 결정 2 · 8 반영(APPROVED M · fable 20l) · **20q N 절 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · 10/21 EX-09/10 진단과 S0-L 이후 본선 경계 기록 · 실제 cfg 미확인
+> 상태: v1.3 · 기존 20,000회 본선 계약 보존 · 10/21 EX-09/10 이력과 10/22 EX-11/12 진단 경계 반영 · 실제 cfg 미확인
 
 # 53 · S2 START 지각 (G1 · G3)
 
@@ -25,6 +25,12 @@ lead가 두 진단의 **2행 2열 영상**에서 몸 아래로 다리를 펴는�
 **기존 본선 선행 조건과 날짜**: §1 그림·§2 본선 표·§5~§7의 G0/G1/G3 일정과 관문은 S0-L을 Linux에서 실제로 통과한 뒤의 본선 계획이다([SCHEDULE-NOW](SCHEDULE-NOW.md) · 50 §2). 오늘의 진단 두 판은 S0-L 통과 증거나 2단계 본 학습 승인으로 쓰지 않는다. 본선 시작 시각과 GPU 배정은 실제 선행 조건을 확인해 다시 기록하며, 기존 41·52·봉인 gates 수치는 바꾸지 않는다. 이 문단은 실행 허가가 아니다.
 
 ## 1. 세부 흐름
+
+### 10/22 EX-11·EX-12 추정 연결 진단 · G0 본선과 구분
+
+[#555 6319562769](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319562769)의 승인 전달 대상은 [EX-11 zeroest](../20261021-experiments/EXP-G0-zeroest.md)와 [EX-12 learnedest](../20261021-experiments/EXP-G0-learnedest.md)다. EX-11 actor에는 `o45 + 0×est51`, EX-12에는 `o45 + est51`을 준다. 지각 forward·표집·감독 갱신·reset은 둘 다 실행하며 초기 actor/critic weight·optimizer SHA가 같아야 한다. 공통 설정은 3072 env·24 step·seed42, S1 이어진 지형 7종 23열과 같은 초기 레벨·승급·reset 원점, START 명령, clean critic 52+512+100=664, actor 잡음, B std0.5, 종료 여유0.25, clip17이다. 50열·sparse·깃발은 이번 진단에서만 끈다. 실 import SHA·dirty diff·YAML·인자·mask·z/action mode·경험량을 manifest로 확인한다. 학습 수집·PPO 저장·평가 mask의 동일성, 같은 history·hidden·epsilon 조건부 지각 KL과 PPO KL 분리, raw/clip 행동 포화를 CPU 시험과 기록으로 확인해야 한다. 모두 구현·실행 전 미확인이다.
+
+EX-10 z/action 네 조합 평가 → 두 판 코드·CPU 시험·lead 확인 → 병렬 학습 순서다. 500 update 점검 뒤 기본은 둘 다 1500까지, 둘 다 참고 평가를 통과한 때만 같은 완료 update에서 함께 종료한다. NaN·shape·명령 계약 위반·실행 중 코드 변경은 무효다. [두 카드의 결과 전 표](../20261021-experiments/EXP-G0-zeroest.md#다음)에 따라 후속을 고른다. clip17 아래의 추정 연결 효과만 해석하며, 이 진단을 §2의 20,000회 G0 기준선·G1/G3 비교·41/52 관문 통과로 승격하지 않는다. 본선에는 깃발·물러나기·듬성한 지형을 복구한다.
 
 ```mermaid
 flowchart TB
