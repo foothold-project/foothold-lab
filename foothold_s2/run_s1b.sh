@@ -21,10 +21,12 @@ EXTRA=("$@")
 RESUMING=0
 for a in "$@"; do [ "$a" = "--resume" ] && RESUMING=1; done
 if [ "$RESUMING" = "0" ]; then
-    FROM="$(basename "$(ls -d logs/rsl_rl/foothold_s1a/*s1a_blind | tail -1)")"
+    FROM_EXP="${S1B_FROM_EXPERIMENT:-foothold_s1a}"          # S1a-v1.1 에서 이어 받을 때: foothold_s1a_v11 (run_s1b_from_v11.sh)
+    FROM_SUFFIX="${S1B_FROM_SUFFIX:-s1a_blind}"
+    FROM="$(basename "$(ls -d logs/rsl_rl/${FROM_EXP}/*${FROM_SUFFIX} | tail -1)")"
     CKPT="${S1B_FROM_CHECKPOINT:-model_5999.pt}"
-    echo "S1-b 시작: $FROM / $CKPT" > "$OUT/start_from.txt"
-    EXTRA=(--resume --load_run "$FROM" --checkpoint "$CKPT" --load_experiment foothold_s1a --stage_transfer "$@")
+    echo "S1-b 시작: $FROM_EXP / $FROM / $CKPT" > "$OUT/start_from.txt"
+    EXTRA=(--resume --load_run "$FROM" --checkpoint "$CKPT" --load_experiment "$FROM_EXP" --stage_transfer "$@")
 fi
 TOTAL="${S1B_TOTAL_ITERATIONS:-9000}"
 "$ENV/python.exe" -m foothold_s2.train_s1 --task FootholdS2-Go2-S1b-blind-v0 --headless --device "$DEV" \

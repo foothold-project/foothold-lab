@@ -312,7 +312,14 @@ def test_real_yaml_has_the_agreed_graph():
     assert all(prio[n] == 9 for n in names if n.startswith("bf16") or n == "agenda_J4")                  # bf16 은 빈 틈만
     assert all(prio[n] == 1 for n in ("scan_train", "blind_train", "repro_s0", "scan_eval", "v2_base_gate200", "blind_eval", "agenda_J1"))
     assert prio["s1b_train"] == 2 and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
-    assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b.sh"] and jobs["s1b_train"]["gpu"] == 0
+    assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b_from_v11.sh"] and jobs["s1b_train"]["gpu"] == 0   # lead 10/21: S1a-v1.1 blind 에서 이어 받는다
+    assert jobs["s1b_train"]["depends_on"] == ["blind_v11_train"]
+    assert jobs["scan_v11_train"]["adopt"]["pid"] > 0 and jobs["blind_v11_train"]["adopt"]["pid"] > 0
+    assert jobs["scan_v11_train"]["gpu"] == 0 and jobs["blind_v11_train"]["gpu"] == 1
+    assert jobs["scan_eval_v11"]["depends_on"] == ["scan_v11_train"] and jobs["blind_eval_v11"]["depends_on"] == ["blind_v11_train"]
+    assert "--gate" in jobs["scan_eval_v11"]["cmd"] and "--gate" in jobs["blind_eval_v11"]["cmd"]
+    assert "axis1,axis2,axis3" in jobs["scan_eval_v11"]["cmd"] and "axis1,axis2,axis3" in jobs["blind_eval_v11"]["cmd"]
+    assert jobs["agenda_v11"]["depends_on"] == ["scan_eval_v11", "blind_eval_v11"] and "gpu" not in jobs["agenda_v11"]
     assert jobs["s1b_train"]["done"]["min_iter"] == 8999 and "run_s1b.sh" in " ".join(jobs["s1b_train"]["retry"]["cmd"])
     assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
     assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200", "snapshot_bf16"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0

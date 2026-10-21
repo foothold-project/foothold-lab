@@ -16,6 +16,7 @@ vars:
   CHAIN_DIR: C:/Users/AI-WS01/s2_lab/chain
   EVAL_ROOT: C:/Users/AI-WS01/s2_lab/eval_new
   S1A_LOGS: ${REPO}/logs/rsl_rl/foothold_s1a
+  V11_LOGS: ${REPO}/logs/rsl_rl/foothold_s1a_v11        # S1a-v1.1 (lead 10/21 결정)
   SNAP: ${CHAIN_DIR}/snap_bf16                        # bf16 세 판을 돌릴 «고정 커밋 사본»(git worktree). 세 판이 같은 코드로 돌게 한다
   S2_LOGS: ${SNAP}/logs/rsl_rl/foothold_s2
 state_dir: ${CHAIN_DIR}
@@ -132,6 +133,81 @@ jobs:
           "AGENDA-J1 · S1-a 평가 끝 · 판단층 구체화 안건을 꺼낼 때 · inbox/jay/20261019-design/AGENDA-LEAD.md"]
     log: ${CHAIN_DIR}/agenda_J1.log
 
+  # ---------------------------------------------------------------- S1a-v1.1 (lead 10/21 09:3x): S1-a + 커널 std 0.25 · fbg 0.25 · clip 17. 학습 두 판은 이미 돌고 있어 adopt 로 붙는다.
+  - name: scan_v11_train
+    gpu: 0
+    priority: 1
+    adopt: {pid: 61752}
+    done:
+      status_glob: ${V11_LOGS}/*s1a_v11_scan/train_start_status.json
+      status_state: done
+      min_iter: 5999
+      outputs:
+        - ${V11_LOGS}/*s1a_v11_scan/latest.pt
+        - ${V11_LOGS}/*s1a_v11_scan/model_5999.pt
+      no_traceback: [${REPO}/logs/s1a_v11_scan_20261021_091717/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1_v11.sh, scan, "cuda:{gpu}", --resume, --load_run, "{globname:${V11_LOGS}/*s1a_v11_scan}", --checkpoint, latest.pt, --load_experiment, foothold_s1a_v11]
+
+  - name: blind_v11_train
+    gpu: 1
+    priority: 1
+    adopt: {pid: 99556}
+    done:
+      status_glob: ${V11_LOGS}/*s1a_v11_blind/train_start_status.json
+      status_state: done
+      min_iter: 5999
+      outputs:
+        - ${V11_LOGS}/*s1a_v11_blind/latest.pt
+        - ${V11_LOGS}/*s1a_v11_blind/model_5999.pt
+      no_traceback: [${REPO}/logs/s1a_v11_blind_20261021_091719/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1_v11.sh, blind, "cuda:{gpu}", --resume, --load_run, "{globname:${V11_LOGS}/*s1a_v11_blind}", --checkpoint, latest.pt, --load_experiment, foothold_s1a_v11]
+
+  - name: scan_eval_v11
+    gpu: 0
+    priority: 1
+    depends_on: [scan_v11_train]
+    cmd: [python, -m, foothold_s2.eval.s0_chain, --root, "${EVAL_ROOT}/s1a_v11_scan", --policies, s1scan,
+          --policy_spec, "s1scan=s1scan={glob:${V11_LOGS}/*s1a_v11_scan/model_5999.pt}",
+          --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "0"]
+    log: ${EVAL_ROOT}/s1a_v11_scan/chain.log
+    done:
+      outputs:
+        - ${EVAL_ROOT}/s1a_v11_scan/s1scan/axis1/rough6/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_scan/s1scan/axis1/rough6/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_scan/s1scan/axis1/unseen10/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_scan/s1scan/axis1/unseen10/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_scan/s1scan/axis2/axis2_cells.csv
+      no_traceback: ["${EVAL_ROOT}/s1a_v11_scan/s1scan/**/run.log"]
+
+  - name: blind_eval_v11
+    gpu: 1
+    priority: 1
+    depends_on: [blind_v11_train]
+    cmd: [python, -m, foothold_s2.eval.s0_chain, --root, "${EVAL_ROOT}/s1a_v11_blind", --policies, s1blind,
+          --policy_spec, "s1blind=s1blind={glob:${V11_LOGS}/*s1a_v11_blind/model_5999.pt}",
+          --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "1"]
+    log: ${EVAL_ROOT}/s1a_v11_blind/chain.log
+    done:
+      outputs:
+        - ${EVAL_ROOT}/s1a_v11_blind/s1blind/axis1/rough6/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_blind/s1blind/axis1/rough6/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_blind/s1blind/axis1/unseen10/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_blind/s1blind/axis1/unseen10/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_v11_blind/s1blind/axis2/axis2_cells.csv
+      no_traceback: ["${EVAL_ROOT}/s1a_v11_blind/s1blind/**/run.log"]
+
+  - name: agenda_v11
+    priority: 1
+    depends_on: [scan_eval_v11, blind_eval_v11]
+    retries: 2
+    python: ${NOTIFY_PY}
+    cwd: ${MAI_RESUME_DIR}
+    cmd: [python, -m, mai_resume, send, --to, "${LEAD}", --wait, "900", --text,
+          "AGENDA-V11 · S1a-v1.1 평가 끝(scan · blind, gates v1.1 · 칸당 200 판 · 축 1 2 3) · 판정은 lead 가 judge_real_drop_gated 로 · 결과 폴더 eval_new/s1a_v11_scan · s1a_v11_blind"]
+    log: ${CHAIN_DIR}/agenda_v11.log
+
   # ---------------------------------------------------------------- S1-b (lead 가 S1-a 판정 뒤 s1a_verdict_pass.json 을 써야 띄워진다)
   # S1-a blind 의 model_5999.pt 에서 이어 3,000 회(iteration 6000 -> 9000, 가중치 + optimizer + 명령 상한 이어, 지형 칸은 새로). GPU 0, 4096 env.
   # run_s1b.sh 가 가장 최근 S1-a blind 폴더를 스스로 찾는다. 중단되면 재시도가 S1-b 자신의 latest.pt 에서 이어 간다.
@@ -139,9 +215,9 @@ jobs:
     gpu: 0
     priority: 2
     note: S1-a 판정 통과 파일이 생기면 S1-b 가 먼저 GPU 0 을 잡는다(bf16 은 판정 파일 뒤에만 뜸)
-    depends_on: [blind_train]
+    depends_on: [blind_v11_train]        # lead 10/21: S1a-v1.1 blind 의 model_5999 를 이어 받는다 (옛 blind_train 에서 바꿈)
     require_file: ${CHAIN_DIR}/s1a_verdict_pass.json
-    cmd: [bash, foothold_s2/run_s1b.sh, "cuda:{gpu}"]
+    cmd: [bash, foothold_s2/run_s1b_from_v11.sh, "cuda:{gpu}"]
     log: ${CHAIN_DIR}/s1b_train.log
     done:
       status_glob: ${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind/train_start_status.json
