@@ -409,3 +409,40 @@ def test_m3_record_contract_states_what_is_not_guaranteed(tmp_path):
 
     assert "시작 hidden" in rc["kl_probe"] and "전체 3072" in rc["kl_probe"]
     assert "범위 밖" in rc["consumed_code"] and "관절각" in rc["action_probe"]
+
+
+def test_h3_consumed_command_is_moved_to_the_runner_device():
+    """env 와 runner 가 다른 GPU 일 때(실제 예행: env cuda:1 · runner cuda:0) 누적 텐서와 섞이지 않게 runner 장치로 옮긴다. 장치 이동 호출을 가로채 확인한다."""
+    r = _runner()
+    seen = []
+
+    class Spy:
+        def __getitem__(self, idx):
+            return self
+
+        def detach(self):
+            return self
+
+        def clone(self):
+            return self
+
+        def to(self, device):
+            seen.append(device)
+
+            return torch.zeros(8, 3)
+
+    r._command_term = lambda: SimpleNamespace(vel_command_b=Spy())
+    out = r._consumed_command(0)
+
+    assert seen == [r.device] and out.shape == (8, 3)
+
+
+def test_new_runner_tensors_are_never_built_on_a_hardcoded_device():
+    """새 모듈 · 새 코드가 장치 이름(cuda)을 박아 쓰지 않는다(인자 · self.device · 대상 텐서의 장치만)."""
+    import re
+
+    for rel in ("runners/contracts.py", "runners/reward_split.py", "runners/action_stats.py", "runners/kl_probe.py", "runners/manifest.py"):
+        src = open(os.path.join(REPO, "foothold_s2", rel), encoding="utf-8").read()
+        code = " ".join(line.split("#")[0] for line in src.splitlines())
+
+        assert not re.search(r"cuda", code), rel

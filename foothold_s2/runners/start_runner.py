@@ -377,7 +377,7 @@ class StartRunner(OnPolicyRunner):
         term = self._command_term()
         if term is None:
             self._invalid(it, "START 명령 계약을 검사해야 하는데 command_manager 의 base_velocity term 이 없다")
-        return term.vel_command_b[:, :3].detach().clone()
+        return term.vel_command_b[:, :3].detach().clone().to(self.device)      # env 와 runner 의 장치가 다를 수 있다(예: env cuda:1 · runner 기본 cuda:0): 누적 텐서와 같은 장치로
 
     def _check_params_finite(self, it: int) -> None:
         """갱신 뒤 정책 · 지각 파라미터가 모두 유한한지."""
