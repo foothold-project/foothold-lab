@@ -6,7 +6,13 @@
 
 # 지금 실험 일정
 
-**아침 보고 첫 줄: S1-a는 불통과입니다. lead 보고에 따르면 거친 바닥에서 서 버리고 다시 못 걷는 양상과 거의 없는 제자리 회전을 확인해, 진단 학습 D1(GPU 0)·D2(GPU 1)를 진행 중입니다. S1-b·bf16은 처방 뒤입니다.**
+**현재 보고 첫 줄 · 10/21 09시대: S1-a 불통과 뒤 커널 0.25 처방을 지지하는 진단 결과가 나왔습니다. lead는 종료 문턱 0.25·action clip 17까지 넣은 scan·blind 각 6000회 본 학습 착수를 지시했다고 보고했습니다. 팀장 진행 확인 질문은 답변 대기이며 실제 기동은 lead_tmp 직접 미확인입니다. 회전 추종 저하는 3000회에 재점검하는 계획입니다.**
+
+- [1500회 D2](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302009721)는 seed42에서 정지 비율 0.766→0.078, 전진 0.19→1.94 m, 회전 추종 0.264→0.039라는 세션 보고다. [두 시드 비교](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304255937)는 seed43 발산 때문에 등록1500 대신 **1100회**에서 닫았고 정지 기준0.921→각0.203이다. 0.078을 두 시드 재현 수치로 쓰지 않는다. 원자료는 lead_tmp가 재집계하지 않았다.
+- [lead 처방 선택](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796): lin·ang std0.25, foot_below_ground0.25, clip_actions17. 1500회 정지≤0.383·전진≥0.69 m, 3000회 회전≥0.264 확인. 회전 미달이면 D4를 준비하되 본 학습은 계속한다는 계획이며 최종 회전 관문0.80을 낮춘 것이 아니다. 약8h는 예상이다.
+- 문서 반영은 [SOL-20y](TASK-sol-20y-s1a-prescription.md)에 의뢰한다. 팀장 승인, 원인 완전 확정, 세 변경의 단독 효과 또는 실제 실행 완료로 기록하지 않는다. 기존 설계와 충돌·근거가 비는 수치는 분리한다. lead_tmp는 실행·프로세스를 건드리지 않는다.
+
+아래 03~04시 진단 내용은 경과 기록이다.
 
 10/21 03:32 직접 읽은 `C:/Users/AI-WS01/s2_lab/eval_new/s1a_scan/judge_scan_vs_v2.json`에는 `real_drop`, 평균 차 −0.8017307692, 큰 하락 23칸, gates v1 `752362ef…`·26칸·칸당 200판이 기록돼 있다. 판정 파일 내용 확인이며 원자료 재집계는 하지 않았다. [첫 보고](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6298224538)의 관측 불일치 가능성 이후, [sonnet 진단을 전한 lead 보고](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6298590512)는 학습 env에서도 정지가 재현되어 평가 도구만의 문제는 아니라고 밝혔다. [후속 보고](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6299099683)는 blind 범위 안 32칸 평균 0.054와 회전 추종 부진을 근거로 S1-a 불통과를 알렸다. 이 추가 수치·원인 진단·실행 상태는 **lead/sonnet 보고이며 lead_tmp 원자료 재검증은 아니다**.
 
@@ -17,7 +23,7 @@
 | 날짜 | GPU 0 | GPU 1 | 사람 · 세션 일 | 끝나면 |
 |---|---|---|---|---|
 | 10/20 밤 | S1-a scan 학습 (약 01 시 끝) → S0 재현 → S1-a scan 평가 → v2 칸당 200 판 | S1-a blind 학습 (약 03 시 끝) → S1-a blind 평가 | sonnet 사슬 띄움 · fable/sol 설계 고침(ASTRA-F) | 사슬이 lead 창에 알림 |
-| 10/21 | 진단 학습 D1 진행(lead 보고) · bf16 A는 처방 뒤 | 진단 학습 D2 진행(lead 보고) · S1-b·bf16 B·A2는 처방 뒤 | S1-a 불통과. 약 06~07시 D1·D2 결과 예상 뒤 lead 처방 판단. 아침 J1의 정지 감지·재시작 요청 후보 논의, 시연 초안 두 벌은 진단 뒤 lead 제시 | 진단 근거 · 처방 · J1 초안 두 벌 · 실험 기록 카드 |
+| 10/21 | S1a-v1.1 scan 6000회 착수 지시(lead 보고·실제 기동 미확인) | S1a-v1.1 blind 6000회 착수 지시(lead 보고·실제 기동 미확인) | 팀장 진행 확인 답 대기. 1500회 정지·전진, 3000회 회전 재점검. sol 16·52·17 반영. S1-b·bf16은 처방 뒤, J1 초안 두 벌은 lead 제시 대기 | 진단·본 학습을 구분한 결과 · 팀장 답 · J1 초안 |
 | 10/22 | S1-b·bf16 후속은 진단 결과에 따라 갱신 | 〃 | **설계 동결 목표 유지** · 진단의 일정 영향 확인 · Linux 이전(D: 포맷은 팀장) | |
 | Linux 준비 직후(기존 순서표 10/23) | **Linux 첫 GPU 작업 S0-L · 약 6~8 h(가정)** | S0-L·다중 GPU 확인의 배정에 따름 | 통과 시각을 실측 기록. bf16 남은 확인은 S2-G1 전에 | **S0-L 실제 통과 직후 S2-G0**(약 28 h는 기존 가정) |
 | S2-G0 이후(기존 순서표 10/24) | 선행 조건 충족 뒤 S2-G1 (bf16 통과면 약 81 h · 아니면 fp32 약 126 h, 기존 처리량 기반 가정) | 배정에 따름 | **10/24 20:00 Claude 주간 한도 풀림** · 그 전까지 Codex(astra · sol) 위주 | 시작 날짜는 S0-L 실제 완료에 따라 갱신 |
