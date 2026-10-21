@@ -48,7 +48,7 @@ import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters, runtime, terrain_sets  # noqa: E402
 
 cmd = tuple(float(x) for x in args.cmd.split(","))
-adapter = adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
+adapter = adapters.S2Adapter(args.policy[2:]) if args.policy.startswith("s2") else adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
 root_h = adapters.sparse_start_root_height(adapter) if args.start_cmd else 0.4
 generator = terrain_sets.merged_generator([args.terrain], args.difficulty, 42, start_cmd=tuple(float(x) for x in (args.plan_cmd or args.cmd).split(',')) if args.start_cmd else None, root_height_m=root_h)
 if args.noise:

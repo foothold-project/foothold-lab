@@ -12,6 +12,7 @@
 import copy
 import json
 import math
+import os
 
 import torch
 
@@ -394,6 +395,89 @@ class S1Adapter(IsaacLabAdapter):
             if hasattr(env_cfg.curriculum, name):
                 setattr(env_cfg.curriculum, name, None)
         self.changes.append("S1 명령 고정 %r, 깃발 env 없음, 지연 · 세기 · 게인 · 마찰 · 질량 · 무게중심 무작위 끔" % (cmd.fixed_cmd,))
+
+
+class S2Policy:
+    """S2-G0 정책 한 벌(actor + 지각 상태). `policy(obs)` 는 env 가 준 관측 묶음에서 행동을 낸다. `reset(dones)` 는 끝난 env 의 지각 상태를 0 으로."""
+
+    def __init__(self, runner, n):
+        import torch
+
+        self.runner = runner
+        self.n = n
+        self.pstate = runner.perception.init_state(n, runner.device)
+        self.pstate.use_gt = torch.zeros(n, dtype=torch.bool, device=runner.device)       # G0 는 지도 입력이 없다: 정답 지도를 쓰지 않는다
+        self.no_gt = self.pstate.use_gt.clone()
+
+    def __call__(self, obs):
+        import torch
+
+        r = self.runner
+
+        with torch.inference_mode():
+            raw = obs.to(r.device)
+            o, depth, gmap, _gfeet, _vel, _con = r._split(raw)
+            inp = r.perception.ingest(self.pstate, o, depth)
+            est = r.perception.step(self.pstate, inp, gmap, deterministic=True)
+
+            ppo_obs = r._ppo_obs(raw, est)
+
+            if os.environ.get("S2_SAMPLE") == "1":            # 점검용: 학습과 같은 표집 행동
+                return r.alg.policy.act(ppo_obs)
+
+            return r.alg.policy.act_inference(ppo_obs)
+
+    def reset(self, dones):
+        self.runner.perception.reset_envs(self.pstate, dones > 0, self.no_gt)
+
+    def act(self, obs):
+        return self(obs)
+
+
+class S2Adapter(S1Adapter):
+    """S2-G0 진단 판(EX-09 · EX-10). 관측은 45 + 지각 묶음, 정책은 StartRunner 의 actor + 지각(지도 입력 none).
+
+    S1Adapter 와 같은 평가 규칙(명령 고정 · 깃발 없음 · 무작위 끔 · 커리큘럼 끔). 체크포인트는 정책과 지각 상태만 읽는다
+    (StartRunner.load 는 학습 env 의 지형 단계를 복사해서 평가 env 크기와 안 맞는다).
+    """
+
+    def __init__(self, variant="open"):
+        from foothold_s2.tasks.s2_env_cfg import FootholdS2G0EnvCfg
+
+        IsaacLabAdapter.__init__(self, name="s2" + variant, env_cfg_class=FootholdS2G0EnvCfg)
+        self.task_id = "FootholdS2-Go2-S2-diag-G0-%s-v0" % variant
+
+    def _configure_command(self, env_cfg, base_cmd):
+        super()._configure_command(env_cfg, base_cmd)
+        cmd = env_cfg.commands.base_velocity
+        cmd.dynamic_flags = False
+        cmd.params = {}
+        self.changes.append("S2: dynamic_flags 끔, 물러나기 · start_mode 끔 (명령 고정)")
+
+    def load_policy(self, built, checkpoint):
+        import torch
+
+        from foothold_s2.runners.start_runner import StartRunner
+
+        agent_cfg = built["agent_cfg"]
+        env = built.get("env") or self.wrap(built)
+        train_cfg = agent_cfg.to_dict()
+        pc = dict(train_cfg.get("perception", {}) or {})
+        pc["map_input"] = "none"
+        train_cfg["perception"] = pc
+        runner = StartRunner(env, train_cfg, log_dir=None, device=agent_cfg.device)
+        sd = torch.load(checkpoint, weights_only=False, map_location=agent_cfg.device)
+        runner.alg.policy.load_state_dict(sd["model_state_dict"])
+        runner.perception.load_state_dict(sd["perception_state_dict"])
+        runner.alg.policy.eval()
+        runner.perception.eval()
+        policy = S2Policy(runner, env.num_envs)
+        obs = env.get_observations()
+        self.checks["policy_class"] = type(runner.alg.policy).__name__
+        self.checks["checkpoint_iter"] = int(sd.get("iter", -1))
+        self.checks["obs_keys"] = sorted(obs.keys())
+
+        return env, policy, policy, obs
 
 
 def deep_copy_generator(generator):

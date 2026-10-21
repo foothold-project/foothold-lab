@@ -49,7 +49,7 @@ import foothold_s2.tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters, runtime, terrain_sets  # noqa: E402
 
 cmd = tuple(float(x) for x in args.cmd.split(","))
-adapter = adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
+adapter = adapters.S2Adapter(args.policy[2:]) if args.policy.startswith("s2") else adapters.S1Adapter(args.policy[2:]) if args.policy.startswith("s1") else terrain_sets.isaaclab_adapter(args.policy, "unseen10")
 adapter.render_mode = "rgb_array"
 adapter.viewer_resolution = (args.width, args.height)
 generator = terrain_sets.merged_generator([args.terrain], 0.5, 42)
