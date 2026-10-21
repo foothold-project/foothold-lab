@@ -1,6 +1,6 @@
 > 분류: 실험
 > 작성: 오흥재 (sol 문서 반영) · 2026-10-22
-> 근거: [#555 6319562769](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319562769) · `VERIFY-astra-ex11-design.md` X1~X4 · lead가 전달한 팀장 승인
+> 근거: [#555 6319562769](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319562769) · `VERIFY-astra-ex11-design.md` X1~X4 · [ASTRA-X12 판단 불가 판정](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319952062) · lead가 전달한 팀장 승인
 > 요지: EX-11에서 S2-G0 추정 입력 51칸을 actor에 넣을 때만 0으로 가리고 EX-12와 비교한다.
 > 상태: 결과 전 계약 등록 · 코드·실행·결과 미확인 · 본선 관문 승인 아님
 
@@ -26,6 +26,8 @@
 ## 검증
 
 CPU에서 학습 수집·PPO 저장·bootstrap·평가 mask 일치, 지각 업데이트·reset 유지, 초기 가중치·optimizer SHA 동일성, 7종·23열·reset origin·명령·664칸·clip17·경험량의 두 판 일치를 확인한다. `completed_updates`·`total_env_steps`·optimizer step 수를 checkpoint 라벨과 구분해 남긴다. `NaN/Inf`·shape 오류·명령 계약 위반·실행 중 코드 변경은 승패가 아니라 실행 무효다. 첫 500회의 기존 PPO KL·episode 길이·NaN 계약을 채택하는지 실행 전 명시하며 새 지각 KL을 PPO KL 문턱에 섞지 않는다. 구현·시험·lead 확인은 미확인이다.
+
+ASTRA-X12는 두 판이 함께 설 가능성을 **판단 불가**로 두고 설계 변경을 제안하지 않았다. 따라서 이 판정으로 결과별 표나 사전 관문을 바꾸지 않는다.
 
 2행2열 영상의 행은 EX-11/EX-12, 열은 평지/고정 rough다. 같은 시드·명령·카메라와 전체 프레임을 보존하고 lead가 본다. 전진 0.5·1.0 및 제자리 회전 ±1.2에서 순간 행동 민감도와 닫힌 고리 추종을 따로 본다. z 평균/표집 × action 평균, 차이가 있으면 action 표집도 본다. 진행≥0.8·생존≥0.95·요 이탈≤0.1·회전 추종≥0.80은 41:133의 임무 참고선이며 이 진단의 S1 관문이 아니다. 몸 높이 0.30·발 높이 3 cm·요 10° 폐기 합격선은 되살리지 않는다.
 

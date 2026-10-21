@@ -1,6 +1,6 @@
 > 분류: 실험
 > 작성: 오흥재 (sol 문서 반영) · 2026-10-22
-> 근거: [#555 6319562769](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319562769) · `VERIFY-astra-ex11-design.md` X1~X4 · lead가 전달한 팀장 승인
+> 근거: [#555 6319562769](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319562769) · `VERIFY-astra-ex11-design.md` X1~X4 · [ASTRA-X12 판단 불가 판정](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6319952062) · lead가 전달한 팀장 승인
 > 요지: EX-12에서 S2-G0 추정 입력 학습값 51칸을 actor에 넣고 EX-11의 0 가림과 비교한다.
 > 상태: 결과 전 계약 등록 · 코드·실행·결과 미확인 · 본선 관문 승인 아님
 
@@ -17,6 +17,8 @@ EX-11 카드의 3072 env·24 step·seed42·7종 23열 S1 이어진 지형·START
 ## 검증
 
 EX-11과 학습 수집·PPO 저장·평가의 est mask 차이 한 곳만 확인한다. 실제 import 파일 SHA·dirty diff·YAML·인자·mode·초기 가중치와 경험량을 manifest로 대조한다. 조건부 KL과 PPO KL, raw/clip 행동과 포화, PD target·토크를 기록한다. NaN·shape·명령 계약 위반·실행 중 코드 변경은 실행 무효다. CPU 시험·lead 확인·실행은 현재 미확인이다.
+
+ASTRA-X12는 두 판이 함께 설 가능성을 **판단 불가**로 두고 설계 변경을 제안하지 않았다. 이 결과로 사전 판정표를 바꾸지 않는다.
 
 두 판의 평지·고정 rough 2행2열 영상을 같은 시드·명령·카메라로 전 프레임 기록한다. 전진 0.5·1.0과 회전 ±1.2의 순간 민감도 및 닫힌 고리 추종을 분리한다. z 평균/표집 × action 평균, 차이가 있으면 action 표집까지 본다. 41:133의 진행≥0.8·생존≥0.95·요 이탈≤0.1·회전 추종≥0.80은 임무 참고선이다. S1 관문과 폐기된 몸높이 0.30·발높이 3 cm·요 10° 합격선으로 쓰지 않는다.
 
