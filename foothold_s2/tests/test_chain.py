@@ -689,3 +689,117 @@ def test_cancelled_jobs_are_never_relaunched_or_retried_and_block_their_follower
     assert chain.state["E"]["state"] == "blocked" and chain.state["Z"]["state"] == "blocked"
     assert not relaunch.exists() and not (tmp_path / "y.txt").exists() and not (tmp_path / "e.txt").exists()
     assert "relaunched" not in kinds(tmp_path, "T") and "launched" not in kinds(tmp_path, "Y")
+
+
+def make_tg(tmp_path, jobs, fail_first=0, **cfg):
+    sent = []
+    state = {"fails": fail_first}
+
+    def sender(text):
+        if state["fails"] > 0:
+            state["fails"] -= 1
+
+            return False
+
+        sent.append(text)
+
+        return True
+
+    config = {"poll_s": 0.02, "start_gap_s": 0.0, "gpus": [0, 1], "jobs": jobs}
+    config.update(cfg)
+    chain = runner.Chain(config, str(tmp_path / "state"), notifier=Notes(), sleep=time.sleep, repo_root=REPO, tg_sender=sender)
+
+    return chain, sent
+
+
+def test_telegram_message_has_title_purpose_next_escapes_html_and_retries_without_real_sending(tmp_path):
+    out = tmp_path / "a.txt"
+    jobs = [{"name": "A", "gpu": 0, "cmd": touch_cmd(out), "done": {"outputs": [str(out)]}, "max_iterations": 1501,
+             "title": "G0 <열린> 진단 & 비교", "purpose": "a < b & c > d 를 본다", "next": "통과 -> 영상, 미통과 -> 원인"}]
+    chain, sent = make_tg(tmp_path, jobs, fail_first=2)                                 # 처음 두 번은 보내기 실패
+    assert chain.run() == 0
+    chain._tg_flush()
+    chain._tg_flush()
+    chain._tg_flush()
+    texts = "\n".join(sent)
+    assert "[FOOTHOLD 실험] 띄움 G0 &lt;열린&gt; 진단 &amp; 비교" in texts                      # 이스케이프
+    assert "목적: a &lt; b &amp; c &gt; d 를 본다" in texts and "다음: 통과 -&gt; 영상, 미통과 -&gt; 원인" in texts
+    assert "GPU 0 · 시작 " in texts and "진행 ?/1501" in texts
+    assert texts.index("띄움") < texts.index("끝")                                       # 순서 유지 · 실패한 것도 결국 간다
+    assert "[FOOTHOLD 실험] 끝 " in texts and not chain.tg_queue
+
+
+def test_telegram_gives_up_after_the_attempt_limit_and_job_without_title_sends_nothing(tmp_path):
+    out = tmp_path / "a.txt"
+    jobs = [{"name": "A", "gpu": 0, "cmd": touch_cmd(out), "title": "t", "purpose": "p", "next": "n"},
+            {"name": "B", "gpu": 1, "cmd": touch_cmd(tmp_path / "b.txt")}]
+    chain, sent = make_tg(tmp_path, jobs, fail_first=10 ** 6)
+    chain.run()
+
+    for _ in range(runner.TG_MAX_ATTEMPTS + 2):
+        chain._tg_flush()
+
+    assert not sent and not chain.tg_queue and "tg_dropped" in kinds(tmp_path, "chain")
+    chain2, sent2 = make_tg(tmp_path / "x", jobs)
+    chain2.run()
+    chain2._tg_flush()
+    assert all("B" not in m.split("\n")[0] for m in sent2) and all("실험]" in m for m in sent2)
+
+
+def test_guard_diag_jobs_must_declare_at_most_1501_iterations_and_long_training_needs_an_approval_file(tmp_path):
+    flag = tmp_path / "ran.txt"
+    jobs = [{"name": "diag-ok", "gpu": 0, "cmd": touch_cmd(tmp_path / "ok.txt") + ["--max_iterations", "1501"], "retries": 0},
+            {"name": "diag-long", "gpu": 1, "cmd": touch_cmd(tmp_path / "long.txt") + ["--max_iterations", "3000"], "retries": 0},
+            {"name": "diag-unknown", "gpu": 0, "cmd": touch_cmd(tmp_path / "unk.txt"), "retries": 0},
+            {"name": "main-9000", "gpu": 1, "cmd": touch_cmd(flag), "max_iterations": 9000, "retries": 0}]
+    chain, _ = make(tmp_path, jobs)
+
+    for _ in range(40):
+        chain.step()
+        time.sleep(0.03)
+
+    assert chain.state["diag-ok"]["state"] == "done"
+    assert chain.state["diag-long"]["state"] == "blocked" and chain.state["diag-unknown"]["state"] == "blocked"      # 3000 회 · 회차 모름
+    assert not (tmp_path / "long.txt").exists() and not (tmp_path / "unk.txt").exists()
+    assert chain.state["main-9000"]["state"] == "pending" and not flag.exists()                                    # 승인 파일 없음 → 안 띄움
+    assert kinds(tmp_path, "main-9000").count("guard_wait") == 1                                                    # 알림은 한 번만
+    approvals = tmp_path / "state" / "approvals"
+    approvals.mkdir(parents=True)
+    (approvals / "main-9000.json").write_text(json.dumps({"design_commit": "abc", "approved_by": "팀장"}), encoding="utf-8")   # time 이 없다
+    chain.step()
+    assert chain.state["main-9000"]["state"] == "pending"
+    (approvals / "main-9000.json").write_text(json.dumps({"design_commit": "abc", "approved_by": "팀장", "time": "10/21 16:00"}), encoding="utf-8")
+
+    for _ in range(40):
+        chain.step()
+        time.sleep(0.03)
+
+        if chain.state["main-9000"]["state"] == "done":
+            break
+
+    assert flag.exists() and chain.state["main-9000"]["state"] in ("running", "done")
+
+
+def test_guard_verdict_file_without_the_required_fields_is_ignored_and_reported_once(tmp_path):
+    verdict = tmp_path / "s1a_verdict_pass.json"
+    out = tmp_path / "s1b.txt"
+    jobs = [{"name": "S1B", "gpu": 0, "cmd": touch_cmd(out), "require_file": str(verdict).replace("\\", "/"), "retries": 0}]
+    chain, _ = make(tmp_path, jobs)
+    verdict.write_text(json.dumps({"verdict": "pass", "video_paths": ["a.mp4"]}), encoding="utf-8")                 # 칸이 모자람
+    for _ in range(6):
+        chain.step()
+        time.sleep(0.03)
+
+    assert chain.state["S1B"]["state"] == "pending" and not out.exists()
+    assert kinds(tmp_path, "chain").count("verdict_invalid") == 1
+    verdict.write_text(json.dumps({"verdict": "pass", "video_paths": ["a.mp4"], "watched_by": "lead", "checklist": {"a": 1},
+                                   "card_path": "EXP-X.md"}), encoding="utf-8")
+
+    for _ in range(40):
+        chain.step()
+        time.sleep(0.03)
+
+        if chain.state["S1B"]["state"] == "done":
+            break
+
+    assert out.exists()

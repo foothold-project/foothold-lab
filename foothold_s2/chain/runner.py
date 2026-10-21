@@ -158,9 +158,66 @@ def default_notifier(notify_cfg, text):
     return "notify started"
 
 
+# ---------------------------------------------------------------- 텔레그램 (lead 10/21): 작업의 title · purpose · next 를 띄움 · 첫 증거 · 끝 · 실패 · 막힘마다 보낸다
+TG_STATUS = {"launched": "띄움", "relaunched": "재시도 띄움", "first_evidence": "첫 증거", "done": "끝", "failed": "실패",
+             "blocked": "막힘", "cancelled": "취소", "guard_wait": "승인 대기", "guard_blocked": "가드로 막힘"}
+TG_MAX_ATTEMPTS = 6
+DIAG_MAX_ITERATIONS = 1501          # 이름이 diag- 인 작업(지류)은 이 회차를 넘기지 않는다
+APPROVAL_FROM_ITERATIONS = 3000     # 이 회차 이상 학습은 상태 폴더 approvals/<작업>.json 이 있어야 띄운다
+APPROVAL_KEYS = ("design_commit", "approved_by", "time")
+VERDICT_KEYS = ("video_paths", "watched_by", "checklist", "card_path")      # 판정 파일(…verdict….json)이 갖춰야 할 칸
+
+
+def tg_escape(text):
+    """텔레그램 parse_mode HTML: 본문의 & < > 를 이스케이프."""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def default_tg_sender(tg_cfg, text):
+    """outbox 파일에 UTF-8 로 쓰고 tg-send.ps1 을 창 없이 부른다. 성공하면 True (토큰은 만지지 않는다)."""
+    outbox = tg_cfg.get("outbox", "C:/ssd-cleanup-logs/tg-outbox.txt")
+    script = tg_cfg.get("script", "C:/ssd-cleanup-logs/tg-send.ps1")
+
+    try:
+        with open(outbox, "w", encoding="utf-8") as handle:
+            handle.write(text)
+
+        flags = 0x08000000 if IS_WIN else 0                                   # CREATE_NO_WINDOW
+        done = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script],
+                              creationflags=flags, timeout=90, capture_output=True)
+
+        return done.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def job_max_iterations(job):
+    """작업의 총 회차: yaml 의 max_iterations 칸, 없으면 cmd 의 마지막 `--max_iterations N`. 모르면 None."""
+    if job.get("max_iterations") is not None:
+        return int(job["max_iterations"])
+
+    cmd = job.get("cmd") or []
+    tokens = shlex.split(cmd, posix=True) if isinstance(cmd, str) else [str(c) for c in cmd]
+    found = None
+
+    for i, token in enumerate(tokens):
+        if token == "--max_iterations" and i + 1 < len(tokens):
+            try:
+                found = int(tokens[i + 1])
+            except ValueError:
+                pass
+        elif token.startswith("--max_iterations="):
+            try:
+                found = int(token.split("=", 1)[1])
+            except ValueError:
+                pass
+
+    return found
+
+
 class Chain:
     def __init__(self, config, state_dir, launcher=default_launcher, notifier=default_notifier, alive=pid_alive,
-                 clock=time.time, sleep=time.sleep, repo_root=None):
+                 clock=time.time, sleep=time.sleep, repo_root=None, tg_sender=None):
         self.cfg = config
         self.state_dir = state_dir
         os.makedirs(state_dir, exist_ok=True)
@@ -184,6 +241,10 @@ class Chain:
         self.last_launch = 0.0
         self.state = self._load_state()
         self.ended = False
+        tg_cfg = config.get("telegram")
+        self.tg_sender = tg_sender or ((lambda text: default_tg_sender(tg_cfg, text)) if tg_cfg else None)
+        self.tg_queue = []
+        self._verdict_seen = {}
 
     # ------------------------------------------------------------------ 상태 · 기록
     def _load_state(self):
@@ -223,6 +284,8 @@ class Chain:
         with open(self.status_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
+        self._tg_enqueue(name, kind)
+
         if notify:
             ncfg = dict(self.cfg.get("notify") or {})
             ncfg.setdefault("log", os.path.join(self.state_dir, "notify.log"))
@@ -231,6 +294,115 @@ class Chain:
 
             with open(self.status_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(rec2, ensure_ascii=False) + "\n")
+
+    # ------------------------------------------------------------------ 텔레그램
+    def _tg_text(self, name, kind):
+        job, st = self.jobs.get(name) or {}, self.state.get(name) or {}
+        title = job.get("title")
+
+        if not title or kind not in TG_STATUS:
+            return None
+
+        it, tot = "?", job.get("max_iterations", job_max_iterations(job) if job.get("cmd") else "?")
+        pattern = (job.get("done") or {}).get("status_glob")
+
+        if pattern:
+            data, _ = self._status_json(pattern)
+
+            if data:
+                it, tot = data.get("iter", "?"), data.get("tot_iter", tot)
+
+        started = st.get("started")
+        when = time.strftime("%H:%M", time.localtime(started)) if started else "-"
+        lines = ["[FOOTHOLD 실험] %s %s" % (TG_STATUS[kind], tg_escape(title)),
+                 "목적: %s" % tg_escape(job.get("purpose", "-")),
+                 "GPU %s · 시작 %s · 진행 %s/%s" % (st.get("gpu", job.get("gpu", "-")), when, it, tot),
+                 "다음: %s" % tg_escape(job.get("next", "-"))]
+
+        return "\n".join(lines)
+
+    def _tg_enqueue(self, name, kind):
+        if self.tg_sender is None:
+            return
+
+        text = self._tg_text(name, kind)
+
+        if text:
+            self.tg_queue.append({"text": text, "attempts": 0, "job": name, "kind": kind})
+
+    def _tg_flush(self):
+        """쌓인 메시지를 차례로 보낸다. 하나라도 실패하면 순서를 지키려고 거기서 멈추고 다음 라운드에 다시 (최대 TG_MAX_ATTEMPTS 번)."""
+        while self.tg_queue and self.tg_sender is not None:
+            item = self.tg_queue[0]
+
+            try:
+                ok = bool(self.tg_sender(item["text"]))
+            except Exception:                                         # noqa: BLE001
+                ok = False
+
+            if ok:
+                self.tg_queue.pop(0)
+                continue
+
+            item["attempts"] += 1
+
+            if item["attempts"] >= TG_MAX_ATTEMPTS:
+                self.tg_queue.pop(0)
+                self.event("chain", "tg_dropped", "%s %s 알림을 %d 번 실패해 버림" % (item["job"], item["kind"], TG_MAX_ATTEMPTS))
+                continue
+
+            break
+
+    # ------------------------------------------------------------------ 가드 (지류 · 본류, lead 10/21)
+    def _approval_ok(self, name):
+        path = os.path.join(self.state_dir, "approvals", name + ".json")
+
+        try:
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError):
+            return False
+
+        return isinstance(data, dict) and all(str(data.get(k) or "").strip() for k in APPROVAL_KEYS)
+
+    def _guard(self, name, job):
+        """띄우기 전 점검. 돌려줌: None(통과) 또는 (종류, 사유, 영구 여부).
+        (1) 이름이 diag- 인 작업은 max_iterations <= 1501 이어야 한다(모르면 못 띄운다) (2) 3000 회 이상 학습은 approvals/<작업>.json 필수."""
+        iters = job_max_iterations(job)
+
+        if name.startswith(("diag-", "diag_")):
+            if iters is None or iters > DIAG_MAX_ITERATIONS:
+                return ("guard_blocked", "diag- 작업은 max_iterations <= %d 여야 한다 (지금 %s)" % (DIAG_MAX_ITERATIONS, iters), True)
+
+        if iters is not None and iters >= APPROVAL_FROM_ITERATIONS and not self._approval_ok(name):
+            return ("guard_wait", "%d 회 이상 학습은 approvals/%s.json(design_commit · approved_by · time)이 있어야 띄운다" % (APPROVAL_FROM_ITERATIONS, name), False)
+
+        return None
+
+    def _verdict_ok(self, path):
+        """판정 파일(이름에 verdict · .json)은 VERDICT_KEYS 가 모두 채워져야 인정한다. 아니면 없는 것으로 보고 한 번 알린다."""
+        base = os.path.basename(path)
+
+        if "verdict" not in base or not base.endswith(".json"):
+            return True
+
+        try:
+            mtime = os.path.getmtime(path)
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError):
+            return False
+
+        missing = [k for k in VERDICT_KEYS if not (isinstance(data, dict) and data.get(k))]
+
+        if missing:
+            if self._verdict_seen.get(path) != mtime:
+                self._verdict_seen[path] = mtime
+                self.event("chain", "verdict_invalid", "%s 에 %s 가 없어 무시함" % (base, ",".join(missing)), notify=True)
+
+            return False
+
+        return True
 
     # ------------------------------------------------------------------ GPU
     def _fixed_gpu(self, job):
@@ -408,12 +580,17 @@ class Chain:
         req = job.get("require_file") or []
         req = [req] if isinstance(req, str) else req
 
-        if not all(os.path.exists(resolve_text(r, 0)) for r in req):
+        def present(r):
+            path = resolve_text(r, 0)
+
+            return os.path.exists(path) and self._verdict_ok(path)      # 판정 파일은 칸이 갖춰져야 인정 (lead 10/21 가드 3)
+
+        if not all(present(r) for r in req):
             return False
 
         any_req = job.get("require_any_file") or []                  # 이 중 하나라도 있으면 됨 (예: 판정 통과 또는 실패 파일)
 
-        return (not any_req) or any(os.path.exists(resolve_text(r, 0)) for r in any_req)
+        return (not any_req) or any(present(r) for r in any_req)
 
     def reload_if_changed(self):
         """yaml 이 바뀌었으면 «아직 안 띄운(pending) 작업» 의 정의를 새 것으로 바꾸고 새 작업을 더한다(실행기를 멈추지 않는다).
@@ -550,6 +727,7 @@ class Chain:
                     self._finish(name)
 
         self._launch_ready()
+        self._tg_flush()
         self._save()
 
     def _launch_ready(self):
@@ -572,6 +750,20 @@ class Chain:
                     st.update(state="done", finished=self.clock(), skipped=True)
                     self.event(name, "skipped", "done 조건이 이미 충족돼 돌리지 않음" + self._report(name))
                     continue
+
+            blocked = self._guard(name, job)
+
+            if blocked:
+                kind, detail, permanent = blocked
+
+                if permanent:
+                    st["state"] = "blocked"
+                    self.event(name, kind, detail, notify=True)
+                elif not st.get("guard_notified"):
+                    st["guard_notified"] = True
+                    self.event(name, kind, detail, notify=True)
+
+                continue
 
             wants_gpu = "gpu" in job
             gpu = self._pick_gpu(job) if wants_gpu else None
