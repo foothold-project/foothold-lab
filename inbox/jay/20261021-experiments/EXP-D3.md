@@ -1,8 +1,10 @@
-> 분류: 리서치
-> 작성: jay · 2026-10-21
+> 분류: 실험
+> 작성: 오흥재 (luna 초안 · lead_tmp 대조) · 2026-10-21
 > 근거: #555 등록·판정 댓글 · NIGHT-REPORT-1021.md · eval_new/diag_s1a · sonnet-code 로그
 > 요지: D3는 D2 대비 선속도 커널만 좁히고 회전 커널을 되돌렸으나 정지·전진·회전 등록 조건을 통과하지 못했다.
-> 상태: 초안 · 진단용 새 판 · 원자료 재집계 및 독립 판정 미실시
+> 상태: 기록 · 진단용 새 판 · 원자료 재집계 및 독립 판정 미실시
+
+대조 범위: 본문 초안의 `[실측]`은 저장 기록 또는 다른 세션 보고를 가리킨다. 아래 「lead_tmp 직접 대조」에 적은 항목만 이번에 직접 확인했고, 그 밖의 값은 보고값·미확인으로 읽는다.
 
 # D3 · 선속도만 좁힌 커널
 
@@ -33,7 +35,7 @@
 | 시작 | 폴더 시각 `[실측] 06:36:49`, PID `[실측] 76708` |
 | 첫 증거 | `run.log`에 seed `[실측] 42`, `Learning iteration 0/1501` |
 | 끝 | 상태 `[실측] done`, `[실측] iter 1500/1501`, 종료 기록 `[실측] 08:54:57`; 마지막 timesteps `[실측] 147,554,304` |
-| 영상 | lead 확인상 밤 보행 영상 없음 |
+| 영상 | 영상 없음 · 미확인(lead 보고: 밤 촬영·판독 없음) |
 
 ## 결과
 
@@ -44,7 +46,7 @@
 | 회전 추종 | `[코드] ≥0.264` | `[실측] 0.230` | 불통과 |
 | 비교할 D2 회전 손실 | `[실측] D2 0.264 → 0.039` at `[코드] 1,500회` | D3 `[실측] 0.230` | 회전만 보면 D2보다 높지만 정지·전진은 기준 미달. ang 원인의 단독 증명 아님 |
 
-D3의 `[실측] 0.766`은 D2의 `[실측] 1,500회 seed42 0.078`과 동일 실험 결과가 아니다. D3는 선속도만 좁혔기 때문에 두 설정 조합의 전체 차이가 존재한다. 결과는 #555 댓글 [6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796) 및 `NIGHT-REPORT-1021.md` [D]·[C7]의 보고값이다. 원 JSON 재집계 없음. 영상 없음.
+D3의 `[실측] 0.766`은 D2의 `[실측] 1,500회 seed42 0.078`과 동일 실험 결과가 아니다. D3는 선속도만 좁혔기 때문에 두 설정 조합의 전체 차이가 존재한다. 결과는 #555 댓글 [6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796) 및 `inbox/jay/20261019-design/NIGHT-REPORT-1021.md` [D]·[C7]의 보고값이다. 원 JSON 재집계 없음. 영상 없음.
 
 ## 다음 가설
 
@@ -55,3 +57,12 @@ D3는 lin만 좁힌 구성에서 정지 개선 기준을 못 넘었다. 따라�
 - [#555 D2·D3 등록 6302009721](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302009721), [D3 결과·세 변경 결정 6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796).
 - `inbox/jay/20261019-design/NIGHT-REPORT-1021.md` D3 표 및 근거 경로.
 - sonnet-code HEAD `[코드] 2fbac752`, saved `params/agent.yaml`, `train_start_status.json`; 결과 `C:/Users/AI-WS01/s2_lab/eval_new/diag_s1a/d3_scan_1500/`.
+
+## lead_tmp 직접 대조
+
+아래 `feet.json`을 CPU로 읽어 저장 집계값과 표를 맞췄다. episode 원자료 재집계나 GPU 재평가는 아니다. 정지는 2~4초 평균 전진 속도 <0.05 m/s이며 분모는 그 구간 유효 env 수다. 전진은 6초 중앙값, 회전은 별도 명령 wz=1.0 rad/s의 `turn.yaw_follow_median`이다.
+
+| 경로 (`eval_new/diag_s1a/` 아래) | 정지 비율·분모 | 전진 m 또는 회전 추종비 | SHA256 |
+|---|---|---|---|
+| `d3_scan_1500/feet.json` | 0.765625000 · 64 | 전진 0.558048313 | `458bbc3d00a5d18035f977b8941e889421017280a51eb8791a1ad828de26b77b` |
+| `d3_scan_1500_turn1/feet.json` | 해당 없음 | 회전 0.229763967 | `56bd042bc09aab5051796bec168117f1354521a8e5eb3fbb8761b5a50ac5f5a8` |

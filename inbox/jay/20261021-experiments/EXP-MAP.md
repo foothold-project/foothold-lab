@@ -1,8 +1,8 @@
-> 분류: 리서치
-> 작성: jay · 2026-10-21
-> 근거: [#555 진단·결정 댓글](https://github.com/foothold-project/foothold-lab/issues/555) · `NIGHT-REPORT-1021.md` · 코드·실행 로그
+> 분류: 실험
+> 작성: 오흥재 (luna 초안 · lead_tmp 대조) · 2026-10-21
+> 근거: [#555 진단·결정 댓글](https://github.com/foothold-project/foothold-lab/issues/555) · `inbox/jay/20261019-design/NIGHT-REPORT-1021.md` · 코드·실행 로그
 > 요지: S1-a 실패에서 D1·D2·D2-s43·D3 진단과 세 변경 처방까지의 근거 관계와 미확인 범위를 연결한다.
-> 상태: 초안 · lead의 명명 답변 대기 · 판정 및 DECISION-SYNC 아님
+> 상태: 기록 · 식별 충돌은 DECISION-SYNC에 기록 · 실험 승인 문서 아님
 
 # 밤 실험 관계표
 
@@ -13,11 +13,11 @@
 
 | 카드 | 역할 | 부모 설정·체크포인트 | 주요 차이와 결과 | 설계 정본 관계 |
 |---|---|---|---|---|
-| [S1-a](EXP-S1-a.md) | 본 학습 기준과 실패 관찰 | S1-a 설정. 실행 로그는 `resume: false` 여부를 이 카드 근거 범위에서 확정하지 않음. model_5999는 결과 참조이며 부모 체크포인트라는 뜻이 아님 | 거친 바닥에서 정지·전진·회전 실패. blind도 실패했으나 진단 경로는 scan 중심 | `16-REWARDS.md`와 `52-S1-OPEN-COMMAND.md`에 S1 계획이 있음. 이번 실패 진단은 #555 기록 |
-| [D1](EXP-D1.md) | 발 들기 항 가설 | S1-a 설정 파생. `resume: false`, 새 1,500회 학습. S1-a의 학습 체크포인트에서 이어 학습하지 않음 | `feet_air_time` 가중치 `[코드] +0.1`. 등록된 개선 기준 미달, 가설 기각 | D1은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
-| [D2](EXP-D2.md) | 추종 커널의 정지 효과 | S1-a 설정 파생. `resume: false`, 새 1,500회 학습 | 선속도·회전 추종 std를 `[코드] 0.5 → 0.25`로 함께 변경. seed 42의 1,500회 결과와 두 시드 1,100회 비교는 별개 | D2는 설계 정본에서 찾지 못함. #555의 진단용 신설 |
-| [D2-s43](EXP-D2-s43.md) | D2 두 번째 시드 확인 및 발산 진단 | seed 43 초기 판은 D2 설정 파생. 이후 발산 판을 `model_1100`에서 재개한 clip 시험은 별도 단계 | 등록 `[코드] 1,500회`를 채우지 못해 `[실측] 1,100회` 비교로 제한. 별도 clip17 단기 확인은 장시간 안정성 증거가 아님 | D2-s43은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
-| [D3](EXP-D3.md) | 회전 커널 분리 진단 | S1-a 설정 파생. `resume: false`, 새 1,500회 학습 | D2 대비 선속도 std만 `[코드] 0.25` 유지, 회전 std는 `[코드] 0.25 → 0.5`로 되돌림. 세 판정선 모두 통과하지 못함 | D3은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
+| [S1-a](EXP-S1-a.md) | 본 학습 기준과 실패 관찰 | S1-a 설정. 두 run의 저장 agent 설정은 `resume: false`(luna 대조). model_5999는 결과 참조이며 부모 체크포인트라는 뜻이 아님 | 거친 바닥에서 정지·전진·회전 실패. blind도 실패했으나 진단 경로는 scan 중심 | `16-REWARDS.md`와 `52-S1-OPEN-COMMAND.md`에 S1 계획이 있음. 이번 실패 진단은 #555 기록 |
+| [D1](EXP-D1.md) | 발 들기 항 가설 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교. S1-a의 학습 체크포인트에서 이어 학습하지 않음 | `feet_air_time` 가중치 `[코드] +0.1`. 등록된 개선 기준 미달, 가설 기각 | D1은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
+| [D2](EXP-D2.md) | 추종 커널의 정지 효과 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교 | 선속도·회전 추종 std를 `[코드] 0.5 → 0.25`로 함께 변경. seed 42의 1,500회 결과와 두 시드 1,100회 비교는 별개 | D2는 설계 정본에서 찾지 못함. #555의 진단용 신설 |
+| [D2-s43](EXP-D2-s43.md) | D2 두 번째 시드 확인 및 발산 진단 | seed 43 초기 판은 D2 설정 파생. 이후 발산 판을 `model_1100`에서 재개한 clip 시험은 별도 단계 | 등록 목표 model_1500를 채우지 못해 `[실측] 1,100회` 비교로 제한. 별도 clip17 단기 확인은 장시간 안정성 증거가 아님 | D2-s43은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
+| [D3](EXP-D3.md) | 회전 커널 분리 진단 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교 | D2 대비 선속도 std만 `[코드] 0.25` 유지, 회전 std는 `[코드] 0.25 → 0.5`로 되돌림. 세 판정선 모두 통과하지 못함 | D3은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
 | [S1a-Rx1 3변경 처방](EXP-S1a-v1.1.md) | 회복용 본 학습 묶음 처방. #555에서는 처음 `S1a-v1.1`로 기록 | S1-a 설정 계보, `resume: false`의 새 학습. S1-a 체크포인트에서 이어받았다고 보지 않음 | 추종 커널 lin·ang `[코드] 0.25`, `foot_below_ground` `[코드] 0.25 m`, `clip_actions` `[코드] 17.0`의 세 변경 묶음 | lead가 이 카드의 정식 이름을 `S1a-Rx1`로 정함. §52의 기존 `S1a-v1.1`은 heading `[코드] 30% → 50%` 처방으로 별도 보존 |
 
 ## 설계 정본에 있는 것과 진단용 신설
@@ -36,7 +36,7 @@
 - lead 확인: 밤 보행 영상 없음. 수치 진단을 영상 관찰로 바꾸어 말하지 않는다.
 - S1a-Rx1 세 변경 묶음의 결과와 항별 효과를 분리한다. blind 성능, 전체 평가 통과, 다음 단계 승격은 미확인이다.
 - 명명 갈림길은 lead 답변으로 해결: 세 변경 카드 이름은 `S1a-Rx1`. `S1a-v1.1`은 #555 실행 기록의 과거 이름으로 남기고, 설계 §52의 heading 처방 이름은 그대로 둔다.
-- `NIGHT-REPORT-1021.md`와 #555는 기록 근거다. 이 표는 lead의 DECISION-SYNC 또는 Astra 검증을 대신하지 않는다.
+- `inbox/jay/20261019-design/NIGHT-REPORT-1021.md`와 #555는 기록 근거다. 이 표는 lead의 DECISION-SYNC 또는 Astra 검증을 대신하지 않는다.
 
 ## 다음 가설
 
@@ -48,3 +48,10 @@ D1에서 실패한 보상 항 가설을 D2의 커널 비교로 좁혔고, D2-s43
 - `inbox/jay/20261019-design/NIGHT-REPORT-1021.md`.
 - #555 댓글: [D1 등록 6298590512](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6298590512), [D1 판정 6301263269](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6301263269), [D2·후속 등록 6302009721](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302009721), [D2-s43 6304255937](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304255937), [발산·clip17 6304310458](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304310458), [D3·처방 6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796).
 - 코드 변경: `[코드] 690dd194`, `[코드] e6efed92`, `[코드] 21fd5e2d`.
+
+## 대조 범위와 읽는 순서
+
+- 부모 화살표는 **설정 관계**다: S1-a → D1·D2·D3·회복 처방, D2 → D2-s43(시드 변경)·D3(회전 커널 복원). 같은 체크포인트를 이어받았다는 뜻은 아니다. D1·D2·D3는 iteration 0~1500, max_iterations=1501이며 통상 「1500회 판」은 model_1500을 뜻한다.
+- 원자료 수치는 각 카드의 「lead_tmp 직접 대조」가 우선한다. 초안의 `[실측]` 중 그 절에서 대조하지 않은 값은 **다른 세션의 보고값**이다. GPU 평가 재실행은 하지 않았다.
+- 보상·종료·행동 clip·시작점·처방의 문서 반영과 미완료 담당은 [DECISION-SYNC](../20261019-design/DECISION-SYNC.md)에 있다. 이 지도는 새 실험을 승인하지 않는다.
+- 파일 경로 약칭: `sonnet-code` = `C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/`, `eval_new` = `C:/Users/AI-WS01/s2_lab/eval_new/`. 상대 로그 경로는 전자, 평가 경로는 후자에서 찾는다.
