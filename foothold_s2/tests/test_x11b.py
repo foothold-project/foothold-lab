@@ -446,3 +446,38 @@ def test_new_runner_tensors_are_never_built_on_a_hardcoded_device():
         code = " ".join(line.split("#")[0] for line in src.splitlines())
 
         assert not re.search(r"cuda", code), rel
+
+
+# ------------------------------------------------------------------ X11d 시뮬과 신경망이 같은 GPU
+def _cfgs(agent_dev="cuda:0", sim_dev="cuda:0"):
+    return SimpleNamespace(sim=SimpleNamespace(device=sim_dev)), SimpleNamespace(device=agent_dev)
+
+
+def test_x11d_device_arg_sets_both_sim_and_agent():
+    from foothold_s2.runners.devices import resolve_devices
+
+    env_cfg, agent_cfg = _cfgs()
+    assert resolve_devices("cuda:1", env_cfg, agent_cfg) == ("cuda:1", "cuda:1")
+    assert env_cfg.sim.device == "cuda:1" and agent_cfg.device == "cuda:1"          # 예전엔 agent 가 cuda:0 에 남았다
+
+    env_cfg, agent_cfg = _cfgs("cuda:0", "cuda:0")
+    assert resolve_devices(None, env_cfg, agent_cfg) == ("cuda:0", "cuda:0")         # 인자가 없으면 기존 값 그대로
+
+    env_cfg, agent_cfg = _cfgs()
+    assert resolve_devices("cuda:0", env_cfg, agent_cfg, distributed=True, local_rank=1) == ("cuda:1", "cuda:1")         # 분산이면 rank 의 GPU
+
+
+def test_x11d_train_start_uses_the_helper_and_agent_yaml_device_is_placement(tmp_path):
+    src = open(os.path.join(REPO, "foothold_s2", "scripts", "train_start.py"), encoding="utf-8").read()
+
+    assert "resolve_devices(args_cli.device, env_cfg, agent_cfg" in src
+    assert "env_cfg.sim.device = args_cli.device" not in src                        # 시뮬만 바꾸던 줄이 없다
+
+    a = _manifest_for(tmp_path, "ex11", "zero", ["agent.perception.est_mode=zero"], device="cuda:0")
+    b = _manifest_for(tmp_path, "ex12", "learned", ["agent.perception.est_mode=learned"], device="cuda:1")
+    a["yaml"]["agent"]["device"], b["yaml"]["agent"]["device"] = "cuda:0", "cuda:1"
+    a["yaml"]["env"]["sim.device"], b["yaml"]["env"]["sim.device"] = "cuda:0", "cuda:1"
+    d = mf.diff_manifests(a, b)
+
+    assert d["ok"], d["unexpected_differences"]
+    assert "yaml.agent.device" in d["device_placement_differences"] and "yaml.env.sim.device" in d["device_placement_differences"]

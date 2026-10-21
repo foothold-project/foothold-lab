@@ -61,6 +61,7 @@ if REPO not in sys.path:
 import foothold_s2.tasks  # noqa: E402,F401  (lead 의 gym 등록)
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
+from foothold_s2.runners.devices import resolve_devices  # noqa: E402
 from foothold_s2.runners.start_runner import StartRunner  # noqa: E402
 from foothold_s2.runners.status import write_status  # noqa: E402
 
@@ -78,10 +79,8 @@ def main(env_cfg, agent_cfg):
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
     env_cfg.seed = agent_cfg.seed
-    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    resolve_devices(args_cli.device, env_cfg, agent_cfg, distributed=args_cli.distributed, local_rank=app_launcher.local_rank)  # 시뮬 · 신경망이 같은 GPU (SONNET-X11d)
     if args_cli.distributed:
-        env_cfg.sim.device = f"cuda:{app_launcher.local_rank}"
-        agent_cfg.device = f"cuda:{app_launcher.local_rank}"
         seed = agent_cfg.seed + app_launcher.local_rank
         env_cfg.seed = seed
         agent_cfg.seed = seed
