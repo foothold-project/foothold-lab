@@ -295,7 +295,10 @@ class IsaacLabAdapter:
             gym_env = gym.make(self.task_id, cfg=env_cfg)
             raw = gym_env.unwrapped
         else:
-            gym_env = raw = ManagerBasedRLEnv(cfg=env_cfg)
+            if getattr(self, "viewer_resolution", None):
+                env_cfg.viewer.resolution = tuple(self.viewer_resolution)       # 영상 촬영용 (record_clip.py)
+
+            gym_env = raw = ManagerBasedRLEnv(cfg=env_cfg, render_mode=getattr(self, "render_mode", None))
 
         return {"gym_env": gym_env, "raw": raw, "env_cfg": env_cfg, "agent_cfg": agent_cfg}
 
