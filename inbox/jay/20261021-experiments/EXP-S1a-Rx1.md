@@ -1,7 +1,7 @@
 > 분류: 실험
 > 작성: 오흥재 (luna 초안 · lead_tmp 대조) · 2026-10-21
 > 근거: #555 결정 댓글 · NIGHT-REPORT-1021.md · 코드 690dd194 · sonnet-code 실행 기록
-> 요지: S1a-Rx1은 추종 커널·종료 여유·action clip 세 설정군을 S1-a 설정 위에 적용한 새 학습 처방이다.
+> 요지: S1a-Rx1(실행 기록의 옛 이름 S1a-v1.1)은 추종 커널·종료 여유·action clip 세 설정군을 S1-a 설정 위에 적용한 새 학습 처방이다.
 > 상태: 기록 · 결과 미완료 · #555 실행 기록의 과거 명칭 병기
 
 대조 범위: 본문 초안의 `[실측]`은 저장 기록 또는 다른 세션 보고를 가리킨다. 아래 「lead_tmp 직접 대조」에 적은 항목만 이번에 직접 확인했고, 그 밖의 값은 보고값·미확인으로 읽는다.
@@ -9,7 +9,7 @@
 # S1a-Rx1 · 세 변경 회복 처방
 
 > 원자료 재집계: `미측정`. 수치 표는 원보고와 실행 기록을 출처로 하며 이 초안에서 다시 계산하지 않았다.
-이 카드는 #555의 `[코드] 690dd194` 및 댓글 [6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796)에 `S1a-v1.1`로 기록된 세 변경 처방을 가리킨다. lead 명명 답변에 따라 카드의 정식 이름을 `S1a-Rx1`로 적는다. 설계 정본 `52-S1-OPEN-COMMAND.md`의 기존 `S1a-v1.1`은 heading 비율 `[코드] 30% → 50%` 처방으로 그대로 보존한다. 두 처방의 내용과 이름 계보를 합치지 않는다.
+이 카드의 S1a-Rx1은 커널 lin·ang 0.25 · fbg 0.25 · clip 17의 처방이다. 학습 폴더 `foothold_s1a_v11/*s1a_v11_*`, 코드 `690dd194` 및 #555 댓글 [6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796)에 `S1a-v1.1`로 기록된 세 변경 처방을 가리킨다. lead 명명 답변에 따라 카드의 정식 이름을 `S1a-Rx1`로 적는다. 설계 정본 `52-S1-OPEN-COMMAND.md`의 기존 `S1a-v1.1`은 heading 비율 `[코드] 30% → 50%` 처방으로 그대로 보존한다. §52의 heading 처방은 lead 명명 인계상 아직 실행하지 않은 별개 판이다. 두 처방의 내용과 이름 계보를 합치지 않는다. 명명 병합 근거는 lead의 이 창 요청과 luna `a974cf8d`이며, 본 카드 파일을 `EXP-S1a-Rx1.md`로 바꾼다. 실행 폴더와 코드 이름은 과거 기록을 찾을 수 있도록 보존한다.
 
 수치 등급: `[코드]` 설정·계획, `[실측]` 저장 기록값, `[가정]` 추정이다. 영상은 lead 확인상 밤 보행 영상이 없다.
 
@@ -68,5 +68,5 @@
 - 시작 로그 09:17과 이 창의 직접 진행 답 접수 09:23을 분리한다. [#555 6304887684](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304887684). 뒤의 답을 앞선 기동 승인으로 소급하지 않는다.
 - 10:16 대조에서 `sonnet-code/logs/s1a_v11_blind_20261021_091719/run.log`의 iteration 500 평균 에피소드 길이는 821.49였다. 별도 건강 감시선 200은 넘었지만 성공률이나 처방 효과 판정은 아니다. 현재 상태와 영상 판독을 대신하지 않는다.
 - `C:/Users/AI-WS01/s2_lab/eval_new/dry_v11_eval/scan3/run_manifest.json`에서 v11 model_100 경로, fbg_margin_m=0.25, clip_actions=17.0, gates SHA `dd31cebd651fb4d6b7a904abdfdde443f5b94c6a562d59092773099d7e45ca37`를 직접 읽었다. 한 칸 6판 예행이며 최종 평가 통과 증거가 아니다. argv는 episodes6/envs2인데 params는100/10이고 환경 문자열 읽기 오류가 남아 있어 metadata는 미완료다.
-- 새 결과 라벨 `s1v11scan`·`s1v11blind`는 코드 `9327c97f`에서 확인했다. 새 라벨로 완료된 전체 평가는 미확인이다. 설계 문서·gates의 동명 heading 처방은 [DECISION-SYNC](../20261019-design/DECISION-SYNC.md)에서 별도로 추적한다.
+- 새 결과 라벨 `s1v11scan`·`s1v11blind`는 코드 `9327c97f`에서 확인했다. 새 라벨로 완료된 전체 평가는 미확인이다. 이 라벨은 S1a-Rx1의 실행 별칭이다. 설계 문서·gates의 별개 heading 처방은 [DECISION-SYNC](../20261019-design/DECISION-SYNC.md)에서 별도로 추적한다.
 - 영상 없음 · 미확인. 밤 수치 진단은 영상 확인 없이 이루어졌다는 lead 보고이며, 새 비교 영상은 경로와 판독 결과가 생기기 전까지 완료로 적지 않는다.
