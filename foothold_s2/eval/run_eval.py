@@ -129,7 +129,7 @@ def verify_mapping(raw, names, envs_per_terrain):
 def _s1_clip_actions():
     from foothold_s2.tasks.agents.s1_ppo_cfg import S1aPPORunnerCfg
 
-    return S1aPPORunnerCfg.clip_actions
+    return S1aPPORunnerCfg().clip_actions      # configclass 의 값은 클래스가 아니라 객체에서 읽힌다 (dry 평가에서 AttributeError 로 확인)
 
 
 def finish(out_dir, record):
