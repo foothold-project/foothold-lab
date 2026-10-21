@@ -18,8 +18,8 @@
 | 밤 진단 D1·D2·D2-s43·D3·Rx1 | 이력 보존. Rx1은 14:38 중단, C1/C2는 15:00 중단이라는 lead 보고 | 계속 실행 중인 판으로 표시하지 않음 |
 | [EX-09 diag-G0-open](EXP-G0-open.md) | START 구조·지도 없음·우리 열린 명령·1500회·seed42. 기동·결과 미확인 | START 명령 판과 영상 비교 |
 | [EX-10 diag-G0-start](EXP-G0-start.md) | 같은 G0 구조·START 원문 명령·1500회·seed42. 기동·결과 미확인 | 사전 코칭 규칙으로 본류에 복귀 |
-| [EX-11 G0-zeroest](EXP-G0-zeroest.md) | est51 actor 입력만 0, 지각 갱신 유지. 결과 전 계약 등록, 실행·결과 미확인 | EX-12와 추정 연결 효과만 대조 |
-| [EX-12 G0-learnedest](EXP-G0-learnedest.md) | actor에 학습 est51 연결. EX-11과 다른 조건은 est mask·run id뿐. 실행·결과 미확인 | 결과별 표에 따라 후속 한 걸음 선택 |
+| [EX-11 G0-zeroest](EXP-G0-zeroest.md) | est51 actor 입력만 0, 지각 갱신 유지. 결과: 전진 91~93 % · 기는 자세 · 회전 0 → 못 걸음 ([RESULT](RESULT-EX11-12.md)) | EX-12와 추정 연결 효과만 대조 |
+| [EX-12 G0-learnedest](EXP-G0-learnedest.md) | actor에 학습 est51 연결. 결과: EX-11 과 같음(est 원인 아님) · 못 걸음 ([RESULT](RESULT-EX11-12.md)) | 결과별 표에 따라 후속 한 걸음 선택 |
 
 10/22 현재 순서는 **EX-10 z/action 네 조합 평가(새 학습 없음) → EX-11/12 코드·CPU 시험·lead 확인 → EX-11/12 병렬 학습**이다. 두 판 모두 3072 env·24 step·seed42, S1 이어진 지형 7종 23열·같은 초기 레벨/승급/reset 원점, START 명령, clean critic 664, B std0.5·종료 여유0.25·clip17이다. 50열·sparse·깃발은 이번 진단에서만 끈다. 500 update 점검·1500 상한이며 둘 다 통과할 때에만 같은 완료 update 조기 종료가 가능하다. 실행 여부·소비 cfg 일치는 미확인이다. 두 판은 본선 G0 대조나 열린 명령·S1 관문으로 자동 승격되지 않는다.
 
