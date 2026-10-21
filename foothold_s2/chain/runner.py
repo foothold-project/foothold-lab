@@ -196,11 +196,16 @@ class Chain:
         for name, job in self.jobs.items():
             st = state.setdefault(name, {"state": "pending", "attempt": 0})
 
-            if job.get("adopt") and st["state"] == "pending":
-                st.update(state="running", pid=int(job["adopt"]["pid"]), adopted=True, started=self.clock(),
-                          gpu=self._fixed_gpu(job), attempt=1)
+            self._adopt_if_declared(job, st)
 
         return state
+
+    def _adopt_if_declared(self, job, st):
+        """`adopt: {pid}` 작업은 «이미 도는 프로세스에 붙는다»: cmd 로 띄우지 않는다. 시작 때와 yaml 을 다시 읽어 새 작업이 더해질 때 둘 다 이 길을 탄다
+        (다시 읽기로 더해진 adopt 작업이 cmd 없이 띄워지려다 «cmd 가 비어 있다» 로 실패 처리된 일, 10/21 09:19)."""
+        if job.get("adopt") and st["state"] == "pending":
+            st.update(state="running", pid=int(job["adopt"]["pid"]), adopted=True, started=self.clock(),
+                      gpu=self._fixed_gpu(job), attempt=1)
 
     def _save(self):
         tmp = self.state_path + ".tmp"
@@ -452,6 +457,7 @@ class Chain:
             if name not in self.jobs:
                 self.jobs[name] = j
                 self.state[name] = {"state": "pending", "attempt": 0}
+                self._adopt_if_declared(j, self.state[name])
                 changed.append(name + "(new)")
             elif self.state[name]["state"] == "pending" and j != self.jobs[name]:
                 self.jobs[name] = j

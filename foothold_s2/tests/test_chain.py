@@ -615,3 +615,27 @@ def test_a_broken_yaml_edit_keeps_the_old_config_and_reports(tmp_path):
     os.utime(cfgp, (time.time() + 5, time.time() + 5))
     chain.reload_if_changed()
     assert "reload_failed" in [e["event"] for e in events(tmp_path)] and "depends_on" not in chain.jobs["A"]
+
+
+def test_adopt_job_added_by_yaml_reload_attaches_instead_of_being_launched_by_cmd(tmp_path):
+    """다시 읽기로 더해진 adopt 작업이 cmd 로 띄워지려다 «cmd 가 비어 있다» 로 실패하던 일(10/21 09:19)을 막는다."""
+    cfg_path = tmp_path / "chain.yaml"
+    out = tmp_path / "model.pt"
+    child = subprocess.Popen(py("import time;time.sleep(1.5);open(r'%s','w').write('m')" % str(out).replace("\\", "/")))
+    first = "poll_s: 0.02\nstart_gap_s: 0\ngpus: [0, 1]\njobs:\n  - name: A\n    gpu: 0\n    cmd: [%s]\n" % ", ".join(
+        '"%s"' % c.replace("\\", "/") for c in touch_cmd(tmp_path / "a.txt"))
+    cfg_path.write_text(first, encoding="utf-8")
+    chain = runner.Chain(runner.load_config(str(cfg_path)), str(tmp_path / "state"), notifier=Notes(), sleep=time.sleep, repo_root=REPO)
+    chain.config_path = str(cfg_path)
+    chain._cfg_mtime = os.path.getmtime(str(cfg_path))
+    second = first + ("  - name: T\n    gpu: 1\n    adopt: {pid: %d}\n    done:\n      outputs: [\"%s\"]\n"
+                      "  - name: E\n    gpu: 1\n    depends_on: [T]\n    cmd: [%s]\n") % (
+        child.pid, str(out).replace("\\", "/"), ", ".join('"%s"' % c.replace("\\", "/") for c in touch_cmd(tmp_path / "e.txt")))
+    time.sleep(0.05)
+    cfg_path.write_text(second, encoding="utf-8")
+    os.utime(str(cfg_path), (time.time() + 5, time.time() + 5))
+    chain.step()
+    assert chain.state["T"]["state"] == "running" and chain.state["T"]["adopted"] and chain.state["T"]["pid"] == child.pid
+    assert "failed" not in kinds(tmp_path, "T")
+    assert chain.run() == 0
+    assert chain.state["T"]["state"] == "done" and chain.state["E"]["state"] == "done" and child.wait() == 0
