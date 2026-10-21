@@ -362,11 +362,14 @@ class S1Adapter(IsaacLabAdapter):
     """S1-a 학습 판(우리 env). 명령은 `fixed_cmd` 로 못 박고 깃발 env 를 끈다. 평가에서는 지연 · 세기 · 마찰 무작위를 끈다."""
 
     def __init__(self, variant="blind"):
+        from foothold_s2.tasks.s1_diag_cfg import FootholdS1aDiagC1ScanEnvCfg, FootholdS1aDiagC2BlindEnvCfg
         from foothold_s2.tasks.s1_env_cfg import FootholdS1aBlindEnvCfg, FootholdS1aScanEnvCfg
 
-        cls = {"blind": FootholdS1aBlindEnvCfg, "scan": FootholdS1aScanEnvCfg}[variant]
+        cls = {"blind": FootholdS1aBlindEnvCfg, "scan": FootholdS1aScanEnvCfg,
+               "c1scan": FootholdS1aDiagC1ScanEnvCfg, "c2blind": FootholdS1aDiagC2BlindEnvCfg}[variant]      # c2blind 는 관측이 528 (몸 선속도 포함)
         super().__init__(name="s1" + variant, env_cfg_class=cls)
-        self.task_id = "FootholdS2-Go2-S1a-%s-v0" % variant
+        self.task_id = {"c1scan": "FootholdS2-Go2-S1a-diag-C1-scan-v0", "c2blind": "FootholdS2-Go2-S1a-diag-C2-blind-v0"}.get(
+            variant, "FootholdS2-Go2-S1a-%s-v0" % variant)
 
     def _import_task(self):
         import importlib

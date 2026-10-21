@@ -81,6 +81,7 @@ H = np.zeros((steps, n))
 ALIVE = np.zeros((steps, n), dtype=bool)
 VEL = np.zeros((steps, n))
 WZ = np.zeros((steps, n))
+YAW = np.zeros((steps, n))
 alive = torch.ones(n, dtype=torch.bool, device=raw.device)
 TERM = {}
 
@@ -99,6 +100,8 @@ for k in range(steps):
     H[k] = robot.data.root_pos_w[:, 2].cpu().numpy()
     VEL[k] = robot.data.root_lin_vel_b[:, 0].cpu().numpy()
     WZ[k] = robot.data.root_ang_vel_b[:, 2].cpu().numpy()
+    _q = robot.data.root_quat_w.cpu().numpy()
+    YAW[k] = np.degrees(np.arctan2(2 * (_q[:, 0] * _q[:, 3] + _q[:, 1] * _q[:, 2]), 1 - 2 * (_q[:, 2] ** 2 + _q[:, 3] ** 2)))
     for nm_ in raw.termination_manager.active_terms:
         hit_ = raw.termination_manager.get_term(nm_) & alive
         TERM[nm_] = TERM.get(nm_, 0) + int(hit_.sum())
@@ -176,6 +179,8 @@ res["terminations_first_episode"] = TERM
 res["init"] = {"feet_in_contact_by_step": {str(k_): float(C[k_, :, :].sum(axis=1)[ALIVE[k_]].mean()) for k_ in (0, 5, 15, 30, 60) if k_ < steps},
                "base_height_by_step": {str(k_): float(H[k_][ALIVE[k_]].mean() - raw.scene.terrain.env_origins[:, 2].cpu().numpy()[ALIVE[k_]].mean()) for k_ in (0, 5, 30, 60) if k_ < steps},
                "alive_at_end": int(ALIVE[-1].sum()), "alive_at_1s": int(ALIVE[min(int(1.0 / dt), steps - 1)].sum())}
+yaw_dev = np.array([float(np.abs(YAW[:, e][ALIVE[:, e]] - YAW[0, e]).max()) if ALIVE[:, e].any() else np.nan for e in range(n)])
+res["yaw_drift"] = {"abs_max_deg_median": float(np.nanmedian(yaw_dev)), "abs_max_deg_p90": float(np.nanpercentile(yaw_dev, 90)), "final_deg_median": float(np.nanmedian([YAW[:, e][ALIVE[:, e]][-1] - YAW[0, e] for e in range(n) if ALIVE[:, e].any()]))}
 os.makedirs(args.out, exist_ok=True)
 
 with open(os.path.join(args.out, "feet.json"), "w", encoding="utf-8") as f:

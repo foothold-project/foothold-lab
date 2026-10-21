@@ -82,7 +82,28 @@ def combine(paths, out):
     return n
 
 
+def main_files():
+    """파일 목록을 직접 준다: CLIP_FILES=a.mp4,b.mp4,c.mp4,d.mp4 CLIP_OUT=이름.mp4 python -m ... <폴더> (검사 + 합본)"""
+    folder = sys.argv[1]
+    paths = [os.path.join(folder, n) for n in os.environ["CLIP_FILES"].split(",")]
+    report = {}
+
+    for p in paths:
+        frames, fps = read_frames(p)
+        report[os.path.basename(p)] = dict(check(frames), fps=fps, bytes=os.path.getsize(p), bytes_per_frame=os.path.getsize(p) / len(frames))
+
+    report[os.environ["CLIP_OUT"]] = {"frames": combine(paths, os.path.join(folder, os.environ["CLIP_OUT"]))}
+
+    with open(os.path.join(folder, os.path.splitext(os.environ["CLIP_OUT"])[0] + "_frame_check.json"), "w", encoding="utf-8") as handle:
+        json.dump(report, handle, ensure_ascii=False, indent=1)
+
+    print(json.dumps(report, ensure_ascii=False, indent=1))
+
+
 def main():
+    if os.environ.get("CLIP_FILES"):
+        return main_files()
+
     folder = sys.argv[1]
     report = {}
 
