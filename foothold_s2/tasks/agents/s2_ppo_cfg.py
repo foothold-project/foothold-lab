@@ -31,3 +31,16 @@ class S2DiagPPORunnerCfg(S2PPORunnerCfg):
     max_iterations = 1501
     save_interval = 100
     experiment_name = "foothold_s2_diag"
+
+
+@configclass
+class S2X11PPORunnerCfg(S2PPORunnerCfg):
+    """EX-11 · EX-12 (SONNET-X11): 3072 env 는 env cfg 쪽, rollout 24, seed 42(실행 인자), 1501 회(model_1500 까지, 완료 update 수는 manifest), 500 회마다 저장.
+    두 판은 est_mode 한 칸만 다르다: EX-11 `agent.perception.est_mode=zero`, EX-12 기본 learned. critic 은 잡음 없는 52 + 지도 512 + 발 지도 100 = 664."""
+
+    max_iterations = 1501
+    save_interval = 500
+    experiment_name = "foothold_s2_x11"
+    perception: dict = {"microbatch_envs": 256, "replay_autocast": "none", "kl_fp32": False,
+                        "est_mode": "learned", "critic_mode": "clean52", "log_action_stats": True, "log_kl": True, "log_reward_split": True,
+                        "contract": "start", "stop_on_nonfinite": True}

@@ -89,3 +89,17 @@ class FootholdS2DiagG0StartEnvCfg(FootholdS2G0EnvCfg):
         cmd.dynamic_flags = False
         cmd.flag_stride = 0
         cmd.params = {"start_mode": True}
+
+
+@configclass
+class FootholdS2X11EnvCfg(FootholdS2DiagG0StartEnvCfg):
+    """EX-11 · EX-12 공통 환경 (SONNET-X11 X1). 두 판은 이 env 가 같고 est 처치만 runner 의 est_mode 로 다르다.
+
+    지형: S1 의 이어진 지형 7종 · 23 열 · 초기 레벨 · 승급 · 강등 · 범위 커리큘럼 · reset 원점을 S1 과 같게 둔다(S1SceneCfg · S1 CurriculumCfg 를 그대로 상속).
+    50 열 생성기 · 듬성한 지형 재배정 · 깃발 공급자는 쓰지 않는다(use_full_terrain 을 비운다, env 클래스도 side table 을 붙이지 않는 ManagerBasedRLEnv).
+    명령: START 원문(start_mode · 깃발 없음 · 정지 없음 · 4 s 재표집). start_mode 는 범위 커리큘럼의 vmax 를 읽지 않는다(mixed_core.resample_start).
+    보상 커널 B std 0.5 · 종료 여유 0.25 · clip 17 은 G0 그대로(agent cfg).
+    """
+
+    def use_full_terrain(self):
+        return None

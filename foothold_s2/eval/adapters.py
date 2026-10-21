@@ -400,8 +400,19 @@ class S1Adapter(IsaacLabAdapter):
 class S2Policy:
     """S2-G0 정책 한 벌(actor + 지각 상태). `policy(obs)` 는 env 가 준 관측 묶음에서 행동을 낸다. `reset(dones)` 는 끝난 env 의 지각 상태를 0 으로."""
 
-    def __init__(self, runner, n):
+    def __init__(self, runner, n, z_mode=None, act_mode=None):
+        """z_mode: mean(지각 z 를 평균으로) | sample(학습 수집처럼 z 를 표집). act_mode: mean(결정 행동) | sample(표집 행동).
+        지정이 없으면 환경 변수 S2_Z · S2_ACT (옛 S2_SAMPLE=1 은 S2_ACT=sample 과 같다: z 는 평균)."""
         import torch
+
+        self.z_mode = z_mode or os.environ.get("S2_Z", "mean")
+        self.act_mode = act_mode or os.environ.get("S2_ACT") or ("sample" if os.environ.get("S2_SAMPLE") == "1" else "mean")
+
+        if self.z_mode not in ("mean", "sample") or self.act_mode not in ("mean", "sample"):
+            raise ValueError("S2_Z · S2_ACT 는 mean 또는 sample: %r %r" % (self.z_mode, self.act_mode))
+
+        if self.z_mode == "sample" and not runner.perception.cfg.sample_latent_in_rollout:
+            raise ValueError("지각 cfg 의 sample_latent_in_rollout 이 꺼져 있어 z 표집을 켤 수 없다")
 
         self.runner = runner
         self.n = n
@@ -418,12 +429,11 @@ class S2Policy:
             raw = obs.to(r.device)
             o, depth, gmap, _gfeet, _vel, _con = r._split(raw)
             inp = r.perception.ingest(self.pstate, o, depth)
-            est = r.perception.step(self.pstate, inp, gmap, deterministic=True)
-
-            ppo_obs = r._ppo_obs(raw, est)
+            est = r.perception.step(self.pstate, inp, gmap, deterministic=(self.z_mode == "mean"))
+            ppo_obs = r._ppo_obs(raw, est)                    # est mask(EX-11)는 runner 의 이 함수 안에 있어 학습 · 평가가 같은 자리를 쓴다
             self.last_est = est                               # 명령 반응 시험(diag_cmd_response)이 같은 est 를 다시 쓴다
 
-            if os.environ.get("S2_SAMPLE") == "1":            # 점검용: 학습과 같은 표집 행동
+            if self.act_mode == "sample":
                 return r.alg.policy.act(ppo_obs)
 
             return r.alg.policy.act_inference(ppo_obs)

@@ -31,6 +31,8 @@ class FakeStartEnv:
                 "gt_feet": torch.randn(n, 100, generator=g) * 0.1,
                 "base_vel": torch.randn(n, 3, generator=g),
                 "contacts": (torch.rand(n, 4, generator=g) > 0.5).float(),
+                # 잡음 없는 critic 묶음 52 (o45 clean + 몸 선속도 3 + 발 접촉 4). 별도 생성기라 위 값의 난수 흐름을 바꾸지 않는다
+                "critic": torch.randn(n, 52, generator=torch.Generator().manual_seed(10_000 + self.t)),
             },
             batch_size=[n],
         )

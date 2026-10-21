@@ -118,3 +118,12 @@ for _name, _cls in (("G0-open", "FootholdS2G0EnvCfg"), ("G0-start", "FootholdS2D
         kwargs={"env_cfg_entry_point": f"foothold_s2.tasks.s2_env_cfg:{_cls}",
                 "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2DiagPPORunnerCfg"},
     )
+
+# EX-11 · EX-12 (SONNET-X11): S1 지형 · START 명령 · est 처치는 runner 의 est_mode. env 클래스는 side table 을 붙이지 않는 기본 ManagerBasedRLEnv.
+gym.register(
+    id="FootholdS2-Go2-S2-X11-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2X11EnvCfg",
+            "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2X11PPORunnerCfg"},
+)

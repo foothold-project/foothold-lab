@@ -327,6 +327,22 @@ class StartPerception(nn.Module):
             z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])
         return torch.cat([z, out["v"], out["zf"], out["zb"]], -1)
 
+    @torch.no_grad()
+    def est_sequence(self, batch: dict[str, torch.Tensor], eps: torch.Tensor) -> torch.Tensor:
+        """저장된 rollout 시퀀스에서 est (T, B, 51) 를 다시 계산한다(gradient 없음). 고정된 eps 로 z 를 표집하므로 phi 전 · 후를 같은 잡음으로 견줄 수 있다.
+        sequence_loss(loop) 와 같은 _advance 경로를 지난다 (X6 KL 기록용)."""
+        T = batch["obs"].shape[0]
+        h_prop, h_terr = batch["h_prop0"], batch["h_terr0"]
+        outs = []
+        for t in range(T):
+            h_prop, h_terr, out = self._advance(
+                h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
+                batch["use_gt"][t], batch["gt_map"][t],
+            )
+            z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
+            outs.append(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
+        return torch.stack(outs)
+
     # ---------------- 재생 손실 (gradient 켬) ----------------
     def sequence_loss(self, batch: dict[str, torch.Tensor], eps: torch.Tensor | None = None,
                       impl: str = "loop") -> dict[str, torch.Tensor]:

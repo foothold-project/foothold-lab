@@ -21,6 +21,7 @@ critic 입력 664 는 이 runner 가 [policy, base_vel, contacts, gt_map, gt_fee
 
 from __future__ import annotations
 
+import json
 import os
 import random
 import time
@@ -38,7 +39,10 @@ from rsl_rl.utils import resolve_obs_groups, store_code_state
 import rsl_rl
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
+from foothold_s2.runners import kl_probe, manifest as run_manifest
+from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.perception_replay import PerceptionReplay
+from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 
 CKPT_FORMAT = "foothold-start/1"
@@ -57,6 +61,15 @@ PERCEPTION_DEFAULTS = {
     "kl_fp32": False,  # bf16 일 때 I-E heads · KL 만 fp32 (RL-3 B 후보)
     "latest_interval": 100,  # latest.pt 를 이 간격으로 덮어쓴다(무인 재개용 · 번호 붙은 model_N.pt 는 save_interval 마다 그대로)
     "status_interval": 10,  # train_start_status.json 을 이 간격으로 갱신한다(첫 iteration 은 항상)
+    # ---- SONNET-X11 (EX-11 · EX-12). 기본값은 기존 G0 · G1 동작 그대로다 ----
+    "est_mode": "learned",  # learned | zero. zero: 지각은 그대로 돌고 actor 입력의 est 51 칸만 0 (수집 · PPO 저장 · 평가 모두 _ppo_obs 하나를 지난다)
+    "critic_mode": "legacy",  # legacy | clean52. clean52: critic = env 의 잡음 없는 critic 묶음 52 + 지도 512 + 발 지도 100 = 664 (vel3 · contact4 는 52 안에 있어 중복 없음)
+    "log_action_stats": False,  # raw a · clip 뒤 a 분위 · 포화율 · 관절별 연속 포화 · PD target · 토크 포화를 action_stats.jsonl 에 (X5)
+    "log_reward_split": False,  # 항별 보상을 움직이는 env · 멈춘 env 로 나눠 train_extra.jsonl 에 (lead 요청, 기록만)
+    "log_kl": False,  # PPO 전후 · 지각 phi 전후 조건부 policy KL 을 train_extra.jsonl 에 (X6, scheduler 에 연결하지 않는다)
+    "kl_probe_envs": 256,
+    "contract": None,  # "start": 명령이 START 원문 범위를 벗어나면 실행 무효(멈추고 기록)
+    "stop_on_nonfinite": False,  # NaN/Inf(보상 · 행동 · 손실)이면 실행 무효
 }
 
 
@@ -79,6 +92,10 @@ class StartRunner(OnPolicyRunner):
         pcfg = dict(PERCEPTION_DEFAULTS)
         pcfg.update(train_cfg.get("perception", {}))
         self.pcfg = pcfg
+        if pcfg["est_mode"] not in ("learned", "zero") or pcfg["critic_mode"] not in ("legacy", "clean52"):
+            raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
+        self.manifest = None
+        self.manifest_dir = None
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)))
         ).to(device)
@@ -122,6 +139,9 @@ class StartRunner(OnPolicyRunner):
                 got = shape  # (60, 60) · (60, 60, 1) · 평탄화 3600 모두 받는다
             if got != shape:
                 raise ValueError(f"'{k}' 모양 {got} 이 계약 {shape} 과 다르다")
+        if self.pcfg["critic_mode"] == "clean52":
+            if "critic" not in raw.keys() or tuple(raw["critic"].shape[1:]) != (52,):
+                raise KeyError("critic_mode=clean52 인데 env 관측에 (N, 52) 'critic' 묶음이 없다")
         if "gt_map" not in raw.keys() or raw["gt_map"][0].numel() != 512:
             raise ValueError("'gt_map' 은 512 칸(32 x 16)이어야 한다")
 
@@ -138,12 +158,18 @@ class StartRunner(OnPolicyRunner):
         )
 
     def _ppo_obs(self, raw: TensorDict, est: torch.Tensor) -> TensorDict:
+        """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
         o, _, gmap, gfeet, vel, con = self._split(raw)
         n = o.shape[0]
+        est_in = torch.zeros_like(est) if self.pcfg["est_mode"] == "zero" else est
+        if self.pcfg["critic_mode"] == "clean52":
+            critic = torch.cat([raw["critic"].reshape(n, 52), gmap.reshape(n, -1), gfeet], -1)
+        else:
+            critic = torch.cat([o, vel, con, gmap.reshape(n, -1), gfeet], -1)
         return TensorDict(
             {
-                ACTOR_KEY: torch.cat([o, est], -1),
-                CRITIC_KEY: torch.cat([o, vel, con, gmap.reshape(n, -1), gfeet], -1),
+                ACTOR_KEY: torch.cat([o, est_in], -1),
+                CRITIC_KEY: critic,
             },
             batch_size=[n],
             device=o.device,
@@ -200,6 +226,10 @@ class StartRunner(OnPolicyRunner):
         cur_reward_sum = torch.zeros(n, device=self.device)
         cur_episode_length = torch.zeros(n, device=self.device)
         gt_steps = torch.zeros((), device=self.device)
+        act_stats = None
+        rs_rec = RewardSplit() if self.pcfg["log_reward_split"] else None
+        if self.pcfg["log_action_stats"]:
+            act_stats = ActionStats(float(self.cfg.get("clip_actions") or 1e9), n, self.env.num_actions, device=self.device)
 
         if self.is_distributed:
             self.broadcast_all()
@@ -215,7 +245,7 @@ class StartRunner(OnPolicyRunner):
             gt_steps.zero_()
             # ① 수집
             with torch.inference_mode():
-                for _ in range(self.num_steps_per_env):
+                for step_k in range(self.num_steps_per_env):
                     o, depth, gmap, gfeet, vel, _ = self._split(raw)
                     inp = self.perception.ingest(self.pstate, o, depth)
                     est = self.perception.step(self.pstate, inp, gmap)
@@ -225,6 +255,12 @@ class StartRunner(OnPolicyRunner):
                     actions = self.alg.act(ppo_obs)
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if rs_rec is not None:
+                        rs_rec.add(getattr(self.env, "unwrapped", self.env))
+                    if act_stats is not None:
+                        act_stats.add(actions, dones, phys_probe(getattr(self.env, "unwrapped", self.env)) if (step_k % 8 == 0) else None)
+                    if self.pcfg["stop_on_nonfinite"]:
+                        self._check_finite(it, rewards=rewards, actions=actions)
                     self.replay.add_post(raw["policy"], dones)
                     # 정규화 통계는 이번 스텝의 actor 입력으로 갱신한다(설치는 다음 관측: 한 스텝 어긋날 뿐 같은 흐름)
                     self.alg.process_env_step(ppo_obs, rewards, dones, extras)
@@ -246,15 +282,36 @@ class StartRunner(OnPolicyRunner):
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
-            # ② PPO
+            if self.pcfg["contract"] == "start":
+                self._check_start_contract(it)
+            # ② PPO update
             self._phase_start()
+            klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
             loss_dict = self.alg.update()
+            kl_info = {}
+            if klp is not None:
+                kl_info["ppo"] = self._kl_ppo_after(klp)
             self._mark("3_ppo_update", it)
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, **{k: torch.as_tensor(v, dtype=torch.float32) for k, v in loss_dict.items() if isinstance(v, (int, float)) or hasattr(v, "dtype")})
             # ③ 지각
             self._phase_start()
+            klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
             ploss = self.update_perception()
+            if klf is not None:
+                kl_info["phi"] = self._kl_phi_after(klf)
             self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
+            for name, res in kl_info.items():
+                loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
+            split = rs_rec.summary() if rs_rec is not None else None
+            if split is not None:
+                loss_dict["reward_split/frac_moving"] = split["frac_moving"]
+                loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
+            extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+            if (kl_info or act_stats is not None or split is not None) and self.log_dir is not None and not self.disable_logs:
+                with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
             p = self.update_adasmpl()
             loss_dict["adasmpl/p_smpl"] = p
@@ -269,6 +326,7 @@ class StartRunner(OnPolicyRunner):
                 self.log(locals())
                 if it % self.save_interval == 0:
                     self.save(os.path.join(self.log_dir, f"model_{it}.pt"))
+                    self._manifest_checkpoint(it, f"model_{it}.pt", n)
                 if it % self.pcfg["latest_interval"] == 0:
                     self.save_latest()
                 if it == start_iter or it % self.pcfg["status_interval"] == 0:
@@ -278,8 +336,86 @@ class StartRunner(OnPolicyRunner):
                 store_code_state(self.log_dir, self.git_status_repos)
         if self.log_dir is not None and not self.disable_logs:
             self.save(os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt"))
+            self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
             self.save_latest()
         self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
+
+    # ------------------------------------------------------------------ SONNET-X11: 실행 무효 · manifest · KL 기록
+    def attach_manifest(self, log_dir: str, manifest: dict) -> None:
+        """실행 시작 때 만든 manifest 를 붙인다. 체크포인트 저장 때마다 소비 코드 변경을 검사하고 진행 수를 갱신한다."""
+        self.manifest_dir, self.manifest = log_dir, manifest
+
+    def _invalid(self, it: int, reason: str) -> None:
+        """실행 무효 · 안전 중단: 성능 승패가 아니라 기록한 뒤 멈춘다."""
+        write_status(self.log_dir, {"state": "failed", "invalid_run": True, "iter": it, "reason": reason})
+        raise RuntimeError(f"실행 무효 (iter {it}): {reason}")
+
+    def _check_finite(self, it: int, **tensors) -> None:
+        for k, v in tensors.items():
+            if not bool(torch.isfinite(v).all()):
+                self._invalid(it, f"NaN/Inf: {k}")
+
+    def _check_start_contract(self, it: int) -> None:
+        """START 원문 명령 계약: vx in [0, 1.5], vy = 0, vx > 0 이면 wz = 0 · vx = 0 이면 |wz| <= 1.2 (표집 vx < 0.3 은 vx = 0 가지)."""
+        term = self._command_term()
+        if term is None:
+            return
+        c = term.vel_command_b[:, :3]
+        tol = 1e-5
+        bad = (c[:, 0] < -tol) | (c[:, 0] > 1.5 + tol) | (c[:, 1].abs() > tol) | ((c[:, 0] > tol) & (c[:, 2].abs() > tol)) | ((c[:, 0].abs() <= tol) & (c[:, 2].abs() > 1.2 + tol))
+        if bool(bad.any()):
+            self._invalid(it, f"명령 계약 위반 {int(bad.sum())} env, 예 {c[bad][0].tolist()}")
+
+    def _manifest_checkpoint(self, it: int, name: str, num_envs: int) -> None:
+        if self.manifest is None:
+            return
+        changed = run_manifest.changed_files(self.manifest)
+        if changed:
+            self._invalid(it, "실행 중 소비 코드가 바뀜: " + ",".join(changed[:8]))
+        done = it + 1
+        run_manifest.update_progress(self.manifest_dir, self.manifest, done, done * self.num_steps_per_env * num_envs * self.gpu_world_size,
+                                     (name, os.path.join(self.log_dir, name)))
+
+    def _kl_select(self):
+        k = min(int(self.pcfg["kl_probe_envs"]), self.env.num_envs)
+        return torch.arange(k, device=self.device)
+
+    def _kl_ppo_before(self, it: int) -> dict:
+        """PPO update 전: 저장된 actor 입력 부분집합에서 행동 분포(mean, std)를 잡아 둔다."""
+        sel = self._kl_select()
+        sub = self.alg.storage.observations[:, sel]
+        sub = sub.reshape(sub.batch_size[0] * sub.batch_size[1]).clone()
+        mu, std = kl_probe.policy_dist(self.alg.policy, sub)
+        return {"obs": sub, "mu": mu, "std": std}
+
+    def _kl_ppo_after(self, snap: dict) -> dict:
+        mu1, std1 = kl_probe.policy_dist(self.alg.policy, snap["obs"])
+        kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+        return kl_probe.summarize(kl, kl_probe.command_branch(snap["obs"][ACTOR_KEY][:, 6:9]))
+
+    def _kl_phi_before(self, it: int) -> dict:
+        """지각 phi update 전: 같은 history · 시작 hidden · epsilon 으로 est 시퀀스를 계산하고 theta(PPO 뒤 값)로 행동 분포를 잡는다."""
+        sel = self._kl_select()
+        batch = self.replay.gather(sel)
+        gen = torch.Generator(device="cpu").manual_seed(1234 + it)
+        T, K = batch["obs"].shape[0], batch["obs"].shape[1]
+        eps = torch.randn(T, K, 16, generator=gen).to(self.device)
+        snap = {"batch": batch, "eps": eps}
+        snap["mu"], snap["std"] = self._phi_dist(snap)
+        return snap
+
+    def _phi_dist(self, snap):
+        est = self.perception.est_sequence(snap["batch"], snap["eps"])
+        est_in = torch.zeros_like(est) if self.pcfg["est_mode"] == "zero" else est
+        o = snap["batch"]["obs"]
+        T, K = o.shape[0], o.shape[1]
+        td = TensorDict({ACTOR_KEY: torch.cat([o, est_in], -1).reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
+        return kl_probe.policy_dist(self.alg.policy, td)
+
+    def _kl_phi_after(self, snap: dict) -> dict:
+        mu1, std1 = self._phi_dist(snap)
+        kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+        return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
 
     def update_perception(self) -> dict[str, float]:
         if not self.replay.full():
