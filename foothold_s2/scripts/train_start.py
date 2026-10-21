@@ -79,7 +79,8 @@ def main(env_cfg, agent_cfg):
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
     env_cfg.seed = agent_cfg.seed
-    resolve_devices(args_cli.device, env_cfg, agent_cfg, distributed=args_cli.distributed, local_rank=app_launcher.local_rank)  # 시뮬 · 신경망이 같은 GPU (SONNET-X11d)
+    resolve_devices(args_cli.device, env_cfg, agent_cfg, distributed=args_cli.distributed,
+                    local_rank=app_launcher.local_rank if args_cli.distributed else 0)  # 시뮬 · 신경망이 같은 GPU (SONNET-X11d)
     if args_cli.distributed:
         seed = agent_cfg.seed + app_launcher.local_rank
         env_cfg.seed = seed

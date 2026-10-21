@@ -481,3 +481,39 @@ def test_x11d_train_start_uses_the_helper_and_agent_yaml_device_is_placement(tmp
 
     assert d["ok"], d["unexpected_differences"]
     assert "yaml.agent.device" in d["device_placement_differences"] and "yaml.env.sim.device" in d["device_placement_differences"]
+
+
+# ------------------------------------------------------------------ X11e 비분산 경로가 AppLauncher 의 분산 전용 속성을 읽지 않는다
+def test_x11e_non_distributed_path_never_reads_app_launcher_attributes_other_than_app():
+    """AppLauncher 는 local_rank 같은 속성을 분산일 때만 만든다. train_start.py 의 모든 app_launcher.<속성> 읽기는 `app` 이거나 args_cli.distributed 로 막힌 안쪽이어야 한다(AST)."""
+    import ast
+
+    path = os.path.join(REPO, "foothold_s2", "scripts", "train_start.py")
+    tree = ast.parse(open(path, encoding="utf-8").read())
+    parents = {}
+
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parents[child] = node
+
+    def mentions_distributed(test):
+        return any(isinstance(n, ast.Attribute) and n.attr == "distributed" for n in ast.walk(test))
+
+    def guarded(node):
+        child, cur = node, parents.get(node)
+
+        while cur is not None:
+            if isinstance(cur, ast.If) and mentions_distributed(cur.test) and any(child is b or any(child is d for d in ast.walk(b)) for b in cur.body):
+                return True
+
+            if isinstance(cur, ast.IfExp) and mentions_distributed(cur.test) and (child is cur.body or any(child is d for d in ast.walk(cur.body))):
+                return True
+
+            child, cur = cur, parents.get(cur)
+
+        return False
+
+    reads = [n for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "app_launcher" and isinstance(n.ctx, ast.Load)]
+    unguarded = [(n.attr, n.lineno) for n in reads if n.attr != "app" and not guarded(n)]
+
+    assert reads and not unguarded, unguarded                                           # X11d 의 실패(local_rank, 줄 82)가 여기서 잡혔어야 한다
