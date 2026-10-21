@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: Go2 URDF `C:/isaac/ext/go2_rl_robotlab/resources/go2/urdf/go2.urdf` 6 · 63 · 84 · 89 · 101 · 122 · 139 · 160 · 205 · 251 · 289 · 327 · 418 · 456 · 494 행 · Isaac Lab 2.3.2 `isaaclab_assets/robots/unitree.py` 140~180 · `actuators/actuator_pd.py` 295~307 · `config/go2/rough_env_cfg.py` 30~35 · `sensors/contact_sensor/contact_sensor_cfg.py` 45 · PIE 2408.13740v3 Table II (ASTRA 19g 4 절, root.tex 182~203) · START 2512.13153v1 221 · 580 행 · JEPLO `go2_loco_env.py` 835~847 (evidence/maicode-jeplo-deep) · MARG 2509.20036v2 647 행 · DECISIONS-step2-lead.md A3 · A4 · APPROVED F-D1 · F-D2 · H(팀장 승인 10/19) · fable 20e 2 절 · VERIFY-fable-20f P9 · P22 · VERIFY-astra-r1 §3~§6(20t · fable 재측: 공식 USD sha256 · usd-core 질량 합 · FK · 카메라 기하)
 > 요지: 시뮬 Go2 가 실기보다 「빠르거나 세지」 않게 종아리 관절만 URDF 값(속도 15.70 rad/s · 토크 45.43 N·m)으로 떼어 DCMotor 로 두고, 나머지는 Isaac Lab Go2 설정을 그대로 쓴다(팀장 승인). 무작위화는 START 가 위임한 PIE 표를 쓴다(짐 무게 −1~2 kg, 팀장 승인). 실측이 오면 실측이 이긴다
-> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)**
+> 상태: v1 · 팀장 검토 전 · 수치는 출처 등급(논문 · 선행 · 코드 · URDF · 실측 · 가정) · 20k ASTRA 마지막 검증(VERIFY-astra-final) 계약 반영 · **20m 승인 차이 넷 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)** · 10/21 S1a-Rx1 종료·클립 이력 추가 · 평가 연결 미확인
 
 # 17 · Go2 로봇 모델
 
@@ -96,6 +96,12 @@ START 는 「DR 은 [31] 을 따른다」 고만 쓴다(**논문** 221 행). [31
 ## 7. 종료 조건 (논문 미기재 · 가정)
 
 START 는 「미리 정한 각도 한계를 넘는 뒤집힘 · 발 높이가 지면 아래 문턱 밑」 만 적는다(**논문** 221 행, 숫자 없음 · deep-research). 1 차 **가정**: 투영 중력과 z 축 사이 각 > 1.5 rad(Isaac Lab `bad_orientation(limit_angle=1.5)`, **코드** sonnet `tasks/s1_env_cfg.py` 152~153 · 설치 `terminations.py` 51~57 행 · 20m #5 · lead 20s 「코드대로」. JEPLO `go2_loco_env.py` 835~847 의 roll · pitch 각각 1.5 와는 기하가 다름: roll 1.2 · pitch 1.2 는 JEPLO 식으로 생존, 우리 식으로 종료) 또는 발 높이 < 지면 −0.2 m(**논문** MARG 2509.20036v2 647 행의 −0.2 m 를 참고). 몸통 접촉 종료는 두지 않는다(fable 20a S-10, Rudin 기본과 다름 · 기록).
+
+### S1a-Rx1의 종료 여유와 행동 클립 · 10/21 이력
+
+**코드 · 진단 실측, S2 자동 상속 아님**: 위 −0.2 m는 최초 설계의 참고값이다. 회복 판 S1a-Rx1(과거 실행 이름 `S1a-v1.1`)의 S1 cfg에서 `foot_below_ground`는 `go2_params.TERMINATION["foot_below_ground_m"]`을 받아 0.25 m를 썼다(`tasks/s1_env_cfg.py` 160~165 · `robots/go2_params.py` 32). `tasks/mdp_extra.py` 14~29는 발 중심이 가장 가까운 유효 높이 스캔 점의 지면 z보다 여유치만큼 아래일 때 종료하며, 유효점이 0.15 m 밖이면 그 발을 제외한다. 물리 바닥을 낮춘 변경이 아니다. 별개 1024 env · 20 s 진단에서 이전 0.2 m 조건은 레벨 9의 계단과 역계단에서 26 + 30 = 56건, 0.25 m 조건은 0건이었다. 서로 다른 실행이라 짝 대조와 전체 지형의 종료 성적은 미확인이다. 16 §2의 발 가장자리 보상 마스크 낙하 높이 0.2 m는 독립된 기준이다.
+
+**코드 · 진단 실측**: S1 PPO cfg의 `clip_actions=17.0`은 학습과 현재 S1 평가의 `RslRlVecEnvWrapper`가 `env.step` 직전에 행동 원소를 [−17, 17]로 자르는 값이다. 잘린 값이 `action`·`prev_action`, `last_action` 관측과 `action_rate_l2`에 이어진다. 각도 17 rad나 토크 17 N·m의 한계가 아니다. 정상 보행 진단의 원소별 `|action|` p99.9는 기준 10.79766과 D2 6.52201이고, `ceil(max × 1.5)=17`로 정했다. 단기 클립 진단으로 장시간 안정성은 증명되지 않았다. Rx1은 14:38에 중단됐다. 평가기가 Rx1 체크포인트에 같은 cfg를 적용했는지, 전체 관문을 통과했는지는 미확인이다. 현재 S2-G0에는 Rx1 종료 여유와 클립을 처방이라는 이유만으로 상속하지 않는다. 근거: [밤 기록 §진단](NIGHT-REPORT-1021.md) · [#555 처방](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796) · [Rx1 카드](../20261021-experiments/EXP-S1a-Rx1.md) · `0259d4d0`의 17 §7.
 
 ## 8. 장면 예
 

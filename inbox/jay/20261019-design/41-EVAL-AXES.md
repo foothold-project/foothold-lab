@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
 > 근거: `docs/research/20260928-v2-mvp-report.md` 6-7 · 9 절 · `docs/research/20260911-eval-protocol-v2.md` · `sim/eval/eval_generalization.py` · `sim/eval/eval_command_response.py` · `s2_lab/eval_e1_v2axes/run_axis1.sh` · `run_axis2.sh` · evidence/E1-vs-v2-axis1.csv · axis2.csv · ASTRA 19f Q5 · fable 20e Q5 · START 2512.13153v1 267~275 · 339~341 · 354 · 389 행 · HiPAN 2604.26504 728 행 · APPROVED B · H(계단은 평가 한 칸 · 무대 계단 실측은 선택) · **K-G · K-I(팀장 승인 10/20 00:1x) · L(S2 20,000 회 · 11/10 대비책, 00:4x)** · Isaac Lab 2.3.2 `velocity_env_cfg.py` 98~100 행 · v2 보고 556 · 569 · 574 · 577~578 행 · JEPLO 2609.15770v1 246 · 249 행 · VERIFY-fable-20f P4 · P25 · P26 · P27 · **VERIFY-lead-final2 2 · 5 · 11 · 14 · 15 · 16 · 17(20j)** · 평가 도구 `foothold_s2/eval/judge.py` · `cells.py`(sonnet-code 커밋 70f70b47) · HiPAN 661 행 · **APPROVED M(팀장 결정 1~8 · 10/20 09:4x)** · evidence/baselines/README.md · axis1_cells.csv · axis2_cells.csv · axis3_cells.csv · S0 원자료 run_manifest.json(`C:/Users/AI-WS01/s2_lab/eval_new/s0/`, 체크포인트 sha256) · Newcombe 1998 Stat Med 17:873 방법 10(**인용 · 미열람**, 식은 수계산) · VERIFY-astra-r1 §3~§6(20t · fable 재측: 공식 USD sha256 · usd-core 질량 합 · FK · 카메라 기하)
 > 요지: v2 의 두 자(험지 · 평지 명령)를 그대로 두고, 「명령이 험지에서도 열렸나」 를 재는 축 3 과 START 시험지 · 무대 계단 칸을 더한다. 기준은 학습 전에 등록하고 해시를 남긴다. 단계별 관문 후보 수치를 S1~S4 모두 여기에 모은다. K-G heading 판정(방향 이탈 > 0.1 → 0.75 새 판)과 K-I 시뮬 간 확인 S1-x(MuJoCo · Gazebo, Isaac 값 대비 차) 관문을 가정으로 등록한다
-> 상태: v1.4 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I · L · 최종 점검 2(20j) · **팀장 결정 1~8(APPROVED M · 10/20 09:4x · fable 20l) 반영** · §8 판정식의 성질(n 100 · 허용폭 0.05 는 우월 판정이 됨)은 열린 항목 · **20q N 절 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)**
+> 상태: v1.4 · 팀장 검토 전 · 기준 수치는 등록 후보(동결 아님) · K-G · K-I · L · 최종 점검 2(20j) · **팀장 결정 1~8(APPROVED M · 10/20 09:4x · fable 20l) 반영** · §8 판정식의 성질(n 100 · 허용폭 0.05 는 우월 판정이 됨)은 열린 항목 · **20q N 절 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)** · **20t ASTRA-R1 셋 반영(fable 10/20)** · 10/21 N1d/e 시작점·PD 잠정 범위와 R_body 구현 차이 기록 · 등록 관문 불변
 
 # 41 · 시뮬 평가 축
 
@@ -66,9 +66,15 @@ v2 는 험지에서 옆 · 뒤 · 회전을 한 번도 재지 않았다(v2 보�
 - 지표: 명령 방향 진행(몸 기준 명령 벡터에 투영한 이동 ÷ 명령 거리) · 벡터 추종 오차 · 생존 · 방향 이탈. 옆 명령을 몸을 돌려 전진으로 대신하면 성공이 아니다(ASTRA 19f Q5). **방향 이탈의 정의(평가 도구 `foothold_s2/eval/judge.py` 와 같은 말, 커밋 70f70b47 177 · 233 · 260 행)**: yaw_dev_deg = |실제 요각 변화 − 명령이 만든 요각 변화(∫ wz_cmd dt)| 이고 30° 를 넘으면 「이탈」 표시. 선속도 명령이 있는 칸에서만 뜻이 있다(앞 + 회전 칸은 ∫ wz_cmd dt 를 빼므로 명령대로 돈 것은 이탈이 아니다). **제자리 회전 칸은 이탈 · 진행을 쓰지 않고** 요 추종비(명령 wz 대비 실제 wz 평균, 뒤 절반 구간) · 생존으로 따로 본다(§5 · VERIFY-lead-final2 2). 방향 이탈률 = 그 칸에서 이탈 표시가 난 판의 비율(Wilson 구간 포함, `rsj.py` yaw_dev_rate).
 - 하네스: 새 하네스의 축 3 모듈(S0 에서 만든다, 51 · `foothold_s2/eval/axis3.py`). 옛 `eval_generalization.py` 는 `--command_vx` 하나만 받고 `verify_commands` 도 vx 만 본다(375~390 행)는 점을 참고만 한다. **가정**: 칸당 100 판 · 시드 42 · 난이도 0.5 · 평가 시간은 3 m 기준 거리 ÷ 명령 속도 × 2(0.5 m/s 면 12 s, 축 1 과 같음). **예외**: 듬성한 행 뒤 · 옆 칸은 위 결정 2 규칙(명령 2 s · 기준 거리 = 속도 × 2 s · T 4 s).
 
+### 시작점 N1d/e 계약과 10/21 판독 범위
+
+**코드 · 가정**: 듬성한 뒤·옆 시작점은 네 발 지지면 높이 차 ≤ 0.03 m, 발 구 바닥과 지지면 간 최소 여유 0.01 m를 만족해야 한다. root 높이는 각 발 FK z와 지지면 z에서 계산하고, 발 구 반지름 0.022 m에 가장자리 여유 0.05 m를 더해 발 중심 inset 0.072 m를 요구한다. 각 발의 여유와 실패 원인을 기록한다. 유효한 위치·자세가 없으면 `no_start`로 남기고 정책 주행 실패 또는 0점 성공 판으로 바꾸지 않는다. XY만 맞춘 옛 후보를 fallback으로 쓰지 않는다([N1d](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302409827) · [N1e](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302777151)).
+
+**진단 실측 · 잠정**: 난이도 0.5 · seed 42의 뒤·좌·우 시작점에서 15칸은 ready, floating_ring과 balance_beams의 각 뒤·좌·우 6칸은 `no_start`였다. 이후 정책 없는 기본 관절 PD 유지 대조를 거친 9칸 시작점은 접촉·생존 기준에서 잠정 통과로 보고됐다. 대조 gap의 지면 기준 몸 높이는 30·60스텝에서 0.249306·0.266623 m라 등록 높이 ≥ 0.30 m에 대조도 못 닿았다. 이 높이 항목은 **판정 불가**이며 문턱을 낮추거나 9칸을 전체 축 3 합격으로 읽지 않는다. 다른 난이도·시드·정책 동역학은 미확인이다([PD 판독](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6303243159) · [밤 기록](NIGHT-REPORT-1021.md)). §8·§9의 등록 관문은 그대로다.
+
 ## 5. 「건넘」 셋 (ASTRA 19f Q5)
 
-- **R 기준선 도달**: 시간 T 안에 몸통(base)이 기준선 통과 + 그 순간 네 발 접촉점이 지지면 위이고 **가장자리 마스크 밖**(16 §2 · 15 §8: 낙하 높이 ≥ 0.2 m 세로 모서리의 2.5 · 5 cm 띠. 마스크가 비는 이어진 지형은 접촉 여부만). 평가 도구의 R_body(몸통 기준, `judge.py` 70f70b47)가 이것이다(VERIFY-lead-final2 17).
+- **R 기준선 도달**: 설계상 시간 T 안에 몸통(base)이 기준선을 통과하고 그 순간 네 발 접촉점이 지지면 위이며 **가장자리 마스크 밖**이어야 한다(16 §2 · 15 §8: 낙하 높이 ≥ 0.2 m 세로 모서리의 2.5 · 5 cm 띠). 현재 평가 도구의 `R_body`(`judge.py` 70f70b47)는 몸통 기준선 통과만 기록한다. 네 발 지지·마스크 조건까지 검사했다는 뜻으로 읽지 않는다. 이 차이는 구현·판정 연결 미완료로 남기며 §8·§9의 기존 등록값을 여기서 고치지 않는다.
 - **S 끝까지 생존**: T 까지 낙하 · 전복 · 위험 접촉 없이.
 - **J 둘 다**: R AND S. J ≤ R, J ≤ S 가 늘 맞아야 한다(집계 검사, L0 시험).
 - 성공 즉시 끝내면 S 를 못 잰다 → 도달 뒤 정지 명령을 주고 T 까지 관측한다.
