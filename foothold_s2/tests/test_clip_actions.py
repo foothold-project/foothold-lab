@@ -20,7 +20,7 @@ def test_runner_cfg_sets_clip_actions_17():
 def test_derived_cfgs_do_not_override_it():
     source = _read("foothold_s2", "tasks", "agents", "s1_ppo_cfg.py")
 
-    assert source.count("clip_actions") == 1           # 값 한 줄뿐: 상속 판이 덮어쓰지 않는다
+    assert len(re.findall(r"^\s+clip_actions\s*=", source, re.M)) == 1       # 값을 정하는 줄은 한 곳뿐: 상속 판이 덮어쓰지 않는다
     assert "class S1bPPORunnerCfg(S1aPPORunnerCfg)" in source
     assert "class S1aDiagPPORunnerCfg(S1aPPORunnerCfg)" in source
 

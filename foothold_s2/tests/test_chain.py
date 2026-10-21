@@ -314,12 +314,9 @@ def test_real_yaml_has_the_agreed_graph():
     assert prio["s1b_train"] == 2 and jobs["s1b_train"]["require_file"].endswith("s1a_verdict_pass.json")
     assert jobs["s1b_train"]["cmd"][:2] == ["bash", "foothold_s2/run_s1b.sh"] and jobs["s1b_train"]["gpu"] == 0   # lead 10/21 14:3x: S1a-v1.1 종료로 S1-a blind 로 되돌림
     assert jobs["s1b_train"]["depends_on"] == ["blind_train"]
-    assert jobs["scan_v11_train"]["adopt"]["pid"] > 0 and jobs["blind_v11_train"]["adopt"]["pid"] > 0
-    assert jobs["scan_v11_train"]["gpu"] == 0 and jobs["blind_v11_train"]["gpu"] == 1
-    assert jobs["scan_eval_v11"]["depends_on"] == ["scan_v11_train"] and jobs["blind_eval_v11"]["depends_on"] == ["blind_v11_train"]
-    assert "--gate" in jobs["scan_eval_v11"]["cmd"] and "--gate" in jobs["blind_eval_v11"]["cmd"]
-    assert "axis1,axis2,axis3" in jobs["scan_eval_v11"]["cmd"] and "axis1,axis2,axis3" in jobs["blind_eval_v11"]["cmd"]
-    assert jobs["agenda_v11"]["depends_on"] == ["scan_eval_v11", "blind_eval_v11"] and "gpu" not in jobs["agenda_v11"]
+    assert jobs["c1_scan_train"]["adopt"]["pid"] > 0 and jobs["c2_blind_train"]["adopt"]["pid"] > 0           # 원인 시험 두 판(adopt)
+    assert jobs["c1_scan_train"]["gpu"] == 0 and jobs["c2_blind_train"]["gpu"] == 1
+    assert not [n for n in jobs if "v11" in n]                                                              # Rx1(S1a-v1.1) 작업은 사슬에서 뺐다 (팀장 「멈춰」)
     assert jobs["s1b_train"]["done"]["min_iter"] == 8999 and "run_s1b.sh" in " ".join(jobs["s1b_train"]["retry"]["cmd"])
     assert jobs["bf16_B_bf16kl_mb256"]["depends_on"] == ["blind_eval", "snapshot_bf16"] and jobs["bf16_B_bf16kl_mb256"]["gpu"] == 1
     assert jobs["bf16_A_fp32_mb128"]["depends_on"] == ["v2_base_gate200", "snapshot_bf16"] and jobs["bf16_A_fp32_mb128"]["gpu"] == 0

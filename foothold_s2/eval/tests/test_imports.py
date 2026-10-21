@@ -11,7 +11,7 @@ import sys
 
 EVAL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXTERNAL = {"numpy", "torch", "pytest", "isaaclab", "isaaclab_rl", "isaaclab_tasks", "robot_lab",
-            "gymnasium", "rsl_rl", "tensordict", "h5py", "trimesh", "matplotlib"}
+            "gymnasium", "rsl_rl", "tensordict", "h5py", "trimesh", "matplotlib", "av", "PIL"}
 ENTRY = {"run_eval.py"}  # 진입점 최상위에서 sys.path 를 만지지 않는지는 아래에서 따로 본다
 
 
