@@ -66,6 +66,8 @@ import foothold_s2.x17_tasks  # noqa: E402,F401  (EX-17 등록)
 import foothold_s2.x18_tasks  # noqa: E402,F401  (EX-18 등록)
 import foothold_s2.x19_tasks  # noqa: E402,F401  (EX-19 등록)
 import foothold_s2.x20_tasks  # noqa: E402,F401  (EX-20 등록)
+import foothold_s2.x21_tasks  # noqa: E402,F401  (EX-21 등록)
+import foothold_s2.x22_tasks  # noqa: E402,F401  (EX-22 등록)
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
