@@ -146,3 +146,15 @@ GPU 실험은 팀장 승인 범위 안에서 · 유료 자원 금지 · 남의 �
 - 결과를 프로젝트 웹사이트에 올리는 일(팀장 요구: Artifact 대신 사이트 직접). 아직 git 문서까지만.
 - EX-17~22 카드 · EXP-MAP 등록(luna 에 맡길 수 있음) · RESULT 문서는 EX-21/22 판정 뒤 EX-17~22 묶음으로.
 - 판단층 안건 J1 · Linux 이전(D: 포맷) · bf16 비교 · 다른 시드 재현(전체 과정 끝난 뒤).
+
+## 16. 한 번 더 점검해서 찾은 빠진 것
+
+- **EX-22 는 두 가지가 같이 바뀐다.** v2 명령(UniformVelocityCommand)으로 바꾸면 우리 지형 커리큘럼(terrain_levels_mixed)과 명령 범위 커리큘럼이 그 명령기와 안 맞아서 sonnet 이 지형 승급을 v2 규칙(mdp.terrain_levels_vel, 걸은 거리 기준)으로 바꾸고 명령 범위 커리큘럼을 껐다. 그래서 EX-22 의 차이는 「명령 분포 + 지형 승급 규칙」 이다. EX-22 만 걸으면 둘 중 무엇인지는 다시 갈라야 한다. 또 EX-22 의 wz 는 heading 오차로 정해진다(제자리 회전 분기 없음).
+- **코드는 원격에 없다.** foothold_s2 코드는 sonnet-code worktree 의 로컬 브랜치 `vfxpedia/sonnet-code`(HEAD aa167a7a, upstream 없음)에만 있다. 이 PC 가 아니면 못 이어 간다. push 는 팀장 확인 뒤(공개 범위 결정).
+- **실행 환경 경로**: Isaac Lab Python `C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe` · Isaac Lab `C:/isaac/IsaacLab` · v2 정책 `C:/isaac/IsaacLab/logs/rsl_rl/unitree_go2_gap_nvidia/2026-09-25_17-29-36_20260925_v2g2-feetair01_seed42_iter3000/model_3000.pt`(env.yaml 은 같은 폴더 params/) · CPU 시험은 `CUDA_VISIBLE_DEVICES="" isaac311 python -m pytest -q foothold_s2/tests --ignore=foothold_s2/tests/test_chain.py`(깨끗한 복사본은 `git archive <sha> foothold_s2 | tar -x`).
+- **지금 걸려 있는 팀장 승인**: 「환경으로 접근 · 작게 300 회 시험」(10/22 18시대) 과 EX-21/22 진행(19시대). 이 범위 안의 다음 묶음 판(300 회)은 진행 가능. **새 계열**(DR 커리큘럼 설계로 START 구조 복귀, 1500 회 이상 학습, 사슬 재가동, 코드 push)은 팀장 확인 뒤.
+- **Claude 세션 핸들**(mai_resume 로 보낼 때, 앞 8 자리): sonnet-code 96ddffa6 · fable 8b5234fd · rl 915c0c7d · super2 5e3d99eb. Claude 세션은 같은 주간 한도라 lead 가 멈추면 같이 멈출 가능성이 크다.
+- **세션 현재 상태(19:3x)**: astra2 ASTRA-X14 끝(문서 미push) · sol SOL-22a 끝(대기) · luna EX-13~16 카드 끝(c6e35714, 대기) · sonnet EX-21/22 코드 끝 · fable · rl 대기 · super2 Linux 준비.
+- **기록 위치 정리**: 주 이슈 foothold-project/foothold-lab#555(실험 전부) · #557 · #559 · #560 · #562(판단층 안건). 설계 문서 inbox/jay/20261019-design/(14 · 52 · 53 · APPROVED · DECISION-SYNC · AGENDA · SCHEDULE) · 실험 inbox/jay/20261021-experiments/(카드 · EXP-MAP · RESULT · figs).
+- **저장소 규칙**: docs/ 직접 수정 금지 · 팀원 제출은 inbox/<이름>/ · 작업 전 원격 최신 · 남의 미커밋 파일 커밋 금지(공유 checkout 에 248 개 미커밋 경로) · em dash 가 있으면 빌드가 막힘.
+- **해석 원칙(오늘 틀린 것들)**: 「START 구조가 자세를 바로잡았다」(틀림, 움직이지 않았을 뿐) · 「토크 벌점은 무관」 을 MGDP 하나로 판단(A1 은 20 배) · 제3자 포트를 PIE 직계로 부름 · 500 회에서 틀린 걸 보고도 1 시간 기다림 · 영상을 찍고 팀장에게 바로 공유하지 않음. 같은 실수를 하지 말 것.
