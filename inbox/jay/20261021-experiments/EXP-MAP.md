@@ -97,7 +97,7 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 | [EX-23 START G1](EXP-X23-g1.md) | START G1 · 정답 높이 지도 | 처음부터 학습, 지도 actor 입력 확인 대상 | `[선행]` 1501 update 목표. 23시 진행 수·판정 미확인 | START G1/G0 본류 |
 | [EX-24a v2 scratch](EXP-X24a-v2-scratch.md) | v2 설정 처음부터, 스캔 포함 | scratch 진단, resume flag 미확인 | `[lead 기록]` 301 update 종료, 보행 결과 미측정 | v2 scratch 지류, START 본류 아님 |
 | [EX-24b v2 no scan](EXP-X24b-v2-noscan.md) | EX-24a에서 actor 스캔 입력 제거 | 설정 차이 검증 미확인 | `[lead 기록]` 301 update 종료, 보행 결과 미측정 | v2 scratch 지류, START 본류 아님 |
-| [EX-25 START G0](EXP-X25-g0.md) | EX-23과 같고 지도 없음 | 처음부터 학습, map_input none | `[lead 기록]` 1501 update 재시작, 현재 진행 수·판정 미확인 | START G1/G0 본류 |
+| [EX-25 START G0](EXP-X25-g0.md) | EX-23과 같고 지도 없음 | 처음부터 학습, `map_input=none` | `[실측·manifest]` 23:00 run target/params 1501 · `run_name=ex25-g0`; 진행 중, 완료 아님. 22:49 중단판은 결과 제외 | START G1/G0 본류 |
 
 ## 사슬 작업 이름
 
