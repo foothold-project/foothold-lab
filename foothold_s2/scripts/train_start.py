@@ -61,6 +61,7 @@ if REPO not in sys.path:
 import foothold_s2.tasks  # noqa: E402,F401  (lead 의 gym 등록)
 import foothold_s2.x15_tasks  # noqa: E402,F401  (EX-15 등록: 실행 중인 학습이 소비하는 tasks/__init__ 를 고치지 않으려고 새 모듈)
 import foothold_s2.x16_tasks  # noqa: E402,F401  (EX-16 등록: 새 모듈)
+import foothold_s2.x16n_tasks  # noqa: E402,F401  (EX-16 NVIDIA Go2 보상 세트 등록: 새 모듈)
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
