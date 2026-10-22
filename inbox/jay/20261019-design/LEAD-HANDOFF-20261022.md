@@ -112,3 +112,37 @@ GPU 실험은 팀장 승인 범위 안에서 · 유료 자원 금지 · 남의 �
 - 앱(현민): 44-APP-GUIDE 가 정본. 판단층 안건 J1(시연 범위 · 기능 설명 · 판단층 내용)은 10/21 04:12 조건 충족 뒤 아직 팀장 논의 전 → AGENDA-LEAD.md.
 - Linux 이전: super2 런북, D: 포맷은 팀장 결정 대기.
 - 한도: Claude 주간 96 %(10/24 20:00 해제) · Codex 는 10/23 02:00 쯤 리셋 예정(팀장 화면 기준).
+
+## 12. 밤사이 · 자리 비울 때 돌아가게 하는 법
+
+- **Codex 는 스스로 깨어나지 못한다**(Claude 의 CronCreate 같은 예약이 없음). 그래서 자리를 비우기 전에 **다음 일을 배경 스크립트로 걸어 둔다**: 「체크포인트 파일이 생기면 영상 · 위상을 찍는다」, 「앞 판 rc.txt 가 생기면 다음 판을 띄운다」 를 `until [ -f ... ]; do sleep 20; done; <다음 명령>` 형태로 한 번에. 오늘 lead 가 쓴 방식 그대로(mid500_ck 자동 촬영).
+- 무인 사슬 실행기(foothold_s2/chain)는 꺼져 있다. 여러 판을 밤새 줄 세우려면 팀장 승인 뒤 다시 켠다.
+- Claude 한도 지킴이(~/.mai/limit-guard)는 state.json heartbeat 가 10/19 에서 멈춰 있어 돌고 있는지 **미확인**. 기대지 말 것.
+- 아침에는 SCHEDULE-NOW.md 를 실측(GPU · 진행 판 · 결과)으로 고쳐 커밋하고, 오늘 · 내일 줄 · 조건 충족 안건(AGENDA-LEAD) 을 팀장에게 먼저 낸다.
+
+## 13. 텔레그램 규칙
+
+`python C:/Users/AI-WS01/s2_lab/tools_lead/tg_send.py <텍스트 파일>` (HTML 이스케이프 · 출력 `0 sent ok=True` 확인).
+- **시작**: `[FOOTHOLD 실험 시작] EX-nn · 날짜 시각` → 왜(앞 결과) · 무엇(GPU 별 판 · 바꾼 것) · 보려는 것 · 판정 방법 · 끝 시각 추정 · 결과별 다음.
+- **결과**: `[FOOTHOLD 실험 결과] EX-nn` → 결과 문서 GitHub 링크 · 한눈에(판별 한 줄) · 정정할 것 · 다음(팀장 결정) · GPU 상태.
+- 중간 점검(50/100 회)은 **이상이 있을 때만**. 같은 내용을 #555 에도 `--body-file` 로.
+
+## 14. 분석 · 해석 절차 (판마다 이 순서, 하나도 빼지 말 것)
+
+1. **학습 숫자**: `tools_lead/metrics_early.sh <run.log> 25 50 100` → episode 길이 · track_lin/ang · 종료 비율(뒤집힘 · 몸통 접촉 · time_out) · 지형 단계. v2 50 회(episode 969 · track_lin 1.26 · 지형 상승)와 비교. 초기 붕괴(뒤집힘 종료 80 % 이상)가 보이면 그 판은 틀린 길.
+2. **영상 촬영**: `CK=100 bash tools_lead/mid500_ck.sh <run 패턴> <실험 폴더> <태그> cuda:N` → 평지 · rough 클립(같은 시드 · 같은 명령 열: 전진 0.5 → 1.0 → 회전 +1.2 → -1.2, 각 3 초) · `_feet.npz`(발 높이 · 접촉 · 몸 높이 · vx · wz · 관절각 12 · roll/pitch) · gait_table. 촬영 로그의 `CLIP ... brightness ... resets` 줄로 검은 화면 · 넘어짐 확인. 주의: gait_table 의 판 라벨이 CK 와 상관없이 「500」 으로 찍히는 스크립트 버그(숫자는 맞음).
+3. **숫자로 본 보행**(gait_table): 발 기준 몸 높이 · 스윙 높이(중앙 · 최대) · 네 발 접촉 비율 · 두 발 접촉일 때 대각 비율 · 발당 이륙/s · 구간 뒤 절반 vx · wz · 전진 m. **v2 기준**: 몸 0.38~0.39 m · 대각 trot · 이륙 2.7/s · vx 1.01(명령 1.0). v2 원본은 `s2_lab/videos/mid500_1022/v2_flat*`.
+4. **걸음 위상도**: `python tools_lead/gait_phase.py out.png 4.0 6.0 "v2 3000 평지=.../v2_flat_feet.npz" "이름=..._feet.npz"` → 왼쪽 발 접촉 막대(파랑 FL·RR / 빨강 FR·RL), 오른쪽 발 높이. trot = 같은 색 짝이 함께, 두 색이 번갈아. pronk = 네 줄이 같은 순간 끊김. 끌기 = 한 줄이 안 끊김.
+5. **영상 프레임**: `tools_lead/strip.sh <mp4> 4.0 out.png` (0.08 초 간격 8 장) → 몸 높이 · 다리가 몸 아래인지 · 앞뒤 수평 · 짝짝이를 눈으로. **반드시 직접 본다.**
+6. **관절각**: `s2_lab/joint_clips.sh` · `joint_plot.py`(sonnet) → 다리별 hip · thigh · calf 시간 그래프(기본각 점선) · 몸 pitch/roll · joint_table.md(평균 · 기본각과의 차 · soft 한계 여유 · 앞/뒤 비교). v2 기준: hip 안쪽 약 -0.22 · calf 약 -1.1(무릎 폄) · 뒤 thigh 0.48. 원본 `s2_lab/videos/joint_1022/`.
+7. **학습 곡선**: `tools_lead/curves_x14.py`(RUNS 목록에 판 경로를 넣어 수정) → 같은 update 축 겹침.
+8. **비교 영상(팀장 공유용)**: `tools_lead/compare_grid.sh out.mp4 "v2=..." "EX-a=..." ...(6 개)` → 1 배 · 0.5 배. git `figs/` 에 넣고 링크.
+9. **명령 반응(끝난 판)**: `tools_lead/eval_x11.sh <run 폴더> <태그> cuda:N` (diag_z_action, 500/1000/1500; 300 회 판이면 스크립트의 IT 목록을 고쳐 씀).
+10. **해석**: 등록한 판정으로만. 숫자 · 위상 · 프레임 · 관절이 같은 말을 하는지 대조. 미측정은 미측정. 결과 문서(RESULT-*.md 형식) · #555 · 텔레그램.
+
+## 15. 아직 안 끝난 일 (잊지 말 것)
+
+- `foothold-lead-style` 스킬 갱신(실험 기록 형식 · 판정 절차) · 팀장이 말한 「실험 기록 스킬」 만들기. Codex 쪽은 이 문서 14 절이 대신.
+- 결과를 프로젝트 웹사이트에 올리는 일(팀장 요구: Artifact 대신 사이트 직접). 아직 git 문서까지만.
+- EX-17~22 카드 · EXP-MAP 등록(luna 에 맡길 수 있음) · RESULT 문서는 EX-21/22 판정 뒤 EX-17~22 묶음으로.
+- 판단층 안건 J1 · Linux 이전(D: 포맷) · bf16 비교 · 다른 시드 재현(전체 과정 끝난 뒤).
