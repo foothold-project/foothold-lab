@@ -1,14 +1,20 @@
 > 분류: 운영
 > 작성: 오흥재 (lead_tmp 대조 · sol 후속) · 2026-10-22
 > 근거: verify-v2 c6582009 · sol f4501f7b·118a2242/취합 a731e2b1·cbb2e5e2 · #555 6310259601 · 6319562769 · ASTRA-X11
-> 요지: EX-09/10 이력을 보존하고 EX-11/12 승인 설계가 반영될 문서 자리를 대조한다
+> 요지: EX-17~25 결정과 기준을 실험 지도·카드·일정 및 승인 방향에 연결하고 과거 이력을 보존한다
 > 상태: 지정 결정의 문서 반영 확인 · 실행·실측 미확인 · 봉인 gates 불변
 
-# 결정 동기화 · 10월 21일
+# 결정 동기화 · 10월 22일 갱신
 
-실험 번호 정본은 [EXP-MAP](../20261021-experiments/EXP-MAP.md)이다. EX-01 S1-a, EX-02 D1, EX-03 D2, EX-04 D2-s43, EX-05 D3, EX-06 S1a-Rx1, EX-07 C1-scan, EX-08 C2-blind, EX-09 diag-G0-open, EX-10 diag-G0-start, EX-11 G0-zeroest, EX-12 G0-learnedest. 다음 번호 EX-13부터 lead가 부여한다. 파일명은 유지한다.
+실험 번호 정본은 [EXP-MAP](../20261021-experiments/EXP-MAP.md)이다. EX-01 S1-a, EX-02 D1, EX-03 D2, EX-04 D2-s43, EX-05 D3, EX-06 S1a-Rx1, EX-07 C1-scan, EX-08 C2-blind, EX-09 diag-G0-open, EX-10 diag-G0-start, EX-11 G0-zeroest, EX-12 G0-learnedest, EX-13~EX-25는 [EXP-MAP](../20261021-experiments/EXP-MAP.md)의 관계표를 따른다. 파일명은 유지한다.
 
 검사 계약 `exp-sync-v1`: 「바뀌는 자리별 점검표」의 `체크`는 모든 반영 자리를 직접 확인했을 때만 `[x]`, 그 전에는 `[ ]`이다. 이 표는 문서 반영 완료를 표시하며, 체크 변경은 해당 자리의 근거를 대조한 뒤에 한다. `[x]`는 실험·실측·승인 완료가 아니다. 미확인인 실험 사실은 그 상태대로 각 자리에 기록되어야 한다.
+
+## 최신 결정 · EX-17~25와 811 동회차 기준
+
+10/22 최신 반영은 환경·관측 진단 EX-17~22, START 본류 EX-23 G1 및 EX-25 G0, v2 scratch 지류 EX-24a/b다. 근거는 [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922) · [`LEAD-HANDOFF-20261022.md` §§17~25](LEAD-HANDOFF-20261022.md) · [BASELINE-0811](../20261021-experiments/BASELINE-0811.md) · [EXPERIMENT-RULES](../20261021-experiments/EXPERIMENT-RULES.md)다. EX-16~22의 100~300회 낮은 자세 단독 조기 실패 판단은 811 동회차 기준으로 뒷받침되지 않는다. 원 관찰은 남기고 판정 근거만 정정한다. 300회는 낮은 자세에서 선행 이동하는지 보는 경고 후보, 500회는 상승·전진, 1000회는 trot 기준이다. 관절 한계 벌점은 미사용이며 DR은 약한 커리큘럼 방향이다. 본류는 START 구조부터 보는 EX-23/25다. 설계 정본 14·52·53 및 봉인 gates는 이번 등록만으로 바꾸지 않는다.
+
+EX-25는 댓글 6342453922와 handoff §25의 초기 1001 목표를 보존하고, 이후 lead가 1501회로 다시 띄웠다고 전달한 사실을 최신 계획으로 구분한다. SCHEDULE-NOW는 10/22 23:00 배정 스냅샷을 기록한다. 그 시각 실제 진행 update·완료·영상 판독은 미확인이다. luna는 GPU를 기동하지 않았다.
 
 ## 현재 결정 · S2-G0 두 판과 결과별 다음 코칭
 
@@ -78,6 +84,7 @@ lead가 전달한 팀장 승인의 대상은 [#555 6319562769](https://github.co
 | [x] | EX-06 S1a-Rx1 묶음·중간 점검 | R에09:17 시작과09:23 직접 답·중단, heading 처방 별개 | a731e2b1의52 §3, 1500 AND·3000 계획과 결과 미확인 구별 | EX-06 중단·EX-07/08 뒤 EX-09/10, 옛 사슬을 현재 지시로 쓰지 않음 | 현재 상태·처방 종료와 잔여 확인 기록 | 유지. heading/prescription_arm의 S1a-v1.1은 별개 미실행 heading 판 | 6304758796·6304887684·6309063175 |
 | [x] | EX-09·EX-10 G0 지류·번호·영상 | T에두판·세갈래·시드순서·폐기기준·번호정본·2행2열 | 52현재경로는 a731e2b1, 14·53 §0·본선 구분은 cbb2e5e2로 반영·직접 대조 | 현재 표에두판약2h·영상·후속. 사슬키와번호 명시 | 현재 상태·다음 코칭 표. EX-11부터lead부여 | 유지. 짧은 영상 진단이41·52·봉인관문 통과를 뜻하지 않음 | 6310259601·번호는이창lead후속지시, 발행 후댓글 연결 |
 | [x] | EX-11·EX-12 est51 연결 진단 | U에 승인 전달 대상·두 mask·공통값·500/1500·무효·복귀 범위 | 14 §1 앞 진단 명령·깃발 복귀, 52 §1 앞 S1 관문 밖, 53 §1 앞 G0 본선 밖 직접 대조 | 10/22 순서 1~4·실행 미확인·clip17 한정 | EX-11/12 안건 닫힘·새 선택 질문 없음·C1/C2 cancelled 대조 | 유지. sealed gates 미수정, 4096 env·clip100 미채택 | #555 6319562769·ASTRA-X11 X1~X4. EXP-MAP·EX-10 보충·EX-11/12 카드에 결과 전 규칙 등록 |
+| [x] | EX-17~25 환경·관측 및 START 본류 · 811 판정 기준 정정 | V에 환경·관측 접근, 관절 한계 벌점 미사용, 약한 DR, Top-Down START-first, 300 경고 후보·500 상승·전진·1000 trot 기록 | 14·52·53 정본은 변경하지 않음. 진단 지류와 본류를 카드·MAP에서 구분 | 10/22 23:00 GPU0 EX-23 G1 · GPU1 EX-25 G0, 각각 1501 목표. 실제 update 미확인 | J1~J5 이력 유지. 이 등록을 실행 승인으로 읽지 않음 | 유지. 기존 봉인 기준 불변 | [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922); handoff §§17~25; BASELINE-0811·EXPERIMENT-RULES. EX-16~22의 낮은 자세 단독 조기 실패 판정은 철회, 관찰은 보존 |
 
 gates 전체를 새 하이퍼파라미터 저장소로 바꾸는 제안은 아니다. 최종 판정 기준은 그대로 두고, 실행 조건·중간 점검·정책 식별의 정본 위치를 연결하면 된다. 등록 파일을 바꿔야 한다고 lead가 정하면 새 판과 해시를 남기고, 이미 사용한 봉인본은 보존한다.
 

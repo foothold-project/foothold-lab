@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 원문 기록 · lead_tmp 후속) · 2026-10-21
 > 근거: lead 세션 채팅 · DECISIONS-step2-lead.md · #555 댓글 6265199264 · 이 폴더 evidence/ · #555 6319562769 · ASTRA-X11
 > 요지: 설계 v1 이 반드시 담아야 할 승인 사항과 조사 결과 체크리스트. 여기와 다르게 쓰려면 고치지 말고 「팀장 결정 필요」 로 올린다
-> 상태: 기존 결정 이력 보존 · U절에 10/22 EX-11/12 승인 전달 범위 반영 · 실행·결과 미확인
+> 상태: 기존 결정 이력 보존 · V절에 EX-17~25 방향 및 기준 반영 · GPU 결과 미측정
 
 # 승인된 방향과 조사 결과 (빠짐없이)
 
@@ -216,3 +216,13 @@ lead가 전달한 팀장의 「순차적으로 진행하고 결정사항 반영�
 - 공통 계약: 3072 env·24 step·seed42, S1 이어진 지형 7종의 23열·초기 레벨·승급·reset 원점, START 명령, clean critic 664, actor 잡음, B std0.5·종료 여유0.25·clip17. 50열·sparse·깃발은 이번에 끈다. 본선 깃발 계약은 유지한다. 초기 weight·optimizer SHA 일치와 실제 import 파일 SHA·dirty diff·cfg·인자·mask·mode·경험량 manifest를 확인한다. 4096 env·clip100·무제한 clip은 채택하지 않는다.
 - 500 update 점검, 기본은 양쪽 모두 1500 update. 둘 다 참고 평가를 통과하면 같은 완료 update에서 함께 멈출 수 있다. 한 판만 걸어도 다른 판을 조기 중단하지 않는다. NaN·shape·명령 계약 위반·실행 중 코드 변경은 승패가 아닌 실행 무효다. 결론은 clip17 조건에 한정한다.
 - 결과별 네 갈래와 무효·미완료 보류는 [EX-11 카드](../20261021-experiments/EXP-G0-zeroest.md#다음)와 [EX-12 카드](../20261021-experiments/EXP-G0-learnedest.md#다음)에 결과 전에 등록한다. 복귀 순서는 쉬운 지형 보행 → 열린 명령 → 깃발·물러나기·듬성한 지형 → G0/G1/G3 본선 비교 → 목표 추종이다. 두 진단을 본선 G0·열린 명령·S1 관문 통과로 자동 승격하지 않는다. 기존 41·52·봉인 gates는 그대로다.
+
+
+## V. EX-17~25 환경·관측 진단과 START 본류 · 10/22 결정
+
+근거: [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922) · [`LEAD-HANDOFF-20261022.md` §§17~25](LEAD-HANDOFF-20261022.md) · [`BASELINE-0811.md`](../20261021-experiments/BASELINE-0811.md) · [`EXPERIMENT-RULES.md`](../20261021-experiments/EXPERIMENT-RULES.md). 이 절은 lead가 전달한 결정과 결과 전 판정 방향을 연결한다. 카드의 관찰·측정 사실은 댓글·handoff에 보고된 등급을 유지하며, 이번 문서 반영은 새 실행이나 결과 확인이 아니다.
+
+- **환경·관측 접근**: 보상 항을 더하는 방향 대신 종료 조건·실제 선속도·DR·행동 지연·명령 입력을 단계별 또는 묶음으로 진단한다. 관절 한계 벌점은 쓰지 않는다. DR은 쉬운 조건에서 시작해 약하게 확장하는 방향으로 기록한다. 세부 계수는 각 카드의 원문 설정과 미확인 구분을 따른다.
+- **판정 기준 정정**: 8/11 기준선은 같은 update에서 100·300회 몸 높이 약0.19 m, 500회 약0.32 m로 상승·전진, 1000회 약0.40 m와 대각 위상비 0.97의 trot이다. 따라서 EX-16~22에서 update 100~300의 낮은 자세만으로 조기 실패라 부른 옛 판정은 근거가 부족하다. 원 관찰과 다른 실패 징후는 보존한다. 300회는 낮은 채 먼저 움직이는 신호를 보는 조기 경고 후보일 뿐이며 하드 중단선으로 확정하지 않는다.
+- **Top-Down 순서**: START 구조를 먼저 비교한다. EX-23은 지도 입력 G1, EX-25는 지도 없음 G0이며 두 판을 본류로 표시한다. v2 scratch EX-24a/b는 진단 지류이며 START 본류 결과로 바꾸어 읽지 않는다. 결과와 진행 수는 `SCHEDULE-NOW.md` 및 각 카드에서 미확인 상태를 분리한다. EX-25의 기존 1001 update 목표는 앞선 계획으로 보존하고, lead가 1501로 재기동했다고 전한 상태를 현재 계획에 둔다.
+- **범위**: 봉인된 설계 gates와 정본 문서의 수치 계약을 이 실험 등록만으로 바꾸지 않는다. GPU 실행·평가·렌더는 luna가 시작하지 않았다.
