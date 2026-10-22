@@ -296,3 +296,5 @@ GPU 실험은 팀장 승인 범위 안에서 · 유료 자원 금지 · 남의 �
 - 띄우는 법(승인 뒤, 멈춘 GPU 에): `cd sonnet-code && bash foothold_s2/run_s2_x26.sh x27 cuda:1` (EX-25 자리) · `x26 cuda:0`. 띄운 뒤 2 분 안에 run.log 첫 update 와 manifest 의 rewards(joint_torques -0.0002) 확인. 처음 실행이라 Kit 오류 가능 → Traceback 이면 고치고 다시.
 - **미확인 · 남은 일**: EX-25 300 평가 리셋 64(학습 지표는 정상) 원인 · S2_ACT=sample 로 다시 찍어 볼 것 / EX-24a 300 걸음 숫자(night3 이 찍는 중) / 811 300 클립 회전 구간 하늘(재촬영 대기) · v1 · v2 회전 구간 넘어짐은 실제 행동(BASELINE 에 적을 것) / BASELINE-0811 띠 · compare_0811 교체 / astra 에 BASELINE · 철칙 · 이 판단 검증 의뢰 / luna c530e09c 내용 확인.
 - **저장소 밖 미커밋**: `C:/Users/AI-WS01/s2_lab/record_seq.py`(force_gt 정답 지도 수정) · `s2_lab/tools_lead/{mid_ck2,night_1022,night2_1022,gap_rec_1023,night3_1023}.sh`. sonnet-code 는 7cab5223 까지 커밋(로컬 브랜치, 원격 push 안 함 · 팀장 확인 필요).
+
+- 10/23 03:45 EX-25 정상 종료(1500/1501 · rc 0 · Traceback 0). **GPU 1 은 03:45 부터 빈다**: EX-26/27 은 팀장 승인 전이라 띄우지 않음. night3 이 EX-25 500 · 1000 · 1500 촬영을 cuda:0 에서 이어 간다.
