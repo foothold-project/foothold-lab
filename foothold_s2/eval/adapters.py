@@ -460,6 +460,7 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None):
     saved = sd.get("perception_cfg") or {}
     pc = dict(train_cfg.get("perception", {}) or {})
     pc["map_input"] = saved.get("map_input", "none")
+    pc["oracle_vel_noise"] = 0.0                      # 평가는 관측 잡음을 끈다(est_mode=oracle_vel 체크포인트도 실제 선속도를 잡음 없이 넣는다)
 
     for key, default in MODE_DEFAULTS.items():
         value = saved.get(key, default)

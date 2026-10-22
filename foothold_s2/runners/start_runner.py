@@ -64,7 +64,8 @@ PERCEPTION_DEFAULTS = {
     "latest_interval": 100,  # latest.pt 를 이 간격으로 덮어쓴다(무인 재개용 · 번호 붙은 model_N.pt 는 save_interval 마다 그대로)
     "status_interval": 10,  # train_start_status.json 을 이 간격으로 갱신한다(첫 iteration 은 항상)
     # ---- SONNET-X11 (EX-11 · EX-12). 기본값은 기존 G0 · G1 동작 그대로다 ----
-    "est_mode": "learned",  # learned | zero. zero: 지각은 그대로 돌고 actor 입력의 est 51 칸만 0 (수집 · PPO 저장 · 평가 모두 _ppo_obs 하나를 지난다)
+    "est_mode": "learned",  # learned | zero | oracle_vel. zero: 지각은 그대로 돌고 actor 입력의 est 51 칸만 0. oracle_vel: est 51 칸 중 앞 3 칸 = env 의 실제 몸 선속도(몸 좌표, oracle_vel_noise 만큼 균일 잡음), 나머지 48 칸 0. 수집 · PPO 저장 · 평가 모두 _ppo_obs 하나를 지난다
+    "oracle_vel_noise": 0.1,  # oracle_vel 일 때 선속도에 더하는 균일 잡음 ±(v2 의 base_lin_vel 관측 잡음과 같은 값). 평가 경계(adapters.load_s2_runner)에서는 0 으로 둔다(관측 잡음을 끄는 평가 규칙)
     "critic_mode": "legacy",  # legacy | clean52. clean52: critic = env 의 잡음 없는 critic 묶음 52 + 지도 512 + 발 지도 100 = 664 (vel3 · contact4 는 52 안에 있어 중복 없음)
     "log_action_stats": False,  # raw a · clip 뒤 a 분위 · 포화율 · 관절별 연속 포화 · PD target · 토크 포화를 action_stats.jsonl 에 (X5)
     "log_reward_split": False,  # 항별 보상을 움직이는 env · 멈춘 env 로 나눠 train_extra.jsonl 에 (lead 요청, 기록만)
@@ -94,7 +95,7 @@ class StartRunner(OnPolicyRunner):
         pcfg = dict(PERCEPTION_DEFAULTS)
         pcfg.update(train_cfg.get("perception", {}))
         self.pcfg = pcfg
-        if pcfg["est_mode"] not in ("learned", "zero") or pcfg["critic_mode"] not in ("legacy", "clean52"):
+        if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
             raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
         self.manifest = None
         self.manifest_dir = None
@@ -159,11 +160,29 @@ class StartRunner(OnPolicyRunner):
             raw["contacts"],
         )
 
+    def _est_in(self, est: torch.Tensor, vel: torch.Tensor, noise: float | None = None) -> torch.Tensor:
+        """actor 입력의 est 51 칸을 est_mode 로 정한다. learned: 지각 est 그대로 · zero: 전부 0 · oracle_vel: 앞 3 칸 = 실제 몸 선속도 vel(+균일 잡음 ±noise), 나머지 48 칸 0.
+        est (..., 51) · vel (..., 3) 는 같은 앞 차원을 가진다. noise 가 None 이면 pcfg 의 oracle_vel_noise."""
+        mode = self.pcfg["est_mode"]
+
+        if mode == "zero":
+            return torch.zeros_like(est)
+
+        if mode == "oracle_vel":
+            n = self.pcfg["oracle_vel_noise"] if noise is None else noise
+            v = vel + (torch.empty_like(vel).uniform_(-n, n) if n > 0 else 0.0)
+            out = torch.zeros_like(est)
+            out[..., :3] = v
+
+            return out
+
+        return est
+
     def _ppo_obs(self, raw: TensorDict, est: torch.Tensor) -> TensorDict:
-        """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
+        """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0, oracle_vel 이면 앞 3 칸만 실제 선속도), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
         o, _, gmap, gfeet, vel, con = self._split(raw)
         n = o.shape[0]
-        est_in = torch.zeros_like(est) if self.pcfg["est_mode"] == "zero" else est
+        est_in = self._est_in(est, vel)
         if self.pcfg["critic_mode"] == "clean52":
             critic = torch.cat([raw["critic"].reshape(n, 52), gmap.reshape(n, -1), gfeet], -1)
         else:
@@ -434,7 +453,7 @@ class StartRunner(OnPolicyRunner):
 
     def _phi_dist(self, snap):
         est = self.perception.est_sequence(snap["batch"], snap["eps"])
-        est_in = torch.zeros_like(est) if self.pcfg["est_mode"] == "zero" else est
+        est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
         o = snap["batch"]["obs"]
         T, K = o.shape[0], o.shape[1]
         td = TensorDict({ACTOR_KEY: torch.cat([o, est_in], -1).reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
