@@ -127,3 +127,19 @@ gym.register(
     kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2X11EnvCfg",
             "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2X11PPORunnerCfg"},
 )
+
+# EX-14 = EX-11 + feet_air_time +1.0 · EX-13 = EX-14 + motion_trot · stand_still · only_positive_rewards (SONNET-X13). est 처치는 둘 다 agent cfg 의 est_mode=zero.
+gym.register(
+    id="FootholdS2-Go2-S2-X14-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2X14EnvCfg",
+            "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2X13PPORunnerCfg"},
+)
+gym.register(
+    id="FootholdS2-Go2-S2-X13-v0",
+    entry_point="foothold_s2.tasks.s2_x13_env:FootholdS2PosRewardEnv",
+    disable_env_checker=True,
+    kwargs={"env_cfg_entry_point": "foothold_s2.tasks.s2_env_cfg:FootholdS2X13EnvCfg",
+            "rsl_rl_cfg_entry_point": "foothold_s2.tasks.agents.s2_ppo_cfg:S2X13PPORunnerCfg"},
+)

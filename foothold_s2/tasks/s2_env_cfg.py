@@ -11,9 +11,12 @@
 """
 
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
+from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
 from foothold_s2.curriculum import terrain_levels_mixed as tlm
+from foothold_s2.rewards import mgdp_terms
 
 from foothold_s2.tasks.s1_env_cfg import FootholdS1aScanEnvCfg
 from foothold_s2.terrains import columns
@@ -103,3 +106,27 @@ class FootholdS2X11EnvCfg(FootholdS2DiagG0StartEnvCfg):
 
     def use_full_terrain(self):
         return None
+
+
+@configclass
+class FootholdS2X14EnvCfg(FootholdS2X11EnvCfg):
+    """EX-14 (SONNET-X13): EX-11 환경 + feet_air_time +1.0 하나만 (MGDP 식 그대로, rewards/mgdp_core.py). 나머지는 EX-11 과 같다(est 처치는 agent cfg 의 est_mode)."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.feet_air_time = RewTerm(
+            func=mgdp_terms.feet_air_time_mgdp, weight=1.0,
+            params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"), "command_name": "base_velocity"})
+
+
+@configclass
+class FootholdS2X13EnvCfg(FootholdS2X14EnvCfg):
+    """EX-13 (SONNET-X13, MGDP 묶음 넷): EX-14 의 feet_air_time +1.0 에 motion_trot -0.1 · stand_still -0.1 · only_positive_rewards 를 더한다.
+    only_positive_rewards 는 env 클래스(FootholdS2PosRewardEnv)가 이 칸을 읽어 보상 합을 0 아래로 자른다."""
+
+    only_positive_rewards: bool = True
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.rewards.motion_trot = RewTerm(func=mgdp_terms.motion_trot_mgdp, weight=-0.1)
+        self.rewards.stand_still = RewTerm(func=mgdp_terms.stand_still_mgdp, weight=-0.1, params={"command_name": "base_velocity"})

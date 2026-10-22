@@ -54,12 +54,13 @@ class StepClassifier:
 
 
 def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset: torch.Tensor | None = None,
-                clf: StepClassifier | None = None, reset_before: torch.Tensor | None = None) -> dict:
+                clf: StepClassifier | None = None, reset_before: torch.Tensor | None = None, clipped: torch.Tensor | None = None) -> dict:
     """rew (T, N, K) 가중치 곱한 항별 값 · vx (T, N) · wz (T, N) · cmd (T, N, 3) · reset (T, N) 그 step 에 종료된 env. 전부 보상과 같은 시점(reset 전)."""
     T, N, _ = rew.shape
     clf = clf or StepClassifier()
     sums = {"moving": torch.zeros(rew.shape[2]), "stalled": torch.zeros(rew.shape[2])}
     counts = {"moving": 0, "stalled": 0, "nomove": 0}
+    clip_counts = {"moving": 0, "stalled": 0}                 # only_positive_rewards 로 합이 0 으로 잘린 env-step (EX-13 만 의미가 있다)
 
     for t in range(T):
         prev = (reset_before if t == 0 else reset[t - 1]) if reset is not None else None
@@ -70,10 +71,15 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
         sums["moving"] += rew[t][moving].sum(0).float().cpu()
         sums["stalled"] += rew[t][stalled].sum(0).float().cpu()
 
+        if clipped is not None:
+            clip_counts["moving"] += int((clipped[t] & moving).sum())
+            clip_counts["stalled"] += int((clipped[t] & stalled).sum())
+
     total = T * N
     idx = {n: i for i, n in enumerate(names)}
     out = {"frac_moving": counts["moving"] / total, "frac_stalled": counts["stalled"] / total, "frac_no_move_command": counts["nomove"] / total,
-           "env_steps": total, "reset_env_steps": int(reset.sum()) if reset is not None else None}
+           "env_steps": total, "reset_env_steps": int(reset.sum()) if reset is not None else None,
+           "only_positive_clipped_frac": (float(clipped.float().mean()) if clipped is not None else None)}      # 항별 값은 자르기 전 값이다
 
     for label in ("moving", "stalled"):
         if counts[label] == 0:
@@ -85,6 +91,7 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
         g["other_penalty_sum"] = float(sum(float(mean[i]) for n, i in idx.items() if n not in NAMED))
         g["total"] = float(mean.sum())
         g["env_steps"] = counts[label]
+        g["only_positive_clipped_frac"] = (clip_counts[label] / counts[label]) if clipped is not None else None
         out[label] = g
 
     return out
@@ -94,7 +101,7 @@ class RewardSplit:
     """reward_manager.compute 를 감싸 보상 직후(reset 전)의 보상 · 명령 · 속도 · reset 표시를 step 마다 모은다."""
 
     def __init__(self):
-        self.rew, self.vx, self.wz, self.cmd, self.reset = [], [], [], [], []
+        self.rew, self.vx, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], []
         self.names = None
         self.error = None
         self.attached = False
@@ -117,7 +124,8 @@ class RewardSplit:
         def wrapped(*a, **k):
             out = orig(*a, **k)
             self._snap = (rm._step_reward.detach().clone(), robot.data.root_lin_vel_b[:, 0].detach().clone(), robot.data.root_ang_vel_b[:, 2].detach().clone(),
-                          term.vel_command_b[:, :3].detach().clone(), env.reset_buf.detach().clone())
+                          term.vel_command_b[:, :3].detach().clone(), env.reset_buf.detach().clone(),
+                          (env.reward_neg_clipped.detach().clone() if hasattr(env, "reward_neg_clipped") else None))
 
             return out
 
@@ -134,13 +142,14 @@ class RewardSplit:
 
             return
 
-        r, vx, wz, cmd, rst = self._snap
+        r, vx, wz, cmd, rst, clipped = self._snap
         self._snap = None
         self.rew.append(r)
         self.vx.append(vx)
         self.wz.append(wz)
         self.cmd.append(cmd)
         self.reset.append(rst)
+        self.clipped.append(clipped)
 
     def summary(self):
         if self.error is not None:
@@ -153,11 +162,12 @@ class RewardSplit:
             return {"unavailable": "기록된 step 이 없다"}
 
         out = split_stats(torch.stack(self.rew), self.names, torch.stack(self.vx), torch.stack(self.wz), torch.stack(self.cmd), torch.stack(self.reset),
-                          clf=self.clf, reset_before=self.last_reset)
+                          clf=self.clf, reset_before=self.last_reset,
+                          clipped=(torch.stack(self.clipped) if self.clipped and self.clipped[0] is not None else None))
         self.last_reset = self.reset[-1].clone()
         self.reset_window()
 
         return out
 
     def reset_window(self):
-        self.rew, self.vx, self.wz, self.cmd, self.reset = [], [], [], [], []
+        self.rew, self.vx, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], []

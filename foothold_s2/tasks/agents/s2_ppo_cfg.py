@@ -44,3 +44,13 @@ class S2X11PPORunnerCfg(S2PPORunnerCfg):
     perception: dict = {"microbatch_envs": 256, "replay_autocast": "none", "kl_fp32": False,
                         "est_mode": "learned", "critic_mode": "clean52", "log_action_stats": True, "log_kl": True, "log_reward_split": True,
                         "contract": "start", "stop_on_nonfinite": True}
+
+
+@configclass
+class S2X13PPORunnerCfg(S2X11PPORunnerCfg):
+    """EX-13 · EX-14 (SONNET-X13): 기준은 EX-11 = est 0(est_mode zero), clean critic 664, clip 17, rollout 24, 1501 회, 500 회마다 저장. 보상만 env cfg 가 다르다."""
+
+    experiment_name = "foothold_s2_x13"
+    perception: dict = {"microbatch_envs": 256, "replay_autocast": "none", "kl_fp32": False,
+                        "est_mode": "zero", "critic_mode": "clean52", "log_action_stats": True, "log_kl": True, "log_reward_split": True,
+                        "contract": "start", "stop_on_nonfinite": True}
