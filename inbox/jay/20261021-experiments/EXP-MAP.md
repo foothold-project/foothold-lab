@@ -18,10 +18,11 @@
 | 밤 진단 D1·D2·D2-s43·D3·Rx1 | 이력 보존. Rx1은 14:38 중단, C1/C2는 15:00 중단이라는 lead 보고 | 계속 실행 중인 판으로 표시하지 않음 |
 | [EX-09 diag-G0-open](EXP-G0-open.md) | START 구조·지도 없음·우리 열린 명령·1500회·seed42. 기동·결과 미확인 | START 명령 판과 영상 비교 |
 | [EX-10 diag-G0-start](EXP-G0-start.md) | 같은 G0 구조·START 원문 명령·1500회·seed42. 기동·결과 미확인 | 사전 코칭 규칙으로 본류에 복귀 |
+| EX-13~EX-16 보상 판별 지류 | EX-13은 약 230 update에서 중단되어 결론 제외. EX-14는 발 공중 시간 단일 항, EX-15는 legged_gym A1 묶음, EX-16은 EX-11 환경에서 보상만 NVIDIA Go2 rough로 교체 | 최종 수치는 lead 결과 문서 대기. EX-16은 NVIDIA 기저 전환으로 해석하지 않음 |
 | [EX-11 G0-zeroest](EXP-G0-zeroest.md) | est51 actor 입력만 0, 지각 갱신 유지. 결과: 전진 91~93 % · 기는 자세 · 회전 0 → 못 걸음 ([RESULT](RESULT-EX11-12.md)) | EX-12와 추정 연결 효과만 대조 |
 | [EX-12 G0-learnedest](EXP-G0-learnedest.md) | actor에 학습 est51 연결. 결과: EX-11 과 같음(est 원인 아님) · 못 걸음 ([RESULT](RESULT-EX11-12.md)) | 결과별 표에 따라 후속 한 걸음 선택 |
 
-10/22 현재 순서는 **EX-10 z/action 네 조합 평가(새 학습 없음) → EX-11/12 코드·CPU 시험·lead 확인 → EX-11/12 병렬 학습**이다. 두 판 모두 3072 env·24 step·seed42, S1 이어진 지형 7종 23열·같은 초기 레벨/승급/reset 원점, START 명령, clean critic 664, B std0.5·종료 여유0.25·clip17이다. 50열·sparse·깃발은 이번 진단에서만 끈다. 500 update 점검·1500 상한이며 둘 다 통과할 때에만 같은 완료 update 조기 종료가 가능하다. 실행 여부·소비 cfg 일치는 미확인이다. 두 판은 본선 G0 대조나 열린 명령·S1 관문으로 자동 승격되지 않는다.
+10/22 당시 본선 순서는 **EX-10 z/action 네 조합 평가(새 학습 없음) → EX-11/12 코드·CPU 시험·lead 확인 → EX-11/12 병렬 학습**으로 기록됐다. EX-13~16은 이후 추가된 보상 판별용 진단 지류이며 본선 계보나 설계 정본의 승인 실험으로 승격하지 않는다. 두 판 모두 3072 env·24 step·seed42, S1 이어진 지형 7종 23열·같은 초기 레벨/승급/reset 원점, START 명령, clean critic 664, B std0.5·종료 여유0.25·clip17이다. 50열·sparse·깃발은 이번 진단에서만 끈다. 500 update 점검·1500 상한이며 둘 다 통과할 때에만 같은 완료 update 조기 종료가 가능하다. 실행 여부·소비 cfg 일치는 미확인이다. 두 판은 본선 G0 대조나 열린 명령·S1 관문으로 자동 승격되지 않는다.
 
 ### EX-11·EX-12 결과별 다음 한 걸음 · 결과 전 등록
 
@@ -80,6 +81,10 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 | [EX-10 diag-G0-start](EXP-G0-start.md) | 현재 S2 진단 지류 | 같은 G0 구조 | START 원문 명령·1500회·seed42, 실행·결과 미확인 | #555 6310259601. 사슬 diag_g0_start |
 | [EX-11 G0-zeroest](EXP-G0-zeroest.md) | 추정 연결 진단 지류 · 계획 | G0, est actor 입력만 0, 지각 갱신 유지 | 3072 env·24 step·seed42·1500 상한, 실행·결과 미확인 | #555 6319562769. EX-12와 한 변수 대조 |
 | [EX-12 G0-learnedest](EXP-G0-learnedest.md) | 추정 연결 진단 지류 · 계획 | G0, est 학습값 actor 연결 | EX-11과 mask/run id 외 동일, 실행·결과 미확인 | #555 6319562769. 결과별 등록 표 |
+| [EX-13 MGDP 묶음](EXP-X13-mgdp.md) | MGDP 보상 네 항 결합, 중단 판정 제외 | EX-11 환경 설정 계보. 체크포인트 계승 미확인 | `[코드]` feet_air_time +1.0 · motion_trot -0.1 · stand_still -0.1 · 음수 합산 보상 0 하한. `[실측·lead 기록]` 14:19 약 230 update 중단 | #555 6332758762 · 6333408008. 진단용 신설. 결론에 사용하지 않음 |
+| [EX-14 발 공중 시간](EXP-X14-airtime.md) | 발 공중 시간 단일 항 분리 | EX-11 환경 설정 계보. 체크포인트 계승 미확인 | `[코드]` feet_air_time +1.0. `[선행]` 300·500회 위상 점검. 최종 결과 미측정 | #555 6332758762 · 6333740345. 진단용 신설 |
+| [EX-15 legged_gym A1](EXP-X15-lgA1.md) | A1 기저 보상 묶음의 자세 영향 | EX-14 설정 계보. 체크포인트 계승 미확인 | `[코드]` 발 공중 시간 +1.0 · 합산 보상 하한 0 · 토크 -2e-4 · 관절 한계 -10 · 종아리 충돌. 최종 결과 미측정 | #555 6333065357 · 6333408008. 진단용 신설 |
+| [EX-16 NVIDIA Go2 rough](EXP-X16-nvgo2.md) | 보상 세트 교체만의 판별 | EX-11 환경 설정을 상속하고 rewards만 교체. 체크포인트 계승 미확인 | `[코드]` NVIDIA Go2 rough 보상 세트 전체. `[선행]` 300·500회 위상 점검. 학습 결과 미측정 | lead 채팅 10/22 · 코드 13d77863. 진단용 신설, NVIDIA 기저 전환 아님 |
 
 ## 사슬 작업 이름
 
@@ -111,6 +116,7 @@ C1/C2는 중단 보고가 있었으나 당시 16:28 사슬에는 `running`이 �
 | S1-a와 기존 실패 처방 경로 | 설계 정본에 있음 | `52-S1-OPEN-COMMAND.md`의 S1-a 계획 및 heading 증가 처방. §52의 `S1a-v1.1`은 heading `[코드] 30% → 50%` 의미이며 lead 명명 인계상 미실행인 별개 판 |
 | D1·D2·D2-s43·D3 실험과 관측 결과 | 진단용 신설 | #555 사전 등록·후속 판정 댓글. 기준 설계 문서에 있는 정식 실험 카드로 간주하지 않음 |
 | #555의 세 변경 회복 처방 | 이 초안에서 별도 표기 | #555 댓글과 코드 `[코드] 690dd194`에 처음 `S1a-v1.1`로 기록. lead의 명명 답에 따라 카드 정식 이름은 `S1a-Rx1`. §52의 기존 heading 처방은 변경하지 않으며 lead 명명 인계상 미실행인 별개 판 |
+| EX-13·EX-14·EX-15·EX-16 | 진단용 신설 | #555의 보상 판별 결정과 lead 채팅. 설계 정본에 승인된 본선 실험으로 간주하지 않음. EX-13은 중단되어 결론 제외, EX-16은 EX-11 환경에서 보상만 교체하는 비교 |
 
 ## 공통 해석 경계
 
@@ -131,6 +137,9 @@ D1에서 실패한 보상 항 가설을 D2의 커널 비교로 좁혔고, D2-s43
 - `inbox/jay/20261019-design/NIGHT-REPORT-1021.md`.
 - #555 댓글: [D1 등록 6298590512](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6298590512), [D1 판정 6301263269](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6301263269), [D2·후속 등록 6302009721](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6302009721), [D2-s43 6304255937](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304255937), [발산·clip17 6304310458](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304310458), [D3·처방 6304758796](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6304758796).
 - 코드 변경: `[코드] 690dd194`, `[코드] e6efed92`, `[코드] 21fd5e2d`.
+- EX-13·EX-14 선행 결정: [#555 6332758762](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6332758762), EX-14·EX-15 시작 [6333408008](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333408008), EX-14 중간 점검 [6333740345](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333740345).
+- EX-15 설정 확인 [#555 6333065357](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333065357). 코드 참고: `[코드] cce2de44`(EX-13·14), `[코드] 2e0fa180`(EX-15), `[코드] 13d77863`(EX-16).
+- EX-14·EX-15 중간 영상·위상 자료는 `[코드] a1671095`의 `figs/mid-1022/`에 있다. 중간 자료는 최종 판정이 아니다.
 
 ## 대조 범위와 읽는 순서
 
