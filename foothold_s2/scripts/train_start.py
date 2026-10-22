@@ -68,6 +68,7 @@ import foothold_s2.x19_tasks  # noqa: E402,F401  (EX-19 등록)
 import foothold_s2.x20_tasks  # noqa: E402,F401  (EX-20 등록)
 import foothold_s2.x21_tasks  # noqa: E402,F401  (EX-21 등록)
 import foothold_s2.x22_tasks  # noqa: E402,F401  (EX-22 등록)
+import foothold_s2.x23_tasks  # noqa: E402,F401  (EX-23 등록)
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
@@ -138,6 +139,10 @@ def main(env_cfg, agent_cfg):
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)
     runner.attach_manifest(log_dir, manifest)
+    if runner.pcfg.get("log_map_stats"):                                   # EX-23: IE 로 가는 지도 입력 통계(map_stats.jsonl · run.log)
+        from foothold_s2.runners.map_stats import MapStatsRecorder
+
+        MapStatsRecorder(runner, log_dir).attach()
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
     remaining = agent_cfg.max_iterations - done
