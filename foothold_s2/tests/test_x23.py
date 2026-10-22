@@ -72,8 +72,9 @@ def test_x23_agent_turns_on_the_map_and_keeps_the_rest_of_ex11():
 
     assert [ast.unparse(b) for b in node.bases] == ["S2X11PPORunnerCfg"] and set(fields) == {"save_interval", "experiment_name", "perception"}
     assert ast.literal_eval(fields["save_interval"]) == 50 and ast.literal_eval(fields["experiment_name"]) == "foothold_s2_x23"
-    assert {k: v for k, v in perc.items() if k not in ("map_input", "log_map_stats")} == base_perc                           # 지도 입력 · 기록 두 칸만 다르다
+    assert {k: v for k, v in perc.items() if k not in ("map_input", "log_map_stats", "force_gt")} == base_perc                           # 지도 입력 · 기록 두 칸만 다르다
     assert perc["map_input"] == "reconstruction" and perc["est_mode"] == "learned" and perc["critic_mode"] == "clean52" and perc["contract"] == "start" and perc["log_map_stats"] is True
+    assert perc["force_gt"] is True
     assert ast.literal_eval(x11_fields["max_iterations"]) == 1501                                                              # 1501 회는 EX-11 에서 상속
 
 
@@ -276,3 +277,20 @@ def test_x24_registration_launcher_and_run_script():
 
     assert "train_v2_noscan.py" in run and "FootholdS2-Go2-S2-X24-v0" in run and "ex24-v2-noscan" in run and "--num_envs 4096" in run and "--seed 42" in run and "--max_iterations 1501" in run
     assert "--resume" not in run.split("\n", 6)[-1] and "agent.device=$DEV" in run
+
+
+def test_x23_force_gt_reaches_adasmpl_as_p_one_and_is_recorded_in_manifest_modes():
+    import torch
+
+    from foothold_s2.models.start_perception import AdaSmpl
+
+    perc = ast.literal_eval(_fields("foothold_s2/tasks/agents/s2_x23_ppo_cfg.py", "S2X23PPORunnerCfg")[0]["perception"])
+    ada = AdaSmpl(0.3, 1e-6, bool(perc.get("force_gt", False)))                                           # StartRunner 가 하는 그대로(start_runner.py:109)
+
+    assert ada.force_gt is True and ada.sample(64, "cpu").all()
+    ada.add(torch.tensor([0.1, 5.0, 0.2]))                                                               # 끝난 에피소드가 있어도 p 는 1 고정
+    ada.update()
+
+    assert ada.p == 1.0
+    assert 'bool(pcfg.get("force_gt", False))' in _src("foothold_s2/runners/start_runner.py")
+    assert '"force_gt": bool(runner.pcfg.get("force_gt", False))' in _src("foothold_s2/scripts/train_start.py")       # manifest modes 칸
