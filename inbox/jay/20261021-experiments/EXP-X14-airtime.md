@@ -1,5 +1,5 @@
 > 분류: 실험
-> 작성: jay · 2026-10-22
+> 작성: 오흥재 (luna 문서 반영) · 2026-10-22
 > 근거: [#555 6332758762](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6332758762) · [6333408008](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333408008) · [6333740345](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333740345) · 코드 cce2de44 · 영상 커밋 a1671095
 > 요지: EX-11에서 발 공중 시간 항 하나만 바꾼 EX-14의 최종 결과는 lead 종합 문서 전까지 미측정으로 둔다.
 > 상태: 기존 실행의 중간 기록 존재 · 최종 결과 대기

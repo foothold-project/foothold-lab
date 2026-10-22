@@ -1,5 +1,5 @@
 > 분류: 실험
-> 작성: jay · 2026-10-22
+> 작성: 오흥재 (luna 문서 반영) · 2026-10-22
 > 근거: [#555 6333065357](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333065357) · 코드 13d77863 · lead 채팅 10/22
 > 요지: EX-11의 환경과 정책 계보는 두고 보상 설정만 NVIDIA Go2 rough 세트로 교체해 보행 위상을 구분하는 판이다.
 > 상태: 설계·코드 참조 기록 · 실행 결과 미측정

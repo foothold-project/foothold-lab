@@ -1,5 +1,5 @@
 > 분류: 실험
-> 작성: jay · 2026-10-22
+> 작성: 오흥재 (luna 문서 반영) · 2026-10-22
 > 근거: [#555 6333065357](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333065357) · [6333408008](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333408008) · 코드 2e0fa180 · 영상 커밋 a1671095 · lead 채팅 10/22
 > 요지: EX-11 환경에 legged_gym A1 보상 묶음을 적용한 EX-15의 최종 수치와 판정은 lead 결과 문서 전까지 미측정이다.
 > 상태: 기존 실행 기록 존재 · 최종 결과 대기

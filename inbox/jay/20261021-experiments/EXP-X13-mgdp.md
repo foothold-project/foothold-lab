@@ -1,5 +1,5 @@
 > 분류: 실험
-> 작성: jay · 2026-10-22
+> 작성: 오흥재 (luna 문서 반영) · 2026-10-22
 > 근거: [#555 6332758762](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6332758762) · [6333408008](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6333408008) · 코드 cce2de44 · lead 채팅 10/22
 > 요지: EX-11 환경에서 MGDP 보상 네 항을 묶어 본 EX-13은 약 230 update에서 중단됐으며 원인 결론에 쓰지 않는다.
 > 상태: 중단 기록 · 최종 결과 판정 제외
