@@ -16,7 +16,7 @@ PKG = pathlib.Path(__file__).resolve().parents[1]
 KIT_FILES = [
     "tasks/s1_env_cfg.py", "tasks/s2_env_cfg.py", "tasks/s1b_env_cfg.py", "tasks/s1b_env.py", "tasks/delayed_action.py", "tasks/mdp_extra.py", "tasks/agents/s1_ppo_cfg.py", "rewards/start_rewards.py",
     "commands/mixed_command.py", "curriculum/terrain_levels_mixed.py", "robots/go2_cfg.py",
-    "terrains/rough_go2_cfg.py", "rewards/mgdp_terms.py", "tasks/s2_x13_env.py", "tasks/agents/s2_ppo_cfg.py",
+    "terrains/rough_go2_cfg.py", "rewards/mgdp_terms.py", "tasks/s2_x13_env.py", "tasks/agents/s2_ppo_cfg.py", "rewards/lg_terms.py", "tasks/s2_x15_cfg.py", "tasks/agents/s2_x15_ppo_cfg.py",
 ]
 MDP_DIRS = [ROOT / "isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/mdp",
             ROOT / "isaaclab/isaaclab/envs/mdp"]
