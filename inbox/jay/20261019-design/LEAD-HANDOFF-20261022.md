@@ -249,3 +249,11 @@ GPU 실험은 팀장 승인 범위 안에서 · 유료 자원 금지 · 남의 �
 - 자동: auto_watch 가 EX-23 100 · 300 · 500 · 1000, EX-25 300 · 500 · 1000 에서 촬영(GPU 1) · 텔레그램.
 - EX-22 재실행 안 함. 새벽 2 시쯤 Codex 리셋 뒤 astra 에 BASELINE-0811 · EXPERIMENT-RULES · 이 계획 검증 의뢰(START 구조가 811 보다 느리게 배울 가능성 포함).
 - 결과 문서는 BASELINE-0811 형식(표 · 위상 · 프레임 · 영상 · 판정)으로.
+
+## 26. 22:5x 이후 (compact 직전)
+
+- EX-25 를 1501 회로 다시 띄움(밤사이 판정이 좋으면 끝까지 가도록). 새 로그 `sonnet-code/logs/s2_x23_ex23-g1_2026102223*`(폴더 이름 고정값), auto_watch 300 · 500 · 1000 · 1500. EX-23 은 1501 그대로.
+- 811 1499 클립에 카메라 앞 파란 가림이 있었는데 주석만 달고 올림 → 다시 촬영 중(s1499_flat_bad.mp4 는 버린 본). 다시 찍은 뒤 BASELINE-0811 의 프레임 띠 · compare_0811.mp4 를 다시 만들어 올릴 것. 철칙 1.1 판에 가림 검사 추가.
+- luna 에 LUNA-22c 의뢰: EX-17~25 카드 · EXP-MAP · DECISION-SYNC · APPROVED · SCHEDULE 반영(밀려 있던 것, lead 가 맡긴다고만 쓰고 안 맡겼던 실수).
+- 밤사이 판정 원칙: 500 · 1000 회 데이터가 811 같은 회차 기준을 통과하면 1500 까지 계속, 아니면 멈춤. 결정은 등록 규칙 + astra 검증(02 시 이후)으로, lead 나 lead_tmp 가 혼자 넓히지 않는다.
+- 로컬 경로: compare_0811.mp4 = `C:/mai/wt/foothold-lab/lead-x11r/inbox/jay/20261021-experiments/figs/baseline-0811/compare_0811.mp4` (원본 클립 `C:/Users/AI-WS01/s2_lab/videos/mid500_1022/scratch0811/`).
