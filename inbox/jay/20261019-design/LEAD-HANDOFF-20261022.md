@@ -298,3 +298,4 @@ GPU 실험은 팀장 승인 범위 안에서 · 유료 자원 금지 · 남의 �
 - **저장소 밖 미커밋**: `C:/Users/AI-WS01/s2_lab/record_seq.py`(force_gt 정답 지도 수정) · `s2_lab/tools_lead/{mid_ck2,night_1022,night2_1022,gap_rec_1023,night3_1023}.sh`. sonnet-code 는 7cab5223 까지 커밋(로컬 브랜치, 원격 push 안 함 · 팀장 확인 필요).
 
 - 10/23 03:45 EX-25 정상 종료(1500/1501 · rc 0 · Traceback 0). **GPU 1 은 03:45 부터 빈다**: EX-26/27 은 팀장 승인 전이라 띄우지 않음. night3 이 EX-25 500 · 1000 · 1500 촬영을 cuda:0 에서 이어 간다.
+- 10/23 08:35 확인: EX-23 정상 종료(1500/1501 · rc 0 · Traceback 0). **GPU 0 · 1 둘 다 빈다**(GPU 1 03:45 부터). EX-26/27 팀장 승인 대기. night3 촬영이 남은 체크포인트를 cuda:0 에서 마저 찍는다.
