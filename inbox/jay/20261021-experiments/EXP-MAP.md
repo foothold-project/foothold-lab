@@ -1,5 +1,5 @@
 > 분류: 실험
-> 작성: 오흥재 (luna 초안 · lead_tmp 대조 · sol 후속) · 2026-10-22
+> 작성: 오흥재 (luna 문서 반영) · 2026-10-23
 > 근거: #555 댓글 6336845347·6338232352·6339275508·6342115176·6342170646·6342453922 · `LEAD-HANDOFF-20261022.md` §§17~27 · `BASELINE-0811.md` · `EXPERIMENT-RULES.md`
 > 요지: EX-01~25의 실험 계보와 본류·진단 지류, 811 동회차 판정 기준을 연결한다.
 > 상태: EX-17~25 카드·결정·일정 연결 · 진행·영상 판독 미확인 · 옛 관찰 보존
@@ -8,7 +8,7 @@
 
 번호 정본은 이 문서의 「관계」 표다. EX-01~EX-25를 보존한다. EX-23과 EX-25는 START 구조 G1/G0 본류, EX-17~22와 EX-24a/b는 환경·관측 및 v2 scratch 진단 지류다. EX-16~22의 낮은 자세만 근거로 한 100~300회 조기 실패 판정은 811 동회차 자료로 뒷받침되지 않는다. 300회는 낮은 자세에서 먼저 움직이는지 보는 조기 경고 후보이며 아직 검증된 중단선이 아니다. 500회 상승·전진, 1000회 trot은 811 같은 회차 기준이다.
 
-## 본류와 진단 지류 · 10/21~10/22 갱신
+## 본류와 진단 지류 · 10/23 결과 자료 반영
 
 기준은 verify-v2 `99dbf578`와 [결정 #555 6310259601](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6310259601)이다. **S1-a 실패 → START 구조·지도 없는 S2-G0의 두 명령 판 → 영상 판정 → 결과별 코칭 → S2 본류**로 연결한다. S1-a를 합격으로 바꾸거나 S1-b를 자동 시작하는 뜻은 아니다.
 
@@ -94,10 +94,10 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 | [EX-20 action·termination](EXP-X20-act-term-v2.md) | EX-16 설정 + 지연 끔·종료 조건 변경 | 두 항목 묶음, checkpoint 미확인 | `[실측·#555]` 300회 0.16 m, 웅크린 정지. 낮은 자세 단독 판정은 811로 미지지 | EX-16 환경 진단 지류 |
 | [EX-21 v2 triple](EXP-X21-v2triple.md) | DR·행동·종료·선속도 결합 | 여러 묶음 변경, checkpoint 미확인 | `[실측·#555]` 100~300회 몸 0.18~0.21 m, 0.37 m/3초 이동, 회전 0 | EX-16 환경 진단 지류 |
 | [EX-22 v2 command](EXP-X22-v2cmd.md) | EX-21 + v2 명령·지형 승급 | 두 항목 함께 변경, checkpoint 미확인 | `[실측·#555]` 300회 몸 0.17 m, 전진 1.20 m/s, 동시 도약 기록. 낮은 자세 단독 실패 판정은 811로 미지지 | EX-16 환경 진단 지류 |
-| [EX-23 START G1](EXP-X23-g1.md) | START G1 · 정답 높이 지도 | 처음부터 학습, 지도 actor 입력 확인 대상 | `[선행]` 1501 update 목표. 23시 진행 수·판정 미확인 | START G1/G0 본류 |
+| [EX-23 START G1](EXP-X23-g1.md) | START G1 · 정답 높이 지도 | 처음부터 학습, 지도 actor 입력 확인 대상 | `[실측·manifest]` 1501/1501 update 기록. 평지·rough·회전 원자료는 [RESULT](RESULT-EX23-25.md)에 기록. 영상 단색 gate 미통과, 판정 대기 | START G1/G0 본류 |
 | [EX-24a v2 scratch](EXP-X24a-v2-scratch.md) | v2 설정 처음부터, 스캔 포함 | scratch 진단, resume flag 미확인 | `[lead 기록]` 301 update 종료, 보행 결과 미측정 | v2 scratch 지류, START 본류 아님 |
 | [EX-24b v2 no scan](EXP-X24b-v2-noscan.md) | EX-24a에서 actor 스캔 입력 제거 | 설정 차이 검증 미확인 | `[lead 기록]` 301 update 종료, 보행 결과 미측정 | v2 scratch 지류, START 본류 아님 |
-| [EX-25 START G0](EXP-X25-g0.md) | EX-23과 같고 지도 없음 | 처음부터 학습, `map_input=none` | `[실측·manifest]` 23:00 run target/params 1501 · `run_name=ex25-g0`; 진행 중, 완료 아님. 22:49 중단판은 결과 제외 | START G1/G0 본류 |
+| [EX-25 START G0](EXP-X25-g0.md) | EX-23과 같고 지도 없음 | 처음부터 학습, `map_input=none` | `[실측·manifest]` 1501/1501 update 기록. EX-25 500회 미측정, 1001은 이전 계획, 22:49 중단판 제외. 영상 단색 gate 미통과, 판정 대기. [RESULT](RESULT-EX23-25.md) | START G1/G0 본류 |
 
 ## 사슬 작업 이름
 
