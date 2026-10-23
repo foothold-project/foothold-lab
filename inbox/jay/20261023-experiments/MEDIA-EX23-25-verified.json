@@ -1,0 +1,38 @@
+{
+  "commit": "754060a4247dcefc75b01761164869455d519d3c",
+  "unauthenticated_public_download": true,
+  "files": [
+    {
+      "name": "ex23-ex25-flat-1500-1x.mp4",
+      "url": "https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-flat-1500-1x.mp4",
+      "http_status": 200,
+      "bytes": 4120046,
+      "sha256": "70fc8bcece9e59157a2c5d0989dd7e42ca8a10461e96a5480a24274201252638",
+      "matches_local": true
+    },
+    {
+      "name": "ex23-ex25-flat-1500-0.5x.mp4",
+      "url": "https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-flat-1500-0.5x.mp4",
+      "http_status": 200,
+      "bytes": 7187410,
+      "sha256": "55f051a57e5f7fb92b6f383d02f8c920ed90307a60f9ad29028883dbc3f3f418",
+      "matches_local": true
+    },
+    {
+      "name": "ex23-ex25-rough-1500-1x.mp4",
+      "url": "https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-rough-1500-1x.mp4",
+      "http_status": 200,
+      "bytes": 4200009,
+      "sha256": "c61e2d616e75d0faf0ffff931b0b7718a50a5e5e5c8e956dfb49fd7c4f65a6b3",
+      "matches_local": true
+    },
+    {
+      "name": "ex23-ex25-rough-1500-0.5x.mp4",
+      "url": "https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-rough-1500-0.5x.mp4",
+      "http_status": 200,
+      "bytes": 7390957,
+      "sha256": "1b978afcf5c3c006d5beaf4695b2e2fe7ede80679414a451650c93252e4692f1",
+      "matches_local": true
+    }
+  ]
+}

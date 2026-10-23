@@ -18,3 +18,5 @@
 | rough 0.5배 | [MP4](https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-rough-1500-0.5x.mp4) | `1b978afcf5c3c006d5beaf4695b2e2fe7ede80679414a451650c93252e4692f1` |
 
 1배는12초·300프레임, 0.5배는24초·600프레임이다. 원본은 `C:/mai/wt/foothold-lab/luna-23b/inbox/jay/20261021-experiments/figs/ex23-25-luna-23b/` 아래에 같은 이름으로 있다. [종합 결과](../20261021-experiments/RESULT-EX23-25.md) · [전체 해독·해시 검증 기록](../20261021-experiments/figs/ex23-25-lead-review/comparison_video_check.json).
+
+외부 확인됨: 10/23 로그인 없는 HTTP 다운로드4개 모두200, 원본 SHA256과 일치했다. [다운로드 검증 기록](MEDIA-EX23-25-verified.json). 종합 결과754060a4도 공개 raw URL에서 명칭 정정·Release 링크를 되읽었다.
