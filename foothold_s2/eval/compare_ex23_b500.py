@@ -20,6 +20,7 @@ EXPECTED_SEGMENTS = [
     ["yaw_right", [0.0, 0.0, -1.2], 3.0],
 ]
 CONDITIONS = ("seed", "physics", "policy_modes", "map_mode", "physics_dt_s")
+EX23_MODEL500_SHA256 = "343bb15665abf76a2e58b96d274b74d8703f84c779b2667028bee8a39d93511e"
 
 
 class ComparisonError(ValueError):
@@ -76,10 +77,12 @@ def _physics_signature(data: dict[str, Any]) -> dict[str, Any]:
     return {"mode": "fixed", "config": found, "actual_readback": readback}
 
 
-def _metadata(data: dict[str, Any], expected_experiment: str,
+def _metadata(data: dict[str, Any], expected_role: str,
               expected_scene: str) -> dict[str, Any]:
-    if data.get("experiment") != expected_experiment:
-        raise ComparisonError(f"experiment_missing_or_mismatch:{expected_experiment}")
+    if expected_role not in ("EX23", "B"):
+        raise ComparisonError("comparison_role_invalid")
+    if data.get("experiment") != "B":
+        raise ComparisonError("evaluation_environment_must_be_B")
     if data.get("scene") != expected_scene:
         raise ComparisonError(f"scene_mismatch:{expected_scene}")
     if data.get("frames") != 300 or data.get("fps") != 25 or not math.isclose(
@@ -91,6 +94,13 @@ def _metadata(data: dict[str, Any], expected_experiment: str,
     checkpoint_sha = data.get("checkpoint_sha256")
     if not isinstance(checkpoint_sha, str) or len(checkpoint_sha) != 64:
         raise ComparisonError("checkpoint_sha_missing")
+    label = str(data.get("label", "")).casefold()
+    normalized_label = "".join(char for char in label if char.isalnum())
+    if expected_role == "EX23":
+        if checkpoint_sha != EX23_MODEL500_SHA256 or "ex23" not in normalized_label:
+            raise ComparisonError("ex23_role_checkpoint_or_label_mismatch")
+    elif checkpoint_sha == EX23_MODEL500_SHA256 or not normalized_label.startswith("b"):
+        raise ComparisonError("b_role_checkpoint_or_label_mismatch")
     seed = data.get("seed")
     if type(seed) is not int:
         raise ComparisonError("seed_missing")
@@ -115,8 +125,17 @@ def _metadata(data: dict[str, Any], expected_experiment: str,
     dt = contract.get("physics_dt_s")
     if not isinstance(dt, (int, float)) or not math.isfinite(dt) or dt <= 0:
         raise ComparisonError("physics_dt_missing")
+    task_selection = data.get("task_selection")
+    if (not isinstance(task_selection, dict) or task_selection.get("terrain") != expected_scene
+            or task_selection.get("seed") != seed):
+        raise ComparisonError("task_selection_missing_or_mismatch")
+    perception_timing = data.get("perception_timing")
+    if (not isinstance(perception_timing, dict)
+            or type(perception_timing.get("depth_delay_ticks")) is not int):
+        raise ComparisonError("perception_timing_missing")
     return {
-        "experiment": expected_experiment,
+        "role": expected_role,
+        "evaluation_experiment": "B",
         "scene": expected_scene,
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": checkpoint_sha,
@@ -125,13 +144,15 @@ def _metadata(data: dict[str, Any], expected_experiment: str,
         "policy_modes": {"latent": modes["latent"], "action": modes["action"]},
         "map_mode": {"requested": map_mode, "effective_use_gt": effective_gt},
         "physics_dt_s": float(dt),
+        "task_selection": task_selection,
+        "perception_timing": perception_timing,
         "frames": 300,
         "fps": 25,
         "duration_s": 12.0,
     }
 
 
-def inspect_clip(mp4: Path, expected_experiment: str, expected_scene: str,
+def inspect_clip(mp4: Path, expected_role: str, expected_scene: str,
                  *, ffprobe: str = "ffprobe") -> dict[str, Any]:
     mp4 = mp4.resolve()
     if mp4.suffix.lower() != ".mp4":
@@ -149,7 +170,7 @@ def inspect_clip(mp4: Path, expected_experiment: str, expected_scene: str,
     npz_path = mp4.with_name(mp4.stem + "_feet.npz")
     if not npz_path.is_file():
         raise ComparisonError(f"feet_npz_missing:{mp4.name}")
-    metadata = _metadata(data, expected_experiment, expected_scene)
+    metadata = _metadata(data, expected_role, expected_scene)
     probe = subprocess.run(
         [ffprobe, "-v", "error", "-select_streams", "v:0", "-count_frames",
          "-show_entries", "stream=nb_read_frames,r_frame_rate:format=duration", "-of", "json", str(mp4)],
@@ -196,9 +217,9 @@ def validate_comparison(clips: dict[str, dict[str, Any]]) -> dict[str, Any]:
         raise ComparisonError("need_flat_and_rough_for_ex23_and_b")
     expected = {"flat_ex23": ("EX23", "flat"), "flat_b": ("B", "flat"),
                 "rough_ex23": ("EX23", "rough"), "rough_b": ("B", "rough")}
-    for key, (experiment, scene) in expected.items():
+    for key, (role, scene) in expected.items():
         meta = clips[key]["metadata"]
-        if meta["experiment"] != experiment or meta["scene"] != scene:
+        if meta["role"] != role or meta["scene"] != scene:
             raise ComparisonError(f"input_role_mismatch:{key}")
     for key in CONDITIONS:
         values = [clips[name]["metadata"][key] for name in required]
@@ -209,11 +230,23 @@ def validate_comparison(clips: dict[str, dict[str, Any]]) -> dict[str, Any]:
         a, b = (clips[name]["metadata"] for name in pair)
         if (a["checkpoint"], a["checkpoint_sha256"]) != (b["checkpoint"], b["checkpoint_sha256"]):
             raise ComparisonError(f"checkpoint_differs_between_terrains:{experiment}")
+    for scene, pair in (("flat", ("flat_ex23", "flat_b")),
+                        ("rough", ("rough_ex23", "rough_b"))):
+        a, b = (clips[name]["metadata"] for name in pair)
+        for key in ("task_selection", "perception_timing"):
+            if a[key] != b[key]:
+                raise ComparisonError(f"condition_mismatch:{key}:{scene}")
     return {"layout": "top=flat, bottom=rough; left=EX23, right=B",
             "frame_contract": {"frames": 300, "fps": 25, "duration_s": 12.0},
             "command_segments": EXPECTED_SEGMENTS,
             "shared_conditions": {key: clips["flat_ex23"]["metadata"][key]
-                                  for key in CONDITIONS}}
+                                  for key in CONDITIONS},
+            "paired_conditions": {
+                scene: {key: clips[pair[0]]["metadata"][key]
+                        for key in ("task_selection", "perception_timing")}
+                for scene, pair in (("flat", ("flat_ex23", "flat_b")),
+                                    ("rough", ("rough_ex23", "rough_b")))
+            }}
 
 
 def _filter_for(index: int, title: str, fontfile: Path) -> str:
@@ -270,8 +303,8 @@ def main(argv: list[str] | None = None) -> int:
              "flat_b": (args.flat_b, "B", "flat"),
              "rough_ex23": (args.rough_ex23, "EX23", "rough"),
              "rough_b": (args.rough_b, "B", "rough")}
-    clips = {key: inspect_clip(path, experiment, scene)
-             for key, (path, experiment, scene) in roles.items()}
+    clips = {key: inspect_clip(path, role, scene)
+             for key, (path, role, scene) in roles.items()}
     result = render_grid(clips, args.out, fontfile=args.fontfile)
     print(json.dumps({"ok": True, "output": result["output"],
                       "output_sha256": result["output_sha256"],
