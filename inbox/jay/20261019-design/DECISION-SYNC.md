@@ -106,6 +106,7 @@ lead가 전달한 팀장 승인의 대상은 [#555 6319562769](https://github.co
 <!-- exp-sync:decision:v1 -->
 | 체크 | 결정 | APPROVED-DIRECTION | 설계 문서 | SCHEDULE-NOW | AGENDA-LEAD | gates | #555 |
 |---|---|---|---|---|---|---|---|
+| [x] | 10/23 마찰 반증·최종 계획 요구 | X에 팀장 직접 요구와 lead_tmp 실행 제안 구분 | PLAN·RESULT·DISCUSSION·REVIEW·SOL23e·ASTRA23d. D1~D6 문구 반영, 구현 미완료 | scratch A/B 순차 권고·약25~31h 가정·실행 미승인 | 원인 대 적응·범위·자원 선택 | 봉인값 유지. 새 수치 관문 없음 | [최종 계획 6360620527](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6360620527). EXP-MAP 연결·학습 미실행 |
 | [x] | 10/23 첫 목표2·DG 별칭·방향 검토 | W에 이 창 직접 지시와 실행 미확정 구분 | 53 이름 대응·운영 규칙1.3·LEAD-STYLE·검토 문서. 원문·코드·CPU 반례 연결, 코드 고침 완료 아님 | 첫 목표2 선택·검토 담당·예산 가정 | 목표 선택 완료와 세부 처치 논의 분리 | 봉인값·실행키 유지 | [검토 기록 6358895016](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6358895016). EXP-MAP 본류 복귀·옛 기록 보존 |
 | [x] | EX-06 커널 0.25 | R에 직접 답·std²0.0625·S2 자동상속 금지 | sol f4501f7b → 이 브랜치 a731e2b1, 16 §3 처방 이력 직접 대조 | EX-06 중단·현재 EX-09/10, 아침 처방은 이력 | 현재 상태 표의 EX-06 처방 연결 | 유지. 보상 값은 성공 문턱 아님, 봉인 SHA 불변 | 6304758796·6304887684, 해당 R 링크 |
 | [x] | EX-06 fbg 0.25 | R에 종료 여유·보상 마스크 구분·옛 결과 보존 | a731e2b1의17 §7·52 §3, 56→별도0 진단과 한계 | EX-06 중단, 당시0.25 계획 보존 | 현재 상태 표에 범위·미완주 | 유지. 평가 조건 fbg_margin_m, 새 성공 문턱 아님 | 6304758796·6304887684, R 링크 |
