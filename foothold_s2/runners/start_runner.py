@@ -262,7 +262,10 @@ class StartRunner(OnPolicyRunner):
         start_iter = self.current_learning_iteration + (1 if self._resumed else 0)
         self.current_learning_iteration = start_iter
         tot_iter = start_iter + num_learning_iterations
+        trace = getattr(self, "training_trace", None)
         for it in range(start_iter, tot_iter):
+            if trace is not None:
+                trace.begin_update(it)
             start = time.time()
             self._phase_start()
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
@@ -284,8 +287,12 @@ class StartRunner(OnPolicyRunner):
                         bad_now = start_contract_bad(consumed)
                         contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
                         contract_bad |= bad_now
+                    if trace is not None:
+                        trace.pre_step(actions)
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if trace is not None:
+                        trace.post_step(step_k, rewards, dones)
                     if rs_rec is not None:
                         rs_rec.add()
                     if act_stats is not None:
@@ -313,6 +320,8 @@ class StartRunner(OnPolicyRunner):
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
+            if trace is not None:
+                trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):
                 self._invalid(it, f"START 명령 계약 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
             # ② PPO update

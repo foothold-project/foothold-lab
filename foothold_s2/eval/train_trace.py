@@ -22,6 +22,7 @@ import numpy as np
 
 
 TRACE_FIELDS = {
+    "sensor_depth_m": (60, 60),
     "depth2": (2, 60, 60),
     "tick": (),
     "first": (),

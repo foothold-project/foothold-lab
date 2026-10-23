@@ -208,6 +208,8 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.runners.map_stats import MapStatsRecorder
 
         MapStatsRecorder(runner, log_dir).attach()
+    from foothold_s2.eval.training_trace_bridge import TrainingTraceBridge
+    runner.training_trace = TrainingTraceBridge(runner)
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
     remaining = agent_cfg.max_iterations - done
@@ -222,6 +224,8 @@ def main(env_cfg, agent_cfg):
                                "physical_resume_identical": False, **detail})
         print("TRAIN_SOL23F_STATUS stopped_saved " + json.dumps(detail), flush=True)
         return
+    finally:
+        runner.training_trace.close()
     final = os.path.join(log_dir, f"model_{runner.current_learning_iteration}.pt")
     write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "log_dir": log_dir,
                            "variant": args_cli.variant, "checkpoint": final, "sha256": sha256(final),
