@@ -2,7 +2,10 @@
 
 This module is deliberately not attached to a runner by import side effect.
 The runner owner calls begin_update, capture_step, and end_update around the
-existing rollout; it does not change the learning, RNG, or optimizer path.
+existing rollout; capture_step receives full-batch tensors. Pose, feet, joint,
+command, and action fields describe the pre-env.step observation/action;
+reward, terminated, timed_out, and reset describe the resulting post-step data.
+The observer does not change the learning, RNG, or optimizer path.
 """
 
 from __future__ import annotations
@@ -39,6 +42,9 @@ TRACE_FIELDS = {
     "episode_id": (),
     "reset": (),
     "actor_action": (12,),
+    "reward": (),
+    "terminated": (),
+    "timed_out": (),
 }
 TRACE_SOURCES = {"training", "replay_evaluation", "synthetic_known_input"}
 
@@ -53,6 +59,33 @@ def to_cpu_float32(value: Any) -> np.ndarray:
     current = current.cpu() if callable(getattr(current, "cpu", None)) else current
     current = current.numpy() if callable(getattr(current, "numpy", None)) else current
     array = np.asarray(current, dtype=np.float32)
+    return np.array(array, dtype=np.float32, copy=True, order="C")
+
+
+def select_batch_rows_to_cpu_float32(value: Any, env_ids: np.ndarray, num_envs: int,
+                                     trailing_shape: tuple[int, ...], key: str) -> np.ndarray:
+    """Select fixed rows from a full environment batch before transferring to CPU."""
+    shape = tuple(int(part) for part in getattr(value, "shape", ()))
+    expected_shape = (num_envs, *trailing_shape)
+    if shape != expected_shape:
+        raise TraceError(f"{key} batch shape {shape} does not match {expected_shape}")
+    if callable(getattr(value, "index_select", None)):
+        current = value.detach() if callable(getattr(value, "detach", None)) else value
+        try:
+            import torch
+            indices = torch.as_tensor(env_ids, dtype=torch.long, device=current.device)
+        except (ImportError, AttributeError, TypeError) as exc:
+            raise TraceError(f"{key} tensor cannot create device indices") from exc
+        selected = current.index_select(0, indices)
+        selected = selected.cpu() if callable(getattr(selected, "cpu", None)) else selected
+        selected = selected.numpy() if callable(getattr(selected, "numpy", None)) else selected
+    else:
+        current = value.detach() if callable(getattr(value, "detach", None)) else value
+        selected = np.asarray(current)[env_ids]
+    array = np.asarray(selected, dtype=np.float32)
+    wanted = (len(env_ids), *trailing_shape)
+    if array.shape != wanted:
+        raise TraceError(f"{key} selected shape {array.shape} does not match {wanted}")
     return np.array(array, dtype=np.float32, copy=True, order="C")
 
 
@@ -123,14 +156,16 @@ class TrainTraceObserver:
             raise TraceError("invalid trace window contract")
         self.out_dir = Path(out_dir)
         self.out_dir.mkdir(parents=True, exist_ok=False)
-        self.env_ids, self.sample_terrain_types = select_env_ids_by_terrain(terrain_type, sample_envs)
+        terrain_labels = to_cpu_float32(terrain_type).reshape(-1)
+        self.num_envs = int(len(terrain_labels))
+        self.env_ids, self.sample_terrain_types = select_env_ids_by_terrain(terrain_labels, sample_envs)
         self.steps_per_update = int(steps_per_update)
         self.step_dt_s = float(step_dt_s)
         self.window_updates = int(window_updates)
         self.stride_updates = int(stride_updates)
         self.manifest_path = self.out_dir / "manifest.json"
         self.current: dict[str, Any] | None = None
-        self.perception_snapshot: dict[str, np.ndarray] | None = None
+        self.perception_snapshot: dict[str, Any] | None = None
         self._perception: Any | None = None
         self._original_step: Any | None = None
         self._original_advance: Any | None = None
@@ -152,6 +187,13 @@ class TrainTraceObserver:
                 "sample_terrain_types": self.sample_terrain_types,
                 "field_dtype": "float32",
                 "fields": {key: list(shape) for key, shape in TRACE_FIELDS.items()},
+                "field_timing": {
+                    "pre_env_step": ["root_pos_w", "root_quat_w", "foot_pos_w", "foot_velocity_xy",
+                                     "foot_contact", "joint_pos", "joint_vel", "command", "actor_action"],
+                    "post_env_step": ["reward", "terminated", "timed_out", "reset"],
+                    "perception_snapshot": ["depth2", "tick", "first", "use_gt", "rough_map",
+                                            "refined_map", "gt_map"],
+                },
             },
             "windows": {},
             "shards": [],
@@ -173,13 +215,13 @@ class TrainTraceObserver:
                 if "rough" not in out or "refined" not in out:
                     raise TraceError("perception output has no TR-Net rough/refined maps")
                 observer.perception_snapshot = {
-                    "depth2": to_cpu_float32(depth2),
-                    "tick": to_cpu_float32(tick),
-                    "first": to_cpu_float32(first),
-                    "use_gt": to_cpu_float32(use_gt),
-                    "gt_map": to_cpu_float32(gt_map),
-                    "rough_map": to_cpu_float32(out["rough"]),
-                    "refined_map": to_cpu_float32(out["refined"]),
+                    "depth2": depth2,
+                    "tick": tick,
+                    "first": first,
+                    "use_gt": use_gt,
+                    "gt_map": gt_map,
+                    "rough_map": out["rough"],
+                    "refined_map": out["refined"],
                 }
             return result
 
@@ -240,12 +282,8 @@ class TrainTraceObserver:
             raise TraceError("missing fields: " + ",".join(sorted(missing)))
         rows: dict[str, np.ndarray] = {}
         for key, trailing_shape in TRACE_FIELDS.items():
-            full = to_cpu_float32(combined[key])
-            expected_count = len(self.sample_terrain_types) * math.prod(trailing_shape)
-            if full.size != expected_count:
-                raise TraceError(f"{key} has {full.size} values, expected {expected_count}")
-            full = full.reshape((len(self.sample_terrain_types), *trailing_shape))
-            rows[key] = np.array(full[self.env_ids], dtype=np.float32, copy=True, order="C")
+            rows[key] = select_batch_rows_to_cpu_float32(
+                combined[key], self.env_ids, self.num_envs, trailing_shape, key)
         steps.append(rows)
         self.perception_snapshot = None
         return True

@@ -13,6 +13,7 @@ from foothold_s2.eval.train_trace import (
     TrainTraceObserver,
     TraceError,
     select_env_ids_by_terrain,
+    select_batch_rows_to_cpu_float32,
     should_capture_update,
     to_cpu_float32,
 )
@@ -23,6 +24,8 @@ class FakeDeviceTensor:
         self.values = np.asarray(values)
         self.events = events if events is not None else []
         self.requires_grad = True
+        self.device = "cpu"
+        self.shape = self.values.shape
 
     def detach(self):
         self.events.append("detach")
@@ -33,6 +36,12 @@ class FakeDeviceTensor:
     def cpu(self):
         self.events.append("cpu")
         return self
+
+    def index_select(self, dim, indices):
+        self.events.append("index_select")
+        result = FakeDeviceTensor(np.take(self.values, indices.numpy(), axis=dim), self.events)
+        result.requires_grad = False
+        return result
 
     def numpy(self):
         self.events.append("numpy")
@@ -77,12 +86,66 @@ class TrainTraceTests(unittest.TestCase):
         self.assertEqual(events, ["detach", "cpu", "numpy"])
         self.assertEqual(copied.tolist(), list(range(8)))
 
+    def test_full_batch_tensor_is_indexed_before_cpu_and_copies_only_selected_rows(self):
+        events = []
+        source = FakeDeviceTensor(np.arange(3072 * 3, dtype=np.float32).reshape(3072, 3), events)
+        selected = select_batch_rows_to_cpu_float32(source, np.array([5, 100, 3071]), 3072,
+                                                     (3,), "root_pos_w")
+        self.assertEqual(selected.shape, (3, 3))
+        self.assertEqual(events, ["detach", "index_select", "cpu", "numpy"])
+        np.testing.assert_array_equal(selected[:, 0], [15, 300, 9213])
+
+    def test_full_3072_env_torch_batch_selects_eight_and_preserves_rng_and_output(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch unavailable")
+        num_envs = 3072
+        labels = torch.repeat_interleave(torch.arange(6, dtype=torch.float32), num_envs // 6)
+        with tempfile.TemporaryDirectory() as temp:
+            observer = TrainTraceObserver(Path(temp) / "full", "full3072", "synthetic_known_input",
+                                          labels, steps_per_update=1)
+            self.assertEqual(len(observer.env_ids), 8)
+            self.assertEqual(observer.num_envs, 3072)
+            self.assertEqual(observer.sample_terrain_types, [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 0.0, 1.0])
+            ids = torch.arange(num_envs, dtype=torch.float32)
+            fields = {}
+            for offset, (name, trailing_shape) in enumerate(TRACE_FIELDS.items(), start=1):
+                expanded_shape = (num_envs, *trailing_shape)
+                view = ids.reshape(num_envs, *([1] * len(trailing_shape))).expand(expanded_shape)
+                fields[name] = view + offset * 10000.0
+            # Keep terrain labels meaningful while every row remains distinguishable.
+            fields["terrain_type"] = labels
+            expected = fields["root_pos_w"][torch.as_tensor(observer.env_ids)]
+            policy_before = fields["root_pos_w"] * 2.0 + fields["command"]
+            rng_before = torch.random.get_rng_state().clone()
+            observer.begin_update(0)
+            observer.capture_step(0, 0, fields)
+            rng_after = torch.random.get_rng_state()
+            self.assertTrue(torch.equal(rng_before, rng_after))
+            policy_after = fields["root_pos_w"] * 2.0 + fields["command"]
+            self.assertTrue(torch.equal(policy_before, policy_after))
+            self.assertTrue(torch.equal(fields["root_pos_w"], ids[:, None].expand(num_envs, 3) + 10000.0 +
+                                        list(TRACE_FIELDS).index("root_pos_w") * 10000.0))
+            shard = observer.end_update(0)
+            with np.load(observer.out_dir / shard["file"], allow_pickle=False) as archive:
+                root = archive["root_pos_w"][0]
+                self.assertEqual(root.shape, (8, 3))
+                np.testing.assert_array_equal(root[:, 0], expected[:, 0].numpy())
+                np.testing.assert_array_equal(root[:, 1], expected[:, 1].numpy())
+                self.assertEqual(archive["depth2"].shape, (1, 8, 2, 60, 60))
+                self.assertEqual(archive["terrain_type"].shape, (1, 8))
+            observer.close()
+
     def test_perception_tap_captures_real_inputs_and_trnet_outputs(self):
+        depth_events = []
+        rough_events = []
+        refined_events = []
         class FakePerception:
             def _advance(self, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
                 return h_prop, h_terr, {
-                    "rough": np.full((8, 32, 16), 0.1, dtype=np.float64),
-                    "refined": np.full((8, 32, 16), 0.2, dtype=np.float64),
+                    "rough": FakeDeviceTensor(np.full((8, 32, 16), 0.1), rough_events),
+                    "refined": FakeDeviceTensor(np.full((8, 32, 16), 0.2), refined_events),
                 }
             def step(self, state, inp, gt_map, deterministic=False):
                 self._advance(None, None, inp["hist"], inp["depth2"], inp["tick"],
@@ -97,17 +160,23 @@ class TrainTraceTests(unittest.TestCase):
             observer.attach_perception(perception)
             observer.begin_update(0)
             fields = fixture_fields()
+            fields["depth2"] = FakeDeviceTensor(fields["depth2"], depth_events)
             state = type("State", (), {"use_gt": fields["use_gt"]})()
             inp = {"hist": np.zeros((8, 10, 45)), "depth2": fields["depth2"],
                    "tick": fields["tick"], "first": fields["first"]}
             perception.step(state, inp, fields["gt_map"])
             snapshot = observer.perception_snapshot
+            self.assertIs(snapshot["depth2"], fields["depth2"])
             self.assertEqual(snapshot["depth2"].shape, (8, 2, 60, 60))
             self.assertEqual(snapshot["refined_map"].shape, (8, 32, 16))
+            self.assertEqual(depth_events + rough_events + refined_events, [])
             fields.update(snapshot)
             for key in ("depth2", "tick", "first", "use_gt", "gt_map", "rough_map", "refined_map"):
                 fields.pop(key, None)
             observer.capture_step(0, 0, fields)
+            self.assertEqual(depth_events, ["detach", "index_select", "cpu", "numpy"])
+            self.assertEqual(rough_events, ["detach", "index_select", "cpu", "numpy"])
+            self.assertEqual(refined_events, ["detach", "index_select", "cpu", "numpy"])
             shard = observer.end_update(0)
             with np.load(observer.out_dir / shard["file"], allow_pickle=False) as archive:
                 self.assertAlmostEqual(float(archive["refined_map"][0, 0, 0, 0]), 0.2)
