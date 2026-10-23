@@ -220,9 +220,17 @@ lead가 전달한 팀장의 「순차적으로 진행하고 결정사항 반영�
 
 ## V. EX-17~25 환경·관측 진단과 START 본류 · 10/22 결정
 
-근거: [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922) · [`LEAD-HANDOFF-20261022.md` §§17~25](LEAD-HANDOFF-20261022.md) · [`BASELINE-0811.md`](../20261021-experiments/BASELINE-0811.md) · [`EXPERIMENT-RULES.md`](../20261021-experiments/EXPERIMENT-RULES.md). 이 절은 lead가 전달한 결정과 결과 전 판정 방향을 연결한다. 카드의 관찰·측정 사실은 댓글·handoff에 보고된 등급을 유지하며, 이번 문서 반영은 새 실행이나 결과 확인이 아니다.
+근거: [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922) · [`LEAD-HANDOFF-20261022.md` §§17~25](LEAD-HANDOFF-20261022.md) · [`BASELINE-0811.md`](../20261021-experiments/BASELINE-0811.md) · [`EXPERIMENT-RULES.md`](EXPERIMENT-RULES.md). 이 절은 lead가 전달한 결정과 결과 전 판정 방향을 연결한다. 카드의 관찰·측정 사실은 댓글·handoff에 보고된 등급을 유지하며, 이번 문서 반영은 새 실행이나 결과 확인이 아니다.
 
 - **환경·관측 접근**: 보상 항을 더하는 방향 대신 종료 조건·실제 선속도·DR·행동 지연·명령 입력을 단계별 또는 묶음으로 진단한다. 관절 한계 벌점은 쓰지 않는다. DR은 쉬운 조건에서 시작해 약하게 확장하는 방향으로 기록한다. 세부 계수는 각 카드의 원문 설정과 미확인 구분을 따른다.
 - **판정 기준 정정**: 8/11 기준선은 같은 update에서 100·300회 몸 높이 약0.19 m, 500회 약0.32 m로 상승·전진, 1000회 약0.40 m와 대각 위상비 0.97의 trot이다. 따라서 EX-16~22에서 update 100~300의 낮은 자세만으로 조기 실패라 부른 옛 판정은 근거가 부족하다. 원 관찰과 다른 실패 징후는 보존한다. 300회는 낮은 채 먼저 움직이는 신호를 보는 조기 경고 후보일 뿐이며 하드 중단선으로 확정하지 않는다.
 - **Top-Down 순서**: START 구조를 먼저 비교한다. EX-23은 지도 입력 G1, EX-25는 지도 없음 G0이며 두 판을 본류로 표시한다. v2 scratch EX-24a/b는 진단 지류이며 START 본류 결과로 바꾸어 읽지 않는다. 결과와 진행 수는 `SCHEDULE-NOW.md` 및 각 카드에서 미확인 상태를 분리한다. EX-25의 기존 1001 update 목표는 앞선 계획으로 보존하고, lead가 1501로 재기동했다고 전한 상태를 현재 계획에 둔다.
 - **범위**: 봉인된 설계 gates와 정본 문서의 수치 계약을 이 실험 등록만으로 바꾸지 않는다. GPU 실행·평가·렌더는 luna가 시작하지 않았다.
+
+## W. 10/23 이 창의 직접 지시 · DR·지연 일부 복원 첫 결과
+
+팀장이 lead_tmp 창에서 첫 목표를 **2번 DR·지연 일부 복원**으로 선택했다. 동시에 지역 최적·확증편향을 반박하고, 원문·실제 코드·중간 영상·위상·관절·학습 곡선까지 대조한 설계와 점검을 요구했다. 이는 목표 선택이며 부모·범위·회차·GPU를 특정한 새 학습 승인은 아니다. 다른 시드 검증은 유용한 전체 과정을 만든 뒤 진행하는 기존 방침을 유지한다.
+
+표시 이름은 팀장 제안 DG1·DG3를 채택해 설계53의 깊이 복원·AdaSmpl 본선과 발 가장자리 추가 본선을 구분한다. EX-23은 G1-GT(정답 고정), EX-25는 G0이며 옛 파일·코드키·봉인 gates는 바꾸지 않는다. [방향 검토](../20261023-experiments/REVIEW-direction-curriculum-1023.md)에 실험 비교 권고와 미확정을 구분했다. Linux 주말 이전은 목표 제안이며 설치 시각·성공 보장은 미확정이다.
+
+Depth Range는 raw를 훼손하자는 제안이 아니라 후단 표현으로 원거리 정보를 이용하기 쉽게 하자는 아이디어다. 눈·수풀은 보이는 표면과 실제 지지면의 불일치에 대응하는 문제로 기록했다. 둘 다 현 DR 복원 판에 자동 추가하지 않는다.
