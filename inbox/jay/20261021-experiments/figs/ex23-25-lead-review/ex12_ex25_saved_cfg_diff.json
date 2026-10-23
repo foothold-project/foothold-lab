@@ -1,0 +1,236 @@
+[
+  {
+    "field": "env.yaml.actions.joint_pos.class_type",
+    "ex12": "foothold_s2.tasks.delayed_action:DelayedJointPositionAction",
+    "ex25": "isaaclab.envs.mdp.actions.joint_actions:JointPositionAction"
+  },
+  {
+    "field": "env.yaml.actions.joint_pos.max_delay_s",
+    "ex12": "0.015",
+    "ex25": "<missing>"
+  },
+  {
+    "field": "env.yaml.events.actuator_gains",
+    "ex12": {
+      "func": "isaaclab.envs.mdp.events:randomize_actuator_gains",
+      "params": {
+        "asset_cfg": {
+          "name": "robot",
+          "joint_names": ".*",
+          "joint_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "fixed_tendon_names": "null",
+          "fixed_tendon_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "body_names": "null",
+          "body_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "object_collection_names": "null",
+          "object_collection_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "preserve_order": "false"
+        },
+        "operation": "scale",
+        "stiffness_distribution_params": [
+          "0.9",
+          "1.1"
+        ],
+        "damping_distribution_params": [
+          "0.9",
+          "1.1"
+        ],
+        "distribution": "uniform"
+      },
+      "mode": "startup",
+      "interval_range_s": "null",
+      "is_global_time": "false",
+      "min_step_count_between_reset": "0"
+    },
+    "ex25": "null"
+  },
+  {
+    "field": "env.yaml.events.add_base_mass.params.mass_distribution_params",
+    "ex12": [
+      "-1.0",
+      "2.0"
+    ],
+    "ex25": [
+      "-1.0",
+      "3.0"
+    ]
+  },
+  {
+    "field": "env.yaml.events.base_com",
+    "ex12": {
+      "func": "isaaclab.envs.mdp.events:randomize_rigid_body_com",
+      "params": {
+        "asset_cfg": {
+          "name": "robot",
+          "joint_names": "null",
+          "joint_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "fixed_tendon_names": "null",
+          "fixed_tendon_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "body_names": "base",
+          "body_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "object_collection_names": "null",
+          "object_collection_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "preserve_order": "false"
+        },
+        "com_range": {
+          "x": [
+            "-0.05",
+            "0.05"
+          ],
+          "y": [
+            "-0.05",
+            "0.05"
+          ],
+          "z": [
+            "-0.05",
+            "0.05"
+          ]
+        }
+      },
+      "mode": "startup",
+      "interval_range_s": "null",
+      "is_global_time": "false",
+      "min_step_count_between_reset": "0"
+    },
+    "ex25": "null"
+  },
+  {
+    "field": "env.yaml.events.motor_strength",
+    "ex12": {
+      "func": "foothold_s2.tasks.mdp_extra:randomize_motor_strength",
+      "params": {
+        "asset_cfg": {
+          "name": "robot",
+          "joint_names": "null",
+          "joint_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "fixed_tendon_names": "null",
+          "fixed_tendon_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "body_names": "null",
+          "body_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "object_collection_names": "null",
+          "object_collection_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "preserve_order": "false"
+        },
+        "scale_range": [
+          "0.9",
+          "1.1"
+        ]
+      },
+      "mode": "startup",
+      "interval_range_s": "null",
+      "is_global_time": "false",
+      "min_step_count_between_reset": "0"
+    },
+    "ex25": "null"
+  },
+  {
+    "field": "env.yaml.events.physics_material.params.dynamic_friction_range",
+    "ex12": [
+      "0.2",
+      "1.2"
+    ],
+    "ex25": [
+      "0.6",
+      "0.6"
+    ]
+  },
+  {
+    "field": "env.yaml.events.physics_material.params.make_consistent",
+    "ex12": "true",
+    "ex25": "<missing>"
+  },
+  {
+    "field": "env.yaml.events.physics_material.params.static_friction_range",
+    "ex12": [
+      "0.2",
+      "1.2"
+    ],
+    "ex25": [
+      "0.8",
+      "0.8"
+    ]
+  },
+  {
+    "field": "env.yaml.log_dir",
+    "ex12": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x11\\2026-10-22_01-34-08_ex12-est-learned",
+    "ex25": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_23-00-45_ex25-g0"
+  },
+  {
+    "field": "agent.yaml.experiment_name",
+    "ex12": "foothold_s2_x11",
+    "ex25": "foothold_s2_x23"
+  },
+  {
+    "field": "agent.yaml.perception.force_gt",
+    "ex12": "<missing>",
+    "ex25": "false"
+  },
+  {
+    "field": "agent.yaml.perception.log_map_stats",
+    "ex12": "<missing>",
+    "ex25": "true"
+  },
+  {
+    "field": "agent.yaml.perception.microbatch_envs",
+    "ex12": "256",
+    "ex25": "64"
+  },
+  {
+    "field": "agent.yaml.run_name",
+    "ex12": "ex12-est-learned",
+    "ex25": "ex25-g0"
+  },
+  {
+    "field": "agent.yaml.save_interval",
+    "ex12": "500",
+    "ex25": "50"
+  }
+]

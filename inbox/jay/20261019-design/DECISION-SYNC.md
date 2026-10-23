@@ -2,19 +2,27 @@
 > 작성: 오흥재 (luna 문서 반영) · 2026-10-23
 > 근거: verify-v2 c6582009 · sol f4501f7b·118a2242/취합 a731e2b1·cbb2e5e2 · #555 6310259601 · 6319562769 · ASTRA-X11
 > 요지: EX-17~25 결정과 기준을 실험 지도·카드·일정 및 승인 방향에 연결하고 과거 이력을 보존한다
-> 상태: 지정 결정의 문서 반영 확인 · EX-23/25 결과 초안 · 최종 판정 대기 · 봉인 gates 불변
+> 상태: EX-23/25 관찰 분석 반영 · 다음 실행 결정 없음 · 원격 동기화 대기 · 봉인 gates 불변
 
-# 결정 동기화 · 10월 22일 갱신
+# 결정 동기화 · 10월 23일 갱신
 
 실험 번호 정본은 [EXP-MAP](../20261021-experiments/EXP-MAP.md)이다. EX-01 S1-a, EX-02 D1, EX-03 D2, EX-04 D2-s43, EX-05 D3, EX-06 S1a-Rx1, EX-07 C1-scan, EX-08 C2-blind, EX-09 diag-G0-open, EX-10 diag-G0-start, EX-11 G0-zeroest, EX-12 G0-learnedest, EX-13~EX-25는 [EXP-MAP](../20261021-experiments/EXP-MAP.md)의 관계표를 따른다. 파일명은 유지한다.
 
 검사 계약 `exp-sync-v1`: 「바뀌는 자리별 점검표」의 `체크`는 모든 반영 자리를 직접 확인했을 때만 `[x]`, 그 전에는 `[ ]`이다. 이 표는 문서 반영 완료를 표시하며, 체크 변경은 해당 자리의 근거를 대조한 뒤에 한다. `[x]`는 실험·실측·승인 완료가 아니다. 미확인인 실험 사실은 그 상태대로 각 자리에 기록되어야 한다.
 
-## 최신 결정 · EX-17~25와 811 동회차 기준
+## 최신 기록 · 10/23 흐름 정정과 결과 분석
 
-10/22 최신 반영은 환경·관측 진단 EX-17~22, START 본류 EX-23 G1 및 EX-25 G0, v2 scratch 지류 EX-24a/b다. 근거는 [#555 6336845347](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6336845347) · [6338232352](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6338232352) · [6339275508](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6339275508) · [6342115176](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342115176) · [6342170646](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342170646) · [6342453922](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6342453922) · [`LEAD-HANDOFF-20261022.md` §§17~25](LEAD-HANDOFF-20261022.md) · [BASELINE-0811](../20261021-experiments/BASELINE-0811.md) · [EXPERIMENT-RULES](../20261021-experiments/EXPERIMENT-RULES.md)다. EX-16~22의 100~300회 낮은 자세 단독 조기 실패 판단은 811 동회차 기준으로 뒷받침되지 않는다. 원 관찰은 남기고 판정 근거만 정정한다. 300회는 낮은 자세에서 선행 이동하는지 보는 경고 후보, 500회는 상승·전진, 1000회는 trot 기준이다. 관절 한계 벌점은 미사용이며 DR은 약한 커리큘럼 방향이다. 본류는 START 구조부터 보는 EX-23/25다. 설계 정본 14·52·53 및 봉인 gates는 이번 등록만으로 바꾸지 않는다.
+팀장 직접 지시: 기존 EX-23·25를 먼저 분석하고 다음 실험을 함께 정한다. 실패를 조기 중단 이야기로 바꾸지 않는다. EX-17~22는 301회 선별 설계이며 EX-11·14·15의 1500회 실패와 구분한다. 현재 EX-23·25는 **약한 DR 고정·지연 끔**이며 DR 커리큘럼 실행이 아니다.
 
-EX-25의 1001 목표는 이전 계획으로 보존한다. EX-23·25 manifest의 1501/1501 update, gait table, feet 자료, TensorBoard, 영상 검수 초안을 [RESULT-EX23-25](../20261021-experiments/RESULT-EX23-25.md)와 두 카드에 반영했다. 단색 영상 gate 미통과, EX-25 500 미측정, 완료 시각·프로세스 종료 미확인이다. 보행 해석은 lead_tmp·Astra 검토 대기이며 설계 정본·승인 방향·gates는 변경하지 않았다. 지정 커밋 20f06b38에서 origin/main fast-forward가 불가능해 이 계보 선택은 `잠정 · lead 확인 필요`로 남긴다. lead 답을 기다리는 30분 동안 결과에 기대지 않는 분석은 이어갔고, 답이 없어 지정 커밋으로 진행했다. 이 문서 작업은 GPU를 쓰지 않았다.
+| 구분 | 반영 자리 | 상태 |
+|---|---|---|
+| 흐름 정정 | EXPERIMENT-FLOW · EXP-MAP | 정본 우선순위와 301회 선별 이유 반영 |
+| 기존 자료 분석 | RESULT-EX23-25 · EX-23/25 카드 | 전진 개선·G1 평지 이점·rough 반례·회전 유지 실패·결측 반영 |
+| 오늘 일정·안건 | SCHEDULE-NOW · AGENDA-LEAD | 분석 후 다음 한 판 논의. 현 조건 안정화 권고는 제안으로 분리 |
+| 다음 학습 설계·번호·gates | 14·52·53·APPROVED·봉인 gates | 변경 안 함. 학습 증분·DR 단계·기준·실행은 미결정 |
+| 원격 취합·#555 | 현재 작업 브랜치 | 이번 갱신은 로컬. 원격 반영·댓글 발송 아직 안 함 |
+
+옛 「영상이 회색이라 검수 실패」「비교 영상 없음」은 정정했다. 회색 지형은 결함이 아니고, 1500회 원본과 비교 영상은 CPU 전체 해독과 표본 영상 판독을 했다. 일부 300·500·1000회 파일 손상·reset은 별도 결측으로 보존한다. 아래 10/22 당시의 300/500/1000 기준 서술은 이력이며 보편적인 중단 규칙으로 재사용하지 않는다. [종합 결과](../20261021-experiments/RESULT-EX23-25.md).
 
 ## 현재 결정 · S2-G0 두 판과 결과별 다음 코칭
 

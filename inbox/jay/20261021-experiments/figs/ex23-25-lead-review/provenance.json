@@ -1,0 +1,53 @@
+{
+  "known_input_checks": 4,
+  "files": [
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat_feet.npz",
+      "sha256": "cd813725c389da044303c65accf7a4c21c0b2000139ddd27ba9c81e521c0e39d"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat.json",
+      "sha256": "1aa822a82526df189b3541c358a853afdedf473b408ddb6646b1f5fe9daa451e"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat.mp4",
+      "sha256": "abcee77ec5644700afc7ac60e61df00cbb9540a219a6898f89c6ea847d388174"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough_feet.npz",
+      "sha256": "f526d0e15518198e1cffb3b56a295f35b85b39bec6091e70e001229077bd091f"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough.json",
+      "sha256": "79604337630d5c7886933a72ecc4dff55d5159f54289f803a8e5f1479ecf0bb2"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough.mp4",
+      "sha256": "77baff63c1af49ba6eeaf364738d4d5081caddd18c7c93575c7b1f0a1b8c2f22"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_flat_feet.npz",
+      "sha256": "0466cc794fca9e5b2ce80f908cc469b0b1916b65f39626352e1ff6acdccc1ad4"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_flat.json",
+      "sha256": "6817d60863aabe3c37b1481089b34ce908663f1836b47a4f004dd7ad9de49d50"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_flat.mp4",
+      "sha256": "e530ceeb690293b1f081e1b061cdc8608a28b6a25aec2ec9b56a88c3e8d8cf7c"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_rough_feet.npz",
+      "sha256": "dea259169a2c7176528b0c23ebf6c7bd4da9920170f695f786148f74d486f6f7"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_rough.json",
+      "sha256": "189ee8b5ab703c48b079332583bc132ab3b7969903ee94e5bfcc98738fccbeb8"
+    },
+    {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex25_1500\\run_rough.mp4",
+      "sha256": "1cbb44e3ec8c2288a076dd3f020c6df6aa74da401c49b6588618e8443eb51948"
+    }
+  ]
+}
