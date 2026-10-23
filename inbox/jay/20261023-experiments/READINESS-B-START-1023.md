@@ -6,6 +6,8 @@
 
 # EX-28·29 구현과 실행 준비 기록
 
+10/24 실제 기동과 후속 수정은 [실행 기록](RUN-EX28-29-1024.md)을 우선한다. 아래 CPU 검증과 미실행 표시는 10/23 준비 시점의 기록이다.
+
 실험 설계 정본은 [B·START TopDown 계획](PLAN-B-START-TOPDOWN-1023.md)이다. 이 문서는 구현 증거와 남은 기계 확인만 다룬다. START 원문 코드는 비공개이므로 논문 기반 재구현이며, 저자 바이트 재현이나 보행 성공을 선언하지 않는다.
 
 ## 고정 코드와 확인한 범위
@@ -69,7 +71,7 @@ sol이 선택 범위 밖에서 시작한 전체 저장소 CPU 시험 `pytest -q 
 ## 기동 인계 순서
 
 1. 위 고정 코드 사본과 SHA 목록, 두 task·seed·3072환경·마감 ISO 시각을 실행 manifest에 등록한다. EULA 등 팀장이 이전에 직접 허용한 환경만 사용하며 새 동의를 대신 만들지 않는다.
-2. `foothold_s2/scripts/train_23f_b.py`와 `train_23f_topdown.py`의 `--smoke-updates 10 --end-by <시간대 포함 마감>`으로 실제 짧은 실행을 먼저 확인한다. 두 Isaac은30초 간격이며 창을 띄우지 않는다. 예행과 본판 폴더는 분리한다. 아직 실행하지 않았다.
+2. B는 `foothold_s2/scripts/train_23f_b.py --smoke-updates 10`, TD는 `train_23f_topdown.py --max_iterations 10`에 각각 `--end-by <시간대 포함 마감>`을 붙인다. TD에 `--smoke-updates`를 주는 옛 안내는 오류다. 두 Isaac은30초 이상 간격이며 창을 띄우지 않는다. 예행과 본판 폴더는 분리한다.
 3. 예행의 실제 소비값·첫 체크포인트를 확인한 뒤 본판을 기동한다. B는1501update, 본류는20,000상한과24h 이하의 등록 마감이다. 상태 파일·PID·첫update를1~2분 안에 직접 읽는다.
 4. `monitor_23d.py scan`의 run·state·deadline을 실제 두 판에 연결하고 반복 호출을 세션 밖 프로세스로 건다. 현재 도구는 요청 생산자이며 반복 감시/촬영 소비자를 이미 띄운 것이 아니다. 알려진 완료 체크포인트로 pending→claimed→영수증 검증을 먼저 확인한다.
 5. 촬영은 새 `foothold_s2/eval/record_sol23f.py`와 `seq_video.py`를 사용해 한 번에1개만 소비한다. `physics_mode=fixed`와`training`, 지도 `pred`와`gt`를 구분한다. 요청 완료는 파일 검증이고 사람의 판독은 별도다. 학습2개+촬영1개의 실측 여유가 없으면 B 종료 뒤 촬영하며 학습을 임의 종료하지 않는다.
