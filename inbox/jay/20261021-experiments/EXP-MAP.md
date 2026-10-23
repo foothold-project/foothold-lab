@@ -14,14 +14,16 @@
 
 | 순서 | 담당·산출물 | 현재 상태 |
 |---|---|---|
-| 두 판 구현·CPU 확인 | sol SOL-23f, 고정 해시·실소비 계약·CLI | 진행 중, 새 GPU·Kit 없음 |
-| 원문·독립 반박 | lead_tmp·astra2 ASTRA-23e | 설계 대조 완료, 바뀐 코드 검토는 고정본 뒤 |
-| 자료·분석 운영 | luna LUNA-23c, 기존 영상 완결성·계측·촬영 순서 | CPU 도구·보고 수신, 실행 자료는 미생성 |
+| 두 판 구현·CPU 확인 | sol SOL-23f, 고정 해시·실소비 계약·CLI | 고정 코드ea664f1e·CPU39 확인, 새 GPU·Kit 없음 |
+| 원문·독립 반박 | lead_tmp·astra2 ASTRA-23e | ASTRA-23e 최종16절 반영. 실제 Kit 미확인 |
+| 자료·분석 운영 | luna LUNA-23c, 기존 영상 완결성·계측·촬영 순서 | 촬영기 결합 CPU24 확인. 실행 자료·배경 소비자는 아직 없음 |
 | 실행과 중간 점검 | B500/1000/1500, 본류1000회 또는3시간마다 | 고정 구현·짧은 실제 예행·구체 마감 확인 뒤 |
 | B 종료 뒤 | GPU0을 본류 영상·복원 전용 평가에 우선 사용 | 원인 판을 자동 추가하지 않음 |
 | Windows 마감·Linux | optimizer·학습 카운터·지형/지도 선택·환경 상태 보존 | 24시간 내 완성 보장 아님, 이전 후 실소비 재확인 |
 
 GT와 복원 지도의 오차는 force_gt=True에서도 측정할 수 있다. 그 조건만으로 복원 지도를 실제 써서 걷는 내성은 확인할 수 없다. 설명 정정은 [학습 개념 기록](../20261023-experiments/NOTE-start-learning-gt-1023.md)에 남겼다. 기존 완료 기록과 봉인 gates는 바꾸지 않는다. 아래 A/B 동시 재학습·순차 두 판 ETA·DR 일부 복원 우선안은 **이전 논의 이력이며 현재 실행 지시가 아니다.**
+
+고정 코드·독립 검토·직접 CPU 결과와 남은 실제 확인은 [실행 준비 기록](../20261023-experiments/READINESS-B-START-1023.md)에 모았다. 원격 코드 `ea664f1e`는 확인됐고 새 GPU 실행은 없다.
 
 ## 이전 결정 이력 · B 단독 비교로 좁힌 단계
 
@@ -132,8 +134,8 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 | [EX-25 START G0](EXP-X25-g0.md) | EX-23과 같고 지도 없음 | 처음부터 학습, `map_input=none` | `[실측·manifest]` 1501/1501 update 기록. EX-25 500회 미측정, 1001은 이전 계획, 22:49 중단판 제외. 단색 오판 정정. 전진 개선·평지 양의 회전 유지 실패. [RESULT](RESULT-EX23-25.md) | START G1/G0 본류 |
 | [EX-26 G0 토크 후보](EXP-X26-g0-torque.md) | 이전 보상 후보 · 보류 | EX-25 설정 | 7cab5223 준비만, lead 인계상 미실행. 번호 보존 | 현재 두 판에 재사용하지 않음 |
 | [EX-27 G0 NVIDIA 보상 후보](EXP-X27-g0-nvidia.md) | 이전 묶음 후보 · 보류 | EX-25 설정 | 7cab5223 준비만, 전제 철회·미실행 보고 | 현재 두 판에 재사용하지 않음 |
-| [EX-28 B-friction](EXP-X28-b-friction.md) | 원인 지류 · 구현/CPU 검토 중 | EX-23 설정, scratch | 마찰 분포만 변경. learned·GT 유지, 새 결과 없음 | 기존EX-23 과거 대조, 한 시드 조건부 근거 |
-| [EX-29 START-TD](EXP-X29-start-topdown.md) | 깊이 기반 본류 · 구현/CPU 검토 중 | START v1·PIE 기반 Go2 scratch | TR-Net·I-E·PPO·AdaSmpl·edge·종류 진행 공동 학습, 새 결과 없음 | 최종 목표와 직접 연결. B 결과를 기다리는 필수 사슬 아님 |
+| [EX-28 B-friction](EXP-X28-b-friction.md) | 원인 지류 · 구현/CPU 확인·Kit 전 | EX-23 설정, scratch | 마찰 분포만 변경. learned·GT 유지, 새 결과 없음 | 기존EX-23 과거 대조, 한 시드 조건부 근거 |
+| [EX-29 START-TD](EXP-X29-start-topdown.md) | 깊이 기반 본류 · 구현/CPU 확인·Kit 전 | START v1·PIE 기반 Go2 scratch | TR-Net·I-E·PPO·AdaSmpl·edge·종류 진행 공동 학습, 새 결과 없음 | 최종 목표와 직접 연결. B 결과를 기다리는 필수 사슬 아님 |
 
 ## 사슬 작업 이름
 
