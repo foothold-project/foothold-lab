@@ -13,7 +13,10 @@
 - `monitor_23d.py`의 상태 파일과 전이를 그대로 사용한다. 완료 판정은 `seq_video.py --verify-receipt`와 해당 요청의 체크포인트 SHA 대조를 통과해야 한다.
 - `--capture`를 명시하지 않으면 감시와 지표 기록만 한다. 촬영은 OS 소유 잠금으로 한 소비기만 수행하고, 요청은 한 번에 하나씩 처리한다. 재시작 시 검증 영수증이 없는 미확인 claim은 다음 촬영을 막는다.
 - 마감은 `2026-10-24T22:30:00+09:00`이다. 마감이 지나면 새 촬영을 시작하지 않고 감시기를 끝낸다. 이미 시작된 자식의 강제 종료는 구현하지 않았으므로 자식이 마감을 넘지 않는다는 보장은 없다. 예시 설정은 촬영 시작에 최소 1800초를 요구한다.
-- 촬영 자식은 root의 원래 launch JSON에 기록된 환경 변수, 제거 변수, 작업 폴더를 재사용한다. `CUDA_VISIBLE_DEVICES` 제거와 `CUDA_DEVICE_ORDER=PCI_BUS_ID`를 확인하며 B `cuda:0`, TD `cuda:1`을 고정한다.
+- 촬영 자식은 root의 원래 launch JSON에 기록된 환경 변수, 제거 변수, 작업 폴더를 재사용한다. `CUDA_VISIBLE_DEVICES` 제거와 `CUDA_DEVICE_ORDER=PCI_BUS_ID`를 확인한다. B의 `training_device`는 `cuda:0`이고 `capture_device`는 독립적으로 `cuda:0` 또는 `cuda:1`을 고른다. 이번 예시는 학습 중인 GPU 0을 피하려고 촬영에 `cuda:1`을 지정한다.
+- 원래 launch JSON의 `--device` 값과 Python 실행 파일을 구성의 학습 장치와 Python에 다시 대조한다. B 본학습 launch JSON에 적힌 Python은 `isaac311/python.exe`다.
+- 매 촬영 직전에 `nvidia-smi`의 PCI bus 순서와 여유 VRAM을 읽어 ordinal 존재를 확인한다. 선택한 `min_free_mib`가 있으면 여유값도 대조한다. 여유 부족, 조회 오류, 지정 ordinal 부재는 요청을 `pending`으로 남기고 상태 파일에 hold를 기록한다. 실행 중인 프로세스는 종료하지 않는다. 예시의 4096 MiB는 운영 제안이며 Kit 성공을 보장하는 실측 문턱은 아니다.
+- root가 PowerShell로 BOM을 붙여 쓴 구성과 launch JSON도 `utf-8-sig`로 읽는다.
 
 ## 지표 계약
 
@@ -33,13 +36,20 @@
 | 원래 launch JSON 환경의 `CUDA_VISIBLE_DEVICES` 제거와 지정 변수 재사용 | PASS |
 | 실제 CLI `--once`가 고정 감시기를 import하여 pending 상태 작성 | PASS |
 | 200회와 500회 간격 선택 시 경계 목록 | 2 PASS |
-| 지정 CPU 시험 합계 | **10 PASS** |
+| 학습·촬영 GPU 분리와 잘못된 ordinal 거절, PCI 순서의 `nvidia-smi` 판독 | 2 PASS |
+| root launch JSON의 실제 학습 `--device` 대조 | PASS |
+| VRAM 부족·조회 실패 시 pending 유지, 여유 충분 시 단회 촬영 영수증 | 2 PASS |
+| 여유 문턱을 생략해도 ordinal 조회 실패 시 pending 유지 | PASS |
+| BOM 구성·launch JSON을 실제 CLI로 읽기 | PASS |
+| 지정 CPU 시험 합계 | **17 PASS** |
 
 CPU 영수증 시험의 MP4, JSON, NPZ는 프로토콜 해시 확인용 가짜 바이트다. 실제 MP4 해독이나 Kit 촬영 성공 증거가 아니다. Ruff `check --select F`는 새 Python 2개에서 0건이다. `pyflakes` 모듈은 이 환경에 설치되지 않아 별도 실행하지 못했다.
 
+실제 `C:/Users/AI-WS01/s2_lab/run_20261024/b_main.json`을 읽기 전용으로 열어 현재 고정 HEAD를 넣은 B 전용 예시 구성을 `validate_config`로 대조했다. 결과는 `CPU_CONFIG_PASS cuda:0 cuda:1 python.exe`이며 실제 실행 폴더와 촬영 성적은 이 대조에 포함되지 않는다.
+
 ## 운영 연결
 
-예시 `consumer_sol24a.example.json`의 고정 커밋 SHA, B/TD 실행 폴더, 각 `process.json`과 root launch JSON 경로를 채워 별도 JSON으로 보존한다. root가 코드 수정 중인 현재 `lead-tmp-start-b`는 추적 파일 3개가 변경 상태라 촬영 고정본으로 간주하지 않는다. 최종 고정 커밋과 실행 폴더가 정해진 뒤 먼저 아래 감시 명령으로 상태와 경로를 확인한다.
+예시 `consumer_sol24a.example.json`은 B 본학습 하나만 대상으로 한다. 고정 커밋 SHA와 B 본학습 실행 폴더를 채워 별도 JSON으로 보존한다. `b_main/process.json`과 `b_main.json` 경로는 root가 제공한 현재 경로이며 실제 실행 폴더는 별도 확인이 필요하다. 최종 고정 커밋과 실행 폴더가 정해진 뒤 먼저 아래 감시 명령으로 상태와 경로를 확인한다.
 
 ```powershell
 & 'C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe' -B 'C:/mai/wt/foothold-lab/sol-23a/inbox/jay/20261023-experiments/consume_sol24a.py' --config 'C:/Users/AI-WS01/s2_lab/run_20261024/consumer/config.json' --once
@@ -49,7 +59,7 @@ CPU 영수증 시험의 MP4, JSON, NPZ는 프로토콜 해시 확인용 가짜 �
 
 ## 남은 확인
 
-- root의 새 고정 커밋과 B/TD 실제 실행 폴더, launch JSON을 구성에 넣어야 한다. 현재 B와 TD smoke는 모두 실패했고 이 소비기가 학습 성공을 뜻하지 않는다.
+- root의 새 고정 커밋과 B 본학습 실제 실행 폴더를 구성에 넣어야 한다. root 보고로 B 본학습은 06:52에 시작했고 TD 10회 확인은 통과 후 종료됐다. 이 세션은 그 결과를 GPU에서 재지 않았으므로 실측 확인은 root 소유다.
 - 원래 launch JSON은 실행 환경을 다시 만든다. 실제 Kit 촬영과 MP4 해독은 root의 별도 참석 확인이 필요하다.
 - 감시기의 소스 세 파일은 시작부터 실행 중까지 SHA를 감시한다. 학습 코드 전체의 불변성은 이 도구가 증명하지 않는다. 체크포인트 SHA는 감시기 요청과 촬영 영수증에서 대조한다.
 - 마감 뒤 이미 시작된 촬영 자식을 강제 종료하지 않는다. 최소 촬영 여유 1800초보다 긴 촬영은 마감을 넘을 수 있다.

@@ -56,7 +56,8 @@ def setup(tmp_path):
     dump(process, {"state": "exited", "child_pid": 99999999, "returncode": 0,
                    "heartbeat_at": "2026-10-24T00:00:00+09:00"})
     launch_file = tmp_path / "launch.json"
-    dump(launch_file, {"cwd": str(FIXED), "env": {"SOL24A_TEST_ENV": "fixed",
+    dump(launch_file, {"cwd": str(FIXED), "argv": [os.sys.executable, "train.py", "--device", "cuda:0"],
+                       "env": {"SOL24A_TEST_ENV": "fixed",
                                                    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"},
                        "unset_env": ["CUDA_VISIBLE_DEVICES"]})
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=FIXED, text=True).strip()
@@ -69,7 +70,8 @@ def setup(tmp_path):
         "capture_root": str(tmp_path / "capture"), "metrics_root": str(tmp_path / "metrics"),
         "runs": [{"name": "B", "run_dir": str(run), "process_file": str(process),
                   "launch_config": str(launch_file),
-                  "device": "cuda:0", "scene": "rough", "label": "B 500",
+                  "training_device": "cuda:0", "capture_device": "cuda:1",
+                  "scene": "rough", "label": "B 500",
                   "policy": {"experiment": "B", "terrain": "rough", "map_mode": "saved"}}],
     }
     assert consumer.validate_config(config)[0] == FIXED
@@ -126,13 +128,14 @@ def test_serial_capture_receipt_and_no_duplicate(setup):
         return 0
 
     consumer.cycle(config, monitor, status, time.time() + 3600,
-                   capture=True, launch=fake_launch)
+                   capture=True, launch=fake_launch, vram_probe=lambda device: 8192)
     request = next(iter(monitor.load_state(Path(config["state"]))["requests"].values()))
     assert request["state"] == "completed"
     assert request["completion_evidence"]["verifier_returncode"] == 0
     assert len(calls) == 1 and "--recorder" in calls[0]
+    assert calls[0][8] == "cuda:1"
     consumer.cycle(config, monitor, status, time.time() + 3600,
-                   capture=True, launch=fake_launch)
+                   capture=True, launch=fake_launch, vram_probe=lambda device: 8192)
     assert len(calls) == 1
 
 
@@ -212,6 +215,114 @@ def test_capture_reuses_launch_environment(setup, monkeypatch):
     env = consumer.capture_environment(config["runs"][0])
     assert "CUDA_VISIBLE_DEVICES" not in env
     assert env["SOL24A_TEST_ENV"] == "fixed"
+
+
+def test_device_contract_separates_training_and_capture(setup):
+    config, _run, _status = setup
+    assert consumer.validate_config(config)
+    config["runs"][0]["training_device"] = "cuda:1"
+    with pytest.raises(ValueError, match="training GPU"):
+        consumer.validate_config(config)
+    config["runs"][0]["training_device"] = "cuda:0"
+    config["runs"][0]["capture_device"] = "cuda:2"
+    with pytest.raises(ValueError, match="capture GPU"):
+        consumer.validate_config(config)
+
+
+def test_training_device_is_read_back_from_root_launch(setup):
+    config, _run, _status = setup
+    launch_file = Path(config["runs"][0]["launch_config"])
+    launch = json.loads(launch_file.read_text())
+    launch["argv"][-1] = "cuda:1"
+    dump(launch_file, launch)
+    with pytest.raises(ValueError, match="original launch"):
+        consumer.validate_config(config)
+
+
+def test_nvidia_smi_pci_order_and_missing_ordinal():
+    class Result:
+        returncode = 0
+        stdout = "00000000:65:00.0, 9000\n00000000:17:00.0, 1200\n"
+
+    calls = []
+
+    def fake_run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return Result()
+
+    assert consumer.capture_free_mib("cuda:0", runner=fake_run) == 1200
+    assert consumer.capture_free_mib("cuda:1", runner=fake_run) == 9000
+    assert calls[0][0][0] == "nvidia-smi"
+    class OneCard:
+        returncode = 0
+        stdout = "00000000:17:00.0, 1200\n"
+    with pytest.raises(RuntimeError, match="ordinal_unavailable"):
+        consumer.capture_free_mib("cuda:1", runner=lambda *_args, **_kwargs: OneCard())
+
+
+def test_low_or_failed_vram_probe_keeps_pending_without_launch(setup):
+    config, _run, status = setup
+    config["min_free_mib"] = 4096
+    calls = []
+    consumer.cycle(config, monitor, status, time.time() + 3600, capture=True,
+                   launch=lambda *_: calls.append(1), vram_probe=lambda device: 2048)
+    request = next(iter(monitor.load_state(Path(config["state"]))["requests"].values()))
+    assert request["state"] == "pending" and not calls
+    assert status["capture_hold"] == {"reason": "insufficient_vram", "capture_device": "cuda:1",
+                                      "free_mib": 2048, "min_free_mib": 4096}
+    consumer.cycle(config, monitor, status, time.time() + 3600, capture=True,
+                   launch=lambda *_: calls.append(1),
+                   vram_probe=lambda device: (_ for _ in ()).throw(RuntimeError("probe")))
+    assert request["state"] == "pending" and not calls
+    assert status["capture_hold"]["reason"] == "vram_probe_failed"
+
+
+def test_ordinal_probe_still_required_when_threshold_omitted(setup):
+    config, _run, status = setup
+    assert "min_free_mib" not in config
+    calls = []
+    consumer.cycle(config, monitor, status, time.time() + 3600, capture=True,
+                   launch=lambda *_: calls.append(1),
+                   vram_probe=lambda device: (_ for _ in ()).throw(RuntimeError("ordinal missing")))
+    request = next(iter(monitor.load_state(Path(config["state"]))["requests"].values()))
+    assert request["state"] == "pending" and not calls
+    assert status["capture_hold"]["reason"] == "vram_probe_failed"
+
+
+def test_high_vram_probe_allows_one_receipted_capture(setup):
+    config, _run, status = setup
+    config["min_free_mib"] = 4096
+    calls = []
+
+    def fake_launch(argv, _log):
+        calls.append(argv)
+        request = next(iter(monitor.load_state(Path(config["state"]))["requests"].values()))
+        receipt_for(config, request)
+        return 0
+
+    consumer.cycle(config, monitor, status, time.time() + 3600, capture=True,
+                   launch=fake_launch, vram_probe=lambda device: 8192)
+    request = next(iter(monitor.load_state(Path(config["state"]))["requests"].values()))
+    assert request["state"] == "completed" and len(calls) == 1
+    assert status["capture_hold"] is None
+
+
+def test_utf8_bom_config_and_launch_json_are_accepted(setup, tmp_path):
+    config, _run, _status = setup
+    launch_file = Path(config["runs"][0]["launch_config"])
+    launch_file.write_bytes(b"\xef\xbb\xbf" + launch_file.read_bytes())
+    assert consumer.validate_config(config)
+    config_file = tmp_path / "bom-consumer.json"
+    config_file.write_bytes(b"\xef\xbb\xbf" + json.dumps(config).encode("utf-8"))
+    env = os.environ.copy()
+    env["CUDA_VISIBLE_DEVICES"] = "-1"
+    completed = subprocess.run(
+        [os.sys.executable, "-B", str(HERE / "consume_sol24a.py"),
+         "--config", str(config_file), "--once"], env=env,
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert Path(config["status"]).is_file()
 
 
 @pytest.mark.parametrize("interval, expected", [(200, [200, 400]), (500, [500])])

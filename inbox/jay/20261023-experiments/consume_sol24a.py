@@ -62,7 +62,7 @@ def atomic_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def read_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(value, dict):
         raise ValueError(f"JSON object required: {path}")
     return value
@@ -126,8 +126,10 @@ def validate_config(config: dict[str, Any]) -> tuple[Path, float]:
         if run.get("name") not in ("B", "TD") or run["name"] in names:
             raise ValueError("run names must be unique B/TD")
         names.add(run["name"])
-        if run.get("device") != {"B": "cuda:0", "TD": "cuda:1"}[run["name"]]:
-            raise ValueError("capture GPU ordinal must match the registered run")
+        if run.get("training_device") != {"B": "cuda:0", "TD": "cuda:1"}[run["name"]]:
+            raise ValueError("training GPU ordinal differs from the registered run")
+        if run.get("capture_device") not in ("cuda:0", "cuda:1"):
+            raise ValueError("capture GPU ordinal must be cuda:0 or cuda:1")
         if run.get("scene") not in ("flat", "rough"):
             raise ValueError("capture scene must be flat or rough")
         if not isinstance(run.get("policy"), dict) or run["policy"].get("experiment") != run["name"]:
@@ -141,6 +143,13 @@ def validate_config(config: dict[str, Any]) -> tuple[Path, float]:
                 or not isinstance(launch.get("env"), dict)
                 or not isinstance(launch.get("unset_env"), list)):
             raise ValueError("original launch environment contract is invalid")
+        argv = launch.get("argv")
+        if (not isinstance(argv, list) or not argv or not all(isinstance(item, str) for item in argv)
+                or Path(argv[0]).resolve() != Path(config["python"]).resolve()
+                or argv.count("--device") != 1
+                or argv.index("--device") + 1 >= len(argv)
+                or argv[argv.index("--device") + 1] != run["training_device"]):
+            raise ValueError("training device or Python differs from the original launch")
         if (launch["env"].get("CUDA_DEVICE_ORDER") != "PCI_BUS_ID"
                 or "CUDA_VISIBLE_DEVICES" not in launch["unset_env"]
                 or "CUDA_VISIBLE_DEVICES" in launch["env"]):
@@ -153,6 +162,9 @@ def validate_config(config: dict[str, Any]) -> tuple[Path, float]:
         raise ValueError("capture Python executable missing")
     if config.get("metrics_every") not in INTERVALS:
         raise ValueError("metrics_every must be 100, 200, or 500")
+    minimum = config.get("min_free_mib")
+    if minimum is not None and (type(minimum) is not int or minimum <= 0):
+        raise ValueError("min_free_mib must be a positive integer when set")
     if float(config.get("poll_s", 0)) < 1 or float(config.get("min_capture_window_s", 0)) < 0:
         raise ValueError("invalid poll/capture window")
     return root, deadline
@@ -312,7 +324,7 @@ def capture_command(config: dict[str, Any], run: dict[str, Any], request: dict[s
     return [config["python"], str(Path(config["fixed_root"]) / SOURCE_FILES[1]),
             str(_receipt_path(config, request).parent), "review",
             json.dumps(run["policy"], separators=(",", ":")), request["checkpoint"],
-            run["label"], run["scene"], run["device"], "--python", config["python"],
+            run["label"], run["scene"], run["capture_device"], "--python", config["python"],
             "--recorder", str(Path(config["fixed_root"]) / SOURCE_FILES[2]),
             "--max-attempts", str(int(config.get("max_attempts", 4)))]
 
@@ -330,6 +342,37 @@ def capture_environment(run: dict[str, Any]) -> dict[str, str]:
             raise ValueError("launch environment keys and values must be strings")
         env[name] = value
     return env
+
+
+def capture_free_mib(device: str, runner=None) -> int:
+    """Read free VRAM for the PCI-ordered CUDA ordinal, without loading CUDA."""
+    if device not in ("cuda:0", "cuda:1"):
+        raise ValueError("unsupported capture GPU ordinal")
+    runner = subprocess.run if runner is None else runner
+    result = runner(["nvidia-smi", "--query-gpu=pci.bus_id,memory.free",
+                     "--format=csv,noheader,nounits"], capture_output=True,
+                    text=True, check=False, timeout=10)
+    if result.returncode:
+        raise RuntimeError("nvidia_smi_exit_nonzero")
+    cards = []
+    for line in result.stdout.splitlines():
+        fields = [field.strip() for field in line.split(",")]
+        if len(fields) != 2:
+            raise RuntimeError("nvidia_smi_bad_row")
+        try:
+            free = int(fields[1])
+        except ValueError as exc:
+            raise RuntimeError("nvidia_smi_bad_free_mib") from exc
+        if not fields[0] or free < 0:
+            raise RuntimeError("nvidia_smi_bad_row")
+        cards.append((fields[0].lower(), free))
+    if len({bus for bus, _free in cards}) != len(cards):
+        raise RuntimeError("nvidia_smi_duplicate_bus")
+    cards.sort(key=lambda pair: pair[0])
+    ordinal = int(device.split(":", 1)[1])
+    if ordinal >= len(cards):
+        raise RuntimeError("capture_gpu_ordinal_unavailable")
+    return cards[ordinal][1]
 
 
 def consume_one(config: dict[str, Any], monitor: Any, request: dict[str, Any],
@@ -371,7 +414,8 @@ def consume_one(config: dict[str, Any], monitor: Any, request: dict[str, Any],
 
 
 def cycle(config: dict[str, Any], monitor: Any, status: dict[str, Any], deadline: float,
-          *, capture: bool, now: float | None = None, launch=None) -> dict[str, Any]:
+          *, capture: bool, now: float | None = None, launch=None,
+          vram_probe=None) -> dict[str, Any]:
     now = time.time() if now is None else now
     root = Path(config["fixed_root"])
     if source_hashes(root) != status["source_sha256"]:
@@ -386,6 +430,7 @@ def cycle(config: dict[str, Any], monitor: Any, status: dict[str, Any], deadline
     status["last_scan_epoch"] = now
     status["request_counts"] = {name: sum(row.get("state") == name for row in result["state"]["requests"].values())
                                 for name in ("pending", "claimed", "completed", "failed")}
+    status["capture_hold"] = None
     status["state"] = "deadline" if now >= deadline else "observing"
     atomic_json(Path(config["status"]), status)
     if not capture or now + float(config["min_capture_window_s"]) >= deadline:
@@ -393,6 +438,23 @@ def cycle(config: dict[str, Any], monitor: Any, status: dict[str, Any], deadline
     requests = sorted((row for row in result["state"]["requests"].values() if row.get("state") == "pending"),
                       key=lambda row: (row["requested_epoch"], row["id"]))
     if requests:
+        minimum = config.get("min_free_mib")
+        run = _run_for_request(config, requests[0])
+        probe = capture_free_mib if vram_probe is None else vram_probe
+        try:
+            free = probe(run["capture_device"])
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired) as exc:
+            status["capture_hold"] = {"reason": "vram_probe_failed",
+                                      "detail": type(exc).__name__,
+                                      "capture_device": run["capture_device"]}
+        else:
+            if minimum is not None and free < minimum:
+                status["capture_hold"] = {"reason": "insufficient_vram",
+                                          "capture_device": run["capture_device"],
+                                          "free_mib": free, "min_free_mib": minimum}
+        if status["capture_hold"] is not None:
+            atomic_json(Path(config["status"]), status)
+            return status
         status["state"] = "capturing"
         atomic_json(Path(config["status"]), status)
         status["last_capture"] = consume_one(config, monitor, requests[0], status, launch=launch)
