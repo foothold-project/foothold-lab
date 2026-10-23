@@ -1,0 +1,221 @@
+{
+  "mode": "read_only_cpu",
+  "model_root": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1",
+  "video_root": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022",
+  "prefix": "ex23r",
+  "rows": [
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_300.pt",
+      "scene": "flat",
+      "status": "available_files",
+      "resets": 0,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_300.pt",
+          "sha256": "dbbf3819c2b5ea0cf6a73f13e824881c83e79137b45117c703c46726a7556f27"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_flat.mp4",
+          "sha256": "497b7d7def3f8344c8b94b827267bc644167a1bcbd073638f7ef129e7bea0f93"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_flat.json",
+          "sha256": "1dd5cdac7f0379da1b9579ed1a6efb1780679f4e38f972a6fdfe10a18128598f"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_flat_feet.npz",
+          "sha256": "e149acf679ffb007021fd9c315d22a014912914a9ddfccae0d9f4a78f526e4ab"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 57.6329231262207
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_300.pt",
+      "scene": "rough",
+      "status": "available_files",
+      "resets": 2,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_300.pt",
+          "sha256": "dbbf3819c2b5ea0cf6a73f13e824881c83e79137b45117c703c46726a7556f27"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_rough.mp4",
+          "sha256": "7e18f4a7baf6a3b5524fc9b44716d3b2ce95c02022e3db691209f8ca818c76e2"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_rough.json",
+          "sha256": "a32fcebc4f4d416eb32fe4ed10aec49582d3f73696d91f04559dac6ad199d930"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_300\\run_rough_feet.npz",
+          "sha256": "7512b5675f1cd8729d1bfb835f9bc30a323b9445fcbdac7242bfaef70e893b31"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 55.776702880859375
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_500.pt",
+      "scene": "flat",
+      "status": "available_files",
+      "resets": 0,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_500.pt",
+          "sha256": "343bb15665abf76a2e58b96d274b74d8703f84c779b2667028bee8a39d93511e"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_flat.mp4",
+          "sha256": "f8d7f47bef7ec57ca5dc17a11b2a15945da709cd15189225561e30dac6115c7f"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_flat.json",
+          "sha256": "4eef9f5eb989f086b8c893bac34f91df43da7f7307257ce046140547b840d69d"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_flat_feet.npz",
+          "sha256": "10a4993d3272c08206c32f22eb32f12194a23b0646dfa5bccebdcef8b17350eb"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 57.63439178466797
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_500.pt",
+      "scene": "rough",
+      "status": "available_files",
+      "resets": 1,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_500.pt",
+          "sha256": "343bb15665abf76a2e58b96d274b74d8703f84c779b2667028bee8a39d93511e"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_rough.mp4",
+          "sha256": "30ad7fed8cf5ea13282b9acba2c0f0a5c7ed21c4d3f23e9f7b826175dc1426c7"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_rough.json",
+          "sha256": "d4882f765868e5c0e8696647264cf9f1744728cec1f3b778c97ec708ec38ea4e"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_500\\run_rough_feet.npz",
+          "sha256": "380a09c924fcbf0a889fd0f7f4678d39c80e4cfed007884e6c40d297eb026140"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 56.96904754638672
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1000.pt",
+      "scene": "flat",
+      "status": "available_files",
+      "resets": 0,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1000.pt",
+          "sha256": "043e95e06aa42fd83e5299dfc3e1cda3063a733d2fc3f899523a7e8eaf0e818e"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000\\run_flat.mp4",
+          "sha256": "4a58e84f480bbfcb1ced76a05609184e499b69d1403f9a6a3c57b12ed0be9b30"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000\\run_flat.json",
+          "sha256": "9940da1cfe7d495c46e1753162b0a20f05e25a96389883f27489612a7209b243"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000\\run_flat_feet.npz",
+          "sha256": "485c401376fa1ca232d28dd29d108baa01bf3bb873943ab4af5c0e796bbed5be"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 57.3490104675293
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1000",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1000.pt",
+      "scene": "rough",
+      "status": "broken_excluded",
+      "resets": null,
+      "receipt": "absent",
+      "files": {},
+      "reason": "dark_or_missing_brightness"
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1500.pt",
+      "scene": "flat",
+      "status": "available_files",
+      "resets": 0,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1500.pt",
+          "sha256": "4775fd35a4af9a6109c8b503e0d6f871152856c36223a17fa261a9a2648eafd1"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat.mp4",
+          "sha256": "abcee77ec5644700afc7ac60e61df00cbb9540a219a6898f89c6ea847d388174"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat.json",
+          "sha256": "1aa822a82526df189b3541c358a853afdedf473b408ddb6646b1f5fe9daa451e"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_flat_feet.npz",
+          "sha256": "cd813725c389da044303c65accf7a4c21c0b2000139ddd27ba9c81e521c0e39d"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 57.18277359008789
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500",
+      "checkpoint": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1500.pt",
+      "scene": "rough",
+      "status": "available_files",
+      "resets": 0,
+      "receipt": "legacy_or_invalid",
+      "files": {
+        "model": {
+          "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\model_1500.pt",
+          "sha256": "4775fd35a4af9a6109c8b503e0d6f871152856c36223a17fa261a9a2648eafd1"
+        },
+        "mp4": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough.mp4",
+          "sha256": "77baff63c1af49ba6eeaf364738d4d5081caddd18c7c93575c7b1f0a1b8c2f22"
+        },
+        "json": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough.json",
+          "sha256": "79604337630d5c7886933a72ecc4dff55d5159f54289f803a8e5f1479ecf0bb2"
+        },
+        "npz": {
+          "path": "C:\\Users\\AI-WS01\\s2_lab\\videos\\mid500_1022\\ex23r_1500\\run_rough_feet.npz",
+          "sha256": "f526d0e15518198e1cffb3b56a295f35b85b39bec6091e70e001229077bd091f"
+        }
+      },
+      "frame_count": 300,
+      "duration_s": 12.0,
+      "min_mean_brightness": 56.503692626953125
+    }
+  ]
+}
