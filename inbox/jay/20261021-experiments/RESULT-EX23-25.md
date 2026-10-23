@@ -19,6 +19,8 @@ G1은 평지 1.0 m/s 전진과 회전 유지에서 G0보다 낫다. rough 양의
 - [ASTRA의 구간별 영상·접촉 판독](ANALYSIS-astra-ex23-25-visual.md) · [기준선·설정·원자료 검증](ANALYSIS-astra-ex23-25.md)
 - [학습 곡선과 촬영 실패의 출처](../20261023-experiments/REPORT-sol-23c.md)
 
+외부 열람: [평지 1배 MP4](https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-flat-1500-1x.mp4) · [평지 0.5배 MP4](https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-flat-1500-0.5x.mp4) · [rough 1배 MP4](https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-rough-1500-1x.mp4) · [rough 0.5배 MP4](https://github.com/foothold-project/foothold-lab/releases/download/research-ex23-25-20261023/ex23-ex25-rough-1500-0.5x.mp4). [파일 목록·해시](../20261023-experiments/MEDIA-EX23-25.md).
+
 영상은 기존 촬영의 CPU 재편집이다. 네 출력의 SHA·전 프레임 해독·길이·프레임 수를 lead_tmp가 재확인했다. 1배는 12초·300프레임, 0.5배는 24초·600프레임. 파일 검증은 사람이 모든 프레임을 눈으로 판독했다는 뜻이 아니다. ASTRA는 원본 네 영상의 0.2초 간격과 핵심 시각을 검토했고, lead_tmp는 전 구간 접촉 시트·회전 핵심 프레임·관측 배열을 대조했다. 원본·실패 기록 모두 보존했다. 영상은 현재 luna 작업 사본에 있고 git에는 경로·해시만 둔다.
 
 ## 무엇을 알아보던 실험인가
@@ -94,7 +96,7 @@ EX-23·25는 EX-11보다 정체율과 추종 오차가 개선됐다. 다만 보�
 
 G1의 지도는 시뮬레이터의 `gt_map_scan` RayCaster가 지면을 쏘아 얻은 **32×16=512칸, 5 cm 간격** 높이다. 몸체 기준 지면 높이 `z_hit-z_base`를 ±1 m로 자른다. 칸 중심 범위는 전후 1.55 m·좌우 0.75 m, 앞쪽으로 0.3 m 치우친 yaw 정렬이다. 예전 S1의 17×11=187점 입력과 다르다. `force_gt`로 정답 지도를 고르고, 지도 encoder와 몸 감각 추정기를 거쳐 정책에 준다. G0는 지도 토큰이 없지만 몸 감각·과거 관측·학습된 추정은 남는다. 학습용 정답·critic 정보가 전혀 없는 로봇이라는 뜻도 아니다.
 
-코드 근거(sonnet-code `7cab5223`, 읽기만): `foothold_s2/sensors/start_obs.py:35~39,83~90`, `models/start_perception.py:135~165,301~327`, `tasks/s2_x23_cfg.py:24~35`, `tasks/delayed_action.py:1~39`. 저장 cfg와 촬영 JSON의 입력 모드도 대조했다. G1은 카메라 인식 성공을 증명하지 않고, G3에서 정답 대신 복원 지도를 소비할 때 그것을 검증한다.
+코드 근거(sonnet-code `7cab5223`, 읽기만): `foothold_s2/sensors/start_obs.py:35~39,83~90`, `models/start_perception.py:135~165,301~327`, `tasks/s2_x23_cfg.py:24~35`, `tasks/delayed_action.py:1~39`. 저장 cfg와 촬영 JSON의 입력 모드도 대조했다. EX-23은 카메라 인식 성공을 증명하지 않는다. **명칭 정정:** EX-23의 G1은 정답 지도 진단이고, 기존 53의 본선 G1은 이미 TR-Net 복원 지도·AdaSmpl을 쓰며 G3는 거기에 발 가장자리 보상을 더한다. 앞선 “G1 정답 → G3 깊이” 설명은 이 둘을 섞었다. [이어 학습·명칭·이전 일정 논의](../20261023-experiments/DISCUSSION-curriculum-linux-1023.md)에서 구분한다.
 
 지도를 주면 발을 딛기 전에 지형을 알 수 있어 유리할 **가능성**이 커진다. 그러나 정보가 있다고 정책이 잘 활용하는 것은 아니다. 평지에서는 몸 감각만으로도 걸을 수 있고, 추가 신경망은 학습을 더 해야 하며, 위치·높이 기준 오류나 입력 오류가 있으면 오히려 나빠질 수 있다. 현재 rough 반례가 있으므로 지도 우세를 결론으로 정해 놓지 않는다. [사전 지각의 이점과 한계를 함께 다룬 원문](https://leggedrobotics.github.io/rl-perceptiveloco/)
 
