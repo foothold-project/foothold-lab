@@ -239,8 +239,15 @@ if __name__ == "__main__":
         main()
     except SystemExit as e:  # hydra 가 정상 끝에 SystemExit(0) 을 낼 수 있다
         code = 0 if e.code in (None, 0) else 1
+        if code:
+            detail = traceback.format_exc()
+            write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"),
+                         {"state": "failed", "exit_code": e.code, "traceback": detail})
+            print(detail, file=sys.stderr, flush=True)
     except BaseException:
-        write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": traceback.format_exc()})
+        detail = traceback.format_exc()
+        write_status(STATE["log_dir"] or os.environ.get("TRAIN_START_STATUS_DIR"), {"state": "failed", "traceback": detail})
+        print(detail, file=sys.stderr, flush=True)
         code = 1
     sys.stdout.flush()
     os._exit(code)

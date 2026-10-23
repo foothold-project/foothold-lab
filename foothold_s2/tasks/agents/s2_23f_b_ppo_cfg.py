@@ -8,3 +8,8 @@ from foothold_s2.tasks.agents.s2_x23_ppo_cfg import S2X23PPORunnerCfg
 @configclass
 class S223FBPPORunnerCfg(S2X23PPORunnerCfg):
     experiment_name = "foothold_s2_23f_b"
+
+    def __post_init__(self):
+        super().__post_init__()
+        # The completed EX23 run used 64 via a launch override, not cfg's 256.
+        self.perception = {**self.perception, "microbatch_envs": 64}
