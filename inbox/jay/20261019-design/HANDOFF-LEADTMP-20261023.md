@@ -117,3 +117,51 @@
 - **astra2**: 9 절 4 번 검증 · 9 절 2 번 판정 질문을 원자료로 독립 확인.
 - **sol**(lead_tmp 가 배정): 9 절 3 번 도구 고침(저장소 코드는 worktree 에서, 실행 중 판이 없으니 지금 가능).
 - **lead_tmp**: 전체 지휘 · 팀장과 다음 실험 설계 · 결과를 팀장에게 보고. 판단은 철칙과 이 문서의 등록 기준 안에서, 기준을 혼자 넓히지 않는다.
+
+## 11. 10/23 오전 갱신 (lead 마지막)
+
+- 결과 문서 완료: `inbox/jay/20261021-experiments/RESULT-EX23-25.md`(luna 1d00ee00 · lead 비교 영상 726f0691). 일정표 · 실험 지도 · 결정 반영표 · 카드 갱신, exp_sync_check rc 0.
+- 비교 영상(3x2, lead 직접 검수): `inbox/jay/20261021-experiments/figs/ex23-25-luna-23a/compare_ex23_25.mp4` · `_half.mp4`. 위 줄 EX-23 1000 · 1500 · 811 1000, 아래 줄 EX-25 1000 · 1500 · v2. 로컬 절대 경로 `C:/mai/wt/foothold-lab/lead-x11r/inbox/jay/20261021-experiments/figs/ex23-25-luna-23a/`.
+- 팀장 판독(10/23): ex23r_1000 · ex25_1500 「보행 많이 괜찮아졌다 · 정상 보행처럼 보인다, 전보다는」.
+- luna 검수의 「거의 회색조 → 공유 제외」 는 S2 지형 회색 바닥을 결함으로 본 오검출. v2 회전 구간 넘어짐은 실제 행동.
+- **작업 규칙**: `LEAD-STYLE-AGENTS.md`(팀장 작업 방식 · Claude 스킬을 Codex 용으로 옮김) + `EXPERIMENT-RULES.md` 1.2. 팀장 10/23: 「모든 실험을 lead_tmp 와 이제 논의하고 하겠다」.
+
+## 12. 팀장 요구 사항 (빠짐없이, 원문 중심)
+
+1. 설계는 학습 전에 고정하고 중간에 바꾸지 않는다. 다른 시드 확인은 끝에 한 번.
+2. 실험은 사슬로 잇는다: 가설 → 설정 · 코드 → 검증 → 평가 → 다음 가설. 본류와 지류 구분. GPU 는 실험을 위해.
+3. 중간 점검(300 · 500 · 1000)은 「이 판을 계속할 가치가 있나」 를 일찍 가리는 것이다. 그래서 학습 중에도 바로 영상 · 위상 · 그래프를 끝난 판 분석과 똑같이 본다(촬영은 cuda:0). 미루면 의미가 없다(팀장 10/22).
+4. 분석은 숫자 · 근거 · 이전 데이터 · 그래프 · 영상 · 프레임을 같이(「데이터를 바라보고 분석하는 능력이 진짜 필요한 시점」). 보행 판단은 위상을 영상으로 제대로 본다.
+5. 영상은 실패 · 성공 모두, 바로 공유. 의미를 담은 장면 · 검정 · 카메라 흔들림 · 가림 없음 · HUD · 나란히 비교 · 배속 0.25 · 0.5 · 1 · 2. 로컬 경로를 함께.
+6. 결과는 문서 한 장(RESULT 형식, 팀장 승인 「앞으로도 이런식으로 정리해라」)을 git 에, 링크를 텔레그램으로. 채팅으로만 흘려보내지 않는다. 기준선 같은 측정은 꼭 문서화.
+7. 실험 기록 스킬(가설 → 설정 → 검증 → 평가 → 다음)을 만들 것: 아직 없음 → `LEAD-STYLE-AGENTS.md` 5 절 + RESULT 형식으로 대신, 정식 절차서(ANALYSIS-PROCEDURE.md)는 미작성.
+8. 웹사이트 게시(Artifact 대신 프로젝트 사이트): 미착수.
+9. 지시는 구체적으로, 팀장 의도를 반영해서. 근거는 실제 경로 · 행 번호, 숫자마다 등급(논문 · 선행 · 코드 · 실측 · 가정).
+10. 세션은 임무별로 모델을 맞춘다: astra(복잡 · 검증) · sol(스크립트 · 코드) · luna(정해진 명령 · 문서). 검증은 세 층. 병렬로.
+11. Top-Down: START 구조(TR-Net · 깊이)를 먼저 세우고 약점을 코칭한다.
+12. 무인 운영: 팀장이 자거나 자리를 비워도 실험이 이어지고, 판단은 전문가 수준으로 등록 규칙 안에서, 아침에 문서 한 장으로 볼 수 있게. Linux 에서도 같은 방식(이전 준비는 super2 · mai-os#54).
+13. 보안 · 절차: 팀장이 치지 않은 동의를 쓰지 않는다 · 키 · 토큰을 다루지 않는다 · em dash 금지 · 생성 꼬리말 금지 · 공유 체크아웃 금지 · 남의 미커밋 금지.
+
+## 13. 운영 장치 인계 (lead 가 쓰던 것)
+
+- **Codex 는 스스로 깨어나지 못한다.** lead 는 Claude 예약(2 시간마다 점검 · 아침 9:23 일정 알림 · 촬영 확인 1 회)을 썼고 한도 때문에 10/23 모두 지웠다. lead_tmp 는 대신 (a) 끝나기 전에 다음 일을 거는 배경 스크립트 (b) 텔레그램 알림 (c) 팀장이 lead_tmp 창에 말할 때 상태를 다시 재는 것으로 이어 간다.
+- **배경 감시 · 촬영 스크립트** (`C:/Users/AI-WS01/s2_lab/tools_lead/`):
+  - `night3_1023.sh`: 체크포인트 파일이 생기는 대로 cuda:0 에서 한 번에 하나 촬영(record_seq 가 돌면 기다림) → `mid_ck2.sh`(평지 · rough 영상 · 걸음 표 · 접촉 시트) → `tg_send.py` 텔레그램. 새 판에 쓸 때는 사본을 만들어 판 경로 · 회차만 바꾼다(돌고 있는 스크립트는 고치지 않는다).
+  - `night_1022.sh metrics <태그> <run.log> <회차...>`: GPU 없이 학습 숫자만 텔레그램.
+  - `metrics_early.sh` · `gait_phase.py` · `strip.sh` · `compare_grid.sh` · `curves_x14.py` · `tg_send.py`. 촬영 본체 `s2_lab/record_seq.py`(force_gt 정답 지도 수정 포함) · `seq_video.sh`(검정이면 4 번까지 다시) · `gait_table.py` · `joint_plot.py`.
+  - auto_watch.sh 는 cuda:1 촬영이라 쓰지 않는다(폐기).
+- **감시를 바꿀 때**: TaskStop 류는 떼어 낸 bash 를 안 죽인다. `Get-CimInstance Win32_Process` 로 명령줄(auto_watch · night · mid_ck · seq_video · record_seq)을 찾아 PID 로 끄고 목록으로 다시 확인. 자기가 띄운 것만.
+- **무인 사슬 실행기**: `sonnet-code/foothold_s2/chain/`(runner.py · chain_s1a_night.yaml · chain.service). 팀장 지시로 꺼져 있다. 다시 켜려면 팀장 승인(sonnet-code 세션 상태에 「실행기 재시작 승인 대기」).
+- **mai-watch**: 세션 · GPU 상태판과 텔레그램 경고(super2 관리). GPU 가 0 % 로 보이는지 · 세션이 멈췄는지 여기서 본다. 한도 지킴이 `~/.mai/limit-guard`(93 % 경고 · 풀리면 재개 신호).
+- **세션 연락**: `python -m mai_resume send --to <전체 term id> --wait 900 --text "..."`(실행 위치 `C:/mai/mai-tools/tools/mai-resume`). 출력 「sent」 를 확인, 「nothing sent」 면 다시. id: luna term_8340af0f-2066-43c6-aa7a-9f10f3a202ef · astra2 term_b63249de-72a2-4570-9516-84a68ec55383 · lead_tmp term_d0d6549f-2da1-433c-9d05-58ce534224d7. 세션 상태는 mai-gauge session_status(다른 세션이 읽는다).
+- **학습 띄우는 법**(승인 뒤): `cd C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code && PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True bash foothold_s2/run_s2_x23.sh cuda:N [--map_input none --run_name ... --max_iterations N agent.perception.force_gt=false agent.perception.microbatch_envs=64]`. microbatch 64 가 아니면 G1 은 OOM 이 났다. 로그 폴더 이름은 스크립트 고정값(s2_x23_ex23-g1_*)이라 실제 run 은 rsl_rl 폴더의 run_name 으로 찾는다. 감시 경로 패턴은 실제 폴더 이름으로 한 번 시험한다.
+
+## 14. 어젯밤 분석부터 다음 실험까지 이어 가는 순서
+
+1. **면밀 분석 마무리(오늘)**: RESULT-EX23-25 를 lead_tmp 가 읽고 astra ASTRA-23a(반증 검증 · EX-11 대 EX-25 설정 전체 diff · 교란 변수) 결과와 맞춘다. 꼭 답할 물음: 1000 · 1500 이 몸을 세운 대각 trot 인가(위상 · 프레임) · 회전 명령 반응(300 회엔 제자리였다) · rough 걸음 · 관절각이 v2(힙 안쪽 · 무릎 펴짐)와 닮았나 · EX-25 300 평가 리셋 64 의 원인(평균 행동 대 표집, `S2_ACT=sample`) · ex25_500 평지 클립 재촬영 · 명령 반응 평가(끝난 판).
+2. **도구 고침(sol)**: `sonnet-code/foothold_s2/eval/adapters.py:420` S2Policy 에 체크포인트 force_gt 반영(지금은 record_seq.py 만 고침) · mid500_ck 표 이름 버그(mid_ck2 로 대체).
+3. **해석에서 다음 가설로**: 지금 가장 강한 가설은 「처음부터 센 DR · 행동 지연이 기는 자세를 만들었다」(EX-11 대 EX-25). 그러나 EX-23 · 25 는 DR 을 커리큘럼으로 올린 판이 아니라 약하게 고정 · 일부를 끈 판이다. 실기 이전(START 기조)에는 DR · 지연이 필요하므로 다음은 **DR · 지연 커리큘럼 판**: EX-23 설정에서 시작해 걸음이 선 뒤(예: 1000 회 이후, 또는 지형 단계 · 추종 기준) 마찰 범위 · 무게중심 · 게인 · 세기 · 지연을 단계적으로 EX-11 수준까지 올린다. 설계 · 판정 기준은 팀장과 정하고 학습 전에 고정. resume(EX-23 1500 에서 이어 학습)으로 시작하면 시간을 줄일 수 있다(가중치만 이어짐에 유의).
+4. **그 다음 본선**: 열린 명령(좌우 · 회전) 확인 → G3(깊이 카메라 + TR-Net 복원 지도, 아직 한 번도 안 돌림) → 험지 일반화 평가. 지도 효과는 평지가 아니라 rough · 험지에서 본다.
+5. **보류**: EX-26(G0 + 토크 -2e-4) · EX-27(G0 + NVIDIA 보상) 코드는 sonnet-code 7cab5223 에 있으나 근거(「START 보상은 못 일어난다」)가 무너져 띄우지 않는다. sonnet-code 로컬 브랜치 push 는 팀장 확인 필요.
+6. **기준선 정리**: 811 300 클립 회전 구간 하늘 재촬영 확인 · BASELINE-0811 띠 · compare_0811 교체 · v1 · v2 회전 넘어짐 기록 · EX-24a 300(몸 0.13 · vx 1.22, 811 과 다름) 원인.
+7. 안건: AGENDA-LEAD J1(판단층 구체화)이 「조건 충족 · 팀장 논의 전」.
