@@ -1,0 +1,18 @@
+{
+ "started": "2026-10-20T11:42:22",
+ "mode": "restore",
+ "restore_from": "C:/Users/AI-WS01/AppData/Local/Temp/claude/C--Users-AI-WS01-orca-workspaces-foothold-lab-rl-v2-command-restore/0d6a4467-5aaa-4436-8e6b-698f433bf226/scratchpad/gate2",
+ "pid": 100192,
+ "max_abs_diff_before_load": 0.3989187777042389,
+ "max_abs_diff_after_load": 0.0,
+ "adasmpl_same": true,
+ "perception_optimizer_same": true,
+ "iter": 1,
+ "checks": {
+  "traceback": false,
+  "differs_before_load": true,
+  "same_after_load": true,
+  "adasmpl_same": true,
+  "perception_optimizer_same": true
+ }
+}
