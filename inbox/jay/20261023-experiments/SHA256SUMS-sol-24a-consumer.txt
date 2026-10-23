@@ -1,0 +1,4 @@
+7fcc0cea64a2018e8c50c5cc908e51e24fbf788a3c18ea152a025e4084159e1d  inbox/jay/20261023-experiments/consume_sol24a.py
+cb79557a1b16ec79d579751c31e62509e1f1291fbe4289d7c939e8f265edd7b6  inbox/jay/20261023-experiments/test_consume_sol24a.py
+d6395a93fcd8c24882c89e23f6259fe0718288f56f724b180a7729f5cacb8e9a  inbox/jay/20261023-experiments/consumer_sol24a.example.json
+13c1ceb0c9db918d4e253f9426654ef7d5aaebc0b8893f8caa2bc03dc6e2f7d5  inbox/jay/20261023-experiments/REPORT-sol-24a-consumer.md

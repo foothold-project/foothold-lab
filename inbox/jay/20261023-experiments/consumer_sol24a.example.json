@@ -1,0 +1,38 @@
+{
+  "schema": "sol24a-consumer/1",
+  "deadline": "2026-10-24T22:30:00+09:00",
+  "fixed_root": "C:/mai/wt/foothold-lab/lead-tmp-start-b",
+  "expected_head": "REPLACE_WITH_ROOT_FROZEN_COMMIT_SHA",
+  "python": "C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
+  "state": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/review_state.json",
+  "status": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/consumer_status.json",
+  "capture_root": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/captures",
+  "metrics_root": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/metrics",
+  "metrics_every": 100,
+  "poll_s": 30,
+  "min_capture_window_s": 1800,
+  "max_attempts": 4,
+  "runs": [
+    {
+      "name": "B",
+      "run_dir": "REPLACE_WITH_B_RUN_DIRECTORY",
+      "process_file": "REPLACE_WITH_B_PROCESS_JSON",
+      "launch_config": "REPLACE_WITH_B_ROOT_LAUNCH_JSON",
+      "device": "cuda:0",
+      "scene": "rough",
+      "label": "B serial review",
+      "policy": {"experiment": "B", "terrain": "rough", "map_mode": "saved", "seed": 42}
+    },
+    {
+      "name": "TD",
+      "run_dir": "REPLACE_WITH_TD_RUN_DIRECTORY",
+      "process_file": "REPLACE_WITH_TD_PROCESS_JSON",
+      "launch_config": "REPLACE_WITH_TD_ROOT_LAUNCH_JSON",
+      "device": "cuda:1",
+      "scene": "rough",
+      "label": "TD serial review",
+      "policy": {"experiment": "TD", "terrain_type": "stepping_stones_low", "level": 0,
+                 "map_mode": "pred", "seed": 42}
+    }
+  ]
+}
