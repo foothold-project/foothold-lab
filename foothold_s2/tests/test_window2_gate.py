@@ -85,7 +85,7 @@ def test_unequal_conditions_or_wrong_iterations_are_not_judged():
 
     assert "조건 불일치" in G.judge(parent, kids)["reasons"][0]
     other = _kids()
-    other["EX-30"]["fixed_terrain"] = None
+    other["EX-30"]["steps"] = 100
 
     assert "조건 불일치" in G.judge(parent, other)["reasons"][0]
     assert any("회차" in r for r in G.judge(_res(1400), _kids())["reasons"]) and any("회차" in r for r in G.judge(parent, {"EX-30": _res(1700), "EX-31": _res(1750)})["reasons"])
