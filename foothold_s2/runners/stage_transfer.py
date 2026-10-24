@@ -27,6 +27,7 @@ from foothold_s2.runners.manifest import state_sha
 CKPT_FORMAT = "foothold-start/1"
 PARENT_VARIANTS = ("B_friction_only",)                              # 이름이 다른 variant 를 받는 허용 목록(이 모듈 한 곳)
 ALLOWED_PARENT_SHA256 = ("cb65ba5641ac7265664a02110c51f9a57b1427ecee74356870fcd462907c43b8",)      # 설계 §2.1: 부모는 EX-28 B model_1500.pt 하나
+TERRAIN_RESTORE_MODES = ("none", "parent_levels")
 TREATMENT_PCFG_KEYS = ("force_gt",)                                  # 부모와 달라도 되는 처치: 지도 선택(adaptive/gt) 하나
 OPERATIONAL_KEYS = ("experiment_id", "run_name", "log_dir", "extra_updates", "deadline")           # 부모와 달라도 되는 운영 칸. 이 밖의 지각/학습/환경 칸은 부모와 같아야 한다(T2/T3 에서 바꿀 칸은 근거와 함께 여기에 명시적으로 더한다)
 EXPERIMENT_MAP = {"EX-30": "adaptive", "EX-31": "gt"}                # 실험 번호 -> 지도 처치. 둘이 어긋나면 거절
@@ -47,9 +48,15 @@ class TransferSpec:
     map_policy: str
     seed: int
     curriculum_spec_sha256: str
+    terrain_restore: str = "none"                                       # "parent_levels" = 창 1: 부모 env_state 의 terrain_levels/types 만 두 판 똑같이 복원(나머지 env 상태는 버린다)
 
     def sha256(self) -> str:
-        return hashlib.sha256(json.dumps(asdict(self), sort_keys=True).encode()).hexdigest()
+        d = asdict(self)
+
+        if d["terrain_restore"] == "none":
+            d.pop("terrain_restore")                                    # 이 칸이 생기기 전 spec 의 SHA 를 바꾸지 않는다
+
+        return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()
 
 
 @dataclass
@@ -72,6 +79,7 @@ class TransferResult:
     parent_depth_delay_ticks: int | None = None
     parent_map_input: str | None = None
     parent_agent_cfg: dict | None = None
+    parent_terrain: dict | None = None                                 # terrain_restore="parent_levels" 일 때만: {"terrain_levels", "terrain_types"} (CPU 텐서)
 
 
 def file_sha256(path) -> str:
@@ -130,6 +138,9 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
     if not isinstance(spec.seed, int) or isinstance(spec.seed, bool):
         raise TransferRefused("seed 는 정수여야 한다")
 
+    if spec.terrain_restore not in TERRAIN_RESTORE_MODES:
+        raise TransferRefused(f"terrain_restore {spec.terrain_restore!r} 는 {TERRAIN_RESTORE_MODES} 중 하나")
+
     sha_before = file_sha256(parent_path)
 
     if sha_before != spec.parent_sha256:
@@ -171,6 +182,17 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
     pcfg["force_gt"] = spec.map_policy == "gt"
     ada = {"p": 1.0, "count": 0.0, "sum": 0.0, "sumsq": 0.0, "force_gt": spec.map_policy == "gt"}
     std = [float(x) for x in model["std"].detach().cpu().flatten()] if "std" in model else None
+    parent_terrain = None
+
+    if spec.terrain_restore == "parent_levels":
+        env_state = sd.get("env_state") or {}
+        lv, ty = env_state.get("terrain_levels"), env_state.get("terrain_types")
+
+        if lv is None or ty is None or lv.shape != ty.shape or lv.dim() != 1 or int(lv.min()) < 0 or int(ty.min()) < 0:
+            raise TransferRefused("terrain_restore=parent_levels 인데 부모 env_state 에 정상 terrain_levels/types 가 없다")
+
+        parent_terrain = {"terrain_levels": lv.detach().cpu().clone(), "terrain_types": ty.detach().cpu().clone()}
+
     parent_agent, agent_sha = load_parent_agent_cfg(parent_path) if require_agent_yaml else (None, None)
     sha_after = file_sha256(parent_path)
 
@@ -185,10 +207,48 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
                "explicit_reset_fields": list(EXPLICIT_RESET_FIELDS), "child_perception_cfg_force_gt": pcfg["force_gt"], "shapes_checked": {k: list(v) for k, v in shapes.items()},
                "parent_env_state_discarded": sorted(sd.get("env_state", {}).keys()), "parent_agent_yaml_sha256": agent_sha}
 
+    if parent_terrain is not None:
+        lv, ty = parent_terrain["terrain_levels"], parent_terrain["terrain_types"]
+        receipt["terrain_restore"] = {"mode": spec.terrain_restore, "num_envs": int(lv.numel()), "parent_hash": terrain_hash(lv, ty), "parent_histogram": terrain_histogram(lv, ty),
+                                      "restored": ["terrain_levels", "terrain_types"], "not_restored": ["common_step_counter", "range_curriculum", "env_hook", "rng", "adasmpl"]}
+
     return TransferResult(model_state=model, optimizer_state=opt, ppo_learning_rate=float(sd["ppo_learning_rate"]), perception_state=perc, perception_optimizer_state=popt,
                           perception_learning_rate=float(popt["param_groups"][0]["lr"]), perception_cfg=pcfg, adasmpl_state=ada, normalizers=_normalizers(model, perc),
                           parent_iter=parent_iter, parent_completed_updates=parent_iter + 1, new_completed_updates=0, explicit_reset_fields=EXPLICIT_RESET_FIELDS, receipt=receipt,
-                          parent_perception_cfg=dict(sd["perception_cfg"]), parent_depth_delay_ticks=own.get("depth_delay_ticks"), parent_map_input=own.get("map_input"), parent_agent_cfg=parent_agent)
+                          parent_perception_cfg=dict(sd["perception_cfg"]), parent_depth_delay_ticks=own.get("depth_delay_ticks"), parent_map_input=own.get("map_input"), parent_agent_cfg=parent_agent, parent_terrain=parent_terrain)
+
+
+def terrain_hash(levels: torch.Tensor, types: torch.Tensor) -> str:
+    """지형 칸(레벨 · 종류) 배열의 sha256. 두 판이 같은 칸을 이어 받았는지 비교하는 값."""
+    return hashlib.sha256(levels.detach().cpu().long().numpy().tobytes() + b"|" + types.detach().cpu().long().numpy().tobytes()).hexdigest()
+
+
+def terrain_histogram(levels: torch.Tensor, types: torch.Tensor) -> list:
+    """레벨 x 종류 개수표(행 = 레벨)."""
+    lv, ty = levels.detach().cpu().long(), types.detach().cpu().long()
+    table = torch.zeros(int(lv.max()) + 1, int(ty.max()) + 1, dtype=torch.long)
+    table.index_put_((lv, ty), torch.ones_like(lv), accumulate=True)
+
+    return table.tolist()
+
+
+def compare_window1_receipts(receipt_a: dict, receipt_b: dict) -> dict:
+    """창 1 의 두 판(EX-30 · EX-31)이 같은 부모에서 같은 지형 칸을 이어 받았는지 영수증 둘로 단언한다. 다르면 TransferRefused."""
+    ta, tb = receipt_a.get("terrain_restore"), receipt_b.get("terrain_restore")
+
+    if not ta or not tb:
+        raise TransferRefused("두 영수증 모두 terrain_restore 가 있어야 한다")
+    if {receipt_a["spec"]["experiment_id"], receipt_b["spec"]["experiment_id"]} != {"EX-30", "EX-31"}:
+        raise TransferRefused("한 쌍은 EX-30 과 EX-31 이어야 한다")
+    if receipt_a["parent_sha256"] != receipt_b["parent_sha256"]:
+        raise TransferRefused("두 판의 부모 SHA 가 다르다")
+    for key in ("parent_hash", "restored_hash", "parent_histogram"):
+        if ta[key] != tb[key]:
+            raise TransferRefused(f"두 판의 terrain_restore.{key} 가 다르다")
+    if ta["restored_hash"] != ta["parent_hash"] or tb["restored_hash"] != tb["parent_hash"]:
+        raise TransferRefused("복원 뒤 지형 해시가 부모와 다르다")
+
+    return {"parent_hash": ta["parent_hash"], "restored_hash": ta["restored_hash"], "equal": True}
 
 
 def _norm(obj):
@@ -314,6 +374,14 @@ def apply_transfer(runner, result: TransferResult, spec: TransferSpec) -> None:
     result.receipt["child_cfg_perception_lr"] = runner.pcfg.get("learning_rate")                       # cfg 값과 실제 값(부모 optimizer 의 값이 이긴다)을 둘 다 남긴다
     result.receipt["child_pcfg_sha256"] = state_sha(dict(runner.pcfg))
 
+    if result.parent_terrain is not None:
+        terrain = getattr(getattr(getattr(runner.env, "unwrapped", runner.env), "scene", None), "terrain", None)
+
+        if terrain is None or getattr(terrain, "terrain_levels", None) is None:
+            raise TransferRefused("terrain_restore 를 하려는데 이 env 에는 terrain_levels 가 없다")
+        if tuple(terrain.terrain_levels.shape) != tuple(result.parent_terrain["terrain_levels"].shape):
+            raise TransferRefused(f"부모 지형 칸 {tuple(result.parent_terrain['terrain_levels'].shape)} 와 이 env {tuple(terrain.terrain_levels.shape)} 의 env 수가 다르다")
+
     try:
         runner.alg.policy.load_state_dict(result.model_state)
         runner.perception.load_state_dict(result.perception_state)
@@ -323,6 +391,14 @@ def apply_transfer(runner, result: TransferResult, spec: TransferSpec) -> None:
         runner.adasmpl.load_state_dict(dict(result.adasmpl_state))
         runner.current_learning_iteration = result.parent_iter                  # learn() 은 재개일 때 parent_iter + 1 번부터 센다
         runner._resumed = True
+
+        if result.parent_terrain is not None:                                                     # 지형 칸만 복원한다: 카운터 · 명령 과정 · RNG · AdaSmpl 통계는 새로
+            runner._load_env_state({k: v.to(terrain.terrain_levels.device) for k, v in result.parent_terrain.items()})
+            now = terrain_hash(terrain.terrain_levels, terrain.terrain_types)
+            result.receipt["terrain_restore"]["restored_hash"] = now
+
+            if now != result.receipt["terrain_restore"]["parent_hash"]:
+                raise TransferRefused("복원한 지형 칸의 해시가 부모와 다르다")
     except BaseException:
         runner._transfer_broken = True
         raise

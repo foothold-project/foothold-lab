@@ -31,18 +31,18 @@ def _pcfg(force_gt, **extra):
     return {"microbatch_envs": 4, "map_input": "reconstruction", "force_gt": force_gt, "critic_mode": "clean52", "contract": "start", **extra}
 
 
-def _env(seed=42, counter=0, level=0):
+def _env(seed=42, counter=0, level=0, types=None):
     """START 계약을 만족하는 명령 term 과 env 상태(카운터 · 지형 레벨)가 있는 가짜 env."""
     env = FakeStartEnv(num_envs=8, seed=seed)
     term = SimpleNamespace(vel_command_b=torch.tensor([[0.5, 0.0, 0.0]] * 8))
     env.command_manager = SimpleNamespace(get_term=lambda name: term)
     env.common_step_counter = counter
-    env.scene = SimpleNamespace(terrain=SimpleNamespace(terrain_levels=torch.full((8,), level), terrain_types=torch.zeros(8, dtype=torch.long)))
+    env.scene = SimpleNamespace(terrain=SimpleNamespace(terrain_levels=level.clone() if torch.is_tensor(level) else torch.full((8,), level), terrain_types=types.clone() if types is not None else torch.zeros(8, dtype=torch.long)))
 
     return env
 
 
-def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, level=0, algo=None, from_parent_agent=False):
+def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, level=0, algo=None, from_parent_agent=False, types=None):
     cfg = train_cfg(4, pcfg if pcfg is not None else _pcfg(force_gt))
     cfg["save_interval"] = 1000
 
@@ -50,7 +50,7 @@ def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, le
         cfg.update(copy.deepcopy({k: v for k, v in st.load_parent_agent_cfg(REAL_PARENT)[0].items() if k in st.AGENT_CFG_KEYS}))
     cfg["algorithm"].update(algo or {})
 
-    return cls(_env(seed, counter, level), cfg, log_dir=str(tmp_path / name), device="cpu")
+    return cls(_env(seed, counter, level, types), cfg, log_dir=str(tmp_path / name), device="cpu")
 
 
 @pytest.fixture(scope="module")
@@ -571,3 +571,132 @@ def test_dumped_yaml_pair_diff_counts_only_non_operational_differences(tmp_path)
     diff = st.yaml_pair_diff(env_yaml, changed)
 
     assert diff == {"seed": (42, 43)} and st.yaml_pair_diff(env_yaml, changed, allowed_paths=("seed",)) == {}
+
+
+# ------------------------------------------------------------------ 창 1: 부모 지형 레벨 선택 복원 (두 판 똑같이, 나머지 env 상태는 새로)
+LV = torch.tensor([0, 3, 3, 5, 7, 7, 7, 1])
+TY = torch.tensor([0, 1, 2, 0, 1, 2, 2, 1])
+
+
+@pytest.fixture(scope="module")
+def parent_varied(tmp_path_factory):
+    """지형 칸이 env 마다 다른 부모(레벨 LV, 종류 TY, 카운터 777)."""
+    tmp = tmp_path_factory.mktemp("parent_varied")
+    r = _runner(BRunner, tmp, True, "b", counter=777, level=LV, types=TY)
+    r.learn(2)
+    (tmp / "b" / "params").mkdir()
+    (tmp / "b" / "params" / "agent.yaml").write_text(yaml.safe_dump({k: r.cfg[k] for k in st.AGENT_CFG_KEYS if k in r.cfg}), encoding="utf-8")
+    path = tmp / "b" / "model_1.pt"
+    sd = torch.load(path, weights_only=False)
+
+    return {"path": path, "sha": file_sha256(path), "allowed": (file_sha256(path),), "shapes": {"std": tuple(sd["model_state_dict"]["std"].shape),
+            "actor.0.weight": tuple(sd["model_state_dict"]["actor.0.weight"].shape), "critic.0.weight": tuple(sd["model_state_dict"]["critic.0.weight"].shape)}}
+
+
+def _w1_spec(parent, exp):
+    return TransferSpec(parent["sha"], exp, st.EXPERIMENT_MAP[exp], 42, CUR, terrain_restore="parent_levels")
+
+
+def _terrain(r):
+    t = r.env.unwrapped.scene.terrain if hasattr(r.env, "unwrapped") else r.env.scene.terrain
+
+    return t.terrain_levels, t.terrain_types
+
+
+def test_spec_sha_of_the_old_five_field_spec_is_unchanged_and_the_new_field_changes_it():
+    import hashlib
+    import json
+
+    old = TransferSpec("a" * 64, "EX-30", "adaptive", 42, CUR)
+    expected = hashlib.sha256(json.dumps({"parent_sha256": "a" * 64, "experiment_id": "EX-30", "map_policy": "adaptive", "seed": 42, "curriculum_spec_sha256": CUR}, sort_keys=True).encode()).hexdigest()
+
+    assert old.sha256() == expected and dataclasses.replace(old, terrain_restore="parent_levels").sha256() != expected
+
+
+def test_window1_both_children_restore_the_same_parent_levels_and_nothing_else(parent_varied, tmp_path):
+    a = _runner(Ex30Runner, tmp_path, False, "a", counter=0, level=0)
+    b = _runner(Ex31Runner, tmp_path, True, "b", counter=0, level=0)
+
+    assert not torch.equal(_terrain(a)[0], LV)                                                                   # 복원 전에는 새 env 의 칸(0)
+    ra = a.begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-30"), parent_varied["shapes"], parent_varied["allowed"])
+    rb = b.begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-31"), parent_varied["shapes"], parent_varied["allowed"])
+
+    for r in (a, b):
+        assert torch.equal(_terrain(r)[0], LV) and torch.equal(_terrain(r)[1], TY)
+        assert r.env.common_step_counter == 0                                                                    # 부모 카운터 777 은 버린다
+        assert r.adasmpl.count == 0.0 and r.adasmpl.p == 1.0
+    assert ra["terrain_restore"]["restored_hash"] == rb["terrain_restore"]["restored_hash"] == ra["terrain_restore"]["parent_hash"] == st.terrain_hash(LV, TY)
+    assert ra["terrain_restore"]["parent_histogram"] == st.terrain_histogram(LV, TY) == rb["terrain_restore"]["parent_histogram"]
+    assert ra["terrain_restore"]["parent_histogram"][7][2] == 2 and sum(map(sum, ra["terrain_restore"]["parent_histogram"])) == 8
+    assert st.compare_window1_receipts(ra, rb)["equal"] is True
+
+
+def test_default_spec_still_discards_the_parent_terrain(parent_varied, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, "n", level=0)
+    receipt = r.begin_from_parent(parent_varied["path"], _spec(parent_varied), parent_varied["shapes"], parent_varied["allowed"])
+
+    assert torch.equal(_terrain(r)[0], torch.zeros(8, dtype=torch.long)) and "terrain_restore" not in receipt
+
+
+def test_window1_pair_check_refuses_a_different_hash_histogram_or_pairing(parent_varied, tmp_path):
+    ra = _runner(Ex30Runner, tmp_path, False, "a").begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-30"), parent_varied["shapes"], parent_varied["allowed"])
+    rb = _runner(Ex31Runner, tmp_path, True, "b").begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-31"), parent_varied["shapes"], parent_varied["allowed"])
+
+    for mutate, why in ((lambda t: t.update(restored_hash="0" * 64), "restored_hash"), (lambda t: t.update(parent_hash="1" * 64), "parent_hash"),
+                        (lambda t: t.update(parent_histogram=[[8]]), "parent_histogram")):
+        bad = copy.deepcopy(rb)
+        mutate(bad["terrain_restore"])
+
+        with pytest.raises(TransferRefused, match=why):
+            st.compare_window1_receipts(ra, bad)
+
+    with pytest.raises(TransferRefused, match="EX-30 과 EX-31"):
+        st.compare_window1_receipts(ra, ra)
+    none_receipt = {k: v for k, v in rb.items() if k != "terrain_restore"}
+
+    with pytest.raises(TransferRefused, match="terrain_restore"):
+        st.compare_window1_receipts(ra, none_receipt)
+
+
+def test_window1_restore_refused_before_any_write_for_bad_parent_or_shape(parent_varied, tmp_path):
+    sd = torch.load(parent_varied["path"], weights_only=False)
+    sd["env_state"] = {"common_step_counter": 5}                                                                # 부모 env_state 에 지형이 없는 체크포인트
+    p = tmp_path / "noterrain" / "model_1.pt"
+    p.parent.mkdir()
+    (p.parent / "params").mkdir()
+    shutil.copy(Path(parent_varied["path"]).parent / "params" / "agent.yaml", p.parent / "params" / "agent.yaml")
+    torch.save(sd, p)
+    sha = file_sha256(p)
+
+    with pytest.raises(TransferRefused, match="terrain_levels"):
+        import_parent(p, TransferSpec(sha, "EX-30", "adaptive", 42, CUR, terrain_restore="parent_levels"), shapes=parent_varied["shapes"], allowed_parent_shas=(sha,))
+    small = _runner(Ex30Runner, tmp_path, False, "small")                                                       # env 수가 다른 runner(칸 4개)
+    small.env.scene.terrain.terrain_levels = torch.zeros(4, dtype=torch.long)
+    before = [x.clone() for x in small.alg.policy.parameters()]
+
+    with pytest.raises(TransferRefused, match="env 수"):
+        small.begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-30"), parent_varied["shapes"], parent_varied["allowed"])
+
+    assert all(torch.equal(x, y) for x, y in zip(before, small.alg.policy.parameters())) and small.stage_transfer is None and not small._transfer_broken
+    with pytest.raises(TransferRefused, match="terrain_restore"):
+        import_parent(parent_varied["path"], TransferSpec(parent_varied["sha"], "EX-30", "adaptive", 42, CUR, terrain_restore="all"), shapes=parent_varied["shapes"], allowed_parent_shas=parent_varied["allowed"])
+
+
+@pytest.mark.skipif(not REAL_PARENT.exists(), reason="실제 B 부모 없음")
+def test_real_parent_terrain_histogram_is_recorded_and_restore_hash_matches():
+    spec = TransferSpec(REAL_SHA, "EX-30", "adaptive", 42, CUR, terrain_restore="parent_levels")
+    result = import_parent(REAL_PARENT, spec)
+    t = result.receipt["terrain_restore"]
+    lv, ty = result.parent_terrain["terrain_levels"], result.parent_terrain["terrain_types"]
+
+    assert t["num_envs"] == lv.numel() == 3072 and sum(map(sum, t["parent_histogram"])) == 3072 and t["parent_hash"] == st.terrain_hash(lv, ty)
+
+
+def test_window1_pair_check_refuses_when_both_children_agree_on_a_wrong_restore(parent_varied, tmp_path):
+    ra = _runner(Ex30Runner, tmp_path, False, "a").begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-30"), parent_varied["shapes"], parent_varied["allowed"])
+    rb = _runner(Ex31Runner, tmp_path, True, "b").begin_from_parent(parent_varied["path"], _w1_spec(parent_varied, "EX-31"), parent_varied["shapes"], parent_varied["allowed"])
+    for r in (ra, rb):
+        r["terrain_restore"]["restored_hash"] = "9" * 64                                                            # 둘이 같은 엉뚱한 칸을 이어 받음
+
+    with pytest.raises(TransferRefused, match="부모와 다르다"):
+        st.compare_window1_receipts(ra, rb)
