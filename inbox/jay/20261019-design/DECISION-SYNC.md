@@ -22,7 +22,7 @@ GPU0 학습은 종료했고 GPU1은 최종 촬영 뒤 유휴다. 새 실험 미�
 | EXP-MAP · EX-28 카드 · RUN 원장 | 완료1501갱신·EX-29 보류 | 확인됨 |
 | SCHEDULE · AGENDA | 다음 설계 논의·Linux 시각 결정 전 | 확인됨 |
 | APPROVED-DIRECTION · gates · 설계 정본 | 새 규칙·수치·실행 결정 없음 | 변경 대상 아님 |
-| #555 | 최종 결과 게시와 되읽기 영수증을 별도로 연결 | 게시 전 |
+| #555 | [최종 결과6381990985](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6381990985)·[게시 영수증](../20261023-experiments/figs/ex28-u1500-review/publication_receipt.json) | 본문 되읽기·영상/zip 재다운로드 SHA 일치 |
 
 ## 이전 기록 · 10/24 1000번 중간 분석 완료
 
@@ -199,6 +199,7 @@ lead가 전달한 팀장 승인의 대상은 [#555 6319562769](https://github.co
 <!-- exp-sync:decision:v1 -->
 | 체크 | 결정 | APPROVED-DIRECTION | 설계 문서 | SCHEDULE-NOW | AGENDA-LEAD | gates | #555 |
 |---|---|---|---|---|---|---|---|
+| [x] | 10/24 B1500 완료·같은 회차 최종 분석 | 기존 직접 결정의 이행, 새 학습 승인 없음 | RESULT-B1500·RUN·MAP·EX28 카드·영상/원자료 SHA 확인 | B 완료·GPU 유휴·EX29 재개 보류 | 본류 두 판 설계 논의, 회전/GT-PRED/우리 요구 분리 | 봉인값 불변, 새 합격선 없음 | [결과6381990985](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6381990985), 원격 문서·영상·zip·댓글 대조 완료 |
 | [x] | 10/24 B1000 중간 판독·1500 자연 완료 | ZB 이전 질문·ZC 최신 직접 답 분리 | 과거 조건 분석·ASTRA24f·PLAN·RUN·MAP·EX28 카드. 고정 코드·설정 미변경 | B1000 촬영 후1500 최종 저장·자연 종료, EX29 보류 | 1000 종료 질문 해결, 다음 실험 미결정 | 봉인값 불변. 새 합격선 없음 | [분석6379475365](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6379475365)·[직접 답6379481102](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6379481102). 두 댓글은 줄바꿈 정규화 후 원문 일치 확인. 반영 표시는 문서 동기화이며 미래 촬영·종료 완료가 아님 |
 | [x] | 10/24 B500·EX29 200 분석 먼저, EX29 재개 보류 | ZA에 최신 직접 요청·229저장 보존 | RESULT-B500-EX29-200·PLAN·RUN·MAP·EX28/29 카드에 실제 원자료와 요구 불일치. 코드·설계 값은 미변경 | B 계속·EX29 보류·촬영6편 완료 | 결과 먼저 검토, 새 학습 자동 진행 없음 | 봉인값 불변. 새 합격선 없음 | [#555 댓글 6378262843](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6378262843)에 판독·영상·재개 보류 보고, UTF-8 본문 되읽기 일치. 500/200은 최종 수렴 판정 아님 |
 | [x] | 10/23 EX-28 B·EX-29 START-TD 두 판 준비 | Y에 팀장 직접 방향·우리 세부 선택·약24h와 기동 구분 | PLAN-B-START-TOPDOWN·개념 NOTE·EX28/29 카드. EX26/27 보류 번호 보존, ea664f1e·CPU39/24·ASTRA 최종16절 확인 | 최신 두 판·중간 증거·마감 보존과 미기동 상태 | 절대 마감·짧은 실제 예행·배경 소비 연결 필요 | 기존 봉인 유지. 이번 준비를 기존 관문 통과로 쓰지 않음 | [6364318422](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6364318422). 문서 반영 표시이며 실제 Kit·기동 완료 아님 |
