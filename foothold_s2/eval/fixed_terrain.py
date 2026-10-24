@@ -61,7 +61,7 @@ def describe(record: dict) -> str:
         groups: dict = {}
         for t in record["tiles"]:
             groups.setdefault((t["kind"], t["level"]), []).append(t["col"])
-        body = " + ".join(f"{k} 레벨 {lv} x {len(cs)} env(열 {','.join(str(c) for c in cs)})" for (k, lv), cs in groups.items())
+        body = " + ".join(f"{k} 레벨 {lv} x {len(cs)} env(열 {','.join(str(c) for c in dict.fromkeys(cs))})" for (k, lv), cs in groups.items())
 
         return f"고정 칸 · {body} · {record['num_envs']} env · 학습 분포(레벨 0~{record['rows'] - 1}) 대표 아님 · 배열 SHA {record['assignment_sha256'][:12]}"
     levels, types = fixed_assignment(record["num_envs"], record["rows"], record["cols"])

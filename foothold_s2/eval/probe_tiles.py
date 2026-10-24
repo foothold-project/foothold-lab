@@ -23,9 +23,11 @@ def column_names(sub_terrain_proportions: dict, num_cols: int) -> list[str]:
 
 
 def pick(names: list[str], num_envs: int = 4):
-    """names = 열 번호 -> 종류 이름. 반환: (levels, types, flat_kind, tiles). env 순서 = [평지 2, rough 2]."""
-    if num_envs != 4:
-        raise ValueError(f"probe 고정 칸은 4 env 용이다(받은 값 {num_envs})")
+    """names = 열 번호 -> 종류 이름. 반환: (levels, types, flat_kind, tiles). env 순서 = [평지 첫 열 x k, 평지 끝 열 x k, rough 첫 열 x k, rough 끝 열 x k], k = num_envs / 4.
+    4 의 배수 env 를 받는다(4 env 는 k=1 이라 예전 배치와 같다). 같은 칸의 env 들은 reset 때 spawn 이 서로 다르다."""
+    if num_envs < 4 or num_envs % 4:
+        raise ValueError(f"probe 고정 칸은 4 env 의 배수(4 env 용 배치를 칸마다 같은 수로 늘림)만 받는다(받은 값 {num_envs})")
+    per = num_envs // 4
     flat_kind = next((k for k in FLAT_PREFERENCE if k in names), None)
 
     if flat_kind is None:
@@ -36,9 +38,9 @@ def pick(names: list[str], num_envs: int = 4):
     for kind, cs in ((flat_kind, flat_cols), (ROUGH, rough_cols)):
         if len(cs) < 2:
             raise ValueError(f"{kind} 열이 2 개 미만이다: {cs}")
-    types = np.array([flat_cols[0], flat_cols[-1], rough_cols[0], rough_cols[-1]], dtype=np.int64)
-    levels = np.full(4, LEVEL, dtype=np.int64)
-    tiles = [{"env": i, "kind": names[int(types[i])], "level": int(levels[i]), "col": int(types[i])} for i in range(4)]
+    types = np.repeat(np.array([flat_cols[0], flat_cols[-1], rough_cols[0], rough_cols[-1]], dtype=np.int64), per)
+    levels = np.full(num_envs, LEVEL, dtype=np.int64)
+    tiles = [{"env": i, "kind": names[int(types[i])], "level": int(levels[i]), "col": int(types[i])} for i in range(num_envs)]
 
     return levels, types, flat_kind, tiles
 

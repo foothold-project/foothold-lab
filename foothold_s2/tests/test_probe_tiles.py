@@ -33,7 +33,7 @@ def test_a_real_flat_column_is_preferred_and_a_layout_without_either_is_refused(
     with pytest.raises(ValueError, match="2 개 미만"):
         PT.pick(["hf_pyramid_slope", "hf_pyramid_slope", "random_rough"])
     with pytest.raises(ValueError, match="4 env"):
-        PT.pick(PT.column_names(CONT, 23), 64)
+        PT.pick(PT.column_names(CONT, 23), 6)
 
 
 def test_record_names_the_kinds_and_says_when_flat_is_only_a_gentle_slope():
@@ -87,3 +87,22 @@ def test_the_unnamed_formula_describe_is_unchanged_for_the_64_env_fixed_layout()
     rec = {"rows": 10, "cols": 23, "levels_used": 3, "num_envs": 64, "assignment_sha256": "ab" * 32}
 
     assert ft.describe(rec).startswith("고정 칸 · 레벨 0~2 만(64 env 배치 23/23/18) · 종류 = env 번호 % 23 열")
+
+
+def test_16_envs_put_the_same_number_of_envs_on_each_of_the_four_columns_and_keep_the_4_env_column_set():
+    names = PT.column_names(CONT, 23)
+    l4, t4, fk4, tl4 = PT.pick(names, 4)
+    l16, t16, fk16, tl16 = PT.pick(names, 16)
+
+    assert t16.tolist() == [18] * 4 + [19] * 4 + [14] * 4 + [17] * 4 and l16.tolist() == [0] * 16 and fk16 == fk4
+    assert set(t16.tolist()) == set(t4.tolist()) and [t["env"] for t in tl16] == list(range(16)) and sum(t["kind"] == "random_rough" for t in tl16) == 8
+    assert all(names[t["col"]] == t["kind"] for t in tl16)
+    assert ft.assignment_sha256(*PT.pick(names, 16)[:2]) == ft.assignment_sha256(*PT.pick(names, 16)[:2])                     # 결정적
+    assert ft.assignment_sha256(l16, t16) != ft.assignment_sha256(l4, t4)
+    line = ft.describe(PT.record(l16, t16, fk16, tl16, 10, 23))
+
+    assert "hf_pyramid_slope 레벨 0 x 8 env(열 18,19)" in line and "random_rough 레벨 0 x 8 env(열 14,17)" in line and "16 env" in line
+    with pytest.raises(ValueError, match="4 env"):
+        PT.pick(names, 10)
+    with pytest.raises(ValueError, match="4 env"):
+        PT.pick(names, 0)
