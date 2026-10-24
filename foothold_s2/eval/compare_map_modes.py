@@ -30,6 +30,8 @@ def check_same_conditions(results: dict) -> None:
         for key in ("task", "envs", "steps", "dr_off", "curriculum_off"):
             if r[key] != first[key]:
                 raise ValueError(f"{name} 의 {key} 가 {names[0]} 와 다르다: {r[key]!r} != {first[key]!r}")
+        if r.get("fixed_terrain") != first.get("fixed_terrain"):
+            raise ValueError(f"{name} 의 fixed_terrain 이 {names[0]} 와 다르다: {r.get('fixed_terrain')!r} != {first.get('fixed_terrain')!r}")
         if set(r["terrain_hash"].values()) != hashes:
             raise ValueError(f"{name} 의 지형 해시가 {names[0]} 와 다르다")
         if list(r["modes"]) != list(first["modes"]) or any(list(r["modes"][m]) != list(first["modes"][m]) for m in first["modes"]):
@@ -48,6 +50,8 @@ def check_reference(results: dict, ref: dict) -> None:
     for key in ("envs", "steps", "dr_off", "curriculum_off"):
         if ref[key] != first[key]:
             raise ValueError(f"참조 열의 {key} 가 다르다: {ref[key]!r} != {first[key]!r}")
+    if ref.get("fixed_terrain") != first.get("fixed_terrain"):
+        raise ValueError("참조 열의 fixed_terrain 이 다르다: %r != %r" % (ref.get("fixed_terrain"), first.get("fixed_terrain")))
     if set(ref["terrain_hash"].values()) != set(first["terrain_hash"].values()):
         raise ValueError("참조 열의 지형 해시가 다르다")
     if list(ref["modes"]["none"]) != list(first["modes"][next(iter(first["modes"]))]):

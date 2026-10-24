@@ -27,6 +27,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
+parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -45,7 +46,7 @@ import isaaclab_tasks  # noqa: E402,F401
 import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task FootholdS2-Go2-S2-X23-v0)
 import foothold_s2.x23f_tasks  # noqa: E402,F401
-from foothold_s2.eval import adapters  # noqa: E402
+from foothold_s2.eval import adapters, fixed_terrain  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -84,7 +85,7 @@ dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
 S = args.steps
-res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "terrain_hash": {}, "modes": {}}
+res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_hash": {}, "modes": {}}
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -111,6 +112,14 @@ for mode in args.modes.split(","):
         torch.manual_seed(42)
         env.reset()
         terrain = raw.scene.terrain
+
+        if args.fixed_terrain:
+            res["fixed_terrain"] = fixed_terrain.apply(raw)
+            env.reset()                                                                  # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
+            lv, ty = fixed_terrain.fixed_assignment(env.num_envs, res["fixed_terrain"]["rows"], res["fixed_terrain"]["cols"])
+
+            if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
+                raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
         th = hashlib.sha256(terrain.terrain_levels.cpu().numpy().tobytes() + terrain.terrain_types.cpu().numpy().tobytes()).hexdigest()
         res["terrain_hash"]["%s/%s" % (mode, cname)] = th
         ref = res["terrain_hash"][next(iter(res["terrain_hash"]))]
