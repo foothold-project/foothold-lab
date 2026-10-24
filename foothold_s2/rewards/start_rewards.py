@@ -93,6 +93,20 @@ def track_lin_vel_min_form(env, command_name, std, asset_cfg=SceneEntityCfg("rob
     return torch.exp(-torch.sum((torch.minimum(asset.data.root_lin_vel_b[:, :2], cmd) - cmd) ** 2, dim=-1) / std ** 2)
 
 
+def calf_ext_limit_band(env, asset_cfg=SceneEntityCfg("robot", joint_names=".*_calf_joint"), margin=core.CALF_BAND_MARGIN):
+    """종아리 펴짐 한계 띠 (창 3 처방 후보 1축): 네 calf 의 sum max(0, q - (hard 상한 - margin)). hard 상한은 시뮬레이터(data.joint_pos_limits)에서 읽고 상수로 박지 않는다.
+    부호는 가중치가 정한다(음수 가중치 = 벌점). `calf_ext_limit_band_term` 으로 붙이면 기본 가중치 0(꺼짐)이다."""
+    asset = env.scene[asset_cfg.name]
+    ids = asset_cfg.joint_ids
+
+    return core.calf_extension_band(asset.data.joint_pos[:, ids], asset.data.joint_pos_limits[:, ids, 1], margin)
+
+
+def calf_ext_limit_band_term(weight=core.CALF_BAND_WEIGHT_OFF, margin=core.CALF_BAND_MARGIN):
+    """task cfg 에 `self.rewards.calf_ext_limit_band = calf_ext_limit_band_term(weight=-2.0)` 로 붙인다. 가중치를 안 주면 0 이라 꺼져 있다."""
+    return RewTerm(func=calf_ext_limit_band, weight=weight, params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_calf_joint"), "margin": margin})
+
+
 @configclass
 class StartRewardsCfg:
     """16 §1 의 14 항. 가중치는 `core.WEIGHTS` (S1 은 발 가장자리 0)."""

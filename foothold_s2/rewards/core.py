@@ -133,3 +133,15 @@ def foot_edge_penalty_tiles(feet_xy, contact, inner_all, outer_all, level, col, 
     outer = outer_all[lv, cl, ix, iy].float() * ok.float()
 
     return torch.sum(contact.float() * (EDGE_OMEGA[0] * inner + EDGE_OMEGA[1] * outer), dim=-1)
+
+
+# 종아리 펴짐 한계 띠 (창 3 처방 후보 1축, 초안 DESIGN-W3 §3.1). 이 값은 «양의 크기»이고 부호는 cfg 가중치가 정한다(다른 벌점 항과 같은 규약).
+# 기본 가중치 0 = 꺼짐: Isaac Lab RewardManager 는 weight == 0 인 항을 계산하지 않는다(설치 reward_manager.py).
+CALF_BAND_MARGIN = 0.05
+CALF_BAND_WEIGHT_OFF = 0.0
+
+
+def calf_extension_band(q_calf, hard_hi, margin=CALF_BAND_MARGIN):
+    """q_calf [N,4] 종아리 네 관절각, hard_hi [N,4] 또는 [4] 시뮬레이터가 아는 hard 상한. 반환 [N] = sum_j max(0, q_j - (hard_hi_j - margin)).
+    펴진 쪽(상한)만 본다. 하한 쪽은 0."""
+    return torch.clamp(q_calf - (hard_hi - margin), min=0.0).sum(dim=-1)
