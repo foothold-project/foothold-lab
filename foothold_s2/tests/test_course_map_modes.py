@@ -150,3 +150,14 @@ def test_env_var_selects_the_mode(monkeypatch):
     S2Policy(r, 8)(_obs(env))
 
     assert _values(seen[-1]) == {PRED_CONST}
+
+
+def test_mask_is_cleared_when_the_same_runner_is_reused_for_another_mode():
+    r, env, seen = _runner(True)
+    S2Policy(r, 8, map_mode="probe_prop_only")
+
+    assert r.perception.ie.mask_map_tokens is True
+    for mode in ("eval_gt", "eval_pred", None):
+        S2Policy(r, 8, map_mode=mode)
+
+        assert r.perception.ie.mask_map_tokens is False, mode

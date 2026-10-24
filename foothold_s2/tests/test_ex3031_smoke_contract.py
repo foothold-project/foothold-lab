@@ -191,3 +191,35 @@ def test_eval_curriculum_off_matches_the_real_b_env_terms():
 
     assert "self.curriculum.terrain_levels = CurrTerm(" in cfg and "command_range" in base
     assert "curriculum" not in SCRIPT.read_text(encoding="utf-8")
+
+
+def test_eval_asserts_the_dr_list_and_clears_the_probe_mask_at_the_end_of_each_mode():
+    src = EVAL.read_text(encoding="utf-8")
+
+    assert 'EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]' in src and "sorted(dr_off) != sorted(EXPECTED_DR_OFF)" in src
+    assert src.index("EXPECTED_DR_OFF") < src.index("gym.make(")
+    assert "runner.perception.ie.mask_map_tokens = False" in src
+
+
+def test_real_b_env_events_contain_exactly_the_two_dr_names_the_eval_turns_off():
+    """B env 의 실제 이벤트 이름(부모 params/env.yaml)을 기대값과 대조: 평가 스크립트가 끄는 DR 이름 일곱 중 B 에 있는 것은 이 둘뿐."""
+    env_yaml = c.PARENT_PATH.parent / "params" / "env.yaml"
+    if not env_yaml.exists():
+        pytest.skip("실제 B 부모 없음")
+    from foothold_s2.runners.stage_transfer import load_dumped_yaml
+
+    events = {k for k, v in load_dumped_yaml(env_yaml)["events"].items() if v is not None}                 # 덤프에는 꺼진 이벤트가 null 로 남는다
+    candidates = {"actuator_gains", "motor_strength", "physics_material", "add_base_mass", "base_com", "push_robot", "base_external_force_torque"}
+
+    assert events & candidates == {"physics_material", "add_base_mass"}
+
+
+def test_smoke_script_records_physics_and_evidence_and_checks_dumped_cfg_against_the_parent():
+    src = SCRIPT.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    calls = {ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)}
+
+    assert {"record_realized_physics", "StepEvidence", "check_dumped_cfg_against_parent", "yaml_pair_diff", "save_material_array"} <= calls
+    assert "evidence=evidence" in src and src.index("record_realized_physics(gym_env") < src.index("RslRlVecEnvWrapper(gym_env")
+    assert src.index("check_dumped_cfg_against_parent(log_dir") < src.index("runner.learn(")
+    assert 'allowed_paths=("perception.force_gt",)' in src and "cfg_pair_diff.json" in src

@@ -6,11 +6,13 @@
 import copy
 import dataclasses
 import os
+import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 import torch
+import yaml
 
 from foothold_s2.runners import stage_transfer as st
 from foothold_s2.runners.course_runner import Ex30Runner, Ex31Runner
@@ -40,9 +42,13 @@ def _env(seed=42, counter=0, level=0):
     return env
 
 
-def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, level=0):
+def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, level=0, algo=None, from_parent_agent=False):
     cfg = train_cfg(4, pcfg if pcfg is not None else _pcfg(force_gt))
     cfg["save_interval"] = 1000
+
+    if from_parent_agent:
+        cfg.update(copy.deepcopy({k: v for k, v in st.load_parent_agent_cfg(REAL_PARENT)[0].items() if k in st.AGENT_CFG_KEYS}))
+    cfg["algorithm"].update(algo or {})
 
     return cls(_env(seed, counter, level), cfg, log_dir=str(tmp_path / name), device="cpu")
 
@@ -56,6 +62,8 @@ def parent(tmp_path_factory):
     path = tmp / "b" / "model_1.pt"
 
     assert path.exists()
+    (tmp / "b" / "params").mkdir()
+    (tmp / "b" / "params" / "agent.yaml").write_text(yaml.safe_dump({k: r.cfg[k] for k in st.AGENT_CFG_KEYS if k in r.cfg}), encoding="utf-8")        # 실제 부모 폴더의 params/agent.yaml 자리
     sd = torch.load(path, weights_only=False)
 
     return {"path": path, "sha": file_sha256(path), "iter": sd["iter"], "allowed": (file_sha256(path),), "shapes": {"std": tuple(sd["model_state_dict"]["std"].shape),
@@ -460,7 +468,7 @@ def test_real_parent_pcfg_through_both_children_and_one_update(tmp_path, monkeyp
     for cls, exp in ((Ex30Runner, "EX-30"), (Ex31Runner, "EX-31")):
         gt = exp == "EX-31"
         spec = TransferSpec(REAL_SHA, exp, st.EXPERIMENT_MAP[exp], 42, CUR)
-        r = _runner(cls, tmp_path, gt, exp, pcfg={**real, "force_gt": gt})
+        r = _runner(cls, tmp_path, gt, exp, pcfg={**real, "force_gt": gt}, from_parent_agent=True)                      # PPO · 정책 cfg 도 실제 부모 params/agent.yaml 그대로
         r.begin_from_parent(REAL_PARENT, spec)
 
         assert r.pcfg["contract"] == "start" and r.pcfg["force_gt"] is gt and r.current_learning_iteration == 1500
@@ -482,6 +490,7 @@ def test_parent_depth_delay_recorded_in_sol23f_must_match_the_child(parent, tmp_
     sd["sol23f"]["depth_delay_ticks"] = 0
     p = tmp_path / "delay0_parent.pt"
     torch.save(sd, p)
+    shutil.copy(Path(parent["path"]).parent / "params" / "agent.yaml", (tmp_path / "params").mkdir() or tmp_path / "params" / "agent.yaml")
     sha = file_sha256(p)
 
     with pytest.raises(TransferRefused, match="depth_delay_ticks"):
@@ -496,3 +505,69 @@ def test_iteration_number_must_equal_start_plus_finished_updates(parent, tmp_pat
 
     with pytest.raises(TransferRefused, match="다르다"):
         r.state_dict()
+
+
+# ------------------------------------------------------------------ PPO · 정책 cfg 를 부모 params/agent.yaml 과 대조 (reviewer d1c22796 막음)
+@pytest.mark.parametrize("algo", [{"entropy_coef": 0.1}, {"num_learning_epochs": 1}, {"clip_param": 0.3}, {"gamma": 0.9}])
+def test_ppo_cfg_different_from_the_parent_agent_yaml_is_refused(parent, tmp_path, algo):
+    r = _runner(Ex30Runner, tmp_path, False, algo=algo)
+
+    with pytest.raises(TransferRefused, match="agent.yaml"):
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+    assert r.current_learning_iteration == 0 and not getattr(r, "_transfer_broken", False)                            # 쓰기 전에 거절: 가중치도 번호도 그대로
+
+
+def test_num_steps_and_policy_cfg_differences_are_refused_and_operational_keys_are_not_compared(parent, tmp_path):
+    r = _runner(Ex31Runner, tmp_path, True)
+    r.cfg["run_name"], r.cfg["max_iterations"], r.cfg["save_interval"] = "other", 7, 3                                   # 운영 칸은 달라도 통과
+
+    r.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
+
+    r2 = _runner(Ex30Runner, tmp_path, False, "r2")
+    r2.policy_cfg["init_noise_std"] = 0.5
+
+    with pytest.raises(TransferRefused, match="agent.yaml"):
+        r2.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+
+def test_missing_parent_agent_yaml_is_refused(parent, tmp_path):
+    d = tmp_path / "noyaml"
+    d.mkdir()
+    shutil.copy(parent["path"], d / "model_1.pt")
+
+    with pytest.raises(TransferRefused, match="agent.yaml"):
+        import_parent(d / "model_1.pt", _spec(parent), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
+
+
+@pytest.mark.skipif(not REAL_PARENT.exists(), reason="실제 B 부모 없음")
+def test_real_parent_agent_yaml_matches_b_hyperparameters_and_detects_the_two_reviewer_counterexamples():
+    parent_agent, _ = st.load_parent_agent_cfg(REAL_PARENT)
+
+    assert parent_agent["algorithm"]["entropy_coef"] == 0.01 and parent_agent["algorithm"]["num_learning_epochs"] == 5 and parent_agent["num_steps_per_env"] == 24
+    assert st.agent_cfg_diffs(parent_agent, copy.deepcopy(parent_agent)) == {}
+    for key, val in (("entropy_coef", 0.1), ("num_learning_epochs", 1)):
+        bad = copy.deepcopy(parent_agent)
+        bad["algorithm"][key] = val
+
+        assert list(st.agent_cfg_diffs(parent_agent, bad)) == ["algorithm"]
+
+    ops = copy.deepcopy(parent_agent)
+    ops.update({"run_name": "x", "max_iterations": 10, "save_interval": 5, "device": "cuda:1"})
+    ops["policy"]["class_name"] = "StartActorCritic"
+
+    assert st.agent_cfg_diffs(parent_agent, ops) == {}
+
+
+@pytest.mark.skipif(not REAL_PARENT.exists(), reason="실제 B 부모 없음")
+def test_dumped_yaml_pair_diff_counts_only_non_operational_differences(tmp_path):
+    env_yaml = REAL_PARENT.parent / "params" / "env.yaml"
+    same = tmp_path / "env.yaml"
+    same.write_text(env_yaml.read_text(encoding="utf-8").replace("2026-10-24_06-52-56_ex28-b-main", "NEW-RUN"), encoding="utf-8")        # log_dir 만 다른 사본
+
+    assert st.yaml_pair_diff(env_yaml, same) == {}
+    changed = tmp_path / "env2.yaml"
+    changed.write_text(env_yaml.read_text(encoding="utf-8").replace("seed: 42", "seed: 43", 1), encoding="utf-8")
+    diff = st.yaml_pair_diff(env_yaml, changed)
+
+    assert diff == {"seed": (42, 43)} and st.yaml_pair_diff(env_yaml, changed, allowed_paths=("seed",)) == {}

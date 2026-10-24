@@ -432,7 +432,11 @@ class S2Policy:
         if self.map_mode == "probe_prop_only":
             if not runner.perception.ie.use_map:
                 raise ValueError("probe_prop_only 는 지도 토큰이 있는 체크포인트에만 쓴다")
-            runner.perception.ie.mask_map_tokens = True
+
+        ie = getattr(runner.perception, "ie", None)
+
+        if ie is not None:
+            ie.mask_map_tokens = self.map_mode == "probe_prop_only"            # 같은 runner 를 다른 모드로 다시 쓸 때 마스크가 새어 들지 않게 매번 설정한다
 
         gt = {"eval_gt": True, "eval_pred": False, "probe_prop_only": False}.get(self.map_mode, runner.perception.cfg.force_gt)
         self.pstate.use_gt = torch.full((n,), gt, dtype=torch.bool, device=runner.device)

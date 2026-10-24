@@ -62,6 +62,10 @@ if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
     env_cfg.actions.joint_pos.max_delay_s = 0.0
     dr_off.append("action_delay")
 
+EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다
+if sorted(dr_off) != sorted(EXPECTED_DR_OFF):
+    raise RuntimeError("꺼진 DR 목록 %r 이 기대 %r 와 다르다" % (dr_off, EXPECTED_DR_OFF))
+
 curriculum_off = []
 
 for name in ("terrain_levels", "command_range"):                      # 부모 B 의 curriculum 이 켜져 있으면 reset 마다 지형 행이 직전 성적으로 오르내려 모드끼리 다른 지형에서 평가된다
@@ -150,6 +154,8 @@ for mode in args.modes.split(","):
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
+
+    runner.perception.ie.mask_map_tokens = False                                          # 모드가 끝나면 진단 마스크를 되돌린다
 
 os.makedirs(args.out, exist_ok=True)
 json.dump(res, open(os.path.join(args.out, "map_modes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)

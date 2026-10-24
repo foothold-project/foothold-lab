@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import torch
+import yaml
 
 from foothold_s2.runners.manifest import state_sha
 
@@ -30,6 +31,8 @@ TREATMENT_PCFG_KEYS = ("force_gt",)                                  # 부모와
 OPERATIONAL_KEYS = ("experiment_id", "run_name", "log_dir", "extra_updates", "deadline")           # 부모와 달라도 되는 운영 칸. 이 밖의 지각/학습/환경 칸은 부모와 같아야 한다(T2/T3 에서 바꿀 칸은 근거와 함께 여기에 명시적으로 더한다)
 EXPERIMENT_MAP = {"EX-30": "adaptive", "EX-31": "gt"}                # 실험 번호 -> 지도 처치. 둘이 어긋나면 거절
 B_SHAPES = {"std": (12,), "actor.0.weight": (512, 96), "actor.6.weight": (12, 128), "critic.0.weight": (512, 664)}      # 부모 B 의 실제 forward 모양(10/25 CPU 읽기)
+AGENT_CFG_KEYS = ("policy", "algorithm", "num_steps_per_env", "clip_actions", "empirical_normalization")      # 부모 params/agent.yaml 과 같아야 하는 학습 cfg. 운영 칸(run_name · max_iterations · save_interval · device · logger · resume · load_*)은 빠진다. obs_groups 는 runner 가 풀어 쓰므로 비교하지 않는다
+AGENT_IGNORE_SUBKEYS = ("class_name",)                                  # runner 가 정책 class_name 을 pop 해 쓰므로 양쪽에서 뺀다
 EXPLICIT_RESET_FIELDS = ("env_state", "rng", "episode_rnn_history", "adasmpl.stats", "adasmpl.force_gt", "course_stage_P0", "iteration_counters", "child_new_updates")
 
 
@@ -68,6 +71,7 @@ class TransferResult:
     parent_perception_cfg: dict = field(default_factory=dict)
     parent_depth_delay_ticks: int | None = None
     parent_map_input: str | None = None
+    parent_agent_cfg: dict | None = None
 
 
 def file_sha256(path) -> str:
@@ -112,7 +116,7 @@ def child_meta(spec: TransferSpec, parent_iter: int, current_iter: int) -> dict:
             "total_completed_updates": int(current_iter) + 1}
 
 
-def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: dict | None = None, allowed_parent_shas=None) -> TransferResult:
+def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: dict | None = None, allowed_parent_shas=None, require_agent_yaml: bool = True) -> TransferResult:
     parent_path = Path(parent_path)
     shapes = B_SHAPES if shapes is None else shapes
     allowed = ALLOWED_PARENT_SHA256 if allowed_parent_shas is None else tuple(allowed_parent_shas)
@@ -167,6 +171,7 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
     pcfg["force_gt"] = spec.map_policy == "gt"
     ada = {"p": 1.0, "count": 0.0, "sum": 0.0, "sumsq": 0.0, "force_gt": spec.map_policy == "gt"}
     std = [float(x) for x in model["std"].detach().cpu().flatten()] if "std" in model else None
+    parent_agent, agent_sha = load_parent_agent_cfg(parent_path) if require_agent_yaml else (None, None)
     sha_after = file_sha256(parent_path)
 
     if sha_after != sha_before:
@@ -178,12 +183,85 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
                "perception_learning_rate": float(popt["param_groups"][0]["lr"]), "action_std": std,
                "state_sha": {"model": state_sha(model), "optimizer": state_sha(opt), "perception": state_sha(perc), "perception_optimizer": state_sha(popt)},
                "explicit_reset_fields": list(EXPLICIT_RESET_FIELDS), "child_perception_cfg_force_gt": pcfg["force_gt"], "shapes_checked": {k: list(v) for k, v in shapes.items()},
-               "parent_env_state_discarded": sorted(sd.get("env_state", {}).keys())}
+               "parent_env_state_discarded": sorted(sd.get("env_state", {}).keys()), "parent_agent_yaml_sha256": agent_sha}
 
     return TransferResult(model_state=model, optimizer_state=opt, ppo_learning_rate=float(sd["ppo_learning_rate"]), perception_state=perc, perception_optimizer_state=popt,
                           perception_learning_rate=float(popt["param_groups"][0]["lr"]), perception_cfg=pcfg, adasmpl_state=ada, normalizers=_normalizers(model, perc),
                           parent_iter=parent_iter, parent_completed_updates=parent_iter + 1, new_completed_updates=0, explicit_reset_fields=EXPLICIT_RESET_FIELDS, receipt=receipt,
-                          parent_perception_cfg=dict(sd["perception_cfg"]), parent_depth_delay_ticks=own.get("depth_delay_ticks"), parent_map_input=own.get("map_input"))
+                          parent_perception_cfg=dict(sd["perception_cfg"]), parent_depth_delay_ticks=own.get("depth_delay_ticks"), parent_map_input=own.get("map_input"), parent_agent_cfg=parent_agent)
+
+
+def _norm(obj):
+    """튜플 · 리스트 · 숫자 표기를 같은 모양으로(JSON 왕복)."""
+    return json.loads(json.dumps(obj, sort_keys=True, default=str))
+
+
+def load_parent_agent_cfg(parent_path) -> tuple[dict, str]:
+    """부모 실행 폴더의 params/agent.yaml. 없으면 거절한다(PPO · 정책 cfg 를 대조할 근거가 없다)."""
+    path = Path(parent_path).parent / "params" / "agent.yaml"
+
+    if not path.is_file():
+        raise TransferRefused(f"부모 실행 폴더에 params/agent.yaml 이 없어 PPO · 정책 cfg 를 대조할 수 없다: {path}")
+
+    return yaml.safe_load(path.read_text(encoding="utf-8")), file_sha256(path)
+
+
+def agent_cfg_diffs(parent_agent: dict, child_cfg: dict) -> dict:
+    """부모 agent.yaml 과 자식 train_cfg 의 학습 cfg(algorithm · policy · 롤아웃 길이 등) 차이. 운영 칸은 AGENT_CFG_KEYS 에 없어 보지 않는다."""
+    def clean(cfg, key):
+        v = cfg.get(key)
+
+        if isinstance(v, dict):
+            v = {k: x for k, x in v.items() if k not in AGENT_IGNORE_SUBKEYS}
+
+        return _norm(v)
+
+    return {k: (clean(parent_agent, k), clean(child_cfg, k)) for k in AGENT_CFG_KEYS if clean(parent_agent, k) != clean(child_cfg, k)}
+
+
+class _PyTupleLoader(yaml.SafeLoader):
+    pass
+
+
+_PyTupleLoader.add_constructor("tag:yaml.org,2002:python/tuple", lambda loader, node: list(loader.construct_sequence(node)))
+
+
+def _python_tag(loader, suffix, node):
+    """isaaclab dump_yaml 이 쓰는 그 밖의 python 태그(slice 등)는 태그 이름과 내용을 그대로 담은 값으로 읽어 비교만 한다(객체를 만들지 않는다)."""
+    if isinstance(node, yaml.SequenceNode):
+        value = loader.construct_sequence(node, deep=True)
+    elif isinstance(node, yaml.MappingNode):
+        value = loader.construct_mapping(node, deep=True)
+    else:
+        value = loader.construct_scalar(node)
+
+    return {"__python_tag__": suffix, "value": value}
+
+
+_PyTupleLoader.add_multi_constructor("tag:yaml.org,2002:python/", _python_tag)
+
+
+def load_dumped_yaml(path) -> dict:
+    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_PyTupleLoader)
+
+
+def yaml_pair_diff(parent_path, child_path, allowed_paths=(), ignore_names=("log_dir", "device")) -> dict:
+    """부모 · 자식 덤프 yaml 의 잎 단위 차이. ignore_names 는 이름(마지막 키)이 같은 운영 칸, allowed_paths 는 점으로 이은 경로(처치 칸)."""
+    def leaves(obj, prefix=""):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                yield from leaves(v, f"{prefix}.{k}" if prefix else str(k))
+        else:
+            yield prefix, _norm(obj)
+
+    a, b = dict(leaves(load_dumped_yaml(parent_path))), dict(leaves(load_dumped_yaml(child_path)))
+    out = {}
+
+    for k in sorted(set(a) | set(b)):
+        if a.get(k, "<없음>") != b.get(k, "<없음>") and k.split(".")[-1] not in ignore_names and k not in allowed_paths:
+            out[k] = (a.get(k, "<없음>"), b.get(k, "<없음>"))
+
+    return out
 
 
 def unexpected_cfg_diffs(parent_pcfg: dict, child_pcfg: dict, defaults: dict) -> dict:
@@ -217,6 +295,12 @@ def apply_transfer(runner, result: TransferResult, spec: TransferSpec) -> None:
 
     if diffs:
         raise TransferRefused(f"부모와 달라도 되는 칸(처치 {TREATMENT_PCFG_KEYS} · 운영 {OPERATIONAL_KEYS}) 밖의 cfg 가 다르다: {diffs}")
+
+    if result.parent_agent_cfg is not None:
+        agent_diffs = agent_cfg_diffs(result.parent_agent_cfg, runner.cfg)
+
+        if agent_diffs:
+            raise TransferRefused(f"부모 params/agent.yaml 과 다른 PPO · 정책 cfg(운영 칸 제외): {agent_diffs}")
 
     if result.parent_depth_delay_ticks is not None and runner.perception.cfg.depth_delay_ticks != result.parent_depth_delay_ticks:
         raise TransferRefused(f"depth_delay_ticks 부모 {result.parent_depth_delay_ticks} 자식 {runner.perception.cfg.depth_delay_ticks}")
