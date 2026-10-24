@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 정리) · 2026-10-25
 > 근거: 팀장 10/25 「2 번 이상 말하거나 금지하거나 요구하는 것은 실험 규칙에 쌓아서 다른 세션들도 바라볼 수 있게 · claude, codex 둘 다 · 한곳에」 · EXPERIMENT-RULES 1.4 · LEAD-STYLE-AGENTS · mai-os AGENTS.md
 > 요지: Claude · Codex 모든 세션이 처음 여는 규칙 입구. 세션 역할 · 운영 · 실험 · 영상 렌더 · 승인 원장을 여기서 찾아간다.
-> 상태: v1.0 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
+> 상태: v1.1 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
 
 # 규칙 입구 (Claude · Codex 공용)
 
@@ -28,15 +28,15 @@
 | super2 | Claude | 시스템: mai-watch · 한도 지킴이 · 세션 기록 · Linux 이전 (Claude 쪽) | 실험 판단 |
 | lead_tmp · sol · astra2 · luna · pipeline | Codex | 10/25 Codex 한도 94 % 로 대기. lead_tmp 는 luna 로 낮춤. pipeline 은 Linux 이전 (Codex 쪽) | 새 일 (한도 보존) |
 
-세션 사이 전달: `cd C:/mai/mai-tools/tools/mai-resume && python -m mai_resume send --to <터미널> --wait N --text "..."` ("sent" 가 나와야 전달) 또는 `orca terminal send --terminal <터미널> --enter --text "..."`. 받는 창 입력줄의 회색 제안 문장 때문에 mai_resume 가 「입력 중」 으로 보고 못 보낼 때가 있다 (10/25) → orca 로 넣고 화면에서 턴 시작을 확인한다.
+세션 사이 전달: `cd C:/mai/mai-tools/tools/mai-resume && python -m mai_resume send --to <터미널> --wait N --text "..."` 하나만 쓴다 ("sent" 가 나와야 전달). **`orca terminal send --enter` 로 직접 넣지 않는다**: 10/20 그 명령이 팀장이 치던 글 뒤에 보고를 붙인 사고가 있었다 (mai-os `os/tool-hazards.md`, 고칠 일 mai-os#51). 받는 창 입력줄의 회색 제안 문장 때문에 「입력 중」 으로 보여 못 보내면 `--wait` 를 늘린다. 받는 창이 Claude 이고 사람이 없을 때만 Esc 로 지우는 방법이 있다. (10/25 lead 가 orca 직접 넣기를 여러 번 썼다. 이 규칙으로 멈춘다.)
 
 ## 2. 운영 규칙 (무인 · 한도 · 깨우기)
 
-- 한도 지킴이: `~/.mai/limit-guard` 가 Claude · Codex 한도를 재고, `~/.mai/resume/targets.txt` 의 세션에 캐시 유지 · 재개 신호를 보낸다. 새 세션은 super2 에게 한 줄 추가를 부탁한다.
+- 한도 지킴이 = 예약 작업 **mai-resume** (vfxpedia/mai-tools `tools/mai-resume`, 상태 `~/.mai/resume/`). `~/.mai/limit-guard` 는 10/20 시제품이며 쓰지 않는다. 계기판이 쓴 `~/.mai/limits.json` 을 읽어 5 시간 93 % · 주간 98 % 에서 마무리 신호, 주간 85~97 % 는 계속 알림, 낡은 값은 알림만. 풀리면 멈춘 일만 재개 신호. Claude 창은 55 분 쉬면 캐시 유지 신호 (한도에 걸린 동안은 안 보냄). 대상은 `~/.mai/resume/targets.txt` (창 handle 앞 8 자리, 1 분마다 다시 읽음, 재시작 필요 없음). 창을 닫고 새로 열면 handle 이 바뀌니 다시 적는다. 새 세션은 super2 에게 부탁한다.
 - lead 는 긴 일을 시작하면 20 분 안팎 반복 점검 예약을 건다. 점검은 GPU 두 장 · 실행 생존 · 회신 · 질문을 보고 바뀐 것이 없으면 한 줄로 끝낸다.
-- mai-watch 대시보드는 `~/.mai/sessions/*.json` 중 24 시간 안에 갱신된 세션을 보여 준다. 세션 이름은 Claude 의 `/rename` 이 정본이다.
+- mai-watch 대시보드는 `~/.mai/sessions/*.json` 중 24 시간 안에 갱신된 세션을 보여 준다. 세션 이름은 Claude 창은 `/rename` 이 정본이고, Codex 창은 세션 기록 파일의 name 을 super2 가 고친다.
 - 무인 사슬 실행기는 팀장 지시로 꺼져 있다. 다시 켜는 것은 팀장 승인.
-- GPU1 은 화면용 GPU 다. 촬영은 cuda:0, GPU1 은 학습만. GPU1 여유가 1 GB 미만이면 화면 쪽 사용을 줄여 달라고 팀장에게 알린다 (10/25 창 1: 15.2 / 16 GB).
+- GPU1 은 화면용 GPU 다. 촬영은 cuda:0. GPU1 에 학습을 띄우려면 **기동 전 여유 3 GB 이상**을 조건으로 한다. 10/25 창 1 의 EX-31 (3072 env) 은 GPU1 15.2 / 16.3 GB 에서 메모리가 넘쳐 갱신 1 회가 34 초 → 226 초로 느려졌다 (Windows 의 GPU 메모리 페이징 추정, 10/23 480 초/회와 같은 모양).
 - Claude · Codex 한도 숫자는 계기판 표시가 「실제 사용량」 과 「지금 속도면」 예측 둘이다. 보고에는 어느 것인지 밝힌다 (10/25 lead 가 예측값을 공식 경고처럼 말한 오류).
 
 ## 3. 실험 규칙 추가 (10/25)
@@ -85,4 +85,5 @@
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.1 | 2026-10-25 | super2 검토: 한도 지킴이 정정 (mai-resume) · orca 직접 넣기 금지 · Codex 이름 · GPU1 학습 메모리 조건 |
 | v1.0 | 2026-10-25 | 첫 판. 세션 역할 · 운영 · 10/25 실험 규칙 · 영상 렌더 v1 · 승인 원장 · 반복 지시 |
