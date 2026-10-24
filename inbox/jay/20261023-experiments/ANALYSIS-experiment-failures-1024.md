@@ -27,6 +27,7 @@
 | EX-29 상세 조사와 재검 | [sol 조사](REPORT-sol-24e-ex29-collapse.md), [lead_tmp 독립 재계산](figs/history-audit-1024/ex29_independent_check.json), [재계산 코드](verify_ex29_history_1024.py) |
 | 기존 요구가 현재 코드에서 실제 쓰이는가 | [ASTRA24f 독립 감사](VERIFY-astra-24f-requirements.md) |
 | 피어슨 산점도·EX-23 물리 설정·보행 역학 해석 | [상관과 역학 보충](NOTE-correlation-mechanics-1024.md). 원시 관절 차이를 힘의 좌우 편향으로 읽지 않도록 정정 |
+| 촬영 렌더의 한계와1000회 비교 준비 | [보호 렌더 검증](NOTE-capture-render-1024.md). 이전 검정 재시도의 물리 진행 여부는 미확인, 새 촬영은 실제 상태 불변 검사 |
 
 이번에 저장 설정을 CPU로 읽고 파일 SHA를 남겼다. EX-29 학습 로그 229행, 전체 환경 종료 집계 229행, 선택 8환경 trace 75개 update, 평가 4건은 원자료에서 다시 계산해 sol의 표와 대조했다. EX-11·12 프레임 띠, EX-14·15 접촉 위상, EX-29 첫 실패의 연속 프레임을 직접 봤다. 기존 영상 전체 디코드 검사와 사람이 본 프레임 표집은 다르며, **모든 영상의 모든 프레임을 사람이 다시 판독했다는 뜻은 아니다.** S1-a 밤 진단에는 당시 영상이 없어 수치 근거로만 설명한다.
 
