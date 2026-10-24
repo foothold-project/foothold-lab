@@ -101,8 +101,8 @@ def combine(branches: dict) -> dict:
     base = {"per": labels, "note": RECOMMEND_NOTE, "default_b": [k for k, v in branches.items() if v.get("default_b")]}
     if "멈춤" in labels.values():
         return {"label": "멈춤", **base, "reason": "추종 < 0.3 env 가 없어 D 를 못 세는 판이 있다"}
-    if "표 밖" in labels.values():
-        return {"label": "판정 보류", **base, "reason": "표 밖(E) 인데 D 가 없는 판이 있다"}
+    if "표 밖" in labels.values() and not ({"D", "B"} & set(labels.values())):          # 다른 판이 D · B 면 설계 우선순위(D > B > C > A)가 이미 정한다
+        return {"label": "판정 보류", **base, "reason": "표 밖(E) 인데 D 가 없는 판이 있고, 다른 판이 D · B 도 아니다"}
     for b in K.BRANCH_PRIORITY:
         if b == "A":
             if all(lb == "A" for lb in labels.values()):
@@ -143,25 +143,45 @@ def weak_direction_dwell(probe_folder, side: str) -> dict:
     return {"D": float(np.mean(whole)), "status": "ok", **info}
 
 
-def inputs_from_files(map_modes_json, probe_folder) -> dict:
+def check_inputs_match(mm: dict, probe_result: dict, prev_mm: dict) -> None:
+    """같은 체크포인트 · 기대한 칸 배치 · 이전 창과 같은 평가 칸이 아니면 ValueError."""
+    ck_m, ck_p = mm.get("checkpoint_sha256") or "", probe_result.get("checkpoint_sha256") or ""
+    if not ck_m or ck_m != ck_p:
+        raise ValueError(f"map_modes 와 probe 의 체크포인트 SHA 가 다르거나 없다: {ck_m[:12]!r} 대 {ck_p[:12]!r}")
+    fm = ((mm.get("fixed_terrain") or {}).get("assignment_sha256") or "")
+    fp = ((probe_result.get("fixed_terrain") or {}).get("assignment_sha256") or "")
+    fv = ((prev_mm.get("fixed_terrain") or {}).get("assignment_sha256") or "")
+    if not fm.startswith(K.EVAL64_FIXED_SHA12):
+        raise ValueError(f"map_modes 칸 SHA {fm[:12]!r} 가 기대한 64 env 고정 칸 {K.EVAL64_FIXED_SHA12} 가 아니다")
+    if not fp.startswith(K.PROBE16_FIXED_SHA12):
+        raise ValueError(f"probe 칸 SHA {fp[:12]!r} 가 기대한 16 env 고정 칸 {K.PROBE16_FIXED_SHA12} 가 아니다")
+    if fv != fm or prev_mm.get("envs") != mm.get("envs"):
+        raise ValueError(f"이전 창 평가가 같은 칸이 아니다(비교 불가): {fv[:12]!r} 대 {fm[:12]!r}, envs {prev_mm.get('envs')} 대 {mm.get('envs')}")
+
+
+def inputs_from_files(map_modes_json, probe_folder, prev_map_modes_json) -> dict:
+    """prev_map_modes_json = 이전 창(부모 또는 직전 창)의 같은 평가 map_modes.json. 회전 층의 «생존 하락» 경고가 이것을 쓴다(필수)."""
     mm = json.loads(Path(map_modes_json).read_text(encoding="utf-8"))
+    prev_mm = json.loads(Path(prev_map_modes_json).read_text(encoding="utf-8"))
+    check_inputs_match(mm, json.loads((Path(probe_folder) / "probe_result.json").read_text(encoding="utf-8")), prev_mm)
     cur = spin_inputs(mm)
+    prev = spin_inputs(prev_mm)
     side = "R" if cur["R"] < cur["L"] else "L"
     other = "L" if side == "R" else "R"
     dw, dw_o = weak_direction_dwell(probe_folder, side), weak_direction_dwell(probe_folder, other)
     # F: 약한 방향 D 가 없을 때 »한 번 다시 잰다« 는 사람이 하는 일이다. 코드는 status 를 그대로 남긴다.
 
-    return {"spin": cur, "weak_side": side, "dwell": dw, "dwell_other": dw_o, "branch": branch(cur["L"], cur["R"], dw["D"], dw_o["D"], dw["status"]), "rotation_layer": rotation_layer(cur),
+    return {"spin": cur, "weak_side": side, "dwell": dw, "dwell_other": dw_o, "branch": branch(cur["L"], cur["R"], dw["D"], dw_o["D"], dw["status"]), "rotation_layer": rotation_layer(cur, prev), "prev_spin": prev,
             "criteria_sha256": K.criteria_sha256(), "checkpoint_iter": mm.get("checkpoint_iter"), "checkpoint_sha256": mm.get("checkpoint_sha256", "")[:12],
             "map_modes_fixed_sha": (mm.get("fixed_terrain") or {}).get("assignment_sha256")}
 
 
 def main(argv=None) -> None:
     argv = sys.argv[1:] if argv is None else argv
-    if len(argv) < 4 or (len(argv) - 1) % 3:
-        raise SystemExit("usage: window3_branch <출력 json> <이름1> <map_modes.json 1> <probe 폴더 1> [<이름2> <map_modes.json 2> <probe 폴더 2> ...]")
+    if len(argv) < 5 or (len(argv) - 1) % 4:
+        raise SystemExit("usage: window3_branch <출력 json> <이름1> <map_modes.json 1> <probe 폴더 1> <이전 창 map_modes.json 1> [<이름2> <map_modes.json 2> <probe 폴더 2> <이전 창 map_modes.json 2> ...]  (이전 창 평가는 필수)")
     out_json, rest = argv[0], argv[1:]
-    res = {rest[i]: inputs_from_files(rest[i + 1], rest[i + 2]) for i in range(0, len(rest), 3)}
+    res = {rest[i]: inputs_from_files(rest[i + 1], rest[i + 2], rest[i + 3]) for i in range(0, len(rest), 4)}
     res_c = combine({k: v["branch"] for k, v in res.items()}) if len(res) > 1 else None
     Path(out_json).write_text(json.dumps({"판": res, "합침": res_c}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("창 3 분기 입력(미검증 집계, reviewer 확인 전). 기준 파일 SHA", K.criteria_sha256()[:12])

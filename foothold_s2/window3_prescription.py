@@ -38,8 +38,8 @@ def prescription_receipt(env_yaml_path) -> dict:
     if not leaves:
         raise ValueError(f"{env_yaml_path}: {PREFIX} 항이 없다(처방을 켜지 않은 판)")
     weight = leaves.get(f"{PREFIX}.weight")
-    if weight is None or float(weight) == 0.0:
-        raise ValueError(f"{PREFIX}.weight 가 없거나 0 이다(꺼져 있다): {weight!r}")
+    if weight is None or float(weight) >= 0.0:
+        raise ValueError(f"{PREFIX}.weight 는 음수여야 한다(벌점 항. 0 이면 꺼짐, 양수면 보상이 된다): {weight!r}")
     margin = leaves.get(f"{PREFIX}.params.margin")
     blob = json.dumps({k: leaves[k] for k in sorted(leaves)}, ensure_ascii=False, default=str, sort_keys=True)
 

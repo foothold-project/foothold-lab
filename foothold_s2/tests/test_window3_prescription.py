@@ -90,8 +90,10 @@ def test_receipt_names_the_axis_weight_margin_and_hashes_the_leaves(tmp_path):
     assert r["axis"] == 1 and r["weight"] == -2.0 and r["margin"] == 0.05 and len(r["leaves_sha256"]) == 64 and r["leaves"] == 5 and "hard_hi" in r["formula"]
     with pytest.raises(ValueError, match="처방을 켜지 않은 판"):
         WP.prescription_receipt(W(tmp_path / "p.yaml", BASE_ENV))
-    with pytest.raises(ValueError, match="꺼져 있다"):
+    with pytest.raises(ValueError, match="음수여야"):
         WP.prescription_receipt(W(tmp_path / "z.yaml", TERM_ENV.format(w=0.0, m=0.05)))
+    with pytest.raises(ValueError, match="음수여야"):
+        WP.prescription_receipt(W(tmp_path / "pos.yaml", TERM_ENV.format(w=2.0, m=0.05)))          # 부호를 뒤집으면 보상이 된다
 
 
 def test_the_two_runs_must_carry_the_same_prescription(tmp_path):

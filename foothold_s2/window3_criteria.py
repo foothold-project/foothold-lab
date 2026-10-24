@@ -36,6 +36,9 @@ BRANCH_PRIORITY = ("D", "B", "C", "A")          # 두 판이 갈리면 이 순�
 # v1.2.1 §2.3a (문턱은 모두 [추정])
 BRANCH_LOW_FOLLOW = 0.30          # D 에 넣는 env = 안 넘어졌고 yaw 추종 < 이 값
 BRANCH_E_B_MIN = 0.5              # 표 밖(E): max(D_L, D_R) >= 이 값이면 B, 아니면 A + 경고
+# 입력 대조: 16 env probe 와 64 env 평가는 칸 배치가 서로 다르다. 각자 이 앞 12 자리와 같아야 한다
+PROBE16_FIXED_SHA12 = "7f49a1e935ea"
+EVAL64_FIXED_SHA12 = "c3884d686592"
 BRANCH_CHECK_ORDER = ("D", "F", "B", "C", "E", "A")   # 검사 순서: 붕괴 -> D 미측정 -> B -> C -> 표 밖 -> A
 
 # D 의 정의(v1.2.1 §2.3a): 약한 방향(L · R 중 작은 쪽)의 시행들에서 추종 < BRANCH_LOW_FOLLOW 인 안 넘어진 env 의 «네 calf 최대 체류(전체 구간)» 평균. calf_band.max_calf_dwell 의 "whole". 정체 구간 한정 값은 분기에 쓰지 않는다(보조 기록).

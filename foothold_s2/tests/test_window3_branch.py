@@ -93,6 +93,9 @@ def test_two_judgments_are_combined_by_priority_and_a_needs_both_a():
     stop = B.branch(0.20, 0.60, None, d_status="no_low_env")
     assert B.combine({"x": stop, "y": b})["label"] == "멈춤" and B.combine({"x": a, "y": B.branch(0.2, 0.6, None)})["default_b"] == ["y"]
     assert "팀장 승인" in B.combine({"x": a, "y": a})["note"]
+    e = B.branch(0.4, 0.45, None)
+    assert e["label"] == "표 밖" and B.combine({"x": e, "y": b})["label"] == "B" and B.combine({"x": d, "y": e})["label"] == "D"     # 한 판이 D · B 면 우선순위대로(보류 아님)
+    assert B.combine({"x": e, "y": c})["label"] == "판정 보류" and B.combine({"x": e, "y": e})["label"] == "판정 보류"
 
 
 def test_d_is_whole_interval_mean_over_low_follow_survivors_only(tmp_path, monkeypatch):
@@ -130,19 +133,52 @@ def test_spin_inputs_reads_the_map_modes_json_keys():
     assert s == {"L": 0.33, "R": 0.66, "alive_L": 64, "alive_R": 54, "envs": 64}
 
 
+PRB = {"checkpoint_sha256": "ab" * 32, "fixed_terrain": {"assignment_sha256": K.PROBE16_FIXED_SHA12 + "0" * 52}}
+
+
+def _mm2(**kw):
+    m = _mm(0.6, 0.6, 64, 64)
+    m["fixed_terrain"] = {"assignment_sha256": K.EVAL64_FIXED_SHA12 + "0" * 52}
+    m.update(kw)
+
+    return m
+
+
+def test_inputs_must_share_checkpoint_and_expected_terrain_layouts():
+    B.check_inputs_match(_mm2(), PRB, _mm2())                                                 # 통과
+    with pytest.raises(ValueError, match="체크포인트"):
+        B.check_inputs_match(_mm2(checkpoint_sha256="cd" * 32), PRB, _mm2())
+    with pytest.raises(ValueError, match="체크포인트"):
+        B.check_inputs_match(_mm2(), {**PRB, "checkpoint_sha256": ""}, _mm2())
+    with pytest.raises(ValueError, match="64 env"):
+        B.check_inputs_match(_mm2(fixed_terrain={"assignment_sha256": "f" * 64}), PRB, _mm2())
+    with pytest.raises(ValueError, match="16 env"):
+        B.check_inputs_match(_mm2(), {**PRB, "fixed_terrain": {"assignment_sha256": "f" * 64}}, _mm2())
+    with pytest.raises(ValueError, match="비교 불가"):
+        B.check_inputs_match(_mm2(), PRB, _mm2(fixed_terrain={"assignment_sha256": "e" * 64}))
+    with pytest.raises(ValueError, match="비교 불가"):
+        B.check_inputs_match(_mm2(), PRB, _mm2(envs=32))
+
+
+def test_cli_needs_the_previous_window_so_the_survival_drop_warning_is_not_skipped(tmp_path):
+    with pytest.raises(SystemExit, match="usage"):
+        B.main([str(tmp_path / "o.json"), "EX-30", "m.json", "probe"])                         # 이전 창 평가 없이는 실행되지 않는다
+
+
 LOGS = Path(__file__).resolve().parents[2] / "logs"
 GATE = Path("C:/mai/wt/foothold-lab/impl-w2/logs_gate/eval")
 
 
 @pytest.mark.skipif(not ((LOGS / "w3p1_ex30_20261025_063715").exists() and (GATE / "ex30_1750" / "map_modes.json").exists() and (LOGS / "w3p1_ex31_20261025_075337").exists()), reason="실측 폴더 없음")
 def test_real_m1750_inputs_give_the_design_draft_labels(tmp_path):
-    r30 = B.inputs_from_files(GATE / "ex30_1750" / "map_modes.json", LOGS / "w3p1_ex30_20261025_063715")
-    r31 = B.inputs_from_files(GATE / "ex31_1750" / "map_modes.json", LOGS / "w3p1_ex31_20261025_075337")
+    r30 = B.inputs_from_files(GATE / "ex30_1750" / "map_modes.json", LOGS / "w3p1_ex30_20261025_063715", GATE / "ex31_1750" / "map_modes.json")
+    r31 = B.inputs_from_files(GATE / "ex31_1750" / "map_modes.json", LOGS / "w3p1_ex31_20261025_075337", GATE / "ex30_1750" / "map_modes.json")
 
     assert r30["weak_side"] == "R" and r31["weak_side"] == "L"                                     # 초안: m1750 기준 EX-30 우 · EX-31 좌
     assert r30["branch"]["label"] == "B" and r31["branch"]["label"] == "B" and r30["dwell"]["D"] >= 0.5 and r31["dwell"]["D"] >= 0.5
     assert r30["rotation_layer"]["level"] == "경고" and r31["rotation_layer"]["level"] == "경고"
+    assert any("하락" in w for w in r31["rotation_layer"]["warn"])                                  # 이전 창(생존 64)보다 R 생존 54 -> 0.16 하락 경고가 CLI 경로에서도 찍힌다
     out = tmp_path / "o.json"
-    B.main([str(out), "EX-30", str(GATE / "ex30_1750" / "map_modes.json"), str(LOGS / "w3p1_ex30_20261025_063715"), "EX-31", str(GATE / "ex31_1750" / "map_modes.json"), str(LOGS / "w3p1_ex31_20261025_075337")])
+    B.main([str(out), "EX-30", str(GATE / "ex30_1750" / "map_modes.json"), str(LOGS / "w3p1_ex30_20261025_063715"), str(GATE / "ex31_1750" / "map_modes.json"), "EX-31", str(GATE / "ex31_1750" / "map_modes.json"), str(LOGS / "w3p1_ex31_20261025_075337"), str(GATE / "ex30_1750" / "map_modes.json")])
 
     assert json.loads(out.read_text(encoding="utf-8"))["합침"]["label"] == "B"
