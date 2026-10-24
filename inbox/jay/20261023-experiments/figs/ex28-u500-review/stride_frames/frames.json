@@ -1,0 +1,26 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261023-experiments\\figs\\ex28-u500-review\\comparison_1x.mp4",
+  "sha256": "ba64839fe8a5b455e687fd56ebd7ae0a96f12df1edf6a694d5442772fe8fa4fe",
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "nb_read_frames": "300"
+      }
+    ],
+    "format": {
+      "duration": "12.000000"
+    }
+  },
+  "sample_fps": 12.5,
+  "start": 3.0,
+  "duration": 1.92,
+  "sampled_frames": 24,
+  "pages": [
+    "grid_00.jpg"
+  ]
+}

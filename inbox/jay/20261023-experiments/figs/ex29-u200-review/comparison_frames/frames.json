@@ -1,0 +1,26 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261023-experiments\\figs\\ex29-u200-review\\comparison_1x.mp4",
+  "sha256": "159eafc76b89cf8c7e9c3022388d28434019ef02abe21e837cfce0ad5eb56a70",
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "nb_read_frames": "300"
+      }
+    ],
+    "format": {
+      "duration": "12.000000"
+    }
+  },
+  "sample_fps": 2,
+  "start": 0,
+  "duration": 12,
+  "sampled_frames": 24,
+  "pages": [
+    "grid_00.jpg"
+  ]
+}

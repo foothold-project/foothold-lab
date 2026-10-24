@@ -1,0 +1,26 @@
+{
+  "source": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\ex29_model200_flat_pred\\review.mp4",
+  "sha256": "04e43ef3e493677486fc62cb236b8bf55424c739aba075aa5deff4758209d36d",
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "25/1",
+        "nb_read_frames": "300"
+      }
+    ],
+    "format": {
+      "duration": "12.000000"
+    }
+  },
+  "sample_fps": 2,
+  "start": 0,
+  "duration": 12,
+  "sampled_frames": 24,
+  "pages": [
+    "grid_00.jpg"
+  ]
+}
