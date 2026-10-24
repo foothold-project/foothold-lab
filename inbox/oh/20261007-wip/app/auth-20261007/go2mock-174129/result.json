@@ -1,0 +1,78 @@
+{
+ "cases": [
+  {
+   "name": "G0 구독 연결",
+   "ok": true,
+   "wait_s": 0.3
+  },
+  {
+   "name": "G1 시작 래치 + 첫 정지 시도",
+   "ok": true,
+   "calls": [
+    [
+     "Move",
+     [
+      0.0,
+      0.0,
+      0.0
+     ]
+    ],
+    [
+     "StopMove",
+     []
+    ]
+   ],
+   "stop_result": "StopMove 응답 0 - 몸 정지는 odom·영상으로 따로 확인"
+  },
+  {
+   "name": "G2 래치 중 0 아닌 입력 → 호출 없음",
+   "ok": true,
+   "n_in": 10,
+   "calls": 2
+  },
+  {
+   "name": "G2b 래치 중 후진 입력 1.2 s → 해제 안 됨·호출 없음",
+   "ok": true,
+   "n_in": 34
+  },
+  {
+   "name": "G3 0 을 1 s 넘게 → 래치 해제",
+   "ok": true,
+   "n_in": 62,
+   "why": ""
+  },
+  {
+   "name": "G4 이동 입력 → Move(0.3,0,0) 전달",
+   "ok": true,
+   "n_move": 20
+  },
+  {
+   "name": "G5 입력 소실 → 0.4 s 안에 Move(0)+StopMove 한 번·래치",
+   "ok": true,
+   "tail": [
+    "Move",
+    "StopMove"
+   ],
+   "why": "상류 /cmd_vel 이 0.3 s 넘게 없음",
+   "stop_after_last_input_s": 0.304,
+   "limit_s": 0.4
+  },
+  {
+   "name": "G6 재연결 0 아닌 값 → 움직이지 않음",
+   "ok": true,
+   "calls_after": []
+  },
+  {
+   "name": "G7 노드 생존·금지 호출 0",
+   "ok": true,
+   "alive": true,
+   "names": [
+    "Move",
+    "StopMove"
+   ]
+  }
+ ],
+ "adapter_pid": 2710295,
+ "adapter_rc": 0,
+ "ok": true
+}
