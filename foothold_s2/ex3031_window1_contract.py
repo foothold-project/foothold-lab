@@ -18,6 +18,7 @@ FINAL_ITER = PARENT_ITER + EXTRA_UPDATES                                 # 1750
 SAVE_INTERVAL = 50
 EXPECTED_CHECKPOINTS = tuple(f"model_{n}.pt" for n in range(PARENT_ITER + SAVE_INTERVAL, FINAL_ITER + 1, SAVE_INTERVAL))      # model_1550 .. model_1750
 DEVICE = {"EX-30": "cuda:0", "EX-31": "cuda:1"}                          # GPU1 은 화면 GPU 라 학습만 한다(촬영 금지)
+ALLOWED_DEVICES = {"EX-30": ("cuda:0",), "EX-31": ("cuda:1", "cuda:0")}   # EX-31 은 10/25 04:42 GPU1 메모리 페이징으로 중단, 팀장 결정으로 EX-30 이 끝난 뒤 cuda:0 에서 단독 재기동
 STAGGER_SECONDS = 30
 WINDOW1_COURSE_TAG = "ex3031-window1-b-contract-no-course-stage"        # T2 과정 상태가 없는 창: spec 의 과정 칸에 이 문자열의 SHA 를 적는다
 TERRAIN_RESTORE = "parent_levels"
@@ -42,8 +43,8 @@ def validate(args, hydra_args=()) -> None:
         raise ValueError(f"갱신 수는 {EXTRA_UPDATES} 로 고정이다. --max_iterations 를 주지 않는다")
     if not Path(args.parent).is_file() or file_sha256(args.parent) not in ALLOWED_PARENT_SHA256:
         raise ValueError("부모가 허용 목록의 B model_1500.pt 가 아니다")
-    if args.device not in (None, DEVICE[args.exp]):
-        raise ValueError(f"{args.exp} 는 {DEVICE[args.exp]} 에서 돈다(받은 값 {args.device})")
+    if args.device not in (None, *ALLOWED_DEVICES[args.exp]):
+        raise ValueError(f"{args.exp} 는 {ALLOWED_DEVICES[args.exp]} 에서 돈다(받은 값 {args.device})")
 
 
 def make_spec(exp: str, parent_sha256: str, seed: int = 42) -> TransferSpec:

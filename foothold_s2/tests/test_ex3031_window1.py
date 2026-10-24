@@ -67,10 +67,11 @@ def test_save_interval_is_the_b_agent_cfg_value():
 def test_valid_launches_pass_and_each_experiment_is_pinned_to_its_gpu():
     w.validate(_args())
     w.validate(_args(exp="EX-31", device="cuda:1", num_envs=3072, seed=42))
+    w.validate(_args(exp="EX-31", device="cuda:0", num_envs=3072, seed=42))             # 단독 재기동(EX-30 이 끝난 뒤)
 
 
 @needs_parent
-@pytest.mark.parametrize("bad", [dict(exp="EX-29"), dict(exp="EX-31", device="cuda:0"), dict(exp="EX-30", device="cuda:1"), dict(task="FootholdS2-Go2-S2-X23-v0"), dict(agent="other"),
+@pytest.mark.parametrize("bad", [dict(exp="EX-29"), dict(exp="EX-31", device="cuda:2"), dict(exp="EX-30", device="cuda:1"), dict(task="FootholdS2-Go2-S2-X23-v0"), dict(agent="other"),
                                  dict(distributed=True), dict(num_envs=1536), dict(seed=7), dict(max_iterations=1751), dict(max_iterations=250)])
 def test_bad_launch_is_refused(bad):
     with pytest.raises(ValueError):
