@@ -1,6 +1,7 @@
 """종아리 펴짐 한계 띠 값 r 집계 (SONNET-X25 W3-P1). CPU 만. 답을 아는 합성 궤적으로 시험한다."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -113,3 +114,68 @@ def test_main_refuses_to_put_runs_side_by_side_without_the_same_fixed_terrain(tm
     assert "미검증 집계" in capsys.readouterr().out
     with pytest.raises(SystemExit, match="비교 불가"):
         C.main(["A", str(tmp_path / "a"), "B", str(tmp_path / "b")])
+
+
+# ---- W3-T4: 네 calf 최대 체류(정체 구간 한정 · 전체 구간) ----
+
+def _wz(vals):
+    w = np.zeros((E, T))
+    w[:] = vals
+
+    return w
+
+
+def test_max_calf_dwell_known_values_whole_vs_stalled():
+    q = _q(-1.5)
+    q[0, :25, 1] = HI[1]                              # env 0: calf 1 이 처음 25 step 띠 안
+    wz = _wz(1.2)                                     # 명령 1.2 를 그대로 따라 도는 중 -> 정체 아님
+    wz[0, :10] = 0.0                                  # env 0 의 처음 10 step 은 정체(|wz| < 0.12)
+    d = C.max_calf_dwell(q, HI, wz, 1.2)
+
+    assert d["whole"][0] == pytest.approx(0.5) and d["whole"][1] == 0.0 and d["argmax_whole"][0] == 1
+    assert d["stalled"][0] == pytest.approx(1.0) and d["n_stalled"][0] == 10                 # 정체 10 step 이 전부 띠 안
+    assert np.isnan(d["stalled"][1]) and d["n_stalled"][1] == 0                                   # 정체 시간이 없으면 0 이 아니라 NaN
+
+
+def test_stall_edge_is_strict_and_uses_the_command_sign_free():
+    q = _q(HI)
+    on = C.max_calf_dwell(q, HI, _wz(0.119), -1.2)             # |wz| < 0.12 -> 정체 (우회전 명령 -1.2)
+    off = C.max_calf_dwell(q, HI, _wz(0.12), -1.2)
+
+    assert np.allclose(on["n_stalled"], T) and np.allclose(off["n_stalled"], 0)
+    with pytest.raises(ValueError, match="모양"):
+        C.max_calf_dwell(np.zeros((E, T, 4)), HI, np.zeros((E, T + 1)), 1.2)
+
+
+def test_table_has_the_dwell_columns_and_the_fallen_count_by_default(tmp_path):
+    q = _q(-1.5)
+    q[:, :, 0] = HI[0]                                 # calf 0 이 내내 띠 안
+    folder = tmp_path / "t"
+    _write(folder, {"indep_right": q, "fwd0.5": q}, kept=[True, False])
+    z = dict(np.load(folder / "arrays_indep_right.npz"))
+    z["wz"] = _wz(0.0)                                  # 내내 정체
+    np.savez(folder / "arrays_indep_right.npz", **z)
+    out = C.table("X", C.load(folder))
+
+    assert "최대 calf 체류(정체 구간 한정)" in out and "최대 calf 체류(전체 구간)" in out and "넘어진 env 수" in out
+    row = [ln for ln in out.splitlines() if ln.startswith("| indep_right")][0]
+
+    assert "1.00 (1.00~1.00) n=1/1 | 1.00 (1.00~1.00) n=1/1 | 1/2 |" in row
+    fwd = [ln for ln in out.splitlines() if ln.startswith("| fwd0.5")][0]
+
+    assert "해당 없음 | 해당 없음 | 1/2 |" in fwd
+
+
+LOGS = Path(__file__).resolve().parents[2] / "logs"
+
+
+@pytest.mark.skipif(not (LOGS / "w3p1_b1500_20261025_063715").exists(), reason="W3-P1 실측 폴더 없음")
+def test_reproduces_the_planner_recount_of_the_w3p1_table():
+    # DESIGN-W3 §1.6(b): B1500 indep_right 추종 >= 0.3 은 4 env 에서 0.38, < 0.3 은 11 env 에서 0.92 (기록 전체 구간 최대 체류 평균)
+    folder = LOGS / "w3p1_b1500_20261025_063715"
+    d = C.load(folder)["by_protocol"]["indep_right"]
+    f = np.array(json.loads((folder / "probe_result.json").read_text(encoding="utf-8"))["protocols"]["indep_right"]["yaw_follow_per_env"])
+    hi, lo = (f >= 0.3) & d["kept"], (f < 0.3) & d["kept"]
+
+    assert (int(hi.sum()), int(lo.sum())) == (4, 11)
+    assert d["dwell"]["whole"][hi].mean() == pytest.approx(0.38, abs=0.005) and d["dwell"]["whole"][lo].mean() == pytest.approx(0.92, abs=0.005)

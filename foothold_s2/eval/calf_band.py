@@ -15,6 +15,10 @@ from pathlib import Path
 
 import numpy as np
 
+from foothold_s2.eval import turn_probe_plan as P
+from foothold_s2.eval import turn_probe_logic as L
+
+STALL_FRAC = L.STALL_FRAC                         # |wz| < 0.1 |cmd_wz| 이면 정체(판정기와 같은 값)
 MARGIN = 0.05
 W = 2.0
 FORWARD_RULE_PER_STEP = 0.03                     # 초안 §6 W3-P1: 정상 전진이 이 값을 넘으면 W 를 1.0 으로 내리는 것을 검토
@@ -45,6 +49,28 @@ def occupancy(q, hi, margin: float = MARGIN):
     return (q > (hi - margin)).mean(axis=1)
 
 
+def band_flags(q, hi, margin: float = MARGIN):
+    """q [E,T,4], hi [4]. 띠 안(q > hi - margin) 인지 bool [E,T,4]."""
+    return np.asarray(q, dtype=float) > (np.asarray(hi, dtype=float) - margin)
+
+
+def max_calf_dwell(q, hi, wz, cmd_wz: float, margin: float = MARGIN) -> dict:
+    """W3-T4: env 마다 «네 calf 중 띠 체류 비율이 가장 큰 값». 두 가지로 센다.
+      whole   = 기록 전체 구간 중 띠 안에 있던 시간 비율(관절마다), 그 최댓값
+      stalled = 정체 구간(|wz| < STALL_FRAC |cmd_wz|) 만 분모로 한 같은 비율의 최댓값. 정체 시간이 없는 env 는 NaN(0 이 아니다)
+    n_stalled = 정체 substep 수, argmax = 가장 큰 관절 열(0~3)."""
+    flags = band_flags(q, hi, margin)
+    wz = np.asarray(wz, dtype=float)
+    if flags.ndim != 3 or wz.shape != flags.shape[:2]:
+        raise ValueError(f"모양 불일치: q {flags.shape} wz {wz.shape}")
+    whole_j = flags.mean(axis=1)
+    stall = np.abs(wz) < STALL_FRAC * abs(cmd_wz)
+    n = stall.sum(axis=1)
+    per_j = (flags & stall[:, :, None]).sum(axis=1) / np.maximum(n, 1)[:, None]
+
+    return {"whole": whole_j.max(axis=1), "stalled": np.where(n > 0, per_j.max(axis=1), np.nan), "n_stalled": n, "argmax_stalled": per_j.argmax(axis=1), "argmax_whole": whole_j.argmax(axis=1)}
+
+
 def load(folder) -> dict:
     folder = Path(folder)
     res = json.loads((folder / "probe_result.json").read_text(encoding="utf-8"))
@@ -61,6 +87,9 @@ def load(folder) -> dict:
         kept = np.asarray(z["kept"] if "kept" in z.files else z["alive"][:, -1], dtype=bool)
         r = band_value(q, hi)
         out[proto] = {"r_mean": r.mean(axis=1), "r_max": r.max(axis=1), "r_pos": (r > 0).mean(axis=1), "occ": occupancy(q, hi), "kept": kept}
+        cmd = P.PROTOCOLS.get(proto, {}).get("cmd")
+        if cmd is not None and "wz" in z.files:                                   # 회전 시행만(전진 걸음은 정체 정의가 없다)
+            out[proto]["dwell"] = max_calf_dwell(q, hi, z["wz"], cmd[2])
 
     return {"calf_names": [st["joint_names"][c] for c in cols], "hard_hi": hi.tolist(), "by_protocol": out, "fixed_terrain": res.get("fixed_terrain"),
             "checkpoint_sha256": res.get("checkpoint_sha256", "")[:12], "envs": res.get("envs")}
@@ -74,18 +103,30 @@ def _cell(x, keep, fmt="{:.4f}"):
     return f"{fmt.format(v.mean())} ({fmt.format(v.min())}~{fmt.format(v.max())}) n={int(keep.sum())}/{len(keep)}"
 
 
+def _nan_cell(x, keep, fmt="{:.2f}"):
+    """NaN(정체 시간 없음)을 뺀 env 평균. 남은 수를 적는다."""
+    ok = keep & ~np.isnan(x)
+    if not ok.any():
+        return f"정체 없음 n=0/{int(keep.sum())}"
+    v = x[ok]
+
+    return f"{fmt.format(v.mean())} ({fmt.format(v.min())}~{fmt.format(v.max())}) n={int(ok.sum())}/{int(keep.sum())}"
+
+
 def table(name: str, d: dict, protocols=PROTOCOLS) -> str:
     lines = [f"### {name} · ckpt {d['checkpoint_sha256']} · hard 상한 {', '.join(f'{n} {h:.4f}' for n, h in zip(d['calf_names'], d['hard_hi']))} · margin {MARGIN} rad · W={W} · 칸 = 안 넘어진 env 평균 (env 최소~최대) n=남은/전체",
-             "| 시행 | r 평균 [rad] | W*r 평균 [/step] | r>0 인 시간 비율 | r 최대 [rad] | " + " | ".join(f"{n} 띠 점유" for n in d["calf_names"]) + " |",
-             "|---|---|---|---|---|" + "---|" * len(d["calf_names"])]
+             "| 시행 | r 평균 [rad] | W*r 평균 [/step] | r>0 인 시간 비율 | r 최대 [rad] | " + " | ".join(f"{n} 띠 점유" for n in d["calf_names"]) + " | 최대 calf 체류(정체 구간 한정) | 최대 calf 체류(전체 구간) | 넘어진 env 수 |",
+             "|---|---|---|---|---|" + "---|" * (len(d["calf_names"]) + 3)]
     for p in protocols:
         v = d["by_protocol"].get(p)
         if v is None:
-            lines.append(f"| {p} | 미측정 |  |  |  |" + " |" * len(d["calf_names"]))
+            lines.append(f"| {p} | 미측정 |  |  |  |" + " |" * (len(d["calf_names"]) + 3))
             continue
         k = v["kept"]
         occ = " | ".join(_cell(v["occ"][:, j], k, "{:.2f}") for j in range(len(d["calf_names"])))
-        lines.append(f"| {p} | {_cell(v['r_mean'], k)} | {_cell(W * v['r_mean'], k)} | {_cell(v['r_pos'], k, '{:.2f}')} | {_cell(v['r_max'], k)} | {occ} |")
+        dw = v.get("dwell")
+        st, wh = (_nan_cell(dw["stalled"], k), _nan_cell(dw["whole"], k)) if dw is not None else ("해당 없음", "해당 없음")
+        lines.append(f"| {p} | {_cell(v['r_mean'], k)} | {_cell(W * v['r_mean'], k)} | {_cell(v['r_pos'], k, '{:.2f}')} | {_cell(v['r_max'], k)} | {occ} | {st} | {wh} | {int((~k).sum())}/{len(k)} |")
 
     return "\n".join(lines)
 
