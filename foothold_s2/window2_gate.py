@@ -85,6 +85,9 @@ def judge(parent: dict, children: dict) -> dict:
     reasons, rows = [], []
     results = {"parent": parent, **children}
 
+    shas = {name: (r.get("fixed_terrain") or {}).get("assignment_sha256") for name, r in results.items()}
+    if any(v is None for v in shas.values()) or len(set(shas.values())) != 1:                 # 세 평가 모두 고정 칸 기록이 있고 배열 SHA 가 같아야 한다(없거나 다르면 멈춘다)
+        return {"passed": False, "reasons": [f"고정 지형 칸 기록이 없거나 배열 SHA 가 다르다: {shas}"], "rows": []}
     try:
         cmp.check_same_conditions(results)
     except ValueError as err:                                     # 조건이 다르면 비교 자체를 하지 않는다

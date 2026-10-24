@@ -238,3 +238,25 @@ def test_scripts_exist_and_have_unix_line_endings():
 
     for n in ("run_eval_window1.sh", "run_ex3031_window2.sh"):
         assert (root / "foothold_s2" / n).is_file() and b"\r" not in (root / "foothold_s2" / n).read_bytes()
+
+
+@pytest.mark.parametrize("who", ["parent", "EX-30", "EX-31"])
+def test_missing_or_different_fixed_terrain_record_stops_the_judgement(who):
+    parent, kids = _res(1500), _kids()
+    target = {"parent": parent, "EX-30": kids["EX-30"], "EX-31": kids["EX-31"]}[who]
+    target["fixed_terrain"] = None                                             # 셋 모두 None 이어도 «같다» 로 통과시키면 안 된다 -> 한 칸만 None 인 경우
+    v = G.judge(parent, kids)
+
+    assert not v["passed"] and v["rows"] == [] and "고정 지형 칸" in v["reasons"][0]
+    parent2, kids2 = _res(1500), _kids()
+    kids2[who if who != "parent" else "EX-30"]["fixed_terrain"] = {**parent2["fixed_terrain"], "assignment_sha256": "ee" * 32}
+
+    assert "고정 지형 칸" in G.judge(parent2, kids2)["reasons"][0]
+
+
+def test_all_three_without_fixed_terrain_is_also_refused():
+    parent, kids = _res(1500), _kids()
+    for r in (parent, *kids.values()):
+        r["fixed_terrain"] = None
+
+    assert "고정 지형 칸" in G.judge(parent, kids)["reasons"][0]
