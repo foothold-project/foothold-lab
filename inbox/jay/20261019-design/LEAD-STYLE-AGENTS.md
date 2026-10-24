@@ -6,6 +6,8 @@
 
 # 팀장 작업 방식 (FOOTHOLD lead 규칙 · Codex 용)
 
+> 10/25 부터 규칙 입구는 [RULES-HUB.md](RULES-HUB.md). 세션 역할 · 영상 렌더 v1 · 승인 원장 · 반복 지시 표가 거기 있다.
+
 작업 단위를 시작할 때 해당 절을 읽고, 끝낼 때 9 절 점검표를 다시 본다. 실험 운영 세부는 `EXPERIMENT-RULES.md`, 진행 상태는 `HANDOFF-LEADTMP-20261023.md`.
 
 ## 1. 목표를 잊지 않는다
