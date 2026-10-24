@@ -108,3 +108,24 @@ def test_scene_update_hook_accepts_the_keyword_call_isaaclab_makes():
     hook = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "_update")
 
     assert hook.args.vararg is not None and hook.args.kwarg is not None            # scene.update(dt=physics_dt) 키워드 호출(첫 Kit 실행에서 TypeError 였다)
+
+
+def test_hook_signature_matches_the_installed_isaaclab_scene_update_and_call_site():
+    root = Path("C:/isaac/IsaacLab/source/isaaclab/isaaclab")
+    if not root.exists():
+        pytest.skip("Isaac Lab 소스 없음")
+    scene_tree = ast.parse((root / "scene/interactive_scene.py").read_text(encoding="utf-8"))
+    cls = next(n for n in scene_tree.body if isinstance(n, ast.ClassDef) and n.name == "InteractiveScene")
+    upd = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "update")
+    env_src = (root / "envs/manager_based_rl_env.py").read_text(encoding="utf-8")
+
+    assert [a.arg for a in upd.args.args] == ["self", "dt"] and "self.scene.update(dt=self.physics_dt)" in env_src
+    probe_tree = ast.parse(PROBE.read_text(encoding="utf-8"))
+    hook_def = next(n for n in ast.walk(probe_tree) if isinstance(n, ast.FunctionDef) and n.name == "_update")
+    calls = []
+    ns = {"_orig_update": lambda *a, **k: calls.append((a, k)), "rec": type("R", (), {"on": False})()}
+    exec(compile(ast.Module(body=[hook_def], type_ignores=[]), "hook", "exec"), ns)
+    ns["_update"](dt=0.005)                                                  # ManagerBasedRLEnv.step 이 하는 호출 그대로
+    ns["_update"](0.005)
+
+    assert calls == [((), {"dt": 0.005}), ((0.005,), {})]
