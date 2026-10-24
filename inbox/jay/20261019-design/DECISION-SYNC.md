@@ -16,6 +16,7 @@
 | 촬영 전 회차 보고·가까운 번호 고려 | 현 실행09:55 시각 종료만 연결. 다음 구간부터 회차 상한 지정. 과거 checkpoint로 되감지 않음.09:40 알림 준비·실도착 시험 확인 |
 | Windows3072·Linux4096 재측정·DDP 조사 | NOTE-camera-ddp-linux-1024에 코드·원자료·공식 출처. 환경 수·해상도 변경이나 분산 학습 기동 승인으로 사용하지 않음 |
 | Linux 이전 준비 | pipeline 정본에 VLC·Flameshot·자동화·세션·백업/복원. 설치 시각 미확정. 시스템super·실험lead 인계 |
+| 개념 질문 단일 기록 · 현재 범위 설명 정정 | 팀장10/24 직접 지시. NOTE-start-learning-gt-1023에 약어·뜻·근거·실제 깊이 그림, EXPERIMENT-RULES §6에 같은 파일 추가 규칙.14·PLAN·AGENDA에 후진·횡이동 최종 요구 보존과 현재 start_mode 제한 명시. B연속7종/TD듬성한4종+보조평지·force_gt True/False 직접 대조. 실행 코드·gates·기동 범위는 변경 없음 |
 | 과거 봉인·판정 | 기존 gates와 EX-23·25 결과 불변. 새 결과는 별도 run·checkpoint·코드 SHA로 연결 |
 
 근거와 실제 상태는 [실행 기록](../20261023-experiments/RUN-EX28-29-1024.md). 아래는 이전 준비 이력이다.
