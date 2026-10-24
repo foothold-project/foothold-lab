@@ -154,7 +154,7 @@ def metrics(rows):
     return result
 
 
-def plots(rows):
+def plots(rows, iteration=1000):
     fig,axes=plt.subplots(2,2,figsize=(13,7),layout='constrained')
     for ax,(label,_,_,z,_) in zip(axes.flat,rows):
         ax.fill_between(z['t'],z['foot_xy'][:,:,0].min(1),z['foot_xy'][:,:,0].max(1),color=COLORS[0],alpha=.18,label='네 발 x 범위')
@@ -180,7 +180,7 @@ def plots(rows):
         for ax in axes[row]:
             for x in [3,6,9]: ax.axvline(x,color='#444444',ls=':',lw=.7)
             ax.set_xlabel('시뮬레이션 초');ax.grid(alpha=.18)
-    fig.suptitle('model_1000 · 같은 촬영기·물리 조건. 약 5.2초 이후 타일 경계, 회전은 순수 험지 시험 아님',fontsize=14)
+    fig.suptitle(f'model_{iteration} · 같은 촬영기·물리 조건. 타일 이탈 뒤 회전은 순수 험지 시험 아님',fontsize=14)
     fig.savefig(OUT/'gait_height_commands.png',dpi=145);plt.close(fig)
     for terrain,ids in [('flat',[0,1]),('rough',[2,3])]:
         fig,axes=plt.subplots(3,4,figsize=(15,9),layout='constrained')
@@ -205,7 +205,7 @@ def ass_time(t):
     return f'{int(t//3600)}:{int(t//60)%60:02d}:{t%60:05.2f}'
 
 
-def video(rows):
+def video(rows, iteration=1000):
     MEDIA.mkdir(exist_ok=True)
     ass='[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,Arial,16,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,0,7,0,0,0,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'
     for panel,(label,folder,j,z,_) in enumerate(rows):
@@ -220,7 +220,7 @@ def video(rows):
     ap=MEDIA/'comparison_hud.ass';ap.write_text(ass,encoding='utf-8')
     filters=[]
     for i,(label,*_) in enumerate(rows):
-        title=f'{label.upper().replace("ROUGH","ROUGH-START")} | model_1000'
+        title=f'{label.upper().replace("ROUGH","ROUGH-START")} | model_{iteration}'
         filters.append(f"[{i}:v]setpts=PTS-STARTPTS,scale=640:360,drawbox=x=0:y=0:w=iw:h=86:color=black:t=fill,drawtext=fontfile='C\\:/Windows/Fonts/arial.ttf':text='{title}':x=10:y=4:fontsize=20:fontcolor=white[v{i}]")
     escaped=ap.as_posix().replace(':',r'\:')
     filters.append(f"[v0][v1][v2][v3]xstack=inputs=4:layout=0_0|640_0|0_360|640_360[g];[g]ass=filename='{escaped}'[out]")
