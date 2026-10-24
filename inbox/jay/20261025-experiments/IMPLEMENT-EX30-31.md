@@ -2,14 +2,21 @@
 > 작성: 오흥재 · lead_tmp · 2026-10-25
 > 근거: DESIGN-EX30-31.md · d9517fb9 실제 runner·명령·지각 코드 · ASTRA24f 요구 소비 감사
 > 요지: 같은 부모에서 지도 선택만 다르게 출발하고 명령·지형·DR 확대와 관측을 실제 소비하는 코드 계약 및 시험을 지정한다.
-> 상태: 구현 지시용 제안 · 아래 체크 전부 미완료 · GPU 실행 승인 아님
-> 판: v0.1
+> 상태: v1.0 진행 · T1 · T4 일부 구현 (리뷰 중) · 나머지 미완료 · 장기 기동 승인 아님
+> 판: v1.0
 
 # EX-30·31 구현 계획
 
 **목표**: [설계](DESIGN-EX30-31.md)의 두 판을 코드·manifest·측정·이어받기에서 같은 계약으로 구현한다. **구조**: 기존 START 학습망을 유지하고 전환 importer, 순수 curriculum/command 코어, Isaac 어댑터, 관측·평가를 분리한다. **기술**: 설치 Isaac Lab·rsl_rl·PyTorch, 기존 `foothold_s2`, Windows 단일 GPU/3072. 버전/환경 해시는 기존 실행에서 직접 추출해 새 manifest에 둔다.
 
 실행 담당은 lead가 Claude sonnet-code/rl에 배분하고 검토는 fable가 맡는다. 기존 실행 worktree `lead-tmp-start-b`@d9517fb9와 그 로그는 불변이다. 새 구현은 그 코드에서 분기한 독립 worktree에서 한다. 공유 체크아웃·기존 live 코드에 쓰지 않는다. 실행 방법은 팀장과 이미 합의한 세션 배분을 따르며 Codex 작업자를 새로 늘리지 않는다.
+
+## v1.0 진행 (lead · 10/25)
+
+- 설계 v1.0 (F1~F3 팀장 결정) 에 따라 **창 1 (추가 0~250) 은 B cfg 그대로 · 지도 처치만**. 그래서 창 1 에 필요한 것은 T1 + T4 의 평가 모드 + 짧은 Kit 시험뿐이고, T2 · T3 은 창 1 이 도는 동안 구현해 창 2 이후 적용한다.
+- T1 추가 항목: 창 1 에서는 부모 지형 레벨을 두 판 모두 같은 방식으로 이어 쓰는 선택 복원 플래그 (planner F1 최소 수정). 창 2 의 P0 진입 때 `course_v1` 계약으로 바꾸고 옛 지형 승급 · vmax 자동 상승 term 을 끈다.
+- 구현 (feature/ex30-31-impl-jay, worktree `C:/mai/wt/foothold-lab/impl-ex30-31`, 로컬 커밋, push 안 함): T1 `52977744` → 리뷰 막음 2 고침 `d1c22796` · T4 일부 지도 모드 `bcbe5f2e` · 평가 · 짧은 Kit 스크립트 `ee90aa82` (평가 스크립트에 리뷰 막음 1, 고치는 중).
+- 리뷰: reviewer `_out/review/PRECHECK-d9517fb9.md` (v0.2) · `REVIEW-52977744.md` · `REVIEW-ee90aa82.md`. 아래 체크 표시는 리뷰 통과와 Kit 확인 뒤에만 바꾼다.
 
 ## 전역 계약
 
