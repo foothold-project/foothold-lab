@@ -43,6 +43,7 @@ from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 import isaaclab_tasks  # noqa: E402,F401
 
 import foothold_s2.tasks  # noqa: E402,F401
+import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task FootholdS2-Go2-S2-X23-v0)
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters  # noqa: E402
 
@@ -88,6 +89,11 @@ res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sh
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
     res["checkpoint_iter"] = int(sd.get("iter", -1))
+    saved_map_input = runner.pcfg.get("map_input")
+    res["map_input"] = saved_map_input
+
+    if (saved_map_input == "none") != (mode == "none"):                                    # 지도 없는 체크포인트(G0)는 모드 'none' 하나만, 지도 있는 체크포인트에는 'none' 모드를 주지 않는다
+        raise RuntimeError("map_input=%r 인 체크포인트에 모드 %r 는 쓸 수 없다(G0 는 --modes none)" % (saved_map_input, mode))
     res["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt_saved": runner.perception.cfg.force_gt}
     counts = {"gt": 0, "total": 0}
     orig_adv = runner.perception._advance
@@ -114,7 +120,7 @@ for mode in args.modes.split(","):
 
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
         counts["gt"] = counts["total"] = 0
-        policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=mode)
+        policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
@@ -132,7 +138,7 @@ for mode in args.modes.split(","):
             TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
             alive = alive & ~dones.bool()
 
-        if mode in ("eval_pred", "probe_prop_only") and counts["gt"] != 0:
+        if mode in ("eval_pred", "probe_prop_only", "none") and counts["gt"] != 0:
             raise RuntimeError("%s 인데 정책 입력에 GT 가 %d 번 들어갔다" % (mode, counts["gt"]))
         if mode == "eval_gt" and counts["gt"] != counts["total"]:
             raise RuntimeError("eval_gt 인데 GT 가 %d/%d 번만 들어갔다" % (counts["gt"], counts["total"]))

@@ -1,6 +1,6 @@
 """eval_map_modes 가 낸 map_modes.json 여러 개를 같은 표로 나란히 놓는다 (창 1 평가용, CPU).
 
-    python -m foothold_s2.eval.compare_map_modes <parent.json> <ex30.json> <ex31.json>
+    python -m foothold_s2.eval.compare_map_modes <parent.json> <ex30.json> <ex31.json> [--reference <ex25_g0.json>]
 
 세 파일이 같은 조건(env 수 · 스텝 · 꺼진 DR · curriculum 끔 · 모드 · 명령 · 지형 해시)에서 나온 것이 아니면 표를 만들지 않고 멈춘다. 해석은 적지 않고 숫자만 놓는다.
 """
@@ -36,7 +36,38 @@ def check_same_conditions(results: dict) -> None:
             raise ValueError(f"{name} 의 모드 · 명령 목록이 다르다")
 
 
-def table(results: dict) -> str:
+REFERENCE_NOTE = "EX-25 는 마찰 고정(0.8/0.6) 으로 학습, 평가는 마찰 무작위 끔 같은 조건"
+
+
+def check_reference(results: dict, ref: dict) -> None:
+    """지도 없음 참조(EX-25 G0)는 task 만 다를 수 있다. 지형 해시 · env 수 · steps · 꺼진 DR · curriculum 끔 · 명령 목록이 같고, 지도 없는 체크포인트의 모드 'none' 하나일 때만 받는다."""
+    first = results[next(iter(results))]
+
+    if ref.get("map_input") != "none" or list(ref["modes"]) != ["none"]:
+        raise ValueError("참조 열은 map_input=none 체크포인트의 모드 'none' 하나여야 한다: %r %r" % (ref.get("map_input"), list(ref["modes"])))
+    for key in ("envs", "steps", "dr_off", "curriculum_off"):
+        if ref[key] != first[key]:
+            raise ValueError(f"참조 열의 {key} 가 다르다: {ref[key]!r} != {first[key]!r}")
+    if set(ref["terrain_hash"].values()) != set(first["terrain_hash"].values()):
+        raise ValueError("참조 열의 지형 해시가 다르다")
+    if list(ref["modes"]["none"]) != list(first["modes"][next(iter(first["modes"]))]):
+        raise ValueError("참조 열의 명령 목록이 다르다")
+
+
+def reference_table(results: dict, ref: dict) -> str:
+    check_reference(results, ref)
+    header = ["명령"] + [f"EX-25(지도 없음): {short}" for _, short in COLUMNS]
+    lines = ["", "지도 없음 참조 열 (" + REFERENCE_NOTE + ")", "", "| " + " | ".join(header) + " |", "|" + "|".join(["---"] * len(header)) + "|"]
+
+    for cmd, row in ref["modes"]["none"].items():
+        lines.append("| " + " | ".join([cmd] + [f"{row[k]:.2f}" if isinstance(row[k], float) else str(row[k]) for k, _ in COLUMNS]) + " |")
+    lines.append("")
+    lines.append(f"참조 체크포인트: iter {ref['checkpoint_iter']} sha256 {ref['checkpoint_sha256'][:12]} · task {ref['task']}")
+
+    return "\n".join(lines)
+
+
+def table(results: dict, reference: dict | None = None) -> str:
     check_same_conditions(results)
     names = list(results)
     header = ["모드", "명령"] + [f"{n}: {short}" for n in names for _, short in COLUMNS]
@@ -52,16 +83,24 @@ def table(results: dict) -> str:
             lines.append("| " + " | ".join([mode, cmd, *cells]) + " |")
     meta = ["", "조건: " + ", ".join(f"{n}: iter {results[n]['checkpoint_iter']} sha256 {results[n]['checkpoint_sha256'][:12]}" for n in names) + f" · 지형 해시 {next(iter(first['terrain_hash'].values()))[:12]} 동일 · envs {first['envs']} steps {first['steps']}"]
 
-    return "\n".join(lines + meta)
+    out = "\n".join(lines + meta)
+
+    return out + reference_table(results, reference) if reference is not None else out
 
 
 def main(argv):
     paths = argv[1:]
+    reference = None
+
+    if "--reference" in paths:
+        i = paths.index("--reference")
+        reference = load(paths[i + 1])
+        paths = paths[:i] + paths[i + 2:]
 
     if len(paths) < 2:
         raise SystemExit("usage: compare_map_modes <parent.json> <ex30.json> [<ex31.json> ...]")
     labels = ["parent", "ex30", "ex31"] + [f"run{i}" for i in range(3, len(paths))]
-    print(table({labels[i]: load(p) for i, p in enumerate(paths)}))
+    print(table({labels[i]: load(p) for i, p in enumerate(paths)}, reference))
 
 
 if __name__ == "__main__":
