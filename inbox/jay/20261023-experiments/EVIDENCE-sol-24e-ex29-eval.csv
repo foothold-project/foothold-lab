@@ -1,0 +1,5 @@
+name,checkpoint_sha256,map_mode,scene,n_steps,resets,bad_orientation,first10_episode_length_mean_steps,first_reset_step,done_abs_roll_mean_rad,done_abs_pitch_mean_rad,all_map_use_gt,any_map_use_gt
+ex29_model200_flat_gt,5977e6519d3d588a05822d9cba23f592139529fabb2bf357b485fb7fa0d3687b,gt,flat,600,34,34,17.1,16,1.450544494756586,0.06121346159594913,True,True
+ex29_model200_flat_pred,5977e6519d3d588a05822d9cba23f592139529fabb2bf357b485fb7fa0d3687b,pred,flat,600,34,34,17.1,16,1.4540427585144888,0.06149670641637415,False,False
+ex29_model200_stepping_stones_low_gt,5977e6519d3d588a05822d9cba23f592139529fabb2bf357b485fb7fa0d3687b,gt,stepping_stones_low,600,34,34,16.9,16,1.4539893520885445,0.05736838107126017,True,True
+ex29_model200_stepping_stones_low_pred,5977e6519d3d588a05822d9cba23f592139529fabb2bf357b485fb7fa0d3687b,pred,stepping_stones_low,600,34,34,16.9,16,1.4537674964572478,0.05732776966387506,False,False

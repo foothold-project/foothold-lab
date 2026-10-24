@@ -23,7 +23,7 @@
 |---|---|
 | 설정 파생 | S1-a 진단 설정 파생. `train_start_status.json`의 저장된 PPO 설정은 `[코드] seed 42`, `[코드] 1501 iterations`, `[코드] resume: false`다. S1-a model_5999 checkpoint에서 이어 학습한 것이 아니다 |
 | 실제 변경 | `feet_air_time` 가중치 `[코드] +0.1` 한 항. NIGHT-REPORT는 당시 정의의 문턱 `[코드] 0.5 s`, 측정 항 값 `[실측] -0.006`을 보고한다 |
-| 코드 기준 | 실행 시작 HEAD `[코드] c07fff1e`. 그 시점 `git_status.txt`에서 진단 cfg·실행 스크립트가 수정 또는 미추적 상태다. D1 변경을 기록한 커밋은 `e6541c99`(03:50:29)다. 시작 로그 HEAD와 같다고 바꾸지 않으며,dirty 실행 바이트와 이 커밋의 완전 일치는 미확인 |
+| 코드 기준 | 10/24 직접 정정: 실제 본 실행 바깥 폴더 `logs/s1a_diag_D1_20261021_035030/git_head.txt`는 `e6541c996112be0723e9f0fff7dc2f963334fef1`, 같은 폴더 `git_status.txt`는 빈 파일이다. 이 폴더 run.log가 Kit `03:50:35`와 Isaac Lab `03:50:41`, 0/1501 학습을 연결한다. 이전 c07fff1e·dirty 서술은 앞선 03:50:04 시도와 본 실행의 출처를 혼동했으므로 철회한다. 시작 이후 바이트 변경 전체의 부재까지 이 두 파일로 보장하지는 않는다 |
 | 실행 폴더 | `logs/rsl_rl/foothold_s1a_diag/2026-10-21_03-50-41_S1a-diag-D1`; 측정 산출물은 `eval_new/diag_s1a/d1_scan_1500/feet.json` |
 
 ## 검증 기록
@@ -58,7 +58,7 @@
 
 - [#555 D1 등록 6298590512](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6298590512), [D1 판정 6301263269](https://github.com/foothold-project/foothold-lab/issues/555#issuecomment-6301263269).
 - `inbox/jay/20261019-design/NIGHT-REPORT-1021.md`의 D1 행.
-- sonnet-code 실행 시작 HEAD `[코드] c07fff1e`, run log 및 `train_start_status.json`; 측정 결과 경로 `C:/Users/AI-WS01/s2_lab/eval_new/diag_s1a/d1_scan_1500/`.
+- sonnet-code 본 실행 HEAD `[코드] e6541c99`, `logs/s1a_diag_D1_20261021_035030/`의 run log·git_head·git_status 및 `train_start_status.json`; 측정 결과 경로 `C:/Users/AI-WS01/s2_lab/eval_new/diag_s1a/d1_scan_1500/`. [10/24 파일별 SHA와 저장 설정 대조](../20261023-experiments/figs/history-audit-1024/s1_saved_evidence.json).
 
 ## lead_tmp 직접 대조
 
