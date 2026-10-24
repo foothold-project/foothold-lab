@@ -43,21 +43,23 @@ def _proto(follow, verdict="반증"):
     return {"judge": [j, j], "follow": [follow, follow]}
 
 
-def test_summary_detects_order_effect_when_right_recovers_only_when_independent():
-    per = {"indep_right": _proto(0.8), "indep_left": _proto(0.9), "fwd_then_right": _proto(0.1), "left_then_right": _proto(0.1), "right_then_left": _proto(0.9)}
+def test_summary_separates_contexts_forward_and_left_turn_are_not_merged():
+    per = {"indep_right": _proto(0.8), "indep_left": _proto(0.9), "fwd_then_right": _proto(0.1), "left_then_right": _proto(0.78), "right_then_left": _proto(0.9)}
     s = P.summarize(per)
 
-    assert s["order"]["verdict"] == "지지" and s["side_asymmetry_independent"] == pytest.approx(0.1)
+    assert s["order"]["right_after_forward"]["verdict"] == "지지"           # 전진 뒤에서만 정체
+    assert s["order"]["right_after_left_turn"]["verdict"] == "반증"         # 좌회전 뒤 우회전은 정상: 중앙값으로 섞으면 이 정체가 흐려진다
+    assert s["order"]["left_after_right_turn"]["verdict"] == "반증" and s["side_asymmetry_independent"] == pytest.approx(0.1)
     assert s["protocols"]["indep_right"]["joint_limit"] == {"반증": 2}
     same = {k: _proto(0.1) for k in per}
 
-    assert P.summarize(same)["order"]["verdict"] == "반증"
+    assert P.summarize(same)["order"]["right_after_forward"]["verdict"] == "반증"
 
 
 def test_summary_without_the_needed_protocols_is_unconfirmed():
     s = P.summarize({"indep_right": _proto(0.8)})
 
-    assert s["order"]["verdict"] == "미확인" and s["side_asymmetry_independent"] is None
+    assert s["order"]["right_after_forward"]["verdict"] == "미확인" and s["side_asymmetry_independent"] is None
 
 
 def test_kit_script_is_valid_python_and_uses_names_that_exist():
@@ -69,8 +71,9 @@ def test_kit_script_is_valid_python_and_uses_names_that_exist():
     used_l = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "L"}
 
     assert used_p <= plan_names and used_l <= (logic_names | {"HZ"}), (used_p - plan_names, used_l - logic_names)
-    for must in ("computed_torque", "applied_torque", "joint_pos_target", "joint_pos_limits", "soft_joint_pos_limits", "net_forces_w", "TURNPROBE_DONE", "raw.scene.update = _update", "x23_tasks"):
+    for must in ("computed_torque", "applied_torque", "joint_pos_target", "joint_pos_limits", "soft_joint_pos_limits", "net_forces_w", "TURNPROBE_DONE", "raw.scene.update = _update", "x23_tasks", "_saturation_effort", "velocity_limit", "act_limits", "L.thresholds()", "L.module_blob_sha()", "terrain_levels_per_env", "joint_effort_limits_sim_NOT_USED"):
         assert must in src
+    assert '"effort_limit": effort' not in src
     assert src.index("rec.on = record") < src.index("env.step(policy(obs))"), "기록 켜기는 step 앞"
 
 

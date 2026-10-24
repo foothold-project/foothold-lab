@@ -84,8 +84,18 @@ robot_ids = robot.find_bodies(link_names, preserve_order=True)[0]
 foot_cols = [i for i, k in enumerate(kinds) if k == "foot"]
 joint_names = list(robot.joint_names)
 data = robot.data
+J = len(joint_names)
+act_limits = {"effort_limit": np.full(J, np.nan), "saturation_effort": np.full(J, np.nan), "velocity_limit": np.full(J, np.nan)}
+
+for _name, _act in robot.actuators.items():                                  # DC 모터의 실제 토크-속도 곡선 인자(구동기 cfg). data.joint_effort_limits 는 effort_limit_sim 이 없으면 설치 기본값 1e9 라 쓰지 않는다
+    ids = list(range(J)) if isinstance(_act.joint_indices, slice) else [int(i) for i in _act.joint_indices]
+    act_limits["effort_limit"][ids] = _act.effort_limit[0].cpu().numpy()
+    act_limits["saturation_effort"][ids] = _act._saturation_effort[0].cpu().numpy() if hasattr(_act._saturation_effort, "cpu") else float(_act._saturation_effort)
+    act_limits["velocity_limit"][ids] = _act.velocity_limit[0].cpu().numpy() if hasattr(_act.velocity_limit, "cpu") else float(_act.velocity_limit)
+if any(np.isnan(v).any() for v in act_limits.values()):
+    raise RuntimeError("구동기 cfg 에서 읽지 못한 관절이 있다: %r" % {k: v.tolist() for k, v in act_limits.items()})
 static = {"joint_names": joint_names, "link_names": link_names, "link_kinds": kinds, "hard_limits": data.joint_pos_limits[0].cpu().tolist(), "soft_limits": data.soft_joint_pos_limits[0].cpu().tolist(),
-          "stiffness": data.joint_stiffness[0].cpu().tolist(), "damping": data.joint_damping[0].cpu().tolist(), "effort_limit": data.joint_effort_limits[0].cpu().tolist(),
+          "stiffness": data.joint_stiffness[0].cpu().tolist(), "damping": data.joint_damping[0].cpu().tolist(), "joint_effort_limits_sim_NOT_USED": data.joint_effort_limits[0].cpu().tolist(), "actuator_limits": {k: v.tolist() for k, v in act_limits.items()},
           "physics_dt": sub_dt, "policy_dt": dt, "sample_hz": 1.0 / sub_dt, "track_contact_points": bool(sensor.cfg.track_contact_points), "track_friction_forces": bool(sensor.cfg.track_friction_forces)}
 static["slip_note"] = "접선 slip 은 미확인: " + ("접촉점 추적이 켜져 있어 계산 가능" if static["track_contact_points"] else "track_contact_points 가 꺼져 있어 링크 중심 XY 속도(link_xy_speed)를 미끄럼 대용치로만 기록")
 if abs(1.0 / sub_dt - L.HZ) > 1e-6:
@@ -128,7 +138,7 @@ map_input = runner.pcfg.get("map_input")
 if (map_input == "none") != (args.map_mode == "none"):
     raise RuntimeError("map_input=%r 인 체크포인트에 --map-mode %s 는 쓸 수 없다" % (map_input, args.map_mode))
 result = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint), "checkpoint_iter": int(sd.get("iter", -1)),
-          "map_input": map_input, "map_mode": args.map_mode, "envs": N, "dr_off": dr_off, "curriculum_off": curriculum_off, "static": static, "protocols": {}, "judged": {}}
+          "map_input": map_input, "map_mode": args.map_mode, "envs": N, "thresholds": L.thresholds(), "logic_blob_sha": L.module_blob_sha(), "dr_off": dr_off, "curriculum_off": curriculum_off, "static": static, "protocols": {}, "judged": {}}
 os.makedirs(args.out, exist_ok=True)
 per_protocol = {}
 
@@ -169,16 +179,19 @@ for pname, proto in P.PROTOCOLS.items():
     np.savez_compressed(os.path.join(args.out, "arrays_%s.npz" % pname), alive=alive, **arr)
     cmd_wz = proto["cmd"][2]
     hard = np.asarray(static["hard_limits"])
-    effort = np.asarray(static["effort_limit"])
+    soft = np.asarray(static["soft_limits"])
+    levels = raw.scene.terrain.terrain_levels.cpu().numpy()
+    types = raw.scene.terrain.terrain_types.cpu().numpy()
     judged, follows = [], []
 
     for e in range(N):
-        a = {"q": arr["q"][e], "target": arr["target"][e], "computed": arr["computed"][e], "applied": arr["applied"][e], "hard": hard, "effort_limit": effort,
+        a = {"q": arr["q"][e], "target": arr["target"][e], "computed": arr["computed"][e], "applied": arr["applied"][e], "qd": arr["qd"][e], "hard": hard, "soft": soft, "limits": act_limits,
              "force": arr["force"][e], "kinds": kinds, "wz": arr["wz"][e], "alive": alive[e]}
         judged.append(L.judge(a, cmd_wz))
         follows.append(P.yaw_follow(arr["wz"][e], alive[e], cmd_wz))
     per_protocol[pname] = {"judge": judged, "follow": follows}
-    result["protocols"][pname] = {"cmd": proto["cmd"], "pre": proto["pre"], "start_xy_from_origin_m": start_xy.tolist(), "alive_at_end": int(alive[:, -1].sum()), "yaw_follow_per_env": follows,
+    result["protocols"][pname] = {"cmd": proto["cmd"], "pre": proto["pre"], "start_xy_from_origin_m": start_xy.tolist(), "terrain_levels_per_env": levels.tolist(), "terrain_types_per_env": types.tolist(),
+                                  "terrain_uniform": bool(len(set(zip(levels.tolist(), types.tolist()))) == 1), "alive_at_end": int(alive[:, -1].sum()), "yaw_follow_per_env": follows,
                                   "judge_per_env": judged, "terrain_hash": hashlib.sha256(raw.scene.terrain.terrain_levels.cpu().numpy().tobytes() + raw.scene.terrain.terrain_types.cpu().numpy().tobytes()).hexdigest(),
                                   "link_xy_speed_mean_per_link": arr["link_xy_speed"].mean((0, 1)).tolist()}
     print("TURNPROBE", pname, json.dumps({"follow": follows, "alive_end": result["protocols"][pname]["alive_at_end"]}), flush=True)

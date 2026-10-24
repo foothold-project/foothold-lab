@@ -26,7 +26,11 @@ PROTOCOLS = {
     "right_then_left": {"pre": (0.0, 0.0, -WZ), "cmd": (0.0, 0.0, +WZ)},
 }
 FOLLOW_INDEPENDENT = {"right": "indep_right", "left": "indep_left"}
-FOLLOW_SEQUENTIAL = {"right": ("fwd_then_right", "left_then_right"), "left": ("right_then_left",)}
+ORDER_PAIRS = {                                                         # 연속 시행마다 따로 판정한다(맥락을 섞지 않는다): 이름 -> (독립 시행, 연속 시행)
+    "right_after_forward": ("indep_right", "fwd_then_right"),           # 설계 §7.1 의 촬영 순서 가설(전진 뒤 우회전에서만 정체)
+    "right_after_left_turn": ("indep_right", "left_then_right"),
+    "left_after_right_turn": ("indep_left", "right_then_left"),
+}
 
 
 def classify_link(name: str) -> str:
@@ -60,14 +64,9 @@ def summarize(per_protocol: dict) -> dict:
             verdicts = [j[h]["verdict"] for j in envs["judge"]]
             row[h] = {v: verdicts.count(v) for v in sorted(set(verdicts))}
         out["protocols"][name] = row
-    ind = {side: out["protocols"][p]["follow_median"] for side, p in FOLLOW_INDEPENDENT.items() if p in out["protocols"]}
-    seq = {}
-
-    for side, names in FOLLOW_SEQUENTIAL.items():
-        vals = [out["protocols"][n]["follow_median"] for n in names if n in out["protocols"]]
-        if vals:
-            seq[side] = float(np.median(vals))
-    out["order"] = L.order(ind, seq) if len(ind) == 2 and seq else {"verdict": "미확인", "reason": "독립 좌/우 또는 연속 측정 없음"}
+    fm = {n: v["follow_median"] for n, v in out["protocols"].items()}
+    out["order"] = {name: L.order_pair(fm.get(a), fm.get(b)) for name, (a, b) in ORDER_PAIRS.items()}
+    ind = {side: fm[p] for side, p in FOLLOW_INDEPENDENT.items() if p in fm}
     out["side_asymmetry_independent"] = L.side_asymmetry(ind["left"], ind["right"]) if len(ind) == 2 else None
 
     return out
