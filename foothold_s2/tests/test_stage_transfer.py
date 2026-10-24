@@ -4,8 +4,10 @@
 """
 
 import copy
+import dataclasses
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -23,30 +25,40 @@ DESIGN_STD = [0.4227981, 0.4260888, 0.4208926, 0.4199505, 0.5929094, 0.6068594, 
 CUR = "c" * 64
 
 
-def _pcfg(force_gt):
-    return {"microbatch_envs": 4, "map_input": "reconstruction", "force_gt": force_gt, "critic_mode": "clean52"}
+def _pcfg(force_gt, **extra):
+    return {"microbatch_envs": 4, "map_input": "reconstruction", "force_gt": force_gt, "critic_mode": "clean52", "contract": "start", **extra}
 
 
-def _runner(cls, tmp_path, force_gt, name="r"):
-    env = FakeStartEnv(num_envs=8, seed=3)
-    cfg = train_cfg(4, _pcfg(force_gt))
+def _env(seed=42, counter=0, level=0):
+    """START 계약을 만족하는 명령 term 과 env 상태(카운터 · 지형 레벨)가 있는 가짜 env."""
+    env = FakeStartEnv(num_envs=8, seed=seed)
+    term = SimpleNamespace(vel_command_b=torch.tensor([[0.5, 0.0, 0.0]] * 8))
+    env.command_manager = SimpleNamespace(get_term=lambda name: term)
+    env.common_step_counter = counter
+    env.scene = SimpleNamespace(terrain=SimpleNamespace(terrain_levels=torch.full((8,), level), terrain_types=torch.zeros(8, dtype=torch.long)))
+
+    return env
+
+
+def _runner(cls, tmp_path, force_gt, name="r", pcfg=None, seed=42, counter=0, level=0):
+    cfg = train_cfg(4, pcfg if pcfg is not None else _pcfg(force_gt))
     cfg["save_interval"] = 1000
 
-    return cls(env, cfg, log_dir=str(tmp_path / name), device="cpu")
+    return cls(_env(seed, counter, level), cfg, log_dir=str(tmp_path / name), device="cpu")
 
 
 @pytest.fixture(scope="module")
 def parent(tmp_path_factory):
     """가짜 env 의 B 부모(force_gt True)를 2 번 갱신해 저장한다(iter=1)."""
     tmp = tmp_path_factory.mktemp("parent")
-    r = _runner(BRunner, tmp, True, "b")
+    r = _runner(BRunner, tmp, True, "b", counter=777, level=5)                                                  # 부모 env 상태가 새 env 초기값(0)과 다르게
     r.learn(2)
     path = tmp / "b" / "model_1.pt"
 
     assert path.exists()
     sd = torch.load(path, weights_only=False)
 
-    return {"path": path, "sha": file_sha256(path), "iter": sd["iter"], "shapes": {"std": tuple(sd["model_state_dict"]["std"].shape),
+    return {"path": path, "sha": file_sha256(path), "iter": sd["iter"], "allowed": (file_sha256(path),), "shapes": {"std": tuple(sd["model_state_dict"]["std"].shape),
             "actor.0.weight": tuple(sd["model_state_dict"]["actor.0.weight"].shape), "critic.0.weight": tuple(sd["model_state_dict"]["critic.0.weight"].shape)}}
 
 
@@ -89,18 +101,18 @@ def test_real_parent_refused_by_ordinary_resume_with_force_gt_false(tmp_path):
 # ------------------------------------------------------------------ 반례
 def test_importer_refuses_wrong_sha_and_bad_pairs(parent):
     with pytest.raises(TransferRefused, match="SHA"):
-        import_parent(parent["path"], _spec(parent, sha="0" * 64), shapes=parent["shapes"])
+        import_parent(parent["path"], _spec(parent, sha="0" * 64), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
     with pytest.raises(TransferRefused, match="짝"):
-        import_parent(parent["path"], TransferSpec(parent["sha"], "EX-30", "gt", 42, CUR), shapes=parent["shapes"])
+        import_parent(parent["path"], TransferSpec(parent["sha"], "EX-30", "gt", 42, CUR), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
     with pytest.raises(TransferRefused, match="짝"):
-        import_parent(parent["path"], TransferSpec(parent["sha"], "EX-99", "adaptive", 42, CUR), shapes=parent["shapes"])
+        import_parent(parent["path"], TransferSpec(parent["sha"], "EX-99", "adaptive", 42, CUR), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
     with pytest.raises(TransferRefused, match="seed"):
-        import_parent(parent["path"], _spec(parent, seed=True), shapes=parent["shapes"])
+        import_parent(parent["path"], _spec(parent, seed=True), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
 
 
 def test_importer_refuses_wrong_dimension_other_model_and_nonfinite(parent, tmp_path):
     with pytest.raises(TransferRefused, match="모양"):
-        import_parent(parent["path"], _spec(parent), shapes={**parent["shapes"], "actor.0.weight": (512, 97)})
+        import_parent(parent["path"], _spec(parent), shapes={**parent["shapes"], "actor.0.weight": (512, 97)}, allowed_parent_shas=parent["allowed"])
     sd = torch.load(parent["path"], weights_only=False)
 
     def variant(mod, name):
@@ -114,33 +126,33 @@ def test_importer_refuses_wrong_dimension_other_model_and_nonfinite(parent, tmp_
     p, sha = variant(lambda s: s["sol23f"].update(variant="START_TopDown"), "other_model.pt")
 
     with pytest.raises(TransferRefused, match="variant"):
-        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"])
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
 
     p, sha = variant(lambda s: s["sol23f"].update(initial_snapshot=True), "initial.pt")
 
     with pytest.raises(TransferRefused, match="snapshot"):
-        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"])
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
 
     p, sha = variant(lambda s: s["model_state_dict"]["std"].__setitem__(0, float("nan")), "nan.pt")
 
     with pytest.raises(TransferRefused, match="NaN"):
-        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"])
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
 
     p, sha = variant(lambda s: s.pop("optimizer_state_dict"), "no_opt.pt")
 
     with pytest.raises(TransferRefused, match="optimizer_state_dict"):
-        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"])
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
 
     p, sha = variant(lambda s: s.update(format="other"), "format.pt")
 
     with pytest.raises(TransferRefused, match="START"):
-        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"])
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
 
 
 # ------------------------------------------------------------------ 정상: 두 판이 같고 처치만 다르다
 def test_two_children_start_identical_except_the_map_policy(parent, tmp_path):
     a, b = _runner(Ex30Runner, tmp_path, False, "a"), _runner(Ex31Runner, tmp_path, True, "b")
-    ra, rb = a.begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"]), b.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"])
+    ra, rb = a.begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"], parent["allowed"]), b.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
 
     assert state_sha(a.alg.policy.state_dict()) == state_sha(b.alg.policy.state_dict()) == ra["state_sha"]["model"] == rb["state_sha"]["model"]
     assert state_sha(a.alg.optimizer.state_dict()) == state_sha(b.alg.optimizer.state_dict()) == ra["state_sha"]["optimizer"]
@@ -152,12 +164,16 @@ def test_two_children_start_identical_except_the_map_policy(parent, tmp_path):
     assert torch.equal(a.alg.policy.actor(x), b.alg.policy.actor(x))                                               # 같은 입력이면 출력 같음
     assert bool(a.adasmpl.sample(64, "cpu").all()) and bool(b.adasmpl.sample(64, "cpu").all())                      # 첫 GT mask 는 두 판 모두 True
     assert a.adasmpl.force_gt is False and b.adasmpl.force_gt is True
+    assert {k: v for k, v in a.pcfg.items() if k != "force_gt"} == {k: v for k, v in b.pcfg.items() if k != "force_gt"} and a.pcfg["force_gt"] != b.pcfg["force_gt"]     # 두 자식 runner 의 실제 cfg(부모 dict 가 아니라)
+    ca, cb = dataclasses.asdict(a.perception.cfg), dataclasses.asdict(b.perception.cfg)
+
+    assert {k: v for k, v in ca.items() if k != "force_gt"} == {k: v for k, v in cb.items() if k != "force_gt"} and ca["force_gt"] is False and cb["force_gt"] is True
 
 
 def test_only_mainline_can_move_p_after_the_first_valid_update(parent, tmp_path):
     a, b = _runner(Ex30Runner, tmp_path, False, "a"), _runner(Ex31Runner, tmp_path, True, "b")
-    a.begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"])
-    b.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"])
+    a.begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"], parent["allowed"])
+    b.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
 
     for r in (a, b):
         r.adasmpl.add(torch.tensor([0.1, 5.0, 0.2, 3.0]))
@@ -167,29 +183,32 @@ def test_only_mainline_can_move_p_after_the_first_valid_update(parent, tmp_path)
 
 
 def test_importer_alone_does_not_touch_env_state_rng_or_counters(parent, tmp_path):
-    r = _runner(Ex30Runner, tmp_path, False)
+    r = _runner(Ex30Runner, tmp_path, False)                                                                       # 새 env: 카운터 0 · 지형 레벨 0 (부모 env 는 777 · 5)
     rng_before = torch.get_rng_state().clone()
-    r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"])
+    r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+    sd = torch.load(parent["path"], weights_only=False)
 
-    assert torch.equal(torch.get_rng_state(), rng_before) and not hasattr(r, "env_state_loaded")
+    assert sd["env_state"]["common_step_counter"] == 777 and int(sd["env_state"]["terrain_levels"][0]) == 5          # 부모에는 실제로 다른 값이 있었다
+    assert torch.equal(torch.get_rng_state(), rng_before)
+    assert r.env.common_step_counter == 0 and bool((r.env.scene.terrain.terrain_levels == 0).all())                 # 전환은 env 상태를 가져오지 않는다
     assert r.stage_transfer["parent_iter"] == parent["iter"]
 
     with pytest.raises(TransferRefused, match="이미"):
-        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"])
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
 
 
 def test_runner_force_gt_must_match_the_map_policy(parent, tmp_path):
     with pytest.raises(TransferRefused, match="force_gt"):
-        _runner(Ex30Runner, tmp_path, True).begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"])
+        _runner(Ex30Runner, tmp_path, True).begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"], parent["allowed"])
     with pytest.raises(TransferRefused, match="force_gt"):
-        _runner(Ex31Runner, tmp_path, False).begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"])
+        _runner(Ex31Runner, tmp_path, False).begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
 
 
 # ------------------------------------------------------------------ 재개
 def test_child_resume_continues_numbering_and_counters(parent, tmp_path):
     spec = _spec(parent)
     r = _runner(Ex30Runner, tmp_path, False, "run")
-    r.begin_from_parent(parent["path"], spec, parent["shapes"])
+    r.begin_from_parent(parent["path"], spec, parent["shapes"], parent["allowed"])
     k = 3
     r.learn(k)
     P = parent["iter"]
@@ -229,7 +248,7 @@ def test_restore_child_refuses_parent_wrong_spec_and_tampered_counts(parent, tmp
         restore_child(parent["path"], spec.sha256())
 
     r = _runner(Ex30Runner, tmp_path, False, "run")
-    r.begin_from_parent(parent["path"], spec, parent["shapes"])
+    r.begin_from_parent(parent["path"], spec, parent["shapes"], parent["allowed"])
     r.learn(1)
     path = tmp_path / "run" / f"model_{parent['iter'] + 1}.pt"
 
@@ -280,3 +299,200 @@ def test_sol23f_runner_is_untouched():
     out = subprocess.run(["git", "diff", "--stat", "d9517fb9", "--", "foothold_s2/runners/sol23f_runner.py"], capture_output=True, text=True, cwd=root).stdout
 
     assert out.strip() == ""
+
+
+# ------------------------------------------------------------------ 막음 1: 학습 0 회 자식
+def test_zero_or_negative_extra_updates_are_refused_at_start(parent, tmp_path):
+    for n in (0, -1):
+        r = _runner(Ex30Runner, tmp_path, False, f"z{n}")
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+        with pytest.raises(TransferRefused, match="<= 0"):
+            r.learn(n)
+
+        assert not list((tmp_path / f"z{n}").glob("model_*.pt"))                                                   # 저장 파일 없음
+
+
+def test_child_with_no_finished_update_cannot_be_saved(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, "s")
+    r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+    with pytest.raises(TransferRefused, match="0 회"):
+        r.state_dict()
+    with pytest.raises(TransferRefused, match="0 회"):
+        r.save(str(tmp_path / "s" / "x.pt"))
+
+    r.current_learning_iteration += 1                                                                             # learn(0) 이 하던 일: 회차만 올림
+    with pytest.raises(TransferRefused):
+        r.state_dict()
+
+
+def test_learn_zero_bypassing_the_start_check_still_cannot_save(parent, tmp_path):
+    """기동 검사를 우회해 StartRunner.learn(0) 을 부르면 회차만 오르고 마지막 저장이 거절돼야 한다(두 번째 문)."""
+    from foothold_s2.runners.start_runner import StartRunner
+
+    r = _runner(Ex30Runner, tmp_path, False, "bypass")
+    r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+    with pytest.raises(TransferRefused, match="0 회"):
+        StartRunner.learn(r, 0)
+
+    assert not list((tmp_path / "bypass").glob("model_*.pt"))
+
+
+# ------------------------------------------------------------------ 막음 2: 허용 목록
+@pytest.mark.parametrize("extra", [{"critic_mode": "legacy"}, {"est_mode": "zero"}, {"microbatch_envs": 8}, {"contract": None}, {"log_kl": True}, {"stop_on_nonfinite": True}])
+def test_cfg_outside_the_allow_list_is_refused(parent, tmp_path, extra):
+    r = _runner(Ex30Runner, tmp_path, False, pcfg=_pcfg(False, **extra))
+
+    with pytest.raises(TransferRefused, match="밖의 cfg"):
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+    assert r.stage_transfer is None
+
+
+def test_depth_delay_ticks_must_match_the_parent(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, pcfg=_pcfg(False, depth_delay_ticks=0))
+
+    with pytest.raises(TransferRefused, match="depth_delay_ticks"):
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+
+def test_map_input_must_match_the_parent(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, pcfg=_pcfg(False, map_input="none"))
+
+    with pytest.raises(TransferRefused):
+        r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+
+
+def test_allow_list_accepts_treatment_and_the_operational_keys(parent, tmp_path):
+    ops = {k: "x" for k in st.OPERATIONAL_KEYS}                                                                    # 운영 칸 다섯: 달라도 통과
+    a = _runner(Ex30Runner, tmp_path, False, "a", pcfg=_pcfg(False, **ops))
+    b = _runner(Ex31Runner, tmp_path, True, "b")                                                                   # 처치(force_gt)만 다름
+
+    a.begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"], parent["allowed"])
+    b.begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
+
+    assert a.stage_transfer and b.stage_transfer
+
+
+# ------------------------------------------------------------------ 고침
+def test_runner_class_must_match_the_spec_experiment(parent, tmp_path):
+    with pytest.raises(TransferRefused, match="실험"):
+        _runner(Ex31Runner, tmp_path, False).begin_from_parent(parent["path"], _spec(parent, "EX-30"), parent["shapes"], parent["allowed"])
+    with pytest.raises(TransferRefused, match="실험"):
+        _runner(Ex30Runner, tmp_path, True).begin_from_parent(parent["path"], _spec(parent, "EX-31"), parent["shapes"], parent["allowed"])
+
+
+def test_spec_seed_must_match_the_env_seed(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, seed=7)
+
+    with pytest.raises(TransferRefused, match="seed"):
+        r.begin_from_parent(parent["path"], _spec(parent, seed=42), parent["shapes"], parent["allowed"])
+
+
+def test_parent_must_be_in_the_allowed_sha_list(parent):
+    """기본 허용 목록은 설계 §2.1 의 B model_1500 하나다: 같은 실행의 다른 회차는 SHA 를 맞게 적어도 거절."""
+    other = REAL_PARENT.parent / "model_1450.pt"
+
+    if not other.exists():
+        pytest.skip("B model_1450 없음")
+
+    with pytest.raises(TransferRefused, match="허용 목록"):
+        import_parent(other, TransferSpec(file_sha256(other), "EX-30", "adaptive", 42, CUR))
+    with pytest.raises(TransferRefused, match="허용 목록"):
+        import_parent(parent["path"], _spec(parent))                                                               # 가짜 부모도 기본 목록에서는 거절
+
+
+def test_set_spec_alone_does_not_open_the_save_gate(parent, tmp_path):
+    spec = _spec(parent)
+    r = _runner(Ex30Runner, tmp_path, False, "g")
+    r.set_spec(spec, parent["iter"])
+
+    with pytest.raises(TransferRefused, match="전환 기록 없이"):
+        r.state_dict()
+    with pytest.raises(TransferRefused, match="전환"):
+        r.learn(1)                                                                                                 # load 없이 학습하면 무작위 가중치가 자식으로 저장될 길
+
+    assert not list((tmp_path / "g").glob("model_*.pt"))
+    with pytest.raises(TransferRefused, match="실험"):
+        _runner(Ex31Runner, tmp_path, True, "g2").set_spec(spec, parent["iter"])
+
+
+def test_nan_in_the_perception_optimizer_state_is_refused(parent, tmp_path):
+    sd = torch.load(parent["path"], weights_only=False)
+    states = sd["perception_optimizer_state_dict"]["state"]
+    first = next(iter(states.values()))
+    key = "exp_avg_sq"
+    first[key] = first[key].clone()
+    first[key].view(-1)[0] = float("inf")
+    p = tmp_path / "perc_inf.pt"
+    torch.save(sd, p)
+    sha = file_sha256(p)
+
+    with pytest.raises(TransferRefused, match="NaN"):
+        import_parent(p, _spec(parent, sha=sha), shapes=parent["shapes"], allowed_parent_shas=(sha,))
+
+
+def test_failed_apply_marks_the_runner_broken(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, "bk")
+    result = import_parent(parent["path"], _spec(parent), shapes=parent["shapes"], allowed_parent_shas=parent["allowed"])
+    result.optimizer_state = {"state": {}, "param_groups": []}                                                      # optimizer load 가 도중에 실패하도록
+
+    with pytest.raises(Exception):
+        st.apply_transfer(r, result, _spec(parent))
+
+    assert r._transfer_broken is True and r.stage_transfer is None
+
+    with pytest.raises(TransferRefused):
+        r.state_dict()
+
+
+# ------------------------------------------------------------------ 고침 6: 실제 부모 pcfg(contract=start) 를 runner 단계에 쓴다
+@pytest.mark.skipif(not REAL_PARENT.exists(), reason="실제 B 부모 없음")
+def test_real_parent_pcfg_through_both_children_and_one_update(tmp_path, monkeypatch):
+    from foothold_s2.runners import start_runner as sr
+
+    real = torch.load(REAL_PARENT, weights_only=False, map_location="cpu")["perception_cfg"]
+    assert real["contract"] == "start" and real["force_gt"] is True
+    monkeypatch.setattr(sr.RewardSplit, "attach", lambda self, env: None)                                          # 가짜 env 에는 reward manager 가 없다(기록 장치만 끔)
+    out = {}
+    for cls, exp in ((Ex30Runner, "EX-30"), (Ex31Runner, "EX-31")):
+        gt = exp == "EX-31"
+        spec = TransferSpec(REAL_SHA, exp, st.EXPERIMENT_MAP[exp], 42, CUR)
+        r = _runner(cls, tmp_path, gt, exp, pcfg={**real, "force_gt": gt})
+        r.begin_from_parent(REAL_PARENT, spec)
+
+        assert r.pcfg["contract"] == "start" and r.pcfg["force_gt"] is gt and r.current_learning_iteration == 1500
+        out[exp] = r
+
+    assert state_sha(out["EX-30"].alg.policy.state_dict()) == state_sha(out["EX-31"].alg.policy.state_dict())
+    assert state_sha(out["EX-30"].perception_optimizer.state_dict()) == state_sha(out["EX-31"].perception_optimizer.state_dict())
+    out["EX-30"].learn(1)                                                                                         # contract=start 로 실제 명령 term 을 거쳐 1 회 학습
+
+    saved = torch.load(tmp_path / "EX-30" / "model_1501.pt", weights_only=False)
+
+    assert saved["stage_transfer"]["new_completed_updates"] == 1 and saved["stage_transfer"]["total_completed_updates"] == 1502
+    assert saved["perception_cfg"]["force_gt"] is False and saved["adasmpl"]["force_gt"] is False
+
+
+def test_parent_depth_delay_recorded_in_sol23f_must_match_the_child(parent, tmp_path):
+    """pcfg 에 없는 칸: 부모 sol23f 기록의 depth_delay_ticks 가 자식 perception.cfg 와 다르면 거절(pcfg 대조와 별개 문)."""
+    sd = torch.load(parent["path"], weights_only=False)
+    sd["sol23f"]["depth_delay_ticks"] = 0
+    p = tmp_path / "delay0_parent.pt"
+    torch.save(sd, p)
+    sha = file_sha256(p)
+
+    with pytest.raises(TransferRefused, match="depth_delay_ticks"):
+        _runner(Ex30Runner, tmp_path, False).begin_from_parent(p, _spec(parent, sha=sha), parent["shapes"], (sha,))
+
+
+def test_iteration_number_must_equal_start_plus_finished_updates(parent, tmp_path):
+    r = _runner(Ex30Runner, tmp_path, False, "m")
+    r.begin_from_parent(parent["path"], _spec(parent), parent["shapes"], parent["allowed"])
+    r.iter_log.append({"it": parent["iter"] + 1})                                                                   # 갱신 1 회를 끝냈다고 하면서
+    r.current_learning_iteration = parent["iter"] + 3                                                               # 회차는 3 칸 올라간 경우
+
+    with pytest.raises(TransferRefused, match="다르다"):
+        r.state_dict()

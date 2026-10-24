@@ -25,6 +25,9 @@ from foothold_s2.runners.manifest import state_sha
 
 CKPT_FORMAT = "foothold-start/1"
 PARENT_VARIANTS = ("B_friction_only",)                              # 이름이 다른 variant 를 받는 허용 목록(이 모듈 한 곳)
+ALLOWED_PARENT_SHA256 = ("cb65ba5641ac7265664a02110c51f9a57b1427ecee74356870fcd462907c43b8",)      # 설계 §2.1: 부모는 EX-28 B model_1500.pt 하나
+TREATMENT_PCFG_KEYS = ("force_gt",)                                  # 부모와 달라도 되는 처치: 지도 선택(adaptive/gt) 하나
+OPERATIONAL_KEYS = ("experiment_id", "run_name", "log_dir", "extra_updates", "deadline")           # 부모와 달라도 되는 운영 칸. 이 밖의 지각/학습/환경 칸은 부모와 같아야 한다(T2/T3 에서 바꿀 칸은 근거와 함께 여기에 명시적으로 더한다)
 EXPERIMENT_MAP = {"EX-30": "adaptive", "EX-31": "gt"}                # 실험 번호 -> 지도 처치. 둘이 어긋나면 거절
 B_SHAPES = {"std": (12,), "actor.0.weight": (512, 96), "actor.6.weight": (12, 128), "critic.0.weight": (512, 664)}      # 부모 B 의 실제 forward 모양(10/25 CPU 읽기)
 EXPLICIT_RESET_FIELDS = ("env_state", "rng", "episode_rnn_history", "adasmpl.stats", "adasmpl.force_gt", "course_stage_P0", "iteration_counters", "child_new_updates")
@@ -54,7 +57,7 @@ class TransferResult:
     perception_state: dict
     perception_optimizer_state: dict
     perception_learning_rate: float
-    perception_cfg: dict
+    perception_cfg: dict                                               # 자식이 가져야 할 pcfg = 부모 pcfg 에서 처치 칸(force_gt)만 바꾼 값
     adasmpl_state: dict
     normalizers: dict
     parent_iter: int
@@ -62,6 +65,9 @@ class TransferResult:
     new_completed_updates: int
     explicit_reset_fields: tuple
     receipt: dict = field(default_factory=dict)
+    parent_perception_cfg: dict = field(default_factory=dict)
+    parent_depth_delay_ticks: int | None = None
+    parent_map_input: str | None = None
 
 
 def file_sha256(path) -> str:
@@ -106,9 +112,13 @@ def child_meta(spec: TransferSpec, parent_iter: int, current_iter: int) -> dict:
             "total_completed_updates": int(current_iter) + 1}
 
 
-def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: dict | None = None) -> TransferResult:
+def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: dict | None = None, allowed_parent_shas=None) -> TransferResult:
     parent_path = Path(parent_path)
     shapes = B_SHAPES if shapes is None else shapes
+    allowed = ALLOWED_PARENT_SHA256 if allowed_parent_shas is None else tuple(allowed_parent_shas)
+
+    if spec.parent_sha256 not in allowed:
+        raise TransferRefused(f"부모 SHA {spec.parent_sha256} 는 허용 목록에 없다(설계 §2.1 의 부모 하나만 받는다)")
 
     if spec.experiment_id not in EXPERIMENT_MAP or EXPERIMENT_MAP[spec.experiment_id] != spec.map_policy:
         raise TransferRefused(f"experiment_id {spec.experiment_id!r} 와 map_policy {spec.map_policy!r} 의 짝이 계약과 다르다")
@@ -147,7 +157,7 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
         if got != tuple(shape):
             raise TransferRefused(f"{name} 모양 {got} 가 계약 {tuple(shape)} 와 다르다")
 
-    if not (_all_finite(sd["model_state_dict"]) and _all_finite(sd["perception_state_dict"]) and _all_finite(sd["optimizer_state_dict"])):
+    if not (_all_finite(sd["model_state_dict"]) and _all_finite(sd["perception_state_dict"]) and _all_finite(sd["optimizer_state_dict"]) and _all_finite(sd["perception_optimizer_state_dict"])):
         raise TransferRefused("부모 가중치 또는 optimizer 상태에 NaN/Inf 가 있다")
 
     parent_iter = int(sd["iter"])
@@ -172,23 +182,68 @@ def import_parent(parent_path, spec: TransferSpec, device: str = "cpu", shapes: 
 
     return TransferResult(model_state=model, optimizer_state=opt, ppo_learning_rate=float(sd["ppo_learning_rate"]), perception_state=perc, perception_optimizer_state=popt,
                           perception_learning_rate=float(popt["param_groups"][0]["lr"]), perception_cfg=pcfg, adasmpl_state=ada, normalizers=_normalizers(model, perc),
-                          parent_iter=parent_iter, parent_completed_updates=parent_iter + 1, new_completed_updates=0, explicit_reset_fields=EXPLICIT_RESET_FIELDS, receipt=receipt)
+                          parent_iter=parent_iter, parent_completed_updates=parent_iter + 1, new_completed_updates=0, explicit_reset_fields=EXPLICIT_RESET_FIELDS, receipt=receipt,
+                          parent_perception_cfg=dict(sd["perception_cfg"]), parent_depth_delay_ticks=own.get("depth_delay_ticks"), parent_map_input=own.get("map_input"))
+
+
+def unexpected_cfg_diffs(parent_pcfg: dict, child_pcfg: dict, defaults: dict) -> dict:
+    """부모 pcfg 와 자식 pcfg 의 차이 중 허용 목록(처치 · 운영 칸) 밖인 것. 부모에 없는 칸은 그 시점의 기본값으로 본다."""
+    expected = {**defaults, **parent_pcfg}
+    keys = set(expected) | set(child_pcfg)
+    allowed = set(TREATMENT_PCFG_KEYS) | set(OPERATIONAL_KEYS)
+
+    return {k: (expected.get(k), child_pcfg.get(k)) for k in sorted(keys) if k not in allowed and expected.get(k) != child_pcfg.get(k)}
 
 
 def apply_transfer(runner, result: TransferResult, spec: TransferSpec) -> None:
-    """가져온 상태를 StartRunner(자식)에 쓴다. env 상태 · RNG 는 건드리지 않고 번호만 부모에서 이어 센다."""
+    """가져온 상태를 StartRunner(자식)에 쓴다. env 상태 · RNG 는 건드리지 않고 번호만 부모에서 이어 센다.
+
+    쓰기 전에 모든 계약을 검사한다: 실험 번호 · 처치 · seed · 허용 목록 밖 cfg 차이. 쓰는 도중 실패하면 runner 를 «깨짐» 으로 표시해 이후 저장을 막는다(버리고 새로 만든다).
+    """
+    from foothold_s2.runners.start_runner import PERCEPTION_DEFAULTS
+
+    if getattr(runner, "experiment_id", None) != spec.experiment_id:
+        raise TransferRefused(f"runner 의 실험 {getattr(runner, 'experiment_id', None)!r} 와 spec 의 {spec.experiment_id!r} 가 다르다")
+
     if bool(runner.pcfg.get("force_gt", False)) != (spec.map_policy == "gt"):
         raise TransferRefused(f"runner force_gt={runner.pcfg.get('force_gt')!r} 가 map_policy {spec.map_policy!r} 와 다르다")
 
-    runner.alg.policy.load_state_dict(result.model_state)
-    runner.perception.load_state_dict(result.perception_state)
-    runner.alg.optimizer.load_state_dict(result.optimizer_state)
-    runner.alg.learning_rate = result.ppo_learning_rate
-    runner.perception_optimizer.load_state_dict(result.perception_optimizer_state)
-    runner.adasmpl.load_state_dict(dict(result.adasmpl_state))
-    runner.current_learning_iteration = result.parent_iter                  # learn() 은 재개일 때 parent_iter + 1 번부터 센다
-    runner._resumed = True
-    runner.stage_transfer = {"spec": spec, "parent_iter": result.parent_iter}
+    env_seed = getattr(getattr(getattr(runner.env, "unwrapped", runner.env), "cfg", None), "seed", None)
+
+    if env_seed != spec.seed:
+        raise TransferRefused(f"spec seed {spec.seed} 와 env cfg seed {env_seed!r} 가 다르다")
+
+    diffs = unexpected_cfg_diffs(result.parent_perception_cfg, dict(runner.pcfg), PERCEPTION_DEFAULTS)
+
+    if diffs:
+        raise TransferRefused(f"부모와 달라도 되는 칸(처치 {TREATMENT_PCFG_KEYS} · 운영 {OPERATIONAL_KEYS}) 밖의 cfg 가 다르다: {diffs}")
+
+    if result.parent_depth_delay_ticks is not None and runner.perception.cfg.depth_delay_ticks != result.parent_depth_delay_ticks:
+        raise TransferRefused(f"depth_delay_ticks 부모 {result.parent_depth_delay_ticks} 자식 {runner.perception.cfg.depth_delay_ticks}")
+
+    if runner.perception.cfg.map_input != result.parent_map_input:
+        raise TransferRefused(f"map_input 부모 {result.parent_map_input!r} 자식 {runner.perception.cfg.map_input!r}")
+
+    if getattr(runner, "_transfer_broken", False):
+        raise TransferRefused("이전 전환이 도중에 실패한 runner 다. 버리고 새로 만든다")
+
+    result.receipt["child_cfg_perception_lr"] = runner.pcfg.get("learning_rate")                       # cfg 값과 실제 값(부모 optimizer 의 값이 이긴다)을 둘 다 남긴다
+    result.receipt["child_pcfg_sha256"] = state_sha(dict(runner.pcfg))
+
+    try:
+        runner.alg.policy.load_state_dict(result.model_state)
+        runner.perception.load_state_dict(result.perception_state)
+        runner.alg.optimizer.load_state_dict(result.optimizer_state)
+        runner.alg.learning_rate = result.ppo_learning_rate
+        runner.perception_optimizer.load_state_dict(result.perception_optimizer_state)
+        runner.adasmpl.load_state_dict(dict(result.adasmpl_state))
+        runner.current_learning_iteration = result.parent_iter                  # learn() 은 재개일 때 parent_iter + 1 번부터 센다
+        runner._resumed = True
+    except BaseException:
+        runner._transfer_broken = True
+        raise
+
+    runner.stage_transfer = {"spec": spec, "parent_iter": result.parent_iter, "base_iter": result.parent_iter}
 
 
 @dataclass
