@@ -1,0 +1,23 @@
+{
+  "checkpoint": "C:\\mai\\wt\\foothold-lab\\lead-tmp-start-b\\logs\\rsl_rl\\foothold_s2_23f_topdown\\2026-10-24_08-20-33_ex29-td-main\\model_100.pt",
+  "checkpoint_sha256": "451bb22bc2a3d4c534c3720958ee5c408eb0b4f90dc5d5005f1fdfafb02607d9",
+  "total_envs": 3072,
+  "counts_by_kind": {
+    "stepping_stones_low": 1625,
+    "flat": 1140,
+    "stepping_stones_high": 0,
+    "balance_beams": 0,
+    "stepping_beams": 0,
+    "gaps": 307
+  },
+  "levels": {
+    "0": 3003,
+    "1": 63,
+    "2": 5,
+    "3": 1
+  },
+  "initial_log": "TOPDOWN_INITIAL_TERRAIN {'gap_envs': 307, 'low_flat_envs': 2765, 'num_cols': 30, 'num_rows': 10}",
+  "initial_log_path": "C:/Users/AI-WS01/s2_lab/run_20261024/td_main_segment1/run.log:216",
+  "cpu_only": true,
+  "note": "all saved environments at model_100, not a sample; source files read only; this verifies exposure, not successful locomotion"
+}
