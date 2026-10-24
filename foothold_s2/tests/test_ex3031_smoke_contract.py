@@ -170,3 +170,24 @@ def test_eval_map_modes_defaults_and_guards():
 
     assert 'default="eval_gt,eval_pred,probe_prop_only"' in src and "raise RuntimeError" in src and 'if mode in ("eval_pred", "probe_prop_only") and counts["gt"] != 0' in src
     assert "map_mode=mode" in src and "runner, sd = adapters.load_s2_runner" in src.split("for mode in")[1].split("for cname")[0]            # 모드마다 새 runner
+
+
+def test_eval_turns_off_curriculum_and_asserts_the_same_terrain_across_modes():
+    src = EVAL.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+
+    assert '("terrain_levels", "command_range")' in src and "setattr(env_cfg.curriculum, name, None)" in src
+    assert src.index("setattr(env_cfg.curriculum, name, None)") < src.index("gym.make(")          # env 를 만들기 전에 끈다
+    assert "terrain_levels.cpu().numpy().tobytes()" in src and "terrain_types.cpu().numpy().tobytes()" in src and '"terrain_hash"' in src
+    assert "지형 칸 해시가 첫 실행과 다르다" in src and src.index("terrain_hash") < src.index("term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)")
+    assert "body_vx_integral_median_m" in src and "forward_dist" not in src
+    assert any(isinstance(n, ast.Attribute) and n.attr == "get_observations" for n in ast.walk(tree))
+
+
+def test_eval_curriculum_off_matches_the_real_b_env_terms():
+    """끄는 이름이 B env cfg 의 실제 curriculum 칸이고, 짧은 Kit 학습 스크립트는 curriculum 을 건드리지 않는다(학습은 B 그대로 켬)."""
+    cfg = (ROOT / "foothold_s2/tasks/s2_23f_topdown_cfg.py").read_text(encoding="utf-8")
+    base = (ROOT / "foothold_s2/tasks/s1_env_cfg.py").read_text(encoding="utf-8")
+
+    assert "self.curriculum.terrain_levels = CurrTerm(" in cfg and "command_range" in base
+    assert "curriculum" not in SCRIPT.read_text(encoding="utf-8")

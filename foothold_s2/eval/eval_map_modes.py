@@ -5,10 +5,11 @@
 diag_z_action 과 같은 틀: 학습 env 그대로 64 env 300 스텝, DR(게인 · 세기 · 마찰 · 질량 · 무게중심 · 밀기 · 지연)만 끔, z mean · action mean.
 명령 전진 0.5 · 1.0 → 제자리 회전 +1.2 · -1.2 를 매 스텝 고정값으로 덮어쓴다(순차 영상 촬영과 같은 명령 넷이되 명령마다 리셋하는 독립 시험).
 모드마다 정책 입력 지도에 실제로 GT 가 몇 번 들어갔는지 지각의 _advance 를 감싸 센다: eval_pred · probe_prop_only 는 0, eval_gt 는 전부여야 하고 어긋나면 그 자리에서 멈춘다.
-산출: 모드 x 명령별 전진 거리 · 요 추종 · 멈춤 비율 · 몸 기울기(roll/pitch 절댓값 평균) · 살아남은 env 수 · GT 사용 횟수.
+산출: 모드 x 명령별 몸 좌표 vx 적분 · 요 추종 · 멈춤 비율 · 몸 기울기(roll/pitch 절댓값 평균) · 살아남은 env 수 · GT 사용 횟수.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -61,6 +62,13 @@ if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
     env_cfg.actions.joint_pos.max_delay_s = 0.0
     dr_off.append("action_delay")
 
+curriculum_off = []
+
+for name in ("terrain_levels", "command_range"):                      # 부모 B 의 curriculum 이 켜져 있으면 reset 마다 지형 행이 직전 성적으로 오르내려 모드끼리 다른 지형에서 평가된다
+    if getattr(env_cfg.curriculum, name, None) is not None:
+        setattr(env_cfg.curriculum, name, None)
+        curriculum_off.append(name)
+
 env_cfg.commands.base_velocity.resampling_time_range = (1.0e9, 1.0e9)
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
@@ -71,7 +79,7 @@ dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
 S = args.steps
-res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "modes": {}}
+res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "terrain_hash": {}, "modes": {}}
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -92,10 +100,18 @@ for mode in args.modes.split(","):
     for cname, cmd in CMDS.items():
         torch.manual_seed(42)
         env.reset()
-        term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+        terrain = raw.scene.terrain
+        th = hashlib.sha256(terrain.terrain_levels.cpu().numpy().tobytes() + terrain.terrain_types.cpu().numpy().tobytes()).hexdigest()
+        res["terrain_hash"]["%s/%s" % (mode, cname)] = th
+        ref = res["terrain_hash"][next(iter(res["terrain_hash"]))]
+
+        if th != ref:
+            raise RuntimeError("%s/%s 의 지형 칸 해시가 첫 실행과 다르다: 모드끼리 같은 지형에서 평가되지 않는다" % (mode, cname))
+
+        term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=mode)
-        obs = env.get_observations()
+        obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
@@ -119,7 +135,7 @@ for mode in args.modes.split(","):
 
         vx, wz, al, tilt = VX.cpu().numpy(), WZ.cpu().numpy(), AL.cpu().numpy(), TILT.cpu().numpy()
         sl = slice(int(2.0 / dt), int(4.0 / dt))
-        dist = (vx * al).sum(0) * dt
+        dist = (vx * al).sum(0) * dt                                  # 몸 좌표 vx 의 적분(월드 이동 거리가 아님)
         nalive = np.maximum(al.sum(0), 1)
         spin = abs(cmd[2]) > 0
         follow = (wz * al).sum(0) / nalive / (cmd[2] if spin else 1.0)
@@ -130,7 +146,7 @@ for mode in args.modes.split(","):
         else:
             stall = float(np.mean((np.where(al[sl], vx[sl], np.nan).mean(0)[used]) < 0.05))
 
-        row = {"forward_dist_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
+        row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
