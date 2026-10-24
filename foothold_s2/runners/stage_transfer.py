@@ -306,7 +306,8 @@ def load_dumped_yaml(path) -> dict:
 
 
 def yaml_pair_diff(parent_path, child_path, allowed_paths=(), ignore_names=("log_dir", "device")) -> dict:
-    """부모 · 자식 덤프 yaml 의 잎 단위 차이. ignore_names 는 이름(마지막 키)이 같은 운영 칸, allowed_paths 는 점으로 이은 경로(처치 칸)."""
+    """부모 · 자식 덤프 yaml 의 잎 단위 차이. ignore_names 는 이름(마지막 키)이 같은 운영 칸, allowed_paths 는 점으로 이은 경로(처치 칸).
+    allowed_paths 의 항목이 ".*" 로 끝나면 그 경로 아래 모든 잎을 허용한다(점 경계까지: "a.b.*" 는 "a.b.c" 를 허용하고 "a.bx" 는 허용하지 않는다)."""
     def leaves(obj, prefix=""):
         if isinstance(obj, dict):
             for k, v in obj.items():
@@ -318,7 +319,7 @@ def yaml_pair_diff(parent_path, child_path, allowed_paths=(), ignore_names=("log
     out = {}
 
     for k in sorted(set(a) | set(b)):
-        if a.get(k, "<없음>") != b.get(k, "<없음>") and k.split(".")[-1] not in ignore_names and k not in allowed_paths:
+        if a.get(k, "<없음>") != b.get(k, "<없음>") and k.split(".")[-1] not in ignore_names and k not in allowed_paths and not any(ap.endswith(".*") and k.startswith(ap[:-1]) for ap in allowed_paths):
             out[k] = (a.get(k, "<없음>"), b.get(k, "<없음>"))
 
     return out

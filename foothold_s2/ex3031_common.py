@@ -50,13 +50,14 @@ def record_realized_physics(gym_env, env_cfg, log_dir, parent_ckpt):
     return check
 
 
-def check_dumped_cfg_against_parent(log_dir, parent_ckpt, exp):
-    """덤프한 env.yaml · agent.yaml 을 부모 실행의 같은 파일과 잎 단위로 대조해 json 으로 남기고, 처치 칸 밖 차이가 있으면 학습 전에 멈춘다."""
+def check_dumped_cfg_against_parent(log_dir, parent_ckpt, exp, env_allowed=()):
+    """덤프한 env.yaml · agent.yaml 을 부모 실행의 같은 파일과 잎 단위로 대조해 json 으로 남기고, 처치 칸 밖 차이가 있으면 학습 전에 멈춘다.
+    env_allowed: env.yaml 에서 허용할 경로(기본 없음 = 창 1 · 2 와 같은 엄격한 대조). 창 3 처방은 window3_prescription.ENV_ALLOWED 를 넘긴다."""
     pdir = os.path.join(os.path.dirname(os.path.abspath(parent_ckpt)), "params")
-    env_diff = yaml_pair_diff(os.path.join(pdir, "env.yaml"), os.path.join(log_dir, "params", "env.yaml"))
+    env_diff = yaml_pair_diff(os.path.join(pdir, "env.yaml"), os.path.join(log_dir, "params", "env.yaml"), allowed_paths=tuple(env_allowed))
     agent_diff = yaml_pair_diff(os.path.join(pdir, "agent.yaml"), os.path.join(log_dir, "params", "agent.yaml"), allowed_paths=("perception.force_gt",), ignore_names=AGENT_PAIR_IGNORE)
     with open(os.path.join(log_dir, "cfg_pair_diff.json"), "w", encoding="utf-8") as stream:
-        json.dump({"exp": exp, "env_yaml": env_diff, "agent_yaml": agent_diff, "sha256": {"parent_env": file_sha256(os.path.join(pdir, "env.yaml")), "parent_agent": file_sha256(os.path.join(pdir, "agent.yaml")),
+        json.dump({"exp": exp, "env_allowed": list(env_allowed), "env_yaml": env_diff, "agent_yaml": agent_diff, "sha256": {"parent_env": file_sha256(os.path.join(pdir, "env.yaml")), "parent_agent": file_sha256(os.path.join(pdir, "agent.yaml")),
                    "child_env": file_sha256(os.path.join(log_dir, "params", "env.yaml")), "child_agent": file_sha256(os.path.join(log_dir, "params", "agent.yaml"))}}, stream, ensure_ascii=False, indent=2, default=str)
     if env_diff or agent_diff:
         raise RuntimeError("부모 params 와 처치 칸 밖의 차이가 있다(cfg_pair_diff.json): env %d칸 · agent %d칸" % (len(env_diff), len(agent_diff)))
