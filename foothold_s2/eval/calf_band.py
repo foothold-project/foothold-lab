@@ -112,7 +112,7 @@ def main(argv=None) -> None:
     shas = {n: (d.get("fixed_terrain") or {}).get("assignment_sha256") for n, d in pairs}
     if len(pairs) > 1 and (None in shas.values() or len(set(shas.values())) != 1):
         raise SystemExit(f"비교 불가: 고정 지형 칸이 없거나 서로 다르다 {shas}")
-    print("W3-P1 사전 점검(미검증 집계, reviewer 확인 전). r = 네 calf 의 sum max(0, q - (hard_hi - 0.05)), 벌점은 W*r 로 계산만 했고 학습에 쓴 적 없다\n")
+    print("W3-P1 사전 점검(미검증 집계, reviewer 확인 전). r = 네 calf 의 sum max(0, q - (hard_hi - 0.05)), 벌점은 W*r 로 계산만 했고 학습에 쓴 적 없다. 이 표의 q 는 200 Hz substep 값이고 보상은 정책 스텝 끝 q 로 계산되므로 같은 값이 아니다\n")
     for name, d in pairs:
         print(table(name, d))
         print()
