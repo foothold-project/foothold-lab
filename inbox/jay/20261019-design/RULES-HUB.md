@@ -15,6 +15,7 @@
 | 실험 흐름 | [EXPERIMENT-FLOW-20261023.md](EXPERIMENT-FLOW-20261023.md) · [EXP-MAP](../20261021-experiments/EXP-MAP.md) | 무엇을 묻고 무엇을 알았나 |
 | 지금 설계 | [DESIGN-EX30-31.md](../20261025-experiments/DESIGN-EX30-31.md) 맨 위 한 장 요약 | EX-30 · 31 |
 | 착안 · 출처 | [PROVENANCE-START-vs-OURS.md](../20261025-experiments/PROVENANCE-START-vs-OURS.md) | START 와 같은 것 · 다른 것 · 참고 논문 |
+| 10/25 문답 | [QA-LEAD-20261025.md](../20261025-experiments/QA-LEAD-20261025.md) | 팀장이 묻고 이해를 확인한 내용 (실험 번호 · 창 1 · 문턱 · AdaSmpl · 노이즈 · 계단) |
 | 개념 풀이 | [NOTE-start-learning-gt-1023.md](../20261023-experiments/NOTE-start-learning-gt-1023.md) | HMap GT · Pred · AdaSmpl 등 |
 
 ## 1. 세션 역할 (10/25 부터)
