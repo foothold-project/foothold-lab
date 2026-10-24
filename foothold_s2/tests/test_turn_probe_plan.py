@@ -101,3 +101,10 @@ def test_run_script_shape_and_lf():
     r = subprocess.run([r"C:\Program Files\Git\bin\bash.exe", "-n", str(SH)], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=30)
 
     assert r.returncode == 0, r.stderr
+
+
+def test_scene_update_hook_accepts_the_keyword_call_isaaclab_makes():
+    tree = ast.parse(PROBE.read_text(encoding="utf-8"))
+    hook = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "_update")
+
+    assert hook.args.vararg is not None and hook.args.kwarg is not None            # scene.update(dt=physics_dt) 키워드 호출(첫 Kit 실행에서 TypeError 였다)

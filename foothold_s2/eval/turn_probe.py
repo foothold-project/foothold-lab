@@ -125,8 +125,8 @@ rec = Recorder()
 _orig_update = raw.scene.update
 
 
-def _update(dt_arg):
-    _orig_update(dt_arg)
+def _update(*args, **kwargs):                  # ManagerBasedRLEnv.step 은 scene.update(dt=...) 로 키워드 호출한다
+    _orig_update(*args, **kwargs)
     if rec.on:
         rec.sample()
 
