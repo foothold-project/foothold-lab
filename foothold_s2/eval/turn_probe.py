@@ -29,6 +29,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=4)
 parser.add_argument("--map-mode", default="eval_pred", choices=("eval_gt", "eval_pred", "probe_prop_only", "none"))
 parser.add_argument("--out", required=True)
+parser.add_argument("--forward-gaits", action="store_true", help="회전 시행 다섯 뒤에 전진 걸음 구간(0.5 · 1.0 m/s, 8 s)을 더 기록한다(판정 없음, arrays_fwd0.5.npz · arrays_fwd1.0.npz). W3-P1 종아리 띠 점검용")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 정해진 칸으로 덮어쓴다(eval_map_modes --fixed-terrain 과 같은 배열 규칙)")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -211,6 +212,33 @@ for pname, proto in P.PROTOCOLS.items():
                                   "judge_per_env": judged, "terrain_hash": hashlib.sha256(raw.scene.terrain.terrain_levels.cpu().numpy().tobytes() + raw.scene.terrain.terrain_types.cpu().numpy().tobytes()).hexdigest(),
                                   "link_xy_speed_mean_per_link": arr["link_xy_speed"].mean((0, 1)).tolist()}
     print("TURNPROBE", pname, json.dumps({"follow": follows, "alive_end": result["protocols"][pname]["alive_at_end"]}), flush=True)
+
+FORWARD_GAITS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0)}
+
+if args.forward_gaits:                                                                   # 판정 없이 q · target · vx 등을 남긴다. 회전 시행과 같은 reset · 고정 칸 · 정책 생성 절차
+    result["forward_gaits"] = {}
+    for gname, gcmd in FORWARD_GAITS.items():
+        torch.manual_seed(42)
+        env.reset()
+        if args.fixed_terrain:
+            fixed = probe_tiles.apply_to(raw)
+            if fixed["assignment_sha256"] != result["fixed_terrain"]["assignment_sha256"]:
+                raise RuntimeError("전진 걸음 구간의 고정 칸 배열이 회전 시행과 다르다")
+            env.reset()
+        origin = raw.scene.env_origins.clone()
+        offset = (robot.data.root_pos_w[:, :2] - origin[:, :2]).abs().max().item()
+        if args.fixed_terrain and offset > START_OFFSET_MAX_M + 1.0e-3:
+            raise RuntimeError("%s: reset 뒤 로봇 root 가 env 원점에서 %.3f m 벗어났다(허용 %.1f m)" % (gname, offset, START_OFFSET_MAX_M))
+        term.vel_command_b[:, :3] = torch.tensor(gcmd, device=dev)
+        policy = adapters.S2Policy(runner, N, z_mode="mean", act_mode="mean", map_mode=None if args.map_mode == "none" else args.map_mode)
+        obs = env.get_observations()
+        obs, alive, alive_end = run_segment(gcmd, P.RECORD_S, policy, obs, True)
+        arr = rec.stack()
+        if alive.shape[1] != arr["q"].shape[1]:
+            raise RuntimeError("alive 길이 %d 와 substep 기록 %d 가 다르다" % (alive.shape[1], arr["q"].shape[1]))
+        np.savez_compressed(os.path.join(args.out, "arrays_%s.npz" % gname), alive=alive, kept=alive_end, **arr)
+        result["forward_gaits"][gname] = {"cmd": gcmd, "start_offset_max_m": offset, "kept_envs": alive_end.tolist(), "alive_at_end": int(alive_end.sum())}
+        print("FORWARD_GAIT", gname, json.dumps({"alive_end": int(alive_end.sum()), "of": int(N)}), flush=True)
 
 result["summary"] = P.summarize(per_protocol)
 if getattr(runner.perception, 'ie', None) is not None:

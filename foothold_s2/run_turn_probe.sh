@@ -11,12 +11,14 @@ export PATH="$ENV:$ENV/Library/mingw-w64/bin:$ENV/Library/usr/bin:$ENV/Library/b
 export CONDA_PREFIX="$ENV" OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID PYTHONUNBUFFERED=1 KMP_DUPLICATE_LIB_OK=TRUE
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+ENVS="${ENVS:-4}"                                      # 기본 4 env. 16 env 판정용: ENVS=16
+GAITS="${FORWARD_GAITS_FLAG-}"                         # W3-P1: FORWARD_GAITS_FLAG=--forward-gaits 면 회전 시행 뒤 전진 걸음 0.5 · 1.0 도 기록
 FIXED="${FIXED_TERRAIN_FLAG---fixed-terrain}"      # 기본: 고정 지형 칸 사용. 끄려면 FIXED_TERRAIN_FLAG= (빈 값)
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="${3:-$ROOT/logs/turn_probe_${STAMP}}"
 mkdir -p "$OUT"
 git rev-parse HEAD > "$OUT/git_head.txt"
 sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
-"$ENV/python.exe" -m foothold_s2.eval.turn_probe --task "$TASK" --map-mode "$MODE" --checkpoint "$CK" --out "$OUT" $FIXED --headless --device "$DEV" > "$OUT/run.log" 2>&1
+"$ENV/python.exe" -m foothold_s2.eval.turn_probe --task "$TASK" --map-mode "$MODE" --checkpoint "$CK" --out "$OUT" --envs "$ENVS" $GAITS $FIXED --headless --device "$DEV" > "$OUT/run.log" 2>&1
 echo "rc=$?" > "$OUT/rc.txt"
 grep -q "TURNPROBE_DONE" "$OUT/run.log" || echo "DONE 줄 없음(Isaac 은 예외 뒤에도 0 을 낼 수 있다)" >> "$OUT/rc.txt"
