@@ -133,7 +133,7 @@ def test_default_effort_limit_without_clipping_cannot_judge_the_curve_and_says_s
     a["limits"] = {**LIM, "effort_limit": np.full(J, 1.0e9)}
     r = L.judge(a, 1.2)["actuator"]
 
-    assert r["curve_used"] is False and r["verdict"] == "반증" and "곡선 근처" in r["note"]
+    assert r["curve_used"] is False and r["verdict"] == "미확인" and "곡선 근처" in r["note"]    # 곡선을 못 쓰고 잘림도 없으면 반증이 아니다
 
 
 def test_missing_inputs_are_unconfirmed_not_negative():

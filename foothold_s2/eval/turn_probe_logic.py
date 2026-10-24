@@ -113,7 +113,7 @@ def actuator(q, target, computed, applied, qd, limits, stall, hz: float = HZ) ->
     run = longest_run((sat & stall[:, None]).T) / hz
     flagged = [int(j) for j in np.nonzero(run >= SUSTAIN_S)[0]]
     err = np.abs(np.asarray(target) - np.asarray(q)) if q is not None and target is not None else None
-    verdict = "지지" if flagged else "반증"                                # 계산≠적용(잘림)은 실제 토크 제한의 완전한 척도다. 곡선 근처(98 %)는 한계가 쓸 만할 때만 본다
+    verdict = "지지" if flagged else ("반증" if usable else "미확인")        # 곡선을 못 쓰고 잘림도 없으면 곡선 근처 포화를 못 본 것이라 반증이 아니라 미확인
 
     return {"verdict": verdict, "joints": flagged, "clipped_fraction": clip.mean(0).tolist(), "at_dc_curve_fraction": at_curve.mean(0).tolist(), "curve_used": bool(usable),
             "longest_saturated_while_stalled_s": run.tolist(), "target_minus_q_mean_abs": None if err is None else err.mean(0).tolist(),
