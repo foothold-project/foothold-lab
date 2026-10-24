@@ -16,6 +16,7 @@
 | 지금 설계 | [DESIGN-EX30-31.md](../20261025-experiments/DESIGN-EX30-31.md) 맨 위 한 장 요약 | EX-30 · 31 |
 | 착안 · 출처 | [PROVENANCE-START-vs-OURS.md](../20261025-experiments/PROVENANCE-START-vs-OURS.md) | START 와 같은 것 · 다른 것 · 참고 논문 |
 | 10/25 문답 | [QA-LEAD-20261025.md](../20261025-experiments/QA-LEAD-20261025.md) | 팀장이 묻고 이해를 확인한 내용 (실험 번호 · 창 1 · 문턱 · AdaSmpl · 노이즈 · 계단) |
+| 실험 상황판 | https://ai-ws01.tail025053.ts.net/lab/ (tailnet 전용, 파일 C:/Users/AI-WS01/s2_lab/lab_status/index.html) | lead 가 20 분마다 갱신, 새 결과 때 텔레그램 |
 | 개념 풀이 | [NOTE-start-learning-gt-1023.md](../20261023-experiments/NOTE-start-learning-gt-1023.md) | HMap GT · Pred · AdaSmpl 등 |
 
 ## 1. 세션 역할 (10/25 부터)
@@ -72,6 +73,7 @@
 | 04:3x | 「1 권고 사항으로 진행. EX-31을 지금 멈추고, EX-30이 끝나는 대로 다시 띄움」 | EX-31 첫 실행 종료 (04:42:05), EX-30 뒤 GPU0 재기동 |
 | 05:4x | 「창 1 두 판이 모두 ① Traceback · OOM 0, ② 고정 칸 평가에서 복원 지도 전진 · 생존이 부모 GT 기준선보다 0.10 넘게 떨어지지 않으면, 창 2(추가 250회, B 설정 그대로)를 GPU0에서 EX-30 → EX-31 순서로 자동 기동한다. 하나라도 어기면 멈추고 아침에 보고.」 | 창 2 조건부 자동 기동 |
 | 05:4x | 우회전 처방 「처방해서 창 2 이후 넣어줘」 · 「창 2는 GPU0에서 차례로, Linux는 창 2 뒤에」 | 창 3 부터 두 판 같게, 한 축씩 |
+| 06:0x | 「planner 맡겨」 · 「만약 GPU0, 1 둘다 작업 필요하다가 GPU 하나 문제 될 것 같다 (chrome 연결되어있는거) 하면 정말 필요시 Chrome 꺼도 되.」 | planner 밤샘 설계 초안 (창 3 · C) · GPU 두 장이 다 필요할 때만 Chrome 종료 허용 |
 
 ## 6. 반복 지시 (팀장이 두 번 이상 말한 것)
 
