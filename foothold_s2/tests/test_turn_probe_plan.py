@@ -129,3 +129,32 @@ def test_hook_signature_matches_the_installed_isaaclab_scene_update_and_call_sit
     ns["_update"](0.005)
 
     assert calls == [((), {"dt": 0.005}), ((0.005,), {})]
+
+
+def test_summary_leaves_out_fallen_envs_and_reports_how_many():
+    j = {h: {"verdict": "반증"} for h in ("joint_limit", "actuator", "foot_support", "posture")}
+    jf = {h: {"verdict": "지지"} for h in ("joint_limit", "actuator", "foot_support", "posture")}
+    per = {"indep_right": {"judge": [j, jf, j, jf], "follow": [0.1, 0.9, 0.12, 0.8], "kept": [True, False, True, False]}}
+    s = P.summarize(per)["protocols"]["indep_right"]
+
+    assert s["n_env"] == 2 and s["n_total"] == 4 and s["n_excluded_fallen"] == 2 and s["follow_median"] == pytest.approx(0.11) and s["joint_limit"] == {"반증": 2}
+    none = P.summarize({"indep_right": {"judge": [j], "follow": [0.5], "kept": [False]}})["protocols"]["indep_right"]
+
+    assert none["n_env"] == 0 and np.isnan(none["follow_median"]) and none["joint_limit"] == {}
+    with pytest.raises(ValueError, match="kept"):
+        P.summarize({"indep_right": {"judge": [j, j], "follow": [0.1, 0.1], "kept": [True]}})
+
+
+def test_probe_script_applies_fixed_terrain_checks_offset_and_filters_fallen_envs():
+    src = PROBE.read_text(encoding="utf-8")
+
+    assert '"--fixed-terrain"' in src and "fixed_terrain.apply(raw)" in src and "START_OFFSET_MAX_M = 0.5" in src and "고정 지형 칸이 reset 뒤에 바뀌었다" in src
+    assert src.index("fixed_terrain.apply(raw)") < src.index("origin = raw.scene.env_origins.clone()") < src.index("offset = (robot.data.root_pos_w")
+    assert "kept = pre_alive_end & alive_end" in src and '"kept": kept.tolist()' in src and "kept=kept" in src and '"fixed_terrain": None' in src
+    assert "return obs, torch.stack(alive_hist, dim=1).cpu().numpy(), alive.cpu().numpy()" in src
+
+
+def test_probe_shell_script_passes_the_fixed_terrain_flag_by_default():
+    text = SH.read_text(encoding="utf-8")
+
+    assert '$FIXED --headless' in text and 'FIXED="${FIXED_TERRAIN_FLAG---fixed-terrain}"' in text and "\r" not in text

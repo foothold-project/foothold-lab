@@ -54,14 +54,20 @@ def yaw_follow(wz: np.ndarray, alive: np.ndarray, cmd_wz: float) -> float:
 
 
 def summarize(per_protocol: dict) -> dict:
-    """per_protocol[이름] = env 별 judge 결과 리스트 + 'follow' 리스트(env 별 yaw 추종 비). 가설별 «지지한 env 수/전체» 와 순서 판정."""
+    """per_protocol[이름] = env 별 judge 결과 리스트 + 'follow' 리스트(env 별 yaw 추종 비) + 'kept'(안 넘어진 env). 가설별 «지지한 env 수/남은 env» 와 순서 판정."""
     out = {"protocols": {}}
 
     for name, envs in per_protocol.items():
-        row = {"n_env": len(envs["judge"]), "follow_median": float(np.nanmedian(envs["follow"]))}
+        total = len(envs["judge"])
+        kept = list(envs.get("kept") or [True] * total)                    # 한 번도 안 넘어진 env 만 센다(넘어져 reset 된 env 의 뒤 기록은 뜻이 없다)
+        if len(kept) != total:
+            raise ValueError(f"{name}: kept {len(kept)} 와 env {total} 가 다르다")
+        follow = [f for f, k in zip(envs["follow"], kept) if k]
+        judge = [j for j, k in zip(envs["judge"], kept) if k]
+        row = {"n_env": len(judge), "n_total": total, "n_excluded_fallen": total - len(judge), "follow_median": float(np.nanmedian(follow)) if follow else float("nan")}
 
         for h in ("joint_limit", "actuator", "foot_support", "posture"):
-            verdicts = [j[h]["verdict"] for j in envs["judge"]]
+            verdicts = [j[h]["verdict"] for j in judge]
             row[h] = {v: verdicts.count(v) for v in sorted(set(verdicts))}
         out["protocols"][name] = row
     fm = {n: v["follow_median"] for n, v in out["protocols"].items()}

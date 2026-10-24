@@ -22,12 +22,14 @@ import rsl_rl.runners  # noqa: F401
 
 from isaaclab.app import AppLauncher
 
+START_OFFSET_MAX_M = 0.5                  # eval_map_modes 와 같은 허용치: B 의 reset 은 원점 기준 x · y ±0.5 m
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=4)
 parser.add_argument("--map-mode", default="eval_pred", choices=("eval_gt", "eval_pred", "probe_prop_only", "none"))
 parser.add_argument("--out", required=True)
+parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 정해진 칸으로 덮어쓴다(eval_map_modes --fixed-terrain 과 같은 배열 규칙)")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 app = AppLauncher(args).app
@@ -45,7 +47,7 @@ import isaaclab_tasks  # noqa: E402,F401
 import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
-from foothold_s2.eval import adapters, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
+from foothold_s2.eval import adapters, fixed_terrain, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -138,7 +140,7 @@ map_input = runner.pcfg.get("map_input")
 if (map_input == "none") != (args.map_mode == "none"):
     raise RuntimeError("map_input=%r 인 체크포인트에 --map-mode %s 는 쓸 수 없다" % (map_input, args.map_mode))
 result = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint), "checkpoint_iter": int(sd.get("iter", -1)),
-          "map_input": map_input, "map_mode": args.map_mode, "envs": N, "thresholds": L.thresholds(), "logic_blob_sha": L.module_blob_sha(), "dr_off": dr_off, "curriculum_off": curriculum_off, "static": static, "protocols": {}, "judged": {}}
+          "map_input": map_input, "map_mode": args.map_mode, "envs": N, "thresholds": L.thresholds(), "logic_blob_sha": L.module_blob_sha(), "dr_off": dr_off, "curriculum_off": curriculum_off, "static": static, "fixed_terrain": None, "protocols": {}, "judged": {}}
 os.makedirs(args.out, exist_ok=True)
 per_protocol = {}
 
@@ -158,25 +160,38 @@ def run_segment(cmd, seconds, policy, obs, record):
         alive = alive & ~dones.bool()
     rec.on = False
 
-    return obs, torch.stack(alive_hist, dim=1).cpu().numpy()
+    return obs, torch.stack(alive_hist, dim=1).cpu().numpy(), alive.cpu().numpy()         # 마지막 값 = 구간 끝까지 한 번도 안 넘어진 env(마지막 step 의 done 까지 반영)
 
 
 for pname, proto in P.PROTOCOLS.items():
     torch.manual_seed(42)
     env.reset()
+
+    if args.fixed_terrain:
+        result["fixed_terrain"] = fixed_terrain.apply(raw)
+        env.reset()                                                                      # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
+        lv, ty = fixed_terrain.fixed_assignment(N, result["fixed_terrain"]["rows"], result["fixed_terrain"]["cols"])
+        if not (np.array_equal(raw.scene.terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(raw.scene.terrain.terrain_types.cpu().numpy(), ty)):
+            raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
     origin = raw.scene.env_origins.clone()
     start_xy = (robot.data.root_pos_w[:, :2] - origin[:, :2]).norm(dim=1).cpu().numpy()
+    offset = (robot.data.root_pos_w[:, :2] - origin[:, :2]).abs().max().item()
+    if args.fixed_terrain and offset > START_OFFSET_MAX_M + 1.0e-3:
+        raise RuntimeError("%s: reset 뒤 로봇 root 가 env 원점에서 %.3f m 벗어났다(허용 %.1f m)" % (pname, offset, START_OFFSET_MAX_M))
     term.vel_command_b[:, :3] = torch.tensor(proto["cmd"], device=dev)
     policy = adapters.S2Policy(runner, N, z_mode="mean", act_mode="mean", map_mode=None if args.map_mode == "none" else args.map_mode)
     obs = env.get_observations()
     if proto["pre"] is not None:
-        obs, _ = run_segment(proto["pre"], P.PRE_S, policy, obs, False)
-    obs, alive = run_segment(proto["cmd"], P.RECORD_S, policy, obs, True)
+        obs, _, pre_alive_end = run_segment(proto["pre"], P.PRE_S, policy, obs, False)
+    else:
+        pre_alive_end = np.ones(N, dtype=bool)
+    obs, alive, alive_end = run_segment(proto["cmd"], P.RECORD_S, policy, obs, True)
+    kept = pre_alive_end & alive_end                                                    # 앞 구간과 기록 구간 모두 한 번도 안 넘어진 env 만 판정 · 집계에 쓴다(넘어져 reset 된 env 는 뒤 기록이 뜻이 없다)
     arr = rec.stack()
     T = arr["q"].shape[1]
     if alive.shape[1] != T:
         raise RuntimeError("alive 길이 %d 와 substep 기록 %d 가 다르다" % (alive.shape[1], T))
-    np.savez_compressed(os.path.join(args.out, "arrays_%s.npz" % pname), alive=alive, **arr)
+    np.savez_compressed(os.path.join(args.out, "arrays_%s.npz" % pname), alive=alive, kept=kept, **arr)
     cmd_wz = proto["cmd"][2]
     hard = np.asarray(static["hard_limits"])
     soft = np.asarray(static["soft_limits"])
@@ -189,9 +204,9 @@ for pname, proto in P.PROTOCOLS.items():
              "force": arr["force"][e], "kinds": kinds, "wz": arr["wz"][e], "alive": alive[e]}
         judged.append(L.judge(a, cmd_wz))
         follows.append(P.yaw_follow(arr["wz"][e], alive[e], cmd_wz))
-    per_protocol[pname] = {"judge": judged, "follow": follows}
-    result["protocols"][pname] = {"cmd": proto["cmd"], "pre": proto["pre"], "start_xy_from_origin_m": start_xy.tolist(), "terrain_levels_per_env": levels.tolist(), "terrain_types_per_env": types.tolist(),
-                                  "terrain_uniform": bool(len(set(zip(levels.tolist(), types.tolist()))) == 1), "alive_at_end": int(alive[:, -1].sum()), "yaw_follow_per_env": follows,
+    per_protocol[pname] = {"judge": judged, "follow": follows, "kept": kept.tolist()}
+    result["protocols"][pname] = {"cmd": proto["cmd"], "pre": proto["pre"], "start_xy_from_origin_m": start_xy.tolist(), "start_offset_max_m": offset, "kept_envs": kept.tolist(), "terrain_levels_per_env": levels.tolist(), "terrain_types_per_env": types.tolist(),
+                                  "terrain_uniform": bool(len(set(zip(levels.tolist(), types.tolist()))) == 1), "alive_at_end": int(kept.sum()), "yaw_follow_per_env": follows,
                                   "judge_per_env": judged, "terrain_hash": hashlib.sha256(raw.scene.terrain.terrain_levels.cpu().numpy().tobytes() + raw.scene.terrain.terrain_types.cpu().numpy().tobytes()).hexdigest(),
                                   "link_xy_speed_mean_per_link": arr["link_xy_speed"].mean((0, 1)).tolist()}
     print("TURNPROBE", pname, json.dumps({"follow": follows, "alive_end": result["protocols"][pname]["alive_at_end"]}), flush=True)
