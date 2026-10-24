@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 import sys
 
+from foothold_s2.eval import fixed_terrain
+
 COLUMNS = (("body_vx_integral_median_m", "vx적분 m"), ("yaw_follow_median", "요추종"), ("stalled_fraction_2to4s", "멈춤"), ("alive_envs_at_end", "생존"))
 
 
@@ -86,6 +88,10 @@ def table(results: dict, reference: dict | None = None) -> str:
                 cells += [f"{row[k]:.2f}" if isinstance(row[k], float) else str(row[k]) for k, _ in COLUMNS]
             lines.append("| " + " | ".join([mode, cmd, *cells]) + " |")
     meta = ["", "조건: " + ", ".join(f"{n}: iter {results[n]['checkpoint_iter']} sha256 {results[n]['checkpoint_sha256'][:12]}" for n in names) + f" · 지형 해시 {next(iter(first['terrain_hash'].values()))[:12]} 동일 · envs {first['envs']} steps {first['steps']}"]
+    if first.get("fixed_terrain"):
+        meta.append("지형: " + fixed_terrain.describe(first["fixed_terrain"]))
+    else:
+        meta.append("지형: 고정 안 함(학습 reset 이 뽑은 칸, 모델끼리 해시가 같을 때만 비교)")
 
     out = "\n".join(lines + meta)
 
@@ -101,8 +107,8 @@ def main(argv):
         reference = load(paths[i + 1])
         paths = paths[:i] + paths[i + 2:]
 
-    if len(paths) < 2:
-        raise SystemExit("usage: compare_map_modes <parent.json> <ex30.json> [<ex31.json> ...]")
+    if len(paths) < (1 if reference is not None else 2):
+        raise SystemExit("usage: compare_map_modes <parent.json> [<ex30.json> <ex31.json> ...] [--reference <ex25_g0.json>]")
     labels = ["parent", "ex30", "ex31"] + [f"run{i}" for i in range(3, len(paths))]
     print(table({labels[i]: load(p) for i, p in enumerate(paths)}, reference))
 

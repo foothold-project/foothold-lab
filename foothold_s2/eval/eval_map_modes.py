@@ -64,6 +64,7 @@ if hasattr(env_cfg.actions.joint_pos, "max_delay_s"):
     env_cfg.actions.joint_pos.max_delay_s = 0.0
     dr_off.append("action_delay")
 
+START_OFFSET_MAX_M = 0.5
 EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다
 if sorted(dr_off) != sorted(EXPECTED_DR_OFF):
     raise RuntimeError("꺼진 DR 목록 %r 이 기대 %r 와 다르다" % (dr_off, EXPECTED_DR_OFF))
@@ -120,6 +121,11 @@ for mode in args.modes.split(","):
 
             if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
                 raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
+        offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
+
+        if offset > START_OFFSET_MAX_M + 1.0e-3:
+            raise RuntimeError("%s/%s: reset 뒤 로봇 root 가 env 원점에서 %.3f m 벗어났다(허용 %.1f m): 원점이 바뀌지 않았거나 다른 칸에서 시작" % (mode, cname, offset, START_OFFSET_MAX_M))
+        res.setdefault("start_offset_max_m", {})["%s/%s" % (mode, cname)] = offset
         th = hashlib.sha256(terrain.terrain_levels.cpu().numpy().tobytes() + terrain.terrain_types.cpu().numpy().tobytes()).hexdigest()
         res["terrain_hash"]["%s/%s" % (mode, cname)] = th
         ref = res["terrain_hash"][next(iter(res["terrain_hash"]))]

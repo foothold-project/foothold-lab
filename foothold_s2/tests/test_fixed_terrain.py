@@ -93,3 +93,39 @@ def test_eval_script_applies_it_after_reset_and_before_the_hash_and_shell_script
         text = (ROOT / "foothold_s2" / name).read_text(encoding="utf-8")
 
         assert "--fixed-terrain" in text and "$FIXED" in text and "\r" not in text
+
+
+def test_table_header_states_what_was_fixed_and_what_it_does_not_represent():
+    base = _with_fixed(_fake_result())
+    line = ft.describe(base["fixed_terrain"])
+
+    assert "고정 칸 · 레벨 0~2 만(64 env 배치 24/20/20) · 종류 = env 번호 % 20 열" in line
+    rec = {"rows": 10, "cols": 23, "levels_used": 3, "num_envs": 64, "assignment_sha256": "ab" * 32}
+    exact = ft.describe(rec)
+
+    assert exact.startswith("고정 칸 · 레벨 0~2 만(64 env 배치 23/23/18) · 종류 = env 번호 % 23 열 · 학습 분포(레벨 0~9) 대표 아님")
+    out = cmp.table({"parent": base})
+
+    assert "지형: 고정 칸" in out and "대표 아님" in out
+    assert "고정 안 함" in cmp.table({"parent": _fake_result()})
+    g0 = _with_fixed(_g0())
+
+    assert out.count("대표 아님") == 1 and "지도 없음 참조 열" in cmp.table({"parent": base}, g0)
+
+
+def test_main_runs_with_only_a_parent_and_a_reference(tmp_path, capsys):
+    p, g = tmp_path / "p.json", tmp_path / "g.json"
+    p.write_text(json.dumps(_with_fixed(_fake_result())), encoding="utf-8")
+    g.write_text(json.dumps(_with_fixed(_g0())), encoding="utf-8")
+    cmp.main(["x", str(p), "--reference", str(g)])
+
+    assert "지도 없음 참조 열" in capsys.readouterr().out
+    with pytest.raises(SystemExit):
+        cmp.main(["x", str(p)])
+
+
+def test_eval_script_asserts_root_is_near_the_env_origin_after_reset():
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+
+    assert "START_OFFSET_MAX_M = 0.5" in src and "root_pos_w[:, :2] - raw.scene.env_origins[:, :2]" in src and "start_offset_max_m" in src
+    assert src.index("fixed_terrain.apply(raw)") < src.index("START_OFFSET_MAX_M + 1.0e-3") < src.index("th = hashlib.sha256(")

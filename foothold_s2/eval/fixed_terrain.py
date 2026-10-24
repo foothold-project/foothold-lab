@@ -44,3 +44,12 @@ def apply(raw) -> dict:
         raise RuntimeError("scene.env_origins 가 terrain.env_origins 와 다르다")
 
     return {"rows": rows, "cols": cols, "levels_used": LEVELS_USED, "num_envs": int(len(levels)), "assignment_sha256": assignment_sha256(levels, types)}
+
+
+def describe(record: dict) -> str:
+    """결과 표 머리에 찍는 한 줄: 무엇을 고정했고 무엇을 대표하지 않는지. record 는 json 의 fixed_terrain."""
+    levels, types = fixed_assignment(record["num_envs"], record["rows"], record["cols"])
+    counts = "/".join(str(int((levels == lv).sum())) for lv in range(record["levels_used"]))
+
+    return (f"고정 칸 · 레벨 0~{record['levels_used'] - 1} 만({record['num_envs']} env 배치 {counts}) · 종류 = env 번호 % {record['cols']} 열 · "
+            f"학습 분포(레벨 0~{record['rows'] - 1}) 대표 아님 · 배열 SHA {record['assignment_sha256'][:12]}")
