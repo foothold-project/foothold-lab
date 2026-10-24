@@ -47,71 +47,113 @@ def rotation_layer(cur: dict, prev: dict | None = None) -> dict:
     return {"record": record, "warn": warn, "stop": stop, "level": "멈춤" if stop else ("경고" if warn else "통과")}
 
 
-def branch(L: float, R: float, D: float | None) -> dict:
-    """§2.3 분기표 한 판. D = 약한 방향의 정체 구간 최대 calf 체류(약한 방향이 없으면 None 가능). label 은 A · B · C · D · «표 밖» · «D 미측정»."""
+RECOMMEND_NOTE = "분기 결과는 권고다. 창 3 기동은 팀장 승인 뒤. 문턱은 모두 [추정]."
+
+
+def branch(L: float, R: float, D: float | None, D_other: float | None = None, d_status: str | None = None) -> dict:
+    """v1.2.1 §2.3a 분기표 한 판. 검사 순서 D 붕괴 -> F(D 미측정) -> B -> C -> E(표 밖) -> A.
+    D = 약한 방향 D(전체 구간, 추종 < 0.3 env 평균), D_other = 반대 방향 D(E 에서만 쓴다).
+    d_status = "ok" | "missing"(probe 없음/실패) | "no_low_env"(probe 는 있으나 추종 < 0.3 인 남은 env 가 0). 생략하면 D 가 None 이면 missing.
+    label: A · B · C · D · 멈춤 · «표 밖»(E 인데 D 가 없어 규칙이 없음, 판정 보류). B 기본이면 default_b=True."""
     lo, diff = min(L, R), abs(L - R)
     weak = lo < K.BRANCH_WEAK_MIN or diff >= K.BRANCH_DIFF_MIN
-    hit = []
-    if L < K.BRANCH_COLLAPSE_MAX and R < K.BRANCH_COLLAPSE_MAX:
-        hit.append("D")
-    if weak and D is not None and D >= K.BRANCH_D_C_MAX:                       # D >= 0.5 는 B, 0.3 <= D < 0.5 도 B (초안)
-        hit.append("B")
-    if weak and D is not None and D < K.BRANCH_D_C_MAX:
-        hit.append("C")
-    if lo >= K.BRANCH_STRONG_MIN and diff <= K.BRANCH_A_DIFF_MAX:
-        hit.append("A")
-    label = next((b for b in K.BRANCH_PRIORITY if b in hit), None)
-    if label is None:
-        label = "D 미측정" if (weak and D is None) else "표 밖"                    # 표 밖 = 약한 방향도 A 도 아닌 사이 구간(예: min 0.3~0.5 이고 차가 작음)
+    status = d_status or ("ok" if D is not None else "missing")
+    out = {"L": L, "R": R, "D": D, "D_other": D_other, "d_status": status, "weak": weak, "weak_side": "R" if R < L else ("L" if L < R else "같음"),
+           "hit": [], "warn": [], "default_b": False, "via": None, "note": RECOMMEND_NOTE}
 
-    return {"label": label, "hit": hit, "L": L, "R": R, "D": D, "weak": weak, "weak_side": "R" if R < L else ("L" if L < R else "같음")}
+    def done(label, via=None):
+        out["label"], out["via"] = label, via
+        if label in "ABCD" and len(label) == 1:
+            out["hit"] = [label]
+
+        return out
+
+    if L < K.BRANCH_COLLAPSE_MAX and R < K.BRANCH_COLLAPSE_MAX:
+        return done("D", "붕괴")
+    if weak:
+        if D is None:                                                             # F
+            if status == "no_low_env":
+                out["warn"].append("D 를 셀 env(남고 추종 < 0.3)가 0 이다: D 가 아니라 회전 생존 쪽 문제. 멈춤")
+
+                return done("멈춤", "F 추종 < 0.3 env 0")
+            out["default_b"] = True
+            out["warn"].append("D 미측정 · B 기본(한 번 다시 재고도 없을 때만. 영수증에 적고 §5 판정 때 D 를 잰다)")
+
+            return done("B", "F B 기본")
+        return done("B" if D >= K.BRANCH_D_C_MAX else "C", "D >= 0.3" if D >= K.BRANCH_D_C_MAX else "D < 0.3")        # 0.3 <= D < 0.5 도 B
+    if lo >= K.BRANCH_STRONG_MIN and diff <= K.BRANCH_A_DIFF_MAX:
+        return done("A", "강한 방향 둘")
+    ds = [x for x in (D, D_other) if x is not None]                                # E: min 0.3~0.5 이고 차 < 0.25
+    if len(ds) < 2:
+        out["warn"].append("표 밖(E) 인데 두 방향 D 가 다 있지 않다: 규칙이 없어 판정 보류")
+
+        return done("표 밖", "E D 없음")
+    if max(ds) >= K.BRANCH_E_B_MIN:
+        return done("B", "E max(D) >= 0.5")
+    out["warn"].append("표 밖(E) -> A + 회전 층 경고 기록(처방 없음 · 창 3 = P0 또는 B 그대로)")
+
+    return done("A", "E max(D) < 0.5")
 
 
 def combine(branches: dict) -> dict:
-    """두 판(이름 -> branch 결과)을 우선순위 D > B > C > A 로 합친다. A 는 둘 다 A 일 때만. «표 밖» · «D 미측정» 이 있으면 합치지 않고 판정 보류."""
+    """두 판(이름 -> branch 결과)을 우선순위 D > B > C > A 로 합친다. A 는 둘 다 A 일 때만. 멈춤이 있으면 멈춤, «표 밖» 이 있으면 판정 보류. 결과는 권고."""
     labels = {k: v["label"] for k, v in branches.items()}
-    if any(lb in ("표 밖", "D 미측정") for lb in labels.values()):
-        return {"label": "판정 보류", "per": labels, "reason": "표 밖 또는 D 미측정인 판이 있다"}
+    base = {"per": labels, "note": RECOMMEND_NOTE, "default_b": [k for k, v in branches.items() if v.get("default_b")]}
+    if "멈춤" in labels.values():
+        return {"label": "멈춤", **base, "reason": "추종 < 0.3 env 가 없어 D 를 못 세는 판이 있다"}
+    if "표 밖" in labels.values():
+        return {"label": "판정 보류", **base, "reason": "표 밖(E) 인데 D 가 없는 판이 있다"}
     for b in K.BRANCH_PRIORITY:
         if b == "A":
             if all(lb == "A" for lb in labels.values()):
-                return {"label": "A", "per": labels}
+                return {"label": "A", **base}
         elif b in labels.values():
-            return {"label": b, "per": labels}
+            return {"label": b, **base}
 
-    return {"label": "판정 보류", "per": labels, "reason": "A 와 다른 분기가 섞여 위 우선순위에 안 걸린다"}
+    return {"label": "판정 보류", **base, "reason": "A 와 다른 분기가 섞여 위 우선순위에 안 걸린다"}
 
 
 def weak_direction_dwell(probe_folder, side: str) -> dict:
-    """probe 폴더의 약한 방향(side = 'R' 또는 'L') 시행들에서 네 calf 최대 체류의 안 넘어진 env 평균(정체 구간 한정 · 전체 구간)과 시행 수, 넘어진 수."""
+    """probe 폴더의 방향(side = 'R' 또는 'L') 시행들에서, 안 넘어졌고 추종 < 0.3 인 env 의 네 calf 최대 체류 평균.
+    D(분기에 쓰는 값) = 전체 구간. 정체 구간 한정은 보조로만 적는다. 폴더나 기록이 없으면 status 'missing'."""
     from foothold_s2.eval import calf_band as C
 
-    d = C.load(probe_folder)
-    st, wh, kept_n, fallen = [], [], 0, 0
+    try:
+        d = C.load(probe_folder)
+    except (FileNotFoundError, KeyError) as e:
+        return {"D": None, "status": "missing", "reason": f"{type(e).__name__}: {e}", "protocols": list(K.WEAK_PROTOCOLS[side])}
+    whole, stalled, kept_n, fallen = [], [], 0, 0
     for p in K.WEAK_PROTOCOLS[side]:
         v = d["by_protocol"].get(p)
-        if v is None or "dwell" not in v:
-            raise SystemExit(f"{p} 시행 기록(wz 포함)이 없다: {probe_folder}")
+        if v is None or "dwell" not in v or "follow" not in v:
+            return {"D": None, "status": "missing", "reason": f"{p} 시행 기록(wz · alive 포함)이 없다: {probe_folder}", "protocols": list(K.WEAK_PROTOCOLS[side])}
         k = v["kept"]
         kept_n += int(k.sum())
         fallen += int((~k).sum())
-        st.extend(v["dwell"]["stalled"][k].tolist())
-        wh.extend(v["dwell"]["whole"][k].tolist())
-    st = np.array(st, dtype=float)
+        low = k & (v["follow"] < K.BRANCH_LOW_FOLLOW)                             # NaN < x 는 False
+        whole.extend(v["dwell"]["whole"][low].tolist())
+        stalled.extend(v["dwell"]["stalled"][low].tolist())
+    st = np.array(stalled, dtype=float)
     ok = ~np.isnan(st)
+    info = {"n_low_env": len(whole), "n_kept": kept_n, "fallen": fallen, "trials_total": kept_n + fallen, "protocols": list(K.WEAK_PROTOCOLS[side]),
+            "D_stalled_aux": float(st[ok].mean()) if ok.any() else None, "n_stalled_aux": int(ok.sum())}
+    if not whole:
+        return {"D": None, "status": "no_low_env", **info}
 
-    return {"D_stalled": float(st[ok].mean()) if ok.any() else None, "n_stalled_trials": int(ok.sum()), "D_whole": float(np.mean(wh)) if wh else None, "n_trials": kept_n, "fallen": fallen,
-            "trials_total": kept_n + fallen, "protocols": list(K.WEAK_PROTOCOLS[side])}
+    return {"D": float(np.mean(whole)), "status": "ok", **info}
 
 
 def inputs_from_files(map_modes_json, probe_folder) -> dict:
     mm = json.loads(Path(map_modes_json).read_text(encoding="utf-8"))
     cur = spin_inputs(mm)
     side = "R" if cur["R"] < cur["L"] else "L"
-    dw = weak_direction_dwell(probe_folder, side)
+    other = "L" if side == "R" else "R"
+    dw, dw_o = weak_direction_dwell(probe_folder, side), weak_direction_dwell(probe_folder, other)
+    # F: 약한 방향 D 가 없을 때 »한 번 다시 잰다« 는 사람이 하는 일이다. 코드는 status 를 그대로 남긴다.
 
-    return {"spin": cur, "weak_side": side, "dwell": dw, "branch": branch(cur["L"], cur["R"], dw["D_stalled"]), "rotation_layer": rotation_layer(cur), "criteria_sha256": K.criteria_sha256(),
-            "checkpoint_iter": mm.get("checkpoint_iter"), "checkpoint_sha256": mm.get("checkpoint_sha256", "")[:12], "map_modes_fixed_sha": (mm.get("fixed_terrain") or {}).get("assignment_sha256")}
+    return {"spin": cur, "weak_side": side, "dwell": dw, "dwell_other": dw_o, "branch": branch(cur["L"], cur["R"], dw["D"], dw_o["D"], dw["status"]), "rotation_layer": rotation_layer(cur),
+            "criteria_sha256": K.criteria_sha256(), "checkpoint_iter": mm.get("checkpoint_iter"), "checkpoint_sha256": mm.get("checkpoint_sha256", "")[:12],
+            "map_modes_fixed_sha": (mm.get("fixed_terrain") or {}).get("assignment_sha256")}
 
 
 def main(argv=None) -> None:
@@ -123,15 +165,20 @@ def main(argv=None) -> None:
     res_c = combine({k: v["branch"] for k, v in res.items()}) if len(res) > 1 else None
     Path(out_json).write_text(json.dumps({"판": res, "합침": res_c}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("창 3 분기 입력(미검증 집계, reviewer 확인 전). 기준 파일 SHA", K.criteria_sha256()[:12])
-    print("| 판 | iter | L(spin+1.2) | R(spin-1.2) | abs(L-R) | 약한 방향 | D(정체 구간 한정) | D(전체 구간) | 약한 방향 시행(남은/전체) | spin 생존 L · R | 분기 | 회전 층 |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    print(RECOMMEND_NOTE)
+    print("D = 약한 방향 시행에서 안 넘어졌고 추종 < 0.3 인 env 의 네 calf 최대 체류(전체 구간) 평균. 정체 구간 한정 값은 보조.")
+    print("| 판 | iter | L(spin+1.2) | R(spin-1.2) | abs(L-R) | 약한 방향 | D(전체 구간) | 반대 방향 D | 보조: 정체 한정 D | D 를 센 env / 남은 / 전체 | spin 생존 L · R | 분기(권고) | 경로 | 회전 층 |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+
+    def f(x):
+        return "미측정" if x is None else f"{x:.2f}"
+
     for name, v in res.items():
-        s, d, b, r = v["spin"], v["dwell"], v["branch"], v["rotation_layer"]
-        dd = "미측정" if d["D_stalled"] is None else f"{d['D_stalled']:.2f}"
-        dw = "미측정" if d["D_whole"] is None else f"{d['D_whole']:.2f}"
-        print(f"| {name} | {v['checkpoint_iter']} | {s['L']:.2f} | {s['R']:.2f} | {abs(s['L'] - s['R']):.2f} | {v['weak_side']} | {dd} (정체 있는 시행 {d['n_stalled_trials']}) | {dw} | {d['n_trials']}/{d['trials_total']} | {s['alive_L']} · {s['alive_R']} /{s['envs']} | {b['label']} {b['hit']} | {r['level']} {r['stop'] or r['warn']} |")
+        s, d, o, b, r = v["spin"], v["dwell"], v["dwell_other"], v["branch"], v["rotation_layer"]
+        print(f"| {name} | {v['checkpoint_iter']} | {s['L']:.2f} | {s['R']:.2f} | {abs(s['L'] - s['R']):.2f} | {v['weak_side']} | {f(d['D'])} ({d['status']}) | {f(o['D'])} ({o['status']}) | {f(d.get('D_stalled_aux'))} | "
+              f"{d.get('n_low_env', '-')}/{d.get('n_kept', '-')}/{d.get('trials_total', '-')} | {s['alive_L']} · {s['alive_R']} /{s['envs']} | {b['label']}{' (B 기본)' if b['default_b'] else ''} | {b['via']} {b['warn'] or ''} | {r['level']} {r['stop'] or r['warn']} |")
     if res_c:
-        print(f"\n합침(우선순위 D > B > C > A): {res_c['label']} {res_c['per']}")
+        print(f"\n합침(우선순위 D > B > C > A, 멈춤 우선): {res_c['label']} {res_c['per']} {res_c.get('reason', '')}")
 
 
 if __name__ == "__main__":

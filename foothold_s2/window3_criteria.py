@@ -33,8 +33,12 @@ BRANCH_D_B_MIN = 0.5              # B: 약한 방향이 있고 D >= 이 값 (0.3
 BRANCH_D_C_MAX = 0.30             # C: 약한 방향이 있고 D < 이 값
 BRANCH_COLLAPSE_MAX = 0.30        # 회전 붕괴(분기 D): L 과 R 둘 다 이 값 미만
 BRANCH_PRIORITY = ("D", "B", "C", "A")          # 두 판이 갈리면 이 순서(앞이 우선)
+# v1.2.1 §2.3a (문턱은 모두 [추정])
+BRANCH_LOW_FOLLOW = 0.30          # D 에 넣는 env = 안 넘어졌고 yaw 추종 < 이 값
+BRANCH_E_B_MIN = 0.5              # 표 밖(E): max(D_L, D_R) >= 이 값이면 B, 아니면 A + 경고
+BRANCH_CHECK_ORDER = ("D", "F", "B", "C", "E", "A")   # 검사 순서: 붕괴 -> D 미측정 -> B -> C -> 표 밖 -> A
 
-# D 의 정의(§2.3): 약한 방향(L · R 중 작은 쪽)의 시행들에서 «네 calf 최대 체류(정체 구간 한정)» 의 안 넘어진 env 평균. foothold_s2.eval.calf_band.max_calf_dwell 의 "stalled".
+# D 의 정의(v1.2.1 §2.3a): 약한 방향(L · R 중 작은 쪽)의 시행들에서 추종 < BRANCH_LOW_FOLLOW 인 안 넘어진 env 의 «네 calf 최대 체류(전체 구간)» 평균. calf_band.max_calf_dwell 의 "whole". 정체 구간 한정 값은 분기에 쓰지 않는다(보조 기록).
 WEAK_PROTOCOLS = {"R": ("indep_right", "fwd_then_right", "left_then_right"), "L": ("indep_left", "right_then_left")}
 
 

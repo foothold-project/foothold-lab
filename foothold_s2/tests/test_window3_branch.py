@@ -59,13 +59,29 @@ def test_branch_rows_with_known_inputs():
     assert B.branch(0.20, 0.25, 0.90)["label"] == "D"                 # 둘 다 < 0.3 이면 붕괴가 우선(B 조건도 만족하지만 D > B)
     assert B.branch(0.20, 0.60, 0.40)["label"] == "B"                 # 0.3 <= D < 0.5 는 B
     assert B.branch(0.20, 0.60, 0.30)["label"] == "B" and B.branch(0.20, 0.60, 0.2999)["label"] == "C"
-    assert B.branch(0.40, 0.45, None)["label"] == "표 밖"             # min 0.3~0.5, 차 작음: 약함도 A 도 아님
-    assert B.branch(0.20, 0.60, None)["label"] == "D 미측정"          # 약한 방향이 있는데 D 를 못 쟀다
+
+
+def test_f_d_unmeasured_defaults_to_b_and_says_so_but_no_low_env_stops():
+    r = B.branch(0.20, 0.60, None)                                    # probe 가 없다 -> 한 번 다시 재고도 없을 때의 B 기본
+    assert r["label"] == "B" and r["default_b"] is True and "B 기본" in r["warn"][0] and "권고" in r["note"]
+    assert B.branch(0.20, 0.60, 0.9)["default_b"] is False
+    s = B.branch(0.20, 0.60, None, d_status="no_low_env")             # probe 는 있으나 추종 < 0.3 env 가 0
+    assert s["label"] == "멈춤" and not s["default_b"]
+    assert B.branch(0.10, 0.20, None)["label"] == "D"                 # 붕괴가 F 보다 먼저
+
+
+def test_e_outside_table_uses_the_larger_of_the_two_directions():
+    assert B.branch(0.40, 0.45, 0.55, 0.20)["label"] == "B"           # max(D) >= 0.5 -> B
+    assert B.branch(0.40, 0.45, 0.20, 0.50)["label"] == "B"           # 반대 방향이 앉았어도 B
+    e = B.branch(0.40, 0.45, 0.49, 0.10)
+    assert e["label"] == "A" and e["warn"] and e["via"] == "E max(D) < 0.5"      # 아니면 A + 경고 기록
+    assert B.branch(0.40, 0.45, None, 0.9)["label"] == "표 밖"        # 규칙이 없는 D 결측 -> 보류
+    assert B.branch(0.40, 0.45, None)["label"] == "표 밖"
 
 
 def test_a_requires_min_at_least_half_and_diff_at_most_a_quarter():
-    assert B.branch(0.50, 0.75, None)["label"] == "A" and B.branch(0.50, 0.7501, None)["hit"] != ["A"]
-    assert B.branch(0.4999, 0.5, None)["label"] == "표 밖"
+    assert B.branch(0.50, 0.7499, None)["label"] == "A" and B.branch(0.50, 0.75, None)["label"] == "B"    # 차가 정확히 0.25 이면 설계의 «약한 방향(>= 0.25)» 과 «A(<= 0.25)» 가 겹친다: 검사 순서(B 가 A 보다 앞)대로 약한 방향 -> F B 기본
+    assert B.branch(0.4999, 0.5, 0.1, 0.1)["label"] == "A" and B.branch(0.4999, 0.5, 0.5, 0.1)["label"] == "B"
 
 
 def test_two_judgments_are_combined_by_priority_and_a_needs_both_a():
@@ -74,6 +90,26 @@ def test_two_judgments_are_combined_by_priority_and_a_needs_both_a():
     assert B.combine({"x": a, "y": a})["label"] == "A" and B.combine({"x": a, "y": b})["label"] == "B" and B.combine({"x": c, "y": b})["label"] == "B"
     assert B.combine({"x": a, "y": c})["label"] == "C" and B.combine({"x": d, "y": b})["label"] == "D"
     assert B.combine({"x": a, "y": B.branch(0.4, 0.45, None)})["label"] == "판정 보류"
+    stop = B.branch(0.20, 0.60, None, d_status="no_low_env")
+    assert B.combine({"x": stop, "y": b})["label"] == "멈춤" and B.combine({"x": a, "y": B.branch(0.2, 0.6, None)})["default_b"] == ["y"]
+    assert "팀장 승인" in B.combine({"x": a, "y": a})["note"]
+
+
+def test_d_is_whole_interval_mean_over_low_follow_survivors_only(tmp_path, monkeypatch):
+    import numpy as np
+    from foothold_s2.eval import calf_band as C
+
+    kept = np.array([True, True, True, False])
+    v = {"kept": kept, "follow": np.array([0.1, 0.9, 0.2, 0.0]), "dwell": {"whole": np.array([0.8, 0.0, 0.6, 1.0]), "stalled": np.array([1.0, np.nan, 0.9, 1.0])}}
+    monkeypatch.setattr(C, "load", lambda folder: {"by_protocol": {p: v for p in K.WEAK_PROTOCOLS["R"] + K.WEAK_PROTOCOLS["L"]}})
+    r = B.weak_direction_dwell("x", "R")
+
+    assert r["status"] == "ok" and r["D"] == pytest.approx(0.7) and r["n_low_env"] == 6 and r["D_stalled_aux"] == pytest.approx(0.95)    # 추종 0.9 env 와 넘어진 env 는 빠진다
+    v2 = dict(v, follow=np.array([0.9, 0.9, 0.9, 0.0]))
+    monkeypatch.setattr(C, "load", lambda folder: {"by_protocol": {p: v2 for p in K.WEAK_PROTOCOLS["R"]}})
+    assert B.weak_direction_dwell("x", "R")["status"] == "no_low_env"
+    monkeypatch.setattr(C, "load", lambda folder: (_ for _ in ()).throw(FileNotFoundError("no")))
+    assert B.weak_direction_dwell("x", "R")["status"] == "missing"
 
 
 def test_constants_file_has_a_stable_sha_and_the_forward_layer_equals_window2():
@@ -104,7 +140,7 @@ def test_real_m1750_inputs_give_the_design_draft_labels(tmp_path):
     r31 = B.inputs_from_files(GATE / "ex31_1750" / "map_modes.json", LOGS / "w3p1_ex31_20261025_075337")
 
     assert r30["weak_side"] == "R" and r31["weak_side"] == "L"                                     # 초안: m1750 기준 EX-30 우 · EX-31 좌
-    assert r30["branch"]["label"] == "B" and r31["branch"]["label"] == "B" and r30["dwell"]["D_stalled"] >= 0.5 and r31["dwell"]["D_stalled"] >= 0.5
+    assert r30["branch"]["label"] == "B" and r31["branch"]["label"] == "B" and r30["dwell"]["D"] >= 0.5 and r31["dwell"]["D"] >= 0.5
     assert r30["rotation_layer"]["level"] == "경고" and r31["rotation_layer"]["level"] == "경고"
     out = tmp_path / "o.json"
     B.main([str(out), "EX-30", str(GATE / "ex30_1750" / "map_modes.json"), str(LOGS / "w3p1_ex30_20261025_063715"), "EX-31", str(GATE / "ex31_1750" / "map_modes.json"), str(LOGS / "w3p1_ex31_20261025_075337")])

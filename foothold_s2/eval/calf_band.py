@@ -90,6 +90,10 @@ def load(folder) -> dict:
         cmd = P.PROTOCOLS.get(proto, {}).get("cmd")
         if cmd is not None and "wz" in z.files:                                   # 회전 시행만(전진 걸음은 정체 정의가 없다)
             out[proto]["dwell"] = max_calf_dwell(q, hi, z["wz"], cmd[2])
+            if "alive" in z.files:                                                    # env 별 yaw 추종 비(turn_probe_plan.yaw_follow 와 같은 정의)
+                al = np.asarray(z["alive"], dtype=bool)
+                wzz = np.asarray(z["wz"], dtype=float)
+                out[proto]["follow"] = np.array([wzz[e][al[e]].mean() / cmd[2] if al[e].any() else np.nan for e in range(wzz.shape[0])])
 
     return {"calf_names": [st["joint_names"][c] for c in cols], "hard_hi": hi.tolist(), "by_protocol": out, "fixed_terrain": res.get("fixed_terrain"),
             "checkpoint_sha256": res.get("checkpoint_sha256", "")[:12], "envs": res.get("envs")}
