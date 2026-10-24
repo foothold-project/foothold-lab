@@ -160,7 +160,11 @@ class IEEstimator(nn.Module):
             tokens.append(m.flatten(2).transpose(1, 2) + self.map_pos)
         seq = torch.cat(tokens, 1)
         self.last_num_map_tokens = seq.shape[1] - 1  # 시험용: G0 이면 0
-        out = self.attn(seq)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
+        pad = None
+        if self.use_map and getattr(self, "mask_map_tokens", False):  # 진단 전용(probe_prop_only): 지도 토큰을 attention 키에서 뺀다. 0 높이 지도로 바꿔 넣지 않는다
+            pad = torch.zeros(seq.shape[:2], dtype=torch.bool, device=seq.device)
+            pad[:, 1:] = True
+        out = self.attn(seq, src_key_padding_mask=pad)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
         if getattr(self, "heads_fp32", False) and torch.is_autocast_enabled(out.device.type):
             with torch.autocast(out.device.type, enabled=False):  # bf16 에서 logvar · KL 정밀도를 지킨다(RL-3 B)
                 h = self.heads(out.float())

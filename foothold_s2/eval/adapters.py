@@ -400,7 +400,9 @@ class S1Adapter(IsaacLabAdapter):
 class S2Policy:
     """S2 정책 한 벌(actor + 지각 상태). 지도 선택은 체크포인트의 force_gt 를 따른다."""
 
-    def __init__(self, runner, n, z_mode=None, act_mode=None):
+    MAP_MODES = ("eval_gt", "eval_pred", "probe_prop_only")
+
+    def __init__(self, runner, n, z_mode=None, act_mode=None, map_mode=None):
         """z_mode: mean(지각 z 를 평균으로) | sample(학습 수집처럼 z 를 표집). act_mode: mean(결정 행동) | sample(표집 행동).
         지정이 없으면 환경 변수 S2_Z · S2_ACT (옛 S2_SAMPLE=1 은 S2_ACT=sample 과 같다: z 는 평균)."""
         import torch
@@ -420,9 +422,20 @@ class S2Policy:
         # 학습의 AdaSmpl(force_gt=True)는 첫 스텝과 매 reset 에서 모두 GT 를 고른다.
         # 그 밖의 평가에서는 기존처럼 복원 지도를 사용한다. map_input=none 은
         # StartPerception._advance 에서 지도를 소비하지 않는다.
-        self.pstate.use_gt = torch.full(
-            (n,), runner.perception.cfg.force_gt, dtype=torch.bool, device=runner.device
-        )
+        # map_mode: eval_gt(정책 입력 지도 = GT) | eval_pred(= 복원 지도, 체크포인트 force_gt 가 True 여도 GT 0 개, reset 뒤에도) | probe_prop_only(지도 토큰을 attention 에서 뺌, 진단 전용).
+        # 지정이 없으면 S2_MAP_MODE, 그것도 없으면 옛 동작(체크포인트의 force_gt).
+        self.map_mode = map_mode or os.environ.get("S2_MAP_MODE") or None
+
+        if self.map_mode not in (None, *self.MAP_MODES):
+            raise ValueError("map_mode 는 %s 중 하나: %r" % (self.MAP_MODES, self.map_mode))
+
+        if self.map_mode == "probe_prop_only":
+            if not runner.perception.ie.use_map:
+                raise ValueError("probe_prop_only 는 지도 토큰이 있는 체크포인트에만 쓴다")
+            runner.perception.ie.mask_map_tokens = True
+
+        gt = {"eval_gt": True, "eval_pred": False, "probe_prop_only": False}.get(self.map_mode, runner.perception.cfg.force_gt)
+        self.pstate.use_gt = torch.full((n,), gt, dtype=torch.bool, device=runner.device)
         self.no_gt = self.pstate.use_gt.clone()  # reset 플래그. 외부 진단 도구와의 호환 이름.
 
     def __call__(self, obs):
@@ -520,12 +533,12 @@ class S2Adapter(S1Adapter):
         agent_cfg = built["agent_cfg"]
         env = built.get("env") or self.wrap(built)
         runner, sd = load_s2_runner(env, agent_cfg.to_dict(), checkpoint, agent_cfg.device, expect=getattr(self, "expect_modes", None))
-        policy = S2Policy(runner, env.num_envs)
+        policy = S2Policy(runner, env.num_envs, map_mode=getattr(self, "map_mode", None))
         obs = env.get_observations()
         self.checks["policy_class"] = type(runner.alg.policy).__name__
         self.checks["checkpoint_iter"] = int(sd.get("iter", -1))
         self.checks["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"],
-                                         "map_input": runner.pcfg.get("map_input"), "force_gt": runner.perception.cfg.force_gt}
+                                         "map_input": runner.pcfg.get("map_input"), "force_gt": runner.perception.cfg.force_gt, "map_mode": policy.map_mode}
         self.checks["obs_keys"] = sorted(obs.keys())
 
         return env, policy, policy, obs
