@@ -240,3 +240,88 @@ def test_compare_builds_a_table_from_equal_condition_results_and_refuses_unequal
 
     with pytest.raises(ValueError, match="모드"):
         cmp.table({"parent": base, "ex30": other})
+
+
+# ---- STOP 은 저장 경계(50 배수)에서만 받는다 (REVIEW-35fd1478 막음 1) ----
+
+def _drive(monkeypatch, tmp_path, stop_after, wrap=True, start=1501, last=1750):
+    """실제 Sol23FRunner.log 를 쓰고 StartRunner.log 만 가짜(경계마다 저장)로 바꿔, stop_after 회차를 끝낸 직후 STOP 을 만든다. 저장된 회차 목록과 멈춘 회차를 돌려준다."""
+    from foothold_s2.runners import start_runner as sr
+    from foothold_s2.runners.boundary_stop import boundary_stop
+    from foothold_s2.runners.sol23f_runner import DeadlineReached, Sol23FRunner
+
+    saved = []
+
+    def fake_start_log(self, locs, width=80, pad=35):
+        if int(locs["it"]) % 50 == 0:
+            saved.append(int(locs["it"]))
+
+    monkeypatch.setattr(sr.StartRunner, "log", fake_start_log)
+    cls = boundary_stop(Sol23FRunner, 50) if wrap else Sol23FRunner
+    r = object.__new__(cls)
+    r.evidence, r.deadline_epoch, r.stop_file = None, None, str(tmp_path / "STOP")
+    r.log_dir, r.env = str(tmp_path), SimpleNamespace(num_envs=1)
+    r.save = lambda path, infos=None: (Path(path).write_bytes(b"x"), saved.append(("model", Path(path).name)))
+    r._manifest_checkpoint = lambda *a, **k: None
+    r.save_latest = lambda: None
+
+    for it in range(start, last + 1):
+        if it == stop_after + 1:
+            (tmp_path / "STOP").write_text("x")
+
+        try:
+            r.log({"it": it})
+        except DeadlineReached as e:
+            return saved, json.loads(str(e))["iter"], r
+
+    return saved, None, r
+
+
+@pytest.mark.parametrize("stop_after,expected", [(1623, 1650), (1649, 1650), (1651, 1700), (1550, 1600), (1501, 1550)])
+def test_stop_file_waits_for_the_next_50_boundary(monkeypatch, tmp_path, stop_after, expected):
+    saved, stopped, r = _drive(monkeypatch, tmp_path, stop_after)
+
+    assert stopped == expected
+    assert not [x for x in saved if isinstance(x, tuple) and int(re.search(r"\d+", x[1]).group()) % 50], "경계 아닌 회차 저장 금지"
+    assert ("model", f"model_{expected}.pt") in saved
+    assert r.stop_file == str(tmp_path / "STOP"), "가린 stop_file 은 되돌려 놓는다"
+
+
+def test_stop_created_at_a_boundary_stops_at_that_boundary(monkeypatch, tmp_path):
+    saved, stopped, _ = _drive(monkeypatch, tmp_path, 1649)              # 1650 의 log 가 불리기 직전에 STOP
+
+    assert stopped == 1650
+    (tmp_path / "STOP").unlink()
+    saved, stopped, _ = _drive(monkeypatch, tmp_path, 1650)              # 1650 을 끝낸 직후에 STOP -> 다음 경계
+
+    assert stopped == 1700
+
+
+def test_without_the_wrapper_stop_halts_off_boundary_so_the_guard_is_real(monkeypatch, tmp_path):
+    _, stopped, _ = _drive(monkeypatch, tmp_path, 1623, wrap=False)
+
+    assert stopped == 1624
+
+
+def test_without_stop_the_wrapper_changes_nothing(monkeypatch, tmp_path):
+    saved, stopped, _ = _drive(monkeypatch, tmp_path, 99999)
+
+    assert stopped is None and saved == [1550, 1600, 1650, 1700, 1750]
+
+
+def test_deadline_is_also_held_to_the_boundary(monkeypatch, tmp_path):
+    from foothold_s2.runners.sol23f_runner import DeadlineReached
+
+    saved, stopped, r = _drive(monkeypatch, tmp_path, 99999)
+    r.stop_file, r.deadline_epoch = None, 0.0                            # 이미 지난 마감
+
+    with pytest.raises(DeadlineReached):
+        r.log({"it": 1800})
+    r.log({"it": 1801})                                                    # 경계가 아니면 마감도 기다린다
+    assert r.deadline_epoch == 0.0
+
+
+def test_window1_script_wraps_the_runner_with_boundary_stop():
+    src = SCRIPT.read_text(encoding="utf-8")
+
+    assert "runner_class = boundary_stop(runner_class, SAVE_INTERVAL)" in src and src.index("boundary_stop(runner_class") < src.index("runner_class(env, train_cfg")

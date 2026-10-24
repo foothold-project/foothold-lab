@@ -62,6 +62,7 @@ for registry in ("foothold_s2.tasks", "foothold_s2.x15_tasks", "foothold_s2.x16_
 from foothold_s2.ex3031_common import check_dumped_cfg_against_parent, record_realized_physics  # noqa: E402
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
+from foothold_s2.runners.boundary_stop import boundary_stop  # noqa: E402
 from foothold_s2.runners.course_runner import Ex30Runner, Ex31Runner  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
 from foothold_s2.runners.sol23f_runner import DeadlineReached, StepEvidence, sha256  # noqa: E402
@@ -99,7 +100,8 @@ def main(env_cfg, agent_cfg):
         raise ValueError("map_input 은 reconstruction")
     train_cfg["perception"] = pc
     runner_class = Ex30Runner if args_cli.exp == "EX-30" else Ex31Runner
-    stop_file = os.path.join(log_dir, "STOP")                                         # 이 파일을 만들면 다음 갱신 경계에서 저장하고 멈춘다
+    runner_class = boundary_stop(runner_class, SAVE_INTERVAL)                          # STOP 은 저장 경계(50 배수)에서만 받는다
+    stop_file = os.path.join(log_dir, "STOP")                                         # 이 파일을 만들면 다음 50 배수 회차 경계에서 저장하고 멈춘다
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device, evidence=evidence, stop_file=stop_file)
     runner.add_git_repo_to_log(__file__)
     receipt = runner.begin_from_parent(args_cli.parent, spec)                         # 부모 상태 + 부모 지형 칸(레벨 · 종류)만 복원
