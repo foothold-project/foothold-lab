@@ -47,7 +47,7 @@ import isaaclab_tasks  # noqa: E402,F401
 import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
-from foothold_s2.eval import adapters, fixed_terrain, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
+from foothold_s2.eval import adapters, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -168,9 +168,10 @@ for pname, proto in P.PROTOCOLS.items():
     env.reset()
 
     if args.fixed_terrain:
-        result["fixed_terrain"] = fixed_terrain.apply(raw)
+        result["fixed_terrain"] = probe_tiles.apply_to(raw)                              # 평지 계열 2 env + random_rough 2 env, 레벨 0, 종류 이름은 생성기 cfg 에서 읽는다
         env.reset()                                                                      # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
-        lv, ty = fixed_terrain.fixed_assignment(N, result["fixed_terrain"]["rows"], result["fixed_terrain"]["cols"])
+        lv = np.array([t["level"] for t in result["fixed_terrain"]["tiles"]])
+        ty = np.array([t["col"] for t in result["fixed_terrain"]["tiles"]])
         if not (np.array_equal(raw.scene.terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(raw.scene.terrain.terrain_types.cpu().numpy(), ty)):
             raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
     origin = raw.scene.env_origins.clone()

@@ -34,6 +34,15 @@ def apply(raw) -> dict:
     terrain = raw.scene.terrain
     rows, cols = int(terrain.terrain_origins.shape[0]), int(terrain.terrain_origins.shape[1])
     levels, types = fixed_assignment(int(terrain.terrain_levels.shape[0]), rows, cols)
+
+    return apply_assignment(raw, levels, types, rows, cols, LEVELS_USED)
+
+
+def apply_assignment(raw, levels, types, rows: int, cols: int, levels_used: int) -> dict:
+    """주어진 (레벨, 종류) 배열을 terrain 에 덮어쓴다. apply 와 probe 의 종류 이름 배치(probe_tiles)가 같이 쓴다."""
+    import torch
+
+    terrain = raw.scene.terrain
     lv = torch.as_tensor(levels, dtype=terrain.terrain_levels.dtype, device=terrain.terrain_levels.device)
     ty = torch.as_tensor(types, dtype=terrain.terrain_types.dtype, device=terrain.terrain_types.device)
     terrain.terrain_levels.copy_(lv)
@@ -43,11 +52,18 @@ def apply(raw) -> dict:
     if not torch.equal(raw.scene.env_origins, terrain.env_origins):
         raise RuntimeError("scene.env_origins 가 terrain.env_origins 와 다르다")
 
-    return {"rows": rows, "cols": cols, "levels_used": LEVELS_USED, "num_envs": int(len(levels)), "assignment_sha256": assignment_sha256(levels, types)}
+    return {"rows": rows, "cols": cols, "levels_used": levels_used, "num_envs": int(len(levels)), "assignment_sha256": assignment_sha256(levels, types)}
 
 
 def describe(record: dict) -> str:
     """결과 표 머리에 찍는 한 줄: 무엇을 고정했고 무엇을 대표하지 않는지. record 는 json 의 fixed_terrain."""
+    if record.get("tiles"):                                          # 종류 이름으로 고른 배치(probe): 식 문구 대신 실제 이름 · 레벨 · env 수
+        groups: dict = {}
+        for t in record["tiles"]:
+            groups.setdefault((t["kind"], t["level"]), []).append(t["col"])
+        body = " + ".join(f"{k} 레벨 {lv} x {len(cs)} env(열 {','.join(str(c) for c in cs)})" for (k, lv), cs in groups.items())
+
+        return f"고정 칸 · {body} · {record['num_envs']} env · 학습 분포(레벨 0~{record['rows'] - 1}) 대표 아님 · 배열 SHA {record['assignment_sha256'][:12]}"
     levels, types = fixed_assignment(record["num_envs"], record["rows"], record["cols"])
     counts = "/".join(str(int((levels == lv).sum())) for lv in range(record["levels_used"]))
 
