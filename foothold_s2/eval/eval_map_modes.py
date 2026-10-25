@@ -46,6 +46,7 @@ import isaaclab_tasks  # noqa: E402,F401
 import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task FootholdS2-Go2-S2-X23-v0)
 import foothold_s2.x23f_tasks  # noqa: E402,F401
+import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 from foothold_s2.eval import adapters, fixed_terrain  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
@@ -176,6 +177,10 @@ for mode in args.modes.split(","):
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
+    tokens = int(getattr(runner.perception.ie, "last_num_map_tokens", -1))                  # 마지막 정책 호출의 지도 토큰 수(G0 계열은 0 이어야 한다)
+    res.setdefault("last_num_map_tokens", {})[mode] = tokens
+    if saved_map_input == "none" and tokens != 0:
+        raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % tokens)
     runner.perception.ie.mask_map_tokens = False                                          # 모드가 끝나면 진단 마스크를 되돌린다
 
 os.makedirs(args.out, exist_ok=True)

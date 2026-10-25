@@ -49,6 +49,7 @@ import isaaclab_tasks  # noqa: E402,F401
 import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
+import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 from foothold_s2.eval import adapters, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
 CASES = P.select_cases(args.cases)                                        # 잘못된 --cases 는 환경을 만들기 전에 거절
 
@@ -244,6 +245,9 @@ if args.forward_gaits:                                                          
         print("FORWARD_GAIT", gname, json.dumps({"alive_end": int(alive_end.sum()), "of": int(N)}), flush=True)
 
 result["summary"] = P.summarize(per_protocol)
+result["last_num_map_tokens"] = int(getattr(runner.perception.ie, "last_num_map_tokens", -1))      # 마지막 정책 호출의 지도 토큰 수(G0 계열은 0 이어야 한다)
+if map_input == "none" and result["last_num_map_tokens"] != 0:
+    raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % result["last_num_map_tokens"])
 if getattr(runner.perception, 'ie', None) is not None:
     runner.perception.ie.mask_map_tokens = False
 with open(os.path.join(args.out, "probe_result.json"), "w", encoding="utf-8") as fh:
