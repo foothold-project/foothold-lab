@@ -1,0 +1,34 @@
+[
+  {
+    "run": "S-B50 (p 0.5)",
+    "last_it": 1040,
+    "window": "991-1040",
+    "off_frac_steps_mean": 0.5010473790268103,
+    "on_ep_reward_mean": 13.893433270792244,
+    "on_ep_length_mean": 953.6086186081426,
+    "on_terrain_level_mean": 5.662646820642318,
+    "on_track_lin_vel_per_s": 1.161916240591464,
+    "on_track_ang_vel_per_s": 0.36602885628446097,
+    "off_ep_reward_mean": 13.35154001710201,
+    "off_ep_length_mean": 949.3177955013069,
+    "off_terrain_level_mean": 5.640434355727347,
+    "off_track_lin_vel_per_s": 1.148047889359776,
+    "off_track_ang_vel_per_s": 0.3650552002496791
+  },
+  {
+    "run": "S-B10 (p 0.1)",
+    "last_it": 826,
+    "window": "777-826",
+    "off_frac_steps_mean": 0.09840712052459517,
+    "on_ep_reward_mean": 13.02026823952189,
+    "on_ep_length_mean": 932.0429988287691,
+    "on_terrain_level_mean": 5.574592274994574,
+    "on_track_lin_vel_per_s": 1.2185661404772998,
+    "on_track_ang_vel_per_s": 0.3301599266714495,
+    "off_ep_reward_mean": 10.750428375503391,
+    "off_ep_length_mean": 901.7824333770805,
+    "off_terrain_level_mean": 5.544057509193006,
+    "off_track_lin_vel_per_s": 1.1858765963401932,
+    "off_track_ang_vel_per_s": 0.3298164886974177
+  }
+]
