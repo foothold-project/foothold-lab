@@ -86,6 +86,7 @@
 | 06:13 | super2 의 mai-tabs 로 탭 재우기 | super2 실행 (완료) |
 | 16:0x | 「R5 는 내가 자리를 비운 사이에는 '실험'이 우선이기 때문에 mai-tabs를 이용해서 재우기를 하던가 정리하라고 super 한테 말해. 실험을 무조건 막아버리면 실험이 늦어져서 안됨.」 | GPU1 메모리 부족 때 학습을 막지 않고 super2 가 비운다 (7 절 R5) |
 | 17:0x | 「orchestration은 … 다음 의뢰 한 건에 시험해 보고 비교 => 좋다.」 · 「필요하면 codex 세션 … lead_tmp, astra2, luna, sol 다 사용 가능 … 같이 검증하던가 작업하는데 있어서 같이 진행해」 · 「lead_tmp는 Astra max 로 바꿨어」 | orchestration 한 건 시험 · Codex 네 세션 사용 (ASTRA-25b · SOL-25b 17:2x) |
+| 18:2x | 「50회 두 판 승인한다, 결과 나오면 바로 돌려 (확인 실험 진행 ok」 | B1500 에서 50 회 두 판 (A 지금 방식 · B 명령 시계 흩기), EX-31 조건. sonnet-code SONNET-X25b 준비, 저장본 평가 sweep 끝나면 바로 기동 |
 | 17:3x | Codex 세션 rename (팀장 직접): luna → runner · astra2 → verifier · sol → scripter · lead_tmp/astra → analyst | 1 절 표. super2 가 mai-watch 기록 이름 반영 (17:38) |
 | 16:4x (super2 창) | 「R5 : 응, 내가 있을 땐 물어볼 것.」 (super2 의 「승인 목록 앱 · Chrome 까지 꺼도 될까요」 에 대한 답) | 부재 중 앱 · Chrome 종료 허용, 자리에 있으면 묻기. lead 가 super2 화면에서 원문 확인 |
 
