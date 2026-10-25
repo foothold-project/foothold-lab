@@ -245,3 +245,18 @@ def test_downstream_readers_still_list_only_the_cases_they_know():
     from foothold_s2.eval import calf_band, limit_dwell
 
     assert set(limit_dwell.PROTOCOLS) == set(P.DEFAULT_CASES) and "fwd_then_left" not in calf_band.PROTOCOLS   # 후속 판독기는 이번 변경에 손대지 않는다(새 경우는 따로 읽는다)
+
+
+def test_fwd_then_left_runner_script_covers_the_four_checkpoints_with_the_old_probe_recipe():
+    p = ROOT / "foothold_s2/eval/run_fwd_then_left.sh"
+    raw = p.read_bytes()
+    s = raw.decode("utf-8")
+
+    assert b"\r" not in raw
+    for must in ("--cases fwd_then_left", "--envs 16", "--map-mode eval_pred", "--fixed-terrain", "FootholdS2-Go2-S2-23f-B-v0", "foothold_s2.eval.turn_probe", "TURNPROBE_DONE", "2026-10-24_06-52-56_ex28-b-main/model_1500.pt",
+                 "2026-10-25_19-15-52_ex31r-b50/model_1510.pt", "2026-10-25_19-15-52_ex31r-b50/model_1550.pt", "2026-10-25_18-55-24_ex31r-a50/model_1550.pt"):
+        assert must in s, must
+    assert "--forward-gaits" not in s
+    r = subprocess.run([r"C:\Program Files\Git\bin\bash.exe", "-n", str(p)], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=30)
+
+    assert r.returncode == 0, r.stderr
