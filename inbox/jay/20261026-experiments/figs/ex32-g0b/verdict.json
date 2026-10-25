@@ -5,28 +5,74 @@
   "baseline_prop_fwd1_m": 0.6213862895965576,
   "modes": {
     "none": {
-      "status": "평가 전"
+      "distance_m": 5.739945411682129,
+      "alive_end": 64,
+      "against_b_gt_ratio": 1.015432843385194,
+      "gt_maintenance": "해당 없음 · eval_gt 아님",
+      "against_g0_none_80pct": "G0-B 자기참조 · 판별력 없음"
     }
   },
   "six_case": {
     "none": {
       "indep_left": {
-        "status": "평가 전"
+        "mean_wz": 0.5241949558258057,
+        "four_contact": 0.4466738618524333,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": 1.007023572921753,
+        "baseline_four_contact": 0.3975,
+        "abs_yaw_difference": 0.48282861709594727,
+        "within_0p12_rad_s": false,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       },
       "indep_right": {
-        "status": "평가 전"
+        "mean_wz": -0.3119606077671051,
+        "four_contact": 0.7211488022381535,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": -0.2467299848794937,
+        "baseline_four_contact": 0.8011381725565107,
+        "abs_yaw_difference": 0.06523062288761139,
+        "within_0p12_rad_s": true,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       },
       "left_then_right": {
-        "status": "평가 전"
+        "mean_wz": -0.401013046503067,
+        "four_contact": 0.7428341096381226,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": -0.23032192885875702,
+        "baseline_four_contact": 0.8966015625,
+        "abs_yaw_difference": 0.17069111764431,
+        "within_0p12_rad_s": false,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       },
       "right_then_left": {
-        "status": "평가 전"
+        "mean_wz": 0.4445212781429291,
+        "four_contact": 0.5817531603459747,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": 1.0383355617523193,
+        "baseline_four_contact": 0.4564453125,
+        "abs_yaw_difference": 0.5938142836093903,
+        "within_0p12_rad_s": false,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       },
       "fwd_then_left": {
-        "status": "평가 전"
+        "mean_wz": 0.36447957158088684,
+        "four_contact": 0.5755859375,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": 0.8901104927062988,
+        "baseline_four_contact": 0.437265625,
+        "abs_yaw_difference": 0.525630921125412,
+        "within_0p12_rad_s": false,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       },
       "fwd_then_right": {
-        "status": "평가 전"
+        "mean_wz": -0.31789204478263855,
+        "four_contact": 0.7928338762214984,
+        "baseline_mode": "eval_pred",
+        "baseline_mean_wz": -0.48839035630226135,
+        "baseline_four_contact": 0.612265625,
+        "abs_yaw_difference": 0.1704983115196228,
+        "within_0p12_rad_s": false,
+        "comparison_scope": "지도 모드가 다르면 처치 효과 판정 불가"
       }
     }
   },
