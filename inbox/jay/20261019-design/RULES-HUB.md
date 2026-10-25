@@ -28,7 +28,11 @@
 | sonnet-code | Claude Sonnet | 구현 (고정 코드에서 분기한 새 worktree) · 승인된 실행 | push (lead 확인 전) |
 | reviewer | Claude Opus | 구현 커밋 `/code-review` · `_out/review/REVIEW-<커밋>.md` | 코드 수정 (--fix 금지) · 커밋 |
 | super2 | Claude | 시스템: mai-watch · 한도 지킴이 · 세션 기록 · Linux 이전 (Claude 쪽) | 실험 판단 |
-| lead_tmp · sol · astra2 · luna · pipeline | Codex | 10/25 Codex 한도 94 % 로 대기. lead_tmp 는 luna 로 낮춤. pipeline 은 Linux 이전 (Codex 쪽) | 새 일 (한도 보존) |
+| analyst (d0d6549f, 옛 lead_tmp) | Codex Astra max | 독립 분석 · 설계 반박 | 코드 수정 · GPU 기동 |
+| verifier (b63249de, 옛 astra2) | Codex Astra | 숫자 재계산 · 결과 검증 | 코드 수정 |
+| scripter (f7b4742c, 옛 sol) | Codex Sol | 분석 · 실행 스크립트 (CPU) | GPU 기동 (lead 요청 없이) |
+| runner (8340af0f, 옛 luna) | Codex Luna | 정해진 명령 · 렌더 · 문서 동기 | 판단 |
+| pipeline (6bc3da38) | Codex | Linux 이전 (Codex 쪽) | 실험 |
 
 세션 사이 전달 (v1.2 · 팀장 10/25 05:0x 「orca cli skill 쓰면 되잖아」 · SendMessage 는 팀장 거절): orca-cli 순서로 보낸다. `orca terminal read --terminal <h>` 로 받는 창을 보고 → `orca terminal wait --terminal <h> --for tui-idle --timeout-ms 5000` → `orca terminal send --terminal <h> --enter --wait-submit 20 --text "..."` → 결과의 `turn_started` 로 전달 확인 (안 보이면 `--retry-request <id>` 로 같은 요청을 다시 보고, 새로 보내지 않는다). 팀장이 그 창에 치고 있을 수 있으면 보내지 않는다 (10/20 팀장 글 뒤에 붙은 사고, mai-os#51). `mai_resume send` 는 받는 창의 회색 제안 문장에 15 분 넘게 막힌 일이 있어 보조로만 쓴다. (v1.1 의 「orca 직접 넣기 금지」 는 이 결정으로 바뀌었는데 15 시까지 고치지 않았다. 7 절 R3.)
 
@@ -82,6 +86,7 @@
 | 06:13 | super2 의 mai-tabs 로 탭 재우기 | super2 실행 (완료) |
 | 16:0x | 「R5 는 내가 자리를 비운 사이에는 '실험'이 우선이기 때문에 mai-tabs를 이용해서 재우기를 하던가 정리하라고 super 한테 말해. 실험을 무조건 막아버리면 실험이 늦어져서 안됨.」 | GPU1 메모리 부족 때 학습을 막지 않고 super2 가 비운다 (7 절 R5) |
 | 17:0x | 「orchestration은 … 다음 의뢰 한 건에 시험해 보고 비교 => 좋다.」 · 「필요하면 codex 세션 … lead_tmp, astra2, luna, sol 다 사용 가능 … 같이 검증하던가 작업하는데 있어서 같이 진행해」 · 「lead_tmp는 Astra max 로 바꿨어」 | orchestration 한 건 시험 · Codex 네 세션 사용 (ASTRA-25b · SOL-25b 17:2x) |
+| 17:3x | Codex 세션 rename (팀장 직접): luna → runner · astra2 → verifier · sol → scripter · lead_tmp/astra → analyst | 1 절 표. super2 가 mai-watch 기록 이름 반영 (17:38) |
 | 16:4x (super2 창) | 「R5 : 응, 내가 있을 땐 물어볼 것.」 (super2 의 「승인 목록 앱 · Chrome 까지 꺼도 될까요」 에 대한 답) | 부재 중 앱 · Chrome 종료 허용, 자리에 있으면 묻기. lead 가 super2 화면에서 원문 확인 |
 
 ## 6. 반복 지시 (팀장이 두 번 이상 말한 것)
