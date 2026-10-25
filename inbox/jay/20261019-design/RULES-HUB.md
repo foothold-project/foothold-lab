@@ -86,6 +86,7 @@
 | 06:13 | super2 의 mai-tabs 로 탭 재우기 | super2 실행 (완료) |
 | 16:0x | 「R5 는 내가 자리를 비운 사이에는 '실험'이 우선이기 때문에 mai-tabs를 이용해서 재우기를 하던가 정리하라고 super 한테 말해. 실험을 무조건 막아버리면 실험이 늦어져서 안됨.」 | GPU1 메모리 부족 때 학습을 막지 않고 super2 가 비운다 (7 절 R5) |
 | 17:0x | 「orchestration은 … 다음 의뢰 한 건에 시험해 보고 비교 => 좋다.」 · 「필요하면 codex 세션 … lead_tmp, astra2, luna, sol 다 사용 가능 … 같이 검증하던가 작업하는데 있어서 같이 진행해」 · 「lead_tmp는 Astra max 로 바꿨어」 | orchestration 한 건 시험 · Codex 네 세션 사용 (ASTRA-25b · SOL-25b 17:2x) |
+| 20:3x | 「G0-B 승인」 (EX-25 설정 + 마찰 0.2~1.2, 처음부터 1501 회, B 와 같은 START 계약) | G0-B 학습 GPU0 20:37:29 기동 (impl-g0b c151db40 · 727d4773, reviewer 막음 0) |
 | 20:0x | 「다른 시드는 우선 안해」 · 「걸으며 돌기 → 제자리 돌기 순서 -> 동의」 · 「planner + analyst 같이」 설계 논의 · 「명령 흔들기 (흩기) 도 이어 학습시 넣어야하는 조건으로 설계」 · 「창1, 창2, 창3 넘어가는 설계도 마찬가지」 · 「걷기 - 걸으면서 돌기 - 제자리 회전 학습 순 반영」 | 다음 설계 v0.1: planner 초안 · analyst 반박 · lead 조율. 다른 시드는 전체 과정 끝 한 번 |
 | 18:2x | 「50회 두 판 승인한다, 결과 나오면 바로 돌려 (확인 실험 진행 ok」 | B1500 에서 50 회 두 판 (A 지금 방식 · B 명령 시계 흩기), EX-31 조건. sonnet-code SONNET-X25b 준비, 저장본 평가 sweep 끝나면 바로 기동 |
 | 17:3x | Codex 세션 rename (팀장 직접): luna → runner · astra2 → verifier · sol → scripter · lead_tmp/astra → analyst | 1 절 표. super2 가 mai-watch 기록 이름 반영 (17:38) |
