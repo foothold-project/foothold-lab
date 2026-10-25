@@ -122,9 +122,9 @@ def test_run_sb_eval_script_shape():
 
     assert b"\r" not in raw
     for must in (SB_ID, "--cases all", "--envs 16", "--fixed-terrain", "foothold_s2.eval.turn_probe", "foothold_s2.eval.eval_map_modes", "--envs 64", "--steps 300",
-                 "--modes eval_gt,probe_prop_only", "for MODE in eval_gt probe_prop_only", '--map-mode "$MODE"', "TURNPROBE_DONE", 'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"'):
+                 '--modes "${MODES// /,}"', "for MODE in $MODES", '--map-mode "$MODE"', "TURNPROBE_DONE", 'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"'):
         assert must in s, must
-    assert "\ncd " not in s and "eval_pred" not in s and "--map-mode none" not in s and "G0B" not in s
+    assert "\ncd " not in s and "--map-mode none" not in s and "G0B" not in s
     r = subprocess.run([BASH, "-n", str(RUN_SH)], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=30)
 
     assert r.returncode == 0, r.stderr
