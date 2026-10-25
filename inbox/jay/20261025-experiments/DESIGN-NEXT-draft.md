@@ -116,6 +116,10 @@ MODULE=foothold_s2.eval.turn_probe DEVICE=cuda:1 bash /c/mai/wt/foothold-lab/imp
 
 읽을 것: indep_right · indep_left 의 발 풀림과 네 발 동시 접촉(RESULT 4 절 정의), 네 calf 체류. 「좌우 둘 다 발을 들며 돈다」 면 그것이 §3 S3 의 목표 모양이고 §5 의 성공 문턱(발 풀림 ≥ 0.5) 이 닿을 수 있는 값인지 확인하는 자료다. 출발선을 바꾸는 근거로는 쓰지 않는다(한 저장본 · 한 시드 · 결과 뒤 선택).
 
+### 2.4 G0-B 를 지금 띄우는 경우(GPU 두 장이 비어 있을 때)
+
+G0-B(B cfg 에서 `map_input=none`, 마찰 0.2~1.2, START 명령, 처음부터 1500 회) 는 이 설계의 출발선이 아니지만, GPU 가 놀고 있고 팀장이 원하면 **지류로 지금 띄우는 것은 설계와 충돌하지 않는다**(EXPERIMENT-RULES 1 절 「다음 일을 미리 걸어 두어 놀리지 않는다」). 조건 넷. (1) 이름은 EX 번호를 새로 받고 카드에 「판 C 의 지도 없는 기준선 · 출발선 후보 아님」 으로 적는다. (2) 저장 50 회 · 같은 고정 칸(SHA c3884d686592) 평가를 §5.1 과 같게 돌려 B 의 §1.1 표와 나란히 둔다(「지도 없이 배운 판도 같은 폭으로 흔들리나」 가 H1 · H2 를 가르는 자료가 된다). (3) 처음부터 학습이라 흩기(T1) 는 해당 없음, 나머지 T4 · T7 · T8 은 같다. (4) G0-B 는 B 와 「같은 출발선」 이 아니다. 지도 능력이 0 이라 뒤에 지도를 붙이면 그때 지도 쓰는 법을 처음부터 배운다(EX-29 가 228 회에서 멈춘 경로와 가깝다 `[RESULT 2 절 · DESIGN §2]`). 그래서 본류(§3) 는 B1500 에서, G0-B 는 비교 · 기준선으로 쓴다. GPU 배치는 lead 몫이며 본류가 뜨면 50 회 평가 GPU 와 겹치지 않게 한다(§6).
+
 ## 3. Q2 학습 순서 · 명령 분포 · 전환 조건
 
 ### 3.1 순서의 원칙
@@ -152,6 +156,19 @@ MODULE=foothold_s2.eval.turn_probe DEVICE=cuda:1 bash /c/mai/wt/foothold-lab/imp
 - 조건을 못 넘으면 같은 단계로 한 창 더 돌고, 두 창 연속 미달이면 DESIGN §5 「후퇴와 보존」 대로 직전 확대만 한 단계 되돌린다.
 - 「좌 0.77 이상」 은 B1500 한 저장본 값을 기준으로 삼는 약점이 있다(그 값 자체가 오르내림의 꼭대기, §1.1). 대안은 B m1000~1500 11 저장본 중앙값(좌 0.49 · 우 0.24) 을 기준선으로 쓰는 것이다. 어느 쪽을 기준선으로 할지 §10 의 3 번.
 
+### 3.4 DESIGN v1.0 의 창마다 넘어갈 과제들은 어디로 갔나
+
+이미 풀린 것(전진 · 좌회전 보행) 은 유지 과제로 남고, 아직 못 넘은 과제는 빠지지 않고 아래 자리로 옮겼다.
+
+| v1.0 의 과제(창마다 축 하나) | 이 설계의 자리 | 조건 |
+|---|---|---|
+| 복원 지도 첫 구간 안정(창 2 조건) | S1 유지 조건(§3.3) 그대로 | 창 2 기준과 같은 수치 |
+| 우회전 처방(창 3 첫 축, 띠 벌점) | §6 순서 4. 명령 축 둘 뒤, 분기 B 에서만 | DESIGN-W3 §2.3a |
+| P0 진입(정지 · 깃발 · 평지 10 %) | S4(§3.2) | S3 통과 |
+| P1 이동 중 회전 · 짧은 후진 · 옆 ±0.2 | 이동 중 회전은 S2 로 **앞당김**(팀장 순서), 후진 · 옆은 S4 뒤 P1 그대로 | §3.3 · DESIGN §4 |
+| C1 sparse 소량 · DR 지연 · 외력 | S4 뒤, DESIGN §4.1 · §6 순서 그대로 | 성과 조건 |
+| 지도 가림(판 C) | §6 순서 3 | S3 통과 또는 S2b 두 창 유지 |
+
 ## 4. Q3 이어 가기 · 창 전환의 필수 조건
 
 새 프로세스가 뜨는 모든 경계(출발 · 창 전환 · 단계 전환) 에서 아래를 모두 만족해야 학습이 시작된다. 영수증(json) 으로 남기고 하나라도 어기면 뜨기 전에 멈춘다(실험이 멈추는 것이 아니라 기동 전 거절이다. 팀장 10/17 원칙과 어긋나지 않게, 거절 사유는 즉시 보고하고 고쳐서 다시 띄운다).
@@ -163,7 +180,7 @@ MODULE=foothold_s2.eval.turn_probe DEVICE=cuda:1 bash /c/mai/wt/foothold-lab/imp
 | T3 | 가중치 · 두 optimizer · LR · action std · 지형 레벨 · 종류 복원 해시 단언 | 있음(transfer_receipt, analyst Q5 확인) | VERIFY-astra-25b 표 |
 | T4 | 처치 칸 밖 cfg 차이 0(`cfg_pair_diff`) · 처치 칸 목록은 단계 전환 때 명령 분포와 계약 이름만 | 있음(허용 목록 방식) | 같은 틀. S2 부터 허용 목록에 `commands.base_velocity.params.*` · `perception.contract` 추가 |
 | T5 | RNN 이력 · 보상 누적기 · 관측 이력은 재시작이 불가피하다. 그 사실과 첫 10 갱신의 value loss · KL 을 영수증에 적고, 첫 보상 급락을 붕괴로 읽지 않는다 | 기록은 TensorBoard 에만 | analyst 「처음의 보상 · 길이 급락을 즉시 정책 붕괴로 읽으면 틀린다」 |
-| T6 | AdaSmpl: EX-30(복원 지도 판) 은 직전 창의 마지막 p 와 통계를 이어받는다(지금은 p = 1 · 통계 0 에서 다시 시작). EX-31 은 force_gt 라 해당 없음 | 없음(현재 0 에서 시작) | 창마다 p 가 1 로 되돌아가면 복원 지도 노출이 창 앞부분마다 줄어든다(RESULT 2 절 창 2 는 0.47 에서 이어받았다고 적혀 있어 확인 필요, §11) |
+| T6 | AdaSmpl: EX-30(복원 지도 판) 은 직전 창의 마지막 p 를 이어받고 그 값을 영수증에 적는다. 통계(count · sum) 는 0 에서 다시 모이므로 「끝난 에피소드 2 개 미만이면 p 유지」 규칙이 창 앞부분을 보호하는지 첫 10 갱신의 p 를 기록한다. EX-31 은 force_gt 라 해당 없음 | 있음. 창 2 영수증 `impl-w2/logs/rsl_rl/foothold_s2_ex3031_w2/2026-10-25_07-45-26_ex-30-w2/transfer_receipt_w2.json` 의 `adasmpl_in_ckpt` p 0.4554 · count 0 `[실측]`. B1500 → 창 1 만 p = 1 에서 시작 | 창마다 p 가 1 로 되돌아가면 복원 지도 노출이 줄어드는데, 창 2 는 그렇지 않았다. 조건은 「이어받음을 단언」 으로 둔다 |
 | T7 | 첫 2 분 안에 첫 갱신 · GPU 메모리 증가를 본 뒤에만 「돈다」 로 보고(R10). GPU1 에 띄우면 기동 전 여유 3 GB · 첫 10 회 초/회가 GPU0 의 1.5 배 넘으면 보고(R5) | 운영 규칙 | RULES-HUB 7 절 |
 | T8 | 멈춤은 50 회 저장 경계에서만(STOP 파일) | 있음(`boundary_stop`) | RULES-HUB 3 절 |
 
@@ -273,7 +290,7 @@ MODULE=foothold_s2.eval.turn_probe DEVICE=cuda:1 bash /c/mai/wt/foothold-lab/imp
 - `[실측]`: §1.1 31 저장본 평가(`impl-t5/logs/onset_sweep/*/map_modes.json`), §1.2 a50 · b50 10 저장본과 두 probe 재계산(같은 폴더 `probe_{a50,b50}_m1550/arrays_*.npz`), §1.4 EX-25 고정 칸(`impl-t5/logs/eval_fixed_ex25_20261025_050726/`), §1.5 시각(파일 mtime · `status_cuda0.log` · `status_cuda1.log`), 흩기 영수증(`impl-stagger/logs/rsl_rl/foothold_s2_ex31r_stagger/*/stagger_receipt.json`).
 - `[코드]`: `impl-stagger/foothold_s2/commands/mixed_core.py` `resample_start`, `runners/contracts.py`, `runners/start_runner.py:273~326`, `runners/command_clock.py`, B `params/env.yaml` 1683~1697 행(재추출 4 s · start_mode) · 1428 행(에피소드 20 s), `impl-w2/foothold_s2/window2_criteria.py`.
 - `[추정]`: 모든 문턱(0.5 · 0.25 · 0.30 · 0.10 · 14/16 · 60/64), 걸으며 돌기 범위, 비중 30 %, 시간 추정, H1~H5 의 예측 패턴.
-- 재지 않은 것: b50 m1510 의 접촉(§2.3), EX-25 학습 당시 GPU 공유 여부, 창 2 가 AdaSmpl p 를 실제로 이어받았는지(RESULT 2 절 「0.47 에서 이어」 와 DESIGN §2.1 「통계 0 에서 시작」 이 다르다. 창 2 `transfer_receipt.json` 의 `child_adasmpl` 로 확인할 것), 레벨 3 이상 칸의 회전(H2), 다른 시드(전체 끝에 한 번).
+- 재지 않은 것: b50 m1510 의 접촉(§2.3), EX-25 학습 당시 GPU 공유 여부, 레벨 3 이상 칸의 회전(H2), 에피소드 나이 흩기의 실제 분포(T2), 다른 시드(전체 끝에 한 번). 창 2 의 AdaSmpl 이어받기는 영수증으로 확인했다(T6).
 - 재계산 코드: 이 세션 scratchpad 의 인라인 python(§1.2 표). 저장소에 두지 않았다. 재현은 `turn_probe_logic.yaw_follow` 와 같은 식(살아 있는 구간 평균 wz / 명령) 과 체류 식(q > −0.8378 − 0.05 비율, 네 calf 최댓값) 으로 된다.
 
 | 판 | 날짜 | 내용 |
