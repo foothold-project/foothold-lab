@@ -39,6 +39,7 @@ class PerceptionReplay:
             "tick": z(num_steps, num_envs, dt=torch.bool),
             "first": z(num_steps, num_envs, dt=torch.bool),
             "use_gt": z(num_steps, num_envs, dt=torch.bool),
+            "map_off": z(num_steps, num_envs, dt=torch.bool),                  # EX-33 S-B: 그 스텝에 정책이 받은 est 를 만들 때 지도 토큰을 껐는가(재생에서 같은 마스크를 쓰려고 저장)
         }
         self.h_prop0 = z(num_envs, 128)
         self.h_terr0 = z(num_envs, 128)
@@ -50,7 +51,7 @@ class PerceptionReplay:
         self.h_terr0.copy_(h_terr)
         self.step = 0
 
-    def add_pre(self, inp: dict, obs: torch.Tensor, gt_map, gt_feet, base_vel, use_gt) -> None:
+    def add_pre(self, inp: dict, obs: torch.Tensor, gt_map, gt_feet, base_vel, use_gt, map_off=None) -> None:
         """env.step 전, 이번 스텝의 지각 입력과 정답."""
         if self.step >= self.T:
             raise OverflowError("지각 재생 버퍼가 찼다. start() 를 먼저 불러야 한다")
@@ -65,6 +66,8 @@ class PerceptionReplay:
         d["gt_feet"][t].copy_(gt_feet.reshape(self.N, -1))
         d["base_vel"][t].copy_(base_vel)
         d["use_gt"][t].copy_(use_gt)
+        if map_off is not None:
+            d["map_off"][t].copy_(map_off)
 
     def add_post(self, next_obs: torch.Tensor, done: torch.Tensor) -> None:
         """env.step 뒤. done 이면 next_obs 는 새 에피소드 첫 관측이라 ô 정답으로 쓰지 않는다(재생에서 마스크)."""

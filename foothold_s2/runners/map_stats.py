@@ -53,8 +53,8 @@ class MapStatsRecorder:
         orig_step, orig_adv = p.step, p._advance
         rec = self
 
-        def advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
-            out = orig_adv(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        def advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *map_off):
+            out = orig_adv(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *map_off)
 
             if rec.in_step:
                 rec._last_refined = out[2].get("refined")

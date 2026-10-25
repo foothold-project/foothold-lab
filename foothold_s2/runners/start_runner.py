@@ -42,6 +42,7 @@ from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, S
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import start_contract_bad
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
+from foothold_s2.runners.map_switch import MapSwitchRecorder, draw_map_off, make_generator
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
@@ -73,7 +74,20 @@ PERCEPTION_DEFAULTS = {
     "kl_probe_envs": 256,
     "contract": None,  # "start": 명령이 START 원문 범위를 벗어나면 실행 무효(멈추고 기록)
     "stop_on_nonfinite": False,  # NaN/Inf(보상 · 행동 · 손실)이면 실행 무효
+    # ---- SONNET-X25f (EX-33 S-B). 기본값 0 은 B 와 같은 동작이다 ----
+    "p_map_off": 0.0,  # env 마다 에피소드 시작(reset) 때 이 확률로 «지도 끔» 을 뽑아 그 에피소드 끝까지 유지한다(끔 = est 를 만들 때 지도 토큰을 attention 키에서 뺌). 0 이면 뽑지 않고 기록기도 안 켠다
+    "map_switch_seed": 20251025,  # 끔 뽑기 전용 난수열의 시드(전역 난수를 건드리지 않는다)
 }
+
+
+def _nan_to_none(x):
+    """json 에 NaN 을 쓰지 않는다(집단에 끝난 에피소드가 없으면 평균이 NaN)."""
+    if isinstance(x, dict):
+        return {k: _nan_to_none(v) for k, v in x.items()}
+    if isinstance(x, float) and x != x:
+        return None
+
+    return x
 
 
 class StartRunner(OnPolicyRunner):
@@ -97,6 +111,12 @@ class StartRunner(OnPolicyRunner):
         self.pcfg = pcfg
         if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
             raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
+        p_off = float(pcfg["p_map_off"])
+        if not 0.0 <= p_off <= 1.0:
+            raise ValueError(f"p_map_off 는 [0, 1]: {p_off}")
+        if p_off > 0.0 and pcfg.get("map_input", "reconstruction") == "none":
+            raise ValueError("p_map_off > 0 은 지도 입력이 있는 판에서만 쓴다")
+        self.p_map_off = p_off
         self.manifest = None
         self.manifest_dir = None
         self.perception = StartPerception(
@@ -117,6 +137,8 @@ class StartRunner(OnPolicyRunner):
         self.replay = PerceptionReplay(
             self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
         )
+        self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
+        self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
 
         self.disable_logs = self.is_distributed and self.gpu_global_rank != 0
         self.log_dir = log_dir
@@ -242,6 +264,9 @@ class StartRunner(OnPolicyRunner):
         n = self.env.num_envs
         self.pstate = self.perception.init_state(n, self.device)
         self.pstate.use_gt = self.adasmpl.sample(n, self.device)
+        self.pstate.map_off = draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen)
+        print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
+        ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
 
         ep_infos = []
         rewbuffer, lenbuffer = deque(maxlen=100), deque(maxlen=100)
@@ -279,7 +304,7 @@ class StartRunner(OnPolicyRunner):
                     inp = self.perception.ingest(self.pstate, o, depth)
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
-                    self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt)
+                    self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
                     actions = self.alg.act(ppo_obs)
                     if contract_bad is not None:
@@ -291,6 +316,9 @@ class StartRunner(OnPolicyRunner):
                         trace.pre_step(actions)
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
+                        lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
+                        self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta)
                     if trace is not None:
                         trace.post_step(step_k, rewards, dones)
                     if rs_rec is not None:
@@ -315,7 +343,8 @@ class StartRunner(OnPolicyRunner):
                         lenbuffer.extend(cur_episode_length[done_ids].cpu().tolist())
                         cur_reward_sum[done_ids] = 0
                         cur_episode_length[done_ids] = 0
-                    self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device))
+                    self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
+                                               draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen) if self.p_map_off > 0.0 else None)
                 self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()
@@ -361,6 +390,8 @@ class StartRunner(OnPolicyRunner):
                 self._check_finite(it, adasmpl_p=torch.as_tensor(p, dtype=torch.float32))
             loss_dict["adasmpl/p_smpl"] = p
             loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
+            if self.map_switch is not None:
+                self._map_switch_log(it, loss_dict)
             learn_time = time.time() - start
             self.current_learning_iteration = it
             steps = self.num_steps_per_env * n * self.gpu_world_size
@@ -385,6 +416,45 @@ class StartRunner(OnPolicyRunner):
             self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
             self.save_latest()
         self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
+
+    # ------------------------------------------------------------------ SONNET-X25f: EX-33 S-B 켬 · 끔 기록
+    def _map_switch_probes(self):
+        """지형 레벨 텐서와 track 두 항의 reward_manager 열 번호. 없으면 None(기록에서 빠지고 jsonl 에 이유가 남는다)."""
+        raw_env = getattr(self.env, "unwrapped", self.env)
+        terrain = getattr(getattr(raw_env, "scene", None), "terrain", None)
+        levels = getattr(terrain, "terrain_levels", None)
+        rm = getattr(raw_env, "reward_manager", None)
+        track = None
+        if rm is not None and hasattr(rm, "_step_reward"):
+            names = list(rm.active_terms)
+            lin = [i for i, nm in enumerate(names) if "track_lin_vel" in nm]
+            ang = [i for i, nm in enumerate(names) if "track_ang_vel" in nm]
+            if len(lin) == 1 and len(ang) == 1:
+                track = (rm, lin[0], ang[0])
+        self.map_switch_unavailable = {"terrain_levels": levels is None, "track_terms": track is None}
+
+        return (raw_env if levels is not None else None), track
+
+    def _map_switch_step_values(self, raw_env, track):
+        levels = raw_env.scene.terrain.terrain_levels.to(self.device) if raw_env is not None else None
+        if track is None:
+            return levels, None, None
+        rm, i, j = track
+
+        return levels, rm._step_reward[:, i].to(self.device), rm._step_reward[:, j].to(self.device)
+
+    def _map_switch_log(self, it: int, loss_dict: dict) -> None:
+        s = self.map_switch.summary()
+        self.map_switch.reset_window()
+        loss_dict["map_switch/off_frac"] = s["off_frac_steps"]
+        for g in ("on", "off"):
+            for k, v in s[g].items():
+                if isinstance(v, float) and v == v:
+                    loss_dict[f"map_switch/{g}_{k}"] = v
+        if self.log_dir is not None and not self.disable_logs:
+            row = {"it": it, "p_off": self.p_map_off, "unavailable": getattr(self, "map_switch_unavailable", None), **s}
+            with open(os.path.join(self.log_dir, "map_switch.jsonl"), "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(_nan_to_none(row), ensure_ascii=False) + "\n")
 
     # ------------------------------------------------------------------ SONNET-X11: 실행 무효 · manifest · KL 기록
     def attach_manifest(self, log_dir: str, manifest: dict) -> None:

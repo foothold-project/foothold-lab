@@ -437,8 +437,8 @@ def _capture(spec: dict[str, Any]) -> None:
         original_advance = perception._advance
         map_snapshot: dict[str, Any] = {}
 
-        def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
-            result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        def tapped_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *map_off):
+            result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *map_off)
             out = result[2]
             map_snapshot.clear()
             map_snapshot.update({"depth": depth2[0, -1].detach().float().cpu().numpy(),

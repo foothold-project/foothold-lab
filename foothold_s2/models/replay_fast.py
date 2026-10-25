@@ -96,6 +96,16 @@ def _gru_states(p, b, scan):
     return H_prop, H_terr
 
 
+def _off_kw(b, t=None) -> dict:
+    """지도 끔 마스크 인자. 끌 env 가 없으면 인자를 아예 안 넘긴다(호출이 B 와 같다)."""
+    m = b.get("map_off")
+    if m is None:
+        return {}
+    m = m.flatten() if t is None else m[t]
+
+    return {"map_off": m} if bool(m.any()) else {}
+
+
 def _losses_flat(p, b, eps, H_prop, H_terr):
     """(T*B) 로 한 번에 계산. loop 의 스텝 평균의 평균 = T*B 평균 (B 가 스텝마다 같으므로)."""
     T, B = b["obs"].shape[:2]
@@ -109,7 +119,7 @@ def _losses_flat(p, b, eps, H_prop, H_terr):
     else:
         res["tr"] = torch.zeros((), device=gt.device)
         hmap = None
-    out = p.ie.estimate(H_prop.flatten(0, 1), hmap)
+    out = p.ie.estimate(H_prop.flatten(0, 1), hmap, **_off_kw(b))
     z = out["mu"] + eps.flatten(0, 1) * torch.exp(0.5 * out["logvar"])
     res["kl"] = kl_standard_normal(out["mu"], out["logvar"])
     res["v"] = F.mse_loss(out["v"], b["base_vel"].flatten(0, 1))
@@ -137,7 +147,7 @@ def _losses_stepwise(p, b, eps, H_prop, H_terr):
             refs.append(refined)
         else:
             hmap = None
-        out = p.ie.estimate(H_prop[t], hmap)
+        out = p.ie.estimate(H_prop[t], hmap, **_off_kw(b, t))
         z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
         sums["kl"] = sums["kl"] + kl_standard_normal(out["mu"], out["logvar"])
         sums["v"] = sums["v"] + F.mse_loss(out["v"], b["base_vel"][t])

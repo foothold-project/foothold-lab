@@ -256,5 +256,11 @@ class BRunner(Sol23FRunner):
     variant = "B_friction_only"
 
 
+class SBRunner(Sol23FRunner):
+    """EX-33 S-B: B 와 같은 설정에 에피소드 단위 지도 끔(p_map_off). 체크포인트 variant 이름이 B 와 달라 서로 이어 가지 못한다."""
+
+    variant = "SB_map_switch"
+
+
 class TopDownRunner(Sol23FRunner):
     variant = "START_TopDown"

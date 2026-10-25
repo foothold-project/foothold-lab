@@ -209,8 +209,8 @@ class TrainTraceObserver:
         observer = self
 
         def tapped_advance(h_prop: Any, h_terr: Any, hist: Any, depth2: Any, tick: Any,
-                           first: Any, use_gt: Any, gt_map: Any) -> Any:
-            result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+                           first: Any, use_gt: Any, gt_map: Any, *map_off: Any) -> Any:           # map_off: 끌 env 가 있을 때만 붙는 마지막 인자(EX-33 S-B)
+            result = original_advance(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *map_off)
             if observer._tap_active:
                 out = result[2]
                 if "rough" not in out or "refined" not in out:
