@@ -2,7 +2,7 @@
 > 작성: 오흥재 (planner) · 2026-10-25 20:54
 > 근거: DESIGN-NEXT-draft v0.2.1 §7 · VERIFY-analyst-DN25 v0.2 §6 · 9.5 · 실제 로그 구조를 열어 확인: `train_extra.jsonl`(kl_probe ppo/phi 가지별 · reward_split, B 1501 행 · b50 50 행 · EX-30 창 2 250 행) · `training_trace/conditions_*.npz`(command · reward · reset 스텝별, B 754 파일) · `runners/kl_probe.py` `command_branch`(walk · spin · stand, 부호 분리 없음) · `eval/fixed_terrain.py` `LEVELS_USED = 3` 고정 · `onset_sweep/sweep.sh` · `probe_ab.sh`
 > 요지: 여섯 가설 중 넷(H1 노출 · H3 갱신 폭 · H5 시계 동기 · H6 지각 간섭) 은 **이미 있는 로그를 CPU 로 읽으면 지금 잴 수 있다**(GPU 0). GPU1 이 필요한 것은 H4 재평가 3 분과 H2 험지 칸 9 분이고, H2 는 작은 코드 추가(고정 칸 레벨 선택) 가 먼저다. 좌 · 우 분리 KL 과 방향별 보상 항은 다음 학습 전에 넣을 로그 구현이다.
-> 상태: v0.1 · lead 요청(10/25 20:5x 「GPU1 명령 · 예상 시간 · 무엇을 가르는지 한 장」) · 실행 승인 아님 · 학습 · GPU 기동 없음
+> 상태: v0.2 · lead 요청(10/25 20:5x) · **결과(10/25 22시)**: H4 끝(B1500 재평가 `onset_sweep/b_m1500_repeat/map_modes.json` 좌 0.8705 · 우 0.1451, 원값 대비 −0.003 · −0.003, 한 쌍이라 「큰 잡음 미발견」) · H1 · H3 · H5 는 SOL-25e CPU 측정으로 **못 가름**, H6 좁은 예측(spin phi KL > walk) 은 **반박**(비 0.47~0.81, 다섯 실행, `impl-t5/logs/sol25e/REPORT-sol-25e.md`) · 1 절의 「4.02 · 8.04 s = 첫 2 갱신」 은 틀림(갱신 8 · 16, value loss 최대는 갱신 3) · 남은 것: 로그 셋 구현(좌우 분리 KL · 방향별 track_ang_vel · 전체 env 명령 변경 수) 과 H2(고정 칸 레벨 오프셋 인자 뒤 9 분) · 실행 승인 아님 · 학습 · GPU 기동 없음
 
 # H1~H6 최소 측정 한 장
 
