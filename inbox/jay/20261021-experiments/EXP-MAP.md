@@ -210,6 +210,9 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 |---|---|---|---|---|
 | [EX-30 복원 본류 전이](EXP-EX30-PRED-transfer.md) | 우리 과제와 복원 지도 사용의 진전 | EX-28 model_1500, 부모 선택 직접 결정 | AdaSmpl 선택과 복원 경로 사용, 새 명령·성과 기반 과정 제안. 미실행 | DESIGN-EX30-31 v0.1 · Fable 검토 중 |
 | [EX-31 GT 대조](EXP-EX31-GT-control.md) | 같은 새 과제의 대조 | EX-30과 같은 EX-28 model_1500 | 같은 과제·손실에서 정책 지도 입력은 GT. 미실행 | DESIGN-EX30-31 v0.1 · 지도 없는 대조가 아님 |
+| [EX-32 G0-B](EXP-EX32-G0B-friction.md) | 지도 없음 기준선 (B 짝) | 처음부터, EX-25 설정 + 마찰 0.2~1.2 | 지도 입력 없음. 학습 중 | DESIGN-NEXT v0.3 · 세 판 비교 |
+| [EX-33 S-B50](EXP-EX33-SB50-mapswitch.md) | 지도 켜고 끄기 p 0.5 | 처음부터, B 설정 | 에피소드마다 지도 끔 0.5. 학습 중 (GPU1) | DESIGN-NEXT v0.3 11 절 판 C0 |
+| [EX-34 S-B10](EXP-EX34-SB10-mapswitch.md) | 지도 켜고 끄기 p 0.1 | 처음부터, B 설정 | 에피소드마다 지도 끔 0.1. G0-B 뒤 GPU0 | DESIGN-NEXT v0.3 11 절 판 C0 |
 | [EX-01 S1-a](EXP-S1-a.md) | 본 학습 기준과 실패 관찰 | S1-a 설정. 두 run의 저장 agent 설정은 `resume: false`(luna 대조). model_5999는 결과 참조이며 부모 체크포인트라는 뜻이 아님 | 거친 바닥에서 정지·전진·회전 실패. blind도 실패했으나 진단 경로는 scan 중심 | `16-REWARDS.md`와 `52-S1-OPEN-COMMAND.md`에 S1 계획이 있음. 이번 실패 진단은 #555 기록 |
 | [EX-02 D1](EXP-D1.md) | 발 들기 항 가설 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교. S1-a의 학습 체크포인트에서 이어 학습하지 않음 | `feet_air_time` 가중치 `[코드] +0.1`. 등록된 개선 기준 미달, 가설 기각 | D1은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
 | [EX-03 D2](EXP-D2.md) | 추종 커널의 정지 효과 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교 | 선속도·회전 추종 std를 `[코드] 0.5 → 0.25`로 함께 변경. seed 42의 1,500회 결과와 두 시드 1,100회 비교는 별개 | D2는 설계 정본에서 찾지 못함. #555의 진단용 신설 |
