@@ -16,6 +16,29 @@ BASH = r"C:\Program Files\Git\bin\bash.exe"
 TASK_FILES = ("foothold_s2/sb_tasks.py", "foothold_s2/tasks/s2_sb_cfg.py", "foothold_s2/tasks/agents/s2_sb_ppo_cfg.py")
 
 
+_SPAWNED = []
+
+
+def _spawn(cmd, **kw):
+    """Popen 한 뒤 목록에 올린다. 시험이 끝나면 아래 fixture 가 자식 셸까지 통째로 끈다(Git Bash 는 런처 아래 진짜 bash 를 두어, 런처만 죽이면 진짜 bash 가 고아로 남는다)."""
+    proc = subprocess.Popen(cmd, **kw)
+    _SPAWNED.append(proc)
+
+    return proc
+
+
+@pytest.fixture(autouse=True)
+def _kill_spawned_shells():
+    yield
+    while _SPAWNED:
+        proc = _SPAWNED.pop()
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, timeout=60)
+        try:
+            proc.wait(timeout=15)
+        except Exception:
+            pass
+
+
 def _src(rel):
     return (ROOT / rel).read_text(encoding="utf-8")
 
@@ -177,7 +200,7 @@ def test_chain_waits_for_train_rc_then_runs_m100_units_first_skips_missing_and_c
     for n in (50, 100, 150, 200, 300, 1500):
         (ck / ("model_%d.pt" % n)).write_bytes(b"x")
     out, rc_file = tmp_path / "out", tmp_path / "train_rc.txt"
-    proc = subprocess.Popen([BASH, _bash(sh), "cuda:1", _bash(ck), _bash(out), _bash(rc_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=dict(os.environ, POLL_SECONDS="1"))
+    proc = _spawn([BASH, _bash(sh), "cuda:1", _bash(ck), _bash(out), _bash(rc_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=dict(os.environ, POLL_SECONDS="1"))
     import time
 
     time.sleep(3)

@@ -4,6 +4,8 @@ import os
 import shutil
 import subprocess
 import time
+
+import pytest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -11,6 +13,29 @@ EVAL = ROOT / "foothold_s2/eval"
 RUN_SH, CHAIN2_SH, BASE_SH = EVAL / "run_sb_eval.sh", EVAL / "post_train_eval2.sh", EVAL / "baseline_b1500.sh"
 BASH = r"C:\Program Files\Git\bin\bash.exe"
 SB_ID, B_ID = "FootholdS2-Go2-S2-SB-v0", "FootholdS2-Go2-S2-23f-B-v0"
+
+
+_SPAWNED = []
+
+
+def _spawn(cmd, **kw):
+    """Popen 한 뒤 목록에 올린다. 시험이 끝나면 아래 fixture 가 자식 셸까지 통째로 끈다(Git Bash 는 런처 아래 진짜 bash 를 두어, 런처만 죽이면 진짜 bash 가 고아로 남는다)."""
+    proc = subprocess.Popen(cmd, **kw)
+    _SPAWNED.append(proc)
+
+    return proc
+
+
+@pytest.fixture(autouse=True)
+def _kill_spawned_shells():
+    yield
+    while _SPAWNED:
+        proc = _SPAWNED.pop()
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, timeout=60)
+        try:
+            proc.wait(timeout=15)
+        except Exception:
+            pass
 
 
 def _bash(path):
@@ -112,7 +137,7 @@ def test_chain2_keeps_waiting_while_a_training_python_is_alive_even_if_the_log_i
     os.utime(log, (1700000000, 1700000000))
     out, rc_file = tmp_path / "out", tmp_path / "rc.txt"
     env = dict(os.environ, POLL_SECONDS="1", DEAD_SECONDS="60", TRAIN_PROC_PATTERN="python")      # 이 시험 자신이 python.exe 라서 「학습 python 있음」
-    proc = subprocess.Popen(_args(sh, ck, out, rc_file, log), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=env)
+    proc = _spawn(_args(sh, ck, out, rc_file, log), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=env)
     time.sleep(8)
 
     assert proc.poll() is None and "TRAIN_DEAD" not in (out / "chain.log").read_text(encoding="utf-8")
@@ -130,11 +155,10 @@ def test_chain2_fresh_log_is_never_dead_even_without_a_python(tmp_path):
     log.write_text("x", encoding="utf-8")                                            # 방금 쓴 로그
     out, rc_file = tmp_path / "out", tmp_path / "rc.txt"
     env = dict(os.environ, POLL_SECONDS="1", DEAD_SECONDS="600", TRAIN_PROC_PATTERN="ZZ_no_such_process_ZZ")
-    proc = subprocess.Popen(_args(sh, ck, out, rc_file, log), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, text=True, env=env)
+    proc = _spawn(_args(sh, ck, out, rc_file, log), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, text=True, env=env)
     time.sleep(4)
 
-    assert proc.poll() is None
-    proc.kill()
+    assert proc.poll() is None                                                  # 정리는 fixture 가 자식 셸까지 한다
 
     assert "TRAIN_DEAD" not in (out / "chain.log").read_text(encoding="utf-8")
 
@@ -145,7 +169,7 @@ def test_baseline_b1500_waits_then_measures_task_b_twice_with_three_modes(tmp_pa
     ck.write_bytes(b"x")
     out, rc_file = tmp_path / "out", tmp_path / "wait_rc.txt"
     env = dict(os.environ, POLL_SECONDS="1", B_CK=_bash(ck))
-    proc = subprocess.Popen([BASH, _bash(sh), "cuda:0", _bash(out), _bash(rc_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=env)
+    proc = _spawn([BASH, _bash(sh), "cuda:0", _bash(out), _bash(rc_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=True, env=env)
     time.sleep(3)
 
     assert proc.poll() is None and not (out / "calls.txt").exists()
