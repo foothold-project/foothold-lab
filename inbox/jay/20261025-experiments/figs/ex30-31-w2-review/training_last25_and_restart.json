@@ -1,0 +1,60 @@
+{
+  "definition": "25 logged updates: B1476-1500, EX30/31 1976-2000; training statistics, not independent evaluation",
+  "source": "C:\\mai\\wt\\foothold-lab\\impl-t5\\logs\\sol25b\\training_raw.csv",
+  "source_sha256": "9496acdb0c74fb9dde4f347bb077e45a88439ec7e63408c891931eb4b82bb466",
+  "last25_mean": {
+    "B": {
+      "Train/mean_reward": 14.131470947265624,
+      "Train/mean_episode_length": 944.4584033203125,
+      "Episode_Reward/track_lin_vel": 1.1379745769500733,
+      "Episode_Reward/track_ang_vel": 0.346422107219696,
+      "Loss/reward_split/frac_stalled": 0.0626003685593605,
+      "Curriculum/terrain_levels": 5.989755687713623,
+      "Loss/value_function": 0.02747123345732689,
+      "Loss/adasmpl/gt_fraction": 1.0
+    },
+    "EX30": {
+      "Train/mean_reward": 15.555093574523926,
+      "Train/mean_episode_length": 949.3072021484375,
+      "Episode_Reward/track_lin_vel": 1.1673071575164795,
+      "Episode_Reward/track_ang_vel": 0.35605610013008115,
+      "Loss/reward_split/frac_stalled": 0.06729492172598839,
+      "Curriculum/terrain_levels": 6.027705421447754,
+      "Loss/value_function": 0.025826033279299734,
+      "Loss/adasmpl/gt_fraction": 0.43543675541877747
+    },
+    "EX31": {
+      "Train/mean_reward": 16.74171543121338,
+      "Train/mean_episode_length": 962.59640625,
+      "Episode_Reward/track_lin_vel": 1.240313925743103,
+      "Episode_Reward/track_ang_vel": 0.35360287308692934,
+      "Loss/reward_split/frac_stalled": 0.031258137971162794,
+      "Curriculum/terrain_levels": 5.980642166137695,
+      "Loss/value_function": 0.02441085547208786,
+      "Loss/adasmpl/gt_fraction": 1.0
+    }
+  },
+  "restart_value_loss": {
+    "EX30": {
+      "1501": 0.012691699899733067,
+      "1502": 0.024543706327676773,
+      "1510": 0.02573365904390812,
+      "1750": 0.024394890293478966,
+      "1751": 0.012823458760976791,
+      "1752": 0.015483093447983265,
+      "1760": 0.023006659001111984,
+      "2000": 0.028222806751728058
+    },
+    "EX31": {
+      "1501": 0.02736467868089676,
+      "1502": 0.017081068828701973,
+      "1510": 0.024707714095711708,
+      "1750": 0.023464346304535866,
+      "1751": 0.013120451010763645,
+      "1752": 0.017521390691399574,
+      "1760": 0.02011241391301155,
+      "2000": 0.02276597172021866
+    }
+  },
+  "caveat": "First resumed episode rolling means include buffer reset; do not equate with policy collapse."
+}

@@ -1,0 +1,73 @@
+{
+  "sources": {
+    "1500": {
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-w2\\logs_gate\\eval\\parent_b1500\\map_modes.json",
+      "sha256": "6884556af0225c36897eef55b9a74dd0356995ff059faf444d7809f9cef1866e",
+      "checkpoint_sha256": "cb65ba5641ac7265664a02110c51f9a57b1427ecee74356870fcd462907c43b8"
+    },
+    "('EX30', 1750)": {
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-w2\\logs_gate\\eval\\ex30_1750\\map_modes.json",
+      "sha256": "7067dc2976d33079e686c12654347a3bb31a4fda411b1bc49792d43cccccda21",
+      "checkpoint_sha256": "3885c505b1418fbc929445ca70d3f354b236f661870a85d50b2252c5098f21a6"
+    },
+    "('EX31', 1750)": {
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-w2\\logs_gate\\eval\\ex31_1750\\map_modes.json",
+      "sha256": "95dab0c462b12c7893c9bb0d940b408919c17d0b17430758b09ae1f7eba18bef",
+      "checkpoint_sha256": "5d91a848f4baba17f7f11bbec842f844916fa08e83c87e8332117ee3926f9e21"
+    },
+    "('EX30', 2000)": {
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-t5\\logs\\w3p2_ex-30_m2000_20261025_082838\\eval64\\map_modes.json",
+      "sha256": "3dab6013bbaa7569739d55f475dafd44b453de1452f15baa432caaed0503ff54",
+      "checkpoint_sha256": "fd2396cb93a109abbd18b411cd0874a942bad03b48b4823ddc1f5fa798d41ddd"
+    },
+    "('EX31', 2000)": {
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-t5\\logs\\w3p2_ex-31_m2000_20261025_082838\\eval64\\map_modes.json",
+      "sha256": "2f58e7d9be9a9fc3d62ebcbf9dbeaf68e9b12993d3446cb7b39d17a34e010138",
+      "checkpoint_sha256": "53450098c4ebf56ae9d9108f7a710013c808944c3841548d695a3f61a043f692"
+    }
+  },
+  "terrain_assignment_sha256": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+  "measure": "yaw_follow_median in fixed 64-env, 300-control-step evaluation",
+  "values": {
+    "EX30/eval_gt/spin+1.2": [
+      0.8729925791422526,
+      0.47961533864339195,
+      0.3305020332336426
+    ],
+    "EX31/eval_gt/spin+1.2": [
+      0.8729925791422526,
+      0.34942288928561743,
+      0.48574216630723743
+    ],
+    "EX30/eval_gt/spin-1.2": [
+      0.14798256556193035,
+      0.15518325699700253,
+      0.24363289939032662
+    ],
+    "EX31/eval_gt/spin-1.2": [
+      0.14798256556193035,
+      0.6967069625854492,
+      0.3316040992736817
+    ],
+    "EX30/eval_pred/spin+1.2": [
+      0.8918206956651475,
+      0.5046071582370335,
+      0.314992798699273
+    ],
+    "EX31/eval_pred/spin+1.2": [
+      0.8918206956651475,
+      0.33193115658230254,
+      0.4838470035129123
+    ],
+    "EX30/eval_pred/spin-1.2": [
+      0.15073350800408258,
+      0.15664910210503472,
+      0.2404782295227051
+    ],
+    "EX31/eval_pred/spin-1.2": [
+      0.15073350800408258,
+      0.6633149041069879,
+      0.3208239449395074
+    ]
+  }
+}
