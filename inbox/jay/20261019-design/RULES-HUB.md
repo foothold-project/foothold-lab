@@ -34,7 +34,7 @@
 | runner (8340af0f, 옛 luna) | Codex Luna | 정해진 명령 · 렌더 · 문서 동기 | 판단 |
 | pipeline (6bc3da38) | Codex | Linux 이전 (Codex 쪽) | 실험 |
 
-세션 사이 전달 (v1.2 · 팀장 10/25 05:0x 「orca cli skill 쓰면 되잖아」 · SendMessage 는 팀장 거절): orca-cli 순서로 보낸다. `orca terminal read --terminal <h>` 로 받는 창을 보고 → `orca terminal wait --terminal <h> --for tui-idle --timeout-ms 5000` → `orca terminal send --terminal <h> --enter --wait-submit 20 --text "..."` → 결과의 `turn_started` 로 전달 확인 (안 보이면 `--retry-request <id>` 로 같은 요청을 다시 보고, 새로 보내지 않는다). 팀장이 그 창에 치고 있을 수 있으면 보내지 않는다 (10/20 팀장 글 뒤에 붙은 사고, mai-os#51). `mai_resume send` 는 받는 창의 회색 제안 문장에 15 분 넘게 막힌 일이 있어 보조로만 쓴다. (v1.1 의 「orca 직접 넣기 금지」 는 이 결정으로 바뀌었는데 15 시까지 고치지 않았다. 7 절 R3.)
+세션 사이 전달 (v1.2 · 팀장 10/25 05:0x 「orca cli skill 쓰면 되잖아」 · SendMessage 는 팀장 거절): orca-cli 순서로 보낸다. `orca terminal read --terminal <h>` 로 받는 창을 보고 → `orca terminal wait --terminal <h> --for tui-idle --timeout-ms 5000` → `orca terminal send --terminal <h> --enter --wait-submit 20 --text "..."` → 결과의 `turn_started` 로 전달 확인 (안 보이면 `--retry-request <id>` 로 같은 요청을 다시 보고, 새로 보내지 않는다). 팀장이 그 창에 치고 있을 수 있으면 보내지 않는다 (10/20 팀장 글 뒤에 붙은 사고, mai-os#51). **read 결과의 입력줄에 글이 보이면 보내지 않고, read · wait · send 를 한 명령 (&&) 으로 잇지 않는다** (10/25 20:5x planner 보고가 lead 창의 팀장 초안 「영상 다 되면 경로랑 프레임 보여줘」 위로 들어간 재발). `mai_resume send` 는 받는 창의 회색 제안 문장에 15 분 넘게 막힌 일이 있어 보조로만 쓴다. (v1.1 의 「orca 직접 넣기 금지」 는 이 결정으로 바뀌었는데 15 시까지 고치지 않았다. 7 절 R3.)
 
 ## 2. 운영 규칙 (무인 · 한도 · 깨우기)
 
