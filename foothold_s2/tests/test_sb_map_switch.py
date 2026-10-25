@@ -397,3 +397,53 @@ def test_run_script_shape():
     r = subprocess.run([r"C:\Program Files\Git\bin\bash.exe", "-n", str(p)], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=30)
 
     assert r.returncode == 0, r.stderr
+
+
+# ---------------------------------------------------------------- 이어 가기: p · 시드 대조와 끔 난수열 이어 가기 (reviewer 고침 1)
+
+def _fake_runner(p, seed=20251025):
+    from foothold_s2.runners.start_runner import StartRunner
+
+    r = SimpleNamespace(p_map_off=p, pcfg={"map_switch_seed": seed}, map_switch_gen=make_generator("cpu", seed) if p > 0 else None)
+    r.map_switch_state = lambda: StartRunner.map_switch_state(r)
+    r.load_map_switch_state = lambda saved: StartRunner.load_map_switch_state(r, saved)
+
+    return r
+
+
+def test_resume_with_the_same_p_continues_the_off_random_sequence():
+    a = _fake_runner(0.5)
+    for _ in range(3):
+        draw_map_off(3072, 0.5, "cpu", a.map_switch_gen)
+    saved = a.map_switch_state()
+    expected_next = draw_map_off(3072, 0.5, "cpu", a.map_switch_gen)         # 멈추지 않았다면 이어서 나왔을 다음 뽑기
+    b = _fake_runner(0.5)                                                    # 새 프로세스: 난수열이 처음 상태
+    b.load_map_switch_state(saved)
+    got = draw_map_off(3072, 0.5, "cpu", b.map_switch_gen)
+    fresh = draw_map_off(3072, 0.5, "cpu", make_generator("cpu", 20251025))
+
+    assert torch.equal(got, expected_next) and not torch.equal(got, fresh)     # 이어졌고, 처음부터 되풀이되지 않았다
+
+
+def test_resume_with_a_different_p_or_seed_or_missing_state_is_refused():
+    saved = _fake_runner(0.5).map_switch_state()
+
+    for other in (_fake_runner(0.3), _fake_runner(0.9), _fake_runner(0.0)):
+        with pytest.raises(ValueError, match="p_map_off"):
+            other.load_map_switch_state(saved)
+    with pytest.raises(ValueError, match="seed"):
+        _fake_runner(0.5, seed=1).load_map_switch_state(saved)
+    with pytest.raises(ValueError, match="난수열"):
+        _fake_runner(0.5).load_map_switch_state({**saved, "generator_state": None})
+    with pytest.raises(ValueError, match="p_map_off"):
+        _fake_runner(0.5).load_map_switch_state(None)                          # 칸이 없는 옛 체크포인트(B)는 p=0 으로 보므로 p=0.5 로는 못 이어 간다
+    _fake_runner(0.0).load_map_switch_state(None)                              # B 이어 가기는 그대로 통과
+    _fake_runner(0.0).load_map_switch_state(_fake_runner(0.0).map_switch_state())
+
+
+def test_checkpoint_carries_the_state_and_load_checks_it_first():
+    src = _src("foothold_s2/runners/start_runner.py")
+
+    assert '"map_switch": self.map_switch_state(),' in src
+    assert src.index("self.load_map_switch_state(sd.get(\"map_switch\"))") < src.index('self._load_env_state(sd["env_state"])')
+    assert "self.map_switch_gen.set_state(saved[\"generator_state\"].cpu())" in src

@@ -689,8 +689,28 @@ class StartRunner(OnPolicyRunner):
             "env_seed": getattr(getattr(getattr(self.env, "unwrapped", self.env), "cfg", None), "seed", None),
             "iter": self.current_learning_iteration,
             "rng": self.rng_state(),
+            "map_switch": self.map_switch_state(),
             "infos": infos,
         }
+
+    def map_switch_state(self) -> dict:
+        """EX-33 S-B: 끔 확률 · 시드 · 끔 전용 난수열 상태. 이어 갈 때 p 가 다르면 거절하고, 같으면 난수열을 이어 간다."""
+        gen = self.map_switch_gen
+
+        return {"p_map_off": self.p_map_off, "map_switch_seed": int(self.pcfg["map_switch_seed"]),
+                "generator_state": gen.get_state() if gen is not None else None}
+
+    def load_map_switch_state(self, saved: dict | None) -> None:
+        """체크포인트의 끔 설정을 이 runner 와 대조한다. 옛 체크포인트(칸 없음)는 p=0 으로 본다(B). p 가 다르거나 난수열 상태가 없는데 p>0 이면 거절."""
+        saved = saved or {"p_map_off": 0.0, "map_switch_seed": None, "generator_state": None}
+        if float(saved["p_map_off"]) != self.p_map_off:
+            raise ValueError(f"체크포인트의 p_map_off={saved['p_map_off']} 와 이 runner 의 {self.p_map_off} 가 다르다 (지도 끔 비율이 다른 체크포인트를 섞지 않는다)")
+        if self.p_map_off > 0.0:
+            if int(saved["map_switch_seed"]) != int(self.pcfg["map_switch_seed"]):
+                raise ValueError(f"체크포인트의 map_switch_seed={saved['map_switch_seed']} 와 이 runner 의 {self.pcfg['map_switch_seed']} 가 다르다")
+            if saved["generator_state"] is None:
+                raise ValueError("체크포인트에 지도 끔 난수열 상태가 없다")
+            self.map_switch_gen.set_state(saved["generator_state"].cpu())
 
     def save(self, path: str, infos: dict | None = None) -> None:
         torch.save(self.state_dict(infos), path)
@@ -729,6 +749,7 @@ class StartRunner(OnPolicyRunner):
             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
             self.alg.learning_rate = sd["ppo_learning_rate"]
             self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+        self.load_map_switch_state(sd.get("map_switch"))
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
