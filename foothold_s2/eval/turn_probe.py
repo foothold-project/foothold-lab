@@ -29,6 +29,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=4)
 parser.add_argument("--map-mode", default="eval_pred", choices=("eval_gt", "eval_pred", "probe_prop_only", "none"))
 parser.add_argument("--out", required=True)
+parser.add_argument("--cases", default=None, help="돌릴 경우: 생략 = 기존 다섯, all = 표 전체, 'fwd_then_left' 또는 쉼표 목록. 경우마다 reset 과 시드를 새로 하므로 일부만 돌려도 그 경우의 조건은 같다")
 parser.add_argument("--forward-gaits", action="store_true", help="회전 시행 다섯 뒤에 전진 걸음 구간(0.5 · 1.0 m/s, 8 s)을 더 기록한다(판정 없음, arrays_fwd0.5.npz · arrays_fwd1.0.npz). W3-P1 종아리 띠 점검용")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 정해진 칸으로 덮어쓴다(eval_map_modes --fixed-terrain 과 같은 배열 규칙)")
 AppLauncher.add_app_launcher_args(parser)
@@ -49,6 +50,7 @@ import foothold_s2.tasks  # noqa: E402,F401
 import foothold_s2.x23_tasks  # noqa: E402,F401
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters, probe_tiles, turn_probe_logic as L, turn_probe_plan as P  # noqa: E402
+CASES = P.select_cases(args.cases)                                        # 잘못된 --cases 는 환경을 만들기 전에 거절
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -164,7 +166,8 @@ def run_segment(cmd, seconds, policy, obs, record):
     return obs, torch.stack(alive_hist, dim=1).cpu().numpy(), alive.cpu().numpy()         # 마지막 값 = 구간 끝까지 한 번도 안 넘어진 env(마지막 step 의 done 까지 반영)
 
 
-for pname, proto in P.PROTOCOLS.items():
+for pname in CASES:
+    proto = P.PROTOCOLS[pname]
     torch.manual_seed(42)
     env.reset()
 

@@ -6,6 +6,8 @@
   fwd_then_right   reset -> 전진 0.5 4 s -> 우회전 8 s      (연속 시작, 전진 뒤)
   left_then_right  reset -> 좌회전 4 s -> 우회전 8 s        (순서 반전 대조)
   right_then_left  reset -> 우회전 4 s -> 좌회전 8 s        (순서 반전 대조)
+추가 경우(표에는 있고 기본 실행에는 없다, --cases 로 고른다):
+  fwd_then_left    reset -> 전진 0.5 4 s -> 좌회전 8 s      (fwd_then_right 의 좌우 대칭)
 앞 구간(pre)은 기록하지 않고 마지막 8 s 만 기록한다. 로봇을 거울 복제하지 않는다.
 """
 
@@ -18,16 +20,36 @@ from foothold_s2.eval import turn_probe_logic as L
 RECORD_S = 8.0
 PRE_S = 4.0
 WZ = 1.2
+# 경우 표(한 곳). 새 경우(후진 · 정지 · 걸으며 돌기)는 여기 한 줄을 더하고, 기본 실행에 넣을지는 DEFAULT_CASES 로 정한다. 기존 다섯의 정의 · 이름은 바꾸지 않는다(기존 결과와 비교).
 PROTOCOLS = {
     "indep_right": {"pre": None, "cmd": (0.0, 0.0, -WZ)},
     "indep_left": {"pre": None, "cmd": (0.0, 0.0, +WZ)},
     "fwd_then_right": {"pre": (0.5, 0.0, 0.0), "cmd": (0.0, 0.0, -WZ)},
     "left_then_right": {"pre": (0.0, 0.0, +WZ), "cmd": (0.0, 0.0, -WZ)},
     "right_then_left": {"pre": (0.0, 0.0, -WZ), "cmd": (0.0, 0.0, +WZ)},
+    "fwd_then_left": {"pre": (0.5, 0.0, 0.0), "cmd": (0.0, 0.0, +WZ)},      # SONNET-X25d: fwd_then_right 의 좌우 대칭(전진 0.5 4 s -> 좌회전 +1.2 8 s)
 }
+DEFAULT_CASES = ("indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left")    # --cases 를 안 주면 도는 경우(X25 의 기존 다섯, 순서 고정)
+
+
+def select_cases(spec: str | None) -> list[str]:
+    """--cases 값 -> 경우 이름 목록. None/'' = 기본 다섯, 'all' = 표 전체, 'a,b' = 그 이름들(표에 없으면 ValueError, 중복 거절)."""
+    if not spec:
+        return list(DEFAULT_CASES)
+    if spec == "all":
+        return list(PROTOCOLS)
+    names = [n.strip() for n in spec.split(",") if n.strip()]
+    bad = [n for n in names if n not in PROTOCOLS]
+    if bad or not names or len(set(names)) != len(names):
+        raise ValueError(f"--cases: 알 수 없거나 중복된 경우 {bad or names} (표: {list(PROTOCOLS)})")
+
+    return names
+
+
 FOLLOW_INDEPENDENT = {"right": "indep_right", "left": "indep_left"}
 ORDER_PAIRS = {                                                         # 연속 시행마다 따로 판정한다(맥락을 섞지 않는다): 이름 -> (독립 시행, 연속 시행)
     "right_after_forward": ("indep_right", "fwd_then_right"),           # 설계 §7.1 의 촬영 순서 가설(전진 뒤 우회전에서만 정체)
+    "left_after_forward": ("indep_left", "fwd_then_left"),              # X25d: 위의 좌우 대칭
     "right_after_left_turn": ("indep_right", "left_then_right"),
     "left_after_right_turn": ("indep_left", "right_then_left"),
 }

@@ -18,7 +18,8 @@ SH = ROOT / "foothold_s2/run_turn_probe.sh"
 def test_protocols_cover_independent_sequential_and_reversed_order_with_right_turn_negative():
     p = P.PROTOCOLS
 
-    assert set(p) == {"indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left"}
+    assert set(P.DEFAULT_CASES) == {"indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left"}
+    assert set(p) == set(P.DEFAULT_CASES) | {"fwd_then_left"}
     assert p["indep_right"]["cmd"] == (0, 0, -1.2) and p["indep_left"]["cmd"] == (0, 0, 1.2) and p["indep_right"]["pre"] is None
     assert p["fwd_then_right"]["pre"][0] == 0.5 and p["left_then_right"]["pre"][2] > 0 and p["right_then_left"]["pre"][2] < 0
     assert (P.RECORD_S, P.PRE_S) == (8.0, 4.0)
@@ -158,3 +159,89 @@ def test_probe_shell_script_passes_the_fixed_terrain_flag_by_default():
     text = SH.read_text(encoding="utf-8")
 
     assert '$FIXED --headless' in text and 'FIXED="${FIXED_TERRAIN_FLAG---fixed-terrain}"' in text and "\r" not in text
+
+
+# ---- SONNET-X25d: fwd_then_left 와 경우 표 ----
+
+X25_FIVE_DEFINITIONS = {                                                       # X25 에서 이미 돈 결과와 비교되어야 하므로 값을 시험에 박아 둔다(표가 바뀌면 여기서 걸린다)
+    "indep_right": {"pre": None, "cmd": (0.0, 0.0, -1.2)},
+    "indep_left": {"pre": None, "cmd": (0.0, 0.0, 1.2)},
+    "fwd_then_right": {"pre": (0.5, 0.0, 0.0), "cmd": (0.0, 0.0, -1.2)},
+    "left_then_right": {"pre": (0.0, 0.0, 1.2), "cmd": (0.0, 0.0, -1.2)},
+    "right_then_left": {"pre": (0.0, 0.0, -1.2), "cmd": (0.0, 0.0, 1.2)},
+}
+
+
+def test_the_five_original_cases_keep_their_definitions_and_default_order():
+    for name, d in X25_FIVE_DEFINITIONS.items():
+        assert P.PROTOCOLS[name] == d, name
+    assert P.DEFAULT_CASES == ("indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left")
+    assert P.select_cases(None) == list(P.DEFAULT_CASES) and P.select_cases("") == list(P.DEFAULT_CASES)
+
+
+def test_fwd_then_left_is_the_mirror_of_fwd_then_right_only_in_the_turn_sign():
+    r, l = P.PROTOCOLS["fwd_then_right"], P.PROTOCOLS["fwd_then_left"]
+
+    assert l["pre"] == r["pre"] == (0.5, 0.0, 0.0)                              # 전진 0.5 4 s
+    assert l["cmd"] == (0.0, 0.0, +1.2) and r["cmd"] == (0.0, 0.0, -1.2)       # 좌회전 +1.2 8 s
+    assert (P.PRE_S, P.RECORD_S) == (4.0, 8.0)
+
+
+def test_command_sequence_per_case_is_pre_then_record():
+    def sequence(name):
+        d = P.PROTOCOLS[name]
+        seq = [] if d["pre"] is None else [(d["pre"], P.PRE_S, False)]
+
+        return seq + [(d["cmd"], P.RECORD_S, True)]
+
+    assert sequence("fwd_then_left") == [((0.5, 0.0, 0.0), 4.0, False), ((0.0, 0.0, 1.2), 8.0, True)]
+    assert sequence("indep_left") == [((0.0, 0.0, 1.2), 8.0, True)]
+
+
+def test_select_cases_all_subset_and_rejections():
+    assert P.select_cases("all") == list(P.PROTOCOLS) and "fwd_then_left" in P.select_cases("all")
+    assert P.select_cases("fwd_then_left") == ["fwd_then_left"]
+    assert P.select_cases("indep_left, fwd_then_left") == ["indep_left", "fwd_then_left"]
+    for bad in ("fwd_then_lft", "indep_left,indep_left", ",", "all,indep_left"):
+        with pytest.raises(ValueError):
+            P.select_cases(bad)
+
+
+def test_left_after_forward_pair_is_judged_and_the_old_keys_are_unchanged_without_it():
+    base = {"indep_right": _proto(0.8), "indep_left": _proto(0.9), "fwd_then_right": _proto(0.1), "left_then_right": _proto(0.78), "right_then_left": _proto(0.9)}
+    five = P.summarize(base)
+
+    assert five["order"]["left_after_forward"]["verdict"] == "미확인"           # fwd_then_left 를 안 돌린 옛 실행은 이 쌍만 «미확인»
+    assert {k: v for k, v in five["order"].items() if k != "left_after_forward"}.keys() == {"right_after_forward", "right_after_left_turn", "left_after_right_turn"}
+    assert five["order"]["right_after_forward"]["verdict"] == "지지" and set(five["protocols"]) == set(base)
+    six = P.summarize({**base, "fwd_then_left": _proto(0.1)})
+
+    assert six["order"]["left_after_forward"]["verdict"] == "지지" and six["order"]["left_after_forward"]["gap"] == pytest.approx(0.8)
+    assert {k: six["order"][k] for k in five["order"] if k != "left_after_forward"} == {k: v for k, v in five["order"].items() if k != "left_after_forward"}
+    only = P.summarize({"fwd_then_left": _proto(0.1)})                         # 이 경우만 돌린 실행: 쌍은 미확인, 경우 자체 요약은 나온다
+
+    assert only["order"]["left_after_forward"]["verdict"] == "미확인" and only["protocols"]["fwd_then_left"]["follow_median"] == pytest.approx(0.1)
+
+
+def test_probe_script_runs_the_selected_cases_and_names_outputs_by_case():
+    src = PROBE.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    loops = [n for n in ast.walk(tree) if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id == "pname"]
+
+    assert len(loops) == 1 and ast.unparse(loops[0].iter) == "CASES"           # 표 전체가 아니라 고른 경우만
+    assert "CASES = P.select_cases(args.cases)" in src and src.index("CASES = P.select_cases") < src.index("load_cfg_from_registry(args.task")
+    assert '"arrays_%s.npz" % pname' in src and 'result["protocols"][pname]' in src and 'print("TURNPROBE", pname' in src
+    assert '"--cases"' in src and 'P.PROTOCOLS[pname]' in src
+
+
+def test_run_script_passes_cases_only_when_given():
+    s = SH.read_text(encoding="utf-8")
+
+    assert 'CASES="${CASES-}"' in s and '${CASES:+--cases "$CASES"}' in s
+    assert s.index('${CASES:+--cases') < s.index("$FIXED --headless")      # 기존 «$FIXED --headless» 줄 모양은 그대로
+
+
+def test_downstream_readers_still_list_only_the_cases_they_know():
+    from foothold_s2.eval import calf_band, limit_dwell
+
+    assert set(limit_dwell.PROTOCOLS) == set(P.DEFAULT_CASES) and "fwd_then_left" not in calf_band.PROTOCOLS   # 후속 판독기는 이번 변경에 손대지 않는다(새 경우는 따로 읽는다)
