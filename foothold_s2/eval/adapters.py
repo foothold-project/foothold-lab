@@ -492,6 +492,7 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None):
     if (sd.get("sol23f") or {}).get("variant") == "START_TopDown" and delay != 0:
         raise ValueError("TopDown checkpoint missing depth_delay_ticks=0")
     pc["depth_delay_ticks"] = delay
+    pc["p_map_off"] = 0.0                              # S-B(EX-33) 의 agent cfg 가 p_map_off 를 들고 있어도 평가는 끔 난수를 쓰지 않는다(지도 모드는 S2Policy 의 map_mode 한 곳이 정한다)
     pc["oracle_vel_noise"] = 0.0                      # 평가는 관측 잡음을 끈다(est_mode=oracle_vel 체크포인트도 실제 선속도를 잡음 없이 넣는다)
 
     for key, default in MODE_DEFAULTS.items():
