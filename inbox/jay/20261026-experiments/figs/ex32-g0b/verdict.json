@@ -1,0 +1,35 @@
+{
+  "checkpoint": 1500,
+  "baseline_gt_fwd1_m": 5.652708053588867,
+  "baseline_gt_90pct_m": 5.087437248229981,
+  "baseline_prop_fwd1_m": 0.6213862895965576,
+  "modes": {
+    "none": {
+      "status": "평가 전"
+    }
+  },
+  "six_case": {
+    "none": {
+      "indep_left": {
+        "status": "평가 전"
+      },
+      "indep_right": {
+        "status": "평가 전"
+      },
+      "left_then_right": {
+        "status": "평가 전"
+      },
+      "right_then_left": {
+        "status": "평가 전"
+      },
+      "fwd_then_left": {
+        "status": "평가 전"
+      },
+      "fwd_then_right": {
+        "status": "평가 전"
+      }
+    }
+  },
+  "video": "영상 없음 · 미확인",
+  "overall": "해석 미완 · m1500 자료와 영상이 모두 필요"
+}
