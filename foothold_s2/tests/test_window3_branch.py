@@ -76,6 +76,10 @@ def test_e_outside_table_uses_the_larger_of_the_two_directions():
     e = B.branch(0.40, 0.45, 0.49, 0.10)
     assert e["label"] == "A" and e["warn"] and e["via"] == "E max(D) < 0.5"      # 아니면 A + 경고 기록
     assert B.branch(0.40, 0.45, None, 0.9)["label"] == "표 밖"        # 규칙이 없는 D 결측 -> 보류
+    z = B.branch(0.48, 0.32, 0.43, None, "ok", "no_low_env")           # EX-31 m2000: 반대 방향에 추종 < 0.3 env 없음 -> 그 방향 D = 0 -> max 0.43 < 0.5 -> A + 경고
+    assert z["label"] == "A" and z["warn"] and B.branch(0.48, 0.32, 0.55, None, "ok", "no_low_env")["label"] == "B"
+    assert B.branch(0.48, 0.32, 0.43, None, "ok", "missing")["label"] == "표 밖"        # probe 자체가 없으면 0 이 아니라 결측
+    assert B.branch(0.40, 0.45, None, None, "no_low_env", "no_low_env")["label"] == "A"  # 둘 다 앉은 env 없음 -> 0 · 0
     assert B.branch(0.40, 0.45, None)["label"] == "표 밖"
 
 

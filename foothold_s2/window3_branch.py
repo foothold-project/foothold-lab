@@ -50,7 +50,7 @@ def rotation_layer(cur: dict, prev: dict | None = None) -> dict:
 RECOMMEND_NOTE = "분기 결과는 권고다. 창 3 기동은 팀장 승인 뒤. 문턱은 모두 [추정]."
 
 
-def branch(L: float, R: float, D: float | None, D_other: float | None = None, d_status: str | None = None) -> dict:
+def branch(L: float, R: float, D: float | None, D_other: float | None = None, d_status: str | None = None, d_other_status: str | None = None) -> dict:
     """v1.2.1 §2.3a 분기표 한 판. 검사 순서 D 붕괴 -> F(D 미측정) -> B -> C -> E(표 밖) -> A.
     D = 약한 방향 D(전체 구간, 추종 < 0.3 env 평균), D_other = 반대 방향 D(E 에서만 쓴다).
     d_status = "ok" | "missing"(probe 없음/실패) | "no_low_env"(probe 는 있으나 추종 < 0.3 인 남은 env 가 0). 생략하면 D 가 None 이면 missing.
@@ -83,7 +83,8 @@ def branch(L: float, R: float, D: float | None, D_other: float | None = None, d_
         return done("B" if D >= K.BRANCH_D_C_MAX else "C", "D >= 0.3" if D >= K.BRANCH_D_C_MAX else "D < 0.3")        # 0.3 <= D < 0.5 도 B
     if lo >= K.BRANCH_STRONG_MIN and diff <= K.BRANCH_A_DIFF_MAX:
         return done("A", "강한 방향 둘")
-    ds = [x for x in (D, D_other) if x is not None]                                # E: min 0.3~0.5 이고 차 < 0.25
+    zero = lambda x, s: 0.0 if (x is None and s == "no_low_env") else x                 # E: 추종 < 0.3 env 가 없는 방향의 D 는 0(앉은 env 없음), 결측이 아니다 (lead 결정 10/25)
+    ds = [x for x in (zero(D, status), zero(D_other, d_other_status)) if x is not None]                  # E: min 0.3~0.5 이고 차 < 0.25
     if len(ds) < 2:
         out["warn"].append("표 밖(E) 인데 두 방향 D 가 다 있지 않다: 규칙이 없어 판정 보류")
 
@@ -171,7 +172,7 @@ def inputs_from_files(map_modes_json, probe_folder, prev_map_modes_json) -> dict
     dw, dw_o = weak_direction_dwell(probe_folder, side), weak_direction_dwell(probe_folder, other)
     # F: 약한 방향 D 가 없을 때 »한 번 다시 잰다« 는 사람이 하는 일이다. 코드는 status 를 그대로 남긴다.
 
-    return {"spin": cur, "weak_side": side, "dwell": dw, "dwell_other": dw_o, "branch": branch(cur["L"], cur["R"], dw["D"], dw_o["D"], dw["status"]), "rotation_layer": rotation_layer(cur, prev), "prev_spin": prev,
+    return {"spin": cur, "weak_side": side, "dwell": dw, "dwell_other": dw_o, "branch": branch(cur["L"], cur["R"], dw["D"], dw_o["D"], dw["status"], dw_o["status"]), "rotation_layer": rotation_layer(cur, prev), "prev_spin": prev,
             "criteria_sha256": K.criteria_sha256(), "checkpoint_iter": mm.get("checkpoint_iter"), "checkpoint_sha256": mm.get("checkpoint_sha256", "")[:12],
             "map_modes_fixed_sha": (mm.get("fixed_terrain") or {}).get("assignment_sha256")}
 
