@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 정리) · 2026-10-25
 > 근거: 팀장 10/25 「2 번 이상 말하거나 금지하거나 요구하는 것은 실험 규칙에 쌓아서 다른 세션들도 바라볼 수 있게 · claude, codex 둘 다 · 한곳에」 · EXPERIMENT-RULES 1.4 · LEAD-STYLE-AGENTS · mai-os AGENTS.md
 > 요지: Claude · Codex 모든 세션이 처음 여는 규칙 입구. 세션 역할 · 운영 · 실험 · 영상 렌더 · 승인 원장을 여기서 찾아간다.
-> 상태: v1.4 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
+> 상태: v1.5 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
 
 # 규칙 입구 (Claude · Codex 공용)
 
@@ -182,8 +182,25 @@
 ### 8.5 영상
 4 절 v2 가 정본. 판단이 걸린 주장 (회전 · 지도) 에는 해당 구간 영상 경로와 확인한 프레임을 같이 낸다.
 
+## 9. 이름 붙은 체크포인트 정본 (10/26 12시, Linux 이전 런북 L-3-2 가 가리킴)
+
+Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/`). sha256 은 lead 가 10/26 12시에 다시 잼 (앞 16 자). Linux 로 옮긴 뒤 같은 값인지 먼저 대조한다.
+
+| 이름 | 자리 | sha256 앞 16 | 역할 |
+|---|---|---|---|
+| B1500 (EX-28) | `lead-tmp-start-b/logs/rsl_rl/foothold_s2_23f_b/2026-10-24_06-52-56_ex28-b-main/model_1500.pt` | cb65ba5641ac7265 | 출발선 후보 · 비교 기준 (지도 늘 켬) |
+| S-B50 (EX-33) m1500 | `impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-25_23-45-04_sb-main/model_1500.pt` | e6d8ba631f24e816 | 출발선 후보 (지도 끔 0.5) |
+| S-B10 (EX-34) m1500 | `impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main/model_1500.pt` | 4d987818c7e25b89 | 출발선 후보 (지도 끔 0.1) |
+| G0-B (EX-32) m1500 | `impl-g0b/logs/rsl_rl/foothold_s2_g0b/2026-10-25_20-37-41_g0b-main/model_1500.pt` | de3a29fb32e49837 | 지도 없이 걷기 기준선 |
+| 흩기 b50 m1510 | `impl-stagger/logs/rsl_rl/foothold_s2_ex31r_stagger/2026-10-25_19-15-52_ex31r-b50/model_1510.pt` | 2a391afa83c88e81 | 회전 진단 (양방향 발 들기) |
+| 흩기 b50 m1550 | 같은 폴더 `model_1550.pt` | 6d7cfa0812ae0a5b | 회전 진단 |
+| EX-23 m1500 | `logs/rsl_rl/foothold_s2_x23/2026-10-22_21-52-26_ex23-g1/model_1500.pt` (sonnet-code 작업공간) | 4775fd35a4af9a61 | 지난 본류 기록 |
+
+같은 폴더의 다른 저장본 (50 회 단위) 과 tfevents · map_switch.jsonl 도 같이 옮긴다 (평가 · 학습 곡선 원자료). 평가 원자료: `impl-turncases/logs/{g0b_eval,sb50_eval,sb10_eval,b1500_baseline,six_cases,fwd_then_left}`, `impl-t5/logs/` (onset_sweep · w3p1 · sol25b), 영상 `C:/Users/AI-WS01/s2_lab/video_25e/final/`.
+
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.5 | 2026-10-26 | 9 절 이름 붙은 체크포인트 정본 (sha256), 영상 검정 화면 재촬영 규칙 |
 | v1.4 | 2026-10-25 | R13~R17 (회색 제안 문장 · 잴 수 있는 것을 미확인으로 · 남의 지적 미확인 전달 · 결정 기록 누락 · 촬영 장면 조건), 판정은 16 env 평균, 영상 장면 조건 |
 | v1.3 | 2026-10-25 | 8 절 표준 절차 (평가 · 측정 · 분석 · 운영 · 기록 · 영상), 영상 규칙 v2, R12 |
 | v1.2 | 2026-10-25 | 1 절 세션 전달을 팀장 결정(orca-cli)으로 고침 · 승인 원장 06:0x 뒤 줄 보충 · 7 절 반복 실수와 막는 장치 R1~R7 |
