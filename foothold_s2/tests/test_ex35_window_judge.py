@@ -460,3 +460,111 @@ def test_a9_verifier_original_counterexample_file_as_is(pair):
     prev, latest, tmp = pair
     r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=str(src))
     assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"]
+
+
+def write_env_arrays(d):
+    """평가 JSON 행과 맞는 env 별 자료를 만든다(거리 중앙값 · 끝 생존 · 지형 배열 해시가 JSON 과 일치)."""
+    from foothold_s2.eval import fixed_terrain as FT
+
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        f = Path(d) / rel / "map_modes.json"
+        j = json.loads(f.read_text(encoding="utf-8"))
+        ft = j["fixed_terrain"]
+        lev, col = FT.fixed_assignment(ft["num_envs"], ft["rows"], ft["cols"], ft.get("fixed_level"))
+        assert FT.assignment_sha256(lev, col) == ft["assignment_sha256"], rel
+
+        for mode, cmds in j["modes"].items():
+            for cname, row in cmds.items():
+                S_, N, dt = 300, ft["num_envs"], 0.02
+                vx = np.zeros((S_, N), dtype=np.float32)
+                vx[:S_ - 1] = row["body_vx_integral_median_m"] / ((S_ - 1) * dt)
+                al = np.ones((S_, N), dtype=bool)
+                al[-1, row["alive_envs_at_end"]:] = False
+                al[S_ - 20:, row["alive_envs_at_end"]:] = False
+                vx[S_ - 20:, :] = 0.0
+                vx[:S_ - 20] = row["body_vx_integral_median_m"] / ((S_ - 20) * dt)
+                np.savez(f.parent / ("env_arrays_%s_%s.npz" % (mode, cname)), vx=vx, alive=al, dt=dt, terrain_level=lev, terrain_col=col,
+                         alive_end=al[-1], assignment_sha256=FT.assignment_sha256(lev, col))
+
+
+np = __import__("numpy")
+
+
+def test_env_arrays_make_the_64env_recompute_independent_and_unblock_a12(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    write_env_arrays(latest)
+    r = W.judge_window(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=_TRAIN.get("t") or make_train_dir(tmp))
+    assert r["a12"]["latest"]["ok"] and r["a12"]["latest"]["not_independent"] == [] and r["decision"]["row"] != 3, r["a12_note"]
+
+
+def test_env_arrays_disagreeing_with_json_or_terrain_hash_fail_a12(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    write_env_arrays(latest)
+    f = latest / "map64" / "env_arrays_eval_gt_fwd1.0.npz"
+    z = dict(np.load(f))
+    z["vx"] = z["vx"] * 1.01                                                                    # 거리 1 % 어긋남
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert not r["a12"]["latest"]["ok"] and any(m["cond"] == "map64_distance" for m in r["a12"]["latest"]["mismatch"])
+    write_env_arrays(latest)
+    z = dict(np.load(f))
+    z["terrain_col"] = (z["terrain_col"] + 1) % 10
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert any(m["cond"] == "map64_env_terrain_hash" for m in r["a12"]["latest"]["mismatch"])
+    write_env_arrays(latest)
+    z = dict(np.load(f))
+    z["alive"] = z["alive"].copy()
+    z["alive"][-1, :] = ~z["alive"][-1, :]
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert any(m["cond"] in ("map64_alive", "map64_distance") for m in r["a12"]["latest"]["mismatch"])
+
+
+def test_save_env_arrays_writes_kind_level_col_and_end_reason(tmp_path):
+    import ast
+    from types import SimpleNamespace
+
+    src = Path(__file__).resolve().parents[1] / "eval" / "eval_map_modes.py"
+    t = ast.parse(src.read_text(encoding="utf-8"))
+    fn = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == "_save_env_arrays")
+    ns = {"np": np, "os": __import__("os")}
+
+    class T:
+        def __init__(self, a):
+            self.a = a
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return self.a
+
+    from foothold_s2.eval import fixed_terrain as FT
+    ns["fixed_terrain"] = FT
+    lev, col = np.array([0, 1, 2, 3]), np.array([0, 1, 2, 3])
+    terrain = SimpleNamespace(terrain_levels=T(lev), terrain_types=T(col), cfg=SimpleNamespace(terrain_generator=None))
+    ns["raw"] = SimpleNamespace(scene=SimpleNamespace(terrain=terrain))
+    ns["args"] = SimpleNamespace(out=str(tmp_path))
+    ns["res"] = {}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), str(src), "exec"), ns)
+    S_, N = 10, 4
+    vx = np.ones((S_, N)); al = np.ones((S_, N), dtype=bool); al[5:, 2] = False; dn = np.zeros((S_, N), dtype=bool); dn[5, 2] = True
+    ns["_save_env_arrays"]("eval_gt", "fwd1.0", vx, np.arange(S_ * N, dtype=float).reshape(S_, N), al, dn, 0.02, np.zeros((N, 2)), {})
+    z = np.load(tmp_path / "env_arrays_eval_gt_fwd1.0.npz")
+    assert list(z["end_reason"]) == ["survived", "survived", "terminated", "survived"] and int(z["first_done_step"][2]) == 5
+    assert z["terrain_col"].tolist() == [0, 1, 2, 3] and z["body_vx_integral_m"][2] < z["body_vx_integral_m"][0]
+    assert set(z["kind"].tolist()) == {"unknown"} and ns["res"]["env_array_basis"]["kind_error"]            # 이름 표를 못 만들면 unknown + 까닭 기록
+
+
+def test_terrain_report_groups_by_kind_with_known_answers(tmp_path):
+    from foothold_s2.eval import ex35_terrain_report as R
+    kind = np.array(["flat", "flat", "stairs", "stairs"])
+    np.savez(tmp_path / "env_arrays_probe_prop_only_fwd1.0.npz", kind=kind, terrain_level=np.array([0, 1, 0, 1]), terrain_col=np.array([0, 0, 1, 1]),
+             body_vx_integral_m=np.array([4.0, 6.0, 1.0, 3.0]), alive_end=np.array([True, True, False, True]),
+             end_reason=np.array(["survived", "survived", "terminated", "survived"]))
+    r = R.report([tmp_path])[str(tmp_path)]["probe_prop_only_fwd1.0"]
+    assert r["flat"]["dist_median_m"] == 5.0 and r["stairs"]["dist_mean_m"] == 2.0 and r["stairs"]["alive_end_fraction"] == 0.5 and r["stairs"]["terminated_envs"] == 1
+    assert R.main(["--dir", str(tmp_path), "--out-prefix", str(tmp_path / "rep")]) == 0 and "stairs" in (tmp_path / "rep.md").read_text(encoding="utf-8")

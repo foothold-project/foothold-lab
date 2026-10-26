@@ -23,6 +23,7 @@ import numpy as np
 
 from foothold_s2.eval import ex35_gate as X
 from foothold_s2.eval import ex35_window_axes as AX
+from foothold_s2.eval import fixed_terrain as G_FT
 from foothold_s2.eval import judge_gate as G
 from foothold_s2.eval import judge_stats as S
 
@@ -284,6 +285,45 @@ def _json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def map64_env_recompute(d, maps, bad) -> list:
+    """X27j: 64 env 거리 · 생존의 독립 재계산. env_arrays_<모드>_<명령>.npz (env 별 vx · alive · 지형 열 · 레벨)에서 거리 중앙값 · 끝 생존을 다시 세어 평가 JSON 행과 대조하고,
+    npz 안 지형 배열의 해시를 평가 JSON 의 assignment_sha256 과 대조한다. 어긋나면 bad 에 더하고, env 별 자료가 없는 칸은 돌려준다(= 아직 «미측»)."""
+    unmeasured = []
+
+    for name, p, _want in maps:
+        if not Path(p).is_file():
+            continue
+
+        j = _json(p)
+        folder = Path(p).parent
+
+        for mode, cmds in (j.get("modes") or {}).items():
+            for cname, row in cmds.items():
+                f = folder / ("env_arrays_%s_%s.npz" % (mode, cname))
+
+                if not f.is_file():
+                    unmeasured.append("%s %s/%s: env 별 자료 없음(%s)" % (name, mode, cname, f.name))
+                    continue
+
+                z = np.load(f, allow_pickle=False)
+                al, vx, dt = z["alive"], z["vx"], float(z["dt"])
+                dist = float(np.median((vx * al).sum(0) * dt))
+                alive_end = int(al[-1].sum())
+                want_sha = (j.get("fixed_terrain") or {}).get("assignment_sha256")
+                got_sha = G_FT.assignment_sha256(z["terrain_level"], z["terrain_col"])
+
+                if not np.isfinite(vx).all() or not abs(dist - row["body_vx_integral_median_m"]) <= 1e-3:
+                    bad.append({"cond": "map64_distance", "file": name, "case": "%s/%s" % (mode, cname), "recomputed": dist, "judge": row.get("body_vx_integral_median_m")})
+
+                if alive_end != row["alive_envs_at_end"] or int(z["alive_end"].sum()) != alive_end:
+                    bad.append({"cond": "map64_alive", "file": name, "case": "%s/%s" % (mode, cname), "recomputed": alive_end, "judge": row.get("alive_envs_at_end")})
+
+                if want_sha is None or got_sha != want_sha:
+                    bad.append({"cond": "map64_env_terrain_hash", "file": name, "case": "%s/%s" % (mode, cname), "value": got_sha[:12], "want": (want_sha or "")[:12]})
+
+    return unmeasured
+
+
 def reproduce_check(d, b, base_hard_assignment=None, tol=WIN["recompute_tol"], dist_tol=1e-3) -> dict:
     """A12 (카드 4b.1): Q · C <= 1e-6, 거리 <= 1e-3 m, 정수 0, 지형 해시, 저장본 sha256, eval_seed 42. 하나라도 어긋나거나 «확인 못 함» 이면 ok 가 아니다
     (파일 · 기록이 없는 것을 통과로 치지 않는다). 독립 식이 없는 것(64 env 거리)은 not_independent 에 적고, 판정에서 막을지는 호출자(require_map64_recompute)가 정한다."""
@@ -361,10 +401,11 @@ def reproduce_check(d, b, base_hard_assignment=None, tol=WIN["recompute_tol"], d
         if sha_txt and j.get("checkpoint_sha256") != sha_txt:
             bad.append({"cond": "turn_checkpoint_sha256", "file": "turn16_" + mode, "value": str(j.get("checkpoint_sha256"))[:12], "want": sha_txt[:12]})
 
+    unmeasured = map64_env_recompute(d, maps, bad)
     notes.append("turn16 의 eval_seed: turn_probe 는 시드 인자가 없고 probe_result.json 에도 기록이 없다(기본 고정). 지형 해시 7f49a1e9 와 저장본 sha 로만 대조")
 
     return {"checked_cases": n, "mismatch": bad, "checkpoint_sha_matches_file": sha_ok, "checkpoint_file": pth, "ok": not bad, "notes": notes,
-            "not_independent": ["64 env 거리 · 생존(map64 · eval_pred · L6 · L9): 환경별 자료(npz)가 없어 독립 식이 없다. 평가 JSON 값을 그대로 쓴다"]}
+            "not_independent": unmeasured}
 
 
 # ------------------------------------------------------------------ A11
@@ -662,8 +703,10 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
     a12_ok = bool(a12["latest"].get("ok") and a12["prev"].get("ok"))
     a12_note = ""
 
-    if not allow_map64_unmeasured:                                                  # 카드 A12: 64 env 거리 · 생존의 독립 재계산. 환경별 자료가 없으면 통과가 아니다
-        a12_note = "64 env 거리 · 생존의 독립 재계산이 없다(환경별 자료 없음): A12 미측 = 통과 아님"
+    unmeas = {t: (a12[t].get("not_independent") or []) for t in ("latest", "prev")}
+
+    if (unmeas["latest"] or unmeas["prev"]) and not allow_map64_unmeasured:          # 카드 A12: 64 env 거리 · 생존의 독립 재계산. 환경별 자료(env_arrays_*.npz)가 없으면 통과가 아니다
+        a12_note = "64 env 거리 · 생존의 독립 재계산이 없다(환경별 자료 없음): A12 미측 = 통과 아님: %s" % ("; ".join((unmeas["latest"] + unmeas["prev"])[:3]))
         a12_ok = False
 
     nonfin = {t: (ex[t]["nonfinite"] if t in ex else []) for t in ("latest", "prev")}

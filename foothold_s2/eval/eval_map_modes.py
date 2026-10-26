@@ -122,6 +122,34 @@ SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "
 if parser_sparse:
     from foothold_s2.eval import kind_stats as _ks
     SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
+def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row):
+    """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
+    종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
+    terrain = raw.scene.terrain
+    lev, col = terrain.terrain_levels.cpu().numpy().astype(np.int64), terrain.terrain_types.cpu().numpy().astype(np.int64)
+    names, err = None, None
+
+    try:
+        from foothold_s2.terrains import columns as _c2
+
+        _g2 = terrain.cfg.terrain_generator
+        names = _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols))
+    except Exception as e:                                                             # noqa: BLE001  (이름 표를 못 만들어도 열 번호 · 레벨은 남긴다)
+        err = repr(e)
+
+    kind = np.array([names[int(c)] if names else "unknown" for c in col])
+    done_any = dn.any(0)
+    first_done = np.where(done_any, dn.argmax(0), -1)
+    dist = (vx * al).sum(0) * dt
+    reason = np.where(done_any, "terminated", "survived")                                # 종료 사유: 정책 종료 조건이 걸렸는가(걸리면 step 번호가 first_done_step)
+    np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
+             fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
+             vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col))
+    res.setdefault("env_arrays", {})["%s/%s" % (mode, cname)] = "env_arrays_%s_%s.npz" % (mode, cname)
+    res["env_array_basis"] = {"kind_names": "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]" if names else None, "kind_error": err,
+                              "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"}
+
+
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}}
 
 for mode in args.modes.split(","):
@@ -205,6 +233,8 @@ for mode in args.modes.split(","):
         YAW = torch.zeros(S, env.num_envs, device=dev)
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
 
+        START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
+
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
             a = policy(obs)
@@ -242,6 +272,7 @@ for mode in args.modes.split(","):
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row)                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
@@ -259,6 +290,7 @@ for mode in args.modes.split(","):
     if saved_map_input == "none" and tokens != 0:
         raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % tokens)
     runner.perception.ie.mask_map_tokens = False                                          # 모드가 끝나면 진단 마스크를 되돌린다
+
 
 def _module_key(m):                                                                    # python -m 로 돌면 이 스크립트 자신이 __main__ 이라 __spec__.name 으로 이름을 되찾는다
     spec = getattr(m, "__spec__", None)
