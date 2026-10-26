@@ -475,7 +475,7 @@ def write_env_arrays(d):
 
         for mode, cmds in j["modes"].items():
             for cname, row in cmds.items():
-                S_, N, dt = 300, ft["num_envs"], 0.02
+                S_, N, dt = j["steps"], ft["num_envs"], 0.02
                 vx = np.zeros((S_, N), dtype=np.float32)
                 vx[:S_ - 1] = row["body_vx_integral_median_m"] / ((S_ - 1) * dt)
                 al = np.ones((S_, N), dtype=bool)
@@ -483,8 +483,9 @@ def write_env_arrays(d):
                 al[S_ - 20:, row["alive_envs_at_end"]:] = False
                 vx[S_ - 20:, :] = 0.0
                 vx[:S_ - 20] = row["body_vx_integral_median_m"] / ((S_ - 20) * dt)
-                np.savez(f.parent / ("env_arrays_%s_%s.npz" % (mode, cname)), vx=vx, alive=al, dt=dt, terrain_level=lev, terrain_col=col,
-                         alive_end=al[-1], assignment_sha256=FT.assignment_sha256(lev, col))
+                np.savez(f.parent / ("env_arrays_%s_%s.npz" % (mode, cname)), vx=vx, alive=al, dones=np.zeros((S_, N), dtype=bool), dt=dt, env=np.arange(N), terrain_level=lev, terrain_col=col,
+                         kind=np.array(["k"] * N), start_xy=np.zeros((N, 2)), fwd_end_m=np.zeros(N), body_vx_integral_m=(vx * al).sum(0) * dt, alive_end=al[-1], alive_steps=al.sum(0),
+                         first_done_step=np.full(N, -1), end_reason=np.array(["survived"] * N), assignment_sha256=FT.assignment_sha256(lev, col))
 
 
 np = __import__("numpy")
@@ -568,3 +569,30 @@ def test_terrain_report_groups_by_kind_with_known_answers(tmp_path):
     r = R.report([tmp_path])[str(tmp_path)]["probe_prop_only_fwd1.0"]
     assert r["flat"]["dist_median_m"] == 5.0 and r["stairs"]["dist_mean_m"] == 2.0 and r["stairs"]["alive_end_fraction"] == 0.5 and r["stairs"]["terminated_envs"] == 1
     assert R.main(["--dir", str(tmp_path), "--out-prefix", str(tmp_path / "rep")]) == 0 and "stairs" in (tmp_path / "rep.md").read_text(encoding="utf-8")
+
+
+def test_env_array_shape_mismatch_fails_a12_not_broadcast_through(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    f = latest / "map64" / "env_arrays_eval_gt_fwd1.0.npz"
+
+    def broken(edit):
+        write_env_arrays(latest)
+        z = dict(np.load(f))
+        edit(z)
+        np.savez(f, **z)
+        r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+        a = r["a12"]["latest"]
+
+        return not a["ok"] and any(m["cond"] == "map64_env_shape" for m in a["mismatch"]) and a["not_independent"] == [] or not a["ok"] and any(m["cond"] == "map64_env_shape" for m in a["mismatch"])
+
+    def one_row(z):                                                                            # verifier 반례: vx 를 1 x N 으로 줄여 같은 적분이 되게 만든다
+        total = (z["vx"] * z["alive"]).sum(0, keepdims=True)
+        z["vx"] = (total / z["alive"].sum(0, keepdims=True)).astype(np.float32)
+
+    assert broken(one_row)
+    assert broken(lambda z: z.update(vx=z["vx"][:-1], alive=z["alive"][:-1], dones=z["dones"][:-1]))          # T 하나 짧음
+    assert broken(lambda z: z.update(vx=z["vx"][:, :-1]))                                                    # N 하나 짧음 (vx 만)
+    assert broken(lambda z: z.update(kind=z["kind"][:-1]))
+    assert broken(lambda z: z.update(terrain_col=z["terrain_col"][:-1]))
+    assert broken(lambda z: z.pop("dones"))

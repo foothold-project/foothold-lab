@@ -285,6 +285,38 @@ def _json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+_ENV_2D = ("vx", "alive", "dones")                                   # (T, N)
+_ENV_1D = ("env", "terrain_level", "terrain_col", "kind", "fwd_end_m", "body_vx_integral_m", "alive_end", "alive_steps", "first_done_step", "end_reason")      # (N,)
+
+
+def _env_shape_problems(z, T, N) -> list:
+    """env_arrays npz 의 모양: vx · alive · dones 는 모두 (T, N), 나머지 env 별 배열은 (N,), start_xy 는 (N, 2). T = 평가 step 수, N = env 수(map_modes.json 값)."""
+    out = []
+
+    if T <= 0 or N <= 0:
+        return ["map_modes.json 에 steps/num_envs 가 없다 (T=%s, N=%s)" % (T, N)]
+
+    for k in _ENV_2D + _ENV_1D + ("start_xy", "dt", "terrain_level"):
+        if k not in z.files:
+            out.append("%s 없음" % k)
+
+    if out:
+        return out
+
+    for k in _ENV_2D:
+        if z[k].shape != (T, N):
+            out.append("%s 모양 %s != (%d, %d)" % (k, tuple(z[k].shape), T, N))
+
+    for k in _ENV_1D:
+        if z[k].shape != (N,):
+            out.append("%s 모양 %s != (%d,)" % (k, tuple(z[k].shape), N))
+
+    if z["start_xy"].shape != (N, 2):
+        out.append("start_xy 모양 %s != (%d, 2)" % (tuple(z["start_xy"].shape), N))
+
+    return out
+
+
 def map64_env_recompute(d, maps, bad) -> list:
     """X27j: 64 env 거리 · 생존의 독립 재계산. env_arrays_<모드>_<명령>.npz (env 별 vx · alive · 지형 열 · 레벨)에서 거리 중앙값 · 끝 생존을 다시 세어 평가 JSON 행과 대조하고,
     npz 안 지형 배열의 해시를 평가 JSON 의 assignment_sha256 과 대조한다. 어긋나면 bad 에 더하고, env 별 자료가 없는 칸은 돌려준다(= 아직 «미측»)."""
@@ -306,6 +338,14 @@ def map64_env_recompute(d, maps, bad) -> list:
                     continue
 
                 z = np.load(f, allow_pickle=False)
+                T, N = int(j.get("steps", -1)), int((j.get("fixed_terrain") or {}).get("num_envs", j.get("envs", -1)))
+                case = "%s/%s" % (mode, cname)
+                shape_bad = _env_shape_problems(z, T, N)
+
+                if shape_bad:                                                  # 방송(broadcast)으로 빠진 시간 · env 자료가 통과하지 않게: 계산 전에 모양부터
+                    bad.append({"cond": "map64_env_shape", "file": name, "case": case, "problems": shape_bad[:4]})
+                    continue
+
                 al, vx, dt = z["alive"], z["vx"], float(z["dt"])
                 dist = float(np.median((vx * al).sum(0) * dt))
                 alive_end = int(al[-1].sum())
