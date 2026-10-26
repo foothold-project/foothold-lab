@@ -166,6 +166,6 @@ m1500의 16환경 Q는 명령 부호를 맞춘 kept 환경별 살아 있는 표�
 
 - 학습: `C:\mai\wt\foothold-lab\impl-sb\logs\rsl_rl\foothold_s2_sb\2026-10-26_01-17-47_sb-main`, 10/26 01:17:35 GPU0 기동 · 11:20 rc 0, model_1500.pt. 코드 impl-sb 6309f67e. 첫 update 실현 끔 0.0951, 전체 평균 0.0988 (3 절).
 - 평가: impl-turncases 7996823f 의 `foothold_s2/eval/post_train_eval2.sh` 사슬, 원자료 `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval\m*`. 회전 열 · 출발선 표 · 어려운 칸 표는 lead `figs/startline/` (rot_series · startline_table · hardlevel_table).
-- 이 문서의 숫자: `figs/ex33-34/gen_result.py` (isaac311 python, CPU), 시험 `test_gen_result.py` 5 통과 (lead 재실행), 원자료 · lead 표 대조 16,012 건, 깨끗한 두 사본 바이트 같음.
+- 이 문서의 숫자: `figs/ex33-34/gen_result.py` (isaac311 python, CPU), 시험 `test_gen_result.py` 6 통과 (lead 재실행 17:4x), 원자료 · lead 표 대조 16,028 건, 깨끗한 두 사본 바이트 같음.
 - 영상: 릴리스 https://github.com/foothold-project/foothold-lab/releases/tag/research-sb-1500-20261026 · 로컬 `C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\` (SHA256SUMS.txt). 머리글은 runner-26a 7d49fafc · 범례는 b64892f9 판.
 - 판정 코드: 통합 브랜치 feature/judge-mapratio-integ-jay (impl-integ), planner JUDGE-SPEC v0.6.

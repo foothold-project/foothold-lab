@@ -164,5 +164,5 @@ m1500의 16환경 Q는 명령 부호를 맞춘 kept 환경별 살아 있는 표�
 
 - 학습: `C:\mai\wt\foothold-lab\impl-sb\logs\rsl_rl\foothold_s2_sb\2026-10-25_23-45-04_sb-main`, 10/25 23:44 GPU1 기동 · 10/26 09:54:42 rc 0, model_1500.pt (sha256 e6d8ba631f24e816). 코드 impl-sb 6309f67e.
 - 평가: impl-turncases 7996823f 의 `foothold_s2/eval/post_train_eval2.sh` 사슬, 원자료 `C:\mai\wt\foothold-lab\impl-turncases\logs\sb50_eval\m*`. lead 표 `figs/startline/`.
-- 이 문서의 숫자: `figs/ex33-34/gen_result.py` (isaac311 python, CPU), 시험 5 통과 (lead 재실행), 대조 16,012 건, 두 사본 바이트 같음.
+- 이 문서의 숫자: `figs/ex33-34/gen_result.py` (isaac311 python, CPU), 시험 6 통과 (lead 재실행 17:4x), 대조 16,028 건, 두 사본 바이트 같음.
 - 영상: 릴리스 https://github.com/foothold-project/foothold-lab/releases/tag/research-sb-1500-20261026 · 로컬 `C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\`.
