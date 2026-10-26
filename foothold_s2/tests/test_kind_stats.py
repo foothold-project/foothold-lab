@@ -179,3 +179,15 @@ def test_start_offbeam_comes_from_the_tile_geometry_and_is_the_same_for_every_mo
     out = K.by_kind(["balance_beams"] * 2, np.full((S, 2), 0.7), np.zeros((S, 2)), np.ones((S, 2), dtype=bool), DT, pos=pos, start_support=sup)["balance_beams"]
 
     assert out["start_offbeam"] == 1 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 시작은 센다
+
+
+def test_threshold_sensitivity_marks_the_env_whose_crossing_changes_with_the_fall_threshold_and_the_metric_stays_at_0_25():
+    f = np.linspace(0.0, 7.0, S)
+    zs = np.stack([np.full(S, STAND), np.full(S, 0.255), np.full(S, 0.11)], axis=1)       # 발판 위 · 문턱 0.25 에 5 mm 위 · 구덩이 바닥
+    fwd = np.stack([f] * 3, axis=1)
+    pos = np.zeros((S, 3, 3))
+    pos[:, :, 0], pos[:, :, 2] = fwd, zs
+    out = K.by_kind(["gaps"] * 3, np.full((S, 3), 0.7), fwd, np.ones((S, 3), dtype=bool), DT, pos=pos)["gaps"]
+
+    assert out["crossed"] == 2 and out["crossed_by_fall_threshold"] == {"0.225": 2, "0.25": 2, "0.275": 1} and out["threshold_sensitive_envs"] == [1]
+    assert K.FALL_BELOW_TOP_M == 0.25

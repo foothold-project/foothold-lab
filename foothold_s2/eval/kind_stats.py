@@ -22,6 +22,7 @@ FALL_BELOW_TOP_M = 0.25               # 출발 단 윗면에서 몸 z 가 이 �
 START_EDGE_M = 0.2                   # 시작 x 가 출발 단 끝에서 이 안이면 «출발 단 끝 시작»
 EDGE_DROP_M = 0.2                    # sparse_terrains.EDGE_DROP_M 와 같은 값(그 모듈은 trimesh 등을 부르지 않지만 순환을 피해 값만 둔다, 시험이 같은지 대조)
 DROP_TOL_M = EDGE_DROP_M / 2.0
+SENSITIVITY_M = (0.225, 0.25, 0.275)   # 낙하 문턱 민감도 기록용(지표는 FALL_BELOW_TOP_M 그대로, 결과를 보고 옮기지 않는다)
 
 
 def start_top_z() -> float:
@@ -63,6 +64,13 @@ def by_kind(kinds, vx, fwd, alive, dt: float, threshold_m: float = ss.REFERENCE_
     fwd_max = fwd_ok.max(0)
     fwd_max_fin = np.where(np.isfinite(fwd_max), fwd_max, 0.0)
     crossed = fwd_max >= threshold_m
+    by_th = {}
+
+    if pos is not None:                                               # 문턱만 바꿔 같은 규칙으로 다시 센 건넘(env 별)
+        for th in SENSITIVITY_M:
+            f2 = np.logical_or.accumulate((z < (start_top_z() + th)) & alive[:steps], axis=0)
+            by_th[th] = np.where(alive[:steps] & ~f2, fwd[:steps], -np.inf).max(0) >= threshold_m
+        sensitive = np.logical_or.reduce([by_th[t] != by_th[SENSITIVITY_M[1]] for t in SENSITIVITY_M])
     kinds = np.asarray(list(kinds))
     out = {}
 
@@ -73,6 +81,9 @@ def by_kind(kinds, vx, fwd, alive, dt: float, threshold_m: float = ss.REFERENCE_
                   "crossing_ratio_median": float(np.median(np.clip(fwd_max_fin[m] / threshold_m, 0.0, 1.0))),
                   "crossed_rule": f"살아 있고 몸 z 가 출발 단 윗면 + {FALL_BELOW_TOP_M:g} m 밑으로 내려가지 않은 동안 칸 원점에서 전진 거리 >= {threshold_m:g} m (도착 단), 기록 {steps * dt:g} s",
                   "fall_test": pos is not None}
+        if by_th:
+            out[k]["crossed_by_fall_threshold"] = {f"{th:g}": int(by_th[th][m].sum()) for th in SENSITIVITY_M}
+            out[k]["threshold_sensitive_envs"] = [int(i) for i in np.flatnonzero(sensitive & m)]        # 문턱에 따라 건넘 판정이 바뀌는 env 번호(전체 env 안의 위치)
         if start_support is not None:                                  # 칸 기하로 잰 시작 자리(모델과 무관, 두 모델 분모가 같다)
             out[k]["start_offbeam"] = int((~np.asarray(start_support, dtype=bool)[m]).sum())
 
