@@ -104,15 +104,18 @@ def update() -> None:
 
     lab = LAB.read_text(encoding="utf-8")
     lab = lab.replace("마지막 직접 대조 <b>10/27 01:52 KST</b>", "마지막 원자료 대조 <b>10/27 03:14 KST</b>")
-    lab = lab.replace("팀장이 정할 것 · 10/27 01:52 KST", "팀장이 정할 것 · 10/27 03:14 KST")
-    lab = lab.replace("아래는 현재 결정 대기 항목이다. EX-35 m1750 중간 시험값과 최종 두 저장본 판정을 구분한다.", "아래는 현재 결정 대기 항목이다. EX-35 두 저장본은 MAINTAIN_FAIL이고 창은 HOLD다.")
-    lab = lab.replace("아래는 현재 결정 대기 항목이다. EX-35 최종 두 저장본은 결과 전 규칙에 따라 REVERT다.", "아래는 현재 결정 대기 항목이다. EX-35 두 저장본은 MAINTAIN_FAIL이고 창은 HOLD다.")
-    lab = re.sub(
-        r'<div class="row"><div class="k">4 · EX-35 (?:창 판정|결과)</div><div>.*?</div></div>',
-        f'<div class="row"><div class="k">4 · EX-35 결과</div><div>m1950·m2000 {w["m2000"]["state"]} 두 건. 필수 칸·A11 미완으로 창 HOLD, 카드 6행 REVERT는 조건부. S-B10 m{t["parent_iter"]} 유지, 연장 없음. 영상·위상·추세 해석 대기.</div></div>',
-        lab,
-        count=1,
+    lab = lab.replace("마지막 원자료 대조 <b>10/27 03:14 KST</b>", "마지막 원자료 대조 <b>10/27 03:27 KST</b>")
+    decision_section = (
+        '<section class="decide">\n'
+        '  <h2>팀장이 정할 것 · 10/27 03:27 KST</h2>\n'
+        '  <p>EX-35 저장본 판정 m1950 · m2000 MAINTAIN_FAIL. 창 판정은 필수 칸 결측과 A11 영상 미판독으로 보류, 연장 없음. mai-os PR #61은 02:10:59 병합 확인.</p>\n'
+        '  <div class="row"><div class="k">1 · 촬영 GPU 규칙</div><div>촬영 GPU 규칙 확대 여부를 팀장이 결정.</div></div>\n'
+        '  <div class="row"><div class="k">2 · 단계 길이</div><div>최소 500 · 예산 1500 · 성과 조기 넘김의 관계를 팀장이 결정.</div></div>\n'
+        '  <div class="row"><div class="k">3 · 다음 판 방향</div><div>분석과 영상 판독 뒤 다음 판 방향을 팀장이 결정.</div></div>\n'
+        '</section>'
     )
+    lab, count = re.subn(r'<section class="decide">.*?</section>', decision_section, lab, count=1, flags=re.S)
+    assert count == 1
     lab, count = re.subn(
         r'<div class="row"><div class="k">GPU0</div><div>.*?</div></div>',
         '<div class="row"><div class="k">GPU0</div><div><span class="pill done">학습 종료</span>EX-35 m2000 rc 0. 02:48:13부터 학습 작업 없음. 새 학습은 팀장 승인 대기.</div></div>',
