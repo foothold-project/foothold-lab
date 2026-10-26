@@ -234,11 +234,12 @@ def _scalar_events(run_dir):
     return ea
 
 
+LOG_PERIOD_UPDATES = 1            # 로거 계약: rsl_rl 학습 runner 가 update 마다 기록한다(start_runner.py 의 log 호출). 남은 자료에서 주기를 추정하지 않는다
+
+
 def _window_complete(tag, allsteps, steps, end_it, window):
-    """창 입력 완전성: 이 run 자신의 기록 주기(전체 step 간격의 중앙값)에 맞춰 중복 · 끝 · 빠진 구간 · 개수를 본다. 모자라면 AxisInputError(= HOLD_NO_DATA)."""
-    diffs = np.diff(np.sort(allsteps))
-    period = int(np.median(diffs[diffs > 0])) if (diffs > 0).any() else 1
-    need = window // period
+    """창 입력 완전성: 계약 주기(1 update)로 창 (end_it-window, end_it] 의 모든 step 이 한 번씩 있어야 한다. 모자라면 AxisInputError(= HOLD_NO_DATA)."""
+    period, need = LOG_PERIOD_UPDATES, window // LOG_PERIOD_UPDATES
     got = sorted(steps)
     lo = end_it - window
 
@@ -246,16 +247,16 @@ def _window_complete(tag, allsteps, steps, end_it, window):
         raise AxisInputError("%s: 창 (%d, %d] 에 같은 step 이 두 번 이상 있다(중복 기록)" % (tag, lo, end_it))
 
     if end_it - got[-1] >= period:
-        raise AxisInputError("%s: 창 끝 %d 에 기록이 없다(마지막 %d, 기록 주기 %d)" % (tag, end_it, got[-1], period))
+        raise AxisInputError("%s: 창 끝 %d 에 기록이 없다(마지막 %d, 기대 주기 %d)" % (tag, end_it, got[-1], period))
 
     edges = [lo] + got
     gaps = [(a, b) for a, b in zip(edges, edges[1:]) if b - a > period]
 
     if gaps:
-        raise AxisInputError("%s: 창 안에 빠진 구간이 있다(주기 %d): %s" % (tag, period, gaps[:3]))
+        raise AxisInputError("%s: 창 안에 빠진 구간이 있다(기대 주기 %d): %s" % (tag, period, gaps[:3]))
 
-    if len(got) < need:
-        raise AxisInputError("%s: 창 안 기록 %d 개 < 필요 %d (주기 %d)" % (tag, len(got), need, period))
+    if len(got) != need:
+        raise AxisInputError("%s: 창 안 기록 %d 개 != 기대 %d (기대 주기 %d update)" % (tag, len(got), need, period))
 
 
 def curve_axis(run_dir, end_it, window=50) -> dict:

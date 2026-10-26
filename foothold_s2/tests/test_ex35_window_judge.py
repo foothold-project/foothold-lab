@@ -43,7 +43,7 @@ def make_train_dir(root, nan_tag=None):
     vals = {"Loss/value_function": 0.03, "Loss/kl_probe/ppo_mean": 0.02, "Loss/entropy": 9.0, "Policy/mean_noise_std": 0.5,
             "Episode_Termination/bad_orientation": 0.1, "Train/mean_reward": 16.0}
 
-    for step in range(1, 3051, 5):
+    for step in range(1, 3051):
         for t, v in vals.items():
             w.add_scalar(t, float("nan") if t == nan_tag else v, step)
 
@@ -438,7 +438,8 @@ def test_a9_incomplete_window_is_hold_no_data(pair, tmp_path):
              "gap_in_window": [s for s in full if not (1970 <= s <= 1985)],
              "missing_end": [s for s in full if s <= 1990],
              "duplicate_step": full + [1980],
-             "too_few_points": [s for s in full if s <= 1950 or s % 5 == 0 and s <= 1990] + [2000]}
+             "too_few_points": [s for s in full if s <= 1950 or s % 5 == 0 and s <= 1990] + [2000],
+             "only_two_points_in_whole_run": [1950, 2000]}                                       # verifier 반례: 전체 기록이 두 점이면 주기를 50 으로 추정하던 허점
 
     for name, steps in cases.items():
         d = _curve_dir(tmp_path, name, steps)
@@ -448,3 +449,14 @@ def test_a9_incomplete_window_is_hold_no_data(pair, tmp_path):
 
         r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=d)
         assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"], name
+
+
+def test_a9_verifier_original_counterexample_file_as_is(pair):
+    src = Path("C:/mai/wt/foothold-lab/verifier-27c-window/_out/db9_probe/train_partial")
+
+    if not src.is_dir():
+        pytest.skip("verifier 반례 폴더 없음")
+
+    prev, latest, tmp = pair
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=str(src))
+    assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"]
