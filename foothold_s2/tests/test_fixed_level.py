@@ -90,3 +90,39 @@ def test_cli_flags_and_script_wiring():
     assert sh.count("$LEVEL_FLAG") == 2 and 'LEVEL_FLAG="--fixed-level $LEVEL"' in sh
     for rel in ("eval/eval_map_modes.py", "eval/turn_probe.py"):
         ast.parse((ROOT / "foothold_s2" / rel).read_text(encoding="utf-8"))
+
+
+def test_level_without_fixed_terrain_or_out_of_range_is_refused_before_the_app_launches():
+    for rel in ("eval/eval_map_modes.py", "eval/turn_probe.py"):
+        src = (ROOT / "foothold_s2" / rel).read_text(encoding="utf-8")
+        launch = src.index("app = AppLauncher(args).app")
+
+        assert src.index("args.fixed_level is not None and not args.fixed_terrain") < launch
+        assert src.index("not 0 <= args.fixed_level <= 9") < launch
+        assert src.count("--fixed-level 은 --fixed-terrain 과 같이만 쓴다") == 1
+
+
+def _fake(sha, extra):
+    from foothold_s2.tests.test_fixed_terrain import _fake_result
+
+    res = _fake_result()
+    res["fixed_terrain"] = {"rows": 10, "cols": 23, "levels_used": 3, "num_envs": 64, "assignment_sha256": sha, **extra}
+
+    return res
+
+
+def test_compare_accepts_an_old_record_and_a_new_one_with_the_same_array_and_refuses_another_array():
+    from foothold_s2.eval import compare_map_modes as cmp
+
+    old, new = _fake("ab" * 32, {}), _fake("ab" * 32, {"levels": [0, 1, 2], "fixed_level": None})
+    cmp.check_same_conditions({"old": old, "new": new})                                       # 기록 칸만 늘었고 배열 SHA 가 같으면 같은 칸
+    other = _fake("cd" * 32, {"levels": [6], "fixed_level": 6})
+
+    with pytest.raises(ValueError, match="fixed_terrain"):
+        cmp.check_same_conditions({"old": old, "other": other})
+    for key, val in (("rows", 9), ("cols", 20), ("num_envs", 16)):
+        bad = _fake("ab" * 32, {})
+        bad["fixed_terrain"][key] = val
+
+        with pytest.raises(ValueError, match="fixed_terrain"):
+            cmp.check_same_conditions({"old": old, "bad": bad})

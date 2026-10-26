@@ -35,6 +35,10 @@ parser.add_argument("--forward-gaits", action="store_true", help="회전 시행 
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 정해진 칸으로 덮어쓴다(eval_map_modes --fixed-terrain 과 같은 배열 규칙)")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+if args.fixed_level is not None and not args.fixed_terrain:
+    parser.error("--fixed-level 은 --fixed-terrain 과 같이만 쓴다")                                  # Kit 기동 전에 거절(조용히 무시하면 기본 칸으로 돈다)
+if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
+    parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
