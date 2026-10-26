@@ -29,9 +29,13 @@ parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
+parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+parser_sparse = args.terrain_set == "sparse50"
+if parser_sparse and (not args.fixed_terrain or args.fixed_level is None):
+    parser.error("--terrain-set sparse50 은 --fixed-terrain 과 --fixed-level N 을 같이 준다(Kit 기동 전 거절)")
 if args.fixed_level is not None and not args.fixed_terrain:
     parser.error("--fixed-level 은 --fixed-terrain 과 같이만 쓴다")                                  # Kit 기동 전에 거절(조용히 무시하면 기본 칸으로 돈다)
 if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
@@ -84,6 +88,13 @@ for name in ("terrain_levels", "command_range"):                      # 부모 B
         curriculum_off.append(name)
 
 env_cfg.commands.base_velocity.resampling_time_range = (1.0e9, 1.0e9)
+
+if parser_sparse:                                                                                   # 평가 지형만 바꾼다. 관측 · 행동 · 보상 · 명령 cfg 는 그대로(깃발 명령 · 깃발 보상 없음)
+    from foothold_s2.terrains import columns
+    from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
+    from foothold_s2.terrains import sparse_terrains
+
+    env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS)
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
 dev = raw.device
@@ -93,7 +104,7 @@ dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
 S = args.steps
-res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_hash": {}, "modes": {}}
+res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "terrain_hash": {}, "modes": {}}
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -122,9 +133,12 @@ for mode in args.modes.split(","):
         terrain = raw.scene.terrain
 
         if args.fixed_terrain:
-            res["fixed_terrain"] = fixed_terrain.apply(raw, args.fixed_level)
+            res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(raw, args.fixed_level)
             env.reset()                                                                  # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
-            lv, ty = fixed_terrain.fixed_assignment(env.num_envs, res["fixed_terrain"]["rows"], res["fixed_terrain"]["cols"], args.fixed_level)
+            if parser_sparse:
+                lv, ty = np.array([t["level"] for t in res["fixed_terrain"]["tiles"]]), np.array([t["col"] for t in res["fixed_terrain"]["tiles"]])
+            else:
+                lv, ty = fixed_terrain.fixed_assignment(env.num_envs, res["fixed_terrain"]["rows"], res["fixed_terrain"]["cols"], args.fixed_level)
 
             if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
                 raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")

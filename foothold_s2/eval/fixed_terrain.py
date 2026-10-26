@@ -38,6 +38,49 @@ def fixed_assignment(num_envs: int, rows: int, cols: int, level=None):
     return (i // cols) % LEVELS_USED, i % cols
 
 
+SPARSE_SET = "sparse50"                 # --terrain-set: 50 열 S2 생성기(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(23..47)만 고정 칸으로 쓴다
+
+
+def sparse_column_ids(names) -> list:
+    """50 열 이름 배열(columns.column_types)에서 듬성 5 종(flat 제외) 열 번호. 50 열이 아니거나 듬성 열이 없으면 거절."""
+    from foothold_s2.runners.map_switch import SPARSE_NAMES
+
+    ids = [j for j, n in enumerate(names) if n in SPARSE_NAMES]
+
+    if not ids:
+        raise ValueError("듬성 지형 열이 없다")
+
+    return ids
+
+
+def sparse_assignment(num_envs: int, names, rows: int, level: int):
+    """듬성 칸 고정 배열: 레벨은 모두 level, 종류는 듬성 열 목록을 env 번호 순으로 되풀이(i % 듬성 열 수). 난수 없음."""
+    level = check_level(level, rows)
+    ids = np.asarray(sparse_column_ids(names), dtype=np.int64)
+    i = np.arange(num_envs)
+
+    return np.full(num_envs, level, dtype=i.dtype), ids[i % len(ids)]
+
+
+def apply_sparse(raw, level) -> dict:
+    """raw = env.unwrapped (50 열 생성기). 듬성 5 종 열만 고정 칸으로 덮어쓴다. 기록에 종류 이름 · 열 · 레벨(tiles)을 남긴다."""
+    from foothold_s2.terrains import columns
+
+    terrain = raw.scene.terrain
+    rows, cols = int(terrain.terrain_origins.shape[0]), int(terrain.terrain_origins.shape[1])
+    gen = terrain.cfg.terrain_generator
+    names = columns.column_types({k: float(v.proportion) for k, v in gen.sub_terrains.items()}, int(gen.num_cols))
+
+    if cols != int(gen.num_cols) or cols != columns.FULL_COLS:
+        raise RuntimeError(f"듬성 고정 칸은 {columns.FULL_COLS} 열 생성기만 받는다(받은 열 수 {cols})")
+    levels, types = sparse_assignment(int(terrain.terrain_levels.shape[0]), names, rows, level)
+    rec = apply_assignment(raw, levels, types, rows, cols, int(level) + 1, fixed_level=int(level))
+    rec["terrain_set"] = SPARSE_SET
+    rec["tiles"] = [{"env": i, "kind": names[int(types[i])], "level": int(levels[i]), "col": int(types[i])} for i in range(len(types))]
+
+    return rec
+
+
 def assignment_sha256(levels, types) -> str:
     return hashlib.sha256(np.asarray(levels, dtype=np.int64).tobytes() + np.asarray(types, dtype=np.int64).tobytes()).hexdigest()
 

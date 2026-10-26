@@ -140,3 +140,49 @@ def test_reference_column_follows_the_same_array_rule():
 
     with pytest.raises(ValueError, match="fixed_terrain"):
         cmp.check_reference({"parent": first}, ref)
+
+
+# ---------------------------------------------------------------- 듬성 지형 고정 칸 (--terrain-set sparse50)
+SPARSE64 = {0: "8ec13148fdc6", 1: "ac5ad60c8e08", 2: "a6d2cd008188", 6: "c876380b3ff7"}          # 64 env 칸 해시 앞 12 자리(고정 기록)
+NAMES50 = columns.column_types(columns.FULL, columns.FULL_COLS)
+
+
+def _raw50(num_envs):
+    raw = _raw(num_envs, 10, 50)
+    raw.scene.terrain.cfg.terrain_generator.sub_terrains = {n: SimpleNamespace(proportion=p) for n, p in columns.FULL.items()}
+
+    return raw
+
+
+@pytest.mark.parametrize("level", [0, 1, 2, 6])
+def test_sparse_fixed_cells_use_only_the_five_sparse_names_at_the_asked_level_and_the_hash_is_pinned(level):
+    raw = _raw50(64)
+    rec = ft.apply_sparse(raw, level)
+    kinds = {t["kind"] for t in rec["tiles"]}
+
+    assert kinds == {"stepping_stones_low", "stepping_stones_high", "balance_beams", "stepping_beams", "gaps"}        # 연속 7 종과 flat 은 없다
+    assert set(rec["levels"]) == {level} and rec["fixed_level"] == level and rec["terrain_set"] == "sparse50"
+    assert rec["assignment_sha256"][:12] == SPARSE64[level] and rec["num_envs"] == 64 and rec["cols"] == 50
+    assert all(NAMES50[t["col"]] == t["kind"] for t in rec["tiles"]) and sorted({t["col"] for t in rec["tiles"]}) == list(range(23, 48))
+    assert raw.scene.terrain.terrain_levels.eq(level).all()
+
+
+def test_sparse_fixed_cells_refuse_a_23_column_generator_and_a_bad_level():
+    with pytest.raises(RuntimeError, match="50 열"):
+        ft.apply_sparse(_raw(64, 10, 23), 0)
+    with pytest.raises(ValueError, match="고정 레벨"):
+        ft.apply_sparse(_raw50(64), 10)
+
+
+def test_default_hashes_are_untouched_by_the_sparse_option():
+    levels, types = ft.fixed_assignment(64, 10, 23)
+
+    assert ft.assignment_sha256(levels, types)[:12] == OLD64
+
+
+def test_eval_map_modes_wires_the_sparse_set_and_refuses_it_without_a_level_before_kit():
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+
+    assert src.index('parser.error("--terrain-set sparse50') < src.index("AppLauncher(args).app")
+    assert "build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS)" in src
+    assert "fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse" in src
