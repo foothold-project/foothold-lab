@@ -1,7 +1,7 @@
 > 분류: 보고 · planner → lead (orchestration task_3d77d131c969)
 > 작성: planner (Claude Fable 5.1) · 2026-10-27 00:48
 > 근거: `impl-turncases/logs/sb10_eval/m1500/walk_turn_summary.json` + `turn16_walk_{eval_gt,probe_prop_only}/arrays_walk_turn_{left,right}.npz`(sonnet-code X27g 00:36, 네 판 rc 0, 저장본 sha 4d987818 · 코드 07fc5e73) · `judge_gate.THRESHOLDS` walk_* · `turn_probe_plan.PROTOCOLS` · planner `inbox/jay/20261026-experiments/a5_baseline.py`(npz 독립 재계산)
-> 요지: A5 걸으며 돌기 부모 기준선을 json 에서 생성기로 읽어 EX-35 카드 v0.8 · JUDGE-SPEC v0.12 · RULES-HUB 10.1 에 채웠다. **막음 1 닫힘.** 사실 하나: 성공선 다섯 성분 중 넷은 부모가 이미 통과하고 전진 적분 3.2 m 만 좌 미달. 막음 2 는 lead 가 쓸 A11 판독표(카드 §4b.4) 로.
+> 요지: A5 걸으며 돌기 부모 기준선을 json 에서 생성기로 읽어 EX-35 카드 v0.8 · JUDGE-SPEC v0.12 · RULES-HUB 10.1 에 채웠다. **막음 1 닫힘.** lead 추가 지시(00:43) 로 analyst 8.2 **E1~E3 와 8.3 표시**도 닫았다(카드 v0.9 · JUDGE-SPEC v0.13 · CURRICULUM v0.3 · RULES-HUB 10.1, 2026-10-27 00:58). 사실 하나: 성공선 다섯 성분 중 넷은 부모가 이미 통과하고 전진 적분 3.2 m 만 좌 미달. 막음 2 는 lead 가 쓸 A11 판독표(카드 §4b.4) 로.
 > 상태: 커밋 전 초안 → 커밋 뒤 이 줄 갱신 없음(커밋 해시는 #557 · worker_done 에)
 
 ## 1. 막음
@@ -44,3 +44,17 @@
 
 - walk_turn 재측정 폭(한 번 잼) · eval_pred 모드 walk_turn · 좌 · 우 전진 적분 차의 원인(해석 금지 지시) · 코드 `_success_walk` 를 부모 묶음에 실제로 돌린 결과(기댓값만 적음, 구현 시험은 sonnet-code).
 - GPU · 학습 · 코드 수정 · push 없음. EX-35 cuda:0 진행 중(손대지 않음).
+
+## 6. analyst 8.2 E1~E3 · 8.3 (lead 추가 지시 00:43, 둘째 커밋)
+
+| 막음 | 반례(analyst) | 닫은 방법 | 자리 |
+|---|---|---|---|
+| **E1** 필수 축을 L0/6/9 혼합 평균으로 대신함 · 사슬에 L6 · 16 env PRED · 직전 저장본 전체가 없음 · A5 미측 | 카드 :103 「미측이면 판정 불가」 와 :110 「레벨 묶음으로 잰다」 모순 | **요구 범위 결정**: EX-35 A2 = 레벨 묶음 L0~2 · L6 · L9 로 **정의**, 종류별 7 종 + 평지는 **A2b(뒤 단계 축)** 로 분리, 대체로 읽지 않음(lead 확인 필요, 카드 §8 (7)). **§4b.5 필수 입력 칸 목록**(11 칸, 최신 · 직전 둘 다, 파일 · 기준선 자리) 을 사슬 2 입력으로 고정, 소비기가 칸 · sha 를 먼저 센다. A5 는 v0.8 로 실측 | 카드 §4b.5 · §4b.3 2 행 · RULES-HUB 10.1 A2 행 + 「요구 범위」 bullet |
+| **E2** 가정 문턱이 정상 trot(주기 0.7 s · 180° · C 0) 과 std 0.45 정책(entropy 7.445) 을 무너짐 · 발산으로 판정 · A8 참고 경보가 :126 에서 강제 정지 | 합성 반례 둘 | A1 은 **기록 축**(부모 ±30° 폐기, 그림 + R · 다중 접촉 · 유효 주기를 A11 ⑤ 로 사람이 전진 구간만) · A9 연장 불가는 **NaN · 비유한값만**, 나머지 전부 경고 · A7 · A8 **경고선**(멈춤 아님) · 세 갈래 멈춤 행에서 A9 발산 · A7 · A8 두 저장본 연속 제거 · RULES-HUB 10.1 「경고 축과 멈춤 축을 가른다」 bullet | 카드 A1 · A7 · A8 · A9 · 세 갈래 · RULES-HUB 10.1 · JUDGE-SPEC 4.4.1 끝 문단 |
+| **E3** 「최신 한 번만 유지 실패」 가 어느 갈래에도 없음 · 3.2 m 가 코드에만 | 카드 :126 · :128 사이 빈칸, RULES-HUB :258 · CURRICULUM §4 와 다름 | **§4b.6 진리표 11 행**(결측 · 같은 sha · STOP · 재현 · 영상 · 상한 · REVERT · **HOLD(단일 실패 = 같은 조건 한 창 더)** · HOLD 해소 · EXPAND · CONTINUE · 평평), 기존 승인 규칙(JUDGE-SPEC 4.1 · 5.1 · RULES-HUB 10.2) 에서 고름 · 새 문턱 없음 · 상태 판단과 창 경계 추세 분리 · 3.2 m 를 카드 A5 · JUDGE-SPEC 4.4 · CURRICULUM C1a 에 표시 | 카드 §4b.6 · JUDGE-SPEC 4.4.1 · CURRICULUM §4 · C1a |
+| **8.3** 표시 | 8 등분은 평균 · 첫 평평 m2500 · ≥/＞ 경계 · C0 소급 통과 아님 · C3a 순서는 우리 설계 · C7c AME-2 램프 근거 아님 · C1b 단위 · C2a 54/48 역할 · §2c GPU1 은 제안 | 전부 고침. C1b 는 **추종률 = Q / \|wz 명령\| ≥ 0.5(무차원)** 로 확정(wz 0.5 면 Q ≥ 0.25 = C1a 와 같은 값) | 카드 A3 · §4b.2 · CURRICULUM §2a ① · C1b · C2a · C3a · C7c · §2c |
+| 8.1 0.115 | B1500 rep1/2 재계산 최대 0.0987 · kept ≥ 14 쌍 0.0833, 0.115 원자료 쌍 재현 못 함 | 교체하지 않고 **운영 가정** 으로 표기(뜻 · 자료 집합 · 고정 시점 v0.7) · RULES-HUB 10.1 「큰 쪽이 안전 정당화 금지」 | 카드 A3 · RULES-HUB 10.1 |
+
+E4(비율 합 110 %) · E5(노출 목표 환산 · 가림 확대 근거) 는 lead 지시대로 CURRICULUM v0.4 에서(§7 에 적음).
+
+**lead 가 정할 것 추가**: (7) E1 요구 범위 결정(A2 = 레벨 묶음, 종류별 A2b) 확인. (8) E2 로 A7 · A8 · A9 를 경고로 내리면 밤사이 경고만 있고 멈춤 조건이 없을 때 연장이 된다. 「경고 때 lead 가 7b 를 고른다」 로 충분한지.
