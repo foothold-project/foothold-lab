@@ -224,6 +224,58 @@
 
 실험 카드는 `inbox/jay/20261021-experiments/EXP-*.md` (EX-30 · 31 · 32 · 33 · 34 등) 한 곳, 목록은 같은 폴더 `EXP-MAP.md` 의 「exp-sync:experiments」 표. 결과 문서는 날짜 폴더 `inbox/jay/2026MMDD-experiments/RESULT-*.md`, 밤 계획 · 실제 기록은 `NIGHT-PLAN-*.md`. 세션이 이어 붙은 뒤 처음 읽을 정본 순서: 이 RULES-HUB → EXP-MAP → SCHEDULE-NOW → 최신 NIGHT-PLAN → 카드.
 
+## 8c. 지금 돌고 있는 실험의 실행 지도 (10/27 01:2x 팀장 「지금 너가 정한 실험 규칙 평가 사슬 폴더 트리 등 이런 것도 실험 규칙에 잘 기록해라. 다른 세션들도 확인할 수 있고 나중에 이사시에도 문제 안되게.」)
+
+판이 바뀔 때마다 lead 가 이 절을 고친다 (기동 · 사슬 · 판정 · 정본 채택 때). Linux 로 옮길 때는 이 트리 그대로 자리를 만들고, 각 자리의 sha256 · 커밋을 다시 대조한다. 경로는 Windows 기준 (`C:/mai/wt/foothold-lab/` = WT).
+
+**EX-35 (S-B10 m1500 → m2001, 회전 명령 과정 첫 판 · 10/26 23:24 기동)**
+
+```text
+WT/impl-ex35-07fc/                       학습 실행 고정 사본 (07fc5e73, foothold_s2 깨끗해야 기동)
+  foothold_s2/run_ex35.sh                기동 스크립트 (kind main|smoke2, 인자 영수증 · argv CR 가드)
+  logs_gate/ex35_smoke2_20261026_232226/ 짧은 확인 실행 2 회 (rc 0)
+  logs_gate/ex35_main_20261026_232432/   본 학습 영수증: launch_receipt.json · launch_args.txt · launch_argv_repr.txt · git_head.txt · run.log · rc.txt
+WT/impl-sb/logs/rsl_rl/foothold_s2_sb/
+  2026-10-26_01-17-47_sb-main/model_1500.pt            부모 S-B10 m1500 (sha256 4d987818c7e25b89)
+  2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476/
+    model_1550.pt … model_2000.pt        EX-35 저장본 (50 회마다)
+    params/env.yaml · params/agent.yaml  실제 학습 조건 (학습 조건 표의 원자료)
+WT/eval-x27g/                            평가 하네스 고정 사본 (07fc5e73, 깨끗)
+WT/impl-integ/                           작업 브랜치 (sonnet-code). 판정 코드 ex35_gate.judge_ex35 · 평가 사슬 foothold_s2/eval/ex35_eval_chain.sh (adad7d5e).
+                                         reviewer 고침 2: 사슬 · 판정 코드도 고정 사본에서 읽게 바꾸는 중 (01:2x)
+WT/impl-turncases/logs/
+  sb10_eval/m1500/                       부모 기준선: turn16_eval_gt · turn16_eval_pred · turn16_probe_prop_only · map64 · turn16_walk_eval_gt · turn16_walk_probe_prop_only · walk_turn_summary.json
+  ex35_eval/                             EX-35 저장본 평가 사슬 (cuda:1, 01:12 시작)
+    chain.log · receipt.txt              사슬 기록 (ITEM m<N> start/done)
+    m<N>/                                저장본마다: checkpoint_sha256.txt · git_head.txt · git_status.txt · rc.txt · turn16_* · map64_* · 판정 json · timing.txt
+WT/fable-25a/                            planner 작업 사본: 카드 EXP-EX35 v0.9 · JUDGE-SPEC v0.13 · CURRICULUM-GATES v0.3 · RULES-HUB 10 절 초안 (30168082, verifier 검증 전 · 아직 lead 브랜치에 안 가져옴)
+  _out/reports/REPORT-planner-*.md
+WT/astra-25b/inbox/jay/20261026-experiments/  analyst · verifier 검토: VERIFY-analyst-EX35-GATES.md · VERIFY-analyst-RULES-AXES-LINEAGE.md · VERIFY-verifier-*.md
+C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/_out/review/  reviewer 검토 REVIEW-<커밋>.md
+```
+
+**판정 흐름**: 저장본 생김 → 사슬이 최신부터 평가 (한 번에 Isaac 하나, cuda:1) → `judge_ex35` 가 저장본 상태 (MAINTAIN_FAIL 등) → 창 경계 m1750 · m2000 에서 마지막 두 저장본으로 consume → 판정표 (카드 v0.9 §4b, 필수 칸 하나라도 비면 HOLD_NO_DATA = 연장 불가) → 1x 영상 lead 판독 (A11) → 계속 · 다음 단계 · 멈춤. 멈춤 · 연장 기동은 lead 가 한다.
+
+**영상 · 조명**
+
+```text
+C:/Users/AI-WS01/s2_lab/video_25e/
+  final/runner-26k_1026_final/           1x 영상 32 편 (inherit 조명) → L4 + 채도 ×1.25 로 같은 이름 재렌더 예정, 옛 파일은 archive
+  final/runner-26a_1026_final/runner-26i-previews/target_vs_result_aligned_26j.png   확정 레이아웃
+  lighting_probe_26h/ · lighting_probe_26k/ · lighting_probe_26l/stills_26l/      조명 · 채도 시험 (L4 · ×1.25 확정 근거)
+WT/runner-26a/inbox/jay/20261023-experiments/runner-26a/   촬영 · 합성 코드 (record_25e.py 7dc7e9e1, render_queue_26d.py, seq_video.py sparse18)
+```
+
+**운영 도구 (lead_tmp 사본 `WT/lead_tmp-20261023/_out/`)**
+
+```text
+tools/limits_now.py        한도 사실만 (정본 ~/.mai/limits.json)
+tools/dispatch_queue.py    일하는 세션 의뢰 대기열 (orca task-create → 쉬면 worker-start)
+msgs/orch_wait.py          받은편지함 배경 대기 (status 포함 · keepalive 거름)
+msgs/*.txt                 보낸 의뢰 원문 (같은 의뢰를 다시 보낼 때 이것을 쓴다)
+```
+orchestration Run: `run_abb2e12cee32` (coordinator = lead 창 term_2580fc05). mai-resume: `C:/mai/mai-tools/tools/mai-resume` (PR #33 병합 01:15, super2 재시작 뒤 적용).
+
 ## 9. 이름 붙은 체크포인트 정본 (10/26 12시, Linux 이전 런북 L-3-2 가 가리킴)
 
 Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/`). sha256 은 lead 가 10/26 12시에 다시 잼 (앞 16 자). Linux 로 옮긴 뒤 같은 값인지 먼저 대조한다.
