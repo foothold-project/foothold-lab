@@ -73,7 +73,6 @@ class MixedVelocityCommand(CommandTerm):
         self.slot_counts = torch.zeros(len(mc.WT_SLOTS), dtype=torch.long, device=dev)      # S2a 슬롯별 재추출 수(update 마다 runner 가 꺼냄)
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
-        self.episode_scatter_receipt = None
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
         self.metrics["error_vel_yaw"] = torch.zeros(n, device=dev)
 
@@ -179,10 +178,6 @@ class MixedVelocityCommand(CommandTerm):
         period = float(self.cfg.resampling_time_range[1])
         self.time_left[:] = mc.scatter_clock(self.gen, self.num_envs, period).to(self.device)
         self.scatter_receipt = mc.scatter_receipt(self.time_left, period)
-        env = self._env                                       # 에피소드 진행도도 흩는다: 이어 가기는 init_at_random_ep_len 을 끄므로 20 s 뒤 모든 env 가 함께 reset 되어 명령 시계가 다시 맞춰진다
-        max_len = int(env.max_episode_length)
-        env.episode_length_buf[:] = mc.scatter_episode(self.gen, self.num_envs, max_len).to(env.episode_length_buf.device)
-        self.episode_scatter_receipt = mc.scatter_receipt(env.episode_length_buf.float() * env.step_dt, max_len * env.step_dt, bins=5)
 
     def take_slot_counts(self):
         """이번 update 동안의 S2a 슬롯 재추출 수와 비율(없거나 S2a 가 아니면 None)."""

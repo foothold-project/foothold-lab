@@ -37,6 +37,7 @@ from rsl_rl.runners import OnPolicyRunner
 from rsl_rl.utils import resolve_obs_groups, store_code_state
 
 import rsl_rl
+from foothold_s2.commands import mixed_core as mc
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
@@ -284,6 +285,7 @@ class StartRunner(OnPolicyRunner):
                 self.env.episode_length_buf, high=int(self.env.max_episode_length)
             )
         raw = self.env.get_observations().to(self.device)
+        self._scatter_and_record_before_rollout()                 # EX-35: 흩기 · 영수증은 reset 이 다 끝난 뒤 첫 rollout 직전의 실제 값으로
         self.train_mode()
         n = self.env.num_envs
         self.pstate = self.perception.init_state(n, self.device)
@@ -421,7 +423,6 @@ class StartRunner(OnPolicyRunner):
             slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
             if slot_stats is not None:
                 extra["command_slots"] = slot_stats
-            self._record_command_receipts(it)                       # EX-35: 흩기 영수증(첫 update 에서 검사 · manifest 기록)
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats
@@ -539,25 +540,40 @@ class StartRunner(OnPolicyRunner):
 
         return fn() if fn is not None else None
 
-    def _record_command_receipts(self, it: int) -> None:
-        """명령 시계 흩기를 켠 판: 첫 update 에서 영수증(범위 · 유한 · 1 s 구간 집중도)을 manifest 사건으로 남기고 어기면 실행 무효. 켜지 않은 판은 아무것도 안 한다."""
+    def scatter_episode_progress(self, seed: int) -> None:
+        """EX-35: 에피소드 진행도를 첫 rollout 직전에 U[0, 최대 길이) 로 흩도록 예약한다(시작 스크립트가 reset 이 다 끝난 뒤 · learn 앞에서 부름).
+        Isaac 의 `_reset_idx` 는 명령 term reset 뒤에 episode_length_buf 를 0 으로 덮으므로 term 안에서는 남지 않는다."""
+        self._episode_scatter_seed = int(seed)
+
+    def _scatter_and_record_before_rollout(self) -> None:
+        """첫 rollout 직전: (1) 예약된 에피소드 진행도 흩기를 하고 (2) 실제 env.episode_length_buf 와 명령 term time_left 를 읽어 영수증(범위 · 유한 · 구간 집중도)을 만든다.
+        manifest 사건과 run.log 한 줄로 남기고, 어기면 실행 무효. 아무것도 켜지 않은 판은 아무 일도 안 한다."""
         term = self._command_term()
+        clock_on = bool(getattr(getattr(term, "cfg", None), "clock_scatter", False))
+        seed = getattr(self, "_episode_scatter_seed", None)
 
-        if getattr(self, "_cmd_receipt_done", False) or term is None or not getattr(getattr(term, "cfg", None), "clock_scatter", False):
+        if not clock_on and seed is None:
             return
-        rc = term.scatter_receipt
+        u = getattr(self.env, "unwrapped", self.env)
+        it = int(self.current_learning_iteration)
+        bad = []
 
-        if rc is None:
-            self._invalid(it, "명령 시계 흩기를 켰는데 영수증이 없다(첫 전체 reset 에서 적용되지 않음)")
-        self._cmd_receipt_done = True
-        ep = getattr(term, "episode_scatter_receipt", None)
-        self.map_ratio_events.append({"kind": "command_clock_scatter", "it": it, **rc})
-        self.map_ratio_events.append({"kind": "episode_progress_scatter", "it": it, **(ep or {})})
-
-        if not rc["ok"]:
-            self._invalid(it, f"명령 시계 흩기 영수증 위반: {rc}")
-        if ep is None or not ep["ok"]:
-            self._invalid(it, f"에피소드 진행도 흩기 영수증 위반: {ep}")
+        if seed is not None:
+            buf = u.episode_length_buf
+            buf[:] = mc.scatter_episode(mc.make_generator(seed, device=str(buf.device)), len(buf), int(u.max_episode_length)).to(buf.device)
+            ep = mc.scatter_receipt(u.episode_length_buf.float() * u.step_dt, int(u.max_episode_length) * u.step_dt, bins=5)          # 흩은 뒤 실제 버퍼를 다시 읽는다
+            self.map_ratio_events.append({"kind": "episode_progress_scatter", "it": it, "seed": seed, **ep})
+            print("EX35_EPISODE_SCATTER " + json.dumps(ep), flush=True)
+            if not ep["ok"]:
+                bad.append(f"에피소드 진행도 흩기 영수증 위반: {ep}")
+        if clock_on:
+            rc = mc.scatter_receipt(term.time_left, float(term.cfg.resampling_time_range[1]))                                         # 실제 time_left 를 읽는다
+            self.map_ratio_events.append({"kind": "command_clock_scatter", "it": it, **rc})
+            print("EX35_CLOCK_SCATTER " + json.dumps(rc), flush=True)
+            if not rc["ok"]:
+                bad.append(f"명령 시계 흩기 영수증 위반: {rc}")
+        if bad:
+            self._invalid(it, "; ".join(bad))
 
     def _take_frame_stats(self):
         """이번 update 동안 쌓인 현행 · 세계 좌표 판정 비교표를 꺼낸다(없으면 None)."""

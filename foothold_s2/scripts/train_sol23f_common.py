@@ -221,7 +221,7 @@ def main(env_cfg, agent_cfg):
              "run_kind": ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main",
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
-             "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None,
+             "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
@@ -243,6 +243,8 @@ def main(env_cfg, agent_cfg):
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return
+    if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"]:
+        runner.scatter_episode_progress(agent_cfg.seed * 1000 + 35)        # reset_segment_physics 뒤 · learn 앞(Isaac 의 _reset_idx 가 term reset 뒤에 진행도를 0 으로 덮으므로)
     try:
         runner.learn(num_learning_iterations=remaining, init_at_random_ep_len=not bool(resume_path))
     except DeadlineReached as stop:

@@ -98,14 +98,33 @@ def test_clock_scatter_receipt_accepts_uniform_and_rejects_range_nan_and_concent
     assert not mc.scatter_receipt(torch.full((3072,), 0.5))["ok"]
 
 
-class _Term:
-    def __init__(self, receipt, on=True, ep="good"):
-        self.cfg = SimpleNamespace(clock_scatter=on)
-        self.scatter_receipt = receipt
-        self.episode_scatter_receipt = mc.scatter_receipt(mc.scatter_episode(mc.make_generator(2), 3072, 1000).float() * 0.02, 20.0, bins=5) if ep == "good" else (mc.scatter_receipt(torch.zeros(3072), 20.0, bins=5) if ep == "zero" else None)
+class _Env:
+    """Isaac `ManagerBasedRLEnv._reset_idx` 의 순서를 흉내 낸다: 명령 term reset(:381) 뒤에 episode_length_buf[ids] = 0 (:394). 이 순서가 term 안 흩기를 지운다."""
+
+    def __init__(self, term, n=3072, max_len=1000):
+        self.term, self.num_envs, self.max_episode_length, self.step_dt = term, n, max_len, 0.02
+        self.episode_length_buf = torch.randint(0, 50, (n,))
+        self.device = "cpu"
+
+    def reset(self):
+        ids = torch.arange(self.num_envs)
+        self.term.time_left[:] = 4.0                                                                   # CommandTerm.reset -> _resample: 시계를 4 s 로
+        self.term.reset_hook(ids)                                                                      # 우리 흩기(실제 소스 함수)
+        self.episode_length_buf[ids] = 0                                                               # :394 가 진행도를 0 으로 덮는다
 
 
-def _fake_runner(term):
+def _isaac_like(on=True, n=3072):
+    fn = _real_scatter_method()
+    t = _fake_term(on=on, n=n)
+    t.reset_hook = lambda ids: fn(t, ids)
+    t.cfg.resampling_time_range = (4.0, 4.0)
+    env = _Env(t, n)
+    t.unwrapped_env = env
+
+    return t, env
+
+
+def _fake_runner(term, env, seed=None):
     from foothold_s2.runners.start_runner import StartRunner
 
     msgs = []
@@ -114,30 +133,50 @@ def _fake_runner(term):
         msgs.append(msg)
         raise RuntimeError(msg)
 
-    r = SimpleNamespace(map_ratio_events=[], _command_term=lambda: term, _invalid=invalid)
+    r = SimpleNamespace(map_ratio_events=[], _command_term=lambda: term, _invalid=invalid, env=SimpleNamespace(unwrapped=env), current_learning_iteration=0, _episode_scatter_seed=seed)
 
-    return StartRunner._record_command_receipts, r, msgs
+    return StartRunner._scatter_and_record_before_rollout, r, msgs
 
 
-def test_runner_records_the_scatter_receipt_once_and_stops_the_run_on_a_bad_one():
-    fn, r, _ = _fake_runner(_Term(mc.scatter_receipt(mc.scatter_clock(mc.make_generator(1), 3072))))
-    fn(r, 0)
-    fn(r, 1)
+def test_isaac_reset_order_erases_scatter_in_the_term_but_the_runner_scatters_after_all_resets_and_reads_the_actual_buffers():
+    t, env = _isaac_like()
+    env.reset()                                                                                       # wrapper 첫 reset
+    env.reset()                                                                                       # reset_segment_physics 의 reset
 
-    assert [e["kind"] for e in r.map_ratio_events] == ["command_clock_scatter", "episode_progress_scatter"] and r.map_ratio_events[0]["ok"] is True and r.map_ratio_events[1]["ok"] is True
-    fn, r, msgs = _fake_runner(_Term(mc.scatter_receipt(torch.full((3072,), 4.0))))
+    assert bool((env.episode_length_buf == 0).all())                                                  # term 안에서 흩으면 이렇게 지워진다(리뷰어 막음)
+    assert float(t.time_left.std()) > 0.5 and t.scatter_receipt["ok"]                                  # time_left 는 term reset 뒤에 남는다
+    fn, r, _ = _fake_runner(t, env, seed=42035)
+    fn(r)
+    kinds = {e["kind"]: e for e in r.map_ratio_events}
+
+    assert float(env.episode_length_buf.float().std()) > 200 and int(env.episode_length_buf.max()) < 1000 and int(env.episode_length_buf.min()) >= 0
+    assert kinds["episode_progress_scatter"]["ok"] and kinds["command_clock_scatter"]["ok"] and kinds["episode_progress_scatter"]["seed"] == 42035
+
+
+def test_receipt_reads_the_actual_values_so_an_overwritten_clock_or_a_missing_episode_scatter_stops_the_run():
+    t, env = _isaac_like()
+    env.reset()
+    t.time_left[:] = 4.0                                                                              # 어떤 경로가 시계를 다시 덮었다
+    fn, r, msgs = _fake_runner(t, env, seed=1)
 
     with pytest.raises(RuntimeError):
-        fn(r, 0)
-    assert "영수증 위반" in msgs[0]
-    fn, r, msgs = _fake_runner(_Term(None))
+        fn(r)
+    assert "명령 시계 흩기 영수증 위반" in msgs[0]
+    t, env = _isaac_like()
+    env.reset()
+    fn, r, msgs = _fake_runner(t, env, seed=None)                                                     # 진행도 흩기 예약 없음 + 시계만 켬: 시계 영수증만
+    fn(r)
 
-    with pytest.raises(RuntimeError):
-        fn(r, 0)
-    fn, r, _ = _fake_runner(_Term(None, on=False))
-    fn(r, 0)                                                                                          # 흩기를 켜지 않은 판은 아무것도 안 함
+    assert [e["kind"] for e in r.map_ratio_events] == ["command_clock_scatter"] and bool((env.episode_length_buf == 0).all())
 
-    assert r.map_ratio_events == []
+
+def test_runner_does_nothing_when_nothing_is_on():
+    t, env = _isaac_like(on=False)
+    env.reset()
+    fn, r, _ = _fake_runner(t, env, seed=None)
+    fn(r)
+
+    assert r.map_ratio_events == [] and bool((env.episode_length_buf == 0).all())
 
 
 def test_term_and_runner_wiring_by_source():
@@ -145,8 +184,9 @@ def test_term_and_runner_wiring_by_source():
     run = (PKG / "runners/start_runner.py").read_text(encoding="utf-8")
 
     assert "self._maybe_scatter_clock(ids)" in cmd and "len(ids) != self.num_envs" in cmd and "self._stepped = True" in cmd and "clock_scatter: bool = False" in cmd
-    assert "contract_fn = contract_bad_fn(self.pcfg[\"contract\"])" in run and "bad_now = contract_fn(consumed)" in run and "self._record_command_receipts(it)" in run
+    assert "contract_fn = contract_bad_fn(self.pcfg[\"contract\"])" in run and "bad_now = contract_fn(consumed)" in run
     assert 'extra["command_slots"] = slot_stats' in run
+    assert run.index("self._scatter_and_record_before_rollout()") < run.index("self.train_mode()") and "episode_length_buf[:] = mc.scatter_episode" not in cmd
 
 
 def _real_scatter_method():
@@ -273,26 +313,14 @@ def test_treatment_without_an_extended_resume_is_refused_instead_of_ending_as_do
     validate_launch(_args(command_mode="start", clock_scatter="off"))                                  # 처치 없음은 기존 그대로
 
 
-def test_episode_progress_is_scattered_with_the_clock_and_its_receipt_rejects_synchronised_episodes():
-    fn = _real_scatter_method()
-    t = _fake_term()
-    fn(t, torch.arange(t.num_envs))
-    buf = t._env.episode_length_buf
-
-    assert int(buf.min()) >= 0 and int(buf.max()) < 1000 and float(buf.float().std()) > 200 and t.episode_scatter_receipt["ok"] and t.episode_scatter_receipt["max_bin_frac"] < 0.30
-    zero = _Term(mc.scatter_receipt(mc.scatter_clock(mc.make_generator(1), 3072)), ep="zero")
-    f, r, msgs = _fake_runner(zero)
-
-    with pytest.raises(RuntimeError):
-        f(r, 0)
-    assert "에피소드 진행도" in msgs[0]
-    f, r, msgs = _fake_runner(_Term(mc.scatter_receipt(mc.scatter_clock(mc.make_generator(1), 3072)), ep="none"))
-
-    with pytest.raises(RuntimeError):
-        f(r, 0)
-
-
 def test_zero_remaining_with_a_treatment_is_a_startup_error_not_done():
     run = (PKG / "scripts/train_sol23f_common.py").read_text(encoding="utf-8")
 
     assert "if remaining <= 0 and (command_settings(args_cli)" in run and "raise RuntimeError(f\"명령 처치를 켰는데 남은 회차가" in run and "학습 없이 done 이 되는 것을 막는다" in run and run.index("학습 없이 done 이 되는 것을 막는다") < run.index('"note": "이미 끝난 체크포인트"')
+
+
+def test_common_script_scatters_the_episode_progress_after_the_resume_reset_and_before_learn():
+    run = (PKG / "scripts/train_sol23f_common.py").read_text(encoding="utf-8")
+
+    assert run.index("runner.reset_segment_physics()") < run.index("runner.scatter_episode_progress(") < run.index("runner.learn(num_learning_iterations=remaining")
+    assert '"episode_scatter_seed"' in run
