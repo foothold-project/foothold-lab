@@ -425,25 +425,33 @@
       "alive_end": 16
     }
   },
-  "checkpoint_pair_row6": "REVERT",
+  "window_default_row": 4,
   "window_decision": "STOP",
-  "window_row": 4,
-  "window_action": "A11 판독표 「있음」 또는 미기입 · 멈춤 · 보고(A11 판독 파일 없음)",
+  "window_row": 6,
+  "window_action": "REVERT: 유지 실패 연속 두 저장본 · 멈춤, 되돌림 판은 사람이 띄움",
   "window_evidence": {
     "missing_inputs": {
       "latest": [],
       "prev": []
     },
     "a11": {
-      "state": "unfilled",
-      "why": "A11 판독 파일 없음"
+      "reader": "lead 세션 (Claude Opus 5.5) · 팀장 판독 아님",
+      "state": "clear",
+      "time": "2026-10-27 05:19 KST",
+      "yes": []
     },
+    "a11_reader": "lead 세션 (Claude Opus 5.5) · 팀장 판독 아님",
+    "a11_time": "2026-10-27 05:19 KST",
     "remeasure_stages": 20,
     "map64_numeric_comparable": 74,
     "map64_numeric_changed": 28,
     "chain_eval_map_modes_sha": "ce4d25ea7110b079",
     "remeasure_eval_map_modes_sha": "ac739f3d8b557043",
-    "cmp_video_sha256": "ad81b106b2085e0034385bc99516fd777a233a2c5fabff755c9ec352fbc711cb"
+    "cmp_video_sha256": "ad81b106b2085e0034385bc99516fd777a233a2c5fabff755c9ec352fbc711cb",
+    "repro_numeric_count": 56,
+    "repro_a1_a2_changed": 27,
+    "repro_a1_b_changed": 29,
+    "repro_source_sha": "b08941a4ba48e06d"
   },
   "canonical": "S-B10 m1500",
   "source_sha256": {
@@ -454,11 +462,17 @@
     "run_log": "932a5ceddebb412a7efac6b64868151aa38382ee9085a0e804a44d341b285edc",
     "rc": "93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494",
     "baseline": "841ce5170e2ec63a952d19c3722ee19cb441020c4b52b8a882295d2605713298",
-    "window": "4afd6565ab43d70e8c9e0a30f04afb9bbc109647d2efe020ba60e47ac27038b1",
+    "window_default": "4afd6565ab43d70e8c9e0a30f04afb9bbc109647d2efe020ba60e47ac27038b1",
+    "window": "a4cdda5ff0fa3acedcac34f89ae65db991173c5048f0b33eae97c451dc3f2a39",
+    "a11": "dce8cc4ca19d52fb765e1a4e207c0b7a6071f1cf2d08ff85e99972de30a65818",
     "remeasure_log": "4e832817541062fc3b9206cf358fdb98a005cc1ca8abf7426a001a8a2229aee0",
     "chain_map": "14798c0936bdf900a03d69ead32bcefbdb0c3cfcc34975edc094c185824297a5",
     "remeasure_map": "9b31e1234ce0575ad8e287a1cb5bd778871bfb565536ffe2186a4576e036ab6f",
-    "cmp_video": "ad81b106b2085e0034385bc99516fd777a233a2c5fabff755c9ec352fbc711cb"
+    "cmp_video": "ad81b106b2085e0034385bc99516fd777a233a2c5fabff755c9ec352fbc711cb",
+    "repro_compare": "a59703976cda15c044465a2c68775b501bf61475e13ab3efb5a29264913c29b5",
+    "repro_a1": "4cc8d221dc012559ec174569fd295fc39a5f574d687a532221ae6cab9af60d3e",
+    "repro_a2": "98c3fff030ab8cc55073fa05886935731a54825fb3ecb84ae4a0bb6849d2f45a",
+    "repro_b": "37d40a8850f7873e69474aeb22ea3aafee241978d01d543c9f631f964e063bd3"
   },
   "source_paths": {
     "m1750": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_eval\\m1750\\ex35_verdict.json",
@@ -468,10 +482,16 @@
     "run_log": "C:\\mai\\wt\\foothold-lab\\impl-ex35-07fc\\logs_gate\\ex35_main_20261026_232432\\run.log",
     "rc": "C:\\mai\\wt\\foothold-lab\\impl-ex35-07fc\\logs_gate\\ex35_main_20261026_232432\\rc.txt",
     "baseline": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261026-experiments\\figs\\startline\\startline_table.json",
-    "window": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_combined_x27j\\window_m2000_default.json",
+    "window_default": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_combined_x27j\\window_m2000_default.json",
+    "window": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_combined_x27j\\window_m2000_a11.json",
+    "a11": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_combined_x27j\\a11_m2000.json",
     "remeasure_log": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_eval_x27j\\remeasure.log",
     "chain_map": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_eval\\m2000\\map64\\map_modes.json",
     "remeasure_map": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_eval_x27j\\m2000\\map64\\map_modes.json",
-    "cmp_video": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26m\\p2\\rendered\\CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4"
+    "cmp_video": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26m\\p2\\rendered\\CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4",
+    "repro_compare": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\compare.md",
+    "repro_a1": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\A1\\map_modes.json",
+    "repro_a2": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\A2\\map_modes.json",
+    "repro_b": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\B\\map_modes.json"
   }
 }

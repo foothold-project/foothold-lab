@@ -16,10 +16,13 @@ DEFAULT_TRAIN = Path(
 )
 DEFAULT_BASELINE = Path(__file__).resolve().parents[5] / "inbox/jay/20261026-experiments/figs/startline/startline_table.json"
 DEFAULT_WINDOW = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_combined_x27j/window_m2000_default.json")
+DEFAULT_WINDOW_A11 = DEFAULT_WINDOW.with_name("window_m2000_a11.json")
+DEFAULT_A11 = DEFAULT_WINDOW.with_name("a11_m2000.json")
 DEFAULT_REMEASURE = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval_x27j/remeasure.log")
 DEFAULT_CHAIN_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval/m2000/map64/map_modes.json")
 DEFAULT_REMEASURE_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval_x27j/m2000/map64/map_modes.json")
 DEFAULT_CMP_VIDEO = Path("C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m/p2/rendered/CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4")
+DEFAULT_REPRO = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_repro_x27k")
 
 
 def read_json(path: Path) -> dict:
@@ -50,22 +53,35 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
         "rc": train_dir / "rc.txt",
         "baseline": baseline_path,
         **(evidence_paths or {
-            "window": DEFAULT_WINDOW,
+            "window_default": DEFAULT_WINDOW,
+            "window": DEFAULT_WINDOW_A11,
+            "a11": DEFAULT_A11,
             "remeasure_log": DEFAULT_REMEASURE,
             "chain_map": DEFAULT_CHAIN_MAP,
             "remeasure_map": DEFAULT_REMEASURE_MAP,
             "cmp_video": DEFAULT_CMP_VIDEO,
+            "repro_compare": DEFAULT_REPRO / "compare.md",
+            "repro_a1": DEFAULT_REPRO / "A1/map_modes.json",
+            "repro_a2": DEFAULT_REPRO / "A2/map_modes.json",
+            "repro_b": DEFAULT_REPRO / "B/map_modes.json",
         }),
     }
     verdicts = {k: read_json(paths[k]) for k in ("m1750", "m1950", "m2000")}
     launch = read_json(paths["receipt"])
     baseline = read_json(paths["baseline"])["turn"]
+    default_window = read_json(paths["window_default"])
     window = read_json(paths["window"])
+    a11 = read_json(paths["a11"])
     chain_map = read_json(paths["chain_map"])
     remeasure_map = read_json(paths["remeasure_map"])
     remeasure_log = paths["remeasure_log"].read_text(encoding="utf-8-sig")
-    assert window["branch"] == "STOP" and window["decision"]["row"] == 4
-    assert window["a11"]["state"] == "unfilled"
+    assert default_window["branch"] == "STOP" and default_window["decision"]["row"] == 4
+    assert default_window["a11"]["state"] == "unfilled"
+    assert window["branch"] == "STOP" and window["decision"]["row"] == 6
+    assert window["decision"]["action"].startswith("REVERT:")
+    assert window["a11"]["state"] == "clear" and a11["items"] == {str(i): "없음" for i in range(1, 6)}
+    assert window["a11"]["yes"] == [] and a11["cmp_video"]["sha256"].lower() == sha(paths["cmp_video"])
+    assert "왼쪽" in a11["memo"][0] and "오른쪽" in a11["memo"][0]
     assert window["missing_inputs"] == {"latest": [], "prev": []}
     assert window["states"]["latest"]["state"] == verdicts["m2000"]["state"]
     assert window["states"]["prev"]["state"] == verdicts["m1950"]["state"]
@@ -83,6 +99,21 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
     old_source = chain_map["source_sha256"][source_module]
     new_source = remeasure_map["source_sha256"][source_module]
     assert old_source != new_source
+    repro = {name: read_json(paths[f"repro_{name.lower()}"]) for name in ("A1", "A2", "B")}
+    repro_leaves = {name: numeric_leaves(doc["modes"]) for name, doc in repro.items()}
+    assert all(len(leaves) == 56 for leaves in repro_leaves.values())
+    assert len({doc["checkpoint_sha256"] for doc in repro.values()}) == 1
+    assert a11["checkpoint_sha256"] == repro["A1"]["checkpoint_sha256"]
+    assert all(doc["eval_seed"] == 42 for doc in repro.values())
+    assert len({doc["source_sha256"][source_module] for doc in repro.values()}) == 1
+    assert [repro[name]["run_identity"]["device"] for name in ("A1", "A2", "B")] == ["cuda:0", "cuda:0", "cuda:1"]
+    assert repro_leaves["A1"].keys() == repro_leaves["A2"].keys() == repro_leaves["B"].keys()
+    repro_diff = {
+        "a1_a2": sum(repro_leaves["A1"][key] != repro_leaves["A2"][key] for key in repro_leaves["A1"]),
+        "a1_b": sum(repro_leaves["A1"][key] != repro_leaves["B"][key] for key in repro_leaves["A1"]),
+    }
+    assert repro_diff == {"a1_a2": 27, "a1_b": 29}
+    assert "27 / 56" in paths["repro_compare"].read_text(encoding="utf-8-sig")
     log = paths["run_log"].read_text(encoding="utf-8-sig", errors="replace")
     iterations = [int(v) for v in re.findall(r"Learning iteration\s+(\d+)/2001", log)]
     elapsed = re.findall(r"Time elapsed:\s*([0-9:]+)", log)
@@ -155,19 +186,25 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
         },
         "training_windows": windows,
         "parent_cases": parent_cases,
-        "checkpoint_pair_row6": "REVERT",
+        "window_default_row": default_window["decision"]["row"],
         "window_decision": window["branch"],
         "window_row": window["decision"]["row"],
         "window_action": window["decision"]["action"],
         "window_evidence": {
             "missing_inputs": window["missing_inputs"],
             "a11": window["a11"],
+            "a11_reader": a11["reader"],
+            "a11_time": a11["time"],
             "remeasure_stages": len(ends),
             "map64_numeric_comparable": len(common),
             "map64_numeric_changed": len(changed),
             "chain_eval_map_modes_sha": old_source,
             "remeasure_eval_map_modes_sha": new_source,
             "cmp_video_sha256": sha(paths["cmp_video"]),
+            "repro_numeric_count": len(repro_leaves["A1"]),
+            "repro_a1_a2_changed": repro_diff["a1_a2"],
+            "repro_a1_b_changed": repro_diff["a1_b"],
+            "repro_source_sha": repro["A1"]["source_sha256"][source_module],
         },
         "canonical": "S-B10 m1500",
         "source_sha256": {k: sha(v) for k, v in paths.items()},
@@ -222,10 +259,10 @@ def render(d: dict) -> str:
     x = d["window_evidence"]
     return f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
-> 근거: EX-35 학습 영수증·저장본 판정 JSON·m2000 창 판정 JSON·재평가 로그·CMP 영상 · 결과 전 EX-35 카드 §4b.6
-> 요지: 최종 두 저장본은 MAINTAIN_FAIL이다. m2000 기본 창 판정은 A11 판독 파일 부재로 STOP 4행, 연장 없음이다.
-> 상태: 학습·저장본 판정 확인됨 · 창 STOP 4행 확인됨 · A11 판독·재현성 원인 미확인
-> 판: v1.2
+> 근거: EX-35 학습 영수증·저장본 판정 JSON·기본 및 A11 창 판정 JSON·재현성 시험·CMP 영상 · 결과 전 EX-35 카드 §4b.6
+> 요지: m1950·m2000은 MAINTAIN_FAIL이고, A11 판독 반영 뒤 창 판정은 STOP 6행이다. 연장 없음, 정본 S-B10 m1500 유지.
+> 상태: 학습·저장본·창 판정 확인됨 · map64 반복 측정 차이 확인됨 · 비결정성 원인 미확인
+> 판: v1.3
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -281,13 +318,15 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 ## 7. 판정과 증거 범위
 
-m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없이 실행한 m2000 기본 창 판정은 **{d['window_decision']} {d['window_row']}행**이다. 창 판정 JSON의 사유는 `{d['window_action']}`이고, A11 상태는 `{x['a11']['state']}`이다. 이 실행에서 선행 필수 입력 결측 목록은 최신·이전 모두 빈 목록이다. A11이 clear여도 두 창 연속 `MAINTAIN_FAIL` 때문에 카드 §4b.6의 **6행 {d['checkpoint_pair_row6']} 예상**이나, A11 clear 입력으로 판정 코드를 돌린 결과는 아니므로 코드 미확인 예측이다. **EX-35 연장 없음, 정본 {d['canonical']} 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
+m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기본 실행은 A11 판독 파일이 없어 `STOP` {d['window_default_row']}행이었다. {x['a11_time']}의 A11 판독표는 다섯 항목 모두 「없음」이며, 판독자는 {x['a11_reader']}이다. 이를 반영한 창 판정 재실행 결과는 **{d['window_decision']} {d['window_row']}행**, 사유는 `{d['window_action']}`이다. 최신·이전 필수 입력 결측 목록은 모두 빈 목록이다. **EX-35 연장 없음, 정본 {d['canonical']} 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
 
-판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 {x['map64_numeric_comparable']}칸 중 {x['map64_numeric_changed']}칸이 다르다. `eval_map_modes` 소스 해시도 `{x['chain_eval_map_modes_sha']}`에서 `{x['remeasure_eval_map_modes_sha']}`로 다르다. 원인은 미확인이고 재현성 시험이 진행 중이다. 허용 폭이나 판정 문턱은 바꾸지 않았다.
+판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 {x['map64_numeric_comparable']}칸 중 {x['map64_numeric_changed']}칸이 다르고, `eval_map_modes` 소스 해시는 `{x['chain_eval_map_modes_sha']}`에서 `{x['remeasure_eval_map_modes_sha']}`로 다르다. 이어 같은 저장본·시드 42·소스 해시 `{x['repro_source_sha']}`로 GPU0에서 두 번 잰 수치도 **{x['repro_numeric_count']}칸 중 {x['repro_a1_a2_changed']}칸** 달랐다. GPU0 대 GPU1은 {x['repro_numeric_count']}칸 중 {x['repro_a1_b_changed']}칸이 달랐다. 따라서 앞의 {x['map64_numeric_changed']}칸 차이를 코드 변경 탓으로 단정할 수 없고, 코드 변경의 영향도 이 시험으로 분리할 수 없다. 평가의 비결정성 원인은 미확인이다.
+
+64 env 생존 수는 같은 GPU 반복에서도 1~2대 달랐다. 16 env 회전의 `kept >= 14` 같은 정수 문턱은 1~2대 변화에 민감할 수 있으나 그 16 env 반복 폭은 이 시험에서 미측정이다. 판정 문턱은 바꾸지 않았다. A11 발자국 메모에는 직진 명령에서 부모 m1500은 왼쪽, EX-35 m2000은 오른쪽으로 휨이 기록됐다. 옆 방향 이동량은 수치 미측이며 이 메모는 판정 항목 밖이다.
 
 ## 8. 다음 설계에서 무엇을 바꾸는가
 
-이 보고서만으로 원인을 정하지 않는다. A11 영상 판독, 보행 위상·저장본 추세 분석, map64 재현성 시험을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
+이 보고서만으로 보행 기전이나 비결정성 원인을 정하지 않는다. 보행 위상·저장본 추세 분석과 재현성 원인 조사가 남았다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
 
 ## 9. 실제 완료와 재현 경로
 
@@ -297,7 +336,7 @@ m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없이 실�
 |---|---|---|
 {evidence}
 
-검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 창 `STOP` 4행, A11 미기입, 재평가 {x['remeasure_stages']}단계 완료, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
+검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 기본 창 `STOP` 4행, A11 판독 뒤 창 `STOP` 6행, 재평가 {x['remeasure_stages']}단계 완료, 동일 GPU 반복 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 수치 차이, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
 """
 
 

@@ -1,9 +1,9 @@
 > 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
-> 근거: EX-35 학습 영수증·저장본 판정 JSON·m2000 창 판정 JSON·재평가 로그·CMP 영상 · 결과 전 EX-35 카드 §4b.6
-> 요지: 최종 두 저장본은 MAINTAIN_FAIL이다. m2000 기본 창 판정은 A11 판독 파일 부재로 STOP 4행, 연장 없음이다.
-> 상태: 학습·저장본 판정 확인됨 · 창 STOP 4행 확인됨 · A11 판독·재현성 원인 미확인
-> 판: v1.2
+> 근거: EX-35 학습 영수증·저장본 판정 JSON·기본 및 A11 창 판정 JSON·재현성 시험·CMP 영상 · 결과 전 EX-35 카드 §4b.6
+> 요지: m1950·m2000은 MAINTAIN_FAIL이고, A11 판독 반영 뒤 창 판정은 STOP 6행이다. 연장 없음, 정본 S-B10 m1500 유지.
+> 상태: 학습·저장본·창 판정 확인됨 · map64 반복 측정 차이 확인됨 · 비결정성 원인 미확인
+> 판: v1.3
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -78,13 +78,15 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 ## 7. 판정과 증거 범위
 
-m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없이 실행한 m2000 기본 창 판정은 **STOP 4행**이다. 창 판정 JSON의 사유는 `A11 판독표 「있음」 또는 미기입 · 멈춤 · 보고(A11 판독 파일 없음)`이고, A11 상태는 `unfilled`이다. 이 실행에서 선행 필수 입력 결측 목록은 최신·이전 모두 빈 목록이다. A11이 clear여도 두 창 연속 `MAINTAIN_FAIL` 때문에 카드 §4b.6의 **6행 REVERT 예상**이나, A11 clear 입력으로 판정 코드를 돌린 결과는 아니므로 코드 미확인 예측이다. **EX-35 연장 없음, 정본 S-B10 m1500 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
+m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기본 실행은 A11 판독 파일이 없어 `STOP` 4행이었다. 2026-10-27 05:19 KST의 A11 판독표는 다섯 항목 모두 「없음」이며, 판독자는 lead 세션 (Claude Opus 5.5) · 팀장 판독 아님이다. 이를 반영한 창 판정 재실행 결과는 **STOP 6행**, 사유는 `REVERT: 유지 실패 연속 두 저장본 · 멈춤, 되돌림 판은 사람이 띄움`이다. 최신·이전 필수 입력 결측 목록은 모두 빈 목록이다. **EX-35 연장 없음, 정본 S-B10 m1500 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
 
-판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 74칸 중 28칸이 다르다. `eval_map_modes` 소스 해시도 `ce4d25ea7110b079`에서 `ac739f3d8b557043`로 다르다. 원인은 미확인이고 재현성 시험이 진행 중이다. 허용 폭이나 판정 문턱은 바꾸지 않았다.
+판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 74칸 중 28칸이 다르고, `eval_map_modes` 소스 해시는 `ce4d25ea7110b079`에서 `ac739f3d8b557043`로 다르다. 이어 같은 저장본·시드 42·소스 해시 `b08941a4ba48e06d`로 GPU0에서 두 번 잰 수치도 **56칸 중 27칸** 달랐다. GPU0 대 GPU1은 56칸 중 29칸이 달랐다. 따라서 앞의 28칸 차이를 코드 변경 탓으로 단정할 수 없고, 코드 변경의 영향도 이 시험으로 분리할 수 없다. 평가의 비결정성 원인은 미확인이다.
+
+64 env 생존 수는 같은 GPU 반복에서도 1~2대 달랐다. 16 env 회전의 `kept >= 14` 같은 정수 문턱은 1~2대 변화에 민감할 수 있으나 그 16 env 반복 폭은 이 시험에서 미측정이다. 판정 문턱은 바꾸지 않았다. A11 발자국 메모에는 직진 명령에서 부모 m1500은 왼쪽, EX-35 m2000은 오른쪽으로 휨이 기록됐다. 옆 방향 이동량은 수치 미측이며 이 메모는 판정 항목 밖이다.
 
 ## 8. 다음 설계에서 무엇을 바꾸는가
 
-이 보고서만으로 원인을 정하지 않는다. A11 영상 판독, 보행 위상·저장본 추세 분석, map64 재현성 시험을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
+이 보고서만으로 보행 기전이나 비결정성 원인을 정하지 않는다. 보행 위상·저장본 추세 분석과 재현성 원인 조사가 남았다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
 
 ## 9. 실제 완료와 재현 경로
 
@@ -99,10 +101,16 @@ m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없이 실�
 | run_log | `C:\mai\wt\foothold-lab\impl-ex35-07fc\logs_gate\ex35_main_20261026_232432\run.log` | `932a5ceddebb412a7efac6b64868151aa38382ee9085a0e804a44d341b285edc` |
 | rc | `C:\mai\wt\foothold-lab\impl-ex35-07fc\logs_gate\ex35_main_20261026_232432\rc.txt` | `93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494` |
 | baseline | `C:\mai\wt\foothold-lab\lead_tmp-20261023\inbox\jay\20261026-experiments\figs\startline\startline_table.json` | `841ce5170e2ec63a952d19c3722ee19cb441020c4b52b8a882295d2605713298` |
-| window | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_combined_x27j\window_m2000_default.json` | `4afd6565ab43d70e8c9e0a30f04afb9bbc109647d2efe020ba60e47ac27038b1` |
+| window_default | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_combined_x27j\window_m2000_default.json` | `4afd6565ab43d70e8c9e0a30f04afb9bbc109647d2efe020ba60e47ac27038b1` |
+| window | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_combined_x27j\window_m2000_a11.json` | `a4cdda5ff0fa3acedcac34f89ae65db991173c5048f0b33eae97c451dc3f2a39` |
+| a11 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_combined_x27j\a11_m2000.json` | `dce8cc4ca19d52fb765e1a4e207c0b7a6071f1cf2d08ff85e99972de30a65818` |
 | remeasure_log | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27j\remeasure.log` | `4e832817541062fc3b9206cf358fdb98a005cc1ca8abf7426a001a8a2229aee0` |
 | chain_map | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval\m2000\map64\map_modes.json` | `14798c0936bdf900a03d69ead32bcefbdb0c3cfcc34975edc094c185824297a5` |
 | remeasure_map | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27j\m2000\map64\map_modes.json` | `9b31e1234ce0575ad8e287a1cb5bd778871bfb565536ffe2186a4576e036ab6f` |
 | cmp_video | `C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26m\p2\rendered\CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4` | `ad81b106b2085e0034385bc99516fd777a233a2c5fabff755c9ec352fbc711cb` |
+| repro_compare | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_x27k\compare.md` | `a59703976cda15c044465a2c68775b501bf61475e13ab3efb5a29264913c29b5` |
+| repro_a1 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_x27k\A1\map_modes.json` | `4cc8d221dc012559ec174569fd295fc39a5f574d687a532221ae6cab9af60d3e` |
+| repro_a2 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_x27k\A2\map_modes.json` | `98c3fff030ab8cc55073fa05886935731a54825fb3ecb84ae4a0bb6849d2f45a` |
+| repro_b | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_x27k\B\map_modes.json` | `37d40a8850f7873e69474aeb22ea3aafee241978d01d543c9f631f964e063bd3` |
 
-검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 창 `STOP` 4행, A11 미기입, 재평가 20단계 완료, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
+검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 기본 창 `STOP` 4행, A11 판독 뒤 창 `STOP` 6행, 재평가 20단계 완료, 동일 GPU 반복 27/56 수치 차이, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
