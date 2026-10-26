@@ -98,6 +98,7 @@ def test_each_command_is_held_for_every_step_of_the_run_and_the_crossing_window_
     fwd = np.linspace(0.0, 7.5, S)[:, None]                                                      # 15 s 동안 1.0 m/s 로 직진: 6.5 m 는 step 650 쯤
     pos = np.zeros((S, 1, 3))
     pos[:, 0, 0] = fwd[:, 0]
+    pos[:, 0, 2] = 0.34                                                                          # 서 있는 몸 z
     out = K.by_kind(["gaps"], np.ones((S, 1)), fwd, np.ones((S, 1), dtype=bool), dt, pos=pos)
 
     assert out["gaps"]["crossed"] == 1 and "15" in out["gaps"]["crossed_rule"]

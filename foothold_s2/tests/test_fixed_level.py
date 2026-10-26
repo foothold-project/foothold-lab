@@ -184,5 +184,5 @@ def test_eval_map_modes_wires_the_sparse_set_and_refuses_it_without_a_level_befo
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     assert src.index('parser.error("--terrain-set sparse50') < src.index("AppLauncher(args).app")
-    assert "build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS)" in src
+    assert "build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS," in src and "seed=geometry_hash.SPARSE_GEOMETRY_SEED" in src
     assert "fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse" in src

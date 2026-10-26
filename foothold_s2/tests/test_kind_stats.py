@@ -12,16 +12,17 @@ ROOT = Path(__file__).resolve().parents[2]
 DT = 0.02
 S = 400                                                         # 8 s
 REF = ss.REFERENCE_M
+STAND = 0.34                                                    # 서 있는 몸 z(출발 단 윗면 0 기준)
 
 
 def _case(fwd_end, z_drop_at=None, z_drop=0.24, die_at=None, teleport=None):
     """env 하나: 전진 거리가 0 에서 fwd_end 까지 직선 증가. z_drop_at 번째 step 에 몸이 z_drop 만큼 내려간다."""
     f = np.linspace(0.0, fwd_end, S)
-    z = np.zeros(S)
+    z = np.full(S, STAND)
     a = np.ones(S, dtype=bool)
 
     if z_drop_at is not None:
-        z[z_drop_at:] = -z_drop
+        z[z_drop_at:] = STAND - z_drop
     if die_at is not None:
         a[die_at:] = False
     if teleport is not None:
@@ -67,8 +68,8 @@ def test_the_threshold_is_the_reference_distance_from_the_sheet_and_not_hardcode
 
 def test_a_fall_stays_a_fall_even_if_the_body_climbs_back_up():
     f = np.linspace(0.0, 7.0, S)
-    z = np.zeros(S)
-    z[50:150] = -0.3                                          # 구덩이에 내려갔다가 올라옴
+    z = np.full(S, STAND)
+    z[50:150] = 0.04                                          # 구덩이에 내려갔다가 올라옴
     pos = np.zeros((S, 1, 3))
     pos[:, 0, 0], pos[:, 0, 2] = f, z
     out = K.by_kind(["gaps"], np.full((S, 1), 0.7), f[:, None], np.ones((S, 1), dtype=bool), DT, pos=pos)
@@ -131,3 +132,23 @@ def test_source_hashes_follow_the_spec_name_so_a_dash_m_main_script_is_included(
 
     assert ns["_module_key"](mod) == "foothold_s2.eval.eval_map_modes"
     assert ns["_module_key"](type("M", (), {"__name__": "foothold_s2.runners.start_runner", "__spec__": None})()) == "foothold_s2.runners.start_runner"
+
+
+def test_a_pit_start_is_not_a_crossing_and_is_counted_as_a_start_off_the_footing():
+    """reviewer 반례: 빔 밖 구덩이에서 시작해 바닥을 걸어 도착 단에 오른다. 시작 높이 기준이면 낙하에 안 걸렸다. 절대 문턱이면 건넘 아님."""
+    f = np.linspace(0.0, 7.0, S)
+    zs = np.stack([np.full(S, 0.11), np.full(S, STAND)], axis=1)         # 0 구덩이 바닥을 걷는다 · 1 발판 위
+    fwd = np.stack([f, f], axis=1)
+    pos = np.zeros((S, 2, 3))
+    pos[:, :, 0], pos[:, :, 2] = fwd, zs
+    pos[0, 1, 0] = K.start_edge_x() - 0.1                                # 1 번은 출발 단 끝 0.1 m 에서 시작
+    out = K.by_kind(["balance_beams"] * 2, np.full((S, 2), 0.7), fwd, np.ones((S, 2), dtype=bool), DT, pos=pos)["balance_beams"]
+
+    assert out["crossed"] == 1 and out["fell"] == 1 and out["start_offbeam"] == 1 and out["start_edge"] == 1
+
+
+def test_the_start_platform_top_is_read_from_the_tile_geometry_and_not_hardcoded():
+    from foothold_s2.terrains import sparse_terrains
+
+    assert K.start_top_z() == 0.0 and K.start_edge_x() == ss.ZONE_X[0] - sparse_terrains.SPAWN_XY[0]
+    assert "0.25" not in (ROOT / "foothold_s2/eval/kind_stats.py").read_text(encoding="utf-8").split("def by_kind")[1].split("def from_files")[0]
