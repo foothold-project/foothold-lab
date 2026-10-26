@@ -58,3 +58,67 @@ def judge(is_flag, max_dist_m, cmd_sum_xy, goals_covered, num_goals, size_x=8.0,
     is_flag = torch.as_tensor(is_flag, dtype=torch.bool)
 
     return torch.where(is_flag, judge_flag(goals_covered, num_goals, walk_frac), judge_free(max_dist_m, cmd_sum_xy, size_x))
+
+
+def mask_new_task(move, had_new_task):
+    """새 과제 표식이 있는 에피소드는 승급 · 강등에서 뺀다(행 유지, 0). 표식이 모두 거짓이면 입력과 비트 단위로 같다 (JUDGE-SPEC 5.2 3).
+
+    임시 행 유지다(성과 기반 지형 커리큘럼 완성이 아니다). 표식 없는 env · 에피소드는 기존 규칙 그대로.
+    """
+    move = torch.as_tensor(move)
+    mark = torch.as_tensor(had_new_task, dtype=torch.bool, device=move.device)
+    out = move.clone()
+    out[mark] = 0
+
+    return out
+
+
+class NewTaskStats:
+    """update 한 번 동안의 표식 통계 (JUDGE-SPEC 5.2 6). `add` 로 쌓고 `take` 로 꺼내 비운다. 순수 torch.
+
+    에피소드 수, 표식 참 수 · 비율, 표식 유무별 판정 수(표식 있는 쪽은 «막지 않았다면» 의 원래 판정과 실제 0 을 함께), 지형 행별 에피소드 수(전체 · 표식).
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.episodes = 0
+        self.marked = 0
+        self.unmarked_up = self.unmarked_down = self.unmarked_stay = 0
+        self.marked_would_up = self.marked_would_down = self.marked_would_stay = 0
+        self.row_total = {}
+        self.row_marked = {}
+
+    def add(self, move_raw, had_new_task, levels):
+        move_raw = torch.as_tensor(move_raw).cpu()
+        mark = torch.as_tensor(had_new_task, dtype=torch.bool).cpu()
+        levels = torch.as_tensor(levels).cpu().long()
+        self.episodes += int(move_raw.numel())
+        self.marked += int(mark.sum())
+        um, mm = ~mark, mark
+        self.unmarked_up += int(((move_raw > 0) & um).sum())
+        self.unmarked_down += int(((move_raw < 0) & um).sum())
+        self.unmarked_stay += int(((move_raw == 0) & um).sum())
+        self.marked_would_up += int(((move_raw > 0) & mm).sum())
+        self.marked_would_down += int(((move_raw < 0) & mm).sum())
+        self.marked_would_stay += int(((move_raw == 0) & mm).sum())
+
+        for lv in levels.unique().tolist():
+            sel = levels == lv
+            self.row_total[int(lv)] = self.row_total.get(int(lv), 0) + int(sel.sum())
+            self.row_marked[int(lv)] = self.row_marked.get(int(lv), 0) + int((sel & mark).sum())
+
+    def take(self):
+        """쌓인 통계를 사전으로 꺼내고 비운다. 쌓인 것이 없으면 None."""
+        if self.episodes == 0:
+            return None
+
+        out = {"episodes": self.episodes, "marked": self.marked, "marked_frac": self.marked / self.episodes,
+               "unmarked": {"up": self.unmarked_up, "down": self.unmarked_down, "stay": self.unmarked_stay},
+               "marked_would_have": {"up": self.marked_would_up, "down": self.marked_would_down, "stay": self.marked_would_stay},
+               "marked_actual": {"up": 0, "down": 0, "stay": self.marked},
+               "per_row": {str(k): v for k, v in sorted(self.row_total.items())}, "per_row_marked": {str(k): v for k, v in sorted(self.row_marked.items())}}
+        self.reset()
+
+        return out

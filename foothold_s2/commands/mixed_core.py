@@ -150,6 +150,46 @@ def resample_start(gen, n, params):
     return {"cmd": cmd, "stand": false, "spin": spin, "heading": false, "psi_star": torch.zeros(n, device=cmd.device)}
 
 
+# ---------------------------------------------------------------- 새 과제 표식 (JUDGE-SPEC v0.2 5 절)
+
+
+def new_task_mask(cmd, params, eps=1.0e-6):
+    """재추출된 명령이 «새 과제» 인가: 걸으며 돌기(vx > 0 이고 wz != 0). 기존 START 의 제자리 회전(vx 0 · wz != 0)과 직진(wz 0)은 새 과제가 아니다.
+
+    START 명령 계약(`params.start_mode`)에서만 표시한다. 옛 혼합 명령(heading · 자유 wz)은 걷는 동안 도는 것이 원래 흔한 명령이라 표식 대상이 아니다(옛 커리큘럼을 바꾸지 않는다).
+    """
+    cmd = torch.as_tensor(cmd)
+    n = cmd.shape[0]
+
+    if not params.start_mode:
+        return torch.zeros(n, dtype=torch.bool, device=cmd.device)
+
+    return (cmd[:, 0] > eps) & (cmd[:, 2].abs() > eps)
+
+
+class NewTaskMark:
+    """에피소드마다 «새 과제 명령을 받았는가» 표식 (N,) bool. 순수 torch.
+
+    켜는 때: 명령 재추출(`on_resample`) 또는 매 스텝 바뀌는 과제가 실제로 소비된 스텝(`on_consumed`, 마지막 명령만 보고 분류하지 않는다).
+    읽는 때: 지형 커리큘럼(`terrain_levels_mixed`)이 승급 · 강등을 정하기 전. 비우는 때: 에피소드 시작(`clear`) = Isaac 순서상 curriculum 이 읽은 뒤.
+    """
+
+    def __init__(self, n, device="cpu"):
+        self.flag = torch.zeros(n, dtype=torch.bool, device=device)
+
+    def clear(self, env_ids):
+        self.flag[env_ids] = False
+
+    def on_resample(self, env_ids, cmd, params):
+        """재추출된 명령 cmd (m, 3) 가 새 과제인 env 를 참으로(이미 참이면 그대로: 한 번 받으면 에피소드 끝까지)."""
+        env_ids = torch.as_tensor(env_ids, dtype=torch.long, device=self.flag.device)
+        self.flag[env_ids] |= new_task_mask(cmd, params).to(self.flag.device)
+
+    def on_consumed(self, mask):
+        """이 스텝에 새 과제 모드가 실제로 소비된 env (N,) 를 참으로."""
+        self.flag |= torch.as_tensor(mask, dtype=torch.bool, device=self.flag.device)
+
+
 def apply_heading(cmd, heading, stand, psi_star, yaw, params):
     """매 스텝: heading env 의 wz 를 갱신. 정지 env 는 세 칸 0 을 지킨다 (정지가 heading 보다 우선)."""
     out = cmd.clone()

@@ -18,6 +18,7 @@ from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
 from foothold_s2.commands import mixed_core as mc
+from foothold_s2.curriculum import rules as curriculum_rules
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -59,6 +60,8 @@ class MixedVelocityCommand(CommandTerm):
         self.max_dist = torch.zeros(n, device=dev)
         self.cmd_sum_xy = torch.zeros(n, 2, device=dev)
         self.goals = torch.zeros(n, dtype=torch.long, device=dev)
+        self.new_task = mc.NewTaskMark(n, dev)               # 새 과제(걸으며 돌기 등) 명령을 받은 에피소드 표식. 지형 커리큘럼이 승급 · 강등에서 뺀다 (JUDGE-SPEC 5)
+        self.new_task_stats = curriculum_rules.NewTaskStats()
         self.excluded_steps = torch.zeros(n, device=dev)     # 깃발 env 가 제자리 회전 · 물러나기로 쓴 스텝 (14 §5 판정에서 뺀다)
         self.ep_steps = torch.zeros(n, device=dev)
 
@@ -86,6 +89,15 @@ class MixedVelocityCommand(CommandTerm):
         return 1.0 - self.excluded_steps / torch.clamp(self.ep_steps, min=1.0)
 
     @property
+    def had_new_task(self) -> torch.Tensor:
+        """(N,) bool: 이 에피소드에서 새 과제 명령을 받았는가. 읽는 쪽은 `terrain_levels_mixed`."""
+        return self.new_task.flag
+
+    def mark_new_task_consumed(self, mask):
+        """매 스텝 바뀌는 새 과제(정지 -> 재출발 프로파일 등)가 이 스텝에 실제로 소비된 env 를 표시한다(호출은 그 과제를 넣는 쪽)."""
+        self.new_task.on_consumed(mask)
+
+    @property
     def mode_ids(self) -> torch.Tensor:
         return mc.mode_labels(self.is_flag_env, self.stand, self.spin, self.heading)
 
@@ -101,6 +113,7 @@ class MixedVelocityCommand(CommandTerm):
         return h if ids is None else h[ids]
 
     def _reset_episode_state(self, env_ids: torch.Tensor):
+        self.new_task.clear(env_ids)                          # Isaac 순서가 curriculum -> command reset 이라 curriculum 이 지난 에피소드 표식을 읽은 뒤에 비운다. 재추출은 이 뒤(reset 안 super().reset)에서 다시 켠다
         pos = self.robot.data.root_pos_w[env_ids, :2]
         self.start_xy[env_ids] = pos
         self.max_dist[env_ids] = 0.0
@@ -163,6 +176,7 @@ class MixedVelocityCommand(CommandTerm):
             self.spin[free] = out["spin"].to(self.device)
             self.heading[free] = out["heading"].to(self.device)
             self.psi_star[free] = out["psi_star"].to(self.device)
+            self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
 
             if self.cfg.fixed_cmd is not None:
                 self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)

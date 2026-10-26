@@ -24,6 +24,13 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
 
     move = rules.judge(term.is_flag_env[env_ids], term.max_dist[env_ids], cmd_sum, term.goals[env_ids],
                        num_goals, size_x=size_x, walk_frac=term.walk_frac[env_ids])
+    marked = getattr(term, "had_new_task", None)
+
+    if marked is not None:                                       # 새 과제 명령을 받은 에피소드는 승급 · 강등에서 뺀다(행 유지, JUDGE-SPEC 5.2). 표식이 모두 거짓이면 이 블록은 move 를 바꾸지 않는다
+        marked = marked[env_ids]
+        term.new_task_stats.add(move, marked, terrain.terrain_levels[env_ids])
+        move = rules.mask_new_task(move, marked)
+
     terrain.update_env_origins(env_ids, move > 0, move < 0)
 
     return torch.mean(terrain.terrain_levels.float())

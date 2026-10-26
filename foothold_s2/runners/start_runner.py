@@ -351,8 +351,11 @@ class StartRunner(OnPolicyRunner):
             if split is not None and "unavailable" not in split:
                 loss_dict["reward_split/frac_moving"] = split["frac_moving"]
                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
+            nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
-            if (kl_info or act_stats is not None or split is not None) and self.log_dir is not None and not self.disable_logs:
+            if nt_stats is not None:
+                extra["new_task_mark"] = nt_stats
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -407,6 +410,13 @@ class StartRunner(OnPolicyRunner):
         if term is None:
             self._invalid(it, "START 명령 계약을 검사해야 하는데 command_manager 의 base_velocity term 이 없다")
         return term.vel_command_b[:, :3].detach().clone().to(self.device)      # env 와 runner 의 장치가 다를 수 있다(예: env cuda:1 · runner 기본 cuda:0): 누적 텐서와 같은 장치로
+
+    def _take_new_task_stats(self):
+        """이번 update 동안 쌓인 새 과제 표식 통계를 꺼낸다(없거나 표식 term 이 아니면 None)."""
+        term = self._command_term()
+        stats = getattr(term, "new_task_stats", None)
+
+        return stats.take() if stats is not None else None
 
     def _check_params_finite(self, it: int) -> None:
         """갱신 뒤 정책 · 지각 파라미터가 모두 유한한지."""

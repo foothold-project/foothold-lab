@@ -19,7 +19,7 @@ def test_protocols_cover_independent_sequential_and_reversed_order_with_right_tu
     p = P.PROTOCOLS
 
     assert set(P.DEFAULT_CASES) == {"indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left"}
-    assert set(p) == set(P.DEFAULT_CASES) | {"fwd_then_left"}
+    assert set(p) == set(P.DEFAULT_CASES) | {"fwd_then_left", "walk_turn_left", "walk_turn_right"}                 # X26a(J-T7): 걸으며 돌기 둘을 표에 더함(기본 실행 다섯은 그대로)
     assert p["indep_right"]["cmd"] == (0, 0, -1.2) and p["indep_left"]["cmd"] == (0, 0, 1.2) and p["indep_right"]["pre"] is None
     assert p["fwd_then_right"]["pre"][0] == 0.5 and p["left_then_right"]["pre"][2] > 0 and p["right_then_left"]["pre"][2] < 0
     assert (P.RECORD_S, P.PRE_S) == (8.0, 4.0)

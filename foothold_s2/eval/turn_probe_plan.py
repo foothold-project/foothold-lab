@@ -28,6 +28,8 @@ PROTOCOLS = {
     "left_then_right": {"pre": (0.0, 0.0, +WZ), "cmd": (0.0, 0.0, -WZ)},
     "right_then_left": {"pre": (0.0, 0.0, -WZ), "cmd": (0.0, 0.0, +WZ)},
     "fwd_then_left": {"pre": (0.5, 0.0, 0.0), "cmd": (0.0, 0.0, +WZ)},      # SONNET-X25d: fwd_then_right 의 좌우 대칭(전진 0.5 4 s -> 좌회전 +1.2 8 s)
+    "walk_turn_left": {"pre": None, "cmd": (0.5, 0.0, +0.5)},               # SONNET-X26a(J-T7): 걸으며 돌기. reset -> 전진 0.5 + 좌회전 0.5 8 s(앞 구간 없음). 명령 과정 단계(JUDGE-SPEC 4.4)의 성공선 입력
+    "walk_turn_right": {"pre": None, "cmd": (0.5, 0.0, -0.5)},
 }
 DEFAULT_CASES = ("indep_right", "indep_left", "fwd_then_right", "left_then_right", "right_then_left")    # --cases 를 안 주면 도는 경우(X25 의 기존 다섯, 순서 고정)
 
