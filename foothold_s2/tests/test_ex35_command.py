@@ -91,7 +91,7 @@ def test_clock_scatter_receipt_accepts_uniform_and_rejects_range_nan_and_concent
     t = mc.scatter_clock(mc.make_generator(7), 3072, 4.0)
     rc = mc.scatter_receipt(t)
 
-    assert rc["ok"] and rc["in_range"] and rc["finite"] and 0.0 <= rc["min"] and rc["max"] <= 4.0 and rc["max_bin_frac"] < 0.30 and len(rc["bin_counts_1s"]) == 4
+    assert rc["ok"] and rc["in_range"] and rc["finite"] and 0.0 <= rc["min"] and rc["max"] <= 4.0 and rc["max_bin_frac"] < 0.30 and len(rc["bin_counts"]) == 4
     assert not mc.scatter_receipt(torch.full((3072,), 4.0))["ok"]                                       # 흩지 않은 상태(전부 4 s)는 집중도로 거절
     assert not mc.scatter_receipt(torch.tensor([1.0, float("nan")]))["ok"]
     assert not mc.scatter_receipt(torch.tensor([1.0, 4.5, 2.0, 3.0]))["ok"]
@@ -99,9 +99,10 @@ def test_clock_scatter_receipt_accepts_uniform_and_rejects_range_nan_and_concent
 
 
 class _Term:
-    def __init__(self, receipt, on=True):
+    def __init__(self, receipt, on=True, ep="good"):
         self.cfg = SimpleNamespace(clock_scatter=on)
         self.scatter_receipt = receipt
+        self.episode_scatter_receipt = mc.scatter_receipt(mc.scatter_episode(mc.make_generator(2), 3072, 1000).float() * 0.02, 20.0, bins=5) if ep == "good" else (mc.scatter_receipt(torch.zeros(3072), 20.0, bins=5) if ep == "zero" else None)
 
 
 def _fake_runner(term):
@@ -123,7 +124,7 @@ def test_runner_records_the_scatter_receipt_once_and_stops_the_run_on_a_bad_one(
     fn(r, 0)
     fn(r, 1)
 
-    assert len(r.map_ratio_events) == 1 and r.map_ratio_events[0]["kind"] == "command_clock_scatter" and r.map_ratio_events[0]["ok"] is True
+    assert [e["kind"] for e in r.map_ratio_events] == ["command_clock_scatter", "episode_progress_scatter"] and r.map_ratio_events[0]["ok"] is True and r.map_ratio_events[1]["ok"] is True
     fn, r, msgs = _fake_runner(_Term(mc.scatter_receipt(torch.full((3072,), 4.0))))
 
     with pytest.raises(RuntimeError):
@@ -162,8 +163,9 @@ def _real_scatter_method():
 
 
 def _fake_term(on=True, n=3072):
-    return SimpleNamespace(cfg=SimpleNamespace(clock_scatter=on, resampling_time_range=(4.0, 4.0)), _stepped=False, num_envs=n, gen=mc.make_generator(11), device="cpu",
-                           time_left=torch.full((n,), 4.0), scatter_receipt=None)
+    env = SimpleNamespace(max_episode_length=1000, step_dt=0.02, episode_length_buf=torch.zeros(n, dtype=torch.long))
+    return SimpleNamespace(cfg=SimpleNamespace(clock_scatter=on, resampling_time_range=(4.0, 4.0)), _stepped=False, num_envs=n, gen=mc.make_generator(11), device="cpu", _env=env,
+                           time_left=torch.full((n,), 4.0), scatter_receipt=None, episode_scatter_receipt=None)
 
 
 def test_real_scatter_method_survives_a_second_full_reset_before_learning_and_stops_after_the_first_step():
@@ -258,3 +260,39 @@ def test_common_script_applies_the_command_settings_before_gym_make_and_records_
     assert run.index("cmd_cfg.clock_scatter") < run.index("gym.make(") and 'pc["contract"] = cmd_set["command_contract"]' in run
     assert '"resume_budget": budget' in run and '"command_settings": command_settings(args_cli)' in run and '"command_params"' in run
     assert run.index("pc[\"contract\"] = cmd_set") < run.index("train_cfg[\"perception\"] = pc")
+
+
+def test_treatment_without_an_extended_resume_is_refused_instead_of_ending_as_done_with_zero_updates():
+    for kw in (dict(command_mode="s2a"), dict(clock_scatter="on"), dict(command_mode="s2a", clock_scatter="on")):
+        with pytest.raises(ValueError, match="0 updates"):
+            validate_launch(_args(resume_from="m1500.pt", **kw))                                       # 2001 을 빠뜨린 이어 가기(1501)
+        with pytest.raises(ValueError, match="0 updates"):
+            validate_launch(_args(**kw))                                                               # 새로 시작
+    validate_launch(_args(resume_from="m1500.pt", max_iterations=2001, command_mode="s2a", clock_scatter="on"))
+    validate_launch(_args(resume_from="smoke10.pt", smoke_updates=2, max_iterations=None, command_mode="s2a", clock_scatter="on"))    # 짧은 Kit smoke 2 는 허용
+    validate_launch(_args(command_mode="start", clock_scatter="off"))                                  # 처치 없음은 기존 그대로
+
+
+def test_episode_progress_is_scattered_with_the_clock_and_its_receipt_rejects_synchronised_episodes():
+    fn = _real_scatter_method()
+    t = _fake_term()
+    fn(t, torch.arange(t.num_envs))
+    buf = t._env.episode_length_buf
+
+    assert int(buf.min()) >= 0 and int(buf.max()) < 1000 and float(buf.float().std()) > 200 and t.episode_scatter_receipt["ok"] and t.episode_scatter_receipt["max_bin_frac"] < 0.30
+    zero = _Term(mc.scatter_receipt(mc.scatter_clock(mc.make_generator(1), 3072)), ep="zero")
+    f, r, msgs = _fake_runner(zero)
+
+    with pytest.raises(RuntimeError):
+        f(r, 0)
+    assert "에피소드 진행도" in msgs[0]
+    f, r, msgs = _fake_runner(_Term(mc.scatter_receipt(mc.scatter_clock(mc.make_generator(1), 3072)), ep="none"))
+
+    with pytest.raises(RuntimeError):
+        f(r, 0)
+
+
+def test_zero_remaining_with_a_treatment_is_a_startup_error_not_done():
+    run = (PKG / "scripts/train_sol23f_common.py").read_text(encoding="utf-8")
+
+    assert "if remaining <= 0 and (command_settings(args_cli)" in run and "raise RuntimeError(f\"명령 처치를 켰는데 남은 회차가" in run and "학습 없이 done 이 되는 것을 막는다" in run and run.index("학습 없이 done 이 되는 것을 막는다") < run.index('"note": "이미 끝난 체크포인트"')

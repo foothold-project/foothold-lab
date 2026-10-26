@@ -206,16 +206,21 @@ def scatter_clock(gen, n, resample_s=4.0):
     return _u(gen, (n,), 0.0, resample_s)
 
 
-def scatter_receipt(time_left, resample_s=4.0, max_bin_frac=0.30):
+def scatter_episode(gen, n, max_episode_length):
+    """새 프로세스의 첫 reset 직후 env 마다 에피소드 진행도(스텝) 정수 U[0, max_episode_length). rsl_rl 의 init_at_random_ep_len 과 같은 뜻(이어 가기는 그것을 끄므로 여기서 한다)."""
+    return torch.clamp((_u(gen, (n,)) * max_episode_length).long(), max=max_episode_length - 1)
+
+
+def scatter_receipt(time_left, resample_s=4.0, max_bin_frac=0.30, bins=None):
     """영수증: 범위 · 유한 · 1 s 구간 집중도(가장 많이 든 구간의 비율, 균등이면 1/구간 수). 어느 하나 어기면 ok False."""
     t = torch.as_tensor(time_left, dtype=torch.float32).detach().cpu()
     finite = bool(torch.isfinite(t).all())
     lo, hi = (float(t.min()), float(t.max())) if finite and t.numel() else (float("nan"), float("nan"))
     in_range = finite and lo >= 0.0 and hi <= resample_s
-    bins = int(math.ceil(resample_s))
-    counts = torch.histc(t.clamp(0.0, resample_s), bins=bins, min=0.0, max=float(bins)) if finite else torch.zeros(bins)
+    bins = int(math.ceil(resample_s)) if bins is None else int(bins)
+    counts = torch.histc(t.clamp(0.0, resample_s), bins=bins, min=0.0, max=float(resample_s)) if finite else torch.zeros(bins)
     frac = float(counts.max() / max(t.numel(), 1))
-    return {"n": int(t.numel()), "min": lo, "max": hi, "finite": finite, "in_range": bool(in_range), "bin_counts_1s": [int(c) for c in counts.tolist()],
+    return {"n": int(t.numel()), "min": lo, "max": hi, "finite": finite, "in_range": bool(in_range), "bin_counts": [int(c) for c in counts.tolist()],
             "max_bin_frac": frac, "max_bin_frac_limit": max_bin_frac, "ok": bool(in_range and frac <= max_bin_frac)}
 
 

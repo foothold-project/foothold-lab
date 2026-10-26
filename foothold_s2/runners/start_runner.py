@@ -550,10 +550,14 @@ class StartRunner(OnPolicyRunner):
         if rc is None:
             self._invalid(it, "명령 시계 흩기를 켰는데 영수증이 없다(첫 전체 reset 에서 적용되지 않음)")
         self._cmd_receipt_done = True
+        ep = getattr(term, "episode_scatter_receipt", None)
         self.map_ratio_events.append({"kind": "command_clock_scatter", "it": it, **rc})
+        self.map_ratio_events.append({"kind": "episode_progress_scatter", "it": it, **(ep or {})})
 
         if not rc["ok"]:
             self._invalid(it, f"명령 시계 흩기 영수증 위반: {rc}")
+        if ep is None or not ep["ok"]:
+            self._invalid(it, f"에피소드 진행도 흩기 영수증 위반: {ep}")
 
     def _take_frame_stats(self):
         """이번 update 동안 쌓인 현행 · 세계 좌표 판정 비교표를 꺼낸다(없으면 None)."""

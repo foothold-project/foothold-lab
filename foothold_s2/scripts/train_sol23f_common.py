@@ -238,6 +238,8 @@ def main(env_cfg, agent_cfg):
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
     remaining = 2 if args_cli.smoke_updates == 2 else agent_cfg.max_iterations - done
+    if remaining <= 0 and (command_settings(args_cli)["command_mode"] != "start" or command_settings(args_cli)["clock_scatter"]) and args_cli.variant == "SB":
+        raise RuntimeError(f"명령 처치를 켰는데 남은 회차가 {remaining} 이다(학습 없이 done 이 되는 것을 막는다)")
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return

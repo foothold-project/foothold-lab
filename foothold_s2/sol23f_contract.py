@@ -80,6 +80,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
         raise ValueError(f"command_mode must be one of {COMMAND_MODES}, clock_scatter on/off")
     if args.variant != "SB" and (cm not in (None, "start") or cs == "on"):
         raise ValueError("--command_mode s2a and --clock_scatter on are for the SB variant only")
+    if (cm == "s2a" or cs == "on") and getattr(args, "smoke_updates", None) != 2 and not is_extended_resume(args):
+        raise ValueError("--command_mode s2a / --clock_scatter on need --resume_from and --max_iterations above 1501 (otherwise 0 updates run and the run ends as done)")
     if cm == "s2a" and getattr(args, "smoke_updates", None) == 10:
         raise ValueError("s2a command mode starts from a parent checkpoint: use --resume_from (smoke 2) or the main resume")
     if args.variant in BUDGET_VARIANTS:
