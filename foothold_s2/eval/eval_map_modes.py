@@ -94,7 +94,11 @@ if parser_sparse:                                                               
     from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
     from foothold_s2.terrains import sparse_terrains
 
-    env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS)
+    from foothold_s2.eval import geometry_hash
+
+    sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
+    env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
+                                                              seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
 env = RslRlVecEnvWrapper(gym.make(args.task, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
 raw = env.unwrapped
 dev = raw.device
@@ -159,6 +163,13 @@ for mode in args.modes.split(","):
             if yaw0.abs().max().item() > 1.0e-3:
                 raise RuntimeError("듬성 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
             res["start_yaw_override"] = 0.0
+            from foothold_s2.eval import geometry_hash as _gh
+            from foothold_s2.terrains import columns as _cols
+            from foothold_s2.terrains import sparse_terrains as _sp2
+
+            _gen = raw.scene.terrain.cfg.terrain_generator
+            _names = _cols.column_types({k: float(v.proportion) for k, v in _gen.sub_terrains.items()}, int(_gen.num_cols))
+            res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:
