@@ -6,6 +6,13 @@
 
 # 팀장 논의 안건
 
+## 10/27 05시대 · EX-35 m2000 창 판정 기본 실행 = STOP 4 행 (A11 미기입) · 연장 없음
+
+- **결과**: `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_combined_x27j\window_m2000_default.json` decision row 4 · STOP · 「A11 판독 파일 없음」 (lead 직접 읽음). 면제 플래그 없음, A12 최신 · 직전 ok. 판정 코드 af4ea545 는 reviewer · verifier 두 겹 막음 0 (verifier 시험 로그 52 passed 426.12 s 직접 읽음).
+- **재평가**: GPU0 04:22~05:02, m2000 · m1950 · m1900 · m1850 · m1800 × map64 · eval_pred · L6 · L9 (sonnet-code 94eacd8d 사본). 판정 코드보다 재평가 기동이 먼저였다 (rulecheck M05, lead 잘못 · 자료는 두 겹 통과 뒤에만 판정에 씀).
+- **단서**: 16 env 회전은 GPU1 사슬 값, 64 env 네 칸은 GPU0 재평가 값을 합친 판정이다. 같은 저장본 sha eba0fbdd · eval_seed 42 에서 사슬 대 재평가 map64 수치 74 개 중 28 개가 달랐고 eval_map_modes 소스 해시도 다르다 (ce4d25ea → ac739f3d). 원인 미확인, 재현성 시험 (같은 GPU 두 번 · GPU0 대 GPU1) 진행.
+- **A11**: CMP 영상 `C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26m\p2\rendered\CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4` (sha256 ad81b106…, 300 프레임). lead 1 차 판독은 1 초 간격 12 장뿐이라 판독표 미기입 (전 프레임 · A1 그림 미확인). A11 이 clear 여도 두 창 연속 MAINTAIN_FAIL 로 6 행 예상 (코드 미확인 예측). 어느 쪽이든 EX-35 연장 없음 · 정본 S-B10 m1500 유지.
+
 ## 10/27 04시대 · GATE-v2 (성과로 넘기는 단계 판정) 팀장 결정 일곱 · 꺼낼 때: 지금 (lead 04:2x 채팅에 제시)
 
 - **문서**: planner `fable-25a/inbox/jay/20261027-design/GATE-v2-performance-promotion.md` v0.2 a84b9175 + 고침 cc5ec6b2. verifier `VERIFY-verifier-GATE-v2-statistics.md` (막음 2) · analyst `VERIFY-analyst-GATE-v2.md` (막음 3) 를 반영했다. 새 문턱 없음, 현행 EX-35 판정 그대로.
