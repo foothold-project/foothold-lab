@@ -58,6 +58,27 @@ def tile_sha256(tile, kind: str, level: int, col: int) -> str:
     return h.hexdigest()
 
 
+SUPPORT_TOL_M = 0.05                 # 시작 점의 칸 윗면 높이가 출발 단 윗면에서 이 안이면 «발판 위»
+
+
+def start_support(side_table, names_by_col, num_rows, tiles, start_xy_rel) -> np.ndarray:
+    """env 별 시작 위치(칸 원점 기준 xy, spawn 은 칸 좌표 SPAWN_XY)가 칸의 발판 위(윗면 높이 >= 출발 단 윗면 - SUPPORT_TOL_M)인지 (n,) bool. 빔 밖 · 구덩이 위 시작은 False. 칸 기하는 SIDE_TABLE 에서 읽는다."""
+    cells = tiles_by_cell(side_table, names_by_col, num_rows)
+    top = float(sp._frame.__defaults__[0])
+    out, grids = [], {}
+
+    for t, rel in zip(tiles, np.asarray(start_xy_rel, dtype=float)):
+        key = (int(t["level"]), int(t["col"]))
+
+        if key not in grids:
+            grids[key] = sp.height_grid(cells[key].boxes)
+        x, y = sp.SPAWN_XY[0] + rel[0], sp.SPAWN_XY[1] + rel[1]
+        i, j = int(np.clip(x / sp.MASK_RES, 0, grids[key].shape[0] - 1)), int(np.clip(y / sp.MASK_RES, 0, grids[key].shape[1] - 1))
+        out.append(grids[key][i, j] >= top - SUPPORT_TOL_M)
+
+    return np.asarray(out, dtype=bool)
+
+
 def geometry_record(side_table, names_by_col, num_rows, used_cells, seed=SPARSE_GEOMETRY_SEED) -> dict:
     """used_cells: [(레벨, 열)] 평가가 쓰는 칸. 열별(칸별) 해시와 전체 해시."""
     cells = tiles_by_cell(side_table, names_by_col, num_rows)

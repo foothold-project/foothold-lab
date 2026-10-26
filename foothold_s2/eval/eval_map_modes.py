@@ -169,6 +169,7 @@ for mode in args.modes.split(","):
 
             _gen = raw.scene.terrain.cfg.terrain_generator
             _names = _cols.column_types({k: float(v.proportion) for k, v in _gen.sub_terrains.items()}, int(_gen.num_cols))
+            START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"], POS[0, :, :2].cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별)
             res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
@@ -236,10 +237,10 @@ for mode in args.modes.split(","):
 
             tile_len = float(raw.scene.terrain.cfg.terrain_generator.size[0])           # 칸 길이는 지형 cfg 에서
             kinds = [t["kind"] for t in res["fixed_terrain"]["tiles"]]
-            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy())
+            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy(), start_support=START_SUPPORT)
             os.makedirs(args.out, exist_ok=True)
             np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len,
-                     pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy())
+                     pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy(), start_support=START_SUPPORT)
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 

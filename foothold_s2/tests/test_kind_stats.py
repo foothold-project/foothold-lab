@@ -107,7 +107,7 @@ def test_eval_adds_the_columns_only_for_the_sparse_set_and_passes_the_height_arr
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     assert "if parser_sparse:                                                                # 새 키" in src
-    assert "kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy())" in src
+    assert "kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy(), start_support=START_SUPPORT)" in src and "start_support=START_SUPPORT)" in src
     row_keys = src.split('row = {"body_vx_integral_median_m"')[1].split("}\n")[0]
 
     assert "by_kind" not in row_keys
@@ -144,7 +144,7 @@ def test_a_pit_start_is_not_a_crossing_and_is_counted_as_a_start_off_the_footing
     pos[0, 1, 0] = K.start_edge_x() - 0.1                                # 1 번은 출발 단 끝 0.1 m 에서 시작
     out = K.by_kind(["balance_beams"] * 2, np.full((S, 2), 0.7), fwd, np.ones((S, 2), dtype=bool), DT, pos=pos)["balance_beams"]
 
-    assert out["crossed"] == 1 and out["fell"] == 1 and out["start_offbeam"] == 1 and out["start_edge"] == 1
+    assert out["crossed"] == 1 and out["fell"] == 1 and out["start_fell_within_1s"] == 1 and out["start_edge"] == 1 and "start_offbeam" not in out
 
 
 def test_the_start_platform_top_is_read_from_the_tile_geometry_and_not_hardcoded():
@@ -152,3 +152,30 @@ def test_the_start_platform_top_is_read_from_the_tile_geometry_and_not_hardcoded
 
     assert K.start_top_z() == 0.0 and K.start_edge_x() == ss.ZONE_X[0] - sparse_terrains.SPAWN_XY[0]
     assert "0.25" not in (ROOT / "foothold_s2/eval/kind_stats.py").read_text(encoding="utf-8").split("def by_kind")[1].split("def from_files")[0]
+
+
+def test_start_offbeam_comes_from_the_tile_geometry_and_is_the_same_for_every_model():
+    """같은 칸 기하에서 빔 위 시작 · 빔 밖 시작을 칸 높이로 가른다. 모델이 달라 결과(1 초 안에 떨어짐)가 달라도 start_offbeam 은 같다."""
+    from foothold_s2.eval import geometry_hash as G
+    from foothold_s2.terrains import sparse_terrains as sp
+
+    st = sp.SideTable()
+    tile = sp.build_tile("balance_beams", 0.05)
+    st.record("balance_beams", 0.05, tile)
+    st.calls = [("balance_beams", 0.05)]
+    grid = sp.height_grid(tile.boxes)
+    ys = np.arange(grid.shape[1]) * sp.MASK_RES
+    x_beam = sp.SPAWN_XY[0] + 3.0                                       # 출발 단 밖 x 에서 빔 위 · 빔 밖 y 를 찾는다
+    col = grid[int(x_beam / sp.MASK_RES)]
+    y_on, y_off = ys[np.argmax(col)], ys[np.argmin(col)]
+    names = ["balance_beams"]
+    tiles = [{"level": 0, "col": 0}] * 2
+    rel = np.array([[3.0, y_on - sp.SPAWN_XY[1]], [3.0, y_off - sp.SPAWN_XY[1]]])
+    sup = G.start_support(st, names, 1, tiles, rel)
+
+    assert sup.tolist() == [True, False]
+    pos = np.zeros((S, 2, 3))
+    pos[:, :, 2] = STAND
+    out = K.by_kind(["balance_beams"] * 2, np.full((S, 2), 0.7), np.zeros((S, 2)), np.ones((S, 2), dtype=bool), DT, pos=pos, start_support=sup)["balance_beams"]
+
+    assert out["start_offbeam"] == 1 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 시작은 센다
