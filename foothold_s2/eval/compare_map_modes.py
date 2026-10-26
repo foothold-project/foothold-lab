@@ -30,6 +30,11 @@ def fixed_key(result: dict):
     return tuple(f.get(k) for k in ("assignment_sha256", "rows", "cols", "num_envs"))
 
 
+def seed_key(result: dict):
+    """평가 시드(키 없으면 옛 기본 42)와 칸 기하 해시 전체(듬성 판만 있음, 없으면 None). 둘이 다르면 같은 조건 비교가 아니다."""
+    return result.get("eval_seed", 42), (result.get("terrain_geometry_sha256") or {}).get("total")
+
+
 def check_same_conditions(results: dict) -> None:
     names = list(results)
     first = results[names[0]]
@@ -44,6 +49,8 @@ def check_same_conditions(results: dict) -> None:
                 raise ValueError(f"{name} 의 {key} 가 {names[0]} 와 다르다: {r[key]!r} != {first[key]!r}")
         if fixed_key(r) != fixed_key(first):
             raise ValueError(f"{name} 의 fixed_terrain 이 {names[0]} 와 다르다: {fixed_key(r)!r} != {fixed_key(first)!r}")
+        if seed_key(r) != seed_key(first):
+            raise ValueError(f"{name} 의 (eval_seed, 기하 해시) 가 {names[0]} 와 다르다: {seed_key(r)!r} != {seed_key(first)!r}. 시드 반복은 같은 모델끼리 따로 묶는다")
         if set(r["terrain_hash"].values()) != hashes:
             raise ValueError(f"{name} 의 지형 해시가 {names[0]} 와 다르다")
         if list(r["modes"]) != list(first["modes"]) or any(list(r["modes"][m]) != list(first["modes"][m]) for m in first["modes"]):
@@ -66,6 +73,8 @@ def check_reference(results: dict, ref: dict) -> None:
         raise ValueError("참조 열의 fixed_terrain 이 다르다: %r != %r" % (fixed_key(ref), fixed_key(first)))
     if set(ref["terrain_hash"].values()) != set(first["terrain_hash"].values()):
         raise ValueError("참조 열의 지형 해시가 다르다")
+    if seed_key(ref) != seed_key(first):
+        raise ValueError("참조 열의 (eval_seed, 기하 해시) 가 다르다: %r != %r" % (seed_key(ref), seed_key(first)))
     if list(ref["modes"]["none"]) != list(first["modes"][next(iter(first["modes"]))]):
         raise ValueError("참조 열의 명령 목록이 다르다")
 

@@ -251,3 +251,28 @@ def test_eval_seed_is_an_argument_with_default_42_recorded_and_passed_by_the_scr
     assert '"eval_seed": args.eval_seed' in src and src.index("--eval-seed 는 0 이상") < src.index("AppLauncher(args).app")
     assert 'EVAL_SEED="${EVAL_SEED:-42}"' in sh and '--eval-seed "$EVAL_SEED"' in sh and '--eval-seed "${EVAL_SEED:-42}"' in smoke
     assert "seed=geometry_hash.SPARSE_GEOMETRY_SEED" in src and "eval_seed" not in src.split("seed=geometry_hash.SPARSE_GEOMETRY_SEED")[0].split("build_generator")[-1]     # 기하 시드는 평가 시드와 섞이지 않는다
+
+
+def _res(seed=None, total=None):
+    r = {"task": "t", "envs": 64, "steps": 750, "dr_off": True, "curriculum_off": True, "fixed_terrain": None, "terrain_hash": {"a/b": "h"}, "modes": {"eval_gt": {"fwd1.0": {}}}}
+
+    if seed is not None:
+        r["eval_seed"] = seed
+    if total is not None:
+        r["terrain_geometry_sha256"] = {"total": total}
+
+    return r
+
+
+def test_compare_refuses_runs_with_a_different_eval_seed_or_geometry_hash_and_treats_a_missing_seed_as_42():
+    import pytest
+
+    from foothold_s2.eval import compare_map_modes as C
+
+    C.check_same_conditions({"A": _res(42, "g1"), "B": _res(None, "g1")})                       # 키 없으면 42
+    with pytest.raises(ValueError, match="eval_seed"):
+        C.check_same_conditions({"A": _res(42, "g1"), "B": _res(43, "g1")})                     # 모델 A 42 · B 43
+    with pytest.raises(ValueError, match="기하 해시"):
+        C.check_same_conditions({"A": _res(42, "g1"), "B": _res(42, "g2")})
+    with pytest.raises(ValueError, match="기하 해시"):
+        C.check_same_conditions({"A": _res(42, "g1"), "B": _res(42, None)})                     # 시드 고정 전 듬성 판과 지금 판

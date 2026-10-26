@@ -11,7 +11,7 @@ KIT="$ROOT/foothold_s2/eval/run_kit.sh"
 TASK="${TASK:-FootholdS2-Go2-S2-23f-B-v0}"
 LEVELS="${LEVELS:-0 1 2 6}"
 MODES="${MODES:-eval_gt,probe_prop_only}"
-EVAL_SEED="${EVAL_SEED:-42}"                                # 시작 위치 · 정책 잡음 시드(기본 42 = 기존). 지형 기하 시드는 고정이라 안 바뀐다
+EVAL_SEED="${EVAL_SEED:-42}"                                # 시작 위치 · 관측 잡음 시드(기본 42 = 기존). 지형 기하 시드는 고정이라 안 바뀐다
 STEPS="${STEPS:-300}"                                      # 건넘(도착 단 6.5 m)은 fwd1.0 명령으로도 300 step(6 s)에는 불가능하다. 듬성 평가 권고 STEPS=900(18 s): fwd0.5 의 진짜 건넘이 13.6~14.4 s 라 750 은 빠듯하다
 mkdir -p "$OUT"
 git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
