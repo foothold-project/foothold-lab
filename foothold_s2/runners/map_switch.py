@@ -52,13 +52,25 @@ class OffEligibilityStats:
         self.starts = self.eligible_starts = self.off_starts = self.sparse_starts = 0
         self.off_by_level: dict[int, int] = {}
         self.off_ended = self.off_ended_on_sparse = 0
+        self.by_name: dict[str, dict] = {}                          # 지형 이름 -> {starts, eligible_starts, off_starts, by_level: {레벨: {starts, off_starts}}}
 
-    def add_draw(self, off, reset, eligible, levels) -> None:
+    def add_draw(self, off, reset, eligible, levels, names=None) -> None:
+        """names: env 별 지형 이름(길이 n 목록). 주면 이름 · 레벨별 분모(시작 수) · 분자(끔 시작 수)도 남긴다."""
         reset, off, eligible, levels = reset.bool().cpu(), off.bool().cpu(), eligible.bool().cpu(), levels.long().cpu()
         self.starts += int(reset.sum())
         self.eligible_starts += int((reset & eligible).sum())
         self.sparse_starts += int((reset & ~eligible).sum())
         self.off_starts += int((reset & off).sum())
+
+        if names is not None:
+            for i in reset.nonzero().flatten().tolist():
+                row = self.by_name.setdefault(names[i], {"starts": 0, "eligible_starts": 0, "off_starts": 0, "by_level": {}})
+                lv = row["by_level"].setdefault(str(int(levels[i])), {"starts": 0, "off_starts": 0})
+                row["starts"] += 1
+                lv["starts"] += 1
+                row["eligible_starts"] += int(eligible[i])
+                row["off_starts"] += int(off[i])
+                lv["off_starts"] += int(off[i])
 
         for lv in levels[reset & off].unique().tolist():
             self.off_by_level[int(lv)] = self.off_by_level.get(int(lv), 0) + int((reset & off & (levels == lv)).sum())
@@ -71,7 +83,9 @@ class OffEligibilityStats:
         if self.starts == 0 and self.off_ended == 0:
             return None
         out = {"starts": self.starts, "eligible_starts": self.eligible_starts, "sparse_starts": self.sparse_starts, "off_starts": self.off_starts,
-               "off_starts_by_level": {str(k): v for k, v in sorted(self.off_by_level.items())}, "off_ended": self.off_ended, "off_ended_on_sparse": self.off_ended_on_sparse}
+               "off_starts_by_level": {str(k): v for k, v in sorted(self.off_by_level.items())}, "off_ended": self.off_ended, "off_ended_on_sparse_prev_step": self.off_ended_on_sparse,
+               "ended_position_note": "끝난 에피소드의 위치는 마지막 물리 step 이전 값(근사): 칸 경계를 마지막 step 에 넘은 것은 못 잡는다. 진입 횟수가 아니라 하한 근사",
+               "by_name": self.by_name}
         self.reset()
 
         return out

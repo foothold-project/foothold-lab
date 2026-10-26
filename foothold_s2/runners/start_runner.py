@@ -870,7 +870,7 @@ class StartRunner(OnPolicyRunner):
             return off
         terrain = self._off_terrain()
         eligible = eligible_map_off(terrain.terrain_types.to(off.device), terrain.terrain_levels.to(off.device), names)
-        self.off_elig.add_draw(off & eligible, reset.to(off.device), eligible, terrain.terrain_levels.to(off.device))
+        self.off_elig.add_draw(off & eligible, reset.to(off.device), eligible, terrain.terrain_levels.to(off.device), [names[int(c)] for c in terrain.terrain_types.cpu().tolist()])
 
         return off & eligible
 

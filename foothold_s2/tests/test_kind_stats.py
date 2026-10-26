@@ -84,3 +84,9 @@ def test_eval_levels_the_start_yaw_for_the_sparse_set_and_records_the_hashes_of_
 
     assert "st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0]" in src and "시작 yaw 를 0 으로 맞추지 못했다" in src and "SOURCE_SHA256" in src
     assert 'status --short -- foothold_s2' in sh and sh.index("exit 3") < sh.index("KIT=") or sh.index("exit 3") < sh.index("for LV in")
+
+
+def test_source_hashes_cover_every_foothold_module_that_was_loaded_by_the_end():
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+
+    assert 'startswith("foothold_s2")' in src and src.index('res["source_sha256"] = {m.__name__') > src.index("MAPMODE_DONE") - 5000 and src.index('res["source_sha256"] = {m.__name__') < src.index("MAPMODE_DONE")

@@ -154,7 +154,7 @@ def test_off_episodes_that_ended_on_a_sparse_tile_are_counted_from_the_position(
     rows = [json.loads(ln) for ln in (tmp_path / "map_switch.jsonl").read_text(encoding="utf-8").splitlines()]
     st = [x["off_eligibility"] for x in rows if x.get("off_eligibility")]
 
-    assert sum(s["off_ended"] for s in st) > 0 and sum(s["off_ended_on_sparse"] for s in st) == sum(s["off_ended"] for s in st)
+    assert sum(s["off_ended"] for s in st) > 0 and sum(s["off_ended_on_sparse_prev_step"] for s in st) == sum(s["off_ended"] for s in st)
     env2 = TerrEnv(dict(columns.FULL), columns.FULL_COLS)
     env2.terrain.terrain_types[:] = NAMES50.index("pyramid_stairs")
     env2.xy[:, 0] = NAMES50.index("pyramid_stairs") * 10.0
@@ -163,7 +163,7 @@ def test_off_episodes_that_ended_on_a_sparse_tile_are_counted_from_the_position(
     r2.learn(2)
     rows = [json.loads(ln) for ln in (tmp_path / "b" / "map_switch.jsonl").read_text(encoding="utf-8").splitlines()]
 
-    assert sum(x["off_eligibility"]["off_ended_on_sparse"] for x in rows if x.get("off_eligibility")) == 0
+    assert sum(x["off_eligibility"]["off_ended_on_sparse_prev_step"] for x in rows if x.get("off_eligibility")) == 0
 
 
 def test_an_env_without_terrain_tools_keeps_every_cell_eligible_and_records_nothing():
@@ -172,3 +172,34 @@ def test_an_env_without_terrain_tools_keeps_every_cell_eligible_and_records_noth
 
     assert r.off_elig is None if hasattr(r, "off_elig") else True
     assert not [e for e in r.map_ratio_events if e["kind"] == "off_eligibility"]
+
+
+def test_per_name_and_level_denominators_and_numerators_are_recorded_and_the_end_position_is_labelled_approximate(tmp_path):
+    env = TerrEnv(dict(columns.FULL), columns.FULL_COLS)
+    r = _runner(env, 0.5, log_dir=str(tmp_path))
+    r.learn(4)
+    rows = [json.loads(ln) for ln in (tmp_path / "map_switch.jsonl").read_text(encoding="utf-8").splitlines()]
+    st = [x["off_eligibility"] for x in rows if x.get("off_eligibility")]
+    by = {}
+
+    for s in st:
+        assert "마지막 물리 step 이전" in s["ended_position_note"] and "off_ended_on_sparse" not in s
+        for name, v in s["by_name"].items():
+            t = by.setdefault(name, [0, 0, 0])
+            t[0] += v["starts"]
+            t[1] += v["eligible_starts"]
+            t[2] += v["off_starts"]
+            assert v["starts"] == sum(x["starts"] for x in v["by_level"].values()) and v["off_starts"] == sum(x["off_starts"] for x in v["by_level"].values())
+
+    assert by and sum(v[0] for v in by.values()) == sum(s["starts"] for s in st)
+    assert all(v[2] == 0 and v[1] == 0 for k, v in by.items() if k in ("gaps", "stepping_stones_low", "stepping_stones_high", "balance_beams", "stepping_beams"))     # 듬성 이름: 허용 0 · 끔 0
+    assert any(v[2] > 0 for k, v in by.items() if k in ("pyramid_stairs", "flat", "boxes")) and by["gaps"][0] > 0                                                      # 분모(시작 수)는 듬성도 남는다
+    assert {lv for s in st for v in s["by_name"].values() for lv in v["by_level"]} <= {str(i) for i in range(10)}
+
+
+def test_ended_stats_stay_zero_for_the_boundary_case_documented_as_an_approximation():
+    st = MS.OffEligibilityStats()
+    st.add_ended(torch.tensor([True]), torch.tensor([False]))                     # 마지막 step 직전 위치가 허용 칸이면 센다(경계를 마지막 step 에 넘은 종료는 못 센다: 알려진 근사)
+    out = st.take()
+
+    assert out["off_ended"] == 1 and out["off_ended_on_sparse_prev_step"] == 0 and "근사" in out["ended_position_note"]
