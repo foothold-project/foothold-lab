@@ -42,10 +42,11 @@ from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, S
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import start_contract_bad
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
-from foothold_s2.runners.map_switch import MapSwitchRecorder, draw_map_off, make_generator
+from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
+from foothold_s2.terrains import columns
 
 CKPT_FORMAT = "foothold-start/1"
 MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크포인트(G0 · G1 · EX-09 · EX-10)에는 이 칸이 없다: 그때의 동작이 이 값이다
@@ -287,7 +288,7 @@ class StartRunner(OnPolicyRunner):
         n = self.env.num_envs
         self.pstate = self.perception.init_state(n, self.device)
         self.pstate.use_gt = self.adasmpl.sample(n, self.device)
-        self.pstate.map_off = draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen)
+        self.pstate.map_off = self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), torch.ones(n, dtype=torch.bool, device=self.device))
         print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
         self._report_first_sources()
         ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
@@ -344,6 +345,7 @@ class StartRunner(OnPolicyRunner):
                         contract_bad |= bad_now
                     if trace is not None:
                         trace.pre_step(actions)
+                    prev_xy = self._robot_xy_for_off()                        # M-T6: env.step 이 끝난 에피소드를 reset 해 버리기 전 위치(끝난 에피소드가 놓였던 칸을 알려고)
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
                     if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
@@ -368,13 +370,14 @@ class StartRunner(OnPolicyRunner):
                     cur_episode_length += 1
                     done_ids = (dones > 0).nonzero(as_tuple=False).flatten()
                     if done_ids.numel():
+                        self._off_episode_ended(done_ids, prev_xy)
                         self.adasmpl.add(cur_reward_sum[done_ids][~self.pstate.map_off[done_ids].bool()])   # M-T2: 지도를 끈 에피소드의 보상은 CV(p_gt)에서 뺀다(reset_envs 가 map_off 를 새로 뽑기 전 값으로 분류)
                         rewbuffer.extend(cur_reward_sum[done_ids].cpu().tolist())
                         lenbuffer.extend(cur_episode_length[done_ids].cpu().tolist())
                         cur_reward_sum[done_ids] = 0
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
-                                               draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen) if self.p_map_off > 0.0 else None)
+                                               self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
                 self._mark("2_rollout", it)
                 collection_time = time.time() - start
                 start = time.time()
@@ -490,6 +493,8 @@ class StartRunner(OnPolicyRunner):
                     loss_dict[f"map_switch/{g}_{k}"] = v
         if self.log_dir is not None and not self.disable_logs:
             row = {"it": it, "p_off": self.p_map_off, "unavailable": getattr(self, "map_switch_unavailable", None), **s}
+            if getattr(self, "off_elig", None) is not None:
+                row["off_eligibility"] = self.off_elig.take()
             with open(os.path.join(self.log_dir, "map_switch.jsonl"), "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(_nan_to_none(row), ensure_ascii=False) + "\n")
 
@@ -826,6 +831,65 @@ class StartRunner(OnPolicyRunner):
         self.map_ratio_events.append(ev)
         print("EX33_FIRST_SOURCES gt=%d recon=%d off=%d envs=%d force_gt=%s p=%.4f resumed=%s" % (ev["gt"], ev["recon"], ev["off"], ev["envs"], ev["force_gt"], ev["p"], ev["resumed"]), flush=True)
         self._flush_map_ratio_events()
+
+    # ------------------------------------------------------------------ M-T6: 끔 대상 지형
+    def _off_terrain(self):
+        """끔 대상 지형을 정할 수 있는 지형 도구(지형 importer 의 열 배정 · 생성기 이름)가 있으면 그것, 없으면 None(= 모든 칸 허용, 지금 코드와 같다)."""
+        u = getattr(self.env, "unwrapped", self.env)
+        scene = getattr(u, "scene", None)
+        terrain = getattr(scene, "terrain", None) if scene is not None else None
+
+        if terrain is None or not hasattr(terrain, "terrain_types") or not hasattr(terrain, "terrain_levels"):
+            return None
+        gen = getattr(getattr(terrain, "cfg", None), "terrain_generator", None)
+
+        if gen is None or not hasattr(gen, "sub_terrains") or not hasattr(gen, "num_cols"):
+            return None
+
+        return terrain
+
+    def _off_column_names(self):
+        """열 번호 -> 지형 이름(Isaac 고정 배치 식 `columns.column_types`). 처음 한 번 만들고, 모르는 이름이 있으면 거절한다. 지형 도구가 없으면 None."""
+        if not hasattr(self, "_off_names_cache"):
+            terrain = self._off_terrain()
+            self._off_names_cache = None
+            if terrain is not None:
+                gen = terrain.cfg.terrain_generator
+                names = columns.column_types({k: float(v.proportion) for k, v in gen.sub_terrains.items()}, int(gen.num_cols))
+                self._off_names_cache = check_column_names(names)
+                self.map_ratio_events.append({"kind": "off_eligibility", "eligible": sorted(ELIGIBLE_NAMES), "sparse": sorted(SPARSE_NAMES),
+                                              "num_cols": int(gen.num_cols), "column_counts": {n: self._off_names_cache.count(n) for n in sorted(set(self._off_names_cache))}})
+            self.off_elig = OffEligibilityStats() if self._off_names_cache is not None else None
+
+        return self._off_names_cache
+
+    def _restrict_map_off(self, off: torch.Tensor, reset: torch.Tensor) -> torch.Tensor:
+        """뽑기(n 개 전부, 난수열 소비는 그대로) 뒤에 «새 에피소드가 놓인 칸이 허용 지형인 env» 만 남긴다. 읽는 때는 env.step 이 끝난 뒤라 칸은 새 에피소드 값이다."""
+        names = self._off_column_names() if self.p_map_off > 0.0 else None
+        if names is None:
+            return off
+        terrain = self._off_terrain()
+        eligible = eligible_map_off(terrain.terrain_types.to(off.device), terrain.terrain_levels.to(off.device), names)
+        self.off_elig.add_draw(off & eligible, reset.to(off.device), eligible, terrain.terrain_levels.to(off.device))
+
+        return off & eligible
+
+    def _robot_xy_for_off(self):
+        if self.p_map_off <= 0.0 or self._off_column_names() is None:
+            return None
+        u = getattr(self.env, "unwrapped", self.env)
+
+        return u.scene["robot"].data.root_pos_w[:, :2].detach().clone()
+
+    def _off_episode_ended(self, done_ids: torch.Tensor, prev_xy) -> None:
+        """끝난 끔 에피소드가 듬성 칸 위에 있었는지(위치 -> 가장 가까운 칸 중심) 센다. 끔이 허용 칸에서만 시작하니 0 이 아니면 이동해 들어간 것이다."""
+        if prev_xy is None or self.off_elig is None:
+            return
+        names = self._off_column_names()
+        origins = self._off_terrain().terrain_origins[..., :2].to(prev_xy.device)
+        cols = nearest_tile_cols(prev_xy[done_ids], origins)
+        on_sparse = torch.tensor([n in SPARSE_NAMES for n in names], dtype=torch.bool, device=cols.device)[cols]
+        self.off_elig.add_ended(self.pstate.map_off[done_ids].to(cols.device), on_sparse)
 
     def _flush_map_ratio_events(self) -> None:
         """사건 목록을 manifest(다음 저장 경계에 파일로) 와 map_ratio_events.jsonl 에 낸다. 여러 번 불러도 같은 줄을 두 번 쓰지 않는다."""

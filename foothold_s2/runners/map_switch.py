@@ -9,6 +9,73 @@ from __future__ import annotations
 
 import torch
 
+from foothold_s2.terrains import columns
+
+# M-T6 끔 대상 지형(DESIGN-MAPRATIO v0.6 3.2): 새 에피소드가 놓인 칸의 지형 이름이 연속 7 종 또는 flat 이면 허용, 듬성 5 종은 불허. 레벨은 보지 않는다
+ELIGIBLE_NAMES = frozenset(columns.CONTINUOUS) | {"flat"}
+SPARSE_NAMES = frozenset(columns.SPARSE) - {"flat"}
+
+
+def check_column_names(names) -> list[str]:
+    """생성기의 열 이름 목록을 확인한다. 모르는 이름이 있으면 기동 거절(허용 여부를 정할 수 없다)."""
+    names = list(names)
+    unknown = sorted({n for n in names if n not in ELIGIBLE_NAMES and n not in SPARSE_NAMES})
+
+    if unknown:
+        raise ValueError(f"끔 대상 지형을 정할 수 없는 열 이름: {unknown} (허용 {sorted(ELIGIBLE_NAMES)}, 불허 {sorted(SPARSE_NAMES)})")
+
+    return names
+
+
+def eligible_map_off(terrain_types, terrain_levels, names) -> torch.Tensor:
+    """(n,) bool: env 의 현재 칸(열 번호 terrain_types)이 «끔을 허용하는 지형» 인가. 지형 이름으로만 정한다. terrain_levels 는 받지만 쓰지 않는다(레벨 조건 없음)."""
+    ok = torch.tensor([n in ELIGIBLE_NAMES for n in check_column_names(names)], dtype=torch.bool, device=terrain_types.device)
+
+    return ok[terrain_types.long()]
+
+
+def nearest_tile_cols(xy, origins_xy) -> torch.Tensor:
+    """위치 (k, 2) -> 가장 가까운 칸 중심의 열 번호 (k,). origins_xy (rows, cols, 2) 는 칸 중심들이라 가장 가까운 중심 = 그 위치를 품은 칸."""
+    rows, cols, _ = origins_xy.shape
+    d = torch.cdist(xy.float(), origins_xy.reshape(rows * cols, 2).float().to(xy.device))
+
+    return d.argmin(dim=1) % cols
+
+
+class OffEligibilityStats:
+    """한 update 동안의 끔 대상 지형 통계(M-T6 기록): 새로 시작한 에피소드 수 · 허용 수 · 끔 시작 수(레벨별) · 끝난 끔 에피소드 중 듬성 칸에 있던 수."""
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.starts = self.eligible_starts = self.off_starts = self.sparse_starts = 0
+        self.off_by_level: dict[int, int] = {}
+        self.off_ended = self.off_ended_on_sparse = 0
+
+    def add_draw(self, off, reset, eligible, levels) -> None:
+        reset, off, eligible, levels = reset.bool().cpu(), off.bool().cpu(), eligible.bool().cpu(), levels.long().cpu()
+        self.starts += int(reset.sum())
+        self.eligible_starts += int((reset & eligible).sum())
+        self.sparse_starts += int((reset & ~eligible).sum())
+        self.off_starts += int((reset & off).sum())
+
+        for lv in levels[reset & off].unique().tolist():
+            self.off_by_level[int(lv)] = self.off_by_level.get(int(lv), 0) + int((reset & off & (levels == lv)).sum())
+
+    def add_ended(self, off_ended, on_sparse) -> None:
+        self.off_ended += int(off_ended.bool().sum())
+        self.off_ended_on_sparse += int((off_ended.bool() & on_sparse.bool()).sum())
+
+    def take(self) -> dict | None:
+        if self.starts == 0 and self.off_ended == 0:
+            return None
+        out = {"starts": self.starts, "eligible_starts": self.eligible_starts, "sparse_starts": self.sparse_starts, "off_starts": self.off_starts,
+               "off_starts_by_level": {str(k): v for k, v in sorted(self.off_by_level.items())}, "off_ended": self.off_ended, "off_ended_on_sparse": self.off_ended_on_sparse}
+        self.reset()
+
+        return out
+
 
 def make_generator(device, seed: int) -> torch.Generator:
     """전용 난수열. 전역 난수(환경 · PPO)를 건드리지 않아 p_off 를 바꿔도 다른 곳의 난수열이 같다."""
