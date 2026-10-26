@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from foothold_s2.eval import ex35_gate as X
+from foothold_s2.eval import ex35_window_axes as AX
 from foothold_s2.eval import judge_gate as G
 from foothold_s2.eval import judge_stats as S
 
@@ -70,15 +71,44 @@ def required_files(d, base=False) -> list:
     for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
         out.append("turn16_%s/probe_result.json" % mode)                    # 평가가 도는 중이면 npz 는 있어도 이 파일은 아직 없다
 
-        for c in CASES8:
+        for c in tuple(CASES8) + AX.FWD:                                   # 여섯 + 걸으며 돌기 둘 + 전진 걸음 둘(A1 · A7 · A8 의 입력)
             out.append("turn16_%s/arrays_%s.npz" % (mode, c))
+
+    return out
+
+
+def content_missing(d) -> list:
+    """파일은 있어도 안에 명령 칸이 빠진 것(예: L9 에 fwd0.5 가 없음)을 결측으로 센다."""
+    d = Path(d)
+    out = []
+    want = {"map64/map_modes.json": ("eval_gt", "probe_prop_only"), "map64_eval_pred/map_modes.json": ("eval_pred",),
+            "hardlevel/L6/map_modes.json": ("eval_gt", "probe_prop_only"), "hardlevel/L9/map_modes.json": ("eval_gt", "probe_prop_only")}
+
+    for rel, modes in want.items():
+        p = d / rel
+
+        if not p.is_file():
+            continue
+
+        try:
+            j = json.loads(p.read_text(encoding="utf-8"))["modes"]
+        except Exception:                                                                       # noqa: BLE001
+            out.append(rel + ": 읽을 수 없음")
+            continue
+
+        cmds = S.MAP64_CMDS if rel.startswith("map64") else ("fwd1.0", "fwd0.5")
+
+        for m in modes:
+            for c in cmds:
+                if c not in (j.get(m) or {}):
+                    out.append("%s: %s/%s 없음" % (rel, m, c))
 
     return out
 
 
 def missing_inputs(d) -> list:
     d = Path(d)
-    miss = [f for f in required_files(d) if not (d / f).is_file()]
+    miss = [f for f in required_files(d) if not (d / f).is_file()] + content_missing(d)
     lst = d / "inputs_list.txt"
 
     if lst.is_file():                                                  # 사슬이 적은 MISSING 줄도 결측으로 센다(파일 존재 검사와 겹치면 한 번만)
@@ -367,6 +397,15 @@ def read_a11(path, ckpt_sha) -> dict:
     if ckpt_sha and d["checkpoint_sha256"] != ckpt_sha:
         return {"state": "unfilled", "why": "판독 저장본 sha256 이 이번 저장본과 다름(이전 판독 재사용 금지)"}
 
+    for k in ("cmp_video", "solo_video"):
+        vp = Path(d[k]["path"])
+
+        if not vp.is_file():
+            return {"state": "unfilled", "why": "%s 영상 파일이 없다: %s" % (k, d[k]["path"])}
+
+        if _sha_file(vp) != d[k]["sha256"]:
+            return {"state": "unfilled", "why": "%s 영상 sha256 이 파일과 다르다" % k}
+
     yes = [k for k in A11_ITEMS if items[k] == "있음"]
 
     return {"state": "flagged" if yes else "clear", "yes": yes, "reader": d["reader"], "time": d["time"]}
@@ -403,10 +442,10 @@ def truth_table(prev_state, latest_state, ctx) -> dict:
         return {"row": 1, "branch": "HOLD_NO_DATA", "action": "판정 불가 = 연장 불가 · 보고(통과 아님): %s" % why}
 
     if ctx["stop"]:
-        return {"row": 2, "branch": "STOP", "action": "저장본 보존 · 보고"}
+        return {"row": 2, "branch": "STOP", "action": "저장본 보존 · 보고 (STOP 상태 또는 비유한값 NaN · inf)"}
 
     if not ctx["a12_ok"]:
-        return {"row": 3, "branch": "STOP", "action": "재현 불일치 · 보고(코드 · 자료 문제)"}
+        return {"row": 3, "branch": "STOP", "action": "재현 불일치 또는 독립 재계산 미측 · 보고(코드 · 자료 문제)"}
 
     if ctx["a11"]["state"] != "clear":
         return {"row": 4, "branch": "STOP", "action": "A11 판독표 「있음」 또는 미기입 · 멈춤 · 보고(%s)" % (ctx["a11"].get("why") or "있음 %s" % ctx["a11"].get("yes"))}
@@ -510,8 +549,29 @@ def axes_rows(b, base, w=WIN) -> list:
         if c in pt and c in bpt:
             rows.append(_row("A10", "eval_pred 16 env %s Q (기록)" % c, pt[c]["Q"], bpt[c]["Q"], None, ">="))
 
-    for a, why in (("A1", "기록 축"), ("A7", "경고 축"), ("A8", "경고 축"), ("A9", "경고 축")):
-        rows.append(dict(axis=a, metric="미계산 (%s, 이 소비기는 계산하지 않음)" % why, value=None, baseline=None, limit=None, op="", ok=None))
+    return rows
+
+
+def extra_rows(e) -> list:
+    """A1 · A7 · A8 · A9 줄(axes_extra 의 결과). A1 은 기록, A7 · A8 · A9 는 경고(멈춤 조건 아님)."""
+    rows = []
+
+    for mode, nm in (("eval_gt", "켬"), ("probe_prop_only", "가림")):
+        cur, base = e["a7a8"][mode], e["base_a7a8"][mode]
+        rows += [_row("A7", "%s 회전 6 기울기 평균 중앙값 (deg, 경고)" % nm, cur["rot_tilt_mean_med"], base["rot_tilt_mean_med"], AX.A7_WARN["rot_mean_med"], "<="),
+                 _row("A7", "%s 회전 6 기울기 p95 중앙값 (deg, 경고)" % nm, cur["rot_tilt_p95_med"], base["rot_tilt_p95_med"], AX.A7_WARN["rot_p95_med"], "<="),
+                 _row("A8", "%s 회전 6 접촉 링크 속도 평균 중앙값 (m/s, 경고)" % nm, cur["rot_slip_mean_med"], base["rot_slip_mean_med"], AX.A8_WARN["rot_mean_med"], "<="),
+                 _row("A8", "%s 회전 6 접촉 링크 속도 p95 중앙값 (m/s, 경고)" % nm, cur["rot_slip_p95_med"], base["rot_slip_p95_med"], AX.A8_WARN["rot_p95_med"], "<=")]
+
+        for c in AX.FWD:
+            rows += [_row("A7", "%s %s 기울기 평균 (deg, 경고)" % (nm, c), cur["fwd"][c]["tilt_mean_deg"], base["fwd"][c]["tilt_mean_deg"], base["fwd"][c]["tilt_mean_deg"] + AX.A7_WARN["fwd_plus_deg"], "<="),
+                     _row("A8", "%s %s 접촉 링크 속도 평균 (m/s, 경고)" % (nm, c), cur["fwd"][c]["slip_mean"], base["fwd"][c]["slip_mean"], base["fwd"][c]["slip_mean"] * AX.A8_WARN["fwd_mult"], "<="),
+                     _row("A1", "%s %s 대각 쌍 위상 (deg, 기록)" % (nm, c), e["a1"][mode][c]["deg"], None, None, ">="),
+                     _row("A1", "%s %s 위상 집중도 R (기록)" % (nm, c), e["a1"][mode][c]["R"], None, None, ">=")]
+
+    for t, v in e["a9"]["tags"].items():
+        lim = AX.A9_WARN.get(t)
+        rows.append(_row("A9", "%s 창 평균 (경고)" % t, v["mean"], None, lim[1] if lim else None, "<=" if (lim and lim[0] == ">") else ">="))
 
     return rows
 
@@ -533,14 +593,37 @@ def prev_window_problem(n_l, prev_window):
     return ""
 
 
-def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None, require_map64_recompute=False) -> dict:
+def axes_extra(d, n, train_dir, base_dir) -> dict:
+    """A1 · A7 · A8 · A9 와 필수 원자료 유한성. 자료가 없으면 AxisInputError (호출자가 HOLD_NO_DATA 로 올린다)."""
+    out = {"nonfinite": AX.finite_scan(d, tuple(CASES8) + AX.FWD), "a7a8": {}, "a1": {}, "base_a7a8": {}}
+
+    for mode in AX.MODES:
+        out["a7a8"][mode] = AX.tilt_slip_axes(d, mode)
+        out["base_a7a8"][mode] = AX.tilt_slip_axes(base_dir, mode)
+        out["a1"][mode] = AX.gait_phase_axis(d, mode)
+
+    if not train_dir:
+        raise AX.AxisInputError("A9 학습 곡선: --train-dir(학습 폴더, tfevents) 가 없다")
+
+    out["a9"] = AX.curve_axis(train_dir, n)
+    out["warnings"] = []
+
+    for mode in AX.MODES:
+        out["warnings"] += [dict(w, mode=mode) for w in AX.a7_a8_warnings(out["a7a8"][mode], out["base_a7a8"][mode])]
+
+    out["warnings"] += [dict(w, axis="A9") for w in out["a9"]["warnings"]]
+
+    return out
+
+
+def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None, allow_map64_unmeasured=False, train_dir=None) -> dict:
     ld, pd = Path(latest_dir), Path(prev_dir)
     n_l, n_p = _iter_of(ld), _iter_of(pd)
     miss = {"latest": missing_inputs(ld), "prev": missing_inputs(pd)}
     base = load_base(base_dir, hard_dir)
     base_hard = {L: (h.get("assignment_sha256") or _json(Path(hard_dir) / ("sb10_" + L) / "map64" / "map_modes.json").get("fixed_terrain", {}).get("assignment_sha256")) for L, h in base["ext"]["hard"].items()}
     res = {"latest_iter": n_l, "prev_iter": n_p, "missing_inputs": miss, "thresholds": {"window": WIN, "ex35_extra": X.EX35_EXTRA}, "base": {"dir": str(base_dir), "hard": str(hard_dir)}}
-    out_states, bundles, read_fail = {}, {}, {"latest": None, "prev": None}
+    out_states, bundles, read_fail, ex = {}, {}, {"latest": None, "prev": None}, {}
 
     for tag, d, n in (("prev", pd, n_p), ("latest", ld, n_l)):
         if miss[tag]:                                                            # 평가가 도는 중이거나 반쯤 쓰인 폴더: 읽지 않고 판정 불가
@@ -551,9 +634,10 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
         try:
             b = load_ckpt(d)
             bundles[tag] = b
+            ex[tag] = axes_extra(d, n, train_dir, base_dir)
             v = ckpt_state(b, base, n - 1500)
             out_states[tag] = {"state": v.state, "reasons": v.reasons, "iter": n}
-        except Exception as e:                                                                  # noqa: BLE001  (읽기 실패는 판정 불가로, 예외로 죽지 않는다)
+        except Exception as e:                                                                  # noqa: BLE001  (읽기 실패 · 축 자료 없음은 판정 불가로, 예외로 죽지 않는다)
             bundles.setdefault(tag, None)
             read_fail[tag] = "%s: %s" % (type(e).__name__, e)
             out_states[tag] = {"state": G.HOLD_NO_DATA, "reasons": [G._cond("read_failed", read_fail[tag])], "iter": n}
@@ -576,12 +660,21 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
     tr = trend(lq, prev_window) if lq else {"has_prev": False, "delta": {}, "improved": None, "no_improve_streak": 0, "flat": False}
     prob = prev_window_problem(n_l, prev_window)
     a12_ok = bool(a12["latest"].get("ok") and a12["prev"].get("ok"))
+    a12_note = ""
 
-    if require_map64_recompute:
+    if not allow_map64_unmeasured:                                                  # 카드 A12: 64 env 거리 · 생존의 독립 재계산. 환경별 자료가 없으면 통과가 아니다
+        a12_note = "64 env 거리 · 생존의 독립 재계산이 없다(환경별 자료 없음): A12 미측 = 통과 아님"
         a12_ok = False
 
+    nonfin = {t: (ex[t]["nonfinite"] if t in ex else []) for t in ("latest", "prev")}
+    nf_curve = {t: (ex[t]["a9"]["nonfinite_tags"] if t in ex else []) for t in ("latest", "prev")}
+    nonfinite_any = any(nonfin.values()) or any(nf_curve.values())
+    res["nonfinite"] = {"raw": nonfin, "curve": nf_curve}
+    res["a12_note"] = a12_note
+    res["extra_axes"] = {t: ex.get(t) for t in ("latest", "prev")}
+    res["warnings"] = {t: (ex[t]["warnings"] if t in ex else []) for t in ("latest", "prev")}
     ctx = {"input_missing": miss["latest"] + miss["prev"], "same_sha": bool(shal and shal == shap), "iter_increasing": n_l > n_p >= 0,
-           "stop": G.STOP in (ls, ps), "a12_ok": a12_ok, "a11": a11d, "trend_missing": prob,
+           "stop": G.STOP in (ls, ps) or nonfinite_any, "a12_ok": a12_ok, "a11": a11d, "trend_missing": prob,
            "at_ceiling": n_l >= WIN["ceiling_iter"], "flat": tr["flat"]}
     res["context"] = {k: v for k, v in ctx.items() if k != "a11"}
     res["a11"] = a11d
@@ -591,7 +684,8 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
     res["no_improve_streak"] = tr["no_improve_streak"]
     res["decision"] = truth_table(ps, ls, ctx)
     res["branch"] = res["decision"]["branch"]
-    res["axes"] = {"latest": axes_rows(bl, base) if bl and ls != G.HOLD_NO_DATA else [], "prev": axes_rows(bp, base) if bp and ps != G.HOLD_NO_DATA else []}
+    res["axes"] = {"latest": axes_rows(bl, base) + (extra_rows(ex["latest"]) if "latest" in ex else []) if bl and ls != G.HOLD_NO_DATA else [],
+                   "prev": axes_rows(bp, base) + (extra_rows(ex["prev"]) if "prev" in ex else []) if bp and ps != G.HOLD_NO_DATA else []}
 
     return res
 
@@ -638,11 +732,12 @@ def main(argv=None) -> int:
     ap.add_argument("--hard-dir", default=HARD_DEFAULT)
     ap.add_argument("--a11", default=None, help="lead 가 채운 판독 JSON")
     ap.add_argument("--prev-window", default=None, help="이전 창 경계의 출력 json(추세 · 평평 셈). 최신이 m2250 이상이면 필수(없으면 HOLD_NO_DATA)")
-    ap.add_argument("--require-map64-recompute", action="store_true", help="64 env 거리에 독립 식이 없다는 사실을 A12 불일치로 친다(기본: 표에 적기만)")
+    ap.add_argument("--allow-map64-unmeasured", action="store_true", help="64 env 거리 · 생존에 독립 재계산이 없어도 A12 를 막지 않는다(기본: 막음. 카드 A12 예외를 승인받았을 때만)")
+    ap.add_argument("--train-dir", default=None, help="학습 폴더(tfevents). A9 학습 곡선 계산에 필요, 없으면 HOLD_NO_DATA")
     ap.add_argument("--out-prefix", required=True, help="<prefix>.json 과 <prefix>.md 를 쓴다")
     a = ap.parse_args(argv)
     pw = json.loads(Path(a.prev_window).read_text(encoding="utf-8")) if a.prev_window else None
-    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw, require_map64_recompute=a.require_map64_recompute)
+    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw, allow_map64_unmeasured=a.allow_map64_unmeasured, train_dir=a.train_dir)
     Path(a.out_prefix + ".json").write_text(json.dumps(r, ensure_ascii=False, indent=1, sort_keys=True, default=str), encoding="utf-8")
     Path(a.out_prefix + ".md").write_text(to_markdown(r), encoding="utf-8")
     print(json.dumps({"branch": r["branch"], "row": r["decision"]["row"], "states": {k: v["state"] for k, v in r["states"].items()}}, ensure_ascii=False))

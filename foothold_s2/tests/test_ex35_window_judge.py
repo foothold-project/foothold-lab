@@ -31,6 +31,41 @@ def sha_of(d):
 BASE_HARD = {L: json.loads((HARD / ("sb10_" + L) / "map64" / "map_modes.json").read_text(encoding="utf-8"))["fixed_terrain"]["assignment_sha256"] for L in ("L6", "L9")}
 
 
+_TRAIN = {}
+
+
+def make_train_dir(root, nan_tag=None):
+    """창 경계 평가용 가짜 학습 폴더: 모든 step 1..3050 에 여섯 태그 tfevents(경고선 안쪽 값)."""
+    from torch.utils.tensorboard import SummaryWriter
+
+    d = Path(root) / ("train_" + str(nan_tag).replace("/", "_"))
+    w = SummaryWriter(str(d))
+    vals = {"Loss/value_function": 0.03, "Loss/kl_probe/ppo_mean": 0.02, "Loss/entropy": 9.0, "Policy/mean_noise_std": 0.5,
+            "Episode_Termination/bad_orientation": 0.1, "Train/mean_reward": 16.0}
+
+    for step in range(1, 3051, 5):
+        for t, v in vals.items():
+            w.add_scalar(t, float("nan") if t == nan_tag else v, step)
+
+    w.close()
+
+    return str(d)
+
+
+def J(latest, prev, **kw):
+    """judge_window 호출 기본값: 학습 폴더를 주고, 64 env 독립 재계산 부재는 시험에서 따로 막는다."""
+    if "train_dir" not in kw:
+        if "t" not in _TRAIN:
+            import tempfile
+            _TRAIN["t"] = make_train_dir(tempfile.mkdtemp())
+
+        kw["train_dir"] = _TRAIN["t"]
+
+    kw.setdefault("allow_map64_unmeasured", True)
+
+    return W.judge_window(latest, prev, **kw)
+
+
 def make_ckpt(root, n, tag="a"):
     """부모 m1500 원자료를 m<N>/ 모양으로 복사한다(턴 폴더에 walk 를 합치고, eval_pred 16 env 의 walk 는 켬 것을 복사한 시험용 자리 채움)."""
     d = Path(root) / ("m%d" % n)
@@ -76,8 +111,16 @@ A11_OK = {"reader": "lead", "time": "2026-10-27 03:00", "checkpoint_sha256": "b"
 
 
 def a11_file(tmp_path, sha, **kw):
+    import hashlib
     p = tmp_path / "a11.json"
-    p.write_text(json.dumps(dict(A11_OK, checkpoint_sha256=sha, **kw)), encoding="utf-8")
+    vids = {}
+
+    for k, nm in (("cmp_video", "cmp.mp4"), ("solo_video", "solo.mp4")):
+        v = tmp_path / nm
+        v.write_bytes((nm * 10).encode())
+        vids[k] = {"path": v.as_posix(), "sha256": hashlib.sha256(v.read_bytes()).hexdigest()}
+
+    p.write_text(json.dumps(dict(A11_OK, checkpoint_sha256=sha, **dict(vids, **kw))), encoding="utf-8")
 
     return p
 
@@ -95,7 +138,7 @@ def run(pair, **kw):
     if a11 == "default":
         a11 = a11_file(tmp, sha_of(latest))
 
-    return W.judge_window(latest, prev, a11=a11, **kw)
+    return J(latest, prev, a11=a11, **kw)
 
 
 def test_parent_inputs_reproduce_the_baseline_and_continue(pair):
@@ -125,7 +168,7 @@ def test_same_checkpoint_sha_or_non_increasing_iteration_is_row_1(pair):
     (latest / "checkpoint_sha256.txt").write_text((prev / "checkpoint_sha256.txt").read_text(encoding="utf-8"), encoding="utf-8")
     r = run(pair, a11=a11_file(tmp, sha_of(prev)))
     assert r["branch"] == "HOLD_NO_DATA"
-    r = W.judge_window(prev, latest, a11=a11_file(tmp, sha_of(prev)))                                  # 최신 · 직전을 바꿔 넣으면 회차가 줄어든다
+    r = J(prev, latest, a11=a11_file(tmp, sha_of(prev)))                                  # 최신 · 직전을 바꿔 넣으면 회차가 줄어든다
     assert r["branch"] == "HOLD_NO_DATA"
 
 
@@ -145,7 +188,7 @@ def test_a11_missing_or_flagged_or_old_checkpoint_stops(pair):
 def test_ceiling_m3000_stops(tmp_path):
     prev, latest = make_ckpt(tmp_path, 2950, "a"), make_ckpt(tmp_path, 3000, "b")
     pw = {"latest_iter": 2750, "a5_q": {"left": 0.4, "right": 0.4}, "no_improve_streak": 0}
-    r = W.judge_window(latest, prev, a11=a11_file(tmp_path, sha_of(latest)), prev_window=pw)
+    r = J(latest, prev, a11=a11_file(tmp_path, sha_of(latest)), prev_window=pw)
     assert r["decision"]["row"] == 5 and r["branch"] == "STOP"
 
 
@@ -259,11 +302,11 @@ def test_unreadable_folder_is_hold_no_data_with_the_reason(pair):
 def test_prev_window_is_required_from_m2250_and_must_match(tmp_path):
     prev, latest = make_ckpt(tmp_path, 2200, "a"), make_ckpt(tmp_path, 2250, "b")
     a = a11_file(tmp_path, sha_of(latest))
-    r = W.judge_window(latest, prev, a11=a)
+    r = J(latest, prev, a11=a)
     assert r["branch"] == "HOLD_NO_DATA" and "--prev-window" in r["decision"]["action"]
-    r = W.judge_window(latest, prev, a11=a, prev_window={"latest_iter": 1750, "a5_q": {"left": 0.4, "right": 0.4}})
+    r = J(latest, prev, a11=a, prev_window={"latest_iter": 1750, "a5_q": {"left": 0.4, "right": 0.4}})
     assert r["branch"] == "HOLD_NO_DATA" and "m1750" in r["decision"]["action"]                        # m2000 의 것이 필요(2250 - 250)
-    r = W.judge_window(latest, prev, a11=a, prev_window={"latest_iter": 2000, "a5_q": {"left": 0.4, "right": 0.4}, "no_improve_streak": 1})
+    r = J(latest, prev, a11=a, prev_window={"latest_iter": 2000, "a5_q": {"left": 0.4, "right": 0.4}, "no_improve_streak": 1})
     assert r["branch"] != "HOLD_NO_DATA" and r["trend"]["has_prev"] is True
     assert W.prev_window_problem(2250, {"latest_iter": 2000, "a5_q": {"left": 0.4}}) == ""
     assert W.prev_window_problem(2000, None) == "" and W.prev_window_problem(2250, None) != "" and W.prev_window_problem(2250, {"latest_iter": 2250, "a5_q": {"left": 1}}) != ""
@@ -309,10 +352,12 @@ def test_truth_table_eleven_rows_one_by_one():
 def test_cli_writes_json_and_markdown(pair, tmp_path):
     prev, latest, tmp = pair
     a = a11_file(tmp, sha_of(latest))
-    assert W.main(["--latest-dir", str(latest), "--prev-dir", str(prev), "--a11", str(a), "--out-prefix", str(tmp_path / "win")]) == 0
+    J(latest, prev, a11=a)                                                                              # 가짜 학습 폴더를 먼저 만든다
+    assert W.main(["--latest-dir", str(latest), "--prev-dir", str(prev), "--a11", str(a), "--out-prefix", str(tmp_path / "win"),
+                   "--train-dir", _TRAIN["t"], "--allow-map64-unmeasured"]) == 0
     d = json.loads((tmp_path / "win.json").read_text(encoding="utf-8"))
     md = (tmp_path / "win.md").read_text(encoding="utf-8")
-    assert d["branch"] == "CONTINUE" and "| A2 |" in md and "미계산" in md
+    assert d["branch"] == "CONTINUE" and "| A2 |" in md and "| A7 |" in md and "| A9 |" in md
 
 
 def test_walk_kept_floor_14_is_a_maintain_condition(pair):
@@ -324,3 +369,45 @@ def test_walk_kept_floor_14_is_a_maintain_condition(pair):
     assert [c["cond"] for c in W.window_extra_broken(b, base)] == ["ex35w_walk_kept"]
     b["turn"]["probe_prop_only"]["walk_turn_left"] = dict(w, kept=14)
     assert W.window_extra_broken(b, base) == []
+
+
+def test_default_blocks_when_map64_has_no_independent_recompute(pair):
+    prev, latest, tmp = pair
+    r = W.judge_window(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=_TRAIN.get("t") or make_train_dir(tmp))
+    assert r["decision"]["row"] == 3 and r["branch"] == "STOP" and "미측" in r["a12_note"]
+
+
+def test_missing_train_dir_or_forward_npz_or_hardlevel_command_is_hold_not_pass(pair):
+    prev, latest, tmp = pair
+    a = a11_file(tmp, sha_of(latest))
+    r = W.judge_window(latest, prev, a11=a, allow_map64_unmeasured=True)
+    assert r["branch"] == "HOLD_NO_DATA" and "A9" in str(r["read_failed"])
+    (latest / "turn16_eval_gt" / "arrays_fwd0.5.npz").unlink()
+    assert "turn16_eval_gt/arrays_fwd0.5.npz" in run(pair)["missing_inputs"]["latest"] and run(pair)["branch"] == "HOLD_NO_DATA"
+    (latest / "turn16_eval_gt" / "arrays_fwd0.5.npz").write_bytes((prev / "turn16_eval_gt" / "arrays_fwd0.5.npz").read_bytes())
+    _edit_map(latest / "hardlevel/L9/map_modes.json", lambda j: j["modes"]["eval_gt"].pop("fwd0.5"))
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and any("fwd0.5" in m for m in r["missing_inputs"]["latest"])
+
+
+def test_nonfinite_raw_array_or_curve_is_stop_not_continue(pair, tmp_path):
+    import numpy as np
+    prev, latest, tmp = pair
+    f = latest / "turn16_eval_gt" / "arrays_fwd1.0.npz"
+    z = dict(np.load(f))
+    k = next(k for k in z if "quat" in k)
+    z[k] = z[k].astype(float).copy()
+    z[k].flat[3] = float("nan")
+    np.savez(f, **z)
+    r = run(pair)
+    assert r["branch"] == "STOP" and r["nonfinite"]["raw"]["latest"]
+    f.write_bytes((prev / "turn16_eval_gt" / "arrays_fwd1.0.npz").read_bytes())
+    r = run(pair, train_dir=make_train_dir(tmp_path / "nan", nan_tag="Loss/entropy"))
+    assert r["branch"] == "STOP" and r["nonfinite"]["curve"]["latest"]
+
+
+def test_a11_video_file_must_exist_and_match_sha(pair):
+    prev, latest, tmp = pair
+    a = a11_file(tmp, sha_of(latest), cmp_video={"path": (tmp / "cmp.mp4").as_posix(), "sha256": "0" * 64})
+    r = J(latest, prev, a11=a)
+    assert r["decision"]["row"] == 4 and "sha256" in r["decision"]["action"]
