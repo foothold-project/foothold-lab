@@ -6,6 +6,14 @@
 
 # 팀장 논의 안건
 
+## 10/27 04시대 · GATE-v2 (성과로 넘기는 단계 판정) 팀장 결정 일곱 · 꺼낼 때: 지금 (lead 04:2x 채팅에 제시)
+
+- **문서**: planner `fable-25a/inbox/jay/20261027-design/GATE-v2-performance-promotion.md` v0.2 a84b9175 + 고침 cc5ec6b2. verifier `VERIFY-verifier-GATE-v2-statistics.md` (막음 2) · analyst `VERIFY-analyst-GATE-v2.md` (막음 3) 를 반영했다. 새 문턱 없음, 현행 EX-35 판정 그대로.
+- **lead 가 이 턴 원자료에서 잰 값**: right_then_left m1500 Q 0.783716, 부모 7 저장본 μ−σ 0.241735 → 허용 하락 69.16 %. fwd_then_left 0.762808 → 0.211979 → 72.21 %. EX-35 m2000 GT kept: left_then_right 13 · fwd_then_left 13 · right_then_left 14 · indep 15 · 15 · fwd_then_right 16. t(df 6) 에서 −√2.5 누적확률 0.082465.
+- **다른 세션 보고만 본 값 (lead 미재측)**: 84 NPZ 전수 · 세 창 통과 · 부트스트랩 모형값 1.9~33 % (가정 · 사건 정의가 달라 현장 오경보율 구간 아님).
+- **결정 일곱과 lead 권고**: (1) k 5 · t 1.0σ 를 다음 판 시작 전 「잠정」 등록 · (2) 기준선 이름 (a) m1500 능력 유지 / (b) 최근 평균 유지 / (c) (b) 를 사슬 전체 고정 → lead 권고 (c), 단 69~72 % 하락 허용이 남으니 그것이 걸리면 (a) · (3) 마지막 저장본 단독 검사 (kept ≥ 14 · 운영 중단선) 넣음 · (4) 적용은 첫 새 판의 첫 창부터, EX-35 자료는 검증으로 재사용 안 함 · (5) 전환 자동 기동 원장 한 줄은 팀장 결정 · (6) m2000 되돌림 판은 env 별 재평가 뒤로 보류 · (7) 가림 열은 이번엔 기록만.
+- **동시 진행**: sonnet-code X27j 94eacd8d (lead 깨끗한 사본 isaac311 재실행 test_ex35_window_judge.py 28 passed) · GPU0 짧은 실제 Kit 시험 뒤 m1800~m2000 env 별 재평가 의뢰 (빈 GPU 평가, 승인 불필요 범위).
+
 ## 10/27 최종 · EX-35 결과 기록
 
 - **EX-35 최종 판정**: [RESULT-EX35](../20261026-experiments/RESULT-EX35-1027.md)는 학습 m2000 종료(rc 0)와 m1950·m2000의 `MAINTAIN_FAIL` 두 건을 원자료에서 생성했다. 카드 §4b.6 선행 1·4행의 필수 칸·A11 판독이 미완이라 창은 `HOLD`. 6행 `REVERT`는 조건부다. 정본 `S-B10 m1500` 유지, EX-35 연장 없음. 독립 좌회전 Q는 부모보다 높아 전환 좌회전과 구별한다. 영상·보행 위상·저장본 추세 해석은 analyst·runner 분석 대기. GPU0 학습 작업은 02:48:13부터 종료, 다음 학습은 팀장 승인 대기. GPU1 평가 사슬의 복원 지도 경로는 별도 진행 중.
