@@ -14,6 +14,12 @@ MODES="${MODES:-eval_gt,probe_prop_only}"
 mkdir -p "$OUT"
 git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
 git -C "$ROOT" status --short > "$OUT/git_status.txt"
+# 출처 섞임 막기(SONNET-X26k): foothold_s2 안에 바뀐 파일 · 새 파일이 있으면 거절한다(변이 · 작업 중 편집이 평가에 섞이지 않게). 실제 읽은 파일 해시는 각 map_modes.json 의 source_sha256 에 남는다
+DIRTY="$(git -C "$ROOT" status --short -- foothold_s2)"
+if [ -n "$DIRTY" ]; then
+  echo "거절: foothold_s2 에 커밋 안 된 변경이 있다(평가 출처가 섞인다):" | tee "$OUT/REFUSED_DIRTY.txt"; echo "$DIRTY" | tee -a "$OUT/REFUSED_DIRTY.txt"
+  exit 3
+fi
 sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
 : > "$OUT/rc.txt"
 for LV in $LEVELS; do

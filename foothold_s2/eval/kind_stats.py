@@ -17,14 +17,16 @@ def by_kind(kinds, vx, fwd, alive, dt: float, tile_len_m: float, window_s: float
     vx, fwd, alive = np.asarray(vx, dtype=float), np.asarray(fwd, dtype=float), np.asarray(alive, dtype=bool)
     steps = min(int(round(window_s / dt)), fwd.shape[0])
     dist = (vx * alive).sum(0) * dt
-    crossed = fwd[:steps].max(0) >= tile_len_m / 2.0
+    fwd_alive = np.where(alive[:steps], fwd[:steps], -np.inf)                       # 쓰러져 reset 된 뒤의 순간이동 위치는 세지 않는다
+    fwd_max = fwd_alive.max(0)
+    crossed = fwd_max >= tile_len_m / 2.0
     kinds = np.asarray(list(kinds))
     out = {}
 
     for k in dict.fromkeys(kinds.tolist()):
         m = kinds == k
         out[k] = {"envs": int(m.sum()), "alive_at_end": int(alive[-1][m].sum()), "body_vx_integral_median_m": float(np.median(dist[m])),
-                  "crossed": int(crossed[m].sum()), "crossed_rule": f"{window_s:g} s 안에 칸 원점에서 전진 거리 >= 칸 길이 {tile_len_m:g} m 의 절반"}
+                  "crossed": int(crossed[m].sum()), "fwd_max_median_m": float(np.median(np.where(np.isfinite(fwd_max[m]), fwd_max[m], 0.0))), "crossed_rule": f"{window_s:g} s 안에 칸 원점에서 전진 거리 >= 칸 길이 {tile_len_m:g} m 의 절반"}
 
     return out
 

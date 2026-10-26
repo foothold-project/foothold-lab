@@ -104,7 +104,12 @@ dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
 CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
 S = args.steps
-res = {"task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "terrain_hash": {}, "modes": {}}
+import foothold_s2.eval.fixed_terrain as _ft, foothold_s2.terrains.sparse_terrains as _sp                      # 실제 읽은 파일의 해시(출처 섞임 확인용)
+SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters)}
+if parser_sparse:
+    from foothold_s2.eval import kind_stats as _ks
+    SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
+res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "terrain_hash": {}, "modes": {}}
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -142,6 +147,18 @@ for mode in args.modes.split(","):
 
             if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
                 raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
+        if parser_sparse:                                                                # 듬성 띠는 +x 방향이다. reset 이 뽑는 무작위 yaw(+-3.14)로는 «전진» 이 띠 밖을 향한다: 시작 yaw 를 0 으로 맞춘다(위치 · 관절은 그대로)
+            st = robot.data.root_state_w.clone()
+            st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)               # 쿼터니언 w x y z
+            st[:, 7:] = 0.0
+            robot.write_root_pose_to_sim(st[:, :7])
+            robot.write_root_velocity_to_sim(st[:, 7:])
+            q = robot.data.root_quat_w
+            yaw0 = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+
+            if yaw0.abs().max().item() > 1.0e-3:
+                raise RuntimeError("듬성 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
+            res["start_yaw_override"] = 0.0
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:
@@ -162,6 +179,9 @@ for mode in args.modes.split(","):
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
         FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
+        POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
+        YAW = torch.zeros(S, env.num_envs, device=dev)
+        DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
 
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
@@ -171,6 +191,10 @@ for mode in args.modes.split(","):
             AL[k] = alive
             VX[k] = robot.data.root_lin_vel_b[:, 0]
             FW[k] = robot.data.root_pos_w[:, 0] - raw.scene.env_origins[:, 0]
+            POS[k] = robot.data.root_pos_w - raw.scene.env_origins
+            q = robot.data.root_quat_w
+            YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+            DN[k] = dones.bool()
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
             TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
@@ -203,7 +227,8 @@ for mode in args.modes.split(","):
             kinds = [t["kind"] for t in res["fixed_terrain"]["tiles"]]
             row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, tile_len)
             os.makedirs(args.out, exist_ok=True)
-            np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len)
+            np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len,
+                     pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy())
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
