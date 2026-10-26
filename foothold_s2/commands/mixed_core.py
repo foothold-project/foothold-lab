@@ -52,6 +52,19 @@ class CommandParams:
     start_vmax: float = 1.5
     start_spin_threshold: float = 0.3
     start_spin_wz: float = 1.2
+    # S2a (EX-35, DESIGN-NEXT v0.3 3.2): START 원문에서 전진 5 %p 를 떼어 걸으며 돌기를 넣는다. 재추출 4 s · vy 0.
+    # 전진 직진 vx U[0.3, 1.5] wz 0 75 % / 걸으며 돌기 vx U[0.3, 0.8] wz 부호 x U[0.2, 0.5] 2.5 % + 2.5 % / 제자리 회전 vx 0 wz U[-1.2, 1.2] 10 % + 10 % (START 그대로). 정지 0.
+    walkturn_mode: bool = False
+    wt_p_forward: float = 0.75
+    wt_p_walkturn_each: float = 0.025
+    wt_p_spin_each: float = 0.10
+    wt_fwd_vmin: float = 0.3
+    wt_fwd_vmax: float = 1.5
+    wt_walk_vmin: float = 0.3
+    wt_walk_vmax: float = 0.8
+    wt_wz_min: float = 0.2
+    wt_wz_max: float = 0.5
+    wt_spin_wz: float = 1.2
 
 
 def make_generator(seed, device="cpu"):
@@ -118,6 +131,8 @@ def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None):
     순서(14 §3.2): 정지(p_stand) > 제자리 회전(1,000 회 이후 p_spin) > heading(플래그 확률) > 자유 wz.
     wz 는 heading env 에서 «매 스텝» `apply_heading` 이 덮어쓰므로 여기서는 자유 wz 를 담아 둔다.
     """
+    if params.walkturn_mode:
+        return resample_walkturn(gen, n, params)
     if params.start_mode:
         return resample_start(gen, n, params)
 
@@ -150,6 +165,60 @@ def resample_start(gen, n, params):
     return {"cmd": cmd, "stand": false, "spin": spin, "heading": false, "psi_star": torch.zeros(n, device=cmd.device)}
 
 
+WT_SLOTS = ("forward", "walk_left", "walk_right", "spin_left", "spin_right")
+
+
+def walkturn_slots(gen, n, params):
+    """S2a 슬롯 번호 (n,) long: WT_SLOTS 의 위치. 한 번 뽑은 u 하나로 누적 구간에 넣는다(구간 합이 1 이어야 한다, 어긋나면 거절)."""
+    total = params.wt_p_forward + 2.0 * params.wt_p_walkturn_each + 2.0 * params.wt_p_spin_each
+
+    if abs(total - 1.0) > 1e-9:
+        raise ValueError(f"S2a 슬롯 비율의 합이 1 이 아니다: {total}")
+    edges = torch.tensor([params.wt_p_forward, params.wt_p_walkturn_each, params.wt_p_walkturn_each, params.wt_p_spin_each, params.wt_p_spin_each], device=gen.device).cumsum(0)
+    u = _u(gen, (n,))
+
+    return torch.clamp(torch.searchsorted(edges, u, right=True), max=len(WT_SLOTS) - 1)
+
+
+def resample_walkturn(gen, n, params):
+    """S2a 명령 표집기(EX-35). 반환 형식은 `resample_start` 와 같다(spin = 제자리 회전 슬롯)."""
+    slot = walkturn_slots(gen, n, params)
+    fwd_vx = _u(gen, (n,), params.wt_fwd_vmin, params.wt_fwd_vmax)
+    walk_vx = _u(gen, (n,), params.wt_walk_vmin, params.wt_walk_vmax)
+    walk_wz = _u(gen, (n,), params.wt_wz_min, params.wt_wz_max)
+    spin_wz = _u(gen, (n,), -params.wt_spin_wz, params.wt_spin_wz)
+    zeros = torch.zeros(n, device=fwd_vx.device)
+    walk = (slot == 1) | (slot == 2)
+    spin = (slot == 3) | (slot == 4)
+    vx = torch.where(slot == 0, fwd_vx, torch.where(walk, walk_vx, zeros))
+    sign = torch.where(slot == 1, 1.0, -1.0)
+    wz = torch.where(walk, sign * walk_wz, torch.where(spin, torch.where(slot == 3, spin_wz.abs(), -spin_wz.abs()), zeros))
+    false = torch.zeros(n, dtype=torch.bool, device=vx.device)
+
+    return {"cmd": torch.stack([vx, zeros, wz], dim=1), "stand": false, "spin": spin, "heading": false, "psi_star": torch.zeros(n, device=vx.device), "slot": slot}
+
+
+# ---------------------------------------------------------------- 명령 시계 흩기 (EX-35)
+
+
+def scatter_clock(gen, n, resample_s=4.0):
+    """새 프로세스의 첫 reset 직후 env 마다 다음 명령 교체까지 남은 시간 U(0, resample_s). 모든 env 가 같은 시각에 교체되는 것을 푼다."""
+    return _u(gen, (n,), 0.0, resample_s)
+
+
+def scatter_receipt(time_left, resample_s=4.0, max_bin_frac=0.30):
+    """영수증: 범위 · 유한 · 1 s 구간 집중도(가장 많이 든 구간의 비율, 균등이면 1/구간 수). 어느 하나 어기면 ok False."""
+    t = torch.as_tensor(time_left, dtype=torch.float32).detach().cpu()
+    finite = bool(torch.isfinite(t).all())
+    lo, hi = (float(t.min()), float(t.max())) if finite and t.numel() else (float("nan"), float("nan"))
+    in_range = finite and lo >= 0.0 and hi <= resample_s
+    bins = int(math.ceil(resample_s))
+    counts = torch.histc(t.clamp(0.0, resample_s), bins=bins, min=0.0, max=float(bins)) if finite else torch.zeros(bins)
+    frac = float(counts.max() / max(t.numel(), 1))
+    return {"n": int(t.numel()), "min": lo, "max": hi, "finite": finite, "in_range": bool(in_range), "bin_counts_1s": [int(c) for c in counts.tolist()],
+            "max_bin_frac": frac, "max_bin_frac_limit": max_bin_frac, "ok": bool(in_range and frac <= max_bin_frac)}
+
+
 # ---------------------------------------------------------------- 새 과제 표식 (JUDGE-SPEC v0.2 5 절)
 
 
@@ -161,7 +230,7 @@ def new_task_mask(cmd, params, eps=1.0e-6):
     cmd = torch.as_tensor(cmd)
     n = cmd.shape[0]
 
-    if not params.start_mode:
+    if not (params.start_mode or params.walkturn_mode):
         return torch.zeros(n, dtype=torch.bool, device=cmd.device)
 
     return (cmd[:, 0] > eps) & (cmd[:, 2].abs() > eps)

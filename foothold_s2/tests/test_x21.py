@@ -153,4 +153,4 @@ def test_x22_agent_turns_off_only_the_contract_and_registration():
 def test_runner_skips_the_contract_check_when_contract_is_none():
     src = _src("foothold_s2/runners/start_runner.py")
 
-    assert 'self.pcfg["contract"] == "start"' in src                                                                  # None 이면 검사 · 명령 term 요구가 모두 꺼진다
+    assert 'contract_bad_fn(self.pcfg["contract"])' in src and 'if contract_fn is not None else None' in src                                                                  # None 이면 검사 · 명령 term 요구가 모두 꺼진다

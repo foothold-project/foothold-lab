@@ -12,7 +12,7 @@ import os
 import sys
 from datetime import datetime
 
-from foothold_s2.sol23f_contract import BUDGET_VARIANTS, FORCE_GT, MAP_INPUT, resume_parent, segment_dir, validate_launch
+from foothold_s2.sol23f_contract import BUDGET_VARIANTS, FORCE_GT, MAP_INPUT, budget_iterations, command_settings, is_extended_resume, resume_budget, resume_parent, segment_dir, validate_launch
 
 # tensordict 의 C 확장은 Kit 이 뜬 뒤 처음 불러오면 이 기기에서 access violation 으로 죽는다(10/20 start_gate 실측 두 번).
 __import__("tensordict")  # Kit 전에 C 확장 선적재
@@ -42,6 +42,8 @@ parser.add_argument("--max-wall-s", type=float, default=86400.0, help="24시간 
 parser.add_argument("--stop-file", type=str, default=None)
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
+parser.add_argument("--command_mode", choices=["start", "s2a"], default=None, help="SB 전용: 명령 표집기. start = START 원문(기본), s2a = 걸으며 돌기 2.5 %% + 2.5 %%(계약 walkturn_v1)")
+parser.add_argument("--clock_scatter", choices=["on", "off"], default=None, help="SB 전용: 새 프로세스 첫 reset 직후 env 마다 다음 명령 교체 시점을 U(0, 4 s) 로 흩음(기본 off)")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
@@ -96,7 +98,7 @@ def main(env_cfg, agent_cfg):
     if args_cli.variant in BUDGET_VARIANTS:
         agent_cfg.seed = 42
         env_cfg.scene.num_envs = 3072
-        agent_cfg.max_iterations = 10 if args_cli.smoke_updates == 10 else 1501
+        agent_cfg.max_iterations = budget_iterations(args_cli)               # 10 · 1501, SB 이어 가기 확장 판만 준 값
         if args_cli.smoke_updates == 10:
             agent_cfg.run_name = f"{agent_cfg.run_name}_smoke10"
         if agent_cfg.num_steps_per_env != 24:
@@ -122,6 +124,13 @@ def main(env_cfg, agent_cfg):
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
     env_cfg.log_dir = log_dir
+    if args_cli.variant == "SB":                                          # EX-35: 명령 표집기 · 시계 흩기는 gym.make 앞에서 명령 term cfg 에 쓴다
+        cmd_set = command_settings(args_cli)
+        cmd_cfg = env_cfg.commands.base_velocity
+        if cmd_set["command_mode"] == "s2a":
+            cmd_cfg.params = {**dict(cmd_cfg.params or {}), "walkturn_mode": True}
+        cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
+    budget = resume_budget(agent_cfg.max_iterations, parent["completed_update"]) if is_extended_resume(args_cli) else None
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
@@ -180,6 +189,9 @@ def main(env_cfg, agent_cfg):
         raise ValueError("SOL-23f map_input/force_gt must match variant")
     if (args_cli.variant == "SB") != (float(pc.get("p_map_off", 0.0)) > 0.0):
         raise ValueError("p_map_off must be > 0 for SB and 0 for the other variants")
+    cmd_set = command_settings(args_cli) if args_cli.variant == "SB" else None
+    if cmd_set is not None and (cmd_set["command_mode"] != "start" or cmd_set["clock_scatter"]):
+        pc["contract"] = cmd_set["command_contract"]
     train_cfg["perception"] = pc
     runner_class = {"B": BRunner, "SB": SBRunner}.get(args_cli.variant, TopDownRunner)
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
@@ -196,7 +208,7 @@ def main(env_cfg, agent_cfg):
         runner.load(resume_path)
         physical_reset = runner.reset_segment_physics()
         with open(os.path.join(log_dir, "resume_parent.json"), "w", encoding="utf-8") as stream:
-            json.dump({**parent, "physical_resume_identical": False,
+            json.dump({**parent, "resume_budget": budget, "physical_resume_identical": False,
                        "physical_reset": physical_reset,
                        "note": "new simulator and episode reset; terrain origins restored independently"}, stream, ensure_ascii=False, indent=2)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
@@ -209,7 +221,8 @@ def main(env_cfg, agent_cfg):
              "run_kind": ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main",
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
-             "resume_parent": parent, "terrain_judge": tlm.judge_settings(env_cfg),
+             "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None,
+             "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,

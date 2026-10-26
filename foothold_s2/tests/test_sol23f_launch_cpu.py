@@ -41,7 +41,7 @@ def test_b_smoke_10_is_separate_mode():
         with pytest.raises(ValueError):
             validate_launch(args, now=NOW)
     source = (Path(__file__).resolve().parents[2] / "foothold_s2/scripts/train_sol23f_common.py").read_text(encoding="utf-8")
-    assert '10 if args_cli.smoke_updates == 10 else 1501' in source
+    assert 'agent_cfg.max_iterations = budget_iterations(args_cli)' in source
     assert '"B_kit_smoke_10_updates"' in source
     assert 'agent_cfg.seed = 42' in source and 'env_cfg.scene.num_envs = 3072' in source
     assert 'agent_cfg.num_steps_per_env != 24' in source

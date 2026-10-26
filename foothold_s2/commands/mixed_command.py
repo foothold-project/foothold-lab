@@ -70,6 +70,9 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.exposure = mc.ExposureLog()
+        self.slot_counts = torch.zeros(len(mc.WT_SLOTS), dtype=torch.long, device=dev)      # S2a 슬롯별 재추출 수(update 마다 runner 가 꺼냄)
+        self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
+        self._stepped = False
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
         self.metrics["error_vel_yaw"] = torch.zeros(n, device=dev)
 
@@ -149,6 +152,7 @@ class MixedVelocityCommand(CommandTerm):
         self._reset_episode_state(ids)
 
         extras = super().reset(env_ids)
+        self._maybe_scatter_clock(ids)
         counts = torch.bincount(self.mode_ids, minlength=len(mc.MODES)).float() / self.num_envs
 
         for name, frac in zip(mc.MODES, counts.tolist()):
@@ -166,6 +170,25 @@ class MixedVelocityCommand(CommandTerm):
 
         return extras
 
+    def _maybe_scatter_clock(self, ids):
+        """EX-35: 전체 reset 직후 env 마다 다음 교체 시점을 U(0, resample_s) 로 흩는다. 첫 env.step 전까지의 전체 reset 마다 다시 흩어(영수증은 마지막 것):
+        RslRlVecEnvWrapper 의 첫 reset 과 이어 가기의 reset_segment_physics 의 reset 이 둘 다 시계를 4 s 로 되돌리므로 «한 번만» 이면 학습 직전 시계는 흩어져 있지 않다."""
+        if not self.cfg.clock_scatter or self._stepped or len(ids) != self.num_envs:
+            return
+        period = float(self.cfg.resampling_time_range[1])
+        self.time_left[:] = mc.scatter_clock(self.gen, self.num_envs, period).to(self.device)
+        self.scatter_receipt = mc.scatter_receipt(self.time_left, period)
+
+    def take_slot_counts(self):
+        """이번 update 동안의 S2a 슬롯 재추출 수와 비율(없거나 S2a 가 아니면 None)."""
+        if not self.params.walkturn_mode:
+            return None
+        c = self.slot_counts.cpu().tolist()
+        self.slot_counts.zero_()
+        total = sum(c)
+
+        return None if total == 0 else {"counts": dict(zip(mc.WT_SLOTS, c)), "frac": {k: v / total for k, v in zip(mc.WT_SLOTS, c)}}
+
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
 
@@ -180,6 +203,8 @@ class MixedVelocityCommand(CommandTerm):
             self.heading[free] = out["heading"].to(self.device)
             self.psi_star[free] = out["psi_star"].to(self.device)
             self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
+            if "slot" in out:
+                self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(mc.WT_SLOTS))
 
             if self.cfg.fixed_cmd is not None:
                 self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
@@ -197,6 +222,7 @@ class MixedVelocityCommand(CommandTerm):
             self.heading[flag] = False
 
     def _update_command(self):
+        self._stepped = True                                  # 흩기는 학습(첫 step) 시작 뒤에는 다시 하지 않는다
         yaw = self._yaw()
         pos = self.robot.data.root_pos_w[:, :2]
         dt = self._env.step_dt
@@ -245,5 +271,7 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     """`(terrain, env_ids) -> bool (m,)` 이 칸에서는 반드시 깃발 방식. dynamic_flags 일 때만 쓴다."""
     fixed_cmd: tuple = None
     """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
+    clock_scatter: bool = False
+    """EX-35: 새 프로세스의 첫 reset 직후 env 마다 다음 교체 시점을 U(0, resampling 주기) 로 흩는다."""
     params: dict = {}
     """`mixed_core.CommandParams` 필드 덮어쓰기."""

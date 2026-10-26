@@ -16,6 +16,43 @@ FORCE_GT = {"B": True, "TopDown": False, "SB": True}
 CKPT_VARIANT = {"B": "B_friction_only", "TopDown": "START_TopDown", "SB": "SB_map_switch"}
 
 
+EXTEND_MAX_ITERATIONS = 3001                                    # 이어 가기 판 총 회차 상한(부모 회차 + N 의 N 은 resume_budget 이 따로 1..1500 으로 잰다)
+COMMAND_MODES = ("start", "s2a")
+COMMAND_CONTRACT = {"start": "start", "s2a": "walkturn_v1"}
+
+
+def is_extended_resume(args) -> bool:
+    """이어 가기 판에서 총 회차(--max_iterations)를 1501 보다 크게 주었나: SB 의 smoke 가 아닌 이어 가기일 때만 참."""
+    mi = getattr(args, "max_iterations", None)
+
+    return args.variant == "SB" and bool(getattr(args, "resume_from", None)) and getattr(args, "smoke_updates", None) is None and mi is not None and mi > 1501
+
+
+def budget_iterations(args) -> int:
+    """BUDGET 판(B · SB)이 쓸 총 회차: smoke 10, 이어 가기 확장 판은 준 값, 그 밖에는 1501(기존 계약 그대로)."""
+    if getattr(args, "smoke_updates", None) == 10:
+        return 10
+
+    return int(args.max_iterations) if is_extended_resume(args) else 1501
+
+
+def resume_budget(max_iterations: int, parent_completed_update: int, limit: int = 1500) -> dict:
+    """이어 가기 확장 판의 회차 영수증: 부모가 끝낸 회차 + 남은 N 회 = 총 회차. N 은 1..limit 이어야 한다."""
+    remaining = int(max_iterations) - (int(parent_completed_update) + 1)
+
+    if not 1 <= remaining <= limit:
+        raise ValueError(f"max_iterations {max_iterations} 은 부모 회차 {parent_completed_update} 뒤 남은 {remaining} 회를 만든다(허용 1..{limit})")
+
+    return {"parent_completed_update": int(parent_completed_update), "max_iterations": int(max_iterations), "remaining": remaining}
+
+
+def command_settings(args) -> dict:
+    """명령 처치 설정(manifest): 표집기 이름 · 계약 이름 · 흩기."""
+    mode = getattr(args, "command_mode", None) or "start"
+
+    return {"command_mode": mode, "command_contract": COMMAND_CONTRACT[mode], "clock_scatter": getattr(args, "clock_scatter", None) == "on"}
+
+
 def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
     if args.variant not in TASKS or args.task != TASKS[args.variant]:
         raise ValueError("variant and task do not match")
@@ -38,6 +75,13 @@ def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
     p_off = getattr(args, "p_map_off", None)
     if args.variant != "SB" and p_off is not None:
         raise ValueError("--p_map_off is for the SB variant only")
+    cm, cs = getattr(args, "command_mode", None), getattr(args, "clock_scatter", None)
+    if cm not in (None, *COMMAND_MODES) or cs not in (None, "on", "off"):
+        raise ValueError(f"command_mode must be one of {COMMAND_MODES}, clock_scatter on/off")
+    if args.variant != "SB" and (cm not in (None, "start") or cs == "on"):
+        raise ValueError("--command_mode s2a and --clock_scatter on are for the SB variant only")
+    if cm == "s2a" and getattr(args, "smoke_updates", None) == 10:
+        raise ValueError("s2a command mode starts from a parent checkpoint: use --resume_from (smoke 2) or the main resume")
     if args.variant in BUDGET_VARIANTS:
         smoke = getattr(args, "smoke_updates", None)
         if args.variant == "B":
@@ -54,8 +98,10 @@ def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
                 raise ValueError("SB 2-update smoke needs --resume_from the 10-update smoke checkpoint")
             if p_off is not None and not 0.0 < float(p_off) < 1.0:
                 raise ValueError("p_map_off must be inside (0, 1)")
-        if args.num_envs not in (None, 3072) or args.seed not in (None, 42) or args.max_iterations not in (None, 1501):
-            raise ValueError(f"{args.variant} is pinned to seed 42, 3072 envs, 1501 updates")
+        if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
+            raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs")
+        if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= EXTEND_MAX_ITERATIONS):
+            raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
     elif getattr(args, "smoke_updates", None) is not None:
         raise ValueError("smoke-updates is reserved for B")
     elif args.force_gt:

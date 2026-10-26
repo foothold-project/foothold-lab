@@ -248,7 +248,7 @@ def test_command_term_exposes_the_marker_and_the_curriculum_reads_it_between_jud
 def test_runner_writes_the_mark_statistics_into_train_extra():
     src = (PKG / "runners/start_runner.py").read_text(encoding="utf-8")
 
-    assert "def _take_new_task_stats" in src and 'extra["new_task_mark"] = nt_stats' in src and "fc_stats is not None) and self.log_dir" in src
+    assert "def _take_new_task_stats" in src and 'extra["new_task_mark"] = nt_stats' in src and "slot_stats is not None) and self.log_dir" in src
 
 
 def test_stats_accumulate_across_calls_until_taken():

@@ -40,7 +40,7 @@ import rsl_rl
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
-from foothold_s2.runners.contracts import start_contract_bad
+from foothold_s2.runners.contracts import contract_bad_fn
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
@@ -323,7 +323,8 @@ class StartRunner(OnPolicyRunner):
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
-            contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if self.pcfg["contract"] == "start" else None
+            contract_fn = contract_bad_fn(self.pcfg["contract"])                  # None | start | walkturn_v1 (모르는 이름은 거절)
+            contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
             contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
             with torch.inference_mode():
@@ -340,7 +341,7 @@ class StartRunner(OnPolicyRunner):
                     actions = self.alg.act(ppo_obs)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
-                        bad_now = start_contract_bad(consumed)
+                        bad_now = contract_fn(consumed)
                         contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
                         contract_bad |= bad_now
                     if trace is not None:
@@ -385,7 +386,7 @@ class StartRunner(OnPolicyRunner):
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):
-                self._invalid(it, f"START 명령 계약 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
+                self._invalid(it, f"{'START ' if self.pcfg['contract'] == 'start' else ''}명령 계약({self.pcfg['contract']}) 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
             # ② PPO update
             self._phase_start()
             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
@@ -417,10 +418,14 @@ class StartRunner(OnPolicyRunner):
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
             if nt_stats is not None:
                 extra["new_task_mark"] = nt_stats
+            slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
+            if slot_stats is not None:
+                extra["command_slots"] = slot_stats
+            self._record_command_receipts(it)                       # EX-35: 흩기 영수증(첫 update 에서 검사 · manifest 기록)
             fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
             if fc_stats is not None:
                 extra["world_frame_compare"] = fc_stats
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None) and self.log_dir is not None and not self.disable_logs:
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -527,6 +532,28 @@ class StartRunner(OnPolicyRunner):
         stats = getattr(term, "new_task_stats", None)
 
         return stats.take() if stats is not None else None
+
+    def _take_slot_stats(self):
+        term = self._command_term()
+        fn = getattr(term, "take_slot_counts", None)
+
+        return fn() if fn is not None else None
+
+    def _record_command_receipts(self, it: int) -> None:
+        """명령 시계 흩기를 켠 판: 첫 update 에서 영수증(범위 · 유한 · 1 s 구간 집중도)을 manifest 사건으로 남기고 어기면 실행 무효. 켜지 않은 판은 아무것도 안 한다."""
+        term = self._command_term()
+
+        if getattr(self, "_cmd_receipt_done", False) or term is None or not getattr(getattr(term, "cfg", None), "clock_scatter", False):
+            return
+        rc = term.scatter_receipt
+
+        if rc is None:
+            self._invalid(it, "명령 시계 흩기를 켰는데 영수증이 없다(첫 전체 reset 에서 적용되지 않음)")
+        self._cmd_receipt_done = True
+        self.map_ratio_events.append({"kind": "command_clock_scatter", "it": it, **rc})
+
+        if not rc["ok"]:
+            self._invalid(it, f"명령 시계 흩기 영수증 위반: {rc}")
 
     def _take_frame_stats(self):
         """이번 update 동안 쌓인 현행 · 세계 좌표 판정 비교표를 꺼낸다(없으면 None)."""
