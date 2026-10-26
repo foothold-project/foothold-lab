@@ -18,7 +18,7 @@ LINE = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) m(\d+) (\w+) (start|end)\b
 
 
 def pids(pattern):
-    ps = "try { @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '%s' -and $_.ProcessId -ne %d } | ForEach-Object { $_.ProcessId }) -join ',' } catch { 'ERR' }" % (pattern, os.getpid())
+    ps = "try { @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '%s' -and $_.Name -ne 'powershell.exe' -and $_.ProcessId -ne %d } | ForEach-Object { $_.ProcessId }) -join ',' } catch { 'ERR' }" % (pattern, os.getpid())
     out = subprocess.run(["powershell.exe", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=60).stdout.strip()
 
     if out == "ERR":
@@ -71,11 +71,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--top", default=TOP)
     ap.add_argument("--poll", type=int, default=10)
+    ap.add_argument("--marker", default=None, help="표식 파일 경로(기본: <top>/PRIORITY_BUSY)")
+    ap.add_argument("--chain-pattern", default="ex35_eval_chain2\.sh", help="사슬 bash 를 찾는 정규식(사슬 출력 폴더 이름을 넣어 판마다 구분)")
     ap.add_argument("--once", action="store_true")
     a = ap.parse_args()
 
     while True:
-        r = tick(a.top)
+        r = tick(a.top, a.marker, a.chain_pattern)
 
         if a.once:
             print(r)
