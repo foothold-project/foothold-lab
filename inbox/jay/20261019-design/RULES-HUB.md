@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 정리) · 2026-10-25
 > 근거: 팀장 10/25 「2 번 이상 말하거나 금지하거나 요구하는 것은 실험 규칙에 쌓아서 다른 세션들도 바라볼 수 있게 · claude, codex 둘 다 · 한곳에」 · EXPERIMENT-RULES 1.4 · LEAD-STYLE-AGENTS · mai-os AGENTS.md
 > 요지: Claude · Codex 모든 세션이 처음 여는 규칙 입구. 세션 역할 · 운영 · 실험 · 영상 렌더 · 승인 원장을 여기서 찾아간다.
-> 상태: v1.6 초안(planner 2026-10-27 00:08) · **10 절** 평가 축 목록 · 이전 학습 비중 · 학습 조건 표 · 정본 채택 · 계보 지도 · 용어(clock_scatter · episode_scatter) · 7 절 R20~R22 · 9 절 S-B10 역할 제안 · 2 절 lead 창 송신(1 절 orchestration 이 표준, mai_resume send 는 대체). lead a72cafe7(1 절 orchestration · 4 절 조명 후보 · 원장 00:2x) 위에 다시 얹음(planner 2026-10-27 00:28, 3-way 충돌 0). analyst E1 · E2 반영(10.1 경고 축 · 요구 범위 · 폭 표기, A2 정의) · A5 기준선 실측 반영(2026-10-27 00:47, lead 39d0af37 위, 3-way 충돌 0). analyst 반박 · verifier 검증 · 팀장 확인 전. v1.5 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
+> 상태: v1.7 초안(planner 2026-10-27 02:09, lead 8c58e0e5 위 · verifier R1 · R2 · lead 02:0x) · v1.6 초안(planner 2026-10-27 00:08) · **10 절** 평가 축 목록 · 이전 학습 비중 · 학습 조건 표 · 정본 채택 · 계보 지도 · 용어(clock_scatter · episode_scatter) · 7 절 R20~R22 · 9 절 S-B10 역할 제안 · 2 절 lead 창 송신(1 절 orchestration 이 표준, mai_resume send 는 대체). lead a72cafe7(1 절 orchestration · 4 절 조명 후보 · 원장 00:2x) 위에 다시 얹음(planner 2026-10-27 00:28, 3-way 충돌 0). analyst E1 · E2 반영(10.1 경고 축 · 요구 범위 · 폭 표기, A2 정의) · A5 기준선 실측 반영(2026-10-27 00:47, lead 39d0af37 위, 3-way 충돌 0). analyst 반박 · verifier 검증 · 팀장 확인 전. v1.5 · 새 규칙은 이 문서나 아래 정본에 더하고, 같은 말을 두 번 하게 한 일은 「반복 지시」 표에 올린다
 
 # 규칙 입구 (Claude · Codex 공용)
 
@@ -38,7 +38,17 @@
 
 **일하는 중인 세션에 보낼 의뢰는 대기열로 (10/27 00:4x 팀장 「10분동안 기다리기만 하면 되겠어? 작업 흐름이 놓치지 않으면서 지속적이어야」)**: `python C:/mai/wt/foothold-lab/lead_tmp-20261023/_out/tools/dispatch_queue.py add --terminal <h> --title <제목> --spec-file <파일> [--worktree path:<경로>]` 로 넣으면 orca task-create 로 Task 가 먼저 생겨 Orca 안에 남는다. `dispatch_queue.py loop 60` 이 받는 세션의 화면에 진행 표시가 없고 끝나지 않은 Dispatch 가 없을 때만 worker-start --task 로 보낸다. 실패한 Dispatch 는 대기열로 되돌려 --retry-of 로 다시 보낸다. 한 세션에 한 의뢰씩. 이미 orchestration 의뢰를 받아 일하는 세션에 덧붙일 말은 새 의뢰가 아니라 `orca orchestration send --to dispatch:<그 세션의 dispatch>` (작업자가 확인 지점에서 읽음, 00:45 planner 에 첫 사용). lead 는 받은편지함 대기 (`_out/msgs/orch_wait.py`) 와 20 분 점검 둘 다에서 대기열을 훑는다. 00:42 실측: 바쁨 판별은 analyst · runner · planner 바쁨, reviewer 쉼으로 맞았으나, 쉬는 reviewer 에 보낸 의뢰가 agent_readiness timeout 으로 실패 (입력줄에 이전 keepalive 문장이 회색 제안으로 떠 있던 창, 원인 미확인). 고칠 때까지 같은 실패가 두 번이면 lead 가 그 창을 직접 보고 처리한다.
 
-**세션 작업 의뢰 · 보고는 orchestration 으로 (10/27 00:2x 팀장 「orchestration 으로 모든 세션이 작업하도록 지시한다. 규칙에 박는다.」)**: lead 가 `orca orchestration run-create` 로 Run 하나를 묶고, 의뢰는 `orca orchestration worker-start --run <run> --terminal <작업 세션 handle> --task-title ... --spec "..."` 로 보낸다. 작업 세션은 끝나면 preamble 의 `worker_done` 하나로 보고한다 (본문 첫 줄 「[이름] 끝 · 커밋/경로 · 막음 n」, 막음은 두 줄까지). 묻는 것은 `ask`/`question`. lead 창에 직접 치지 않는다. lead 는 점검마다 `orca orchestration check --types "worker_done,escalation,question"` 으로 꺼내 읽고, 원자료와 대조한 뒤 `--ack` 하고 팀장에게 채팅으로 전한다. 시험 (10/27 00:13~00:15, run_abb2e12cee32): scripter 에 보낸 읽기 의뢰가 1 분 52 초 뒤 받은편지함에 도착, lead 창 타이핑 0, 네 숫자 원자료와 일치. 일하는 중인 창에 보내면 기본 60 초 안에 turn 이 안 열려 Dispatch 가 failed (00:26 runner, lastFailure timeout) → `--timeout-ms 600000` 을 붙인다. 다른 작업공간 창은 `--worktree path:<그 창의 작업공간>` 이 있어야 한다 (00:30 sonnet-code). `check --wait` 출력에는 기다리는 동안 keepalive JSON 줄이 섞이니 마지막 결과 객체를 읽는다 (_out/msgs/orch_wait.py). worker_done 은 Dispatch 없이 보내면 거절 표시가 붙지만 받은편지함에는 들어온다 (00:2x planner). 아직 안 잰 것: 여러 건 동시. 아래 옛 전달 방식 (orca terminal send · mai_resume send) 은 orchestration 이 실패할 때 (worker-start 비정상 종료 등) 와 팀장이 lead 창에서 바로 봐야 하는 급한 막음에만 쓴다.
+**세션 지시 · 보고 (v2 · 10/27 01:1x 팀장 확정 「지금 말한 작업 지시 보고 에 대한 규칙 만들고 정리해서 모든 세션에서 따를 수 있도록 해」)**
+
+| 할 일 | 방법 | 실측 근거 |
+|---|---|---|
+| 작업 세션 (runner · reviewer · verifier · scripter · sonnet-code · rulecheck · planner) 에 지시 | `orca terminal send --terminal <h> --text "..." --enter --wait-submit 20`. 회색 제안 문장이 있어도 보낸다. 일하는 중이면 대기 입력으로 들어가 다음 turn 에 읽힌다 | 01:00 scripter 즉시 시작 · 00:52 일하는 runner 입력줄에 들어감 |
+| 사용자가 치는 중일 수 있는 창 (lead · analyst · super2 · pipeline 등 관리자 창) 에 지시 | `python -m mai_resume send --to <h> --text "..." --wait 600` (C:/mai/mai-tools/tools/mai-resume, 파이썬 isaac311-moects). 치는 중이면 기다렸다 보낸다. rc 4 면 나중에 다시 | PR #33 (01:15 병합) 뒤: 힌트 빈 창 · 대기 메시지 표시 → 보냄, 친 글 → 막음 |
+| 작업 세션의 보고 | `orca orchestration send --run <run> --to run:<run> --type status --subject "[이름] 끝 · 커밋/경로 · 막음 n" --body "..."`. orchestration worker-start 로 받은 일이면 그 preamble 의 `worker_done`. 어느 창에도 치지 않는다 | worker_done 은 진행 중 Dispatch 없이는 거절 (01:00 scripter, task id 를 붙여도) · status 는 도착 |
+| 관리자 세션이 보고 받기 | 받은편지함 알림 (Claude Code 가 창 밖 메시지로 띄움, 입력줄에 치지 않음 · 01:0x 팀장 확인) → `orca orchestration check --run <run> --types "worker_done,escalation,question,status"` 로 꺼내 읽고 원자료 대조 뒤 `--ack <delivery>`. 배경 대기는 `_out/msgs/orch_wait.py` (status 포함, keepalive 줄 거름) | 00:13 이후 8 건 수신 |
+| orchestration worker-start | 쉬는 창에만. 일하는 창은 기본 60 초 뒤 Dispatch failed (15 분으로 늘려도 실패). 보낸 뒤 2 분 안에 받는 창에 의뢰 문장이 실제로 들어갔는지 lead 가 읽어 본다. 안 들어갔으면 위 orca cli 로 보낸다 | 00:26 runner · 00:33~00:48 analyst · 00:42 reviewer 실패 |
+
+지금 Run: `run_abb2e12cee32` (lead 가 coordinator). 한도는 `_out/tools/limits_now.py` 로만 말한다 (아래). 이 표는 Linux 로 옮긴 뒤에도 같은 순서로 다시 잰다 (super2 · pipeline 정리).
 
 세션 사이 전달 (v1.2 · 팀장 10/25 05:0x 「orca cli skill 쓰면 되잖아」 · SendMessage 는 팀장 거절): orca-cli 순서로 보낸다. `orca terminal read --terminal <h>` 로 받는 창을 보고 → `orca terminal wait --terminal <h> --for tui-idle --timeout-ms 5000` → `orca terminal send --terminal <h> --enter --wait-submit 20 --text "..."` → 결과의 `turn_started` 로 전달 확인 (안 보이면 `--retry-request <id>` 로 같은 요청을 다시 보고, 새로 보내지 않는다). 팀장이 그 창에 치고 있을 수 있으면 보내지 않는다 (10/20 팀장 글 뒤에 붙은 사고, mai-os#51). **read · wait · send 를 한 명령 (&&) 으로 잇지 않는다. 입력줄의 「❯ 글」 은 작업 세션 창에서는 Claude Code 회색 제안 문장이니 보낸다 (팀장이 치는 곳은 lead 창뿐, R13). lead 창으로 보낼 때만 그 창 turn 이 끝난 뒤 보낸다** (10/25 20:5x planner 보고가 lead 창의 팀장 초안 「영상 다 되면 경로랑 프레임 보여줘」 위로 들어간 재발). `mai_resume send` 는 받는 창의 회색 제안 문장에 15 분 넘게 막힌 일이 있어 보조로만 쓴다. (v1.1 의 「orca 직접 넣기 금지」 는 이 결정으로 바뀌었는데 15 시까지 고치지 않았다. 7 절 R3.) **lead 창 (팀장이 치는 창, term_2580fc05) 으로 보내는 보고는 `orca terminal send` 를 쓰지 않고 `python -m mai_resume send --to term_2580fc05-e7ff-4a63-8e24-714802e8f2c5 --text "..." --wait 600` 만 쓴다** (C:/mai/mai-tools/tools/mai-resume, 파이썬은 isaac311-moects). 입력줄이 비고 5 초 간격 두 화면이 같을 때만, 보내기 직전 한 번 더 보고 보낸다. 종료값 4 는 「팀장이 치는 중이라 안 보냄」 이니 나중에 다시. 10/26 23:4x 팀장이 lead 창에 치는 중에 runner 보고가 끼어 팀장 글이 섞였다. 원인: 이 줄이 타이핑 감지 없는 `orca terminal send` 를 표준으로 적고 있었다 (10/20 에 만든 타이핑 대기 장치를 규칙이 우회). 23:56 실측 (Claude Code 2.1.310): 친 글이 있으면 감지해 rc 4 (맞음), 빈 입력줄에 회색 힌트가 보이는 창은 오검출로 계속 rc 4 (보내지 못하는 쪽, super2 고침 대상).
 
@@ -70,7 +80,7 @@
 - **단일 정책 (1920×1080)**: 왼쪽 장면 1280×720 (IsaacLab 초록 · 파랑 속도 화살표와 회전 호, 바닥에 정답 지도 초록 점 · 복원 지도 파랑 격자 · 2 cm 넘는 복원 오차 빨간 막대 · 발 아래 스캔 노랑 · attention 상위 주황, 발 궤적 1.5 초, 오른쪽 위 영어 범례, 오른쪽 아래 구간 · 배속) · 오른쪽 640 위에서 본 지도 세 칸 (정답 · 복원 「정책에는 0」 · 정책 입력 + attention 흰 상자, 같은 색 범위) 과 「Mean | Reconstructed - GT |」 곡선 (y 축 0 · 2 · 최대 cm) · 아래 띠 구간 타임라인 · vx · wz 명령 대 실제 · 발 접촉 막대. 코드 `C:/Users/AI-WS01/s2_lab/video_25e/` (record_25e.py · overlay_25e.py · compose_25e.py).
 - **비교 (1920×1080)**: 판별 장면 2×2 (800×450) · 오른쪽 판별 현재 wz · vx 와 최근 3 초 발 접촉 · 아래 판별 wz 겹친 곡선 (흰 점선 = 명령). compose_compare_25e.py.
 - 촬영 GPU (10/26 하나로 정리, rulecheck V07): 화면용 GPU1 (cuda:1) 에서 찍되, GPU1 에서 학습이 돌고 있으면 cuda:0 (10/23 cuda:1 촬영이 학습을 480 초/회로). 구간 (전체 · 좌 · 우 · 전진) × 배속 ×0.25 · 0.5 · 1 · 2. 전 프레임 검사.
-- **촬영 조명 후보 셋 (10/27 00:2x 팀장 「2,3,4 다 좋아 … 다른 환경에서도 찍어봐야 3중에 하나를 할 것 같아. 우선 3개다 영상 촬영할 때 쓰는 옵션으로 규칙에 기록해놔」)**: record_25e.py (runner 6959a303) `--lighting-profile` 로 고른다. (L2) three_point 세기 100 · 방위 45/165/285 · 높이 45 · 각 12 도 · 그림자 켬, (L3) 같은 설정 그림자 끔, (L4) dome 0.05 + three_point 100 (그림자 켬). B1500 rough 6.0 s 평균 밝기 112.9 · 112.8 · 113.5 (지금 inherit 76.1, v2_flat 183.0). **기본은 L4 (10/27 00:2x 팀장 「랜더는 4번으로 우선 정해서 규칙으로 하고, 이전에 뽑아준 영상들 다 저 톤으로 동일 네이밍으로 덮어 씌워서 같은 경로에 같은 파일로 해줘. 단, 하기 전에 아래 우리 정보 그래픽 채도를 지금보다 25%~ 이상 올려봐서 … 사진으로 보고 싶어」)**. 순서: 정보 그래픽 채도 지금 · +25% · +50% 정지 화면 → 팀장 확인 → 앞서 낸 영상 전부를 L4 + 고른 채도로 같은 이름 · 같은 경로에 다시 렌더 (덮기 전 옛 파일은 archive 로 옮기고 sha256 전후 목록). 다른 지형 정지 화면도 같이 본다. 비교 그림 C:\Users\AI-WS01\s2_lab\video_25e\lighting_probe_26k\lead_cmp4_0010.png
+- **촬영 조명 후보 셋 (10/27 00:2x 팀장 「2,3,4 다 좋아 … 다른 환경에서도 찍어봐야 3중에 하나를 할 것 같아. 우선 3개다 영상 촬영할 때 쓰는 옵션으로 규칙에 기록해놔」)**: record_25e.py (runner 6959a303) `--lighting-profile` 로 고른다. (L2) three_point 세기 100 · 방위 45/165/285 · 높이 45 · 각 12 도 · 그림자 켬, (L3) 같은 설정 그림자 끔, (L4) dome 0.05 + three_point 100 (그림자 켬). B1500 rough 6.0 s 평균 밝기 112.9 · 112.8 · 113.5 (지금 inherit 76.1, v2_flat 183.0). **확정 (10/27 01:1x 팀장 「1.25로 확정. 혹시 모르니 옵션으로 1.50 도 기록만 해두자.」 · 「다른 지형도 봤어. L4 좋다.」)**: 촬영 조명 L4 + 바닥 정보 그래픽 채도 ×1.25 (runner 7dc7e9e1 옵션). ×1.50 은 옵션으로만 기록. 근거 그림 C:\Users\AI-WS01\s2_lab\video_25e\lighting_probe_26l\stills_26l\ (overlay_saturation_3panel.png · stairs/boxes/slope/sparse_beam_inherit_vs_L4.png). **기본은 L4 (10/27 00:2x 팀장 「랜더는 4번으로 우선 정해서 규칙으로 하고, 이전에 뽑아준 영상들 다 저 톤으로 동일 네이밍으로 덮어 씌워서 같은 경로에 같은 파일로 해줘. 단, 하기 전에 아래 우리 정보 그래픽 채도를 지금보다 25%~ 이상 올려봐서 … 사진으로 보고 싶어」)**. 순서: 정보 그래픽 채도 지금 · +25% · +50% 정지 화면 → 팀장 확인 → 앞서 낸 영상 전부를 L4 + 고른 채도로 같은 이름 · 같은 경로에 다시 렌더 (덮기 전 옛 파일은 archive 로 옮기고 sha256 전후 목록). 다른 지형 정지 화면도 같이 본다. 비교 그림 C:\Users\AI-WS01\s2_lab\video_25e\lighting_probe_26k\lead_cmp4_0010.png
 - **배속은 1x 만 (10/26 20:3x 팀장, 0.25 · 0.5 · 2 배는 보류, 다시 지시할 때까지)**: 0.5x 는 같은 프레임을 두 번 넣은 것이라 끊겨 보인다 (진짜 느린 화면은 촬영을 더 촘촘히 해야 한다).
 - **만드는 것과 전하는 것 (10/26 팀장)**: 만들기는 CMP (비교 조건별) 와 단독 판 각각 seq · forward · spin_left · spin_right × 1x. 팀장에게 전하는 것은 **CMP seq 1x 와 단독 seq 1x 만** (예 `CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_1x.mp4` · `EX34-SB10-m1500_mapmasked_rough_seq_1x.mp4`). 구간 영상은 폴더에만 둔다.
 - **바탕 렌더 대기열 (10/26 팀장 「빈 시간에 랜더링 걸어도」)**: GPU 가 학습 · 평가에 안 쓰일 때만 촬영 · 합성을 낮은 우선순위로 하나씩. 학습 · 평가가 뜨면 다음 건부터 멈추고 상태 파일에 대기 · 진행 · 끝을 남긴다 (runner 대기열 스크립트).
@@ -119,6 +129,7 @@
 | 10/26 21:2x | 「내가 시킨거만 제대로 해라 영상 overlay 만드는거. 진짜 두번 말 안한다. Isaac Sim 화살표 일단 그럼 냅둬 … 나중에 다른거 찍을때 되는지 확인해보고 한장 먼저 보여주면 되지」 · 「듬성 지형 고정 칸 평가 -> 영상도 성공, 실패 와 같이 의미 있는 영상들 제공해봐」 · 시드 반복 「지금 성공 데이터가 딸랑 1개 아니면 4개 … 이 시드 평가는 큰 의미가 더더욱 없지 안그래?」 · 「중요한 코드의 경우 (학습을 띄우는 코드, 판정 숫자를 만드는 코드) 결정을 다루는 것이라면 verifier 가 한 번 더 보는 두겹 검토 그렇게 해.」 | 화살표 그대로 (다음 촬영 때 한 장 먼저 컨펌). 듬성 칸 성공 · 실패 영상 (runner). 시드 반복 평가 멈춤 (B1500 s44 · S-B50 · G0-B s43 · s44 중단, 21:2x). 학습 · 판정 코드는 reviewer 뒤 verifier 두 겹 검토 |
 | 10/26 21:5x | 「kept 기준 12 → 14: … 이건 뭐야? 전에 이런 말이 있긴 했는데 생존은 관문에 있어야한다에 주목했지 저 숫자가 중요한거야?」 → 「kept 기준 14 ok」 · 「gpu0, gpu1 학습, 평가 같이 돌린다는 말 이해했음」 | 16:0x 원문의 「(16대 중 14대 이상 생존)」 숫자는 lead 가 쓴 말을 팀장이 옮긴 것이고 팀장이 짚은 것은 생존 관문 원칙. 숫자 14 는 lead 권고로 팀장 21:5x 확인. **권고 근거 「부모 S-B10 kept 최소 14」 는 틀림**(planner 재측 23:4x · analyst 1.2: eval_gt 최소 13 (m1250 · m1350), 가림 m1350 10; JUDGE-SPEC v0.11 · EXP-EX35 v0.7 정정, 숫자 14 자체는 유지). JUDGE-SPEC v0.9 · EXP-EX35 v0.2 (planner 225345ac · 8e0abd53) 반영 |
 | 10/26 23:1x | 「「코드 두 겹 검토와 짧은 확인 실행을 통과하면 오늘 밤 GPU0에서 띄운다」를 승인한다. 다른 세션에서도 차질 없이 진행할 수 있도록 승인.」 · 밤사이 자동 연장 「위에 말한 것 처럼 체계적 설계(근거, 숫자, 재현 등 문제 없이 확인 후) 진행 가능」 · 듬성 지형 진단 판 GPU1 앞당김 「문제 없다. 단, EX-35 평가, 영상 통해서 문제 없는지 파악 후 다음 단계로 진행 가능.」 · 「우리는 START 에서 학습한 것 처럼 최소 20,000 번 학습을 목표 … 가장 근본적인 핵심 원칙은 '숫자' iter 에 의해서 커리큘럼이 변하는 것이 아니라 '성과'에 따라서 커리큘럼이 바뀌는 것」 · 「target_vs_result_aligned_26j.png 확인했다. 문제 없을 것 같다.」 · 「검증기 고치게해 18초 한 구간도 당연히 찍혀야지」 · 조명 「3 방향에서 있던가, 아니면 전체 환경 조명으로 컨트롤 하던가. 같이 하던가」 | EX-35 기동 승인 (조건: reviewer · verifier 두 겹 막음 0 + 10 update 짧은 확인 실행 통과, GPU0). m2001 뒤 연장은 판정표 (보행 유지 · 이전 능력 유지 · 발전, 숫자 · 그래프 · 영상 · 재현) 를 결과 전에 고정하고 통과할 때만 (planner 설계 · analyst 숫자 검증). 듬성 진단 판은 EX-35 평가 · 영상 확인 뒤. 커리큘럼은 성과 관문으로 단계 이동, 전체 20,000 회 목표. 레이아웃 549edfb4 확정 → 1x 재합성. |
+| 10/27 01:1x | 「1.25로 확정. 혹시 모르니 옵션으로 1.50 도 기록만 해두자. 다른 지형도 봤어. L4 좋다.」 · 「지금 말한 작업 지시 보고 에 대한 규칙 만들고 정리해서 모든 세션에서 따를 수 있도록 해. super, pipeline 에게도 지시해서 linux 이사시에도 필요한 내용이니 정리 잘하라고해.」 · 「우리는 MVP 이후 새롭게 진행되는 실험이기에 축을 제대로 우리가 구체적으로 세워야한다 … 지형별, 레벨별, 명령별, 등 축이 따로 있어야한다」 · 「mai-tools 병합 진행해.」 | 조명 L4 + 채도 ×1.25 확정 (×1.50 옵션 기록) → 기존 영상 재렌더. 1 절 지시 · 보고 표 v2. 평가 축 논의 planner + analyst. mai-tools PR #33 병합 (01:15) |
 | 10/27 00:4x | 「한도 체크에 대한 걸 자꾸 너가 틀리게 말하면 작업에 영향이 된다니깐? 규칙으로 제대로 너가 읽게 시스템화해. 다른 세션들도 마찬가지고. claude, codex 지금 내가 연결된 모든 세션」 · 「10분동안 기다리기만 하면 되겠어? 작업 흐름이 놓치지 않으면서 지속적이어야하는데 그런 경우는 규칙을 제대로 세워야하지 않겠어?」 | 1 절: 한도는 limits_now.py 로만 · 표시줄 예측은 예측으로. 일하는 세션 의뢰는 dispatch_queue.py 대기열 · 덧붙임은 orchestration send |
 | 10/27 00:2x | 「일단 지금 2,3,4 다 좋아 … 이 환경 말고 다른 환경에서도 찍어봐야 3중에 하나를 할 것 같아. 우선 3개다 영상 촬영할 때 쓰는 옵션으로 규칙에 기록해놔.」 · 「orchestration 으로 모든 세션이 작업하도록 지시한다. 규칙에 박는다.」 | 조명 후보 L2 · L3 · L4 를 4 절에 기록, 다른 지형 정지 화면 뒤 선택. 세션 의뢰 · 보고를 orchestration 으로 (1 절 첫 문단) |
 | 10/26 23:2x | (23:1x 승인의 기동) | EX-35 GPU0 23:24:32 기동 (impl-ex35-07fc 고정 사본 07fc5e73, reviewer REVIEW-07fc5e73 막음 0 · verifier VERIFY-verifier-EX35-07fc5e73 막음 0 · smoke2 23:22 rc 0 TRAIN_START_STATUS done). 부모 sha 4d987818 일치. 첫 update 23:25:38: EPISODE_SCATTER ok (0~19.98 s) · CLOCK_SCATTER ok (0~4.0 s) · 지도 끔 실현 0.0889 · spin 0.20 · 27.6 초/회 (m2001 까지 약 3.9 시간). 기록 logs_gate/ex35_main_20261026_232432 |
@@ -217,6 +228,58 @@
 
 실험 카드는 `inbox/jay/20261021-experiments/EXP-*.md` (EX-30 · 31 · 32 · 33 · 34 등) 한 곳, 목록은 같은 폴더 `EXP-MAP.md` 의 「exp-sync:experiments」 표. 결과 문서는 날짜 폴더 `inbox/jay/2026MMDD-experiments/RESULT-*.md`, 밤 계획 · 실제 기록은 `NIGHT-PLAN-*.md`. 세션이 이어 붙은 뒤 처음 읽을 정본 순서: 이 RULES-HUB → EXP-MAP → SCHEDULE-NOW → 최신 NIGHT-PLAN → 카드.
 
+## 8c. 지금 돌고 있는 실험의 실행 지도 (10/27 01:2x 팀장 「지금 너가 정한 실험 규칙 평가 사슬 폴더 트리 등 이런 것도 실험 규칙에 잘 기록해라. 다른 세션들도 확인할 수 있고 나중에 이사시에도 문제 안되게.」)
+
+판이 바뀔 때마다 lead 가 이 절을 고친다 (기동 · 사슬 · 판정 · 정본 채택 때). Linux 로 옮길 때는 이 트리 그대로 자리를 만들고, 각 자리의 sha256 · 커밋을 다시 대조한다. 경로는 Windows 기준 (`C:/mai/wt/foothold-lab/` = WT).
+
+**EX-35 (S-B10 m1500 → m2001, 회전 명령 과정 첫 판 · 10/26 23:24 기동)**
+
+```text
+WT/impl-ex35-07fc/                       학습 실행 고정 사본 (07fc5e73, foothold_s2 깨끗해야 기동)
+  foothold_s2/run_ex35.sh                기동 스크립트 (kind main|smoke2, 인자 영수증 · argv CR 가드)
+  logs_gate/ex35_smoke2_20261026_232226/ 짧은 확인 실행 2 회 (rc 0)
+  logs_gate/ex35_main_20261026_232432/   본 학습 영수증: launch_receipt.json · launch_args.txt · launch_argv_repr.txt · git_head.txt · run.log · rc.txt
+WT/impl-sb/logs/rsl_rl/foothold_s2_sb/
+  2026-10-26_01-17-47_sb-main/model_1500.pt            부모 S-B10 m1500 (sha256 4d987818c7e25b89)
+  2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476/
+    model_1550.pt … model_2000.pt        EX-35 저장본 (50 회마다)
+    params/env.yaml · params/agent.yaml  실제 학습 조건 (학습 조건 표의 원자료)
+WT/eval-x27g/                            평가 하네스 고정 사본 (07fc5e73, 깨끗)
+WT/impl-integ/                           작업 브랜치 (sonnet-code). 판정 코드 ex35_gate.judge_ex35 · 평가 사슬 foothold_s2/eval/ex35_eval_chain.sh (adad7d5e).
+                                         reviewer 고침 2: 사슬 · 판정 코드도 고정 사본에서 읽게 바꾸는 중 (01:2x)
+WT/impl-turncases/logs/
+  sb10_eval/m1500/                       부모 기준선: turn16_eval_gt · turn16_eval_pred · turn16_probe_prop_only · map64 · turn16_walk_eval_gt · turn16_walk_probe_prop_only · walk_turn_summary.json
+  ex35_eval/                             EX-35 저장본 평가 사슬 (cuda:1, 01:12 시작)
+    chain.log · receipt.txt              사슬 기록 (ITEM m<N> start/done)
+    m<N>/                                저장본마다: checkpoint_sha256.txt · git_head.txt · git_status.txt · rc.txt · turn16_* · map64_* · 판정 json · timing.txt
+WT/fable-25a/                            planner 작업 사본: 카드 EXP-EX35 v0.9 · JUDGE-SPEC v0.13 · CURRICULUM-GATES v0.3 · RULES-HUB 10 절 초안 (30168082, verifier 검증 전 · 아직 lead 브랜치에 안 가져옴)
+  _out/reports/REPORT-planner-*.md
+WT/astra-25b/inbox/jay/20261026-experiments/  analyst · verifier 검토: VERIFY-analyst-EX35-GATES.md · VERIFY-analyst-RULES-AXES-LINEAGE.md · VERIFY-verifier-*.md
+C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/_out/review/  reviewer 검토 REVIEW-<커밋>.md
+```
+
+**판정 흐름**: 저장본 생김 → 사슬이 최신부터 평가 (한 번에 Isaac 하나, cuda:1) → `judge_ex35` 가 저장본 상태 (MAINTAIN_FAIL 등) → 창 경계 m1750 · m2000 에서 마지막 두 저장본으로 consume → 판정표 (카드 v0.9 §4b, 필수 칸 하나라도 비면 HOLD_NO_DATA = 연장 불가) → 1x 영상 lead 판독 (A11) → 계속 · 다음 단계 · 멈춤. 멈춤 · 연장 기동은 lead 가 한다.
+
+**영상 · 조명**
+
+```text
+C:/Users/AI-WS01/s2_lab/video_25e/
+  final/runner-26k_1026_final/           1x 영상 32 편 (inherit 조명) → L4 + 채도 ×1.25 로 같은 이름 재렌더 예정, 옛 파일은 archive
+  final/runner-26a_1026_final/runner-26i-previews/target_vs_result_aligned_26j.png   확정 레이아웃
+  lighting_probe_26h/ · lighting_probe_26k/ · lighting_probe_26l/stills_26l/      조명 · 채도 시험 (L4 · ×1.25 확정 근거)
+WT/runner-26a/inbox/jay/20261023-experiments/runner-26a/   촬영 · 합성 코드 (record_25e.py 7dc7e9e1, render_queue_26d.py, seq_video.py sparse18)
+```
+
+**운영 도구 (lead_tmp 사본 `WT/lead_tmp-20261023/_out/`)**
+
+```text
+tools/limits_now.py        한도 사실만 (정본 ~/.mai/limits.json)
+tools/dispatch_queue.py    일하는 세션 의뢰 대기열 (orca task-create → 쉬면 worker-start)
+msgs/orch_wait.py          받은편지함 배경 대기 (status 포함 · keepalive 거름)
+msgs/*.txt                 보낸 의뢰 원문 (같은 의뢰를 다시 보낼 때 이것을 쓴다)
+```
+orchestration Run: `run_abb2e12cee32` (coordinator = lead 창 term_2580fc05). mai-resume: `C:/mai/mai-tools/tools/mai-resume` (PR #33 병합 01:15, super2 재시작 뒤 적용).
+
 ## 9. 이름 붙은 체크포인트 정본 (10/26 12시, Linux 이전 런북 L-3-2 가 가리킴)
 
 Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/`). sha256 은 lead 가 10/26 12시에 다시 잼 (앞 16 자). Linux 로 옮긴 뒤 같은 값인지 먼저 대조한다.
@@ -242,15 +305,15 @@ Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-
 - **빠진 축이 하나라도 있으면 그 판정은 「판정 불가」** 이고 결과는 멈춤 · 보고다(연장 · 승급 · 정본 채택 모두). 「미측」 칸을 비워 두고 통과시키지 않는다. 기준선이 없는 축은 **먼저 기준선을 잰다**(평가는 승인 없이 빈 GPU 에서, 8.3).
 - 잡음 폭이 「미측」 인 축은 문턱에 「가정」 을 붙이고 폭의 **뜻 · 자료 집합 · 고정 시점**을 적는다. 「큰 쪽이 안전」 이라 정당화하지 않는다(개선 인정에는 엄격해지지만 악화 인정에는 둔해진다. analyst 8.1).
 - **경고 축과 멈춤 축을 가른다**(analyst E2): 자동 멈춤 · 연장 불가는 §3 STOP(전진 유지선 · 생존 · Q < 0.12 · NaN · 기동 실패) · 입력 결측 · 재현 불일치 · 영상 판독뿐이다. 가정 문턱(A1 · A7 · A8 · A9) 은 경고 · 기록이고 사람(lead) 이 보고 멈출 수 있다. 가정 문턱을 정상/이상 입력 · 반복 변동 시험 없이 자동 중단선으로 올리지 않는다.
-- **요구 범위는 명시적으로 정한다**(analyst E1): 기준선이 없는 축을 다른 축으로 「대신」 하지 않는다. 대신 쓰려면 그 축의 정의를 바꾸는 결정(누가 · 언제) 을 카드에 적고, 원래 축은 뒤 단계 축으로 분리한다. 예: EX-35 A2 = 레벨 묶음 L0~2 · L6 · L9 로 정의, 종류별 7 종 + 평지는 A2b. 같은 저장본 재평가로 폭이 생기면 그 값으로 바꾼다(결과 전 고정 원칙은 문턱 숫자에 적용, 폭의 출처 갱신은 허용 · 결과 뒤 넓히기는 금지).
-- 축 정의의 통계는 **env 단위 → kept env 동일 가중 → 중앙값 또는 평균** 을 축마다 하나로 고정하고 바꾸지 않는다(analyst: 「정확히 같은 분모」). 16 env(8 s · 200 Hz) 와 64 env(6 s · 300 스텝) 통계를 섞지 않는다.
+- **요구 범위는 명시적으로 정한다**(analyst E1): 기준선이 없는 축을 다른 축으로 「대신」 하지 않는다. 대신 쓰려면 그 축의 정의를 바꾸는 결정(누가 · 언제) 을 카드에 적고, 원래 축은 뒤 단계 축으로 분리한다. 예: EX-35 A2 = **레벨 묶음 L0~2 · L6 · L9 와 종류별(연속 7 종 + 평지) 둘 다 필수**(lead 02:0x 결정 · 팀장 「지형별로도 봤었고」 · analyst E1 · verifier R2). 종류별 env 기록은 sonnet-code X27j 가 만드는 중이라 그 전까지 종류별 칸은 **「미측 = HOLD_NO_DATA」** 로 적는다(연장 불가 · 통과 아님). 레벨 묶음을 종류별의 「대체」 로 읽지 않는다. 같은 저장본 재평가로 폭이 생기면 그 값으로 바꾼다(결과 전 고정 원칙은 문턱 숫자에 적용, 폭의 출처 갱신은 허용 · 결과 뒤 넓히기는 금지).
+- 축 정의의 통계(분모 · 가중 · 요약) 는 축마다 하나로 고정하고 바꾸지 않는다(analyst: 「정확히 같은 분모」). 16 env Q · C 는 **kept env 동일 가중**(8 s · 200 Hz), 64 env map 통계는 **전체 env 의 alive 시간 마스크**(6 s · 300 스텝, `eval_map_modes.py:231~239` dist = Σ vx·alive·dt · 중앙값). 「모든 축에 kept」 가 아니다(verifier). 둘을 섞지 않는다.
 - 뒤 단계의 새 과제 축(A13~A17) 은 그 단계 카드에서 결과 전에 정의 · 소비 코드 · 기준선을 적고, 그 전 단계의 축은 전부 **유지 축**으로 계속 잰다.
 
 | 번호 | 축 (코드 이름) | 정의 (분모 · 통계) | 소비 코드 | 원자료 자리 | 잡음 폭 (같은 저장본 재측정) | 기준선 출처 (S-B10 m1500) | 상태 |
 |---|---|---|---|---|---|---|---|
 | A1 | **보행 위상** `gait_phase` | 16 env 전진 fwd0.5 · fwd1.0 × 켬 · 가림. 접촉력 크기 > 1 N(`turn_probe.py:128` norm) 접촉. 대각 쌍(FL·RR / FR·RL) 착지 사이 위상(완전 주기만, env 동일 가중 원형 평균) · 쌍 안 위상차 FL→RR · FR→RL · duty(접지율) · 착지 주기 중앙값 · C(네 발 동시 접촉률) · 주기 내 집중도 R. 그림 둘: 16 env 접촉 막대(RESULT-EX34 `sb10_phase_joint.png` 형식) · 발자국 평면도 | `lead_tmp-20261023/inbox/jay/20261026-experiments/figs/ex32-g0b/generate_result26a.py:209 pair_phase`(불완전 주기도 셈) + analyst `astra-25b/inbox/jay/20261026-experiments/figs/ex35-parent-baseline/recompute.py`(완전 주기만 · 정지 입력 제외 · 합성 trot 180° · duty 0.5 자기 시험). 확장 지점 `ex35_gate.gait_phase_broken` | `impl-turncases/logs/sb10_eval/m<N>/turn16_<mode>/arrays_fwd{0.5,1.0}.npz`(force · alive · feet_pos). 발자국: `C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26a/cap/<판>_<mode>_rough/review_feet.npz`(50 Hz 촬영, 분모 다름 · 그림용) | **미측**(같은 저장본 두 번 평가 필요) | analyst `baseline.json`: GT fwd0.5 대각 쌍 사이 **88.49°** · C 0.149 · 주기 0.698 s / GT fwd1.0 **167.03°** · C 0.035 · 0.475 s / 가림 fwd0.5 92.28° / 가림 fwd1.0 151.02° · 집중도 R 0.29~0.57(실측, L0 경사 8 · rough 8 env). **0°/180° 일괄 기준은 쓰지 않는다**(속도 · 모드별 기준선) | 기준선 있음 · 문턱 미정(analyst 다음 절) · 소비 코드 확장 지점 |
-| A2 | **지형별 전진** `terrain_forward` | 64 env 고정 칸(레벨 0~2 묶음 c3884d68) + 레벨 6 · 9 칸 × fwd1.0 · fwd0.5 × eval_gt · probe_prop_only · eval_pred: `body_vx_integral_median_m` · `alive_envs_at_end`. **종류별(연속 7 종 + 평지) 분해는 미측 · 확장 지점**(map64 에 env 별 지형 종류 기록이 없다. 16 env meta `fixed_terrain.tiles[env].kind` 는 경사 · rough 둘뿐). EX-35 창 판정에서 A2 는 **레벨 묶음(L0~2 · L6 · L9) 으로 정의**(요구 범위 결정, EX-35 v0.9 §4b.5 · lead 확인 필요). 종류별은 **A2b(뒤 단계 축)** 로 분리하고 레벨 묶음을 그 대체로 읽지 않는다 | `foothold_s2/eval/eval_map_modes.py`(map64) · hardlevel 사슬(impl-turncases) · `judge_gate.forward_hold_broken` · `ex35_gate.ex35_extra_broken` | `impl-turncases/logs/sb10_eval/m<N>/map64/map_modes.json` · `impl-turncases/logs/hardlevel/<판>_L{6,9}/map64/map_modes.json` | 거리 **미측**(H4 같은 저장본 재평가는 회전만 기록, 8.1) | lead `figs/startline/hardlevel_table.md`: S-B10 L0~2 켬 **5.43**(64) · 가림 5.44(64) / L6 5.27 · 5.27(64 · 64) / L9 5.01(59) · 5.28(62); eval_pred L0~2 5.417(64)(`sb10_eval/m1500/map64`) | 레벨 묶음 있음 · 종류별 미측 |
-| A3 | **회전 16 env** `turn16` | 여섯 경우(좌 · 우 독립, 좌 → 우, 우 → 좌, 전진 → 좌, 전진 → 우, R12) × 켬 · 가림. Q = env 별 sign(cmd)×mean(wz[alive]) 를 kept env 동일 가중 평균 · C · kept. **좌 · 우 따로**(평균 금지, 한 방향 악화를 숨김) · 8 등분 시간 열(8 s 를 1 s 씩, 확장 지점) · 절대 추종 오차 mean|wz − cmd|(analyst 2 절, Q 상승 ≠ 오차 감소) | `judge_gate.judge_continue` · `judge_stats.py` · `judge_repro.py` | `turn16_<mode>/arrays_<case>.npz`(wz · alive · kept · force) · 8 등분 기준선 analyst `figs/ex35-parent-baseline/rotation_bins.json`(indep_right 0~1 s 0.99 → 7~8 s 0.10, 후반 정체는 부모 한계로 보존) | 16 env Q 평균 최대 **0.115**(RESULT-EX34 165 행 · EX-34 카드 「평균 0.11」 · 8.2). analyst 같은 식 재계산 B rep1/rep2 18 칸 최대 0.0987 · 평균 0.0371(출처 재대조 중) → 문턱은 큰 쪽 0.115 로 「같음 / 나아짐 / 나빠짐」 | m1500 eval_gt Q 0.307~0.784 · C 0.417~0.702 · kept 15~16(JUDGE-SPEC 6.8 · analyst 2 절 표) | 있음 |
+| A2 | **지형별 전진** `terrain_forward` | 64 env 고정 칸(레벨 0~2 묶음 c3884d68) + 레벨 6 · 9 칸 × fwd1.0 · fwd0.5 × eval_gt · probe_prop_only · eval_pred: `body_vx_integral_median_m` · `alive_envs_at_end`. **종류별(연속 7 종 + 평지) 분해는 미측 · 확장 지점**(map64 에 env 별 지형 종류 기록이 없다. 16 env meta `fixed_terrain.tiles[env].kind` 는 경사 · rough 둘뿐). EX-35 창 판정의 A2 는 **레벨 묶음(L0~2 · L6 · L9) + 종류별(연속 7 종 + 평지) 둘 다 필수**(lead 02:0x · 팀장 「지형별로도 봤었고」 · verifier R2). 종류별 기록(sonnet-code X27j) 전까지 종류별 칸은 「미측 = HOLD_NO_DATA」(통과 아님). 레벨 묶음을 종류별의 대체로 읽지 않는다. 적용 시작 창(m2000 · m2250) 은 lead 가 정한다(카드 §8 (9)) | `foothold_s2/eval/eval_map_modes.py`(map64) · hardlevel 사슬(impl-turncases) · `judge_gate.forward_hold_broken` · `ex35_gate.ex35_extra_broken` | `impl-turncases/logs/sb10_eval/m<N>/map64/map_modes.json` · `impl-turncases/logs/hardlevel/<판>_L{6,9}/map64/map_modes.json` | 거리 **미측**(H4 같은 저장본 재평가는 회전만 기록, 8.1) | lead `figs/startline/hardlevel_table.md`: S-B10 L0~2 켬 **5.43**(64) · 가림 5.44(64) / L6 5.27 · 5.27(64 · 64) / L9 5.01(59) · 5.28(62); eval_pred L0~2 5.417(64)(`sb10_eval/m1500/map64`) | 레벨 묶음 있음 · 종류별 미측 |
+| A3 | **회전 16 env** `turn16` | 여섯 경우(좌 · 우 독립, 좌 → 우, 우 → 좌, 전진 → 좌, 전진 → 우, R12) × 켬 · 가림. Q = env 별 sign(cmd)×mean(wz[alive]) 를 kept env 동일 가중 평균 · C · kept. **좌 · 우 따로**(평균 금지, 한 방향 악화를 숨김) · 8 등분 시간 열(8 s 를 1 s 씩, 확장 지점) · 절대 추종 오차 mean|wz − cmd|(analyst 2 절, Q 상승 ≠ 오차 감소) | `judge_gate.judge_continue` · `judge_stats.py` · `judge_repro.py` | `turn16_<mode>/arrays_<case>.npz`(wz · alive · kept · force) · 8 등분 기준선 analyst `figs/ex35-parent-baseline/rotation_bins.json`(indep_right 0~1 s 0.99 → 7~8 s 0.10, 후반 정체는 부모 한계로 보존) | 16 env Q 평균 최대 **0.115**(RESULT-EX34 165 행 · EX-34 카드 「평균 0.11」 · 8.2). analyst 같은 식 재계산 B rep1/rep2 18 칸 최대 0.0987 · 평균 0.0371(출처 재대조 중) → 문턱 0.115 는 **운영 가정**(뜻 = 같은 저장본 같은 지표 재측정 차의 상한 가정 · 자료 집합 RESULT-EX34 · 고정 시점 v0.7; 실측 확정 아님 · 「큰 쪽이 안전」 정당화 아님, verifier) 으로 「같음 / 나아짐 / 나빠짐」 | m1500 eval_gt Q 0.307~0.784 · C 0.417~0.702 · kept 15~16(JUDGE-SPEC 6.8 · analyst 2 절 표) | 있음 |
 | A4 | **회전 64 env** `spin64` | 제자리 회전 ±1.2 × 세 모드: `yaw_follow_median` 좌 · 우 따로 · `alive_envs_at_end` · `stalled_fraction_2to4s` | `judge_gate`(spin_follow · rot_survive_64 48) | `map64/map_modes.json` modes.*/spin±1.2 | H4 B1500 좌 0.873 → 0.870(8.1) | m1500 켬 좌 **0.195** · 우 **0.302** · 생존 64 · 64 | 있음 |
 | A5 | **걸으며 돌기** `walk_turn` (S2a 부터 새 과제 축) | J-T7 `walk_turn_left` · `walk_turn_right`(0.5, 0, ±0.5) 8 s: Q · C · kept · 반대 부호 수, 좌 · 우 따로 | `turn_probe_plan.PROTOCOLS:31~32` · `ex35_gate.judge_ex35` | `turn16_<mode>/arrays_walk_turn_<dir>.npz` | **미측**(A3 폭 0.115 를 빌리면 「가정」) | **실측** `sb10_eval/m1500/walk_turn_summary.json`(X27g 00:36, planner 재계산 일치): 켬 좌 Q 0.4544 · C 0.215 · kept 16 · 적분 3.006 m / 우 0.4460 · 0.092 · 16 · 4.289 / 가림 좌 0.4487 · 0.172 · 16 · 3.065 / 우 0.4366 · 0.077 · 16 · 4.369. eval_pred 미측 | 기준선 실측(10/27 00:36) · 폭 미측 |
 | A6 | **생존** `survive` | 16 env kept(경우별) · 64 env `alive_envs_at_end`(명령별) | `judge_gate.THRESHOLDS`(min_kept · rot_survive_64 · fwd_survive_drop_64) | 위 npz · map_modes.json | 정수(재측정 폭 미측) | m1500 kept 15~16 · 전진 64 · 64 · 회전 64 · 64. 부모 이력 최소: 켬 **13**(m1250 fwd_then_left · m1350 fwd_then_right) · 가림 **10**(m1350 right_then_left)(planner 재측 10/26 23:4x · analyst 1.2) | 있음 |
@@ -264,9 +327,9 @@ Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-
 
 ### 10.2 이전 학습 비중 (앞 단계 과제를 0 으로 없애지 않는다)
 
-- 다음 단계로 넘어가도 **앞 단계의 명령 과제 합 ≥ 20 %, 연속 7 종 지형 열 ≥ 20 %** 를 유지한다(DESIGN-NEXT §3.2 「쉬운 과제 최소 20 %」 · DISCUSSION 높이뛰기 「봉을 넣은 뒤 어려워지면 쉬운 동작을 다시 섞어 연습」, 비율 값은 **가정**). 전진 직진은 C0~C2 에서 ≥ 55 %, 그 뒤 ≥ 40 %(가정). 새 과제는 입장 때 ≤ 15 %(걸으며 돌기 5 → 15 % 전례).
+- 다음 단계로 넘어가도 **앞 단계의 명령 과제 합 ≥ 20 %, 연속 7 종 지형 열 ≥ 20 %** 를 유지한다(DESIGN-NEXT §3.2 「쉬운 과제 최소 20 %」 · DISCUSSION 높이뛰기 「봉을 넣은 뒤 어려워지면 쉬운 동작을 다시 섞어 연습」, 비율 값은 **가정**). 전진 직진은 C0~C2 에서 ≥ 55 %, 그 뒤 ≥ 40 %(가정). 새 과제는 입장 때 ≤ 15 %(걸으며 돌기 5 → 15 % 전례). 합 ≥ 20 % 만으로는 어느 한 이전 과제가 0 % 가 되는 것을 못 막으므로 **각 유지 과제 슬롯 > 0** 을 과제별로 따로 검사한다(verifier). 새 과제가 비율이 아니라 범위 · DR · 지연이면 비율 되돌리기만으로 복원되지 않으므로 바뀐 항목의 **이전 값**도 계보(10.4) 에 남긴다.
 - 단계별 명령 슬롯 · 지형 열 비율 표의 정본은 [CURRICULUM-GATES v0.2 §3](../20261026-experiments/CURRICULUM-GATES.md). 비율을 바꾸는 코드 자리는 하나(`command_mode` 인자 → `mixed_core` 표집 표, 지형은 `terrains/columns.py` 의 CONTINUOUS · SPARSE 비율).
-- **되돌림 규칙(유지 축 하한 미달)**: 창 경계 두 저장본이 연속으로 유지 축(A1~A4 · A6~A10) 하한 밑이면(`consume` = REVERT) 새 과제 비율을 **직전 단계 값으로 내리고(= 앞 단계 비율을 올리고)** 마지막 유지 통과 저장본에서 다시 띄운다. 한 번 되돌린 뒤 또 미달이면 STOP_REPORT(사람). 단일 미달은 HOLD(같은 조건 한 창 더). 비율을 올릴 때도 한 번에 한 축.
+- **되돌림 규칙(유지 축 하한 미달)**: 창 경계 두 저장본이 연속으로 **유지 조건 축(A2 전진 · A3 · A4 · A6 · A10 = JUDGE-SPEC 4.1 `maintained`; A1 · A7 · A8 · A9 경고 축은 들어가지 않는다, verifier R1)** 하한 밑이면(`consume` = REVERT) 새 과제 비율을 **직전 단계 값으로 내리고(= 앞 단계 비율을 올리고)** 마지막 유지 통과 저장본에서 다시 띄운다. 한 번 되돌린 뒤 또 미달이면 STOP_REPORT(사람). 단일 미달은 HOLD(같은 조건 한 창 더). 비율을 올릴 때도 한 번에 한 축.
 - 연장 · 승급 소비기는 입력 두 저장본의 sha256 이 다르고 회차가 엄격히 증가하는지 · 빈 이력 · HOLD_NO_DATA 가 아닌지 · 새 축을 직접 검사하는지를 답 아는 입력으로 먼저 시험한다(analyst `audit_knowninputs.json`: 기존 `consume` 은 빈 이력 · HOLD_NO_DATA 에 CONTINUE, 같은 PASS 둘에 EXPAND).
 - 승급(`consume` = EXPAND) 은 유지 축 전부 통과 + 새 과제 축 성공선 두 저장본 연속일 때만. 회차는 예산 · 관찰 간격이다(「N 회 돌았으니 다음」 금지, 팀장 23:1x).
 
@@ -280,7 +343,7 @@ Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-
 | iter 구간 · env · 시드 · GPU · 실행 이름 | receipt first_iter · last_iter · args.num_envs · args.seed · args.device · args.run_name · `launch_args.txt` |
 | 명령 슬롯과 범위 · 계약 | args.command_mode · receipt contract · 실현 비율은 `train_extra.jsonl`(EX35 슬롯 로그) |
 | 재추출 · clock_scatter · episode_scatter | `params/env.yaml` commands.base_velocity.resampling_time_range · args.clock_scatter · 첫 update 영수증(CLOCK_SCATTER 범위 · EPISODE_SCATTER 범위, `run.log`) |
-| 지도 (p_off · 끔 분모 · force_gt · map_input) | args.p_map_off · `map_ratio_events.jsonl` · `resume_parent.json`(force_gt 대조) · `manifest.json` restored_modes.map_input |
+| 지도 (p_off · 끔 분모 · force_gt · map_input) | args.p_map_off · `map_ratio_events.jsonl` · `resume_parent.json`(force_gt 대조) · `manifest.json` **`modes.map_input`**(실제 키 · 값 reconstruction) · `modes.force_gt`(true) · 최상위 `map_ratio_events`(verifier: `restored_modes` 는 manifest 에 없고 평가 `map_modes.json` 의 키다) |
 | 지형 비율 · 격자 · 난이도 복원 | `params/env.yaml` scene.terrain(num_rows · num_cols · sub_terrains 비율) · `terrains/columns.py` CONTINUOUS/SPARSE · curriculum terrain_levels · `resume_parent.json` 지형 레벨 복원 |
 | 판정 (world_frame · mask_new_task) | args.judge_world_frame · args.judge_mask_new_task · `manifest.json` modes.terrain_judge · parent_judge · start_checkpoint_judged_with |
 | DR (마찰 · 질량 · COM · 게인 · 세기 · 밀기 · 지연) | `params/env.yaml` events.physics_material(static · dynamic range · mode) · add_base_mass · base_com · actuator_gains · motor_strength · push_robot · `realized_material.json`(static_min/max · dynamic_min/max) · `realized_physics.json` |
@@ -297,7 +360,7 @@ S-B10 부모의 실제 DR(부모 `params/env.yaml:1292~1369`, 실측): 마찰 st
 4. 다음 카드의 부모 칸은 그 저장본을 가리키고, 기동 영수증 parent_sha256 과 대조해 다르면 기동 무효.
 5. 채택 전 저장본으로 띄운 판은 「지류」 로 표시한다.
 
-**지금 상태(planner 판단 · 제안)**: 9 절에서 S-B10 m1500 은 「출발선 후보」 인데 팀장 16:0x 「출발선 S-B10 m1500 우선 승인」 · 23:4x 「지금 자체로는 S-B10이 정본이잖아?」 가 있다 → 9 절 역할을 **「정본 (C0 평지 전진 · 출발선, 팀장 16:0x · 23:4x)」** 으로 바로잡고, B1500 · S-B50 은 「출발선 후보였음 (채택 안 됨) · 비교 기준」 으로 둔다(아래 9 절에 반영, 팀장 확인 뒤 고정). EX-35 m2000+ 는 §4b 연장 판정표 통과 + 팀장 원문 뒤에만 「정본 (C1a)」 이 된다.
+**지금 상태(planner 판단 · 제안)**: 9 절에서 S-B10 m1500 은 「출발선 후보」 인데 팀장 16:0x 「출발선 S-B10 m1500 우선 승인」 · 23:4x 「지금 자체로는 S-B10이 정본이잖아?」 가 있다 → 9 절 역할을 **「정본 (C0 평지 전진 · 출발선, 팀장 16:0x · 23:4x)」** 으로 바로잡고, B1500 · S-B50 은 「출발선 후보였음 (채택 안 됨) · 비교 기준」 으로 둔다(아래 9 절에 반영, 팀장 확인 뒤 고정). EX-35 m2000+ 는 §4b 연장 판정표 통과 + 팀장 원문 뒤에만 「정본 (C1a)」 이 된다. 정본 채택을 C0 평지 전진 졸업이나 A1~A12 전체 통과로 **소급하지 않는다**(CURRICULUM §2a ① · verifier).
 
 ### 10.4 계보 지도 (정본에서 이어지는 판마다 「부모 대비 바뀐 칸만」)
 
@@ -305,7 +368,7 @@ S-B10 부모의 실제 DR(부모 `params/env.yaml:1292~1369`, 실측): 마찰 st
 
 | 판 | 가중치 부모 | 설정 계보 | 부모 대비 바뀐 칸만 | 역할 |
 |---|---|---|---|---|
-| B1500 (EX-28) | 없음(처음부터 1501 회) | EX-25 START TopDown | 마찰 DR 0.2~1.2 복원(「B = friction only」, `sol23f_contract.CKPT_VARIANT`), 지도 늘 켬(force_gt), START 명령 계약 `start`, 3072 env · 시드 42 | 출발선 후보였음 · 비교 기준 |
+| B1500 (EX-28) | 없음(처음부터 1501 회) | **EX-23**(`EXP-X28-b-friction.md:48 · 52` EX-23 설정 부모 · scratch · learned · GT 강제. v1.6 「EX-25」 는 오기, verifier) | 마찰 DR 0.2~1.2 복원(「B = friction only」, `sol23f_contract.CKPT_VARIANT`), 지도 늘 켬(force_gt), START 명령 계약 `start`, 3072 env · 시드 42 | 출발선 후보였음 · 비교 기준 |
 | S-B10 (EX-34) | **없음(처음부터 1501 회, B1500 의 자식이 아니다)** | B 설정 | 지도 끔 p_map_off **0.1**(에피소드 단위, EX-33 S-B50 0.5 의 비율만 바꿈). 나머지 B 와 같음(`impl-sb 6309f67e`) | **정본 (C0 · 출발선)** 제안 |
 | EX-35 (S2a) | **S-B10 m1500** sha 4d987818(가중치 이어 가기, resume) | S-B10 | command_mode **s2a**(걸으며 돌기 2.5 + 2.5 %, 전진 75 %, 계약 `walkturn_v1`) · clock_scatter **on** · episode_scatter **on** · judge_world_frame **on** · judge_mask_new_task off · p_map_off 0.1 끔 분모 「허용 지형 안」(결정 9) · max_iterations 2001 · 코드 07fc5e73 · 실행 사본 impl-ex35-07fc · 부모 DR 그대로(마찰 0.2~1.2 · 질량 −1~+3) | 진행 중(10/26 23:24 기동) · 정본 아님 |
 
@@ -319,6 +382,7 @@ S-B10 부모의 실제 DR(부모 `params/env.yaml:1292~1369`, 실측): 마찰 st
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.7 초안 | 2026-10-27 | lead 8c58e0e5 위에 다시 얹음(3-way 충돌 0). verifier 막음 2 · lead 02:0x: A2 종류별 필수(X27j 전 HOLD_NO_DATA) · 10.2 REVERT 축 = 유지 조건 축만(A1 · A7~A9 제외) · 분모 축별 분리 · 유지 과제 슬롯 > 0 · 이전 값 계보 · 10.3 manifest 실제 키 · 소급 금지 · 10.4 B1500 설정 계보 EX-23 · A3 0.115 운영 가정 |
 | v1.6 초안 | 2026-10-27 | 10 절 평가 축(A1~A12 + 뒤 단계 A13~A17) · 이전 학습 비중 · 학습 조건 표(생성기) · 정본 채택 절차 · 계보 지도 첫 판(B1500 → S-B10 → EX-35) · 용어 clock_scatter · episode_scatter · R20~R22 · 9 절 S-B10 「정본」 제안 · 2 절 lead 창 송신(orchestration 표준 · mai_resume 대체) (planner 초안, analyst E1 · E2 반영(경고 축 · 요구 범위 · 폭 표기) · A5 기준선 실측 반영 · lead 39d0af37 위에 다시 얹음; 앞서 a72cafe7 위에 다시 얹음 2026-10-27 00:28, analyst · verifier · 팀장 전) |
 | v1.5 | 2026-10-26 | 9 절 이름 붙은 체크포인트 정본 (sha256), 영상 검정 화면 재촬영 규칙 |
 | v1.4 | 2026-10-25 | R13~R17 (회색 제안 문장 · 잴 수 있는 것을 미확인으로 · 남의 지적 미확인 전달 · 결정 기록 누락 · 촬영 장면 조건), 판정은 16 env 평균, 영상 장면 조건 |
