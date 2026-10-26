@@ -42,9 +42,9 @@ def last_stage(log):
     return last
 
 
-def tick(top):
-    marker = os.path.join(top, "PRIORITY_BUSY")
-    chain = pids("ex35_eval_chain2\\.sh")
+def tick(top, marker=None, chain_pattern="ex35_eval_chain2\.sh"):
+    marker = marker or os.path.join(top, "PRIORITY_BUSY")
+    chain = pids(chain_pattern)
     st = last_stage(os.path.join(top, "chain2.log"))
     busy = bool(chain) and st is not None and (st[3] == "start" or time.time() - time.mktime(time.strptime(st[0], "%Y-%m-%d %H:%M:%S")) < GRACE_S)   # 단계 사이 틈(45 초)은 계속 바쁨
 
