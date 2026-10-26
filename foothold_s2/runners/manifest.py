@@ -26,7 +26,7 @@ ALLOWED_DIFF_PREFIXES = (
     "run.hydra_overrides.agent.perception.est_mode",             # hydra 인자는 key 단위: est_mode 만 허용
     "modes.est_mode",                                              # 처치(est mask)
     "yaml.agent.run_name", "yaml.agent.perception.est_mode", "yaml.env.log_dir",
-    "files.manifest_file", "progress", "checkpoints", "files.added_after_start",
+    "files.manifest_file", "progress", "checkpoints", "files.added_after_start", "map_ratio_events",
 )
 
 # 장치 배치(어느 GPU 에서 돌렸나)는 처치가 아니라 배치다: 따로 «허용 · 장치 배치» 로 표시한다

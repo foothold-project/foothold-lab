@@ -76,6 +76,8 @@ PERCEPTION_DEFAULTS = {
     "stop_on_nonfinite": False,  # NaN/Inf(보상 · 행동 · 손실)이면 실행 무효
     # ---- SONNET-X25f (EX-33 S-B). 기본값 0 은 B 와 같은 동작이다 ----
     "p_map_off": 0.0,  # env 마다 에피소드 시작(reset) 때 이 확률로 «지도 끔» 을 뽑아 그 에피소드 끝까지 유지한다(끔 = est 를 만들 때 지도 토큰을 attention 키에서 뺌). 0 이면 뽑지 않고 기록기도 안 켠다
+    "p_map_off_change": None,  # M-T1: 이어 갈 때 체크포인트의 p_map_off 와 이 runner 값이 다르면 보통 거절한다. {"from_iter": N, "to": v[, "from": 직전 값]} 가 있고 to == p_map_off, N == 체크포인트 회차 + 1 일 때만 허용한다. 숫자(값 · 회차)는 cfg 칸으로만 받는다
+    "resume_adasmpl": None,  # M-T5: 이어 갈 때 저장본의 AdaSmpl(force_gt · p)을 덮을 값 {"force_gt": bool, "p": float|None}. None 이면 저장본 값이 조용히 되살아나므로 경고 줄을 낸다
     "map_switch_seed": 20251025,  # 끔 뽑기 전용 난수열의 시드(전역 난수를 건드리지 않는다)
 }
 
@@ -117,6 +119,27 @@ class StartRunner(OnPolicyRunner):
         if p_off > 0.0 and pcfg.get("map_input", "reconstruction") == "none":
             raise ValueError("p_map_off > 0 은 지도 입력이 있는 판에서만 쓴다")
         self.p_map_off = p_off
+        chg = pcfg.get("p_map_off_change")
+        if chg is not None:
+            chg = dict(chg)
+            if not {"from_iter", "to"} <= set(chg) or set(chg) - {"from_iter", "to", "from"}:
+                raise ValueError(f"p_map_off_change 는 {{from_iter, to[, from]}}: {chg}")
+            if not 0.0 <= float(chg["to"]) <= 1.0 or int(chg["from_iter"]) < 1:
+                raise ValueError(f"p_map_off_change 값이 범위 밖: {chg}")
+            if float(chg["to"]) != p_off:
+                raise ValueError(f"p_map_off_change.to={chg['to']} 와 p_map_off={p_off} 가 다르다 (바꿀 값은 한 곳에서 정한다)")
+            pcfg["p_map_off_change"] = chg
+        ra = pcfg.get("resume_adasmpl")
+        if ra is not None:
+            ra = dict(ra)
+            if "force_gt" not in ra or set(ra) - {"force_gt", "p"}:
+                raise ValueError(f"resume_adasmpl 은 {{force_gt[, p]}}: {ra}")
+            if ra.get("p") is not None and not 0.0 <= float(ra["p"]) <= 1.0:
+                raise ValueError(f"resume_adasmpl.p 가 범위 밖: {ra}")
+            pcfg["resume_adasmpl"] = ra
+        self.map_switch_changes: list[dict] = []   # 체크포인트에 실려 가는 p_map_off 변경 이력
+        self.map_ratio_events: list[dict] = []     # 이 실행이 manifest · jsonl 에 남기는 사건(변경 · 이어 가기 AdaSmpl · 첫 회차 표본)
+        self._events_written = 0
         self.manifest = None
         self.manifest_dir = None
         self.perception = StartPerception(
@@ -266,6 +289,7 @@ class StartRunner(OnPolicyRunner):
         self.pstate.use_gt = self.adasmpl.sample(n, self.device)
         self.pstate.map_off = draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen)
         print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
+        self._report_first_sources()
         ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
 
         ep_infos = []
@@ -318,7 +342,7 @@ class StartRunner(OnPolicyRunner):
                     raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
                     if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
                         lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
-                        self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta)
+                        self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta, extras.get("time_outs"), self.pstate.use_gt)
                     if trace is not None:
                         trace.post_step(step_k, rewards, dones)
                     if rs_rec is not None:
@@ -338,7 +362,7 @@ class StartRunner(OnPolicyRunner):
                     cur_episode_length += 1
                     done_ids = (dones > 0).nonzero(as_tuple=False).flatten()
                     if done_ids.numel():
-                        self.adasmpl.add(cur_reward_sum[done_ids])
+                        self.adasmpl.add(cur_reward_sum[done_ids][~self.pstate.map_off[done_ids].bool()])   # M-T2: 지도를 끈 에피소드의 보상은 CV(p_gt)에서 뺀다(reset_envs 가 map_off 를 새로 뽑기 전 값으로 분류)
                         rewbuffer.extend(cur_reward_sum[done_ids].cpu().tolist())
                         lenbuffer.extend(cur_episode_length[done_ids].cpu().tolist())
                         cur_reward_sum[done_ids] = 0
@@ -460,6 +484,7 @@ class StartRunner(OnPolicyRunner):
     def attach_manifest(self, log_dir: str, manifest: dict) -> None:
         """실행 시작 때 만든 manifest 를 붙인다. 체크포인트 저장 때마다 소비 코드 변경을 검사하고 진행 수를 갱신한다."""
         self.manifest_dir, self.manifest = log_dir, manifest
+        self._flush_map_ratio_events()
 
     def _invalid(self, it: int, reason: str) -> None:
         """실행 무효 · 안전 중단: 성능 승패가 아니라 기록한 뒤 멈춘다."""
@@ -698,19 +723,76 @@ class StartRunner(OnPolicyRunner):
         gen = self.map_switch_gen
 
         return {"p_map_off": self.p_map_off, "map_switch_seed": int(self.pcfg["map_switch_seed"]),
-                "generator_state": gen.get_state() if gen is not None else None}
+                "generator_state": gen.get_state() if gen is not None else None, "changes": list(self.map_switch_changes)}
 
-    def load_map_switch_state(self, saved: dict | None) -> None:
-        """체크포인트의 끔 설정을 이 runner 와 대조한다. 옛 체크포인트(칸 없음)는 p=0 으로 본다(B). p 가 다르거나 난수열 상태가 없는데 p>0 이면 거절."""
+    def load_map_switch_state(self, saved: dict | None, ckpt_iter: int | None = None) -> None:
+        """체크포인트의 끔 설정을 이 runner 와 대조한다. 옛 체크포인트(칸 없음)는 p=0 으로 본다(B).
+
+        p 가 다르면 거절한다. 단 `p_map_off_change` 가 있고 to == 이 runner 의 p, from_iter == 체크포인트 회차 + 1 이면 허용하고 사건을 남긴다(M-T1).
+        난수열: 이전 p > 0 이고 새 p > 0 이면 저장된 상태를 이어 쓴다. 이전 p == 0 이면 이 runner 가 시드로 새로 만든 것, 새 p == 0 이면 난수열이 없다.
+        """
         saved = saved or {"p_map_off": 0.0, "map_switch_seed": None, "generator_state": None}
-        if float(saved["p_map_off"]) != self.p_map_off:
-            raise ValueError(f"체크포인트의 p_map_off={saved['p_map_off']} 와 이 runner 의 {self.p_map_off} 가 다르다 (지도 끔 비율이 다른 체크포인트를 섞지 않는다)")
-        if self.p_map_off > 0.0:
+        old, new = float(saved["p_map_off"]), self.p_map_off
+        changed = old != new
+        if changed:
+            chg = self.pcfg.get("p_map_off_change")
+            if chg is None:
+                raise ValueError(f"체크포인트의 p_map_off={saved['p_map_off']} 와 이 runner 의 {self.p_map_off} 가 다르다 (지도 끔 비율이 다른 체크포인트를 섞지 않는다)")
+            if ckpt_iter is None or int(chg["from_iter"]) != int(ckpt_iter) + 1:
+                raise ValueError(f"p_map_off_change.from_iter={chg['from_iter']} 가 체크포인트 회차 {ckpt_iter} + 1 과 다르다 (p_map_off 변경은 이어 가는 첫 회차에서만 허용)")
+            if "from" in chg and float(chg["from"]) != old:
+                raise ValueError(f"p_map_off_change.from={chg['from']} 가 체크포인트의 p_map_off={old} 와 다르다")
+        self.map_switch_changes = [dict(e) for e in (saved.get("changes") or [])]
+        if old > 0.0 and new > 0.0:
             if int(saved["map_switch_seed"]) != int(self.pcfg["map_switch_seed"]):
                 raise ValueError(f"체크포인트의 map_switch_seed={saved['map_switch_seed']} 와 이 runner 의 {self.pcfg['map_switch_seed']} 가 다르다")
             if saved["generator_state"] is None:
                 raise ValueError("체크포인트에 지도 끔 난수열 상태가 없다")
             self.map_switch_gen.set_state(saved["generator_state"].cpu())
+        if changed:
+            ev = {"kind": "p_map_off_change", "from": old, "to": new, "from_iter": int(self.pcfg["p_map_off_change"]["from_iter"]),
+                  "rng": "continued" if (old > 0.0 and new > 0.0) else ("fresh_from_seed" if new > 0.0 else "none")}
+            self.map_switch_changes.append(ev)
+            self.map_ratio_events.append(ev)
+            print("MAP_RATIO_CHANGE from=%s to=%s from_iter=%d rng=%s" % (old, new, ev["from_iter"], ev["rng"]), flush=True)
+
+    # ------------------------------------------------------------------ M-T5: 이어 가기 AdaSmpl 덮어쓰기 · 사건 기록
+    def _apply_resume_adasmpl(self) -> None:
+        """저장본의 force_gt · p 는 AdaSmpl.load_state_dict 가 오류 없이 되살린다. 설정 `resume_adasmpl` 이 있으면 그 값으로 덮고, 없으면 저장본을 두고 설정과 다를 때 경고 줄을 낸다."""
+        before = {"force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p)}
+        cfg = self.pcfg.get("resume_adasmpl")
+        if cfg is None:
+            want = bool(self.pcfg.get("force_gt", False))
+            if before["force_gt"] != want:
+                print("RESUME_ADASMPL_WARN 저장본 force_gt=%s 가 설정 force_gt=%s 와 다르다 (resume_adasmpl 이 없어 저장본 값을 그대로 쓴다)" % (before["force_gt"], want), flush=True)
+            ev = {"kind": "resume_adasmpl", "applied": False, "saved": before, "configured_force_gt": want}
+        else:
+            self.adasmpl.force_gt = bool(cfg["force_gt"])
+            if cfg.get("p") is not None:
+                self.adasmpl.p = float(cfg["p"])
+            ev = {"kind": "resume_adasmpl", "applied": True, "saved": before, "after": {"force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p)}}
+        self.map_ratio_events.append(ev)
+        print("RESUME_ADASMPL %s" % json.dumps(ev, ensure_ascii=False), flush=True)
+
+    def _report_first_sources(self) -> None:
+        """학습 시작(또는 이어 가기 첫 회차) 때 실제로 뽑힌 env 의 지도 출처 수를 출력하고 기록한다: 정답 · 복원 · 끔(끔이 먼저)."""
+        off = self.pstate.map_off.bool()
+        gt = self.pstate.use_gt.bool()
+        ev = {"kind": "first_iter_sources", "gt": int((gt & ~off).sum()), "recon": int((~gt & ~off).sum()), "off": int(off.sum()),
+              "envs": int(off.numel()), "force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p), "resumed": bool(self._resumed)}
+        self.map_ratio_events.append(ev)
+        print("EX33_FIRST_SOURCES gt=%d recon=%d off=%d envs=%d force_gt=%s p=%.4f resumed=%s" % (ev["gt"], ev["recon"], ev["off"], ev["envs"], ev["force_gt"], ev["p"], ev["resumed"]), flush=True)
+        self._flush_map_ratio_events()
+
+    def _flush_map_ratio_events(self) -> None:
+        """사건 목록을 manifest(다음 저장 경계에 파일로) 와 map_ratio_events.jsonl 에 낸다. 여러 번 불러도 같은 줄을 두 번 쓰지 않는다."""
+        if self.manifest is not None:
+            self.manifest["map_ratio_events"] = [dict(e) for e in self.map_ratio_events]
+        if self.log_dir is not None and not self.disable_logs and self._events_written < len(self.map_ratio_events):
+            with open(os.path.join(self.log_dir, "map_ratio_events.jsonl"), "a", encoding="utf-8") as fh:
+                for ev in self.map_ratio_events[self._events_written:]:
+                    fh.write(json.dumps(_nan_to_none(ev), ensure_ascii=False) + "\n")
+            self._events_written = len(self.map_ratio_events)
 
     def save(self, path: str, infos: dict | None = None) -> None:
         torch.save(self.state_dict(infos), path)
@@ -745,11 +827,12 @@ class StartRunner(OnPolicyRunner):
         self.alg.policy.load_state_dict(sd["model_state_dict"])
         self.perception.load_state_dict(sd["perception_state_dict"])
         self.adasmpl.load_state_dict(sd["adasmpl"])
+        self._apply_resume_adasmpl()
         if load_optimizer:
             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
             self.alg.learning_rate = sd["ppo_learning_rate"]
             self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
-        self.load_map_switch_state(sd.get("map_switch"))
+        self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]

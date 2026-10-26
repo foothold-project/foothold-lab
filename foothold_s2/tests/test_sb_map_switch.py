@@ -401,10 +401,10 @@ def test_run_script_shape():
 
 # ---------------------------------------------------------------- 이어 가기: p · 시드 대조와 끔 난수열 이어 가기 (reviewer 고침 1)
 
-def _fake_runner(p, seed=20251025):
+def _fake_runner(p, seed=20251025, change=None):
     from foothold_s2.runners.start_runner import StartRunner
 
-    r = SimpleNamespace(p_map_off=p, pcfg={"map_switch_seed": seed}, map_switch_gen=make_generator("cpu", seed) if p > 0 else None)
+    r = SimpleNamespace(p_map_off=p, pcfg={"map_switch_seed": seed, "p_map_off_change": change}, map_switch_gen=make_generator("cpu", seed) if p > 0 else None, map_switch_changes=[], map_ratio_events=[])
     r.map_switch_state = lambda: StartRunner.map_switch_state(r)
     r.load_map_switch_state = lambda saved: StartRunner.load_map_switch_state(r, saved)
 
@@ -445,5 +445,5 @@ def test_checkpoint_carries_the_state_and_load_checks_it_first():
     src = _src("foothold_s2/runners/start_runner.py")
 
     assert '"map_switch": self.map_switch_state(),' in src
-    assert src.index("self.load_map_switch_state(sd.get(\"map_switch\"))") < src.index('self._load_env_state(sd["env_state"])')
+    assert src.index("self.load_map_switch_state(sd.get(\"map_switch\"), int(sd[\"iter\"]))") < src.index('self._load_env_state(sd["env_state"])')
     assert "self.map_switch_gen.set_state(saved[\"generator_state\"].cpu())" in src

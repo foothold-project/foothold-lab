@@ -58,10 +58,15 @@ class MapSwitchRecorder:
         self.track_sum = {"lin": z(), "ang": z()}
         self.track_n = z()
         self.off_frac_sum = 0.0
+        self.ended_timeout = z()          # 시간 제한으로 끝난 에피소드 수(extras["time_outs"])
+        self.ended_other = z()            # 그 밖의 종료(낙상 · 접촉 종료 등)
+        self.cause_steps = 0              # 종료 원인을 받은 step 수(0 이면 원인 기록 없음)
+        self.source_steps = {"gt": 0, "recon": 0, "off": 0}   # 정답 · 복원 · 끔 env-step 수. 끔이 먼저(끔 env 는 지도를 안 쓰므로 정답 · 복원과 겹치지 않는다)
+        self.source_known_steps = 0
 
     @torch.no_grad()
     def add_step(self, map_off: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor, levels: torch.Tensor | None = None,
-                 track_lin: torch.Tensor | None = None, track_ang: torch.Tensor | None = None) -> None:
+                 track_lin: torch.Tensor | None = None, track_ang: torch.Tensor | None = None, time_outs: torch.Tensor | None = None, use_gt: torch.Tensor | None = None) -> None:
         off = map_off.bool()
         self.steps += 1
         self.off_frac_sum += float(off.float().mean())
@@ -81,10 +86,22 @@ class MapSwitchRecorder:
                 self.track_n[g] += k
             end = sel & done
             c = int(end.sum())
+            if time_outs is not None:
+                to = time_outs.bool().to(end.device)
+                self.ended_timeout[g] += int((end & to).sum())
+                self.ended_other[g] += int((end & ~to).sum())
             if c:
                 self.ended[g] += c
                 self.ep_rew_sum[g] += float(self.ep_rew[end].sum())
                 self.ep_len_sum[g] += float(self.ep_len[end].sum())
+        if time_outs is not None:
+            self.cause_steps += 1
+        if use_gt is not None:
+            gt = use_gt.bool().to(off.device)
+            self.source_steps["off"] += int(off.sum())
+            self.source_steps["gt"] += int((gt & ~off).sum())
+            self.source_steps["recon"] += int((~gt & ~off).sum())
+            self.source_known_steps += 1
         self.ep_rew[done] = 0.0
         self.ep_len[done] = 0.0
 
@@ -98,5 +115,12 @@ class MapSwitchRecorder:
                       "ep_reward_mean": mean(self.ep_rew_sum[g], self.ended[g]), "ep_length_mean": mean(self.ep_len_sum[g], self.ended[g]),
                       "terrain_level_mean": mean(self.level_sum[g], self.level_n[g]),
                       "track_lin_vel_per_s": mean(self.track_sum["lin"][g], self.track_n[g]), "track_ang_vel_per_s": mean(self.track_sum["ang"][g], self.track_n[g])}
+
+        known = self.cause_steps == self.steps and self.steps > 0
+        for g in self.GROUPS:
+            out[g]["ended_timeout"] = int(self.ended_timeout[g]) if known else None
+            out[g]["ended_terminated"] = int(self.ended_other[g]) if known else None
+        src_ok = self.source_known_steps == self.steps and self.steps > 0
+        out["source_steps"] = ({**self.source_steps, "total": sum(self.source_steps.values())} if src_ok else None)
 
         return out
