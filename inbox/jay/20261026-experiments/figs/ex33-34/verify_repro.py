@@ -24,6 +24,26 @@ def digest_tree(root):
     return h.hexdigest(), [p.relative_to(root).as_posix() for p in files]
 
 
+def seal_sha_list(root):
+    manifest = root / "SHA256SUMS.txt"
+    lines = manifest.read_text(encoding="utf-8").splitlines()
+    updated = []
+    seen_repro = 0
+    for line in lines:
+        digest, relative = line.split("  ", 1)
+        source = (root / relative).resolve()
+        if relative == "reproducibility.json":
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            seen_repro += 1
+        if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+            raise AssertionError(f"SHA mismatch: {relative}")
+        updated.append(f"{digest}  {relative}")
+    assert seen_repro == 1, "reproducibility SHA row required exactly once"
+    with manifest.open("w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(updated) + "\n")
+    return len(updated)
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix="sol26b-repro-") as scratch:
         roots = [Path(scratch) / n for n in ("copy_a", "copy_b")]
@@ -58,9 +78,11 @@ def main():
         }
     with (HERE / "reproducibility.json").open("w", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    sha_rows = seal_sha_list(HERE)
     print(json.dumps({k: receipt[k] for k in
                       ("copies", "files_per_copy", "assertions_each",
-                       "byte_identical", "tree_sha256_both")}))
+                       "byte_identical", "tree_sha256_both")}
+                     | {"sha_rows": sha_rows}))
 
 
 if __name__ == "__main__":

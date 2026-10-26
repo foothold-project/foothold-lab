@@ -1,114 +1,130 @@
 [
   {
     "frames": 600,
-    "name": "b1500_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\b1500_rough_seq_05x.mp4",
-    "seconds": 24.0,
-    "sha256": "2e5a41745ce5286ee41ca5f5eafc49f82bcb504a5963b30811882355d34c1888"
-  },
-  {
-    "frames": 300,
-    "name": "b1500_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\b1500_rough_seq_1x.mp4",
-    "seconds": 12.0,
-    "sha256": "aec574ead9f973e5b6b6f2bd9654d767907ab8bd1230f08a0b222d510789f935"
-  },
-  {
-    "frames": 600,
-    "name": "compare_mapon_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\compare_mapon_rough_seq_05x.mp4",
-    "seconds": 24.0,
-    "sha256": "53c2e59facd3fb2747c2643e2975255ac65e1463f96e6cf6fd5b3cd9b9f91068"
-  },
-  {
-    "frames": 300,
-    "name": "compare_mapon_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\compare_mapon_rough_seq_1x.mp4",
-    "seconds": 12.0,
-    "sha256": "115e05180276a266a7e2989fb6ab432ada7ed12517395bad65fc911de2a74e2c"
-  },
-  {
-    "frames": 600,
-    "name": "compare_masked_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\compare_masked_rough_seq_05x.mp4",
+    "name": "CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_0.5x.mp4",
+    "old_name": "compare_masked_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_0.5x.mp4",
     "seconds": 24.0,
     "sha256": "9d67c83a1a3ebf0ab1c3bcce17d40f6d76b0faecf39ea6a5f96ff032797d568a"
   },
   {
     "frames": 300,
-    "name": "compare_masked_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\compare_masked_rough_seq_1x.mp4",
+    "name": "CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_1x.mp4",
+    "old_name": "compare_masked_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_1x.mp4",
     "seconds": 12.0,
     "sha256": "be0438c69e5ffa088034b48f6367807104ab05cef972fce58711562fe3d5df8f"
   },
   {
     "frames": 600,
-    "name": "g0b1500_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\g0b1500_rough_seq_05x.mp4",
+    "name": "CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_0.5x.mp4",
+    "old_name": "compare_mapon_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_0.5x.mp4",
+    "seconds": 24.0,
+    "sha256": "53c2e59facd3fb2747c2643e2975255ac65e1463f96e6cf6fd5b3cd9b9f91068"
+  },
+  {
+    "frames": 300,
+    "name": "CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_1x.mp4",
+    "old_name": "compare_mapon_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_1x.mp4",
+    "seconds": 12.0,
+    "sha256": "115e05180276a266a7e2989fb6ab432ada7ed12517395bad65fc911de2a74e2c"
+  },
+  {
+    "frames": 600,
+    "name": "EX28-B-m1500_mapgt_rough_seq_0.5x.mp4",
+    "old_name": "b1500_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX28-B-m1500_mapgt_rough_seq_0.5x.mp4",
+    "seconds": 24.0,
+    "sha256": "2e5a41745ce5286ee41ca5f5eafc49f82bcb504a5963b30811882355d34c1888"
+  },
+  {
+    "frames": 300,
+    "name": "EX28-B-m1500_mapgt_rough_seq_1x.mp4",
+    "old_name": "b1500_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX28-B-m1500_mapgt_rough_seq_1x.mp4",
+    "seconds": 12.0,
+    "sha256": "aec574ead9f973e5b6b6f2bd9654d767907ab8bd1230f08a0b222d510789f935"
+  },
+  {
+    "frames": 600,
+    "name": "EX32-G0B-m1500_mapnone_rough_seq_0.5x.mp4",
+    "old_name": "g0b1500_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX32-G0B-m1500_mapnone_rough_seq_0.5x.mp4",
     "seconds": 24.0,
     "sha256": "6b274d50384ef4d25ae730493953283c973d1569a1d7b5951b9fd687f60db28a"
   },
   {
     "frames": 300,
-    "name": "g0b1500_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\g0b1500_rough_seq_1x.mp4",
+    "name": "EX32-G0B-m1500_mapnone_rough_seq_1x.mp4",
+    "old_name": "g0b1500_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX32-G0B-m1500_mapnone_rough_seq_1x.mp4",
     "seconds": 12.0,
     "sha256": "ee724c4c4cac92d887cb6688264b203a2be59264603312a1503ce971ece510d3"
   },
   {
     "frames": 600,
-    "name": "sb10_1500_eval_gt_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb10_1500_eval_gt_rough_seq_05x.mp4",
-    "seconds": 24.0,
-    "sha256": "1b8c1608ca929e3676ba70113cfceb776f438582090cfea630f922da95782fc7"
-  },
-  {
-    "frames": 300,
-    "name": "sb10_1500_eval_gt_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb10_1500_eval_gt_rough_seq_1x.mp4",
-    "seconds": 12.0,
-    "sha256": "24c3da68a66a6f8e6de7ac22c5caf8d1fd624ab1c4efa66e46647d35a9ace835"
-  },
-  {
-    "frames": 600,
-    "name": "sb10_1500_probe_prop_only_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb10_1500_probe_prop_only_rough_seq_05x.mp4",
-    "seconds": 24.0,
-    "sha256": "d021ad0af7d33612f743a15c9925d44a9fb2829ad9ccd739ae57daa3d1c8706a"
-  },
-  {
-    "frames": 300,
-    "name": "sb10_1500_probe_prop_only_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb10_1500_probe_prop_only_rough_seq_1x.mp4",
-    "seconds": 12.0,
-    "sha256": "1b3a80d8be1fd1fbba8017bfe52bcea925fa31e70d189f77170cd21f9c643b4e"
-  },
-  {
-    "frames": 600,
-    "name": "sb50_1500_eval_gt_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb50_1500_eval_gt_rough_seq_05x.mp4",
+    "name": "EX33-SB50-m1500_mapgt_rough_seq_0.5x.mp4",
+    "old_name": "sb50_1500_eval_gt_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX33-SB50-m1500_mapgt_rough_seq_0.5x.mp4",
     "seconds": 24.0,
     "sha256": "29e83f770d0437bdd81342d0470598a3b6dcf975f4d79402806db94b5694ad05"
   },
   {
     "frames": 300,
-    "name": "sb50_1500_eval_gt_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb50_1500_eval_gt_rough_seq_1x.mp4",
+    "name": "EX33-SB50-m1500_mapgt_rough_seq_1x.mp4",
+    "old_name": "sb50_1500_eval_gt_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX33-SB50-m1500_mapgt_rough_seq_1x.mp4",
     "seconds": 12.0,
     "sha256": "bac4765fd389ef8acff6cd9df18c3369ebcdd12a196a009490b6017758c2e0d0"
   },
   {
     "frames": 600,
-    "name": "sb50_1500_probe_prop_only_rough_seq_05x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb50_1500_probe_prop_only_rough_seq_05x.mp4",
+    "name": "EX33-SB50-m1500_mapmasked_rough_seq_0.5x.mp4",
+    "old_name": "sb50_1500_probe_prop_only_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX33-SB50-m1500_mapmasked_rough_seq_0.5x.mp4",
     "seconds": 24.0,
     "sha256": "953c0d02a29bf7ec298bffe053612b85aaaff5e060b345b415ae01d30a0382a7"
   },
   {
     "frames": 300,
-    "name": "sb50_1500_probe_prop_only_rough_seq_1x.mp4",
-    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\sb50_1500_probe_prop_only_rough_seq_1x.mp4",
+    "name": "EX33-SB50-m1500_mapmasked_rough_seq_1x.mp4",
+    "old_name": "sb50_1500_probe_prop_only_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX33-SB50-m1500_mapmasked_rough_seq_1x.mp4",
     "seconds": 12.0,
     "sha256": "bbda81456a69269f2e20419892261c250d4955b9aa6c3e76e5d68c9b8ced7f72"
+  },
+  {
+    "frames": 600,
+    "name": "EX34-SB10-m1500_mapgt_rough_seq_0.5x.mp4",
+    "old_name": "sb10_1500_eval_gt_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX34-SB10-m1500_mapgt_rough_seq_0.5x.mp4",
+    "seconds": 24.0,
+    "sha256": "1b8c1608ca929e3676ba70113cfceb776f438582090cfea630f922da95782fc7"
+  },
+  {
+    "frames": 300,
+    "name": "EX34-SB10-m1500_mapgt_rough_seq_1x.mp4",
+    "old_name": "sb10_1500_eval_gt_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX34-SB10-m1500_mapgt_rough_seq_1x.mp4",
+    "seconds": 12.0,
+    "sha256": "24c3da68a66a6f8e6de7ac22c5caf8d1fd624ab1c4efa66e46647d35a9ace835"
+  },
+  {
+    "frames": 600,
+    "name": "EX34-SB10-m1500_mapmasked_rough_seq_0.5x.mp4",
+    "old_name": "sb10_1500_probe_prop_only_rough_seq_05x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX34-SB10-m1500_mapmasked_rough_seq_0.5x.mp4",
+    "seconds": 24.0,
+    "sha256": "d021ad0af7d33612f743a15c9925d44a9fb2829ad9ccd739ae57daa3d1c8706a"
+  },
+  {
+    "frames": 300,
+    "name": "EX34-SB10-m1500_mapmasked_rough_seq_1x.mp4",
+    "old_name": "sb10_1500_probe_prop_only_rough_seq_1x.mp4",
+    "path": "C:\\Users\\AI-WS01\\s2_lab\\video_25e\\final\\runner-26a_1026_final\\EX34-SB10-m1500_mapmasked_rough_seq_1x.mp4",
+    "seconds": 12.0,
+    "sha256": "1b3a80d8be1fd1fbba8017bfe52bcea925fa31e70d189f77170cd21f9c643b4e"
   }
 ]

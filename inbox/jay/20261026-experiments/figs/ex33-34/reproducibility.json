@@ -1,5 +1,5 @@
 {
-  "assertions_each": 16028,
+  "assertions_each": 16074,
   "byte_identical": true,
   "copies": 2,
   "files_per_copy": 18,
@@ -23,6 +23,6 @@
     "RESULT-EX33-SB50-1026.md",
     "RESULT-EX34-SB10-1026.md"
   ],
-  "source_video_sha_list_sha256": "75ea2b4bd856d974752e035fb1eeda5be1e748dc20a3961c63dfba5e7fb7971d",
-  "tree_sha256_both": "46288f2f6500de8c281265b20a27807827e4a2ed58d43284953cc01b734a75cc"
+  "source_video_sha_list_sha256": "e6954ef130f4bdbd6324648d431a4510375e63afe328470d48245067d180afac",
+  "tree_sha256_both": "71ec28b430aa63af4d0a19d22fe3a28a4e77052a0835fbc6a302f407c7b8f712"
 }

@@ -1,9 +1,9 @@
 {
-  "assertions": 16028,
+  "assertions": 16074,
   "lead_tables": {
-    "hardlevel_table.json": "8feaf9314323afb601c67e9846c6d1ba66a7dd10d95cddd57e3e4036faeb656d",
-    "rot_series.json": "5340ce16d9bb8194ea0c087ff56d292fff9aa9a6f73cda3a21ecf47ea54e4af3",
-    "startline_table.json": "6768033eb510ca30cd2221bbf53911e89d6a02372b70795348fdbfbb79df3eb2"
+    "hardlevel_table.json": "759a6ecb36242e4f396e28946967ecce699a3d8a81d84f8e33930ef29685b4dc",
+    "rot_series.json": "6922a8eedfa4a31a036fa8b11ac8adcce4d384e125d548067ed58a2c9f94c840",
+    "startline_table.json": "841ce5170e2ec63a952d19c3722ee19cb441020c4b52b8a882295d2605713298"
   },
   "runs": {
     "S-B10": {
@@ -23,5 +23,6 @@
       "training_path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-25_23-45-04_sb-main"
     }
   },
-  "source_video_sha_list_sha256": "75ea2b4bd856d974752e035fb1eeda5be1e748dc20a3961c63dfba5e7fb7971d"
+  "source_video_renames_sha256": "e88143ee73b9aa51ba7318f9af952247201c4c8e327f49224f18a91889b5754e",
+  "source_video_sha_list_sha256": "e6954ef130f4bdbd6324648d431a4510375e63afe328470d48245067d180afac"
 }

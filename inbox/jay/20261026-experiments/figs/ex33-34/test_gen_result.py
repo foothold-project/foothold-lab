@@ -1,5 +1,6 @@
 """Known-answer and mutation checks for the CPU result generator."""
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -8,6 +9,7 @@ from pathlib import Path
 import numpy as np
 
 import gen_result as g
+import verify_repro as repro
 
 
 class ResultTests(unittest.TestCase):
@@ -78,6 +80,49 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(g.read_lead_sections(ex), source.read_bytes().decode("utf-8-sig"))
         with self.assertRaisesRegex(AssertionError, "lead sections missing"):
             g.read_lead_sections("MISSING")
+
+    def test_video_renames_match_new_sha_list_and_reject_mutation(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            rows = [(f"old_{i}.mp4", f"EX33-new_{i}.mp4", f"{i:064x}")
+                    for i in range(16)]
+            csv_text = "old_name,new_name,sha256\n" + "".join(
+                f"{old},{new},{digest}\n" for old, new, digest in rows)
+            (root / "renames.csv").write_text(csv_text, encoding="utf-8")
+            sha_text = "".join(f"{digest} *{new}\n" for _, new, digest in rows)
+            sha_text += f"{'a' * 64} *unfinished_forward_0.25x.mp4\n"
+            (root / "SHA256SUMS.txt").write_text(sha_text, encoding="utf-8")
+            mapped = g.video_sources(root)
+            self.assertEqual(len(mapped), 16)
+            self.assertEqual(mapped[0]["new_name"], "EX33-new_0.mp4")
+            (root / "renames.csv").write_text(csv_text.replace(
+                rows[0][2], "b" * 64, 1), encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "rename SHA mismatch"):
+                g.video_sources(root)
+            (root / "renames.csv").write_text(csv_text, encoding="utf-8")
+            (root / "SHA256SUMS.txt").write_text(sha_text.replace(
+                f"{rows[0][2]} *{rows[0][1]}\n", "", 1), encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "rename SHA mismatch"):
+                g.video_sources(root)
+
+    def test_repro_receipt_seals_final_sha_without_masking_other_changes(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            receipt = root / "reproducibility.json"
+            other = root / "other.txt"
+            receipt.write_text("before", encoding="utf-8")
+            other.write_text("stable", encoding="utf-8")
+            digest = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+            (root / "SHA256SUMS.txt").write_text(
+                f"{digest(other)}  other.txt\n{digest(receipt)}  reproducibility.json\n",
+                encoding="utf-8")
+            receipt.write_text("after", encoding="utf-8")
+            self.assertEqual(repro.seal_sha_list(root), 2)
+            self.assertIn(f"{digest(receipt)}  reproducibility.json",
+                          (root / "SHA256SUMS.txt").read_text(encoding="utf-8"))
+            other.write_text("changed", encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "SHA mismatch: other.txt"):
+                repro.seal_sha_list(root)
 
     def test_card_denominators_are_raw_and_lead_table_mutation_caught(self):
         start = g.read_json(g.LEAD / "startline_table.json")

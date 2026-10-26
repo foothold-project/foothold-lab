@@ -15,16 +15,18 @@
 
 | 파일 | 길이(s) | 프레임 | SHA256 |
 |---|---:|---:|---|
-| compare_mapon_rough_seq_05x.mp4 | 24.00 | 600 | `53c2e59facd3fb2747c2643e2975255ac65e1463f96e6cf6fd5b3cd9b9f91068` |
-| compare_mapon_rough_seq_1x.mp4 | 12.00 | 300 | `115e05180276a266a7e2989fb6ab432ada7ed12517395bad65fc911de2a74e2c` |
-| compare_masked_rough_seq_05x.mp4 | 24.00 | 600 | `9d67c83a1a3ebf0ab1c3bcce17d40f6d76b0faecf39ea6a5f96ff032797d568a` |
-| compare_masked_rough_seq_1x.mp4 | 12.00 | 300 | `be0438c69e5ffa088034b48f6367807104ab05cef972fce58711562fe3d5df8f` |
-| sb50_1500_eval_gt_rough_seq_05x.mp4 | 24.00 | 600 | `29e83f770d0437bdd81342d0470598a3b6dcf975f4d79402806db94b5694ad05` |
-| sb50_1500_eval_gt_rough_seq_1x.mp4 | 12.00 | 300 | `bac4765fd389ef8acff6cd9df18c3369ebcdd12a196a009490b6017758c2e0d0` |
-| sb50_1500_probe_prop_only_rough_seq_05x.mp4 | 24.00 | 600 | `953c0d02a29bf7ec298bffe053612b85aaaff5e060b345b415ae01d30a0382a7` |
-| sb50_1500_probe_prop_only_rough_seq_1x.mp4 | 12.00 | 300 | `bbda81456a69269f2e20419892261c250d4955b9aa6c3e76e5d68c9b8ced7f72` |
+| CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_0.5x.mp4 | 24.00 | 600 | `9d67c83a1a3ebf0ab1c3bcce17d40f6d76b0faecf39ea6a5f96ff032797d568a` |
+| CMP-B1500-G0B-SB50-SB10-m1500_mapmasked_rough_seq_1x.mp4 | 12.00 | 300 | `be0438c69e5ffa088034b48f6367807104ab05cef972fce58711562fe3d5df8f` |
+| CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_0.5x.mp4 | 24.00 | 600 | `53c2e59facd3fb2747c2643e2975255ac65e1463f96e6cf6fd5b3cd9b9f91068` |
+| CMP-B1500-G0B-SB50-SB10-m1500_mapon_rough_seq_1x.mp4 | 12.00 | 300 | `115e05180276a266a7e2989fb6ab432ada7ed12517395bad65fc911de2a74e2c` |
+| EX33-SB50-m1500_mapgt_rough_seq_0.5x.mp4 | 24.00 | 600 | `29e83f770d0437bdd81342d0470598a3b6dcf975f4d79402806db94b5694ad05` |
+| EX33-SB50-m1500_mapgt_rough_seq_1x.mp4 | 12.00 | 300 | `bac4765fd389ef8acff6cd9df18c3369ebcdd12a196a009490b6017758c2e0d0` |
+| EX33-SB50-m1500_mapmasked_rough_seq_0.5x.mp4 | 24.00 | 600 | `953c0d02a29bf7ec298bffe053612b85aaaff5e060b345b415ae01d30a0382a7` |
+| EX33-SB50-m1500_mapmasked_rough_seq_1x.mp4 | 12.00 | 300 | `bbda81456a69269f2e20419892261c250d4955b9aa6c3e76e5d68c9b8ced7f72` |
 
 단일 영상 네 편과 비교 영상 네 편이다. 영상 속 보행·발 위상·거친 타일 경계는 lead 판독 전이다.
+
+구간 영상: 폴더 안 `*_forward_*` · `*_left_*` · `*_right_*` (전진 · 좌 · 우, 0.25 · 0.5 · 1 · 2 배속). 작성 중인 구간 영상은 위 완성본 8편 표와 분리한다.
 
 ## 2. 같은 것과 다른 것
 

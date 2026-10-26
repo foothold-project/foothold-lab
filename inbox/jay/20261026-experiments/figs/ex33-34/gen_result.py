@@ -12,6 +12,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -341,17 +342,46 @@ def training(run):
     return rows, scalars, base
 
 
-def video_manifest():
+def video_sources(video_dir):
     source = {}
-    for line in (VIDEO / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
+    for line in (video_dir / "SHA256SUMS.txt").read_text(encoding="utf-8-sig").splitlines():
         digest, name = line.split(maxsplit=1)
-        source[name.lstrip("*")] = digest.lower()
+        name = name.lstrip("*")
+        require(name not in source and bool(re.fullmatch(r"[0-9a-fA-F]{64}", digest)),
+                f"duplicate or invalid video SHA row: {name}")
+        source[name] = digest.lower()
+    with (video_dir / "renames.csv").open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        require(reader.fieldnames == ["old_name", "new_name", "sha256"],
+                "video rename header")
+        renames = list(reader)
+    require(len(renames) == 16, "video rename mapping needs 16 original clips")
+    old_names = set()
+    new_names = set()
+    for row in renames:
+        old_name, new_name, digest = (row[key] for key in
+                                      ("old_name", "new_name", "sha256"))
+        require(old_name not in old_names and new_name not in new_names,
+                f"duplicate video rename: {old_name} -> {new_name}")
+        require(Path(old_name).name == old_name and Path(new_name).name == new_name
+                and old_name.endswith(".mp4") and new_name.endswith(".mp4"),
+                f"invalid video filename: {old_name} -> {new_name}")
+        require(bool(re.fullmatch(r"[0-9a-fA-F]{64}", digest))
+                and source.get(new_name) == digest.lower(),
+                f"video rename SHA mismatch: {new_name}")
+        old_names.add(old_name)
+        new_names.add(new_name)
+    return sorted(renames, key=lambda row: row["new_name"])
+
+
+def video_manifest():
     result = []
-    for name in sorted(source):
+    for row in video_sources(VIDEO):
+        name = row["new_name"]
         path = VIDEO / name
         require(path.is_file(), f"video missing: {name}")
         digest = sha(path)
-        require(digest == source[name], f"video SHA mismatch: {name}")
+        require(digest == row["sha256"].lower(), f"video SHA mismatch: {name}")
         probe = subprocess.run(
             ["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_frames",
              "-show_entries", "stream=nb_read_frames,duration,avg_frame_rate",
@@ -361,7 +391,8 @@ def video_manifest():
         frames = int(stream["nb_read_frames"])
         seconds = float(stream["duration"])
         require(frames > 0 and seconds > 0, f"video frames: {name}")
-        result.append({"name": name, "sha256": digest, "seconds": seconds,
+        result.append({"old_name": row["old_name"], "name": name,
+                       "sha256": digest, "seconds": seconds,
                        "frames": frames, "path": str(path)})
     require(len(result) == 16, "final video manifest has 16 MP4 files")
     return result
@@ -546,8 +577,8 @@ def markdown_report(run, rows, training_data, videos, verdict, out):
     manifest = read_json(base / "manifest.json")
     cli = manifest["run"]["cli_args"]
     other = next(name for name in RUNS if name != run)
-    relevant = [v for v in videos if v["name"].startswith(cfg["name"] + "_")
-                or v["name"].startswith("compare_")]
+    relevant = [v for v in videos if v["old_name"].startswith(cfg["name"] + "_")
+                or v["old_name"].startswith("compare_")]
     require(len(relevant) == 8, f"video count {run}")
     video_rows = "\n".join(
         f"| {v['name']} | {fmt(v['seconds'], 2)} | {v['frames']} | `{v['sha256']}` |"
@@ -620,6 +651,8 @@ def markdown_report(run, rows, training_data, videos, verdict, out):
 {video_rows}
 
 단일 영상 네 편과 비교 영상 네 편이다. 영상 속 보행·발 위상·거친 타일 경계는 lead 판독 전이다.
+
+구간 영상: 폴더 안 `*_forward_*` · `*_left_*` · `*_right_*` (전진 · 좌 · 우, 0.25 · 0.5 · 1 · 2 배속). 작성 중인 구간 영상은 위 완성본 8편 표와 분리한다.
 
 ## 2. 같은 것과 다른 것
 
@@ -762,6 +795,7 @@ def main():
     js(out / "summary.json", {
         "assertions": assertions,
         "source_video_sha_list_sha256": sha(VIDEO / "SHA256SUMS.txt"),
+        "source_video_renames_sha256": sha(VIDEO / "renames.csv"),
         "runs": {run: {
             "training_path": str(training_data[run][2]),
             "training_map_switch_sha256": sha(training_data[run][2] / "map_switch.jsonl"),
