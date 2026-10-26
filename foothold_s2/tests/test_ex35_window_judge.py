@@ -24,6 +24,12 @@ def _set_meta(path, sha, seed=True):
     Path(path).write_text(json.dumps(d), encoding="utf-8")
 
 
+def _set_identity(path, sha, device="cuda:0", head="h" * 40):
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    d["run_identity"] = {"device": device, "gpu_name": "gpu", "checkpoint_sha256": sha, "eval_seed": 42, "code_head": head}
+    Path(path).write_text(json.dumps(d), encoding="utf-8")
+
+
 def sha_of(d):
     return (Path(d) / "checkpoint_sha256.txt").read_text(encoding="utf-8").split()[0]
 
@@ -99,6 +105,7 @@ def make_ckpt(root, n, tag="a"):
 
     for rel in ("map64/map_modes.json", "map64_eval_pred/map_modes.json", "hardlevel/L6/map_modes.json", "hardlevel/L9/map_modes.json"):
         _set_meta(d / rel, sha)
+        _set_identity(d / rel, sha)
 
     for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
         _set_meta(d / ("turn16_" + mode) / "probe_result.json", sha, seed=False)
@@ -596,3 +603,52 @@ def test_env_array_shape_mismatch_fails_a12_not_broadcast_through(pair):
     assert broken(lambda z: z.update(kind=z["kind"][:-1]))
     assert broken(lambda z: z.update(terrain_col=z["terrain_col"][:-1]))
     assert broken(lambda z: z.pop("dones"))
+
+
+def _strip_identity(d, rels=("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9")):
+    for rel in rels:
+        f = Path(d) / rel / "map_modes.json"
+        j = json.loads(f.read_text(encoding="utf-8"))
+        j.pop("run_identity", None)
+        f.write_text(json.dumps(j), encoding="utf-8")
+
+
+def test_run_identity_clean_pair_passes_and_records_require_true(pair):
+    r = run(pair)
+    assert r["run_identity"]["problems"] == [] and r["run_identity"]["require"] is True and r["branch"] != "HOLD_NO_DATA"
+
+
+def test_run_identity_missing_is_hold_by_default_and_warning_only_when_allowed(pair):
+    prev, latest, tmp = pair
+    _strip_identity(prev)
+    _strip_identity(latest)
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "미기록" in r["decision"]["action"]
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["require"] is False and r["run_identity"]["warning"].startswith("실행 계열 미기록")
+    assert W.to_markdown(r).startswith("> 경고: 실행 계열 미기록")
+
+
+def test_run_identity_one_side_missing_is_still_a_problem_in_strict_mode(pair):
+    prev, latest, tmp = pair
+    _strip_identity(prev, ("hardlevel/L9",))
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and any("prev/hardlevel/L9" in m for m in r["run_identity"]["missing"])
+
+
+def test_run_identity_mixed_device_or_head_or_sha_is_hold_even_when_missing_allowed(pair):
+    prev, latest, tmp = pair
+    _set_identity(latest / "map64_eval_pred" / "map_modes.json", sha_of(latest), device="cuda:1")                 # 한 저장본 안 칸끼리 device 가 다름
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] == "HOLD_NO_DATA" and "device" in r["decision"]["action"]
+    _set_identity(latest / "map64_eval_pred" / "map_modes.json", sha_of(latest))
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        _set_identity(prev / rel / "map_modes.json", sha_of(prev), device="cuda:1")                           # 최신 대 직전 device 가 다름
+    assert run(pair)["branch"] == "HOLD_NO_DATA"
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        _set_identity(prev / rel / "map_modes.json", sha_of(prev))
+    _set_identity(prev / "map64" / "map_modes.json", sha_of(prev), head="g" * 40)                              # 코드 head 가 섞임
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "코드 head" in r["decision"]["action"]
+    _set_identity(prev / "map64" / "map_modes.json", "e" * 64)                                                  # 저장본 sha 가 다른 저장본 것
+    assert any("저장본 sha" in p for p in run(pair)["run_identity"]["problems"])

@@ -517,8 +517,8 @@ def trend(latest_q: dict, prev_window: dict | None, w=WIN) -> dict:
 
 def truth_table(prev_state, latest_state, ctx) -> dict:
     """카드 4b.6 의 열한 행. ctx: trend_missing(문자열 또는 빈) · input_missing(list) · same_sha · iter_increasing · stop(bool) · a12_ok · a11 · at_ceiling · flat. 위에서부터 먼저 맞는 행."""
-    if ctx["input_missing"] or ctx["same_sha"] or not ctx["iter_increasing"] or G.HOLD_NO_DATA in (prev_state, latest_state) or ctx.get("trend_missing"):
-        why = ctx.get("trend_missing") or "필수 칸 결측 · 같은 sha · 회차 비증가 · 읽기 실패"
+    if ctx["input_missing"] or ctx["same_sha"] or not ctx["iter_increasing"] or G.HOLD_NO_DATA in (prev_state, latest_state) or ctx.get("trend_missing") or ctx.get("identity_problem"):
+        why = ctx.get("trend_missing") or ctx.get("identity_problem") or "필수 칸 결측 · 같은 sha · 회차 비증가 · 읽기 실패"
 
         return {"row": 1, "branch": "HOLD_NO_DATA", "action": "판정 불가 = 연장 불가 · 보고(통과 아님): %s" % why}
 
@@ -697,7 +697,73 @@ def axes_extra(d, n, train_dir, base_dir) -> dict:
     return out
 
 
-def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None, allow_map64_unmeasured=False, train_dir=None) -> dict:
+IDENTITY_FILES = ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9")
+
+
+def run_identity_check(latest_dir, prev_dir, require=True) -> dict:
+    """X27j2: 판정에 쓰는 평가가 한 실행 계열인가. 각 저장본의 네 평가 JSON 의 run_identity(device · 코드 head · 저장본 sha · eval_seed)를 대조한다.
+    - 기록이 없는 파일(옛 자료)이 하나라도 있으면: require(기본 켬)이면 problem, 끄면 warning 한 줄(판정은 막지 않음).
+    - 기록이 있는 것끼리: 코드 head 가 하나, 저장본 안 네 칸 device 가 하나, 최신과 직전 device 가 하나, 저장본 sha 가 그 저장본 것, eval_seed 42 가 아니면 problem(실행 계열 섞임)."""
+    ids, missing, problems = {}, [], []
+
+    for tag, d in (("latest", latest_dir), ("prev", prev_dir)):
+        d = Path(d)
+        sha_txt = None
+
+        try:
+            sha_txt = (d / "checkpoint_sha256.txt").read_text(encoding="utf-8").split()[0]
+        except OSError:
+            pass
+
+        for rel in IDENTITY_FILES:
+            p = d / rel / "map_modes.json"
+
+            try:
+                ident = _json(p).get("run_identity") if p.is_file() else None
+            except Exception:                                                                    # noqa: BLE001
+                ident = None
+
+            if not isinstance(ident, dict):
+                missing.append("%s/%s" % (tag, rel))
+                continue
+
+            ids[(tag, rel)] = ident
+
+            if sha_txt and ident.get("checkpoint_sha256") != sha_txt:
+                problems.append("%s/%s: 저장본 sha 가 이 저장본과 다르다" % (tag, rel))
+
+            if ident.get("eval_seed") != 42:
+                problems.append("%s/%s: eval_seed %s != 42" % (tag, rel, ident.get("eval_seed")))
+
+    heads = {i.get("code_head") for i in ids.values()}
+
+    if len(heads) > 1 or None in heads:
+        problems.append("코드 head 가 하나가 아니다 또는 없다: %s" % sorted(str(h)[:10] for h in heads))
+
+    for tag in ("latest", "prev"):
+        devs = {i.get("device") for (t, _r), i in ids.items() if t == tag}
+
+        if len(devs) > 1:
+            problems.append("%s 저장본의 네 칸 device 가 섞였다: %s" % (tag, sorted(map(str, devs))))
+
+    dl = {i.get("device") for (t, _r), i in ids.items() if t == "latest"}
+    dp = {i.get("device") for (t, _r), i in ids.items() if t == "prev"}
+
+    if dl and dp and dl != dp:
+        problems.append("최신 %s 와 직전 %s 의 device 가 다르다" % (sorted(map(str, dl)), sorted(map(str, dp))))
+
+    warning = ""
+
+    if missing:
+        warning = "실행 계열 미기록: run_identity 가 없는 평가 JSON %d 개 (%s)" % (len(missing), ", ".join(missing[:4]))
+
+        if require:
+            problems.append(warning + " (--allow-missing-run-identity 로만 끌 수 있다)")
+
+    return {"require": bool(require), "missing": missing, "problems": problems, "warning": warning, "problem": "실행 계열 섞임 · 미기록: " + "; ".join(problems) if problems else ""}
+
+
+def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None, allow_map64_unmeasured=False, train_dir=None, require_run_identity=True) -> dict:
     ld, pd = Path(latest_dir), Path(prev_dir)
     n_l, n_p = _iter_of(ld), _iter_of(pd)
     miss = {"latest": missing_inputs(ld), "prev": missing_inputs(pd)}
@@ -756,7 +822,9 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
     res["a12_note"] = a12_note
     res["extra_axes"] = {t: ex.get(t) for t in ("latest", "prev")}
     res["warnings"] = {t: (ex[t]["warnings"] if t in ex else []) for t in ("latest", "prev")}
-    ctx = {"input_missing": miss["latest"] + miss["prev"], "same_sha": bool(shal and shal == shap), "iter_increasing": n_l > n_p >= 0,
+    ident = run_identity_check(latest_dir, prev_dir, require_run_identity)
+    res["run_identity"] = ident
+    ctx = {"identity_problem": ident["problem"], "input_missing": miss["latest"] + miss["prev"], "same_sha": bool(shal and shal == shap), "iter_increasing": n_l > n_p >= 0,
            "stop": G.STOP in (ls, ps) or nonfinite_any, "a12_ok": a12_ok, "a11": a11d, "trend_missing": prob,
            "at_ceiling": n_l >= WIN["ceiling_iter"], "flat": tr["flat"]}
     res["context"] = {k: v for k, v in ctx.items() if k != "a11"}
@@ -784,7 +852,8 @@ def _fmt(v):
 
 
 def to_markdown(r) -> str:
-    L = ["# EX-35 창 경계 판정 m%s (직전 m%s)" % (r["latest_iter"], r["prev_iter"]), "",
+    L = (["> 경고: %s (판정 JSON 의 run_identity.require = %s)" % (r["run_identity"]["warning"], r["run_identity"]["require"]), ""] if r.get("run_identity", {}).get("warning") else [])
+    L += ["# EX-35 창 경계 판정 m%s (직전 m%s)" % (r["latest_iter"], r["prev_iter"]), "",
          "- 갈래: **%s** (진리표 %d 행) -- %s" % (r["branch"], r["decision"]["row"], r["decision"]["action"]),
          "- 상태: 직전 %s · 최신 %s" % (r["states"]["prev"]["state"], r["states"]["latest"]["state"]),
          "- 입력 결측: 최신 %s · 직전 %s" % (r["missing_inputs"]["latest"] or "없음", r["missing_inputs"]["prev"] or "없음"),
@@ -816,11 +885,12 @@ def main(argv=None) -> int:
     ap.add_argument("--a11", default=None, help="lead 가 채운 판독 JSON")
     ap.add_argument("--prev-window", default=None, help="이전 창 경계의 출력 json(추세 · 평평 셈). 최신이 m2250 이상이면 필수(없으면 HOLD_NO_DATA)")
     ap.add_argument("--allow-map64-unmeasured", action="store_true", help="64 env 거리 · 생존에 독립 재계산이 없어도 A12 를 막지 않는다(기본: 막음. 카드 A12 예외를 승인받았을 때만)")
+    ap.add_argument("--allow-missing-run-identity", action="store_true", help="run_identity 가 없는 옛 자료(EX-35 m1550~m2000)를 다시 돌릴 때만. 끈 사실은 판정 JSON 의 run_identity.require=false 에 남는다")
     ap.add_argument("--train-dir", default=None, help="학습 폴더(tfevents). A9 학습 곡선 계산에 필요, 없으면 HOLD_NO_DATA")
     ap.add_argument("--out-prefix", required=True, help="<prefix>.json 과 <prefix>.md 를 쓴다")
     a = ap.parse_args(argv)
     pw = json.loads(Path(a.prev_window).read_text(encoding="utf-8")) if a.prev_window else None
-    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw, allow_map64_unmeasured=a.allow_map64_unmeasured, train_dir=a.train_dir)
+    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw, allow_map64_unmeasured=a.allow_map64_unmeasured, train_dir=a.train_dir, require_run_identity=not a.allow_missing_run_identity)
     Path(a.out_prefix + ".json").write_text(json.dumps(r, ensure_ascii=False, indent=1, sort_keys=True, default=str), encoding="utf-8")
     Path(a.out_prefix + ".md").write_text(to_markdown(r), encoding="utf-8")
     print(json.dumps({"branch": r["branch"], "row": r["decision"]["row"], "states": {k: v["state"] for k, v in r["states"].items()}}, ensure_ascii=False))
