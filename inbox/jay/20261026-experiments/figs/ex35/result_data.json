@@ -453,6 +453,87 @@
     "repro_a1_b_changed": 29,
     "repro_source_sha": "b08941a4ba48e06d"
   },
+  "turn16": {
+    "cases": {
+      "left_then_right": {
+        "chain": {
+          "kept": 13,
+          "Q": 1.120012540853215
+        },
+        "repeats": {
+          "R1": {
+            "kept": 14,
+            "Q": 1.1172209302825753
+          },
+          "R2": {
+            "kept": 16,
+            "Q": 1.0697803315690817
+          },
+          "R3": {
+            "kept": 15,
+            "Q": 1.129806046403217
+          }
+        },
+        "kept_min": 14,
+        "kept_max": 16,
+        "q_min": 1.0697803315690817,
+        "q_max": 1.129806046403217
+      },
+      "fwd_then_left": {
+        "chain": {
+          "kept": 13,
+          "Q": 0.571407832968594
+        },
+        "repeats": {
+          "R1": {
+            "kept": 13,
+            "Q": 0.5957288119482557
+          },
+          "R2": {
+            "kept": 13,
+            "Q": 0.6159861684280623
+          },
+          "R3": {
+            "kept": 13,
+            "Q": 0.5161682452989023
+          }
+        },
+        "kept_min": 13,
+        "kept_max": 13,
+        "q_min": 0.5161682452989023,
+        "q_max": 0.6159861684280623
+      },
+      "right_then_left": {
+        "chain": {
+          "kept": 14,
+          "Q": 0.5586886471922285
+        },
+        "repeats": {
+          "R1": {
+            "kept": 14,
+            "Q": 0.5669262974853362
+          },
+          "R2": {
+            "kept": 14,
+            "Q": 0.580413340701546
+          },
+          "R3": {
+            "kept": 13,
+            "Q": 0.561068349367278
+          }
+        },
+        "kept_min": 13,
+        "kept_max": 14,
+        "q_min": 0.561068349367278,
+        "q_max": 0.580413340701546
+      }
+    },
+    "kept_limit": 14,
+    "right_then_left_q_limit": 0.5837163634983495,
+    "checkpoint_sha256": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "terrain_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "code_head": "27b0aa43ceb558bf7a52c7b465c110ced6c5b01c"
+  },
   "canonical": "S-B10 m1500",
   "source_sha256": {
     "m1750": "9707eb3cc3aecb208177093d054f86e1d1b501951de8aa0849a8b7c86d3b3e4b",
@@ -472,7 +553,23 @@
     "repro_compare": "a59703976cda15c044465a2c68775b501bf61475e13ab3efb5a29264913c29b5",
     "repro_a1": "4cc8d221dc012559ec174569fd295fc39a5f574d687a532221ae6cab9af60d3e",
     "repro_a2": "98c3fff030ab8cc55073fa05886935731a54825fb3ecb84ae4a0bb6849d2f45a",
-    "repro_b": "37d40a8850f7873e69474aeb22ea3aafee241978d01d543c9f631f964e063bd3"
+    "repro_b": "37d40a8850f7873e69474aeb22ea3aafee241978d01d543c9f631f964e063bd3",
+    "turn16_compare": "49642f7d4ee64d7bb929118c4cd76eb14682937108e3a79c24e0335f92c93c2d",
+    "turn16_log": "a8531df08b9e847d07a5f822eaed8441aef03061449910b2252672e018a17521",
+    "turn16_checkpoint": "111d212f69b2a956628826d29229833887407b898b446fe6318838b0894adb76",
+    "turn16_git_head": "fb0e8552862b4ca5dfde1ff92bb546550ba3924fb3fa6876e8e92ec97d9302db",
+    "turn16_probe_R1": "2dd2e0587131f2a1cd34e76fd8a1bd3ef064b68434a305372908904b64ce1791",
+    "turn16_probe_R2": "4e09a67aa95a2ffa74268f9f780de2424ffd467a9c7f153fe59334e0496b5307",
+    "turn16_probe_R3": "c10ef0ae8f9274e179f8a55d774342e7ba0955627945ae83fb7446ee7f2b0384",
+    "turn16_R1_left_then_right": "6d8f72b09d3972ca1ca0f2d3511c4d2ea84e54c968dd8dc577b9ab2e5a704406",
+    "turn16_R1_fwd_then_left": "caeb847c0939a64b397991f95848bc42b6a2d5d09232fad38b771032614213c2",
+    "turn16_R1_right_then_left": "a931b421803cca9108658759c6bcb7c21ac7c2543307309bf458fe369538322d",
+    "turn16_R2_left_then_right": "407aa7d030b557350c72d4b5e54b78ce3d0e3e4494a6ba7a4e44cc036da1122d",
+    "turn16_R2_fwd_then_left": "75af443d817998de2e2a2bb24d9e72caf8cc699b9f57b1b820bf96604fd7e7d4",
+    "turn16_R2_right_then_left": "8b0eb6623c9dd47016ddbd7feccef3bed3031368641ff415108de5b4190eed91",
+    "turn16_R3_left_then_right": "e34b6c6c537fc60ee9fb389073e3441966929dee570035afcc5520b2f7b5986f",
+    "turn16_R3_fwd_then_left": "b275d46f5ca5f5d68a9f324c3bb1fb21bafb0ef4f258771adb8a971901f1efb2",
+    "turn16_R3_right_then_left": "1f7a3b19c84dce95cdbb8475b7990706866d6606635aae5ad6809a714e86013d"
   },
   "source_paths": {
     "m1750": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_eval\\m1750\\ex35_verdict.json",
@@ -492,6 +589,22 @@
     "repro_compare": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\compare.md",
     "repro_a1": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\A1\\map_modes.json",
     "repro_a2": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\A2\\map_modes.json",
-    "repro_b": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\B\\map_modes.json"
+    "repro_b": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_x27k\\B\\map_modes.json",
+    "turn16_compare": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\compare.md",
+    "turn16_log": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\repro.log",
+    "turn16_checkpoint": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\checkpoint_sha256.txt",
+    "turn16_git_head": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\git_head.txt",
+    "turn16_probe_R1": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R1\\probe_result.json",
+    "turn16_probe_R2": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R2\\probe_result.json",
+    "turn16_probe_R3": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R3\\probe_result.json",
+    "turn16_R1_left_then_right": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R1\\arrays_left_then_right.npz",
+    "turn16_R1_fwd_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R1\\arrays_fwd_then_left.npz",
+    "turn16_R1_right_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R1\\arrays_right_then_left.npz",
+    "turn16_R2_left_then_right": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R2\\arrays_left_then_right.npz",
+    "turn16_R2_fwd_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R2\\arrays_fwd_then_left.npz",
+    "turn16_R2_right_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R2\\arrays_right_then_left.npz",
+    "turn16_R3_left_then_right": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R3\\arrays_left_then_right.npz",
+    "turn16_R3_fwd_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R3\\arrays_fwd_then_left.npz",
+    "turn16_R3_right_then_left": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\ex35_repro_turn16\\R3\\arrays_right_then_left.npz"
   }
 }

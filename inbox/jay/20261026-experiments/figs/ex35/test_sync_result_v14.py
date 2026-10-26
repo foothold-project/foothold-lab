@@ -3,7 +3,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from sync_result_v13 import render_exp_map, render_lab
+from sync_result_v14 import render_exp_map, render_lab
 
 
 DATA = {
@@ -19,6 +19,13 @@ DATA = {
         "repro_a1_a2_changed": 27,
         "repro_numeric_count": 56,
     },
+    "turn16": {
+        "right_then_left_q_limit": 0.5837,
+        "cases": {
+            "left_then_right": {"kept_min": 14, "kept_max": 16},
+            "fwd_then_left": {"kept_min": 13},
+        },
+    },
 }
 
 
@@ -33,6 +40,7 @@ class SyncTest(unittest.TestCase):
         output = render_exp_map(source, DATA)
         self.assertIn("STOP` 6행", output)
         self.assertIn("27/56", output)
+        self.assertIn("turn16 GPU0 세 반복", output)
         self.assertIn("- 다른 기록: 보존", output)
         self.assertEqual(output, render_exp_map(output, DATA))
 

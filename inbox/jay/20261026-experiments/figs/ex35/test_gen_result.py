@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
+
 from gen_result import collect, render
 
 
@@ -19,12 +21,23 @@ class ResultTest(unittest.TestCase):
         self.baseline = self.root / "baseline.json"
         self.train_dir.mkdir()
         self.baseline.write_text(json.dumps({"turn": {f"S-B10|eval_gt|{name}": {"Q": 0.4} for name in ("fwd_then_left", "right_then_left", "indep_left")}}), encoding="utf-8")
-        names = ("fwd_then_left", "right_then_left", "indep_left", *(f"case_{i}" for i in range(5)))
+        names = ("fwd_then_left", "right_then_left", "left_then_right", "indep_left", *(f"case_{i}" for i in range(4)))
         cases = {name: {"Q": 0.5, "C": 0.2, "kept": 16} for name in names}
         for name, state in (("m1750", "NEW_TASK_PENDING"), ("m1950", "MAINTAIN_FAIL"), ("m2000", "MAINTAIN_FAIL")):
             folder = self.eval_dir / name
             folder.mkdir(parents=True)
-            doc = {"state": state, "mode": "eval_gt", "reasons": [{"case": "case", "cond": "drop_Q", "limit": 0.6, "value": 0.5}], "detail": {"it_in_stage": int(name[1:]) - 1500, "min_stay": 500, "cases": dict(cases)}}
+            local_cases = {key: dict(value) for key, value in cases.items()}
+            reasons = [{"case": "case", "cond": "drop_Q", "limit": 0.6, "value": 0.5}]
+            if name == "m2000":
+                local_cases["left_then_right"]["kept"] = 13
+                local_cases["fwd_then_left"]["kept"] = 13
+                local_cases["right_then_left"]["kept"] = 14
+                reasons = [
+                    {"case": "left_then_right", "cond": "survival_16", "limit": 14, "value": 13},
+                    {"case": "fwd_then_left", "cond": "survival_16", "limit": 14, "value": 13},
+                    {"case": "right_then_left", "cond": "drop_Q", "limit": 0.6, "value": 0.5},
+                ]
+            doc = {"state": state, "mode": "eval_gt", "reasons": reasons, "detail": {"it_in_stage": int(name[1:]) - 1500, "min_stay": 500, "cases": local_cases}}
             (folder / "ex35_verdict.json").write_text(json.dumps(doc), encoding="utf-8")
         receipt = {"validate_launch": "ok", "parent_sha256": "a" * 64, "expected_parent_sha256": "a" * 64, "parent_iter": 1500, "first_iter": 1501, "last_iter": 2000, "remaining_updates": 500, "args": {"device": "cuda:0", "num_envs": "3072", "seed": "42", "max_iterations": "2001"}}
         (self.train_dir / "launch_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
@@ -54,6 +67,30 @@ class ResultTest(unittest.TestCase):
             values = {f"k{i}": float(i + (1 if name == "a2" and i < 27 else 2 if name == "b" and i < 29 else 0)) for i in range(56)}
             doc = {"modes": values, "checkpoint_sha256": "a" * 64, "eval_seed": 42, "source_sha256": {"foothold_s2.eval.eval_map_modes": "same"}, "run_identity": {"device": "cuda:1" if name == "b" else "cuda:0"}}
             self.evidence[f"repro_{name}"].write_text(json.dumps(doc), encoding="utf-8")
+        turn_root = self.root / "turn16"
+        turn_root.mkdir()
+        for name in ("compare", "log", "checkpoint", "git_head"):
+            self.evidence[f"turn16_{name}"] = turn_root / name
+        self.evidence["turn16_compare"].write_text("R1 R2 R3 same source", encoding="utf-8")
+        self.evidence["turn16_log"].write_text("\n".join(f"start {run} cuda:0\nend ok {run}" for run in ("R1", "R2", "R3")) + "\nREPRO DONE", encoding="utf-8")
+        self.evidence["turn16_checkpoint"].write_text("a" * 64, encoding="utf-8")
+        self.evidence["turn16_git_head"].write_text("f" * 40, encoding="utf-8")
+        turn_cases = ("left_then_right", "fwd_then_left", "right_then_left")
+        kept_by_run = {"R1": (14, 13, 14), "R2": (16, 13, 14), "R3": (15, 13, 13)}
+        q_by_run = {"R1": (1.1, 0.61, 0.55), "R2": (1.0, 0.62, 0.58), "R3": (1.2, 0.51, 0.56)}
+        for run in ("R1", "R2", "R3"):
+            probe = {"checkpoint_iter": 2000, "envs": 16, "map_mode": "eval_gt", "checkpoint_sha256": "a" * 64,
+                     "fixed_terrain": {"assignment_sha256": "t" * 64},
+                     "protocols": {case: {"cmd": [0, 0, -1.2 if case == "left_then_right" else 1.2]} for case in turn_cases}}
+            self.evidence[f"turn16_probe_{run}"] = turn_root / f"probe_{run}.json"
+            self.evidence[f"turn16_probe_{run}"].write_text(json.dumps(probe), encoding="utf-8")
+            for i, case in enumerate(turn_cases):
+                path = turn_root / f"{run}_{case}.npz"
+                kept = np.arange(16) < kept_by_run[run][i]
+                sign = -1 if case == "left_then_right" else 1
+                wz = np.full((16, 2), sign * q_by_run[run][i])
+                np.savez(path, alive=np.ones((16, 2), dtype=bool), kept=kept, wz=wz)
+                self.evidence[f"turn16_{run}_{case}"] = path
 
     def collect(self):
         return collect(self.eval_dir, self.train_dir, self.baseline, self.evidence)
@@ -65,8 +102,11 @@ class ResultTest(unittest.TestCase):
         self.assertEqual(data["window_row"], 6)
         self.assertEqual(data["window_evidence"]["map64_numeric_changed"], 28)
         self.assertEqual(data["window_evidence"]["repro_a1_a2_changed"], 27)
+        self.assertEqual(data["turn16"]["cases"]["left_then_right"]["kept_max"], 16)
+        self.assertEqual(data["turn16"]["cases"]["right_then_left"]["q_max"], 0.58)
         self.assertEqual(render(data), render(self.collect()))
         self.assertIn("**STOP 6행**", render(data))
+        self.assertIn("m2000 MAINTAIN_FAIL은 세 반복에서도 유지", render(data))
 
     def test_mutated_final_state_is_rejected(self):
         path = self.eval_dir / "m2000/ex35_verdict.json"
@@ -110,6 +150,12 @@ class ResultTest(unittest.TestCase):
         doc = json.loads(path.read_text())
         doc["modes"]["k27"] += 1
         path.write_text(json.dumps(doc))
+        with self.assertRaises(AssertionError):
+            self.collect()
+
+    def test_turn16_stable_failure_mutation_is_rejected(self):
+        path = self.evidence["turn16_R2_fwd_then_left"]
+        np.savez(path, alive=np.ones((16, 2), dtype=bool), kept=np.arange(16) < 14, wz=np.ones((16, 2)))
         with self.assertRaises(AssertionError):
             self.collect()
 

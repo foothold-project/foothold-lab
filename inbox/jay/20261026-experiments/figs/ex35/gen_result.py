@@ -9,6 +9,8 @@ import re
 from statistics import mean
 from pathlib import Path
 
+import numpy as np
+
 
 DEFAULT_EVAL = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval")
 DEFAULT_TRAIN = Path(
@@ -23,6 +25,9 @@ DEFAULT_CHAIN_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval/m
 DEFAULT_REMEASURE_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval_x27j/m2000/map64/map_modes.json")
 DEFAULT_CMP_VIDEO = Path("C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m/p2/rendered/CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4")
 DEFAULT_REPRO = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_repro_x27k")
+DEFAULT_TURN16 = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_repro_turn16")
+TURN_RUNS = ("R1", "R2", "R3")
+TURN_CASES = ("left_then_right", "fwd_then_left", "right_then_left")
 
 
 def read_json(path: Path) -> dict:
@@ -41,6 +46,22 @@ def numeric_leaves(value: object, prefix: str = "") -> dict[str, float | int]:
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return {prefix: value}
     return {}
+
+
+def turn_npz_stats(path: Path, sign: int) -> dict[str, float | int]:
+    """Match the kept-env Q contract from judge_stats for the two reported fields."""
+    with np.load(path) as z:
+        alive = np.asarray(z["alive"], dtype=bool)
+        kept = np.asarray(z["kept"], dtype=bool)
+        wz = np.asarray(z["wz"], dtype=np.float64)
+    assert sign in (-1, 1) and alive.shape == wz.shape and alive.ndim == 2
+    assert kept.shape == (alive.shape[0],) and alive.shape[0] == 16
+    assert np.isfinite(wz[alive]).all()
+    counts = alive.sum(axis=1)
+    valid = kept & (counts > 0)
+    assert valid.any()
+    per_env = sign * np.where(alive, wz, 0.0).sum(axis=1) / np.maximum(counts, 1)
+    return {"kept": int(valid.sum()), "Q": float(per_env[valid].mean())}
 
 
 def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASELINE, evidence_paths: dict[str, Path] | None = None) -> dict:
@@ -64,6 +85,12 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
             "repro_a1": DEFAULT_REPRO / "A1/map_modes.json",
             "repro_a2": DEFAULT_REPRO / "A2/map_modes.json",
             "repro_b": DEFAULT_REPRO / "B/map_modes.json",
+            "turn16_compare": DEFAULT_TURN16 / "compare.md",
+            "turn16_log": DEFAULT_TURN16 / "repro.log",
+            "turn16_checkpoint": DEFAULT_TURN16 / "checkpoint_sha256.txt",
+            "turn16_git_head": DEFAULT_TURN16 / "git_head.txt",
+            **{f"turn16_probe_{run}": DEFAULT_TURN16 / run / "probe_result.json" for run in TURN_RUNS},
+            **{f"turn16_{run}_{case}": DEFAULT_TURN16 / run / f"arrays_{case}.npz" for run in TURN_RUNS for case in TURN_CASES},
         }),
     }
     verdicts = {k: read_json(paths[k]) for k in ("m1750", "m1950", "m2000")}
@@ -114,6 +141,38 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
     }
     assert repro_diff == {"a1_a2": 27, "a1_b": 29}
     assert "27 / 56" in paths["repro_compare"].read_text(encoding="utf-8-sig")
+    turn_probes = {run: read_json(paths[f"turn16_probe_{run}"]) for run in TURN_RUNS}
+    assert all(probe["checkpoint_iter"] == 2000 and probe["envs"] == 16 and probe["map_mode"] == "eval_gt" for probe in turn_probes.values())
+    assert all(probe["checkpoint_sha256"] == a11["checkpoint_sha256"] for probe in turn_probes.values())
+    assert len({probe["fixed_terrain"]["assignment_sha256"] for probe in turn_probes.values()}) == 1
+    assert "REPRO DONE" in paths["turn16_log"].read_text(encoding="utf-8-sig")
+    assert all(f"start {run} cuda:0" in paths["turn16_log"].read_text(encoding="utf-8-sig") for run in TURN_RUNS)
+    assert a11["checkpoint_sha256"] in paths["turn16_checkpoint"].read_text(encoding="utf-8-sig")
+    turn = {}
+    for case in TURN_CASES:
+        commands = [turn_probes[run]["protocols"][case]["cmd"][2] for run in TURN_RUNS]
+        assert all(command == commands[0] for command in commands) and commands[0] != 0
+        sign = 1 if commands[0] > 0 else -1
+        repeats = {run: turn_npz_stats(paths[f"turn16_{run}_{case}"], sign) for run in TURN_RUNS}
+        chain = verdicts["m2000"]["detail"]["cases"][case]
+        turn[case] = {
+            "chain": {"kept": int(chain["kept"]), "Q": float(chain["Q"])},
+            "repeats": repeats,
+            "kept_min": min(item["kept"] for item in repeats.values()),
+            "kept_max": max(item["kept"] for item in repeats.values()),
+            "q_min": min(item["Q"] for item in repeats.values()),
+            "q_max": max(item["Q"] for item in repeats.values()),
+        }
+    failures = verdicts["m2000"]["reasons"]
+    kept_limit = next(item["limit"] for item in failures if item["case"] == "fwd_then_left" and item["cond"] == "survival_16")
+    assert kept_limit == next(item["limit"] for item in failures if item["case"] == "left_then_right" and item["cond"] == "survival_16")
+    q_limit = next(item["limit"] for item in failures if item["case"] == "right_then_left" and item["cond"] == "drop_Q")
+    assert turn["left_then_right"]["chain"]["kept"] < kept_limit
+    assert all(item["kept"] >= kept_limit for item in turn["left_then_right"]["repeats"].values())
+    assert turn["fwd_then_left"]["chain"]["kept"] < kept_limit
+    assert all(item["kept"] < kept_limit for item in turn["fwd_then_left"]["repeats"].values())
+    assert turn["right_then_left"]["chain"]["Q"] < q_limit
+    assert all(item["Q"] < q_limit for item in turn["right_then_left"]["repeats"].values())
     log = paths["run_log"].read_text(encoding="utf-8-sig", errors="replace")
     iterations = [int(v) for v in re.findall(r"Learning iteration\s+(\d+)/2001", log)]
     elapsed = re.findall(r"Time elapsed:\s*([0-9:]+)", log)
@@ -206,6 +265,10 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
             "repro_a1_b_changed": repro_diff["a1_b"],
             "repro_source_sha": repro["A1"]["source_sha256"][source_module],
         },
+        "turn16": {"cases": turn, "kept_limit": kept_limit, "right_then_left_q_limit": q_limit,
+                   "checkpoint_sha256": a11["checkpoint_sha256"],
+                   "terrain_sha256": turn_probes["R1"]["fixed_terrain"]["assignment_sha256"],
+                   "code_head": paths["turn16_git_head"].read_text(encoding="utf-8-sig").strip()},
         "canonical": "S-B10 m1500",
         "source_sha256": {k: sha(v) for k, v in paths.items()},
         "source_paths": {k: str(v) for k, v in paths.items()},
@@ -213,7 +276,7 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
 
 
 def render(d: dict) -> str:
-    t, w = d["training"], d["windows"]
+    t, w, turn16 = d["training"], d["windows"], d["turn16"]
     rows = []
     for key, value in w.items():
         rows.append(
@@ -256,13 +319,24 @@ def render(d: dict) -> str:
         parent_rows.append(
             f"| {name} | {parent['Q']:.4f} | {latest['Q']:.4f} | {latest['Q'] - parent['Q']:+.4f} |"
         )
+    kept_rows, q_rows = [], []
+    for name, case in turn16["cases"].items():
+        sample = case["repeats"]
+        kept_rows.append(
+            f"| {name} | {case['chain']['kept']} | {sample['R1']['kept']} | {sample['R2']['kept']} | "
+            f"{sample['R3']['kept']} | {case['kept_min']}~{case['kept_max']} | {case['kept_max'] - case['kept_min']} |"
+        )
+        q_rows.append(
+            f"| {name} | {case['chain']['Q']:.4f} | {sample['R1']['Q']:.4f} | {sample['R2']['Q']:.4f} | "
+            f"{sample['R3']['Q']:.4f} | {case['q_min']:.4f}~{case['q_max']:.4f} | {case['q_max'] - case['q_min']:.4f} |"
+        )
     x = d["window_evidence"]
     return f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
-> 근거: EX-35 학습 영수증·저장본 판정 JSON·기본 및 A11 창 판정 JSON·재현성 시험·CMP 영상 · 결과 전 EX-35 카드 §4b.6
-> 요지: m1950·m2000은 MAINTAIN_FAIL이고, A11 판독 반영 뒤 창 판정은 STOP 6행이다. 연장 없음, 정본 S-B10 m1500 유지.
-> 상태: 학습·저장본·창 판정 확인됨 · map64 반복 측정 차이 확인됨 · 비결정성 원인 미확인
-> 판: v1.3
+> 근거: EX-35 학습 영수증·저장본 판정 JSON·A11 창 판정 JSON·map64 및 turn16 반복 NPZ·CMP 영상 · 결과 전 EX-35 카드 §4b.6
+> 요지: m2000 MAINTAIN_FAIL의 세 사유 중 둘은 같은 GPU 세 번의 회전 반복에서 유지됐다. 창 판정은 STOP 6행이며 정본 S-B10 m1500을 유지한다.
+> 상태: 학습·저장본·창 판정 확인됨 · map64 및 turn16 반복 측정 차이 확인됨 · 비결정성 원인 미확인
+> 판: v1.4
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -316,13 +390,27 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 이 학습 평균은 같은 명령 분포의 저장본 독립 평가가 아니며, 판정에는 사용하지 않았다.
 
+### 16 env 회전 반복 · m2000 핵심 사유
+
+사슬은 GPU1, R1~R3은 같은 고정 사본·저장본·칸에서 GPU0으로 세 번 실행했다. 아래 수치는 각 `arrays_*.npz`의 살아 있는 프레임과 kept env를 CPU에서 다시 집계했다. 반복 폭은 R1~R3의 최대값에서 최솟값을 뺀 값이며 사슬은 폭 계산에 넣지 않았다.
+
+| 경우 | 사슬 kept | R1 | R2 | R3 | 반복 최소~최대 | 반복 폭 |
+|---|---:|---:|---:|---:|---:|---:|
+{chr(10).join(kept_rows)}
+
+| 경우 | 사슬 Q | R1 | R2 | R3 | 반복 최소~최대 | 반복 폭 |
+|---|---:|---:|---:|---:|---:|---:|
+{chr(10).join(q_rows)}
+
+등록 조건은 kept `{turn16['kept_limit']}` 이상, `right_then_left` Q `{turn16['right_then_left_q_limit']:.4f}` 이상이다. R1~R3은 표본 세 번이고 장치 차이를 분리하지 못했다.
+
 ## 7. 판정과 증거 범위
 
 m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기본 실행은 A11 판독 파일이 없어 `STOP` {d['window_default_row']}행이었다. {x['a11_time']}의 A11 판독표는 다섯 항목 모두 「없음」이며, 판독자는 {x['a11_reader']}이다. 이를 반영한 창 판정 재실행 결과는 **{d['window_decision']} {d['window_row']}행**, 사유는 `{d['window_action']}`이다. 최신·이전 필수 입력 결측 목록은 모두 빈 목록이다. **EX-35 연장 없음, 정본 {d['canonical']} 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
 
 판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 {x['map64_numeric_comparable']}칸 중 {x['map64_numeric_changed']}칸이 다르고, `eval_map_modes` 소스 해시는 `{x['chain_eval_map_modes_sha']}`에서 `{x['remeasure_eval_map_modes_sha']}`로 다르다. 이어 같은 저장본·시드 42·소스 해시 `{x['repro_source_sha']}`로 GPU0에서 두 번 잰 수치도 **{x['repro_numeric_count']}칸 중 {x['repro_a1_a2_changed']}칸** 달랐다. GPU0 대 GPU1은 {x['repro_numeric_count']}칸 중 {x['repro_a1_b_changed']}칸이 달랐다. 따라서 앞의 {x['map64_numeric_changed']}칸 차이를 코드 변경 탓으로 단정할 수 없고, 코드 변경의 영향도 이 시험으로 분리할 수 없다. 평가의 비결정성 원인은 미확인이다.
 
-64 env 생존 수는 같은 GPU 반복에서도 1~2대 달랐다. 16 env 회전의 `kept >= 14` 같은 정수 문턱은 1~2대 변화에 민감할 수 있으나 그 16 env 반복 폭은 이 시험에서 미측정이다. 판정 문턱은 바꾸지 않았다. A11 발자국 메모에는 직진 명령에서 부모 m1500은 왼쪽, EX-35 m2000은 오른쪽으로 휨이 기록됐다. 옆 방향 이동량은 수치 미측이며 이 메모는 판정 항목 밖이다.
+64 env 생존 수는 같은 GPU 반복에서도 1~2대 달랐다. 16 env 회전 반복에서는 `left_then_right` kept가 사슬 {turn16['cases']['left_then_right']['chain']['kept']}에서 R1~R3 {' · '.join(str(turn16['cases']['left_then_right']['repeats'][run]['kept']) for run in TURN_RUNS)}로 바뀌어 이 사유 하나는 반복에서 유지되지 않았다. 그러나 `fwd_then_left` kept는 세 번 모두 {turn16['cases']['fwd_then_left']['kept_min']}으로 {turn16['kept_limit']} 미만이고, `right_then_left` Q도 세 번 모두 {turn16['right_then_left_q_limit']:.4f} 미만이다. 따라서 **m2000 MAINTAIN_FAIL은 세 반복에서도 유지**된다. 사슬 GPU1과 반복 GPU0의 장치 차이는 분리하지 못했고, 세 번의 표본에서 본 폭은 모집단 전체 폭의 하한일 뿐이다. 문턱은 바꾸지 않았다. A11 발자국 메모에는 직진 명령에서 부모 m1500은 왼쪽, EX-35 m2000은 오른쪽으로 휨이 기록됐다. 옆 방향 이동량은 수치 미측이며 이 메모는 판정 항목 밖이다.
 
 ## 8. 다음 설계에서 무엇을 바꾸는가
 
@@ -336,7 +424,7 @@ m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기�
 |---|---|---|
 {evidence}
 
-검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 기본 창 `STOP` 4행, A11 판독 뒤 창 `STOP` 6행, 재평가 {x['remeasure_stages']}단계 완료, 동일 GPU 반복 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 수치 차이, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
+검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 기본 창 `STOP` 4행, A11 판독 뒤 창 `STOP` 6행, 재평가 {x['remeasure_stages']}단계 완료, map64 동일 GPU 반복 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 수치 차이, turn16의 두 안정 실패 사유, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
 """
 
 

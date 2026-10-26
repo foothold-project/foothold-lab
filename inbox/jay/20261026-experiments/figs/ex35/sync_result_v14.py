@@ -1,4 +1,4 @@
-"""Sync the generated EX-35 v1.3 result to its map and local status page."""
+"""Sync the generated EX-35 v1.4 result to its map and local status page."""
 
 from __future__ import annotations
 
@@ -24,29 +24,32 @@ def replace_one(source: str, pattern: str, replacement: str) -> str:
 def render_exp_map(source: str, data: dict) -> str:
     assert data["window_decision"] == "STOP" and data["window_row"] == 6
     assert data["window_evidence"]["a11"]["state"] == "clear"
-    t, x = data["training"], data["window_evidence"]
+    t, x, turn = data["training"], data["window_evidence"], data["turn16"]
     status = (
         f"> 상태: 10/27 최종 기록 · EX-35 m{t['completed_iteration']} 학습 rc {t['exit_code']} · "
         f"m1950/m2000 MAINTAIN_FAIL · 창 STOP 6행 (A11 판독 반영) · {data['canonical']} 유지 · "
-        "비결정성 원인 미확인"
+        "turn16 두 사유 반복 유지 · 비결정성 원인 미확인"
     )
     summary = (
-        "- **EX-35 최종 판정**: [RESULT-EX35 v1.3](../20261026-experiments/RESULT-EX35-1027.md)는 "
+        "- **EX-35 최종 판정**: [RESULT-EX35 v1.4](../20261026-experiments/RESULT-EX35-1027.md)는 "
         f"학습 m{t['completed_iteration']} 종료(rc {t['exit_code']})와 m1950·m2000의 `MAINTAIN_FAIL` 두 건을 원자료에서 생성했다. "
         f"기본 창 `STOP` {data['window_default_row']}행 뒤 A11 다섯 항목 「없음」 판독을 반영한 재실행은 "
         f"`STOP` {data['window_row']}행 (REVERT)이다. 정본 `{data['canonical']}` 유지, EX-35 연장 없음. "
         "16 env 회전은 GPU1 사슬, 64 env 네 칸은 GPU0 재평가를 합쳤다. "
         f"사슬 대 재평가 map64 수치 {x['map64_numeric_changed']}/{x['map64_numeric_comparable']}칸이 달랐고 "
         f"같은 GPU0 반복도 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']}칸 달랐다. "
-        "코드 변경 영향과 비결정성 원인은 분리되지 않았다. A11 발자국의 좌우 휨은 수치 미측이다."
+        f"turn16 GPU0 세 반복에서 `left_then_right` kept는 {turn['cases']['left_then_right']['kept_min']}~{turn['cases']['left_then_right']['kept_max']}로 흔들렸으나 "
+        f"`fwd_then_left` kept는 모두 {turn['cases']['fwd_then_left']['kept_min']}, "
+        f"`right_then_left` Q는 모두 {turn['right_then_left_q_limit']:.4f} 미만이라 m2000 유지 실패는 반복됐다. "
+        "GPU1 사슬과 GPU0 반복의 장치 차이 및 비결정성 원인은 분리되지 않았다. A11 발자국의 좌우 휨은 수치 미측이다."
     )
     row = (
         "| [EX-35 S-B10 명령 S2a](EXP-EX35-SB10-cmd-S2a.md) | S-B10 m1500 명령 S2a 첫 축 | "
         f"부모 sha256 `{t['parent_sha256']}` | 학습 m{t['completed_iteration']} rc {t['exit_code']}; "
         f"m1950·m2000 `MAINTAIN_FAIL`. A11 판독 뒤 창 `STOP` {data['window_row']}행 (REVERT), "
         f"연장 없음. 정본 {data['canonical']} | "
-        f"[RESULT-EX35 v1.3](../20261026-experiments/RESULT-EX35-1027.md) · GPU0 반복 "
-        f"{x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 불일치 원인 미확인 |"
+        f"[RESULT-EX35 v1.4](../20261026-experiments/RESULT-EX35-1027.md) · turn16 두 사유 반복 유지 · "
+        f"map64 GPU0 반복 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 불일치 원인 미확인 |"
     )
     source = replace_one(source, r"^> 상태:.*$", status)
     source = replace_one(source, r"^- \*\*EX-35 최종 판정\*\*:.*$", summary)
@@ -55,7 +58,7 @@ def render_exp_map(source: str, data: dict) -> str:
 
 def render_lab(source: str, data: dict, now: datetime) -> str:
     assert data["window_decision"] == "STOP" and data["window_row"] == 6
-    x = data["window_evidence"]
+    x, turn = data["window_evidence"], data["turn16"]
     stamp = now.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
     short_stamp = now.astimezone(KST).strftime("%m/%d %H:%M KST")
     source = replace_one(source, r"마지막 원자료 대조 <b>[^<]+</b>", f"마지막 원자료 대조 <b>{stamp}</b>")
@@ -65,6 +68,8 @@ def render_lab(source: str, data: dict, now: datetime) -> str:
         "16 env 회전은 GPU1 사슬, 64 env 네 칸은 GPU0 재평가를 합쳤다. "
         f"사슬 대 재평가 map64 {x['map64_numeric_changed']}/{x['map64_numeric_comparable']}, "
         f"같은 GPU0 반복 {x['repro_a1_a2_changed']}/{x['repro_numeric_count']} 수치가 달랐다. "
+        f"turn16 세 반복에서 left_then_right kept는 {turn['cases']['left_then_right']['kept_min']}~{turn['cases']['left_then_right']['kept_max']}로 흔들렸지만 "
+        f"fwd_then_left kept {turn['cases']['fwd_then_left']['kept_min']}과 right_then_left Q 기준 미달은 세 번 모두 유지. "
         "코드 변경 영향과 비결정성 원인은 미확인.</p>"
     )
     source = replace_one(
@@ -75,7 +80,7 @@ def render_lab(source: str, data: dict, now: datetime) -> str:
     gpu1 = (
         '<div class="row"><div class="k">GPU1</div><div><span class="pill wait">평가 증거</span>'
         f"EX-35 16 env 회전 사슬과 GPU0 64 env 재평가의 합본 창 판정 STOP {data['window_row']}행. "
-        "같은 GPU0 반복도 달라 재현성 원인 미확인.</div></div>"
+        "map64와 turn16 반복 값이 달라 재현성 원인 미확인.</div></div>"
     )
     return replace_one(source, r'<div class="row"><div class="k">GPU1</div><div>.*?</div></div>', gpu1)
 
