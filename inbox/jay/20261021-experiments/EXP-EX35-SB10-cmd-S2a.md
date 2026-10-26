@@ -2,8 +2,8 @@
 > 작성: 오흥재 (planner 초안, lead 의뢰 10/26 21:3x) · 2026-10-26 21:50
 > 근거: 팀장 16:0x 「출발선 S-B10 m1500 우선 승인」 · 16:4x 「analyst 순서로 확정」(OPINION-startline-analyst 6.4 변경 순서 ②) · 21:0x 「모든 명령에서 보정 켬」(결정 8) · 20:3x 끔 분모 「허용 지형 안 10 % confirm」 · 10/25 20:0x 「걷기 → 걸으며 돌기 → 제자리 회전」 · 21:0x 「잠정 권고 우선 승인」(점검 50 · 판정 250 창 · 한 단계 최소 500 회) · DESIGN-NEXT v0.3 §3.2 S2a · §5.2 · JUDGE-SPEC v0.8 3 · 4.2 · 4.4 · 7 절 · DESIGN-MAPRATIO v0.10 3.2 · M-T6 · RULES-HUB v1.5 4 · 8 절 · 원자료 `impl-turncases/logs/sb10_eval/m1500/`(14:5x 사슬)
 > 요지: 출발선 S-B10 m1500 에서 **명령 분포 한 축만** 바꾼다(S1 START 분포 → S2a: 걸으며 돌기 2.5 % + 2.5 % 를 전진에서 떼어 넣음). 지도 끔 0.1(허용 지형 안) · 보정 켬 · 듬성 지형 없음 · 물리 · 보상 · PPO 는 그대로. 500 회(m1500 → m2000) · 3072 env · cuda:0 · 50 회 저장. 판정은 이어 가기 판 규칙(유지 + 새 과제 연속 두 저장본). **코드 상태가 끝나기 전에는 띄우지 않는다.**
-> 상태: 카드 초안 · 미실행 · 기동 승인 없음 · 모든 문턱은 추정(결과 뒤 넓히지 않음) · 코드 조건 6 개 중 조건 1 은 7639a97d · afad7987 로 커밋됨(planner 재대조 21:50 막음 0, reviewer · verifier 대기), 나머지 미완(§5) · kept 14 근거 정정(lead 21:5x) · 에피소드 진행도 흩기 행 추가(v0.3, reviewer a06f4ecc · lead 22:1x) · 3 절 멈춤 · 기록 표(v0.4, reviewer REVIEW-570042cb 고침 1 · lead 권고 23:0x · 구현 570042cb 대조, lead 가 정할 것 둘: kept < 14 · Q < 0.12) · GPU · 학습 · 코드 수정 없음
-> 판: v0.4
+> 상태: 카드 초안 · 미실행 · 기동 승인 없음 · 모든 문턱은 추정(결과 뒤 넓히지 않음) · 코드 조건 6 개 중 조건 1 은 7639a97d · afad7987 로 커밋됨(planner 재대조 21:50 막음 0, reviewer · verifier 대기), 나머지 미완(§5) · kept 14 근거 정정(lead 21:5x) · 에피소드 진행도 흩기 행 추가(v0.3, reviewer a06f4ecc · lead 22:1x) · 3 절 멈춤 · 기록 표(v0.4, reviewer REVIEW-570042cb 고침 1 · lead 권고 23:0x · 구현 570042cb 대조, lead 가 정할 것 둘: kept < 14 · Q < 0.12) · **v0.5 고정**: lead 결정 23:1x (a) kept < 14 기록 (b) Q < 0.12 멈춤 유지 (c) JUDGE-SPEC v0.10 좁힘 (d) walk_turn 구간 영상은 폴더에만, 갈림 없음 · GPU · 학습 · 코드 수정 없음
+> 판: v0.5
 
 # EX-35 · S-B10 m1500 → 회전 명령 과정 첫 판 (S2a 걸으며 돌기 소량)
 
@@ -67,18 +67,18 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 |---|---|---|
 | 걸으며 돌기 두 부호(`walk_turn_left` · `walk_turn_right`, vx 0.5 · wz ±0.5) | Q ≥ 0.6 × (0.5/1.2) = **0.25** rad/s · C ≤ **0.6** · kept ≥ **14/16** · q_e < 0 인 env **0**, 두 부호 모두 | JUDGE-SPEC 4.4 S2a → S2b(0.25 는 명령 크기 비례 추정, 결과 뒤 넓히지 않음) · 성공선 네 조건 · kept 14 는 lead 권고(위 행 근거) |
 
-운영 중단선과 기록선(이어 가기 판에만, v0.4 · 결과 전 고정): 어떤 미달이 **학습을 멈추고**(STOP) 어떤 미달이 **기록만 하고 계속**(MAINTAIN_FAIL, 창 경계에서 되돌림 여부) 하는지 한 표로 둔다. 멈춤은 자동 멈춤 · 저장본 보존 · 보고이고 「회복 불가」 라고 적지 않는다(JUDGE-SPEC 3 절 · verifier D6). 원칙(lead 권고 23:0x): 밤사이 한 저장본의 미달 하나로 판 전체가 서지 않게, 멈춤은 켬 fwd1.0 유지선과 생존(넘어짐) 미달만.
+운영 중단선과 기록선(이어 가기 판에만, v0.4 · 결과 전 고정): 어떤 미달이 **학습을 멈추고**(STOP) 어떤 미달이 **기록만 하고 계속**(MAINTAIN_FAIL, 창 경계에서 되돌림 여부) 하는지 한 표로 둔다. 멈춤은 자동 멈춤 · 저장본 보존 · 보고이고 「회복 불가」 라고 적지 않는다(JUDGE-SPEC 3 절 · verifier D6). 원칙(lead 권고 23:0x · 결정 23:1x, 결과 전 고정): 밤사이 한 저장본의 미달 하나로 판 전체가 서지 않게, 멈춤은 켬 fwd1.0 유지선과 생존(넘어짐) 미달만.
 
 | 미달 | 처리 | 구현(impl-integ 570042cb `judge_gate` · `ex35_gate`, planner 가 열어 확인) | 근거 · 단서 |
 |---|---|---|---|
 | 기동 실패 · NaN · 비유한값 | **멈춤** | `operational_stop` `launch_failed` · `nonfinite` | JUDGE-SPEC 3 절 |
 | 켬 fwd1.0 < 기준 × 0.90 (**4.885 m**) | **멈춤** | `operational_stop` → `stop_fwd_keep_on`(켬 모드) | lead 권고 · reviewer REVIEW-570042cb 고침 1. 단서: 전진 재측정 폭은 미측이라 한 저장본의 하락으로 멈춘다(보수적) |
 | 64 env 회전(spin ±1.2) 생존 < **48/64** | **멈춤** | `operational_stop` → `rot_survive_64` | JUDGE-SPEC 5.1 「64 env 생존 < 48 이면 STOP」 · lead 권고의 「생존(넘어짐) 미달」 을 64 env 생존으로 읽음 |
-| 여섯 경우 어느 하나 Q < **0.12**(kept ≥ 14 인 경우만) | **멈춤** | `operational_stop` → `stop_q` | JUDGE-SPEC 3 절 운영 중단선. lead 권고 문장에는 없음 → **lead 확인**(기준 Q 최저 0.307 이라 0.12 는 붕괴선) |
-| 16 env 여섯 경우 kept < **14/16** | **기록**(창 경계) | `maintain_broken` → `survival_16`(MAINTAIN_FAIL, 그 경우 회전 통계 무효) | 구현은 기록. lead 권고의 「생존(넘어짐) 미달 = 멈춤」 을 16 env 까지로 읽으면 멈춤이라 **갈림 → lead 가 정할 것**. planner 권고: 16 env 는 표본이 작아(기준 indep_right 15) 한 저장본으로 멈추지 않고 기록 |
+| 여섯 경우 어느 하나 Q < **0.12**(kept ≥ 14 인 경우만) | **멈춤** | `operational_stop` → `stop_q` | JUDGE-SPEC 3 절 운영 중단선 · **lead 결정(b) 23:1x 유지**: 기준 Q 최저 0.307 대비 붕괴선이라 GPU 를 아끼는 멈춤으로 둔다 |
+| 16 env 여섯 경우 kept < **14/16** | **기록**(창 경계) | `maintain_broken` → `survival_16`(MAINTAIN_FAIL, 그 경우 회전 통계 무효) | **lead 결정(a) 23:1x 기록**: 16 env 한 저장본의 넘어짐은 표본이 작아(기준 indep_right 15) 밤사이 한 번으로 판 전체를 세우지 않는다. 넘어짐으로 멈추는 것은 64 env 회전 생존 < 48 만. 구현 570042cb 와 같음 |
 | 켬 fwd0.5 < 기준 × 0.90 (**2.471 m**) | **기록** | `ex35_extra_broken` `on_fwd05_frac` | lead 권고 · reviewer 고침 1 |
 | 켬 전진 생존이 기준보다 6/64 넘게 줆(< **58/64**) | **기록** | `forward_hold_broken` `fwd_survive_drop`(멈춤선에서 제외) · `on_survive_58` | JUDGE-SPEC 3 절 넘어짐 허용(유지 조건) |
-| 가림 fwd1.0 < **4.592** · fwd0.5 < **2.310** · 생존 < **60/64** | **기록** | `ex35_extra_broken` → 가림 모드 `forward_hold_broken`(MAINTAIN_FAIL) | lead 권고 · reviewer 고침 1. JUDGE-SPEC 3 절 「전진 유지 미달 → 중단」 보다 좁다(사양 v0.10 에서 맞출 것, lead 확인) |
+| 가림 fwd1.0 < **4.592** · fwd0.5 < **2.310** · 생존 < **60/64** | **기록** | `ex35_extra_broken` → 가림 모드 `forward_hold_broken`(MAINTAIN_FAIL) | lead 권고 · reviewer 고침 1. JUDGE-SPEC 3 절은 v0.10 에서 카드와 같게 좁힘(lead 결정(c) 23:1x) |
 | 여섯 경우 Q 하락 > 0.20 · C 상승 > 0.25 | **기록** | `maintain_broken` `drop_Q` · `rise_C` | JUDGE-SPEC 3 절 유지 하락 허용 |
 | 64 env spin 좌 · 우 추종 < max(기준 − 0.20, 0.10) · 각 방향 생존 < 48 | **기록** | `ex35_extra_broken` spin_follow · `ex35_spin_survive_*`(생존 48 은 위 멈춤선이 먼저 잡음) | lead 의뢰 「오래 도는 좌우 둘 다」 |
 | 걸으며 돌기 성공선 미달 | **기록 · 계속**(NEW_TASK_PENDING) | `judge_continue` 새 과제 분기 | §4 「새 과제 미달」 |
@@ -109,7 +109,7 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 
 ## 6. 영상 (RULES-HUB 4 절 v2)
 
-- 만들기: **CMP**(부모 S-B10 m1500 대 EX-35 판단 저장본, 같은 칸 · 같은 모드) 와 **단독**(EX-35) 각각 seq · forward · spin_left · spin_right × **1x**. 새 과제 구간 `walk_turn_left` · `walk_turn_right` 는 규칙 4 절에 없는 구간이라 추가 여부를 lead 가 정한다(lead 가 정할 것 2).
+- 만들기: **CMP**(부모 S-B10 m1500 대 EX-35 판단 저장본, 같은 칸 · 같은 모드) 와 **단독**(EX-35) 각각 seq · forward · spin_left · spin_right × **1x**. 새 과제 구간 `walk_turn_left` · `walk_turn_right` 도 **만들어 폴더에만** 둔다(구간 영상, lead 결정(d) 23:1x). 팀장 전달 목록은 바꾸지 않는다.
 - 팀장에게 전하는 것: **CMP seq 1x 와 단독 seq 1x 만**(팀장 20:3x). 구간 영상은 폴더에만.
 - 이름: `CMP-SB10m1500-EX35m2000-rough-m2000-seq-1x.mp4` · `EX35-SB10-rough-m2000-seq-1x.mp4` 꼴(`<실험들>-<지형>-m<회차>-<구간>-<배속>.mp4`). 일반 이름 금지.
 - 언제: 창 경계(m1750 · m2000) 와 판정이 걸린 저장본. 실패 · 성공 모두. 전 프레임 검사. 촬영은 cuda:1(학습이 cuda:0).
@@ -122,10 +122,11 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 
 통과면 EX-36(S2b 7.5 % + 7.5 %). 유지 하락 2 창이면 §4 되돌림 판. analyst 순서 ③(복원 지도 노출 확대) · ④(듬성 조건부 가림) 은 이 축이 닫힌 뒤 한 축씩.
 
-lead 가 정할 것: (1) 끝(v0.2): JUDGE-SPEC v0.9 넘어짐 허용 14/16, 근거는 lead 권고(팀장 승인 숫자 아님, lead 21:5x) · (2) 영상에 걸으며 돌기 구간 추가 여부 · (3) §5 조건 2(표집기 · 계약 · 흩기) 를 누구에게(sonnet-code) 어느 번호로 · (4) RULES-HUB 5 절 승인 원장의 「돌 때 넘어지지 않음(16 중 14) 관문 바닥」 문구도 같은 정정(원칙 승인 · 숫자는 권고) 이 필요한지(lead 파일) · (5) §3 멈춤 · 기록 표의 갈림 둘: 16 env kept < 14 를 멈춤으로 올릴지(구현 · planner 권고는 기록) · Q < 0.12 운영 중단선 유지 여부(권고 문장에 없음) · JUDGE-SPEC 3 절 「전진 유지 미달 → 중단」 을 켬 fwd1.0 만으로 좁히는 v0.10.
+lead 가 정할 것: (1) 끝(v0.2): JUDGE-SPEC v0.9 넘어짐 허용 14/16, 근거는 lead 권고(팀장 승인 숫자 아님, lead 21:5x) · (2) 끝(v0.5): walk_turn 구간 영상은 폴더에만, 팀장 전달은 CMP seq 1x · 단독 seq 1x 그대로(lead 결정(d)) · (3) §5 조건 2(표집기 · 계약 · 흩기) 를 누구에게(sonnet-code) 어느 번호로 · (4) RULES-HUB 5 절 승인 원장의 「돌 때 넘어지지 않음(16 중 14) 관문 바닥」 문구도 같은 정정(원칙 승인 · 숫자는 권고) 이 필요한지(lead 파일) · (5) 끝(v0.5): kept < 14 기록 · Q < 0.12 멈춤 유지 · JUDGE-SPEC v0.10 좁힘(lead 결정 (a)(b)(c) 23:1x). 남은 것은 (3) 뿐.
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.5 | 2026-10-26 | lead 결정 23:1x 고정: (a) kept < 14 기록 (b) Q < 0.12 멈춤 유지 (c) JUDGE-SPEC v0.10 좁힘 (d) walk_turn 구간 영상 폴더에만 · §3 표 갈림 없음 · §6 · §8 |
 | v0.4 | 2026-10-26 | §3 운영 중단선 → 멈춤 · 기록 한 표(reviewer REVIEW-570042cb 고침 1 · lead 권고: 멈춤은 켬 fwd1.0 · 생존만) · 구현 570042cb 와 대조 · §4 갈래를 창 경계 `consume`(연속 두 저장본) 과 맞춤 · lead 가 정할 것 (5) |
 | v0.3 | 2026-10-26 | §2 에피소드 진행도 흩기 행(reviewer a06f4ecc 「20 s 뒤 명령 시계 재동기」 · lead 판단 U(0, 20 s) · 코드 확인 `init_at_random_ep_len=not bool(resume_path)`) · 조건 2 영수증 |
 | v0.2 | 2026-10-26 | §5 조건 1 커밋됨(7639a97d · afad7987, planner 재대조 막음 0 · 시험 34 통과) · 조건 4 에 manifest 세 키 · `--resume_from` 원 폴더 확인 줄 · §2 보정 행에 manifest 키 · §3 kept 14 근거 정정(lead 21:5x: 원칙 팀장 동의 · 숫자 lead 권고) · 학습 길이 행에 run_sb.sh 1501 고정 주의(reviewer X26w 막음 2) |
