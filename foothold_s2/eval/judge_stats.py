@@ -135,7 +135,7 @@ def feet_from_probe(probe: dict) -> tuple:
 def read_turn_dir(d, cases=SIX_CASES, strict_sha=True) -> dict:
     """<판>/arrays_<경우>.npz 들을 읽어 {경우: turn_stats} 로. 파일이 없는 경우는 목록에서 빠진다(호출자가 missing 으로 읽는다).
 
-    probe_result.json 이 있으면 고정 칸 SHA 앞 12 자리(7f49a1e935ea)와 발 링크 번호를 단언한다.
+    probe_result.json 으로 고정 칸 SHA 앞 12 자리(7f49a1e935ea)와 발 링크 번호를 단언한다. json 이 없으면 거절한다(strict_sha=False 일 때만 건너뜀).
     """
     d = Path(d)
     pj = d / "probe_result.json"
@@ -148,8 +148,10 @@ def read_turn_dir(d, cases=SIX_CASES, strict_sha=True) -> dict:
             raise JudgeInputError("%s: 16 env 고정 칸 SHA %r 가 %s 와 다르다(칸이 다른 숫자를 섞지 않는다)" % (d, sha[:12], PROBE16_SHA12))
 
         feet = feet_from_probe(probe)
+    elif strict_sha and any((d / ("arrays_%s.npz" % c)).exists() for c in cases):
+        raise JudgeInputError("%s: probe_result.json 이 없다(16 env 고정 칸 SHA 와 발 링크 번호를 대조할 수 없으니 읽지 않는다)" % d)
     else:
-        feet = FEET
+        feet = FEET                                                  # 자료가 아예 없는 폴더(missing 으로 읽힌다) 또는 strict_sha=False
 
     out = {}
 

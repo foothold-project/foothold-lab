@@ -14,9 +14,17 @@ F, P, N, H, S = G.MAINTAIN_FAIL, G.PASS, G.NEW_TASK_PENDING, G.HOLD_NO_DATA, G.S
 LADDER = [0.8, 0.5, 0.2]                       # 시험 입력(높은 값에서 낮은 값으로)
 
 
-def _run(states, start=1, ladder=LADDER, first_iter=100, every=50):
+def _run(states, start=1, ladder=LADDER, first_iter=100, every=50, applied=True):
+    """저장본마다 step 을 부르고, 인자가 나오면 호출하는 쪽이 걸었다고(applied) 확인한다."""
     rc = RatioController(ladder, start)
-    outs = [rc.step(s, first_iter + i * every) for i, s in enumerate(states)]
+    outs = []
+
+    for i, s in enumerate(states):
+        o = rc.step(s, first_iter + i * every)
+        outs.append(o)
+
+        if rc.pending is not None:
+            rc.confirm(applied)
 
     return rc, outs
 
@@ -29,10 +37,11 @@ def test_fail_fail_makes_the_revert_argument_with_the_previous_value():
     assert set(outs[1]["argument"]) == set(ARGUMENT_KEYS) and rc.current == 0.8 and not outs[1]["stop"]
 
 
-def test_fail_then_pass_makes_no_revert_argument():
+def test_fail_then_pass_makes_no_revert_argument_but_an_expand_argument():
     rc, outs = _run([F, P], start=1)
 
-    assert outs[1]["action"] == G.EXPAND and outs[1]["argument"] is None and outs[1]["expand_to"] == 0.2 and rc.consumer.reverts == 0
+    assert outs[0]["argument"] is None and rc.consumer.reverts == 0                      # 단일 FAIL 은 인자 없음(되돌림 아님)
+    assert outs[1]["action"] == G.EXPAND and outs[1]["argument"] == {"from_iter": 151, "to": 0.2, "from": 0.5} and rc.current == 0.2
 
 
 def test_second_revert_stops_and_reports():
@@ -48,7 +57,7 @@ def test_after_a_revert_one_pass_reenters_once_then_a_failure_pair_stops():
     rc, outs = _run([F, F, P, F, F], start=2)
 
     assert [o["action"] for o in outs] == [G.HOLD, G.REVERT, G.EXPAND, G.HOLD, G.STOP_REPORT]
-    assert outs[2]["expand_to"] == 0.2                        # 되돌린 값(0.5)에서 다시 진입 후보로
+    assert outs[2]["argument"] == {"from_iter": 201, "to": 0.2, "from": 0.5}               # 되돌린 값(0.5)에서 다시 진입
     assert outs[3]["argument"] is None and outs[4]["argument"] is None and rc.consumer.reverts == 1
 
 
@@ -73,7 +82,30 @@ def test_revert_from_the_first_ladder_value_has_nowhere_to_go_so_it_stops():
 def test_pass_at_the_end_of_the_ladder_has_no_next_value():
     rc, outs = _run([P], start=2)
 
-    assert outs[0]["action"] == G.EXPAND and outs[0]["expand_to"] is None and outs[0]["argument"] is None and rc.current == 0.2
+    assert outs[0]["action"] == G.EXPAND and outs[0]["argument"] is None and rc.current == 0.2
+
+
+def test_an_expand_that_was_not_applied_does_not_move_the_position_so_the_next_revert_from_is_the_real_p():
+    rc = RatioController(LADDER, 1)
+    o = rc.step(P, 100)
+
+    assert o["argument"]["to"] == 0.2 and rc.current == 0.5                               # 확인 전에는 안 옮겨 간다
+    rc.confirm(False)                                                                       # 호출하는 쪽이 걸지 않았다
+    rc.step(F, 150)
+    o = rc.step(F, 200)
+
+    assert o["action"] == G.REVERT and o["argument"] == {"from_iter": 201, "to": 0.8, "from": 0.5}          # from 이 실제 p
+    assert [r["applied"] for r in rc.records][0] is False
+
+
+def test_step_before_the_previous_argument_is_confirmed_is_refused_and_confirm_without_pending_too():
+    rc = RatioController(LADDER, 1)
+    rc.step(P, 100)
+
+    with pytest.raises(RuntimeError, match="confirm"):
+        rc.step(P, 150)
+    with pytest.raises(RuntimeError):
+        RatioController(LADDER, 1).confirm(True)
 
 
 def test_record_lines_are_deterministic_and_carry_the_decision():

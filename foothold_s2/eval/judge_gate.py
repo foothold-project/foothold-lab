@@ -417,7 +417,7 @@ def scratch_progress(b, thr=THRESHOLDS) -> dict:
         f10, f05, al = fwd(b, "eval_gt")
         k = _kept_ok(b, "eval_gt", thr)
         out["on"] = {"fwd10": f10, "fwd05": f05, "alive": al, "kept_ok": k["ok"], "kept_known": k["known"], "kept_short": k["short"],
-                     "met": bool(f10 >= thr["on_fwd10_m"] and al >= thr["on_survive_64"] and k["ok"])}
+                     "met": bool(f10 >= thr["on_fwd10_m"] and al >= thr["on_survive_64"])}      # 켬 달성은 명세 4.3 대로 64 env 두 조건뿐. 16 env kept 는 기록만(리뷰 고침 2)
 
     mm = masked_mode(b)
 
@@ -460,6 +460,18 @@ def judge_scratch(latest, prev, *, require=("on", "masked"), thr=THRESHOLDS) -> 
 
     if latest.get("missing") or prev is None or prev.get("missing"):
         v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=(latest.get("missing_what") or []) + ([] if prev is not None else ["prev"]))]
+
+        return v
+
+    absent = []
+
+    for kind in require:                                                  # 달성 판정에 쓸 자료가 «없는» 것은 미달이 아니라 자료 없음이다(리뷰 고침 2)
+        for window, p in (("latest", pl), ("prev", pp)):
+            if p.get(kind) is None or (kind == "masked" and not p[kind]["kept_known"]):
+                absent.append("%s/%s" % (kind, window))
+
+    if absent:
+        v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=absent)]
 
         return v
 

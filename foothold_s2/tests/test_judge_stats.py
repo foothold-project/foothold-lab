@@ -297,3 +297,21 @@ def test_six_table_prints_kept_and_alive_end_and_keeps_pooled_only_as_legacy(exp
 
     assert "kept 10, alive_end 13) 무효 legacy +0.401" in row and "+0.388 / 0.759" in row                  # G0-B m1500 좌 -> 우: 새 Q 0.388, 옛 pooled 0.401
     assert "kept 16, alive_end 16) legacy" in [ln for ln in text.splitlines() if "b50_m1510" in ln][0]
+
+
+def test_review3_npz_without_probe_result_json_is_refused_but_an_empty_dir_is_just_missing(tmp_path):
+    import shutil
+
+    src = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/six_cases/b1500")
+    d = tmp_path / "copied"
+    d.mkdir()
+    shutil.copy(src / "arrays_indep_left.npz", d / "arrays_indep_left.npz")
+
+    with pytest.raises(S.JudgeInputError, match="probe_result.json"):
+        S.read_turn_dir(d)
+    assert S.read_turn_dir(tmp_path / "nothing_here_yet") == {} if (tmp_path / "nothing_here_yet").is_dir() else True
+    empty = tmp_path / "empty"
+    empty.mkdir()
+
+    assert S.read_turn_dir(empty) == {}
+    assert "indep_left" in S.read_turn_dir(d, strict_sha=False)

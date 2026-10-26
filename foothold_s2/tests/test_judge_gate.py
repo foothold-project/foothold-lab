@@ -421,3 +421,23 @@ def test_consumer_counts_reverts_and_restarts_the_window_after_one():
     assert [d.step(s) for s in (G.MAINTAIN_FAIL, G.PASS, G.MAINTAIN_FAIL)] == [G.HOLD, G.EXPAND, G.HOLD]      # 확대 뒤 열을 비운다
     e = G.Consumer()
     assert [e.step(s) for s in (G.MAINTAIN_FAIL, G.MAINTAIN_FAIL, G.PASS, G.PASS)] == [G.HOLD, G.REVERT, G.EXPAND, G.EXPAND]
+
+
+def test_review2_scratch_without_16_env_data_is_no_data_not_unmet(bundles):
+    d = L / "sb50_eval/m400"
+    only64 = S.load_bundle("sb50_m400_map64_only", None, d / "map64/map_modes.json")
+    v = G.judge_scratch(only64, only64, require=("masked",))
+
+    assert v.state == G.HOLD_NO_DATA and {r["cond"] for r in v.reasons} == {"no_data"}                      # 16 env 자료가 «없는» 것은 달성 미달이 아니다
+    assert G.judge_scratch(only64, only64).state == G.HOLD_NO_DATA
+
+
+def test_review2_on_achievement_is_the_two_64_env_conditions_of_spec_4_3_only(bundles):
+    d = L / "sb50_eval/m400"
+    only64 = S.load_bundle("sb50_m400_map64_only", None, d / "map64/map_modes.json")
+    v = G.judge_scratch(only64, only64, require=("on",))
+
+    assert v.state == G.PASS and v.detail["progress_latest"]["on"]["met"] is True                               # 켬 달성에 16 env kept 를 요구하지 않는다
+    short = synth(turn={"eval_gt": {"indep_left": {"kept": 3}}}, map64={"eval_gt": {"fwd1.0": (5.7, 64)}})
+
+    assert G.judge_scratch(short, short, require=("on",)).state == G.PASS
