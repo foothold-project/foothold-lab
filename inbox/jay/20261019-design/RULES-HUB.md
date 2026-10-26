@@ -183,6 +183,10 @@
 ### 8.5 영상
 4 절 v2 가 정본. 판단이 걸린 주장 (회전 · 지도) 에는 해당 구간 영상 경로와 확인한 프레임을 같이 낸다.
 
+## 8b. 실험 카드 정본 자리 (Linux 런북 L-12 가 가리킴)
+
+실험 카드는 `inbox/jay/20261021-experiments/EXP-*.md` (EX-30 · 31 · 32 · 33 · 34 등) 한 곳, 목록은 같은 폴더 `EXP-MAP.md` 의 「exp-sync:experiments」 표. 결과 문서는 날짜 폴더 `inbox/jay/2026MMDD-experiments/RESULT-*.md`, 밤 계획 · 실제 기록은 `NIGHT-PLAN-*.md`. 세션이 이어 붙은 뒤 처음 읽을 정본 순서: 이 RULES-HUB → EXP-MAP → SCHEDULE-NOW → 최신 NIGHT-PLAN → 카드.
+
 ## 9. 이름 붙은 체크포인트 정본 (10/26 12시, Linux 이전 런북 L-3-2 가 가리킴)
 
 Windows 자리 기준 (`C:/mai/wt/foothold-lab/` 아래, EX-23 만 `C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/`). sha256 은 lead 가 10/26 12시에 다시 잼 (앞 16 자). Linux 로 옮긴 뒤 같은 값인지 먼저 대조한다.
