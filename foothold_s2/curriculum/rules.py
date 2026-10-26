@@ -73,6 +73,53 @@ def mask_new_task(move, had_new_task):
     return out
 
 
+class FrameCompareStats:
+    """J-T10 병행 기록: 현행(몸 기준 합 `cmd_sum_xy`) 판정과 세계 좌표 기대 변위(`cmd_sum_w`) 판정을 둘 다 계산해 3 x 3 = 9 칸 표로 센다.
+
+    `add` 로 쌓고 `take` 로 꺼내 비운다. 칸 이름 `c{현행}w{세계}` (예: `c-1w0` = 현행 강등 · 세계 좌표 유지). 표식 유무별로 따로 센다.
+    깃발 env 는 두 판정이 같은 규칙이라 항상 대각선에 들어가므로 `free_only` 마스크를 줄 수 있다.
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.episodes = 0
+        self.cells = {False: {}, True: {}}
+        self.world_frame = None
+
+    def add(self, move_cur, move_w, had_new_task=None, world_frame=False, select=None):
+        cur = torch.as_tensor(move_cur).cpu().long()
+        wld = torch.as_tensor(move_w).cpu().long()
+        mark = torch.zeros(len(cur), dtype=torch.bool) if had_new_task is None else torch.as_tensor(had_new_task, dtype=torch.bool).cpu()
+        keep = torch.ones(len(cur), dtype=torch.bool) if select is None else torch.as_tensor(select, dtype=torch.bool).cpu()
+        self.world_frame = bool(world_frame)
+        self.episodes += int(keep.sum())
+
+        for m in (False, True):
+            for c in (-1, 0, 1):
+                for w in (-1, 0, 1):
+                    n = int(((cur == c) & (wld == w) & (mark == m) & keep).sum())
+                    if n:
+                        key = "c%dw%d" % (c, w)
+                        self.cells[m][key] = self.cells[m].get(key, 0) + n
+
+    @staticmethod
+    def _mismatch(cells):
+        """현행과 세계 좌표 판정이 다른 에피소드 수(칸 이름 `c{현행}w{세계}` 에서 두 값이 다른 칸의 합)."""
+        return sum(n for key, n in cells.items() if key[1:].split("w")[0] != key.split("w")[1])
+
+    def take(self):
+        if self.episodes == 0:
+            return None
+
+        out = {"world_frame": self.world_frame, "episodes": self.episodes, "unmarked": dict(sorted(self.cells[False].items())), "marked": dict(sorted(self.cells[True].items()))}
+        out["mismatch"] = {"unmarked": self._mismatch(self.cells[False]), "marked": self._mismatch(self.cells[True])}
+        self.reset()
+
+        return out
+
+
 class NewTaskStats:
     """update 한 번 동안의 표식 통계 (JUDGE-SPEC 5.2 6). `add` 로 쌓고 `take` 로 꺼내 비운다. 순수 torch.
 

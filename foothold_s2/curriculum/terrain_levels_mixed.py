@@ -11,8 +11,12 @@ from foothold_s2.curriculum import rules
 from foothold_s2.terrains import s2_runtime
 
 
-def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0):
-    """깃발 env 는 깃발 규칙, 자유 속도 env 는 거리 규칙으로 지형 단계를 올리고 내린다. 단계 평균을 돌려준다."""
+def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, world_frame: bool = False):
+    """깃발 env 는 깃발 규칙, 자유 속도 env 는 거리 규칙으로 지형 단계를 올리고 내린다. 단계 평균을 돌려준다.
+
+    world_frame (J-T10, 기본 끔): 참이면 자유 속도 판정의 명령 합을 몸 기준 `cmd_sum_xy` 대신 세계 좌표 기대 변위 `cmd_sum_w` 로 낸다.
+    끔이면 지금 식과 비트 단위로 같고, 어느 쪽이든 두 판정을 모두 계산해 9 칸 표(`term.frame_stats`)로 병행 기록한다.
+    """
     term = env.command_manager.get_term(command_name)
     terrain = env.scene.terrain
     env_ids = torch.as_tensor(env_ids, device=env.device, dtype=torch.long)
@@ -25,6 +29,19 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
     move = rules.judge(term.is_flag_env[env_ids], term.max_dist[env_ids], cmd_sum, term.goals[env_ids],
                        num_goals, size_x=size_x, walk_frac=term.walk_frac[env_ids])
     marked = getattr(term, "had_new_task", None)
+    cmd_sum_w = getattr(term, "cmd_sum_w", None)
+
+    if cmd_sum_w is None and world_frame:
+        raise ValueError("world_frame=True 인데 명령 term 에 cmd_sum_w 가 없다")
+    if cmd_sum_w is not None:                                    # 병행 기록: 세계 좌표 판정을 같은 식으로 한 번 더 계산한다(끔이면 판정에 쓰지 않는다)
+        move_w = rules.judge(term.is_flag_env[env_ids], term.max_dist[env_ids], cmd_sum_w[env_ids] * env.step_dt / resample_s, term.goals[env_ids],
+                             num_goals, size_x=size_x, walk_frac=term.walk_frac[env_ids])
+        stats = getattr(term, "frame_stats", None)
+
+        if stats is not None:
+            stats.add(move, move_w, None if marked is None else marked[env_ids], world_frame=world_frame, select=~term.is_flag_env[env_ids])
+        if world_frame:
+            move = move_w
 
     if marked is not None:                                       # 새 과제 명령을 받은 에피소드는 승급 · 강등에서 뺀다(행 유지, JUDGE-SPEC 5.2). 표식이 모두 거짓이면 이 블록은 move 를 바꾸지 않는다
         marked = marked[env_ids]

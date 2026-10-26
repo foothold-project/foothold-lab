@@ -59,6 +59,8 @@ class MixedVelocityCommand(CommandTerm):
         self.start_xy = torch.zeros(n, 2, device=dev)
         self.max_dist = torch.zeros(n, device=dev)
         self.cmd_sum_xy = torch.zeros(n, 2, device=dev)
+        self.cmd_sum_w = torch.zeros(n, 2, device=dev)       # J-T10: 세계 좌표 기대 변위 합 R(yaw_t) · 명령 (매 스텝 실제 yaw). 기본은 판정에 안 쓰고 병행 기록만
+        self.frame_stats = curriculum_rules.FrameCompareStats()
         self.goals = torch.zeros(n, dtype=torch.long, device=dev)
         self.new_task = mc.NewTaskMark(n, dev)               # 새 과제(걸으며 돌기 등) 명령을 받은 에피소드 표식. 지형 커리큘럼이 승급 · 강등에서 뺀다 (JUDGE-SPEC 5)
         self.new_task_stats = curriculum_rules.NewTaskStats()
@@ -118,6 +120,7 @@ class MixedVelocityCommand(CommandTerm):
         self.start_xy[env_ids] = pos
         self.max_dist[env_ids] = 0.0
         self.cmd_sum_xy[env_ids] = 0.0
+        self.cmd_sum_w[env_ids] = 0.0
         self.goals[env_ids] = 0
         self.excluded_steps[env_ids] = 0.0
         self.ep_steps[env_ids] = 0.0
@@ -215,6 +218,7 @@ class MixedVelocityCommand(CommandTerm):
 
         self.max_dist = torch.maximum(self.max_dist, torch.linalg.norm(pos - self.start_xy, dim=1))
         self.cmd_sum_xy += self.vel_command_b[:, :2]
+        self.cmd_sum_w += mc.world_cmd_step(yaw, self.vel_command_b[:, :2])
         self.exposure.add(self.mode_ids, self.vel_command_b, dt)
 
     def _update_metrics(self):

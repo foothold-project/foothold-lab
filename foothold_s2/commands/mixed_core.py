@@ -190,6 +190,13 @@ class NewTaskMark:
         self.flag |= torch.as_tensor(mask, dtype=torch.bool, device=self.flag.device)
 
 
+def world_cmd_step(yaw, vel_xy):
+    """J-T10: 몸 기준 선속도 명령 (n, 2) 을 이 스텝의 실제 yaw (n,) 로 세계 좌표로 돌린 값. 합하면 세계 좌표 기대 변위(÷ step_dt 단위)다."""
+    c, s = torch.cos(yaw), torch.sin(yaw)
+
+    return torch.stack([c * vel_xy[:, 0] - s * vel_xy[:, 1], s * vel_xy[:, 0] + c * vel_xy[:, 1]], dim=1)
+
+
 def apply_heading(cmd, heading, stand, psi_star, yaw, params):
     """매 스텝: heading env 의 wz 를 갱신. 정지 env 는 세 칸 0 을 지킨다 (정지가 heading 보다 우선)."""
     out = cmd.clone()
