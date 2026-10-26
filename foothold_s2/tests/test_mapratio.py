@@ -348,3 +348,53 @@ def test_first_sources_off_envs_are_not_counted_as_reconstruction(tmp_path):
     first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
 
     assert first["off"] > 0 and first["recon"] > 0 and first["gt"] + first["recon"] + first["off"] == 64
+
+
+# ---------------------------------------------------------------- 실제 SBRunner 경로 (reviewer 막음 1)
+
+def _sb(n=64, force_gt=False, **perception):
+    from foothold_s2.runners.sol23f_runner import SBRunner
+
+    torch.manual_seed(0)
+    pc = {"microbatch_envs": 4, "p_map_off": 0.5, "force_gt": force_gt, **perception}
+    env = HookEnv(num_envs=n, seed=0)
+    r = SBRunner(env, train_cfg(24, pc), log_dir=None, device="cpu")
+    env.runner = r
+
+    return r
+
+
+def _sb_gt_ckpt(tmp_path):
+    r = _sb(force_gt=True)
+    r.learn(1)
+    path = str(tmp_path / "sbgt.pt")
+    r.save(path)
+
+    return path
+
+
+def test_sbrunner_without_the_argument_still_refuses_a_force_gt_change(tmp_path):
+    path = _sb_gt_ckpt(tmp_path)
+
+    with pytest.raises(ValueError, match="force_gt mismatch"):
+        _sb(force_gt=False).load(path)
+
+
+def test_sbrunner_with_the_argument_reaches_reconstruction_and_records_the_real_value(tmp_path):
+    path = _sb_gt_ckpt(tmp_path)
+    r = _sb(force_gt=False, resume_adasmpl={"force_gt": False, "p": 0.5})
+    r.load(path)
+    r.learn(1)
+    first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
+    path2 = str(tmp_path / "sb2.pt")
+    r.save(path2)
+    sd = torch.load(path2, weights_only=False)
+
+    assert first["recon"] > 0                                                             # 첫 회차에 복원 env
+    assert sd["sol23f"]["force_gt"] is False and sd["perception_cfg"]["force_gt"] is False and sd["adasmpl"]["force_gt"] is False   # 기록이 실제와 같다
+    _sb(force_gt=False).load(path2)                                                       # 덮은 뒤의 저장본은 인자 없이도 이어 간다
+
+
+def test_resume_adasmpl_force_gt_must_equal_the_configured_force_gt():
+    with pytest.raises(ValueError, match="force_gt"):
+        _sb(force_gt=True, resume_adasmpl={"force_gt": False, "p": 0.5})                  # 설정(yaml)이 True 로 남는 길을 막는다

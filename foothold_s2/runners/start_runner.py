@@ -136,6 +136,8 @@ class StartRunner(OnPolicyRunner):
                 raise ValueError(f"resume_adasmpl 은 {{force_gt[, p]}}: {ra}")
             if ra.get("p") is not None and not 0.0 <= float(ra["p"]) <= 1.0:
                 raise ValueError(f"resume_adasmpl.p 가 범위 밖: {ra}")
+            if bool(ra["force_gt"]) != bool(pcfg.get("force_gt", False)):
+                raise ValueError(f"resume_adasmpl.force_gt={ra['force_gt']} 와 force_gt={pcfg.get('force_gt', False)} 가 다르다 (yaml · manifest 의 force_gt 가 실제로 쓰는 값이어야 한다)")
             pcfg["resume_adasmpl"] = ra
         self.map_switch_changes: list[dict] = []   # 체크포인트에 실려 가는 p_map_off 변경 이력
         self.map_ratio_events: list[dict] = []     # 이 실행이 manifest · jsonl 에 남기는 사건(변경 · 이어 가기 AdaSmpl · 첫 회차 표본)
@@ -743,6 +745,8 @@ class StartRunner(OnPolicyRunner):
             if "from" in chg and float(chg["from"]) != old:
                 raise ValueError(f"p_map_off_change.from={chg['from']} 가 체크포인트의 p_map_off={old} 와 다르다")
         self.map_switch_changes = [dict(e) for e in (saved.get("changes") or [])]
+        if not changed and self.pcfg.get("p_map_off_change") is not None:
+            print("MAP_RATIO_CHANGE_NOOP 체크포인트 p_map_off=%s 가 이미 인자의 to 와 같다 (묵은 인자: 적용할 변경 없음)" % old, flush=True)
         if old > 0.0 and new > 0.0:
             if int(saved["map_switch_seed"]) != int(self.pcfg["map_switch_seed"]):
                 raise ValueError(f"체크포인트의 map_switch_seed={saved['map_switch_seed']} 와 이 runner 의 {self.pcfg['map_switch_seed']} 가 다르다")
