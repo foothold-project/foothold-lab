@@ -122,6 +122,29 @@ SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "
 if parser_sparse:
     from foothold_s2.eval import kind_stats as _ks
     SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
+def _run_identity():
+    """X27j: 이 실행이 어느 장치 · 코드 · 저장본 · 시드로 돌았는지(실행 계열 대조용). 못 알아낸 칸은 None 과 까닭."""
+    import subprocess
+
+    out = {"device": str(args.device), "checkpoint_sha256": sha, "eval_seed": args.eval_seed, "torch": torch.__version__, "torch_cuda": torch.version.cuda}
+
+    try:
+        d = torch.device(args.device)
+        pr = torch.cuda.get_device_properties(d)
+        out.update({"gpu_name": pr.name, "gpu_total_mem_mib": int(pr.total_memory // (1 << 20)), "gpu_index": d.index, "gpu_uuid": str(getattr(pr, "uuid", None))})
+    except Exception as e:                                                             # noqa: BLE001
+        out["gpu_error"] = repr(e)
+
+    try:
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        out["code_head"] = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20).stdout.strip() or None
+        out["code_dirty_files"] = len([ln for ln in subprocess.run(["git", "-C", root, "status", "--short", "foothold_s2"], capture_output=True, text=True, timeout=20).stdout.splitlines() if ln.strip()])
+    except Exception as e:                                                             # noqa: BLE001
+        out["code_error"] = repr(e)
+
+    return out
+
+
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
@@ -144,13 +167,14 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row):
     reason = np.where(done_any, "terminated", "survived")                                # 종료 사유: 정책 종료 조건이 걸렸는가(걸리면 step 번호가 first_done_step)
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
-             vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col))
+             vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
+             run_identity=json.dumps(res.get("run_identity"), ensure_ascii=False, sort_keys=True))
     res.setdefault("env_arrays", {})["%s/%s" % (mode, cname)] = "env_arrays_%s_%s.npz" % (mode, cname)
     res["env_array_basis"] = {"kind_names": "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]" if names else None, "kind_error": err,
                               "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"}
 
 
-res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}}
+res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다

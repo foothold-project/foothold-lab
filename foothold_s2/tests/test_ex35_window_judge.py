@@ -530,7 +530,7 @@ def test_save_env_arrays_writes_kind_level_col_and_end_reason(tmp_path):
     src = Path(__file__).resolve().parents[1] / "eval" / "eval_map_modes.py"
     t = ast.parse(src.read_text(encoding="utf-8"))
     fn = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == "_save_env_arrays")
-    ns = {"np": np, "os": __import__("os")}
+    ns = {"np": np, "os": __import__("os"), "json": json}
 
     class T:
         def __init__(self, a):
