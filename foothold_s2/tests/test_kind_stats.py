@@ -240,3 +240,14 @@ def test_the_short_kit_check_exists_and_commands_are_filterable_before_kit():
     sh = (ROOT / "foothold_s2/eval/smoke_sparse_start.sh").read_text(encoding="utf-8")
 
     assert src.index("--commands 는") < src.index("AppLauncher(args).app") and "--steps 50" in sh and "--commands fwd1.0" in sh
+
+
+def test_eval_seed_is_an_argument_with_default_42_recorded_and_passed_by_the_scripts_and_the_geometry_seed_is_separate():
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+    sh = (ROOT / "foothold_s2/eval/run_sparse_eval.sh").read_text(encoding="utf-8")
+    smoke = (ROOT / "foothold_s2/eval/smoke_sparse_start.sh").read_text(encoding="utf-8")
+
+    assert '"--eval-seed", type=int, default=42' in src and "torch.manual_seed(args.eval_seed)" in src and "torch.manual_seed(42)" not in src       # 기본 42 = 기존 결과 불변
+    assert '"eval_seed": args.eval_seed' in src and src.index("--eval-seed 는 0 이상") < src.index("AppLauncher(args).app")
+    assert 'EVAL_SEED="${EVAL_SEED:-42}"' in sh and '--eval-seed "$EVAL_SEED"' in sh and '--eval-seed "${EVAL_SEED:-42}"' in smoke
+    assert "seed=geometry_hash.SPARSE_GEOMETRY_SEED" in src and "eval_seed" not in src.split("seed=geometry_hash.SPARSE_GEOMETRY_SEED")[0].split("build_generator")[-1]     # 기하 시드는 평가 시드와 섞이지 않는다

@@ -8,5 +8,5 @@ TASK="${TASK:-FootholdS2-Go2-S2-23f-B-v0}"
 [ -z "$(git -C "$ROOT" status --short -- foothold_s2)" ] || { echo "거절: foothold_s2 더러움"; exit 3; }
 mkdir -p "$OUT"
 MODULE=foothold_s2.eval.eval_map_modes DEVICE="$DEV" bash "$ROOT/foothold_s2/eval/run_kit.sh" "$OUT" \
-  --task "$TASK" --checkpoint "$CK" --envs 64 --steps 50 --modes "${MODES:-eval_gt}" --commands fwd1.0 --fixed-terrain --fixed-level 0 --terrain-set sparse50 < /dev/null
+  --task "$TASK" --checkpoint "$CK" --envs 64 --steps 50 --modes "${MODES:-eval_gt}" --commands fwd1.0 --fixed-terrain --fixed-level 0 --terrain-set sparse50 --eval-seed "${EVAL_SEED:-42}" < /dev/null
 PYTHONPATH="$ROOT" PYTHONUTF8=1 python "$ROOT/foothold_s2/eval/smoke_sparse_check.py" "$OUT"
