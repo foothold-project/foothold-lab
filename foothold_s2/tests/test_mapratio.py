@@ -280,47 +280,50 @@ def test_m_t5_without_the_argument_the_saved_force_gt_silently_returns_and_a_war
     assert first["recon"] == 0 and first["gt"] == 64                                          # 저장본 값이 그대로 돌아와 복원 env 가 0
 
 
-def test_m_t5_with_the_argument_the_first_iteration_has_reconstruction_envs(tmp_path):
-    path = _gt_ckpt(tmp_path)
-    r = _runner(0.0, n=64, resume_adasmpl={"force_gt": False, "p": 0.5})
-    r.load(path)
-    r.learn(1)
-    first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
-    ev = [e for e in r.map_ratio_events if e["kind"] == "resume_adasmpl"][0]
-
-    assert first["recon"] != 0 and first["gt"] + first["recon"] + first["off"] == 64
-    assert ev["applied"] and ev["saved"] == {"force_gt": True, "p": 1.0} and ev["after"]["force_gt"] is False and ev["after"]["p"] == 0.5
+def _events(r, kind):
+    return [e for e in r.map_ratio_events if e["kind"] == kind]
 
 
-def test_m_t5_force_gt_override_without_p_keeps_the_saved_p_so_the_first_iteration_is_all_gt(tmp_path):
+def test_m_t5_with_the_argument_first_iteration_is_all_gt_and_the_iteration_after_the_first_update_has_reconstruction(tmp_path):
     path = _gt_ckpt(tmp_path)
     r = _runner(0.0, n=64, resume_adasmpl={"force_gt": False})
     r.load(path)
-    r.learn(1)
-    first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
+    r.learn(2)
+    first, ev = _events(r, "first_iter_sources")[-1], _events(r, "resume_adasmpl")[0]
+    it0, it1 = _events(r, "iter_sources")
+    upd = _events(r, "first_update_adasmpl")[0]
 
-    assert r.adasmpl.force_gt is False and first["recon"] == 0 and first["p"] <= 1.0       # 저장본 p=1.0 이라 첫 회차는 rand<1 항상 참(복원 0). p 시작값은 인자로 정해야 한다
+    assert first["recon"] == 0 and first["p"] == 1.0 and first["gt"] == 64                    # 첫 회차: 저장본 p 1.0 이라 전부 정답 지도(명세 v0.4)
+    assert it0["recon_steps"] == 0 and it0["total"] == 64 * 24 and it0["p_start"] == 1.0
+    assert 0.0 < upd["p_after"] < 1.0 and upd["cv"] is not None and upd["count"] >= 2           # 첫 update 에서 식 5 가 p 를 계산했다
+    assert it1["recon_steps"] > 0 and it1["gt_steps"] + it1["recon_steps"] + it1["off_steps"] == it1["total"] == 64 * 24     # 첫 update 뒤 회차에 복원 env
+    assert ev["applied"] and ev["saved"] == {"force_gt": True, "p": 1.0} and ev["after"] == {"force_gt": False, "p": 1.0}
+
+
+def test_m_t5_p_in_the_argument_is_refused(tmp_path):
+    with pytest.raises(ValueError, match="resume_adasmpl"):
+        _runner(0.0, resume_adasmpl={"force_gt": False, "p": 0.5})
 
 
 def test_m_t5_events_reach_the_jsonl_and_the_manifest(tmp_path):
     path = _gt_ckpt(tmp_path)
-    r = _runner(0.0, n=64, resume_adasmpl={"force_gt": False, "p": 0.5}, log_dir=str(tmp_path / "run"))
+    r = _runner(0.0, n=64, resume_adasmpl={"force_gt": False}, log_dir=str(tmp_path / "run"))
     (tmp_path / "run").mkdir()
     m = {"run": {}, "files": {"imported_sha256": {}}, "checkpoints": {}}
     r.attach_manifest(str(tmp_path / "run"), m)
     r.load(path)
-    r.learn(1)
+    r.learn(2)
     kinds = [json.loads(ln)["kind"] for ln in (tmp_path / "run" / "map_ratio_events.jsonl").read_text(encoding="utf-8").splitlines()]
 
-    assert "resume_adasmpl" in kinds and "first_iter_sources" in kinds
-    assert "first_iter_sources" in [e["kind"] for e in m["map_ratio_events"]]
+    assert {"resume_adasmpl", "first_iter_sources", "iter_sources", "first_update_adasmpl"} <= set(kinds)
+    assert "first_update_adasmpl" in [e["kind"] for e in m["map_ratio_events"]]
 
 
 def test_m_t5_bad_arguments_are_refused():
     with pytest.raises(ValueError, match="resume_adasmpl"):
-        _runner(0.0, resume_adasmpl={"p": 0.5})
+        _runner(0.0, resume_adasmpl={})
     with pytest.raises(ValueError, match="resume_adasmpl"):
-        _runner(0.0, resume_adasmpl={"force_gt": False, "p": 1.5})
+        _runner(0.0, resume_adasmpl={"force_gt": False, "extra": 1})
 
 
 def test_first_sources_sum_to_envs_with_off_envs_and_flush_never_duplicates_lines(tmp_path):
@@ -337,17 +340,17 @@ def test_first_sources_sum_to_envs_with_off_envs_and_flush_never_duplicates_line
     assert len(lines) == len(r.map_ratio_events)
 
 
-def test_first_sources_off_envs_are_not_counted_as_reconstruction(tmp_path):
+def test_iteration_sources_count_off_envs_apart_from_reconstruction(tmp_path):
     r0 = _runner(0.5, n=64)
     r0.learn(1)
     path = str(tmp_path / "o.pt")
     r0.save(path)
-    r = _runner(0.5, n=64, resume_adasmpl={"force_gt": False, "p": 0.5})
+    r = _runner(0.5, n=64, resume_adasmpl={"force_gt": r0.adasmpl.force_gt})
     r.load(path)
-    r.learn(1)
-    first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
+    r.learn(2)
+    it1 = _events(r, "iter_sources")[1]
 
-    assert first["off"] > 0 and first["recon"] > 0 and first["gt"] + first["recon"] + first["off"] == 64
+    assert it1["off_steps"] > 0 and it1["recon_steps"] > 0 and it1["gt_steps"] + it1["recon_steps"] + it1["off_steps"] == 64 * 24
 
 
 # ---------------------------------------------------------------- 실제 SBRunner 경로 (reviewer 막음 1)
@@ -380,21 +383,24 @@ def test_sbrunner_without_the_argument_still_refuses_a_force_gt_change(tmp_path)
         _sb(force_gt=False).load(path)
 
 
-def test_sbrunner_with_the_argument_reaches_reconstruction_and_records_the_real_value(tmp_path):
+def test_sbrunner_with_the_argument_reaches_reconstruction_after_the_first_update_and_records_the_real_value(tmp_path):
     path = _sb_gt_ckpt(tmp_path)
-    r = _sb(force_gt=False, resume_adasmpl={"force_gt": False, "p": 0.5})
+    r = _sb(force_gt=False, resume_adasmpl={"force_gt": False})
     r.load(path)
-    r.learn(1)
-    first = [e for e in r.map_ratio_events if e["kind"] == "first_iter_sources"][-1]
+    r.learn(2)
+    first = _events(r, "first_iter_sources")[-1]
+    it0, it1 = _events(r, "iter_sources")
     path2 = str(tmp_path / "sb2.pt")
     r.save(path2)
     sd = torch.load(path2, weights_only=False)
 
-    assert first["recon"] > 0                                                             # 첫 회차에 복원 env
+    assert first["recon"] == 0 and first["p"] == 1.0 and it0["recon_steps"] == 0           # 첫 회차 복원 env 0 · p 1.0 기록
+    assert it1["recon_steps"] > 0 and it1["off_steps"] > 0                                  # 첫 update 뒤 회차에 복원 env > 0 (p = tanh(CV) < 1)
+    assert 0.0 < _events(r, "first_update_adasmpl")[0]["p_after"] < 1.0
     assert sd["sol23f"]["force_gt"] is False and sd["perception_cfg"]["force_gt"] is False and sd["adasmpl"]["force_gt"] is False   # 기록이 실제와 같다
     _sb(force_gt=False).load(path2)                                                       # 덮은 뒤의 저장본은 인자 없이도 이어 간다
 
 
 def test_resume_adasmpl_force_gt_must_equal_the_configured_force_gt():
     with pytest.raises(ValueError, match="force_gt"):
-        _sb(force_gt=True, resume_adasmpl={"force_gt": False, "p": 0.5})                  # 설정(yaml)이 True 로 남는 길을 막는다
+        _sb(force_gt=True, resume_adasmpl={"force_gt": False})                  # 설정(yaml)이 True 로 남는 길을 막는다

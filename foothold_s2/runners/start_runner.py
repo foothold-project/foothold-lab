@@ -77,7 +77,7 @@ PERCEPTION_DEFAULTS = {
     # ---- SONNET-X25f (EX-33 S-B). 기본값 0 은 B 와 같은 동작이다 ----
     "p_map_off": 0.0,  # env 마다 에피소드 시작(reset) 때 이 확률로 «지도 끔» 을 뽑아 그 에피소드 끝까지 유지한다(끔 = est 를 만들 때 지도 토큰을 attention 키에서 뺌). 0 이면 뽑지 않고 기록기도 안 켠다
     "p_map_off_change": None,  # M-T1: 이어 갈 때 체크포인트의 p_map_off 와 이 runner 값이 다르면 보통 거절한다. {"from_iter": N, "to": v[, "from": 직전 값]} 가 있고 to == p_map_off, N == 체크포인트 회차 + 1 일 때만 허용한다. 숫자(값 · 회차)는 cfg 칸으로만 받는다
-    "resume_adasmpl": None,  # M-T5: 이어 갈 때 저장본의 AdaSmpl(force_gt · p)을 덮을 값 {"force_gt": bool, "p": float|None}. None 이면 저장본 값이 조용히 되살아나므로 경고 줄을 낸다
+    "resume_adasmpl": None,  # M-T5: 이어 갈 때 저장본의 AdaSmpl.force_gt 를 덮을 값 {"force_gt": bool}. p 는 주지 않는다(저장본 값을 쓰고 첫 update 에서 식 5 가 정한다, DESIGN-MAPRATIO v0.4). None 이면 저장본 값이 조용히 되살아나므로 경고 줄을 낸다
     "map_switch_seed": 20251025,  # 끔 뽑기 전용 난수열의 시드(전역 난수를 건드리지 않는다)
 }
 
@@ -132,10 +132,8 @@ class StartRunner(OnPolicyRunner):
         ra = pcfg.get("resume_adasmpl")
         if ra is not None:
             ra = dict(ra)
-            if "force_gt" not in ra or set(ra) - {"force_gt", "p"}:
-                raise ValueError(f"resume_adasmpl 은 {{force_gt[, p]}}: {ra}")
-            if ra.get("p") is not None and not 0.0 <= float(ra["p"]) <= 1.0:
-                raise ValueError(f"resume_adasmpl.p 가 범위 밖: {ra}")
+            if set(ra) != {"force_gt"}:
+                raise ValueError(f"resume_adasmpl 은 {{force_gt}} 만 받는다(p 는 저장본 값, 첫 update 에서 식 5): {ra}")
             if bool(ra["force_gt"]) != bool(pcfg.get("force_gt", False)):
                 raise ValueError(f"resume_adasmpl.force_gt={ra['force_gt']} 와 force_gt={pcfg.get('force_gt', False)} 가 다르다 (yaml · manifest 의 force_gt 가 실제로 쓰는 값이어야 한다)")
             pcfg["resume_adasmpl"] = ra
@@ -299,6 +297,8 @@ class StartRunner(OnPolicyRunner):
         cur_reward_sum = torch.zeros(n, device=self.device)
         cur_episode_length = torch.zeros(n, device=self.device)
         gt_steps = torch.zeros((), device=self.device)
+        src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
+        learn_iters = 0
         act_stats = None
         rs_rec = RewardSplit() if self.pcfg["log_reward_split"] else None
         if rs_rec is not None:
@@ -321,6 +321,7 @@ class StartRunner(OnPolicyRunner):
             self._phase_start()
             self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
+            src_steps.zero_()
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if self.pcfg["contract"] == "start" else None
             contract_example = torch.zeros(n, 3, device=self.device)
             # ① 수집
@@ -332,6 +333,9 @@ class StartRunner(OnPolicyRunner):
                     ppo_obs = self._ppo_obs(raw, est)
                     self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
+                    _off = self.pstate.map_off.bool()
+                    _gt = self.pstate.use_gt.bool()
+                    src_steps += torch.stack([(_gt & ~_off).sum(), (~_gt & ~_off).sum(), _off.sum()]).float()
                     actions = self.alg.act(ppo_obs)
                     if contract_bad is not None:
                         consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
@@ -411,7 +415,8 @@ class StartRunner(OnPolicyRunner):
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
-            p = self.update_adasmpl()
+            p = self._update_adasmpl_recorded(it, src_steps, learn_iters)
+            learn_iters += 1
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, adasmpl_p=torch.as_tensor(p, dtype=torch.float32))
             loss_dict["adasmpl/p_smpl"] = p
@@ -602,6 +607,23 @@ class StartRunner(OnPolicyRunner):
 
         return contextlib.nullcontext()
 
+    def _update_adasmpl_recorded(self, it: int, src_steps: torch.Tensor, learn_iters: int) -> float:
+        """update 를 부르고, 이 learn 호출의 첫 두 회차에 «그 회차의 정답 · 복원 · 끔 env-step 수» 를, 첫 update 에는 CV · count · p 를 사건으로 남긴다(M-T5, 막음 1 확인용)."""
+        before = (self.adasmpl.count, self.adasmpl.sum, self.adasmpl.sumsq)
+        p_before = float(self.adasmpl.p)
+        p = self.update_adasmpl()
+        if learn_iters < 2:
+            gt, recon, off = (int(round(float(x))) for x in src_steps)
+            self.map_ratio_events.append({"kind": "iter_sources", "it": int(it), "learn_iter": learn_iters, "gt_steps": gt, "recon_steps": recon, "off_steps": off,
+                                          "total": gt + recon + off, "force_gt": bool(self.adasmpl.force_gt), "p_start": p_before})
+            if learn_iters == 0:
+                cv = AdaSmpl.cv(before[0], before[1], before[2], self.adasmpl.eps) if before[0] >= 2 and not self.adasmpl.force_gt else None
+                self.map_ratio_events.append({"kind": "first_update_adasmpl", "it": int(it), "count": before[0], "cv": cv, "p_before": p_before, "p_after": float(p)})
+            print("EX33_ITER_SOURCES it=%d gt_steps=%d recon_steps=%d off_steps=%d p_start=%.4f p_end=%.4f" % (it, gt, recon, off, p_before, p), flush=True)
+            self._flush_map_ratio_events()
+
+        return p
+
     def update_adasmpl(self) -> float:
         if self.is_distributed:
             t = torch.tensor([self.adasmpl.count, self.adasmpl.sum, self.adasmpl.sumsq], dtype=torch.float64, device=self.device)
@@ -772,8 +794,6 @@ class StartRunner(OnPolicyRunner):
             ev = {"kind": "resume_adasmpl", "applied": False, "saved": before, "configured_force_gt": want}
         else:
             self.adasmpl.force_gt = bool(cfg["force_gt"])
-            if cfg.get("p") is not None:
-                self.adasmpl.p = float(cfg["p"])
             ev = {"kind": "resume_adasmpl", "applied": True, "saved": before, "after": {"force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p)}}
         self.map_ratio_events.append(ev)
         print("RESUME_ADASMPL %s" % json.dumps(ev, ensure_ascii=False), flush=True)
