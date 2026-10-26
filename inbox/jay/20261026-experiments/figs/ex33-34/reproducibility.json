@@ -1,0 +1,26 @@
+{
+  "assertions_each": 16012,
+  "byte_identical": true,
+  "copies": 2,
+  "files_per_copy": 16,
+  "paths": [
+    "figs/ex33-34/checkpoint_metrics.png",
+    "figs/ex33-34/gen_result.py",
+    "figs/ex33-34/map_switch_on_off.png",
+    "figs/ex33-34/map_switch_rows.csv",
+    "figs/ex33-34/sb10_phase_joint.png",
+    "figs/ex33-34/sb50_phase_joint.png",
+    "figs/ex33-34/SHA256SUMS.txt",
+    "figs/ex33-34/summary.json",
+    "figs/ex33-34/test_gen_result.py",
+    "figs/ex33-34/training_curves.png",
+    "figs/ex33-34/training_scalars.csv",
+    "figs/ex33-34/verdicts.json",
+    "figs/ex33-34/verify_repro.py",
+    "figs/ex33-34/video_manifest.json",
+    "RESULT-EX33-SB50-1026.md",
+    "RESULT-EX34-SB10-1026.md"
+  ],
+  "source_video_sha_list_sha256": "75ea2b4bd856d974752e035fb1eeda5be1e748dc20a3961c63dfba5e7fb7971d",
+  "tree_sha256_both": "fe1736c5933fdaec4511929e3eb6ea95620bee37987e41a48d7efe92f385263e"
+}

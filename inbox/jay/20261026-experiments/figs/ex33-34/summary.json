@@ -1,0 +1,27 @@
+{
+  "assertions": 16012,
+  "lead_tables": {
+    "hardlevel_table.json": "8feaf9314323afb601c67e9846c6d1ba66a7dd10d95cddd57e3e4036faeb656d",
+    "rot_series.json": "5340ce16d9bb8194ea0c087ff56d292fff9aa9a6f73cda3a21ecf47ea54e4af3",
+    "startline_table.json": "6768033eb510ca30cd2221bbf53911e89d6a02372b70795348fdbfbb79df3eb2"
+  },
+  "runs": {
+    "S-B10": {
+      "card_numeric_candidate": true,
+      "eval_root": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval",
+      "last_update": 1500,
+      "m1500_map64_sha256": "57bd0a861f824ec5c231e655c73c7266762c9b9ae630402ba02d46084dc2f532",
+      "training_map_switch_sha256": "a36fe03de507c8722dfef547d69edf35cfa6689e758021816c83c0fabc6e6aa6",
+      "training_path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main"
+    },
+    "S-B50": {
+      "card_numeric_candidate": true,
+      "eval_root": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb50_eval",
+      "last_update": 1500,
+      "m1500_map64_sha256": "c78d2a524a46e1cda98f4cbd243ef22c5b60bbd5fe090945051f015be9829862",
+      "training_map_switch_sha256": "9c97ade6a3f0c32e21c228a2259875248bfbe2cdce0234d85f2d2f28f1d2c794",
+      "training_path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-25_23-45-04_sb-main"
+    }
+  },
+  "source_video_sha_list_sha256": "75ea2b4bd856d974752e035fb1eeda5be1e748dc20a3961c63dfba5e7fb7971d"
+}
