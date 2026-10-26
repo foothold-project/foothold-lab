@@ -42,6 +42,8 @@ parser.add_argument("--max-wall-s", type=float, default=86400.0, help="24시간 
 parser.add_argument("--stop-file", type=str, default=None)
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
+parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
+parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -70,6 +72,7 @@ for registry in ("foothold_s2.tasks", "foothold_s2.x15_tasks", "foothold_s2.x16_
     __import__(registry)
 __import__("foothold_s2.x23f_tasks")  # SOL-23f 독립 task 등록
 __import__("foothold_s2.sb_tasks")  # EX-33 S-B task 등록(B 와 같은 환경, 에피소드 단위 지도 끔)
+from foothold_s2.curriculum import terrain_levels_mixed as tlm  # noqa: E402
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
@@ -119,6 +122,7 @@ def main(env_cfg, agent_cfg):
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
     env_cfg.log_dir = log_dir
+    tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -205,7 +209,9 @@ def main(env_cfg, agent_cfg):
              "run_kind": ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main",
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
-             "resume_parent": parent}
+             "resume_parent": parent, "terrain_judge": tlm.judge_settings(env_cfg),
+             "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
+             "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)

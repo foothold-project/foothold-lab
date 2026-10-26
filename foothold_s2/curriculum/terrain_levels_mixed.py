@@ -142,17 +142,44 @@ def apply_judge_args(env_cfg, world_frame=None, mask_new_task=None) -> None:
     """실행 인자(on/off 문자열 또는 bool, None 이면 건드리지 않음)를 커리큘럼 term params 에 쓴다. 그 term 이 모르는 인자면 거절."""
     import inspect
 
-    cur = env_cfg.curriculum.terrain_levels
+    cur = getattr(getattr(env_cfg, "curriculum", None), "terrain_levels", None)
+
+    if cur is None or getattr(cur, "func", None) is None:
+        if world_frame is not None or mask_new_task is not None:
+            raise ValueError("커리큘럼 terrain_levels term 이 없어 판정 인자를 줄 수 없다")
+        return
     sig = inspect.signature(cur.func).parameters
 
     for k, v in {"world_frame": world_frame, "mask_new_task": mask_new_task}.items():
-        if v is None:
-            continue
         if k not in sig:
-            raise ValueError(f"커리큘럼 term {cur.func.__name__} 은 {k} 인자를 받지 않는다")
+            if v is not None:
+                raise ValueError(f"커리큘럼 term {cur.func.__name__} 은 {k} 인자를 받지 않는다")
+            continue
         params = dict(cur.params or {})
-        params[k] = v in (True, "on")
+        params[k] = bool(params.get(k, sig[k].default)) if v is None else v in (True, "on")      # 인자가 없어도 실제 값을 params 에 박아 env.yaml 에 남긴다
         cur.params = params
+
+
+OLD_PARENT_JUDGE = "world_frame=False (10/26 이전)"
+
+
+def parent_judge(checkpoint_path) -> dict | str:
+    """이어 시작하는 부모 체크포인트가 어떤 판정으로 학습됐나. 같은 폴더의 manifest.json 의 modes.terrain_judge 를 읽고, 없으면 결정 8 이전의 옛 판정 문구."""
+    import json
+    import os
+
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(checkpoint_path)), "manifest.json"), encoding="utf-8") as f:
+            found = json.load(f)["modes"]["terrain_judge"]
+    except (OSError, KeyError, TypeError, ValueError):
+        return OLD_PARENT_JUDGE
+
+    return found if isinstance(found, dict) and "world_frame" in found else OLD_PARENT_JUDGE
+
+
+def judged_with(parent) -> str:
+    """JUDGE-SPEC J-T10 의 start_checkpoint_judged_with: 부모가 세계 좌표 판정이면 world_frame, 아니면(옛 문구 포함) body_frame."""
+    return "world_frame" if isinstance(parent, dict) and parent.get("world_frame") is True else "body_frame"
 
 
 def stage_T(iteration, offset):

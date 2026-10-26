@@ -246,3 +246,51 @@ def test_s2_term_passes_world_frame_and_mask_through_and_train_start_records_and
     assert "terrain_levels_mixed(env, env_ids, command_name, resample_s, world_frame=world_frame, mask_new_task=mask_new_task)" in src
     assert '"terrain_judge": tlm.judge_settings(env_cfg)' in run and "--judge_world_frame" in run and "--judge_mask_new_task" in run
     assert run.index("tlm.apply_judge_args(") < run.index("gym.make(") < run.index("tlm.judge_settings(env_cfg)")        # 인자 반영은 env 만들기 앞, 기록은 뒤
+
+
+def test_parent_judge_reads_the_parent_manifest_and_falls_back_to_the_old_judgement_text(tmp_path):
+    import json
+
+    ck = tmp_path / "model_1500.pt"
+    ck.write_bytes(b"x")
+
+    assert tlm.parent_judge(ck) == "world_frame=False (10/26 이전)" and tlm.judged_with(tlm.parent_judge(ck)) == "body_frame"            # manifest 없음
+    (tmp_path / "manifest.json").write_text(json.dumps({"modes": {"seed": 1}}), encoding="utf-8")
+
+    assert tlm.parent_judge(ck) == "world_frame=False (10/26 이전)"                                                                  # terrain_judge 키 없음(결정 8 이전 판)
+    (tmp_path / "manifest.json").write_text(json.dumps({"modes": {"terrain_judge": {"world_frame": True, "mask_new_task": False}}}), encoding="utf-8")
+    got = tlm.parent_judge(ck)
+
+    assert got == {"world_frame": True, "mask_new_task": False} and tlm.judged_with(got) == "world_frame"
+    (tmp_path / "manifest.json").write_text("{not json", encoding="utf-8")
+
+    assert tlm.parent_judge(ck) == "world_frame=False (10/26 이전)"
+
+
+def test_sb_task_chain_sets_the_terrain_levels_term_only_in_s2_env_cfg_so_the_defaults_are_what_run_and_args_pin_them_into_params():
+    import re
+
+    chain = ["s2_sb_cfg", "s2_23f_b_cfg", "s2_x23_cfg", "s2_env_cfg"]
+    srcs = {n: (PKG / f"tasks/{n}.py").read_text(encoding="utf-8") for n in chain}
+    owners = [n for n, t in srcs.items() if re.search(r"curriculum\.terrain_levels\s*=", t)]
+
+    assert owners == ["s2_env_cfg"] and "func=tlm.terrain_levels_s2, params={\"t_start\": t_start, \"t_end\": t_end}" in srcs["s2_env_cfg"]
+    cfg = _cfg(tlm.terrain_levels_s2, {"t_start": 1000, "t_end": 8000})
+
+    assert tlm.judge_settings(cfg) == {"world_frame": True, "mask_new_task": False}
+    tlm.apply_judge_args(cfg, None, None)                                                              # 인자가 없어도 실제 값을 params 에 박는다(env.yaml 에 남음)
+
+    assert cfg.curriculum.terrain_levels.params == {"t_start": 1000, "t_end": 8000, "world_frame": True, "mask_new_task": False}
+    tlm.apply_judge_args(type("C", (), {"curriculum": None})(), None, None)                          # term 이 없는 task 는 인자가 없으면 그냥 지나감
+
+    with pytest.raises(ValueError):
+        tlm.apply_judge_args(type("C", (), {"curriculum": None})(), "off", None)
+
+
+def test_sol23f_common_exposes_the_args_and_records_judge_and_parent_judge_in_the_manifest_in_order():
+    run = (PKG / "scripts/train_sol23f_common.py").read_text(encoding="utf-8")
+
+    assert "--judge_world_frame" in run and "--judge_mask_new_task" in run
+    assert '"terrain_judge": tlm.judge_settings(env_cfg)' in run and '"parent_judge": tlm.parent_judge(resume_path)' in run and '"start_checkpoint_judged_with"' in run
+    assert run.index("tlm.apply_judge_args(") < run.index("gym.make(") < run.index("tlm.judge_settings(env_cfg)")
+    assert 'sys.argv = [sys.argv[0], "--task", "FootholdS2-Go2-S2-SB-v0", "--variant", "SB", *sys.argv[1:]]' in (PKG / "scripts/train_sb.py").read_text(encoding="utf-8")        # train_sb 는 나머지 인자를 그대로 넘김
