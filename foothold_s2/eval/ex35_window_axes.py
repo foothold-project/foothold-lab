@@ -234,6 +234,30 @@ def _scalar_events(run_dir):
     return ea
 
 
+def _window_complete(tag, allsteps, steps, end_it, window):
+    """창 입력 완전성: 이 run 자신의 기록 주기(전체 step 간격의 중앙값)에 맞춰 중복 · 끝 · 빠진 구간 · 개수를 본다. 모자라면 AxisInputError(= HOLD_NO_DATA)."""
+    diffs = np.diff(np.sort(allsteps))
+    period = int(np.median(diffs[diffs > 0])) if (diffs > 0).any() else 1
+    need = window // period
+    got = sorted(steps)
+    lo = end_it - window
+
+    if len(set(got)) != len(got):
+        raise AxisInputError("%s: 창 (%d, %d] 에 같은 step 이 두 번 이상 있다(중복 기록)" % (tag, lo, end_it))
+
+    if end_it - got[-1] >= period:
+        raise AxisInputError("%s: 창 끝 %d 에 기록이 없다(마지막 %d, 기록 주기 %d)" % (tag, end_it, got[-1], period))
+
+    edges = [lo] + got
+    gaps = [(a, b) for a, b in zip(edges, edges[1:]) if b - a > period]
+
+    if gaps:
+        raise AxisInputError("%s: 창 안에 빠진 구간이 있다(주기 %d): %s" % (tag, period, gaps[:3]))
+
+    if len(got) < need:
+        raise AxisInputError("%s: 창 안 기록 %d 개 < 필요 %d (주기 %d)" % (tag, len(got), need, period))
+
+
 def curve_axis(run_dir, end_it, window=50) -> dict:
     """학습 폴더 tfevents 의 (end_it - window, end_it] 창 평균 6 개와 비유한값. 경고는 카드 A9 숫자. 태그가 없으면 AxisInputError."""
     ea = _scalar_events(run_dir)
@@ -246,10 +270,13 @@ def curve_axis(run_dir, end_it, window=50) -> dict:
     out, nonfinite, warn = {}, [], []
 
     for t in A9_TAGS:
+        allsteps = np.array([e.step for e in ea.Scalars(t)], dtype=np.int64)
         ev = [e for e in ea.Scalars(t) if end_it - window < e.step <= end_it]
 
         if not ev:
             raise AxisInputError("%s: 창 (%d, %d] 에 기록이 없다" % (t, end_it - window, end_it))
+
+        _window_complete(t, allsteps, [e.step for e in ev], end_it, window)
 
         vals = np.array([e.value for e in ev], dtype=np.float64)
 

@@ -411,3 +411,40 @@ def test_a11_video_file_must_exist_and_match_sha(pair):
     a = a11_file(tmp, sha_of(latest), cmp_video={"path": (tmp / "cmp.mp4").as_posix(), "sha256": "0" * 64})
     r = J(latest, prev, a11=a)
     assert r["decision"]["row"] == 4 and "sha256" in r["decision"]["action"]
+
+
+def _curve_dir(root, name, steps):
+    from torch.utils.tensorboard import SummaryWriter
+
+    d = Path(root) / name
+    w = SummaryWriter(str(d))
+
+    for step in steps:
+        for t in ("Loss/value_function", "Loss/kl_probe/ppo_mean", "Loss/entropy", "Policy/mean_noise_std", "Episode_Termination/bad_orientation", "Train/mean_reward"):
+            w.add_scalar(t, {"Loss/entropy": 9.0, "Policy/mean_noise_std": 0.5, "Train/mean_reward": 16.0}.get(t, 0.03), step)
+
+    w.close()
+
+    return str(d)
+
+
+def test_a9_incomplete_window_is_hold_no_data(pair, tmp_path):
+    from foothold_s2.eval import ex35_window_axes as AX
+    prev, latest, tmp = pair
+    full = list(range(1, 2051))
+    ok = _curve_dir(tmp_path, "ok", full)
+    assert AX.curve_axis(ok, 2000)["tags"]["Loss/entropy"]["n"] == 50
+    cases = {"one_point_per_window": [s for s in full if s <= 1900] + [1950, 2000],            # verifier 반례: 50 회 창마다 한 점
+             "gap_in_window": [s for s in full if not (1970 <= s <= 1985)],
+             "missing_end": [s for s in full if s <= 1990],
+             "duplicate_step": full + [1980],
+             "too_few_points": [s for s in full if s <= 1950 or s % 5 == 0 and s <= 1990] + [2000]}
+
+    for name, steps in cases.items():
+        d = _curve_dir(tmp_path, name, steps)
+
+        with pytest.raises(AX.AxisInputError):
+            AX.curve_axis(d, 2000)
+
+        r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=d)
+        assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"], name
