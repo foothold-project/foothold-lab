@@ -68,6 +68,8 @@ def required_files(d, base=False) -> list:
     out = ["map64/map_modes.json", "map64_eval_pred/map_modes.json", "hardlevel/L6/map_modes.json", "hardlevel/L9/map_modes.json", "checkpoint_sha256.txt"]
 
     for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
+        out.append("turn16_%s/probe_result.json" % mode)                    # 평가가 도는 중이면 npz 는 있어도 이 파일은 아직 없다
+
         for c in CASES8:
             out.append("turn16_%s/arrays_%s.npz" % (mode, c))
 
@@ -235,39 +237,104 @@ def recompute_turn(npz, case) -> dict:
     return {"kept": len(qs), "Q": float(np.mean(qs)) if qs else float("nan"), "C": float(np.mean(cs)) if cs else float("nan")}
 
 
-def reproduce_check(d, b, tol=WIN["recompute_tol"]) -> dict:
+def recompute_vx_integral(npz) -> float:
+    """독립 식: kept env 의 (살아 있는 스텝 vx 합 / 200 Hz) 평균(m). judge_stats.turn_stats 의 vx_integral_kept_mean 과 같은 정의, 다른 계산."""
+    z = np.load(npz)
+    tot, n = 0.0, 0
+
+    for e in range(z["alive"].shape[0]):
+        if z["kept"][e] and z["alive"][e].any():
+            tot += float(np.sum(z["vx"][e][z["alive"][e]])) / S.HZ
+            n += 1
+
+    return tot / n if n else float("nan")
+
+
+def _json(path):
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def reproduce_check(d, b, base_hard_assignment=None, tol=WIN["recompute_tol"], dist_tol=1e-3) -> dict:
+    """A12 (카드 4b.1): Q · C <= 1e-6, 거리 <= 1e-3 m, 정수 0, 지형 해시, 저장본 sha256, eval_seed 42. 하나라도 어긋나거나 «확인 못 함» 이면 ok 가 아니다
+    (파일 · 기록이 없는 것을 통과로 치지 않는다). 독립 식이 없는 것(64 env 거리)은 not_independent 에 적고, 판정에서 막을지는 호출자(require_map64_recompute)가 정한다."""
     d = Path(d)
-    bad = []
+    bad, notes = [], []
     n = 0
 
-    for mode in MODES_TURN:
+    for mode in MODES_TURN + ("eval_pred",):
         for c in CASES8:
             p = d / ("turn16_" + mode) / ("arrays_%s.npz" % c)
-            s = G._turn(b, mode).get(c)
+            s = (G._turn(b, mode) if mode != "eval_pred" else b["ext"].get("pred_turn") or {}).get(c)
 
             if not p.is_file() or s is None:
+                bad.append({"cond": "no_input", "file": str(p)})
                 continue
 
             r = recompute_turn(p, c)
+            vx = recompute_vx_integral(p)
             n += 1
 
             if r["kept"] != s["kept"] or abs(r["Q"] - s["Q"]) > tol or abs(r["C"] - s["C"]) > tol:
                 if not (r["kept"] == 0 == s["kept"]):
                     bad.append({"mode": mode, "case": c, "recomputed": r, "judge": {k: s[k] for k in ("kept", "Q", "C")}})
 
+            if not abs(vx - s["vx_integral_kept_mean"]) <= dist_tol:
+                bad.append({"cond": "distance", "mode": mode, "case": c, "recomputed": vx, "judge": s["vx_integral_kept_mean"]})
+
     ext = b["ext"]
-    sha_ok, sha_note = None, None
-    pth = ext.get("ckpt_path_txt")
+    sha_txt, pth = ext.get("ckpt_sha_txt"), ext.get("ckpt_path_txt")
+    sha_ok = None
 
-    if ext.get("ckpt_sha_txt") and pth and Path(pth).is_file():
-        sha_ok = _sha_file(pth) == ext["ckpt_sha_txt"]
-        sha_note = pth
+    if not sha_txt or not pth or not Path(pth).is_file():
+        bad.append({"cond": "checkpoint_sha256", "why": "저장본 파일을 찾을 수 없어 sha256 을 다시 계산하지 못했다(미확인은 통과가 아니다)", "file": pth})
+    else:
+        sha_ok = _sha_file(pth) == sha_txt
 
-    if sha_ok is False:
-        bad.append({"cond": "checkpoint_sha256", "file": pth})
+        if not sha_ok:
+            bad.append({"cond": "checkpoint_sha256", "file": pth})
 
-    return {"checked_cases": n, "mismatch": bad, "checkpoint_sha_matches_file": sha_ok, "checkpoint_file": sha_note, "ok": not bad,
-            "not_checked": ["64 env 거리 · 생존은 평가 JSON 값 그대로(독립 식 없음)", "eval_seed 는 map_modes.json 에 기록 없음(옛 평가)"]}
+    maps = [("map64", d / "map64" / "map_modes.json", S.MAP64_SHA), ("map64_eval_pred", d / "map64_eval_pred" / "map_modes.json", S.MAP64_SHA)]
+
+    for L in ("L6", "L9"):
+        maps.append(("hardlevel/" + L, d / "hardlevel" / L / "map_modes.json", (base_hard_assignment or {}).get(L)))
+
+    for name, p, want in maps:
+        if not p.is_file():
+            bad.append({"cond": "no_input", "file": str(p)})
+            continue
+
+        j = _json(p)
+        got = (j.get("fixed_terrain") or {}).get("assignment_sha256")
+
+        if j.get("eval_seed") != 42:
+            bad.append({"cond": "eval_seed", "file": name, "value": j.get("eval_seed"), "want": 42})
+
+        if want is None or got != want:
+            bad.append({"cond": "terrain_hash", "file": name, "value": (got or "")[:12], "want": (want or "")[:12] or "기준 없음"})
+
+        if sha_txt and j.get("checkpoint_sha256") != sha_txt:
+            bad.append({"cond": "map_checkpoint_sha256", "file": name, "value": str(j.get("checkpoint_sha256"))[:12], "want": sha_txt[:12]})
+
+    for mode in MODES_TURN + ("eval_pred",):
+        pj = d / ("turn16_" + mode) / "probe_result.json"
+
+        if not pj.is_file():
+            bad.append({"cond": "no_input", "file": str(pj)})
+            continue
+
+        j = _json(pj)
+        got = (j.get("fixed_terrain") or {}).get("assignment_sha256") or ""
+
+        if not got.startswith(S.PROBE16_SHA12):
+            bad.append({"cond": "terrain_hash", "file": "turn16_" + mode, "value": got[:12], "want": S.PROBE16_SHA12})
+
+        if sha_txt and j.get("checkpoint_sha256") != sha_txt:
+            bad.append({"cond": "turn_checkpoint_sha256", "file": "turn16_" + mode, "value": str(j.get("checkpoint_sha256"))[:12], "want": sha_txt[:12]})
+
+    notes.append("turn16 의 eval_seed: turn_probe 는 시드 인자가 없고 probe_result.json 에도 기록이 없다(기본 고정). 지형 해시 7f49a1e9 와 저장본 sha 로만 대조")
+
+    return {"checked_cases": n, "mismatch": bad, "checkpoint_sha_matches_file": sha_ok, "checkpoint_file": pth, "ok": not bad, "notes": notes,
+            "not_independent": ["64 env 거리 · 생존(map64 · eval_pred · L6 · L9): 환경별 자료(npz)가 없어 독립 식이 없다. 평가 JSON 값을 그대로 쓴다"]}
 
 
 # ------------------------------------------------------------------ A11
@@ -329,9 +396,11 @@ def trend(latest_q: dict, prev_window: dict | None, w=WIN) -> dict:
 
 
 def truth_table(prev_state, latest_state, ctx) -> dict:
-    """카드 4b.6 의 열한 행. ctx: input_missing(list) · same_sha · iter_increasing · stop(bool) · a12_ok · a11 · at_ceiling · flat. 위에서부터 먼저 맞는 행."""
-    if ctx["input_missing"] or ctx["same_sha"] or not ctx["iter_increasing"] or G.HOLD_NO_DATA in (prev_state, latest_state):
-        return {"row": 1, "branch": "HOLD_NO_DATA", "action": "판정 불가 = 연장 불가 · 보고(통과 아님)"}
+    """카드 4b.6 의 열한 행. ctx: trend_missing(문자열 또는 빈) · input_missing(list) · same_sha · iter_increasing · stop(bool) · a12_ok · a11 · at_ceiling · flat. 위에서부터 먼저 맞는 행."""
+    if ctx["input_missing"] or ctx["same_sha"] or not ctx["iter_increasing"] or G.HOLD_NO_DATA in (prev_state, latest_state) or ctx.get("trend_missing"):
+        why = ctx.get("trend_missing") or "필수 칸 결측 · 같은 sha · 회차 비증가 · 읽기 실패"
+
+        return {"row": 1, "branch": "HOLD_NO_DATA", "action": "판정 불가 = 연장 불가 · 보고(통과 아님): %s" % why}
 
     if ctx["stop"]:
         return {"row": 2, "branch": "STOP", "action": "저장본 보존 · 보고"}
@@ -450,34 +519,69 @@ def axes_rows(b, base, w=WIN) -> list:
 # ------------------------------------------------------------------ 본체
 
 
-def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None) -> dict:
+def prev_window_problem(n_l, prev_window):
+    """평평 판정(4b.2)에는 이전 창 경계의 출력이 필요하다. 첫 창(m2000 이하)은 추세가 없는 게 정상. m2250 이상에서 이전 창 json 이 없거나 회차가 맞지 않으면 문제 문구."""
+    if n_l < 2250:
+        return ""
+
+    if not prev_window:
+        return "최신이 m%d 인데 --prev-window(이전 창 경계 m%d 의 출력 json) 가 없다: 평평 판정을 할 수 없다" % (n_l, n_l - 250)
+
+    if prev_window.get("latest_iter") != n_l - 250 or not prev_window.get("a5_q"):
+        return "--prev-window 가 m%s 의 것이다(필요: m%d, a5_q 포함)" % (prev_window.get("latest_iter"), n_l - 250)
+
+    return ""
+
+
+def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_DEFAULT, a11=None, prev_window=None, require_map64_recompute=False) -> dict:
     ld, pd = Path(latest_dir), Path(prev_dir)
     n_l, n_p = _iter_of(ld), _iter_of(pd)
     miss = {"latest": missing_inputs(ld), "prev": missing_inputs(pd)}
     base = load_base(base_dir, hard_dir)
+    base_hard = {L: (h.get("assignment_sha256") or _json(Path(hard_dir) / ("sb10_" + L) / "map64" / "map_modes.json").get("fixed_terrain", {}).get("assignment_sha256")) for L, h in base["ext"]["hard"].items()}
     res = {"latest_iter": n_l, "prev_iter": n_p, "missing_inputs": miss, "thresholds": {"window": WIN, "ex35_extra": X.EX35_EXTRA}, "base": {"dir": str(base_dir), "hard": str(hard_dir)}}
-    out_states, bundles = {}, {}
+    out_states, bundles, read_fail = {}, {}, {"latest": None, "prev": None}
 
     for tag, d, n in (("prev", pd, n_p), ("latest", ld, n_l)):
-        b = load_ckpt(d)
-        bundles[tag] = b
+        if miss[tag]:                                                            # 평가가 도는 중이거나 반쯤 쓰인 폴더: 읽지 않고 판정 불가
+            bundles[tag] = None
+            out_states[tag] = {"state": G.HOLD_NO_DATA, "reasons": [G._cond("no_data", what=miss[tag])], "iter": n}
+            continue
 
         try:
+            b = load_ckpt(d)
+            bundles[tag] = b
             v = ckpt_state(b, base, n - 1500)
             out_states[tag] = {"state": v.state, "reasons": v.reasons, "iter": n}
-        except Exception as e:                                                                  # noqa: BLE001  (읽기 실패는 판정 불가로)
-            out_states[tag] = {"state": G.HOLD_NO_DATA, "reasons": [G._cond("exception", str(e))], "iter": n}
+        except Exception as e:                                                                  # noqa: BLE001  (읽기 실패는 판정 불가로, 예외로 죽지 않는다)
+            bundles.setdefault(tag, None)
+            read_fail[tag] = "%s: %s" % (type(e).__name__, e)
+            out_states[tag] = {"state": G.HOLD_NO_DATA, "reasons": [G._cond("read_failed", read_fail[tag])], "iter": n}
 
     res["states"] = out_states
+    res["read_failed"] = read_fail
     ls, ps = out_states["latest"]["state"], out_states["prev"]["state"]
-    shal, shap = bundles["latest"]["ext"]["ckpt_sha_txt"], bundles["prev"]["ext"]["ckpt_sha_txt"]
-    a12 = {"latest": reproduce_check(ld, bundles["latest"]) if not miss["latest"] else {"ok": False, "why": "입력 결측"},
-           "prev": reproduce_check(pd, bundles["prev"]) if not miss["prev"] else {"ok": False, "why": "입력 결측"}}
+    bl, bp = bundles.get("latest"), bundles.get("prev")
+    shal, shap = (bl["ext"]["ckpt_sha_txt"] if bl else None), (bp["ext"]["ckpt_sha_txt"] if bp else None)
+    a12 = {}
+
+    for tag, d, b in (("latest", ld, bl), ("prev", pd, bp)):
+        try:
+            a12[tag] = reproduce_check(d, b, base_hard) if b else {"ok": False, "why": "입력 결측 또는 읽기 실패"}
+        except Exception as e:                                                                  # noqa: BLE001
+            a12[tag] = {"ok": False, "why": "%s: %s" % (type(e).__name__, e)}
+
     a11d = read_a11(a11, shal)
-    lq = a5_q(bundles["latest"]) if ls != G.HOLD_NO_DATA else {}
+    lq = a5_q(bl) if bl and ls != G.HOLD_NO_DATA else {}
     tr = trend(lq, prev_window) if lq else {"has_prev": False, "delta": {}, "improved": None, "no_improve_streak": 0, "flat": False}
+    prob = prev_window_problem(n_l, prev_window)
+    a12_ok = bool(a12["latest"].get("ok") and a12["prev"].get("ok"))
+
+    if require_map64_recompute:
+        a12_ok = False
+
     ctx = {"input_missing": miss["latest"] + miss["prev"], "same_sha": bool(shal and shal == shap), "iter_increasing": n_l > n_p >= 0,
-           "stop": G.STOP in (ls, ps), "a12_ok": bool(a12["latest"].get("ok") and a12["prev"].get("ok")), "a11": a11d,
+           "stop": G.STOP in (ls, ps), "a12_ok": a12_ok, "a11": a11d, "trend_missing": prob,
            "at_ceiling": n_l >= WIN["ceiling_iter"], "flat": tr["flat"]}
     res["context"] = {k: v for k, v in ctx.items() if k != "a11"}
     res["a11"] = a11d
@@ -487,7 +591,7 @@ def judge_window(latest_dir, prev_dir, *, base_dir=BASE_DEFAULT, hard_dir=HARD_D
     res["no_improve_streak"] = tr["no_improve_streak"]
     res["decision"] = truth_table(ps, ls, ctx)
     res["branch"] = res["decision"]["branch"]
-    res["axes"] = {"latest": axes_rows(bundles["latest"], base) if not miss["latest"] else [], "prev": axes_rows(bundles["prev"], base) if not miss["prev"] else []}
+    res["axes"] = {"latest": axes_rows(bl, base) if bl and ls != G.HOLD_NO_DATA else [], "prev": axes_rows(bp, base) if bp and ps != G.HOLD_NO_DATA else []}
 
     return res
 
@@ -533,11 +637,12 @@ def main(argv=None) -> int:
     ap.add_argument("--base-dir", default=BASE_DEFAULT)
     ap.add_argument("--hard-dir", default=HARD_DEFAULT)
     ap.add_argument("--a11", default=None, help="lead 가 채운 판독 JSON")
-    ap.add_argument("--prev-window", default=None, help="이전 창 경계의 출력 json(추세 · 평평 셈)")
+    ap.add_argument("--prev-window", default=None, help="이전 창 경계의 출력 json(추세 · 평평 셈). 최신이 m2250 이상이면 필수(없으면 HOLD_NO_DATA)")
+    ap.add_argument("--require-map64-recompute", action="store_true", help="64 env 거리에 독립 식이 없다는 사실을 A12 불일치로 친다(기본: 표에 적기만)")
     ap.add_argument("--out-prefix", required=True, help="<prefix>.json 과 <prefix>.md 를 쓴다")
     a = ap.parse_args(argv)
     pw = json.loads(Path(a.prev_window).read_text(encoding="utf-8")) if a.prev_window else None
-    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw)
+    r = judge_window(a.latest_dir, a.prev_dir, base_dir=a.base_dir, hard_dir=a.hard_dir, a11=a.a11, prev_window=pw, require_map64_recompute=a.require_map64_recompute)
     Path(a.out_prefix + ".json").write_text(json.dumps(r, ensure_ascii=False, indent=1, sort_keys=True, default=str), encoding="utf-8")
     Path(a.out_prefix + ".md").write_text(to_markdown(r), encoding="utf-8")
     print(json.dumps({"branch": r["branch"], "row": r["decision"]["row"], "states": {k: v["state"] for k, v in r["states"].items()}}, ensure_ascii=False))
