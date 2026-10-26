@@ -1,7 +1,7 @@
 {
   "S-B10": {
     "card_numeric_candidate": true,
-    "final_interpretation": "lead 작성 자리 · 영상·위상 대조 전",
+    "final_interpretation": "lead 8·9절 참조 · 회전 같음/다름은 판정 관문 아님",
     "off": {
       "alive": 64,
       "distance": 5.4405694007873535,
@@ -23,11 +23,22 @@
       "left_then_right": 0.027941788701405124,
       "right_then_left": 0.07498362687404203
     },
-    "turn_within_0p12_all": false
+    "turn_mode_similarity": {
+      "fwd_then_left": "다름",
+      "fwd_then_right": "같음",
+      "indep_left": "같음",
+      "indep_right": "같음",
+      "left_then_right": "같음",
+      "right_then_left": "같음"
+    },
+    "turn_mode_similarity_counts": {
+      "같음": 5,
+      "다름": 1
+    }
   },
   "S-B50": {
     "card_numeric_candidate": true,
-    "final_interpretation": "lead 작성 자리 · 영상·위상 대조 전",
+    "final_interpretation": "lead 8·9절 참조 · 회전 같음/다름은 판정 관문 아님",
     "off": {
       "alive": 63,
       "distance": 5.314908027648926,
@@ -49,6 +60,17 @@
       "left_then_right": 0.12094937639198267,
       "right_then_left": 0.041237814711750254
     },
-    "turn_within_0p12_all": false
+    "turn_mode_similarity": {
+      "fwd_then_left": "같음",
+      "fwd_then_right": "같음",
+      "indep_left": "같음",
+      "indep_right": "같음",
+      "left_then_right": "다름",
+      "right_then_left": "같음"
+    },
+    "turn_mode_similarity_counts": {
+      "같음": 5,
+      "다름": 1
+    }
   }
 }

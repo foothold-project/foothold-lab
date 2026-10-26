@@ -1,11 +1,13 @@
 {
-  "assertions_each": 16012,
+  "assertions_each": 16028,
   "byte_identical": true,
   "copies": 2,
-  "files_per_copy": 16,
+  "files_per_copy": 18,
   "paths": [
     "figs/ex33-34/checkpoint_metrics.png",
     "figs/ex33-34/gen_result.py",
+    "figs/ex33-34/lead_sections_EX33.md",
+    "figs/ex33-34/lead_sections_EX34.md",
     "figs/ex33-34/map_switch_on_off.png",
     "figs/ex33-34/map_switch_rows.csv",
     "figs/ex33-34/sb10_phase_joint.png",
@@ -22,5 +24,5 @@
     "RESULT-EX34-SB10-1026.md"
   ],
   "source_video_sha_list_sha256": "75ea2b4bd856d974752e035fb1eeda5be1e748dc20a3961c63dfba5e7fb7971d",
-  "tree_sha256_both": "fa3777c40935ff3b8ebc44316c0697a0a3f20290eb4b44f0bc978fff449ec5a5"
+  "tree_sha256_both": "03fb2319f29135d4411de0bfef1c647aef9bc810593031798e395f40407ddc78"
 }

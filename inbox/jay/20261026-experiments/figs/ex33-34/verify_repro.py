@@ -31,7 +31,8 @@ def main():
         for root in roots:
             out = root / "figs/ex33-34"
             out.mkdir(parents=True)
-            for name in ("gen_result.py", "test_gen_result.py", "verify_repro.py"):
+            for name in ("gen_result.py", "test_gen_result.py", "verify_repro.py",
+                         "lead_sections_EX33.md", "lead_sections_EX34.md"):
                 shutil.copy2(HERE / name, out / name)
             env = os.environ.copy()
             env["CUDA_VISIBLE_DEVICES"] = "-1"

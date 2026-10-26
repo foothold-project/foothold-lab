@@ -495,9 +495,15 @@ def result_verdict(run, row, start):
                "threshold": .9 * base, "pass": bool(on_pass)},
         "off": {"distance": off["body_vx_integral_median_m"], "alive": off["alive_envs_at_end"],
                 "threshold": .8 * g0, "pass": bool(off_pass)},
-        "turn_mode_delta": deltas, "turn_within_0p12_all": all(v <= .12 for v in deltas.values()),
+        "turn_mode_delta": deltas,
+        "turn_mode_similarity": {case: "같음" if delta <= .12 else "다름"
+                                 for case, delta in deltas.items()},
+        "turn_mode_similarity_counts": {
+            "같음": sum(delta <= .12 for delta in deltas.values()),
+            "다름": sum(delta > .12 for delta in deltas.values()),
+        },
         "card_numeric_candidate": bool(on_pass and off_pass),
-        "final_interpretation": "lead 작성 자리 · 영상·위상 대조 전",
+        "final_interpretation": "lead 8·9절 참조 · 회전 같음/다름은 판정 관문 아님",
     }
 
 
@@ -522,8 +528,19 @@ def raw_reference(start):
     return reference
 
 
+def read_lead_sections(ex):
+    path = Path(__file__).resolve().parent / f"lead_sections_{ex}.md"
+    require(path.is_file(), f"lead sections missing: {path}")
+    content = path.read_bytes().decode("utf-8-sig")
+    require(content.startswith("## 8. ") and content.count("## 9. ") == 1,
+            f"lead sections 8 and 9 required: {path}")
+    require("lead 작성 자리" not in content, f"lead sections unfinished: {path}")
+    return content
+
+
 def markdown_report(run, rows, training_data, videos, verdict, out):
     cfg = RUNS[run]
+    lead_sections = read_lead_sections(cfg["ex"])
     final = rows[-1]
     switch, scalars, base = training_data
     manifest = read_json(base / "manifest.json")
@@ -579,11 +596,15 @@ def markdown_report(run, rows, training_data, videos, verdict, out):
         f"{fmt(r['turn']['eval_gt']['indep_left']['Q'])} | "
         f"{fmt(r['turn']['eval_gt']['indep_right']['Q'])} |"
         for r in rows]
+    turn_similarity = " · ".join(
+        f"{case} {verdict['turn_mode_similarity'][case]} "
+        f"({fmt(verdict['turn_mode_delta'][case], 4)})"
+        for case in CASES)
     text = f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 반영) · 2026-10-26
 > 근거: EXP-{cfg['ex']} 결과 전 고정 판정 · TensorBoard · map_switch.jsonl · 고정 64/16환경 평가 원본 · 영상 SHA
 > 요지: {run}의 학습·저장본별 평가·영상 원본을 자동 집계하고 판정의 해석은 lead가 마친다
-> 상태: CPU 원자료 수치 집계 · 해석 미완 · lead 작성 자리
+> 상태: CPU 원자료 수치 집계 · lead 8·9절 반영
 > 판: v0.1
 
 # {cfg['ex']} {run} 결과 · 원자료 생성본
@@ -592,7 +613,7 @@ def markdown_report(run, rows, training_data, videos, verdict, out):
 
 ## 1. 영상
 
-로컬 폴더: `{VIDEO}`. 영상의 릴리스 링크: **lead 가 채움**. 영상 SHA는 같은 폴더의 `SHA256SUMS.txt`와 바이트 대조했다. 아래 길이·프레임 수는 ffprobe가 실제 파일에서 읽었다.
+로컬 폴더: `{VIDEO}`. 영상 릴리스: https://github.com/foothold-project/foothold-lab/releases/tag/research-sb-1500-20261026. 영상 SHA는 같은 폴더의 `SHA256SUMS.txt`와 바이트 대조했다. 아래 길이·프레임 수는 ffprobe가 실제 파일에서 읽었다.
 
 | 파일 | 길이(s) | 프레임 | SHA256 |
 |---|---:|---:|---|
@@ -677,18 +698,11 @@ m1500의 16환경 Q는 명령 부호를 맞춘 kept 환경별 살아 있는 표�
 | 지도 켬 유지 · B1500 eval_gt ×0.9 | {fmt(verdict['on']['distance'], 4)} | {fmt(verdict['on']['threshold'], 4)} | {'PASS' if verdict['on']['pass'] else 'FAIL'} |
 | 지도 없이 걷기 있음 · G0-B none ×0.8 | {fmt(verdict['off']['distance'], 4)} | {fmt(verdict['off']['threshold'], 4)} | {'PASS' if verdict['off']['pass'] else 'FAIL'} |
 
-생존: 켬 {verdict['on']['alive']}/64, 가림 {verdict['off']['alive']}/64. 여섯 경우 켬·가림 Q 차이 최대 {fmt(max(verdict['turn_mode_delta'].values()), 4)} rad/s, 여섯 경우 모두 0.12 이내 여부 {'PASS' if verdict['turn_within_0p12_all'] else 'FAIL'}. 이 모드 차이는 두 회전 방향의 절대 추종 성공을 뜻하지 않는다. **영상·위상 대조 전 출발선 최종 판정은 보류**.
+생존: 켬 {verdict['on']['alive']}/64, 가림 {verdict['off']['alive']}/64. 회전 Q의 켬·가림 차이가 0.12 rad/s 안이면 「같음」, 넘으면 「다름」으로 표시한다. 경우별 {turn_similarity}. 합계 같음 {verdict['turn_mode_similarity_counts']['같음']} · 다름 {verdict['turn_mode_similarity_counts']['다름']}. 16환경 Q 재측정 폭은 최대 0.115 · 평균 0.039 rad/s (lead 실측)이다. 이 표시는 판정 관문이나 두 회전 방향의 절대 추종 성공을 뜻하지 않는다.
 
 원본·코드·영상 SHA 목록은 `figs/ex33-34/SHA256SUMS.txt`, 고정 표 대조 횟수는 `figs/ex33-34/summary.json`에 남겼다.
 
-## 8. 이 결과로 다음 설계에서 무엇을 바꾸는가
-
-**lead 작성 자리**
-
-## 9. 실제 완료와 재현 경로
-
-**lead 작성 자리**
-"""
+{lead_sections}"""
     require(chr(0x2014) not in text, "em dash in result")
     write(out / cfg["doc"], text)
 

@@ -61,9 +61,23 @@ class ResultTests(unittest.TestCase):
                 "probe_prop_only": {c: stats(.3) for c in g.CASES},
             },
         }
-        self.assertTrue(g.result_verdict("S-B50", row, start)["card_numeric_candidate"])
+        verdict = g.result_verdict("S-B50", row, start)
+        self.assertTrue(verdict["card_numeric_candidate"])
+        self.assertEqual(verdict["turn_mode_similarity_counts"], {"같음": 6, "다름": 0})
+        row["turn"]["probe_prop_only"][g.CASES[0]]["Q"] = .2793
+        verdict = g.result_verdict("S-B50", row, start)
+        self.assertEqual(verdict["turn_mode_similarity"][g.CASES[0]], "다름")
+        self.assertEqual(verdict["turn_mode_similarity_counts"], {"같음": 5, "다름": 1})
+        self.assertTrue(verdict["card_numeric_candidate"])
         row["map"]["modes"]["probe_prop_only"]["fwd1.0"]["body_vx_integral_median_m"] = 3.999
         self.assertFalse(g.result_verdict("S-B50", row, start)["card_numeric_candidate"])
+
+    def test_lead_sections_are_required_and_verbatim(self):
+        for ex in ("EX33", "EX34"):
+            source = Path(g.__file__).resolve().parent / f"lead_sections_{ex}.md"
+            self.assertEqual(g.read_lead_sections(ex), source.read_bytes().decode("utf-8-sig"))
+        with self.assertRaisesRegex(AssertionError, "lead sections missing"):
+            g.read_lead_sections("MISSING")
 
     def test_card_denominators_are_raw_and_lead_table_mutation_caught(self):
         start = g.read_json(g.LEAD / "startline_table.json")
