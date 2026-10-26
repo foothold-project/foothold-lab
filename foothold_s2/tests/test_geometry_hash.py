@@ -91,7 +91,9 @@ def test_each_command_is_held_for_every_step_of_the_run_and_the_crossing_window_
 
     assert "term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)" in loop                  # 매 step 같은 명령으로 덮어씀(전 구간 같은 명령)
     assert "resampling_time_range = (1.0e9, 1.0e9)" in src
-    assert "window_s" not in src.split("kind_stats.by_kind(")[1].split(")")[0]                  # 창을 따로 주지 않는다 = 기록 전체(STEPS)
+    call = next(ln for ln in src.splitlines() if "kind_stats.by_kind(kinds" in ln)
+
+    assert "window_s" not in call and "pos=POS" in call                                         # 창을 따로 주지 않는다 = 기록 전체(STEPS)
     S, dt = 750, 0.02
     fwd = np.linspace(0.0, 7.5, S)[:, None]                                                      # 15 s 동안 1.0 m/s 로 직진: 6.5 m 는 step 650 쯤
     pos = np.zeros((S, 1, 3))
