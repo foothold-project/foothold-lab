@@ -2,8 +2,8 @@
 > 작성: 오흥재 (planner 초안, lead 의뢰 10/26 21:3x) · 2026-10-26 21:50
 > 근거: 팀장 16:0x 「출발선 S-B10 m1500 우선 승인」 · 16:4x 「analyst 순서로 확정」(OPINION-startline-analyst 6.4 변경 순서 ②) · 21:0x 「모든 명령에서 보정 켬」(결정 8) · 20:3x 끔 분모 「허용 지형 안 10 % confirm」 · 10/25 20:0x 「걷기 → 걸으며 돌기 → 제자리 회전」 · 21:0x 「잠정 권고 우선 승인」(점검 50 · 판정 250 창 · 한 단계 최소 500 회) · DESIGN-NEXT v0.3 §3.2 S2a · §5.2 · JUDGE-SPEC v0.8 3 · 4.2 · 4.4 · 7 절 · DESIGN-MAPRATIO v0.10 3.2 · M-T6 · RULES-HUB v1.5 4 · 8 절 · 원자료 `impl-turncases/logs/sb10_eval/m1500/`(14:5x 사슬)
 > 요지: 출발선 S-B10 m1500 에서 **명령 분포 한 축만** 바꾼다(S1 START 분포 → S2a: 걸으며 돌기 2.5 % + 2.5 % 를 전진에서 떼어 넣음). 지도 끔 0.1(허용 지형 안) · 보정 켬 · 듬성 지형 없음 · 물리 · 보상 · PPO 는 그대로. 500 회(m1500 → m2000) · 3072 env · cuda:0 · 50 회 저장. 판정은 이어 가기 판 규칙(유지 + 새 과제 연속 두 저장본). **코드 상태가 끝나기 전에는 띄우지 않는다.**
-> 상태: 카드 초안 · 미실행 · 기동 승인 없음 · 모든 문턱은 추정(결과 뒤 넓히지 않음) · 코드 조건 6 개 중 조건 1 은 7639a97d · afad7987 로 커밋됨(planner 재대조 21:50 막음 0, reviewer · verifier 대기), 나머지 미완(§5) · kept 14 근거 정정(lead 21:5x) · GPU · 학습 · 코드 수정 없음
-> 판: v0.2
+> 상태: 카드 초안 · 미실행 · 기동 승인 없음 · 모든 문턱은 추정(결과 뒤 넓히지 않음) · 코드 조건 6 개 중 조건 1 은 7639a97d · afad7987 로 커밋됨(planner 재대조 21:50 막음 0, reviewer · verifier 대기), 나머지 미완(§5) · kept 14 근거 정정(lead 21:5x) · 에피소드 진행도 흩기 행 추가(v0.3, reviewer a06f4ecc · lead 22:1x) · GPU · 학습 · 코드 수정 없음
+> 판: v0.3
 
 # EX-35 · S-B10 m1500 → 회전 명령 과정 첫 판 (S2a 걸으며 돌기 소량)
 
@@ -19,6 +19,7 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 | 바꾸는 것(한 축) | 명령 슬롯 배정(재추출 4 s · 에피소드 20 s · vy 0): 전진 직진 vx U[0.3, 1.5] · wz 0 **75 %** / 걸으며 돌기 vx U[0.3, 0.8] · wz 부호 × U[0.2, 0.5] **2.5 % + 2.5 %** / 제자리 회전 vx 0 · wz U[−1.2, 1.2] **10 % + 10 %**(B 그대로) / 정지 0 | DESIGN-NEXT v0.3 §3.2 S2a 행 · 팀장 10/25 20:0x 순서 · 16:4x analyst 순서 ② 「가림 10 % · 물리 유지한 채 명령 과정 한 축」 · DESIGN v1.0 §4 P1 범위 · verifier D3 「상한 0.5 하나」 · 전진에서 5 %p 뗌(DESIGN §4). B 표집기(`mixed_core.resample_start`: vx U[0, 1.5], vx < 0.3 → 제자리) 의 전진 80 % · 제자리 20 % 에서 전진만 줄인다 |
 | 명령 계약 | `start` → `walkturn_v1`: 「vx = 0 또는 [0.3, 1.5], vy = 0, vx > 0.8 이면 wz = 0, 0 < vx ≤ 0.8 이면 \|wz\| ≤ 0.5, vx = 0 이면 \|wz\| ≤ 1.2」. 위반이면 실행 무효(지금 `start_contract_bad` 와 같은 처리) | DESIGN-NEXT §3.2 계약 bullet. `contract=start` 는 걸으며 돌기를 위반으로 보아 판을 무효 처리한다(`start_runner.py:326~345`) |
 | 명령 시계 흩기 | **켬**(새 프로세스에서 env 마다 다음 교체 시점 U(0, 4 s), 영수증 범위 · 유한 · 1 s 구간 집중도 단언) | 팀장 10/25 20:0x 「흩기도 이어 학습시 넣어야 하는 조건」 · DESIGN-NEXT Q3 · RESULT v2.2 0b(흩기 없는 A 판 좌회전 0.56 → 0.39 급락, B 판 유지) |
+| 에피소드 진행도 흩기 | **켬**(이어 가기의 첫 reset 에서 env 마다 에피소드 진행도를 U(0, 20 s) 로 흩음, 영수증 기록) | reviewer a06f4ecc 검토 「이어 가기는 에피소드 길이를 안 흩어 20 s 뒤 명령 시계가 재동기될 수 있다」(REVIEW-a06f4ecc.md, lead 전달 22:1x · 파일은 planner 경로에서 미확인) · 코드 확인(planner): `train_sol23f_common.py:247` `init_at_random_ep_len=not bool(resume_path)` 라 이어 가기 판은 진행도를 안 흩고 모두 0 에서 시작해 20 s 뒤 동시에 time_out 된다(처음부터 판만 `randint_like`, `start_runner.py:282~284`) · lead 판단 「명령 시계 흩기와 같은 목적」 → sonnet-code 에 구현 지시(a06f4ecc `start_runner.py:553~555` 에 `episode_progress_scatter` 영수증 자리, 흩기 본체는 커밋 뒤 대조) · 조건 2 · 4 의 영수증에 포함 |
 | 지도 끔 | p_map_off **0.1**, 허용 지형(연속 7 종 + flat) 안에서만, 듬성 0, 레벨 조건 없음, 전체 비율 자동 조정 없음 | 팀장 20:3x 「허용 지형 안 10 % confirm」 · 결정 9 「이해함, 확인」 · DESIGN-MAPRATIO 3.2 · M-T6(X26u 구현, 대조 21:15 막음 0) |
 | 지도 켬 쪽 | force_gt 켬(정답 지도) 그대로. resume 때 `resume_adasmpl.force_gt=True` 로 저장본 값과 대조 | S-B 저장본 `force_gt_saved=True`(analyst OPINION 3) · M-T5 · analyst 순서 ③(복원 지도 노출 확대) 은 이 판 뒤 |
 | 지형 판정 보정 | **켬** `world_frame=True`(세계 좌표 기대 변위 proxy, 기존 START 명령 전부 + 걸으며 돌기), 옛 판정 병행 기록, 표식 덮기는 기록용, manifest `modes.terrain_judge` · `parent_judge` · `start_checkpoint_judged_with` 기록(afad7987) | 팀장 21:0x 「모든 명령에서 보정 켬」(결정 8) · JUDGE-SPEC v0.8 5.4 · J-T10 · 5.2 의 3 |
@@ -83,7 +84,7 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 ## 5. 띄우기 전 조건 (하나라도 안 끝나면 띄우지 않는다)
 
 1. sonnet-code 고침 둘(REPORT-planner-20261026-2115 §3): `world_frame` 을 설정 · manifest 에서 고를 수 있게(S1 CurrTerm params · S2 전달 · `terrain_judge` 키) · 표식 덮기 기록용(`mask_new_task` 기본 False). 커밋 · 통합 회귀 통과. **상태(v0.2, 21:50)**: 7639a97d · afad7987 로 커밋됨, planner 재대조(`_out/reports/REPORT-planner-20261026-2150.md`) 막음 0 · 고침 0 · 참고 4, 시험 34 통과(CPU). 남은 것은 reviewer 재확인 · 조건 3 의 verifier · 통합 회귀.
-2. **S2a 명령 표집기 + `walkturn_v1` 계약 + 명령 시계 흩기** 구현. 21:4x impl-integ 에는 셋 다 없다(`resample_start` 만, `contract` 는 `start` 만, 흩기 코드 없음). 답 아는 입력: 슬롯 비율(200,000 표본) 75 / 2.5 / 2.5 / 10 / 10 ± 0.3 %p · 계약이 B 명령 전부를 통과시키고 vx 1.0 · wz 0.5 를 거절 · 흩기 영수증 U(0, 4 s).
+2. **S2a 명령 표집기 + `walkturn_v1` 계약 + 명령 시계 흩기** 구현. 21:4x impl-integ 에는 셋 다 없다(`resample_start` 만, `contract` 는 `start` 만, 흩기 코드 없음). 답 아는 입력: 슬롯 비율(200,000 표본) 75 / 2.5 / 2.5 / 10 / 10 ± 0.3 %p · 계약이 B 명령 전부를 통과시키고 vx 1.0 · wz 0.5 를 거절 · 흩기 영수증 U(0, 4 s) · 에피소드 진행도 영수증 U(0, 20 s)(v0.3, 이어 가기 첫 reset).
 3. reviewer 통과(막음 0) → verifier 두 겹(코드 · 판정 기댓값 JSON).
 4. 짧은 Kit: m1500 에서 smoke10 + smoke2 이어 가기(resume offset · `resume_adasmpl` · `world_frame` manifest 기록 · 흩기 영수증 · `EX35` 슬롯 비율 로그 확인 · manifest `modes.terrain_judge = {world_frame: true, mask_new_task: false}` · `parent_judge = "world_frame=False (10/26 이전)"` · `start_checkpoint_judged_with = body_frame` 확인). `--resume_from` 은 S-B10 원 폴더 `…/2026-10-26_01-17-47_sb-main/model_1500.pt` 를 가리킨다(`parent_judge` 가 같은 폴더의 manifest 를 읽는다. 복사본이면 EX-36 부터 부모 판정 출처가 끊긴다).
 5. 부모 기준값 재측정: m1500 을 **새 코드 · 여덟 경우**로 한 번 더 재서 `walk_turn_*` 기준값과 재측정 폭을 얻는다(JUDGE-SPEC 4.2 「옛 표 숫자를 그대로 쓰지 않는다」). 이 카드 §3 기준표를 그 값으로 갱신(v0.2).
@@ -108,5 +109,6 @@ lead 가 정할 것: (1) 끝(v0.2): JUDGE-SPEC v0.9 넘어짐 허용 14/16, 근�
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.3 | 2026-10-26 | §2 에피소드 진행도 흩기 행(reviewer a06f4ecc 「20 s 뒤 명령 시계 재동기」 · lead 판단 U(0, 20 s) · 코드 확인 `init_at_random_ep_len=not bool(resume_path)`) · 조건 2 영수증 |
 | v0.2 | 2026-10-26 | §5 조건 1 커밋됨(7639a97d · afad7987, planner 재대조 막음 0 · 시험 34 통과) · 조건 4 에 manifest 세 키 · `--resume_from` 원 폴더 확인 줄 · §2 보정 행에 manifest 키 · §3 kept 14 근거 정정(lead 21:5x: 원칙 팀장 동의 · 숫자 lead 권고) · 학습 길이 행에 run_sb.sh 1501 고정 주의(reviewer X26w 막음 2) |
 | v0.1 | 2026-10-26 | 첫 카드(결과 전 고정). 부모 m1500 기준표 21:3x 재계산. walk_turn 기준값 미측 |
