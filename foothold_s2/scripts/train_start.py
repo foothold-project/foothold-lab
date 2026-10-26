@@ -36,6 +36,8 @@ parser.add_argument("--map_input", type=str, default=None, help="reconstruction(
 parser.add_argument("--force_gt", action="store_true", default=False, help="G0-gt")
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로(보통 <run>/latest.pt). 같은 폴더에 이어 쓰고 남은 회차만 돈다")
+parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
+parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -69,6 +71,7 @@ import foothold_s2.x20_tasks  # noqa: E402,F401  (EX-20 등록)
 import foothold_s2.x21_tasks  # noqa: E402,F401  (EX-21 등록)
 import foothold_s2.x22_tasks  # noqa: E402,F401  (EX-22 등록)
 import foothold_s2.x23_tasks  # noqa: E402,F401  (EX-23 등록)
+from foothold_s2.curriculum import terrain_levels_mixed as tlm  # noqa: E402
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
@@ -108,6 +111,7 @@ def main(env_cfg, agent_cfg):
             log_dir += f"_{agent_cfg.run_name}"
         log_dir = os.path.join(log_root, log_dir)
     env_cfg.log_dir = log_dir
+    tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞(결정 8: 설정과 실행 인자로 고름)
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path, "seed": agent_cfg.seed})
 
@@ -134,7 +138,7 @@ def main(env_cfg, agent_cfg):
     modes = {"est_mode": runner.pcfg["est_mode"], "oracle_vel_noise": runner.pcfg["oracle_vel_noise"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt": bool(runner.pcfg.get("force_gt", False)),
              "clip_actions": agent_cfg.clip_actions, "z_rollout": "sample" if runner.perception.cfg.sample_latent_in_rollout else "mean", "action_rollout": "sample",
              "contract": runner.pcfg["contract"], "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"], "track_lin_form": getattr(env_cfg, "track_lin_form", None),
-             "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task}
+             "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task, "terrain_judge": tlm.judge_settings(env_cfg)}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
     run_manifest.write_manifest(log_dir, manifest)

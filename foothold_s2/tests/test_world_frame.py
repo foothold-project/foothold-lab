@@ -1,6 +1,6 @@
 """J-T10: 세계 좌표 기대 변위 proxy (JUDGE-SPEC v0.5 5.3 새 여섯 행 · 5.4). CPU, Kit 없음.
 
-스위치 `world_frame` 기본 끔: 지금 식과 비트 동일. 두 판정을 둘 다 계산해 9 칸 표로 병행 기록한다. 켬은 설정 인자.
+스위치 `world_frame` 기본 켬(팀장 결정 8): 끔(False)은 옛 식과 비트 동일. 두 판정을 둘 다 계산해 9 칸 표로 병행 기록한다. 설정(커리큘럼 term params) 과 실행 인자로 고른다.
 """
 
 import math
@@ -116,7 +116,7 @@ def test_switch_off_is_bit_identical_to_a_term_without_the_world_sum_and_the_wor
         env = type("E", (), {})()
         env.command_manager = type("CM", (), {"get_term": lambda self, name, t=term: t})()
         env.scene, env.device, env.step_dt = type("S", (), {"terrain": terrain})(), "cpu", DT
-        tlm.terrain_levels_mixed(env, torch.arange(300), "base_velocity", 4.0)                        # world_frame 인자를 주지 않음 = 기본 끔
+        tlm.terrain_levels_mixed(env, torch.arange(300), "base_velocity", 4.0, world_frame=False)    # 결정 8: 기본이 켬이라 끔은 인자로 준다
 
     assert torch.equal(ta.calls[-1][0], tb.calls[-1][0]) and torch.equal(ta.calls[-1][1], tb.calls[-1][1]) and (ta.calls[-1][1]).any()
 
@@ -163,7 +163,7 @@ def test_command_term_accumulates_clears_and_the_runner_records_it():
 
     assert "self.cmd_sum_w += mc.world_cmd_step(yaw, self.vel_command_b[:, :2])" in cmd and "self.cmd_sum_w[env_ids] = 0.0" in cmd
     assert 'extra["world_frame_compare"] = fc_stats' in run and "def _take_frame_stats" in run
-    assert 'world_frame: bool = False' in (PKG / "curriculum/terrain_levels_mixed.py").read_text(encoding="utf-8")
+    assert 'world_frame: bool = True' in (PKG / "curriculum/terrain_levels_mixed.py").read_text(encoding="utf-8")
 
 
 def test_perfect_following_simulation_with_the_real_resampler_demotes_only_with_the_old_frame():
@@ -192,3 +192,57 @@ def test_perfect_following_simulation_with_the_real_resampler_demotes_only_with_
 
     assert int((new < 0).sum()) == 0 and int((old < 0).sum()) > 0 and int((old < 0).sum()) < 0.03 * n
     assert float((new > 0).float().mean()) > 0.9
+
+
+def test_decision_8_default_is_on_and_old_behavior_stays_behind_the_argument():
+    import inspect
+
+    assert inspect.signature(tlm.terrain_levels_mixed).parameters["world_frame"].default is True
+    far, body, world = _sim(COUNTER)
+    term = Term(far, body, world)
+    env = type("E", (), {})()
+    env.command_manager = type("CM", (), {"get_term": lambda self, name: term})()
+    terrain = Terrain(1)
+    env.scene, env.device, env.step_dt = type("S", (), {"terrain": terrain})(), "cpu", DT
+    tlm.terrain_levels_mixed(env, torch.arange(1), "base_velocity", 4.0)                              # 인자 없음 = 켬
+    up, down = terrain.calls[-1]
+
+    assert int(up[0]) - int(down[0]) == 0 and _run(Term(far, body, world), False) == -1
+
+
+class _Cur:
+    def __init__(self, func, params=None):
+        self.func, self.params = func, params
+
+
+def _cfg(func, params=None):
+    return type("C", (), {"curriculum": type("U", (), {"terrain_levels": _Cur(func, params)})()})()
+
+
+def test_judge_settings_report_the_values_actually_used_for_s1_and_s2_terms_and_the_config_can_turn_it_off():
+    assert tlm.judge_settings(_cfg(tlm.terrain_levels_mixed)) == {"world_frame": True, "mask_new_task": False}
+    assert tlm.judge_settings(_cfg(tlm.terrain_levels_s2, {"t_start": 1000})) == {"world_frame": True, "mask_new_task": False}
+    assert tlm.judge_settings(_cfg(tlm.terrain_levels_s2, {"world_frame": False, "mask_new_task": True})) == {"world_frame": False, "mask_new_task": True}
+    assert tlm.judge_settings(type("C", (), {"curriculum": type("U", (), {})()})()) == {}
+
+
+def test_run_arguments_write_into_the_term_params_and_unknown_terms_are_refused():
+    cfg = _cfg(tlm.terrain_levels_s2, {"t_start": 1000})
+    tlm.apply_judge_args(cfg, "off", "on")
+
+    assert cfg.curriculum.terrain_levels.params == {"t_start": 1000, "world_frame": False, "mask_new_task": True}
+    assert tlm.judge_settings(cfg) == {"world_frame": False, "mask_new_task": True}
+    tlm.apply_judge_args(cfg, None, None)                                                              # None 은 건드리지 않음
+    assert tlm.judge_settings(cfg) == {"world_frame": False, "mask_new_task": True}
+
+    with pytest.raises(ValueError, match="world_frame"):
+        tlm.apply_judge_args(_cfg(lambda env, env_ids: 0), "off", None)
+
+
+def test_s2_term_passes_world_frame_and_mask_through_and_train_start_records_and_exposes_them():
+    src = (PKG / "curriculum/terrain_levels_mixed.py").read_text(encoding="utf-8")
+    run = (PKG / "scripts/train_start.py").read_text(encoding="utf-8")
+
+    assert "terrain_levels_mixed(env, env_ids, command_name, resample_s, world_frame=world_frame, mask_new_task=mask_new_task)" in src
+    assert '"terrain_judge": tlm.judge_settings(env_cfg)' in run and "--judge_world_frame" in run and "--judge_mask_new_task" in run
+    assert run.index("tlm.apply_judge_args(") < run.index("gym.make(") < run.index("tlm.judge_settings(env_cfg)")        # 인자 반영은 env 만들기 앞, 기록은 뒤

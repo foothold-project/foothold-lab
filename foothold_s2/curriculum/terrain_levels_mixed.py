@@ -11,11 +11,12 @@ from foothold_s2.curriculum import rules
 from foothold_s2.terrains import s2_runtime
 
 
-def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, world_frame: bool = False):
+def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, world_frame: bool = True, mask_new_task: bool = False):
     """깃발 env 는 깃발 규칙, 자유 속도 env 는 거리 규칙으로 지형 단계를 올리고 내린다. 단계 평균을 돌려준다.
 
-    world_frame (J-T10, 기본 끔): 참이면 자유 속도 판정의 명령 합을 몸 기준 `cmd_sum_xy` 대신 세계 좌표 기대 변위 `cmd_sum_w` 로 낸다.
-    끔이면 지금 식과 비트 단위로 같고, 어느 쪽이든 두 판정을 모두 계산해 9 칸 표(`term.frame_stats`)로 병행 기록한다.
+    world_frame (J-T10, 팀장 결정 8 로 기본 켬): 참이면 자유 속도 판정의 명령 합을 몸 기준 `cmd_sum_xy` 대신 세계 좌표 기대 변위 `cmd_sum_w` 로 낸다.
+    mask_new_task (JUDGE-SPEC v0.8 5.2 의 3, 기본 False): 참이면 새 과제 명령을 받은 에피소드의 move 를 0 으로 덮는다(옛 동작). 거짓이면 덮지 않고 `term.new_task_stats` 로 기록만 한다.
+    False 를 주면 옛 동작(몸 기준 합)이고 옛 식과 비트 단위로 같다. 어느 쪽이든 두 판정을 모두 계산해 9 칸 표(`term.frame_stats`)로 병행 기록하니 갈린 에피소드 수는 계속 남는다.
     """
     term = env.command_manager.get_term(command_name)
     terrain = env.scene.terrain
@@ -46,7 +47,8 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
     if marked is not None:                                       # 새 과제 명령을 받은 에피소드는 승급 · 강등에서 뺀다(행 유지, JUDGE-SPEC 5.2). 표식이 모두 거짓이면 이 블록은 move 를 바꾸지 않는다
         marked = marked[env_ids]
         term.new_task_stats.add(move, marked, terrain.terrain_levels[env_ids])
-        move = rules.mask_new_task(move, marked)
+        if mask_new_task:
+            move = rules.mask_new_task(move, marked)
 
     terrain.update_env_origins(env_ids, move > 0, move < 0)
 
@@ -122,13 +124,44 @@ def command_range_curriculum(env, env_ids, command_name: str = "base_velocity",
     return {"vmax_x": term.range_curriculum.vmax_x, "flag_vmax": term.range_curriculum.flag_vmax}
 
 
+def judge_settings(env_cfg) -> dict:
+    """실제로 쓰이는 판정 설정(manifest `terrain_judge`). 커리큘럼 term 의 함수 기본값에 설정의 params 를 덮어 읽는다. term 이 없으면 빈 사전."""
+    import inspect
+
+    cur = getattr(getattr(env_cfg, "curriculum", None), "terrain_levels", None)
+
+    if cur is None or getattr(cur, "func", None) is None:
+        return {}
+    sig = inspect.signature(cur.func).parameters
+    params = dict(getattr(cur, "params", None) or {})
+
+    return {k: bool(params.get(k, sig[k].default)) for k in ("world_frame", "mask_new_task") if k in sig}
+
+
+def apply_judge_args(env_cfg, world_frame=None, mask_new_task=None) -> None:
+    """실행 인자(on/off 문자열 또는 bool, None 이면 건드리지 않음)를 커리큘럼 term params 에 쓴다. 그 term 이 모르는 인자면 거절."""
+    import inspect
+
+    cur = env_cfg.curriculum.terrain_levels
+    sig = inspect.signature(cur.func).parameters
+
+    for k, v in {"world_frame": world_frame, "mask_new_task": mask_new_task}.items():
+        if v is None:
+            continue
+        if k not in sig:
+            raise ValueError(f"커리큘럼 term {cur.func.__name__} 은 {k} 인자를 받지 않는다")
+        params = dict(cur.params or {})
+        params[k] = v in (True, "on")
+        cur.params = params
+
+
 def stage_T(iteration, offset):
     """이 단계의 반복 수 T (p_advance 의 입력). 이어 시작한 회차(offset)를 빼서 0 부터 센다."""
     return max(0, int(iteration) - int(offset))
 
 
 def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resample_s: float = 4.0, seed: int = 0,
-                      t_start: int = 1000, t_end: int = 8000, p_max: float = 0.9):
+                      t_start: int = 1000, t_end: int = 8000, p_max: float = 0.9, world_frame: bool = True, mask_new_task: bool = False):
     """S2 · S1-b: 승급 · 강등(`terrain_levels_mixed`) 뒤 듬성한 env 의 열을 p_advance 로 다시 뽑는다 (15 §5 · §8.1 ①).
 
     S2 는 T_start 1000 · T_end 8000, S1-b 는 자체 반복 수 기준 0 · 1500 (15 §5 · VERIFY-lead-final 7).
@@ -137,7 +170,7 @@ def terrain_levels_s2(env, env_ids, command_name: str = "base_velocity", resampl
     """
     import numpy as np
 
-    value = terrain_levels_mixed(env, env_ids, command_name, resample_s)
+    value = terrain_levels_mixed(env, env_ids, command_name, resample_s, world_frame=world_frame, mask_new_task=mask_new_task)
     term = env.command_manager.get_term(command_name)
 
     if not hasattr(env, "_s2_rng"):

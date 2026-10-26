@@ -150,6 +150,7 @@ class FakeTerm:
     def __init__(self, max_dist, cmd_sum_xy, mark):
         n = len(max_dist)
         self.cmd_sum_xy = torch.as_tensor(cmd_sum_xy, dtype=torch.float32)
+        self.cmd_sum_w = self.cmd_sum_xy.clone()                      # 결정 8: 기본이 켬이라 세계 좌표 합이 필요하다(yaw 0 모의라 몸 기준 합과 같다)
         self.max_dist = torch.as_tensor(max_dist, dtype=torch.float32)
         self.is_flag_env = torch.zeros(n, dtype=torch.bool)
         self.goals = torch.zeros(n, dtype=torch.long)
@@ -159,7 +160,7 @@ class FakeTerm:
         self.new_task_stats = rules.NewTaskStats()
 
 
-def run_tlm(term, terrain, ids, without_attr=False):
+def run_tlm(term, terrain, ids, without_attr=False, mask_new_task=True):
     if without_attr:
         del term.had_new_task
 
@@ -167,7 +168,7 @@ def run_tlm(term, terrain, ids, without_attr=False):
     env = type("E", (), {})()
     env.command_manager, env.scene, env.device = cm, type("S", (), {"terrain": terrain})(), "cpu"
     env.step_dt = 0.02
-    tlm.terrain_levels_mixed(env, torch.as_tensor(ids), "base_velocity", 4.0)
+    tlm.terrain_levels_mixed(env, torch.as_tensor(ids), "base_velocity", 4.0, mask_new_task=mask_new_task)
 
     return terrain.calls[-1]
 
@@ -258,3 +259,19 @@ def test_stats_accumulate_across_calls_until_taken():
 
     assert t["episodes"] == 4 and t["marked"] == 2 and t["unmarked"] == {"up": 1, "down": 0, "stay": 1} and t["marked_would_have"] == {"up": 1, "down": 1, "stay": 0}
     assert t["per_row"] == {"0": 2, "1": 2} and t["per_row_marked"] == {"0": 1, "1": 1}
+
+
+def test_marked_episodes_are_only_recorded_by_default_and_masked_when_asked():
+    """JUDGE-SPEC v0.8 5.2 의 3: mask_new_task 기본 False = 기록만(표식 에피소드도 판정대로 움직임), True = 옛 덮기."""
+    def one(mask):
+        term = FakeTerm([10.0, 2.0, 10.0, 2.0], [[500.0, 0.0]] * 4, [False, False, True, True])
+        _i, up, down = run_tlm(term, FakeTerrain([2, 2, 3, 3]), [0, 1, 2, 3], mask_new_task=mask)
+
+        return up.tolist(), down.tolist(), term.new_task_stats.take()
+
+    up, down, st = one(False)
+    assert up == [True, False, True, False] and down == [False, True, False, True] and st["marked"] == 2 and st["marked_would_have"] == {"up": 1, "down": 1, "stay": 0}
+    up, down, _ = one(True)
+    assert up == [True, False, False, False] and down == [False, True, False, False]
+    import inspect
+    assert inspect.signature(tlm.terrain_levels_mixed).parameters["mask_new_task"].default is False
