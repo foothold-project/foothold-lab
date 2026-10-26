@@ -15,8 +15,11 @@ class ResultTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.eval_dir = self.root / "eval"
         self.train_dir = self.root / "train"
+        self.baseline = self.root / "baseline.json"
         self.train_dir.mkdir()
-        cases = {f"case_{i}": {"Q": 0.5, "C": 0.2, "kept": 16} for i in range(8)}
+        self.baseline.write_text(json.dumps({"turn": {f"S-B10|eval_gt|{name}": {"Q": 0.4} for name in ("fwd_then_left", "right_then_left", "indep_left")}}), encoding="utf-8")
+        names = ("fwd_then_left", "right_then_left", "indep_left", *(f"case_{i}" for i in range(5)))
+        cases = {name: {"Q": 0.5, "C": 0.2, "kept": 16} for name in names}
         for name, state in (("m1750", "NEW_TASK_PENDING"), ("m1950", "MAINTAIN_FAIL"), ("m2000", "MAINTAIN_FAIL")):
             folder = self.eval_dir / name
             folder.mkdir(parents=True)
@@ -28,10 +31,11 @@ class ResultTest(unittest.TestCase):
         (self.train_dir / "rc.txt").write_text("rc=0", encoding="utf-8")
 
     def test_known_result_is_deterministic(self):
-        data = collect(self.eval_dir, self.train_dir)
-        self.assertEqual(data["decision"], "REVERT")
-        self.assertEqual(render(data), render(collect(self.eval_dir, self.train_dir)))
-        self.assertIn("m1950과 m2000의 `MAINTAIN_FAIL`", render(data))
+        data = collect(self.eval_dir, self.train_dir, self.baseline)
+        self.assertEqual(data["window_decision"], "HOLD")
+        self.assertEqual(data["checkpoint_pair_row6"], "REVERT")
+        self.assertEqual(render(data), render(collect(self.eval_dir, self.train_dir, self.baseline)))
+        self.assertIn("창 판정은 **HOLD", render(data))
 
     def test_mutated_final_state_is_rejected(self):
         path = self.eval_dir / "m2000/ex35_verdict.json"
@@ -39,12 +43,12 @@ class ResultTest(unittest.TestCase):
         doc["state"] = "PASS"
         path.write_text(json.dumps(doc))
         with self.assertRaises(AssertionError):
-            collect(self.eval_dir, self.train_dir)
+            collect(self.eval_dir, self.train_dir, self.baseline)
 
     def test_missing_completion_is_rejected(self):
         (self.train_dir / "run.log").write_text("Learning iteration 1999/2001\nTime elapsed: 03:22:27")
         with self.assertRaises(AssertionError):
-            collect(self.eval_dir, self.train_dir)
+            collect(self.eval_dir, self.train_dir, self.baseline)
 
 
 if __name__ == "__main__":

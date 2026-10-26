@@ -14,6 +14,7 @@ DEFAULT_EVAL = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval")
 DEFAULT_TRAIN = Path(
     "C:/mai/wt/foothold-lab/impl-ex35-07fc/logs_gate/ex35_main_20261026_232432"
 )
+DEFAULT_BASELINE = Path(__file__).resolve().parents[5] / "inbox/jay/20261026-experiments/figs/startline/startline_table.json"
 
 
 def read_json(path: Path) -> dict:
@@ -24,7 +25,7 @@ def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def collect(eval_dir: Path, train_dir: Path) -> dict:
+def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASELINE) -> dict:
     paths = {
         "m1750": eval_dir / "m1750/ex35_verdict.json",
         "m1950": eval_dir / "m1950/ex35_verdict.json",
@@ -32,9 +33,11 @@ def collect(eval_dir: Path, train_dir: Path) -> dict:
         "receipt": train_dir / "launch_receipt.json",
         "run_log": train_dir / "run.log",
         "rc": train_dir / "rc.txt",
+        "baseline": baseline_path,
     }
     verdicts = {k: read_json(paths[k]) for k in ("m1750", "m1950", "m2000")}
     launch = read_json(paths["receipt"])
+    baseline = read_json(paths["baseline"])["turn"]
     log = paths["run_log"].read_text(encoding="utf-8-sig", errors="replace")
     iterations = [int(v) for v in re.findall(r"Learning iteration\s+(\d+)/2001", log)]
     elapsed = re.findall(r"Time elapsed:\s*([0-9:]+)", log)
@@ -75,6 +78,10 @@ def collect(eval_dir: Path, train_dir: Path) -> dict:
                 "n": len(samples),
                 **{k: mean(s[k] for s in samples if k in s) for k in metric_labels if any(k in s for s in samples)},
             }
+    parent_cases = {
+        case: baseline[f"S-B10|eval_gt|{case}"]
+        for case in ("fwd_then_left", "right_then_left", "indep_left")
+    }
     return {
         "training": {
             "parent_iter": launch["parent_iter"],
@@ -102,7 +109,14 @@ def collect(eval_dir: Path, train_dir: Path) -> dict:
             for k, v in verdicts.items()
         },
         "training_windows": windows,
-        "decision": "REVERT",
+        "parent_cases": parent_cases,
+        "checkpoint_pair_row6": "REVERT",
+        "window_decision": "HOLD",
+        "window_evidence": {
+            "required_fields_complete": False,
+            "a11_video_reviewed": False,
+            "basis": "카드 §4b.6의 선행 1·4행과 rulecheck 10/27 03:15 N06. 필수 칸 완결 및 A11 판독 확인서 미제출",
+        },
         "canonical": "S-B10 m1500",
         "source_sha256": {k: sha(v) for k, v in paths.items()},
         "source_paths": {k: str(v) for k, v in paths.items()},
@@ -147,12 +161,18 @@ def render(d: dict) -> str:
             f"{item.get('ppo_kl', float('nan')):.4f} | "
             f"{item.get('bad_orientation', float('nan')):.4f} |"
         )
+    parent_rows = []
+    for name, parent in d["parent_cases"].items():
+        latest = w["m2000"]["cases"][name]
+        parent_rows.append(
+            f"| {name} | {parent['Q']:.4f} | {latest['Q']:.4f} | {latest['Q'] - parent['Q']:+.4f} |"
+        )
     return f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
 > 근거: EX-35 고정 학습 영수증·run.log·m1750/m1950/m2000 판정 JSON · 결과 전 EX-35 카드 §4b.6
-> 요지: 두 최종 저장본이 MAINTAIN_FAIL이라 등록된 갈래는 REVERT이며 정본은 S-B10 m1500이다.
-> 상태: 학습 종료·정답 지도 판정 확인됨 · 영상·보행 위상·저장본 추세 해석 대기
-> 판: v1.0
+> 요지: 최종 두 저장본은 MAINTAIN_FAIL이다. 필수 칸과 A11 미판독으로 창 판정은 HOLD, 연장 없음이다.
+> 상태: 학습 종료·정답 지도 저장본 판정 확인됨 · 창 판정 보류 · 영상·보행 위상·저장본 추세 해석 대기
+> 판: v1.1
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -188,6 +208,14 @@ m1750의 `NEW_TASK_PENDING`은 최종 유지 판정이 아니다. 최종 판단�
 
 Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여기서는 원자료 표시만 한다.
 
+부모와 비교할 때는 같은 사례끼리 본다. 부모 S-B10 m1500은 `startline_table.json`의 `eval_gt`이고 아래 m2000 열은 EX-35 판정 JSON이다.
+
+| 사례 | 부모 Q | m2000 Q | 차이 |
+|---|---:|---:|---:|
+{chr(10).join(parent_rows)}
+
+독립 좌회전은 부모보다 높다. 전진 뒤 좌회전과 우회전 뒤 좌회전의 하락을 독립 좌회전의 하락으로 일반화하지 않는다.
+
 ## 6. 학습 종료와 학습 곡선의 한계
 
 `run.log`의 마지막 학습 회차는 {t['completed_iteration']}/{t['max_iterations']}, 표시 경과는 {t['elapsed']}, `rc.txt`는 {t['exit_code']}이다. 아래는 run.log의 각 회차 값을 창 안에서 산술 평균한 것이다.
@@ -200,11 +228,11 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 ## 7. 판정과 증거 범위
 
-m1950과 m2000의 `MAINTAIN_FAIL` 두 건을 결과 전 카드 §4b.6에 대입한 결과는 **{d['decision']}**다. 정본은 **{d['canonical']} 유지**, EX-35 연장은 없다. m1950·m2000 JSON은 정답 지도 `eval_gt` 판정이며, 영상·복원 지도 행동·보행 위상에 대한 해석은 미완이다.
+m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 카드 §4b.6의 **6행만 조건부로 보면 {d['checkpoint_pair_row6']}**이나, 이 표는 앞에서 맞는 행이 우선이다. 필수 칸 완결 증거가 없고 A11 영상 판독표가 미제출이므로 선행 1·4행에서 현재 창 판정은 **{d['window_decision']} (판정 보류)**다. 정본은 **{d['canonical']} 유지**, EX-35 연장은 없다. m1950·m2000 JSON은 정답 지도 `eval_gt` 저장본 판정이며, 전체 창 판정 완료나 보행 기전 결론이 아니다.
 
 ## 8. 다음 설계에서 무엇을 바꾸는가
 
-이 보고서만으로 원인을 정하지 않는다. analyst와 runner의 영상·위상·저장본 추세 분석을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
+이 보고서만으로 원인을 정하지 않는다. analyst와 runner의 영상·위상·저장본 추세 분석 및 필수 칸 완결 확인을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
 
 ## 9. 실제 완료와 재현 경로
 
@@ -214,7 +242,7 @@ m1950과 m2000의 `MAINTAIN_FAIL` 두 건을 결과 전 카드 §4b.6에 대입�
 |---|---|---|
 {evidence}
 
-검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
+검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `HOLD`는 카드 §4b.6 선행 행과 미완 증거 범위의 운영 기록이며 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
 """
 
 
