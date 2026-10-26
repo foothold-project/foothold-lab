@@ -255,6 +255,8 @@ WT/astra-25b/inbox/jay/20261026-experiments/  analyst · verifier 검토: VERIFY
 C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code/_out/review/  reviewer 검토 REVIEW-<커밋>.md
 ```
 
+**GPU 작업 관리판 (SOL-27a · lead 확인 전)**: `WT/lead_tmp-20261023/_out/tools/gpu_jobs/`의 `jobs.json`은 P0 승인 학습, P1 판정 평가, P2 진단, P3 시드 반복, P4 영상 렌더를 등록한다. `gpu_jobs.py status`는 두 GPU의 실제 PID · EX-35 `PRIORITY_BUSY` · `chain2.log` · runner 상태를 한 화면에 읽는다. `gate <id>`는 다음 한 건의 진입만 판정하고 프로세스를 띄우거나 멈추지 않는다. P1 감시기 `WT/impl-integ/foothold_s2/eval/ex35_priority_marker.py`(당시 PID 34976)는 평가 단계에 `PRIORITY_BUSY`를 쓰고, runner `render_queue_26d.py` e202543a는 매 렌더 건 앞에서 표식과 사슬 대기를 재확인한다. 낮은 작업은 현재 한 건을 끝낸 뒤 높은 작업에 비킨다. P3 시드 43 · 44는 현재 `turn_probe.py`에 시드 변경 CLI가 없어 실행 불가로 등록했고, runner는 아직 이 관리판의 P3 등록을 직접 읽지 않는다. 따라서 이 명부만으로 P3 우선권이나 새 작업 승인이 생기지 않는다. CPU 시험 경로는 같은 폴더의 `test_gpu_jobs.py`다.
+
 **판정 흐름**: 저장본 생김 → 사슬이 최신부터 평가 (한 번에 Isaac 하나, cuda:1) → `judge_ex35` 가 저장본 상태 (MAINTAIN_FAIL 등) → 창 경계 m1750 · m2000 에서 마지막 두 저장본으로 consume → 판정표 (카드 v0.9 §4b, 필수 칸 하나라도 비면 HOLD_NO_DATA = 연장 불가) → 1x 영상 lead 판독 (A11) → 계속 · 다음 단계 · 멈춤. 멈춤 · 연장 기동은 lead 가 한다.
 
 **영상 · 조명**

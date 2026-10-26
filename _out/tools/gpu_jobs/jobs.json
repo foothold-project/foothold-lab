@@ -1,0 +1,79 @@
+{
+  "schema": "foothold-gpu-jobs-v1",
+  "recorded_at": "2026-10-27T02:16:06+09:00",
+  "sources": {
+    "priority_busy": "C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval/PRIORITY_BUSY",
+    "chain_log": "C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval/chain2.log",
+    "render_state": "C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m/queue/state_remaining.json"
+  },
+  "jobs": [
+    {
+      "id": "ex35-train",
+      "priority": 0,
+      "gpu": 0,
+      "command": null,
+      "pid": 120476,
+      "pid_create_time": 1793024673.0946784,
+      "owner_session": "lead · EX-35",
+      "preemptible": false,
+      "state": "실행",
+      "started_at": "2026-10-26T23:24:32+09:00",
+      "ended_at": null,
+      "output_path": "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476"
+    },
+    {
+      "id": "ex35-judge-chain",
+      "priority": 1,
+      "gpu": 1,
+      "command": null,
+      "pid": 109120,
+      "pid_create_time": 1793032058.5892932,
+      "owner_session": "sonnet-code · EX-35 평가",
+      "preemptible": false,
+      "state": "실행",
+      "started_at": "2026-10-27T01:27:38+09:00",
+      "ended_at": null,
+      "output_path": "C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval"
+    },
+    {
+      "id": "diagnostic-slot",
+      "priority": 2,
+      "gpu": 1,
+      "command": "미지정: 진단 평가 작업 등록 전용 자리, 실행 명령 확정 전",
+      "executable": false,
+      "owner_session": "lead · 미배정",
+      "preemptible": true,
+      "state": "대기",
+      "started_at": null,
+      "ended_at": null,
+      "output_path": "미정"
+    },
+    {
+      "id": "sb10-m1500-walkturn-seeds-43-44",
+      "priority": 3,
+      "gpu": 1,
+      "command": "미지정: turn_probe 현재 CLI는 seed 42 고정, seed 43·44 실행 인자 없음",
+      "executable": false,
+      "owner_session": "lead · 후순위",
+      "preemptible": true,
+      "state": "대기",
+      "started_at": null,
+      "ended_at": null,
+      "output_path": "미정"
+    },
+    {
+      "id": "runner-26m-render",
+      "priority": 4,
+      "gpu": 1,
+      "command": null,
+      "pid": 75516,
+      "pid_create_time": 1793034724.585643,
+      "owner_session": "runner-26m",
+      "preemptible": true,
+      "state": "대기",
+      "started_at": null,
+      "ended_at": null,
+      "output_path": "C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m/queue/state_remaining.json"
+    }
+  ]
+}
