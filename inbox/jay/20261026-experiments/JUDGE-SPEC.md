@@ -2,8 +2,8 @@
 > 작성: 오흥재 (planner) · 2026-10-26 10:3x
 > 근거: lead 의뢰 PLAN-26b · 팀장 원문 10/26 10:2x (「평가 판단이 올바른 기준이 아니거나 커리큘럼 전환 기준이 틀리면 학습 6~10 시간이 무의미해진다. 사전 대비」) · analyst VERIFY-analyst-DN25 v0.5 12.2 · 12.3 · 12.5 · 12.6 · verifier VER-DN25 D1~D4 · D6 · analyst VERIFY-analyst-DN25 v0.6 13 절(#555 6406609943, 숫자는 내가 `judge_recompute.py` 로 재확인) · reviewer REVIEW-5fab45e7-dacb51d7 v0.1(고침 1 · 2 · 5, `repro_x26.py` good · good · bad · good · good 반례) · RULES-HUB 8.1 · 8.2 · RESULT v2.3 0c · EXP-EX33 판정 절 · 코드 `impl-turncases` `eval/turn_probe.py:153~216` `eval/turn_probe_plan.py` `curriculum/rules.py:14~26` `curriculum/terrain_levels_mixed.py:14~29` `commands/mixed_command.py:103~204` `commands/mixed_core.py:140~150` · Isaac Lab `envs/manager_based_rl_env.py` `_reset_idx` (curriculum compute 가 command reset 보다 먼저) · 원자료 `impl-turncases/logs/{six_cases,g0b_eval,b1500_baseline,sb50_eval,sb10_eval}` · `impl-t5/logs/onset_sweep` · `impl-w2/logs_gate/eval/parent_b1500` · 재계산 스크립트 `judge_recompute.py` · `judge_m1500.py` (planner scratchpad, 6 절에 식 그대로)
 > 요지: 회전 판정은 **env 마다 명령 부호를 곱한 평균 요 q_e 를 kept env 에서 같은 무게로 평균**한 Q 로 하고 절댓값 · pooled 평균 · alive_end 분모를 쓰지 않는다. 문턱은 역할(재측정 폭 · 회전 성공선 · 유지 하락 허용 · 넘어짐 허용 · 운영 중단선) 마다 비교 대상이 다르다. 단계 넘김은 「연속 두 저장본이 각각 통과 · 단계별 최소 체류(`min_stay`, 명령 500 · 비율 250 추정) · 한 번에 한 축」 이고, **판정은 저장본 하나씩** 하고 연속은 소비자가 세어 **되돌림은 연속 두 저장본이 모두 유지 조건(하락 · 넘어짐 · 전진 중 어느 것이든) 에 미달**일 때만이다(한 저장본의 미달이 두 창에 걸쳐 두 번 세어지지 않는다, reviewer X26 고침 1). 관측된 낙상은 자료 누락이 아니라 생존 조건 미달로 적는다. **이어 가는 판과 처음부터 배우는 판의 관문을 나눈다**(처음부터 판에는 부모 유지선 · 멈춤선을 걸지 않는다). 지형 커리큘럼은 새 과제 표식이 있는 에피소드만 승급 · 강등에서 빼고, Isaac 의 reset 순서(curriculum → command reset) 대로 「지난 에피소드 표식을 읽은 뒤 비운다」. 6 절에 기존 원자료로 답을 미리 적은 시험 아홉이 있다. 이 답이 안 나오면 코드가 틀린 것이다.
-> 상태: v0.4 · reviewer X26 고침 1(한 저장본 미달이 두 번 세어져 REVERT) 반영: 판정은 저장본 하나씩, 연속은 소비자가 센다 · 고침 5(force_gt 저장본 p 1.0 과 「첫 회차 복원 env > 0」 충돌) 는 4.5 (c) 행 · DESIGN-MAPRATIO 3.3 · M-T5 로 · v0.3: 6.8 에 S-B50 m500~m1200 · m1500 과 S-B10 m100~m700 · m1500 답 아는 입력 추가(12:57 평가 끝, 13:0x 재계산) · 처음부터 판 두 개가 m1500 하나로 가림 · 켬 달성, 직전 m1400 은 사슬 미도달 · sonnet-code 구현 대기 · 숫자 문턱은 **추정(승인 아님)** · 재측정 폭은 새 식 여섯 쌍 최대 0.083(6.6) · GPU · 학습 · 코드 수정 없음
-> 판: v0.4
+> 상태: v0.5 · analyst OPINION-startline 2 절 반례(기존 START 전진 ↔ 제자리 회전만으로도 완벽 추종이 강등, `judge_free([2],[[1.5,0]]) == -1`) 의 범위 판단(5.4): J-T5 표식 범위는 그대로(새 과제만, S1 비트 동등성), 기존 명령 전체의 바른 판정은 **세계 좌표 기대 변위 proxy** 를 기본 끔 스위치 + 병행 기록으로(J-T10, 켜는 때는 판 경계에서 팀장 결정 8) · 완벽 추종 모의(실제 표집기, 시드 셋 × 200,000) 에서 현행 강등 0.85~0.91 % · 세계 좌표 0.00 % · 레벨 평균 5.8 정체는 Isaac 최고 레벨 무작위 재배정이라 오판 증거가 아님 · v0.4 · reviewer X26 고침 1(한 저장본 미달이 두 번 세어져 REVERT) 반영: 판정은 저장본 하나씩, 연속은 소비자가 센다 · 고침 5(force_gt 저장본 p 1.0 과 「첫 회차 복원 env > 0」 충돌) 는 4.5 (c) 행 · DESIGN-MAPRATIO 3.3 · M-T5 로 · v0.3: 6.8 에 S-B50 m500~m1200 · m1500 과 S-B10 m100~m700 · m1500 답 아는 입력 추가(12:57 평가 끝, 13:0x 재계산) · 처음부터 판 두 개가 m1500 하나로 가림 · 켬 달성, 직전 m1400 은 사슬 미도달 · sonnet-code 구현 대기 · 숫자 문턱은 **추정(승인 아님)** · 재측정 폭은 새 식 여섯 쌍 최대 0.083(6.6) · GPU · 학습 · 코드 수정 없음
+> 판: v0.5
 
 # JUDGE-SPEC · 판정과 커리큘럼 관문 명세 (코드로 옮길 정본)
 
@@ -172,13 +172,15 @@ def consume(history):                            # 평가 사슬(소비자). his
 | 16 env 여섯 경우 가림 | 같음 | 지도 비율 (a) 진입(kept 만), 가림 회전 기록 |
 | 영상(규칙 v2) | 창 경계 · 판단 걸린 저장본 | S3b 「확보」 · 보행 주장(R12) |
 
-## 5. 지형 커리큘럼: 원운동 강등 오판 수정 규칙
+## 5. 지형 커리큘럼: 원운동 강등 오판 수정 규칙과 기존 명령 범위 판단
 
 ### 5.1 지금 코드 `[코드 · 내가 다시 읽음]`
 
 - `rules.judge_free(max_dist, cmd_sum_xy)` (`rules.py:14~26`): norm = ‖cmd_sum_xy‖, active = norm > eps, 승급 = active & max_dist > size_x/2, 강등 = active & max_dist < 0.5 × norm × 4 s × 0.9 & ¬승급.
 - `terrain_levels_mixed` (`terrain_levels_mixed.py:20~27`): cmd_sum = term.cmd_sum_xy × step_dt / 4 s 로 「재추출 한 번당 한 번 뽑힌 값의 합」 단위로 맞춘 뒤 judge 에 넘긴다. `cmd_sum_xy` 는 `_update_command` 에서 **매 스텝** 몸 기준 (vx, vy) 를 더한다(`mixed_command.py:202`). 제자리 회전(vx 0) 과 정지는 0 을 더하므로 spin 만 있는 에피소드는 active 가 거짓이라 판정에서 이미 빠진다(docstring 7 행).
 - 반례(analyst 2.1, 내가 재현): vx 0.5 · wz 0.5 로 20 s 정확한 원(반지름 1 m) 은 max_dist 2 m, 명령 합 10 m → 강등. `judge_free([10, 2], [[2.5, 0], [2.5, 0]]) == [1, −1]`.
+- 반례 둘째(analyst OPINION-startline 2 절, 내가 `judge_startcmd_sim.py` 로 재실행): **기존 START 명령만으로도** 난다. 20 s 를 4 s 씩 「전진 0.5 → 제자리 π/4 rad/s → 전진 0.5 → 제자리 π/4 → 전진 0.5」 를 완벽히 따르면 2 m 전진 · 반바퀴 · 2 m 복귀 · 반바퀴 · 2 m 전진이라 최대 거리 2 m, 슬롯 단위 명령 합 1.5 → 문턱 0.5 × 1.5 × 4 × 0.9 = 2.7 m → `judge_free([2], [[1.5, 0]]) == [-1]`. 5.2 의 1 「기존 START spin 과 직진은 새 과제가 아니다」 는 **표식의 범위**이지 「기존 명령은 판정이 맞다」 는 뜻이 아니었다. 범위 판단은 5.4.
+- 레벨 평균 정체(`map_switch.jsonl` `on.terrain_level_mean`: S-B10 500 회 이후 5.2~5.9, S-B50 5.3~6.0, 최대 행 9) 는 오판 증거가 아니다. Isaac `terrain_importer.py:318~326` `update_env_origins` 가 최고 레벨을 넘어 승급한 env 를 **무작위 레벨로 되돌리므로**(「robots that solve the last level are sent to a random one」) 승급 우세 사슬의 정상 분포가 평균 5~6 에 머문다. 어려운 칸 L9 가림 S-B10 5.281 m · 62/64(`hardlevel/sb10_L9/map64`) 와도 맞는다.
 - Isaac 의 reset 순서(`manager_based_rl_env.py` `_reset_idx`, 내가 다시 열어 확인): `curriculum_manager.compute(env_ids)` 가 먼저, 그 뒤 이벤트 reset, 그 뒤 `command_manager.reset(env_ids)`. 그래서 curriculum 이 읽는 `max_dist` · `cmd_sum_xy` 는 **방금 끝난 에피소드** 값이고, command reset(`_reset_episode_state`) 이 그 뒤에 비운다(`terrain_levels_mixed.py:3` 머리말과 같음).
 
 ### 5.2 수정 규칙 (정확히)
@@ -204,6 +206,23 @@ def consume(history):                            # 평가 사슬(소비자). his
 | env 부분 reset: env 3 만 reset | env 3 표식만 거짓, 다른 env 유지 |
 | 창 전환 직후 잔여 명령이 옛 계약(S1 직진 · spin) | 표식 F |
 | S1 설정 1000 스텝 | 표식 참 수 0, 승급 · 강등 결과가 수정 전 코드와 비트 단위로 같음 |
+| analyst 반례(전진 0.5 · 반바퀴 · 전진 · 반바퀴 · 전진, 20 s 완벽 추종), 표식 F, 스위치 끔 | **−1**(지금과 같음, 기록만. 고치는 것은 J-T10 스위치) |
+| 같은 반례, J-T10 스위치 켬(세계 좌표 기대 변위 2 m → 슬롯 단위 0.5) | `judge_free([2], [[0.5, 0]])` = **0** |
+| 원운동(5.1, 반지름 1 m · 20 s), 스위치 켬 | 0 (기대 변위 = 실제 변위 ≤ 2 m 라 문턱 ≤ 0.9 m) |
+| 직진 10 m, 스위치 끔 · 켬 | +1 · +1 (같음) |
+| 완벽 추종 모의(실제 `mixed_core.resample_start`, 20 s · 4 s 다섯 슬롯, 시드 0 · 1 · 2, 각 200,000 에피소드, `judge_startcmd_sim.py`) | 스위치 끔: 승급 97.5 % · 유지 1.6 % · **강등 0.85~0.91 %**(모두 회전 뒤 전진이 있는 에피소드, 그 안에서 1.5~1.6 %). 스위치 켬: 승급 97.5 % · 유지 2.5 % · **강등 0.00 %** |
+
+### 5.4 범위 판단: 기존 명령 전체로 넓히나 (analyst OPINION 2 절 반례 · lead 14:0x 의뢰)
+
+판단: **J-T5 의 표식 범위는 그대로 두고(새 과제만), 기존 명령 전체의 바른 판정은 proxy 교체(J-T10) 로, 단 기본 끔 스위치 + 병행 기록으로 넣는다.** 켜는 때는 판 경계에서 팀장이 정한다(결정 8). 까닭 다섯.
+
+1. **빈도 `[모의 · 실제 표집기]`.** 완벽 추종 모의에서 기존 명령의 강등 오판은 에피소드의 0.85~0.91 %(5.3 마지막 행) 이고 승급은 97.5 % 다. 기존 명령 오판은 **드물고 한 방향(보수적)** 이며, 실제 학습의 강등 대부분은 추종 실패 · 낙상이다(추정 · 에피소드별 판정 기록이 없어 실측 불가 → J-T10 의 기록으로 잰다). analyst 2 절 「주원인이라는 빈도 · 개입 증거는 아직 없다」 와 같다. 회전 오르내림(OPINION 2) 의 설명도 아니다.
+2. **표식으로 넓히면 신호가 반으로 준다.** 회전 뒤 전진이 있는 에피소드가 56 % 다(모의). 이것을 표식 「0」 으로 빼면 지형 커리큘럼 신호의 절반이 사라지고 S1 이 B 와 다른 흐름이 된다(5.2 의 7 동등성 깨짐). 표식 「0」 은 새 과제 비율이 커지는 S2a · S2b 에서도 신호 손실이 크므로 임시 방편이다.
+3. **바른 고침은 proxy 교체다.** `cmd_sum_xy`(몸 기준 합) 대신 **세계 좌표 기대 변위** `cmd_sum_w += R(yaw_t) · vel_command_b[:, :2]` (매 스텝, 실제 yaw) 의 노름을 **같은 식**(0.5 × ‖·‖ × 4 s × 0.9, `step_dt / 4 s` 단위 변환 그대로) 에 넣는다. 완벽 추종이면 max_dist ≥ ‖기대 변위‖ > 0.45 × ‖기대 변위‖ 라 강등이 0 이다(5.3). Isaac `terrain_levels_vel` 의 가정(에피소드 안 명령 방향 불변) 을 재표집 명령에 맞게 일반화한 것이고 새 보상 · 새 문턱 · 새 명령이 아니다(R11 · D5). 승급 조건 `max_dist > size_x / 2` 는 그대로 둔다(회전 많은 에피소드의 승급 기회 손실은 보수적 방향, 기록만).
+4. **돌고 있는 판 중간에 켜지 않는다(D6).** 스위치 `world_frame=False` 가 기본이고 끔이면 지금 코드와 비트 동일(답 아는 시험). S1 동안 두 판정(현행 · 세계 좌표) 을 둘 다 계산해 **불일치 수**(현행 −1 · 세계 0 따위) 와 표식 유무별 수를 `train_extra.jsonl` 에 적어 실측 빈도를 얻는다. 켜는 것은 새 판 시작 또는 단계 진입에서 팀장 결정 8(DESIGN-MAPRATIO 6 절) 로.
+5. **켠 뒤 표식과의 관계.** 세계 좌표 proxy 가 켜지면 새 과제(걸으며 돌기) 도 바르게 판정되므로 표식의 「승급 · 강등 생략」(5.2 의 3) 은 **기록용**으로 바꿀 수 있다. 그 전환도 결정 8 과 함께 하고, 그 전까지 5.2 는 그대로다.
+
+모의 스크립트: 이 폴더 `judge_startcmd_sim.py`(읽기만, 인자 = impl-sb 경로 · N · 시드, isaac311 python -I). 범위 밖(이번에 안 함): 깃발 규칙(`judge_flag`) · 승급 조건 변경 · 성과 기반 행 넓히기 · 명령 분포 변경. 재지 않은 것: 실제 학습의 에피소드별 판정 분포(J-T10 기록 뒤) · 모의의 조기 종료 에피소드(낙상은 모의에 없다, 모의는 완벽 추종 상한만).
 
 ## 6. 답 아는 시험 (기존 원자료 → 미리 적은 답)
 
@@ -359,6 +378,7 @@ def consume(history):                            # 평가 사슬(소비자). his
 | J-T6 | 재측정 24 쌍을 새 식으로 재계산해 3 절 첫 줄 갱신 + 64 env 전진(m) 반복 폭(같은 저장본 쌍이 있는 것만) | `six_repro.py` 를 새 함수로 | 옛 pooled 결과(최대 0.115) 와 나란히 · 6.6 여섯 쌍 최대 0.0833 재현 |
 | J-T7 | 걸으며 돌기 경우 둘을 `PROTOCOLS` 에 추가(`walk_turn_left` · `walk_turn_right`, pre 없음, cmd (0.5, 0, ±0.5)) | `eval/turn_probe_plan.py` | `select_cases("all")` 길이 8, 기존 여섯 정의 불변 |
 | J-T8 | 판정 결과 기록 형식: 상태 · 근거 필드(`turn_valid` · `survival_ok` · 어느 유지 조건이 깨졌나) · 입력 파일 SHA · 문턱 판(이 문서 판) 한 줄 JSON | 평가 사슬 끝 | 같은 입력 두 번 → 같은 출력 |
+| J-T10 | 세계 좌표 기대 변위 proxy(5.4): 명령 term 에 `cmd_sum_w (N, 2)` 를 매 스텝 `R(yaw_t) · vel_command_b[:, :2]` 로 누적(`cmd_sum_xy` 옆), `_reset_episode_state` 에서 비움 · `terrain_levels_mixed(…, world_frame: bool = False)`: False 면 지금 식 비트 동일, True 면 `cmd_sum_w` 를 같은 단위 변환으로 넘김 · **둘 다 계산**해 불일치 수(현행 · 세계 좌표 조합 9 칸) 와 표식 유무별 승급 · 강등 수를 update 마다 `train_extra.jsonl` 에 기록 · 기본 False, 켜는 것은 설정 인자 + manifest 기록 | `commands/mixed_command.py:202` · `curriculum/terrain_levels_mixed.py:20~27` · `runners/start_runner.py`(기록) | 5.3 의 analyst 반례(끔 −1 · 켬 0) · 원운동(켬 0) · 직진 10 m(둘 다 +1) · 스위치 끔 S1 1000 스텝 비트 동등성 · 완벽 추종 모의(`judge_startcmd_sim.py`, 시드 0 · 1 · 2) 켬 강등 0 · 승급 97.5 % 재현 |
 | J-T9 | 소비자 `consume(history)`(4.1): 판정 상태 열 → 동작(계속 · 보류 · REVERT · 확대 · 멈춤). **연속은 여기서만 센다.** DESIGN-MAPRATIO M-T4 는 이것을 부른다 | 평가 사슬(`judge_gate.py:644` 의 REVERT 조건은 그대로, 입력 상태가 저장본 하나 판정으로 바뀌는 것이 수정) | `[FAIL, FAIL]` → REVERT · `[FAIL]` → 보류 · `[STOP]` → 멈춤 · `[PASS, PASS]` → 확대 · `[FAIL, PASS]` → 계속(연속 미완) · **good · good · bad · good · good → REVERT 없음**(`repro_x26.py` 반례) · `[FAIL, HOLD, FAIL]` → 보류 · `[PASS, HOLD, PASS]` → 계속 · 두 번째 REVERT → 멈춤 · 보고 |
 
 구현 → 리뷰 → 깨끗한 복사본 CPU 시험 → Kit 예행 → 승인된 학습(EXPERIMENT-RULES 8 절 순서). 이 문서는 학습 승인이 아니다.
@@ -375,5 +395,6 @@ def consume(history):                            # 평가 사슬(소비자). his
 |---|---|---|
 | v0.1 | 2026-10-26 | 첫 판. 통계 식 · 분모 · 문턱 역할 표 · 네 상태 관문(이어 가기 · 처음부터 분리) · 지형 표식 규칙 · 답 아는 시험 아홉 · 구현 항목 J-T1~T8 |
 | v0.2 | 2026-10-26 | analyst 13 절 반영: 낙상 ≠ 자료 누락(`turn_valid` · `survival_ok` 분리, `HOLD_NO_DATA` 는 파일 누락만, 6.5 기대값 `MAINTAIN_FAIL`) · 상태와 동작 분리(`consume`, `min_stay` 입력, REVERT 소비자 J-T9) · 되돌림은 유지 조건 전부(4.5) · (c) 절대 조건 상속 · 재측정 폭 여섯 쌍 최대 0.083(「세 쌍 0.020」 철회) · 「같음 · 다른 문턱의 하한」 표현 철회 · a50 우 → 좌 본값 0.3431 · 5.3 부분 reset 시험 둘로 · 6.8 S-B50 m300 · m400 추가 |
+| v0.5 | 2026-10-26 | analyst OPINION-startline 2 절 반례 범위 판단(5.4): 기존 START 순차 명령도 강등 오판(재현) · 완벽 추종 모의 강등 0.85~0.91 %(드물고 보수적) · 레벨 평균 5.8 정체는 Isaac 최고 레벨 무작위 재배정 · J-T5 표식 범위 그대로 · 세계 좌표 기대 변위 proxy 를 기본 끔 스위치 + 병행 기록(J-T10) · 켜는 때는 판 경계에서 결정 8 · 5.3 여섯 행 추가 |
 | v0.4 | 2026-10-26 | reviewer X26 고침 1: 판정은 저장본 하나씩(`judge(ckpt, …)`), 연속 두 저장본의 통과 · 미달은 소비자가 센다(good · good · bad · good · good → REVERT 없음, HOLD 가 끼면 연속 끊김) · 고침 2 의 명세 문장: 16 env 자료 없음 → `HOLD_NO_DATA`, 켬 달성에 kept 조건 없음 · 고침 5: (c) 진입 · 재진입 p 시작값 = 저장본 값 1.0, 첫 update 에서 식 5, M-T5 확인은 첫 update 뒤 회차 · 「최신 + 직전」 표현을 「연속 두 저장본 각각」 으로 |
 | v0.3 | 2026-10-26 | 6.8 에 S-B50 m500~m1200 · m1500(세 모드) 과 S-B10 m100~m700 · m1500(세 모드) 추가: 두 판 m1500 하나로 가림 · 켬 달성, 직전 m1400 미도달이라 연속 미완(달성 플래그만) · 회전 성공선 둘 다 미달 · S-B50 비단조 추세가 「처음부터 판에 유지선 없음」 의 둘째 답 아는 입력 · (b) 시작 시 기준값은 m1500 · 4.3 진도 판독 「50 회 간격」 → 저장 간격(지금 100) |
