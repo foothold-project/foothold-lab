@@ -56,13 +56,14 @@ class RatioController:
         if state not in G.STATES:
             raise ValueError("알 수 없는 판정 상태: %r" % (state,))
 
-        action = self.consumer.step(state)
+        action = self.consumer.step(state, defer=True)                        # REVERT · EXPAND 는 confirm 뒤에야 센다
         argument, reason = None, ""
         before = self.index
 
         if action == G.REVERT:
             if self.index == 0:
                 action, reason = G.STOP_REPORT, "되돌릴 직전 값이 없다(첫 단계)"
+                self.consumer.commit()
             else:
                 argument = self._argument(self.index - 1, ckpt_iter)
                 self.pending = {"to_index": self.index - 1, "argument": argument, "action": action}
@@ -74,6 +75,7 @@ class RatioController:
                 reason = "PASS: 다음 단계로"
             else:
                 reason = "PASS: 단계표 끝(더 확대할 값 없음)"
+                self.consumer.commit()                                            # 걸 인자가 없으니 확인할 것도 없다
         elif action == G.STOP_REPORT:
             reason = reason or ("STOP" if state == G.STOP else "두 번째 되돌림: 멈춤 · 보고")
 
@@ -85,14 +87,21 @@ class RatioController:
 
         return {"action": action, "argument": argument, "stop": stop, "reason": reason, "index": self.index, "record_line": record_line(rec)}
 
-    def confirm(self, applied: bool) -> None:
-        """직전 step 이 낸 인자를 실제로 걸었는가. 걸었으면 위치를 옮기고, 아니면 그대로 둔다(기록에 applied 를 남긴다)."""
+    def confirm(self, applied: bool) -> str:
+        """직전 step 이 낸 인자를 실제로 걸었는가. 걸었으면 위치를 옮기고 되돌림 횟수를 세며, 아니면 그대로 둔다(기록에 applied 를 남긴다).
+        갱신된 기록 한 줄(applied · reverts 반영)을 돌려준다. step 이 돌려준 record_line 은 확인 전 모습(applied null)이다."""
         if self.pending is None:
             raise RuntimeError("확인할 인자가 없다")
         if applied:
             self.index = self.pending["to_index"]
+            self.consumer.commit()
+        else:
+            self.consumer.discard()
         self.records[-1]["applied"] = bool(applied)
+        self.records[-1]["reverts"] = self.consumer.reverts
         self.pending = None
+
+        return record_line(self.records[-1])
 
 
 def record_line(rec: dict) -> str:

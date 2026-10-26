@@ -8,7 +8,7 @@ import json
 import pytest
 
 from foothold_s2.eval import judge_gate as G
-from foothold_s2.eval.mapratio_revert import ARGUMENT_KEYS, RatioController
+from foothold_s2.eval.mapratio_revert import ARGUMENT_KEYS, RatioController, record_line
 
 F, P, N, H, S = G.MAINTAIN_FAIL, G.PASS, G.NEW_TASK_PENDING, G.HOLD_NO_DATA, G.STOP
 LADDER = [0.8, 0.5, 0.2]                       # 시험 입력(높은 값에서 낮은 값으로)
@@ -119,7 +119,8 @@ def test_record_lines_are_deterministic_and_carry_the_decision():
     assert [o["record_line"] for o in a] == [o["record_line"] for o in b]
     rec = json.loads(a[1]["record_line"])
 
-    assert rec["state"] == F and rec["action"] == G.REVERT and rec["argument"]["to"] == 0.8 and rec["ckpt_iter"] == 150 and rec["reverts"] == 1
+    assert rec["state"] == F and rec["action"] == G.REVERT and rec["argument"]["to"] == 0.8 and rec["ckpt_iter"] == 150
+    assert rec["reverts"] == 0 and rec["applied"] is None                                        # step 이 돌려준 줄은 확인 전 모습
 
 
 def test_inputs_are_validated_and_no_ladder_numbers_live_in_the_module():
@@ -153,3 +154,49 @@ def test_review1_good_good_bad_good_good_makes_no_argument_and_fail_hold_fail_ne
     rc, outs = _run([F, H, F], start=1)
 
     assert [o["argument"] for o in outs] == [None, None, None] and rc.consumer.reverts == 0
+
+
+def test_confirm_returns_the_updated_record_line_with_applied_and_reverts():
+    rc = RatioController(LADDER, 1)
+    rc.step(F, 100)
+    out = rc.step(F, 150)
+    line = json.loads(rc.confirm(True))
+
+    assert out["action"] == G.REVERT and line["applied"] is True and line["reverts"] == 1 and line["ckpt_iter"] == 150
+    assert json.loads(record_line(rc.records[-1])) == line
+
+
+def test_reverts_are_counted_only_after_the_argument_was_confirmed():
+    rc = RatioController(LADDER, 1)
+    rc.step(F, 100)
+    rc.step(F, 150)
+
+    assert rc.consumer.reverts == 0                                                              # 아직 걸었다고 확인 안 됨
+    line = json.loads(rc.confirm(False))
+
+    assert rc.consumer.reverts == 0 and line["applied"] is False and line["reverts"] == 0 and rc.index == 1
+    out = rc.step(F, 200)                                                                        # 못 걸었으니 열이 그대로라 같은 판정이 다시 난다
+    assert out["action"] == G.REVERT and out["argument"]["to"] == 0.8 and rc.confirm(True) and rc.consumer.reverts == 1 and rc.index == 0
+    rc2 = RatioController(LADDER, 1)                                                             # 걸지 못한 REVERT 가 STOP 까지 끌고 가지 않는다
+    for i, st in enumerate([F, F]):
+        rc2.step(st, 100 + 50 * i)
+    rc2.confirm(False)
+    assert not rc2.stopped and rc2.step(F, 200)["action"] == G.REVERT
+
+
+def test_consumer_deferred_effects_wait_for_commit_or_discard():
+    c = G.Consumer()
+    c.step(F, defer=True)
+
+    assert c.step(F, defer=True) == G.REVERT and c.reverts == 0 and len(c.history) == 2
+    with pytest.raises(RuntimeError):
+        c.step(F, defer=True)
+    c.discard()
+
+    assert c.reverts == 0 and len(c.history) == 2
+    assert c.step(F, defer=True) == G.REVERT
+    c.commit()
+
+    assert c.reverts == 1 and c.history == []
+    with pytest.raises(RuntimeError):
+        c.commit()

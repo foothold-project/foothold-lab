@@ -675,16 +675,41 @@ class Consumer:
         self.history = []
         self.reverts = 0
         self.log = []
+        self._deferred = None
 
-    def step(self, state: str) -> str:
+    def step(self, state: str, defer: bool = False) -> str:
+        """defer=True 면 REVERT · EXPAND 의 효과(되돌림 횟수 · 열 비움)를 바로 내지 않고 `commit()` / `discard()` 를 기다린다
+        (인자를 실제로 걸었는지 확인되기 전에는 센 것이 아니다, reviewer X26 참고)."""
+        if getattr(self, "_deferred", None) is not None:
+            raise RuntimeError("직전 REVERT · EXPAND 를 commit() 이나 discard() 로 마무리해야 다음 상태를 넣을 수 있다")
+
         self.history.append(state)
         action = consume(self.history, self.reverts)
         self.log.append((state, action))
 
+        if action in (REVERT, EXPAND) and defer:
+            self._deferred = action
+        else:
+            self._apply(action)
+
+        return action
+
+    def _apply(self, action: str) -> None:
         if action == REVERT:
             self.reverts += 1
             self.history = []
         elif action == EXPAND:
             self.history = []
 
-        return action
+    def commit(self) -> None:
+        """미룬 동작을 실제로 걸었다: 되돌림 횟수를 세고 열을 비운다."""
+        if getattr(self, "_deferred", None) is None:
+            raise RuntimeError("commit 할 미룬 동작이 없다")
+        action, self._deferred = self._deferred, None
+        self._apply(action)
+
+    def discard(self) -> None:
+        """미룬 동작을 걸지 못했다: 횟수 · 열을 그대로 둔다(다음 상태에서 같은 판정이 다시 난다)."""
+        if getattr(self, "_deferred", None) is None:
+            raise RuntimeError("discard 할 미룬 동작이 없다")
+        self._deferred = None
