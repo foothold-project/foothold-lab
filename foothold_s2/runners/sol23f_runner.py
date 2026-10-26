@@ -199,7 +199,7 @@ class Sol23FRunner(StartRunner):
         state["sol23f"] = {
             "variant": self.variant,
             "physical_resume_identical": False,
-            "force_gt": bool(self.pcfg.get("force_gt", False)),
+            "force_gt": bool(self.adasmpl.force_gt),                 # 실제로 쓰는 값(resume_adasmpl 로 덮은 뒤에는 덮은 값). 설정값이 아니라 AdaSmpl 의 값을 적는다
             "map_input": self.pcfg.get("map_input"),
             "depth_delay_ticks": int(self.perception.cfg.depth_delay_ticks),
         }
@@ -224,8 +224,8 @@ class Sol23FRunner(StartRunner):
         own = state.get("sol23f") or {}
         if own.get("variant") != self.variant:
             raise ValueError("SOL-23f variant mismatch on resume")
-        if own.get("force_gt") != bool(self.pcfg.get("force_gt", False)):
-            raise ValueError("SOL-23f force_gt mismatch on resume")
+        if own.get("force_gt") != bool(self.pcfg.get("force_gt", False)) and self.pcfg.get("resume_adasmpl") is None:
+            raise ValueError("SOL-23f force_gt mismatch on resume")      # 덮어쓰기 인자(resume_adasmpl)가 있으면 저장본 값에서 설정 값으로 바뀌는 것이 의도이며 StartRunner 가 사건으로 기록한다
         if own.get("map_input") != self.pcfg.get("map_input"):
             raise ValueError("SOL-23f map_input mismatch on resume")
         if own.get("depth_delay_ticks") != self.perception.cfg.depth_delay_ticks:
@@ -254,6 +254,12 @@ class Sol23FRunner(StartRunner):
 
 class BRunner(Sol23FRunner):
     variant = "B_friction_only"
+
+
+class SBRunner(Sol23FRunner):
+    """EX-33 S-B: B 와 같은 설정에 에피소드 단위 지도 끔(p_map_off). 체크포인트 variant 이름이 B 와 달라 서로 이어 가지 못한다."""
+
+    variant = "SB_map_switch"
 
 
 class TopDownRunner(Sol23FRunner):

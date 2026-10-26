@@ -151,7 +151,8 @@ class IEEstimator(nn.Module):
     def prop_step(self, hist: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
         return self.prop_gru(self.prop_mlp(hist.flatten(1)), h)
 
-    def estimate(self, z_prop: torch.Tensor, hmap: torch.Tensor | None) -> dict[str, torch.Tensor]:
+    def estimate(self, z_prop: torch.Tensor, hmap: torch.Tensor | None, map_off: torch.Tensor | None = None) -> dict[str, torch.Tensor]:
+        """map_off (B,) bool: 참인 행은 지도 토큰을 attention 키에서 뺀다(EX-33 S-B · 평가 probe_prop_only 와 같은 방식, 지도를 0 높이로 바꿔 넣지 않는다). None 이거나 모두 거짓이면 마스크 인자 없이 B 와 같은 호출이다."""
         tokens = [self.prop_token(z_prop).unsqueeze(1)]
         if self.use_map:
             if hmap is None:
@@ -161,10 +162,14 @@ class IEEstimator(nn.Module):
         seq = torch.cat(tokens, 1)
         self.last_num_map_tokens = seq.shape[1] - 1  # 시험용: G0 이면 0
         pad = None
-        if self.use_map and getattr(self, "mask_map_tokens", False):  # 진단 전용(probe_prop_only): 지도 토큰을 attention 키에서 뺀다. 0 높이 지도로 바꿔 넣지 않는다
+        if self.use_map and getattr(self, "mask_map_tokens", False):  # 진단 전용(probe_prop_only): 지도 토큰을 모든 행에서 attention 키에서 뺀다. 0 높이 지도로 바꿔 넣지 않는다
             pad = torch.zeros(seq.shape[:2], dtype=torch.bool, device=seq.device)
             pad[:, 1:] = True
-        out = self.attn(seq, src_key_padding_mask=pad)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
+        elif self.use_map and map_off is not None and bool(map_off.any()):  # 행마다 끔(지도 비율 M-T1): 참인 행만
+            pad = torch.zeros(seq.shape[:2], dtype=torch.bool, device=seq.device)
+            pad[:, 1:] = map_off.bool()[:, None]
+        out = self.attn(seq) if pad is None else self.attn(seq, src_key_padding_mask=pad)
+        out = out[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)
         if getattr(self, "heads_fp32", False) and torch.is_autocast_enabled(out.device.type):
             with torch.autocast(out.device.type, enabled=False):  # bf16 에서 logvar · KL 정밀도를 지킨다(RL-3 B)
                 h = self.heads(out.float())
@@ -247,6 +252,7 @@ class PerceptionState:
     steps_since_reset: torch.Tensor  # (N,) long
     use_gt: torch.Tensor  # (N,) bool AdaSmpl 플래그
     extra: dict = field(default_factory=dict)
+    map_off: torch.Tensor | None = None  # (N,) bool: 이 에피소드는 지도 토큰을 끈다(EX-33 S-B). None = 항상 켬(B)
 
 
 class StartPerception(nn.Module):
@@ -271,16 +277,19 @@ class StartPerception(nn.Module):
             frames=torch.zeros(n, k, DEPTH_HW, DEPTH_HW, device=device),
             steps_since_reset=torch.zeros(n, dtype=torch.long, device=device),
             use_gt=torch.ones(n, dtype=torch.bool, device=device),
+            map_off=torch.zeros(n, dtype=torch.bool, device=device),
         )
 
     @torch.no_grad()
-    def reset_envs(self, st: PerceptionState, mask: torch.Tensor, new_flags: torch.Tensor) -> None:
+    def reset_envs(self, st: PerceptionState, mask: torch.Tensor, new_flags: torch.Tensor, new_map_off: torch.Tensor | None = None) -> None:
         """env 리셋: 두 GRU 0 (12 §6.1), 이력 · 프레임은 다음 관측으로 채우도록 표시, AdaSmpl 플래그 새로 뽑음."""
         m = mask.bool()
         st.h_prop[m] = 0
         st.h_terr[m] = 0
         st.steps_since_reset[m] = 0
         st.use_gt[m] = new_flags[m]
+        if new_map_off is not None:
+            st.map_off[m] = new_map_off[m]  # 에피소드 시작 때만 새로 뽑는다: 에피소드 안에서는 유지
 
     @torch.no_grad()
     def ingest(self, st: PerceptionState, obs: torch.Tensor, depth: torch.Tensor) -> dict[str, torch.Tensor]:
@@ -302,7 +311,7 @@ class StartPerception(nn.Module):
         return {"hist": st.hist.clone(), "depth2": d2.clone(), "tick": tick.clone(), "first": first.clone()}
 
     # ---------------- 한 스텝 계산 (수집 · 재생 공용) ----------------
-    def _advance(self, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map):
+    def _advance(self, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, map_off=None):
         keep = (~first).float()[:, None]
         h_prop = self.ie.prop_step(hist, h_prop * keep)
         h_terr = h_terr * keep
@@ -315,15 +324,24 @@ class StartPerception(nn.Module):
             hmap = torch.where(use_gt[:, None, None], gt_map, refined.detach())
         else:
             hmap = None
-        est = self.ie.estimate(h_prop, hmap)
+        est = self.ie.estimate(h_prop, hmap) if map_off is None else self.ie.estimate(h_prop, hmap, map_off)
         out.update(est)
         return h_prop, h_terr, out
+
+    @staticmethod
+    def _off_args(map_off, t: int | None = None) -> tuple:
+        """_advance 의 마지막 인자. 끌 env 가 하나도 없으면 인자를 아예 안 넘긴다: 그러면 호출이 B 와 글자까지 같고, _advance 를 감싼 기록기(8 인자 고정)도 그대로 돈다."""
+        if map_off is None:
+            return ()
+        m = map_off if t is None else map_off[t]
+
+        return (m,) if bool(m.any()) else ()
 
     @torch.no_grad()
     def step(self, st: PerceptionState, inp: dict[str, torch.Tensor], gt_map: torch.Tensor, deterministic: bool = False) -> torch.Tensor:
         """수집 · 배포용. 51 차원 추정(z · v · zf · zb)을 돌려준다. 배포(deterministic)는 z 평균."""
         st.h_prop, st.h_terr, out = self._advance(
-            st.h_prop, st.h_terr, inp["hist"], inp["depth2"], inp["tick"], inp["first"], st.use_gt, gt_map
+            st.h_prop, st.h_terr, inp["hist"], inp["depth2"], inp["tick"], inp["first"], st.use_gt, gt_map, *self._off_args(st.map_off)
         )
         if deterministic or not self.cfg.sample_latent_in_rollout:
             z = out["mu"]
@@ -341,7 +359,7 @@ class StartPerception(nn.Module):
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
-                batch["use_gt"][t], batch["gt_map"][t],
+                batch["use_gt"][t], batch["gt_map"][t], *self._off_args(batch.get("map_off"), t),
             )
             z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
             outs.append(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -370,7 +388,7 @@ class StartPerception(nn.Module):
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
-                batch["use_gt"][t], batch["gt_map"][t],
+                batch["use_gt"][t], batch["gt_map"][t], *self._off_args(batch.get("map_off"), t),
             )
             if self.trnet is not None:
                 sums["tr"] = sums["tr"] + loss_tr(out["rough"], out["refined"], batch["gt_map"][t])

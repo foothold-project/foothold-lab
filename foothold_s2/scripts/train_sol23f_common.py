@@ -12,7 +12,7 @@ import os
 import sys
 from datetime import datetime
 
-from foothold_s2.sol23f_contract import resume_parent, segment_dir, validate_launch
+from foothold_s2.sol23f_contract import BUDGET_VARIANTS, FORCE_GT, MAP_INPUT, resume_parent, segment_dir, validate_launch
 
 # tensordict 의 C 확장은 Kit 이 뜬 뒤 처음 불러오면 이 기기에서 access violation 으로 죽는다(10/20 start_gate 실측 두 번).
 __import__("tensordict")  # Kit 전에 C 확장 선적재
@@ -33,9 +33,10 @@ parser.add_argument("--max_iterations", type=int, default=None)
 parser.add_argument("--distributed", action="store_true", default=False)
 parser.add_argument("--map_input", type=str, default=None, help="reconstruction(G1 · G3) · none(G0)")
 parser.add_argument("--force_gt", action="store_true", default=False, help="G0-gt")
-parser.add_argument("--variant", choices=("B", "TopDown"), required=True)
+parser.add_argument("--variant", choices=("B", "TopDown", "SB"), required=True)
+parser.add_argument("--p_map_off", type=float, default=None, help="SB 전용: 에피소드 시작 때 지도를 끌 확률. 생략하면 agent cfg 의 값(0.5)")
 parser.add_argument("--smoke-updates", type=int, default=None,
-                    help="B 전용 10 update Kit 예행. 본 실행과 별도 폴더")
+                    help="B 전용 10 update Kit 예행(SB 는 10 = 새 시험, 2 = 그 체크포인트에서 이어 2 회). 본 실행과 별도 폴더")
 parser.add_argument("--end-by", type=str, required=True, help="시간대가 붙은 ISO8601 마감")
 parser.add_argument("--max-wall-s", type=float, default=86400.0, help="24시간 이하")
 parser.add_argument("--stop-file", type=str, default=None)
@@ -68,10 +69,11 @@ for registry in ("foothold_s2.tasks", "foothold_s2.x15_tasks", "foothold_s2.x16_
                  "foothold_s2.x22_tasks", "foothold_s2.x23_tasks"):
     __import__(registry)
 __import__("foothold_s2.x23f_tasks")  # SOL-23f 독립 task 등록
+__import__("foothold_s2.sb_tasks")  # EX-33 S-B task 등록(B 와 같은 환경, 에피소드 단위 지도 끔)
 from foothold_s2.robots import go2_params as gp  # noqa: E402
 from foothold_s2.runners import manifest as run_manifest  # noqa: E402
 from foothold_s2.runners.devices import resolve_devices  # noqa: E402
-from foothold_s2.runners.sol23f_runner import BRunner, DeadlineReached, StepEvidence, TopDownRunner, save_material_array, sha256, tensor_summary  # noqa: E402
+from foothold_s2.runners.sol23f_runner import BRunner, DeadlineReached, SBRunner, StepEvidence, TopDownRunner, save_material_array, sha256, tensor_summary  # noqa: E402
 from foothold_s2.runners.status import write_status  # noqa: E402
 
 STATE = {"log_dir": None}  # 예외 때 상태 파일을 어디에 쓸지(main 이 정한다)
@@ -88,7 +90,7 @@ def main(env_cfg, agent_cfg):
     agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
-    if args_cli.variant == "B":
+    if args_cli.variant in BUDGET_VARIANTS:
         agent_cfg.seed = 42
         env_cfg.scene.num_envs = 3072
         agent_cfg.max_iterations = 10 if args_cli.smoke_updates == 10 else 1501
@@ -137,8 +139,8 @@ def main(env_cfg, agent_cfg):
     with open(os.path.join(log_dir, "realized_material.json"), "w", encoding="utf-8") as stream:
         json.dump(realized_material, stream, ensure_ascii=False, indent=2)
     print("SOL23F_REALIZED_MATERIAL " + json.dumps(realized_material), flush=True)
-    if args_cli.variant == "B" and not realized_material["dynamic_le_static_all"]:
-        raise RuntimeError("B realized material violates dynamic<=static")
+    if args_cli.variant in BUDGET_VARIANTS and not realized_material["dynamic_le_static_all"]:
+        raise RuntimeError(f"{args_cli.variant} realized material violates dynamic<=static")
     raw_robot = env.unwrapped.scene["robot"]
     physx = raw_robot.root_physx_view
     physics = {
@@ -168,11 +170,14 @@ def main(env_cfg, agent_cfg):
         pc["map_input"] = args_cli.map_input
     if args_cli.force_gt:
         pc["force_gt"] = True
-    want_gt = args_cli.variant == "B"
-    if pc.get("map_input") != "reconstruction" or bool(pc.get("force_gt", False)) != want_gt:
+    if args_cli.variant == "SB" and args_cli.p_map_off is not None:
+        pc["p_map_off"] = args_cli.p_map_off
+    if pc.get("map_input") != MAP_INPUT[args_cli.variant] or bool(pc.get("force_gt", False)) != FORCE_GT[args_cli.variant]:
         raise ValueError("SOL-23f map_input/force_gt must match variant")
+    if (args_cli.variant == "SB") != (float(pc.get("p_map_off", 0.0)) > 0.0):
+        raise ValueError("p_map_off must be > 0 for SB and 0 for the other variants")
     train_cfg["perception"] = pc
-    runner_class = BRunner if args_cli.variant == "B" else TopDownRunner
+    runner_class = {"B": BRunner, "SB": SBRunner}.get(args_cli.variant, TopDownRunner)
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
     if resume_path is None:
@@ -197,8 +202,9 @@ def main(env_cfg, agent_cfg):
              "clip_actions": agent_cfg.clip_actions, "z_rollout": "sample" if runner.perception.cfg.sample_latent_in_rollout else "mean", "action_rollout": "sample",
              "contract": runner.pcfg["contract"], "fbg_margin_m": gp.TERMINATION["foot_below_ground_m"], "track_lin_form": getattr(env_cfg, "track_lin_form", None),
              "num_envs": env_cfg.scene.num_envs, "num_steps_per_env": agent_cfg.num_steps_per_env, "seed": agent_cfg.seed, "task": args_cli.task,
-             "run_kind": "B_kit_smoke_10_updates" if args_cli.smoke_updates == 10 else "main",
+             "run_kind": ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main",
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
+             "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
              "resume_parent": parent}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
                                            runner=runner, env_yaml=os.path.join(log_dir, "params", "env.yaml"), agent_yaml=os.path.join(log_dir, "params", "agent.yaml"))
@@ -212,7 +218,7 @@ def main(env_cfg, agent_cfg):
     runner.training_trace = TrainingTraceBridge(runner)
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
-    remaining = agent_cfg.max_iterations - done
+    remaining = 2 if args_cli.smoke_updates == 2 else agent_cfg.max_iterations - done
     if remaining <= 0:
         write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "note": "이미 끝난 체크포인트", "log_dir": log_dir})
         return
