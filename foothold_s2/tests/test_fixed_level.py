@@ -126,3 +126,17 @@ def test_compare_accepts_an_old_record_and_a_new_one_with_the_same_array_and_ref
 
         with pytest.raises(ValueError, match="fixed_terrain"):
             cmp.check_same_conditions({"old": old, "bad": bad})
+
+
+def test_reference_column_follows_the_same_array_rule():
+    from foothold_s2.eval import compare_map_modes as cmp
+    from foothold_s2.tests.test_eval_g0_reference import _g0
+
+    first = _fake("ab" * 32, {"levels": [0, 1, 2], "fixed_level": None})
+    ref = _g0()
+    ref["fixed_terrain"] = _fake("ab" * 32, {})["fixed_terrain"]                                # 옛 기록(칸 수 적음) + 같은 배열
+    cmp.check_reference({"parent": first}, ref)
+    ref["fixed_terrain"] = _fake("cd" * 32, {})["fixed_terrain"]
+
+    with pytest.raises(ValueError, match="fixed_terrain"):
+        cmp.check_reference({"parent": first}, ref)
