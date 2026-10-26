@@ -159,13 +159,13 @@ def consume(history):                            # 평가 사슬(소비자). his
 | 직전 | 최신 | 갈래 |
 |---|---|---|
 | (입력 결측 · HOLD_NO_DATA · 같은 sha · 회차 비증가 · §3 STOP · 재현 불일치 · 영상 판독 「있음」/미기입 · 상한) | | **멈춤**(연장 불가, 통과 아님) |
-| MAINTAIN_FAIL | MAINTAIN_FAIL | **REVERT** → 멈춤(되돌림 판은 사람). MAINTAIN_FAIL 은 유지 조건 축(A2 전진 · A3 · A4 · A6 · A10 = JUDGE-SPEC 4.1 `maintained`) 에서만 나온다. A1 · A7 · A8 · A9 경고 축은 들어가지 않는다(verifier R1) |
+| MAINTAIN_FAIL | MAINTAIN_FAIL | **REVERT** → 멈춤(되돌림 판은 사람). MAINTAIN_FAIL 은 유지 조건 축(A2 전진 · A3 · A4 · **A5 전진 적분** · A6 · A10 = JUDGE-SPEC 4.1 `maintained`) 에서만 나온다. A1 · A7 · A8 · A9 경고 축은 들어가지 않는다(verifier R1) |
 | PASS · PENDING | MAINTAIN_FAIL | **HOLD** → 같은 조건 한 창 더(v0.7 카드에 비어 있던 칸, RULES-HUB 10.2 와 같음) |
 | MAINTAIN_FAIL | PASS · PENDING | HOLD 해소 → 계속(실패 셈 리셋) |
 | PASS | PASS | **EXPAND**(다음 카드 없으면 멈춤 · 보고) |
 | PASS · PENDING | PENDING | **CONTINUE**(평평이면 멈춤) |
 
-가정 문턱(A1 보행 위상 · A7 기울기 · A8 접촉 링크 평면 속도 · A9 곡선) 은 **경고 · 기록**이고 멈춤 조건이 아니다. A11 ⑤(대각 쌍이 아닌 발 교대) 는 A1 기록과 실제 영상 현상으로 판독하고 폐기한 ±30° 문턱을 쓰지 않는다(verifier R1). A2 는 레벨 묶음 + 종류별 둘 다 필수이고 종류별 기록(X27j) 전은 HOLD_NO_DATA(lead 02:0x · 적용 시작 창은 카드 §8 (9)). 멈춤은 §3 STOP · 생존 · 결측 · NaN · 재현 · 영상 판독뿐(analyst E2). 걸으며 돌기 성공선의 **전진 적분 ≥ 3.2 m** 는 코드(`judge_gate._success_walk`) 와 이 표(4.4) 양쪽에 있다(E3).
+가정 문턱(A1 보행 위상 · A7 기울기 · A8 접촉 링크 평면 속도 · A9 곡선) 은 **경고 · 기록**이고 멈춤 조건이 아니다. A11 ⑤(대각 쌍이 아닌 발 교대) 는 A1 기록과 실제 영상 현상으로 판독하고 폐기한 ±30° 문턱을 쓰지 않는다(verifier R1). A2 는 레벨 묶음 + 종류별 둘 다 필수이고 종류별 기록(X27j) 전은 HOLD_NO_DATA(lead 02:0x · 적용 시작 창 m2250, lead 02:1x · 카드 §8 (9)). 멈춤은 §3 STOP · 생존 · 결측 · NaN · 재현 · 영상 판독뿐(analyst E2). 걸으며 돌기 성공선의 **전진 적분 ≥ 3.2 m** 는 코드(`judge_gate._success_walk`) 와 이 표(4.4) 양쪽에 있다(E3).
 
 ### 4.5 지도 비율 단계 (DESIGN-MAPRATIO-draft 3 절이 정본, 여기는 관문만)
 
@@ -445,6 +445,7 @@ v0.9 kept 바닥 14 에서 이 표의 kept_ok 는 **m1250(켬 fwd_then_left 13) 
 |---|---|---|
 | v0.1 | 2026-10-26 | 첫 판. 통계 식 · 분모 · 문턱 역할 표 · 네 상태 관문(이어 가기 · 처음부터 분리) · 지형 표식 규칙 · 답 아는 시험 아홉 · 구현 항목 J-T1~T8 |
 | v0.2 | 2026-10-26 | analyst 13 절 반영: 낙상 ≠ 자료 누락(`turn_valid` · `survival_ok` 분리, `HOLD_NO_DATA` 는 파일 누락만, 6.5 기대값 `MAINTAIN_FAIL`) · 상태와 동작 분리(`consume`, `min_stay` 입력, REVERT 소비자 J-T9) · 되돌림은 유지 조건 전부(4.5) · (c) 절대 조건 상속 · 재측정 폭 여섯 쌍 최대 0.083(「세 쌍 0.020」 철회) · 「같음 · 다른 문턱의 하한」 표현 철회 · a50 우 → 좌 본값 0.3431 · 5.3 부분 reset 시험 둘로 · 6.8 S-B50 m300 · m400 추가 |
+| v0.14a | 2026-10-27 | verifier 재확인: REVERT 축 목록에 A5 전진 적분(코드에 맞춤) · 종류별 적용 시작 창 m2250 |
 | v0.14 | 2026-10-27 | verifier R1 · R2: 4.4.1 REVERT 행에 MAINTAIN_FAIL 축(A2 · A3 · A4 · A6 · A10) 명시 · A11 ⑤ 폐기 ±30° 제거 · A2 종류별 필수(X27j 전 HOLD_NO_DATA) |
 | v0.13 | 2026-10-27 | 4.4.1 S2a 창 경계 진리표(E3, 단일 유지 실패 HOLD · 결측 멈춤) · 가정 문턱은 경고(E2) · 3.2 m 코드 · 표 양쪽 |
 | v0.12 | 2026-10-27 | 6.8.2 A5 걸으며 돌기 부모 기준선 실측 표 · 성공선 성분 통과표 · `_success_walk` 답 아는 입력 · 4.4 주석에 부모 실측 |
