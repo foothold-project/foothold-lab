@@ -55,9 +55,8 @@ def main():
             )["source_video_sha_list_sha256"],
             "paths": a["digest"][1],
         }
-    (HERE / "reproducibility.json").write_text(
-        json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8")
+    with (HERE / "reproducibility.json").open("w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
     print(json.dumps({k: receipt[k] for k in
                       ("copies", "files_per_copy", "assertions_each",
                        "byte_identical", "tree_sha256_both")}))
