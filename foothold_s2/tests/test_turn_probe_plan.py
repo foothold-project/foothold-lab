@@ -149,8 +149,8 @@ def test_summary_leaves_out_fallen_envs_and_reports_how_many():
 def test_probe_script_applies_fixed_terrain_checks_offset_and_filters_fallen_envs():
     src = PROBE.read_text(encoding="utf-8")
 
-    assert '"--fixed-terrain"' in src and "probe_tiles.apply_to(raw)" in src and "START_OFFSET_MAX_M = 0.5" in src and "고정 지형 칸이 reset 뒤에 바뀌었다" in src
-    assert src.index("probe_tiles.apply_to(raw)") < src.index("origin = raw.scene.env_origins.clone()") < src.index("offset = (robot.data.root_pos_w")
+    assert '"--fixed-terrain"' in src and "probe_tiles.apply_to(raw, args.fixed_level)" in src and "START_OFFSET_MAX_M = 0.5" in src and "고정 지형 칸이 reset 뒤에 바뀌었다" in src
+    assert src.index("probe_tiles.apply_to(raw, args.fixed_level)") < src.index("origin = raw.scene.env_origins.clone()") < src.index("offset = (robot.data.root_pos_w")
     assert "kept = pre_alive_end & alive_end" in src and '"kept": kept.tolist()' in src and "kept=kept" in src and '"fixed_terrain": None' in src
     assert "return obs, torch.stack(alive_hist, dim=1).cpu().numpy(), alive.cpu().numpy()" in src
 

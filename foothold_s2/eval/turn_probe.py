@@ -28,12 +28,17 @@ parser.add_argument("--task", required=True)
 parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=4)
 parser.add_argument("--map-mode", default="eval_pred", choices=("eval_gt", "eval_pred", "probe_prop_only", "none"))
+parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(평지 계열 2 + rough 2 열은 그대로). 생략 = 기존 레벨 0(칸 해시 7f49a1e9). 바꾸면 해시도 바뀐다")
 parser.add_argument("--out", required=True)
 parser.add_argument("--cases", default=None, help="돌릴 경우: 생략 = 기존 다섯, all = 표 전체, 'fwd_then_left' 또는 쉼표 목록. 경우마다 reset 과 시드를 새로 하므로 일부만 돌려도 그 경우의 조건은 같다")
 parser.add_argument("--forward-gaits", action="store_true", help="회전 시행 다섯 뒤에 전진 걸음 구간(0.5 · 1.0 m/s, 8 s)을 더 기록한다(판정 없음, arrays_fwd0.5.npz · arrays_fwd1.0.npz). W3-P1 종아리 띠 점검용")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 정해진 칸으로 덮어쓴다(eval_map_modes --fixed-terrain 과 같은 배열 규칙)")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+if args.fixed_level is not None and not args.fixed_terrain:
+    parser.error("--fixed-level 은 --fixed-terrain 과 같이만 쓴다")                                  # Kit 기동 전에 거절(조용히 무시하면 기본 칸으로 돈다)
+if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
+    parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -174,7 +179,7 @@ for pname in CASES:
     env.reset()
 
     if args.fixed_terrain:
-        result["fixed_terrain"] = probe_tiles.apply_to(raw)                              # 평지 계열 2 env + random_rough 2 env, 레벨 0, 종류 이름은 생성기 cfg 에서 읽는다
+        result["fixed_terrain"] = probe_tiles.apply_to(raw, args.fixed_level)                              # 평지 계열 2 env + random_rough 2 env, 레벨 0, 종류 이름은 생성기 cfg 에서 읽는다
         env.reset()                                                                      # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
         lv = np.array([t["level"] for t in result["fixed_terrain"]["tiles"]])
         ty = np.array([t["col"] for t in result["fixed_terrain"]["tiles"]])
@@ -226,7 +231,7 @@ if args.forward_gaits:                                                          
         torch.manual_seed(42)
         env.reset()
         if args.fixed_terrain:
-            fixed = probe_tiles.apply_to(raw)
+            fixed = probe_tiles.apply_to(raw, args.fixed_level)
             if fixed["assignment_sha256"] != result["fixed_terrain"]["assignment_sha256"]:
                 raise RuntimeError("전진 걸음 구간의 고정 칸 배열이 회전 시행과 다르다")
             env.reset()

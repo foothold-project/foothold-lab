@@ -20,6 +20,16 @@ def load(path):
         return json.load(fh)
 
 
+def fixed_key(result: dict):
+    """고정 칸 비교 열쇠: 배열 SHA · rows · cols · num_envs. 기록에 칸이 더 붙어도(levels · fixed_level 등) SHA 가 같으면 같은 칸이다. 고정 안 함은 None."""
+    f = result.get("fixed_terrain")
+
+    if f is None:
+        return None
+
+    return tuple(f.get(k) for k in ("assignment_sha256", "rows", "cols", "num_envs"))
+
+
 def check_same_conditions(results: dict) -> None:
     names = list(results)
     first = results[names[0]]
@@ -32,8 +42,8 @@ def check_same_conditions(results: dict) -> None:
         for key in ("task", "envs", "steps", "dr_off", "curriculum_off"):
             if r[key] != first[key]:
                 raise ValueError(f"{name} 의 {key} 가 {names[0]} 와 다르다: {r[key]!r} != {first[key]!r}")
-        if r.get("fixed_terrain") != first.get("fixed_terrain"):
-            raise ValueError(f"{name} 의 fixed_terrain 이 {names[0]} 와 다르다: {r.get('fixed_terrain')!r} != {first.get('fixed_terrain')!r}")
+        if fixed_key(r) != fixed_key(first):
+            raise ValueError(f"{name} 의 fixed_terrain 이 {names[0]} 와 다르다: {fixed_key(r)!r} != {fixed_key(first)!r}")
         if set(r["terrain_hash"].values()) != hashes:
             raise ValueError(f"{name} 의 지형 해시가 {names[0]} 와 다르다")
         if list(r["modes"]) != list(first["modes"]) or any(list(r["modes"][m]) != list(first["modes"][m]) for m in first["modes"]):
@@ -52,8 +62,8 @@ def check_reference(results: dict, ref: dict) -> None:
     for key in ("envs", "steps", "dr_off", "curriculum_off"):
         if ref[key] != first[key]:
             raise ValueError(f"참조 열의 {key} 가 다르다: {ref[key]!r} != {first[key]!r}")
-    if ref.get("fixed_terrain") != first.get("fixed_terrain"):
-        raise ValueError("참조 열의 fixed_terrain 이 다르다: %r != %r" % (ref.get("fixed_terrain"), first.get("fixed_terrain")))
+    if fixed_key(ref) != fixed_key(first):
+        raise ValueError("참조 열의 fixed_terrain 이 다르다: %r != %r" % (fixed_key(ref), fixed_key(first)))
     if set(ref["terrain_hash"].values()) != set(first["terrain_hash"].values()):
         raise ValueError("참조 열의 지형 해시가 다르다")
     if list(ref["modes"]["none"]) != list(first["modes"][next(iter(first["modes"]))]):
