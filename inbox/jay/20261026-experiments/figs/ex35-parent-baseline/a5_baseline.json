@@ -1,0 +1,147 @@
+{
+ "source": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\walk_turn_summary.json",
+ "consts": {
+  "walk_q": 0.25,
+  "walk_c": 0.6,
+  "walk_kept": 14,
+  "walk_fwd_frac": 0.8,
+  "record_s": 8.0,
+  "contact_N": 1.0,
+  "hold_drop_q": 0.2,
+  "hold_rise_c": 0.25,
+  "hold_kept": 14,
+  "fwd_keep_frac": 0.9,
+  "trend_width": 0.115,
+  "tol": 1e-06
+ },
+ "rows": {
+  "eval_gt/walk_turn_left": {
+   "mode": "eval_gt",
+   "case": "walk_turn_left",
+   "cmd": [
+    0.5,
+    0.0,
+    0.5
+   ],
+   "path": "C:/mai/wt/foothold-lab/impl-turncases/logs/sb10_eval/m1500/turn16_walk_eval_gt/arrays_walk_turn_left.npz",
+   "Q": 0.45439367771148687,
+   "C": 0.2149609375,
+   "kept": 16,
+   "alive_end": 16,
+   "n_neg": 0,
+   "qmin": 0.4320758056640625,
+   "qmax": 0.4764259338378906,
+   "vx_integral_kept_mean": 3.005636215209961,
+   "n_env": 16,
+   "T": 1600,
+   "success": {
+    "q": true,
+    "c": true,
+    "kept": true,
+    "neg": true,
+    "vx": false
+   },
+   "need_int_m": 3.2,
+   "hold_min_Q": 0.25439367771148685,
+   "hold_max_C": 0.4649609375,
+   "hold_min_vx_m": 2.705072593688965,
+   "improve_Q": 0.5693936777114869
+  },
+  "eval_gt/walk_turn_right": {
+   "mode": "eval_gt",
+   "case": "walk_turn_right",
+   "cmd": [
+    0.5,
+    0.0,
+    -0.5
+   ],
+   "path": "C:/mai/wt/foothold-lab/impl-turncases/logs/sb10_eval/m1500/turn16_walk_eval_gt/arrays_walk_turn_right.npz",
+   "Q": 0.44604657649993895,
+   "C": 0.09187499999999998,
+   "kept": 16,
+   "alive_end": 16,
+   "n_neg": 0,
+   "qmin": 0.41810699462890627,
+   "qmax": 0.4685031890869141,
+   "vx_integral_kept_mean": 4.2891693115234375,
+   "n_env": 16,
+   "T": 1600,
+   "success": {
+    "q": true,
+    "c": true,
+    "kept": true,
+    "neg": true,
+    "vx": true
+   },
+   "need_int_m": 3.2,
+   "hold_min_Q": 0.24604657649993894,
+   "hold_max_C": 0.341875,
+   "hold_min_vx_m": 3.8602523803710938,
+   "improve_Q": 0.5610465764999389
+  },
+  "probe_prop_only/walk_turn_left": {
+   "mode": "probe_prop_only",
+   "case": "walk_turn_left",
+   "cmd": [
+    0.5,
+    0.0,
+    0.5
+   ],
+   "path": "C:/mai/wt/foothold-lab/impl-turncases/logs/sb10_eval/m1500/turn16_walk_probe_prop_only/arrays_walk_turn_left.npz",
+   "Q": 0.44874903917312625,
+   "C": 0.1716796875,
+   "kept": 16,
+   "alive_end": 16,
+   "n_neg": 0,
+   "qmin": 0.42956634521484377,
+   "qmax": 0.46673465728759767,
+   "vx_integral_kept_mean": 3.0653159618377686,
+   "n_env": 16,
+   "T": 1600,
+   "success": {
+    "q": true,
+    "c": true,
+    "kept": true,
+    "neg": true,
+    "vx": false
+   },
+   "need_int_m": 3.2,
+   "hold_min_Q": 0.24874903917312624,
+   "hold_max_C": 0.4216796875,
+   "hold_min_vx_m": 2.758784365653992,
+   "improve_Q": 0.5637490391731262
+  },
+  "probe_prop_only/walk_turn_right": {
+   "mode": "probe_prop_only",
+   "case": "walk_turn_right",
+   "cmd": [
+    0.5,
+    0.0,
+    -0.5
+   ],
+   "path": "C:/mai/wt/foothold-lab/impl-turncases/logs/sb10_eval/m1500/turn16_walk_probe_prop_only/arrays_walk_turn_right.npz",
+   "Q": 0.43659955978393555,
+   "C": 0.07710937500000001,
+   "kept": 16,
+   "alive_end": 16,
+   "n_neg": 0,
+   "qmin": 0.40430023193359377,
+   "qmax": 0.4553701019287109,
+   "vx_integral_kept_mean": 4.369293212890625,
+   "n_env": 16,
+   "T": 1600,
+   "success": {
+    "q": true,
+    "c": true,
+    "kept": true,
+    "neg": true,
+    "vx": true
+   },
+   "need_int_m": 3.2,
+   "hold_min_Q": 0.23659955978393554,
+   "hold_max_C": 0.32710937500000004,
+   "hold_min_vx_m": 3.9323638916015624,
+   "improve_Q": 0.5515995597839356
+  }
+ }
+}
