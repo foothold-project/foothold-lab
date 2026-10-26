@@ -81,9 +81,10 @@ def test_6_3_b50_m1510_against_b1500_three_branches(bundles):
     same = G.judge_continue(m, m, b, "S3->S3b", 600, 500, mode="eval_pred")
     s1 = G.judge_continue(m, m, b, "S1->S2a", 600, 500, mode="eval_pred", preconditions=STEP["S1->S2a"])
 
-    assert none.state == G.HOLD_NO_DATA and any("prev" in r.get("what", []) for r in none.reasons)               # 직전 저장본 없음 -> 보류
+    assert none.state == G.NEW_TASK_PENDING and none.reasons == same.reasons                                  # v0.4: 판정은 저장본 하나. 직전이 없어도 같은 상태(연속은 소비자 몫)
+    assert G.consume([none.state]) == G.CONTINUE                                                               # 직전 자료가 없으면 consume 은 「계속」 이고 넘기지 않는다
     assert same.state == G.NEW_TASK_PENDING and all(r["case"] == "left_then_right" and r["cond"] == "success_six_c" for r in same.reasons)   # 유지는 통과, 새 과제는 좌 -> 우 네 발 동시 접촉 0.6222 > 0.6 하나만 미달
-    assert {r["window"] for r in same.reasons} == {"latest", "prev"} and same.reasons[0]["value"] == pytest.approx(0.6222, abs=6e-4)
+    assert {r["window"] for r in same.reasons} == {"latest"} and same.reasons[0]["value"] == pytest.approx(0.6222, abs=6e-4)
     assert s1.state == G.PASS and s1.reasons == []                                                            # 유지만 보는 단계는 통과
     assert [d["turn_valid"] and d["survival_ok"] for d in same.detail["cases"].values()] == [True] * 6
 
@@ -166,7 +167,10 @@ def test_6_8_scratch_progress_is_read_not_judged(bundles):
         prog[n] = G.scratch_progress(b)
         prev = b
 
-    assert states == [G.HOLD_NO_DATA, G.NEW_TASK_PENDING, G.NEW_TASK_PENDING, G.NEW_TASK_PENDING]               # 첫 저장본은 직전이 없고, 이후 상태 변화 없음
+    assert states == [G.NEW_TASK_PENDING, G.NEW_TASK_PENDING, G.NEW_TASK_PENDING, G.PASS]                       # v0.4: 저장본 하나씩. 켬 · 가림 둘 다 달성하는 것은 m400 뿐
+    masked_only = [G.judge_scratch(bundles["sb%d" % n], None, require=("masked",)).state for n in (100, 200, 300, 400)]
+
+    assert masked_only == [G.NEW_TASK_PENDING, G.NEW_TASK_PENDING, G.PASS, G.PASS]                              # 가림 달성: m300 · m400
     assert [prog[n]["masked"]["met"] for n in (100, 200, 300, 400)] == [False, False, True, True]               # m300 에서 가림 달성
     assert [prog[n]["on"]["met"] for n in (100, 200, 300, 400)] == [False, False, False, True]                 # m400 에서 켬 달성
     assert prog[300]["masked"]["fwd10"] == pytest.approx(4.991, abs=6e-4) and prog[300]["masked"]["fwd05"] == pytest.approx(2.727, abs=6e-4)
@@ -176,11 +180,11 @@ def test_6_8_scratch_progress_is_read_not_judged(bundles):
 
 
 def test_6_8_scratch_two_consecutive_saves_achieve_forward_but_rotation_is_not_a_goal(bundles):
-    v = G.judge_scratch(bundles["sb400"], bundles["sb300"], require=("masked",))
-    both = G.judge_scratch(bundles["sb400"], bundles["sb300"])
+    hist = [G.judge_scratch(bundles["sb%d" % n], None, require=("masked",)).state for n in (300, 400)]
+    both = [G.judge_scratch(bundles["sb%d" % n], None).state for n in (300, 400)]
 
-    assert v.state == G.PASS                                                                               # 가림 달성: m300 + m400 연속
-    assert both.state == G.NEW_TASK_PENDING and [r["window"] for r in both.reasons] == ["prev"]             # 켬은 m300(4.951 < 5.097)이 직전이라 아직
+    assert hist == [G.PASS, G.PASS] and G.consume(hist) == G.EXPAND                                          # 가림 달성: m300 + m400 연속 두 저장본이 각각 통과 -> 소비자가 넘김
+    assert both == [G.NEW_TASK_PENDING, G.PASS] and G.consume(both) == G.CONTINUE                            # 켬은 m300(4.951 < 5.097)이 아직: 연속 미완
 
 
 def test_6_8_wrongly_applying_continue_rules_stops_at_m100(bundles):
@@ -260,7 +264,7 @@ def test_stop_conditions_are_checked_first_and_only_on_the_latest():
     slow = synth({"eval_gt": {}}, {"eval_gt": {"fwd1.0": (5.7 * 0.9 - 0.01, 64)}})
     assert G.judge_continue(slow, on, on, "S1->S2a", 600, 500).state == G.STOP                                   # 켬 전진 < 기준 x 0.90
     prev_bad = synth({"eval_gt": {"indep_left": {"Q": 0.01}}}, {"eval_gt": {}})
-    assert G.judge_continue(on, prev_bad, on, "S1->S2a", 600, 500).state == G.MAINTAIN_FAIL                      # 직전의 낮은 Q 는 STOP 이 아니라 유지 실패
+    assert G.judge_continue(on, prev_bad, on, "S1->S2a", 600, 500, preconditions=STEP["S1->S2a"]).state == G.PASS      # v0.4: 직전 저장본은 판정에 들어가지 않는다(나쁜 직전은 그 저장본 자신의 상태가 말한다)
 
 
 def test_hold_no_data_only_for_missing_files_never_for_observed_falls():
@@ -270,8 +274,8 @@ def test_hold_no_data_only_for_missing_files_never_for_observed_falls():
 
     assert G.judge_continue(fall, on, on, "S1->S2a", 600, 500).state == G.MAINTAIN_FAIL                          # 관측된 낙상은 생존 조건 미달
     assert G.judge_continue(miss, on, on, "S1->S2a", 600, 500).state == G.HOLD_NO_DATA
-    assert G.judge_continue(on, miss, on, "S1->S2a", 600, 500).state == G.HOLD_NO_DATA
-    assert G.judge_continue(on, None, on, "S1->S2a", 600, 500).state == G.HOLD_NO_DATA
+    assert G.judge_continue(on, miss, on, "S1->S2a", 600, 500).state != G.HOLD_NO_DATA                           # 직전 자료 없음은 이 저장본의 판정과 무관(v0.4)
+    assert G.judge_continue(on, None, on, "S1->S2a", 600, 500).state != G.HOLD_NO_DATA
 
 
 def test_each_maintain_condition_alone_breaks_maintenance():
@@ -329,7 +333,8 @@ def test_ratio_b_step_holds_until_min_stay_and_treats_one_bad_window_as_failure(
 
     assert G.judge_ratio(ok, ok, start, "b_step", 249, 250).state == G.NEW_TASK_PENDING
     assert G.judge_ratio(ok, ok, start, "b_step", 250, 250).state == G.PASS
-    assert G.judge_ratio(ok, masked_bundle(alive=40), start, "b_step", 250, 250).state == G.MAINTAIN_FAIL      # 직전 창만 나빠도 유지 실패
+    assert G.judge_ratio(masked_bundle(alive=40), ok, start, "b_step", 250, 250).state == G.MAINTAIN_FAIL      # 이 저장본이 나쁘면 유지 실패
+    assert G.judge_ratio(ok, masked_bundle(alive=40), start, "b_step", 250, 250).state == G.PASS                # 직전이 나빴던 것은 이 저장본의 판정이 아니다(v0.4, 연속은 소비자)
 
 
 def test_ratio_c_hold_inherits_absolute_conditions_so_half_a_metre_cannot_pass():
@@ -364,8 +369,8 @@ def test_ratio_none_masked_mode_for_g0b_style_bundles_and_missing_data():
     g = masked_bundle(mode="none")
 
     assert G.judge_ratio(g, g, None, "a_to_b", 0, 0).state == G.PASS
-    assert G.judge_ratio(g, None, None, "a_to_b", 0, 0).state == G.HOLD_NO_DATA
-    assert G.judge_ratio(synth({"eval_gt": {}}, {"eval_gt": {}}), g, None, "a_to_b", 0, 0).state == G.HOLD_NO_DATA     # 가림 자료 없음 -> 자료 부족
+    assert G.judge_ratio(g, None, None, "a_to_b", 0, 0).state == G.PASS                                          # 직전 없음은 이 저장본의 판정과 무관(v0.4)
+    assert G.judge_ratio(synth({"eval_gt": {}}, {"eval_gt": {}}), g, None, "a_to_b", 0, 0).state == G.HOLD_NO_DATA     # 이 저장본의 가림 자료 없음 -> 자료 부족
     with pytest.raises(G.JudgeConfigError):
         G.judge_ratio(g, g, None, "z", 0, 0)
     assert G.judge_ratio(masked_bundle(), masked_bundle(), None, "b_step", 250, 250).state == G.HOLD_NO_DATA           # start 가 필요한데 없다
@@ -383,10 +388,10 @@ def test_record_line_is_deterministic_one_line_json_with_the_fields_a_reader_nee
     assert a == b and "\n" not in a and G.Verdict.record_sha256(run()) == G.Verdict.record_sha256(run())
     rec = json.loads(a)
 
-    assert rec["state"] == "MAINTAIN_FAIL" and rec["thresholds"]["spec_version"] == "JUDGE-SPEC v0.2" and rec["rule"] == "continue"
+    assert rec["state"] == "MAINTAIN_FAIL" and rec["thresholds"]["spec_version"] == "JUDGE-SPEC v0.4" and rec["rule"] == "continue"
     assert rec["detail"]["cases"]["indep_left"]["survival_ok"] is False and rec["detail"]["cases"]["indep_left"]["turn_valid"] is False
     assert rec["reasons"][0]["cond"] == "survival_16" and rec["reasons"][0]["case"] == "indep_left"                    # 어느 유지 조건이 깨졌나
-    assert set(rec["inputs"]) == {"latest", "prev", "base"} and any(k.startswith("turn16/none/") for k in rec["inputs"]["latest"]) and "map64" in rec["inputs"]["latest"]
+    assert set(rec["inputs"]) == {"latest", "base"} and any(k.startswith("turn16/none/") for k in rec["inputs"]["latest"]) and "map64" in rec["inputs"]["latest"]
     assert all(len(v) == 64 for v in rec["inputs"]["latest"].values())                                              # 입력 파일 SHA-256
     other = G.judge_continue(bundles["g1000"], bundles["g1000"], bundles["g1000"], "S1->S2a", 600, 500, mode="none", preconditions=STEP["S1->S2a"]).record_line()
     assert other != a
@@ -405,10 +410,11 @@ def test_consume_actions_for_the_spec_examples():
     F, P_, S_, H = G.MAINTAIN_FAIL, G.PASS, G.STOP, G.HOLD_NO_DATA
 
     assert G.consume([F, F]) == G.REVERT and G.consume([P_, F, F]) == G.REVERT
-    assert G.consume([F]) == G.HOLD and G.consume([S_]) == G.STOP_REPORT and G.consume([F, P_]) == G.EXPAND
-    assert G.consume([F, H, F]) == G.HOLD and G.consume([]) == G.CONTINUE and G.consume([G.NEW_TASK_PENDING]) == G.CONTINUE and G.consume([F, F, P_]) == G.EXPAND
+    assert G.consume([F]) == G.HOLD and G.consume([S_]) == G.STOP_REPORT and G.consume([F, P_]) == G.CONTINUE                 # [FAIL, PASS] 는 연속 미완
+    assert G.consume([P_, P_]) == G.EXPAND and G.consume([P_]) == G.CONTINUE and G.consume([P_, H, P_]) == G.CONTINUE        # HOLD_NO_DATA 가 끼면 연속이 끊긴다
+    assert G.consume([F, H, F]) == G.HOLD and G.consume([]) == G.CONTINUE and G.consume([G.NEW_TASK_PENDING]) == G.CONTINUE and G.consume([F, F, P_]) == G.CONTINUE
     assert G.consume([F, F], reverts_done=1) == G.STOP_REPORT                                                  # 두 번째 REVERT 면 멈춤 · 보고
-    assert G.consume([F, S_]) == G.STOP_REPORT and G.consume([S_, P_]) == G.EXPAND                              # 마지막 상태 기준
+    assert G.consume([F, S_]) == G.STOP_REPORT and G.consume([S_, P_]) == G.CONTINUE                            # STOP 뒤의 단일 PASS 는 연속 미완
 
 
 def test_consumer_counts_reverts_and_restarts_the_window_after_one():
@@ -418,9 +424,9 @@ def test_consumer_counts_reverts_and_restarts_the_window_after_one():
     assert acts == [G.HOLD, G.REVERT, G.HOLD, G.STOP_REPORT] and c.reverts == 1                                # 되돌린 뒤 회복을 두 저장본으로 다시 잰다, 두 번째 실패는 멈춤
     d = G.Consumer()
 
-    assert [d.step(s) for s in (G.MAINTAIN_FAIL, G.PASS, G.MAINTAIN_FAIL)] == [G.HOLD, G.EXPAND, G.HOLD]      # 확대 뒤 열을 비운다
+    assert [d.step(s) for s in (G.MAINTAIN_FAIL, G.PASS, G.PASS, G.MAINTAIN_FAIL)] == [G.HOLD, G.CONTINUE, G.EXPAND, G.HOLD]      # 확대 뒤 열을 비운다
     e = G.Consumer()
-    assert [e.step(s) for s in (G.MAINTAIN_FAIL, G.MAINTAIN_FAIL, G.PASS, G.PASS)] == [G.HOLD, G.REVERT, G.EXPAND, G.EXPAND]
+    assert [e.step(s) for s in (G.MAINTAIN_FAIL, G.MAINTAIN_FAIL, G.PASS, G.PASS)] == [G.HOLD, G.REVERT, G.CONTINUE, G.EXPAND]
 
 
 def test_review2_scratch_without_16_env_data_is_no_data_not_unmet(bundles):
@@ -441,3 +447,25 @@ def test_review2_on_achievement_is_the_two_64_env_conditions_of_spec_4_3_only(bu
     short = synth(turn={"eval_gt": {"indep_left": {"kept": 3}}}, map64={"eval_gt": {"fwd1.0": (5.7, 64)}})
 
     assert G.judge_scratch(short, short, require=("on",)).state == G.PASS
+
+
+def test_review1_one_bad_save_is_counted_once_good_good_bad_good_good_has_no_revert():
+    """reviewer X26 고침 1 반례: 같은 열을 판정 함수(저장본 하나씩)와 소비자에 통째로 넣는다."""
+    good, bad = masked_bundle(), masked_bundle(fwd10=4.0)
+    start = masked_bundle()
+    states = [G.judge_ratio(b, None, start, "b_step", 250, 250).state for b in (good, good, bad, good, good)]
+
+    assert states == [G.PASS, G.PASS, G.MAINTAIN_FAIL, G.PASS, G.PASS]
+    c = G.Consumer()
+    acts = [c.step(s) for s in states]
+
+    assert acts == [G.CONTINUE, G.EXPAND, G.HOLD, G.CONTINUE, G.EXPAND] and G.REVERT not in acts and c.reverts == 0
+    d = G.Consumer()
+
+    assert [d.step(s) for s in (G.MAINTAIN_FAIL, G.MAINTAIN_FAIL)] == [G.HOLD, G.REVERT]                       # bad bad 는 되돌림
+    e = G.Consumer()
+
+    assert [e.step(s) for s in (G.MAINTAIN_FAIL, G.HOLD_NO_DATA, G.MAINTAIN_FAIL)] == [G.HOLD, G.CONTINUE, G.HOLD]     # 사이에 자료 없음이 끼면 연속이 끊긴다
+    f = G.Consumer()
+
+    assert [f.step(s) for s in (G.PASS, G.HOLD_NO_DATA, G.PASS)] == [G.CONTINUE, G.CONTINUE, G.CONTINUE]       # 넘기지 않는다

@@ -350,12 +350,13 @@ def _inputs(**bundles) -> dict:
 
 
 def judge_continue(latest, prev, base, stage, it_in_stage, min_stay, *, mode="eval_gt", preconditions=None, thr=THRESHOLDS) -> Verdict:
-    """4.1 의사 코드. latest · prev · base 는 `load_bundle` 묶음(prev 는 None 가능). min_stay 는 호출자가 넣는다(함수 안에 고정값 없음)."""
+    """4.1 의사 코드 (v0.4). **저장본 하나(latest)** 만 판정한다. prev 는 호출 모양을 지키려고 받을 뿐 쓰지 않는다(연속은 소비자 `consume` 이 센다, reviewer X26 고침 1).
+    latest · base 는 `load_bundle` 묶음. min_stay 는 호출자가 넣는다(함수 안에 고정값 없음)."""
     if stage not in STAGES:
         raise JudgeConfigError("알 수 없는 단계 %r (표: %s)" % (stage, list(STAGES)))
 
     needs = tuple(S.SIX_CASES) + tuple(STAGES[stage]["needs"])
-    v = Verdict(state=PASS, rule="continue", stage=stage, mode=mode, inputs=_inputs(latest=latest, prev=prev, base=base))
+    v = Verdict(state=PASS, rule="continue", stage=stage, mode=mode, inputs=_inputs(latest=latest, base=base))
     v.detail = {"cases": case_table(latest, mode, needs), "it_in_stage": it_in_stage, "min_stay": min_stay}
     stop = operational_stop(latest, base, mode, thr)
 
@@ -364,21 +365,21 @@ def judge_continue(latest, prev, base, stage, it_in_stage, min_stay, *, mode="ev
 
         return v
 
-    inc = _incomplete(latest, mode, needs) + (["prev"] if prev is None else _incomplete(prev, mode, needs))
+    inc = _incomplete(latest, mode, needs)
 
     if inc:
         v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=inc)]
 
         return v
 
-    broken = maintain_broken(latest, base, mode, thr, "latest") + maintain_broken(prev, base, mode, thr, "prev")
+    broken = maintain_broken(latest, base, mode, thr, "latest")
 
     if broken:
         v.state, v.reasons = MAINTAIN_FAIL, broken
 
         return v
 
-    pending = new_task_broken(latest, stage, mode, preconditions, thr, "latest") + new_task_broken(prev, stage, mode, preconditions, thr, "prev")
+    pending = new_task_broken(latest, stage, mode, preconditions, thr, "latest")
 
     if it_in_stage < min_stay:
         pending.insert(0, _cond("min_stay", it_in_stage, min_stay))
@@ -436,12 +437,13 @@ def scratch_progress(b, thr=THRESHOLDS) -> dict:
 def judge_scratch(latest, prev, *, require=("on", "masked"), thr=THRESHOLDS) -> Verdict:
     """처음부터 배우는 판. 부모 유지선(0.20) · 운영 중단선(0.12 · 48/64 · 전진 0.90)을 걸지 않는다. MAINTAIN_FAIL 은 나오지 않는다.
 
-    STOP: 기동 실패 · 비유한값 · 64 env 전진 생존 0 이 두 저장본 연속. PASS(= 달성): require 한 종류(켬 · 가림)가 최신 + 직전 모두 달성.
-    그 밖에는 NEW_TASK_PENDING(= 달성 미달 · 계속 관찰), 직전 자료가 없으면 HOLD_NO_DATA.
+    STOP: 기동 실패 · 비유한값 · 64 env 전진 생존 0 이 두 저장본 연속(운영 중단선이라 이것만 prev 를 본다). PASS: 이 저장본 하나가 require 한 종류(켬 · 가림) 모두 달성
+    (넘김은 소비자가 연속 둘 PASS 로 정한다, v0.4). 그 밖에는 NEW_TASK_PENDING(= 달성 미달 · 계속 관찰), 이 저장본의 자료가 없으면 HOLD_NO_DATA.
     """
     v = Verdict(state=NEW_TASK_PENDING, rule="scratch", inputs=_inputs(latest=latest, prev=prev))
-    pl, pp = scratch_progress(latest, thr), scratch_progress(prev, thr)
-    v.detail = {"progress_latest": pl, "progress_prev": pp if prev is not None else None}
+    pl = scratch_progress(latest, thr)
+    pp = scratch_progress(prev, thr) if prev is not None else None
+    v.detail = {"progress_latest": pl, "progress_prev": pp}
 
     if latest.get("launch_failed") or latest.get("nonfinite"):
         v.state, v.reasons = STOP, [_cond("launch_failed" if latest.get("launch_failed") else "nonfinite")]
@@ -458,15 +460,15 @@ def judge_scratch(latest, prev, *, require=("on", "masked"), thr=THRESHOLDS) -> 
 
         return v
 
-    if latest.get("missing") or prev is None or prev.get("missing"):
-        v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=(latest.get("missing_what") or []) + ([] if prev is not None else ["prev"]))]
+    if latest.get("missing"):
+        v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=latest.get("missing_what") or [])]
 
         return v
 
     absent = []
 
     for kind in require:                                                  # 달성 판정에 쓸 자료가 «없는» 것은 미달이 아니라 자료 없음이다(리뷰 고침 2)
-        for window, p in (("latest", pl), ("prev", pp)):
+        for window, p in (("latest", pl),):
             if p.get(kind) is None or (kind == "masked" and not p[kind]["kept_known"]):
                 absent.append("%s/%s" % (kind, window))
 
@@ -478,7 +480,7 @@ def judge_scratch(latest, prev, *, require=("on", "masked"), thr=THRESHOLDS) -> 
     unmet = []
 
     for kind in require:
-        for window, p in (("latest", pl), ("prev", pp)):
+        for window, p in (("latest", pl),):
             if not (p.get(kind) and p[kind]["met"]):
                 unmet.append(_cond("achievement_" + kind, window=window))
 
@@ -575,7 +577,7 @@ def _ratio_split(b, start, transition, thr, window):
 
 
 def judge_ratio(latest, prev, start, transition, it_in_stage, min_stay, *, thr=THRESHOLDS) -> Verdict:
-    """지도 비율 단계의 관문(4.5). transition: a_to_b · b_step · b_to_c · c_hold.
+    """지도 비율 단계의 관문(4.5). transition: a_to_b · b_step · b_to_c · c_hold. 저장본 하나(latest)만 판정한다(prev 는 호출 모양용, 쓰지 않음; 연속은 소비자가 센다).
 
     b_step 의 유지 조건: 가림 fwd1.0 >= 단계 시작 x 0.8 그리고 >= 4.592, fwd0.5 >= 2.310, 생존 >= 60/64, 16 env 가림 kept >= 12 모두, 켬 fwd1.0 >= 단계 시작 x 0.90.
     c_hold 는 절대 조건을 상속한다(상대 조건만이면 GT 0.5 m · PRED 0.5 m 도 통과한다). `start` 는 b_step 에서만 쓴다.
@@ -583,7 +585,7 @@ def judge_ratio(latest, prev, start, transition, it_in_stage, min_stay, *, thr=T
     if transition not in RATIO_TRANSITIONS:
         raise JudgeConfigError("알 수 없는 전이 %r (표: %s)" % (transition, list(RATIO_TRANSITIONS)))
 
-    v = Verdict(state=PASS, rule="ratio", stage=transition, inputs=_inputs(latest=latest, prev=prev, start=start))
+    v = Verdict(state=PASS, rule="ratio", stage=transition, inputs=_inputs(latest=latest, start=start))
     v.detail = {"it_in_stage": it_in_stage, "min_stay": min_stay}
 
     if latest.get("launch_failed") or latest.get("nonfinite"):
@@ -611,7 +613,7 @@ def judge_ratio(latest, prev, start, transition, it_in_stage, min_stay, *, thr=T
         return out
 
     need_start = transition == "b_step"
-    inc = incomplete(latest) + (["prev"] if prev is None else incomplete(prev)) + (incomplete(start) if need_start else [])
+    inc = incomplete(latest) + (incomplete(start) if need_start else [])
 
     if inc:
         v.state, v.reasons = HOLD_NO_DATA, [_cond("no_data", what=inc)]
@@ -620,7 +622,7 @@ def judge_ratio(latest, prev, start, transition, it_in_stage, min_stay, *, thr=T
 
     maint, entry = [], []
 
-    for window, b in (("latest", latest), ("prev", prev)):
+    for window, b in (("latest", latest),):
         m, e = _ratio_split(b, start, transition, thr, window)
         maint += m
         entry += e
@@ -644,7 +646,8 @@ def judge_ratio(latest, prev, start, transition, it_in_stage, min_stay, *, thr=T
 
 def consume(history, reverts_done: int = 0) -> str:
     """상태 열 -> 동작. 마지막 상태 기준: STOP -> 멈춤 · 보고, MAINTAIN_FAIL 두 번 연속 -> REVERT(이미 한 번 되돌렸으면 멈춤 · 보고),
-    MAINTAIN_FAIL 한 번 -> 보류(같은 조건 한 창 더), PASS -> 한 축 확대, 그 밖 -> 계속."""
+    MAINTAIN_FAIL 한 번 -> 보류(같은 조건 한 저장본 더), PASS 두 번 연속 -> 한 축 확대, 그 밖(단일 PASS 포함) -> 계속.
+    판정은 저장본 하나씩이므로 연속은 여기서만 센다(JUDGE-SPEC v0.4)."""
     h = list(history)
 
     if not h:
@@ -659,10 +662,10 @@ def consume(history, reverts_done: int = 0) -> str:
     if h[-1] == MAINTAIN_FAIL:
         return HOLD
 
-    if h[-1] == PASS:
+    if h[-2:] == [PASS, PASS]:
         return EXPAND
 
-    return CONTINUE
+    return CONTINUE                                    # 단일 PASS(연속 미완) · NEW_TASK_PENDING · HOLD_NO_DATA(사이에 끼면 연속이 끊긴다)
 
 
 class Consumer:

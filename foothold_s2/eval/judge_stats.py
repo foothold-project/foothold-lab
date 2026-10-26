@@ -19,7 +19,7 @@ import numpy as np
 
 from foothold_s2.eval import turn_probe_plan as P
 
-SPEC_VERSION = "JUDGE-SPEC v0.2"
+SPEC_VERSION = "JUDGE-SPEC v0.4"
 HZ = 200.0
 FEET = (4, 8, 14, 18)                               # 발 링크 번호(결과 JSON 의 link_names 에서 다시 뽑아 같은지 단언한다)
 CONTACT_N = 1.0                                     # 네 발 동시 접촉의 접촉력 문턱

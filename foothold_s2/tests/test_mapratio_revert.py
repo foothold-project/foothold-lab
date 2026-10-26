@@ -40,8 +40,10 @@ def test_fail_fail_makes_the_revert_argument_with_the_previous_value():
 def test_fail_then_pass_makes_no_revert_argument_but_an_expand_argument():
     rc, outs = _run([F, P], start=1)
 
-    assert outs[0]["argument"] is None and rc.consumer.reverts == 0                      # 단일 FAIL 은 인자 없음(되돌림 아님)
-    assert outs[1]["action"] == G.EXPAND and outs[1]["argument"] == {"from_iter": 151, "to": 0.2, "from": 0.5} and rc.current == 0.2
+    assert outs[0]["argument"] is None and outs[1]["argument"] is None and rc.consumer.reverts == 0           # [FAIL, PASS] 는 연속 미완: 인자 없음 (v0.4)
+    rc, outs = _run([P, P], start=1)
+
+    assert outs[0]["argument"] is None and outs[1]["action"] == G.EXPAND and outs[1]["argument"] == {"from_iter": 151, "to": 0.2, "from": 0.5} and rc.current == 0.2
 
 
 def test_second_revert_stops_and_reports():
@@ -54,11 +56,11 @@ def test_second_revert_stops_and_reports():
 
 
 def test_after_a_revert_one_pass_reenters_once_then_a_failure_pair_stops():
-    rc, outs = _run([F, F, P, F, F], start=2)
+    rc, outs = _run([F, F, P, P, F, F], start=2)
 
-    assert [o["action"] for o in outs] == [G.HOLD, G.REVERT, G.EXPAND, G.HOLD, G.STOP_REPORT]
-    assert outs[2]["argument"] == {"from_iter": 201, "to": 0.2, "from": 0.5}               # 되돌린 값(0.5)에서 다시 진입
-    assert outs[3]["argument"] is None and outs[4]["argument"] is None and rc.consumer.reverts == 1
+    assert [o["action"] for o in outs] == [G.HOLD, G.REVERT, G.CONTINUE, G.EXPAND, G.HOLD, G.STOP_REPORT]
+    assert outs[3]["argument"] == {"from_iter": 251, "to": 0.2, "from": 0.5}               # 되돌린 값(0.5)에서 다시 진입
+    assert outs[4]["argument"] is None and outs[5]["argument"] is None and rc.consumer.reverts == 1
 
 
 def test_stop_state_stops_even_with_no_failures_before():
@@ -80,13 +82,14 @@ def test_revert_from_the_first_ladder_value_has_nowhere_to_go_so_it_stops():
 
 
 def test_pass_at_the_end_of_the_ladder_has_no_next_value():
-    rc, outs = _run([P], start=2)
+    rc, outs = _run([P, P], start=2)
 
-    assert outs[0]["action"] == G.EXPAND and outs[0]["argument"] is None and rc.current == 0.2
+    assert outs[1]["action"] == G.EXPAND and outs[1]["argument"] is None and rc.current == 0.2
 
 
 def test_an_expand_that_was_not_applied_does_not_move_the_position_so_the_next_revert_from_is_the_real_p():
     rc = RatioController(LADDER, 1)
+    rc.step(P, 50)
     o = rc.step(P, 100)
 
     assert o["argument"]["to"] == 0.2 and rc.current == 0.5                               # 확인 전에는 안 옮겨 간다
@@ -95,11 +98,12 @@ def test_an_expand_that_was_not_applied_does_not_move_the_position_so_the_next_r
     o = rc.step(F, 200)
 
     assert o["action"] == G.REVERT and o["argument"] == {"from_iter": 201, "to": 0.8, "from": 0.5}          # from 이 실제 p
-    assert [r["applied"] for r in rc.records][0] is False
+    assert rc.records[1]["applied"] is False
 
 
 def test_step_before_the_previous_argument_is_confirmed_is_refused_and_confirm_without_pending_too():
     rc = RatioController(LADDER, 1)
+    rc.step(P, 50)
     rc.step(P, 100)
 
     with pytest.raises(RuntimeError, match="confirm"):
@@ -139,3 +143,13 @@ def test_argument_keys_match_the_runner_cell():
     rc, outs = _run([F, F], start=1)
 
     assert tuple(sorted(outs[1]["argument"])) == tuple(sorted(("from_iter", "to", "from")))
+
+
+def test_review1_good_good_bad_good_good_makes_no_argument_and_fail_hold_fail_neither():
+    rc, outs = _run([P, P, F, P, P], start=1)
+
+    assert [o["action"] for o in outs] == [G.CONTINUE, G.EXPAND, G.HOLD, G.CONTINUE, G.EXPAND]
+    assert all(o["argument"] is None or o["action"] == G.EXPAND for o in outs) and rc.consumer.reverts == 0
+    rc, outs = _run([F, H, F], start=1)
+
+    assert [o["argument"] for o in outs] == [None, None, None] and rc.consumer.reverts == 0
