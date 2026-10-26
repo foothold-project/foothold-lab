@@ -225,7 +225,7 @@ for mode in args.modes.split(","):
 
             tile_len = float(raw.scene.terrain.cfg.terrain_generator.size[0])           # 칸 길이는 지형 cfg 에서
             kinds = [t["kind"] for t in res["fixed_terrain"]["tiles"]]
-            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, tile_len)
+            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy())
             os.makedirs(args.out, exist_ok=True)
             np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len,
                      pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy())
@@ -238,8 +238,17 @@ for mode in args.modes.split(","):
         raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % tokens)
     runner.perception.ie.mask_map_tokens = False                                          # 모드가 끝나면 진단 마스크를 되돌린다
 
-res["source_sha256"] = {m.__name__: hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in list(sys.modules.values())      # 끝에서 다시: adapters 가 늦게 import 하는 runners/* 까지, 실제 불린 foothold_s2 파일 전부
-                        if getattr(m, "__name__", "").startswith("foothold_s2") and getattr(m, "__file__", None) and os.path.isfile(m.__file__)}
+def _module_key(m):                                                                    # python -m 로 돌면 이 스크립트 자신이 __main__ 이라 __spec__.name 으로 이름을 되찾는다
+    spec = getattr(m, "__spec__", None)
+
+    return getattr(spec, "name", None) or getattr(m, "__name__", "")
+
+
+res["source_sha256"] = {}                                                              # 끝에서 다시: adapters 가 늦게 import 하는 runners/* 와 __main__ 까지, 실제 불린 foothold_s2 파일 전부
+for _m in list(sys.modules.values()):
+    _key, _file = _module_key(_m), getattr(_m, "__file__", None)
+    if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
+        res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
 os.makedirs(args.out, exist_ok=True)
 json.dump(res, open(os.path.join(args.out, "map_modes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("MAPMODE_DONE", flush=True)

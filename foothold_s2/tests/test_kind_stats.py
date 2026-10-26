@@ -1,4 +1,4 @@
-"""듬성 칸 종류별 집계 (SONNET-X26j). 답을 아는 가짜 배열. CPU."""
+"""듬성 칸 종류별 집계 (SONNET-X26j · X26m). 답을 아는 가짜 배열. CPU."""
 
 import json
 from pathlib import Path
@@ -6,87 +6,128 @@ from pathlib import Path
 import numpy as np
 
 from foothold_s2.eval import kind_stats as K
+from foothold_s2.eval import start_sheet as ss
 
 ROOT = Path(__file__).resolve().parents[2]
 DT = 0.02
+S = 400                                                         # 8 s
+REF = ss.REFERENCE_M
 
 
-def _arrays(S=300):
-    kinds = ["gaps", "gaps", "gaps", "balance_beams", "balance_beams"]
-    fwd = np.zeros((S, 5))
-    fwd[:, 0] = np.linspace(0, 6.0, S)                          # 6 s 안에 6 m: 건넘 (절반 = 4 m)
-    fwd[:, 1] = np.linspace(0, 3.9, S)                          # 3.9 m: 못 건넘
-    fwd[250:, 2] = 5.0                                          # 5 s 지나서 5 m: 6 s 안(300 step)이라 건넘
-    fwd[:, 3] = np.linspace(0, 4.0, S)                          # 정확히 절반: 건넘 (>=)
-    fwd[:, 4] = 1.0
-    vx = np.tile(np.array([1.0, 0.5, 0.0, 0.7, 0.2]), (S, 1))
-    alive = np.ones((S, 5), dtype=bool)
-    alive[100:, 1] = False                                      # 1 번 env 는 100 step 에 쓰러짐
-    alive[:, 4] = np.arange(S)[:, None][:, 0] < 50
+def _case(fwd_end, z_drop_at=None, z_drop=0.24, die_at=None, teleport=None):
+    """env 하나: 전진 거리가 0 에서 fwd_end 까지 직선 증가. z_drop_at 번째 step 에 몸이 z_drop 만큼 내려간다."""
+    f = np.linspace(0.0, fwd_end, S)
+    z = np.zeros(S)
+    a = np.ones(S, dtype=bool)
 
-    return kinds, vx, fwd, alive
+    if z_drop_at is not None:
+        z[z_drop_at:] = -z_drop
+    if die_at is not None:
+        a[die_at:] = False
+    if teleport is not None:
+        f[teleport[0]:] = teleport[1]
 
-
-def test_per_kind_counts_alive_median_and_crossed_by_a_known_input():
-    kinds, vx, fwd, alive = _arrays()
-    out = K.by_kind(kinds, vx, fwd, alive, DT, 8.0)
-
-    assert out["gaps"]["envs"] == 3 and out["gaps"]["crossed"] == 2 and out["gaps"]["alive_at_end"] == 2
-    assert out["balance_beams"]["envs"] == 2 and out["balance_beams"]["crossed"] == 1 and out["balance_beams"]["alive_at_end"] == 1
-    assert abs(out["gaps"]["body_vx_integral_median_m"] - np.median([6.0, 0.5 * 100 * DT, 0.0])) < 1e-9        # 중앙값 = 1.0 (살아 있던 구간만 적분)
-    assert list(out) == ["gaps", "balance_beams"]
+    return f, z, a
 
 
-def test_the_threshold_comes_from_the_tile_length_and_the_window_is_six_seconds():
-    kinds, vx, fwd, alive = _arrays()
+def _pack(cases):
+    fwd = np.stack([c[0] for c in cases], axis=1)
+    z = np.stack([c[1] for c in cases], axis=1)
+    alive = np.stack([c[2] for c in cases], axis=1)
+    pos = np.zeros((S, len(cases), 3))
+    pos[:, :, 0], pos[:, :, 2] = fwd, z
 
-    assert K.by_kind(kinds, vx, fwd, alive, DT, 12.0)["gaps"]["crossed"] == 1                  # 칸 길이 12 m 면 절반 6 m: 0 번 env 만(6.0 >= 6.0)
-    late = fwd.copy()
-    late[:, 0] = 0.0
-    late[299, 0] = 9.0
-
-    assert K.by_kind(kinds, vx, late, alive, DT, 8.0, window_s=5.0)["gaps"]["crossed"] == 0       # 5 s 창(250 step)이면 마지막 step 의 9 m 와 250 step 뒤 5 m 는 안 센다
-    assert K.by_kind(kinds, vx, late, alive, DT, 8.0)["gaps"]["crossed"] == 2                        # 기본 6 s 창(300 step)이면 둘 다 센다
+    return fwd, pos, alive, np.full_like(fwd, 0.7)
 
 
-def test_the_files_roundtrip_gives_the_same_numbers(tmp_path):
-    kinds, vx, fwd, alive = _arrays()
-    np.savez(tmp_path / "a.npz", vx=vx, fwd=fwd, alive=alive, dt=DT, tile_len_m=8.0)
-    json.dump({"fixed_terrain": {"tiles": [{"kind": k} for k in kinds]}}, open(tmp_path / "m.json", "w"))
+def test_crossing_is_reaching_the_arrival_ledge_while_alive_and_on_the_footing():
+    cases = [_case(7.0),                                      # 0 끝까지 걸음: 건넘
+             _case(6.0),                                      # 1 6 m 까지만: 도착 단(6.5 m) 못 닿음
+             _case(7.0, z_drop_at=100),                       # 2 100 step(1.4 m 지점)에 구덩이로 내려가 대각선으로 7 m 까지 감: 건넘 아님
+             _case(7.0, die_at=150),                          # 3 쓰러짐(종료)
+             _case(2.0, teleport=(300, 9.0)),                 # 4 쓰러져 reset 된 뒤 순간이동 위치 9 m: 건넘 아님
+             _case(7.0, z_drop_at=399, z_drop=0.05)]          # 5 마지막 step 에 5 cm 내려감(오차 안): 건넘
+    cases[4] = (cases[4][0], cases[4][1], np.arange(S) < 300)
+    fwd, pos, alive, vx = _pack(cases)
+    kinds = ["gaps", "gaps", "balance_beams", "balance_beams", "stepping_beams", "stepping_beams"]
+    out = K.by_kind(kinds, vx, fwd, alive, DT, pos=pos)
 
-    assert K.from_files(str(tmp_path / "m.json"), str(tmp_path / "a.npz"), "eval_gt", "fwd0.5") == K.by_kind(kinds, vx, fwd, alive, DT, 8.0)
+    assert out["gaps"]["crossed"] == 1 and out["gaps"]["fell"] == 0 and out["gaps"]["envs"] == 2
+    assert out["balance_beams"]["crossed"] == 0 and out["balance_beams"]["fell"] == 1                         # 2 번은 떨어짐, 3 번은 쓰러짐(종료)
+    assert out["stepping_beams"]["crossed"] == 1 and out["stepping_beams"]["fell"] == 0
+    assert out["gaps"]["fall_test"] is True and f"{REF:g}" in out["gaps"]["crossed_rule"]
 
 
-def test_eval_adds_the_columns_only_for_the_sparse_set_and_reads_the_tile_length_from_the_cfg():
+def test_the_threshold_is_the_reference_distance_from_the_sheet_and_not_hardcoded():
+    assert K.by_kind.__defaults__[0] == ss.REFERENCE_M == 6.5
+    src = (ROOT / "foothold_s2/eval/kind_stats.py").read_text(encoding="utf-8")
+
+    assert "6.5" not in src.split("def by_kind")[1] and "threshold_m: float = ss.REFERENCE_M" in src
+
+
+def test_a_fall_stays_a_fall_even_if_the_body_climbs_back_up():
+    f = np.linspace(0.0, 7.0, S)
+    z = np.zeros(S)
+    z[50:150] = -0.3                                          # 구덩이에 내려갔다가 올라옴
+    pos = np.zeros((S, 1, 3))
+    pos[:, 0, 0], pos[:, 0, 2] = f, z
+    out = K.by_kind(["gaps"], np.full((S, 1), 0.7), f[:, None], np.ones((S, 1), dtype=bool), DT, pos=pos)
+
+    assert out["gaps"]["crossed"] == 0 and out["gaps"]["fell"] == 1
+
+
+def test_without_the_height_array_the_result_says_it_could_not_test_the_fall():
+    fwd, pos, alive, vx = _pack([_case(7.0)])
+    out = K.by_kind(["gaps"], vx, fwd, alive, DT)
+
+    assert out["gaps"]["crossed"] == 1 and out["gaps"]["fall_test"] is False
+
+
+def test_drop_tolerance_matches_the_terrain_edge_threshold():
+    from foothold_s2.terrains import sparse_terrains
+
+    assert K.EDGE_DROP_M == sparse_terrains.EDGE_DROP_M
+
+
+def test_recompute_pairs_each_npz_with_its_json_and_skips_a_folder_without_one(tmp_path):
+    fwd, pos, alive, vx = _pack([_case(7.0), _case(3.0)])
+    (tmp_path / "ok").mkdir()
+    (tmp_path / "bad").mkdir()
+    np.savez(tmp_path / "ok" / "arrays_a.npz", vx=vx, fwd=fwd, alive=alive, dt=DT, tile_len_m=8.0, pos=pos)
+    np.savez(tmp_path / "bad" / "arrays_a.npz", vx=vx, fwd=fwd, alive=alive, dt=DT, tile_len_m=8.0, pos=pos)
+    json.dump({"fixed_terrain": {"tiles": [{"kind": "gaps"}, {"kind": "gaps"}]}}, open(tmp_path / "ok" / "map_modes.json", "w"))
+    out = K.recompute([str(tmp_path / "*" / "arrays_*.npz")], str(tmp_path / "t.json"))
+    ok, bad = out[str(tmp_path / "ok" / "arrays_a.npz")], out[str(tmp_path / "bad" / "arrays_a.npz")]
+
+    assert ok["gaps"]["crossed"] == 1 and ok["gaps"]["envs"] == 2 and "error" in bad and (tmp_path / "t.json").exists()
+
+
+def test_eval_adds_the_columns_only_for_the_sparse_set_and_passes_the_height_array():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
 
     assert "if parser_sparse:                                                                # 새 키" in src
-    assert "tile_len = float(raw.scene.terrain.cfg.terrain_generator.size[0])" in src and "tile_len = 4" not in src and "tile_len = 8" not in src
+    assert "kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy())" in src
     row_keys = src.split('row = {"body_vx_integral_median_m"')[1].split("}\n")[0]
 
-    assert "by_kind" not in row_keys                                                         # 기존 키 묶음은 그대로, by_kind 는 듬성에서만 덧붙는다
-
-
-def test_a_teleport_after_falling_does_not_count_as_crossing():
-    S = 300
-    fwd = np.zeros((S, 1))
-    fwd[120:, 0] = 7.0                                          # 쓰러져 reset 된 뒤 다른 칸에서 7 m 처럼 보이는 위치
-    alive = np.ones((S, 1), dtype=bool)
-    alive[100:, 0] = False
-    out = K.by_kind(["gaps"], np.zeros((S, 1)), fwd, alive, DT, 8.0)
-
-    assert out["gaps"]["crossed"] == 0 and out["gaps"]["fwd_max_median_m"] == 0.0
+    assert "by_kind" not in row_keys
 
 
 def test_eval_levels_the_start_yaw_for_the_sparse_set_and_records_the_hashes_of_the_files_it_read():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
     sh = (ROOT / "foothold_s2/eval/run_sparse_eval.sh").read_text(encoding="utf-8")
 
-    assert "st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0]" in src and "시작 yaw 를 0 으로 맞추지 못했다" in src and "SOURCE_SHA256" in src
-    assert 'status --short -- foothold_s2' in sh and sh.index("exit 3") < sh.index("KIT=") or sh.index("exit 3") < sh.index("for LV in")
+    assert "st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0]" in src and "시작 yaw 를 0 으로 맞추지 못했다" in src
+    assert 'status --short -- foothold_s2' in sh and sh.index("exit 3") < sh.index("for LV in")
 
 
-def test_source_hashes_cover_every_foothold_module_that_was_loaded_by_the_end():
+def test_source_hashes_follow_the_spec_name_so_a_dash_m_main_script_is_included():
     src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+    key = src.split("def _module_key")[1].split("res[\"source_sha256\"] = {}")[0]
 
-    assert 'startswith("foothold_s2")' in src and src.index('res["source_sha256"] = {m.__name__') > src.index("MAPMODE_DONE") - 5000 and src.index('res["source_sha256"] = {m.__name__') < src.index("MAPMODE_DONE")
+    assert "__spec__" in key and "getattr(spec, \"name\", None)" in key
+    ns = {}
+    exec("def _module_key" + key.split("\n\n\n")[0], ns)                                                   # 함수 본문만 떼어 실행
+    mod = type("M", (), {"__name__": "__main__", "__spec__": type("S", (), {"name": "foothold_s2.eval.eval_map_modes"})()})()
+
+    assert ns["_module_key"](mod) == "foothold_s2.eval.eval_map_modes"
+    assert ns["_module_key"](type("M", (), {"__name__": "foothold_s2.runners.start_runner", "__spec__": None})()) == "foothold_s2.runners.start_runner"

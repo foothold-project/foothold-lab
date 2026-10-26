@@ -273,7 +273,7 @@ def test_runner_wiring_order_in_learn():
 
     assert i_add < i_step < i_rec < i_reset                     # 기록은 env.step 뒤 · reset_envs 앞(끝난 에피소드가 속한 집단으로 센다)
     assert "EX33_MAP_SWITCH p_off=" in src and "realized=" in src
-    assert 'draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen) if self.p_map_off > 0.0 else None' in src
+    assert 'self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None' in src      # M-T6: 뽑은 뒤 허용 칸만 남김
 
 
 # ---------------------------------------------------------------- 기록기

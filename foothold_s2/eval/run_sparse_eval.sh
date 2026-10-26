@@ -11,6 +11,7 @@ KIT="$ROOT/foothold_s2/eval/run_kit.sh"
 TASK="${TASK:-FootholdS2-Go2-S2-23f-B-v0}"
 LEVELS="${LEVELS:-0 1 2 6}"
 MODES="${MODES:-eval_gt,probe_prop_only}"
+STEPS="${STEPS:-300}"                                      # 건넘(도착 단 6.5 m)은 fwd1.0 명령으로도 300 step(6 s)에는 불가능하다. 건넘을 보려면 STEPS=700 이상(14 s: fwd0.5 도 닿을 수 있음)
 mkdir -p "$OUT"
 git -C "$ROOT" rev-parse HEAD > "$OUT/git_head.txt"
 git -C "$ROOT" status --short > "$OUT/git_status.txt"
@@ -24,7 +25,7 @@ sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
 : > "$OUT/rc.txt"
 for LV in $LEVELS; do
   MODULE=foothold_s2.eval.eval_map_modes DEVICE="$DEV" bash "$KIT" "$OUT/L$LV" \
-    --task "$TASK" --checkpoint "$CK" --envs 64 --steps 300 --modes "$MODES" --fixed-terrain --fixed-level "$LV" --terrain-set sparse50 < /dev/null
+    --task "$TASK" --checkpoint "$CK" --envs 64 --steps "$STEPS" --modes "$MODES" --fixed-terrain --fixed-level "$LV" --terrain-set sparse50 < /dev/null
   echo "L$LV rc=$?" >> "$OUT/rc.txt"
   [ -f "$OUT/L$LV/map_modes.json" ] || echo "L$LV: map_modes.json 없음" >> "$OUT/rc.txt"
 done
