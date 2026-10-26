@@ -4,6 +4,7 @@
 건넘 = 살아 있고 발판 위에 있는 동안 칸 원점(출발 단)에서 전진(+x) 거리가 도착 단까지의 거리 REFERENCE_M(start_sheet, 6.5 m)에 닿음.
 발판 위 = 몸 z 가 출발 단 윗면(칸 기하에서 읽음) + 0.25 m 밑으로 내려가지 않음(절대 문턱, X26o: 시작 높이 기준은 구덩이에서 시작한 env 를 놓쳤다). start_edge = 출발 단 끝 0.2 m 안 시작 수, start_offbeam = 칸 기하로 잰 발판 밖 시작 수(평가가 start_support 를 npz 에 남긴 판만), start_fell_within_1s = 1 초 안에 구덩이로 내려간 수(결과 지표, 시작 자리가 아님). 한 번 내려가면(구덩이 바닥 · 빔 아래) 그 시점부터 건넘 불가(되돌아 올라가도 안 침).
 칸 상자는 쓰지 않는다: 같은 (종류, 레벨)이어도 칸 기하가 난이도 무작위 정도(시드는 (종류, 난이도) 해시, 난이도는 줄 안 무작위)로 달라 저장된 평가의 정확한 상자를 모른다.
+start_offbeam = 시작 y 한 줄(몸 중심, 2.5 cm 격자 반올림)에서 구덩이 구역(칸 x 1~7)에 발판이 없는 시작 수이고 balance_beams 에만 낸다(다른 종류는 키 없음).
 낙하 문턱은 출발 단 윗면 + 0.25 m 로 결과를 보기 전에 정했고(FALL_BELOW_TOP_M) 결과를 보고 옮기지 않는다. 민감도(0.225 · 0.275)는 crossed_by_fall_threshold · threshold_sensitive_envs 에 기록만 한다.
 원자료(vx · fwd · alive · pos · dones 배열)는 평가가 npz 로 남기므로 이 모듈로 다시 낼 수 있다: python -m foothold_s2.eval.kind_stats --recompute <npz 또는 폴더 글롭...>
 """
@@ -23,6 +24,7 @@ FALL_BELOW_TOP_M = 0.25               # 출발 단 윗면에서 몸 z 가 이 �
 START_EDGE_M = 0.2                   # 시작 x 가 출발 단 끝에서 이 안이면 «출발 단 끝 시작»
 EDGE_DROP_M = 0.2                    # sparse_terrains.EDGE_DROP_M 와 같은 값(그 모듈은 trimesh 등을 부르지 않지만 순환을 피해 값만 둔다, 시험이 같은지 대조)
 DROP_TOL_M = EDGE_DROP_M / 2.0
+OFFBEAM_KINDS = ("balance_beams",)   # start_offbeam 은 빔 줄 하나가 곧 발판인 종류에만 낸다(정의는 결과 전에 고정): 징검돌은 돌 사이 y 틈 때문에 «몸 중심 한 줄» 규칙이 발판 밖 시작을 크게 부풀린다
 SENSITIVITY_M = (0.225, 0.25, 0.275)   # 낙하 문턱 민감도 기록용(지표는 FALL_BELOW_TOP_M 그대로, 결과를 보고 옮기지 않는다)
 
 
@@ -85,7 +87,7 @@ def by_kind(kinds, vx, fwd, alive, dt: float, threshold_m: float = ss.REFERENCE_
         if by_th:
             out[k]["crossed_by_fall_threshold"] = {f"{th:g}": int(by_th[th][m].sum()) for th in SENSITIVITY_M}
             out[k]["threshold_sensitive_envs"] = [int(i) for i in np.flatnonzero(sensitive & m)]        # 문턱에 따라 건넘 판정이 바뀌는 env 번호(전체 env 안의 위치)
-        if start_support is not None:                                  # 칸 기하로 잰 시작 자리(모델과 무관, 두 모델 분모가 같다)
+        if start_support is not None and k in OFFBEAM_KINDS:                                  # 칸 기하로 잰 시작 자리(모델과 무관, 두 모델 분모가 같다)
             out[k]["start_offbeam"] = int((~np.asarray(start_support, dtype=bool)[m]).sum())
 
     return out

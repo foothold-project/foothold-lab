@@ -188,9 +188,11 @@ def test_start_offbeam_compares_the_start_lane_with_the_beam_lanes_of_the_pit_zo
     assert sup.tolist() == [True, False, False]
     pos = np.zeros((S, 3, 3))
     pos[:, :, 2] = STAND
-    out = K.by_kind(["balance_beams"] * 3, np.full((S, 3), 0.7), np.zeros((S, 3)), np.ones((S, 3), dtype=bool), DT, pos=pos, start_support=sup)["balance_beams"]
+    both = K.by_kind(["balance_beams"] * 2 + ["stepping_stones_low"], np.full((S, 3), 0.7), np.zeros((S, 3)), np.ones((S, 3), dtype=bool), DT, pos=pos, start_support=sup)
+    out = both["balance_beams"]
 
-    assert out["start_offbeam"] == 2 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 줄 시작은 센다
+    assert "start_offbeam" not in both["stepping_stones_low"]                                                  # 징검돌에는 내지 않는다(돌 사이 y 틈으로 부풀림)
+    assert out["start_offbeam"] == 1 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 줄 시작은 센다
 
 
 def test_threshold_sensitivity_marks_the_env_whose_crossing_changes_with_the_fall_threshold_and_the_metric_stays_at_0_25():

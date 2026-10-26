@@ -14,5 +14,5 @@ assert len(npz) == 1, npz
 a = np.load(npz[0])
 assert a["start_support"].shape == (64,) and a["start_support"].dtype == bool, a["start_support"].shape
 by_kind = next(iter(mm["modes"].values()))["fwd1.0"]["by_kind"]
-assert sum(d["envs"] for d in by_kind.values()) == 64 and all("start_offbeam" in d for d in by_kind.values())
+assert sum(d["envs"] for d in by_kind.values()) == 64 and all(("start_offbeam" in d) == (k == "balance_beams") for k, d in by_kind.items())
 print("SMOKE_OK start_support", int(a["start_support"].sum()), "of 64 on support; terrain_geometry_sha256.total", mm["terrain_geometry_sha256"]["total"][:12])
