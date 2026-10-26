@@ -16,6 +16,7 @@
 | **MOVE** (arXiv 2412.03353) | 앞만 보는 깊이 카메라로도 후진 · 옆 계단을 평가한 사례 | 우리 「본 계단 / 처음 보는 계단」 평가 분리의 근거 | [논문 §IV · Table I · Fig. 7](https://arxiv.org/html/2412.03353v1#S4) |
 | legged_gym · Isaac Lab | 학습 환경 · 기본 보상 함수 · 지형 커리큘럼 틀 | 기본 `feet_air_time` 은 명령 xy 속력 > 0.1 일 때만 작동해 제자리 회전에는 0 (설치 소스 `rewards.py:27~46`) | 설치 Isaac Lab |
 | AME-2 검토 (Fable19a) | 발 · 종아리 · 허벅지 · 몸통 접촉을 보자는 제안 | 진단 로그로만 기록, 보상 · 종료에는 안 씀 | [VERIFY-fable-19a](https://github.com/foothold-project/foothold-lab/blob/36bb35cf30cbc78bc9f538e786134704805149d3/inbox/jay/20261018-next-arch/VERIFY-fable-19a.md) |
+| Miki 2022 (Science Robotics, 야외 지각 보행) | 높이 지도에 잡음 · 가림을 넣어 학습한 사례. 카드 EX-34 가 지도 끔 비율 10 % 의 참고로 인용 | 우리는 잡음이 아니라 에피소드 단위로 지도를 통째로 끈다 (attention key padding, critic 은 GT). 세부 수치는 원문 미대조 (10/26 rulecheck N07 로 추가) | 카드 EXP-EX34 12 행 |
 
 ## 2. START 원문과 우리 설정
 
@@ -23,6 +24,7 @@
 
 | 항목 | START 원문 | 우리 B · EX-30/31 창 1 | 우리 다음 단계 (v1.0) |
 |---|---|---|---|
+| 지도 끔 (S-B, 10/26 추가) | 없음. AdaSmpl 은 정답 지도 대 복원 지도를 섞을 뿐 지도를 끄지 않는다 | B · EX-30/31 은 끔 없음. S-B50 p 0.5 · S-B10 p 0.1 (impl-sb 6309f67e): 에피소드마다 확률 p 로 지도 토큰을 attention key padding 으로 가림, critic 은 GT 지도 그대로, 실현 비율 S-B10 0.0988 (RESULT-EX34 3 절) | 출발선 S-B10 m1500 에서 p 0.1 유지 (팀장 10/26). 끔은 연속 7 종 + 평지에서만, 듬성 지형 0 (M-T6, 결정 9 팀장 미결). 10 % 는 허용 지형 안 분모 (lead 권고, 팀장 미결) |
 | 전진 명령 | vx ~ U[0, 1.5] m/s, 0.3 미만이면 0 (원문 225~231 행) | **같음** (`mixed_core.py:50~54`, 계약 `contracts.py`) | 정지 0,0,0 을 10 % 로 따로, 전진 U[0.3, 1.5] |
 | 제자리 회전 | vx = 0 일 때 wz ~ U[−1.2, 1.2] | **같음** | P0 크기 U[0.3, 1.2] 양쪽 |
 | 옆 이동 · 전진 중 회전 · 후진 · 깃발 | 없음 (vy 0) | 없음 | P0 깃발 → P1 이동 회전 · 짧은 후진 · 옆 ±0.2 → P2 ±0.3 |
