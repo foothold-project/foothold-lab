@@ -1,9 +1,9 @@
 > 분류: 리서치 · 설계 초안 (지도 비율 커리큘럼, 팀장 안)
 > 작성: 오흥재 (planner) · 2026-10-26 10:5x
-> 근거: 팀장 원문 10/26 10:2x (lead PLAN-26b 전달) · JUDGE-SPEC v0.1 (관문 정본) · EXP-EX33 · EX34 카드 · RESULT-EX32-G0B v0.1 · DESIGN-NEXT-draft v0.3 §11 · DESIGN-C v0.2 · analyst VERIFY-analyst-DN25 v0.5 12.4 · 12.5 · 코드 `impl-sb` `runners/map_switch.py` `runners/start_runner.py:78,114~119,267~268,347,700~708` · `models/start_perception.py:154~167,188~236,252~289` · 원자료 `impl-turncases/logs/{g0b_eval/m1500,b1500_baseline/rep1,sb50_eval/m100~m200}` (JUDGE-SPEC 6 절 재계산) · 문헌 원문(웹): Miki 2022 ar5iv 2201.08117 · Agarwal 2022 ar5iv 2211.07638 · Hoeller 2022 ar5iv 2206.08077 · Wang 2024 CTS arXiv 2405.10830 · START 2512.13153 II-C
-> 요지: 팀장 안을 세 단계 (a) 지도 없이 걷기 기반 → (b) 지도 켬 비율을 성과로 조금씩 올림(끔 비율은 하한 이상) → (c) 켬 쪽에 복원 지도 섞기(START AdaSmpl) 로 적고, 각 전이는 JUDGE-SPEC 4.5 관문으로, 무너짐(가림 전진 < G0-B m1500 × 0.8 두 저장본 연속) 은 직전 비율로 되돌린다. 한 번에 한 축: (b) 와 (c) 를 같은 창에 두지 않고 회전 명령 과정은 다른 GPU 의 진단 판에서 검증한 뒤 넣는다. 문헌에는 「지도를 처음부터 일부 끄고 배운다」(Miki 60/30/10) · 「잡음을 시간에 따라 키운다」(Miki · Agarwal) · 「복원 지도를 정책이 쓴다」(Hoeller · START) 선례가 있지만 **「끔 비율을 성과로 내리는」 일정의 직접 선례는 못 찾았다**(우리 제안 · 추정). 숫자 자리(S-B50 · S-B10 m1500 평가) 는 오늘 낮 결과로 채운다.
-> 상태: v0.1 · S-B50 평가 사슬 진행 중(m300 까지) · S-B10 학습 중(10:32 model_1350) · 모든 비율 · 폭 · 체류는 추정(승인 아님) · GPU · 학습 · 코드 수정 없음
-> 판: v0.1
+> 근거: 팀장 원문 10/26 10:2x (lead PLAN-26b 전달) · JUDGE-SPEC v0.1 (관문 정본) · EXP-EX33 · EX34 카드 · RESULT-EX32-G0B v0.1 · DESIGN-NEXT-draft v0.3 §11 · DESIGN-C v0.2 · analyst VERIFY-analyst-DN25 v0.5 12.4 · 12.5 · v0.6 13 절(#555 6406609943) · 코드 `impl-sb` `runners/map_switch.py` `runners/start_runner.py:78,114~119,267~268,347,700~708` · `models/start_perception.py:154~167,188~236,252~289` · 원자료 `impl-turncases/logs/{g0b_eval/m1500,b1500_baseline/rep1,sb50_eval/m100~m200}` (JUDGE-SPEC 6 절 재계산) · 문헌 원문(웹): Miki 2022 ar5iv 2201.08117 · Agarwal 2022 ar5iv 2211.07638 · Hoeller 2022 ar5iv 2206.08077 · Wang 2024 CTS arXiv 2405.10830 · START 2512.13153 II-C
+> 요지: 팀장 안을 세 단계 (a) 지도 없이 걷기 기반 → (b) 지도 켬 비율을 성과로 조금씩 올림(끔 비율은 하한 이상) → (c) 켬 쪽에 복원 지도 섞기(START AdaSmpl) 로 적고, 각 전이는 JUDGE-SPEC 4.5 관문으로, 무너짐(가림 전진 < G0-B m1500 × 0.8 두 저장본 연속) 은 직전 비율로 되돌린다. 한 번에 한 축: (b) 와 (c) 를 같은 창에 두지 않고 회전 명령 과정은 다른 GPU 의 진단 판에서 검증한 뒤 넣는다. 문헌에는 「잡음 · 결함을 시간에 따라 키운다」(Miki · Agarwal) · 「특권 교사 → 고유 감각 학생」(Lee · Miki · CTS) · 「복원 지도를 정책이 쓴다」(Hoeller · START) 선례가 있지만, **처음부터 일부 에피소드를 완전히 끄는 것도, 끔 비율을 성과로 내리는 것도 직접 선례는 못 찾았다**(우리 제안 · 추정. Miki 60/30/10 은 잡음 모드 비율이고 학생은 잡음 0 에서 시작한다). 숫자 자리(S-B50 · S-B10 m1500 평가) 는 오늘 낮 결과로 채운다.
+> 상태: v0.2 · analyst 13 절(막음 4 · 고침 3) 반영 · S-B50 평가 사슬 진행 중(11:00 m500 평가 중, m300 · m400 2 절에) · S-B10 학습 중 · 모든 비율 · 폭 · 체류는 추정(승인 아님) · GPU · 학습 · 코드 수정 없음
+> 판: v0.2
 
 # DESIGN-MAPRATIO · 지도 비율 커리큘럼 설계 초안 (팀장 안)
 
@@ -14,9 +14,9 @@
 | 무엇을 올리고 내리나 | `p_map_off`(에피소드마다 지도 토큰을 끄는 확률, 코드 이름 그대로). 켬 비율 = 1 − p_map_off. (c) 에서는 켬 안에서 정답 ↔ 복원 비율 p_gt(START AdaSmpl) |
 | 세 단계 | (a) 끔 비율 높은 판에서 「지도 없이 걷기 기반」 확인 → (b) 켬 비율을 0.1 씩 올림, 끔 비율 하한 0.2(추정) → (c) 켬 쪽에 복원 지도 섞기(`force_gt` 해제) |
 | 넘김 관문 | JUDGE-SPEC 4.5 · 4.3. 가림 fwd1.0 ≥ 4.592 m(G0-B m1500 × 0.8) · 생존 ≥ 60/64 · 16 env 가림 kept ≥ 12, 최신 + 직전 연속 |
-| 무너짐 되돌림 | 가림 fwd1.0 < 4.592 m 두 저장본 연속 → p_map_off 를 직전 단계로. 두 번이면 멈추고 보고 |
+| 무너짐 되돌림 | 유지 조건(가림 fwd1.0 ≥ 4.592 m 과 단계 시작 × 0.8 · fwd0.5 ≥ 2.310 m · 생존 ≥ 60/64 · 16 env kept ≥ 12 · 켬 ≥ 단계 시작 × 0.90) 중 **어느 하나라도** 두 저장본 연속 미달 → p_map_off 를 직전 단계로(가중치는 되돌아가지 않으므로 회복을 다시 잰다). 두 번이면 멈추고 보고 |
 | 한 번에 한 축 | (b) 동안 p_gt 고정(1.0), (c) 동안 p_map_off 고정. 회전 명령 과정은 GPU 다른 장의 진단 판에서 분포를 확정한 뒤 창 전환으로 |
-| 오늘 정할 것 | (a) 의 출발 저장본: S-B50 m1500 이 관문을 넘으면 그대로 (b) 로, 아니면 새 판(p_map_off 0.8, 추정) |
+| 오늘 정할 것 | (a) 의 출발 저장본: S-B50 m1500 이 관문을 넘으면 그대로 (b) 로. **S-B10(p_off 0.1) 은 제안 하한 0.2 보다 이미 작다** → 「하한을 0.1 로 두고 별도 승인 · 0.2 로 올려 (b) 를 거꾸로 확인 · (b) 생략」 중 하나(6 절 7). 둘 다 못 넘으면 원인(가림 전진 부족 · 회전 생존 · 자료 누락) 을 나눈 뒤에만 새 판(p_map_off 0.8, 추정) |
 
 ## 1. 팀장 안 (원문과 낱말)
 
@@ -40,20 +40,23 @@
 |---|---|---|---|---|---|
 | B1500 (지도 늘 켬) | 5.663 / 60 (eval_gt), 5.696 / 59 (eval_pred) | **0.527 / 43** | 0.067 / 52 | 6 · 12 · 12 · 8 · 8 · 12 | `b1500_baseline/rep1` |
 | G0-B m1500 (지도 없음, 기준선) | 해당 없음 | 5.740 / 64 (none) | 2.887 / 64 | 9 · 11 · 10 · 14 · 16 · 14 (지도 없이 회전하다 넘어짐) | `g0b_eval/m1500` |
-| S-B50 m200 (p_map_off 0.5, 학습 초반) | 3.444 / 62 | 3.924 / 62 | 1.956 / 64 | 16 모두 (회전 0) | `sb50_eval/m200` |
+| S-B50 m200 (p_map_off 0.5, 학습 초반) | 3.444 / 62 | 3.924 / 62 | 1.956 / 64 | 16 모두 (회전 Q 0.01~0.05) | `sb50_eval/m200` |
+| S-B50 m300 | 4.951 / 64 | **4.991 / 64** | **2.727 / 64** | 16 모두 (Q 0.01~0.04) | `sb50_eval/m300` (11:00 재계산) |
+| S-B50 m400 | **5.592 / 63** | 5.506 / 63 | 2.549 / 64 | 16 모두 (Q 0.02~0.06) | `sb50_eval/m400` (11:00 재계산) |
 | **S-B50 m1500** | (오늘 낮 · 자리) | (자리) | (자리) | (자리) | `sb50_eval/m1500` |
 | **S-B10 m1500** (p_map_off 0.1 = C0) | (학습 중, 11:2x 끝 추정) | (자리) | (자리) | (자리) | `sb10_eval/m1500` |
 
 - 가림 관문 값: fwd1.0 ≥ 5.740 × 0.8 = **4.592 m**, fwd0.5 ≥ 2.887 × 0.8 = **2.310 m**, 생존 ≥ 60/64, 16 env kept ≥ 12/16 여섯 경우 모두. 켬 달성: fwd1.0 ≥ 5.663 × 0.9 = **5.097 m**, 생존 ≥ 54/64.
 - B1500 은 가림에서 못 걷는다(0.527 m, 생존 43). 이것이 「지도 늘 켬」 계보가 (a) 를 만족하지 못한다는 답 아는 입력이다.
 - S-B50 m200 은 가림이 켬보다 오히려 길다(3.92 대 3.44). 초반이라 해석하지 않는다(진도 판독만).
+- S-B50 중간 진도(JUDGE-SPEC 4.3 처음부터 판 판독, 11:00 `judge_recompute.py` 재계산): **m300 에서 가림 관문 셋(4.592 · 2.310 · 60/64) 을 모두 넘고, m400 에서 켬 달성(5.097 m · 54/64) 도 넘었다.** 회전은 여섯 경우 모두 Q ≤ 0.07 로 미달(성공선 0.6). 켬 · 가림 전진 차가 매 저장본 0.1 m 안이라 **지도를 아직 쓰지 않는 상태로 보인다(추정)**. 이 두 저장본은 JUDGE-SPEC 6.8 의 답 아는 입력에 더한다(기대: 전진 진도 「달성」 · 회전 「미달」 · 이어 가기 관문은 걸지 않음).
 - 자리 넷은 오늘 낮 평가 사슬(`sb50_eval` GPU1, `sb10_eval` GPU0) 이 끝나면 **스크립트 값으로** 채운다(손으로 옮기지 않음).
 
 ## 3. 세 단계와 관문
 
 ### 3.1 (a) 지도 없이 걷기 기반 확인
 
-- 어느 판에서: **S-B50 m1500 이 가림 관문(위 네 조건, 최신 m1500 + 직전 m1450) 을 넘으면 그 저장본이 (a) 를 끝낸 것**이다. S-B10 이 넘으면 S-B10 도 후보(끔 비율이 낮아 (b) 가 짧다). 둘 다 못 넘으면 (a) 새 판: B cfg + `p_map_off` **0.8**(추정) 처음부터, 50 회마다 가림 평가, 관문 통과 저장본에서 (b) 로.
+- 어느 판에서: **S-B50 m1500 이 가림 관문(위 네 조건, 최신 m1500 + 직전 m1450) 을 넘으면 그 저장본이 (a) 를 끝낸 것**이다(m300 · m400 중간 진도는 이미 가림 관문을 넘었다, 2 절). **S-B10 은 p_map_off 0.1 이 제안 하한 0.2 보다 작다**(v0.1 「(b) 가 짧다」 는 틀린 표현, analyst 13). S-B10 이 관문을 넘으면 셋 중 하나를 팀장이 정한다: (i) 하한을 0.1 로 두고 별도 승인, (ii) p_map_off 를 0.2 로 **올려** (b) 를 거꾸로 한 단계 확인, (iii) (b) 생략하고 (c) 진입 조건만 본다. 둘 다 못 넘으면 먼저 **원인을 나눈다**: 가림 전진 부족 · 회전 생존(kept) 부족 · 평가 자료 누락. 가림 전진 부족일 때만 (a) 새 판: B cfg + `p_map_off` **0.8**(추정) 처음부터, 50 회마다 가림 평가, 관문 통과 저장본에서 (b) 로.
 - 왜 0.8 이고 1.0 이 아닌가: 1.0 은 G0-B(지도 모듈 없음) 와 달리 지도 모듈이 있으되 한 번도 안 쓰는 판이라 (b) 에서 지도 사용을 처음 배워야 한다. 0.8 은 켬 20 % 로 지도 경로의 가중치가 죽지 않게 둔다(추정 · 비교 판 없음).
 - 판정은 JUDGE-SPEC 4.3(처음부터 판): 멈춤선 · 부모 유지선 없음, 진도 판독 + 달성 기준 + 운영 중단.
 
@@ -63,9 +66,9 @@
 |---|---|---|
 | 올림 폭 | p_map_off 를 **0.1 씩** 내림(켬 0.1 씩 올림) | 「조금씩」. 한 단계가 재측정 폭보다 큰 변화를 내는지 보기 위해 너무 작게 두지 않는다 |
 | 끔 비율 하한 | **0.2** | 첫 추정. 실제 하한은 되돌림 규칙이 정한다(가림이 무너지는 비율의 직전 값). 하한에 닿으면 (b) 끝 |
-| 단계 체류 | 단계마다 최소 **250 회**(≈ 1.7 h, 24.5 s/회 실측) 뒤 판정, 최신 + 직전 저장본 연속 | 비율 변경은 가중치 초기화 없는 연속 변화라 명령 단계(500 회) 보다 짧게 둔다. 팀장 판단(6 절 2) |
-| 올림 관문 | 가림 fwd1.0 ≥ max(단계 시작 저장본 × 0.8, 4.592 m) · 생존 ≥ 60/64 · 16 env 가림 kept ≥ 12 모두, 켬 fwd1.0 이 단계 시작 저장본보다 재측정 폭 넘게 내려가지 않음 | JUDGE-SPEC 4.5 |
-| 되돌림 | 가림 fwd1.0 < 4.592 m **두 저장본 연속** → p_map_off 를 직전 단계 값으로, 되돌린 회차 · 값 기록. 두 번 되돌리면 멈추고 보고(그 직전 값이 「무너지지 않는 하한」 의 실측) | 팀장 「무너지지 않는 정도」 |
+| 단계 체류 | 단계마다 최소 **250 회**(≈ 1.7 h, 24.5 s/회 실측) 뒤 판정, 최신 + 직전 저장본 연속. JUDGE-SPEC 4.1 의 `min_stay` 입력으로 넘긴다(함수 안 고정 500 아님) | 비율 변경은 가중치 초기화 없는 연속 변화라 명령 단계(500 회) 보다 짧게 둔다. 팀장 판단(6 절 2) |
+| 올림 관문 | 가림 fwd1.0 ≥ max(단계 시작 저장본 × 0.8, 4.592 m) · fwd0.5 ≥ 2.310 m · 생존 ≥ 60/64 · 16 env 가림 kept ≥ 12 모두, 켬 fwd1.0 ≥ 단계 시작 저장본 × 0.90(전진 재측정 폭은 미측이라 폭 기준을 쓰지 않는다) | JUDGE-SPEC 4.5 |
+| 되돌림 | 위 올림 관문의 유지 조건 **어느 하나라도 두 저장본 연속 미달**(JUDGE-SPEC 4.1 `MAINTAIN_FAIL` × 2 → `consume` 이 REVERT) → p_map_off 를 직전 단계 값으로, 되돌린 회차 · 값 기록. 거리 한 항만 보지 않는다(analyst 13 합성 입력: 가림 4.8 m 인데 생존 40/64, kept 6/16, 단계 시작 6.1 m 대비 하락). p 만 돌려도 **가중치는 되돌아가지 않으므로** 회복을 두 저장본으로 다시 잰다. 두 번 되돌리면 멈추고 보고. 그 직전 값은 「이 계보에서 마지막으로 통과한 비율」 이지 「무너지지 않는 하한」 의 보편 실측이 아니다 | 팀장 「무너지지 않는 정도」 |
 | 고정 | p_gt = 1.0(`force_gt=True`) 그대로. 명령 계약 S1(START) 그대로. 보상 · 지형 커리큘럼 그대로 | 한 번에 한 축 |
 | 기록 | 단계마다 배정된 끔 비율(realized) 뿐 아니라 **실제 유효 스텝 비율 · 평균 에피소드 길이(켬 · 끔 따로) · 종료 원인** | analyst 12.5: 에피소드 확률 ≠ 시간 비율(끔 에피소드가 짧으면 실제 노출은 훨씬 작다) |
 
@@ -76,9 +79,10 @@
 - 들어가는 조건: (b) 가 끔 하한에 닿고 켬 달성 기준(fwd1.0 ≥ 5.097 m · 생존 ≥ 54/64) 두 저장본 연속 + 가림 유지.
 - 무엇을 바꾸나: `force_gt=False`. 켬 env 안에서 START AdaSmpl(p_init 1.0, p_gt = tanh(CV(R))) 이 정답 ↔ 복원을 고른다. **끔 env 의 에피소드 보상은 CV 통계에서 뺀다**(DESIGN-C §2.1, 안 빼면 끔 에피소드의 낮은 보상이 CV 를 키워 정답 비율을 올린다). 끔 env 에서는 p_gt 를 뽑되 쓰지 않는다. 종료한 옛 에피소드의 d 로 보상을 분류한 뒤 reset 한다(analyst 12.5).
 - 고정: p_map_off 는 하한 값으로 고정. 명령 계약 그대로.
-- 관문: 배포 모드(eval_pred) fwd1.0 ≥ eval_gt × 0.9 두 저장본 연속 + 가림 유지. manifest 에 실제 정답 · 복원 · 끔 스텝 수 세 개를 따로 남긴다(이론상 (1−p_off)·p_gt, (1−p_off)·(1−p_gt), p_off 이지만 실제 시간 비율은 다르다).
-- 되돌림: eval_pred 가 두 저장본 연속 미달이면 `force_gt=True` 로 되돌리고 기록. AdaSmpl 자체가 적응이라 p_gt 를 손으로 정하지 않는다.
-- 끝: (c) 관문 통과 저장본이 **실기 후보**다(복원 지도로 걷고, 지도가 끊겨도 G0-B 수준으로 걷는다).
+- 관문: **절대 조건을 상속**한다. 켬(eval_gt) fwd1.0 ≥ 5.097 m · 생존 ≥ 54/64, 가림 ≥ 4.592 · 2.310 m · 60/64, **그리고** 배포(eval_pred) fwd1.0 ≥ eval_gt × 0.9. 두 저장본 연속. 상대 조건만이면 GT 0.5 m · PRED 0.5 m · 가림 4.8 m 도 통과한다(analyst 13 반례). manifest 에 실제 정답 · 복원 · 끔 스텝 수 세 개를 따로 남긴다(이론상 (1−p_off)·p_gt, (1−p_off)·(1−p_gt), p_off 이지만 실제 시간 비율은 다르다).
+- 되돌림: 위 조건 어느 하나 두 저장본 연속 미달이면 `force_gt=True` 로 되돌리고 기록(M-T5 로 실제 선택까지 확인). 되돌린 뒤 켬 · 가림 유지가 두 저장본 연속이면 **한 번만** 다시 `force_gt=False` 로 진입하고, 두 번째 실패면 멈추고 보고. AdaSmpl 자체가 적응이라 p_gt 를 손으로 정하지 않는다.
+- 코드 제약 `[코드 · analyst 13 절 지적을 11:0x 직접 확인]`: `models/start_perception.py:233~238` 의 `AdaSmpl.state_dict` · `load_state_dict` 가 `force_gt` 를 저장본에 넣고 **그대로 되살린다**. resume 경로 `runners/start_runner.py:747` 이 이것을 부르므로, 설정에 `force_gt=False` 를 적어도 부모 저장본(B · S-B 는 True) 을 읽으면 **오류 없이 True 로 돌아간다**(`MODE_DEFAULTS` 거절 목록에도 없다). (c) 진입은 M-T5(7 절) 가 먼저다: 복원 뒤 runner 설정값으로 덮고 실제 `sample` 결과(정답 · 복원 env 수) 를 첫 회차 출력에 남긴다.
+- 끝: (c) 관문 통과 저장본은 「고정 칸에서 복원 지도로 전진하고, 에피소드 전체 가림에서 G0-B 의 80 % 선을 넘는」 저장본이다. 에피소드 안 순간 끊김은 3.5 에서 시험하지 않으므로 「실기 후보」 「지도가 끊겨도 G0-B 수준」 이라고 적지 않는다(analyst 13, v0.1 표현 철회).
 
 ### 3.4 회전 명령 과정과의 순서
 
@@ -94,12 +98,12 @@
 
 | 출처 | 무엇을 했나(원문) | 우리 안과의 관계 |
 |---|---|---|
-| Miki 외 2022, Science Robotics, [ar5iv 2201.08117](https://ar5iv.labs.arxiv.org/html/2201.08117) | 높이 표본 잡음 조건 셋을 「에피소드 시작에 60 % · 30 % · 10 % 비율로 뽑는다」(Sec. 4). 10 % 는 「large noise magnitude for each scan point to simulate complete lack of terrain information」(Sec. 4 · Fig. 6). 학생은 「without height sample noise」 로 시작해 「linearly until we reach 100 epochs」 로 잡음을 키운다(S3). gate 가 닫히면 「becomes similar to the proprioceptive model」(Table S4) | 처음부터 일부 에피소드에 지형 정보를 없애는 **선례**. 다만 teacher-student 증류 · 잡음 크기 램프이고, 우리처럼 무작위 가중치 PPO 에 토큰을 빼는 것도, 비율을 성과로 바꾸는 것도 아니다(analyst 12.4). 10 % 를 우리 비율의 정당화로 쓰지 않는다 |
-| Agarwal 외 2022, CoRL, [ar5iv 2211.07638](https://ar5iv.labs.arxiv.org/html/2211.07638) | 1 단계 「low resolution scandots located under the robot as a proxy for depth」, 2 단계 「distill it into the final policy that uses depth」. scandot 높이 잡음 σ 0.07(Table 2), 지도 갱신 주기 · 지연은 **curriculum 으로 늘림**(Table 5). 지형 커리큘럼: 「promoted to harder terrain if they traverse more than half its length」, 「demoted … if they fail to travel at least half the commanded distance」 | 지각 결함(지연 · 주기) 을 시간 커리큘럼으로 키운 선례. 강등 규칙이 우리 `rules.judge_free` 와 같은 꼴이라 **걸으며 돌기 원운동 오판은 이 계열 공통의 약점**이다(JUDGE-SPEC 5 절) |
+| Miki 외 2022, Science Robotics, [ar5iv 2201.08117](https://ar5iv.labs.arxiv.org/html/2201.08117) | 높이 표본 잡음 조건 셋을 「에피소드 시작에 60 % · 30 % · 10 % 비율로 뽑는다」(Sec. 4). 10 % 는 「large noise magnitude for each scan point to simulate complete lack of terrain information」(Sec. 4 · Fig. 6). 학생은 「without height sample noise」 로 시작해 「linearly until we reach 100 epochs」 로 잡음을 키운다(S3). gate 가 닫히면 「becomes similar to the proprioceptive model」(Table S4) | 본질은 교사 가중치를 재사용한 학생 증류와 **잡음 크기 램프**다. 10 % 의 「큰 잡음」 을 저자가 지형 정보 없음에 비유하지만 학생은 잡음 0 에서 시작하므로 **처음부터 일부를 완전히 끈 선례는 아니다**(v0.1 「선례」 철회, analyst 13). 우리처럼 무작위 가중치 PPO 에 토큰을 빼는 것도, 비율을 성과로 바꾸는 것도 아니다. 10 % 를 우리 비율의 정당화로 쓰지 않는다 |
+| Agarwal 외 2022, CoRL, [ar5iv 2211.07638](https://ar5iv.labs.arxiv.org/html/2211.07638) | 1 단계 「low resolution scandots located under the robot as a proxy for depth」, 2 단계 「distill it into the final policy that uses depth」. scandot 높이 잡음 σ 0.07(Table 2), 지도 갱신 주기 · 지연은 **curriculum 으로 늘림**(Table 5). 지형 커리큘럼: 「promoted to harder terrain if they traverse more than half its length」, 「demoted … if they fail to travel at least half the commanded distance」 | 지각 결함(지연 · 주기) 을 시간 커리큘럼으로 키운 선례. 강등 규칙이 우리 `rules.judge_free` 와 같은 꼴이므로 **같은 거리 정의에 회전 명령을 섞으면 원운동 오판이 생길 수 있다는 기하학적 추론**이다(원문이 확인한 결과가 아니다, analyst 13)(JUDGE-SPEC 5 절) |
 | Hoeller 외 2022, [ar5iv 2206.08077](https://ar5iv.labs.arxiv.org/html/2206.08077) | 「Since the policy is trained with noise in the height measurements, the robot is capable of recovering」. 복원 지도에서 「query an array of heights around the robot for the policy」. 복원기는 「up to 50% of data omission」 을 견디고 학습 증강에 「Pruning: Random patches of the point cloud are removed」 | **정책이 복원 지도를 소비하는 선례**((c) 의 뜻). 가림 내성은 복원기 쪽에 두었다. 정책을 완전 가림으로 학습한 것은 아니다 |
-| Wang 외 2024 CTS, [arXiv 2405.10830](https://arxiv.org/abs/2405.10830) | 「trains teacher and student policy networks concurrently under the reinforcement learning paradigm」, 두 정책의 상호작용 자료를 함께 쓴다 | 지도 있는 정책과 없는 정책을 한 학습에서 같이 배우는 틀. 우리는 정책 하나에 켬 · 끔 에피소드를 섞는다(가중치 공유가 더 강함). 세부(학생 관측 · 커리큘럼) 는 초록만 확인, **본문 미확인** |
+| Wang 외 2024 CTS, [arXiv 2405.10830](https://arxiv.org/abs/2405.10830) | 「trains teacher and student policy networks concurrently under the reinforcement learning paradigm」, 두 정책의 상호작용 자료를 함께 쓴다 | 지도 있는 집단과 없는 집단을 한 학습에서 같이 배우는 틀. **원문(II-B · Fig. 2, 11:0x 확인) 은 두 집단이 정책망 πθ 와 critic Vϕ 를 공유하고 encoder 만 따로** 둔다(privileged · proprioceptive). 우리는 정책 · critic 공유에 더해 지각 경로도 하나(끔은 가림 mask) 라, 다른 점은 「encoder 분리 유무」 이지 「공유가 더 강함」 이 아니다(v0.1 문장 철회). 학생은 고유 감각 이력(H=5) 만 보고 지형을 받지 않으며, 관측 잡음 · 지도 가용성 커리큘럼은 원문에 없다 |
 | START 2512.13153 II-C 식 5 (로컬 `s2_lab/_papers/2512.13153v1.txt:173~205`) | p_smpl = tanh(CV(R)) 로 정답 ↔ 복원 지도를 섞는다. 「없음」 은 섞지 않는다 | (c) 의 장치 그대로. (a) · (b) 의 끔은 START 밖의 우리 처치 |
-| Lee 외 2020, Science Robotics(검색 결과 [researchgate](https://www.researchgate.net/publication/346344811_Learning_quadrupedal_locomotion_over_challenging_terrain)) | 특권 정보 교사 → 몸감각 학생, 적응형 지형 커리큘럼 | 널리 알려진 teacher-student 틀. 이번 세션에서 **원문 미확인**(검색 제목만). 수치 인용 안 함 |
+| Lee 외 2020, Science Robotics, [arXiv 2010.11251](https://arxiv.org/html/2010.11251v1) (11:0x 원문 확인) | §4.1: 「We first train a teacher policy that has access to privileged information concerning the terrain」, 교사 입력은 「the elevation of 9 scan points around each foot」, 「This teacher policy is then distilled into a proprioceptive student policy」(지도 학습, DAgger). 학생 · 실기 제어기는 「does not use any exteroceptive input」. 적응 지형 커리큘럼: 「particle filter」 로 지형 매개변수 분포를 쫓고, 「faster than 0.2 m/s」 를 통과로 보며 통과율 「0.5 and 0.9」 사이 지형을 고른다 | 특권 교사 → 고유 감각 학생의 원형. 학생은 지형을 전혀 받지 않으므로 우리 (a) 의 「가림 env」 가 닮은 쪽이고, (b) · (c) 의 지도 사용은 교사 쪽이다. 지형 커리큘럼은 **통과율 띠(0.5~0.9)** 로 난이도를 고르는 방식이라 우리 `judge_free` 거리 규칙과 다르다. 비율 · 폭 · 체류를 정당화하지 않는다 |
 
 결론: 「처음부터 지도 일부를 없앤다」 「지각 결함을 시간에 따라 키운다」 「복원 지도를 정책이 쓴다」 는 각각 선례가 있다. **「끔 비율을 성과 관문으로 내려 가며 하한을 찾는다」(팀장 안 (b)) 의 직접 선례는 두 번의 검색(standard · extended) 에서 못 찾았다.** 그래서 (b) 의 폭 · 하한 · 체류는 우리 추정이고, 되돌림 규칙이 하한을 실측으로 바꾸는 구조로 둔다.
 
@@ -131,7 +135,8 @@
 3. (c) 진입 조건과 되돌림(`force_gt` 재설정) 승인.
 4. 회전 명령 과정 위치: GPU1 진단 판 병행(권고) 대 (c) 뒤 본류에서 직접.
 5. Linux 이전 날(11/3 자리) 과 그날 GPU 를 비울지.
-6. 구현 항목 M-T1(p_map_off 일정 · resume 허용) · M-T2(끔 env 보상을 AdaSmpl CV 에서 제외) 를 sonnet-code 에 JUDGE 구현과 같이 줄지.
+6. 구현 항목 M-T1(p_map_off 일정 · resume 허용) · M-T2(끔 env 보상을 AdaSmpl CV 에서 제외) · M-T5(resume 뒤 force_gt 덮어쓰기) 를 sonnet-code 에 JUDGE 구현과 같이 줄지.
+7. S-B10 의 p_map_off 0.1 이 제안 하한 0.2 보다 작은 문제(3.1): (i) 하한을 0.1 로 두고 별도 승인 · (ii) 0.2 로 올려 (b) 를 거꾸로 한 단계 확인 · (iii) (b) 생략. 보편적 「무너지지 않는 최소 비율」 은 미확인이며, 되돌림이 멈춘 값은 이 계보에서 마지막으로 통과한 비율일 뿐이다.
 
 ## 7. 구현 항목 (계약만)
 
@@ -140,16 +145,18 @@
 | M-T1 | `p_map_off` 일정: 명시적 인자로 「회차 N 부터 값 v」 를 받고, resume 때 체크포인트 값과 다르면 거절 대신 **일정 인자가 있을 때만 허용** · manifest 에 (이전 값, 새 값, 회차) 기록 · 끔 난수열 상태는 그대로 복원 | `runners/start_runner.py:700~708` | 인자 없이 다른 값 → 지금처럼 거절. 인자 있음 → 통과 + 기록 줄. realized 비율이 새 값 ± 0.03 안 |
 | M-T2 | 끔 env 의 에피소드 보상을 AdaSmpl CV 통계에서 제외(종료한 옛 에피소드의 `map_off` 로 분류한 뒤 reset) | `models/start_perception.py:188~236` · `runners/start_runner.py:309~318` | 끔 env 보상을 0 으로 바꿔도 p_gt 가 변하지 않음. 켬 env 만 바꾸면 변함 |
 | M-T3 | 켬 · 끔 집단별 유효 스텝 · 평균 에피소드 길이 · 종료 원인 기록 | `runners/map_switch.py MapSwitchRecorder` 확장 | 합이 전체 스텝과 같음 |
-| M-T4 | 되돌림 자동화: JUDGE-SPEC 4.5 판정이 `REVERT` 면 다음 저장 경계에서 M-T1 인자를 직전 값으로 걸고 기록 | 평가 사슬 | 가짜 판정 입력 → 인자 생성 확인 |
+| M-T4 | 되돌림 자동화(JUDGE-SPEC 4.1 `consume` · J-T9 의 소비자): `MAINTAIN_FAIL` 두 번 연속이면 다음 저장 경계에서 M-T1 인자를 직전 값으로 걸고 기록, 두 번째 되돌림이면 멈춤 · 보고 | 평가 사슬 | 가짜 판정 열 `[FAIL, FAIL]` → 인자 생성 · `[FAIL, PASS]` → 없음 · 두 번째 → 멈춤 |
+| M-T5 | resume 뒤 `adasmpl.force_gt` 와 `p` 를 runner 설정값으로 덮어쓰기(인자 있을 때만) · 첫 회차에 실제 `sample` 결과(정답 · 복원 env 수) 출력 · manifest 기록 | `models/start_perception.py:233~238` · `runners/start_runner.py:747` | force_gt=True 저장본을 False 설정으로 resume → 첫 회차에 복원 env 가 0 이 아님. 인자 없으면 지금처럼 저장본 값 유지 + 경고 줄 |
 
 ## 8. 근거 등급 · 재지 않은 것
 
 - [실측]: 2 절 숫자(JUDGE-SPEC 6 절 재계산), 단가 24.5 s/회(S-B 로그), 평가 15 분/저장본(chain.log).
 - [코드]: 1 절 행 번호(impl-sb 6309f67e).
-- [논문 · 웹 원문]: 4 절 Miki · Agarwal · Hoeller 인용. CTS · Lee 는 초록 · 제목 수준.
+- [논문 · 웹 원문]: 4 절 Miki · Agarwal · Hoeller · CTS(II-B · Fig. 2) · Lee(§4.1 · 적응 지형) 인용, CTS · Lee 는 11:0x 원문 확인. 어느 논문도 0.8 → 0.2 · 폭 0.1 · 체류 250 을 정당화하지 않는다.
 - [추정 · 승인 아님]: 0.8 · 0.1 · 0.2 · 250 회 · 날짜별 배치 · (c) 되돌림.
 - 재지 않은 것: S-B50 · S-B10 m1500(오늘 낮) · 끔 비율별 지도 사용 학습 속도(그런 판이 없다) · 끔 에피소드의 실제 유효 스텝 비율(M-T3 뒤) · Linux 에서의 단가.
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
 | v0.1 | 2026-10-26 | 첫 판. 팀장 안 세 단계 · 관문(JUDGE-SPEC 참조) · 되돌림 · 한 번에 한 축 · 문헌 다섯 · 날짜별 GPU 배치 · 결정 여섯 · 구현 M-T1~T4 |
+| v0.2 | 2026-10-26 | analyst 13 절 반영: S-B10 0.1 < 하한 0.2 모순(세 선택지, 결정 7) · 되돌림은 유지 조건 전부 · 「무너지지 않는 하한 실측」 → 「이 계보에서 마지막 통과 비율」 · (c) 절대 조건 상속 · 「실기 후보」 철회 · `force_gt` resume 복원 제약 + M-T5 · M-T4 는 `consume` 소비자 · 문헌: Miki 「선례」 철회 · Agarwal 기하학적 추론 · CTS 공유 문장 정정 · Lee 원문 추가 · 2 절 S-B50 m300 · m400 중간 진도 |
