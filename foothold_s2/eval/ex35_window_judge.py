@@ -697,13 +697,39 @@ def axes_extra(d, n, train_dir, base_dir) -> dict:
     return out
 
 
-IDENTITY_FILES = ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9")
+IDENTITY_FILES = ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9", "turn16_eval_gt", "turn16_eval_pred", "turn16_probe_prop_only")
+
+
+def _identity_path(d, rel):
+    """64 env 평가는 <rel>/map_modes.json, 16 env 평가(turn16_*)는 <rel>/probe_result.json 에 run_identity 가 있다."""
+    return Path(d) / rel / ("probe_result.json" if rel.startswith("turn16_") else "map_modes.json")
+
+
+def _gpu_key(ident):
+    """장치 비교 키는 물리 GPU 의 gpu_uuid(device 문자열은 CUDA_VISIBLE_DEVICES 로 가리면 다른 GPU 도 cuda:0 이 된다). 없거나 'None' 이면 None."""
+    u = ident.get("gpu_uuid")
+
+    return u if isinstance(u, str) and u.strip() and u.strip() != "None" else None
+
+
+def _identity_gaps(ident):
+    """필수 값(code_head · gpu_uuid · device)이 없음 · null · 빈 문자열 · 'None' 이면 그 이름들. 비면 객체 없음과 같이 «미기록» 으로 센다."""
+    gaps = []
+
+    for k in ("code_head", "gpu_uuid", "device"):
+        v = ident.get(k)
+
+        if not (isinstance(v, str) and v.strip() and v.strip() != "None"):
+            gaps.append(k)
+
+    return gaps
 
 
 def run_identity_check(latest_dir, prev_dir, require=True) -> dict:
-    """X27j2: 판정에 쓰는 평가가 한 실행 계열인가. 각 저장본의 네 평가 JSON 의 run_identity(device · 코드 head · 저장본 sha · eval_seed)를 대조한다.
-    - 기록이 없는 파일(옛 자료)이 하나라도 있으면: require(기본 켬)이면 problem, 끄면 warning 한 줄(판정은 막지 않음).
-    - 기록이 있는 것끼리: 코드 head 가 하나, 저장본 안 네 칸 device 가 하나, 최신과 직전 device 가 하나, 저장본 sha 가 그 저장본 것, eval_seed 42 가 아니면 problem(실행 계열 섞임)."""
+    """X27j2/j5: 판정에 쓰는 평가가 한 실행 계열인가. 각 저장본의 일곱 평가(64 env 넷 + 16 env turn16 셋)의 run_identity 를 대조한다.
+    - 기록이 없거나 gpu_uuid 를 못 읽은 칸(옛 자료)이 하나라도 있으면: require(기본 켬)이면 problem, 끄면 warning 한 줄(판정은 막지 않음).
+    - 기록이 있는 것끼리: 코드 head 가 하나, 저장본 안 일곱 칸 gpu_uuid 가 하나, 최신과 직전 gpu_uuid 가 하나, 저장본 sha 가 그 저장본 것, 64 env 칸은 eval_seed 42 가 아니면 problem(실행 계열 섞임).
+      turn16 은 시드 인자가 없어 eval_seed 를 보지 않는다(지형 해시 · 저장본 sha 로 A12 가 대조)."""
     ids, missing, problems = {}, [], []
 
     for tag, d in (("latest", latest_dir), ("prev", prev_dir)):
@@ -716,14 +742,14 @@ def run_identity_check(latest_dir, prev_dir, require=True) -> dict:
             pass
 
         for rel in IDENTITY_FILES:
-            p = d / rel / "map_modes.json"
+            p = _identity_path(d, rel)
 
             try:
                 ident = _json(p).get("run_identity") if p.is_file() else None
             except Exception:                                                                    # noqa: BLE001
                 ident = None
 
-            if not isinstance(ident, dict):
+            if not isinstance(ident, dict) or _identity_gaps(ident):
                 missing.append("%s/%s" % (tag, rel))
                 continue
 
@@ -732,30 +758,30 @@ def run_identity_check(latest_dir, prev_dir, require=True) -> dict:
             if sha_txt and ident.get("checkpoint_sha256") != sha_txt:
                 problems.append("%s/%s: 저장본 sha 가 이 저장본과 다르다" % (tag, rel))
 
-            if ident.get("eval_seed") != 42:
+            if not rel.startswith("turn16_") and ident.get("eval_seed") != 42:
                 problems.append("%s/%s: eval_seed %s != 42" % (tag, rel, ident.get("eval_seed")))
 
     heads = {i.get("code_head") for i in ids.values()}
 
-    if len(heads) > 1 or None in heads:
+    if len(heads) > 1:
         problems.append("코드 head 가 하나가 아니다 또는 없다: %s" % sorted(str(h)[:10] for h in heads))
 
     for tag in ("latest", "prev"):
-        devs = {i.get("device") for (t, _r), i in ids.items() if t == tag}
+        devs = {_gpu_key(i) for (t, _r), i in ids.items() if t == tag}
 
         if len(devs) > 1:
-            problems.append("%s 저장본의 네 칸 device 가 섞였다: %s" % (tag, sorted(map(str, devs))))
+            problems.append("%s 저장본의 평가 칸 device(gpu_uuid)가 섞였다: %s" % (tag, sorted(str(u)[:12] for u in devs)))
 
-    dl = {i.get("device") for (t, _r), i in ids.items() if t == "latest"}
-    dp = {i.get("device") for (t, _r), i in ids.items() if t == "prev"}
+    dl = {_gpu_key(i) for (t, _r), i in ids.items() if t == "latest"}
+    dp = {_gpu_key(i) for (t, _r), i in ids.items() if t == "prev"}
 
     if dl and dp and dl != dp:
-        problems.append("최신 %s 와 직전 %s 의 device 가 다르다" % (sorted(map(str, dl)), sorted(map(str, dp))))
+        problems.append("최신 %s 와 직전 %s 의 device(gpu_uuid)가 다르다" % (sorted(str(u)[:12] for u in dl), sorted(str(u)[:12] for u in dp)))
 
     warning = ""
 
     if missing:
-        warning = "실행 계열 미기록: run_identity 가 없는 평가 JSON %d 개 (%s)" % (len(missing), ", ".join(missing[:4]))
+        warning = "실행 계열 미기록: run_identity(또는 code_head · gpu_uuid · device)가 비었거나 없는 평가 JSON %d 개 (%s)" % (len(missing), ", ".join(missing[:4]))
 
         if require:
             problems.append(warning + " (--allow-missing-run-identity 로만 끌 수 있다)")

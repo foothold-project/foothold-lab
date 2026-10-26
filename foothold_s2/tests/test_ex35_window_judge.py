@@ -24,9 +24,9 @@ def _set_meta(path, sha, seed=True):
     Path(path).write_text(json.dumps(d), encoding="utf-8")
 
 
-def _set_identity(path, sha, device="cuda:0", head="h" * 40):
+def _set_identity(path, sha, device="cuda:0", head="h" * 40, uuid=None):
     d = json.loads(Path(path).read_text(encoding="utf-8"))
-    d["run_identity"] = {"device": device, "gpu_name": "gpu", "checkpoint_sha256": sha, "eval_seed": 42, "code_head": head}
+    d["run_identity"] = {"device": device, "gpu_name": "gpu", "gpu_uuid": uuid or ("GPU-uuid-of-" + device), "checkpoint_sha256": sha, "eval_seed": 42, "code_head": head}
     Path(path).write_text(json.dumps(d), encoding="utf-8")
 
 
@@ -109,6 +109,7 @@ def make_ckpt(root, n, tag="a"):
 
     for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
         _set_meta(d / ("turn16_" + mode) / "probe_result.json", sha, seed=False)
+        _set_identity(d / ("turn16_" + mode) / "probe_result.json", sha)
 
     return d
 
@@ -605,9 +606,16 @@ def test_env_array_shape_mismatch_fails_a12_not_broadcast_through(pair):
     assert broken(lambda z: z.pop("dones"))
 
 
-def _strip_identity(d, rels=("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9")):
+ALL_IDENT = ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9", "turn16_eval_gt", "turn16_eval_pred", "turn16_probe_prop_only")
+
+
+def _ident_file(d, rel):
+    return Path(d) / rel / ("probe_result.json" if rel.startswith("turn16_") else "map_modes.json")
+
+
+def _strip_identity(d, rels=ALL_IDENT):
     for rel in rels:
-        f = Path(d) / rel / "map_modes.json"
+        f = _ident_file(d, rel)
         j = json.loads(f.read_text(encoding="utf-8"))
         j.pop("run_identity", None)
         f.write_text(json.dumps(j), encoding="utf-8")
@@ -652,3 +660,103 @@ def test_run_identity_mixed_device_or_head_or_sha_is_hold_even_when_missing_allo
     assert r["branch"] == "HOLD_NO_DATA" and "코드 head" in r["decision"]["action"]
     _set_identity(prev / "map64" / "map_modes.json", "e" * 64)                                                  # 저장본 sha 가 다른 저장본 것
     assert any("저장본 sha" in p for p in run(pair)["run_identity"]["problems"])
+
+
+def test_run_identity_uses_gpu_uuid_not_device_string(pair):
+    prev, latest, tmp = pair
+    f = latest / "map64_eval_pred" / "map_modes.json"
+    _set_identity(f, sha_of(latest), uuid="GPU-other-physical-card")                 # device 문자열은 cuda:0 으로 같고 물리 GPU 만 다름
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] == "HOLD_NO_DATA" and any("gpu_uuid" in p for p in r["run_identity"]["problems"])
+    _set_identity(f, sha_of(latest))
+    for rel in ALL_IDENT:                                                              # 최신 전체가 다른 물리 GPU(문자열은 같음)
+        _set_identity(_ident_file(latest, rel), sha_of(latest), uuid="GPU-other-physical-card")
+    assert run(pair)["branch"] == "HOLD_NO_DATA"
+    for rel in ALL_IDENT:
+        _set_identity(_ident_file(latest, rel), sha_of(latest))
+    assert run(pair)["run_identity"]["problems"] == []
+
+
+def test_run_identity_no_usable_uuid_counts_as_missing(pair):
+    prev, latest, tmp = pair
+    f = latest / "hardlevel" / "L6" / "map_modes.json"
+    for bad in ("None", "", None):
+        _set_identity(f, sha_of(latest), uuid="x")
+        j = json.loads(f.read_text(encoding="utf-8"))
+        j["run_identity"]["gpu_uuid"] = bad
+        f.write_text(json.dumps(j), encoding="utf-8")
+        r = run(pair)
+        assert r["branch"] == "HOLD_NO_DATA" and "latest/hardlevel/L6" in r["run_identity"]["missing"]
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"]
+
+
+def test_run_identity_turn16_cells_are_checked(pair):
+    prev, latest, tmp = pair
+    for mode in ("eval_gt", "eval_pred", "probe_prop_only"):                          # 16 env 한 칸만 다른 GPU
+        f = latest / ("turn16_" + mode) / "probe_result.json"
+        _set_identity(f, sha_of(latest), uuid="GPU-16env-other")
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] == "HOLD_NO_DATA" and any("turn16_" + mode not in p and "gpu_uuid" in p for p in r["run_identity"]["problems"]), mode
+        _set_identity(f, sha_of(latest))
+    f = latest / "turn16_probe_prop_only" / "probe_result.json"
+    _set_identity(f, "e" * 64)                                                           # 16 env 의 저장본 sha 가 다른 저장본 것
+    assert any("turn16_probe_prop_only" in p and "저장본 sha" in p for p in run(pair)["run_identity"]["problems"])
+    _set_identity(f, sha_of(latest), head="g" * 40)                                      # 16 env 만 코드 head 가 다름
+    assert any("코드 head" in p for p in run(pair)["run_identity"]["problems"])
+
+
+def test_run_identity_turn16_missing_is_hold_by_default_and_warning_when_allowed(pair):
+    prev, latest, tmp = pair
+    _strip_identity(latest, ("turn16_eval_gt", "turn16_eval_pred", "turn16_probe_prop_only"))   # 64 env 는 기록 있음, 16 env 는 옛 자료
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "latest/turn16_eval_gt" in r["run_identity"]["missing"]
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"].startswith("실행 계열 미기록")
+
+
+def test_turn16_has_no_eval_seed_requirement(pair):
+    prev, latest, tmp = pair
+    f = latest / "turn16_eval_gt" / "probe_result.json"
+    j = json.loads(f.read_text(encoding="utf-8"))
+    j["run_identity"].pop("eval_seed", None)
+    f.write_text(json.dumps(j), encoding="utf-8")
+    assert run(pair)["run_identity"]["problems"] == []
+
+
+def test_run_identity_collect_known_answers(tmp_path):
+    from foothold_s2.eval import run_identity as RI
+    r = RI.collect("cpu", "ab" * 32, repo_root=str(tmp_path))                          # git 저장소 아님 + CPU: 칸 대신 까닭이 남는다
+    assert r["device"] == "cpu" and r["checkpoint_sha256"] == "ab" * 32 and "eval_seed" not in r and "gpu_error" in r and "gpu_uuid" not in r
+    assert RI.collect("cpu", "x", eval_seed=42)["eval_seed"] == 42
+    head = RI.collect("cpu", "x")                                                       # 이 저장소 안: 코드 head 40 자리
+    assert len(head["code_head"]) == 40
+    import foothold_s2.eval.run_identity as m
+    orig = m.collect
+    m.collect = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+    try:
+        assert "boom" in RI.safe_collect("cpu", "x")["identity_error"]                 # 기록이 죽어도 평가는 계속
+    finally:
+        m.collect = orig
+
+
+def test_run_identity_required_values_empty_count_as_missing_verifier_counterexamples(pair):
+    prev, latest, tmp = pair
+    for key, bad in (("device", "__drop__"), ("device", None), ("code_head", ""), ("gpu_uuid", None), ("code_head", None)):
+        for d in (prev, latest):                                                         # 양쪽 여덟(칸 일곱씩) 전부
+            for rel in ALL_IDENT:
+                f = _ident_file(d, rel)
+                _set_identity(f, sha_of(d))
+                j = json.loads(f.read_text(encoding="utf-8"))
+                if bad == "__drop__":
+                    j["run_identity"].pop(key)
+                else:
+                    j["run_identity"][key] = bad
+                f.write_text(json.dumps(j), encoding="utf-8")
+        r = run(pair)
+        assert r["branch"] == "HOLD_NO_DATA" and len(r["run_identity"]["missing"]) == 14, (key, bad)
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"].startswith("실행 계열 미기록") and r["run_identity"]["require"] is False, (key, bad)
+        for d in (prev, latest):
+            for rel in ALL_IDENT:
+                _set_identity(_ident_file(d, rel), sha_of(d))

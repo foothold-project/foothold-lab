@@ -256,6 +256,8 @@ if map_input == "none" and result["last_num_map_tokens"] != 0:
     raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % result["last_num_map_tokens"])
 if getattr(runner.perception, 'ie', None) is not None:
     runner.perception.ie.mask_map_tokens = False
+from foothold_s2.eval import run_identity as _RI  # noqa: E402
+result["run_identity"] = _RI.safe_collect(args.device, result["checkpoint_sha256"], REPO)                  # X27j5: 실행 계열 대조용(실패해도 평가 계속)
 with open(os.path.join(args.out, "probe_result.json"), "w", encoding="utf-8") as fh:
     json.dump(result, fh, ensure_ascii=False, indent=1)
 print("TURNPROBE_DONE", json.dumps(result["summary"]["order"]), flush=True)
