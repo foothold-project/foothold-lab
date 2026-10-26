@@ -18,7 +18,13 @@ git rev-parse HEAD > "$OUT/git_head.txt"
 git status --short foothold_s2 > "$OUT/git_status.txt"
 PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" > "$OUT/launch_receipt.json" || { echo "거절: 인자 영수증 실패"; exit 4; }
 cat "$OUT/launch_receipt.json"
-mapfile -t ARGS < <(PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" --print-args)
+mapfile -t ARGS < <(PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" --print-args | tr -d '\r')
+[ "${#ARGS[@]}" -gt 0 ] || { echo "거절: 인자 목록이 비었다"; exit 5; }
+: > "$OUT/launch_argv_repr.txt"
+for A in "${ARGS[@]}"; do
+  printf '%q\n' "$A" >> "$OUT/launch_argv_repr.txt"
+  case "$A" in ""|*[[:space:]]*|*$'\r'*) echo "거절: argv 에 CR · 공백 · 빈 값 (${A@Q})"; exit 5;; esac
+done
 printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
 [ "${DRY:-0}" = "1" ] && { echo "DRY: 학습은 띄우지 않음 ($OUT)"; exit 0; }
 "$ENV/python.exe" foothold_s2/scripts/train_sb.py "${ARGS[@]}" > "$OUT/run.log" 2>&1

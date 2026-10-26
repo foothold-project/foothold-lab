@@ -71,3 +71,64 @@ def test_script_calls_the_generator_before_training_and_does_not_hard_code_1501(
 
     assert sh.index("foothold_s2.ex35_launch") < sh.index("train_sb.py") and '"${ARGS[@]}"' in sh and "--max_iterations 1501" not in sh and "DRY" in sh
     assert "launch_receipt.json" in sh and "foothold_s2 더러움" in sh and "git_head.txt" in sh
+
+
+# ---- verifier 막음 1 (570042cb): Windows python 출력의 CR 이 mapfile 로 argv 에 남던 것 ----
+import shutil
+import subprocess
+import sys
+
+BASH = shutil.which("bash")
+RUN_SH = PKG / "run_ex35.sh"
+
+
+def _py_print_args_bytes():
+    r = subprocess.run([sys.executable, "-m", "foothold_s2.ex35_launch", "main", "cuda:0", "m1500.pt", "--end-by", END, "--print-args", "--no-sha"],
+                       cwd=PKG.parent, env={**__import__("os").environ, "PYTHONPATH": str(PKG.parent)}, capture_output=True)
+    assert r.returncode == 0, r.stderr.decode("utf-8", "replace")
+
+    return r.stdout
+
+
+def test_python_prints_args_and_receipt_with_lf_only():
+    assert b"\r" not in _py_print_args_bytes()
+
+
+def test_run_script_strips_cr_and_checks_argv_before_launch():
+    s = RUN_SH.read_text(encoding="utf-8")
+    assert "tr -d '" + chr(92) + "r'" in s and "launch_argv_repr.txt" in s
+    assert s.index("launch_argv_repr") < s.index("train_sb.py")                # 검사가 기동보다 앞
+
+
+@pytest.mark.skipif(BASH is None, reason="bash 없음")
+def test_real_pipe_windows_python_into_git_bash_gives_clean_argv(tmp_path):
+    """verifier 재현 그대로: Windows python 출력을 bash mapfile 로 받아 argv 를 repr 로 본다. CR 이 있으면 --command_mode\r 가 된다."""
+    snippet = (
+        f'cd "{PKG.parent.as_posix()}"; export PYTHONPATH="{PKG.parent.as_posix()}"; '
+        f'mapfile -t ARGS < <("{Path(sys.executable).as_posix()}" -m foothold_s2.ex35_launch main cuda:0 m1500.pt --end-by {END} --print-args --no-sha | tr -d \'\r\'); '
+        'for A in "${ARGS[@]}"; do printf "%q\n" "$A"; done'
+    )
+    r = subprocess.run([BASH, "-c", snippet], capture_output=True)
+    assert r.returncode == 0, r.stderr.decode("utf-8", "replace")
+    lines = r.stdout.decode("utf-8").splitlines()
+    assert "--command_mode" in lines and "s2a" in lines and len(lines) >= 27
+    assert all("\r" not in x and "\r" not in x and " " not in x for x in lines)
+
+
+@pytest.mark.skipif(BASH is None, reason="bash 없음")
+def test_script_guard_rejects_cr_space_or_empty_arg():
+    """스크립트의 검사 case 문만 떼어 CR · 공백 · 빈 값 인자를 넣으면 exit 5."""
+    s = RUN_SH.read_text(encoding="utf-8")
+    start = s.index('for A in "${ARGS[@]}"')
+    end = s.index("done", start) + 4
+    loop = s[start:end].replace('>> "$OUT/launch_argv_repr.txt"', ">/dev/null")
+
+    def run(arg):
+        r = subprocess.run([BASH, "-c", f'ARGS=(--ok "$X"); {loop}; echo clean'], capture_output=True, env={**__import__("os").environ, "X": arg})
+
+        return r.returncode, r.stdout.decode("utf-8", "replace")
+
+    assert run("s2a")[1].strip().endswith("clean")
+    for bad in ("s2a\r", "a b", ""):
+        rc, out = run(bad)
+        assert rc == 5 and "거절" in out

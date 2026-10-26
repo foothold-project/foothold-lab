@@ -86,7 +86,9 @@ def main(argv=None) -> int:
     end_by = a.end_by or (datetime.now(timezone.utc).astimezone() + timedelta(hours=24)).isoformat(timespec="seconds")
     args = build_args(a.kind, a.device, a.parent, end_by)
     rc = receipt(a.kind, args, a.parent, check_sha=not a.no_sha)
-    print("\n".join(args) if a.print_args else json.dumps(rc, ensure_ascii=False, indent=1, sort_keys=True))
+    text = "\n".join(args) if a.print_args else json.dumps(rc, ensure_ascii=False, indent=1, sort_keys=True)
+    sys.stdout.buffer.write((text + "\n").encode("utf-8"))    # Windows 텍스트 모드의 CRLF 변환을 피한다(줄끝 LF 고정)
+    sys.stdout.flush()
 
     return 0
 
