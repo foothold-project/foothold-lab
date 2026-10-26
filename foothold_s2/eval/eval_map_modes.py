@@ -161,6 +161,7 @@ for mode in args.modes.split(","):
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
 
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
@@ -169,6 +170,7 @@ for mode in args.modes.split(","):
             policy.reset(dones)
             AL[k] = alive
             VX[k] = robot.data.root_lin_vel_b[:, 0]
+            FW[k] = robot.data.root_pos_w[:, 0] - raw.scene.env_origins[:, 0]
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
             TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
@@ -194,6 +196,14 @@ for mode in args.modes.split(","):
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
+            from foothold_s2.eval import kind_stats
+
+            tile_len = float(raw.scene.terrain.cfg.terrain_generator.size[0])           # 칸 길이는 지형 cfg 에서
+            kinds = [t["kind"] for t in res["fixed_terrain"]["tiles"]]
+            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, tile_len)
+            os.makedirs(args.out, exist_ok=True)
+            np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len)
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
