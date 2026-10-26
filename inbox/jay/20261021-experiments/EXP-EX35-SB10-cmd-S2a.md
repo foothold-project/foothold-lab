@@ -27,7 +27,7 @@ S-B10 m1500 은 지도 없이도 L9 까지 걷고(가림 fwd1.0 5.441 m · 64/64
 | 시드 | 42 그대로 | R11 다른 시드 제안 금지 · 팀장 10/25 「다른 시드는 마지막에 한 번」 |
 | env 수 | **3072**(B · S-B10 과 같음) | `run_sb.sh --num_envs 3072` · `env.yaml num_envs 3072` · 비교 분모를 바꾸지 않음 |
 | GPU | 학습 **cuda:0**, 저장본 평가 **cuda:1**(64 env map64 + 16 env 여덟 경우), 촬영 cuda:1(학습이 cuda:0 이라 가능) | S-B10 이 cuda:0(EX-34 카드) · RULES-HUB 4 절 촬영 GPU · 메모리 「화면 GPU 1, 학습 중 촬영은 다른 장」 · 21:3x nvidia-smi GPU0 0 MiB · GPU1 2.9 GB |
-| 학습 길이 | **500 회**(m1500 → m2000, `max_iterations 2001`, 창 250 회 × 2). 자동 연장 없음 | 팀장 10/25 21:0x 「한 단계 최소 500 회」 · DESIGN-NEXT §5.2 · S-B10 실측 24.1 s/회(model_0 01:18 → model_1500 11:20, 10 h 02 m) → 500 회 ≈ 3.3 h |
+| 학습 길이 | **500 회**(m1500 → m2000, `max_iterations 2001`, 창 250 회 × 2). 자동 연장 없음 | 팀장 10/25 21:0x 「한 단계 최소 500 회」 · DESIGN-NEXT §5.2 · S-B10 실측 24.1 s/회(model_0 01:18 → model_1500 11:20, 10 h 02 m) → 500 회 ≈ 3.3 h. **주의(v0.2)**: `run_sb.sh:28` 은 `--max_iterations 1501` 고정이라 m1500 에서 그대로 이어 가면 0 회 돈다. EX-35 기동 줄은 2001 을 따로 넘겨야 한다(reviewer X26w 막음 2 와 같은 지적, planner 가 run_sb.sh 열어 확인) |
 | 저장 간격 | **50 회**(m1550 … m2000, 10 저장본). 저장본마다 cuda:1 에서 64 env 세 모드 + 16 env 여덟 경우(여섯 + `walk_turn_left` · `walk_turn_right`) | `agent.yaml save_interval 50` · RULES-HUB 8.1 · JUDGE-SPEC 1 · J-T7 · DESIGN-NEXT §5.1(합 6~9 분 < 50 회 ≈ 20 분) |
 | 비용 | ≈ 3.3 h 학습 + 저장본 평가(병렬) ≈ 4 h | 위 실측 |
 
@@ -108,5 +108,5 @@ lead 가 정할 것: (1) 끝(v0.2): JUDGE-SPEC v0.9 넘어짐 허용 14/16, 근�
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
-| v0.2 | 2026-10-26 | §5 조건 1 커밋됨(7639a97d · afad7987, planner 재대조 막음 0 · 시험 34 통과) · 조건 4 에 manifest 세 키 · `--resume_from` 원 폴더 확인 줄 · §2 보정 행에 manifest 키 · §3 kept 14 근거 정정(lead 21:5x: 원칙 팀장 동의 · 숫자 lead 권고) |
+| v0.2 | 2026-10-26 | §5 조건 1 커밋됨(7639a97d · afad7987, planner 재대조 막음 0 · 시험 34 통과) · 조건 4 에 manifest 세 키 · `--resume_from` 원 폴더 확인 줄 · §2 보정 행에 manifest 키 · §3 kept 14 근거 정정(lead 21:5x: 원칙 팀장 동의 · 숫자 lead 권고) · 학습 길이 행에 run_sb.sh 1501 고정 주의(reviewer X26w 막음 2) |
 | v0.1 | 2026-10-26 | 첫 카드(결과 전 고정). 부모 m1500 기준표 21:3x 재계산. walk_turn 기준값 미측 |
