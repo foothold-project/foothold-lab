@@ -154,31 +154,43 @@ def test_the_start_platform_top_is_read_from_the_tile_geometry_and_not_hardcoded
     assert "0.25" not in (ROOT / "foothold_s2/eval/kind_stats.py").read_text(encoding="utf-8").split("def by_kind")[1].split("def from_files")[0]
 
 
-def test_start_offbeam_comes_from_the_tile_geometry_and_is_the_same_for_every_model():
-    """같은 칸 기하에서 빔 위 시작 · 빔 밖 시작을 칸 높이로 가른다. 모델이 달라 결과(1 초 안에 떨어짐)가 달라도 start_offbeam 은 같다."""
+def test_start_offbeam_compares_the_start_lane_with_the_beam_lanes_of_the_pit_zone_for_real_start_positions():
+    """출발 단은 칸 x 0~1 폭 전체라 실제 시작(x 0.5 +-0.5, y 4.0 +-0.5)은 늘 발판 위다. 빔 밖은 시작 y 줄에 구덩이 구역(칸 x 1~7) 발판이 없는가로 가른다(reviewer 수용: 줄 12 · 16 잡힘, 38 빠짐)."""
     from foothold_s2.eval import geometry_hash as G
     from foothold_s2.terrains import sparse_terrains as sp
 
-    st = sp.SideTable()
-    tile = sp.build_tile("balance_beams", 0.05)
-    st.record("balance_beams", 0.05, tile)
-    st.calls = [("balance_beams", 0.05)]
-    grid = sp.height_grid(tile.boxes)
-    ys = np.arange(grid.shape[1]) * sp.MASK_RES
-    x_beam = sp.SPAWN_XY[0] + 3.0                                       # 출발 단 밖 x 에서 빔 위 · 빔 밖 y 를 찾는다
-    col = grid[int(x_beam / sp.MASK_RES)]
-    y_on, y_off = ys[np.argmax(col)], ys[np.argmin(col)]
-    names = ["balance_beams"]
-    tiles = [{"level": 0, "col": 0}] * 2
-    rel = np.array([[3.0, y_on - sp.SPAWN_XY[1]], [3.0, y_off - sp.SPAWN_XY[1]]])
-    sup = G.start_support(st, names, 1, tiles, rel)
+    found = None
 
-    assert sup.tolist() == [True, False]
-    pos = np.zeros((S, 2, 3))
+    for d in np.linspace(0.02, 0.98, 40):                                  # 시작 y 범위 안에 빔 줄과 빈 줄이 둘 다 있는 balance 칸 하나를 찾는다
+        tile = sp.build_tile("balance_beams", float(d))
+        g = sp.height_grid(tile.boxes)
+        i0, i1 = int(round(1.0 / sp.MASK_RES)), int(round(7.0 / sp.MASK_RES))
+        ys = np.arange(g.shape[1]) * sp.MASK_RES
+        lane = np.array([g[i0:i1, k].max() for k in range(g.shape[1])])
+        rel = ys - sp.SPAWN_XY[1]
+        inside = np.abs(rel) <= 0.5
+        on, off = inside & (lane >= -0.05), inside & (lane < -0.05)
+
+        if on.any() and off.any():
+            found = (tile, float(rel[on][0]), float(rel[off][0]), float(d))
+            break
+    assert found is not None
+    tile, y_on, y_off, d = found
+    tiles = [{"level": sp.level_of(d), "col": 0}] * 3
+    rel_xy = np.array([[0.4, y_on], [-0.4, y_off], [0.0, y_off]])           # 실제 시작 분포 안(x +-0.5)
+    real = G.tiles_by_cell
+    G.tiles_by_cell = lambda *_a, **_k: {(sp.level_of(d), 0): tile}         # 칸 묶기 규칙은 test_geometry_hash 가 따로 시험한다
+    try:
+        sup = G.start_support(None, None, 10, tiles, rel_xy)
+    finally:
+        G.tiles_by_cell = real
+
+    assert sup.tolist() == [True, False, False]
+    pos = np.zeros((S, 3, 3))
     pos[:, :, 2] = STAND
-    out = K.by_kind(["balance_beams"] * 2, np.full((S, 2), 0.7), np.zeros((S, 2)), np.ones((S, 2), dtype=bool), DT, pos=pos, start_support=sup)["balance_beams"]
+    out = K.by_kind(["balance_beams"] * 3, np.full((S, 3), 0.7), np.zeros((S, 3)), np.ones((S, 3), dtype=bool), DT, pos=pos, start_support=sup)["balance_beams"]
 
-    assert out["start_offbeam"] == 1 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 시작은 센다
+    assert out["start_offbeam"] == 2 and out["start_fell_within_1s"] == 0                                   # 떨어지지 않아도 빔 밖 줄 시작은 센다
 
 
 def test_threshold_sensitivity_marks_the_env_whose_crossing_changes_with_the_fall_threshold_and_the_metric_stays_at_0_25():
@@ -191,3 +203,38 @@ def test_threshold_sensitivity_marks_the_env_whose_crossing_changes_with_the_fal
 
     assert out["crossed"] == 2 and out["crossed_by_fall_threshold"] == {"0.225": 2, "0.25": 2, "0.275": 1} and out["threshold_sensitive_envs"] == [1]
     assert K.FALL_BELOW_TOP_M == 0.25
+
+
+def test_start_support_is_computed_from_the_robot_start_pose_of_this_command_and_not_from_a_buffer_made_later():
+    """reviewer 막음: START_SUPPORT 가 아직 안 만든 POS 를 읽으면 첫 명령에서 NameError, 읽혀도 앞 명령의 값이다."""
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+    i = src.index("START_SUPPORT = _gh.start_support(")
+    stmt = src[i:src.index(chr(10), src.index("offset 과 같은 값", i))]
+
+    assert "POS" not in stmt and "robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]" in stmt
+    assert src.index("POS = torch.zeros(") > i                                               # POS 는 이 문장 뒤에 만들어진다: 이 문장이 POS 를 읽으면 안 된다
+    assert src.index("START_SUPPORT = _gh.start_support(") < src.index("offset = (robot.data.root_pos_w")
+
+
+def test_no_buffer_in_the_eval_loop_is_read_before_it_is_created():
+    """가짜 env 시험은 Kit 경로를 안 타서 NameError 를 못 잡았다. 평가 파일 안에서 버퍼 이름을 처음 읽는 줄이 처음 만드는 줄보다 앞서면 실패."""
+    import ast
+
+    tree = ast.parse((ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8"))
+    names = ("POS", "FW", "YAW", "DN", "AL", "VX", "START_SUPPORT")
+    first = {}
+
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name) and n.id in names:
+            key = (n.id, "store" if isinstance(n.ctx, ast.Store) else "load")
+            first[key] = min(first.get(key, n.lineno), n.lineno)
+
+    for name in names:
+        assert (name, "store") in first and first[(name, "store")] <= first[(name, "load")], (name, first)
+
+
+def test_the_short_kit_check_exists_and_commands_are_filterable_before_kit():
+    src = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text(encoding="utf-8")
+    sh = (ROOT / "foothold_s2/eval/smoke_sparse_start.sh").read_text(encoding="utf-8")
+
+    assert src.index("--commands 는") < src.index("AppLauncher(args).app") and "--steps 50" in sh and "--commands fwd1.0" in sh

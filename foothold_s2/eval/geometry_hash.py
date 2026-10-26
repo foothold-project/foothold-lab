@@ -62,9 +62,11 @@ SUPPORT_TOL_M = 0.05                 # 시작 점의 칸 윗면 높이가 출발
 
 
 def start_support(side_table, names_by_col, num_rows, tiles, start_xy_rel) -> np.ndarray:
-    """env 별 시작 위치(칸 원점 기준 xy, spawn 은 칸 좌표 SPAWN_XY)가 칸의 발판 위(윗면 높이 >= 출발 단 윗면 - SUPPORT_TOL_M)인지 (n,) bool. 빔 밖 · 구덩이 위 시작은 False. 칸 기하는 SIDE_TABLE 에서 읽는다."""
+    """env 별로 «시작 줄(y)이 구덩이 구역(칸 x ZONE_X)에서 발판을 가지는가» (n,) bool. 출발 단은 칸 x 0~1 폭 전체라 시작 점 자체는 늘 발판 위이므로(reviewer),
+    시작 y 에서 구덩이 구역을 따라 윗면 높이가 출발 단 윗면 - SUPPORT_TOL_M 이상인 곳이 한 군데도 없으면(빔 밖 줄) False. 칸 기하는 SIDE_TABLE 에서 읽는다."""
     cells = tiles_by_cell(side_table, names_by_col, num_rows)
     top = float(sp._frame.__defaults__[0])
+    i0, i1 = int(round(sp.ss.ZONE_X[0] / sp.MASK_RES)), int(round(sp.ss.ZONE_X[1] / sp.MASK_RES))
     out, grids = [], {}
 
     for t, rel in zip(tiles, np.asarray(start_xy_rel, dtype=float)):
@@ -72,9 +74,9 @@ def start_support(side_table, names_by_col, num_rows, tiles, start_xy_rel) -> np
 
         if key not in grids:
             grids[key] = sp.height_grid(cells[key].boxes)
-        x, y = sp.SPAWN_XY[0] + rel[0], sp.SPAWN_XY[1] + rel[1]
-        i, j = int(np.clip(x / sp.MASK_RES, 0, grids[key].shape[0] - 1)), int(np.clip(y / sp.MASK_RES, 0, grids[key].shape[1] - 1))
-        out.append(grids[key][i, j] >= top - SUPPORT_TOL_M)
+        g = grids[key]
+        j = int(np.clip((sp.SPAWN_XY[1] + rel[1]) / sp.MASK_RES, 0, g.shape[1] - 1))
+        out.append(g[i0:i1, j].max() >= top - SUPPORT_TOL_M)
 
     return np.asarray(out, dtype=bool)
 

@@ -30,6 +30,7 @@ parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
+parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -40,6 +41,11 @@ if args.fixed_level is not None and not args.fixed_terrain:
     parser.error("--fixed-level 은 --fixed-terrain 과 같이만 쓴다")                                  # Kit 기동 전에 거절(조용히 무시하면 기본 칸으로 돈다)
 if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
+CMD_NAMES = ("fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2")
+WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
+
+if not set(WANT_CMDS) <= set(CMD_NAMES):
+    parser.error("--commands 는 %s 중에서 (Kit 기동 전 거절)" % (CMD_NAMES,))
 app = AppLauncher(args).app
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO not in sys.path:
@@ -136,7 +142,7 @@ for mode in args.modes.split(","):
     runner.perception._advance = tapped
     res["modes"][mode] = {}
 
-    for cname, cmd in CMDS.items():
+    for cname, cmd in ((c, v) for c, v in CMDS.items() if c in WANT_CMDS):
         torch.manual_seed(42)
         env.reset()
         terrain = raw.scene.terrain
@@ -169,7 +175,8 @@ for mode in args.modes.split(","):
 
             _gen = raw.scene.terrain.cfg.terrain_generator
             _names = _cols.column_types({k: float(v.proportion) for k, v in _gen.sub_terrains.items()}, int(_gen.num_cols))
-            START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"], POS[0, :, :2].cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별)
+            START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"],
+                                              (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별): reset · yaw 맞춤 뒤 이 명령의 실제 시작 xy(아래 offset 과 같은 값)
             res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 

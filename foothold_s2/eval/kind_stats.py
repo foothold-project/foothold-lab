@@ -4,6 +4,7 @@
 건넘 = 살아 있고 발판 위에 있는 동안 칸 원점(출발 단)에서 전진(+x) 거리가 도착 단까지의 거리 REFERENCE_M(start_sheet, 6.5 m)에 닿음.
 발판 위 = 몸 z 가 출발 단 윗면(칸 기하에서 읽음) + 0.25 m 밑으로 내려가지 않음(절대 문턱, X26o: 시작 높이 기준은 구덩이에서 시작한 env 를 놓쳤다). start_edge = 출발 단 끝 0.2 m 안 시작 수, start_offbeam = 칸 기하로 잰 발판 밖 시작 수(평가가 start_support 를 npz 에 남긴 판만), start_fell_within_1s = 1 초 안에 구덩이로 내려간 수(결과 지표, 시작 자리가 아님). 한 번 내려가면(구덩이 바닥 · 빔 아래) 그 시점부터 건넘 불가(되돌아 올라가도 안 침).
 칸 상자는 쓰지 않는다: 같은 (종류, 레벨)이어도 칸 기하가 난이도 무작위 정도(시드는 (종류, 난이도) 해시, 난이도는 줄 안 무작위)로 달라 저장된 평가의 정확한 상자를 모른다.
+낙하 문턱은 출발 단 윗면 + 0.25 m 로 결과를 보기 전에 정했고(FALL_BELOW_TOP_M) 결과를 보고 옮기지 않는다. 민감도(0.225 · 0.275)는 crossed_by_fall_threshold · threshold_sensitive_envs 에 기록만 한다.
 원자료(vx · fwd · alive · pos · dones 배열)는 평가가 npz 로 남기므로 이 모듈로 다시 낼 수 있다: python -m foothold_s2.eval.kind_stats --recompute <npz 또는 폴더 글롭...>
 """
 
@@ -79,7 +80,7 @@ def by_kind(kinds, vx, fwd, alive, dt: float, threshold_m: float = ss.REFERENCE_
         out[k] = {"envs": int(m.sum()), "alive_at_end": int(alive[-1][m].sum()), "body_vx_integral_median_m": float(np.median(dist[m])),
                   "crossed": int(crossed[m].sum()), "fell": int(fell_any[m].sum()), "start_edge": int(start_edge[m].sum()), "start_fell_within_1s": int(fell_1s[m].sum()), "fwd_max_median_m": float(np.median(fwd_max_fin[m])),
                   "crossing_ratio_median": float(np.median(np.clip(fwd_max_fin[m] / threshold_m, 0.0, 1.0))),
-                  "crossed_rule": f"살아 있고 몸 z 가 출발 단 윗면 + {FALL_BELOW_TOP_M:g} m 밑으로 내려가지 않은 동안 칸 원점에서 전진 거리 >= {threshold_m:g} m (도착 단), 기록 {steps * dt:g} s",
+                  "crossed_rule": f"살아 있고 몸 z 가 출발 단 윗면 + {FALL_BELOW_TOP_M:g} m 밑으로 내려가지 않은 동안(문턱은 결과 전에 정한 값, 민감도는 별도 열) 칸 원점에서 전진 거리 >= {threshold_m:g} m (도착 단), 기록 {steps * dt:g} s",
                   "fall_test": pos is not None}
         if by_th:
             out[k]["crossed_by_fall_threshold"] = {f"{th:g}": int(by_th[th][m].sum()) for th in SENSITIVITY_M}
