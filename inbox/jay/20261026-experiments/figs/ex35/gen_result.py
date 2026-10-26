@@ -15,6 +15,11 @@ DEFAULT_TRAIN = Path(
     "C:/mai/wt/foothold-lab/impl-ex35-07fc/logs_gate/ex35_main_20261026_232432"
 )
 DEFAULT_BASELINE = Path(__file__).resolve().parents[5] / "inbox/jay/20261026-experiments/figs/startline/startline_table.json"
+DEFAULT_WINDOW = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_combined_x27j/window_m2000_default.json")
+DEFAULT_REMEASURE = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval_x27j/remeasure.log")
+DEFAULT_CHAIN_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval/m2000/map64/map_modes.json")
+DEFAULT_REMEASURE_MAP = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval_x27j/m2000/map64/map_modes.json")
+DEFAULT_CMP_VIDEO = Path("C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m/p2/rendered/CMP_S-B10-m1500_vs_EX-35-m2000_rough_eval_gt_seq_1x.mp4")
 
 
 def read_json(path: Path) -> dict:
@@ -25,7 +30,17 @@ def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASELINE) -> dict:
+def numeric_leaves(value: object, prefix: str = "") -> dict[str, float | int]:
+    if isinstance(value, dict):
+        return {key: item for name, child in value.items() for key, item in numeric_leaves(child, f"{prefix}/{name}").items()}
+    if isinstance(value, list):
+        return {key: item for i, child in enumerate(value) for key, item in numeric_leaves(child, f"{prefix}/{i}").items()}
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return {prefix: value}
+    return {}
+
+
+def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASELINE, evidence_paths: dict[str, Path] | None = None) -> dict:
     paths = {
         "m1750": eval_dir / "m1750/ex35_verdict.json",
         "m1950": eval_dir / "m1950/ex35_verdict.json",
@@ -34,10 +49,40 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
         "run_log": train_dir / "run.log",
         "rc": train_dir / "rc.txt",
         "baseline": baseline_path,
+        **(evidence_paths or {
+            "window": DEFAULT_WINDOW,
+            "remeasure_log": DEFAULT_REMEASURE,
+            "chain_map": DEFAULT_CHAIN_MAP,
+            "remeasure_map": DEFAULT_REMEASURE_MAP,
+            "cmp_video": DEFAULT_CMP_VIDEO,
+        }),
     }
     verdicts = {k: read_json(paths[k]) for k in ("m1750", "m1950", "m2000")}
     launch = read_json(paths["receipt"])
     baseline = read_json(paths["baseline"])["turn"]
+    window = read_json(paths["window"])
+    chain_map = read_json(paths["chain_map"])
+    remeasure_map = read_json(paths["remeasure_map"])
+    remeasure_log = paths["remeasure_log"].read_text(encoding="utf-8-sig")
+    assert window["branch"] == "STOP" and window["decision"]["row"] == 4
+    assert window["a11"]["state"] == "unfilled"
+    assert window["missing_inputs"] == {"latest": [], "prev": []}
+    assert window["states"]["latest"]["state"] == verdicts["m2000"]["state"]
+    assert window["states"]["prev"]["state"] == verdicts["m1950"]["state"]
+    starts = re.findall(r"(?m)^\S+ \S+ start .*?/m(\d{4})/", remeasure_log)
+    ends = re.findall(r"(?m)^\S+ \S+ end ok .*?/m(\d{4})/.*?rc=0", remeasure_log)
+    assert len(starts) == len(ends) == 20 and starts == ends
+    assert sorted(set(ends)) == ["1800", "1850", "1900", "1950", "2000"]
+    old_leaves = numeric_leaves(chain_map)
+    new_leaves = numeric_leaves(remeasure_map)
+    excluded = {"/envs", "/steps", "/checkpoint_iter"}
+    common = sorted((old_leaves.keys() & new_leaves.keys()) - excluded)
+    changed = [key for key in common if old_leaves[key] != new_leaves[key]]
+    assert len(common) == 74 and len(changed) == 28
+    source_module = "foothold_s2.eval.eval_map_modes"
+    old_source = chain_map["source_sha256"][source_module]
+    new_source = remeasure_map["source_sha256"][source_module]
+    assert old_source != new_source
     log = paths["run_log"].read_text(encoding="utf-8-sig", errors="replace")
     iterations = [int(v) for v in re.findall(r"Learning iteration\s+(\d+)/2001", log)]
     elapsed = re.findall(r"Time elapsed:\s*([0-9:]+)", log)
@@ -111,11 +156,18 @@ def collect(eval_dir: Path, train_dir: Path, baseline_path: Path = DEFAULT_BASEL
         "training_windows": windows,
         "parent_cases": parent_cases,
         "checkpoint_pair_row6": "REVERT",
-        "window_decision": "HOLD",
+        "window_decision": window["branch"],
+        "window_row": window["decision"]["row"],
+        "window_action": window["decision"]["action"],
         "window_evidence": {
-            "required_fields_complete": False,
-            "a11_video_reviewed": False,
-            "basis": "카드 §4b.6의 선행 1·4행과 rulecheck 10/27 03:15 N06. 필수 칸 완결 및 A11 판독 확인서 미제출",
+            "missing_inputs": window["missing_inputs"],
+            "a11": window["a11"],
+            "remeasure_stages": len(ends),
+            "map64_numeric_comparable": len(common),
+            "map64_numeric_changed": len(changed),
+            "chain_eval_map_modes_sha": old_source,
+            "remeasure_eval_map_modes_sha": new_source,
+            "cmp_video_sha256": sha(paths["cmp_video"]),
         },
         "canonical": "S-B10 m1500",
         "source_sha256": {k: sha(v) for k, v in paths.items()},
@@ -167,18 +219,19 @@ def render(d: dict) -> str:
         parent_rows.append(
             f"| {name} | {parent['Q']:.4f} | {latest['Q']:.4f} | {latest['Q'] - parent['Q']:+.4f} |"
         )
+    x = d["window_evidence"]
     return f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
-> 근거: EX-35 고정 학습 영수증·run.log·m1750/m1950/m2000 판정 JSON · 결과 전 EX-35 카드 §4b.6
-> 요지: 최종 두 저장본은 MAINTAIN_FAIL이다. 필수 칸과 A11 미판독으로 창 판정은 HOLD, 연장 없음이다.
-> 상태: 학습 종료·정답 지도 저장본 판정 확인됨 · 창 판정 보류 · 영상·보행 위상·저장본 추세 해석 대기
-> 판: v1.1
+> 근거: EX-35 학습 영수증·저장본 판정 JSON·m2000 창 판정 JSON·재평가 로그·CMP 영상 · 결과 전 EX-35 카드 §4b.6
+> 요지: 최종 두 저장본은 MAINTAIN_FAIL이다. m2000 기본 창 판정은 A11 판독 파일 부재로 STOP 4행, 연장 없음이다.
+> 상태: 학습·저장본 판정 확인됨 · 창 STOP 4행 확인됨 · A11 판독·재현성 원인 미확인
+> 판: v1.2
 
 # EX-35 결과 · 명령 S2a 창 판정
 
 ## 1. 같은 조건의 영상부터 보기
 
-영상 분석 대기. analyst · runner가 영상과 보행 위상을 분석 중이다. 공개 링크와 영상 길이·프레임 수는 미확인이다.
+CMP 영상 원본은 `{d['source_paths']['cmp_video']}` (`sha256 {x['cmp_video_sha256']}`)이다. 영상 판독과 보행 위상 해석은 진행 중이며, 이 보고서는 영상의 운동 품질을 판정하지 않는다. 공개 링크와 영상 길이·프레임 수는 미확인이다.
 
 ## 2. 무엇이 같고 무엇이 다른가
 
@@ -228,11 +281,13 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 ## 7. 판정과 증거 범위
 
-m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 카드 §4b.6의 **6행만 조건부로 보면 {d['checkpoint_pair_row6']}**이나, 이 표는 앞에서 맞는 행이 우선이다. 필수 칸 완결 증거가 없고 A11 영상 판독표가 미제출이므로 선행 1·4행에서 현재 창 판정은 **{d['window_decision']} (판정 보류)**다. 정본은 **{d['canonical']} 유지**, EX-35 연장은 없다. m1950·m2000 JSON은 정답 지도 `eval_gt` 저장본 판정이며, 전체 창 판정 완료나 보행 기전 결론이 아니다.
+m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없이 실행한 m2000 기본 창 판정은 **{d['window_decision']} {d['window_row']}행**이다. 창 판정 JSON의 사유는 `{d['window_action']}`이고, A11 상태는 `{x['a11']['state']}`이다. 이 실행에서 선행 필수 입력 결측 목록은 최신·이전 모두 빈 목록이다. A11이 clear여도 두 창 연속 `MAINTAIN_FAIL` 때문에 카드 §4b.6의 **6행 {d['checkpoint_pair_row6']} 예상**이나, A11 clear 입력으로 판정 코드를 돌린 결과는 아니므로 코드 미확인 예측이다. **EX-35 연장 없음, 정본 {d['canonical']} 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
+
+판정 입력은 GPU1 사슬의 16 env 회전 값과 GPU0 재평가의 64 env 네 칸 값을 합쳤다. 같은 m2000 저장본·시드 42의 사슬 및 재평가 map64에서 비교 가능한 수치 {x['map64_numeric_comparable']}칸 중 {x['map64_numeric_changed']}칸이 다르다. `eval_map_modes` 소스 해시도 `{x['chain_eval_map_modes_sha']}`에서 `{x['remeasure_eval_map_modes_sha']}`로 다르다. 원인은 미확인이고 재현성 시험이 진행 중이다. 허용 폭이나 판정 문턱은 바꾸지 않았다.
 
 ## 8. 다음 설계에서 무엇을 바꾸는가
 
-이 보고서만으로 원인을 정하지 않는다. analyst와 runner의 영상·위상·저장본 추세 분석 및 필수 칸 완결 확인을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
+이 보고서만으로 원인을 정하지 않는다. A11 영상 판독, 보행 위상·저장본 추세 분석, map64 재현성 시험을 기다린다. 새 학습이나 연장은 별도 팀장 결정이 필요하다.
 
 ## 9. 실제 완료와 재현 경로
 
@@ -242,7 +297,7 @@ m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 카드 §4b.6의 **
 |---|---|---|
 {evidence}
 
-검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `HOLD`는 카드 §4b.6 선행 행과 미완 증거 범위의 운영 기록이며 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
+검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 창 `STOP` 4행, A11 미기입, 재평가 {x['remeasure_stages']}단계 완료, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
 """
 
 

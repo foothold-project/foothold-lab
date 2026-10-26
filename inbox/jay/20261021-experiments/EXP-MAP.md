@@ -2,13 +2,13 @@
 > 작성: 오흥재 (luna 문서 반영) · 2026-10-23
 > 근거: #555 댓글 6336845347·6338232352·6339275508·6342115176·6342170646·6342453922 · `LEAD-HANDOFF-20261022.md` §§17~27 · `BASELINE-0811.md` · `EXPERIMENT-RULES.md`
 > 요지: EX-01~29의 기록과 EX-30/31 전이 설계, 본류·진단 지류와 811 동회차 판정 기준을 연결한다.
-> 상태: 10/27 최종 기록 · EX-35 m2000 학습 rc 0 · m1950/m2000 MAINTAIN_FAIL · 창 HOLD · S-B10 m1500 유지 · 해석 대기
+> 상태: 10/27 최종 기록 · EX-35 m2000 학습 rc 0 · m1950/m2000 MAINTAIN_FAIL · 창 STOP 4행 (A11 미기입) · S-B10 m1500 유지 · 재현성 원인 미확인
 
 # 실험 지도 · S1-a 실패에서 S2-G0로
 
 ## 10/27 최종 · EX-35 결과 기록
 
-- **EX-35 최종 판정**: [RESULT-EX35](../20261026-experiments/RESULT-EX35-1027.md)는 학습 m2000 종료(rc 0)와 m1950·m2000의 `MAINTAIN_FAIL` 두 건을 원자료에서 생성했다. 카드 §4b.6 선행 1·4행의 필수 칸·A11 판독이 미완이라 창은 `HOLD`. 6행 `REVERT`는 조건부다. 정본 `S-B10 m1500` 유지, EX-35 연장 없음. 독립 좌회전 Q는 부모보다 높아 전환 좌회전과 구별한다. 영상·보행 위상·저장본 추세 해석은 analyst·runner 분석 대기. GPU0 학습 작업은 02:48:13부터 종료, 다음 학습은 팀장 승인 대기. GPU1 평가 사슬의 복원 지도 경로는 별도 진행 중.
+- **EX-35 최종 판정**: [RESULT-EX35 v1.2](../20261026-experiments/RESULT-EX35-1027.md)는 학습 m2000 종료(rc 0)와 m1950·m2000의 `MAINTAIN_FAIL` 두 건을 원자료에서 생성했다. 면제 없는 m2000 기본 창 판정은 A11 판독 파일 부재로 `STOP` 4행이다. A11이 clear여도 6행 `REVERT`는 예상이며 코드 실행 결과는 미확인이다. 정본 `S-B10 m1500` 유지, EX-35 연장 없음. 16 env 회전은 GPU1 사슬, 64 env 네 칸은 GPU0 재평가를 합쳤다. 같은 저장본·시드 42의 map64 비교 가능 수치 74칸 중 28칸이 달랐고 `eval_map_modes` 소스 해시도 `ce4d25ea`에서 `ac739f3d`로 달랐다. 원인은 미확인이고 재현성 시험 중이다. A11 영상 판독·보행 위상 해석은 대기 중이다.
 
 ## 10/27 01시대 · EX-35 실행 및 결정 8 · 9 반영
 
@@ -263,7 +263,7 @@ lead가 2행2열 영상에서 다리를 몸 아래로 펴는가·네 발이 번�
 | [EX-32 G0-B](EXP-EX32-G0B-friction.md) | 지도 없음 기준선 (B 짝) | 처음부터, EX-25 설정 + 마찰 0.2~1.2 | 지도 입력 없음. 학습 중 | DESIGN-NEXT v0.3 · 세 판 비교 |
 | [EX-33 S-B50](EXP-EX33-SB50-mapswitch.md) | 지도 켜고 끄기 p 0.5 | 처음부터, B 설정 | 에피소드마다 지도 끔 0.5. 학습 중 (GPU1) | DESIGN-NEXT v0.3 11 절 판 C0 |
 | [EX-34 S-B10](EXP-EX34-SB10-mapswitch.md) | 지도 켜고 끄기 p 0.1 | 처음부터, B 설정 | 에피소드마다 지도 끔 0.1. G0-B 뒤 GPU0 | DESIGN-NEXT v0.3 11 절 판 C0 |
-| [EX-35 S-B10 명령 S2a](EXP-EX35-SB10-cmd-S2a.md) | S-B10 m1500 명령 S2a 첫 축 | 부모 sha256 `4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d` | 학습 m2000 rc 0; m1950·m2000 `MAINTAIN_FAIL`. 필수 칸·A11 미완으로 창 `HOLD`, 연장 없음. 정본 S-B10 m1500 | [RESULT-EX35](../20261026-experiments/RESULT-EX35-1027.md) · 카드 §4b.6 선행 행 · 해석 대기 |
+| [EX-35 S-B10 명령 S2a](EXP-EX35-SB10-cmd-S2a.md) | S-B10 m1500 명령 S2a 첫 축 | 부모 sha256 `4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d` | 학습 m2000 rc 0; m1950·m2000 `MAINTAIN_FAIL`. 기본 창 `STOP` 4행 (A11 미기입), 연장 없음. 정본 S-B10 m1500 | [RESULT-EX35 v1.2](../20261026-experiments/RESULT-EX35-1027.md) · map64 28/74 불일치 원인 미확인 · A11 판독 대기 |
 | [EX-01 S1-a](EXP-S1-a.md) | 본 학습 기준과 실패 관찰 | S1-a 설정. 두 run의 저장 agent 설정은 `resume: false`(luna 대조). model_5999는 결과 참조이며 부모 체크포인트라는 뜻이 아님 | 거친 바닥에서 정지·전진·회전 실패. blind도 실패했으나 진단 경로는 scan 중심 | `16-REWARDS.md`와 `52-S1-OPEN-COMMAND.md`에 S1 계획이 있음. 이번 실패 진단은 #555 기록 |
 | [EX-02 D1](EXP-D1.md) | 발 들기 항 가설 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교. S1-a의 학습 체크포인트에서 이어 학습하지 않음 | `feet_air_time` 가중치 `[코드] +0.1`. 등록된 개선 기준 미달, 가설 기각 | D1은 설계 정본에서 찾지 못함. #555의 진단용 신설 |
 | [EX-03 D2](EXP-D2.md) | 추종 커널의 정지 효과 | S1-a 설정 파생. `resume: false`, max_iterations=1501, model_1500 비교 | 선속도·회전 추종 std를 `[코드] 0.5 → 0.25`로 함께 변경. seed 42의 1,500회 결과와 두 시드 1,100회 비교는 별개 | D2는 설계 정본에서 찾지 못함. #555의 진단용 신설 |
