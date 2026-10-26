@@ -2,7 +2,7 @@
 > 작성: 오흥재 (lead 정리) · 2026-10-26
 > 근거: 팀장 22:5x 승인 · impl-sb 6309f67e · RULES-HUB 8 절 · DESIGN-NEXT-draft v0.3 11 절
 > 요지: 에피소드마다 지도를 켜고 끄며 처음부터 배우면, 한 정책이 지도 있을 때는 B 만큼, 지도 없을 때는 G0-B 만큼 걷는다.
-> 상태: 학습 끝 10/26 09:54:42 rc 0 (model_1500) · 평가 사슬 진행 중 (100 회 단위 먼저)
+> 상태: 학습 끝 · 평가 끝 · 결과 문서 RESULT-EX33-SB50-1026.md (10/26 17:3x) · 해석 미완 (영상 · 위상 판독 전) · 출발선 아님 (m1400 연속 끊김)
 > 판: v0.1
 
 # EX-33 · S-B50 (지도 켜고 끄기 p 0.5, 처음부터)
@@ -29,7 +29,7 @@
 
 ## 결과
 
-영상 없음 · 미확인 (학습 중). 끝나면 RESULT-B1500-1024 9 절 형식 결과 문서와 영상 경로를 여기에 잇는다.
+결과 문서: [RESULT-EX33-SB50-1026.md](https://github.com/foothold-project/foothold-lab/blob/feature/verify-v2-mvp-jay/inbox/jay/20261026-experiments/RESULT-EX33-SB50-1026.md) (9 절, 숫자는 figs/ex33-34/gen_result.py). 영상: https://github.com/foothold-project/foothold-lab/releases/tag/research-sb-1500-20261026 · 로컬 C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\. 대표 영상: C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\compare_masked_rough_seq_1x.mp4 (네 판 지도 가림 비교) · C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\sb50_1500_probe_prop_only_rough_seq_1x.mp4 · C:\Users\AI-WS01\s2_lab\video_25e\final\runner-26a_1026_final\sb50_1500_eval_gt_rough_seq_1x.mp4. 카드 판정: 지도 켬 유지 · 지도 없이 걷기 PASS, 회전 켬 · 가림 같음 5 · 다름 1. 이후 결정: 회전은 출발선 고르는 점수에서 뺀다 (팀장 10/26 16시, 원장 bba2fe52). 위 판정 절의 회전 우선 문장은 그 결정으로 대체된다 (결과 전 고정 문장이라 지우지 않고 남김).
 
 ## 다음
 
