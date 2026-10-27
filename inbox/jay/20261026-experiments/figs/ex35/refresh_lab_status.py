@@ -71,12 +71,15 @@ def replace_one(source: str, pattern: str, replacement: str) -> str:
     return changed
 
 
-def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[int]) -> str:
+def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[int], decision_count: int) -> str:
     stamp = now.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
     short = now.astimezone(KST).strftime("%m/%d %H:%M KST")
     source = replace_one(source, r"마지막 원자료 대조 <b>[^<]+</b>", f"마지막 원자료 대조 <b>{stamp}</b>")
     source = replace_one(source, r"팀장이 정할 것 · [^<]+</h2>", f"팀장이 정할 것 · {short}</h2>")
     run_text = "실행 중인 학습·평가 후보 없음" if not active else f"실행 후보 PID {', '.join(map(str, active))} · 상태 확인 필요"
+    if decision_count < 1:
+        raise ValueError("pending decisions missing")
+    decision_label = "여덟" if decision_count == 8 else str(decision_count)
     for gpu in gpus:
         index = gpu["index"]
         row = (
@@ -86,7 +89,7 @@ def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[
             f'UUID {gpu["uuid"]}. {run_text}. '
             '<a href="https://github.com/foothold-project/foothold-lab/blob/feature/verify-v2-mvp-jay/'
             'inbox/jay/20261026-experiments/RESULT-EX35-1027.md">EX-35 RESULT v1.5</a>: '
-            '창 STOP 6행 · 팀장 결정 대기 3건.</div></div>'
+            f'창 STOP 6행 · 팀장 결정 대기 {decision_label} 건.</div></div>'
         )
         source = replace_one(source, rf'<div class="row"><div class="k">GPU{index}</div><div>.*?</div></div>', row)
     return source.replace("\u2014", " · ")
@@ -114,7 +117,8 @@ def refresh(page: Path = LAB, log: Path = LOG) -> dict:
     data, agenda, result, a11 = load_sources()
     cards = render_cards(data, agenda, result, a11)
     decisions = render_decisions(data, agenda)
-    output = render(page.read_text(encoding="utf-8"), now, gpus, active)
+    decision_count = decisions.count('class="row"')
+    output = render(page.read_text(encoding="utf-8"), now, gpus, active, decision_count)
     output = render_page(output, cards, decisions)
     ensure_figure(data)
     write_atomic(page, output)
