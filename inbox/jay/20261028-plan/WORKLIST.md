@@ -56,7 +56,7 @@
 | W13 | ponytail 켬 · 끔 한 쌍 시험 (우리 코드 과제, 격리 clone, 한도 전후 측정) | super2 | 팀장 super2 창 직접 허락(03:0x 됨) | 카드 `CARD-W12` 2 절 |
 | W14 | 성과로 일찍 넘김 규칙(D07): 실측 기준 명세 → 판정 코드 → 검수 | planner 명세 → sonnet-code 구현 → reviewer | W18 | 대기 |
 | W15 | 평가 사슬에 eval_pred · 지형 종류별 64 env 기록 추가(D09) | sonnet-code → reviewer | W03 GPU 가 빈 뒤 | 대기 |
-| W16 | orchestration 알림이 팀장 입력 중에 lead 창으로 들어오는 문제 조사 · 고침 | super2 | - | 원인 찾음 · 옮기기 승인(D11) · 시험 run 중 |
+| W16 | orchestration 알림이 팀장 입력 중에 lead 창으로 들어오는 문제 조사 · 고침 | super2 | - | 끝 04:14: coordinator = 셸 창 mailbox(term_a5d996e2), lead 는 UserPromptSubmit 훅 맥락 + `_out/msgs/inbox_wait.py`(읽기만, 시험 통과)로 받음. 되돌리기 `orca orchestration run-use --id run_abb2e12cee32` |
 | W17 | 밤 자동 선택 기준표: 안전 축 HOLD 때 lead 가 무엇을 보고 무엇을 고르나(계속 · 처방하고 계속 · 되돌림) | planner → reviewer 1 회 | W05 v0.5 | 의뢰 |
 | W18 | 단계(stage) 목록 확정과 코드 구현 상태 점검: 단계 순서 · 각 단계 명령 구성 · 자동 전환 장치 유무 | planner | - | 의뢰 · W14 의 앞 일 |
 
