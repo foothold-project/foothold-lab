@@ -9,7 +9,7 @@
 ## W12 원장 · 규칙 글
 
 - [ ] R12-1 `UserPromptSubmit` 훅이 원문 · 시각 · 세션 이름 · 세션 ID 를 `~/.mai/ledger-spool/` 에 붙임(LLM 없음). 다른 세션이 보낸 글은 표시를 다르게
-- [x] R12-2 `wt/mai-os/ledger` worktree 에서 10 분마다 `ledger/` 만 커밋 · push, 키 모양 문자열 가림(가린 건수만 로그)
+- [ ] R12-2 (첫 push 만 끝 · 10 분 예약은 팀장 답 대기) `wt/mai-os/ledger` worktree 에서 10 분마다 `ledger/` 만 커밋 · push, 키 모양 문자열 가림(가린 건수만 로그)
 - [x] R12-3 10/26 이전 대화 기록(jsonl)에서 같은 모양으로 한 번 뽑아 넣음 (lead 의 W02 원장 초안이 이것을 입력으로 씀)
 - [x] R12-4 하루 끝에 「foothold-lab `inbox/jay/20261028-plan/WORKLIST.md` 의 어느 W · R 에도 안 붙은 팀장 원문 줄」 목록을 뽑는 스크립트
 - [ ] R12-5 `os/rules/scope-discipline.md` + `SessionStart`(startup · resume · compact) · `SubagentStart` 훅 주입 + 주입 로그 + 하루 한 번 빠진 세션 알림
