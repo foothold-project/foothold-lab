@@ -120,7 +120,7 @@
 - 10/26 analyst 「자동 전환 없음」 의 원문 파일을 lead_tmp 10/26 문서 네 편(QA · NIGHT-PLAN · RESULT-EX35 · OPINION) 에서 찾지 못했다. lead 03:56 인용으로 둔다. 이 문서의 「없음」 은 planner 가 cd2c599a 를 직접 읽은 결과다.
 - `start_perception.py:228~232`(force_gt 전환 영수증) 와 `terrains/columns.py` 의 듬성 열 켜기 인자는 CURRICULUM v0.3 인용이고 이번에 다시 열지 않았다(§1 6 · 8 행).
 - eval-x27noise 작업 사본(dirty 1) 은 다른 세션 것이라 읽지 않았다. impl-w04 와 eval-x27m4 의 인용 줄은 같았다(§2 줄 번호 둘 다 확인).
-- 손 명령 경로: `sol23f_contract.py` 에 `sha` 문자열이 없음을 grep 으로 재확인했다(`validate_launch` 는 부모 sha 를 보지 않는다). 실행은 하지 않았다.
+- 손 명령 경로: `sol23f_contract.py` 의 `validate_launch`(`:56~105`) 안에 부모 sha 비교가 없음을 재확인했다(파일의 sha256 은 `:144~145` 영수증 계산뿐이고, 비교는 `ex35_launch.py:18 · 67~68` 에만 있다). 실행은 하지 않았다.
 - 이항 꼬리 여섯 값은 planner 가 다시 계산했고 reviewer 값(0.160 · 0.012 · 0.0006 · 0.311 · 0.050 · 0.0048) 과 반올림 안에서 같다.
 - W17 표의 S1 · S2 · S7 은 G3 구현 전에는 손 계산이다. 밤 운영에서 lead 가 손으로 셀 수 있는 양(축 11 · 저장본 10) 인지는 미측.
 - 깃발 성공선(C1b 열) 은 W04 · W09 기준선 뒤 카드에서 고정한다. 여기엔 값이 없다.
