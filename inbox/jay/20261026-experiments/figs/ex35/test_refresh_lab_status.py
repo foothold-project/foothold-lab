@@ -32,6 +32,7 @@ def test_render_updates_only_current_snapshot():
     )
     now = datetime(2026, 10, 27, 6, 32, tzinfo=timezone(timedelta(hours=9)))
     gpus = MODULE.gpu_rows("0, GPU-a, 0, 15979, 0\n1, GPU-b, 3964, 12016, 0\n")
+    source += "<p>긴 대시\u2014두 개\u2014제거</p>"
     output = MODULE.render(source, now, gpus, [])
     assert "2026-10-27 06:32 KST" in output
     assert "06:32 KST" in output
@@ -40,6 +41,7 @@ def test_render_updates_only_current_snapshot():
     assert "STOP 6행" in output and "RESULT v1.4" in output
     assert "과거 결과 기록은 보존" in output
     assert "old0" not in output and "old1" not in output
+    assert "\u2014" not in output and "긴 대시 · 두 개 · 제거" in output
     assert "PID 123" in MODULE.render(source, now, gpus, [123])
 
 

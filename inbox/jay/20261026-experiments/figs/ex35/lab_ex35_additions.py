@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import html
 import json
+import os
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -16,6 +19,7 @@ ANALYST = Path("C:/mai/wt/foothold-lab/astra-25b/inbox/jay/20261027-design/VERIF
 A1_FIGURES = Path("C:/mai/wt/foothold-lab/astra-25b/inbox/jay/20261027-design/figs/ex35-a1-m2000")
 TURN_FIGURE = Path("C:/Users/AI-WS01/s2_lab/lab_status/ex35_turn16_repeat.png")
 MEDIA = Path("C:/Users/AI-WS01/s2_lab/video_25e/final/runner-26m")
+SERVED = Path("C:/Users/AI-WS01/s2_lab/lab_status")
 JOBS = MEDIA / "queue/jobs_remaining.json"
 STATE = MEDIA / "queue/state_remaining.json"
 FIRST_RECEIPT = MEDIA / "cap/b1500_rough_normalized/review.done"
@@ -49,12 +53,21 @@ def checked(path: Path) -> str:
 
 
 def evidence(*items: tuple[str, Path]) -> str:
-    links = " · ".join(
-        f'<a href="{html.escape(path.resolve().as_uri(), quote=True)}">{html.escape(label)}</a> '
-        f'{html.escape(checked(path))}'
-        for label, path in items
-    )
-    return f'<p class="t">근거 {links}</p>'
+    links = []
+    for label, path in items:
+        display = html.escape(checked(path))
+        if path in SEQS:
+            served = SERVED / "videos" / path.name
+            url = f"videos/{quote(path.name)}" if served.is_file() and os.path.samefile(served, path) else None
+        elif path == TURN_FIGURE and (SERVED / path.name).is_file():
+            url = quote(path.name)
+        else:
+            url = None
+        if url:
+            links.append(f'<a href="{html.escape(url, quote=True)}">{html.escape(label)}</a> {display}')
+        else:
+            links.append(f"{html.escape(label)} {display}")
+    return f'<p class="t">근거 {" · ".join(links)}</p>'
 
 
 def decorate_existing(cards: list[str], data: dict) -> list[str]:
@@ -132,7 +145,7 @@ def video_card() -> str:
         if done.get("child_returncode") == 0 and len(done.get("files", {})) == 3:
             completed.append(job["id"])
     composed = sum(Path(job["output"]).is_file() for job in compose)
-    state_completed = set(state["completed"])
+    state_completed = {entry["id"] if isinstance(entry, dict) else entry for entry in state["completed"]}
     state_note = "" if state_completed == set(completed) else " 대기열 상태와 영수증 수가 달라 확인 필요."
     seq_paths = [Path(checked(path)) for path in SEQS]
     body = (
@@ -147,4 +160,5 @@ def video_card() -> str:
         ("첫 촬영 영수증", FIRST_RECEIPT), ("남은 촬영", JOBS),
         ("대기 상태", STATE), ("재구성 목록", COMPOSE),
     )
-    return '<div class="card ex35-recent"><p><b>10/27 · 영상 제작 상태</b>: ' + html.escape(body) + "</p>" + proof + "</div>"
+    stamp = datetime.now(timezone(timedelta(hours=9))).strftime("%m/%d %H:%M KST")
+    return f'<div class="card ex35-recent"><p><b>{stamp} · 영상 제작 상태</b>: ' + html.escape(body) + "</p>" + proof + "</div>"

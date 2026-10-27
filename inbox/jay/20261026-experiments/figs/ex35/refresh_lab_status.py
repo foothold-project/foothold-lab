@@ -89,7 +89,7 @@ def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[
             '창 STOP 6행 · 팀장 결정 대기 3건.</div></div>'
         )
         source = replace_one(source, rf'<div class="row"><div class="k">GPU{index}</div><div>.*?</div></div>', row)
-    return source
+    return source.replace("\u2014", " · ")
 
 
 def write_atomic(path: Path, content: str) -> None:

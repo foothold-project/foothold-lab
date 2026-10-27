@@ -17,7 +17,7 @@ def test_real_sources_make_six_newest_first_entries_and_three_decisions():
     assert cards.count('class="card ex35-recent"') == 8
     assert cards.index("05:5x") < cards.index("05:19") < cards.index("05:1x")
     assert cards.index("05:1x") < cards.index("05:0x") < cards.index("04시대") < cards.index("02:48:13")
-    for phrase in ("m1950", "m2000", "MAINTAIN_FAIL", "STOP 4행", "STOP 6행", "27개", 'href="file:///'):
+    for phrase in ("m1950", "m2000", "MAINTAIN_FAIL", "STOP 4행", "STOP 6행", "27개", 'href="videos/'):
         assert phrase in cards
     assert decisions.count('class="row"') == 3
     assert "촬영 GPU 규칙 확대" not in decisions
@@ -67,6 +67,8 @@ def test_each_item_has_its_own_evidence_and_registered_axes():
     parts = re.findall(r'<div class="card ex35-recent">(.*?)</div>', cards, flags=re.S)
     assert len(parts) == 8
     assert "jobs_remaining.json" in parts[0] and "compose_jobs.json" in parts[0]
+    assert re.search(r"10/27 \d\d:\d\d KST · 영상 제작 상태", parts[0])
+    assert 'href="file:///' not in cards
     assert all(name in parts[0] for name in (
         "CMP_S-B10-m1500_vs_EX-35-m2000", "EX-35-m2000_rough", "S-B10-m1500_rough"
     ))
