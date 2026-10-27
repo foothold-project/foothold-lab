@@ -74,7 +74,7 @@ W03_SOURCE_HEAD = "496e0cfed7fffe704b91c22f52f89572a5bab20e"
 W03_RECORDER_SHA256 = "ce86aec23ffa6e863cab746ac4da5e4504ebbe2919be1f85f2ad7af6aa7979e2"
 W03_CHECKPOINT_SHA256 = ("4d987818", "eba0fbdd")           # 부모 m1500 · EX-35 m2000 (앞 8 자리, 아래 B1500 은 평가 때 기록한 값을 spec 에서 받는다)
 W03_FIXED_LEVEL_KINDS = "fixed64"                          # 연속 지형 64 env 평가 배치(map64 = 레벨 0..2, hardlevel = 레벨 L)
-W03_SUCCESS_FWD_M = 3.0                                    # SELECTION_RULE.md: 성공 = alive_end 참 그리고 fwd_end_m >= 3.0, 실패 = alive_end 거짓
+W03_SUCCESS_FWD_M = 3.0                                    # SELECTION_RULE.md v2: 성공 = alive_end 참 그리고 body_vx_integral_m >= 3.0(몸 앞쪽 방향 이동 거리, 시작 yaw 가 무작위인 연속 칸에서도 뜻이 같다), 실패 = alive_end 거짓
 EX35_CHECKPOINT = "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476/model_2000.pt"
 EX35_CHECKPOINT_SHA256 = "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548"
 
@@ -710,9 +710,9 @@ def validate_w03_reference(spec: dict[str, Any]) -> dict[str, Any]:
     with np.load(path, allow_pickle=True) as z:
         env = int(spec["env_id"])
         row = {"kind": str(z["kind"][env]), "level": int(z["terrain_level"][env]), "col": int(z["terrain_col"][env]),
-               "alive_end": bool(z["alive_end"][env]), "fwd_end_m": float(z["fwd_end_m"][env]), "n_env": int(len(z["kind"]))}
+               "alive_end": bool(z["alive_end"][env]), "fwd_end_m": float(z["fwd_end_m"][env]), "body_vx_integral_m": float(z["body_vx_integral_m"][env]), "n_env": int(len(z["kind"]))}
         ids = np.where((z["kind"].astype(str) == spec["kind"]) & (z["terrain_level"].astype(int) == row["level"]))[0]
-        succ = [int(i) for i in ids if bool(z["alive_end"][i]) and float(z["fwd_end_m"][i]) >= W03_SUCCESS_FWD_M]
+        succ = [int(i) for i in ids if bool(z["alive_end"][i]) and float(z["body_vx_integral_m"][i]) >= W03_SUCCESS_FWD_M]
         fail = [int(i) for i in ids if not bool(z["alive_end"][i])]
     if row["n_env"] != SPARSE_ENV_COUNT or row["kind"] != spec["kind"] or row["col"] != spec["col"]:
         raise ValueError("w03 selected env kind/column differs from the evaluation arrays")
