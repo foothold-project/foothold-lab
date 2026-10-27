@@ -149,6 +149,9 @@ def render_cards(data: dict, agenda: str, result: str, a11: dict) -> str:
             "receipt",
         ),
     ]
+    from lab_ex35_additions import decorate_existing, design_card, video_card
+
+    cards = [video_card(), *decorate_existing(cards, data), design_card()]
     return START + "\n" + "\n".join(cards) + "\n" + END
 
 
