@@ -6,12 +6,13 @@ above the last seen one appears. The last seen sequence lives in _out/msgs/.inbo
 Usage: python _out/msgs/inbox_wait.py [timeout_s]
 """
 import json
+import os
 import pathlib
 import subprocess
 import sys
 import time
 
-STATE = pathlib.Path(__file__).with_name(".inbox_seq")
+STATE = pathlib.Path(__file__).with_name(os.environ.get("INBOX_STATE", ".inbox_seq"))
 timeout = float(sys.argv[1]) if len(sys.argv) > 1 else 3600.0
 
 

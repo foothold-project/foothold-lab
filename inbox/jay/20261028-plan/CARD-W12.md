@@ -8,13 +8,13 @@
 
 ## W12 원장 · 규칙 글
 
-- [ ] R12-1 `UserPromptSubmit` 훅이 원문 · 시각 · 세션 이름 · 세션 ID 를 `~/.mai/ledger-spool/` 에 붙임(LLM 없음). 다른 세션이 보낸 글은 표시를 다르게
-- [ ] R12-2 (첫 push 만 끝 · 10 분 예약은 팀장 답 대기) `wt/mai-os/ledger` worktree 에서 10 분마다 `ledger/` 만 커밋 · push, 키 모양 문자열 가림(가린 건수만 로그)
+- [x] R12-1 `UserPromptSubmit` 훅이 원문 · 시각 · 세션 이름 · 세션 ID 를 `~/.mai/ledger-spool/` 에 붙임(LLM 없음). 다른 세션이 보낸 글은 표시를 다르게
+- [x] R12-2 (mai-ledger 첫 자동 실행 04:20:07 커밋 4f971f2) `wt/mai-os/ledger` worktree 에서 10 분마다 `ledger/` 만 커밋 · push, 키 모양 문자열 가림(가린 건수만 로그)
 - [x] R12-3 10/26 이전 대화 기록(jsonl)에서 같은 모양으로 한 번 뽑아 넣음 (lead 의 W02 원장 초안이 이것을 입력으로 씀)
 - [x] R12-4 하루 끝에 「foothold-lab `inbox/jay/20261028-plan/WORKLIST.md` 의 어느 W · R 에도 안 붙은 팀장 원문 줄」 목록을 뽑는 스크립트
-- [ ] R12-5 `os/rules/scope-discipline.md` + `SessionStart`(startup · resume · compact) · `SubagentStart` 훅 주입 + 주입 로그 + 하루 한 번 빠진 세션 알림
-- [ ] R12-6 답을 아는 확인: 새 세션 · compact 뒤 「범위 규칙 첫 줄을 그대로 옮겨라」 로 확인
-- [ ] R12-7 팀장이 승인해야 할 것(전역 설정 변경 · 예약 작업 등록)은 하기 전에 lead 창에 한 줄로 묻는다
+- [x] R12-5 `os/rules/scope-discipline.md` + `SessionStart`(startup · resume · compact) · `SubagentStart` 훅 주입 + 주입 로그 + 하루 한 번 빠진 세션 알림
+- [x] R12-6 답을 아는 확인: 새 세션 · compact 뒤 「범위 규칙 첫 줄을 그대로 옮겨라」 로 확인
+- [x] R12-7 팀장이 승인해야 할 것(전역 설정 변경 · 예약 작업 등록)은 하기 전에 lead 창에 한 줄로 묻는다
 
 ## W13 ponytail 한 쌍 시험
 
@@ -28,3 +28,4 @@
 
 - W13 끝 03:28 · mai-os `os/external-tools-ab/w13-ponytail-pair.md` (5182fa6) · 켬 대 끔: 줄 74 → 71 · 고친 횟수 2 → 1 · 턴 14 → 9 · 비용 약 $0.41 → $0.43 · 둘 다 시험 통과 · 권고 보류(한 쌍 차이 작음, 범위 규칙 글은 scope-discipline 으로 이미 들어감)
 - W12: R12-2 · R12-3 push 끝(d0d7b5c, 팀장 super2 창 직접 허락) · R12-4 unlinked.md · R12-1 · R12-5 코드 끝(29d1f2e · 8484131), 전역 훅 셋 · 예약 작업은 팀장 답 대기(R12-7) · R12-6 은 훅 건 뒤
+- W12 끝 04:21 (super2 보고 · lead 확인: settings.json 에 tools/ledger 훅 4 · schtasks mai-ledger 준비 · 백업 claude-settings-20261028-041004.json). 문서 mai-os os/ledger.md · os/session-messaging.md v2.2 (0040c1b)
