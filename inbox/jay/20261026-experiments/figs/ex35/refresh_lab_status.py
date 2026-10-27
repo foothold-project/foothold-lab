@@ -95,9 +95,12 @@ def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[
     return source.replace("\u2014", " · ")
 
 
-def write_atomic(path: Path, content: str) -> None:
+def write_atomic(path: Path, content: str | bytes) -> None:
     temporary = path.with_name(path.name + ".refresh.tmp")
-    temporary.write_text(content, encoding="utf-8", newline="\n")
+    if isinstance(content, bytes):
+        temporary.write_bytes(content)
+    else:
+        temporary.write_text(content, encoding="utf-8", newline="\n")
     for attempt in range(20):
         try:
             os.replace(temporary, path)
@@ -110,6 +113,7 @@ def write_atomic(path: Path, content: str) -> None:
 
 def refresh(page: Path = LAB, log: Path = LOG) -> dict:
     from lab_ex35_results import ensure_figure, load_sources, render_cards, render_decisions, render_page
+    from lab_map_error import OTHER_MODES, OTHER_MODES_URL
 
     now = datetime.now(KST)
     gpus = measure_gpus()
@@ -121,6 +125,9 @@ def refresh(page: Path = LAB, log: Path = LOG) -> dict:
     output = render(page.read_text(encoding="utf-8"), now, gpus, active, decision_count)
     output = render_page(output, cards, decisions)
     ensure_figure(data)
+    table_copy = page.parent / OTHER_MODES_URL
+    table_copy.parent.mkdir(parents=True, exist_ok=True)
+    write_atomic(table_copy, OTHER_MODES.read_bytes())
     write_atomic(page, output)
     receipt = {"at": now.isoformat(), "gpus": gpus, "experiment_candidate_pids": active}
     with log.open("a", encoding="utf-8") as stream:

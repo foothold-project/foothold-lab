@@ -191,7 +191,7 @@ def new_decision_cards() -> list[str]:
     proof = html.escape(winpath(RULES))
     figure = html.escape(winpath(RECON_FIGURE))
     return [
-        f'<div class="card ex35-recent"><p><b>10/27 {checked_at} · 복원 지도 셋 진행 상태</b>: '
+        f'<div class="card ex35-recent"><p><b>10/27 {checked_at} · 복원 오차 본 측정 완료</b>: '
         '복원 손실 학습 곡선 완료 (7b1ad9fe, 해석 미완). '
         '복원 지도 모드 영상 미착수.</p>'
         + render_map_error()

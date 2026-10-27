@@ -15,12 +15,13 @@ def test_real_sources_make_newest_first_entries_and_eight_decisions():
     cards = MODULE.render_cards(data, agenda, result, a11)
     decisions = MODULE.render_decisions(data, agenda)
     assert cards.count('class="card ex35-recent"') == 11
-    assert cards.index("복원 지도 셋 진행 상태") < cards.index("지형 레벨 평가 결정") < cards.index("영상 제작 상태")
+    assert cards.index("복원 오차 본 측정 완료") < cards.index("지형 레벨 평가 결정") < cards.index("영상 제작 상태")
     assert "L0~2 · L3 · L6 · L9" in cards and "L3 미측" in cards
     assert "7b1ad9fe" in cards and "해석 미완" in cards
     assert "16112810, 8 env" in cards and "496e0cfe, 64 env" in cards
     assert "reviewer 막음 0" in cards and "verifier 막음 0" in cards
-    assert "본 측정 X27n GPU0 12:46:30 기동, 진행 중" in cards
+    assert "X27n 본 측정 완료" in cards and "13:09:01 MAIN DONE" in cards
+    assert "한 번 잰 값 · 흔들림 폭 미측 · 해석 미완" in cards
     assert "복원 지도 모드 영상 미착수" in cards
     assert "753f9b08 검토 중" not in cards
     assert cards.index("05:5x") < cards.index("05:19") < cards.index("05:1x")

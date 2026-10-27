@@ -53,3 +53,10 @@ def test_atomic_write_replaces_page(tmp_path):
     MODULE.write_atomic(page, "new")
     assert page.read_text(encoding="utf-8") == "new"
     assert not page.with_name(page.name + ".refresh.tmp").exists()
+
+
+def test_atomic_copy_preserves_original_table_bytes(tmp_path):
+    table = tmp_path / "table.md"
+    original = "종류,부모,m2000\r\nboxes,1.28,1.17\r\n".encode("utf-8")
+    MODULE.write_atomic(table, original)
+    assert table.read_bytes() == original
