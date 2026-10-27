@@ -68,6 +68,11 @@ def test_each_item_has_its_own_evidence_and_registered_axes():
     assert len(parts) == 9
     assert "jobs_remaining.json" in parts[0] and "compose_jobs.json" in parts[0]
     assert re.search(r"10/27 \d\d:\d\d KST · 영상 제작 상태", parts[0])
+    assert "sparse18 4편은 제작됐으나 납품 보류" in parts[0]
+    assert "3.78초부터 몸통 z&lt;0.25 m" in parts[0]
+    assert "4.86초 네 발 z&lt;0 m" in parts[0]
+    assert "review_feet.npz" in parts[0] and "frame_check.csv" in parts[0]
+    assert "듬성 성공 · 실패 촬영 0건 미완" not in parts[0]
     assert 'href="file:///' not in cards
     assert all(name in parts[0] for name in (
         "CMP_S-B10-m1500_vs_EX-35-m2000", "EX-35-m2000_rough", "S-B10-m1500_rough"
@@ -105,3 +110,22 @@ def test_design_distribution_or_media_completion_change_needs_review(monkeypatch
     changed_state.write_text('{"completed": ["capture-02"]}', encoding="utf-8")
     monkeypatch.setattr(additions, "STATE", changed_state)
     assert "대기열 상태와 영수증 수가 달라 확인 필요" in additions.video_card()
+
+
+def test_sparse_physical_receipt_known_input_and_mutation(tmp_path):
+    import numpy as np
+    import pytest
+    import lab_ex35_additions as additions
+
+    path = tmp_path / "review_feet.npz"
+    t = np.array([0.0, 3.78, 4.86])
+    root = np.zeros((3, 3), dtype=np.float32)
+    root[:, 2] = [0.40, 0.24, -0.01]
+    feet = np.zeros((3, 4, 3), dtype=np.float32)
+    feet[-1, :, 2] = [-0.27, -0.26, -0.25, -0.15]
+    np.savez(path, t=t, root_pos_w=root, foot_pos_w=feet)
+    assert additions.sparse_crossed_record(path) == (3.78, 4.86)
+    feet[-1, -1, 2] = 0.01
+    np.savez(path, t=t, root_pos_w=root, foot_pos_w=feet)
+    with pytest.raises(ValueError, match="four-feet"):
+        additions.sparse_crossed_record(path)

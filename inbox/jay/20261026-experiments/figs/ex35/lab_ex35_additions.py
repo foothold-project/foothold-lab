@@ -29,6 +29,9 @@ SEQS = (
     MEDIA / "p2/rendered/EX-35-m2000_rough_eval_gt_seq_1x.mp4",
     MEDIA / "p2/rendered/S-B10-m1500_rough_eval_gt_seq_1x.mp4",
 )
+SPARSE_DIR = MEDIA / "p2/rendered/sparse18"
+SPARSE_RECORD = MEDIA / "cap/sparse18/env40-crossed-eval_gt-sparse18/review_feet.npz"
+SPARSE_FRAME_CHECK = SPARSE_DIR / "frame_check.csv"
 
 AXES = {
     "A1": ("보행 위상", "대각 발 접촉 위상과 주기"),
@@ -124,6 +127,25 @@ def design_card() -> str:
     )
 
 
+def sparse_crossed_record(path: Path) -> tuple[float, float]:
+    """Read the capture's physical timeline, not the rendered nameplate."""
+    import numpy as np
+
+    with np.load(path, allow_pickle=False) as capture:
+        t = np.asarray(capture["t"], dtype=np.float64)
+        root_z = np.asarray(capture["root_pos_w"][:, 2], dtype=np.float64)
+        foot_z = np.asarray(capture["foot_pos_w"][:, :, 2], dtype=np.float64)
+    if t.ndim != 1 or root_z.shape != t.shape or foot_z.shape != (len(t), 4):
+        raise ValueError("sparse18 physical receipt shape changed")
+    low = np.flatnonzero(root_z < 0.25)
+    if len(low) == 0:
+        raise ValueError("sparse18 low body observation absent")
+    at = int(np.argmin(np.abs(t - 4.86)))
+    if abs(float(t[at]) - 4.86) > 0.011 or not np.all(foot_z[at] < 0):
+        raise ValueError("sparse18 four-feet pit observation absent")
+    return float(t[low[0]]), float(t[at])
+
+
 def video_card() -> str:
     jobs = json.loads(JOBS.read_text(encoding="utf-8"))["jobs"]
     state = json.loads(STATE.read_text(encoding="utf-8"))
@@ -147,18 +169,29 @@ def video_card() -> str:
     composed = sum(Path(job["output"]).is_file() for job in compose)
     state_completed = {entry["id"] if isinstance(entry, dict) else entry for entry in state["completed"]}
     state_note = "" if state_completed == set(completed) else " 대기열 상태와 영수증 수가 달라 확인 필요."
+    sparse_files = sorted(path for path in SPARSE_DIR.glob("*.mp4") if not path.name.endswith(".tmp.mp4"))
+    if len(sparse_files) != len(sparse) or any(not path.with_suffix(".json").is_file() for path in sparse_files):
+        raise ValueError("sparse18 four rendered videos or receipts missing")
+    if not {job["id"] for job in sparse} <= set(completed):
+        raise ValueError("sparse18 capture receipt missing")
+    first_low_t, pit_t = sparse_crossed_record(SPARSE_RECORD)
     seq_paths = [Path(checked(path)) for path in SEQS]
     body = (
         "EX-35 CMP · EX-35 단독 · 부모 S-B10 단독 seq 1x 세 편 완료. "
         f"L4 재구성 {composed}/{len(compose)}편 완료. 첫 촬영 영수증 1건 확인, "
         f"남은 촬영 {len(completed)}/{len(jobs)}건 완료, "
-        f"듬성 성공 · 실패 촬영 {len(sparse) - sum(job['id'] in completed for job in sparse)}건 미완. "
+        f"듬성 sparse18 {len(sparse_files)}편은 제작됐으나 납품 보류. "
+        "사유: 이웃 로봇 노출(팀장 판독) · 지도 가림 영상에 단위 없는 오차 그래프 합성 · "
+        f"crossed 이름표의 env40 정답 지도 촬영에서 {first_low_t:.2f}초부터 몸통 z<0.25 m, "
+        f"{pit_t:.2f}초 네 발 z<0 m(구덩이 상태로 판독). "
         "EX-35 구간 영상과 m1750 영상은 이 대기열에 완료 영수증 없음." + state_note
     )
     proof = evidence(
         ("CMP", seq_paths[0]), ("EX-35 단독", seq_paths[1]), ("부모 단독", seq_paths[2]),
         ("첫 촬영 영수증", FIRST_RECEIPT), ("남은 촬영", JOBS),
         ("대기 상태", STATE), ("재구성 목록", COMPOSE),
+        ("sparse18 영상 네 편", SPARSE_DIR), ("sparse18 프레임 검사", SPARSE_FRAME_CHECK),
+        ("crossed 정답 지도 원시 촬영", SPARSE_RECORD),
     )
     stamp = datetime.now(timezone(timedelta(hours=9))).strftime("%m/%d %H:%M KST")
     return f'<div class="card ex35-recent"><p><b>{stamp} · 영상 제작 상태</b>: ' + html.escape(body) + "</p>" + proof + "</div>"
