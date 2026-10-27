@@ -195,7 +195,7 @@ for mode in args.modes.split(","):
         raise RuntimeError("map_input=%r 인 체크포인트에 모드 %r 는 쓸 수 없다(G0 는 --modes none)" % (saved_map_input, mode))
     res["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt_saved": runner.perception.cfg.force_gt}
     counts = {"gt": 0, "total": 0}
-    last_err = {"e": None}                                                                 # X27m: 이번 policy step 의 복원 오차 다섯 값(map_error.SERIES) 각 (N,)
+    last_err = {"e": None, "rebuild_maxdiff": 0.0}                                                                 # X27m: 이번 policy step 의 복원 오차 다섯 값(map_error.SERIES) 각 (N,)
     orig_adv = runner.perception._advance
 
     def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, _orig=orig_adv, _c=counts):
@@ -203,7 +203,13 @@ for mode in args.modes.split(","):
         _c["total"] += int(use_gt.numel())
 
         result = _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
-        ME.record(last_err, result, gt_map)
+        try:                                                                                 # 센서 원자료(z_hit - z_base): 정답 -1.0 이 «광선 못 맞힘» 인지 «1 m 아래 clip» 인지 가른다
+            rel = raw.scene.sensors["gt_map_scan"].data.ray_hits_w[..., 2] - raw.scene["robot"].data.root_pos_w[:, 2:3]
+        except Exception as _e:                                                              # noqa: BLE001
+            rel = None
+            last_err["rel_error"] = repr(_e)
+
+        ME.record(last_err, result, gt_map, rel)
 
         return result
 
@@ -265,6 +271,7 @@ for mode in args.modes.split(","):
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        last_err["rebuild_maxdiff"] = 0.0
         ERR = torch.full((len(ME.SERIES), S, env.num_envs), float("nan"), device=dev)                  # X27m: step 별 복원 오차 다섯 계열
         FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
@@ -326,6 +333,9 @@ for mode in args.modes.split(","):
             os.makedirs(args.out, exist_ok=True)
             np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len,
                      pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy(), start_support=START_SUPPORT)
+        res.setdefault("map_err_gt_rebuild_max_abs_m", {})["%s/%s" % (mode, cname)] = last_err.get("rebuild_maxdiff")           # 센서 원자료로 다시 만든 정답 지도와 obs 의 정답 지도의 최대 차이(0 이어야 분류가 믿을 만하다)
+        if last_err.get("rel_error"):
+            res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
 
