@@ -36,7 +36,7 @@ def proof_link(data: dict, table_key: str) -> str:
     video = source_path(data, "cmp_video")
     table = source_path(data, table_key)
     return (
-        f'<p class="t"><a href="{RESULT_URL}">RESULT-EX35 v1.4</a> · '
+        f'<p class="t"><a href="{RESULT_URL}">RESULT-EX35 v1.5</a> · '
         f'그림 {html.escape(winpath(FIGURE))} · '
         f'영상 {html.escape(video)} · 표 {html.escape(table)}</p>'
     )
@@ -66,8 +66,8 @@ def agenda_gate(agenda: str) -> tuple[int, int, float, float, str]:
 
 
 def render_cards(data: dict, agenda: str, result: str, a11: dict) -> str:
-    if "> 판: v1.4" not in result or data["window_decision"] != "STOP" or data["window_row"] != 6:
-        raise ValueError("RESULT-EX35 v1.4 seal mismatch")
+    if "> 판: v1.5" not in result or data["window_decision"] != "STOP" or data["window_row"] != 6:
+        raise ValueError("RESULT-EX35 v1.5 seal mismatch")
     if data["windows"]["m1950"]["state"] != "MAINTAIN_FAIL" or data["windows"]["m2000"]["state"] != "MAINTAIN_FAIL":
         raise ValueError("two saved-window verdicts missing")
     if data["window_evidence"]["a11"]["state"] != "clear" or list(a11["items"].values()) != ["없음"] * 5:
@@ -151,7 +151,22 @@ def render_cards(data: dict, agenda: str, result: str, a11: dict) -> str:
     ]
     from lab_ex35_additions import decorate_existing, design_card, video_card
 
-    cards = [video_card(), *decorate_existing(cards, data), design_card()]
+    terrain = data["terrain_compare"]
+    measured = [row for row in terrain["rows"] if row["measured"] and row["mode"] == "켬" and row["command"] == "fwd1.0"]
+    gains = [row["child_median_m"] - row["parent_median_m"] for row in measured]
+    if len(measured) != 21 or not all(gain > 0 for gain in gains) or len(terrain["missing"]) != 4:
+        raise ValueError("terrain comparison evidence incomplete")
+    repeat = terrain["repeat"]
+    terrain_card = (
+        '<div class="card ex35-recent"><p><b>10/27 · 같은 조건 지형별 부모 대조</b>: '
+        f'켬 fwd1.0 {len(measured)}칸의 m2000 거리 중앙값 차이 {min(gains):.2f}~{max(gains):.2f} m. '
+        f'L9 상자 가림 생존 재측정 {repeat["earlier_alive"]}/{repeat["n"]} → '
+        f'{repeat["current_alive"]}/{repeat["n"]}. 두 재측정의 코드 해시는 달라 원인 분리 불가. '
+        '복원 L6·L9는 미측정.</p>'
+        f'<p class="t"><a href="{RESULT_URL}">RESULT-EX35 v1.5 지형 표</a> · '
+        f'원자료 {html.escape(source_path(data, "terrain_child_L9_probe_prop_only_fwd1.0"))}</p></div>'
+    )
+    cards = [video_card(), terrain_card, *decorate_existing(cards, data), design_card()]
     return START + "\n" + "\n".join(cards) + "\n" + END
 
 

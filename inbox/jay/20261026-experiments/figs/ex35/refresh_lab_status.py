@@ -85,7 +85,7 @@ def render(source: str, now: datetime, gpus: list[dict[str, str]], active: list[
             f'사용 {gpu["used"]} MiB · 여유 {gpu["free"]} MiB · 사용률 {gpu["util"]}% · '
             f'UUID {gpu["uuid"]}. {run_text}. '
             '<a href="https://github.com/foothold-project/foothold-lab/blob/feature/verify-v2-mvp-jay/'
-            'inbox/jay/20261026-experiments/RESULT-EX35-1027.md">EX-35 RESULT v1.4</a>: '
+            'inbox/jay/20261026-experiments/RESULT-EX35-1027.md">EX-35 RESULT v1.5</a>: '
             '창 STOP 6행 · 팀장 결정 대기 3건.</div></div>'
         )
         source = replace_one(source, rf'<div class="row"><div class="k">GPU{index}</div><div>.*?</div></div>', row)

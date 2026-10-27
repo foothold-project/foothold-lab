@@ -11,6 +11,8 @@ from pathlib import Path
 
 import numpy as np
 
+from terrain_compare import collect as collect_terrain_compare
+
 
 DEFAULT_EVAL = Path("C:/mai/wt/foothold-lab/impl-turncases/logs/ex35_eval")
 DEFAULT_TRAIN = Path(
@@ -331,12 +333,46 @@ def render(d: dict) -> str:
             f"{sample['R3']['Q']:.4f} | {case['q_min']:.4f}~{case['q_max']:.4f} | {case['q_max'] - case['q_min']:.4f} |"
         )
     x = d["window_evidence"]
+    terrain = d.get("terrain_compare")
+    terrain_section = ""
+    if terrain is not None:
+        terrain_rows = []
+        for row in terrain["rows"]:
+            if not row["measured"]:
+                terrain_rows.append(f"| {row['level']} | {row['kind']} | {row['mode']} | {row['command']} | 미측정 | 미측정 | 미측정 | 미측정 |")
+                continue
+            terrain_rows.append(
+                f"| {row['level']} | {row['kind']} | {row['mode']} | {row['command']} | "
+                f"{row['parent_median_m']:.2f} | {row['parent_alive']}/{row['n']} | "
+                f"{row['child_median_m']:.2f} | {row['child_alive']}/{row['n']} |"
+            )
+        on_fwd1 = [row for row in terrain["rows"] if row["measured"] and row["mode"] == "켬" and row["command"] == "fwd1.0"]
+        gains = [row["child_median_m"] - row["parent_median_m"] for row in on_fwd1]
+        assert len(on_fwd1) == 21 and all(value > 0 for value in gains)
+        assert len(terrain["missing"]) == 4
+        descending = next(row for row in on_fwd1 if row["level"] == "L6" and row["kind"] == "pyramid_stairs_inv")
+        repeat = terrain["repeat"]
+        terrain_section = f"""
+### 같은 코드·장치·시드·칸 배정의 지형별 전진 비교
+
+부모 S-B10 m1500과 EX-35 m2000을 평가 코드 `{terrain['code_head']}`, `cuda:0`, seed 42 및 같은 env별 지형 배정에서 비교했다. 거리는 각 env의 `body_vx_integral_m`를 지형 종류별로 집계한 중앙값(m)이며, 생존은 `alive_end`의 합이다. 켬·가림은 L0~2·L6·L9 모두 측정했고 복원은 L0~2만 측정했다.
+
+| 레벨 | 지형 종류 | 지도 | 명령 | 부모 거리 중앙값 m | 부모 생존/env | m2000 거리 중앙값 m | m2000 생존/env |
+|---|---|---|---|---:|---:|---:|---:|
+{chr(10).join(terrain_rows)}
+
+켬 `fwd1.0`은 측정한 {len(on_fwd1)}칸 모두 m2000의 거리 중앙값이 커졌고, 차이 범위는 {min(gains):.2f}~{max(gains):.2f} m다. L6 내려가는 계단(`pyramid_stairs_inv`) 켬 `fwd1.0`은 이 고정 원자료에서 {descending['parent_median_m']:.2f} → {descending['child_median_m']:.2f} m다. 의뢰 예시의 끝값 5.28 m는 이 원자료에서 재현되지 않아 표에 넣지 않았다. 한 번의 지형별 거리 차이를 개선 확정으로 읽지 않는다.
+
+생존은 재측정에서 흔들렸다. L9 상자 가림 `fwd1.0`의 같은 m2000 저장본은 {repeat['earlier_alive']}/{repeat['n']} → {repeat['current_alive']}/{repeat['n']}이지만 평가 소스 해시도 `{repeat['earlier_source_sha']}` → `{repeat['current_source_sha']}`로 달라, 코드 영향과 반복 잡음을 이 사례만으로 분리할 수 없다. 측정한 각 지형 칸은 {min(row['n'] for row in terrain['rows'] if row['measured'])}~{max(row['n'] for row in terrain['rows'] if row['measured'])} env다. L0~2·L6·L9는 이번 비교를 위해 설계로 고른 레벨이 아니라 기존 고정 칸과 10/26 추가 칸이다.
+
+복원 `eval_pred`의 L6·L9는 env별 배열이 없어 **미측정**이다: {', '.join(terrain['missing'])}. 빈 칸을 켬 또는 가림 수치로 채우지 않았다.
+"""
     return f"""> 분류: 실험
 > 작성: 오흥재 (lead · scripter 원자료 생성) · 2026-10-27
 > 근거: EX-35 학습 영수증·저장본 판정 JSON·A11 창 판정 JSON·map64 및 turn16 반복 NPZ·CMP 영상 · 결과 전 EX-35 카드 §4b.6
 > 요지: m2000 MAINTAIN_FAIL의 세 사유 중 둘은 같은 GPU 세 번의 회전 반복에서 유지됐다. 창 판정은 STOP 6행이며 정본 S-B10 m1500을 유지한다.
 > 상태: 학습·저장본·창 판정 확인됨 · map64 및 turn16 반복 측정 차이 확인됨 · 비결정성 원인 미확인
-> 판: v1.4
+> 판: {'v1.5' if terrain is not None else 'v1.4'}
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -403,6 +439,7 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 {chr(10).join(q_rows)}
 
 등록 조건은 kept `{turn16['kept_limit']}` 이상, `right_then_left` Q `{turn16['right_then_left_q_limit']:.4f}` 이상이다. R1~R3은 표본 세 번이고 장치 차이를 분리하지 못했다.
+{terrain_section}
 
 ## 7. 판정과 증거 범위
 
@@ -436,6 +473,10 @@ def main() -> None:
     p.add_argument("--json-out", type=Path, required=True)
     a = p.parse_args()
     data = collect(a.eval_dir, a.train_dir)
+    terrain = collect_terrain_compare()
+    data["terrain_compare"] = {key: value for key, value in terrain.items() if key not in ("source_paths", "source_sha256")}
+    data["source_paths"].update(terrain["source_paths"])
+    data["source_sha256"].update(terrain["source_sha256"])
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.json_out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(render(data), encoding="utf-8", newline="\n")

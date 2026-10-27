@@ -14,7 +14,7 @@ def test_real_sources_make_six_newest_first_entries_and_three_decisions():
     data, agenda, result, a11 = MODULE.load_sources()
     cards = MODULE.render_cards(data, agenda, result, a11)
     decisions = MODULE.render_decisions(data, agenda)
-    assert cards.count('class="card ex35-recent"') == 8
+    assert cards.count('class="card ex35-recent"') == 9
     assert cards.index("05:5x") < cards.index("05:19") < cards.index("05:1x")
     assert cards.index("05:1x") < cards.index("05:0x") < cards.index("04시대") < cards.index("02:48:13")
     for phrase in ("m1950", "m2000", "MAINTAIN_FAIL", "STOP 4행", "STOP 6행", "27개", 'href="videos/'):
@@ -37,14 +37,14 @@ def test_repeat_render_replaces_cards_and_decisions_without_duplication():
     twice = MODULE.render_page(once, cards, decisions)
     assert once == twice
     assert twice.count(MODULE.START) == 1 and twice.count(MODULE.END) == 1
-    assert twice.count('class="card ex35-recent"') == 8
+    assert twice.count('class="card ex35-recent"') == 9
     assert "old history" in twice and "old1" not in twice
 
 
 def test_wrong_result_or_a11_fails_closed():
     data, agenda, result, a11 = MODULE.load_sources()
     try:
-        MODULE.render_cards(data, agenda, result.replace("> 판: v1.4", "> 판: v1.3"), a11)
+        MODULE.render_cards(data, agenda, result.replace("> 판: v1.5", "> 판: v1.4"), a11)
     except ValueError as exc:
         assert "seal" in str(exc)
     else:
@@ -65,24 +65,25 @@ def test_each_item_has_its_own_evidence_and_registered_axes():
     import re
 
     parts = re.findall(r'<div class="card ex35-recent">(.*?)</div>', cards, flags=re.S)
-    assert len(parts) == 8
+    assert len(parts) == 9
     assert "jobs_remaining.json" in parts[0] and "compose_jobs.json" in parts[0]
     assert re.search(r"10/27 \d\d:\d\d KST · 영상 제작 상태", parts[0])
     assert 'href="file:///' not in cards
     assert all(name in parts[0] for name in (
         "CMP_S-B10-m1500_vs_EX-35-m2000", "EX-35-m2000_rough", "S-B10-m1500_rough"
     ))
-    assert "ex35_repro_turn16\\compare.md" in parts[1] and "ex35_turn16_repeat.png" in parts[1]
-    assert "a11_m2000.json" in parts[2] and "ex35-a1-m2000" in parts[2]
-    assert "ex35_repro_x27k\\compare.md" in parts[3]
-    assert "window_m2000_default.json" in parts[4]
-    assert "GATE-v2-performance-promotion.md" in parts[5]
-    assert "VERIFY-verifier-GATE-v2-statistics.md" in parts[5]
-    assert "VERIFY-analyst-GATE-v2.md" in parts[5]
-    assert "EXP-EX35-SB10-cmd-S2a.md" in parts[7]
-    assert all(f"A{i} " in parts[7] for i in range(1, 13))
-    assert "75%" in parts[7] and "2.5% + 2.5%" in parts[7] and "500회" in parts[7]
-    assert "ex35_turn16_repeat.png" not in parts[2] + parts[3] + parts[4] + parts[5] + parts[6] + parts[7]
+    assert "같은 조건 지형별 부모 대조" in parts[1] and "env_arrays_probe_prop_only_fwd1.0.npz" in parts[1]
+    assert "ex35_repro_turn16\\compare.md" in parts[2] and "ex35_turn16_repeat.png" in parts[2]
+    assert "a11_m2000.json" in parts[3] and "ex35-a1-m2000" in parts[3]
+    assert "ex35_repro_x27k\\compare.md" in parts[4]
+    assert "window_m2000_default.json" in parts[5]
+    assert "GATE-v2-performance-promotion.md" in parts[6]
+    assert "VERIFY-verifier-GATE-v2-statistics.md" in parts[6]
+    assert "VERIFY-analyst-GATE-v2.md" in parts[6]
+    assert "EXP-EX35-SB10-cmd-S2a.md" in parts[8]
+    assert all(f"A{i} " in parts[8] for i in range(1, 13))
+    assert "75%" in parts[8] and "2.5% + 2.5%" in parts[8] and "500회" in parts[8]
+    assert "ex35_turn16_repeat.png" not in "".join(parts[3:])
 
 
 def test_design_distribution_or_media_completion_change_needs_review(monkeypatch, tmp_path):

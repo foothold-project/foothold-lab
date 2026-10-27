@@ -38,7 +38,7 @@ def test_render_updates_only_current_snapshot():
     assert "06:32 KST" in output
     assert "여유 12016 MiB" in output
     assert "실행 중인 학습·평가 후보 없음" in output
-    assert "STOP 6행" in output and "RESULT v1.4" in output
+    assert "STOP 6행" in output and "RESULT v1.5" in output
     assert "과거 결과 기록은 보존" in output
     assert "old0" not in output and "old1" not in output
     assert "\u2014" not in output and "긴 대시 · 두 개 · 제거" in output

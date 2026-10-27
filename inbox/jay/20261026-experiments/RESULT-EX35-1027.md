@@ -3,7 +3,7 @@
 > 근거: EX-35 학습 영수증·저장본 판정 JSON·A11 창 판정 JSON·map64 및 turn16 반복 NPZ·CMP 영상 · 결과 전 EX-35 카드 §4b.6
 > 요지: m2000 MAINTAIN_FAIL의 세 사유 중 둘은 같은 GPU 세 번의 회전 반복에서 유지됐다. 창 판정은 STOP 6행이며 정본 S-B10 m1500을 유지한다.
 > 상태: 학습·저장본·창 판정 확인됨 · map64 및 turn16 반복 측정 차이 확인됨 · 비결정성 원인 미확인
-> 판: v1.4
+> 판: v1.5
 
 # EX-35 결과 · 명령 S2a 창 판정
 
@@ -94,6 +94,146 @@ Q·C의 정의와 문턱은 등록 카드와 판정기 계약을 따른다. 여�
 
 등록 조건은 kept `14` 이상, `right_then_left` Q `0.5837` 이상이다. R1~R3은 표본 세 번이고 장치 차이를 분리하지 못했다.
 
+### 같은 코드·장치·시드·칸 배정의 지형별 전진 비교
+
+부모 S-B10 m1500과 EX-35 m2000을 평가 코드 `84deb79336896b6e77916e7479cbace06ee8ab53`, `cuda:0`, seed 42 및 같은 env별 지형 배정에서 비교했다. 거리는 각 env의 `body_vx_integral_m`를 지형 종류별로 집계한 중앙값(m)이며, 생존은 `alive_end`의 합이다. 켬·가림은 L0~2·L6·L9 모두 측정했고 복원은 L0~2만 측정했다.
+
+| 레벨 | 지형 종류 | 지도 | 명령 | 부모 거리 중앙값 m | 부모 생존/env | m2000 거리 중앙값 m | m2000 생존/env |
+|---|---|---|---|---:|---:|---:|---:|
+| L0~2 | boxes | 켬 | fwd0.5 | 2.69 | 12/12 | 2.86 | 11/12 |
+| L0~2 | hf_pyramid_slope | 켬 | fwd0.5 | 2.78 | 4/4 | 2.99 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 켬 | fwd0.5 | 2.83 | 4/4 | 2.99 | 4/4 |
+| L0~2 | pyramid_stairs | 켬 | fwd0.5 | 2.47 | 15/15 | 2.75 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 켬 | fwd0.5 | 3.08 | 15/15 | 3.02 | 15/15 |
+| L0~2 | random_rough | 켬 | fwd0.5 | 2.79 | 12/12 | 2.94 | 12/12 |
+| L0~2 | stage_stairs | 켬 | fwd0.5 | 2.49 | 2/2 | 2.72 | 2/2 |
+| L0~2 | boxes | 켬 | fwd1.0 | 5.39 | 12/12 | 5.69 | 12/12 |
+| L0~2 | hf_pyramid_slope | 켬 | fwd1.0 | 5.55 | 4/4 | 5.80 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 켬 | fwd1.0 | 5.54 | 4/4 | 5.78 | 4/4 |
+| L0~2 | pyramid_stairs | 켬 | fwd1.0 | 5.16 | 15/15 | 5.65 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 켬 | fwd1.0 | 5.57 | 15/15 | 5.85 | 15/15 |
+| L0~2 | random_rough | 켬 | fwd1.0 | 5.46 | 12/12 | 5.73 | 12/12 |
+| L0~2 | stage_stairs | 켬 | fwd1.0 | 5.08 | 2/2 | 5.52 | 2/2 |
+| L0~2 | boxes | 가림 | fwd0.5 | 2.72 | 12/12 | 2.86 | 12/12 |
+| L0~2 | hf_pyramid_slope | 가림 | fwd0.5 | 2.86 | 4/4 | 2.97 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 가림 | fwd0.5 | 2.87 | 4/4 | 2.99 | 4/4 |
+| L0~2 | pyramid_stairs | 가림 | fwd0.5 | 2.70 | 15/15 | 2.85 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 가림 | fwd0.5 | 2.92 | 15/15 | 2.99 | 15/15 |
+| L0~2 | random_rough | 가림 | fwd0.5 | 2.88 | 12/12 | 2.94 | 12/12 |
+| L0~2 | stage_stairs | 가림 | fwd0.5 | 2.73 | 2/2 | 2.69 | 2/2 |
+| L0~2 | boxes | 가림 | fwd1.0 | 5.40 | 12/12 | 5.61 | 12/12 |
+| L0~2 | hf_pyramid_slope | 가림 | fwd1.0 | 5.50 | 4/4 | 5.74 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 가림 | fwd1.0 | 5.52 | 4/4 | 5.74 | 4/4 |
+| L0~2 | pyramid_stairs | 가림 | fwd1.0 | 5.31 | 15/15 | 5.67 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 가림 | fwd1.0 | 5.54 | 15/15 | 5.77 | 14/15 |
+| L0~2 | random_rough | 가림 | fwd1.0 | 5.50 | 12/12 | 5.69 | 12/12 |
+| L0~2 | stage_stairs | 가림 | fwd1.0 | 5.33 | 2/2 | 5.39 | 2/2 |
+| L0~2 | boxes | 복원 | fwd0.5 | 2.66 | 12/12 | 2.89 | 12/12 |
+| L0~2 | hf_pyramid_slope | 복원 | fwd0.5 | 2.78 | 4/4 | 2.98 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 복원 | fwd0.5 | 2.85 | 4/4 | 2.99 | 4/4 |
+| L0~2 | pyramid_stairs | 복원 | fwd0.5 | 2.46 | 15/15 | 2.73 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 복원 | fwd0.5 | 2.93 | 15/15 | 3.02 | 15/15 |
+| L0~2 | random_rough | 복원 | fwd0.5 | 2.78 | 12/12 | 2.95 | 12/12 |
+| L0~2 | stage_stairs | 복원 | fwd0.5 | 2.45 | 2/2 | 2.58 | 2/2 |
+| L0~2 | boxes | 복원 | fwd1.0 | 5.36 | 12/12 | 5.72 | 12/12 |
+| L0~2 | hf_pyramid_slope | 복원 | fwd1.0 | 5.55 | 4/4 | 5.79 | 4/4 |
+| L0~2 | hf_pyramid_slope_inv | 복원 | fwd1.0 | 5.51 | 4/4 | 5.80 | 4/4 |
+| L0~2 | pyramid_stairs | 복원 | fwd1.0 | 5.14 | 15/15 | 5.59 | 15/15 |
+| L0~2 | pyramid_stairs_inv | 복원 | fwd1.0 | 5.54 | 15/15 | 5.72 | 13/15 |
+| L0~2 | random_rough | 복원 | fwd1.0 | 5.46 | 12/12 | 5.75 | 12/12 |
+| L0~2 | stage_stairs | 복원 | fwd1.0 | 4.99 | 2/2 | 5.21 | 2/2 |
+| L6 | boxes | 켬 | fwd0.5 | 2.60 | 12/12 | 2.84 | 12/12 |
+| L6 | hf_pyramid_slope | 켬 | fwd0.5 | 2.64 | 4/4 | 2.81 | 4/4 |
+| L6 | hf_pyramid_slope_inv | 켬 | fwd0.5 | 3.13 | 4/4 | 3.12 | 4/4 |
+| L6 | pyramid_stairs | 켬 | fwd0.5 | 2.16 | 15/15 | 2.42 | 15/15 |
+| L6 | pyramid_stairs_inv | 켬 | fwd0.5 | 2.98 | 15/15 | 2.71 | 15/15 |
+| L6 | random_rough | 켬 | fwd0.5 | 2.79 | 12/12 | 2.96 | 12/12 |
+| L6 | stage_stairs | 켬 | fwd0.5 | 2.54 | 2/2 | 2.63 | 2/2 |
+| L6 | boxes | 켬 | fwd1.0 | 5.17 | 11/12 | 5.57 | 11/12 |
+| L6 | hf_pyramid_slope | 켬 | fwd1.0 | 5.18 | 4/4 | 5.66 | 4/4 |
+| L6 | hf_pyramid_slope_inv | 켬 | fwd1.0 | 5.75 | 4/4 | 5.87 | 4/4 |
+| L6 | pyramid_stairs | 켬 | fwd1.0 | 4.98 | 15/15 | 5.28 | 15/15 |
+| L6 | pyramid_stairs_inv | 켬 | fwd1.0 | 5.30 | 15/15 | 5.35 | 14/15 |
+| L6 | random_rough | 켬 | fwd1.0 | 5.48 | 12/12 | 5.71 | 12/12 |
+| L6 | stage_stairs | 켬 | fwd1.0 | 4.96 | 2/2 | 5.37 | 2/2 |
+| L6 | boxes | 가림 | fwd0.5 | 2.68 | 12/12 | 2.86 | 12/12 |
+| L6 | hf_pyramid_slope | 가림 | fwd0.5 | 2.72 | 4/4 | 3.01 | 4/4 |
+| L6 | hf_pyramid_slope_inv | 가림 | fwd0.5 | 3.02 | 4/4 | 3.11 | 4/4 |
+| L6 | pyramid_stairs | 가림 | fwd0.5 | 2.44 | 14/15 | 2.67 | 15/15 |
+| L6 | pyramid_stairs_inv | 가림 | fwd0.5 | 2.64 | 15/15 | 2.66 | 15/15 |
+| L6 | random_rough | 가림 | fwd0.5 | 2.82 | 12/12 | 3.00 | 12/12 |
+| L6 | stage_stairs | 가림 | fwd0.5 | 2.77 | 2/2 | 2.87 | 2/2 |
+| L6 | boxes | 가림 | fwd1.0 | 5.27 | 11/12 | 5.53 | 12/12 |
+| L6 | hf_pyramid_slope | 가림 | fwd1.0 | 5.21 | 4/4 | 5.70 | 4/4 |
+| L6 | hf_pyramid_slope_inv | 가림 | fwd1.0 | 5.64 | 4/4 | 5.77 | 4/4 |
+| L6 | pyramid_stairs | 가림 | fwd1.0 | 5.18 | 15/15 | 5.34 | 15/15 |
+| L6 | pyramid_stairs_inv | 가림 | fwd1.0 | 4.80 | 15/15 | 4.96 | 15/15 |
+| L6 | random_rough | 가림 | fwd1.0 | 5.47 | 12/12 | 5.65 | 12/12 |
+| L6 | stage_stairs | 가림 | fwd1.0 | 5.30 | 2/2 | 5.42 | 2/2 |
+| L6 | boxes | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | hf_pyramid_slope | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | hf_pyramid_slope_inv | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | pyramid_stairs | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | pyramid_stairs_inv | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | random_rough | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | stage_stairs | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | boxes | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | hf_pyramid_slope | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | hf_pyramid_slope_inv | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | pyramid_stairs | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | pyramid_stairs_inv | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | random_rough | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L6 | stage_stairs | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | boxes | 켬 | fwd0.5 | 2.55 | 10/12 | 2.58 | 11/12 |
+| L9 | hf_pyramid_slope | 켬 | fwd0.5 | 2.60 | 4/4 | 2.79 | 4/4 |
+| L9 | hf_pyramid_slope_inv | 켬 | fwd0.5 | 3.23 | 4/4 | 3.12 | 4/4 |
+| L9 | pyramid_stairs | 켬 | fwd0.5 | 1.63 | 14/15 | 2.41 | 14/15 |
+| L9 | pyramid_stairs_inv | 켬 | fwd0.5 | 2.47 | 13/15 | 2.38 | 14/15 |
+| L9 | random_rough | 켬 | fwd0.5 | 2.77 | 12/12 | 2.93 | 12/12 |
+| L9 | stage_stairs | 켬 | fwd0.5 | 2.53 | 2/2 | 2.75 | 2/2 |
+| L9 | boxes | 켬 | fwd1.0 | 5.24 | 11/12 | 5.49 | 12/12 |
+| L9 | hf_pyramid_slope | 켬 | fwd1.0 | 4.96 | 4/4 | 5.62 | 4/4 |
+| L9 | hf_pyramid_slope_inv | 켬 | fwd1.0 | 5.79 | 4/4 | 5.94 | 4/4 |
+| L9 | pyramid_stairs | 켬 | fwd1.0 | 4.84 | 15/15 | 5.27 | 15/15 |
+| L9 | pyramid_stairs_inv | 켬 | fwd1.0 | 4.90 | 13/15 | 5.16 | 12/15 |
+| L9 | random_rough | 켬 | fwd1.0 | 5.44 | 12/12 | 5.73 | 12/12 |
+| L9 | stage_stairs | 켬 | fwd1.0 | 5.05 | 2/2 | 5.46 | 2/2 |
+| L9 | boxes | 가림 | fwd0.5 | 2.69 | 12/12 | 2.66 | 11/12 |
+| L9 | hf_pyramid_slope | 가림 | fwd0.5 | 2.75 | 4/4 | 2.91 | 4/4 |
+| L9 | hf_pyramid_slope_inv | 가림 | fwd0.5 | 3.12 | 4/4 | 3.20 | 4/4 |
+| L9 | pyramid_stairs | 가림 | fwd0.5 | 2.28 | 12/15 | 2.80 | 12/15 |
+| L9 | pyramid_stairs_inv | 가림 | fwd0.5 | 2.23 | 15/15 | 2.26 | 10/15 |
+| L9 | random_rough | 가림 | fwd0.5 | 2.84 | 12/12 | 2.97 | 12/12 |
+| L9 | stage_stairs | 가림 | fwd0.5 | 2.80 | 2/2 | 2.84 | 2/2 |
+| L9 | boxes | 가림 | fwd1.0 | 5.28 | 11/12 | 5.47 | 12/12 |
+| L9 | hf_pyramid_slope | 가림 | fwd1.0 | 5.18 | 4/4 | 5.63 | 4/4 |
+| L9 | hf_pyramid_slope_inv | 가림 | fwd1.0 | 5.65 | 4/4 | 5.79 | 4/4 |
+| L9 | pyramid_stairs | 가림 | fwd1.0 | 5.27 | 15/15 | 5.38 | 14/15 |
+| L9 | pyramid_stairs_inv | 가림 | fwd1.0 | 4.04 | 14/15 | 4.52 | 11/15 |
+| L9 | random_rough | 가림 | fwd1.0 | 5.46 | 12/12 | 5.64 | 12/12 |
+| L9 | stage_stairs | 가림 | fwd1.0 | 5.40 | 2/2 | 5.50 | 2/2 |
+| L9 | boxes | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | hf_pyramid_slope | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | hf_pyramid_slope_inv | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | pyramid_stairs | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | pyramid_stairs_inv | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | random_rough | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | stage_stairs | 복원 | fwd0.5 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | boxes | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | hf_pyramid_slope | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | hf_pyramid_slope_inv | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | pyramid_stairs | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | pyramid_stairs_inv | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | random_rough | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+| L9 | stage_stairs | 복원 | fwd1.0 | 미측정 | 미측정 | 미측정 | 미측정 |
+
+켬 `fwd1.0`은 측정한 21칸 모두 m2000의 거리 중앙값이 커졌고, 차이 범위는 0.05~0.65 m다. L6 내려가는 계단(`pyramid_stairs_inv`) 켬 `fwd1.0`은 이 고정 원자료에서 5.30 → 5.35 m다. 의뢰 예시의 끝값 5.28 m는 이 원자료에서 재현되지 않아 표에 넣지 않았다. 한 번의 지형별 거리 차이를 개선 확정으로 읽지 않는다.
+
+생존은 재측정에서 흔들렸다. L9 상자 가림 `fwd1.0`의 같은 m2000 저장본은 8/12 → 12/12이지만 평가 소스 해시도 `ac739f3d8b557043` → `b08941a4ba48e06d`로 달라, 코드 영향과 반복 잡음을 이 사례만으로 분리할 수 없다. 측정한 각 지형 칸은 2~15 env다. L0~2·L6·L9는 이번 비교를 위해 설계로 고른 레벨이 아니라 기존 고정 칸과 10/26 추가 칸이다.
+
+복원 `eval_pred`의 L6·L9는 env별 배열이 없어 **미측정**이다: L6/복원/fwd0.5, L6/복원/fwd1.0, L9/복원/fwd0.5, L9/복원/fwd1.0. 빈 칸을 켬 또는 가림 수치로 채우지 않았다.
+
+
 ## 7. 판정과 증거 범위
 
 m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기본 실행은 A11 판독 파일이 없어 `STOP` 4행이었다. 2026-10-27 05:19 KST의 A11 판독표는 다섯 항목 모두 「없음」이며, 판독자는 lead 세션 (Claude Opus 5.5) · 팀장 판독 아님이다. 이를 반영한 창 판정 재실행 결과는 **STOP 6행**, 사유는 `REVERT: 유지 실패 연속 두 저장본 · 멈춤, 되돌림 판은 사람이 띄움`이다. 최신·이전 필수 입력 결측 목록은 모두 빈 목록이다. **EX-35 연장 없음, 정본 S-B10 m1500 유지**다. 저장본 상태와 창 판정을 혼동하지 않는다.
@@ -146,5 +286,37 @@ m1950과 m2000 저장본의 `MAINTAIN_FAIL`은 확인됐다. 면제 없는 기�
 | turn16_R3_left_then_right | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_turn16\R3\arrays_left_then_right.npz` | `e34b6c6c537fc60ee9fb389073e3441966929dee570035afcc5520b2f7b5986f` |
 | turn16_R3_fwd_then_left | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_turn16\R3\arrays_fwd_then_left.npz` | `b275d46f5ca5f5d68a9f324c3bb1fb21bafb0ef4f258771adb8a971901f1efb2` |
 | turn16_R3_right_then_left | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_repro_turn16\R3\arrays_right_then_left.npz` | `1f7a3b19c84dce95cdbb8475b7990706866d6606635aae5ad6809a714e86013d` |
+| terrain_parent_L0~2_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64\env_arrays_eval_gt_fwd0.5.npz` | `69003d2563a5260f80b38535753260e6114a32a75dec861da882cc5f90d08b9f` |
+| terrain_child_L0~2_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64\env_arrays_eval_gt_fwd0.5.npz` | `e46b5dde826ba0c2233d9a2bad26cfb6ef5a3b950e1a27ac6d976c1b97b8e74a` |
+| terrain_parent_L0~2_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64\env_arrays_eval_gt_fwd1.0.npz` | `8374750b333afe6b69433c2b85ed5e1545d1a46116257a51ac6cc7028d452a7c` |
+| terrain_child_L0~2_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64\env_arrays_eval_gt_fwd1.0.npz` | `dce0cd264933d53f957e1135e5120039643f51994fb2f9612f54fb30eebbd36d` |
+| terrain_parent_L0~2_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64\env_arrays_probe_prop_only_fwd0.5.npz` | `76d217e5ce07bf7a3bd46aef460eb382ad3b381b9c720bc570a2b554baf11a78` |
+| terrain_child_L0~2_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64\env_arrays_probe_prop_only_fwd0.5.npz` | `8209d2748808aea5424b5cffa4f8f6ca6195d57db1ff3b65e5ab49f6f6dbc8e5` |
+| terrain_parent_L0~2_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64\env_arrays_probe_prop_only_fwd1.0.npz` | `330bef74b8677f899dd67a5bd9be08318c8e71b48c95fdde42c28bae91430b68` |
+| terrain_child_L0~2_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64\env_arrays_probe_prop_only_fwd1.0.npz` | `a096d2add79905db2fcfc042fd6fb4be07eab13b25500f2c023299ee31e1975c` |
+| terrain_parent_L0~2_eval_pred_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64_eval_pred\env_arrays_eval_pred_fwd0.5.npz` | `5206f18895f7ba0235dabfa94b88f6ec43e35aae5af9d56a350b84262aab967e` |
+| terrain_child_L0~2_eval_pred_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64_eval_pred\env_arrays_eval_pred_fwd0.5.npz` | `34e267550b9c358e5f18d3402f99969a405151f61510949fe7d714cfdc02864a` |
+| terrain_parent_L0~2_eval_pred_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\map64_eval_pred\env_arrays_eval_pred_fwd1.0.npz` | `f328f6d67127a5a3dea6010a27522e6a3f33798c14045a880cd0ab9f14b0e44d` |
+| terrain_child_L0~2_eval_pred_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\map64_eval_pred\env_arrays_eval_pred_fwd1.0.npz` | `1f3fac098d10a414d13be896e73454cea024cedca3db812b2663ed61aaf29486` |
+| terrain_parent_L6_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L6\env_arrays_eval_gt_fwd0.5.npz` | `b7e770bd57b180f3660ca6e21524681fa2e914b72b34b3a852b5a20e707cc8ec` |
+| terrain_child_L6_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L6\env_arrays_eval_gt_fwd0.5.npz` | `22f726d70701451ebd51a0693ba2669bfed9d1bd8a539ebcd6c93c90a0bf7039` |
+| terrain_parent_L6_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L6\env_arrays_eval_gt_fwd1.0.npz` | `5b71fb704f0f00df9ae27ccefba7a272ba0ef0f9406bb4400d9ca4da8a457ca3` |
+| terrain_child_L6_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L6\env_arrays_eval_gt_fwd1.0.npz` | `ca889feeaf9ec08b492efc14405644a7417e854cc753d6ab7f38f2f9c7be185a` |
+| terrain_parent_L6_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L6\env_arrays_probe_prop_only_fwd0.5.npz` | `5067da77783399803dcf5d46ffafdd3412a5aec3af634bcc27e29a171d2f1e46` |
+| terrain_child_L6_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L6\env_arrays_probe_prop_only_fwd0.5.npz` | `7fee1979a4a3a1f56e76475f8b37f96768b7cb1066647f85110bd9fb101dd221` |
+| terrain_parent_L6_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L6\env_arrays_probe_prop_only_fwd1.0.npz` | `50bb64257b29d5eb386ade00889bfb557e7ec4934c121a54b31aa9e2c6b5e7f8` |
+| terrain_child_L6_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L6\env_arrays_probe_prop_only_fwd1.0.npz` | `f3b6150c71f59b9f5ad73a8e625500b4e8f8abb58101347cbd492fe2845aa945` |
+| terrain_parent_L9_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L9\env_arrays_eval_gt_fwd0.5.npz` | `0fa471078a04e5877645465f4d03aa9c10ed8464b7ab61cc117da5bf8e212042` |
+| terrain_child_L9_eval_gt_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L9\env_arrays_eval_gt_fwd0.5.npz` | `25f95b9d7b405e295381c1db4c3f62e1114c1312607907e8bb8b5ad28e6d3a19` |
+| terrain_parent_L9_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L9\env_arrays_eval_gt_fwd1.0.npz` | `4349cf0308f464e35d2a9bbc78c4a5f14ad198c41dfb1abe01005e4fa96b5187` |
+| terrain_child_L9_eval_gt_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L9\env_arrays_eval_gt_fwd1.0.npz` | `5c9c7c7bc4c4fdea462b0c527d4b737576e8dbacf3e0d90f90033b3675fbc708` |
+| terrain_parent_L9_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L9\env_arrays_probe_prop_only_fwd0.5.npz` | `86e212b7fb3e7ebf0f28857c6b81fc333bd2315f9145e9ebe0164afd9dba2361` |
+| terrain_child_L9_probe_prop_only_fwd0.5 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L9\env_arrays_probe_prop_only_fwd0.5.npz` | `245b2c461dbe19aad585d9d68633d2950b2dc2748c3c12308bb99fccd5da1956` |
+| terrain_parent_L9_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\m1500\hardlevel\L9\env_arrays_probe_prop_only_fwd1.0.npz` | `7e3f74fee85d6cefe9558989ba51a882906b6379b4a0f67ab4967ee5a9fd4ded` |
+| terrain_child_L9_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L9\env_arrays_probe_prop_only_fwd1.0.npz` | `3102e6709881dc243d73f5d7ee3f559670e833d71dfa7667f9c4f10aa4ed5b30` |
+| terrain_child_earlier_L9_probe_prop_only_fwd1.0 | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27j\m2000\hardlevel\L9\env_arrays_probe_prop_only_fwd1.0.npz` | `e4b167ed99fb9e94410db74f12cddf26dfb36dbc3625afb89895f92ee69ea2eb` |
+| terrain_child_earlier_L9_meta | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27j\m2000\hardlevel\L9\map_modes.json` | `3868755e474feb6381c2a26957b654755d449a39be2e785504bac3ea47c10d21` |
+| terrain_child_current_L9_meta | `C:\mai\wt\foothold-lab\impl-turncases\logs\ex35_eval_x27k\m2000\hardlevel\L9\map_modes.json` | `a19a73a24da9ac793e2be37523b6396518ee5dc56ca0f0640037b48311a21bb8` |
+| terrain_original_comparison | `C:\mai\wt\foothold-lab\impl-turncases\logs\sb10_eval_x27j\parent_vs_m2000.md` | `cb2b91590e3faca4d6bd6940b37af651ba34101ed09d6a9aa59d0700f6e2ae98` |
 
 검사: `m1750=NEW_TASK_PENDING`, `m1950=m2000=MAINTAIN_FAIL`, 기본 창 `STOP` 4행, A11 판독 뒤 창 `STOP` 6행, 재평가 20단계 완료, map64 동일 GPU 반복 27/56 수치 차이, turn16의 두 안정 실패 사유, 완료 회차와 rc, 부모 sha 일치를 생성기가 요구한다. `STOP`은 창 판정 코드의 결과이지 저장본 JSON의 상태가 아니다. 재생성 시 원자료가 달라지면 해시와 문서도 달라진다.
