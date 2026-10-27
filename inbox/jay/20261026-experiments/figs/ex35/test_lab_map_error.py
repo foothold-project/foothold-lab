@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from lab_map_error import group_inrange, render
+from lab_map_error import group_inrange, main_launch_evidence, render
 
 
 def test_known_tiles_group_env_means_without_step_weighting():
@@ -25,7 +25,12 @@ def test_known_tiles_group_env_means_without_step_weighting():
 def test_real_receipts_are_labeled_smoke_and_not_judgement():
     card = render()
     assert card.count("<tr>") == 13  # header plus five sparse and seven default kinds
-    assert "예행 · 판정 아님 · 해석 미완 · 496e0cfe 두 겹 검토 전" in card
+    assert "reviewer 막음 0(REVIEW-496e0cfe.md)" in card
+    assert "verifier 막음 0(VERIFY-verifier-496e0cfe-map-error.md)" in card
+    launched, first_npz = main_launch_evidence()
+    assert launched == "12:46:30" and first_npz == "12:47:06"
+    assert "본 측정 X27n GPU0 12:46:30 기동, 진행 중(첫 NPZ 12:47:06 생성)" in card
+    assert "결과 수치는 진행 중이라 미기입" in card
     assert "옛 valid 지표" in card
     assert "map_err_x27m4\\smoke64_sparse50_pred" in card
     assert "map_err_x27m4\\smoke64_default_pred" in card
