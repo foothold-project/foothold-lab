@@ -29,7 +29,7 @@
 - [ ] R03-7 GPU 가 논 구간과 이유
 - [x] R03-8 (03:34 끝 · `impl-turncases/logs/w03_noise_off/r0308_compare.md` · 끔 3 회 폭 최대 0.044 대 켬 2 회 0.027 → 흔들림의 주 원인은 잡음 아님. 그러나 끔(cuda:1) 회전 Q 수준이 켬(cuda:0)보다 크게 낮음: right_then_left 0.26 대 0.86) (02:37 추가 · GPU1 · 촬영 전) 관측 잡음 끔 반복: S-B10 m1500 한 저장본을 turn16 eval_gt 를 잡음 끔(enable_corruption = False)으로 3 회. 잡음 켬 반복 폭(Q 0.100 · kept 3)과 견줘 흔들림 중 잡음 몫을 잰다(GATE-v3 §10 결정 8, 약 15 분 가정). 평가 코드 사본에서만 바꾸고 W03 본 묶음은 잡음 켬 그대로
 
-- [ ] R03-9 (03:35 추가) 잡음 켬 · cuda:1 turn16 eval_gt 1 회로 R03-8 의 수준 차가 잡음 때문인지 GPU 때문인지 가름
+- [x] R03-9 (03:44 끝 · `impl-turncases/logs/w03_noise_on_cuda1/r0309_compare.md` · 잡음 켬 cuda:1 이 켬 cuda:0 과 같고 끔 cuda:1 과 다름 → 회전 수준 차는 GPU 가 아니라 관측 잡음 때문, 1 회라 폭 미확인. 잡음: ang_vel ±0.2 · gravity ±0.05 · joint_pos ±0.01 · joint_vel ±1.5, env.yaml 952~1016) (03:35 추가) 잡음 켬 · cuda:1 turn16 eval_gt 1 회로 R03-8 의 수준 차가 잡음 때문인지 GPU 때문인지 가름
 
 ## 지킬 것
 
