@@ -66,7 +66,7 @@ import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task Foo
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, fixed_terrain  # noqa: E402
+from foothold_s2.eval import adapters, fixed_terrain, map_error as ME  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -145,7 +145,7 @@ def _run_identity():
     return out
 
 
-def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row):
+def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -165,13 +165,23 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row):
     first_done = np.where(done_any, dn.argmax(0), -1)
     dist = (vx * al).sum(0) * dt
     reason = np.where(done_any, "terminated", "survived")                                # 종료 사유: 정책 종료 조건이 걸렸는가(걸리면 step 번호가 first_done_step)
+    extra = {}
+
+    if map_err is not None:                                                            # X27m: 복원 지도 오차(cm). 지도 없는 체크포인트(G0)는 None 이라 키가 없다
+        from foothold_s2.eval import map_error as _me
+
+        agg = _me.env_aggregate(map_err[0], map_err[1], al)
+        extra = {"map_err_mean_cm": agg["mean_cm"], "map_err_cellmax_cm": agg["cellmax_cm"], "map_err_valid_steps": agg["valid_steps"],
+                 "map_err_mean_series_cm": np.asarray(map_err[0], dtype=np.float32), "map_err_cellmax_series_cm": np.asarray(map_err[1], dtype=np.float32)}
+        res["env_array_basis"] = dict(res.get("env_array_basis") or {}, map_err=_me.DEFINITION)
+
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
-             run_identity=json.dumps(res.get("run_identity"), ensure_ascii=False, sort_keys=True))
+             run_identity=json.dumps(res.get("run_identity"), ensure_ascii=False, sort_keys=True), **extra)
     res.setdefault("env_arrays", {})["%s/%s" % (mode, cname)] = "env_arrays_%s_%s.npz" % (mode, cname)
-    res["env_array_basis"] = {"kind_names": "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]" if names else None, "kind_error": err,
-                              "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"}
+    res["env_array_basis"] = dict(res.get("env_array_basis") or {}, **{"kind_names": "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]" if names else None, "kind_error": err,
+                              "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
 
 
 res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
@@ -186,13 +196,17 @@ for mode in args.modes.split(","):
         raise RuntimeError("map_input=%r 인 체크포인트에 모드 %r 는 쓸 수 없다(G0 는 --modes none)" % (saved_map_input, mode))
     res["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt_saved": runner.perception.cfg.force_gt}
     counts = {"gt": 0, "total": 0}
+    last_err = {"e": None}                                                                 # X27m: 이번 policy step 의 복원 오차(cm) (mean (N,), cellmax (N,))
     orig_adv = runner.perception._advance
 
     def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, _orig=orig_adv, _c=counts):
         _c["gt"] += int(use_gt.sum())
         _c["total"] += int(use_gt.numel())
 
-        return _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        result = _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        ME.record(last_err, result, gt_map)
+
+        return result
 
     runner.perception._advance = tapped
     res["modes"][mode] = {}
@@ -252,6 +266,7 @@ for mode in args.modes.split(","):
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        ERR_M, ERR_X = (torch.full((S, env.num_envs), float("nan"), device=dev) for _ in range(2))          # X27m: step 별 복원 오차(cm) 평균 · 칸 최대
         FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
         YAW = torch.zeros(S, env.num_envs, device=dev)
@@ -261,7 +276,12 @@ for mode in args.modes.split(","):
 
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+            last_err["e"] = None
             a = policy(obs)
+
+            if last_err["e"] is not None:
+                ERR_M[k], ERR_X[k] = last_err["e"]
+
             obs, _r, dones, _x = env.step(a)
             policy.reset(dones)
             AL[k] = alive
@@ -296,7 +316,8 @@ for mode in args.modes.split(","):
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
-        _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row)                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
+        _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
+                         map_err=None if mode == "none" else (ERR_M.cpu().numpy(), ERR_X.cpu().numpy()))                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
