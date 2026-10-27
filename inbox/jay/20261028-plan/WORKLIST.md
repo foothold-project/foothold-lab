@@ -67,6 +67,7 @@
 | W23 | 커리큘럼 문서 v0.4 (지금 안: STAGES-AND-NIGHT-RULES v0.2 단계표 + D01~D16) · 팀장 검토 칸 표시 · planner 의견으로 갱신 | planner | - | 끝 04:5x · `fable-25a/inbox/jay/20261026-experiments/CURRICULUM-GATES.md` v0.4 (98dae623) · 검토 전 칸은 팀장 검토 |
 | W19 | EX-35 m2000 → m3000 같은 조건 이어 학습 기동 경로: ex35_launch extend kind + validate_launch 부모 sha 검사(W17 reviewer 막음) | sonnet-code → reviewer 1 회 | - | 의뢰 04:16 · 기동은 팀장 승인 뒤 |
 | W09b | 오늘 밤 이어 학습(D13): W19 검수 → CPU 시험 → 8 env 예행 → 본 기동(GPU0, W03 끝난 뒤) → 첫 update · 첫 사슬 평가 확인 → 50 회마다 사슬(GPU1 우선, 촬영은 빈틈에) | sonnet-code · lead 확인 | W19 | 승인됨 04:2x |
+| W24 | train_start.py · 확장 아닌 이어 가기(start · 1501 · smoke2 start) 경로도 부모 검사 안에 넣기(W19 reviewer 참고) | sonnet-code → reviewer | W19 | 아침 |
 | W20 | 500 회 점수표 코드(GATE-v3 v0.5 · D12 종류별 추세 칸) | sonnet-code → reviewer | W03 | 대기 |
 | W21 | 처방 재개 경로(`wt_p_*` 인자 + 재개 첫 회차 사건) | sonnet-code → reviewer | W19 | 대기 |
 | W22 | 깃발 학습 슬롯(D02, 다음 판 EX-36 = C1b 10 %) | sonnet-code → reviewer | W04 · W19 | 대기 |
