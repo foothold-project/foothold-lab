@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[5]
 DATA = Path(__file__).with_name("result_data.json")
 RESULT = ROOT / "inbox/jay/20261026-experiments/RESULT-EX35-1027.md"
 AGENDA = ROOT / "inbox/jay/20261019-design/AGENDA-LEAD.md"
+RULES = ROOT / "inbox/jay/20261019-design/RULES-HUB.md"
+RECON_FIGURE = Path(__file__).with_name("reconstruction_loss_s-b10_ex35.png")
 FIGURE = Path("C:/Users/AI-WS01/s2_lab/lab_status/ex35_turn16_repeat.png")
 RESULT_URL = (
     "https://github.com/foothold-project/foothold-lab/blob/"
@@ -166,8 +168,33 @@ def render_cards(data: dict, agenda: str, result: str, a11: dict) -> str:
         f'<p class="t"><a href="{RESULT_URL}">RESULT-EX35 v1.5 지형 표</a> · '
         f'원자료 {html.escape(source_path(data, "terrain_child_L9_probe_prop_only_fwd1.0"))}</p></div>'
     )
-    cards = [video_card(), terrain_card, *decorate_existing(cards, data), design_card()]
+    cards = [*new_decision_cards(), video_card(), terrain_card, *decorate_existing(cards, data), design_card()]
     return START + "\n" + "\n".join(cards) + "\n" + END
+
+
+def new_decision_cards() -> list[str]:
+    rules = RULES.read_text(encoding="utf-8")
+    level_row = next((line for line in rules.splitlines() if line.startswith("| 10/27 11:2x |")), "")
+    restart_row = next((line for line in rules.splitlines() if line.startswith("| 10/27 11:3x |")), "")
+    if not all(token in level_row for token in ("L0~2 · L3 · L6 · L9", "L3 은 미측", "이미 고정된 EX-35 카드")):
+        raise ValueError("RULES-HUB level decision incomplete")
+    if "77388 종료는 승인 없이" not in restart_row:
+        raise ValueError("RULES-HUB process decision incomplete")
+    if not RECON_FIGURE.is_file():
+        raise FileNotFoundError(RECON_FIGURE)
+    proof = html.escape(winpath(RULES))
+    figure = html.escape(winpath(RECON_FIGURE))
+    return [
+        '<div class="card ex35-recent"><p><b>10/27 12:02 · 복원 지도 셋 진행 상태</b>: '
+        '복원 손실 학습 곡선 완료 (7b1ad9fe, 해석 미완). '
+        '복원 오차 축 코드 검토 중 (sonnet-code 753f9b08, GPU 미실행). '
+        '복원 지도 모드 영상 미착수.</p>'
+        f'<p class="t">근거 그림 {figure} · 팀장 결정 원장 {proof} 10/27 11:2x</p></div>',
+        '<div class="card ex35-recent"><p><b>10/27 11:2x · 지형 레벨 평가 결정</b>: '
+        '앞으로 부모 비교와 지형 레벨 평가는 L0~2 · L3 · L6 · L9. '
+        'L3 미측. 기존 EX-35 카드 v0.9의 판정 칸은 소급 변경하지 않음.</p>'
+        f'<p class="t">근거 팀장 결정 원장 {proof} 10/27 11:2x</p></div>',
+    ]
 
 
 def render_decisions(data: dict, agenda: str) -> str:
@@ -181,14 +208,13 @@ def render_decisions(data: dict, agenda: str) -> str:
     )
     return intro + "\n" + "\n".join(
         [
-            '<div class="row"><div class="k">1 · GATE-v2 일곱 결정</div><div>'
-            '성과 단계 전환의 기준선·단독 검사·적용 시점 등 일곱 선택을 팀장이 결정. '
-            f'근거 {html.escape(winpath(AGENDA))} 10/27 04시대 절.</div></div>',
-            '<div class="row"><div class="k">2 · 되돌림 판</div><div>'
-            f'EX-35 STOP {data["window_row"]}행 뒤 {data["canonical"]}에서 되돌림 판을 기동할지 팀장이 결정. '
-            '현재 새 학습 승인 아님.</div></div>',
-            '<div class="row"><div class="k">3 · 다음 판 방향</div><div>'
-            '영상·보행 위상·저장본 추세 분석 뒤 다음 판의 축을 팀장이 결정.</div></div>',
+            '<div class="row"><div class="k">1 · 깃발 평가 진행 여부</div><div>'
+            '추가 평가를 진행할지 팀장이 결정. 현재 새 GPU 실행 지시 아님.</div></div>',
+            '<div class="row"><div class="k">2 · 실험 순서 v2 규칙화</div><div>'
+            '실험 순서 v2를 규칙으로 확정할지 팀장이 결정. 현재 초안 단계.</div></div>',
+            '<div class="row"><div class="k">3 · 77388 종료 소급 승인</div><div>'
+            f'갱신기 PID 77388 종료는 승인 없이 이뤄졌다. 소급 승인 여부는 팀장 대기. '
+            f'근거 {html.escape(winpath(RULES))} 10/27 11:3x.</div></div>',
         ]
     )
 
