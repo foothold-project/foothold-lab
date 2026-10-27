@@ -58,6 +58,7 @@
 | W15 | 평가 사슬에 eval_pred · 지형 종류별 64 env 기록 추가(D09) | sonnet-code → reviewer | W03 GPU 가 빈 뒤 | 대기 |
 | W16 | orchestration 알림이 팀장 입력 중에 lead 창으로 들어오는 문제 조사 · 고침 | super2 | - | 끝 04:14: coordinator = 셸 창 mailbox(term_a5d996e2), lead 는 UserPromptSubmit 훅 맥락 + `_out/msgs/inbox_wait.py`(읽기만, 시험 통과)로 받음. 되돌리기 `orca orchestration run-use --id run_abb2e12cee32` |
 | W17 | 밤 자동 선택 기준표: 안전 축 HOLD 때 lead 가 무엇을 보고 무엇을 고르나(계속 · 처방하고 계속 · 되돌림) | planner → reviewer 1 회 | W05 v0.5 | 의뢰 |
+| W19 | EX-35 m2000 → m3000 같은 조건 이어 학습 기동 경로: ex35_launch extend kind + validate_launch 부모 sha 검사(W17 reviewer 막음) | sonnet-code → reviewer 1 회 | - | 의뢰 04:16 · 기동은 팀장 승인 뒤 |
 | W18 | 단계(stage) 목록 확정과 코드 구현 상태 점검: 단계 순서 · 각 단계 명령 구성 · 자동 전환 장치 유무 | planner | - | 의뢰 · W14 의 앞 일 |
 
 ## W01 계기판 v8
