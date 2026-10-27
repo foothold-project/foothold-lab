@@ -221,3 +221,39 @@ def judge(reach_step, fall_step, alive_steps, steps, dt):
             "flag_last_reach_time_s": last_t.astype(np.float32), "flag_fall": fell, "flag_fall_step": fs.astype(np.int32),
             "flag_fall_time_s": np.where(fell, fs * float(dt), np.nan).astype(np.float32), "flag_fell_before_last": fell_before_last,
             "flag_order_ok": np.array(bool(order_ok)), "flag_count": np.array(K, dtype=np.int32)}
+
+
+# ---------------------------------------------------------------- 영상 판정 성분 (계기판 칸 · 촬영 목록 고르기에 같은 규칙)
+
+BASELINE_FWD_M = 6.5
+
+
+def episode_verdict(fwd, t, fell_row=None, last_row=None, threshold_m=BASELINE_FWD_M):
+    """한 에피소드의 두 성분을 같은 숫자에서 낸다 (record_25e 의 «건넘» 정의: 출발 자세 기준 전진 >= 6.5 m, 넘어지지 않음).
+
+    fwd: (n,) 에피소드 첫 행부터 지금까지의 전진 거리 m. t: (n,) 시각 s. fell_row: 넘어진 행 번호(에피소드 안, 없으면 None). last_row: 에피소드 마지막 행 번호(끝났는지 알 때).
+    반환: baseline_reached(bool), baseline_t(s 또는 None), baseline_max_m, fell(bool), fell_t, survived_to_end(끝난 에피소드에서 넘어지지 않음: 끝나지 않았으면 None), label.
+    label: crossed(기준선 도달, 넘어지지 않음) · fell(넘어짐) · reached_then_fell · running(진행 중) · ended_short(끝까지 생존했으나 기준선 미도달).
+    """
+    f = np.asarray(fwd, dtype=np.float64)
+    tt = np.asarray(t, dtype=np.float64)
+    hit = np.flatnonzero(f >= threshold_m)
+    reached = bool(hit.size)
+    fell = fell_row is not None
+    n = len(f)
+    ended = last_row is not None and (n - 1) >= int(last_row)
+    survived = None if not ended else (not fell)
+
+    if reached and not fell:
+        label = "crossed"
+    elif fell and reached:
+        label = "reached_then_fell"
+    elif fell:
+        label = "fell"
+    elif ended:
+        label = "ended_short"
+    else:
+        label = "running"
+
+    return {"baseline_reached": reached, "baseline_t": float(tt[hit[0]]) if reached else None, "baseline_max_m": float(f.max()) if n else float("nan"),
+            "fell": fell, "fell_t": float(tt[int(fell_row)]) if fell and int(fell_row) < n else None, "survived_to_end": survived, "label": label}

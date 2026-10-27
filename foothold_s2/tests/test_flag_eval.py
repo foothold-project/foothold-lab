@@ -195,3 +195,18 @@ def test_first_event_wins_between_z_and_termination():
     tr2.note_done(2, torch.tensor([True]), act)
     tr2.note_fall(3, _t([0.1]), act)
     assert tr2.fall_step.tolist() == [2] and tr2.fall_kind.tolist() == [2]
+
+
+def test_episode_verdict_hand_cases():
+    t = np.arange(10) * 1.0
+    fwd = np.array([0, 1, 2, 3, 4, 5, 6.4, 6.5, 7.0, 7.2])
+    v = FE.episode_verdict(fwd, t, None, last_row=9)
+    assert v["baseline_reached"] and v["baseline_t"] == 7.0 and v["survived_to_end"] is True and v["label"] == "crossed"       # 6.5 정확히 닿음(경계 포함)
+    v = FE.episode_verdict(fwd[:6], t[:6], None, last_row=9)                           # 아직 진행 중: 기준선 미도달, 생존 판정은 미정
+    assert not v["baseline_reached"] and v["baseline_t"] is None and v["survived_to_end"] is None and v["label"] == "running" and v["baseline_max_m"] == 5.0
+    v = FE.episode_verdict(fwd[:5], t[:5], 4, last_row=4)                              # 마지막 행에서 넘어짐, 기준선 전
+    assert v["label"] == "fell" and v["fell_t"] == 4.0 and v["survived_to_end"] is False
+    v = FE.episode_verdict(fwd, t, 9, last_row=9)                                      # 기준선은 닿고 끝에서 넘어짐
+    assert v["label"] == "reached_then_fell" and v["baseline_reached"]
+    v = FE.episode_verdict(fwd[:6], t[:6], None, last_row=5)                           # 끝까지 생존했으나 기준선 미도달
+    assert v["label"] == "ended_short" and v["survived_to_end"] is True
