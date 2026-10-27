@@ -200,23 +200,42 @@ def new_decision_cards() -> list[str]:
 def render_decisions(data: dict, agenda: str) -> str:
     if "결정 일곱" not in agenda or "되돌림 판" not in agenda or data["window_row"] != 6:
         raise ValueError("decision sources incomplete")
+    heading = "## 10/27 12:1x · 팀장 결정 대기 여덟"
+    if agenda.count(heading) != 1:
+        raise ValueError("AGENDA-LEAD latest decision section missing")
+    section = agenda.split(heading, 1)[1].split("\n## ", 1)[0]
+    old_line = next((line for line in section.splitlines() if line.startswith("- 10:1x 부터 남은 셋:")), "")
+    markers = list(re.finditer(r"\(([1-3])\)", old_line))
+    if [int(match[1]) for match in markers] != [1, 2, 3]:
+        raise ValueError("AGENDA-LEAD earlier three decisions missing")
+    items = {}
+    for index, match in enumerate(markers):
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(old_line)
+        items[int(match[1])] = old_line[match.end():end].strip().removesuffix(".")
+    for line in section.splitlines():
+        match = re.fullmatch(r"\s+- \(([4-8])\) (.+)", line)
+        if match:
+            number = int(match[1])
+            if number in items:
+                raise ValueError("AGENDA-LEAD repeated decision number")
+            items[number] = match[2].strip().removesuffix(".")
+    if sorted(items) != list(range(1, 9)) or any(not value for value in items.values()):
+        raise ValueError("AGENDA-LEAD eight decisions incomplete")
     intro = (
         f'<p>EX-35 m1950 · m2000 저장본은 MAINTAIN_FAIL. 기본 창 STOP '
         f'{data["window_default_row"]}행은 A11 파일이 없었기 때문이며, 판독을 반영한 창 판정은 '
         f'STOP {data["window_row"]}행 (되돌림 갈래)이다. 연장 없음, '
         f'정본 {data["canonical"]} 유지. 새 학습은 팀장 결정 전 대기.</p>'
     )
-    return intro + "\n" + "\n".join(
-        [
-            '<div class="row"><div class="k">1 · 깃발 평가 진행 여부</div><div>'
-            '추가 평가를 진행할지 팀장이 결정. 현재 새 GPU 실행 지시 아님.</div></div>',
-            '<div class="row"><div class="k">2 · 실험 순서 v2 규칙화</div><div>'
-            '실험 순서 v2를 규칙으로 확정할지 팀장이 결정. 현재 초안 단계.</div></div>',
-            '<div class="row"><div class="k">3 · 77388 종료 소급 승인</div><div>'
-            f'갱신기 PID 77388 종료는 승인 없이 이뤄졌다. 소급 승인 여부는 팀장 대기. '
-            f'근거 {html.escape(winpath(RULES))} 10/27 11:3x.</div></div>',
-        ]
-    )
+    rows = []
+    for number in range(1, 9):
+        description = items[number]
+        label = description.split(":", 1)[0].split(" (", 1)[0]
+        rows.append(
+            f'<div class="row"><div class="k">{number} · {html.escape(label)}</div><div>'
+            f'{html.escape(description)}. 근거 {html.escape(winpath(AGENDA))} 10/27 12:1x.</div></div>'
+        )
+    return intro + "\n" + "\n".join(rows)
 
 
 def render_page(source: str, cards: str, decisions: str) -> str:
@@ -231,8 +250,8 @@ def render_page(source: str, cards: str, decisions: str) -> str:
         source = source.replace(heading, heading + "\n" + cards, 1)
     pattern = r'(<section class="decide">\s*<h2>[^<]+</h2>)(.*?)(</section>)'
     match = re.search(pattern, source, flags=re.S)
-    if not match or match[2].count('class="row"') != 3:
-        raise ValueError("three decision rows missing")
+    if not match or match[2].count('class="row"') not in (3, 8):
+        raise ValueError("decision rows missing")
     return source[: match.start()] + match[1] + "\n  " + decisions + "\n" + match[3] + source[match.end() :]
 
 

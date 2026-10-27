@@ -10,7 +10,7 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
-def test_real_sources_make_newest_first_entries_and_three_decisions():
+def test_real_sources_make_newest_first_entries_and_eight_decisions():
     data, agenda, result, a11 = MODULE.load_sources()
     cards = MODULE.render_cards(data, agenda, result, a11)
     decisions = MODULE.render_decisions(data, agenda)
@@ -23,11 +23,15 @@ def test_real_sources_make_newest_first_entries_and_three_decisions():
     assert cards.index("05:1x") < cards.index("05:0x") < cards.index("04시대") < cards.index("02:48:13")
     for phrase in ("m1950", "m2000", "MAINTAIN_FAIL", "STOP 4행", "STOP 6행", "27개", 'href="videos/'):
         assert phrase in cards
-    assert decisions.count('class="row"') == 3
+    assert decisions.count('class="row"') == 8
     assert "촬영 GPU 규칙 확대" not in decisions
-    assert "깃발 평가 진행 여부" in decisions
-    assert "실험 순서 v2 규칙화" in decisions
-    assert "77388 종료 소급 승인" in decisions
+    for phrase in (
+        "GATE-v2 일곱", "S-B10 m1500 되돌림 판 기동 여부", "다음 판 방향",
+        "듬성 지형 깃발 평가 진행 여부", "실험 순서 v2", "PID 147032 재시작 승인",
+        "주기마다 모듈을 다시 읽게 고칠지", "77388 종료 소급 승인",
+    ):
+        assert phrase in decisions
+    assert decisions.count("AGENDA-LEAD.md 10/27 12:1x") == 8
 
 
 def test_repeat_render_replaces_cards_and_decisions_without_duplication():
@@ -63,6 +67,12 @@ def test_wrong_result_or_a11_fails_closed():
         assert "A11" in str(exc)
     else:
         raise AssertionError("A11 mutation accepted")
+    try:
+        MODULE.render_decisions(data, agenda.replace("  - (7) 갱신기가 주기마다", "  - (9) 갱신기가 주기마다"))
+    except ValueError as exc:
+        assert "eight decisions incomplete" in str(exc)
+    else:
+        raise AssertionError("missing seventh decision accepted")
 
 
 def test_each_item_has_its_own_evidence_and_registered_axes():
