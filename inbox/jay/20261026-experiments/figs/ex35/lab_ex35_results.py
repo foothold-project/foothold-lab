@@ -173,6 +173,12 @@ def render_cards(data: dict, agenda: str, result: str, a11: dict) -> str:
 
 
 def new_decision_cards() -> list[str]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from lab_map_error import render as render_map_error
+
+    checked_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%H:%M")
     rules = RULES.read_text(encoding="utf-8")
     level_row = next((line for line in rules.splitlines() if line.startswith("| 10/27 11:2x |")), "")
     restart_row = next((line for line in rules.splitlines() if line.startswith("| 10/27 11:3x |")), "")
@@ -185,11 +191,11 @@ def new_decision_cards() -> list[str]:
     proof = html.escape(winpath(RULES))
     figure = html.escape(winpath(RECON_FIGURE))
     return [
-        '<div class="card ex35-recent"><p><b>10/27 12:02 · 복원 지도 셋 진행 상태</b>: '
+        f'<div class="card ex35-recent"><p><b>10/27 {checked_at} · 복원 지도 셋 진행 상태</b>: '
         '복원 손실 학습 곡선 완료 (7b1ad9fe, 해석 미완). '
-        '복원 오차 축 코드 검토 중 (sonnet-code 753f9b08, GPU 미실행). '
         '복원 지도 모드 영상 미착수.</p>'
-        f'<p class="t">근거 그림 {figure} · 팀장 결정 원장 {proof} 10/27 11:2x</p></div>',
+        + render_map_error()
+        + f'<p class="t">근거 그림 {figure} · 팀장 결정 원장 {proof} 10/27 11:2x</p></div>',
         '<div class="card ex35-recent"><p><b>10/27 11:2x · 지형 레벨 평가 결정</b>: '
         '앞으로 부모 비교와 지형 레벨 평가는 L0~2 · L3 · L6 · L9. '
         'L3 미측. 기존 EX-35 카드 v0.9의 판정 칸은 소급 변경하지 않음.</p>'

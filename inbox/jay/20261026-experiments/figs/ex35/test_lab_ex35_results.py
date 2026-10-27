@@ -18,7 +18,10 @@ def test_real_sources_make_newest_first_entries_and_eight_decisions():
     assert cards.index("복원 지도 셋 진행 상태") < cards.index("지형 레벨 평가 결정") < cards.index("영상 제작 상태")
     assert "L0~2 · L3 · L6 · L9" in cards and "L3 미측" in cards
     assert "7b1ad9fe" in cards and "해석 미완" in cards
-    assert "753f9b08, GPU 미실행" in cards and "복원 지도 모드 영상 미착수" in cards
+    assert "16112810, 8 env" in cards and "496e0cfe, 64 env" in cards
+    assert "예행 · 판정 아님 · 해석 미완 · 496e0cfe 두 겹 검토 전" in cards
+    assert "복원 지도 모드 영상 미착수" in cards
+    assert "753f9b08 검토 중" not in cards
     assert cards.index("05:5x") < cards.index("05:19") < cards.index("05:1x")
     assert cards.index("05:1x") < cards.index("05:0x") < cards.index("04시대") < cards.index("02:48:13")
     for phrase in ("m1950", "m2000", "MAINTAIN_FAIL", "STOP 4행", "STOP 6행", "27개", 'href="videos/'):
@@ -83,6 +86,8 @@ def test_each_item_has_its_own_evidence_and_registered_axes():
     parts = re.findall(r'<div class="card ex35-recent">(.*?)</div>', cards, flags=re.S)
     assert len(parts) == 11
     assert "reconstruction_loss_s-b10_ex35.png" in parts[0]
+    assert "map_err_x27m4\\smoke64_sparse50_pred" in parts[0]
+    assert "map_err_x27m4\\smoke64_default_pred" in parts[0]
     assert "RULES-HUB.md" in parts[0] and "RULES-HUB.md" in parts[1]
     assert "jobs_remaining.json" in parts[2] and "compose_jobs.json" in parts[2]
     assert re.search(r"10/27 \d\d:\d\d KST · 영상 제작 상태", parts[2])
