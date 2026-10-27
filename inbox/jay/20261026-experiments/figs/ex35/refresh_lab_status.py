@@ -106,10 +106,17 @@ def write_atomic(path: Path, content: str) -> None:
 
 
 def refresh(page: Path = LAB, log: Path = LOG) -> dict:
+    from lab_ex35_results import ensure_figure, load_sources, render_cards, render_decisions, render_page
+
     now = datetime.now(KST)
     gpus = measure_gpus()
     active = active_experiments()
+    data, agenda, result, a11 = load_sources()
+    cards = render_cards(data, agenda, result, a11)
+    decisions = render_decisions(data, agenda)
     output = render(page.read_text(encoding="utf-8"), now, gpus, active)
+    output = render_page(output, cards, decisions)
+    ensure_figure(data)
     write_atomic(page, output)
     receipt = {"at": now.isoformat(), "gpus": gpus, "experiment_candidate_pids": active}
     with log.open("a", encoding="utf-8") as stream:
