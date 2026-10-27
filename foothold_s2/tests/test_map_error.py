@@ -27,7 +27,7 @@ def test_step_error_known_answers_three_quantities():
     pr[0] += 0.02                                              # 모든 칸 2 cm, 결측 없음 -> a = b = 2.0, c = 0
     pr[1, 0, 0] = 0.512                                        # 한 칸만 51.2 cm -> 평균 0.1 cm
     gt[2, 0, :] = -1.0                                         # 16 칸 결측(정답이 빔), 복원 0 -> b 는 16 x 100 / 512 = 3.125 cm, a 는 0
-    vm, vx, am, ax, mf = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, mf, nf = (t.numpy() for t in ME.step_error(pr, gt))
     assert np.allclose(vm, [2.0, 0.1, 0.0], atol=1e-4) and np.allclose(vx, [2.0, 51.2, 0.0], atol=1e-3)
     assert np.allclose(am, [2.0, 0.1, 3.125], atol=1e-4) and np.allclose(ax, [2.0, 51.2, 100.0], atol=1e-3)
     assert np.allclose(mf, [0.0, 0.0, 16 / 512.0], atol=1e-6)
@@ -36,7 +36,7 @@ def test_step_error_known_answers_three_quantities():
 def test_missing_only_case_valid_is_nan_not_zero_and_b_is_the_video_value():
     gt = torch.full((1, 32, 16), -1.0)                         # 결측 칸만 있는 경우: 비교할 유효 칸이 없다
     pr = torch.zeros(1, 32, 16)
-    vm, vx, am, ax, mf = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, mf, nf = (t.numpy() for t in ME.step_error(pr, gt))
     assert np.isnan(vm[0]) and np.isnan(vx[0])                 # «0 cm(완벽)» 로 둔갑하지 않는다
     assert abs(am[0] - 100.0) < 1e-4 and abs(ax[0] - 100.0) < 1e-4 and mf[0] == 1.0       # 영상 식은 100 cm, 결측 비율 1.0 이 이유를 말해 준다
     assert abs(am[0] - video_formula(pr[0].numpy(), gt[0].numpy())) < 1e-4
@@ -46,7 +46,7 @@ def test_step_error_matches_video_formula_on_random_input_and_a_excludes_exactly
     rng = np.random.default_rng(0)
     g, p = rng.normal(size=(5, 32, 16)).astype(np.float32), rng.normal(size=(5, 32, 16)).astype(np.float32)
     g[1, :4] = -1.0                                            # env 1 은 4 줄(64 칸)이 결측
-    vm, _vx, am, _ax, mf = (t.numpy() for t in ME.step_error(T(p), T(g)))
+    vm, _vx, am, _ax, mf, _nf = (t.numpy() for t in ME.step_error(T(p), T(g)))
     assert np.allclose(am, [video_formula(p[i], g[i]) for i in range(5)], atol=1e-4)
     keep = g[1] != -1.0
     assert abs(vm[1] - float(np.abs(p[1][keep] - g[1][keep]).mean() * 100.0)) < 1e-4 and abs(mf[1] - 64 / 512.0) < 1e-6
@@ -59,7 +59,7 @@ def test_step_error_nan_cells_are_skipped_in_all_quantities():
     pr[0, 0, :] = float("nan")
     pr[0, 1, 0] = 0.5
     pr[1] = float("nan")
-    vm, vx, am, ax, _mf = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, _mf, nf = (t.numpy() for t in ME.step_error(pr, gt))
     assert abs(vm[0] - 0.5 / (512 - 16) * 100.0) < 1e-4 and abs(ax[0] - 50.0) < 1e-4 and abs(am[0] - vm[0]) < 1e-6
     assert np.isnan(vm[1]) and np.isnan(am[1]) and np.isnan(vx[1]) and np.isnan(ax[1])
 
@@ -68,7 +68,7 @@ def test_record_stores_only_when_refined_exists():
     last = {}
     gt = torch.zeros(2, 32, 16)
     ME.record(last, (None, None, {"refined": torch.full((2, 32, 16), 0.01)}), gt)
-    assert len(last["e"]) == len(ME.SERIES) == 5 and np.allclose(last["e"][0].numpy(), [1.0, 1.0])
+    assert len(last["e"]) == len(ME.SERIES) == 6 and np.allclose(last["e"][0].numpy(), [1.0, 1.0])
     ME.record(last, (None, None, {"mu": torch.zeros(2, 3)}), gt)                     # G0 계열: 복원 없음
     assert last["e"] is None
 
@@ -130,12 +130,16 @@ def test_save_env_arrays_writes_all_three_quantities_and_keeps_old_keys(tmp_path
         mf = np.zeros((S_, N), dtype=np.float32)
         mf[:, 3] = 0.5
 
-        return np.stack([m, m * 2.0, m + 1.0, m * 3.0, mf])                    # ME.SERIES 순서
+        nf = np.zeros((S_, N), dtype=np.float32)
+        nf[1, 0] = 2.0                                                         # env 0 의 한 step 에 비유한 칸 2 개
+
+        return np.stack([m, m * 2.0, m + 1.0, m * 3.0, mf, nf])                # ME.SERIES 순서
 
     ns, z = _exec_save(tmp_path, err)
     assert z["map_err_valid_mean_cm"].tolist() == [1.0, 2.0, 3.0, 4.0] and z["map_err_valid_cellmax_cm"].tolist() == [2.0, 4.0, 6.0, 8.0]
     assert z["map_err_all_mean_cm"].tolist() == [2.0, 3.0, 4.0, 5.0] and z["map_err_all_cellmax_cm"].tolist() == [3.0, 6.0, 9.0, 12.0]
     assert z["map_err_missing_frac_mean"].tolist() == [0.0, 0.0, 0.0, 0.5] and z["map_err_valid_steps"].tolist() == [6, 6, 3, 6]
+    assert z["map_err_nonfinite_cells_total"].tolist() == [2, 0, 0, 0] and z["map_err_nonfinite_steps"].tolist() == [1, 0, 0, 0]
     assert z["map_err_series_valid_mean"].shape == (6, 4) and z["map_err_series_missing_frac"].shape == (6, 4)
     assert {"kind", "terrain_level", "terrain_col", "vx", "alive", "dones", "assignment_sha256", "run_identity"} <= set(z.files)              # 기존 키 불변
     assert "map_err" in ns["res"]["env_array_basis"] and "kind_error" in ns["res"]["env_array_basis"]
@@ -154,7 +158,7 @@ def test_group_stats_report_and_cli_known_answers_head_is_a(tmp_path):
     np.savez(tmp_path / "env_arrays_eval_pred_fwd1.0.npz", kind=kind,
              map_err_valid_mean_cm=f32(1.0, 3.0, 2.0, 4.0, np.nan), map_err_valid_cellmax_cm=f32(5.0, 9.0, 6.0, 8.0, np.nan),
              map_err_all_mean_cm=f32(11.0, 13.0, 12.0, 14.0, 100.0), map_err_all_cellmax_cm=f32(15.0, 19.0, 16.0, 18.0, 100.0),
-             map_err_missing_frac_mean=f32(0.0, 0.0, 0.1, 0.1, 1.0))
+             map_err_missing_frac_mean=f32(0.0, 0.0, 0.1, 0.1, 1.0), map_err_nonfinite_cells_total=np.array([0, 3, 0, 0, 1]), map_err_nonfinite_steps=np.array([0, 2, 0, 0, 1], dtype=np.int32))
     np.savez(tmp_path / "env_arrays_eval_gt_fwd1.0.npz", kind=kind)                              # 오차 키 없는 옛 npz 는 건너뜀
     r = ME.report({"L6": [tmp_path]})["L6"]
     assert list(r) == ["eval_pred"]
@@ -162,7 +166,34 @@ def test_group_stats_report_and_cli_known_answers_head_is_a(tmp_path):
     assert s["flat"]["a_mean_of_mean_cm"] == 2.0 and s["flat"]["a_max_of_cellmax_cm"] == 9.0 and s["flat"]["a_median_of_mean_cm"] == 2.0 and s["flat"]["b_mean_of_mean_cm"] == 12.0
     st = s["stairs"]
     assert st["envs"] == 3 and st["valid_envs"] == 2 and st["a_mean_of_mean_cm"] == 3.0 and abs(st["b_mean_of_mean_cm"] - 42.0) < 1e-6 and abs(st["c_missing_frac_mean"] - 0.4) < 1e-6
+    assert s["flat"]["d_nonfinite_cells_total"] == 3 and s["flat"]["d_nonfinite_steps_total"] == 2 and s["flat"]["d_nonfinite_envs"] == 1 and st["d_nonfinite_cells_total"] == 1
     assert ME.main(["--group", "L6=%s" % tmp_path, "--out-prefix", str(tmp_path / "rep")]) == 0
     md = (tmp_path / "rep.md").read_text(encoding="utf-8")
-    assert md.index("(a) env 평균의 평균") < md.index("(b) 영상 식 평균") < md.index("(c) 결측 칸 비율") and "flat" in md          # 머리는 (a)
+    assert md.index("(a) env 평균의 평균") < md.index("(b) 영상 식 평균") < md.index("(c) 결측 칸 비율") and "flat" in md and "(d) 비유한 칸" in md          # 머리는 (a)
     assert json.loads((tmp_path / "rep.json").read_text(encoding="utf-8"))["L6"]
+
+
+def test_inf_cell_is_counted_not_silently_dropped_verifier_case(tmp_path):
+    """verifier 반례: alive step [1 cm, 한 칸이 +Inf]. 예전에는 둘째 step 이 통째로 버려져 «평균 1 cm · 유효 1 · 비유한 0» 으로 보였다."""
+    gt = torch.zeros(1, 32, 16)
+    ok = torch.full((1, 32, 16), 0.01)                                               # 모든 칸 1 cm
+    bad = ok.clone()
+    bad[0, 3, 3] = float("inf")
+    r1, r2 = ME.step_error(ok, gt), ME.step_error(bad, gt)
+    assert float(r1[2]) == pytest.approx(1.0, abs=1e-4) and float(r1[5]) == 0.0
+    assert float(r2[5]) == 1.0 and np.isfinite(float(r2[3])) and float(r2[0]) == pytest.approx(1.0, abs=1e-4)      # 다른 511 칸으로 평균 · 최대는 유한, Inf 칸은 세어 남음
+    ser = np.stack([np.array([[float(a[i])] for a in (r1, r2)]) for i in range(len(ME.SERIES))])          # (6, 2, 1)
+    al = np.ones((2, 1), dtype=bool)
+    agg = ME.env_aggregate({nm: ser[i] for i, nm in enumerate(ME.SERIES)}, al)
+    assert agg["map_err_valid_steps"].tolist() == [2] and agg["map_err_nonfinite_cells_total"].tolist() == [1] and agg["map_err_nonfinite_steps"].tolist() == [1]
+    np.savez(tmp_path / "env_arrays_eval_pred_fwd1.0.npz", kind=np.array(["boxes"]), **agg)
+    assert ME.main(["--group", "L6=%s" % tmp_path, "--out-prefix", str(tmp_path / "rep")]) == 0
+    row = [ln for ln in (tmp_path / "rep.md").read_text(encoding="utf-8").splitlines() if ln.startswith("| boxes")][0]
+    assert row.endswith("1 · 1 · 1 |")                                                  # 비유한 칸 1 · step 1 · env 1 이 표에 보인다
+
+
+def test_all_nonfinite_step_has_nan_means_but_counts_all_512_cells():
+    gt = torch.zeros(1, 32, 16)
+    pr = torch.full((1, 32, 16), float("inf"))
+    vm, vx, am, ax, _mf, nf = (t.numpy() for t in ME.step_error(pr, gt))
+    assert np.isnan(vm[0]) and np.isnan(am[0]) and nf[0] == 512.0
