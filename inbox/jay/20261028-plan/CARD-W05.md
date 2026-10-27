@@ -34,7 +34,8 @@
 ## 결과
 
 - planner 끝 02:30 · 커밋 fa4e650f(feature/fable-25a-jay, push 안 함) · `fable-25a/inbox/jay/20261028-design/GATE-v3-maintenance-redesign.md` · `GATE-v3-easy.md` · 막음 2(안전 등급의 종류별 낙상 · 복원 지도로 걷기는 지금 사슬에 측정 없음)
-- [ ] R05-10 reviewer 독립 검토(02:33 보냄)
+- [x] R05-10 reviewer 독립 검토(02:42 끝 · `sonnet-code/_out/review/REVIEW-reviewer-GATE-v3.md` · 막음 1 · 고침 5 · 참고 8)
+- [ ] R05-13 막음 1(δ 와 오경보율: 후보 δ 에서 변화 없는 창도 Q 23~42 % · 거리 14~27 % 미달) · 고침 5 반영 → GATE-v3 v0.3 → reviewer 재확인
 - [ ] R05-11 팀장 판단(문서 10 절 일곱 항목)
 - [x] R05-12 W06 고침 5 반영(EVAL-AXES-v2 v0.3) · 고침 4(m2250 종류별 필수) 결정. 02:30 에 보냈으나 W05 끝과 겹쳐 반영 여부 미확인
   - R05-12 근거: planner 02:35 커밋 f3279c55 · EVAL-AXES-v2 v0.3 · GATE-v3 v0.2 §4a. 관측 잡음은 turn16(`turn_probe.py:62`) · map64(`eval_map_modes.py:71`) 둘 다 켜진 채 평가(planner 재확인)
