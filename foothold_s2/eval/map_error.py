@@ -12,24 +12,37 @@ from pathlib import Path
 
 import numpy as np
 
-DEFINITION = ("step 오차 = nanmean(|refined - gt_map|) * 100 [cm, 512 칸, 결측 -1.0 칸도 포함, NaN 만 제외] (영상 compose_25e.recon_error_series 와 같다); "
-              "cellmax = nanmax(|refined - gt_map|) * 100 [cm]; env 별 값은 살아 있는 step 에서만(mean = step 오차 평균, max = cellmax 의 최댓값)")
+DEFINITION = ("(a) valid = 정답 지도 결측 표식(gt_map == -1.0)과 NaN 칸을 뺀 칸만의 nanmean(|refined - gt_map|) * 100 [cm] 과 nanmax [cm]; "
+              "(b) all = 결측 칸도 넣은 nanmean(|refined - gt_map|) * 100 [cm] (512 칸, 영상 compose_25e.recon_error_series 와 같은 식) 과 nanmax; "
+              "(c) missing_frac = 512 칸 중 gt_map == -1.0 인 칸의 비율; env 별 값은 살아 있는 step 에서만(mean = step 값의 평균, cellmax = step 칸 최대의 최댓값). "
+              "표의 머리는 (a): (b) 는 결측 칸 하나가 100 cm 안팎으로 평균을 끌어올려 «복원이 나쁨» 과 «정답이 비었음» 이 섞인다")
+SERIES = ("valid_mean", "valid_cellmax", "all_mean", "all_cellmax", "missing_frac")                     # step_error 가 돌려주는 순서
 
 
 def step_error(refined, gt_map):
-    """(N,32,16) 두 텐서(torch) -> (mean_cm (N,), cellmax_cm (N,)) torch. NaN 만 있는 env 는 NaN."""
+    """(N,32,16) 두 텐서(torch) -> 다섯 (N,) torch 텐서 (SERIES 순서). cm 는 x100. 유효 칸이 하나도 없으면 valid_* 는 NaN."""
     import torch
 
-    d = (refined.detach().float() - gt_map.detach().float()).abs().reshape(refined.shape[0], -1)
-    mean = torch.nanmean(d, dim=1) * 100.0
-    mx = torch.where(torch.isnan(d), torch.full_like(d, float("-inf")), d).amax(dim=1) * 100.0
-    mx = torch.where(torch.isinf(mx), torch.full_like(mx, float("nan")), mx)
+    n = refined.shape[0]
+    d = (refined.detach().float() - gt_map.detach().float()).abs().reshape(n, -1)
+    miss = (gt_map.detach().float().reshape(n, -1) == -1.0)
+    full_nan = torch.full_like(d, float("nan"))
 
-    return mean, mx
+    def nmean(x):
+        return torch.nanmean(x, dim=1) * 100.0
+
+    def nmax(x):
+        m = torch.where(torch.isnan(x), torch.full_like(x, float("-inf")), x).amax(dim=1) * 100.0
+
+        return torch.where(torch.isinf(m), torch.full_like(m, float("nan")), m)
+
+    dv = torch.where(miss, full_nan, d)
+
+    return nmean(dv), nmax(dv), nmean(d), nmax(d), miss.float().mean(dim=1)
 
 
 def record(last: dict, result, gt_map) -> None:
-    """_advance 의 반환값(result[2] = out 사전)에 refined 가 있으면 이번 step 의 오차를 last["e"] 에 둔다(지도 없는 체크포인트는 비워 둔다)."""
+    """_advance 의 반환값(result[2] = out 사전)에 refined 가 있으면 이번 step 의 오차 다섯 값을 last["e"] 에 둔다(지도 없는 체크포인트는 비워 둔다)."""
     out = result[2]
 
     if isinstance(out, dict) and out.get("refined") is not None:
@@ -38,41 +51,64 @@ def record(last: dict, result, gt_map) -> None:
         last["e"] = None
 
 
-def env_aggregate(mean_series, cellmax_series, alive) -> dict:
-    """(S,N) 세 배열(numpy) -> env 별 {mean_cm, cellmax_cm, valid_steps}. 살아 있고 값이 유한한 step 만 센다. 없으면 NaN."""
-    m, x, al = np.asarray(mean_series, dtype=np.float64), np.asarray(cellmax_series, dtype=np.float64), np.asarray(alive, dtype=bool)
-    ok = al & np.isfinite(m)
+def _mean_alive(series, alive):
+    x, al = np.asarray(series, dtype=np.float64), np.asarray(alive, dtype=bool)
+    ok = al & np.isfinite(x)
     n = ok.sum(0)
-    mean = np.where(n > 0, np.where(ok, m, 0.0).sum(0) / np.maximum(n, 1), np.nan)
-    okx = al & np.isfinite(x)
-    cmax = np.where(okx.any(0), np.where(okx, x, -np.inf).max(0), np.nan)
 
-    return {"mean_cm": mean.astype(np.float32), "cellmax_cm": cmax.astype(np.float32), "valid_steps": n.astype(np.int32)}
+    return np.where(n > 0, np.where(ok, x, 0.0).sum(0) / np.maximum(n, 1), np.nan).astype(np.float32), n.astype(np.int32)
+
+
+def _max_alive(series, alive):
+    x, al = np.asarray(series, dtype=np.float64), np.asarray(alive, dtype=bool)
+    ok = al & np.isfinite(x)
+
+    return np.where(ok.any(0), np.where(ok, x, -np.inf).max(0), np.nan).astype(np.float32)
+
+
+def env_aggregate(series: dict, alive) -> dict:
+    """series: SERIES 이름 -> (S,N) numpy. 살아 있고 값이 유한한 step 만 센다(없으면 NaN). 돌려주는 키는 npz 의 map_err_* 이름이다."""
+    out = {}
+    out["map_err_valid_mean_cm"], out["map_err_valid_steps"] = _mean_alive(series["valid_mean"], alive)
+    out["map_err_valid_cellmax_cm"] = _max_alive(series["valid_cellmax"], alive)
+    out["map_err_all_mean_cm"], out["map_err_all_steps"] = _mean_alive(series["all_mean"], alive)
+    out["map_err_all_cellmax_cm"] = _max_alive(series["all_cellmax"], alive)
+    out["map_err_missing_frac_mean"], _n = _mean_alive(series["missing_frac"], alive)
+
+    return out
 
 
 # ---------------- 종류 x 레벨 묶음 x 모드 집계 (저장된 npz 에서) ----------------
 LEVEL_GROUPS = {"L0~2": (0, 1, 2), "L3": (3,), "L6": (6,), "L9": (9,)}
 
 
+def _fin(x):
+    x = np.asarray(x, dtype=np.float64)
+
+    return x[np.isfinite(x)]
+
+
 def group_stats(z, kinds=None) -> dict:
-    """한 npz -> {종류: {env, mean_of_mean_cm, median_of_mean_cm, max_of_cellmax_cm, mean_of_cellmax_cm}}. env 평균은 NaN 제외."""
+    """한 npz -> {종류: {...}}. 머리는 (a) 결측 제외 값; (b) 영상 식 값과 (c) 결측 비율은 옆 칸. env 평균은 NaN 제외."""
     kind = z["kind"].astype(str)
-    em, ex = z["map_err_mean_cm"].astype(np.float64), z["map_err_cellmax_cm"].astype(np.float64)
     out = {}
 
     for k in (kinds or sorted(set(kind.tolist()))):
         m = kind == k
-        a, b = em[m], ex[m]
-        a, b = a[np.isfinite(a)], b[np.isfinite(b)]
-        out[k] = {"envs": int(m.sum()), "valid_envs": int(a.size),
-                  "mean_of_mean_cm": float(a.mean()) if a.size else None, "median_of_mean_cm": float(np.median(a)) if a.size else None,
-                  "mean_of_cellmax_cm": float(b.mean()) if b.size else None, "max_of_cellmax_cm": float(b.max()) if b.size else None}
+        va, vx = _fin(z["map_err_valid_mean_cm"][m]), _fin(z["map_err_valid_cellmax_cm"][m])
+        ba, bx = _fin(z["map_err_all_mean_cm"][m]), _fin(z["map_err_all_cellmax_cm"][m])
+        mf = _fin(z["map_err_missing_frac_mean"][m])
+        out[k] = {"envs": int(m.sum()), "valid_envs": int(va.size),
+                  "a_mean_of_mean_cm": float(va.mean()) if va.size else None, "a_median_of_mean_cm": float(np.median(va)) if va.size else None,
+                  "a_max_of_cellmax_cm": float(vx.max()) if vx.size else None,
+                  "b_mean_of_mean_cm": float(ba.mean()) if ba.size else None, "b_max_of_cellmax_cm": float(bx.max()) if bx.size else None,
+                  "c_missing_frac_mean": float(mf.mean()) if mf.size else None}
 
     return out
 
 
 def report(folders: dict, modes=("eval_gt", "eval_pred", "probe_prop_only"), cmds=("fwd0.5", "fwd1.0")) -> dict:
-    """folders: {레벨 묶음 이름: [평가 폴더, ...]} (한 묶음에 폴더가 여럿이면 모드별로 있는 npz 를 쓴다). -> {묶음: {모드: {명령: group_stats}}}"""
+    """folders: {레벨 묶음 이름: [평가 폴더, ...]} -> {묶음: {모드: {명령: group_stats}}}. 오차 키가 없는 옛 npz 는 건너뛴다."""
     res = {}
 
     for g, dirs in folders.items():
@@ -84,23 +120,25 @@ def report(folders: dict, modes=("eval_gt", "eval_pred", "probe_prop_only"), cmd
                     if f.is_file():
                         z = np.load(f, allow_pickle=False)
 
-                        if "map_err_mean_cm" in z.files:
+                        if "map_err_valid_mean_cm" in z.files:
                             res.setdefault(g, {}).setdefault(mode, {})[c] = group_stats(z)
 
     return res
 
 
 def to_md(res: dict) -> str:
-    lines = ["# 복원 지도 오차 (cm, |refined - gt_map| 512 칸 평균), 종류 x 레벨 x 모드", "", DEFINITION, ""]
+    lines = ["# 복원 지도 오차 (cm), 종류 x 레벨 x 모드. 머리 = (a) 정답 결측 칸을 뺀 값", "", DEFINITION, ""]
+    f = lambda v: "-" if v is None else "%.2f" % v                                               # noqa: E731
 
     for g, modes in res.items():
         for mode, cmds in modes.items():
             for c, kinds in cmds.items():
-                lines += ["## %s · %s · %s" % (g, mode, c), "", "| 종류 | env | 유효 env | env 평균의 평균 | env 평균의 중앙값 | 칸 최대의 평균 | 칸 최대의 최댓값 |", "|---|---|---|---|---|---|---|"]
-                f = lambda v: "-" if v is None else "%.2f" % v                                  # noqa: E731
+                lines += ["## %s · %s · %s" % (g, mode, c), "",
+                          "| 종류 | env | 유효 env | (a) env 평균의 평균 | (a) 중앙값 | (a) 칸 최대의 최댓값 | (b) 영상 식 평균 | (b) 칸 최대의 최댓값 | (c) 결측 칸 비율 |", "|---|---|---|---|---|---|---|---|---|"]
 
                 for k, v in kinds.items():
-                    lines.append("| %s | %d | %d | %s | %s | %s | %s |" % (k, v["envs"], v["valid_envs"], f(v["mean_of_mean_cm"]), f(v["median_of_mean_cm"]), f(v["mean_of_cellmax_cm"]), f(v["max_of_cellmax_cm"])))
+                    lines.append("| %s | %d | %d | %s | %s | %s | %s | %s | %s |" % (k, v["envs"], v["valid_envs"], f(v["a_mean_of_mean_cm"]), f(v["a_median_of_mean_cm"]), f(v["a_max_of_cellmax_cm"]),
+                                                                                       f(v["b_mean_of_mean_cm"]), f(v["b_max_of_cellmax_cm"]), "-" if v["c_missing_frac_mean"] is None else "%.3f" % v["c_missing_frac_mean"]))
 
                 lines.append("")
 

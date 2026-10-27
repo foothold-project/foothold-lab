@@ -1,4 +1,4 @@
-"""X27m: 복원 지도 오차(map_error) 알려진 답 시험 (CPU)."""
+"""X27m: 복원 지도 오차(map_error) 알려진 답 시험 (CPU). (a) 결측 제외 · (b) 영상 식 · (c) 결측 비율 셋."""
 import ast
 import json
 from pathlib import Path
@@ -17,48 +17,77 @@ def video_formula(refined, gt):
     return float(np.nanmean(np.abs(refined.reshape(-1) - gt.reshape(-1))) * 100.0)
 
 
-def test_step_error_known_answers_and_matches_video_formula():
+def T(x):
+    return torch.as_tensor(x, dtype=torch.float32)
+
+
+def test_step_error_known_answers_three_quantities():
     gt = torch.zeros(3, 32, 16)
     pr = torch.zeros(3, 32, 16)
-    pr[0] += 0.02                                              # 모든 칸 2 cm
+    pr[0] += 0.02                                              # 모든 칸 2 cm, 결측 없음 -> a = b = 2.0, c = 0
     pr[1, 0, 0] = 0.512                                        # 한 칸만 51.2 cm -> 평균 0.1 cm
-    gt[2, :, :] = -1.0                                         # 결측 표식 -1.0 도 빼지 않는다(영상 식과 같다): refined 0 이면 오차 100 cm
-    m, x = ME.step_error(pr, gt)
-    assert np.allclose(m.numpy(), [2.0, 0.1, 100.0], atol=1e-4) and np.allclose(x.numpy(), [2.0, 51.2, 100.0], atol=1e-3)
+    gt[2, 0, :] = -1.0                                         # 16 칸 결측(정답이 빔), 복원 0 -> b 는 16 x 100 / 512 = 3.125 cm, a 는 0
+    vm, vx, am, ax, mf = (t.numpy() for t in ME.step_error(pr, gt))
+    assert np.allclose(vm, [2.0, 0.1, 0.0], atol=1e-4) and np.allclose(vx, [2.0, 51.2, 0.0], atol=1e-3)
+    assert np.allclose(am, [2.0, 0.1, 3.125], atol=1e-4) and np.allclose(ax, [2.0, 51.2, 100.0], atol=1e-3)
+    assert np.allclose(mf, [0.0, 0.0, 16 / 512.0], atol=1e-6)
 
+
+def test_missing_only_case_valid_is_nan_not_zero_and_b_is_the_video_value():
+    gt = torch.full((1, 32, 16), -1.0)                         # 결측 칸만 있는 경우: 비교할 유효 칸이 없다
+    pr = torch.zeros(1, 32, 16)
+    vm, vx, am, ax, mf = (t.numpy() for t in ME.step_error(pr, gt))
+    assert np.isnan(vm[0]) and np.isnan(vx[0])                 # «0 cm(완벽)» 로 둔갑하지 않는다
+    assert abs(am[0] - 100.0) < 1e-4 and abs(ax[0] - 100.0) < 1e-4 and mf[0] == 1.0       # 영상 식은 100 cm, 결측 비율 1.0 이 이유를 말해 준다
+    assert abs(am[0] - video_formula(pr[0].numpy(), gt[0].numpy())) < 1e-4
+
+
+def test_step_error_matches_video_formula_on_random_input_and_a_excludes_exactly_the_missing_cells():
     rng = np.random.default_rng(0)
     g, p = rng.normal(size=(5, 32, 16)).astype(np.float32), rng.normal(size=(5, 32, 16)).astype(np.float32)
-    m, _x = ME.step_error(torch.from_numpy(p), torch.from_numpy(g))
-    assert np.allclose(m.numpy(), [video_formula(p[i], g[i]) for i in range(5)], atol=1e-4)
+    g[1, :4] = -1.0                                            # env 1 은 4 줄(64 칸)이 결측
+    vm, _vx, am, _ax, mf = (t.numpy() for t in ME.step_error(T(p), T(g)))
+    assert np.allclose(am, [video_formula(p[i], g[i]) for i in range(5)], atol=1e-4)
+    keep = g[1] != -1.0
+    assert abs(vm[1] - float(np.abs(p[1][keep] - g[1][keep]).mean() * 100.0)) < 1e-4 and abs(mf[1] - 64 / 512.0) < 1e-6
+    assert np.allclose(vm[[0, 2, 3, 4]], am[[0, 2, 3, 4]], atol=1e-4)           # 결측이 없는 env 는 a = b
 
 
-def test_step_error_nan_cells_are_skipped_and_all_nan_env_is_nan():
+def test_step_error_nan_cells_are_skipped_in_all_quantities():
     gt = torch.zeros(2, 32, 16)
     pr = torch.zeros(2, 32, 16)
-    pr[0, 0, :] = float("nan")                                 # 한 줄 NaN: 나머지 칸 오차 0 -> 평균 0
-    pr[0, 1, 0] = 0.5                                          # 유한 칸 중 한 개 50 cm
-    pr[1] = float("nan")                                       # 전부 NaN
-    m, x = ME.step_error(pr, gt)
-    assert abs(float(m[0]) - 0.5 / (512 - 16) * 100.0) < 1e-4 and abs(float(x[0]) - 50.0) < 1e-4
-    assert np.isnan(float(m[1])) and np.isnan(float(x[1]))
+    pr[0, 0, :] = float("nan")
+    pr[0, 1, 0] = 0.5
+    pr[1] = float("nan")
+    vm, vx, am, ax, _mf = (t.numpy() for t in ME.step_error(pr, gt))
+    assert abs(vm[0] - 0.5 / (512 - 16) * 100.0) < 1e-4 and abs(ax[0] - 50.0) < 1e-4 and abs(am[0] - vm[0]) < 1e-6
+    assert np.isnan(vm[1]) and np.isnan(am[1]) and np.isnan(vx[1]) and np.isnan(ax[1])
 
 
 def test_record_stores_only_when_refined_exists():
     last = {}
     gt = torch.zeros(2, 32, 16)
     ME.record(last, (None, None, {"refined": torch.full((2, 32, 16), 0.01)}), gt)
-    assert np.allclose(last["e"][0].numpy(), [1.0, 1.0])
+    assert len(last["e"]) == len(ME.SERIES) == 5 and np.allclose(last["e"][0].numpy(), [1.0, 1.0])
     ME.record(last, (None, None, {"mu": torch.zeros(2, 3)}), gt)                     # G0 계열: 복원 없음
     assert last["e"] is None
 
 
+def series(S_, N, **kw):
+    z = {k: np.full((S_, N), np.nan) for k in ME.SERIES}
+    z.update({k: np.asarray(v, dtype=np.float64) for k, v in kw.items()})
+
+    return z
+
+
 def test_env_aggregate_uses_only_alive_steps_and_handles_nan():
-    m = np.array([[1.0, 5.0, np.nan], [3.0, 7.0, np.nan], [100.0, 9.0, np.nan]])
-    x = np.array([[2.0, 6.0, np.nan], [4.0, 8.0, np.nan], [200.0, 10.0, np.nan]])
+    vm = np.array([[1.0, 5.0, np.nan], [3.0, 7.0, np.nan], [100.0, 9.0, np.nan]])
     al = np.array([[1, 1, 1], [1, 1, 1], [0, 1, 1]], dtype=bool)                    # env 0 은 마지막 step 에 이미 죽음
-    a = ME.env_aggregate(m, x, al)
-    assert np.allclose(a["mean_cm"][:2], [2.0, 7.0]) and a["cellmax_cm"][0] == 4.0 and a["cellmax_cm"][1] == 10.0
-    assert a["valid_steps"].tolist() == [2, 3, 0] and np.isnan(a["mean_cm"][2]) and np.isnan(a["cellmax_cm"][2])
+    a = ME.env_aggregate(series(3, 3, valid_mean=vm, valid_cellmax=vm * 2, all_mean=vm + 1, all_cellmax=vm * 3, missing_frac=np.full((3, 3), 0.25)), al)
+    assert np.allclose(a["map_err_valid_mean_cm"][:2], [2.0, 7.0]) and a["map_err_valid_cellmax_cm"][0] == 6.0 and a["map_err_valid_cellmax_cm"][1] == 18.0
+    assert a["map_err_valid_steps"].tolist() == [2, 3, 0] and np.isnan(a["map_err_valid_mean_cm"][2]) and np.isnan(a["map_err_valid_cellmax_cm"][2])
+    assert np.allclose(a["map_err_all_mean_cm"][:2], [3.0, 8.0]) and a["map_err_all_cellmax_cm"][1] == 27.0
+    assert a["map_err_missing_frac_mean"][0] == 0.25 and a["map_err_missing_frac_mean"][2] == 0.25
 
 
 def _exec_save(tmp_path, map_err):
@@ -67,7 +96,7 @@ def _exec_save(tmp_path, map_err):
     fn = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == "_save_env_arrays")
     ns = {"np": np, "os": __import__("os"), "json": json}
 
-    class T:
+    class Tn:
         def __init__(self, a):
             self.a = a
 
@@ -79,7 +108,7 @@ def _exec_save(tmp_path, map_err):
 
     from foothold_s2.eval import fixed_terrain as FT
     ns["fixed_terrain"] = FT
-    terrain = SimpleNamespace(terrain_levels=T(np.array([0, 0, 1, 1])), terrain_types=T(np.array([0, 1, 0, 1])), cfg=SimpleNamespace(terrain_generator=None))
+    terrain = SimpleNamespace(terrain_levels=Tn(np.array([0, 0, 1, 1])), terrain_types=Tn(np.array([0, 1, 0, 1])), cfg=SimpleNamespace(terrain_generator=None))
     ns["raw"] = SimpleNamespace(scene=SimpleNamespace(terrain=terrain))
     ns["args"] = SimpleNamespace(out=str(tmp_path))
     ns["res"] = {}
@@ -94,17 +123,22 @@ def _exec_save(tmp_path, map_err):
     return ns, np.load(tmp_path / "env_arrays_eval_pred_fwd1.0.npz")
 
 
-def test_save_env_arrays_writes_map_err_keys_and_keeps_old_keys(tmp_path):
+def test_save_env_arrays_writes_all_three_quantities_and_keeps_old_keys(tmp_path):
     def err(S_, N):
-        m = np.tile(np.arange(N, dtype=np.float32) + 1.0, (S_, 1))               # env e 의 step 오차 = e + 1 cm 로 일정
+        m = np.tile(np.arange(N, dtype=np.float32) + 1.0, (S_, 1))               # env e 의 값 = e + 1 cm 로 일정
         m[3:, 2] = 999.0                                                       # 죽은 뒤 값은 집계에서 빠져야 한다
-        return m, m * 2.0
+        mf = np.zeros((S_, N), dtype=np.float32)
+        mf[:, 3] = 0.5
+
+        return np.stack([m, m * 2.0, m + 1.0, m * 3.0, mf])                    # ME.SERIES 순서
 
     ns, z = _exec_save(tmp_path, err)
-    assert z["map_err_mean_cm"].tolist() == [1.0, 2.0, 3.0, 4.0] and z["map_err_cellmax_cm"].tolist() == [2.0, 4.0, 6.0, 8.0]
-    assert z["map_err_valid_steps"].tolist() == [6, 6, 3, 6] and z["map_err_mean_series_cm"].shape == (6, 4)
+    assert z["map_err_valid_mean_cm"].tolist() == [1.0, 2.0, 3.0, 4.0] and z["map_err_valid_cellmax_cm"].tolist() == [2.0, 4.0, 6.0, 8.0]
+    assert z["map_err_all_mean_cm"].tolist() == [2.0, 3.0, 4.0, 5.0] and z["map_err_all_cellmax_cm"].tolist() == [3.0, 6.0, 9.0, 12.0]
+    assert z["map_err_missing_frac_mean"].tolist() == [0.0, 0.0, 0.0, 0.5] and z["map_err_valid_steps"].tolist() == [6, 6, 3, 6]
+    assert z["map_err_series_valid_mean"].shape == (6, 4) and z["map_err_series_missing_frac"].shape == (6, 4)
     assert {"kind", "terrain_level", "terrain_col", "vx", "alive", "dones", "assignment_sha256", "run_identity"} <= set(z.files)              # 기존 키 불변
-    assert "map_err" in ns["res"]["env_array_basis"] and "kind_error" in ns["res"]["env_array_basis"]                                      # 기존 기록과 같이 남는다
+    assert "map_err" in ns["res"]["env_array_basis"] and "kind_error" in ns["res"]["env_array_basis"]
 
 
 def test_save_env_arrays_without_map_err_has_no_map_err_keys(tmp_path):
@@ -114,16 +148,21 @@ def test_save_env_arrays_without_map_err_has_no_map_err_keys(tmp_path):
     assert not [k for k in z.files if k.startswith("map_err")]
 
 
-def test_group_stats_report_and_cli_known_answers(tmp_path):
+def test_group_stats_report_and_cli_known_answers_head_is_a(tmp_path):
     kind = np.array(["flat", "flat", "stairs", "stairs", "stairs"])
-    em = np.array([1.0, 3.0, 2.0, 4.0, np.nan], dtype=np.float32)
-    ex = np.array([5.0, 9.0, 6.0, 8.0, np.nan], dtype=np.float32)
-    np.savez(tmp_path / "env_arrays_eval_pred_fwd1.0.npz", kind=kind, map_err_mean_cm=em, map_err_cellmax_cm=ex)
+    f32 = lambda *v: np.array(v, dtype=np.float32)                                              # noqa: E731
+    np.savez(tmp_path / "env_arrays_eval_pred_fwd1.0.npz", kind=kind,
+             map_err_valid_mean_cm=f32(1.0, 3.0, 2.0, 4.0, np.nan), map_err_valid_cellmax_cm=f32(5.0, 9.0, 6.0, 8.0, np.nan),
+             map_err_all_mean_cm=f32(11.0, 13.0, 12.0, 14.0, 100.0), map_err_all_cellmax_cm=f32(15.0, 19.0, 16.0, 18.0, 100.0),
+             map_err_missing_frac_mean=f32(0.0, 0.0, 0.1, 0.1, 1.0))
     np.savez(tmp_path / "env_arrays_eval_gt_fwd1.0.npz", kind=kind)                              # 오차 키 없는 옛 npz 는 건너뜀
     r = ME.report({"L6": [tmp_path]})["L6"]
     assert list(r) == ["eval_pred"]
     s = r["eval_pred"]["fwd1.0"]
-    assert s["flat"]["mean_of_mean_cm"] == 2.0 and s["flat"]["max_of_cellmax_cm"] == 9.0 and s["flat"]["median_of_mean_cm"] == 2.0
-    assert s["stairs"]["envs"] == 3 and s["stairs"]["valid_envs"] == 2 and s["stairs"]["mean_of_mean_cm"] == 3.0 and s["stairs"]["mean_of_cellmax_cm"] == 7.0
+    assert s["flat"]["a_mean_of_mean_cm"] == 2.0 and s["flat"]["a_max_of_cellmax_cm"] == 9.0 and s["flat"]["a_median_of_mean_cm"] == 2.0 and s["flat"]["b_mean_of_mean_cm"] == 12.0
+    st = s["stairs"]
+    assert st["envs"] == 3 and st["valid_envs"] == 2 and st["a_mean_of_mean_cm"] == 3.0 and abs(st["b_mean_of_mean_cm"] - 42.0) < 1e-6 and abs(st["c_missing_frac_mean"] - 0.4) < 1e-6
     assert ME.main(["--group", "L6=%s" % tmp_path, "--out-prefix", str(tmp_path / "rep")]) == 0
-    assert "flat" in (tmp_path / "rep.md").read_text(encoding="utf-8") and json.loads((tmp_path / "rep.json").read_text(encoding="utf-8"))["L6"]
+    md = (tmp_path / "rep.md").read_text(encoding="utf-8")
+    assert md.index("(a) env 평균의 평균") < md.index("(b) 영상 식 평균") < md.index("(c) 결측 칸 비율") and "flat" in md          # 머리는 (a)
+    assert json.loads((tmp_path / "rep.json").read_text(encoding="utf-8"))["L6"]

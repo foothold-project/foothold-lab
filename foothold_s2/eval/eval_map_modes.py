@@ -170,9 +170,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
     if map_err is not None:                                                            # X27m: 복원 지도 오차(cm). 지도 없는 체크포인트(G0)는 None 이라 키가 없다
         from foothold_s2.eval import map_error as _me
 
-        agg = _me.env_aggregate(map_err[0], map_err[1], al)
-        extra = {"map_err_mean_cm": agg["mean_cm"], "map_err_cellmax_cm": agg["cellmax_cm"], "map_err_valid_steps": agg["valid_steps"],
-                 "map_err_mean_series_cm": np.asarray(map_err[0], dtype=np.float32), "map_err_cellmax_series_cm": np.asarray(map_err[1], dtype=np.float32)}
+        ser = {nm: np.asarray(map_err[i], dtype=np.float32) for i, nm in enumerate(_me.SERIES)}                    # (S,N) 다섯 계열
+        extra = dict(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
         res["env_array_basis"] = dict(res.get("env_array_basis") or {}, map_err=_me.DEFINITION)
 
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
@@ -196,7 +195,7 @@ for mode in args.modes.split(","):
         raise RuntimeError("map_input=%r 인 체크포인트에 모드 %r 는 쓸 수 없다(G0 는 --modes none)" % (saved_map_input, mode))
     res["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt_saved": runner.perception.cfg.force_gt}
     counts = {"gt": 0, "total": 0}
-    last_err = {"e": None}                                                                 # X27m: 이번 policy step 의 복원 오차(cm) (mean (N,), cellmax (N,))
+    last_err = {"e": None}                                                                 # X27m: 이번 policy step 의 복원 오차 다섯 값(map_error.SERIES) 각 (N,)
     orig_adv = runner.perception._advance
 
     def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, _orig=orig_adv, _c=counts):
@@ -266,7 +265,7 @@ for mode in args.modes.split(","):
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
         VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
-        ERR_M, ERR_X = (torch.full((S, env.num_envs), float("nan"), device=dev) for _ in range(2))          # X27m: step 별 복원 오차(cm) 평균 · 칸 최대
+        ERR = torch.full((len(ME.SERIES), S, env.num_envs), float("nan"), device=dev)                  # X27m: step 별 복원 오차 다섯 계열
         FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
         YAW = torch.zeros(S, env.num_envs, device=dev)
@@ -280,7 +279,7 @@ for mode in args.modes.split(","):
             a = policy(obs)
 
             if last_err["e"] is not None:
-                ERR_M[k], ERR_X[k] = last_err["e"]
+                ERR[:, k] = torch.stack(last_err["e"])
 
             obs, _r, dones, _x = env.step(a)
             policy.reset(dones)
@@ -317,7 +316,7 @@ for mode in args.modes.split(","):
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
-                         map_err=None if mode == "none" else (ERR_M.cpu().numpy(), ERR_X.cpu().numpy()))                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
+                         map_err=None if mode == "none" else ERR.cpu().numpy())                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
