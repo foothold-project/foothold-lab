@@ -34,6 +34,8 @@
 - D14 잡음 평가: 주 평가는 관측 잡음 켬으로 고정(학습 · 실기 · 과거 자료와 같은 조건), 잡음 끔은 기록 축, 나중에 잡음 크기 축(0 · 0.5 · 1 · 2 배) (10/28 04:2x) · 키워드: 잡음 끄고 평가 | 잡음 켬 고정할지
 - D15 밤 운영에서 넘김 · 평평이 나와도 상한(m3000)까지 같은 조건 계속, 기록하고 아침 보고. 안전 축 미달은 W17 v0.2 표대로 lead 가 영상 판독 뒤 선택(아침 팀장 재판독) (10/28 04:2x) · 키워드: 넘김 평평 밤
 
+- D16 단계표 결정 1~4 는 lead 의견대로(깃발 15 · 20 % 는 planner 배치를 임시로 · 다음 판은 깃발 하나만 · 넘김 · 평평은 밤에 상한까지 계속 · 코드 순서 W19 → W20 → W21 → W22). 단 planner 배치로 정해지는 것은 다시 팀장 검토. 커리큘럼 문서는 지금 안으로 먼저 쓰고 planner 의견으로 고쳐 간다 (10/28 04:3x) · 키워드: 깃발 배치 확정 | 옆 후진 언제
+
 ## 팀장 의견 (결정 아님 · 논의 때 출발점)
 
 - 밤사이에는 「멈춤 + 영상 판독 + 사람 선택」 의 사람 선택을 lead 가 미리 정한 기준표로 대신해 실험이 멈추지 않게 (10/28 03:5x) → W17
@@ -62,6 +64,7 @@
 | W15 | 평가 사슬에 eval_pred · 지형 종류별 64 env 기록 추가(D09) | sonnet-code → reviewer | W03 GPU 가 빈 뒤 | 대기 |
 | W16 | orchestration 알림이 팀장 입력 중에 lead 창으로 들어오는 문제 조사 · 고침 | super2 | - | 끝 04:14: coordinator = 셸 창 mailbox(term_a5d996e2), lead 는 UserPromptSubmit 훅 맥락 + `_out/msgs/inbox_wait.py`(읽기만, 시험 통과)로 받음. 되돌리기 `orca orchestration run-use --id run_abb2e12cee32` |
 | W17 | 밤 자동 선택 기준표: 안전 축 HOLD 때 lead 가 무엇을 보고 무엇을 고르나(계속 · 처방하고 계속 · 되돌림) | planner → reviewer 1 회 | W05 v0.5 | 의뢰 |
+| W23 | 커리큘럼 문서 v0.4 (지금 안: STAGES-AND-NIGHT-RULES v0.2 단계표 + D01~D16) · 팀장 검토 칸 표시 · planner 의견으로 갱신 | planner | - | 의뢰 04:3x |
 | W19 | EX-35 m2000 → m3000 같은 조건 이어 학습 기동 경로: ex35_launch extend kind + validate_launch 부모 sha 검사(W17 reviewer 막음) | sonnet-code → reviewer 1 회 | - | 의뢰 04:16 · 기동은 팀장 승인 뒤 |
 | W09b | 오늘 밤 이어 학습(D13): W19 검수 → CPU 시험 → 8 env 예행 → 본 기동(GPU0, W03 끝난 뒤) → 첫 update · 첫 사슬 평가 확인 → 50 회마다 사슬(GPU1 우선, 촬영은 빈틈에) | sonnet-code · lead 확인 | W19 | 승인됨 04:2x |
 | W20 | 500 회 점수표 코드(GATE-v3 v0.5 · D12 종류별 추세 칸) | sonnet-code → reviewer | W03 | 대기 |
