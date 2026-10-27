@@ -142,6 +142,7 @@ def test_revert_kind_new_seed_parent_m1500_and_gates():
     assert diff <= {"43", "42"}                                                      # 명령 구성 · env · 판정 인자는 main 과 같고 시드만 다르다
     r = L.receipt("revert", args, str(M1500))
     assert r["parent_sha256"] == L.PARENT_SHA256 and r["parent_iter"] == 1500 and r["first_iter"] == 1501 and r["last_iter"] == 2000 and r["args"]["seed"] == "43"
+    assert "lead 04:48" in r["assumption"] and "assumption" not in L.receipt("extend", L.build_args("extend", "cuda:0", str(M2000), END), str(M2000))
     with pytest.raises(ValueError, match="부모 SHA-256"):
         L.receipt("revert", args, str(M2000))                                        # 부모 파일이 카드 sha 와 다르면 거절
     for bad in (1500, 3001):

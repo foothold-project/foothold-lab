@@ -98,7 +98,8 @@ def receipt(kind, args, parent, check_sha=True, parent_sha=None) -> dict:
 
     return {"kind": kind, "task": TASKS["SB"], "parent": parent, "parent_sha256": actual, "expected_parent_sha256": parent_sha, "parent_iter": parent_iter,
             "args": pairs, "remaining_updates": remaining, "first_iter": first, "last_iter": first + remaining - 1,
-            "contract": "walkturn_v1", "validate_launch": "ok", "note": "기동은 팀장 승인 뒤 lead 가 한다. 이 영수증은 승인이 아니다."}
+            "contract": "walkturn_v1", "validate_launch": "ok", "note": "기동은 팀장 승인 뒤 lead 가 한다. 이 영수증은 승인이 아니다.",
+            **({"assumption": "가정 · lead 04:48: revert 시드 43(허용 43~45), to_iter 기본 3000(부모 + 상한 1500)"} if kind == "revert" else {})}
 
 
 def main(argv=None) -> int:
