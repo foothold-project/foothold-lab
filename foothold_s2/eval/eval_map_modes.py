@@ -30,7 +30,7 @@ parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
-parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
+parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2,flag). 기본 all = 앞의 넷(flag 는 이름으로 줄 때만). flag = 깃발 평가(W04): 다음 깃발 방향을 (vx 0.6, 0, wz) 명령으로 바꾼다, 시작 yaw 0")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -44,8 +44,8 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
-CMD_NAMES = ("fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2")
-WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
+CMD_NAMES = ("fwd0.5", "fwd1.0", "spin+1.2", "spin-1.2", "flag")
+WANT_CMDS = CMD_NAMES[:4] if args.commands == "all" else tuple(args.commands.split(","))
 
 if not set(WANT_CMDS) <= set(CMD_NAMES):
     parser.error("--commands 는 %s 중에서 (Kit 기동 전 거절)" % (CMD_NAMES,))
@@ -66,7 +66,7 @@ import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task Foo
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, fixed_terrain, map_error as ME  # noqa: E402
+from foothold_s2.eval import adapters, fixed_terrain, flag_eval as FE, map_error as ME  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -115,10 +115,10 @@ robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")
 dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
-CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
+CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2), "flag": (0.0, 0.0, 0.0)}      # flag 의 (0,0,0) 은 자리표시: 실제 명령은 매 틱 깃발에서 나온다
 S = args.steps
 import foothold_s2.eval.fixed_terrain as _ft, foothold_s2.terrains.sparse_terrains as _sp                      # 실제 읽은 파일의 해시(출처 섞임 확인용)
-SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters)}
+SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters, FE)}
 if parser_sparse:
     from foothold_s2.eval import kind_stats as _ks
     SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
@@ -145,7 +145,7 @@ def _run_identity():
     return out
 
 
-def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None):
+def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None, flag=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -173,6 +173,9 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         ser = {nm: np.asarray(map_err[i], dtype=np.float32) for i, nm in enumerate(_me.SERIES)}                    # (S,N) 다섯 계열
         extra = dict(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
         res["env_array_basis"] = dict(res.get("env_array_basis") or {}, map_err=_me.DEFINITION)
+
+    if flag is not None:                                                               # W04: 깃발 평가 칸(판정 · 깃발 좌표 · 틱별 현재 목표 번호). 기존 키는 그대로
+        extra = dict(extra, **flag)
 
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
@@ -231,6 +234,23 @@ for mode in args.modes.split(","):
 
             if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
                 raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
+        FT = None
+        FLAGS_REL = None
+
+        if cname == "flag" and not parser_sparse:                                        # W04: 연속 지형 깃발은 +x 직선이다: 듬성 평가와 같이 시작 yaw 를 0 으로 맞춘다(위치 · 관절은 그대로)
+            st = robot.data.root_state_w.clone()
+            st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)
+            st[:, 7:] = 0.0
+            robot.write_root_pose_to_sim(st[:, :7])
+            robot.write_root_velocity_to_sim(st[:, 7:])
+            q = robot.data.root_quat_w
+            yaw0 = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+
+            if yaw0.abs().max().item() > 1.0e-3:
+                raise RuntimeError("깃발 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
+            res["start_yaw_override"] = 0.0
+            FLAGS_REL = FE.continuous_env_flags(env.num_envs)
+
         if parser_sparse:                                                                # 듬성 띠는 +x 방향이다. reset 이 뽑는 무작위 yaw(+-3.14)로는 «전진» 이 띠 밖을 향한다: 시작 yaw 를 0 으로 맞춘다(위치 · 관절은 그대로)
             st = robot.data.root_state_w.clone()
             st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)               # 쿼터니언 w x y z
@@ -252,6 +272,9 @@ for mode in args.modes.split(","):
             START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"],
                                               (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별): reset · yaw 맞춤 뒤 이 명령의 실제 시작 xy(아래 offset 과 같은 값)
             res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
+
+            if cname == "flag":                                                          # W04: 같은 칸 생성기가 만든 TileData 의 발판 위로 깃발을 놓는다
+                FLAGS_REL = FE.sparse_env_flags(res["fixed_terrain"]["tiles"], _gh.tiles_by_cell(_sp2.SIDE_TABLE, _names, int(_gen.num_rows)))
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:
@@ -263,6 +286,13 @@ for mode in args.modes.split(","):
 
         if th != ref:
             raise RuntimeError("%s/%s 의 지형 칸 해시가 첫 실행과 다르다: 모드끼리 같은 지형에서 평가되지 않는다" % (mode, cname))
+
+        if cname == "flag":
+            FT = FE.FlagTracker(FLAGS_REL, device=dev, num_steps=S, z_fall=parser_sparse)
+            res["flag_layout"] = {"version": FE.LAYOUT_VERSION, "terrain_set": args.terrain_set, "count": int(FT.K), "speed_mps": FE.FLAG_SPEED_MPS, "reach_radius_m": FE.REACH_RADIUS_M,
+                                  "wz_clip": FE.WZ_CLIP, "fall_z_m": FE.FALL_Z_M, "fall_rule": "몸통 z(env 원점 기준) < 0.25 m 또는 종료 조건 중 먼저" if parser_sparse else "종료 조건(넘어짐)만: 연속 지형은 원점 기준 z 가 내리막에서 서 있어도 0.25 m 아래", "start_yaw_rad": 0.0, "command_obs_lag_ticks": 1,
+                                  "layout_sha256": hashlib.sha256(np.asarray(FLAGS_REL, dtype=np.float32).tobytes()).hexdigest(),
+                                  "assumption": FE.ASSUMED_LAYOUT_NOTE if parser_sparse else "연속 지형 +0.5 · 1.5 · 2.5 · 3.5 m 직선 4개(설계 14)"}
 
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
         counts["gt"] = counts["total"] = 0
@@ -281,7 +311,12 @@ for mode in args.modes.split(","):
         START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
 
         for k in range(S):
-            term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+            if FT is not None:                                                         # W04: 이 틱의 명령 = 현재 몸 위치 · yaw 에서 본 다음 깃발. 정책 관측에는 한 틱 늦게 들어간다(env.step 이 관측을 계산하는 순서)
+                q = robot.data.root_quat_w
+                yaw_now = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+                term.vel_command_b[:, :3] = FT.step(k, robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2], yaw_now, active=alive)
+            else:
+                term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
             last_err["e"] = None
             a = policy(obs)
 
@@ -297,6 +332,10 @@ for mode in args.modes.split(","):
             q = robot.data.root_quat_w
             YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
             DN[k] = dones.bool()
+
+            if FT is not None:
+                FT.note_fall(k, robot.data.root_pos_w[:, 2] - raw.scene.env_origins[:, 2], alive)
+                FT.note_done(k, dones, alive)
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
             TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
@@ -322,8 +361,20 @@ for mode in args.modes.split(","):
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        flag_arrays = None
+
+        if FT is not None:                                                              # W04: 깃발 판정(기존 거리 · 생존 칸과 나란히 row 에도 요약)
+            J = FE.judge(FT.reach_step.cpu().numpy(), FT.fall_step.cpu().numpy(), al.sum(0), S, dt)
+            origins_xy = raw.scene.env_origins[:, :2].cpu().numpy()
+            flag_arrays = dict(J, flag_rel=np.asarray(FLAGS_REL, dtype=np.float32), flag_world=(np.asarray(FLAGS_REL) + origins_xy[:, None, :]).astype(np.float32),
+                               flag_target_idx=FT.target_series.cpu().numpy().astype(np.int8), flag_fall_kind=FT.fall_kind.cpu().numpy(), flag_layout=json.dumps(res["flag_layout"], ensure_ascii=False, sort_keys=True))
+            row["flag"] = {"envs": int(FT.N), "count": int(FT.K), "reached_mean": float(J["flag_reached_n"].mean()), "last_reached_envs": int(J["flag_last_reached"].sum()),
+                           "fall_envs": int(J["flag_fall"].sum()), "fell_before_last_envs": int(J["flag_fell_before_last"].sum()), "order_ok": bool(J["flag_order_ok"])}
+            if not bool(J["flag_order_ok"]):
+                raise RuntimeError("깃발 도달 순서 자기검사가 깨졌다(추적기 오류)")
+
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
-                         map_err=None if mode == "none" else ERR.cpu().numpy())                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
+                         map_err=None if mode == "none" else ERR.cpu().numpy(), flag=flag_arrays)                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
