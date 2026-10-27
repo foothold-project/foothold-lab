@@ -1,8 +1,8 @@
 > 분류: A/정책학습 · 설계 (평가 축 체계 v2 · MVP 뒤 실험용)
-> 작성: 오흥재 (planner 초안 v0.1 2026-10-27 01:3x → v0.2 02:2x, analyst 막음 A~E 반영 · lead 01:5x 「축 후보를 빠짐없이 훑는다」) · verifier 검증 전 · lead 가 팀장에게 보이기 전
+> 작성: 오흥재 (planner 초안 v0.1 2026-10-27 01:3x → v0.2 02:2x, analyst 막음 A~E 반영 · lead 01:5x 「축 후보를 빠짐없이 훑는다」) → v0.3 2026-10-28 02:3x, reviewer W06 독립 검증 `sonnet-code/_out/review/REVIEW-W06-dedc8f60.md`(막음 0 · 고침 5 · 참고 6) 반영) · lead 가 팀장에게 보이기 전
 > 근거: 팀장 01:1x 「지형별 · 레벨별 · 명령별 등 축이 따로 있어야 … 더 체계적이고 구체적으로」 · 01:5x 「MVP 축을 꼭 가져와야 하는 것은 아니야 … 우리 실험에 맞게 축을 제대로 구축」 · 「보행 위상 외 내가 지금 생각하지 못한 여러 가지」 · 「지도가 얼마나 오차가 좋아졌는지 … 복원 지도의 핵심」 · 「눈을 끄고 걷는 것도 … 연속 7 종 지형에 대해서는 … 무너지면 안 되는 것」 · 「모든 조합을 다 잴 수는 없습니다 · 동의」 · analyst `astra-25b/inbox/jay/20261027-design/VERIFY-analyst-EVAL-AXES-v2.md`(막음 A~E · 여섯 답 · `figs/eval-axes-audit/audit.json`) · planner 재측(표마다 「planner 재측」 표시): `impl-ex35-07fc/foothold_s2/commands/mixed_core.py:50~67` · `eval/eval_map_modes.py:130~134 · 225~259` · `eval/adapters.py:403 · 432~439` · `eval/turn_probe.py:69~83 · 111~112 · 128~141 · 206` · `eval/turn_probe_plan.py:24~34` · `eval/fixed_terrain.py:13~45` · `terrains/columns.py:11~34` · `terrains/rough_go2_cfg.py:11~37` · 부모 `params/env.yaml`(rewards 1430~1585 · terminations 1586~1600 · events 1292~1420 · commands 1681~1697 · terrain 101~108 · 242) · `impl-turncases/logs/sb10_eval/m1500/*/run.log:5` · `hardlevel/hardlevel.log` · `sb10_eval/m1500/turn16_walk_*/arrays_*.npz` 키 · 부모 run tfevents 태그 · `train_extra.jsonl` · `map_stats.jsonl` 키 · START arXiv 2512.13153 III-A(평가 지표 · 재구성 오차 Fig. 5 · MEV) · Rudin 2109.11978 §3.1 · MOVE 2412.03353 표 I · `41-EVAL-AXES.md` v1.4 · RULES-HUB 10 절(ce4962dd 뒤 v1.7a)
-> 요지: 평가를 **조건 차원**(지형 · 난도 · 명령 과정 · 지도 처치 · 외부 조건) 과 **같은 시행에서 얻는 측정 축**(추종 · 생존 · 보행 · 접촉 · 제어 · 지도 오차 · 곡선 · 영상 · 재현) 으로 가른다. 축 후보 30 개를 「단계 넘김 필수 / 유지 / 기록만 / 지금 측정 불가(코드 필요)」 로 분류하고 근거를 단다(§3). analyst 막음 다섯을 고쳤다: 전진 상한은 **1.5**(0.3 분기), 같은 정책 지도 모드는 **셋**(none 은 G0-B 대조 정책), 낮은 64 칸은 L0/L1/L2 = 23/23/18 로 균형 표본이 아니며 평지가 없다, 27 분은 map64 가 아니라 **turn16 세 모드 + map64 전체 묶음**(map64 세 모드 5 분 50 초), 표본 교차 A · B 는 PRED 가 없어 복원 지도 졸업 증거가 아니다. 비용은 **실행 묶음 단위**로 다시 센다(§5): 지금 필수 묶음은 최신 저장본 하나에 약 37 분 관측(새 10 경우 · 종류별 · 1.5 속도는 미측). 전 교차는 「13 종 × 10 행 × 3 모드 = 390 조건, 옛 8 경우 + map 4 명령 기준 130 묶음 × 26.7 분 ≈ 58 시간」 **가정 산술**이다. 종류별 기록 · 지도 오차 · 종료 사유는 sonnet-code X27j 가 만든다(§7). 종류별 칸은 m2250 창부터 필수(그 전 HOLD_NO_DATA, lead 02:1x).
-> 상태: v0.2 초안 · EX-35 m2000 판정은 카드 v1.0 §4b 표(v0.9 고정, lead 01:2x) 로 하고 이 문서로 바꾸지 않는다 · 새 문턱 없음 · GPU · 학습 · 코드 수정 없음 · 다음: verifier 검증(§9) → lead 가 팀장에게 §10
+> 요지: 평가를 **조건 차원**(지형 · 난도 · 명령 과정 · 지도 처치 · 외부 조건) 과 **같은 시행에서 얻는 측정 축**(추종 · 생존 · 보행 · 접촉 · 제어 · 지도 오차 · 곡선 · 영상 · 재현) 으로 가른다. 축 후보 33 개(v0.3: analyst 03 · 27 · 28 추가) 를 「단계 넘김 필수 / 유지 / 기록만 / 지금 측정 불가(코드 필요)」 로 분류하고 근거를 단다(§3). analyst 막음 다섯을 고쳤다: 전진 상한은 **1.5**(0.3 분기), 같은 정책 지도 모드는 **셋**(none 은 G0-B 대조 정책), 낮은 64 칸은 L0/L1/L2 = 23/23/18 로 균형 표본이 아니며 평지가 없다, 27 분은 map64 가 아니라 **turn16 세 모드 + map64 전체 묶음**(map64 세 모드 5 분 50 초), 표본 교차 A · B 는 PRED 가 없어 복원 지도 졸업 증거가 아니다. 비용은 **실행 묶음 단위**로 다시 센다(§5): 지금 필수 묶음은 최신 저장본 하나에 약 37 분 관측(새 10 경우 · 종류별 · 1.5 속도는 미측). 전 교차는 「13 종 × 10 행 × 3 모드 = 390 조건, 옛 8 경우 + map 4 명령 기준 130 묶음 × 26.7 분 ≈ 58 시간」 **가정 산술**이다. 종류별 기록 · 지도 오차 · 종료 사유는 sonnet-code X27j 가 만든다(§7). 종류별 칸은 m2250 창부터 **기록**(lead 02:1x), 판정 전환은 `20261028-design/GATE-v3-maintenance-redesign.md` §4a 절차로(reviewer 고침 4).
+> 상태: v0.3(reviewer W06 고침 1~5 · 참고 1~6 반영, 고침 4 는 GATE-v3 §4a 결정으로) · 「지금 자료」 기준 커밋 **07fc5e73**(EX-35 실행판, 496e0cfe 에서 생긴 것은 §3 비고) · EX-35 m2000 판정은 카드 v1.0 §4b 표(v0.9 고정, lead 01:2x) 로 하고 이 문서로 바꾸지 않는다 · 새 문턱 없음 · GPU · 학습 · 코드 수정 없음 · 다음: verifier 검증(§9) → lead 가 팀장에게 §10
 
 # 평가 축 체계 v2 (MVP 뒤 실험용) · v0.2
 
@@ -17,8 +17,8 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 | 막음 | analyst 지적 | planner 재측 | v0.2 에서 고친 것 |
 |---|---|---|---|
 | **A 속도** | 전진 상한 1.0 은 틀림. `start_vmax=1.5`, 0.3 미만은 제자리 회전 가지 | `mixed_core.py:52~54` `start_vmax 1.5 · start_spin_threshold 0.3 · start_spin_wz 1.2`, `:61~67` EX-35 `wt_fwd 0.3~1.5 · wt_walk 0.3~0.8 · wt_wz 0.2~0.5`. 부모 `env.yaml:1697` `params: start_mode: true`(`vmax_x` 소비 안 함) **일치** | §4 명령 과정: 전진 칸 0.5 · 1.0 유지 + **1.5(범위 상단)** + 0.3(하단 경계, 저속 단계). 1.5 는 「범위 밖」 이 아니다. 매 창 0.5 · 1.0 만 재면 「그 두 점의 유지」 로만 말한다. m2000 고정표에 1.5 를 덧붙이지 않는다 |
-| **B 교차 단위** | 13 × 10 × 4 = 520 은 가능한 집합이 아니다. none 은 G0-B 전용. L0~2 묶음은 균형 표본 아님. 행 증가 ≠ 물리 난도 증가 | `eval_map_modes.py:130~134` map_input=none 저장본과 `--modes none` 불일치면 `RuntimeError`, `adapters.py:403` 같은 정책 모드 셋 **일치**. `fixed_assignment(64, 10, 23)` CPU 재현 L0 23 · L1 23 · **L2 18(경사 · 역경사 · 무대 계단 없음)**, sha c3884d68 **일치**. `random_rough` 는 Isaac `hf_terrains.py:13` 「difficulty is ignored」, `stage_stairs` 0.15 m 고정(`rough_go2_cfg.py:11 · 35`), 평지는 23 열에 없음 **일치** | §2 조건 차원: 지도 처치는 같은 정책 **셋**, G0-B 는 **대조 정책 차원**. 난도 행은 물리 범위가 변하는 종류(계단 · 역계단 · 상자 · 경사 · 역경사) 에서만 난도이고 rough · 무대 계단 · 평지는 「행 = 다른 실현」. 전 교차 수는 **합법 조건 목록**에서 센다(§5.3) |
-| **C 지형별 증거** | 종류 이름만 붙이면 된다는 최소 구현은 부족. 일반 경로는 env 별 거리 · 종료를 저장 안 함 | `eval_map_modes.py:231~246` 일반 경로는 `row` 집계(중앙값 · 합계) 만, `:247~253` `parser_sparse` 만 `by_kind` + npz(vx · fwd · alive · pos · yaw · dones · start_support) **일치** | §7 X27j 요구 목록(env 별 종류 · 열 · 행 · 시작 위치 · 종료 사유 · 거리 · 생존 · 타일 전이 · 지형 해시 · 표본 n) |
+| **B 교차 단위** | 13 × 10 × 4 = 520 은 가능한 집합이 아니다. none 은 G0-B 전용. L0~2 묶음은 균형 표본 아님. 행 증가 ≠ 물리 난도 증가 | `eval_map_modes.py:130~134` map_input=none 저장본과 `--modes none` 불일치면 `RuntimeError`, `adapters.py:403` 같은 정책 모드 셋 **일치**. `fixed_assignment(64, 10, 23)` CPU 재현 L0 23 · L1 23 · **L2 18(경사 · 역경사 · 무대 계단 없음)**, sha c3884d68 **일치**. `random_rough` 는 Isaac `hf_terrains.py:22 · 30` 「difficulty is ignored」, `stage_stairs` 0.15 m 고정(`rough_go2_cfg.py:11 · 35`), 평지는 23 열에 없음 **일치** | §2 조건 차원: 지도 처치는 같은 정책 **셋**, G0-B 는 **대조 정책 차원**. 난도 행은 물리 범위가 변하는 종류(계단 · 역계단 · 상자 · 경사 · 역경사) 에서만 난도이고 rough · 무대 계단 · 평지는 「행 = 다른 실현」. 전 교차 수는 **합법 조건 목록**에서 센다(§5.3) |
+| **C 지형별 증거** | 종류 이름만 붙이면 된다는 최소 구현은 부족. 일반 경로는 env 별 거리 · 종료를 저장 안 함 | `eval_map_modes.py:243~244` 일반 경로는 `row` 집계(중앙값 · 합계) 만, `:245~253` `parser_sparse` 만 `by_kind` + npz(vx · fwd · alive · pos · yaw · dones · start_support) **일치** | §7 X27j 요구 목록(env 별 종류 · 열 · 행 · 시작 위치 · 종료 사유 · 거리 · 생존 · 타일 전이 · 지형 해시 · 표본 n) |
 | **D 비용** | 27 분은 turn16 세 모드 + map64 전체. map64 세 모드는 5 분 50 초. 옛 8 경우 = 회전 6 + 전진 2, walk 2 더하면 10 | `run.log:5` UTC → KST: turn16 GT 12:30:19 → 가림 12:38:02(**7:43**) → PRED 12:44:36(**6:34**) → map64 12:51:11(**6:35**) → 끝 12:57:01(**5:50**), 합 **26:42**. L6 map64 13:31:28 → 13:35:33 **4:05**, L9 13:57:48 → 14:01:42 **3:54**. `turn_probe_plan.PROTOCOLS` 8 경우(walk 2 포함) + `--forward-gaits` 전진 2 = **10** **일치**. walk_turn 네 판(X27g) 00:33:20 → 00:35:45 **2:25**(planner 추가 실측) | §5 비용표를 실행 묶음 단위로 다시 씀. 140 h · 73 분 · 12 h · 20 h 폐기 |
 | **E 졸업 범위** | A 는 GT · 가림만, B 는 GT 만. 복원 지도 13 종 통과 증거가 아니다 | START II-C(학습은 GT · 복원 섞음, 배포는 복원만, analyst 인용 134~137 행 · planner 는 III-A 지표만 재확인) | §6 단계별 「주장 → 필요한 교차 → 지금 자료」 표. C3 복원 지도 단계 필수에 **eval_pred × 종류별 × 명령** 포함 |
 | 답 2.2 레벨 | L0~2 묶음 · L6 · L9 는 연결용 감시점. 승급 전 점검은 현재 목표 행 · 다음 행 · 쉬운 유지 행 | 부모 `env.yaml:242` `max_init_terrain_level 2`, `:1672` `terrain_levels_mixed` 커리큘럼(학습 노출은 10 행 전체). Isaac `terrain_generator.py:261~262` 행 안 난도 = (행 + U[0,1)) / 10 **일치** | §4 난도 칸: 전체 목록 0~9 보존, 점검 행 = 「현재 목표 · 다음 · 쉬운 유지」 + 연결 열(L0~2 묶음 · L6 · L9). 실제 형상(계단 높이 · 경사 · 격자 높이) 과 mesh 해시를 함께 기록 |
@@ -46,58 +46,61 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 | 겹 | 이름 | 값 | 정본 · 근거 |
 |---|---|---|---|
 | 조건 1 | 지형 종류 | 평지 1 + 연속 7(`pyramid_stairs` · `_inv` · `boxes` · `random_rough` · `hf_pyramid_slope` · `_inv` · `stage_stairs`) + 듬성 5(`stepping_stones_low` · `_high` · `balance_beams` · `stepping_beams` · `gaps`) = 13. 학습 노출 목록과 평가 노출 목록은 따로 적는다 | `columns.py:11~34`(23 열 연속, 50 열 전체) |
-| 조건 2 | 난도 행 + 실제 형상 | 행 0~9. 물리 범위가 변하는 종류: 계단 · 역계단 0.05~0.23 m, 상자 0.025~0.1 m, 경사 · 역경사 0~0.4. **난도가 아닌 것**: `random_rough`(difficulty 무시) · `stage_stairs`(0.15 m 고정) · 평지. 행 안에서도 (행 + U[0,1))/10 무작위라 계단 높이 · 경사 · mesh 해시를 결과에 같이 남긴다 | `rough_go2_cfg.py:20~37` · Isaac `hf_terrains.py:13` · `terrain_generator.py:261~262` · Rudin §3.1(지형 종류마다 난도를 따로 올리고 내림, 중간 행 생략 근거 아님) |
+| 조건 2 | 난도 행 + 실제 형상 | 행 0~9. 물리 범위가 변하는 종류: 계단 · 역계단 0.05~0.23 m, 상자 0.025~0.1 m, 경사 · 역경사 0~0.4. **난도가 아닌 것**: `random_rough`(difficulty 무시) · `stage_stairs`(0.15 m 고정) · 평지. 행 안에서도 (행 + U[0,1))/10 무작위라 계단 높이 · 경사 · mesh 해시를 결과에 같이 남긴다 | `rough_go2_cfg.py:20~37` · Isaac `hf_terrains.py:22 · 30` · `terrain_generator.py:261~262` · Rudin §3.1(지형 종류마다 난도를 따로 올리고 내림, 중간 행 생략 근거 아님) |
 | 조건 3 | 명령 과정 | 전진 vx 0.5 · 1.0 · **1.5**(상단) · 0.3(하단 경계, C5a), 제자리 wz ±1.2(독립 · 전진 뒤 · 방향 반전), 걸으며 돌기 (0.5, ±0.5)(EX-35). 뒤 단계: 저속 · 정지 → 재출발 · 횡 · 후진 · 깃발. **앞 4 s 이력이 다르면 다른 시험**(명령 벡터만 같아도) | `mixed_core.py:50~67` · `turn_probe_plan.PROTOCOLS:24~34`(pre 4 s + 기록 8 s) · START II-D1(vx U[0,1.5], < 0.3 이면 wz U[−1.2, 1.2]) |
-| 조건 4 | 지도 처치(같은 정책) | `eval_gt` · `eval_pred` · `probe_prop_only`(지도 토큰 attention 가림 진단 = S-B 「눈 끄고 걷기」 대용). 실제 소비는 `gt_used/policy_steps_x_envs` · `last_num_map_tokens` 로 확인. **대조 정책 차원**: G0-B(`map_input=none`, `--modes none` 만) | `adapters.py:403 · 432~439` · `eval_map_modes.py:130~134 · 225~228 · 256~259` |
-| 조건 5 | 외부 조건 | 지금 평가는 **DR 끔 · 지연 없음 · 커리큘럼 끔 · 재추출 끔**을 명시한다(`dr_off` 목록이 결과 json 에 남음). 학습 쪽 부모 DR: 마찰 0.2~1.2 · 질량 −1~+3 kg 켬, base_com · actuator_gains · motor_strength 끔, push_robot · action delay **설정 자체가 없음**. 이 결과를 「DR 에 강하다」 의 증거로 쓰지 않는다. 뒤 단계(C7) 에서 마찰 · 질량 · 밀기 · 지연 · 센서 잡음의 설정값과 실현값을 조건으로 등록 | `turn_probe.py:69~83` · `eval_map_modes.py`(dr_off 키) · 부모 `env.yaml:1292~1369`(push_robot 0 건 · delay 0 건) |
+| 조건 4 | 지도 처치(같은 정책) | `eval_gt` · `eval_pred` · `probe_prop_only`(지도 토큰 attention 가림 진단 = S-B 「눈 끄고 걷기」 대용). GT 사용 수(`gt_used/policy_steps_x_envs`) 는 eval_gt 와 나머지 둘을 가르지만 **eval_pred 와 probe_prop_only 는 결과 파일에서 같다**(둘 다 0/19200 · `last_num_map_tokens` 128, reviewer 고침 1 실측: `start_perception.py:163` 이 가림 전에 토큰 수를 적음). 가림 여부는 코드(`adapters.py:439`) 와 모드 이름표로만 보인다. 가림 뒤 키 수를 json 에 남기는 것은 구현 몫(X27j, 후보 31). **대조 정책 차원**: G0-B(`map_input=none`, `--modes none` 만) | `adapters.py:403 · 432~439` · `eval_map_modes.py:130~134 · 225~228 · 257~260` |
+| 조건 5 | 외부 조건 | 지금 평가는 **DR 끔 · 지연 없음 · 커리큘럼 끔 · 재추출 끔**을 명시한다(`dr_off` 목록이 결과 json 에 남음). **정책 관측 잡음은 켜져 있다**(학습과 같음: 부모 `env.yaml:954` policy `enable_corruption: true`, 균등 잡음 base_ang_vel ±0.2 · projected_gravity ±0.05 · joint_pos ±0.01 · joint_vel ±1.5 `:962~1015`, reviewer 고침 2). 사슬이 쓰는 `eval_map_modes.py:71` · `turn_probe.py:62` 는 `load_cfg_from_registry` 로 학습 cfg 를 그대로 불러오고 끄는 줄이 없다(planner grep 0 건). `adapters.py:132 · 276` 이 끄는 것은 MVP 하네스(`run_eval.py` · `record_clip.py`) 경로라 사슬에서는 불리지 않는다. C7 에서 「센서 잡음 켬」 을 새 조건으로 더하지 않는다(이미 켜짐). 재측정 폭의 원인 후보다(GATE-v3 §1.1). 학습 쪽 부모 DR: 마찰 0.2~1.2 · 질량 −1~+3 kg 켬, base_com · actuator_gains · motor_strength 끔, push_robot · action delay **설정 자체가 없음**. 이 결과를 「DR 에 강하다」 의 증거로 쓰지 않는다. 뒤 단계(C7) 에서 마찰 · 질량 · 밀기 · 지연 · 센서 잡음의 설정값과 실현값을 조건으로 등록 | `turn_probe.py:69~83` · `eval_map_modes.py`(dr_off 키) · 부모 `env.yaml:1292~1369`(push_robot 0 건 · delay 0 건) |
 | 분모 | 두 하네스 | 64 env · 6 s · 300 스텝(map64, 전체 env 의 alive 시간 마스크 · 중앙값) / 16 env · 8 s · 1600 스텝 200 Hz(turn16, kept env 동일 가중) · 시드 42. 섞지 않는다 | RULES-HUB 10.1(ce4962dd) |
-| 측정 M1 | 추종 · 진행 | 전진 적분(몸 좌표), yaw 추종, Q(kept 동일 가중) · 절대 오차 · 8 등분 열, 정체 비율 | `eval_map_modes.py:231~246` · `judge_stats.turn_stats` |
+| 측정 M1 | 추종 · 진행 | 전진 적분(몸 좌표), yaw 추종, Q(kept 동일 가중) · 절대 오차 · 8 등분 열, 정체 비율 | `eval_map_modes.py:243~244` · `judge_stats.turn_stats` |
 | 측정 M2 | 생존 · 종료 | kept · alive_end · 종료 사유(bad_orientation 1.5 rad · foot_below_ground · time_out) | `env.yaml:1586~1600` · tfevents `Episode_Termination/*`(학습) · 평가는 X27j |
 | 측정 M3 | 보행 | 쌍 사이 · 쌍 안 위상 · duty · 완전 주기 수 · C · R · 발자국 | npz `force` · `feet_pos` · analyst `recompute.py` |
 | 측정 M4 | 접촉 · 발 · 몸 | 기울기 · 접촉 링크 평면 속도(대용) · 종아리 접촉 · 발 높이 · 걸림 · 가장자리 거리 | npz `root_quat` · `link_xy_speed` · `force` · `feet_pos`(§3 에 축별) |
 | 측정 M5 | 제어 · 관절 | 관절 한계 여유 · 토크 포화 · 에너지 · 행동 변화율 | npz `q` · `qd` · `applied` · `target` + `probe_result.json static` |
 | 측정 M6 | 지도 오차 | 학습 중 TR-Net 손실, 평가 PRED 의 지형별 · 발 아래 칸 오차 | tfevents `Loss/perception/l_tr` · X27j (3) |
-| 측정 M7 | 학습 곡선 | 손실 · KL · std · 엔트로피 · 보상 항 · 종료 사유 비율 · 지도 소비 비율 · 노출 | tfevents 70 태그 · `train_extra.jsonl` · `map_stats.jsonl` · `map_switch.jsonl` |
+| 측정 M7 | 학습 곡선 | 손실 · KL · std · 엔트로피 · 보상 항 · 종료 사유 비율 · 지도 소비 비율 · 노출 | tfevents 73 태그 · `train_extra.jsonl` · `map_stats.jsonl` · `map_switch.jsonl` |
 | 측정 M8 | 영상 · 재현 | 1x 영상 판독표(A11) · 독립 재계산(A12) | 카드 §4b.4 · `judge_repro.py` |
 
-## 3. 축 후보 전수 훑기 (lead 01:5x 목록 + planner 추가, 30 개)
+## 3. 축 후보 전수 훑기 (lead 01:5x 목록 + planner 추가 30 + v0.3 analyst 셋, 33 개)
 
 분류: **필수** = 그 단계 넘김 판정에 들어가는 축(성공선 또는 유지 하한) / **유지** = 이전 단계 능력의 하한 축 / **기록** = 재지만 판정에 안 넣음(정상 · 이상 정의나 폭이 없음) / **불가** = 지금 코드 · 기록으로는 못 재서 코드가 필요. 「지금 자료」 는 turn16 npz(`alive · kept · q · qd · target · computed · applied · force(19 링크 크기) · link_xy_speed · root_pos · root_quat · wz · vx · feet_pos(4 발 xyz)`, planner 재측) · map64 집계 json · 학습 tfevents 를 뜻한다. 근거 등급: 원문 · 코드 · 실측 · 가정.
 
 | 번호 | 후보 | 정의(분모 고정) | 지금 자료 | 분류(단계) | 근거 · 까닭 |
 |---|---|---|---|---|---|
-| 1 | **복원 지도 오차 · 지형별** | eval_pred 에서 mean \|복원 − 정답\| (cm), 종류 · 행별, 로봇 주변 격자 | 학습 중 `Loss/perception/l_tr`(TR-Net 손실, 실측 태그) 만. 평가 쪽 저장 없음 | **불가 → C3 필수**(X27j (3) 뒤) | START III-A 「For methods involving TR-Net, we also measure reconstruction errors in simulation」(Fig. 5, 지표 이름 미명시) `[원문]`. 팀장 「복원 지도의 핵심」. 영상 오버레이의 2 cm 빨간 막대 식이 있음(RULES-HUB 4 절) `[코드]` |
+| 1 | **복원 지도 오차 · 지형별** | eval_pred 에서 mean \|복원 − 정답\| (cm), 종류 · 행별, 로봇 주변 격자 | 학습 중 `Loss/perception/l_tr`(TR-Net 손실, 실측 태그) 만. 평가 쪽 저장 없음 | **불가 → C3 필수**(X27j (3) 뒤) | START III-A 「For methods involving TR-Net, we also measure reconstruction errors in simulation」(Fig. 5 는 III-B1 304~312 행, 조건 「at the highest terrain difficulty level」, 지표 이름 미명시, reviewer 참고 1) `[원문]`. 팀장 「복원 지도의 핵심」. 영상 오버레이의 2 cm 빨간 막대 식이 있음(RULES-HUB 4 절) `[코드]` |
 | 2 | **복원 지도 오차 · 발 아래 칸** | 각 발 아래 칸의 \|복원 − 정답\| (cm), 착지 순간 | 없음(`gt_feet` 관측은 env 안에만, `start_obs.py:42~43`) | **불가 → C3 · C4 필수** | 발 놓을 곳이 핵심(#557 「발을 놓을 곳에 지형만 주는 데서 막혔다」). 관측 함수가 있어 기록은 소량 코드 `[코드]` |
-| 3 | **지도 없이 걷기 · 연속 7 종별** | probe_prop_only × fwd1.0 · fwd0.5 × 종류별 거리 · 생존 | L0~2 혼합 · L6 · L9 가림 집계만(유지 축으로 이미 잼). 종류별 없음 | **유지(지금: 레벨 묶음) + 종류별 필수(m2250 창부터, 그 전 HOLD_NO_DATA)** | 팀장 「연속 7 종 지형에 대해서는 … 무너지면 안 되는 것」 · lead 02:0x · 02:1x. S-B 학습 p_map_off 0.1 `[코드]`. 가림은 토큰 가림이라 실기 카메라 가림과 같다고 말하지 않는다(analyst 2.5) |
+| 3 | **지도 없이 걷기 · 연속 7 종별** | probe_prop_only × fwd1.0 · fwd0.5 × 종류별 거리 · 생존 | L0~2 혼합 · L6 · L9 가림 집계만(유지 축으로 이미 잼). 종류별 없음 | **유지(레벨 묶음)**. 종류별은 m2250 창부터 **기록**(env_arrays), 판정(안전 등급 종류별 낙상) 은 부모 종류별 기준선 재측정 뒤 GATE-v3 §4a 절차로(카드 §4b.5 A2b 와 모순 없음, reviewer 고침 4) | 팀장 「연속 7 종 지형에 대해서는 … 무너지면 안 되는 것」 · lead 02:0x · 02:1x. S-B 학습 p_map_off 0.1 `[코드]`. 가림은 토큰 가림이라 실기 카메라 가림과 같다고 말하지 않는다(analyst 2.5) |
 | 4 | **보행 위상**(쌍 사이 · 쌍 안) | 1 N 접촉, 완전 주기만, env 동일 가중 원형 평균 · R | 있음(npz `force` 발 4 열) | **기록**(C0~) | 부모 fwd0.5 88.49° · fwd1.0 167.03° 로 0/180 일괄 기준 불가, ±30° 폐기(카드 v0.9 · verifier R1) `[실측]`. 정상/이상 정의가 서기 전 판정 금지 |
 | 5 | duty · 착지 주기 · C(네 발 동시) · 완전 주기 수 | 같은 접촉열 | 있음 | **기록**(C0~) · C 는 걸으며 돌기 성공선 성분(**필수** C1a, ≤ 0.6) | `judge_gate.THRESHOLDS walk_c 0.6` `[코드]`. 불규칙 지형 · 느린 속도에서는 정상 위상도 달라진다(analyst 5 절) |
-| 6 | **발 들기 높이**(clearance) | 스윙 중 발 z − 발 아래 지형 높이, 발별 최대 · 중앙값 | `feet_pos` 있음. 지형 높이 참조 없음(평지 · rough L0 칸은 기준면 0 으로 근사 가능) | **기록**(평지 칸, CPU 코드 소량) · 험지는 **불가**(X27j 지형 해시 + 높이 격자) | START 는 clearance 를 보고하지 않음 `[원문]`. 보상 항에도 없음(`env.yaml:1430~1585` 14 항) `[코드]` |
+| 6 | **발 들기 높이**(clearance) | 스윙 중 발 z − 발 아래 지형 높이, 발별 최대 · 중앙값 | `feet_pos` 있음. 지형 높이 참조 없음. turn16 16 칸은 경사 L0 8 · rough L0 8 이고 **순수 평지 열은 없다**(probe_result `flat_note`, reviewer 고침 3). 기준면 0 근사는 오차 미측이고 reset 직후 낙하 구간(root z 0.46 → 0.34) 은 뺀다 | **기록**(경사 L0 · rough L0 칸, 기준면 근사 · 오차 미측) · 험지는 **불가**(X27j 지형 해시 + 높이 격자) | START 는 clearance 를 보고하지 않음 `[원문]`. 보상 항에도 없음(`env.yaml:1430~1585` 14 항) `[코드]` |
 | 7 | **발 끌림**(drag · slide) | 접촉 중 발 링크 평면 속도(대용) 평균 · p95, 또는 스윙 중 발 z < 문턱 비율 | `link_xy_speed` · `force` 있음(A8, 대용) | **기록 · 경고**(C0~) | `track_contact_points=false` 라 접선 slip 아님(`turn_probe.py:111~112`) `[코드]`. A11 ② 「세 걸음 이상 발 끌기」 와 대조 |
 | 8 | **걸림**(stumble) | 어느 발 \|F_xy\| > 4 \|F_z\| 인 스텝 비율 | 학습 `Episode_Reward/stumble` 태그 있음(비중 −1.0). 평가 npz 는 힘 **크기**만 저장 → 벡터 없음 | 학습 곡선 **기록** · 평가 **불가**(힘 벡터 저장 필요) | `rewards/core.py:93~98` `[코드]` · START 표 I stumble −1.0 `[원문]` |
-| 9 | **몸 높이** | root z − 발 아래 지형 기준면, kept env 평균 · 분산 | `root_pos` 있음. 평지 칸은 기준면 0 | **기록**(평지) · 험지 **불가**(지형 높이) | 서 있는 몸 z 약 0.34 m(`kind_stats.py` 주석) `[코드]` |
+| 9 | **몸 높이** | root z − 발 아래 지형 기준면, kept env 평균 · 분산 | `root_pos` 있음. 경사 L0 · rough L0 칸 기준면 0 근사(오차 미측) · 대용 「root z − 접지 발 중심」 은 turn16 에서 계산 가능(analyst 10) | **기록**(경사 L0 · rough L0) · 험지 **불가**(지형 높이) | 서 있는 몸 z 약 0.34 m(`kind_stats.py` 주석) `[코드]` |
 | 10 | **자세 흔들림** | roll · pitch 표준편차 · 각속도 xy p95(쿼터니언 차분) | `root_quat` 있음(A7 기울기 평균 · p95 는 이미 경고선) | **기록 · 경고**(C0~) | 학습 `Episode_Reward/ang_vel_xy · flat_orientation` 태그 `[실측]`. 기울기 하나로 실패 원인 확정 금지(analyst 5 절) |
-| 11 | **관절 한계 접근** | 관절별 min(hi − q, q − lo) 의 p05, 종아리 띠 r | `q` + `probe_result.json static.hard_limits · soft_limits` 있음, `calf_band.py` 있음 | **기록 · 경고**(C0~) | EXPERIMENT-RULES 52 행 「관절각 … 한계 여유」 · `calf_band.py` `[코드]` |
-| 12 | **토크 · 포화** | \|applied\| / effort_limit 의 p99 · 포화 비율 · 연속 포화 길이 | `applied` + `static.actuator_limits` 있음. 학습 `action_stats.element_saturation_rate · torque_clipped_frac`(`train_extra.jsonl`) | **기록 · 경고**(C0~) | `train_extra.jsonl` 키 `[실측]`. 실기 전이 때 필수 후보(C7 뒤) |
-| 13 | **에너지** | Σ \|applied × qd\| dt / 이동 거리 (J/m), kept env | `applied` · `qd` · `vx` 있음 | **기록**(C0~) | 학습 `Episode_Reward/joint_power` 태그 `[실측]`. START 미보고 `[원문]` |
-| 14 | **행동 매끄러움**(action rate) | \|target_t − target_{t−1}\| 평균 · 2 차 차분 | `target` 있음. 학습 `Episode_Reward/action_rate · action_smoothness` | **기록 · 경고**(C0~) | 보상 항 −0.01 둘 `[코드]`. 실기 모터 보호 축(C7 뒤 필수 후보) |
+| 11 | **관절 한계 접근** | 관절별 min(hi − q, q − lo) 의 p05, 종아리 띠 r | `q` + `probe_result.json static.hard_limits · soft_limits` 있음, `calf_band.py` 있음 | **기록**(C0~, 경고선은 카드 §4b.1 에 없음 · reviewer 참고 6) | EXPERIMENT-RULES 52 행 「관절각 … 한계 여유」 · `calf_band.py` `[코드]` |
+| 12 | **토크 · 포화** | \|applied\| / effort_limit 의 p99 · 포화 비율 · 연속 포화 길이 | `applied` + `static.actuator_limits` 있음. 학습 `action_stats.element_saturation_rate · torque_clipped_frac`(`train_extra.jsonl`) | **기록**(C0~, 경고선 없음) | `train_extra.jsonl` 키 `[실측]`. 실기 전이 때 필수 후보(C7 뒤) |
+| 13 | **에너지** | 절대 일 Σ \|τ · qd\| dt 와 순기계 일 Σ (τ · qd)⁺ dt 를 **따로**(W, kept env 시간 평균). 전진 칸만 J/m 도 적고 제자리 회전 칸은 거리로 나누지 않는다(분모 0 근처, analyst 14 · reviewer 고침 5) | `applied` · `qd` · `vx` 있음 | **기록**(C0~) | 학습 `Episode_Reward/joint_power` 태그 `[실측]`. START 미보고 `[원문]` |
+| 14 | **행동 매끄러움**(action rate) | 정책 행동(50 Hz) 차분 평균 · 2 차 차분. turn16 `target` 은 200 Hz 유지값이라 그대로 차분하면 작게 나온다(analyst 15 반례 1 → 0.2) → 정책 tick 만 뽑아 센다 | `target` 있음(200 Hz, 정책 tick 추출 필요). 학습 `Episode_Reward/action_rate · action_smoothness` | **기록**(C0~, 경고선 없음 · reviewer 참고 6) | 보상 항 −0.01 둘 `[코드]`. 실기 모터 보호 축(C7 뒤 필수 후보) |
 | 15 | **명령 추종 지연** | 명령 바뀐 뒤 wz(또는 vx) 가 명령의 50 % · 90 % 에 닿는 시간, 8 등분 첫 칸 | 있음(`wz` · `vx` 1600 시점, 기록 구간 첫 1 s) | **기록**(C1~) | 8 등분 열 기준선 analyst `rotation_bins.json`(indep_right 0~1 s 0.99 → 7~8 s 0.10) `[실측]`. 후반 정체는 부모 한계로 보존 |
 | 16 | **명령 바뀔 때 회복** | ORDER_PAIRS(독립 대 연속 시행) Q 차 · 전진 → 회전 전이 1 s | 있음(여섯 경우 설계가 이것) | **유지**(C0~, A3) | `turn_probe_plan.ORDER_PAIRS` `[코드]` · 설계 §7.1 촬영 순서 가설 |
 | 17 | **마찰 DR 강건성** | 마찰 μ ∈ {0.2, 0.5, 1.2} 고정 평가에서 거리 · 생존 · Q | 평가는 `physics_material` 끔(`dr_off`). 학습은 0.2~1.2 켬 | **불가**(평가 μ 고정 인자 필요) → C7 필수 | `turn_probe.py:69~74` `[코드]`. 학습 범위 안 평가라도 「DR 에 강함」 은 측정 뒤에만 |
 | 18 | **질량 DR 강건성** | 질량 +3 kg 고정 평가 | 같음(add_base_mass 끔) | **불가** → C7 | 부모 −1~+3 kg `[코드]` |
 | 19 | **밀기 회복** | 외력 임펄스 뒤 2 s 안 복귀 · 넘어짐 | 부모 설정에 push_robot **없음**(0 건), 평가에도 없음 | **불가**(이벤트 + 평가 코드) → C7 | AME-2 식 DR 은 마지막 도입(팀장 10/8) |
-| 20 | **행동 지연** | 지연 k 틱 고정 평가 | 부모 `max_delay_s` **없음** | **불가** → C7 | `env.yaml` delay 0 건 `[코드]` |
+| 20 | **행동 지연 · COM · gain · 관측 오염**(analyst 19) | 지연 k 틱 · COM 오프셋 · gain 배율 고정 평가 · 관측 잡음 끔/켬 대조 | 부모 `max_delay_s` **없음** · base_com · actuator_gains 학습 끔 · 관측 잡음은 평가에서 **켜짐**(조건 5) | **불가** → C7 | `env.yaml` delay 0 건 `[코드]` · 잡음 끔 대조는 cfg 한 줄(구현 몫) |
 | 21 | **듬성 발 놓기 가장자리 거리**(MEV) | 가장자리 띠(2.5 cm · 5 cm) 에 착지한 스텝 비율, 발판 중심까지 거리 | `feet_pos` 있음 + `sparse_terrains.edge_masks` 있음. 평가 쪽 결합 없음 | **불가 → C4b 듬성 필수** | START III-A 「mean edge violation(MEV): the proportion of steps landing on terrain edges, measured at the highest difficulty level」 `[원문]` · `rewards/core.py:101~118` `[코드]`. 부모 `foot_edge` 비중 0 이라 학습 태그값 0(Isaac `reward_manager.py:146` 비중 0 건너뜀) |
-| 22 | **계단 발끝 부딪힘 · 종아리 접촉** | 발 아닌 링크(calf · thigh) 접촉력 > 문턱 횟수 · 지속 시간 | `force` 19 링크 + `classify_link` 있음(평지 · rough 칸). 계단 칸은 X27j 64 env 배열 필요 | **기록 · 경고**(C0~) · 계단 **불가**(지금 16 env 칸이 계단 아님) | 학습 `Episode_Reward/collision`(−10) · `stumble` `[실측]`. W3-P1 종아리 띠 요구 |
+| 22 | **계단 발끝 부딪힘 · 종아리 접촉** | 발 아닌 링크(calf · thigh) 접촉력 > 문턱 횟수 · 지속 시간 | `force` 19 링크 + `classify_link` 있음(경사 L0 · rough L0 칸). 계단 칸은 X27j 64 env 배열 필요 | **기록 · 경고**(C0~) · 계단 **불가**(지금 16 env 칸이 계단 아님) | 학습 `Episode_Reward/collision`(−10) · `stumble` `[실측]`. W3-P1 종아리 띠 요구 |
 | 23 | **생존** | kept · alive_end | 있음 | **필수 · 유지**(C0~, A6) | JUDGE-SPEC 3 절 `[코드]` |
 | 24 | **넘어짐 원인**(종료 사유) | bad_orientation(1.5 rad) · foot_below_ground · time_out 비율, env 별 | 학습 태그 셋 있음. 평가는 `alive` 만 | 학습 **기록** · 평가 **불가** → X27j (1) | `env.yaml:1586~1600` `[코드]` · `Episode_Termination/*` `[실측]` |
 | 25 | **추종 · 전진**(기존) | 전진 적분 · yaw 추종 · Q · C · 절대 오차 | 있음 | **필수 · 유지**(A2 · A3 · A4 · A5) | 카드 v1.0 §4b.1 |
-| 26 | **학습 곡선 항** | value · surrogate · entropy · std · KL(ppo · phi) · 보상 14 항 · 종료 3 · 지도 소비(gt_fraction · off_frac) · 지형 레벨 · 명령 모드 비율 · 속도 오차 xy · yaw | 있음(tfevents 70 태그 · 3 jsonl) | **기록**(NaN 만 멈춤) | A9 · `tb_stats.py` `[실측]` |
+| 26 | **학습 곡선 항** | value · surrogate · entropy · std · KL(ppo · phi) · 보상 14 항 · 종료 3 · 지도 소비(gt_fraction · off_frac) · 지형 레벨 · 명령 모드 비율 · 속도 오차 xy · yaw | 있음(tfevents 73 태그 · 3 jsonl) | **기록**(NaN 만 멈춤) | A9 · `tb_stats.py` `[실측]` |
 | 27 | **영상 판독** | A11 ①~⑤ | 사람 | **필수**(연장 전 증거) | 팀장 23:1x `[승인]` |
 | 28 | **재현** | 독립 재계산 ≤ 1e-6 · sha · 해시 | 있음(16 env) | **필수**(A12) | |
 | 29 | **환경 → 지형 표**(조건 기록) | env 별 종류 · 열 · 행 · 실제 형상 · 시작 위치 · mesh 해시, 학습 manifest 에 실제 종류 비율 | 학습: env.yaml 로 사후 재구성만. 평가: `fixed_terrain.tiles` 는 sparse · 16 env 만 | **불가 → 모든 단계 필수 조건 기록**(X27j (1)) | 팀장 「env 가 어느 지형에서 돌았는지 기록이 안 된다고? … 당연히 있어야」 |
 | 30 | **속도 범위 경계**(1.5 · 0.3) | fwd1.5 · fwd0.3 거리 · 생존 · 보행 | 평가 명령 칸에 없음(코드 인자만 더하면 됨) | **기록**(C0~) → 정본 채택 때 1.5 **필수**(운영 선택, §10) | 막음 A `[코드]` |
+| 31 | **지도 소비 계약**(analyst 03) | 모드마다 정책이 실제로 받은 지도: GT 사용 수 · 가림 뒤 키 수 · 모드 이름표 | GT 수 있음(64 env). 가림 뒤 키 수 **없음**(조건 4) | **필수 계약**(모든 지도 비교의 전제, 판정 축 아님) | reviewer 고침 1 · `w06_mask.py`(가림 켬 → 지도 영향 0) `[실측]` |
+| 32 | **지도 유효성 · 시차**(analyst 27) | 유효 칸 비율 · ray miss · clip 비율 · 지도 나이(마지막 갱신 뒤 tick) | 07fc5e73 없음. 496e0cfe 에 ray_miss_frac · clip_low_frac(reviewer 실측: −1 칸은 모두 clip, ray miss 0). 지도 나이 없음 | **기록** → C3 필수 후보 | reviewer R06-4 `[실측]` |
+| 33 | **I-E 추정 정확도**(analyst 28) | 추정 v · hf · hb 대 정답의 오차 | 학습 태그만. 평가 쪽 짝 기록 없음 | **불가** → C3 기록 | analyst 28 |
 
-요약: 지금 자료로 바로 CPU 로 셀 수 있는 것 = 4 · 5 · 7 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 22(평지) · 23 · 25 · 26 · 28. 코드가 필요한 것 = 1 · 2 · 3(종류별) · 6 · 8 · 9(험지) · 17~21 · 24 · 29 · 30(인자). 어느 것도 **새 문턱을 지금 만들지 않는다**. 기록 축의 정상/이상 정의는 부모와 자식 저장본의 같은 조건 반복 측정이 쌓인 뒤 결과 전에 고정한다.
+요약: 지금 자료로 바로 CPU 로 셀 수 있는 것 = 4 · 5 · 7 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 22(경사 L0 · rough L0) · 23 · 25 · 26 · 28. 표에서 **불가** = 1 · 2 · 6 · 8 · 9 · 17~22 · 24 · 29 · 33(14 개; reviewer 참고 3 의 13 + v0.3 의 33). 코드 인자나 기록만 더하면 되는 것 = 3(종류별) · 30 · 31 · 32. 어느 것도 **새 문턱을 지금 만들지 않는다**. 기록 축의 정상/이상 정의는 부모와 자식 저장본의 같은 조건 반복 측정이 쌓인 뒤 결과 전에 고정한다.
 
 ## 4. 조건 차원의 값 칸 (지금 → 전체)
 
@@ -108,7 +111,7 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 | 명령 과정 | 64 env: fwd0.5 · fwd1.0 · spin ±1.2 / 16 env: 회전 6 + walk_turn 2 + 전진 gait 2 = **10 경우** | + fwd1.5 · fwd0.3 · 정지 → 재출발 · 횡 ±0.1~0.2 → ±0.5 · 후진 −0.1~−0.2 · 깃발 | 매 창: 지금 칸. 정본 채택 · 범위 확대 때: + 1.5. 새 단계 입장 때 그 칸을 더하고 **이전 칸을 지우지 않는다** |
 | 지도 처치 | eval_gt · probe_prop_only(필수) · eval_pred(64 env 필수 · 16 env 기록) | 셋 | C3 부터 eval_pred 가 **주장 조건**(배포 = 복원 지도만, START II-C) |
 | 대조 정책 | G0-B m1500(none) | | 「지도 없이 걷기 기준선」 비교에만 |
-| 외부 조건 | DR 끔 · 지연 0 · 커리큘럼 끔(명시) | 마찰 {0.2, 0.5, 1.2} · 질량 {−1, +3} · 밀기 · 지연 · 센서 잡음 | C7 에서 등록. 전 교차에 무조건 곱하지 않는다 |
+| 외부 조건 | DR 끔 · 지연 0 · 커리큘럼 끔 · **관측 잡음 켬**(명시) | 마찰 {0.2, 0.5, 1.2} · 질량 {−1, +3} · 밀기 · 지연 · 센서 잡음 | C7 에서 등록. 전 교차에 무조건 곱하지 않는다 |
 
 ## 5. 비용 (실행 묶음 단위로 다시 셈 · planner 재측)
 
@@ -140,7 +143,7 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 
 | 단계 | 그 단계가 주장하는 것 | 필요한 조건 교차(필수 목록) | 유지 축 | 지금 자료 상태 |
 |---|---|---|---|---|
-| C0 S-B10 정본 | 평지 · 연속 7 종(낮은 행) 전진, 켬 · 가림 | 종류별 7 + 평지 × {현재 행} × fwd0.5 · 1.0 × 켬 · 가림 · PRED(기록) | 없음(출발선) | 레벨 묶음 · L6 · L9 집계만. 종류별은 m2250 창부터 필수(그 전 HOLD_NO_DATA) |
+| C0 S-B10 정본 | 평지 · 연속 7 종(낮은 행) 전진, 켬 · 가림 | 종류별 7 + 평지 × {현재 행} × fwd0.5 · 1.0 × 켬 · 가림 · PRED(기록) | 없음(출발선) | 레벨 묶음 · L6 · L9 집계만. 종류별은 m2250 창부터 기록, 판정 전환은 GATE-v3 §4a |
 | C1a~C1c 걸으며 돌기 | (0.5, ±0.5) 추종 + 전진, 좌 · 우 | walk_turn 좌 · 우 × 켬 · 가림(16 env) | C0 전부 | **있음**(A5 기준선 실측) |
 | C2a · C2b 제자리 회전 | 여섯 경우 Q ≥ 0.6, 생존 54/48 | 회전 6 × 켬 · 가림 + spin64 세 모드 | C0 · C1 | 있음 |
 | C3a · C3b 복원 지도 | **복원 지도만으로** 전진 · 회전이 켬의 0.9 | **eval_pred** × 종류별 7 + 평지 × 명령(fwd0.5 · 1.0 · spin · walk) + 지도 오차(후보 1 · 2) | 위 전부 + 가림 유지 | eval_pred 집계(L0~2) 만. 종류별 · 지도 오차 **불가**(X27j) |
@@ -156,7 +159,7 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 
 | 항목 | 요구 | 까닭 |
 |---|---|---|
-| env 별 기록(64 env 일반 경로) | `env_id · episode · 시작 kind/row/col · mesh/assignment hash · 명령 시계열 · 지도 소비(gt_used) · root pose · alive/done · 종료 사유 · env 별 거리 · 추종값 · 유효 시간` 을 npz 로. 일반 경로가 메모리의 VX · WZ · AL · TILT · POS · DN 을 파일로 남기면 된다 | `eval_map_modes.py:247~253` parser_sparse 경로가 이미 같은 일을 함 `[코드]` |
+| env 별 기록(64 env 일반 경로) | `env_id · episode · 시작 kind/row/col · mesh/assignment hash · 명령 시계열 · 지도 소비(gt_used) · root pose · alive/done · 종료 사유 · env 별 거리 · 추종값 · 유효 시간` 을 npz 로. 일반 경로가 메모리의 VX · WZ · AL · TILT · POS · DN 을 파일로 남기면 된다 | `eval_map_modes.py:245~253` parser_sparse 경로가 이미 같은 일을 함 `[코드]` |
 | 종류별 집계 | 종류 · 행별 n · 끝 생존 · 거리 중앙값 · 분포. **전체 중앙값으로 특정 종류 통과를 말하지 않는다** | 반례: 무대 계단 2 개만 실패해도 전체 중앙값 6 m · 생존 62/64(analyst 집계 반례) |
 | 타일 전이 | 6 s 기록이 출발 타일을 벗어났는지(8 m 타일 · 1.0 m/s 는 4 s 에 경계) 를 pos 로 기록하거나, 같은 종류 통로를 지정. 경계 밖 실패를 결과 뒤 삭제하지 않는다 | `env.yaml:102~104` · `reset_base` ±0.5 m |
 | 표본 n | 지금 64 혼합(종류당 1~5 열 × 3 행) 과 「종류마다 n = 64」 는 다르다. 칸별 n 과 실현 수를 결과 전에 고정 | 23 열 비율 5 · 5 · 4 · 4 · 2 · 2 · 1 |
@@ -169,11 +172,12 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 
 - 사슬 29 건 통계(13:04 · 14:51 · 23:16) 와 B1500 rep 재계산(0.0987 · 0.0833) 은 analyst 값을 그대로 옮겼다(**planner 미재측**). 네 구간 시각 차 · L6 · L9 map64 · walk_turn 2:25 · 배정 23/23/18 · 코드 줄은 planner 가 다시 쟀다.
 - START 원문은 III-A 지표(성공률 · 통과율 · MEV · 재구성 오차 · 500 회 × 6 m × 10 지형) 와 II-D1 명령 범위를 요약으로 재확인했고, analyst 가 적은 행 번호(134~137 · 143) 는 재확인하지 않았다.
+- §5.1 의 L6 · L9 시각은 다른 GPU 의 Kit 과 겹쳐 돌던 구간이라(reviewer 참고 5) 혼자 돌 때의 상한 · 하한이 아니다.
 - §5.3 의 58 시간은 가정 산술이다. 새 10 경우 · 종류별 · 1.5 속도 · 영상 · DR 의 실제 소요는 **미측**.
 - 후보 30 개 중 「기록」 축의 정상/이상 정의와 폭은 전부 미고정이다. 이 문서는 문턱을 만들지 않는다.
-- 이 문서는 EX-35 m2000 판정(카드 v1.0 §4b, lead 01:2x 「v0.9 판정표로 고정」) 을 바꾸지 않는다. 종류별 칸은 m2250 창부터(lead 02:1x).
+- 이 문서는 EX-35 m2000 판정(카드 v1.0 §4b, lead 01:2x 「v0.9 판정표로 고정」) 을 바꾸지 않는다. 종류별 칸은 m2250 창부터 기록(lead 02:1x), 판정 전환은 GATE-v3 §4a.
 
-## 9. verifier 검증 요청 (lead 01:5x 「verifier 가 이 v2 를 검증한 뒤 lead 가 팀장에게」)
+## 9. 검증 요청 (lead 01:5x; verifier 대신 reviewer 가 W06 으로 검증 끝: 맞음 6 · 부분 2(태그 73 · 불가 개수) · 막음 0 · 고침 5 · 참고 6, `REVIEW-W06-dedc8f60.md`, v0.3 에 반영)
 
 1. §1 표의 「planner 재측」 칸 10 곳: 코드 줄 · 시각 차 · 배정 해시 · npz 키.
 2. §3 「지금 자료」 열: npz 14 키 · tfevents 태그 · jsonl 키가 실제와 맞는지(부모 run 폴더).
@@ -190,9 +194,10 @@ MVP 때는 「험지 16 지형을 세 속도로 건너는 성공률」 과 「�
 
 **운영 선택 셋(analyst §6 권고에 planner 동의)**: (1) 기존 묶음 유지 점검과 새 능력 졸업 증거를 분리(§6 표) (2) 종류별 n 과 실현 수를 먼저 정하고 비용을 센다(64 혼합 분할은 탐색용, 보증 아님) (3) 표본 주기는 달력이 아니라 승급 · 채택 전 확인 + 예산 안 순환.
 
-**남은 갈림길**: (a) 1.5 속도를 매 창 넣나, 정본 채택 때만 넣나 (b) 점검 행 = 「현재 · 다음 · 쉬운 유지」 안 채택 여부 (c) 순환 탐색 예산(저장본당 분) (d) X27j 범위 (1) 기록 → (2) 종류별 가림 → (3) 지도 오차 순서 승인. (e) 종류별 적용 시작 창은 lead 02:1x 가 m2250 으로 정함(팀장 확인).
+**남은 갈림길**: (a) 1.5 속도를 매 창 넣나, 정본 채택 때만 넣나 (b) 점검 행 = 「현재 · 다음 · 쉬운 유지」 안 채택 여부 (c) 순환 탐색 예산(저장본당 분) (d) X27j 범위 (1) 기록 → (2) 종류별 가림 → (3) 지도 오차 순서 승인. (e) 종류별 기록 시작 창은 lead 02:1x 가 m2250 으로 정함, 판정 전환 조건은 GATE-v3 §4a(팀장 확인).
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.3 | 2026-10-28 | reviewer W06(dedc8f60 검증) 고침 1~5 · 참고 1~6: 지도 소비 확인 칸은 eval_pred 와 가림을 못 가름(§2 조건 4) · 관측 잡음 켬 명시(§2 조건 5 · §4 · 후보 20, 사슬 하네스는 `load_cfg_from_registry` 그대로) · 「평지」 → 경사 L0 · rough L0(후보 6 · 9 · 22) · 종류별 칸 m2250 부터 기록, 판정은 GATE-v3 §4a(후보 3 · §6 · §8 · §10) · 후보 31~33 추가 · 13 · 14 정의 고침 · 11 · 12 · 14 경고 → 기록 · 줄 번호 · 태그 73 · 기준 커밋 07fc5e73 |
 | v0.2 | 2026-10-27 | analyst 막음 A~E · 여섯 답 반영(§1, planner 재측 표시) · 조건 차원 5 + 측정 축 8 분리(§2) · **축 후보 30 개 분류**(§3, 필수 · 유지 · 기록 · 불가 + 근거) · 값 칸 고침(§4: 1.5 · 0.3, 난도 행과 실현 구분, 10 경우, 모드 3 + 대조 정책, DR 끔 명시) · 비용을 실행 묶음 단위로 재계산(§5: 26:42 · 5:50 · 4:05 · 3:54 · 2:25, 필수 약 37 분, 전 교차 58 h 가정) · 단계별 주장 → 교차 표(§6) · X27j 요구(§7) · verifier 요청 8(§9) · 팀장 사실 5 · 선택 3 · 갈림길(§10). v0.1 의 140 h · 73 분 · 12 h · 20 h · 「1.5 범위 밖」 · 「none 네 번째 모드」 · 「32 칸 축 3」 폐기 |
 | v0.1 | 2026-10-27 | 첫 초안: 여덟 차원 · 값의 칸 · 축별 정의 · 폭 · 소비 코드 · 비용 · 전 교차 140 시간 추정 · 필수 교차 73 분 · 표본 교차 A 12 시간 · B 20 시간 · 단계별 판정 · 유지 · 기록 축 · analyst 요청 6 · 갈림길 5 |
