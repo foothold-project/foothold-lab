@@ -348,7 +348,11 @@ def terrain_text(meta: dict | None) -> tuple[str, str]:
     task = meta.get("task_selection") or {}
     kind = task.get("terrain_type") or task.get("terrain_generator") or meta.get("scene", "?")
     diff = task.get("difficulty")
-    return str(kind), (f"난도 {float(diff):.2f}" if diff is not None else "-")
+    if diff is None:
+        return str(kind), "-"
+    # curriculum rows: difficulty = (row + U(0,1)) / num_rows over range (0, 1), num_rows 10 (Isaac Lab
+    # terrain_generator.py:52-58 · 261-262, training env.yaml difficulty_range 0..1) -> row = floor(10 d)
+    return str(kind), f"L{min(9, int(float(diff) * 10))} ({float(diff):.2f})"
 
 
 def scene_gauges(scene: np.ndarray, z, row: int, meta: dict | None = None) -> np.ndarray:
