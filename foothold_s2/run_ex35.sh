@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # EX-35 (S-B10 m1500 -> 회전 명령 과정 첫 판) 전용 기동 스크립트. run_sb.sh 는 1501 고정이라 쓰지 않는다.
 # 인자는 ex35_launch.py 가 정하고 validate_launch 로 검증하며 부모 SHA 를 카드와 대조한 뒤 영수증을 찍는다. 기동은 팀장 승인 뒤 lead 가 한다.
-# usage: run_ex35.sh <main|smoke2> <cuda:N> <model_1500.pt 경로>        (DRY=1 이면 영수증만 찍고 학습은 띄우지 않는다)
+# usage: run_ex35.sh <main|smoke2|extend|extend_smoke2|revert> <cuda:N> <부모 저장본 경로>   (main · smoke2 = model_1500.pt, extend · extend_smoke2 = model_2000.pt)
+#        DRY=1 이면 영수증만 찍고 학습은 띄우지 않는다. TO_ITER=<2001..3000> 은 extend 의 마지막 저장본 번호(기본 3000). revert 는 SEED=<43|44|45>(기본 43) · PARENT_SHA=<판정 파일이 가리키는 저장본 sha256>(기본 m1500) 를 받는다.
 set -u
 KIND="$1"; DEV="$2"; PARENT="$3"
 ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311
@@ -16,9 +17,9 @@ OUT="$ROOT/logs_gate/ex35_${KIND}_${STAMP}"
 mkdir -p "$OUT"
 git rev-parse HEAD > "$OUT/git_head.txt"
 git status --short foothold_s2 > "$OUT/git_status.txt"
-PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" > "$OUT/launch_receipt.json" || { echo "거절: 인자 영수증 실패"; exit 4; }
+PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" ${TO_ITER:+--to-iter "$TO_ITER"} ${SEED:+--seed "$SEED"} ${PARENT_SHA:+--parent-sha "$PARENT_SHA"} > "$OUT/launch_receipt.json" || { echo "거절: 인자 영수증 실패"; exit 4; }
 cat "$OUT/launch_receipt.json"
-mapfile -t ARGS < <(PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" --print-args | tr -d '\r')
+mapfile -t ARGS < <(PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.ex35_launch "$KIND" "$DEV" "$PARENT" --end-by "$END_BY" ${TO_ITER:+--to-iter "$TO_ITER"} ${SEED:+--seed "$SEED"} ${PARENT_SHA:+--parent-sha "$PARENT_SHA"} --print-args | tr -d '\r')
 [ "${#ARGS[@]}" -gt 0 ] || { echo "거절: 인자 목록이 비었다"; exit 5; }
 : > "$OUT/launch_argv_repr.txt"
 for A in "${ARGS[@]}"; do

@@ -16,7 +16,13 @@ FORCE_GT = {"B": True, "TopDown": False, "SB": True}
 CKPT_VARIANT = {"B": "B_friction_only", "TopDown": "START_TopDown", "SB": "SB_map_switch"}
 
 
+REVERT_SEEDS = (43, 44, 45)                                    # 되돌림 판 전용 새 시드(원 시드 42 와 겹치지 않게; 가정, lead 확인 대기)
 EXTEND_MAX_ITERATIONS = 3001                                    # 이어 가기 판 총 회차 상한(부모 회차 + N 의 N 은 resume_budget 이 따로 1..1500 으로 잰다)
+# EX-35 계열(이어 가기 총 회차 > 1501, 또는 s2a 의 smoke 2)이 부모로 받는 저장본: sha256 -> 그 저장본의 회차. 손 명령(train_sb.py 직접)도 이 표를 통과해야 한다(W19).
+RESUME_PARENTS = {
+    "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d": 1500,      # S-B10 model_1500.pt (EX-35 main · smoke2)
+    "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548": 2000,      # EX-35 model_2000.pt (extend · extend_smoke2)
+}
 COMMAND_MODES = ("start", "s2a")
 COMMAND_CONTRACT = {"start": "start", "s2a": "walkturn_v1"}
 
@@ -53,7 +59,37 @@ def command_settings(args) -> dict:
     return {"command_mode": mode, "command_contract": COMMAND_CONTRACT[mode], "clock_scatter": getattr(args, "clock_scatter", None) == "on"}
 
 
-def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
+def file_sha256(path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+
+    return h.hexdigest()
+
+
+def check_resume_parent(args) -> int:
+    """이어 가기 부모 저장본의 sha256 을 RESUME_PARENTS 와 대조하고 그 회차를 돌려준다. 이어 가기 총 회차는 부모 회차 뒤 1 회 이상이어야 한다(0 회 판 거절)."""
+    path = getattr(args, "resume_from", None)
+
+    if not path or not Path(path).is_file():
+        raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
+    sha = file_sha256(path)
+
+    if sha not in RESUME_PARENTS:
+        raise ValueError(f"--resume_from 저장본의 sha256 이 허용표에 없다: {sha}")
+    parent_iter = RESUME_PARENTS[sha]
+
+    if getattr(args, "smoke_updates", None) is None:
+        resume_budget(int(args.max_iterations), parent_iter)                     # 남은 회차 1..1500 (0 회 · 너무 긴 판 거절)
+
+    return parent_iter
+
+
+def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent: bool = True) -> float:
+    """verify_parent=False 는 CPU 시험 전용(가짜 경로). 실제 기동(train_sol23f_common)은 기본값 True 로 부른다."""
     if args.variant not in TASKS or args.task != TASKS[args.variant]:
         raise ValueError("variant and task do not match")
     if args.agent != "rsl_rl_cfg_entry_point" or hydra_args:
@@ -84,6 +120,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
         raise ValueError("--command_mode s2a / --clock_scatter on need --resume_from and --max_iterations above 1501 (otherwise 0 updates run and the run ends as done)")
     if cm == "s2a" and getattr(args, "smoke_updates", None) == 10:
         raise ValueError("s2a command mode starts from a parent checkpoint: use --resume_from (smoke 2) or the main resume")
+    if verify_parent and args.variant == "SB" and (is_extended_resume(args) or (getattr(args, "smoke_updates", None) == 2 and cm == "s2a")):
+        check_resume_parent(args)
     if args.variant in BUDGET_VARIANTS:
         smoke = getattr(args, "smoke_updates", None)
         if args.variant == "B":
@@ -100,8 +138,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None) -> float:
                 raise ValueError("SB 2-update smoke needs --resume_from the 10-update smoke checkpoint")
             if p_off is not None and not 0.0 < float(p_off) < 1.0:
                 raise ValueError("p_map_off must be inside (0, 1)")
-        if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
-            raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs")
+        if args.num_envs not in (None, 3072) or not (args.seed in (None, 42) or (args.seed in REVERT_SEEDS and is_extended_resume(args))):
+            raise ValueError(f"{args.variant} is pinned to seed 42 (a resume run may use one of {REVERT_SEEDS}) and 3072 envs")
         if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= EXTEND_MAX_ITERATIONS):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
     elif getattr(args, "smoke_updates", None) is not None:
