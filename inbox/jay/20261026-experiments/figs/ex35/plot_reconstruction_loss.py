@@ -50,18 +50,31 @@ def render(parent_events: Path, ex35_events: Path, excluded_events: Path, output
         (tag, label, read_scalar(parent_events, tag, 0, 1500), read_scalar(ex35_events, tag, 1501, 2000))
         for tag, label in TAGS
     ]
-    fig, axes = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.23, hspace=0.34)
-    for ax, (tag, label, parent, ex35) in zip(axes, series, strict=True):
-        ax.plot(range(0, 1501), parent, color="#275d79", lw=1.3, label="S-B10 parent")
-        ax.plot(range(1501, 2001), ex35, color="#c15c32", lw=1.5, label="EX-35 continuation")
-        ax.axvline(1500.5, color="#444444", lw=0.9, ls=":")
-        ax.set_ylabel("Logged loss")
-        ax.set_title(f"{label}  ({tag})", loc="left", fontsize=11)
-        ax.grid(alpha=0.2)
-        ax.legend(loc="best")
-    axes[-1].set_xlabel("TensorBoard training step")
-    axes[-1].set_xlim(0, 2000)
+    fig, axes = plt.subplots(2, 2, figsize=(16, 8.5))
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.89, bottom=0.22, hspace=0.36, wspace=0.16)
+    for row, (tag, label, parent, ex35) in enumerate(series):
+        zoom = parent[11:] + ex35
+        assert zoom, f"{tag}: no values after step 10"
+        low, high = min(zoom), max(zoom)
+        margin = max((high - low) * 0.06, 1e-6)
+        for col, ax in enumerate(axes[row]):
+            ax.plot(range(0, 1501), parent, color="#275d79", lw=1.3, label="S-B10 parent")
+            ax.plot(range(1501, 2001), ex35, color="#c15c32", lw=1.5, label="EX-35 continuation")
+            ax.axvline(1500.5, color="#444444", lw=0.9, ls=":")
+            ax.set_title(
+                f"{label}  ({tag})" if col == 0 else "After step 10: expanded vertical scale",
+                loc="left", fontsize=10,
+            )
+            ax.set_ylabel("Logged loss")
+            ax.grid(alpha=0.2)
+            if col == 0:
+                ax.set_xlim(0, 2000)
+                ax.legend(loc="best", fontsize=8)
+            else:
+                ax.set_xlim(11, 2000)
+                ax.set_ylim(low - margin, high + margin)
+    for ax in axes[-1]:
+        ax.set_xlabel("TensorBoard training step")
     fig.suptitle("Map reconstruction losses: S-B10 to EX-35", fontsize=14)
     fig.text(
         0.08, 0.08,
