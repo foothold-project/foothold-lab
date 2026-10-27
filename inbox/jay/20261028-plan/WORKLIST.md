@@ -30,6 +30,10 @@
 - D11 super2 원장 훅 셋 · mai-ledger 10 분 push · orchestration 알림 방향 ok, 단 lead 채팅이 밀려 올라가지 않게. coordinator 를 셸 창으로 옮김 승인, 시험 run 먼저 (10/28 03:5x) · 키워드: 원장 훅 승인 | coordinator 옮길지
 - D12 지형 종류별 결과는 기록이지만 「점점 나아지는지」 추세를 점수표에서 본다(목표: 어느 지형이든 잘 걷기) (10/28 03:5x) · 키워드: 종류별 필수
 
+- D13 오늘 밤 학습 승인: EX-35 m2000 → m3000 같은 조건 이어 학습 (10/28 04:2x, 원문은 mai-os 원장). 이 한 판만. 다른 새 학습은 다시 승인 · 키워드: 이어 학습 할지 | m3000 까지
+- D14 잡음 평가: 주 평가는 관측 잡음 켬으로 고정(학습 · 실기 · 과거 자료와 같은 조건), 잡음 끔은 기록 축, 나중에 잡음 크기 축(0 · 0.5 · 1 · 2 배) (10/28 04:2x) · 키워드: 잡음 끄고 평가 | 잡음 켬 고정할지
+- D15 밤 운영에서 넘김 · 평평이 나와도 상한(m3000)까지 같은 조건 계속, 기록하고 아침 보고. 안전 축 미달은 W17 v0.2 표대로 lead 가 영상 판독 뒤 선택(아침 팀장 재판독) (10/28 04:2x) · 키워드: 넘김 평평 밤
+
 ## 팀장 의견 (결정 아님 · 논의 때 출발점)
 
 - 밤사이에는 「멈춤 + 영상 판독 + 사람 선택」 의 사람 선택을 lead 가 미리 정한 기준표로 대신해 실험이 멈추지 않게 (10/28 03:5x) → W17
@@ -59,6 +63,10 @@
 | W16 | orchestration 알림이 팀장 입력 중에 lead 창으로 들어오는 문제 조사 · 고침 | super2 | - | 끝 04:14: coordinator = 셸 창 mailbox(term_a5d996e2), lead 는 UserPromptSubmit 훅 맥락 + `_out/msgs/inbox_wait.py`(읽기만, 시험 통과)로 받음. 되돌리기 `orca orchestration run-use --id run_abb2e12cee32` |
 | W17 | 밤 자동 선택 기준표: 안전 축 HOLD 때 lead 가 무엇을 보고 무엇을 고르나(계속 · 처방하고 계속 · 되돌림) | planner → reviewer 1 회 | W05 v0.5 | 의뢰 |
 | W19 | EX-35 m2000 → m3000 같은 조건 이어 학습 기동 경로: ex35_launch extend kind + validate_launch 부모 sha 검사(W17 reviewer 막음) | sonnet-code → reviewer 1 회 | - | 의뢰 04:16 · 기동은 팀장 승인 뒤 |
+| W09b | 오늘 밤 이어 학습(D13): W19 검수 → CPU 시험 → 8 env 예행 → 본 기동(GPU0, W03 끝난 뒤) → 첫 update · 첫 사슬 평가 확인 → 50 회마다 사슬(GPU1 우선, 촬영은 빈틈에) | sonnet-code · lead 확인 | W19 | 승인됨 04:2x |
+| W20 | 500 회 점수표 코드(GATE-v3 v0.5 · D12 종류별 추세 칸) | sonnet-code → reviewer | W03 | 대기 |
+| W21 | 처방 재개 경로(`wt_p_*` 인자 + 재개 첫 회차 사건) | sonnet-code → reviewer | W19 | 대기 |
+| W22 | 깃발 학습 슬롯(D02, 다음 판 EX-36 = C1b 10 %) | sonnet-code → reviewer | W04 · W19 | 대기 |
 | W18 | 단계(stage) 목록 확정과 코드 구현 상태 점검: 단계 순서 · 각 단계 명령 구성 · 자동 전환 장치 유무 | planner | - | 의뢰 · W14 의 앞 일 |
 
 ## W01 계기판 v8
