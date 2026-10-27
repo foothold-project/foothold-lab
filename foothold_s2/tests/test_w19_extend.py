@@ -163,3 +163,23 @@ def test_revert_cli_prints_args(capsys):
     assert L.main(["revert", "cuda:0", str(M1500), "--to-iter", "2000", "--print-args", "--end-by", END]) == 0
     out = capsys.readouterr().out.split()
     assert "43" in out and "2001" in out
+
+
+def test_parent_sha_and_seed_options_are_revert_only_and_revert_parent_is_m1500_only():
+    for kind, parent in (("extend", M2000), ("main", M1500)):
+        for kw in ({"parent_sha": L.PARENT_SHA256}, {"parent_sha": L.EXTEND_PARENT_SHA256}, {"seed": 44}):
+            with pytest.raises(ValueError, match="revert 전용"):
+                L.build_args(kind, "cuda:0", str(parent), END, **kw)
+    ok = L.build_args("extend", "cuda:0", str(M2000), END)
+    with pytest.raises(ValueError, match="revert 전용"):
+        L.receipt("extend", ok, str(M2000), parent_sha=L.PARENT_SHA256)            # 리뷰 반례: extend + m1500 sha
+    with pytest.raises(ValueError, match="revert 의 부모 sha"):
+        L.build_args("revert", "cuda:0", str(M2000), END, parent_sha=L.EXTEND_PARENT_SHA256, to_iter=3000)   # m2000 은 되돌림 부모가 아니다
+    d = L.build_args("revert", "cuda:0", str(M1500), END)                          # 기본 to_iter 3000
+    assert d[d.index("--max_iterations") + 1] == "3001"
+    assert L.receipt("revert", d, str(M1500))["remaining_updates"] == 1500
+
+
+def test_cli_rejects_parent_sha_for_extend():
+    with pytest.raises(ValueError, match="revert 전용"):
+        L.main(["extend", "cuda:0", str(M2000), "--parent-sha", L.PARENT_SHA256, "--print-args", "--end-by", END])

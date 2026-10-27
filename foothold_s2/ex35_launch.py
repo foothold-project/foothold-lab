@@ -25,6 +25,17 @@ PARENT_BY_KIND = {"main": (PARENT_SHA256, PARENT_ITER), "smoke2": (PARENT_SHA256
                   "extend": (EXTEND_PARENT_SHA256, EXTEND_PARENT_ITER), "extend_smoke2": (EXTEND_PARENT_SHA256, EXTEND_PARENT_ITER),
                   "revert": (PARENT_SHA256, PARENT_ITER)}     # revert 의 기본 부모(판정 파일이 다른 허용 저장본을 가리키면 parent_sha 로 바꾼다)
 REVERT_DEFAULT_SEED = REVERT_SEEDS[0]
+REVERT_PARENTS = {PARENT_SHA256: PARENT_ITER}    # 되돌림 허용 부모(직전 PASS 저장본). extend 의 부모 m2000 은 넣지 않는다: HOLD 저장본에서 시드만 바꾼 계속이 되기 때문
+assert all(sha in RESUME_PARENTS and RESUME_PARENTS[sha] == it for sha, it in REVERT_PARENTS.items())
+
+
+def check_kind_options(kind, parent_sha=None, seed=None):
+    """--parent-sha · --seed 는 revert 전용이다. 다른 kind 에 주면 조용히 무시하거나 부모가 바뀌지 않게 거절한다."""
+    if kind != "revert":
+        if parent_sha is not None or seed is not None:
+            raise ValueError(f"--parent-sha · --seed 는 revert 전용이다({kind} 에는 줄 수 없다)")
+    elif parent_sha is not None and parent_sha not in REVERT_PARENTS:
+        raise ValueError(f"revert 의 부모 sha 는 {sorted(REVERT_PARENTS)} 중 하나여야 한다: {parent_sha}")
 assert all(sha in RESUME_PARENTS and RESUME_PARENTS[sha] == it for sha, it in PARENT_BY_KIND.values())
 
 
@@ -42,6 +53,7 @@ def build_args(kind, device, parent, end_by, parent_sha=None, to_iter=EXTEND_MAX
     extend = m2000 -> m<to_iter> (같은 env · 명령 구성 · 시드 · 흩기 · 판정 인자, 총 회차 = to_iter + 1, to_iter 2001..3000), extend_smoke2 = m2000 에서 2 회."""
     if kind not in KINDS:
         raise ValueError(f"kind must be one of {KINDS}")
+    check_kind_options(kind, parent_sha, seed)
     common = ["--headless", "--device", device, "--num_envs", "3072", "--seed", str(seed if kind == "revert" and seed is not None else REVERT_DEFAULT_SEED if kind == "revert" else 42), "--run_name", "ex35-s2a", "--end-by", end_by, "--max-wall-s", "86400",
               "--resume_from", parent, "--command_mode", "s2a", "--clock_scatter", "on", "--p_map_off", "0.1",
               "--judge_world_frame", "on", "--judge_mask_new_task", "off"]
@@ -56,7 +68,7 @@ def build_args(kind, device, parent, end_by, parent_sha=None, to_iter=EXTEND_MAX
         return common + ["--max_iterations", str(int(to_iter) + 1)]
 
     if kind == "revert":
-        p_iter = RESUME_PARENTS[parent_sha or PARENT_BY_KIND["revert"][0]]
+        p_iter = REVERT_PARENTS[parent_sha or PARENT_SHA256]
         if not p_iter < int(to_iter) <= EXTEND_MAX_TO_ITER or int(to_iter) - p_iter > 1500:
             raise ValueError(f"revert 의 to_iter 는 {p_iter + 1}..{min(p_iter + 1500, EXTEND_MAX_TO_ITER)} 이어야 한다: {to_iter}")
         if str(common[common.index("--seed") + 1]) == "42" or int(common[common.index("--seed") + 1]) not in REVERT_SEEDS:
@@ -85,9 +97,10 @@ def receipt(kind, args, parent, check_sha=True, parent_sha=None) -> dict:
                          max_wall_s=float(pairs["max-wall-s"]), end_by=pairs["end-by"], num_envs=int(pairs["num_envs"]), seed=int(pairs["seed"]),
                          max_iterations=int(pairs["max_iterations"]), smoke_updates=int(pairs["smoke-updates"]) if "smoke-updates" in pairs else None,
                          resume_from=pairs["resume_from"], p_map_off=float(pairs["p_map_off"]), command_mode=pairs["command_mode"], clock_scatter=pairs["clock_scatter"])
+    check_kind_options(kind, parent_sha, None)
     parent_sha_default, parent_iter = PARENT_BY_KIND[kind]
     parent_sha = parent_sha or parent_sha_default
-    parent_iter = RESUME_PARENTS.get(parent_sha, parent_iter) if kind == "revert" else parent_iter
+    parent_iter = REVERT_PARENTS[parent_sha] if kind == "revert" else parent_iter
     validate_launch(ns, verify_parent=check_sha)
     actual = sha256_file(parent) if check_sha else None
 
