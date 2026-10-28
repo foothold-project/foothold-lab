@@ -36,6 +36,10 @@
 
 - D16 단계표 결정 1~4 는 lead 의견대로(깃발 15 · 20 % 는 planner 배치를 임시로 · 다음 판은 깃발 하나만 · 넘김 · 평평은 밤에 상한까지 계속 · 코드 순서 W19 → W20 → W21 → W22). 단 planner 배치로 정해지는 것은 다시 팀장 검토. 커리큘럼 문서는 지금 안으로 먼저 쓰고 planner 의견으로 고쳐 간다 (10/28 04:3x) · 키워드: 깃발 배치 확정 | 옆 후진 언제
 
+- D17 GATE-v3 v0.5 §10.2: 2 (가) δ 규칙 · 3 전진 거리 교환 가능 · 4 처방 비율은 새 과제 쪽에서 반씩(실측 뒤 조정, 조건부) · 10 이동 축은 사람 판독 · 11 회전 평가 64 마리는 비용 잰 뒤 · 12 저장본 단독 조건 그대로 · 13 안전 축 1 회 미달 = 멈춤 + 영상 판독 + 선택, 2 회 = 되돌림 · 15 (a) 다음 단계 승급 불가 · 같은 조건 계속 허용 (10/28 14:0x). 16 · 17 은 설명 뒤 결정 · 키워드: δ 규칙 정할 | 안전 축 동작 정할
+- D18 커리큘럼 v0.4 방향 진행 (10/28 14:0x) · 키워드: 커리큘럼 방향
+- D19 기본 명령(제자리 회전 포함)을 먼저 잘 하게 만든 뒤 듬성 지형 · 도메인 무작위화로 넘어간다 (팀장 10/28 14:0x 의견, lead 동의) · 키워드: 듬성 먼저 | 회전 나중
+
 ## 팀장 의견 (결정 아님 · 논의 때 출발점)
 
 - 밤사이에는 「멈춤 + 영상 판독 + 사람 선택」 의 사람 선택을 lead 가 미리 정한 기준표로 대신해 실험이 멈추지 않게 (10/28 03:5x) → W17
@@ -67,7 +71,12 @@
 | W23 | 커리큘럼 문서 v0.4 (지금 안: STAGES-AND-NIGHT-RULES v0.2 단계표 + D01~D16) · 팀장 검토 칸 표시 · planner 의견으로 갱신 | planner | - | 끝 04:5x · `fable-25a/inbox/jay/20261026-experiments/CURRICULUM-GATES.md` v0.4 (98dae623) · 검토 전 칸은 팀장 검토 |
 | W19 | EX-35 m2000 → m3000 같은 조건 이어 학습 기동 경로: ex35_launch extend kind + validate_launch 부모 sha 검사(W17 reviewer 막음) | sonnet-code → reviewer 1 회 | - | 의뢰 04:16 · 기동은 팀장 승인 뒤 |
 | W09b | 오늘 밤 이어 학습(D13): W19 검수 → CPU 시험 → 8 env 예행 → 본 기동(GPU0, W03 끝난 뒤) → 첫 update · 첫 사슬 평가 확인 → 50 회마다 사슬(GPU1 우선, 촬영은 빈틈에) | sonnet-code · lead 확인 | W19 | 띄움 05:00:23 lead(run_ex35.sh extend cuda:0, impl-w19/logs_gate/ex35_extend_20261028_050023) · 첫 update 05:01:28(2001~2003, 24.6 s/회 = 원 EX-35 와 같음) · 첫 사슬 평가 m2050 core end ok 05:37:34(833 s, impl-turncases/logs/ex35ext_eval/chain2.log, v0.9 판정 MAINTAIN_FAIL = 기록만 · D15) · 끝 11:47:37 rc=0 · TRAIN_START_STATUS done · Traceback 0 · model_3000.pt 생김. 사슬: m2900 STOP(64 env 회전 생존 39 < 48) · m2700 · m2750 회전 중 생존 하락 → planner GATE-v3 재계산 · 넘어짐 영상 판독 대기 |
-| W24 | train_start.py · 확장 아닌 이어 가기(start · 1501 · smoke2 start) 경로도 부모 검사 안에 넣기(W19 reviewer 참고) | sonnet-code → reviewer | W19 | 아침 |
+| W24 | 모든 학습 기동 길에 부모 저장본 확인 넣기: train_start.py · start · 1501 · smoke2 start 로 띄워도 부모 sha 검사 · 영수증이 남게(W19 reviewer 참고) | sonnet-code → reviewer | W19 | 아침 |
+| W03b | EX-35 m3000 을 W03 과 같은 평가 묶음 · 촬영 묶음으로(세 정본 표에 네 번째 열) | sonnet-code | 사슬 · 재현 끝 | 대기 |
+| W25 | 단계 자동 전환기: 판정이 넘김이면 다음 단계 명령 구성으로 다시 기동(10,000 회 연속 학습의 핵심) | planner 명세 → sonnet-code → reviewer | W20 · W27 | 대기 |
+| W27 | 정본 기록부(canon registry): 팀장이 정한 정본 · 단계 · 부모 sha 를 한 파일에, 기동기 · 평가 · 촬영 대기열이 그것을 읽는다(실험마다 코드를 고치지 않게) | planner 명세 → sonnet-code | - | 대기 |
+| W28 | GPU 작업 대기열 하나로: 사슬 평가 · 재현 · 촬영 · 합성을 등록만 하면 우선순위대로 돌고, 영상은 끝난 뒤 제목 · 판정 · 화면 점검 스크립트, 에이전트는 이상 칸만 판독 | scripter(Codex, 16:00 뒤) → reviewer | - | 대기 |
+| W29 | EX-35 연장(m2050~m3000) 결과 문서 RESULT 9 절 형식 + 회전 흔들림 원인 분석 · 다음 설계 의견 | analyst(Codex, 16:00 뒤) + planner 의견 | 재현 R · 넘어짐 영상 판독 | 대기 |
 | W20 | 500 회 점수표 코드(GATE-v3 v0.5 · D12 종류별 추세 칸) | sonnet-code → reviewer | W03 | 대기 |
 | W21 | 처방 재개 경로(`wt_p_*` 인자 + 재개 첫 회차 사건) | sonnet-code → reviewer | W19 | 대기 |
 | W22 | 깃발 학습 슬롯(D02, 다음 판 EX-36 = C1b 10 %) | sonnet-code → reviewer | W04 · W19 | 대기 |
