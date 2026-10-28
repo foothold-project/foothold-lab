@@ -1,0 +1,587 @@
+[
+  {
+    "run_id": "0d5ba1e2181e",
+    "relative": "ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-22-25",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-22-25\\events.out.tfevents.1791444186.fb88149a1245.19702.0",
+        "sha256": "26dcfd258512f63503482ed6affeda3b348f4175378d421f3c5405f2ba2cac21"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-22-25\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-22-25\\params\\agent.yaml",
+    "first": 0,
+    "last": 2,
+    "n": 3
+  },
+  {
+    "run_id": "df8fd82eb54e",
+    "relative": "ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-41-26",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-41-26\\events.out.tfevents.1791445341.fb88149a1245.20206.0",
+        "sha256": "a49b03aca8f1267da22fe7253eee6bee6c2c7ca0e30061f4183b063150e2ff21"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-41-26\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\_runs\\logs\\rsl_rl\\ame2_gaze\\2026-10-08_07-41-26\\params\\agent.yaml",
+    "first": 0,
+    "last": 5,
+    "n": 6
+  },
+  {
+    "run_id": "08702edb9a88",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_05-27-05_ab_standard",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_05-27-05_ab_standard\\events.out.tfevents.1791523658.fb88149a1245.53565.0",
+        "sha256": "604cf46de4f6f9c754e2eefc41ce6b5735223ba41a93e07f3f687234483be528"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_05-27-05_ab_standard\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_05-27-05_ab_standard\\params\\agent.yaml",
+    "first": 0,
+    "last": 2999,
+    "n": 3000
+  },
+  {
+    "run_id": "f6b0e11c4fc3",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_12-44-06_ab_easystart",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_12-44-06_ab_easystart\\events.out.tfevents.1791549885.fb88149a1245.58005.0",
+        "sha256": "e5dfefd325e2cb08a197d33e11b71716d2944eeeeef221dff808636fcdfb2ca2"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_12-44-06_ab_easystart\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_12-44-06_ab_easystart\\params\\agent.yaml",
+    "first": 0,
+    "last": 2999,
+    "n": 3000
+  },
+  {
+    "run_id": "c6c3c1990b20",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_20-10-10_stage2a_main",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_20-10-10_stage2a_main\\events.out.tfevents.1791576734.fb88149a1245.68632.0",
+        "sha256": "c88f35f571b47147a6be60f5089d26d9b98941ec00bcc29e5b3675159a4d29a0"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_20-10-10_stage2a_main\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-09_20-10-10_stage2a_main\\params\\agent.yaml",
+    "first": 3000,
+    "last": 9999,
+    "n": 7000
+  },
+  {
+    "run_id": "d2693572b54f",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_13-14-14_emademote",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_13-14-14_emademote\\events.out.tfevents.1791638084.fb88149a1245.119324.0",
+        "sha256": "f42008411b0f0138946ed137dbc701de669be1f75eb8390973bf5e3d7be44592"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_13-14-14_emademote\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_13-14-14_emademote\\params\\agent.yaml",
+    "first": 3000,
+    "last": 5999,
+    "n": 3000
+  },
+  {
+    "run_id": "e1fcd29631bc",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_20-20-47_ctrl6000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_20-20-47_ctrl6000\\events.out.tfevents.1791663677.fb88149a1245.123793.0",
+        "sha256": "2bae2cba2c2da5c7d86cac66570be786b8c119acecf35458b1a8fcb196f2eeb8"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_20-20-47_ctrl6000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-10_20-20-47_ctrl6000\\params\\agent.yaml",
+    "first": 3000,
+    "last": 4348,
+    "n": 1349
+  },
+  {
+    "run_id": "0a68113cd82c",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_05-26-43_bal_ctrl_r1",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_05-26-43_bal_ctrl_r1\\events.out.tfevents.1791696436.fb88149a1245.142950.0",
+        "sha256": "5d83e00f7b3d40d4dcb9503599f947d2d809042f17774c5c94f7285f1fa3c2ee"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_05-26-43_bal_ctrl_r1\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_05-26-43_bal_ctrl_r1\\params\\agent.yaml",
+    "first": 4001,
+    "last": 5999,
+    "n": 1999
+  },
+  {
+    "run_id": "b0f5239787ff",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_10-21-44_bal_ema_r1",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_10-21-44_bal_ema_r1\\events.out.tfevents.1791714134.fb88149a1245.148719.0",
+        "sha256": "a8e4295179b67b332943fc80019a584b505ae20d13d02d128ced465b02c84d05"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_10-21-44_bal_ema_r1\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_10-21-44_bal_ema_r1\\params\\agent.yaml",
+    "first": 4001,
+    "last": 5999,
+    "n": 1999
+  },
+  {
+    "run_id": "0e223253677f",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_15-35-10_main15k_r1",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_15-35-10_main15k_r1\\events.out.tfevents.1791732941.fb88149a1245.154750.0",
+        "sha256": "b4e40f5d9d7378d40d84a8e8a7b007d8b94eab5ad4d3cde0249b59401223e69f"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_15-35-10_main15k_r1\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-11_15-35-10_main15k_r1\\params\\agent.yaml",
+    "first": 10000,
+    "last": 10334,
+    "n": 335
+  },
+  {
+    "run_id": "5af67d050a01",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_02-19-17_acc15k_r1",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_02-19-17_acc15k_r1\\events.out.tfevents.1791771591.29b9247c969f.9501.0",
+        "sha256": "cf7f0d73af8e0633754d40d515d61206135b93791111ae2081eea79ff29b3475"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_02-19-17_acc15k_r1\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_02-19-17_acc15k_r1\\params\\agent.yaml",
+    "first": 10000,
+    "last": 10942,
+    "n": 943
+  },
+  {
+    "run_id": "ac4124a2e3b9",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_17-00-33_s2k0_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_17-00-33_s2k0_s42\\events.out.tfevents.1791824470.29b9247c969f.83749.0",
+        "sha256": "219c2dc1108b1a6c21c0a73b62c626f4e16241f720702c415fe60f6f388e6e6b"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_17-00-33_s2k0_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_17-00-33_s2k0_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1999,
+    "n": 2000
+  },
+  {
+    "run_id": "0dc8253e1465",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_21-43-40_s2k1_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_21-43-40_s2k1_s42\\events.out.tfevents.1791841455.29b9247c969f.86791.0",
+        "sha256": "24a230c223d267a75acedcaf0c0d4f776c46b8ff6ed3b7ba0179b3dcfa28e663"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_21-43-40_s2k1_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-12_21-43-40_s2k1_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1999,
+    "n": 2000
+  },
+  {
+    "run_id": "ff9824f61fa3",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_06-49-24_c12_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_06-49-24_c12_s42\\events.out.tfevents.1791960620.2731a8715f97.29382.0",
+        "sha256": "978e62d339944577047ea2ab19b014bf0d8da5c306afc61c13acbfced4b1726f"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_06-49-24_c12_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_06-49-24_c12_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1999,
+    "n": 2000
+  },
+  {
+    "run_id": "d4522def6980",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_11-47-38_c16_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_11-47-38_c16_s42\\events.out.tfevents.1791978497.2731a8715f97.34880.0",
+        "sha256": "48b7730d15655a32cd23ffaef2952adcc00f3fb4353fc32921993c468cd3cdbf"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_11-47-38_c16_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_11-47-38_c16_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1999,
+    "n": 2000
+  },
+  {
+    "run_id": "673b185eba3f",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_18-27-53_mix_c12_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_18-27-53_mix_c12_s42\\events.out.tfevents.1792002525.2731a8715f97.42045.0",
+        "sha256": "883c812efa003f1d025b807ccef8215c98be92c8d008c6cf2956e31755186452"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_18-27-53_mix_c12_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-14_18-27-53_mix_c12_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1999,
+    "n": 2000
+  },
+  {
+    "run_id": "ade29e2253e0",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-15-11_smoke_nogap",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-15-11_smoke_nogap\\events.out.tfevents.1792037752.2731a8715f97.75048.0",
+        "sha256": "f3e48175c19f66395434e14f2bdc86a4312feb9da0399bf4679a13112d6be77e"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-15-11_smoke_nogap\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-15-11_smoke_nogap\\params\\agent.yaml",
+    "first": 0,
+    "last": 2,
+    "n": 3
+  },
+  {
+    "run_id": "29a477f8df24",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-43-28_nogap_c12_s42",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-43-28_nogap_c12_s42\\events.out.tfevents.1792039438.2731a8715f97.80660.0",
+        "sha256": "c6500be7d7826ab296bf361f895771a415ce113f6776d5aeb2f61904fec7d23a"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-43-28_nogap_c12_s42\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-15_04-43-28_nogap_c12_s42\\params\\agent.yaml",
+    "first": 0,
+    "last": 1038,
+    "n": 1039
+  },
+  {
+    "run_id": "83f311ade60b",
+    "relative": "ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-16_03-16-03_gap12a_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-16_03-16-03_gap12a_smoke\\events.out.tfevents.1792120631.2731a8715f97.155271.0",
+        "sha256": "b53834d20774246ce5808558990f3c4dfcb6df556111058e7806a700795215be"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-16_03-16-03_gap12a_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\_archive_20261019\\go2_gaze_teacher\\2026-10-16_03-16-03_gap12a_smoke\\params\\agent.yaml",
+    "first": 0,
+    "last": 29,
+    "n": 30
+  },
+  {
+    "run_id": "87aff28eb73f",
+    "relative": "ame2\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-15_14-40-29_nogap2_c12_s42_to6000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-15_14-40-29_nogap2_c12_s42_to6000\\events.out.tfevents.1792075274.2731a8715f97.126906.0",
+        "sha256": "78f9e8f77a68320cb497fc3975cc65809f80fafea4014dde63fcabb1678f36ad"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-15_14-40-29_nogap2_c12_s42_to6000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-15_14-40-29_nogap2_c12_s42_to6000\\params\\agent.yaml",
+    "first": 2000,
+    "last": 5999,
+    "n": 4000
+  },
+  {
+    "run_id": "33defb6b85f1",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-02-43_nogap9k_emademote_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-02-43_nogap9k_emademote_smoke\\events.out.tfevents.1792868589.c5226af51640.184877.0",
+        "sha256": "1cb065749847e974a7f11b2a95a81d38a5ae461324e656e496a3a9ed679ae578"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-02-43_nogap9k_emademote_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-02-43_nogap9k_emademote_smoke\\params\\agent.yaml",
+    "first": 9001,
+    "last": 9030,
+    "n": 30
+  },
+  {
+    "run_id": "c0dfa19a4267",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-07-16_nogap9k_klfp32_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-07-16_nogap9k_klfp32_smoke\\events.out.tfevents.1792868862.c5226af51640.185412.0",
+        "sha256": "308ce6de8473e81bb49efb6eb893d0287b93eeb2741801c3bec9eb4dc988ad78"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-07-16_nogap9k_klfp32_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-07-16_nogap9k_klfp32_smoke\\params\\agent.yaml",
+    "first": 9001,
+    "last": 9030,
+    "n": 30
+  },
+  {
+    "run_id": "c3d770168e6c",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-13-56_nogap9k_emademote_to15001",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-13-56_nogap9k_emademote_to15001\\events.out.tfevents.1792869262.c5226af51640.186046.0",
+        "sha256": "c7954ebb0782e844bef9a43471c1b4a1737cfcaa3564e6e5211a569f9104bfdf"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-13-56_nogap9k_emademote_to15001\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-24_19-13-56_nogap9k_emademote_to15001\\params\\agent.yaml",
+    "first": 9001,
+    "last": 15000,
+    "n": 6000
+  },
+  {
+    "run_id": "b03ec9c305f8",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-25_07-46-45_nogap9k_klfp32_to15001",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-25_07-46-45_nogap9k_klfp32_to15001\\events.out.tfevents.1792914431.c5226af51640.193618.0",
+        "sha256": "41d875bff91dca37bd103248c0a2e4ea113c5cda778e38cccc780e370bd1cbfe"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-25_07-46-45_nogap9k_klfp32_to15001\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-25_07-46-45_nogap9k_klfp32_to15001\\params\\agent.yaml",
+    "first": 9001,
+    "last": 15000,
+    "n": 6000
+  },
+  {
+    "run_id": "b89c9f17c350",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_01-51-42_nogap9k_klfp32_to20000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_01-51-42_nogap9k_klfp32_to20000\\events.out.tfevents.1792979528.c5226af51640.215582.0",
+        "sha256": "119c973dfd1378d7bb84b2338cd1646e906fb7fc9a0b9f269a35e1200dd15ed1"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_01-51-42_nogap9k_klfp32_to20000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_01-51-42_nogap9k_klfp32_to20000\\params\\agent.yaml",
+    "first": 15001,
+    "last": 15507,
+    "n": 507
+  },
+  {
+    "run_id": "865546d51560",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_03-18-14_nogap9k_klfp32_to20000_r2",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_03-18-14_nogap9k_klfp32_to20000_r2\\events.out.tfevents.1792984720.c5226af51640.225040.0",
+        "sha256": "3b95b414d3ccdba735b7f3d9bde27336e01f2ca38a02d16d3f689826c98f1c19"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_03-18-14_nogap9k_klfp32_to20000_r2\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_03-18-14_nogap9k_klfp32_to20000_r2\\params\\agent.yaml",
+    "first": 15501,
+    "last": 19999,
+    "n": 4499
+  },
+  {
+    "run_id": "d575691586b8",
+    "relative": "ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\failed1_2026-10-24_18-55-18_nogap9k_emademote_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\failed1_2026-10-24_18-55-18_nogap9k_emademote_smoke\\events.out.tfevents.1792868144.c5226af51640.183398.0",
+        "sha256": "7cb61c04fc47a83a2f2ab1e94c6032eb3d53e99339222c6c5ca89466ae1fd047"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\failed1_2026-10-24_18-55-18_nogap9k_emademote_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_br\\logs\\rsl_rl\\go2_gaze_teacher\\failed1_2026-10-24_18-55-18_nogap9k_emademote_smoke\\params\\agent.yaml",
+    "first": 9001,
+    "last": 9030,
+    "n": 30
+  },
+  {
+    "run_id": "840a7604c4a8",
+    "relative": "ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-00-21_dh1_9000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-00-21_dh1_9000\\events.out.tfevents.1792623647.c5226af51640.76999.0",
+        "sha256": "c4360189038e26d4dba89a1ddf08e0ca05bfc088a99faa237da274a339561c60"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-00-21_dh1_9000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-00-21_dh1_9000\\params\\agent.yaml",
+    "first": 9001,
+    "last": 9030,
+    "n": 30
+  },
+  {
+    "run_id": "f0ace318626c",
+    "relative": "ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-05-42_dh1_14000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-05-42_dh1_14000\\events.out.tfevents.1792623967.c5226af51640.77536.0",
+        "sha256": "b869be7f97355d80cecae280bacadba62aee2d3b4611e7eb2558a877c4b6a88a"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-05-42_dh1_14000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_dh1\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_23-05-42_dh1_14000\\params\\agent.yaml",
+    "first": 14001,
+    "last": 14030,
+    "n": 30
+  },
+  {
+    "run_id": "e6cb7dfb5e1a",
+    "relative": "ame2_es20\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-22_10-10-38_es20_c12_s42_m035",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_es20\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-22_10-10-38_es20_c12_s42_m035\\events.out.tfevents.1792663874.c5226af51640.115549.0",
+        "sha256": "acb68d6acc0d849ead11428fb9ae0c96b8afb06d6a0a1da555e42f7872403b18"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_es20\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-22_10-10-38_es20_c12_s42_m035\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_es20\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-22_10-10-38_es20_c12_s42_m035\\params\\agent.yaml",
+    "first": 0,
+    "last": 19999,
+    "n": 20000
+  },
+  {
+    "run_id": "110c01bd80a6",
+    "relative": "ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-32-54_nogap_fp32_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-32-54_nogap_fp32_smoke\\events.out.tfevents.1793086418.71bba97b0f21.8443.0",
+        "sha256": "a821e911529b2d2ca20cb40bb6a1850b1e7b88832b287fb3ded4227179212f2b"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-32-54_nogap_fp32_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-32-54_nogap_fp32_smoke\\params\\agent.yaml",
+    "first": 0,
+    "last": 29,
+    "n": 30
+  },
+  {
+    "run_id": "9d8b829c0cf3",
+    "relative": "ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000\\events.out.tfevents.1793086733.71bba97b0f21.11496.0",
+        "sha256": "30346ac121858909a140686978b7bef00fc90d0cc016b2afd84ea1d1f2e5b341"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000\\params\\agent.yaml",
+    "first": 0,
+    "last": 10427,
+    "n": 10428
+  },
+  {
+    "run_id": "4d05c8038a65",
+    "relative": "ame2_m035\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_07-27-45_nogap2_c12_s42_m035_to15001",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_m035\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_07-27-45_nogap2_c12_s42_m035_to15001\\events.out.tfevents.1792567690.c5226af51640.16597.0",
+        "sha256": "9ec84e9a52ad42811599f21d43cf9b70b458219106ea8798cd23a62419e05315"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_m035\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_07-27-45_nogap2_c12_s42_m035_to15001\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_m035\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-21_07-27-45_nogap2_c12_s42_m035_to15001\\params\\agent.yaml",
+    "first": 9001,
+    "last": 15000,
+    "n": 6000
+  },
+  {
+    "run_id": "06fb5c1cf3a1",
+    "relative": "ame2_nogap20k\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-16_19-16-42_nogap2_c12_s42_to20000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_nogap20k\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-16_19-16-42_nogap2_c12_s42_to20000\\events.out.tfevents.1792178245.2731a8715f97.190967.0",
+        "sha256": "daedec4820b571dbbcb3caf0b6ffc17a76f8ed0b2bfa4ae77d317ec32a781efe"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_nogap20k\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-16_19-16-42_nogap2_c12_s42_to20000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_nogap20k\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-16_19-16-42_nogap2_c12_s42_to20000\\params\\agent.yaml",
+    "first": 6000,
+    "last": 19999,
+    "n": 14000
+  },
+  {
+    "run_id": "19e2c441b50f",
+    "relative": "ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-52-30_nogapst5_vmax12_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-52-30_nogapst5_vmax12_smoke\\events.out.tfevents.1793116378.c5226af51640.274100.0",
+        "sha256": "94335249a125ad4a352f6ad7f046206bb07bb3de7c6cf02562fb65aa05aa756c"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-52-30_nogapst5_vmax12_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-52-30_nogapst5_vmax12_smoke\\params\\agent.yaml",
+    "first": 10000,
+    "last": 10029,
+    "n": 30
+  },
+  {
+    "run_id": "24f5a9d0307f",
+    "relative": "ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-57-27_nogapst5_vmax12_to15000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-57-27_nogapst5_vmax12_to15000\\events.out.tfevents.1793116674.c5226af51640.274618.0",
+        "sha256": "577542b587fe06ae5e692af2c4f509942d48fe88642c43d631b597e9cd35477b"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-57-27_nogapst5_vmax12_to15000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_spd\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_15-57-27_nogapst5_vmax12_to15000\\params\\agent.yaml",
+    "first": 10000,
+    "last": 14999,
+    "n": 5000
+  },
+  {
+    "run_id": "ba379304c778",
+    "relative": "ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-18-27_nogapst5_smoke",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-18-27_nogapst5_smoke\\events.out.tfevents.1793002752.143f023dd7d8.5950.0",
+        "sha256": "bfc589642a8af397996ddcd4e423c22dadc8640c7d79150d7d6e7d4de2f2b3df"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-18-27_nogapst5_smoke\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-18-27_nogapst5_smoke\\params\\agent.yaml",
+    "first": 0,
+    "last": 29,
+    "n": 30
+  },
+  {
+    "run_id": "f4033663c3db",
+    "relative": "ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-23-55_nogapst5_f10k_to10000",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-23-55_nogapst5_f10k_to10000\\events.out.tfevents.1793003064.143f023dd7d8.6687.0",
+        "sha256": "e96f46bc2a4b1c8feb753cc21463375db0203dd2a3bee4b419a167a5b7cfba1d"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-23-55_nogapst5_f10k_to10000\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_08-23-55_nogapst5_f10k_to10000\\params\\agent.yaml",
+    "first": 0,
+    "last": 3503,
+    "n": 3504
+  },
+  {
+    "run_id": "edf618d3c0e6",
+    "relative": "ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_17-36-47_nogapst5_f10k_to10000_r2",
+    "events": [
+      {
+        "path": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_17-36-47_nogapst5_f10k_to10000_r2\\events.out.tfevents.1793036250.c5226af51640.241625.0",
+        "sha256": "d5815316e11cbc26f39fe880e4e3f161cf94ec34025c2c0c7526ec0a933f2c68"
+      }
+    ],
+    "params_env": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_17-36-47_nogapst5_f10k_to10000_r2\\params\\env.yaml",
+    "params_agent": "D:\\mai-data\\ame2\\raw\\ame2_st\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-26_17-36-47_nogapst5_f10k_to10000_r2\\params\\agent.yaml",
+    "first": 3501,
+    "last": 9999,
+    "n": 6499
+  }
+]

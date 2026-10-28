@@ -1,0 +1,484 @@
+﻿branch,path,official,mapping,status,sha256,lines
+ame2_nogap20k,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_nogap20k,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_nogap20k,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_nogap20k,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_nogap20k,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_nogap20k,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_nogap20k,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_nogap20k,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_nogap20k,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_nogap20k,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_nogap20k,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_nogap20k,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_nogap20k,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_nogap20k,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_nogap20k,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_nogap20k,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_nogap20k,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_nogap20k,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_nogap20k,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_nogap20k,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_nogap20k,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_nogap20k,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_nogap20k,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_nogap20k,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_nogap20k,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_nogap20k,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_nogap20k,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_nogap20k,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_nogap20k,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_nogap20k,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_nogap20k,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_nogap20k,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_nogap20k,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_nogap20k,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_nogap20k,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_nogap20k,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_nogap20k,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,a67626d7f3515c729ce8de7a79865251711c91ff45d95a6d5b99ddb412625483,886
+ame2_nogap20k,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_nogap20k,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_nogap20k,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_nogap20k,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_nogap20k,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_nogap20k,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_nogap20k,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_nogap20k,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_nogap20k,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_nogap20k,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_nogap20k,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_nogap20k,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_nogap20k,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_nogap20k,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_nogap20k,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_nogap20k,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,2a2e938a0d9c5385053180215b7416d476dfdcf5ae3f2c42070aebf3d85df3d9,31
+ame2_nogap20k,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_nogap20k,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_nogap20k,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,c6d28eb7ea5fc0c44e9efdfcab393a90292c1fe67f2774a6cd1223b0a1983deb,1424
+ame2_nogap20k,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,cb519837d0ed47f200e2c69dd150bbdaf0fcf5d0e95bc7fe533a4aed58fe089c,754
+ame2_nogap20k,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,0169548b4946b88594c8d7bcf0f274db4c4e2c4fd052459de468e2f54d235fcc,841
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_nogap20k,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_nogap20k,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,df804073b2535f4c0652621d99c950574f30eb1af6ff4399f85254338f129232,353
+ame2_br,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_br,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_br,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_br,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_br,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_br,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_br,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_br,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_br,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_br,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_br,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_br,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_br,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_br,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_br,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_br,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_br,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_br,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_br,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_br,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_br,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_br,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_br,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_br,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_br,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_br,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_br,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_br,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_br,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_br,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_br,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_br,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_br,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_br,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_br,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_br,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_br,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,f8141b9e9b1e98b54808b27053e1cf81ca70a29379ad1ee246206430ecef6137,995
+ame2_br,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_br,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_br,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_br,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_br,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_br,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_br,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_br,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_br,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_br,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_br,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_br,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_br,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_br,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_br,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_br,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,2a2e938a0d9c5385053180215b7416d476dfdcf5ae3f2c42070aebf3d85df3d9,31
+ame2_br,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_br,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_br,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,c6d28eb7ea5fc0c44e9efdfcab393a90292c1fe67f2774a6cd1223b0a1983deb,1424
+ame2_br,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,cb519837d0ed47f200e2c69dd150bbdaf0fcf5d0e95bc7fe533a4aed58fe089c,754
+ame2_br,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_br,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_br,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_br,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_br,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_br,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_br,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,0169548b4946b88594c8d7bcf0f274db4c4e2c4fd052459de468e2f54d235fcc,841
+ame2_br,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_br,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_br,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_br,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_br,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,df804073b2535f4c0652621d99c950574f30eb1af6ff4399f85254338f129232,353
+ame2_st,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_st,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_st,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_st,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_st,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_st,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_st,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_st,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_st,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_st,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_st,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_st,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_st,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_st,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_st,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_st,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_st,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_st,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_st,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_st,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_st,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_st,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_st,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_st,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_st,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_st,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_st,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_st,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_st,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_st,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_st,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_st,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_st,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_st,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_st,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_st,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_st,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,f8141b9e9b1e98b54808b27053e1cf81ca70a29379ad1ee246206430ecef6137,995
+ame2_st,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_st,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_st,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_st,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_st,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_st,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_st,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_st,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_st,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_st,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_st,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_st,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_st,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_st,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_st,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_st,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,16b3c6361684fa01e3973f105069657c9f6454a482e6977b74b6aa6a8c8e3fc0,32
+ame2_st,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_st,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_st,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,71a3d2264d0f886f016ccea791ad11d5dc154f5afc577707c2445ec5b2edb69f,1446
+ame2_st,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,58342b6abedc758e42ec0878a2ffedde2f74440c8277139a1ab93bb75e9f7ded,767
+ame2_st,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_st,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_st,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_st,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_st,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_st,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_st,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,2abb84ff1261a6661f477640deb0f5e0d3abd06622bbd69dba0b0d16ac0b9a53,861
+ame2_st,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_st,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_st,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_st,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_st,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,73caebc285d822e05397221c7afdba698201caa77908eb8a2a9dd5130153fce6,418
+ame2_spd,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_spd,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_spd,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_spd,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_spd,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_spd,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_spd,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_spd,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_spd,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_spd,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_spd,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_spd,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_spd,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_spd,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_spd,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_spd,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_spd,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_spd,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_spd,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_spd,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_spd,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_spd,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_spd,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_spd,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_spd,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_spd,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_spd,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_spd,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_spd,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_spd,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_spd,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_spd,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_spd,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_spd,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_spd,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_spd,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_spd,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,f8141b9e9b1e98b54808b27053e1cf81ca70a29379ad1ee246206430ecef6137,995
+ame2_spd,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_spd,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_spd,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_spd,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_spd,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_spd,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_spd,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_spd,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_spd,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_spd,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_spd,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_spd,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_spd,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_spd,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_spd,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_spd,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,16b3c6361684fa01e3973f105069657c9f6454a482e6977b74b6aa6a8c8e3fc0,32
+ame2_spd,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_spd,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_spd,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,71a3d2264d0f886f016ccea791ad11d5dc154f5afc577707c2445ec5b2edb69f,1446
+ame2_spd,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,58342b6abedc758e42ec0878a2ffedde2f74440c8277139a1ab93bb75e9f7ded,767
+ame2_spd,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_spd,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_spd,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_spd,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_spd,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_spd,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_spd,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,2abb84ff1261a6661f477640deb0f5e0d3abd06622bbd69dba0b0d16ac0b9a53,861
+ame2_spd,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_spd,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_spd,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_spd,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_spd,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,73caebc285d822e05397221c7afdba698201caa77908eb8a2a9dd5130153fce6,418
+ame2_fp32,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_fp32,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_fp32,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_fp32,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_fp32,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_fp32,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_fp32,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_fp32,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_fp32,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_fp32,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_fp32,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_fp32,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_fp32,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_fp32,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_fp32,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_fp32,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_fp32,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_fp32,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_fp32,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_fp32,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_fp32,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_fp32,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_fp32,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_fp32,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_fp32,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_fp32,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_fp32,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_fp32,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_fp32,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_fp32,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_fp32,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_fp32,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_fp32,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_fp32,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_fp32,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_fp32,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_fp32,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,a27f59c62cd35cc81d7cbf7f46f03f298c339ec8d48c89f0294523b46cf5ee73,1074
+ame2_fp32,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_fp32,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_fp32,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_fp32,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_fp32,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_fp32,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_fp32,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_fp32,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_fp32,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_fp32,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_fp32,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_fp32,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_fp32,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_fp32,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_fp32,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_fp32,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,2a2e938a0d9c5385053180215b7416d476dfdcf5ae3f2c42070aebf3d85df3d9,31
+ame2_fp32,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_fp32,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_fp32,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,c6d28eb7ea5fc0c44e9efdfcab393a90292c1fe67f2774a6cd1223b0a1983deb,1424
+ame2_fp32,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,cb519837d0ed47f200e2c69dd150bbdaf0fcf5d0e95bc7fe533a4aed58fe089c,754
+ame2_fp32,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_fp32,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_fp32,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_fp32,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_fp32,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_fp32,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_fp32,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,0169548b4946b88594c8d7bcf0f274db4c4e2c4fd052459de468e2f54d235fcc,841
+ame2_fp32,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_fp32,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_fp32,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_fp32,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_fp32,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,df804073b2535f4c0652621d99c950574f30eb1af6ff4399f85254338f129232,353
+ame2_es20,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_es20,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_es20,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_es20,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_es20,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_es20,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_es20,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_es20,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_es20,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_es20,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_es20,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_es20,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_es20,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_es20,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_es20,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_es20,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_es20,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_es20,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_es20,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_es20,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_es20,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_es20,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_es20,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_es20,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_es20,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_es20,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_es20,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_es20,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_es20,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_es20,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_es20,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_es20,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_es20,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_es20,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_es20,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_es20,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_es20,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,a67626d7f3515c729ce8de7a79865251711c91ff45d95a6d5b99ddb412625483,886
+ame2_es20,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_es20,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_es20,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_es20,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_es20,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_es20,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_es20,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_es20,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_es20,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_es20,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_es20,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_es20,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_es20,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_es20,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_es20,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_es20,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,2f604be9150f2fa182fd50309a60e510acd49cec6c70e21a42fc8ba9c93bd26f,33
+ame2_es20,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_es20,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_es20,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,71a3d2264d0f886f016ccea791ad11d5dc154f5afc577707c2445ec5b2edb69f,1446
+ame2_es20,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,eea533f18a7945b322009f011630068ba23a13b951df8892f9788452bb27c278,772
+ame2_es20,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_es20,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_es20,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_es20,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_es20,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_es20,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_es20,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,0169548b4946b88594c8d7bcf0f274db4c4e2c4fd052459de468e2f54d235fcc,841
+ame2_es20,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_es20,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_es20,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_es20,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_es20,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,cbe7cdc6907eaa95a326e5cd96bc0186655a34f02bf426ee69fe4ee59026f966,393
+ame2_m035,rsl_rl/rsl_rl/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\__init__.py,same path,same,9b4c420fef3ae39683544833b6d2efbb26aecfc0583ec59be7f4eeb748fecf66,6
+ame2_m035,rsl_rl/rsl_rl/algorithms/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\__init__.py,same path,same,e370271e689bada5cdf2b4623e0d16d75e8439864a2ae913b22215f7b2985843,11
+ame2_m035,rsl_rl/rsl_rl/algorithms/distillation.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\distillation.py,same path,same,66bf70f1c4ca2f4c4cbb10339e2c8f337eef2ed79181855f6cf7f6c1a26aaaa5,306
+ame2_m035,rsl_rl/rsl_rl/algorithms/ppo.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo.py,same path,same,f1c4b73cb132078e5e594ed04690533b3c296178604f1b12657100f75bb622f9,715
+ame2_m035,rsl_rl/rsl_rl/algorithms/ppo_il.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\algorithms\ppo_il.py,same path,same,f05a477f40396663339e9209a2e8e87e79c5bcaa478ac77bb36fefc39ea8dd5d,335
+ame2_m035,rsl_rl/rsl_rl/env/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\__init__.py,same path,same,33bfc9562580377c2ce6388c37b0df2b8e992c22ce46923443681cbbf1960d60,10
+ame2_m035,rsl_rl/rsl_rl/env/vec_env.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\env\vec_env.py,same path,same,4a72df2fbf9b3e162e0e4b10e0b473511f02ad8c3ebaab0b7993ddfd63a9fa43,93
+ame2_m035,rsl_rl/rsl_rl/extensions/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\__init__.py,same path,same,595fd79b13fa6c64cce1f20adb7440660a4c5e5b78749db4794554a782a1ccfe,15
+ame2_m035,rsl_rl/rsl_rl/extensions/rnd.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\rnd.py,same path,same,e8f25627c04f4cf478cbbf1ec4c362276e80566a1222c75ba55f7b8e0f8471af,226
+ame2_m035,rsl_rl/rsl_rl/extensions/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\extensions\symmetry.py,same path,same,eb83c3f77e4cc3f3b3b18f7a592429761b7152c8ac1160c32e02562dc0987481,28
+ame2_m035,rsl_rl/rsl_rl/models/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\__init__.py,same path,same,3ee2113438171d743fe733dd97f4bb3c16965406b4713f1ead8ebd74faa3b7a2,23
+ame2_m035,rsl_rl/rsl_rl/models/AME2_models.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\AME2_models.py,same path,same,d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d,1429
+ame2_m035,rsl_rl/rsl_rl/models/cnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\cnn_model.py,same path,same,be96851407e75efed08f8302ae05c28f6d917c3ee174e8c79a095e53d0b69e8e,251
+ame2_m035,rsl_rl/rsl_rl/models/mlp_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\mlp_model.py,same path,same,6219ebb3ed4df036dae7ff1c30d0fbb169eaaa659e44a659dd757a292124476b,257
+ame2_m035,rsl_rl/rsl_rl/models/rnn_model.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\models\rnn_model.py,same path,same,80c1d6452ef021e4d7b174231ed7abac1ed0db8de9604561f8060148d4333ccc,249
+ame2_m035,rsl_rl/rsl_rl/modules/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\__init__.py,same path,same,842c65f27abfb9a9cf0ba913ed95aaafc9605dffa7ae72bf7a246a4f2893ec9a,27
+ame2_m035,rsl_rl/rsl_rl/modules/ame2_modules.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\ame2_modules.py,same path,same,b3fc6b38073b085299c9e622e1c1a6e86126d94ae488d5485e7853e7841a8a2c,47
+ame2_m035,rsl_rl/rsl_rl/modules/cnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\cnn.py,same path,same,4f5bab5f192c42180125f32a4af350108dd1c247e1e84c81f6cf4ea560037ccf,193
+ame2_m035,rsl_rl/rsl_rl/modules/distribution.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\distribution.py,same path,same,4631eae1939dcd6b065d79c3c0128a88ba2c6126d08f46944c8795682a208a1b,311
+ame2_m035,rsl_rl/rsl_rl/modules/mlp.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\mlp.py,same path,same,bad934b364b26cd47b6d1612e00ace107a425ae4d272c0cd0c82cbfc57bbcdbc,95
+ame2_m035,rsl_rl/rsl_rl/modules/normalization.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\normalization.py,same path,same,539e1193cebcc472585cd3df100946fb8d788c4aa0f9f5cbcb3387a64d312926,131
+ame2_m035,rsl_rl/rsl_rl/modules/rnn.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\modules\rnn.py,same path,same,07f0eec06c7f2638edbdbc3ba25f56122a7941cb0543138f4a6b04675b2a97e6,86
+ame2_m035,rsl_rl/rsl_rl/runners/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\__init__.py,same path,same,26f4130a403414e13041b62a848d04da3fb0166757603950ea758b151d4b5aaa,11
+ame2_m035,rsl_rl/rsl_rl/runners/distillation_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\distillation_runner.py,same path,same,7445cbaf3e1fa241d742447ab17d941a659c92b6f8365ef22c5d818923d9e275,25
+ame2_m035,rsl_rl/rsl_rl/runners/on_policy_runner.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\runners\on_policy_runner.py,same path,same,e45a08f8c41bdc7226036739bef86d4ef6b2089d95451a9bc3ac6fe7b6551d56,273
+ame2_m035,rsl_rl/rsl_rl/storage/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\__init__.py,same path,same,7c9d96df3cad10aa27f34e77f7105a29f74e2d7dd10467b2919f99867a69298e,10
+ame2_m035,rsl_rl/rsl_rl/storage/rollout_storage.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\storage\rollout_storage.py,same path,same,ab6c8439370d292c756f70984ee89f334c455969cd58ea2b764175135929f28a,363
+ame2_m035,rsl_rl/rsl_rl/utils/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\__init__.py,same path,same,80a1f640c23169f47c949b85dfdfb3a1d356b3aba7988eb162177d2dfc7908ea,32
+ame2_m035,rsl_rl/rsl_rl/utils/logger.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\logger.py,same path,same,38c1ba2ebc15c27a5baa105f314269e3e8f88409f504b05575786efe670855b1,313
+ame2_m035,rsl_rl/rsl_rl/utils/muon.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\muon.py,same path,same,8936a949518112baadfce19eb634553881c40f275756a51d29aa3b320b24d823,155
+ame2_m035,rsl_rl/rsl_rl/utils/neptune_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\neptune_utils.py,same path,same,a3446faf8d655b75feb215ff4df8598bc91ff5aab446a6349e9ced31bf3cc495,102
+ame2_m035,rsl_rl/rsl_rl/utils/utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\utils.py,same path,same,5d364b9236c76e8d040d6e150c0d17f5fea1f44ffcd7f139b80a61af58e728c8,393
+ame2_m035,rsl_rl/rsl_rl/utils/wandb_utils.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\rsl_rl\rsl_rl\utils\wandb_utils.py,same path,same,ed42325490f3bb15e6910bbe1496aa18709cf69e2db822cb76d98c8d80367a8d,101
+ame2_m035,go2/ame2_go2/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\__init__.py,Go2 port mapped path,changed,677324483072d688c118c81e05cd28ff1266188b85102717bf57a290d8e80730,6
+ame2_m035,go2/ame2_go2/algorithms/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_m035,go2/ame2_go2/algorithms/go2_ppo_il.py,,Go2 port mapped path,added,545753c19315def140c1c838208782ddf856eda49de86c6abd87f4f5325492b4,144
+ame2_m035,go2/ame2_go2/algorithms/go2_runner.py,,Go2 port mapped path,added,a67626d7f3515c729ce8de7a79865251711c91ff45d95a6d5b99ddb412625483,886
+ame2_m035,go2/ame2_go2/assets/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\assets\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_m035,go2/ame2_go2/assets/go2_actuator.py,,Go2 port mapped path,added,c77eec53e93f993b2dd69bdf1139c4d386f11517784ac5424c1d426863beb4ff,61
+ame2_m035,go2/ame2_go2/assets/go2_curve.py,,Go2 port mapped path,added,85aace2b5bfa41c3406718f9ee0ddcc1c3f8f80a42e29d843b4e702fba32b06c,16
+ame2_m035,go2/ame2_go2/assets/unitree_go2.py,,Go2 port mapped path,added,2bedc5401f7230ea60832bc9d6938b72ce08bb7c0d331d5786207b13f1056191,93
+ame2_m035,go2/ame2_go2/mapping/__init__.py,,Go2 port mapped path,same,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_m035,go2/ame2_go2/mapping/datagen.py,,Go2 port mapped path,added,9e292c34d759202f0dbf067e57a91c1a9f88b3481123d39f84ca862b824b1c7d,198
+ame2_m035,go2/ame2_go2/mapping/fusion.py,,Go2 port mapped path,added,e337095509f21fd2c185cb1d984fd1e1ce5379fc21899486bd0fcb5249bc0dbd,220
+ame2_m035,go2/ame2_go2/mapping/grid.py,,Go2 port mapped path,added,55493de2ea99553da8ab6ed690d13a80d6cd7cd0848fee5d189049c5ed7daed1,83
+ame2_m035,go2/ame2_go2/mapping/model.py,,Go2 port mapped path,added,3679ce88ca5a346b6bb02455ed59b0a165a3f4e49166c934d545b9930b56eedc,115
+ame2_m035,go2/ame2_go2/mapping/runtime.py,,Go2 port mapped path,added,dc11f098a0f6d6ba9f4ddfcd6fe8570f101138915fdb60028ab8959d7c95d1bf,150
+ame2_m035,go2/ame2_go2/provenance.py,,Go2 port mapped path,added,dac358ff32687423122755238cdc2f0a618caa587efed9e745d8d9abfb17efaf,28
+ame2_m035,go2/ame2_go2/sensors/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\sensors\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_m035,go2/ame2_go2/sensors/range_sensor.py,,Go2 port mapped path,added,111a3fb0296d5641605dadd0c630374c975e7d488e0831058f56f3cd46682dff,214
+ame2_m035,go2/ame2_go2/sensors/scan_patterns.py,,Go2 port mapped path,added,513a0581307a1ff1e6d8a3aa776d0cbf8199fa240deb2f2a8ddaa7c7f4fe58ec,245
+ame2_m035,go2/ame2_go2/sensors/virtual_floor.py,,Go2 port mapped path,added,aad7995b0fe29a238f3f52c9894b86ab4d70b1a019f948984b97986c231ab14f,158
+ame2_m035,go2/ame2_go2/tasks/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\__init__.py,Go2 port mapped path,changed,2a2e938a0d9c5385053180215b7416d476dfdcf5ae3f2c42070aebf3d85df3d9,31
+ame2_m035,go2/ame2_go2/tasks/agents/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\agents\__init__.py,Go2 port mapped path,changed,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0
+ame2_m035,go2/ame2_go2/tasks/agents/rsl_rl_ppo_cfg_go2.py,,Go2 port mapped path,added,c1450086ecc8604975d2296688fb9b32a86ac9d980ffefba0f5c8beb10059584,195
+ame2_m035,go2/ame2_go2/tasks/custom_terrains.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\custom_terrains.py,Go2 port mapped path,changed,c6d28eb7ea5fc0c44e9efdfcab393a90292c1fe67f2774a6cd1223b0a1983deb,1424
+ame2_m035,go2/ame2_go2/tasks/go2_env_cfg.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\ame2_env_cfg.py,Go2 port mapped path,changed,cb519837d0ed47f200e2c69dd150bbdaf0fcf5d0e95bc7fe533a4aed58fe089c,754
+ame2_m035,go2/ame2_go2/tasks/jeplo_heights.py,,Go2 port mapped path,added,b025b2e54c151d32c0458d9c7f24808e4ee8bf0848a762819ed777906a32f78b,106
+ame2_m035,go2/ame2_go2/tasks/mdp/__init__.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\__init__.py,Go2 port mapped path,same,c17637c649ddc519321053fc49649e02d24189d3a809b043cfed1472700d697b,17
+ame2_m035,go2/ame2_go2/tasks/mdp/acceleration.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\acceleration.py,Go2 port mapped path,same,14334bb4b5d1f12def0d2eb24ec6c9ccb8e06cd6709c4af6635e41e0a28b12a8,133
+ame2_m035,go2/ame2_go2/tasks/mdp/actions.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\actions.py,Go2 port mapped path,changed,792b74d38c4cb1abe2350d63c18a20d96fb3414d8c8f1a525c63bb1b488bf756,80
+ame2_m035,go2/ame2_go2/tasks/mdp/commands.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\commands.py,Go2 port mapped path,same,109ad14aa65a1d37ab7bf530824294481a9739c6a35aac334cbe9bb1634d3811,90
+ame2_m035,go2/ame2_go2/tasks/mdp/curriculums.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\curriculums.py,Go2 port mapped path,changed,7048cba5f1f4bdff82c89c1d9a1285d8c0e82f9a1a94c46905c651fa0c7ad70a,530
+ame2_m035,go2/ame2_go2/tasks/mdp/events.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\events.py,Go2 port mapped path,changed,0169548b4946b88594c8d7bcf0f274db4c4e2c4fd052459de468e2f54d235fcc,841
+ame2_m035,go2/ame2_go2/tasks/mdp/observations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\observations.py,Go2 port mapped path,changed,02aca54ea3e5716fd0faacec5b6d54e592b89fd0841c73de1732e98fc140fee6,456
+ame2_m035,go2/ame2_go2/tasks/mdp/rewards.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\rewards.py,Go2 port mapped path,changed,ba8afc70fca6bf34570a2aafa5a86a63e876d6fdbc488e4d416489a1ac3e98ed,746
+ame2_m035,go2/ame2_go2/tasks/mdp/symmetry.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\symmetry.py,Go2 port mapped path,changed,6baa96a058bc4e1c8042c5d0b2b67f962d6489839c01921e0e35f34caa1edf1a,124
+ame2_m035,go2/ame2_go2/tasks/mdp/terminations.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\mdp\terminations.py,Go2 port mapped path,same,dc7bedb814cd5d149d8193cbab6b56ad287c4468dfd362133bb851f7768a402e,230
+ame2_m035,go2/ame2_go2/tasks/terrains_go2.py,C:\mai\wt\foothold-lab\analyst-ame2\_out\ame2_minimal\ame2\ame2\tasks\terrains.py,Go2 port mapped path,changed,df804073b2535f4c0652621d99c950574f30eb1af6ff4399f85254338f129232,353

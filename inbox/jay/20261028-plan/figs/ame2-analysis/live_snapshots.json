@@ -1,0 +1,29 @@
+[
+  {
+    "key": "limseokheon/ame2_fp32/out/q/nogap_fp32_s42_to20000.log",
+    "size": 39268123,
+    "modified": "2026-10-28T10:51:39+00:00",
+    "etag": "\"eb4de189889772393141929acc9ed52a\"",
+    "sha256": "dff166563bc88f236051b130dd6cbcdc070792c405d2c0f313671cf094546efc",
+    "local": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\out\\q\\nogap_fp32_s42_to20000.log",
+    "captured_utc": "2026-10-28T10:51:52.637939+00:00"
+  },
+  {
+    "key": "limseokheon/ame2_fp32/logs/rsl_rl/go2_gaze_teacher/2026-10-27_07-38-27_nogap_fp32_s42_to20000/events.out.tfevents.1793086733.71bba97b0f21.11496.0",
+    "size": 48842582,
+    "modified": "2026-10-28T10:51:49+00:00",
+    "etag": "\"bfa57ccee41e2f7488fa09ba1a30c533\"",
+    "sha256": "30346ac121858909a140686978b7bef00fc90d0cc016b2afd84ea1d1f2e5b341",
+    "local": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000\\events.out.tfevents.1793086733.71bba97b0f21.11496.0",
+    "captured_utc": "2026-10-28T10:51:58.948927+00:00"
+  },
+  {
+    "key": "limseokheon/ame2_fp32/logs/rsl_rl/go2_gaze_teacher/2026-10-27_07-38-27_nogap_fp32_s42_to20000/heartbeat.txt",
+    "size": 17,
+    "modified": "2026-10-28T10:51:58+00:00",
+    "etag": "\"c3e3b268cf01a708fa95519485cc1021\"",
+    "sha256": "91906d1291bd06e17cbe9fab2ac1cf9ee9baf83be225e674b45da0e85ade1ffb",
+    "local": "D:\\mai-data\\ame2\\raw\\ame2_fp32\\logs\\rsl_rl\\go2_gaze_teacher\\2026-10-27_07-38-27_nogap_fp32_s42_to20000\\heartbeat.txt",
+    "captured_utc": "2026-10-28T10:51:59.733835+00:00"
+  }
+]

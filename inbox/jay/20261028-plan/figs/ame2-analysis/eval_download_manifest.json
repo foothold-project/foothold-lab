@@ -1,0 +1,22 @@
+[
+  {
+    "path": "D:\\mai-data\\ame2\\raw\\ame2\\go2\\_runs\\n20k_eval5\\eval5_n20k_b42.pt",
+    "sha256": "2b1ad17122c2f2b422b7e881dbd393ac26cf54b4355342ec6d0985a6d0addf65",
+    "size": 2168153
+  },
+  {
+    "path": "D:\\mai-data\\ame2\\raw\\ame2\\go2\\_runs\\vid_v1\\20261019T024708Z_22894_v1\\eval\\eval5_m9000_b42.pt",
+    "sha256": "fec747fb8d5b56f186cf106185e88b21c248d0f668889dcd39aa6f446acad003",
+    "size": 2168178
+  },
+  {
+    "path": "D:\\mai-data\\ame2\\raw\\ame2\\go2\\_runs\\n20k_eval5\\eval5_n20k_b1001.pt",
+    "sha256": "ecefd0d3ffc4dcc02f53cf4a5ea70d191e96cfcb956c192cef2c8ba731321dda",
+    "size": 2168203
+  },
+  {
+    "path": "D:\\mai-data\\ame2\\raw\\ame2\\go2\\_runs\\vid_v1\\20261019T024708Z_22894_v1\\eval\\eval5_m9000_b1001.pt",
+    "sha256": "33de3ad214bbb6b594f503aad474d69b4cc8efd1a512bddb13f5484c1722c0a4",
+    "size": 2168228
+  }
+]

@@ -1,0 +1,21 @@
+Known input PASS. Four datasets, 2400 env x 5 counted episodes each. First played episode per env excluded.
+67:     if nt == 0:
+68:         raw.append("no termination term names")
+69:     if raw:
+70:         bad.extend(f"{name}: {x}" for x in raw)
+71:         return None
+72:     R = R[R[:, F["played"]] > 0]
+73:     env = R[:, F["env"]].long()
+74:     played = torch.bincount(env, minlength=n)
+75:     if int((played != eps + 1).sum()):
+76:         bad.append(f"{name}: played episodes per env {int(played.min())}-{int(played.max())}, not all {eps + 1} (1 uncounted + {eps})")
+77:     order = torch.argsort(env, stable=True)  # rows are in time order within an env
+78:     es = env[order]
+79:     rank = torch.arange(len(es)) - torch.searchsorted(es, torch.arange(n))[es]
+80:     keep = order[(rank >= 1) & (rank <= eps)]
+81:     rows, ek = R[keep], env[keep]
+82:     cnt = torch.bincount(ek, minlength=n)
+83:     if int((cnt != eps).sum()):
+84:         bad.append(f"{os.path.basename(path)}: {int((cnt != eps).sum())} envs without {eps} counted episodes")
+85:     succ = torch.zeros(n, dtype=torch.float64).index_add_(0, ek, rows[:, F["success"]].double())
+86:     d["rate"] = succ / cnt.clamp(min=1)
