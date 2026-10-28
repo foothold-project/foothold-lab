@@ -23,8 +23,8 @@ RESUME_PARENTS = {
     "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d": 1500,      # S-B10 model_1500.pt (EX-35 main · smoke2)
     "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548": 2000,      # EX-35 model_2000.pt (extend · extend_smoke2)
 }
-COMMAND_MODES = ("start", "s2a")
-COMMAND_CONTRACT = {"start": "start", "s2a": "walkturn_v1"}
+COMMAND_MODES = ("start", "s2a", "basic_gait")
+COMMAND_CONTRACT = {"start": "start", "s2a": "walkturn_v1", "basic_gait": "basic_gait_v1"}
 
 
 def is_extended_resume(args) -> bool:
@@ -56,7 +56,15 @@ def command_settings(args) -> dict:
     """명령 처치 설정(manifest): 표집기 이름 · 계약 이름 · 흩기."""
     mode = getattr(args, "command_mode", None) or "start"
 
-    return {"command_mode": mode, "command_contract": COMMAND_CONTRACT[mode], "clock_scatter": getattr(args, "clock_scatter", None) == "on"}
+    out = {"command_mode": mode, "command_contract": COMMAND_CONTRACT[mode], "clock_scatter": getattr(args, "clock_scatter", None) == "on"}
+    if mode == "basic_gait":
+        from foothold_s2.commands.mixed_core import basic_shares, BASIC_SLOTS
+
+        share = getattr(args, "basic_new_share", None)
+        share = 0.30 if share is None else share
+        out["basic_new_share"] = share
+        out["basic_shares"] = dict(zip(BASIC_SLOTS, basic_shares(share)))
+    return out
 
 
 def file_sha256(path) -> str:
@@ -112,15 +120,22 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     if args.variant != "SB" and p_off is not None:
         raise ValueError("--p_map_off is for the SB variant only")
     cm, cs = getattr(args, "command_mode", None), getattr(args, "clock_scatter", None)
+    basic_share = getattr(args, "basic_new_share", None)
     if cm not in (None, *COMMAND_MODES) or cs not in (None, "on", "off"):
         raise ValueError(f"command_mode must be one of {COMMAND_MODES}, clock_scatter on/off")
+    if basic_share is not None and cm != "basic_gait":
+        raise ValueError("--basic-new-share requires --command_mode basic_gait")
+    if cm == "basic_gait":
+        from foothold_s2.commands.mixed_core import basic_shares
+
+        basic_shares(0.30 if basic_share is None else basic_share)
     if args.variant != "SB" and (cm not in (None, "start") or cs == "on"):
-        raise ValueError("--command_mode s2a and --clock_scatter on are for the SB variant only")
-    if (cm == "s2a" or cs == "on") and getattr(args, "smoke_updates", None) != 2 and not is_extended_resume(args):
+        raise ValueError("non-START command modes and --clock_scatter on are for the SB variant only")
+    if (cm == "s2a" or (cs == "on" and cm != "basic_gait")) and getattr(args, "smoke_updates", None) != 2 and not is_extended_resume(args):
         raise ValueError("--command_mode s2a / --clock_scatter on need --resume_from and --max_iterations above 1501 (otherwise 0 updates run and the run ends as done)")
     if cm == "s2a" and getattr(args, "smoke_updates", None) == 10:
         raise ValueError("s2a command mode starts from a parent checkpoint: use --resume_from (smoke 2) or the main resume")
-    if verify_parent and args.variant == "SB" and (is_extended_resume(args) or (getattr(args, "smoke_updates", None) == 2 and cm == "s2a")):
+    if verify_parent and args.variant == "SB" and (is_extended_resume(args) or (getattr(args, "smoke_updates", None) == 2 and cm in ("s2a", "basic_gait"))):
         check_resume_parent(args)
     if args.variant in BUDGET_VARIANTS:
         smoke = getattr(args, "smoke_updates", None)

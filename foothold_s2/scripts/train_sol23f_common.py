@@ -42,7 +42,8 @@ parser.add_argument("--max-wall-s", type=float, default=86400.0, help="24시간 
 parser.add_argument("--stop-file", type=str, default=None)
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
-parser.add_argument("--command_mode", choices=["start", "s2a"], default=None, help="SB 전용: 명령 표집기. start = START 원문(기본), s2a = 걸으며 돌기 2.5 %% + 2.5 %%(계약 walkturn_v1)")
+parser.add_argument("--command_mode", choices=["start", "s2a", "basic_gait"], default=None, help="SB 전용: start(기본) · s2a · basic_gait")
+parser.add_argument("--basic-new-share", type=float, default=None, help="basic_gait 정지·후진·옆걸음 총 몫(기본 0.30, 대안 0.15)")
 parser.add_argument("--clock_scatter", choices=["on", "off"], default=None, help="SB 전용: 새 프로세스 첫 reset 직후 env 마다 다음 명령 교체 시점을 U(0, 4 s) 로 흩음(기본 off)")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
@@ -129,6 +130,9 @@ def main(env_cfg, agent_cfg):
         cmd_cfg = env_cfg.commands.base_velocity
         if cmd_set["command_mode"] == "s2a":
             cmd_cfg.params = {**dict(cmd_cfg.params or {}), "walkturn_mode": True}
+        elif cmd_set["command_mode"] == "basic_gait":
+            cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True,
+                              "basic_new_share": cmd_set["basic_new_share"]}
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
     budget = resume_budget(agent_cfg.max_iterations, parent["completed_update"]) if is_extended_resume(args_cli) else None
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다

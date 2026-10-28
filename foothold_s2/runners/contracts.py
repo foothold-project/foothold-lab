@@ -13,7 +13,7 @@ VX_MIN, VX_MAX, WZ_SPIN = 0.3, 1.5, 1.2
 
 
 VX_WALK_MAX, WZ_WALK = 0.8, 0.5
-CONTRACTS = ("start", "walkturn_v1")
+CONTRACTS = ("start", "walkturn_v1", "basic_gait_v1")
 
 
 def start_contract_bad(c: torch.Tensor, tol: float = TOL) -> torch.Tensor:
@@ -41,6 +41,21 @@ def walkturn_contract_bad(c: torch.Tensor, tol: float = TOL) -> torch.Tensor:
     return ~(finite & ok_vx & ok_vy & ok_wz)
 
 
+def basic_gait_contract_bad(c: torch.Tensor, tol: float = TOL) -> torch.Tensor:
+    """새 기본 보행의 여섯 묶음만 허용한다. 몫은 표집기에서 따로 확인한다."""
+    finite = torch.isfinite(c).all(dim=-1)
+    z = torch.nan_to_num(c, nan=0.0, posinf=1e9, neginf=-1e9)
+    vx, vy, wz = z[..., 0], z[..., 1], z[..., 2]
+    zero_x, zero_y, zero_z = vx.abs() <= tol, vy.abs() <= tol, wz.abs() <= tol
+    forward = (vx >= 0.3 - tol) & (vx <= 1.5 + tol) & zero_y & zero_z
+    walk = (vx >= 0.3 - tol) & (vx <= 0.8 + tol) & zero_y & (wz.abs() >= 0.2 - tol) & (wz.abs() <= 0.5 + tol)
+    spin = zero_x & zero_y & (wz.abs() >= 0.5 - tol) & (wz.abs() <= 1.2 + tol)
+    stand = zero_x & zero_y & zero_z
+    reverse = (vx >= -0.8 - tol) & (vx <= -0.2 + tol) & zero_y & zero_z
+    side = zero_x & (vy.abs() >= 0.2 - tol) & (vy.abs() <= 0.5 + tol) & zero_z
+    return ~(finite & (forward | walk | spin | stand | reverse | side))
+
+
 def contract_bad_fn(name):
     """계약 이름 -> 검사 함수. 이름이 None 이면 None(검사 없음), 모르는 이름이면 거절."""
     if name is None:
@@ -49,4 +64,6 @@ def contract_bad_fn(name):
         return start_contract_bad
     if name == "walkturn_v1":
         return walkturn_contract_bad
+    if name == "basic_gait_v1":
+        return basic_gait_contract_bad
     raise ValueError(f"모르는 명령 계약 {name!r} (허용 {CONTRACTS})")

@@ -65,6 +65,9 @@ class CommandParams:
     wt_wz_min: float = 0.2
     wt_wz_max: float = 0.5
     wt_spin_wz: float = 1.2
+    # 기본 보행 준비판. 기존 START 와 S2a 선택값에는 영향이 없다.
+    basic_mode: bool = False
+    basic_new_share: float = 0.30  # 정지 · 후진 · 옆걸음 합. 대안 0.15 는 인자로 받는다.
 
 
 def make_generator(seed, device="cpu"):
@@ -131,6 +134,8 @@ def resample_free_modes(gen, n, params, iteration, vmax_x=None, vmax_y=None):
     순서(14 §3.2): 정지(p_stand) > 제자리 회전(1,000 회 이후 p_spin) > heading(플래그 확률) > 자유 wz.
     wz 는 heading env 에서 «매 스텝» `apply_heading` 이 덮어쓰므로 여기서는 자유 wz 를 담아 둔다.
     """
+    if params.basic_mode:
+        return resample_basic(gen, n, params)
     if params.walkturn_mode:
         return resample_walkturn(gen, n, params)
     if params.start_mode:
@@ -198,6 +203,47 @@ def resample_walkturn(gen, n, params):
     return {"cmd": torch.stack([vx, zeros, wz], dim=1), "stand": false, "spin": spin, "heading": false, "psi_star": torch.zeros(n, device=vx.device), "slot": slot}
 
 
+BASIC_SLOTS = ("forward", "walk_left", "walk_right", "spin_left", "spin_right",
+               "stand", "reverse", "side_left", "side_right")
+
+
+def basic_shares(new_share):
+    """새 기술의 합을 세 묶음에 균등 배정한다. 기존 보행 몫 30 % 는 고정."""
+    share = float(new_share)
+    if not math.isfinite(share) or not 0.0 <= share <= 0.70:
+        raise ValueError("basic_new_share must be finite and within [0, 0.70]")
+    each = share / 3.0
+    return (0.70 - share, 0.05, 0.05, 0.10, 0.10, each, each, each / 2.0, each / 2.0)
+
+
+def resample_basic(gen, n, params):
+    """기본 보행 준비판. 한 슬롯을 뽑고 그 슬롯의 속도만 소비한다."""
+    shares = basic_shares(params.basic_new_share)
+    edges = torch.tensor(shares, device=gen.device, dtype=torch.float64).cumsum(0)
+    slot = torch.clamp(torch.searchsorted(edges, _u(gen, (n,)).double(), right=True),
+                       max=len(BASIC_SLOTS) - 1)
+    forward = slot == 0
+    walk = (slot == 1) | (slot == 2)
+    spin = (slot == 3) | (slot == 4)
+    stand = slot == 5
+    reverse = slot == 6
+    side = (slot == 7) | (slot == 8)
+    zeros = torch.zeros(n, device=gen.device)
+    fwd_vx = _u(gen, (n,), 0.3, 1.5)
+    walk_vx = _u(gen, (n,), 0.3, 0.8)
+    back_vx = _u(gen, (n,), -0.8, -0.2)
+    side_vy = _u(gen, (n,), 0.2, 0.5)
+    walk_wz = _u(gen, (n,), 0.2, 0.5)
+    spin_wz = _u(gen, (n,), 0.5, 1.2)
+    vx = torch.where(forward, fwd_vx, torch.where(walk, walk_vx, torch.where(reverse, back_vx, zeros)))
+    vy = torch.where(side, torch.where(slot == 7, side_vy, -side_vy), zeros)
+    wz = torch.where(walk, torch.where(slot == 1, walk_wz, -walk_wz),
+                     torch.where(spin, torch.where(slot == 3, spin_wz, -spin_wz), zeros))
+    false = torch.zeros(n, dtype=torch.bool, device=gen.device)
+    return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
+            "heading": false, "psi_star": zeros, "slot": slot}
+
+
 # ---------------------------------------------------------------- 명령 시계 흩기 (EX-35)
 
 
@@ -235,6 +281,10 @@ def new_task_mask(cmd, params, eps=1.0e-6):
     cmd = torch.as_tensor(cmd)
     n = cmd.shape[0]
 
+    if params.basic_mode:
+        # 새로 도입한 정지 · 후진 · 옆걸음과 걸으며 돌기를 기록한다.
+        return ((cmd[:, :3].abs() <= eps).all(dim=1) | (cmd[:, 0] < -eps) |
+                (cmd[:, 1].abs() > eps) | ((cmd[:, 0] > eps) & (cmd[:, 2].abs() > eps)))
     if not (params.start_mode or params.walkturn_mode):
         return torch.zeros(n, dtype=torch.bool, device=cmd.device)
 

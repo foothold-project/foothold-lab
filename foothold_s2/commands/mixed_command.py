@@ -70,7 +70,8 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.exposure = mc.ExposureLog()
-        self.slot_counts = torch.zeros(len(mc.WT_SLOTS), dtype=torch.long, device=dev)      # S2a 슬롯별 재추출 수(update 마다 runner 가 꺼냄)
+        self.slot_names = mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS
+        self.slot_counts = torch.zeros(len(self.slot_names), dtype=torch.long, device=dev)
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
@@ -180,14 +181,14 @@ class MixedVelocityCommand(CommandTerm):
         self.scatter_receipt = mc.scatter_receipt(self.time_left, period)
 
     def take_slot_counts(self):
-        """이번 update 동안의 S2a 슬롯 재추출 수와 비율(없거나 S2a 가 아니면 None)."""
-        if not self.params.walkturn_mode:
+        """이번 update 동안 선택한 명령 모드의 슬롯 재추출 수와 비율."""
+        if not (self.params.walkturn_mode or self.params.basic_mode):
             return None
         c = self.slot_counts.cpu().tolist()
         self.slot_counts.zero_()
         total = sum(c)
 
-        return None if total == 0 else {"counts": dict(zip(mc.WT_SLOTS, c)), "frac": {k: v / total for k, v in zip(mc.WT_SLOTS, c)}}
+        return None if total == 0 else {"counts": dict(zip(self.slot_names, c)), "frac": {k: v / total for k, v in zip(self.slot_names, c)}}
 
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
@@ -204,7 +205,7 @@ class MixedVelocityCommand(CommandTerm):
             self.psi_star[free] = out["psi_star"].to(self.device)
             self.new_task.on_resample(free, out["cmd"].to(self.device), self.params)
             if "slot" in out:
-                self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(mc.WT_SLOTS))
+                self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
 
             if self.cfg.fixed_cmd is not None:
                 self.vel_command_b[free] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
