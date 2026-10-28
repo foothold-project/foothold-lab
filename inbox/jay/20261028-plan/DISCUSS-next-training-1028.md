@@ -1,5 +1,5 @@
 > 분류: 논의 자료
-> 작성: 오흥재 (lead) · 2026-10-28 21:4x
+> 작성: 오흥재 (lead) · 2026-10-28 21:3x
 > 근거: W15 64 env 출발선(sonnet-code, impl-turncases/logs/w15_dry/full_*) · W29 RESULT-EX35-EXT-1028(analyst dcd37d30) · W32(fba75521) · RESEARCH-basic-gait-list · RESEARCH-basic-gait-repos · ANALYSIS-AME2-seokheon · mixed_core.py:50~66
 > 요지: 기본 보행 1단계 명령 구성안과 부모(S-B10 m1500) 대 처음부터 대조 설계. 보상은 START 그대로, 명령 분포 하나만 바꾼다
 > 상태: 팀장 논의 전 초안 · 학습 승인 아님
