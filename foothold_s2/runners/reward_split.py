@@ -21,6 +21,8 @@ MOVE_YAW_FOLLOW = 0.1
 EMA_ALPHA = 0.1
 EPS = 1e-6
 BASIC_GROUPS = ("forward", "walkturn", "spin", "stand", "reverse", "side")
+BASIC_STAND_LINEAR_MPS = 0.05
+BASIC_STAND_YAW_RADPS = 0.1
 
 
 def basic_group_ids(cmd: torch.Tensor) -> torch.Tensor:
@@ -68,7 +70,8 @@ class StepClassifier:
         if basic_mode:
             group = basic_group_ids(cmd)
             yaw_follow = self.ema_wz * torch.sign(cmd[:, 2]) / cmd[:, 2].abs().clamp_min(EPS)
-            moving = (((group == 0) | (group == 1)) & (self.ema_vx >= MOVE_VX))
+            moving = ((group == 0) & (self.ema_vx >= MOVE_VX))
+            moving |= (group == 1) & (self.ema_vx >= MOVE_VX) & (yaw_follow >= MOVE_YAW_FOLLOW)
             moving |= (group == 4) & (-self.ema_vx >= MOVE_VX)
             moving |= (group == 5) & (self.ema_vy * torch.sign(cmd[:, 1]) >= MOVE_VX)
             moving |= (group == 2) & (yaw_follow >= MOVE_YAW_FOLLOW)
@@ -95,7 +98,7 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
     clip_counts = {"moving": 0, "stalled": 0}                 # only_positive_rewards 로 합이 0 으로 잘린 env-step (EX-13 만 의미가 있다)
     group_counts = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
     group_rewards = torch.zeros(len(BASIC_GROUPS), rew.shape[2], device=rew.device) if basic_mode else None
-    group_moving = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
+    group_following = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
     group_invalid = torch.zeros((), dtype=torch.long, device=rew.device) if basic_mode else None
 
     for t in range(T):
@@ -104,12 +107,17 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
                                                 vy=vy[t] if vy is not None else None, basic_mode=basic_mode)
         if basic_mode:
             groups = basic_group_ids(cmd[t])
+            # Stand is successful when both planar and yaw motion are small.
+            # It remains a no-move command in the legacy aggregate counts.
+            stand_following = (clf.ema_vx.square() + clf.ema_vy.square() < BASIC_STAND_LINEAR_MPS ** 2)
+            stand_following &= clf.ema_wz.abs() < BASIC_STAND_YAW_RADPS
+            following = moving | ((groups == 3) & stand_following)
             group_invalid += (groups < 0).sum()
             for i in range(len(BASIC_GROUPS)):
                 mask = groups == i
                 group_counts[i] += mask.sum()
                 group_rewards[i] += rew[t][mask].sum(0).float()
-                group_moving[i] += (mask & moving).sum()
+                group_following[i] += (mask & following).sum()
         counts["moving"] += int(moving.sum())
         counts["stalled"] += int(stalled.sum())
         counts["nomove"] += int(nomove.sum())
@@ -144,10 +152,10 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
             raise ValueError("basic reward split saw a command outside the six groups")
         group_counts = group_counts.cpu()
         group_rewards = group_rewards.cpu()
-        group_moving = group_moving.cpu()
+        group_following = group_following.cpu()
         out["by_basic_group"] = {
             name: {"env_steps": int(group_counts[i]), "fraction": int(group_counts[i]) / total,
-                   "following_env_steps": int(group_moving[i]),
+                   "following_env_steps": int(group_following[i]),
                    "reward_terms_mean": {key: float(group_rewards[i, j] / group_counts[i])
                                          for j, key in enumerate(names)} if group_counts[i] else None}
             for i, name in enumerate(BASIC_GROUPS)

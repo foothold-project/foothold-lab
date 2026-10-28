@@ -44,6 +44,8 @@ parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
 parser.add_argument("--command_mode", choices=["start", "s2a", "basic_gait"], default=None, help="SB 전용: start(기본) · s2a · basic_gait")
 parser.add_argument("--basic-new-share", type=float, default=None, help="basic_gait 정지·후진·옆걸음 총 몫(기본 0.30, 대안 0.15)")
+parser.add_argument("--basic-log-root", type=str, default=None, help="basic_gait 출력 전용 절대경로. smoke/main 별도 폴더")
+parser.add_argument("--basic-stage", choices=["smoke", "main"], default=None)
 parser.add_argument("--clock_scatter", choices=["on", "off"], default=None, help="SB 전용: 새 프로세스 첫 reset 직후 env 마다 다음 명령 교체 시점을 U(0, 4 s) 로 흩음(기본 off)")
 parser.add_argument("--judge_world_frame", choices=["on", "off"], default=None, help="승급 · 강등 판정에 세계 좌표 기대 변위 사용(결정 8, 기본 on). off = 옛 몸 기준 합")
 parser.add_argument("--judge_mask_new_task", choices=["on", "off"], default=None, help="새 과제 명령 에피소드의 move 를 0 으로 덮기(기본 off = 기록만)")
@@ -112,18 +114,27 @@ def main(env_cfg, agent_cfg):
         env_cfg.seed = seed
         agent_cfg.seed = seed
 
+    basic_run = args_cli.variant == "SB" and command_settings(args_cli)["command_mode"] == "basic_gait"
     log_root = os.path.abspath(os.path.join("logs", "rsl_rl", agent_cfg.experiment_name))
     if args_cli.resume_from:
         resume_path = os.path.abspath(args_cli.resume_from)
         parent = resume_parent(resume_path, args_cli.variant)
-        log_dir = str(segment_dir(parent, datetime.now().strftime("%Y%m%d_%H%M%S"), os.getpid()))
+        if not basic_run:
+            log_dir = str(segment_dir(parent, datetime.now().strftime("%Y%m%d_%H%M%S"), os.getpid()))
     else:
         resume_path = None
         parent = None
-        log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        if agent_cfg.run_name:
-            log_dir += f"_{agent_cfg.run_name}"
-        log_dir = os.path.join(log_root, log_dir)
+        if not basic_run:
+            log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            if agent_cfg.run_name:
+                log_dir += f"_{agent_cfg.run_name}"
+            log_dir = os.path.join(log_root, log_dir)
+    if basic_run:
+        from foothold_s2.basic_gait_run import isolated_run_dir
+
+        log_dir = str(isolated_run_dir(args_cli.basic_log_root, args_cli.basic_stage,
+                                       agent_cfg.run_name, datetime.now().strftime("%Y%m%d_%H%M%S"),
+                                       os.getpid(), resume_path))
     env_cfg.log_dir = log_dir
     if args_cli.variant == "SB":                                          # EX-35: 명령 표집기 · 시계 흩기는 gym.make 앞에서 명령 term cfg 에 쓴다
         cmd_set = command_settings(args_cli)
@@ -133,6 +144,7 @@ def main(env_cfg, agent_cfg):
         elif cmd_set["command_mode"] == "basic_gait":
             cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True,
                               "basic_new_share": cmd_set["basic_new_share"]}
+            cmd_cfg.seed = agent_cfg.seed
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
     budget = resume_budget(agent_cfg.max_iterations, parent["completed_update"]) if is_extended_resume(args_cli) else None
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
@@ -230,6 +242,14 @@ def main(env_cfg, agent_cfg):
                        "physical_reset": physical_reset,
                        "basic_terrain": basic_terrain,
                        "note": "new simulator and episode reset; terrain origins restored independently"}, stream, ensure_ascii=False, indent=2)
+    if basic_l02:
+        from foothold_s2.basic_gait_run import write_start_receipt
+
+        current_terrain = place_l02(env.unwrapped)
+        start_receipt = write_start_receipt(log_dir, stage=args_cli.basic_stage, name=agent_cfg.run_name,
+                                            env_seed=agent_cfg.seed, command_seed=env_cfg.commands.base_velocity.seed,
+                                            terrain=current_terrain, num_envs=env_cfg.scene.num_envs)
+        print("BASIC_START_RECEIPT " + json.dumps(start_receipt, ensure_ascii=False), flush=True)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
     # SONNET-X11: 실행 시작 manifest(소비 파일 SHA · dirty diff · YAML · 인자 · 모드 · 초기 상태 SHA). 소비 코드가 실행 중 바뀌면 체크포인트 저장 때 멈춘다.
@@ -243,6 +263,7 @@ def main(env_cfg, agent_cfg):
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,
+             "basic_start_receipt": start_receipt if basic_l02 else None,
              "basic_terrain_cfg_difference": "L0..2 active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None,
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}

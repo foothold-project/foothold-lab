@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Proposed parent/scratch pair. Default is receipt-only; lead starts live jobs after approval.
-# END_BY=2026-10-30T08:00:00+09:00 SHARE=0.30 bash foothold_s2/run_basic_gait.sh parent cuda:0 <model_1500.pt>
-# END_BY=... SHARE=0.30 bash foothold_s2/run_basic_gait.sh scratch cuda:1
+# END_BY=<ISO8601> BASIC_LOG_ROOT=C:/Users/AI-WS01/s2_lab/basic_gait_runs STAGE=smoke SHARE=0.30 bash foothold_s2/run_basic_gait.sh parent cuda:0 <model_1500.pt>
+# STAGE=main puts the approved full run under a separate main root. Default remains receipt-only.
 set -euo pipefail
 
 KIND="${1:?parent or scratch}"
@@ -9,6 +9,8 @@ DEV="${2:?cuda:0 or cuda:1}"
 PARENT="${3:-}"
 END_BY="${END_BY:?explicit ISO8601 deadline with timezone required}"
 SHARE="${SHARE:-0.30}"
+BASIC_LOG_ROOT="${BASIC_LOG_ROOT:?explicit absolute output root required}"
+STAGE="${STAGE:?smoke or main required}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV=/c/Users/AI-WS01/anaconda3/envs/isaac311
 PY="$ENV/python.exe"
@@ -17,10 +19,10 @@ export CONDA_PREFIX="$ENV" OMNI_KIT_ACCEPT_EULA=YES CUDA_DEVICE_ORDER=PCI_BUS_ID
 export PYTHONPATH="$ROOT"
 cd "$ROOT"
 
-OPTS=("$KIND" "$DEV" --end-by "$END_BY" --share "$SHARE")
+OPTS=("$KIND" "$DEV" --end-by "$END_BY" --share "$SHARE" --log-root "$BASIC_LOG_ROOT" --stage "$STAGE")
 if [ -n "$PARENT" ]; then OPTS+=(--parent "$PARENT"); fi
 STAMP="$(date +%Y%m%d_%H%M%S)"
-OUT="$ROOT/logs_gate/basic_gait_${KIND}_${STAMP}_$$"
+OUT="$BASIC_LOG_ROOT/receipts/$STAGE/basic_gait_${KIND}_${STAMP}_$$"
 mkdir -p "$OUT"
 git rev-parse HEAD > "$OUT/git_head.txt"
 git status --short foothold_s2 > "$OUT/git_status.txt"

@@ -129,6 +129,16 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
         from foothold_s2.commands.mixed_core import basic_shares
 
         basic_shares(0.30 if basic_share is None else basic_share)
+        basic_root = getattr(args, "basic_log_root", None)
+        basic_stage = getattr(args, "basic_stage", None)
+        if not basic_root or not Path(basic_root).is_absolute() or basic_stage not in ("smoke", "main"):
+            raise ValueError("basic_gait requires an absolute --basic-log-root and --basic-stage smoke|main")
+        if basic_stage == "smoke" and getattr(args, "smoke_updates", None) not in (2, 10):
+            raise ValueError("basic smoke stage requires --smoke-updates 2 or 10")
+        if basic_stage == "main" and getattr(args, "smoke_updates", None) is not None:
+            raise ValueError("basic main stage forbids --smoke-updates")
+    elif getattr(args, "basic_log_root", None) is not None or getattr(args, "basic_stage", None) is not None:
+        raise ValueError("basic output flags require --command_mode basic_gait")
     if args.variant != "SB" and (cm not in (None, "start") or cs == "on"):
         raise ValueError("non-START command modes and --clock_scatter on are for the SB variant only")
     if (cm == "s2a" or (cs == "on" and cm != "basic_gait")) and getattr(args, "smoke_updates", None) != 2 and not is_extended_resume(args):

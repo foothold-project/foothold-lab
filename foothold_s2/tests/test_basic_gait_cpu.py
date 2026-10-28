@@ -17,7 +17,9 @@ def _args(**changes):
                 end_by="2099-01-01T00:00:00+00:00", num_envs=3072, seed=42,
                 max_iterations=1501, force_gt=False, smoke_updates=None,
                 resume_from=None, p_map_off=0.1, command_mode="basic_gait",
-                clock_scatter="on", basic_new_share=None)
+                clock_scatter="on", basic_new_share=None,
+                basic_log_root="C:/Users/AI-WS01/s2_lab/basic_gait_runs", basic_stage="main",
+                run_name="EX-36B-basic-share30")
     data.update(changes)
     return SimpleNamespace(**data)
 
@@ -62,7 +64,7 @@ def test_contract_rejects_known_invalid_commands_and_preserves_old_modes():
 def test_new_mode_validation_and_parameterized_share():
     validate_launch(_args(), verify_parent=False)
     validate_launch(_args(basic_new_share=0.15), verify_parent=False)
-    validate_launch(_args(smoke_updates=10), verify_parent=False)
+    validate_launch(_args(smoke_updates=10, basic_stage="smoke"), verify_parent=False)
     settings = command_settings(_args(basic_new_share=0.15))
     assert settings["command_contract"] == "basic_gait_v1"
     assert settings["basic_shares"]["forward"] == pytest.approx(0.55)
@@ -74,6 +76,10 @@ def test_new_mode_validation_and_parameterized_share():
         validate_launch(_args(command_mode="start", basic_new_share=0.15), verify_parent=False)
     with pytest.raises(ValueError, match="SB variant only"):
         validate_launch(_args(variant="B", task=TASKS["B"]), verify_parent=False)
+    with pytest.raises(ValueError, match="basic-log-root"):
+        validate_launch(_args(basic_log_root=None), verify_parent=False)
+    with pytest.raises(ValueError, match="smoke stage"):
+        validate_launch(_args(basic_stage="smoke"), verify_parent=False)
 
 
 def test_reward_split_uses_pre_reset_body_vy_and_six_basic_groups():
@@ -112,6 +118,25 @@ def test_basic_reward_split_rejects_missing_y_velocity():
     with pytest.raises(ValueError, match="body vy"):
         split_stats(torch.ones(1, 1, 1), ["r"], torch.zeros(1, 1), torch.zeros(1, 1),
                     torch.tensor([[[0., 0.5, 0.]]]), basic_mode=True)
+
+
+def test_basic_following_requires_walkturn_yaw_sign_and_stand_both_speeds():
+    cmd = torch.tensor([[[0.5, 0, 0.3], [0.5, 0, -0.3],
+                         [0, 0, 0], [0, 0, 0], [0, 0, 0]]])
+    vx = torch.tensor([[0.5, 0.5, 0.0, 0.06, 0.0]])
+    vy = torch.zeros_like(vx)
+    wz = torch.tensor([[-0.3, 0.3, 0.0, 0.0, 0.11]])
+    out = split_stats(torch.ones(1, 5, 1), ["track_lin_vel"], vx, wz, cmd,
+                      vy=vy, basic_mode=True)
+    # Both turning commands have opposite actual yaw; neither is full following.
+    assert out["by_basic_group"]["walkturn"]["following_env_steps"] == 0
+    # Only the motionless stand sample follows, not the translating or rotating one.
+    assert out["by_basic_group"]["stand"]["following_env_steps"] == 1
+    wz[0, 0] = 0.3
+    wz[0, 1] = -0.3
+    fixed = split_stats(torch.ones(1, 5, 1), ["track_lin_vel"], vx, wz, cmd,
+                        vy=vy, basic_mode=True)
+    assert fixed["by_basic_group"]["walkturn"]["following_env_steps"] == 2
 
 
 def test_l02_rebase_updates_labels_and_both_origins_without_changing_types():
