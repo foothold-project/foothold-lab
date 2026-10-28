@@ -1,11 +1,16 @@
 """Known-input tests of W15 checkpoint units, receipts, and W28 job specs."""
 
 import json
+import os
+from pathlib import Path
+import subprocess
+from types import SimpleNamespace
 
 import pytest
 
 from foothold_s2 import basic_gait_chain_plan as plan
 from foothold_s2 import basic_gait_eval_once as once
+from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
 from foothold_s2.eval.map_mode_cells import commands, SEQUENCES
 
 
@@ -70,3 +75,42 @@ def test_w28_job_per_250_checkpoint_and_gpu_pin(tmp_path):
                          tmp_path / "specs", 1, "GPU-test-uuid", "CPU-test-approval")
     with pytest.raises(ValueError, match="approval"):
         plan.spec("parent", 1750, tmp_path, tmp_path, 0, "GPU-test-uuid", "PENDING")
+
+
+def test_basic_eval_once_passes_w33b_cache_to_child(tmp_path, monkeypatch):
+    ck = tmp_path / "model_250.pt"
+    ck.write_bytes(b"complete atomic checkpoint")
+    out = tmp_path / "eval"
+    captured = {}
+
+    def fake_run(argv, **kwargs):
+        captured.update(argv=argv, env=kwargs["env"])
+        _complete(tmp_path)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(once.subprocess, "run", fake_run)
+    result = once.run("cuda:1", ck, 250, out)
+    assert result["checkpoint_iter"] == 250
+    assert captured["env"]["BASIC_GAIT_KIT_ARG"] == KIT_CACHE_ARG
+
+
+def test_run_sb_eval_forwards_single_kit_cache_token_without_kit(tmp_path):
+    shell = Path("C:/Program Files/Git/bin/bash.exe")
+    if not shell.is_file():
+        pytest.skip("Git Bash unavailable")
+    root = Path(__file__).resolve().parents[2]
+    fake = tmp_path / "fake_kit.sh"
+    fake.write_text("#!/usr/bin/env bash\nOUT=$1; shift\nmkdir -p \"$OUT\"\nprintf '%s\\n' \"$@\" > \"$OUT/argv.txt\"\n"
+                    "echo TURNPROBE_DONE > \"$OUT/run.log\"\necho '{}' > \"$OUT/map_modes.json\"\n", encoding="utf-8")
+    ck = tmp_path / "model_250.pt"
+    ck.write_bytes(b"fixture")
+    out = tmp_path / "eval"
+    env = os.environ.copy()
+    env.update(BASIC_GAIT_KIT_RUNNER=fake.as_posix(), BASIC_GAIT_KIT_ARG=KIT_CACHE_ARG,
+               MODES="eval_gt", COMMAND_SUITE="extended")
+    child = subprocess.run([str(shell), str(root / "foothold_s2/eval/run_sb_eval.sh"),
+                            "cuda:1", ck.as_posix(), out.as_posix()], cwd=root, env=env,
+                           capture_output=True, text=True, check=False)
+    assert child.returncode == 0, child.stderr
+    assert (out / "turn16_eval_gt" / "argv.txt").read_text(encoding="utf-8").splitlines().count(KIT_CACHE_ARG) == 1
+    assert (out / "map64" / "argv.txt").read_text(encoding="utf-8").splitlines().count(KIT_CACHE_ARG) == 1

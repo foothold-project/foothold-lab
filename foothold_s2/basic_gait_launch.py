@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+from foothold_s2.basic_gait_kit import KIT_CACHE_ARG, KIT_CACHE_VALUE
 from foothold_s2.commands.mixed_core import basic_shares
 from foothold_s2.sol23f_contract import TASKS, validate_launch
 
@@ -46,7 +47,7 @@ def build_args(kind: str, device: str, end_by: str, share: float, parent: str | 
             "--max-wall-s", "86400", "--max_iterations", "3001" if parent and stage == "main" else "1501",
             "--command_mode", "basic_gait", "--basic-new-share", str(share),
             "--basic-log-root", str(Path(log_root).resolve()), "--basic-stage", stage,
-            "--clock_scatter", "on", "--p_map_off", "0.1"]
+            "--clock_scatter", "on", "--p_map_off", "0.1", KIT_CACHE_ARG]
     if parent:
         args += ["--resume_from", parent]
     if stage == "smoke":
@@ -59,6 +60,12 @@ def receipt(kind: str, args: list[str], check_sha: bool = True) -> dict:
     i = 0
     while i < len(args):
         if args[i] == "--headless":
+            i += 1
+            continue
+        if args[i].startswith("--kit_args="):
+            if "kit_args" in pairs:
+                raise ValueError("duplicate Kit arguments")
+            pairs["kit_args"] = args[i].split("=", 1)[1]
             i += 1
             continue
         if not args[i].startswith("--") or i + 1 >= len(args):
@@ -75,6 +82,8 @@ def receipt(kind: str, args: list[str], check_sha: bool = True) -> dict:
                          clock_scatter=pairs["clock_scatter"], basic_log_root=pairs["basic-log-root"],
                          basic_stage=pairs["basic-stage"])
     validate_launch(ns, verify_parent=check_sha)
+    if pairs.get("kit_args") != KIT_CACHE_VALUE:
+        raise ValueError("W33b basic gait Kit cache argument missing or changed")
     if (kind == "parent") != bool(ns.resume_from):
         raise ValueError("receipt kind and checkpoint disagree")
     actual = None
@@ -93,7 +102,7 @@ def receipt(kind: str, args: list[str], check_sha: bool = True) -> dict:
         "additional_updates": (2 if kind == "parent" else 10) if ns.basic_stage == "smoke" else (1500 if kind == "parent" else 1501),
         "run_name": pairs["run_name"], "stage": ns.basic_stage,
         "log_root": ns.basic_log_root, "expected_log_parent": str(Path(ns.basic_log_root) / ns.basic_stage),
-        "env_seed": SEED, "command_seed": SEED,
+        "env_seed": SEED, "command_seed": SEED, "kit_cache_argument": KIT_CACHE_ARG,
         "start_terrain_receipt": "basic_start_receipt.json in actual log_dir, written after placement and parent restore",
         "prior_parent_smoke_output": {"path": PRIOR_PARENT_SMOKE, "classification": "예행 산출, 정본 아님"} if kind == "parent" else None,
         "command_contract": "basic_gait_v1", "basic_new_share": ns.basic_new_share,

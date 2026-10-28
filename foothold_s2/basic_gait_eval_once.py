@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import subprocess
 
+from foothold_s2.basic_gait_kit import KIT_CACHE_ARG
 from foothold_s2.eval.map_mode_cells import commands, SEQUENCES
 
 
@@ -65,6 +66,7 @@ def run(device: str, checkpoint: Path, expected_iter: int, out: Path) -> dict:
     env["COMMAND_SUITE"] = "extended"
     env["PYTHONUTF8"] = "1"
     env["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    env["BASIC_GAIT_KIT_ARG"] = KIT_CACHE_ARG
     child = subprocess.run([str(shell), str(root / "foothold_s2/eval/run_sb_eval.sh"), device,
                             str(checkpoint), str(out)], cwd=root, env=env, check=False)
     if child.returncode != 0 or sha256_file(checkpoint) != before:

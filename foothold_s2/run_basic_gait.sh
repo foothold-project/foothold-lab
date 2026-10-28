@@ -28,6 +28,8 @@ git rev-parse HEAD > "$OUT/git_head.txt"
 git status --short foothold_s2 > "$OUT/git_status.txt"
 "$PY" -m foothold_s2.basic_gait_launch "${OPTS[@]}" > "$OUT/launch_receipt.json"
 mapfile -t ARGS < <("$PY" -m foothold_s2.basic_gait_launch "${OPTS[@]}" --print-args | tr -d '\r')
+CACHE_ARG='--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache'
+[ "$(printf '%s\n' "${ARGS[@]}" | grep -Fxc -- "$CACHE_ARG")" = "1" ] || { echo "W33b Kit cache arg missing or duplicated" >&2; exit 5; }
 for A in "${ARGS[@]}"; do
   case "$A" in ""|*$'\r'*) echo "invalid argv" >&2; exit 5;; esac
 done

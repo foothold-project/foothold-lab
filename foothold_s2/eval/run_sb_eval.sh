@@ -9,7 +9,9 @@
 set -u
 DEV="$1"; CK="$2"; OUT="$3"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-KIT="$ROOT/foothold_s2/eval/run_kit.sh"
+KIT="${BASIC_GAIT_KIT_RUNNER:-$ROOT/foothold_s2/eval/run_kit.sh}"
+CACHE_ARGS=()
+if [ -n "${BASIC_GAIT_KIT_ARG:-}" ]; then CACHE_ARGS=("$BASIC_GAIT_KIT_ARG"); fi
 TASK="${TASK:-FootholdS2-Go2-S2-SB-v0}"                    # B1500 을 같은 꼴로 재려면 TASK=FootholdS2-Go2-S2-23f-B-v0
 MODES="${MODES:-eval_gt probe_prop_only eval_pred}"        # 세 정책 입력 지도 모드. G0 는 호출자가 MODES=none 을 명시한다.
 COMMAND_SUITE="${COMMAND_SUITE:-extended}"                # core 는 옛 전진·제자리 회전 네 칸만 재현할 때 쓴다.
@@ -23,11 +25,11 @@ sha256sum "$CK" > "$OUT/checkpoint_sha256.txt"
 : > "$OUT/rc.txt"
 for MODE in $MODES; do
   MODULE=foothold_s2.eval.turn_probe DEVICE="$DEV" bash "$KIT" "$OUT/turn16_$MODE" \
-    --task "$TASK" --checkpoint "$CK" --envs 16 --map-mode "$MODE" --fixed-terrain $LEVEL_FLAG --cases all $GAITS < /dev/null
+    --task "$TASK" --checkpoint "$CK" --envs 16 --map-mode "$MODE" --fixed-terrain $LEVEL_FLAG --cases all $GAITS "${CACHE_ARGS[@]}" < /dev/null
   echo "turn16_$MODE rc=$?" >> "$OUT/rc.txt"
   grep -q "TURNPROBE_DONE" "$OUT/turn16_$MODE/run.log" || echo "turn16_$MODE: DONE 줄 없음(Isaac 은 예외 뒤에도 0 을 낼 수 있다)" >> "$OUT/rc.txt"
 done
 MODULE=foothold_s2.eval.eval_map_modes DEVICE="$DEV" bash "$KIT" "$OUT/map64" \
-  --task "$TASK" --checkpoint "$CK" --envs 64 --steps 300 --modes "${MODES// /,}" --command-suite "$COMMAND_SUITE" --fixed-terrain $LEVEL_FLAG < /dev/null
+  --task "$TASK" --checkpoint "$CK" --envs 64 --steps 300 --modes "${MODES// /,}" --command-suite "$COMMAND_SUITE" --fixed-terrain $LEVEL_FLAG "${CACHE_ARGS[@]}" < /dev/null
 echo "map64 rc=$?" >> "$OUT/rc.txt"
 [ -f "$OUT/map64/map_modes.json" ] || echo "map64: map_modes.json 없음" >> "$OUT/rc.txt"

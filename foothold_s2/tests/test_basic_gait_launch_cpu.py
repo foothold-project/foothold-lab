@@ -18,13 +18,17 @@ def _build(kind, device, share, parent=None, stage="main"):
 
 
 def _pairs(argv):
-    a = [x for x in argv if x != "--headless"]
+    a = [x for x in argv if x != "--headless" and not x.startswith("--kit_args=")]
     return dict(zip(a[::2], a[1::2]))
 
 
 def test_parent_and_scratch_args_keep_seed_env_and_ppo_budget():
-    parent = _pairs(_build("parent", "cuda:0", 0.30, "m1500.pt"))
-    scratch = _pairs(_build("scratch", "cuda:1", 0.30))
+    parent_argv = _build("parent", "cuda:0", 0.30, "m1500.pt")
+    scratch_argv = _build("scratch", "cuda:1", 0.30)
+    for argv in (parent_argv, scratch_argv):
+        assert argv.count(bg.KIT_CACHE_ARG) == 1
+    parent = _pairs(parent_argv)
+    scratch = _pairs(scratch_argv)
     for row in (parent, scratch):
         assert row["--seed"] == "42" and row["--num_envs"] == "3072"
         assert row["--command_mode"] == "basic_gait" and row["--basic-new-share"] == "0.3"
@@ -48,6 +52,8 @@ def test_scratch_receipt_and_wrong_kind_or_share_rejected():
         bg.receipt("parent", _build("scratch", "cuda:1", 0.15))
     with pytest.raises(ValueError, match="basic_new_share"):
         _build("scratch", "cuda:1", 0.9)
+    with pytest.raises(ValueError, match="W33b"):
+        bg.receipt("scratch", [x for x in _build("scratch", "cuda:1", 0.15) if x != bg.KIT_CACHE_ARG])
 
 
 def test_parent_sha_pin_rejects_changed_bytes(tmp_path, monkeypatch):
