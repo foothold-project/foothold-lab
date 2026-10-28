@@ -112,3 +112,23 @@ def test_basic_reward_split_rejects_missing_y_velocity():
     with pytest.raises(ValueError, match="body vy"):
         split_stats(torch.ones(1, 1, 1), ["r"], torch.zeros(1, 1), torch.zeros(1, 1),
                     torch.tensor([[[0., 0.5, 0.]]]), basic_mode=True)
+
+
+def test_l02_rebase_updates_labels_and_both_origins_without_changing_types():
+    from foothold_s2.commands.basic_levels import place_l02
+
+    origins = torch.arange(10 * 3 * 3, dtype=torch.float32).reshape(10, 3, 3)
+    levels = torch.tensor([0, 2, 3, 9], dtype=torch.long)
+    types = torch.tensor([0, 1, 2, 1], dtype=torch.long)
+    terrain = SimpleNamespace(terrain_origins=origins, terrain_levels=levels,
+                              terrain_types=types, env_origins=torch.zeros(4, 3))
+    scene = SimpleNamespace(terrain=terrain, env_origins=torch.zeros(4, 3))
+    row = place_l02(SimpleNamespace(scene=scene))
+    assert row["old_above_l2"] == 2 and row["new_counts"] == [3, 0, 1]
+    assert levels.tolist() == [0, 2, 0, 0] and types.tolist() == [0, 1, 2, 1]
+    assert torch.equal(terrain.env_origins, origins[levels, types])
+    assert torch.equal(scene.env_origins, terrain.env_origins)
+    assert place_l02(SimpleNamespace(scene=scene))["labels_sha256"] == row["labels_sha256"]
+    levels[0] = 10
+    with pytest.raises(ValueError, match="outside"):
+        place_l02(SimpleNamespace(scene=scene))

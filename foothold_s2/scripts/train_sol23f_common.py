@@ -136,6 +136,13 @@ def main(env_cfg, agent_cfg):
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
     budget = resume_budget(agent_cfg.max_iterations, parent["completed_update"]) if is_extended_resume(args_cli) else None
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
+    basic_l02 = args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
+    if basic_l02:
+        # 10행 지형의 형상은 유지하고 활성 env만 L0..2에 고정한다.
+        # 두 판 모두 같은 고정을 쓰며 EX-35와 다른 설정으로 영수증에 남긴다.
+        env_cfg.curriculum.terrain_levels = None
+        env_cfg.curriculum.command_range = None
+        agent_cfg.save_interval = 250
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -145,6 +152,11 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.sensors.start_obs import AUG
         AUG.enabled = False
     env = gym.make(args_cli.task, cfg=env_cfg)
+    basic_terrain = None
+    if basic_l02:
+        from foothold_s2.commands.basic_levels import place_l02
+
+        basic_terrain = place_l02(env.unwrapped)
     realized_material = save_material_array(env.unwrapped.scene["robot"].root_physx_view.get_material_properties(), log_dir)
     floor = env_cfg.scene.terrain.physics_material
     realized_material["floor_material_cfg"] = {
@@ -210,10 +222,13 @@ def main(env_cfg, agent_cfg):
         if sha256(resume_path) != parent["sha256"]:
             raise RuntimeError("resume checkpoint changed after validation")
         runner.load(resume_path)
+        if basic_l02:
+            basic_terrain = place_l02(env.unwrapped)
         physical_reset = runner.reset_segment_physics()
         with open(os.path.join(log_dir, "resume_parent.json"), "w", encoding="utf-8") as stream:
             json.dump({**parent, "resume_budget": budget, "physical_resume_identical": False,
                        "physical_reset": physical_reset,
+                       "basic_terrain": basic_terrain,
                        "note": "new simulator and episode reset; terrain origins restored independently"}, stream, ensure_ascii=False, indent=2)
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), train_cfg)
@@ -227,6 +242,8 @@ def main(env_cfg, agent_cfg):
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
+             "basic_terrain": basic_terrain,
+             "basic_terrain_cfg_difference": "L0..2 active labels; terrain_levels and command_range curriculum disabled; generated 10-row terrain geometry unchanged" if basic_l02 else None,
              "parent_judge": tlm.parent_judge(resume_path) if resume_path else None,
              "start_checkpoint_judged_with": tlm.judged_with(tlm.parent_judge(resume_path)) if resume_path else None}
     manifest = run_manifest.build_manifest(repo=REPO, log_dir=log_dir, run_name=agent_cfg.run_name, cli_args={**vars(args_cli), "hydra_args": hydra_args}, modes=modes,
