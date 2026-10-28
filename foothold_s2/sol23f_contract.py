@@ -85,6 +85,8 @@ def check_resume_parent(args) -> int:
     if not path or not Path(path).is_file():
         raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
     sha = file_sha256(path)
+    if getattr(args, "basic_ex38", False) and sha != "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d":
+        raise ValueError("EX-38 parent must be the pinned S-B10 model_1500.pt")
 
     basic_arm = getattr(args, "basic_extend_arm", None)
     if basic_arm is not None:
@@ -99,7 +101,8 @@ def check_resume_parent(args) -> int:
     parent_iter = RESUME_PARENTS[sha]
 
     if getattr(args, "smoke_updates", None) is None:
-        resume_budget(int(args.max_iterations), parent_iter)                     # 남은 회차 1..1500 (0 회 · 너무 긴 판 거절)
+        resume_budget(int(args.max_iterations), parent_iter,
+                      limit=18500 if getattr(args, "basic_ex38", False) else 1500)
 
     return parent_iter
 
@@ -131,13 +134,14 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     basic_share = getattr(args, "basic_new_share", None)
     basic_arm = getattr(args, "basic_extend_arm", None)
     basic_sha = getattr(args, "basic_extend_parent_sha", None)
+    ex38 = bool(getattr(args, "basic_ex38", False))
     fast_gt = bool(getattr(args, "fast_gt_only", False))
     reward_slots = ("basic_feet_regulation_weight", "basic_track_ang_weight",
                     "basic_track_lin_weight", "basic_joint_acc_weight", "basic_hip_pos_weight")
     if (any(getattr(args, name, None) is not None for name in reward_slots)
-            or bool(getattr(args, "basic_lin_vel_z_schedule", False))) and basic_arm is None:
+            or bool(getattr(args, "basic_lin_vel_z_schedule", False))) and basic_arm is None and not ex38:
         raise ValueError("basic reward bundle is reserved for an EX-36 extension parent")
-    if basic_arm is not None:
+    if basic_arm is not None or ex38:
         from foothold_s2.rewards.basic_gait_bundle import validate_settings
 
         validate_settings({"track_ang_vel": getattr(args, "basic_track_ang_weight", None),
@@ -150,6 +154,22 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                     or getattr(args, "basic_stage", None) != "main"
                     or getattr(args, "smoke_updates", None) is not None):
         raise ValueError("fast_gt_only requires a completed EX-36 basic-gait extension parent")
+    if ex38:
+        from foothold_s2.rewards.basic_gait_bundle import E1_CANDIDATE
+
+        if (basic_arm is not None or basic_sha is not None or fast_gt or args.variant != "SB"
+                or cm != "basic_gait" or getattr(args, "basic_stage", None) != "main"
+                or getattr(args, "smoke_updates", None) is not None
+                or not is_extended_resume(args) or float(basic_share or 0) != 0.30
+                or cs != "on" or p_off != 0.1
+                or not getattr(args, "basic_lin_vel_z_schedule", False)
+                or getattr(args, "basic_feet_regulation_weight", None) is not None
+                or any(getattr(args, flag, None) != value for flag, value in (
+                    ("basic_track_ang_weight", E1_CANDIDATE["track_ang_vel"]),
+                    ("basic_track_lin_weight", E1_CANDIDATE["track_lin_vel"]),
+                    ("basic_joint_acc_weight", E1_CANDIDATE["joint_acc"]),
+                    ("basic_hip_pos_weight", E1_CANDIDATE["hip_pos_penalty"])))):
+            raise ValueError("EX-38 requires pinned parent basic-gait settings and ordinary perception")
     if (basic_arm is None) != (basic_sha is None):
         raise ValueError("EX-36 extend arm and parent SHA must be supplied together")
     if basic_arm is not None and (args.variant != "SB" or cm != "basic_gait"
@@ -202,7 +222,7 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("p_map_off must be inside (0, 1)")
         if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
             raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
-        max_total = (3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
+        max_total = (20001 if ex38 else 3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
         if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= max_total):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
     elif getattr(args, "smoke_updates", None) is not None:

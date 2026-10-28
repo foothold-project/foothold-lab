@@ -30,11 +30,13 @@ def validate_settings(weights: dict[str, float | None], lin_vel_z_schedule: bool
             "feet_regulation": "reserved_adapter_unverified"}
 
 
-def scheduled_lin_vel_z_weight(iteration: int, end_iteration: int = 1500) -> float:
-    """E1 absolute update schedule: -2 at update 0, 0 at and after 1500."""
-    if iteration < 0 or end_iteration <= 0:
+def scheduled_lin_vel_z_weight(iteration: int, end_iteration: int = 1500,
+                               start_iteration: int = 0) -> float:
+    """E1 schedule: -2 at this segment's first update, 0 after 1500 updates."""
+    if iteration < 0 or start_iteration < 0 or end_iteration <= 0:
         raise ValueError("invalid reward schedule update")
-    return -2.0 * (1.0 - min(iteration, end_iteration) / end_iteration)
+    elapsed = max(0, iteration - start_iteration)
+    return -2.0 * (1.0 - min(elapsed, end_iteration) / end_iteration)
 
 
 def apply_settings(env_cfg, settings: dict) -> dict:
@@ -55,9 +57,9 @@ def apply_settings(env_cfg, settings: dict) -> dict:
     return settings
 
 
-def set_lin_vel_z_weight(env, iteration: int) -> float:
+def set_lin_vel_z_weight(env, iteration: int, start_iteration: int = 0) -> float:
     """Call at each update boundary after RewardManager registered its nonzero base term."""
-    weight = scheduled_lin_vel_z_weight(iteration)
+    weight = scheduled_lin_vel_z_weight(iteration, start_iteration=start_iteration)
     manager = env.unwrapped.reward_manager
     term = manager.get_term_cfg("lin_vel_z")
     term.weight = weight

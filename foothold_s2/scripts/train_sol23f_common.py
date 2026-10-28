@@ -43,6 +43,7 @@ parser.add_argument("--stop-file", type=str, default=None)
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
 parser.add_argument("--basic-extend-arm", choices=("A", "B"), default=None)
+parser.add_argument("--basic-ex38", action="store_true", help="pinned EX-38 ordinary-perception reward segment")
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
 parser.add_argument("--basic-feet-regulation-weight", type=float)
@@ -160,7 +161,9 @@ def main(env_cfg, agent_cfg):
                               "basic_new_share": cmd_set["basic_new_share"]}
             cmd_cfg.seed = agent_cfg.seed
         cmd_cfg.clock_scatter = bool(cmd_set["clock_scatter"])
-    budget = resume_budget(agent_cfg.max_iterations, parent["completed_update"]) if is_extended_resume(args_cli) else None
+    budget = (resume_budget(agent_cfg.max_iterations, parent["completed_update"],
+                            limit=18500 if args_cli.basic_ex38 else 1500)
+              if is_extended_resume(args_cli) else None)
     tlm.apply_judge_args(env_cfg, args_cli.judge_world_frame, args_cli.judge_mask_new_task)    # gym.make 앞: 실제 값을 term params 에 박아 env.yaml 에도 남긴다
     basic_l02 = args_cli.variant == "SB" and cmd_set["command_mode"] == "basic_gait"
     if basic_l02:
@@ -255,6 +258,8 @@ def main(env_cfg, agent_cfg):
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
     runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
+    runner.basic_lin_vel_z_start_iteration = (parent["completed_update"] + 1
+                                             if args_cli.basic_ex38 else 0)
     if resume_path is None:
         initial = os.path.join(log_dir, "model_initial.pt")
         runner.save_initial(initial)
@@ -297,6 +302,8 @@ def main(env_cfg, agent_cfg):
              "map_stats_enabled": bool(runner.pcfg.get("log_map_stats", False)),
              "kl_probe_enabled": bool(runner.pcfg.get("log_kl", False)),
              "basic_reward_bundle": basic_reward_bundle,
+             "basic_reward_schedule_start_iteration": runner.basic_lin_vel_z_start_iteration,
+             "basic_ex38": bool(args_cli.basic_ex38),
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,

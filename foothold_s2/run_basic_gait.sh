@@ -21,6 +21,11 @@ cd "$ROOT"
 
 OPTS=("$KIND" "$DEV" --end-by "$END_BY" --share "$SHARE" --log-root "$BASIC_LOG_ROOT" --stage "$STAGE")
 if [ -n "$PARENT" ]; then OPTS+=(--parent "$PARENT"); fi
+if [ "${EX38:-0}" = "1" ]; then
+  [ "$END_BY" = '2026-10-29T12:30:00+09:00' ] || { echo 'EX-38 deadline mismatch' >&2; exit 5; }
+  [ "$BASIC_LOG_ROOT" = 'C:/Users/AI-WS01/s2_lab/basic_gait_runs' ] || { echo 'EX-38 output root mismatch' >&2; exit 5; }
+  OPTS+=(--ex38)
+fi
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="$BASIC_LOG_ROOT/receipts/$STAGE/basic_gait_${KIND}_${STAMP}_$$"
 mkdir -p "$OUT"

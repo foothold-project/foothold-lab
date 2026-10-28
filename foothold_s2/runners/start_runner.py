@@ -325,7 +325,8 @@ class StartRunner(OnPolicyRunner):
             if getattr(self, "basic_lin_vel_z_schedule", False):
                 from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
 
-                basic_lin_vel_z_weight = set_lin_vel_z_weight(self.env, it)
+                basic_lin_vel_z_weight = set_lin_vel_z_weight(
+                    self.env, it, getattr(self, "basic_lin_vel_z_start_iteration", 0))
             else:
                 basic_lin_vel_z_weight = None
             if trace is not None:
