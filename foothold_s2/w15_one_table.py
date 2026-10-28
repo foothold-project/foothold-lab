@@ -62,7 +62,9 @@ def read_receipt(model: str, iteration: int, path: Path, *, e1: bool = False) ->
             summary = by_sequence.get(command) if command in SEQUENCES else by_command.get(command)
             row = {"model": model, "iteration": iteration, "mode": mode, "command": command,
                    "source": str(path.resolve()),
-                   "device": (data.get("run_identity") or {}).get("gpu_uuid")}
+                   "device": (data.get("run_identity") or {}).get("gpu_uuid"),
+                   "repeat_identity": (data.get("checkpoint_sha256"), data.get("eval_seed"),
+                                       data.get("terrain_hash"), data.get("source_sha256"))}
             if summary is not None:
                 row.update(_measure(summary, command))
             out.append(row)
@@ -114,6 +116,9 @@ def collapse(rows: list[dict]) -> list[dict]:
     for _, group in sorted(grouped.items()):
         row = dict(group[0])
         distinct_devices = {r.get("device") for r in group if r.get("device")}
+        if len(group) > 1 and len({r.get("repeat_identity") for r in group}) != 1:
+            raise ValueError("repeat sources differ in checkpoint, seed, terrain, or code")
+        row["source"] = "; ".join(r["source"] for r in group if r.get("source")) or None
         for key, target in (("survival_fraction", "repeat_survival_width"),
                             ("vx_error_mps", "repeat_vx_error_width_mps"),
                             ("body_displacement_m", "repeat_displacement_width_m")):

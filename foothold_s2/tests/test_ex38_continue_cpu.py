@@ -92,6 +92,8 @@ def test_w15_table_measured_missing_and_cross_device_width(tmp_path):
         out.mkdir(parents=True)
         data = {"command_suite": "extended", "checkpoint_iter": 1750,
                 "terrain_tiles": [{"env": i} for i in range(64)],
+                "checkpoint_sha256": "a" * 64, "eval_seed": 42,
+                "terrain_hash": "b" * 64, "source_sha256": "c" * 64,
                 "run_identity": {"gpu_uuid": device},
                 "modes": {"eval_gt": {"spin+1.2": _summary(survived, .3, 1.0)}},
                 "sequences": {}}
@@ -106,6 +108,9 @@ def test_w15_table_measured_missing_and_cross_device_width(tmp_path):
     collapsed = w15_one_table.collapse(rows)
     spin = [r for r in collapsed if r["mode"] == "eval_gt" and r["command"] == "spin+1.2"]
     assert len(spin) == 1 and spin[0]["repeat_survival_width"] == 2 / 64
+    altered = dict(measured[1], repeat_identity=("different", 42, "b" * 64, "c" * 64))
+    with pytest.raises(ValueError, match="repeat sources differ"):
+        w15_one_table.collapse([measured[0], altered])
     assert all("envs" not in r for r in rows if r["command"] == "back0.5")
 
 

@@ -23,7 +23,7 @@ END_BY='<새 ISO8601 시각+09:00>' BASIC_LOG_ROOT='C:/Users/AI-WS01/s2_lab/basi
 
 ## 2. W15 한 표
 
-- `w15_one_table.py`는 부모 m1500, EX-36A m1750~m3000, EX-38 같은 저장본과 m3001, E1의 저장된 JSON만 읽어 CSV를 만든다. `eval_gt`와 `eval_pred`, `spin+1.2`와 `spin-1.2`, 좌→우와 우→좌를 별도 행으로 둔다. 64 env 생존 수·추종 절대오차·몸 이동 거리·장치 간 반복 폭을 원자료에서 계산한다. 없는 측정은 `미측`이다.
+- `w15_one_table.py`는 부모 m1500, EX-36A m1750~m3000, EX-38 같은 저장본과 m3001, E1의 저장된 JSON만 읽어 CSV를 만든다. `eval_gt`와 `eval_pred`, `spin+1.2`와 `spin-1.2`, 좌→우와 우→좌를 별도 행으로 둔다. 64 env 생존 수·추종 절대오차·몸 이동 거리·장치 간 반복 폭을 원자료에서 계산한다. 반복 폭은 체크포인트·시드·지형·코드가 같고 GPU UUID가 다른 자료에서만 계산하며 불일치하면 거절한다. 없는 측정은 `미측`이다.
 - 현재 CSV `W15-one-table-prepared.csv`는 496행 중 측정 근거 20행이다. 부모 4행은 옛 core 평가라 생존만 비교 가능하고 추종·몸 이동은 미측이다. E1 16행은 `native_student`이며 GT/PRED라고 부르지 않는다. EX-36A와 EX-38의 W15 원자료는 아직 없어서 빈 칸이다. 장치 간 반복 폭도 현재 미측이다.
 - 입력 원자료: `C:/mai/wt/foothold-lab/impl-turncases/logs/sb10_eval_x27j/m1500/map64/map_modes.json`, `C:/Users/AI-WS01/s2_lab/eval_e1_w15/e1/e1_w15.json`, `C:/Users/AI-WS01/s2_lab/basic_gait_runs/eval_w15/`.
 
