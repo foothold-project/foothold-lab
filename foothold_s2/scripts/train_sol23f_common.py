@@ -42,6 +42,8 @@ parser.add_argument("--max-wall-s", type=float, default=86400.0, help="24시간 
 parser.add_argument("--stop-file", type=str, default=None)
 parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
+parser.add_argument("--basic-extend-arm", choices=("A", "B"), default=None)
+parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--command_mode", choices=["start", "s2a", "basic_gait"], default=None, help="SB 전용: start(기본) · s2a · basic_gait")
 parser.add_argument("--basic-new-share", type=float, default=None, help="basic_gait 정지·후진·옆걸음 총 몫(기본 0.30, 대안 0.15)")
 parser.add_argument("--basic-log-root", type=str, default=None, help="basic_gait 출력 전용 절대경로. smoke/main 별도 폴더")
@@ -119,6 +121,11 @@ def main(env_cfg, agent_cfg):
     if args_cli.resume_from:
         resume_path = os.path.abspath(args_cli.resume_from)
         parent = resume_parent(resume_path, args_cli.variant)
+        if args_cli.basic_extend_arm is not None:
+            from foothold_s2.basic_gait_extend_parent import check_parent
+
+            parent = {**parent, "basic_extend": check_parent(resume_path, args_cli.basic_extend_arm,
+                                                             args_cli.basic_extend_parent_sha)}
         if not basic_run:
             log_dir = str(segment_dir(parent, datetime.now().strftime("%Y%m%d_%H%M%S"), os.getpid()))
     else:

@@ -86,6 +86,14 @@ def check_resume_parent(args) -> int:
         raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
     sha = file_sha256(path)
 
+    basic_arm = getattr(args, "basic_extend_arm", None)
+    if basic_arm is not None:
+        from foothold_s2.basic_gait_extend_parent import check_parent
+
+        parent = check_parent(path, basic_arm, getattr(args, "basic_extend_parent_sha", ""))
+        resume_budget(int(args.max_iterations), parent["completed_update"])
+        return parent["completed_update"]
+
     if sha not in RESUME_PARENTS:
         raise ValueError(f"--resume_from 저장본의 sha256 이 허용표에 없다: {sha}")
     parent_iter = RESUME_PARENTS[sha]
@@ -121,6 +129,16 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
         raise ValueError("--p_map_off is for the SB variant only")
     cm, cs = getattr(args, "command_mode", None), getattr(args, "clock_scatter", None)
     basic_share = getattr(args, "basic_new_share", None)
+    basic_arm = getattr(args, "basic_extend_arm", None)
+    basic_sha = getattr(args, "basic_extend_parent_sha", None)
+    if (basic_arm is None) != (basic_sha is None):
+        raise ValueError("EX-36 extend arm and parent SHA must be supplied together")
+    if basic_arm is not None and (args.variant != "SB" or cm != "basic_gait"
+                                  or getattr(args, "basic_stage", None) != "main"
+                                  or not getattr(args, "resume_from", None)
+                                  or getattr(args, "smoke_updates", None) is not None
+                                  or not is_extended_resume(args)):
+        raise ValueError("EX-36 extend requires a main-stage basic-gait SB resume")
     if cm not in (None, *COMMAND_MODES) or cs not in (None, "on", "off"):
         raise ValueError(f"command_mode must be one of {COMMAND_MODES}, clock_scatter on/off")
     if basic_share is not None and cm != "basic_gait":
@@ -165,7 +183,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("p_map_off must be inside (0, 1)")
         if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
             raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
-        if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= EXTEND_MAX_ITERATIONS):
+        max_total = (3001 if basic_arm is None else {"A": 4501, "B": 3001}.get(basic_arm, 0))
+        if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= max_total):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
     elif getattr(args, "smoke_updates", None) is not None:
         raise ValueError("smoke-updates is reserved for B")
