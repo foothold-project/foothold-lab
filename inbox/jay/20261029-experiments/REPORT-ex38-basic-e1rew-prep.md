@@ -4,8 +4,8 @@
 > 작성: 오흥재 (scripter 반영) · 2026-10-29 02:43
 > 근거: lead 10/29 02:3x EX-38 정정 명세, S-B10 model_1500.pt, CPU 시험과 DRY 영수증
 > 요지: 기존 일반 지각 학습 경로에서 보상 다섯 항목만 바꾸는 EX-38 기동 인자를 고정했다.
-> 상태: 준비 완료 · Kit 실행 미확인 · 학습 미기동
-> 판: v1.0
+> 상태: 인자 파싱 수정 완료 · Kit 재기동 미확인
+> 판: v1.1
 
 ## 계약
 
@@ -63,8 +63,22 @@ $env:SHARE='0.30'
 실제 Kit 예행과 학습은 lead가 EX-36B 종료 후 판단해 실행한다. 현재 학습을 건드리지 않았다.
 변경 코드와 시험의 SHA256은 `EX38-SHA256SUMS.txt`에 있다.
 
+## v1.1 · 실제 첫 기동의 인자 파싱 수정
+
+lead 첫 기동 영수증의 `run.log`는 `train_sb.py: error: argument --basic-joint-acc-weight: expected one argument`로 끝났다.
+기존 생성기가 `--basic-joint-acc-weight`, `-1e-7`을 두 토큰으로 내어 `argparse`가 음수 지수 표기를
+다음 옵션으로 읽었다. `--basic-joint-acc-weight=-1e-7`과 `--basic-hip-pos-weight=-0.05`로 바꿨다.
+영수증 파서도 이 한 토큰 형식을 읽는다.
+
+CPU 시험은 생성기의 `--print-args` 출력을 그대로 받아 실제
+`train_sol23f_common.py`의 `parser.add_argument` 선언을 AST에서 실행한 뒤 `parse_known_args`에 넣었다.
+기존 분리 토큰 입력은 지정 실패, 새 한 토큰 입력은 `joint_acc=-1e-7`과 `hip=-0.05`로 파싱됐다.
+AppLauncher 인자 등록과 Kit 시작은 실행하지 않았다. 좁은 관련 시험 17 PASS.
+첫 기동은 파서 전에 종료되어 학습이 시작되지 않았으며, 수정본의 실제 Kit 재기동은 lead 담당이다.
+
 ## 판 이력
 
 | 판 | 날짜 | 변경 |
 |---|---|---|
 | v1.0 | 2026-10-29 | EX-38 보상 판 준비와 CPU 검증 |
+| v1.1 | 2026-10-29 | 음수 보상 인자 한 토큰 파싱 수정과 실제 인자 선언 CPU 시험 |

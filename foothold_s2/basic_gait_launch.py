@@ -55,8 +55,8 @@ def build_args(kind: str, device: str, end_by: str, share: float, parent: str | 
         args += ["--resume_from", parent]
     if ex38:
         args += ["--basic-ex38", "--basic-track-ang-weight", "1.0",
-                 "--basic-track-lin-weight", "2.0", "--basic-joint-acc-weight", "-1e-7",
-                 "--basic-hip-pos-weight", "-0.05", "--basic-lin-vel-z-schedule"]
+                 "--basic-track-lin-weight", "2.0", "--basic-joint-acc-weight=-1e-7",
+                 "--basic-hip-pos-weight=-0.05", "--basic-lin-vel-z-schedule"]
     if stage == "smoke":
         args += ["--smoke-updates", "2" if parent else "10"]
     return args
@@ -74,6 +74,11 @@ def receipt(kind: str, args: list[str], check_sha: bool = True) -> dict:
             if "kit_args" in pairs:
                 raise ValueError("duplicate Kit arguments")
             pairs["kit_args"] = args[i].split("=", 1)[1]
+            i += 1
+            continue
+        if args[i].startswith("--") and "=" in args[i]:
+            key, value = args[i][2:].split("=", 1)
+            pairs[key] = value
             i += 1
             continue
         if not args[i].startswith("--") or i + 1 >= len(args):

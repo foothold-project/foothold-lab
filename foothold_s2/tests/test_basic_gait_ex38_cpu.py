@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import ast
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -24,6 +26,25 @@ def ex38_args(tmp_path: Path) -> list[str]:
         "parent", "cuda:0", END, 0.30, str(parent),
         log_root=str(tmp_path / "basic_gait_runs"), stage="main", ex38=True,
     )
+
+
+def actual_train_parser() -> argparse.ArgumentParser:
+    """Execute the real train_sol23f_common parser declarations, stopping before Kit."""
+    source = Path(__file__).resolve().parents[1] / "scripts" / "train_sol23f_common.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+    declarations = []
+    for node in tree.body:
+        if (isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "parser" for target in node.targets)):
+            declarations.append(node)
+        elif (isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+              and isinstance(node.value.func, ast.Attribute)
+              and isinstance(node.value.func.value, ast.Name)
+              and node.value.func.value.id == "parser" and node.value.func.attr == "add_argument"):
+            declarations.append(node)
+    namespace = {"argparse": argparse}
+    exec(compile(ast.Module(body=declarations, type_ignores=[]), str(source), "exec"), namespace)
+    return namespace["parser"]
 
 
 def test_ex38_receipt_pins_parent_rewards_perception_and_deadline(tmp_path, monkeypatch):
@@ -50,7 +71,36 @@ def test_ex38_receipt_pins_parent_rewards_perception_and_deadline(tmp_path, monk
         ("joint_acc", "--basic-joint-acc-weight"),
         ("hip_pos_penalty", "--basic-hip-pos-weight"),
     ):
-        assert float(args[args.index(flag) + 1]) == E1_CANDIDATE[name]
+        value = next((part.split("=", 1)[1] for part in args if part.startswith(flag + "=")), None)
+        if value is None:
+            value = args[args.index(flag) + 1]
+        assert float(value) == E1_CANDIDATE[name]
+
+
+def test_generated_launch_args_pass_actual_training_parser_without_kit(tmp_path, monkeypatch, capsys):
+    expected = basic_gait_launch.PARENT_SHA256
+    monkeypatch.setattr(basic_gait_launch, "sha256_file", lambda _p: expected)
+    monkeypatch.setattr(sol23f_contract, "file_sha256", lambda _p: expected)
+    parent = tmp_path / "model_1500.pt"
+    parent.write_bytes(b"known CPU fixture")
+    basic_gait_launch.main([
+        "parent", "cuda:0", "--parent", str(parent), "--end-by", END,
+        "--share", "0.30", "--log-root", str(tmp_path / "runs"),
+        "--stage", "main", "--ex38", "--print-args",
+    ])
+    launch_args = capsys.readouterr().out.splitlines()
+    parser = actual_train_parser()
+    prefix = ["--task", sol23f_contract.TASKS["SB"], "--variant", "SB"]
+    parsed, unknown = parser.parse_known_args(prefix + launch_args)
+    assert parsed.basic_joint_acc_weight == -1e-7
+    assert parsed.basic_hip_pos_weight == -0.05
+    assert parsed.basic_ex38 and parsed.basic_lin_vel_z_schedule
+    assert "--headless" in unknown  # AppLauncher flags are intentionally not executed here.
+    old_args = list(launch_args)
+    old_args[old_args.index("--basic-joint-acc-weight=-1e-7")] = "--basic-joint-acc-weight"
+    old_args.insert(old_args.index("--basic-joint-acc-weight") + 1, "-1e-7")
+    with pytest.raises(SystemExit):
+        parser.parse_known_args(prefix + old_args)
 
 
 def test_ex38_wrong_reward_or_parent_or_stage_caught(tmp_path, monkeypatch):
