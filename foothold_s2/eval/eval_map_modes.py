@@ -354,6 +354,10 @@ for mode in args.modes.split(","):
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
                "stationary_fraction_2to4s": stationary,
+               "stationary_measurement_definition": {
+                   "body_xy_speed_mps_lt": map_mode_cells.STOP_LINEAR_MPS,
+                   "body_abs_yaw_rate_radps_lt": map_mode_cells.STOP_YAW_RADPS,
+               } if stationary is not None else None,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
         row.update(map_mode_cells.summarize(cmd, tiles, vx, vy, wz, al,
                                            alive.cpu().numpy(), dt,

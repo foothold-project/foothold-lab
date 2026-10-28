@@ -2,7 +2,7 @@
 > 작성: 오흥재 (scripter 반영) · 2026-10-28
 > 근거: WORKLIST W15 · 팀장 추가 지시 · RESEARCH-basic-gait-list.md §2 · 기존 eval_map_modes.py
 > 요지: eval_pred와 64환경 지형별 기록에 후진·횡이동·대각·정지·회전 반전·재출발 칸을 연결
-> 상태: CPU 시험 통과 · Kit/GPU 미실행 · 실측값·판정 없음
+> 상태: verifier V1·V2 수정 · CPU 재시험 통과 · Kit/GPU 미실행 · 실측값·판정 없음
 
 # W15 평가 사슬 CPU 구현
 
@@ -26,3 +26,9 @@ $env:COMMAND_SUITE='extended'
 ```
 
 이 작업은 학습, 평가 Kit 실행, 성능 판정, 새 지형 난도 설정을 수행하지 않았다.
+
+## verifier V1·V2 수정
+
+`VERIFY-W15-f1631c10.md`의 정지 반례는 선속도 0, 요속도 1.2 rad/s에서 종전 `stationary_fraction_2to4s=1.0`이었다. 수정판은 몸 좌표 XY 평균 속력 < 0.05 m/s와 절대 요속도 평균 < 0.1 rad/s를 **동시에** 만족한 환경의 비율로 기록한다. 0.1 rad/s는 기존 `mgdp_terms.py`의 zero-command 요속도 범위에서 가져온 측정 정의이며, 이 비율에 새 합격선을 만들지 않았다. 반례에서 0.0, 양 축 정지 입력에서 1.0인 답을 아는 CPU 시험을 추가했다.
+
+`response_times`의 입력은 `env.step` 뒤 첫 표본부터이므로 첫 표본 시각을 0 대신 `dt`로 기록한다. 첫 표본에서 절반 속도 도달이면 0.02 s, 세 번째 표본이면 0.06 s인 CPU 입력을 확인했다. 기존 문서 위의 첫 시험 수치 6 PASS는 `f1631c10` 당시 값이며, 이 후속 수정의 재시험 수치는 아래 커밋 보고를 따른다. 실제 Kit 시간축은 미측정이다.

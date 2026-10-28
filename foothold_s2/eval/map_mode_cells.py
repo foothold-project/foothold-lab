@@ -7,6 +7,9 @@ import math
 
 import numpy as np
 
+STOP_LINEAR_MPS = 0.05
+STOP_YAW_RADPS = 0.1
+
 
 CORE_COMMANDS = {
     "fwd0.5": (0.5, 0.0, 0.0),
@@ -59,6 +62,17 @@ def phase_steps(total: int, phases: int) -> list[int]:
     return [base + (i < remainder) for i in range(phases)]
 
 
+def stationary_fraction(mean_xy_speed, mean_abs_yaw_rate, used) -> float:
+    """Descriptive stop statistic across both commanded-zero motion axes."""
+    mean_xy_speed = np.asarray(mean_xy_speed)
+    mean_abs_yaw_rate = np.asarray(mean_abs_yaw_rate)
+    used = np.asarray(used, dtype=bool)
+    if mean_xy_speed.shape != mean_abs_yaw_rate.shape or used.shape != mean_xy_speed.shape or not used.any():
+        raise ValueError("stop window needs matching nonempty samples")
+    return float(np.mean((mean_xy_speed[used] < STOP_LINEAR_MPS) &
+                         (mean_abs_yaw_rate[used] < STOP_YAW_RADPS)))
+
+
 def response_times(command, vx, vy, wz, alive, dt: float) -> list[dict]:
     """Descriptive first half-speed and yaw-sign response, without a pass gate."""
     vx, vy, wz, alive = (np.asarray(a) for a in (vx, vy, wz, alive))
@@ -69,8 +83,8 @@ def response_times(command, vx, vy, wz, alive, dt: float) -> list[dict]:
     for i in range(vx.shape[1]):
         hit = np.flatnonzero(alive[:, i] & (projected[:, i] >= norm * 0.5)) if norm else []
         sign = np.flatnonzero(alive[:, i] & (wz[:, i] * cz > 0)) if cz else []
-        out.append({"half_speed_response_s": float(hit[0] * dt) if len(hit) else None,
-                    "yaw_sign_response_s": float(sign[0] * dt) if len(sign) else None})
+        out.append({"half_speed_response_s": float((hit[0] + 1) * dt) if len(hit) else None,
+                    "yaw_sign_response_s": float((sign[0] + 1) * dt) if len(sign) else None})
     return out
 
 

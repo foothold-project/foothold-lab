@@ -74,12 +74,26 @@ def test_spin_drift_and_restart_response_are_descriptive_not_gates():
     assert spin["per_env"][0]["world_xy_displacement_m"] == pytest.approx(0.05)
     assert spin["per_env"][0]["world_xy_path_m"] == pytest.approx(0.07)
     assert cells.response_times((0, 0, -1.2), np.zeros((3, 1)), np.zeros((3, 1)),
-                                np.array([[0], [-0.5], [-1.0]]), samples, 0.02)[0]["yaw_sign_response_s"] == 0.02
+                                np.array([[0], [-0.5], [-1.0]]), samples, 0.02)[0]["yaw_sign_response_s"] == 0.04
     restart = cells.response_times((0.5, 0, 0), np.array([[0], [0.1], [0.3]]),
                                    np.zeros((3, 1)), np.zeros((3, 1)), samples, 0.02)
-    assert restart[0]["half_speed_response_s"] == 0.04
+    assert restart[0]["half_speed_response_s"] == 0.06
+    first = cells.response_times((0.5, 0, 0), np.array([[0.5]]), np.array([[0]]),
+                                 np.array([[0]]), np.array([[True]]), 0.02)
+    assert first[0]["half_speed_response_s"] == 0.02
     assert cells.response_times((0, 0, 0), np.zeros((3, 1)), np.zeros((3, 1)),
                                 np.zeros((3, 1)), samples, 0.02)[0]["half_speed_response_s"] is None
+
+
+def test_stop_statistic_rejects_spinning_body_even_with_zero_linear_speed():
+    xy = np.zeros(2)
+    spinning = np.array([1.2, 1.2])
+    used = np.ones(2, dtype=bool)
+    assert cells.stationary_fraction(xy, spinning, used) == 0.0
+    assert cells.stationary_fraction(xy, np.array([0.0, 0.2]), used) == 0.5
+    assert cells.stationary_fraction(xy, np.array([0.0, 0.0]), used) == 1.0
+    with pytest.raises(ValueError):
+        cells.stationary_fraction(xy, spinning, np.zeros(2, dtype=bool))
 
 
 def test_kit_entry_and_chain_are_wired_without_running_kit():
@@ -90,6 +104,7 @@ def test_kit_entry_and_chain_are_wired_without_running_kit():
                   '"terrain_tiles"', '"terrain_columns"', 'VY[k]'):
         assert token in eval_src
     assert 'map_mode_cells.SEQUENCES.items()' in eval_src
+    assert 'map_mode_cells.stationary_fraction(mean_speed, mean_abs_yaw, used)' in eval_src
     assert '"sequences"' in eval_src
     assert 'eval_gt probe_prop_only eval_pred' in chain
     assert '--command-suite "$COMMAND_SUITE"' in chain
