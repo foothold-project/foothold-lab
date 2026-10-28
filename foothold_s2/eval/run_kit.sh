@@ -12,5 +12,5 @@ export PYTHONUNBUFFERED=1
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 mkdir -p "$OUT"
 cd "$ROOT"
-"$ENV/python.exe" -m "${MODULE:-foothold_s2.eval.run_eval}" "$@" --out "$OUT" --headless --device "${DEVICE:-cuda:0}" > "$OUT/run.log" 2>&1
+"$ENV/python.exe" -m foothold_s2.kit_cache_next --module "${MODULE:-foothold_s2.eval.run_eval}" -- "$@" --out "$OUT" --headless --device "${DEVICE:-cuda:0}" > "$OUT/run.log" 2>&1
 exit $?

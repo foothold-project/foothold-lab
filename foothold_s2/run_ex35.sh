@@ -28,6 +28,6 @@ for A in "${ARGS[@]}"; do
 done
 printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
 [ "${DRY:-0}" = "1" ] && { echo "DRY: 학습은 띄우지 않음 ($OUT)"; exit 0; }
-"$ENV/python.exe" foothold_s2/scripts/train_sb.py "${ARGS[@]}" > "$OUT/run.log" 2>&1
+"$ENV/python.exe" -m foothold_s2.kit_cache_next --script foothold_s2/scripts/train_sb.py -- "${ARGS[@]}" > "$OUT/run.log" 2>&1
 echo "rc=$?" > "$OUT/rc.txt"
 grep -q "TRAIN_START_STATUS done" "$OUT/run.log" || echo "DONE 줄 없음(Isaac 은 예외 뒤에도 0 을 낼 수 있다)" >> "$OUT/rc.txt"
