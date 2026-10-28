@@ -1,0 +1,169 @@
+[
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\model_1500.pt",
+    "sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+    "bytes": 24937283
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\manifest.json",
+    "sha256": "bf09c189e9de02ff84b25dfe78bb3c2a946c7354f9a6387adffe1d38689f9575",
+    "bytes": 107380
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\\model_2000.pt",
+    "sha256": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "bytes": 24937411
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\\manifest.json",
+    "sha256": "541d2809ba8cbfdbb14a7476d5775d0eb2b3c64120cb34ffdcaedb79918252b1",
+    "bytes": 109042
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\\model_3000.pt",
+    "sha256": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "bytes": 24937411
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\\manifest.json",
+    "sha256": "83f72104ae0a9ae9420d7473be4d89bf2da0cce00264939732a95b82a10eef15",
+    "bytes": 110068
+  },
+  {
+    "path": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\rsl_rl\\algorithms\\ppo.py",
+    "sha256": "4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478",
+    "bytes": 20267
+  },
+  {
+    "git": "3681d7dbe787c01463e50a57246a6f57e4866d0f",
+    "file": "foothold_s2/runners/start_runner.py",
+    "sha256": "ff3406e8c22ba935f2cbe9c596b46b42c2156926a251b43f6747905f9e827e34",
+    "bytes": 63317
+  },
+  {
+    "git": "3681d7dbe787c01463e50a57246a6f57e4866d0f",
+    "file": "foothold_s2/scripts/train_start.py",
+    "sha256": "dfb9d1704893140b026c09a6f1ec626eb0288542ee2a46491708a769d4652e1b",
+    "bytes": 10988
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review.mp4",
+    "sha256": "8e9aaa0d27fbe03e4c4cad7a968b55172b33bd34c5c21d99488971890fb83daf",
+    "bytes": 2505520
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review.done",
+    "sha256": "698e16e944d7af41910b9024ebf235633ee38bfed8e936599e977ca0359ef264",
+    "bytes": 1252
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review.json",
+    "sha256": "2bbb26ab643ebb2e3af9a852d927450cdfab7f1a37e7ab70c21d47597a612e3b",
+    "bytes": 1247120
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review_feet.npz",
+    "sha256": "258f6116ac24f517a5d7283838a7a08549f7d99c2b6e1d602c2f30d93ec7269c",
+    "bytes": 1325982
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review.mp4",
+    "sha256": "6738cba99a9d13e41b405f208afd0f9955d6bafc382a3b75de4896bfc76bebf2",
+    "bytes": 4996668
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review.done",
+    "sha256": "f74a161dc163c61b85045a251b4a73f81a7194b7a99cbfdbc73db1ee691c75f6",
+    "bytes": 1408
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review.json",
+    "sha256": "caa7332375ce6572321320d8f408e966da7ad8cab1b4daee8fae5ad2ec517fdc",
+    "bytes": 1872735
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review_feet.npz",
+    "sha256": "9b9b5f4a3ff1e331bd9d5d07cd68ac07779d73de6581e52adc5cc37ec376a3c2",
+    "bytes": 1283501
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review.mp4",
+    "sha256": "c772d7657e53270d35b0a9b5d310c2cc0195da08f79a79b9515046c5e2862a76",
+    "bytes": 3026648
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review.done",
+    "sha256": "4d9b6c80bd14396b698c4c7463d0c03f217c6c9ff2eeadd89cdde0d275df668c",
+    "bytes": 1420
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review.json",
+    "sha256": "e4d535a7d6df5a1677544f9b07c7bb5258e92462082b81d2450dbcca55d6c0a2",
+    "bytes": 1243017
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review_feet.npz",
+    "sha256": "0da1172467a5dab7757900d4e742c6d9c1c4f8edc8a045ea8abdc01ed58a8533",
+    "bytes": 1026974
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review.mp4",
+    "sha256": "8986cdc6b748437769e73d1da68a9593a635d132af45d96850b2089c9659d351",
+    "bytes": 4381114
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review.done",
+    "sha256": "e7ac33c67703d6ae955f779aa74a9206d15d90c6e90c8c4087006413df6fbe99",
+    "bytes": 1400
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review.json",
+    "sha256": "53f89ef31b6c2c66be002a71c94486cb0e9e96385086182e2a8cfa57d3f2b7aa",
+    "bytes": 1113122
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review_feet.npz",
+    "sha256": "f41fc22e12187a17b6852df3f1866f96610b567e6773545db0e3bcc4cf19c9d2",
+    "bytes": 1421650
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review.mp4",
+    "sha256": "41984b6b9a2047210f95dc005d0a3819940c985d65a4323771d6ae1dbd29401b",
+    "bytes": 2901429
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review.done",
+    "sha256": "779bd6e84cbd9c9e4b7c94118f7cf41c9d1e6bcf5a27acace5931ad192573e83",
+    "bytes": 1436
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review.json",
+    "sha256": "b9562d3e84b596b326b8a8c78ea3e1f569deeac608b690d0f04aabab4ba37ec9",
+    "bytes": 1242295
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review_feet.npz",
+    "sha256": "bb9eeee4b235392495b5b3398ea2d39d543d348ae1e84a0c9c2ef13449bd15fc",
+    "bytes": 955653
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review.mp4",
+    "sha256": "e0a9948782a49996734fc9364343aaee09937bd6badba43b0a08c2b2006fe43a",
+    "bytes": 4608667
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review.done",
+    "sha256": "6947e0823a6ff95068285dcdb5778264d5cfc8387eb04f7dff2ab5f9b5139b9f",
+    "bytes": 1416
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review.json",
+    "sha256": "4f7b468ca0969427b46ec194eaa664d14a79abb48a3d3015384aef838f2d5c7b",
+    "bytes": 1112915
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review_feet.npz",
+    "sha256": "328f9cccbbb56bb11dccd7d350d44d1b26c675311c253cc04fe56f0d35093a6f",
+    "bytes": 1387888
+  }
+]

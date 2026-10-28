@@ -1,0 +1,14 @@
+[
+  {
+    "name": "params/env.yaml",
+    "before": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\\params\\env.yaml",
+    "after": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\\params\\env.yaml",
+    "unified_diff": "--- \n+++ \n@@ -1423,7 +1423,7 @@\n teleop_devices:\n   devices: {}\n export_io_descriptors: false\n-log_dir: C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\n+log_dir: C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\n is_finite_horizon: false\n episode_length_s: 20.0\n rewards:\n"
+  },
+  {
+    "name": "params/agent.yaml",
+    "before": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\\params\\agent.yaml",
+    "after": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\\params\\agent.yaml",
+    "unified_diff": "--- \n+++ \n@@ -1,7 +1,7 @@\n seed: 42\n device: cuda:0\n num_steps_per_env: 24\n-max_iterations: 2001\n+max_iterations: 3001\n empirical_normalization: null\n obs_groups:\n   policy:\n"
+  }
+]

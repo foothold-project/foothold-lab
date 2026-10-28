@@ -1,0 +1,94 @@
+{
+  "actual_interpreter": "isaac311",
+  "checkpoints": [
+    {
+      "label": "SB10",
+      "iter": 1500,
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\model_1500.pt",
+      "sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+      "model_dtypes": [
+        "torch.float32"
+      ],
+      "perception_dtypes": [
+        "torch.float32"
+      ],
+      "ppo_learning_rate": 0.0002562890625000001,
+      "optimizer_lr": [
+        0.0002562890625000001
+      ],
+      "replay_autocast": "none",
+      "kl_fp32": false,
+      "microbatch_envs": 64,
+      "kl_probe_envs": 256,
+      "force_gt": true,
+      "p_map_off": 0.1,
+      "manifest_git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "6309f67e2b303bad2f375660c81146994b50dc1b"
+      },
+      "normalization": {},
+      "manifest_precision_fields": {}
+    },
+    {
+      "label": "EX35-first",
+      "iter": 2000,
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476\\model_2000.pt",
+      "sha256": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+      "model_dtypes": [
+        "torch.float32"
+      ],
+      "perception_dtypes": [
+        "torch.float32"
+      ],
+      "ppo_learning_rate": 0.00038443359375000017,
+      "optimizer_lr": [
+        0.00038443359375000017
+      ],
+      "replay_autocast": "none",
+      "kl_fp32": false,
+      "microbatch_envs": 64,
+      "kl_probe_envs": 256,
+      "force_gt": true,
+      "p_map_off": 0.1,
+      "manifest_git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "07fc5e73b1122d6a4e8ab01fc922af998db4651a"
+      },
+      "normalization": {},
+      "manifest_precision_fields": {}
+    },
+    {
+      "label": "EX35-extend",
+      "iter": 3000,
+      "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main_resume_20261026_232446_120476_resume_20261028_050035_157468\\model_3000.pt",
+      "sha256": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+      "model_dtypes": [
+        "torch.float32"
+      ],
+      "perception_dtypes": [
+        "torch.float32"
+      ],
+      "ppo_learning_rate": 0.00038443359375000017,
+      "optimizer_lr": [
+        0.00038443359375000017
+      ],
+      "replay_autocast": "none",
+      "kl_fp32": false,
+      "microbatch_envs": 64,
+      "kl_probe_envs": 256,
+      "force_gt": true,
+      "p_map_off": 0.1,
+      "manifest_git": {
+        "dirty_diff_bytes": 0,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "head": "3681d7dbe787c01463e50a57246a6f57e4866d0f"
+      },
+      "normalization": {},
+      "manifest_precision_fields": {}
+    }
+  ],
+  "ppo_autocast_present": false,
+  "limitation": "No GPU kernel trace was performed. fp32 describes saved weights and active training code path, not every hardware instruction."
+}

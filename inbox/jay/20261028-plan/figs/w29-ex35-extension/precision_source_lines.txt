@@ -1,0 +1,228 @@
+
+3681d7dbe787c01463e50a57246a6f57e4866d0f:foothold_s2/runners/start_runner.py:390-421
+390:             if contract_bad is not None and bool(contract_bad.any()):
+391:                 self._invalid(it, f"{'START ' if self.pcfg['contract'] == 'start' else ''}명령 계약({self.pcfg['contract']}) 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
+392:             # ② PPO update
+393:             self._phase_start()
+394:             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
+395:             loss_dict = self.alg.update()
+396:             kl_info = {}
+397:             if klp is not None:
+398:                 kl_info["ppo"] = self._kl_ppo_after(klp)
+399:             self._mark("3_ppo_update", it)
+400:             if self.pcfg["stop_on_nonfinite"]:
+401:                 self._check_finite(it, **{k: torch.as_tensor(v, dtype=torch.float32) for k, v in loss_dict.items() if isinstance(v, (int, float)) or hasattr(v, "dtype")})
+402:             # ③ 지각
+403:             self._phase_start()
+404:             klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
+405:             ploss = self.update_perception()
+406:             if self.pcfg["stop_on_nonfinite"]:
+407:                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
+408:                 self._check_params_finite(it)
+409:             if klf is not None:
+410:                 kl_info["phi"] = self._kl_phi_after(klf)
+411:             self._mark("4_perception_update", it)
+412:             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
+413:             for name, res in kl_info.items():
+414:                 loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
+415:             split = rs_rec.summary() if rs_rec is not None else None
+416:             if split is not None and "unavailable" not in split:
+417:                 loss_dict["reward_split/frac_moving"] = split["frac_moving"]
+418:                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
+419:             nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
+420:             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+421:             if nt_stats is not None:
+
+3681d7dbe787c01463e50a57246a6f57e4866d0f:foothold_s2/runners/start_runner.py:609-679
+609:     def _kl_select(self):
+610:         k = min(int(self.pcfg["kl_probe_envs"]), self.env.num_envs)
+611:         return torch.arange(k, device=self.device)
+612:
+613:     def _kl_ppo_before(self, it: int) -> dict:
+614:         """PPO update 전: 저장된 actor 입력 부분집합에서 행동 분포(mean, std)를 잡아 둔다."""
+615:         sel = self._kl_select()
+616:         sub = self.alg.storage.observations[:, sel]
+617:         sub = sub.reshape(sub.batch_size[0] * sub.batch_size[1]).clone()
+618:         mu, std = kl_probe.policy_dist(self.alg.policy, sub)
+619:         return {"obs": sub, "mu": mu, "std": std}
+620:
+621:     def _kl_ppo_after(self, snap: dict) -> dict:
+622:         mu1, std1 = kl_probe.policy_dist(self.alg.policy, snap["obs"])
+623:         kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+624:         return kl_probe.summarize(kl, kl_probe.command_branch(snap["obs"][ACTOR_KEY][:, 6:9]))
+625:
+626:     def _kl_phi_before(self, it: int) -> dict:
+627:         """지각 phi update 전: 같은 history · 시작 hidden · epsilon 으로 est 시퀀스를 계산하고 theta(PPO 뒤 값)로 행동 분포를 잡는다."""
+628:         sel = self._kl_select()
+629:         batch = self.replay.gather(sel)
+630:         gen = torch.Generator(device="cpu").manual_seed(1234 + it)
+631:         T, K = batch["obs"].shape[0], batch["obs"].shape[1]
+632:         eps = torch.randn(T, K, 16, generator=gen).to(self.device)
+633:         snap = {"batch": batch, "eps": eps}
+634:         snap["mu"], snap["std"] = self._phi_dist(snap)
+635:         return snap
+636:
+637:     def _phi_dist(self, snap):
+638:         est = self.perception.est_sequence(snap["batch"], snap["eps"])
+639:         est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
+640:         o = snap["batch"]["obs"]
+641:         T, K = o.shape[0], o.shape[1]
+642:         td = TensorDict({ACTOR_KEY: torch.cat([o, est_in], -1).reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
+643:         return kl_probe.policy_dist(self.alg.policy, td)
+644:
+645:     def _kl_phi_after(self, snap: dict) -> dict:
+646:         mu1, std1 = self._phi_dist(snap)
+647:         kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+648:         return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
+649:
+650:     def update_perception(self) -> dict[str, float]:
+651:         if not self.replay.full():
+652:             raise RuntimeError("지각 재생 버퍼가 덜 찼다")
+653:         pc = self.pcfg
+654:         params = [p for p in self.perception.parameters() if p.requires_grad]
+655:         acc: dict[str, float] = {}
+656:         n_updates = 0
+657:         for idx in self.replay.env_batches(pc["num_mini_batches"], pc["num_learning_epochs"]):
+658:             self.perception_optimizer.zero_grad(set_to_none=True)
+659:             chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
+660:             for c in chunks:
+661:                 with self._autocast():
+662:                     res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
+663:                 (res["loss"] * (len(c) / len(idx))).backward()
+664:                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
+665:                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
+666:             if self.is_distributed:
+667:                 self._allreduce_grads(params)
+668:             nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])
+669:             self.perception_optimizer.step()
+670:             n_updates += 1
+671:         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
+672:         return self.last_perception_losses
+673:
+674:     def _autocast(self):
+675:         if self.pcfg.get("replay_autocast") == "bf16" and self._cuda():
+676:             return torch.autocast("cuda", dtype=torch.bfloat16)
+677:         import contextlib
+678:
+679:         return contextlib.nullcontext()
+
+3681d7dbe787c01463e50a57246a6f57e4866d0f:foothold_s2/runners/start_runner.py:790-820
+790:     @staticmethod
+791:     def set_rng_state(s: dict) -> None:
+792:         torch.set_rng_state(s["torch"])
+793:         np.random.set_state(s["numpy"])
+794:         random.setstate(s["python"])
+795:         if "cuda" in s and torch.cuda.is_available():
+796:             torch.cuda.set_rng_state_all(s["cuda"])
+797:
+798:     def state_dict(self, infos: dict | None = None) -> dict:
+799:         return {
+800:             "format": CKPT_FORMAT,
+801:             "model_state_dict": self.alg.policy.state_dict(),  # 정책 + 관측 정규화 통계(EmpiricalNormalization 버퍼)
+802:             "optimizer_state_dict": self.alg.optimizer.state_dict(),
+803:             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
+804:             "perception_state_dict": self.perception.state_dict(),
+805:             "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
+806:             "perception_cfg": dict(self.pcfg),
+807:             "adasmpl": self.adasmpl.state_dict(),
+808:             "env_state": self._env_state(),
+809:             "env_seed": getattr(getattr(getattr(self.env, "unwrapped", self.env), "cfg", None), "seed", None),
+810:             "iter": self.current_learning_iteration,
+811:             "rng": self.rng_state(),
+812:             "map_switch": self.map_switch_state(),
+813:             "infos": infos,
+814:         }
+815:
+816:     def map_switch_state(self) -> dict:
+817:         """EX-33 S-B: 끔 확률 · 시드 · 끔 전용 난수열 상태. 이어 갈 때 p 가 다르면 거절하고, 같으면 난수열을 이어 간다."""
+818:         gen = self.map_switch_gen
+819:
+820:         return {"p_map_off": self.p_map_off, "map_switch_seed": int(self.pcfg["map_switch_seed"]),
+
+3681d7dbe787c01463e50a57246a6f57e4866d0f:foothold_s2/runners/start_runner.py:965-1000
+965:             "mean_reward": (sum(rewbuffer) / len(rewbuffer)) if rewbuffer else None,
+966:             "mean_episode_length": (sum(lenbuffer) / len(lenbuffer)) if lenbuffer else None,
+967:             "p_smpl": self.adasmpl.p,
+968:             "gpu_max_allocated_GiB": (torch.cuda.max_memory_allocated(self.device) / 2**30) if self._cuda() else None,
+969:             "perception": {k: round(v, 5) for k, v in self.last_perception_losses.items()},
+970:             "log_dir": self.log_dir,
+971:         })
+972:
+973:     def load(self, path: str, load_optimizer: bool = True, map_location: str | None = None) -> dict:
+974:         sd = torch.load(path, weights_only=False, map_location=map_location)
+975:         if sd.get("format") != CKPT_FORMAT:
+976:             raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
+977:         saved = sd.get("perception_cfg") or {}
+978:         for key, default in MODE_DEFAULTS.items():
+979:             if saved.get(key, default) != self.pcfg[key]:
+980:                 raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
+981:         self.alg.policy.load_state_dict(sd["model_state_dict"])
+982:         self.perception.load_state_dict(sd["perception_state_dict"])
+983:         self.adasmpl.load_state_dict(sd["adasmpl"])
+984:         self._apply_resume_adasmpl()
+985:         if load_optimizer:
+986:             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
+987:             self.alg.learning_rate = sd["ppo_learning_rate"]
+988:             self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+989:         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+990:         self._load_env_state(sd["env_state"])
+991:         self.set_rng_state(sd["rng"])
+992:         self.current_learning_iteration = sd["iter"]
+993:         self._resumed = True
+994:         return sd["infos"]
+995:
+996:     def train_mode(self) -> None:
+997:         super().train_mode()
+998:         self.perception.train()
+999:
+1000:     def eval_mode(self) -> None:
+
+C:\Users\AI-WS01\anaconda3\envs\isaac311\Lib\site-packages\rsl_rl\algorithms\ppo.py:258-292 sha256 4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478
+258:             # Compute KL divergence and adapt the learning rate
+259:             if self.desired_kl is not None and self.schedule == "adaptive":
+260:                 with torch.inference_mode():
+261:                     kl = torch.sum(
+262:                         torch.log(sigma_batch / old_sigma_batch + 1.0e-5)
+263:                         + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch))
+264:                         / (2.0 * torch.square(sigma_batch))
+265:                         - 0.5,
+266:                         axis=-1,
+267:                     )
+268:                     kl_mean = torch.mean(kl)
+269:
+270:                     # Reduce the KL divergence across all GPUs
+271:                     if self.is_multi_gpu:
+272:                         torch.distributed.all_reduce(kl_mean, op=torch.distributed.ReduceOp.SUM)
+273:                         kl_mean /= self.gpu_world_size
+274:
+275:                     # Update the learning rate only on the main process
+276:                     # TODO: Is this needed? If KL-divergence is the "same" across all GPUs,
+277:                     #       then the learning rate should be the same across all GPUs.
+278:                     if self.gpu_global_rank == 0:
+279:                         if kl_mean > self.desired_kl * 2.0:
+280:                             self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+281:                         elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
+282:                             self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+283:
+284:                     # Update the learning rate for all GPUs
+285:                     if self.is_multi_gpu:
+286:                         lr_tensor = torch.tensor(self.learning_rate, device=self.device)
+287:                         torch.distributed.broadcast(lr_tensor, src=0)
+288:                         self.learning_rate = lr_tensor.item()
+289:
+290:                     # Update the learning rate for all parameter groups
+291:                     for param_group in self.optimizer.param_groups:
+292:                         param_group["lr"] = self.learning_rate
+
+TF32 source at 3681d7dbe787c01463e50a57246a6f57e4866d0f
+95:
+96:
+97: class StartRunner(OnPolicyRunner):
+98:     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
+99:         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
+100:         # 같은 일을 그 입력 모양으로 한다(설치 54~78 행과 같은 속성을 채운다).
+101:         # TF32 를 끈 채로 고정한다: cuDNN GRU 가 TF32 면 GRUCell 과 hidden 이 3e-4 까지 달라진다(lead 결정 10/20 RL-3)
+102:         torch.backends.cudnn.allow_tf32 = False
+103:         torch.backends.cuda.matmul.allow_tf32 = False
+104:         self.cfg = train_cfg
+105:         self.alg_cfg = train_cfg["algorithm"]

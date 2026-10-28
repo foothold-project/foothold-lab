@@ -1,0 +1,9 @@
+{
+  "known_answer_checks": 4,
+  "map_rows": 180,
+  "turn_rows": 430,
+  "training_updates": 3001,
+  "raw_sources": 584,
+  "sources_unchanged": true,
+  "missing_paths": 2
+}

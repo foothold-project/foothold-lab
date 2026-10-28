@@ -1,0 +1,7392 @@
+[
+  {
+    "kind": "parent",
+    "iter": 1500,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "parent",
+    "iter": 1500,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "parent",
+    "iter": 1500,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "parent",
+    "iter": 1500,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "first",
+    "iter": 2000,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "first",
+    "iter": 2000,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "first",
+    "iter": 2000,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "first",
+    "iter": 2000,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "eba0fbdd7e8cdb2f4a3750ee1125e55063fbb36eb9d1377692fad26f850fb548",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2050,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "25aaea9a45ad0ea3aff5f5ef27fd3df709fbd3be6225a983dfb4c1e7701e344e",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2050,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "25aaea9a45ad0ea3aff5f5ef27fd3df709fbd3be6225a983dfb4c1e7701e344e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2050,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "25aaea9a45ad0ea3aff5f5ef27fd3df709fbd3be6225a983dfb4c1e7701e344e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2100,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "585227fa925b40abb2619339e838caa4598a29e7a7e45cc5d92f66572412f72e",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2100,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "585227fa925b40abb2619339e838caa4598a29e7a7e45cc5d92f66572412f72e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2100,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "585227fa925b40abb2619339e838caa4598a29e7a7e45cc5d92f66572412f72e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2150,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "e5567ecf39a0d64f333fac2ea80e034f86e24316147642b9e584c3a12dba82df",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2150,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "e5567ecf39a0d64f333fac2ea80e034f86e24316147642b9e584c3a12dba82df",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2150,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "e5567ecf39a0d64f333fac2ea80e034f86e24316147642b9e584c3a12dba82df",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2200,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "20171711df768f41a057f3badab39b3e19f67fca30fbd52c86030c53d2df505b",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2200,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "20171711df768f41a057f3badab39b3e19f67fca30fbd52c86030c53d2df505b",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2200,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "20171711df768f41a057f3badab39b3e19f67fca30fbd52c86030c53d2df505b",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2200,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "20171711df768f41a057f3badab39b3e19f67fca30fbd52c86030c53d2df505b",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2250,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "b6c00b9f37631b80b92fb9aedb4bff54b9f4d5edcb23849aac756877f84ffbd2",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2250,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b6c00b9f37631b80b92fb9aedb4bff54b9f4d5edcb23849aac756877f84ffbd2",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2250,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b6c00b9f37631b80b92fb9aedb4bff54b9f4d5edcb23849aac756877f84ffbd2",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2250,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b6c00b9f37631b80b92fb9aedb4bff54b9f4d5edcb23849aac756877f84ffbd2",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2300,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "de6205bbb17e34207c25dcc97aa26b9cf90a7b98cfb81a060614b111bbdeac4b",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2300,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "de6205bbb17e34207c25dcc97aa26b9cf90a7b98cfb81a060614b111bbdeac4b",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2300,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "de6205bbb17e34207c25dcc97aa26b9cf90a7b98cfb81a060614b111bbdeac4b",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2350,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "81d5ffacae55a15a06f2f08a606e34f7d96a6ab476b7959dbe1bf935281dd908",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2350,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "81d5ffacae55a15a06f2f08a606e34f7d96a6ab476b7959dbe1bf935281dd908",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2350,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "81d5ffacae55a15a06f2f08a606e34f7d96a6ab476b7959dbe1bf935281dd908",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2400,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "c9866822303a576da412ba74c6fee939dcbc63fd89a2677554dec80beafec882",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2400,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "c9866822303a576da412ba74c6fee939dcbc63fd89a2677554dec80beafec882",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2400,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "c9866822303a576da412ba74c6fee939dcbc63fd89a2677554dec80beafec882",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2450,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "2fe042ce140e058c4a35625c725ae822b2c65566291758e98869c90deedcc33e",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2450,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "2fe042ce140e058c4a35625c725ae822b2c65566291758e98869c90deedcc33e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2450,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "2fe042ce140e058c4a35625c725ae822b2c65566291758e98869c90deedcc33e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2450,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "2fe042ce140e058c4a35625c725ae822b2c65566291758e98869c90deedcc33e",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2500,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "b724b24d0cb4d42e465870bf1e01589cbb2bee9092724823bedf4279a395a155",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2500,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b724b24d0cb4d42e465870bf1e01589cbb2bee9092724823bedf4279a395a155",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2500,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b724b24d0cb4d42e465870bf1e01589cbb2bee9092724823bedf4279a395a155",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2500,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "b724b24d0cb4d42e465870bf1e01589cbb2bee9092724823bedf4279a395a155",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2550,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "3289ea1593a24501580c65e2ef5c5bc41812829aa851b4b9c9496d93563a0738",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2550,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "3289ea1593a24501580c65e2ef5c5bc41812829aa851b4b9c9496d93563a0738",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2550,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "3289ea1593a24501580c65e2ef5c5bc41812829aa851b4b9c9496d93563a0738",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2600,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "bc28eac370f83a7598d18b78d278de3ed3b4049f923be7875a85315444124109",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2600,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "bc28eac370f83a7598d18b78d278de3ed3b4049f923be7875a85315444124109",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2600,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "bc28eac370f83a7598d18b78d278de3ed3b4049f923be7875a85315444124109",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2650,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "ad213463f77582d3f9af92106059748bb7d86f310d13e55cb1858a3173f906dd",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2650,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "ad213463f77582d3f9af92106059748bb7d86f310d13e55cb1858a3173f906dd",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2650,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "ad213463f77582d3f9af92106059748bb7d86f310d13e55cb1858a3173f906dd",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2700,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2700,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2700,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2700,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2750,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "f0b34703f424d37d7eff0b1fee3c077d51dacfde077606fe3ce930a0acd5353a",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2750,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "f0b34703f424d37d7eff0b1fee3c077d51dacfde077606fe3ce930a0acd5353a",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2750,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "f0b34703f424d37d7eff0b1fee3c077d51dacfde077606fe3ce930a0acd5353a",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2750,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "f0b34703f424d37d7eff0b1fee3c077d51dacfde077606fe3ce930a0acd5353a",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2800,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "4858c99d525eb5571ad08d94954b7cc07ffd17dffd2087c4875b4607b6df1a37",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2800,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "4858c99d525eb5571ad08d94954b7cc07ffd17dffd2087c4875b4607b6df1a37",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2800,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "4858c99d525eb5571ad08d94954b7cc07ffd17dffd2087c4875b4607b6df1a37",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2850,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "3e9406711ba7bd45cdd771244f5f7aba5223c50d8c63ed8f6e14d907e56fd8eb",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2850,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "3e9406711ba7bd45cdd771244f5f7aba5223c50d8c63ed8f6e14d907e56fd8eb",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2850,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "3e9406711ba7bd45cdd771244f5f7aba5223c50d8c63ed8f6e14d907e56fd8eb",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2900,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "800aa7426a64930c24bdb14a63748d5882bf906f3d1b8be1c93f2725f17c2402",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2900,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "800aa7426a64930c24bdb14a63748d5882bf906f3d1b8be1c93f2725f17c2402",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2900,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "800aa7426a64930c24bdb14a63748d5882bf906f3d1b8be1c93f2725f17c2402",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2950,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "cc115a837c1fcd9dd978dc1d816d2923895eab18b784897a0afdf401bd87aa42",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2950,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "cc115a837c1fcd9dd978dc1d816d2923895eab18b784897a0afdf401bd87aa42",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2950,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "cc115a837c1fcd9dd978dc1d816d2923895eab18b784897a0afdf401bd87aa42",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 2950,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "cc115a837c1fcd9dd978dc1d816d2923895eab18b784897a0afdf401bd87aa42",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 3000,
+    "type": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "terrain": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 3000,
+    "type": "eval_gt",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 3000,
+    "type": "probe_prop_only",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  },
+  {
+    "kind": "extend",
+    "iter": 3000,
+    "type": "eval_pred",
+    "terrain": {
+      "rows": 10,
+      "cols": 23,
+      "levels_used": 1,
+      "levels": [
+        0
+      ],
+      "fixed_level": 0,
+      "num_envs": 16,
+      "assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+      "tiles": [
+        {
+          "env": 0,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 1,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 2,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 3,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 18
+        },
+        {
+          "env": 4,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 5,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 6,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 7,
+          "kind": "hf_pyramid_slope",
+          "level": 0,
+          "col": 19
+        },
+        {
+          "env": 8,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 9,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 10,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 11,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 14
+        },
+        {
+          "env": 12,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 13,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 14,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        },
+        {
+          "env": 15,
+          "kind": "random_rough",
+          "level": 0,
+          "col": 17
+        }
+      ],
+      "flat_kind": "hf_pyramid_slope",
+      "flat_note": "순수 평지 열이 생성기에 없어 경사 피라미드 레벨 0(경사 최저 난이도, 중앙 평탄 플랫폼)을 평지 계열로 썼다"
+    },
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ]
+  }
+]

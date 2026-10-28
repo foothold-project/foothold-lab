@@ -1,0 +1,390 @@
+[
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_map64_spin+1.2_fell_env15\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 150,
+    "fps": 25.0,
+    "duration_s": 6.0,
+    "selected_environment": {
+      "env_id": 15,
+      "kind": "random_rough",
+      "level": 0,
+      "col": 15,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "resets": [],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2700_map64_spin+1.2_fell_env15_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138
+    ],
+    "dense_grids": [],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.0762364864349365
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "6.000000",
+      "nb_frames": "150"
+    }
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2700_turn16_indep_left_fell_env0\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 200,
+    "fps": 25.0,
+    "duration_s": 8.0,
+    "selected_environment": {
+      "env_id": 0,
+      "kind": "hf_pyramid_slope",
+      "level": 0,
+      "col": 18,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "9e8da1117d8bfdbc3e28949620216fcc2e95003a74f724971514fd8f8dbefc5f",
+    "resets": [
+      {
+        "index": 154,
+        "t": 3.08,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": 1.4507238717272557,
+        "pitch": 0.09426538150925243
+      },
+      {
+        "index": 302,
+        "t": 6.04,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": 1.4886143625146269,
+        "pitch": 0.062287873518305996
+      }
+    ],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2700_turn16_indep_left_fell_env0_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138,
+      150,
+      162,
+      175,
+      188
+    ],
+    "dense_grids": [
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2700_turn16_indep_left_fell_env0_reset0.jpg",
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2700_turn16_indep_left_fell_env0_reset1.jpg"
+    ],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.015062093734741
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "8.000000",
+      "nb_frames": "200"
+    }
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_map64_spin+1.2_fell_env7\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 150,
+    "fps": 25.0,
+    "duration_s": 6.0,
+    "selected_environment": {
+      "env_id": 7,
+      "kind": "pyramid_stairs_inv",
+      "level": 0,
+      "col": 7,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "800aa7426a64930c24bdb14a63748d5882bf906f3d1b8be1c93f2725f17c2402",
+    "resets": [
+      {
+        "index": 215,
+        "t": 4.3,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": -1.4532736125344972,
+        "pitch": 0.4603786103769139
+      }
+    ],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2900_map64_spin+1.2_fell_env7_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138
+    ],
+    "dense_grids": [
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2900_map64_spin+1.2_fell_env7_reset0.jpg"
+    ],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.0762364864349365
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "6.000000",
+      "nb_frames": "150"
+    }
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m2900_turn16_indep_left_fell_env0\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 200,
+    "fps": 25.0,
+    "duration_s": 8.0,
+    "selected_environment": {
+      "env_id": 0,
+      "kind": "hf_pyramid_slope",
+      "level": 0,
+      "col": 18,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "800aa7426a64930c24bdb14a63748d5882bf906f3d1b8be1c93f2725f17c2402",
+    "resets": [
+      {
+        "index": 207,
+        "t": 4.14,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": -1.4711979243218263,
+        "pitch": 0.1904664480618211
+      }
+    ],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2900_turn16_indep_left_fell_env0_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138,
+      150,
+      162,
+      175,
+      188
+    ],
+    "dense_grids": [
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m2900_turn16_indep_left_fell_env0_reset0.jpg"
+    ],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.015062093734741
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "8.000000",
+      "nb_frames": "200"
+    }
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_map64_spin+1.2_fell_env0\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 150,
+    "fps": 25.0,
+    "duration_s": 6.0,
+    "selected_environment": {
+      "env_id": 0,
+      "kind": "pyramid_stairs",
+      "level": 0,
+      "col": 0,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "resets": [
+      {
+        "index": 229,
+        "t": 4.58,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": -1.4182017437496997,
+        "pitch": -0.1271002971730335
+      }
+    ],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m3000_map64_spin+1.2_fell_env0_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138
+    ],
+    "dense_grids": [
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m3000_map64_spin+1.2_fell_env0_reset0.jpg"
+    ],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.0762364864349365
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "6.000000",
+      "nb_frames": "150"
+    }
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review.mp4",
+    "receipt": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\w26_fall\\m3000_turn16_indep_left_fell_env0\\review.done",
+    "receipt_hashes_match": true,
+    "decoded_frames": 200,
+    "fps": 25.0,
+    "duration_s": 8.0,
+    "selected_environment": {
+      "env_id": 0,
+      "kind": "hf_pyramid_slope",
+      "level": 0,
+      "col": 18,
+      "selection_role": "fell"
+    },
+    "checkpoint_sha": "02a59e09e0408bd21efb769921eafb34fe0711a98a8cb73ebd467b9b26244412",
+    "resets": [
+      {
+        "index": 351,
+        "t": 7.0200000000000005,
+        "term": "bad_orientation",
+        "reason": "termination_terms",
+        "roll": -1.404646359500678,
+        "pitch": -0.0822167378053212
+      }
+    ],
+    "grid": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m3000_turn16_indep_left_fell_env0_2fps.jpg",
+    "sampled_frames": [
+      0,
+      12,
+      25,
+      38,
+      50,
+      62,
+      75,
+      88,
+      100,
+      112,
+      125,
+      138,
+      150,
+      162,
+      175,
+      188
+    ],
+    "dense_grids": [
+      "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-plan\\figs\\w29-ex35-extension\\m3000_turn16_indep_left_fell_env0_reset0.jpg"
+    ],
+    "mode": {
+      "requested": "eval_gt",
+      "effective_use_gt": true,
+      "policy_map_tokens": "present",
+      "map_input": "reconstruction"
+    },
+    "capture_start": {
+      "yaw_override_rad": null,
+      "source": "continuous evaluation reset (random yaw kept, as in eval_map_modes)",
+      "reset_ranges_preserved": true,
+      "yaw_readback_max_abs_rad": 3.015062093734741
+    },
+    "probe": {
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "25/1",
+      "duration": "8.000000",
+      "nb_frames": "200"
+    }
+  }
+]

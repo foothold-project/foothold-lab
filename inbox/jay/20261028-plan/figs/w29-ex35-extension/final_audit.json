@@ -1,0 +1,36 @@
+{
+  "raw_file_hash_rechecks": 615,
+  "unchanged": true,
+  "precision_source": [
+    {
+      "run": "SB10",
+      "ppo_module": "rsl_rl.algorithms.ppo",
+      "ppo_sha256": "4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478",
+      "manifest_ppo_hash_match": true,
+      "runner_commit_hash_match": true,
+      "tf32_code_disabled": true
+    },
+    {
+      "run": "EX35-first",
+      "ppo_module": "rsl_rl.algorithms.ppo",
+      "ppo_sha256": "4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478",
+      "manifest_ppo_hash_match": true,
+      "runner_commit_hash_match": true,
+      "tf32_code_disabled": true
+    },
+    {
+      "run": "EX35-extend",
+      "ppo_module": "rsl_rl.algorithms.ppo",
+      "ppo_sha256": "4373ac1b2f9fdf14d9da57516968fc95d8f605d2967fee01dc61bf0d09423478",
+      "manifest_ppo_hash_match": true,
+      "runner_commit_hash_match": true,
+      "tf32_code_disabled": true
+    }
+  ],
+  "extends_update_count": 1000,
+  "lr_floor_count": 45,
+  "last100_lr_floor_count": 0,
+  "video_decode_frames": 1050,
+  "no_gpu_or_training_execution": true,
+  "report": "C:\\mai\\wt\\foothold-lab\\analyst-ame2\\inbox\\jay\\20261028-experiments\\RESULT-EX35-EXT-1028.md"
+}
