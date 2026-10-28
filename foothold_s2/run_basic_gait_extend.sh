@@ -18,6 +18,13 @@ cd "$ROOT"
 OPTS=(--arm "$ARM" --device "$DEV" --parent "$PARENT" --parent-sha256 "$PARENT_SHA" \
       --additional-updates "$ADDITIONAL" --end-by "$END_BY" --log-root "$BASIC_LOG_ROOT")
 if [ -n "${STOP_FILE:-}" ]; then OPTS+=(--stop-file "$STOP_FILE"); fi
+if [ "${FAST_GT_ONLY:-0}" = "1" ]; then OPTS+=(--fast-gt-only); fi
+if [ -n "${BASIC_FEET_REG_WEIGHT:-}" ]; then OPTS+=(--basic-feet-regulation-weight "$BASIC_FEET_REG_WEIGHT"); fi
+if [ -n "${BASIC_TRACK_ANG_WEIGHT:-}" ]; then OPTS+=(--basic-track-ang-weight "$BASIC_TRACK_ANG_WEIGHT"); fi
+if [ -n "${BASIC_TRACK_LIN_WEIGHT:-}" ]; then OPTS+=(--basic-track-lin-weight "$BASIC_TRACK_LIN_WEIGHT"); fi
+if [ -n "${BASIC_JOINT_ACC_WEIGHT:-}" ]; then OPTS+=(--basic-joint-acc-weight "$BASIC_JOINT_ACC_WEIGHT"); fi
+if [ -n "${BASIC_HIP_POS_WEIGHT:-}" ]; then OPTS+=(--basic-hip-pos-weight "$BASIC_HIP_POS_WEIGHT"); fi
+if [ "${BASIC_LIN_VEL_Z_SCHEDULE:-0}" = "1" ]; then OPTS+=(--basic-lin-vel-z-schedule); fi
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT="$BASIC_LOG_ROOT/receipts/extend/EX-36${ARM}_${STAMP}_$$"
 mkdir -p "$OUT"

@@ -131,6 +131,25 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     basic_share = getattr(args, "basic_new_share", None)
     basic_arm = getattr(args, "basic_extend_arm", None)
     basic_sha = getattr(args, "basic_extend_parent_sha", None)
+    fast_gt = bool(getattr(args, "fast_gt_only", False))
+    reward_slots = ("basic_feet_regulation_weight", "basic_track_ang_weight",
+                    "basic_track_lin_weight", "basic_joint_acc_weight", "basic_hip_pos_weight")
+    if (any(getattr(args, name, None) is not None for name in reward_slots)
+            or bool(getattr(args, "basic_lin_vel_z_schedule", False))) and basic_arm is None:
+        raise ValueError("basic reward bundle is reserved for an EX-36 extension parent")
+    if basic_arm is not None:
+        from foothold_s2.rewards.basic_gait_bundle import validate_settings
+
+        validate_settings({"track_ang_vel": getattr(args, "basic_track_ang_weight", None),
+                           "track_lin_vel": getattr(args, "basic_track_lin_weight", None),
+                           "joint_acc": getattr(args, "basic_joint_acc_weight", None),
+                           "hip_pos_penalty": getattr(args, "basic_hip_pos_weight", None)},
+                          bool(getattr(args, "basic_lin_vel_z_schedule", False)),
+                          getattr(args, "basic_feet_regulation_weight", None))
+    if fast_gt and (basic_arm is None or cm != "basic_gait" or args.variant != "SB"
+                    or getattr(args, "basic_stage", None) != "main"
+                    or getattr(args, "smoke_updates", None) is not None):
+        raise ValueError("fast_gt_only requires a completed EX-36 basic-gait extension parent")
     if (basic_arm is None) != (basic_sha is None):
         raise ValueError("EX-36 extend arm and parent SHA must be supplied together")
     if basic_arm is not None and (args.variant != "SB" or cm != "basic_gait"

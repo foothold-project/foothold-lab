@@ -44,6 +44,13 @@ parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
 parser.add_argument("--basic-extend-arm", choices=("A", "B"), default=None)
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
+parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
+parser.add_argument("--basic-feet-regulation-weight", type=float)
+parser.add_argument("--basic-track-ang-weight", type=float)
+parser.add_argument("--basic-track-lin-weight", type=float)
+parser.add_argument("--basic-joint-acc-weight", type=float)
+parser.add_argument("--basic-hip-pos-weight", type=float)
+parser.add_argument("--basic-lin-vel-z-schedule", action="store_true")
 parser.add_argument("--command_mode", choices=["start", "s2a", "basic_gait"], default=None, help="SB 전용: start(기본) · s2a · basic_gait")
 parser.add_argument("--basic-new-share", type=float, default=None, help="basic_gait 정지·후진·옆걸음 총 몫(기본 0.30, 대안 0.15)")
 parser.add_argument("--basic-log-root", type=str, default=None, help="basic_gait 출력 전용 절대경로. smoke/main 별도 폴더")
@@ -162,6 +169,18 @@ def main(env_cfg, agent_cfg):
         env_cfg.curriculum.terrain_levels = None
         env_cfg.curriculum.command_range = None
         agent_cfg.save_interval = 250
+    if args_cli.fast_gt_only:
+        from foothold_s2.sensors.fast_gt_cfg import disable_depth_camera_for_gt
+
+        disable_depth_camera_for_gt(env_cfg)
+    from foothold_s2.rewards.basic_gait_bundle import apply_settings, validate_settings
+
+    basic_reward_bundle = apply_settings(env_cfg, validate_settings({
+        "track_ang_vel": args_cli.basic_track_ang_weight,
+        "track_lin_vel": args_cli.basic_track_lin_weight,
+        "joint_acc": args_cli.basic_joint_acc_weight,
+        "hip_pos_penalty": args_cli.basic_hip_pos_weight,
+    }, args_cli.basic_lin_vel_z_schedule, args_cli.basic_feet_regulation_weight))
     STATE["log_dir"] = log_dir
     write_status(log_dir, {"state": "starting", "task": args_cli.task, "resume_from": resume_path,
                            "resume_parent": parent, "seed": agent_cfg.seed, "smoke_updates": args_cli.smoke_updates})
@@ -220,6 +239,10 @@ def main(env_cfg, agent_cfg):
         pc["force_gt"] = True
     if args_cli.variant == "SB" and args_cli.p_map_off is not None:
         pc["p_map_off"] = args_cli.p_map_off
+    if args_cli.fast_gt_only:
+        pc["fast_gt_only"] = True
+        pc["log_kl"] = False
+        pc["log_map_stats"] = False
     if pc.get("map_input") != MAP_INPUT[args_cli.variant] or bool(pc.get("force_gt", False)) != FORCE_GT[args_cli.variant]:
         raise ValueError("SOL-23f map_input/force_gt must match variant")
     if (args_cli.variant == "SB") != (float(pc.get("p_map_off", 0.0)) > 0.0):
@@ -231,6 +254,7 @@ def main(env_cfg, agent_cfg):
     runner_class = {"B": BRunner, "SB": SBRunner}.get(args_cli.variant, TopDownRunner)
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
+    runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
     if resume_path is None:
         initial = os.path.join(log_dir, "model_initial.pt")
         runner.save_initial(initial)
@@ -267,6 +291,12 @@ def main(env_cfg, agent_cfg):
              "run_kind": ("B_kit_smoke_10_updates" if args_cli.variant == "B" else f"{args_cli.variant}_kit_smoke_{args_cli.smoke_updates}_updates") if args_cli.smoke_updates else "main",
              "depth_delay_ticks": int(runner.perception.cfg.depth_delay_ticks),
              "p_map_off": float(runner.pcfg["p_map_off"]), "map_switch_seed": int(runner.pcfg["map_switch_seed"]),
+             "fast_gt_only": bool(runner.pcfg["fast_gt_only"]),
+             "depth_camera_enabled": not bool(runner.pcfg["fast_gt_only"]),
+             "perception_training_enabled": not bool(runner.pcfg["fast_gt_only"]),
+             "map_stats_enabled": bool(runner.pcfg.get("log_map_stats", False)),
+             "kl_probe_enabled": bool(runner.pcfg.get("log_kl", False)),
+             "basic_reward_bundle": basic_reward_bundle,
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,
@@ -282,8 +312,13 @@ def main(env_cfg, agent_cfg):
         from foothold_s2.runners.map_stats import MapStatsRecorder
 
         MapStatsRecorder(runner, log_dir).attach()
-    from foothold_s2.eval.training_trace_bridge import TrainingTraceBridge
-    runner.training_trace = TrainingTraceBridge(runner)
+    if args_cli.fast_gt_only:
+        runner.training_trace = None
+        print("BASIC_FAST_GT_TRACE disabled: depth camera and TR-Net trace are unavailable", flush=True)
+    else:
+        from foothold_s2.eval.training_trace_bridge import TrainingTraceBridge
+
+        runner.training_trace = TrainingTraceBridge(runner)
     # 남은 회차만: 체크포인트의 iter 는 «끝난» 회차이므로 max_iterations(총 회차 수) 에서 iter + 1 을 뺀다
     done = runner.current_learning_iteration + 1 if resume_path else 0
     remaining = 2 if args_cli.smoke_updates == 2 else agent_cfg.max_iterations - done
@@ -303,7 +338,8 @@ def main(env_cfg, agent_cfg):
         print("TRAIN_SOL23F_STATUS stopped_saved " + json.dumps(detail), flush=True)
         return
     finally:
-        runner.training_trace.close()
+        if runner.training_trace is not None:
+            runner.training_trace.close()
     final = os.path.join(log_dir, f"model_{runner.current_learning_iteration}.pt")
     write_status(log_dir, {"state": "done", "iter": runner.current_learning_iteration, "log_dir": log_dir,
                            "variant": args_cli.variant, "checkpoint": final, "sha256": sha256(final),

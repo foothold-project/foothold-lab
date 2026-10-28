@@ -27,7 +27,9 @@ def source_receipt(run_dir: Path, arm: str, final_iter: int, *, require_done: bo
     run = manifest.get("run") or {}
     modes = manifest.get("modes") or {}
     parent = (modes.get("resume_parent") or {}).get("basic_extend") or {}
-    if (run.get("name") != f"EX-36{arm}-basic-extend-share30"
+    expected_names = {f"EX-36{arm}-basic-extend-share30", f"EX-36{arm}-basic-extend-fastgt-share30"}
+    if (run.get("name") not in expected_names
+            or bool(modes.get("fast_gt_only", False)) != run.get("name", "").endswith("-fastgt-share30")
             or parent.get("arm") != arm or parent.get("completed_update") != PARENT_UPDATE[arm]
             or modes.get("basic_terrain_cfg_difference") is None
             or modes.get("seed") != 42 or modes.get("p_map_off") != 0.1):

@@ -54,6 +54,7 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
 PERCEPTION_DEFAULTS = {
+    "fast_gt_only": False,
     "learning_rate": 5e-4,
     "weight_decay": 0.0,
     "num_learning_epochs": 5,
@@ -113,6 +114,8 @@ class StartRunner(OnPolicyRunner):
         pcfg = dict(PERCEPTION_DEFAULTS)
         pcfg.update(train_cfg.get("perception", {}))
         self.pcfg = pcfg
+        if pcfg["fast_gt_only"] and (not pcfg.get("force_gt") or pcfg.get("map_input") != "reconstruction" or pcfg.get("log_kl")):
+            raise ValueError("fast_gt_only requires force_gt, reconstruction map, and disabled replay KL probe")
         if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
             raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
         p_off = float(pcfg["p_map_off"])
@@ -146,6 +149,7 @@ class StartRunner(OnPolicyRunner):
         self.manifest_dir = None
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)),
+                          fast_gt_only=bool(pcfg["fast_gt_only"]),
                           depth_delay_ticks=pcfg.get("depth_delay_ticks", 1))
         ).to(device)
         self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
@@ -159,9 +163,9 @@ class StartRunner(OnPolicyRunner):
         template = self._ppo_obs(raw, torch.zeros(raw.batch_size[0], 51, device=device))
         self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
         self.alg = self._construct_algorithm(template)
-        self.replay = PerceptionReplay(
+        self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
             self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
-        )
+        ))
         self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
         self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
 
@@ -318,11 +322,18 @@ class StartRunner(OnPolicyRunner):
         tot_iter = start_iter + num_learning_iterations
         trace = getattr(self, "training_trace", None)
         for it in range(start_iter, tot_iter):
+            if getattr(self, "basic_lin_vel_z_schedule", False):
+                from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
+
+                basic_lin_vel_z_weight = set_lin_vel_z_weight(self.env, it)
+            else:
+                basic_lin_vel_z_weight = None
             if trace is not None:
                 trace.begin_update(it)
             start = time.time()
             self._phase_start()
-            self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
+            if self.replay is not None:
+                self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
             contract_fn = contract_bad_fn(self.pcfg["contract"])                  # None | start | walkturn_v1 (모르는 이름은 거절)
@@ -335,7 +346,8 @@ class StartRunner(OnPolicyRunner):
                     inp = self.perception.ingest(self.pstate, o, depth)
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
-                    self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
+                    if self.replay is not None:
+                        self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
                     _off = self.pstate.map_off.bool()
                     _gt = self.pstate.use_gt.bool()
@@ -362,7 +374,8 @@ class StartRunner(OnPolicyRunner):
                         act_stats.add(actions, dones, phys_probe(getattr(self.env, "unwrapped", self.env)) if (step_k % 8 == 0) else None)
                     if self.pcfg["stop_on_nonfinite"]:
                         self._check_finite(it, rewards=rewards, actions=actions)
-                    self.replay.add_post(raw["policy"], dones)
+                    if self.replay is not None:
+                        self.replay.add_post(raw["policy"], dones)
                     # 정규화 통계는 이번 스텝의 actor 입력으로 갱신한다(설치는 다음 관측: 한 스텝 어긋날 뿐 같은 흐름)
                     self.alg.process_env_step(ppo_obs, rewards, dones, extras)
                     if "episode" in extras:
@@ -402,7 +415,8 @@ class StartRunner(OnPolicyRunner):
             # ③ 지각
             self._phase_start()
             klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
-            ploss = self.update_perception()
+            ploss = ({"fast_gt_only": 1.0}
+                     if self.pcfg["fast_gt_only"] else self.update_perception())
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
                 self._check_params_finite(it)
@@ -410,6 +424,8 @@ class StartRunner(OnPolicyRunner):
                 kl_info["phi"] = self._kl_phi_after(klf)
             self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
+            if basic_lin_vel_z_weight is not None:
+                loss_dict["basic_reward/lin_vel_z_weight"] = basic_lin_vel_z_weight
             for name, res in kl_info.items():
                 loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
             split = rs_rec.summary() if rs_rec is not None else None

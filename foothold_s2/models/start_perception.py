@@ -54,6 +54,7 @@ def mlp(in_dim: int, hidden: list[int], out_dim: int | None) -> nn.Sequential:
 
 @dataclass
 class PerceptionCfg:
+    fast_gt_only: bool = False
     map_input: str = "reconstruction"  # "reconstruction"(G1 · G3) · "none"(G0 · 지도 토큰 0)
     force_gt: bool = False  # G0-gt: p_smpl = 1 고정 (13 §4)
     attn_layers: int = 2  # 가정 (12 §4: 층 수 · FF 근거 부족)
@@ -316,7 +317,11 @@ class StartPerception(nn.Module):
         h_prop = self.ie.prop_step(hist, h_prop * keep)
         h_terr = h_terr * keep
         out: dict[str, torch.Tensor] = {}
-        if self.trnet is not None:
+        if self.cfg.fast_gt_only:
+            if not self.cfg.force_gt or not bool(use_gt.all()):
+                raise ValueError("fast_gt_only requires the GT map for every environment")
+            hmap = gt_map
+        elif self.trnet is not None:
             h_new = self.trnet.step(depth2, h_prop, h_terr)
             h_terr = torch.where(tick[:, None], h_new, h_terr)  # 틱이 아니면 step mask 0 (12 §6.1)
             rough, refined = self.trnet.decode(h_terr)
