@@ -16,6 +16,7 @@ from pathlib import Path
 import subprocess
 import time
 from typing import Callable
+from uuid import uuid4
 
 
 STATES = {"waiting", "running", "done", "failed", "hold"}
@@ -89,6 +90,9 @@ def validate(job: dict) -> dict:
     gpu = job.get("gpu")
     if gpu not in (0, 1, None) or (gpu is None) != (job["kind"] == "compose"):
         raise ValueError("GPU 0/1 required except CPU composition")
+    if gpu is not None and (not isinstance(job.get("gpu_uuid"), str)
+                            or not job["gpu_uuid"].startswith("GPU-")):
+        raise ValueError("GPU job needs a pinned gpu_uuid")
     argv = job.get("argv")
     if not isinstance(argv, list) or not argv or not all(isinstance(a, str) and a for a in argv):
         raise ValueError("argv must be a nonempty string array")
@@ -111,7 +115,35 @@ def validate(job: dict) -> dict:
         if verifier is not None and (not isinstance(verifier, list) or not verifier or
                                      not all(isinstance(a, str) and a for a in verifier)):
             raise ValueError("verify_argv invalid")
+        check_device_arguments(job, unit)
     return job
+
+
+def check_device_arguments(job: dict, unit: dict) -> None:
+    """Require the Isaac/CUDA device ordinal to equal the registered GPU."""
+    launch = [*job["argv"], *unit.get("args", [])]
+    verify = unit.get("verify_argv") or []
+    gpu = job["gpu"]
+    for command in (launch, verify):
+        for i, token in enumerate(command):
+            if token.startswith(("--device=", "--gpu-id=", "--gpu-index=",
+                                 "--rendering_device=", "--renderer-gpu-id=")):
+                raise ValueError("inline device flags are not part of the pinned GPU contract")
+            if token.startswith("cuda:") and token != f"cuda:{gpu}":
+                raise ValueError("device ordinal conflicts with pinned GPU UUID")
+            if token in ("--gpu-index", "--rendering_device", "--renderer-gpu-id"):
+                raise ValueError("unverified physical renderer GPU flag")
+            if token in ("--device", "--gpu-id"):
+                if i + 1 >= len(command):
+                    raise ValueError("device flag has no value")
+                expected = f"cuda:{gpu}" if token == "--device" else str(gpu)
+                if gpu is None or command[i + 1] != expected:
+                    raise ValueError("device flag conflicts with pinned GPU UUID or CPU lane")
+    if gpu is not None and sum(launch[i:i + 2] == ["--device", f"cuda:{gpu}"]
+                               for i in range(len(launch) - 1)) != 1:
+        raise ValueError("GPU launch needs exactly one registered --device cuda:N")
+    if gpu is None and any(token.startswith("cuda:") for token in (*launch, *verify)):
+        raise ValueError("CPU composition cannot select CUDA")
 
 
 def register(queue_path: Path, spec: dict) -> dict:
@@ -170,6 +202,8 @@ def claim_one(queue_path: Path, gpu: int | None, idle: Callable[[int], tuple[boo
               sources: dict | None = None) -> tuple[dict | None, str]:
     with locked(queue_path.with_suffix(".lock")):
         queue = read(queue_path)
+        if any(c["gpu"] == gpu for c in queue.get("legacy_claims", [])):
+            return None, "legacy_renderer_claim_requires_review"
         if any(j["gpu"] == gpu and j["state"] == "running" for j in queue["jobs"]):
             return None, "existing_claim_requires_review"
         job = choose(queue, gpu)
@@ -190,16 +224,62 @@ def claim_one(queue_path: Path, gpu: int | None, idle: Callable[[int], tuple[boo
         return json.loads(json.dumps(job)), "claimed"
 
 
-def execute(job: dict, unit: dict) -> tuple[int, str]:
+def legacy_claim(queue_path: Path, gpu: int, job_id: str) -> tuple[str | None, str]:
+    """Reserve a unit for the old renderer under the same queue lock."""
+    with locked(queue_path.with_suffix(".lock")):
+        queue = read(queue_path)
+        if any(j["gpu"] == gpu and j["state"] == "running" for j in queue["jobs"]):
+            return None, "new_queue_claimed"
+        if any(c["gpu"] == gpu for c in queue.get("legacy_claims", [])):
+            return None, "legacy_renderer_claimed"
+        token = uuid4().hex
+        queue.setdefault("legacy_claims", []).append({
+            "gpu": gpu, "job_id": job_id, "pid": os.getpid(), "token": token, "at": now()})
+        publish(queue_path, queue)
+        return token, "legacy_claimed"
+
+
+def legacy_release(queue_path: Path, token: str) -> None:
+    with locked(queue_path.with_suffix(".lock")):
+        queue = read(queue_path)
+        claims = queue.get("legacy_claims", [])
+        matched = [c for c in claims if c["token"] == token and c["pid"] == os.getpid()]
+        if len(matched) != 1:
+            raise ValueError("legacy claim missing or not owned")
+        queue["legacy_claims"] = [c for c in claims if c is not matched[0]]
+        publish(queue_path, queue)
+
+
+def pinned_gpu_uuid(gpu: int) -> str:
+    result = subprocess.run(["nvidia-smi", "--id", str(gpu), "--query-gpu=uuid",
+                             "--format=csv,noheader,nounits"], capture_output=True,
+                            text=True, timeout=10, check=False)
+    if result.returncode or len(result.stdout.splitlines()) != 1:
+        raise RuntimeError("gpu_uuid_probe_failed")
+    return result.stdout.strip()
+
+
+def execute(job: dict, unit: dict, uuid_probe=pinned_gpu_uuid) -> tuple[int, str]:
+    validate(job)
     argv = [*job["argv"], *unit.get("args", [])]
+    child_env = os.environ.copy()
+    child_env.pop("CUDA_VISIBLE_DEVICES", None)
+    child_env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    if job["gpu"] is None:
+        child_env["CUDA_VISIBLE_DEVICES"] = ""
+    else:
+        if uuid_probe(job["gpu"]) != job["gpu_uuid"]:
+            raise RuntimeError("registered_gpu_uuid_mismatch")
     output = Path(job["output"])
     output.mkdir(parents=True, exist_ok=True)
     log = output / f"{job['id']}.{unit['id']}.log"
     with log.open("ab") as stream:
-        result = subprocess.run(argv, cwd=job["cwd"], stdout=stream, stderr=subprocess.STDOUT,
+        result = subprocess.run(argv, cwd=job["cwd"], env=child_env,
+                                stdout=stream, stderr=subprocess.STDOUT,
                                 check=False)
         if result.returncode == 0 and unit.get("verify_argv"):
-            result = subprocess.run(unit["verify_argv"], cwd=job["cwd"], stdout=stream,
+            result = subprocess.run(unit["verify_argv"], cwd=job["cwd"], env=child_env,
+                                    stdout=stream,
                                     stderr=subprocess.STDOUT, check=False)
     return result.returncode, str(log)
 
@@ -252,6 +332,9 @@ def screen(queue: dict) -> str:
     for gpu in (0, 1, None):
         label = "CPU 합성" if gpu is None else f"GPU{gpu}"
         lines.append(label)
+        for claim in queue.get("legacy_claims", []):
+            if claim["gpu"] == gpu:
+                lines.append(f"  legacy-renderer {claim['job_id']} running pid={claim['pid']}")
         for job in sorted((j for j in queue["jobs"] if j["gpu"] == gpu),
                           key=lambda j: (j["priority"], j["registered_at"])):
             lines.append(f"  P{job['priority']} {job['id']} {job['state']} {job['next_unit']}/{len(job['units'])} {job['owner']}")

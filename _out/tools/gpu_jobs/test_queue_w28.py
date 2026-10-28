@@ -1,9 +1,12 @@
 """Answer-known CPU checks for W28; no GPU and no Kit process is started."""
 
 from pathlib import Path
+import subprocess
+import os
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent))
 import queue_w28 as q
@@ -12,9 +15,12 @@ import queue_w28 as q
 def spec(name, kind="capture", gpu=1, units=2, ready_file=None):
     value = {"id": name, "kind": kind, "priority": q.PRIORITY[kind], "gpu": gpu,
              "owner": "cpu-test", "authorization_ref": "cpu-only-fixture",
-             "output": "cpu-output", "cwd": ".", "argv": [sys.executable, "-c", "pass"],
+             "output": "cpu-output", "cwd": ".",
+             "argv": [sys.executable, "-c", "pass"] + (["--device", f"cuda:{gpu}"] if gpu is not None else []),
              "units": [{"id": str(i), "args": [],
                         "verify_argv": [sys.executable, "-c", "pass"]} for i in range(units)]}
+    if gpu is not None:
+        value["gpu_uuid"] = "GPU-cpu-fixture-" + str(gpu)
     if ready_file is not None:
         value["ready_file"] = str(ready_file)
     return value
@@ -103,6 +109,51 @@ class QueueTests(unittest.TestCase):
         q.register(self.path, job)
         self.assertEqual(q.one(self.path, None)[0], "done")
         self.assertEqual(target.read_text(), "ok")
+
+    def test_gpu_uuid_and_child_device_must_match(self):
+        job = spec("mismatch", kind="judge", gpu=1, units=1)
+        job["argv"][-1] = "cuda:0"
+        with self.assertRaisesRegex(ValueError, "device flag"):
+            q.validate(job)
+        job = spec("missing-uuid", kind="judge", gpu=1, units=1)
+        job.pop("gpu_uuid")
+        with self.assertRaisesRegex(ValueError, "gpu_uuid"):
+            q.validate(job)
+        job = spec("cpu-cuda", kind="compose", gpu=None, units=1)
+        job["argv"] += ["--device", "cuda:1"]
+        with self.assertRaisesRegex(ValueError, "device ordinal|CPU"):
+            q.validate(job)
+
+    def test_child_environment_pins_uuid_and_probe_disagreement_holds(self):
+        job = spec("pinned", kind="judge", gpu=1, units=1)
+        job["output"] = str(self.root / "logs")
+        with self.assertRaisesRegex(RuntimeError, "registered_gpu_uuid_mismatch"):
+            q.execute(job, job["units"][0], uuid_probe=lambda gpu: "GPU-other")
+        calls = []
+        def fake_run(argv, **kwargs):
+            calls.append((argv, kwargs["env"]))
+            return subprocess.CompletedProcess(argv, 0)
+        with patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": "GPU-inherited-wrong"}):
+            with patch.object(q.subprocess, "run", fake_run):
+                q.execute(job, job["units"][0], uuid_probe=lambda gpu: job["gpu_uuid"])
+        self.assertEqual(len(calls), 2)
+        self.assertNotIn("CUDA_VISIBLE_DEVICES", calls[0][1])
+        self.assertEqual(calls[0][1]["CUDA_DEVICE_ORDER"], "PCI_BUS_ID")
+        self.assertNotIn("CUDA_VISIBLE_DEVICES", calls[1][1])
+
+    def test_legacy_and_new_claims_exclude_each_other(self):
+        q.register(self.path, spec("new", units=1))
+        new_job, reason = q.claim_one(self.path, 1, idle=self.idle)
+        self.assertEqual(reason, "claimed")
+        self.assertEqual(q.legacy_claim(self.path, 1, "old")[1], "new_queue_claimed")
+        q.finish_unit(self.path, new_job["id"], "0", 0, "log")
+        token, reason = q.legacy_claim(self.path, 1, "old")
+        self.assertEqual(reason, "legacy_claimed")
+        q.register(self.path, spec("next", units=1))
+        self.assertEqual(q.claim_one(self.path, 1, idle=self.idle)[1],
+                         "legacy_renderer_claim_requires_review")
+        q.legacy_release(self.path, token)
+        self.assertEqual(q.claim_one(self.path, 1, idle=self.idle)[1], "claimed")
 
 
 if __name__ == "__main__":
