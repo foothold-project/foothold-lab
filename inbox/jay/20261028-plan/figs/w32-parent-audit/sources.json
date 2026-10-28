@@ -1,0 +1,977 @@
+[
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\map64\\map_modes.json",
+    "bytes": 4520,
+    "sha256": "e9cc9867b71f22469ede697dad8e05201c2c397e707deeb057b1e5199f0e3a8e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\probe_result.json",
+    "bytes": 417430,
+    "sha256": "5861a716146cc9787a2970eac5f42f302c6645ce2cd08ee0705369331344a71c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8494003,
+    "sha256": "963d09c492c74ef67debc964e64a2e0965adc2d44fa685d3385c468c02735b75"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8498518,
+    "sha256": "e39019096f96416f5349d96d78ea7afb7c0ebd9db99d490e047af2d4ec3bb2df"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8539555,
+    "sha256": "fcc3dd7a55abe83647274990309a93d66db85160ff5c91ca66e0e422f2b1a8cd"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8513883,
+    "sha256": "fc0cc0a7da4e495c779488c35a082d052450f9e969380c5b41a2beea450e5fba"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8515215,
+    "sha256": "111aa97017332b45ea3839e355cbb954a47f4abe67914cae6e3f9846f6ae1089"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8501165,
+    "sha256": "2630f800437328f14cb430267144275702a5918aa34d51a0966e98a7361d649e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8662169,
+    "sha256": "bb172d8a1dd920c2bade3e2826460ee3a329c65e9eeaed4bdfe36aba87a24d90"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8658012,
+    "sha256": "70825be59f8e3d9b88269ed262a2fbd9f5612d22c27fe618fae969d8e0aee190"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 416202,
+    "sha256": "09b18e81b13101227af13833683eb905e8b0639c5d4f0abe9496b3ed0a65e632"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8524571,
+    "sha256": "f65d6abd1c9fb4950c840bd9dbc91c7822d4e535ca9b04449c7dcff64d94102b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8522756,
+    "sha256": "bf4a5151eaed2888abcc2426a4dfeff8937bf03078e90af77418efa011ee1c27"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8525018,
+    "sha256": "9023c0b8fc6b178b96dc5d4e6d3f68f0c16344fa079ccd26881a9073b5e31f75"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8528478,
+    "sha256": "ebc3e29fb9f840d0819a0ea9b1d15dfb9896bd9d446cdc9c02e51555e7d7826f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8528027,
+    "sha256": "eb97d44106976ebcfe1668c302c96b497e1bd3cebffa75412e35dc7bc24d0cf8"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8521140,
+    "sha256": "523b9fde61c80b917bf36d4c4802dd74fb599a011096aa9b5602a24eb23ec558"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8662212,
+    "sha256": "26ad9fc3d581053c96b971ea7bd2e0b2ad036aea8ce9d3e61221b1ddb323acf4"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1050\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8660116,
+    "sha256": "46c033cff2cad2e87bd71d4bf61d146d1a099e02cb5966487b478fe7d19fc31d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\map64\\map_modes.json",
+    "bytes": 4501,
+    "sha256": "dc70955cbee70dd42cf6225d1d7dd8be8d09568b8ffa4b423c17510c4d03ac0f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\probe_result.json",
+    "bytes": 415095,
+    "sha256": "ac173f0ccacf629ed2bd06d9a3c286bf2d415439ebbeedf4d5269c362ae623e0"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8548534,
+    "sha256": "14700c2c53dc4a5ff6a1a037a6baec9b4ae22e10cb62ecfdc1d6792caff9974b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8554602,
+    "sha256": "e57ff2c8cde035ad08c0fe193c32a3e70c8ea27e1ce02792ab5d25cb7a11cdb4"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8573932,
+    "sha256": "4dc0eeb2bf67925ed147b8b827ab3dc652fe60a109c79bc09de90502171792fb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8570719,
+    "sha256": "9cbfbeced28738c3fa3a0e6341be78de8dfeb10fde2630af29d3512986702e7a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8564359,
+    "sha256": "631d7e2adaf5812753ee0748e9830fc7d46375089738cd3a701cb7f10a1f0a29"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8509364,
+    "sha256": "ad2d0b46da570bf5abdff5eaec309094a53101e86206d7ffac290904768ef22e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8659539,
+    "sha256": "965ba1a5f2cffbecd7242a02f2254232273d6bfb1a0aacfb960506d7fd42b744"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8657896,
+    "sha256": "79d93b8d1cf56cb2c222db3108b7edeb7edf7d6fd689dd410ee1d43bb97c7486"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 416362,
+    "sha256": "4b7c351fa3d50ae804ece8dd7d06d6118a2a37c9ddbf4233288addc1bcb390b4"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8563215,
+    "sha256": "a56ca6bcbc38d2fdf863159d8debbc7cbb8c60d2eda609221c7cd5e28039520e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8570307,
+    "sha256": "916f35779960c1b83fd56e3671ded2eeb7b8a523b73b662c1b2d8f5bce30072e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8547988,
+    "sha256": "62964342af342437c12ac52d827eb2daa52e64fbcd364b5afdba447f3a867deb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8578919,
+    "sha256": "b0d10e7f8f212ea8a74c4d73e46c7ec21067471f9a10aacb77e4e29bf6283782"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8557847,
+    "sha256": "dd5d5689cdddad1bd182899f56a34220be697cf7a3f1c7207ddc4366adfdff7e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8530650,
+    "sha256": "d845ca5b829694e0dada91bab7971ee427ccefa0ea57057b309a12c1dcb5850c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8655847,
+    "sha256": "0ab75e1875a4c713d426e1620caf95cba0325539aa2354276900b2c30d4d964f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1100\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8656701,
+    "sha256": "fe790c9abcded18fec0d6431ee2e16be36ecbb0fbdb65c5ac340ab4fb2c1129c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\map64\\map_modes.json",
+    "bytes": 4494,
+    "sha256": "9fcf4196602b150346a42a5d6a2a6ebc3881adf677e92b3c9b97793593d1fd7d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\probe_result.json",
+    "bytes": 414674,
+    "sha256": "f9cdc10ee3a2c549e99d94c278979b1477b4cac4b499a332ab54325fa16b33f9"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8604946,
+    "sha256": "e4e5a43d2a737362493d439bbf62c7df2749bd693c9460459d18392aa1ea683e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8591242,
+    "sha256": "969b419d0e6bbbdc23ca99281f4ab66c7d5aa2a739bcabc127ba433c43e07da8"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8618828,
+    "sha256": "36ae3f2d19914a1395fabba441f2d1208839f5659da9d13eea58638c02b75d45"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8584869,
+    "sha256": "cfcc759ceb70b50d05c0f81d865841f06abd11789f3efbd830cc3838559521c1"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8592487,
+    "sha256": "d86b4714628033694ab2caf67ea0bb280ebe2176754bde992c7c3f499aef6dd0"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8573468,
+    "sha256": "476aa6586f965d03a826ab88cbe33dd6f136897de1e30e652f0e6413ae8f6fef"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8663393,
+    "sha256": "06c40ef6ec425acad890ffe2d2a7a24ea50100702437c0c589915536b9e623a3"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8656305,
+    "sha256": "e2d954f0fc8733da0d0f74a29d4d89256aec22ac9c742e46a47b07ff17097613"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 414411,
+    "sha256": "8aa77538e4ef3be0266ae3c6eb032828781671ca7fe2bb4fe8a04168e1a590d8"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8608622,
+    "sha256": "657cd531c3106a65d432333405eb9995e73233d7a948f0f56fc9c9badeae33ba"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8596406,
+    "sha256": "7e3a6847ed865289062b48a37845301757a75cf78a5d08db67688e8e218152b2"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8600176,
+    "sha256": "50bd0b454012ad8f9916a55715b70f4b39fa697ba9e8024a2ba0035bdcf0332a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8598344,
+    "sha256": "d59a0cf24cf0e930e936a4818f3ea07014dd90a5e28ef283ca3e09a86cfeafcc"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8591617,
+    "sha256": "25606f7eeba63b3c3bb3f907351c25d638ff3bf17eda038f5a46b3bd9f539a44"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8559559,
+    "sha256": "518c203a47711ce8091c8400e9ee4eaf26b8354bfe00ede0413e6bf03612060e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8663219,
+    "sha256": "fb9be5ef7c6e00005b8bdff18432074f5f26ba1ec8d1e7f03fbffd2038aea916"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1150\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8655419,
+    "sha256": "3cfc5bd978caa7931cee5fefe72e6fa843db8d6fb13637347953c1f8ee1110c5"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\map64\\map_modes.json",
+    "bytes": 4494,
+    "sha256": "8b3bd140d05aca0bf2d27c81928d73d93d87f4f8da987dd793836788b76dfa8d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\probe_result.json",
+    "bytes": 414885,
+    "sha256": "556506b6abb246b421fcff83f90b10640d9be535ba22a6f2b7c36ad4d0bc3316"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8551719,
+    "sha256": "2a917a2ac57000bebcaaee8ee4dd1e09c08063750655cab008629d95c565791b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8646066,
+    "sha256": "82d3f13a7341a17fa3118ed354eec8a791927ab66655dbc8a7e1dcf446cee3d6"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8574020,
+    "sha256": "379c425554465e18ee9d5c672bdfdf750b95b5df9740ac43035f07abcbbeaf34"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8637019,
+    "sha256": "ddb541045ce13a36b13ebd51cc699166f0fce0ef264c935a7454beb17c54a269"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8555012,
+    "sha256": "45a0b4145a8cae44f1a3de376881ff3eeeac94262bfcb7af49898fbdae768863"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8627670,
+    "sha256": "b908fbe97811fe44677d759760052a1356342bc7faf6d08b208f64fc8815652d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8658020,
+    "sha256": "f498996ba30c5db55d98e6f5499424c4476a3bb623157e23736d92b3d74e5eea"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8659296,
+    "sha256": "39b4033995e05db0cd8915da60aa1b02eb6de716ebb764e4ac19ddbe1672c985"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 414640,
+    "sha256": "4d629b8e268513cff2ac309761975985e0bb2605626f29454abe6837fa8489c9"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8563287,
+    "sha256": "dde4455cb1c5ee404577ed8c89ba27764f9a55ceb612fa0f527a2fc04b83d483"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8636276,
+    "sha256": "866b3ac03c341e4db9a6a560d7e4b1b804f19bc23924f76ac5943c55ca5afaab"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8599331,
+    "sha256": "51861d58e456abd5e3f85a230f43235403a9d13dcd6e8d694f495734042960ce"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8644487,
+    "sha256": "a1d43f8ce8bffa330d7623ef86da1511cf0ef83ea26d684ef7d220adbd076002"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8556810,
+    "sha256": "8ceb3fdc4f2dc1ec16b70289781036bb48ea4c93775bce8a1fe43a312a9513e5"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8623709,
+    "sha256": "f3a85e600248b26be4897164f3ac1b2a4e92b0650096218ad7680359ca151146"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8657161,
+    "sha256": "818aaea0c7c3d03305e67d7bf1c13fedd89dc36a5556da004f33b195b119ed5e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1200\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8659011,
+    "sha256": "ba1c72fad4aaf62ea8a243107c3156abc2c1c4656be6e1f11a3c7f34d2704d3c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\map64\\map_modes.json",
+    "bytes": 4498,
+    "sha256": "2153cc5a66b7b74e7c4dd244ded82cdddcc4572865049a94ec6fc5c8b66d041d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\probe_result.json",
+    "bytes": 414312,
+    "sha256": "c2bc04a85f494b7f9ffc22ad96084b053fbcc8973757ddb1e242636594b422ab"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8609291,
+    "sha256": "ef3ae86ca70adcc4cfafa1ac597c527c7871c174d4484e319e27538d93eabeb3"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8589025,
+    "sha256": "af04002f8e739822915b7e2ec68239b21bdda42170b05e8fcc274301089542a8"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8617038,
+    "sha256": "bcebdd16349bc5aa1ac79f9caba31d779d7ae8e8f130c336c2ce695237c9d599"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8589347,
+    "sha256": "9fb6ab1e2fd1cd85a7e1eb10abc8c60206283ae8d29440357998c69a003bde3a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8562490,
+    "sha256": "3fb1bd097a16c7e597600331eef5a0e229c69bf0e7e10fcaf75f3b25eb2f5715"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8602243,
+    "sha256": "abcf8e42f984892ff838be338bf10ffd3a405438c08098be1a56a66311a631e2"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8659637,
+    "sha256": "d5d5d3afb1bb15e7ef0c2b4821d5eae75054db54bef6e9ffd4a4805974e72d48"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8654027,
+    "sha256": "e2aa33a490b5d9f3bdbc2206510b6cf29d14af73f813facf98f096e8388a68df"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 413964,
+    "sha256": "ebc74841e7d51c34580692116568fea9f53eeb7d4152a95ba67d2d2969e78786"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8610775,
+    "sha256": "055aee1fc2527b163c45e268adaf1d03c6dba0875f8e990eee151423da73180b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8604919,
+    "sha256": "2652384ef28aa5cb2bd3f92c3cde61acc5a9de27360ad2c58448c5694bf3e54f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8632286,
+    "sha256": "aea45fe8a449a40a8455762df56e144b94e1509a0b41861470b4e736fabed177"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8606649,
+    "sha256": "3256718668f7ca872bac56779183794eb2d2d51b2b4e7da2b0f4dc228651364e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8607709,
+    "sha256": "86e0a2390636a680a5650d0e71ac05a8aebb68690d2945037f8fe9e9e0a5c92a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8586754,
+    "sha256": "648eb59633a5cf639ee11b3932939350c17dc5af3fc6d7e392234a687b7c9903"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8655104,
+    "sha256": "223bfffb5fdef32909d17bb331d171f23f42beb513055a47964cb9320e5b09d0"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1250\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8653676,
+    "sha256": "29e9d0031c993721424276c740942fb651dadd957018c8061d73cce3755ecf22"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\map64\\map_modes.json",
+    "bytes": 4501,
+    "sha256": "16f36d789638f41446d41e002baa328a0bf66a1c933aa0756d9a445df586ab9a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\probe_result.json",
+    "bytes": 416195,
+    "sha256": "a0ce2eaf55a824b14cbe26c66ec8b98604bc443980e8053402c6f7f2fb9bd2f7"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8523364,
+    "sha256": "4dd3630b40f806e6f091f94e5da5ce799613c452b54cafe217252ce3c2d9f713"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8610262,
+    "sha256": "fb9e4b17ca57501bb41057161437c5ae1474473e282892d872bf19371e3c8f8e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8544277,
+    "sha256": "0249278bf733feac415110f1bed8d706a20d05781fc5668612b2d9f293e7658f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8591929,
+    "sha256": "af4aa1dc383e55f1933919fd5169c346cf2c7a7234bd6d184d31418af55dd64d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8527323,
+    "sha256": "f5d3165e4e09dd0df094377c5355f1a6414f0af02dfb3b9dbd5eb68afbc8d2c2"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8615578,
+    "sha256": "cb2529293d194d837260d693ca0b96b9a84ecf59e4b67368542422645dfe277a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8654717,
+    "sha256": "1fea00e2f88d5973b00779393bfb21825834a628d9e75bc56db18066ad570379"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8648773,
+    "sha256": "3dad42187aebda9c6e103457873771b99cbf3a2cebff0af23a401c89de473045"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 415915,
+    "sha256": "d395f04b5a7f2899ac429b593fcf0c428d423ff22eaa835cdbd32ff08d9d8236"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8513900,
+    "sha256": "b5a1d2ecd56dd5ebaf836d0075483b42b129725a3db7f6949e241773a5056e1e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8639715,
+    "sha256": "c1e3dfd329a4fb58b97682a1b82422482683c1a9ce4e65b0e8c5e7afc01a7f3a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8543552,
+    "sha256": "daf16da6be3a1846d362d81e2abaaf961b51c26fdbbddbf7fb37edbee3901c50"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8587694,
+    "sha256": "19917dded64857ed6e15985c47381718441d5297414c30b596051efa6762918c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8520387,
+    "sha256": "b162ee80e27e32d2c786bfbe7533ce9ca20bd0a0c71cf97b32a4f58ce06a9db6"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8602068,
+    "sha256": "3730de99c70916fce1d7ea665cb5ce2ad7562a3f33c43e4a39f6bf97a5fb8426"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8653171,
+    "sha256": "70c2f33d82bad3a4e7c84d0d93abfa8c2f434737d4a0f32bb45214f7d08b1990"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1300\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8655682,
+    "sha256": "391dcc95a49374bc41caafc45f2f18f3a04b5fc44bfc2e4b674fe2d10e3735d4"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\map64\\map_modes.json",
+    "bytes": 4510,
+    "sha256": "bb2c35b8305608e2b74ff3c867128d5eedbad4e548b885574ce24a3e33e9764d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\probe_result.json",
+    "bytes": 415906,
+    "sha256": "0af3b0e8a86610c1ded4fcf535adfb438d2db8e15e04e5d3a40c778ef3907c76"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8511591,
+    "sha256": "03ef47bd7dc3e747b8b852b1b61b7f991c1c54c1e64ac4fc7459bf832cbd1b16"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8627238,
+    "sha256": "f38f34cdf59f8422693aed1f81183dbace0828cf0401cae37588e0540ff1546c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8557381,
+    "sha256": "ca715b1db525920e21e4c43c9d76b8791675bac4ac95da952563f71c87d376c5"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8639911,
+    "sha256": "0f060d490c32a95accf24dacc0b1df6a216ba892fc98fbf559cd28820c72ee8c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8565603,
+    "sha256": "893ee71111a62e1519987bf545a3c0188b1bc658dd8f4e3c641037f392d9673f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8611263,
+    "sha256": "2dcb474b502fff2ed2b7933054da317b4fbe0ee92dc982e1a8d4298d20d69677"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8647659,
+    "sha256": "7f790f0609942b5d9239f82c4f84c7ab55b9ef81bb921759b522e476c0303538"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8657915,
+    "sha256": "7e9144b201a631952c8cd7d63bca4e8b9f246392924ef803132597d3478e84bb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 416516,
+    "sha256": "a12b5c21d5af8e198245dfcb90531c89b6acb27b2f9e8c612f46db8a707450bb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8511447,
+    "sha256": "6955cee9169839d08fbaf13358f599dd3d7716edac632749bd07ed816c3f19d9"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8633867,
+    "sha256": "0ec0793b685011a6c5ab89f27f71550817f81750db8fb17fc8ee953ea6d70706"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8593521,
+    "sha256": "8c4a7369994099bc04a0cab5bcef8753436647c06f3b2982376231616a8862b7"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8635311,
+    "sha256": "354c9a7b7e9e934640b8216c8e8eff7be6e052ac7248aabc3a1768db3761b3df"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8570716,
+    "sha256": "81b08e52fdc6984ce815213b059a9b257593db8d088a498be3b9cc750cda883a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8611171,
+    "sha256": "3bdca877ee63fda05691e737418e9c750c88ec7080a55e0c68cf111d0d7dfb83"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8652811,
+    "sha256": "6fdbd192e232dc632893b825a87fbfbe72d9c683ad3158fb75280730670eb5ad"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1350\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8658924,
+    "sha256": "d870ea8585d2acd50321bf9537f4211378b5774daf03d0e76317eabc792c4ee0"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\map64\\map_modes.json",
+    "bytes": 4497,
+    "sha256": "a2eba5a0e1827d9014e7b990b0a2e7c4e4f32cb818eab3ea358dc9f96a3a04b2"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\probe_result.json",
+    "bytes": 415644,
+    "sha256": "4816e35248ec82ae9425426ea7b9d9528519b40c7de4135ec12bd20c0f7dfe4b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8564296,
+    "sha256": "9ff2f10b41214548bbacc7f50f3e2b062b611f7c4b8615e12a46b333d7db6d3d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8603237,
+    "sha256": "1543bd7069f7593852dfa4245ad1849794ea419048fcb78f1af59a6d94f88b23"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8578203,
+    "sha256": "e7963a3aed643e50403ddb9bf52f3dc46181e298aff7b92a15ba530055f545f1"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8622016,
+    "sha256": "57757ac6d57494f7f06b28b38589c5afa9b3ee88a2133e5e6194b91ca47a27a7"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8596108,
+    "sha256": "b4d6216cca0321a0d3b869366755de307297dfb565514ce9a7f2c3419466b9eb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8604416,
+    "sha256": "bb6df4b2925504794203e2e7a0b746fd448b1929f9bf4f67101453e3f655e46f"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8651907,
+    "sha256": "e0155575a408454dac38806c2e5a58c0cbb933ea0cfd8e2877676fdb9f98dbc8"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8652972,
+    "sha256": "8174d882de3f0749f713fd52b017a00bd902f92161e6ecea9e89a68e09731228"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 416058,
+    "sha256": "86e13b64fd112b96080289bd9b2d4122b2007edbfe66c71aaba038e934d66906"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8559977,
+    "sha256": "ecb8517939e09d6550d5141a31c1c3e86bfcccf140122bc8328af860e404b722"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8612894,
+    "sha256": "d096c6e5132315c03fd6605b823dd5f6b27af331a43eaa5749ccf5e9bcdca6a7"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8604883,
+    "sha256": "8d67962d55328fefb2aa58c0a14c8549571a0894feb3f98e8e27e7491266822d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8616537,
+    "sha256": "8b08fecaddbca49f90167c6b13574095663714fbef49a7570c348f0cc3b54103"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8605533,
+    "sha256": "f6530b01045373b281de99b9628ccba3b70b55b474e29a1f885c48e7be8dd9b9"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8616859,
+    "sha256": "bbe1d44bfb036c4fc286c3f28c7aaae4030c32fcae78069e7dd162750e155641"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8653193,
+    "sha256": "ca73f93b4e5f9b01dd12037f0d31ed839c9f63deb39ecff4a1393b6f824db684"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1400\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8654155,
+    "sha256": "2e2dc722e755becbbf9ad0aecc044b32f6c448d91ca7bec5ad4075efa676f71e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\map64\\map_modes.json",
+    "bytes": 4504,
+    "sha256": "dbb624fd0f08b5e3afd2bbbb2b8e335173a39b2e41bb7d176da4e473042c71db"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\probe_result.json",
+    "bytes": 420844,
+    "sha256": "73ee5416d4c35941c043415824ed7cb15b2c49cc0f43df9542976d8939fa3e74"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8497030,
+    "sha256": "d102e57e15020f755400f026ddfd298988cd07cd84f6b86cc7401894c06a2c36"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8537553,
+    "sha256": "71d6448c199fc9ac378c3c73cf43391be8e70229370a4dfc9c80274412cae14d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8571045,
+    "sha256": "cb44be29491e8ae5fcff36899309d8ad1c9403cb06c613951b75971c7736e668"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8523584,
+    "sha256": "31d2f4e8c0f0740de3aac584388957ec701e93fc9b412341e9d833e6698fea65"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8579340,
+    "sha256": "3423445b550c56952c62ab64667ab64e062de3d39d84739b2dc7540b9a240f3b"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8512883,
+    "sha256": "3c18fce8344e0f2471ab98c85ce008bb640e51eacae9a38e2f57e624bfc3492d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8654758,
+    "sha256": "4140373d801eff0612da61f7dfd51bdddbc867a2264383b4bee92ad1128a0d38"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8655083,
+    "sha256": "fe538174ba9b186125b9483e0e1a51e3ab3a707808d077451f73da12ea044e7d"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 421884,
+    "sha256": "661bba3ddae1c1c73a40e482e71f2b19c9d56f2b79495f5aa9e1afe93a6e0ae7"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8504805,
+    "sha256": "964e28be6559b8625e449451a5ec95ae5417b76ee3b93fbd298f43358cabbccc"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8523216,
+    "sha256": "c397d14c9d0f13695e996263dc1eca5273c3d3f696d3e43dbfe0a7e6ef6b2825"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8550459,
+    "sha256": "70cf9e14aa826148fe4216e6f6209554ae9bfe623e4bfc5f08de62fbf03706ee"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8536577,
+    "sha256": "db974334cd88e8d24b57d85496023242de41b26c1860508bfd07003cf4b80799"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8586336,
+    "sha256": "1bcca15fe09f60cbe9515678a0daa8e3d501dfc04e65879afebd21dffe2f98fb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8535817,
+    "sha256": "d6987775418118038dee4812f4ee999a555892522dc39af8346b23ab41e95d3e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8649264,
+    "sha256": "bfa897759f1b1de2793d226ce1fdbc34b378518821dcb2fcd4e7778478b4a746"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1450\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8655368,
+    "sha256": "c372362bff4dd1c1b62c4332042b8a26fb7ae55baddfe8158d069c1cc96fe311"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\map64\\map_modes.json",
+    "bytes": 6272,
+    "sha256": "57bd0a861f824ec5c231e655c73c7266762c9b9ae630402ba02d46084dc2f532"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\probe_result.json",
+    "bytes": 416976,
+    "sha256": "586adbb13471d86d47eebaf304862ddf697af00f741d9a38fe3bdea5f4a18432"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_indep_left.npz",
+    "bytes": 8576091,
+    "sha256": "4718c2859957ad8b41f845a63f7c39c810470e79f36ceaf67e4995482c93b74e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_indep_right.npz",
+    "bytes": 8573699,
+    "sha256": "2114a3f783fb09bd016fa6ffeb39b4bda8ecf04c1571f6157b2a76ecbef672e1"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_fwd_then_left.npz",
+    "bytes": 8617501,
+    "sha256": "3e9d17c49bf7c65aa956e978a57aeda5a29d8091a99be5e9bbe4a6abe6e9199e"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_fwd_then_right.npz",
+    "bytes": 8582986,
+    "sha256": "70c66a061b0a0a446a5f776a869acd2bc3d93404bbdd2942359ca29d6c1142eb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_right_then_left.npz",
+    "bytes": 8606270,
+    "sha256": "0690cc405a1b0bb7fd12e7ec4241cd7c192c46ddc8c10c3aa0bf1dea3b557b93"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_left_then_right.npz",
+    "bytes": 8558117,
+    "sha256": "91a6a9337096f9ea1ad5a4cc1a5f55cb4032b59e35b5725f7992e7ff2c9debad"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_fwd0.5.npz",
+    "bytes": 8640491,
+    "sha256": "98750ad9c3a54bca7c4320bfa3ec6394129501642bdbf80872fb5bd2276764ad"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_eval_gt\\arrays_fwd1.0.npz",
+    "bytes": 8645290,
+    "sha256": "7754eb3c88774236f8f8f4e36e9866030fe214b63cd79a27ef48813307d3e7fb"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\probe_result.json",
+    "bytes": 417871,
+    "sha256": "077506e6b1c2ca57f8559e438603fc125cdf03f59a550a01296c330a63154249"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_indep_left.npz",
+    "bytes": 8566617,
+    "sha256": "c5d17d3f33b6910686ed94aa332f108b27cc730e4f36c37ad072e8b4071366ed"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_indep_right.npz",
+    "bytes": 8574692,
+    "sha256": "93d31060b2a3401a71a67ba3adffe8de67103e1915a2f8f96990aba429cefeb2"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_fwd_then_left.npz",
+    "bytes": 8610855,
+    "sha256": "d48056909b784cd6006edcacb16bfcf27ec8ecca582047e039aa68c38a70a861"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_fwd_then_right.npz",
+    "bytes": 8567012,
+    "sha256": "7c1784572c5974a680b618d04ff812c45fc3e7c7489737db6059957ce1450f0a"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_right_then_left.npz",
+    "bytes": 8618121,
+    "sha256": "d023841224b0a39a4aa8cc598e78bffb50fdcbe7f543782d6041a94c4f78860c"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_left_then_right.npz",
+    "bytes": 8575413,
+    "sha256": "5009baa25d673612ebaacbd4a5459ebd7b5dc84f16ec9c9e9e4e9c3592ad44e4"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_fwd0.5.npz",
+    "bytes": 8645800,
+    "sha256": "85c9e1ce3fc3b6ca9dd608ae84a6597f4d9e50a814d750e617bc14da11576ff0"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\sb10_eval\\m1500\\turn16_probe_prop_only\\arrays_fwd1.0.npz",
+    "bytes": 8645879,
+    "sha256": "5362dad600ab38625b3580b83ea33ebb135600e4125c1ff0e36c42d66bbb5826"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\events.out.tfevents.1792945085.AI-WS01.94196.0",
+    "bytes": 7288413,
+    "sha256": "86e1c74ce08a6bcec0dadab68f36beae890a8b5a250dd5333970e484d8c5da96"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\train_extra.jsonl",
+    "bytes": 3132353,
+    "sha256": "2e27de00b3050617eec73b47dc8b2ef21650bff27e37ff506ba17796c4c70136"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-sb\\logs\\rsl_rl\\foothold_s2_sb\\2026-10-26_01-17-47_sb-main\\map_switch.jsonl",
+    "bytes": 961860,
+    "sha256": "a36fe03de507c8722dfef547d69edf35cfa6689e758021816c83c0fabc6e6aa6"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\b1500_baseline\\rep1\\map64\\map_modes.json",
+    "bytes": 6322,
+    "sha256": "9e34629ad5ea59cc9768c472b9ebdba0b9ac658e3c78febf7da163d7dc7da5c5"
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\impl-turncases\\logs\\b1500_baseline\\rep2\\map64\\map_modes.json",
+    "bytes": 6318,
+    "sha256": "d520863d00cf34d17c695e88e6ebbde88b72b4b835036cd4c02419feef48042d"
+  }
+]

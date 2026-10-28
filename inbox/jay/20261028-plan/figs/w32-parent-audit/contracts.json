@@ -1,0 +1,426 @@
+[
+  {
+    "iter": 1050,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "11c19ecedc457016b8c458c6096d9136b4e0539d6cfeed15401c3ae4e45bfd9b"
+  },
+  {
+    "iter": 1050,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "11c19ecedc457016b8c458c6096d9136b4e0539d6cfeed15401c3ae4e45bfd9b"
+  },
+  {
+    "iter": 1050,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "11c19ecedc457016b8c458c6096d9136b4e0539d6cfeed15401c3ae4e45bfd9b"
+  },
+  {
+    "iter": 1100,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "2c8d955f1ef75e4fa6d0ff570d5e3c7d84c7892386fbc31c8aa5a0dd3e5d86e7"
+  },
+  {
+    "iter": 1100,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "2c8d955f1ef75e4fa6d0ff570d5e3c7d84c7892386fbc31c8aa5a0dd3e5d86e7"
+  },
+  {
+    "iter": 1100,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "2c8d955f1ef75e4fa6d0ff570d5e3c7d84c7892386fbc31c8aa5a0dd3e5d86e7"
+  },
+  {
+    "iter": 1150,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "47508a2e721decef66d89b01b0518e0a09766afe1928de779f305ad2b4ce6cd2"
+  },
+  {
+    "iter": 1150,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "47508a2e721decef66d89b01b0518e0a09766afe1928de779f305ad2b4ce6cd2"
+  },
+  {
+    "iter": 1150,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "47508a2e721decef66d89b01b0518e0a09766afe1928de779f305ad2b4ce6cd2"
+  },
+  {
+    "iter": 1200,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "f0205aa7247597f033554c6abfbb968988b889af14a7568ab0262edb468e208e"
+  },
+  {
+    "iter": 1200,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "f0205aa7247597f033554c6abfbb968988b889af14a7568ab0262edb468e208e"
+  },
+  {
+    "iter": 1200,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "f0205aa7247597f033554c6abfbb968988b889af14a7568ab0262edb468e208e"
+  },
+  {
+    "iter": 1250,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "241612fac9ec6ee6c0efa3a6bff09f966d52d87b959fb73145e018a12bbc2a8d"
+  },
+  {
+    "iter": 1250,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "241612fac9ec6ee6c0efa3a6bff09f966d52d87b959fb73145e018a12bbc2a8d"
+  },
+  {
+    "iter": 1250,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "241612fac9ec6ee6c0efa3a6bff09f966d52d87b959fb73145e018a12bbc2a8d"
+  },
+  {
+    "iter": 1300,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "6fa88439ed4cccc3c3f3b309151d0d9bd23b364c5d3f8ea2996c5bdce4975cd9"
+  },
+  {
+    "iter": 1300,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "6fa88439ed4cccc3c3f3b309151d0d9bd23b364c5d3f8ea2996c5bdce4975cd9"
+  },
+  {
+    "iter": 1300,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "6fa88439ed4cccc3c3f3b309151d0d9bd23b364c5d3f8ea2996c5bdce4975cd9"
+  },
+  {
+    "iter": 1350,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "ee52896dca41655864528f03d62f2975d9cd68cc01a190b2a86e9a35dd10cc54"
+  },
+  {
+    "iter": 1350,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "ee52896dca41655864528f03d62f2975d9cd68cc01a190b2a86e9a35dd10cc54"
+  },
+  {
+    "iter": 1350,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "ee52896dca41655864528f03d62f2975d9cd68cc01a190b2a86e9a35dd10cc54"
+  },
+  {
+    "iter": 1400,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "09cd9d4df94ea3d9d851a348a1cba358a17be4eb3200281eb9a9575e50bfcb70"
+  },
+  {
+    "iter": 1400,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "09cd9d4df94ea3d9d851a348a1cba358a17be4eb3200281eb9a9575e50bfcb70"
+  },
+  {
+    "iter": 1400,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "09cd9d4df94ea3d9d851a348a1cba358a17be4eb3200281eb9a9575e50bfcb70"
+  },
+  {
+    "iter": 1450,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "4ee476d47963444685ad6cba14a1f56942ac9eaf47d32abbe10e21851df18111"
+  },
+  {
+    "iter": 1450,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "4ee476d47963444685ad6cba14a1f56942ac9eaf47d32abbe10e21851df18111"
+  },
+  {
+    "iter": 1450,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "4ee476d47963444685ad6cba14a1f56942ac9eaf47d32abbe10e21851df18111"
+  },
+  {
+    "iter": 1500,
+    "kind": "map64",
+    "task": "FootholdS2-Go2-S2-SB-v0",
+    "terrain_hash": {
+      "eval_gt/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_gt/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "probe_prop_only/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/fwd0.5": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/fwd1.0": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/spin+1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f",
+      "eval_pred/spin-1.2": "c3884d686592596ee6ac7b2cdfc94e0b1d3f6d84dbca66c52ad20a0400e2358f"
+    },
+    "envs": 64,
+    "steps": 300,
+    "dr_off": [
+      "physics_material",
+      "add_base_mass"
+    ],
+    "curriculum_off": [
+      "terrain_levels",
+      "command_range"
+    ],
+    "checkpoint_sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d"
+  },
+  {
+    "iter": 1500,
+    "kind": "eval_gt",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d"
+  },
+  {
+    "iter": 1500,
+    "kind": "probe_prop_only",
+    "terrain_hash": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506",
+    "logic": "644092a1ffd3377494a446188490bc6ca3efe14d",
+    "protocol_sha": "8b827de57b0465d5d8f916e8c4d74cfcceefe5eead2254b7cb03fa0ad72f8558",
+    "checkpoint_sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d"
+  }
+]

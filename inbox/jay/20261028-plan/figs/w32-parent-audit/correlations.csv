@@ -1,0 +1,13 @@
+﻿mode,case,n,pearson_levels,pearson_first_differences,note
+eval_gt,indep_left,10,-0.4669571030863039,-0.6133998395600171,descriptive; checkpoints dependent; no causal or p-value claim
+eval_gt,indep_right,10,-0.020890452456556134,-0.2105993261865474,descriptive; checkpoints dependent; no causal or p-value claim
+eval_gt,fwd_then_left,10,-0.8266612570234821,-0.811996111837786,descriptive; checkpoints dependent; no causal or p-value claim
+eval_gt,fwd_then_right,10,-0.27136347589617416,-0.4525960232976909,descriptive; checkpoints dependent; no causal or p-value claim
+eval_gt,right_then_left,10,-0.9252888928753291,-0.8596674077573618,descriptive; checkpoints dependent; no causal or p-value claim
+eval_gt,left_then_right,10,-0.0559092285641524,-0.17174663651846495,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,indep_left,10,-0.3942419573151687,-0.4741116405280713,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,indep_right,10,-0.19967679758226833,-0.5081947032828058,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,fwd_then_left,10,-0.7421443435752323,-0.5135408583211607,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,fwd_then_right,10,-0.21268274494565217,-0.3339672839007206,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,right_then_left,10,-0.7850088949392513,-0.49096881390473185,descriptive; checkpoints dependent; no causal or p-value claim
+probe_prop_only,left_then_right,10,-0.26070613285588284,-0.3499621477866377,descriptive; checkpoints dependent; no causal or p-value claim

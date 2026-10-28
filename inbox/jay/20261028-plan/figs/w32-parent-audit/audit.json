@@ -1,0 +1,20 @@
+{
+  "known_answer_checks": 7,
+  "checkpoints": [
+    1050,
+    1100,
+    1150,
+    1200,
+    1250,
+    1300,
+    1350,
+    1400,
+    1450,
+    1500
+  ],
+  "map_rows": 80,
+  "turn_rows": 120,
+  "gait_rows": 120,
+  "unchanged_source_files": 195,
+  "nan_fields": 0
+}
