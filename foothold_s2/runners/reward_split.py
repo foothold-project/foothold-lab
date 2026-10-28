@@ -20,6 +20,21 @@ MOVE_VX = 0.05
 MOVE_YAW_FOLLOW = 0.1
 EMA_ALPHA = 0.1
 EPS = 1e-6
+BASIC_GROUPS = ("forward", "walkturn", "spin", "stand", "reverse", "side")
+
+
+def basic_group_ids(cmd: torch.Tensor) -> torch.Tensor:
+    """보상과 같은 시점의 명령을 기본 보행 여섯 묶음으로 나눈다."""
+    vx, vy, wz = cmd[..., 0], cmd[..., 1], cmd[..., 2]
+    x, y, z = vx.abs() > EPS, vy.abs() > EPS, wz.abs() > EPS
+    out = torch.full(vx.shape, -1, dtype=torch.long, device=cmd.device)
+    out[(vx > EPS) & ~y & ~z] = 0
+    out[(vx > EPS) & ~y & z] = 1
+    out[~x & ~y & z] = 2
+    out[~x & ~y & ~z] = 3
+    out[(vx < -EPS) & ~y & ~z] = 4
+    out[~x & y & ~z] = 5
+    return out
 
 
 class StepClassifier:
@@ -31,18 +46,34 @@ class StepClassifier:
         self.prev_cmd = None
         self.prev_reset = None
 
-    def classify(self, vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset_prev: torch.Tensor | None = None):
+    def classify(self, vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset_prev: torch.Tensor | None = None,
+                 vy: torch.Tensor | None = None, basic_mode: bool = False):
         fresh = torch.zeros_like(vx, dtype=torch.bool) if reset_prev is None else reset_prev.bool()
 
+        if basic_mode and vy is None:
+            raise ValueError("basic reward split needs body vy")
         if self.ema_vx is None:
             self.ema_vx, self.ema_wz = vx.clone(), wz.clone()
+            if basic_mode:
+                self.ema_vy = vy.clone()
         else:
             changed = (cmd - self.prev_cmd).abs().amax(dim=-1) > EPS
             fresh = fresh | changed
             self.ema_vx = torch.where(fresh, vx, (1 - EMA_ALPHA) * self.ema_vx + EMA_ALPHA * vx)
             self.ema_wz = torch.where(fresh, wz, (1 - EMA_ALPHA) * self.ema_wz + EMA_ALPHA * wz)
+            if basic_mode:
+                self.ema_vy = torch.where(fresh, vy, (1 - EMA_ALPHA) * self.ema_vy + EMA_ALPHA * vy)
 
         self.prev_cmd = cmd.clone()
+        if basic_mode:
+            group = basic_group_ids(cmd)
+            yaw_follow = self.ema_wz * torch.sign(cmd[:, 2]) / cmd[:, 2].abs().clamp_min(EPS)
+            moving = (((group == 0) | (group == 1)) & (self.ema_vx >= MOVE_VX))
+            moving |= (group == 4) & (-self.ema_vx >= MOVE_VX)
+            moving |= (group == 5) & (self.ema_vy * torch.sign(cmd[:, 1]) >= MOVE_VX)
+            moving |= (group == 2) & (yaw_follow >= MOVE_YAW_FOLLOW)
+            active = group != 3
+            return moving, active & ~moving, ~active
         straight = cmd[:, 0].abs() > EPS
         spin = (~straight) & (cmd[:, 2].abs() > EPS)
         nomove = ~(straight | spin)
@@ -54,17 +85,31 @@ class StepClassifier:
 
 
 def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch.Tensor, cmd: torch.Tensor, reset: torch.Tensor | None = None,
-                clf: StepClassifier | None = None, reset_before: torch.Tensor | None = None, clipped: torch.Tensor | None = None) -> dict:
+                clf: StepClassifier | None = None, reset_before: torch.Tensor | None = None, clipped: torch.Tensor | None = None,
+                vy: torch.Tensor | None = None, basic_mode: bool = False) -> dict:
     """rew (T, N, K) 가중치 곱한 항별 값 · vx (T, N) · wz (T, N) · cmd (T, N, 3) · reset (T, N) 그 step 에 종료된 env. 전부 보상과 같은 시점(reset 전)."""
     T, N, _ = rew.shape
     clf = clf or StepClassifier()
     sums = {"moving": torch.zeros(rew.shape[2]), "stalled": torch.zeros(rew.shape[2])}
     counts = {"moving": 0, "stalled": 0, "nomove": 0}
     clip_counts = {"moving": 0, "stalled": 0}                 # only_positive_rewards 로 합이 0 으로 잘린 env-step (EX-13 만 의미가 있다)
+    group_counts = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
+    group_rewards = torch.zeros(len(BASIC_GROUPS), rew.shape[2], device=rew.device) if basic_mode else None
+    group_moving = torch.zeros(len(BASIC_GROUPS), dtype=torch.long, device=rew.device) if basic_mode else None
+    group_invalid = torch.zeros((), dtype=torch.long, device=rew.device) if basic_mode else None
 
     for t in range(T):
         prev = (reset_before if t == 0 else reset[t - 1]) if reset is not None else None
-        moving, stalled, nomove = clf.classify(vx[t], wz[t], cmd[t], prev)
+        moving, stalled, nomove = clf.classify(vx[t], wz[t], cmd[t], prev,
+                                                vy=vy[t] if vy is not None else None, basic_mode=basic_mode)
+        if basic_mode:
+            groups = basic_group_ids(cmd[t])
+            group_invalid += (groups < 0).sum()
+            for i in range(len(BASIC_GROUPS)):
+                mask = groups == i
+                group_counts[i] += mask.sum()
+                group_rewards[i] += rew[t][mask].sum(0).float()
+                group_moving[i] += (mask & moving).sum()
         counts["moving"] += int(moving.sum())
         counts["stalled"] += int(stalled.sum())
         counts["nomove"] += int(nomove.sum())
@@ -94,14 +139,29 @@ def split_stats(rew: torch.Tensor, names: list[str], vx: torch.Tensor, wz: torch
         g["only_positive_clipped_frac"] = (clip_counts[label] / counts[label]) if clipped is not None else None
         out[label] = g
 
+    if basic_mode:
+        if int(group_invalid):
+            raise ValueError("basic reward split saw a command outside the six groups")
+        group_counts = group_counts.cpu()
+        group_rewards = group_rewards.cpu()
+        group_moving = group_moving.cpu()
+        out["by_basic_group"] = {
+            name: {"env_steps": int(group_counts[i]), "fraction": int(group_counts[i]) / total,
+                   "following_env_steps": int(group_moving[i]),
+                   "reward_terms_mean": {key: float(group_rewards[i, j] / group_counts[i])
+                                         for j, key in enumerate(names)} if group_counts[i] else None}
+            for i, name in enumerate(BASIC_GROUPS)
+        }
+
     return out
 
 
 class RewardSplit:
     """reward_manager.compute 를 감싸 보상 직후(reset 전)의 보상 · 명령 · 속도 · reset 표시를 step 마다 모은다."""
 
-    def __init__(self):
-        self.rew, self.vx, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], []
+    def __init__(self, basic_mode: bool = False):
+        self.basic_mode = basic_mode
+        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], [], []
         self.names = None
         self.error = None
         self.attached = False
@@ -123,7 +183,9 @@ class RewardSplit:
 
         def wrapped(*a, **k):
             out = orig(*a, **k)
-            self._snap = (rm._step_reward.detach().clone(), robot.data.root_lin_vel_b[:, 0].detach().clone(), robot.data.root_ang_vel_b[:, 2].detach().clone(),
+            self._snap = (rm._step_reward.detach().clone(), robot.data.root_lin_vel_b[:, 0].detach().clone(),
+                          robot.data.root_lin_vel_b[:, 1].detach().clone() if self.basic_mode else None,
+                          robot.data.root_ang_vel_b[:, 2].detach().clone(),
                           term.vel_command_b[:, :3].detach().clone(), env.reset_buf.detach().clone(),
                           (env.reward_neg_clipped.detach().clone() if hasattr(env, "reward_neg_clipped") else None))
 
@@ -142,10 +204,12 @@ class RewardSplit:
 
             return
 
-        r, vx, wz, cmd, rst, clipped = self._snap
+        r, vx, vy, wz, cmd, rst, clipped = self._snap
         self._snap = None
         self.rew.append(r)
         self.vx.append(vx)
+        if vy is not None:
+            self.vy.append(vy)
         self.wz.append(wz)
         self.cmd.append(cmd)
         self.reset.append(rst)
@@ -163,11 +227,12 @@ class RewardSplit:
 
         out = split_stats(torch.stack(self.rew), self.names, torch.stack(self.vx), torch.stack(self.wz), torch.stack(self.cmd), torch.stack(self.reset),
                           clf=self.clf, reset_before=self.last_reset,
-                          clipped=(torch.stack(self.clipped) if self.clipped and self.clipped[0] is not None else None))
+                          clipped=(torch.stack(self.clipped) if self.clipped and self.clipped[0] is not None else None),
+                          vy=torch.stack(self.vy) if self.basic_mode else None, basic_mode=self.basic_mode)
         self.last_reset = self.reset[-1].clone()
         self.reset_window()
 
         return out
 
     def reset_window(self):
-        self.rew, self.vx, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], []
+        self.rew, self.vx, self.vy, self.wz, self.cmd, self.reset, self.clipped = [], [], [], [], [], [], []

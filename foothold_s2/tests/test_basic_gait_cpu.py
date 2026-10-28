@@ -7,6 +7,7 @@ import torch
 
 from foothold_s2.commands import mixed_core as mc
 from foothold_s2.runners.contracts import basic_gait_contract_bad, contract_bad_fn
+from foothold_s2.runners.reward_split import RewardSplit, split_stats
 from foothold_s2.sol23f_contract import TASKS, command_settings, validate_launch
 
 
@@ -73,3 +74,41 @@ def test_new_mode_validation_and_parameterized_share():
         validate_launch(_args(command_mode="start", basic_new_share=0.15), verify_parent=False)
     with pytest.raises(ValueError, match="SB variant only"):
         validate_launch(_args(variant="B", task=TASKS["B"]), verify_parent=False)
+
+
+def test_reward_split_uses_pre_reset_body_vy_and_six_basic_groups():
+    commands = torch.tensor([[0.5, 0, 0], [0.5, 0, 0.3], [0, 0, -1],
+                             [0, 0, 0], [-0.5, 0, 0], [0, -0.4, 0]])
+    body = commands.clone()
+    rewards = torch.arange(1, 7, dtype=torch.float32).reshape(6, 1)
+    robot = SimpleNamespace(data=SimpleNamespace(root_lin_vel_b=torch.column_stack(
+        [body[:, 0], body[:, 1], torch.zeros(6)]), root_ang_vel_b=torch.column_stack(
+        [torch.zeros(6), torch.zeros(6), body[:, 2]])))
+    term = SimpleNamespace(vel_command_b=commands.clone())
+    rm = SimpleNamespace(active_terms=["track_lin_vel"], _step_reward=rewards.clone())
+    rm.compute = lambda: rewards.sum(-1)
+    env = SimpleNamespace(scene={"robot": robot}, command_manager=SimpleNamespace(get_term=lambda _: term),
+                          reward_manager=rm, reset_buf=torch.zeros(6, dtype=torch.bool))
+    record = RewardSplit(basic_mode=True)
+    record.attach(env)
+    rm.compute()
+    robot.data.root_lin_vel_b.zero_()
+    term.vel_command_b.zero_()
+    record.add()
+    out = record.summary()
+    groups = out["by_basic_group"]
+    assert list(groups) == ["forward", "walkturn", "spin", "stand", "reverse", "side"]
+    assert [groups[k]["env_steps"] for k in groups] == [1] * 6
+    assert groups["reverse"]["following_env_steps"] == 1
+    assert groups["side"]["following_env_steps"] == 1
+    assert groups["side"]["reward_terms_mean"]["track_lin_vel"] == pytest.approx(6.0)
+    assert out["frac_moving"] == pytest.approx(5 / 6)
+    assert out["frac_no_move_command"] == pytest.approx(1 / 6)
+    old = split_stats(rewards[None], ["track_lin_vel"], body[:, 0][None], body[:, 2][None], commands[None])
+    assert old["frac_moving"] < out["frac_moving"] and "by_basic_group" not in old
+
+
+def test_basic_reward_split_rejects_missing_y_velocity():
+    with pytest.raises(ValueError, match="body vy"):
+        split_stats(torch.ones(1, 1, 1), ["r"], torch.zeros(1, 1), torch.zeros(1, 1),
+                    torch.tensor([[[0., 0.5, 0.]]]), basic_mode=True)

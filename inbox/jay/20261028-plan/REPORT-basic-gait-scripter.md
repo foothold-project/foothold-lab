@@ -35,7 +35,11 @@ CPU 100,000개 실제 표본, seed 42:
 | 명령 term | `mixed_command.py:192~207`가 실제 sampler 결과 세 칸을 버퍼에 복사, `:224~235`가 heading/stand 표시만 적용, `:252~255`가 `[:, :2]` 전체 오차를 기록 | basic 모드의 후진·옆걸음 보존 |
 | START 식 격리 | `mixed_core.py`의 `resample_free_modes`는 basic 모드를 먼저 분기하고 `resample_start`는 START 분기에서만 호출한다. 깃발도 `flag_stride=0` 상속값 (`s2_env_cfg.py:87~95`) | basic의 음의 vx·낮은 양의 vx가 START의 0.3 문턱으로 들어가지 않음 |
 
-주의: 기존 `foothold_s2/runners/reward_split.py:46~51`은 학습에 쓰지 않는 정체 진단에서 `vx`만 보고 전진/회전을 분류한다. CPU 답 아는 입력에서 명령 vx=-0.5, 실제 vx=-0.5는 `stalled=True`, 명령 vy=0.5는 `nomove=True`였다. 이 진단의 basic 모드 결과는 새 기술의 성과로 해석하지 않는다. 보상 자체와 PPO 입력을 바꾸는 결함은 아니다. 8 env Kit에서 실제 env cfg·관측·보상 소비는 미확인이다.
+수정 전 `foothold_s2/runners/reward_split.py`는 학습에 쓰지 않는 정체 진단에서 `vx`만 보고 전진/회전을 분류했다. CPU 답 아는 입력에서 명령 vx=-0.5, 실제 vx=-0.5는 `stalled=True`, 명령 vy=0.5는 `nomove=True`였다. 보상 자체와 PPO 입력을 바꾸는 결함은 아니다. 8 env Kit에서 실제 env cfg·관측·보상 소비는 미확인이다.
+
+### 2.1 기록 전용 오분류 수정
+
+lead 후속 지시로 `basic_gait_v1`일 때만 `RewardSplit`이 보상 직후 몸 좌우 속도까지 잡고, 전진 · 걸으며 돌기 · 제자리 회전 · 정지 · 후진 · 옆걸음 여섯 묶음의 env-step 수, 추종 env-step 수, 항별 보상 평균을 `train_extra.jsonl`의 `reward_split.by_basic_group`에 기록하게 했다. 후진은 몸 vx 부호를 뒤집어, 옆걸음은 몸 vy와 명령 vy의 부호를 맞춰 추종을 판별한다. 기존 모드의 보상 계산과 기록 분류는 그대로다. 앞의 오분류 반례 여섯 env를 보상 직후에 찍고 reset 뒤 속도·명령을 지운 CPU 시험에서 후진·옆걸음 각각 추종 1, 여섯 묶음 각각 1, 전체 추종 5/6이었다. `test_basic_gait_cpu.py` 6 PASS, `ruff check --select F` 0건.
 
 ## 3. 남은 준비
 
