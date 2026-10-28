@@ -1,12 +1,12 @@
 > 분류: 리서치
 > 작성: analyst · 2026-10-29
-> 근거: Nav2 Jazzy 공식 문서·소스, SLAM 저자 저장소, HiPAN 원문, 민우 저장 소스, 설계 21·23·54 직접 대조
-> 요지: 민우의 Nav2+MPPI를 비교 기준으로 보존하고, 높이에서 통과 비용을 만드는 경로와 위치 추정을 먼저 잇되 HiPAN 구간 주행은 별도 통합판으로 비교하는 안을 권고한다.
-> 상태: v0.2 · 독립 의견 완료 · 팀장 선택 전 · 소스 읽기와 식 대입만 확인됨 · GPU·Kit·ROS 기동 없음
+> 근거: Nav2 Jazzy 고정 소스, RTAB-Map·FAR·CMU Go2·PCT 원문, L1·D435i 사양, HiPAN·민우·설계 21·23·54 대조
+> 요지: 복층·계단을 첫 통합 범위로 바꾸며, 3D 위치 추정 + 층·계단 연결 그래프 + 층별 Nav2 + 계단 구간 제어를 권고한다. 단일 2D 지도와 기본 XY 도착 판정만으로는 부족하다.
+> 상태: v0.3 · 복층 우선 독립 의견 완료 · 팀장 선택 전 · 소스·원문·식 대입 확인됨 · 실기·GPU·Kit·ROS 실행 없음
 
 # 상위 항법 구성에 대한 의견
 
-**권고는 “평지·연속 지형의 재현 가능한 Nav2 기준선 + 검증된 구간에서 HiPAN을 선택하는 통합판”이다.** 민우의 `rko_lio → slam_toolbox → NavFn → MPPI`를 버릴 이유는 아직 없다. 전역 경로 후보는 Smac 2D를 먼저 비교하고, 좁은 통로나 방향 제약이 핵심이면 State Lattice로 간다. 국소 제어는 MPPI를 우선 후보로 둔다. 다만 어느 후보도 높이 지도만 받으면 사족보행의 발 디딤 가능성을 알아서 판단하지 않는다. 추가 star 조사에서는 **Go2 L1 전용 Point-LIO 연결과 FAR Planner**를 찾았다. LIO의 첫 비교군과 알려지지 않은 공간 탐색의 대안에 넣되, 현재 Nav2 자산의 교체 결정은 하지 않는다(§10).
+**복층·계단 이동이 첫 요구이므로 v0.2의 “단층부터 통합” 권고를 철회한다. 권고는 3D 위치 추정과 층·계단 연결 그래프를 먼저 두고, 층 안에서는 Nav2, 계단에서는 검증된 하위 보행과 구간 제어를 쓰는 구성이다.** 첫 통합 결과도 두 층 사이 계단 왕복과 각 층의 목표 도달로 잡는다(§11). 민우의 NavFn·MPPI는 층 안의 비교 기준으로 보존하며, `slam_toolbox` 한 장을 건물 전체 정본으로 쓰지는 않는다. 3D backend는 RTAB-Map을 첫 비교 후보로 앞당긴다. star의 CMU Go2·FAR와 비star의 PCT Planner도 비교하되, 3D 경로가 나온다는 사실과 Go2가 그 경로를 걸을 수 있다는 증거를 구분한다.
 
 이번 요청의 “Nav2 전역 경로 + HiPAN 구간 주행”에는 **조건부 찬성**이다. 기존 설계의 “HiPAN 본 경로, Nav2 대체”와는 다른 우리 통합안이다. “HiPAN이 막히면 무조건 MPPI”에는 반대한다. 막힌 이유가 위치 추정 실패, 낭떠러지, 하위 보행 한계라면 제어기 교체로 해결되지 않는다. 최종 속도 명령의 소유권은 하나여야 한다.
 
@@ -29,7 +29,7 @@
 
 ## 2. 전역 경로 planner 비교
 
-전역 planner는 “어느 통로로 갈까”를 정한다. **몸의 경로와 발 네 개의 착지 계획은 다르다.** 아래 기본 planner들은 지지면 강도·미끄럼·보행 위상·발끝 걸림을 자체적으로 계산하는 사족 동역학 계획기가 아니다. 높이 정보는 우선 통과 비용 또는 방향 제약으로 바꿔야 한다.
+이 절의 전역 planner 비교는 **한 층 또는 한 지지면의 2D 비용지도 안**에서 유효하다. 건물 전체 층 선택은 §11의 연결 그래프가 맡는다. 전역 planner는 “어느 통로로 갈까”를 정한다. **몸의 경로와 발 네 개의 착지 계획은 다르다.** 아래 기본 planner들은 지지면 강도·미끄럼·보행 위상·발끝 걸림을 자체적으로 계산하는 사족 동역학 계획기가 아니다. 높이 정보는 우선 통과 비용 또는 방향 제약으로 바꿔야 한다.
 
 | 후보 | 공식 방식과 장점 | 4족·높이 지도에서의 한계 | 권고 |
 |---|---|---|---|
@@ -67,15 +67,15 @@ MPPI를 쓰면 GPU를 별도로 써야 한다는 전제는 없다. 공식 구현
 
 | 후보 | 실제 역할·필요 입력 | L1·D435i와의 적합성·비용 | 판단 |
 |---|---|---|---|
-| **slam_toolbox** | 2D LaserScan+odom TF, pose graph SLAM, 지도 직렬화·localization 모드 | L1 3D 점군을 중력 정렬 후 일정 높이 띠로 투영하면 단층 실내 경로에 활용 가능. 원래 수평 레이저와 같지는 않으며 몸 높이·계단·다층 변화로 같은 벽의 관측 단면이 달라짐 | **민우의 단층 기준선 유지**. 계단을 포함한 3D 위치 추정 자체를 이것 하나에 맡기지 않는다. [공식 README · Localization/Topics](https://github.com/SteveMacenski/slam_toolbox) |
+| **slam_toolbox** | 2D LaserScan+odom TF, pose graph SLAM, 지도 직렬화·localization 모드 | L1 3D 점군을 중력 정렬 후 일정 높이 띠로 투영하면 단층 실내 경로에 활용 가능. 원래 수평 레이저와 같지는 않으며 몸 높이·계단·다층 변화로 같은 벽의 관측 단면이 달라짐 | **층 안의 비교 기준으로 한정**. 복층 전체 정본으로 선택하지 않는다. 계단을 포함한 3D 위치 추정 자체를 이것 하나에 맡기지 않는다. [공식 README · Localization/Topics](https://github.com/SteveMacenski/slam_toolbox) |
 | **Cartographer 2D/3D** | local submap + 전역 loop closure. 3D는 IMU 필요, 2D는 선택 | 지형이 3D라고 구현 불가능한 도구는 아님. 다만 upstream은 적극 유지보수 종료를 명시, ROS fork도 제한된 유지보수. Jazzy 포트·L1 전처리 인수 비용을 별도로 부담 | 신규 주력으로는 후순위. 이미 검증된 L1 자료·담당자가 있을 때 비교 가치. [공식 유지보수 상태](https://github.com/cartographer-project/cartographer) · [알고리즘 설명](https://github.com/cartographer-project/cartographer_ros/blob/master/docs/source/algo_walkthrough.rst) |
-| **RTAB-Map** | RGB-D·stereo·LiDAR 입력의 graph SLAM, loop closure, 외부 odometry 사용 가능, 3D 지도·점유 지도 출력 | D435i RGB-D를 활용하고 rko_lio odom을 그대로 넣는 확장 가능. 색 영상 단서가 적거나 재방문 장면이 달라질 때의 성능·CPU·메모리는 실측 필요 | **다층·재방문·3D 지도가 실제 필요해질 때 첫 backend 확장 후보**. slam_toolbox와 map→odom을 동시에 발행시키지 않음. [공식 ROS 2 README](https://github.com/introlab/rtabmap_ros/blob/f04a52d255ded6396dc11a54bfe01079ec0b0023/README.md) |
+| **RTAB-Map** | RGB-D·stereo·LiDAR 입력의 graph SLAM, loop closure, 외부 odometry 사용 가능, 3D 지도·점유 지도 출력 | D435i RGB-D를 활용하고 rko_lio odom을 그대로 넣는 확장 가능. 색 영상 단서가 적거나 재방문 장면이 달라질 때의 성능·CPU·메모리는 실측 필요 | **복층이 필수이므로 첫 3D backend 비교 후보로 앞당김**. 층 identity·계단 연결·잘못된 loop closure 차단은 별도로 남는다(§11). slam_toolbox와 map→odom을 동시에 발행시키지 않음. [공식 ROS 2 README](https://github.com/introlab/rtabmap_ros/blob/f04a52d255ded6396dc11a54bfe01079ec0b0023/README.md) |
 | **FAST-LIO2** | LiDAR+IMU, raw point scan-to-map와 필터 기반 odometry·증분 지도 | spinning·solid-state를 다루지만 Unitree L1 그대로의 검증 증거는 아님. timestamp·IMU 동기화·외참·센서 전처리 필요. 공식 main은 ROS1 안내 중심이므로 Jazzy 포트 출처를 정해야 함 | **rko_lio가 실제 자료에서 실패할 때 비교할 강한 LIO 후보**. 원 저장소만으로 loop closure·재위치 추정 완성이라 부르지 않음. [공식 README](https://github.com/hku-mars/FAST_LIO) |
 | **LIO-SAM** | IMU 결합 factor graph, point time·ring, loop closure 예제·GPS factor | 공식 README는 9축 자세 제공 IMU를 요구하고, 일반 기계식 라이다 투영을 기본으로 한다. L1의 ring 존재만으로 투영 가정이 맞지 않으며 내부 6축을 9축처럼 취급할 수 없음. solid-state 확장은 제한적 시험이라고 명시 | **현재 장비의 첫 선택으로 비추천**. 사용할 경우 6축 초기화·L1 투영을 해결한 정확한 fork를 별도 판으로 봄. “L1은 절대 불가”라는 뜻은 아님. [공식 데이터·IMU 조건](https://github.com/TixiaoShan/LIO-SAM#prepare-lidar-data) |
 | **KISS-ICP** | LiDAR만 사용하는 ICP odometry. ROS2 wrapper, 간단한 비교 기준 | IMU 결합·전역 loop closure를 기본 기능으로 기대하면 안 됨. L1의 희소한 관측과 빠른 몸 회전에서 불리할 가능성은 추정이며, 같은 bag에서 확인 필요 | IMU·외참 경로의 문제를 가르는 **LiDAR-only 대조군**. 주력 전체 SLAM의 대체는 아님. [공식 코드·논문 연결](https://github.com/PRBonn/kiss-icp) |
 | **rko_lio** | LiDAR+IMU odometry, 센서별 모델 의존을 줄인 방식. 공식 ROS 문서는 Jazzy 지원과 점별 timestamp 설정 제공 | 민우가 이미 연결한 자산. 외참·점별 시각·입력 프레임 확인이 여전히 필요. 별도의 rko_slam을 두는 것처럼 odometry와 SLAM은 다름 | **현재 LIO 우선 유지**. L1에서 우수하다는 판정은 아직 못 함. [공식 코드](https://github.com/PRBonn/rko_lio/blob/04566e598f700bc7d5efcfcf3a83327ce842f4f7/README.md) · [ROS 입력 설명](https://prbonn.github.io/rko_lio/pages/ros.html) · [논문](https://arxiv.org/abs/2509.06593) |
 
-권고 조합은 두 범위로 나뉜다. **단층 행사장·실내 기준선은 rko_lio + slam_toolbox**, 실제 계단을 올라 서로 다른 층을 오가는 임무나 동일 XY의 상하 구조까지 필요하면 **rko_lio 같은 3D odometry + RTAB-Map 등 3D backend**를 별도 비교한다. 후자의 점유 지도를 2D로 내보낸다고 다층 경로 선택까지 자동 해결되는 것은 아니다. 층별 지도·연결 지점 또는 3D 경로 표현이 추가로 필요하다.
+복층 우선 조합은 **rko_lio를 초기 odometry 후보로 보존하고 RTAB-Map 같은 3D backend와 층·계단 연결 관리를 붙이는 안**이다. rko_lio+slam_toolbox는 층 안 비교판으로 남긴다. 3D 점유 지도를 2D로 내보낸다고 층간 경로 선택까지 해결되지는 않는다. 현재 건물의 계단 위치를 아는 첫 통합에는 층별 지도와 명시된 연결 그래프가 현실적이다. 미지의 계단 연결을 스스로 발견하는 것은 더 큰 별도 범위다.
 
 TF 소유권은 `map→odom`에 전역 localization 한 곳, `odom→base_link`에 연속 odometry 한 곳으로 정한다. 로컬 높이 지도는 연속인 odom에서 다루고, 전역 loop closure의 순간 이동을 무시한 채 과거 높이 셀에 덧칠하지 않는다. 계단에서 필요한 z·roll·pitch는 유지하되, 2D planner용 평면 pose와 별도로 변환한다. [REP-105 원문 · odom/map/Frame Authorities](https://github.com/ros-infrastructure/rep/blob/master/rep-0105.rst)
 
@@ -171,8 +171,8 @@ HiPAN의 SR·SPL은 원문 §V-A의 지표이며, 우리 비교의 충돌·안�
 
 ## 8. 팀장이 정할 것과 권고안
 
-1. **첫 항법 범위**: 단층 실내·연속 지형을 첫 통합 범위로 두는 안을 권고한다. 실제 층 이동·듬성한 지형 자율 통과까지 같은 완료 조건에 넣으면 2D 지도와 하위 능력의 한계를 동시에 해결해야 한다.
-2. **우선 조합**: 기존 NavFn+MPPI를 기준으로 보존하고 Smac 2D를 첫 비교 후보로 둔다. 좁은 길·횡이동이 필수면 State Lattice 검토를 앞당긴다. LIO는 rko_lio 유지, L1 전용 Point-LIO를 첫 비교군으로 추가한다. 단층 전역 localization은 slam_toolbox, 3D backend는 RTAB-Map을 다음 비교 후보로 둔다. 높이 지도 구현은 공식 Jazzy 판이 확인된 `elevation_mapping_cupy/ros2`도 비교한다(§10).
+1. **첫 항법 범위**: 두 층·한 계단 연결에서 아래층 목표 → 위층 목표 → 아래층 복귀를 권고한다. 상행만 성공한 것을 왕복 성공으로 쓰지 않는다. 단층 통합 완료를 복층 요구 충족으로 바꾸지 않는다(§11.5).
+2. **우선 조합**: 건물 전체는 층·계단 연결 그래프와 3D localization, 층 안은 기존 NavFn+MPPI를 기준으로 둔다. Smac 2D·Lattice는 층 안의 후속 선택이다. rko_lio와 L1 전용 Point-LIO를 비교하고, RTAB-Map을 첫 3D backend 후보로 둔다. 로컬 지지면 지도에는 `elevation_mapping_cupy/ros2`를 검토하되 이것 한 장으로 모든 층을 저장하지 않는다.
 3. **HiPAN의 자리**: 학습 연구판은 최종 목표 기반을 보존하고, Nav2 부목표를 받는 판은 별도 “우리 통합판”으로 명명한다. 평지 MPPI와의 선택은 가능하나 HiPAN의 모든 실패를 MPPI로 덮지 않는다.
 
 설계 반영이 결정되면 **21은 입력 목표·부목표 변경·기억 유지**, **23은 경로/제어권/전환/STOP**, **54는 독립판과 통합판의 평가 조건·하위 hash**를 함께 고쳐야 한다. 지금은 의견만 작성했으며 세 문서는 바꾸지 않았다.
@@ -221,9 +221,132 @@ HiPAN의 SR·SPL은 원문 §V-A의 지표이며, 우리 비교의 충돌·안�
 | [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README.md#L15) · `0d2c0346`, star 없음 | LiDAR+IMU+영상 결합 odometry. LiDAR 기하가 불리한 장면에서 영상 단서를 쓰는 후보 | D435i가 있다고 즉시 우수한 것은 아님. L1과 image의 시각·외참, 영상 노출과 흔들림, ROS 포트가 추가 일. 원문 장비 동기화 안내와 우리 입력은 구분. [논문](https://arxiv.org/abs/2408.14035) |
 | [Wild Visual Navigation](https://github.com/leggedrobotics/wild_visual_navigation/blob/3d6d9d95d3b322956de4e9294e04639cfe30b3cd/README.md#L28) · `3d6d9d95`, star 없음 | 영상과 몸 반응으로 통과성을 온라인 학습. 팀장의 풀·눈·지지면 구분 아이디어에 직접 관련 | 높이만으로 재질을 안다고 할 수 없는 문제의 연구 확장. Noetic·GPU 기반이며 현재 Nav2/START에 바로 꽂는 모듈은 아님. 첫 항법 통합 뒤 별도 학습 효과를 비교. [저자 논문](https://arxiv.org/abs/2404.07110) |
 
-이 추가 조사로 바꾸는 권고는 두 가지다. **LIO 비교에는 L1 전용 Point-LIO를 앞에 놓고, 높이 지도 구현에는 최신 공식 ROS2 CuPy 판을 포함한다.** FAR는 모르는 공간 탐색이 중요해질 때 Nav2 경로 계층과 비교한다. 동시에 모든 후보를 결합하는 것은 고칠 곳을 늘리므로 권하지 않는다. 현재 Nav2 기준선, 한 LIO 교체 비교, 한 높이→통과 비용 변환을 각각 구분해도 최종 HiPAN 통합 방향을 유지할 수 있다. 이 순서는 의견이며 실행 지시가 아니다.
+v0.2에서 얻은 L1 전용 Point-LIO와 공식 ROS2 CuPy 후보는 유지한다. **복층 우선 정정으로 실제 선택 순서는 §11로 바뀐다.** FAR는 CMU Go2에 포함됐다는 이유만으로 층간 계단용 주력으로 채택하지 않는다. 기존 단층 Nav2 자산도 재사용 범위를 층 안으로 한정한다. 이 문서는 의견이며 실행 지시가 아니다.
+
+## 11. v0.3: 복층·계단을 첫 조건으로 다시 판단
+
+### 11.1 단일 2D 지도 대신 무엇을 정본으로 둘 것인가
+
+**복층은 높낮이가 있는 한 층과 다른 문제다.** 같은 `(x,y)`에 아래층 바닥·위층 바닥·계단참이 동시에 존재한다. 이들을 하나의 점유 셀 또는 높이 한 값으로 합치면 서로 없는 길이 연결되거나 실제 길이 막힌다. `slam_toolbox`는 2D scan matching 기반이다. 층마다 따로 사용 가능하지만, 단일 pose graph와 점유 지도에 모든 층을 평면 투영하는 것은 이번 건물 정본으로 맞지 않는다. [공식 README · Lifelong Mapping](https://github.com/SteveMacenski/slam_toolbox#lifelong-mapping)
+
+| 방식 | 복층에서 보존하는 것 | 부족한 것 | 이번 권고 |
+|---|---|---|---|
+| **3D LIO 점군 지도** | 연속 `x,y,z,roll,pitch,yaw`, 위아래 구조 | odometry 누적 오차·재시작 재위치 추정·잘못된 재방문 대응. 점군이 있다고 통과할 계단 연결까지 생기지는 않음 | 위치 추정의 바탕. 단독으로 건물 임무 정본이 완성됐다고 하지 않음 |
+| **RTAB-Map 3D graph SLAM** | 외부 LIO와 RGB-D/LiDAR로 3D 배치·재방문 보정. 층별 2D 출력도 가능 | 비슷하게 생긴 층의 잘못된 loop closure, 계단 통과성·층 전환 업무는 별도 | **첫 3D backend 비교 후보**. rko_lio를 곧바로 교체하기보다 odom 입력으로 연결하는 안부터 |
+| **층별 2D 지도 + 전환 관리자** | 각 층의 Nav2 자산, 층 identity, 계단 진입·이탈점 | 계단 위의 6DoF 위치는 별도로 유지해야 함. 층 전환 시 map·pose·costmap·goal 일관성 구현 필요 | **첫 복층 통합의 경로·임무 표현으로 권고**. 3D localization과 함께 쓰는 구성 |
+| **3D 통과 그래프 / 다중 지지면 지도** | 같은 XY의 다른 바닥과 그 사이 실제 연결, 계단 방향·통과 비용 | 지도 구축·표면 연결·로봇 능력별 비용이 추가. 실시간 업데이트·Jazzy 연결 비용 미측정 | 알려진 층·계단 그래프부터 시작하고, 자동 생성은 PCT/평면 그래프 등과 비교 |
+
+RTAB-Map의 `GridGlobal/AltitudeDelta`는 **현재 높이에 가까운 노드로 2D 점유 지도를 조립하는 범위**다. 층 identity 판정기나 loop closure의 층 제한이 아니다. 유지관리자의 이슈 답변과 현재 `Parameters.h:947`이 일치한다. `Reg/Force3DoF`를 켜면 z·roll·pitch가 0이 된다(:743). 2D 예제를 복사해 이 옵션을 켠 채 계단용 3D 추정을 한다고 쓰면 안 된다. `RGBD/OptimizeMaxError`는 링크 불확실도 대비 그래프 오차를 검사하며(:411), 층 오인식이 절대 없다는 보장은 아니다. [현재 파라미터 소스](https://github.com/introlab/rtabmap/blob/89a4cb59340297860381ccb7073d86a1e0932245/corelib/include/rtabmap/core/Parameters.h#L743) · [AltitudeDelta](https://github.com/introlab/rtabmap/blob/89a4cb59340297860381ccb7073d86a1e0932245/corelib/include/rtabmap/core/Parameters.h#L947) · [유지관리자 설명](https://github.com/introlab/rtabmap_ros/issues/996#issuecomment-1636072158)
+
+**한 층을 한 session으로 나누는 것도 층 구별의 충분조건은 아니다.** 처음 통합은 계단을 포함해 연결 관계를 보존한 3D 지도와 명시한 `floor_id`를 함께 쓴다. 서로 끊어진 층별 지도만 저장했다면, 그 사이 변환과 연결을 별도로 제공해야 한다. `floor_id`는 단순 z 반올림 대신 현재 구간·계단 진행·착지한 계단참 위치와 함께 갱신한다. 이는 **우리 설계 제안**이며 RTAB-Map 기본 기능으로 확인한 것이 아니다.
+
+### 11.2 Nav2의 공식 지원과 우리가 만들어야 할 부분
+
+**공식 지원은 있다. 다만 “복층용 완성 로봇”이 아니라 이를 조합할 기능과 예시 구조를 제공한다.** 이번에 읽은 Jazzy commit `d5d768b7`에는 `nav2_route`가 실제로 있다. 최신 Rolling의 기능을 Jazzy에 있다고 추정한 것이 아니다. 운영 설치 패키지에 이 commit의 기능이 들어 있는지는 `미확인`이다.
+
+| 기능 | 공식 문서·고정 소스에서 확인 | 자동으로 되지 않는 것 |
+|---|---|---|
+| 지도 교체 | map server `load_map`, 여러 map server 인스턴스. 현재 지원 출력은 `OccupancyGrid` | 위치 추정기의 층 전환, 앱 목표의 층 identity, 옛 장애물 관측·경로의 폐기 |
+| Waypoint | `NavigateToPose` 연속 호출과 도착 때 실행할 task plugin | z가 있는 waypoint를 넣는 것만으로 계단 이동·올바른 층 도착을 보장하지 않음 |
+| Route Server | node ID, 방향 있는 edge, metadata, edge cost·operation plugin. README :69~70에 층 안 자유 공간 계획과 계단/승강기 연결 행동을 결합하는 복층 구조 명시 | 계단 행동·층 판별·SLAM 재위치 추정·동작 완료 확인은 우리 연결 코드 필요 |
+| Smac 2D·Lattice·NavFn | 현재 층 비용지도 안의 경로 | Lattice의 SE(2)는 x,y,yaw이며, 건물 전체의 여러 z 지지면 표현을 대체하지 않음 |
+
+근거: [Jazzy map server README:3~4,78~99,111~113](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_map_server/README.md#L78) · [Waypoint Follower 공식 문서](https://docs.nav2.org/jazzy/configuration_and_development/configuration_guide/core_servers/waypoint_follower/) · [Route Server README:25~70](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_route/README.md#L25) · [공식 Route Server 설정](https://docs.nav2.org/jazzy/configuration_and_development/configuration_guide/core_servers/route_server/configuring_route_server/).
+
+**놓치기 쉬운 실제 코드 반례가 있다.**
+
+| 코드 | 읽은 동작 | 복층 반례와 처리 |
+|---|---|---|
+| `geojson_graph_file_loader.cpp:132~144` | 좌표 배열에서 x,y만 읽음 | `coordinates:[x,y,z]`의 세 번째 값을 넣었다고 3D 연결이 됐다고 할 수 없음. 층·z·계단 속성은 별도 metadata와 소비 코드 필요 |
+| `node_spatial_tree.cpp:61~67` | 최근접 후보 검색 질의가 x,y 두 값 | 같은 XY의 위·아래 노드가 공간상 동점. 현재 층으로 결정한 **node ID**를 사용하거나 층 조건을 포함한 검색 필요 |
+| `route_tracker.cpp:60~85` | 노드 도달을 XY 거리와 반경 진입/이탈로 판단 | 위층 목표와 같은 XY에 아래층 로봇이 서 있으면 `dist=0`으로 true가 될 수 있음. node ID만 정확히 골라도 이 도착 문제는 별개로 남음 |
+| `simple_goal_checker.cpp:103~135` | 목표 도달은 XY와 yaw. z 검사 없음 | 아래층 `(1,2,0)`와 위층 `(1,2,3)`에 같은 yaw를 넣으면 XY 오차 0. 높이 3 m는 **설명용 가상 입력**이며, 소스 식 대입상 다른 층을 구별하지 못함 |
+
+소스: [좌표 loader](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_route/src/plugins/graph_file_loaders/geojson_graph_file_loader.cpp#L132) · [최근접 노드](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_route/src/node_spatial_tree.cpp#L61) · [Route 도착](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_route/src/route_tracker.cpp#L60) · [Goal checker](https://github.com/ros-navigation/navigation2/blob/d5d768b7b38a05e7cfd2b6c693b786b402161bed/nav2_controller/plugins/simple_goal_checker.cpp#L103). 위 표는 **소스 분기·식 대입 확인이며 실제 ROS 통합 재현은 아니다.**
+
+따라서 첫 통합에서는 **건물 Route를 node ID로 계산하고, 층간 edge의 실행·완료는 임무 관리자가 소유**하는 편이 명확하다. `ComputeAndTrackRoute`의 기본 XY 완료 사건을 계단 통과 완료로 쓰지 않는다. 해당 기능을 쓴다면 층·계단 상태까지 반영하는 완료 연결을 먼저 구현해야 한다. 계단 edge에는 오르기/내리기 방향과 하위 능력을 반영한 비용을 주며, 위아래 XY가 같다는 이유로 이동 비용 0을 주지 않는다. Route가 내놓는 dense 2D Path를 MPPI에 통째로 보내 위층까지 따라가게 하지 않는다.
+
+층 교체도 `LoadMap` 호출 하나로 끝내지 않는다. **계단참 이탈 확인 → 목적 층 map identity·pose frame 맞춤 → 해당 층의 관측/비용지도 준비 확인 → 층 안 goal 재개**가 한 전환이다. 3D odometry를 층마다 초기화하지 않으며, map→odom을 RTAB-Map과 slam_toolbox/AMCL이 동시에 소유하게 하지 않는다. 앱 목표에는 floor ID와 지도 판이 필요하다. 이 전환 순서는 공식 완성 예제가 아니라 우리 구현 제안이다.
+
+### 11.3 FAR·CMU·3D 통과 그래프 비교
+
+star 여부는 §10의 **333개 목록 스냅샷**으로 직접 대조했다. 새 후보를 star에 있었다고 쓰지 않는다.
+
+| 후보 | 복층에 직접 쓸 수 있는 근거 | 이번 판단 |
+|---|---|---|
+| **FAR Planner**, star 있음 · `3776b83b` | 원문 §III-D의 3D multi-layer 가시성 그래프는 **비행체 확장**. 지상 실험은 지형 분석과 로컬 planner를 별도로 사용(§III-A·IV) | 빠른 경로 재탐색 연구로 유용. 가시선이 열렸어도 아래 지지면이 없으면 Go2는 못 감. `is_multi_layer=true`만으로 계단용 사족 통과 그래프가 된다고 할 근거 없음. 현재 기본 yaml :13은 false |
+| **CMU autonomy_stack_go2**, star 있음 · `43d5f54b` | L1+Point-LIO+지형 분석+FAR의 실제 Go2 연결 예제. `terrainAnalysis.cpp:543~580`은 XY 셀별 고도 하나를 선택, :606~615는 그 기준의 상대 높이를 출력. 포함된 FAR 기본 yaml :13도 `is_multi_layer:false` | **L1 입출력·local terrain 처리의 가장 가까운 참고**. 지형 분석 경로가 건물 전체의 중첩된 지지면을 보존하는 그래프라는 증거는 아님. 원문 스스로 낮은 장애물·지연·SLAM drift 한계를 적음 |
+| **PCT Planner**, star 없음 · `35cd73fd` | 점군을 바닥·천장 높이의 여러 단면으로 표현하고 단면 사이 경로 검색. 원문 §III-B~E, §IV-D Fig.9에 Jueying Mini의 아래층→위층 굽은 계단 주행 | **복층 3D 경로 대안 중 이번 요구에 가장 직접적인 비교 후보**. ROS1 예제·CUDA/CuPy, 사전 pcd→tomogram 구성. L1 온라인 지도·Jazzy·Go2/START 연결은 추가 구현이며 우리 성공률 미측정 |
+| **Traversable plane graph**, star 여부와 무관한 추가 문헌 | Zhang 등 ICRA 2025 §III는 바닥·경사·계단 면 연결, §IV-D는 이동 제약, §V-C는 FAST-LIO2+CubeTrack 실험 | 층·계단·진입 방향을 연결하는 설계 근거. 실험 로봇은 궤도형이며 Go2의 보행 제약과 다름. 읽은 저자 페이지·원문에 바로 쓸 코드 링크는 확인하지 못함 |
+
+근거: [FAR §III-D·IV](https://arxiv.org/html/2110.09460v2#S3.SS4) · [FAR 기본 설정](https://github.com/MichaelFYang/far_planner/blob/3776b83bd4c4e41e4296bdc9579e4f7e510b8162/src/far_planner/config/default.yaml#L13) · [CMU terrain 소스](https://github.com/jizhang-cmu/autonomy_stack_go2/blob/43d5f54b389b251713f0097893c30fa76c870d54/src/base_autonomy/terrain_analysis/src/terrainAnalysis.cpp#L543) · [CMU FAR 설정](https://github.com/jizhang-cmu/autonomy_stack_go2/blob/43d5f54b389b251713f0097893c30fa76c870d54/src/route_planner/far_planner/config/default.yaml#L13) · [CMU 관측 한계 README:200~208](https://github.com/jizhang-cmu/autonomy_stack_go2/blob/43d5f54b389b251713f0097893c30fa76c870d54/README.md#L200) · [PCT 논문 §III·IV](https://arxiv.org/html/2403.07631v1) · [PCT 코드 README:30~41,63~89](https://github.com/byangw/PCT_planner/blob/35cd73fd82bcd51bc538429294af7646b2a09815/README.md#L30) · [평면 그래프 원문](https://arxiv.org/html/2503.08076v1) · [저자 페이지](https://fast-fire.github.io/publication/conference-paper/icra2025-zmk-3dplanner/).
+
+**3D 점유 공간에서 충돌 없는 선을 찾는 것과, 지지면을 따라 걸을 경로를 찾는 것은 다르다.** 이번 Go2의 그래프 edge에는 지지면 연결·머리 위 여유·계단 방향·하위 정책의 계단 크기/명령 범위가 들어가야 한다. 처음에는 사람이 아는 계단 연결을 등록하는 것이 과장 없는 통합이다. 자동 지지면 연결과 미지 복층 탐색은 PCT 등과 비교할 다음 연구 범위로 남긴다. PCT 논문의 성능 배수를 우리 장비 ETA나 L1 정확도로 옮기지 않는다.
+
+### 11.4 계단에서 L1·D435i 위치 추정은 버티는가
+
+**가능한 구성은 있지만, 우리 센서·장착·하위 정책의 계단 bag을 재지 않았으므로 “버틴다”는 결론은 미확인이다.** 계단의 여러 방향 면은 위치 구속에 유리할 수 있고, 반복되는 단·흰 벽·가림은 불리할 수 있다. 계단이라는 이름만으로 LIO가 반드시 좋아지거나 나빠지지는 않는다. 기하·영상 특징 부족 때의 추정 약화는 상태 추정 원문에 근거하며, 아래 L1/D435i 영향은 그 원리를 적용한 **위험 추론**이다. [Zhang·Kaess·Singh ICRA 2016, §I·III](https://www.cs.cmu.edu/~kaess/pub/Zhang16icra.html)
+
+| 구간·위험 | 왜 계단에서 중요한가 | 실제로 남길 자료와 구별할 것 |
+|---|---|---|
+| 보행 진동·pitch 변화와 L1 순차 스캔 | 한 프레임의 점들이 같은 순간에 찍히지 않음. 시각·외참이 틀리면 계단 모서리가 움직인 것처럼 누적될 수 있음 | raw 점별 time/ring, IMU, deskew 사용 여부, 센서→추정→명령 age, residual·유효 대응점. L1 전체 점 수만으로 정확도를 판단하지 않음 |
+| 계단·벽 기하의 반복 | 층/계단참 모양이 비슷해 잘못된 정합 또는 loop closure 가능 | 연속 z 변화, 층 상태, loop closure 전후 pose jump와 잔차. 같은 층으로 돌아왔다는 결과만으로 중간 경로가 정확했다고 못 함 |
+| D435i 전방·하향 시야 | 올라갈 때 단 앞면, 내려갈 때 첫 발 앞의 낙차·가림을 서로 다르게 봄. 35° 장착은 현재 우리 설계값이며 실물 보정은 미확인 | 상·하행 각각 유효 depth 비율, 계단참/첫 단 가시 범위, RGB 특징·노출, IMU/영상 동기화. SLAM용 영상이 START의 60×60이어야 할 이유는 없음 |
+| 착지 충격·발 미끄럼 | 명령 속도/관절 추정만으로 실제 몸 이동을 대체할 수 없음 | LIO pose·접촉·정책 명령·몸 반응을 같은 시각에 기록. HiPAN이 속도를 잘 골랐다는 것과 위치 추정이 정확한 것은 별개 |
+| 층 교체·재시작 | 같은 XY에서도 다른 목적지. 옛 층의 map·목표·장애물 관측이 남으면 경로가 틀림 | floor ID, map/graph 판, TF 소유자, 입구/출구 사건, 재시작 후 초기 위치. 층 혼동 횟수·중단 원인을 분리 |
+
+L1 SDK 시각 필드와 D435i 사양은 §4 근거를 따른다. CMU Go2 README:208은 **그 stack의 영상 시각이 LiDAR/IMU와 동기화되지 않음**을 적는다. 이것을 별도 장착한 우리 D435i의 현재 상태로 단정하지 않으며, D435i를 보태면 자동으로 LIO가 좋아진다는 주장도 하지 않는다. 두 센서 정보를 합칠 때에는 장착 외참과 실제 발행 시각부터 확인해야 한다.
+
+HiPAN 원문은 하위가 stairs 등을 학습한다고 적는다(§IV-D Implementation Details). 그러나 §V-A·V-D의 평가·실기는 복잡한 방·좁은 통로·장애물·경사지 등이며 **서로 다른 층을 선택해 계단을 왕복한 평가를 확인하지 못했다**. 실기 localization의 구체 공급 방법도 해당 설명에서 미기재다. 따라서 HiPAN의 SR/SPL을 복층 임무 성공률이나 L1 계단 위치 정확도로 사용하지 않는다. **하위의 계단 보행 능력, 상위의 계단 진입 판단, 3D 위치 추정은 세 개의 별도 확인 대상**이다. [HiPAN 원문 §IV-D·V](https://arxiv.org/html/2604.26504v1)
+
+선택은 다음처럼 나눈다. rko_lio를 현재 입력 경로의 첫 후보로 유지하되, 같은 **상행·하행·계단참 회전·복귀** 자료에서 L1 전용 Point-LIO와 비교한다. RTAB-Map은 전역 재방문·재위치 추정 역할이다. D435i RGB-D 단서를 더 쓰는 효과는 별도로 잰다. 일정상 알려진 계단참 표식이 필요하면 §10의 AprilTag를 보조 기준으로 쓸 수 있으나, 표식을 쓴 복층 항법으로 명시하고 표식 없는 성공이라고 발표하지 않는다.
+
+### 11.5 첫 통합 범위와 바뀌는 결정
+
+**첫 목표는 알려진 건물의 두 층·한 계단을 포함한 목표 왕복이다.** 계단은 실제로 연결하는 구간이어야 하며, 층마다 별도 평지 영상만 찍어 복층 결과로 대신하지 않는다. 처음부터 건물 전체 미지 탐색·계단 자동 발견·모든 듬성 지형까지 한 번에 해결하겠다는 범위도 권하지 않는다.
+
+```mermaid
+flowchart TD
+    APP["앱 목표: 건물·층·지도 판·목표 pose"] --> TASK["한 임무 관리자: 현재 층·계단 상태·목표 identity"]
+    GRAPH["층·계단 연결 그래프: 방향·통과 능력·비용"] --> TASK
+    LOC["3D LIO + 전역 localization: 연속 odom·층 식별 근거"] --> TASK
+    TASK --> FLOOR["층 안: 해당 층 2D 지도 + Nav2 planner"]
+    FLOOR --> MPPI["MPPI 또는 검증된 HiPAN 구간 제어"]
+    TASK --> STAIR["계단: 진입·상행/하행·계단참 이탈 제어"]
+    STAIR --> SKILL["검증된 하위와 맞춘 HiPAN 또는 별도 구간 제어"]
+    MPPI --> OWNER["속도 명령 소유자 하나 + 기존 안전층"]
+    SKILL --> OWNER
+    OWNER --> LOW["START 계열 하위 보행"]
+```
+
+그림은 **우리 통합 제안**이다. 계단 구간 제어를 넣었다는 사실만으로 학습된 HiPAN이라고 부르지 않는다. HiPAN이 준비되지 않았다면 알려진 계단 입구·출구와 허용 명령을 쓰는 임시 구간 제어로 배관을 먼저 확인할 수 있다. 단, 하위가 해당 계단의 오르기·내리기를 실제로 수행할 능력이 있어야 하며, 이 배관 결과는 HiPAN 성능 결과와 구분한다. 계단에서 MPPI 자동 대체를 기본값으로 두지 않는다.
+
+| 범위 | 첫 통합에 넣을 것 | 완료 근거·아직 미정인 값 |
+|---|---|---|
+| 건물 표현 | 두 층 지도와 하나의 실제 계단 연결, 같은 XY의 다른 층 goal, 상행/하행 방향 edge | 층·지도 판·연결을 보고 목표를 구별. 층 ID와 계단 완료를 빼면 안 됨 |
+| 위치 추정 | 층 안과 계단을 통틀어 6DoF 연속 추정, 전역 재방문 보정, 계단참 재확인 | z·yaw·수평 오차, 지연, 재위치 추정과 잘못된 층 대응 기록. 허용 오차는 실제 계단 폭·발판 여유·하위 추종 오차를 재서 결정하며 지금 cm값을 만들지 않음 |
+| 주행 | 아래층 출발→위층 목표→아래층 복귀, 상·하행·계단참 회전 분리 | 각 구간 영상·위치 궤적·층 사건·명령 소유권·하위 상태. 중간 수동 재위치 추정/개입은 자동 성공에서 분리 |
+| 실패 처리 | 계단 입구의 진행 불가, 다른 층 목표 혼동, 재시작 위치 불확실, 통신·pose 결측 | 실패 원인이 경로/위치/보행 중 무엇인지 남김. 위치 불확실을 경로만 바꿔 감추지 않음. 안전 STOP 뒤 자동 재개는 기존 설계 23과 같게 제한 |
+| 재현 | 지도·그래프·센서 보정·하위 checkpoint·route/controller 설정의 판 고정 | 성공 한 번으로 일반화하지 않음. 반복 수·시간 예산·계단 사양은 팀장이 범위를 고를 때 수치화할 항목이며 이번 조사에서는 미측정 |
+
+| v0.2의 선택 | v0.3의 권고 | 바꾸는 이유 |
+|---|---|---|
+| 단층 실내가 첫 통합 범위 | **두 층 사이 실제 계단 왕복이 첫 범위** | 팀장 확정 요구가 복층이며 단층 성공은 핵심 문제를 확인하지 않음 |
+| slam_toolbox 전체 기준선, RTAB-Map은 나중 | **3D localization·RTAB-Map 후보를 처음부터**, slam_toolbox는 층 안 비교용 | z·겹친 바닥·재위치 추정이 처음부터 필요 |
+| Nav2 global path를 HiPAN에 공급 | **건물 Route → 층 안 Nav2 / 계단 행동**으로 한 층을 더 명시 | 평면 비용지도 하나로 층간 연결을 표현하지 못함 |
+| FAR를 미지 탐색 확장으로만 소개 | CMU local terrain은 재사용 참고, **복층 3D 비교에는 PCT 추가** | FAR aerial 3D와 지상 계단은 다른 제약. PCT는 사족 층간 계단 실험이 직접 존재 |
+
+설계 21·23·54의 보행 지형에 “계단”이 들어 있는 것만으로 위의 층 identity·층간 route·map 전환 계약까지 정의됐다고 할 수 없다. 채택하면 **21: 상위 목표에 층/구간과 기억 전환**, **23: 계단 edge·제어권·map 전환·STOP**, **54: 복층 왕복 평가와 고정 하위**를 함께 구체화해야 한다. 이번 요청은 의견 작성이며 이 정본 파일들은 수정하지 않았다.
+
+### 11.6 확인한 범위와 재현 자리
+
+- `확인됨`: Nav2 Jazzy 고정 소스의 LoadMap·Route 기능, XY 최근접/도착 분기, RTAB-Map 현 파라미터, FAR의 aerial 3D 원문, CMU 고도 선택·기본 설정, PCT 사족 복층 원문·ROS1/CUDA 요구. 위의 가상 동일-XY 반례는 식 대입 결과다.
+- `미확인`: 설치된 Nav2 binary 버전, L1+D435i 계단 오차·지연·가림, 실제 3D SLAM 재위치 추정, 우리 HiPAN/START 계단 왕복, 모든 후보의 통합 시간·메모리·성공률. **GPU·Kit·ROS·실기·학습 실행 0**. 영상 시청 결과로 쓴 문장은 없다.
+- 원문·코드 사본: `C:/mai/wt/foothold-lab/analyst-ame2/_out/nav_stack/multifloor/`. `sources.json`, `sources_extra.json`, `sources_final.json`에 URL·SHA256. `rtab_996.json`은 유지관리자 답변, `pct_commit.json`은 고정 판, `known_input_xy.json`은 가상 입력 식 대입. 내부 문서와 HiPAN 재독 해시는 `local_v03.json`.
+- 새 고정 판: RTAB-Map core `89a4cb59340297860381ccb7073d86a1e0932245`, PCT `35cd73fd82bcd51bc538429294af7646b2a09815`. Nav2·CMU·FAR는 §9·§10의 판 그대로. 실제 star 여부는 같은 날 보존한 목록과 재대조했다.
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
 | v0.1 | 2026-10-29 | 후보 비교, 민우·21/23/54 대조, 높이 비용 변환 반례, Nav2·HiPAN 역할과 전환 권고 |
 | v0.2 | 2026-10-29 | 실제 star 333개 대조, 관련 저장소 활용 표, L1 Point-LIO·ROS2 CuPy·STVL·FAST-LIVO2·WVN 후보 추가. HiPAN 절 번호 정정 |
+| v0.3 | 2026-10-29 | 복층·계단을 첫 요구로 정정. 단층 우선 권고 철회, Jazzy Route의 공식 복층 구성과 XY 도착 한계, RTAB-Map·CMU·FAR·PCT 비교, 계단 위치 추정 위험과 두 층 왕복 범위 추가 |
