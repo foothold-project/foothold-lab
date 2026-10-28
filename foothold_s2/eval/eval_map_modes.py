@@ -27,6 +27,7 @@ parser.add_argument("--checkpoint", required=True)
 parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--steps", type=int, default=300)
 parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
+parser.add_argument("--command-suite", choices=("core", "extended"), default="core")
 parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50"], default="default", help="sparse50: 지형 생성기를 50 열 S2(연속 7 종 + 듬성 5 종 + flat)로 바꾸고 듬성 5 종 열(gaps · stepping stones 등)만 고정 칸으로 쓴다. --fixed-terrain 과 --fixed-level 이 필요. 생략 = 기존 23 열")
@@ -66,7 +67,8 @@ import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task Foo
 import foothold_s2.x23f_tasks  # noqa: E402,F401
 import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
 import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
-from foothold_s2.eval import adapters, fixed_terrain, map_error as ME  # noqa: E402
+from foothold_s2.eval import adapters, fixed_terrain, map_error as ME, map_mode_cells  # noqa: E402
+from foothold_s2.terrains import columns  # noqa: E402
 
 env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
 agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
@@ -115,7 +117,7 @@ robot = raw.scene["robot"]
 term = raw.command_manager.get_term("base_velocity")
 dt = raw.step_dt
 sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
-CMDS = {"fwd0.5": (0.5, 0.0, 0.0), "fwd1.0": (1.0, 0.0, 0.0), "spin+1.2": (0.0, 0.0, 1.2), "spin-1.2": (0.0, 0.0, -1.2)}
+CMDS = map_mode_cells.commands(args.command_suite)
 S = args.steps
 import foothold_s2.eval.fixed_terrain as _ft, foothold_s2.terrains.sparse_terrains as _sp                      # 실제 읽은 파일의 해시(출처 섞임 확인용)
 SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters)}
@@ -183,7 +185,11 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
                               "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
 
 
-res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+res = {"source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+terrain_gen = raw.scene.terrain.cfg.terrain_generator
+terrain_props = {name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}
+terrain_names = columns.column_types(terrain_props, int(terrain_gen.num_cols))
+res["terrain_columns"] = terrain_names
 
 for mode in args.modes.split(","):
     runner, sd = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint, args.device)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
@@ -264,12 +270,23 @@ for mode in args.modes.split(","):
         if th != ref:
             raise RuntimeError("%s/%s 의 지형 칸 해시가 첫 실행과 다르다: 모드끼리 같은 지형에서 평가되지 않는다" % (mode, cname))
 
+        tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
+                                            terrain.terrain_types.cpu().numpy(), terrain_names)
+        if len(tiles) != args.envs:
+            raise RuntimeError("terrain tile receipt count does not match env count")
+        if "terrain_tiles" not in res:
+            res["terrain_tiles"] = tiles
+        elif tiles != res["terrain_tiles"]:
+            raise RuntimeError("terrain kind/level assignment changed between commands")
+
         term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
         alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
-        VX, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(3))
+        root_xy_start = robot.data.root_pos_w[:, :2].clone()
+        VX, VY, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(4))
+        XY = torch.zeros(S, env.num_envs, 2, device=dev)
         AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
         last_err["rebuild_maxdiff"] = 0.0
         ERR = torch.full((len(ME.SERIES), S, env.num_envs), float("nan"), device=dev)                  # X27m: step 별 복원 오차 다섯 계열
@@ -290,16 +307,18 @@ for mode in args.modes.split(","):
 
             obs, _r, dones, _x = env.step(a)
             policy.reset(dones)
-            AL[k] = alive
+            AL[k] = alive & ~dones.bool()  # env.step may already have reset done envs
             VX[k] = robot.data.root_lin_vel_b[:, 0]
             FW[k] = robot.data.root_pos_w[:, 0] - raw.scene.env_origins[:, 0]
             POS[k] = robot.data.root_pos_w - raw.scene.env_origins
             q = robot.data.root_quat_w
             YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
             DN[k] = dones.bool()
+            VY[k] = robot.data.root_lin_vel_b[:, 1]
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
             TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
+            XY[k] = robot.data.root_pos_w[:, :2]
             alive = alive & ~dones.bool()
 
         if mode in ("eval_pred", "probe_prop_only", "none") and counts["gt"] != 0:
@@ -307,7 +326,7 @@ for mode in args.modes.split(","):
         if mode == "eval_gt" and counts["gt"] != counts["total"]:
             raise RuntimeError("eval_gt 인데 GT 가 %d/%d 번만 들어갔다" % (counts["gt"], counts["total"]))
 
-        vx, wz, al, tilt = VX.cpu().numpy(), WZ.cpu().numpy(), AL.cpu().numpy(), TILT.cpu().numpy()
+        vx, vy, wz, al, tilt = VX.cpu().numpy(), VY.cpu().numpy(), WZ.cpu().numpy(), AL.cpu().numpy(), TILT.cpu().numpy()
         sl = slice(int(2.0 / dt), int(4.0 / dt))
         dist = (vx * al).sum(0) * dt                                  # 몸 좌표 vx 의 적분(월드 이동 거리가 아님)
         nalive = np.maximum(al.sum(0), 1)
@@ -315,13 +334,31 @@ for mode in args.modes.split(","):
         follow = (wz * al).sum(0) / nalive / (cmd[2] if spin else 1.0)
         used = al[sl].any(0)
 
-        if spin:
-            stall = float(np.mean((np.abs(np.where(al[sl], wz[sl], np.nan)).mean(0)[used]) < 0.1 * abs(cmd[2])))
+        window_count = al[sl].sum(0)
+        if used.any():
+            if spin:
+                turn = np.abs((wz[sl] * al[sl]).sum(0) / np.maximum(window_count, 1))
+                stall = float(np.mean(turn[used] < 0.1 * abs(cmd[2])))
+            elif np.hypot(cmd[0], cmd[1]) > 0:
+                projected = (vx[sl] * cmd[0] + vy[sl] * cmd[1]) / np.hypot(cmd[0], cmd[1])
+                followed = (projected * al[sl]).sum(0) / np.maximum(window_count, 1)
+                stall = float(np.mean(followed[used] < 0.05))
+            else:
+                stall = None
+            speed = np.hypot(vx[sl], vy[sl])
+            mean_speed = (speed * al[sl]).sum(0) / np.maximum(window_count, 1)
+            mean_abs_yaw = (np.abs(wz[sl]) * al[sl]).sum(0) / np.maximum(window_count, 1)
+            stationary = map_mode_cells.stationary_fraction(mean_speed, mean_abs_yaw, used) if cmd == (0.0, 0.0, 0.0) else None
         else:
-            stall = float(np.mean((np.where(al[sl], vx[sl], np.nan).mean(0)[used]) < 0.05))
+            stall, stationary = None, None
 
         row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
+               "stationary_fraction_2to4s": stationary,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        row.update(map_mode_cells.summarize(cmd, tiles, vx, vy, wz, al,
+                                           alive.cpu().numpy(), dt,
+                                           root_xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
+                                           XY.cpu().numpy()))
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy())                  # X27j: env 별 지형 · 거리 · 생존 · 종료 (모든 평가에 항상)
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
@@ -338,6 +375,65 @@ for mode in args.modes.split(","):
             res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
         res["modes"][mode][cname] = row
         print("MAPMODE", mode, cname, json.dumps(row), flush=True)
+
+    if args.command_suite == "extended":
+        res.setdefault("sequences", {})[mode] = {}
+        for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
+            torch.manual_seed(42)
+            env.reset()
+            if args.fixed_terrain:
+                fixed_terrain.apply(raw)
+                env.reset()
+            seq_tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
+                                                    terrain.terrain_types.cpu().numpy(), terrain_names)
+            if seq_tiles != res["terrain_tiles"]:
+                raise RuntimeError("sequence terrain assignment changed")
+            policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean",
+                                       map_mode=None if mode == "none" else mode)
+            alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
+            counts["gt"] = counts["total"] = 0
+            seq_row = {"total_steps": S, "phase_steps": map_mode_cells.phase_steps(S, len(seq_commands)),
+                       "phases": [], "independent_reset": True}
+            for phase_index, (phase_cmd, nsteps) in enumerate(zip(seq_commands, seq_row["phase_steps"])):
+                term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                obs = env.get_observations()
+                xy_start = robot.data.root_pos_w[:, :2].clone()
+                vx_t, vy_t, wz_t = (torch.zeros(nsteps, env.num_envs, device=dev) for _ in range(3))
+                xy_t = torch.zeros(nsteps, env.num_envs, 2, device=dev)
+                alive_t = torch.zeros(nsteps, env.num_envs, dtype=torch.bool, device=dev)
+                for step in range(nsteps):
+                    term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                    action = policy(obs)
+                    obs, _reward, dones, _extra = env.step(action)
+                    policy.reset(dones)
+                    alive_t[step] = alive & ~dones.bool()  # exclude possible post-reset sample
+                    vx_t[step] = robot.data.root_lin_vel_b[:, 0]
+                    vy_t[step] = robot.data.root_lin_vel_b[:, 1]
+                    wz_t[step] = robot.data.root_ang_vel_b[:, 2]
+                    xy_t[step] = robot.data.root_pos_w[:, :2]
+                    alive = alive & ~dones.bool()
+                phase_vx, phase_vy, phase_wz, phase_alive = (
+                    vx_t.cpu().numpy(), vy_t.cpu().numpy(), wz_t.cpu().numpy(), alive_t.cpu().numpy())
+                phase = map_mode_cells.summarize(
+                    phase_cmd, seq_tiles, phase_vx, phase_vy, phase_wz, phase_alive,
+                    alive.cpu().numpy(), dt, xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
+                    xy_t.cpu().numpy())
+                for env_row, response in zip(phase["per_env"], map_mode_cells.response_times(
+                        phase_cmd, phase_vx, phase_vy, phase_wz, phase_alive, dt)):
+                    env_row.update(response)
+                phase.update({"phase_index": phase_index, "steps": nsteps,
+                              "start_step": sum(seq_row["phase_steps"][:phase_index])})
+                seq_row["phases"].append(phase)
+            if mode in ("eval_pred", "probe_prop_only", "none") and counts["gt"] != 0:
+                raise RuntimeError("sequence policy input unexpectedly used GT")
+            if mode == "eval_gt" and counts["gt"] != counts["total"]:
+                raise RuntimeError("sequence eval_gt policy input did not use GT for every sample")
+            seq_row["gt_used"] = counts["gt"]
+            seq_row["policy_steps_x_envs"] = counts["total"]
+            res["sequences"][mode][seq_name] = seq_row
+            print("MAPMODE_SEQUENCE", mode, seq_name, json.dumps({
+                "alive_at_end": [p["by_kind"] for p in seq_row["phases"]],
+                "gt_used": counts["gt"]}), flush=True)
 
     tokens = int(getattr(runner.perception.ie, "last_num_map_tokens", -1))                  # 마지막 정책 호출의 지도 토큰 수(G0 계열은 0 이어야 한다)
     res.setdefault("last_num_map_tokens", {})[mode] = tokens
@@ -358,6 +454,11 @@ for _m in list(sys.modules.values()):
     if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
         res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
 os.makedirs(args.out, exist_ok=True)
-json.dump(res, open(os.path.join(args.out, "map_modes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+out_json = os.path.join(args.out, "map_modes.json")
+with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
+    json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
+    stream.flush()
+    os.fsync(stream.fileno())
+os.replace(out_json + ".tmp", out_json)
 print("MAPMODE_DONE", flush=True)
 os._exit(0)

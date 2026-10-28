@@ -68,8 +68,10 @@ def test_run_sb_eval_uses_task_and_modes_from_the_environment(tmp_path):
     subprocess.run([BASH, _bash(sh), "cuda:0", _bash(ck), _bash(tmp_path / "out_default")], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=60)
     calls = (tmp_path / "out_default" / "kit_calls.txt").read_text(encoding="utf-8").splitlines()
 
-    assert len(calls) == 3 and all(SB_ID in c for c in calls)                       # 기본: S-B task, turn16 두 모드 + map64 한 번
-    assert "--map-mode eval_gt" in calls[0] and "--map-mode probe_prop_only" in calls[1] and "--modes eval_gt,probe_prop_only" in calls[2]
+    assert len(calls) == 4 and all(SB_ID in c for c in calls)                       # S-B task, turn16 세 모드 + map64 한 번
+    assert "--map-mode eval_gt" in calls[0] and "--map-mode probe_prop_only" in calls[1]
+    assert "--map-mode eval_pred" in calls[2] and "--modes eval_gt,probe_prop_only,eval_pred" in calls[3]
+    assert "--command-suite extended" in calls[3]
     out2 = tmp_path / "out_b"
     env = dict(os.environ, TASK=B_ID, MODES="eval_gt probe_prop_only eval_pred")
     subprocess.run([BASH, _bash(sh), "cuda:0", _bash(ck), _bash(out2)], capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=60, env=env)
