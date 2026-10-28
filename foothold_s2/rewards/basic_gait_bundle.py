@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 
+import torch
+
 
 WEIGHT_NAMES = ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")
 BASELINE = {"track_ang_vel": 0.5, "track_lin_vel": 1.5, "joint_acc": -2.5e-7}
@@ -47,14 +49,24 @@ def apply_settings(env_cfg, settings: dict) -> dict:
             getattr(env_cfg.rewards, name).weight = selected[name]
     if "hip_pos_penalty" in selected:
         from isaaclab.managers import RewardTermCfg as RewTerm, SceneEntityCfg
-        from robot_lab.tasks.go2 import mdp
 
         env_cfg.rewards.basic_hip_pos_penalty_l1 = RewTerm(
-            func=mdp.hip_pos_penalty_l1, weight=selected["hip_pos_penalty"],
+            func=hip_pos_penalty_l1, weight=selected["hip_pos_penalty"],
             params={"command_name": "base_velocity",
                     "asset_cfg": SceneEntityCfg("robot", joint_names=".*_hip_joint"),
                     "stand_still_scale": 1.0, "command_threshold": 0.1})
     return settings
+
+
+def hip_pos_penalty_l1(env, command_name, asset_cfg, stand_still_scale, command_threshold):
+    """E1 hip L1 term, copied formula from installed RobotLab Go2 mdp/rewards.py:553-573."""
+    asset = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)[:, [1, 2]]
+    cmd_large = torch.any(torch.abs(command) > command_threshold, dim=1)
+    running_reward = torch.linalg.norm(
+        asset.data.joint_pos[:, asset_cfg.joint_ids]
+        - asset.data.default_joint_pos[:, asset_cfg.joint_ids], dim=1, ord=1)
+    return torch.where(cmd_large, running_reward, stand_still_scale * running_reward)
 
 
 def set_lin_vel_z_weight(env, iteration: int, start_iteration: int = 0) -> float:

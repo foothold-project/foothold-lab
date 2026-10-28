@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 from pathlib import Path
@@ -20,6 +21,7 @@ from foothold_s2.rewards.basic_gait_bundle import (
     E1_CANDIDATE,
     WEIGHT_NAMES,
     apply_settings,
+    hip_pos_penalty_l1,
     scheduled_lin_vel_z_weight,
     set_lin_vel_z_weight,
     validate_settings,
@@ -118,23 +120,84 @@ def test_hip_l1_binding_matches_installed_go2_parameters(monkeypatch):
     isaac_managers = types.ModuleType("isaaclab.managers")
     isaac_managers.RewardTermCfg = lambda **kw: SimpleNamespace(**kw)
     isaac_managers.SceneEntityCfg = lambda name, **kw: SimpleNamespace(name=name, **kw)
-    robot_lab = types.ModuleType("robot_lab")
-    robot_tasks = types.ModuleType("robot_lab.tasks")
-    robot_go2 = types.ModuleType("robot_lab.tasks.go2")
-    robot_go2.mdp = SimpleNamespace(hip_pos_penalty_l1=lambda *_a: None)
     monkeypatch.setitem(sys.modules, "isaaclab.managers", isaac_managers)
-    monkeypatch.setitem(sys.modules, "robot_lab", robot_lab)
-    monkeypatch.setitem(sys.modules, "robot_lab.tasks", robot_tasks)
-    monkeypatch.setitem(sys.modules, "robot_lab.tasks.go2", robot_go2)
     cfg = SimpleNamespace(rewards=SimpleNamespace())
     settings = validate_settings({"track_ang_vel": None, "track_lin_vel": None,
                                   "joint_acc": None, "hip_pos_penalty": -0.05}, False, None)
     apply_settings(cfg, settings)
     term = cfg.rewards.basic_hip_pos_penalty_l1
-    assert term.weight == -0.05 and term.func is robot_go2.mdp.hip_pos_penalty_l1
+    assert term.weight == -0.05 and term.func is hip_pos_penalty_l1
     assert term.params["asset_cfg"].joint_names == ".*_hip_joint"
     assert term.params["command_name"] == "base_velocity"
     assert term.params["stand_still_scale"] == 1.0 and term.params["command_threshold"] == 0.1
+
+
+def test_hip_l1_matches_e1_formula_known_commands_and_joint_indices():
+    asset = SimpleNamespace(data=SimpleNamespace(
+        joint_pos=torch.tensor([[0.4, 8.0, -0.2], [0.1, 7.0, 0.3]]),
+        default_joint_pos=torch.tensor([[0.0, 8.0, 0.0], [0.0, 7.0, 0.0]])))
+    commands = torch.tensor([[1.0, 0.2, 0.0], [1.0, 0.0, 0.0]])
+    env = SimpleNamespace(
+        scene={"robot": asset},
+        command_manager=SimpleNamespace(get_command=lambda name: commands))
+    cfg = SimpleNamespace(name="robot", joint_ids=[0, 2])
+    got = hip_pos_penalty_l1(env, "base_velocity", cfg, 0.5, 0.1)
+    torch.testing.assert_close(got, torch.tensor([0.6, 0.2]), rtol=0, atol=1e-6)
+
+
+def test_training_reward_bundle_call_uses_local_hip_function(monkeypatch):
+    isaac_managers = types.ModuleType("isaaclab.managers")
+    isaac_managers.RewardTermCfg = lambda **kw: SimpleNamespace(**kw)
+    isaac_managers.SceneEntityCfg = lambda name, **kw: SimpleNamespace(name=name, **kw)
+    monkeypatch.setitem(sys.modules, "isaaclab.managers", isaac_managers)
+    cfg = SimpleNamespace(rewards=SimpleNamespace(**{
+        name: SimpleNamespace(weight=value) for name, value in BASELINE.items()}))
+    args = SimpleNamespace(basic_track_ang_weight=1.0, basic_track_lin_weight=2.0,
+                           basic_joint_acc_weight=-1e-7, basic_hip_pos_weight=-0.05,
+                           basic_lin_vel_z_schedule=True, basic_feet_regulation_weight=None)
+    source = Path(__file__).resolve().parents[1] / "scripts" / "train_sol23f_common.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    matches = [node for node in ast.walk(tree) if isinstance(node, ast.Assign)
+               and any(isinstance(t, ast.Name) and t.id == "basic_reward_bundle" for t in node.targets)]
+    assert len(matches) == 1
+    expression = compile(ast.Expression(matches[0].value), str(source), "eval")
+    bundle = eval(expression, {"apply_settings": apply_settings, "validate_settings": validate_settings,
+                               "env_cfg": cfg, "args_cli": args})
+    assert bundle["weights"] == E1_CANDIDATE
+    assert cfg.rewards.basic_hip_pos_penalty_l1.func is hip_pos_penalty_l1
+
+
+def test_isaac311_imports_new_cpu_modules_without_extra_sys_path():
+    root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    env["CUDA_VISIBLE_DEVICES"] = ""
+    env["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    modules = (
+        "foothold_s2.rewards.basic_gait_bundle",
+        "foothold_s2.commands.basic_levels",
+        "foothold_s2.basic_gait_run",
+        "foothold_s2.basic_gait_launch",
+        "foothold_s2.sol23f_contract",
+        "foothold_s2.runners.start_runner",
+        "foothold_s2.sensors.fast_gt_cfg",
+        "foothold_s2.basic_gait_extend_launch",
+    )
+    code = "\n".join(f"import {name}" for name in modules)
+    code += (
+        "\nimport ast, importlib.util\nfrom pathlib import Path\n"
+        "assert importlib.util.find_spec('robot_lab') is None\n"
+        "tree = ast.parse(Path('foothold_s2/scripts/train_sol23f_common.py').read_text(encoding='utf-8'))\n"
+        "found = [node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) "
+        "and node.module == 'foothold_s2.rewards.basic_gait_bundle']\n"
+        "assert len(found) == 1\n"
+        "exec(compile(ast.Module(body=found, type_ignores=[]), '<training-reward-import>', 'exec'))\n"
+        "assert callable(apply_settings) and callable(validate_settings)\n"
+    )
+    python = Path("C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe")
+    result = subprocess.run([str(python), "-c", code], cwd=root, env=env,
+                            text=True, capture_output=True, timeout=45)
+    assert result.returncode == 0, result.stderr
 
 
 def test_fast_launch_receipt_and_forbidden_adapter(tmp_path):

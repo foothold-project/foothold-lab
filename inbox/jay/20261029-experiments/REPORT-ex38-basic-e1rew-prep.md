@@ -4,8 +4,8 @@
 > 작성: 오흥재 (scripter 반영) · 2026-10-29 02:43
 > 근거: lead 10/29 02:3x EX-38 정정 명세, S-B10 model_1500.pt, CPU 시험과 DRY 영수증
 > 요지: 기존 일반 지각 학습 경로에서 보상 다섯 항목만 바꾸는 EX-38 기동 인자를 고정했다.
-> 상태: 인자 파싱 수정 완료 · Kit 재기동 미확인
-> 판: v1.1
+> 상태: hip L1 의존 수정 완료 · Kit 재기동 미확인
+> 판: v1.2
 
 ## 계약
 
@@ -76,9 +76,28 @@ CPU 시험은 생성기의 `--print-args` 출력을 그대로 받아 실제
 AppLauncher 인자 등록과 Kit 시작은 실행하지 않았다. 좁은 관련 시험 17 PASS.
 첫 기동은 파서 전에 종료되어 학습이 시작되지 않았으며, 수정본의 실제 Kit 재기동은 lead 담당이다.
 
+## v1.2 · 실제 두 번째 기동의 hip L1 import 수정
+
+두 번째 기동은 보상 설정에서 `ModuleNotFoundError: No module named 'robot_lab'`로 종료됐다.
+작업본 `basic_gait_bundle.py`가 설치 `C:/isaac/ext/go2_rl_robotlab/source/robot_lab/robot_lab/tasks/go2/mdp/rewards.py:553-573`의
+`hip_pos_penalty_l1`을 직접 import했기 때문이다. E1 원식의 명령 y·yaw 문턱 검사,
+선택 hip 관절의 기본 자세 대비 L1 오차, 정지 배율을 로컬 함수로 동일하게 옮겼다.
+`robot_lab` import는 제거했다. 보상 가중치 -0.05와 `SceneEntityCfg`의 hip 이름 정규식은 그대로다.
+
+`isaac311/python.exe` CPU 시험은 실제 `train_sol23f_common.py`의 보상 묶음 호출식을
+AST로 읽어 실행하고 네 보상 계수 및 로컬 hip 함수 결선을 확인했다.
+hip 함수는 명령과 관절 값이 알려진 두 환경에서 각각 0.6·0.2를 반환했다.
+같은 Python에서 `robot_lab`를 찾을 수 없는 상태를 확인하고 이 판의 신규 CPU 모듈
+여덟 개와 학습 코드의 보상 import 문장을 경로 주입 없이 import했다. 좁은 시험 14 PASS.
+CPU 단독으로 `isaaclab.managers`를 직접 import하면 Kit 초기화 전 `omni`가 없어 실패한다.
+따라서 CPU 호출식 시험에서는 그 manager 설정 클래스만 대역으로 두었다.
+실제 두 번째 Kit 로그는 `isaaclab.managers` import 뒤 `robot_lab`에서 실패했으므로
+이 변경 뒤의 Kit 보상 등록과 학습 진입은 lead 재기동으로 확인해야 한다.
+
 ## 판 이력
 
 | 판 | 날짜 | 변경 |
 |---|---|---|
 | v1.0 | 2026-10-29 | EX-38 보상 판 준비와 CPU 검증 |
 | v1.1 | 2026-10-29 | 음수 보상 인자 한 토큰 파싱 수정과 실제 인자 선언 CPU 시험 |
+| v1.2 | 2026-10-29 | E1 hip L1 수식 로컬 이식, robot_lab 의존 제거, isaac311 CPU import 시험 |
