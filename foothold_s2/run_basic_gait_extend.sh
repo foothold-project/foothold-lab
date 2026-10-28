@@ -31,6 +31,7 @@ mkdir -p "$OUT"
 "$PY" -m foothold_s2.basic_gait_extend_launch "${OPTS[@]}" > "$OUT/launch_receipt.json"
 "$PY" -m foothold_s2.basic_gait_extend_launch "${OPTS[@]}" --print-args > "$OUT/launch_args.txt"
 mapfile -t ARGS < <(tr -d '\r' < "$OUT/launch_args.txt")
+"$PY" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json"
 [ "${#ARGS[@]}" -gt 20 ] || { echo "refused: incomplete training argv" >&2; exit 5; }
 [ "$(printf '%s\n' "${ARGS[@]}" | grep -Fxc -- '--kit_args=--/UJITSO/datastore/localCachePath=D:/mai-cache/isaacsim-5.1/DerivedDataCache')" = "1" ] || { echo "refused: Kit cache argument missing or duplicated" >&2; exit 5; }
 git rev-parse HEAD > "$OUT/git_head.txt"

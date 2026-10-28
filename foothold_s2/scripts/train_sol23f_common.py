@@ -44,6 +44,8 @@ parser.add_argument("--resume_from", type=str, default=None,
                     help="이어 갈 START 체크포인트 경로. 검증 후 새 segment 폴더에 쓴다")
 parser.add_argument("--basic-extend-arm", choices=("A", "B"), default=None)
 parser.add_argument("--basic-ex38", action="store_true", help="pinned EX-38 ordinary-perception reward segment")
+parser.add_argument("--basic-ex38-continue-parent-sha", default=None,
+                    help="full SHA256 of a completed EX-38 segment checkpoint")
 parser.add_argument("--basic-extend-parent-sha", default=None, help="EX-36 완료 저장본의 전체 SHA256, 시작 전 CPU 대조")
 parser.add_argument("--fast-gt-only", action="store_true", help="basic-gait extension only: GT/off map, no depth camera or perception training")
 parser.add_argument("--basic-feet-regulation-weight", type=float)
@@ -258,8 +260,8 @@ def main(env_cfg, agent_cfg):
     runner = runner_class(env, train_cfg, log_dir=log_dir, device=agent_cfg.device,
                           deadline_epoch=deadline_epoch, stop_file=args_cli.stop_file, evidence=evidence)
     runner.basic_lin_vel_z_schedule = bool(basic_reward_bundle["lin_vel_z_schedule"])
-    runner.basic_lin_vel_z_start_iteration = (parent["completed_update"] + 1
-                                             if args_cli.basic_ex38 else 0)
+    # EX-38 schedule is tied to its original m1501 start, including later segments.
+    runner.basic_lin_vel_z_start_iteration = 1501 if args_cli.basic_ex38 else 0
     if resume_path is None:
         initial = os.path.join(log_dir, "model_initial.pt")
         runner.save_initial(initial)
@@ -304,6 +306,7 @@ def main(env_cfg, agent_cfg):
              "basic_reward_bundle": basic_reward_bundle,
              "basic_reward_schedule_start_iteration": runner.basic_lin_vel_z_start_iteration,
              "basic_ex38": bool(args_cli.basic_ex38),
+             "basic_ex38_continue_parent_sha": args_cli.basic_ex38_continue_parent_sha,
              "resume_parent": parent, "resume_budget": budget, "command_settings": command_settings(args_cli) if args_cli.variant == "SB" else None, "episode_scatter_seed": (agent_cfg.seed * 1000 + 35) if args_cli.variant == "SB" and command_settings(args_cli)["clock_scatter"] else None,
              "command_params": dict(env_cfg.commands.base_velocity.params or {}), "terrain_judge": tlm.judge_settings(env_cfg),
              "basic_terrain": basic_terrain,

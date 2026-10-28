@@ -85,6 +85,13 @@ def check_resume_parent(args) -> int:
     if not path or not Path(path).is_file():
         raise ValueError(f"--resume_from 저장본 파일이 없다: {path}")
     sha = file_sha256(path)
+    ex38_cont_sha = getattr(args, "basic_ex38_continue_parent_sha", None)
+    if ex38_cont_sha:
+        from foothold_s2.basic_gait_ex38_continue import check_parent
+
+        parent = check_parent(path, ex38_cont_sha)
+        resume_budget(int(args.max_iterations), parent["completed_update"], limit=18500)
+        return parent["completed_update"]
     if getattr(args, "basic_ex38", False) and sha != "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d":
         raise ValueError("EX-38 parent must be the pinned S-B10 model_1500.pt")
 
@@ -135,6 +142,9 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
     basic_arm = getattr(args, "basic_extend_arm", None)
     basic_sha = getattr(args, "basic_extend_parent_sha", None)
     ex38 = bool(getattr(args, "basic_ex38", False))
+    ex38_cont = getattr(args, "basic_ex38_continue_parent_sha", None)
+    if ex38_cont and not ex38:
+        raise ValueError("EX-38 continuation SHA requires --basic-ex38")
     fast_gt = bool(getattr(args, "fast_gt_only", False))
     reward_slots = ("basic_feet_regulation_weight", "basic_track_ang_weight",
                     "basic_track_lin_weight", "basic_joint_acc_weight", "basic_hip_pos_weight")

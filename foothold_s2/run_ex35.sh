@@ -27,6 +27,7 @@ for A in "${ARGS[@]}"; do
   case "$A" in ""|*[[:space:]]*|*$'\r'*) echo "거절: argv 에 CR · 공백 · 빈 값 (${A@Q})"; exit 5;; esac
 done
 printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
+PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json" || exit 5
 [ "${DRY:-0}" = "1" ] && { echo "DRY: 학습은 띄우지 않음 ($OUT)"; exit 0; }
 "$ENV/python.exe" foothold_s2/scripts/train_sb.py "${ARGS[@]}" > "$OUT/run.log" 2>&1
 echo "rc=$?" > "$OUT/rc.txt"

@@ -39,6 +39,7 @@ for A in "${ARGS[@]}"; do
   case "$A" in ""|*$'\r'*) echo "invalid argv" >&2; exit 5;; esac
 done
 printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
+"$PY" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json"
 echo "receipt=$OUT/launch_receipt.json"
 if [ "${LIVE:-0}" != "1" ]; then echo "DRY: training not started"; exit 0; fi
 [ -z "$(git status --short foothold_s2)" ] || { echo "refused: foothold_s2 dirty" >&2; exit 3; }

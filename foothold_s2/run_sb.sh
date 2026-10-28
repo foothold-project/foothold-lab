@@ -25,6 +25,9 @@ case "$KIND" in
   smoke2) [ -n "$RESUME" ] || { echo "smoke2 는 smoke10 체크포인트 경로가 필요하다"; exit 2; }; EXTRA+=(--smoke-updates 2 --resume_from "$RESUME") ;;
   *) echo "main | smoke10 | smoke2"; exit 2 ;;
 esac
-"$ENV/python.exe" foothold_s2/scripts/train_sb.py --headless --device "$DEV" --num_envs 3072 --max_iterations 1501 --seed 42 --run_name sb-main --end-by "$END_BY" --max-wall-s 86400 ${EXTRA[@]+"${EXTRA[@]}"} > "$OUT/run.log" 2>&1
+ARGS=(--headless --device "$DEV" --num_envs 3072 --max_iterations 1501 --seed 42 --run_name sb-main --end-by "$END_BY" --max-wall-s 86400 ${EXTRA[@]+"${EXTRA[@]}")
+printf '%s\n' "${ARGS[@]}" > "$OUT/launch_args.txt"
+PYTHONPATH="$ROOT" "$ENV/python.exe" -m foothold_s2.prestart_check --args-file "$OUT/launch_args.txt" > "$OUT/prestart.json" || exit 5
+"$ENV/python.exe" foothold_s2/scripts/train_sb.py "${ARGS[@]}" > "$OUT/run.log" 2>&1
 echo "rc=$?" > "$OUT/rc.txt"
 grep -q "TRAIN_START_STATUS done" "$OUT/run.log" || echo "DONE 줄 없음(Isaac 은 예외 뒤에도 0 을 낼 수 있다)" >> "$OUT/rc.txt"
