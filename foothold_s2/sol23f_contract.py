@@ -16,7 +16,7 @@ FORCE_GT = {"B": True, "TopDown": False, "SB": True}
 CKPT_VARIANT = {"B": "B_friction_only", "TopDown": "START_TopDown", "SB": "SB_map_switch"}
 
 
-REVERT_SEEDS = (43, 44, 45)                                    # 이어 가기 시드(되돌림 용도로 예약; 가정, lead 04:48 확인). 인자만으로 revert 와 main 을 가를 수 없어 validate 는 이어 가기 전체에 열고, ex35_launch 가 revert 에만 허용한다
+REVERT_SEEDS = (42,)                                            # D21: 되돌림도 원래 시드 42. 다른 시드는 전체 과정 끝의 별도 평가에서만 쓴다.
 EXTEND_MAX_ITERATIONS = 3001                                    # 이어 가기 판 총 회차 상한(부모 회차 + N 의 N 은 resume_budget 이 따로 1..1500 으로 잰다)
 # EX-35 계열(이어 가기 총 회차 > 1501, 또는 s2a 의 smoke 2)이 부모로 받는 저장본: sha256 -> 그 저장본의 회차. 손 명령(train_sb.py 직접)도 이 표를 통과해야 한다(W19).
 RESUME_PARENTS = {
@@ -138,8 +138,8 @@ def validate_launch(args, hydra_args=(), now: float | None = None, verify_parent
                 raise ValueError("SB 2-update smoke needs --resume_from the 10-update smoke checkpoint")
             if p_off is not None and not 0.0 < float(p_off) < 1.0:
                 raise ValueError("p_map_off must be inside (0, 1)")
-        if args.num_envs not in (None, 3072) or not (args.seed in (None, 42) or (args.seed in REVERT_SEEDS and is_extended_resume(args))):
-            raise ValueError(f"{args.variant} is pinned to seed 42 (a resume run may use one of {REVERT_SEEDS}) and 3072 envs")
+        if args.num_envs not in (None, 3072) or args.seed not in (None, 42):
+            raise ValueError(f"{args.variant} is pinned to seed 42 and 3072 envs, including resume and revert")
         if args.max_iterations not in (None, 1501) and not (is_extended_resume(args) and args.max_iterations <= EXTEND_MAX_ITERATIONS):
             raise ValueError(f"{args.variant} is pinned to 1501 updates (a SB resume run may give a larger total, at most {EXTEND_MAX_ITERATIONS})")
     elif getattr(args, "smoke_updates", None) is not None:

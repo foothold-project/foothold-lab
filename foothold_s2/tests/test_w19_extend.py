@@ -133,36 +133,39 @@ def test_run_ex35_script_is_valid_bash_with_the_extend_usage_and_lf_only():
     assert rc.returncode == 0, rc.stderr
 
 
-def test_revert_kind_new_seed_parent_m1500_and_gates():
+def test_revert_kind_same_seed_parent_m1500_and_gates():
     args = L.build_args("revert", "cuda:0", str(M1500), END, to_iter=2000)
 
-    assert args[args.index("--seed") + 1] == "43" and args[args.index("--max_iterations") + 1] == "2001"
+    assert args[args.index("--seed") + 1] == "42" and args[args.index("--max_iterations") + 1] == "2001"
     main = L.build_args("main", "cuda:0", str(M1500), END)
     diff = {t for t in args if t not in main} | {t for t in main if t not in args}
-    assert diff <= {"43", "42"}                                                      # 명령 구성 · env · 판정 인자는 main 과 같고 시드만 다르다
+    assert diff == set()                                                                # 명령 구성 · env · 판정 인자 · 시드 모두 main 과 같다
     r = L.receipt("revert", args, str(M1500))
-    assert r["parent_sha256"] == L.PARENT_SHA256 and r["parent_iter"] == 1500 and r["first_iter"] == 1501 and r["last_iter"] == 2000 and r["args"]["seed"] == "43"
-    assert "lead 04:48" in r["assumption"] and "assumption" not in L.receipt("extend", L.build_args("extend", "cuda:0", str(M2000), END), str(M2000))
+    assert r["parent_sha256"] == L.PARENT_SHA256 and r["parent_iter"] == 1500 and r["first_iter"] == 1501 and r["last_iter"] == 2000 and r["args"]["seed"] == "42"
+    assert "확정 D21" in r["decision_basis"] and "assumption" not in r
     with pytest.raises(ValueError, match="부모 SHA-256"):
         L.receipt("revert", args, str(M2000))                                        # 부모 파일이 카드 sha 와 다르면 거절
     for bad in (1500, 3001):
         with pytest.raises(ValueError, match="to_iter"):
             L.build_args("revert", "cuda:0", str(M1500), END, to_iter=bad)
+    assert pairs(L.build_args("revert", "cuda:0", str(M1500), END, to_iter=2000, seed=42))["--seed"] == "42"
     with pytest.raises(ValueError, match="시드"):
-        L.build_args("revert", "cuda:0", str(M1500), END, to_iter=2000, seed=42)
-    with pytest.raises(ValueError, match="시드"):
-        L.build_args("revert", "cuda:0", str(M1500), END, to_iter=2000, seed=7)
-    with pytest.raises(ValueError, match="seed 42"):                                  # 시드 43 은 허용 부모 이어 가기에만: 새 판(이어 가기 아님)은 거절
+        L.build_args("revert", "cuda:0", str(M1500), END, to_iter=2000, seed=43)
+    with pytest.raises(ValueError, match="seed 42"):                                  # 시드 43 은 새 판과 이어 가기 모두 거절
         from types import SimpleNamespace as NS
         from foothold_s2.sol23f_contract import validate_launch
         validate_launch(NS(variant="SB", task=L.TASKS["SB"], agent="rsl_rl_cfg_entry_point", distributed=False, map_input=None, force_gt=False, max_wall_s=1.0, end_by=END,
                            num_envs=3072, seed=43, max_iterations=1501, smoke_updates=None, resume_from=None, p_map_off=None, command_mode=None, clock_scatter=None))
+    with pytest.raises(ValueError, match="seed 42"):
+        validate_launch(NS(variant="SB", task=L.TASKS["SB"], agent="rsl_rl_cfg_entry_point", distributed=False, map_input=None, force_gt=False,
+                           max_wall_s=1.0, end_by=END, num_envs=3072, seed=43, max_iterations=2001, smoke_updates=None,
+                           resume_from=str(M1500), p_map_off=0.1, command_mode="s2a", clock_scatter="on"), verify_parent=False)
 
 
 def test_revert_cli_prints_args(capsys):
     assert L.main(["revert", "cuda:0", str(M1500), "--to-iter", "2000", "--print-args", "--end-by", END]) == 0
     out = capsys.readouterr().out.split()
-    assert "43" in out and "2001" in out
+    assert "42" in out and "2001" in out
 
 
 def test_parent_sha_and_seed_options_are_revert_only_and_revert_parent_is_m1500_only():

@@ -71,8 +71,8 @@ def build_args(kind, device, parent, end_by, parent_sha=None, to_iter=EXTEND_MAX
         p_iter = REVERT_PARENTS[parent_sha or PARENT_SHA256]
         if not p_iter < int(to_iter) <= EXTEND_MAX_TO_ITER or int(to_iter) - p_iter > 1500:
             raise ValueError(f"revert 의 to_iter 는 {p_iter + 1}..{min(p_iter + 1500, EXTEND_MAX_TO_ITER)} 이어야 한다: {to_iter}")
-        if str(common[common.index("--seed") + 1]) == "42" or int(common[common.index("--seed") + 1]) not in REVERT_SEEDS:
-            raise ValueError(f"revert 의 시드는 {REVERT_SEEDS} 중 하나(원 시드 42 불가)")
+        if int(common[common.index("--seed") + 1]) not in REVERT_SEEDS:
+            raise ValueError(f"revert 의 시드는 원래 시드 42 로 고정한다(D21): {REVERT_SEEDS}")
 
         return common + ["--max_iterations", str(int(to_iter) + 1)]
 
@@ -112,7 +112,7 @@ def receipt(kind, args, parent, check_sha=True, parent_sha=None) -> dict:
     return {"kind": kind, "task": TASKS["SB"], "parent": parent, "parent_sha256": actual, "expected_parent_sha256": parent_sha, "parent_iter": parent_iter,
             "args": pairs, "remaining_updates": remaining, "first_iter": first, "last_iter": first + remaining - 1,
             "contract": "walkturn_v1", "validate_launch": "ok", "note": "기동은 팀장 승인 뒤 lead 가 한다. 이 영수증은 승인이 아니다.",
-            **({"assumption": "가정 · lead 04:48: revert 시드 43(허용 43~45), to_iter 기본 3000(부모 + 상한 1500)"} if kind == "revert" else {})}
+            **({"decision_basis": "확정 D21: 되돌림 시드 42 유지. D06: 같은 조건 상한은 부모 뒤 1500회, 기본 to_iter 3000."} if kind == "revert" else {})}
 
 
 def main(argv=None) -> int:
@@ -122,7 +122,7 @@ def main(argv=None) -> int:
     ap.add_argument("parent")
     ap.add_argument("--end-by", default=None)
     ap.add_argument("--to-iter", type=int, default=EXTEND_MAX_TO_ITER, help="extend 전용: 마지막 저장본 번호(2001..3000, 기본 3000)")
-    ap.add_argument("--seed", type=int, default=None, help=f"revert 전용: 새 시드(기본 {REVERT_DEFAULT_SEED}, 허용 {REVERT_SEEDS})")
+    ap.add_argument("--seed", type=int, default=None, help=f"revert 전용: 원 시드 유지(기본 {REVERT_DEFAULT_SEED}, 허용 {REVERT_SEEDS})")
     ap.add_argument("--parent-sha", default=None, help="revert 전용: 부모 저장본 sha256(판정 파일이 가리키는 직전 단계, 허용표 안, 기본 m1500)")
     ap.add_argument("--print-args", action="store_true", help="영수증 대신 train_sb.py 인자만 한 줄씩")
     ap.add_argument("--no-sha", action="store_true", help="시험 전용: 부모 파일 SHA 를 재지 않음")
