@@ -1,0 +1,47 @@
+{
+  "schema": "foothold-canon-registry/v1",
+  "note": "W27. 정본 · 단계 · 부모 sha 의 한 곳. 기동기 · 평가 · 촬영은 여기서 읽는다(W50 연결 전까지는 사람이 대조). 값은 각 run 의 resume_parent.json 과 checkpoint sha 실측(10/29 22:4x).",
+  "current": {
+    "stage": "basic_gait_L0-2",
+    "canon": "EX-38_m3001",
+    "baseline_policy": "S-B10_m1500"
+  },
+  "entries": [
+    {
+      "id": "S-B10_m1500",
+      "role": "기준 정책(기본 보행 단계) · 1 차 출발점",
+      "decision": "FLOW 3 절(기준 정책 S-B10 m1500)",
+      "checkpoint": "C:/mai/wt/foothold-lab/impl-sb/logs/rsl_rl/foothold_s2_sb/2026-10-26_01-17-47_sb-main/model_1500.pt",
+      "sha256": "4d987818c7e25b89e77b7541feca3ddabedd444c5b20651eb29f3681da040d9d",
+      "completed_update": 1500,
+      "parent": null,
+      "actuator": "DCMotor (Isaac Lab UNITREE_GO2_CFG, 종아리 URDF 45.43 N·m · 15.70 rad/s) · 지연 없음",
+      "terrain": "S-B 판(L0~2 고정 아님, 원 설정은 run env.yaml)"
+    },
+    {
+      "id": "EX-38_m2709",
+      "role": "중간 저장본(12:30 이어 학습 실패 뒤 재출발점)",
+      "checkpoint": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_040521_60072/model_2709.pt",
+      "sha256": "b9db93b125ab53eb56a032676950a7c509da49643753b34a915dff559f7b7cd3",
+      "completed_update": 2709,
+      "parent": "S-B10_m1500",
+      "segment": "m1501~m2709 · EX-38 보상(E1 후보 다섯 항) · 명령 basic share 0.30 · L0~2"
+    },
+    {
+      "id": "EX-38_m3001",
+      "role": "2 차 정본 (기본 보행)",
+      "decision": "D54 (10/29 21:1x)",
+      "checkpoint": "C:/Users/AI-WS01/s2_lab/basic_gait_runs/main/EX-38-basic-e1rew_20261029_123840_163180/model_3001.pt",
+      "sha256": "7ff575f356c27ab6280fa2e01dce40f806bbfdd89d4306ae63c827b3ff16706c",
+      "completed_update": 3001,
+      "parent": "EX-38_m2709",
+      "segment": "m2710~m3001 이어 학습 (physical_resume_identical false)",
+      "actuator": "DCMotor · 지연 없음 (설계 17 문서 78 행 지연 0~15 ms 미구현)",
+      "eval": "W15 13 명령 · 64 env · 지도 셋: C:/Users/AI-WS01/s2_lab/basic_gait_runs/eval_w15/ex38/m3001/"
+    }
+  ],
+  "next": [
+    {"id": "EX-39A", "parent": "EX-38_m3001", "status": "준비 · Kit 확인 try01 FAIL(명령 계약 범위) · 기동 전"},
+    {"id": "EX-39B", "parent": "EX-38_m3001", "status": "준비 · Kit 확인 try01 FAIL(명령 계약 범위) · 기동 전"}
+  ]
+}
